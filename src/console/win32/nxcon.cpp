@@ -539,14 +539,31 @@ void CConsoleApp::OnAppAbout()
 
 void CConsoleApp::OnViewControlpanel() 
 {
-	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+   ShowControlPanel();
+}
+
+
+//
+// Create new control panel window or open existing
+//
+
+CMDIChildWnd *CConsoleApp::ShowControlPanel(void) 
+{
+	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+   CMDIChildWnd *pWnd;
 
 	// create a new MDI child window or open existing
    if (m_viewState[VIEW_CTRLPANEL].bActive)
+   {
       m_viewState[VIEW_CTRLPANEL].pWnd->BringWindowToTop();
+      pWnd = m_viewState[VIEW_CTRLPANEL].pWnd;
+   }
    else
-	   pFrame->CreateNewChild(RUNTIME_CLASS(CControlPanel), IDR_CTRLPANEL,
-                             m_hMDIMenu, m_hMDIAccel);
+   {
+	   pWnd = pFrame->CreateNewChild(RUNTIME_CLASS(CControlPanel), IDR_CTRLPANEL,
+                                    m_hMDIMenu, m_hMDIAccel);
+   }
+   return pWnd;
 }
 
 

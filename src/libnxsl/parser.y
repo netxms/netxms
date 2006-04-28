@@ -3,6 +3,7 @@
 #pragma warning(disable : 4065 4102)
 
 #define YYERROR_VERBOSE
+#define YYINCLUDED_STDLIB_H
 #define YYDEBUG			1
 
 #include <nms_common.h>

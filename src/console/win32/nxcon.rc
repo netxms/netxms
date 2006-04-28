@@ -132,6 +132,7 @@ IDI_REFRESH             ICON    DISCARDABLE     "icons\\refresh.ico"
 IDI_BACK                ICON    DISCARDABLE     "icons\\back.ico"
 IDI_FORWARD             ICON    DISCARDABLE     "icons\\forward.ico"
 IDI_GO_ROOT             ICON    DISCARDABLE     "icons\\go_root.ico"
+IDI_MODULE              ICON    DISCARDABLE     "icons\\module.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -361,6 +362,7 @@ BEGIN
         MENUITEM "Event &Policy\tF4",           ID_CONTROLPANEL_EVENTPOLICY
         MENUITEM "&Log processing",             ID_CONTROLPANEL_LOGPROCESSING
 
+        MENUITEM "&Modules",                    ID_CONTROLPANEL_MODULES
         MENUITEM "&Object Tools",               ID_CONTROLPANEL_OBJECTTOOLS
         MENUITEM "Script &Library",             ID_CONTROLPANEL_SCRIPTLIBRARY
 

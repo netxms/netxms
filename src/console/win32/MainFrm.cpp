@@ -543,6 +543,9 @@ void CMainFrame::OnDesktopRestore()
                case WNDC_OBJECT_BROWSER:
                   pWnd = theApp.ShowObjectBrowser(pWndInfo[i].szParameters);
                   break;
+               case WNDC_CONTROL_PANEL:
+                  pWnd = theApp.ShowControlPanel();
+                  break;
                default:
                   pWnd = NULL;
                   break;

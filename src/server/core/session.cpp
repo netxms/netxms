@@ -945,6 +945,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_SUBMAP_BK_IMAGE:
             SendSubmapBkImage(pMsg);
             break;
+         case CMD_GET_MODULE_LIST:
+            SendModuleList(pMsg->GetId());
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -6735,5 +6738,57 @@ void ClientSession::RecvSubmapBkImage(CSCPMessage *pRequest)
    UnlockMaps();
 
    // Send response message
+   SendMessage(&msg);
+}
+
+
+//
+// Send list of configured modules
+//
+
+void ClientSession::SendModuleList(DWORD dwRqId)
+{
+   CSCPMessage msg;
+   DB_RESULT hResult;
+   DWORD i, dwId, dwNumModules;
+   TCHAR *pszDescr;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   if (CheckSysAccessRights(SYSTEM_ACCESS_MANAGE_MODULES))
+   {
+      hResult = DBSelect(g_hCoreDB, "SELECT module_id,module_name,exec_name,module_flags,description,license_key FROM modules");
+      if (hResult != NULL)
+      {
+         dwNumModules = DBGetNumRows(hResult);
+         msg.SetVariable(VID_NUM_MODULES, dwNumModules);
+         
+         for(i = 0, dwId = VID_MODULE_LIST_BASE; i < dwNumModules; i++, dwId += 4)
+         {
+            msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 0));
+            msg.SetVariable(dwId++, DBGetField(hResult, i, 1));
+            msg.SetVariable(dwId++, DBGetField(hResult, i, 2));
+            msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 3));
+            pszDescr = _tcsdup(DBGetField(hResult, i, 4));
+            DecodeSQLString(pszDescr);
+            msg.SetVariable(dwId++, pszDescr);
+            free(pszDescr);
+            msg.SetVariable(dwId++, DBGetField(hResult, i, 5));
+         }
+
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
    SendMessage(&msg);
 }

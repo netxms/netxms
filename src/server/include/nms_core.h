@@ -476,6 +476,7 @@ private:
    void LoadMap(CSCPMessage *pRequest);
    void SendSubmapBkImage(CSCPMessage *pRequest);
    void RecvSubmapBkImage(CSCPMessage *pRequest);
+   void SendModuleList(DWORD dwRqId);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

@@ -360,22 +360,23 @@ enum
 // Global user rights
 //
 
-#define SYSTEM_ACCESS_MANAGE_USERS        0x0001
-#define SYSTEM_ACCESS_SERVER_CONFIG       0x0002
-#define SYSTEM_ACCESS_CONFIGURE_TRAPS     0x0004
-#define SYSTEM_ACCESS_MANAGE_SESSIONS     0x0008
-#define SYSTEM_ACCESS_VIEW_EVENT_DB       0x0010
-#define SYSTEM_ACCESS_EDIT_EVENT_DB       0x0020
-#define SYSTEM_ACCESS_EPP                 0x0040
-#define SYSTEM_ACCESS_MANAGE_ACTIONS      0x0080
-#define SYSTEM_ACCESS_DELETE_ALARMS       0x0100
-#define SYSTEM_ACCESS_MANAGE_PACKAGES     0x0200
-#define SYSTEM_ACCESS_MANAGE_LPP          0x0400
-#define SYSTEM_ACCESS_MANAGE_TOOLS        0x0800
-#define SYSTEM_ACCESS_MANAGE_SCRIPTS      0x1000
-#define SYSTEM_ACCESS_VIEW_TRAP_LOG       0x2000
+#define SYSTEM_ACCESS_MANAGE_USERS        0x000001
+#define SYSTEM_ACCESS_SERVER_CONFIG       0x000002
+#define SYSTEM_ACCESS_CONFIGURE_TRAPS     0x000004
+#define SYSTEM_ACCESS_MANAGE_SESSIONS     0x000008
+#define SYSTEM_ACCESS_VIEW_EVENT_DB       0x000010
+#define SYSTEM_ACCESS_EDIT_EVENT_DB       0x000020
+#define SYSTEM_ACCESS_EPP                 0x000040
+#define SYSTEM_ACCESS_MANAGE_ACTIONS      0x000080
+#define SYSTEM_ACCESS_DELETE_ALARMS       0x000100
+#define SYSTEM_ACCESS_MANAGE_PACKAGES     0x000200
+#define SYSTEM_ACCESS_MANAGE_LPP          0x000400
+#define SYSTEM_ACCESS_MANAGE_TOOLS        0x000800
+#define SYSTEM_ACCESS_MANAGE_SCRIPTS      0x001000
+#define SYSTEM_ACCESS_VIEW_TRAP_LOG       0x002000
+#define SYSTEM_ACCESS_MANAGE_MODULES      0x004000
 
-#define SYSTEM_ACCESS_FULL                0x3FFF
+#define SYSTEM_ACCESS_FULL                0x007FFF
 
 
 //
@@ -1307,6 +1308,32 @@ typedef struct
 
 
 //
+// Module information
+//
+
+typedef struct
+{
+   DWORD dwModuleId;
+   DWORD dwFlags;
+   TCHAR *pszName;
+   TCHAR *pszExecutable;
+   TCHAR *pszLicenseKey;
+   TCHAR *pszDescription;
+} NXC_SERVER_MODULE_INFO;
+
+
+//
+// Module list
+//
+
+typedef struct
+{
+   DWORD dwNumModules;
+   NXC_SERVER_MODULE_INFO *pModules;
+} NXC_SERVER_MODULE_LIST;
+
+
+//
 // Functions
 //
 
@@ -1538,6 +1565,10 @@ DWORD LIBNXCL_EXPORTABLE NXCUploadSubmapBkImage(NXC_SESSION hSession, DWORD dwMa
                                                 DWORD dwSubmapId, TCHAR *pszFile);
 DWORD LIBNXCL_EXPORTABLE NXCDownloadSubmapBkImage(NXC_SESSION hSession, DWORD dwMapId,
                                                   DWORD dwSubmapId, TCHAR *pszFile);
+
+DWORD LIBNXCL_EXPORTABLE NXCGetServerModuleList(NXC_SESSION hSession,
+                                                NXC_SERVER_MODULE_LIST **ppModuleList);
+void LIBNXCL_EXPORTABLE NXCDestroyModuleList(NXC_SERVER_MODULE_LIST *pModuleList);
 
 #ifdef __cplusplus
 }

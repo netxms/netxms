@@ -36,7 +36,9 @@ BEGIN_MESSAGE_MAP(CControlPanel, CMDIChildWnd)
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
    ON_NOTIFY(NM_DBLCLK, ID_LIST_VIEW, OnListViewDoubleClick)
+	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
+   ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -71,6 +73,8 @@ static int CALLBACK CompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSo
 int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
+   BYTE *pwp;
+   UINT iBytes;
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
@@ -96,7 +100,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_LPP));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_OBJTOOLS));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SCRIPT_LIBRARY));
-   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SCRIPT_LIBRARY));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_MODULE));
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_NORMAL);
 
    // Populate list with items
@@ -110,9 +114,21 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    //AddItem("Log Processing", 7, ID_CONTROLPANEL_LOGPROCESSING);
    AddItem("Object Tools", 8, ID_CONTROLPANEL_OBJECTTOOLS);
    AddItem("Script Library", 9, ID_CONTROLPANEL_SCRIPTLIBRARY);
-   AddItem("View Builder", 10, ID_CONTROLPANEL_VIEWBUILDER);
+   AddItem("Modules", 10, ID_CONTROLPANEL_MODULES);
+   //AddItem("View Builder", 10, ID_CONTROLPANEL_VIEWBUILDER);
 
    m_wndListCtrl.SortItems(CompareItems, (DWORD)&m_wndListCtrl);
+
+   // Restore window size and position if we have one saved
+   if (theApp.GetProfileBinary(_T("ControlPanel"), _T("WindowPlacement"),
+                               &pwp, &iBytes))
+   {
+      if (iBytes == sizeof(WINDOWPLACEMENT))
+      {
+         RestoreMDIChildPlacement(this, (WINDOWPLACEMENT *)pwp);
+      }
+      delete pwp;
+   }
 
    theApp.OnViewCreate(VIEW_CTRLPANEL, this);
 	return 0;
@@ -181,4 +197,33 @@ void CControlPanel::AddItem(char *pszName, int iImage, WPARAM wParam)
 
    iIndex = m_wndListCtrl.InsertItem(0x7FFFFFFF, pszName, iImage);
    m_wndListCtrl.SetItemData(iIndex, wParam);
+}
+
+
+//
+// Get save info for desktop saving
+//
+
+LRESULT CControlPanel::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+{
+   pInfo->iWndClass = WNDC_CONTROL_PANEL;
+   GetWindowPlacement(&pInfo->placement);
+   pInfo->szParameters[0] = 0;
+   return 1;
+}
+
+
+//
+// WM_CLOSE message handler
+//
+
+void CControlPanel::OnClose() 
+{
+   WINDOWPLACEMENT wp;
+
+   GetWindowPlacement(&wp);
+   theApp.WriteProfileBinary(_T("ControlPanel"), _T("WindowPlacement"), 
+                             (BYTE *)&wp, sizeof(WINDOWPLACEMENT));
+	
+	CMDIChildWnd::OnClose();
 }

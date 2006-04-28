@@ -235,6 +235,7 @@ public:
 	void ChangeNodeAddress(DWORD dwNodeId);
 	void UnbindObject(NXC_OBJECT *pObject);
 	void BindObject(NXC_OBJECT *pObject);
+	CMDIChildWnd *ShowControlPanel(void);
 	CMDIChildWnd *ShowEventBrowser(void);
 	CMDIChildWnd *ShowSyslogBrowser(void);
 	CMDIChildWnd *ShowTrapLogBrowser(void);

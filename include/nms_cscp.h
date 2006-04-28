@@ -405,6 +405,8 @@ typedef struct
 #define CMD_SUBMAP_DATA             0x00A8
 #define CMD_UPLOAD_SUBMAP_BK_IMAGE  0x00A9
 #define CMD_GET_SUBMAP_BK_IMAGE     0x00AA
+#define CMD_GET_MODULE_LIST			0x00AB
+#define CMD_UPDATE_MODULE_INFO		0x00AC
 
 
 //
@@ -628,6 +630,7 @@ typedef struct
 #define VID_LINK_LIST               ((DWORD)215)
 #define VID_MAP_ID                  ((DWORD)216)
 #define VID_NUM_MAPS                ((DWORD)217)
+#define VID_NUM_MODULES             ((DWORD)218)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -716,6 +719,9 @@ typedef struct
 
 // Base value for map list
 #define VID_MAP_LIST_BASE           ((DWORD)0x10000000)
+
+// Base value for module list
+#define VID_MODULE_LIST_BASE        ((DWORD)0x10000000)
 
 
 //

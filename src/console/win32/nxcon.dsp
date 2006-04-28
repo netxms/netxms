@@ -1198,6 +1198,10 @@ SOURCE=.\icons\lpp.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\module.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\nack.ico
 # End Source File
 # Begin Source File

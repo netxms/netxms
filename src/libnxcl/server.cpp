@@ -158,3 +158,59 @@ DWORD LIBNXCL_EXPORTABLE NXCGetServerStats(NXC_SESSION hSession, NXC_SERVER_STAT
    }
    return dwRetCode;
 }
+
+
+//
+// Get module list
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetServerModuleList(NXC_SESSION hSession,
+                                                NXC_SERVER_MODULE_LIST **ppModuleList)
+{
+   DWORD dwRetCode, dwRqId;
+   CSCPMessage msg, *pResponse;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_GET_MODULE_LIST);
+   msg.SetId(dwRqId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      if (dwRetCode == RCC_SUCCESS)
+      {
+      }
+      delete pResponse;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+   return dwRetCode;
+}
+
+
+//
+// Destroy module list
+//
+
+void LIBNXCL_EXPORTABLE NXCDestroyModuleList(NXC_SERVER_MODULE_LIST *pModuleList)
+{
+   DWORD i;
+
+   if (pModuleList == NULL)
+      return;
+
+   for(i = 0; i < pModuleList->dwNumModules; i++)
+   {
+      safe_free(pModuleList->pModules[i].pszDescription);
+      safe_free(pModuleList->pModules[i].pszExecutable);
+      safe_free(pModuleList->pModules[i].pszLicenseKey);
+      safe_free(pModuleList->pModules[i].pszName);
+   }
+   safe_free(pModuleList->pModules);
+   free(pModuleList);
+}

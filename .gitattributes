@@ -792,6 +792,7 @@ src/console/win32/icons/graph.ico -text
 src/console/win32/icons/iexplore.ico -text
 src/console/win32/icons/log.ico -text
 src/console/win32/icons/lpp.ico -text
+src/console/win32/icons/module.ico -text
 src/console/win32/icons/nack.ico -text
 src/console/win32/icons/objtools.ico -text
 src/console/win32/icons/ovl_status_critical.ico -text
