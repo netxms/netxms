@@ -514,6 +514,7 @@
 #define IDR_TRAP_LOG_BROWSER            8111
 #define IDR_VIEW_BUILDER                8112
 #define IDR_DCI_HISTORY_GRAPH           8113
+#define IDR_MODULE_MANAGER              8114
 #define IDR_CTRLPANEL                   8133
 #define IDR_EVENTS                      8137
 #define IDR_MAPFRAME                    8138

@@ -3015,6 +3015,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDR_VIEW_BUILDER        "\nView Builder\nView Builder"
     IDR_DCI_HISTORY_GRAPH   "\nHistory Graph\nHistory Graph"
+    IDR_MODULE_MANAGER      "\nModule Manager\nModuleManager"
 END
 
 STRINGTABLE DISCARDABLE 

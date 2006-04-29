@@ -641,6 +641,8 @@ src/console/win32/MapView.cpp -text
 src/console/win32/MapView.h -text
 src/console/win32/ModifiedAgentCfgDlg.cpp -text
 src/console/win32/ModifiedAgentCfgDlg.h -text
+src/console/win32/ModuleManager.cpp -text
+src/console/win32/ModuleManager.h -text
 src/console/win32/NetSrvPropsGeneral.cpp -text
 src/console/win32/NetSrvPropsGeneral.h -text
 src/console/win32/NetSummaryFrame.cpp -text

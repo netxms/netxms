@@ -51,6 +51,7 @@
 #include "ObjectBrowser.h"
 #include "ViewEditor.h"
 #include "PackageMgr.h"
+#include "ModuleManager.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -100,6 +101,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_CONTROLPANEL_SCRIPTLIBRARY, OnControlpanelScriptlibrary)
 	ON_COMMAND(ID_VIEW_SNMPTRAPLOG, OnViewSnmptraplog)
 	ON_COMMAND(ID_CONTROLPANEL_VIEWBUILDER, OnControlpanelViewbuilder)
+	ON_COMMAND(ID_CONTROLPANEL_MODULES, OnControlpanelModules)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -2521,5 +2523,26 @@ void CConsoleApp::MoveObject(DWORD dwObjectId, DWORD dwParentId)
                                (void *)dlg.m_pdwObjectList[0], _T("Moving object..."));
       if (dwResult != RCC_SUCCESS)
          ErrorBox(dwResult, _T("Error moving object: %s"));
+   }
+}
+
+
+//
+// WM_COMMAND::ID_CONTROLPANEL_MODULES
+//
+
+void CConsoleApp::OnControlpanelModules() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_viewState[VIEW_MODULE_MANAGER].bActive)
+   {
+      m_viewState[VIEW_MODULE_MANAGER].pWnd->BringWindowToTop();
+   }
+   else
+   {
+	   pFrame->CreateNewChild(RUNTIME_CLASS(CModuleManager), IDR_MODULE_MANAGER,
+                             m_hMDIMenu, m_hMDIAccel);
    }
 }

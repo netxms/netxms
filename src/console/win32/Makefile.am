@@ -59,6 +59,7 @@ EXTRA_DIST = \
 	MapView.cpp MapView.h \
 	MIBBrowserDlg.cpp MIBBrowserDlg.h \
 	ModifiedAgentCfgDlg.cpp ModifiedAgentCfgDlg.h \
+	ModuleManager.cpp ModuleManager.h \
 	NetSrvPropsGeneral.cpp NetSrvPropsGeneral.h \
 	NetSummaryFrame.cpp NetSummaryFrame.h \
 	NewActionDlg.cpp NewActionDlg.h \

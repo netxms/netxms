@@ -85,6 +85,7 @@ enum
    VIEW_LPP_EDITOR,
    VIEW_SCRIPT_MANAGER,
    VIEW_BUILDER,
+   VIEW_MODULE_MANAGER,
    MAX_VIEW_ID
 };
 
@@ -219,6 +220,7 @@ public:
 	afx_msg void OnControlpanelScriptlibrary();
 	afx_msg void OnViewSnmptraplog();
 	afx_msg void OnControlpanelViewbuilder();
+	afx_msg void OnControlpanelModules();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

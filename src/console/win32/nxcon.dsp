@@ -325,6 +325,10 @@ SOURCE=.\ModifiedAgentCfgDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ModuleManager.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\NetSrvPropsGeneral.cpp
 # End Source File
 # Begin Source File
@@ -791,6 +795,10 @@ SOURCE=.\MIBBrowserDlg.h
 # Begin Source File
 
 SOURCE=.\ModifiedAgentCfgDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ModuleManager.h
 # End Source File
 # Begin Source File
 

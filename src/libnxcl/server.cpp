@@ -167,7 +167,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetServerStats(NXC_SESSION hSession, NXC_SERVER_STAT
 DWORD LIBNXCL_EXPORTABLE NXCGetServerModuleList(NXC_SESSION hSession,
                                                 NXC_SERVER_MODULE_LIST **ppModuleList)
 {
-   DWORD dwRetCode, dwRqId;
+   DWORD i, dwRetCode, dwRqId, dwId;
    CSCPMessage msg, *pResponse;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -182,6 +182,18 @@ DWORD LIBNXCL_EXPORTABLE NXCGetServerModuleList(NXC_SESSION hSession,
       dwRetCode = pResponse->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
+         *ppModuleList = (NXC_SERVER_MODULE_LIST *)malloc(sizeof(NXC_SERVER_MODULE_LIST));
+         (*ppModuleList)->dwNumModules = pResponse->GetVariableLong(VID_NUM_MODULES);
+         (*ppModuleList)->pModules = (NXC_SERVER_MODULE_INFO *)malloc(sizeof(NXC_SERVER_MODULE_INFO) * (*ppModuleList)->dwNumModules);
+         for(i = 0, dwId = VID_MODULE_LIST_BASE; i < (*ppModuleList)->dwNumModules; i++, dwId += 4)
+         {
+            (*ppModuleList)->pModules[i].dwModuleId = pResponse->GetVariableLong(dwId++);
+            (*ppModuleList)->pModules[i].pszName = pResponse->GetVariableStr(dwId++);
+            (*ppModuleList)->pModules[i].pszExecutable = pResponse->GetVariableStr(dwId++);
+            (*ppModuleList)->pModules[i].dwFlags = pResponse->GetVariableLong(dwId++);
+            (*ppModuleList)->pModules[i].pszDescription = pResponse->GetVariableStr(dwId++);
+            (*ppModuleList)->pModules[i].pszLicenseKey = pResponse->GetVariableStr(dwId++);
+         }
       }
       delete pResponse;
    }
