@@ -145,7 +145,7 @@ BOOL EPRule::MatchSource(DWORD dwObjectId)
             }
          }
    }
-   return bMatch;
+   return (m_dwFlags & RF_NEGATED_SOURCE) ? !bMatch : bMatch;
 }
 
 
@@ -178,7 +178,7 @@ BOOL EPRule::MatchEvent(DWORD dwEventCode)
             }
          }
    }
-   return bMatch;
+   return (m_dwFlags & RF_NEGATED_EVENTS) ? !bMatch : bMatch;
 }
 
 

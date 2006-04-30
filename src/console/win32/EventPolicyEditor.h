@@ -82,6 +82,7 @@ protected:
 	afx_msg void OnPolicyEdit();
 	afx_msg void OnPolicySave();
 	afx_msg void OnUpdatePolicySave(CCmdUI* pCmdUI);
+	afx_msg void OnPolicyNegatecell();
 	//}}AFX_MSG
    afx_msg void OnRuleListDblClk(LPNMHDR pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()

@@ -82,6 +82,7 @@ BEGIN_MESSAGE_MAP(CEventPolicyEditor, CMDIChildWnd)
 	ON_COMMAND(ID_POLICY_EDIT, OnPolicyEdit)
 	ON_COMMAND(ID_POLICY_SAVE, OnPolicySave)
 	ON_UPDATE_COMMAND_UI(ID_POLICY_SAVE, OnUpdatePolicySave)
+	ON_COMMAND(ID_POLICY_NEGATECELL, OnPolicyNegatecell)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NM_DBLCLK, ID_RULE_LIST, OnRuleListDblClk)
 END_MESSAGE_MAP()
@@ -342,6 +343,7 @@ void CEventPolicyEditor::UpdateRow(int iRow)
                                   GetObjectImageIndex(pObject));
       }
    }
+   m_wndRuleList.SetNegationFlag(iRow, COL_SOURCE, (m_pEventPolicy->pRuleList[iRow].dwFlags & RF_NEGATED_SOURCE) ? TRUE : FALSE);
    
    // Event list
    m_wndRuleList.ClearCell(iRow, COL_EVENT);
@@ -356,6 +358,7 @@ void CEventPolicyEditor::UpdateRow(int iRow)
              (char *)NXCGetEventName(g_hSession, m_pEventPolicy->pRuleList[iRow].pdwEventList[i]),
              m_iImageSeverityBase + NXCGetEventSeverity(g_hSession, m_pEventPolicy->pRuleList[iRow].pdwEventList[i]));
    }
+   m_wndRuleList.SetNegationFlag(iRow, COL_EVENT, (m_pEventPolicy->pRuleList[iRow].dwFlags & RF_NEGATED_EVENTS) ? TRUE : FALSE);
 
    // Severity
    m_wndRuleList.ClearCell(iRow, COL_SEVERITY);
@@ -544,11 +547,29 @@ void CEventPolicyEditor::OnUpdatePolicyInsertruleAbove(CCmdUI* pCmdUI)
 
 void CEventPolicyEditor::OnUpdatePolicyNegatecell(CCmdUI* pCmdUI) 
 {
-   int iColumn;
+   int nRow, nCol;
 
    // Negation available only for source, event and severity columns
-   iColumn = m_wndRuleList.GetCurrentColumn();
-   pCmdUI->Enable((iColumn >= COL_SOURCE) && (iColumn <= COL_SEVERITY));
+   nCol = m_wndRuleList.GetCurrentColumn();
+   if ((nCol == COL_SOURCE) || (nCol == COL_EVENT))
+   {
+      nRow = m_wndRuleList.GetCurrentRow();
+      pCmdUI->Enable(TRUE);
+      if ((nRow >= 0) && (nRow < (int)m_pEventPolicy->dwNumRules))
+      {
+         pCmdUI->SetCheck((m_pEventPolicy->pRuleList[nRow].dwFlags & 
+            ((nCol == COL_SOURCE) ? RF_NEGATED_SOURCE : RF_NEGATED_EVENTS)) ? TRUE : FALSE);
+      }
+      else
+      {
+         pCmdUI->SetCheck(FALSE);
+      }
+   }
+   else
+   {
+      pCmdUI->Enable(FALSE);
+      pCmdUI->SetCheck(FALSE);
+   }
 }
 
 void CEventPolicyEditor::OnUpdatePolicyDisablerule(CCmdUI* pCmdUI) 
@@ -977,4 +998,47 @@ void CEventPolicyEditor::OnPolicySave()
 void CEventPolicyEditor::OnRuleListDblClk(LPNMHDR pNMHDR, LRESULT *pResult)
 {
    PostMessage(WM_COMMAND, ID_POLICY_EDIT, 0);
+}
+
+
+//
+// WM_COMMAND::ID_POLICY_NEGATECELL message handler
+//
+
+void CEventPolicyEditor::OnPolicyNegatecell() 
+{
+   int nRow;
+
+   nRow = m_wndRuleList.GetCurrentRow();
+   switch(m_wndRuleList.GetCurrentColumn())
+   {
+      case COL_SOURCE:
+         if (m_pEventPolicy->pRuleList[nRow].dwFlags & RF_NEGATED_SOURCE)
+         {
+            m_pEventPolicy->pRuleList[nRow].dwFlags &= ~RF_NEGATED_SOURCE;
+            m_wndRuleList.SetNegationFlag(nRow, COL_SOURCE, FALSE);
+         }
+         else
+         {
+            m_pEventPolicy->pRuleList[nRow].dwFlags |= RF_NEGATED_SOURCE;
+            m_wndRuleList.SetNegationFlag(nRow, COL_SOURCE, TRUE);
+         }
+         Modify();
+         break;
+      case COL_EVENT:
+         if (m_pEventPolicy->pRuleList[nRow].dwFlags & RF_NEGATED_EVENTS)
+         {
+            m_pEventPolicy->pRuleList[nRow].dwFlags &= ~RF_NEGATED_EVENTS;
+            m_wndRuleList.SetNegationFlag(nRow, COL_EVENT, FALSE);
+         }
+         else
+         {
+            m_pEventPolicy->pRuleList[nRow].dwFlags |= RF_NEGATED_EVENTS;
+            m_wndRuleList.SetNegationFlag(nRow, COL_EVENT, TRUE);
+         }
+         Modify();
+         break;
+      default:
+         break;
+   }
 }

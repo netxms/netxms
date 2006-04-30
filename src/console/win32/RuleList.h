@@ -50,6 +50,7 @@ public:
    BYTE *m_pSelectFlags;
    BOOL m_bHasImages;
    BOOL m_bSelectable;
+   BOOL m_bNegate;
    char *m_pszText;    // Text for CF_TEXTBOX cells
 
    RL_Cell();
@@ -147,6 +148,7 @@ private:
 	int m_iCurrColumn;
 	int m_iCurrRow;
 	CImageList *m_pImageList;
+   CImageList m_imgListInternal;
 	int m_iYOrg;
 	int m_iXOrg;
 	int m_iEdgeCX;
@@ -171,6 +173,7 @@ private:
    RL_Row **m_ppRowList;
 
 public:
+	void SetNegationFlag(int nRow, int nCol, BOOL bNegate);
 	void SetCellText(int iRow, int iColumn, char *pszText);
 	BOOL DeleteRow(int iRow);
 	BOOL EnableCellSelection(int iRow, int iCell, BOOL bEnable);

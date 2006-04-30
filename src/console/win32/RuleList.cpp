@@ -100,6 +100,7 @@ RL_Cell::RL_Cell()
    m_pSelectFlags = NULL;
    m_bHasImages = FALSE;
    m_bSelectable = TRUE;
+   m_bNegate = FALSE;
    m_pszText = NULL;
 }
 
@@ -351,6 +352,10 @@ int CRuleList::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_iTextHeight = max(pDC->GetTextExtent("gqhXQ|", 6).cy, ITEM_IMAGE_SIZE);
    ReleaseDC(pDC);
 
+   // Create internal images (for negated cells, etc.)
+   m_imgListInternal.Create(16, 16, ILC_COLOR24 | ILC_MASK, 4, 1);
+   m_imgListInternal.Add(theApp.LoadIcon(IDI_NACK));
+
    // Create header
    GetClientRect(&rect);
    rect.bottom = RULE_HEADER_HEIGHT;
@@ -470,6 +475,9 @@ void CRuleList::OnPaint()
                   if (m_ppRowList[i]->m_ppCellList[j]->m_piImageList[iLine] != -1)
                      m_pImageList->Draw(&dc, m_ppRowList[i]->m_ppCellList[j]->m_piImageList[iLine],
                                         CPoint(rcText.left - ITEM_IMAGE_SIZE, rcText.top), ILD_TRANSPARENT);
+                  if (m_ppRowList[i]->m_ppCellList[j]->m_bNegate)
+                     m_imgListInternal.Draw(&dc, 0, CPoint(rcText.left - ITEM_IMAGE_SIZE, rcText.top), ILD_TRANSPARENT);
+                     
                   dc.DrawText(m_ppRowList[i]->m_ppCellList[j]->m_pszTextList[iLine],
                               strlen(m_ppRowList[i]->m_ppCellList[j]->m_pszTextList[iLine]),
                               &rcText, DT_SINGLELINE | DT_VCENTER | 
@@ -1376,4 +1384,19 @@ void CRuleList::OnLButtonDblClk(UINT nFlags, CPoint point)
    nmhdr.code = NM_DBLCLK;
    GetParent()->SendMessage(WM_NOTIFY, GetDlgCtrlID(), (LPARAM)&nmhdr);
 	CWnd::OnLButtonDblClk(nFlags, point);
+}
+
+
+//
+// Set cell's negation flag
+//
+
+void CRuleList::SetNegationFlag(int nRow, int nCol, BOOL bNegate)
+{
+   if ((nRow >= 0) && (nRow < m_iNumRows) &&
+       (nCol >= 0) && (nCol < m_iNumColumns))
+   {
+      m_ppRowList[nRow]->m_ppCellList[nCol]->m_bNegate = bNegate;
+      InvalidateRow(nRow);
+   }
 }
