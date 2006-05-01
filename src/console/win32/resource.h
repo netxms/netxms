@@ -694,6 +694,7 @@
 #define ID_MAP_SETBACKGROUND            33008
 #define ID_MAP_PARENT                   33009
 #define ID_CONTROLPANEL_MODULES         33010
+#define ID_ACCEL33011                   33011
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -704,7 +705,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        319
-#define _APS_NEXT_COMMAND_VALUE         33011
+#define _APS_NEXT_COMMAND_VALUE         33012
 #define _APS_NEXT_CONTROL_VALUE         1350
 #define _APS_NEXT_SYMED_VALUE           127
 #endif

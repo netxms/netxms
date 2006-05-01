@@ -300,6 +300,8 @@ BEGIN_MESSAGE_MAP(CRuleList, CWnd)
 	ON_WM_MOUSEWHEEL()
 	ON_WM_RBUTTONDOWN()
 	ON_WM_LBUTTONDBLCLK()
+	ON_WM_KEYDOWN()
+	ON_WM_CONTEXTMENU()
 	//}}AFX_MSG_MAP
    ON_NOTIFY(HDN_BEGINTRACK, ID_HEADER_CTRL, OnHeaderBeginTrack)
    ON_NOTIFY(HDN_TRACK, ID_HEADER_CTRL, OnHeaderTrack)
@@ -380,7 +382,7 @@ void CRuleList::OnPaint()
    int i, j, iLine;
    CFont *pOldFont;
    CBrush brTitle, brActive, brNormal, brDisabled, brEmpty, *pOldBrush;
-   CPen pen, *pOldPen;
+   CPen penCross, penActive, *pOldPen;
    COLORREF rgbTextColor, rgbBkColor;
 
 	CPaintDC dc(this); // device context for painting
@@ -391,7 +393,8 @@ void CRuleList::OnPaint()
    brNormal.CreateSolidBrush(m_rgbNormalBkColor);
    brDisabled.CreateSolidBrush(m_rgbDisabledBkColor);
    brEmpty.CreateSolidBrush(m_rgbEmptyBkColor);
-   pen.CreatePen(PS_SOLID, 2, m_rgbCrossColor);
+   penCross.CreatePen(PS_SOLID, 2, m_rgbCrossColor);
+   penActive.CreatePen(PS_DOT, 0, m_rgbTextColor);
 
    // Setup DC
    dc.SetWindowOrg(m_iXOrg, m_iYOrg);
@@ -498,12 +501,21 @@ void CRuleList::OnPaint()
             if ((m_ppRowList[i]->m_dwFlags & RLF_DISABLED) && 
                 (m_pColList[j].m_dwFlags & CF_TITLE_COLOR))
             {
-               pOldPen = dc.SelectObject(&pen);
+               pOldPen = dc.SelectObject(&penCross);
                dc.MoveTo(rect.left + 2, rect.top + 2);
                dc.LineTo(rect.right - 2, rect.bottom - 2);
                dc.MoveTo(rect.right - 2, rect.top + 2);
                dc.LineTo(rect.left + 2, rect.bottom - 2);
                dc.SelectObject(pOldPen);
+            }
+
+            // Draw active cell border
+            if ((i == m_iCurrRow) && (j == m_iCurrColumn))
+            {
+               //pOldPen = dc.SelectObject(&penActive);
+               dc.DrawFocusRect(CRect(rect.left + 2, rect.top + 2,
+                                      rect.right - 2, rect.bottom - 2));
+               //dc.SelectObject(pOldPen);
             }
          }
       }
@@ -737,6 +749,20 @@ int CRuleList::GetColumnStartPos(int iColumn)
    for(i = 0, x = 0; i < iColumn; i++)
       x += m_pColList[i].m_iWidth;
    return x;
+}
+
+
+//
+// Get start Y position for row
+//
+
+int CRuleList::GetRowStartPos(int nRow)
+{
+   int i, y;
+
+   for(i = 0, y = RULE_HEADER_HEIGHT; i < nRow; i++)
+      y += this->m_ppRowList[i]->m_iHeight;
+   return y;
 }
 
 
@@ -1107,26 +1133,50 @@ void CRuleList::OnMouseButtonDown(UINT nFlags, CPoint point)
 
 void CRuleList::OnRButtonDown(UINT nFlags, CPoint point) 
 {
+   int nPrevCol = m_iCurrColumn;
+   int nPrevItem = m_iCurrItem;
+   BOOL bNewRow;
+
    OnMouseButtonDown(nFlags, point);
    if (m_iCurrRow != -1)
    {
-      if (!(m_ppRowList[m_iCurrRow]->m_dwFlags & RLF_SELECTED))
+      if (m_ppRowList[m_iCurrRow]->m_dwFlags & RLF_SELECTED)
+      {
+         bNewRow = FALSE;
+      }
+      else
       {
          // Right click on non-selected row
          ClearSelection(FALSE);
          m_ppRowList[m_iCurrRow]->m_dwFlags |= RLF_SELECTED;
+         bNewRow = TRUE;
+      }
 
-         // Select item
-         if (m_iCurrColumn != -1)
-         {
-            m_ppRowList[m_iCurrRow]->m_ppCellList[m_iCurrColumn]->ClearSelection();
-            if ((m_iCurrItem != -1) &&
-                (m_ppRowList[m_iCurrRow]->m_ppCellList[m_iCurrColumn]->m_bSelectable))
-               m_ppRowList[m_iCurrRow]->m_ppCellList[m_iCurrColumn]->m_pSelectFlags[m_iCurrItem] = 1;
-         }
+      // Select item
+      if ((m_iCurrColumn != -1) && 
+          (bNewRow || 
+           ((nPrevCol != m_iCurrColumn) || (nPrevItem != m_iCurrItem))))
+      {
+         m_ppRowList[m_iCurrRow]->m_ppCellList[m_iCurrColumn]->ClearSelection();
+         if ((m_iCurrItem != -1) &&
+             (m_ppRowList[m_iCurrRow]->m_ppCellList[m_iCurrColumn]->m_bSelectable))
+            m_ppRowList[m_iCurrRow]->m_ppCellList[m_iCurrColumn]->m_pSelectFlags[m_iCurrItem] = 1;
+      }
          
+      if (bNewRow)
+      {
          InvalidateList();
       }
+      else
+      {
+         if ((nPrevCol != m_iCurrColumn) ||
+             (nPrevItem != m_iCurrItem))
+            InvalidateRow(m_iCurrRow);
+      }
+   }
+   else
+   {
+      ClearSelection();
    }
 	CWnd::OnRButtonDown(nFlags, point);
 }
@@ -1399,4 +1449,139 @@ void CRuleList::SetNegationFlag(int nRow, int nCol, BOOL bNegate)
       m_ppRowList[nRow]->m_ppCellList[nCol]->m_bNegate = bNegate;
       InvalidateRow(nRow);
    }
+}
+
+
+//
+// Get number of selected rows
+//
+
+int CRuleList::GetSelectionCount()
+{
+   int i, nCount;
+
+   for(i = 0, nCount = 0; i < m_iNumRows; i++)
+      if (m_ppRowList[i]->m_dwFlags & RLF_SELECTED)
+         nCount++;
+   return nCount;
+}
+
+
+//
+// WM_KEYDOWN message handler
+//
+
+void CRuleList::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) 
+{
+   switch(nChar)
+   {
+      case VK_LEFT:
+         if (m_iCurrRow != -1)
+            if (m_iCurrColumn > 0)
+            {
+               m_ppRowList[m_iCurrRow]->m_ppCellList[m_iCurrColumn]->ClearSelection();
+               m_iCurrColumn--;
+               m_iCurrItem = -1;
+               InvalidateRow(m_iCurrRow);
+            }
+         break;
+      case VK_RIGHT:
+         if (m_iCurrRow != -1)
+            if (m_iCurrColumn < m_iNumColumns - 1)
+            {
+               if (m_iCurrColumn != -1)
+                  m_ppRowList[m_iCurrRow]->m_ppCellList[m_iCurrColumn]->ClearSelection();
+               m_iCurrColumn++;
+               m_iCurrItem = -1;
+               InvalidateRow(m_iCurrRow);
+            }
+         break;
+      case VK_UP:
+         if (m_iCurrRow > 0)
+         {
+            if (m_iCurrColumn != -1)
+               m_ppRowList[m_iCurrRow]->m_ppCellList[m_iCurrColumn]->ClearSelection();
+            m_iCurrRow--;
+            m_iCurrItem = -1;
+            if (GetSelectionCount() > 1)
+            {
+               ClearSelection(FALSE);
+               m_ppRowList[m_iCurrRow]->m_dwFlags |= RLF_SELECTED;
+               InvalidateList();
+            }
+            else
+            {
+               m_ppRowList[m_iCurrRow + 1]->m_dwFlags &= ~RLF_SELECTED;
+               m_ppRowList[m_iCurrRow]->m_dwFlags |= RLF_SELECTED;
+               InvalidateRow(m_iCurrRow);
+               InvalidateRow(m_iCurrRow + 1);
+            }
+         }
+         else if (m_iCurrRow == -1)
+         {
+            m_iCurrRow = 0;
+            m_iCurrColumn = 0;
+            m_iCurrItem = -1;
+            m_ppRowList[m_iCurrRow]->m_dwFlags |= RLF_SELECTED;
+            InvalidateRow(m_iCurrRow);
+         }
+         break;
+      case VK_DOWN:
+         if ((m_iCurrRow < m_iNumRows - 1) && (m_iCurrRow != -1))
+         {
+            if (m_iCurrColumn != -1)
+               m_ppRowList[m_iCurrRow]->m_ppCellList[m_iCurrColumn]->ClearSelection();
+            m_iCurrRow++;
+            m_iCurrItem = -1;
+            if (GetSelectionCount() > 1)
+            {
+               ClearSelection(FALSE);
+               m_ppRowList[m_iCurrRow]->m_dwFlags |= RLF_SELECTED;
+               InvalidateList();
+            }
+            else
+            {
+               m_ppRowList[m_iCurrRow - 1]->m_dwFlags &= ~RLF_SELECTED;
+               m_ppRowList[m_iCurrRow]->m_dwFlags |= RLF_SELECTED;
+               InvalidateRow(m_iCurrRow);
+               InvalidateRow(m_iCurrRow - 1);
+            }
+         }
+         else if (m_iCurrRow == -1)
+         {
+            m_iCurrRow = 0;
+            m_iCurrColumn = 0;
+            m_iCurrItem = -1;
+            m_ppRowList[m_iCurrRow]->m_dwFlags |= RLF_SELECTED;
+            InvalidateRow(m_iCurrRow);
+         }
+         break;
+      default:
+      	CWnd::OnKeyDown(nChar, nRepCnt, nFlags);
+         break;
+   }
+}
+
+void CRuleList::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   // If WM_CONTEXTMENU comes from child window, this means
+   // that mouse located outside rule list, so selection should
+   // be cleared
+   if (pWnd->m_hWnd != m_hWnd)
+   {
+      m_iCurrRow = -1;
+      m_iCurrColumn = -1;
+      m_iCurrItem = -1;
+      ClearSelection();
+   }
+
+   // Translate coordinates if context menu was called from keyboard
+   if ((point.x == -1) && (point.y == -1))
+   {
+      point.x = (m_iCurrColumn != -1) ? GetColumnStartPos(m_iCurrColumn) - m_iXOrg : 0;
+      point.y = (m_iCurrRow != -1) ? GetRowStartPos(m_iCurrRow) - m_iYOrg : 0;
+      ClientToScreen(&point);
+   }
+
+   GetParent()->SendMessage(WM_CONTEXTMENU, (WPARAM)m_hWnd, MAKELPARAM(point.x, point.y));
 }
