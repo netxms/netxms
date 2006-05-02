@@ -35,6 +35,7 @@ EXTRA_DIST = \
 	DCITransformPage.cpp DCITransformPage.h \
 	DebugFrame.cpp DebugFrame.h \
 	DeploymentView.cpp DeploymentView.h \
+	DesktopManager.cpp DesktopManager.h \
 	draw.cpp \
 	EditActionDlg.cpp EditActionDlg.h \
 	EditBox.cpp EditBox.h \

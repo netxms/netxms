@@ -92,7 +92,7 @@ BOOL CSaveDesktopDlg::OnInitDialog()
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
 
    // Load list of existing desktop configurations
-   dwResult = DoRequestArg4(NXCEnumUserVariables, g_hSession,
+   dwResult = DoRequestArg5(NXCEnumUserVariables, g_hSession, (void *)CURRENT_USER,
                             _T("/Win32Console/Desktop/*/WindowCount"),
                             &dwNumVars, &ppVarList, _T("Loading desktop configuration list..."));
 	if (dwResult == RCC_SUCCESS)

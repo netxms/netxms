@@ -52,6 +52,7 @@
 #include "ViewEditor.h"
 #include "PackageMgr.h"
 #include "ModuleManager.h"
+#include "DesktopManager.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -102,6 +103,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_VIEW_SNMPTRAPLOG, OnViewSnmptraplog)
 	ON_COMMAND(ID_CONTROLPANEL_VIEWBUILDER, OnControlpanelViewbuilder)
 	ON_COMMAND(ID_CONTROLPANEL_MODULES, OnControlpanelModules)
+	ON_COMMAND(ID_DESKTOP_MANAGE, OnDesktopManage)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -2543,6 +2545,27 @@ void CConsoleApp::OnControlpanelModules()
    else
    {
 	   pFrame->CreateNewChild(RUNTIME_CLASS(CModuleManager), IDR_MODULE_MANAGER,
+                             m_hMDIMenu, m_hMDIAccel);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_DESKTOP_MANAGE
+//
+
+void CConsoleApp::OnDesktopManage() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_viewState[VIEW_DESKTOP_MANAGER].bActive)
+   {
+      m_viewState[VIEW_DESKTOP_MANAGER].pWnd->BringWindowToTop();
+   }
+   else
+   {
+	   pFrame->CreateNewChild(RUNTIME_CLASS(CDesktopManager), IDR_DESKTOP_MANAGER,
                              m_hMDIMenu, m_hMDIAccel);
    }
 }

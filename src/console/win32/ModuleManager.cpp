@@ -30,6 +30,8 @@ BEGIN_MESSAGE_MAP(CModuleManager, CMDIChildWnd)
 	ON_WM_CREATE()
 	ON_WM_DESTROY()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
+	ON_WM_SETFOCUS()
+	ON_WM_SIZE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -132,4 +134,26 @@ void CModuleManager::OnViewRefresh()
    {
       theApp.ErrorBox(dwResult, _T("Cannot load module list: %s"));
    }
+}
+
+
+//
+// WM_SETFOCUS message handler
+//
+
+void CModuleManager::OnSetFocus(CWnd* pOldWnd) 
+{
+	CMDIChildWnd::OnSetFocus(pOldWnd);
+   m_wndListCtrl.SetFocus();
+}
+
+
+//
+// WM_SIZE message handler
+//
+
+void CModuleManager::OnSize(UINT nType, int cx, int cy) 
+{
+	CMDIChildWnd::OnSize(nType, cx, cy);
+   m_wndListCtrl.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
 }

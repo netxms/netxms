@@ -328,25 +328,25 @@ static DWORD SaveDesktop(TCHAR *pszDesktopName, DWORD dwWindowCount, WINDOW_SAVE
    // Set window count
    _tcscpy(&szVar[dwLastChar], _T("WindowCount"));
    _stprintf(szBuffer, _T("%d"), dwWindowCount);
-   dwResult = NXCSetUserVariable(g_hSession, szVar, szBuffer);
+   dwResult = NXCSetUserVariable(g_hSession, CURRENT_USER, szVar, szBuffer);
 
    for(i = 0; (i < dwWindowCount) && (dwResult == RCC_SUCCESS); i++)
    {
       _stprintf(&szVar[dwLastChar], _T("wnd_%d/class"), i);
       _stprintf(szBuffer, _T("%d"), pWndSaveInfo[i].iWndClass);
-      dwResult = NXCSetUserVariable(g_hSession, szVar, szBuffer);
+      dwResult = NXCSetUserVariable(g_hSession, CURRENT_USER, szVar, szBuffer);
 
       if (dwResult == RCC_SUCCESS)
       {
          _stprintf(&szVar[dwLastChar], _T("wnd_%d/props"), i);
-         dwResult = NXCSetUserVariable(g_hSession, szVar, pWndSaveInfo[i].szParameters);
+         dwResult = NXCSetUserVariable(g_hSession, CURRENT_USER, szVar, pWndSaveInfo[i].szParameters);
       }
 
       if (dwResult == RCC_SUCCESS)
       {
          _stprintf(&szVar[dwLastChar], _T("wnd_%d/placement"), i);
          BinToStr((BYTE *)&pWndSaveInfo[i].placement, sizeof(WINDOWPLACEMENT), szBuffer);
-         dwResult = NXCSetUserVariable(g_hSession, szVar, szBuffer);
+         dwResult = NXCSetUserVariable(g_hSession, CURRENT_USER, szVar, szBuffer);
       }
    }
 
@@ -451,7 +451,7 @@ static DWORD LoadDesktop(TCHAR *pszName, DWORD *pdwWindowCount, WINDOW_SAVE_INFO
 
    // Set window count
    _tcscpy(&szVar[dwLastChar], _T("WindowCount"));
-   dwResult = NXCGetUserVariable(g_hSession, szVar, szBuffer, 256);
+   dwResult = NXCGetUserVariable(g_hSession, CURRENT_USER, szVar, szBuffer, 256);
    if (dwResult == RCC_SUCCESS)
    {
       *pdwWindowCount = _tcstoul(szBuffer, 0, NULL);
@@ -460,20 +460,20 @@ static DWORD LoadDesktop(TCHAR *pszName, DWORD *pdwWindowCount, WINDOW_SAVE_INFO
       for(i = 0; i < *pdwWindowCount; i++)
       {
          _stprintf(&szVar[dwLastChar], _T("wnd_%d/class"), i);
-         dwResult = NXCGetUserVariable(g_hSession, szVar, szBuffer, 256);
+         dwResult = NXCGetUserVariable(g_hSession, CURRENT_USER, szVar, szBuffer, 256);
          if (dwResult == RCC_SUCCESS)
          {
             (*ppInfo)[i].iWndClass = _tcstol(szBuffer, 0, NULL);
 
             _stprintf(&szVar[dwLastChar], _T("wnd_%d/placement"), i);
-            dwResult = NXCGetUserVariable(g_hSession, szVar, szBuffer, 256);
+            dwResult = NXCGetUserVariable(g_hSession, CURRENT_USER, szVar, szBuffer, 256);
          }
          if (dwResult == RCC_SUCCESS)
          {
             StrToBin(szBuffer, (BYTE *)&(*ppInfo)[i].placement, sizeof(WINDOWPLACEMENT));
 
             _stprintf(&szVar[dwLastChar], _T("wnd_%d/props"), i);
-            dwResult = NXCGetUserVariable(g_hSession, szVar,
+            dwResult = NXCGetUserVariable(g_hSession, CURRENT_USER, szVar,
                                           (*ppInfo)[i].szParameters, MAX_WND_PARAM_LEN);
          }
       }

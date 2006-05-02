@@ -588,6 +588,8 @@ src/console/win32/DebugFrame.cpp -text
 src/console/win32/DebugFrame.h -text
 src/console/win32/DeploymentView.cpp -text
 src/console/win32/DeploymentView.h -text
+src/console/win32/DesktopManager.cpp -text
+src/console/win32/DesktopManager.h -text
 src/console/win32/EditActionDlg.cpp -text
 src/console/win32/EditActionDlg.h -text
 src/console/win32/EditBox.cpp -text

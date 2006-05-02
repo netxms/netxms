@@ -86,6 +86,7 @@ enum
    VIEW_SCRIPT_MANAGER,
    VIEW_BUILDER,
    VIEW_MODULE_MANAGER,
+   VIEW_DESKTOP_MANAGER,
    MAX_VIEW_ID
 };
 
@@ -221,6 +222,7 @@ public:
 	afx_msg void OnViewSnmptraplog();
 	afx_msg void OnControlpanelViewbuilder();
 	afx_msg void OnControlpanelModules();
+	afx_msg void OnDesktopManage();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

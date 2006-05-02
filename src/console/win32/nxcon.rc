@@ -188,6 +188,8 @@ BEGIN
         MENUITEM "&Save\tCtrl+Shift+F2",        ID_DESKTOP_SAVE
         MENUITEM "Save &as...",                 ID_DESKTOP_SAVEAS
         MENUITEM "&Restore...\tCtrl+Shift+F3",  ID_DESKTOP_RESTORE
+        MENUITEM SEPARATOR
+        MENUITEM "&Manage...",                  ID_DESKTOP_MANAGE
     END
     POPUP "&View"
     BEGIN
@@ -3016,6 +3018,7 @@ BEGIN
     IDR_VIEW_BUILDER        "\nView Builder\nView Builder"
     IDR_DCI_HISTORY_GRAPH   "\nHistory Graph\nHistory Graph"
     IDR_MODULE_MANAGER      "\nModule Manager\nModuleManager"
+    IDR_DESKTOP_MANAGER     "\nSaved Desktop Manager\nSaved Desktop Manager"
 END
 
 STRINGTABLE DISCARDABLE 

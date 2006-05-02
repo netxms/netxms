@@ -1,20 +1,20 @@
-#if !defined(AFX_MODULEMANAGER_H__B88D3066_4A71_422B_9552_5B936FA8A5A9__INCLUDED_)
-#define AFX_MODULEMANAGER_H__B88D3066_4A71_422B_9552_5B936FA8A5A9__INCLUDED_
+#if !defined(AFX_DESKTOPMANAGER_H__0E45DD9B_4C40_46C4_BDC4_3CB64E1832D5__INCLUDED_)
+#define AFX_DESKTOPMANAGER_H__0E45DD9B_4C40_46C4_BDC4_3CB64E1832D5__INCLUDED_
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
-// ModuleManager.h : header file
+// DesktopManager.h : header file
 //
 
 /////////////////////////////////////////////////////////////////////////////
-// CModuleManager frame
+// CDesktopManager frame
 
-class CModuleManager : public CMDIChildWnd
+class CDesktopManager : public CMDIChildWnd
 {
-	DECLARE_DYNCREATE(CModuleManager)
+	DECLARE_DYNCREATE(CDesktopManager)
 protected:
-	CModuleManager();           // protected constructor used by dynamic creation
+	CDesktopManager();           // protected constructor used by dynamic creation
 
 // Attributes
 public:
@@ -24,23 +24,24 @@ public:
 
 // Overrides
 	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CModuleManager)
+	//{{AFX_VIRTUAL(CDesktopManager)
 	protected:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	//}}AFX_VIRTUAL
 
 // Implementation
 protected:
-	CListCtrl m_wndListCtrl;
-	virtual ~CModuleManager();
+	CImageList m_imageList;
+	CTreeCtrl m_wndTreeCtrl;
+	virtual ~CDesktopManager();
 
 	// Generated message map functions
-	//{{AFX_MSG(CModuleManager)
+	//{{AFX_MSG(CDesktopManager)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
-	afx_msg void OnViewRefresh();
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
@@ -50,4 +51,4 @@ protected:
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
-#endif // !defined(AFX_MODULEMANAGER_H__B88D3066_4A71_422B_9552_5B936FA8A5A9__INCLUDED_)
+#endif // !defined(AFX_DESKTOPMANAGER_H__0E45DD9B_4C40_46C4_BDC4_3CB64E1832D5__INCLUDED_)
