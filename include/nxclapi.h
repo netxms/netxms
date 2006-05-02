@@ -73,6 +73,7 @@ typedef void * NXC_SESSION;
 #define MAX_RCPT_ADDR_LEN        256
 #define MAX_EMAIL_SUBJECT_LEN    256
 #define MAC_ADDR_LENGTH          6
+#define CURRENT_USER             ((DWORD)0xFFFFFFFF)
 
 
 //
@@ -1438,12 +1439,15 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateUser(NXC_SESSION hSession, TCHAR *pszName, BOO
 DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(NXC_SESSION hSession, DWORD dwId);
 DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_SESSION hSession, NXC_USER *pUserInfo);
 DWORD LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, DWORD dwUserId, TCHAR *pszNewPassword);
-DWORD LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, TCHAR *pszVarName,
-                                            TCHAR *pszValue, DWORD dwSize);
-DWORD LIBNXCL_EXPORTABLE NXCSetUserVariable(NXC_SESSION hSession, TCHAR *pszVarName, TCHAR *pszValue);
-DWORD LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, TCHAR *pszPattern,
-                                              DWORD *pdwNumVars, TCHAR ***pppszVarList);
-DWORD LIBNXCL_EXPORTABLE NXCDeleteUserVariable(NXC_SESSION hSession, TCHAR *pszVarName);
+DWORD LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, DWORD dwUserId,
+                                            TCHAR *pszVarName, TCHAR *pszValue, DWORD dwSize);
+DWORD LIBNXCL_EXPORTABLE NXCSetUserVariable(NXC_SESSION hSession, DWORD dwUserId,
+                                            TCHAR *pszVarName, TCHAR *pszValue);
+DWORD LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, DWORD dwUserId,
+                                              TCHAR *pszPattern, DWORD *pdwNumVars,
+                                              TCHAR ***pppszVarList);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteUserVariable(NXC_SESSION hSession, DWORD dwUserId,
+                                               TCHAR *pszVarName);
 DWORD LIBNXCL_EXPORTABLE NXCGetSessionList(NXC_SESSION hSession, DWORD *pdwNumSessions,
                                            NXC_CLIENT_SESSION_INFO **ppList);
 DWORD LIBNXCL_EXPORTABLE NXCKillSession(NXC_SESSION hSession, DWORD dwSessionId);

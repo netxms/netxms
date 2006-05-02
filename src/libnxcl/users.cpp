@@ -229,8 +229,8 @@ DWORD LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, DWORD dwUserId,
 // Get user variable
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, TCHAR *pszVarName,
-                                            TCHAR *pszValue, DWORD dwSize)
+DWORD LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, DWORD dwUserId,
+                                            TCHAR *pszVarName, TCHAR *pszValue, DWORD dwSize)
 {
    CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwResult;
@@ -240,6 +240,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, TCHAR *pszVarN
    msg.SetCode(CMD_GET_USER_VARIABLE);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_NAME, pszVarName);
+   if (dwUserId != CURRENT_USER)
+      msg.SetVariable(VID_USER_ID, dwUserId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
@@ -263,7 +265,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, TCHAR *pszVarN
 // Set user variable
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSetUserVariable(NXC_SESSION hSession, TCHAR *pszVarName, TCHAR *pszValue)
+DWORD LIBNXCL_EXPORTABLE NXCSetUserVariable(NXC_SESSION hSession, DWORD dwUserId,
+                                            TCHAR *pszVarName, TCHAR *pszValue)
 {
    CSCPMessage msg;
    DWORD dwRqId;
@@ -274,6 +277,8 @@ DWORD LIBNXCL_EXPORTABLE NXCSetUserVariable(NXC_SESSION hSession, TCHAR *pszVarN
    msg.SetId(dwRqId);
    msg.SetVariable(VID_NAME, pszVarName);
    msg.SetVariable(VID_VALUE, pszValue);
+   if (dwUserId != CURRENT_USER)
+      msg.SetVariable(VID_USER_ID, dwUserId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -284,7 +289,8 @@ DWORD LIBNXCL_EXPORTABLE NXCSetUserVariable(NXC_SESSION hSession, TCHAR *pszVarN
 // Delete user variable
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDeleteUserVariable(NXC_SESSION hSession, TCHAR *pszVarName)
+DWORD LIBNXCL_EXPORTABLE NXCDeleteUserVariable(NXC_SESSION hSession, DWORD dwUserId,
+                                               TCHAR *pszVarName)
 {
    CSCPMessage msg;
    DWORD dwRqId;
@@ -294,6 +300,8 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteUserVariable(NXC_SESSION hSession, TCHAR *pszV
    msg.SetCode(CMD_DELETE_USER_VARIABLE);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_NAME, pszVarName);
+   if (dwUserId != CURRENT_USER)
+      msg.SetVariable(VID_USER_ID, dwUserId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -304,8 +312,9 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteUserVariable(NXC_SESSION hSession, TCHAR *pszV
 // Enumerate user variables
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, TCHAR *pszPattern,
-                                              DWORD *pdwNumVars, TCHAR ***pppszVarList)
+DWORD LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, DWORD dwUserId,
+                                              TCHAR *pszPattern, DWORD *pdwNumVars,
+                                              TCHAR ***pppszVarList)
 {
    CSCPMessage msg, *pResponse;
    DWORD i, dwId, dwRqId, dwResult;
@@ -315,6 +324,8 @@ DWORD LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, TCHAR *pszPa
    msg.SetCode(CMD_ENUM_USER_VARIABLES);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_SEARCH_PATTERN, pszPattern);
+   if (dwUserId != CURRENT_USER)
+      msg.SetVariable(VID_USER_ID, dwUserId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);

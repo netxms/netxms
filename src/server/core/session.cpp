@@ -4555,38 +4555,47 @@ void ClientSession::GetUserVariable(CSCPMessage *pRequest)
    CSCPMessage msg;
    TCHAR szVarName[MAX_VARIABLE_NAME], szQuery[MAX_VARIABLE_NAME + 256];
    DB_RESULT hResult;
+   DWORD dwUserId;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   // Try to read variable from database
-   pRequest->GetVariableStr(VID_NAME, szVarName, MAX_VARIABLE_NAME);
-   _sntprintf(szQuery, MAX_VARIABLE_NAME + 256,
-              _T("SELECT var_value FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
-              m_dwUserId, szVarName);
-   hResult = DBSelect(g_hCoreDB, szQuery);
-   if (hResult != NULL)
+   dwUserId = pRequest->IsVariableExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
+   if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
-      if (DBGetNumRows(hResult) > 0)
+      // Try to read variable from database
+      pRequest->GetVariableStr(VID_NAME, szVarName, MAX_VARIABLE_NAME);
+      _sntprintf(szQuery, MAX_VARIABLE_NAME + 256,
+                 _T("SELECT var_value FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
+                 dwUserId, szVarName);
+      hResult = DBSelect(g_hCoreDB, szQuery);
+      if (hResult != NULL)
       {
-         TCHAR *pszData;
+         if (DBGetNumRows(hResult) > 0)
+         {
+            TCHAR *pszData;
 
-         pszData = _tcsdup(DBGetField(hResult, 0, 0));
-         DecodeSQLString(pszData);
-         msg.SetVariable(VID_RCC, RCC_SUCCESS);
-         msg.SetVariable(VID_VALUE, pszData);
-         free(pszData);
+            pszData = _tcsdup(DBGetField(hResult, 0, 0));
+            DecodeSQLString(pszData);
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            msg.SetVariable(VID_VALUE, pszData);
+            free(pszData);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_VARIABLE_NOT_FOUND);
+         }
+         DBFreeResult(hResult);
       }
       else
       {
-         msg.SetVariable(VID_RCC, RCC_VARIABLE_NOT_FOUND);
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
       }
-      DBFreeResult(hResult);
    }
    else
    {
-      msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    // Send response
@@ -4604,54 +4613,63 @@ void ClientSession::SetUserVariable(CSCPMessage *pRequest)
    TCHAR szVarName[MAX_VARIABLE_NAME], szQuery[8192], *pszValue, *pszRawValue;
    DB_RESULT hResult;
    BOOL bExist = FALSE;
+   DWORD dwUserId;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   // Check variable name
-   pRequest->GetVariableStr(VID_NAME, szVarName, MAX_VARIABLE_NAME);
-   if (IsValidObjectName(szVarName))
+   dwUserId = pRequest->IsVariableExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
+   if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
-      // Check if variable already exist in database
-      _sntprintf(szQuery, MAX_VARIABLE_NAME + 256,
-                 _T("SELECT var_value FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
-                 m_dwUserId, szVarName);
-      hResult = DBSelect(g_hCoreDB, szQuery);
-      if (hResult != NULL)
+      // Check variable name
+      pRequest->GetVariableStr(VID_NAME, szVarName, MAX_VARIABLE_NAME);
+      if (IsValidObjectName(szVarName))
       {
-         if (DBGetNumRows(hResult) > 0)
+         // Check if variable already exist in database
+         _sntprintf(szQuery, MAX_VARIABLE_NAME + 256,
+                    _T("SELECT var_value FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
+                    dwUserId, szVarName);
+         hResult = DBSelect(g_hCoreDB, szQuery);
+         if (hResult != NULL)
          {
-            bExist = TRUE;
+            if (DBGetNumRows(hResult) > 0)
+            {
+               bExist = TRUE;
+            }
+            DBFreeResult(hResult);
          }
-         DBFreeResult(hResult);
-      }
 
-      // Update value in database
-      pszRawValue = pRequest->GetVariableStr(VID_VALUE);
-      pszValue = EncodeSQLString(pszRawValue);
-      free(pszRawValue);
-      if (bExist)
-         _sntprintf(szQuery, 8192,
-                    _T("UPDATE user_profiles SET var_value='%s' WHERE user_id=%d AND var_name='%s'"),
-                    pszValue, m_dwUserId, szVarName);
-      else
-         _sntprintf(szQuery, 8192,
-                    _T("INSERT INTO user_profiles (user_id,var_name,var_value) VALUES (%d,'%s','%s')"),
-                    m_dwUserId, szVarName, pszValue);
-      free(pszValue);
-      if (DBQuery(g_hCoreDB, szQuery))
-      {
-         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         // Update value in database
+         pszRawValue = pRequest->GetVariableStr(VID_VALUE);
+         pszValue = EncodeSQLString(pszRawValue);
+         free(pszRawValue);
+         if (bExist)
+            _sntprintf(szQuery, 8192,
+                       _T("UPDATE user_profiles SET var_value='%s' WHERE user_id=%d AND var_name='%s'"),
+                       pszValue, dwUserId, szVarName);
+         else
+            _sntprintf(szQuery, 8192,
+                       _T("INSERT INTO user_profiles (user_id,var_name,var_value) VALUES (%d,'%s','%s')"),
+                       dwUserId, szVarName, pszValue);
+         free(pszValue);
+         if (DBQuery(g_hCoreDB, szQuery))
+         {
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+         }
       }
       else
       {
-         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+         msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
       }
    }
    else
    {
-      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    // Send response
@@ -4667,35 +4685,43 @@ void ClientSession::EnumUserVariables(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR *pszName, szPattern[MAX_VARIABLE_NAME], szQuery[256];
-   DWORD i, dwNumRows, dwNumVars, dwId;
+   DWORD i, dwNumRows, dwNumVars, dwId, dwUserId;
    DB_RESULT hResult;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   pRequest->GetVariableStr(VID_SEARCH_PATTERN, szPattern, MAX_VARIABLE_NAME);
-   _sntprintf(szQuery, 256, _T("SELECT var_name FROM user_profiles WHERE user_id=%d"), m_dwUserId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
-   if (hResult != NULL)
+   dwUserId = pRequest->IsVariableExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
+   if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0, dwNumVars = 0, dwId = VID_VARLIST_BASE; i < dwNumRows; i++)
+      pRequest->GetVariableStr(VID_SEARCH_PATTERN, szPattern, MAX_VARIABLE_NAME);
+      _sntprintf(szQuery, 256, _T("SELECT var_name FROM user_profiles WHERE user_id=%d"), dwUserId);
+      hResult = DBSelect(g_hCoreDB, szQuery);
+      if (hResult != NULL)
       {
-         pszName = DBGetField(hResult, i, 0);
-         if (MatchString(szPattern, pszName, FALSE))
+         dwNumRows = DBGetNumRows(hResult);
+         for(i = 0, dwNumVars = 0, dwId = VID_VARLIST_BASE; i < dwNumRows; i++)
          {
-            dwNumVars++;
-            msg.SetVariable(dwId++, pszName);
+            pszName = DBGetField(hResult, i, 0);
+            if (MatchString(szPattern, pszName, FALSE))
+            {
+               dwNumVars++;
+               msg.SetVariable(dwId++, pszName);
+            }
          }
+         msg.SetVariable(VID_NUM_VARIABLES, dwNumVars);
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         DBFreeResult(hResult);
       }
-      msg.SetVariable(VID_NUM_VARIABLES, dwNumVars);
-      msg.SetVariable(VID_RCC, RCC_SUCCESS);
-      DBFreeResult(hResult);
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
    }
    else
    {
-      msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    // Send response
@@ -4711,23 +4737,32 @@ void ClientSession::DeleteUserVariable(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szVarName[MAX_VARIABLE_NAME], szQuery[MAX_VARIABLE_NAME + 256];
+   DWORD dwUserId;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   // Try to read variable from database
-   pRequest->GetVariableStr(VID_NAME, szVarName, MAX_VARIABLE_NAME);
-   _sntprintf(szQuery, MAX_VARIABLE_NAME + 256,
-              _T("DELETE FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
-              m_dwUserId, szVarName);
-   if (DBQuery(g_hCoreDB, szQuery))
+   dwUserId = pRequest->IsVariableExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
+   if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
-      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      // Try to read variable from database
+      pRequest->GetVariableStr(VID_NAME, szVarName, MAX_VARIABLE_NAME);
+      _sntprintf(szQuery, MAX_VARIABLE_NAME + 256,
+                 _T("DELETE FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
+                 dwUserId, szVarName);
+      if (DBQuery(g_hCoreDB, szQuery))
+      {
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
    }
    else
    {
-      msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    // Send response
