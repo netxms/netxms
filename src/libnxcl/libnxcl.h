@@ -118,7 +118,10 @@ private:
    DWORD m_dwReceiverBufferSize;
    NXC_DCI_LIST *m_pItemList;
    THREAD m_hRecvThread;
-   void *m_pClientData;      // Client-defined data
+   void *m_pClientData;       // Client-defined data
+
+   DWORD m_dwUserId;          // Id of logged-in user
+   DWORD m_dwSystemAccess;    // System access rights for current user
 
    int m_hCurrFile;
    DWORD m_dwFileRqId;
@@ -220,6 +223,10 @@ public:
 
    void SetClientData(void *pData) { m_pClientData = pData; }
    void *GetClientData(void) { return m_pClientData; }
+
+   void ParseLoginMessage(CSCPMessage *pMsg);
+   DWORD GetCurrentUserId(void) { return m_dwUserId; }
+   DWORD GetCurrentSystemAccess(void) { return m_dwSystemAccess; }
 };
 
 inline void NXCL_Session::CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)

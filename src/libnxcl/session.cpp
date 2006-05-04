@@ -943,3 +943,14 @@ DWORD NXCL_Session::SimpleCommand(WORD wCmd)
 
    return WaitForRCC(dwRqId);
 }
+
+
+//
+// Parse login response message
+//
+
+void NXCL_Session::ParseLoginMessage(CSCPMessage *pMsg)
+{
+   m_dwUserId = pMsg->GetVariableLong(VID_USER_ID);
+   m_dwSystemAccess = pMsg->GetVariableLong(VID_USER_SYS_RIGHTS);
+}

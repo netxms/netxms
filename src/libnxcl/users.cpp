@@ -286,6 +286,32 @@ DWORD LIBNXCL_EXPORTABLE NXCSetUserVariable(NXC_SESSION hSession, DWORD dwUserId
 
 
 //
+// Copy or move user variable
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCCopyUserVariable(NXC_SESSION hSession, DWORD dwSrcUserId,
+                                             DWORD dwDstUserId, TCHAR *pszVarName,
+                                             BOOL bMove)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_COPY_USER_VARIABLE);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_NAME, pszVarName);
+   if (dwSrcUserId != CURRENT_USER)
+      msg.SetVariable(VID_USER_ID, dwSrcUserId);
+   msg.SetVariable(VID_DST_USER_ID, dwDstUserId);
+   msg.SetVariable(VID_MOVE_FLAG, (WORD)bMove);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
 // Delete user variable
 //
 
@@ -424,4 +450,24 @@ DWORD LIBNXCL_EXPORTABLE NXCKillSession(NXC_SESSION hSession, DWORD dwSessionId)
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
+// Get Id of currently logged in user
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetCurrentUserId(NXC_SESSION hSession)
+{
+   return ((NXCL_Session *)hSession)->GetCurrentUserId();
+}
+
+
+//
+// Get system access rights of currently logged in user
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetCurrentSystemAccess(NXC_SESSION hSession)
+{
+   return ((NXCL_Session *)hSession)->GetCurrentSystemAccess();
 }

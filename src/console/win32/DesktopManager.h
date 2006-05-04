@@ -18,6 +18,7 @@ protected:
 
 // Attributes
 public:
+	BOOL m_bEnableCopy;
 
 // Operations
 public:
@@ -31,6 +32,9 @@ public:
 
 // Implementation
 protected:
+	void MoveOrCopyDesktop(BOOL bMove);
+	TCHAR m_szCurrConf[MAX_DB_STRING];
+	DWORD m_dwCurrUser;
 	CImageList m_imageList;
 	CTreeCtrl m_wndTreeCtrl;
 	virtual ~CDesktopManager();
@@ -42,7 +46,15 @@ protected:
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnViewRefresh();
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnDesktopDelete();
+	afx_msg void OnUpdateDesktopDelete(CCmdUI* pCmdUI);
+	afx_msg void OnDesktopMove();
+	afx_msg void OnUpdateDesktopMove(CCmdUI* pCmdUI);
+	afx_msg void OnDesktopCopy();
+	afx_msg void OnUpdateDesktopCopy(CCmdUI* pCmdUI);
 	//}}AFX_MSG
+   afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 

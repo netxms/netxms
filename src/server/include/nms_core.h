@@ -442,6 +442,7 @@ private:
    void SendParametersList(CSCPMessage *pRequest);
    void GetUserVariable(CSCPMessage *pRequest);
    void SetUserVariable(CSCPMessage *pRequest);
+   void CopyUserVariable(CSCPMessage *pRequest);
    void EnumUserVariables(CSCPMessage *pRequest);
    void DeleteUserVariable(CSCPMessage *pRequest);
    void ChangeObjectIP(CSCPMessage *pRequest);

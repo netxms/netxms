@@ -536,7 +536,7 @@ void CScriptManager::OnContextMenu(CWnd* pWnd, CPoint point)
       CPoint pt;
 
       pt = point;
-      m_wndListCtrl.ScreenToClient(&pt);
+      m_wndTreeCtrl.ScreenToClient(&pt);
 
       hItem = m_wndTreeCtrl.HitTest(pt, &uFlags);
       if ((hItem != NULL) && (uFlags & TVHT_ONITEM))

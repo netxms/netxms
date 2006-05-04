@@ -841,6 +841,12 @@ BEGIN
             MENUITEM "View as &tree",               ID_SCRIPT_VIEWASTREE
         END
     END
+    POPUP "Desktop"
+    BEGIN
+        MENUITEM "&Copy...",                    ID_DESKTOP_COPY
+        MENUITEM "&Move...",                    ID_DESKTOP_MOVE
+        MENUITEM "&Delete",                     ID_DESKTOP_DELETE
+    END
 END
 
 

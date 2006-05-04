@@ -407,6 +407,7 @@ typedef struct
 #define CMD_GET_SUBMAP_BK_IMAGE     0x00AA
 #define CMD_GET_MODULE_LIST			0x00AB
 #define CMD_UPDATE_MODULE_INFO		0x00AC
+#define CMD_COPY_USER_VARIABLE      0x00AD
 
 
 //
@@ -631,6 +632,8 @@ typedef struct
 #define VID_MAP_ID                  ((DWORD)216)
 #define VID_NUM_MAPS                ((DWORD)217)
 #define VID_NUM_MODULES             ((DWORD)218)
+#define VID_DST_USER_ID             ((DWORD)219)
+#define VID_MOVE_FLAG               ((DWORD)220)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

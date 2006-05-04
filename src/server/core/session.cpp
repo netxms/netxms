@@ -843,6 +843,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_ENUM_USER_VARIABLES:
             EnumUserVariables(pMsg);
             break;
+         case CMD_COPY_USER_VARIABLE:
+            CopyUserVariable(pMsg);
+            break;
          case CMD_CHANGE_IP_ADDR:
             ChangeObjectIP(pMsg);
             break;
@@ -1059,6 +1062,8 @@ void ClientSession::Login(CSCPMessage *pRequest)
          m_dwFlags |= CSF_AUTHENTICATED;
          sprintf(m_szUserName, "%s@%s", szLogin, IpToStr(m_dwHostAddr, szBuffer));
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         msg.SetVariable(VID_USER_SYS_RIGHTS, m_dwSystemAccess);
+         msg.SetVariable(VID_USER_ID, m_dwUserId);
          DebugPrintf("User %s authenticated\n", m_szUserName);
       }
       else
@@ -4628,7 +4633,7 @@ void ClientSession::SetUserVariable(CSCPMessage *pRequest)
       {
          // Check if variable already exist in database
          _sntprintf(szQuery, MAX_VARIABLE_NAME + 256,
-                    _T("SELECT var_value FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
+                    _T("SELECT var_name FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
                     dwUserId, szVarName);
          hResult = DBSelect(g_hCoreDB, szQuery);
          if (hResult != NULL)
@@ -4730,7 +4735,7 @@ void ClientSession::EnumUserVariables(CSCPMessage *pRequest)
 
 
 //
-// Delete user variable
+// Delete user variable(s)
 //
 
 void ClientSession::DeleteUserVariable(CSCPMessage *pRequest)
@@ -4746,13 +4751,100 @@ void ClientSession::DeleteUserVariable(CSCPMessage *pRequest)
    dwUserId = pRequest->IsVariableExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
    if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
-      // Try to read variable from database
+      // Try to delete variable from database
       pRequest->GetVariableStr(VID_NAME, szVarName, MAX_VARIABLE_NAME);
+      TranslateStr(szVarName, _T("*"), _T("%"));
       _sntprintf(szQuery, MAX_VARIABLE_NAME + 256,
-                 _T("DELETE FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
+                 _T("DELETE FROM user_profiles WHERE user_id=%d AND var_name LIKE '%s'"),
                  dwUserId, szVarName);
       if (DBQuery(g_hCoreDB, szQuery))
       {
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send response
+   SendMessage(&msg);
+}
+
+
+//
+// Copy or move user variable(s) to another user
+//
+
+void ClientSession::CopyUserVariable(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR szVarName[MAX_VARIABLE_NAME], szQuery[8192], *pszCurrVar;
+   DWORD dwSrcUserId, dwDstUserId;
+   int i, nRows;
+   BOOL bMove, bExist;
+   DB_RESULT hResult, hResult2;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS)
+   {
+      dwSrcUserId = pRequest->IsVariableExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
+      dwDstUserId = pRequest->GetVariableLong(VID_DST_USER_ID);
+      bMove = (BOOL)pRequest->GetVariableShort(VID_MOVE_FLAG);
+      pRequest->GetVariableStr(VID_NAME, szVarName, MAX_VARIABLE_NAME);
+      TranslateStr(szVarName, _T("*"), _T("%"));
+      _sntprintf(szQuery, 8192,
+                 _T("SELECT var_name,var_value FROM user_profiles WHERE user_id=%d AND var_name LIKE '%s'"),
+                 dwSrcUserId, szVarName);
+      hResult = DBSelect(g_hCoreDB, szQuery);
+      if (hResult != NULL)
+      {
+         nRows = DBGetNumRows(hResult);
+         for(i = 0; i < nRows; i++)
+         {
+            pszCurrVar = DBGetField(hResult, i, 0);
+
+            // Check if variable already exist in database
+            _sntprintf(szQuery, 8192,
+                       _T("SELECT var_name FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
+                       dwDstUserId, pszCurrVar);
+            hResult2 = DBSelect(g_hCoreDB, szQuery);
+            if (hResult2 != NULL)
+            {
+               bExist = (DBGetNumRows(hResult2) > 0);
+               DBFreeResult(hResult2);
+            }
+            else
+            {
+               bExist = FALSE;
+            }
+            
+            if (bExist)
+               _sntprintf(szQuery, 8192,
+                          _T("UPDATE user_profiles SET var_value='%s' WHERE user_id=%d AND var_name='%s'"),
+                          DBGetField(hResult, i, 1), dwDstUserId, pszCurrVar);
+            else
+               _sntprintf(szQuery, 8192,
+                          _T("INSERT INTO user_profiles (user_id,var_name,var_value) VALUES (%d,'%s','%s')"),
+                          dwDstUserId, pszCurrVar, DBGetField(hResult, i, 1));
+            DBQuery(g_hCoreDB, szQuery);
+
+            if (bMove)
+            {
+               _sntprintf(szQuery, 8192,
+                          _T("DELETE FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
+                          dwSrcUserId, pszCurrVar);
+               DBQuery(g_hCoreDB, szQuery);
+            }
+         }
+         DBFreeResult(hResult);
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
       }
       else

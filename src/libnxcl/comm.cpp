@@ -365,6 +365,8 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
                            if (pResp != NULL)
                            {
                               dwRetCode = pResp->GetVariableLong(VID_RCC);
+                              if (dwRetCode == RCC_SUCCESS)
+                                 pSession->ParseLoginMessage(pResp);
                               delete pResp;
                            }
                            else

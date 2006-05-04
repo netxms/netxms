@@ -23,6 +23,7 @@ CUserSelectDlg::CUserSelectDlg(CWnd* pParent /*=NULL*/)
 	//}}AFX_DATA_INIT
 
    m_bOnlyUsers = FALSE;
+   m_bAddPublic = FALSE;
 }
 
 
@@ -75,6 +76,12 @@ BOOL CUserSelectDlg::OnInitDialog()
    m_wndListCtrl.SetImageList(pImageList, LVSIL_SMALL);
 
    // Fill in list view
+   if (m_bAddPublic)
+   {
+      iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, _T("[public]"), 2);
+      if (iItem != -1)
+         m_wndListCtrl.SetItemData(iItem, GROUP_EVERYONE);
+   }
    if (NXCGetUserDB(g_hSession, &pUserList, &dwNumUsers))
    {
       for(i = 0; i < dwNumUsers; i++)

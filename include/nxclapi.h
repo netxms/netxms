@@ -1443,6 +1443,9 @@ DWORD LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, DWORD dwUserId
                                             TCHAR *pszVarName, TCHAR *pszValue, DWORD dwSize);
 DWORD LIBNXCL_EXPORTABLE NXCSetUserVariable(NXC_SESSION hSession, DWORD dwUserId,
                                             TCHAR *pszVarName, TCHAR *pszValue);
+DWORD LIBNXCL_EXPORTABLE NXCCopyUserVariable(NXC_SESSION hSession, DWORD dwSrcUserId,
+                                             DWORD dwDstUserId, TCHAR *pszVarName,
+                                             BOOL bMove);
 DWORD LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, DWORD dwUserId,
                                               TCHAR *pszPattern, DWORD *pdwNumVars,
                                               TCHAR ***pppszVarList);
@@ -1451,6 +1454,8 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteUserVariable(NXC_SESSION hSession, DWORD dwUse
 DWORD LIBNXCL_EXPORTABLE NXCGetSessionList(NXC_SESSION hSession, DWORD *pdwNumSessions,
                                            NXC_CLIENT_SESSION_INFO **ppList);
 DWORD LIBNXCL_EXPORTABLE NXCKillSession(NXC_SESSION hSession, DWORD dwSessionId);
+DWORD LIBNXCL_EXPORTABLE NXCGetCurrentUserId(NXC_SESSION hSession);
+DWORD LIBNXCL_EXPORTABLE NXCGetCurrentSystemAccess(NXC_SESSION hSession);
 
 DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(NXC_SESSION hSession, DWORD dwNodeId, NXC_DCI_LIST **ppItemList);
 DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_SESSION hSession, NXC_DCI_LIST *pItemList);
