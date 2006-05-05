@@ -851,7 +851,12 @@ void DCItem::Transform(ItemValue &value, time_t nElapsedTime)
       }
       else
       {
-printf("SCRIPT ERROR: %s\n", m_pScript->GetErrorText());
+         TCHAR szBuffer[1024];
+
+         _sntprintf(szBuffer, 1024, _T("DCI::%s::%d"),
+                    (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
+         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), szBuffer,
+                   m_pScript->GetErrorText(), m_dwId);
       }
    }
 }

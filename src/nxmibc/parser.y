@@ -37,11 +37,22 @@
 
 #pragma warning(disable : 4102)
 
+#ifndef __STDC__
+#define __STDC__	1
+#endif
+
 #include <string.h>
 #include <time.h>
 #include "mibparse.h"
 #include "nxmibc.h"
 #include "nxsnmp.h"
+
+#define YYINCLUDED_STDLIB_H		1
+
+#ifdef _WIN32
+#define strdup _strdup
+#define stricmp _stricmp
+#endif
 
 #ifdef YYTEXT_POINTER
 extern char *mptext;

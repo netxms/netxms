@@ -265,6 +265,13 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
          bResult = (pScript->GetResult()->GetValueAsInt32() != 0) ? TRUE : FALSE;
          DbgPrintf(AF_DEBUG_DISCOVERY, "Filter script result: %d", bResult);
       }
+      else
+      {
+         DbgPrintf(AF_DEBUG_DISCOVERY, "Filter script execution error: %s",
+                   pScript->GetErrorText());
+         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), szFilter,
+                   pScript->GetErrorText(), 0);
+      }
    }
    else
    {

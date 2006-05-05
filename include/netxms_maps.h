@@ -53,8 +53,9 @@
 // Submap attributes
 //
 
+#define SUBMAP_ATTR_AUTOMATIC_LAYOUT      0x00000001
+#define SUBMAP_ATTR_HAS_BK_IMAGE          0x00000002
 #define SUBMAP_ATTR_LAYOUT_COMPLETED      0x00010000
-#define SUBMAP_ATTR_HAS_BK_IMAGE          0x00020000
 
 
 //
@@ -163,6 +164,9 @@ public:
 
    BOOL GetBkImageFlag(void) { return (m_dwAttr & SUBMAP_ATTR_HAS_BK_IMAGE) ? TRUE : FALSE; }
    void SetBkImageFlag(BOOL bFlag) { if (bFlag) m_dwAttr |= SUBMAP_ATTR_HAS_BK_IMAGE; else m_dwAttr &= ~SUBMAP_ATTR_HAS_BK_IMAGE; }
+
+   BOOL GetAutoLayoutFlag(void) { return (m_dwAttr & SUBMAP_ATTR_LAYOUT_COMPLETED) ? TRUE : FALSE; }
+   void SetAutoLayoutFlag(BOOL bFlag) { if (bFlag) m_dwAttr |= SUBMAP_ATTR_LAYOUT_COMPLETED; else m_dwAttr &= ~SUBMAP_ATTR_LAYOUT_COMPLETED; }
 };
 
 

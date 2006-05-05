@@ -47,7 +47,7 @@ protected:
 	BOOL m_bShowToolBar;
 	CImageList m_imageList;
 	CMapToolbox m_wndToolBox;
-	CToolBarCtrl m_wndToolBar;
+	CToolBar m_wndToolBar;
 	CMapView m_wndMapView;
 	virtual ~CMapFrame();
 
@@ -93,8 +93,10 @@ protected:
 	afx_msg void OnUpdateObjectUnmanage(CCmdUI* pCmdUI);
 	afx_msg void OnObjectBind();
 	afx_msg void OnUpdateObjectBind(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateMapSave(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnObjectChange(WPARAM wParam, NXC_OBJECT *pObject);
+   afx_msg void OnSubmapChange(WPARAM wParam, nxSubmap *pSubmap);
 	DECLARE_MESSAGE_MAP()
 };
 

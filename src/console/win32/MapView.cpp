@@ -49,6 +49,7 @@ CMapView::CMapView()
    m_dwHistoryPos = 0;
    m_dwHistorySize = 0;
    m_hBkImage = NULL;
+   m_bIsModified = FALSE;
 }
 
 CMapView::~CMapView()
@@ -405,6 +406,7 @@ void CMapView::SetMap(nxMap *pMap)
    delete m_pMap;
    m_pMap = pMap;
    OpenSubmap(m_pMap->ObjectId(), FALSE);
+   m_bIsModified = FALSE;
 }
 
 
@@ -493,6 +495,7 @@ void CMapView::DoSubmapLayout()
          m_pSubmap->DoLayout(pObject->dwNumChilds, pObject->pdwChildList,
                              0, NULL, rect.right, rect.bottom);
       }
+      m_bIsModified = TRUE;
    }
    else
    {
@@ -803,6 +806,7 @@ void CMapView::MoveSelectedObjects(int nOffsetX, int nOffsetY)
    m_ptMapSize = m_pSubmap->GetMinSize();
    ScalePosMapToScreen(&m_ptMapSize);
    Update();
+   m_bIsModified = TRUE;
 }
 
 
@@ -913,6 +917,9 @@ void CMapView::OpenSubmap(DWORD dwId, BOOL bAddToHistory)
       
       // Redraw everything
       Update();
+
+      // Notify parent
+      GetParent()->SendMessage(NXCM_SUBMAP_CHANGE, 0, (LPARAM)m_pSubmap);
    }
    else
    {
@@ -1357,6 +1364,13 @@ void CMapView::OnObjectChange(DWORD dwObjectId, NXC_OBJECT *pObject)
       // Check if object already presented on current submap
       if (m_pSubmap->GetObjectIndex(dwObjectId) == INVALID_INDEX)
       {
+         if (m_pSubmap->GetAutoLayoutFlag())
+         {
+            DoSubmapLayout();
+         }
+         else
+         {
+         }
       }
       Update();
    }
@@ -1413,6 +1427,7 @@ void CMapView::SetBkImage(HBITMAP hBitmap)
       m_hBkImage = hBitmap;
       m_pSubmap->SetBkImageFlag(hBitmap != NULL);
       Update();
+      m_bIsModified = TRUE;
    }
    else
    {

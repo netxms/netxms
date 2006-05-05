@@ -14,7 +14,8 @@ static char THIS_FILE[] = __FILE__;
 
 #define MAP_SECTION     _T("MapFrame")
 
-#define STATUS_PANE_SCALE  2
+#define STATUS_PANE_LAYOUT    1
+#define STATUS_PANE_SCALE     2
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -79,8 +80,10 @@ BEGIN_MESSAGE_MAP(CMapFrame, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_UNMANAGE, OnUpdateObjectUnmanage)
 	ON_COMMAND(ID_OBJECT_BIND, OnObjectBind)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_BIND, OnUpdateObjectBind)
+	ON_UPDATE_COMMAND_UI(ID_MAP_SAVE, OnUpdateMapSave)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
+   ON_MESSAGE(NXCM_SUBMAP_CHANGE, OnSubmapChange)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -140,9 +143,11 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(theApp.LoadIcon(IDI_GO_ROOT));
 
    // Create toolbar
-   m_wndToolBar.Create(WS_CHILD | (m_bShowToolBar ? WS_VISIBLE : 0) | CCS_NODIVIDER | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT, rect, this, ID_TOOLBAR_CTRL);
-   m_wndToolBar.SetImageList(&m_imageList);
-   m_wndToolBar.AddButtons(sizeof(tbButtons) / sizeof(TBBUTTON), tbButtons);
+   m_wndToolBar.CreateEx(this, CCS_NODIVIDER | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT,
+                         WS_CHILD | (m_bShowToolBar ? WS_VISIBLE : 0) | CBRS_ALIGN_TOP,
+                         CRect(0, 0, 0, 0), ID_TOOLBAR_CTRL);
+   m_wndToolBar.GetToolBarCtrl().SetImageList(&m_imageList);
+   m_wndToolBar.GetToolBarCtrl().AddButtons(sizeof(tbButtons) / sizeof(TBBUTTON), tbButtons);
 
    // Create status bar
    m_wndStatusBar.Create(WS_CHILD | (m_bShowStatusBar ? WS_VISIBLE : 0) | CCS_BOTTOM | SBARS_SIZEGRIP, rect, this, -1);
@@ -168,16 +173,14 @@ void CMapFrame::RedoLayout()
    m_wndStatusBar.SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOZORDER);
    m_wndStatusBar.GetClientRect(&rect);
    nShift = GetSystemMetrics(SM_CXVSCROLL);
-   int widths[3] = { rect.right - 130 - nShift, 
+   int widths[3] = { rect.right - 110 - nShift, 
                      rect.right - 30 - nShift, rect.right -  nShift };
    m_wndStatusBar.SetParts(3, widths);
    nStatusBarHeight = m_bShowStatusBar ? GetWindowSize(&m_wndStatusBar).cy : 0;
 
    GetClientRect(&rect);
 
-   m_wndToolBar.AutoSize();
    nToolBarHeight = m_bShowToolBar ? (GetWindowSize(&m_wndToolBar).cy + 1) : 0;
-
    nToolBoxWidth = m_bShowToolBox ? 150 : 0;
 
    m_wndToolBox.SetWindowPos(NULL, 0, nToolBarHeight, nToolBoxWidth,
@@ -400,10 +403,19 @@ void CMapFrame::OnMapSave()
    DWORD dwResult;
 
    dwResult = DoRequestArg2(NXCSaveMap, g_hSession, m_wndMapView.GetMap(), _T("Saving map..."));
-   if (dwResult != RCC_SUCCESS)
+   if (dwResult == RCC_SUCCESS)
+   {
+      m_wndMapView.m_bIsModified = FALSE;
+   }
+   else
    {
       theApp.ErrorBox(dwResult, _T("Cannot save map on server: %s"));
    }
+}
+
+void CMapFrame::OnUpdateMapSave(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndMapView.m_bIsModified);
 }
 
 
@@ -769,4 +781,22 @@ NXC_OBJECT * CMapFrame::GetFirstSelectedObject()
    }
    safe_free(pdwList);
    return pObject;
+}
+
+
+//
+// NXCM_SUBMAP_CHANGE message handler
+//
+
+void CMapFrame::OnSubmapChange(WPARAM wParam, nxSubmap *pSubmap)
+{
+   if (pSubmap != NULL)
+   {
+      m_wndStatusBar.SetText(pSubmap->GetAutoLayoutFlag() ? _T("Automatic") : _T("Manual"),
+                             STATUS_PANE_LAYOUT, 0);
+   }
+   else
+   {
+      m_wndStatusBar.SetText(_T(""), STATUS_PANE_LAYOUT, 0);
+   }
 }

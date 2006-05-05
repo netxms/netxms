@@ -87,6 +87,14 @@ static BOOL H_UpgradeFromV38(void)
 	   "INSERT INTO maps (map_id,map_name,description,root_object_id) "
 		   "VALUES (1,'Default','Default network map',1)\n"
 	   "INSERT INTO map_access_lists (map_id,user_id,access_rights) VALUES (1,-2147483648,1)\n"
+      "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) "
+         "VALUES (33,'SYS_SCRIPT_ERROR',2,1,"
+		   "'Script (%1) execution error: %2',"
+		   "'Generated when server encounters NXSL script execution error.#0D#0A"
+		   "Parameters:#0D#0A"
+		   "   1) Script name#0D#0A"
+		   "   2) Error text#0D#0A"
+		   "   3) DCI ID if script is DCI transformation script, or 0 otherwise')\n"
       "<END>";
 
    if (!CreateTable(_T("CREATE TABLE maps	("

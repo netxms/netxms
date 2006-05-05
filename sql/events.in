@@ -339,6 +339,17 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'Parameters:#0D#0A' CONCAT
 		'   No message-specific parameters'
 	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_SCRIPT_ERROR, 'SYS_SCRIPT_ERROR',
+		EVENT_SEVERITY_MINOR, 1,
+		'Script (%1) execution error: %2',
+		'Generated when server encounters NXSL script execution error.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Script name#0D#0A' CONCAT
+		'   2) Error text#0D#0A' CONCAT
+		'   3) DCI ID if script is DCI transformation script, or 0 otherwise'
+	);
 
 
 /*

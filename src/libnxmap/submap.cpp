@@ -63,7 +63,7 @@ nxSubmap::nxSubmap(CSCPMessage *pMsg)
 void nxSubmap::CommonInit(void)
 {
    m_dwId = 0;
-   m_dwAttr = 0;
+   m_dwAttr = SUBMAP_ATTR_AUTOMATIC_LAYOUT;
    m_dwNumObjects = 0;
    m_pObjectList = NULL;
    m_dwNumLinks = 0;

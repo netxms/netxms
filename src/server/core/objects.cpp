@@ -60,7 +60,8 @@ char *g_pszStatusName[] = { "Normal", "Warning", "Minor", "Major", "Critical",
                             "Unknown", "Unmanaged", "Disabled", "Testing" };
 char *g_szClassName[]={ "Generic", "Subnet", "Node", "Interface",
                         "Network", "Container", "Zone", "ServiceRoot",
-                        "Template", "TemplateGroup", "TemplateRoot", "NetworkService" };
+                        "Template", "TemplateGroup", "TemplateRoot",
+                        "NetworkService", "VPNConnector" };
 
 
 //

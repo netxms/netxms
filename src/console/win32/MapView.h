@@ -165,6 +165,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 public:
+	BOOL m_bIsModified;
    int GetScaleFactor(void);
 	void SetBkImage(HBITMAP hBitmap);
 	DWORD * GetSelectedObjects(DWORD *pdwNumObjects);
