@@ -272,7 +272,9 @@ DWORD SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCom
                   {
                      // Should we stop walking?
                      if ((pVar->GetName()->Length() < dwRootLen) ||
-                         (memcmp(pdwRootName, pVar->GetName()->GetValue(), dwRootLen * sizeof(DWORD))))
+                         (memcmp(pdwRootName, pVar->GetName()->GetValue(), dwRootLen * sizeof(DWORD))) ||
+                         ((pVar->GetName()->Length() == dwNameLen) &&
+                          (!memcmp(pVar->GetName()->GetValue(), pdwName, pVar->GetName()->Length() * sizeof(DWORD)))))
                      {
                         bRunning = FALSE;
                         delete pRespPDU;

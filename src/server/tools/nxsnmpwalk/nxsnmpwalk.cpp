@@ -97,7 +97,9 @@ int GetData(char *pszHost, char *pszRootOid)
                   {
                      // Should we stop walking?
                      if ((pVar->GetName()->Length() < dwRootLen) ||
-                         (memcmp(pdwRootName, pVar->GetName()->GetValue(), dwRootLen * sizeof(DWORD))))
+                         (memcmp(pdwRootName, pVar->GetName()->GetValue(), dwRootLen * sizeof(DWORD))) ||
+                         ((pVar->GetName()->Length() == dwNameLen) &&
+                          (!memcmp(pVar->GetName()->GetValue(), pdwName, pVar->GetName()->Length() * sizeof(DWORD)))))
                      {
                         bRunning = FALSE;
                         delete pRespPDU;

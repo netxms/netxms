@@ -6,6 +6,7 @@
 - Non-standart (other than 4701) ports now can be used for client-server
   communications
 - Copy/move/delete of saved desktop configurations implemented
+- SNMP walk function improved
 - Fixed issues: #83, #85, #88
 
 
