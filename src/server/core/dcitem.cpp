@@ -889,28 +889,35 @@ void DCItem::UpdateCacheSize(void)
 {
    DWORD i, dwRequiredSize;
 
-   // Minimum cache size is 1 for nodes (so GetLastValue can work)
-   // and 0 for templates
-   if (m_pNode != NULL)
+   // Sanity check
+   if (m_pNode == NULL)
    {
-      dwRequiredSize = (m_pNode->Type() == OBJECT_NODE) ? 1 : 0;
+      DbgPrintf(AF_DEBUG_DC, _T("DCItem::UpdateCacheSize() called for DCI %d when m_pNode == NULL"), m_dwId);
+      return;
+   }
+
+   // Minimum cache size is 1 for nodes (so GetLastValue can work)
+   // and it is always 0 for templates
+   if (m_pNode->Type() == OBJECT_NODE)
+   {
+      dwRequiredSize = 1;
+
+      // Calculate required cache size
+      for(i = 0; i < m_dwNumThresholds; i++)
+         if (dwRequiredSize < m_ppThresholdList[i]->RequiredCacheSize())
+            dwRequiredSize = m_ppThresholdList[i]->RequiredCacheSize();
    }
    else
    {
       dwRequiredSize = 0;
    }
 
-   // Calculate required cache size
-   for(i = 0; i < m_dwNumThresholds; i++)
-      if (dwRequiredSize < m_ppThresholdList[i]->RequiredCacheSize())
-         dwRequiredSize = m_ppThresholdList[i]->RequiredCacheSize();
-
    // Update cache if needed
    if (dwRequiredSize < m_dwCacheSize)
    {
       // Destroy unneeded values
       if (m_dwCacheSize > 0)
-         for(i = m_dwCacheSize - 1; i >= dwRequiredSize; i--)
+         for(i = dwRequiredSize; i < m_dwCacheSize; i++)
             delete m_ppValueCache[i];
 
       m_dwCacheSize = dwRequiredSize;
@@ -1228,6 +1235,8 @@ void DCItem::UpdateFromTemplate(DCItem *pItem)
       m_ppThresholdList[i]->CreateId();
       m_ppThresholdList[i]->BindToItem(m_dwId);
    }
+
+   UpdateCacheSize();
    
    Unlock();
 }

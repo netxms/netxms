@@ -6,7 +6,7 @@
 - Non-standart (other than 4701) ports now can be used for client-server
   communications
 - Copy/move/delete of saved desktop configurations implemented
-- Fixed issues: #83, #85
+- Fixed issues: #83, #85, #88
 
 
 *
