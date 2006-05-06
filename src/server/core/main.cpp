@@ -596,14 +596,14 @@ static void DumpIndex(CONSOLE_CTX pCtx, RWLOCK hLock, INDEX *pIndex, DWORD dwSiz
    {
       if (bIndexByIp)
       {
-         printf("%08X [%-15s] %p %s\n", pIndex[i].dwKey,
-                IpToStr(pIndex[i].dwKey, szIpAddr),
-                pIndex[i].pObject, pIndex[i].pObject->Name());
+         ConsolePrintf(pCtx, "%08X [%-15s] %p %s\n", pIndex[i].dwKey,
+                       IpToStr(pIndex[i].dwKey, szIpAddr),
+                       pIndex[i].pObject, pIndex[i].pObject->Name());
       }
       else
       {
-         printf("%08X %p %s\n", pIndex[i].dwKey, pIndex[i].pObject,
-                pIndex[i].pObject->Name());
+         ConsolePrintf(pCtx, "%08X %p %s\n", pIndex[i].dwKey, pIndex[i].pObject,
+                       pIndex[i].pObject->Name());
       }
    }
 

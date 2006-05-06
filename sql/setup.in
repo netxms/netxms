@@ -132,14 +132,14 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 ** Default users
 */
 
-INSERT INTO users (id,name,password,system_access,flags,full_name,description)
+INSERT INTO users (id,name,password,system_access,flags,full_name,description,grace_logins)
    VALUES (0,'admin',
            '3A445C0072CD69D9030CC6644020E5C4576051B1', // Default password: netxms
-           65535,8,'','Built-in system administrator account'
+           65535,8,'','Built-in system administrator account',5
           );
-INSERT INTO users (id,name,password,system_access,flags,full_name,description)
+INSERT INTO users (id,name,password,system_access,flags,full_name,description,grace_logins)
    VALUES (1,'guest','DA39A3EE5E6B4B0D3255BFEF95601890AFD80709', // Default password is empty
-           0,0,'','Default guest user'
+           0,0,'','Default guest user',5
           );
 
 

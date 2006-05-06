@@ -25,6 +25,13 @@
 
 
 //
+// Maximum number of grace logins allowed for user
+//
+
+#define MAX_GRACE_LOGINS      5
+
+
+//
 // User structure
 //
 
@@ -37,6 +44,7 @@ typedef struct
    WORD wFlags;
    char szFullName[MAX_USER_FULLNAME];
    char szDescription[MAX_USER_DESCR];
+   int nGraceLogins;
 } NMS_USER;
 
 
@@ -104,7 +112,8 @@ BOOL LoadUsers(void);
 void SaveUsers(DB_HANDLE hdb);
 void AddUserToGroup(DWORD dwUserId, DWORD dwGroupId);
 BOOL CheckUserMembership(DWORD dwUserId, DWORD dwGroupId);
-BOOL AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId, DWORD *pdwSystemRights);
+DWORD AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId,
+                       DWORD *pdwSystemRights, BOOL *pbChangePasswd);
 void DumpUsers(CONSOLE_CTX pCtx);
 DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId);
 DWORD DeleteUserFromDB(DWORD dwId);

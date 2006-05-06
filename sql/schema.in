@@ -46,11 +46,12 @@ CREATE TABLE users
 (
 	id integer not null,
 	name varchar(63) not null,
-	password varchar(48),
-	system_access integer,
-	flags integer,
-	full_name varchar(127),
-	description varchar(255),
+	password varchar(48) not null,
+	system_access integer not null,
+	flags integer not null,
+	full_name varchar(127) not null,
+	description varchar(255) not null,
+	grace_logins integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

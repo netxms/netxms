@@ -62,7 +62,7 @@ BOOL LoadUsers(void)
    DWORD i, iNumRows;
 
    // Load users
-   hResult = DBSelect(g_hCoreDB, "SELECT id,name,password,system_access,flags,full_name,description FROM users ORDER BY id");
+   hResult = DBSelect(g_hCoreDB, "SELECT id,name,password,system_access,flags,full_name,description,grace_logins FROM users ORDER BY id");
    if (hResult == NULL)
       return FALSE;
 
@@ -84,6 +84,7 @@ BOOL LoadUsers(void)
       g_pUserList[i].wFlags = (WORD)DBGetFieldLong(hResult, i, 4);
       nx_strncpy(g_pUserList[i].szFullName, DBGetField(hResult, i, 5), MAX_USER_FULLNAME);
       nx_strncpy(g_pUserList[i].szDescription, DBGetField(hResult, i, 6), MAX_USER_DESCR);
+      g_pUserList[i].nGraceLogins = DBGetFieldLong(hResult, i, 7);
    }
 
    DBFreeResult(hResult);
@@ -104,6 +105,7 @@ BOOL LoadUsers(void)
       g_pUserList[i].szFullName[0] = 0;
       strcpy(g_pUserList[i].szDescription, "Built-in system administrator account");
       CalculateSHA1Hash((BYTE *)"netxms", 6, g_pUserList[i].szPassword);
+      g_pUserList[i].nGraceLogins = MAX_GRACE_LOGINS;
       WriteLog(MSG_SUPERUSER_CREATED, EVENTLOG_WARNING_TYPE, NULL);
    }
 
@@ -207,16 +209,18 @@ void SaveUsers(DB_HANDLE hdb)
          BinToStr(g_pUserList[i].szPassword, SHA1_DIGEST_SIZE, szPassword);
          if (bUserExists)
             sprintf(szQuery, "UPDATE users SET name='%s',password='%s',system_access=%d,flags=%d,"
-                             "full_name='%s',description='%s' WHERE id=%d",
+                             "full_name='%s',description='%s',grace_logins=%s WHERE id=%d",
                     g_pUserList[i].szName, szPassword, g_pUserList[i].wSystemRights,
                     g_pUserList[i].wFlags, g_pUserList[i].szFullName,
-                    g_pUserList[i].szDescription, g_pUserList[i].dwId);
+                    g_pUserList[i].szDescription, g_pUserList[i].nGraceLogins,
+                    g_pUserList[i].dwId);
          else
-            sprintf(szQuery, "INSERT INTO users (id,name,password,system_access,flags,full_name,description) "
-                             "VALUES (%d,'%s','%s',%d,%d,'%s','%s')",
+            sprintf(szQuery, "INSERT INTO users (id,name,password,system_access,flags,full_name,description,grace_logins) "
+                             "VALUES (%d,'%s','%s',%d,%d,'%s','%s',%d)",
                     g_pUserList[i].dwId, g_pUserList[i].szName, szPassword,
                     g_pUserList[i].wSystemRights, g_pUserList[i].wFlags,
-                    g_pUserList[i].szFullName, g_pUserList[i].szDescription);
+                    g_pUserList[i].szFullName, g_pUserList[i].szDescription,
+                    g_pUserList[i].nGraceLogins);
          DBQuery(hdb, szQuery);
       }
    }
@@ -293,38 +297,62 @@ void SaveUsers(DB_HANDLE hdb)
 
 //
 // Authenticate user
-// Checks if provided login name and password are correct, and returns TRUE
-// on success and FALSE otherwise. On success authentication, user's ID is stored
+// Checks if provided login name and password are correct, and returns RCC_SUCCESS
+// on success and appropriate RCC otherwise. On success authentication, user's ID is stored
 // int pdwId.
 //
 
-BOOL AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId, DWORD *pdwSystemRights)
+DWORD AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId,
+                       DWORD *pdwSystemRights, BOOL *pbChangePasswd)
 {
    DWORD i, j;
-   BOOL bResult = FALSE;
+   DWORD dwResult = RCC_ACCESS_DENIED;
 
    MutexLock(m_hMutexUserAccess, INFINITE);
    for(i = 0; i < g_dwNumUsers; i++)
    {
-      if (!strcmp(szName, g_pUserList[i].szName) &&
-          !memcmp(szPassword, g_pUserList[i].szPassword, SHA1_DIGEST_SIZE) &&
-          !(g_pUserList[i].wFlags & UF_DELETED) && !(g_pUserList[i].wFlags & UF_DISABLED))
+      if ((!strcmp(szName, g_pUserList[i].szName)) &&
+          (!(g_pUserList[i].wFlags & UF_DELETED)))
       {
-         *pdwId = g_pUserList[i].dwId;
-         *pdwSystemRights = (DWORD)g_pUserList[i].wSystemRights;
-         bResult = TRUE;
+         if (!memcmp(szPassword, g_pUserList[i].szPassword, SHA1_DIGEST_SIZE))
+         {
+            if (!(g_pUserList[i].wFlags & UF_DISABLED))
+            {
+               if (g_pUserList[i].wFlags & UF_CHANGE_PASSWORD)
+               {
+                  if (g_pUserList[i].nGraceLogins <= 0)
+                  {
+                     dwResult = RCC_NO_GRACE_LOGINS;
+                     break;
+                  }
+                  g_pUserList[i].nGraceLogins--;
+                  *pbChangePasswd = TRUE;
+               }
+               else
+               {
+                  *pbChangePasswd = FALSE;
+               }
+               *pdwId = g_pUserList[i].dwId;
+               *pdwSystemRights = (DWORD)g_pUserList[i].wSystemRights;
+               dwResult = RCC_SUCCESS;
          
-         // Collect system rights from groups this user belongs to
-         MutexLock(m_hMutexGroupAccess, INFINITE);
-         for(j = 0; j < g_dwNumGroups; j++)
-            if (CheckUserMembership(g_pUserList[i].dwId, g_pGroupList[j].dwId))
-               *pdwSystemRights |= (DWORD)g_pGroupList[j].wSystemRights;
-         MutexUnlock(m_hMutexGroupAccess);
+               // Collect system rights from groups this user belongs to
+               MutexLock(m_hMutexGroupAccess, INFINITE);
+               for(j = 0; j < g_dwNumGroups; j++)
+                  if (CheckUserMembership(g_pUserList[i].dwId, g_pGroupList[j].dwId))
+                     *pdwSystemRights |= (DWORD)g_pGroupList[j].wSystemRights;
+               MutexUnlock(m_hMutexGroupAccess);
+            }
+            else
+            {
+               dwResult = RCC_ACCOUNT_DISABLED;
+            }
+         }
          break;
       }
    }
    MutexUnlock(m_hMutexUserAccess);
-   return bResult;
+   return dwResult;
 }
 
 
@@ -553,6 +581,7 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId)
          g_pUserList[i].wSystemRights = 0;
          g_pUserList[i].szFullName[0] = 0;
          g_pUserList[i].szDescription[0] = 0;
+         g_pUserList[i].nGraceLogins = MAX_GRACE_LOGINS;
       }
 
       if (dwResult == RCC_SUCCESS)
@@ -678,6 +707,7 @@ DWORD SetUserPassword(DWORD dwId, BYTE *pszPassword)
       if (g_pUserList[i].dwId == dwId)
       {
          memcpy(g_pUserList[i].szPassword, pszPassword, SHA1_DIGEST_SIZE);
+         g_pUserList[i].nGraceLogins = MAX_GRACE_LOGINS;
          g_pUserList[i].wFlags |= UF_MODIFIED;
          dwResult = RCC_SUCCESS;
          break;

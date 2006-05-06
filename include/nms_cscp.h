@@ -634,6 +634,7 @@ typedef struct
 #define VID_NUM_MODULES             ((DWORD)218)
 #define VID_DST_USER_ID             ((DWORD)219)
 #define VID_MOVE_FLAG               ((DWORD)220)
+#define VID_CHANGE_PASSWD_FLAG      ((DWORD)221)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

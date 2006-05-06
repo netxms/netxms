@@ -78,6 +78,29 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V39 to V40
+//
+
+static BOOL H_UpgradeFromV39(void)
+{
+   static TCHAR m_szBatch[] =
+      "ALTER TABLE users ADD grace_logins integer\n"
+      "UPDATE users SET grace_logins=5\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='40' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V38 to V39
 //
 
@@ -1709,6 +1732,7 @@ static struct
    { 36, H_UpgradeFromV36 },
    { 37, H_UpgradeFromV37 },
    { 38, H_UpgradeFromV38 },
+   { 39, H_UpgradeFromV39 },
    { 0, NULL }
 };
 

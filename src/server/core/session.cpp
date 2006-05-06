@@ -1034,6 +1034,8 @@ void ClientSession::Login(CSCPMessage *pRequest)
    CSCPMessage msg;
    BYTE szPassword[SHA1_DIGEST_SIZE];
    char szLogin[MAX_USER_NAME], szBuffer[32];
+   BOOL bChangePasswd;
+   DWORD dwResult;
 
    // Prepare response message
    msg.SetCode(CMD_LOGIN_RESP);
@@ -1057,18 +1059,21 @@ void ClientSession::Login(CSCPMessage *pRequest)
       pRequest->GetVariableStr(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
       pRequest->GetVariableBinary(VID_PASSWORD, szPassword, SHA1_DIGEST_SIZE);
 
-      if (AuthenticateUser(szLogin, szPassword, &m_dwUserId, &m_dwSystemAccess))
+      dwResult = AuthenticateUser(szLogin, szPassword, &m_dwUserId,
+                                  &m_dwSystemAccess, &bChangePasswd);
+      if (dwResult == RCC_SUCCESS)
       {
          m_dwFlags |= CSF_AUTHENTICATED;
          sprintf(m_szUserName, "%s@%s", szLogin, IpToStr(m_dwHostAddr, szBuffer));
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
          msg.SetVariable(VID_USER_SYS_RIGHTS, m_dwSystemAccess);
          msg.SetVariable(VID_USER_ID, m_dwUserId);
+         msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)bChangePasswd);
          DebugPrintf("User %s authenticated\n", m_szUserName);
       }
       else
       {
-         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         msg.SetVariable(VID_RCC, dwResult);
       }
    }
    else

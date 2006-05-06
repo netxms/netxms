@@ -321,6 +321,8 @@ enum
 #define RCC_INVALID_SCRIPT_NAME     ((DWORD)57)
 #define RCC_UNKNOWN_MAP_NAME        ((DWORD)58)
 #define RCC_INVALID_MAP_ID          ((DWORD)59)
+#define RCC_ACCOUNT_DISABLED        ((DWORD)60)
+#define RCC_NO_GRACE_LOGINS         ((DWORD)61)
 
 
 //
@@ -1439,6 +1441,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateUser(NXC_SESSION hSession, TCHAR *pszName, BOO
 DWORD LIBNXCL_EXPORTABLE NXCDeleteUser(NXC_SESSION hSession, DWORD dwId);
 DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_SESSION hSession, NXC_USER *pUserInfo);
 DWORD LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, DWORD dwUserId, TCHAR *pszNewPassword);
+BOOL LIBNXCL_EXPORTABLE NXCNeedPasswordChange(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, DWORD dwUserId,
                                             TCHAR *pszVarName, TCHAR *pszValue, DWORD dwSize);
 DWORD LIBNXCL_EXPORTABLE NXCSetUserVariable(NXC_SESSION hSession, DWORD dwUserId,

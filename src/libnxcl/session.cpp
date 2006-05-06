@@ -953,4 +953,6 @@ void NXCL_Session::ParseLoginMessage(CSCPMessage *pMsg)
 {
    m_dwUserId = pMsg->GetVariableLong(VID_USER_ID);
    m_dwSystemAccess = pMsg->GetVariableLong(VID_USER_SYS_RIGHTS);
+   if (pMsg->GetVariableShort(VID_CHANGE_PASSWD_FLAG))
+      m_dwFlags |= NXC_SF_CHANGE_PASSWD;
 }
