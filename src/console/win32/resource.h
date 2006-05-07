@@ -189,6 +189,7 @@
 #define IDD_SUBMAP_BKGND                312
 #define IDI_GO_ROOT                     317
 #define IDI_MODULE                      318
+#define IDD_CHANGE_PASSWORD             320
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -500,6 +501,7 @@
 #define IDC_RADIO_NO_SCALE              1346
 #define IDC_STATIC_FRAME                1348
 #define IDC_STATIC_FILE                 1349
+#define IDC_STATIC_INFO                 1351
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -699,6 +701,7 @@
 #define ID_DESKTOP_COPY                 33013
 #define ID_DESKTOP_DELETE               33014
 #define ID_DESKTOP_MOVE                 33015
+#define ID_TOOLS_CHANGEPASSWORD         33016
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -708,9 +711,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        320
-#define _APS_NEXT_COMMAND_VALUE         33016
-#define _APS_NEXT_CONTROL_VALUE         1351
-#define _APS_NEXT_SYMED_VALUE           127
+#define _APS_NEXT_RESOURCE_VALUE        321
+#define _APS_NEXT_COMMAND_VALUE         33017
+#define _APS_NEXT_CONTROL_VALUE         1352
+#define _APS_NEXT_SYMED_VALUE           128
 #endif
 #endif

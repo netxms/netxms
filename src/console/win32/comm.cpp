@@ -152,6 +152,20 @@ static DWORD WINAPI LoginThread(void *pArg)
       theApp.GetMainWnd()->PostMessage(NXCM_STATE_CHANGE, TRUE, 0);
       NXCSetEventHandler(g_hSession, ClientEventHandler);
 
+      if (NXCNeedPasswordChange(g_hSession))
+      {
+         TCHAR szPassword[MAX_DB_STRING];
+
+         if (SendMessage(hWnd, NXCM_CHANGE_PASSWORD, 0, (LPARAM)szPassword))
+         {
+            SetInfoText(hWnd, "Changing password...");
+            dwResult = NXCSetPassword(g_hSession, NXCGetCurrentUserId(g_hSession), szPassword);
+         }
+      }
+   }
+
+   if (dwResult == RCC_SUCCESS)
+   {
       SetInfoText(hWnd, "Loading container categories...");
       dwResult = NXCLoadCCList(g_hSession, &g_pCCList);
    }

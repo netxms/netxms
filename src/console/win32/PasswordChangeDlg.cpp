@@ -15,8 +15,8 @@ static char THIS_FILE[] = __FILE__;
 // CPasswordChangeDlg dialog
 
 
-CPasswordChangeDlg::CPasswordChangeDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CPasswordChangeDlg::IDD, pParent)
+CPasswordChangeDlg::CPasswordChangeDlg(int nTemplate, CWnd* pParent /*=NULL*/)
+	: CDialog(nTemplate, pParent)
 {
 	//{{AFX_DATA_INIT(CPasswordChangeDlg)
 		// NOTE: the ClassWizard will add member initialization here

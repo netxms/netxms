@@ -43,6 +43,7 @@ protected:
 	//}}AFX_MSG
    afx_msg void OnRequestCompleted(WPARAM wParam, LPARAM lParam);
    afx_msg void OnSetInfoText(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnChangePassword(WPARAM wParam, TCHAR *pszBuffer);
 	DECLARE_MESSAGE_MAP()
 };
 

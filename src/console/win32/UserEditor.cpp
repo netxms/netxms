@@ -560,7 +560,7 @@ void CUserEditor::OnUserSetpassword()
       pUser = NXCFindUserById(g_hSession, dwId);
       if (pUser != NULL)
       {
-         CPasswordChangeDlg dlg;
+         CPasswordChangeDlg dlg(IDD_SET_PASSWORD);
 
          if (dlg.DoModal() == IDOK)
          {

@@ -7,7 +7,8 @@
   communications
 - Copy/move/delete of saved desktop configurations implemented
 - SNMP walk function improved
-- Fixed issues: #83, #85, #88
+- Implemented "User must change password on next logon" function
+- Fixed issues: #83, #84, #85, #88
 
 
 *

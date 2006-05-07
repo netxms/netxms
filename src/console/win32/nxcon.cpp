@@ -104,6 +104,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_CONTROLPANEL_VIEWBUILDER, OnControlpanelViewbuilder)
 	ON_COMMAND(ID_CONTROLPANEL_MODULES, OnControlpanelModules)
 	ON_COMMAND(ID_DESKTOP_MANAGE, OnDesktopManage)
+	ON_COMMAND(ID_TOOLS_CHANGEPASSWORD, OnToolsChangepassword)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -2567,5 +2568,33 @@ void CConsoleApp::OnDesktopManage()
    {
 	   pFrame->CreateNewChild(RUNTIME_CLASS(CDesktopManager), IDR_DESKTOP_MANAGER,
                              m_hMDIMenu, m_hMDIAccel);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_TOOLS_CHANGEPASSWORD message handler
+//
+
+void CConsoleApp::OnToolsChangepassword() 
+{
+   CPasswordChangeDlg dlg(IDD_SET_PASSWORD);
+
+   if (dlg.DoModal() == IDOK)
+   {
+      DWORD dwResult;
+
+      dwResult = DoRequestArg3(NXCSetPassword, g_hSession, 
+                               (void *)NXCGetCurrentUserId(g_hSession),
+                               dlg.m_szPassword, _T("Changing password..."));
+      if (dwResult == RCC_SUCCESS)
+      {
+         m_pMainWnd->MessageBox(_T("Password was successfully changed"),
+                                _T("Information"), MB_ICONINFORMATION | MB_OK);
+      }
+      else
+      {
+         ErrorBox(dwResult, _T("Cannot change password: %s"));
+      }
    }
 }

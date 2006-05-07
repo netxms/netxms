@@ -17,7 +17,7 @@ class CPasswordChangeDlg : public CDialog
 // Construction
 public:
 	char m_szPassword[MAX_PASSWORD_LENGTH];
-	CPasswordChangeDlg(CWnd* pParent = NULL);   // standard constructor
+	CPasswordChangeDlg(int nTemplate, CWnd* pParent = NULL);
 
 // Dialog Data
 	//{{AFX_DATA(CPasswordChangeDlg)

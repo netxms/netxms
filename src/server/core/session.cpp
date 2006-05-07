@@ -2124,7 +2124,7 @@ void ClientSession::SetPassword(CSCPMessage *pRequest)
       BYTE szPassword[SHA1_DIGEST_SIZE];
 
       pRequest->GetVariableBinary(VID_PASSWORD, szPassword, SHA1_DIGEST_SIZE);
-      dwResult = SetUserPassword(dwUserId, szPassword);
+      dwResult = SetUserPassword(dwUserId, szPassword, dwUserId == m_dwUserId);
       msg.SetVariable(VID_RCC, dwResult);
    }
    else

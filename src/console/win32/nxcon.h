@@ -223,6 +223,7 @@ public:
 	afx_msg void OnControlpanelViewbuilder();
 	afx_msg void OnControlpanelModules();
 	afx_msg void OnDesktopManage();
+	afx_msg void OnToolsChangepassword();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

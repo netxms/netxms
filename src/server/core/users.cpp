@@ -209,7 +209,7 @@ void SaveUsers(DB_HANDLE hdb)
          BinToStr(g_pUserList[i].szPassword, SHA1_DIGEST_SIZE, szPassword);
          if (bUserExists)
             sprintf(szQuery, "UPDATE users SET name='%s',password='%s',system_access=%d,flags=%d,"
-                             "full_name='%s',description='%s',grace_logins=%s WHERE id=%d",
+                             "full_name='%s',description='%s',grace_logins=%d WHERE id=%d",
                     g_pUserList[i].szName, szPassword, g_pUserList[i].wSystemRights,
                     g_pUserList[i].wFlags, g_pUserList[i].szFullName,
                     g_pUserList[i].szDescription, g_pUserList[i].nGraceLogins,
@@ -696,7 +696,7 @@ DWORD ModifyGroup(NMS_USER_GROUP *pGroupInfo)
 // Set user's password
 //
 
-DWORD SetUserPassword(DWORD dwId, BYTE *pszPassword)
+DWORD SetUserPassword(DWORD dwId, BYTE *pszPassword, BOOL bResetChPasswd)
 {
    DWORD i, dwResult = RCC_INVALID_USER_ID;
 
@@ -709,6 +709,8 @@ DWORD SetUserPassword(DWORD dwId, BYTE *pszPassword)
          memcpy(g_pUserList[i].szPassword, pszPassword, SHA1_DIGEST_SIZE);
          g_pUserList[i].nGraceLogins = MAX_GRACE_LOGINS;
          g_pUserList[i].wFlags |= UF_MODIFIED;
+         if (bResetChPasswd)
+            g_pUserList[i].wFlags &= ~UF_CHANGE_PASSWORD;
          dwResult = RCC_SUCCESS;
          break;
       }

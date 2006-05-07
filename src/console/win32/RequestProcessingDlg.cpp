@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "RequestProcessingDlg.h"
+#include "PasswordChangeDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -41,6 +42,7 @@ BEGIN_MESSAGE_MAP(CRequestProcessingDlg, CDialog)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_REQUEST_COMPLETED, OnRequestCompleted)
    ON_MESSAGE(NXCM_SET_INFO_TEXT, OnSetInfoText)
+   ON_MESSAGE(NXCM_CHANGE_PASSWORD, OnChangePassword)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -91,4 +93,22 @@ void CRequestProcessingDlg::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 void CRequestProcessingDlg::OnSetInfoText(WPARAM wParam, LPARAM lParam)
 {
    m_wndInfoText.SetWindowText((LPCTSTR)lParam);
+}
+
+
+//
+// NXCM_CHANGE_PASSWORD message handler
+//
+
+LRESULT CRequestProcessingDlg::OnChangePassword(WPARAM wParam, TCHAR *pszBuffer)
+{
+   CPasswordChangeDlg dlg(IDD_CHANGE_PASSWORD);
+   BOOL bResult = FALSE;
+
+   if (dlg.DoModal() == IDOK)
+   {
+      bResult = TRUE;
+      nx_strncpy(pszBuffer, (LPCTSTR)dlg.m_szPassword, MAX_DB_STRING);
+   }
+   return bResult;
 }
