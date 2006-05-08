@@ -109,7 +109,8 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    {
       { 5, ID_MAP_BACK, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
       { 6, ID_MAP_FORWARD, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
-      { 7, ID_MAP_HOME, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 7, ID_MAP_PARENT, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 8, ID_MAP_HOME, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
       { 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0, 0 },
       { 0, ID_MAP_ZOOMIN, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
       { 1, ID_MAP_ZOOMOUT, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
@@ -140,7 +141,8 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(theApp.LoadIcon(IDI_PRINT));
    m_imageList.Add(theApp.LoadIcon(IDI_BACK));
    m_imageList.Add(theApp.LoadIcon(IDI_FORWARD));
-   m_imageList.Add(theApp.LoadIcon(IDI_GO_ROOT));
+   m_imageList.Add(theApp.LoadIcon(IDI_GO_PARENT));
+   m_imageList.Add(theApp.LoadIcon(IDI_HOME));
 
    // Create toolbar
    m_wndToolBar.CreateEx(this, CCS_NODIVIDER | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT,

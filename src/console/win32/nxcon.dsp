@@ -1190,11 +1190,19 @@ SOURCE=.\icons\forward.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\go_parent.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\go_root.ico
 # End Source File
 # Begin Source File
 
 SOURCE=.\icons\graph.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\home.ico
 # End Source File
 # Begin Source File
 

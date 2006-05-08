@@ -131,8 +131,9 @@ IDI_PRINT               ICON    DISCARDABLE     "icons\\print.ico"
 IDI_REFRESH             ICON    DISCARDABLE     "icons\\refresh.ico"
 IDI_BACK                ICON    DISCARDABLE     "icons\\back.ico"
 IDI_FORWARD             ICON    DISCARDABLE     "icons\\forward.ico"
-IDI_GO_ROOT             ICON    DISCARDABLE     "icons\\go_root.ico"
 IDI_MODULE              ICON    DISCARDABLE     "icons\\module.ico"
+IDI_GO_PARENT           ICON    DISCARDABLE     "icons\\go_parent.ico"
+IDI_HOME                ICON    DISCARDABLE     "icons\\home.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3076,6 +3077,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
+    ID_MAP_PARENT           "Go to parent object\nParent object"
     ID_TOOLS_CHANGEPASSWORD "Change password for current user\nChange password"
 END
 

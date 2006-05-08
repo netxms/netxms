@@ -116,6 +116,10 @@ int CMapView::OnCreate(LPCREATESTRUCT lpCreateStruct)
                             0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
                             VARIABLE_PITCH | FF_DONTCARE, "Helvetica");
+
+   // Create pens for different link types
+   m_penLinkTypes[0].CreatePen(PS_SOLID, 0, RGB(0, 0, 0));
+   m_penLinkTypes[1].CreatePen(PS_DOT, 0, RGB(0, 0, 0));
 	
    // Disable scroll bars
    SetScrollRange(SB_HORZ, 0, 0);
@@ -224,6 +228,7 @@ void CMapView::DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel)
    CDC *pdc, dc, dcBmp;           // Window dc and in-memory dc
    CBitmap *pOldBitmap;
    CBrush brush;
+   CPen *pOldPen;
    RECT rcClient, rcBitmap;
    DWORD i;
    CImageList *pImageList;
@@ -297,6 +302,7 @@ void CMapView::DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel)
       else
       {
          // Draw links between objects
+         pOldPen = dc.SelectObject(&m_penLinkTypes[0]);
          for(i = 0; i < m_pSubmap->GetNumLinks(); i++)
          {
             ptLinkStart = m_pSubmap->GetObjectPosition(m_pSubmap->GetLinkByIndex(i)->dwId1);
@@ -310,9 +316,11 @@ void CMapView::DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel)
             ptLinkEnd.x += m_scaleInfo[m_nScale].ptObjectSize.x / 2;
             ptLinkEnd.y += m_scaleInfo[m_nScale].ptObjectSize.y / 2;
 
+            dc.SelectObject(&m_penLinkTypes[m_pSubmap->GetLinkByIndex(i)->nType]);
             dc.MoveTo(ptLinkStart);
             dc.LineTo(ptLinkEnd);
          }
+         dc.SelectObject(pOldPen);
 
          // Draw objects
          for(i = 0; i < m_pSubmap->GetNumObjects(); i++)
@@ -438,10 +446,10 @@ void CMapView::DoSubmapLayout()
       if (pObject->dwId == 1)    // "Entire Network" object
       {
          DWORD i, j, k, dwNumObjects, dwObjListSize, *pdwObjectList, dwNumLinks = 0;
-         DWORD dwNumSubnets, *pdwSubnetList = NULL;
+         DWORD dwNumVpns, dwNumSubnets, *pdwSubnetList = NULL;
          OBJLINK *pLinkList = NULL;
          NXC_OBJECT_INDEX *pIndex;
-         NXC_OBJECT *pParent;
+         NXC_OBJECT *pSibling;
          
          dwObjListSize = pObject->dwNumChilds;
          pdwObjectList = (DWORD *)nx_memdup(pObject->pdwChildList, sizeof(DWORD) * dwObjListSize);
@@ -455,17 +463,46 @@ void CMapView::DoSubmapLayout()
                pdwSubnetList = (DWORD *)realloc(pdwSubnetList, sizeof(DWORD) * pIndex[i].pObject->dwNumParents);
                for(j = 0, dwNumSubnets = 0; j < pIndex[i].pObject->dwNumParents; j++)
                {
-                  pParent = NXCFindObjectByIdNoLock(g_hSession, pIndex[i].pObject->pdwParentList[j]);
-                  if ((pParent != NULL) &&
-                      (pParent->iClass == OBJECT_SUBNET))
+                  pSibling = NXCFindObjectByIdNoLock(g_hSession, pIndex[i].pObject->pdwParentList[j]);
+                  if ((pSibling != NULL) &&
+                      (pSibling->iClass == OBJECT_SUBNET))
                   {
                      pdwSubnetList[dwNumSubnets] = pIndex[i].pObject->pdwParentList[j];
                      dwNumSubnets++;
                   }
                }
-               if (dwNumSubnets > 1)
+               for(j = 0, dwNumVpns = 0; j < pIndex[i].pObject->dwNumChilds; j++)
                {
-                  // Node connected to more than one subnet, add it to the map
+                  pSibling = NXCFindObjectByIdNoLock(g_hSession, pIndex[i].pObject->pdwChildList[j]);
+                  if ((pSibling != NULL) &&
+                      (pSibling->iClass == OBJECT_VPNCONNECTOR))
+                  {
+                     dwNumVpns++;
+
+                     // Check for duplicated links
+                     for(k = 0; k < dwNumLinks; k++)
+                        if ((((pLinkList[k].dwId1 == pSibling->vpnc.dwPeerGateway) &&
+                              (pLinkList[k].dwId2 == pIndex[i].dwKey)) ||
+                             ((pLinkList[k].dwId1 == pIndex[i].dwKey) &&
+                              (pLinkList[k].dwId2 == pSibling->vpnc.dwPeerGateway))) &&
+                              (pLinkList[k].nType == LINK_TYPE_VPN))
+                           break;
+
+                     if (k == dwNumLinks)
+                     {
+                        // Add new link
+                        dwNumLinks++;
+                        pLinkList = (OBJLINK *)realloc(pLinkList, sizeof(OBJLINK) * dwNumLinks);
+                        pLinkList[k].dwId1 = pIndex[i].dwKey;
+                        pLinkList[k].dwId2 = pSibling->vpnc.dwPeerGateway;
+                        pLinkList[k].nType = LINK_TYPE_VPN;
+                     }
+                  }
+               }
+               if ((dwNumSubnets > 1) || (dwNumVpns > 0))
+               {
+                  // Node connected to more than one subnet or
+                  // have VPN connectors, so add it to the map
                   pdwObjectList = (DWORD *)realloc(pdwObjectList, sizeof(DWORD) * (dwObjListSize + 1));
                   pdwObjectList[dwObjListSize] = pIndex[i].dwKey;
                   dwObjListSize++;

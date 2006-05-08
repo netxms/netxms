@@ -109,6 +109,7 @@ public:
 
 	// Generated message map functions
 protected:
+	CPen m_penLinkTypes[2];
 	HBITMAP GetBkImage(DWORD dwMapId, DWORD dwSubmapId, int nScaleFactor);
 	HBITMAP m_hBkImage;
 	void OnMouseButtonDown(UINT nFlags, POINT point);

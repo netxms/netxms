@@ -152,23 +152,23 @@ BOOL CAlarmBrowser::SetHTML(CString &strHTML)
    pDisp2->QueryInterface(IID_IHTMLDocument2, (void* *)&pDoc);
 
    BSTR bstr = strHTML.AllocSysString();
-   HRESULT hresult = S_OK;
    SAFEARRAY *sfArray = SafeArrayCreateVector(VT_VARIANT, 0, 1);
    if (sfArray != NULL)
    {
       VARIANT *param;
 
-      hresult = SafeArrayAccessData(sfArray, (LPVOID *)&param);
+      SafeArrayAccessData(sfArray, (LPVOID *)&param);
       param->vt = VT_BSTR;
       param->bstrVal = bstr;
-      hresult = SafeArrayUnaccessData(sfArray);
-      hresult = pDoc->write(sfArray);
-      hresult = pDoc->close();
-   }
-
-   SysFreeString(bstr);
-   if (sfArray != NULL)
+      SafeArrayUnaccessData(sfArray);
+      pDoc->write(sfArray);
+      pDoc->close();
       SafeArrayDestroy(sfArray);
+   }
+   else
+   {
+      SysFreeString(bstr);
+   }
 
    return TRUE;
 }

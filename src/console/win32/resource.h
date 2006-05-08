@@ -187,9 +187,10 @@
 #define IDI_BACK                        310
 #define IDI_FORWARD                     311
 #define IDD_SUBMAP_BKGND                312
-#define IDI_GO_ROOT                     317
 #define IDI_MODULE                      318
 #define IDD_CHANGE_PASSWORD             320
+#define IDI_GO_PARENT                   321
+#define IDI_HOME                        323
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -711,7 +712,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        321
+#define _APS_NEXT_RESOURCE_VALUE        324
 #define _APS_NEXT_COMMAND_VALUE         33017
 #define _APS_NEXT_CONTROL_VALUE         1352
 #define _APS_NEXT_SYMED_VALUE           128
