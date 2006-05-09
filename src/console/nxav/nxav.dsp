@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
-# ADD LINK32 libnetxms.lib libnxcl.lib nxuilib.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcl\Release" /libpath:"..\nxuilib\Release"
+# ADD LINK32 shfolder.lib libnetxms.lib libnxcl.lib nxuilib.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcl\Release" /libpath:"..\nxuilib\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -84,7 +84,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libnetxms.lib libnxcl.lib nxuilib.lib "C:\Program Files\Microsoft Visual Studio\VC98\Lib\uuid.lib" /nologo /subsystem:windows /debug /machine:I386 /nodefaultlib:"uuid.lib" /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcl\Debug" /libpath:"..\nxuilib\Debug"
+# ADD LINK32 "C:\Program Files\Microsoft Visual Studio\VC98\Lib\uuid.lib" shfolder.lib libnetxms.lib libnxcl.lib nxuilib.lib /nologo /subsystem:windows /debug /machine:I386 /nodefaultlib:"uuid.lib" /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcl\Debug" /libpath:"..\nxuilib\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files

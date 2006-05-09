@@ -465,7 +465,6 @@ src/console/nxav/nxav.dsp -text
 src/console/nxav/nxav.dsw -text
 src/console/nxav/nxav.h -text
 src/console/nxav/nxav.rc -text
-src/console/nxav/nxav.vcproj -text
 src/console/nxav/res/Makefile.am -text
 src/console/nxav/res/ack.png -text
 src/console/nxav/res/background.jpg -text

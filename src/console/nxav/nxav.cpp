@@ -154,10 +154,21 @@ BOOL CAlarmViewApp::InitInstance()
 
    // Place main window to correct monitor
    CreateMonitorList();
-   dwMonitor = GetProfileInt(_T("Settings"), _T("Monitor"), 0);
-   if (dwMonitor >= g_dwNumMonitors)
-      dwMonitor = 0;
-   pFrame->MoveWindow(&g_pMonitorList[dwMonitor].rcWork, FALSE);
+   if (g_dwNumMonitors > 0)
+   {
+      dwMonitor = GetProfileInt(_T("Settings"), _T("Monitor"), 0);
+      if (dwMonitor >= g_dwNumMonitors)
+         dwMonitor = 0;
+      pFrame->MoveWindow(&g_pMonitorList[dwMonitor].rcWork, FALSE);
+   }
+   else
+   {
+      RECT rect;
+
+      // Cannot detect monitors, assume only one
+      GetClientRect(GetDesktopWindow(), &rect);
+      pFrame->MoveWindow(&rect, FALSE);
+   }
 
 	// The one and only window has been initialized, so show and update it.
 	pFrame->ShowWindow(SW_SHOW);

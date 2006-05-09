@@ -85,7 +85,7 @@ static BOOL CALLBACK MonitorEnumCallback(HMONITOR hMonitor, HDC hdcMonitor,
 {
    g_pMonitorList = (MONITORINFOEX *)realloc(g_pMonitorList, sizeof(MONITORINFOEX) * (g_dwNumMonitors + 1));
    g_pMonitorList[g_dwNumMonitors].cbSize = sizeof(MONITORINFOEX);
-   GetMonitorInfo(hMonitor, &g_pMonitorList[g_dwNumMonitors]);
+   ((BOOL (WINAPI *)(HMONITOR, LPMONITORINFO))dwData)(hMonitor, &g_pMonitorList[g_dwNumMonitors]);
    g_dwNumMonitors++;
    return TRUE;
 }
@@ -97,6 +97,24 @@ static BOOL CALLBACK MonitorEnumCallback(HMONITOR hMonitor, HDC hdcMonitor,
 
 void CreateMonitorList(void)
 {
+   BOOL (WINAPI * pfEnumDisplayMonitors)(HDC, LPCRECT, MONITORENUMPROC, LPARAM);
+   BOOL (WINAPI * pfGetMonitorInfo)(HMONITOR, LPMONITORINFO);
+   HMODULE hModule;
+
    g_dwNumMonitors = 0;
-   EnumDisplayMonitors(NULL, NULL, MonitorEnumCallback, 0);
+   hModule = LoadLibrary(_T("USER32.DLL"));
+   if (hModule != NULL)
+   {
+      pfEnumDisplayMonitors = (BOOL (WINAPI *)(HDC, LPCRECT, MONITORENUMPROC, LPARAM))GetProcAddress(hModule, _T("EnumDisplayMonitors"));
+#ifdef UNICODE
+      pfGetMonitorInfo = (BOOL (WINAPI *)(HMONITOR, LPMONITORINFO))GetProcAddress(hModule, _T("GetMonitorInfoW"));
+#else
+      pfGetMonitorInfo = (BOOL (WINAPI *)(HMONITOR, LPMONITORINFO))GetProcAddress(hModule, _T("GetMonitorInfoA"));
+#endif
+      if ((pfEnumDisplayMonitors != NULL) &&
+          (pfGetMonitorInfo != NULL))
+      {
+         pfEnumDisplayMonitors(NULL, NULL, MonitorEnumCallback, (LPARAM)pfGetMonitorInfo);
+      }
+   }
 }
