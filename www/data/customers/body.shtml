@@ -1,5 +1,4 @@
 <div class="twoThirds noBorderOnLeft">
-	<!--<h1>Some of the companies, that are using our system:</h2>-->
 	<h1>Some of the companies that are using NetXMS:</h2>
 
 	<!-- ABB -->
@@ -21,7 +20,7 @@
 	<p>
 	C.T.Co is a Riga based software development company, a subsidiary of <a href="http://www.com-tec-co.com/">Com Tec Co Ltd</a>. C.T.Co uses NetXMS for monitoring servers and network equipment in various locations around the world.
 		<p>
-			Statistics for 20 January 2005:
+			Statistics for 20 January 2006:
 			<ul>
 				<li />246 monitored nodes
 				<li />1368 configured data collection items
@@ -49,11 +48,30 @@
 	<p>
 		OptiCom is a local Latvian IT company. NetXMS is used to monitor servers and network equipment on various sites across Latvia.
 		<p>
-			Statistics for 20 January 2006:
+			Statistics for 8 May 2006:
 			<ul>
-				<li />41 monitored nodes
-				<li />367 configured data collection items
+				<li />63 monitored nodes
+				<li />609 configured data collection items
 			</ul>
 		</p>
 	</p>
+
+	<!-- welcome new users -->
+	<br>
+	<hr noshade="" width="70%" align="left" />
+	<br>
+	<p>
+		If you are using NetXMS we will be very appreciated if you allow as to list your organization on this page. To add your organization to the list, please contact us via <a href="/contacts#form">this form</a> or one of the mailing lists. Thank you in advance!<br>
+		<br>
+		NetXMS Team.
+	</p>
+</div>
+
+<div class="oneThird">
+	<h1>NetXMS Users on <a href="http://www.frappr.com/netxms">Frappr</a></h1>
+	<blockquote><small><i>&laquo;Frappr is an online tool that lets you map out the city where you live, work, vacation, or anything else! You can then share your unique URL with friends and find out where the rest of them live and work in relation to everyone else&#133;&raquo;&nbsp;<a href="http://www.frappr.com/?a=doc&section=faq#1">[more]</a></i></small></blockquote>
+	<ul>
+		<li><a href="http://www.frappr.com/netxms">View our user map</a></li>
+		<li><a href="http://www.frappr.com/?a=widgetlandingg&gid=605033">Add a pin to our user map</a></li>
+	</ul>
 </div>

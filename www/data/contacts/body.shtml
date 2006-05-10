@@ -2,7 +2,7 @@
 	<h1>Mailing lists</h1>
 	<h2>NetXMS-users</h2>
 	<p>
-		<strong>User talks and general support.</strong><br />
+	<strong>User talks and general support.</strong><br />
 		Subscribe: <a href="mailto:minimalist@alk.lv?subject=subscribe%20netxms-users">send mail to minimalist@alk.lv with &quot;subscribe netxms-users&quot; in subject line</a><br />
 		Unsubscribe: <a href="mailto:minimalist@alk.lv?subject=unsubscribe%20netxms-users">send mail to minimalist@alk.lv with &quot;unsubscribe netxms-users&quot; in subject line</a><br />
 		Archive: <a href="/archive/netxms-users/summary.html">summary</a>, <a href="/archive/netxms-users/">by thread</a><br />
@@ -26,6 +26,7 @@
 	</p>
 
 	<hr noshade="" width="70%" align="left" />
+	<a name="form"></a>
 	<h2>Send your comments to developers team directly from this page</h2>
 	<p>
 		<form action="/cgi-bin/sendmail.pl">
