@@ -47,10 +47,13 @@ extern "C" {
 // Constants
 //
 
-#define MAX_UPS_DEVICES    128
+#define MAX_UPS_DEVICES       128
 
-#define UPS_PROTOCOL_APC   1
-#define UPS_PROTOCOL_USB   2
+#define UPS_PROTOCOL_APC      1
+#define UPS_PROTOCOL_USB      2
+#define UPS_PROTOCOL_BCMXCP   3
+
+#define BCMXCP_BUFFER_SIZE    1024
 
 
 //
@@ -145,6 +148,29 @@ public:
 
 
 //
+// BCMXCP-compatible UPS interface
+//
+
+class BCMXCPInterface : public SerialInterface
+{
+protected:
+   BYTE m_data[BCMXCP_BUFFER_SIZE];
+
+   BOOL SendReadCommand(BYTE nCommand);
+   int RecvData(int nCommand);
+
+public:
+   BCMXCPInterface(TCHAR *pszDevice) : SerialInterface(pszDevice) { }
+
+   virtual TCHAR *Type(void) { return _T("BCMXCP"); }
+
+   virtual BOOL Open(void);
+
+   virtual LONG GetModel(TCHAR *pszBuffer);
+};
+
+
+//
 // UPS with USB interface
 //
 
@@ -180,6 +206,5 @@ public:
 };
 
 #endif
-
 
 #endif

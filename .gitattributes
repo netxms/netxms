@@ -342,6 +342,7 @@ src/agent/subagents/sunos/sunos_subagent.h -text
 src/agent/subagents/sunos/system.cpp -text
 src/agent/subagents/ups/Makefile.am -text
 src/agent/subagents/ups/apc.cpp -text
+src/agent/subagents/ups/bcmxcp.cpp -text
 src/agent/subagents/ups/doc/apc_protocol.htm -text
 src/agent/subagents/ups/doc/apc_protocol_files/nut-banner.png -text
 src/agent/subagents/ups/doc/apc_protocol_files/vh401.png -text

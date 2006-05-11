@@ -218,6 +218,10 @@ static BOOL AddDeviceFromConfig(TCHAR *pszStr)
                         {
                            nProto = UPS_PROTOCOL_APC;
                         }
+                        else if (!_tcsicmp(pszCurrField, _T("BCMXCP")))
+                        {
+                           nProto = UPS_PROTOCOL_BCMXCP;
+                        }
 #ifdef _WIN32
                         else if (!_tcsicmp(pszCurrField, _T("USB")))
                         {
@@ -289,6 +293,9 @@ static BOOL AddDeviceFromConfig(TCHAR *pszStr)
       {
          case UPS_PROTOCOL_APC:
             m_deviceInfo[nDev] = new APCInterface(szPort);
+            break;
+         case UPS_PROTOCOL_BCMXCP:
+            m_deviceInfo[nDev] = new BCMXCPInterface(szPort);
             break;
 #ifdef _WIN32
          case UPS_PROTOCOL_USB:
