@@ -3079,7 +3079,18 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                }
                else
                {
-                  msg.SetVariable(VID_RCC, RCC_OBJECT_CREATION_FAILED);
+						// :DIRTY HACK:
+						// PollNewNode will return NULL only if IP already
+						// in use. some new() can fail there too, but server will
+						// crash in that case
+						if (iClass == OBJECT_NODE)
+						{
+                  	msg.SetVariable(VID_RCC, RCC_ALREADY_EXIST);
+						}
+						else
+						{
+                  	msg.SetVariable(VID_RCC, RCC_OBJECT_CREATION_FAILED);
+						}
                }
             }
             else
