@@ -54,6 +54,7 @@ extern "C" {
 #define UPS_PROTOCOL_BCMXCP   3
 
 #define BCMXCP_BUFFER_SIZE    1024
+#define BCMXCP_MAP_SIZE       128
 
 
 //
@@ -151,13 +152,21 @@ public:
 // BCMXCP-compatible UPS interface
 //
 
+struct BCMXCP_METER_MAP_ENTRY
+{
+   int nFormat;
+   int nOffset;
+};
+
 class BCMXCPInterface : public SerialInterface
 {
 protected:
    BYTE m_data[BCMXCP_BUFFER_SIZE];
+   BCMXCP_METER_MAP_ENTRY m_map[BCMXCP_MAP_SIZE];
 
    BOOL SendReadCommand(BYTE nCommand);
    int RecvData(int nCommand);
+   LONG ReadParameter(int nIndex, int nFormat, void *pValue);
 
 public:
    BCMXCPInterface(TCHAR *pszDevice) : SerialInterface(pszDevice) { }
@@ -166,6 +175,13 @@ public:
 
    virtual BOOL Open(void);
 
+   virtual LONG GetTemperature(LONG *pnTemp);
+   virtual LONG GetLineFrequency(LONG *pnFrequency);
+   virtual LONG GetBatteryLevel(LONG *pnLevel);
+   virtual LONG GetInputVoltage(double *pdVoltage);
+   virtual LONG GetOutputVoltage(double *pdVoltage);
+   virtual LONG GetBatteryVoltage(double *pdVoltage);
+   virtual LONG GetEstimatedRuntime(LONG *pnMinutes);
    virtual LONG GetModel(TCHAR *pszBuffer);
 };
 

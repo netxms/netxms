@@ -1,6 +1,23 @@
 /*
 ** NetXMS UPS management subagent
 ** Copyright (C) 2006 Victor Kirhenshtein
+** Code is partially based on BCMXCP driver for NUT:
+**
+** ! bcmxcp.c - driver for powerware UPS
+** !
+** ! Total rewrite of bcmxcp.c (nut ver-1.4.3)
+** ! * Copyright (c) 2002, Martin Schroeder *
+** ! * emes -at- geomer.de *
+** ! * All rights reserved.*
+** !
+** ! Copyright (C) 2004 Kjell Claesson <kjell.claesson-at-telia.com>
+** ! and Tore +rpetveit <tore-at-orpetveit.net>
+** !
+** ! Thanks to Tore +rpetveit <tore-at-orpetveit.net> that sent me the
+** ! manuals for bcm/xcp.
+** !
+** ! And to Fabio Di Niro <fabio.diniro@email.it> and his metasys module.
+** ! It influenced the layout of this driver.
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +38,7 @@
 **/
 
 #include "ups.h"
+#include <math.h>
 
 
 //
@@ -30,6 +48,41 @@
 #define PW_COMMAND_START_BYTE    ((BYTE)0xAB)
 
 #define PW_ID_BLOCK_REQ 	      ((BYTE)0x31)
+#define PW_STATUS_REQ 		      ((BYTE)0x33)
+#define PW_METER_BLOCK_REQ	      ((BYTE)0x34)
+#define PW_CUR_ALARM_REQ	      ((BYTE)0x35)
+#define PW_CONFIG_BLOCK_REQ	   ((BYTE)0x36)
+#define PW_BAT_TEST_REQ		      ((BYTE)0x3B)
+#define PW_LIMIT_BLOCK_REQ	      ((BYTE)0x3C)
+#define PW_TEST_RESULT_REQ	      ((BYTE)0x3F)
+#define PW_COMMAND_LIST_REQ	   ((BYTE)0x40)
+#define PW_OUT_MON_BLOCK_REQ	   ((BYTE)0x41)
+#define PW_COM_CAP_REQ		      ((BYTE)0x42)
+#define PW_UPS_TOPO_DATA_REQ	   ((BYTE)0x43)
+
+
+//
+// Meter map elements
+//
+
+#define MAP_INPUT_FREQUENCY         28
+#define MAP_BATTERY_VOLTAGE         33
+#define MAP_BATTERY_LEVEL           34
+#define MAP_BATTERY_RUNTIME         35
+#define MAP_INPUT_VOLTAGE           56
+#define MAP_AMBIENT_TEMPERATURE     62
+#define MAP_UPS_TEMPERATURE         63
+#define MAP_BATTERY_TEMPERATURE     77
+#define MAP_OUTPUT_VOLTAGE          78
+
+
+//
+// Result formats
+//
+
+#define FMT_INTEGER     0
+#define FMT_DOUBLE      1
+#define FMT_STRING      2
 
 
 //
@@ -61,6 +114,106 @@ static BOOL ValidateChecksum(BYTE *pBuffer)
 	for(i = 0, sum = 0; i < nLen; i++)
 		sum += pBuffer[i];
    return sum == 0;
+}
+
+
+//
+// Get value as long integer
+//
+
+static LONG GetLong(BYTE *pData)
+{
+#if WORDS_BIGENDIAN
+	return (LONG)(((DWORD)pData[3] << 24) | ((DWORD)pData[2] << 16) |
+                 ((DWORD)pData[1] << 8) | (DWORD)pData[0]);
+#else
+   return *((LONG *)pData);
+#endif
+}
+
+
+//
+// Get value as float
+//
+
+static float GetFloat(BYTE *pData)
+{
+#if WORDS_BIGENDIAN
+   DWORD dwTemp;
+
+	dwTemp = ((DWORD)pData[3] << 24) | ((DWORD)pData[2] << 16) |
+            ((DWORD)pData[1] << 8) | (DWORD)pData[0];
+   return *((float *)&dwTemp);
+#else
+   return *((float *)pData);
+#endif
+}
+
+
+//
+// Decode numerical value
+//
+
+static void DecodeValue(BYTE *pData, int nDataFmt, int nOutputFmt, void *pValue)
+{
+   LONG nValue;
+   double dValue;
+   int nInputFmt;
+
+	if ((nDataFmt == 0xF0) || (nDataFmt == 0xE2))
+   {
+      nValue = GetLong(pData);
+      nInputFmt = FMT_INTEGER;
+	}
+	else if ((nDataFmt & 0xF0) == 0xF0)
+   {
+		// Fixed point integer
+		dValue = GetLong(pData) / ldexp(1, nDataFmt & 0x0F);
+      nInputFmt = FMT_DOUBLE;
+	}
+	else if (nDataFmt <= 0x97)
+   {
+		// Floating point
+		dValue = GetFloat(pData);
+      nInputFmt = FMT_DOUBLE;
+	}
+	else if (nDataFmt == 0xE0)
+   {
+		// Date
+      nInputFmt = FMT_INTEGER;
+	}
+	else if (nDataFmt == 0xE1)
+   {
+		// Time
+      nInputFmt = FMT_INTEGER;
+	}
+	else
+   {
+      // Unknown format
+      nValue = 0;
+      nInputFmt = FMT_INTEGER;
+	}
+
+   // Convert value in input format to requested format
+   switch(nInputFmt)
+   {
+      case FMT_INTEGER:
+         dValue = nValue;
+         break;
+      case FMT_DOUBLE:
+         nValue = (LONG)dValue;
+         break;
+   }
+
+   switch(nOutputFmt)
+   {
+      case FMT_INTEGER:
+         *((LONG *)pValue) = nValue;
+         break;
+      case FMT_DOUBLE:
+         *((double *)pValue) = dValue;
+         break;
+   }
 }
 
 
@@ -176,7 +329,8 @@ int BCMXCPInterface::RecvData(int nCommand)
 BOOL BCMXCPInterface::Open(void)
 {
    BOOL bRet = FALSE;
-   TCHAR szModel[256];
+   TCHAR szBuffer[256];
+   int i, nBytes, nPos, nLen, nOffset;
 
    if (SerialInterface::Open())
    {
@@ -186,14 +340,78 @@ BOOL BCMXCPInterface::Open(void)
       // Send two escapes
       m_serial.Write("\x1D\x1D", 2);
 
-      if (GetModel(szModel) == SYSINFO_RC_SUCCESS)
+      // Read UPS ID block
+      if (SendReadCommand(PW_ID_BLOCK_REQ))
       {
-         bRet = TRUE;
-         SetConnected();
-         SetName(szModel);
+         nBytes = RecvData(PW_ID_BLOCK_REQ);
+         if (nBytes > 0)
+         {
+            // Skip to model name
+            nPos = m_data[0] * 2 + 1;
+            nPos += (m_data[nPos] == 0) ? 5 : 3;
+            nLen = min(m_data[nPos], 255);
+            if ((nPos < nBytes) && (nPos + nLen <= nBytes))
+            {
+               memcpy(szBuffer, &m_data[nPos + 1], nLen);
+               szBuffer[nLen] = 0;
+               StrStrip(szBuffer);
+               SetName(szBuffer);
+            }
+
+            // Read meter map
+            memset(m_map, 0, sizeof(BCMXCP_METER_MAP_ENTRY) * BCMXCP_MAP_SIZE);
+            nPos += m_data[nPos] + 1;
+            nLen = m_data[nPos++];
+            for(i = 0, nOffset = 0; (i < nLen) && (i < BCMXCP_MAP_SIZE); i++, nPos++)
+            {
+               m_map[i].nFormat = m_data[nPos];
+               if (m_map[i].nFormat != 0)
+               {
+                  m_map[i].nOffset = nOffset;
+                  nOffset += 4;
+               }
+printf("%3d %02X %d\n", i, m_map[i].nFormat, m_map[i].nOffset);
+            }
+
+            bRet = TRUE;
+            SetConnected();
+         }
       }
    }
    return bRet;
+}
+
+
+//
+// Read parameter from UPS
+//
+
+LONG BCMXCPInterface::ReadParameter(int nIndex, int nFormat, void *pValue)
+{
+   LONG nRet = SYSINFO_RC_ERROR;
+   int nBytes;
+
+   if ((nIndex >= BCMXCP_MAP_SIZE) || (m_map[nIndex].nFormat == 0))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   if (SendReadCommand(PW_METER_BLOCK_REQ))
+   {
+      nBytes = RecvData(PW_METER_BLOCK_REQ);
+      if (nBytes > 0)
+      {
+         if (m_map[nIndex].nOffset < nBytes)
+         {
+            DecodeValue(&m_data[m_map[nIndex].nOffset],
+                        m_map[nIndex].nFormat, nFormat, pValue);
+            nRet = SYSINFO_RC_SUCCESS;
+         }
+         else
+         {
+            nRet = SYSINFO_RC_UNSUPPORTED;
+         }
+      }
+   }
+   return nRet;
 }
 
 
@@ -227,4 +445,74 @@ LONG BCMXCPInterface::GetModel(TCHAR *pszBuffer)
       }
    }
    return nRet;
+}
+
+
+//
+// Get battery level (in percents)
+//
+
+LONG BCMXCPInterface::GetBatteryLevel(LONG *pnLevel)
+{
+   return ReadParameter(MAP_BATTERY_LEVEL, FMT_INTEGER, pnLevel);
+}
+
+
+//
+// Get battery voltage
+//
+
+LONG BCMXCPInterface::GetBatteryVoltage(double *pdVoltage)
+{
+   return ReadParameter(MAP_BATTERY_VOLTAGE, FMT_DOUBLE, pdVoltage);
+}
+
+
+//
+// Get input line voltage
+//
+
+LONG BCMXCPInterface::GetInputVoltage(double *pdVoltage)
+{
+   return ReadParameter(MAP_INPUT_VOLTAGE, FMT_DOUBLE, pdVoltage);
+}
+
+
+//
+// Get output voltage
+//
+
+LONG BCMXCPInterface::GetOutputVoltage(double *pdVoltage)
+{
+   return ReadParameter(MAP_OUTPUT_VOLTAGE, FMT_DOUBLE, pdVoltage);
+}
+
+
+//
+// Get estimated runtime (in minutes)
+//
+
+LONG BCMXCPInterface::GetEstimatedRuntime(LONG *pnMinutes)
+{
+   return ReadParameter(MAP_BATTERY_RUNTIME, FMT_INTEGER, pnMinutes);
+}
+
+
+//
+// Get temperature inside UPS
+//
+
+LONG BCMXCPInterface::GetTemperature(LONG *pnTemp)
+{
+   return ReadParameter(MAP_AMBIENT_TEMPERATURE, FMT_INTEGER, pnTemp);
+}
+
+
+//
+// Get line frequency (Hz)
+//
+
+LONG BCMXCPInterface::GetLineFrequency(LONG *pnFrequency)
+{
+   return ReadParameter(MAP_INPUT_FREQUENCY, FMT_INTEGER, pnFrequency);
 }
