@@ -480,6 +480,30 @@ Package=<4>
 
 ###############################################################################
 
+Project: "nxnotify"=.\SRC\CONSOLE\nxnotify\nxnotify.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcl
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcscp
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name nxuilib
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "nxscript"=.\src\nxscript\nxscript.dsp - Package Owner=<4>
 
 Package=<5>

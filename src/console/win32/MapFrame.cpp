@@ -91,10 +91,14 @@ END_MESSAGE_MAP()
 
 BOOL CMapFrame::PreCreateWindow(CREATESTRUCT& cs) 
 {
+   BOOL bRet;
+
    if (cs.lpszClass == NULL)
       cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, NULL, NULL, 
                                          AfxGetApp()->LoadIcon(IDI_NETMAP));
-	return CMDIChildWnd::PreCreateWindow(cs);
+	bRet = CMDIChildWnd::PreCreateWindow(cs);
+   cs.dwExStyle &= ~WS_EX_CLIENTEDGE;
+   return bRet;
 }
 
 
@@ -145,7 +149,7 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(theApp.LoadIcon(IDI_HOME));
 
    // Create toolbar
-   m_wndToolBar.CreateEx(this, CCS_NODIVIDER | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT,
+   m_wndToolBar.CreateEx(this, CCS_TOP | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT,
                          WS_CHILD | (m_bShowToolBar ? WS_VISIBLE : 0) | CBRS_ALIGN_TOP,
                          CRect(0, 0, 0, 0), ID_TOOLBAR_CTRL);
    m_wndToolBar.GetToolBarCtrl().SetImageList(&m_imageList);

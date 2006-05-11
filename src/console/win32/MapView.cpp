@@ -90,6 +90,7 @@ const TCHAR *CMapView::GetScaleText(void)
 BOOL CMapView::PreCreateWindow(CREATESTRUCT& cs) 
 {
    cs.style |= WS_HSCROLL | WS_VSCROLL;
+   cs.dwExStyle |= WS_EX_CLIENTEDGE;
 	return CWnd::PreCreateWindow(cs);
 }
 
