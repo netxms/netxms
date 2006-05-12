@@ -183,6 +183,8 @@ public:
    virtual LONG GetBatteryVoltage(double *pdVoltage);
    virtual LONG GetEstimatedRuntime(LONG *pnMinutes);
    virtual LONG GetModel(TCHAR *pszBuffer);
+   virtual LONG GetFirmwareVersion(TCHAR *pszBuffer);
+   virtual LONG GetSerialNumber(TCHAR *pszBuffer);
 };
 
 

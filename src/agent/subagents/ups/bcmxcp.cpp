@@ -370,7 +370,7 @@ BOOL BCMXCPInterface::Open(void)
                   m_map[i].nOffset = nOffset;
                   nOffset += 4;
                }
-printf("%3d %02X %d\n", i, m_map[i].nFormat, m_map[i].nOffset);
+//printf("%3d %02X %d\n", i, m_map[i].nFormat, m_map[i].nOffset);
             }
 
             bRet = TRUE;
@@ -515,4 +515,70 @@ LONG BCMXCPInterface::GetTemperature(LONG *pnTemp)
 LONG BCMXCPInterface::GetLineFrequency(LONG *pnFrequency)
 {
    return ReadParameter(MAP_INPUT_FREQUENCY, FMT_INTEGER, pnFrequency);
+}
+
+
+//
+// Get firmware version
+//
+
+LONG BCMXCPInterface::GetFirmwareVersion(TCHAR *pszBuffer)
+{
+   LONG nRet = SYSINFO_RC_ERROR;
+   int i, nLen, nBytes, nPos;
+
+   if (SendReadCommand(PW_ID_BLOCK_REQ))
+   {
+      nBytes = RecvData(PW_ID_BLOCK_REQ);
+      if (nBytes > 0)
+      {
+         nRet = SYSINFO_RC_UNSUPPORTED;
+         nLen = m_data[0];
+         for(i = 0, nPos = 1; i < nLen; i++, nPos += 2)
+         {
+            if ((m_data[nPos + 1] != 0) || (m_data[nPos] != 0))
+            {
+               _stprintf(pszBuffer, _T("%d.%02d"), m_data[nPos + 1], m_data[nPos]);
+               nRet = SYSINFO_RC_SUCCESS;
+               break;
+            }
+         }
+      }
+   }
+   return nRet;
+}
+
+
+//
+// Get unit serial number
+//
+
+LONG BCMXCPInterface::GetSerialNumber(TCHAR *pszBuffer)
+{
+   LONG nRet = SYSINFO_RC_ERROR;
+   int nBytes;
+
+   if (SendReadCommand(PW_ID_BLOCK_REQ))
+   {
+      nBytes = RecvData(PW_ID_BLOCK_REQ);
+      if (nBytes >= 80)    // Serial number offset + length
+      {
+         memcpy(pszBuffer, &m_data[64], 16);
+         if (*pszBuffer == 0)
+         {
+            _tcscpy(pszBuffer, _T("UNSET"));
+         }
+         else
+         {
+            pszBuffer[16] = 0;
+            StrStrip(pszBuffer);
+         }
+         nRet = SYSINFO_RC_SUCCESS;
+      }
+      else
+      {
+         nRet = SYSINFO_RC_UNSUPPORTED;
+      }
+   }
+   return nRet;
 }
