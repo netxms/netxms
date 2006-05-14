@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.150 2006-04-18 16:20:49 victor Exp $
+# $Id: configure.ac,v 1.151 2006-05-14 21:48:18 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -415,7 +415,7 @@ AC_C_BIGENDIAN
 # --------------------------------------------------------------------------
 # macros
 
-AC_CHECK_DECLS([__bswap_64],,,[
+AC_CHECK_DECLS([__bswap_32, __bswap_64],,,[
 #if HAVE_BYTESWAP_H
 #include <byteswap.h>
 #endif
