@@ -42,7 +42,11 @@
 
 #else    /* not _WIN32 */
 
+#ifdef _NETWARE
+#define WCHAR     wchar_t
+#else
 #define WCHAR     unsigned short
+#endif
 
 #ifdef UNICODE
 

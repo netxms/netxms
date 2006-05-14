@@ -21,6 +21,7 @@
 **/
 
 #include "ping.h"
+#include <screen.h>
 
 #ifdef _WIN32
 #define PING_EXPORTABLE __declspec(dllexport) __cdecl
@@ -106,17 +107,22 @@ static LONG H_IcmpPing(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
    TCHAR szHostName[256], szTimeOut[32], szPacketSize[32];
    DWORD dwAddr, dwTimeOut = m_dwTimeout, dwRTT, dwPacketSize = m_dwDefPacketSize;
 
+consoleprintf("step 1\n");
    if (!NxGetParameterArg(pszParam, 1, szHostName, 256))
       return SYSINFO_RC_UNSUPPORTED;
    StrStrip(szHostName);
+consoleprintf("step 2\n");
    if (!NxGetParameterArg(pszParam, 2, szTimeOut, 256))
       return SYSINFO_RC_UNSUPPORTED;
    StrStrip(szTimeOut);
+consoleprintf("step 3\n");
    if (!NxGetParameterArg(pszParam, 3, szPacketSize, 256))
       return SYSINFO_RC_UNSUPPORTED;
    StrStrip(szPacketSize);
+consoleprintf("step 4\n");
 
    dwAddr = _t_inet_addr(szHostName);
+consoleprintf("step 5\n");
    if (szTimeOut[0] != 0)
    {
       dwTimeOut = _tcstoul(szTimeOut, NULL, 0);
@@ -130,9 +136,12 @@ static LONG H_IcmpPing(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
       dwPacketSize = _tcstoul(szPacketSize, NULL, 0);
    }
 
+consoleprintf("step 6\n");
    if (IcmpPing(dwAddr, 1, dwTimeOut, &dwRTT, dwPacketSize) != ICMP_SUCCESS)
       dwRTT = 10000;
+consoleprintf("step 7\n");
    ret_uint(pValue, dwRTT);
+consoleprintf("step 8\n");
    return SYSINFO_RC_SUCCESS;
 }
 

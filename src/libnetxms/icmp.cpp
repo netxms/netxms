@@ -1,6 +1,6 @@
 /* 
 ** libnetxms - Common NetXMS utility library
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@
 #if HAVE_POLL_H
 #include <poll.h>
 #endif
-
 
 //
 // Constants
@@ -141,6 +140,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
    }
 
    // Setup destination address structure
+   memset(&saDest, 0, sizeof(sockaddr_in));
    saDest.sin_addr.s_addr = dwAddr;
    saDest.sin_family = AF_INET;
    saDest.sin_port = 0;

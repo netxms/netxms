@@ -41,21 +41,30 @@ static int m_iCpuHPos = 0;
 static LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 {
    struct memory_info info;
+   size64_t nTotalMem;
 
    memset(&info, 0, sizeof(struct memory_info));
    if (netware_mem_info(&info) != 0)
       return SYSINFO_RC_ERROR;
 
+   // Field info.TotalKnownSystemMemoryUnder4Gb may be zero if
+   // total memory is below 4GB (or it is only on older LibC,
+   // I don't know).
+   if (info.TotalKnownSystemMemory != 0)
+      nTotalMem = info.TotalKnownSystemMemory;
+   else
+      nTotalMem = info.TotalKnownSystemMemoryUnder4Gb;
+
    switch((int)pArg)
    {
       case MEMINFO_PHYSICAL_TOTAL:
-         ret_uint64(pValue, info.TotalKnownSystemMemory);
+         ret_uint64(pValue, nTotalMem);
          break;
       case MEMINFO_PHYSICAL_USED:
          ret_uint64(pValue, info.TotalWorkMemory);
          break;
       case MEMINFO_PHYSICAL_FREE:
-         ret_uint64(pValue, info.TotalKnownSystemMemory - info.TotalWorkMemory);
+         ret_uint64(pValue, nTotalMem - info.TotalWorkMemory);
          break;
       default:
          break;
@@ -129,7 +138,7 @@ static LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
    if (szBuffer[0] == 0)   // All CPUs?
       iCpu = -1;
    else
-      iCpu = strtol(szBuffer, 0, NULL);
+      iCpu = strtol(szBuffer, NULL, 0);
 
    iSteps = (int)pArg;
    iCpuCount = NXGetCpuCount();
@@ -237,6 +246,7 @@ static void UnloadHandler(void)
    if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
       ConditionSet(m_hCondShutdown);
    ThreadJoin(m_hCollectorThread);
+   ConditionDestroy(m_hCondShutdown);
 
    // Notify main thread that NLM can exit
    ConditionSet(m_hCondTerminate);
@@ -263,7 +273,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, "Available physical memory" },
    { "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, "Total amount of physical memory" },
    { "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, "Used physical memory" },
-   { "System.PlatformName", H_PlatformName, NULL, DCI_DT_STRING, NULL }
+   { "System.PlatformName", H_PlatformName, NULL, DCI_DT_STRING, "" }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
@@ -297,6 +307,7 @@ extern "C" BOOL NxSubAgentInit_NETWARE(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *psz
    memset(m_iCpuUtilHistory, 0, sizeof(int) * CPU_HISTORY_SIZE * MAX_CPU);
 
    // Start collector thread
+   m_hCondShutdown = ConditionCreate(TRUE);
    m_hCollectorThread = ThreadCreateEx(CollectorThread, 0, NULL);
 
    return TRUE;

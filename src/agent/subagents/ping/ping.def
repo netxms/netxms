@@ -3,12 +3,13 @@
 # Copyright (c) 2004 Victor Kirhenshtein
 #
 
-# define startup object files
-INPUT c:/novell/ndk/libc/imports/libcpre.gcc.o   # clib startup code
+# common definitions
+@../../../../netware/nlmconv.inc
+
+# define input object files
 INPUT ping.o
 
 # Import/Export
-IMPORT @c:/novell/ndk/libc/imports/libc.imp
 IMPORT @../../../libnetxms/netxms.imp
 EXPORT NxSubAgentInit_PING
 
@@ -19,7 +20,6 @@ EXIT _LibCPostlude
 # NLM header
 OUTPUT ping.nsm
 TYPE 0
-@../../../../netware/version.inc
 DESCRIPTION "NetXMS PING Subagent"
 SCREENNAME "System Console"
 

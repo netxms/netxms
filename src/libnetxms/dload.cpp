@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,6 +31,39 @@
 
 
 //
+// Error texts for NetWare LoadModule()
+//
+
+#ifdef _NETWARE
+
+static char *m_pszErrorText[] =
+{
+   "No error",
+   "File not found",
+   "Error reading file",
+   "File not in NLM format",
+   "Wrong NLM file version",
+   "Reentrant initialization failure",
+   "Cannot load multiple copies",
+   "Operation already in progress",
+   "Not enough memory",
+   "Initialization failure",
+   "Inconsistent file format",
+   "Cannot load module at startup",
+   "Unresolved dependencies",
+   "Unresolved external symbols",
+   "Public symbol already defined",
+   "XDC data error",
+   "Module must be loaded in the kernel",
+   "Module is NIOS compatible only and cannot be loaded on NetWare",
+   "Cannot create specified address space",
+   "Module initialization failed"
+};
+
+#endif
+
+
+//
 // Load DLL/shared library
 //
 
@@ -44,16 +77,19 @@ HMODULE LIBNETXMS_EXPORTABLE DLOpen(TCHAR *szLibName, TCHAR *pszErrorText)
       GetSystemErrorText(GetLastError(), pszErrorText, 255);
 #elif defined(_NETWARE)
    TCHAR szBuffer[MAX_PATH + 4];
+   int nError;
 
    nx_strncpy(&szBuffer[4], szLibName, MAX_PATH);
-   if (LoadModule(getscreenhandle(), &szBuffer[4], LO_RETURN_HANDLE) == 0)
+   nError = LoadModule(getnetwarelogger(), &szBuffer[4], LO_RETURN_HANDLE);
+   if (nError == 0)
    {
       hModule = *((HMODULE *)szBuffer);
+      *pszErrorText = 0;
    }
    else
    {
       hModule = NULL;
-      *pszErrorText = 0;
+      nx_strncpy(pszErrorText, (nError <= 19) ? m_pszErrorText[nError] : "Unknown error code", 255);
    }
 #else    /* _WIN32 */
    hModule = dlopen(szLibName, RTLD_NOW | RTLD_GLOBAL);

@@ -3,13 +3,13 @@
 # Copyright (c) 2004 Victor Kirhenshtein
 #
 
+# common definitions
+@../../netware/nlmconv.inc
+
 # define startup object files
-INPUT c:/novell/ndk/libc/imports/libcpre.gcc.o   # clib startup code
 INPUT netxms_r.o
 
 # Imports/Exports
-IMPORT @c:/novell/ndk/libc/imports/libc.imp
-IMPORT @c:/novell/ndk/libc/imports/netware.imp
 EXPORT @netxms.imp
 
 # Entry points
@@ -19,7 +19,6 @@ EXIT _LibCPostlude
 # NLM header
 OUTPUT netxms.nlm
 TYPE 0
-@../../netware/version.inc
 DESCRIPTION "NetXMS Foundation Library"
 SCREENNAME "System Console"
 FLAG_ON 64

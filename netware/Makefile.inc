@@ -4,9 +4,10 @@
 #
 
 CFLAGS   = -nostdinc -fno-exceptions -fno-builtin -fpack-struct -fno-rtti \
-           -c -D_NETWARE -I../../include -I../../../include \
-           -I../../../../include -IC:/novell/ndk/libc/include \
-           -IC:/novell/ndk/nwsdk/include
+           -c -D_NETWARE -IC:/nwsdk/libc/include \
+           -IC:/nwsdk/fs64/include \
+	   -I../../include -I../../../include \
+           -I../../../../include
 LDFLAGS  = --linker=c:/gcc-nlm/usr/bin/i586-netware-ld.exe --output-target=nlm32-i386 --input-target=elf32-i386
 PLDFLAGS = -r
 

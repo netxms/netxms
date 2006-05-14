@@ -3,12 +3,13 @@
 # Copyright (c) 2004 Victor Kirhenshtein
 #
 
-# define startup object files
-INPUT c:/novell/ndk/libc/imports/libcpre.gcc.o   # clib startup code
+# common definitions
+@../../../../netware/nlmconv.inc
+
+# define input object files
 INPUT netware.o
 
 # Import/Export
-IMPORT @c:/novell/ndk/libc/imports/libc.imp
 IMPORT @../../../libnetxms/netxms.imp
 EXPORT NxSubAgentInit_NETWARE
 
@@ -18,7 +19,6 @@ EXIT _LibCPostlude
 
 # NLM header
 OUTPUT netware.nsm
-@../../../../netware/version.inc
 COPYRIGHT "Copyright (c) 2004, 2005, 2006 NetXMS Team"
 DESCRIPTION "NetXMS NetWare Platform Subagent"
 SCREENNAME "System Console"
