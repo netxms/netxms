@@ -211,7 +211,7 @@ m4/Makefile.am -text
 netware/Makefile.am -text
 netware/Makefile.inc -text
 netware/bin/.keep -text
-netware/version.inc -text
+netware/nlmconv.inc -text
 /netxms.dsw -text
 /reconf -text
 sql/.cvsignore -text
