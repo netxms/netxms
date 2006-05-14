@@ -27,6 +27,7 @@
 #include <locale.h>
 #elif defined(_NETWARE)
 #include <screen.h>
+#include <library.h>
 #else
 #include <signal.h>
 #include <sys/wait.h>
@@ -472,7 +473,7 @@ void LoadPlatformSubagent(void)
    char szName[MAX_PATH];
    int i;
 
-   if (uname(&un) == 0)
+   if (uname(&un) != -1)
    {
       // Convert system name to lowercase
       for(i = 0; un.sysname[i] != 0; i++)
@@ -493,6 +494,9 @@ void LoadPlatformSubagent(void)
 BOOL Initialize(void)
 {
    char *pItem, *pEnd;
+#ifdef _NETWARE
+   char szLoadPath[1024], szSearchPath[1024];
+#endif
 
    // Open log file
    InitLog();
@@ -519,6 +523,28 @@ BOOL Initialize(void)
    }
 #endif
 
+   // Add NLM load path to search list
+#ifdef _NETWARE
+   if (getnlmloadpath(szLoadPath) != NULL)
+   {
+      int i, nIsDOS;
+      BOOL bExist = FALSE;
+
+      for(i = 0; ; i++)
+      {
+         if (GetSearchPathElement(i, &nIsDOS, szSearchPath) != 0)
+            break;
+         if (strlen(szLoadPath) == szSearchPath[0])
+            if (!strncasecmp(&szSearchPath[1], szLoadPath, szSearchPath[0]))
+            {
+               bExist = TRUE;
+               break;
+            }
+      }
+      if (!bExist)
+         InsertSearchPath(getnetwarelogger(), 0, szLoadPath);
+   }
+#endif
 
    // Initialize logger for subagents
    InitSubAgentsLogger(WriteSubAgentMsg);
