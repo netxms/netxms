@@ -250,6 +250,9 @@ extern "C"
    int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
                                    size_t nSize, int nFlags, DWORD dwTimeout);
 
+#if defined(_WIN32) || !(HAVE_DECL___BSWAP_32)
+   DWORD LIBNETXMS_EXPORTABLE __bswap_32(DWORD dwVal);
+#endif
 #if defined(_WIN32) || !(HAVE_DECL___BSWAP_64)
    QWORD LIBNETXMS_EXPORTABLE __bswap_64(QWORD qwVal);
 #endif

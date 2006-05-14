@@ -91,7 +91,7 @@ char g_szPlatformSuffix[MAX_PSUFFIX_LENGTH] = "";
 WORD g_wListenPort = AGENT_LISTEN_PORT;
 SERVER_INFO g_pServerList[MAX_SERVERS];
 DWORD g_dwServerCount = 0;
-DWORD g_dwTimeOut = 5000;     // Request timeout in milliseconds
+DWORD g_dwExecTimeout = 2000;     // External process execution timeout in milliseconds
 time_t g_dwAgentStartTime;
 DWORD g_dwStartupDelay = 0;
 DWORD g_dwIdleTimeout = 60;   // Session idle timeout
@@ -146,6 +146,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "EnabledCiphers", CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers },
    { "EnableProxy", CT_BOOLEAN, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags },
    { "EnableSubagentAutoload", CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags },
+   { "ExecTimeout", CT_LONG, 0, 0, 0, 0, &g_dwExecTimeout },
    { "ExternalParameter", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },
    { "FileStore", CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore },
    { "InstallationServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList }, // Old name for MasterServers, deprecated
@@ -162,7 +163,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "SharedSecret", CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret },
    { "StartupDelay", CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay },
    { "SubAgent", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList },
-   { "Timeout", CT_LONG, 0, 0, 0, 0, &g_dwTimeOut },
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 

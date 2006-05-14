@@ -72,6 +72,7 @@ typedef struct
 #include "../src/console/nxuilib/FlatButton.h"
 #include "../src/console/nxuilib/ScintillaCtrl.h"
 #include "../src/console/nxuilib/SimpleListCtrl.h"
+#include "../src/console/nxuilib/TaskBarPopupWnd.h"
 
 #endif
 

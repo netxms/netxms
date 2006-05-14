@@ -200,4 +200,10 @@ Language=English
 Subagent "%1" already loaded from module "%2"
 .
 
+MessageId=
+SymbolicName=MSG_PROCESS_KILLED
+Language=English
+Process "%1" killed because of execution timeout
+.
+
 ;#endif

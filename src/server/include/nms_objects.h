@@ -89,14 +89,14 @@ extern DWORD g_dwRoutingTableUpdateInterval;
 
 #define NDF_QUEUED_FOR_STATUS_POLL     0x0001
 #define NDF_QUEUED_FOR_CONFIG_POLL     0x0002
-#define NDF_UNREACHEABLE               0x0004
-#define NDF_AGENT_UNREACHEABLE         0x0008
-#define NDF_SNMP_UNREACHEABLE          0x0010
+#define NDF_UNREACHABLE                0x0004
+#define NDF_AGENT_UNREACHABLE          0x0008
+#define NDF_SNMP_UNREACHABLE           0x0010
 #define NDF_QUEUED_FOR_DISCOVERY_POLL  0x0020
 #define NDF_FORCE_STATUS_POLL          0x0040
 #define NDF_FORCE_CONFIGURATION_POLL   0x0080
 #define NDF_QUEUED_FOR_ROUTE_POLL      0x0100
-#define NDF_CPSNMP_UNREACHEABLE        0x0200
+#define NDF_CPSNMP_UNREACHABLE         0x0200
 #define NDF_RECHECK_CAPABILITIES       0x0400
 #define NDF_POLLING_DISABLED           0x0800
 
@@ -563,7 +563,7 @@ public:
    BOOL IsRouter(void) { return m_dwFlags & NF_IS_ROUTER ? TRUE : FALSE; }
    BOOL IsLocalManagement(void) { return m_dwFlags & NF_IS_LOCAL_MGMT ? TRUE : FALSE; }
 
-   BOOL IsDown(void) { return m_dwDynamicFlags & NDF_UNREACHEABLE ? TRUE : FALSE; }
+   BOOL IsDown(void) { return m_dwDynamicFlags & NDF_UNREACHABLE ? TRUE : FALSE; }
 
    const char *ObjectId(void) { return m_szObjectId; }
 

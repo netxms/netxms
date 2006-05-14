@@ -53,23 +53,24 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 {
    QWORD qwStartTime;
    DWORD i, dwSum, dwCount, dwInterval, dwElapsedTime;
-   BOOL bUnreacheable = FALSE;
+   BOOL bUnreachable;
 
    while(!m_bShutdown)
    {
+      bUnreachable = FALSE;
       qwStartTime = GetCurrentTimeMs();
-      if (IcmpPing(((PING_TARGET *)pArg)->dwIpAddr, 3, m_dwTimeout,
+      if (IcmpPing(((PING_TARGET *)pArg)->dwIpAddr, 1, m_dwTimeout,
                    &((PING_TARGET *)pArg)->dwLastRTT, 
                    ((PING_TARGET *)pArg)->dwPacketSize) != ICMP_SUCCESS)
       {
          ((PING_TARGET *)pArg)->dwLastRTT = 10000;
-         bUnreacheable = TRUE;
+         bUnreachable = TRUE;
       }
 
       ((PING_TARGET *)pArg)->pdwHistory[((PING_TARGET *)pArg)->iBufPos++] = ((PING_TARGET *)pArg)->dwLastRTT;
       if (((PING_TARGET *)pArg)->iBufPos == (int)m_dwPollsPerMinute)
          ((PING_TARGET *)pArg)->iBufPos = 0;
-      if (bUnreacheable)
+      if (bUnreachable)
       {
          ((PING_TARGET *)pArg)->dwAvgRTT = 10000;
       }
@@ -103,7 +104,7 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 static LONG H_IcmpPing(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 {
    TCHAR szHostName[256], szTimeOut[32], szPacketSize[32];
-   DWORD dwAddr, dwTimeOut = 1000, dwRTT, dwPacketSize = m_dwDefPacketSize;
+   DWORD dwAddr, dwTimeOut = m_dwTimeout, dwRTT, dwPacketSize = m_dwDefPacketSize;
 
    if (!NxGetParameterArg(pszParam, 1, szHostName, 256))
       return SYSINFO_RC_UNSUPPORTED;

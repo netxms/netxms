@@ -93,8 +93,7 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
 
    // Create new process
    if (!CreateProcess(NULL, pszCmdLine, NULL, NULL, FALSE, 
-                      CREATE_NO_WINDOW | DETACHED_PROCESS,
-                      NULL, NULL, &si, &pi))
+                      CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
    {
       WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCmdLine, GetLastError());
       dwRetCode = ERR_EXEC_FAILED;
@@ -267,25 +266,33 @@ LONG H_ExternalParameter(char *pszCmd, char *pszArg, char *pValue)
       si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
       // Create new process
-      if (CreateProcess(NULL, pszCmdLine, NULL, NULL, TRUE, 
-                        CREATE_NO_WINDOW | DETACHED_PROCESS,
-                        NULL, NULL, &si, &pi))
+      if (CreateProcess(NULL, pszCmdLine, NULL, NULL, TRUE,
+                        CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
       {
          // Wait for process termination and close all handles
-         WaitForSingleObject(pi.hProcess, INFINITE);
+         if (WaitForSingleObject(pi.hProcess, g_dwExecTimeout) == WAIT_OBJECT_0)
+         {
+            // Rewind temporary file for reading
+            SetFilePointer(hOutput, 0, NULL, FILE_BEGIN);
+
+            // Read process output
+            ReadFile(hOutput, pValue, MAX_RESULT_LENGTH - 1, &dwBytes, NULL);
+            pValue[dwBytes] = 0;
+            sptr = strchr(pValue, '\n');
+            if (sptr != NULL)
+               *sptr = 0;
+            iStatus = SYSINFO_RC_SUCCESS;
+         }
+         else
+         {
+            // Timeout waiting for external process to complete, kill it
+            TerminateProcess(pi.hProcess, 127);
+            WriteLog(MSG_PROCESS_KILLED, EVENTLOG_WARNING_TYPE, "s", pszCmdLine);
+            iStatus = SYSINFO_RC_ERROR;
+         }
+
          CloseHandle(pi.hThread);
          CloseHandle(pi.hProcess);
-
-         // Rewind temporary file for reading
-         SetFilePointer(hOutput, 0, NULL, FILE_BEGIN);
-
-         // Read process output
-         ReadFile(hOutput, pValue, MAX_RESULT_LENGTH - 1, &dwBytes, NULL);
-         pValue[dwBytes] = 0;
-         sptr = strchr(pValue, '\n');
-         if (sptr != NULL)
-            *sptr = 0;
-         iStatus = SYSINFO_RC_SUCCESS;
       }
       else
       {
@@ -308,6 +315,7 @@ LONG H_ExternalParameter(char *pszCmd, char *pszArg, char *pValue)
    iStatus = SYSINFO_RC_ERROR;
 	{
 		FILE *hPipe;
+
 		if ((hPipe = popen(pszCmdLine, "r")) != NULL)
 		{
 			char *pTmp;

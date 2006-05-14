@@ -113,7 +113,7 @@ void CorrelateEvent(Event *pEvent)
          case EVENT_SERVICE_DOWN:
          case EVENT_SNMP_FAIL:
          case EVENT_AGENT_FAIL:
-            if (((Node *)pObject)->RuntimeFlags() & NDF_UNREACHEABLE)
+            if (((Node *)pObject)->RuntimeFlags() & NDF_UNREACHABLE)
             {
                pEvent->SetRootId(((Node *)pObject)->GetLastEventId(LAST_EVENT_NODE_DOWN));
             }

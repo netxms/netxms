@@ -350,6 +350,7 @@ extern char g_szPlatformSuffix[];
 extern DWORD g_dwStartupDelay;
 extern DWORD g_dwIdleTimeout;
 extern DWORD g_dwMaxSessions;
+extern DWORD g_dwExecTimeout;
 
 extern DWORD g_dwAcceptErrors;
 extern DWORD g_dwAcceptedConnections;

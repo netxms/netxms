@@ -746,30 +746,30 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                          FALSE, FALSE);
       if ((dwResult == SNMP_ERR_SUCCESS) || (dwResult == SNMP_ERR_NO_OBJECT))
       {
-         if (m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE)
+         if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
          {
-            m_dwDynamicFlags &= ~NDF_SNMP_UNREACHEABLE;
+            m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
             PostEventEx(pQueue, EVENT_SNMP_OK, m_dwId, NULL);
             SendPollerMsg(dwRqId, "Connectivity with SNMP agent restored\r\n");
          }
       }
       else
       {
-         SendPollerMsg(dwRqId, "SNMP agent unreacheable\r\n");
-         if (m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE)
+         SendPollerMsg(dwRqId, "SNMP agent unreachable\r\n");
+         if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
          {
             if ((tNow > m_tFailTimeSNMP + tExpire) &&
-                (!(m_dwDynamicFlags & NDF_UNREACHEABLE)))
+                (!(m_dwDynamicFlags & NDF_UNREACHABLE)))
             {
                m_dwFlags &= ~NF_IS_SNMP;
-               m_dwDynamicFlags &= ~NDF_SNMP_UNREACHEABLE;
+               m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
                m_szObjectId[0] = 0;
                SendPollerMsg(dwRqId, "Attribute isSNMP set to FALSE\r\n");
             }
          }
          else
          {
-            m_dwDynamicFlags |= NDF_SNMP_UNREACHEABLE;
+            m_dwDynamicFlags |= NDF_SNMP_UNREACHABLE;
             PostEventEx(pQueue, EVENT_SNMP_FAIL, m_dwId, NULL);
             m_tFailTimeSNMP = tNow;
          }
@@ -788,9 +788,9 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       SetAgentProxy(pAgentConn);
       if (pAgentConn->Connect(g_pServerKey))
       {
-         if (m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE)
+         if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
          {
-            m_dwDynamicFlags &= ~NDF_AGENT_UNREACHEABLE;
+            m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
             PostEventEx(pQueue, EVENT_AGENT_OK, m_dwId, NULL);
             SendPollerMsg(dwRqId, "Connectivity with NetXMS agent restored\r\n");
          }
@@ -798,14 +798,14 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       }
       else
       {
-         SendPollerMsg(dwRqId, "NetXMS agent unreacheable\r\n");
-         if (m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE)
+         SendPollerMsg(dwRqId, "NetXMS agent unreachable\r\n");
+         if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
          {
             if ((tNow > m_tFailTimeAgent + tExpire) &&
-                (!(m_dwDynamicFlags & NDF_UNREACHEABLE)))
+                (!(m_dwDynamicFlags & NDF_UNREACHABLE)))
             {
                m_dwFlags &= ~NF_IS_NATIVE_AGENT;
-               m_dwDynamicFlags &= ~NDF_AGENT_UNREACHEABLE;
+               m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
                m_szPlatformName[0] = 0;
                m_szAgentVersion[0] = 0;
                SendPollerMsg(dwRqId, "Attribute isNetXMSAgent set to FALSE\r\n");
@@ -813,7 +813,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          }
          else
          {
-            m_dwDynamicFlags |= NDF_AGENT_UNREACHEABLE;
+            m_dwDynamicFlags |= NDF_AGENT_UNREACHABLE;
             PostEventEx(pQueue, EVENT_AGENT_FAIL, m_dwId, NULL);
             m_tFailTimeAgent = tNow;
          }
@@ -885,34 +885,45 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
           (m_pChildList[i]->Status() != STATUS_CRITICAL) &&
           (m_pChildList[i]->Status() != STATUS_UNKNOWN) &&
+          (m_pChildList[i]->Status() != STATUS_UNMANAGED) &&
           (m_pChildList[i]->Status() != STATUS_DISABLED))
       {
          bAllDown = FALSE;
          break;
       }
    UnlockChildList();
-   if (bAllDown && (m_dwFlags & NF_IS_NATIVE_AGENT))
-      if (!(m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE))
+   if (bAllDown && (m_dwFlags & NF_IS_NATIVE_AGENT) &&
+       (!(m_dwFlags & NF_DISABLE_NXCP)))
+      if (!(m_dwDynamicFlags & NDF_AGENT_UNREACHABLE))
          bAllDown = FALSE;
-   if (bAllDown && (m_dwFlags & NF_IS_SNMP))
-      if (!(m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE))
+   if (bAllDown && (m_dwFlags & NF_IS_SNMP) &&
+       (!(m_dwFlags & NF_DISABLE_SNMP)))
+      if (!(m_dwDynamicFlags & NDF_SNMP_UNREACHABLE))
          bAllDown = FALSE;
    if (bAllDown)
    {
-      if (!(m_dwDynamicFlags & NDF_UNREACHEABLE))
+      if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
       {
-         m_dwDynamicFlags |= NDF_UNREACHEABLE;
+         m_dwDynamicFlags |= NDF_UNREACHABLE;
          PostEvent(EVENT_NODE_DOWN, m_dwId, NULL);
-         SendPollerMsg(dwRqId, "Node is unreacheable\r\n");
+         SendPollerMsg(dwRqId, "Node is unreachable\r\n");
+      }
+      else
+      {
+         SendPollerMsg(dwRqId, "Node is still unreachable\r\n");
       }
    }
    else
    {
-      if (m_dwDynamicFlags & NDF_UNREACHEABLE)
+      if (m_dwDynamicFlags & NDF_UNREACHABLE)
       {
-         m_dwDynamicFlags &= ~NDF_UNREACHEABLE;
+         m_dwDynamicFlags &= ~NDF_UNREACHABLE;
          PostEvent(EVENT_NODE_UP, m_dwId, NULL);
-         SendPollerMsg(dwRqId, "Node recovered from unreacheable state\r\n");
+         SendPollerMsg(dwRqId, "Node recovered from unreachable state\r\n");
+      }
+      else
+      {
+         SendPollerMsg(dwRqId, "Node is connected\r\n");
       }
    }
 
@@ -966,8 +977,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    // Check for forced capabilities recheck
    if (m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES)
    {
-      m_dwDynamicFlags &= ~(NDF_UNREACHEABLE | NDF_SNMP_UNREACHEABLE |
-                            NDF_CPSNMP_UNREACHEABLE | NDF_AGENT_UNREACHEABLE);
+      m_dwDynamicFlags &= ~(NDF_UNREACHABLE | NDF_SNMP_UNREACHABLE |
+                            NDF_CPSNMP_UNREACHABLE | NDF_AGENT_UNREACHABLE);
       m_dwFlags &= ~(NF_IS_NATIVE_AGENT | NF_IS_SNMP | NF_IS_CPSNMP |
                      NF_IS_BRIDGE | NF_IS_ROUTER | NF_IS_OSPF);
       m_szObjectId[0] = 0;
@@ -975,11 +986,11 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       m_szAgentVersion[0] = 0;
    }
 
-   // Check if node is marked as unreacheable
-   if (m_dwDynamicFlags & NDF_UNREACHEABLE)
+   // Check if node is marked as unreachable
+   if (m_dwDynamicFlags & NDF_UNREACHABLE)
    {
-      SendPollerMsg(dwRqId, _T("Node is marked as unreacheable, configuration poll aborted\r\n"));
-      DbgPrintf(AF_DEBUG_DISCOVERY, "Node is marked as unreacheable, configuration poll aborted");
+      SendPollerMsg(dwRqId, _T("Node is marked as unreachable, configuration poll aborted\r\n"));
+      DbgPrintf(AF_DEBUG_DISCOVERY, "Node is marked as unreachable, configuration poll aborted");
       m_tLastConfigurationPoll = time(NULL);
    }
    else
@@ -987,7 +998,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       // Check node's capabilities
       SetPollerInfo(nPoller, "capability check");
       SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
-      if ((!((m_dwFlags & NF_IS_SNMP) && (m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE))) &&
+      if ((!((m_dwFlags & NF_IS_SNMP) && (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE))) &&
           (!(m_dwFlags & NF_DISABLE_SNMP)))
       {
          if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
@@ -1005,7 +1016,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
             }
 
             m_dwFlags |= NF_IS_SNMP;
-            m_dwDynamicFlags &= ~NDF_SNMP_UNREACHEABLE;
+            m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
             SendPollerMsg(dwRqId, _T("   SNMP agent is active\r\n"));
 
             // Check node type
@@ -1060,7 +1071,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                }
 
                m_dwFlags |= NF_IS_SNMP | NF_IS_ROUTER;
-               m_dwDynamicFlags &= ~NDF_SNMP_UNREACHEABLE;
+               m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
                UnlockData();
                SendPollerMsg(dwRqId, _T("   CheckPoint SNMP agent on port 161 is active\r\n"));
             }
@@ -1068,7 +1079,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       }
 
       // Check for CheckPoint SNMP agent on port 260
-      if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHEABLE)))
+      if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)))
       {
          if (SnmpGet(SNMP_VERSION_1, m_dwIpAddr, CHECKPOINT_SNMP_PORT, m_szCommunityString,
                      ".1.3.6.1.4.1.2620.1.1.10.0", NULL, 0,
@@ -1076,13 +1087,13 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          {
             LockData();
             m_dwFlags |= NF_IS_CPSNMP | NF_IS_ROUTER;
-            m_dwDynamicFlags &= ~NDF_CPSNMP_UNREACHEABLE;
+            m_dwDynamicFlags &= ~NDF_CPSNMP_UNREACHABLE;
             UnlockData();
             SendPollerMsg(dwRqId, _T("   CheckPoint SNMP agent on port 260 is active\r\n"));
          }
       }
 
-      if ((!((m_dwFlags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE))) &&
+      if ((!((m_dwFlags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE))) &&
           (!(m_dwFlags & NF_DISABLE_NXCP)))
       {
          pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort,
@@ -1092,7 +1103,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          {
             LockData();
             m_dwFlags |= NF_IS_NATIVE_AGENT;
-            m_dwDynamicFlags &= ~NDF_AGENT_UNREACHEABLE;
+            m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
             UnlockData();
       
             if (pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
@@ -1420,8 +1431,8 @@ DWORD Node::GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer
 {
    DWORD dwResult;
 
-   if ((m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE) ||
-       (m_dwDynamicFlags & NDF_UNREACHEABLE))
+   if ((m_dwDynamicFlags & NDF_SNMP_UNREACHABLE) ||
+       (m_dwDynamicFlags & NDF_UNREACHABLE))
    {
       dwResult = SNMP_ERR_COMM;
    }
@@ -1443,8 +1454,8 @@ DWORD Node::GetItemFromCheckPointSNMP(const char *szParam, DWORD dwBufSize, char
 {
    DWORD dwResult;
 
-   if ((m_dwDynamicFlags & NDF_CPSNMP_UNREACHEABLE) ||
-       (m_dwDynamicFlags & NDF_UNREACHEABLE))
+   if ((m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE) ||
+       (m_dwDynamicFlags & NDF_UNREACHABLE))
    {
       dwResult = SNMP_ERR_COMM;
    }
@@ -1468,8 +1479,8 @@ DWORD Node::GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffe
    DWORD dwError, dwResult = DCE_COMM_ERROR;
    DWORD dwTries = 5;
 
-   if ((m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE) ||
-       (m_dwDynamicFlags & NDF_UNREACHEABLE))
+   if ((m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ||
+       (m_dwDynamicFlags & NDF_UNREACHABLE))
       return DCE_COMM_ERROR;
 
    AgentLock();
@@ -1525,7 +1536,7 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
    {
       if (m_dwFlags & NF_IS_NATIVE_AGENT)
       {
-         szBuffer[0] = (m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE) ? '1' : '0';
+         szBuffer[0] = (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ? '1' : '0';
          szBuffer[1] = 0;
       }
       else
@@ -1937,8 +1948,8 @@ DWORD Node::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceTy
    DWORD dwError = ERR_NOT_CONNECTED;
 
    if ((m_dwFlags & NF_IS_NATIVE_AGENT) &&
-       (!(m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE)) &&
-       (!(m_dwDynamicFlags & NDF_UNREACHEABLE)))
+       (!(m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)) &&
+       (!(m_dwDynamicFlags & NDF_UNREACHABLE)))
    {
       AgentConnection *pConn;
 
@@ -2005,8 +2016,8 @@ AgentConnection *Node::CreateAgentConnection(void)
    AgentConnection *pConn;
 
    if ((!(m_dwFlags & NF_IS_NATIVE_AGENT)) ||
-       (m_dwDynamicFlags & NDF_AGENT_UNREACHEABLE) ||
-       (m_dwDynamicFlags & NDF_UNREACHEABLE))
+       (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ||
+       (m_dwDynamicFlags & NDF_UNREACHABLE))
       return NULL;
 
    pConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort,
@@ -2363,8 +2374,8 @@ DWORD Node::CallSnmpEnumerate(char *pszRootOid,
                               void *pArg)
 {
    if ((m_dwFlags & NF_IS_SNMP) && 
-       (!(m_dwDynamicFlags & NDF_SNMP_UNREACHEABLE)) &&
-       (!(m_dwDynamicFlags & NDF_UNREACHEABLE)))
+       (!(m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)) &&
+       (!(m_dwDynamicFlags & NDF_UNREACHABLE)))
       return SnmpEnumerate(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort,
                            m_szCommunityString, pszRootOid, pHandler, pArg, FALSE);
    else

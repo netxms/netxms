@@ -122,7 +122,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
    DWORD dwResult = ICMP_TIMEOUT;
    ECHOREQUEST request;
    ECHOREPLY reply;
-   DWORD dwTimeLeft, dwElapsedTime;
+   DWORD dwTimeLeft, dwElapsedTime, dwRTT;
    int nBytes;
    INT64 qwStartTime;
    static char szPayload[64] = "NetXMS ICMP probe [01234567890]";
@@ -156,6 +156,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
    nBytes = dwPacketSize - sizeof(IPHDR);
    while(iNumRetries--)
    {
+      dwRTT = 0;  // Round-trip time for current request
       request.m_icmpHdr.m_wId = ICMP_REQUEST_ID;
       request.m_icmpHdr.m_wSeq++;
       request.m_icmpHdr.m_wChecksum = 0;
@@ -218,6 +219,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
             {
                dwElapsedTime = (DWORD)(GetCurrentTimeMs() - qwStartTime);
                dwTimeLeft -= min(dwElapsedTime, dwTimeLeft);
+               dwRTT += dwElapsedTime;
 
                // Receive reply
                iAddrLen = sizeof(struct sockaddr_in);
@@ -234,7 +236,7 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
 #endif
                      dwResult = ICMP_SUCCESS;   // We succeed
                      if (pdwRTT != NULL)
-                        *pdwRTT = dwElapsedTime;
+                        *pdwRTT = dwRTT;
                      goto stop_ping;            // Stop sending packets
                   }
 
