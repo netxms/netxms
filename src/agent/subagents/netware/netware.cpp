@@ -201,6 +201,18 @@ static LONG H_ArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 
 
 //
+// Shutdown system
+//
+
+static LONG H_ActionShutdown(char *pszAction, NETXMS_VALUES_LIST *pArgList, char *pData)
+{
+   LONG nRet = ERR_INTERNAL_ERROR;
+
+   return nRet;
+}
+
+
+//
 // Collector thread
 //
 
@@ -279,6 +291,11 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
    { "Net.ArpCache", H_ArpCache, NULL }
 };
+static NETXMS_SUBAGENT_ACTION m_actions[] =
+{
+   { "System.Restart", H_ActionShutdown, "R", "Restart system" },
+   { "System.Shutdown", H_ActionShutdown, "S", "Shutdown system" }
+};
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
@@ -289,7 +306,9 @@ static NETXMS_SUBAGENT_INFO m_info =
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
-   m_enums
+   m_enums,
+	sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
+   m_actions
 };
 
 
