@@ -503,6 +503,8 @@ src/console/nxuilib/SimpleListCtrl.cpp -text
 src/console/nxuilib/SimpleListCtrl.h -text
 src/console/nxuilib/StdAfx.cpp -text
 src/console/nxuilib/StdAfx.h -text
+src/console/nxuilib/TaskBarPopupWnd.cpp -text
+src/console/nxuilib/TaskBarPopupWnd.h -text
 src/console/nxuilib/nxuilib.clw -text
 src/console/nxuilib/nxuilib.cpp -text
 src/console/nxuilib/nxuilib.def -text
@@ -511,7 +513,6 @@ src/console/nxuilib/nxuilib.dsw -text
 src/console/nxuilib/nxuilib.h -text
 src/console/nxuilib/nxuilib.rc -text
 src/console/nxuilib/nxuilib.vcproj -text
-src/console/nxuilib/popup.cpp -text
 src/console/nxuilib/res/Makefile.am -text
 src/console/nxuilib/res/SeverityCritical.ico -text
 src/console/nxuilib/res/SeverityMajor.ico -text
