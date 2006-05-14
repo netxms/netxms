@@ -10,7 +10,7 @@
 - Implemented "User must change password on next logon" function
 - UPS subagent: added support for BSMXCP protocol (used by Powerware,
   HP and Compaq UPSes)
-- Fixed issues: #52, #82, #83, #84, #85, #86, #87, #88
+- Fixed issues: #28, #34, #52, #82, #83, #84, #85, #86, #87, #88
 
 
 *
