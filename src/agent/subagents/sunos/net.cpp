@@ -1,28 +1,31 @@
+/* $Id: net.cpp,v 1.7 2006-05-15 22:11:22 alk Exp $ */
+
 /*
-** NetXMS subagent for SunOS/Solaris
-** Copyright (C) 2004 Victor Kirhenshtein
-**
-** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software
-** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-**
-** $module: net.cpp
-**
-**/
+ ** NetXMS subagent for SunOS/Solaris
+ ** Copyright (C) 2004 Victor Kirhenshtein
+ **
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation; either version 2 of the License, or
+ ** (at your option) any later version.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ **
+ ** $module: net.cpp
+ **
+ **/
 
 #include "sunos_subagent.h"
 #include <net/if.h>
 #include <sys/sockio.h>
+#include <sys/utsname.h>
 
 
 //
@@ -31,50 +34,48 @@
 
 static int InterfaceTypeFromName(char *pszName)
 {
-   int iType = 0;
+	int iType = 0;
 
-   switch(pszName[0])
-   {
-      case 'l':   // le / lo / lane (ATM LAN Emulation)
-         switch(pszName[1])
-         {
-            case 'o':
-               iType = 24;
-               break;
-            case 'e':
-               iType = 6;
-               break;
-            case 'a':
-               iType = 37;
-               break;
-         }
-         break;
-      case 'g':   // (gigabit ethernet card)
-         iType = 6;
-         break;
-      case 'h':   // hme (SBus card)
-      case 'e':   // eri (PCI card)
-      case 'b':   // be
-      case 'd':   // dmfe -- found on netra X1
-         iType = 6;
-         break;
-      case 'f':   // fa (Fore ATM)
-         iType = 37;
-         break;
-      case 'q':   // qe (QuadEther)/qa (Fore ATM)/qfe (QuadFastEther)
-         switch(pszName[1])
-         {
-            case 'a':
-               iType = 37;
-               break;
-            case 'e':
-            case 'f':
-               iType = 6;
-               break;
-         }
-         break;
-   }
-   return iType;
+	switch(pszName[0])
+	{
+		case 'l':   // le / lo / lane (ATM LAN Emulation)
+			switch(pszName[1])
+			{
+				case 'o':
+					iType = 24;
+					break;
+				case 'e':
+					iType = 6;
+					break;
+				case 'a':
+					iType = 37;
+					break;
+			}
+			break;
+		case 'g':   // (gigabit ethernet card)
+		case 'h':   // hme (SBus card)
+		case 'e':   // eri (PCI card)
+		case 'b':   // be
+		case 'd':   // dmfe -- found on netra X1
+			iType = 6;
+			break;
+		case 'f':   // fa (Fore ATM)
+			iType = 37;
+			break;
+		case 'q':   // qe (QuadEther)/qa (Fore ATM)/qfe (QuadFastEther)
+			switch(pszName[1])
+			{
+				case 'a':
+					iType = 37;
+					break;
+				case 'e':
+				case 'f':
+					iType = 6;
+					break;
+			}
+			break;
+	}
+	return iType;
 }
 
 
@@ -84,19 +85,19 @@ static int InterfaceTypeFromName(char *pszName)
 
 static BOOL GetInterfaceHWAddr(char *pszIfName, char *pszMacAddr)
 {
-   BYTE macAddr[6];
+	BYTE macAddr[6];
 	int i;
 
-   if (mac_addr_dlpi(pszIfName, macAddr) == 0)
+	if (mac_addr_dlpi(pszIfName, macAddr) == 0)
 	{
 		for(i = 0; i < 6; i++)
 			sprintf(&pszMacAddr[i << 1], "%02X", macAddr[i]);
 	}
 	else
 	{
-   	strcpy(pszMacAddr, "000000000000");
+		strcpy(pszMacAddr, "000000000000");
 	}
-   return TRUE;
+	return TRUE;
 }
 
 
@@ -109,7 +110,7 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 	int nRet = SYSINFO_RC_ERROR;
 	struct lifnum ln;
 	struct lifconf lc;
-   struct lifreq rq;
+	struct lifreq rq;
 	int i, nFd;
 
 	nFd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -164,9 +165,9 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 					if (ioctl(nFd, SIOCGLIFINDEX, &rq) == 0)
 					{
 						snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s",
-								   rq.lifr_index, szIpAddr, nMask,
-									InterfaceTypeFromName(lc.lifc_req[i].lifr_name),
-									szMacAddr, lc.lifc_req[i].lifr_name);
+								rq.lifr_index, szIpAddr, nMask,
+								InterfaceTypeFromName(lc.lifc_req[i].lifr_name),
+								szMacAddr, lc.lifc_req[i].lifr_name);
 						NxAddResultString(pValue, szOut);
 					}
 					else
@@ -195,26 +196,24 @@ LONG H_NetIfDescription(char *pszParam, char *pArg, char *pValue)
 	char *eptr, szIfName[IF_NAMESIZE];
 	int nIndex, nFd;
 	struct lifreq rq;
-   LONG nRet = SYSINFO_RC_ERROR;
+	LONG nRet = SYSINFO_RC_ERROR;
 
-   NxGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
-   if (szIfName[0] == 0)
-   {
-      nRet = SYSINFO_RC_UNSUPPORTED;
-   }
-   else
-   {
-      // Determine if parameter is index or name
-      nIndex = strtol(szIfName, &eptr, 10);
-      if (*eptr == 0)
-      {
-         // It's an index, determine name
+	NxGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
+	if (szIfName[0] != 0)
+	{
+		// Determine if parameter is index or name
+		nIndex = strtol(szIfName, &eptr, 10);
+		if (*eptr == 0)
+		{
+			// It's an index, determine name
 			if (if_indextoname(nIndex, szIfName) == NULL)
-      		nRet = SYSINFO_RC_UNSUPPORTED;
-      }
+			{
+				szIfName[0] = 0;
+			}
+		}
 	}
 
-	if (nRet != SYSINFO_RC_UNSUPPORTED)
+	if (szIfName[0] != 0)
 	{
 		ret_string(pValue, szIfName);
 		nRet = SYSINFO_RC_SUCCESS;
@@ -233,26 +232,24 @@ LONG H_NetIfAdminStatus(char *pszParam, char *pArg, char *pValue)
 	char *eptr, szIfName[IF_NAMESIZE];
 	int nIndex, nFd;
 	struct lifreq rq;
-   LONG nRet = SYSINFO_RC_ERROR;
+	LONG nRet = SYSINFO_RC_ERROR;
 
-   NxGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
-   if (szIfName[0] == 0)
-   {
-      nRet = SYSINFO_RC_UNSUPPORTED;
-   }
-   else
-   {
-      // Determine if parameter is index or name
-      nIndex = strtol(szIfName, &eptr, 10);
-      if (*eptr == 0)
-      {
-         // It's an index, determine name
+	NxGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
+	if (szIfName[0] != 0)
+	{
+		// Determine if parameter is index or name
+		nIndex = strtol(szIfName, &eptr, 10);
+		if (*eptr == 0)
+		{
+			// It's an index, determine name
 			if (if_indextoname(nIndex, szIfName) == NULL)
-      		nRet = SYSINFO_RC_UNSUPPORTED;
-      }
+			{
+				szIfName[0] = 0;
+			}
+		}
 	}
 
-	if (nRet != SYSINFO_RC_UNSUPPORTED)
+	if (szIfName[0] != 0)
 	{
 		nFd = socket(AF_INET, SOCK_DGRAM, 0);
 		if (nFd >= 0)
@@ -270,38 +267,35 @@ LONG H_NetIfAdminStatus(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-
 //
 // Get interface statistics
 //
 
 LONG H_NetInterfaceStats(char *pszParam, char *pArg, char *pValue)
 {
-   kstat_ctl_t *kc;
-   kstat_t *kp;
-   kstat_named_t *kn;
+	kstat_ctl_t *kc;
+	kstat_t *kp;
+	kstat_named_t *kn;
 	char *ptr, *eptr, szIfName[IF_NAMESIZE], szDevice[IF_NAMESIZE];
 	int nInstance, nIndex;
-   LONG nRet = SYSINFO_RC_ERROR;
+	LONG nRet = SYSINFO_RC_ERROR;
 
-   NxGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
-   if (szIfName[0] == 0)
-   {
-      nRet = SYSINFO_RC_UNSUPPORTED;
-   }
-   else
-   {
-      // Determine if parameter is index or name
-      nIndex = strtol(szIfName, &eptr, 10);
-      if (*eptr == 0)
-      {
-         // It's an index, determine name
+	NxGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
+	if (szIfName[0] != 0)
+	{
+		// Determine if parameter is index or name
+		nIndex = strtol(szIfName, &eptr, 10);
+		if (*eptr == 0)
+		{
+			// It's an index, determine name
 			if (if_indextoname(nIndex, szIfName) == NULL)
-      		nRet = SYSINFO_RC_UNSUPPORTED;
-      }
+			{
+				szIfName[0] = 0;
+			}
+		}
 	}
 
-	if (nRet != SYSINFO_RC_UNSUPPORTED)
+	if (szIfName[0] != 0)
 	{
 		// Parse interface name and create device name and instance number
 		for(ptr = szIfName; (*ptr != 0) && (!isdigit(*ptr)); ptr++);
@@ -311,15 +305,15 @@ LONG H_NetInterfaceStats(char *pszParam, char *pArg, char *pValue)
 		*eptr = 0;
 		nInstance = atoi(ptr);
 
-   	// Open kstat
-   	kc = kstat_open();
-   	if (kc != NULL)
-   	{
-      	kp = kstat_lookup(kc, szDevice, nInstance, szIfName);
-      	if (kp != NULL)
-      	{
-         	if(kstat_read(kc, kp, 0) != -1)
-         	{
+		// Open kstat
+		kc = kstat_open();
+		if (kc != NULL)
+		{
+			kp = kstat_lookup(kc, szDevice, nInstance, szIfName);
+			if (kp != NULL)
+			{
+				if(kstat_read(kc, kp, 0) != -1)
+				{
 					kn = (kstat_named_t *)kstat_data_lookup(kp, pArg);
 					if (kn != NULL)
 					{
@@ -352,11 +346,67 @@ LONG H_NetInterfaceStats(char *pszParam, char *pArg, char *pValue)
 						}
 						nRet = SYSINFO_RC_SUCCESS;
 					}
-         	}
-      	}
-      	kstat_close(kc);
-   	}
+				}
+			}
+			kstat_close(kc);
+		}
 	}
 
-   return nRet;
+	return nRet;
 }
+
+//
+// Get Link status
+//
+LONG H_NetInterfaceLink(char *pszParam, char *pArg, char *pValue)
+{
+	char *eptr, szIfName[IF_NAMESIZE];
+	int nIndex, nFd;
+	struct lifreq rq;
+	LONG nRet = SYSINFO_RC_ERROR;
+
+	// try to get status using kstat()
+	nRet = H_NetInterfaceStats(pszParam, "link_up", pValue);
+	if (nRet == SYSINFO_RC_SUCCESS)
+	{
+		return SYSINFO_RC_SUCCESS;
+	}
+
+	NxGetParameterArg(pszParam, 1, szIfName, IF_NAMESIZE);
+	if (szIfName[0] != 0)
+	{
+		// Determine if parameter is index or name
+		nIndex = strtol(szIfName, &eptr, 10);
+		if (*eptr == 0)
+		{
+			// It's an index, determine name
+			if (if_indextoname(nIndex, szIfName) == NULL)
+			{
+				szIfName[0] = 0;
+			}
+		}
+
+		if (szIfName[0] != 0)
+		{
+			nFd = socket(AF_INET, SOCK_DGRAM, 0);
+			if (nFd >= 0)
+			{			  
+				strcpy(rq.lifr_name, szIfName);
+				if (ioctl(nFd, SIOCGLIFFLAGS, &rq) == 0)
+				{
+					ret_int(pValue, (rq.lifr_flags & IFF_RUNNING) ? 1 : 2);
+					nRet = SYSINFO_RC_SUCCESS;
+				}
+			}
+		}
+	}
+
+	return nRet;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+
+$Log: not supported by cvs2svn $
+
+*/

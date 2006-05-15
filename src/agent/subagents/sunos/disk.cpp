@@ -1,24 +1,26 @@
+/* $Id: disk.cpp,v 1.2 2006-05-15 22:11:22 alk Exp $ */
+
 /*
-** NetXMS subagent for SunOS/Solaris
-** Copyright (C) 2004 Victor Kirhenshtein
-**
-** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software
-** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-**
-** $module: disk.cpp
-**
-**/
+ ** NetXMS subagent for SunOS/Solaris
+ ** Copyright (C) 2004 Victor Kirhenshtein
+ **
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation; either version 2 of the License, or
+ ** (at your option) any later version.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ **
+ ** $module: disk.cpp
+ **
+ **/
 
 #include "sunos_subagent.h"
 #include <sys/statvfs.h>
@@ -32,9 +34,9 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct statvfs sv;
-   char szPath[512] = "";
+	char szPath[512] = "";
 
-   NxGetParameterArg(pszParam, 1, szPath, sizeof(szPath));
+	NxGetParameterArg(pszParam, 1, szPath, sizeof(szPath));
 
 	if ((szPath[0] != 0) && (statvfs(szPath, &sv) == 0))
 	{
@@ -58,3 +60,10 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 
 	return nRet;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+
+$Log: not supported by cvs2svn $
+
+*/

@@ -1,24 +1,26 @@
+/* $Id: sunos_subagent.h,v 1.12 2006-05-15 22:11:22 alk Exp $ */
+
 /*
-** NetXMS subagent for SunOS/Solaris
-** Copyright (C) 2004 Victor Kirhenshtein
-**
-** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software
-** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-**
-** $module: sunos_subagent.h
-**
-**/
+ ** NetXMS subagent for SunOS/Solaris
+ ** Copyright (C) 2004 Victor Kirhenshtein
+ **
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation; either version 2 of the License, or
+ ** (at your option) any later version.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ **
+ ** $module: sunos_subagent.h
+ **
+ **/
 
 #ifndef _sunos_subagent_h_
 #define _sunos_subagent_h_
@@ -86,7 +88,7 @@ typedef struct t_ProcEnt
 
 int mac_addr_dlpi(char *pszIfName, u_char *pMacAddr);
 LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName,
-                    char *pszStat, char *pValue, kstat_named_t *pRawValue);
+		char *pszStat, char *pValue, kstat_named_t *pRawValue);
 
 THREAD_RESULT THREAD_CALL CPUStatCollector(void *pArg);
 
@@ -99,3 +101,10 @@ extern BOOL g_bShutdown;
 
 
 #endif
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+
+$Log: not supported by cvs2svn $
+
+*/

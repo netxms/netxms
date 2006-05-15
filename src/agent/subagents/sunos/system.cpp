@@ -1,24 +1,26 @@
+/* $Id: system.cpp,v 1.7 2006-05-15 22:11:22 alk Exp $ */
+
 /*
-** NetXMS subagent for SunOS/Solaris
-** Copyright (C) 2004, 2005 Victor Kirhenshtein
-**
-** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software
-** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-**
-** $module: system.cpp
-**
-**/
+ ** NetXMS subagent for SunOS/Solaris
+ ** Copyright (C) 2004, 2005 Victor Kirhenshtein
+ **
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation; either version 2 of the License, or
+ ** (at your option) any later version.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ **
+ ** $module: system.cpp
+ **
+ **/
 
 #include "sunos_subagent.h"
 #include <sys/systeminfo.h>
@@ -44,7 +46,7 @@ LONG H_Uname(char *pszParam, char *pArg, char *pValue)
 		SI_PLATFORM
 	};
 
-   for(i = 0; i < 7; i++)
+	for(i = 0; i < 7; i++)
 		if (sysinfo(nSysCode[i], szSysStr[i], 64) == -1)
 		{
 			nRet = SYSINFO_RC_ERROR;
@@ -54,11 +56,11 @@ LONG H_Uname(char *pszParam, char *pArg, char *pValue)
 	if (nRet == SYSINFO_RC_SUCCESS)
 	{
 		snprintf(pValue, MAX_RESULT_LENGTH, "%s %s %s %s %s %s %s",
-					szSysStr[0], szSysStr[1], szSysStr[2], szSysStr[3],
-					szSysStr[4], szSysStr[5], szSysStr[6]);
+				szSysStr[0], szSysStr[1], szSysStr[2], szSysStr[3],
+				szSysStr[4], szSysStr[5], szSysStr[6]);
 	}
 
-   return nRet;
+	return nRet;
 }
 
 
@@ -108,7 +110,7 @@ LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
 {
 	return (sysinfo(SI_HOSTNAME, pValue, MAX_RESULT_LENGTH) == -1) ?
-				SYSINFO_RC_ERROR : SYSINFO_RC_SUCCESS;
+		SYSINFO_RC_ERROR : SYSINFO_RC_SUCCESS;
 }
 
 
@@ -159,9 +161,9 @@ LONG H_KStat(char *pszParam, char *pArg, char *pValue)
 
 	// Read parameters
 	if ((!NxGetParameterArg(pszParam, 1, szModule, 128)) ||
-		 (!NxGetParameterArg(pszParam, 2, szInstance, 16)) ||
-		 (!NxGetParameterArg(pszParam, 3, szName, 128)) ||
-		 (!NxGetParameterArg(pszParam, 4, szStat, 128)))
+			(!NxGetParameterArg(pszParam, 2, szInstance, 16)) ||
+			(!NxGetParameterArg(pszParam, 3, szName, 128)) ||
+			(!NxGetParameterArg(pszParam, 4, szStat, 128)))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	if (szInstance[0] != 0)
@@ -194,7 +196,7 @@ LONG H_CPUCount(char *pszParam, char *pArg, char *pValue)
 //
 
 LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName,
-                    char *pszStat, char *pValue, kstat_named_t *pRawValue)
+		char *pszStat, char *pValue, kstat_named_t *pRawValue)
 {
 	kstat_ctl_t *kc;
 	kstat_t *kp;
@@ -215,34 +217,34 @@ LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName,
 				{
 					if (pValue != NULL)
 					{
-	               switch(kn->data_type)
-   	            {
-      	            case KSTAT_DATA_CHAR:
-         	            ret_string(pValue, kn->value.c);
-            	         break;
-               	   case KSTAT_DATA_INT32:
-                  	   ret_int(pValue, kn->value.i32);
-                     	break;
-	                  case KSTAT_DATA_UINT32:
-   	                  ret_uint(pValue, kn->value.ui32);
-      	               break;
-         	         case KSTAT_DATA_INT64:
-            	         ret_int64(pValue, kn->value.i64);
-               	      break;
-                  	case KSTAT_DATA_UINT64:
-    	                 ret_uint64(pValue, kn->value.ui64);
-      	               break;
-         	         case KSTAT_DATA_FLOAT:
-            	         ret_double(pValue, kn->value.f);
-               	      break;
-                  	case KSTAT_DATA_DOUBLE:
-                     	ret_double(pValue, kn->value.d);
-                     	break;
+						switch(kn->data_type)
+						{
+							case KSTAT_DATA_CHAR:
+								ret_string(pValue, kn->value.c);
+								break;
+							case KSTAT_DATA_INT32:
+								ret_int(pValue, kn->value.i32);
+								break;
+							case KSTAT_DATA_UINT32:
+								ret_uint(pValue, kn->value.ui32);
+								break;
+							case KSTAT_DATA_INT64:
+								ret_int64(pValue, kn->value.i64);
+								break;
+							case KSTAT_DATA_UINT64:
+								ret_uint64(pValue, kn->value.ui64);
+								break;
+							case KSTAT_DATA_FLOAT:
+								ret_double(pValue, kn->value.f);
+								break;
+							case KSTAT_DATA_DOUBLE:
+								ret_double(pValue, kn->value.d);
+								break;
 							default:
-                     	ret_int(pValue, 0);
+								ret_int(pValue, 0);
 								break;
 						}
-               }
+					}
 
 					if (pRawValue != NULL)
 					{
@@ -298,3 +300,10 @@ LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 
 	return nRet;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+
+$Log: not supported by cvs2svn $
+
+*/

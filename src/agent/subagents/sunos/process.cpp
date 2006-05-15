@@ -1,24 +1,26 @@
+/* $Id: process.cpp,v 1.9 2006-05-15 22:11:22 alk Exp $ */
+
 /*
-** NetXMS subagent for SunOS/Solaris
-** Copyright (C) 2004 Victor Kirhenshtein
-**
-** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software
-** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-**
-** $module: process.cpp
-**
-**/
+ ** NetXMS subagent for SunOS/Solaris
+ ** Copyright (C) 2004 Victor Kirhenshtein
+ **
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation; either version 2 of the License, or
+ ** (at your option) any later version.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ **
+ ** $module: process.cpp
+ **
+ **/
 
 #include "sunos_subagent.h"
 #include <procfs.h>
@@ -107,7 +109,7 @@ static int ProcRead(PROC_ENT **pEnt, char *pszPattern)
 			int hFile;
 
 			snprintf(szFileName, sizeof(szFileName),
-					   "/proc/%s/psinfo", pNameList[nCount]->d_name);
+					"/proc/%s/psinfo", pNameList[nCount]->d_name);
 			hFile = open(szFileName, O_RDONLY);
 			if (hFile != -1)
 			{
@@ -121,7 +123,7 @@ static int ProcRead(PROC_ENT **pEnt, char *pszPattern)
 						{
 							(*pEnt)[nFound].nPid = strtoul(pNameList[nCount]->d_name, NULL, 10);
 							nx_strncpy((*pEnt)[nFound].szProcName, psi.pr_fname,
-									  sizeof((*pEnt)[nFound].szProcName));
+									sizeof((*pEnt)[nFound].szProcName));
 						}
 						nFound++;
 					}
@@ -143,7 +145,7 @@ static int ProcRead(PROC_ENT **pEnt, char *pszPattern)
 
 LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
-   LONG nRet = SYSINFO_RC_SUCCESS;
+	LONG nRet = SYSINFO_RC_SUCCESS;
 	PROC_ENT *pList;
 	int i, nProc;
 	char szBuffer[256];
@@ -154,7 +156,7 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 		for(i = 0; i < nProc; i++)
 		{
 			snprintf(szBuffer, sizeof(szBuffer), "%d %s", pList[i].nPid,
-						pList[i].szProcName);
+					pList[i].szProcName);
 			NxAddResultString(pValue, szBuffer);
 		}
 	}
@@ -175,10 +177,10 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
-   char szArg[128] = "";
+	char szArg[128] = "";
 	int nCount;
 
-   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 	nCount = ProcRead(NULL, szArg);
 	if (nCount >= 0)
 	{
@@ -231,7 +233,7 @@ static BOOL ReadProcFile(pid_t nPid, char *pszFile, void *pData, size_t nDataLen
 //
 
 static QWORD GetProcessAttribute(pid_t nPid, int nAttr, int nType,
-											int nCount, QWORD *pqwValue)
+		int nCount, QWORD *pqwValue)
 {
 	QWORD qwValue;  
 	char szFileName[MAX_PATH];
@@ -260,7 +262,7 @@ static QWORD GetProcessAttribute(pid_t nPid, int nAttr, int nType,
 			if (ReadProcFile(nPid, "status", &status, sizeof(pstatus_t)))
 			{
 				qwValue = status.pr_stime.tv_sec * 1000 + 
-							 status.pr_stime.tv_nsec / 1000000;
+					status.pr_stime.tv_nsec / 1000000;
 			}
 			else
 			{
@@ -271,7 +273,7 @@ static QWORD GetProcessAttribute(pid_t nPid, int nAttr, int nType,
 			if (ReadProcFile(nPid, "status", &status, sizeof(pstatus_t)))
 			{
 				qwValue = status.pr_utime.tv_sec * 1000 + 
-							 status.pr_utime.tv_nsec / 1000000;
+					status.pr_utime.tv_nsec / 1000000;
 			}
 			else
 			{
@@ -327,14 +329,14 @@ static QWORD GetProcessAttribute(pid_t nPid, int nAttr, int nType,
 
 LONG H_ProcessInfo(char *pszParam, char *pArg, char *pValue)
 {
-   int nRet = SYSINFO_RC_ERROR;
-   char szBuffer[256] = "";
+	int nRet = SYSINFO_RC_ERROR;
+	char szBuffer[256] = "";
 	int i, nCount, nType;
 	PROC_ENT *pList;
 	QWORD qwValue;
 	static char *pszTypeList[]={ "min", "max", "avg", "sum", NULL };
 
-   // Get parameter type arguments
+	// Get parameter type arguments
 	NxGetParameterArg(pszParam, 2, szBuffer, sizeof(szBuffer));
 	if (szBuffer[0] == 0)     // Omited type
 	{
@@ -358,10 +360,17 @@ LONG H_ProcessInfo(char *pszParam, char *pArg, char *pValue)
 				break;
 		if (i == nCount)
 		{
-      	ret_uint64(pValue, qwValue);
+			ret_uint64(pValue, qwValue);
 			nRet = SYSINFO_RC_SUCCESS;
 		}
 	}
 
 	return nRet;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+
+$Log: not supported by cvs2svn $
+
+*/
