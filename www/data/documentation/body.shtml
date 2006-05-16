@@ -7,6 +7,15 @@
 	If you have any questions, please contact us.
 	</p>
 
+	<h2>Manuals</h2>
+	<p>
+	This manuals are far from being complete, but already contain some useable information. They will be updated on a regular basis.<br>
+	<br>
+	NetXMS User's Manual:<br>
+		&nbsp    <a href="netxms_user_manual.pdf">In PDF format</a><br>
+		&nbsp    <a href="netxms_user_manual.doc">In Microsoft Word format</a>.
+	</p>
+
 	<h2>Documentation Wiki</h2>
 	<p>
 	This is the <a href="http://wiki.netxms.org/">NetXMS Wiki</a>.
