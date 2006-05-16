@@ -38,7 +38,7 @@ Name: "{app}\etc"
 Name: "{app}\var"
 
 [Run]
-Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" {code:GetMasterServer} {{syslog} ""{app}\var"""; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's config..."; Flags: runhidden
+Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" {code:GetMasterServer} {{syslog} ""{app}\var"" {code:GetSubagentList}"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's config..."; Flags: runhidden
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c ""{app}\etc\nxagentd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing service..."; Flags: runhidden
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting service..."; Flags: runhidden
 

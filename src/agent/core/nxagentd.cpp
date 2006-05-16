@@ -911,10 +911,12 @@ static void ExitHandler(int nSig)
 // Create configuration file
 //
 
-static int CreateConfig(TCHAR *pszServer, TCHAR *pszLogFile, TCHAR *pszFileStore)
+static int CreateConfig(TCHAR *pszServer, TCHAR *pszLogFile, TCHAR *pszFileStore,
+                        int iNumSubAgents, TCHAR **ppszSubAgentList)
 {
    FILE *fp;
    time_t currTime;
+   int i;
 
    if (_taccess(g_szConfigFile, 0) == 0)
       return 0;  // File already exist, we shouldn't overwrite it
@@ -927,6 +929,8 @@ static int CreateConfig(TCHAR *pszServer, TCHAR *pszLogFile, TCHAR *pszFileStore
                 _tctime(&currTime));
       _ftprintf(fp, _T("MasterServers = %s\nLogFile = %s\nFileStore = %s\n"),
                 pszServer, pszLogFile, pszFileStore);
+      for(i = 0; i < iNumSubAgents; i++)
+         _ftprintf(fp, _T("SubAgent = %s\n"), ppszSubAgentList[i]);
       fclose(fp);
    }
    return (fp != NULL) ? 0 : 2;
@@ -1122,7 +1126,8 @@ int main(int argc, char *argv[])
          break;
       case ACTION_CREATE_CONFIG:
          iExitCode = CreateConfig(CHECK_NULL(argv[optind]), CHECK_NULL(argv[optind + 1]),
-                                  CHECK_NULL(argv[optind + 2]));
+                                  CHECK_NULL(argv[optind + 2]), argc - optind - 3,
+                                  &argv[optind + 3]);
          break;
 #ifdef _WIN32
       case ACTION_INSTALL_SERVICE:
