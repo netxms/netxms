@@ -781,6 +781,7 @@ src/console/win32/icons/ZoomOut.ico -text
 src/console/win32/icons/ack.ico -text
 src/console/win32/icons/active.ico -text
 src/console/win32/icons/alarm.ico -text
+src/console/win32/icons/back.ico -text
 src/console/win32/icons/command.ico -text
 src/console/win32/icons/connect.ico -text
 src/console/win32/icons/database.ico -text
@@ -795,6 +796,7 @@ src/console/win32/icons/editor.ico -text
 src/console/win32/icons/exec.ico -text
 src/console/win32/icons/folder_c.ico -text
 src/console/win32/icons/folder_o.ico -text
+src/console/win32/icons/forward.ico -text
 src/console/win32/icons/go_parent.ico -text
 src/console/win32/icons/graph.ico -text
 src/console/win32/icons/home.ico -text
