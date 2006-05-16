@@ -35,7 +35,7 @@ DWORD UpgradeAgent(TCHAR *pszPkgFile)
 #if defined(_WIN32)
 
    // Start installation
-   _sntprintf(szCmdLine, 1024, _T("\"%s\" /VERYSILENT"), pszPkgFile);
+   _sntprintf(szCmdLine, 1024, _T("\"%s\" /VERYSILENT /SUPPRESSMSGBOXES"), pszPkgFile);
    return ExecuteCommand(szCmdLine, NULL);
 
 #elif defined(_NETWARE)

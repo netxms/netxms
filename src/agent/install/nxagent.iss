@@ -27,6 +27,7 @@ Source: "..\subagents\win9x\Release\win9x.nsm"; DestDir: "{app}\bin"; Flags: ign
 Source: "..\subagents\winperf\Release\winperf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\ping\Release\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\portCheck\Release\portcheck.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\subagents\logscan\Release\logscan.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 ;Source: "..\subagents\rtmonitor\Release\rtmonitor.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\ups\Release\ups.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion
@@ -93,19 +94,19 @@ Begin
   SubagentSelectionPage.Add('Port Checker Subagent - portcheck.nsm');
   SubagentSelectionPage.Add('Windows Performance Subagent - winperf.nsm');
   SubagentSelectionPage.Add('UPS Monitoring Subagent - ups.nsm');
-  SubagentSelectionPage.Values[0] := StrToBool(GetPreviousData('Subagent0', 'FALSE'));
-  SubagentSelectionPage.Values[1] := StrToBool(GetPreviousData('Subagent0', 'FALSE'));
-  SubagentSelectionPage.Values[2] := StrToBool(GetPreviousData('Subagent0', 'TRUE'));
-  SubagentSelectionPage.Values[3] := StrToBool(GetPreviousData('Subagent0', 'FALSE'));
+  SubagentSelectionPage.Values[0] := StrToBool(GetPreviousData('Subagent_PING', 'FALSE'));
+  SubagentSelectionPage.Values[1] := StrToBool(GetPreviousData('Subagent_PORTCHECK', 'FALSE'));
+  SubagentSelectionPage.Values[2] := StrToBool(GetPreviousData('Subagent_WINPERF', 'TRUE'));
+  SubagentSelectionPage.Values[3] := StrToBool(GetPreviousData('Subagent_UPS', 'FALSE'));
 End;
 
 Procedure RegisterPreviousData(PreviousDataKey: Integer);
 Begin
   SetPreviousData(PreviousDataKey, 'MasterServer', ServerSelectionPage.Values[0]);
-  SetPreviousData(PreviousDataKey, 'Subagent0', BoolToStr(SubagentSelectionPage.Values[0]));
-  SetPreviousData(PreviousDataKey, 'Subagent1', BoolToStr(SubagentSelectionPage.Values[1]));
-  SetPreviousData(PreviousDataKey, 'Subagent2', BoolToStr(SubagentSelectionPage.Values[2]));
-  SetPreviousData(PreviousDataKey, 'Subagent3', BoolToStr(SubagentSelectionPage.Values[3]));
+  SetPreviousData(PreviousDataKey, 'Subagent_PING', BoolToStr(SubagentSelectionPage.Values[0]));
+  SetPreviousData(PreviousDataKey, 'Subagent_PORTCHECK', BoolToStr(SubagentSelectionPage.Values[1]));
+  SetPreviousData(PreviousDataKey, 'Subagent_WINPERF', BoolToStr(SubagentSelectionPage.Values[2]));
+  SetPreviousData(PreviousDataKey, 'Subagent_UPS', BoolToStr(SubagentSelectionPage.Values[3]));
 End;
 
 Function GetMasterServer(Param: String): String;
