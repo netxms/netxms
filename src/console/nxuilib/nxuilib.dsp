@@ -126,10 +126,6 @@ SOURCE=.\nxuilib.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\popup.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\ScintillaCtrl.cpp
 # End Source File
 # Begin Source File
