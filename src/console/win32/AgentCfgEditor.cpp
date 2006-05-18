@@ -34,12 +34,12 @@ static char THIS_FILE[] = __FILE__;
 //
 
 static TCHAR m_szConfigKeywords[] = "Action ControlServers EnableActions EnabledCiphers "
-                                    "EnableProxy EnableSubagentAutoload ExternalParameter "
-                                    "FileStore ListenPort LogFile LogUnresolvedSymbols "
-                                    "MasterServers MaxSessions PlatformSuffix "
-                                    "RequireAuthentication RequireEncryption Servers "
-                                    "SessionIdleTimeout SharedSecret StartupDelay "
-                                    "SubAgent Timeout";
+                                    "EnableProxy EnableSubagentAutoload ExecTimeout"
+                                    "ExternalParameter FileStore ListenPort LogFile "
+                                    "LogUnresolvedSymbols MasterServers MaxSessions "
+                                    "PlatformSuffix RequireAuthentication "
+                                    "RequireEncryption Servers SessionIdleTimeout "
+                                    "SharedSecret StartupDelay SubAgent";
 
 
 /////////////////////////////////////////////////////////////////////////////

@@ -164,6 +164,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "SharedSecret", CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret },
    { "StartupDelay", CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay },
    { "SubAgent", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList },
+   { "TimeOut", CT_IGNORE, 0, 0, 0, 0, NULL },
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
