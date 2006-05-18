@@ -11,6 +11,10 @@
 	<p>
 	This manuals are far from being complete, but already contain some useable information. They will be updated on a regular basis.<br>
 	<br>
+	NetXMS Installation Guide:<br>
+		&nbsp    <a href="netxms_install_guide.pdf">In PDF format</a><br>
+		&nbsp    <a href="netxms_install_guide.doc">In Microsoft Word format</a>.
+	<br><br>
 	NetXMS User's Manual:<br>
 		&nbsp    <a href="netxms_user_manual.pdf">In PDF format</a><br>
 		&nbsp    <a href="netxms_user_manual.doc">In Microsoft Word format</a>.
