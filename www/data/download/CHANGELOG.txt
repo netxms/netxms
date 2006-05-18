@@ -1,4 +1,21 @@
 *
+* 0.2.11
+*
+
+- Basic network maps implemented
+- Non-standart (other than 4701) ports now can be used for client-server
+  communications
+- Copy/move/delete of saved desktop configurations implemented
+- SNMP walk function improved
+- Implemented "User must change password on next logon" function
+- UPS subagent: added support for BSMXCP protocol (used by Powerware,
+  HP and Compaq UPSes)
+- Fixed Alarm Viewer crash
+- Improved Solaris support
+- Fixed issues: #28, #34, #52, #82, #83, #84, #85, #86, #87, #88
+
+
+*
 * 0.2.10
 *
 

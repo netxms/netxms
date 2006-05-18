@@ -1,3 +1,7 @@
+16-May-2006|0.2.11 released|Version 0.2.11 released.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
+15-May-2006|0.2.11 is on the way|Packages are prepared, final testing in progress. See you soon.
+13-May-2006|Scheduled release date for 0.2.11 is 15-May-2006|We are still here, polishing code for the new release. Stay tuned.
+20-Mar-2006|Agent package republished|Latest agent package (0.2.10) is repacked due to typos, which can brake the build in certain circumstances
 13-Mar-2006|Patch for OpenBSD subagent|OpenBSD specific: NetXMS version 0.2.10 is packaged with wrong system.cpp (due to incorrect cvs-commit, blame me -- alk), diff file is available <a href="http://netxms.org/download/system.cpp.patch">here</a>.
 08-Mar-2006|0.2.10 released|Version 0.2.10 released.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
 26-Jan-2006|Windows management console is working under Wine|management console version 0.2.9 (nxcon.exe) was successfully tested under Wine version 0.9.5

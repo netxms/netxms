@@ -4,46 +4,65 @@
 	<!-- links -->
 	<a href="#win32">WIN32 Console &#9660;</a><br />
 	<a href="#PPC">PocketPC Console &#9660;</a><br />
-	<a href="#WEB">WEB Console &#9660;</a><br />
+	<!--	<a href="#WEB">WEB Console &#9660;</a><br /> -->
 
 	<!-- images -->
+	<!-- WIN32 -->
 	<a name="win32"></a>
 	<h2>WIN32 Console</h2>
 	<p class="screenShot">
-		Login window:<br />
-		<a href="netxms_console_01.png"><img src="th_netxms_console_01.png" border="0" alt="Login window"></a>
+		<a href="v2/login_prompt.png"><img src="v2/th_login_prompt.png" border="0" alt=""></a>
 	</p>
 	<p class="screenShot">
-		Event Processing Policy editor:<br />
-		<a href="netxms_console_02.png"><img src="th_netxms_console_02.png" border="0" alt="Event Processing Policy editor"></a>
+		<a href="v2/agent_param_selection.png"><img src="v2/th_agent_param_selection.png" border="0" alt=""></a>
 	</p>
 	<p class="screenShot">
-		<a href="netxms_console_03.png"><img src="th_netxms_console_03.png" border="0" alt=""></a>
+		<a href="v2/alarms_and_data.png"><img src="v2/th_alarms_and_data.png" border="0" alt=""></a>
 	</p>
 	<p class="screenShot">
-		<a href="netxms_console_04.png"><img src="th_netxms_console_04.png" border="0" alt=""></a>
+		<a href="v2/collected_data.png"><img src="v2/th_collected_data.png" border="0" alt=""></a>
 	</p>
 	<p class="screenShot">
-		Agent package deployment:<br />
-		<a href="netxms_console_05.png"><img src="th_netxms_console_05.png" border="0" alt="Agent package deployment"></a>
+		<a href="v2/dci_editor.png"><img src="v2/th_dci_editor.png" border="0" alt=""></a>
 	</p>
 	<p class="screenShot">
-		MIB Browser:<br />
-		<a href="netxms_console_06.png"><img src="th_netxms_console_06.png" border="0" alt="MIB Browser"></a>
+		<a href="v2/map.png"><img src="v2/th_map.png" border="0" alt=""></a>
 	</p>
 	<p class="screenShot">
-		Node properties:<br />
-		<a href="netxms_console_07.png"><img src="th_netxms_console_07.png" border="0" alt="Node properties"></a>
+		<a href="v2/map_zoomed.png"><img src="v2/th_map_zoomed.png" border="0" alt=""></a>
 	</p>
 	<p class="screenShot">
-		List of parameters supported by agent on selected node:<br />
-		<a href="netxms_console_08.png"><img src="th_netxms_console_08.png" border="0" alt="List of parameters supported by agent on selected node"></a>
+		<a href="v2/mib_browser.png"><img src="v2/th_mib_browser.png" border="0" alt=""></a>
 	</p>
 	<p class="screenShot">
-		Agent package deployment&nbsp;&#151;progress:<br />
-		<a href="netxms_console_09.png"><img src="th_netxms_console_09.png" border="0" alt="Agent package deployment&nbsp;&#151;progress:"></a>
+		<a href="v2/multiple_graphs.png"><img src="v2/th_multiple_graphs.png" border="0" alt=""></a>
+	</p>
+	<p class="screenShot">
+		<a href="v2/object_acl.png"><img src="v2/th_object_acl.png" border="0" alt=""></a>
+	</p>
+	<p class="screenShot">
+		<a href="v2/object_browser.png"><img src="v2/th_object_browser.png" border="0" alt=""></a>
+	</p>
+	<p class="screenShot">
+		<a href="v2/object_properties.png"><img src="v2/th_object_properties.png" border="0" alt=""></a>
+	</p>
+	<p class="screenShot">
+		<a href="v2/object_tools.png"><img src="v2/th_object_tools.png" border="0" alt=""></a>
+	</p>
+	<p class="screenShot">
+		<a href="v2/object_tools_cfg.png"><img src="v2/th_object_tools_cfg.png" border="0" alt=""></a>
+	</p>
+	<p class="screenShot">
+		<a href="v2/package_deployment.png"><img src="v2/th_package_deployment.png" border="0" alt=""></a>
+	</p>
+	<p class="screenShot">
+		<a href="v2/snmp_walk.png"><img src="v2/th_snmp_walk.png" border="0" alt=""></a>
+	</p>
+	<p class="screenShot">
+		<a href="v2/switch_fdb.png"><img src="v2/th_switch_fdb.png" border="0" alt=""></a>
 	</p>
 
+	<!-- PPC -->
 	<a name="PPC"></a>
 	<h2>PocketPC Console</h2>
 	<p class="screenShot">
@@ -55,10 +74,11 @@
 		<a href="ppc_console_02.png"><img src="ppc_console_02.png" border="0" alt="Objects tree"></a>
 	</p>
 
-	<a name="WEB"></a>
+	<!-- WEB -->
+<!--	<a name="WEB"></a>
 	<h2>Web interface (<acronym title="Proof of concept">PoC</acronym> version for <acronym title="Internet Information Services">IIS</acronym>)</h2>
 	<p class="screenShot">
 		Object Info:<br />
 		<a href="netxms_web_01.png"><img src="th_netxms_web_01.png" border="0" alt="Object Info"></a>
-	</p>
+		</p>-->
 </div>
