@@ -27,6 +27,7 @@ public:
 	//{{AFX_VIRTUAL(CTaskBarPopupWnd)
 	protected:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
+	virtual void PostNcDestroy();
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -44,6 +45,7 @@ protected:
 	void DrawOnBitmap(void);
 	virtual void DrawContent(CDC &dc);
 	RECT m_rcCurrSize;
+   RECT m_rcClient;
    int m_nWidth;
    int m_nHeight;
 	int m_nIncY;

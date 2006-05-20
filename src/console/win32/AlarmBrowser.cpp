@@ -358,8 +358,6 @@ void CAlarmBrowser::AddAlarm(NXC_ALARM *pAlarm)
 void CAlarmBrowser::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
 {
    int iItem;
-   static TCHAR *m_szAlarmText[] = { _T("INFORMATIONAL"), _T("WARNING"),
-                                     _T("MINOR"), _T("MAJOR"), _T("CRITICAL") };
 
    iItem = FindAlarmRecord(pAlarm->dwAlarmId);
    switch(dwCode)

@@ -121,7 +121,7 @@ void CTaskBarPopupWnd::OnTimer(UINT nIDEvent)
          if ((nWidth >= m_nWidth) && (nHeight >= m_nHeight))
          {
             KillTimer(TIMER_OPEN);
-            SetTimer(TIMER_STAY, 5000, NULL);
+            SetTimer(TIMER_STAY, m_dwStayTime, NULL);
          }
          break;
       case TIMER_STAY:
@@ -211,6 +211,11 @@ BOOL CTaskBarPopupWnd::Create(int nWidth, int nHeight, CWnd *pParentWnd)
 
    m_nWidth = nWidth;
    m_nHeight = nHeight;
+   
+   m_rcClient.left = 0;
+   m_rcClient.top = 0;
+   m_rcClient.right = nWidth - GetSystemMetrics(SM_CXSIZEFRAME) * 2;
+   m_rcClient.bottom = nHeight - GetSystemMetrics(SM_CYSIZEFRAME) * 2;
 
    // Determine desktop size and position of task bar
    SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkarea, 0);
@@ -314,4 +319,15 @@ void CTaskBarPopupWnd::SetAttr(DWORD dwStayTime, DWORD dwAnimInt, int nStep)
    m_dwStayTime = dwStayTime;
    m_dwAnimationInterval = dwAnimInt;
    m_nStep = nStep;
+}
+
+
+//
+// Overrided PostNcDestroy()
+//
+
+void CTaskBarPopupWnd::PostNcDestroy() 
+{
+	CWnd::PostNcDestroy();
+   delete this;
 }

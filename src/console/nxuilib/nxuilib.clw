@@ -15,8 +15,8 @@ Class4=CScintillaCtrl
 Class5=CSimpleListCtrl
 Resource2=IDD_ALARM_SOUNDS (English (U.S.))
 Resource3=IDD_NOTIFY (English (U.S.))
-Resource4=IDD_ALARM_SOUNDS
-Resource5=IDD_LOGIN
+Resource4=IDD_LOGIN
+Resource5=IDD_ALARM_SOUNDS
 Class6=CTaskBarPopupWnd
 Resource6=IDD_NOTIFY
 
