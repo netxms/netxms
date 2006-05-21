@@ -116,6 +116,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CMainFrame::OnSetFocus(CWnd* pOldWnd)
 {
+   CFrameWnd::OnSetFocus(pOldWnd);
    m_wndListCtrl.SetFocus();
 }
 
@@ -144,8 +145,8 @@ void CMainFrame::OnTaskbarCallback(WPARAM wParam, LPARAM lParam)
          else
          {
             ShowWindow(SW_SHOW);
-            SetForegroundWindow();
          }
+         SetForegroundWindow();
          break;
       case WM_LBUTTONDOWN:
          break;

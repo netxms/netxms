@@ -176,11 +176,12 @@ void CAlarmPopup::OnTimer(UINT nIDEvent)
 {
    if (nIDEvent == 1)
    {
+      KillTimer(1);
+
       // Execute left-click action if double click was not detected
       if (!m_bDblClk)
          PopupAction(g_nActionLeft);
       m_bDblClk = FALSE;   // Reset double click flag
-      KillTimer(1);
    }
    else
    {
