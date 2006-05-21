@@ -5,6 +5,8 @@
 #include "nxnotify.h"
 
 #include "MainFrm.h"
+#include "PopupCfgPage.h"
+#include "ConnectionPage.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -72,12 +74,22 @@ BOOL CNxnotifyApp::InitInstance()
 	SetRegistryKey(_T("NetXMS"));
 
    // Load settings
+   g_nActionLeft = GetProfileInt(_T("Settings"), _T("ActionLeft"), g_nActionLeft);
+   VALIDATE_VALUE(g_nActionLeft, 0, NXNOTIFY_ACTION_NONE, NXNOTIFY_ACTION_NONE);
+   g_nActionRight = GetProfileInt(_T("Settings"), _T("ActionRight"), g_nActionRight);
+   VALIDATE_VALUE(g_nActionRight, 0, NXNOTIFY_ACTION_NONE, NXNOTIFY_ACTION_NONE);
+   g_nActionDblClk = GetProfileInt(_T("Settings"), _T("ActionDblClk"), g_nActionDblClk);
+   VALIDATE_VALUE(g_nActionDblClk, 0, NXNOTIFY_ACTION_NONE, NXNOTIFY_ACTION_NONE);
+   g_dwPopupTimeout = GetProfileInt(_T("Settings"), _T("PopupTimeout"), g_dwPopupTimeout);
    LoadAlarmSoundCfg(&m_soundCfg, NXNOTIFY_ALARM_SOUND_KEY);
    bAutoLogin = GetProfileInt(_T("Connection"), _T("AutoLogin"), FALSE);
    _tcscpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
    _tcscpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
    _tcscpy(g_szPassword, (LPCTSTR)GetProfileString(_T("Connection"), _T("Password"), NULL));
    g_dwOptions = GetProfileInt(_T("Connection"), _T("Options"), 0);
+
+   // Load context menus
+   m_ctxMenu.LoadMenu(IDM_CONTEXT);
 
 	// To create the main window, this code creates a new frame window
 	// object and then sets it as the application's main window object.
@@ -179,7 +191,7 @@ public:
 // Implementation
 protected:
 	//{{AFX_MSG(CAboutDlg)
-		// No message handlers
+	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
@@ -199,9 +211,16 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
 	//{{AFX_MSG_MAP(CAboutDlg)
-		// No message handlers
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
+
+BOOL CAboutDlg::OnInitDialog() 
+{
+	CDialog::OnInitDialog();
+
+   SetDlgItemText(IDC_STATIC_VERSION_INFO, _T("NetXMS Alarm Notifier Version ") NETXMS_VERSION_STRING);
+	return TRUE;
+}
 
 // App command to run the dialog
 void CNxnotifyApp::OnAppAbout()
@@ -244,8 +263,62 @@ void CNxnotifyApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
 
 void CNxnotifyApp::OnFileSettings() 
 {
-   if (ConfigureAlarmSounds(&m_soundCfg))
+   CPropertySheet dlg;
+   CPopupCfgPage pgPopup;
+   CConnectionPage pgConnection;
+
+   pgPopup.m_nTimeout = g_dwPopupTimeout / 1000;
+   pgPopup.m_nActionLeft = g_nActionLeft;
+   pgPopup.m_nActionRight = g_nActionRight;
+   pgPopup.m_nActionDblClk = g_nActionDblClk;
+   memcpy(&pgPopup.m_soundCfg, &m_soundCfg, sizeof(ALARM_SOUND_CFG));
+   dlg.AddPage(&pgPopup);
+
+   pgConnection.m_bAutoLogin = GetProfileInt(_T("Connection"), _T("AutoLogin"), FALSE);
+   pgConnection.m_strServer = (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost"));
+   pgConnection.m_strLogin = (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL);
+   pgConnection.m_strPassword = (LPCTSTR)GetProfileString(_T("Connection"), _T("Password"), NULL);
+   dlg.AddPage(&pgConnection);
+
+   if (dlg.DoModal() == IDOK)
    {
+      g_nActionLeft = pgPopup.m_nActionLeft;
+      WriteProfileInt(_T("Settings"), _T("ActionLeft"), g_nActionLeft);
+
+      g_nActionRight = pgPopup.m_nActionRight;
+      WriteProfileInt(_T("Settings"), _T("ActionRight"), g_nActionRight);
+
+      g_nActionDblClk = pgPopup.m_nActionDblClk;
+      WriteProfileInt(_T("Settings"), _T("ActionDblClk"), g_nActionDblClk);
+
+      g_dwPopupTimeout = pgPopup.m_nTimeout * 1000;
+      WriteProfileInt(_T("Settings"), _T("PopupTimeout"), g_dwPopupTimeout);
+      
+      memcpy(&m_soundCfg, &pgPopup.m_soundCfg, sizeof(ALARM_SOUND_CFG));
       SaveAlarmSoundCfg(&m_soundCfg, NXNOTIFY_ALARM_SOUND_KEY);
+
+      WriteProfileInt(_T("Connection"), _T("AutoLogin"), pgConnection.m_bAutoLogin);
+      if (pgConnection.m_bAutoLogin)
+      {
+         WriteProfileString(_T("Connection"), _T("Server"), (LPCTSTR)pgConnection.m_strServer);
+         WriteProfileString(_T("Connection"), _T("Login"), (LPCTSTR)pgConnection.m_strLogin);
+      }
+      WriteProfileString(_T("Connection"), _T("Password"), 
+                         pgConnection.m_bAutoLogin ? (LPCTSTR)pgConnection.m_strPassword : _T(""));
+      if (pgConnection.m_bEncrypt)
+         g_dwOptions |= OPT_ENCRYPT_CONNECTION;
+      else
+         g_dwOptions &= ~OPT_ENCRYPT_CONNECTION;
+      WriteProfileInt(_T("Connection"), _T("Options"), g_dwOptions);
    }
+}
+
+
+//
+// Get context menu
+//
+
+CMenu *CNxnotifyApp::GetContextMenu(int iIndex)
+{
+   return m_ctxMenu.GetSubMenu(iIndex);
 }

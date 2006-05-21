@@ -11,11 +11,11 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define TIMER_OPEN      1
-#define TIMER_STAY      2
-#define TIMER_CLOSE     3
+#define TIMER_OPEN      101
+#define TIMER_STAY      102
+#define TIMER_CLOSE     103
 
-#define MARGIN                5
+#define MARGIN          5
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -47,7 +47,7 @@ END_MESSAGE_MAP()
 
 BOOL CTaskBarPopupWnd::PreCreateWindow(CREATESTRUCT& cs) 
 {
-   cs.lpszClass = AfxRegisterWndClass(0, LoadCursor(NULL, IDC_HAND), NULL, NULL);
+   cs.lpszClass = AfxRegisterWndClass(CS_DBLCLKS, LoadCursor(NULL, IDC_HAND), NULL, NULL);
 	return CWnd::PreCreateWindow(cs);
 }
 

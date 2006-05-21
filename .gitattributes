@@ -492,8 +492,13 @@ src/console/nxlexer/nxlexer.h -text
 src/console/nxlexer/nxlexer.vcproj -text
 src/console/nxnotify/AlarmPopup.cpp -text
 src/console/nxnotify/AlarmPopup.h -text
+src/console/nxnotify/ConnectionPage.cpp -text
+src/console/nxnotify/ConnectionPage.h -text
 src/console/nxnotify/MainFrm.cpp -text
 src/console/nxnotify/MainFrm.h -text
+src/console/nxnotify/Makefile.am -text
+src/console/nxnotify/PopupCfgPage.cpp -text
+src/console/nxnotify/PopupCfgPage.h -text
 src/console/nxnotify/RequestProcessingDlg.cpp -text
 src/console/nxnotify/RequestProcessingDlg.h -text
 src/console/nxnotify/StdAfx.cpp -text
@@ -506,11 +511,13 @@ src/console/nxnotify/nxnotify.cpp -text
 src/console/nxnotify/nxnotify.dsp -text
 src/console/nxnotify/nxnotify.h -text
 src/console/nxnotify/nxnotify.rc -text
+src/console/nxnotify/res/Makefile.am -text
 src/console/nxnotify/res/nxnotify.ico -text
 src/console/nxnotify/res/nxnotify.rc2 -text
 src/console/nxnotify/res/processing.ico -text
 src/console/nxnotify/res/sort_up.ico -text
 src/console/nxnotify/res/sortdown.ico -text
+src/console/nxnotify/res/warning.ico -text
 src/console/nxnotify/resource.h -text
 src/console/nxuilib/AlarmSoundDlg.cpp -text
 src/console/nxuilib/AlarmSoundDlg.h -text

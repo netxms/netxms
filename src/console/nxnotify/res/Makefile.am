@@ -1,4 +1,4 @@
-# Copyright (C) 2004 NetXMS Team <bugs@netxms.org>
+# Copyright (C) 2006 NetXMS Team <bugs@netxms.org>
 #  
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without 
@@ -8,4 +8,10 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = nxuilib nxlexer win32 win32starter nxav nxnotify cmdline PocketPC
+EXTRA_DIST = \
+	nxnotify.ico \
+	nxnotify.rc2 \
+	processing.ico \
+	sort_up.ico \
+	sortdown.ico \
+	warning.ico

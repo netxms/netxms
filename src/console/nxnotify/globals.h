@@ -44,6 +44,17 @@
 
 
 //
+// Popup actions
+//
+
+#define NXNOTIFY_ACTION_ACK_ALARM      0
+#define NXNOTIFY_ACTION_DISMISS        1
+#define NXNOTIFY_ACTION_OPEN_LIST      2
+#define NXNOTIFY_ACTION_OPEN_CONSOLE   3
+#define NXNOTIFY_ACTION_NONE           4
+
+
+//
 // Functions
 //
 
@@ -73,6 +84,9 @@ extern TCHAR g_szWorkDir[];
 extern DWORD g_dwOptions;
 extern CImageList g_imgListSeverity;
 extern DWORD g_dwPopupTimeout;
+extern int g_nActionLeft;
+extern int g_nActionRight;
+extern int g_nActionDblClk;
 
 
 #endif

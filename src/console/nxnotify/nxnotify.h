@@ -42,12 +42,15 @@ public:
 // Implementation
 
 public:
+   CMenu *GetContextMenu(int iIndex);
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
 	//{{AFX_MSG(CNxnotifyApp)
 	afx_msg void OnAppAbout();
 	afx_msg void OnFileSettings();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+protected:
+	CMenu m_ctxMenu;
 };
 
 

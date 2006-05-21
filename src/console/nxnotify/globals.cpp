@@ -47,6 +47,9 @@ DWORD g_dwOptions = 0;
 //
 
 DWORD g_dwPopupTimeout = 20000;
+int g_nActionLeft = NXNOTIFY_ACTION_DISMISS;
+int g_nActionRight = NXNOTIFY_ACTION_NONE;
+int g_nActionDblClk = NXNOTIFY_ACTION_OPEN_LIST;
 
 
 //

@@ -20,6 +20,7 @@ CAlarmPopup::CAlarmPopup()
    HDC hDC;
 
    m_pAlarm = NULL;
+   m_bDblClk = FALSE;
 
    // Create fonts
    hDC = ::GetDC(appNotify.m_pMainWnd->m_hWnd);
@@ -43,6 +44,9 @@ CAlarmPopup::~CAlarmPopup()
 BEGIN_MESSAGE_MAP(CAlarmPopup, CTaskBarPopupWnd)
 	//{{AFX_MSG_MAP(CAlarmPopup)
 	ON_WM_LBUTTONUP()
+	ON_WM_LBUTTONDBLCLK()
+	ON_WM_RBUTTONUP()
+	ON_WM_TIMER()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -102,5 +106,84 @@ void CAlarmPopup::DrawContent(CDC &dc)
 
 void CAlarmPopup::OnLButtonUp(UINT nFlags, CPoint point) 
 {
-   DestroyWindow();
+   SetTimer(1, GetDoubleClickTime() + 10, NULL);
+}
+
+
+//
+// WM_LBUTTONDBLCLK message handler
+//
+
+void CAlarmPopup::OnLButtonDblClk(UINT nFlags, CPoint point) 
+{
+   m_bDblClk = TRUE;
+   PopupAction(g_nActionDblClk);
+}
+
+
+//
+// WM_RBUTTONUP message handler
+//
+
+void CAlarmPopup::OnRButtonUp(UINT nFlags, CPoint point) 
+{
+   PopupAction(g_nActionRight);
+}
+
+
+//
+// Execute popup action
+//
+
+void CAlarmPopup::PopupAction(int nAction)
+{
+   STARTUPINFO si;
+   PROCESS_INFORMATION pi;
+
+   switch(nAction)
+   {
+      case NXNOTIFY_ACTION_DISMISS:
+         DestroyWindow();
+         break;
+      case NXNOTIFY_ACTION_OPEN_LIST:
+         appNotify.m_pMainWnd->PostMessage(WM_COMMAND, ID_TASKBAR_OPEN, 0);
+         break;
+      case NXNOTIFY_ACTION_OPEN_CONSOLE:
+         memset(&si, 0, sizeof(STARTUPINFO));
+         si.cb = sizeof(STARTUPINFO);
+         if (CreateProcess(_T("nxcon.exe"), NULL, NULL, NULL, FALSE, 0, NULL,
+                           NULL, &si, &pi))
+         {
+            CloseHandle(pi.hThread);
+            CloseHandle(pi.hProcess);
+         }
+         else
+         {
+            appNotify.m_pMainWnd->MessageBox(_T("Failed to create process"), _T("Error"), MB_OK | MB_ICONSTOP);
+         }
+         break;
+      default:
+         break;
+   }
+}
+
+
+//
+// WM_TIMER message handler
+//
+
+void CAlarmPopup::OnTimer(UINT nIDEvent) 
+{
+   if (nIDEvent == 1)
+   {
+      // Execute left-click action if double click was not detected
+      if (!m_bDblClk)
+         PopupAction(g_nActionLeft);
+      m_bDblClk = FALSE;   // Reset double click flag
+      KillTimer(1);
+   }
+   else
+   {
+	   CTaskBarPopupWnd::OnTimer(nIDEvent);
+   }
 }

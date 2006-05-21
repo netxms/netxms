@@ -8,4 +8,18 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = nxuilib nxlexer win32 win32starter nxav nxnotify cmdline PocketPC
+SUBDIRS = res
+EXTRA_DIST = \
+	AlarmPopup.cpp AlarmPopup.h \
+	comm.cpp \
+	ConnectionPage.cpp ConnectionPage.h \
+	globals.cpp globals.h \
+	MainFrm.cpp MainFrm.h \
+	nxnotify.clw \
+	nxnotify.cpp \
+	nxnotify.dsp \
+	nxnotify.h \
+	nxnotify.rc resource.h \
+	PopupCfgPage.cpp PopupCfgPage.h \
+	RequestProcessingDlg.cpp RequestProcessingDlg.h \
+	StdAfx.cpp StdAfx.h

@@ -38,6 +38,7 @@ public:
 
 // Generated message map functions
 protected:
+	BOOL m_bExit;
 	CImageList m_imageList;
 	int m_iSortDir;
 	int m_iSortMode;
@@ -52,6 +53,9 @@ protected:
 	afx_msg void OnSetFocus(CWnd *pOldWnd);
 	afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnTaskbarOpen();
+	afx_msg void OnClose();
+	afx_msg void OnFileExit();
 	//}}AFX_MSG
    afx_msg void OnTaskbarCallback(WPARAM wParam, LPARAM lParam);
    afx_msg void OnAlarmUpdate(WPARAM wParam, LPARAM lParam);

@@ -23,6 +23,9 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_SETFOCUS()
 	ON_WM_DESTROY()
 	ON_WM_SIZE()
+	ON_COMMAND(ID_TASKBAR_OPEN, OnTaskbarOpen)
+	ON_WM_CLOSE()
+	ON_COMMAND(ID_FILE_EXIT, OnFileExit)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXNM_TASKBAR_CALLBACK, OnTaskbarCallback)
    ON_MESSAGE(NXNM_ALARM_UPDATE, OnAlarmUpdate)
@@ -35,6 +38,7 @@ CMainFrame::CMainFrame()
 {
    m_iSortDir = appNotify.GetProfileInt(_T("AlarmList"), _T("SortDir"), 1);
    m_iSortMode = appNotify.GetProfileInt(_T("AlarmList"), _T("SortMode"), 0);
+   m_bExit = FALSE;
 }
 
 CMainFrame::~CMainFrame()
@@ -123,6 +127,8 @@ void CMainFrame::OnSetFocus(CWnd* pOldWnd)
 void CMainFrame::OnTaskbarCallback(WPARAM wParam, LPARAM lParam)
 {
    NOTIFYICONDATA nid;
+   POINT pt;
+   CMenu *pMenu;
 
    switch(lParam)
    {
@@ -143,10 +149,10 @@ void CMainFrame::OnTaskbarCallback(WPARAM wParam, LPARAM lParam)
          break;
       case WM_LBUTTONDOWN:
          break;
-      case WM_RBUTTONDOWN:
-         break;
       case WM_CONTEXTMENU:
-
+         GetCursorPos(&pt);
+         pMenu = appNotify.GetContextMenu(0);
+         pMenu->TrackPopupMenu(TPM_RIGHTALIGN | TPM_LEFTBUTTON, pt.x, pt.y, this);
          break;
       default:
          break;
@@ -278,4 +284,46 @@ void CMainFrame::AddAlarm(NXC_ALARM *pAlarm)
       m_wndListCtrl.SetItemText(iIdx, 3, szBuffer);
       m_wndListCtrl.SetItemText(iIdx, 4, pAlarm->wIsAck ? _T("X") : _T(""));
    }
+}
+
+
+//
+// WM_COMMAND::ID_TASKBAR_OPEN message handler
+//
+
+void CMainFrame::OnTaskbarOpen() 
+{
+   if (IsIconic())
+   {
+      ShowWindow(SW_RESTORE);
+   }
+   else
+   {
+      ShowWindow(SW_SHOW);
+      SetForegroundWindow();
+   }
+}
+
+
+//
+// WM_CLOSE message handler
+//
+
+void CMainFrame::OnClose() 
+{
+   if (!m_bExit)
+      CloseWindow();
+   else
+      CFrameWnd::OnClose();
+}
+
+
+//
+// WM_COMMAND::ID_FILE_EXIT message handler
+//
+
+void CMainFrame::OnFileExit() 
+{
+   m_bExit = TRUE;
+   DestroyWindow();
 }

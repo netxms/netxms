@@ -589,6 +589,13 @@ typedef struct tagICMPHDR
 
 
 //
+// Validate numerical value
+//
+
+#define VALIDATE_VALUE(var,x,y,z) { if ((var < x) || (var > y)) var = z; }
+
+
+//
 // DCI (data collection item) data types
 //
 

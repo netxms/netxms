@@ -110,6 +110,10 @@ SOURCE=.\comm.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ConnectionPage.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\globals.cpp
 # End Source File
 # Begin Source File
@@ -123,6 +127,10 @@ SOURCE=.\nxnotify.cpp
 # Begin Source File
 
 SOURCE=.\nxnotify.rc
+# End Source File
+# Begin Source File
+
+SOURCE=.\PopupCfgPage.cpp
 # End Source File
 # Begin Source File
 
@@ -143,6 +151,10 @@ SOURCE=.\AlarmPopup.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ConnectionPage.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\globals.h
 # End Source File
 # Begin Source File
@@ -151,7 +163,15 @@ SOURCE=.\MainFrm.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\include\nms_common.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\nxnotify.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\PopupCfgPage.h
 # End Source File
 # Begin Source File
 
@@ -189,10 +209,10 @@ SOURCE=.\res\sort_up.ico
 
 SOURCE=.\res\sortdown.ico
 # End Source File
-# End Group
 # Begin Source File
 
-SOURCE=.\ReadMe.txt
+SOURCE=.\res\warning.ico
 # End Source File
+# End Group
 # End Target
 # End Project

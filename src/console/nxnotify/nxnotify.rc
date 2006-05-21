@@ -70,6 +70,7 @@ IDR_MAINFRAME           ICON    DISCARDABLE     "res\\nxnotify.ico"
 IDI_PROCESSING          ICON    DISCARDABLE     "res\\processing.ico"
 IDI_SORT_UP             ICON    DISCARDABLE     "res\\sort_up.ico"
 IDI_SORT_DOWN           ICON    DISCARDABLE     "res\\sortdown.ico"
+32515                   ICON    DISCARDABLE     "res\\warning.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -82,7 +83,7 @@ BEGIN
     BEGIN
         MENUITEM "&Settings...\tF9",            ID_FILE_SETTINGS
         MENUITEM SEPARATOR
-        MENUITEM "E&xit\tAlt+X",                ID_APP_EXIT
+        MENUITEM "E&xit\tAlt+X",                ID_FILE_EXIT
     END
     POPUP "&Help"
     BEGIN
@@ -90,7 +91,7 @@ BEGIN
     END
 END
 
-IDM_TASKBAR MENU DISCARDABLE 
+IDM_CONTEXT MENU DISCARDABLE 
 BEGIN
     POPUP "Taskbar"
     BEGIN
@@ -99,7 +100,7 @@ BEGIN
         MENUITEM "&Settings...",                ID_FILE_SETTINGS
         MENUITEM "&About...",                   ID_APP_ABOUT
         MENUITEM SEPARATOR
-        MENUITEM "E&xit",                       ID_APP_EXIT
+        MENUITEM "E&xit",                       ID_FILE_EXIT
     END
 END
 
@@ -111,16 +112,9 @@ END
 
 IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
 BEGIN
-    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
-    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
-    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
-    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
-    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
-    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
-    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
-    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
-    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
-    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+    VK_F1,          ID_APP_ABOUT,           VIRTKEY, NOINVERT
+    VK_F9,          ID_FILE_SETTINGS,       VIRTKEY, NOINVERT
+    "X",            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
 END
 
 
@@ -129,16 +123,17 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 235, 55
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 253, 55
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About nxnotify"
+CAPTION "About NetXMS Alarm Notifier"
 FONT 8, "MS Sans Serif"
 BEGIN
-    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    LTEXT           "nxnotify Version 1.0",IDC_STATIC,40,10,119,8,
-                    SS_NOPREFIX
-    LTEXT           "Copyright (C) 2006",IDC_STATIC,40,25,119,8
-    DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,11,21,20
+    LTEXT           "nxnotify Version 1.0",IDC_STATIC_VERSION_INFO,40,10,143,
+                    8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2006 Victor Kirhenshtein",IDC_STATIC,40,
+                    25,119,8
+    DEFPUSHBUTTON   "OK",IDOK,196,7,50,14,WS_GROUP
 END
 
 IDD_REQUEST_WAIT DIALOG DISCARDABLE  0, 0, 249, 34
@@ -147,6 +142,52 @@ FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDI_PROCESSING,IDC_STATIC,7,7,21,20
     LTEXT           "Static",IDC_INFO_TEXT,35,13,207,8
+END
+
+IDD_POUP_CFG_PAGE DIALOG DISCARDABLE  0, 0, 246, 126
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Popup"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Popup window timeout:",IDC_STATIC,7,7,74,8
+    EDITTEXT        IDC_EDIT_TIMEOUT,7,16,40,14,ES_AUTOHSCROLL
+    LTEXT           "Action on left mouse button click:",IDC_STATIC,7,38,106,
+                    8
+    COMBOBOX        IDC_COMBO_LEFT,7,49,109,63,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Action on right mouse button click:",IDC_STATIC,7,67,
+                    110,8
+    COMBOBOX        IDC_COMBO_RIGHT,7,78,109,65,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Action on mouse double click:",IDC_STATIC,7,96,96,8
+    COMBOBOX        IDC_COMBO_DBLCLK,7,106,109,64,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "seconds",IDC_STATIC,51,19,28,8
+    LTEXT           "Sound configuration",IDC_STATIC,125,7,64,8
+    EDITTEXT        IDC_EDIT_SOUND,125,18,114,82,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    PUSHBUTTON      "&Change...",IDC_CHANGE_SOUND,189,105,50,14
+END
+
+IDD_CONNECTION_PAGE DIALOG DISCARDABLE  0, 0, 246, 126
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Connection"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&Login to server automatically",IDC_CHECK_AUTOLOGIN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,7,105,10
+    EDITTEXT        IDC_SERVER,7,31,123,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_LOGIN,7,62,123,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_PASSWORD,7,94,123,14,ES_AUTOHSCROLL
+    CONTROL         "&Encrypt connection",IDC_ENCRYPT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,131,7,108,10
+    LTEXT           "Login name",IDC_STATIC,7,51,38,8
+    LTEXT           "Server",IDC_STATIC,7,21,22,8
+    LTEXT           "Password",IDC_STATIC,7,83,32,8
+    ICON            32515,IDC_STATIC,140,27,20,20
+    LTEXT           "Please note that login name and password required for automatic login are stored  unencrypted in the registry, so anybody which have access to the registry on your computer will have access to saved credentials.",
+                    IDC_STATIC,140,53,100,66
+    LTEXT           "SECURITY NOTICE",IDC_STATIC,168,33,71,8
 END
 
 
@@ -204,7 +245,7 @@ BEGIN
     IDD_ABOUTBOX, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 228
+        RIGHTMARGIN, 246
         TOPMARGIN, 7
         BOTTOMMARGIN, 48
     END
@@ -215,6 +256,22 @@ BEGIN
         RIGHTMARGIN, 242
         TOPMARGIN, 7
         BOTTOMMARGIN, 27
+    END
+
+    IDD_POUP_CFG_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 239
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 119
+    END
+
+    IDD_CONNECTION_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 239
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 119
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -254,7 +311,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
-    ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
+    ID_APP_EXIT             "Quit the application\nExit"
 END
 
 STRINGTABLE DISCARDABLE 
