@@ -241,8 +241,7 @@ void CNxnotifyApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
       switch(dwCode)
       {
          case NX_NOTIFY_SHUTDOWN:
-            m_pMainWnd->MessageBox("Server was shutdown", "Warning", MB_OK | MB_ICONSTOP);
-            m_pMainWnd->DestroyWindow();
+            m_pMainWnd->PostMessage(NXNM_SERVER_SHUTDOWN, 0, 0);
             break;
          case NX_NOTIFY_NEW_ALARM:
          case NX_NOTIFY_ALARM_DELETED:

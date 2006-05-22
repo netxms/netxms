@@ -59,6 +59,7 @@ protected:
 	//}}AFX_MSG
    afx_msg void OnTaskbarCallback(WPARAM wParam, LPARAM lParam);
    afx_msg void OnAlarmUpdate(WPARAM wParam, LPARAM lParam);
+   afx_msg void OnServerShutdown(void);
 	DECLARE_MESSAGE_MAP()
 };
 

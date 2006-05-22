@@ -33,6 +33,7 @@
 #define NXNM_SET_INFO_TEXT       (WM_USER + 2)
 #define NXNM_ALARM_UPDATE        (WM_USER + 3)
 #define NXNM_TASKBAR_CALLBACK    (WM_USER + 4)
+#define NXNM_SERVER_SHUTDOWN     (WM_USER + 5)
 
 
 //

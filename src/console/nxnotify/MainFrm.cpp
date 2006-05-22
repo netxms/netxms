@@ -29,6 +29,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXNM_TASKBAR_CALLBACK, OnTaskbarCallback)
    ON_MESSAGE(NXNM_ALARM_UPDATE, OnAlarmUpdate)
+   ON_MESSAGE(NXNM_SERVER_SHUTDOWN, OnServerShutdown)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -325,6 +326,18 @@ void CMainFrame::OnClose()
 
 void CMainFrame::OnFileExit() 
 {
+   m_bExit = TRUE;
+   DestroyWindow();
+}
+
+
+//
+// NXNM_SERVER_SHUTDOWN message handler
+//
+
+void CMainFrame::OnServerShutdown(void)
+{
+   MessageBox("NetXMS server was shutdown", "Warning", MB_OK | MB_ICONSTOP);
    m_bExit = TRUE;
    DestroyWindow();
 }
