@@ -44,6 +44,7 @@ contrib/mibs/COSINE-InVision-MIB.txt -text
 contrib/mibs/COSINE-ORION-MIB.txt -text
 contrib/mibs/DS1-MIB.txt -text
 contrib/mibs/DS3-MIB.txt -text
+contrib/mibs/ENTITY-MIB.txt -text
 contrib/mibs/HOST-RESOURCES-MIB.txt -text
 contrib/mibs/HOST-RESOURCES-TYPES.txt -text
 contrib/mibs/IANA-ADDRESS-FAMILY-NUMBERS-MIB.txt -text
