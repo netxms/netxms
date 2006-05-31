@@ -585,7 +585,7 @@ public:
    BOOL GetNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
                    DWORD *pdwIfIndex, BOOL *pbIsVPN);
 
-   void SetDiscoveryPollTimeStamp(void) { m_tLastDiscoveryPoll = time(NULL); }
+   void SetDiscoveryPollTimeStamp(void);
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
    void ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
    void UpdateRoutingTable(void);
@@ -640,6 +640,12 @@ public:
 //
 // Inline functions for Node class
 //
+
+inline void Node::SetDiscoveryPollTimeStamp(void)
+{
+   m_tLastDiscoveryPoll = time(NULL);
+   m_dwDynamicFlags &= ~NDF_QUEUED_FOR_DISCOVERY_POLL;
+}
 
 inline BOOL Node::ReadyForStatusPoll(void) 
 {

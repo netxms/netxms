@@ -102,7 +102,7 @@ static void CheckNodes(void)
 {
    DB_RESULT hResult, hResult2;
    DWORD i, dwNumObjects, dwId;
-   TCHAR szQuery[256], szName[MAX_OBJECT_NAME];
+   TCHAR szQuery[1024], szName[MAX_OBJECT_NAME];
    BOOL bResult, bIsDeleted;
 
    StartStage(_T("Checking node objects..."));
@@ -125,10 +125,14 @@ static void CheckNodes(void)
                _tprintf(_T("\rMissing node object %d properties. Create? (Y/N) "), dwId);
                if (GetYesNo())
                {
-                  _sntprintf(szQuery, 256, 
+                  _sntprintf(szQuery, 1024, 
                              _T("INSERT INTO object_properties (object_id,name,"
                                 "status,is_deleted,image_id,inherit_access_rights,"
-                                "last_access) VALUES(%d,'lost_node_%d',5,0,0,1,0)"), dwId, dwId);
+                                "last_modified,status_calc_alg,status_prop_alg,"
+                                "status_fixed_val,status_shift,status_translation,"
+                                "status_single_threshold,status_thresholds) VALUES "
+                                "(%d,'lost_node_%d',5,0,0,1,0,0,0,0,0,0,0,'00000000')"),
+                                dwId, dwId);
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
                }
@@ -143,7 +147,7 @@ static void CheckNodes(void)
 
          if (!bIsDeleted)
          {
-            _sntprintf(szQuery, 256, _T("SELECT subnet_id FROM nsmap WHERE node_id=%d"), dwId);
+            _sntprintf(szQuery, 1024, _T("SELECT subnet_id FROM nsmap WHERE node_id=%d"), dwId);
             hResult2 = SQLSelect(szQuery);
             if (hResult2 != NULL)
             {
@@ -154,11 +158,11 @@ static void CheckNodes(void)
                            dwId, szName);
                   if (GetYesNo())
                   {
-                     _sntprintf(szQuery, 256, _T("DELETE FROM nodes WHERE id=%d"), dwId);
+                     _sntprintf(szQuery, 1024, _T("DELETE FROM nodes WHERE id=%d"), dwId);
                      bResult = SQLQuery(szQuery);
-                     _sntprintf(szQuery, 256, _T("DELETE FROM acl WHERE object_id=%d"), dwId);
+                     _sntprintf(szQuery, 1024, _T("DELETE FROM acl WHERE object_id=%d"), dwId);
                      bResult = bResult && SQLQuery(szQuery);
-                     _sntprintf(szQuery, 256, _T("DELETE FROM object_properties WHERE object_id=%d"), dwId);
+                     _sntprintf(szQuery, 1024, _T("DELETE FROM object_properties WHERE object_id=%d"), dwId);
                      if (SQLQuery(szQuery) && bResult)
                         m_iNumFixes++;
                   }
@@ -181,7 +185,7 @@ static void CheckComponents(TCHAR *pszDisplayName, TCHAR *pszTable)
 {
    DB_RESULT hResult, hResult2;
    DWORD i, dwNumObjects, dwId;
-   TCHAR szQuery[256], szName[MAX_OBJECT_NAME];
+   TCHAR szQuery[1024], szName[MAX_OBJECT_NAME];
    BOOL bIsDeleted;
 
    _stprintf(szQuery, _T("Checking %s objects..."), pszDisplayName);
@@ -208,10 +212,13 @@ static void CheckComponents(TCHAR *pszDisplayName, TCHAR *pszTable)
                         pszDisplayName, dwId);
                if (GetYesNo())
                {
-                  _sntprintf(szQuery, 256, 
+                  _sntprintf(szQuery, 1024, 
                              _T("INSERT INTO object_properties (object_id,name,"
                                 "status,is_deleted,image_id,inherit_access_rights,"
-                                "last_access) VALUES(%d,'lost_%s_%d',5,0,0,1,0)"),
+                                "last_modified,status_calc_alg,status_prop_alg,"
+                                "status_fixed_val,status_shift,status_translation,"
+                                "status_single_threshold,status_thresholds) VALUES "
+                                "(%d,'lost_%s_%d',5,0,0,1,0,0,0,0,0,0,0,'00000000')"),
                              dwId, pszDisplayName, dwId);
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
