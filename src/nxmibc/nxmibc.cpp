@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
    int i, ch;
 
    printf("NetXMS MIB Compiler  Version " NETXMS_VERSION_STRING "\n"
-          "Copyright (c) 2005 Victor Kirhenshtein\n\n");
+          "Copyright (c) 2005, 2006 Victor Kirhenshtein\n\n");
 
    // Parse command line
    opterr = 1;

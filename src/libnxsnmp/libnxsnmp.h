@@ -27,6 +27,7 @@
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nxsnmp.h>
+#include <zlib.h>
 
 #ifndef _WIN32
 #include <netdb.h>
@@ -53,7 +54,8 @@ typedef struct
    char chMagic[6];
    BYTE bHeaderSize;    // Header size in bytes
    BYTE bVersion;
-   BYTE bReserved[4];
+   WORD wFlags;
+   BYTE bReserved[2];
    DWORD dwTimeStamp;   // Server's timestamp
 } SNMP_MIB_HEADER;
 
@@ -81,6 +83,47 @@ typedef struct
 #define MIB_TAG_DWORD_OID     0x09
 
 #define MIB_END_OF_TAG        0x80
+
+
+//
+// Class for compressed/uncompressed I/O
+//
+
+class ZFile
+{
+private:
+   BOOL m_bCompress;
+   BOOL m_bWrite;
+   FILE *m_pFile;
+   z_stream m_stream;
+   int m_nLastZLibError;
+   int m_nBufferSize;
+   BYTE *m_pDataBuffer;
+   BYTE *m_pCompBuffer;
+   BYTE *m_pBufferPos;
+
+   int zwrite(void *pBuf, int nLen);
+   int zputc(int ch);
+   int zread(void *pBuf, int nLen);
+   int zgetc(void);
+   int zclose(void);
+
+   BOOL FillDataBuffer(void);
+
+public:
+   ZFile(FILE *pFile, BOOL bCompress, BOOL bWrite);
+   ~ZFile();
+
+   int write(void *pBuf, int nLen) { return m_bCompress ? zwrite(pBuf, nLen) : fwrite(pBuf, 1, nLen, m_pFile); }
+   int fputc(int ch) { return m_bCompress ? zputc(ch) : ::fputc(ch, m_pFile); }
+
+   int read(void *pBuf, int nLen) { return m_bCompress ? zread(pBuf, nLen) : fread(pBuf, 1, nLen, m_pFile); }
+   int fgetc(void) { return m_bCompress ? zgetc() : ::fgetc(m_pFile); }
+
+   int close(void) { return m_bCompress ? zclose() : fclose(m_pFile); }
+
+   int GetZLibError(void) { return m_nLastZLibError; }
+};
 
 
 //

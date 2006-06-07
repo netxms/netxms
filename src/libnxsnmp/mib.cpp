@@ -180,7 +180,7 @@ void SNMP_MIBObject::Print(int nIndent)
 // Write string to file
 //
 
-static void WriteStringToFile(FILE *pFile, TCHAR *pszStr)
+static void WriteStringToFile(ZFile *pFile, TCHAR *pszStr)
 {
    WORD wLen, wTemp;
 #ifdef UNICODE
@@ -189,15 +189,15 @@ static void WriteStringToFile(FILE *pFile, TCHAR *pszStr)
 
    wLen = (WORD)_tcslen(pszStr);
    wTemp = htons(wLen);
-   fwrite(&wTemp, 2, 1, pFile);
+   pFile->write(&wTemp, 2);
 #ifdef UNICODE
    pszBuffer = (char *)malloc(wLen + 1);
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
 		                 pszStr, -1, pszBuffer, wLen + 1, NULL, NULL);
-   fwrite(pszBuffer, 1, wLen, pFile);
+   pFile->write(pszBuffer, wLen);
    free(pszBuffer);
 #else
-   fwrite(pszStr, 1, wLen, pFile);
+   pFile->write(pszStr, wLen);
 #endif
 }
 
@@ -206,71 +206,71 @@ static void WriteStringToFile(FILE *pFile, TCHAR *pszStr)
 // Write object to file
 //
 
-void SNMP_MIBObject::WriteToFile(FILE *pFile, DWORD dwFlags)
+void SNMP_MIBObject::WriteToFile(ZFile *pFile, DWORD dwFlags)
 {
    SNMP_MIBObject *pCurr;
 
-   fputc(MIB_TAG_OBJECT, pFile);
+   pFile->fputc(MIB_TAG_OBJECT);
 
    // Object name
-   fputc(MIB_TAG_NAME, pFile);
+   pFile->fputc(MIB_TAG_NAME);
    WriteStringToFile(pFile, CHECK_NULL_EX(m_pszName));
-   fputc(MIB_TAG_NAME | MIB_END_OF_TAG, pFile);
+   pFile->fputc(MIB_TAG_NAME | MIB_END_OF_TAG);
 
    // Object ID
    if (m_dwOID < 256)
    {
-      fputc(MIB_TAG_BYTE_OID, pFile);
-      fputc((int)m_dwOID, pFile);
-      fputc(MIB_TAG_BYTE_OID | MIB_END_OF_TAG, pFile);
+      pFile->fputc(MIB_TAG_BYTE_OID);
+      pFile->fputc((int)m_dwOID);
+      pFile->fputc(MIB_TAG_BYTE_OID | MIB_END_OF_TAG);
    }
    else if (m_dwOID < 65536)
    {
       WORD wTemp;
 
-      fputc(MIB_TAG_WORD_OID, pFile);
+      pFile->fputc(MIB_TAG_WORD_OID);
       wTemp = htons((WORD)m_dwOID);
-      fwrite(&wTemp, 2, 1, pFile);
-      fputc(MIB_TAG_WORD_OID | MIB_END_OF_TAG, pFile);
+      pFile->write(&wTemp, 2);
+      pFile->fputc(MIB_TAG_WORD_OID | MIB_END_OF_TAG);
    }
    else
    {
       DWORD dwTemp;
 
-      fputc(MIB_TAG_DWORD_OID, pFile);
+      pFile->fputc(MIB_TAG_DWORD_OID);
       dwTemp = htonl(m_dwOID);
-      fwrite(&dwTemp, 4, 1, pFile);
-      fputc(MIB_TAG_DWORD_OID | MIB_END_OF_TAG, pFile);
+      pFile->write(&dwTemp, 4);
+      pFile->fputc(MIB_TAG_DWORD_OID | MIB_END_OF_TAG);
    }
 
    // Object status
-   fputc(MIB_TAG_STATUS, pFile);
-   fputc(m_iStatus, pFile);
-   fputc(MIB_TAG_STATUS | MIB_END_OF_TAG, pFile);
+   pFile->fputc(MIB_TAG_STATUS);
+   pFile->fputc(m_iStatus);
+   pFile->fputc(MIB_TAG_STATUS | MIB_END_OF_TAG);
 
    // Object access
-   fputc(MIB_TAG_ACCESS, pFile);
-   fputc(m_iAccess, pFile);
-   fputc(MIB_TAG_ACCESS | MIB_END_OF_TAG, pFile);
+   pFile->fputc(MIB_TAG_ACCESS);
+   pFile->fputc(m_iAccess);
+   pFile->fputc(MIB_TAG_ACCESS | MIB_END_OF_TAG);
 
    // Object type
-   fputc(MIB_TAG_TYPE, pFile);
-   fputc(m_iType, pFile);
-   fputc(MIB_TAG_TYPE | MIB_END_OF_TAG, pFile);
+   pFile->fputc(MIB_TAG_TYPE);
+   pFile->fputc(m_iType);
+   pFile->fputc(MIB_TAG_TYPE | MIB_END_OF_TAG);
 
    // Object description
    if (!(dwFlags & SMT_SKIP_DESCRIPTIONS))
    {
-      fputc(MIB_TAG_DESCRIPTION, pFile);
+      pFile->fputc(MIB_TAG_DESCRIPTION);
       WriteStringToFile(pFile, CHECK_NULL_EX(m_pszDescription));
-      fputc(MIB_TAG_DESCRIPTION | MIB_END_OF_TAG, pFile);
+      pFile->fputc(MIB_TAG_DESCRIPTION | MIB_END_OF_TAG);
    }
 
    // Save childs
    for(pCurr = m_pFirst; pCurr != NULL; pCurr = pCurr->Next())
       pCurr->WriteToFile(pFile, dwFlags);
 
-   fputc(MIB_TAG_OBJECT | MIB_END_OF_TAG, pFile);
+   pFile->fputc(MIB_TAG_OBJECT | MIB_END_OF_TAG);
 }
 
 
@@ -282,6 +282,7 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(TCHAR *pszFile, SNMP_MIBObject *pRoot
                                            DWORD dwFlags)
 {
    FILE *pFile;
+   ZFile *pZFile;
    SNMP_MIB_HEADER header;
    DWORD dwRet = SNMP_ERR_SUCCESS;
 
@@ -291,11 +292,14 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(TCHAR *pszFile, SNMP_MIBObject *pRoot
       memcpy(header.chMagic, MIB_FILE_MAGIC, 6);
       header.bVersion = MIB_FILE_VERSION;
       header.bHeaderSize = sizeof(SNMP_MIB_HEADER);
+      header.wFlags = htons((WORD)dwFlags);
       header.dwTimeStamp = htonl((DWORD)time(NULL));
       memset(header.bReserved, 0, sizeof(header.bReserved));
       fwrite(&header, sizeof(SNMP_MIB_HEADER), 1, pFile);
-      pRoot->WriteToFile(pFile, dwFlags);
-      fclose(pFile);
+      pZFile = new ZFile(pFile, dwFlags & SMT_COMPRESS_DATA, TRUE);
+      pRoot->WriteToFile(pZFile, dwFlags);
+      pZFile->close();
+      delete pZFile;
    }
    else
    {
@@ -309,23 +313,23 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(TCHAR *pszFile, SNMP_MIBObject *pRoot
 // Read string from file
 //
 
-static TCHAR *ReadStringFromFile(FILE *pFile)
+static TCHAR *ReadStringFromFile(ZFile *pFile)
 {
    TCHAR *pszStr;
    WORD wLen;
 
-   fread(&wLen, 1, 2, pFile);
+   pFile->read(&wLen, 2);
    wLen = ntohs(wLen);
    if (wLen > 0)
    {
       pszStr = (TCHAR *)malloc(sizeof(TCHAR) * (wLen + 1));
 #ifdef UNICODE
       pszBuffer = (char *)malloc(wLen + 1);
-      fread(pszBuffer, 1, wLen, pFile);
+      pFile->read(pszBuffer, wLen);
       MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszBuffer, wLen, pszStr, wLen + 1);
       free(pszBuffer);
 #else
-      fread(pszStr, 1, wLen, pFile);
+      pFile->read(pszStr, wLen);
 #endif
       pszStr[wLen] = 0;
    }
@@ -341,9 +345,9 @@ static TCHAR *ReadStringFromFile(FILE *pFile)
 // Read object from file
 //
 
-#define CHECK_NEXT_TAG(x) { ch = fgetc(pFile); if (ch != (x)) nState--; }
+#define CHECK_NEXT_TAG(x) { ch = pFile->fgetc(); if (ch != (x)) nState--; }
 
-BOOL SNMP_MIBObject::ReadFromFile(FILE *pFile)
+BOOL SNMP_MIBObject::ReadFromFile(ZFile *pFile)
 {
    int ch, nState = 0;
    WORD wTmp;
@@ -352,23 +356,23 @@ BOOL SNMP_MIBObject::ReadFromFile(FILE *pFile)
 
    while(nState == 0)
    {
-      ch = fgetc(pFile);
+      ch = pFile->fgetc();
       switch(ch)
       {
          case (MIB_TAG_OBJECT | MIB_END_OF_TAG):
             nState++;
             break;
          case MIB_TAG_BYTE_OID:
-            m_dwOID = (DWORD)fgetc(pFile);
+            m_dwOID = (DWORD)pFile->fgetc();
             CHECK_NEXT_TAG(MIB_TAG_BYTE_OID | MIB_END_OF_TAG);
             break;
          case MIB_TAG_WORD_OID:
-            fread(&wTmp, 1, 2, pFile);
+            pFile->read(&wTmp, 2);
             m_dwOID = (DWORD)ntohs(wTmp);
             CHECK_NEXT_TAG(MIB_TAG_WORD_OID | MIB_END_OF_TAG);
             break;
          case MIB_TAG_DWORD_OID:
-            fread(&dwTmp, 1, 4, pFile);
+            pFile->read(&dwTmp, 4);
             m_dwOID = ntohl(dwTmp);
             CHECK_NEXT_TAG(MIB_TAG_DWORD_OID | MIB_END_OF_TAG);
             break;
@@ -383,15 +387,15 @@ BOOL SNMP_MIBObject::ReadFromFile(FILE *pFile)
             CHECK_NEXT_TAG(MIB_TAG_DESCRIPTION | MIB_END_OF_TAG);
             break;
          case MIB_TAG_TYPE:
-            m_iType = fgetc(pFile);
+            m_iType = pFile->fgetc();
             CHECK_NEXT_TAG(MIB_TAG_TYPE | MIB_END_OF_TAG);
             break;
          case MIB_TAG_STATUS:
-            m_iStatus = fgetc(pFile);
+            m_iStatus = pFile->fgetc();
             CHECK_NEXT_TAG(MIB_TAG_STATUS | MIB_END_OF_TAG);
             break;
          case MIB_TAG_ACCESS:
-            m_iAccess = fgetc(pFile);
+            m_iAccess = pFile->fgetc();
             CHECK_NEXT_TAG(MIB_TAG_ACCESS | MIB_END_OF_TAG);
             break;
          case MIB_TAG_OBJECT:
@@ -422,6 +426,7 @@ BOOL SNMP_MIBObject::ReadFromFile(FILE *pFile)
 DWORD LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(TCHAR *pszFile, SNMP_MIBObject **ppRoot)
 {
    FILE *pFile;
+   ZFile *pZFile;
    SNMP_MIB_HEADER header;
    DWORD dwRet = SNMP_ERR_SUCCESS;
 
@@ -431,11 +436,13 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(TCHAR *pszFile, SNMP_MIBObject **ppRo
       fread(&header, 1, sizeof(SNMP_MIB_HEADER), pFile);
       if (!memcmp(header.chMagic, MIB_FILE_MAGIC, 6))
       {
+         header.wFlags = ntohs(header.wFlags);
          fseek(pFile, header.bHeaderSize, SEEK_SET);
-         if (fgetc(pFile) == MIB_TAG_OBJECT)
+         pZFile = new ZFile(pFile, header.wFlags & SMT_COMPRESS_DATA, FALSE);
+         if (pZFile->fgetc() == MIB_TAG_OBJECT)
          {
             *ppRoot = new SNMP_MIBObject;
-            if (!(*ppRoot)->ReadFromFile(pFile))
+            if (!(*ppRoot)->ReadFromFile(pZFile))
             {
                delete *ppRoot;
                dwRet = SNMP_ERR_BAD_FILE_DATA;
@@ -445,12 +452,14 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(TCHAR *pszFile, SNMP_MIBObject **ppRo
          {
             dwRet = SNMP_ERR_BAD_FILE_DATA;
          }
+         pZFile->close();
+         delete pZFile;
       }
       else
       {
          dwRet = SNMP_ERR_BAD_FILE_HEADER;
+         fclose(pFile);
       }
-      fclose(pFile);
    }
    else
    {

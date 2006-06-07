@@ -245,6 +245,8 @@
 // MIB tree node
 //
 
+class ZFile;
+
 class LIBNXSNMP_EXPORTABLE SNMP_MIBObject
 {
 private:
@@ -292,8 +294,9 @@ public:
 
    void Print(int nIndent);
 
-   void WriteToFile(FILE *pFile, DWORD dwFlags);
-   BOOL ReadFromFile(FILE *pFile);
+   // File I/O, supposed to be callsed only from libnxsnmp functions
+   void WriteToFile(ZFile *pFile, DWORD dwFlags);
+   BOOL ReadFromFile(ZFile *pFile);
 };
 
 
