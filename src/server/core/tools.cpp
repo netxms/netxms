@@ -91,7 +91,7 @@ void CleanInterfaceList(INTERFACE_LIST *pIfList)
 // Get system information string
 //
 
-void GetSysInfoStr(char *pszBuffer)
+void GetSysInfoStr(char *pszBuffer, int nMaxSize)
 {
 #ifdef _WIN32
    DWORD dwSize;
@@ -127,21 +127,20 @@ void GetSysInfoStr(char *pszBuffer)
          break;
    }
 
-   _snprintf(pszBuffer, 256, "%s %s Build %d", computerName, osVersion, versionInfo.dwBuildNumber);
+   _snprintf(pszBuffer, nMaxSize, "%s %s Build %d", computerName, osVersion, versionInfo.dwBuildNumber);
 #else
 # ifdef HAVE_SYS_UTSNAME_H
 	struct utsname uName;
-	if (uname(&uName) == 0)
+	if (uname(&uName) >= 0)
 	{
-		snprintf(pszBuffer, 256, "%s %s Release %s", uName.nodename, uName.sysname, uName.release);
+		snprintf(pszBuffer, nMaxSize, "%s %s Release %s", uName.nodename, uName.sysname, uName.release);
 	}
 	else
 	{
-		// size=256 was taken from locks.cpp
 #if HAVE_STRERROR_R
-		strerror_r(errno, pszBuffer, 256);
+		strerror_r(errno, pszBuffer, nMaxSize);
 #else
-		nx_strncpy(pszBuffer, strerror(errno), 256);
+		nx_strncpy(pszBuffer, strerror(errno), nMaxSize);
 #endif
 	}
 # else

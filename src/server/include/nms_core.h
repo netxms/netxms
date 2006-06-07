@@ -584,7 +584,7 @@ void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *,
 void NXCORE_EXPORTABLE NotifyClientSessions(DWORD dwCode, DWORD dwData);
 int GetSessionCount(void);
 
-void GetSysInfoStr(char *pszBuffer);
+void GetSysInfoStr(char *pszBuffer, int nMaxSize);
 DWORD GetLocalIpAddr(void);
 
 BOOL ExecCommand(char *pszCommand);

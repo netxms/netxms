@@ -92,7 +92,7 @@ BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo)
    {
       IpToStr(GetLocalIpAddr(), szBuffer);
       ConfigWriteStr("DBLockStatus", szBuffer, FALSE);
-      GetSysInfoStr(szBuffer);
+      GetSysInfoStr(szBuffer, sizeof(szBuffer));
       ConfigWriteStr("DBLockInfo", szBuffer, TRUE);
       m_hMutexLockerAccess = MutexCreate();
       bSuccess = TRUE;
