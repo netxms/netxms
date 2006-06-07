@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.154 2006-05-21 15:04:06 victor Exp $
+# $Id: configure.ac,v 1.155 2006-06-07 11:27:27 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -65,6 +65,11 @@ fi
 AC_CHECK_HEADERS([/usr/include/pthread.h])
 
 # --------------------------------------------------------------------------
+# check for zlib
+
+AC_CHECK_LIB(z, deflate)
+
+# --------------------------------------------------------------------------
 # command line options
 
 AC_ARG_WITH(sqlite,
@@ -113,7 +118,6 @@ AC_ARG_WITH(mysql,
 	fi
    DYNAMIC_COMPONENTS="yes"
 	AC_CHECK_LIB(m, floor)
-	AC_CHECK_LIB(z, gzclose)
 	with_mysql="yes"
 	AC_DEFINE(WITH_MYSQL,,[with mysql])
 	DB_DRIVERS="$DB_DRIVERS mysql"
@@ -150,7 +154,6 @@ AC_ARG_WITH(pgsql,
 	fi
    DYNAMIC_COMPONENTS="yes"
 	AC_CHECK_LIB(m, floor)
-	AC_CHECK_LIB(z, gzclose)
 	with_pgsql="yes"
 	DB_DRIVERS="$DB_DRIVERS pgsql"
 	AC_DEFINE(WITH_PGSQL,,[with pgsql])
