@@ -280,6 +280,9 @@ src/agent/subagents/freebsd/system.h -text
 src/agent/subagents/linux/Makefile.am -text
 src/agent/subagents/linux/disk.cpp -text
 src/agent/subagents/linux/disk.h -text
+src/agent/subagents/linux/drbd.cpp -text
+src/agent/subagents/linux/drbd.h -text
+src/agent/subagents/linux/drbd_config.h -text
 src/agent/subagents/linux/hddinfo.cpp -text
 src/agent/subagents/linux/linux.cpp -text
 src/agent/subagents/linux/net.cpp -text

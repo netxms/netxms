@@ -1,6 +1,6 @@
 INCLUDES=-I@top_srcdir@/include
 
 lib_LTLIBRARIES = libnsm_linux.la
-libnsm_linux_la_SOURCES = linux.cpp proc.cpp system.cpp disk.cpp net.cpp hddinfo.cpp
+libnsm_linux_la_SOURCES = disk.cpp drbd.cpp hddinfo.cpp linux.cpp net.cpp proc.cpp system.cpp
 
-EXTRA_DIST = disk.h net.h proc.h system.h
+EXTRA_DIST = disk.h drbd.h drbd_config.h net.h proc.h system.h

@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.24 2006-03-02 21:08:20 alk Exp $ */
+/* $Id: linux.cpp,v 1.25 2006-06-08 15:21:29 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -32,15 +32,19 @@
 //
 // Cleanup callback
 //
+
 static void Cleanup(void)
 {
 	ShutdownCpuUsageCollector();
 }
 
+
 //
 // Externals
 //
 
+LONG H_DRBDDeviceList(char *pszParam, char *pszArg, NETXMS_VALUES_LIST *pValue);
+LONG H_DRBDDeviceInfo(TCHAR *pszCmd, TCHAR *pArg, TCHAR *pValue);
 LONG H_PhysicalDiskInfo(char *pszParam, char *pszArg, char *pValue);
 
 
@@ -64,6 +68,19 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 			DCI_DT_UINT64,	"Used disk space on {instance}" },
    { "Disk.UsedPerc(*)",             H_DiskInfo,        (char *)DISK_USED_PERC,
 			DCI_DT_FLOAT,	"Percentage of used disk space on {instance}" },
+
+   { "DRBD.ConnState(*)",            H_DRBDDeviceInfo,  "c",
+		   DCI_DT_INT,    "Connection state of DRBD device {instance}" },
+   { "DRBD.ConnStateText(*)",        H_DRBDDeviceInfo,  "C",
+		   DCI_DT_INT,    "Connection state of DRBD device {instance} as text" },
+   { "DRBD.PeerState(*)",            H_DRBDDeviceInfo,  "p",
+		   DCI_DT_INT,    "State of DRBD peer device {instance}" },
+   { "DRBD.PeerStateText(*)",        H_DRBDDeviceInfo,  "P",
+		   DCI_DT_INT,    "State of DRBD peer device {instance} as text" },
+   { "DRBD.State(*)",                H_DRBDDeviceInfo,  "s",
+		   DCI_DT_INT,    "State of DRBD device {instance}" },
+   { "DRBD.StateText(*)",            H_DRBDDeviceInfo,  "S",
+		   DCI_DT_INT,    "State of DRBD device {instance} as text" },
 
    { "Net.Interface.AdminStatus(*)", H_NetIfInfoFromIOCTL, (char *)IF_INFO_ADMIN_STATUS,
 			DCI_DT_INT,		"Administrative status of interface {instance}" },
@@ -143,6 +160,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
+   { "DRBD.DeviceList",              H_DRBDDeviceList,  NULL },
    { "Net.ArpCache",                 H_NetArpCache,     NULL },
    { "Net.IP.RoutingTable",          H_NetRoutingTable, NULL },
    { "Net.InterfaceList",            H_NetIfList,       NULL },
@@ -178,6 +196,11 @@ DECLARE_SUBAGENT_INIT(LINUX)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.24  2006/03/02 21:08:20  alk
+implemented:
+	System.CPU.Usage5
+	System.CPU.Usage15
+
 Revision 1.23  2006/03/01 22:13:09  alk
 added System.CPU.Usage [broken]
 
