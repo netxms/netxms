@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.25 2006-06-08 15:21:29 victor Exp $ */
+/* $Id: linux.cpp,v 1.26 2006-06-09 07:08:40 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -72,15 +72,17 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "DRBD.ConnState(*)",            H_DRBDDeviceInfo,  "c",
 		   DCI_DT_INT,    "Connection state of DRBD device {instance}" },
    { "DRBD.ConnStateText(*)",        H_DRBDDeviceInfo,  "C",
-		   DCI_DT_INT,    "Connection state of DRBD device {instance} as text" },
+		   DCI_DT_STRING, "Connection state of DRBD device {instance} as text" },
+   { "DRBD.LowerDevice(*)",          H_DRBDDeviceInfo,  "L",
+		   DCI_DT_STRING, "Underlaying device of DRBD device {instance}" },
    { "DRBD.PeerState(*)",            H_DRBDDeviceInfo,  "p",
 		   DCI_DT_INT,    "State of DRBD peer device {instance}" },
    { "DRBD.PeerStateText(*)",        H_DRBDDeviceInfo,  "P",
-		   DCI_DT_INT,    "State of DRBD peer device {instance} as text" },
+		   DCI_DT_STRING, "State of DRBD peer device {instance} as text" },
    { "DRBD.State(*)",                H_DRBDDeviceInfo,  "s",
 		   DCI_DT_INT,    "State of DRBD device {instance}" },
    { "DRBD.StateText(*)",            H_DRBDDeviceInfo,  "S",
-		   DCI_DT_INT,    "State of DRBD device {instance} as text" },
+		   DCI_DT_STRING, "State of DRBD device {instance} as text" },
 
    { "Net.Interface.AdminStatus(*)", H_NetIfInfoFromIOCTL, (char *)IF_INFO_ADMIN_STATUS,
 			DCI_DT_INT,		"Administrative status of interface {instance}" },
@@ -196,6 +198,9 @@ DECLARE_SUBAGENT_INIT(LINUX)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.25  2006/06/08 15:21:29  victor
+Initial support for DRBD device monitoring
+
 Revision 1.24  2006/03/02 21:08:20  alk
 implemented:
 	System.CPU.Usage5

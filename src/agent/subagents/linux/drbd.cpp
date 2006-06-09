@@ -176,6 +176,9 @@ LONG H_DRBDDeviceInfo(TCHAR *pszCmd, TCHAR *pArg, TCHAR *pValue)
 				case 'P':	// Peer state as text
 					ret_string(pValue, (char *)StateText(drbdConfig.peer_state));
 					break;
+				case 'L':	// Lower device
+					ret_string(pValue, drbdConfig.lower_device_name);
+					break;
 				default:
 					nRet = SYSINFO_RC_UNSUPPORTED;
 					break;
