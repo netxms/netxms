@@ -5,7 +5,6 @@ hash2=__HASH2__
 skip=__SKIP__
 skip1=__SKIP1__
 command=__COMMAND__
-command=inst/installAgent.sh
 log=/tmp/nxagentupdate.log
 
 wd=`pwd -P`
