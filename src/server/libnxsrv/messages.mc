@@ -506,4 +506,34 @@ Language=English
 Error compiling library script %2 (ID: %1): %3
 .
 
+MessageId=
+SymbolicName=MSG_RADIUS_UNKNOWN_ENCR_METHOD
+Language=English
+RADIUS client error: encryption style %1 is not implemented (attribute %2)
+.
+
+MessageId=
+SymbolicName=MSG_RADIUS_DECR_FAILED
+Language=English
+RADIUS client error: decryption (style %1) failed for attribute %2
+.
+
+MessageId=
+SymbolicName=MSG_RADIUS_AUTH_SUCCESS
+Language=English
+User %1 was successfully authenticated by RADIUS server %2
+.
+
+MessageId=
+SymbolicName=MSG_RADIUS_AUTH_FAILED
+Language=English
+Authentication request for user %1 was rejected by RADIUS server %2
+.
+
+MessageId=
+SymbolicName=MSG_UNKNOWN_AUTH_METHOD
+Language=English
+Unsupported authentication method %1 requested for user %2
+.
+
 ;#endif

@@ -126,6 +126,16 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('DisableVacuum','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('LockTimeout','60000',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('RADIUSServer','localhost',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('RADIUSSecret','netxms',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('RADIUSPort','1645',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('RADIUSNumRetries','5',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('RADIUSTimeout','3',1,0);
 
 
 /*

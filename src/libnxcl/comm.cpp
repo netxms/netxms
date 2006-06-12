@@ -240,7 +240,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
 {
    struct sockaddr_in servAddr;
    CSCPMessage msg, *pResp;
-   BYTE szPasswordHash[SHA1_DIGEST_SIZE];
+//   BYTE szPasswordHash[SHA1_DIGEST_SIZE];
    DWORD dwRetCode = RCC_COMM_FAILURE;
    SOCKET hSocket;
    THREAD hThread;
@@ -344,7 +344,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
                         msg.SetId(pSession->CreateRqId());
                         msg.SetCode(CMD_LOGIN);
                         msg.SetVariable(VID_LOGIN_NAME, pszLogin);
-#ifdef UNICODE
+/*#ifdef UNICODE
                         char szMPasswd[64];
 
 	                     WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
@@ -353,7 +353,8 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
 #else
                         CalculateSHA1Hash((BYTE *)pszPassword, strlen(pszPassword), szPasswordHash);
 #endif
-                        msg.SetVariable(VID_PASSWORD, szPasswordHash, SHA1_DIGEST_SIZE);
+                        msg.SetVariable(VID_PASSWORD, szPasswordHash, SHA1_DIGEST_SIZE);*/
+                        msg.SetVariable(VID_PASSWORD, pszPassword);
                         msg.SetVariable(VID_CLIENT_INFO, pszClientInfo);
                         msg.SetVariable(VID_LIBNXCL_VERSION, NETXMS_VERSION_STRING);
                         GetOSVersionString(szBuffer);

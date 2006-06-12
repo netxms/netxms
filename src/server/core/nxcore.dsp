@@ -330,6 +330,10 @@ SOURCE=.\poll.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\radius.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\rootobj.cpp
 # End Source File
 # Begin Source File
@@ -547,6 +551,10 @@ SOURCE=..\include\nxsrvapi.h
 # Begin Source File
 
 SOURCE=..\..\..\include\nxtools.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\radius.h
 # End Source File
 # Begin Source File
 

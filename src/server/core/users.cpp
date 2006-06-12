@@ -24,6 +24,13 @@
 
 
 //
+// Externals
+//
+
+int RadiusAuth(char *pszLogin, char *pszPasswd);
+
+
+//
 // Global variables
 //
 
@@ -62,7 +69,7 @@ BOOL LoadUsers(void)
    DWORD i, iNumRows;
 
    // Load users
-   hResult = DBSelect(g_hCoreDB, "SELECT id,name,password,system_access,flags,full_name,description,grace_logins FROM users ORDER BY id");
+   hResult = DBSelect(g_hCoreDB, "SELECT id,name,password,system_access,flags,full_name,description,grace_logins,auth_method FROM users ORDER BY id");
    if (hResult == NULL)
       return FALSE;
 
@@ -85,6 +92,7 @@ BOOL LoadUsers(void)
       nx_strncpy(g_pUserList[i].szFullName, DBGetField(hResult, i, 5), MAX_USER_FULLNAME);
       nx_strncpy(g_pUserList[i].szDescription, DBGetField(hResult, i, 6), MAX_USER_DESCR);
       g_pUserList[i].nGraceLogins = DBGetFieldLong(hResult, i, 7);
+      g_pUserList[i].nAuthMethod = DBGetFieldLong(hResult, i, 8);
    }
 
    DBFreeResult(hResult);
@@ -106,6 +114,8 @@ BOOL LoadUsers(void)
       strcpy(g_pUserList[i].szDescription, "Built-in system administrator account");
       CalculateSHA1Hash((BYTE *)"netxms", 6, g_pUserList[i].szPassword);
       g_pUserList[i].nGraceLogins = MAX_GRACE_LOGINS;
+      g_pUserList[i].nAuthMethod = AUTH_NETXMS_PASSWORD;
+      uuid_generate(g_pUserList[i].guid);
       WriteLog(MSG_SUPERUSER_CREATED, EVENTLOG_WARNING_TYPE, NULL);
    }
 
@@ -302,11 +312,13 @@ void SaveUsers(DB_HANDLE hdb)
 // int pdwId.
 //
 
-DWORD AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId,
+DWORD AuthenticateUser(char *szName, char *szPassword, DWORD *pdwId,
                        DWORD *pdwSystemRights, BOOL *pbChangePasswd)
 {
    DWORD i, j;
    DWORD dwResult = RCC_ACCESS_DENIED;
+   BOOL bPasswordValid;
+   BYTE hash[SHA1_DIGEST_SIZE];
 
    MutexLock(m_hMutexUserAccess, INFINITE);
    for(i = 0; i < g_dwNumUsers; i++)
@@ -314,7 +326,23 @@ DWORD AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId,
       if ((!strcmp(szName, g_pUserList[i].szName)) &&
           (!(g_pUserList[i].wFlags & UF_DELETED)))
       {
-         if (!memcmp(szPassword, g_pUserList[i].szPassword, SHA1_DIGEST_SIZE))
+         switch(g_pUserList[i].nAuthMethod)
+         {
+            case AUTH_NETXMS_PASSWORD:
+               CalculateSHA1Hash((BYTE *)szPassword, strlen(szPassword), hash);
+               bPasswordValid = !memcmp(hash, g_pUserList[i].szPassword, SHA1_DIGEST_SIZE);
+               break;
+            case AUTH_RADIUS:
+               bPasswordValid = (RadiusAuth(szName, szPassword) == 0);
+               break;
+            default:
+               WriteLog(MSG_UNKNOWN_AUTH_METHOD, EVENTLOG_WARNING_TYPE, "ds",
+                        g_pUserList[i].nAuthMethod, szName);
+               bPasswordValid = FALSE;
+               break;
+         }
+
+         if (bPasswordValid)
          {
             if (!(g_pUserList[i].wFlags & UF_DISABLED))
             {

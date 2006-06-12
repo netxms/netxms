@@ -2,6 +2,7 @@
 * 0.2.12
 *
 
+- Implemented RADIUS authentication for NetXMS users
 - Added support for compressed MIB files
 - New MIBs added: ENTITY-MIB
 - Added support for DRBD device monitoring

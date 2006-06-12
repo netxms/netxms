@@ -45,6 +45,7 @@ CREATE TABLE modules
 CREATE TABLE users
 (
 	id integer not null,
+	guid varchar(32) not null,
 	name varchar(63) not null,
 	password varchar(48) not null,
 	system_access integer not null,
@@ -52,6 +53,7 @@ CREATE TABLE users
 	full_name varchar(127) not null,
 	description varchar(255) not null,
 	grace_logins integer not null,
+	auth_method integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -63,10 +65,11 @@ CREATE TABLE users
 CREATE TABLE user_groups
 (
 	id integer not null,
+	guid varchar(32) not null,
 	name varchar(63) not null,
-	system_access integer,
-	flags integer,
-	description varchar(255),
+	system_access integer not null,
+	flags integer not null,
+	description varchar(255) not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -91,7 +94,7 @@ CREATE TABLE user_profiles
 (
 	user_id integer not null,
 	var_name varchar(255) not null,
-	var_value SQL_TEXT,
+	var_value SQL_TEXT not null,
 	PRIMARY KEY(user_id,var_name)
 ) TABLE_TYPE;
 

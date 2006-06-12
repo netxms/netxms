@@ -32,6 +32,15 @@
 
 
 //
+// Authentication methods
+//
+
+#define AUTH_NETXMS_PASSWORD  0
+#define AUTH_RADIUS           1
+#define AUTH_RSA_SECUREID     2
+
+
+//
 // User structure
 //
 
@@ -45,6 +54,8 @@ typedef struct
    char szFullName[MAX_USER_FULLNAME];
    char szDescription[MAX_USER_DESCR];
    int nGraceLogins;
+   int nAuthMethod;
+   uuid_t guid;
 } NMS_USER;
 
 
@@ -61,6 +72,7 @@ typedef struct
    DWORD dwNumMembers;
    DWORD *pMembers;
    char szDescription[MAX_USER_DESCR];
+   uuid_t guid;
 } NMS_USER_GROUP;
 
 
@@ -112,7 +124,7 @@ BOOL LoadUsers(void);
 void SaveUsers(DB_HANDLE hdb);
 void AddUserToGroup(DWORD dwUserId, DWORD dwGroupId);
 BOOL CheckUserMembership(DWORD dwUserId, DWORD dwGroupId);
-DWORD AuthenticateUser(char *szName, BYTE *szPassword, DWORD *pdwId,
+DWORD AuthenticateUser(char *szName, char *szPassword, DWORD *pdwId,
                        DWORD *pdwSystemRights, BOOL *pbChangePasswd);
 void DumpUsers(CONSOLE_CTX pCtx);
 DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId);

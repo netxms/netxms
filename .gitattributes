@@ -208,6 +208,7 @@ include/nxsnmp.h -text
 include/nxtools.h -text
 include/nxwinui.h -text
 include/unicode.h -text
+include/uuid.h -text
 m4/Makefile.am -text
 netware/Makefile.am -text
 netware/Makefile.inc -text
@@ -899,6 +900,7 @@ src/libnetxms/c_lgcc3.cpp -text
 src/libnetxms/config.cpp -text
 src/libnetxms/dir.c -text
 src/libnetxms/dload.cpp -text
+src/libnetxms/gen_uuid.c -text
 src/libnetxms/getopt.c -text
 src/libnetxms/hash.cpp -text
 src/libnetxms/icmp.cpp -text
@@ -924,6 +926,7 @@ src/libnetxms/threads.cpp -text
 src/libnetxms/tools.cpp -text
 src/libnetxms/unicode.cpp -text
 src/libnetxms/uuid.c -text
+src/libnetxms/uuidP.h -text
 src/libnxcl/Makefile.am -text
 src/libnxcl/actions.cpp -text
 src/libnxcl/alarms.cpp -text
@@ -1062,6 +1065,8 @@ src/server/core/objects.cpp -text
 src/server/core/objtools.cpp -text
 src/server/core/package.cpp -text
 src/server/core/poll.cpp -text
+src/server/core/radius.cpp -text
+src/server/core/radius.h -text
 src/server/core/rootobj.cpp -text
 src/server/core/script.cpp -text
 src/server/core/session.cpp -text

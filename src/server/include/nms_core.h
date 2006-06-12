@@ -67,6 +67,7 @@
 #include <dbdrv.h>
 #include <nms_cscp.h>
 #include <nms_util.h>
+#include <uuid.h>
 #include <nxsrvapi.h>
 #include <nxcscpapi.h>
 #include <nximage.h>
