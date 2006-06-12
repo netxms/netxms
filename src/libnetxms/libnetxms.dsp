@@ -243,6 +243,10 @@ SOURCE=.\tools.cpp
 
 SOURCE=.\unicode.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\uuid.c
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -294,6 +298,10 @@ SOURCE=.\sha1.h
 # Begin Source File
 
 SOURCE=..\..\include\unicode.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\uuid.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

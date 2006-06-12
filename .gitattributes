@@ -923,6 +923,7 @@ src/libnetxms/strtoull.c -text
 src/libnetxms/threads.cpp -text
 src/libnetxms/tools.cpp -text
 src/libnetxms/unicode.cpp -text
+src/libnetxms/uuid.c -text
 src/libnxcl/Makefile.am -text
 src/libnxcl/actions.cpp -text
 src/libnxcl/alarms.cpp -text
