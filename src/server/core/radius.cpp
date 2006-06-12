@@ -589,7 +589,8 @@ int RadiusAuth(char *cLogin, char *cPasswd)
 	struct sockaddr_in *sin;
 	struct timeval		tv;
 	fd_set readfds;
-	int port, salen, result, length, i;
+	socklen_t salen;
+	int port, result, length, i;
    int nRetries, nTimeout;
    SOCKET sockfd;
    int send_buffer[512];

@@ -35,6 +35,22 @@
 #include "libnetxms.h"
 #include "uuidP.h"
 
+#if HAVE_SYS_IOCTL_H
+#include <sys/ioctl.h>
+#endif
+#if HAVE_SYS_SOCKIO_H
+#include <sys/sockio.h>
+#endif
+#if HAVE_NET_IF_H
+#include <net/if.h>
+#endif
+#if HAVE_NET_IF_ARP_H
+#include <net/if_arp.h>
+#endif
+#if HAVE_NET_IF_DL_H
+#include <net/if_dl.h>
+#endif
+
 #ifdef HAVE_SRANDOM
 #define srand(x) 	srandom(x)
 #define rand() 		random()
@@ -111,12 +127,12 @@ static void get_random_bytes(void *buf, int nbytes)
 static int get_node_id(unsigned char *node_id)
 {
 #ifdef HAVE_NET_IF_H
-	int 		sd;
-	struct ifreq 	ifr, *ifrp;
-	struct ifconf 	ifc;
+	int sd;
+	struct ifreq ifr, *ifrp;
+	struct ifconf ifc;
 	char buf[1024];
-	int		n, i;
-	unsigned char 	*a;
+	int n, i;
+	unsigned char *a;
 	
 /*
  * BSD 4.4 defines the size of an ifreq to be
@@ -140,14 +156,16 @@ static int get_node_id(unsigned char *node_id)
 #endif
 	{
 		sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
-		if (sd < 0) {
+		if (sd < 0)
+		{
 			return -1;
 		}
 	}
 	memset(buf, 0, sizeof(buf));
 	ifc.ifc_len = sizeof(buf);
 	ifc.ifc_buf = buf;
-	if (ioctl (sd, SIOCGIFCONF, (char *)&ifc) < 0) {
+	if (ioctl(sd, SIOCGIFCONF, (char *)&ifc) < 0)
+	{
 		close(sd);
 		return -1;
 	}
