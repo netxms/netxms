@@ -126,14 +126,14 @@ static void get_system_time(uuid_time_t *uuid_time)
        UUID UTC base time is October 15, 1582.
        Unix base time is January 1, 1970.
     */
-    *uuid_time = (tp.tv_sec * 10000000) + (tp.tv_usec * 10) +
-      I64(0x01B21DD213814000);
-};
+    *uuid_time = (tp.tv_sec * 10000000) + (tp.tv_usec * 10) + 0x01B21DD213814000;
+}
 
 static void get_random_info(char seed[16])
 {
-  MD5_CTX c;
-  typedef struct {
+   MD5_CTX c;
+   typedef struct
+   {
 #ifdef HAVE_SYS_SYSINFO_H
       struct sysinfo s;
 #else
@@ -146,27 +146,33 @@ static void get_random_info(char seed[16])
 #endif
       struct timeval t;
       char hostname[257];
-  } randomness;
-  randomness r;
+   } randomness;
+   randomness r;
 
-  I_md5_init(&c);
+   I_md5_init(&c);
 
 #ifdef HAVE_SYS_SYSINFO_H
-  sysinfo(&r.s);
+   sysinfo(&r.s);
 #else
-  r.clock_tick    = sysconf(_SC_CLK_TCK);
-  r.open_max      = sysconf(_SC_OPEN_MAX);
-  r.stream_max    = sysconf(_SC_STREAM_MAX);
-  r.expr_nest_max = sysconf(_SC_EXPR_NEST_MAX);
-  r.bc_scale_max  = sysconf(_SC_BC_SCALE_MAX);
-  r.bc_string_max = sysconf(_SC_BC_STRING_MAX);
+   r.clock_tick    = sysconf(_SC_CLK_TCK);
+   r.open_max      = sysconf(_SC_OPEN_MAX);
+   r.stream_max    = sysconf(_SC_STREAM_MAX);
+#ifdef _SC_EXPR_NEST_MAX
+   r.expr_nest_max = sysconf(_SC_EXPR_NEST_MAX);
+#endif
+#ifdef _SC_BC_SCALE_MAX
+   r.bc_scale_max  = sysconf(_SC_BC_SCALE_MAX);
+#endif
+#ifdef _SC_BC_STRING_MAX
+   r.bc_string_max = sysconf(_SC_BC_STRING_MAX);
+#endif
 #endif
 
-  gettimeofday(&r.t, (struct timezone *)0);
-  gethostname(r.hostname, 256);
-  I_md5_append(&c, (md5_byte_t *)&r, sizeof(randomness));
-  I_md5_finish(&c, seed);
-};
+   gettimeofday(&r.t, (struct timezone *)0);
+   gethostname(r.hostname, 256);
+   I_md5_append(&c, (md5_byte_t *)&r, sizeof(randomness));
+   I_md5_finish(&c, (md5_byte_t *)seed);
+}
 
 #endif
 
@@ -175,7 +181,7 @@ static void get_node_identifier(uuid_node_t *node)
 {
   char seed[16];
   FILE * fd;
-  static inited = 0;
+  static int inited = 0;
   static uuid_node_t saved_node;
 
   if (!inited)
@@ -394,7 +400,7 @@ void LIBNETXMS_EXPORTABLE uuid_create_from_name(
 
   I_md5_init(&c);
   I_md5_append(&c, (md5_byte_t *)&net_nsid, sizeof(uuid_t));
-  I_md5_append(&c, name, namelen);
+  I_md5_append(&c, (md5_byte_t *)name, namelen);
   I_md5_finish(&c, hash);
 
   /* the hash is in network byte order at this point */
