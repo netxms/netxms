@@ -397,6 +397,7 @@ void CUserEditor::OnUserProperties()
             dlg.m_strLogin = pUser->szName;
             dlg.m_strFullName = pUser->szFullName;
             dlg.m_strDescription = pUser->szDescription;
+            dlg.m_nAuthMethod = pUser->nAuthMethod;
             dlg.m_bAccountDisabled = (pUser->wFlags & UF_DISABLED) ? TRUE : FALSE;
             dlg.m_bChangePassword = (pUser->wFlags & UF_CHANGE_PASSWORD) ? TRUE : FALSE;
             dlg.m_bDropConn = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_SESSIONS) ? TRUE : FALSE;
@@ -415,6 +416,7 @@ void CUserEditor::OnUserProperties()
                strcpy(userInfo.szName, (LPCTSTR)dlg.m_strLogin);
                strcpy(userInfo.szFullName, (LPCTSTR)dlg.m_strFullName);
                strcpy(userInfo.szDescription, (LPCTSTR)dlg.m_strDescription);
+               userInfo.nAuthMethod = dlg.m_nAuthMethod;
                userInfo.wFlags = (dlg.m_bAccountDisabled ? UF_DISABLED : 0) |
                                  (dlg.m_bChangePassword ? UF_CHANGE_PASSWORD : 0);
                userInfo.wSystemRights = (dlg.m_bDropConn ? SYSTEM_ACCESS_MANAGE_SESSIONS : 0) |

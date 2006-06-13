@@ -83,6 +83,8 @@ static void FillUserInfoMessage(CSCPMessage *pMsg, NMS_USER *pUser)
    pMsg->SetVariable(VID_USER_SYS_RIGHTS, pUser->wSystemRights);
    pMsg->SetVariable(VID_USER_FULL_NAME, pUser->szFullName);
    pMsg->SetVariable(VID_USER_DESCRIPTION, pUser->szDescription);
+   pMsg->SetVariable(VID_GUID, pUser->guid, UUID_LENGTH);
+   pMsg->SetVariable(VID_AUTH_METHOD, (WORD)pUser->nAuthMethod);
 }
 
 
@@ -100,6 +102,7 @@ static void FillGroupInfoMessage(CSCPMessage *pMsg, NMS_USER_GROUP *pGroup)
    pMsg->SetVariable(VID_USER_SYS_RIGHTS, pGroup->wSystemRights);
    pMsg->SetVariable(VID_USER_DESCRIPTION, pGroup->szDescription);
    pMsg->SetVariable(VID_NUM_MEMBERS, pGroup->dwNumMembers);
+   pMsg->SetVariable(VID_GUID, pGroup->guid, UUID_LENGTH);
    for(i = 0, dwId = VID_GROUP_MEMBER_BASE; i < pGroup->dwNumMembers; i++, dwId++)
       pMsg->SetVariable(dwId, pGroup->pMembers[i]);
 }
@@ -1914,6 +1917,7 @@ void ClientSession::UpdateUser(CSCPMessage *pRequest)
          pRequest->GetVariableStr(VID_USER_NAME, user.szName, MAX_USER_NAME);
          user.wFlags = pRequest->GetVariableShort(VID_USER_FLAGS);
          user.wSystemRights = pRequest->GetVariableShort(VID_USER_SYS_RIGHTS);
+         user.nAuthMethod = pRequest->GetVariableShort(VID_AUTH_METHOD);
          dwResult = ModifyUser(&user);
       }
       msg.SetVariable(VID_RCC, dwResult);

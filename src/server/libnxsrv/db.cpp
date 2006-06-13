@@ -360,6 +360,38 @@ BOOL LIBNXSRV_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iC
 
 
 //
+// Get field's value as GUID
+//
+
+BOOL LIBNXSRV_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow,
+                                        int iColumn, uuid_t guid)
+{
+   char *pszVal;
+   BOOL bResult;
+
+   pszVal = DBGetField(hResult, iRow, iColumn);
+   if (pszVal != NULL)
+   {
+      if (uuid_parse(pszVal, guid) == 0)
+      {
+         bResult = TRUE;
+      }
+      else
+      {
+         uuid_clear(guid);
+         bResult = FALSE;
+      }
+   }
+   else
+   {
+      uuid_clear(guid);
+      bResult = FALSE;
+   }
+   return bResult;
+}
+
+
+//
 // Get number of rows in result
 //
 

@@ -25,6 +25,7 @@
 
 #include <nms_common.h>
 #include <nms_util.h>
+#include <uuid.h>
 #include <nxsrvapi.h>
 #include <netxmsdb.h>
 

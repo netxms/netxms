@@ -14,12 +14,14 @@ class CUserPropDlg : public CDialog
 {
 // Construction
 public:
+	int m_nAuthMethod;
 	NXC_USER * m_pUser;
 	CUserPropDlg(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
 	//{{AFX_DATA(CUserPropDlg)
 	enum { IDD = IDD_USER_PROPERTIES };
+	CComboBox	m_wndComboAuth;
 	BOOL	m_bAccountDisabled;
 	BOOL	m_bDropConn;
 	BOOL	m_bEditEventDB;
@@ -51,6 +53,7 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CUserPropDlg)
 	virtual BOOL OnInitDialog();
+	virtual void OnOK();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

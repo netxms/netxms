@@ -171,6 +171,7 @@ TCHAR *g_szInterfaceTypes[] =
    "SMDS",
    "Frame Relay"
 };
+TCHAR *g_szAuthMethod[] = { _T("NetXMS Password"), _T("RADIUS"), _T("RSA SecureID"), NULL };
 
 
 //

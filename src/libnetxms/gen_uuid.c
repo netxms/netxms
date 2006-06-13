@@ -116,6 +116,7 @@ static void get_random_bytes(void *buf, int nbytes)
 		return;
 
 	/* XXX put something better here if no /dev/random! */
+   srand(time(NULL) ^ getpid());
 	for (i=0; i < nbytes; i++)
 		*cp++ = rand() & 0xFF;
 	return;
@@ -193,7 +194,8 @@ static int get_node_id(unsigned char *node_id)
 #endif /* SIOCGIFHWADDR */
 		if (!a[0] && !a[1] && !a[2] && !a[3] && !a[4] && !a[5])
 			continue;
-		if (node_id) {
+		if (node_id)
+      {
 			memcpy(node_id, a, 6);
 			close(sd);
 			return 1;
@@ -216,8 +218,8 @@ static int get_clock(DWORD *clock_high, DWORD *clock_low, WORD *ret_clock_seq)
 	QWORD clock_reg;
 #ifdef _WIN32
    FILETIME ft;
-   LARGE_INTEGER li;
-   __int64 t;
+   ULARGE_INTEGER li;
+   unsigned __int64 t;
 #endif
 	
 try_again:

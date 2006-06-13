@@ -45,7 +45,7 @@ CREATE TABLE modules
 CREATE TABLE users
 (
 	id integer not null,
-	guid varchar(32) not null,
+	guid varchar(36) not null,
 	name varchar(63) not null,
 	password varchar(48) not null,
 	system_access integer not null,
@@ -65,7 +65,7 @@ CREATE TABLE users
 CREATE TABLE user_groups
 (
 	id integer not null,
-	guid varchar(32) not null,
+	guid varchar(36) not null,
 	name varchar(63) not null,
 	system_access integer not null,
 	flags integer not null,

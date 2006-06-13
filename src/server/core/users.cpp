@@ -69,7 +69,7 @@ BOOL LoadUsers(void)
    DWORD i, iNumRows;
 
    // Load users
-   hResult = DBSelect(g_hCoreDB, "SELECT id,name,password,system_access,flags,full_name,description,grace_logins,auth_method FROM users ORDER BY id");
+   hResult = DBSelect(g_hCoreDB, "SELECT id,name,password,system_access,flags,full_name,description,grace_logins,auth_method,guid FROM users ORDER BY id");
    if (hResult == NULL)
       return FALSE;
 
@@ -93,6 +93,7 @@ BOOL LoadUsers(void)
       nx_strncpy(g_pUserList[i].szDescription, DBGetField(hResult, i, 6), MAX_USER_DESCR);
       g_pUserList[i].nGraceLogins = DBGetFieldLong(hResult, i, 7);
       g_pUserList[i].nAuthMethod = DBGetFieldLong(hResult, i, 8);
+      DBGetFieldGUID(hResult, i, 9, g_pUserList[i].guid);
    }
 
    DBFreeResult(hResult);
@@ -120,7 +121,7 @@ BOOL LoadUsers(void)
    }
 
    // Load groups
-   hResult = DBSelect(g_hCoreDB, "SELECT id,name,system_access,flags,description FROM user_groups ORDER BY id");
+   hResult = DBSelect(g_hCoreDB, "SELECT id,name,system_access,flags,description,guid FROM user_groups ORDER BY id");
    if (hResult == 0)
       return FALSE;
 
@@ -133,6 +134,7 @@ BOOL LoadUsers(void)
       g_pGroupList[i].wSystemRights = (WORD)DBGetFieldLong(hResult, i, 2);
       g_pGroupList[i].wFlags = (WORD)DBGetFieldLong(hResult, i, 3);
       nx_strncpy(g_pGroupList[i].szDescription, DBGetField(hResult, i, 4), MAX_USER_DESCR);
+      DBGetFieldGUID(hResult, i, 5, g_pGroupList[i].guid);
       g_pGroupList[i].dwNumMembers = 0;
       g_pGroupList[i].pMembers = NULL;
    }
@@ -178,7 +180,7 @@ BOOL LoadUsers(void)
 void SaveUsers(DB_HANDLE hdb)
 {
    DWORD i;
-   char szQuery[1024], szPassword[SHA1_DIGEST_SIZE * 2 + 1];
+   char szQuery[1024], szPassword[SHA1_DIGEST_SIZE * 2 + 1], szGUID[64];
 
    // Save users
    MutexLock(m_hMutexUserAccess, INFINITE);
@@ -219,18 +221,18 @@ void SaveUsers(DB_HANDLE hdb)
          BinToStr(g_pUserList[i].szPassword, SHA1_DIGEST_SIZE, szPassword);
          if (bUserExists)
             sprintf(szQuery, "UPDATE users SET name='%s',password='%s',system_access=%d,flags=%d,"
-                             "full_name='%s',description='%s',grace_logins=%d WHERE id=%d",
+                             "full_name='%s',description='%s',grace_logins=%d,guid='%s' WHERE id=%d",
                     g_pUserList[i].szName, szPassword, g_pUserList[i].wSystemRights,
                     g_pUserList[i].wFlags, g_pUserList[i].szFullName,
                     g_pUserList[i].szDescription, g_pUserList[i].nGraceLogins,
-                    g_pUserList[i].dwId);
+                    uuid_to_string(g_pUserList[i].guid, szGUID), g_pUserList[i].dwId);
          else
-            sprintf(szQuery, "INSERT INTO users (id,name,password,system_access,flags,full_name,description,grace_logins) "
-                             "VALUES (%d,'%s','%s',%d,%d,'%s','%s',%d)",
+            sprintf(szQuery, "INSERT INTO users (id,name,password,system_access,flags,full_name,description,grace_logins,guid) "
+                             "VALUES (%d,'%s','%s',%d,%d,'%s','%s',%d,'%s')",
                     g_pUserList[i].dwId, g_pUserList[i].szName, szPassword,
                     g_pUserList[i].wSystemRights, g_pUserList[i].wFlags,
                     g_pUserList[i].szFullName, g_pUserList[i].szDescription,
-                    g_pUserList[i].nGraceLogins);
+                    g_pUserList[i].nGraceLogins, uuid_to_string(g_pUserList[i].guid, szGUID));
          DBQuery(hdb, szQuery);
       }
    }
@@ -276,15 +278,16 @@ void SaveUsers(DB_HANDLE hdb)
          // Create or update record in database
          if (bGroupExists)
             sprintf(szQuery, "UPDATE user_groups SET name='%s',system_access=%d,flags=%d,"
-                             "description='%s' WHERE id=%d",
+                             "description='%s',guid='%s' WHERE id=%d",
                     g_pGroupList[i].szName, g_pGroupList[i].wSystemRights,
                     g_pGroupList[i].wFlags, g_pGroupList[i].szDescription,
-                    g_pGroupList[i].dwId);
+                    uuid_to_string(g_pGroupList[i].guid, szGUID), g_pGroupList[i].dwId);
          else
-            sprintf(szQuery, "INSERT INTO user_groups (id,name,system_access,flags,description) "
-                             "VALUES (%d,'%s',%d,%d,'%s')",
+            sprintf(szQuery, "INSERT INTO user_groups (id,name,system_access,flags,description,guid) "
+                             "VALUES (%d,'%s',%d,%d,'%s','%s')",
                     g_pGroupList[i].dwId, g_pGroupList[i].szName, g_pGroupList[i].wSystemRights,
-                    g_pGroupList[i].wFlags, g_pGroupList[i].szDescription);
+                    g_pGroupList[i].wFlags, g_pGroupList[i].szDescription,
+                    uuid_to_string(g_pGroupList[i].guid, szGUID));
          DBQuery(hdb, szQuery);
 
          if (bGroupExists)
@@ -482,11 +485,13 @@ BOOL CheckUserMembership(DWORD dwUserId, DWORD dwGroupId)
 void DumpUsers(CONSOLE_CTX pCtx)
 {
    DWORD i;
+   char szGUID[64];
 
-   ConsolePrintf(pCtx, "Login name           System rights\n"
-                       "----------------------------------\n");
+   ConsolePrintf(pCtx, "Login name           GUID                                 System rights\n"
+                       "-----------------------------------------------------------------------\n");
    for(i = 0; i < g_dwNumUsers; i++)
-      ConsolePrintf(pCtx, "%-20s 0x%08X\n", g_pUserList[i].szName, g_pUserList[i].wSystemRights);
+      ConsolePrintf(pCtx, "%-20s %-36s 0x%08X\n", g_pUserList[i].szName,
+                    uuid_to_string(g_pUserList[i].guid, szGUID), g_pUserList[i].wSystemRights);
    ConsolePrintf(pCtx, "\n");
 }
 
@@ -579,6 +584,7 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId)
          g_pGroupList[i].wFlags = UF_MODIFIED;
          g_pGroupList[i].wSystemRights = 0;
          g_pGroupList[i].szDescription[0] = 0;
+         uuid_generate(g_pGroupList[i].guid);
       }
 
       if (dwResult == RCC_SUCCESS)
@@ -610,6 +616,7 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId)
          g_pUserList[i].szFullName[0] = 0;
          g_pUserList[i].szDescription[0] = 0;
          g_pUserList[i].nGraceLogins = MAX_GRACE_LOGINS;
+         uuid_generate(g_pUserList[i].guid);
       }
 
       if (dwResult == RCC_SUCCESS)
@@ -647,6 +654,7 @@ DWORD ModifyUser(NMS_USER *pUserInfo)
          strcpy(g_pUserList[i].szName, pUserInfo->szName);
          strcpy(g_pUserList[i].szFullName, pUserInfo->szFullName);
          strcpy(g_pUserList[i].szDescription, pUserInfo->szDescription);
+         g_pUserList[i].nAuthMethod = pUserInfo->nAuthMethod;
          
          // We will not replace system access rights for UID 0
          if (g_pUserList[i].dwId != 0)

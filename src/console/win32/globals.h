@@ -349,6 +349,7 @@ extern TCHAR *g_szToolType[];
 extern TCHAR *g_szToolColFmt[];
 extern TCHAR *g_szSyslogSeverity[];
 extern TCHAR *g_szSyslogFacility[];
+extern TCHAR *g_szAuthMethod[];
 extern COLORREF g_statusColorTable[];
 extern char *g_szObjectClass[];
 extern char *g_szInterfaceTypes[];

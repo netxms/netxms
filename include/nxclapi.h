@@ -31,6 +31,7 @@
 #include <nxcscpapi.h>
 #include <nxtools.h>
 #include <nxlog.h>
+#include <uuid.h>
 
 #ifdef _WIN32
 #ifdef LIBNXCL_EXPORTS
@@ -886,9 +887,11 @@ typedef struct
 typedef struct
 {
    TCHAR szName[MAX_USER_NAME];
+   uuid_t guid;
    DWORD dwId;
    WORD wFlags;
    WORD wSystemRights;
+   int nAuthMethod;        // Only for users
    DWORD dwNumMembers;     // Only for groups
    DWORD *pdwMemberList;   // Only for groups
    TCHAR szFullName[MAX_USER_FULLNAME];    // Only for users

@@ -5,11 +5,11 @@
 - New configuration parameters: RADIUSServer, RADIUSSecret, RADIUSPort,
   RADIUSNumRetries, RADIUSTimeout
 - Added column "guid" to table "users":
-	ALTER TABLE users ADD guid varchar(32) not null;
+	ALTER TABLE users ADD guid varchar(36) not null;
 - Added column "auth_method" to table "users":
 	ALTER TABLE users ADD auth_method integer not null;
 - Added column "guid" to table "user_groups":
-	ALTER TABLE user_groups ADD guid varchar(32) not null;
+	ALTER TABLE user_groups ADD guid varchar(36) not null;
 
 
 *************

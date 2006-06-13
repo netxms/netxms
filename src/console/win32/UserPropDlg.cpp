@@ -35,6 +35,7 @@ CUserPropDlg::CUserPropDlg(CWnd* pParent /*=NULL*/)
 	m_bDeleteAlarms = FALSE;
 	m_bManagePkg = FALSE;
 	//}}AFX_DATA_INIT
+   m_nAuthMethod = 0;
 }
 
 
@@ -42,6 +43,7 @@ void CUserPropDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CUserPropDlg)
+	DDX_Control(pDX, IDC_COMBO_AUTH, m_wndComboAuth);
 	DDX_Check(pDX, IDC_CHECK_DISABLED, m_bAccountDisabled);
 	DDX_Check(pDX, IDC_CHECK_DROP_CONN, m_bDropConn);
 	DDX_Check(pDX, IDC_CHECK_EDIT_EVENTDB, m_bEditEventDB);
@@ -74,21 +76,52 @@ END_MESSAGE_MAP()
 
 BOOL CUserPropDlg::OnInitDialog() 
 {
+   int i;
+
 	CDialog::OnInitDialog();
 
    if (m_pUser->dwId == 0)
    {
       // Disable checkboxes with system access rights for superuser
-      GetDlgItem(IDC_CHECK_DISABLED)->EnableWindow(FALSE);
-      GetDlgItem(IDC_CHECK_DROP_CONN)->EnableWindow(FALSE);
-      GetDlgItem(IDC_CHECK_MANAGE_USERS)->EnableWindow(FALSE);
-      GetDlgItem(IDC_CHECK_SNMP_TRAPS)->EnableWindow(FALSE);
-      GetDlgItem(IDC_CHECK_MANAGE_CONFIG)->EnableWindow(FALSE);
-      GetDlgItem(IDC_CHECK_VIEW_EVENTDB)->EnableWindow(FALSE);
-      GetDlgItem(IDC_CHECK_EDIT_EVENTDB)->EnableWindow(FALSE);
-      GetDlgItem(IDC_CHECK_MANAGE_ACTIONS)->EnableWindow(FALSE);
-      GetDlgItem(IDC_CHECK_MANAGE_EPP)->EnableWindow(FALSE);
+      EnableDlgItem(this, IDC_CHECK_DISABLED, FALSE);
+      EnableDlgItem(this, IDC_CHECK_DROP_CONN, FALSE);
+      EnableDlgItem(this, IDC_CHECK_MANAGE_USERS, FALSE);
+      EnableDlgItem(this, IDC_CHECK_SNMP_TRAPS, FALSE);
+      EnableDlgItem(this, IDC_CHECK_MANAGE_CONFIG, FALSE);
+      EnableDlgItem(this, IDC_CHECK_VIEW_EVENTDB, FALSE);
+      EnableDlgItem(this, IDC_CHECK_EDIT_EVENTDB, FALSE);
+      EnableDlgItem(this, IDC_CHECK_MANAGE_ACTIONS, FALSE);
+      EnableDlgItem(this, IDC_CHECK_MANAGE_EPP, FALSE);
+      EnableDlgItem(this, IDC_CHECK_MANAGE_PKG, FALSE);
+      EnableDlgItem(this, IDC_CHECK_DELETE_ALARMS, FALSE);
    }
 
+   for(i = 0; g_szAuthMethod[i] != NULL; i++)
+      m_wndComboAuth.AddString(g_szAuthMethod[i]);
+   if ((m_nAuthMethod < 0) || (m_nAuthMethod >= i))
+      m_nAuthMethod = 0;
+   m_wndComboAuth.SelectString(-1, g_szAuthMethod[m_nAuthMethod]);
+
 	return TRUE;
+}
+
+
+//
+// OK button handler
+//
+
+void CUserPropDlg::OnOK() 
+{
+   int i;
+   TCHAR szText[256];
+
+   m_wndComboAuth.GetWindowText(szText, 256);
+   for(i = 0; g_szAuthMethod[i] != NULL; i++)
+      if (!_tcscmp(szText, g_szAuthMethod[i]))
+      {
+         m_nAuthMethod = i;
+         break;
+      }
+
+	CDialog::OnOK();
 }

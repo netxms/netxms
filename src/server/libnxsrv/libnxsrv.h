@@ -35,6 +35,7 @@
 #endif   /* _WIN32 */
 
 #include <nms_util.h>
+#include <uuid.h>
 #include <nms_agent.h>
 #include <nms_threads.h>
 #include <dbdrv.h>

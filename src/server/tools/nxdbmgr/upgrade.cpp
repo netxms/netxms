@@ -78,6 +78,95 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V40 to V41
+//
+
+static BOOL H_UpgradeFromV40(void)
+{
+   static TCHAR m_szBatch[] =
+      "ALTER TABLE users ADD guid varchar(36)\n"
+      "ALTER TABLE users ADD auth_method integer\n"
+      "ALTER TABLE user_groups ADD guid varchar(36)\n"
+      "UPDATE users SET auth_method=0\n"
+      "<END>";
+   DB_RESULT hResult;
+   int i, nCount;
+   DWORD dwId;
+   uuid_t guid;
+   TCHAR szQuery[256], szGUID[64];
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   // Generate GUIDs for users and groups
+   printf("Generating GUIDs...\n");
+   
+   hResult = SQLSelect(_T("SELECT id FROM users"));
+   if (hResult != NULL)
+   {
+      nCount = DBGetNumRows(hResult);
+      for(i = 0; i < nCount; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         uuid_generate(guid);
+         _sntprintf(szQuery, 256, _T("UPDATE users SET guid='%s' WHERE id=%d"),
+                    uuid_to_string(guid, szGUID), dwId);
+         if (!SQLQuery(szQuery))
+            if (!g_bIgnoreErrors)
+            {
+               DBFreeResult(hResult);
+               return FALSE;
+            }
+      }
+      DBFreeResult(hResult);
+   }
+
+   hResult = SQLSelect(_T("SELECT id FROM user_groups"));
+   if (hResult != NULL)
+   {
+      nCount = DBGetNumRows(hResult);
+      for(i = 0; i < nCount; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         uuid_generate(guid);
+         _sntprintf(szQuery, 256, _T("UPDATE user_groups SET guid='%s' WHERE id=%d"),
+                    uuid_to_string(guid, szGUID), dwId);
+         if (!SQLQuery(szQuery))
+            if (!g_bIgnoreErrors)
+            {
+               DBFreeResult(hResult);
+               return FALSE;
+            }
+      }
+      DBFreeResult(hResult);
+   }
+
+   if (!CreateConfigParam(_T("RADIUSServer"), _T("localhost"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("RADIUSSecret"), _T("netxms"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("RADIUSNumRetries"), _T("5"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("RADIUSTimeout"), _T("3"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='41' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V39 to V40
 //
 
@@ -1733,6 +1822,7 @@ static struct
    { 37, H_UpgradeFromV37 },
    { 38, H_UpgradeFromV38 },
    { 39, H_UpgradeFromV39 },
+   { 40, H_UpgradeFromV40 },
    { 0, NULL }
 };
 

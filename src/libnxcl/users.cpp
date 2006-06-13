@@ -36,6 +36,7 @@ void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser)
    pUser->wFlags = pMsg->GetVariableShort(VID_USER_FLAGS);
    pUser->wSystemRights = pMsg->GetVariableShort(VID_USER_SYS_RIGHTS);
    pMsg->GetVariableStr(VID_USER_DESCRIPTION, pUser->szDescription, MAX_USER_DESCR);
+   pMsg->GetVariableBinary(VID_GUID, pUser->guid, UUID_LENGTH);
 
    // Process group-specific fields
    if (pUser->dwId & GROUP_FLAG)
@@ -49,6 +50,7 @@ void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser)
    }
    else     // User-specific data
    {
+      pUser->nAuthMethod = pMsg->GetVariableShort(VID_AUTH_METHOD);
       pMsg->GetVariableStr(VID_USER_FULL_NAME, pUser->szFullName, MAX_USER_FULLNAME);
       pUser->pdwMemberList = NULL;
    }
@@ -191,6 +193,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_SESSION hSession, NXC_USER *pUserInfo
    else     // User-specific fields
    {
       msg.SetVariable(VID_USER_FULL_NAME, pUserInfo->szFullName);
+      msg.SetVariable(VID_AUTH_METHOD, (WORD)pUserInfo->nAuthMethod);
    }
 
    ((NXCL_Session *)hSession)->SendMsg(&msg);
