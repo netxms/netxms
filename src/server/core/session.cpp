@@ -3065,6 +3065,11 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                      pObject->SetName(szObjectName);
                      NetObjInsert(pObject, TRUE);
                      break;
+                  case OBJECT_CONDITION:
+                     pObject = new Condition(TRUE);
+                     pObject->SetName(szObjectName);
+                     NetObjInsert(pObject, TRUE);
+                     break;
                   default:
                      break;
                }

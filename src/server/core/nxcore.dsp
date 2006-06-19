@@ -198,6 +198,10 @@ SOURCE=.\client.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\condition.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\config.cpp
 # End Source File
 # Begin Source File

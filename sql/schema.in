@@ -262,10 +262,42 @@ CREATE TABLE vpn_connector_networks
 CREATE TABLE containers
 (
 	id integer not null,
-	category integer,
-	description SQL_TEXT,
+	category integer not null,
+	description SQL_TEXT not null,
 	object_class integer not null,
 	PRIMARY KEY(id)
+) TABLE_TYPE;
+
+
+/*
+** Condition objects
+*/
+
+CREATE TABLE conditions
+(
+	id integer not null,
+	activation_event integer not null,
+	deactivation_event integer not null,
+	source_object integer not null,
+	active_status integer not null,
+	inactive_status integer not null,
+	script SQL_TEXT not null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;
+
+
+/*
+** DCI to condition mapping
+*/
+
+CREATE TABLE cond_dci_map
+(
+	condition_id integer not null,
+	dci_id integer not null,
+	node_id integer not null,
+	dci_func integer not null,
+	num_polls integer not null,
+	PRIMARY KEY(condition_id,dci_id)
 ) TABLE_TYPE;
 
 

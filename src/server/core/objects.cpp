@@ -61,7 +61,7 @@ char *g_pszStatusName[] = { "Normal", "Warning", "Minor", "Major", "Critical",
 char *g_szClassName[]={ "Generic", "Subnet", "Node", "Interface",
                         "Network", "Container", "Zone", "ServiceRoot",
                         "Template", "TemplateGroup", "TemplateRoot",
-                        "NetworkService", "VPNConnector" };
+                        "NetworkService", "VPNConnector", "Condition" };
 
 
 //
@@ -745,7 +745,7 @@ BOOL LoadObjects(void)
    // Load VPN connectors
    DbgPrintf(AF_DEBUG_MISC, "Loading VPN connectors...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM vpn_connectors");
-   if (hResult != 0)
+   if (hResult != NULL)
    {
       VPNConnector *pConnector;
 
@@ -767,10 +767,35 @@ BOOL LoadObjects(void)
       DBFreeResult(hResult);
    }
 
+   // Load conditions
+   DbgPrintf(AF_DEBUG_MISC, "Loading conditions...");
+   hResult = DBSelect(g_hCoreDB, "SELECT id FROM conditions");
+   if (hResult != NULL)
+   {
+      Condition *pCondition;
+
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         pCondition = new Condition;
+         if (pCondition->CreateFromDB(dwId))
+         {
+            NetObjInsert(pCondition, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete pCondition;
+            WriteLog(MSG_CONDITION_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
    // Load templates
    DbgPrintf(AF_DEBUG_MISC, "Loading templates...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM templates");
-   if (hResult != 0)
+   if (hResult != NULL)
    {
       Template *pTemplate;
 
@@ -959,7 +984,8 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
       case OBJECT_SERVICEROOT:
       case OBJECT_CONTAINER:
          if ((iChildClass == OBJECT_CONTAINER) || 
-             (iChildClass == OBJECT_NODE))
+             (iChildClass == OBJECT_NODE) ||
+             (iChildClass == OBJECT_CONDITION))
             return TRUE;
          break;
       case OBJECT_TEMPLATEROOT:

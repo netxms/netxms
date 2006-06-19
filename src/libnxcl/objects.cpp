@@ -54,6 +54,10 @@ void DestroyObject(NXC_OBJECT *pObject)
          safe_free(pObject->vpnc.pLocalNetList);
          safe_free(pObject->vpnc.pRemoteNetList);
          break;
+      case OBJECT_CONDITION:
+         safe_free(pObject->cond.pszScript);
+         safe_free(pObject->cond.pDCIList);
+         break;
    }
    safe_free(pObject->pdwChildList);
    safe_free(pObject->pdwParentList);
@@ -157,6 +161,10 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
       case OBJECT_VPNCONNECTOR:
          safe_free(pObject->vpnc.pLocalNetList);
          safe_free(pObject->vpnc.pRemoteNetList);
+         break;
+      case OBJECT_CONDITION:
+         safe_free(pObject->cond.pszScript);
+         safe_free(pObject->cond.pDCIList);
          break;
    }
    safe_free(pObject->pdwChildList);
@@ -295,6 +303,24 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          {
             pObject->vpnc.pRemoteNetList[i].dwAddr = pMsg->GetVariableLong(dwId1++);
             pObject->vpnc.pRemoteNetList[i].dwMask = pMsg->GetVariableLong(dwId1++);
+         }
+         break;
+      case OBJECT_CONDITION:
+         pObject->cond.dwActivationEvent = pMsg->GetVariableLong(VID_ACTIVATION_EVENT);
+         pObject->cond.dwDeactivationEvent = pMsg->GetVariableLong(VID_DEACTIVATION_EVENT);
+         pObject->cond.dwSourceObject = pMsg->GetVariableLong(VID_SOURCE_OBJECT);
+         pObject->cond.pszScript = pMsg->GetVariableStr(VID_SCRIPT);
+         pObject->cond.wActiveStatus = pMsg->GetVariableShort(VID_ACTIVE_STATUS);
+         pObject->cond.wInactiveStatus = pMsg->GetVariableShort(VID_INACTIVE_STATUS);
+         pObject->cond.dwNumDCI = pMsg->GetVariableLong(VID_NUM_ITEMS);
+         pObject->cond.pDCIList = (INPUT_DCI *)malloc(sizeof(INPUT_DCI) * pObject->cond.dwNumDCI);
+         for(i = 0, dwId1 = VID_DCI_LIST_BASE; i < pObject->cond.dwNumDCI; i++)
+         {
+            pObject->cond.pDCIList[i].dwId = pMsg->GetVariableLong(dwId1++);
+            pObject->cond.pDCIList[i].dwNodeId = pMsg->GetVariableLong(dwId1++);
+            pObject->cond.pDCIList[i].nFunction = pMsg->GetVariableShort(dwId1++);
+            pObject->cond.pDCIList[i].nPolls = pMsg->GetVariableShort(dwId1++);
+            dwId1 += 6;
          }
          break;
       default:
@@ -639,6 +665,18 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_PEER_GATEWAY, pUpdate->dwPeerGateway);
    if (pUpdate->dwFlags & OBJ_UPDATE_NODE_FLAGS)
       msg.SetVariable(VID_FLAGS, pUpdate->dwNodeFlags);
+   if (pUpdate->dwFlags & OBJ_UPDATE_ACT_EVENT)
+      msg.SetVariable(VID_ACTIVATION_EVENT, pUpdate->dwActivationEvent);
+   if (pUpdate->dwFlags & OBJ_UPDATE_DEACT_EVENT)
+      msg.SetVariable(VID_DEACTIVATION_EVENT, pUpdate->dwDeactivationEvent);
+   if (pUpdate->dwFlags & OBJ_UPDATE_SOURCE_OBJECT)
+      msg.SetVariable(VID_SOURCE_OBJECT, pUpdate->dwSourceObject);
+   if (pUpdate->dwFlags & OBJ_UPDATE_ACTIVE_STATUS)
+      msg.SetVariable(VID_ACTIVE_STATUS, (WORD)pUpdate->nActiveStatus);
+   if (pUpdate->dwFlags & OBJ_UPDATE_INACTIVE_STATUS)
+      msg.SetVariable(VID_INACTIVE_STATUS, (WORD)pUpdate->nInactiveStatus);
+   if (pUpdate->dwFlags & OBJ_UPDATE_SCRIPT)
+      msg.SetVariable(VID_SCRIPT, pUpdate->pszScript);
    if (pUpdate->dwFlags & OBJ_UPDATE_STATUS_ALG)
    {
       msg.SetVariable(VID_STATUS_CALCULATION_ALG, (WORD)pUpdate->iStatusCalcAlg);
@@ -679,6 +717,18 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       {
          msg.SetVariable(dwId1, pUpdate->pAccessList[i].dwUserId);
          msg.SetVariable(dwId2, pUpdate->pAccessList[i].dwAccessRights);
+      }
+   }
+   if (pUpdate->dwFlags & OBJ_UPDATE_DCI_LIST)
+   {
+      msg.SetVariable(VID_NUM_ITEMS, pUpdate->dwNumDCI);
+      for(i = 0, dwId1 = VID_DCI_LIST_BASE; i < pUpdate->dwNumDCI; i++)
+      {
+         msg.SetVariable(dwId1++, pUpdate->pDCIList[i].dwId);
+         msg.SetVariable(dwId1++, pUpdate->pDCIList[i].dwNodeId);
+         msg.SetVariable(dwId1++, (WORD)pUpdate->pDCIList[i].nFunction);
+         msg.SetVariable(dwId1++, (WORD)pUpdate->pDCIList[i].nPolls);
+         dwId1 += 6;
       }
    }
 
@@ -1199,6 +1249,14 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, TCHAR *pszFile
                fwrite(pList[i].pObject->vpnc.pRemoteNetList, 1, 
                       pList[i].pObject->vpnc.dwNumRemoteNets * sizeof(IP_NETWORK), hFile);
                break;
+            case OBJECT_CONDITION:
+               dwSize = _tcslen(pList[i].pObject->cond.pszScript) * sizeof(TCHAR);
+               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
+               fwrite(pList[i].pObject->cond.pszScript, 1, dwSize, hFile);
+
+               fwrite(pList[i].pObject->cond.pDCIList, 1, 
+                      pList[i].pObject->cond.dwNumDCI * sizeof(INPUT_DCI), hFile);
+               break;
             default:
                break;
          }
@@ -1309,6 +1367,16 @@ void NXCL_Session::LoadObjectsFromCache(TCHAR *pszFile)
                         dwSize = object.vpnc.dwNumRemoteNets * sizeof(IP_NETWORK);
                         object.vpnc.pRemoteNetList = (IP_NETWORK *)malloc(dwSize);
                         fread(object.vpnc.pRemoteNetList, 1, dwSize, hFile);
+                        break;
+                     case OBJECT_CONDITION:
+                        fread(&dwSize, 1, sizeof(DWORD), hFile);
+                        object.cond.pszScript = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
+                        fread(object.cond.pszScript, 1, dwSize, hFile);
+                        object.cond.pszScript[dwSize / sizeof(TCHAR)] = 0;
+
+                        dwSize = object.cond.dwNumDCI * sizeof(INPUT_DCI);
+                        object.cond.pDCIList = (INPUT_DCI *)malloc(dwSize);
+                        fread(object.cond.pDCIList, 1, dwSize, hFile);
                         break;
                      default:
                         break;

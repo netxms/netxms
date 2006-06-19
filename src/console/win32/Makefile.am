@@ -19,6 +19,7 @@ EXTRA_DIST = \
 	ColorSelector.cpp ColorSelector.h \
 	ConsolePropsGeneral.cpp ConsolePropsGeneral.h \
 	ControlPanel.cpp ControlPanel.h \
+	CreateCondDlg.cpp CreateCondDlg.h \
 	CreateContainerDlg.cpp CreateContainerDlg.h \
 	CreateNodeDlg.cpp CreateNodeDlg.h \
 	CreateObjectDlg.cpp CreateObjectDlg.h \

@@ -636,6 +636,12 @@ typedef struct
 #define VID_MOVE_FLAG               ((DWORD)220)
 #define VID_CHANGE_PASSWD_FLAG      ((DWORD)221)
 #define VID_GUID                    ((DWORD)222)
+#define VID_ACTIVATION_EVENT        ((DWORD)223)
+#define VID_DEACTIVATION_EVENT      ((DWORD)224)
+#define VID_SOURCE_OBJECT           ((DWORD)225)
+#define VID_ACTIVE_STATUS           ((DWORD)226)
+#define VID_INACTIVE_STATUS         ((DWORD)227)
+#define VID_SCRIPT                  ((DWORD)228)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -727,6 +733,10 @@ typedef struct
 
 // Base value for module list
 #define VID_MODULE_LIST_BASE        ((DWORD)0x10000000)
+
+// Base and last values for condition's DCI list
+#define VID_DCI_LIST_BASE           ((DWORD)0x40000000)
+#define VID_DCI_LIST_LAST           ((DWORD)0x4FFFFFFF)
 
 
 //

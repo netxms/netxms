@@ -1,0 +1,317 @@
+/* 
+** NetXMS - Network Management System
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: container.cpp
+**
+**/
+
+#include "nxcore.h"
+
+
+//
+// Constructor
+//
+
+Condition::Condition()
+          :NetObj()
+{
+   m_pszScript = NULL;
+   m_pDCIList = NULL;
+   m_dwDCICount = 0;
+   m_pszScript = 0;
+   m_dwSourceObject = 0;
+   m_nActiveStatus = STATUS_MAJOR;
+   m_nInactiveStatus = STATUS_NORMAL;
+}
+
+
+//
+// Constructor for new objects
+//
+
+Condition::Condition(BOOL bHidden)
+          :NetObj()
+{
+   m_pszScript = NULL;
+   m_pDCIList = NULL;
+   m_dwDCICount = 0;
+   m_pszScript = 0;
+   m_dwSourceObject = 0;
+   m_nActiveStatus = STATUS_MAJOR;
+   m_nInactiveStatus = STATUS_NORMAL;
+   m_bIsHidden = bHidden;
+}
+
+
+//
+// Destructor
+//
+
+Condition::~Condition()
+{
+   safe_free(m_pDCIList);
+   safe_free(m_pszScript);
+}
+
+
+//
+// Load object from database
+//
+
+BOOL Condition::CreateFromDB(DWORD dwId)
+{
+   TCHAR szQuery[512];
+   DB_RESULT hResult;
+   DWORD i;
+
+   m_dwId = dwId;
+
+   if (!LoadCommonProperties())
+      return FALSE;
+
+   // Load properties
+   _sntprintf(szQuery, 512, _T("SELECT activation_event,deactivation_event,")
+                            _T("source_object,active_status,inactive_status,")
+                            _T("script FROM conditions WHERE id=%d"), dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult == NULL)
+      return FALSE;     // Query failed
+
+   if (DBGetNumRows(hResult) == 0)
+   {
+      // No object with given ID in database
+      DBFreeResult(hResult);
+      return FALSE;
+   }
+
+   m_dwActivationEventCode = DBGetFieldULong(hResult, 0, 0);
+   m_dwDeactivationEventCode = DBGetFieldULong(hResult, 0, 1);
+   m_dwSourceObject = DBGetFieldULong(hResult, 0, 2);
+   m_nActiveStatus = DBGetFieldLong(hResult, 0, 3);
+   m_nInactiveStatus = DBGetFieldLong(hResult, 0, 4);
+   m_pszScript = _tcsdup(DBGetField(hResult, 0, 5));
+   
+   DBFreeResult(hResult);
+
+   // Load DCI map
+   _sntprintf(szQuery, 512, _T("SELECT dci_id,node_id,dci_func,num_polls ")
+                            _T("FROM cond_dci_map WHERE condition_id=%d"), dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult == NULL)
+      return FALSE;     // Query failed
+
+   m_dwDCICount = DBGetNumRows(hResult);
+   if (m_dwDCICount > 0)
+   {
+      m_pDCIList = (INPUT_DCI *)malloc(sizeof(INPUT_DCI) * m_dwDCICount);
+      for(i = 0; i < m_dwDCICount; i++)
+      {
+         m_pDCIList[i].dwId = DBGetFieldULong(hResult, i, 0);
+         m_pDCIList[i].dwNodeId = DBGetFieldULong(hResult, i, 1);
+         m_pDCIList[i].nFunction = DBGetFieldLong(hResult, i, 2);
+         m_pDCIList[i].nPolls = DBGetFieldLong(hResult, i, 3);
+      }
+   }
+   DBFreeResult(hResult);
+
+   return LoadACLFromDB();
+}
+
+
+//
+// Save object to database
+//
+
+BOOL Condition::SaveToDB(DB_HANDLE hdb)
+{
+   TCHAR *pszEscScript, *pszQuery;
+   DB_RESULT hResult;
+   BOOL bNewObject = TRUE;
+   DWORD i;
+
+   LockData();
+
+   SaveCommonProperties(hdb);
+
+   pszEscScript = EncodeSQLString(CHECK_NULL_EX(m_pszScript));
+   pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * (_tcslen(pszEscScript) + 1024));
+
+   // Check for object's existence in database
+   _stprintf(pszQuery, _T("SELECT id FROM conditions WHERE id=%d"), m_dwId);
+   hResult = DBSelect(hdb, pszQuery);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         bNewObject = FALSE;
+      DBFreeResult(hResult);
+   }
+
+   // Form and execute INSERT or UPDATE query
+   if (bNewObject)
+   {
+      _stprintf(pszQuery, _T("INSERT INTO conditions (id,activation_event,")
+                          _T("deactivation_event,source_object,active_status,")
+                          _T("inactive_status,script) VALUES (%d,%d,%d,%d,%d,%d,'%s')"),
+                m_dwId, m_dwActivationEventCode, m_dwDeactivationEventCode,
+                m_dwSourceObject, m_nActiveStatus, m_nInactiveStatus, pszEscScript);
+   }
+   else
+   {
+      _stprintf(pszQuery, _T("UPDATE conditions SET activation_event=%d,")
+                          _T("deactivation_event=%s,source_object=%d,active_status=%d,")
+                          _T("inactive_status=%d,script='%s') WHERE id=%d"),
+                m_dwActivationEventCode, m_dwDeactivationEventCode, m_dwSourceObject,
+                m_nActiveStatus, m_nInactiveStatus, pszEscScript, m_dwId);
+   }
+   free(pszEscScript);
+   DBQuery(hdb, pszQuery);
+
+   // Save DCI mapping
+   _stprintf(pszQuery, _T("DELETE FROM cond_dci_map WHERE condition_id=%d"), m_dwId);
+   DBQuery(hdb, pszQuery);
+   for(i = 0; i < m_dwDCICount; i++)
+   {
+      _stprintf(pszQuery, _T("INSERT INTO cond_dci_map (condition_id,dci_id,node_id,")
+                          _T("dci_func,num_polls VALUES (%d,%d,%d,%d,%d)"),
+                m_dwId, m_pDCIList[i].dwId, m_pDCIList[i].dwNodeId,
+                m_pDCIList[i].nFunction, m_pDCIList[i].nPolls);
+      DBQuery(hdb, pszQuery);
+   }
+   free(pszQuery);
+
+   // Save access list
+   SaveACLToDB(hdb);
+
+   // Unlock object and clear modification flag
+   m_bIsModified = FALSE;
+   UnlockData();
+   return TRUE;
+}
+
+
+//
+// Delete object from database
+//
+
+BOOL Condition::DeleteFromDB(void)
+{
+   TCHAR szQuery[128];
+   BOOL bSuccess;
+
+   bSuccess = NetObj::DeleteFromDB();
+   if (bSuccess)
+   {
+      _sntprintf(szQuery, 128, _T("DELETE FROM conditions WHERE id=%d"), m_dwId);
+      QueueSQLRequest(szQuery);
+      _sntprintf(szQuery, 128, _T("DELETE FROM cond_dci_map WHERE condition_id=%d"), m_dwId);
+      QueueSQLRequest(szQuery);
+   }
+   return bSuccess;
+}
+
+
+//
+// Create NXCP message from object
+//
+
+void Condition::CreateMessage(CSCPMessage *pMsg)
+{
+   DWORD i, dwId;
+
+   NetObj::CreateMessage(pMsg);
+   pMsg->SetVariable(VID_SCRIPT, CHECK_NULL_EX(m_pszScript));
+   pMsg->SetVariable(VID_ACTIVATION_EVENT, m_dwActivationEventCode);
+   pMsg->SetVariable(VID_DEACTIVATION_EVENT, m_dwDeactivationEventCode);
+   pMsg->SetVariable(VID_SOURCE_OBJECT, m_dwSourceObject);
+   pMsg->SetVariable(VID_ACTIVE_STATUS, (WORD)m_nActiveStatus);
+   pMsg->SetVariable(VID_INACTIVE_STATUS, (WORD)m_nInactiveStatus);
+   pMsg->SetVariable(VID_NUM_ITEMS, m_dwDCICount);
+   for(i = 0, dwId = VID_DCI_LIST_BASE; (i < m_dwDCICount) && (dwId < (VID_DCI_LIST_LAST + 1)); i++)
+   {
+      pMsg->SetVariable(dwId++, m_pDCIList[i].dwId);
+      pMsg->SetVariable(dwId++, m_pDCIList[i].dwNodeId);
+      pMsg->SetVariable(dwId++, (WORD)m_pDCIList[i].nFunction);
+      pMsg->SetVariable(dwId++, (WORD)m_pDCIList[i].nPolls);
+      dwId += 6;
+   }
+}
+
+
+//
+// Modify object from NXCP message
+//
+
+DWORD Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+{
+   DWORD i, dwId;
+
+   if (!bAlreadyLocked)
+      LockData();
+
+   // Change script
+   if (pRequest->IsVariableExist(VID_SCRIPT))
+   {
+      safe_free(m_pszScript);
+      m_pszScript = pRequest->GetVariableStr(VID_SCRIPT);
+   }
+
+   // Change activation event
+   if (pRequest->IsVariableExist(VID_ACTIVATION_EVENT))
+      m_dwActivationEventCode = pRequest->GetVariableLong(VID_ACTIVATION_EVENT);
+
+   // Change deactivation event
+   if (pRequest->IsVariableExist(VID_DEACTIVATION_EVENT))
+      m_dwDeactivationEventCode = pRequest->GetVariableLong(VID_DEACTIVATION_EVENT);
+
+   // Change source object
+   if (pRequest->IsVariableExist(VID_SOURCE_OBJECT))
+      m_dwSourceObject = pRequest->GetVariableLong(VID_SOURCE_OBJECT);
+
+   // Change active status
+   if (pRequest->IsVariableExist(VID_ACTIVE_STATUS))
+      m_nActiveStatus = pRequest->GetVariableShort(VID_ACTIVE_STATUS);
+
+   // Change inactive status
+   if (pRequest->IsVariableExist(VID_INACTIVE_STATUS))
+      m_nInactiveStatus = pRequest->GetVariableShort(VID_INACTIVE_STATUS);
+
+   // Change DCI list
+   if (pRequest->IsVariableExist(VID_NUM_ITEMS))
+   {
+      safe_free(m_pDCIList);
+      m_dwDCICount = pRequest->GetVariableLong(VID_NUM_ITEMS);
+      if (m_dwDCICount > 0)
+      {
+         m_pDCIList = (INPUT_DCI *)malloc(sizeof(INPUT_DCI) * m_dwDCICount);
+         for(i = 0, dwId = VID_DCI_LIST_BASE; (i < m_dwDCICount) && (dwId < (VID_DCI_LIST_LAST + 1)); i++)
+         {
+            m_pDCIList[i].dwId = pRequest->GetVariableLong(dwId++);
+            m_pDCIList[i].dwNodeId = pRequest->GetVariableLong(dwId++);
+            m_pDCIList[i].nFunction = pRequest->GetVariableShort(dwId++);
+            m_pDCIList[i].nPolls = pRequest->GetVariableShort(dwId++);
+            dwId += 6;
+         }
+      }
+      else
+      {
+         m_pDCIList = NULL;
+      }
+   }
+
+   return NetObj::ModifyFromMessage(pRequest, TRUE);
+}

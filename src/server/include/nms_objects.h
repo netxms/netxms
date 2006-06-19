@@ -904,6 +904,38 @@ public:
 
 
 //
+// Condition
+//
+
+class NXCORE_EXPORTABLE Condition : public NetObj
+{
+protected:
+   DWORD m_dwDCICount;
+   INPUT_DCI *m_pDCIList;
+   TCHAR *m_pszScript;
+   DWORD m_dwActivationEventCode;
+   DWORD m_dwDeactivationEventCode;
+   DWORD m_dwSourceObject;
+   int m_nActiveStatus;
+   int m_nInactiveStatus;
+
+public:
+   Condition();
+   Condition(BOOL bHidden);
+   virtual ~Condition();
+
+   virtual int Type(void) { return OBJECT_CONDITION; }
+
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
+   virtual BOOL DeleteFromDB(void);
+   virtual BOOL CreateFromDB(DWORD dwId);
+
+   virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+};
+
+
+//
 // Object index structure
 //
 

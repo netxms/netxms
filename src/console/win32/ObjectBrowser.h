@@ -159,6 +159,7 @@ protected:
 	afx_msg void OnObjectCreateVpnconnector();
 	afx_msg void OnObjectMove();
 	afx_msg void OnUpdateObjectMove(CCmdUI* pCmdUI);
+	afx_msg void OnObjectCreateCondition();
 	//}}AFX_MSG
    afx_msg void OnFindObject(WPARAM wParam, LPARAM lParam);
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);

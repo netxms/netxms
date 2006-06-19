@@ -191,6 +191,7 @@
 #define IDD_CHANGE_PASSWORD             320
 #define IDI_GO_PARENT                   321
 #define IDI_HOME                        323
+#define IDD_CREATE_CONDITION            324
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -703,6 +704,7 @@
 #define ID_DESKTOP_DELETE               33014
 #define ID_DESKTOP_MOVE                 33015
 #define ID_TOOLS_CHANGEPASSWORD         33016
+#define ID_OBJECT_CREATE_CONDITION      33017
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -712,8 +714,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        324
-#define _APS_NEXT_COMMAND_VALUE         33017
+#define _APS_NEXT_RESOURCE_VALUE        325
+#define _APS_NEXT_COMMAND_VALUE         33019
 #define _APS_NEXT_CONTROL_VALUE         1353
 #define _APS_NEXT_SYMED_VALUE           128
 #endif

@@ -108,9 +108,30 @@ static BOOL ExecSQLBatch(TCHAR *pszFile)
 
 void InitDatabase(TCHAR *pszInitFile)
 {
+   uuid_t guid;
+   TCHAR szQuery[256], szGUID[64];
+
    _tprintf(_T("Initializing database...\n"));
-   if (ExecSQLBatch(pszInitFile))
-      _tprintf(_T("Database initialized successfully\n"));
-   else
-      _tprintf(_T("Database initialization failed\n"));
+   if (!ExecSQLBatch(pszInitFile))
+      goto init_failed;
+
+   // Generate GUID for user "admin"
+   uuid_generate(guid);
+   _sntprintf(szQuery, 256, _T("UPDATE users SET guid='%s' WHERE id=0"),
+              uuid_to_string(guid, szGUID));
+   if (!SQLQuery(szQuery))
+      goto init_failed;
+
+   // Generate GUID for "everyone" group
+   uuid_generate(guid);
+   _sntprintf(szQuery, 256, _T("UPDATE user_groups SET guid='%s' WHERE id=%d"),
+              uuid_to_string(guid, szGUID), GROUP_EVERYONE);
+   if (!SQLQuery(szQuery))
+      goto init_failed;
+
+   _tprintf(_T("Database initialized successfully\n"));
+   return;
+
+init_failed:
+   _tprintf(_T("Database initialization failed\n"));
 }

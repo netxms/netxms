@@ -7,6 +7,7 @@
 #include "ActionEditor.h"
 #include "ConsolePropsGeneral.h"
 #include "ControlPanel.h"
+#include "CreateCondDlg.h"
 #include "CreateContainerDlg.h"
 #include "CreateNodeDlg.h"
 #include "CreateTemplateDlg.h"
@@ -1679,6 +1680,30 @@ void CConsoleApp::CreateContainer(DWORD dwParent)
       ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);
       ci.cs.container.dwCategory = 1;
       ci.cs.container.pszDescription = (TCHAR *)((LPCTSTR)dlg.m_strDescription);
+      CreateObject(&ci);
+   }
+}
+
+
+//
+// Create condition object
+//
+
+void CConsoleApp::CreateCondition(DWORD dwParent)
+{
+   NXC_OBJECT_CREATE_INFO ci;
+   CCreateCondDlg dlg;
+
+   dlg.m_pParentObject = NXCFindObjectById(g_hSession, dwParent);
+   if (dlg.m_pParentObject != NULL)
+      if ((dlg.m_pParentObject->iClass != OBJECT_CONTAINER) &&
+          (dlg.m_pParentObject->iClass != OBJECT_SERVICEROOT))
+         dlg.m_pParentObject = NULL;
+   if (dlg.DoModal() == IDOK)
+   {
+      ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
+      ci.iClass = OBJECT_CONDITION;
+      ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);
       CreateObject(&ci);
    }
 }

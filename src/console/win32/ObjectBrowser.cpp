@@ -211,6 +211,7 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_CREATE_VPNCONNECTOR, OnObjectCreateVpnconnector)
 	ON_COMMAND(ID_OBJECT_MOVE, OnObjectMove)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_MOVE, OnUpdateObjectMove)
+	ON_COMMAND(ID_OBJECT_CREATE_CONDITION, OnObjectCreateCondition)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
    ON_NOTIFY(TVN_GETDISPINFO, IDC_TREE_VIEW, OnTreeViewGetDispInfo)
@@ -1575,6 +1576,16 @@ void CObjectBrowser::OnObjectUnbind()
 void CObjectBrowser::OnObjectCreateContainer() 
 {
    theApp.CreateContainer((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_CREATE_CONDITION message handler
+//
+
+void CObjectBrowser::OnObjectCreateCondition() 
+{
+   theApp.CreateCondition((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
 }
 
 

@@ -221,18 +221,20 @@ void SaveUsers(DB_HANDLE hdb)
          BinToStr(g_pUserList[i].szPassword, SHA1_DIGEST_SIZE, szPassword);
          if (bUserExists)
             sprintf(szQuery, "UPDATE users SET name='%s',password='%s',system_access=%d,flags=%d,"
-                             "full_name='%s',description='%s',grace_logins=%d,guid='%s' WHERE id=%d",
+                             "full_name='%s',description='%s',grace_logins=%d,guid='%s',auth_method=%d WHERE id=%d",
                     g_pUserList[i].szName, szPassword, g_pUserList[i].wSystemRights,
                     g_pUserList[i].wFlags, g_pUserList[i].szFullName,
                     g_pUserList[i].szDescription, g_pUserList[i].nGraceLogins,
-                    uuid_to_string(g_pUserList[i].guid, szGUID), g_pUserList[i].dwId);
+                    uuid_to_string(g_pUserList[i].guid, szGUID),
+                    g_pUserList[i].nAuthMethod, g_pUserList[i].dwId);
          else
-            sprintf(szQuery, "INSERT INTO users (id,name,password,system_access,flags,full_name,description,grace_logins,guid) "
-                             "VALUES (%d,'%s','%s',%d,%d,'%s','%s',%d,'%s')",
+            sprintf(szQuery, "INSERT INTO users (id,name,password,system_access,flags,full_name,description,grace_logins,guid,auth_method) "
+                             "VALUES (%d,'%s','%s',%d,%d,'%s','%s',%d,'%s',%d)",
                     g_pUserList[i].dwId, g_pUserList[i].szName, szPassword,
                     g_pUserList[i].wSystemRights, g_pUserList[i].wFlags,
                     g_pUserList[i].szFullName, g_pUserList[i].szDescription,
-                    g_pUserList[i].nGraceLogins, uuid_to_string(g_pUserList[i].guid, szGUID));
+                    g_pUserList[i].nGraceLogins, uuid_to_string(g_pUserList[i].guid, szGUID),
+                    g_pUserList[i].nAuthMethod);
          DBQuery(hdb, szQuery);
       }
    }

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: netsrv.cpp
+** File: netsrv.cpp
 **
 **/
 
@@ -87,9 +87,9 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
 
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT id FROM network_services WHERE id=%d", m_dwId);
+   _stprintf(szQuery, _T("SELECT id FROM network_services WHERE id=%d"), m_dwId);
    hResult = DBSelect(hdb, szQuery);
-   if (hResult != 0)
+   if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
          bNewObject = FALSE;
@@ -100,6 +100,7 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
    pszEscRequest = EncodeSQLString(CHECK_NULL_EX(m_pszRequest));
    pszEscResponse = EncodeSQLString(CHECK_NULL_EX(m_pszResponse));
    if (bNewObject)
+   {
       _sntprintf(szQuery, 16384, _T("INSERT INTO network_services (id,node_id,"
                                     "service_type,ip_bind_addr,ip_proto,ip_port,"
                                     "check_request,check_responce,poller_node_id) VALUES "
@@ -107,7 +108,9 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
                  m_dwId, m_pHostNode->Id(), m_iServiceType,
                  IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
                  pszEscResponse, m_dwPollerNode);
+   }
    else
+   {
       _sntprintf(szQuery, 16384, _T("UPDATE network_services SET node_id=%d,"
                                     "service_type=%d,ip_bind_addr='%s',"
                                     "ip_proto=%d,ip_port=%d,check_request='%s',"
@@ -115,6 +118,7 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
                  m_pHostNode->Id(), m_iServiceType,
                  IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
                  pszEscResponse, m_dwPollerNode, m_dwId);
+   }
    free(pszEscRequest);
    free(pszEscResponse);
    DBQuery(hdb, szQuery);

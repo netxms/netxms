@@ -256,14 +256,16 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&Create..."
         BEGIN
-            MENUITEM "&Node...",                    ID_OBJECT_CREATE_NODE
+            MENUITEM "C&ondition...",               ID_OBJECT_CREATE_CONDITION
+
             MENUITEM "&Container...",               ID_OBJECT_CREATE_CONTAINER
+
+            MENUITEM "&Node...",                    ID_OBJECT_CREATE_NODE
+            MENUITEM "&Service...",                 ID_OBJECT_CREATE_SERVICE
+            MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
 
             MENUITEM "Template &group...",          ID_OBJECT_CREATE_TEMPLATEGROUP
 
-            MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
-
-            MENUITEM "&Service...",                 ID_OBJECT_CREATE_SERVICE
             MENUITEM "&VPN Connector...",           ID_OBJECT_CREATE_VPNCONNECTOR
 
         END
@@ -385,14 +387,16 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&Create..."
         BEGIN
-            MENUITEM "&Node...",                    ID_OBJECT_CREATE_NODE
+            MENUITEM "C&ondition...",               ID_OBJECT_CREATE_CONDITION
+
             MENUITEM "&Container...",               ID_OBJECT_CREATE_CONTAINER
+
+            MENUITEM "&Node...",                    ID_OBJECT_CREATE_NODE
+            MENUITEM "&Service...",                 ID_OBJECT_CREATE_SERVICE
+            MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
 
             MENUITEM "Template &group...",          ID_OBJECT_CREATE_TEMPLATEGROUP
 
-            MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
-
-            MENUITEM "&Service...",                 ID_OBJECT_CREATE_SERVICE
             MENUITEM "&VPN Connector...",           ID_OBJECT_CREATE_VPNCONNECTOR
 
         END
@@ -571,14 +575,16 @@ BEGIN
     BEGIN
         POPUP "&Create"
         BEGIN
-            MENUITEM "&Node...",                    ID_OBJECT_CREATE_NODE
+            MENUITEM "C&ondition...",               ID_OBJECT_CREATE_CONDITION
+
             MENUITEM "&Container...",               ID_OBJECT_CREATE_CONTAINER
+
+            MENUITEM "&Node...",                    ID_OBJECT_CREATE_NODE
+            MENUITEM "&Service...",                 ID_OBJECT_CREATE_SERVICE
+            MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
 
             MENUITEM "Template &group...",          ID_OBJECT_CREATE_TEMPLATEGROUP
 
-            MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
-
-            MENUITEM "&Service...",                 ID_OBJECT_CREATE_SERVICE
             MENUITEM "&VPN Connector...",           ID_OBJECT_CREATE_VPNCONNECTOR
 
         END
@@ -712,14 +718,16 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&Create"
         BEGIN
-            MENUITEM "&Node...",                    ID_OBJECT_CREATE_NODE
+            MENUITEM "C&ondition...",               ID_OBJECT_CREATE_CONDITION
+
             MENUITEM "&Container...",               ID_OBJECT_CREATE_CONTAINER
+
+            MENUITEM "&Node...",                    ID_OBJECT_CREATE_NODE
+            MENUITEM "&Service...",                 ID_OBJECT_CREATE_SERVICE
+            MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
 
             MENUITEM "Template &group...",          ID_OBJECT_CREATE_TEMPLATEGROUP
 
-            MENUITEM "&Template...",                ID_OBJECT_CREATE_TEMPLATE
-
-            MENUITEM "&Service...",                 ID_OBJECT_CREATE_SERVICE
             MENUITEM "&VPN Connector...",           ID_OBJECT_CREATE_VPNCONNECTOR
 
         END
@@ -1060,7 +1068,7 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,217,7,50,14,WS_GROUP
 END
 
-IDD_EDIT_EVENT DIALOG DISCARDABLE  0, 0, 270, 190
+IDD_EDIT_EVENT DIALOG DISCARDABLE  0, 0, 270, 210
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Event Configuration"
 FONT 8, "MS Sans Serif"
@@ -1072,11 +1080,11 @@ BEGIN
     CONTROL         "Write to event log",IDC_CHECK_LOG,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,175,46,88,10
     EDITTEXT        IDC_EDIT_MESSAGE,7,72,256,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_DESCRIPTION,7,102,256,62,ES_MULTILINE | 
+    EDITTEXT        IDC_EDIT_DESCRIPTION,7,102,256,79,ES_MULTILINE | 
                     ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | 
                     WS_VSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,156,169,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,213,169,50,14
+    DEFPUSHBUTTON   "OK",IDOK,156,189,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,213,189,50,14
     LTEXT           "ID",IDC_STATIC,7,7,8,8
     LTEXT           "Name",IDC_STATIC,7,35,20,8
     LTEXT           "Message template",IDC_STATIC,7,63,58,8
@@ -2385,6 +2393,23 @@ BEGIN
                     IDC_STATIC_INFO,40,7,145,19
 END
 
+IDD_CREATE_CONDITION DIALOG DISCARDABLE  0, 0, 229, 101
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create Condition"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_NAME,13,27,146,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Select...",IDC_SELECT_PARENT,110,62,50,12
+    DEFPUSHBUTTON   "OK",IDOK,172,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,172,24,50,14
+    GROUPBOX        "New object",IDC_STATIC,7,7,158,41
+    LTEXT           "Name",IDC_STATIC,13,18,20,8
+    GROUPBOX        "Parent object",IDC_STATIC,7,51,158,42
+    ICON            "",IDC_ICON_PARENT,14,64,21,20
+    LTEXT           "ID:",IDC_STATIC_ID,43,64,54,8
+    LTEXT           "Name",IDC_STATIC_NAME,44,78,112,9
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -2450,7 +2475,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 263
         TOPMARGIN, 7
-        BOTTOMMARGIN, 183
+        BOTTOMMARGIN, 203
     END
 
     IDD_OBJECT_NODE_GENERAL, DIALOG
@@ -2907,6 +2932,14 @@ BEGIN
         RIGHTMARGIN, 244
         TOPMARGIN, 7
         BOTTOMMARGIN, 80
+    END
+
+    IDD_CREATE_CONDITION, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 222
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 94
     END
 END
 #endif    // APSTUDIO_INVOKED

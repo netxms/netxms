@@ -536,4 +536,10 @@ Language=English
 Unsupported authentication method %1 requested for user %2
 .
 
+MessageId=
+SymbolicName=MSG_CONDITION_LOAD_FAILED
+Language=English
+Failed to load condition object with id %1 from database
+.
+
 ;#endif

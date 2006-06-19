@@ -468,7 +468,8 @@ static DWORD __stdcall WorkerThread(void *pArg)
 {
    WIZARD_CFG_INFO *pc = (WIZARD_CFG_INFO *)pArg;
    DB_HANDLE hConn = NULL;
-   TCHAR szDataDir[MAX_PATH];
+   TCHAR szDataDir[MAX_PATH], szQuery[256], szGUID[64];
+   uuid_t guid;
    BOOL bResult;
 
    bResult = CreateConfigFile(pc);
@@ -511,6 +512,24 @@ static DWORD __stdcall WorkerThread(void *pArg)
       _sntprintf(szInitFile, MAX_PATH, _T("%s\\lib\\sql\\dbinit_%s.sql"),
                  pc->m_szInstallDir, szEngineName[pc->m_iDBEngine]);
       bResult = ExecSQLBatch(hConn, szInitFile);
+
+      // Generate GUID for user "admin"
+      if (bResult)
+      {
+         uuid_generate(guid);
+         _sntprintf(szQuery, 256, _T("UPDATE users SET guid='%s' WHERE id=0"),
+                    uuid_to_string(guid, szGUID));
+         bResult = DBQueryEx(hConn, szQuery);
+      }
+
+      // Generate GUID for "everyone" group
+      if (bResult)
+      {
+         uuid_generate(guid);
+         _sntprintf(szQuery, 256, _T("UPDATE user_groups SET guid='%s' WHERE id=%d"),
+                    uuid_to_string(guid, szGUID), GROUP_EVERYONE);
+         bResult = DBQueryEx(hConn, szQuery);
+      }
 
       PostMessage(m_hStatusWnd, WM_STAGE_COMPLETED, bResult, 0);
    }

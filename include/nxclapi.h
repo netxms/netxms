@@ -128,6 +128,7 @@ typedef void * NXC_SESSION;
 #define OBJECT_TEMPLATEROOT   10
 #define OBJECT_NETWORKSERVICE 11
 #define OBJECT_VPNCONNECTOR   12
+#define OBJECT_CONDITION      13
 
 
 //
@@ -342,30 +343,37 @@ enum
 // Mask bits (flags) for NXCModifyObject()
 //
 
-#define OBJ_UPDATE_NAME             ((DWORD)0x000001)
-#define OBJ_UPDATE_AGENT_PORT       ((DWORD)0x000002)
-#define OBJ_UPDATE_AGENT_AUTH       ((DWORD)0x000004)
-#define OBJ_UPDATE_AGENT_SECRET     ((DWORD)0x000008)
-#define OBJ_UPDATE_SNMP_VERSION     ((DWORD)0x000010)
-#define OBJ_UPDATE_SNMP_COMMUNITY   ((DWORD)0x000020)
-#define OBJ_UPDATE_ACL              ((DWORD)0x000040)
-#define OBJ_UPDATE_IMAGE            ((DWORD)0x000080)
-#define OBJ_UPDATE_DESCRIPTION      ((DWORD)0x000100)
-#define OBJ_UPDATE_SERVICE_TYPE     ((DWORD)0x000200)
-#define OBJ_UPDATE_IP_PROTO         ((DWORD)0x000400)
-#define OBJ_UPDATE_IP_PORT          ((DWORD)0x000800)
-#define OBJ_UPDATE_CHECK_REQUEST    ((DWORD)0x001000)
-#define OBJ_UPDATE_CHECK_RESPONSE   ((DWORD)0x002000)
-#define OBJ_UPDATE_POLLER_NODE      ((DWORD)0x004000)
-#define OBJ_UPDATE_IP_ADDR          ((DWORD)0x008000)
-#define OBJ_UPDATE_PEER_GATEWAY     ((DWORD)0x010000)
-#define OBJ_UPDATE_NETWORK_LIST     ((DWORD)0x020000)
-#define OBJ_UPDATE_STATUS_ALG       ((DWORD)0x040000)
-#define OBJ_UPDATE_PROXY_NODE       ((DWORD)0x080000)
-#define OBJ_UPDATE_NODE_FLAGS       ((DWORD)0x100000)
+#define OBJ_UPDATE_NAME             ((DWORD)0x00000001)
+#define OBJ_UPDATE_AGENT_PORT       ((DWORD)0x00000002)
+#define OBJ_UPDATE_AGENT_AUTH       ((DWORD)0x00000004)
+#define OBJ_UPDATE_AGENT_SECRET     ((DWORD)0x00000008)
+#define OBJ_UPDATE_SNMP_VERSION     ((DWORD)0x00000010)
+#define OBJ_UPDATE_SNMP_COMMUNITY   ((DWORD)0x00000020)
+#define OBJ_UPDATE_ACL              ((DWORD)0x00000040)
+#define OBJ_UPDATE_IMAGE            ((DWORD)0x00000080)
+#define OBJ_UPDATE_DESCRIPTION      ((DWORD)0x00000100)
+#define OBJ_UPDATE_SERVICE_TYPE     ((DWORD)0x00000200)
+#define OBJ_UPDATE_IP_PROTO         ((DWORD)0x00000400)
+#define OBJ_UPDATE_IP_PORT          ((DWORD)0x00000800)
+#define OBJ_UPDATE_CHECK_REQUEST    ((DWORD)0x00001000)
+#define OBJ_UPDATE_CHECK_RESPONSE   ((DWORD)0x00002000)
+#define OBJ_UPDATE_POLLER_NODE      ((DWORD)0x00004000)
+#define OBJ_UPDATE_IP_ADDR          ((DWORD)0x00008000)
+#define OBJ_UPDATE_PEER_GATEWAY     ((DWORD)0x00010000)
+#define OBJ_UPDATE_NETWORK_LIST     ((DWORD)0x00020000)
+#define OBJ_UPDATE_STATUS_ALG       ((DWORD)0x00040000)
+#define OBJ_UPDATE_PROXY_NODE       ((DWORD)0x00080000)
+#define OBJ_UPDATE_NODE_FLAGS       ((DWORD)0x00100000)
+#define OBJ_UPDATE_ACT_EVENT        ((DWORD)0x00200000)
+#define OBJ_UPDATE_DEACT_EVENT      ((DWORD)0x00400000)
+#define OBJ_UPDATE_SOURCE_OBJECT    ((DWORD)0x00800000)
+#define OBJ_UPDATE_ACTIVE_STATUS    ((DWORD)0x01000000)
+#define OBJ_UPDATE_INACTIVE_STATUS  ((DWORD)0x02000000)
+#define OBJ_UPDATE_DCI_LIST         ((DWORD)0x04000000)
+#define OBJ_UPDATE_SCRIPT           ((DWORD)0x08000000)
 
-#define OBJ_UPDATE_NODE_ALL         ((DWORD)0x1C41FF)
-#define OBJ_UPDATE_NETSRV_ALL       ((DWORD)0x04FEC1)
+#define OBJ_UPDATE_NODE_ALL         ((DWORD)0x001C41FF)
+#define OBJ_UPDATE_NETSRV_ALL       ((DWORD)0x0004FEC1)
 
 
 //
@@ -653,6 +661,19 @@ struct NXC_TRAP_CFG_ENTRY
 };
 
 
+//
+// Condition's input DCI definition
+//
+
+struct INPUT_DCI
+{
+   DWORD dwId;
+   DWORD dwNodeId;
+   int nFunction;    // Average, last, diff
+   int nPolls;       // Number of polls used for average
+};
+
+
 /********************************************************************
  * Following part of this file shouldn't be included by server code *
  ********************************************************************/
@@ -833,6 +854,17 @@ typedef struct
          IP_NETWORK *pLocalNetList;
          IP_NETWORK *pRemoteNetList;
       } vpnc;  // VPN connector
+      struct
+      {
+         TCHAR *pszScript;
+         DWORD dwActivationEvent;
+         DWORD dwDeactivationEvent;
+         DWORD dwSourceObject;
+         WORD wActiveStatus;
+         WORD wInactiveStatus;
+         DWORD dwNumDCI;
+         INPUT_DCI *pDCIList;
+      } cond;  // Condition
    };
 } NXC_OBJECT;
 
@@ -877,6 +909,14 @@ typedef struct
    int iStatusThresholds[4];
    DWORD dwProxyNode;
    DWORD dwNodeFlags;
+   DWORD dwActivationEvent;
+   DWORD dwDeactivationEvent;
+   DWORD dwSourceObject;
+   int nActiveStatus;
+   int nInactiveStatus;
+   DWORD dwNumDCI;
+   INPUT_DCI *pDCIList;
+   TCHAR *pszScript;
 } NXC_OBJECT_UPDATE;
 
 

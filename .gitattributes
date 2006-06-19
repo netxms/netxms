@@ -591,6 +591,8 @@ src/console/win32/ConsolePropsGeneral.cpp -text
 src/console/win32/ConsolePropsGeneral.h -text
 src/console/win32/ControlPanel.cpp -text
 src/console/win32/ControlPanel.h -text
+src/console/win32/CreateCondDlg.cpp -text
+src/console/win32/CreateCondDlg.h -text
 src/console/win32/CreateContainerDlg.cpp -text
 src/console/win32/CreateContainerDlg.h -text
 src/console/win32/CreateNetSrvDlg.cpp -text
@@ -1029,6 +1031,7 @@ src/server/core/admin.cpp -text
 src/server/core/agent.cpp -text
 src/server/core/alarm.cpp -text
 src/server/core/client.cpp -text
+src/server/core/condition.cpp -text
 src/server/core/config.cpp -text
 src/server/core/container.cpp -text
 src/server/core/correlate.cpp -text
