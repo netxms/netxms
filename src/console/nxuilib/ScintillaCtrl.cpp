@@ -46,51 +46,7 @@ BOOL CScintillaCtrl::Create(LPCTSTR lpszWindowName, DWORD dwStyle,
                        dwStyle, rect, pParentWnd, nID))
       return FALSE;
 
-   // Default style
-   SendMessage(SCI_STYLESETFONT, STYLE_DEFAULT, (LPARAM)"Courier New");
-   SendMessage(SCI_STYLESETSIZE, STYLE_DEFAULT, 10);
-   SendMessage(SCI_STYLECLEARALL, 0, 0);
-
-   // Set tab width and indentation to 3 characters
-   SendMessage(SCI_SETTABWIDTH, 3, 0);
-	SendMessage(SCI_SETINDENT, 3, 0);
-	SendMessage(SCI_SETINDENTATIONGUIDES, FALSE, 0);
-
-   // Set end of line mode to CRLF
-   SendMessage(SCI_CONVERTEOLS, 2, 0);
-   SendMessage(SCI_SETEOLMODE, 2, 0);
-
-   // Set default styles
-   SendMessage(SCI_STYLESETFORE, NX_STYLE_DEFAULT, RGB(0, 0, 0));
-
-   SendMessage(SCI_STYLESETFORE, NX_STYLE_COMMENT, RGB(128, 128, 128));
-   //SendMessage(SCI_STYLESETITALIC, NX_STYLE_COMMENT, TRUE);
-
-   SendMessage(SCI_STYLESETFORE, NX_STYLE_KEYWORD, RGB(0, 0, 92));
-   SendMessage(SCI_STYLESETBOLD, NX_STYLE_KEYWORD, TRUE);
-
-   SendMessage(SCI_STYLESETFORE, NX_STYLE_SYMBOL, RGB(128, 0, 0));
-   SendMessage(SCI_STYLESETBOLD, NX_STYLE_SYMBOL, TRUE);
-
-   SendMessage(SCI_STYLESETFORE, NX_STYLE_STRING, RGB(0, 0, 192));
-
-   SendMessage(SCI_STYLESETFORE, NX_STYLE_CONSTANT, RGB(0, 0, 192));
-
-   SendMessage(SCI_STYLESETFORE, NX_STYLE_ERROR, RGB(255, 255, 255));
-   SendMessage(SCI_STYLESETBACK, NX_STYLE_ERROR, RGB(192, 0, 0));
-
-   SendMessage(SCI_STYLESETFORE, NX_STYLE_SECTION, RGB(255, 255, 255));
-   SendMessage(SCI_STYLESETBACK, NX_STYLE_SECTION, RGB(128, 128, 255));
-   SendMessage(SCI_STYLESETBOLD, NX_STYLE_SECTION, TRUE);
-   SendMessage(SCI_STYLESETEOLFILLED, NX_STYLE_SECTION, TRUE);
-
-   // Selection colors
-   SendMessage(SCI_SETSELFORE, TRUE, RGB(255, 255, 255));
-   SendMessage(SCI_SETSELBACK, TRUE, RGB(0, 0, 0));
-
-   // Other settings
-   SendMessage(SCI_USEPOPUP, 0, 0);
-
+   SetDefaults();
    return TRUE;
 }
 
@@ -314,4 +270,57 @@ void CScintillaCtrl::SetSavePoint()
 void CScintillaCtrl::EmptyUndoBuffer()
 {
    SendMessage(SCI_EMPTYUNDOBUFFER, 0, 0);
+}
+
+
+//
+// Set default settings
+//
+
+void CScintillaCtrl::SetDefaults(void)
+{
+   // Default style
+   SendMessage(SCI_STYLESETFONT, STYLE_DEFAULT, (LPARAM)"Courier New");
+   SendMessage(SCI_STYLESETSIZE, STYLE_DEFAULT, 10);
+   SendMessage(SCI_STYLECLEARALL, 0, 0);
+
+   // Set tab width and indentation to 3 characters
+   SendMessage(SCI_SETTABWIDTH, 3, 0);
+	SendMessage(SCI_SETINDENT, 3, 0);
+	SendMessage(SCI_SETINDENTATIONGUIDES, FALSE, 0);
+
+   // Set end of line mode to CRLF
+   SendMessage(SCI_CONVERTEOLS, 2, 0);
+   SendMessage(SCI_SETEOLMODE, 2, 0);
+
+   // Set default styles
+   SendMessage(SCI_STYLESETFORE, NX_STYLE_DEFAULT, RGB(0, 0, 0));
+
+   SendMessage(SCI_STYLESETFORE, NX_STYLE_COMMENT, RGB(128, 128, 128));
+   //SendMessage(SCI_STYLESETITALIC, NX_STYLE_COMMENT, TRUE);
+
+   SendMessage(SCI_STYLESETFORE, NX_STYLE_KEYWORD, RGB(0, 0, 92));
+   SendMessage(SCI_STYLESETBOLD, NX_STYLE_KEYWORD, TRUE);
+
+   SendMessage(SCI_STYLESETFORE, NX_STYLE_SYMBOL, RGB(128, 0, 0));
+   SendMessage(SCI_STYLESETBOLD, NX_STYLE_SYMBOL, TRUE);
+
+   SendMessage(SCI_STYLESETFORE, NX_STYLE_STRING, RGB(0, 0, 192));
+
+   SendMessage(SCI_STYLESETFORE, NX_STYLE_CONSTANT, RGB(0, 0, 192));
+
+   SendMessage(SCI_STYLESETFORE, NX_STYLE_ERROR, RGB(255, 255, 255));
+   SendMessage(SCI_STYLESETBACK, NX_STYLE_ERROR, RGB(192, 0, 0));
+
+   SendMessage(SCI_STYLESETFORE, NX_STYLE_SECTION, RGB(255, 255, 255));
+   SendMessage(SCI_STYLESETBACK, NX_STYLE_SECTION, RGB(128, 128, 255));
+   SendMessage(SCI_STYLESETBOLD, NX_STYLE_SECTION, TRUE);
+   SendMessage(SCI_STYLESETEOLFILLED, NX_STYLE_SECTION, TRUE);
+
+   // Selection colors
+   SendMessage(SCI_SETSELFORE, TRUE, RGB(255, 255, 255));
+   SendMessage(SCI_SETSELBACK, TRUE, RGB(0, 0, 0));
+
+   // Other settings
+   SendMessage(SCI_USEPOPUP, 0, 0);
 }

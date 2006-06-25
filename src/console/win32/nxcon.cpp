@@ -54,6 +54,9 @@
 #include "PackageMgr.h"
 #include "ModuleManager.h"
 #include "DesktopManager.h"
+#include "CondPropsGeneral.h"
+#include "CondPropsData.h"
+#include "CondPropsScript.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1113,6 +1116,9 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
    CNodePropsPolling wndNodePolling;
    CVPNCPropsGeneral wndVPNCGeneral;
    CObjectPropsStatus wndStatus;
+   CCondPropsGeneral wndCondGeneral;
+   CCondPropsData wndCondData;
+   CCondPropsScript wndCondScript;
    NXC_OBJECT *pObject;
 
    pObject = NXCFindObjectById(g_hSession, dwObjectId);
@@ -1164,6 +1170,18 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
             wndVPNCGeneral.m_strName = pObject->szName;
             wndVPNCGeneral.m_dwPeerGateway = pObject->vpnc.dwPeerGateway;
             wndPropSheet.AddPage(&wndVPNCGeneral);
+            break;
+         case OBJECT_CONDITION:
+            wndCondGeneral.m_pObject = pObject;
+            wndCondGeneral.m_dwObjectId = dwObjectId;
+            wndCondGeneral.m_strName = pObject->szName;
+            wndPropSheet.AddPage(&wndCondGeneral);
+
+            wndCondData.m_pObject = pObject;
+            wndPropSheet.AddPage(&wndCondData);
+
+            wndCondScript.m_strScript = pObject->cond.pszScript;
+            wndPropSheet.AddPage(&wndCondScript);
             break;
          default:
             wndObjectGeneral.m_dwObjectId = dwObjectId;

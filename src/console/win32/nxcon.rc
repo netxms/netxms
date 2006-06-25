@@ -1319,7 +1319,7 @@ IDD_SET_PASSWORD DIALOGEX 0, 0, 251, 63
 STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | 
     WS_SYSMENU
 CAPTION "Change Password"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_EDIT_PASSWD1,39,16,144,14,ES_PASSWORD | 
                     ES_AUTOHSCROLL | NOT WS_BORDER,WS_EX_CLIENTEDGE
@@ -1419,7 +1419,7 @@ IDD_MIB_BROWSER DIALOGEX 0, 0, 329, 322
 STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | 
     WS_SYSMENU
 CAPTION "MIB Browser"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_EDIT_OID,7,17,224,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_INSTANCE,235,17,31,14,ES_AUTOHSCROLL | 
@@ -2354,6 +2354,47 @@ BEGIN
     LTEXT           "Enter new IP address for node:",IDC_STATIC,7,7,98,8
 END
 
+IDD_REMOVE_TEMPLATE DIALOG DISCARDABLE  0, 0, 200, 86
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Remove Template"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&Unbind DCIs from template",IDC_RADIO_UNBIND,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,41,35,122,10
+    CONTROL         "&Remove DCIs from node",IDC_RADIO_REMOVE,"Button",
+                    BS_AUTORADIOBUTTON,41,46,93,10
+    DEFPUSHBUTTON   "OK",IDOK,89,65,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,143,65,50,14
+    LTEXT           "You are about to remove data collection template from a node. Please select how to deal with DCIs related to this template:",
+                    IDC_STATIC,33,7,160,25
+    ICON            IDI_SEVERITY_MINOR,IDC_STATIC,7,7,21,20
+END
+
+IDD_OBJTOOL_COLUMNS DIALOGEX 0, 0, 257, 154
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Columns"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "List1",IDC_LIST_COLUMNS,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_TABSTOP,7,7,
+                    243,121,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,86,133,50,14
+    PUSHBUTTON      "&Modify...",IDC_BUTTON_MODIFY,143,133,50,14
+    PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,200,133,50,14
+END
+
+IDD_SNMP_WALK DIALOGEX 0, 0, 417, 213
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SNMP Walk"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Close",IDCANCEL,360,192,50,14
+    LTEXT           "Static",IDC_STATIC_STATUS,7,7,403,8
+    CONTROL         "List1",IDC_LIST_DATA,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_TABSTOP,7,20,
+                    403,164,WS_EX_CLIENTEDGE
+END
+
 IDD_SUBMAP_BKGND DIALOG DISCARDABLE  0, 0, 241, 106
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Set Submap Background"
@@ -2378,7 +2419,7 @@ END
 IDD_CHANGE_PASSWORD DIALOGEX 0, 0, 251, 87
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dialog"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_EDIT_PASSWD1,40,38,144,14,ES_PASSWORD | 
                     ES_AUTOHSCROLL | NOT WS_BORDER,WS_EX_CLIENTEDGE
@@ -2408,6 +2449,79 @@ BEGIN
     ICON            "",IDC_ICON_PARENT,14,64,21,20
     LTEXT           "ID:",IDC_STATIC_ID,43,64,54,8
     LTEXT           "Name",IDC_STATIC_NAME,44,78,112,9
+END
+
+IDD_OBJECT_COND_GENERAL DIALOG DISCARDABLE  0, 0, 292, 194
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_NAME,13,26,211,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_ID,233,26,45,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT_ACTIVATION_EVENT,13,72,125,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    PUSHBUTTON      "...",IDC_BROWSE_ACTIVATION_EVENT,143,72,15,14
+    EDITTEXT        IDC_EDIT_DEACTIVATION_EVENT,13,101,125,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    PUSHBUTTON      "...",IDC_BROWSE_DEACTIVATION_EVENT,143,101,15,14
+    EDITTEXT        IDC_EDIT_OBJECT,13,130,125,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    PUSHBUTTON      "...",IDC_BROWSE_OBJECT,143,130,15,14
+    COMBOBOX        IDC_COMBO_ACTIVE,178,81,101,71,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_INACTIVE,178,120,101,69,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Activation event",IDC_STATIC,13,62,52,8
+    LTEXT           "Deactivation event",IDC_STATIC,13,91,61,8
+    LTEXT           "Active status",IDC_STATIC,178,70,42,8
+    LTEXT           "Inactive status",IDC_STATIC,178,109,47,8
+    LTEXT           "Object ID",IDC_STATIC,233,16,31,8
+    LTEXT           "Name",IDC_STATIC,13,16,20,8
+    GROUPBOX        "General",IDC_STATIC,7,7,278,39
+    GROUPBOX        "Events",IDC_STATIC,7,49,161,104
+    GROUPBOX        "Status",IDC_STATIC,173,49,112,104
+    LTEXT           "Source object for events",IDC_STATIC,13,120,78,8
+END
+
+IDD_OBJECT_COND_SCRIPT DIALOGEX 0, 0, 292, 194
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Script"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "Custom1",IDC_EDIT_SCRIPT,"Scintilla",WS_TABSTOP,7,7,278,
+                    180,WS_EX_CLIENTEDGE
+END
+
+IDD_OBJECT_COND_DATA DIALOGEX 0, 0, 292, 194
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Data"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "List1",IDC_LIST_DCI,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_TABSTOP,7,7,
+                    278,158,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,73,173,50,14
+    PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,127,173,50,14
+    PUSHBUTTON      "Move &up",IDC_BUTTON_UP,181,173,50,14
+    PUSHBUTTON      "Move dow&n",IDC_BUTTON_DOWN,235,173,50,14
+END
+
+IDD_ADD_DCI DIALOGEX 0, 0, 330, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Parameter"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List1",IDC_LIST_NODES,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | 
+                    LVS_NOSORTHEADER | WS_TABSTOP,7,17,129,168,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "List2",IDC_LIST_DCI,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | 
+                    WS_TABSTOP,144,17,179,168,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "OK",IDOK,217,194,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,273,194,50,14
+    LTEXT           "Nodes",IDC_STATIC,7,7,22,8
+    LTEXT           "Parameters",IDC_STATIC,144,7,36,8
 END
 
 
@@ -2918,6 +3032,30 @@ BEGIN
         BOTTOMMARGIN, 39
     END
 
+    IDD_REMOVE_TEMPLATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 193
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 79
+    END
+
+    IDD_OBJTOOL_COLUMNS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 250
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 147
+    END
+
+    IDD_SNMP_WALK, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 410
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 206
+    END
+
     IDD_SUBMAP_BKGND, DIALOG
     BEGIN
         LEFTMARGIN, 7
@@ -2940,6 +3078,38 @@ BEGIN
         RIGHTMARGIN, 222
         TOPMARGIN, 7
         BOTTOMMARGIN, 94
+    END
+
+    IDD_OBJECT_COND_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 285
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 187
+    END
+
+    IDD_OBJECT_COND_SCRIPT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 285
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 187
+    END
+
+    IDD_OBJECT_COND_DATA, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 285
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 187
+    END
+
+    IDD_ADD_DCI, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 323
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 208
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -3124,100 +3294,6 @@ BEGIN
 END
 
 #endif    // English (U.S.) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// English (U.K.) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
-#ifdef _WIN32
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-IDD_REMOVE_TEMPLATE DIALOG DISCARDABLE  0, 0, 200, 86
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Remove Template"
-FONT 8, "MS Sans Serif"
-BEGIN
-    CONTROL         "&Unbind DCIs from template",IDC_RADIO_UNBIND,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,41,35,122,10
-    CONTROL         "&Remove DCIs from node",IDC_RADIO_REMOVE,"Button",
-                    BS_AUTORADIOBUTTON,41,46,93,10
-    DEFPUSHBUTTON   "OK",IDOK,89,65,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,143,65,50,14
-    LTEXT           "You are about to remove data collection template from a node. Please select how to deal with DCIs related to this template:",
-                    IDC_STATIC,33,7,160,25
-    ICON            IDI_SEVERITY_MINOR,IDC_STATIC,7,7,21,20
-END
-
-IDD_OBJTOOL_COLUMNS DIALOGEX 0, 0, 257, 154
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Columns"
-FONT 8, "MS Sans Serif", 0, 0, 0x1
-BEGIN
-    CONTROL         "List1",IDC_LIST_COLUMNS,"SysListView32",LVS_REPORT | 
-                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_TABSTOP,7,7,
-                    243,121,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,86,133,50,14
-    PUSHBUTTON      "&Modify...",IDC_BUTTON_MODIFY,143,133,50,14
-    PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,200,133,50,14
-END
-
-IDD_SNMP_WALK DIALOGEX 0, 0, 417, 213
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "SNMP Walk"
-FONT 8, "MS Sans Serif"
-BEGIN
-    PUSHBUTTON      "Close",IDCANCEL,360,192,50,14
-    LTEXT           "Static",IDC_STATIC_STATUS,7,7,403,8
-    CONTROL         "List1",IDC_LIST_DATA,"SysListView32",LVS_REPORT | 
-                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_TABSTOP,7,20,
-                    403,164,WS_EX_CLIENTEDGE
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
-BEGIN
-    IDD_REMOVE_TEMPLATE, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 193
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 79
-    END
-
-    IDD_OBJTOOL_COLUMNS, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 250
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 147
-    END
-
-    IDD_SNMP_WALK, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 410
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 206
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-#endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

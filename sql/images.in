@@ -43,6 +43,9 @@ INSERT INTO images (image_id,name,file_name_png,file_hash_png,file_name_ico,file
 INSERT INTO images (image_id,name,file_name_png,file_hash_png,file_name_ico,file_hash_ico)
 	VALUES (IMG_VPN_CONNECTOR,'Obj.VPNConnector','vpnc.png','<invalid_hash>',
                 'vpnc.ico','<invalid_hash>');
+INSERT INTO images (image_id,name,file_name_png,file_hash_png,file_name_ico,file_hash_ico)
+	VALUES (IMG_CONDITION,'Obj.Condition','condition.png','<invalid_hash>',
+                'condition.ico','<invalid_hash>');
 
 
 /*
@@ -73,3 +76,5 @@ INSERT INTO default_images (object_class,image_id)
 	VALUES (11, IMG_NETWORK_SERVICE);
 INSERT INTO default_images (object_class,image_id)
 	VALUES (12, IMG_VPN_CONNECTOR);
+INSERT INTO default_images (object_class,image_id)
+	VALUES (13, IMG_CONDITION);

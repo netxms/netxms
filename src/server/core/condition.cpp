@@ -105,6 +105,7 @@ BOOL Condition::CreateFromDB(DWORD dwId)
    m_nActiveStatus = DBGetFieldLong(hResult, 0, 3);
    m_nInactiveStatus = DBGetFieldLong(hResult, 0, 4);
    m_pszScript = _tcsdup(DBGetField(hResult, 0, 5));
+   DecodeSQLString(m_pszScript);
    
    DBFreeResult(hResult);
 
@@ -173,8 +174,8 @@ BOOL Condition::SaveToDB(DB_HANDLE hdb)
    else
    {
       _stprintf(pszQuery, _T("UPDATE conditions SET activation_event=%d,")
-                          _T("deactivation_event=%s,source_object=%d,active_status=%d,")
-                          _T("inactive_status=%d,script='%s') WHERE id=%d"),
+                          _T("deactivation_event=%d,source_object=%d,active_status=%d,")
+                          _T("inactive_status=%d,script='%s' WHERE id=%d"),
                 m_dwActivationEventCode, m_dwDeactivationEventCode, m_dwSourceObject,
                 m_nActiveStatus, m_nInactiveStatus, pszEscScript, m_dwId);
    }

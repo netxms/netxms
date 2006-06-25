@@ -192,6 +192,10 @@
 #define IDI_GO_PARENT                   321
 #define IDI_HOME                        323
 #define IDD_CREATE_CONDITION            324
+#define IDD_OBJECT_COND_GENERAL         325
+#define IDD_OBJECT_COND_SCRIPT          326
+#define IDD_OBJECT_COND_DATA            327
+#define IDD_ADD_DCI                     328
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -227,11 +231,11 @@
 #define IDC_LIST_PARAMS                 1024
 #define IDC_LIST_PARENTS                1024
 #define IDC_LIST_DESKTOPS               1024
-#define IDC_LIST_DCI                    1024
 #define IDC_LIST_LOCAL                  1024
 #define IDC_LIST_SCHEDULES              1024
 #define IDC_LIST_COLUMNS                1024
 #define IDC_LIST_DATA                   1024
+#define IDC_LIST_NODES                  1024
 #define IDC_INFO_TEXT                   1025
 #define IDC_LIST_CHILDS                 1025
 #define IDC_LIST_REMOTE                 1025
@@ -504,6 +508,17 @@
 #define IDC_STATIC_FRAME                1348
 #define IDC_STATIC_FILE                 1349
 #define IDC_STATIC_INFO                 1351
+#define IDC_EDIT_ACTIVATION_EVENT       1354
+#define IDC_BROWSE_ACTIVATION_EVENT     1355
+#define IDC_EDIT_DEACTIVATION_EVENT     1356
+#define IDC_BROWSE_DEACTIVATION_EVENT   1357
+#define IDC_COMBO_ACTIVE                1358
+#define IDC_COMBO_INACTIVE              1359
+#define IDC_EDIT_OBJECT                 1360
+#define IDC_BROWSE_OBJECT               1361
+#define IDC_EDIT_SCRIPT                 1366
+#define IDC_LIST_DCI                    1367
+#define IDC_LIST2                       1367
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -714,9 +729,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        325
+#define _APS_NEXT_RESOURCE_VALUE        329
 #define _APS_NEXT_COMMAND_VALUE         33019
-#define _APS_NEXT_CONTROL_VALUE         1353
+#define _APS_NEXT_CONTROL_VALUE         1368
 #define _APS_NEXT_SYMED_VALUE           128
 #endif
 #endif

@@ -408,6 +408,7 @@ typedef struct
 #define CMD_GET_MODULE_LIST			0x00AB
 #define CMD_UPDATE_MODULE_INFO		0x00AC
 #define CMD_COPY_USER_VARIABLE      0x00AD
+#define CMD_RESOLVE_DCI_NAMES       0x00AE
 
 
 //

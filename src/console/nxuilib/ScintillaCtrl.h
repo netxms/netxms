@@ -32,6 +32,7 @@ public:
 
 // Implementation
 public:
+	void SetDefaults(void);
 	void EmptyUndoBuffer(void);
 	void SetSavePoint(void);
 	void SetKeywords(int nSet, TCHAR *pszKeywordList);

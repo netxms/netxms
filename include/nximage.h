@@ -43,5 +43,6 @@
 #define IMG_NETWORK_SERVICE         12
 #define IMG_ZONE                    13
 #define IMG_VPN_CONNECTOR           14
+#define IMG_CONDITION               15
 
 #endif

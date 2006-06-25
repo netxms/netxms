@@ -109,6 +109,10 @@ SOURCE=.\ActionSelDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\AddDCIDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\AddrChangeDlg.cpp
 # End Source File
 # Begin Source File
@@ -134,6 +138,18 @@ SOURCE=.\ColorSelector.cpp
 # Begin Source File
 
 SOURCE=.\comm.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\CondPropsData.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\CondPropsGeneral.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\CondPropsScript.cpp
 # End Source File
 # Begin Source File
 
@@ -590,6 +606,10 @@ SOURCE=.\ActionSelDlg.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\AddDCIDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\AddrChangeDlg.h
 # End Source File
 # Begin Source File
@@ -611,6 +631,18 @@ SOURCE=.\AlarmBrowser.h
 # Begin Source File
 
 SOURCE=.\ColorSelector.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\CondPropsData.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\CondPropsGeneral.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\CondPropsScript.h
 # End Source File
 # Begin Source File
 

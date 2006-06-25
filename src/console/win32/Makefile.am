@@ -12,11 +12,15 @@ SUBDIRS = res icons
 EXTRA_DIST = \
 	ActionEditor.cpp ActionEditor.h \
 	ActionSelDlg.cpp ActionSelDlg.h \
+	AddDCIDlg.cpp AddDCIDlg.h \
 	AdvSplitter.cpp AdvSplitter.h \
 	AgentCfgEditor.cpp AgentCfgEditor.h \
 	AlarmBrowser.cpp AlarmBrowser.h \
 	comm.cpp \
 	ColorSelector.cpp ColorSelector.h \
+	CondPropsData.cpp CondPropsData.h \
+	CondPropsGeneral.cpp CondPropsGeneral.h \
+	CondPropsScript.cpp CondPropsScript.h \
 	ConsolePropsGeneral.cpp ConsolePropsGeneral.h \
 	ControlPanel.cpp ControlPanel.h \
 	CreateCondDlg.cpp CreateCondDlg.h \
