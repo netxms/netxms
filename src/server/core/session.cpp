@@ -954,6 +954,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_MODULE_LIST:
             SendModuleList(pMsg->GetId());
             break;
+         case CMD_RESOLVE_DCI_NAMES:
+            ResolveDCINames(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -6943,5 +6946,79 @@ void ClientSession::SendModuleList(DWORD dwRqId)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
+   SendMessage(&msg);
+}
+
+
+//
+// Resolve single DCI name
+//
+
+DWORD ClientSession::ResolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName)
+{
+   NetObj *pObject;
+   DCItem *pItem;
+   DWORD dwResult;
+
+   pObject = FindObjectById(dwNode);
+   if (pObject != NULL)
+   {
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         pItem = ((Node *)pObject)->GetItemById(dwItem);
+         if (pItem != NULL)
+         {
+            *ppszName = (TCHAR *)pItem->Name();
+            dwResult = RCC_SUCCESS;
+         }
+         else
+         {
+            dwResult = RCC_INVALID_DCI_ID;
+         }
+      }
+      else
+      {
+         dwResult = RCC_ACCESS_DENIED;
+      }
+   }
+   else
+   {
+      dwResult = RCC_INVALID_OBJECT_ID;
+   }
+   return dwResult;
+}
+
+
+//
+// Resolve DCI identifiers to names
+//
+
+void ClientSession::ResolveDCINames(CSCPMessage *pRequest)
+{
+   DWORD i, dwId, dwNumDCI, *pdwNodeList, *pdwDCIList, dwResult = RCC_INVALID_ARGUMENT;
+   TCHAR *pszName;
+   CSCPMessage msg;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   dwNumDCI = pRequest->GetVariableLong(VID_NUM_ITEMS);
+   pdwNodeList = (DWORD *)malloc(sizeof(DWORD) * dwNumDCI);
+   pdwDCIList = (DWORD *)malloc(sizeof(DWORD) * dwNumDCI);
+   pRequest->GetVariableInt32Array(VID_NODE_LIST, dwNumDCI, pdwNodeList);
+   pRequest->GetVariableInt32Array(VID_DCI_LIST, dwNumDCI, pdwDCIList);
+   
+   for(i = 0, dwId = VID_DCI_LIST_BASE; i < dwNumDCI; i++)
+   {
+      dwResult = ResolveDCIName(pdwNodeList[i], pdwDCIList[i], &pszName);
+      if (dwResult != RCC_SUCCESS)
+         break;
+      msg.SetVariable(dwId++, pszName);
+   }
+
+   free(pdwNodeList);
+   free(pdwDCIList);
+
+   msg.SetVariable(VID_RCC, dwResult);
    SendMessage(&msg);
 }

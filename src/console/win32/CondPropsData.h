@@ -45,7 +45,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
-	void AddListItem(int nPos, INPUT_DCI *pItem);
+	void AddListItem(int nPos, INPUT_DCI *pItem, TCHAR *pszName);
 	INPUT_DCI *m_pDCIList;
 	DWORD m_dwNumDCI;
 };

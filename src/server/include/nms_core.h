@@ -479,6 +479,8 @@ private:
    void SendSubmapBkImage(CSCPMessage *pRequest);
    void RecvSubmapBkImage(CSCPMessage *pRequest);
    void SendModuleList(DWORD dwRqId);
+   void ResolveDCINames(CSCPMessage *pRequest);
+   DWORD ResolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

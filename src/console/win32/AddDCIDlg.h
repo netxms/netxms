@@ -19,8 +19,8 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CAddDCIDlg)
 	enum { IDD = IDD_ADD_DCI };
+	CListCtrl	m_wndListDCI;
 	CListCtrl	m_wndListNodes;
-	CListBox	m_wndListDCI;
 	//}}AFX_DATA
 
 
@@ -33,10 +33,12 @@ public:
 
 // Implementation
 protected:
+	CImageList m_imageList;
 
 	// Generated message map functions
 	//{{AFX_MSG(CAddDCIDlg)
-		// NOTE: the ClassWizard will add member functions here
+	virtual BOOL OnInitDialog();
+	afx_msg void OnItemchangedListNodes(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

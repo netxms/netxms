@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "CondPropsData.h"
+#include "AddDCIDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -51,7 +52,8 @@ END_MESSAGE_MAP()
 
 BOOL CCondPropsData::OnInitDialog() 
 {
-   DWORD i;
+   DWORD i, dwResult;
+   TCHAR **ppszNames;
 
 	CPropertyPage::OnInitDialog();
 	
@@ -62,9 +64,24 @@ BOOL CCondPropsData::OnInitDialog()
 
    m_dwNumDCI = m_pObject->cond.dwNumDCI;
    m_pDCIList = (INPUT_DCI *)nx_memdup(m_pObject->cond.pDCIList, sizeof(INPUT_DCI) * m_dwNumDCI);
-   for(i = 0; i < m_dwNumDCI; i++)
-      AddListItem(i, &m_pDCIList[i]);
-	
+   
+   dwResult = DoRequestArg4(NXCResolveDCINames, g_hSession, (void *)m_dwNumDCI,
+                            m_pDCIList, &ppszNames, _T("Resolving DCI names..."));
+   if (dwResult == RCC_SUCCESS)
+   {
+      for(i = 0; i < m_dwNumDCI; i++)
+      {
+         AddListItem(i, &m_pDCIList[i], CHECK_NULL(ppszNames[i]));
+         safe_free(ppszNames[i]);
+      }
+      safe_free(ppszNames);
+   }
+   else
+   {
+      for(i = 0; i < m_dwNumDCI; i++)
+         AddListItem(i, &m_pDCIList[i], _T("<unresolved>"));
+   }
+   
 	return TRUE;
 }
 
@@ -73,7 +90,7 @@ BOOL CCondPropsData::OnInitDialog()
 // Add item to list
 //
 
-void CCondPropsData::AddListItem(int nPos, INPUT_DCI *pItem)
+void CCondPropsData::AddListItem(int nPos, INPUT_DCI *pItem, TCHAR *pszName)
 {
    int iItem;
    TCHAR szBuffer[64];
@@ -97,6 +114,8 @@ void CCondPropsData::AddListItem(int nPos, INPUT_DCI *pItem)
       {
          m_wndListCtrl.SetItemText(iItem, 2, _T("<unknown>"));
       }
+
+      m_wndListCtrl.SetItemText(iItem, 3, pszName);
    }
 }
 
@@ -107,4 +126,9 @@ void CCondPropsData::AddListItem(int nPos, INPUT_DCI *pItem)
 
 void CCondPropsData::OnButtonAdd() 
 {
+   CAddDCIDlg dlg;
+
+   if (dlg.DoModal() == IDOK)
+   {
+   }
 }

@@ -643,6 +643,8 @@ typedef struct
 #define VID_ACTIVE_STATUS           ((DWORD)226)
 #define VID_INACTIVE_STATUS         ((DWORD)227)
 #define VID_SCRIPT                  ((DWORD)228)
+#define VID_NODE_LIST               ((DWORD)229)
+#define VID_DCI_LIST                ((DWORD)230)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

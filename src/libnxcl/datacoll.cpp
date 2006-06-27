@@ -603,3 +603,50 @@ DWORD LIBNXCL_EXPORTABLE NXCApplyTemplate(NXC_SESSION hSession, DWORD dwTemplate
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
+
+
+//
+// Resolve DCI names
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCResolveDCINames(NXC_SESSION hSession, DWORD dwNumDCI,
+                                            INPUT_DCI *pDCIList, TCHAR ***pppszNames)
+{
+   CSCPMessage msg, *pResponse;
+   DWORD i, j, dwId, dwRqId, dwResult, *pdwList;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_RESOLVE_DCI_NAMES);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_NUM_ITEMS, dwNumDCI);
+
+   pdwList = (DWORD *)malloc(sizeof(DWORD) * dwNumDCI * 2);
+   for(i = 0, j = dwNumDCI; i < dwNumDCI; i++, j++)
+   {
+      pdwList[i] = pDCIList[i].dwNodeId;
+      pdwList[j] = pDCIList[i].dwId;
+   }
+   msg.SetVariableToInt32Array(VID_NODE_LIST, dwNumDCI, pdwList);
+   msg.SetVariableToInt32Array(VID_DCI_LIST, dwNumDCI, &pdwList[dwNumDCI]);
+   free(pdwList);
+
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwResult = pResponse->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+      {
+         *pppszNames = (TCHAR **)malloc(sizeof(TCHAR *) * dwNumDCI);
+         for(i = 0, dwId = VID_DCI_LIST_BASE; i < dwNumDCI; i++)
+            (*pppszNames)[i] = pResponse->GetVariableStr(dwId++);
+      }
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+   }
+   return dwResult;
+}
