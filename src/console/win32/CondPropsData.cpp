@@ -5,6 +5,7 @@
 #include "nxcon.h"
 #include "CondPropsData.h"
 #include "AddDCIDlg.h"
+#include "ObjectPropSheet.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -130,5 +131,31 @@ void CCondPropsData::OnButtonAdd()
 
    if (dlg.DoModal() == IDOK)
    {
+      m_pDCIList = (INPUT_DCI *)realloc(m_pDCIList, sizeof(INPUT_DCI) * (m_dwNumDCI + 1));
+      
+      m_pDCIList[m_dwNumDCI].dwId = dlg.m_dwItemId;
+      m_pDCIList[m_dwNumDCI].dwNodeId = dlg.m_dwNodeId;
+      m_pDCIList[m_dwNumDCI].nFunction = F_LAST;
+      m_pDCIList[m_dwNumDCI].nPolls = 1;
+
+      AddListItem(m_dwNumDCI, &m_pDCIList[m_dwNumDCI], (TCHAR *)((LPCTSTR)dlg.m_strItemName));
+      m_dwNumDCI++;
+      SetModified();
    }
+}
+
+
+//
+// OK handler
+//
+
+void CCondPropsData::OnOK() 
+{
+   NXC_OBJECT_UPDATE *pUpdate;
+   	
+	CPropertyPage::OnOK();
+   pUpdate = ((CObjectPropSheet *)GetParent())->GetUpdateStruct();
+   pUpdate->dwFlags |= OBJ_UPDATE_DCI_LIST;
+   pUpdate->dwNumDCI = m_dwNumDCI;
+   pUpdate->pDCIList = m_pDCIList;
 }

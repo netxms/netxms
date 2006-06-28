@@ -188,7 +188,7 @@ BOOL Condition::SaveToDB(DB_HANDLE hdb)
    for(i = 0; i < m_dwDCICount; i++)
    {
       _stprintf(pszQuery, _T("INSERT INTO cond_dci_map (condition_id,dci_id,node_id,")
-                          _T("dci_func,num_polls VALUES (%d,%d,%d,%d,%d)"),
+                          _T("dci_func,num_polls) VALUES (%d,%d,%d,%d,%d)"),
                 m_dwId, m_pDCIList[i].dwId, m_pDCIList[i].dwNodeId,
                 m_pDCIList[i].nFunction, m_pDCIList[i].nPolls);
       DBQuery(hdb, pszQuery);

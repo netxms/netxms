@@ -14,6 +14,9 @@ class CAddDCIDlg : public CDialog
 {
 // Construction
 public:
+	CString m_strItemName;
+	DWORD m_dwItemId;
+	DWORD m_dwNodeId;
 	CAddDCIDlg(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
@@ -39,6 +42,7 @@ protected:
 	//{{AFX_MSG(CAddDCIDlg)
 	virtual BOOL OnInitDialog();
 	afx_msg void OnItemchangedListNodes(NMHDR* pNMHDR, LRESULT* pResult);
+	virtual void OnOK();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

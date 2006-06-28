@@ -117,3 +117,29 @@ void CAddDCIDlg::OnItemchangedListNodes(NMHDR* pNMHDR, LRESULT* pResult)
 	
 	*pResult = 0;
 }
+
+
+//
+// OK button handler
+//
+
+void CAddDCIDlg::OnOK() 
+{
+   int iItem;
+
+   iItem = m_wndListNodes.GetNextItem(-1, LVNI_SELECTED);
+   if (iItem != -1)
+   {
+      m_dwNodeId = m_wndListNodes.GetItemData(iItem);
+      iItem = m_wndListDCI.GetNextItem(-1, LVNI_SELECTED);
+      if (iItem != -1)
+      {
+         m_dwItemId = m_wndListDCI.GetItemData(iItem);
+         m_strItemName = m_wndListDCI.GetItemText(iItem, 0);
+      	CDialog::OnOK();
+         return;
+      }
+   }
+   MessageBox(_T("You should select data collection item before pressing OK"),
+              _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
+}
