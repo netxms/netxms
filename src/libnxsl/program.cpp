@@ -357,6 +357,7 @@ void NXSL_Program::Error(int nError)
 
 //
 // Run program
+// Returns 0 on success and -1 on error
 //
 
 int NXSL_Program::Run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv)

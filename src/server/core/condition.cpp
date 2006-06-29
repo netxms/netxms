@@ -37,6 +37,8 @@ Condition::Condition()
    m_dwSourceObject = 0;
    m_nActiveStatus = STATUS_MAJOR;
    m_nInactiveStatus = STATUS_NORMAL;
+   m_pCompiledScript = NULL;
+   m_bIsActive = FALSE;
 }
 
 
@@ -55,6 +57,8 @@ Condition::Condition(BOOL bHidden)
    m_nActiveStatus = STATUS_MAJOR;
    m_nInactiveStatus = STATUS_NORMAL;
    m_bIsHidden = bHidden;
+   m_pCompiledScript = NULL;
+   m_bIsActive = FALSE;
 }
 
 
@@ -66,6 +70,7 @@ Condition::~Condition()
 {
    safe_free(m_pDCIList);
    safe_free(m_pszScript);
+   delete m_pCompiledScript;
 }
 
 
@@ -108,6 +113,12 @@ BOOL Condition::CreateFromDB(DWORD dwId)
    DecodeSQLString(m_pszScript);
    
    DBFreeResult(hResult);
+
+   // Compile script
+   m_pCompiledScript = (NXSL_Program *)NXSLCompile(m_pszScript, szQuery, 512);
+   if (m_pCompiledScript == NULL)
+      WriteLog(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
+               "dss", m_dwId, m_szName, szQuery);
 
    // Load DCI map
    _sntprintf(szQuery, 512, _T("SELECT dci_id,node_id,dci_func,num_polls ")
@@ -267,8 +278,15 @@ DWORD Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    // Change script
    if (pRequest->IsVariableExist(VID_SCRIPT))
    {
+      TCHAR szError[1024];
+
       safe_free(m_pszScript);
+      delete m_pCompiledScript;
       m_pszScript = pRequest->GetVariableStr(VID_SCRIPT);
+      m_pCompiledScript = (NXSL_Program *)NXSLCompile(m_pszScript, szError, 1024);
+      if (m_pCompiledScript == NULL)
+         WriteLog(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
+                  "dss", m_dwId, m_szName, szError);
    }
 
    // Change activation event
@@ -315,4 +333,102 @@ DWORD Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    }
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);
+}
+
+
+//
+// Check condition
+//
+
+void Condition::Check(void)
+{
+   NXSL_Environment *pEnv;
+   NXSL_Value **ppValueList, *pValue;
+   NetObj *pObject;
+   DCItem *pItem;
+   DWORD i, dwNumValues;
+
+   if (m_pCompiledScript == NULL)
+      return;
+
+   pEnv = new NXSL_Environment;
+   pEnv->SetLibrary(g_pScriptLibrary);
+
+   LockData();
+   ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * m_dwDCICount);
+   memset(ppValueList, 0, sizeof(NXSL_Value *) * m_dwDCICount);
+   for(i = 0; i < m_dwDCICount; i++)
+   {
+      pObject = FindObjectById(m_pDCIList[i].dwNodeId);
+      if (pObject != NULL)
+      {
+         if (pObject->Type() == OBJECT_NODE)
+         {
+            pItem = ((Node *)pObject)->GetItemById(m_pDCIList[i].dwId);
+            if (pItem != NULL)
+            {
+               ppValueList[i] = pItem->GetValueForNXSL();
+            }
+         }
+      }
+      if (ppValueList[i] == NULL)
+         ppValueList[i] = new NXSL_Value;
+   }
+   dwNumValues = m_dwDCICount;
+   UnlockData();
+
+   DbgPrintf(AF_DEBUG_OBJECTS, _T("Running evaluation script for condition %d \"%s\""),
+             m_dwId, m_szName);
+   if (m_pCompiledScript->Run(pEnv, dwNumValues, ppValueList) == 0)
+   {
+      pValue = m_pCompiledScript->GetResult();
+      if (pValue->GetValueAsInt32() == 0)
+      {
+         if (m_bIsActive)
+         {
+            // Deactivate condition
+            LockData();
+            m_iStatus = m_nInactiveStatus;
+            Modify();
+            UnlockData();
+
+            CalculateCompoundStatus();
+
+            DbgPrintf(AF_DEBUG_OBJECTS, _T("Condition %d \"%s\" deactivated"),
+                      m_dwId, m_szName);
+         }
+         else
+         {
+            DbgPrintf(AF_DEBUG_OBJECTS, _T("Condition %d \"%s\" still inactive"),
+                      m_dwId, m_szName);
+         }
+      }
+      else
+      {
+         if (!m_bIsActive)
+         {
+            // Activate condition
+            LockData();
+            m_iStatus = m_nInactiveStatus;
+            Modify();
+            UnlockData();
+
+            CalculateCompoundStatus();
+
+            DbgPrintf(AF_DEBUG_OBJECTS, _T("Condition %d \"%s\" activated"),
+                      m_dwId, m_szName);
+         }
+         else
+         {
+            DbgPrintf(AF_DEBUG_OBJECTS, _T("Condition %d \"%s\" still active"),
+                      m_dwId, m_szName);
+         }
+      }
+   }
+   else
+   {
+      WriteLog(MSG_COND_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE,
+               "dss", m_dwId, m_szName, m_pCompiledScript->GetErrorText());
+   }
+   free(ppValueList);
 }

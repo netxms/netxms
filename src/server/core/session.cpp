@@ -244,6 +244,8 @@ ClientSession::~ClientSession()
       free(m_ppEPPRuleList);
    }
    DestroyEncryptionContext(m_pCtx);
+   if (m_condEncryptionSetup != INVALID_CONDITION_HANDLE)
+      ConditionDestroy(m_condEncryptionSetup);
 }
 
 

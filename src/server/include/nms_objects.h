@@ -913,11 +913,13 @@ protected:
    DWORD m_dwDCICount;
    INPUT_DCI *m_pDCIList;
    TCHAR *m_pszScript;
+   NXSL_Program *m_pCompiledScript;
    DWORD m_dwActivationEventCode;
    DWORD m_dwDeactivationEventCode;
    DWORD m_dwSourceObject;
    int m_nActiveStatus;
    int m_nInactiveStatus;
+   BOOL m_bIsActive;
 
 public:
    Condition();
@@ -932,6 +934,8 @@ public:
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+   void Check(void);
 };
 
 

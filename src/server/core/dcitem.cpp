@@ -1039,6 +1039,22 @@ void DCItem::GetLastValue(CSCPMessage *pMsg, DWORD dwId)
 
 
 //
+// Get item's last value for use in NXSL
+//
+
+NXSL_Value *DCItem::GetValueForNXSL(void)
+{
+   NXSL_Value *pValue;
+
+   if (m_dwCacheSize > 0)
+      pValue = new NXSL_Value((TCHAR *)m_ppValueCache[0]->String());
+   else
+      pValue = new NXSL_Value;
+   return pValue;
+}
+
+
+//
 // Clean expired data
 //
 

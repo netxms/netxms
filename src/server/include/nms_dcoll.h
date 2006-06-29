@@ -221,6 +221,7 @@ public:
    void NewValue(time_t nTimeStamp, const char *pszValue);
 
    void GetLastValue(CSCPMessage *pMsg, DWORD dwId);
+   NXSL_Value *GetValueForNXSL(void);
 
    void CreateMessage(CSCPMessage *pMsg);
    void UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId);

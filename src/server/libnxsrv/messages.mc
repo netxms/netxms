@@ -542,4 +542,16 @@ Language=English
 Failed to load condition object with id %1 from database
 .
 
+MessageId=
+SymbolicName=MSG_COND_SCRIPT_COMPILATION_ERROR
+Language=English
+Failed to compile evaluation script for condition object %1 "%2": %3
+.
+
+MessageId=
+SymbolicName=MSG_COND_SCRIPT_EXECUTION_ERROR
+Language=English
+Failed to execute evaluation script for condition object %1 "%2": %3
+.
+
 ;#endif
