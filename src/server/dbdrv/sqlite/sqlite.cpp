@@ -265,9 +265,17 @@ extern "C" int EXPORT DrvGetNumRows(DB_RESULT hResult)
 
 extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 {
+   int i, nCount;
+
    if (hResult != NULL)
    {
-      safe_free(((SQLITE_RESULT *)hResult)->ppszData);
+      if (((SQLITE_RESULT *)hResult)->ppszData != NULL)
+      {
+         nCount = ((SQLITE_RESULT *)hResult)->nRows * ((SQLITE_RESULT *)hResult)->nCols;
+         for(i = 0; i < nCount; i++)
+            safe_free(((SQLITE_RESULT *)hResult)->ppszData[i]);
+         free(((SQLITE_RESULT *)hResult)->ppszData);
+      }
       free(hResult);
    }
 }
