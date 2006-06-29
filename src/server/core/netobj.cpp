@@ -56,6 +56,7 @@ NetObj::NetObj()
    m_iFixedStatus = STATUS_WARNING;
    m_iStatusShift = 0;
    m_iStatusSingleThreshold = 75;
+   m_dwTimeStamp = 0;
    for(i = 0; i < 4; i++)
    {
       m_iStatusTranslation[i] = i + 1;
