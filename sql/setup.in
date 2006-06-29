@@ -204,3 +204,5 @@ INSERT INTO container_categories (category,name,image_id,description)
 
 INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags)
    VALUES (0,'.1.3.6.1.4.1.2272.*',NODE_TYPE_NORTEL_ACCELAR,0);
+INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags)
+   VALUES (1,'.1.3.6.1.4.1.3224.1.*',NODE_TYPE_NETSCREEN,0);

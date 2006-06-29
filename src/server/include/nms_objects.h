@@ -45,6 +45,7 @@ extern DWORD g_dwDiscoveryPollingInterval;
 extern DWORD g_dwStatusPollingInterval;
 extern DWORD g_dwConfigurationPollingInterval;
 extern DWORD g_dwRoutingTableUpdateInterval;
+extern DWORD g_dwConditionPollingInterval;
 
 
 //
@@ -920,8 +921,11 @@ protected:
    int m_nActiveStatus;
    int m_nInactiveStatus;
    BOOL m_bIsActive;
+   time_t m_tmLastPoll;
+   BOOL m_bQueuedForPolling;
 
 public:
+
    Condition();
    Condition(BOOL bHidden);
    virtual ~Condition();
@@ -936,6 +940,17 @@ public:
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    void Check(void);
+
+   void LockForPoll(void);
+   void EndPoll(void);
+
+   BOOL ReadyForPoll(void) 
+   {
+      return ((m_iStatus != STATUS_UNMANAGED) && 
+              (!m_bQueuedForPolling) &&
+              ((DWORD)time(NULL) - (DWORD)m_tmLastPoll > g_dwConditionPollingInterval))
+                  ? TRUE : FALSE;
+   }
 };
 
 
@@ -1014,11 +1029,14 @@ extern INDEX *g_pInterfaceIndexByAddr;
 extern DWORD g_dwInterfaceAddrIndexSize;
 extern INDEX *g_pZoneIndexByGUID;
 extern DWORD g_dwZoneGUIDIndexSize;
+extern INDEX *g_pConditionIndex;
+extern DWORD g_dwConditionIndexSize;
 extern RWLOCK g_rwlockIdIndex;
 extern RWLOCK g_rwlockNodeIndex;
 extern RWLOCK g_rwlockSubnetIndex;
 extern RWLOCK g_rwlockInterfaceIndex;
 extern RWLOCK g_rwlockZoneIndex;
+extern RWLOCK g_rwlockConditionIndex;
 extern DWORD g_dwNumCategories;
 extern CONTAINER_CATEGORY *g_pContainerCatList;
 extern char *g_szClassName[];

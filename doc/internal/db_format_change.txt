@@ -2,6 +2,10 @@
 * 41 ==> 42 *
 *************
 
+- Added new node type:
+	INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags)
+	   VALUES (1,'.1.3.6.1.4.1.3224.1.*',2,0);
+
 
 *************
 * 40 ==> 41 *

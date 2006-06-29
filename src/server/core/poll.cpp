@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: poll.cpp
+** File: poll.cpp
 **
 **/
 
@@ -45,6 +45,7 @@ Queue g_configPollQueue;
 Queue g_routePollQueue;
 Queue g_discoveryPollQueue;
 Queue g_nodePollerQueue;
+Queue g_conditionPollerQueue;
 
 
 //
@@ -342,18 +343,53 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
 
 
 //
-// Node queuing thread
+// Condition poll thread
 //
 
-THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
+static THREAD_RESULT THREAD_CALL ConditionPoller(void *arg)
+{
+   Condition *pCond;
+   char szBuffer[MAX_OBJECT_NAME + 64];
+
+   // Initialize state info
+   m_pPollerState[(long)arg].iType = 'N';
+   SetPollerState((long)arg, "init");
+
+   // Main loop
+   while(!ShutdownInProgress())
+   {
+      SetPollerState((long)arg, "wait");
+      pCond = (Condition *)g_conditionPollerQueue.GetOrBlock();
+      if (pCond == INVALID_POINTER_VALUE)
+         break;   // Shutdown indicator
+
+      snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%d]",
+               pCond->Name(), pCond->Id());
+      SetPollerState((long)arg, szBuffer);
+      pCond->Check();
+      pCond->EndPoll();
+   }
+   SetPollerState((long)arg, "finished");
+   return THREAD_OK;
+}
+
+
+//
+// Node and condition queuing thread
+//
+
+THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 {
    Node *pNode;
-   DWORD dwWatchdogId;
+   Condition *pCond;
+   DWORD j, dwWatchdogId;
    int i, iCounter, iNumStatusPollers, iNumConfigPollers;
    int nIndex, iNumDiscoveryPollers, iNumRoutePollers;
+   int iNumConditionPollers;
    BOOL bDoNetworkDiscovery;
 
    // Read configuration
+   iNumConditionPollers = ConfigReadInt("NumberOfConditionPollers", 10);
    iNumStatusPollers = ConfigReadInt("NumberOfStatusPollers", 10);
    iNumConfigPollers = ConfigReadInt("NumberOfConfigurationPollers", 4);
    iNumRoutePollers = ConfigReadInt("NumberOfRoutingTablePollers", 5);
@@ -362,8 +398,9 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
       iNumDiscoveryPollers = ConfigReadInt("NumberOfDiscoveryPollers", 1);
    else
       iNumDiscoveryPollers = 0;
-   m_iNumPollers = iNumStatusPollers + iNumConfigPollers + iNumDiscoveryPollers + iNumRoutePollers;
-   DbgPrintf(AF_DEBUG_MISC, "NodePollManager: %d pollers to start", m_iNumPollers);
+   m_iNumPollers = iNumStatusPollers + iNumConfigPollers + 
+                   iNumDiscoveryPollers + iNumRoutePollers + iNumConditionPollers;
+   DbgPrintf(AF_DEBUG_MISC, "PollManager: %d pollers to start", m_iNumPollers);
 
    // Prepare static data
    m_pPollerState = (__poller_state *)malloc(sizeof(__poller_state) * m_iNumPollers);
@@ -384,7 +421,11 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
    for(i = 0; i < iNumDiscoveryPollers; i++, nIndex++)
       ThreadCreate(DiscoveryPoller, 0, CAST_TO_POINTER(nIndex, void *));
 
-   dwWatchdogId = WatchdogAddThread("Node Poll Manager", 60);
+   // Start condition pollers
+   for(i = 0; i < iNumConditionPollers; i++, nIndex++)
+      ThreadCreate(ConditionPoller, 0, CAST_TO_POINTER(nIndex, void *));
+
+   dwWatchdogId = WatchdogAddThread("Poll Manager", 60);
    iCounter = 0;
 
    while(!ShutdownInProgress())
@@ -404,9 +445,9 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
       // Walk through nodes and queue them for status 
       // and/or configuration poll
       RWLockReadLock(g_rwlockNodeIndex, INFINITE);
-      for(DWORD i = 0; i < g_dwNodeAddrIndexSize; i++)
+      for(j = 0; j < g_dwNodeAddrIndexSize; j++)
       {
-         pNode = (Node *)g_pNodeIndexByAddr[i].pObject;
+         pNode = (Node *)g_pNodeIndexByAddr[j].pObject;
          if (pNode->ReadyForConfigurationPoll())
          {
             pNode->IncRefCount();
@@ -433,12 +474,27 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
          }
       }
       RWLockUnlock(g_rwlockNodeIndex);
+
+      // Walk through condition objects and queue them for poll
+      RWLockReadLock(g_rwlockConditionIndex, INFINITE);
+      for(j = 0; j < g_dwConditionIndexSize; j++)
+      {
+         pCond = (Condition *)g_pConditionIndex[j].pObject;
+         if (pCond->ReadyForPoll())
+         {
+            pCond->LockForPoll();
+            g_conditionPollerQueue.Put(pCond);
+         }
+      }
+      RWLockUnlock(g_rwlockConditionIndex);
    }
 
    // Send stop signal to all pollers
    g_statusPollQueue.Clear();
    g_configPollQueue.Clear();
    g_discoveryPollQueue.Clear();
+   g_routePollQueue.Clear();
+   g_conditionPollerQueue.Clear();
    for(i = 0; i < iNumStatusPollers; i++)
       g_statusPollQueue.Put(INVALID_POINTER_VALUE);
    for(i = 0; i < iNumConfigPollers; i++)
@@ -447,7 +503,9 @@ THREAD_RESULT THREAD_CALL NodePollManager(void *pArg)
       g_routePollQueue.Put(INVALID_POINTER_VALUE);
    for(i = 0; i < iNumDiscoveryPollers; i++)
       g_discoveryPollQueue.Put(INVALID_POINTER_VALUE);
+   for(i = 0; i < iNumConditionPollers; i++)
+      g_conditionPollerQueue.Put(INVALID_POINTER_VALUE);
 
-   DbgPrintf(AF_DEBUG_MISC, "NodePollManager: main thread terminated");
+   DbgPrintf(AF_DEBUG_MISC, "PollManager: main thread terminated");
    return THREAD_OK;
 }

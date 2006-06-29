@@ -44,12 +44,15 @@ INDEX *g_pInterfaceIndexByAddr = NULL;
 DWORD g_dwInterfaceAddrIndexSize = 0;
 INDEX *g_pZoneIndexByGUID = NULL;
 DWORD g_dwZoneGUIDIndexSize = 0;
+INDEX *g_pConditionIndex = NULL;
+DWORD g_dwConditionIndexSize = 0;
 
 RWLOCK g_rwlockIdIndex;
 RWLOCK g_rwlockNodeIndex;
 RWLOCK g_rwlockSubnetIndex;
 RWLOCK g_rwlockInterfaceIndex;
 RWLOCK g_rwlockZoneIndex;
+RWLOCK g_rwlockConditionIndex;
 
 DWORD g_dwNumCategories = 0;
 CONTAINER_CATEGORY *g_pContainerCatList = NULL;
@@ -187,6 +190,7 @@ void ObjectsInit(void)
    g_rwlockSubnetIndex = RWLockCreate();
    g_rwlockInterfaceIndex = RWLockCreate();
    g_rwlockZoneIndex = RWLockCreate();
+   g_rwlockConditionIndex = RWLockCreate();
 
    // Create "Entire Network" object
    g_pEntireNet = new Network;
@@ -319,7 +323,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
    RWLockWriteLock(g_rwlockIdIndex, INFINITE);
    AddObjectToIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id(), pObject);
    RWLockUnlock(g_rwlockIdIndex);
-   if (((pObject->IpAddr() != 0) || (pObject->Type() == OBJECT_ZONE)) && (!pObject->IsDeleted()))
+   if (!pObject->IsDeleted())
    {
       switch(pObject->Type())
       {
@@ -328,28 +332,45 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          case OBJECT_CONTAINER:
          case OBJECT_SERVICEROOT:
          case OBJECT_NETWORKSERVICE:
+         case OBJECT_TEMPLATE:
+         case OBJECT_TEMPLATEGROUP:
+         case OBJECT_TEMPLATEROOT:
             break;
          case OBJECT_SUBNET:
-            RWLockWriteLock(g_rwlockSubnetIndex, INFINITE);
-            AddObjectToIndex(&g_pSubnetIndexByAddr, &g_dwSubnetAddrIndexSize, pObject->IpAddr(), pObject);
-            RWLockUnlock(g_rwlockSubnetIndex);
-            if (bNewObject)
-               PostEvent(EVENT_SUBNET_ADDED, pObject->Id(), NULL);
+            if (pObject->IpAddr() != 0)
+            {
+               RWLockWriteLock(g_rwlockSubnetIndex, INFINITE);
+               AddObjectToIndex(&g_pSubnetIndexByAddr, &g_dwSubnetAddrIndexSize, pObject->IpAddr(), pObject);
+               RWLockUnlock(g_rwlockSubnetIndex);
+               if (bNewObject)
+                  PostEvent(EVENT_SUBNET_ADDED, pObject->Id(), NULL);
+            }
             break;
          case OBJECT_NODE:
-            RWLockWriteLock(g_rwlockNodeIndex, INFINITE);
-            AddObjectToIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, pObject->IpAddr(), pObject);
-            RWLockUnlock(g_rwlockNodeIndex);
+            if (pObject->IpAddr() != 0)
+            {
+               RWLockWriteLock(g_rwlockNodeIndex, INFINITE);
+               AddObjectToIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, pObject->IpAddr(), pObject);
+               RWLockUnlock(g_rwlockNodeIndex);
+            }
             break;
          case OBJECT_INTERFACE:
-            RWLockWriteLock(g_rwlockInterfaceIndex, INFINITE);
-            AddObjectToIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr(), pObject);
-            RWLockUnlock(g_rwlockInterfaceIndex);
+            if (pObject->IpAddr() != 0)
+            {
+               RWLockWriteLock(g_rwlockInterfaceIndex, INFINITE);
+               AddObjectToIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr(), pObject);
+               RWLockUnlock(g_rwlockInterfaceIndex);
+            }
             break;
          case OBJECT_ZONE:
             RWLockWriteLock(g_rwlockZoneIndex, INFINITE);
             AddObjectToIndex(&g_pZoneIndexByGUID, &g_dwZoneGUIDIndexSize, ((Zone *)pObject)->GUID(), pObject);
             RWLockUnlock(g_rwlockZoneIndex);
+            break;
+         case OBJECT_CONDITION:
+            RWLockWriteLock(g_rwlockConditionIndex, INFINITE);
+            AddObjectToIndex(&g_pConditionIndex, &g_dwConditionIndexSize, pObject->Id(), pObject);
+            RWLockUnlock(g_rwlockConditionIndex);
             break;
          default:
             WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
@@ -368,39 +389,55 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 
 void NetObjDeleteFromIndexes(NetObj *pObject)
 {
-   if (pObject->IpAddr() != 0)
-      switch(pObject->Type())
-      {
-         case OBJECT_GENERIC:
-         case OBJECT_NETWORK:
-         case OBJECT_CONTAINER:
-         case OBJECT_SERVICEROOT:
-         case OBJECT_NETWORKSERVICE:
-            break;
-         case OBJECT_SUBNET:
+   switch(pObject->Type())
+   {
+      case OBJECT_GENERIC:
+      case OBJECT_NETWORK:
+      case OBJECT_CONTAINER:
+      case OBJECT_SERVICEROOT:
+      case OBJECT_NETWORKSERVICE:
+      case OBJECT_TEMPLATE:
+      case OBJECT_TEMPLATEGROUP:
+      case OBJECT_TEMPLATEROOT:
+         break;
+      case OBJECT_SUBNET:
+         if (pObject->IpAddr() != 0)
+         {
             RWLockWriteLock(g_rwlockSubnetIndex, INFINITE);
             DeleteObjectFromIndex(&g_pSubnetIndexByAddr, &g_dwSubnetAddrIndexSize, pObject->IpAddr());
             RWLockUnlock(g_rwlockSubnetIndex);
-            break;
-         case OBJECT_NODE:
+         }
+         break;
+      case OBJECT_NODE:
+         if (pObject->IpAddr() != 0)
+         {
             RWLockWriteLock(g_rwlockNodeIndex, INFINITE);
             DeleteObjectFromIndex(&g_pNodeIndexByAddr, &g_dwNodeAddrIndexSize, pObject->IpAddr());
             RWLockUnlock(g_rwlockNodeIndex);
-            break;
-         case OBJECT_INTERFACE:
+         }
+         break;
+      case OBJECT_INTERFACE:
+         if (pObject->IpAddr() != 0)
+         {
             RWLockWriteLock(g_rwlockInterfaceIndex, INFINITE);
             DeleteObjectFromIndex(&g_pInterfaceIndexByAddr, &g_dwInterfaceAddrIndexSize, pObject->IpAddr());
             RWLockUnlock(g_rwlockInterfaceIndex);
-            break;
-         case OBJECT_ZONE:
-            RWLockWriteLock(g_rwlockZoneIndex, INFINITE);
-            DeleteObjectFromIndex(&g_pZoneIndexByGUID, &g_dwZoneGUIDIndexSize, ((Zone *)pObject)->GUID());
-            RWLockUnlock(g_rwlockZoneIndex);
-            break;
-         default:
-            WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
-            break;
-      }
+         }
+         break;
+      case OBJECT_ZONE:
+         RWLockWriteLock(g_rwlockZoneIndex, INFINITE);
+         DeleteObjectFromIndex(&g_pZoneIndexByGUID, &g_dwZoneGUIDIndexSize, ((Zone *)pObject)->GUID());
+         RWLockUnlock(g_rwlockZoneIndex);
+         break;
+      case OBJECT_CONDITION:
+         RWLockWriteLock(g_rwlockConditionIndex, INFINITE);
+         DeleteObjectFromIndex(&g_pConditionIndex, &g_dwConditionIndexSize, pObject->Id());
+         RWLockUnlock(g_rwlockConditionIndex);
+         break;
+      default:
+         WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
+         break;
+   }
 }
 
 

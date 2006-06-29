@@ -39,6 +39,8 @@ Condition::Condition()
    m_nInactiveStatus = STATUS_NORMAL;
    m_pCompiledScript = NULL;
    m_bIsActive = FALSE;
+   m_tmLastPoll = 0;
+   m_bQueuedForPolling = FALSE;
 }
 
 
@@ -59,6 +61,8 @@ Condition::Condition(BOOL bHidden)
    m_bIsHidden = bHidden;
    m_pCompiledScript = NULL;
    m_bIsActive = FALSE;
+   m_tmLastPoll = 0;
+   m_bQueuedForPolling = FALSE;
 }
 
 
@@ -337,6 +341,31 @@ DWORD Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
 
 //
+// Lock for polling
+//
+
+void Condition::LockForPoll(void)
+{
+   IncRefCount();
+   m_bQueuedForPolling = TRUE;
+}
+
+
+//
+// This method should be callsed by poller thread when poll finish
+//
+
+void Condition::EndPoll(void)
+{
+   LockData();
+   m_bQueuedForPolling = FALSE;
+   m_tmLastPoll = time(NULL);
+   UnlockData();
+   DecRefCount();
+}
+
+
+//
 // Check condition
 //
 
@@ -347,8 +376,9 @@ void Condition::Check(void)
    NetObj *pObject;
    DCItem *pItem;
    DWORD i, dwNumValues;
+   int iOldStatus = m_iStatus;
 
-   if (m_pCompiledScript == NULL)
+   if ((m_pCompiledScript == NULL) || (m_iStatus == STATUS_UNMANAGED))
       return;
 
    pEnv = new NXSL_Environment;
@@ -389,10 +419,13 @@ void Condition::Check(void)
             // Deactivate condition
             LockData();
             m_iStatus = m_nInactiveStatus;
+            m_bIsActive = FALSE;
             Modify();
             UnlockData();
 
-            CalculateCompoundStatus();
+            PostEvent(m_dwDeactivationEventCode,
+                      (m_dwSourceObject == 0) ? g_dwMgmtNode : m_dwSourceObject,
+                      "ds", m_dwId, m_szName);
 
             DbgPrintf(AF_DEBUG_OBJECTS, _T("Condition %d \"%s\" deactivated"),
                       m_dwId, m_szName);
@@ -401,6 +434,13 @@ void Condition::Check(void)
          {
             DbgPrintf(AF_DEBUG_OBJECTS, _T("Condition %d \"%s\" still inactive"),
                       m_dwId, m_szName);
+            LockData();
+            if (m_iStatus != m_nInactiveStatus)
+            {
+               m_iStatus = m_nInactiveStatus;
+               Modify();
+            }
+            UnlockData();
          }
       }
       else
@@ -409,11 +449,14 @@ void Condition::Check(void)
          {
             // Activate condition
             LockData();
-            m_iStatus = m_nInactiveStatus;
+            m_iStatus = m_nActiveStatus;
+            m_bIsActive = TRUE;
             Modify();
             UnlockData();
 
-            CalculateCompoundStatus();
+            PostEvent(m_dwActivationEventCode,
+                      (m_dwSourceObject == 0) ? g_dwMgmtNode : m_dwSourceObject,
+                      "ds", m_dwId, m_szName);
 
             DbgPrintf(AF_DEBUG_OBJECTS, _T("Condition %d \"%s\" activated"),
                       m_dwId, m_szName);
@@ -422,6 +465,13 @@ void Condition::Check(void)
          {
             DbgPrintf(AF_DEBUG_OBJECTS, _T("Condition %d \"%s\" still active"),
                       m_dwId, m_szName);
+            LockData();
+            if (m_iStatus != m_nActiveStatus)
+            {
+               m_iStatus = m_nActiveStatus;
+               Modify();
+            }
+            UnlockData();
          }
       }
    }
@@ -429,6 +479,23 @@ void Condition::Check(void)
    {
       WriteLog(MSG_COND_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE,
                "dss", m_dwId, m_szName, m_pCompiledScript->GetErrorText());
+
+      LockData();
+      if (m_iStatus != STATUS_UNKNOWN)
+      {
+         m_iStatus = STATUS_UNKNOWN;
+         Modify();
+      }
+      UnlockData();
    }
    free(ppValueList);
+
+   // Cause parent object(s) to recalculate it's status
+   if (iOldStatus != m_iStatus)
+   {
+      LockParentList(FALSE);
+      for(i = 0; i < m_dwParentCount; i++)
+         m_pParentList[i]->CalculateCompoundStatus();
+      UnlockParentList();
+   }
 }

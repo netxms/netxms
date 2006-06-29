@@ -45,7 +45,7 @@
 THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg);
 THREAD_RESULT THREAD_CALL Syncer(void *pArg);
 THREAD_RESULT THREAD_CALL NodePoller(void *pArg);
-THREAD_RESULT THREAD_CALL NodePollManager(void *pArg);
+THREAD_RESULT THREAD_CALL PollManager(void *pArg);
 THREAD_RESULT THREAD_CALL EventProcessor(void *pArg);
 THREAD_RESULT THREAD_CALL WatchdogThread(void *pArg);
 THREAD_RESULT THREAD_CALL ClientListener(void *pArg);
@@ -69,6 +69,7 @@ DWORD g_dwDiscoveryPollingInterval;
 DWORD g_dwStatusPollingInterval;
 DWORD g_dwConfigurationPollingInterval;
 DWORD g_dwRoutingTableUpdateInterval;
+DWORD g_dwConditionPollingInterval;
 DWORD g_dwPingSize;
 char g_szDataDir[MAX_PATH];
 DWORD g_dwDBSyntax = DB_SYNTAX_GENERIC;
@@ -83,7 +84,7 @@ DWORD g_dwLockTimeout = 60000;   // Default timeout for acquiring mutex
 //
 
 static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
-static THREAD m_thNodePollMgr = INVALID_THREAD_HANDLE;
+static THREAD m_thPollManager = INVALID_THREAD_HANDLE;
 static THREAD m_thHouseKeeper = INVALID_THREAD_HANDLE;
 static THREAD m_thSyncer = INVALID_THREAD_HANDLE;
 static THREAD m_thSyslogDaemon = INVALID_THREAD_HANDLE;
@@ -182,6 +183,7 @@ static void LoadGlobalConfig()
    g_dwStatusPollingInterval = ConfigReadInt("StatusPollingInterval", 60);
    g_dwConfigurationPollingInterval = ConfigReadInt("ConfigurationPollingInterval", 3600);
    g_dwRoutingTableUpdateInterval = ConfigReadInt("RoutingTableUpdateInterval", 300);
+   g_dwConditionPollingInterval = ConfigReadInt("ConditionPollingInterval", 60);
    if (ConfigReadInt("EnableAccessControl", 1))
       g_dwFlags |= AF_ENABLE_ACCESS_CONTROL;
    if (ConfigReadInt("EnableEventsAccessControl", 1))
@@ -444,7 +446,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    ThreadCreate(ClientListener, 0, NULL);
    m_thSyncer = ThreadCreateEx(Syncer, 0, NULL);
    m_thHouseKeeper = ThreadCreateEx(HouseKeeper, 0, NULL);
-   m_thNodePollMgr = ThreadCreateEx(NodePollManager, 0, NULL);
+   m_thPollManager = ThreadCreateEx(PollManager, 0, NULL);
 
    // Start event processors
    iNumThreads = ConfigReadInt("NumberOfEventProcessors", 1);
@@ -509,7 +511,7 @@ void NXCORE_EXPORTABLE Shutdown(void)
 
    // Wait for critical threads
    ThreadJoin(m_thHouseKeeper);
-   ThreadJoin(m_thNodePollMgr);
+   ThreadJoin(m_thPollManager);
    ThreadJoin(m_thSyncer);
    ThreadJoin(m_thSyslogDaemon);
 
@@ -708,7 +710,11 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
          // Get argument
          pArg = ExtractWord(pArg, szBuffer);
 
-         if (IsCommand("ID", szBuffer, 2))
+         if (IsCommand("CONDITION", szBuffer, 1))
+         {
+            DumpIndex(pCtx, g_rwlockConditionIndex, g_pConditionIndex, g_dwConditionIndexSize, FALSE);
+         }
+         else if (IsCommand("ID", szBuffer, 2))
          {
             DumpIndex(pCtx, g_rwlockIdIndex, g_pIndexById, g_dwIdIndexSize, FALSE);
          }
@@ -731,7 +737,7 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
          {
             if (szBuffer[0] == 0)
                ConsolePrintf(pCtx, "ERROR: Missing index name\n"
-                                   "Valid names are: ID, INTERFACE, NODE, SUBNET\n\n");
+                                   "Valid names are: CONDITION, ID, INTERFACE, NODE, SUBNET\n\n");
             else
                ConsolePrintf(pCtx, "ERROR: Invalid index name\n\n");
          }
