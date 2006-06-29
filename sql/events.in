@@ -350,6 +350,30 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'   2) Error text#0D#0A' CONCAT
 		'   3) DCI ID if script is DCI transformation script, or 0 otherwise'
 	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_CONDITION_ACTIVATED, 'SYS_CONDITION_ACTIVATED',
+		EVENT_SEVERITY_MINOR, 1,
+		'Condition "%2" activated',
+		'Default event for condition activation.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Condition object ID#0D#0A' CONCAT
+		'   2) Condition object name#0D#0A' CONCAT
+		'   3) Previous condition status#0D#0A' CONCAT
+		'   4) Current condition status'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_CONDITION_DEACTIVATED, 'SYS_CONDITION_DEACTIVATED',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Condition "%2" deactivated',
+		'Default event for condition deactivation.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Condition object ID#0D#0A' CONCAT
+		'   2) Condition object name#0D#0A' CONCAT
+		'   3) Previous condition status#0D#0A' CONCAT
+		'   4) Current condition status'
+	);
 
 
 /*

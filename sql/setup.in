@@ -27,6 +27,8 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('RoutingTableUpdateInterval','300',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('ConditionPollingInterval','60',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('ResolveNodeNames','1',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('NumberOfEventProcessors','1',1,1);
@@ -42,6 +44,8 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('NumberOfDiscoveryPollers','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('NumberOfRoutingTablePollers','5',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('NumberOfConditionPollers','10',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 #ifdef DB_MYSQL
 	VALUES ('IDataTableCreationCommand','CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer not null,idata_value varchar(255) not null) TYPE=InnoDB',0,1);

@@ -2,6 +2,58 @@
 * 41 ==> 42 *
 *************
 
+- Added table "conditions":
+	CREATE TABLE conditions
+	(
+		id integer not null,
+		activation_event integer not null,
+		deactivation_event integer not null,
+		source_object integer not null,
+		active_status integer not null,
+		inactive_status integer not null,
+		script SQL_TEXT not null,
+		PRIMARY KEY(id)
+	) TABLE_TYPE;
+- Added table "cond_dci_map":
+	CREATE TABLE cond_dci_map
+	(
+		condition_id integer not null,
+		dci_id integer not null,
+		node_id integer not null,
+		dci_func integer not null,
+		num_polls integer not null,
+		PRIMARY KEY(condition_id,dci_id)
+	) TABLE_TYPE;
+- New configuration parameters: NumberOfConditionPollers, ConditionPollingInterval
+- New image records:
+	INSERT INTO images (image_id,name,file_name_png,file_hash_png,file_name_ico,file_hash_ico)
+		VALUES (15,'Obj.Condition','condition.png','<invalid_hash>',
+                	'condition.ico','<invalid_hash>');
+	INSERT INTO default_images (object_class,image_id)
+		VALUES (13, 15);
+- New events added:
+	INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+		(
+			34, 'SYS_CONDITION_ACTIVATED', 2, 1,
+			'Condition "%2" activated',
+			'Default event for condition activation.#0D#0A' CONCAT
+			'Parameters:#0D#0A' CONCAT
+			'   1) Condition object ID#0D#0A' CONCAT
+			'   2) Condition object name#0D#0A' CONCAT
+			'   3) Previous condition status#0D#0A' CONCAT
+			'   4) Current condition status'
+		);
+	INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+		(
+			35, 'SYS_CONDITION_DEACTIVATED', 0, 1,
+			'Condition "%2" deactivated',
+			'Default event for condition deactivation.#0D#0A' CONCAT
+			'Parameters:#0D#0A' CONCAT
+			'   1) Condition object ID#0D#0A' CONCAT
+			'   2) Condition object name#0D#0A' CONCAT
+			'   3) Previous condition status#0D#0A' CONCAT
+			'   4) Current condition status'
+		);
 - Added new node type:
 	INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags)
 	   VALUES (1,'.1.3.6.1.4.1.3224.1.*',2,0);

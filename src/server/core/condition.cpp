@@ -41,6 +41,8 @@ Condition::Condition()
    m_bIsActive = FALSE;
    m_tmLastPoll = 0;
    m_bQueuedForPolling = FALSE;
+   m_dwActivationEventCode = EVENT_CONDITION_ACTIVATED;
+   m_dwDeactivationEventCode = EVENT_CONDITION_DEACTIVATED;
 }
 
 
@@ -63,6 +65,8 @@ Condition::Condition(BOOL bHidden)
    m_bIsActive = FALSE;
    m_tmLastPoll = 0;
    m_bQueuedForPolling = FALSE;
+   m_dwActivationEventCode = EVENT_CONDITION_ACTIVATED;
+   m_dwDeactivationEventCode = EVENT_CONDITION_DEACTIVATED;
 }
 
 
@@ -425,7 +429,7 @@ void Condition::Check(void)
 
             PostEvent(m_dwDeactivationEventCode,
                       (m_dwSourceObject == 0) ? g_dwMgmtNode : m_dwSourceObject,
-                      "ds", m_dwId, m_szName);
+                      "dsdd", m_dwId, m_szName, iOldStatus, m_iStatus);
 
             DbgPrintf(AF_DEBUG_OBJECTS, _T("Condition %d \"%s\" deactivated"),
                       m_dwId, m_szName);
@@ -456,7 +460,7 @@ void Condition::Check(void)
 
             PostEvent(m_dwActivationEventCode,
                       (m_dwSourceObject == 0) ? g_dwMgmtNode : m_dwSourceObject,
-                      "ds", m_dwId, m_szName);
+                      "dsdd", m_dwId, m_szName, iOldStatus, m_iStatus);
 
             DbgPrintf(AF_DEBUG_OBJECTS, _T("Condition %d \"%s\" activated"),
                       m_dwId, m_szName);
