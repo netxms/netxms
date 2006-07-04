@@ -199,13 +199,14 @@ public:
    BOOL LoadThresholdsFromDB(void);
    void DeleteFromDB(void);
 
-   void UpdateCacheSize(void);
+   void UpdateCacheSize(DWORD dwCondId = 0);
 
    DWORD Id(void) { return m_dwId; }
    int DataSource(void) { return m_iSource; }
    int DataType(void) { return m_iDataType; }
    int Status(void) { return m_iStatus; }
    const char *Name(void) { return m_szName; }
+   const char *Description(void) { return m_szDescription; }
    Template *RelatedNode(void) { return m_pNode; }
    DWORD TemplateId(void) { return m_dwTemplateId; }
    DWORD TemplateItemId(void) { return m_dwTemplateItemId; }
@@ -221,7 +222,7 @@ public:
    void NewValue(time_t nTimeStamp, const char *pszValue);
 
    void GetLastValue(CSCPMessage *pMsg, DWORD dwId);
-   NXSL_Value *GetValueForNXSL(void);
+   NXSL_Value *GetValueForNXSL(int nFunction, int nPolls);
 
    void CreateMessage(CSCPMessage *pMsg);
    void UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId);
@@ -237,6 +238,11 @@ public:
 BOOL InitDataCollector(void);
 void DeleteAllItemsForNode(DWORD dwNodeId);
 void WriteFullParamListToMessage(CSCPMessage *pMsg);
+
+void CalculateItemValueDiff(ItemValue &result, int nDataType,
+                            ItemValue &value1, ItemValue &value2);
+void CalculateItemValueAverage(ItemValue &result, int nDataType,
+                               int nNumValues, ItemValue **ppValueList);
 
 
 //

@@ -17,6 +17,7 @@ EXTRA_DIST = \
 	AgentCfgEditor.cpp AgentCfgEditor.h \
 	AlarmBrowser.cpp AlarmBrowser.h \
 	comm.cpp \
+	CondDCIPropDlg.cpp CondDCIPropDlg.h \
 	ColorSelector.cpp ColorSelector.h \
 	CondPropsData.cpp CondPropsData.h \
 	CondPropsGeneral.cpp CondPropsGeneral.h \

@@ -661,6 +661,33 @@ BOOL LoadObjects(void)
       }
    }
 
+   // Load conditions
+   // We should load conditions before nodes because
+   // DCI cache size calculation uses information from condition objects
+   DbgPrintf(AF_DEBUG_MISC, "Loading conditions...");
+   hResult = DBSelect(g_hCoreDB, "SELECT id FROM conditions");
+   if (hResult != NULL)
+   {
+      Condition *pCondition;
+
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         pCondition = new Condition;
+         if (pCondition->CreateFromDB(dwId))
+         {
+            NetObjInsert(pCondition, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete pCondition;
+            WriteLog(MSG_CONDITION_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
    // Load subnets
    DbgPrintf(AF_DEBUG_MISC, "Loading subnets...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM subnets");
@@ -799,31 +826,6 @@ BOOL LoadObjects(void)
          {
             delete pConnector;
             WriteLog(MSG_VPNC_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
-   // Load conditions
-   DbgPrintf(AF_DEBUG_MISC, "Loading conditions...");
-   hResult = DBSelect(g_hCoreDB, "SELECT id FROM conditions");
-   if (hResult != NULL)
-   {
-      Condition *pCondition;
-
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
-      {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         pCondition = new Condition;
-         if (pCondition->CreateFromDB(dwId))
-         {
-            NetObjInsert(pCondition, FALSE);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            delete pCondition;
-            WriteLog(MSG_CONDITION_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
          }
       }
       DBFreeResult(hResult);

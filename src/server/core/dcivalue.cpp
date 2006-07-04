@@ -163,3 +163,88 @@ const ItemValue& ItemValue::operator=(QWORD qwInt64)
    m_iInt64 = (INT64)m_qwInt64;
    return *this;
 }
+
+
+//
+// Calculate difference between two values
+//
+
+void CalculateItemValueDiff(ItemValue &result, int nDataType,
+                            ItemValue &value1, ItemValue &value2)
+{
+   switch(nDataType)
+   {
+      case DCI_DT_INT:
+         result = (LONG)value1 - (LONG)value2;
+         break;
+      case DCI_DT_UINT:
+         result = (DWORD)value1 - (DWORD)value2;
+         break;
+      case DCI_DT_INT64:
+         result = (INT64)value1 - (INT64)value2;
+         break;
+      case DCI_DT_UINT64:
+         result = (QWORD)value1 - (QWORD)value2;
+         break;
+      case DCI_DT_FLOAT:
+         result = (double)value1 - (double)value2;
+         break;
+      case DCI_DT_STRING:
+         result = (LONG)((_tcscmp((const TCHAR *)value1, (const TCHAR *)value2) == 0) ? 0 : 1);
+         break;
+      default:
+         // Delta calculation is not supported for other types
+         result = value1;
+         break;
+   }
+}
+
+
+//
+// Calculate average value for set of values
+//
+
+#define CALC_AVG_VALUE(vtype) \
+{ \
+   vtype var; \
+   var = 0; \
+   for(i = 0, nValueCount = 0; i < nNumValues; i++) \
+   { \
+      if (ppValueList[i]->GetTimeStamp() != 1) \
+      { \
+         var += (vtype)(*ppValueList[i]); \
+         nValueCount++; \
+      } \
+   } \
+   result = var / (vtype)nValueCount; \
+}
+
+void CalculateItemValueAverage(ItemValue &result, int nDataType,
+                               int nNumValues, ItemValue **ppValueList)
+{
+   int i, nValueCount;
+
+   switch(nDataType)
+   {
+      case DCI_DT_INT:
+         CALC_AVG_VALUE(LONG);
+         break;
+      case DCI_DT_UINT:
+         CALC_AVG_VALUE(DWORD);
+         break;
+      case DCI_DT_INT64:
+         CALC_AVG_VALUE(INT64);
+         break;
+      case DCI_DT_UINT64:
+         CALC_AVG_VALUE(QWORD);
+         break;
+      case DCI_DT_FLOAT:
+         CALC_AVG_VALUE(double);
+         break;
+      case DCI_DT_STRING:
+         result = _T("");   // Average value for string is meaningless
+         break;
+      default:
+         break;
+   }
+}

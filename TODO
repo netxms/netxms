@@ -17,7 +17,6 @@ GENERAL:
 - Maintenance mode for nodes
 - SMART (HDD diagnostics) subagent
 - Add SNMP SET functionality
-- Add SNMP WALK functionality
 - ThreadSleep(1) sleeps less then second (Linux specific?)
 - Add libgd check to configure
 

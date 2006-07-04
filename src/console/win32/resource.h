@@ -196,6 +196,7 @@
 #define IDD_OBJECT_COND_SCRIPT          326
 #define IDD_OBJECT_COND_DATA            327
 #define IDD_ADD_DCI                     328
+#define IDD_COND_DCI_PROP               329
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -519,6 +520,9 @@
 #define IDC_EDIT_SCRIPT                 1366
 #define IDC_LIST_DCI                    1367
 #define IDC_LIST2                       1367
+#define IDC_EDIT_NODE                   1368
+#define IDC_EDIT_ITEM                   1369
+#define IDC_EDIT_POLLS                  1371
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -729,9 +733,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        329
+#define _APS_NEXT_RESOURCE_VALUE        330
 #define _APS_NEXT_COMMAND_VALUE         33019
-#define _APS_NEXT_CONTROL_VALUE         1368
+#define _APS_NEXT_CONTROL_VALUE         1373
 #define _APS_NEXT_SYMED_VALUE           128
 #endif
 #endif

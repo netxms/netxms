@@ -453,31 +453,7 @@ void Threshold::CalculateAverageValue(ItemValue *pResult, ItemValue &lastValue, 
 
 void Threshold::CalculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
 {
-   switch(m_iDataType)
-   {
-      case DCI_DT_INT:
-         *pResult = (LONG)lastValue - (LONG)(*ppPrevValues[0]);
-         break;
-      case DCI_DT_UINT:
-         *pResult = (DWORD)lastValue - (DWORD)(*ppPrevValues[0]);
-         break;
-      case DCI_DT_INT64:
-         *pResult = (INT64)lastValue - (INT64)(*ppPrevValues[0]);
-         break;
-      case DCI_DT_UINT64:
-         *pResult = (QWORD)lastValue - (QWORD)(*ppPrevValues[0]);
-         break;
-      case DCI_DT_FLOAT:
-         *pResult = (double)lastValue - (double)(*ppPrevValues[0]);
-         break;
-      case DCI_DT_STRING:
-         *pResult = (LONG)((_tcscmp((const TCHAR *)lastValue, (const TCHAR *)(*ppPrevValues[0])) == 0) ? 0 : 1);
-         break;
-      default:
-         // Delta calculation is not supported for other types
-         *pResult = lastValue;
-         break;
-   }
+   CalculateItemValueDiff(*pResult, m_iDataType, lastValue, *ppPrevValues[0]);
 }
 
 

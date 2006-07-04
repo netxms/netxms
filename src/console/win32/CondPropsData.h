@@ -39,17 +39,24 @@ public:
 
 // Implementation
 protected:
+	NXC_OBJECT_UPDATE *m_pUpdate;
 	// Generated message map functions
 	//{{AFX_MSG(CCondPropsData)
 	virtual BOOL OnInitDialog();
 	afx_msg void OnButtonAdd();
+	afx_msg void OnButtonDelete();
+	afx_msg void OnItemchangedListDci(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnButtonEdit();
+	afx_msg void OnDblclkListDci(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
 private:
-	void AddListItem(int nPos, INPUT_DCI *pItem, TCHAR *pszName);
+	int AddListItem(int nPos, INPUT_DCI *pItem, TCHAR *pszName);
 	INPUT_DCI *m_pDCIList;
 	DWORD m_dwNumDCI;
+
+   void Modify(void) { m_pUpdate->dwFlags |= OBJ_UPDATE_DCI_LIST; }
 };
 
 //{{AFX_INSERT_LOCATION}}

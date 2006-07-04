@@ -883,11 +883,14 @@ void DCItem::ChangeBinding(DWORD dwNewId, Template *pNewNode)
 
 //
 // Update required cache size depending on thresholds
+// dwCondId is an identifier of calling condition object id. If it is not 0,
+// GetCacheSizeForDCI should be called with bNoLock == TRUE for appropriate
+// condition object
 //
 
-void DCItem::UpdateCacheSize(void)
+void DCItem::UpdateCacheSize(DWORD dwCondId)
 {
-   DWORD i, dwRequiredSize;
+   DWORD i, dwSize, dwRequiredSize;
 
    // Sanity check
    if (m_pNode == NULL)
@@ -906,6 +909,15 @@ void DCItem::UpdateCacheSize(void)
       for(i = 0; i < m_dwNumThresholds; i++)
          if (dwRequiredSize < m_ppThresholdList[i]->RequiredCacheSize())
             dwRequiredSize = m_ppThresholdList[i]->RequiredCacheSize();
+
+      RWLockReadLock(g_rwlockConditionIndex, INFINITE);
+      for(i = 0; i < g_dwConditionIndexSize; i++)
+      {
+         dwSize = ((Condition *)g_pConditionIndex[i].pObject)->GetCacheSizeForDCI(m_dwId, dwCondId == g_pConditionIndex[i].dwKey);
+         if (dwSize > dwRequiredSize)
+            dwRequiredSize = dwSize;
+      }
+      RWLockUnlock(g_rwlockConditionIndex);
    }
    else
    {
@@ -1042,14 +1054,46 @@ void DCItem::GetLastValue(CSCPMessage *pMsg, DWORD dwId)
 // Get item's last value for use in NXSL
 //
 
-NXSL_Value *DCItem::GetValueForNXSL(void)
+NXSL_Value *DCItem::GetValueForNXSL(int nFunction, int nPolls)
 {
    NXSL_Value *pValue;
 
-   if (m_dwCacheSize > 0)
-      pValue = new NXSL_Value((TCHAR *)m_ppValueCache[0]->String());
-   else
-      pValue = new NXSL_Value;
+   switch(nFunction)
+   {
+      case F_LAST:
+         pValue = (m_dwCacheSize > 0) ? new NXSL_Value((TCHAR *)m_ppValueCache[0]->String()) : new NXSL_Value;
+         break;
+      case F_DIFF:
+         if (m_dwCacheSize >= 2)
+         {
+            ItemValue result;
+
+            CalculateItemValueDiff(result, m_iDataType, *m_ppValueCache[0], *m_ppValueCache[1]);
+            pValue = new NXSL_Value((TCHAR *)result.String());
+         }
+         else
+         {
+            pValue = new NXSL_Value;
+         }
+         break;
+      case F_AVERAGE:
+         if (m_dwCacheSize > 0)
+         {
+            ItemValue result;
+
+            CalculateItemValueAverage(result, m_iDataType,
+                                      min(m_dwCacheSize, (DWORD)nPolls), m_ppValueCache);
+            pValue = new NXSL_Value((TCHAR *)result.String());
+         }
+         else
+         {
+            pValue = new NXSL_Value;
+         }
+         break;
+      default:
+         pValue = new NXSL_Value;
+         break;
+   }
    return pValue;
 }
 

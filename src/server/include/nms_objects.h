@@ -951,6 +951,8 @@ public:
               ((DWORD)time(NULL) - (DWORD)m_tmLastPoll > g_dwConditionPollingInterval))
                   ? TRUE : FALSE;
    }
+
+   int GetCacheSizeForDCI(DWORD dwItemId, BOOL bNoLock);
 };
 
 

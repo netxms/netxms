@@ -279,6 +279,8 @@ void Condition::CreateMessage(CSCPMessage *pMsg)
 DWORD Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    DWORD i, dwId;
+   NetObj *pObject;
+   DCItem *pItem;
 
    if (!bAlreadyLocked)
       LockData();
@@ -332,6 +334,23 @@ DWORD Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
             m_pDCIList[i].nFunction = pRequest->GetVariableShort(dwId++);
             m_pDCIList[i].nPolls = pRequest->GetVariableShort(dwId++);
             dwId += 6;
+         }
+
+         // Update cache size of DCIs
+         for(i = 0; i < m_dwDCICount; i++)
+         {
+            pObject = FindObjectById(m_pDCIList[i].dwNodeId);
+            if (pObject != NULL)
+            {
+               if (pObject->Type() == OBJECT_NODE)
+               {
+                  pItem = ((Node *)pObject)->GetItemById(m_pDCIList[i].dwId);
+                  if (pItem != NULL)
+                  {
+                     pItem->UpdateCacheSize(m_dwId);
+                  }
+               }
+            }
          }
       }
       else
@@ -401,7 +420,7 @@ void Condition::Check(void)
             pItem = ((Node *)pObject)->GetItemById(m_pDCIList[i].dwId);
             if (pItem != NULL)
             {
-               ppValueList[i] = pItem->GetValueForNXSL();
+               ppValueList[i] = pItem->GetValueForNXSL(m_pDCIList[i].nFunction, m_pDCIList[i].nPolls);
             }
          }
       }
@@ -502,4 +521,40 @@ void Condition::Check(void)
          m_pParentList[i]->CalculateCompoundStatus();
       UnlockParentList();
    }
+}
+
+
+//
+// Determine DCI cache size required by condition object
+//
+
+int Condition::GetCacheSizeForDCI(DWORD dwItemId, BOOL bNoLock)
+{
+   DWORD i;
+   int nSize = 0;
+
+   if (!bNoLock)
+      LockData();
+   for(i = 0; i < m_dwDCICount; i++)
+   {
+      if (m_pDCIList[i].dwId == dwItemId)
+      {
+         switch(m_pDCIList[i].nFunction)
+         {
+            case F_LAST:
+               nSize = 1;
+               break;
+            case F_DIFF:
+               nSize = 2;
+               break;
+            default:
+               nSize = m_pDCIList[i].nPolls;
+               break;
+         }
+         break;
+      }
+   }
+   if (!bNoLock)
+      UnlockData();
+   return nSize;
 }

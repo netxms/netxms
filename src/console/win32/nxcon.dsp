@@ -141,6 +141,10 @@ SOURCE=.\comm.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\CondDCIPropDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\CondPropsData.cpp
 # End Source File
 # Begin Source File
@@ -631,6 +635,10 @@ SOURCE=.\AlarmBrowser.h
 # Begin Source File
 
 SOURCE=.\ColorSelector.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\CondDCIPropDlg.h
 # End Source File
 # Begin Source File
 

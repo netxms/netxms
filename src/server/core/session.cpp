@@ -6970,7 +6970,7 @@ DWORD ClientSession::ResolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName
          pItem = ((Node *)pObject)->GetItemById(dwItem);
          if (pItem != NULL)
          {
-            *ppszName = (TCHAR *)pItem->Name();
+            *ppszName = (TCHAR *)pItem->Description();
             dwResult = RCC_SUCCESS;
          }
          else
