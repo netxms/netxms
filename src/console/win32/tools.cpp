@@ -800,3 +800,48 @@ HBITMAP LoadPicture(TCHAR *pszFile, int nScaleFactor)
 
 	return hBitmap;
 }
+
+
+//
+// Save dimensions of all list control columns into registry
+//
+
+void SaveListCtrlColumns(CListCtrl &wndListCtrl, TCHAR *pszSection, TCHAR *pszPrefix)
+{
+   int i;
+   LVCOLUMN lvc;
+   TCHAR szParam[256];
+
+   lvc.mask = LVCF_WIDTH;
+   for(i = 0; wndListCtrl.GetColumn(i, &lvc); i++)
+   {
+      _sntprintf(szParam, 256, _T("%s_%d"), pszPrefix, i);
+      theApp.WriteProfileInt(pszSection, szParam, lvc.cx);
+   }
+
+   _sntprintf(szParam, 256, _T("%s_CNT"), pszPrefix);
+   theApp.WriteProfileInt(pszSection, szParam, i);
+}
+
+
+//
+// Load and set dimensions of all list control columns
+//
+
+void LoadListCtrlColumns(CListCtrl &wndListCtrl, TCHAR *pszSection, TCHAR *pszPrefix)
+{
+   int i, nCount;
+   LVCOLUMN lvc;
+   TCHAR szParam[256];
+
+   _sntprintf(szParam, 256, _T("%s_CNT"), pszPrefix);
+   nCount = theApp.GetProfileInt(pszSection, szParam, 0);
+
+   lvc.mask = LVCF_WIDTH;
+   for(i = 0; i < nCount; i++)
+   {
+      _sntprintf(szParam, 256, _T("%s_%d"), pszPrefix, i);
+      lvc.cx = theApp.GetProfileInt(pszSection, szParam, 50);
+      wndListCtrl.SetColumn(i, &lvc);
+   }
+}

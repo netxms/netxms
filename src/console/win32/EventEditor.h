@@ -21,6 +21,7 @@ public:
 
 // Operations
 public:
+	int CompareListItems(DWORD dwId1, DWORD dwId2);
    DWORD DeleteEvents(DWORD dwNumEvents, DWORD *pdwEventList);
 
 // Overrides
@@ -32,10 +33,12 @@ public:
 
 // Implementation
 protected:
+	int m_iSortMode;
+	int m_iSortDir;
+	int m_iSortImageBase;
 	void UpdateItem(int iItem, NXC_EVENT_TEMPLATE *pData);
 	CImageList *m_pImageList;
 	BOOL EditEvent(int iItem);
-	afx_msg void OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult);
 	DWORD m_dwNumTemplates;
 	NXC_EVENT_TEMPLATE ** m_ppEventTemplates;
 	CListCtrl m_wndListCtrl;
@@ -56,6 +59,8 @@ protected:
 	afx_msg void OnEventDelete();
 	afx_msg void OnUpdateEventList();
 	//}}AFX_MSG
+	afx_msg void OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult);
+   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 

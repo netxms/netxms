@@ -202,6 +202,7 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(2, _T("Message"), LVCFMT_LEFT, 400);
    m_wndListCtrl.InsertColumn(3, _T("Time Stamp"), LVCFMT_LEFT, 135);
    m_wndListCtrl.InsertColumn(4, _T("Ack"), LVCFMT_CENTER, 30);
+   LoadListCtrlColumns(m_wndListCtrl, _T("AlarmBrowser"), _T("ListCtrl"));
 	
    // Mark sorting column in list control
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
@@ -255,6 +256,7 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CAlarmBrowser::OnDestroy() 
 {
+   SaveListCtrlColumns(m_wndListCtrl, _T("AlarmBrowser"), _T("ListCtrl"));
    DoRequestArg2(NXCUnsubscribe, g_hSession, (void *)NXC_CHANNEL_ALARMS,
                  _T("Unsubscribing from ALARMS channel..."));
    theApp.OnViewDestroy(VIEW_ALARMS, this);

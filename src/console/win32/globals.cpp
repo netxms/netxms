@@ -88,10 +88,10 @@ CImageList *g_pObjectNormalImageList = NULL;
 
 TCHAR *g_szStatusText[] = { _T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"),
                             _T("CRITICAL"), _T("UNKNOWN"), _T("UNMANAGED"),
-                            _T("DISABLED"), _T("TESTING") };
+                            _T("DISABLED"), _T("TESTING"), NULL };
 TCHAR *g_szStatusTextSmall[] = { _T("Normal"), _T("Warning"), _T("Minor"), _T("Major"),
                                  _T("Critical"), _T("Unknown"), _T("Unmanaged"),
-                                 _T("Disabled"), _T("Testing") };
+                                 _T("Disabled"), _T("Testing"), NULL };
 TCHAR *g_szObjectClass[] = { _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"), _T("Network"), 
                              _T("Container"), _T("Zone"), _T("ServiceRoot"), _T("Template"), 
                              _T("TemplateGroup"), _T("TemplateRoot"), _T("NetworkService"),

@@ -281,7 +281,7 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Create list view control
    m_wndListCtrl.Create(WS_CHILD | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, rect, this, IDC_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | 
-                                  LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+                                  LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_LABELTIP);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
    // Setup list view columns

@@ -78,6 +78,73 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V41 to V42
+//
+
+static BOOL H_UpgradeFromV41(void)
+{
+   static TCHAR m_szBatch[] =
+	   "INSERT INTO images (image_id,name,file_name_png,file_hash_png,"
+         "file_name_ico,file_hash_ico) VALUES (15,'Obj.Condition',"
+         "'condition.png','<invalid_hash>','condition.ico','<invalid_hash>')\n"
+	   "INSERT INTO default_images (object_class,image_id) VALUES (13, 15)\n"
+	   "INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) "
+	      "VALUES (1,'.1.3.6.1.4.1.3224.1.*',2,0)\n"
+	   "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) "
+         "VALUES (34,'SYS_CONDITION_ACTIVATED',2,1,'Condition \"%2\" activated',"
+			"'Default event for condition activation.#0D#0AParameters:#0D#0A"
+			"   1) Condition object ID#0D#0A   2) Condition object name#0D#0A"
+			"   3) Previous condition status#0D#0A   4) Current condition status')\n"
+	   "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) "
+         "VALUES (35,'SYS_CONDITION_DEACTIVATED',0,1,'Condition \"%2\" deactivated',"
+			"'Default event for condition deactivation.#0D#0AParameters:#0D#0A"
+			"   1) Condition object ID#0D#0A   2) Condition object name#0D#0A"
+			"   3) Previous condition status#0D#0A   4) Current condition status')\n"
+      "<END>";
+
+   if (!CreateTable(_T("CREATE TABLE conditions	("
+		                 "id integer not null,"
+		                 "activation_event integer not null,"
+		                 "deactivation_event integer not null,"
+		                 "source_object integer not null,"
+		                 "active_status integer not null,"
+		                 "inactive_status integer not null,"
+		                 "script $SQL:TEXT not null,"
+		                 "PRIMARY KEY(id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE cond_dci_map ("
+		                 "condition_id integer not null,"
+		                 "dci_id integer not null,"
+		                 "node_id integer not null,"
+		                 "dci_func integer not null,"
+		                 "num_polls integer not null,"
+		                 "PRIMARY KEY(condition_id,dci_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("NumberOfConditionPollers"), _T("10"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("ConditionPollingInterval"), _T("60"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='42' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V40 to V41
 //
 
@@ -1823,6 +1890,7 @@ static struct
    { 38, H_UpgradeFromV38 },
    { 39, H_UpgradeFromV39 },
    { 40, H_UpgradeFromV40 },
+   { 41, H_UpgradeFromV41 },
    { 0, NULL }
 };
 

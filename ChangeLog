@@ -2,10 +2,12 @@
 * 0.2.12
 *
 
+- Added possibility to define complicated conditions using "condition" objects
 - Implemented RADIUS authentication for NetXMS users
 - Added support for compressed MIB files
 - New MIBs added: ENTITY-MIB
 - Added support for DRBD device monitoring
+- Windows console: Event editor improved
 - Fixed issues: ???
 
 
