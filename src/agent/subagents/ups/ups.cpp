@@ -29,9 +29,17 @@
 
 UPSInterface::UPSInterface(TCHAR *pszDevice)
 {
+   int i;
+
    m_pszName = NULL;
    m_pszDevice = _tcsdup(pszDevice);
    m_bIsConnected = FALSE;
+   memset(m_paramList, 0, sizeof(UPS_PARAMETER) * UPS_PARAM_COUNT);
+   for(i = 0; i < UPS_PARAM_COUNT; i++)
+      m_paramList[i].dwFlags |= UPF_NULL_VALUE;
+   m_mutex = MutexCreate();
+   m_condStop = ConditionCreate(TRUE);
+   m_thCommThread = INVALID_THREAD_HANDLE;
 }
 
 
@@ -41,8 +49,12 @@ UPSInterface::UPSInterface(TCHAR *pszDevice)
 
 UPSInterface::~UPSInterface()
 {
+   ConditionSet(m_condStop);
+   ThreadJoin(m_thCommThread);
    safe_free(m_pszDevice);
    safe_free(m_pszName);
+   MutexDestroy(m_mutex);
+   ConditionDestroy(m_condStop);
 }
 
 
@@ -88,70 +100,230 @@ void UPSInterface::Close(void)
 
 
 //
-// Methods need to be overriden
+// Validate connection to the UPS
 //
 
-LONG UPSInterface::GetModel(TCHAR *pszBuffer)
+BOOL UPSInterface::ValidateConnection(void)
 {
-   return SYSINFO_RC_UNSUPPORTED;
+   return FALSE;
 }
 
-LONG UPSInterface::GetFirmwareVersion(TCHAR *pszBuffer)
+
+//
+// Get parameter's value
+//
+
+LONG UPSInterface::GetParameter(int nParam, TCHAR *pszValue)
 {
-   return SYSINFO_RC_UNSUPPORTED;
+   LONG nRet;
+
+   if ((nParam < 0) || (nParam >= UPS_PARAM_COUNT))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   MutexLock(m_mutex, INFINITE);
+
+   if (m_paramList[nParam].dwFlags & UPF_NOT_SUPPORTED)
+   {
+      nRet = SYSINFO_RC_UNSUPPORTED;
+   }
+   else if (m_paramList[nParam].dwFlags & UPF_NULL_VALUE)
+   {
+      nRet = SYSINFO_RC_ERROR;
+   }
+   else
+   {
+      _tcscpy(pszValue, m_paramList[nParam].szValue);
+      nRet = SYSINFO_RC_SUCCESS;
+   }
+
+   MutexUnlock(m_mutex);
+   return nRet;
 }
 
-LONG UPSInterface::GetMfgDate(TCHAR *pszBuffer)
+
+//
+// Parameter query methods need to be overriden
+//
+
+void UPSInterface::QueryModel(void)
 {
-   return SYSINFO_RC_UNSUPPORTED;
+   m_paramList[UPS_PARAM_MODEL].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-LONG UPSInterface::GetSerialNumber(TCHAR *pszBuffer)
+void UPSInterface::QueryFirmwareVersion(void)
 {
-   return SYSINFO_RC_UNSUPPORTED;
+   m_paramList[UPS_PARAM_FIRMWARE].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-LONG UPSInterface::GetTemperature(LONG *pnTemp)
+void UPSInterface::QueryMfgDate(void)
 {
-   return SYSINFO_RC_UNSUPPORTED;
+   m_paramList[UPS_PARAM_MFG_DATE].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-LONG UPSInterface::GetBatteryVoltage(double *pdVoltage)
+void UPSInterface::QuerySerialNumber(void)
 {
-   return SYSINFO_RC_UNSUPPORTED;
+   m_paramList[UPS_PARAM_SERIAL].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-LONG UPSInterface::GetNominalBatteryVoltage(double *pdVoltage)
+void UPSInterface::QueryTemperature(void)
 {
-   return SYSINFO_RC_UNSUPPORTED;
+   m_paramList[UPS_PARAM_TEMP].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-LONG UPSInterface::GetBatteryLevel(LONG *pnLevel)
+void UPSInterface::QueryBatteryVoltage(void)
 {
-   return SYSINFO_RC_UNSUPPORTED;
+   m_paramList[UPS_PARAM_BATTERY_VOLTAGE].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-LONG UPSInterface::GetInputVoltage(double *pdVoltage)
+void UPSInterface::QueryNominalBatteryVoltage(void)
 {
-   return SYSINFO_RC_UNSUPPORTED;
+   m_paramList[UPS_PARAM_NOMINAL_BATT_VOLTAGE].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-LONG UPSInterface::GetOutputVoltage(double *pdVoltage)
+void UPSInterface::QueryBatteryLevel(void)
 {
-   return SYSINFO_RC_UNSUPPORTED;
+   m_paramList[UPS_PARAM_BATTERY_LEVEL].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-LONG UPSInterface::GetLineFrequency(LONG *pnFrequency)
+void UPSInterface::QueryInputVoltage(void)
 {
-   return SYSINFO_RC_UNSUPPORTED;
+   m_paramList[UPS_PARAM_INPUT_VOLTAGE].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-LONG UPSInterface::GetPowerLoad(LONG *pnLoad)
+void UPSInterface::QueryOutputVoltage(void)
 {
-   return SYSINFO_RC_UNSUPPORTED;
+   m_paramList[UPS_PARAM_OUTPUT_VOLTAGE].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
-LONG UPSInterface::GetEstimatedRuntime(LONG *pnMinutes)
+void UPSInterface::QueryLineFrequency(void)
 {
-   return SYSINFO_RC_UNSUPPORTED;
+   m_paramList[UPS_PARAM_LINE_FREQ].dwFlags |= UPF_NOT_SUPPORTED;
+}
+
+void UPSInterface::QueryPowerLoad(void)
+{
+   m_paramList[UPS_PARAM_LOAD].dwFlags |= UPF_NOT_SUPPORTED;
+}
+
+void UPSInterface::QueryEstimatedRuntime(void)
+{
+   m_paramList[UPS_PARAM_EST_RUNTIME].dwFlags |= UPF_NOT_SUPPORTED;
+}
+
+
+//
+// Communication thread starter
+//
+
+THREAD_RESULT THREAD_CALL UPSInterface::CommThreadStarter(void *pArg)
+{
+   ((UPSInterface *)pArg)->CommThread();
+   return THREAD_OK;
+}
+
+
+//
+// Start communication thread
+//
+
+void UPSInterface::StartCommunication(void)
+{
+   m_thCommThread = ThreadCreateEx(CommThreadStarter, 0, this);
+}
+
+
+//
+// Communication thread
+//
+
+void UPSInterface::CommThread(void)
+{
+   int nIteration;
+
+   // Try to open device immediatelly after start
+   if (Open())
+   {
+      NxWriteAgentLog(EVENTLOG_INFORMATION_TYPE, _T("UPS: Established communication with device #%d \"%s\""), m_nIndex, m_pszName);
+
+      // Open successfully, query all parameters
+      MutexLock(m_mutex, INFINITE);
+      QueryModel();
+      QueryFirmwareVersion();
+      QueryMfgDate();
+      QuerySerialNumber();
+      QueryTemperature();
+      QueryBatteryVoltage();
+      QueryNominalBatteryVoltage();
+      QueryBatteryLevel();
+      QueryInputVoltage();
+      QueryOutputVoltage();
+      QueryLineFrequency();
+      QueryPowerLoad();
+      QueryEstimatedRuntime();
+      MutexUnlock(m_mutex);
+   }
+   else
+   {
+      NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("UPS: Cannot establish communication with device #%d \"%s\""), m_nIndex, m_pszName);
+   }
+
+   for(nIteration = 0; ; nIteration++)
+   {
+      if (ConditionWait(m_condStop, 10000))
+         break;
+
+      // Try to connect to device if it is not connected
+      if (!m_bIsConnected)
+      {
+         if (Open())
+         {
+            NxWriteAgentLog(EVENTLOG_INFORMATION_TYPE, _T("UPS: Established communication with device #%d \"%s\""), m_nIndex, m_pszName);
+            nIteration = 100;    // Force all parameters to be polled
+         }
+      }
+      else  // Validate connection
+      {
+         if (!ValidateConnection())
+         {
+            // Try to reconnect
+            Close();
+            if (Open())
+            {
+               nIteration = 100;    // Force all parameters to be polled
+            }
+            else
+            {
+               NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("UPS: Lost communication with device #%d \"%s\""), m_nIndex, m_pszName);
+            }
+         }
+      }
+
+      // Query parameters if we are connected
+      if (m_bIsConnected)
+      {
+         MutexLock(m_mutex, INFINITE);
+
+         // Check rarely changing parameters only every 100th poll
+         if (nIteration == 100)
+         {
+            nIteration = 0;
+            QueryModel();
+            QueryFirmwareVersion();
+            QueryMfgDate();
+            QuerySerialNumber();
+         }
+
+         QueryTemperature();
+         QueryBatteryVoltage();
+         QueryNominalBatteryVoltage();
+         QueryBatteryLevel();
+         QueryInputVoltage();
+         QueryOutputVoltage();
+         QueryLineFrequency();
+         QueryPowerLoad();
+         QueryEstimatedRuntime();
+
+         MutexUnlock(m_mutex);
+      }
+   }
 }

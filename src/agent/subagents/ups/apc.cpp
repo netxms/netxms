@@ -24,6 +24,90 @@
 
 
 //
+// Data types for CheckNA()
+//
+
+#define TYPE_STRING  0
+#define TYPE_LONG    1
+#define TYPE_DOUBLE  2
+
+
+//
+// Check if UPS reports parameter value as NA and set parameter's
+// flags acordingly. 
+//
+
+static void CheckNA(UPS_PARAMETER *p, int nType)
+{
+   LONG nVal;
+   double dVal;
+   char *pErr;
+
+   if (!_tcscmp(p->szValue, _T("NA")))
+   {
+      p->dwFlags |= UPF_NOT_SUPPORTED;
+   }
+   else
+   {
+      p->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+      switch(nType)
+      {
+         case TYPE_LONG:
+            nVal = strtol(p->szValue, &pErr, 10);
+            if (*pErr == 0)
+            {
+               sprintf(p->szValue, "%d", nVal);
+            }
+            else
+            {
+               p->dwFlags |= UPF_NULL_VALUE;
+            }
+            break;
+         case TYPE_DOUBLE:
+            dVal = strtod(p->szValue, &pErr);
+            if (*pErr == 0)
+            {
+               sprintf(p->szValue, "%f", dVal);
+            }
+            else
+            {
+               p->dwFlags |= UPF_NULL_VALUE;
+            }
+            break;
+         default:
+            break;
+      }
+   }
+}
+
+
+//
+// Query parameter from device
+//
+
+void APCInterface::QueryParameter(char *pszRq, UPS_PARAMETER *p, int nType, int chSep)
+{
+   char *pch;
+
+   m_serial.Write(pszRq, 1);
+   if (ReadLineFromSerial(p->szValue, MAX_RESULT_LENGTH))
+   {
+      if (chSep != -1)
+      {
+         pch = strchr(p->szValue, chSep);
+         if (pch != NULL)
+            *pch = 0;
+      }
+      CheckNA(p, nType);
+   }
+   else
+   {
+      p->dwFlags |= UPF_NULL_VALUE;
+   }
+}
+
+
+//
 // Open device
 //
 
@@ -56,13 +140,27 @@ BOOL APCInterface::Open(void)
 
 
 //
+// Validate connection
+//
+
+BOOL APCInterface::ValidateConnection(void)
+{
+   BOOL bRet;
+   char szLine[256];
+
+   m_serial.Write("Y", 1);
+   bRet = ReadLineFromSerial(szLine, 256);
+   return (bRet && !strcmp(szLine, "SM"));
+}
+
+
+//
 // Get UPS model
 //
 
-LONG APCInterface::GetModel(TCHAR *pszBuffer)
+void APCInterface::QueryModel(void)
 {
-   m_serial.Write("\x01", 1);
-   return ReadLineFromSerial(pszBuffer, MAX_RESULT_LENGTH) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_UNSUPPORTED;
+   QueryParameter("\x01", &m_paramList[UPS_PARAM_MODEL], TYPE_STRING, -1);
 }
 
 
@@ -70,7 +168,7 @@ LONG APCInterface::GetModel(TCHAR *pszBuffer)
 // Get UPS firmware version
 //
 
-LONG APCInterface::GetFirmwareVersion(TCHAR *pszBuffer)
+void APCInterface::QueryFirmwareVersion(void)
 {
    char szRev[256], szVer[256];
 
@@ -86,9 +184,16 @@ LONG APCInterface::GetFirmwareVersion(TCHAR *pszBuffer)
       szRev[0] = 0;
    }
       
-   snprintf(pszBuffer, MAX_RESULT_LENGTH, "%s%s%s", szVer,
-            ((szVer[0] != 0) && (szRev[0] != 0)) ? " " : "", szRev);
-   return ((szVer[0] != 0) || (szRev[0] != 0)) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_UNSUPPORTED;
+   if ((szVer[0] != 0) || (szRev[0] != 0))
+   {
+      snprintf(m_paramList[UPS_PARAM_FIRMWARE].szValue, MAX_RESULT_LENGTH, "%s%s%s", szVer,
+               ((szVer[0] != 0) && (szRev[0] != 0)) ? " " : "", szRev);
+      m_paramList[UPS_PARAM_FIRMWARE].dwFlags &= ~UPF_NULL_VALUE;
+   }
+   else
+   {
+      m_paramList[UPS_PARAM_FIRMWARE].dwFlags |= UPF_NULL_VALUE;
+   }
 }
 
 
@@ -96,10 +201,9 @@ LONG APCInterface::GetFirmwareVersion(TCHAR *pszBuffer)
 // Get manufacturing date
 //
 
-LONG APCInterface::GetMfgDate(TCHAR *pszBuffer)
+void APCInterface::QueryMfgDate(void)
 {
-   m_serial.Write("m", 1);
-   return ReadLineFromSerial(pszBuffer, MAX_RESULT_LENGTH) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_UNSUPPORTED;
+   QueryParameter("m", &m_paramList[UPS_PARAM_MFG_DATE], TYPE_STRING, -1);
 }
 
 
@@ -107,10 +211,9 @@ LONG APCInterface::GetMfgDate(TCHAR *pszBuffer)
 // Get serial number
 //
 
-LONG APCInterface::GetSerialNumber(TCHAR *pszBuffer)
+void APCInterface::QuerySerialNumber(void)
 {
-   m_serial.Write("n", 1);
-   return ReadLineFromSerial(pszBuffer, MAX_RESULT_LENGTH) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_UNSUPPORTED;
+   QueryParameter("n", &m_paramList[UPS_PARAM_SERIAL], TYPE_STRING, -1);
 }
 
 
@@ -118,24 +221,9 @@ LONG APCInterface::GetSerialNumber(TCHAR *pszBuffer)
 // Get temperature inside UPS
 //
 
-LONG APCInterface::GetTemperature(LONG *pnTemp)
+void APCInterface::QueryTemperature(void)
 {
-   char *pErr, szLine[256];
-   LONG nRet = SYSINFO_RC_UNSUPPORTED;
-
-   m_serial.Write("C", 1);
-   if (ReadLineFromSerial(szLine, 256))
-   {
-      if (strcmp(szLine, "NA"))
-      {
-         pErr = strchr(szLine, '.');
-         if (pErr != NULL)
-            *pErr = 0;
-         *pnTemp = strtol(szLine, &pErr, 10);
-         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
-      }
-   }
-   return nRet;
+   QueryParameter("C", &m_paramList[UPS_PARAM_TEMP], TYPE_LONG, '.');
 }
 
 
@@ -143,21 +231,9 @@ LONG APCInterface::GetTemperature(LONG *pnTemp)
 // Get battery voltage
 //
 
-LONG APCInterface::GetBatteryVoltage(double *pdVoltage)
+void APCInterface::QueryBatteryVoltage(void)
 {
-   char *pErr, szLine[256];
-   LONG nRet = SYSINFO_RC_UNSUPPORTED;
-
-   m_serial.Write("B", 1);
-   if (ReadLineFromSerial(szLine, 256))
-   {
-      if (strcmp(szLine, "NA"))
-      {
-         *pdVoltage = strtod(szLine, &pErr);
-         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
-      }
-   }
-   return nRet;
+   QueryParameter("B", &m_paramList[UPS_PARAM_BATTERY_VOLTAGE], TYPE_DOUBLE, -1);
 }
 
 
@@ -165,21 +241,9 @@ LONG APCInterface::GetBatteryVoltage(double *pdVoltage)
 // Get nominal battery voltage
 //
 
-LONG APCInterface::GetNominalBatteryVoltage(double *pdVoltage)
+void APCInterface::QueryNominalBatteryVoltage(void)
 {
-   char *pErr, szLine[256];
-   LONG nRet = SYSINFO_RC_UNSUPPORTED;
-
-   m_serial.Write("g", 1);
-   if (ReadLineFromSerial(szLine, 256))
-   {
-      if (strcmp(szLine, "NA"))
-      {
-         *pdVoltage = strtod(szLine, &pErr);
-         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
-      }
-   }
-   return nRet;
+   QueryParameter("g", &m_paramList[UPS_PARAM_NOMINAL_BATT_VOLTAGE], TYPE_DOUBLE, -1);
 }
 
 
@@ -187,24 +251,9 @@ LONG APCInterface::GetNominalBatteryVoltage(double *pdVoltage)
 // Get battery level (in percents)
 //
 
-LONG APCInterface::GetBatteryLevel(LONG *pnLevel)
+void APCInterface::QueryBatteryLevel(void)
 {
-   char *pErr, szLine[256];
-   LONG nRet = SYSINFO_RC_UNSUPPORTED;
-
-   m_serial.Write("f", 1);
-   if (ReadLineFromSerial(szLine, 256))
-   {
-      if (strcmp(szLine, "NA"))
-      {
-         pErr = strchr(szLine, '.');
-         if (pErr != NULL)
-            *pErr = 0;
-         *pnLevel = strtol(szLine, &pErr, 10);
-         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
-      }
-   }
-   return nRet;
+   QueryParameter("f", &m_paramList[UPS_PARAM_BATTERY_LEVEL], TYPE_LONG, '.');
 }
 
 
@@ -212,21 +261,9 @@ LONG APCInterface::GetBatteryLevel(LONG *pnLevel)
 // Get input line voltage
 //
 
-LONG APCInterface::GetInputVoltage(double *pdVoltage)
+void APCInterface::QueryInputVoltage(void)
 {
-   char *pErr, szLine[256];
-   LONG nRet = SYSINFO_RC_UNSUPPORTED;
-
-   m_serial.Write("L", 1);
-   if (ReadLineFromSerial(szLine, 256))
-   {
-      if (strcmp(szLine, "NA"))
-      {
-         *pdVoltage = strtod(szLine, &pErr);
-         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
-      }
-   }
-   return nRet;
+   QueryParameter("L", &m_paramList[UPS_PARAM_INPUT_VOLTAGE], TYPE_DOUBLE, -1);
 }
 
 
@@ -234,21 +271,9 @@ LONG APCInterface::GetInputVoltage(double *pdVoltage)
 // Get output voltage
 //
 
-LONG APCInterface::GetOutputVoltage(double *pdVoltage)
+void APCInterface::QueryOutputVoltage(void)
 {
-   char *pErr, szLine[256];
-   LONG nRet = SYSINFO_RC_UNSUPPORTED;
-
-   m_serial.Write("O", 1);
-   if (ReadLineFromSerial(szLine, 256))
-   {
-      if (strcmp(szLine, "NA"))
-      {
-         *pdVoltage = strtod(szLine, &pErr);
-         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
-      }
-   }
-   return nRet;
+   QueryParameter("O", &m_paramList[UPS_PARAM_OUTPUT_VOLTAGE], TYPE_DOUBLE, -1);
 }
 
 
@@ -256,24 +281,9 @@ LONG APCInterface::GetOutputVoltage(double *pdVoltage)
 // Get line frequency (Hz)
 //
 
-LONG APCInterface::GetLineFrequency(LONG *pnFrequency)
+void APCInterface::QueryLineFrequency(void)
 {
-   char *pErr, szLine[256];
-   LONG nRet = SYSINFO_RC_UNSUPPORTED;
-
-   m_serial.Write("F", 1);
-   if (ReadLineFromSerial(szLine, 256))
-   {
-      if (strcmp(szLine, "NA"))
-      {
-         pErr = strchr(szLine, '.');
-         if (pErr != NULL)
-            *pErr = 0;
-         *pnFrequency = strtol(szLine, &pErr, 10);
-         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
-      }
-   }
-   return nRet;
+   QueryParameter("F", &m_paramList[UPS_PARAM_LINE_FREQ], TYPE_LONG, '.');
 }
 
 
@@ -281,24 +291,9 @@ LONG APCInterface::GetLineFrequency(LONG *pnFrequency)
 // Get UPS power load (in percents)
 //
 
-LONG APCInterface::GetPowerLoad(LONG *pnLoad)
+void APCInterface::QueryPowerLoad(void)
 {
-   char *pErr, szLine[256];
-   LONG nRet = SYSINFO_RC_UNSUPPORTED;
-
-   m_serial.Write("P", 1);
-   if (ReadLineFromSerial(szLine, 256))
-   {
-      if (strcmp(szLine, "NA"))
-      {
-         pErr = strchr(szLine, '.');
-         if (pErr != NULL)
-            *pErr = 0;
-         *pnLoad = strtol(szLine, &pErr, 10);
-         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
-      }
-   }
-   return nRet;
+   QueryParameter("P", &m_paramList[UPS_PARAM_LOAD], TYPE_LONG, '.');
 }
 
 
@@ -306,22 +301,7 @@ LONG APCInterface::GetPowerLoad(LONG *pnLoad)
 // Get estimated on-battery runtime
 //
 
-LONG APCInterface::GetEstimatedRuntime(LONG *pnMinutes)
+void APCInterface::QueryEstimatedRuntime(void)
 {
-   char *pErr, szLine[256];
-   LONG nRet = SYSINFO_RC_UNSUPPORTED;
-
-   m_serial.Write("j", 1);
-   if (ReadLineFromSerial(szLine, 256))
-   {
-      if (strcmp(szLine, "NA"))
-      {
-         pErr = strchr(szLine, ':');
-         if (pErr != NULL)
-            *pErr = 0;
-         *pnMinutes = strtol(szLine, &pErr, 10);
-         nRet = ((*pErr == 0) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR);
-      }
-   }
-   return nRet;
+   QueryParameter("j", &m_paramList[UPS_PARAM_EST_RUNTIME], TYPE_LONG, ':');
 }

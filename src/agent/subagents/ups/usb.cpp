@@ -212,6 +212,18 @@ void USBInterface::Close(void)
 
 
 //
+// Validate connection
+//
+
+BOOL USBInterface::ValidateConnection(void)
+{
+   WCHAR wszSerial[256];
+
+   return HidD_GetSerialNumberString(m_hDev, wszSerial, 256 * sizeof(WCHAR));
+}
+
+
+//
 // Read integer value from device
 //
 
@@ -290,12 +302,73 @@ LONG USBInterface::ReadIndexedString(USAGE uPage, USAGE uUsage, TCHAR *pszBuffer
 
 
 //
+// Read string parameter
+//
+
+void USBInterface::ReadStringParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pParam)
+{
+   LONG nRet;
+
+   nRet = ReadIndexedString(nPage, nUsage, pParam->szValue, MAX_RESULT_LENGTH);
+   switch(nRet)
+   {
+      case SYSINFO_RC_SUCCESS:
+         pParam->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+         break;
+      case SYSINFO_RC_ERROR:
+         pParam->dwFlags |= UPF_NULL_VALUE;
+         break;
+      case SYSINFO_RC_UNSUPPORTED:
+         pParam->dwFlags |= UPF_NOT_SUPPORTED;
+         break;
+   }
+}
+
+
+//
+// Read integer parameter
+//
+
+void USBInterface::ReadIntParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pParam,
+                                int nDiv, BOOL bDouble)
+{
+   LONG nRet, nValue;
+   double dValue;
+
+   nRet = ReadInt(nPage, nUsage, &nValue);
+   switch(nRet)
+   {
+      case SYSINFO_RC_SUCCESS:
+         pParam->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+         if (bDouble)
+         {
+            dValue = (nDiv != 0) ? (double)nValue / nDiv : nValue;
+            sprintf(pParam->szValue, "%f", dValue);
+         }
+         else
+         {
+            if (nDiv != 0)
+               nValue /= nDiv;
+            sprintf(pParam->szValue, "%d", nValue);
+         }
+         break;
+      case SYSINFO_RC_ERROR:
+         pParam->dwFlags |= UPF_NULL_VALUE;
+         break;
+      case SYSINFO_RC_UNSUPPORTED:
+         pParam->dwFlags |= UPF_NOT_SUPPORTED;
+         break;
+   }
+}
+
+
+//
 // Get model name
 //
 
-LONG USBInterface::GetModel(TCHAR *pszBuffer)
+void USBInterface::QueryModel(void)
 {
-   return ReadIndexedString(0x84, 0xFE, pszBuffer, MAX_RESULT_LENGTH);
+   ReadStringParam(0x84, 0xFE, &m_paramList[UPS_PARAM_MODEL]);
 }
 
 
@@ -303,9 +376,9 @@ LONG USBInterface::GetModel(TCHAR *pszBuffer)
 // Get serial number
 //
 
-LONG USBInterface::GetSerialNumber(TCHAR *pszBuffer)
+void USBInterface::QuerySerialNumber(void)
 {
-   return ReadIndexedString(0x84, 0xFF, pszBuffer, MAX_RESULT_LENGTH);
+   ReadStringParam(0x84, 0xFF, &m_paramList[UPS_PARAM_SERIAL]);
 }
 
 
@@ -313,13 +386,9 @@ LONG USBInterface::GetSerialNumber(TCHAR *pszBuffer)
 // Get battery voltage
 //
 
-LONG USBInterface::GetBatteryVoltage(double *pdVoltage)
+void USBInterface::QueryBatteryVoltage(void)
 {
-   LONG nVal, nRet;
-   nRet = ReadInt(0x84, 0x30, &nVal);
-   if (nRet == SYSINFO_RC_SUCCESS)
-      *pdVoltage = (double)nVal / 100;
-   return nRet;
+   ReadIntParam(0x84, 0x30, &m_paramList[UPS_PARAM_BATTERY_VOLTAGE], 100, TRUE);
 }
 
 
@@ -327,13 +396,9 @@ LONG USBInterface::GetBatteryVoltage(double *pdVoltage)
 // Get nominal battery voltage
 //
 
-LONG USBInterface::GetNominalBatteryVoltage(double *pdVoltage)
+void USBInterface::QueryNominalBatteryVoltage(void)
 {
-   LONG nVal, nRet;
-   nRet = ReadInt(0x84, 0x40, &nVal);
-   if (nRet == SYSINFO_RC_SUCCESS)
-      *pdVoltage = (double)nVal / 100;
-   return nRet;
+   ReadIntParam(0x84, 0x40, &m_paramList[UPS_PARAM_NOMINAL_BATT_VOLTAGE], 100, TRUE);
 }
 
 
@@ -341,9 +406,9 @@ LONG USBInterface::GetNominalBatteryVoltage(double *pdVoltage)
 // Battery level
 //
 
-LONG USBInterface::GetBatteryLevel(LONG *pnLevel)
+void USBInterface::QueryBatteryLevel(void)
 {
-   return ReadInt(0x85, 0x66, pnLevel);
+   ReadIntParam(0x85, 0x66, &m_paramList[UPS_PARAM_BATTERY_LEVEL], 0, FALSE);
 }
 
 
@@ -351,14 +416,9 @@ LONG USBInterface::GetBatteryLevel(LONG *pnLevel)
 // UPS load (in percents)
 //
 
-LONG USBInterface::GetPowerLoad(LONG *pnLoad)
+void USBInterface::QueryPowerLoad(void)
 {
-   LONG nRet;
-
-   nRet = ReadInt(0x84, 0x35, pnLoad);
-   if (nRet == SYSINFO_RC_SUCCESS)
-      *pnLoad /= 10;
-   return nRet;
+   ReadIntParam(0x84, 0x35, &m_paramList[UPS_PARAM_LOAD], 10, FALSE);
 }
 
 
@@ -366,12 +426,7 @@ LONG USBInterface::GetPowerLoad(LONG *pnLoad)
 // Estimated on-battery run time
 //
 
-LONG USBInterface::GetEstimatedRuntime(LONG *pnMinutes)
+void USBInterface::QueryEstimatedRuntime(void)
 {
-   LONG nRet;
-
-   nRet = ReadInt(0x85, 0x68, pnMinutes);
-   if (nRet == SYSINFO_RC_SUCCESS)
-      *pnMinutes /= 60;
-   return nRet;
+   ReadIntParam(0x85, 0x68, &m_paramList[UPS_PARAM_EST_RUNTIME], 60, FALSE);
 }

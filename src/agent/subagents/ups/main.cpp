@@ -36,10 +36,8 @@ static UPSInterface *m_deviceInfo[MAX_UPS_DEVICES];
 
 static LONG H_UPSData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 {
-   LONG nRet, nDev, nValue;
-   double dValue;
+   LONG nDev;
    TCHAR *pErr, szArg[256];
-   BOOL bFirstTry = TRUE;
 
    if (!NxGetParameterArg(pszParam, 1, szArg, 256))
       return SYSINFO_RC_UNSUPPORTED;
@@ -52,85 +50,9 @@ static LONG H_UPSData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
       return SYSINFO_RC_UNSUPPORTED;
 
    if (!m_deviceInfo[nDev]->IsConnected())
-      if (!m_deviceInfo[nDev]->Open())
-         return SYSINFO_RC_ERROR;
+      return SYSINFO_RC_ERROR;
 
-restart_query:
-   switch(*((char *)pArg))
-   {
-      case 'B':   // Battery voltage
-         nRet = m_deviceInfo[nDev]->GetBatteryVoltage(&dValue);
-         if (nRet == SYSINFO_RC_SUCCESS)
-            ret_double(pValue, dValue);
-         break;
-      case 'b':   // Nominal battery voltage
-         nRet = m_deviceInfo[nDev]->GetNominalBatteryVoltage(&dValue);
-         if (nRet == SYSINFO_RC_SUCCESS)
-            ret_double(pValue, dValue);
-         break;
-      case 'E':   // Estimated runtime
-         nRet = m_deviceInfo[nDev]->GetEstimatedRuntime(&nValue);
-         if (nRet == SYSINFO_RC_SUCCESS)
-            ret_int(pValue, nValue);
-         break;
-      case 'F':   // Firmware version
-         nRet = m_deviceInfo[nDev]->GetFirmwareVersion(pValue);
-         break;
-      case 'f':   // Line frequency
-         nRet = m_deviceInfo[nDev]->GetLineFrequency(&nValue);
-         if (nRet == SYSINFO_RC_SUCCESS)
-            ret_int(pValue, nValue);
-         break;
-      case 'I':   // Input voltage
-         nRet = m_deviceInfo[nDev]->GetInputVoltage(&dValue);
-         if (nRet == SYSINFO_RC_SUCCESS)
-            ret_double(pValue, dValue);
-         break;
-      case 'L':   // Battery level
-         nRet = m_deviceInfo[nDev]->GetBatteryLevel(&nValue);
-         if (nRet == SYSINFO_RC_SUCCESS)
-            ret_int(pValue, nValue);
-         break;
-      case 'l':   // Load
-         nRet = m_deviceInfo[nDev]->GetPowerLoad(&nValue);
-         if (nRet == SYSINFO_RC_SUCCESS)
-            ret_int(pValue, nValue);
-         break;
-      case 'M':   // Model
-         nRet = m_deviceInfo[nDev]->GetModel(pValue);
-         break;
-      case 'm':   // Manufacturing date
-         nRet = m_deviceInfo[nDev]->GetMfgDate(pValue);
-         break;
-      case 'O':   // Output voltage
-         nRet = m_deviceInfo[nDev]->GetOutputVoltage(&dValue);
-         if (nRet == SYSINFO_RC_SUCCESS)
-            ret_double(pValue, dValue);
-         break;
-      case 'S':   // Serial number
-         nRet = m_deviceInfo[nDev]->GetSerialNumber(pValue);
-         break;
-      case 'T':   // Temperature
-         nRet = m_deviceInfo[nDev]->GetTemperature(&nValue);
-         if (nRet == SYSINFO_RC_SUCCESS)
-            ret_int(pValue, nValue);
-         break;
-      default:
-         nRet = SYSINFO_RC_UNSUPPORTED;
-         break;
-   }
-
-   if ((nRet == SYSINFO_RC_ERROR) && bFirstTry)
-   {
-      // Try to re-connect in case of error
-      m_deviceInfo[nDev]->Close();
-      if (m_deviceInfo[nDev]->Open())
-      {
-         bFirstTry = FALSE;
-         goto restart_query;
-      }
-   }
-   return nRet;
+   return m_deviceInfo[nDev]->GetParameter(CAST_FROM_POINTER(pArg, int), pValue);
 }
 
 
@@ -167,7 +89,6 @@ static void UnloadHandler(void)
    for(i = 0; i < MAX_UPS_DEVICES; i++)
       if (m_deviceInfo[i] != NULL)
       {
-         m_deviceInfo[i]->Close();
          delete_and_null(m_deviceInfo[i]);
       }
 }
@@ -306,6 +227,7 @@ static BOOL AddDeviceFromConfig(TCHAR *pszStr)
             break;
       }
       m_deviceInfo[nDev]->SetName(szName);
+      m_deviceInfo[nDev]->SetIndex(nDev);
    }
 
    return ((nState == -1) && (nField >= 3));
@@ -318,19 +240,70 @@ static BOOL AddDeviceFromConfig(TCHAR *pszStr)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("UPS.BatteryLevel(*)"), H_UPSData, "L", DCI_DT_INT, _T("UPS {instance} battery charge level") },
-   { _T("UPS.BatteryVoltage(*)"), H_UPSData, "B", DCI_DT_FLOAT, _T("UPS {instance} battery voltage") },
-   { _T("UPS.EstimatedRuntime(*)"), H_UPSData, "E", DCI_DT_INT, _T("UPS {instance} estimated on-battery runtime (minutes)") },
-   { _T("UPS.Firmware(*)"), H_UPSData, "F", DCI_DT_STRING, _T("UPS {instance} firmware version") },
-   { _T("UPS.InputVoltage(*)"), H_UPSData, "I", DCI_DT_FLOAT, _T("UPS {instance} input line voltage") },
-   { _T("UPS.LineFrequency(*)"), H_UPSData, "f", DCI_DT_INT, _T("UPS {instance} input line frequency") },
-   { _T("UPS.Load(*)"), H_UPSData, "l", DCI_DT_INT, _T("UPS {instance} load") },
-   { _T("UPS.MfgDate(*)"), H_UPSData, "m", DCI_DT_STRING, _T("UPS {instance} manufacturing date") },
-   { _T("UPS.Model(*)"), H_UPSData, "M", DCI_DT_STRING, _T("UPS {instance} model") },
-   { _T("UPS.NominalBatteryVoltage(*)"), H_UPSData, "b", DCI_DT_FLOAT, _T("UPS {instance} nominal battery voltage") },
-   { _T("UPS.OutputVoltage(*)"), H_UPSData, "O", DCI_DT_FLOAT, _T("UPS {instance} output voltage") },
-   { _T("UPS.SerialNumber(*)"), H_UPSData, "S", DCI_DT_STRING, _T("UPS {instance} serial number") },
-   { _T("UPS.Temperature(*)"), H_UPSData, "T", DCI_DT_INT, _T("UPS {instance} temperature") }
+   { _T("UPS.BatteryLevel(*)"),           H_UPSData,
+      CAST_TO_POINTER(UPS_PARAM_BATTERY_LEVEL, char *),
+      DCI_DT_INT,      _T("UPS {instance} battery charge level")
+   },
+
+   { _T("UPS.BatteryVoltage(*)"),         H_UPSData,
+      CAST_TO_POINTER(UPS_PARAM_BATTERY_VOLTAGE, char *),
+      DCI_DT_FLOAT,    _T("UPS {instance} battery voltage")
+   },
+
+   { _T("UPS.EstimatedRuntime(*)"),       H_UPSData,
+      CAST_TO_POINTER(UPS_PARAM_EST_RUNTIME, char *),
+      DCI_DT_INT,      _T("UPS {instance} estimated on-battery runtime (minutes)")
+   },
+
+   { _T("UPS.Firmware(*)"),               H_UPSData,
+      CAST_TO_POINTER(UPS_PARAM_FIRMWARE, char *),
+      DCI_DT_STRING,   _T("UPS {instance} firmware version")
+   },
+
+   { _T("UPS.InputVoltage(*)"),           H_UPSData,
+      CAST_TO_POINTER(UPS_PARAM_INPUT_VOLTAGE, char *),
+      DCI_DT_FLOAT,    _T("UPS {instance} input line voltage")
+   },
+
+   { _T("UPS.LineFrequency(*)"),          H_UPSData,
+      CAST_TO_POINTER(UPS_PARAM_LINE_FREQ, char *),
+      DCI_DT_INT,      _T("UPS {instance} input line frequency")
+   },
+
+   { _T("UPS.Load(*)"),                   H_UPSData,
+      CAST_TO_POINTER(UPS_PARAM_LOAD, char *),
+      DCI_DT_INT,      _T("UPS {instance} load")
+   },
+
+   { _T("UPS.MfgDate(*)"),                H_UPSData,
+      CAST_TO_POINTER(UPS_PARAM_MFG_DATE, char *),
+      DCI_DT_STRING,   _T("UPS {instance} manufacturing date")
+   },
+
+   { _T("UPS.Model(*)"),                  H_UPSData,
+      CAST_TO_POINTER(UPS_PARAM_MODEL, char *),
+      DCI_DT_STRING,   _T("UPS {instance} model")
+   },
+
+   { _T("UPS.NominalBatteryVoltage(*)"),  H_UPSData,
+      CAST_TO_POINTER(UPS_PARAM_NOMINAL_BATT_VOLTAGE, char *),
+      DCI_DT_FLOAT,    _T("UPS {instance} nominal battery voltage")
+   },
+
+   { _T("UPS.OutputVoltage(*)"),          H_UPSData,
+      CAST_TO_POINTER(UPS_PARAM_OUTPUT_VOLTAGE, char *),
+      DCI_DT_FLOAT,    _T("UPS {instance} output voltage")
+   },
+
+   { _T("UPS.SerialNumber(*)"),           H_UPSData,
+      CAST_TO_POINTER(UPS_PARAM_SERIAL, char *),
+      DCI_DT_STRING,   _T("UPS {instance} serial number")
+   },
+
+   { _T("UPS.Temperature(*)"),            H_UPSData,
+      CAST_TO_POINTER(UPS_PARAM_TEMP, char *),
+      DCI_DT_INT,      _T("UPS {instance} temperature")
+   }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
@@ -394,14 +367,11 @@ DECLARE_SUBAGENT_INIT(APC)
          }
          free(m_pszDeviceList);
 
-         // Open configured devices
+         // Start communicating with configured devices
          for(i = 0; i < MAX_UPS_DEVICES; i++)
          {
             if (m_deviceInfo[i] != NULL)
-               if (!m_deviceInfo[i]->Open())
-               {
-                  NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("UPS: Unable to open device %d"), i);
-               }
+               m_deviceInfo[i]->StartCommunication();
          }
       }
    }

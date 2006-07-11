@@ -154,7 +154,7 @@ static float GetFloat(BYTE *pData)
 // Decode numerical value
 //
 
-static void DecodeValue(BYTE *pData, int nDataFmt, int nOutputFmt, void *pValue)
+static void DecodeValue(BYTE *pData, int nDataFmt, int nOutputFmt, char *pszValue)
 {
    LONG nValue;
    double dValue;
@@ -208,10 +208,13 @@ static void DecodeValue(BYTE *pData, int nDataFmt, int nOutputFmt, void *pValue)
    switch(nOutputFmt)
    {
       case FMT_INTEGER:
-         *((LONG *)pValue) = nValue;
+         sprintf(pszValue, "%d", nValue);
          break;
       case FMT_DOUBLE:
-         *((double *)pValue) = dValue;
+         sprintf(pszValue, "%f", dValue);
+         break;
+      default:
+         strcpy(pszValue, "ERROR");
          break;
    }
 }
@@ -383,35 +386,60 @@ BOOL BCMXCPInterface::Open(void)
 
 
 //
+// Validate connection to the device
+//
+
+BOOL BCMXCPInterface::ValidateConnection(void)
+{
+   if (SendReadCommand(PW_ID_BLOCK_REQ))
+   {
+      if (RecvData(PW_ID_BLOCK_REQ) > 0)
+         return TRUE;
+   }
+   return FALSE;
+}
+
+
+//
 // Read parameter from UPS
 //
 
-LONG BCMXCPInterface::ReadParameter(int nIndex, int nFormat, void *pValue)
+void BCMXCPInterface::ReadParameter(int nIndex, int nFormat, UPS_PARAMETER *pParam)
 {
-   LONG nRet = SYSINFO_RC_ERROR;
    int nBytes;
 
    if ((nIndex >= BCMXCP_MAP_SIZE) || (m_map[nIndex].nFormat == 0))
-      return SYSINFO_RC_UNSUPPORTED;
-
-   if (SendReadCommand(PW_METER_BLOCK_REQ))
    {
-      nBytes = RecvData(PW_METER_BLOCK_REQ);
-      if (nBytes > 0)
+      pParam->dwFlags |= UPF_NOT_SUPPORTED;
+   }
+   else
+   {
+      if (SendReadCommand(PW_METER_BLOCK_REQ))
       {
-         if (m_map[nIndex].nOffset < nBytes)
+         nBytes = RecvData(PW_METER_BLOCK_REQ);
+         if (nBytes > 0)
          {
-            DecodeValue(&m_data[m_map[nIndex].nOffset],
-                        m_map[nIndex].nFormat, nFormat, pValue);
-            nRet = SYSINFO_RC_SUCCESS;
+            if (m_map[nIndex].nOffset < nBytes)
+            {
+               DecodeValue(&m_data[m_map[nIndex].nOffset],
+                           m_map[nIndex].nFormat, nFormat, pParam->szValue);
+               pParam->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+            }
+            else
+            {
+               pParam->dwFlags |= UPF_NOT_SUPPORTED;
+            }
          }
          else
          {
-            nRet = SYSINFO_RC_UNSUPPORTED;
+            pParam->dwFlags |= UPF_NULL_VALUE;
          }
       }
+      else
+      {
+         pParam->dwFlags |= UPF_NULL_VALUE;
+      }
    }
-   return nRet;
 }
 
 
@@ -419,9 +447,8 @@ LONG BCMXCPInterface::ReadParameter(int nIndex, int nFormat, void *pValue)
 // Get UPS model
 //
 
-LONG BCMXCPInterface::GetModel(TCHAR *pszBuffer)
+void BCMXCPInterface::QueryModel(void)
 {
-   LONG nRet = SYSINFO_RC_ERROR;
    int nBytes, nPos;
 
    if (SendReadCommand(PW_ID_BLOCK_REQ))
@@ -433,18 +460,25 @@ LONG BCMXCPInterface::GetModel(TCHAR *pszBuffer)
          nPos += (m_data[nPos] == 0) ? 5 : 3;
          if ((nPos < nBytes) && (nPos + m_data[nPos] <= nBytes))
          {
-            memcpy(pszBuffer, &m_data[nPos + 1], m_data[nPos]);
-            pszBuffer[m_data[nPos]] = 0;
-            StrStrip(pszBuffer);
-            nRet = SYSINFO_RC_SUCCESS;
+            memcpy(m_paramList[UPS_PARAM_MODEL].szValue, &m_data[nPos + 1], m_data[nPos]);
+            m_paramList[UPS_PARAM_MODEL].szValue[m_data[nPos]] = 0;
+            StrStrip(m_paramList[UPS_PARAM_MODEL].szValue);
+            m_paramList[UPS_PARAM_MODEL].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
          }
          else
          {
-            nRet = SYSINFO_RC_UNSUPPORTED;
+            m_paramList[UPS_PARAM_MODEL].dwFlags |= UPF_NOT_SUPPORTED;
          }
       }
+      else
+      {
+         m_paramList[UPS_PARAM_MODEL].dwFlags |= UPF_NULL_VALUE;
+      }
    }
-   return nRet;
+   else
+   {
+      m_paramList[UPS_PARAM_MODEL].dwFlags |= UPF_NULL_VALUE;
+   }
 }
 
 
@@ -452,9 +486,9 @@ LONG BCMXCPInterface::GetModel(TCHAR *pszBuffer)
 // Get battery level (in percents)
 //
 
-LONG BCMXCPInterface::GetBatteryLevel(LONG *pnLevel)
+void BCMXCPInterface::QueryBatteryLevel(void)
 {
-   return ReadParameter(MAP_BATTERY_LEVEL, FMT_INTEGER, pnLevel);
+   ReadParameter(MAP_BATTERY_LEVEL, FMT_INTEGER, &m_paramList[UPS_PARAM_BATTERY_LEVEL]);
 }
 
 
@@ -462,9 +496,9 @@ LONG BCMXCPInterface::GetBatteryLevel(LONG *pnLevel)
 // Get battery voltage
 //
 
-LONG BCMXCPInterface::GetBatteryVoltage(double *pdVoltage)
+void BCMXCPInterface::QueryBatteryVoltage(void)
 {
-   return ReadParameter(MAP_BATTERY_VOLTAGE, FMT_DOUBLE, pdVoltage);
+   ReadParameter(MAP_BATTERY_VOLTAGE, FMT_DOUBLE, &m_paramList[UPS_PARAM_BATTERY_VOLTAGE]);
 }
 
 
@@ -472,9 +506,9 @@ LONG BCMXCPInterface::GetBatteryVoltage(double *pdVoltage)
 // Get input line voltage
 //
 
-LONG BCMXCPInterface::GetInputVoltage(double *pdVoltage)
+void BCMXCPInterface::QueryInputVoltage(void)
 {
-   return ReadParameter(MAP_INPUT_VOLTAGE, FMT_DOUBLE, pdVoltage);
+   ReadParameter(MAP_INPUT_VOLTAGE, FMT_DOUBLE, &m_paramList[UPS_PARAM_INPUT_VOLTAGE]);
 }
 
 
@@ -482,9 +516,9 @@ LONG BCMXCPInterface::GetInputVoltage(double *pdVoltage)
 // Get output voltage
 //
 
-LONG BCMXCPInterface::GetOutputVoltage(double *pdVoltage)
+void BCMXCPInterface::QueryOutputVoltage(void)
 {
-   return ReadParameter(MAP_OUTPUT_VOLTAGE, FMT_DOUBLE, pdVoltage);
+   ReadParameter(MAP_OUTPUT_VOLTAGE, FMT_DOUBLE, &m_paramList[UPS_PARAM_OUTPUT_VOLTAGE]);
 }
 
 
@@ -492,9 +526,9 @@ LONG BCMXCPInterface::GetOutputVoltage(double *pdVoltage)
 // Get estimated runtime (in minutes)
 //
 
-LONG BCMXCPInterface::GetEstimatedRuntime(LONG *pnMinutes)
+void BCMXCPInterface::QueryEstimatedRuntime(void)
 {
-   return ReadParameter(MAP_BATTERY_RUNTIME, FMT_INTEGER, pnMinutes);
+   ReadParameter(MAP_BATTERY_RUNTIME, FMT_INTEGER, &m_paramList[UPS_PARAM_EST_RUNTIME]);
 }
 
 
@@ -502,9 +536,9 @@ LONG BCMXCPInterface::GetEstimatedRuntime(LONG *pnMinutes)
 // Get temperature inside UPS
 //
 
-LONG BCMXCPInterface::GetTemperature(LONG *pnTemp)
+void BCMXCPInterface::QueryTemperature(void)
 {
-   return ReadParameter(MAP_AMBIENT_TEMPERATURE, FMT_INTEGER, pnTemp);
+   ReadParameter(MAP_AMBIENT_TEMPERATURE, FMT_INTEGER, &m_paramList[UPS_PARAM_TEMP]);
 }
 
 
@@ -512,9 +546,9 @@ LONG BCMXCPInterface::GetTemperature(LONG *pnTemp)
 // Get line frequency (Hz)
 //
 
-LONG BCMXCPInterface::GetLineFrequency(LONG *pnFrequency)
+void BCMXCPInterface::QueryLineFrequency(void)
 {
-   return ReadParameter(MAP_INPUT_FREQUENCY, FMT_INTEGER, pnFrequency);
+   ReadParameter(MAP_INPUT_FREQUENCY, FMT_INTEGER, &m_paramList[UPS_PARAM_LINE_FREQ]);
 }
 
 
@@ -522,9 +556,8 @@ LONG BCMXCPInterface::GetLineFrequency(LONG *pnFrequency)
 // Get firmware version
 //
 
-LONG BCMXCPInterface::GetFirmwareVersion(TCHAR *pszBuffer)
+void BCMXCPInterface::QueryFirmwareVersion(void)
 {
-   LONG nRet = SYSINFO_RC_ERROR;
    int i, nLen, nBytes, nPos;
 
    if (SendReadCommand(PW_ID_BLOCK_REQ))
@@ -532,20 +565,30 @@ LONG BCMXCPInterface::GetFirmwareVersion(TCHAR *pszBuffer)
       nBytes = RecvData(PW_ID_BLOCK_REQ);
       if (nBytes > 0)
       {
-         nRet = SYSINFO_RC_UNSUPPORTED;
          nLen = m_data[0];
          for(i = 0, nPos = 1; i < nLen; i++, nPos += 2)
          {
             if ((m_data[nPos + 1] != 0) || (m_data[nPos] != 0))
             {
-               _stprintf(pszBuffer, _T("%d.%02d"), m_data[nPos + 1], m_data[nPos]);
-               nRet = SYSINFO_RC_SUCCESS;
+               _stprintf(m_paramList[UPS_PARAM_FIRMWARE].szValue, _T("%d.%02d"), m_data[nPos + 1], m_data[nPos]);
+               m_paramList[UPS_PARAM_FIRMWARE].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
                break;
             }
          }
+         if (i == nLen)
+         {
+            m_paramList[UPS_PARAM_FIRMWARE].dwFlags |= UPF_NOT_SUPPORTED;
+         }
+      }
+      else
+      {
+         m_paramList[UPS_PARAM_FIRMWARE].dwFlags |= UPF_NULL_VALUE;
       }
    }
-   return nRet;
+   else
+   {
+      m_paramList[UPS_PARAM_FIRMWARE].dwFlags |= UPF_NULL_VALUE;
+   }
 }
 
 
@@ -553,9 +596,8 @@ LONG BCMXCPInterface::GetFirmwareVersion(TCHAR *pszBuffer)
 // Get unit serial number
 //
 
-LONG BCMXCPInterface::GetSerialNumber(TCHAR *pszBuffer)
+void BCMXCPInterface::QuerySerialNumber(void)
 {
-   LONG nRet = SYSINFO_RC_ERROR;
    int nBytes;
 
    if (SendReadCommand(PW_ID_BLOCK_REQ))
@@ -563,22 +605,25 @@ LONG BCMXCPInterface::GetSerialNumber(TCHAR *pszBuffer)
       nBytes = RecvData(PW_ID_BLOCK_REQ);
       if (nBytes >= 80)    // Serial number offset + length
       {
-         memcpy(pszBuffer, &m_data[64], 16);
-         if (*pszBuffer == 0)
+         memcpy(m_paramList[UPS_PARAM_SERIAL].szValue, &m_data[64], 16);
+         if (m_paramList[UPS_PARAM_SERIAL].szValue[0] == 0)
          {
-            _tcscpy(pszBuffer, _T("UNSET"));
+            _tcscpy(m_paramList[UPS_PARAM_SERIAL].szValue, _T("UNSET"));
          }
          else
          {
-            pszBuffer[16] = 0;
-            StrStrip(pszBuffer);
+            m_paramList[UPS_PARAM_SERIAL].szValue[16] = 0;
+            StrStrip(m_paramList[UPS_PARAM_SERIAL].szValue);
          }
-         nRet = SYSINFO_RC_SUCCESS;
+         m_paramList[UPS_PARAM_SERIAL].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
       }
       else
       {
-         nRet = SYSINFO_RC_UNSUPPORTED;
+         m_paramList[UPS_PARAM_SERIAL].dwFlags |= UPF_NOT_SUPPORTED;
       }
    }
-   return nRet;
+   else
+   {
+      m_paramList[UPS_PARAM_SERIAL].dwFlags |= UPF_NULL_VALUE;
+   }
 }

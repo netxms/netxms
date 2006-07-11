@@ -8,6 +8,7 @@
 - New MIBs added: ENTITY-MIB
 - Added support for DRBD device monitoring
 - Windows console: Event editor improved
+- UPS subagent redesigned to improve stability and performance
 - Fixed issues: ???
 
 
