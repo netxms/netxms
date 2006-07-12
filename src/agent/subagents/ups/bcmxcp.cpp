@@ -373,7 +373,6 @@ BOOL BCMXCPInterface::Open(void)
                   m_map[i].nOffset = nOffset;
                   nOffset += 4;
                }
-//printf("%3d %02X %d\n", i, m_map[i].nFormat, m_map[i].nOffset);
             }
 
             bRet = TRUE;
@@ -619,11 +618,54 @@ void BCMXCPInterface::QuerySerialNumber(void)
       }
       else
       {
-         m_paramList[UPS_PARAM_SERIAL].dwFlags |= UPF_NOT_SUPPORTED;
+         m_paramList[UPS_PARAM_SERIAL].dwFlags |= (nBytes == -1) ? UPF_NULL_VALUE : UPF_NOT_SUPPORTED;
       }
    }
    else
    {
       m_paramList[UPS_PARAM_SERIAL].dwFlags |= UPF_NULL_VALUE;
+   }
+}
+
+
+//
+// Get UPS online status
+//
+
+void BCMXCPInterface::QueryOnlineStatus(void)
+{
+   int nBytes;
+
+   if (SendReadCommand(PW_STATUS_REQ))
+   {
+      nBytes = RecvData(PW_STATUS_REQ);
+      if (nBytes > 0)
+      {
+         switch(m_data[0])
+         {
+            case 0x50:  // Online
+               m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '0';
+               break;
+            case 0xF0:  // On battery
+               if (m_data[1] & 0x20)
+                  m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '2';   // Low battery
+               else
+                  m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '1';
+               break;
+            default:    // Unknown status, assume OK
+               m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '0';
+               break;
+         }
+         m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[1] = 0;
+         m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+      }
+      else
+      {
+         m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NULL_VALUE;
+      }
+   }
+   else
+   {
+      m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NULL_VALUE;
    }
 }

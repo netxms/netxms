@@ -430,3 +430,45 @@ void USBInterface::QueryEstimatedRuntime(void)
 {
    ReadIntParam(0x85, 0x68, &m_paramList[UPS_PARAM_EST_RUNTIME], 60, FALSE);
 }
+
+
+//
+// Get UPS online status
+//
+
+void USBInterface::QueryOnlineStatus(void)
+{
+   LONG nRet, nACPresent, nBelowLimit;
+
+   nRet = ReadInt(0x85, 0xD0, &nACPresent);
+   switch(nRet)
+   {
+      case SYSINFO_RC_SUCCESS:
+         if (nACPresent == 0)
+         {
+            // If on battery power, check battery status
+            nRet = ReadInt(0x85, 0x42, &nBelowLimit);
+            if (nRet == SYSINFO_RC_SUCCESS)
+            {
+               m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = nBelowLimit ? '2' : '1';
+            }
+            else
+            {
+               m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '1';
+            }
+         }
+         else
+         {
+            m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '0';
+         }
+         m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[1] = 0;
+         m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
+         break;
+      case SYSINFO_RC_ERROR:
+         m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NULL_VALUE;
+         break;
+      case SYSINFO_RC_UNSUPPORTED:
+         m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NOT_SUPPORTED;
+         break;
+   }
+}

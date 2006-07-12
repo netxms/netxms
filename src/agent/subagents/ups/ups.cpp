@@ -210,6 +210,11 @@ void UPSInterface::QueryEstimatedRuntime(void)
    m_paramList[UPS_PARAM_EST_RUNTIME].dwFlags |= UPF_NOT_SUPPORTED;
 }
 
+void UPSInterface::QueryOnlineStatus(void)
+{
+   m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NOT_SUPPORTED;
+}
+
 
 //
 // Communication thread starter
@@ -260,6 +265,7 @@ void UPSInterface::CommThread(void)
       QueryLineFrequency();
       QueryPowerLoad();
       QueryEstimatedRuntime();
+      QueryOnlineStatus();
       MutexUnlock(m_mutex);
    }
    else
@@ -322,6 +328,7 @@ void UPSInterface::CommThread(void)
          QueryLineFrequency();
          QueryPowerLoad();
          QueryEstimatedRuntime();
+         QueryOnlineStatus();
 
          MutexUnlock(m_mutex);
       }

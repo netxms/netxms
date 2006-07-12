@@ -57,6 +57,30 @@ static LONG H_UPSData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 
 
 //
+// UPS connection status
+//
+
+static LONG H_UPSConnStatus(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+{
+   LONG nDev;
+   TCHAR *pErr, szArg[256];
+
+   if (!NxGetParameterArg(pszParam, 1, szArg, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   nDev = _tcstol(szArg, &pErr, 0);
+   if ((*pErr != 0) || (nDev < 0) || (nDev >= MAX_UPS_DEVICES))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   if (m_deviceInfo[nDev] == NULL)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   ret_int(pValue, m_deviceInfo[nDev]->IsConnected() ? 0 : 1);
+   return SYSINFO_RC_SUCCESS;
+}
+
+
+//
 // List configured devices
 //
 
@@ -250,6 +274,11 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
       DCI_DT_FLOAT,    _T("UPS {instance} battery voltage")
    },
 
+   { _T("UPS.ConnectionStatus(*)"),       H_UPSConnStatus,
+      NULL,
+      DCI_DT_INT,      _T("UPS {instance} connection status")
+   },
+
    { _T("UPS.EstimatedRuntime(*)"),       H_UPSData,
       CAST_TO_POINTER(UPS_PARAM_EST_RUNTIME, char *),
       DCI_DT_INT,      _T("UPS {instance} estimated on-battery runtime (minutes)")
@@ -288,6 +317,11 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("UPS.NominalBatteryVoltage(*)"),  H_UPSData,
       CAST_TO_POINTER(UPS_PARAM_NOMINAL_BATT_VOLTAGE, char *),
       DCI_DT_FLOAT,    _T("UPS {instance} nominal battery voltage")
+   },
+
+   { _T("UPS.OnlineStatus(*)"),           H_UPSData,
+      CAST_TO_POINTER(UPS_PARAM_ONLINE_STATUS, char *),
+      DCI_DT_FLOAT,    _T("UPS {instance} online status")
    },
 
    { _T("UPS.OutputVoltage(*)"),          H_UPSData,
@@ -339,7 +373,7 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_INIT(APC)
+DECLARE_SUBAGENT_INIT(UPS)
 {
    DWORD i, dwResult;
 

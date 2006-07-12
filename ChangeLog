@@ -8,8 +8,11 @@
 - New MIBs added: ENTITY-MIB
 - Added support for DRBD device monitoring
 - Windows console: Event editor improved
-- UPS subagent redesigned to improve stability and performance
-- Fixed issues: ???
+- UPS subagent:
+	- Redesigned to improve stability and performance
+	- Added parameter UPS.OnlineStatus
+	- Fixed problem with occasional APC UPS disconnections
+- Fixed issues: 89
 
 
 *

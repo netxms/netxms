@@ -66,6 +66,7 @@ bool Serial::Open(TCHAR *pszPort)
 {
 	bool bRet = false;
 
+   Close();    // In case if port already open
    safe_free(m_pszPort);
 	m_pszPort = _tcsdup(pszPort);
 
@@ -117,6 +118,7 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 		dcb.fOutX = FALSE;
 		dcb.fInX = FALSE;
 		dcb.fRtsControl = RTS_CONTROL_DISABLE;
+      dcb.fAbortOnError = FALSE;
 
 		if (SetCommState(m_hPort, &dcb))
 		{
@@ -221,6 +223,7 @@ void Serial::Close(void)
    if (m_hPort != INVALID_HANDLE_VALUE)
    {
 #ifdef _WIN32
+      //PurgeComm(m_hPort, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
    	CloseHandle(m_hPort);
 #else // UNIX
 	   close(m_hPort);

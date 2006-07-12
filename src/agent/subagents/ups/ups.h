@@ -88,8 +88,9 @@ typedef struct
 #define UPS_PARAM_LINE_FREQ            10
 #define UPS_PARAM_LOAD                 11
 #define UPS_PARAM_EST_RUNTIME          12
+#define UPS_PARAM_ONLINE_STATUS        13
 
-#define UPS_PARAM_COUNT                13
+#define UPS_PARAM_COUNT                14
 
 
 //
@@ -155,6 +156,7 @@ public:
    virtual void QueryLineFrequency(void);
    virtual void QueryPowerLoad(void);
    virtual void QueryEstimatedRuntime(void);
+   virtual void QueryOnlineStatus(void);
 };
 
 
@@ -207,6 +209,7 @@ public:
    virtual void QueryLineFrequency(void);
    virtual void QueryPowerLoad(void);
    virtual void QueryEstimatedRuntime(void);
+   virtual void QueryOnlineStatus(void);
 };
 
 
@@ -248,6 +251,7 @@ public:
    virtual void QueryModel(void);
    virtual void QueryFirmwareVersion(void);
    virtual void QuerySerialNumber(void);
+   virtual void QueryOnlineStatus(void);
 };
 
 
@@ -288,6 +292,7 @@ public:
    virtual void QueryBatteryLevel(void);
    virtual void QueryPowerLoad(void);
    virtual void QueryEstimatedRuntime(void);
+   virtual void QueryOnlineStatus(void);
 };
 
 #endif

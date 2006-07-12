@@ -305,3 +305,51 @@ void APCInterface::QueryEstimatedRuntime(void)
 {
    QueryParameter("j", &m_paramList[UPS_PARAM_EST_RUNTIME], TYPE_LONG, ':');
 }
+
+
+//
+// Check if UPS is online or on battery power
+//
+
+void APCInterface::QueryOnlineStatus(void)
+{
+   char *eptr, szLine[MAX_RESULT_LENGTH];
+   DWORD dwFlags;
+
+   m_serial.Write("Q", 1);
+   if (ReadLineFromSerial(szLine, MAX_RESULT_LENGTH))
+   {
+      if (strcmp(szLine, "NA"))
+      {
+         dwFlags = strtoul(szLine, &eptr, 16);
+         if (*eptr == 0)
+         {
+            m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[1] = 0;
+            if (dwFlags & 0x08)  // online
+            {
+               m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '0';
+            }
+            else if (dwFlags & 0x10)   // on battery
+            {
+               if (dwFlags & 0x40)  // battery low
+                  m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '2';
+               else
+                  m_paramList[UPS_PARAM_ONLINE_STATUS].szValue[0] = '1';
+            }
+            m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags &= ~(UPF_NULL_VALUE | UPF_NOT_SUPPORTED);
+         }
+         else
+         {
+            m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NULL_VALUE;
+         }
+      }
+      else
+      {
+         m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NOT_SUPPORTED;
+      }
+   }
+   else
+   {
+      m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NULL_VALUE;
+   }
+}
