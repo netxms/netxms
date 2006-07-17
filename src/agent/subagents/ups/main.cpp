@@ -321,7 +321,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
    { _T("UPS.OnlineStatus(*)"),           H_UPSData,
       CAST_TO_POINTER(UPS_PARAM_ONLINE_STATUS, char *),
-      DCI_DT_FLOAT,    _T("UPS {instance} online status")
+      DCI_DT_INT,      _T("UPS {instance} online status")
    },
 
    { _T("UPS.OutputVoltage(*)"),          H_UPSData,

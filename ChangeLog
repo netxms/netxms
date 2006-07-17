@@ -12,7 +12,7 @@
 	- Redesigned to improve stability and performance
 	- Added parameter UPS.OnlineStatus
 	- Fixed problem with occasional APC UPS disconnections
-- Fixed issues: 89
+- Fixed issues: #89
 
 
 *

@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.2.11
-AppVersion=0.2.11
+AppVerName=NetXMS 0.2.12
+AppVersion=0.2.12
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.2.11
+OutputBaseFilename=netxms-0.2.12
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -102,6 +102,7 @@ Source: "Files\libiconv-2.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Comp
 Source: "Files\ssleay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "Files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "Files\bgd.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv
+Source: "Files\zlib1.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 
 [Icons]
 Name: "{group}\Alarm Viewer"; Filename: "{app}\bin\nxav.exe"; Components: console
