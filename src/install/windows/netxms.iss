@@ -84,6 +84,7 @@ Source: "..\..\console\nxuilib\Release\nxuilib.dll"; DestDir: "{app}\bin"; Flags
 Source: "..\..\console\nxlexer\Release\nxlexer.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\console\win32\Release\nxcon.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\console\nxav\Release\nxav.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "..\..\console\nxnotify\Release\nxnotify.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 ; Web server files
 Source: "..\..\nxhttpd\Release\nxhttpd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv
 Source: "..\..\nxhttpd\static\*.xsl"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
@@ -105,6 +106,7 @@ Source: "Files\bgd.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components:
 Source: "Files\zlib1.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 
 [Icons]
+Name: "{group}\Alarm Notifier"; Filename: "{app}\bin\nxnotify.exe"; Components: console
 Name: "{group}\Alarm Viewer"; Filename: "{app}\bin\nxav.exe"; Components: console
 Name: "{group}\NetXMS Console"; Filename: "{app}\bin\nxcon.exe"; Components: console
 Name: "{group}\Server Configuration Wizard"; Filename: "{app}\bin\nxconfig.exe"; Components: server
