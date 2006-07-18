@@ -11,5 +11,6 @@ COMMAND = for dir in $(SUBDIRS); do \
 all:
 	$(COMMAND)
 
+.PHONY: clean
 clean:
 	$(COMMAND)
