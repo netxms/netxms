@@ -268,6 +268,7 @@ void Serial::SetTimeout(int nTimeout)
 bool Serial::Restart(void)
 {
 	Close();
+	ThreadSleepMs(500);
 	if (Open(m_pszPort))
 	   if (Set(m_nSpeed, m_nDataBits, m_nParity, m_nStopBits))
       	return true;
@@ -284,6 +285,8 @@ int Serial::Read(char *pBuff, int nSize)
 	int nRet;
 
 	memset(pBuff, 0, nSize);
+	if (m_hPort == INVALID_HANDLE_VALUE)
+		return -1;
 
 #ifdef _WIN32
 	DWORD nDone;
@@ -313,8 +316,8 @@ int Serial::Read(char *pBuff, int nSize)
 
 #endif // _WIN32
 
-   if (nRet == -1)
-      Restart();
+   //if (nRet == -1)
+   //   Restart();
 
 	return nRet;
 }
@@ -327,6 +330,9 @@ int Serial::Read(char *pBuff, int nSize)
 bool Serial::Write(char *pBuff, int nSize)
 {
 	bool bRet = false;
+
+	if (m_hPort == INVALID_HANDLE_VALUE)
+		return false;
 
 #ifdef _WIN32
 
