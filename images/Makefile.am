@@ -11,6 +11,7 @@
 imagesdir=$(pkgdatadir)/images
 
 images_DATA = \
+    condition.ico condition.png \
     generic_printer.ico generic_printer.png \
     interface.ico interface.png \
     network.ico network.png \

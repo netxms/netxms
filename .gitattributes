@@ -151,6 +151,8 @@ doc/misc/Makefile.am -text
 doc/misc/ping_subagent.txt -text
 doc/misc/upgrade.txt -text
 images/Makefile.am -text
+images/condition.ico -text
+images/condition.png -text
 images/generic_printer.ico -text
 images/generic_printer.png -text
 images/interface.ico -text
