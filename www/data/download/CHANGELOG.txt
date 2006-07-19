@@ -1,4 +1,21 @@
 *
+* 0.2.12
+*
+
+- Added possibility to define complicated conditions using "condition" objects
+- Implemented RADIUS authentication for NetXMS users
+- Added support for compressed MIB files
+- New MIBs added: ENTITY-MIB
+- Added support for DRBD device monitoring
+- Windows console: Event editor improved
+- UPS subagent:
+	- Redesigned to improve stability and performance
+	- Added parameter UPS.OnlineStatus
+	- Fixed problem with occasional APC UPS disconnections
+- Fixed issues: #89
+
+
+*
 * 0.2.11
 *
 
@@ -11,7 +28,6 @@
 - UPS subagent: added support for BSMXCP protocol (used by Powerware,
   HP and Compaq UPSes)
 - Fixed Alarm Viewer crash
-- Improved Solaris support
 - Fixed issues: #28, #34, #52, #82, #83, #84, #85, #86, #87, #88
 
 

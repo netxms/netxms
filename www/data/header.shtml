@@ -32,7 +32,7 @@
 
         <div class="headerLinks">
             <span class="doNotDisplay">Current release:</span>
-				<a href="/download/netxms-0.2.11.tar.gz">latest version (0.2.11) &laquo;</a>
+				<a href="/download/netxms-0.2.12.tar.gz">latest version (0.2.12) &laquo;</a>
             <span class="doNotDisplay">|</span>
             <a href="/download/netxms-cvs.tar.gz">daily snapsnot &laquo;</a>
             </div>
