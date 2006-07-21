@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.158 2006-07-21 14:18:20 victor Exp $
+# $Id: configure.ac,v 1.159 2006-07-21 16:23:57 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -295,6 +295,7 @@ AC_ARG_WITH(ipso-agent,
    CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO"
    LDFLAGS="$LDFLAGS -all-static"
    STATIC_SUBAGENT_LIST="ipso ping portcheck ups"
+   SUBAGENT_DIRS="ipso"
    SUBAGENT_LIBS="../subagents/ipso/libnsm_ipso.la ../subagents/ping/libnsm_ping.la ../subagents/portCheck/libnsm_portCheck.la ../subagents/ups/libnsm_ups.la"
 ])
 
@@ -481,6 +482,9 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror])
 AC_CHECK_FUNCS([strrchr strtol strtoul strtoll strtoull])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
+
+AC_CHECK_HEADERS([sys/sysctl.h vm/vm_param.h])
+AC_CHECK_FUNCS([sysctlnametomib])
 
 # sockets/resolver (probably for solaris)
 AC_CHECK_FUNC(connect, , [AC_CHECK_LIB(socket, connect)])
