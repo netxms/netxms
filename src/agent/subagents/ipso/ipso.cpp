@@ -1,4 +1,4 @@
-/* $Id: ipso.cpp,v 1.1 2006-07-21 11:48:35 victor Exp $ */
+/* $Id: ipso.cpp,v 1.2 2006-07-21 16:22:44 victor Exp $ */
 
 /* 
 ** NetXMS subagent for IPSO
@@ -42,6 +42,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "Disk.Used(*)",                 H_DiskInfo,        (char *)DISK_USED,
 			DCI_DT_UINT64,	"Used disk space on *" },
 
+/*
    { "Net.IP.Forwarding",            H_NetIpForwarding, (char *)4,
 			DCI_DT_INT,		"IP forwarding status" },
    { "Net.IP6.Forwarding",           H_NetIpForwarding, (char *)6,
@@ -50,6 +51,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 			DCI_DT_INT,		"Administrative status of *" },
    { "Net.Interface.Link(*)",        H_NetIfLink,       NULL,
 			DCI_DT_INT,		"Physical link status of *" },
+*/
 
    { "Process.Count(*)",             H_ProcessCount,    (char *)0,
 			DCI_DT_UINT,	"" },
@@ -96,9 +98,11 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
+/*
    { "Net.ArpCache",                 H_NetArpCache,     NULL },
    { "Net.InterfaceList",            H_NetIfList,       NULL },
    { "Net.IP.RoutingTable",          H_NetRoutingTable, NULL },
+*/
    { "System.ProcessList",           H_ProcessList,     NULL },
 };
 
@@ -118,7 +122,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_INIT(FREEBSD)
+DECLARE_SUBAGENT_INIT(IPSO)
 {
    *ppInfo = &m_info;
    return TRUE;
@@ -128,6 +132,9 @@ DECLARE_SUBAGENT_INIT(FREEBSD)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/07/21 11:48:35  victor
+Initial commit
+
 Revision 1.7  2005/09/15 21:47:02  victor
 Added macro DECLARE_SUBAGENT_INIT to simplify initialization function declaration
 

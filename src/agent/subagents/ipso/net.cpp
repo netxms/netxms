@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.1 2006-07-21 11:48:35 victor Exp $ */
+/* $Id: net.cpp,v 1.2 2006-07-21 16:22:44 victor Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -91,7 +91,7 @@ LONG H_NetIfAdmStatus(char *pszParam, char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szArg[512];
-
+/*
    NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	if (szArg[0] != 0)
@@ -141,6 +141,8 @@ LONG H_NetIfAdmStatus(char *pszParam, char *pArg, char *pValue)
 	}
 
 	return nRet;
+*/
+return SYSINFO_RC_UNSUPPORETD;
 }
 
 LONG H_NetIfLink(char *pszParam, char *pArg, char *pValue)
@@ -533,6 +535,9 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/07/21 11:48:35  victor
+Initial commit
+
 Revision 1.10  2005/10/17 20:45:46  victor
 Fixed incorrect usage of strncpy
 

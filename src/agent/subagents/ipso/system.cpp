@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.1 2006-07-21 11:48:35 victor Exp $ */
+/* $Id: system.cpp,v 1.2 2006-07-21 16:22:44 victor Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -30,6 +30,7 @@
 #include <sys/param.h>
 #include <sys/proc.h>
 #include <sys/user.h>
+#include <vm/vm_param.h>
 #include <fcntl.h>
 #include <kvm.h>
 #include <paths.h>
@@ -143,15 +144,20 @@ LONG H_CpuCount(char *pszParam, char *pArg, char *pValue)
 	size_t nSize = sizeof(mib), nValSize;
 	int nVal;
 
+#if HAVE_SYSCTLNAMETOMIB
 	if (sysctlnametomib("hw.ncpu", mib, &nSize) != 0)
 	{
 		return SYSINFO_RC_ERROR;
 	}
+#else
+	mib[0] = CTL_HW;
+	mib[1] = HW_NCPU; 
+#endif
 
 	nValSize = sizeof(nVal);
 	if (sysctl(mib, nSize, &nVal, &nValSize, NULL, 0) == 0)
 	{
-   	ret_int(pValue, nVal);
+		ret_int(pValue, nVal);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 
@@ -232,97 +238,12 @@ LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 
 	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
-#define DOIT(x, y) { \
-	nSize = sizeof(mib); \
-	if (sysctlnametomib(x, mib, &nSize) == 0) { \
-		size_t __nTmp = sizeof(y); \
-		if (sysctl(mib, nSize, &y, &__nTmp, NULL, 0) == 0) { \
-			nRet = SYSINFO_RC_SUCCESS; \
-		} else { \
-			perror(x ": sysctl()"); \
-		} \
-	} else { \
-		perror(x ": sysctlnametomib()"); \
-	} \
-}
-
 	nPageSize = getpagesize();
 
 	// Phisical memory
 
-	DOIT("vm.stats.vm.v_page_count", nPageCount);
 
-	if (nRet == SYSINFO_RC_SUCCESS)
-	{
-		nRet = SYSINFO_RC_ERROR;
-		DOIT("vm.stats.vm.v_free_count", nFreeCount);
-	}
-
-#undef DOIT
-
-	// Swap
-/*
-	kd = kvm_open(NULL, NULL, NULL, O_RDONLY, "kvm_open");
-	if (kd != NULL)
-	{
-		i = kvm_getswapinfo(kd, swap, 16, 0);
-		while (i > 0)
-		{
-			i--;
-			nSwapTotal += swap[i].ksw_total;
-			nSwapUsed += swap[i].ksw_used;
-		}
-		kvm_close(kd);
-	}
-	else*/
-	{
-		if ((int)pArg != PHYSICAL_FREE &&
-				(int)pArg != PHYSICAL_TOTAL &&
-				(int)pArg != PHYSICAL_USED)
-		nRet = SYSINFO_RC_ERROR;
-	}
-
-	if (nRet == SYSINFO_RC_SUCCESS)
-	{
-		switch((int)pArg)
-		{
-		case PHYSICAL_FREE: // ph-free
-			ret_uint64(pValue, ((int64_t)nFreeCount) * nPageSize);
-			break;
-		case PHYSICAL_TOTAL: // ph-total
-			ret_uint64(pValue, ((int64_t)nPageCount) * nPageSize);
-			break;
-		case PHYSICAL_USED: // ph-used
-			ret_uint64(pValue, ((int64_t)(nPageCount - nFreeCount)) * nPageSize);
-			break;
-		case SWAP_FREE: // sw-free
-			ret_uint64(pValue, (nSwapTotal - nSwapUsed) * nPageSize);
-			break;
-		case SWAP_TOTAL: // sw-total
-			ret_uint64(pValue, nSwapTotal * nPageSize);
-			break;
-		case SWAP_USED: // sw-used
-			ret_uint64(pValue, nSwapUsed * nPageSize);
-			break;
-		case VIRTUAL_FREE: // vi-free
-			ret_uint64(pValue, ((nSwapTotal - nSwapUsed) * nPageSize) +
-					(((int64_t)nFreeCount) * nPageSize));
-			break;
-		case VIRTUAL_TOTAL: // vi-total
-			ret_uint64(pValue, (nSwapTotal * nPageSize) +
-					(((int64_t)nPageCount) * nPageSize));
-			break;
-		case VIRTUAL_USED: // vi-used
-			ret_uint64(pValue, (nSwapUsed * nPageSize) +
-					(((int64_t)(nPageCount - nFreeCount)) * nPageSize));
-			break;
-		default: // error
-			nRet = SYSINFO_RC_ERROR;
-			break;
-		}
-	}
-
-	return nRet;
+	return SYSINFO_RC_UNSUPPORTED;
 }
 
 LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
@@ -373,6 +294,9 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/07/21 11:48:35  victor
+Initial commit
+
 Revision 1.9  2006/03/05 20:50:18  alk
 Process.Count() fixed, thanks to Boris for report
 
