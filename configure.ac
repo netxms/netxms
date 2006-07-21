@@ -1,9 +1,9 @@
-# $Id: configure.ac,v 1.157 2006-07-21 11:40:58 victor Exp $
+# $Id: configure.ac,v 1.158 2006-07-21 14:18:20 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
 
-AC_INIT([NetXMS], [0.2.12], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.13-dev], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR([config])
 AM_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
@@ -21,11 +21,37 @@ AC_PROG_YACC
 AC_PROG_LN_S
 
 # --------------------------------------------------------------------------
-# disable C++ exceptions
-CFLAGS="$CFLAGS $no_builtin_flag -D_POSIX_PTHREAD_SEMANTICS"
-CPPFLAGS="$CPPFLAGS $no_builtin_flag -D_POSIX_PTHREAD_SEMANTICS"
-LDFLAGS="$LDFLAGS"
+# Misc. settings
+CFLAGS="$CFLAGS -D_POSIX_PTHREAD_SEMANTICS"
+CPPFLAGS="$CPPFLAGS -D_POSIX_PTHREAD_SEMANTICS"
 SUBAGENT_LIBS=""
+
+# --------------------------------------------------------------------------
+# disable C++ exceptions
+
+AC_LANG_PUSH([C++])
+
+AC_MSG_CHECKING(wheter C++ compiler accepts -fno-rtti)
+OLD_CPPFLGAS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS -fno-rtti"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+	[ AC_MSG_RESULT(yes) ], 
+	[ 
+		CPPFLAGS="$OLD_CPPFLAGS"
+		AC_MSG_RESULT(no)
+	])
+
+AC_MSG_CHECKING(wheter C++ compiler accepts -fno-exceptions)
+OLD_CPPFLGAS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS -fno-exceptions"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+	[ AC_MSG_RESULT(yes) ], 
+	[ 
+		CPPFLAGS="$OLD_CPPFLAGS"
+		AC_MSG_RESULT(no)
+	])
+
+AC_LANG_POP([C++])
 
 # --------------------------------------------------------------------------
 # set LDFLAGS depending on OS
