@@ -118,6 +118,7 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\NetXMS Console"; F
 [Dirs]
 Name: "{app}\etc"
 Name: "{app}\database"
+Name: "{app}\var\backgrounds"
 Name: "{app}\var\packages"
 
 [Registry]
