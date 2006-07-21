@@ -54,6 +54,11 @@
 
 #else
 
+// On some old systems, ctype.h defines _T macro, so we include it
+// before our definition and do an undef
+#include <ctype.h>
+
+#undef _T
 #define _T(x)     x
 #define TCHAR     char
 

@@ -176,12 +176,7 @@ inline BOOL ConditionWait(CONDITION hCond, DWORD dwTimeOut)
 /* unix part                                                                */
 /****************************************************************************/
 
-#if HAVE__USR_INCLUDE_PTHREAD_H
-#include </usr/include/pthread.h>
-#else
 #include <pthread.h>
-#endif
-
 #include <errno.h>
 #include <sys/time.h>
 
