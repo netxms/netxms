@@ -6,7 +6,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-GB">
 	<!--#include virtual="/header.shtml" -->
 	<div id="main-copy">
-		<div class="twoThirds noBorderOnLeft">
+		<div class="fullWidth noBorderOnLeft">
 			<!--#include virtual="/cgi-bin/matrix?nocss" -->
 		</div>
 	</div>

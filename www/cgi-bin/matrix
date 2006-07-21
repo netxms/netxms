@@ -70,19 +70,20 @@ print <<"__END";
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 	<tr>
 		<td width="300pix" class="matrixHeader">Parameter</td>
-		<td class="matrixHeader">Windows</td>
-		<td class="matrixHeader">NetWare</td>
-		<td class="matrixHeader">Linux</td>
-		<td class="matrixHeader">FreeBSD</td>
-		<td class="matrixHeader">HPUX</td>
-		<td class="matrixHeader">AIX</td>
-		<td class="matrixHeader">Solaris</td>
+		<td class="matrixHeader" align="center" width="8%">Windows</td>
+		<td class="matrixHeader" align="center" width="8%">NetWare</td>
+		<td class="matrixHeader" align="center" width="8%">Linux</td>
+		<td class="matrixHeader" align="center" width="8%">FreeBSD</td>
+		<td class="matrixHeader" align="center" width="8%">HPUX</td>
+		<td class="matrixHeader" align="center" width="8%">AIX</td>
+		<td class="matrixHeader" align="center" width="8%">Solaris</td>
+		<td class="matrixHeader" align="center" width="8%">IPSO</td>
 	</tr>
 __END
 #####################
 
 
-my $sth = $db->prepare("SELECT param, r1, r2, r3, r4, r5, r6, r7 FROM agentMatrix WHERE type = 'P' ORDER BY param");
+my $sth = $db->prepare("SELECT param, r1, r2, r3, r4, r5, r6, r7, r8 FROM agentMatrix WHERE type = 'P' ORDER BY param");
 $sth->execute();
 while (my $rec = $sth->fetchrow_hashref())
 {
@@ -115,6 +116,10 @@ while (my $rec = $sth->fetchrow_hashref())
 		print "<td class=\"matrixReady\"><span style=\"display: none\">X</span></td>"
 			:
 		print "<td class=\"matrixNotReady\"></td>";
+	$rec->{r8} == 1 ?
+		print "<td class=\"matrixReady\"><span style=\"display: none\">X</span></td>"
+			:
+		print "<td class=\"matrixNotReady\"></td>";
 	print "</tr>";
 }
 $sth->finish();
@@ -132,18 +137,19 @@ print <<"__END";
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 	<tr>
 		<td width="300pix" class="matrixHeader">Parameter</td>
-		<td class="matrixHeader">Windows</td>
-		<td class="matrixHeader">NetWare</td>
-		<td class="matrixHeader">Linux</td>
-		<td class="matrixHeader">FreeBSD</td>
-		<td class="matrixHeader">HPUX</td>
-		<td class="matrixHeader">AIX</td>
-		<td class="matrixHeader">Solaris</td>
+		<td class="matrixHeader" align="center" width="8%">Windows</td>
+		<td class="matrixHeader" align="center" width="8%">NetWare</td>
+		<td class="matrixHeader" align="center" width="8%">Linux</td>
+		<td class="matrixHeader" align="center" width="8%">FreeBSD</td>
+		<td class="matrixHeader" align="center" width="8%">HPUX</td>
+		<td class="matrixHeader" align="center" width="8%">AIX</td>
+		<td class="matrixHeader" align="center" width="8%">Solaris</td>
+		<td class="matrixHeader" align="center" width="8%">IPSO</td>
 	</tr>
 __END
 #####################
 
-$sth = $db->prepare("SELECT param, r1, r2, r3, r4, r5, r6, r7 FROM agentMatrix WHERE type = 'E' ORDER BY param");
+$sth = $db->prepare("SELECT param, r1, r2, r3, r4, r5, r6, r7, r8 FROM agentMatrix WHERE type = 'E' ORDER BY param");
 $sth->execute();
 while (my $rec = $sth->fetchrow_hashref())
 {
@@ -155,6 +161,7 @@ while (my $rec = $sth->fetchrow_hashref())
 	$rec->{r5} == 1 ? print "<td class=\"matrixReady\"></td>" : print "<td class=\"matrixNotReady\"></td>";
 	$rec->{r6} == 1 ? print "<td class=\"matrixReady\"></td>" : print "<td class=\"matrixNotReady\"></td>";
 	$rec->{r7} == 1 ? print "<td class=\"matrixReady\"></td>" : print "<td class=\"matrixNotReady\"></td>";
+	$rec->{r8} == 1 ? print "<td class=\"matrixReady\"></td>" : print "<td class=\"matrixNotReady\"></td>";
 	print "</tr>";
 }
 $sth->finish();
@@ -177,6 +184,6 @@ __END
 }
 #####################
 
-#$db->do("INSERT INTO agentMatrix (param, r1, r2, r3, r4, r5, r6, r7, type) VALUES ('$1', $2, $3, $4, $5, $6, $7, $8, 'E')");
+#$db->do("INSERT INTO agentMatrix (param, r1, r2, r3, r4, r5, r6, r7, r8, type) VALUES ('$1', $2, $3, $4, $5, $6, $7, $8, $9, 'E')");
 
 $db->disconnect();
