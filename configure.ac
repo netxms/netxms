@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.156 2006-07-17 20:09:14 victor Exp $
+# $Id: configure.ac,v 1.157 2006-07-21 11:40:58 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -22,8 +22,8 @@ AC_PROG_LN_S
 
 # --------------------------------------------------------------------------
 # disable C++ exceptions
-CFLAGS="$CFLAGS -fno-exceptions -D_POSIX_PTHREAD_SEMANTICS"
-CPPFLAGS="$CPPFLAGS -fno-exceptions -D_POSIX_PTHREAD_SEMANTICS"
+CFLAGS="$CFLAGS $no_builtin_flag -D_POSIX_PTHREAD_SEMANTICS"
+CPPFLAGS="$CPPFLAGS $no_builtin_flag -D_POSIX_PTHREAD_SEMANTICS"
 LDFLAGS="$LDFLAGS"
 SUBAGENT_LIBS=""
 
@@ -58,11 +58,6 @@ fi
 if test -d /usr/local/lib; then
 	LDFLAGS="$LDFLAGS -L/usr/local/lib"
 fi
-
-# --------------------------------------------------------------------------
-# check for system pthread.h
-
-AC_CHECK_HEADERS([/usr/include/pthread.h])
 
 # --------------------------------------------------------------------------
 # check for zlib
@@ -227,10 +222,11 @@ AC_ARG_WITH(agent,
 AC_ARG_WITH(static-agent,
 [AS_HELP_STRING(--with-static-agent,build statically linked agent)],
 [
-	BUILD_STATIC_AGENT="yes"
-	MODULES="$MODULES agent"
+   BUILD_STATIC_AGENT="yes"
+   MODULES="$MODULES agent"
    CFLAGS="$CFLAGS -D_STATIC_AGENT"
    CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT"
+   LDFLAGS="$LDFLAGS -all-static"
 #   STATIC_SUBAGENT_LIST="ping portcheck"
 	case `uname -s` in
 		Linux)
@@ -264,11 +260,23 @@ AC_ARG_WITH(static-agent,
 	esac
 ])
 
+AC_ARG_WITH(ipso-agent,
+[AS_HELP_STRING(--with-ipso-agent,build statically linked IPSO agent)],
+[
+   BUILD_STATIC_AGENT="yes"
+   MODULES="$MODULES agent"
+   CFLAGS="$CFLAGS -D_STATIC_AGENT -D_IPSO"
+   CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO"
+   LDFLAGS="$LDFLAGS -all-static"
+   STATIC_SUBAGENT_LIST="ipso ping portcheck ups"
+   SUBAGENT_LIBS="../subagents/ipso/libnsm_ipso.la ../subagents/ping/libnsm_ping.la ../subagents/portCheck/libnsm_portCheck.la ../subagents/ups/libnsm_ups.la"
+])
+
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql pgsql odbc mssql sqlite"
 	MODULES="libnxsnmp libnxsl server agent libnxmap libnxcl nxevent nxreport nxmibc console nxhttpd nxscript"
-	SUBAGENT_DIRS="linux freebsd openbsd sunos aix"
+	SUBAGENT_DIRS="linux freebsd openbsd sunos aix ipso"
 	NXCONFIG="nxconfig"
    TOP_LEVEL_MODULES="sql images"
    CONTRIB_MODULES="mibs"
@@ -293,7 +301,7 @@ AC_ARG_WITH(openssl,
 				LDFLAGS="$LDFLAGS -L${withval}/lib"
 				CPPFLAGS="$CPPFLAGS -I${withval}/include"
 			else
-				LD_RUN_PATH="/usr/local/lib:/opt/openssl/lib:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+				LD_RUN_PATH="/usr/local/lib:/opt/openssl/lib:/usr/local/ssl/lib:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 				LDFLAGS="$LDFLAGS -L/usr/local/lib -L/opt/openssl/lib"
 				CPPFLAGS="$CPPFLAGS -I/usr/local/include -I/opt/openssl/include"
 			fi
@@ -406,7 +414,7 @@ AC_TYPE_SIZE_T
 AC_STRUCT_TIMEZONE
 
 AC_CHECK_TYPES([int64_t, uint64_t, u_int64_t])
-AC_CHECK_TYPES([off_t])
+AC_CHECK_TYPES([off_t, socklen_t])
 
 # --------------------------------------------------------------------------
 # C/CPP caps
@@ -640,6 +648,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/skeleton/Makefile
 	src/agent/subagents/freebsd/Makefile
 	src/agent/subagents/openbsd/Makefile
+	src/agent/subagents/ipso/Makefile
 	src/agent/subagents/netware/Makefile
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/win9x/Makefile
