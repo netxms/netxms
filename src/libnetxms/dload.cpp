@@ -27,6 +27,9 @@
 #include <netware.h>
 #elif !defined(_WIN32)
 #include <dlfcn.h>
+#ifndef RTLD_GLOBAL
+#define RTLD_GLOBAL	0
+#endif
 #endif
 
 
