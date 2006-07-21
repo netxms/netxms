@@ -279,6 +279,11 @@ src/agent/subagents/freebsd/net.cpp -text
 src/agent/subagents/freebsd/net.h -text
 src/agent/subagents/freebsd/system.cpp -text
 src/agent/subagents/freebsd/system.h -text
+src/agent/subagents/ipso/Makefile.am -text
+src/agent/subagents/ipso/disk.cpp -text
+src/agent/subagents/ipso/ipso.cpp -text
+src/agent/subagents/ipso/net.cpp -text
+src/agent/subagents/ipso/system.cpp -text
 src/agent/subagents/linux/Makefile.am -text
 src/agent/subagents/linux/disk.cpp -text
 src/agent/subagents/linux/disk.h -text
