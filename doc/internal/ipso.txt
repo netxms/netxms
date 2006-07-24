@@ -1,0 +1,8 @@
+Compilation for IPSO (assuming you are in the root of source tree):
+
+./configure --prefix=/opt/netxms --with-ipso-agent
+make
+cd src/agent/core
+./link_ipso
+
+nxagentd in current directory is the resulting file.

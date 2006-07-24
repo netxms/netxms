@@ -141,6 +141,7 @@ doc/Makefile.am -text
 doc/internal/Makefile.am -text
 doc/internal/db_format_change.txt -text
 doc/internal/internals.rtf -text
+doc/internal/ipso.txt -text
 doc/internal/netxms_architecture.vsd -text
 doc/internal/snmp.txt -text
 doc/manuals/Makefile.am -text
