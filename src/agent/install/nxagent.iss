@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS Agent
-AppVerName=NetXMS Agent 0.2.12
-AppVersion=0.2.12
+AppVerName=NetXMS Agent 0.2.12-hf1
+AppVersion=0.2.12-hf1
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -12,7 +12,7 @@ AppUpdatesURL=http://www.netxms.org
 DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS Agent
 AllowNoIcons=yes
-OutputBaseFilename=nxagent-0.2.12
+OutputBaseFilename=nxagent-0.2.12-hf1
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -50,6 +50,7 @@ Filename: "{app}\bin\nxagentd.exe"; Parameters: "-R"; StatusMsg: "Uninstalling s
 Var
   ServerSelectionPage: TInputQueryWizardPage;
   SubagentSelectionPage: TInputOptionWizardPage;
+  serverName, sbPing, sbPortCheck, sbWinPerf, sbUPS: String;
 
 Procedure StopService;
 Var
@@ -79,13 +80,64 @@ Begin
     Result := FALSE;
 End;
 
+Function InitializeSetup(): Boolean;
+Var
+  i, nCount : Integer;
+  param : String;
+Begin
+  // Empty values for installation data
+  serverName := '';
+  sbPing := 'FALSE';
+  sbPortCheck := 'FALSE';
+  sbWinPerf := 'TRUE';
+  sbUPS := 'FALSE';
+  
+  // Parse command line parameters
+  nCount := ParamCount;
+  For i := 1 To nCount Do Begin
+    param := ParamStr(i);
+
+    If Pos('/SERVER=', param) = 1 Then Begin
+      serverName := param;
+      Delete(serverName, 1, 8);
+    End;
+
+    If Pos('/SUBAGENT=', param) = 1 Then Begin
+      Delete(param, 1, 10);
+      param := Uppercase(param);
+      If param = 'PING' Then
+        sbPing := 'TRUE';
+      If param = 'PORTCHECK' Then
+        sbPortCheck := 'TRUE';
+      If param = 'WINPERF' Then
+        sbWinPerf := 'TRUE';
+      If param = 'UPS' Then
+        sbUPS := 'TRUE';
+    End;
+
+    If Pos('/NOSUBAGENT=', param) = 1 Then Begin
+      Delete(param, 1, 12);
+      param := Uppercase(param);
+      If param = 'PING' Then
+        sbPing := 'FALSE';
+      If param = 'PORTCHECK' Then
+        sbPortCheck := 'FALSE';
+      If param = 'WINPERF' Then
+        sbWinPerf := 'FALSE';
+      If param = 'UPS' Then
+        sbUPS := 'FALSE';
+    End;
+  End;
+  Result := TRUE;
+End;
+
 Procedure InitializeWizard;
 Begin
   ServerSelectionPage := CreateInputQueryPage(wpSelectTasks,
     'NetXMS Server', 'Select your management server.',
     'Please enter host name or IP address of your NetXMS server.');
   ServerSelectionPage.Add('NetXMS server:', False);
-  ServerSelectionPage.Values[0] := GetPreviousData('MasterServer', '');
+  ServerSelectionPage.Values[0] := GetPreviousData('MasterServer', serverName)
 
   SubagentSelectionPage := CreateInputOptionPage(ServerSelectionPage.Id,
     'Subagent Selection', 'Select desired subagents.',
@@ -94,10 +146,10 @@ Begin
   SubagentSelectionPage.Add('Port Checker Subagent - portcheck.nsm');
   SubagentSelectionPage.Add('Windows Performance Subagent - winperf.nsm');
   SubagentSelectionPage.Add('UPS Monitoring Subagent - ups.nsm');
-  SubagentSelectionPage.Values[0] := StrToBool(GetPreviousData('Subagent_PING', 'FALSE'));
-  SubagentSelectionPage.Values[1] := StrToBool(GetPreviousData('Subagent_PORTCHECK', 'FALSE'));
-  SubagentSelectionPage.Values[2] := StrToBool(GetPreviousData('Subagent_WINPERF', 'TRUE'));
-  SubagentSelectionPage.Values[3] := StrToBool(GetPreviousData('Subagent_UPS', 'FALSE'));
+  SubagentSelectionPage.Values[0] := StrToBool(GetPreviousData('Subagent_PING', sbPing));
+  SubagentSelectionPage.Values[1] := StrToBool(GetPreviousData('Subagent_PORTCHECK', sbPortCheck));
+  SubagentSelectionPage.Values[2] := StrToBool(GetPreviousData('Subagent_WINPERF', sbWinPerf));
+  SubagentSelectionPage.Values[3] := StrToBool(GetPreviousData('Subagent_UPS', sbUPS));
 End;
 
 Procedure RegisterPreviousData(PreviousDataKey: Integer);

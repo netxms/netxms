@@ -1,4 +1,13 @@
 *
+* 0.2.13
+*
+
+- Agent ported to IPSO
+- Added installer command line options for unattended installation of
+  Windows agent
+
+
+*
 * 0.2.12
 *
 
