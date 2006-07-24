@@ -244,6 +244,7 @@ src/agent/core/comm.cpp -text
 src/agent/core/exec.cpp -text
 src/agent/core/getparam.cpp -text
 src/agent/core/hddinfo.cpp -text
+src/agent/core/link_ipso.sh -text
 src/agent/core/log.cpp -text
 src/agent/core/lpp.cpp -text
 src/agent/core/messages.mc -text
