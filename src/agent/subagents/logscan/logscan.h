@@ -29,6 +29,10 @@
 #include <nms_util.h>
 #include <nms_agent.h>
 
+// These macros conflicts with following includes on old FreeBSD systems
+#undef min
+#undef max
+
 #include <string>
 #include <map>
 
