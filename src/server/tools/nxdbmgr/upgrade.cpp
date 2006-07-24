@@ -78,6 +78,24 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V42 to V43
+//
+
+static BOOL H_UpgradeFromV42(void)
+{
+   if (!CreateConfigParam(_T("RADIUSPort"), _T("1645"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='43' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V41 to V42
 //
 
