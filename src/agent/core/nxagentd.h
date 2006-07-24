@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -67,7 +67,11 @@
 #define AGENT_DEFAULT_LOG        "SYS:ETC/nxagentd.log"
 #define AGENT_DEFAULT_FILE_STORE "SYS:\\"
 #else
+#ifdef _IPSO
+#define AGENT_DEFAULT_CONFIG     "/var/etc/nxagentd.conf"
+#else
 #define AGENT_DEFAULT_CONFIG     "/etc/nxagentd.conf"
+#endif
 #define AGENT_DEFAULT_LOG        "/var/log/nxagentd"
 #define AGENT_DEFAULT_FILE_STORE "/tmp"
 #endif

@@ -238,12 +238,13 @@ LONG H_PlatformName(char *cmd, char *arg, char *value)
 
    struct utsname info;
 
-	if (uname(&info) != -1)
-	{
+   if (uname(&info) != -1)
+   {
       sprintf(value, "%s-%s", info.sysname, info.machine);
    }
    else
    {
+      DebugPrintf("uname() failed: %s", strerror(errno));
       nResult = SYSINFO_RC_ERROR;
    }
 

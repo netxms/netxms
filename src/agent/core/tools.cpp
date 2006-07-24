@@ -119,3 +119,17 @@ char *GetPdhErrorText(DWORD dwError, char *pszBuffer, int iBufSize)
 }
 
 #endif   /* _WIN32 */
+
+
+//
+// Replacement for libc version of issetugid() to prevent agent crash on IPSO
+//
+
+#ifdef _IPSO
+
+extern "C" int issetugid __P((void))
+{
+	return 0;
+}
+
+#endif
