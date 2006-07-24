@@ -1,4 +1,4 @@
-/* $Id: ipso.cpp,v 1.2 2006-07-21 16:22:44 victor Exp $ */
+/* $Id: ipso.cpp,v 1.3 2006-07-24 06:49:47 victor Exp $ */
 
 /* 
 ** NetXMS subagent for IPSO
@@ -22,10 +22,8 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
+#include "ipso.h"
 
-#include "net.h"
-#include "system.h"
-#include "disk.h"
 
 //
 // Subagent information
@@ -132,6 +130,9 @@ DECLARE_SUBAGENT_INIT(IPSO)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/07/21 16:22:44  victor
+Some parameters are working
+
 Revision 1.1  2006/07/21 11:48:35  victor
 Initial commit
 

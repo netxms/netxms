@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.2 2006-07-21 16:22:44 victor Exp $ */
+/* $Id: system.cpp,v 1.3 2006-07-24 06:49:48 victor Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -22,25 +22,29 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
-
-#include <sys/time.h>
-#include <sys/types.h>
 #include <sys/sysctl.h>
 #include <sys/utsname.h>
-#include <sys/param.h>
-#include <sys/proc.h>
-#include <sys/user.h>
 #include <vm/vm_param.h>
-#include <fcntl.h>
+#include <sys/vmmeter.h>
 #include <kvm.h>
-#include <paths.h>
+#include "ipso.h"
 
 
-#include "system.h"
+//
+// Defines for getting data from process information structure
+//
+
+#define KP_PID(x)    (*((pid_t *)(kp + 48)))
+#define KP_PNAME(x)  (x + 0xCB)
+
+
+//
+// Handler for System.Uptime
+//
 
 LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 {
-	int mib[2] = { CTL_KERN, KERN_BOOTTIME };
+	static int mib[2] = { CTL_KERN, KERN_BOOTTIME };
 	time_t nNow;
 	size_t nSize;
 	struct timeval bootTime;
@@ -60,11 +64,16 @@ LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 
 	if (nUptime > 0)
 	{
-   	ret_uint(pValue, nUptime);
+		ret_uint(pValue, nUptime);
 	}
 
    return nUptime > 0 ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
+
+
+//
+// Handler for System.Uname
+//
 
 LONG H_Uname(char *pszParam, char *pArg, char *pValue)
 {
@@ -132,27 +141,12 @@ LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
-{
-	return SYSINFO_RC_UNSUPPORTED;
-}
-
 LONG H_CpuCount(char *pszParam, char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
-	int mib[2];
+	static int mib[2] = { CTL_HW, HW_NCPU };
 	size_t nSize = sizeof(mib), nValSize;
 	int nVal;
-
-#if HAVE_SYSCTLNAMETOMIB
-	if (sysctlnametomib("hw.ncpu", mib, &nSize) != 0)
-	{
-		return SYSINFO_RC_ERROR;
-	}
-#else
-	mib[0] = CTL_HW;
-	mib[1] = HW_NCPU; 
-#endif
 
 	nValSize = sizeof(nVal);
 	if (sysctl(mib, nSize, &nVal, &nValSize, NULL, 0) == 0)
@@ -164,36 +158,33 @@ LONG H_CpuCount(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
+
+//
+// Handler for System.ProcessCount and Process.Count(*) parameters
+//
+
 LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 {
-	int nRet = SYSINFO_RC_ERROR;
-//	struct statvfs s;
-	char szArg[128] = {0};
-	int nCount;
-	int nResult = -1;
-	int i;
+	char *kp, szArg[128] = "";
+	int i, nCount, nResult = -1;
 	kvm_t *kd;
-	struct kinfo_proc *kp;
+	LONG nRet = SYSINFO_RC_ERROR;
 
 	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
 	if (kd != NULL)
 	{
-		kp = kvm_getprocs(kd, KERN_PROC_ALL, 0, &nCount);
+		kp = (char *)kvm_getprocs(kd, KERN_PROC_ALL, 0, &nCount);
 
 		if (kp != NULL)
 		{
 			if (szArg[0] != 0)
 			{
 				nResult = 0;
-				for (i = 0; i < nCount; i++)
+				for(i = 0; i < nCount; i++, kp += 648)
 				{
-#if __FreeBSD__ >= 5
-					if (strcasecmp(kp[i].ki_comm, szArg) == 0)
-#else
-					if (strcasecmp(kp[i].kp_proc.p_comm, szArg) == 0)
-#endif
+					if (!stricmp(KP_PNAME(kp), szArg))
 					{
 						nResult++;
 					}
@@ -204,7 +195,6 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 				nResult = nCount;
 			}
 		}
-
 		kvm_close(kd);
 	}
 
@@ -213,71 +203,100 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 		ret_int(pValue, nResult);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
-
 	return nRet;
 }
 
+
+//
+// Handler for System.Memory.* parameters
+//
+
 LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 {
-	int nRet = SYSINFO_RC_ERROR;
-	FILE *hFile;
-	int nPageCount, nFreeCount;
-	int64_t nSwapTotal, nSwapUsed;
-	char *pTag;
-	int mib[4];
+	struct vmtotal vmStat;
+	DWORD dwPageSize, dwPhysMem;
 	size_t nSize;
-	int i;
-	char *pOid;
-	int nPageSize;
-	char szArg[16] = {0};
-	kvm_t *kd;
-	//struct kvm_swap swap[16];
+	int mib[2] = { CTL_HW, HW_PAGESIZE };
+	int nRet = SYSINFO_RC_SUCCESS;
 
-	nPageCount = nFreeCount = 0;
-	nSwapTotal = nSwapUsed = 0;
+	nSize = sizeof(int);
+	if (sysctl(mib, 2, &dwPageSize, &nSize, NULL, 0) == -1)
+	{
+		return SYSINFO_RC_ERROR;
+	}
 
-	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	nSize = sizeof(int);
+	mib[1] = HW_PHYSMEM;
+	if (sysctl(mib, 2, &dwPhysMem, &nSize, NULL, 0) == -1)
+	{
+		return SYSINFO_RC_ERROR;
+	}
 
-	nPageSize = getpagesize();
-
-	// Phisical memory
-
-
-	return SYSINFO_RC_UNSUPPORTED;
+	nSize = sizeof(struct vmtotal);
+	mib[0] = CTL_VM;
+	mib[1] = VM_METER;
+	if (sysctl(mib, 2, &vmStat, &nSize, NULL, 0) != -1)
+	{
+#define XX(a) a,a*dwPageSize,(a*dwPageSize)/1024
+printf("t_avm    = %d %d %dK\n",XX(vmStat.t_avm));
+printf("t_rm     = %d %d %dK\n",XX(vmStat.t_rm));
+printf("t_arm    = %d %d %dK\n",XX(vmStat.t_arm));
+printf("t_vmshr  = %d %d %dK\n",XX(vmStat.t_vmshr));
+printf("t_avmshr = %d %d %dK\n",XX(vmStat.t_avmshr));
+printf("t_rmshr  = %d %d %dK\n",XX(vmStat.t_rmshr));
+printf("t_armshr = %d %d %dK\n",XX(vmStat.t_armshr));
+printf("t_free   = %d %d %dK\n",XX(vmStat.t_free));
+printf("PageSize = %d\n",dwPageSize);
+		switch((int)pArg)
+		{
+			case PHYSICAL_FREE:
+				ret_uint64(pValue, (QWORD)vmStat.t_free * dwPageSize);
+				break;
+			case PHYSICAL_TOTAL:
+				ret_uint64(pValue, (QWORD)dwPhysMem);
+				break;
+			case PHYSICAL_USED:
+				ret_uint64(pValue, (QWORD)dwPhysMem - (QWORD)vmStat.t_arm * dwPageSize);
+				break;
+			default:
+				nRet = SYSINFO_RC_UNSUPPORTED;
+				break;
+		}
+	}
+	else
+	{
+		nRet = SYSINFO_RC_ERROR;
+	}
+	return nRet;
 }
+
+
+//
+// Handler for System.ProcessList enum
+//
 
 LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
-	int nRet = SYSINFO_RC_ERROR;
-	int nCount = -1;
-	int i;
-	struct kinfo_proc *kp;
+	int i, nCount = -1;
+	char *kp;
 	kvm_t *kd;
+	LONG nRet = SYSINFO_RC_ERROR;
 
-
-
-	kd = kvm_openfiles(_PATH_DEVNULL, _PATH_DEVNULL, NULL, O_RDONLY, NULL);
+	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
 	if (kd != 0)
 	{
-		kp = kvm_getprocs(kd, KERN_PROC_ALL, 0, &nCount);
-
+		kp = (char *)kvm_getprocs(kd, KERN_PROC_ALL, 0, &nCount);
 		if (kp != NULL)
 		{
-			for (i = 0; i < nCount; i++)
+			for (i = 0; i < nCount; i++, kp += 648)
 			{
 				char szBuff[128];
 
 				snprintf(szBuff, sizeof(szBuff), "%d %s",
-#if __FreeBSD__ >= 5
-						kp[i].ki_pid, kp[i].ki_comm
-#else
-						kp[i].kp_proc.p_pid, kp[i].kp_proc.p_comm
-#endif
-						);
+					KP_PID(kp), KP_PNAME(kp));
 				NxAddResultString(pValue, szBuff);
 			}
 		}
-
 		kvm_close(kd);
 	}
 
@@ -285,7 +304,6 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 	{
 		nRet = SYSINFO_RC_SUCCESS;
 	}
-
 	return nRet;
 }
 
@@ -294,54 +312,10 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/07/21 16:22:44  victor
+Some parameters are working
+
 Revision 1.1  2006/07/21 11:48:35  victor
 Initial commit
-
-Revision 1.9  2006/03/05 20:50:18  alk
-Process.Count() fixed, thanks to Boris for report
-
-Revision 1.8  2005/05/30 14:39:32  alk
-* process list now works via kvm, compatible with freebsd 5+
-
-Revision 1.7  2005/05/29 22:44:59  alk
-* configure: pthreads & fbsd5+; detection code should be rewriten!
-* another ugly hack: agent's process info disabled for fbsd5+: struct kinfo_proc changed; m/b fix it tomorow
-* server/nxadm & fbsd5.1: a**holes, in 5.1 there no define with version in readline.h...
-
-Revision 1.6  2005/01/24 19:51:16  alk
-reurn types/comments added
-Process.Count(*)/System.ProcessCount fixed
-
-Revision 1.5  2005/01/23 05:36:11  alk
-+ System.Memory.Swap.*
-+ System.Memory.Virtual.*
-
-NB! r/o access to /dev/mem required! (e.g. chgrp kmem ; chmod g+s)
-
-Revision 1.4  2005/01/23 05:14:49  alk
-System's PageSize used instead of Hardware PageSize
-
-Revision 1.3  2005/01/23 05:08:06  alk
-+ System.CPU.Count
-+ System.Memory.Physical.*
-+ System.ProcessCount
-+ System.ProcessList
-
-Revision 1.2  2005/01/17 23:25:47  alk
-Agent.SourcePackageSupport added
-
-Revision 1.1  2005/01/17 17:14:32  alk
-freebsd agent, incomplete (but working)
-
-Revision 1.1  2004/10/22 22:08:35  alk
-source restructured;
-implemented:
-	Net.IP.Forwarding
-	Net.IP6.Forwarding
-	Process.Count(*)
-	Net.ArpCache
-	Net.InterfaceList (if-type not implemented yet)
-	System.ProcessList
-
 
 */
