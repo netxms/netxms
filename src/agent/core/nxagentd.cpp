@@ -885,8 +885,19 @@ static void DoRestartActions(DWORD dwOldPID)
 #elif defined(_NETWARE)
    /* TODO: implement restart for NetWare */
 #else
+   int i;
+
    kill(dwOldPID, SIGTERM);
-   sleep(10);
+   for(i = 0; i < 30; i++)
+   {
+      sleep(2);
+      if (kill(dwOldPID, SIGCONT) == -1)
+         break;
+   }
+   
+   // Kill previous instance og agent if it's still running
+   if (i == 30)
+      kill(dwOldPID, SIGKILL);
 #endif
 }
 

@@ -68,12 +68,14 @@
 #define AGENT_DEFAULT_FILE_STORE "SYS:\\"
 #else
 #ifdef _IPSO
-#define AGENT_DEFAULT_CONFIG     "/var/etc/nxagentd.conf"
+#define AGENT_DEFAULT_CONFIG     "/opt/netxms/etc/nxagentd.conf"
+#define AGENT_DEFAULT_LOG        "/opt/netxms/log/nxagentd.log"
+#define AGENT_DEFAULT_FILE_STORE "/opt/netxms/store"
 #else
 #define AGENT_DEFAULT_CONFIG     "/etc/nxagentd.conf"
-#endif
 #define AGENT_DEFAULT_LOG        "/var/log/nxagentd"
 #define AGENT_DEFAULT_FILE_STORE "/tmp"
+#endif
 #endif
 
 
