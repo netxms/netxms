@@ -155,7 +155,7 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
    // Check for object's existence in database
    sprintf(szQuery, "SELECT id FROM containers WHERE id=%d", m_dwId);
    hResult = DBSelect(hdb, szQuery);
-   if (hResult != 0)
+   if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
          bNewObject = FALSE;

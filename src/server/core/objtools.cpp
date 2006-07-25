@@ -224,6 +224,7 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
          {
             msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
          }
+         DBFreeResult(hResult);
       }
       else     // Cannot load column info from DB
       {

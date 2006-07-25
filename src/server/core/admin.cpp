@@ -1,4 +1,4 @@
-/* $Id: admin.cpp,v 1.16 2006-03-02 12:17:06 victor Exp $ */
+/* $Id: admin.cpp,v 1.17 2006-07-25 22:05:49 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -75,6 +75,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
             InitiateShutdown();
             break;
          case CMD_EXIT_CLOSE_SESSION:
+            delete pRequest;
             goto close_session;
          default:
             break;
@@ -91,6 +92,8 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 close_session:
    shutdown(sock, 2);
    closesocket(sock);
+   free(pRawMsg);
+   free(pRecvBuffer);
    return THREAD_OK;
 }
 
@@ -172,6 +175,9 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2006/03/02 12:17:06  victor
+Removed various warnings related to 64bit platforms
+
 Revision 1.15  2006/02/21 13:54:10  victor
 Issue 72 fixed ("exit" command was not working in nxadm -i)
 

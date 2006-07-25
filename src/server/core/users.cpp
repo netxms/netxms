@@ -162,12 +162,13 @@ BOOL LoadUsers(void)
 
    // Add users to groups
    hResult = DBSelect(g_hCoreDB, "SELECT user_id,group_id FROM user_group_members");
-   if (hResult == 0)
+   if (hResult == NULL)
       return FALSE;
 
    iNumRows = DBGetNumRows(hResult);
    for(i = 0; i < iNumRows; i++)
       AddUserToGroup(DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1));
+   DBFreeResult(hResult);
 
    return TRUE;
 }

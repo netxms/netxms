@@ -4392,57 +4392,66 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
          // Read package information
          _sntprintf(szQuery, 256, _T("SELECT platform,pkg_file,version FROM agent_pkg WHERE pkg_id=%d"), dwPkgId);
          hResult = DBSelect(g_hCoreDB, szQuery);
-         if ((hResult != NULL) && (DBGetNumRows(hResult) > 0))
+         if (hResult != NULL)
          {
-            nx_strncpy(szPlatform, DBGetField(hResult, 0, 0), MAX_PLATFORM_NAME_LEN);
-            nx_strncpy(szPkgFile, DBGetField(hResult, 0, 1), MAX_PATH);
-            nx_strncpy(szVersion, DBGetField(hResult, 0, 2), MAX_AGENT_VERSION_LEN);
-
-            // Create list of nodes to be upgraded
-            dwNumObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);
-            pdwObjectList = (DWORD *)malloc(sizeof(DWORD) * dwNumObjects);
-            pRequest->GetVariableInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
-            for(i = 0; i < dwNumObjects; i++)
+            if (DBGetNumRows(hResult) > 0)
             {
-               pObject = FindObjectById(pdwObjectList[i]);
-               if (pObject != NULL)
+               nx_strncpy(szPlatform, DBGetField(hResult, 0, 0), MAX_PLATFORM_NAME_LEN);
+               nx_strncpy(szPkgFile, DBGetField(hResult, 0, 1), MAX_PATH);
+               nx_strncpy(szVersion, DBGetField(hResult, 0, 2), MAX_AGENT_VERSION_LEN);
+
+               // Create list of nodes to be upgraded
+               dwNumObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);
+               pdwObjectList = (DWORD *)malloc(sizeof(DWORD) * dwNumObjects);
+               pRequest->GetVariableInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
+               for(i = 0; i < dwNumObjects; i++)
                {
-                  if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+                  pObject = FindObjectById(pdwObjectList[i]);
+                  if (pObject != NULL)
                   {
-                     if (pObject->Type() == OBJECT_NODE)
+                     if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
                      {
-                        // Check if this node already in the list
-                        for(j = 0; j < dwNumNodes; j++)
-                           if (ppNodeList[j]->Id() == pdwObjectList[i])
-                              break;
-                        if (j == dwNumNodes)
+                        if (pObject->Type() == OBJECT_NODE)
                         {
-                           pObject->IncRefCount();
-                           ppNodeList = (Node **)realloc(ppNodeList, sizeof(Node *) * (dwNumNodes + 1));
-                           ppNodeList[dwNumNodes] = (Node *)pObject;
-                           dwNumNodes++;
+                           // Check if this node already in the list
+                           for(j = 0; j < dwNumNodes; j++)
+                              if (ppNodeList[j]->Id() == pdwObjectList[i])
+                                 break;
+                           if (j == dwNumNodes)
+                           {
+                              pObject->IncRefCount();
+                              ppNodeList = (Node **)realloc(ppNodeList, sizeof(Node *) * (dwNumNodes + 1));
+                              ppNodeList[dwNumNodes] = (Node *)pObject;
+                              dwNumNodes++;
+                           }
+                        }
+                        else
+                        {
+                           pObject->AddChildNodesToList(&dwNumNodes, &ppNodeList, m_dwUserId);
                         }
                      }
                      else
                      {
-                        pObject->AddChildNodesToList(&dwNumNodes, &ppNodeList, m_dwUserId);
+                        msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+                        bSuccess = FALSE;
+                        break;
                      }
                   }
                   else
                   {
-                     msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+                     msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
                      bSuccess = FALSE;
                      break;
                   }
                }
-               else
-               {
-                  msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
-                  bSuccess = FALSE;
-                  break;
-               }
+               safe_free(pdwObjectList);
             }
-            safe_free(pdwObjectList);
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+               bSuccess = FALSE;
+            }
+            DBFreeResult(hResult);
          }
          else
          {

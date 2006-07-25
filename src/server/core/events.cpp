@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: events.cpp
+** File: events.cpp
 **
 **/
 
@@ -442,9 +442,18 @@ void ShutdownEventSubsystem(void)
 
 void ReloadEvents(void)
 {
+   DWORD i;
+
    RWLockWriteLock(m_rwlockTemplateAccess, INFINITE);
    if (m_pEventTemplates != NULL)
+   {
+      for(i = 0; i < m_dwNumTemplates; i++)
+      {
+         safe_free(m_pEventTemplates[i].szDescription);
+         safe_free(m_pEventTemplates[i].szMessageTemplate);
+      }
       free(m_pEventTemplates);
+   }
    m_dwNumTemplates = 0;
    m_pEventTemplates = NULL;
    LoadEvents();
@@ -466,6 +475,8 @@ void DeleteEventTemplateFromList(DWORD dwEventCode)
       if (m_pEventTemplates[i].dwCode == dwEventCode)
       {
          m_dwNumTemplates--;
+         safe_free(m_pEventTemplates[i].szDescription);
+         safe_free(m_pEventTemplates[i].szMessageTemplate);
          memmove(&m_pEventTemplates[i], &m_pEventTemplates[i + 1],
                  sizeof(EVENT_TEMPLATE) * (m_dwNumTemplates - i));
          break;

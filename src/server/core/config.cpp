@@ -172,7 +172,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate)
    // Check for variable existence
    sprintf(szQuery, "SELECT var_value FROM config WHERE var_name='%s'", szVar);
    hResult = DBSelect(g_hCoreDB, szQuery);
-   if (hResult != 0)
+   if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
          bVarExist = TRUE;

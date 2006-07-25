@@ -382,7 +382,7 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
    // Delete non-existing thresholds
    sprintf(szQuery, "SELECT threshold_id FROM thresholds WHERE item_id=%d", m_dwId);
    hResult = DBSelect(hdb, szQuery);
-   if (hResult != 0)
+   if (hResult != NULL)
    {
       int i, iNumRows;
       DWORD j, dwId;
@@ -406,7 +406,7 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
    // Create record in raw_dci_values if needed
    sprintf(szQuery, "SELECT item_id FROM raw_dci_values WHERE item_id=%d", m_dwId);
    hResult = DBSelect(hdb, szQuery);
-   if (hResult != 0)
+   if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) == 0)
       {

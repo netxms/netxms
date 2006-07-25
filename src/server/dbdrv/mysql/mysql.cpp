@@ -276,7 +276,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
 {
    if (hResult != NULL)
    {
-      // Check if all result rows fetchef
+      // Check if all result rows fetched
       if (!((MYSQL_ASYNC_RESULT *)hResult)->bNoMoreRows)
       {
          // Fetch remaining rows
@@ -287,8 +287,8 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
       }
 
       // Free allocated memory
-      if (((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths != NULL)
-         free(((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths);
+      mysql_free_result(((MYSQL_ASYNC_RESULT *)hResult)->pHandle);
+      safe_free(((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths);
       free(hResult);
    }
 }
