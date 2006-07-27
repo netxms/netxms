@@ -1,4 +1,26 @@
 *************
+* 43 ==> 44 *
+*************
+
+- New object tools added:
+	INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+		VALUES (13,'&Info->&Process list',3,
+                	'Process List#7FSystem.ProcessList#7F^([0-9]+) (.*)',2,'','Show list of currently running processes');
+	INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+		VALUES (13,0,'PID','',0,1);
+	INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+		VALUES (13,1,'Name','',0,2);
+	INSERT INTO object_tools_acl (tool_id,user_id) VALUES (13,-2147483648);
+
+
+*************
+* 42 ==> 43 *
+*************
+
+- New configuration parameter: RADIUSPort
+
+
+*************
 * 41 ==> 42 *
 *************
 
@@ -63,8 +85,8 @@
 * 40 ==> 41 *
 *************
 
-- New configuration parameters: RADIUSServer, RADIUSSecret, RADIUSPort,
-  RADIUSNumRetries, RADIUSTimeout
+- New configuration parameters: RADIUSServer, RADIUSSecret, RADIUSNumRetries,
+  RADIUSTimeout
 - Added column "guid" to table "users":
 	ALTER TABLE users ADD guid varchar(36) not null;
 - Added column "auth_method" to table "users":

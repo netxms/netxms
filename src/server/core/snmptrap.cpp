@@ -388,6 +388,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
       }
    }
 
+   delete pTransport;
    DbgPrintf(AF_DEBUG_SNMP, _T("SNMP Trap Receiver terminated"));
    return THREAD_OK;
 }

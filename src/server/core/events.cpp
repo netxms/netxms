@@ -136,8 +136,7 @@ Event::~Event()
       DWORD i;
 
       for(i = 0; i < m_dwNumParameters; i++)
-         if (m_ppszParameters[i] != NULL)
-            free(m_ppszParameters[i]);
+         safe_free(m_ppszParameters[i]);
       free(m_ppszParameters);
    }
 }

@@ -409,6 +409,8 @@ typedef struct
 #define CMD_UPDATE_MODULE_INFO		0x00AC
 #define CMD_COPY_USER_VARIABLE      0x00AD
 #define CMD_RESOLVE_DCI_NAMES       0x00AE
+#define CMD_GET_MY_CONFIG           0x00AF
+#define CMD_GET_AGENT_CFG_LIST      0x00B0
 
 
 //
@@ -736,6 +738,9 @@ typedef struct
 
 // Base value for module list
 #define VID_MODULE_LIST_BASE        ((DWORD)0x10000000)
+
+// Base value for agent configs list
+#define VID_AGENT_CFG_LIST_BASE     ((DWORD)0x10000000)
 
 // Base and last values for condition's DCI list
 #define VID_DCI_LIST_BASE           ((DWORD)0x40000000)

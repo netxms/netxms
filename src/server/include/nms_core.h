@@ -481,6 +481,8 @@ private:
    void SendModuleList(DWORD dwRqId);
    void ResolveDCINames(CSCPMessage *pRequest);
    DWORD ResolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName);
+   void SendConfigForAgent(CSCPMessage *pRequest);
+   void SendAgentCfgList(DWORD dwRqId);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

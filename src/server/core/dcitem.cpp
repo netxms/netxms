@@ -664,8 +664,7 @@ void DCItem::NewValue(time_t tmTimeStamp, const char *pszOriginalValue)
 
    Lock();
 
-   // Normally m_pNode shouldn't be NULL for polled items,
-   // but who knows...
+   // Normally m_pNode shouldn't be NULL for polled items, but who knows...
    if (m_pNode == NULL)
    {
       Unlock();

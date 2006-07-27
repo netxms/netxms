@@ -65,6 +65,14 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (12,4,'Average RTT','',CFMT_STRING,3);
 
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+	VALUES (13,'&Info->&Process list',TOOL_TYPE_TABLE_AGENT,
+                'Process List#7FSystem.ProcessList#7F^([0-9]+) (.*)',2,'','Show list of currently running processes');
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (13,0,'PID','',CFMT_STRING,1);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (13,1,'Name','',CFMT_STRING,2);
+
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (1,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (2,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (3,-2147483648);
@@ -77,3 +85,4 @@ INSERT INTO object_tools_acl (tool_id,user_id) VALUES (9,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (10,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (11,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (12,-2147483648);
+INSERT INTO object_tools_acl (tool_id,user_id) VALUES (13,-2147483648);

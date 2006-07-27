@@ -607,17 +607,18 @@ void ClientSession::ProcessingThread(void)
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-      DebugPrintf("Received message %s\n", CSCPMessageCodeName(pMsg->GetCode(), szBuffer));
+      m_wCurrentCmd = pMsg->GetCode();
+      DebugPrintf("Received message %s\n", CSCPMessageCodeName(m_wCurrentCmd, szBuffer));
       if (!(m_dwFlags & CSF_AUTHENTICATED) && 
-          (pMsg->GetCode() != CMD_LOGIN) && 
-          (pMsg->GetCode() != CMD_GET_SERVER_INFO) &&
-          (pMsg->GetCode() != CMD_REQUEST_ENCRYPTION))
+          (m_wCurrentCmd != CMD_LOGIN) && 
+          (m_wCurrentCmd != CMD_GET_SERVER_INFO) &&
+          (m_wCurrentCmd != CMD_REQUEST_ENCRYPTION) &&
+          (m_wCurrentCmd != CMD_GET_MY_CONFIG))
       {
          delete pMsg;
          continue;
       }
 
-      m_wCurrentCmd = pMsg->GetCode();
       m_iState = SESSION_STATE_PROCESSING;
       switch(m_wCurrentCmd)
       {
@@ -626,6 +627,9 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_GET_SERVER_INFO:
             SendServerInfo(pMsg->GetId());
+            break;
+         case CMD_GET_MY_CONFIG:
+            SendConfigForAgent(pMsg);
             break;
          case CMD_GET_OBJECTS:
             SendAllObjects(pMsg);
@@ -959,6 +963,11 @@ void ClientSession::ProcessingThread(void)
          case CMD_RESOLVE_DCI_NAMES:
             ResolveDCINames(pMsg);
             break;
+         case CMD_GET_AGENT_CFG_LIST:
+            SendAgentCfgList(pMsg->GetId());
+            break;
+//         case CMD_ADD_AGENT_CONFIG:
+//            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -7031,5 +7040,65 @@ void ClientSession::ResolveDCINames(CSCPMessage *pRequest)
    free(pdwDCIList);
 
    msg.SetVariable(VID_RCC, dwResult);
+   SendMessage(&msg);
+}
+
+
+//
+// Send list of available agent configs to client
+//
+
+void ClientSession::SendAgentCfgList(DWORD dwRqId)
+{
+   CSCPMessage msg;
+   DB_RESULT hResult;
+   DWORD i, dwId, dwNumRows;
+   TCHAR szText[MAX_DB_STRING];
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
+   {
+      hResult = DBSelect(g_hCoreDB, "SELECT config_id,config_name FROM agent_configs");
+      if (hResult != NULL)
+      {
+         dwNumRows = DBGetNumRows(hResult);
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
+         for(i = 0, dwId = VID_AGENT_CFG_LIST_BASE; i < dwNumRows; i++, dwId += 8)
+         {
+            msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 0));
+            _tcscpy(szText, DBGetField(hResult, i, 1));
+            DecodeSQLString(szText);
+            msg.SetVariable(dwId++, szText);
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   SendMessage(&msg);
+}
+
+
+//
+// Send config to agent on request
+//
+
+void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR szPlatform[MAX_DB_STRING];
+
+   pRequest->GetVariableStr(VID_PLATFORM_NAME, szPlatform);
+
    SendMessage(&msg);
 }
