@@ -1909,6 +1909,7 @@ static struct
    { 39, H_UpgradeFromV39 },
    { 40, H_UpgradeFromV40 },
    { 41, H_UpgradeFromV41 },
+   { 42, H_UpgradeFromV42 },
    { 0, NULL }
 };
 
