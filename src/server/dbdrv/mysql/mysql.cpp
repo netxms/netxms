@@ -88,6 +88,7 @@ extern "C" void EXPORT DrvDisconnect(DB_HANDLE hConn)
    {
       mysql_close(((MYSQL_CONN *)hConn)->pMySQL);
       MutexDestroy(((MYSQL_CONN *)hConn)->mutexQueryLock);
+		free(hConn);
    }
 }
 
