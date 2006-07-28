@@ -742,7 +742,15 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
                ConsolePrintf(pCtx, "ERROR: Invalid index name\n\n");
          }
       }
-      else if (IsCommand("MUTEX", szBuffer, 1))
+      else if (IsCommand("MEMORY", szBuffer, 2))
+      {
+#ifdef NETXMS_MEMORY_DEBUG
+			PrintMemoryBlocks();
+#else
+			ConsolePrintf(pCtx, "ERROR: Server was compiled without memory debugger\n\n");
+#endif
+		}
+      else if (IsCommand("MUTEX", szBuffer, 2))
       {
          ConsolePrintf(pCtx, "Mutex status:\n");
          DbgTestRWLock(g_rwlockIdIndex, "g_hMutexIdIndex", pCtx);

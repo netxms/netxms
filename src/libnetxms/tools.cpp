@@ -918,3 +918,109 @@ int LIBNETXMS_EXPORTABLE write(int hFile, void *pBuffer, size_t nBytes)
 }
 
 #endif   /* UNDER_CE */
+
+
+//
+// Memory debugging functions
+//
+
+#ifdef NETXMS_MEMORY_DEBUG
+
+#undef malloc
+#undef realloc
+#undef free
+
+typedef struct
+{
+	void *pAddr;
+	char szFile[MAX_PATH];
+	int nLine;
+	time_t nAllocTime;
+	LONG nBytes;
+} MEMORY_BLOCK;
+
+static MEMORY_BLOCK *m_pBlockList = NULL;
+static DWORD m_dwNumBlocks = 0;
+static MUTEX m_mutex;
+static time_t m_nStartTime;
+
+void InitMemoryDebugger(void)
+{
+	m_mutex = MutexCreate();
+	m_nStartTime = time(NULL);
+}
+
+static void AddBlock(void *p, char *file, int line, size_t size)
+{
+	m_pBlockList = (MEMORY_BLOCK *)realloc(m_pBlockList, sizeof(MEMORY_BLOCK) * (m_dwNumBlocks + 1));
+	m_pBlockList[m_dwNumBlocks].pAddr = p;
+	strcpy(m_pBlockList[m_dwNumBlocks].szFile, file);
+	m_pBlockList[m_dwNumBlocks].nLine = line;
+	m_pBlockList[m_dwNumBlocks].nAllocTime = time(NULL);
+	m_pBlockList[m_dwNumBlocks].nBytes = size;
+	m_dwNumBlocks++;
+}
+
+static void DeleteBlock(void *ptr)
+{
+	DWORD i;
+
+	for(i = 0; i < m_dwNumBlocks; i++)
+		if (m_pBlockList[i].pAddr == ptr)
+		{
+			m_dwNumBlocks--;
+			memmove(&m_pBlockList[i], &m_pBlockList[i + 1], sizeof(MEMORY_BLOCK) * (m_dwNumBlocks - i));
+			break;
+		}
+}
+
+void *nx_malloc(size_t size, char *file, int line)
+{
+	void *p;
+
+	p = malloc(size);
+	MutexLock(m_mutex, INFINITE);
+	AddBlock(p, file, line, size);
+	MutexUnlock(m_mutex);
+	return p;
+}
+
+void *nx_realloc(void *ptr, size_t size, char *file, int line)
+{
+	void *p;
+
+	p = realloc(ptr, size);
+	if (p != ptr)
+	{
+		MutexLock(m_mutex, INFINITE);
+		DeleteBlock(ptr);
+		AddBlock(p, file, line, size);
+		MutexUnlock(m_mutex);
+	}
+	return p;
+}
+
+void nx_free(void *ptr, char *file, int line)
+{
+	free(ptr);
+	MutexLock(m_mutex, INFINITE);
+	DeleteBlock(ptr);
+	MutexUnlock(m_mutex);
+}
+
+void PrintMemoryBlocks(void)
+{
+	DWORD i;
+	LONG nBytes;
+
+	MutexLock(m_mutex, INFINITE);
+	for(i = 0, nBytes = 0; i < m_dwNumBlocks; i++)
+	{
+		nBytes += m_pBlockList[i].nBytes;
+		printf("%08X %d %s:%d (AGE: %d)\n", m_pBlockList[i].pAddr, m_pBlockList[i].nBytes, m_pBlockList[i].szFile, m_pBlockList[i].nLine, m_pBlockList[i].nAllocTime - m_nStartTime);
+	}
+	printf("%dK bytes (%d bytes) in %d blocks\n", nBytes / 1024, nBytes, m_dwNumBlocks);
+	MutexUnlock(m_mutex);
+}
+
+#endif

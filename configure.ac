@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.159 2006-07-21 16:23:57 victor Exp $
+# $Id: configure.ac,v 1.160 2006-07-28 16:52:04 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -213,6 +213,14 @@ AC_ARG_WITH(client,
 	MODULES="$MODULES libnxmap libnxcl nxevent nxreport console"
 	BUILD_CLIENT="yes"
    DYNAMIC_COMPONENTS="yes"
+])
+
+
+AC_ARG_WITH(mdebug,
+[AS_HELP_STRING(--with-mdebug,use debug version of memory allocation functions)],
+[
+	CFLAGS="$CFLAGS -DNETXMS_MEMORY_DEBUG"
+	CPPFLAGS="$CPPFLAGS -DNETXMS_MEMORY_DEBUG"
 ])
 
 

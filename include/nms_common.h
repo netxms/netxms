@@ -622,4 +622,31 @@ typedef struct tagICMPHDR
 #endif
 
 
+//
+// Memory debug
+//
+
+#ifdef NETXMS_MEMORY_DEBUG												
+
+#ifdef __cplusplus												
+extern "C" {												  
+#endif
+
+void *nx_malloc(size_t, char *, int);
+void *nx_realloc(void *, size_t, char *, int);
+void nx_free(void *, char *, int);
+
+void InitMemoryDebugger(void);
+void PrintMemoryBlocks(void);
+
+#ifdef __cplusplus												
+}
+#endif
+
+#define malloc(x) nx_malloc(x, __FILE__, __LINE__)
+#define realloc(p, x) nx_realloc(p, x, __FILE__,  __LINE__)
+#define free(p) nx_free(p, __FILE__, __LINE__)											  
+
+#endif	/* NETXMS_MEMORY_DEBUG */
+
 #endif   /* _nms_common_h_ */
