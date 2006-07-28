@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.160 2006-07-28 16:52:04 victor Exp $
+# $Id: configure.ac,v 1.161 2006-07-28 17:32:52 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -201,7 +201,7 @@ AC_ARG_WITH(server,
 [
 	MODULES="$MODULES libnxmap libnxsnmp libnxsl server nxmibc nxscript"
    TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
-   CONTRIB_MODULES="$CONTRIB_MODULES mibs"
+   CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds"
 	BUILD_SERVER="yes"
    DYNAMIC_COMPONENTS="yes"
 ])
@@ -314,7 +314,7 @@ AC_ARG_WITH(dist,
 	SUBAGENT_DIRS="linux freebsd openbsd sunos aix ipso"
 	NXCONFIG="nxconfig"
    TOP_LEVEL_MODULES="sql images"
-   CONTRIB_MODULES="mibs"
+   CONTRIB_MODULES="mibs backgrounds"
 )
 
 AC_ARG_WITH(nxhttpd,
@@ -615,6 +615,7 @@ AC_CONFIG_FILES([
 	contrib/startup/gentoo/Makefile
 	contrib/startup/redhat/Makefile
 	contrib/mibs/Makefile
+	contrib/backgrounds/Makefile
 	doc/Makefile
 	doc/internal/Makefile
 	doc/manuals/Makefile

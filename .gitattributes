@@ -16,6 +16,8 @@
 /clean -text
 /configure.ac -text
 contrib/Makefile.am -text
+contrib/backgrounds/.keep -text
+contrib/backgrounds/Makefile.am -text
 contrib/dct/Makefile.am -text
 contrib/dct/generic_agent.dct -text
 contrib/dct/generic_object.dct -text
