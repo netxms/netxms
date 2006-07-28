@@ -5,6 +5,7 @@
 - Agent ported to IPSO
 - Added installer command line options for unattended installation of
   Windows agent
+- Fixed issues: #91, #92, #94
 
 
 *
