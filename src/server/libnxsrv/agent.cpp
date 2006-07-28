@@ -1080,6 +1080,7 @@ DWORD AgentConnection::SetupEncryption(RSA *pServerKey)
                dwError = ERR_INTERNAL_ERROR;
                break;
          }
+			delete pResp;
       }
       else
       {
