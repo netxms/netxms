@@ -94,6 +94,7 @@ contrib/mibs/RMON-MIB.txt -text
 contrib/mibs/RS-232-MIB.txt -text
 contrib/mibs/S5-CHASSIS-MIB.txt -text
 contrib/mibs/S5-CHASSIS-TRAP-MIB.txt -text
+contrib/mibs/S5-ETH-MULTISEG-TOPOLOGY-MIB.txt -text
 contrib/mibs/S5-ETH-REDUNDANT-LINKS-MIB.txt -text
 contrib/mibs/S5-ETHERNET-COMMON-MIB.txt -text
 contrib/mibs/S5-ETHERNET-MIB.txt -text
@@ -144,6 +145,7 @@ doc/internal/Makefile.am -text
 doc/internal/db_format_change.txt -text
 doc/internal/internals.rtf -text
 doc/internal/ipso.txt -text
+doc/internal/layer2-topology.txt -text
 doc/internal/netxms_architecture.vsd -text
 doc/internal/snmp.txt -text
 doc/manuals/Makefile.am -text

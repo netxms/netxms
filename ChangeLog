@@ -5,6 +5,7 @@
 - Agent ported to IPSO
 - Added installer command line options for unattended installation of
   Windows agent
+- New MIBs added: S5-ETH-MULTISEG-TOPOLOGY-MIB
 - Fixed issues: #91, #92, #94
 
 
