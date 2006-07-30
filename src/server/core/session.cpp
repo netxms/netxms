@@ -2476,13 +2476,14 @@ void ClientSession::ChangeDCIStatus(CSCPMessage *pRequest)
 
 
 //
-// Copy DCI from one node or template to another
+// Copy or move DCI from one node or template to another
 //
 
 void ClientSession::CopyDCI(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pSource, *pDestination;
+   BOOL bMove;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -2499,8 +2500,9 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
       {
          if (((Template *)pSource)->IsLockedBySession(m_dwIndex))
          {
+            bMove = pRequest->GetVariableShort(VID_MOVE_FLAG);
             // Check access rights
-            if ((pSource->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
+            if ((pSource->CheckAccessRights(m_dwUserId, bMove ? (OBJECT_ACCESS_READ | OBJECT_ACCESS_MODIFY) : OBJECT_ACCESS_READ)) &&
                 (pDestination->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
             {
                // Attempt to lock destination's DCI list
@@ -2512,7 +2514,7 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
                   DCItem *pDstItem;
                   int iErrors = 0;
 
-                  // Get list of items to be copied
+                  // Get list of items to be copied/moved
                   dwNumItems = pRequest->GetVariableLong(VID_NUM_ITEMS);
                   pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
                   pRequest->GetVariableInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
@@ -2526,7 +2528,18 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
                         pDstItem = new DCItem(pSrcItem);
                         pDstItem->ChangeBinding(CreateUniqueId(IDG_ITEM),
                                                 (Template *)pDestination);
-                        if (!((Template *)pDestination)->AddItem(pDstItem))
+                        if (((Template *)pDestination)->AddItem(pDstItem))
+                        {
+                           if (bMove)
+                           {
+                              // Delete original item
+                              if (!((Template *)pSource)->DeleteItem(pdwItemList[i]))
+                              {
+                                 iErrors++;
+                              }
+                           }
+                        }
+                        else
                         {
                            delete pDstItem;
                            iErrors++;

@@ -141,6 +141,8 @@ BEGIN_MESSAGE_MAP(CDataCollectionEditor, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_EXPORTDATA, OnUpdateItemExportdata)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_MOVETOTEMPLATE, OnUpdateItemMovetotemplate)
 	ON_COMMAND(ID_ITEM_MOVETOTEMPLATE, OnItemMovetotemplate)
+	ON_COMMAND(ID_ITEM_MOVE, OnItemMove)
+	ON_UPDATE_COMMAND_UI(ID_ITEM_MOVE, OnUpdateItemMove)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NM_DBLCLK, ID_LIST_VIEW, OnListViewDblClk)
 	ON_NOTIFY(LVN_COLUMNCLICK, ID_LIST_VIEW, OnListViewColumnClick)
@@ -543,9 +545,14 @@ void CDataCollectionEditor::OnUpdateItemCopy(CCmdUI* pCmdUI)
    pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
 }
 
-void CDataCollectionEditor::OnUpdateItemMovetotemplate(CCmdUI* pCmdUI) 
+void CDataCollectionEditor::OnUpdateItemMove(CCmdUI* pCmdUI) 
 {
    pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
+}
+
+void CDataCollectionEditor::OnUpdateItemMovetotemplate(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(!m_bIsTemplate && (m_wndListCtrl.GetSelectedCount() > 0));
 }
 
 void CDataCollectionEditor::OnUpdateItemDuplicate(CCmdUI* pCmdUI) 
@@ -760,67 +767,6 @@ BOOL CDataCollectionEditor::PreCreateWindow(CREATESTRUCT& cs)
       cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, NULL, NULL, 
                                          AfxGetApp()->LoadIcon(IDI_DATACOLLECT));
 	return CMDIChildWnd::PreCreateWindow(cs);
-}
-
-
-//
-// Copy DCIs to host(s)
-//
-
-static DWORD __cdecl CopyItems(DWORD dwSourceNode, DWORD dwNumObjects, DWORD *pdwObjectList,
-                               DWORD dwNumItems, DWORD *pdwItemList)
-{
-   DWORD i, dwResult;
-
-   for(i = 0; i < dwNumObjects; i++)
-   {
-      dwResult = NXCCopyDCI(g_hSession, dwSourceNode, pdwObjectList[i], dwNumItems, pdwItemList);
-      if (dwResult != RCC_SUCCESS)
-         break;
-   }
-   return dwResult;
-}
-
-
-//
-// WM_COMMAND::ID_ITEM_COPY message handler
-//
-
-void CDataCollectionEditor::OnItemCopy() 
-{
-   CObjectSelDlg dlg;
-   int iPos, iItem;
-   DWORD dwResult, dwNumItems, *pdwItemList;
-
-   dwNumItems = m_wndListCtrl.GetSelectedCount();
-   if (dwNumItems > 0)
-   {
-      pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
-
-      // Build list of items to be copied
-      iPos = 0;
-      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
-      while(iItem != -1)
-      {
-         pdwItemList[iPos++] = m_wndListCtrl.GetItemData(iItem);
-         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
-      }
-
-      // Ask for destination nodes
-      dlg.m_dwAllowedClasses = SCL_NODE | SCL_TEMPLATE;
-      if (dlg.DoModal() == IDOK)
-      {
-         // Perform request(s) to server
-         dwResult = DoRequestArg5(CopyItems, (void *)m_pItemList->dwNodeId, 
-               (void *)dlg.m_dwNumObjects, dlg.m_pdwObjectList, 
-               (void *)dwNumItems, pdwItemList, "Copying items...");
-         if (dwResult != RCC_SUCCESS)
-            theApp.ErrorBox(dwResult, "Error copying items: %s");
-      }
-
-      // Cleanup
-      free(pdwItemList);
-   }
 }
 
 
@@ -1085,41 +1031,31 @@ DWORD CDataCollectionEditor::MoveItemsToTemplate(DWORD dwTemplate,
    }
 
    // Copy DCIs to template
-   dwResult = NXCCopyDCI(g_hSession, dwNode, dwTemplate, dwNumItems, pdwItemList);
+   dwResult = NXCCopyDCI(g_hSession, dwNode, dwTemplate, dwNumItems, pdwItemList, TRUE);
    if (dwResult == RCC_SUCCESS)
    {
-      for(i = 0; i < dwNumItems; i++)
+      // Close node's DCI list
+      dwResult = NXCCloseNodeDCIList(g_hSession, m_pItemList);
+      
+      // Apply template to item if needed
+      if ((dwResult == RCC_SUCCESS) && (bNeedApply))
       {
-         dwResult = NXCDeleteDCI(g_hSession, m_pItemList, pdwItemList[i]);
-         if (dwResult != RCC_SUCCESS)
-            break;
+         dwResult = NXCApplyTemplate(g_hSession, dwTemplate, dwNode);
       }
 
+      // Re-open DCI list
       if (dwResult == RCC_SUCCESS)
       {
-         // Close node's DCI list
-         dwResult = NXCCloseNodeDCIList(g_hSession, m_pItemList);
-         
-         // Apply template to item if needed
-         if ((dwResult == RCC_SUCCESS) && (bNeedApply))
-         {
-            dwResult = NXCApplyTemplate(g_hSession, dwTemplate, dwNode);
-         }
-
-         // Re-open DCI list
+         m_pItemList = NULL;
+         Sleep(750);    // Allow template apply operation to complete
+         dwResult = NXCOpenNodeDCIList(g_hSession, dwNode, &m_pItemList);
          if (dwResult == RCC_SUCCESS)
          {
-            m_pItemList = NULL;
-            Sleep(750);    // Allow template apply operation to complete
-            dwResult = NXCOpenNodeDCIList(g_hSession, dwNode, &m_pItemList);
-            if (dwResult == RCC_SUCCESS)
-            {
-               RefreshItemList();
-            }
-            else
-            {
-               m_wndListCtrl.DeleteAllItems();
-            }
+            RefreshItemList();
+         }
+         else
+         {
+            m_wndListCtrl.DeleteAllItems();
          }
       }
    }
@@ -1148,6 +1084,9 @@ void CDataCollectionEditor::OnItemMovetotemplate()
    CObjectSelDlg dlg;
    int iPos, iItem;
    DWORD dwResult, dwNumItems, *pdwItemList;
+
+   if (m_bIsTemplate)
+      return;
 
    dwNumItems = m_wndListCtrl.GetSelectedCount();
    if (dwNumItems > 0)
@@ -1178,5 +1117,103 @@ void CDataCollectionEditor::OnItemMovetotemplate()
 
       // Cleanup
       free(pdwItemList);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_ITEM_COPY message handler
+//
+
+void CDataCollectionEditor::OnItemCopy() 
+{
+   CopyOrMoveItems(FALSE);
+}
+
+
+//
+// WM_COMMAND::ID_ITEM_MOVE message handler
+//
+
+void CDataCollectionEditor::OnItemMove() 
+{
+   CopyOrMoveItems(TRUE);
+}
+
+
+//
+// Copy DCIs to host(s)
+//
+
+static DWORD __cdecl CopyItems(DWORD dwSourceNode, DWORD dwNumObjects, DWORD *pdwObjectList,
+                               DWORD dwNumItems, DWORD *pdwItemList, BOOL bMove)
+{
+   DWORD i, dwResult;
+
+   for(i = 0; i < dwNumObjects; i++)
+   {
+      dwResult = NXCCopyDCI(g_hSession, dwSourceNode, pdwObjectList[i],
+                            dwNumItems, pdwItemList, bMove);
+      if (dwResult != RCC_SUCCESS)
+         break;
+   }
+   return dwResult;
+}
+
+
+//
+// Copy or move DCIs to another node or template
+//
+
+void CDataCollectionEditor::CopyOrMoveItems(BOOL bMove)
+{
+   CObjectSelDlg dlg;
+   int iPos, iItem, *pnIdxList;
+   DWORD i, dwResult, dwNumItems, *pdwItemList;
+
+   dwNumItems = m_wndListCtrl.GetSelectedCount();
+   if (dwNumItems > 0)
+   {
+      pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
+      if (bMove)
+         pnIdxList = (int *)malloc(sizeof(int) * dwNumItems);
+
+      // Build list of items to be copied
+      iPos = 0;
+      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+      while(iItem != -1)
+      {
+         if (bMove)
+            pnIdxList[iPos] = iItem;
+         pdwItemList[iPos++] = m_wndListCtrl.GetItemData(iItem);
+         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+      }
+
+      // Ask for destination nodes
+      dlg.m_dwAllowedClasses = SCL_NODE | SCL_TEMPLATE;
+      dlg.m_bSingleSelection = bMove;
+      if (dlg.DoModal() == IDOK)
+      {
+         // Perform request(s) to server
+         dwResult = DoRequestArg6(CopyItems, (void *)m_pItemList->dwNodeId, 
+               (void *)dlg.m_dwNumObjects, dlg.m_pdwObjectList, 
+               (void *)dwNumItems, pdwItemList, (void *)bMove,
+               bMove ? _T("Moving items...") : _T("Copying items..."));
+         if (dwResult == RCC_SUCCESS)
+         {
+            if (bMove)
+               for(i = 0, iPos = dwNumItems - 1; i < dwNumItems; i++)
+                  m_wndListCtrl.DeleteItem(pnIdxList[iPos--]);
+         }
+         else
+         {
+            theApp.ErrorBox(dwResult, bMove ? _T("Error moving items: %s") : _T("Error copying items: %s"));
+         }
+      }
+
+      // Cleanup
+      free(pdwItemList);
+      if (bMove)
+         free(pnIdxList);
    }
 }

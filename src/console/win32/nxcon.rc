@@ -311,7 +311,9 @@ BEGIN
         MENUITEM "&Edit...\tAlt+Enter",         ID_ITEM_EDIT
         MENUITEM "&Delete\tDel",                ID_ITEM_DELETE
         MENUITEM "&Copy to other node(s)...\tCtrl+C", ID_ITEM_COPY
-        MENUITEM "&Move to template...\tCtrl+M", ID_ITEM_MOVETOTEMPLATE
+        MENUITEM "&Move to other node(s)...\tCtrl+M", ID_ITEM_MOVE
+        MENUITEM "Convert to &template item...\tCtrl+T", 
+                                                ID_ITEM_MOVETOTEMPLATE
         MENUITEM "D&uplicate",                  ID_ITEM_DUPLICATE
         MENUITEM SEPARATOR
         MENUITEM "&Activate\tCtrl+A",           ID_ITEM_ACTIVATE
@@ -619,7 +621,8 @@ BEGIN
         MENUITEM "&Edit...",                    ID_ITEM_EDIT
         MENUITEM "&Delete",                     ID_ITEM_DELETE
         MENUITEM "&Copy to other node(s)...",   ID_ITEM_COPY
-        MENUITEM "&Move to template...",        ID_ITEM_MOVETOTEMPLATE
+        MENUITEM "&Move to other node(s)...",   ID_ITEM_MOVE
+        MENUITEM "Convert to &template item...", ID_ITEM_MOVETOTEMPLATE
         MENUITEM "D&uplicate",                  ID_ITEM_DUPLICATE
         MENUITEM SEPARATOR
         MENUITEM "&Activate",                   ID_ITEM_ACTIVATE
@@ -1023,8 +1026,9 @@ BEGIN
     "C",            ID_ITEM_COPY,           VIRTKEY, CONTROL, NOINVERT
     "D",            ID_ITEM_DISABLE,        VIRTKEY, CONTROL, NOINVERT
     "G",            ID_ITEM_GRAPH,          VIRTKEY, CONTROL, NOINVERT
-    "M",            ID_ITEM_MOVETOTEMPLATE, VIRTKEY, CONTROL, NOINVERT
+    "M",            ID_ITEM_MOVE,           VIRTKEY, CONTROL, NOINVERT
     "S",            ID_ITEM_SHOWDATA,       VIRTKEY, CONTROL, NOINVERT
+    "T",            ID_ITEM_MOVETOTEMPLATE, VIRTKEY, CONTROL, NOINVERT
     VK_DELETE,      ID_ITEM_DELETE,         VIRTKEY, NOINVERT
     VK_INSERT,      ID_ITEM_NEW,            VIRTKEY, NOINVERT
     VK_RETURN,      ID_ITEM_EDIT,           VIRTKEY, ALT, NOINVERT

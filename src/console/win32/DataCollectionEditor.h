@@ -35,6 +35,7 @@ public:
 
 // Implementation
 protected:
+	void CopyOrMoveItems(BOOL bMove);
 	void RefreshItemList(void);
 	int m_iSortImageBase;
 	BOOL m_bIsTemplate;
@@ -78,6 +79,8 @@ protected:
 	afx_msg void OnUpdateItemExportdata(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateItemMovetotemplate(CCmdUI* pCmdUI);
 	afx_msg void OnItemMovetotemplate();
+	afx_msg void OnItemMove();
+	afx_msg void OnUpdateItemMove(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
    afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);

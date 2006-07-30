@@ -481,7 +481,7 @@ BOOL LIBNXCL_EXPORTABLE NXCSwapThresholds(NXC_DCI *pItem, DWORD dwIndex1, DWORD 
 //
 
 DWORD LIBNXCL_EXPORTABLE NXCCopyDCI(NXC_SESSION hSession, DWORD dwSrcNodeId, DWORD dwDstNodeId, 
-                                    DWORD dwNumItems, DWORD *pdwItemList)
+                                    DWORD dwNumItems, DWORD *pdwItemList, BOOL bMove)
 {
    CSCPMessage msg;
    DWORD dwRqId;
@@ -494,6 +494,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCopyDCI(NXC_SESSION hSession, DWORD dwSrcNodeId, DWO
    msg.SetVariable(VID_DESTINATION_OBJECT_ID, dwDstNodeId);
    msg.SetVariable(VID_NUM_ITEMS, dwNumItems);
    msg.SetVariableToInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
+   msg.SetVariable(VID_MOVE_FLAG, (WORD)bMove);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
