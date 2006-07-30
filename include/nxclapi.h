@@ -174,7 +174,9 @@ typedef void * NXC_SESSION;
 #define NF_IS_PRINTER      0x00000020
 #define NF_IS_OSPF         0x00000040
 #define NF_BEHIND_NAT      0x00000080
-#define NF_IS_CPSNMP       0x00000100   /* CheckPoint SNMP agent on port 260 */
+#define NF_IS_CPSNMP       0x00000100  /* CheckPoint SNMP agent on port 260 */
+#define NF_IS_CDP          0x00000200
+#define NF_IS_NORTEL_TOPO  0x00000400  /* Supports Nortel topology discovery */
 
 #define NF_DISABLE_SNMP    0x01000000
 #define NF_DISABLE_NXCP    0x02000000

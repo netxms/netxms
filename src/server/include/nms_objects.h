@@ -534,6 +534,7 @@ protected:
    void RTLock(void) { MutexLock(m_mutexRTAccess, INFINITE); }
    void RTUnlock(void) { MutexUnlock(m_mutexRTAccess); }
 
+   BOOL CheckSNMPIntegerValue(char *pszOID, int nValue);
    void CheckOSPFSupport(void);
    void SetAgentProxy(AgentConnection *pConn);
 

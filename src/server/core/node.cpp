@@ -1030,14 +1030,13 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
             }
 
             // Check IP forwarding
-            if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
-                        ".1.3.6.1.2.1.4.1.0", NULL, 0, &dwTemp, sizeof(DWORD),
-                        FALSE, FALSE) == SNMP_ERR_SUCCESS)
+            if (CheckSNMPIntegerValue(".1.3.6.1.2.1.4.1.0", 1))
             {
-               if (dwTemp == 1)
-                  m_dwFlags |= NF_IS_ROUTER;
-               else
-                  m_dwFlags &= ~NF_IS_ROUTER;
+               m_dwFlags |= NF_IS_ROUTER;
+            }
+            else
+            {
+               m_dwFlags &= ~NF_IS_ROUTER;
             }
 
             // Check for bridge MIB support
@@ -1050,6 +1049,26 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
             else
             {
                m_dwFlags &= ~NF_IS_BRIDGE;
+            }
+
+            // Check for CDP (Cisco Discovery Protocol) support
+            if (CheckSNMPIntegerValue(".1.3.6.1.4.1.9.9.23.1.3.1.0", 1))
+            {
+               m_dwFlags |= NF_IS_CDP;
+            }
+            else
+            {
+               m_dwFlags &= ~NF_IS_CDP;
+            }
+
+            // Check for Nortel topology discovery support
+            if (CheckSNMPIntegerValue(".1.3.6.1.4.1.45.1.6.13.1.2.0", 1))
+            {
+               m_dwFlags |= NF_IS_NORTEL_TOPO;
+            }
+            else
+            {
+               m_dwFlags &= ~NF_IS_NORTEL_TOPO;
             }
 
             UnlockData();
@@ -2428,4 +2447,20 @@ void Node::PrepareForDeletion(void)
       UnlockData();
       ThreadSleepMs(100);
    }
+}
+
+
+//
+// Check if specified SNMP variable set to specified value.
+// If variable doesn't exist at all, will return FALSE
+//
+
+BOOL Node::CheckSNMPIntegerValue(char *pszOID, int nValue)
+{
+   DWORD dwTemp;
+
+   if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
+               pszOID, NULL, 0, &dwTemp, sizeof(DWORD), FALSE, FALSE) == SNMP_ERR_SUCCESS)
+      return (int)dwTemp == nValue;
+   return FALSE;
 }

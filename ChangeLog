@@ -6,7 +6,7 @@
 - Added installer command line options for unattended installation of
   Windows agent
 - New MIBs added: S5-ETH-MULTISEG-TOPOLOGY-MIB
-- Fixed issues: #91, #92, #94
+- Fixed issues: #4, #67, #91, #92, #94
 
 
 *

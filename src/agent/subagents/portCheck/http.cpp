@@ -1,4 +1,4 @@
-/* $Id: http.cpp,v 1.6 2005-10-18 21:33:26 victor Exp $ */
+/* $Id: http.cpp,v 1.7 2006-07-30 08:22:13 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -48,7 +48,7 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 		char *szHost, char *szMatch)
 {
 	int nRet = 0;
-	int nSd;
+	int nSd, nBytes;
 	regex_t preg;
 
 	if (regcomp(&preg, szMatch, REG_EXTENDED | REG_ICASE | REG_NOSUB) != 0)
@@ -59,7 +59,7 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
 	if (nSd > 0)
 	{
-		char szTmp[2048];
+		char szTmp[4096];
 
 		nRet = PC_ERR_HANDSHAKE;
 
@@ -67,12 +67,11 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 				"GET %s HTTP/1.1\r\nConnection: close\r\nHost: %s:%d\r\n\r\n",
 				szURI, szHost, nPort);
 
-		//printf("GET:\n|%s|\n", szTmp);
-
 		if (NetWrite(nSd, szTmp, strlen(szTmp)) > 0)
 		{
-			if (NetRead(nSd, szTmp, sizeof(szTmp)) >= 8)
+			if ((nBytes = NetRead(nSd, szTmp, sizeof(szTmp))) >= 8)
 			{
+            szTmp[nBytes] = 0;
 				if (regexec(&preg, szTmp, 0, NULL, 0) == 0)
 				{
 					nRet = PC_ERR_NONE;
@@ -95,6 +94,10 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2005/10/18 21:33:26  victor
+- Default port for ServiceCheck.HTTP(*) changed from 22 to 80 :)
+- All ServiceCheck.XXX parameters now returns actual failure code, not just 0 or 1
+
 Revision 1.5  2005/10/18 09:01:16  alk
 Added commands (ServiceCheck.*) for
 	http
