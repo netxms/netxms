@@ -555,6 +555,22 @@ BEGIN
         MENUITEM "&Redo layout",                ID_MAP_REDOLAYOUT
         MENUITEM "S&et background...",          ID_MAP_SETBACKGROUND
     END
+    POPUP "Data"
+    BEGIN
+        MENUITEM "&Scale value...\tCtrl+S",     ID_DATA_SCALEVALUE
+        POPUP "Scale &to"
+        BEGIN
+            MENUITEM "1:1\tCtrl+N",                 ID_DATA_SCALE_NORMAL
+            MENUITEM "1:1024 (Kbytes)\tCtrl+K",     ID_DATA_SCALE_KBYTES
+            MENUITEM "1:1000 (Kilo)\tCtrl+Shift+K", ID_DATA_SCALE_KILO
+            MENUITEM "1:1048576 (Mbytes)\tCtrl+M",  ID_DATA_SCALE_MBYTES
+            MENUITEM "1:1000000 (Mega)\tCtrl+Shift+M", ID_DATA_SCALE_MEGA
+            MENUITEM "1:1073741824 (Gbytes)\tCtrl+G", ID_DATA_SCALE_GBYTES
+            MENUITEM "1:1000000000 (Giga)\tCtrl+Shift+G", ID_DATA_SCALE_GIGA
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Copy to clipboard\tCtrl+C",  ID_DATA_COPYTOCLIPBOARD
+    END
 END
 
 IDM_CONTEXT MENU DISCARDABLE 
@@ -861,6 +877,22 @@ BEGIN
         MENUITEM "&Move...",                    ID_DESKTOP_MOVE
         MENUITEM "&Delete",                     ID_DESKTOP_DELETE
     END
+    POPUP "Data"
+    BEGIN
+        MENUITEM "&Scale value...",             ID_DATA_SCALEVALUE
+        POPUP "Scale &to"
+        BEGIN
+            MENUITEM "1:1",                         ID_DATA_SCALE_NORMAL
+            MENUITEM "1:1024 (Kbytes)",             ID_DATA_SCALE_KBYTES
+            MENUITEM "1:1000 (Kilo)",               ID_DATA_SCALE_KILO
+            MENUITEM "1:1048576 (Mbytes)",          ID_DATA_SCALE_MBYTES
+            MENUITEM "1:1000000 (Mega)",            ID_DATA_SCALE_MEGA
+            MENUITEM "1:1073741824 (Gbytes)",       ID_DATA_SCALE_GBYTES
+            MENUITEM "1:1000000000 (Giga)",         ID_DATA_SCALE_GIGA
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Copy to clipboard",          ID_DATA_COPYTOCLIPBOARD
+    END
 END
 
 
@@ -1051,6 +1083,22 @@ BEGIN
     "S",            ID_SCRIPT_SAVE,         VIRTKEY, CONTROL, ALT, NOINVERT
     "T",            ID_SCRIPT_VIEWASTREE,   VIRTKEY, CONTROL, ALT, NOINVERT
     VK_DELETE,      ID_EDIT_DELETE,         VIRTKEY, NOINVERT
+END
+
+IDA_DATA_VIEW ACCELERATORS DISCARDABLE 
+BEGIN
+    "C",            ID_DATA_COPYTOCLIPBOARD, VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_DATA_SCALE_GBYTES,   VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_DATA_SCALE_GIGA,     VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "K",            ID_DATA_SCALE_KBYTES,   VIRTKEY, CONTROL, NOINVERT
+    "K",            ID_DATA_SCALE_KILO,     VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "M",            ID_DATA_SCALE_MBYTES,   VIRTKEY, CONTROL, NOINVERT
+    "M",            ID_DATA_SCALE_MEGA,     VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "N",            ID_DATA_SCALE_NORMAL,   VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_DATA_SCALEVALUE,     VIRTKEY, CONTROL, NOINVERT
 END
 
 

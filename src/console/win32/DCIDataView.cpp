@@ -21,6 +21,7 @@ CDCIDataView::CDCIDataView()
    m_dwNodeId = 0;
    m_dwItemId = 0;
    m_szItemName[0] = 0;
+   m_nScale = 1;
 }
 
 CDCIDataView::CDCIDataView(DWORD dwNodeId, DWORD dwItemId, TCHAR *pszItemName)
@@ -28,6 +29,7 @@ CDCIDataView::CDCIDataView(DWORD dwNodeId, DWORD dwItemId, TCHAR *pszItemName)
    m_dwNodeId = dwNodeId;
    m_dwItemId = dwItemId;
    nx_strncpy(m_szItemName, pszItemName, MAX_OBJECT_NAME + MAX_ITEM_NAME + 4);
+   m_nScale = 1;
 }
 
 CDCIDataView::CDCIDataView(TCHAR *pszParams)
@@ -37,6 +39,7 @@ CDCIDataView::CDCIDataView(TCHAR *pszParams)
    if (!ExtractWindowParam(pszParams, _T("IN"), m_szItemName,
                            MAX_OBJECT_NAME + MAX_ITEM_NAME + 4))
       m_szItemName[0] = 0;
+   m_nScale = 1;
 }
 
 CDCIDataView::~CDCIDataView()
@@ -51,6 +54,15 @@ BEGIN_MESSAGE_MAP(CDCIDataView, CMDIChildWnd)
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
+	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_DATA_SCALE_GBYTES, OnDataScaleGbytes)
+	ON_COMMAND(ID_DATA_SCALE_GIGA, OnDataScaleGiga)
+	ON_COMMAND(ID_DATA_SCALE_KBYTES, OnDataScaleKbytes)
+	ON_COMMAND(ID_DATA_SCALE_KILO, OnDataScaleKilo)
+	ON_COMMAND(ID_DATA_SCALE_MBYTES, OnDataScaleMbytes)
+	ON_COMMAND(ID_DATA_SCALE_MEGA, OnDataScaleMega)
+	ON_COMMAND(ID_DATA_SCALE_NORMAL, OnDataScaleNormal)
+	ON_COMMAND(ID_DATA_COPYTOCLIPBOARD, OnDataCopytoclipboard)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_VIEW, OnListViewItemChange)
    ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
@@ -89,6 +101,7 @@ int CDCIDataView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(1, "Value", LVCFMT_LEFT, 
                               rect.right - 130 - GetSystemMetrics(SM_CXVSCROLL));
 
+   DisplayScale();
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 	
 	return 0;
@@ -152,6 +165,7 @@ void CDCIDataView::OnViewRefresh()
       NXC_DCI_ROW *pRow;
       TCHAR szBuffer[256];
 
+      // Fill list control with data
       for(i = 0, pRow = pData->pRows; i < pData->dwNumRows; i++)
       {
          FormatTimeStamp(pRow->dwTimeStamp, szBuffer, TS_LONG_DATE_TIME);
@@ -167,19 +181,19 @@ void CDCIDataView::OnViewRefresh()
                switch(pData->wDataType)
                {
                   case DCI_DT_INT:
-                     sprintf(szBuffer, "%d", pRow->value.dwInt32);
+                     sprintf(szBuffer, "%d", pRow->value.dwInt32 / m_nScale);
                      break;
                   case DCI_DT_UINT:
-                     sprintf(szBuffer, "%u", pRow->value.dwInt32);
+                     sprintf(szBuffer, "%u", pRow->value.dwInt32 / m_nScale);
                      break;
                   case DCI_DT_INT64:
-                     sprintf(szBuffer, "%I64d", pRow->value.qwInt64);
+                     sprintf(szBuffer, "%I64d", pRow->value.qwInt64 / m_nScale);
                      break;
                   case DCI_DT_UINT64:
-                     sprintf(szBuffer, "%I64u", pRow->value.qwInt64);
+                     sprintf(szBuffer, "%I64u", pRow->value.qwInt64 / m_nScale);
                      break;
                   case DCI_DT_FLOAT:
-                     sprintf(szBuffer, "%f", pRow->value.dFloat);
+                     sprintf(szBuffer, "%f", pRow->value.dFloat / m_nScale);
                      break;
                   default:
                      sprintf(szBuffer, "Unknown data type (%d)", pData->wDataType);
@@ -239,4 +253,142 @@ LRESULT CDCIDataView::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
    _sntprintf(pInfo->szParameters, MAX_DB_STRING, _T("N:%d\x7FI:%d\x7FIN:%s"),
               m_dwNodeId, m_dwItemId, m_szItemName);
    return 1;
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CDCIDataView::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+
+   pMenu = theApp.GetContextMenu(21);
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+}
+
+
+//
+// Scale presets
+//
+
+void CDCIDataView::OnDataScaleKbytes() 
+{
+   SetScale(1024);
+}
+
+void CDCIDataView::OnDataScaleKilo() 
+{
+   SetScale(1000);
+}
+
+void CDCIDataView::OnDataScaleMbytes() 
+{
+   SetScale(1048576);
+}
+
+void CDCIDataView::OnDataScaleMega() 
+{
+   SetScale(1000000);
+}
+
+void CDCIDataView::OnDataScaleGbytes() 
+{
+   SetScale(1073741824);
+}
+
+void CDCIDataView::OnDataScaleGiga() 
+{
+   SetScale(1000000000);
+}
+
+void CDCIDataView::OnDataScaleNormal() 
+{
+   SetScale(1);
+}
+
+
+//
+// Display current scale on status bar
+//
+
+void CDCIDataView::DisplayScale()
+{
+   TCHAR szBuffer[256];
+
+   _stprintf(szBuffer, _T("1:%d"), m_nScale);
+   switch(m_nScale)
+   {
+      case 1024:
+         _tcscat(szBuffer, _T(" (Kbytes)"));
+         break;
+      case 1048576:
+         _tcscat(szBuffer, _T(" (Mbytes)"));
+         break;
+      case 1073741824:
+         _tcscat(szBuffer, _T(" (Gbytes)"));
+         break;
+      default:
+         break;
+   }
+   m_wndStatusBar.SetText(szBuffer, 2, 0);
+}
+
+
+//
+// Set new scale for values
+//
+
+void CDCIDataView::SetScale(int nScale)
+{
+   m_nScale = nScale;
+   DisplayScale();
+   PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
+}
+
+
+//
+// WM_COMMAND::ID_DATA_COPYTOCLIPBOARD message handler
+//
+
+void CDCIDataView::OnDataCopytoclipboard() 
+{
+   CString str;
+   int i, nLines;
+   HANDLE hMem;
+   TCHAR *pMem;
+
+   str.Empty();
+   nLines = m_wndListCtrl.GetItemCount();
+   for(i = 0; i < nLines; i++)
+   {
+      str += m_wndListCtrl.GetItemText(i, 0);
+      str += _T(" ");
+      str += m_wndListCtrl.GetItemText(i, 1);
+      str += _T("\r\n");
+   }
+
+   hMem = GlobalAlloc(GMEM_MOVEABLE, (str.GetLength() + 1) * sizeof(TCHAR));
+   if (hMem != NULL)
+   {
+      pMem = (TCHAR *)GlobalLock(hMem);
+      if (pMem != NULL)
+      {
+         _tcscpy(pMem, (LPCTSTR)str);
+         GlobalUnlock(hMem);
+
+         if (OpenClipboard())
+         {
+            EmptyClipboard();
+            SetClipboardData(CF_TEXT, hMem);
+            CloseClipboard();
+         }
+         else
+         {
+            MessageBox(_T("Cannot open clipboard"), _T("Error"), MB_OK | MB_ICONSTOP);
+         }
+      }
+      GlobalFree(hMem);
+   }
 }

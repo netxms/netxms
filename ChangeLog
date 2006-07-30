@@ -6,6 +6,8 @@
 - Added installer command line options for unattended installation of
   Windows agent
 - New MIBs added: S5-ETH-MULTISEG-TOPOLOGY-MIB
+- Windows console:
+	- DCI history data viewer improved
 - Fixed issues: #4, #67, #80, #91, #92, #93, #94
 
 

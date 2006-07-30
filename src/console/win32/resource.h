@@ -197,6 +197,7 @@
 #define IDD_OBJECT_COND_DATA            327
 #define IDD_ADD_DCI                     328
 #define IDD_COND_DCI_PROP               329
+#define IDA_DATA_VIEW                   330
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -725,6 +726,15 @@
 #define ID_TOOLS_CHANGEPASSWORD         33016
 #define ID_OBJECT_CREATE_CONDITION      33017
 #define ID_ITEM_MOVE                    33019
+#define ID_DATA_SCALEVALUE              33020
+#define ID_DATA_COPYTOCLIPBOARD         33021
+#define ID_DATA_SCALE_KBYTES            33022
+#define ID_DATA_SCALE_KILO              33023
+#define ID_DATA_SCALE_MBYTES            33024
+#define ID_DATA_SCALE_MEGA              33025
+#define ID_DATA_SCALE_GBYTES            33026
+#define ID_DATA_SCALE_GIGA              33027
+#define ID_DATA_SCALE_NORMAL            33028
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -734,8 +744,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        330
-#define _APS_NEXT_COMMAND_VALUE         33020
+#define _APS_NEXT_RESOURCE_VALUE        331
+#define _APS_NEXT_COMMAND_VALUE         33029
 #define _APS_NEXT_CONTROL_VALUE         1373
 #define _APS_NEXT_SYMED_VALUE           128
 #endif

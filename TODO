@@ -62,7 +62,6 @@ WINDOWS CONSOLE:
 - Enlarge 16x16 status overlay icons
 - Add real-time graphs
 - Add sorting to all list views
-- Add "Copy value to clipboard" to "Collected data" window
 - Implement drag-and-drop editing in policy editor
 - Add "previous value" and "delta" fields to last values view
 - Add option to split exported DCI data into several files or limit export

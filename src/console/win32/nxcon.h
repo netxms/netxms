@@ -190,6 +190,8 @@ protected:
 	HACCEL m_hScriptManagerAccel; // Accelerator for script manager
 	HMENU m_hViewBuilderMenu;     // Menu for view builder
 	HACCEL m_hViewBuilderAccel;   // Accelerator for view builder
+	HMENU m_hDataViewMenu;        // Menu for DCI data viewer
+	HACCEL m_hDataViewAccel;      // Accelerator for DCI data viewer
 	
 public:
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);

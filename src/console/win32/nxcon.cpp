@@ -373,6 +373,10 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hScriptManagerMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 17), "&Edit");
    InsertMenu(m_hScriptManagerMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 20), "&Script");
 
+   m_hDataViewMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hDataViewMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hDataViewMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 22), "&Data");
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -392,6 +396,7 @@ BOOL CConsoleApp::InitInstance()
 	m_hLPPEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hObjToolsEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_OBJECT_TOOLS_EDITOR));
 	m_hScriptManagerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_SCRIPT_MANAGER));
+	m_hDataViewAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_DATA_VIEW));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)
@@ -472,6 +477,8 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hLPPEditorAccel);
    SafeFreeResource(m_hScriptManagerMenu);
    SafeFreeResource(m_hScriptManagerAccel);
+   SafeFreeResource(m_hDataViewMenu);
+   SafeFreeResource(m_hDataViewAccel);
 
    CloseHandle(g_mutexActionListAccess);
 
@@ -1370,7 +1377,7 @@ CMDIChildWnd *CConsoleApp::ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *psz
       pWnd = new CDCIDataView(pszParams);
    }
    CreateChildFrameWithSubtitle(pWnd, IDR_DCI_DATA_VIEW,
-                                pWnd->GetItemName(), m_hMDIMenu, m_hMDIAccel);
+                                pWnd->GetItemName(), m_hDataViewMenu, m_hDataViewAccel);
    return pWnd;
 }
 
