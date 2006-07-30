@@ -628,6 +628,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_SERVER_INFO:
             SendServerInfo(pMsg->GetId());
             break;
+         case CMD_KEEPALIVE:
+            RespondToKeepalive(pMsg->GetId());
+            break;
          case CMD_GET_MY_CONFIG:
             SendConfigForAgent(pMsg);
             break;
@@ -987,6 +990,21 @@ void ClientSession::ProcessingThread(void)
       delete pMsg;
       m_iState = (m_dwFlags & CSF_AUTHENTICATED) ? SESSION_STATE_IDLE : SESSION_STATE_INIT;
    }
+}
+
+
+//
+// Respond to client's keepalive message
+//
+
+void ClientSession::RespondToKeepalive(DWORD dwRqId)
+{
+   CSCPMessage msg;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   SendMessage(&msg);
 }
 
 

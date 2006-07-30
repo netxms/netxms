@@ -146,7 +146,6 @@ static DWORD WINAPI LoginThread(void *pArg)
                          (g_dwOptions & OPT_MATCH_SERVER_VERSION) ? TRUE : FALSE,
                          (g_dwOptions & OPT_ENCRYPT_CONNECTION) ? TRUE : FALSE);
 
-   // If successful, load container objects' categories
    if (dwResult == RCC_SUCCESS)
    {
       theApp.GetMainWnd()->PostMessage(NXCM_STATE_CHANGE, TRUE, 0);
@@ -164,6 +163,11 @@ static DWORD WINAPI LoginThread(void *pArg)
       }
    }
 
+   // Setup connection watchdog
+   if (dwResult == RCC_SUCCESS)
+      NXCStartWatchdog(g_hSession);
+
+   // If successful, load container objects' categories
    if (dwResult == RCC_SUCCESS)
    {
       SetInfoText(hWnd, "Loading container categories...");

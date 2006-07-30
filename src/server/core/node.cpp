@@ -1005,7 +1005,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                      ".1.3.6.1.2.1.1.2.0", NULL, 0, szBuffer, 4096,
                      FALSE, FALSE) == SNMP_ERR_SUCCESS)
          {
-            DWORD dwNodeFlags, dwNodeType, dwTemp;
+            DWORD dwNodeFlags, dwNodeType;
 
             LockData();
 

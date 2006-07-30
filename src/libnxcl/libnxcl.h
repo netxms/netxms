@@ -54,6 +54,7 @@
 #define NXC_SF_USERDB_LOADED     0x0001
 #define NXC_SF_HAS_OBJECT_CACHE  0x0002
 #define NXC_SF_CHANGE_PASSWD     0x0004
+#define NXC_SF_CONN_BROKEN       0x0008
 
 
 //
@@ -119,6 +120,8 @@ private:
    DWORD m_dwReceiverBufferSize;
    NXC_DCI_LIST *m_pItemList;
    THREAD m_hRecvThread;
+   THREAD m_hWatchdogThread;
+   CONDITION m_condStopThreads;
    void *m_pClientData;       // Client-defined data
 
    DWORD m_dwUserId;          // Id of logged-in user
@@ -165,6 +168,9 @@ private:
    void AddObject(NXC_OBJECT *pObject, BOOL bSortIndex);
    void LoadObjectsFromCache(TCHAR *pszCacheFile);
 
+   void WatchdogThread(void);
+   static THREAD_RESULT THREAD_CALL WatchdogThreadStarter(void *pArg);
+
 public:
    NXCL_Session();
    ~NXCL_Session();
@@ -173,6 +179,7 @@ public:
    void Disconnect(void);
 
    void SetRecvThread(THREAD hThread) { m_hRecvThread = hThread; }
+   void StartWatchdogThread(void);
 
    BOOL SendMsg(CSCPMessage *pMsg);
    CSCPMessage *WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut = 0);
@@ -225,6 +232,7 @@ public:
    void SetClientData(void *pData) { m_pClientData = pData; }
    void *GetClientData(void) { return m_pClientData; }
 
+   void OnNotify(CSCPMessage *pMsg);
    void ParseLoginMessage(CSCPMessage *pMsg);
    DWORD GetCurrentUserId(void) { return m_dwUserId; }
    DWORD GetCurrentSystemAccess(void) { return m_dwSystemAccess; }

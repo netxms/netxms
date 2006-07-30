@@ -171,6 +171,16 @@ BOOL LIBNXCL_EXPORTABLE NXCNeedPasswordChange(NXC_SESSION hSession)
 
 
 //
+// Check if password needs to be changed
+//
+
+void LIBNXCL_EXPORTABLE NXCStartWatchdog(NXC_SESSION hSession)
+{
+   ((NXCL_Session *)hSession)->StartWatchdogThread();
+}
+
+
+//
 // Get text for error
 //
 
@@ -239,9 +249,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Unknown map name"),
       _T("Invalid map ID"),
       _T("Account disabled"),
-      _T("No more grace logins")
+      _T("No more grace logins"),
+      _T("Server connection broken")
    };
-   return ((dwError >= 0) && (dwError <= RCC_NO_GRACE_LOGINS)) ? pszErrorText[dwError] : _T("No text message for this error");
+   return ((dwError >= 0) && (dwError <= RCC_CONNECTION_BROKEN)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

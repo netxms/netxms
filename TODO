@@ -59,7 +59,6 @@ SOLARIS AGENT:
 
 WINDOWS CONSOLE:
 
-- Find good graph creation library
 - Enlarge 16x16 status overlay icons
 - Add real-time graphs
 - Add sorting to all list views

@@ -54,12 +54,15 @@ NXCL_Session::NXCL_Session()
    m_pUserList = NULL;
 
    m_hRecvThread = INVALID_THREAD_HANDLE;
+   m_hWatchdogThread = INVALID_THREAD_HANDLE;
    m_pCtx = NULL;
 
    m_hCurrFile = -1;
    m_dwFileRqId = 0;
    m_condFileRq = ConditionCreate(FALSE);
    m_mutexFileRq = MutexCreate();
+
+   m_condStopThreads = ConditionCreate(TRUE);
 
    for(i = 0; i < SYNC_OP_COUNT; i++)
    {
@@ -102,6 +105,8 @@ NXCL_Session::~NXCL_Session()
    MutexDestroy(m_mutexFileRq);
    ConditionDestroy(m_condFileRq);
 
+   ConditionDestroy(m_condStopThreads);
+
    for(i = 0; i < SYNC_OP_COUNT; i++)
    {
       MutexDestroy(m_mutexSyncOpAccess[i]);
@@ -123,6 +128,15 @@ NXCL_Session::~NXCL_Session()
 
 void NXCL_Session::Disconnect(void)
 {
+   // Terminate watchdog thread
+   ConditionSet(m_condStopThreads);
+   if (m_hWatchdogThread != INVALID_THREAD_HANDLE)
+   {
+      ThreadJoin(m_hWatchdogThread);
+      m_hWatchdogThread = INVALID_THREAD_HANDLE;
+   }
+   ConditionReset(m_condStopThreads);
+
    // Close socket
    shutdown(m_hSocket, SHUT_RDWR);
    closesocket(m_hSocket);
@@ -165,6 +179,8 @@ void NXCL_Session::DestroyAllObjects(void)
 
 CSCPMessage *NXCL_Session::WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut)
 {
+   if (m_dwFlags & NXC_SF_CONN_BROKEN)
+      return NULL;
    return m_msgWaitQueue.WaitForMessage(wCode, dwId, 
       dwTimeOut == 0 ? m_dwCommandTimeout : dwTimeOut);
 }
@@ -176,6 +192,8 @@ CSCPMessage *NXCL_Session::WaitForMessage(WORD wCode, DWORD dwId, DWORD dwTimeOu
 
 CSCP_MESSAGE *NXCL_Session::WaitForRawMessage(WORD wCode, DWORD dwId, DWORD dwTimeOut)
 {
+   if (m_dwFlags & NXC_SF_CONN_BROKEN)
+      return NULL;
    return m_msgWaitQueue.WaitForRawMessage(wCode, dwId, 
       dwTimeOut == 0 ? m_dwCommandTimeout : dwTimeOut);
 }
@@ -191,15 +209,22 @@ DWORD NXCL_Session::WaitForRCC(DWORD dwRqId, DWORD dwTimeOut)
    CSCPMessage *pResponse;
    DWORD dwRetCode;
 
-   pResponse = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, dwTimeOut);
-   if (pResponse != NULL)
+   if (m_dwFlags & NXC_SF_CONN_BROKEN)
    {
-      dwRetCode = pResponse->GetVariableLong(VID_RCC);
-      delete pResponse;
+      dwRetCode = RCC_CONNECTION_BROKEN;
    }
    else
    {
-      dwRetCode = RCC_TIMEOUT;
+      pResponse = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, dwTimeOut);
+      if (pResponse != NULL)
+      {
+         dwRetCode = pResponse->GetVariableLong(VID_RCC);
+         delete pResponse;
+      }
+      else
+      {
+         dwRetCode = RCC_TIMEOUT;
+      }
    }
    return dwRetCode;
 }
@@ -215,6 +240,9 @@ BOOL NXCL_Session::SendMsg(CSCPMessage *pMsg)
    CSCP_ENCRYPTED_MESSAGE *pEnMsg;
    BOOL bResult;
    TCHAR szBuffer[128];
+
+   if (m_dwFlags & NXC_SF_CONN_BROKEN)
+      return FALSE;
 
    DebugPrintf(_T("SendMsg(\"%s\"), id:%d)"), CSCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
    pRawMsg = pMsg->CreateMessage();
@@ -955,4 +983,94 @@ void NXCL_Session::ParseLoginMessage(CSCPMessage *pMsg)
    m_dwSystemAccess = pMsg->GetVariableLong(VID_USER_SYS_RIGHTS);
    if (pMsg->GetVariableShort(VID_CHANGE_PASSWD_FLAG))
       m_dwFlags |= NXC_SF_CHANGE_PASSWD;
+}
+
+
+//
+// Start watchdog thread
+//
+
+void NXCL_Session::StartWatchdogThread(void)
+{
+   if (m_hWatchdogThread == INVALID_THREAD_HANDLE)
+      m_hWatchdogThread = ThreadCreateEx(NXCL_Session::WatchdogThreadStarter, 0, this);
+}
+
+
+//
+// Starter function for watchdog thread
+//
+
+THREAD_RESULT THREAD_CALL NXCL_Session::WatchdogThreadStarter(void *pArg)
+{
+   ((NXCL_Session *)pArg)->WatchdogThread();
+   return THREAD_OK;
+}
+
+
+//
+// Watchdog thread
+//
+
+void NXCL_Session::WatchdogThread(void)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+   BOOL bConnBroken = FALSE;
+
+   msg.SetCode(CMD_KEEPALIVE);
+   while(1)
+   {
+      if (ConditionWait(m_condStopThreads, 30000))
+         break;   // Need to stop
+
+      // Send keepalive message
+      dwRqId = CreateRqId();
+      msg.SetId(dwRqId);
+
+      if (SendMsg(&msg))
+      {
+         if (WaitForRCC(dwRqId) != RCC_SUCCESS)
+         {
+            bConnBroken = TRUE;
+         }
+      }
+      else
+      {
+         bConnBroken = TRUE;
+      }
+
+      if (bConnBroken)
+      {
+         m_dwFlags |= NXC_SF_CONN_BROKEN;
+         CallEventHandler(NXC_EVENT_CONNECTION_BROKEN, 0, NULL);
+         break;
+      }
+   }
+}
+
+
+//
+// Handler for CMD_NOTIFY message
+//
+
+void NXCL_Session::OnNotify(CSCPMessage *pMsg)
+{
+   DWORD dwCode;
+
+   dwCode = pMsg->GetVariableLong(VID_NOTIFICATION_CODE);
+   if (dwCode == NX_NOTIFY_SHUTDOWN)
+   {
+      // Stop watchdog and set broken connection flag
+      ConditionSet(m_condStopThreads);
+      if (m_hWatchdogThread != INVALID_THREAD_HANDLE)
+      {
+         ThreadJoin(m_hWatchdogThread);
+         m_hWatchdogThread = INVALID_THREAD_HANDLE;
+      }
+      ConditionReset(m_condStopThreads);
+      m_dwFlags |= NXC_SF_CONN_BROKEN;
+   }
+   CallEventHandler(NXC_EVENT_NOTIFICATION, dwCode,
+                    (void *)pMsg->GetVariableLong(VID_NOTIFICATION_DATA));
 }

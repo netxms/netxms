@@ -138,6 +138,7 @@ public:
 
 // Implementation
 protected:
+	BOOL m_bIgnoreErrors;
 	void ExecuteCmdTool(NXC_OBJECT *pObject, TCHAR *pszCmd);
 	void ExecuteWebTool(NXC_OBJECT *pObject, TCHAR *pszURL);
 	void ExecuteTableTool(NXC_OBJECT *pNode, DWORD dwToolId);

@@ -122,6 +122,7 @@ CConsoleApp::CConsoleApp()
    m_dwClientState = STATE_DISCONNECTED;
    memset(m_openDCEditors, 0, sizeof(DC_EDITOR) * MAX_DC_EDITORS);
    memset(m_viewState, 0, sizeof(CONSOLE_VIEW) * MAX_VIEW_ID);
+   m_bIgnoreErrors = FALSE;
 }
 
 
@@ -859,6 +860,14 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
 
    switch(dwEvent)
    {
+      case NXC_EVENT_CONNECTION_BROKEN:
+         if (!m_bIgnoreErrors)
+         {
+            m_bIgnoreErrors = TRUE;
+            m_pMainWnd->MessageBox(_T("Connection with the management server terminated unexpectedly"), _T("Error"), MB_OK | MB_ICONSTOP);
+            m_pMainWnd->PostMessage(WM_CLOSE, 0, 0);
+         }
+         break;
       case NXC_EVENT_NEW_ELOG_RECORD:
          if (m_viewState[VIEW_EVENT_LOG].bActive)
          {
@@ -912,8 +921,12 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
          switch(dwCode)
          {
             case NX_NOTIFY_SHUTDOWN:
-               m_pMainWnd->MessageBox(_T("Server was shutdown"), _T("Warning"), MB_OK | MB_ICONSTOP);
-               m_pMainWnd->PostMessage(WM_CLOSE, 0, 0);
+               if (!m_bIgnoreErrors)
+               {
+                  m_bIgnoreErrors = TRUE;
+                  m_pMainWnd->MessageBox(_T("Server was shutdown"), _T("Warning"), MB_OK | MB_ICONSTOP);
+                  m_pMainWnd->PostMessage(WM_CLOSE, 0, 0);
+               }
                break;
             case NX_NOTIFY_EVENTDB_CHANGED:
                m_pMainWnd->PostMessage(NXCM_UPDATE_EVENT_LIST);
@@ -1331,9 +1344,12 @@ void CConsoleApp::ErrorBox(DWORD dwError, TCHAR *pszMessage, TCHAR *pszTitle)
 {
    TCHAR szBuffer[512];
 
-   _sntprintf(szBuffer, 512, (pszMessage != NULL) ? pszMessage : _T("Error: %s"), 
-              NXCGetErrorText(dwError));
-   m_pMainWnd->MessageBox(szBuffer, (pszTitle != NULL) ? pszTitle : _T("Error"), MB_ICONSTOP);
+   if (!m_bIgnoreErrors)
+   {
+      _sntprintf(szBuffer, 512, (pszMessage != NULL) ? pszMessage : _T("Error: %s"), 
+                 NXCGetErrorText(dwError));
+      m_pMainWnd->MessageBox(szBuffer, (pszTitle != NULL) ? pszTitle : _T("Error"), MB_ICONSTOP);
+   }
 }
 
 

@@ -146,7 +146,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
          // Process message
          switch(pMsg->GetCode())
          {
-            case CMD_KEEPALIVE:     // Keepalive message, ignore it
+            case CMD_KEEPALIVE:     // Keepalive message
                pSession->SetTimeStamp(pMsg->GetVariableLong(VID_TIMESTAMP));
                break;
             case CMD_REQUEST_SESSION_KEY:
@@ -194,9 +194,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
                ProcessActionUpdate(pSession, pMsg);
                break;
             case CMD_NOTIFY:
-               pSession->CallEventHandler(NXC_EVENT_NOTIFICATION, 
-                                          pMsg->GetVariableLong(VID_NOTIFICATION_CODE),
-                                          (void *)pMsg->GetVariableLong(VID_NOTIFICATION_DATA));
+               pSession->OnNotify(pMsg);
                break;
             default:
                pSession->m_msgWaitQueue.Put(pMsg);
@@ -240,7 +238,6 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
 {
    struct sockaddr_in servAddr;
    CSCPMessage msg, *pResp;
-//   BYTE szPasswordHash[SHA1_DIGEST_SIZE];
    DWORD dwRetCode = RCC_COMM_FAILURE;
    SOCKET hSocket;
    THREAD hThread;
@@ -336,7 +333,6 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
                   if (dwRetCode == RCC_SUCCESS)
                   {
                      // Do login if we are requested to do so
-                     // Login is not needed for web sessions
                      if (pszLogin != NULL)
                      {
                         // Prepare login message
@@ -344,16 +340,6 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
                         msg.SetId(pSession->CreateRqId());
                         msg.SetCode(CMD_LOGIN);
                         msg.SetVariable(VID_LOGIN_NAME, pszLogin);
-/*#ifdef UNICODE
-                        char szMPasswd[64];
-
-	                     WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
-		                     pszPassword, -1, szMPasswd, sizeof(szMPasswd), NULL, NULL);
-                        CalculateSHA1Hash((BYTE *)szMPasswd, strlen(szMPasswd), szPasswordHash);
-#else
-                        CalculateSHA1Hash((BYTE *)pszPassword, strlen(pszPassword), szPasswordHash);
-#endif
-                        msg.SetVariable(VID_PASSWORD, szPasswordHash, SHA1_DIGEST_SIZE);*/
                         msg.SetVariable(VID_PASSWORD, pszPassword);
                         msg.SetVariable(VID_CLIENT_INFO, pszClientInfo);
                         msg.SetVariable(VID_LIBNXCL_VERSION, NETXMS_VERSION_STRING);

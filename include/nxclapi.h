@@ -219,7 +219,7 @@ enum
 // Events
 //
 
-#define NXC_EVENT_ERROR                1
+#define NXC_EVENT_CONNECTION_BROKEN    1
 #define NXC_EVENT_NEW_ELOG_RECORD      2
 #define NXC_EVENT_USER_DB_CHANGED      3
 #define NXC_EVENT_OBJECT_CHANGED       4
@@ -227,13 +227,6 @@ enum
 #define NXC_EVENT_DEPLOYMENT_STATUS    6
 #define NXC_EVENT_NEW_SYSLOG_RECORD    7
 #define NXC_EVENT_NEW_SNMP_TRAP        8
-
-
-//
-// Errors
-//
-
-#define NXC_ERR_INTERNAL            1
 
 
 //
@@ -327,6 +320,7 @@ enum
 #define RCC_INVALID_MAP_ID          ((DWORD)59)
 #define RCC_ACCOUNT_DISABLED        ((DWORD)60)
 #define RCC_NO_GRACE_LOGINS         ((DWORD)61)
+#define RCC_CONNECTION_BROKEN       ((DWORD)62)
 
 
 //
@@ -1410,6 +1404,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *szServer, TCHAR *szLogin,
                                     TCHAR *pszClientInfo, BOOL bExactVersionMatch,
                                     BOOL bEncrypt);
 void LIBNXCL_EXPORTABLE NXCDisconnect(NXC_SESSION hSession);
+void LIBNXCL_EXPORTABLE NXCStartWatchdog(NXC_SESSION hSession);
 void LIBNXCL_EXPORTABLE NXCSetEventHandler(NXC_SESSION hSession, NXC_EVENT_HANDLER pHandler);
 void LIBNXCL_EXPORTABLE NXCSetCommandTimeout(NXC_SESSION hSession, DWORD dwTimeout);
 void LIBNXCL_EXPORTABLE NXCGetServerID(NXC_SESSION hSession, BYTE *pbsId);

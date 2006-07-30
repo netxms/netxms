@@ -379,6 +379,7 @@ private:
    }
 
    void SetupEncryption(DWORD dwRqId);
+   void RespondToKeepalive(DWORD dwRqId);
    void OnFileUpload(BOOL bSuccess);
    void DebugPrintf(char *szFormat, ...);
    void SendServerInfo(DWORD dwRqId);
