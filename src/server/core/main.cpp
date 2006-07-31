@@ -296,7 +296,7 @@ static BOOL IsNetxmsdProcess(DWORD dwPID)
    }
    return bRet;
 #else
-   return (kill((pid_t)dwPID, -1) == 0);
+   return (kill((pid_t)dwPID, 0) != -1);
 #endif
 }
 
