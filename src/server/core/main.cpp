@@ -30,11 +30,12 @@
 #endif
 
 #ifdef _WIN32
-# include <direct.h>
-# include <errno.h> 
+#include <direct.h>
+#include <errno.h>
+#include <psapi.h>
 #else
-# include <signal.h>
-# include <sys/wait.h>
+#include <signal.h>
+#include <sys/wait.h>
 #endif
 
 
@@ -268,6 +269,39 @@ static BOOL InitCryptografy(void)
 
 
 //
+// Check if process with given PID exists and is a NetXMS server process
+//
+
+static BOOL IsNetxmsdProcess(DWORD dwPID)
+{
+#ifdef _WIN32
+   HANDLE hProcess;
+   TCHAR szExtModule[MAX_PATH], szIntModule[MAX_PATH];
+   BOOL bRet = FALSE;
+
+   hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dwPID);
+   if (hProcess != NULL)
+   {
+      if ((GetModuleBaseName(hProcess, NULL, szExtModule, MAX_PATH) > 0) &&
+          (GetModuleBaseName(GetCurrentProcess(), NULL, szIntModule, MAX_PATH) > 0))
+      {
+         bRet = !_tcsicmp(szExtModule, szIntModule);
+      }
+      else
+      {
+         // Cannot read process name, assume that it's a server process
+         bRet = TRUE;
+      }
+      CloseHandle(hProcess);
+   }
+   return bRet;
+#else
+   return (kill((pid_t)dwPID, -1) == 0);
+#endif
+}
+
+
+//
 // Server initialization
 //
 
@@ -354,12 +388,30 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    }
 
    // Initialize locks
+retry_db_lock:
    if (!InitLocks(&dwAddr, szInfo))
    {
       if (dwAddr == UNLOCKED)    // Some SQL problems
+      {
          WriteLog(MSG_INIT_LOCKS_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+      }
       else     // Database already locked by another server instance
+      {
+         // Check for lock from crashed/terminated local process
+         if (dwAddr == GetLocalIpAddr())
+         {
+            DWORD dwPID;
+
+            dwPID = ConfigReadULong("DBLockPID", 0);
+            if (!IsNetxmsdProcess(dwPID) || (dwPID == GetCurrentProcessId()))
+            {
+               UnlockDB();
+               WriteLog(MSG_DB_LOCK_REMOVED, EVENTLOG_INFORMATION_TYPE, NULL);
+               goto retry_db_lock;
+            }
+         }
          WriteLog(MSG_DB_LOCKED, EVENTLOG_ERROR_TYPE, "as", dwAddr, szInfo);
+      }
       return FALSE;
    }
    g_dwFlags |= AF_DB_LOCKED;
@@ -555,6 +607,31 @@ void NXCORE_EXPORTABLE Shutdown(void)
 #else
    exit(0);
 #endif
+}
+
+
+//
+// Fast server shutdown - normally called only by Windows service on system shutdown
+//
+
+void NXCORE_EXPORTABLE FastShutdown(void)
+{
+   g_dwFlags |= AF_SHUTDOWN;     // Set shutdown flag
+   ConditionSet(m_condShutdown);
+
+   SaveObjects(g_hCoreDB);
+   DbgPrintf(AF_DEBUG_MISC, "All objects saved to database");
+   SaveUsers(g_hCoreDB);
+   DbgPrintf(AF_DEBUG_MISC, "All users saved to database");
+
+   // Remove database lock first, because we have a chance to loose DB connection
+   UnlockDB();
+
+   // Stop database writers
+   StopDBWriter();
+   DbgPrintf(AF_DEBUG_MISC, "Database writer stopped");
+
+   CloseLog();
 }
 
 

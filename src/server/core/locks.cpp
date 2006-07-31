@@ -94,6 +94,7 @@ BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo)
       ConfigWriteStr("DBLockStatus", szBuffer, FALSE);
       GetSysInfoStr(szBuffer, sizeof(szBuffer));
       ConfigWriteStr("DBLockInfo", szBuffer, TRUE);
+      ConfigWriteULong("DBLockPID", GetCurrentProcessId(), TRUE);
       m_hMutexLockerAccess = MutexCreate();
       bSuccess = TRUE;
    }
@@ -118,6 +119,7 @@ void NXCORE_EXPORTABLE UnlockDB(void)
 {
    ConfigWriteStr("DBLockStatus", "UNLOCKED", FALSE);
    ConfigWriteStr("DBLockInfo", "", FALSE);
+   ConfigWriteULong("DBLockPID", 0, FALSE);
 }
 
 

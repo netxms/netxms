@@ -55,7 +55,10 @@ static VOID WINAPI ServiceCtrlHandler(DWORD ctrlCode)
          status.dwWaitHint = 60000;
          SetServiceStatus(serviceHandle, &status);
 
-         Shutdown();
+         if (ctrlCode == SERVICE_CONTROL_SHUTDOWN)
+            FastShutdown();
+         else
+            Shutdown();
 
          status.dwCurrentState = SERVICE_STOPPED;
          status.dwWaitHint = 0;
@@ -88,6 +91,10 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
    status.dwWaitHint = 300000;   // Assume that startup can take up to 5 minutes
    SetServiceStatus(serviceHandle, &status);
 
+   // On system startup there is a possible situation when database engine
+   // not fully initialized, so wait some time
+   ThreadSleep(15);
+
    // Actual initialization
    if (!Initialize())
    {
@@ -109,6 +116,8 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
    status.dwCurrentState = SERVICE_RUNNING;
    status.dwWaitHint = 0;
    SetServiceStatus(serviceHandle, &status);
+
+   SetProcessShutdownParameters(0x3FF, 0);
 
    Main(NULL);
 }

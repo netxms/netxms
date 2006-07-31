@@ -554,4 +554,10 @@ Language=English
 Failed to execute evaluation script for condition object %1 "%2": %3
 .
 
+MessageId=
+SymbolicName=MSG_DB_LOCK_REMOVED
+Language=English
+Stalled database lock removed
+.
+
 ;#endif

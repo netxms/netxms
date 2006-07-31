@@ -537,6 +537,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(char *pszVar, int *pnArray, int nSiz
 BOOL NXCORE_EXPORTABLE LoadConfig(void);
 
 void NXCORE_EXPORTABLE Shutdown(void);
+void NXCORE_EXPORTABLE FastShutdown(void);
 BOOL NXCORE_EXPORTABLE Initialize(void);
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *);
 void NXCORE_EXPORTABLE ShutdownDB(void);
