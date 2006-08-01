@@ -23,6 +23,7 @@ EXTRA_DIST = \
 	PollCfgPage.cpp PollCfgPage.h \
 	ProcessingPage.cpp ProcessingPage.h \
 	SMTPPage.cpp SMTPPage.h \
+	SrvDepsPage.cpp SrvDepsPage.h \
 	StdAfx.cpp StdAfx.h \
 	SummaryPage.cpp SummaryPage.h \
 	WizardWorker.cpp \

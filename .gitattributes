@@ -1221,6 +1221,8 @@ src/server/tools/nxconfig/ProcessingPage.cpp -text
 src/server/tools/nxconfig/ProcessingPage.h -text
 src/server/tools/nxconfig/SMTPPage.cpp -text
 src/server/tools/nxconfig/SMTPPage.h -text
+src/server/tools/nxconfig/SrvDepsPage.cpp -text
+src/server/tools/nxconfig/SrvDepsPage.h -text
 src/server/tools/nxconfig/StdAfx.cpp -text
 src/server/tools/nxconfig/StdAfx.h -text
 src/server/tools/nxconfig/SummaryPage.cpp -text

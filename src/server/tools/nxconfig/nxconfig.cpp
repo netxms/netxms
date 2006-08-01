@@ -15,6 +15,7 @@
 #include "ProcessingPage.h"
 #include "ConfigFilePage.h"
 #include "WinSrvPage.h"
+#include "SrvDepsPage.h"
 #include "LoggingPage.h"
 #include "FinishPage.h"
 
@@ -125,19 +126,14 @@ BOOL CNxconfigApp::InitInstance()
 #endif
 
 	// Change the registry key under which our settings are stored.
-	// TODO: You should modify this string to be something appropriate
-	// such as the name of your company or organization.
-	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
-
+	SetRegistryKey(_T("NetXMS"));
 
 	// To create the main window, this code creates a new frame window
 	// object and then sets it as the application's main window object.
-
 	CMainFrame* pFrame = new CMainFrame;
 	m_pMainWnd = pFrame;
 
 	// create and load the frame with its resources
-
 	pFrame->LoadFrame(IDR_MAINFRAME,
 		WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, NULL,
 		NULL);
@@ -165,6 +161,7 @@ void CNxconfigApp::OnFileCfgWizard()
    CSMTPPage pgSMTP;
    CLoggingPage pgLogging;
    CWinSrvPage pgWinSrv;
+   CSrvDepsPage pgSrvDeps;
    CSummaryPage pgSummary;
    CProcessingPage pgProcessing;
    CFinishPage pgFinish;
@@ -178,6 +175,7 @@ void CNxconfigApp::OnFileCfgWizard()
    dlg.AddPage(&pgSMTP);
    dlg.AddPage(&pgLogging);
    dlg.AddPage(&pgWinSrv);
+   dlg.AddPage(&pgSrvDeps);
    dlg.AddPage(&pgSummary);
    dlg.AddPage(&pgProcessing);
    dlg.AddPage(&pgFinish);

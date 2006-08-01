@@ -22,6 +22,7 @@
 #define IDD_LOG_FILE                    144
 #define IDI_WARN                        145
 #define IDD_SERVICE                     146
+#define IDD_SRV_DEPS                    147
 #define IDC_COMBO_DBDRV                 1000
 #define IDC_COMBO_DBDRV2                1001
 #define IDC_COMBO_DBENGINE              1001
@@ -63,6 +64,7 @@
 #define IDC_EDIT_PASSWD2                1037
 #define IDC_ICON_WARNING                1038
 #define IDC_STATIC_WARNING              1039
+#define IDC_LIST_SERVICES               1040
 #define ID_FILE_CFG_WIZARD              32771
 
 // Next default values for new objects
@@ -70,9 +72,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        147
+#define _APS_NEXT_RESOURCE_VALUE        148
 #define _APS_NEXT_COMMAND_VALUE         32772
-#define _APS_NEXT_CONTROL_VALUE         1040
+#define _APS_NEXT_CONTROL_VALUE         1041
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -232,6 +232,10 @@ SOURCE=.\SMTPPage.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\SrvDepsPage.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
@@ -322,6 +326,10 @@ SOURCE=.\Resource.h
 # Begin Source File
 
 SOURCE=.\SMTPPage.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\SrvDepsPage.h
 # End Source File
 # Begin Source File
 

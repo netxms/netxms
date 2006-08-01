@@ -104,7 +104,7 @@ BEGIN
 END
 
 IDD_FINISH DIALOGEX 0, 0, 319, 202
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Configuration Completed"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -264,6 +264,20 @@ BEGIN
                     IDC_STATIC_WARNING,125,147,187,29
 END
 
+IDD_SRV_DEPS DIALOGEX 0, 0, 319, 202
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Service Dependencies"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         131,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE,7,7,
+                    75,188,WS_EX_CLIENTEDGE
+    LTEXT           "Set NetXMS core service to be dependent on:",IDC_STATIC,
+                    89,7,147,8
+    CONTROL         "List1",IDC_LIST_SERVICES,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | WS_TABSTOP,89,
+                    19,223,176,WS_EX_CLIENTEDGE
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -400,6 +414,14 @@ BEGIN
     END
 
     IDD_SERVICE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 312
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 195
+    END
+
+    IDD_SRV_DEPS, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 312

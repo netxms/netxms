@@ -124,7 +124,7 @@ static BOOL InstallService(WIZARD_CFG_INFO *pc)
    {
       CloseServiceHandle(hService);
       bResult = TRUE;
-      _sntprintf(szCmdLine, MAX_PATH, _T("%s\\bin\\nxcore.dll"), pc->m_szInstallDir);
+      _sntprintf(szCmdLine, MAX_PATH, _T("%s\\bin\\libnxsrv.dll"), pc->m_szInstallDir);
    }
 
    CloseServiceHandle(hMgr);
