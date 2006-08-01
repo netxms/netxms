@@ -103,7 +103,8 @@ static BOOL InstallService(WIZARD_CFG_INFO *pc)
    hService = CreateService(hMgr, CORE_SERVICE_NAME, _T("NetXMS Core"),
                             GENERIC_READ, SERVICE_WIN32_OWN_PROCESS,
                             SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
-                            szCmdLine, NULL, NULL, NULL, pszLogin, pszPassword);
+                            szCmdLine, NULL, NULL, pc->m_pszDependencyList,
+                            pszLogin, pszPassword);
    if (hService == NULL)
    {
       DWORD dwCode = GetLastError();

@@ -93,19 +93,18 @@ BOOL CDBSelectPage::OnInitDialog()
 
 	CPropertyPage::OnInitDialog();
 	
+   // Initialize new/existing DB selection
+   if (pc->m_bCreateDB)
+      SendDlgItemMessage(IDC_RADIO_NEWDB, BM_SETCHECK, TRUE);
+   else
+      SendDlgItemMessage(IDC_RADIO_EXISTINGDB, BM_SETCHECK, TRUE);
+
    // Initialize DB engines list
    for(i = 0; i < MAX_DB_ENGINES; i++)
       m_wndEngineList.AddString(g_pszDBEngines[i]);
    m_wndEngineList.SelectString(-1, g_pszDBEngines[pc->m_iDBEngine]);
    OnEngineSelect();
    OnDriverSelect();
-
-   // Initialize new/existing DB selection
-   if (pc->m_bCreateDB)
-      SendDlgItemMessage(IDC_RADIO_NEWDB, BM_SETCHECK, TRUE);
-   else
-      SendDlgItemMessage(IDC_RADIO_EXISTINGDB, BM_SETCHECK, TRUE);
-   OnDBCreationSelect();
 
    // Initialize text fields
    SetDlgItemText(IDC_EDIT_SERVER, pc->m_szDBServer);
@@ -297,7 +296,6 @@ void CDBSelectPage::OnDriverSelect()
       SendDlgItemMessage(IDC_RADIO_EXISTINGDB, BM_SETCHECK, BST_CHECKED);
       pc->m_bCreateDB = FALSE;
       EnableDlgItem(this, IDC_RADIO_NEWDB, FALSE);
-      OnDBCreationSelect();
    }
    else if (!_tcscmp(pc->m_szDBDriver, _T("sqlite.ddr")))
    {
@@ -308,7 +306,6 @@ void CDBSelectPage::OnDriverSelect()
       EnableDlgItem(this, IDC_EDIT_DB_PASSWORD, FALSE);
       EnableDlgItem(this, IDC_EDIT_DB_NAME, TRUE);
       EnableDlgItem(this, IDC_RADIO_NEWDB, TRUE);
-      OnDBCreationSelect();
    }
    else
    {
@@ -319,6 +316,6 @@ void CDBSelectPage::OnDriverSelect()
       EnableDlgItem(this, IDC_RADIO_NEWDB, TRUE);
       EnableDlgItem(this, IDC_EDIT_DB_LOGIN, TRUE);
       EnableDlgItem(this, IDC_EDIT_DB_PASSWORD, TRUE);
-      OnDBCreationSelect();
    }
+   OnDBCreationSelect();
 }

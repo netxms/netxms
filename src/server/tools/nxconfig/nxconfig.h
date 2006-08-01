@@ -76,6 +76,8 @@ struct WIZARD_CFG_INFO
    TCHAR m_szSMSDrvParam[MAX_DB_STRING];
    TCHAR m_szServiceLogin[MAX_DB_STRING];
    TCHAR m_szServicePassword[MAX_DB_STRING];
+   DWORD m_dwDependencyListSize;
+   TCHAR *m_pszDependencyList;
 };
 
 

@@ -40,18 +40,18 @@ Class15=CLoggingPage
 Resource12=IDD_PROCESSING (English (U.S.))
 Class16=CWinSrvPage
 Resource13=IDD_SERVICE (English (U.S.))
-Resource14=IDD_PROCESSING
-Resource15=IDD_LOG_FILE
-Resource16=IDD_SELECT_DB
-Resource17=IDD_ODBC
-Resource18=IDD_SUMMARY
-Resource19=IDD_SERVICE
-Resource20=IDR_MAINFRAME
-Resource21=IDD_FINISH
-Resource22=IDD_INTRO
-Resource23=IDD_POLLING
-Resource24=IDD_SMTP
-Resource25=IDD_CFG_FILE
+Resource14=IDD_LOG_FILE
+Resource15=IDR_MAINFRAME
+Resource16=IDD_ODBC
+Resource17=IDD_SMTP
+Resource18=IDD_CFG_FILE
+Resource19=IDD_INTRO
+Resource20=IDD_SELECT_DB
+Resource21=IDD_POLLING
+Resource22=IDD_FINISH
+Resource23=IDD_SUMMARY
+Resource24=IDD_PROCESSING
+Resource25=IDD_SERVICE
 Class17=CSrvDepsPage
 Resource26=IDD_SRV_DEPS
 
@@ -522,10 +522,14 @@ Control3=IDC_LIST_STATUS,SysListView32,1342291969
 [DLG:IDD_SRV_DEPS]
 Type=1
 Class=CSrvDepsPage
-ControlCount=3
+ControlCount=7
 Control1=IDC_STATIC,static,1342177806
 Control2=IDC_STATIC,static,1342308352
-Control3=IDC_LIST_SERVICES,SysListView32,1342259209
+Control3=IDC_LIST_SERVICES,SysListView32,1342259225
+Control4=IDC_STATIC,static,1342308352
+Control5=IDC_STATIC,static,1342308352
+Control6=IDC_STATIC,static,1342308352
+Control7=IDC_STATIC,static,1342308352
 
 [CLS:CSrvDepsPage]
 Type=0

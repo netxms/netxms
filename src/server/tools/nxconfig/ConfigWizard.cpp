@@ -33,6 +33,7 @@ CConfigWizard::CConfigWizard(LPCTSTR pszCaption, CWnd* pParentWnd, UINT iSelectP
 
 CConfigWizard::~CConfigWizard()
 {
+   safe_free(m_cfg.m_pszDependencyList);
 }
 
 

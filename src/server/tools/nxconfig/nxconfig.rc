@@ -271,11 +271,17 @@ FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         131,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE,7,7,
                     75,188,WS_EX_CLIENTEDGE
-    LTEXT           "Set NetXMS core service to be dependent on:",IDC_STATIC,
-                    89,7,147,8
+    LTEXT           "Select services NetXMS core service should dependend on:",
+                    IDC_STATIC,89,7,223,10
     CONTROL         "List1",IDC_LIST_SERVICES,"SysListView32",LVS_REPORT | 
-                    LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | WS_TABSTOP,89,
-                    19,223,176,WS_EX_CLIENTEDGE
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | 
+                    LVS_NOCOLUMNHEADER | WS_TABSTOP,89,48,223,147,
+                    WS_EX_CLIENTEDGE
+    LTEXT           "We recommend you to select your database engine service if it is running on local computer.",
+                    IDC_STATIC,104,18,208,17
+    LTEXT           "-",IDC_STATIC,96,18,8,8
+    LTEXT           "-",IDC_STATIC,96,35,8,8
+    LTEXT           "If unsure, just press next.",IDC_STATIC,104,35,79,8
 END
 
 
