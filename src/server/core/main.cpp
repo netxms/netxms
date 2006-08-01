@@ -289,7 +289,7 @@ static BOOL IsNetxmsdProcess(DWORD dwPID)
       }
       else
       {
-         // Cannot read process name, assume that it's a server process
+         // Cannot read process name, for safety assume that it's a server process
          bRet = TRUE;
       }
       CloseHandle(hProcess);
