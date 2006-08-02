@@ -321,6 +321,7 @@ enum
 #define RCC_ACCOUNT_DISABLED        ((DWORD)60)
 #define RCC_NO_GRACE_LOGINS         ((DWORD)61)
 #define RCC_CONNECTION_BROKEN       ((DWORD)62)
+#define RCC_INVALID_CONFIG_ID       ((DWORD)63)
 
 
 //

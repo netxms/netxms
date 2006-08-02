@@ -27,7 +27,7 @@
 // Constants
 //
 
-#define NUMBER_OF_GROUPS   17
+#define NUMBER_OF_GROUPS   18
 
 
 //
@@ -38,13 +38,13 @@ static MUTEX m_mutexTableAccess;
 static DWORD m_dwFreeIdTable[NUMBER_OF_GROUPS] = { 10, 1, FIRST_USER_EVENT_ID, 1, 1, 
                                                    1000, 1, 0x80000000,
                                                    1, 1, 0x80000001, 1, 1, 1, 1,
-                                                   10000, 10000
+                                                   10000, 10000, 1
                                                  };
 static DWORD m_dwIdLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 
                                                 0x7FFFFFFF, 0xFFFFFFFE, 0x7FFFFFFF, 0xFFFFFFFF,
                                                 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE,
                                                 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-                                                0xFFFFFFFE
+                                                0xFFFFFFFE, 0xFFFFFFFE
                                               };
 static QWORD m_qwFreeEventId = 1;
 static char *m_pszGroupNames[NUMBER_OF_GROUPS] =
@@ -65,7 +65,8 @@ static char *m_pszGroupNames[NUMBER_OF_GROUPS] =
    "Packages",
    "Log Processing Policies",
    "Object Tools",
-   "Scripts"
+   "Scripts",
+   "Agent Configs"
 };
 
 
@@ -307,6 +308,16 @@ BOOL InitIdTable(void)
       if (DBGetNumRows(hResult) > 0)
          m_dwFreeIdTable[IDG_SCRIPT] = max(m_dwFreeIdTable[IDG_SCRIPT], 
                                            DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available agent config id
+   hResult = DBSelect(g_hCoreDB, "SELECT max(config_id) FROM agent_configs");
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_AGENT_CONFIG] = max(m_dwFreeIdTable[IDG_AGENT_CONFIG], 
+                                                 DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
    return TRUE;

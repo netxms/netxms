@@ -151,6 +151,7 @@ typedef void * HSNMPSESSION;
 #define IDG_LPP               14
 #define IDG_OBJECT_TOOL       15
 #define IDG_SCRIPT            16
+#define IDG_AGENT_CONFIG      17
 
 
 //
@@ -484,6 +485,9 @@ private:
    DWORD ResolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName);
    void SendConfigForAgent(CSCPMessage *pRequest);
    void SendAgentCfgList(DWORD dwRqId);
+   void OpenAgentConfig(CSCPMessage *pRequest);
+   void SaveAgentConfig(CSCPMessage *pRequest);
+   void DeleteAgentConfig(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -553,6 +557,8 @@ void SaveObjects(DB_HANDLE hdb);
 void QueueSQLRequest(char *szQuery);
 void StartDBWriter(void);
 void StopDBWriter(void);
+
+void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, DWORD dwVarId, TCHAR *pszStr);
 
 void SnmpInit(void);
 DWORD SnmpNewRequestId(void);

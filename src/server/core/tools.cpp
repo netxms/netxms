@@ -335,3 +335,18 @@ BOOL SendMagicPacket(DWORD dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
    closesocket(hSocket);
    return bResult;
 }
+
+
+//
+// Decode SQL string and set as NXCP variable's value
+//
+
+void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, DWORD dwVarId, TCHAR *pszStr)
+{
+   TCHAR *pszTemp;
+
+   pszTemp = _tcsdup(pszStr);
+   DecodeSQLString(pszTemp);
+   pMsg->SetVariable(dwVarId, pszTemp);
+   free(pszTemp);
+}

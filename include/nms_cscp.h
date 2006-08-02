@@ -411,6 +411,9 @@ typedef struct
 #define CMD_RESOLVE_DCI_NAMES       0x00AE
 #define CMD_GET_MY_CONFIG           0x00AF
 #define CMD_GET_AGENT_CFG_LIST      0x00B0
+#define CMD_OPEN_AGENT_CONFIG       0x00B1
+#define CMD_SAVE_AGENT_CONFIG       0x00B2
+#define CMD_DELETE_AGENT_CONFIG     0x00B3
 
 
 //
@@ -647,6 +650,12 @@ typedef struct
 #define VID_SCRIPT                  ((DWORD)228)
 #define VID_NODE_LIST               ((DWORD)229)
 #define VID_DCI_LIST                ((DWORD)230)
+#define VID_CONFIG_ID               ((DWORD)231)
+#define VID_FILTER                  ((DWORD)232)
+#define VID_SEQUENCE_NUMBER         ((DWORD)233)
+#define VID_VERSION_MAJOR           ((DWORD)234)
+#define VID_VERSION_MINOR           ((DWORD)235)
+#define VID_VERSION_RELEASE         ((DWORD)236)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

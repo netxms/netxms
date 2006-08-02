@@ -892,21 +892,7 @@ CREATE TABLE agent_configs
 	config_id integer not null,
 	config_name integer not null,
 	config_file SQL_TEXT not null,
+	config_filter SQL_TEXT not null,
+	sequence_number integer not null,
 	PRIMARY KEY(config_id)
-) TABLE_TYPE;
-
-
-/*
-** Filters for agent configurations
-*/
-
-CREATE TABLE agent_cfg_filters
-(
-	config_id integer not null,
-	filter_id integer not null,
-	filter_type integer not null,
-	ip_addr_1 varchar(15),
-	ip_addr_2 varchar(15),
-	filter_data varchar(255),
-	PRIMARY KEY(config_id,filter_id)
 ) TABLE_TYPE;

@@ -7091,18 +7091,204 @@ void ClientSession::SendAgentCfgList(DWORD dwRqId)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
-      hResult = DBSelect(g_hCoreDB, "SELECT config_id,config_name FROM agent_configs");
+      hResult = DBSelect(g_hCoreDB, "SELECT config_id,config_name,sequence_number FROM agent_configs");
       if (hResult != NULL)
       {
          dwNumRows = DBGetNumRows(hResult);
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
          msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
-         for(i = 0, dwId = VID_AGENT_CFG_LIST_BASE; i < dwNumRows; i++, dwId += 8)
+         for(i = 0, dwId = VID_AGENT_CFG_LIST_BASE; i < dwNumRows; i++, dwId += 7)
          {
             msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 0));
             _tcscpy(szText, DBGetField(hResult, i, 1));
             DecodeSQLString(szText);
             msg.SetVariable(dwId++, szText);
+            msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 2));
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   SendMessage(&msg);
+}
+
+
+//
+// Open (get all data) server-stored agent's config
+//
+
+void ClientSession::OpenAgentConfig(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DB_RESULT hResult;
+   DWORD dwCfgId;
+   TCHAR szQuery[256];
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
+   {
+      dwCfgId = pRequest->GetVariableLong(VID_CONFIG_ID);
+      _sntprintf(szQuery, 256, _T("SELECT config_name,config_file,config_filter,sequence_number FROM agent_configs WHERE config_id=%d"), dwCfgId);
+      hResult = DBSelect(g_hCoreDB, szQuery);
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            msg.SetVariable(VID_CONFIG_ID, dwCfgId);
+            DecodeSQLStringAndSetVariable(&msg, VID_NAME, DBGetField(hResult, 0, 0));
+            DecodeSQLStringAndSetVariable(&msg, VID_CONFIG_FILE, DBGetField(hResult, 0, 1));
+            DecodeSQLStringAndSetVariable(&msg, VID_FILTER, DBGetField(hResult, 0, 2));
+            msg.SetVariable(VID_SEQUENCE_NUMBER, DBGetFieldULong(hResult, 0, 3));
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INVALID_CONFIG_ID);
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   SendMessage(&msg);
+}
+
+
+//
+// Save changes to server-stored agent's configuration
+//
+
+void ClientSession::SaveAgentConfig(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DB_RESULT hResult;
+   DWORD dwCfgId;
+   TCHAR szQuery[256], szName[MAX_DB_STRING], *pszFilter, *pszText;
+   TCHAR *pszQuery, *pszEscFilter, *pszEscText, *pszEscName;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
+   {
+      dwCfgId = pRequest->GetVariableLong(VID_CONFIG_ID);
+      _sntprintf(szQuery, 256, _T("SELECT config_name FROM agent_configs WHERE config_id=%d"), dwCfgId);
+      hResult = DBSelect(g_hCoreDB, szQuery);
+      if (hResult != NULL)
+      {
+         pRequest->GetVariableStr(VID_NAME, szName, MAX_DB_STRING);
+         pszEscName = EncodeSQLString(szName);
+
+         pszFilter = pRequest->GetVariableStr(VID_FILTER);
+         pszEscFilter = EncodeSQLString(pszFilter);
+         free(pszFilter);
+
+         pszText = pRequest->GetVariableStr(VID_CONFIG_FILE);
+         pszEscText = EncodeSQLString(pszText);
+         free(pszText);
+
+         pszQuery = (TCHAR *)malloc((_tcslen(pszEscText) + _tcslen(pszEscFilter) +
+                                     _tcslen(pszEscName) + 256) * sizeof(TCHAR));
+         if (DBGetNumRows(hResult) > 0)
+         {
+            _stprintf(pszQuery, _T("UPDATE agent_configs SET config_name='%s',config_filter='%s',config_file='%s',sequence_number=%d WHERE config_id=%d"),
+                      pszEscName, pszEscFilter, pszEscText,
+                      pRequest->GetVariableLong(VID_SEQUENCE_NUMBER), dwCfgId);
+         }
+         else
+         {
+            if (dwCfgId == 0)
+            {
+               // Request for new ID creation
+               dwCfgId = CreateUniqueId(IDG_AGENT_CONFIG);
+               msg.SetVariable(VID_CONFIG_ID, dwCfgId);
+            }
+            _stprintf(pszQuery, _T("INSERT INTO agent_configs (config_id,config_name,config_filter,config_file,sequence_number) VALUES (%d,'%s','%s','%s',%d)"),
+                      dwCfgId, pszEscName, pszEscFilter, pszEscText,
+                      pRequest->GetVariableLong(VID_SEQUENCE_NUMBER));
+         }
+         DBFreeResult(hResult);
+         free(pszEscName);
+         free(pszEscText);
+         free(pszEscFilter);
+
+         if (DBQuery(g_hCoreDB, pszQuery))
+         {
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+         }
+         free(pszQuery);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   SendMessage(&msg);
+}
+
+
+//
+// Delete agent's configuration
+//
+
+void ClientSession::DeleteAgentConfig(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DB_RESULT hResult;
+   DWORD dwCfgId;
+   TCHAR szQuery[256];
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
+   {
+      dwCfgId = pRequest->GetVariableLong(VID_CONFIG_ID);
+      _sntprintf(szQuery, 256, _T("SELECT config_name FROM agent_configs WHERE config_id=%d"), dwCfgId);
+      hResult = DBSelect(g_hCoreDB, szQuery);
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            _sntprintf(szQuery, 256, _T("DELETE FROM agent_configs WHERE config_id=%d"), dwCfgId);
+            if (DBQuery(g_hCoreDB, szQuery))
+            {
+               msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+            }
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INVALID_CONFIG_ID);
          }
          DBFreeResult(hResult);
       }
@@ -7127,9 +7313,82 @@ void ClientSession::SendAgentCfgList(DWORD dwRqId)
 void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   TCHAR szPlatform[MAX_DB_STRING];
+   TCHAR szPlatform[MAX_DB_STRING], szError[256], *pszText;
+   WORD wMajor, wMinor, wRelease;
+   int i, nNumRows;
+   DB_RESULT hResult;
+   NXSL_Program *pScript;
+   NXSL_Value *ppArgList[5], *pValue;
 
-   pRequest->GetVariableStr(VID_PLATFORM_NAME, szPlatform);
+   pRequest->GetVariableStr(VID_PLATFORM_NAME, szPlatform, MAX_DB_STRING);
+   wMajor = pRequest->GetVariableShort(VID_VERSION_MAJOR);
+   wMinor = pRequest->GetVariableShort(VID_VERSION_MINOR);
+   wRelease = pRequest->GetVariableShort(VID_VERSION_RELEASE);
+
+   hResult = DBSelect(g_hCoreDB, "SELECT config_id,config_file,config_filter FROM agent_configs");
+   if (hResult != NULL)
+   {
+      nNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < nNumRows; i++)
+      {
+         // Compile script
+         pszText = _tcsdup(DBGetField(hResult, i, 2));
+         DecodeSQLString(pszText);
+         pScript = (NXSL_Program *)NXSLCompile(pszText, szError, 256);
+         free(pszText);
+
+         if (pScript != NULL)
+         {
+            // Set arguments:
+            // $1 - IP address
+            // $2 - platform
+            // $3 - major version number
+            // $4 - minor version number
+            // $5 - release number
+            ppArgList[1] = new NXSL_Value(szPlatform);
+            ppArgList[2] = new NXSL_Value((LONG)wMajor);
+            ppArgList[3] = new NXSL_Value((LONG)wMinor);
+            ppArgList[4] = new NXSL_Value((LONG)wRelease);
+
+            // Run script
+            if (pScript->Run(NULL, 5, ppArgList) == 0)
+            {
+               pValue = pScript->GetResult();
+               if (pValue->GetValueAsInt32() != 0)
+               {
+                  msg.SetVariable(VID_RCC, (WORD)0);
+                  pszText = _tcsdup(DBGetField(hResult, i, 1));
+                  DecodeSQLString(pszText);
+                  msg.SetVariable(VID_CONFIG_FILE, pszText);
+                  free(pszText);
+                  break;
+               }
+            }
+            else
+            {
+               _stprintf(szError, _T("AgentCfg::%d"), DBGetFieldULong(hResult, i, 0));
+               PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), szError,
+                         pScript->GetErrorText(), 0);
+            }
+            delete pScript;
+         }
+         else
+         {
+            TCHAR szBuffer[256];
+
+            _stprintf(szBuffer, _T("AgentCfg::%d"), DBGetFieldULong(hResult, i, 0));
+            PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), szBuffer, szError, 0);
+         }
+      }
+      DBFreeResult(hResult);
+
+      if (i == nNumRows)
+         msg.SetVariable(VID_RCC, (WORD)1);  // No matching configs found
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, (WORD)1);  // DB Failure
+   }
 
    SendMessage(&msg);
 }
