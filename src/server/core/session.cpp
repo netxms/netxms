@@ -969,8 +969,15 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_AGENT_CFG_LIST:
             SendAgentCfgList(pMsg->GetId());
             break;
-//         case CMD_ADD_AGENT_CONFIG:
-//            break;
+         case CMD_OPEN_AGENT_CONFIG:
+            OpenAgentConfig(pMsg);
+            break;
+         case CMD_SAVE_AGENT_CONFIG:
+            SaveAgentConfig(pMsg);
+            break;
+         case CMD_DELETE_AGENT_CONFIG:
+            DeleteAgentConfig(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -7179,9 +7186,10 @@ void ClientSession::SaveAgentConfig(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DB_RESULT hResult;
-   DWORD dwCfgId;
+   DWORD dwCfgId, dwSeqNum;
    TCHAR szQuery[256], szName[MAX_DB_STRING], *pszFilter, *pszText;
    TCHAR *pszQuery, *pszEscFilter, *pszEscText, *pszEscName;
+   BOOL bCreate;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
@@ -7193,6 +7201,9 @@ void ClientSession::SaveAgentConfig(CSCPMessage *pRequest)
       hResult = DBSelect(g_hCoreDB, szQuery);
       if (hResult != NULL)
       {
+         bCreate = (DBGetNumRows(hResult) == 0);
+         DBFreeResult(hResult);
+
          pRequest->GetVariableStr(VID_NAME, szName, MAX_DB_STRING);
          pszEscName = EncodeSQLString(szName);
 
@@ -7206,25 +7217,39 @@ void ClientSession::SaveAgentConfig(CSCPMessage *pRequest)
 
          pszQuery = (TCHAR *)malloc((_tcslen(pszEscText) + _tcslen(pszEscFilter) +
                                      _tcslen(pszEscName) + 256) * sizeof(TCHAR));
-         if (DBGetNumRows(hResult) > 0)
-         {
-            _stprintf(pszQuery, _T("UPDATE agent_configs SET config_name='%s',config_filter='%s',config_file='%s',sequence_number=%d WHERE config_id=%d"),
-                      pszEscName, pszEscFilter, pszEscText,
-                      pRequest->GetVariableLong(VID_SEQUENCE_NUMBER), dwCfgId);
-         }
-         else
+         if (bCreate)
          {
             if (dwCfgId == 0)
             {
                // Request for new ID creation
                dwCfgId = CreateUniqueId(IDG_AGENT_CONFIG);
                msg.SetVariable(VID_CONFIG_ID, dwCfgId);
+
+               // Request sequence number
+               hResult = DBSelect(g_hCoreDB, _T("SELECT max(sequence_number) FROM agent_configs"));
+               if (hResult != NULL)
+               {
+                  if (DBGetNumRows(hResult) > 0)
+                     dwSeqNum = DBGetFieldULong(hResult, 0, 0) + 1;
+                  else
+                     dwSeqNum = 1;
+                  DBFreeResult(hResult);
+               }
+               else
+               {
+                  dwSeqNum = 1;
+               }
+               msg.SetVariable(VID_SEQUENCE_NUMBER, dwSeqNum);
             }
             _stprintf(pszQuery, _T("INSERT INTO agent_configs (config_id,config_name,config_filter,config_file,sequence_number) VALUES (%d,'%s','%s','%s',%d)"),
-                      dwCfgId, pszEscName, pszEscFilter, pszEscText,
-                      pRequest->GetVariableLong(VID_SEQUENCE_NUMBER));
+                      dwCfgId, pszEscName, pszEscFilter, pszEscText, dwSeqNum);
          }
-         DBFreeResult(hResult);
+         else
+         {
+            _stprintf(pszQuery, _T("UPDATE agent_configs SET config_name='%s',config_filter='%s',config_file='%s',sequence_number=%d WHERE config_id=%d"),
+                      pszEscName, pszEscFilter, pszEscText,
+                      pRequest->GetVariableLong(VID_SEQUENCE_NUMBER), dwCfgId);
+         }
          free(pszEscName);
          free(pszEscText);
          free(pszEscFilter);
@@ -7313,7 +7338,7 @@ void ClientSession::DeleteAgentConfig(CSCPMessage *pRequest)
 void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   TCHAR szPlatform[MAX_DB_STRING], szError[256], *pszText;
+   TCHAR szPlatform[MAX_DB_STRING], szError[256], szBuffer[256], *pszText;
    WORD wMajor, wMinor, wRelease;
    int i, nNumRows;
    DB_RESULT hResult;
@@ -7325,7 +7350,7 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
    wMinor = pRequest->GetVariableShort(VID_VERSION_MINOR);
    wRelease = pRequest->GetVariableShort(VID_VERSION_RELEASE);
 
-   hResult = DBSelect(g_hCoreDB, "SELECT config_id,config_file,config_filter FROM agent_configs");
+   hResult = DBSelect(g_hCoreDB, "SELECT config_id,config_file,config_filter FROM agent_configs ORDER BY sequence_number");
    if (hResult != NULL)
    {
       nNumRows = DBGetNumRows(hResult);
@@ -7345,6 +7370,7 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
             // $3 - major version number
             // $4 - minor version number
             // $5 - release number
+            ppArgList[0] = new NXSL_Value(IpToStr(m_dwHostAddr, szBuffer));
             ppArgList[1] = new NXSL_Value(szPlatform);
             ppArgList[2] = new NXSL_Value((LONG)wMajor);
             ppArgList[3] = new NXSL_Value((LONG)wMinor);
@@ -7360,6 +7386,7 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
                   pszText = _tcsdup(DBGetField(hResult, i, 1));
                   DecodeSQLString(pszText);
                   msg.SetVariable(VID_CONFIG_FILE, pszText);
+                  msg.SetVariable(VID_CONFIG_ID, DBGetFieldULong(hResult, i, 0));
                   free(pszText);
                   break;
                }
@@ -7374,8 +7401,6 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
          }
          else
          {
-            TCHAR szBuffer[256];
-
             _stprintf(szBuffer, _T("AgentCfg::%d"), DBGetFieldULong(hResult, i, 0));
             PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), szBuffer, szError, 0);
          }

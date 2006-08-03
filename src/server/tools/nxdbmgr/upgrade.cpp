@@ -37,7 +37,7 @@ static BOOL CreateTable(TCHAR *pszQuery)
    TranslateStr(pszBuffer, _T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
    TranslateStr(pszBuffer, _T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
    if (g_iSyntax == DB_SYNTAX_MYSQL)
-      _tcscat(pszBuffer, _T(" type=InnoDB"));
+      _tcscat(pszBuffer, g_pszTableSuffix);
    bResult = SQLQuery(pszBuffer);
    free(pszBuffer);
    return bResult;
@@ -74,6 +74,53 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
       bResult = SQLQuery(szQuery);
    }
    return bResult;
+}
+
+
+//
+// Upgrade from V43 to V44
+//
+
+static BOOL H_UpgradeFromV43(void)
+{
+   static TCHAR m_szBatch[] =
+      "DELETE FROM object_tools WHERE tool_id=8000\n"
+      "DELETE FROM object_tools_table_columns WHERE tool_id=8000\n"
+      "DELETE FROM object_tools_acl WHERE tool_id=8000\n"
+      "INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,"
+         "matching_oid,description) VALUES (13,'&Info->&Process list',3,"
+         "'Process List#7FSystem.ProcessList#7F^([0-9]+) (.*)',2,'',"
+         "'Show list of currently running processes')\n"
+	   "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,"
+         "col_oid,col_format,col_substr) VALUES (13,0,'PID','',0,1)\n"
+	   "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,"
+         "col_oid,col_format,col_substr) VALUES (13,1,'Name','',0,2)\n"
+	   "INSERT INTO object_tools_acl (tool_id,user_id) VALUES (13,-2147483648)\n"
+      "<END>";
+
+   if (!CreateTable(_T("CREATE TABLE agent_configs ("
+		                 "config_id integer not null,"
+		                 "config_name varchar(255) not null,"
+		                 "config_file $SQL:TEXT not null,"
+		                 "config_filter $SQL:TEXT not null,"
+		                 "sequence_number integer not null,"
+		                 "PRIMARY KEY(config_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("DBLockPID"), _T("0"), 0, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='44' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
 }
 
 
@@ -1910,6 +1957,7 @@ static struct
    { 40, H_UpgradeFromV40 },
    { 41, H_UpgradeFromV41 },
    { 42, H_UpgradeFromV42 },
+   { 43, H_UpgradeFromV43 },
    { 0, NULL }
 };
 

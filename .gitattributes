@@ -594,8 +594,12 @@ src/console/win32/AddrChangeDlg.cpp -text
 src/console/win32/AddrChangeDlg.h -text
 src/console/win32/AdvSplitter.cpp -text
 src/console/win32/AdvSplitter.h -text
+src/console/win32/AgentCfgDlg.cpp -text
+src/console/win32/AgentCfgDlg.h -text
 src/console/win32/AgentCfgEditor.cpp -text
 src/console/win32/AgentCfgEditor.h -text
+src/console/win32/AgentConfigMgr.cpp -text
+src/console/win32/AgentConfigMgr.h -text
 src/console/win32/AgentParamSelDlg.cpp -text
 src/console/win32/AgentParamSelDlg.h -text
 src/console/win32/AlarmBrowser.cpp -text
@@ -841,6 +845,7 @@ src/console/win32/icons/active.ico -text
 src/console/win32/icons/alarm.ico -text
 src/console/win32/icons/back.ico -text
 src/console/win32/icons/command.ico -text
+src/console/win32/icons/configs.ico -text
 src/console/win32/icons/connect.ico -text
 src/console/win32/icons/database.ico -text
 src/console/win32/icons/datacoll.ico -text
@@ -954,6 +959,7 @@ src/libnetxms/uuid.c -text
 src/libnetxms/uuidP.h -text
 src/libnxcl/Makefile.am -text
 src/libnxcl/actions.cpp -text
+src/libnxcl/agentcfg.cpp -text
 src/libnxcl/alarms.cpp -text
 src/libnxcl/comm.cpp -text
 src/libnxcl/datacoll.cpp -text

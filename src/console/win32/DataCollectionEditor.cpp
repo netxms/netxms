@@ -170,7 +170,7 @@ int CDataCollectionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
       return -1;
 
    // Create image list
-   m_imageList.Create(16, 16, ILC_COLOR24 | ILC_MASK, 4, 1);
+   m_imageList.Create(16, 16, ILC_COLOR24 | ILC_MASK, 5, 1);
    m_imageList.Add(theApp.LoadIcon(IDI_ACTIVE));
    m_imageList.Add(theApp.LoadIcon(IDI_DISABLED));
    m_imageList.Add(theApp.LoadIcon(IDI_UNSUPPORTED));

@@ -57,6 +57,7 @@
 #include "CondPropsGeneral.h"
 #include "CondPropsData.h"
 #include "CondPropsScript.h"
+#include "AgentConfigMgr.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -109,6 +110,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_CONTROLPANEL_MODULES, OnControlpanelModules)
 	ON_COMMAND(ID_DESKTOP_MANAGE, OnDesktopManage)
 	ON_COMMAND(ID_TOOLS_CHANGEPASSWORD, OnToolsChangepassword)
+	ON_COMMAND(ID_CONTROLPANEL_AGENTCONFIGS, OnControlpanelAgentconfigs)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -377,6 +379,10 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hDataViewMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
    InsertMenu(m_hDataViewMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 22), "&Data");
 
+   m_hAgentCfgMgrMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hAgentCfgMgrMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hAgentCfgMgrMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 23), "&Config");
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -397,6 +403,7 @@ BOOL CConsoleApp::InitInstance()
 	m_hObjToolsEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_OBJECT_TOOLS_EDITOR));
 	m_hScriptManagerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_SCRIPT_MANAGER));
 	m_hDataViewAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_DATA_VIEW));
+	m_hAgentCfgMgrAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_AGENT_CONFIG_MANAGER));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)
@@ -479,6 +486,8 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hScriptManagerAccel);
    SafeFreeResource(m_hDataViewMenu);
    SafeFreeResource(m_hDataViewAccel);
+   SafeFreeResource(m_hAgentCfgMgrMenu);
+   SafeFreeResource(m_hAgentCfgMgrAccel);
 
    CloseHandle(g_mutexActionListAccess);
 
@@ -2613,6 +2622,27 @@ void CConsoleApp::OnControlpanelModules()
    {
 	   pFrame->CreateNewChild(RUNTIME_CLASS(CModuleManager), IDR_MODULE_MANAGER,
                              m_hMDIMenu, m_hMDIAccel);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_CONTROLPANEL_AGENTCONFIGS
+//
+
+void CConsoleApp::OnControlpanelAgentconfigs() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_viewState[VIEW_AGENT_CONFIG_MANAGER].bActive)
+   {
+      m_viewState[VIEW_AGENT_CONFIG_MANAGER].pWnd->BringWindowToTop();
+   }
+   else
+   {
+	   pFrame->CreateNewChild(RUNTIME_CLASS(CAgentConfigMgr), IDR_AGENT_CONFIG_MANAGER,
+                             m_hAgentCfgMgrMenu, m_hAgentCfgMgrAccel);
    }
 }
 

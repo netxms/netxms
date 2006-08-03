@@ -87,6 +87,7 @@ enum
    VIEW_BUILDER,
    VIEW_MODULE_MANAGER,
    VIEW_DESKTOP_MANAGER,
+   VIEW_AGENT_CONFIG_MANAGER,
    MAX_VIEW_ID
 };
 
@@ -192,6 +193,8 @@ protected:
 	HACCEL m_hViewBuilderAccel;   // Accelerator for view builder
 	HMENU m_hDataViewMenu;        // Menu for DCI data viewer
 	HACCEL m_hDataViewAccel;      // Accelerator for DCI data viewer
+	HMENU m_hAgentCfgMgrMenu;     // Menu for agent configuration manager
+	HACCEL m_hAgentCfgMgrAccel;   // Accelerator for agent configuration manager
 	
 public:
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
@@ -227,6 +230,7 @@ public:
 	afx_msg void OnControlpanelModules();
 	afx_msg void OnDesktopManage();
 	afx_msg void OnToolsChangepassword();
+	afx_msg void OnControlpanelAgentconfigs();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

@@ -29,19 +29,6 @@ static char THIS_FILE[] = __FILE__;
 #define PANE_MODIFY        3
 
 
-//
-// Configuration file keywords
-//
-
-static TCHAR m_szConfigKeywords[] = "Action ControlServers EnableActions EnabledCiphers "
-                                    "EnableProxy EnableSubagentAutoload ExecTimeout"
-                                    "ExternalParameter FileStore ListenPort LogFile "
-                                    "LogUnresolvedSymbols MasterServers MaxSessions "
-                                    "PlatformSuffix RequireAuthentication "
-                                    "RequireEncryption Servers SessionIdleTimeout "
-                                    "SharedSecret StartupDelay SubAgent";
-
-
 /////////////////////////////////////////////////////////////////////////////
 // CAgentCfgEditor
 
@@ -141,7 +128,7 @@ int CAgentCfgEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndEditor.Create(_T("Edit"), WS_CHILD | WS_VISIBLE, rect, this, ID_EDIT_CTRL);
    m_wndEditor.LoadLexer(_T("nxlexer.dll"));
    m_wndEditor.SetLexer(_T("nxconfig"));
-   m_wndEditor.SetKeywords(0, m_szConfigKeywords);
+   m_wndEditor.SetKeywords(0, g_szConfigKeywords);
 
    m_dwTimer = SetTimer(1, 1000, NULL);
 

@@ -19,7 +19,7 @@ class CCondPropsScript : public CPropertyPage
 public:
 	CString m_strScript;
 	CCondPropsScript();
-	~CCondPropsScript();
+	virtual ~CCondPropsScript();
 
 // Dialog Data
 	//{{AFX_DATA(CCondPropsScript)

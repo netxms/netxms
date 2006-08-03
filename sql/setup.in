@@ -13,6 +13,8 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('DBLockInfo','',0,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('DBLockPID','0',0,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('ServerID','',0,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('EnableZoning','0',1,1);

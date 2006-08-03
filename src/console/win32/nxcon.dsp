@@ -121,7 +121,15 @@ SOURCE=.\AdvSplitter.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\AgentCfgDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\AgentCfgEditor.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\AgentConfigMgr.cpp
 # End Source File
 # Begin Source File
 
@@ -622,7 +630,15 @@ SOURCE=.\AdvSplitter.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\AgentCfgDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\AgentCfgEditor.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\AgentConfigMgr.h
 # End Source File
 # Begin Source File
 
@@ -1163,6 +1179,10 @@ SOURCE=.\res\bmp00001.bmp
 # Begin Source File
 
 SOURCE=.\icons\command.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\configs.ico
 # End Source File
 # Begin Source File
 

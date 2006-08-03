@@ -74,6 +74,7 @@ DWORD ConfigReadULong(TCHAR *pszVar, DWORD dwDefault);
 extern DB_HANDLE g_hCoreDB;
 extern BOOL g_bIgnoreErrors;
 extern int g_iSyntax;
+extern TCHAR *g_pszTableSuffix;
 extern TCHAR *g_pszSqlType[][2];
 
 

@@ -14,7 +14,9 @@ EXTRA_DIST = \
 	ActionSelDlg.cpp ActionSelDlg.h \
 	AddDCIDlg.cpp AddDCIDlg.h \
 	AdvSplitter.cpp AdvSplitter.h \
+	AgentCfgDlg.cpp AgentCfgDlg.h \
 	AgentCfgEditor.cpp AgentCfgEditor.h \
+	AgentConfigMgr.cpp AgentConfigMgr.h \
 	AlarmBrowser.cpp AlarmBrowser.h \
 	comm.cpp \
 	CondDCIPropDlg.cpp CondDCIPropDlg.h \

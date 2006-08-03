@@ -134,6 +134,7 @@ IDI_FORWARD             ICON    DISCARDABLE     "icons\\forward.ico"
 IDI_MODULE              ICON    DISCARDABLE     "icons\\module.ico"
 IDI_GO_PARENT           ICON    DISCARDABLE     "icons\\go_parent.ico"
 IDI_HOME                ICON    DISCARDABLE     "icons\\home.ico"
+IDI_CONFIGS             ICON    DISCARDABLE     "icons\\configs.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -366,6 +367,7 @@ BEGIN
     POPUP "Control Panel"
     BEGIN
         MENUITEM "&Actions",                    ID_CONTROLPANEL_ACTIONS
+        MENUITEM "A&gent configs",              ID_CONTROLPANEL_AGENTCONFIGS
         MENUITEM "Agent Pac&kages",             ID_CONTROLPANEL_AGENTPKG
         MENUITEM "&Events",                     ID_CONTROLPANEL_EVENTS
         MENUITEM "Event &Policy\tF4",           ID_CONTROLPANEL_EVENTPOLICY
@@ -373,7 +375,7 @@ BEGIN
 
         MENUITEM "&Modules",                    ID_CONTROLPANEL_MODULES
         MENUITEM "&Object Tools",               ID_CONTROLPANEL_OBJECTTOOLS
-        MENUITEM "Script &Library",             ID_CONTROLPANEL_SCRIPTLIBRARY
+        MENUITEM "Script Li&brary",             ID_CONTROLPANEL_SCRIPTLIBRARY
 
         MENUITEM "Server &configuration",       ID_CONTROLPANEL_SERVERCFG
         MENUITEM "&SNMP Traps",                 ID_CONTROLPANEL_SNMPTRAPS
@@ -570,6 +572,15 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "&Copy to clipboard\tCtrl+C",  ID_DATA_COPYTOCLIPBOARD
+    END
+    POPUP "Config"
+    BEGIN
+        MENUITEM "&New...\tIns",                ID_CONFIG_NEW
+        MENUITEM "&Edit...\tAlt+Enter",         ID_CONFIG_EDIT
+        MENUITEM "&Delete\tDel",                ID_CONFIG_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Move &up\tCtrl+Up",           ID_CONFIG_MOVEUP
+        MENUITEM "Move do&wn\tCtrl+Down",       ID_CONFIG_MOVEDOWN
     END
 END
 
@@ -893,6 +904,15 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Copy to clipboard",          ID_DATA_COPYTOCLIPBOARD
     END
+    POPUP "Config"
+    BEGIN
+        MENUITEM "&New...",                     ID_CONFIG_NEW
+        MENUITEM "&Edit...",                    ID_CONFIG_EDIT
+        MENUITEM "&Delete",                     ID_CONFIG_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Move &up",                    ID_CONFIG_MOVEUP
+        MENUITEM "Move do&wn",                  ID_CONFIG_MOVEDOWN
+    END
 END
 
 
@@ -1099,6 +1119,13 @@ BEGIN
                                                     NOINVERT
     "N",            ID_DATA_SCALE_NORMAL,   VIRTKEY, CONTROL, NOINVERT
     "S",            ID_DATA_SCALEVALUE,     VIRTKEY, CONTROL, NOINVERT
+END
+
+IDA_AGENT_CONFIG_MANAGER ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_DELETE,      ID_CONFIG_DELETE,       VIRTKEY, NOINVERT
+    VK_INSERT,      ID_CONFIG_NEW,          VIRTKEY, NOINVERT
+    VK_RETURN,      ID_CONFIG_EDIT,         VIRTKEY, ALT, NOINVERT
 END
 
 
@@ -2596,6 +2623,23 @@ BEGIN
     LTEXT           "Number of polls",IDC_STATIC,94,69,50,8
 END
 
+IDD_AGENT_CONFIG DIALOGEX 0, 0, 417, 330
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit Agent Configuration"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_NAME,7,17,340,14,ES_AUTOHSCROLL
+    CONTROL         "Custom1",IDC_EDIT_FILTER,"Scintilla",WS_TABSTOP,7,47,
+                    340,120,WS_EX_CLIENTEDGE
+    CONTROL         "Custom2",IDC_EDIT_CONFIG,"Scintilla",WS_TABSTOP,7,185,
+                    339,138,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "OK",IDOK,360,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,360,24,50,14
+    LTEXT           "Name",IDC_STATIC,7,7,50,8
+    LTEXT           "Filtering script",IDC_STATIC,7,36,44,8
+    LTEXT           "Configuration file",IDC_STATIC,7,174,53,8
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -3191,6 +3235,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 93
     END
+
+    IDD_AGENT_CONFIG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 410
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 323
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -3341,6 +3393,8 @@ BEGIN
     IDR_DCI_HISTORY_GRAPH   "\nHistory Graph\nHistory Graph"
     IDR_MODULE_MANAGER      "\nModule Manager\nModuleManager"
     IDR_DESKTOP_MANAGER     "\nSaved Desktop Manager\nSaved Desktop Manager"
+    IDR_AGENT_CONFIG_MANAGER 
+                            "\nAgent Configuration Manager\nAgent Configuration Manager"
 END
 
 STRINGTABLE DISCARDABLE 

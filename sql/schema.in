@@ -890,7 +890,7 @@ CREATE TABLE submap_links
 CREATE TABLE agent_configs
 (
 	config_id integer not null,
-	config_name integer not null,
+	config_name varchar(255) not null,
 	config_file SQL_TEXT not null,
 	config_filter SQL_TEXT not null,
 	sequence_number integer not null,

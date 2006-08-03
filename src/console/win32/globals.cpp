@@ -309,3 +309,16 @@ CODE_TO_TEXT g_ctNodeType[] =
 
 DWORD g_dwNumObjectTools = 0;
 NXC_OBJECT_TOOL *g_pObjectToolList = NULL;
+
+
+//
+// Configuration file keywords
+//
+
+TCHAR g_szConfigKeywords[] = "Action ControlServers EnableActions EnabledCiphers "
+                             "EnableProxy EnableSubagentAutoload ExecTimeout"
+                             "ExternalParameter FileStore ListenPort LogFile "
+                             "LogUnresolvedSymbols MasterServers MaxSessions "
+                             "PlatformSuffix RequireAuthentication "
+                             "RequireEncryption Servers SessionIdleTimeout "
+                             "SharedSecret StartupDelay SubAgent";

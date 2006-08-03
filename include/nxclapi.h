@@ -1386,6 +1386,32 @@ typedef struct
 
 
 //
+// Agent configuration info
+//
+
+typedef struct
+{
+   DWORD dwId;
+   DWORD dwSequence;
+   TCHAR szName[MAX_DB_STRING];
+} NXC_AGENT_CONFIG_INFO;
+
+
+//
+// Agent configuration - all data
+//
+
+typedef struct
+{
+   DWORD dwId;
+   DWORD dwSequence;
+   TCHAR szName[MAX_DB_STRING];
+   TCHAR *pszText;
+   TCHAR *pszFilter;
+} NXC_AGENT_CONFIG;
+
+
+//
 // Functions
 //
 
@@ -1633,6 +1659,13 @@ DWORD LIBNXCL_EXPORTABLE NXCDownloadSubmapBkImage(NXC_SESSION hSession, DWORD dw
 DWORD LIBNXCL_EXPORTABLE NXCGetServerModuleList(NXC_SESSION hSession,
                                                 NXC_SERVER_MODULE_LIST **ppModuleList);
 void LIBNXCL_EXPORTABLE NXCDestroyModuleList(NXC_SERVER_MODULE_LIST *pModuleList);
+
+DWORD LIBNXCL_EXPORTABLE NXCGetAgentConfigList(NXC_SESSION hSession, DWORD *pdwNumRecs,
+                                               NXC_AGENT_CONFIG_INFO **ppList);
+DWORD LIBNXCL_EXPORTABLE NXCOpenAgentConfig(NXC_SESSION hSession, DWORD dwCfgId,
+                                            NXC_AGENT_CONFIG *pConfig);
+DWORD LIBNXCL_EXPORTABLE NXCSaveAgentConfig(NXC_SESSION hSession, NXC_AGENT_CONFIG *pConfig);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteAgentConfig(NXC_SESSION hSession, DWORD dwCfgId);
 
 #ifdef __cplusplus
 }

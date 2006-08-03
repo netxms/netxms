@@ -34,6 +34,7 @@
 DB_HANDLE g_hCoreDB;
 BOOL g_bIgnoreErrors = FALSE;
 int g_iSyntax;
+TCHAR *g_pszTableSuffix = _T("");
 TCHAR *g_pszSqlType[5][2] = 
 {
    { _T("blob"), _T("bigint") },       // MySQL
@@ -286,7 +287,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:fhvX")) != -1)
+   while((ch = getopt(argc, argv, "c:fhIMvX")) != -1)
    {
       switch(ch)
       {
@@ -301,6 +302,8 @@ int main(int argc, char *argv[])
                         "   -c <config>  : Use alternate configuration file. Default is " DEFAULT_CONFIG_FILE "\n"
                         "   -f           : Force repair - do not ask for confirmation.\n"
                         "   -h           : Display help and exit.\n"
+                        "   -I           : MySQL only - specify TYPE=InnoDB for new tables.\n"
+                        "   -M           : MySQL only - specify TYPE=MyISAM for new tables.\n"
                         "   -v           : Display version and exit.\n"
                         "   -X           : Ignore SQL errors when upgrading (USE WITH CARE!!!)\n"
                         "\n"));
@@ -314,6 +317,12 @@ int main(int argc, char *argv[])
             break;
          case 'f':
             m_bForce = TRUE;
+            break;
+         case 'I':
+            g_pszTableSuffix = _T(" TYPE=InnoDB");
+            break;
+         case 'M':
+            g_pszTableSuffix = _T(" TYPE=MyISAM");
             break;
          case 'X':
             g_bIgnoreErrors = TRUE;

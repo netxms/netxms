@@ -101,6 +101,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_OBJTOOLS));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SCRIPT_LIBRARY));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_MODULE));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_CONFIGS));
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_NORMAL);
 
    // Populate list with items
@@ -116,6 +117,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    AddItem("Script Library", 9, ID_CONTROLPANEL_SCRIPTLIBRARY);
    AddItem("Modules", 10, ID_CONTROLPANEL_MODULES);
    //AddItem("View Builder", 10, ID_CONTROLPANEL_VIEWBUILDER);
+   AddItem("Agent Configurations", 11, ID_CONTROLPANEL_AGENTCONFIGS);
 
    m_wndListCtrl.SortItems(CompareItems, (DWORD)&m_wndListCtrl);
 

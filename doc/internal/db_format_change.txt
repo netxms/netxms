@@ -2,6 +2,16 @@
 * 43 ==> 44 *
 *************
 
+- Added table "agent_configs":
+	CREATE TABLE agent_configs
+	(
+		config_id integer not null,
+		config_name integer not null,
+		config_file SQL_TEXT not null,
+		config_filter SQL_TEXT not null,
+		sequence_number integer not null,
+		PRIMARY KEY(config_id)
+	) TABLE_TYPE;
 - New object tools added:
 	INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
 		VALUES (13,'&Info->&Process list',3,
@@ -11,6 +21,7 @@
 	INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 		VALUES (13,1,'Name','',0,2);
 	INSERT INTO object_tools_acl (tool_id,user_id) VALUES (13,-2147483648);
+- New configuration parameter: DBLockPID (hidden)
 
 
 *************

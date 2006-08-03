@@ -139,9 +139,8 @@ BOOL CAlarmBrowser::PreCreateWindow(CREATESTRUCT& cs)
 {
    if (cs.lpszClass == NULL)
       cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, 
-                                         NULL, 
-                                         GetSysColorBrush(COLOR_WINDOW), 
-                                         AfxGetApp()->LoadIcon(IDI_ALARM));
+                                         NULL, GetSysColorBrush(COLOR_WINDOW), 
+                                         theApp.LoadIcon(IDI_ALARM));
 	return CMDIChildWnd::PreCreateWindow(cs);
 }
 

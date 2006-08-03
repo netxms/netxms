@@ -105,6 +105,10 @@ SOURCE=.\actions.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\agentcfg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\alarms.cpp
 # End Source File
 # Begin Source File

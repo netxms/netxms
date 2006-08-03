@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = \
-	ack.ico active.ico alarm.ico connect.ico datacoll.ico \
+	ack.ico active.ico alarm.ico configs.ico connect.ico datacoll.ico \
 	dctemplate.ico deploy.ico disabled.ico document.ico \
 	EARTH.ICO e-mail.ico editor.ico exec.ico graph.ico \
 	iexplore.ico log.ico lpp.ico NetMap.ICO ovl_status_critical.ico \
