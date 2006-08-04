@@ -52,7 +52,10 @@ protected:
 	afx_msg void OnUpdateConfigEdit(CCmdUI* pCmdUI);
 	afx_msg void OnConfigNew();
 	afx_msg void OnConfigEdit();
+	afx_msg void OnConfigDelete();
 	//}}AFX_MSG
+   afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 

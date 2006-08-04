@@ -246,6 +246,7 @@ src/agent/core/Makefile.am -text
 src/agent/core/Makefile.nw -text
 src/agent/core/actions.cpp -text
 src/agent/core/comm.cpp -text
+src/agent/core/config.cpp -text
 src/agent/core/exec.cpp -text
 src/agent/core/getparam.cpp -text
 src/agent/core/hddinfo.cpp -text

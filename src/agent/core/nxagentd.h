@@ -66,8 +66,7 @@
 #define AGENT_DEFAULT_CONFIG     "SYS:ETC/nxagentd.conf"
 #define AGENT_DEFAULT_LOG        "SYS:ETC/nxagentd.log"
 #define AGENT_DEFAULT_FILE_STORE "SYS:\\"
-#else
-#ifdef _IPSO
+#elif defined(_IPSO)
 #define AGENT_DEFAULT_CONFIG     "/opt/netxms/etc/nxagentd.conf"
 #define AGENT_DEFAULT_LOG        "/opt/netxms/log/nxagentd.log"
 #define AGENT_DEFAULT_FILE_STORE "/opt/netxms/store"
@@ -75,7 +74,6 @@
 #define AGENT_DEFAULT_CONFIG     "/etc/nxagentd.conf"
 #define AGENT_DEFAULT_LOG        "/var/log/nxagentd"
 #define AGENT_DEFAULT_FILE_STORE "/tmp"
-#endif
 #endif
 
 
@@ -101,6 +99,7 @@
 #define AF_HIDE_WINDOW              0x0080
 #define AF_ENABLE_AUTOLOAD          0x0100
 #define AF_ENABLE_PROXY             0x0200
+#define AF_CENTRAL_CONFIG           0x0400
 #define AF_SHUTDOWN                 0x1000
 #define AF_RUNNING_ON_NT4           0x2000
 
@@ -291,6 +290,8 @@ void ConsolePrintf(char *pszFormat, ...);
 void DebugPrintf(char *pszFormat, ...);
 
 void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
+
+BOOL DownloadConfig(TCHAR *pszServer);
 
 BOOL InitParameterList(void);
 void AddParameter(char *szName, LONG (* fpHandler)(char *,char *,char *), char *pArg,

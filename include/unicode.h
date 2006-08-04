@@ -79,6 +79,7 @@
 #define _vsntprintf vsnprintf
 #define _tfopen   fopen
 #define _fgetts   fgets
+#define _fputts   fputs
 #define _tcstol   strtol
 #define _tcstoul  strtoul
 #define _tcstod   strtod

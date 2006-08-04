@@ -173,6 +173,10 @@ SOURCE=.\comm.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\config.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\exec.cpp
 # End Source File
 # Begin Source File

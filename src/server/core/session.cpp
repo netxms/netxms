@@ -7344,11 +7344,17 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
    DB_RESULT hResult;
    NXSL_Program *pScript;
    NXSL_Value *ppArgList[5], *pValue;
+   DWORD dwCfgId;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
 
    pRequest->GetVariableStr(VID_PLATFORM_NAME, szPlatform, MAX_DB_STRING);
    wMajor = pRequest->GetVariableShort(VID_VERSION_MAJOR);
    wMinor = pRequest->GetVariableShort(VID_VERSION_MINOR);
    wRelease = pRequest->GetVariableShort(VID_VERSION_RELEASE);
+   DbgPrintf(AF_DEBUG_MISC, "Finding config for agent at %s: platform=\"%s\", version=\"%d.%d.%d\"",
+             IpToStr(m_dwHostAddr, szBuffer), szPlatform, (int)wMajor, (int)wMinor, (int)wRelease);
 
    hResult = DBSelect(g_hCoreDB, "SELECT config_id,config_file,config_filter FROM agent_configs ORDER BY sequence_number");
    if (hResult != NULL)
@@ -7356,6 +7362,8 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
       nNumRows = DBGetNumRows(hResult);
       for(i = 0; i < nNumRows; i++)
       {
+         dwCfgId = DBGetFieldULong(hResult, i, 0);
+
          // Compile script
          pszText = _tcsdup(DBGetField(hResult, i, 2));
          DecodeSQLString(pszText);
@@ -7377,23 +7385,31 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
             ppArgList[4] = new NXSL_Value((LONG)wRelease);
 
             // Run script
+            DbgPrintf(AF_DEBUG_MISC, "Running configuration matching script %d", dwCfgId);
             if (pScript->Run(NULL, 5, ppArgList) == 0)
             {
                pValue = pScript->GetResult();
                if (pValue->GetValueAsInt32() != 0)
                {
+                  DbgPrintf(AF_DEBUG_MISC, "Configuration script %d matched for agent %s, sending config",
+                            dwCfgId, IpToStr(m_dwHostAddr, szBuffer));
                   msg.SetVariable(VID_RCC, (WORD)0);
                   pszText = _tcsdup(DBGetField(hResult, i, 1));
                   DecodeSQLString(pszText);
                   msg.SetVariable(VID_CONFIG_FILE, pszText);
-                  msg.SetVariable(VID_CONFIG_ID, DBGetFieldULong(hResult, i, 0));
+                  msg.SetVariable(VID_CONFIG_ID, dwCfgId);
                   free(pszText);
                   break;
+               }
+               else
+               {
+                  DbgPrintf(AF_DEBUG_MISC, "Configuration script %d not matched for agent %s",
+                            dwCfgId, IpToStr(m_dwHostAddr, szBuffer));
                }
             }
             else
             {
-               _stprintf(szError, _T("AgentCfg::%d"), DBGetFieldULong(hResult, i, 0));
+               _stprintf(szError, _T("AgentCfg::%d"), dwCfgId);
                PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), szError,
                          pScript->GetErrorText(), 0);
             }
@@ -7401,7 +7417,7 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
          }
          else
          {
-            _stprintf(szBuffer, _T("AgentCfg::%d"), DBGetFieldULong(hResult, i, 0));
+            _stprintf(szBuffer, _T("AgentCfg::%d"), dwCfgId);
             PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), szBuffer, szError, 0);
          }
       }

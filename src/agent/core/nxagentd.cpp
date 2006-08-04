@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -55,11 +55,11 @@ void InitStaticSubagents(void);
 //
 
 #if defined(_WIN32)
-#define VALID_OPTIONS   "c:CdDEhHIRsSUvX:Z:"
+#define VALID_OPTIONS   "c:CdDEhHIM:RsSUvX:Z:"
 #elif defined(_NETWARE)
-#define VALID_OPTIONS   "c:CDhvX:Z:"
+#define VALID_OPTIONS   "c:CDhM:vX:Z:"
 #else
-#define VALID_OPTIONS   "c:CdDhp:vX:Z:"
+#define VALID_OPTIONS   "c:CdDhM:p:vX:Z:"
 #endif
 
 
@@ -186,6 +186,9 @@ static char m_szHelpText[] =
 #ifdef _WIN32
    "   -H         : Hide agent's window when in standalone mode\n"
    "   -I         : Install Windows service\n"
+#endif
+   "   -M <addr>  : Download config from management server <addr>\n"
+#ifdef _WIN32
    "   -R         : Remove Windows service\n"
    "   -s         : Start Windows servive\n"
    "   -S         : Stop Windows service\n"
@@ -958,6 +961,7 @@ int main(int argc, char *argv[])
    int ch, iExitCode = 0, iAction = ACTION_RUN_AGENT;
    BOOL bRestart = FALSE;
    DWORD dwOldPID;
+   char szConfigServer[MAX_DB_STRING];
 #ifdef _WIN32
    char szModuleName[MAX_PATH];
 #endif
@@ -1006,6 +1010,10 @@ int main(int argc, char *argv[])
             printf("NetXMS Core Agent Version " AGENT_VERSION_STRING "\n");
             iAction = ACTION_NONE;
             break;
+         case 'M':
+            g_dwFlags |= AF_CENTRAL_CONFIG;
+            nx_strncpy(szConfigServer, optarg, MAX_DB_STRING);
+            break;
          case 'X':   // Agent is being restarted
             bRestart = TRUE;
             dwOldPID = strtoul(optarg, NULL, 10);
@@ -1053,6 +1061,22 @@ int main(int argc, char *argv[])
    switch(iAction)
    {
       case ACTION_RUN_AGENT:
+         if (g_dwFlags & AF_CENTRAL_CONFIG)
+         {
+            if (g_dwFlags & AF_DEBUG)
+               printf("Downloading configuration from %s...\n", szConfigServer);
+            if (DownloadConfig(szConfigServer))
+            {
+               if (g_dwFlags & AF_DEBUG)
+                  printf("Configuration downloaded successfully\n");
+            }
+            else
+            {
+               if (g_dwFlags & AF_DEBUG)
+                  printf("Configuration download failed\n");
+            }
+         }
+
          if (NxLoadConfig(g_szConfigFile, "", m_cfgTemplate, !(g_dwFlags & AF_DAEMON)) == NXCFG_ERR_OK)
          {
             if ((!stricmp(g_szLogFile, "{syslog}")) || 

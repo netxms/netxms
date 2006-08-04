@@ -44,7 +44,10 @@ BEGIN_MESSAGE_MAP(CAgentConfigMgr, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_CONFIG_EDIT, OnUpdateConfigEdit)
 	ON_COMMAND(ID_CONFIG_NEW, OnConfigNew)
 	ON_COMMAND(ID_CONFIG_EDIT, OnConfigEdit)
+	ON_COMMAND(ID_CONFIG_DELETE, OnConfigDelete)
 	//}}AFX_MSG_MAP
+	ON_NOTIFY(NM_DBLCLK, ID_LIST_VIEW, OnListViewDblClk)
+	ON_NOTIFY(LVN_COLUMNCLICK, ID_LIST_VIEW, OnListViewColumnClick)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -170,7 +173,7 @@ void CAgentConfigMgr::OnViewRefresh()
       for(i = 0; i < dwNumCfg; i++)
       {
          _stprintf(szBuffer, _T("%d"), pList[i].dwId);
-         iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
+         iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, -1);
          if (iItem != -1)
          {
             m_wndListCtrl.SetItemData(iItem, pList[i].dwId);
@@ -319,4 +322,86 @@ void CAgentConfigMgr::EditConfig(NXC_AGENT_CONFIG *pConfig)
       safe_free(pConfig->pszFilter);
       safe_free(pConfig->pszText);
    }
+}
+
+
+//
+// Delete config records
+//
+
+static DWORD DeleteConfigRecords(CListCtrl *pListCtrl)
+{
+   int nItem;
+   DWORD dwResult = RCC_SUCCESS;
+
+   nItem = pListCtrl->GetNextItem(-1, LVIS_SELECTED);
+   while(nItem != -1)
+   {
+      dwResult = NXCDeleteAgentConfig(g_hSession, pListCtrl->GetItemData(nItem));
+      if (dwResult != RCC_SUCCESS)
+         break;
+      pListCtrl->DeleteItem(nItem);
+      nItem = pListCtrl->GetNextItem(-1, LVIS_SELECTED);
+   }
+   return dwResult;
+}
+
+
+//
+// Menu item "Config->Delete" handler
+//
+
+void CAgentConfigMgr::OnConfigDelete() 
+{
+   DWORD dwResult;
+
+   dwResult = DoRequestArg1(DeleteConfigRecords, &m_wndListCtrl, _T("Deleting configs..."));
+   if (dwResult != RCC_SUCCESS)
+      theApp.ErrorBox(dwResult, _T("Cannot delete agent config record: %s"));
+}
+
+
+//
+// Handler for WM_NOTIFY::NM_DBLCLK from ID_LIST_VIEW
+//
+
+void CAgentConfigMgr::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
+{
+   PostMessage(WM_COMMAND, ID_CONFIG_EDIT, 0);
+}
+
+
+//
+// WM_NOTIFY::LVN_COLUMNCLICK message handler
+//
+
+void CAgentConfigMgr::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+{
+   LVCOLUMN lvCol;
+
+   // Unmark old sorting column
+   lvCol.mask = LVCF_FMT;
+   lvCol.fmt = LVCFMT_LEFT;
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
+
+   // Change current sort mode and resort list
+   if (m_iSortMode == pNMHDR->iSubItem)
+   {
+      // Same column, change sort direction
+      m_iSortDir = 1 - m_iSortDir;
+   }
+   else
+   {
+      // Another sorting column
+      m_iSortMode = pNMHDR->iSubItem;
+   }
+   //m_wndListCtrl.SortItems(ItemCompareProc, (LPARAM)this);
+
+   // Mark new sorting column
+   lvCol.mask = LVCF_IMAGE | LVCF_FMT;
+   lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
+   lvCol.iImage = m_iSortDir;
+   m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
+   
+   *pResult = 0;
 }
