@@ -115,9 +115,9 @@ static void get_random_bytes(void *buf, int nbytes)
 	if (nbytes == 0)
 		return;
 
-	/* XXX put something better here if no /dev/random! */
-   srand(time(NULL) ^ getpid());
-	for (i=0; i < nbytes; i++)
+	/* FIXME: put something better here if no /dev/random! */
+   srand((unsigned int)time(NULL) ^ getpid());
+	for (i = 0; i < nbytes; i++)
 		*cp++ = rand() & 0xFF;
 	return;
 }
@@ -229,8 +229,8 @@ try_again:
    li.HighPart = ft.dwHighDateTime;
    t = li.QuadPart;       // In 100-nanosecond intervals
    t /= 10;    // To microseconds
-   tv.tv_sec = (time_t)(t / 1000000);
-   tv.tv_usec = (time_t)(t % 1000000);
+   tv.tv_sec = (long)(t / 1000000);
+   tv.tv_usec = (long)(t % 1000000);
 #else
 	gettimeofday(&tv, NULL);
 #endif

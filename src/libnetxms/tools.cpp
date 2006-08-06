@@ -237,7 +237,7 @@ void LIBNETXMS_EXPORTABLE StrStrip(TCHAR *str)
    for(i=0;(str[i]!=0)&&((str[i]==_T(' '))||(str[i]==_T('\t')));i++);
    if (i>0)
       memmove(str,&str[i],(_tcslen(&str[i])+1) * sizeof(TCHAR));
-   for(i=_tcslen(str)-1;(i>=0)&&((str[i]==_T(' '))||(str[i]==_T('\t')));i--);
+   for(i=(int)_tcslen(str)-1;(i>=0)&&((str[i]==_T(' '))||(str[i]==_T('\t')));i--);
    str[i+1]=0;
 }
 
@@ -582,8 +582,8 @@ void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, TCHAR *pszSubStr, TCHAR
    TCHAR *pszSrc, *pszDst;
    int iSrcLen, iRepLen;
 
-   iSrcLen = _tcslen(pszSubStr);
-   iRepLen = _tcslen(pszReplace);
+   iSrcLen = (int)_tcslen(pszSubStr);
+   iRepLen = (int)_tcslen(pszReplace);
    for(pszSrc = pszString, pszDst = pszString; *pszSrc != 0;)
    {
       if (!_tcsncmp(pszSrc, pszSubStr, iSrcLen))
@@ -671,7 +671,7 @@ int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(TCHAR *pszText)
 int LIBNETXMS_EXPORTABLE SendEx(SOCKET nSocket, const void *pBuff,
 		                          size_t nSize, int nFlags)
 {
-	int nLeft = nSize;
+	int nLeft = (int)nSize;
 	int nRet;
 
 	do
@@ -684,7 +684,7 @@ int LIBNETXMS_EXPORTABLE SendEx(SOCKET nSocket, const void *pBuff,
 		nLeft -= nRet;
 	} while (nLeft > 0);
 
-	return nLeft == 0 ? nSize : nRet;
+	return nLeft == 0 ? (int)nSize : nRet;
 }
 
 
@@ -728,7 +728,7 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
 #ifdef _WIN32
       tv.tv_sec = dwTimeout / 1000;
       tv.tv_usec = (dwTimeout % 1000) * 1000;
-      iErr = select(nSocket + 1, &rdfs, NULL, NULL, &tv);
+      iErr = select(0, &rdfs, NULL, NULL, &tv);
 #else
       do
       {
@@ -746,7 +746,7 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
       if (iErr > 0)
       {
 #ifdef _WIN32
-         iErr = recv(nSocket, (char *)pBuff, nSize, nFlags);
+         iErr = recv(nSocket, (char *)pBuff, (int)nSize, nFlags);
 #else
          do
          {
@@ -762,7 +762,7 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
    else
    {
 #ifdef _WIN32
-      iErr = recv(nSocket, (char *)pBuff, nSize, nFlags);
+      iErr = recv(nSocket, (char *)pBuff, (int)nSize, nFlags);
 #else
       do
       {

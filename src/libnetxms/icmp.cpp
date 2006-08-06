@@ -212,7 +212,11 @@ DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries,
 #if HAVE_POLL
 	         if (poll(&fds, 1, dwTimeLeft) > 0)
 #else
+#ifdef _WIN32
+	         if (select(0, &rdfs, NULL, NULL, &timeout) > 0)
+#else
 	         if (select(sock + 1, &rdfs, NULL, NULL, &timeout) > 0)
+#endif
 #endif
 
 #endif   /* USE_KQUEUE */
