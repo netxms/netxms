@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.6 2006-03-15 13:28:18 victor Exp $ */
+/* $Id: net.cpp,v 1.7 2006-08-06 10:32:02 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -46,7 +46,7 @@ bool NetCanRead(SOCKET nSocket, int nTimeout /* ms */)
 	timeout.tv_sec = nTimeout / 1000;
 	timeout.tv_usec = (nTimeout % 1000) * 1000;
 
-	if (select(nSocket + 1, &rdfs, NULL, NULL, &timeout) > 0)
+	if (select(SELECT_NFDS(nSocket + 1), &rdfs, NULL, NULL, &timeout) > 0)
 	{
 		ret = true;
 	}
@@ -54,17 +54,17 @@ bool NetCanRead(SOCKET nSocket, int nTimeout /* ms */)
 	return ret;
 }
 
-int NetRead(int nSocket, char *pBuff, int nSize)
+int NetRead(SOCKET nSocket, char *pBuff, int nSize)
 {
 	return recv(nSocket, pBuff, nSize, 0);
 }
 
-int NetWrite(int nSocket, char *pBuff, int nSize)
+int NetWrite(SOCKET nSocket, char *pBuff, int nSize)
 {
 	return send(nSocket, pBuff, nSize, 0);
 }
 
-void NetClose(int nSocket)
+void NetClose(SOCKET nSocket)
 {
    shutdown(nSocket, SHUT_RDWR);
 	closesocket(nSocket);
@@ -74,6 +74,10 @@ void NetClose(int nSocket)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/03/15 13:28:18  victor
+- int changed to SOCKET
+- Telnet checker added to VC++ project
+
 Revision 1.5  2006/03/15 12:00:10  alk
 simple telnet service checker added: it connects, response WON'T/DON'T to
 all offers and disconnects (this prevents from "peer died" in logs)

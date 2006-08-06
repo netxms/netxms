@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS Agent
-AppVerName=NetXMS Agent 0.2.12-hf1
-AppVersion=0.2.12-hf1
+AppVerName=NetXMS Agent 0.2.13-dev
+AppVersion=0.2.13-dev
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -12,7 +12,7 @@ AppUpdatesURL=http://www.netxms.org
 DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS Agent
 AllowNoIcons=yes
-OutputBaseFilename=nxagent-0.2.12-hf1
+OutputBaseFilename=nxagent-0.2.13-dev
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -85,6 +85,16 @@ Var
   i, nCount : Integer;
   param : String;
 Begin
+  // Check if we are running on 64-bit Windows
+  If ProcessorArchitecture = paX64 Then Begin
+    If MsgBox('You are trying to install 32-bit version of NetXMS agent on 64-bit Windows. It is recommended to install 64-bit version instead. Do you really wish to continue installation?', mbConfirmation, MB_YESNO) = IDYES Then
+      Result := TRUE
+    Else
+      Result := FALSE;
+  End Else Begin
+    Result := TRUE;
+  End;
+  
   // Empty values for installation data
   serverName := '';
   sbPing := 'FALSE';
@@ -128,7 +138,6 @@ Begin
         sbUPS := 'FALSE';
     End;
   End;
-  Result := TRUE;
 End;
 
 Procedure InitializeWizard;

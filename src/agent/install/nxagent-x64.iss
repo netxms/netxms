@@ -17,6 +17,8 @@ Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
 LicenseFile=..\..\..\copying
+ArchitecturesInstallIn64BitMode=x64
+ArchitecturesAllowed=x64
 
 [Files]
 Source: "..\..\libnetxms\Release64\libnetxms.dll"; DestDir: "{app}\bin"; BeforeInstall: StopService; Flags: ignoreversion

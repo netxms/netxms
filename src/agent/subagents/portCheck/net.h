@@ -1,4 +1,4 @@
-/* $Id: net.h,v 1.4 2006-03-15 13:28:18 victor Exp $ */
+/* $Id: net.h,v 1.5 2006-08-06 10:32:02 victor Exp $ */
 
 #ifndef __NET__H__
 #define __NET__H__
@@ -11,9 +11,9 @@ enum
 
 SOCKET NetConnectTCP(char *, DWORD, unsigned short);
 bool NetCanRead(SOCKET, int);
-int NetRead(int, char *, int);
-int NetWrite(int, char *, int);
-void NetClose(int);
+int NetRead(SOCKET, char *, int);
+int NetWrite(SOCKET, char *, int);
+void NetClose(SOCKET);
 
 #endif // __NET__H__
 
@@ -21,6 +21,10 @@ void NetClose(int);
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/03/15 13:28:18  victor
+- int changed to SOCKET
+- Telnet checker added to VC++ project
+
 Revision 1.3  2006/03/15 12:00:10  alk
 simple telnet service checker added: it connects, response WON'T/DON'T to
 all offers and disconnects (this prevents from "peer died" in logs)

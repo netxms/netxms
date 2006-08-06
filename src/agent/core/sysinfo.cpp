@@ -221,7 +221,7 @@ LONG H_PlatformName(char *cmd, char *arg, char *value)
          strcpy(value, "windows-i386");
          break;
       case PROCESSOR_ARCHITECTURE_AMD64:
-         strcpy(value, "windows-amd64");
+         strcpy(value, "windows-x64");
          break;
       default:
          strcpy(value, "windows-unknown");

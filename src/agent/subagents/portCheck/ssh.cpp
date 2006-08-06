@@ -1,4 +1,4 @@
-/* $Id: ssh.cpp,v 1.5 2005-10-18 21:33:26 victor Exp $ */
+/* $Id: ssh.cpp,v 1.6 2006-08-06 10:32:03 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -35,7 +35,7 @@ LONG H_CheckSSH(char *pszParam, char *pArg, char *pValue)
 int CheckSSH(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass)
 {
 	int nRet = 0;
-	int nSd;
+	SOCKET nSd;
 
 	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
 	if (nSd > 0)
@@ -53,7 +53,7 @@ int CheckSSH(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass
 			{
 				snprintf(szTmp, sizeof(szTmp), "SSH-%d.%d-NetXMS\n",
 						nMajor, nMinor);
-				if (NetWrite(nSd, szTmp, strlen(szTmp)) > 0)
+				if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
 				{
 					nRet = PC_ERR_NONE;
 				}
@@ -74,6 +74,10 @@ int CheckSSH(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/10/18 21:33:26  victor
+- Default port for ServiceCheck.HTTP(*) changed from 22 to 80 :)
+- All ServiceCheck.XXX parameters now returns actual failure code, not just 0 or 1
+
 Revision 1.4  2005/01/28 23:45:01  alk
 SMTP check added, requst string == rcpt to
 

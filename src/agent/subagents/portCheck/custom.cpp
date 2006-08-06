@@ -1,4 +1,4 @@
-/* $Id: custom.cpp,v 1.4 2005-10-18 21:33:26 victor Exp $ */
+/* $Id: custom.cpp,v 1.5 2006-08-06 10:32:02 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -37,7 +37,7 @@ int CheckCustom(char *szAddr, DWORD dwAddr, short nPort, char *szRequest,
 		char *szResponse)
 {
 	int nRet = 0;
-	int nSd;
+	SOCKET nSd;
 
 	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
 	if (nSd > 0)
@@ -58,6 +58,10 @@ int CheckCustom(char *szAddr, DWORD dwAddr, short nPort, char *szRequest,
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2005/10/18 21:33:26  victor
+- Default port for ServiceCheck.HTTP(*) changed from 22 to 80 :)
+- All ServiceCheck.XXX parameters now returns actual failure code, not just 0 or 1
+
 Revision 1.3  2005/10/18 09:01:16  alk
 Added commands (ServiceCheck.*) for
 	http

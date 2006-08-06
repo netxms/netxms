@@ -153,7 +153,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
       tv.tv_usec = 0;
       FD_ZERO(&rdfs);
       FD_SET(hSocket, &rdfs);
-      nRet = select(hSocket + 1, &rdfs, NULL, NULL, &tv);
+      nRet = select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv);
       if ((nRet > 0) && (!(g_dwFlags & AF_SHUTDOWN)))
       {
          iSize = sizeof(struct sockaddr_in);

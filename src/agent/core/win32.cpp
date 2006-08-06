@@ -70,22 +70,22 @@ LONG H_MemoryInfo(char *cmd, char *arg, char *value)
       switch((int)arg)
       {
          case MEMINFO_PHYSICAL_FREE:
-            ret_uint(value, ms.dwAvailPhys);
+            ret_uint64(value, ms.dwAvailPhys);
             break;
          case MEMINFO_PHYSICAL_TOTAL:
-            ret_uint(value, ms.dwTotalPhys);
+            ret_uint64(value, ms.dwTotalPhys);
             break;
          case MEMINFO_PHYSICAL_USED:
-            ret_uint(value, ms.dwTotalPhys - ms.dwAvailPhys);
+            ret_uint64(value, ms.dwTotalPhys - ms.dwAvailPhys);
             break;
          case MEMINFO_VIRTUAL_FREE:
-            ret_uint(value, ms.dwAvailPageFile);
+            ret_uint64(value, ms.dwAvailPageFile);
             break;
          case MEMINFO_VIRTUAL_TOTAL:
-            ret_uint(value, ms.dwTotalPageFile);
+            ret_uint64(value, ms.dwTotalPageFile);
             break;
          case MEMINFO_VIRTUAL_USED:
-            ret_uint(value, ms.dwTotalPageFile - ms.dwAvailPageFile);
+            ret_uint64(value, ms.dwTotalPageFile - ms.dwAvailPageFile);
             break;
          default:
             return SYSINFO_RC_UNSUPPORTED;

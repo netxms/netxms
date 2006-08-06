@@ -1,4 +1,4 @@
-/* $Id: http.cpp,v 1.7 2006-07-30 08:22:13 victor Exp $ */
+/* $Id: http.cpp,v 1.8 2006-08-06 10:32:02 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -47,8 +47,8 @@ LONG H_CheckHTTP(char *pszParam, char *pArg, char *pValue)
 int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 		char *szHost, char *szMatch)
 {
-	int nRet = 0;
-	int nSd, nBytes;
+	int nBytes, nRet = 0;
+	SOCKET nSd;
 	regex_t preg;
 
 	if (regcomp(&preg, szMatch, REG_EXTENDED | REG_ICASE | REG_NOSUB) != 0)
@@ -67,7 +67,7 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 				"GET %s HTTP/1.1\r\nConnection: close\r\nHost: %s:%d\r\n\r\n",
 				szURI, szHost, nPort);
 
-		if (NetWrite(nSd, szTmp, strlen(szTmp)) > 0)
+		if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
 		{
 			if ((nBytes = NetRead(nSd, szTmp, sizeof(szTmp))) >= 8)
 			{
@@ -94,6 +94,10 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/07/30 08:22:13  victor
+- Added checking for CDP and Nortel topology autodiscovery support
+- Other minor changes
+
 Revision 1.6  2005/10/18 21:33:26  victor
 - Default port for ServiceCheck.HTTP(*) changed from 22 to 80 :)
 - All ServiceCheck.XXX parameters now returns actual failure code, not just 0 or 1

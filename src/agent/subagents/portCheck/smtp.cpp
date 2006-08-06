@@ -26,7 +26,7 @@ LONG H_CheckSMTP(char *pszParam, char *pArg, char *pValue)
 int CheckSMTP(char *szAddr, DWORD dwAddr, short nPort, char *szTo)
 {
 	int nRet = 0;
-	int nSd;
+	SOCKET nSd;
 	int nErr = 0; 
 
 	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
@@ -54,18 +54,18 @@ int CheckSMTP(char *szAddr, DWORD dwAddr, short nPort, char *szTo)
 			}
 
 			snprintf(szTmp, sizeof(szTmp), "HELO %s\r\n", szHostname);
-			if (NetWrite(nSd, szTmp, strlen(szTmp)) > 0)
+			if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
 			{
 				CHECK_OK("250")
 				{
 					snprintf(szTmp, sizeof(szTmp), "MAIL FROM: noreply@%s\r\n",
 						szHostname);
-					if (NetWrite(nSd, szTmp, strlen(szTmp)) > 0)
+					if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
 					{
 						CHECK_OK("250")
 						{
 							snprintf(szTmp, sizeof(szTmp), "RCPT TO: %s\r\n", szTo);
-							if (NetWrite(nSd, szTmp, strlen(szTmp)) > 0)
+							if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
 							{
 								CHECK_OK("250")
 								{

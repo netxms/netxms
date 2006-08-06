@@ -886,7 +886,7 @@ void CommSession::ProxyReadThread(void)
       FD_SET(m_hProxySocket, &rdfs);
       tv.tv_sec = 0;
       tv.tv_usec = 5000000;   // Half-second timeout
-      nRet = select(m_hProxySocket + 1, &rdfs, NULL, NULL, &tv);
+      nRet = select(SELECT_NFDS(m_hProxySocket + 1), &rdfs, NULL, NULL, &tv);
       if (nRet < 0)
          break;
       if (nRet > 0)

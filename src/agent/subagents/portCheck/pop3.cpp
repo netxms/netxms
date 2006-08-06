@@ -1,4 +1,4 @@
-/* $Id: pop3.cpp,v 1.8 2005-10-18 21:33:26 victor Exp $ */
+/* $Id: pop3.cpp,v 1.9 2006-08-06 10:32:03 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -30,7 +30,7 @@ LONG H_CheckPOP3(char *pszParam, char *pArg, char *pValue)
 int CheckPOP3(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass)
 {
 	int nRet = 0;
-	int nSd;
+	SOCKET nSd;
 
 	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
 	if (nSd > 0)
@@ -46,12 +46,12 @@ int CheckPOP3(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPas
 		if (CHECK_OK)
 		{
 			snprintf(szTmp, sizeof(szTmp), "USER %s\r\n", szUser);
-			if (NetWrite(nSd, szTmp, strlen(szTmp)) > 0)
+			if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
 			{
 				if (CHECK_OK)
 				{
 					snprintf(szTmp, sizeof(szTmp), "PASS %s\r\n", szPass);
-					if (NetWrite(nSd, szTmp, strlen(szTmp)) > 0)
+					if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
 					{
 						if (CHECK_OK)
 						{
@@ -76,6 +76,10 @@ int CheckPOP3(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPas
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2005/10/18 21:33:26  victor
+- Default port for ServiceCheck.HTTP(*) changed from 22 to 80 :)
+- All ServiceCheck.XXX parameters now returns actual failure code, not just 0 or 1
+
 Revision 1.7  2005/08/17 12:09:23  victor
 responce changed to response (issue #37)
 
