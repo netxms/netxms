@@ -94,7 +94,7 @@ void SendTrap(DWORD dwEventCode, char *pszFormat, ...)
    va_list args;
 
    va_start(args, pszFormat);
-   iNumArgs = (pszFormat == NULL) ? 0 : strlen(pszFormat);
+   iNumArgs = (pszFormat == NULL) ? 0 : (int)strlen(pszFormat);
    for(i = 0; i < iNumArgs; i++)
    {
       switch(pszFormat[i])

@@ -93,7 +93,7 @@ WORD g_wListenPort = AGENT_LISTEN_PORT;
 SERVER_INFO g_pServerList[MAX_SERVERS];
 DWORD g_dwServerCount = 0;
 DWORD g_dwExecTimeout = 2000;     // External process execution timeout in milliseconds
-time_t g_dwAgentStartTime;
+time_t g_tmAgentStartTime;
 DWORD g_dwStartupDelay = 0;
 DWORD g_dwIdleTimeout = 60;   // Session idle timeout
 DWORD g_dwMaxSessions = 32;
@@ -762,7 +762,7 @@ BOOL Initialize(void)
    }
 
    // Agent start time
-   g_dwAgentStartTime = time(NULL);
+   g_tmAgentStartTime = time(NULL);
 
    // Start network listener and session watchdog
    m_thListener = ThreadCreateEx(ListenerThread, 0, NULL);

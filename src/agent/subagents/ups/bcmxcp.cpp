@@ -168,7 +168,7 @@ static void DecodeValue(BYTE *pData, int nDataFmt, int nOutputFmt, char *pszValu
 	else if ((nDataFmt & 0xF0) == 0xF0)
    {
 		// Fixed point integer
-		dValue = GetLong(pData) / ldexp(1, nDataFmt & 0x0F);
+		dValue = GetLong(pData) / ldexp((double)1, nDataFmt & 0x0F);
       nInputFmt = FMT_DOUBLE;
 	}
 	else if (nDataFmt <= 0x97)

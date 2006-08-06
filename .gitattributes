@@ -271,6 +271,7 @@ src/agent/core/trap.cpp -text
 src/agent/core/upgrade.cpp -text
 src/agent/core/win32.cpp -text
 src/agent/install/Makefile.am -text
+src/agent/install/nxagent-x64.iss -text
 src/agent/install/nxagent.iss -text
 src/agent/subagents/Makefile.am -text
 src/agent/subagents/aix/Makefile.am -text

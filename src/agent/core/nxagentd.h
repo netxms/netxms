@@ -352,7 +352,7 @@ extern char g_szFileStore[];
 extern WORD g_wListenPort;
 extern SERVER_INFO g_pServerList[];
 extern DWORD g_dwServerCount;
-extern time_t g_dwAgentStartTime;
+extern time_t g_tmAgentStartTime;
 extern char g_szPlatformSuffix[];
 extern DWORD g_dwStartupDelay;
 extern DWORD g_dwIdleTimeout;

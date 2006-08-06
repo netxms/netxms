@@ -33,7 +33,7 @@
 
 LONG H_AgentUptime(char *cmd, char *arg, char *value)
 {
-   ret_uint(value, time(NULL) - g_dwAgentStartTime);
+   ret_uint(value, (DWORD)(time(NULL) - g_tmAgentStartTime));
    return SYSINFO_RC_SUCCESS;
 }
 

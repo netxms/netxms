@@ -70,12 +70,12 @@ void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath)
    int i, nLen;
 
    // Strip path from original file name, if any
-   for(i = _tcslen(pszFileName) - 1; 
+   for(i = (int)_tcslen(pszFileName) - 1; 
        (i >= 0) && (pszFileName[i] != '\\') && (pszFileName[i] != '/'); i--);
 
    // Create full path to the file store
    _tcscpy(pszFullPath, g_szFileStore);
-   nLen = _tcslen(pszFullPath);
+   nLen = (int)_tcslen(pszFullPath);
    if ((pszFullPath[nLen - 1] != '\\') &&
        (pszFullPath[nLen - 1] != '/'))
    {
