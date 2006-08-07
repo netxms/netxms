@@ -292,7 +292,7 @@ inline MUTEX MutexCreate(void)
 
    mutex = (MUTEX)malloc(sizeof(netxms_mutex_t));
    if (mutex != NULL)
-      pthread_mutex_init(mutex->mutex, NULL);
+      pthread_mutex_init(&mutex->mutex, NULL);
    return mutex;
 }
 

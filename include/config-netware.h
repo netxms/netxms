@@ -17,3 +17,5 @@
 
 /* The size of a `long', as computed by sizeof. */
 #define SIZEOF_LONG 4
+
+#define HAVE_RECURSIVE_MUTEXES 1
