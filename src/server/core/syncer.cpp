@@ -60,9 +60,11 @@ delete_loop_start:;
 
    // Save objects
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
+   DBBegin(hdb);
    for(i = 0; i < g_dwIdIndexSize; i++)
       if (g_pIndexById[i].pObject->IsModified())
          g_pIndexById[i].pObject->SaveToDB(hdb);
+   DBCommit(hdb);
    RWLockUnlock(g_rwlockIdIndex);
 }
 

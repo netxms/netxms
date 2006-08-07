@@ -291,6 +291,7 @@ void SaveUsers(DB_HANDLE hdb)
                     g_pGroupList[i].dwId, g_pGroupList[i].szName, g_pGroupList[i].wSystemRights,
                     g_pGroupList[i].wFlags, g_pGroupList[i].szDescription,
                     uuid_to_string(g_pGroupList[i].guid, szGUID));
+         DBBegin(hdb);
          DBQuery(hdb, szQuery);
 
          if (bGroupExists)
@@ -305,6 +306,7 @@ void SaveUsers(DB_HANDLE hdb)
                     g_pGroupList[i].dwId, g_pGroupList[i].pMembers[j]);
             DBQuery(hdb, szQuery);
          }
+         DBCommit(hdb);
       }
    }
    MutexUnlock(m_hMutexGroupAccess);
