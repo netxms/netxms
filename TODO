@@ -7,7 +7,7 @@ GENERAL:
 - Finish Linux subagent
 - Finish FreeBSD subagent
 - Finish Solaris subagent
-- AIX subagent
+- Finish AIX subagent
 - HP-UX subagent
 - Write README for NetWare
 - Add check for read/write locks support to configure script
@@ -81,8 +81,3 @@ SUBAGENTS:
 - libperl-driven subagent, allow to run perl scripts w/o forking/executing
 - bandwidth meter; data in/out for last N seconds
 - syslog proxy
-
-
-CLIENT LIBRARY:
-
-- Check for broken connections
