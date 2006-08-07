@@ -31,6 +31,7 @@ public:
 
 // Implementation
 protected:
+	void SwapItems(int nItem1, int nItem2);
 	void EditConfig(NXC_AGENT_CONFIG *pConfig);
 	int m_iSortMode;
 	int m_iSortDir;
@@ -53,6 +54,8 @@ protected:
 	afx_msg void OnConfigNew();
 	afx_msg void OnConfigEdit();
 	afx_msg void OnConfigDelete();
+	afx_msg void OnConfigMoveup();
+	afx_msg void OnConfigMovedown();
 	//}}AFX_MSG
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
    afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);

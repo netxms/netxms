@@ -127,6 +127,7 @@ typedef int socklen_t;
 #define SHUT_RDWR    2
 
 #define SetSocketReuseFlag(sd)
+#define SELECT_NFDS(x)  ((int)(x))
 
 #ifdef UNDER_CE
 #define O_RDONLY     0x0004
@@ -208,6 +209,8 @@ typedef int SOCKET;
 	setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const void *)&nVal,  \
 			(socklen_t)sizeof(nVal)); \
 }
+
+#define SELECT_NFDS(x)  (x)
 
 #else    /* not _WIN32 and not _NETWARE */
 
@@ -322,6 +325,8 @@ typedef int SOCKET;
 	setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const void *)&nVal,  \
 			(socklen_t)sizeof(nVal)); \
 }
+
+#define SELECT_NFDS(x)  (x)
 
 #if !(HAVE_SOCKLEN_T)
 typedef int socklen_t;

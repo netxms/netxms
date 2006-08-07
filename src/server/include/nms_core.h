@@ -488,6 +488,7 @@ private:
    void OpenAgentConfig(CSCPMessage *pRequest);
    void SaveAgentConfig(CSCPMessage *pRequest);
    void DeleteAgentConfig(CSCPMessage *pRequest);
+   void SwapAgentConfigs(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

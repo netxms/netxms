@@ -30,7 +30,7 @@
 // Datatypes
 //
 
-typedef void * DB_HANDLE;
+typedef void * DB_CONNECTION;
 typedef void * DB_RESULT;
 typedef void * DB_ASYNC_RESULT;
 

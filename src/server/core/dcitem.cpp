@@ -1009,7 +1009,7 @@ void DCItem::UpdateCacheSize(DWORD dwCondId)
             for(; i < dwRequiredSize; i++)
                m_ppValueCache[i] = new ItemValue(_T(""), 1);
 
-            DBFreeAsyncResult(hResult);
+            DBFreeAsyncResult(g_hCoreDB, hResult);
          }
          else
          {

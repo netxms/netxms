@@ -63,7 +63,7 @@ static void CleanDeletedObjects(void)
                QueueSQLRequest(szQuery);
                DbgPrintf(AF_DEBUG_HOUSEKEEPER, "*HK* Deleted object with id %d was purged", dwObjectId);
             }
-            DBFreeAsyncResult(hAsyncResult);
+            DBFreeAsyncResult(m_hdb, hAsyncResult);
          }
       }
       DBFreeResult(hResult);

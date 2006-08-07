@@ -45,6 +45,8 @@ BEGIN_MESSAGE_MAP(CAgentConfigMgr, CMDIChildWnd)
 	ON_COMMAND(ID_CONFIG_NEW, OnConfigNew)
 	ON_COMMAND(ID_CONFIG_EDIT, OnConfigEdit)
 	ON_COMMAND(ID_CONFIG_DELETE, OnConfigDelete)
+	ON_COMMAND(ID_CONFIG_MOVEUP, OnConfigMoveup)
+	ON_COMMAND(ID_CONFIG_MOVEDOWN, OnConfigMovedown)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NM_DBLCLK, ID_LIST_VIEW, OnListViewDblClk)
 	ON_NOTIFY(LVN_COLUMNCLICK, ID_LIST_VIEW, OnListViewColumnClick)
@@ -404,4 +406,73 @@ void CAgentConfigMgr::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResul
    m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
    
    *pResult = 0;
+}
+
+
+//
+// Handler for "Config->Move up" menu
+//
+
+void CAgentConfigMgr::OnConfigMoveup() 
+{
+   int nItem;
+
+   nItem = m_wndListCtrl.GetSelectionMark();
+   if (nItem > 0)
+      SwapItems(nItem, nItem - 1);
+}
+
+
+//
+// Handler for "Config->Move down" menu
+//
+
+void CAgentConfigMgr::OnConfigMovedown() 
+{
+   int nItem;
+
+   nItem = m_wndListCtrl.GetSelectionMark();
+   if (nItem < m_wndListCtrl.GetItemCount() - 1)
+      SwapItems(nItem, nItem + 1);
+}
+
+
+//
+// Swap sequence numbers for two items
+//
+
+void CAgentConfigMgr::SwapItems(int nItem1, int nItem2)
+{
+   DWORD dwResult, dwId1, dwId2;
+   TCHAR szBuffer[32], szBuf1[256], szBuf2[256];
+   int nItem;
+
+   dwId1 = m_wndListCtrl.GetItemData(nItem1);
+   dwId2 = m_wndListCtrl.GetItemData(nItem2);
+   dwResult = DoRequestArg3(NXCSwapAgentConfigs, g_hSession, (void *)dwId1,
+                            (void *)dwId2, _T("Changing sequence of agent config..."));
+   if (dwResult == RCC_SUCCESS)
+   {
+      m_wndListCtrl.GetItemText(nItem1, 1, szBuf1, 256);
+      m_wndListCtrl.GetItemText(nItem2, 1, szBuf2, 256);
+      m_wndListCtrl.SetItemText(nItem1, 1, szBuf2);
+      if (m_iSortMode == 1)
+      {
+         m_wndListCtrl.GetItemText(nItem2, 2, szBuf2, 256);
+         m_wndListCtrl.DeleteItem(nItem2);
+
+         _stprintf(szBuffer, _T("%d"), dwId2);
+         nItem = m_wndListCtrl.InsertItem(nItem1, szBuffer, -1);
+         m_wndListCtrl.SetItemText(nItem, 1, szBuf1);
+         m_wndListCtrl.SetItemText(nItem, 2, szBuf2);
+         m_wndListCtrl.SetItemData(nItem, dwId2);
+      }
+      else
+      {
+      }
+   }
+   else
+   {
+      theApp.ErrorBox(dwResult, _T("Cannot change sequence number of agent config: %s"));
+   }
 }

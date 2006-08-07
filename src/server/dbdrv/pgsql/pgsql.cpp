@@ -1,4 +1,4 @@
-/* $Id: pgsql.cpp,v 1.11 2006-03-23 08:00:09 victor Exp $ */
+/* $Id: pgsql.cpp,v 1.12 2006-08-07 09:47:02 victor Exp $ */
 /* 
 ** PostgreSQL Database Driver
 ** Copyright (C) 2003, 2005 Victor Kirhenshtein and Alex Kirhenshtein
@@ -46,7 +46,7 @@ extern "C" void EXPORT DrvUnload(void)
 // Connect to database
 //
 
-extern "C" DB_HANDLE EXPORT DrvConnect(
+extern "C" DB_CONNECTION EXPORT DrvConnect(
 		char *szHost,
 		char *szLogin,
 		char *szPassword,
@@ -78,7 +78,7 @@ extern "C" DB_HANDLE EXPORT DrvConnect(
 		}
 	}
 
-   return (DB_HANDLE)pConn;
+   return (DB_CONNECTION)pConn;
 }
 
 
@@ -86,7 +86,7 @@ extern "C" DB_HANDLE EXPORT DrvConnect(
 // Disconnect from database
 //
 
-extern "C" void EXPORT DrvDisconnect(DB_HANDLE pConn)
+extern "C" void EXPORT DrvDisconnect(DB_CONNECTION pConn)
 {
 	if (pConn != NULL)
 	{
@@ -101,7 +101,7 @@ extern "C" void EXPORT DrvDisconnect(DB_HANDLE pConn)
 // Perform non-SELECT query
 //
 
-static BOOL UnsafeDrvQuery(DB_HANDLE pConn, char *szQuery)
+static BOOL UnsafeDrvQuery(DB_CONNECTION pConn, char *szQuery)
 {
 	PGresult	*pResult;
 
@@ -127,7 +127,7 @@ static BOOL UnsafeDrvQuery(DB_HANDLE pConn, char *szQuery)
    return TRUE;
 }
 
-extern "C" BOOL EXPORT DrvQuery(DB_HANDLE pConn, char *szQuery)
+extern "C" BOOL EXPORT DrvQuery(DB_CONNECTION pConn, char *szQuery)
 {
 	BOOL bRet = FALSE;
 
@@ -146,7 +146,7 @@ extern "C" BOOL EXPORT DrvQuery(DB_HANDLE pConn, char *szQuery)
 // Perform SELECT query
 //
 
-static DB_RESULT UnsafeDrvSelect(DB_HANDLE pConn, char *szQuery)
+static DB_RESULT UnsafeDrvSelect(DB_CONNECTION pConn, char *szQuery)
 {
 	PGresult	*pResult;
 
@@ -167,7 +167,7 @@ static DB_RESULT UnsafeDrvSelect(DB_HANDLE pConn, char *szQuery)
    return (DB_RESULT)pResult;
 }
 
-extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE pConn, char *szQuery)
+extern "C" DB_RESULT EXPORT DrvSelect(DB_CONNECTION pConn, char *szQuery)
 {
 	DB_RESULT pResult;
 
@@ -226,16 +226,14 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT pResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE pConn, char *szQuery)
+extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_CONNECTION pConn, char *szQuery)
 {
 	BOOL bSuccess = FALSE;
    char *pszReq;
    static char szDeclareCursor[] = "DECLARE cur1 CURSOR FOR ";
 
 	if (pConn == NULL)
-	{
 		return NULL;
-	}
 
 	MutexLock(((PG_CONN *)pConn)->mutexQueryLock, INFINITE);
 
@@ -365,10 +363,64 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT pConn)
 		   PQclear(((PG_CONN *)pConn)->pFetchBuffer);
          ((PG_CONN *)pConn)->pFetchBuffer = NULL;
       }
-		UnsafeDrvQuery((DB_HANDLE)pConn, "CLOSE cur1");
-		UnsafeDrvQuery((DB_HANDLE)pConn, "COMMIT");
+		UnsafeDrvQuery((DB_CONNECTION)pConn, "CLOSE cur1");
+		UnsafeDrvQuery((DB_CONNECTION)pConn, "COMMIT");
    }
 	MutexUnlock(((PG_CONN *)pConn)->mutexQueryLock);
+}
+
+
+//
+// Begin transaction
+//
+
+extern "C" BOOL EXPORT DrvBegin(DB_CONNECTION pConn)
+{
+   BOOL bRet;
+
+	if (pConn == NULL)
+      return FALSE;
+
+	MutexLock(((PG_CONN *)pConn)->mutexQueryLock, INFINITE);
+	bRet = UnsafeDrvQuery(pConn, "BEGIN");
+	MutexUnlock(((PG_CONN *)pConn)->mutexQueryLock);
+   return bRet;
+}
+
+
+//
+// Commit transaction
+//
+
+extern "C" BOOL EXPORT DrvCommit(DB_CONNECTION pConn)
+{
+   BOOL bRet;
+
+	if (pConn == NULL)
+      return FALSE;
+
+	MutexLock(((PG_CONN *)pConn)->mutexQueryLock, INFINITE);
+	bRet = UnsafeDrvQuery(pConn, "COMMIT");
+	MutexUnlock(((PG_CONN *)pConn)->mutexQueryLock);
+   return bRet;
+}
+
+
+//
+// Rollback transaction
+//
+
+extern "C" BOOL EXPORT DrvRollback(DB_CONNECTION pConn)
+{
+   BOOL bRet;
+
+	if (pConn == NULL)
+      return FALSE;
+
+	MutexLock(((PG_CONN *)pConn)->mutexQueryLock, INFINITE);
+	bRet = UnsafeDrvQuery(pConn, "ROLLBACK");
+	MutexUnlock(((PG_CONN *)pConn)->mutexQueryLock);
+   return bRet;
 }
 
 

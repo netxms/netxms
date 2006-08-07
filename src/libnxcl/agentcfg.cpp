@@ -167,3 +167,24 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteAgentConfig(NXC_SESSION hSession, DWORD dwCfgI
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
+
+
+//
+// Swap sequence numbers of two agent configs
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSwapAgentConfigs(NXC_SESSION hSession, DWORD dwCfgId1, DWORD dwCfgId2)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_SWAP_AGENT_CONFIGS);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_CONFIG_ID, dwCfgId1);
+   msg.SetVariable(VID_CONFIG_ID_2, dwCfgId2);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}

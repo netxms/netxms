@@ -414,6 +414,7 @@ typedef struct
 #define CMD_OPEN_AGENT_CONFIG       0x00B1
 #define CMD_SAVE_AGENT_CONFIG       0x00B2
 #define CMD_DELETE_AGENT_CONFIG     0x00B3
+#define CMD_SWAP_AGENT_CONFIGS      0x00B4
 
 
 //
@@ -656,6 +657,7 @@ typedef struct
 #define VID_VERSION_MAJOR           ((DWORD)234)
 #define VID_VERSION_MINOR           ((DWORD)235)
 #define VID_VERSION_RELEASE         ((DWORD)236)
+#define VID_CONFIG_ID_2             ((DWORD)237)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

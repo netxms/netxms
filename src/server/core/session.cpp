@@ -978,6 +978,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_DELETE_AGENT_CONFIG:
             DeleteAgentConfig(pMsg);
             break;
+         case CMD_SWAP_AGENT_CONFIGS:
+            SwapAgentConfigs(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -1179,7 +1182,7 @@ void ClientSession::SendEventDB(DWORD dwRqId)
             SendMessage(&msg);
             msg.DeleteAllVariables();
          }
-         DBFreeAsyncResult(hResult);
+         DBFreeAsyncResult(g_hCoreDB, hResult);
       }
 
       // Send end-of-list indicator
@@ -1577,7 +1580,7 @@ void ClientSession::SendAllEvents(CSCPMessage *pRequest)
          m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, dwRqId, wFlags,
                                                 sizeof(NXC_EVENT), &event, NULL));
       }
-      DBFreeAsyncResult(hResult);
+      DBFreeAsyncResult(g_hCoreDB, hResult);
    }
 
    // Send end of list notification
@@ -2729,7 +2732,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
                }
                pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + m_dwRowSize[iType]);
             }
-            DBFreeAsyncResult(hResult);
+            DBFreeAsyncResult(g_hCoreDB, hResult);
             pData->dwNumRows = htonl(dwNumRows);
 
             // Prepare and send raw message with fetched data
@@ -4199,7 +4202,7 @@ void ClientSession::SendAllPackages(DWORD dwRqId)
             msg.SetVariable(VID_PACKAGE_ID, (DWORD)0);
             SendMessage(&msg);
 
-            DBFreeAsyncResult(hResult);
+            DBFreeAsyncResult(g_hCoreDB, hResult);
          }
          else
          {
@@ -6391,7 +6394,7 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
          DecodeSQLString(szBuffer);
          msg.SetVariable(dwId++, szBuffer);
       }
-      DBFreeAsyncResult(hResult);
+      DBFreeAsyncResult(g_hCoreDB, hResult);
 
       // Send remaining records with End-Of-Sequence notification
       msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
@@ -6517,7 +6520,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
             DecodeSQLString(szBuffer);
             msg.SetVariable(dwId++, szBuffer);
          }
-         DBFreeAsyncResult(hResult);
+         DBFreeAsyncResult(g_hCoreDB, hResult);
 
          // Send remaining records with End-Of-Sequence notification
          msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
@@ -7305,6 +7308,77 @@ void ClientSession::DeleteAgentConfig(CSCPMessage *pRequest)
             if (DBQuery(g_hCoreDB, szQuery))
             {
                msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+            }
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INVALID_CONFIG_ID);
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   SendMessage(&msg);
+}
+
+
+//
+// Swap sequence numbers of two agent configs
+//
+
+void ClientSession::SwapAgentConfigs(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DB_RESULT hResult;
+   TCHAR szQuery[256];
+   BOOL bRet;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
+   {
+      _sntprintf(szQuery, 256, _T("SELECT config_id,sequence_number FROM agent_configs WHERE config_id=%d OR config_id=%d"),
+                 pRequest->GetVariableLong(VID_CONFIG_ID), pRequest->GetVariableLong(VID_CONFIG_ID_2));
+      hResult = DBSelect(g_hCoreDB, szQuery);
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) >= 2)
+         {
+            if (DBBegin(g_hCoreDB))
+            {
+               _sntprintf(szQuery, 256, _T("UPDATE agent_configs SET sequence_number=%d WHERE config_id=%d"),
+                          DBGetFieldULong(hResult, 1, 1), DBGetFieldULong(hResult, 0, 0));
+               bRet = DBQuery(g_hCoreDB, szQuery);
+               if (bRet)
+               {
+                  _sntprintf(szQuery, 256, _T("UPDATE agent_configs SET sequence_number=%d WHERE config_id=%d"),
+                             DBGetFieldULong(hResult, 0, 1), DBGetFieldULong(hResult, 1, 0));
+                  bRet = DBQuery(g_hCoreDB, szQuery);
+               }
+
+               if (bRet)
+               {
+                  DBCommit(g_hCoreDB);
+                  msg.SetVariable(VID_RCC, RCC_SUCCESS);
+               }
+               else
+               {
+                  DBRollback(g_hCoreDB);
+                  msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+               }
             }
             else
             {

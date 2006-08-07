@@ -728,14 +728,14 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
 #ifdef _WIN32
       tv.tv_sec = dwTimeout / 1000;
       tv.tv_usec = (dwTimeout % 1000) * 1000;
-      iErr = select(0, &rdfs, NULL, NULL, &tv);
+      iErr = select(SELECT_NFDS(nSocket + 1), &rdfs, NULL, NULL, &tv);
 #else
       do
       {
          tv.tv_sec = dwTimeout / 1000;
          tv.tv_usec = (dwTimeout % 1000) * 1000;
          qwStartTime = GetCurrentTimeMs();
-         iErr = select(nSocket + 1, &rdfs, NULL, NULL, &tv);
+         iErr = select(SELECT_NFDS(nSocket + 1), &rdfs, NULL, NULL, &tv);
          if ((iErr != -1) || (errno != EINTR))
             break;
          dwElapsed = GetCurrentTimeMs() - qwStartTime;

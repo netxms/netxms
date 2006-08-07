@@ -125,6 +125,11 @@ inline MUTEX MutexCreate(void)
    return CreateMutex(NULL, FALSE, NULL);
 }
 
+inline MUTEX MutexCreateRecursive(void)
+{
+   return CreateMutex(NULL, FALSE, NULL);
+}
+
 inline void MutexDestroy(MUTEX mutex)
 {
    CloseHandle(mutex);
@@ -185,15 +190,23 @@ inline BOOL ConditionWait(CONDITION hCond, DWORD dwTimeOut)
 //
 
 typedef pthread_t THREAD;
-typedef pthread_mutex_t * MUTEX;
-struct condition_t
+struct netxms_mutex_t
+{
+   pthread_mutex_t mutex;
+#ifndef HAVE_RECURSIVE_MUTEXES
+   BOOL isRecursive;
+   pthread_t owner;
+#endif
+};
+typedef netxms_mutex_t * MUTEX;
+struct netxms_condition_t
 {
 	pthread_cond_t cond;
 	pthread_mutex_t mutex;
 	BOOL broadcast;
    BOOL isSet;
 };
-typedef struct condition_t * CONDITION;
+typedef struct netxms_condition_t * CONDITION;
 
 #define INVALID_MUTEX_HANDLE        (NULL)
 #define INVALID_CONDITION_HANDLE    (NULL)
@@ -277,16 +290,38 @@ inline MUTEX MutexCreate(void)
 {
    MUTEX mutex;
 
-   mutex = (MUTEX)malloc(sizeof(pthread_mutex_t));
+   mutex = (MUTEX)malloc(sizeof(netxms_mutex_t));
    if (mutex != NULL)
-      pthread_mutex_init(mutex, NULL);
+      pthread_mutex_init(mutex->mutex, NULL);
+   return mutex;
+}
+
+inline MUTEX MutexCreateRecursive(void)
+{
+   MUTEX mutex;
+
+   mutex = (MUTEX)malloc(sizeof(netxms_mutex_t));
+   if (mutex != NULL)
+   {
+#ifdef HAVE_RECURSIVE_MUTEXES
+      pthread_mutexattr_t a;
+
+      pthread_mutexattr_init(&a);
+      pthread_mutexattr_settype(&a, PTHREAD_MUTEX_RECURSIVE);
+      pthread_mutex_init(&mutex->mutex, &a);
+      pthread_mutexattr_destroy(&a);
+#else
+#error FIXME: implement recursive mutexes
+#endif
+   }
    return mutex;
 }
 
 inline void MutexDestroy(MUTEX mutex)
 {
-   if (mutex != NULL) {
-      pthread_mutex_destroy(mutex);
+   if (mutex != NULL)
+   {
+      pthread_mutex_destroy(&mutex->mutex);
       free(mutex);
    }
 }
@@ -296,17 +331,20 @@ inline BOOL MutexLock(MUTEX mutex, DWORD dwTimeOut)
 	int i;
 	int ret = FALSE;
 
-   if (mutex != NULL) {
+   if (mutex != NULL)
+   {
 		if (dwTimeOut == INFINITE)
 		{
-			if (pthread_mutex_lock(mutex) == 0) {
+			if (pthread_mutex_lock(&mutex->mutex) == 0)
+         {
 				ret = TRUE;
 			}
 		}
 		else
 		{
-			for (i = (dwTimeOut / 50) + 1; i > 0; i--) {
-				if (pthread_mutex_trylock(mutex) == 0) 
+			for (i = (dwTimeOut / 50) + 1; i > 0; i--)
+         {
+				if (pthread_mutex_trylock(&mutex->mutex) == 0) 
             {
 					ret = TRUE;
 					break;
@@ -322,7 +360,7 @@ inline void MutexUnlock(MUTEX mutex)
 {
    if (mutex != NULL) 
    {
-      pthread_mutex_unlock(mutex);
+      pthread_mutex_unlock(&mutex->mutex);
 	}
 }
 
@@ -330,7 +368,7 @@ inline CONDITION ConditionCreate(BOOL bBroadcast)
 {
 	CONDITION cond;
 
-   cond = (CONDITION)malloc(sizeof(struct condition_t));
+   cond = (CONDITION)malloc(sizeof(struct netxms_condition_t));
    if (cond != NULL) 
    {
       pthread_cond_init(&cond->cond, NULL);

@@ -198,6 +198,10 @@ SOURCE=.\rwlock.cpp
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
+SOURCE=..\include\dbdrv.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\libnxsrv.h
 # End Source File
 # Begin Source File

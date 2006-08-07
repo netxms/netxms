@@ -120,12 +120,12 @@ DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *pData,
 // Calculate MD5 hash for array of bytes
 //
 
-void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, int nbytes, BYTE *hash)
+void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, size_t nbytes, BYTE *hash)
 {
 	md5_state_t state;
 
 	I_md5_init(&state);
-	I_md5_append(&state, (const md5_byte_t *)data, nbytes);
+	I_md5_append(&state, (const md5_byte_t *)data, (int)nbytes);
 	I_md5_finish(&state, (md5_byte_t *)hash);
 }
 
@@ -134,12 +134,12 @@ void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, int nbytes
 // Calculate SHA1 hash for array of bytes
 //
 
-void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, int nbytes, BYTE *hash)
+void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, size_t nbytes, BYTE *hash)
 {
    SHA1_CTX context;
 
    I_SHA1Init(&context);
-   I_SHA1Update(&context, data, nbytes);
+   I_SHA1Update(&context, data, (uint32)nbytes);
    I_SHA1Final(hash, &context);
 }
 

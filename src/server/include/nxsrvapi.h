@@ -107,6 +107,19 @@
 
 
 //
+// Database connection structure
+//
+
+struct db_handle_t
+{
+   DB_CONNECTION hConn;
+   MUTEX mutexTransLock;      // Transaction lock
+   int nTransactionLevel;
+};
+typedef db_handle_t * DB_HANDLE;
+
+
+//
 // Win32 service constants
 //
 
@@ -324,7 +337,10 @@ double LIBNXSRV_EXPORTABLE DBGetFieldAsyncDouble(DB_RESULT hResult, int iColumn)
 DWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncIPAddr(DB_RESULT hResult, int iColumn);
 int LIBNXSRV_EXPORTABLE DBGetNumRows(DB_RESULT hResult);
 void LIBNXSRV_EXPORTABLE DBFreeResult(DB_RESULT hResult);
-void LIBNXSRV_EXPORTABLE DBFreeAsyncResult(DB_ASYNC_RESULT hResult);
+void LIBNXSRV_EXPORTABLE DBFreeAsyncResult(DB_HANDLE hConn, DB_ASYNC_RESULT hResult);
+BOOL LIBNXSRV_EXPORTABLE DBBegin(DB_HANDLE hConn);
+BOOL LIBNXSRV_EXPORTABLE DBCommit(DB_HANDLE hConn);
+BOOL LIBNXSRV_EXPORTABLE DBRollback(DB_HANDLE hConn);
 void LIBNXSRV_EXPORTABLE DBUnloadDriver(void);
 
 TCHAR LIBNXSRV_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn);
