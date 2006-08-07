@@ -2017,16 +2017,16 @@ void UpgradeDatabase(void)
                break;
             }
             printf("Upgrading from version %d to %d\n", iVersion, iVersion + 1);
-            SQLQuery(_T("BEGIN"));
+            DBBegin(g_hCoreDB);
             if (m_dbUpgradeMap[i].fpProc())
             {
-               SQLQuery(_T("COMMIT"));
+               DBCommit(g_hCoreDB);
                iVersion++;
             }
             else
             {
                printf("Rolling back last stage due to upgrade errors...\n");
-               SQLQuery(_T("ROLLBACK"));
+               DBRollback(g_hCoreDB);
                break;
             }
          }

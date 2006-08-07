@@ -502,7 +502,7 @@ void CheckDatabase(void)
 
       if (!bLocked)
       {
-         SQLQuery(_T("BEGIN"));
+         DBBegin(g_hCoreDB);
 
          CheckNodes();
          CheckComponents(_T("interface"), _T("interfaces"));
@@ -513,7 +513,7 @@ void CheckDatabase(void)
          if (m_iNumErrors == 0)
          {
             _tprintf(_T("Database doesn't contain any errors\n"));
-            SQLQuery(_T("COMMIT"));
+            DBCommit(g_hCoreDB);
          }
          else
          {
@@ -528,19 +528,19 @@ void CheckDatabase(void)
                if (GetYesNo())
                {
                   _tprintf(_T("Committing changes...\n"));
-                  if (SQLQuery(_T("COMMIT")))
+                  if (DBCommit(g_hCoreDB))
                      _tprintf(_T("Changes was successfully committed to database\n"));
                }
                else
                {
                   _tprintf(_T("Rolling back changes...\n"));
-                  if (SQLQuery(_T("ROLLBACK")))
+                  if (DBRollback(g_hCoreDB))
                      _tprintf(_T("All changes made to database was cancelled\n"));
                }
             }
             else
             {
-               SQLQuery(_T("ROLLBACK"));
+               DBRollback(g_hCoreDB);
             }
          }
          bCompleted = TRUE;
