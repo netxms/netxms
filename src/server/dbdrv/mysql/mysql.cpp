@@ -46,7 +46,7 @@ extern "C" void EXPORT DrvUnload(void)
 // Connect to database
 //
 
-extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPassword, char *szDatabase)
+extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char *szPassword, char *szDatabase)
 {
    MYSQL *pMySQL;
    MYSQL_CONN *pConn;
@@ -74,7 +74,7 @@ extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPass
    pConn->pMySQL = pMySQL;
    pConn->mutexQueryLock = MutexCreate();
 
-   return (DB_HANDLE)pConn;
+   return (DB_CONNECTION)pConn;
 }
 
 
@@ -82,13 +82,13 @@ extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPass
 // Disconnect from database
 //
 
-extern "C" void EXPORT DrvDisconnect(DB_HANDLE hConn)
+extern "C" void EXPORT DrvDisconnect(MYSQL_CONN *pConn)
 {
-   if (hConn != NULL)
+   if (pConn != NULL)
    {
-      mysql_close(((MYSQL_CONN *)hConn)->pMySQL);
-      MutexDestroy(((MYSQL_CONN *)hConn)->mutexQueryLock);
-		free(hConn);
+      mysql_close(pConn->pMySQL);
+      MutexDestroy(pConn->mutexQueryLock);
+		free(pConn);
    }
 }
 
@@ -97,13 +97,13 @@ extern "C" void EXPORT DrvDisconnect(DB_HANDLE hConn)
 // Perform non-SELECT query
 //
 
-extern "C" BOOL EXPORT DrvQuery(DB_HANDLE hConn, char *szQuery)
+extern "C" BOOL EXPORT DrvQuery(MYSQL_CONN *pConn, char *szQuery)
 {
    BOOL bResult;
 
-   MutexLock(((MYSQL_CONN *)hConn)->mutexQueryLock, INFINITE);
-   bResult = (mysql_query(((MYSQL_CONN *)hConn)->pMySQL, szQuery) == 0);
-   MutexUnlock(((MYSQL_CONN *)hConn)->mutexQueryLock);
+   MutexLock(pConn->mutexQueryLock, INFINITE);
+   bResult = (mysql_query(pConn->pMySQL, szQuery) == 0);
+   MutexUnlock(pConn->mutexQueryLock);
    return bResult;
 }
 
@@ -112,14 +112,14 @@ extern "C" BOOL EXPORT DrvQuery(DB_HANDLE hConn, char *szQuery)
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE hConn, char *szQuery)
+extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, char *szQuery)
 {
    DB_RESULT pResult = NULL;
 
-   MutexLock(((MYSQL_CONN *)hConn)->mutexQueryLock, INFINITE);
-   if (mysql_query(((MYSQL_CONN *)hConn)->pMySQL, szQuery) == 0)
-      pResult = (DB_RESULT)mysql_store_result(((MYSQL_CONN *)hConn)->pMySQL);
-   MutexUnlock(((MYSQL_CONN *)hConn)->mutexQueryLock);
+   MutexLock(pConn->mutexQueryLock, INFINITE);
+   if (mysql_query(pConn->pMySQL, szQuery) == 0)
+      pResult = (DB_RESULT)mysql_store_result(pConn->pMySQL);
+   MutexUnlock(pConn->mutexQueryLock);
    return pResult;
 }
 
@@ -164,16 +164,16 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE hConn, char *szQuery)
+extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, char *szQuery)
 {
    MYSQL_ASYNC_RESULT *pResult = NULL;
 
-   MutexLock(((MYSQL_CONN *)hConn)->mutexQueryLock, INFINITE);
-   if (mysql_query(((MYSQL_CONN *)hConn)->pMySQL, szQuery) == 0)
+   MutexLock(pConn->mutexQueryLock, INFINITE);
+   if (mysql_query(pConn->pMySQL, szQuery) == 0)
    {
       pResult = (MYSQL_ASYNC_RESULT *)malloc(sizeof(MYSQL_ASYNC_RESULT));
-      pResult->pConn = (MYSQL_CONN *)hConn;
-      pResult->pHandle = mysql_use_result(((MYSQL_CONN *)hConn)->pMySQL);
+      pResult->pConn = pConn;
+      pResult->pHandle = mysql_use_result(pConn->pMySQL);
       if (pResult->pHandle != NULL)
       {
          pResult->bNoMoreRows = FALSE;
@@ -188,7 +188,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE hConn, char *szQuery)
       }
    }
    if (pResult == NULL)
-      MutexUnlock(((MYSQL_CONN *)hConn)->mutexQueryLock);
+      MutexUnlock(pConn->mutexQueryLock);
    return pResult;
 }
 
@@ -292,6 +292,36 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
       safe_free(((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths);
       free(hResult);
    }
+}
+
+
+//
+// Begin transaction
+//
+
+extern "C" BOOL EXPORT DrvBegin(MYSQL_CONN *pConn)
+{
+   return DrvQuery(pConn, "BEGIN");
+}
+
+
+//
+// Commit transaction
+//
+
+extern "C" BOOL EXPORT DrvCommit(MYSQL_CONN *pConn)
+{
+   return DrvQuery(pConn, "COMMIT");
+}
+
+
+//
+// Rollback transaction
+//
+
+extern "C" BOOL EXPORT DrvRollback(MYSQL_CONN *pConn)
+{
+   return DrvQuery(pConn, "ROLLBACK");
 }
 
 

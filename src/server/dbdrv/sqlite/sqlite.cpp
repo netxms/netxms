@@ -162,15 +162,15 @@ extern "C" void EXPORT DrvUnload(void)
 // Disconnect from database
 //
 
-extern "C" void EXPORT DrvDisconnect(DB_HANDLE hConn)
+extern "C" void EXPORT DrvDisconnect(SQLITE_CONN *hConn)
 {
    if (hConn != NULL)
    {
-      ExecCommand((SQLITE_CONN *)hConn, SQLITE_DRV_CLOSE, NULL);
-      ThreadJoin(((SQLITE_CONN *)hConn)->hThread);
-      ConditionDestroy(((SQLITE_CONN *)hConn)->condCommand);
-      ConditionDestroy(((SQLITE_CONN *)hConn)->condResult);
-      MutexDestroy(((SQLITE_CONN *)hConn)->mutexQueryLock);
+      ExecCommand(hConn, SQLITE_DRV_CLOSE, NULL);
+      ThreadJoin(hConn->hThread);
+      ConditionDestroy(hConn->condCommand);
+      ConditionDestroy(hConn->condResult);
+      MutexDestroy(hConn->mutexQueryLock);
       free(hConn);
    }
 }
@@ -180,7 +180,7 @@ extern "C" void EXPORT DrvDisconnect(DB_HANDLE hConn)
 // Connect to database
 //
 
-extern "C" DB_HANDLE EXPORT DrvConnect(char *pszHost, char *pszLogin,
+extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
                                        char *pszPassword, char *pszDatabase)
 {
    SQLITE_CONN *pConn;
@@ -198,7 +198,7 @@ extern "C" DB_HANDLE EXPORT DrvConnect(char *pszHost, char *pszLogin,
       DrvDisconnect(pConn);
       pConn = NULL;
    }
-   return (DB_HANDLE)pConn;
+   return (DB_CONNECTION)pConn;
 }
 
 
@@ -206,13 +206,13 @@ extern "C" DB_HANDLE EXPORT DrvConnect(char *pszHost, char *pszLogin,
 // Perform non-SELECT query
 //
 
-extern "C" BOOL EXPORT DrvQuery(DB_HANDLE hConn, char *pszQuery)
+extern "C" BOOL EXPORT DrvQuery(SQLITE_CONN *pConn, char *pszQuery)
 {
    BOOL bResult;
 
-   MutexLock(((SQLITE_CONN *)hConn)->mutexQueryLock, INFINITE);
-   bResult = (ExecCommand((SQLITE_CONN *)hConn, SQLITE_DRV_QUERY, pszQuery) == SQLITE_OK);
-   MutexUnlock(((SQLITE_CONN *)hConn)->mutexQueryLock);
+   MutexLock(pConn->mutexQueryLock, INFINITE);
+   bResult = (ExecCommand(pConn, SQLITE_DRV_QUERY, pszQuery) == SQLITE_OK);
+   MutexUnlock(pConn->mutexQueryLock);
    return bResult;
 }
 
@@ -221,16 +221,16 @@ extern "C" BOOL EXPORT DrvQuery(DB_HANDLE hConn, char *pszQuery)
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE hConn, char *pszQuery)
+extern "C" DB_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, char *pszQuery)
 {
    DB_RESULT pResult = NULL;
 
-   MutexLock(((SQLITE_CONN *)hConn)->mutexQueryLock, INFINITE);
-   if (ExecCommand((SQLITE_CONN *)hConn, SQLITE_DRV_SELECT, pszQuery) == SQLITE_OK)
+   MutexLock(hConn->mutexQueryLock, INFINITE);
+   if (ExecCommand(hConn, SQLITE_DRV_SELECT, pszQuery) == SQLITE_OK)
    {
-      pResult = ((SQLITE_CONN *)hConn)->pResult;
+      pResult = hConn->pResult;
    }
-   MutexUnlock(((SQLITE_CONN *)hConn)->mutexQueryLock);
+   MutexUnlock(hConn->mutexQueryLock);
    return pResult;
 }
 
@@ -285,18 +285,18 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE hConn, char *pszQuery)
+extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, char *pszQuery)
 {
    DB_ASYNC_RESULT hResult;
 
-   MutexLock(((SQLITE_CONN *)hConn)->mutexQueryLock, INFINITE);
-   if (ExecCommand((SQLITE_CONN *)hConn, SQLITE_DRV_PREPARE, pszQuery) == SQLITE_OK)
+   MutexLock(hConn->mutexQueryLock, INFINITE);
+   if (ExecCommand(hConn, SQLITE_DRV_PREPARE, pszQuery) == SQLITE_OK)
    {
       hResult = hConn;
    }
    else
    {
-      MutexUnlock(((SQLITE_CONN *)hConn)->mutexQueryLock);
+      MutexUnlock(hConn->mutexQueryLock);
       hResult = NULL;
    }
    return hResult;
@@ -350,6 +350,36 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
       ExecCommand((SQLITE_CONN *)hResult, SQLITE_DRV_FINALIZE, NULL);
       MutexUnlock(((SQLITE_CONN *)hResult)->mutexQueryLock);
    }
+}
+
+
+//
+// Begin transaction
+//
+
+extern "C" BOOL EXPORT DrvBegin(SQLITE_CONN *pConn)
+{
+   return DrvQuery(pConn, "BEGIN");
+}
+
+
+//
+// Commit transaction
+//
+
+extern "C" BOOL EXPORT DrvCommit(SQLITE_CONN *pConn)
+{
+   return DrvQuery(pConn, "COMMIT");
+}
+
+
+//
+// Rollback transaction
+//
+
+extern "C" BOOL EXPORT DrvRollback(SQLITE_CONN *pConn)
+{
+   return DrvQuery(pConn, "ROLLBACK");
 }
 
 

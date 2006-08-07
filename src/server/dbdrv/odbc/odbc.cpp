@@ -53,7 +53,7 @@ extern "C" void EXPORT DrvUnload(void)
 // Connect to database
 //
 
-extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPassword, char *szDatabase)
+extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char *szPassword, char *szDatabase)
 {
    long iResult;
    ODBCDRV_CONN *pConn;
@@ -87,7 +87,7 @@ extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPass
    pConn->mutexQuery = MutexCreate();
 
    // Success
-   return (DB_HANDLE)pConn;
+   return (DB_CONNECTION)pConn;
 
    // Handle failures
 connect_failure_2:
@@ -357,6 +357,62 @@ extern "C" void EXPORT DrvFreeAsyncResult(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
       MutexUnlock(pResult->pConn->mutexQuery);
       free(pResult);
    }
+}
+
+
+//
+// Begin transaction
+//
+
+extern "C" BOOL EXPORT DrvBegin(ODBCDRV_CONN *pConn)
+{
+   SQLRETURN nRet;
+
+	if (pConn == NULL)
+      return FALSE;
+
+	MutexLock(pConn->mutexQuery, INFINITE);
+   nRet = SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_OFF, 0);
+	MutexUnlock(pConn->mutexQuery);
+   return (nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO);
+}
+
+
+//
+// Commit transaction
+//
+
+extern "C" BOOL EXPORT DrvCommit(ODBCDRV_CONN *pConn)
+{
+   SQLRETURN nRet;
+
+	if (pConn == NULL)
+      return FALSE;
+
+	MutexLock(pConn->mutexQuery, INFINITE);
+   nRet = SQLEndTran(SQL_HANDLE_DBC, pConn->sqlConn, SQL_COMMIT);
+   SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
+	MutexUnlock(pConn->mutexQuery);
+   return (nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO);
+}
+
+
+//
+// Rollback transaction
+//
+
+extern "C" BOOL EXPORT DrvRollback(ODBCDRV_CONN *pConn)
+{
+   SQLRETURN nRet;
+
+	if (pConn == NULL)
+      return FALSE;
+
+	MutexLock(pConn->mutexQuery, INFINITE);
+   nRet = SQLEndTran(SQL_HANDLE_DBC, pConn->sqlConn, SQL_ROLLBACK);
+   SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
+	MutexUnlock(pConn->mutexQuery);
+   return (nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO);
 }
 
 

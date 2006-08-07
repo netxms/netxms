@@ -601,13 +601,21 @@ BOOL LIBNXSRV_EXPORTABLE DBBegin(DB_HANDLE hConn)
    BOOL bRet;
 
    MutexLock(hConn->mutexTransLock, INFINITE);
-   if (bRet = m_fpDrvBegin(hConn->hConn))
+   if (hConn->nTransactionLevel == 0)
    {
-      hConn->nTransactionLevel++;
+      if (bRet = m_fpDrvBegin(hConn->hConn))
+      {
+         hConn->nTransactionLevel++;
+      }
+      else
+      {
+         MutexUnlock(hConn->mutexTransLock);
+      }
    }
    else
    {
-      MutexUnlock(hConn->mutexTransLock);
+      hConn->nTransactionLevel++;
+      bRet = TRUE;
    }
    return bRet;
 }
@@ -624,8 +632,11 @@ BOOL LIBNXSRV_EXPORTABLE DBCommit(DB_HANDLE hConn)
    MutexLock(hConn->mutexTransLock, INFINITE);
    if (hConn->nTransactionLevel > 0)
    {
-      bRet = m_fpDrvCommit(hConn->hConn);
       hConn->nTransactionLevel--;
+      if (hConn->nTransactionLevel == 0)
+         bRet = m_fpDrvCommit(hConn->hConn);
+      else
+         bRet = TRUE;
       MutexUnlock(hConn->mutexTransLock);
    }
    MutexUnlock(hConn->mutexTransLock);
@@ -644,8 +655,11 @@ BOOL LIBNXSRV_EXPORTABLE DBRollback(DB_HANDLE hConn)
    MutexLock(hConn->mutexTransLock, INFINITE);
    if (hConn->nTransactionLevel > 0)
    {
-      bRet = m_fpDrvRollback(hConn->hConn);
       hConn->nTransactionLevel--;
+      if (hConn->nTransactionLevel == 0)
+         bRet = m_fpDrvRollback(hConn->hConn);
+      else
+         bRet = TRUE;
       MutexUnlock(hConn->mutexTransLock);
    }
    MutexUnlock(hConn->mutexTransLock);

@@ -1,6 +1,6 @@
 /* 
 ** Microsoft SQL Server Database Driver
-** Copyright (C) 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -121,7 +121,7 @@ extern "C" void EXPORT DrvUnload(void)
 // Connect to database
 //
 
-extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPassword, char *szDatabase)
+extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char *szPassword, char *szDatabase)
 {
    LOGINREC *loginrec;
    MSDB_CONN *pConn = NULL;
@@ -169,7 +169,7 @@ extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPass
       }
    }
 
-   return (DB_HANDLE)pConn;
+   return (DB_CONNECTION)pConn;
 }
 
 
@@ -177,13 +177,13 @@ extern "C" DB_HANDLE EXPORT DrvConnect(char *szHost, char *szLogin, char *szPass
 // Disconnect from database
 //
 
-extern "C" void EXPORT DrvDisconnect(DB_HANDLE hConn)
+extern "C" void EXPORT DrvDisconnect(MSDB_CONN *pConn)
 {
-   if (hConn != NULL)
+   if (pConn != NULL)
    {
-      dbclose(((MSDB_CONN *)hConn)->hProcess);
-      MutexDestroy(((MSDB_CONN *)hConn)->mutexQueryLock);
-      free(hConn);
+      dbclose(pConn->hProcess);
+      MutexDestroy(pConn->mutexQueryLock);
+      free(pConn);
    }
 }
 
@@ -192,31 +192,31 @@ extern "C" void EXPORT DrvDisconnect(DB_HANDLE hConn)
 // Perform non-SELECT query
 //
 
-extern "C" BOOL EXPORT DrvQuery(DB_HANDLE hConn, char *szQuery)
+extern "C" BOOL EXPORT DrvQuery(MSDB_CONN *pConn, char *szQuery)
 {
    BOOL bResult;
    int nTries;
 
-   MutexLock(((MSDB_CONN *)hConn)->mutexQueryLock, INFINITE);
+   MutexLock(pConn->mutexQueryLock, INFINITE);
    
-   dbcmd(((MSDB_CONN *)hConn)->hProcess, szQuery);
+   dbcmd(pConn->hProcess, szQuery);
    for(nTries = 0; nTries < 3; nTries++)
    {
-      if (dbsqlexec(((MSDB_CONN *)hConn)->hProcess) == SUCCEED)
+      if (dbsqlexec(pConn->hProcess) == SUCCEED)
       {
          bResult = TRUE;
          break;
       }
-      if (((MSDB_CONN *)hConn)->bProcessDead)
-         if (!Reconnect((MSDB_CONN *)hConn))
+      if (pConn->bProcessDead)
+         if (!Reconnect(pConn))
             break;
    }
 
    // Process query results if any
    if (bResult)
-      if (dbresults(((MSDB_CONN *)hConn)->hProcess) == SUCCEED)
-         while(dbnextrow(((MSDB_CONN *)hConn)->hProcess) != NO_MORE_ROWS);
-   MutexUnlock(((MSDB_CONN *)hConn)->mutexQueryLock);
+      if (dbresults(pConn->hProcess) == SUCCEED)
+         while(dbnextrow(pConn->hProcess) != NO_MORE_ROWS);
+   MutexUnlock(pConn->mutexQueryLock);
    return bResult;
 }
 
@@ -225,26 +225,26 @@ extern "C" BOOL EXPORT DrvQuery(DB_HANDLE hConn, char *szQuery)
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE hConn, char *szQuery)
+extern "C" DB_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, char *szQuery)
 {
    MSDB_QUERY_RESULT *pResult = NULL;
    int i, iCurrPos, iLen, *piColTypes, nTries;
    void *pData;
    BOOL bResult = FALSE;
 
-   MutexLock(((MSDB_CONN *)hConn)->mutexQueryLock, INFINITE);
+   MutexLock(pConn->mutexQueryLock, INFINITE);
 
-   dbcmd(((MSDB_CONN *)hConn)->hProcess, szQuery);
+   dbcmd(pConn->hProcess, szQuery);
    for(nTries = 0; nTries < 3; nTries++)
    {
-      if (dbsqlexec(((MSDB_CONN *)hConn)->hProcess) == SUCCEED)
+      if (dbsqlexec(pConn->hProcess) == SUCCEED)
       {
          bResult = TRUE;
          break;
       }
-      if (((MSDB_CONN *)hConn)->bProcessDead)
+      if (pConn->bProcessDead)
       {
-         if (!Reconnect((MSDB_CONN *)hConn))
+         if (!Reconnect(pConn))
             break;
       }
       else
@@ -256,28 +256,28 @@ extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE hConn, char *szQuery)
    if (bResult)
    {
       // Process query results
-      if (dbresults(((MSDB_CONN *)hConn)->hProcess) == SUCCEED)
+      if (dbresults(pConn->hProcess) == SUCCEED)
       {
          pResult = (MSDB_QUERY_RESULT *)malloc(sizeof(MSDB_QUERY_RESULT));
          pResult->iNumRows = 0;
-         pResult->iNumCols = dbnumcols(((MSDB_CONN *)hConn)->hProcess);
+         pResult->iNumCols = dbnumcols(pConn->hProcess);
          pResult->pValues = NULL;
 
          // Determine column types
          piColTypes = (int *)malloc(pResult->iNumCols * sizeof(int));
          for(i = 0; i < pResult->iNumCols; i++)
-            piColTypes[i] = dbcoltype(((MSDB_CONN *)hConn)->hProcess, i + 1);
+            piColTypes[i] = dbcoltype(pConn->hProcess, i + 1);
 
          // Retrieve data
          iCurrPos = 0;
-         while(dbnextrow(((MSDB_CONN *)hConn)->hProcess) != NO_MORE_ROWS)
+         while(dbnextrow(pConn->hProcess) != NO_MORE_ROWS)
          {
             pResult->iNumRows++;
             pResult->pValues = (char **)realloc(pResult->pValues, 
                                                 sizeof(char *) * pResult->iNumRows * pResult->iNumCols);
             for(i = 1; i <= pResult->iNumCols; i++, iCurrPos++)
             {
-               pData = (void *)dbdata(((MSDB_CONN *)hConn)->hProcess, i);
+               pData = (void *)dbdata(pConn->hProcess, i);
                if (pData != NULL)
                {
                   switch(piColTypes[i - 1])
@@ -285,7 +285,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE hConn, char *szQuery)
                      case SQLCHAR:
                      case SQLTEXT:
                      case SQLBINARY:
-                        iLen = dbdatlen(((MSDB_CONN *)hConn)->hProcess, i);
+                        iLen = dbdatlen(pConn->hProcess, i);
                         pResult->pValues[iCurrPos] = (char *)malloc(iLen + 1);
                         if (iLen > 0)
                            memcpy(pResult->pValues[iCurrPos], (char *)pData, iLen);
@@ -327,7 +327,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(DB_HANDLE hConn, char *szQuery)
          }
       }
    }
-   MutexUnlock(((MSDB_CONN *)hConn)->mutexQueryLock);
+   MutexUnlock(pConn->mutexQueryLock);
    return (DB_RESULT)pResult;
 }
 
@@ -379,25 +379,25 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE hConn, char *szQuery)
+extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MSDB_CONN *pConn, char *szQuery)
 {
    MSDB_ASYNC_QUERY_RESULT *pResult = NULL;
    int i, nTries;
    BOOL bResult = FALSE;
 
-   MutexLock(((MSDB_CONN *)hConn)->mutexQueryLock, INFINITE);
+   MutexLock(pConn->mutexQueryLock, INFINITE);
    
-   dbcmd(((MSDB_CONN *)hConn)->hProcess, szQuery);
+   dbcmd(pConn->hProcess, szQuery);
    for(nTries = 0; nTries < 3; nTries++)
    {
-      if (dbsqlexec(((MSDB_CONN *)hConn)->hProcess) == SUCCEED)
+      if (dbsqlexec(pConn->hProcess) == SUCCEED)
       {
          bResult = TRUE;
          break;
       }
-      if (((MSDB_CONN *)hConn)->bProcessDead)
+      if (pConn->bProcessDead)
       {
-         if (!Reconnect((MSDB_CONN *)hConn))
+         if (!Reconnect(pConn))
             break;
       }
       else
@@ -409,22 +409,22 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(DB_HANDLE hConn, char *szQuery)
    if (bResult)
    {
       // Prepare query results for processing
-      if (dbresults(((MSDB_CONN *)hConn)->hProcess) == SUCCEED)
+      if (dbresults(pConn->hProcess) == SUCCEED)
       {
          // Fill in result information structure
          pResult = (MSDB_ASYNC_QUERY_RESULT *)malloc(sizeof(MSDB_ASYNC_QUERY_RESULT));
-         pResult->pConnection = (MSDB_CONN *)hConn;
+         pResult->pConnection = pConn;
          pResult->bNoMoreRows = FALSE;
-         pResult->iNumCols = dbnumcols(((MSDB_CONN *)hConn)->hProcess);
+         pResult->iNumCols = dbnumcols(pConn->hProcess);
          pResult->piColTypes = (int *)malloc(sizeof(int) * pResult->iNumCols);
 
          // Determine column types
          for(i = 0; i < pResult->iNumCols; i++)
-            pResult->piColTypes[i] = dbcoltype(((MSDB_CONN *)hConn)->hProcess, i + 1);
+            pResult->piColTypes[i] = dbcoltype(pConn->hProcess, i + 1);
       }
    }
    if (pResult == NULL)
-      MutexUnlock(((MSDB_CONN *)hConn)->mutexQueryLock);
+      MutexUnlock(pConn->mutexQueryLock);
    return pResult;
 }
 
@@ -539,6 +539,36 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
          free(((MSDB_ASYNC_QUERY_RESULT *)hResult)->piColTypes);
       free(hResult);
    }
+}
+
+
+//
+// Begin transaction
+//
+
+extern "C" BOOL EXPORT DrvBegin(MSDB_CONN *pConn)
+{
+   return DrvQuery(pConn, "BEGIN TRANSACTION");
+}
+
+
+//
+// Commit transaction
+//
+
+extern "C" BOOL EXPORT DrvCommit(MSDB_CONN *pConn)
+{
+   return DrvQuery(pConn, "COMMIT");
+}
+
+
+//
+// Rollback transaction
+//
+
+extern "C" BOOL EXPORT DrvRollback(MSDB_CONN *pConn)
+{
+   return DrvQuery(pConn, "ROLLBACK");
 }
 
 
