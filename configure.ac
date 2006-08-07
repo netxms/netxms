@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.161 2006-07-28 17:32:52 victor Exp $
+# $Id: configure.ac,v 1.162 2006-08-07 11:03:33 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -543,10 +543,17 @@ fi
 if test "x$PTHREAD_LIBS" = xerror; then
 	AC_MSG_ERROR(*** Unable to locate working posix thread library ***)
 fi
+LDFLAGS="$LDFLAGS $PTHREAD_LIBS"
 AC_SUBST(PTHREAD_LIBS)
 
 # Extensions to posix threads
 AC_CHECK_FUNCS([pthread_cond_reltimedwait_np])
+
+# Check for recursive mutexes
+AC_CHECK_FUNCS([pthread_mutexattr_settype pthread_mutexattr_setkind_np])
+AC_CHECK_DECLS([PTHREAD_MUTEX_RECURSIVE, PTHREAD_MUTEX_RECURSIVE_NP],,,[
+#include <pthread.h>
+])
 
 # misc
 CPPFLAGS="$CPPFLAGS -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\""

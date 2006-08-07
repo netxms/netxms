@@ -185,6 +185,25 @@ inline BOOL ConditionWait(CONDITION hCond, DWORD dwTimeOut)
 #include <errno.h>
 #include <sys/time.h>
 
+#if (HAVE_PTHREAD_MUTEXATTR_SETTYPE || HAVE_PTHREAD_MUTEXATTR_SETKIND_NP) && \
+	 (HAVE_DECL_PTHREAD_MUTEX_RECURSIVE || HAVE_DECL_PTHREAD_MUTEX_RECURSIVE_NP)
+
+#define HAVE_RECURSIVE_MUTEXES 1
+
+#if HAVE_DECL_PTHREAD_MUTEX_RECURSIVE
+#define MUTEX_RECURSIVE_FLAG PTHREAD_MUTEX_RECURSIVE
+#else
+#define MUTEX_RECURSIVE_FLAG PTHREAD_MUTEX_RECURSIVE_NP
+#endif
+
+#if HAVE_PTHREAD_MUTEXATTR_SETTYPE
+#define MUTEXATTR_SETTYPE pthread_mutexattr_settype
+#else
+#define MUTEXATTR_SETTYPE pthread_mutexattr_setkind_np
+#endif
+
+#endif
+
 //
 // Related datatypes and constants
 //
@@ -307,7 +326,7 @@ inline MUTEX MutexCreateRecursive(void)
       pthread_mutexattr_t a;
 
       pthread_mutexattr_init(&a);
-      pthread_mutexattr_settype(&a, PTHREAD_MUTEX_RECURSIVE);
+      MUTEXATTR_SETTYPE(&a, MUTEX_RECURSIVE_FLAG);
       pthread_mutex_init(&mutex->mutex, &a);
       pthread_mutexattr_destroy(&a);
 #else
