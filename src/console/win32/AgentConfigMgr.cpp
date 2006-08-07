@@ -19,7 +19,7 @@ IMPLEMENT_DYNCREATE(CAgentConfigMgr, CMDIChildWnd)
 
 CAgentConfigMgr::CAgentConfigMgr()
 {
-   m_iSortMode = theApp.GetProfileInt(_T("AgentConfigMgr"), _T("SortMode"), 0);
+   m_iSortMode = theApp.GetProfileInt(_T("AgentConfigMgr"), _T("SortMode"), 1);
    m_iSortDir = theApp.GetProfileInt(_T("AgentConfigMgr"), _T("SortDir"), 0);
 }
 
@@ -458,7 +458,7 @@ void CAgentConfigMgr::SwapItems(int nItem1, int nItem2)
       m_wndListCtrl.SetItemText(nItem1, 1, szBuf2);
       if (m_iSortMode == 1)
       {
-         m_wndListCtrl.GetItemText(nItem2, 2, szBuf2, 256);
+         m_wndListCtrl.GetItemText(nItem1, 2, szBuf2, 256);
          m_wndListCtrl.DeleteItem(nItem2);
 
          _stprintf(szBuffer, _T("%d"), dwId2);
@@ -469,6 +469,7 @@ void CAgentConfigMgr::SwapItems(int nItem1, int nItem2)
       }
       else
       {
+         m_wndListCtrl.SetItemText(nItem2, 1, szBuf1);
       }
    }
    else
