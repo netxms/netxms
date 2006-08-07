@@ -32,6 +32,8 @@
 #endif
 */
 
+#undef _XOPEN_SOURCE
+
 #include "libnetxms.h"
 #include "uuidP.h"
 

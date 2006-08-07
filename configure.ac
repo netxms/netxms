@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.162 2006-08-07 11:03:33 victor Exp $
+# $Id: configure.ac,v 1.163 2006-08-07 21:52:17 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -554,6 +554,30 @@ AC_CHECK_FUNCS([pthread_mutexattr_settype pthread_mutexattr_setkind_np])
 AC_CHECK_DECLS([PTHREAD_MUTEX_RECURSIVE, PTHREAD_MUTEX_RECURSIVE_NP],,,[
 #include <pthread.h>
 ])
+
+# Check for read/write locks
+# On Linux, rwlock functions declared always, but pthread_rwlock_t may need
+# additional defines
+AC_CHECK_FUNCS([pthread_rwlock_init pthread_rwlock_timedrdlock pthread_rwlock_timedwrlock])
+if test "$ac_cv_func_pthread_rwlock_init" = "yes"; then
+	AC_CACHE_CHECK([for pthread_rwlock_t], ac_cv_struct_pthread_rw,
+		[AC_TRY_COMPILE([#include <sys/types.h>
+		#include <pthread.h>],
+		[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;],
+		ac_cv_struct_pthread_rw=yes, [
+			AC_TRY_COMPILE([#define _XOPEN_SOURCE 500
+			#include <sys/types.h>
+			#include <pthread.h>],
+			[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;],
+			ac_cv_struct_pthread_rw=yes, ac_cv_struct_pthread_rw=no)
+			if test "$ac_cv_struct_pthread_rw" = "yes"; then
+				CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=500"
+			fi
+			])])
+	if test "$ac_cv_struct_pthread_rw" = "yes"; then
+		AC_DEFINE(HAVE_PTHREAD_RWLOCK_T, 1, Define to 1 if you have the 'pthread_rwlock_t' defined)
+	fi
+fi
 
 # misc
 CPPFLAGS="$CPPFLAGS -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
