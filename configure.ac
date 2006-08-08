@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.163 2006-08-07 21:52:17 victor Exp $
+# $Id: configure.ac,v 1.164 2006-08-08 13:33:29 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -575,7 +575,7 @@ if test "$ac_cv_func_pthread_rwlock_init" = "yes"; then
 			fi
 			])])
 	if test "$ac_cv_struct_pthread_rw" = "yes"; then
-		AC_DEFINE(HAVE_PTHREAD_RWLOCK_T, 1, Define to 1 if you have the 'pthread_rwlock_t' defined)
+		AC_DEFINE(HAVE_PTHREAD_RWLOCK, 1, Define to 1 if you have working pthread read/write locks)
 	fi
 fi
 

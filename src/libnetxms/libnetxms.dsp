@@ -221,6 +221,10 @@ SOURCE=.\regex.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\rwlock.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\scandir.c
 # End Source File
 # Begin Source File
@@ -294,6 +298,10 @@ SOURCE=..\..\include\nms_util.h
 # Begin Source File
 
 SOURCE=..\..\include\nxqueue.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\rwlock.h
 # End Source File
 # Begin Source File
 

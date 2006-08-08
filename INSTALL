@@ -6,8 +6,8 @@ Basic NetXMS Installation
 =========================
 
    These are generic installation instructions. For more detailed
-installation instruction consult docs/install-guide.doc (when it will be
-ready).
+installation instruction consult NetXMS Installation Guide (located in
+doc/manuals, also available separately on NetXMS web site).
 
 The simplest way to install netxms server is:
 
@@ -48,20 +48,20 @@ The simplest way to install netxms server is:
   5. Type `make install' to install the programs and any data files and
      documentation.
  
-  6. Use sql/dbinit_[dbname].sql script and Your database client
-     program to initialize database for netxms. 
-     For example if You're going to use mysql this could be like this:
-
-     mysql> create database netxms;
-     mysql> \q
-     $> mysql netxms < sql/dbinit_mysql.sql
-
-  7. Copy default netxms daemon configuration file ('netxmsd.conf-dist') to /etc
+  6. Copy default netxms daemon configuration file ('netxmsd.conf-dist') to /etc
      directory with name 'netxmsd.conf' and edit it to match actual settings.
      You can do it like this: 
      cp ./netxmsd.conf-dist /etc/netxmsd.conf
      vi /etc/netxmsd.conf
   
+  7. Use sql/dbinit_[dbname].sql script and Your database client
+     program to initialize database for netxms. 
+     For example if You're going to use mysql this could be like this:
+
+     mysql> create database netxms;
+     mysql> \q
+     $> nxdbmgr init sql/dbinit_mysql.sql
+
   8. `cd' to netxms installation directory and try running bin/netxmsd.
      Check if netsmd process is running. If not try starting it again with
      --debug-all parameter and see log file for details.

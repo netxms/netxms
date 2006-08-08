@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** Server Library
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** NetXMS Foundation Library
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,14 +17,12 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: rwlock.h
+** File: rwlock.h
 **
 **/
 
 #ifndef _rwlock_h_
 #define _rwlock_h_
-
-#include <nms_threads.h>
 
 #if HAVE_PTHREAD_RWLOCK
 
@@ -54,7 +52,6 @@ inline void RWLockDestroy(RWLOCK hLock)
 
 inline BOOL RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut)
 {
-	int i;
 	BOOL ret = FALSE;
 
    if (hLock != NULL) 
@@ -68,7 +65,21 @@ inline BOOL RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut)
 		}
 		else
 		{
-			for (i = (dwTimeOut / 50) + 1; i > 0; i--) 
+#if HAVE_PTHREAD_RWLOCK_TIMEDRDLOCK
+			struct timeval now;
+			struct timespec timeout;
+
+			// FIXME: there should be more accurate way
+			gettimeofday(&now, NULL);
+			timeout.tv_sec = now.tv_sec + (dwTimeOut / 1000);
+
+			now.tv_usec += (dwTimeOut % 1000) * 1000;
+			timeout.tv_sec += now.tv_usec / 1000000;
+			timeout.tv_nsec = (now.tv_usec % 1000000) * 1000;
+
+			retcode = pthread_rwlock_timedrdlock(hLock, &timeout);
+#else
+			for(int i = (dwTimeOut / 50) + 1; i > 0; i--) 
          {
 				if (pthread_rwlock_tryrdlock(hLock) == 0) 
             {
@@ -77,6 +88,7 @@ inline BOOL RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut)
 				}
 				ThreadSleepMs(50);
 			}
+#endif
 		}
 	}
    return ret;
@@ -84,7 +96,6 @@ inline BOOL RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut)
 
 inline BOOL RWLockWriteLock(RWLOCK hLock, DWORD dwTimeOut)
 {
-	int i;
 	BOOL ret = FALSE;
 
    if (hLock != NULL) 
@@ -98,7 +109,21 @@ inline BOOL RWLockWriteLock(RWLOCK hLock, DWORD dwTimeOut)
 		}
 		else
 		{
-			for (i = (dwTimeOut / 50) + 1; i > 0; i--) 
+#if HAVE_PTHREAD_RWLOCK_TIMEDWRLOCK
+			struct timeval now;
+			struct timespec timeout;
+
+			// FIXME: there should be more accurate way
+			gettimeofday(&now, NULL);
+			timeout.tv_sec = now.tv_sec + (dwTimeOut / 1000);
+
+			now.tv_usec += (dwTimeOut % 1000) * 1000;
+			timeout.tv_sec += now.tv_usec / 1000000;
+			timeout.tv_nsec = (now.tv_usec % 1000000) * 1000;
+
+			retcode = pthread_rwlock_timedwrlock(hLock, &timeout);
+#else
+			for(int i = (dwTimeOut / 50) + 1; i > 0; i--) 
          {
 				if (pthread_rwlock_trywrlock(hLock) == 0) 
             {
@@ -107,6 +132,7 @@ inline BOOL RWLockWriteLock(RWLOCK hLock, DWORD dwTimeOut)
 				}
 				ThreadSleepMs(50);
 			}
+#endif
 		}
 	}
    return ret;
@@ -118,7 +144,7 @@ inline void RWLockUnlock(RWLOCK hLock)
       pthread_rwlock_unlock(hLock);
 }
 
-#else
+#else    /* HAVE_PTHREAD_RWLOCK */
 
 struct __rwlock_data
 {
@@ -138,11 +164,11 @@ struct __rwlock_data
 
 typedef struct __rwlock_data * RWLOCK;
 
-RWLOCK LIBNXSRV_EXPORTABLE RWLockCreate(void);
-void LIBNXSRV_EXPORTABLE RWLockDestroy(RWLOCK hLock);
-BOOL LIBNXSRV_EXPORTABLE RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut);
-BOOL LIBNXSRV_EXPORTABLE RWLockWriteLock(RWLOCK hLock, DWORD dwTimeOut);
-void LIBNXSRV_EXPORTABLE RWLockUnlock(RWLOCK hLock);
+RWLOCK LIBNETXMS_EXPORTABLE RWLockCreate(void);
+void LIBNETXMS_EXPORTABLE RWLockDestroy(RWLOCK hLock);
+BOOL LIBNETXMS_EXPORTABLE RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut);
+BOOL LIBNETXMS_EXPORTABLE RWLockWriteLock(RWLOCK hLock, DWORD dwTimeOut);
+void LIBNETXMS_EXPORTABLE RWLockUnlock(RWLOCK hLock);
 
 #endif
 

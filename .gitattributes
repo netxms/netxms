@@ -213,6 +213,7 @@ include/nxsm_ext.h -text
 include/nxsnmp.h -text
 include/nxtools.h -text
 include/nxwinui.h -text
+include/rwlock.h -text
 include/unicode.h -text
 include/uuid.h -text
 m4/Makefile.am -text
@@ -947,6 +948,7 @@ src/libnetxms/md5.h -text
 src/libnetxms/netxms.def -text
 src/libnetxms/queue.cpp -text
 src/libnetxms/regex.c -text
+src/libnetxms/rwlock.cpp -text
 src/libnetxms/scandir.c -text
 src/libnetxms/serial.cpp -text
 src/libnetxms/sha1.cpp -text
@@ -1160,7 +1162,6 @@ src/server/include/nms_users.h -text
 src/server/include/nxcore_maps.h -text
 src/server/include/nxmodule.h -text
 src/server/include/nxsrvapi.h -text
-src/server/include/rwlock.h -text
 src/server/libnxsrv/.cvsignore -text
 src/server/libnxsrv/Makefile.am -text
 src/server/libnxsrv/agent.cpp -text

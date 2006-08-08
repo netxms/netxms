@@ -1,26 +1,2 @@
-Upgrading NetXMS server
-=======================
-1. Unpack source package
-2. Run ./configure --with-agent --with-server --with-<your_db_driver>
-3. Run make
-4. Stop NetXMS server
-5. Stop NetXMS agent
-6. Run "nxdbmgr check"
-7. Run make install
-8. Run "nxdbmgr upgrade"
-9. Unpack new image and MIB files to appropriate directories (usually under
-/var/netxms)
-10. Start NetXMS agent
-11. Start NetXMS server
-
-Upgrading NetXMS agent
-======================
-    Normally netxms agent is upgraded automatically from netxms console via
-netxms server. This makes possible upgrade of hundreds of servers with just
-a few clicks.
-    However if want to upgrade netxms agent manually this can be done in 4
-generic steps:
-    1. Backup agent config file
-    2. Erase agent installation tree
-    3. Install netxms agent
-    4. Restore config from backup.
+For upgrade instructions, please consult NetXMS Installation Guide (located
+in doc/manuals, also available separately on NetXMS website).

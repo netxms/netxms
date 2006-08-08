@@ -30,7 +30,7 @@
 #ifdef _WIN32
 
 #ifndef UNDER_CE
-# include <process.h>
+#include <process.h>
 #endif
 
 //
@@ -529,6 +529,8 @@ inline DWORD GetCurrentProcessId(void)
 }
 
 #endif   /* _WIN32 */
+
+#include <rwlock.h>
 
 #endif   /* __cplusplus */
 

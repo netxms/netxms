@@ -10,7 +10,6 @@ GENERAL:
 - Finish AIX subagent
 - HP-UX subagent
 - Write README for NetWare
-- Add check for read/write locks support to configure script
 - Add ability to clear collected DCI data
 - Add possibility to set different polling timeouts for different nodes
 - Planned outages (maintenance schedule)

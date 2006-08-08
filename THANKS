@@ -1,6 +1,13 @@
 NetXMS THANKS file
 
-NetXMS has originally been written by NetXMS Team.
-Many people have further contributed to FOO by reporting problems, 
+NetXMS has originally been written by Victor Kirhenshtein and Alex Kirhenshtein.
+Many people have further contributed to NetXMS by reporting problems, 
 suggesting various improvements, or submitting actual code. Here is
 a list of these people. Help me keep it complete and exempt of errors.
+
+People from C.T.Co:
+
+Igor Kopman
+Roman Lazarenko
+Victoria Almazova
+
