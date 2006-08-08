@@ -77,7 +77,7 @@ inline BOOL RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut)
 			timeout.tv_sec += now.tv_usec / 1000000;
 			timeout.tv_nsec = (now.tv_usec % 1000000) * 1000;
 
-			retcode = pthread_rwlock_timedrdlock(hLock, &timeout);
+			ret = (pthread_rwlock_timedrdlock(hLock, &timeout) == 0);
 #else
 			for(int i = (dwTimeOut / 50) + 1; i > 0; i--) 
          {
@@ -121,7 +121,7 @@ inline BOOL RWLockWriteLock(RWLOCK hLock, DWORD dwTimeOut)
 			timeout.tv_sec += now.tv_usec / 1000000;
 			timeout.tv_nsec = (now.tv_usec % 1000000) * 1000;
 
-			retcode = pthread_rwlock_timedwrlock(hLock, &timeout);
+			ret = (pthread_rwlock_timedwrlock(hLock, &timeout) == 0);
 #else
 			for(int i = (dwTimeOut / 50) + 1; i > 0; i--) 
          {

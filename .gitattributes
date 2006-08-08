@@ -1174,7 +1174,6 @@ src/server/libnxsrv/log.cpp -text
 src/server/libnxsrv/main.cpp -text
 src/server/libnxsrv/messages.mc -text
 src/server/libnxsrv/resource.h -text
-src/server/libnxsrv/rwlock.cpp -text
 src/server/netxmsd/.cvsignore -text
 src/server/netxmsd/Makefile.am -text
 src/server/netxmsd/netxmsd.cpp -text
