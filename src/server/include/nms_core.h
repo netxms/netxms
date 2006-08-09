@@ -63,10 +63,9 @@
 // Common includes
 //
 
-#include <nms_threads.h>
+#include <nms_util.h>
 #include <dbdrv.h>
 #include <nms_cscp.h>
-#include <nms_util.h>
 #include <uuid.h>
 #include <nxsrvapi.h>
 #include <nxcscpapi.h>

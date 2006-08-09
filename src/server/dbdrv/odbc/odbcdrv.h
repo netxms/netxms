@@ -34,7 +34,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <dbdrv.h>
-#include <nms_threads.h>
+#include <nms_util.h>
 
 #include <sql.h>
 #include <sqlext.h>

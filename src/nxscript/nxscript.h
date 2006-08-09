@@ -25,6 +25,7 @@
 #define _nxscript_h_
 
 #include <nms_common.h>
+#include <nms_util.h>
 #include <getopt.h>
 #include <nxsl.h>
 

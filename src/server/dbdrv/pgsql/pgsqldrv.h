@@ -32,7 +32,7 @@
 #endif   /* _WIN32 */
 
 #include <nms_common.h>
-#include <nms_threads.h>
+#include <nms_util.h>
 #include <dbdrv.h>
 #include <libpq-fe.h>
 #include <string.h>

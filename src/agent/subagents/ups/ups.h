@@ -24,9 +24,8 @@
 #define _ups_h_
 
 #include <nms_common.h>
-#include <nms_threads.h>
-#include <nms_agent.h>
 #include <nms_util.h>
+#include <nms_agent.h>
 
 #ifdef _WIN32
 

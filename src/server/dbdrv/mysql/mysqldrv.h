@@ -33,7 +33,7 @@
 #endif   /* _WIN32 */
 
 #include <dbdrv.h>
-#include <nms_threads.h>
+#include <nms_util.h>
 
 #undef GROUP_FLAG
 #include <mysql.h>

@@ -25,7 +25,6 @@
 #define _libnxsl_h_
 
 #include <nms_common.h>
-#include <nms_threads.h>
 #include <nms_util.h>
 #include <nxcscpapi.h>
 #include <nxsl.h>
