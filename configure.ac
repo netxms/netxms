@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.164 2006-08-08 13:33:29 victor Exp $
+# $Id: configure.ac,v 1.165 2006-08-09 13:27:51 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -547,12 +547,18 @@ LDFLAGS="$LDFLAGS $PTHREAD_LIBS"
 AC_SUBST(PTHREAD_LIBS)
 
 # Extensions to posix threads
+AC_CHECK_HEADERS([pthread_np.h],,,[
+#include <pthread.h>
+])
 AC_CHECK_FUNCS([pthread_cond_reltimedwait_np])
 
 # Check for recursive mutexes
 AC_CHECK_FUNCS([pthread_mutexattr_settype pthread_mutexattr_setkind_np])
-AC_CHECK_DECLS([PTHREAD_MUTEX_RECURSIVE, PTHREAD_MUTEX_RECURSIVE_NP],,,[
+AC_CHECK_DECLS([PTHREAD_MUTEX_RECURSIVE, PTHREAD_MUTEX_RECURSIVE_NP, MUTEX_TYPE_COUNTING_FAST],,,[
 #include <pthread.h>
+#if HAVE_PTHREAD_NP_H
+#include <pthread_np.h>
+#endif
 ])
 
 # Check for read/write locks
