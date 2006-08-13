@@ -95,8 +95,12 @@ DWORD g_dwServerCount = 0;
 DWORD g_dwExecTimeout = 2000;     // External process execution timeout in milliseconds
 time_t g_tmAgentStartTime;
 DWORD g_dwStartupDelay = 0;
-DWORD g_dwIdleTimeout = 60;   // Session idle timeout
 DWORD g_dwMaxSessions = 32;
+#ifdef _WIN32
+DWORD g_dwIdleTimeout = 60;   // Session idle timeout
+#else
+DWORD g_dwIdleTimeout = 120;   // Session idle timeout
+#endif
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 char g_szPidFile[MAX_PATH] = "/var/run/nxagentd.pid";
@@ -1061,6 +1065,19 @@ int main(int argc, char *argv[])
    switch(iAction)
    {
       case ACTION_RUN_AGENT:
+         // Set default value for session idle timeout based on
+         // connect() timeout, if possible
+#ifdef HAVE_SYSCTLBYNAME
+         {
+            int nVal;
+
+            if (sysctlbyname("net.inet.tcp.keepinit", &nVal, sizeof(nVal), NULL, 0) == 0)
+            {
+               g_dwIdleTimeout = nVal / 1000 + 15;
+            }
+         }
+#endif
+
          if (g_dwFlags & AF_CENTRAL_CONFIG)
          {
             if (g_dwFlags & AF_DEBUG)

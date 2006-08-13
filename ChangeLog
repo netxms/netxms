@@ -2,6 +2,7 @@
 * 0.2.13
 *
 
+- Implemented central (stored on server) agent configs
 - Agent ported to IPSO
 - Added installer command line options for unattended installation of
   Windows agent
@@ -10,7 +11,7 @@
 - Native operating system read/write locks used whenever possible
 - Windows console:
 	- DCI history data viewer improved
-- Fixed issues: #4, #20, #47, #67, #79, #80, #91, #92, #93, #94
+- Fixed issues: #4, #20, #47, #67, #79, #80, #91, #92, #93, #94, #95
 
 
 *

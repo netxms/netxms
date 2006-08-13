@@ -1,4 +1,4 @@
-/* $Id: http.cpp,v 1.8 2006-08-06 10:32:02 victor Exp $ */
+/* $Id: http.cpp,v 1.9 2006-08-13 22:58:59 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -57,7 +57,7 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 	}
 
 	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
-	if (nSd > 0)
+	if (nSd != INVALID_SOCKET)
 	{
 		char szTmp[4096];
 
@@ -94,6 +94,11 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/08/06 10:32:02  victor
+- Both 32 and 6 bit installers works correctly
+- All subagents ported to 64bit
+- Agent now reports platform windows-x64 instead of windows-amd64
+
 Revision 1.7  2006/07/30 08:22:13  victor
 - Added checking for CDP and Nortel topology autodiscovery support
 - Other minor changes

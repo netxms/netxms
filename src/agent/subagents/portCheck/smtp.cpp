@@ -30,7 +30,7 @@ int CheckSMTP(char *szAddr, DWORD dwAddr, short nPort, char *szTo)
 	int nErr = 0; 
 
 	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
-	if (nSd > 0)
+	if (nSd != INVALID_SOCKET)
 	{
 		char szBuff[512];
 		char szTmp[128];

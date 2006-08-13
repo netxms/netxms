@@ -1,4 +1,4 @@
-/* $Id: custom.cpp,v 1.5 2006-08-06 10:32:02 victor Exp $ */
+/* $Id: custom.cpp,v 1.6 2006-08-13 22:58:59 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -36,11 +36,11 @@ LONG H_CheckCustom(char *pszParam, char *pArg, char *pValue)
 int CheckCustom(char *szAddr, DWORD dwAddr, short nPort, char *szRequest,
 		char *szResponse)
 {
-	int nRet = 0;
+	int nRet;
 	SOCKET nSd;
 
 	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
-	if (nSd > 0)
+	if (nSd != INVALID_SOCKET)
 	{
 		nRet = PC_ERR_NONE;
 
@@ -58,6 +58,11 @@ int CheckCustom(char *szAddr, DWORD dwAddr, short nPort, char *szRequest,
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/08/06 10:32:02  victor
+- Both 32 and 6 bit installers works correctly
+- All subagents ported to 64bit
+- Agent now reports platform windows-x64 instead of windows-amd64
+
 Revision 1.4  2005/10/18 21:33:26  victor
 - Default port for ServiceCheck.HTTP(*) changed from 22 to 80 :)
 - All ServiceCheck.XXX parameters now returns actual failure code, not just 0 or 1

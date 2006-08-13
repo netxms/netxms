@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.7 2006-08-06 10:32:02 victor Exp $ */
+/* $Id: net.cpp,v 1.8 2006-08-13 22:59:00 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -10,7 +10,7 @@ SOCKET NetConnectTCP(char *szHost, DWORD dwAddr, unsigned short nPort)
 	SOCKET nSocket;
 
 	nSocket = socket(AF_INET, SOCK_STREAM, 0);
-	if (nSocket > 0)
+	if (nSocket != INVALID_SOCKET)
 	{
 		struct sockaddr_in sa;
 
@@ -28,7 +28,7 @@ SOCKET NetConnectTCP(char *szHost, DWORD dwAddr, unsigned short nPort)
 		if (connect(nSocket, (struct sockaddr*)&sa, sizeof(sa)) < 0)
 		{
 			closesocket(nSocket);
-			nSocket = -1;
+			nSocket = INVALID_SOCKET;
 		}
 	}
 
@@ -74,6 +74,11 @@ void NetClose(SOCKET nSocket)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/08/06 10:32:02  victor
+- Both 32 and 6 bit installers works correctly
+- All subagents ported to 64bit
+- Agent now reports platform windows-x64 instead of windows-amd64
+
 Revision 1.6  2006/03/15 13:28:18  victor
 - int changed to SOCKET
 - Telnet checker added to VC++ project

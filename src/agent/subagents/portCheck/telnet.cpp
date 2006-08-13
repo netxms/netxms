@@ -1,4 +1,4 @@
-/* $Id: telnet.cpp,v 1.3 2006-03-15 13:28:18 victor Exp $ */
+/* $Id: telnet.cpp,v 1.4 2006-08-13 22:59:00 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -38,7 +38,7 @@ int CheckTelnet(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szP
 	SOCKET nSd;
 
 	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
-	if (nSd > 0)
+	if (nSd != INVALID_SOCKET)
 	{
 		unsigned char szBuff[512];
 
@@ -98,6 +98,10 @@ int CheckTelnet(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szP
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/03/15 13:28:18  victor
+- int changed to SOCKET
+- Telnet checker added to VC++ project
+
 Revision 1.2  2006/03/15 12:00:39  alk
 *** empty log message ***
 

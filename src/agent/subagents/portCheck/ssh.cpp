@@ -1,4 +1,4 @@
-/* $Id: ssh.cpp,v 1.6 2006-08-06 10:32:03 victor Exp $ */
+/* $Id: ssh.cpp,v 1.7 2006-08-13 22:59:00 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -38,7 +38,7 @@ int CheckSSH(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass
 	SOCKET nSd;
 
 	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
-	if (nSd > 0)
+	if (nSd != INVALID_SOCKET)
 	{
 		char szBuff[512];
 		char szTmp[128];
@@ -74,6 +74,11 @@ int CheckSSH(char *szAddr, DWORD dwAddr, short nPort, char *szUser, char *szPass
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/08/06 10:32:03  victor
+- Both 32 and 6 bit installers works correctly
+- All subagents ported to 64bit
+- Agent now reports platform windows-x64 instead of windows-amd64
+
 Revision 1.5  2005/10/18 21:33:26  victor
 - Default port for ServiceCheck.HTTP(*) changed from 22 to 80 :)
 - All ServiceCheck.XXX parameters now returns actual failure code, not just 0 or 1

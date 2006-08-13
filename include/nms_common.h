@@ -201,7 +201,8 @@ typedef int SOCKET;
 #define closesocket(x) close(x)
 #define WSAGetLastError() (errno)
 
-#define WSAEINTR  EINTR
+#define WSAEINTR        EINTR
+#define INVALID_SOCKET  (-1)
 
 //#define SetSocketReuseFlag(sd)
 #define SetSocketReuseFlag(sd) { \
@@ -318,7 +319,8 @@ typedef int SOCKET;
 #define closesocket(x) close(x)
 #define WSAGetLastError() (errno)
 
-#define WSAEINTR  EINTR
+#define WSAEINTR        EINTR
+#define INVALID_SOCKET  (-1)
 
 #define SetSocketReuseFlag(sd) { \
 	int nVal = 1; \
