@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.165 2006-08-09 13:27:51 victor Exp $
+# $Id: configure.ac,v 1.166 2006-08-13 23:20:00 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -492,7 +492,7 @@ AC_CHECK_FUNCS([strrchr strtol strtoul strtoll strtoull])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
 
 AC_CHECK_HEADERS([sys/sysctl.h vm/vm_param.h])
-AC_CHECK_FUNCS([sysctlnametomib])
+AC_CHECK_FUNCS([sysctlbyname sysctlnametomib])
 
 # sockets/resolver (probably for solaris)
 AC_CHECK_FUNC(connect, , [AC_CHECK_LIB(socket, connect)])
