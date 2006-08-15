@@ -38,6 +38,7 @@ CGraphSettingsPage::CGraphSettingsPage() : CPropertyPage(CGraphSettingsPage::IDD
 	m_timeTo = 0;
 	m_bRuler = FALSE;
 	m_bShowLegend = FALSE;
+	m_bEnableZoom = FALSE;
 	//}}AFX_DATA_INIT
 
    m_iTimeUnit = 0;
@@ -66,6 +67,7 @@ void CGraphSettingsPage::DoDataExchange(CDataExchange* pDX)
 	DDX_DateTimeCtrl(pDX, IDC_TIME_TO, m_timeTo);
 	DDX_Check(pDX, IDC_CHECK_RULER, m_bRuler);
 	DDX_Check(pDX, IDC_CHECK_LEGEND, m_bShowLegend);
+	DDX_Check(pDX, IDC_CHECK_ZOOM, m_bEnableZoom);
 	//}}AFX_DATA_MAP
 }
 

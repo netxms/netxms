@@ -97,6 +97,8 @@ private:
    int m_nLastGridSizeY;
 
 public:
+	BOOL m_bEnableZoom;
+	void ClearZoomHistory(void);
 	BOOL CanZoomOut(void);
 	BOOL CanZoomIn(void);
 	void ZoomOut(void);

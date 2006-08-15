@@ -120,6 +120,7 @@ extern CConsoleApp theApp;
 #define NXCM_TRAP_LOG_RECORD       (WM_USER + 121)
 #define NXCM_SUBMAP_CHANGE         (WM_USER + 122)
 #define NXCM_CHANGE_PASSWORD       (WM_USER + 123)
+#define NXCM_GRAPH_ZOOM_CHANGED    (WM_USER + 124)
 
 
 //

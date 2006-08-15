@@ -100,6 +100,7 @@ BEGIN_MESSAGE_MAP(CGraphFrame, CMDIChildWnd)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
    ON_MESSAGE(NXCM_UPDATE_GRAPH_POINT, OnUpdateGraphPoint)
+   ON_MESSAGE(NXCM_GRAPH_ZOOM_CHANGED, OnGraphZoomChange)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -224,6 +225,7 @@ void CGraphFrame::OnViewRefresh()
          theApp.ErrorBox(dwResult, "Unable to retrieve colected data: %s");
       }
    }
+   m_wndGraph.ClearZoomHistory();
    m_wndGraph.Update();
 }
 
@@ -257,6 +259,7 @@ void CGraphFrame::OnGraphProperties()
    pgSettings.m_bShowGrid = m_wndGraph.m_bShowGrid;
    pgSettings.m_bRuler = m_wndGraph.m_bShowRuler;
    pgSettings.m_bShowLegend = m_wndGraph.m_bShowLegend;
+   pgSettings.m_bEnableZoom = m_wndGraph.m_bEnableZoom;
    pgSettings.m_bAutoUpdate = (m_dwFlags & GF_AUTOUPDATE) ? TRUE : FALSE;
    pgSettings.m_dwRefreshInterval = m_dwRefreshInterval;
    pgSettings.m_rgbAxisLines = m_wndGraph.m_rgbAxisColor;
@@ -307,6 +310,7 @@ void CGraphFrame::OnGraphProperties()
       m_wndGraph.m_bShowGrid = pgSettings.m_bShowGrid;
       m_wndGraph.m_bShowLegend = pgSettings.m_bShowLegend;
       m_wndGraph.m_bShowRuler = pgSettings.m_bRuler;
+      m_wndGraph.m_bEnableZoom = pgSettings.m_bEnableZoom;
 
       m_wndGraph.m_rgbAxisColor = pgSettings.m_rgbAxisLines;
       m_wndGraph.m_rgbBkColor = pgSettings.m_rgbBackground;
@@ -661,4 +665,28 @@ void CGraphFrame::OnGraphZoomout()
 void CGraphFrame::OnUpdateGraphZoomout(CCmdUI* pCmdUI) 
 {
    pCmdUI->Enable(m_wndGraph.CanZoomOut());
+}
+
+
+//
+// NXCM_GRAPH_ZOOM_CHANGED message handler
+//
+
+void CGraphFrame::OnGraphZoomChange(WPARAM nZoomLevel)
+{
+   TCHAR szBuffer[32];
+
+   if (nZoomLevel > 0)
+   {
+      _stprintf(szBuffer, _T("%d"), nZoomLevel);
+      m_wndStatusBar.SetText(szBuffer, 2, 0);
+      m_wndStatusBar.SetIcon(2,
+         (HICON)LoadImage(theApp.m_hInstance, MAKEINTRESOURCE(IDI_ZOOMIN),
+                          IMAGE_ICON, 16, 16, LR_SHARED));
+   }
+   else
+   {
+      m_wndStatusBar.SetText(_T(""), 2, 0);
+      m_wndStatusBar.SetIcon(2, NULL);
+   }
 }

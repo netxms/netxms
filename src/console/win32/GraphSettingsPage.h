@@ -50,6 +50,7 @@ public:
 	CTime	m_timeTo;
 	BOOL	m_bRuler;
 	BOOL	m_bShowLegend;
+	BOOL	m_bEnableZoom;
 	//}}AFX_DATA
 
 

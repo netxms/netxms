@@ -504,6 +504,7 @@
 #define IDC_CHECK_RULER                 1337
 #define IDC_CHECK_LEGEND                1338
 #define IDC_CHECK_DISABLE_AGENT         1339
+#define IDC_CHECK_ZOOM                  1339
 #define IDC_CHECK_DISABLE_SNMP          1340
 #define IDC_CHECK_DISABLE_ICMP          1341
 #define IDC_BUTTON_WALK                 1342
@@ -758,7 +759,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        334
-#define _APS_NEXT_COMMAND_VALUE         33038
+#define _APS_NEXT_COMMAND_VALUE         33039
 #define _APS_NEXT_CONTROL_VALUE         1376
 #define _APS_NEXT_SYMED_VALUE           128
 #endif

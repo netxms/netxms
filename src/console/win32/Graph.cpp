@@ -48,6 +48,7 @@ CGraph::CGraph()
    m_bShowGrid = TRUE;
    m_bShowRuler = TRUE;
    m_bShowLegend = TRUE;
+   m_bEnableZoom = TRUE;
    m_dwNumItems = 0;
    m_rgbBkColor = RGB(0,0,0);
    m_rgbGridColor = RGB(64, 64, 64);
@@ -340,16 +341,21 @@ void CGraph::DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int 
 
    // Move to first position
    pRow = pData->pRows;
-   dc.MoveTo(m_rectGraph.right, 
-             (int)(m_rectGraph.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1));
-   inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
-
-   for(i = 1; (i < pData->dwNumRows) && (pRow->dwTimeStamp >= m_dwTimeFrom); i++)
-   {
-      // Calculate timestamp position on graph
-      x = m_rectGraph.right - (int)((double)(m_dwTimeTo - pRow->dwTimeStamp) / m_dSecondsPerPixel);
-      dc.LineTo(x, (int)(m_rectGraph.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1));
+   for(i = 0; (i < pData->dwNumRows) && (pRow->dwTimeStamp > m_dwTimeTo); i++)
       inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
+   if (i < pData->dwNumRows)
+   {
+      dc.MoveTo(m_rectGraph.right, 
+                (int)(m_rectGraph.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1));
+      inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
+
+      for(i++; (i < pData->dwNumRows) && (pRow->dwTimeStamp >= m_dwTimeFrom); i++)
+      {
+         // Calculate timestamp position on graph
+         x = m_rectGraph.right - (int)((double)(m_dwTimeTo - pRow->dwTimeStamp) / m_dSecondsPerPixel);
+         dc.LineTo(x, (int)(m_rectGraph.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1));
+         inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
+      }
    }
 
    dc.SelectObject(pOldPen);
@@ -570,8 +576,12 @@ void CGraph::DrawGraphOnBitmap()
             double dCurrValue;
             DWORD j;
 
+            // Skip values beyond right graph border
             pRow = m_pData[i]->pRows;
-            for(j = 0; (j < m_pData[i]->dwNumRows) && (pRow->dwTimeStamp >= m_dwTimeFrom); j++)
+            for(j = 0; (j < m_pData[i]->dwNumRows) && (pRow->dwTimeStamp > m_dwTimeTo); j++)
+               inc_ptr(pRow, m_pData[i]->wRowSize, NXC_DCI_ROW);
+
+            for(; (j < m_pData[i]->dwNumRows) && (pRow->dwTimeStamp >= m_dwTimeFrom); j++)
             {
                dCurrValue = (double)ROW_DATA(pRow, m_pData[i]->wDataType);
                if (dCurrValue > m_dCurrMaxValue)
@@ -899,12 +909,15 @@ void CGraph::OnMouseMove(UINT nFlags, CPoint point)
 
 void CGraph::OnLButtonDown(UINT nFlags, CPoint point) 
 {
-   m_ptMouseOpStart = point;
-   m_rcSelection.left = m_rcSelection.right = point.x;
-   m_rcSelection.top = m_rcSelection.bottom = point.y;
-   m_nState = STATE_SELECTING;
-   InvalidateRect(&m_rectGraph, FALSE);
-   SetCapture();
+   if (m_bEnableZoom)
+   {
+      m_ptMouseOpStart = point;
+      m_rcSelection.left = m_rcSelection.right = point.x;
+      m_rcSelection.top = m_rcSelection.bottom = point.y;
+      m_nState = STATE_SELECTING;
+      InvalidateRect(&m_rectGraph, FALSE);
+      SetCapture();
+   }
 }
 
 
@@ -914,23 +927,26 @@ void CGraph::OnLButtonDown(UINT nFlags, CPoint point)
 
 void CGraph::OnLButtonUp(UINT nFlags, CPoint point) 
 {
-   ReleaseCapture();
-   m_nState = STATE_NORMAL;
-   if ((m_rcSelection.right - m_rcSelection.left > 2) && 
-       (m_rcSelection.bottom - m_rcSelection.top > 2))
+   if (m_nState == STATE_SELECTING)
    {
-      ZoomIn(m_rcSelection);
-   }
-   else
-   {
-      InvalidateRect(&m_rectGraph, FALSE);
+      ReleaseCapture();
+      m_nState = STATE_NORMAL;
+      if ((m_rcSelection.right - m_rcSelection.left > 2) && 
+          (m_rcSelection.bottom - m_rcSelection.top > 2))
+      {
+         ZoomIn(m_rcSelection);
+      }
+      else
+      {
+         InvalidateRect(&m_rectGraph, FALSE);
+      }
    }
 }
 
 
 //
 // Zoom graph based on selection rectangle
-// Currently, Y axis is ignored
+// If graph mode is set to autoscale, Y axis is ignored
 //
 
 void CGraph::ZoomIn(RECT &rect)
@@ -944,6 +960,7 @@ void CGraph::ZoomIn(RECT &rect)
    SetTimeFrame(m_dwTimeFrom + (DWORD)((rect.left - m_rectGraph.left) * m_dSecondsPerPixel),
                 m_dwTimeFrom + (DWORD)((rect.right - m_rectGraph.left) * m_dSecondsPerPixel));
    Update();
+   GetParent()->PostMessage(NXCM_GRAPH_ZOOM_CHANGED, m_nZoomLevel, 0);
 }
 
 
@@ -959,6 +976,7 @@ void CGraph::ZoomOut()
    m_nZoomLevel--;
    SetTimeFrame(m_zoomInfo[m_nZoomLevel].dwTimeFrom, m_zoomInfo[m_nZoomLevel].dwTimeTo);
    Update();
+   GetParent()->PostMessage(NXCM_GRAPH_ZOOM_CHANGED, m_nZoomLevel, 0);
 }
 
 
@@ -968,7 +986,7 @@ void CGraph::ZoomOut()
 
 BOOL CGraph::CanZoomIn()
 {
-   return m_nZoomLevel < ZOOM_HISTORY_SIZE;
+   return m_bEnableZoom && (m_nZoomLevel < ZOOM_HISTORY_SIZE);
 }
 
 
@@ -979,4 +997,15 @@ BOOL CGraph::CanZoomIn()
 BOOL CGraph::CanZoomOut()
 {
    return m_nZoomLevel > 0;
+}
+
+
+//
+// Clear zoom history
+//
+
+void CGraph::ClearZoomHistory()
+{
+   m_nZoomLevel = 0;
+   GetParent()->PostMessage(NXCM_GRAPH_ZOOM_CHANGED, 0, 0);
 }
