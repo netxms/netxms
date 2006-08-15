@@ -476,6 +476,8 @@ BEGIN
         MENUITEM "&Legend\tAlt+L",              ID_GRAPH_LEGEND
         MENUITEM "R&uler\tAlt+R",               ID_GRAPH_RULER
         MENUITEM SEPARATOR
+        MENUITEM "&Zoom out\tBksp",             ID_GRAPH_ZOOMOUT
+        MENUITEM SEPARATOR
         MENUITEM "&Properties...\tAlt+P",       ID_GRAPH_PROPERTIES
     END
     POPUP "Package"
@@ -822,6 +824,8 @@ BEGIN
         MENUITEM "&Legend",                     ID_GRAPH_LEGEND
         MENUITEM "R&uler",                      ID_GRAPH_RULER
         MENUITEM SEPARATOR
+        MENUITEM "&Zoom out",                   ID_GRAPH_ZOOMOUT
+        MENUITEM SEPARATOR
         MENUITEM "&Properties...",              ID_GRAPH_PROPERTIES
     END
     POPUP "Package"
@@ -1044,6 +1048,7 @@ BEGIN
     "A",            ID_GRAPH_AUTOSCALE,     VIRTKEY, ALT, NOINVERT
     "P",            ID_GRAPH_PROPERTIES,    VIRTKEY, ALT, NOINVERT
     "R",            ID_GRAPH_RULER,         VIRTKEY, ALT, NOINVERT
+    VK_BACK,        ID_GRAPH_ZOOMOUT,       VIRTKEY, NOINVERT
 END
 
 IDA_PACKAGE_MGR ACCELERATORS DISCARDABLE 

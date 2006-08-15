@@ -15,6 +15,10 @@
                            )
 #define LEGEND_TEXT_SPACING   4
 
+#define STATE_NORMAL          0
+#define STATE_SELECTING       1
+
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -51,6 +55,7 @@ CGraph::CGraph()
    m_rgbTextColor = RGB(255, 255, 255);
    m_rgbLabelBkColor = RGB(255, 255, 170);
    m_rgbLabelTextColor = RGB(85, 0, 0);
+   m_rgbSelRectColor = RGB(0, 255, 255);
 
    m_rgbLineColors[0] = RGB(0, 255, 0);
    m_rgbLineColors[1] = RGB(255, 255, 0);
@@ -73,6 +78,8 @@ CGraph::CGraph()
    m_ppItems = NULL;
    
    m_bIsActive = FALSE;
+   m_nState = STATE_NORMAL;
+   m_nZoomLevel = 0;
 }
 
 CGraph::~CGraph()
@@ -92,6 +99,8 @@ BEGIN_MESSAGE_MAP(CGraph, CWnd)
 	ON_WM_KILLFOCUS()
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
+	ON_WM_LBUTTONDOWN()
+	ON_WM_LBUTTONUP()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -141,7 +150,8 @@ void CGraph::OnPaint()
    pOldBitmap = dc.SelectObject(&m_bmpGraph);
 
    // Draw ruler
-   if (m_bShowRuler && m_bIsActive && PtInRect(&m_rectGraph, m_ptCurrMousePos))
+   if (m_bShowRuler && m_bIsActive && (m_nState == STATE_NORMAL) &&
+       PtInRect(&m_rectGraph, m_ptCurrMousePos))
    {
       CPen pen, *pOldPen;
       CBitmap bitmap;         // Bitmap for in-memory drawing
@@ -177,8 +187,71 @@ void CGraph::OnPaint()
    }
    else
    {
-      // Move drawing from in-memory DC to screen
-      sdc.BitBlt(0, 0, rect.right, rect.bottom, &dc, 0, 0, SRCCOPY);
+      if (m_nState == STATE_SELECTING)
+      {
+         CPen pen, *pOldPen;
+         CBrush brush, *pOldBrush;
+         CDC dcTemp, dcGraph;
+         CBitmap bitmap, bmpGraph, *pOldTempBitmap, *pOldGraphBitmap;
+         int cx, cy;
+         BLENDFUNCTION bf;
+
+         // Create map copy
+         dcGraph.CreateCompatibleDC(&sdc);
+         bmpGraph.CreateCompatibleBitmap(&sdc, rect.right, rect.bottom);
+         pOldGraphBitmap = dcGraph.SelectObject(&bmpGraph);
+         dcGraph.BitBlt(0, 0, rect.right, rect.bottom, &dc, 0, 0, SRCCOPY);
+
+         // Calculate selection width and height
+         cx = m_rcSelection.right - m_rcSelection.left - 1;
+         cy = m_rcSelection.bottom - m_rcSelection.top - 1;
+
+         // Create temporary bitmap
+         dcTemp.CreateCompatibleDC(&sdc);
+         bitmap.CreateCompatibleBitmap(&sdc, cx, cy);
+         pOldTempBitmap = dcTemp.SelectObject(&bitmap);
+
+         // Fill temporary bitmap with selection color
+         brush.DeleteObject();
+         brush.CreateSolidBrush(m_rgbSelRectColor);
+         pen.CreatePen(PS_SOLID, 1, m_rgbSelRectColor);
+         pOldBrush = dcTemp.SelectObject(&brush);
+         pOldPen = dcTemp.SelectObject(&pen);
+         dcTemp.Rectangle(0, 0, cx + 1, cy + 1);
+         dcTemp.SelectObject(pOldPen);
+         dcTemp.SelectObject(pOldBrush);
+
+         // Copy temporary bitmap to main bitmap with transparency
+         bf.AlphaFormat = 0;
+         bf.BlendFlags = 0;
+         bf.BlendOp = AC_SRC_OVER;
+         bf.SourceConstantAlpha = 32;
+         AlphaBlend(dcGraph.m_hDC, m_rcSelection.left, m_rcSelection.top,
+                    cx, cy, dcTemp.m_hDC, 0, 0, cx, cy, bf);
+      
+         // Draw solid rectangle around selection area
+         brush.DeleteObject();
+         brush.CreateStockObject(NULL_BRUSH);
+         pOldBrush = dcGraph.SelectObject(&brush);
+         pOldPen = dcGraph.SelectObject(&pen);
+         dcGraph.Rectangle(&m_rcSelection);
+         dcGraph.SelectObject(pOldPen);
+         dcGraph.SelectObject(pOldBrush);
+
+         dcTemp.SelectObject(pOldTempBitmap);
+         dcTemp.DeleteDC();
+
+         // Move drawing from in-memory bitmap to screen
+         sdc.BitBlt(0, 0, rect.right, rect.bottom, &dcGraph, 0, 0, SRCCOPY);
+
+         dcGraph.SelectObject(pOldGraphBitmap);
+         dcGraph.DeleteDC();
+      }
+      else
+      {
+         // Move drawing from in-memory DC to screen
+         sdc.BitBlt(0, 0, rect.right, rect.bottom, &dc, 0, 0, SRCCOPY);
+      }
    }
 
    // Cleanup
@@ -280,41 +353,6 @@ void CGraph::DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int 
    }
 
    dc.SelectObject(pOldPen);
-}
-
-
-//
-// WM_MOUSEMOVE message handler
-//
-
-void CGraph::OnMouseMove(UINT nFlags, CPoint point) 
-{
-   BOOL bChanged;
-
-   CWnd::OnMouseMove(nFlags, point);
-   if (!m_bIsActive)
-      return;
-
-   if (PtInRect(&m_rectGraph, point))
-   {
-      DWORD dwTimeStamp;
-      double dValue;
-
-      dwTimeStamp = m_dwTimeFrom + (DWORD)((point.x - m_rectGraph.left) * m_dSecondsPerPixel);
-      dValue = m_dCurrMaxValue / (m_rectGraph.bottom - m_rectGraph.top - 
-                  (m_rectGraph.bottom - m_rectGraph.top) % m_nLastGridSizeY) * 
-                  (m_rectGraph.bottom - point.y);
-      GetParent()->SendMessage(NXCM_UPDATE_GRAPH_POINT, dwTimeStamp, (LPARAM)&dValue);
-      bChanged = TRUE;
-   }
-   else
-   {
-      GetParent()->SendMessage(NXCM_UPDATE_GRAPH_POINT, 0, 0);
-      bChanged = PtInRect(&m_rectGraph, m_ptCurrMousePos);
-   }
-   m_ptCurrMousePos = point;
-   if (bChanged)
-      InvalidateRect(&m_rectGraph, FALSE);
 }
 
 
@@ -769,4 +807,176 @@ int CGraph::NextMonthOffset(DWORD dwTimeStamp)
       return (int)ceil(2505600.0 / m_dSecondsPerPixel) + 1;
    else
       return (int)ceil(nSecPerMonth[plt->tm_mon] / m_dSecondsPerPixel) + 1;
+}
+
+
+//
+// WM_MOUSEMOVE message handler
+//
+
+void CGraph::OnMouseMove(UINT nFlags, CPoint point) 
+{
+   BOOL bChanged;
+   RECT rcOldSel, rcUpdate;
+
+   if (!m_bIsActive)
+      return;
+
+   if (PtInRect(&m_rectGraph, point))
+   {
+      DWORD dwTimeStamp;
+      double dValue;
+
+      dwTimeStamp = m_dwTimeFrom + (DWORD)((point.x - m_rectGraph.left) * m_dSecondsPerPixel);
+      dValue = m_dCurrMaxValue / (m_rectGraph.bottom - m_rectGraph.top - 
+                  (m_rectGraph.bottom - m_rectGraph.top) % m_nLastGridSizeY) * 
+                  (m_rectGraph.bottom - point.y);
+      GetParent()->SendMessage(NXCM_UPDATE_GRAPH_POINT, dwTimeStamp, (LPARAM)&dValue);
+      bChanged = TRUE;
+   }
+   else
+   {
+      bChanged = PtInRect(&m_rectGraph, m_ptCurrMousePos);
+      if (bChanged)
+         GetParent()->SendMessage(NXCM_UPDATE_GRAPH_POINT, 0, 0);
+   }
+   m_ptCurrMousePos = point;
+
+   switch(m_nState)
+   {
+      case STATE_NORMAL:
+         if (bChanged)
+            InvalidateRect(&m_rectGraph, FALSE);
+         break;
+      case STATE_SELECTING:
+         CopyRect(&rcOldSel, &m_rcSelection);
+
+         // Calculate normalized selection rectangle
+         if (point.x < m_ptMouseOpStart.x)
+         {
+            m_rcSelection.left = point.x;
+            m_rcSelection.right = m_ptMouseOpStart.x;
+         }
+         else
+         {
+            m_rcSelection.left = m_ptMouseOpStart.x;
+            m_rcSelection.right = point.x;
+         }
+         if (point.y < m_ptMouseOpStart.y)
+         {
+            m_rcSelection.top = point.y;
+            m_rcSelection.bottom = m_ptMouseOpStart.y;
+         }
+         else
+         {
+            m_rcSelection.top = m_ptMouseOpStart.y;
+            m_rcSelection.bottom = point.y;
+         }
+
+         // Validate selection rectangle
+         if (m_rcSelection.left < m_rectGraph.left)
+            m_rcSelection.left = m_rectGraph.left;
+         if (m_rcSelection.top < m_rectGraph.top)
+            m_rcSelection.top = m_rectGraph.top;
+         if (m_rcSelection.right > m_rectGraph.right)
+            m_rcSelection.right = m_rectGraph.right;
+         if (m_rcSelection.bottom > m_rectGraph.bottom)
+            m_rcSelection.bottom = m_rectGraph.bottom;
+         
+         // Update changed region
+         UnionRect(&rcUpdate, &rcOldSel, &m_rcSelection);
+         InvalidateRect(&rcUpdate, FALSE);
+         break;
+      default:
+         break;
+   }
+}
+
+
+//
+// WM_LBUTTONDOWN message handler
+//
+
+void CGraph::OnLButtonDown(UINT nFlags, CPoint point) 
+{
+   m_ptMouseOpStart = point;
+   m_rcSelection.left = m_rcSelection.right = point.x;
+   m_rcSelection.top = m_rcSelection.bottom = point.y;
+   m_nState = STATE_SELECTING;
+   InvalidateRect(&m_rectGraph, FALSE);
+   SetCapture();
+}
+
+
+//
+// WM_LBUTTONUP message handler
+//
+
+void CGraph::OnLButtonUp(UINT nFlags, CPoint point) 
+{
+   ReleaseCapture();
+   m_nState = STATE_NORMAL;
+   if ((m_rcSelection.right - m_rcSelection.left > 2) && 
+       (m_rcSelection.bottom - m_rcSelection.top > 2))
+   {
+      ZoomIn(m_rcSelection);
+   }
+   else
+   {
+      InvalidateRect(&m_rectGraph, FALSE);
+   }
+}
+
+
+//
+// Zoom graph based on selection rectangle
+// Currently, Y axis is ignored
+//
+
+void CGraph::ZoomIn(RECT &rect)
+{
+   if (m_nZoomLevel >= ZOOM_HISTORY_SIZE)
+      return;
+
+   m_zoomInfo[m_nZoomLevel].dwTimeFrom = m_dwTimeFrom;
+   m_zoomInfo[m_nZoomLevel].dwTimeTo = m_dwTimeTo;
+   m_nZoomLevel++;
+   SetTimeFrame(m_dwTimeFrom + (DWORD)((rect.left - m_rectGraph.left) * m_dSecondsPerPixel),
+                m_dwTimeFrom + (DWORD)((rect.right - m_rectGraph.left) * m_dSecondsPerPixel));
+   Update();
+}
+
+
+//
+// Restore graph to state before last zoom-in operation
+//
+
+void CGraph::ZoomOut()
+{
+   if (m_nZoomLevel == 0)
+      return;
+
+   m_nZoomLevel--;
+   SetTimeFrame(m_zoomInfo[m_nZoomLevel].dwTimeFrom, m_zoomInfo[m_nZoomLevel].dwTimeTo);
+   Update();
+}
+
+
+//
+// Returns TRUE if graph can be zoomed in
+//
+
+BOOL CGraph::CanZoomIn()
+{
+   return m_nZoomLevel < ZOOM_HISTORY_SIZE;
+}
+
+
+//
+// Returns TRUE if graph can be zoomed out
+//
+
+BOOL CGraph::CanZoomOut()
+{
+   return m_nZoomLevel > 0;
 }

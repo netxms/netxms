@@ -97,6 +97,8 @@ protected:
 	afx_msg void OnUpdateGraphLegend(CCmdUI* pCmdUI);
 	afx_msg void OnGraphPresetsLastmonth();
 	afx_msg void OnGraphPresetsLastyear();
+	afx_msg void OnUpdateGraphZoomout(CCmdUI* pCmdUI);
+	afx_msg void OnGraphZoomout();
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
    afx_msg void OnUpdateGraphPoint(DWORD dwTimeStamp, double *pdValue);

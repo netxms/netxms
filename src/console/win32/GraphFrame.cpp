@@ -95,6 +95,8 @@ BEGIN_MESSAGE_MAP(CGraphFrame, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_GRAPH_LEGEND, OnUpdateGraphLegend)
 	ON_COMMAND(ID_GRAPH_PRESETS_LASTMONTH, OnGraphPresetsLastmonth)
 	ON_COMMAND(ID_GRAPH_PRESETS_LASTYEAR, OnGraphPresetsLastyear)
+	ON_UPDATE_COMMAND_UI(ID_GRAPH_ZOOMOUT, OnUpdateGraphZoomout)
+	ON_COMMAND(ID_GRAPH_ZOOMOUT, OnGraphZoomout)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
    ON_MESSAGE(NXCM_UPDATE_GRAPH_POINT, OnUpdateGraphPoint)
@@ -111,7 +113,7 @@ END_MESSAGE_MAP()
 int CGraphFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
-   static int widths[3] = { 70, 170, -1 };
+   static int widths[4] = { 70, 170, 220, -1 };
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
@@ -119,7 +121,7 @@ int CGraphFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    GetClientRect(&rect);
 
    m_wndStatusBar.Create(WS_CHILD | WS_VISIBLE, rect, this, IDC_STATUS_BAR);
-   m_wndStatusBar.SetParts(3, widths);
+   m_wndStatusBar.SetParts(4, widths);
 
    m_iStatusBarHeight = GetWindowSize(&m_wndStatusBar).cy;
    rect.bottom -= m_iStatusBarHeight;
@@ -594,11 +596,11 @@ void CGraphFrame::OnUpdateGraphPoint(DWORD dwTimeStamp, double *pdValue)
 
       FormatTimeStamp(dwTimeStamp, szTimeStamp, TS_LONG_DATE_TIME);
       _sntprintf(szText, 256, _T("Time: %s  Value: %.3f"), szTimeStamp, *pdValue);
-      m_wndStatusBar.SetText(szText, 2, 0);
+      m_wndStatusBar.SetText(szText, 3, 0);
    }
    else
    {
-      m_wndStatusBar.SetText(_T(""), 2, 0);
+      m_wndStatusBar.SetText(_T(""), 3, 0);
    }
 }
 
@@ -644,4 +646,19 @@ void CGraphFrame::OnGraphLegend()
 void CGraphFrame::OnUpdateGraphLegend(CCmdUI* pCmdUI) 
 {
    pCmdUI->SetCheck(m_wndGraph.m_bShowLegend);
+}
+
+
+//
+// WM_COMMAND::ID_GRAPH_ZOOMOUT message handlers
+//
+
+void CGraphFrame::OnGraphZoomout() 
+{
+   m_wndGraph.ZoomOut();
+}
+
+void CGraphFrame::OnUpdateGraphZoomout(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndGraph.CanZoomOut());
 }

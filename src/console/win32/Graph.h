@@ -10,6 +10,14 @@
 //
 
 #define MAX_GRAPH_ITEMS    16
+#define ZOOM_HISTORY_SIZE  16
+
+struct ZOOM_INFO
+{
+   DWORD dwTimeFrom;
+   DWORD dwTimeTo;
+};
+
 
 /////////////////////////////////////////////////////////////////////////////
 // CGraph window
@@ -32,6 +40,7 @@ public:
 	COLORREF m_rgbBkColor;
 	COLORREF m_rgbAxisColor;
 	COLORREF m_rgbTextColor;
+	COLORREF m_rgbSelRectColor;
 
 // Operations
 public:
@@ -54,6 +63,11 @@ public:
 
 	// Generated message map functions
 protected:
+   ZOOM_INFO m_zoomInfo[ZOOM_HISTORY_SIZE];
+   int m_nZoomLevel;
+	POINT m_ptMouseOpStart;
+	int m_nState;
+	RECT m_rcSelection;
 	int NextMonthOffset(DWORD dwTimeStamp);
 	BOOL m_bIsActive;
 	void DrawGraphOnBitmap(void);
@@ -65,6 +79,8 @@ protected:
 	afx_msg void OnKillFocus(CWnd* pNewWnd);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
@@ -81,6 +97,10 @@ private:
    int m_nLastGridSizeY;
 
 public:
+	BOOL CanZoomOut(void);
+	BOOL CanZoomIn(void);
+	void ZoomOut(void);
+	void ZoomIn(RECT &rect);
    void SetDCIInfo(DCIInfo **ppInfo) { m_ppItems = ppInfo; }
 };
 
