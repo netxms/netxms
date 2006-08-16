@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.2 2006-07-21 16:22:44 victor Exp $ */
+/* $Id: net.cpp,v 1.3 2006-08-16 22:26:09 victor Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -20,13 +20,8 @@
 **
 **/
 
-#include <nms_common.h>
-#include <nms_agent.h>
-
-#include <stdio.h>
-#include <stdlib.h>
+#include "ipso.h"
 #include <sys/file.h>
-#include <sys/socket.h>
 #include <sys/sysctl.h>
 #include <sys/sockio.h>
 #include <net/if.h>
@@ -34,12 +29,15 @@
 #include <net/if_dl.h>
 #include <net/if_types.h>
 #include <net/route.h>
-//#include <net/iso88025.h>
 #include <netinet/if_ether.h>
 #include <netinet/in.h>
-//#include <ifaddrs.h>
 #include <arpa/inet.h>
 #include <net/ethernet.h>
+
+
+//
+// Internal data structures
+//
 
 typedef struct t_Addr
 {
@@ -56,50 +54,59 @@ typedef struct t_IfList
 	int index;
 } IFLIST;
 
+
+//
+// Handler for Net.IP.Forwarding parameter
+//
+
 LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue)
 {
 	int nVer = (int)pArg;
 	int nRet = SYSINFO_RC_ERROR;
-	int mib[4];
-	size_t nSize = sizeof(mib), nValSize;
-	int nVal;
+	LONG nVal;
 
 	if (nVer == 6)
 	{
 		return ERR_NOT_IMPLEMENTED;
 	}
 
-	if (sysctlnametomib("net.inet.ip.forwarding", mib, &nSize) != 0)
-	{
-		return SYSINFO_RC_ERROR;
-	}
-
-	nValSize = sizeof(nVal);
-	if (sysctl(mib, nSize, &nVal, &nValSize, NULL, 0) == 0)
-	{
-		if (nVal == 0 || nVal == 1)
-		{
-			ret_int(pValue, nVal);
-			nRet = SYSINFO_RC_SUCCESS;
-		}
-	}
+	nRet = IPSCTLGetInt("net:ip:forward:noforwarding", &nVal);
+	if (nRet == SYSINFO_RC_SUCCESS)
+		ret_int(pValue, !nVal);
 
 	return nRet;
 }
 
-LONG H_NetIfAdmStatus(char *pszParam, char *pArg, char *pValue)
+
+//
+// Handler for Net.Interface.XXX parameters
+//
+
+LONG H_NetIfStats(char *pszParam, char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
-	char szArg[512];
-/*
-   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
-
-	if (szArg[0] != 0)
+	char szName[128], szRequest[256];
+	static char *pszRqList[] =
 	{
-		if (szArg[0] >= '0' && szArg[0] <= '9')
+		"interface:%s:name",
+		"interface:%s:flags:link_avail",
+		"interface:%s:flags:up",
+		"interface:%s:stats:ibytes",
+		"interface:%s:stats:obytes",
+		"interface:%s:stats:ipackets",
+		"interface:%s:stats:opackets"
+	};
+
+	if (!NxGetParameterArg(pszParam, 1, szName, sizeof(szName)))
+		return SYSINFO_RC_UNSUPPORTED;
+
+	if (szName[0] != 0)
+	{
+		// Convert interface index to name if needed
+		if (szName[0] >= '0' && szName[0] <= '9')
 		{
 			// index
-			if (if_indextoname(atoi(szArg), szArg) != szArg)
+			if (if_indextoname(atoi(szName), szName) != szName)
 			{
 				// not found
 				nRet = SYSINFO_RC_ERROR;
@@ -108,96 +115,22 @@ LONG H_NetIfAdmStatus(char *pszParam, char *pArg, char *pValue)
 
 		if (nRet == SYSINFO_RC_SUCCESS)
 		{
-			int nSocket;
-
-			nRet = SYSINFO_RC_ERROR;
-
-			nSocket = socket(AF_INET, SOCK_DGRAM, 0);
-			if (nSocket > 0)
-			{
-				struct ifreq ifr;
-				int flags;
-
-				memset(&ifr, 0, sizeof(ifr));
-				nx_strncpy(ifr.ifr_name, szArg, sizeof(ifr.ifr_name));
-				if (ioctl(nSocket, SIOCGIFFLAGS, (caddr_t)&ifr) >= 0)
-				{
-					flags = (ifr.ifr_flags & 0xffff) | (ifr.ifr_flagshigh << 16);
-					if ((flags & IFF_UP) == IFF_UP)
-					{
-						// enabled
-						ret_int(pValue, 1);
-						nRet = SYSINFO_RC_SUCCESS;
-					}
-					else
-					{
-						ret_int(pValue, 2);
-						nRet = SYSINFO_RC_SUCCESS;
-					}
-				}
-				close(nSocket);
-			}
+			snprintf(szRequest, sizeof(szRequest), pszRqList[(int)pArg], szName);
+			nRet = IPSCTLGetString(szRequest, pValue, MAX_RESULT_LENGTH);
 		}
 	}
-
-	return nRet;
-*/
-return SYSINFO_RC_UNSUPPORETD;
-}
-
-LONG H_NetIfLink(char *pszParam, char *pArg, char *pValue)
-{
-	int nRet = SYSINFO_RC_SUCCESS;
-	char szArg[512];
-
-   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
-
-	if (szArg[0] != 0)
+	else
 	{
-		if (szArg[0] >= '0' && szArg[0] <= '9')
-		{
-			// index
-			if (if_indextoname(atoi(szArg), szArg) != szArg)
-			{
-				// not found
-				nRet = SYSINFO_RC_ERROR;
-			}
-		}
-
-		if (nRet == SYSINFO_RC_SUCCESS)
-		{
-			int nSocket;
-
-			nRet = SYSINFO_RC_ERROR;
-
-			nSocket = socket(AF_INET, SOCK_DGRAM, 0);
-			if (nSocket > 0)
-			{
-				struct ifmediareq ifmr;
-
-				memset(&ifmr, 0, sizeof(ifmr));
-				nx_strncpy(ifmr.ifm_name, szArg, sizeof(ifmr.ifm_name));
-				if (ioctl(nSocket, SIOCGIFMEDIA, (caddr_t)&ifmr) >= 0)
-				{
-					if ((ifmr.ifm_status & IFM_AVALID) == IFM_AVALID &&
-							(ifmr.ifm_status & IFM_ACTIVE) == IFM_ACTIVE)
-					{
-						ret_int(pValue, 1);
-						nRet = SYSINFO_RC_SUCCESS;
-					}
-					else
-					{
-						ret_int(pValue, 0);
-						nRet = SYSINFO_RC_SUCCESS;
-					}
-				}
-				close(nSocket);
-			}
-		}
+		nRet = SYSINFO_RC_UNSUPPORTED;
 	}
 
 	return nRet;
 }
+
+
+//
+// Handler for Net.ArpCache enum
+//
 
 LONG H_NetArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
@@ -384,150 +317,15 @@ LONG H_NetRoutingTable(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 	return nRet;
 }
 
+
+//
+// Handler for Net.InterfaceList enum
+//
+
 LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
-	struct ifaddrs *pIfAddr, *pNext;
-	if (getifaddrs(&pIfAddr) == 0)
-	{
-		char *pName = NULL;
-		int nIndex, nMask, i;
-		int nIfCount = 0;
-		IFLIST *pList = NULL;
 
-		nRet = SYSINFO_RC_SUCCESS;
-
-		pNext = pIfAddr;
-		while (pNext != NULL)
-		{
-			if (pName != pNext->ifa_name)
-			{
-				IFLIST *pTmp;
-
-				nIfCount++;
-				pTmp = (IFLIST *)realloc(pList, nIfCount * sizeof(IFLIST));
-				if (pTmp == NULL)
-				{
-					// out of memoty
-					nIfCount--;
-					nRet = SYSINFO_RC_ERROR;
-					break;
-				}
-				pList = pTmp;
-
-				memset(&(pList[nIfCount-1]), 0, sizeof(IFLIST));
-				pList[nIfCount-1].name = pNext->ifa_name;
-				pName = pNext->ifa_name;
-			}
-
-			switch (pNext->ifa_addr->sa_family)
-			{
-			case AF_INET:
-				{
-					ADDR *pTmp;
-					pList[nIfCount-1].addrCount++;
-					pTmp = (ADDR *)realloc(pList[nIfCount-1].addr,
-							pList[nIfCount-1].addrCount * sizeof(ADDR));
-					if (pTmp == NULL)
-					{
-						pList[nIfCount-1].addrCount--;
-						nRet = SYSINFO_RC_ERROR;
-						break;
-					}
-					pList[nIfCount-1].addr = pTmp;
-					pList[nIfCount-1].addr[pList[nIfCount-1].addrCount-1].ip =
-						((struct sockaddr_in *)(pNext->ifa_addr))->sin_addr;
-					pList[nIfCount-1].addr[pList[nIfCount-1].addrCount-1].mask = 
-						BitsInMask(htonl(((struct sockaddr_in *)
-										(pNext->ifa_netmask))->sin_addr.s_addr));
-				}
-				break;
-			case AF_LINK:
-				{
-					struct sockaddr_dl *pSdl;
-
-					pSdl = (struct sockaddr_dl *)pNext->ifa_addr;
-					pList[nIfCount-1].mac = (struct ether_addr *)LLADDR(pSdl);
-					pList[nIfCount-1].index = pSdl->sdl_index;
-				}
-				break;
-			}
-
-			if (nRet == SYSINFO_RC_ERROR)
-			{
-				break;
-			}
-			pNext = pNext->ifa_next;
-		}
-
-		if (nRet == SYSINFO_RC_SUCCESS)
-		{
-			for (i = 0; i < nIfCount; i++)
-			{
-				int j;
-				char szOut[1024];
-
-				if (pList[i].addrCount == 0)
-				{
-					snprintf(szOut, sizeof(szOut), "%d 0.0.0.0/0 %d %s %s",
-							pList[i].index,
-							IFTYPE_OTHER,
-							ether_ntoa(pList[i].mac),
-							pList[i].name);
-					NxAddResultString(pValue, szOut);
-				}
-				else
-				{
-					for (j = 0; j < pList[i].addrCount; j++)
-					{
-						if (j > 0)
-						{
-							snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s:%d",
-									pList[i].index,
-									inet_ntoa(pList[i].addr[j].ip),
-									pList[i].addr[j].mask,
-									IFTYPE_OTHER,
-									ether_ntoa(pList[i].mac),
-									pList[i].name,
-									j - 1);
-						}
-						else
-						{
-							snprintf(szOut, sizeof(szOut), "%d %s/%d %d %s %s",
-									pList[i].index,
-									inet_ntoa(pList[i].addr[j].ip),
-									pList[i].addr[j].mask,
-									IFTYPE_OTHER,
-									ether_ntoa(pList[i].mac),
-									pList[i].name);
-						}
-						NxAddResultString(pValue, szOut);
-					}
-				}
-			}
-		}
-
-		for (i = 0; i < nIfCount; i++)
-		{
-			if (pList[i].addr != NULL)
-			{
-				free(pList[i].addr);
-				pList[i].addr = NULL;
-				pList[i].addrCount = 0;
-			}
-		}
-		if (pList != NULL)
-		{
-			free(pList);
-			pList = NULL;
-		}
-
-		freeifaddrs(pIfAddr);
-	}
-	else
-	{
-		perror("getifaddrs()");
-	}
 	return nRet;
 }
 
@@ -535,67 +333,10 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/07/21 16:22:44  victor
+Some parameters are working
+
 Revision 1.1  2006/07/21 11:48:35  victor
 Initial commit
-
-Revision 1.10  2005/10/17 20:45:46  victor
-Fixed incorrect usage of strncpy
-
-Revision 1.9  2005/08/22 23:00:05  alk
-Net.IP.RoutingTable added
-
-Revision 1.8  2005/06/12 17:58:36  victor
-Net.Interface.AdminStatus should return 2 for disabled interfaces
-
-Revision 1.7  2005/05/30 16:31:58  alk
-fix: InterfaceList now return interfaces w/o IP address
-
-Revision 1.6  2005/05/23 20:30:28  alk
-! memory allocation for address list now in sizeof * count, fixes "mixing" lists of aliases
-
-Revision 1.5  2005/03/10 19:04:07  alk
-implemented:
-	Net.Interface.AdminStatus(*)
-	Net.Interface.Link(*)
-
-Revision 1.4  2005/03/10 12:23:56  alk
-issue #18
-alias handling on inet interfaces
-status: fixed
-
-Revision 1.3  2005/02/14 17:03:37  alk
-issue #9
-
-mask calculation chaged to BitsInMask()
-
-Revision 1.2  2005/01/23 05:08:06  alk
-+ System.CPU.Count
-+ System.Memory.Physical.*
-+ System.ProcessCount
-+ System.ProcessList
-
-Revision 1.1  2005/01/17 17:14:32  alk
-freebsd agent, incomplete (but working)
-
-Revision 1.4  2005/01/05 12:21:24  victor
-- Added wrappers for new and delete from gcc2 libraries
-- sys/stat.h and fcntl.h included in nms_common.h
-
-Revision 1.3  2004/11/25 08:01:27  victor
-Processing of interface list will be stopped on error
-
-Revision 1.2  2004/10/23 22:53:23  alk
-ArpCache: ignore incomplete entries
-
-Revision 1.1  2004/10/22 22:08:34  alk
-source restructured;
-implemented:
-	Net.IP.Forwarding
-	Net.IP6.Forwarding
-	Process.Count(*)
-	Net.ArpCache
-	Net.InterfaceList (if-type not implemented yet)
-	System.ProcessList
-
 
 */

@@ -1,8 +1,9 @@
-/* $Id: system.cpp,v 1.3 2006-07-24 06:49:48 victor Exp $ */
+/* $Id: system.cpp,v 1.4 2006-08-16 22:26:09 victor Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
+** Copyright (C) 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,14 +21,12 @@
 **
 **/
 
-#include <nms_common.h>
-#include <nms_agent.h>
+#include "ipso.h"
 #include <sys/sysctl.h>
 #include <sys/utsname.h>
 #include <vm/vm_param.h>
 #include <sys/vmmeter.h>
 #include <kvm.h>
-#include "ipso.h"
 
 
 //
@@ -312,6 +311,10 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/07/24 06:49:48  victor
+- Process and physical memory parameters are working
+- Various other changes
+
 Revision 1.2  2006/07/21 16:22:44  victor
 Some parameters are working
 

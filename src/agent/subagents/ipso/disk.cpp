@@ -1,4 +1,4 @@
-/* $Id: disk.cpp,v 1.2 2006-07-24 06:49:47 victor Exp $ */
+/* $Id: disk.cpp,v 1.3 2006-08-16 22:26:09 victor Exp $ */
 
 /* 
 ** NetXMS subagent for IPSO
@@ -21,11 +21,9 @@
 **
 **/
 
-#include <nms_common.h>
-#include <nms_agent.h>
+#include "ipso.h"
 #include <sys/param.h>
 #include <sys/mount.h>
-#include "ipso.h"
 
 LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 {
@@ -74,6 +72,10 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/07/24 06:49:47  victor
+- Process and physical memory parameters are working
+- Various other changes
+
 Revision 1.1  2006/07/21 11:48:35  victor
 Initial commit
 

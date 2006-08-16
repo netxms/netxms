@@ -21,6 +21,49 @@
 #ifndef __IPSO_H__
 #define __IPSO_H__
 
+#include <nms_common.h>
+#include <nms_util.h>
+#include <nms_agent.h>
+
+
+//
+// IPSO system functions and structures
+//
+
+struct ipsctl_value
+{
+	WORD wSize;
+	WORD wType;
+	union
+	{
+		LONG nInt;
+		INT64 nInt64;
+		char szStr[1];
+	} data;
+};
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int ipsctl_open(void);
+int ipsctl_close(int nHandle);
+int ipsctl_get(int nHandle, char *pszName, struct ipsctl_value **ppData);
+
+char *if_indextoname(unsigned int ifindex, char *ifname);
+
+#ifdef __cplusplus
+}
+#endif
+
+
+//
+// Wrappers for ipsctl_get()
+//
+
+LONG IPSCTLGetInt(char *pszName, LONG *pnValue);
+LONG IPSCTLGetString(char *pszName, char *pszValue, int nSize);
+
 
 //
 // File system stats
@@ -57,6 +100,22 @@ enum
 
 
 //
+// Network interface stats
+//
+
+enum
+{
+	NET_IF_DESCRIPTION,
+	NET_IF_LINK,
+	NET_IF_ADMIN_STATUS,
+	NET_IF_BYTES_IN,
+	NET_IF_BYTES_OUT,
+	NET_IF_PACKETS_IN,
+	NET_IF_PACKETS_OUT
+};
+
+
+//
 // Handlers
 //
 
@@ -70,5 +129,10 @@ LONG H_CpuLoad(char *, char *, char *);
 LONG H_CpuUsage(char *, char *, char *);
 LONG H_ProcessCount(char *, char *, char *);
 LONG H_MemoryInfo(char *, char *, char *);
+LONG H_NetIpForwarding(char *, char *, char *);
+LONG H_NetIfStats(char *, char *, char *);
+LONG H_NetArpCache(char *, char *, NETXMS_VALUES_LIST *);
+LONG H_NetIfList(char *, char *, NETXMS_VALUES_LIST *);
+LONG H_NetRoutingTable(char *, char *, NETXMS_VALUES_LIST *);
 
 #endif /* __IPSO_H__ */

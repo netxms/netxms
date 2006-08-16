@@ -505,6 +505,25 @@ BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName)
 
 
 //
+// Convert 6-byte MAC address to text representation
+//
+
+void LIBNETXMS_EXPORTABLE MACToStr(BYTE *pData, TCHAR *pStr)
+{
+   DWORD i;
+   TCHAR *pCurr;
+
+   for(i = 0, pCurr = pStr; i < 6; i++)
+   {
+      *pCurr++ = bin2hex(pData[i] >> 4);
+      *pCurr++ = bin2hex(pData[i] & 15);
+      *pCurr++ = _T(':');
+   }
+   *(pCurr - 1) = 0;
+}
+
+
+//
 // Convert byte array to text representation
 //
 

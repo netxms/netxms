@@ -54,6 +54,19 @@
 
 
 //
+// Wrappers for 64-bit constants
+//
+
+#ifdef __GNUC__
+#define _LL(x) (x ## LL)
+#define _ULL(x) (x ## ULL)
+#else
+#define _LL(x) (x)
+#define _ULL(x) (x)
+#endif
+
+
+//
 // Common constants
 //
 
@@ -67,7 +80,7 @@
 #define NETXMS_RSA_KEYLEN        2048
 
 #ifndef LLONG_MAX
-#define LLONG_MAX    9223372036854775807
+#define LLONG_MAX    _LL(9223372036854775807)
 #endif
 
 #ifndef LLONG_MIN
@@ -75,7 +88,7 @@
 #endif
 
 #ifndef ULLONG_MAX
-#define ULLONG_MAX   18446744073709551615
+#define ULLONG_MAX   _ULL(18446744073709551615)
 #endif
 
 

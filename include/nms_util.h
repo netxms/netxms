@@ -275,6 +275,7 @@ extern "C"
 
    void LIBNETXMS_EXPORTABLE BinToStr(BYTE *pData, DWORD dwSize, TCHAR *pStr);
    DWORD LIBNETXMS_EXPORTABLE StrToBin(TCHAR *pStr, BYTE *pData, DWORD dwSize);
+   void LIBNETXMS_EXPORTABLE MACToStr(BYTE *pData, TCHAR *pStr);
 
    void LIBNETXMS_EXPORTABLE StrStrip(TCHAR *pszStr);
    BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *string, BOOL matchCase);
