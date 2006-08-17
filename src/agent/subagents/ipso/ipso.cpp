@@ -1,4 +1,4 @@
-/* $Id: ipso.cpp,v 1.4 2006-08-16 22:26:09 victor Exp $ */
+/* $Id: ipso.cpp,v 1.5 2006-08-17 07:38:52 victor Exp $ */
 
 /* 
 ** NetXMS subagent for IPSO
@@ -190,39 +190,45 @@ LONG IPSCTLGetString(char *pszName, char *pszValue, int nSize)
 	struct ipsctl_value *pData;
 	LONG nRet = SYSINFO_RC_ERROR;
 
-        nHandle = ipsctl_open();
-        if (nHandle > 0)
-        {
-                nErr = ipsctl_get(nHandle, pszName, &pData);
-                if (nErr == 0)
-                {
-                        switch(pData->wType)
-                        {
-                                case 3:         // Integer
+	nHandle = ipsctl_open();
+	if (nHandle > 0)
+	{
+		nErr = ipsctl_get(nHandle, pszName, &pData);
+		if (nErr == 0)
+		{
+			switch(pData->wType)
+			{
+				case 3:         // Integer
 					if (pData->wSize == 8)
-                                        	ret_int64(pszValue, pData->data.nInt64);
+						ret_int64(pszValue, pData->data.nInt64);
 					else
-                                        	ret_int(pszValue, pData->data.nInt);
-                                        break;
-                                case 4:         // String
-                                        nx_strncpy(pszValue, pData->data.szStr, nSize);
-                                        break;
-                                case 7:         // MAC address ?  
-                                        MACToStr((BYTE *)pData->data.szStr, pszValue);
-                                        break; 
-                                default:        // Unknown data type
+						ret_int(pszValue, pData->data.nInt);
+					break;
+				case 4:         // String
+					nx_strncpy(pszValue, pData->data.szStr, nSize);
+					break;
+				case 7:         // MAC address ?  
+					MACToStr((BYTE *)pData->data.szStr, pszValue);
+					break; 
+				case 13:	// Kbits ?
+					if (pData->wSize == 8)
+						ret_uint64(pszValue, pData->data.qwUInt64 * 1000);
+					else
+						ret_uint(pszValue, pData->data.dwUInt * 1000);
+					break;
+				default:        // Unknown data type
 					nx_strncpy(pszValue, "<unknown type>", nSize);
-                                        break;
-                        }
+					break;
+			}
 			nRet = SYSINFO_RC_SUCCESS;
-                }
-                else
-                {
-                        if (nErr == 2)   // No such parameter
-                                nRet = SYSINFO_RC_UNSUPPORTED;
-                }
-                ipsctl_close(nHandle);
-        }
+		}
+		else
+		{
+			if (nErr == 2)   // No such parameter
+				nRet = SYSINFO_RC_UNSUPPORTED;
+		}
+		ipsctl_close(nHandle);
+	}
 	return nRet;
 }
 
@@ -231,6 +237,10 @@ LONG IPSCTLGetString(char *pszName, char *pszValue, int nSize)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/08/16 22:26:09  victor
+- Most of Net.Interface.XXX functions implemented on IPSO
+- Added function MACToStr
+
 Revision 1.3  2006/07/24 06:49:47  victor
 - Process and physical memory parameters are working
 - Various other changes

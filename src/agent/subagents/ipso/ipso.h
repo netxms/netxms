@@ -37,7 +37,9 @@ struct ipsctl_value
 	union
 	{
 		LONG nInt;
+		DWORD dwUInt;
 		INT64 nInt64;
+		QWORD qwUInt64;
 		char szStr[1];
 	} data;
 };
