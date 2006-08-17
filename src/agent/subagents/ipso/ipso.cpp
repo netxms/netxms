@@ -1,4 +1,4 @@
-/* $Id: ipso.cpp,v 1.5 2006-08-17 07:38:52 victor Exp $ */
+/* $Id: ipso.cpp,v 1.6 2006-08-17 19:22:57 victor Exp $ */
 
 /* 
 ** NetXMS subagent for IPSO
@@ -45,14 +45,20 @@ static LONG H_IPSCTL(char *pszParam, char *pArg, char *pValue)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { "System.CPU.Count",             H_CpuCount,        NULL },
-
+   { "Disk.Avail(*)",                H_DiskInfo,        (char *)DISK_AVAIL,
+			DCI_DT_UINT64,	"Available disk space on {instance}" },
+   { "Disk.AvailPerc(*)",            H_DiskInfo,        (char *)DISK_AVAIL_PERC,
+			DCI_DT_FLOAT,	"Percentage of Available disk space on {instance}" },
    { "Disk.Free(*)",                 H_DiskInfo,        (char *)DISK_FREE,
-			DCI_DT_UINT64,	"Free disk space on *" },
+			DCI_DT_UINT64,	"Free disk space on {instance}" },
+   { "Disk.FreePerc(*)",             H_DiskInfo,        (char *)DISK_FREE_PERC,
+			DCI_DT_FLOAT,	"Percentage of free disk space on {instance}" },
    { "Disk.Total(*)",                H_DiskInfo,        (char *)DISK_TOTAL,
-			DCI_DT_UINT64,	"Total disk space on *" },
+			DCI_DT_UINT64,	"Total disk space on {instance}" },
    { "Disk.Used(*)",                 H_DiskInfo,        (char *)DISK_USED,
-			DCI_DT_UINT64,	"Used disk space on *" },
+			DCI_DT_UINT64,	"Used disk space on {instance}" },
+   { "Disk.UsedPerc(*)",             H_DiskInfo,        (char *)DISK_USED_PERC,
+			DCI_DT_FLOAT,	"Percentage of used disk space on {instance}" },
 
    { "Net.IP.Forwarding",            H_NetIpForwarding, (char *)4,
 			DCI_DT_INT,		"IP forwarding status" },
@@ -74,16 +80,18 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 			DCI_DT_UINT,		"Number of output packets on interface {instance}" },
 
    { "Process.Count(*)",             H_ProcessCount,    (char *)0,
-			DCI_DT_UINT,	"" },
+			DCI_DT_UINT,	"Number of {instance} processes" },
    { "System.ProcessCount",          H_ProcessCount,    (char *)1,
-			DCI_DT_UINT,	"" },
+			DCI_DT_UINT,	"Total number of processes" },
 
+   { "System.CPU.Count",             H_CpuCount,        NULL,
+			DCI_DT_INT,		"Number of CPU in the system" },
    { "System.CPU.LoadAvg",           H_CpuLoad,         NULL,
-			DCI_DT_FLOAT,	"" },
+			DCI_DT_FLOAT,	"Average CPU load for last minute" },
    { "System.CPU.LoadAvg5",          H_CpuLoad,         NULL,
-			DCI_DT_FLOAT,	"" },
+			DCI_DT_FLOAT,	"Average CPU load for last 5 minutes" },
    { "System.CPU.LoadAvg15",         H_CpuLoad,         NULL,
-			DCI_DT_FLOAT,	"" },
+			DCI_DT_FLOAT,	"Average CPU load for last 15 minutes" },
 /*   { "System.CPU.Usage",             H_CpuUsage,        NULL,
 			DCI_DT_FLOAT,	"" },
    { "System.CPU.Usage5",            H_CpuUsage,        NULL,
@@ -93,7 +101,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.IPSCTL(*)",             H_IPSCTL,          NULL,
 			DCI_DT_STRING,	"Value of given ipsctl parameter" },
    { "System.Hostname",              H_Hostname,        NULL,
-			DCI_DT_STRING,	"" },
+			DCI_DT_STRING,	"Host name" },
    { "System.Memory.Physical.Free",  H_MemoryInfo,      (char *)PHYSICAL_FREE,
 			DCI_DT_UINT64,	"Free physical memory" },
    { "System.Memory.Physical.Total", H_MemoryInfo,      (char *)PHYSICAL_TOTAL,
@@ -113,7 +121,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.Memory.Virtual.Used",   H_MemoryInfo,      (char *)VIRTUAL_USED,
 			DCI_DT_UINT64,	"Used virtual memory" },
    { "System.Uname",                 H_Uname,           NULL,
-			DCI_DT_STRING,	"" },
+			DCI_DT_STRING,	"System uname" },
    { "System.Uptime",                H_Uptime,          NULL,
 			DCI_DT_UINT,	"System uptime" },
 };
@@ -237,6 +245,9 @@ LONG IPSCTLGetString(char *pszName, char *pszValue, int nSize)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/08/17 07:38:52  victor
+Improved handling of data returned by ipsctl_get()
+
 Revision 1.4  2006/08/16 22:26:09  victor
 - Most of Net.Interface.XXX functions implemented on IPSO
 - Added function MACToStr
