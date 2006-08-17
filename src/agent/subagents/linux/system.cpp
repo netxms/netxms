@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.8 2006-03-02 21:08:21 alk Exp $ */
+/* $Id: system.cpp,v 1.9 2006-08-17 20:10:00 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -397,7 +397,7 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 
 	MutexLock(m_cpuUsageMutex, INFINITE);
 
-	switch ((int)pArg)
+	switch (CAST_FROM_POINTER(pArg, int))
 	{
 		case 5: // last 5 min
 			count = 5 * 60;
@@ -436,6 +436,11 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/03/02 21:08:21  alk
+implemented:
+	System.CPU.Usage5
+	System.CPU.Usage15
+
 Revision 1.7  2006/03/02 12:17:05  victor
 Removed various warnings related to 64bit platforms
 

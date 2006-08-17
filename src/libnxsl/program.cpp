@@ -622,7 +622,7 @@ void NXSL_Program::Execute(void)
             m_dwSubLevel--;
             delete m_pLocals;
             m_pLocals = (NXSL_VariableSystem *)m_pCodeStack->Pop();
-            dwNext = (DWORD)m_pCodeStack->Pop();
+            dwNext = CAST_FROM_POINTER(m_pCodeStack->Pop(), DWORD);
          }
          else
          {
