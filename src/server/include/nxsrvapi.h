@@ -102,7 +102,7 @@
 
 #define MAX_DB_LOGIN          64
 #define MAX_DB_PASSWORD       64
-#define MAX_DB_NAME           32
+#define MAX_DB_NAME           256
 
 
 //
@@ -289,6 +289,8 @@ public:
    void SetEncryptionPolicy(int iPolicy) { m_iEncryptionPolicy = iPolicy; }
    void SetProxy(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,
                  int iAuthMethod = AUTH_NONE, TCHAR *pszSecret = NULL);
+   void SetPort(WORD wPort) { m_wPort = wPort; }
+   void SetAuthData(int nMethod, char *pszSecret) { m_iAuthMethod = nMethod; strncpy(m_szSecret, pszSecret, MAX_SECRET_LENGTH); }
 };
 
 

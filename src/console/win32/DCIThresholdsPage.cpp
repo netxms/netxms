@@ -11,6 +11,9 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+extern int g_nCurrentDCIDataType;
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CDCIThresholdsPage property page
 
@@ -125,7 +128,7 @@ void CDCIThresholdsPage::UpdateListEntry(int iItem, DWORD dwIndex)
          break;
    }
 
-   switch(m_pItem->iDataType)
+   switch(g_nCurrentDCIDataType)
    {
       case DCI_DT_INT:
          sprintf(szValue, "%d", m_pItem->pThresholdList[dwIndex].value.dwInt32);
@@ -173,7 +176,7 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
    dlg.m_iOperation = pThreshold->wOperation;
    dlg.m_dwArg1 = pThreshold->dwArg1;
    dlg.m_dwEventId = pThreshold->dwEvent;
-   switch(m_pItem->iDataType)
+   switch(g_nCurrentDCIDataType)
    {
       case DCI_DT_INT:
          sprintf(szBuffer, "%d", pThreshold->value.dwInt32);
@@ -205,7 +208,7 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
       pThreshold->wFunction = (WORD)dlg.m_iFunction;
       pThreshold->wOperation = (WORD)dlg.m_iOperation;
       pThreshold->dwEvent = dlg.m_dwEventId;
-      switch(m_pItem->iDataType)
+      switch(g_nCurrentDCIDataType)
       {
          case DCI_DT_INT:
             pThreshold->value.dwInt32 = strtol((LPCTSTR)dlg.m_strValue, NULL, 0);

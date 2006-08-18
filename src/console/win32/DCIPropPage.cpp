@@ -14,6 +14,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+int g_nCurrentDCIDataType;
+
 /////////////////////////////////////////////////////////////////////////////
 // CDCIPropPage dialog
 
@@ -72,6 +74,7 @@ BEGIN_MESSAGE_MAP(CDCIPropPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_BUTTON_SELECT, OnButtonSelect)
 	ON_CBN_SELCHANGE(IDC_COMBO_ORIGIN, OnSelchangeComboOrigin)
 	ON_BN_CLICKED(IDC_CHECK_SCHEDULE, OnCheckSchedule)
+	ON_CBN_SELCHANGE(IDC_COMBO_DT, OnSelchangeComboDt)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -98,6 +101,7 @@ BOOL CDCIPropPage::OnInitDialog()
    for(i = 0; i < 6; i++)
       m_wndTypeList.AddString(g_pszItemDataType[i]);
    m_wndTypeList.SelectString(-1, g_pszItemDataType[m_iDataType]);
+   g_nCurrentDCIDataType = m_iDataType;
 
    if (m_bAdvSchedule)
       EnablePollingInterval(FALSE);
@@ -140,7 +144,22 @@ void CDCIPropPage::OnSelchangeComboOrigin()
 
    m_wndOriginList.GetWindowText(szBuffer, 256);
    for(m_iOrigin = 0; m_iOrigin < 3; m_iOrigin++)
-      if (!strcmp(szBuffer, g_pszItemOriginLong[m_iOrigin]))
+      if (!_tcscmp(szBuffer, g_pszItemOriginLong[m_iOrigin]))
+         break;
+}
+
+
+//
+// Handler for selection change in data type combo box
+//
+
+void CDCIPropPage::OnSelchangeComboDt() 
+{
+   TCHAR szBuffer[256];
+
+   m_wndTypeList.GetWindowText(szBuffer, 256);
+   for(g_nCurrentDCIDataType = 0; g_nCurrentDCIDataType < 6; g_nCurrentDCIDataType++)
+      if (!_tcscmp(szBuffer, g_pszItemDataType[g_nCurrentDCIDataType]))
          break;
 }
 
@@ -175,6 +194,7 @@ void CDCIPropPage::SelectSNMPItem(void)
       dlg.m_strOID += szBuffer;
       m_wndEditName.SetWindowText(dlg.m_strOID);
       m_wndTypeList.SelectString(-1, g_pszItemDataType[dlg.m_iDataType]);
+      g_nCurrentDCIDataType = dlg.m_iDataType;
       m_wndEditName.SetFocus();
    }
 }
@@ -196,6 +216,7 @@ void CDCIPropPage::SelectInternalItem(void)
       m_wndEditName.SetWindowText(dlg.m_szItemName);
       SetDlgItemText(IDC_EDIT_DESCRIPTION, dlg.m_szItemDescription);
       m_wndTypeList.SelectString(-1, g_pszItemDataType[dlg.m_iDataType]);
+      g_nCurrentDCIDataType = dlg.m_iDataType;
       m_wndEditName.SetFocus();
 
       // Replace (*) in parameter's name
@@ -254,6 +275,7 @@ void CDCIPropPage::SelectAgentItem(void)
          SetDlgItemText(IDC_EDIT_DESCRIPTION,
                         m_pParamList[dlg.m_dwSelectionIndex].szDescription);
          m_wndTypeList.SelectString(-1, g_pszItemDataType[m_pParamList[dlg.m_dwSelectionIndex].iDataType]);
+         g_nCurrentDCIDataType = m_pParamList[dlg.m_dwSelectionIndex].iDataType;
          m_wndEditName.SetFocus();
 
          // Replace (*) in parameter's name

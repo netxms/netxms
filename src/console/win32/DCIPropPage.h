@@ -61,6 +61,7 @@ protected:
 	afx_msg void OnButtonSelect();
 	afx_msg void OnSelchangeComboOrigin();
 	afx_msg void OnCheckSchedule();
+	afx_msg void OnSelchangeComboDt();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
