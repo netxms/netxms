@@ -1,4 +1,4 @@
-/* $Id: ipso.cpp,v 1.6 2006-08-17 19:22:57 victor Exp $ */
+/* $Id: ipso.cpp,v 1.7 2006-08-18 08:37:46 victor Exp $ */
 
 /* 
 ** NetXMS subagent for IPSO
@@ -206,11 +206,11 @@ LONG IPSCTLGetString(char *pszName, char *pszValue, int nSize)
 		{
 			switch(pData->wType)
 			{
-				case 3:         // Integer
+				case 3:         // Integer (unsigned?)
 					if (pData->wSize == 8)
-						ret_int64(pszValue, pData->data.nInt64);
+						ret_uint64(pszValue, pData->data.qwUInt64);
 					else
-						ret_int(pszValue, pData->data.nInt);
+						ret_uint(pszValue, pData->data.dwUInt);
 					break;
 				case 4:         // String
 					nx_strncpy(pszValue, pData->data.szStr, nSize);
@@ -245,6 +245,9 @@ LONG IPSCTLGetString(char *pszName, char *pszValue, int nSize)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/08/17 19:22:57  victor
+Minor changes
+
 Revision 1.5  2006/08/17 07:38:52  victor
 Improved handling of data returned by ipsctl_get()
 
