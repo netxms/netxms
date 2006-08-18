@@ -814,7 +814,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession,
 
    // Wait for response. Creating node object can include polling,
    // which can take a minute or even more in worst cases
-   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 120000);
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 300000);
    if (pResponse != NULL)
    {
       dwRetCode = pResponse->GetVariableLong(VID_RCC);
@@ -917,7 +917,9 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteObject(NXC_SESSION hSession, DWORD dwObject)
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    // Wait for reply
-   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+   // For node objects, deletion may take long time if object
+   // is currently polled
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId, 300000);
 }
 
 
