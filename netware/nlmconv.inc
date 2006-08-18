@@ -3,5 +3,5 @@ INPUT c:/nwsdk/libc/imports/libcpre.gcc.o   # clib startup code
 IMPORT @c:/nwsdk/libc/imports/libc.imp
 IMPORT @c:/nwsdk/libc/imports/netware.imp
 
-VERSION 0,2,12
+VERSION 0,2,13
 COPYRIGHT "Copyright (c) 2004, 2005, 2006 NetXMS Team"
