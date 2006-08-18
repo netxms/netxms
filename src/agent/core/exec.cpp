@@ -36,7 +36,7 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
    char *pszCmdLine, *sptr;
    DWORD i, dwSize, dwRetCode = ERR_SUCCESS;
 
-   DebugPrintf("EXEC: Expanding command \"%s\"", pszCommand);
+   DebugPrintf(INVALID_INDEX, "EXEC: Expanding command \"%s\"", pszCommand);
 
    // Substitute $1 .. $9 with actual arguments
    if (pArgs != NULL)
@@ -81,7 +81,7 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
       pszCmdLine = pszCommand;
    }
 
-   DebugPrintf("EXEC: Executing \"%s\"", pszCmdLine);
+   DebugPrintf(INVALID_INDEX, "EXEC: Executing \"%s\"", pszCmdLine);
 #if defined(_WIN32)
    STARTUPINFO si;
    PROCESS_INFORMATION pi;

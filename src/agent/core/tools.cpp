@@ -45,7 +45,7 @@ void ConsolePrintf(char *pszFormat, ...)
 // Print debug messages
 //
 
-void DebugPrintf(char *pszFormat, ...)
+void DebugPrintf(DWORD dwSessionId, char *pszFormat, ...)
 {
    if (g_dwFlags & AF_DEBUG)
    {
@@ -56,7 +56,10 @@ void DebugPrintf(char *pszFormat, ...)
       _vsntprintf(szBuffer, 1024, pszFormat, args);
       va_end(args);
       
-      WriteLog(MSG_DEBUG, EVENTLOG_INFORMATION_TYPE, "s", szBuffer);
+      if (dwSessionId != INVALID_INDEX)
+         WriteLog(MSG_DEBUG_SESSION, EVENTLOG_INFORMATION_TYPE, "ds", dwSessionId, szBuffer);
+      else
+         WriteLog(MSG_DEBUG, EVENTLOG_INFORMATION_TYPE, "s", szBuffer);
    }
 }
 

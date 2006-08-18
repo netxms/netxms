@@ -100,7 +100,7 @@ DWORD ExecAction(char *pszAction, NETXMS_VALUES_LIST *pArgs)
    for(i = 0; i < m_dwNumActions; i++)
       if (!stricmp(m_pActionList[i].szName, pszAction))
       {
-         DebugPrintf("Executing action %s of type %d", pszAction, m_pActionList[i].iType);
+         DebugPrintf(INVALID_INDEX, "Executing action %s of type %d", pszAction, m_pActionList[i].iType);
          switch(m_pActionList[i].iType)
          {
             case AGENT_ACTION_EXEC:

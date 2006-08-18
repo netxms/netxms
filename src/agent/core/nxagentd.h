@@ -287,7 +287,7 @@ void InitLog(void);
 void CloseLog(void);
 
 void ConsolePrintf(char *pszFormat, ...);
-void DebugPrintf(char *pszFormat, ...);
+void DebugPrintf(DWORD dwSessionId, char *pszFormat, ...);
 
 void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
 
@@ -298,8 +298,8 @@ void AddParameter(char *szName, LONG (* fpHandler)(char *,char *,char *), char *
                   int iDataType, char *pszDescription);
 void AddEnum(char *szName, LONG (* fpHandler)(char *,char *,NETXMS_VALUES_LIST *), char *pArg);
 BOOL AddExternalParameter(char *pszCfgLine);
-DWORD GetParameterValue(char *pszParam, char *pszValue);
-DWORD GetEnumValue(char *pszParam, NETXMS_VALUES_LIST *pValue);
+DWORD GetParameterValue(DWORD dwSessionId, char *pszParam, char *pszValue);
+DWORD GetEnumValue(DWORD dwSessionId, char *pszParam, NETXMS_VALUES_LIST *pValue);
 void GetParameterList(CSCPMessage *pMsg);
 
 BOOL LoadSubAgent(char *szModuleName);

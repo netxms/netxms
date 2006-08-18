@@ -368,12 +368,12 @@ BOOL AddExternalParameter(char *pszCfgLine)
 // Get parameter's value
 //
 
-DWORD GetParameterValue(char *pszParam, char *pszValue)
+DWORD GetParameterValue(DWORD dwSessionId, char *pszParam, char *pszValue)
 {
    int i, rc;
    DWORD dwErrorCode;
 
-   DebugPrintf("Requesting parameter \"%s\"", pszParam);
+   DebugPrintf(dwSessionId, "Requesting parameter \"%s\"", pszParam);
    for(i = 0; i < m_iNumParams; i++)
       if (MatchString(m_pParamList[i].szName, pszParam, FALSE))
       {
@@ -413,12 +413,12 @@ DWORD GetParameterValue(char *pszParam, char *pszValue)
 // Get parameter's value
 //
 
-DWORD GetEnumValue(char *pszParam, NETXMS_VALUES_LIST *pValue)
+DWORD GetEnumValue(DWORD dwSessionId, char *pszParam, NETXMS_VALUES_LIST *pValue)
 {
    int i, rc;
    DWORD dwErrorCode;
 
-   DebugPrintf("Requesting enum \"%s\"", pszParam);
+   DebugPrintf(dwSessionId, "Requesting enum \"%s\"", pszParam);
    for(i = 0; i < m_iNumEnums; i++)
       if (MatchString(m_pEnumList[i].szName, pszParam, FALSE))
       {

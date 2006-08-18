@@ -206,4 +206,10 @@ Language=English
 Process "%1" killed because of execution timeout
 .
 
+MessageId=
+SymbolicName=MSG_DEBUG_SESSION
+Language=English
+Debug: {%1} %2
+.
+
 ;#endif

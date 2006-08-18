@@ -180,12 +180,12 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 #endif
 
          iNumErrors = 0;     // Reset consecutive errors counter
-         DebugPrintf("Incoming connection from %s", IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer));
+         DebugPrintf(INVALID_INDEX, "Incoming connection from %s", IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer));
 
          if (IsValidServerAddr(servAddr.sin_addr.s_addr, &bMasterServer, &bControlServer))
          {
             g_dwAcceptedConnections++;
-            DebugPrintf("Connection from %s accepted", szBuffer);
+            DebugPrintf(INVALID_INDEX, "Connection from %s accepted", szBuffer);
 
             // Create new session structure and threads
             pSession = new CommSession(hClientSocket, ntohl(servAddr.sin_addr.s_addr), 
@@ -204,7 +204,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
             g_dwRejectedConnections++;
             shutdown(hClientSocket, SHUT_RDWR);
             closesocket(hClientSocket);
-            DebugPrintf("Connection from %s rejected", szBuffer);
+            DebugPrintf(INVALID_INDEX, "Connection from %s rejected", szBuffer);
          }
       }
       else if (nRet == -1)
@@ -232,7 +232,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    MutexDestroy(m_hSessionListAccess);
    free(m_pSessionList);
    closesocket(hSocket);
-   DebugPrintf("Listener thread terminated");
+   DebugPrintf(INVALID_INDEX, "Listener thread terminated");
    return THREAD_OK;
 }
 
@@ -274,7 +274,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
 
    ThreadSleep(1);
    MutexUnlock(m_mutexWatchdogActive);
-   DebugPrintf("Session Watchdog thread terminated");
+   DebugPrintf(INVALID_INDEX, "Session Watchdog thread terminated");
 
    return THREAD_OK;
 }

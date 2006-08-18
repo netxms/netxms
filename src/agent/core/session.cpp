@@ -198,7 +198,7 @@ void CommSession::ReadThread(void)
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(pRawMsg->dwSize) != iErr)
       {
-         DebugPrintf("Actual message size doesn't match wSize value (%d,%d)", iErr, ntohl(pRawMsg->dwSize));
+         DebugPrintf(m_dwIndex, "Actual message size doesn't match wSize value (%d,%d)", iErr, ntohl(pRawMsg->dwSize));
          continue;   // Bad packet, wait for next
       }
 
@@ -219,7 +219,7 @@ void CommSession::ReadThread(void)
             pRawMsg->dwId = ntohl(pRawMsg->dwId);
             pRawMsg->wCode = ntohs(pRawMsg->wCode);
             pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
-            DebugPrintf("Received raw message %s", CSCPMessageCodeName(pRawMsg->wCode, szBuffer));
+            DebugPrintf(m_dwIndex, "Received raw message %s", CSCPMessageCodeName(pRawMsg->wCode, szBuffer));
 
             if (pRawMsg->wCode == CMD_FILE_DATA)
             {
@@ -262,7 +262,7 @@ void CommSession::ReadThread(void)
             pMsg = new CSCPMessage(pRawMsg);
             if (pMsg->GetCode() == CMD_REQUEST_SESSION_KEY)
             {
-               DebugPrintf("Received message %s", CSCPMessageCodeName(pMsg->GetCode(), szBuffer));
+               DebugPrintf(m_dwIndex, "Received message %s", CSCPMessageCodeName(pMsg->GetCode(), szBuffer));
                if (m_pCtx == NULL)
                {
                   CSCPMessage *pResponse;
@@ -299,7 +299,7 @@ void CommSession::ReadThread(void)
    if (m_bProxyConnection)
       ThreadJoin(m_hProxyReadThread);
 
-   DebugPrintf("Session with %s closed", IpToStr(m_dwHostAddr, szBuffer));
+   DebugPrintf(m_dwIndex, "Session with %s closed", IpToStr(m_dwHostAddr, szBuffer));
 }
 
 
@@ -312,7 +312,7 @@ BOOL CommSession::SendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pC
    BOOL bResult = TRUE;
    char szBuffer[128];
 
-   DebugPrintf("Sending message %s", CSCPMessageCodeName(ntohs(pMsg->wCode), szBuffer));
+   DebugPrintf(m_dwIndex, "Sending message %s", CSCPMessageCodeName(ntohs(pMsg->wCode), szBuffer));
    if ((pCtx != NULL) && (pCtx != PROXY_ENCRYPTION_CTX))
    {
       CSCP_ENCRYPTED_MESSAGE *pEnMsg;
@@ -378,7 +378,7 @@ void CommSession::ProcessingThread(void)
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
       dwCommand = pMsg->GetCode();
-      DebugPrintf("Received message %s", CSCPMessageCodeName((WORD)dwCommand, szBuffer));
+      DebugPrintf(m_dwIndex, "Received message %s", CSCPMessageCodeName((WORD)dwCommand, szBuffer));
 
       // Prepare response message
       msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -538,7 +538,7 @@ void CommSession::GetParameter(CSCPMessage *pRequest, CSCPMessage *pMsg)
    DWORD dwErrorCode;
 
    pRequest->GetVariableStr(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
-   dwErrorCode = GetParameterValue(szParameter, szValue);
+   dwErrorCode = GetParameterValue(m_dwIndex, szParameter, szValue);
    pMsg->SetVariable(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
       pMsg->SetVariable(VID_VALUE, szValue);
@@ -559,7 +559,7 @@ void CommSession::GetList(CSCPMessage *pRequest, CSCPMessage *pMsg)
    value.dwNumStrings = 0;
    value.ppStringList = NULL;
 
-   dwErrorCode = GetEnumValue(szParameter, &value);
+   dwErrorCode = GetEnumValue(m_dwIndex, szParameter, &value);
    pMsg->SetVariable(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
    {
@@ -621,7 +621,7 @@ void CommSession::RecvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
    {
       szFileName[0] = 0;
       pRequest->GetVariableStr(VID_FILE_NAME, szFileName, MAX_PATH);
-      DebugPrintf("Preparing for receiving file \"%s\"", szFileName);
+      DebugPrintf(m_dwIndex, "Preparing for receiving file \"%s\"", szFileName);
       BuildFullPath(szFileName, szFullPath);
 
       // Check if for some reason we have already opened file
@@ -631,11 +631,11 @@ void CommSession::RecvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
       }
       else
       {
-         DebugPrintf("Writing to local file \"%s\"", szFullPath);
+         DebugPrintf(m_dwIndex, "Writing to local file \"%s\"", szFullPath);
          m_hCurrFile = _topen(szFullPath, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, 0600);
          if (m_hCurrFile == -1)
          {
-            DebugPrintf("Error opening file for writing: %s", strerror(errno));
+            DebugPrintf(m_dwIndex, "Error opening file for writing: %s", strerror(errno));
             pMsg->SetVariable(VID_RCC, ERR_IO_FAILURE);
          }
          else
@@ -729,7 +729,7 @@ void CommSession::UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
          }
          else
          {
-            DebugPrintf("Error opening file %s for writing: %s",
+            DebugPrintf(m_dwIndex, "Error opening file %s for writing: %s",
                         g_szConfigFile, strerror(errno));
             pMsg->SetVariable(VID_RCC, ERR_IO_FAILURE);
          }
@@ -849,7 +849,7 @@ DWORD CommSession::SetupProxyConnection(CSCPMessage *pRequest)
             SendRawMessage(pRawMsg, pSavedCtx);
             DestroyEncryptionContext(pSavedCtx);
 
-            DebugPrintf("Established proxy connection to %s:%d", IpToStr(dwAddr, szBuffer), wPort);
+            DebugPrintf(m_dwIndex, "Established proxy connection to %s:%d", IpToStr(dwAddr, szBuffer), wPort);
          }
          else
          {
