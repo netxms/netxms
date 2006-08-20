@@ -37,6 +37,7 @@
 
 #undef GROUP_FLAG
 #include <mysql.h>
+#include <errmsg.h>
 
 
 //

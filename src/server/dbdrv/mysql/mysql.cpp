@@ -46,23 +46,35 @@ extern "C" void EXPORT DrvUnload(void)
 // Connect to database
 //
 
-extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char *szPassword, char *szDatabase)
+extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char *szPassword,
+										   char *szDatabase)
 {
 	MYSQL *pMySQL;
 	MYSQL_CONN *pConn;
+	char *pHost = szHost;
+	char *pSocket = NULL;
 	
 	pMySQL = mysql_init(NULL);
 	if (pMySQL == NULL)
+	{
 		return NULL;
-	
+	}
+
+	pSocket = strstr(szHost, "socket:");
+	if (pSocket != NULL)
+	{
+		pHost = NULL;
+		pSocket += 7;
+	}
+
 	if (!mysql_real_connect(
 		pMySQL, // MYSQL *
-		szHost, // host
+		pHost, // host
 		szLogin[0] == 0 ? NULL : szLogin, // user
 		(szPassword[0] == 0 || szLogin[0] == 0) ? NULL : szPassword, // pass
 		szDatabase, // DB Name
 		0, // use default port
-		NULL, // char * - unix socket
+		pSocket, // char * - unix socket
 		0 // flags
 		))
 	{
@@ -97,14 +109,31 @@ extern "C" void EXPORT DrvDisconnect(MYSQL_CONN *pConn)
 // Perform non-SELECT query
 //
 
-extern "C" BOOL EXPORT DrvQuery(MYSQL_CONN *pConn, char *szQuery)
+extern "C" DWORD EXPORT DrvQuery(MYSQL_CONN *pConn, char *szQuery)
 {
-	BOOL bResult;
-	
+	DWORD dwRet = DBERR_INVALID_HANDLE;
+
 	MutexLock(pConn->mutexQueryLock, INFINITE);
-	bResult = (mysql_query(pConn->pMySQL, szQuery) == 0);
+	if (mysql_query(pConn->pMySQL, szQuery) == 0)
+	{
+		dwRet = DBERR_SUCCESS;
+	}
+	else
+	{
+		int nErr = mysql_errno(pConn->pMySQL);
+		if (nErr == CR_SERVER_LOST || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
+		{
+			dwRet = DBERR_CONNECTION_LOST;
+		}
+		else
+		{
+			dwRet = DBERR_OTHER_ERROR;
+		}
+	}
+
 	MutexUnlock(pConn->mutexQueryLock);
-	return bResult;
+
+	return dwRet;
 }
 
 
@@ -112,14 +141,37 @@ extern "C" BOOL EXPORT DrvQuery(MYSQL_CONN *pConn, char *szQuery)
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, char *szQuery)
+extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, char *szQuery, DWORD *pdwError)
 {
 	DB_RESULT pResult = NULL;
 	
+	if (pConn == NULL)
+	{
+		*pdwError = DBERR_INVALID_HANDLE;
+		return NULL;
+	}
+
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 	if (mysql_query(pConn->pMySQL, szQuery) == 0)
+	{
 		pResult = (DB_RESULT)mysql_store_result(pConn->pMySQL);
+		*pdwError = DBERR_SUCCESS;
+	}
+	else
+	{
+		int nErr = mysql_errno(pConn->pMySQL);
+		if (nErr == CR_SERVER_LOST || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
+		{
+			*pdwError = DBERR_CONNECTION_LOST;
+		}
+		else
+		{
+			*pdwError = DBERR_OTHER_ERROR;
+		}
+	}
+
 	MutexUnlock(pConn->mutexQueryLock);
+	
 	return pResult;
 }
 
@@ -164,10 +216,16 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, char *szQuery)
+extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, char *szQuery, DWORD *pdwError)
 {
 	MYSQL_ASYNC_RESULT *pResult = NULL;
 	
+	if (pConn == NULL)
+	{
+		*pdwError = DBERR_INVALID_HANDLE;
+		return NULL;
+	}
+
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 	if (mysql_query(pConn->pMySQL, szQuery) == 0)
 	{
@@ -186,9 +244,27 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, char *szQuer
 			free(pResult);
 			pResult = NULL;
 		}
+
+		*pdwError = DBERR_SUCCESS;
 	}
+	else
+	{
+		int nErr = mysql_errno(pConn->pMySQL);
+		if (nErr == CR_SERVER_LOST || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
+		{
+			*pdwError = DBERR_CONNECTION_LOST;
+		}
+		else
+		{
+			*pdwError = DBERR_OTHER_ERROR;
+		}
+	}
+
 	if (pResult == NULL)
+	{
 		MutexUnlock(pConn->mutexQueryLock);
+	}
+
 	return pResult;
 }
 
