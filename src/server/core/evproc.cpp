@@ -73,7 +73,6 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
                   pEvent->SourceId(), pEvent->Severity(), pszMsg,
                   pEvent->GetRootId());
          free(pszMsg);
-//         DBQuery(g_hCoreDB, szQuery);
          QueueSQLRequest(szQuery);
       }
 

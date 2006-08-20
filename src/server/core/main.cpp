@@ -40,6 +40,19 @@
 
 
 //
+// Externals
+//
+
+extern Queue g_statusPollQueue;
+extern Queue g_configPollQueue;
+extern Queue g_routePollQueue;
+extern Queue g_discoveryPollQueue;
+extern Queue g_nodePollerQueue;
+extern Queue g_conditionPollerQueue;
+extern Queue *g_pItemQueue;
+
+
+//
 // Thread functions
 //
 
@@ -803,6 +816,8 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_OBJECTS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_LOCKED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_MULTIPLE_DB_CONN));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_RECONNECT));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(pCtx, "\n");
       }
@@ -867,6 +882,19 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
       else if (IsCommand("POLLERS", szBuffer, 1))
       {
          ShowPollerState(pCtx);
+      }
+      else if (IsCommand("QUEUES", szBuffer, 1))
+      {
+         ShowQueueStats(pCtx, &g_conditionPollerQueue, "Condition poller");
+         ShowQueueStats(pCtx, &g_configPollQueue, "Configuration poller");
+         ShowQueueStats(pCtx, g_pItemQueue, "Data collector");
+         ShowQueueStats(pCtx, g_pLazyRequestQueue, "Database writer");
+         ShowQueueStats(pCtx, g_pEventQueue, "Event processor");
+         ShowQueueStats(pCtx, &g_discoveryPollQueue, "Network discovery poller");
+         ShowQueueStats(pCtx, &g_nodePollerQueue, "Node poller");
+         ShowQueueStats(pCtx, &g_routePollQueue, "Routing table poller");
+         ShowQueueStats(pCtx, &g_statusPollQueue, "Status poller");
+         ConsolePrintf(pCtx, "\n");
       }
       else if (IsCommand("ROUTING-TABLE", szBuffer, 1))
       {
@@ -1023,6 +1051,7 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
                           "   show mutex                - Display mutex status\n"
                           "   show objects              - Dump network objects to screen\n"
                           "   show pollers              - Show poller threads state information\n"
+                          "   show queues               - Show internal queues statistics\n"
                           "   show routing-table <node> - Show cached routing table for node\n"
                           "   show sessions             - Show active client sessions\n"
                           "   show stats                - Show server statistics\n"

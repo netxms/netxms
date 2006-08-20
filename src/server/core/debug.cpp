@@ -142,6 +142,17 @@ void ShowServerStats(CONSOLE_CTX pCtx)
 
 
 //
+// Show queue stats
+//
+
+void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, char *pszName)
+{
+   if (pQueue != NULL)
+      ConsolePrintf(pCtx, "%-32s : %d\n", pszName, pQueue->Size());
+}
+
+
+//
 // Write process coredump
 //
 

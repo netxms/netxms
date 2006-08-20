@@ -656,6 +656,7 @@ void DumpSessions(CONSOLE_CTX pCtx);
 void ShowPollerState(CONSOLE_CTX pCtx);
 void SetPollerInfo(int nIdx, char *pszMsg);
 void ShowServerStats(CONSOLE_CTX pCtx);
+void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, char *pszName);
 void DumpProcess(void);
 
 

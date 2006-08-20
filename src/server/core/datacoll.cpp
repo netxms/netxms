@@ -47,13 +47,7 @@ double g_dAvgDBWriterQueueSize = 0;
 double g_dAvgStatusPollerQueueSize = 0;
 double g_dAvgConfigPollerQueueSize = 0;
 DWORD g_dwAvgDCIQueuingTime = 0;
-
-
-//
-// Static data
-//
-
-static Queue *m_pItemQueue = NULL;
+Queue *g_pItemQueue = NULL;
 
 
 //
@@ -72,7 +66,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 
    while(!ShutdownInProgress())
    {
-      pItem = (DCItem *)m_pItemQueue->GetOrBlock();
+      pItem = (DCItem *)g_pItemQueue->GetOrBlock();
       pNode = (Node *)pItem->RelatedNode();
       if (pNode != NULL)
       {
@@ -151,7 +145,7 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
       RWLockReadLock(g_rwlockNodeIndex, INFINITE);
       qwStart = GetCurrentTimeMs();
       for(i = 0; i < g_dwNodeAddrIndexSize; i++)
-         ((Node *)g_pNodeIndexByAddr[i].pObject)->QueueItemsForPolling(m_pItemQueue);
+         ((Node *)g_pNodeIndexByAddr[i].pObject)->QueueItemsForPolling(g_pItemQueue);
       RWLockUnlock(g_rwlockNodeIndex);
 
       // Save last poll time
@@ -195,7 +189,7 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
          break;      // Shutdown has arrived
 
       // Get current values
-      dwPollerQS[dwCurrPos] = m_pItemQueue->Size();
+      dwPollerQS[dwCurrPos] = g_pItemQueue->Size();
       dwDBWriterQS[dwCurrPos] = g_pLazyRequestQueue->Size();
       dwStatusPollerQS[dwCurrPos] = g_statusPollQueue.Size();
       dwConfigPollerQS[dwCurrPos] = g_configPollQueue.Size();
@@ -229,7 +223,7 @@ BOOL InitDataCollector(void)
    int i, iNumCollectors;
 
    // Create collection requests queue
-   m_pItemQueue = new Queue(4096, 256);
+   g_pItemQueue = new Queue(4096, 256);
 
    // Start data collection threads
    iNumCollectors = ConfigReadInt("NumberOfDataCollectors", 10);
