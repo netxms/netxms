@@ -31,6 +31,40 @@
 
 
 //
+// Convert ODBC state to NetXMS database error code
+//
+
+static DWORD StateToErrorCode(SQLSMALLINT nHandleType, SQLHANDLE hHandle)
+{
+   SQLRETURN nRet;
+   SQLSMALLINT nChars;
+   DWORD dwError;
+   char szState[16];
+
+   nRet = SQLGetDiagField(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, szState, 16, &nChars);
+   if (nRet == SQL_SUCCESS)
+   {
+      if ((!strcmp(szState, "08003")) ||     // Connection does not exist
+          (!strcmp(szState, "08S01")) ||     // Communication link failure
+          (!strcmp(szState, "HYT00")) ||     // Timeout expired
+          (!strcmp(szState, "HYT01")))       // Connection timeout expired
+      {
+         dwError = DBERR_CONNECTION_LOST;
+      }
+      else
+      {
+         dwError = DBERR_OTHER_ERROR;
+      }
+   }
+   else
+   {
+      dwError = DBERR_OTHER_ERROR;
+   }
+   return dwError;
+}
+
+
+//
 // Initialize driver
 //
 
@@ -51,9 +85,11 @@ extern "C" void EXPORT DrvUnload(void)
 
 //
 // Connect to database
+// pszHost should be set to ODBC source name, and pszDatabase is ignored
 //
 
-extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char *szPassword, char *szDatabase)
+extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
+                                           char *pszPassword, char *pszDatabase)
 {
    long iResult;
    ODBCDRV_CONN *pConn;
@@ -79,8 +115,8 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char *sz
 	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_CONNECTION_TIMEOUT, (SQLPOINTER *)30, 0);
 
 	// Connect to the datasource 
-	iResult = SQLConnect(pConn->sqlConn, (SQLCHAR *)szHost, SQL_NTS,
-                        (SQLCHAR *)szLogin, SQL_NTS, (SQLCHAR *)szPassword, SQL_NTS);
+	iResult = SQLConnect(pConn->sqlConn, (SQLCHAR *)pszHost, SQL_NTS,
+                        (SQLCHAR *)pszLogin, SQL_NTS, (SQLCHAR *)pszPassword, SQL_NTS);
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
       goto connect_failure_2;
 
@@ -144,13 +180,13 @@ extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, char *szQuery)
       }
       else
       {
-         dwResult = ProcessError(SQL_HANDLE_STMT, pConn->sqlStatement);
+         dwResult = StateToErrorCode(SQL_HANDLE_STMT, pConn->sqlStatement);
       }
       SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
    }
    else
    {
-      dwResult = ProcessError(SQL_HANDLE_DBC, pConn->sqlConn);
+      dwResult = StateToErrorCode(SQL_HANDLE_DBC, pConn->sqlConn);
    }
 
    MutexUnlock(pConn->mutexQuery);
@@ -162,7 +198,7 @@ extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, char *szQuery)
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, char *szQuery)
+extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, char *szQuery, DWORD *pdwError)
 {
    long i, iResult, iCurrValue;
    ODBCDRV_QUERY_RESULT *pResult = NULL;
@@ -206,8 +242,17 @@ extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, char *szQuery)
                pResult->pValues[iCurrValue++] = strdup((const char *)pDataBuffer);
             }
          }
+         *pdwError = DBERR_SUCCESS;
+      }
+      else
+      {
+         *pdwError = StateToErrorCode(SQL_HANDLE_STMT, pConn->sqlStatement);
       }
       SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
+   }
+   else
+   {
+      *pdwError = StateToErrorCode(SQL_HANDLE_DBC, pConn->sqlConn);
    }
 
    MutexUnlock(pConn->mutexQuery);
@@ -267,7 +312,8 @@ extern "C" void EXPORT DrvFreeResult(ODBCDRV_QUERY_RESULT *pResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, char *szQuery)
+extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, char *szQuery,
+                                                 DWORD *pdwError)
 {
    ODBCDRV_ASYNC_QUERY_RESULT *pResult = NULL;
    long iResult;
@@ -289,12 +335,18 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, char *szQu
          pResult->iNumCols = wNumCols;
          pResult->pConn = pConn;
          pResult->bNoMoreRows = FALSE;
+         *pdwError = DBERR_SUCCESS;
       }
       else
       {
+         *pdwError = StateToErrorCode(SQL_HANDLE_STMT, pConn->sqlStatement);
          // Free statement handle if query failed
          SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
       }
+   }
+   else
+   {
+      *pdwError = StateToErrorCode(SQL_HANDLE_DBC, pConn->sqlConn);
    }
 
    if (pResult == NULL) // Unlock mutex if query has failed
