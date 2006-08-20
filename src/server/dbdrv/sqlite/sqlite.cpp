@@ -206,14 +206,14 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 // Perform non-SELECT query
 //
 
-extern "C" BOOL EXPORT DrvQuery(SQLITE_CONN *pConn, char *pszQuery)
+extern "C" DWORD EXPORT DrvQuery(SQLITE_CONN *pConn, char *pszQuery)
 {
    BOOL bResult;
 
    MutexLock(pConn->mutexQueryLock, INFINITE);
    bResult = (ExecCommand(pConn, SQLITE_DRV_QUERY, pszQuery) == SQLITE_OK);
    MutexUnlock(pConn->mutexQueryLock);
-   return bResult;
+   return bResult ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 
@@ -221,7 +221,7 @@ extern "C" BOOL EXPORT DrvQuery(SQLITE_CONN *pConn, char *pszQuery)
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, char *pszQuery)
+extern "C" DB_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, char *pszQuery, DWORD *pdwError)
 {
    DB_RESULT pResult = NULL;
 
@@ -231,6 +231,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, char *pszQuery)
       pResult = hConn->pResult;
    }
    MutexUnlock(hConn->mutexQueryLock);
+   *pdwError = (pResult != NULL) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
    return pResult;
 }
 
@@ -285,7 +286,8 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, char *pszQuery)
+extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, char *pszQuery,
+                                                 DWORD *pdwError)
 {
    DB_ASYNC_RESULT hResult;
 
@@ -299,6 +301,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, char *pszQu
       MutexUnlock(hConn->mutexQueryLock);
       hResult = NULL;
    }
+   *pdwError = (hResult != NULL) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
    return hResult;
 }
 

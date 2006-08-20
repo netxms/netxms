@@ -106,6 +106,15 @@
 
 
 //
+// DB events
+//
+
+#define DBEVENT_CONNECTION_LOST        0
+#define DBEVENT_CONNECTION_RESTORED    1
+#define DBEVENT_QUERY_FAILED           2
+
+
+//
 // Database connection structure
 //
 
@@ -114,6 +123,10 @@ struct db_handle_t
    DB_CONNECTION hConn;
    MUTEX mutexTransLock;      // Transaction lock
    int nTransactionLevel;
+   TCHAR *pszServer;
+   TCHAR *pszLogin;
+   TCHAR *pszPassword;
+   TCHAR *pszDBName;
 };
 typedef db_handle_t * DB_HANDLE;
 
@@ -309,7 +322,8 @@ void LIBNXSRV_EXPORTABLE InitLog(BOOL bUseSystemLog, char *pszLogFile, BOOL bPri
 void LIBNXSRV_EXPORTABLE CloseLog(void);
 void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, char *format, ...);
 
-BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL);
+BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
+                                void (* fpEventHandler)(DWORD, TCHAR *));
 DB_HANDLE LIBNXSRV_EXPORTABLE DBConnect(void);
 DB_HANDLE LIBNXSRV_EXPORTABLE DBConnectEx(TCHAR *pszServer, TCHAR *pszDBName,
                                           TCHAR *pszLogin, TCHAR *pszPassword);

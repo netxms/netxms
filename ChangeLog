@@ -8,6 +8,7 @@
   Windows agent
 - New MIBs added: S5-ETH-MULTISEG-TOPOLOGY-MIB
 - Server startup and shutdown procedures improved
+- Added detection of lost database connections and automatic reconnect
 - Native operating system read/write locks used whenever possible
 - Windows console:
 	- DCI history data viewer improved

@@ -78,6 +78,37 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V44 to V45
+//
+
+static BOOL H_UpgradeFromV44(void)
+{
+   static TCHAR m_szBatch[] =
+	   "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) "
+         "VALUES (36,'SYS_DB_CONN_LOST',4,1,"
+			"'Lost connection with backend database engine',"
+			"'Generated if connection with backend database engine is lost.#0D#0A"
+			"Parameters:#0D#0A   No message-specific parameters')\n"
+	   "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) "
+         "VALUES (37,'SYS_DB_CONN_RESTORED',0,1,"
+			"'Connection with backend database engine restored',"
+			"'Generated when connection with backend database engine restored.#0D#0A"
+			"Parameters:#0D#0A   No message-specific parameters')\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='45' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V43 to V44
 //
 
@@ -1958,6 +1989,7 @@ static struct
    { 41, H_UpgradeFromV41 },
    { 42, H_UpgradeFromV42 },
    { 43, H_UpgradeFromV43 },
+   { 44, H_UpgradeFromV44 },
    { 0, NULL }
 };
 

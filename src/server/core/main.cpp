@@ -302,6 +302,29 @@ static BOOL IsNetxmsdProcess(DWORD dwPID)
 
 
 //
+// Database event handler
+//
+
+static void DBEventHandler(DWORD dwEvent, TCHAR *pszData)
+{
+   if (!(g_dwFlags & AF_SERVER_INITIALIZED))
+      return;     // Don't try to do anything if server is not ready yet
+
+   switch(dwEvent)
+   {
+      case DBEVENT_CONNECTION_LOST:
+         PostEvent(EVENT_DB_CONNECTION_LOST, g_dwMgmtNode, NULL);
+         break;
+      case DBEVENT_CONNECTION_RESTORED:
+         PostEvent(EVENT_DB_CONNECTION_RESTORED, g_dwMgmtNode, NULL);
+         break;
+      default:
+         break;
+   }
+}
+
+
+//
 // Server initialization
 //
 
@@ -326,7 +349,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    g_pLazyRequestQueue = new Queue(64, 16);
 
    // Initialize database driver and connect to database
-   if (!DBInit(TRUE, g_dwFlags & AF_LOG_SQL_ERRORS, g_dwFlags & AF_DEBUG_SQL))
+   if (!DBInit(TRUE, g_dwFlags & AF_LOG_SQL_ERRORS, g_dwFlags & AF_DEBUG_SQL, DBEventHandler))
       return FALSE;
 
    g_hCoreDB = DBConnect();
@@ -524,6 +547,7 @@ retry_db_lock:
    // Load modules
    LoadNetXMSModules();
 
+   g_dwFlags |= AF_SERVER_INITIALIZED;
    DbgPrintf(AF_DEBUG_MISC, "Server initialization completed");
    return TRUE;
 }

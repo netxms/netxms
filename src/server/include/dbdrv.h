@@ -34,4 +34,14 @@ typedef void * DB_CONNECTION;
 typedef void * DB_RESULT;
 typedef void * DB_ASYNC_RESULT;
 
+
+//
+// Error codes
+//
+
+#define DBERR_SUCCESS               0
+#define DBERR_CONNECTION_LOST       1
+#define DBERR_INVALID_HANDLE        2
+#define DBERR_OTHER_ERROR           255
+
 #endif   /* _dbdrv_h_ */

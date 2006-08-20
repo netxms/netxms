@@ -374,6 +374,24 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'   3) Previous condition status#0D#0A' CONCAT
 		'   4) Current condition status'
 	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_DB_CONNECTION_LOST, 'SYS_DB_CONN_LOST',
+		EVENT_SEVERITY_CRITICAL, 1,
+		'Lost connection with backend database engine',
+		'Generated if connection with backend database engine is lost.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   No message-specific parameters'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_DB_CONNECTION_RESTORED, 'SYS_DB_CONN_RESTORED',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Connection with backend database engine restored',
+		'Generated when connection with backend database engine restored.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   No message-specific parameters'
+	);
 
 
 /*

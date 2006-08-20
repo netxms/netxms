@@ -30,7 +30,6 @@ SERVER:
 - Optimize SNMP subsystem
 - Add special handling for HP iLO boards
 - Add logging API for database drivers
-- Implement reconnect in all database drivers
 - Network service autodiscovery
 - New attribute: disable status/configuration poll
 - NxDbMgr -- backup before db recover

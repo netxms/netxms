@@ -31,6 +31,12 @@ INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,al
 INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
 	VALUES (8,7944,'Generate alarm when server enconters NXSL script execution error',
 		'%m',2,'SCRIPT_ERR_%1_%2','SCRIPT_ERR_%1_%2');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+	VALUES (9,7944,'Show alarm when connection with backend database is lost',
+		'%m',4,'DB_CONN','DB_CONN');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+	VALUES (10,7944,'Acknowlege DB connection loss alarm when connection restored',
+		'%m',6,'#00','DB_CONN');
 
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (1,EVENT_NODE_UP);
@@ -42,3 +48,5 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (5,EVENT_INTERFACE_UP)
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (6,EVENT_INCORRECT_NETMASK);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (7,EVENT_MAC_ADDR_CHANGED);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (8,EVENT_SCRIPT_ERROR);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (9,EVENT_DB_CONNECTION_LOST);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (10,EVENT_DB_CONNECTION_RESTORED);

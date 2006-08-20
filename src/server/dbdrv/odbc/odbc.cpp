@@ -75,7 +75,8 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char *sz
 	iResult = SQLAllocHandle(SQL_HANDLE_DBC, pConn->sqlEnv, &pConn->sqlConn); 
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
       goto connect_failure_1;
-	SQLSetConnectAttr(pConn->sqlConn, SQL_LOGIN_TIMEOUT, (SQLPOINTER *)5, 0);
+	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_LOGIN_TIMEOUT, (SQLPOINTER *)15, 0);
+	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_CONNECTION_TIMEOUT, (SQLPOINTER *)30, 0);
 
 	// Connect to the datasource 
 	iResult = SQLConnect(pConn->sqlConn, (SQLCHAR *)szHost, SQL_NTS,
@@ -122,10 +123,10 @@ extern "C" void EXPORT DrvDisconnect(ODBCDRV_CONN *pConn)
 // Perform non-SELECT query
 //
 
-extern "C" BOOL EXPORT DrvQuery(ODBCDRV_CONN *pConn, char *szQuery)
+extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, char *szQuery)
 {
-   BOOL bSuccess = FALSE;
    long iResult;
+   DWORD dwResult;
 
    MutexLock(pConn->mutexQuery, INFINITE);
 
@@ -138,12 +139,22 @@ extern "C" BOOL EXPORT DrvQuery(ODBCDRV_CONN *pConn, char *szQuery)
 	   if ((iResult == SQL_SUCCESS) || 
           (iResult == SQL_SUCCESS_WITH_INFO) || 
           (iResult == SQL_NO_DATA))
-         bSuccess = TRUE;
+      {
+         dwResult = DBERR_SUCCESS;
+      }
+      else
+      {
+         dwResult = ProcessError(SQL_HANDLE_STMT, pConn->sqlStatement);
+      }
       SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
+   }
+   else
+   {
+      dwResult = ProcessError(SQL_HANDLE_DBC, pConn->sqlConn);
    }
 
    MutexUnlock(pConn->mutexQuery);
-   return bSuccess;
+   return dwResult;
 }
 
 

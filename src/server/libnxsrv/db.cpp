@@ -42,12 +42,14 @@ char LIBNXSRV_EXPORTABLE g_szDbName[MAX_DB_NAME] = "netxms_db";
 static BOOL m_bWriteLog = FALSE;
 static BOOL m_bLogSQLErrors = FALSE;
 static BOOL m_bDumpSQL = FALSE;
+static int m_nReconnect = 0;
+static MUTEX m_mutexReconnect = INVALID_MUTEX_HANDLE;
 static HMODULE m_hDriver = NULL;
 static DB_CONNECTION (* m_fpDrvConnect)(char *, char *, char *, char *) = NULL;
 static void (* m_fpDrvDisconnect)(DB_CONNECTION) = NULL;
-static BOOL (* m_fpDrvQuery)(DB_CONNECTION, char *) = NULL;
-static DB_RESULT (* m_fpDrvSelect)(DB_CONNECTION, char *) = NULL;
-static DB_ASYNC_RESULT (* m_fpDrvAsyncSelect)(DB_CONNECTION, char *) = NULL;
+static DWORD (* m_fpDrvQuery)(DB_CONNECTION, char *) = NULL;
+static DB_RESULT (* m_fpDrvSelect)(DB_CONNECTION, char *, DWORD *) = NULL;
+static DB_ASYNC_RESULT (* m_fpDrvAsyncSelect)(DB_CONNECTION, char *, DWORD *) = NULL;
 static BOOL (* m_fpDrvFetch)(DB_ASYNC_RESULT) = NULL;
 static char* (* m_fpDrvGetField)(DB_RESULT, int, int) = NULL;
 static char* (* m_fpDrvGetFieldAsync)(DB_ASYNC_RESULT, int, char *, int) = NULL;
@@ -58,6 +60,7 @@ static BOOL (* m_fpDrvBegin)(DB_CONNECTION) = NULL;
 static BOOL (* m_fpDrvCommit)(DB_CONNECTION) = NULL;
 static BOOL (* m_fpDrvRollback)(DB_CONNECTION) = NULL;
 static void (* m_fpDrvUnload)(void) = NULL;
+static void (* m_fpEventHandler)(DWORD, TCHAR *);
 
 
 //
@@ -80,7 +83,8 @@ static void *DLGetSymbolAddrEx(HMODULE hModule, char *pszSymbol)
 // Load and initialize database driver
 //
 
-BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL)
+BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
+                                void (* fpEventHandler)(DWORD, TCHAR *))
 {
    BOOL (* fpDrvInit)(char *);
    char szErrorText[256];
@@ -88,6 +92,9 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL)
    m_bWriteLog = bWriteLog;
    m_bLogSQLErrors = bLogErrors && bWriteLog;
    m_bDumpSQL = bDumpSQL;
+   m_fpEventHandler = fpEventHandler;
+   m_nReconnect = 0;
+   m_mutexReconnect = MutexCreate();
 
    // Load driver's module
    m_hDriver = DLOpen(g_szDbDriver, szErrorText);
@@ -102,9 +109,9 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL)
    fpDrvInit = (BOOL (*)(char *))DLGetSymbolAddrEx(m_hDriver, "DrvInit");
    m_fpDrvConnect = (DB_CONNECTION (*)(char *, char *, char *, char *))DLGetSymbolAddrEx(m_hDriver, "DrvConnect");
    m_fpDrvDisconnect = (void (*)(DB_CONNECTION))DLGetSymbolAddrEx(m_hDriver, "DrvDisconnect");
-   m_fpDrvQuery = (BOOL (*)(DB_CONNECTION, char *))DLGetSymbolAddrEx(m_hDriver, "DrvQuery");
-   m_fpDrvSelect = (DB_RESULT (*)(DB_CONNECTION, char *))DLGetSymbolAddrEx(m_hDriver, "DrvSelect");
-   m_fpDrvAsyncSelect = (DB_ASYNC_RESULT (*)(DB_CONNECTION, char *))DLGetSymbolAddrEx(m_hDriver, "DrvAsyncSelect");
+   m_fpDrvQuery = (DWORD (*)(DB_CONNECTION, char *))DLGetSymbolAddrEx(m_hDriver, "DrvQuery");
+   m_fpDrvSelect = (DB_RESULT (*)(DB_CONNECTION, char *, DWORD *))DLGetSymbolAddrEx(m_hDriver, "DrvSelect");
+   m_fpDrvAsyncSelect = (DB_ASYNC_RESULT (*)(DB_CONNECTION, char *, DWORD *))DLGetSymbolAddrEx(m_hDriver, "DrvAsyncSelect");
    m_fpDrvFetch = (BOOL (*)(DB_ASYNC_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvFetch");
    m_fpDrvGetField = (char* (*)(DB_RESULT, int, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetField");
    m_fpDrvGetFieldAsync = (char* (*)(DB_ASYNC_RESULT, int, char *, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetFieldAsync");
@@ -154,6 +161,7 @@ void LIBNXSRV_EXPORTABLE DBUnloadDriver(void)
 {
    m_fpDrvUnload();
    DLClose(m_hDriver);
+   MutexDestroy(m_mutexReconnect);
 }
 
 
@@ -186,6 +194,10 @@ DB_HANDLE LIBNXSRV_EXPORTABLE DBConnectEx(TCHAR *pszServer, TCHAR *pszDBName,
          hConn->hConn = hDrvConn;
          hConn->mutexTransLock = MutexCreateRecursive();
          hConn->nTransactionLevel = 0;
+         hConn->pszDBName = (pszDBName == NULL) ? NULL : _tcsdup(pszDBName);
+         hConn->pszLogin = (pszLogin == NULL) ? NULL : _tcsdup(pszLogin);
+         hConn->pszPassword = (pszPassword == NULL) ? NULL : _tcsdup(pszPassword);
+         hConn->pszServer = (pszServer == NULL) ? NULL : _tcsdup(pszServer);
       }
       else
       {
@@ -207,7 +219,47 @@ void LIBNXSRV_EXPORTABLE DBDisconnect(DB_HANDLE hConn)
 
    m_fpDrvDisconnect(hConn->hConn);
    MutexDestroy(hConn->mutexTransLock);
+   safe_free(hConn->pszDBName);
+   safe_free(hConn->pszLogin);
+   safe_free(hConn->pszPassword);
+   safe_free(hConn->pszServer);
    free(hConn);
+}
+
+
+//
+// Reconnect to database
+//
+
+static void DBReconnect(DB_HANDLE hConn)
+{
+   int nCount;
+
+   m_fpDrvDisconnect(hConn->hConn);
+   for(nCount = 0; ; nCount++)
+   {
+      hConn->hConn = m_fpDrvConnect(hConn->pszServer, hConn->pszLogin,
+                                    hConn->pszPassword, hConn->pszDBName);
+      if (hConn->hConn != NULL)
+         break;
+      if (nCount == 0)
+      {
+         MutexLock(m_mutexReconnect, INFINITE);
+         if ((m_nReconnect == 0) && (m_fpEventHandler != NULL))
+            m_fpEventHandler(DBEVENT_CONNECTION_LOST, NULL);
+         m_nReconnect++;
+         MutexUnlock(m_mutexReconnect);
+      }
+      ThreadSleepMs(1000);
+   }
+   if (nCount > 0)
+   {
+      MutexLock(m_mutexReconnect, INFINITE);
+      m_nReconnect--;
+      if ((m_nReconnect == 0) && (m_fpEventHandler != NULL))
+         m_fpEventHandler(DBEVENT_CONNECTION_RESTORED, NULL);
+      MutexUnlock(m_mutexReconnect);
+   }
 }
 
 
@@ -217,22 +269,30 @@ void LIBNXSRV_EXPORTABLE DBDisconnect(DB_HANDLE hConn)
 
 BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, char *szQuery)
 {
-   BOOL bResult;
+   DWORD dwResult;
    INT64 ms;
-   
+
    MutexLock(hConn->mutexTransLock, INFINITE);
    if (m_bDumpSQL)
       ms = GetCurrentTimeMs();
-   bResult = m_fpDrvQuery(hConn->hConn, szQuery);
+
+   dwResult = m_fpDrvQuery(hConn->hConn, szQuery);
+   if (dwResult == DBERR_CONNECTION_LOST)
+   {
+      DBReconnect(hConn);
+      dwResult = m_fpDrvQuery(hConn->hConn, szQuery);
+   }
+   
    if (m_bDumpSQL)
    {
       ms = GetCurrentTimeMs() - ms;
-      printf("%s sync query: \"%s\" [%d ms]\n", bResult ? "Successful" : "Failed", szQuery, ms);
+      printf("%s sync query: \"%s\" [%d ms]\n", (dwResult == DBERR_SUCCESS) ? "Successful" : "Failed", szQuery, ms);
    }
+   
    MutexUnlock(hConn->mutexTransLock);
-   if ((!bResult) && m_bLogSQLErrors)
+   if ((dwResult != DBERR_SUCCESS) && m_bLogSQLErrors)
       WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
-   return bResult;
+   return dwResult == DBERR_SUCCESS;
 }
 
 
@@ -243,19 +303,25 @@ BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, char *szQuery)
 DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, char *szQuery)
 {
    DB_RESULT hResult;
+   DWORD dwError;
    INT64 ms;
    
    MutexLock(hConn->mutexTransLock, INFINITE);
    if (m_bDumpSQL)
       ms = GetCurrentTimeMs();
-   hResult = m_fpDrvSelect(hConn->hConn, szQuery);
+   hResult = m_fpDrvSelect(hConn->hConn, szQuery, &dwError);
+   if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST))
+   {
+      DBReconnect(hConn);
+      hResult = m_fpDrvSelect(hConn->hConn, szQuery, &dwError);
+   }
    if (m_bDumpSQL)
    {
       ms = GetCurrentTimeMs() - ms;
       printf("%s sync query: \"%s\" [%d ms]\n", (hResult != NULL) ? "Successful" : "Failed", szQuery, (DWORD)ms);
    }
    MutexUnlock(hConn->mutexTransLock);
-   if ((!hResult) && m_bLogSQLErrors)
+   if ((hResult == NULL) && m_bLogSQLErrors)
       WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
    return hResult;
 }
@@ -455,12 +521,18 @@ void LIBNXSRV_EXPORTABLE DBFreeResult(DB_RESULT hResult)
 DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, char *szQuery)
 {
    DB_RESULT hResult;
+   DWORD dwError;
    INT64 ms;
    
    MutexLock(hConn->mutexTransLock, INFINITE);
    if (m_bDumpSQL)
       ms = GetCurrentTimeMs();
-   hResult = m_fpDrvAsyncSelect(hConn->hConn, szQuery);
+   hResult = m_fpDrvAsyncSelect(hConn->hConn, szQuery, &dwError);
+   if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST))
+   {
+      DBReconnect(hConn);
+      hResult = m_fpDrvAsyncSelect(hConn->hConn, szQuery, &dwError);
+   }
    if (m_bDumpSQL)
    {
       ms = GetCurrentTimeMs() - ms;
