@@ -29,7 +29,7 @@
 
 extern "C" BOOL EXPORT DrvInit(char *szCmdLine)
 {
-   return TRUE;
+	return TRUE;
 }
 
 
@@ -48,33 +48,33 @@ extern "C" void EXPORT DrvUnload(void)
 
 extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char *szPassword, char *szDatabase)
 {
-   MYSQL *pMySQL;
-   MYSQL_CONN *pConn;
-
-   pMySQL = mysql_init(NULL);
-   if (pMySQL == NULL)
-      return NULL;
-
-   if (!mysql_real_connect(
-				pMySQL, // MYSQL *
-				szHost, // host
-				szLogin[0] == 0 ? NULL : szLogin, // user
-				(szPassword[0] == 0 || szLogin[0] == 0) ? NULL : szPassword, // pass
-				szDatabase, // DB Name
-				0, // use default port
-				NULL, // char * - unix socket
-				0 // flags
-			))
-   {
-      mysql_close(pMySQL);
-      return NULL;
-   }
-
-   pConn = (MYSQL_CONN *)malloc(sizeof(MYSQL_CONN));
-   pConn->pMySQL = pMySQL;
-   pConn->mutexQueryLock = MutexCreate();
-
-   return (DB_CONNECTION)pConn;
+	MYSQL *pMySQL;
+	MYSQL_CONN *pConn;
+	
+	pMySQL = mysql_init(NULL);
+	if (pMySQL == NULL)
+		return NULL;
+	
+	if (!mysql_real_connect(
+		pMySQL, // MYSQL *
+		szHost, // host
+		szLogin[0] == 0 ? NULL : szLogin, // user
+		(szPassword[0] == 0 || szLogin[0] == 0) ? NULL : szPassword, // pass
+		szDatabase, // DB Name
+		0, // use default port
+		NULL, // char * - unix socket
+		0 // flags
+		))
+	{
+		mysql_close(pMySQL);
+		return NULL;
+	}
+	
+	pConn = (MYSQL_CONN *)malloc(sizeof(MYSQL_CONN));
+	pConn->pMySQL = pMySQL;
+	pConn->mutexQueryLock = MutexCreate();
+	
+	return (DB_CONNECTION)pConn;
 }
 
 
@@ -84,12 +84,12 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char *sz
 
 extern "C" void EXPORT DrvDisconnect(MYSQL_CONN *pConn)
 {
-   if (pConn != NULL)
-   {
-      mysql_close(pConn->pMySQL);
-      MutexDestroy(pConn->mutexQueryLock);
+	if (pConn != NULL)
+	{
+		mysql_close(pConn->pMySQL);
+		MutexDestroy(pConn->mutexQueryLock);
 		free(pConn);
-   }
+	}
 }
 
 
@@ -99,12 +99,12 @@ extern "C" void EXPORT DrvDisconnect(MYSQL_CONN *pConn)
 
 extern "C" BOOL EXPORT DrvQuery(MYSQL_CONN *pConn, char *szQuery)
 {
-   BOOL bResult;
-
-   MutexLock(pConn->mutexQueryLock, INFINITE);
-   bResult = (mysql_query(pConn->pMySQL, szQuery) == 0);
-   MutexUnlock(pConn->mutexQueryLock);
-   return bResult;
+	BOOL bResult;
+	
+	MutexLock(pConn->mutexQueryLock, INFINITE);
+	bResult = (mysql_query(pConn->pMySQL, szQuery) == 0);
+	MutexUnlock(pConn->mutexQueryLock);
+	return bResult;
 }
 
 
@@ -114,13 +114,13 @@ extern "C" BOOL EXPORT DrvQuery(MYSQL_CONN *pConn, char *szQuery)
 
 extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, char *szQuery)
 {
-   DB_RESULT pResult = NULL;
-
-   MutexLock(pConn->mutexQueryLock, INFINITE);
-   if (mysql_query(pConn->pMySQL, szQuery) == 0)
-      pResult = (DB_RESULT)mysql_store_result(pConn->pMySQL);
-   MutexUnlock(pConn->mutexQueryLock);
-   return pResult;
+	DB_RESULT pResult = NULL;
+	
+	MutexLock(pConn->mutexQueryLock, INFINITE);
+	if (mysql_query(pConn->pMySQL, szQuery) == 0)
+		pResult = (DB_RESULT)mysql_store_result(pConn->pMySQL);
+	MutexUnlock(pConn->mutexQueryLock);
+	return pResult;
 }
 
 
@@ -130,11 +130,11 @@ extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, char *szQuery)
 
 extern "C" char EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int iColumn)
 {
-   MYSQL_ROW row;
-
-   mysql_data_seek((MYSQL_RES *)hResult, iRow);
-   row = mysql_fetch_row((MYSQL_RES *)hResult);
-   return (row == NULL) ? NULL : row[iColumn];
+	MYSQL_ROW row;
+	
+	mysql_data_seek((MYSQL_RES *)hResult, iRow);
+	row = mysql_fetch_row((MYSQL_RES *)hResult);
+	return (row == NULL) ? NULL : row[iColumn];
 }
 
 
@@ -144,9 +144,9 @@ extern "C" char EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int iColumn)
 
 extern "C" int EXPORT DrvGetNumRows(DB_RESULT hResult)
 {
-   if (hResult == 0)
-      return 0;
-   return (int)mysql_num_rows((MYSQL_RES *)hResult);
+	if (hResult == 0)
+		return 0;
+	return (int)mysql_num_rows((MYSQL_RES *)hResult);
 }
 
 
@@ -156,7 +156,7 @@ extern "C" int EXPORT DrvGetNumRows(DB_RESULT hResult)
 
 extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 {
-   mysql_free_result((MYSQL_RES *)hResult);
+	mysql_free_result((MYSQL_RES *)hResult);
 }
 
 
@@ -166,30 +166,30 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 
 extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, char *szQuery)
 {
-   MYSQL_ASYNC_RESULT *pResult = NULL;
-
-   MutexLock(pConn->mutexQueryLock, INFINITE);
-   if (mysql_query(pConn->pMySQL, szQuery) == 0)
-   {
-      pResult = (MYSQL_ASYNC_RESULT *)malloc(sizeof(MYSQL_ASYNC_RESULT));
-      pResult->pConn = pConn;
-      pResult->pHandle = mysql_use_result(pConn->pMySQL);
-      if (pResult->pHandle != NULL)
-      {
-         pResult->bNoMoreRows = FALSE;
-         pResult->iNumCols = mysql_num_fields(pResult->pHandle);
-         pResult->pCurrRow = NULL;
-         pResult->pulColLengths = (unsigned long *)malloc(sizeof(unsigned long) * pResult->iNumCols);
-      }
-      else
-      {
-         free(pResult);
-         pResult = NULL;
-      }
-   }
-   if (pResult == NULL)
-      MutexUnlock(pConn->mutexQueryLock);
-   return pResult;
+	MYSQL_ASYNC_RESULT *pResult = NULL;
+	
+	MutexLock(pConn->mutexQueryLock, INFINITE);
+	if (mysql_query(pConn->pMySQL, szQuery) == 0)
+	{
+		pResult = (MYSQL_ASYNC_RESULT *)malloc(sizeof(MYSQL_ASYNC_RESULT));
+		pResult->pConn = pConn;
+		pResult->pHandle = mysql_use_result(pConn->pMySQL);
+		if (pResult->pHandle != NULL)
+		{
+			pResult->bNoMoreRows = FALSE;
+			pResult->iNumCols = mysql_num_fields(pResult->pHandle);
+			pResult->pCurrRow = NULL;
+			pResult->pulColLengths = (unsigned long *)malloc(sizeof(unsigned long) * pResult->iNumCols);
+		}
+		else
+		{
+			free(pResult);
+			pResult = NULL;
+		}
+	}
+	if (pResult == NULL)
+		MutexUnlock(pConn->mutexQueryLock);
+	return pResult;
 }
 
 
@@ -199,41 +199,41 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, char *szQuer
 
 extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
 {
-   BOOL bResult = TRUE;
-   
-   if (hResult == NULL)
-   {
-      bResult = FALSE;
-   }
-   else
-   {
-      // Try to fetch next row from server
-      ((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow = mysql_fetch_row(((MYSQL_ASYNC_RESULT *)hResult)->pHandle);
-      if (((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow == NULL)
-      {
-         ((MYSQL_ASYNC_RESULT *)hResult)->bNoMoreRows = TRUE;
-         bResult = FALSE;
-         MutexUnlock(((MYSQL_ASYNC_RESULT *)hResult)->pConn->mutexQueryLock);
-      }
-      else
-      {
-         unsigned long *pLen;
-
-         // Get column lengths for current row
-         pLen = mysql_fetch_lengths(((MYSQL_ASYNC_RESULT *)hResult)->pHandle);
-         if (pLen != NULL)
-         {
-            memcpy(((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths, pLen, 
-                   sizeof(unsigned long) * ((MYSQL_ASYNC_RESULT *)hResult)->iNumCols);
-         }
-         else
-         {
-            memset(((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths, 0, 
-                   sizeof(unsigned long) * ((MYSQL_ASYNC_RESULT *)hResult)->iNumCols);
-         }
-      }
-   }
-   return bResult;
+	BOOL bResult = TRUE;
+	
+	if (hResult == NULL)
+	{
+		bResult = FALSE;
+	}
+	else
+	{
+		// Try to fetch next row from server
+		((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow = mysql_fetch_row(((MYSQL_ASYNC_RESULT *)hResult)->pHandle);
+		if (((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow == NULL)
+		{
+			((MYSQL_ASYNC_RESULT *)hResult)->bNoMoreRows = TRUE;
+			bResult = FALSE;
+			MutexUnlock(((MYSQL_ASYNC_RESULT *)hResult)->pConn->mutexQueryLock);
+		}
+		else
+		{
+			unsigned long *pLen;
+			
+			// Get column lengths for current row
+			pLen = mysql_fetch_lengths(((MYSQL_ASYNC_RESULT *)hResult)->pHandle);
+			if (pLen != NULL)
+			{
+				memcpy(((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths, pLen, 
+					sizeof(unsigned long) * ((MYSQL_ASYNC_RESULT *)hResult)->iNumCols);
+			}
+			else
+			{
+				memset(((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths, 0, 
+					sizeof(unsigned long) * ((MYSQL_ASYNC_RESULT *)hResult)->iNumCols);
+			}
+		}
+	}
+	return bResult;
 }
 
 
@@ -244,28 +244,28 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
 extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
                                          char *pBuffer, int iBufSize)
 {
-   int iLen;
-
-   // Check if we have valid result handle
-   if (hResult == NULL)
-      return NULL;
-
-   // Check if there are valid fetched row
-   if ((((MYSQL_ASYNC_RESULT *)hResult)->bNoMoreRows) ||
-       (((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow == NULL))
-      return NULL;
-
-   // Check if column number is valid
-   if ((iColumn < 0) || (iColumn >= ((MYSQL_ASYNC_RESULT *)hResult)->iNumCols))
-      return NULL;
-
-   // Now get column data
-   iLen = min((int)((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths[iColumn], iBufSize - 1);
-   if (iLen > 0)
-      memcpy(pBuffer, ((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow[iColumn], iLen);
-   pBuffer[iLen] = 0;
-   
-   return pBuffer;
+	int iLen;
+	
+	// Check if we have valid result handle
+	if (hResult == NULL)
+		return NULL;
+	
+	// Check if there are valid fetched row
+	if ((((MYSQL_ASYNC_RESULT *)hResult)->bNoMoreRows) ||
+		(((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow == NULL))
+		return NULL;
+	
+	// Check if column number is valid
+	if ((iColumn < 0) || (iColumn >= ((MYSQL_ASYNC_RESULT *)hResult)->iNumCols))
+		return NULL;
+	
+	// Now get column data
+	iLen = min((int)((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths[iColumn], iBufSize - 1);
+	if (iLen > 0)
+		memcpy(pBuffer, ((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow[iColumn], iLen);
+	pBuffer[iLen] = 0;
+	
+	return pBuffer;
 }
 
 
@@ -275,23 +275,23 @@ extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
 
 extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
 {
-   if (hResult != NULL)
-   {
-      // Check if all result rows fetched
-      if (!((MYSQL_ASYNC_RESULT *)hResult)->bNoMoreRows)
-      {
-         // Fetch remaining rows
-         while(mysql_fetch_row(((MYSQL_ASYNC_RESULT *)hResult)->pHandle) != NULL);
-
-         // Now we are ready for next query, so unlock query mutex
-         MutexUnlock(((MYSQL_ASYNC_RESULT *)hResult)->pConn->mutexQueryLock);
-      }
-
-      // Free allocated memory
-      mysql_free_result(((MYSQL_ASYNC_RESULT *)hResult)->pHandle);
-      safe_free(((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths);
-      free(hResult);
-   }
+	if (hResult != NULL)
+	{
+		// Check if all result rows fetched
+		if (!((MYSQL_ASYNC_RESULT *)hResult)->bNoMoreRows)
+		{
+			// Fetch remaining rows
+			while(mysql_fetch_row(((MYSQL_ASYNC_RESULT *)hResult)->pHandle) != NULL);
+			
+			// Now we are ready for next query, so unlock query mutex
+			MutexUnlock(((MYSQL_ASYNC_RESULT *)hResult)->pConn->mutexQueryLock);
+		}
+		
+		// Free allocated memory
+		mysql_free_result(((MYSQL_ASYNC_RESULT *)hResult)->pHandle);
+		safe_free(((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths);
+		free(hResult);
+	}
 }
 
 
@@ -301,7 +301,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
 
 extern "C" BOOL EXPORT DrvBegin(MYSQL_CONN *pConn)
 {
-   return DrvQuery(pConn, "BEGIN");
+	return DrvQuery(pConn, "BEGIN");
 }
 
 
@@ -311,7 +311,7 @@ extern "C" BOOL EXPORT DrvBegin(MYSQL_CONN *pConn)
 
 extern "C" BOOL EXPORT DrvCommit(MYSQL_CONN *pConn)
 {
-   return DrvQuery(pConn, "COMMIT");
+	return DrvQuery(pConn, "COMMIT");
 }
 
 
@@ -321,7 +321,7 @@ extern "C" BOOL EXPORT DrvCommit(MYSQL_CONN *pConn)
 
 extern "C" BOOL EXPORT DrvRollback(MYSQL_CONN *pConn)
 {
-   return DrvQuery(pConn, "ROLLBACK");
+	return DrvQuery(pConn, "ROLLBACK");
 }
 
 
@@ -333,9 +333,9 @@ extern "C" BOOL EXPORT DrvRollback(MYSQL_CONN *pConn)
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-   if (dwReason == DLL_PROCESS_ATTACH)
-      DisableThreadLibraryCalls(hInstance);
-   return TRUE;
+	if (dwReason == DLL_PROCESS_ATTACH)
+		DisableThreadLibraryCalls(hInstance);
+	return TRUE;
 }
 
 #endif
