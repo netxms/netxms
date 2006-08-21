@@ -121,7 +121,7 @@ extern "C" DWORD EXPORT DrvQuery(MYSQL_CONN *pConn, char *szQuery)
 	else
 	{
 		int nErr = mysql_errno(pConn->pMySQL);
-		if (nErr == CR_SERVER_LOST || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
+		if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
 		{
 			dwRet = DBERR_CONNECTION_LOST;
 		}
@@ -160,7 +160,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, char *szQuery, DWORD *p
 	else
 	{
 		int nErr = mysql_errno(pConn->pMySQL);
-		if (nErr == CR_SERVER_LOST || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
+		if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
 		{
 			*pdwError = DBERR_CONNECTION_LOST;
 		}
@@ -250,7 +250,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, char *szQuer
 	else
 	{
 		int nErr = mysql_errno(pConn->pMySQL);
-		if (nErr == CR_SERVER_LOST || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
+		if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
 		{
 			*pdwError = DBERR_CONNECTION_LOST;
 		}
