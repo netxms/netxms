@@ -49,7 +49,8 @@
 #define DB_SYNTAX	'MYSQL'
 #define SQL_TEXT	blob
 #define SQL_INT64	bigint
-#define TABLE_TYPE	TYPE=InnoDB
+#define TABLE_TYPE
+//#define TABLE_TYPE	TYPE=InnoDB
 
 #else
 
