@@ -360,7 +360,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
 // Begin transaction
 //
 
-extern "C" BOOL EXPORT DrvBegin(SQLITE_CONN *pConn)
+extern "C" DWORD EXPORT DrvBegin(SQLITE_CONN *pConn)
 {
    return DrvQuery(pConn, "BEGIN");
 }
@@ -370,7 +370,7 @@ extern "C" BOOL EXPORT DrvBegin(SQLITE_CONN *pConn)
 // Commit transaction
 //
 
-extern "C" BOOL EXPORT DrvCommit(SQLITE_CONN *pConn)
+extern "C" DWORD EXPORT DrvCommit(SQLITE_CONN *pConn)
 {
    return DrvQuery(pConn, "COMMIT");
 }
@@ -380,7 +380,7 @@ extern "C" BOOL EXPORT DrvCommit(SQLITE_CONN *pConn)
 // Rollback transaction
 //
 
-extern "C" BOOL EXPORT DrvRollback(SQLITE_CONN *pConn)
+extern "C" DWORD EXPORT DrvRollback(SQLITE_CONN *pConn)
 {
    return DrvQuery(pConn, "ROLLBACK");
 }

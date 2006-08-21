@@ -24,6 +24,13 @@
 
 
 //
+// Constants
+//
+
+#define CONNECT_TIMEOUT    30
+
+
+//
 // DB library error handler
 //
 
@@ -66,6 +73,7 @@ static BOOL Reconnect(MSDB_CONN *pConn)
       DBSETLPWD(loginrec, pConn->szPassword);
    }
    DBSETLAPP(loginrec, "NetXMS");
+   DBSETLTIME(loginrec, CONNECT_TIMEOUT);
    hProcess = dbopen(loginrec, pConn->szHost);
 
    if ((hProcess != NULL) && (pConn->szDatabase[0] != 0))
@@ -138,6 +146,7 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char *sz
       DBSETLPWD(loginrec, szPassword);
    }
    DBSETLAPP(loginrec, "NetXMS");
+   DBSETLTIME(loginrec, CONNECT_TIMEOUT);
    hProcess = dbopen(loginrec, szHost);
 
    if (hProcess != NULL)
@@ -189,35 +198,62 @@ extern "C" void EXPORT DrvDisconnect(MSDB_CONN *pConn)
 
 
 //
+// Execute query
+//
+
+static BOOL ExecuteQuery(MSDB_CONN *pConn, char *pszQuery)
+{
+   BOOL bResult;
+
+   dbcmd(pConn->hProcess, pszQuery);
+   if (dbsqlexec(pConn->hProcess) == SUCCEED)
+   {
+      bResult = TRUE;
+   }
+   else
+   {
+      if (pConn->bProcessDead)
+      {
+         if (Reconnect(pConn))
+         {
+            bResult = (dbsqlexec(pConn->hProcess) == SUCCEED);
+         }
+         else
+         {
+            bResult = FALSE;
+         }
+      }
+      else
+      {
+         bResult = FALSE;
+      }
+   }
+   return bResult;
+}
+
+
+//
 // Perform non-SELECT query
 //
 
-extern "C" BOOL EXPORT DrvQuery(MSDB_CONN *pConn, char *szQuery)
+extern "C" DWORD EXPORT DrvQuery(MSDB_CONN *pConn, char *pszQuery)
 {
-   BOOL bResult;
-   int nTries;
+   DWORD dwError;
 
    MutexLock(pConn->mutexQueryLock, INFINITE);
    
-   dbcmd(pConn->hProcess, szQuery);
-   for(nTries = 0; nTries < 3; nTries++)
+   if (ExecuteQuery(pConn, pszQuery))
    {
-      if (dbsqlexec(pConn->hProcess) == SUCCEED)
-      {
-         bResult = TRUE;
-         break;
-      }
-      if (pConn->bProcessDead)
-         if (!Reconnect(pConn))
-            break;
-   }
-
-   // Process query results if any
-   if (bResult)
       if (dbresults(pConn->hProcess) == SUCCEED)
          while(dbnextrow(pConn->hProcess) != NO_MORE_ROWS);
+      dwError = DBERR_SUCCESS;
+   }
+   else
+   {
+      dwError = pConn->bProcessDead ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+   }
    MutexUnlock(pConn->mutexQueryLock);
-   return bResult;
+   return dwError;
 }
 
 
@@ -225,35 +261,15 @@ extern "C" BOOL EXPORT DrvQuery(MSDB_CONN *pConn, char *szQuery)
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, char *szQuery)
+extern "C" DB_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, char *pszQuery, DWORD *pdwError)
 {
    MSDB_QUERY_RESULT *pResult = NULL;
-   int i, iCurrPos, iLen, *piColTypes, nTries;
+   int i, iCurrPos, iLen, *piColTypes;
    void *pData;
-   BOOL bResult = FALSE;
 
    MutexLock(pConn->mutexQueryLock, INFINITE);
 
-   dbcmd(pConn->hProcess, szQuery);
-   for(nTries = 0; nTries < 3; nTries++)
-   {
-      if (dbsqlexec(pConn->hProcess) == SUCCEED)
-      {
-         bResult = TRUE;
-         break;
-      }
-      if (pConn->bProcessDead)
-      {
-         if (!Reconnect(pConn))
-            break;
-      }
-      else
-      {
-         break;   // Not a communication problem
-      }
-   }
-
-   if (bResult)
+   if (ExecuteQuery(pConn, pszQuery))
    {
       // Process query results
       if (dbresults(pConn->hProcess) == SUCCEED)
@@ -327,6 +343,16 @@ extern "C" DB_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, char *szQuery)
          }
       }
    }
+
+   if (pResult != NULL)
+   {
+      *pdwError = DBERR_SUCCESS;
+   }
+   else
+   {
+      *pdwError = pConn->bProcessDead ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+   }
+
    MutexUnlock(pConn->mutexQueryLock);
    return (DB_RESULT)pResult;
 }
@@ -379,34 +405,14 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MSDB_CONN *pConn, char *szQuery)
+extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MSDB_CONN *pConn, char *pszQuery, DWORD *pdwError)
 {
    MSDB_ASYNC_QUERY_RESULT *pResult = NULL;
-   int i, nTries;
-   BOOL bResult = FALSE;
+   int i;
 
    MutexLock(pConn->mutexQueryLock, INFINITE);
    
-   dbcmd(pConn->hProcess, szQuery);
-   for(nTries = 0; nTries < 3; nTries++)
-   {
-      if (dbsqlexec(pConn->hProcess) == SUCCEED)
-      {
-         bResult = TRUE;
-         break;
-      }
-      if (pConn->bProcessDead)
-      {
-         if (!Reconnect(pConn))
-            break;
-      }
-      else
-      {
-         break;   // Not a communication problem
-      }
-   }
-
-   if (bResult)
+   if (ExecuteQuery(pConn, pszQuery))
    {
       // Prepare query results for processing
       if (dbresults(pConn->hProcess) == SUCCEED)
@@ -423,8 +429,16 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MSDB_CONN *pConn, char *szQuery
             pResult->piColTypes[i] = dbcoltype(pConn->hProcess, i + 1);
       }
    }
-   if (pResult == NULL)
+
+   if (pResult != NULL)
+   {
+      *pdwError = DBERR_SUCCESS;
+   }
+   else
+   {
+      *pdwError = pConn->bProcessDead ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
       MutexUnlock(pConn->mutexQueryLock);
+   }
    return pResult;
 }
 
@@ -546,7 +560,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
 // Begin transaction
 //
 
-extern "C" BOOL EXPORT DrvBegin(MSDB_CONN *pConn)
+extern "C" DWORD EXPORT DrvBegin(MSDB_CONN *pConn)
 {
    return DrvQuery(pConn, "BEGIN TRANSACTION");
 }
@@ -556,7 +570,7 @@ extern "C" BOOL EXPORT DrvBegin(MSDB_CONN *pConn)
 // Commit transaction
 //
 
-extern "C" BOOL EXPORT DrvCommit(MSDB_CONN *pConn)
+extern "C" DWORD EXPORT DrvCommit(MSDB_CONN *pConn)
 {
    return DrvQuery(pConn, "COMMIT");
 }
@@ -566,7 +580,7 @@ extern "C" BOOL EXPORT DrvCommit(MSDB_CONN *pConn)
 // Rollback transaction
 //
 
-extern "C" BOOL EXPORT DrvRollback(MSDB_CONN *pConn)
+extern "C" DWORD EXPORT DrvRollback(MSDB_CONN *pConn)
 {
    return DrvQuery(pConn, "ROLLBACK");
 }

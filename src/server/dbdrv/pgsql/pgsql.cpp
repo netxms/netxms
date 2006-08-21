@@ -1,4 +1,4 @@
-/* $Id: pgsql.cpp,v 1.13 2006-08-20 12:45:20 victor Exp $ */
+/* $Id: pgsql.cpp,v 1.14 2006-08-21 15:11:57 victor Exp $ */
 /* 
 ** PostgreSQL Database Driver
 ** Copyright (C) 2003, 2005 Victor Kirhenshtein and Alex Kirhenshtein
@@ -395,17 +395,24 @@ extern "C" void EXPORT DrvFreeAsyncResult(PG_CONN *pConn)
 // Begin transaction
 //
 
-extern "C" BOOL EXPORT DrvBegin(PG_CONN *pConn)
+extern "C" DWORD EXPORT DrvBegin(PG_CONN *pConn)
 {
-   BOOL bRet;
+   DWORD dwResult;
 
 	if (pConn == NULL)
-      return FALSE;
+      return DBERR_INVALID_HANDLE;
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
-	bRet = UnsafeDrvQuery(pConn, "BEGIN");
+	if (UnsafeDrvQuery(pConn, "BEGIN"))
+   {
+      dwResult = DBERR_SUCCESS;
+   }
+   else
+   {
+      dwResult = (PQstatus(pConn->pHandle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
+   }
 	MutexUnlock(pConn->mutexQueryLock);
-   return bRet;
+   return dwResult;
 }
 
 
@@ -413,17 +420,17 @@ extern "C" BOOL EXPORT DrvBegin(PG_CONN *pConn)
 // Commit transaction
 //
 
-extern "C" BOOL EXPORT DrvCommit(PG_CONN *pConn)
+extern "C" DWORD EXPORT DrvCommit(PG_CONN *pConn)
 {
    BOOL bRet;
 
 	if (pConn == NULL)
-      return FALSE;
+      return DBERR_INVALID_HANDLE;
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 	bRet = UnsafeDrvQuery(pConn, "COMMIT");
 	MutexUnlock(pConn->mutexQueryLock);
-   return bRet;
+   return bRet ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 
@@ -431,17 +438,17 @@ extern "C" BOOL EXPORT DrvCommit(PG_CONN *pConn)
 // Rollback transaction
 //
 
-extern "C" BOOL EXPORT DrvRollback(PG_CONN *pConn)
+extern "C" DWORD EXPORT DrvRollback(PG_CONN *pConn)
 {
    BOOL bRet;
 
 	if (pConn == NULL)
-      return FALSE;
+      return DBERR_INVALID_HANDLE;
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 	bRet = UnsafeDrvQuery(pConn, "ROLLBACK");
 	MutexUnlock(pConn->mutexQueryLock);
-   return bRet;
+   return bRet ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 

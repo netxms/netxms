@@ -56,9 +56,9 @@ static char* (* m_fpDrvGetFieldAsync)(DB_ASYNC_RESULT, int, char *, int) = NULL;
 static int (* m_fpDrvGetNumRows)(DB_RESULT) = NULL;
 static void (* m_fpDrvFreeResult)(DB_RESULT) = NULL;
 static void (* m_fpDrvFreeAsyncResult)(DB_ASYNC_RESULT) = NULL;
-static BOOL (* m_fpDrvBegin)(DB_CONNECTION) = NULL;
-static BOOL (* m_fpDrvCommit)(DB_CONNECTION) = NULL;
-static BOOL (* m_fpDrvRollback)(DB_CONNECTION) = NULL;
+static DWORD (* m_fpDrvBegin)(DB_CONNECTION) = NULL;
+static DWORD (* m_fpDrvCommit)(DB_CONNECTION) = NULL;
+static DWORD (* m_fpDrvRollback)(DB_CONNECTION) = NULL;
 static void (* m_fpDrvUnload)(void) = NULL;
 static void (* m_fpEventHandler)(DWORD, TCHAR *);
 
@@ -118,9 +118,9 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
    m_fpDrvGetNumRows = (int (*)(DB_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvGetNumRows");
    m_fpDrvFreeResult = (void (*)(DB_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvFreeResult");
    m_fpDrvFreeAsyncResult = (void (*)(DB_ASYNC_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvFreeAsyncResult");
-   m_fpDrvBegin = (BOOL (*)(DB_CONNECTION))DLGetSymbolAddrEx(m_hDriver, "DrvBegin");
-   m_fpDrvCommit = (BOOL (*)(DB_CONNECTION))DLGetSymbolAddrEx(m_hDriver, "DrvCommit");
-   m_fpDrvRollback = (BOOL (*)(DB_CONNECTION))DLGetSymbolAddrEx(m_hDriver, "DrvRollback");
+   m_fpDrvBegin = (DWORD (*)(DB_CONNECTION))DLGetSymbolAddrEx(m_hDriver, "DrvBegin");
+   m_fpDrvCommit = (DWORD (*)(DB_CONNECTION))DLGetSymbolAddrEx(m_hDriver, "DrvCommit");
+   m_fpDrvRollback = (DWORD (*)(DB_CONNECTION))DLGetSymbolAddrEx(m_hDriver, "DrvRollback");
    m_fpDrvUnload = (void (*)(void))DLGetSymbolAddrEx(m_hDriver, "DrvUnload");
    if ((fpDrvInit == NULL) || (m_fpDrvConnect == NULL) || (m_fpDrvDisconnect == NULL) ||
        (m_fpDrvQuery == NULL) || (m_fpDrvSelect == NULL) || (m_fpDrvGetField == NULL) ||
@@ -670,14 +670,22 @@ void LIBNXSRV_EXPORTABLE DBFreeAsyncResult(DB_HANDLE hConn, DB_ASYNC_RESULT hRes
 
 BOOL LIBNXSRV_EXPORTABLE DBBegin(DB_HANDLE hConn)
 {
-   BOOL bRet;
+   DWORD dwResult;
+   BOOL bRet = FALSE;
 
    MutexLock(hConn->mutexTransLock, INFINITE);
    if (hConn->nTransactionLevel == 0)
    {
-      if (bRet = m_fpDrvBegin(hConn->hConn))
+      dwResult = m_fpDrvBegin(hConn->hConn);
+      if (dwResult == DBERR_CONNECTION_LOST)
+      {
+         DBReconnect(hConn);
+         dwResult = m_fpDrvBegin(hConn->hConn);
+      }
+      if (dwResult == DBERR_SUCCESS)
       {
          hConn->nTransactionLevel++;
+         bRet = TRUE;
       }
       else
       {
@@ -706,7 +714,7 @@ BOOL LIBNXSRV_EXPORTABLE DBCommit(DB_HANDLE hConn)
    {
       hConn->nTransactionLevel--;
       if (hConn->nTransactionLevel == 0)
-         bRet = m_fpDrvCommit(hConn->hConn);
+         bRet = (m_fpDrvCommit(hConn->hConn) == DBERR_SUCCESS);
       else
          bRet = TRUE;
       MutexUnlock(hConn->mutexTransLock);
@@ -729,7 +737,7 @@ BOOL LIBNXSRV_EXPORTABLE DBRollback(DB_HANDLE hConn)
    {
       hConn->nTransactionLevel--;
       if (hConn->nTransactionLevel == 0)
-         bRet = m_fpDrvRollback(hConn->hConn);
+         bRet = (m_fpDrvRollback(hConn->hConn) == DBERR_SUCCESS);
       else
          bRet = TRUE;
       MutexUnlock(hConn->mutexTransLock);

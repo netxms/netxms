@@ -427,17 +427,26 @@ extern "C" void EXPORT DrvFreeAsyncResult(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
 // Begin transaction
 //
 
-extern "C" BOOL EXPORT DrvBegin(ODBCDRV_CONN *pConn)
+extern "C" DWORD EXPORT DrvBegin(ODBCDRV_CONN *pConn)
 {
    SQLRETURN nRet;
+   DWORD dwResult;
 
 	if (pConn == NULL)
-      return FALSE;
+      return DBERR_INVALID_HANDLE;
 
 	MutexLock(pConn->mutexQuery, INFINITE);
    nRet = SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_OFF, 0);
+   if ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO))
+   {
+      dwResult = DBERR_SUCCESS;
+   }
+   else
+   {
+      dwResult = StateToErrorCode(SQL_HANDLE_DBC, pConn->sqlConn);
+   }
 	MutexUnlock(pConn->mutexQuery);
-   return (nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO);
+   return dwResult;
 }
 
 
@@ -445,18 +454,18 @@ extern "C" BOOL EXPORT DrvBegin(ODBCDRV_CONN *pConn)
 // Commit transaction
 //
 
-extern "C" BOOL EXPORT DrvCommit(ODBCDRV_CONN *pConn)
+extern "C" DWORD EXPORT DrvCommit(ODBCDRV_CONN *pConn)
 {
    SQLRETURN nRet;
 
 	if (pConn == NULL)
-      return FALSE;
+      return DBERR_INVALID_HANDLE;
 
 	MutexLock(pConn->mutexQuery, INFINITE);
    nRet = SQLEndTran(SQL_HANDLE_DBC, pConn->sqlConn, SQL_COMMIT);
    SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
 	MutexUnlock(pConn->mutexQuery);
-   return (nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO);
+   return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 
@@ -464,18 +473,18 @@ extern "C" BOOL EXPORT DrvCommit(ODBCDRV_CONN *pConn)
 // Rollback transaction
 //
 
-extern "C" BOOL EXPORT DrvRollback(ODBCDRV_CONN *pConn)
+extern "C" DWORD EXPORT DrvRollback(ODBCDRV_CONN *pConn)
 {
    SQLRETURN nRet;
 
 	if (pConn == NULL)
-      return FALSE;
+      return DBERR_INVALID_HANDLE;
 
 	MutexLock(pConn->mutexQuery, INFINITE);
    nRet = SQLEndTran(SQL_HANDLE_DBC, pConn->sqlConn, SQL_ROLLBACK);
    SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
 	MutexUnlock(pConn->mutexQuery);
-   return (nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO);
+   return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 

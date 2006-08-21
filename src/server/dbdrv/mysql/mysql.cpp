@@ -375,7 +375,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
 // Begin transaction
 //
 
-extern "C" BOOL EXPORT DrvBegin(MYSQL_CONN *pConn)
+extern "C" DWORD EXPORT DrvBegin(MYSQL_CONN *pConn)
 {
 	return DrvQuery(pConn, "BEGIN");
 }
@@ -385,7 +385,7 @@ extern "C" BOOL EXPORT DrvBegin(MYSQL_CONN *pConn)
 // Commit transaction
 //
 
-extern "C" BOOL EXPORT DrvCommit(MYSQL_CONN *pConn)
+extern "C" DWORD EXPORT DrvCommit(MYSQL_CONN *pConn)
 {
 	return DrvQuery(pConn, "COMMIT");
 }
@@ -395,7 +395,7 @@ extern "C" BOOL EXPORT DrvCommit(MYSQL_CONN *pConn)
 // Rollback transaction
 //
 
-extern "C" BOOL EXPORT DrvRollback(MYSQL_CONN *pConn)
+extern "C" DWORD EXPORT DrvRollback(MYSQL_CONN *pConn)
 {
 	return DrvQuery(pConn, "ROLLBACK");
 }
