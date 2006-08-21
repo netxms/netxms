@@ -327,9 +327,11 @@ static void DBEventHandler(DWORD dwEvent, TCHAR *pszData)
    {
       case DBEVENT_CONNECTION_LOST:
          PostEvent(EVENT_DB_CONNECTION_LOST, g_dwMgmtNode, NULL);
+         g_dwFlags |= AF_DB_RECONNECT;
          break;
       case DBEVENT_CONNECTION_RESTORED:
          PostEvent(EVENT_DB_CONNECTION_RESTORED, g_dwMgmtNode, NULL);
+         g_dwFlags &= ~AF_DB_RECONNECT;
          break;
       default:
          break;

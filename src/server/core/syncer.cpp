@@ -105,8 +105,11 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
       if (SleepAndCheckForShutdown(iSyncInterval))
          break;   // Shutdown time has arrived
       WatchdogNotify(dwWatchdogId);
-      SaveObjects(hdb);
-      SaveUsers(hdb);
+      if (!(g_dwFlags & AF_DB_RECONNECT))    // Don't try to save if DB connection is lost
+      {
+         SaveObjects(hdb);
+         SaveUsers(hdb);
+      }
    }
 
    // Disconnect from database if using separate connection

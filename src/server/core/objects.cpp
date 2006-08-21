@@ -1056,7 +1056,7 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
 
 void NetObjDelete(NetObj *pObject)
 {
-   char szQuery[256], szIpAddr[16], szNetMask[16];
+   TCHAR szQuery[256], szIpAddr[16], szNetMask[16];
 
    // Write object to deleted objects table
    _sntprintf(szQuery, 256, _T("INSERT INTO deleted_objects (object_id,object_class,name,"
@@ -1064,7 +1064,7 @@ void NetObjDelete(NetObj *pObject)
               pObject->Id(), pObject->Type(), pObject->Name(), 
               IpToStr(pObject->IpAddr(), szIpAddr),
               IpToStr(GetObjectNetmask(pObject), szNetMask));
-   DBQuery(g_hCoreDB, szQuery);
+   QueueSQLRequest(szQuery);
 
    // Delete object from index by ID and object itself
    DeleteObjectFromIndex(&g_pIndexById, &g_dwIdIndexSize, pObject->Id());

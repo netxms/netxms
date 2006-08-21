@@ -171,7 +171,8 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeveri
            alarm.qwSourceEventId);
    free(pszExpMsg);
    free(pszExpKey);
-   DBQuery(g_hCoreDB, szQuery);
+   //DBQuery(g_hCoreDB, szQuery);
+   QueueSQLRequest(szQuery);
 
    // Notify connected clients about new alarm
    NotifyClients(NX_NOTIFY_NEW_ALARM, &alarm);
@@ -272,7 +273,8 @@ void AlarmManager::DeleteAlarm(DWORD dwAlarmId)
 
    // Delete from database
    sprintf(szQuery, "DELETE FROM alarms WHERE alarm_id=%d", dwAlarmId);
-   DBQuery(g_hCoreDB, szQuery);
+   //DBQuery(g_hCoreDB, szQuery);
+   QueueSQLRequest(szQuery);
 
    UpdateObjectStatus(dwObject);
 }
@@ -288,7 +290,8 @@ void AlarmManager::AckAlarmInDB(DWORD dwAlarmId, DWORD dwUserId)
 
    sprintf(szQuery, "UPDATE alarms SET is_ack=1,ack_by=%d WHERE alarm_id=%d",
            dwUserId, dwAlarmId);
-   DBQuery(g_hCoreDB, szQuery);
+   //DBQuery(g_hCoreDB, szQuery);
+   QueueSQLRequest(szQuery);
 }
 
 
