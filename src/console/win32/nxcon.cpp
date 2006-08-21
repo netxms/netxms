@@ -848,8 +848,16 @@ void CConsoleApp::OnConnectToServer()
 
       // Initiate connection
       dwResult = DoLogin(dlgLogin.m_bClearCache);
-      if (dwResult != RCC_SUCCESS)
+      if (dwResult == RCC_SUCCESS)
+      {
+         if (NXCIsDBConnLost(g_hSession))
+            m_pMainWnd->MessageBox(_T("NetXMS server currently has no connection with backend database. You will not be able to access historical data, and many other functions may be disabled or not work as expected."),
+                                   _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
+      }
+      else
+      {
          ErrorBox(dwResult, "Unable to connect: %s", "Connection error");
+      }
    }
    while(dwResult != RCC_SUCCESS);
 }
@@ -942,6 +950,18 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
                   m_bIgnoreErrors = TRUE;
                   m_pMainWnd->MessageBox(_T("Server was shutdown"), _T("Warning"), MB_OK | MB_ICONSTOP);
                   m_pMainWnd->PostMessage(WM_CLOSE, 0, 0);
+               }
+               break;
+            case NX_NOTIFY_DBCONN_STATUS:
+               if (CAST_FROM_POINTER(pArg, int))
+               {
+                  m_pMainWnd->MessageBox(_T("Connection between NetXMS server and backend database restored."),
+                                         _T("Information"), MB_OK | MB_ICONINFORMATION);
+               }
+               else
+               {
+                  m_pMainWnd->MessageBox(_T("Server has lost connection to backend database.\nAccess to historical data and most configuration fuctions will be unavailabe."),
+                                         _T("Critical Alarm"), MB_OK | MB_ICONSTOP);
                }
                break;
             case NX_NOTIFY_EVENTDB_CHANGED:

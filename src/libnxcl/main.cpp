@@ -171,6 +171,16 @@ BOOL LIBNXCL_EXPORTABLE NXCNeedPasswordChange(NXC_SESSION hSession)
 
 
 //
+// Check if server has problems with backend database connection
+//
+
+BOOL LIBNXCL_EXPORTABLE NXCIsDBConnLost(NXC_SESSION hSession)
+{
+   return ((NXCL_Session *)hSession)->IsDBConnLost();
+}
+
+
+//
 // Check if password needs to be changed
 //
 
@@ -251,9 +261,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Account disabled"),
       _T("No more grace logins"),
       _T("Server connection broken"),
-      _T("Invalid agent configuration ID")
+      _T("Invalid agent configuration ID"),
+      _T("Server has lost connection with backend database")
    };
-   return ((dwError >= 0) && (dwError <= RCC_INVALID_CONFIG_ID)) ? pszErrorText[dwError] : _T("No text message for this error");
+   return ((dwError >= 0) && (dwError <= RCC_DB_CONNECTION_LOST)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

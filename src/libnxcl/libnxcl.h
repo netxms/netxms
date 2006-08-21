@@ -55,6 +55,7 @@
 #define NXC_SF_HAS_OBJECT_CACHE  0x0002
 #define NXC_SF_CHANGE_PASSWD     0x0004
 #define NXC_SF_CONN_BROKEN       0x0008
+#define NXC_SF_BAD_DBCONN        0x0010
 
 
 //
@@ -237,6 +238,7 @@ public:
    DWORD GetCurrentUserId(void) { return m_dwUserId; }
    DWORD GetCurrentSystemAccess(void) { return m_dwSystemAccess; }
    BOOL NeedPasswordChange(void) { return (m_dwFlags & NXC_SF_CHANGE_PASSWD) ? TRUE : FALSE; }
+   BOOL IsDBConnLost(void) { return (m_dwFlags & NXC_SF_BAD_DBCONN) ? TRUE : FALSE; }
 };
 
 inline void NXCL_Session::CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)

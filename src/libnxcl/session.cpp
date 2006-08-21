@@ -983,6 +983,8 @@ void NXCL_Session::ParseLoginMessage(CSCPMessage *pMsg)
    m_dwSystemAccess = pMsg->GetVariableLong(VID_USER_SYS_RIGHTS);
    if (pMsg->GetVariableShort(VID_CHANGE_PASSWD_FLAG))
       m_dwFlags |= NXC_SF_CHANGE_PASSWD;
+   if (!pMsg->GetVariableShort(VID_DBCONN_STATUS))
+      m_dwFlags |= NXC_SF_BAD_DBCONN;
 }
 
 
@@ -1072,5 +1074,5 @@ void NXCL_Session::OnNotify(CSCPMessage *pMsg)
       m_dwFlags |= NXC_SF_CONN_BROKEN;
    }
    CallEventHandler(NXC_EVENT_NOTIFICATION, dwCode,
-                    (void *)pMsg->GetVariableLong(VID_NOTIFICATION_DATA));
+                    CAST_TO_POINTER(pMsg->GetVariableLong(VID_NOTIFICATION_DATA), void *));
 }

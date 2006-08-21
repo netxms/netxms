@@ -327,11 +327,13 @@ static void DBEventHandler(DWORD dwEvent, TCHAR *pszData)
    {
       case DBEVENT_CONNECTION_LOST:
          PostEvent(EVENT_DB_CONNECTION_LOST, g_dwMgmtNode, NULL);
-         g_dwFlags |= AF_DB_RECONNECT;
+         g_dwFlags |= AF_DB_CONNECTION_LOST;
+         NotifyClientSessions(NX_NOTIFY_DBCONN_STATUS, FALSE);
          break;
       case DBEVENT_CONNECTION_RESTORED:
          PostEvent(EVENT_DB_CONNECTION_RESTORED, g_dwMgmtNode, NULL);
-         g_dwFlags &= ~AF_DB_RECONNECT;
+         g_dwFlags &= ~AF_DB_CONNECTION_LOST;
+         NotifyClientSessions(NX_NOTIFY_DBCONN_STATUS, TRUE);
          break;
       default:
          break;
@@ -818,7 +820,7 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_OBJECTS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_LOCKED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_MULTIPLE_DB_CONN));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_RECONNECT));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_CONNECTION_LOST));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(pCtx, "\n");

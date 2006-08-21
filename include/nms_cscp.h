@@ -659,6 +659,7 @@ typedef struct
 #define VID_VERSION_RELEASE         ((DWORD)236)
 #define VID_CONFIG_ID_2             ((DWORD)237)
 #define VID_IV_LENGTH               ((DWORD)238)
+#define VID_DBCONN_STATUS           ((DWORD)239)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
