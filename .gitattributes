@@ -1201,7 +1201,6 @@ src/server/tools/nxadm/nxadm.cpp -text
 src/server/tools/nxadm/nxadm.dsp -text
 src/server/tools/nxadm/nxadm.dsw -text
 src/server/tools/nxadm/nxadm.h -text
-src/server/tools/nxadm/nxadm.vcproj -text
 src/server/tools/nxconfig/ChildView.cpp -text
 src/server/tools/nxconfig/ChildView.h -text
 src/server/tools/nxconfig/ConfigFilePage.cpp -text
@@ -1269,13 +1268,11 @@ src/server/tools/nxget/Makefile.am -text
 src/server/tools/nxget/nxget.cpp -text
 src/server/tools/nxget/nxget.dsp -text
 src/server/tools/nxget/nxget.dsw -text
-src/server/tools/nxget/nxget.vcproj -text
 src/server/tools/nxsnmpget/.cvsignore -text
 src/server/tools/nxsnmpget/Makefile.am -text
 src/server/tools/nxsnmpget/nxsnmpget.cpp -text
 src/server/tools/nxsnmpget/nxsnmpget.dsp -text
 src/server/tools/nxsnmpget/nxsnmpget.dsw -text
-src/server/tools/nxsnmpget/nxsnmpget.vcproj -text
 src/server/tools/nxsnmpset/Makefile.am -text
 src/server/tools/nxsnmpset/nxsnmpset.cpp -text
 src/server/tools/nxsnmpset/nxsnmpset.dsp -text
