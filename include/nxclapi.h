@@ -163,24 +163,25 @@ typedef void * NXC_SESSION;
 // Node flags
 //
 
-#define NF_SYSTEM_FLAGS    0x0000FFFF
-#define NF_USER_FLAGS      0xFFFF0000
+#define NF_SYSTEM_FLAGS       0x0000FFFF
+#define NF_USER_FLAGS         0xFFFF0000
 
-#define NF_IS_SNMP         0x00000001
-#define NF_IS_NATIVE_AGENT 0x00000002
-#define NF_IS_BRIDGE       0x00000004
-#define NF_IS_ROUTER       0x00000008
-#define NF_IS_LOCAL_MGMT   0x00000010
-#define NF_IS_PRINTER      0x00000020
-#define NF_IS_OSPF         0x00000040
-#define NF_BEHIND_NAT      0x00000080
-#define NF_IS_CPSNMP       0x00000100  /* CheckPoint SNMP agent on port 260 */
-#define NF_IS_CDP          0x00000200
-#define NF_IS_NORTEL_TOPO  0x00000400  /* Supports Nortel topology discovery */
+#define NF_IS_SNMP            0x00000001
+#define NF_IS_NATIVE_AGENT    0x00000002
+#define NF_IS_BRIDGE          0x00000004
+#define NF_IS_ROUTER          0x00000008
+#define NF_IS_LOCAL_MGMT      0x00000010
+#define NF_IS_PRINTER         0x00000020
+#define NF_IS_OSPF            0x00000040
+#define NF_BEHIND_NAT         0x00000080
+#define NF_IS_CPSNMP          0x00000100  /* CheckPoint SNMP agent on port 260 */
+#define NF_IS_CDP             0x00000200
+#define NF_IS_NORTEL_TOPO     0x00000400  /* Supports Nortel topology discovery */
 
-#define NF_DISABLE_SNMP    0x01000000
-#define NF_DISABLE_NXCP    0x02000000
-#define NF_DISABLE_ICMP    0x04000000
+#define NF_DISABLE_SNMP       0x01000000
+#define NF_DISABLE_NXCP       0x02000000
+#define NF_DISABLE_ICMP       0x04000000
+#define NF_FORCE_ENCRYPTION   0x08000000
 
 
 //

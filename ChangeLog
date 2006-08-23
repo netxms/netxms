@@ -12,6 +12,7 @@
 - Native operating system read/write locks used whenever possible
 - Added possibility to use alarm message text in actions (if action executed by
   the same event processing rule as alarm)
+- Windows binaries built against OpenSSL 0.9.8b
 - Windows console:
 	- DCI history data viewer improved
 	- Graphs improved

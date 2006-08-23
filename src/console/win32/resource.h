@@ -530,6 +530,8 @@
 #define IDC_EDIT_POLLS                  1371
 #define IDC_EDIT_FILTER                 1374
 #define IDC_EDIT_CONFIG                 1375
+#define IDC_BUTTON_GENERATE             1376
+#define IDC_CHECK_ENCRYPTION            1377
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -760,7 +762,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        334
 #define _APS_NEXT_COMMAND_VALUE         33039
-#define _APS_NEXT_CONTROL_VALUE         1376
+#define _APS_NEXT_CONTROL_VALUE         1378
 #define _APS_NEXT_SYMED_VALUE           128
 #endif
 #endif

@@ -38,6 +38,7 @@ CNodePropsGeneral::CNodePropsGeneral() : CPropertyPage(CNodePropsGeneral::IDD)
 	m_strCommunity = _T("");
 	m_iAuthType = -1;
 	m_iSNMPVersion = -1;
+	m_bForceEncryption = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -62,6 +63,7 @@ void CNodePropsGeneral::DoDataExchange(CDataExchange* pDX)
 	DDV_MaxChars(pDX, m_strCommunity, 63);
 	DDX_CBIndex(pDX, IDC_COMBO_AUTH, m_iAuthType);
 	DDX_Radio(pDX, IDC_RADIO_VERSION1, m_iSNMPVersion);
+	DDX_Check(pDX, IDC_CHECK_ENCRYPTION, m_bForceEncryption);
 	//}}AFX_DATA_MAP
 }
 
@@ -77,6 +79,7 @@ BEGIN_MESSAGE_MAP(CNodePropsGeneral, CPropertyPage)
 	ON_BN_CLICKED(IDC_RADIO_VERSION1, OnRadioVersion1)
 	ON_BN_CLICKED(IDC_SELECT_IP, OnSelectIp)
 	ON_BN_CLICKED(IDC_SELECT_PROXY, OnSelectProxy)
+	ON_BN_CLICKED(IDC_BUTTON_GENERATE, OnButtonGenerate)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -189,6 +192,10 @@ void CNodePropsGeneral::OnOK()
    m_pUpdate->wSNMPVersion = (m_iSNMPVersion == 0) ? SNMP_VERSION_1 : SNMP_VERSION_2C;
    m_pUpdate->dwIpAddr = m_dwIpAddr;
    m_pUpdate->dwProxyNode = m_dwProxyNode;
+   if (m_bForceEncryption)
+      m_pUpdate->dwNodeFlags |= NF_FORCE_ENCRYPTION;
+   else
+      m_pUpdate->dwNodeFlags &= ~NF_FORCE_ENCRYPTION;
 
    // Authentication type
    m_wndAuthList.GetWindowText(szBuffer, 255);
@@ -266,4 +273,31 @@ void CNodePropsGeneral::OnSelectProxy()
       m_pUpdate->dwFlags |= OBJ_UPDATE_PROXY_NODE;
       SetModified();
    }
+}
+
+
+//
+// Generate random shared secret
+//
+
+void CNodePropsGeneral::OnButtonGenerate() 
+{
+   TCHAR szBuffer[256];
+   int i;
+
+   GetDlgItemText(IDC_EDIT_SECRET, szBuffer, 256);
+   if (szBuffer[0] != 0)
+      if (MessageBox(_T("Do you really wish to replace existing shared secret with a random one?"),
+                     _T("Confirmation"), MB_YESNO | MB_ICONQUESTION) != IDYES)
+         return;
+
+   srand(time(NULL));
+   for(i = 0; i < 15; i++)
+   {
+      szBuffer[i] = rand() * 90 / RAND_MAX + '!';
+      if ((szBuffer[i] == '"') || (szBuffer[i] == '\'') || (szBuffer[i] == '='))
+         szBuffer[i]++;
+   }
+   szBuffer[15] = 0;
+   SetDlgItemText(IDC_EDIT_SECRET, szBuffer);
 }

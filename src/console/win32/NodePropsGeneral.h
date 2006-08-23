@@ -33,6 +33,7 @@ public:
 	CString	m_strCommunity;
 	int		m_iAuthType;
 	int		m_iSNMPVersion;
+	BOOL	m_bForceEncryption;
 	//}}AFX_DATA
 
 
@@ -59,6 +60,7 @@ protected:
 	afx_msg void OnRadioVersion1();
 	afx_msg void OnSelectIp();
 	afx_msg void OnSelectProxy();
+	afx_msg void OnButtonGenerate();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
