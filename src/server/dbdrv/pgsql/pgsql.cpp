@@ -1,4 +1,4 @@
-/* $Id: pgsql.cpp,v 1.14 2006-08-21 15:11:57 victor Exp $ */
+/* $Id: pgsql.cpp,v 1.15 2006-08-23 20:38:38 victor Exp $ */
 /* 
 ** PostgreSQL Database Driver
 ** Copyright (C) 2003, 2005 Victor Kirhenshtein and Alex Kirhenshtein
@@ -22,6 +22,13 @@
 **/
 
 #include "pgsqldrv.h"
+
+
+//
+// API version
+//
+
+extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
 
 
 //

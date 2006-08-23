@@ -87,7 +87,9 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
                                 void (* fpEventHandler)(DWORD, TCHAR *))
 {
    BOOL (* fpDrvInit)(char *);
+   DWORD *pdwAPIVersion;
    char szErrorText[256];
+   static DWORD dwVersionZero = 0;
 
    m_bWriteLog = bWriteLog;
    m_bLogSQLErrors = bLogErrors && bWriteLog;
@@ -102,6 +104,20 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
    {
       if (m_bWriteLog)
          WriteLog(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", g_szDbDriver, szErrorText);
+      return FALSE;
+   }
+
+   // Check API version supported by driver
+   pdwAPIVersion = (DWORD *)DLGetSymbolAddr(m_hDriver, "drvAPIVersion", NULL);
+   if (pdwAPIVersion == NULL)
+      pdwAPIVersion = &dwVersionZero;
+   if (*pdwAPIVersion != DBDRV_API_VERSION)
+   {
+      if (m_bWriteLog)
+         WriteLog(MSG_DBDRV_API_VERSION_MISMATCH, EVENTLOG_ERROR_TYPE, "sdd",
+                  g_szDbDriver, DBDRV_API_VERSION, *pdwAPIVersion);
+      DLClose(m_hDriver);
+      m_hDriver = NULL;
       return FALSE;
    }
 

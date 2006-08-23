@@ -1,6 +1,6 @@
 /* 
 ** MySQL Database Driver
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,13 @@
 **/
 
 #include "mysqldrv.h"
+
+
+//
+// API version
+//
+
+extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
 
 
 //

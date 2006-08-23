@@ -31,6 +31,13 @@
 
 
 //
+// API version
+//
+
+extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
+
+
+//
 // Convert ODBC state to NetXMS database error code
 //
 

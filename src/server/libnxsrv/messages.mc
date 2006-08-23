@@ -560,4 +560,10 @@ Language=English
 Stalled database lock removed
 .
 
+MessageId=
+SymbolicName=MSG_DBDRV_API_VERSION_MISMATCH
+Language=English
+Database driver "%1" cannot be loaded because of API version mismatch (driver: %3; server: %2)
+.
+
 ;#endif

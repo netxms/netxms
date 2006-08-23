@@ -146,14 +146,15 @@ void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule,
 #else
    pAddr = GetProcAddress(hModule, pszSymbol);
 #endif
-   if (pAddr == NULL)
+   if ((pAddr == NULL) && (pszErrorText != NULL))
       GetSystemErrorText(GetLastError(), pszErrorText, 255);
 #elif defined(_NETWARE)
    pAddr = ImportPublicObject(hModule, pszSymbol);
-   *pszErrorText = 0;
+   if (pszErrorText != NULL)
+      *pszErrorText = 0;
 #else    /* _WIN32 */
    pAddr = dlsym(hModule, pszSymbol);
-   if (pAddr == NULL)
+   if ((pAddr == NULL) && (pszErrorText != NULL))
       nx_strncpy(pszErrorText, dlerror(), 255);
 #endif
    return pAddr;

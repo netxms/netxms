@@ -100,6 +100,13 @@ static BOOL Reconnect(MSDB_CONN *pConn)
 
 
 //
+// API version
+//
+
+extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
+
+
+//
 // Initialize driver
 //
 

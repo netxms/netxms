@@ -27,6 +27,13 @@
 
 
 //
+// API version
+//
+
+#define DBDRV_API_VERSION           1
+
+
+//
 // Datatypes
 //
 

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
-** Copyright (C) 2003, 2004 NetXMS Team
+** Copyright (C) 2003, 2004, 2005, 2006 NetXMS Team
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -141,7 +141,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
       }
       else if (!strcmp(argv[i], "version"))    // Display version and exit
       {
-         printf("NMS Version " NETXMS_VERSION_STRING " Build of " __DATE__ "\n");
+         printf("NetXMS Server Version " NETXMS_VERSION_STRING " Build of " __DATE__ "\n");
          return FALSE;
       }
       else if (!strcmp(argv[i], "--config"))  // Config file
@@ -367,7 +367,7 @@ int main(int argc, char *argv[])
    {
       if (!Initialize())
       {
-         printf("NMS Core initialization failed\n");
+         printf("NetXMS Core initialization failed\n");
 
          // Remove database lock
          if (g_dwFlags & AF_DB_LOCKED)
