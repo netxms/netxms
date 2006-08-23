@@ -85,7 +85,7 @@ public:
    void PrepareMessage(NXC_EVENT *pEventData);
 
    void ExpandMessageText(void);
-   char *ExpandText(char *szTemplate);
+   TCHAR *ExpandText(TCHAR *szTemplate, TCHAR *pszAlarmMsg = NULL);
 
    char *GetParameter(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? m_ppszParameters[dwIndex] : NULL; }
    DWORD GetParameterAsULong(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? strtoul(m_ppszParameters[dwIndex], NULL, 0) : 0; }

@@ -166,7 +166,7 @@ void Event::ExpandMessageText(void)
 // Substitute % macros in given text with actual values
 //
 
-char *Event::ExpandText(char *pszTemplate)
+TCHAR *Event::ExpandText(TCHAR *pszTemplate, TCHAR *pszAlarmMsg)
 {
    char *pCurr;
    DWORD dwPos, dwSize, dwParam;
@@ -259,6 +259,15 @@ char *Event::ExpandText(char *pszTemplate)
                      pText = (char *)realloc(pText, dwSize);
                      strcpy(&pText[dwPos], m_pszMessageText);
                      dwPos += (DWORD)_tcslen(m_pszMessageText);
+                  }
+                  break;
+               case 'A':   // Associated alarm message
+                  if (pszAlarmMsg != NULL)
+                  {
+                     dwSize += (DWORD)_tcslen(pszAlarmMsg);
+                     pText = (char *)realloc(pText, dwSize);
+                     strcpy(&pText[dwPos], pszAlarmMsg);
+                     dwPos += (DWORD)_tcslen(pszAlarmMsg);
                   }
                   break;
                case '0':

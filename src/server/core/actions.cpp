@@ -284,7 +284,7 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
 // Execute action on specific event
 //
 
-BOOL ExecuteAction(DWORD dwActionId, Event *pEvent)
+BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
 {
    NXC_ACTION *pAction;
    BOOL bSuccess = FALSE;
@@ -304,7 +304,7 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent)
       {
          char *pszExpandedData, *pszExpandedSubject;
 
-         pszExpandedData = pEvent->ExpandText(CHECK_NULL_EX(pAction->pszData));
+         pszExpandedData = pEvent->ExpandText(CHECK_NULL_EX(pAction->pszData), pszAlarmMsg);
          switch(pAction->iType)
          {
             case ACTION_EXEC:
@@ -314,7 +314,7 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent)
             case ACTION_SEND_EMAIL:
                DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending mail to %s: \"%s\"", 
                          pAction->szRcptAddr, pszExpandedData);
-               pszExpandedSubject = pEvent->ExpandText(pAction->szEmailSubject);
+               pszExpandedSubject = pEvent->ExpandText(pAction->szEmailSubject, pszAlarmMsg);
                PostMail(pAction->szRcptAddr, pszExpandedSubject, pszExpandedData);
                free(pszExpandedSubject);
                bSuccess = TRUE;

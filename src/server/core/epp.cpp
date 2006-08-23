@@ -204,6 +204,7 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
 {
    BOOL bStopProcessing = FALSE;
    DWORD i;
+   TCHAR *pszAlarmMsg;
 
    // Check disable flag
    if (!(m_dwFlags & RF_DISABLED))
@@ -212,13 +213,18 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
       if ((MatchSource(pEvent->SourceId())) && (MatchEvent(pEvent->Code())) &&
           (MatchSeverity(pEvent->Severity())))
       {
-         // Event matched, perform actions
-         for(i = 0; i < m_dwNumActions; i++)
-            ExecuteAction(m_pdwActionList[i], pEvent);
-
          // Generate alarm if requested
          if (m_dwFlags & RF_GENERATE_ALARM)
             GenerateAlarm(pEvent);
+
+         // Event matched, perform actions
+         if (m_dwNumActions > 0)
+         {
+            pszAlarmMsg = pEvent->ExpandText(m_szAlarmMessage);
+            for(i = 0; i < m_dwNumActions; i++)
+               ExecuteAction(m_pdwActionList[i], pEvent, pszAlarmMsg);
+            free(pszAlarmMsg);
+         }
 
          bStopProcessing = m_dwFlags & RF_STOP_PROCESSING;
       }

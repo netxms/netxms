@@ -30,7 +30,7 @@
 
 BOOL InitActions(void);
 void CleanupActions(void);
-BOOL ExecuteAction(DWORD dwActionId, Event *pEvent);
+BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg);
 DWORD CreateNewAction(char *pszName, DWORD *pdwId);
 DWORD DeleteActionFromDB(DWORD dwActionId);
 DWORD ModifyActionFromMessage(CSCPMessage *pMsg);

@@ -10,11 +10,13 @@
 - Server startup and shutdown procedures improved
 - Added detection of lost database connections and automatic reconnect
 - Native operating system read/write locks used whenever possible
+- Added possibility to use alarm message text in actions (if action executed by
+  the same event processing rule as alarm)
 - Windows console:
 	- DCI history data viewer improved
 	- Graphs improved
-- Fixed issues: #4, #20, #47, #67, #79, #80, #91, #92, #93, #94, #95, #96,
-                #99, #100
+- Fixed issues: #4, #20, #47, #67, #79, #80, #91, #92, #93, #94, #95, #96, #97,
+                #98, #99, #100
 
 
 *
