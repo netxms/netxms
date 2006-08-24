@@ -65,6 +65,7 @@
 // Meter map elements
 //
 
+#define MAP_OUTPUT_VA      			23
 #define MAP_INPUT_FREQUENCY         28
 #define MAP_BATTERY_VOLTAGE         33
 #define MAP_BATTERY_LEVEL           34
@@ -72,6 +73,7 @@
 #define MAP_INPUT_VOLTAGE           56
 #define MAP_AMBIENT_TEMPERATURE     62
 #define MAP_UPS_TEMPERATURE         63
+#define MAP_MAX_OUTPUT_VA     		71
 #define MAP_BATTERY_TEMPERATURE     77
 #define MAP_OUTPUT_VOLTAGE          78
 
@@ -83,6 +85,7 @@
 #define FMT_INTEGER     0
 #define FMT_DOUBLE      1
 #define FMT_STRING      2
+#define FMT_INT_MINUTES 3
 
 
 //
@@ -209,6 +212,9 @@ static void DecodeValue(BYTE *pData, int nDataFmt, int nOutputFmt, char *pszValu
    {
       case FMT_INTEGER:
          sprintf(pszValue, "%d", nValue);
+         break;
+      case FMT_INT_MINUTES:
+         sprintf(pszValue, "%d", nValue / 60);
          break;
       case FMT_DOUBLE:
          sprintf(pszValue, "%f", dValue);
@@ -527,7 +533,7 @@ void BCMXCPInterface::QueryOutputVoltage(void)
 
 void BCMXCPInterface::QueryEstimatedRuntime(void)
 {
-   ReadParameter(MAP_BATTERY_RUNTIME, FMT_INTEGER, &m_paramList[UPS_PARAM_EST_RUNTIME]);
+   ReadParameter(MAP_BATTERY_RUNTIME, FMT_INT_MINUTES, &m_paramList[UPS_PARAM_EST_RUNTIME]);
 }
 
 
@@ -667,5 +673,33 @@ void BCMXCPInterface::QueryOnlineStatus(void)
    else
    {
       m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags |= UPF_NULL_VALUE;
+   }
+}
+
+
+//
+// Get UPS load
+//
+
+void BCMXCPInterface::QueryPowerLoad(void)
+{
+   UPS_PARAMETER upsCurrOutput, upsMaxOutput;
+   int nCurrOutput, nMaxOutput;
+
+   ReadParameter(MAP_OUTPUT_VA, FMT_INTEGER, &upsCurrOutput);
+   ReadParameter(MAP_MAX_OUTPUT_VA, FMT_INTEGER, &upsMaxOutput);
+   m_paramList[UPS_PARAM_LOAD].dwFlags = upsCurrOutput.dwFlags | upsMaxOutput.dwFlags;
+   if ((m_paramList[UPS_PARAM_LOAD].dwFlags & (UPF_NOT_SUPPORTED | UPF_NULL_VALUE)) == 0)
+   {
+      nCurrOutput = atoi(upsCurrOutput.szValue);
+      nMaxOutput = atoi(upsMaxOutput.szValue);
+      if ((nMaxOutput > 0) && (nMaxOutput >= nCurrOutput))
+      {
+         sprintf(m_paramList[UPS_PARAM_LOAD].szValue, "%d", nCurrOutput * 100 / nMaxOutput);
+      }
+      else
+      {
+         m_paramList[UPS_PARAM_LOAD].dwFlags |= UPF_NULL_VALUE;
+      }
    }
 }

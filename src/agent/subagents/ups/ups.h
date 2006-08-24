@@ -251,6 +251,7 @@ public:
    virtual void QueryFirmwareVersion(void);
    virtual void QuerySerialNumber(void);
    virtual void QueryOnlineStatus(void);
+   virtual void QueryPowerLoad(void);
 };
 
 
