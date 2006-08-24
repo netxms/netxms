@@ -25,6 +25,7 @@ contrib/installAgent.sh -text
 contrib/logo.jpg -text
 contrib/mibs/ARCADA-MIB.txt -text
 contrib/mibs/BGP4-MIB.txt -text
+contrib/mibs/BN-IF-EXTENSIONS-MIB.txt -text
 contrib/mibs/BRIDGE-MIB.txt -text
 contrib/mibs/CDX-6500-COMMON-MIB.txt -text
 contrib/mibs/CHECKPOINT-NG-MIB.txt -text

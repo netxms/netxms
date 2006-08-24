@@ -1,0 +1,92 @@
+-- SECTION 1: Top Level Definitions
+
+
+BN-IF-EXTENSIONS-MIB DEFINITIONS ::= BEGIN
+
+
+-- Interface Extension MIB
+-- Revision 10/21/97
+
+-- Copyright 1997 Bay Networks, Inc.
+-- All rights reserved.
+-- This Bay Networks SNMP Management Information Base Specification
+-- (Specification) embodies Bay Networks' confidential and
+-- proprietary intellectual property. Bay Networks retains all
+-- title and ownership in the Specification, including any
+-- revisions.
+
+-- This Specification is supplied "AS IS," and Bay Networks makes
+-- no warranty, either express or implied, as to the use,
+-- operation, condition, or performance of the Specification.
+
+
+-- Imports
+
+IMPORTS
+	OBJECT-TYPE
+		FROM RFC-1212
+        s5IfExt FROM S5-ROOT-MIB;
+
+
+-- Groups
+
+bnIfExtensions	OBJECT IDENTIFIER ::= { s5IfExt 1 }
+
+
+-- SECTION 2: Interface Extension Table
+
+bnIfExtnTable OBJECT-TYPE
+	SYNTAX	SEQUENCE OF BnIfExtnEntry
+	ACCESS	not-accessible
+	STATUS	mandatory
+	DESCRIPTION
+		"A list of interface entries. The numebr of entries is
+		given by the value of ifNumber."
+	::= { bnIfExtensions 1 }
+
+bnIfExtnEntry OBJECT-TYPE
+	SYNTAX	BnIfExtnEntry
+	ACCESS	not-accessible
+	STATUS	mandatory
+	DESCRIPTION
+		"An interface entry containing objects at the subnetwork
+		layer and below for a particular interface."
+	INDEX	{ bnIfExtnIndex }
+	::= { bnIfExtnTable 1 }
+
+BnIfExtnEntry ::= SEQUENCE {
+	bnIfExtnIndex
+		INTEGER,
+	bnIfExtnSlot
+		INTEGER,
+	bnIfExtnPort
+		INTEGER
+}
+
+bnIfExtnIndex OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"A unique value for each interface corresponding to the
+		ifIndex value for the same interface."
+	::= { bnIfExtnEntry 1 }
+
+bnIfExtnSlot OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The unit number associated with this particular interface."
+	::= { bnIfExtnEntry 2 }
+
+bnIfExtnPort OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The port number within a unit or slot."
+	::= { bnIfExtnEntry 3 }
+
+END
+
