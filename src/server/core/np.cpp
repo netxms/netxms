@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: np.cpp
+** File: np.cpp
 **
 **/
 
@@ -94,6 +94,14 @@ NXSL_Value *NXSL_DiscoveryClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
    else if (!strcmp(pszAttr, "isPrinter"))
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_PRINTER) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isCDP"))
+   {
+      pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_CDP) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isNortelTopo"))
+   {
+      pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_NORTEL_TOPO) ? 1 : 0));
    }
    else if (!strcmp(pszAttr, "snmpVersion"))
    {
@@ -240,14 +248,33 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
       }
    }
 
-   // Check if node is a bridge
+   // Check various SNMP device capabilities
    if (data.dwFlags & NNF_IS_SNMP)
    {
+      // Check if node is a bridge
       if (SnmpGet(data.nSNMPVersion, dwIpAddr, 161, szCommunityString,
                   ".1.3.6.1.2.1.17.1.1.0", NULL, 0, szBuffer, 256,
                   FALSE, FALSE) == SNMP_ERR_SUCCESS)
       {
          data.dwFlags |= NNF_IS_BRIDGE;
+      }
+
+      // Check for CDP (Cisco Discovery Protocol) support
+      if (SnmpGet(data.nSNMPVersion, dwIpAddr, 161, szCommunityString,
+                  ".1.3.6.1.4.1.9.9.23.1.3.1.0", NULL, 0, &dwTemp, sizeof(DWORD),
+                  FALSE, FALSE) == SNMP_ERR_SUCCESS)
+      {
+         if (dwTemp == 1)
+            data.dwFlags |= NNF_IS_CDP;
+      }
+
+      // Check for Nortel topology discovery support
+      if (SnmpGet(data.nSNMPVersion, dwIpAddr, 161, szCommunityString,
+                  ".1.3.6.1.4.1.45.1.6.13.1.2.0", NULL, 0, &dwTemp, sizeof(DWORD),
+                  FALSE, FALSE) == SNMP_ERR_SUCCESS)
+      {
+         if (dwTemp == 1)
+            data.dwFlags |= NNF_IS_NORTEL_TOPO;
       }
    }
 

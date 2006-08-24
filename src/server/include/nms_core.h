@@ -258,11 +258,13 @@ typedef struct
 // New node flags
 //
 
-#define NNF_IS_SNMP     0x0001
-#define NNF_IS_AGENT    0x0002
-#define NNF_IS_ROUTER   0x0004
-#define NNF_IS_BRIDGE   0x0008
-#define NNF_IS_PRINTER  0x0010
+#define NNF_IS_SNMP           0x0001
+#define NNF_IS_AGENT          0x0002
+#define NNF_IS_ROUTER         0x0004
+#define NNF_IS_BRIDGE         0x0008
+#define NNF_IS_PRINTER        0x0010
+#define NNF_IS_CDP            0x0020
+#define NNF_IS_NORTEL_TOPO    0x0040
 
 
 //

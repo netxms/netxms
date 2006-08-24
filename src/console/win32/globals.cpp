@@ -299,6 +299,7 @@ CODE_TO_TEXT g_ctNodeType[] =
    { NODE_TYPE_GENERIC, _T("Generic") },
    { NODE_TYPE_NORTEL_ACCELAR, _T("Nortel Networks Passport switch") },
    { NODE_TYPE_NETSCREEN, _T("NetScreen Firewall/VPN") },
+   { NODE_TYPE_NORTEL_BAYSTACK, _T("Nortel Ethernet switch (former BayStack)") },
    { 0, NULL }    // End of list
 };
 
