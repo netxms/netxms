@@ -55,6 +55,7 @@
 #define CFMT_FLOAT      2
 #define CFMT_IP_ADDR    3
 #define CFMT_MAC_ADDR   4
+#define CFMT_IFINDEX    5
 
 
 #endif

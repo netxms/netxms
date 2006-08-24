@@ -6,12 +6,13 @@
 - Agent ported to IPSO
 - Added installer command line options for unattended installation of
   Windows agent
-- New MIBs added: S5-ETH-MULTISEG-TOPOLOGY-MIB
+- New MIBs added: S5-ETH-MULTISEG-TOPOLOGY-MIB, BN-IF-EXTENSIONS-MIB
 - Server startup and shutdown procedures improved
 - Added detection of lost database connections and automatic reconnect
 - Native operating system read/write locks used whenever possible
 - Added possibility to use alarm message text in actions (if action executed by
   the same event processing rule as alarm)
+- Better handling of interface names of Nortel ethernet switches
 - Windows binaries built against OpenSSL 0.9.8b
 - Windows console:
 	- DCI history data viewer improved

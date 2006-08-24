@@ -55,6 +55,7 @@ struct SNMP_ENUM_ARGS
    LONG *pnFormatList;
    DWORD dwFlags;
    NETXMS_VALUES_LIST values;
+   Node *pNode;
 };
 
 
@@ -249,9 +250,12 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
 // Add SNMP variable value to results list
 //
 
-static void AddSNMPResult(NETXMS_VALUES_LIST *pValues, SNMP_Variable *pVar, LONG nFmt)
+static void AddSNMPResult(NETXMS_VALUES_LIST *pValues, SNMP_Variable *pVar,
+                          LONG nFmt, Node *pNode)
 {
    TCHAR szBuffer[4096];
+   Interface *pInterface;
+   DWORD dwIndex;
 
    if (pVar != NULL)
    {
@@ -259,6 +263,18 @@ static void AddSNMPResult(NETXMS_VALUES_LIST *pValues, SNMP_Variable *pVar, LONG
       {
          case CFMT_MAC_ADDR:
             pVar->GetValueAsMACAddr(szBuffer);
+            break;
+         case CFMT_IFINDEX:   // Column is an interface index, convert to interface name
+            dwIndex = pVar->GetValueAsUInt();
+            pInterface = pNode->FindInterface(dwIndex, INADDR_ANY);
+            if (pInterface != NULL)
+            {
+               nx_strncpy(szBuffer, pInterface->Name(), 4096);
+            }
+            else
+            {
+               _stprintf(szBuffer, _T("#%d"), dwIndex);
+            }
             break;
          default:
             pVar->GetValueAsString(szBuffer, 4096);
@@ -318,17 +334,20 @@ static DWORD TableHandler(DWORD dwVersion, DWORD dwAddr, WORD wPort,
    if (dwResult == SNMP_ERR_SUCCESS)
    {
       if ((pRespPDU->GetNumVariables() > 0) &&
-       (pRespPDU->GetErrorCode() == SNMP_PDU_ERR_SUCCESS))
+          (pRespPDU->GetErrorCode() == SNMP_PDU_ERR_SUCCESS))
       {
          ((SNMP_ENUM_ARGS *)pArg)->dwNumRows++;
 
          // Add first column to results
-         AddSNMPResult(&((SNMP_ENUM_ARGS *)pArg)->values, pVar, ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[0]);
+         AddSNMPResult(&((SNMP_ENUM_ARGS *)pArg)->values, pVar,
+                       ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[0],
+                       ((SNMP_ENUM_ARGS *)pArg)->pNode);
 
          for(i = 1; i < ((SNMP_ENUM_ARGS *)pArg)->dwNumCols; i++)
             AddSNMPResult(&((SNMP_ENUM_ARGS *)pArg)->values, 
                           pRespPDU->GetVariable(i - 1), 
-                          ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[i]);
+                          ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[i],
+                          ((SNMP_ENUM_ARGS *)pArg)->pNode);
       }
       delete pRespPDU;
    }
@@ -367,6 +386,7 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
          args.dwFlags = ((TOOL_STARTUP_INFO *)pArg)->dwFlags;
          args.values.dwNumStrings = 0;
          args.values.ppStringList = NULL;
+         args.pNode = ((TOOL_STARTUP_INFO *)pArg)->pNode;
          for(i = 0; i < dwNumCols; i++)
          {
             nx_strncpy(szBuffer, DBGetField(hResult, i, 0), 256);

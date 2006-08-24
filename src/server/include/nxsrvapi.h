@@ -172,7 +172,7 @@ typedef struct
 
 typedef struct
 {
-   TCHAR szName[MAX_OBJECT_NAME];
+   TCHAR szName[MAX_DB_STRING];
    DWORD dwIndex;
    DWORD dwType;
    DWORD dwIpAddr;

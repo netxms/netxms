@@ -888,8 +888,11 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
          if (!m_bIgnoreErrors)
          {
             m_bIgnoreErrors = TRUE;
-            m_pMainWnd->MessageBox(_T("Connection with the management server terminated unexpectedly"), _T("Error"), MB_OK | MB_ICONSTOP);
-            m_pMainWnd->PostMessage(WM_CLOSE, 0, 0);
+            if (IsWindow(m_pMainWnd->m_hWnd))
+            {
+               m_pMainWnd->MessageBox(_T("Connection with the management server terminated unexpectedly"), _T("Error"), MB_OK | MB_ICONSTOP);
+               m_pMainWnd->PostMessage(WM_CLOSE, 0, 0);
+            }
          }
          break;
       case NXC_EVENT_NEW_ELOG_RECORD:

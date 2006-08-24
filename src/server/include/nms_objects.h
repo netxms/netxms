@@ -540,6 +540,8 @@ protected:
 
    DWORD GetInterfaceCount(Interface **ppInterface);
 
+   void CheckInterfaceNames(INTERFACE_LIST *pIfList);
+
    virtual void PrepareForDeletion(void);
    virtual void OnObjectDelete(DWORD dwObjectId);
 

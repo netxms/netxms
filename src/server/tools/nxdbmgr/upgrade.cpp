@@ -78,6 +78,48 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V45 to V46
+//
+
+static BOOL H_UpgradeFromV45(void)
+{
+   static TCHAR m_szBatch[] =
+      "UPDATE object_tools_table_columns SET col_format=5 WHERE tool_id=5 AND col_number=1\n"
+	   "INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) "
+	      "VALUES (2,'.1.3.6.1.4.1.45.3.26.*',3,0)\n"
+	   "INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) "
+	      "VALUES (3,'.1.3.6.1.4.1.45.3.30.*',3,0)\n"
+	   "INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) "
+	      "VALUES (4,'.1.3.6.1.4.1.45.3.31.*',3,0)\n"
+	   "INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) "
+	      "VALUES (5,'.1.3.6.1.4.1.45.3.32.*',3,0)\n"
+	   "INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) "
+	      "VALUES (6,'.1.3.6.1.4.1.45.3.33.*',3,0)\n"
+	   "INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) "
+	      "VALUES (7,'.1.3.6.1.4.1.45.3.34.*',3,0)\n"
+	   "INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) "
+	      "VALUES (8,'.1.3.6.1.4.1.45.3.35.*',3,0)\n"
+	   "INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) "
+	      "VALUES (9,'.1.3.6.1.4.1.45.3.36.*',3,0)\n"
+	   "INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) "
+	      "VALUES (10,'.1.3.6.1.4.1.45.3.40.*',3,0)\n"
+	   "INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) "
+	      "VALUES (11,'.1.3.6.1.4.1.45.3.61.*',3,0)\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='46' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V44 to V45
 //
 
@@ -1990,6 +2032,7 @@ static struct
    { 42, H_UpgradeFromV42 },
    { 43, H_UpgradeFromV43 },
    { 44, H_UpgradeFromV44 },
+   { 45, H_UpgradeFromV45 },
    { 0, NULL }
 };
 

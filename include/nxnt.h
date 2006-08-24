@@ -26,5 +26,6 @@
 #define NODE_TYPE_GENERIC           0
 #define NODE_TYPE_NORTEL_ACCELAR    1
 #define NODE_TYPE_NETSCREEN         2
+#define NODE_TYPE_NORTEL_BAYSTACK   3
 
 #endif

@@ -427,6 +427,7 @@ void Node::NewNodePoll(DWORD dwNetMask)
 
       if (pIfList != NULL)
       {
+         CheckInterfaceNames(pIfList);
          for(i = 0; i < pIfList->iNumEntries; i++)
             CreateNewInterface(pIfList->pInterfaces[i].dwIpAddr, 
                                pIfList->pInterfaces[i].dwIpNetMask,
@@ -534,6 +535,9 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
       pIfList = SnmpGetInterfaceList(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort,
                                      m_szCommunityString, m_dwNodeType);
    }
+
+   if (pIfList != NULL)
+      CheckInterfaceNames(pIfList);
 
    return pIfList;
 }
@@ -2472,4 +2476,39 @@ BOOL Node::CheckSNMPIntegerValue(char *pszOID, int nValue)
                pszOID, NULL, 0, &dwTemp, sizeof(DWORD), FALSE, FALSE) == SNMP_ERR_SUCCESS)
       return (int)dwTemp == nValue;
    return FALSE;
+}
+
+
+//
+// Check and update if needed interface names
+//
+
+void Node::CheckInterfaceNames(INTERFACE_LIST *pIfList)
+{
+   int i;
+   TCHAR *ptr;
+
+   if (m_dwNodeType == NODE_TYPE_NORTEL_BAYSTACK)
+   {
+      // Translate interface names
+      for(i = 0; i < pIfList->iNumEntries; i++)
+      {
+         if ((_tcsstr(pIfList->pInterfaces[i].szName, _T("BayStack")) != NULL) ||
+             (_tcsstr(pIfList->pInterfaces[i].szName, _T("Nortel Ethernet Switch")) != NULL))
+         {
+            ptr = _tcsrchr(pIfList->pInterfaces[i].szName, _T('-'));
+            if (ptr != NULL)
+            {
+               ptr++;
+               while(*ptr == _T(' '))
+                  ptr++;
+               memmove(pIfList->pInterfaces[i].szName, ptr, _tcslen(ptr) + 1);
+            }
+         }
+      }
+   }
+
+   // Cut interface names
+   for(i = 0; i < pIfList->iNumEntries; i++)
+      pIfList->pInterfaces[i].szName[MAX_OBJECT_NAME - 1] = 0;
 }

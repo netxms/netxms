@@ -17,7 +17,7 @@ INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_o
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (5,0,'MAC Address','.1.3.6.1.2.1.17.4.3.1.1',CFMT_MAC_ADDR,0);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
-	VALUES (5,1,'Port','.1.3.6.1.2.1.17.4.3.1.2',CFMT_INTEGER,0);
+	VALUES (5,1,'Port','.1.3.6.1.2.1.17.4.3.1.2',CFMT_IFINDEX,0);
 
 INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
 	VALUES (6,'&Connect->Open &web browser',TOOL_TYPE_URL,'http://%OBJECT_IP_ADDR%',0,'','Open embedded web browser to node');

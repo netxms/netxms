@@ -437,7 +437,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr, WORD wPort,
          // Interface name
          sprintf(szOid, ".1.3.6.1.2.1.2.2.1.2.%d", pIfList->pInterfaces[i].dwIndex);
          if (SnmpGet(dwVersion, dwAddr, wPort, szCommunity, szOid, NULL, 0,
-                      pIfList->pInterfaces[i].szName, MAX_OBJECT_NAME,
+                      pIfList->pInterfaces[i].szName, MAX_DB_STRING,
                       FALSE, FALSE) != SNMP_ERR_SUCCESS)
             break;
 
