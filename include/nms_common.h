@@ -344,7 +344,7 @@ typedef int SOCKET;
 #define SELECT_NFDS(x)  (x)
 
 #if !(HAVE_SOCKLEN_T)
-typedef int socklen_t;
+typedef unsigned int socklen_t;
 #endif
 
 #endif   /* _WIN32 */
