@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.170 2006-08-25 21:05:53 alk Exp $
+# $Id: configure.ac,v 1.171 2006-08-25 21:15:35 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -308,7 +308,7 @@ AC_ARG_WITH(ipso-agent,
 ])
 
 UNSTABLE_SUBAGENT_DIRS=""
-AC_ARG_WITH(unstable,
+AC_ARG_ENABLE(unstable,
 [AS_HELP_STRING(--enable-unstable,build experimental/unstable components)],
 [
 	UNSTABLE_SUBAGENT_DIRS="logscan"
