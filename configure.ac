@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.168 2006-08-23 13:05:03 victor Exp $
+# $Id: configure.ac,v 1.169 2006-08-25 20:46:45 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -307,6 +307,13 @@ AC_ARG_WITH(ipso-agent,
    SUBAGENT_LIBS="../subagents/ipso/libnsm_ipso.la ../subagents/ping/libnsm_ping.la ../subagents/portCheck/libnsm_portCheck.la ../subagents/ups/libnsm_ups.la"
 ])
 
+UNSTABLE_SUBAGENT_DIRS=""
+AC_ARG_WITH(unstable-subagents,
+[AS_HELP_STRING(--with-unstable-subagents,build experimental/unstable subagents)],
+[
+	UNSTABLE_SUBAGENT_DIRS="logscan"
+])
+
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql pgsql odbc mssql sqlite"
@@ -380,6 +387,7 @@ AC_SUBST(CONTRIB_MODULES)
 AC_SUBST(STATIC_SUBAGENT_LIST)
 AC_SUBST(SUBAGENT_LIBS)
 AC_SUBST(BUILD_SERVER)
+AC_SUBST(UNSTABLE_SUBAGENT_DIRS)
 
 # --------------------------------------------------------------------------
 # If --with-static-agent selected, other components cannot be selected
