@@ -86,6 +86,7 @@
 #define _tcsdup   strdup
 #define _tcsupr   strupr
 #define _tcsspn   strspn
+#define _tcsstr   strstr
 #define _tcscat   strcat
 #define _topen    open
 #define _taccess  access
