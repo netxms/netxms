@@ -82,6 +82,19 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (14,2,'Port','.1.3.6.1.4.1.45.1.6.13.2.1.1.2',CFMT_IFINDEX,0);
 
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+	VALUES (15,'&Info->Topology table (CDP)',TOOL_TYPE_TABLE_SNMP,'Topology table',1,'','Show topology table (CDP)');
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (15,0,'Device ID','.1.3.6.1.4.1.9.9.23.1.2.1.1.6',CFMT_STRING,0);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (15,1,'IP Address','.1.3.6.1.4.1.9.9.23.1.2.1.1.4',CFMT_IP_ADDR,0);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (15,2,'Platform','.1.3.6.1.4.1.9.9.23.1.2.1.1.8',CFMT_STRING,0);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (15,3,'Version','.1.3.6.1.4.1.9.9.23.1.2.1.1.5',CFMT_STRING,0);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (15,4,'Port','.1.3.6.1.4.1.9.9.23.1.2.1.1.7',CFMT_STRING,0);
+
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (1,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (2,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (3,-2147483648);
@@ -95,3 +108,5 @@ INSERT INTO object_tools_acl (tool_id,user_id) VALUES (10,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (11,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (12,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (13,-2147483648);
+INSERT INTO object_tools_acl (tool_id,user_id) VALUES (14,-2147483648);
+INSERT INTO object_tools_acl (tool_id,user_id) VALUES (15,-2147483648);

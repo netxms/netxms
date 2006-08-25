@@ -297,6 +297,25 @@ TCHAR *SNMP_Variable::GetValueAsMACAddr(TCHAR *pszBuffer)
 
 
 //
+// Get value as IP address
+//
+
+TCHAR *SNMP_Variable::GetValueAsIPAddr(TCHAR *pszBuffer)
+{
+   // Ignore type and check only length
+   if (m_dwValueLength >= 4)
+   {
+      IpToStr(ntohl(*((DWORD *)m_pValue)), pszBuffer);
+   }
+   else
+   {
+      _tcscpy(pszBuffer, _T("0.0.0.0"));
+   }
+   return pszBuffer;
+}
+
+
+//
 // Encode variable using BER
 // Normally buffer provided should be at least m_dwValueLength + (name_length * 4) + 12 bytes
 // Return value is number of bytes actually used in buffer

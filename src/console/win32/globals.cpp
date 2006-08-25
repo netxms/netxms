@@ -169,7 +169,31 @@ TCHAR *g_szInterfaceTypes[] =
    "SLIP",
    "DS3",
    "SMDS",
-   "Frame Relay"
+   "Frame Relay",
+   "RS-232",
+   "PARA",
+   "ArcNet",
+   "ArcNet Plus",
+   "ATM",
+   "MIO X.25",
+   "SONET",
+   "X.25 PLE"
+   "ISO 88022 LLC",
+   "LocalTalk",
+   "SMDS DXI",
+   "Frame Relay Service",
+   "V.35",
+   "HSSI",
+   "HIPPI",
+   "Modem",
+   "AAL5",
+   "SONET PATH",
+   "SONET VT",
+   "SMDS ICIP",
+   "Proprietary Virtual",
+   "Proprietary Multiplexor",
+   "IEEE 802.12",
+   "FibreChannel"
 };
 TCHAR *g_szAuthMethod[] = { _T("NetXMS Password"), _T("RADIUS"), _T("RSA SecureID"), NULL };
 

@@ -34,6 +34,7 @@ static char m_szCommunity[256] = "public";
 static WORD m_wPort = 161;
 static DWORD m_dwVersion = SNMP_VERSION_2C;
 static DWORD m_dwTimeout = 3000;
+static DWORD m_dwType = ASN_OCTET_STRING;
 
 
 //
@@ -71,7 +72,7 @@ static int SetVariables(int argc, char *argv[])
          if (SNMPIsCorrectOID(argv[i]))
          {
             pVar = new SNMP_Variable(argv[i]);
-            pVar->SetValueFromString(ASN_OCTET_STRING, argv[i + 1]);
+            pVar->SetValueFromString(m_dwType, argv[i + 1]);
             request->BindVariable(pVar);
          }
          else
@@ -120,7 +121,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:hp:v:")) != -1)
+   while((ch = getopt(argc, argv, "c:hp:t:v:")) != -1)
    {
       switch(ch)
       {
@@ -130,6 +131,7 @@ int main(int argc, char *argv[])
                    "   -c <string>  : Specify community string. Default is \"public\".\n"
                    "   -h           : Display help and exit.\n"
                    "   -p <port>    : Specify agent's port number. Default is 161.\n"
+                   "   -t <type>    : Specify variable's data type. Default is octet string.\n"
                    "   -v <version> : Specify SNMP version (valid values is 1 and 2c).\n"
                    "   -w <seconds> : Specify request timeout (default is 3 seconds)\n"
                    "\n");
@@ -149,6 +151,18 @@ int main(int argc, char *argv[])
             else
             {
                m_wPort = (WORD)dwValue;
+            }
+            break;
+         case 't':
+            dwValue = strtoul(optarg, &eptr, 0);
+            if (*eptr != 0)
+            {
+               printf("Invalid data type %s\n", optarg);
+               bStart = FALSE;
+            }
+            else
+            {
+               m_dwType = dwValue;
             }
             break;
          case 'v':   // Version

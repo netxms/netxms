@@ -25,6 +25,29 @@
 	      VALUES (10,'.1.3.6.1.4.1.45.3.40.*',3,0)
 	   INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags)
 	      VALUES (11,'.1.3.6.1.4.1.45.3.61.*',3,0)
+- New object tools added:
+	INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+		VALUES (14,'&Info->Topology table (Nortel)',2 ,'Topology table',1,'','Show topology table (Nortel protocol)');
+	INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+		VALUES (14,0,'Peer IP','.1.3.6.1.4.1.45.1.6.13.2.1.1.3',3 ,0);
+	INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+		VALUES (14,1,'Peer MAC','.1.3.6.1.4.1.45.1.6.13.2.1.1.5',4 ,0);
+	INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+		VALUES (14,2,'Port','.1.3.6.1.4.1.45.1.6.13.2.1.1.2',5 ,0);
+	INSERT INTO object_tools_acl (tool_id,user_id) VALUES (14,-2147483648);
+	INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+		VALUES (15,'&Info->Topology table (CDP)',2 ,'Topology table',1,'','Show topology table (CDP)');
+	INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+		VALUES (15,0,'Device ID','.1.3.6.1.4.1.9.9.23.1.2.1.1.6',0 ,0);
+	INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+		VALUES (15,1,'IP Address','.1.3.6.1.4.1.9.9.23.1.2.1.1.4',3 ,0);
+	INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+		VALUES (15,2,'Platform','.1.3.6.1.4.1.9.9.23.1.2.1.1.8',0 ,0);
+	INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+		VALUES (15,3,'Version','.1.3.6.1.4.1.9.9.23.1.2.1.1.5',0 ,0);
+	INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+		VALUES (15,4,'Port','.1.3.6.1.4.1.9.9.23.1.2.1.1.7',0 ,0);
+	INSERT INTO object_tools_acl (tool_id,user_id) VALUES (15,-2147483648);
 
 
 *************

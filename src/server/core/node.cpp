@@ -2508,7 +2508,11 @@ void Node::CheckInterfaceNames(INTERFACE_LIST *pIfList)
       }
    }
 
-   // Cut interface names
+   // Cut interface names to MAX_OBJECT_NAME and check for unnamed interfaces
    for(i = 0; i < pIfList->iNumEntries; i++)
+   {
       pIfList->pInterfaces[i].szName[MAX_OBJECT_NAME - 1] = 0;
+      if (pIfList->pInterfaces[i].szName[0] == 0)
+         _stprintf(pIfList->pInterfaces[i].szName, _T("%d"), pIfList->pInterfaces[i].dwIndex);
+   }
 }

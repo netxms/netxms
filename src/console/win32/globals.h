@@ -40,7 +40,7 @@ extern CConsoleApp theApp;
 #define MAX_SERVER_NAME_LEN   64
 #define MAX_LOGIN_NAME_LEN    64
 #define MAX_PASSWORD_LEN      64
-#define MAX_INTERFACE_TYPE    32
+#define MAX_INTERFACE_TYPE    56
 #define MAX_WND_PARAM_LEN     32768
 
 #define TOOLBOX_X_MARGIN      5

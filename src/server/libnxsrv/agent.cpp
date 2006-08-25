@@ -608,9 +608,10 @@ ARP_CACHE *AgentConnection::GetArpCache(void)
       szByte[2] = 0;
 
       // Parse data lines
-      // Each line has form of XXXXXXXXXXXX a.b.c.d
+      // Each line has form of XXXXXXXXXXXX a.b.c.d n
       // where XXXXXXXXXXXX is a MAC address (12 hexadecimal digits)
-      // and a.b.c.d is an IP address in decimal dotted notation
+      // a.b.c.d is an IP address in decimal dotted notation
+      // n is an interface index
       for(i = 0; i < m_dwNumDataLines; i++)
       {
          pBuf = m_ppDataLines[i];

@@ -264,6 +264,9 @@ static void AddSNMPResult(NETXMS_VALUES_LIST *pValues, SNMP_Variable *pVar,
          case CFMT_MAC_ADDR:
             pVar->GetValueAsMACAddr(szBuffer);
             break;
+         case CFMT_IP_ADDR:
+            pVar->GetValueAsIPAddr(szBuffer);
+            break;
          case CFMT_IFINDEX:   // Column is an interface index, convert to interface name
             dwIndex = pVar->GetValueAsUInt();
             pInterface = pNode->FindInterface(dwIndex, INADDR_ANY);
@@ -273,7 +276,10 @@ static void AddSNMPResult(NETXMS_VALUES_LIST *pValues, SNMP_Variable *pVar,
             }
             else
             {
-               _stprintf(szBuffer, _T("#%d"), dwIndex);
+               if (dwIndex == 0)    // Many devices uses index 0 for internal MAC, etc.
+                  _tcscpy(szBuffer, _T("INTERNAL"));
+               else
+                  _stprintf(szBuffer, _T("%d"), dwIndex);
             }
             break;
          default:
