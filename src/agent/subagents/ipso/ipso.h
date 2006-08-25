@@ -41,6 +41,11 @@ struct ipsctl_value
 		INT64 nInt64;
 		QWORD qwUInt64;
 		char szStr[1];
+		struct
+		{
+			DWORD dwAddr;
+			BYTE nMaskBits;
+		} ipAddr;
 	} data;
 };
 
@@ -51,8 +56,11 @@ extern "C" {
 int ipsctl_open(void);
 int ipsctl_close(int nHandle);
 int ipsctl_get(int nHandle, char *pszName, struct ipsctl_value **ppData);
+int ipsctl_iterate(int nHandle, char *pszRoot,
+                   void (* pfCallback)(char *, void *), void *pArg);
 
 char *if_indextoname(unsigned int ifindex, char *ifname);
+unsigned int if_nametoindex(char *ifname);
 
 #ifdef __cplusplus
 }
@@ -63,8 +71,9 @@ char *if_indextoname(unsigned int ifindex, char *ifname);
 // Wrappers for ipsctl_get()
 //
 
-LONG IPSCTLGetInt(char *pszName, LONG *pnValue);
-LONG IPSCTLGetString(char *pszName, char *pszValue, int nSize);
+LONG IPSCTLGetInt(int nCallerHandle, char *pszName, LONG *pnValue);
+LONG IPSCTLGetString(int nCallerHandle, char *pszName,
+                     char *pszValue, int nSize);
 
 
 //

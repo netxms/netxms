@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.3 2006-08-16 22:26:09 victor Exp $ */
+/* $Id: net.cpp,v 1.4 2006-08-25 22:24:02 victor Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -39,20 +39,102 @@
 // Internal data structures
 //
 
-typedef struct t_Addr
+#define MAX_IF_NAME	128
+
+typedef struct t_IfData
 {
-	struct in_addr ip;
-	int mask;
-} ADDR;
+	char szName[MAX_IF_NAME];
+	LONG nIndex;
+	LONG nType;
+	char szMacAddr[24];
+	BOOL isLogical;
+	char szPhysIfName[MAX_IF_NAME];
+	int nAddrCount;
+	char szIpAddr[16];
+	int nMask;
+} IFDATA;
 
 typedef struct t_IfList
 {
-	char *name;
-	struct ether_addr *mac;
-	ADDR *addr;
-	int addrCount;
-	int index;
+	int nSize;
+	IFDATA *pData;
+	int nHandle;
+	int nCurr;
 } IFLIST;
+
+typedef struct t_cbp
+{
+	int nHandle;
+	NETXMS_VALUES_LIST *pList;
+} CBP;
+
+
+//
+// Index to name resolution callback parameters
+//
+
+typedef struct
+{
+	int nHandle;
+	int nIndex;
+	char *pszName;
+	char *pszResult;
+} IRPARAM;
+
+
+//
+// Callback for index to name resolution
+//
+
+static void IndexCallback(char *pszPath, IRPARAM *pArg)
+{
+	char *ptr, szCtl[256];
+	LONG nIndex;
+
+	snprintf(szCtl, 256, "%s:index", pszPath);
+	if (IPSCTLGetInt(pArg->nHandle, szCtl, &nIndex) == SYSINFO_RC_SUCCESS)
+	{
+		if (nIndex == pArg->nIndex)
+		{
+			ptr = strrchr(pszPath, ':');
+			if (ptr != NULL)
+				ptr++;
+			else
+				ptr = pszPath;
+			nx_strncpy(pArg->pszName, ptr, MAX_IF_NAME);
+			pArg->pszResult = pArg->pszName;
+		}
+	}
+}
+
+
+//
+// Convert logical interface index to name
+//
+
+static char *IndexToName(int nIndex, char *pszName, BOOL *pbIsLogical)
+{
+	IRPARAM data;
+
+	if (nIndex >= 0x01000000)
+	{
+		*pbIsLogical = TRUE;
+		return if_indextoname(nIndex - 0x01000000, pszName);
+	}
+
+	*pbIsLogical = FALSE;
+	
+	data.pszResult = NULL;
+	data.nHandle = ipsctl_open();
+	if (data.nHandle > 0)
+	{
+		data.nIndex = nIndex;
+		data.pszName = pszName;
+		ipsctl_iterate(data.nHandle, "ifphys", IndexCallback, &data);
+		ipsctl_close(data.nHandle);
+	}
+	return data.pszResult;
+}
 
 
 //
@@ -70,7 +152,7 @@ LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue)
 		return ERR_NOT_IMPLEMENTED;
 	}
 
-	nRet = IPSCTLGetInt("net:ip:forward:noforwarding", &nVal);
+	nRet = IPSCTLGetInt(0, "net:ip:forward:noforwarding", &nVal);
 	if (nRet == SYSINFO_RC_SUCCESS)
 		ret_int(pValue, !nVal);
 
@@ -84,9 +166,10 @@ LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue)
 
 LONG H_NetIfStats(char *pszParam, char *pArg, char *pValue)
 {
-	int nRet = SYSINFO_RC_SUCCESS;
-	char szName[128], szRequest[256];
-	static char *pszRqList[] =
+	LONG nTemp, nRet = SYSINFO_RC_SUCCESS;
+	char szName[MAX_IF_NAME], szRequest[256];
+	BOOL isLogical;
+	static char *pszRqListLog[] =
 	{
 		"interface:%s:name",
 		"interface:%s:flags:link_avail",
@@ -95,6 +178,16 @@ LONG H_NetIfStats(char *pszParam, char *pArg, char *pValue)
 		"interface:%s:stats:obytes",
 		"interface:%s:stats:ipackets",
 		"interface:%s:stats:opackets"
+	};
+	static char *pszRqListPhy[] =
+	{
+		"ifphys:%s:dev_type",
+		"ifphys:%s:flags:link",
+		"ifphys:%s:flags:up",
+		"ifphys:%s:stats:ibytes",
+		"ifphys:%s:stats:obytes",
+		"ifphys:%s:stats:ipackets",
+		"ifphys:%s:stats:opackets"
 	};
 
 	if (!NxGetParameterArg(pszParam, 1, szName, sizeof(szName)))
@@ -106,17 +199,25 @@ LONG H_NetIfStats(char *pszParam, char *pArg, char *pValue)
 		if (szName[0] >= '0' && szName[0] <= '9')
 		{
 			// index
-			if (if_indextoname(atoi(szName), szName) != szName)
+			if (IndexToName(atoi(szName), szName, &isLogical) != szName)
 			{
 				// not found
 				nRet = SYSINFO_RC_ERROR;
 			}
 		}
+		else
+		{
+			// Check if interface is physical or logical
+			snprintf(szRequest, sizeof(szRequest), "ifphys:%s:index", szName);
+			isLogical = (IPSCTLGetInt(0, szRequest, &nTemp) == SYSINFO_RC_SUCCESS) ? FALSE : TRUE;
+		}
 
 		if (nRet == SYSINFO_RC_SUCCESS)
 		{
-			snprintf(szRequest, sizeof(szRequest), pszRqList[(int)pArg], szName);
-			nRet = IPSCTLGetString(szRequest, pValue, MAX_RESULT_LENGTH);
+			snprintf(szRequest, sizeof(szRequest),
+			         isLogical ? pszRqListLog[(int)pArg] : pszRqListPhy[(int)pArg],
+			         szName);
+			nRet = IPSCTLGetString(0, szRequest, pValue, MAX_RESULT_LENGTH);
 		}
 	}
 	else
@@ -129,73 +230,49 @@ LONG H_NetIfStats(char *pszParam, char *pArg, char *pValue)
 
 
 //
+// Callback for ARP cache enumeration
+//
+
+static void ArpCallback(char *pszPath, CBP *pArg)
+{
+	char *ptr, szBuffer[1024], szMacAddr[32], szIfName[MAX_IF_NAME];
+
+	snprintf(szBuffer, 1024, "%s:macaddr", pszPath);
+	if (IPSCTLGetString(pArg->nHandle, szBuffer, szMacAddr, 32) != SYSINFO_RC_SUCCESS)
+		return;
+
+	snprintf(szBuffer, 1024, "%s:ifname", pszPath);
+	if (IPSCTLGetString(pArg->nHandle, szBuffer, szIfName, MAX_IF_NAME) != SYSINFO_RC_SUCCESS)
+		return;
+
+	ptr = strrchr(pszPath, ':');
+	if (ptr == NULL)
+		return;
+	ptr++;
+
+	TranslateStr(szMacAddr, ":", "");
+	snprintf(szBuffer, 1024, "%s %s %d", szMacAddr, ptr,
+	         if_nametoindex(szIfName) + 0x01000000);
+	NxAddResultString(pArg->pList, szBuffer);
+}
+
+
+//
 // Handler for Net.ArpCache enum
 //
 
 LONG H_NetArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
-	int nRet = SYSINFO_RC_ERROR;
-	FILE *hFile;
-	int mib[6] = { CTL_NET, PF_ROUTE, 0, AF_INET, NET_RT_FLAGS, RTF_LLINFO };
-	size_t nNeeded;
-	char *pNext, *pBuff;
-	struct rt_msghdr *pRtm = NULL;
-	struct sockaddr_inarp *pSin;
-	struct sockaddr_dl *pSdl;
-	char *pLim;
+	LONG nRet = SYSINFO_RC_ERROR;
+	CBP data;
 
-	if (sysctl(mib, 6, NULL, &nNeeded, NULL, 0) != 0)
+	data.nHandle = ipsctl_open();
+	if (data.nHandle > 0)
 	{
-		return SYSINFO_RC_ERROR;
-	}
-	if ((pBuff = (char *)malloc(nNeeded)) == NULL)
-	{
-		return SYSINFO_RC_ERROR;
-	}
-	if (sysctl(mib, 6, pBuff, &nNeeded, NULL, 0) != 0)
-	{
-		return SYSINFO_RC_ERROR;
-	}
-
-	nRet = SYSINFO_RC_SUCCESS;
-	pLim = pBuff + nNeeded;
-	for (pNext = pBuff; pNext < pLim; pNext += pRtm->rtm_msglen)
-	{
-		char szBuff[256];
-		struct ether_addr *pEa;
-
-		pRtm = (struct rt_msghdr *)pNext;
-		pSin = (struct sockaddr_inarp *)(pRtm + 1);
-
-		pSdl = (struct sockaddr_dl *)((char *)pSin + (pSin->sin_len > 0
-					?
-						(1 + ((pSin->sin_len - 1) | (sizeof(long) - 1)))
-					:
-						sizeof(long))
-				);
-
-		if (pSdl->sdl_alen != 6)
-		{
-			continue;
-		}
-
-		pEa = (struct ether_addr *)LLADDR(pSdl);
-
-		if (memcmp(pEa->octet, "\377\377\377\377\377\377", 6) == 0)
-		{
-			// broadcast
-			continue;
-		}
-
-		snprintf(szBuff, sizeof(szBuff),
-				"%02X%02X%02X%02X%02X%02X %s %d",
-				pEa->octet[0], pEa->octet[1],
-				pEa->octet[2], pEa->octet[3],
-				pEa->octet[4], pEa->octet[5],
-				inet_ntoa(pSin->sin_addr),
-				pSdl->sdl_index);
-
-		NxAddResultString(pValue, szBuff);
+		data.pList = pValue;
+		if (ipsctl_iterate(data.nHandle, "net:ip:arp:entry", ArpCallback, &data) == 0)
+			nRet = SYSINFO_RC_SUCCESS;
+		ipsctl_close(data.nHandle);
 	}
 
 	return nRet;
@@ -319,12 +396,208 @@ LONG H_NetRoutingTable(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 
 
 //
+// Callback for physical interface enumeration
+//
+
+static void PhysicalIfCallback(char *pszPath, IFLIST *pList)
+{
+	char *ptr, szCtl[256], szBuffer[256];
+	IFDATA *pCurr;
+
+	// Extract interface name from path
+	ptr = strrchr(pszPath, ':');
+	if (ptr == NULL)	// Should never happen
+		ptr = pszPath;
+	else
+		ptr++;
+	
+	// Allocate new interface data structure
+	pList->pData = (IFDATA *)realloc(pList->pData, sizeof(IFDATA) * (pList->nSize + 1));
+	pCurr = &pList->pData[pList->nSize];
+	memset(pCurr, 0, sizeof(IFDATA));
+	pList->nSize++;
+
+	// Fill interface data
+	nx_strncpy(pCurr->szName, ptr, MAX_IF_NAME);
+	strcpy(pCurr->szIpAddr, "0.0.0.0");
+
+	// Interface index
+	snprintf(szCtl, 256, "%s:index", pszPath);
+	IPSCTLGetInt(pList->nHandle, szCtl, &pCurr->nIndex);
+
+	// Interface type
+	snprintf(szCtl, 256, "%s:type", pszPath);
+	if (IPSCTLGetString(pList->nHandle, szCtl, szBuffer, 256) == SYSINFO_RC_SUCCESS)
+	{
+		if (!strcmp(szBuffer, "ethernet"))
+			pCurr->nType = IFTYPE_ETHERNET_CSMACD;
+		else if (!strcmp(szBuffer, "loopback"))
+			pCurr->nType = IFTYPE_SOFTWARE_LOOPBACK;
+		else if (!strcmp(szBuffer, "pppoe"))
+			pCurr->nType = IFTYPE_EON;
+		else
+			pCurr->nType = IFTYPE_OTHER;
+	}
+	else
+	{
+		pCurr->nType = IFTYPE_OTHER;
+	}
+
+	// MAC address
+	snprintf(szCtl, 256, "%s:macaddr", pszPath);
+	IPSCTLGetString(pList->nHandle, szCtl, pCurr->szMacAddr, 24);
+	TranslateStr(pCurr->szMacAddr, ":", "");
+}
+
+
+//
+// Callback for logical interface enumeration
+//
+
+static void LogicalIfCallback(char *pszPath, IFLIST *pList)
+{
+	char *ptr, szCtl[256], szBuffer[256];
+	IFDATA *pCurr;
+
+	// Extract interface name from path
+	ptr = strrchr(pszPath, ':');
+	if (ptr == NULL)	// Should never happen
+		ptr = pszPath;
+	else
+		ptr++;
+	
+	// Allocate new interface data structure
+	pList->pData = (IFDATA *)realloc(pList->pData, sizeof(IFDATA) * (pList->nSize + 1));
+	pCurr = &pList->pData[pList->nSize];
+	memset(pCurr, 0, sizeof(IFDATA));
+	pList->nSize++;
+
+	// Fill interface data
+	nx_strncpy(pCurr->szName, ptr, MAX_IF_NAME);
+	pCurr->isLogical = TRUE;
+
+	// Interface index
+	snprintf(szCtl, 256, "%s:index", pszPath);
+	IPSCTLGetInt(pList->nHandle, szCtl, &pCurr->nIndex);
+	pCurr->nIndex += 0x01000000;
+
+	// Get underlaying physical interface
+	snprintf(szCtl, 256, "%s:phys", pszPath);
+	IPSCTLGetString(pList->nHandle, szCtl, pCurr->szPhysIfName, MAX_IF_NAME);
+
+	// Interface type
+	snprintf(szCtl, 256, "ifphys:%s:type", pCurr->szPhysIfName);
+	if (IPSCTLGetString(pList->nHandle, szCtl, szBuffer, 256) == SYSINFO_RC_SUCCESS)
+	{
+		if (!strcmp(szBuffer, "ethernet"))
+			pCurr->nType = IFTYPE_ETHERNET_CSMACD;
+		else if (!strcmp(szBuffer, "loopback"))
+			pCurr->nType = IFTYPE_SOFTWARE_LOOPBACK;
+		else if (!strcmp(szBuffer, "pppoe"))
+			pCurr->nType = IFTYPE_EON;
+		else
+			pCurr->nType = IFTYPE_OTHER;
+	}
+	else
+	{
+		pCurr->nType = IFTYPE_OTHER;
+	}
+
+	// MAC address
+	snprintf(szCtl, 256, "ifphys:%s:macaddr", pCurr->szPhysIfName);
+	IPSCTLGetString(pList->nHandle, szCtl, pCurr->szMacAddr, 24);
+	TranslateStr(pCurr->szMacAddr, ":", "");
+}
+
+
+//
+// Callback for IP address enumeration
+//
+
+static void IpAddrCallback(char *pszPath, IFLIST *pList)
+{
+	IFDATA *pCurr;
+	struct ipsctl_value *pValue;
+	char *ptr, szCtl[256];
+
+	if (pList->pData[pList->nCurr].szIpAddr[0] != 0)
+	{
+		// Interface already has IP address, create additional entry
+		pList->pData = (IFDATA *)realloc(pList->pData, sizeof(IFDATA) * (pList->nSize + 1));
+		pCurr = &pList->pData[pList->nSize];
+		memcpy(pCurr, &pList->pData[pList->nCurr], sizeof(IFDATA));
+		pList->nSize++;
+	}
+	else
+	{
+		pCurr = &pList->pData[pList->nCurr];
+	}
+
+	ptr = strrchr(pszPath, ':');
+	if (ptr != NULL)
+		ptr++;
+	else
+		ptr = pszPath;
+	nx_strncpy(pCurr->szIpAddr, ptr, 16);
+
+	snprintf(szCtl, 256, "%s:dest", pszPath);
+	if (ipsctl_get(pList->nHandle, szCtl, &pValue) == 0)
+	{
+		pCurr->nMask = pValue->data.ipAddr.nMaskBits;
+	}
+}
+
+
+//
 // Handler for Net.InterfaceList enum
 //
 
 LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
-	int nRet = SYSINFO_RC_ERROR;
+	int i, nSize, nHandle;
+	IFLIST ifList;
+	char szBuffer[1024];
+	LONG nRet = SYSINFO_RC_ERROR;
+
+	nHandle = ipsctl_open();
+	if (nHandle > 0)
+	{
+		ifList.nSize = 0;
+		ifList.pData = NULL;
+		ifList.nHandle = nHandle;
+		if ((ipsctl_iterate(nHandle, "ifphys", 
+		                    PhysicalIfCallback, &ifList) == 0) &&
+		    (ipsctl_iterate(nHandle, "interface",
+		                    LogicalIfCallback, &ifList) == 0))
+		{
+			nRet = SYSINFO_RC_SUCCESS;
+			
+			// Gather IP addresses
+			nSize = ifList.nSize;
+			for(i = 0; i < nSize; i++)
+			{
+				if (ifList.pData[i].isLogical)
+				{
+					sprintf(szBuffer, "interface:%s:family:inet:addr",
+					        ifList.pData[i].szName);
+					ifList.nCurr = i;
+					ipsctl_iterate(nHandle, szBuffer, IpAddrCallback, &ifList);
+					if (ifList.pData[i].szIpAddr[0] == 0)
+						strcpy(ifList.pData[i].szIpAddr, "0.0.0.0");
+				}
+			}
+
+			for(i = 0; i < ifList.nSize; i++)
+			{
+				sprintf(szBuffer, "%d %s/%d %d %s %s", ifList.pData[i].nIndex,
+				        ifList.pData[i].szIpAddr, ifList.pData[i].nMask,
+				        ifList.pData[i].nType, ifList.pData[i].szMacAddr,
+				        ifList.pData[i].szName);
+				NxAddResultString(pValue, szBuffer);
+			}
+		}
+		ipsctl_close(nHandle);
+	}
 
 	return nRet;
 }
@@ -333,6 +606,10 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/08/16 22:26:09  victor
+- Most of Net.Interface.XXX functions implemented on IPSO
+- Added function MACToStr
+
 Revision 1.2  2006/07/21 16:22:44  victor
 Some parameters are working
 

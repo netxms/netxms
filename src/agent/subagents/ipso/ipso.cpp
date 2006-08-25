@@ -1,4 +1,4 @@
-/* $Id: ipso.cpp,v 1.7 2006-08-18 08:37:46 victor Exp $ */
+/* $Id: ipso.cpp,v 1.8 2006-08-25 22:24:02 victor Exp $ */
 
 /* 
 ** NetXMS subagent for IPSO
@@ -35,7 +35,7 @@ static LONG H_IPSCTL(char *pszParam, char *pArg, char *pValue)
 	if (!NxGetParameterArg(pszParam, 1, szName, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	return IPSCTLGetString(szName, pValue, MAX_RESULT_LENGTH);
+	return IPSCTLGetString(0, szName, pValue, MAX_RESULT_LENGTH);
 }
 
 
@@ -161,13 +161,13 @@ DECLARE_SUBAGENT_INIT(IPSO)
 // Wrappers for ipsctl_get() function
 //
 
-LONG IPSCTLGetInt(char *pszName, LONG *pnValue)
+LONG IPSCTLGetInt(int nCallerHandle, char *pszName, LONG *pnValue)
 {
 	int nHandle, nErr;
 	struct ipsctl_value *pValue;
 	LONG nRet = SYSINFO_RC_ERROR;
 
-	nHandle = ipsctl_open();
+	nHandle = (nCallerHandle > 0) ? nCallerHandle : ipsctl_open();
 	if (nHandle > 0)
 	{
                 nErr = ipsctl_get(nHandle, pszName, &pValue);
@@ -187,18 +187,20 @@ LONG IPSCTLGetInt(char *pszName, LONG *pnValue)
                         if (nErr == 2)   // No such parameter
                                 nRet = SYSINFO_RC_UNSUPPORTED;
 		}
-		ipsctl_close(nHandle);
+		if (nHandle != nCallerHandle)
+			ipsctl_close(nHandle);
 	}
 	return nRet;
 }
 
-LONG IPSCTLGetString(char *pszName, char *pszValue, int nSize)
+LONG IPSCTLGetString(int nCallerHandle, char *pszName,
+                     char *pszValue, int nSize)
 {
 	int nHandle, nErr;
 	struct ipsctl_value *pData;
 	LONG nRet = SYSINFO_RC_ERROR;
 
-	nHandle = ipsctl_open();
+	nHandle = (nCallerHandle > 0) ? nCallerHandle : ipsctl_open();
 	if (nHandle > 0)
 	{
 		nErr = ipsctl_get(nHandle, pszName, &pData);
@@ -214,6 +216,14 @@ LONG IPSCTLGetString(char *pszName, char *pszValue, int nSize)
 					break;
 				case 4:         // String
 					nx_strncpy(pszValue, pData->data.szStr, nSize);
+					break;
+				case 5:         // IP address
+					IpToStr(ntohl(pData->data.ipAddr.dwAddr), pszValue);
+					if (pData->data.ipAddr.nMaskBits != 32)
+					{
+						sprintf(&pszValue[strlen(pszValue)], "/%d",
+						        pData->data.ipAddr.nMaskBits);
+					}
 					break;
 				case 7:         // MAC address ?  
 					MACToStr((BYTE *)pData->data.szStr, pszValue);
@@ -235,7 +245,8 @@ LONG IPSCTLGetString(char *pszName, char *pszValue, int nSize)
 			if (nErr == 2)   // No such parameter
 				nRet = SYSINFO_RC_UNSUPPORTED;
 		}
-		ipsctl_close(nHandle);
+		if (nHandle != nCallerHandle)
+			ipsctl_close(nHandle);
 	}
 	return nRet;
 }
@@ -245,6 +256,9 @@ LONG IPSCTLGetString(char *pszName, char *pszValue, int nSize)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/08/18 08:37:46  victor
+Changed handling of ipsctl data types
+
 Revision 1.6  2006/08/17 19:22:57  victor
 Minor changes
 
