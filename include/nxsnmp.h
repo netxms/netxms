@@ -360,6 +360,7 @@ public:
    TCHAR *GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize);
    SNMP_ObjectId *GetValueAsObjectId(void);
    TCHAR *GetValueAsMACAddr(TCHAR *pszBuffer);
+   TCHAR *GetValueAsIPAddr(TCHAR *pszBuffer);
 
    void SetValueFromString(DWORD dwType, TCHAR *pszValue);
 };

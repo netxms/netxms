@@ -485,6 +485,30 @@ typedef struct tagPOINT
 #define IFTYPE_DS3                  30
 #define IFTYPE_SMDS                 31
 #define IFTYPE_FRAME_RELAY          32
+#define IFTYPE_RS232                33
+#define IFTYPE_PARA                 34
+#define IFTYPE_ARCNET               35
+#define IFTYPE_ARCNET_PLUS          36
+#define IFTYPE_ATM                  37
+#define IFTYPE_MIOX25               38
+#define IFTYPE_SONET                39
+#define IFTYPE_X25PLE               40
+#define IFTYPE_ISO88022LLC          41
+#define IFTYPE_LOCALTALK            42
+#define IFTYPE_SMDS_DXI             43
+#define IFTYPE_FRAME_RELAY_SERVICE  44
+#define IFTYPE_V35                  45
+#define IFTYPE_HSSI                 46
+#define IFTYPE_HIPPI                47
+#define IFTYPE_MODEM                48
+#define IFTYPE_AAL5                 49
+#define IFTYPE_SONET_PATH           50
+#define IFTYPE_SONET_VT             51
+#define IFTYPE_SMDS_ICIP            52
+#define IFTYPE_PROP_VIRTUAL         53
+#define IFTYPE_PROP_MULTIPLEXOR     54
+#define IFTYPE_IEEE80212            55
+#define IFTYPE_FIBRECHANNEL         56
 
 #define IFTYPE_NETXMS_NAT_ADAPTER   65535
 
