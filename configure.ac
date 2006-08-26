@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.172 2006-08-26 21:30:17 victor Exp $
+# $Id: configure.ac,v 1.173 2006-08-26 21:48:58 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -322,6 +322,7 @@ AC_ARG_WITH(dist,
 	NXCONFIG="nxconfig"
    TOP_LEVEL_MODULES="sql images"
    CONTRIB_MODULES="mibs backgrounds"
+	UNSTABLE_SUBAGENT_DIRS="logscan"
 )
 
 AC_ARG_WITH(nxhttpd,
