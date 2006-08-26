@@ -654,7 +654,7 @@ struct NXC_TRAP_CFG_ENTRY
 {
    DWORD dwId;             // Entry ID
    DWORD *pdwObjectId;     // Trap OID
-   DWORD dwOidLen;         // Trap OID length
+   DWORD dwOidLen;         // Trap OID length (if highest bit is set, than it's a position)
    DWORD dwEventCode;      // Event code
    DWORD dwNumMaps;        // Number of parameter mappings
    NXC_OID_MAP *pMaps;

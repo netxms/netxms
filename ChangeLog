@@ -13,6 +13,8 @@
 - Added possibility to use alarm message text in actions (if action executed by
   the same event processing rule as alarm)
 - Better handling of interface names of Nortel ethernet switches
+- SNMP trap varbinds now can be mapped to event parameters not only by OID,
+  but also by position in trap PDU
 - Windows binaries built against OpenSSL 0.9.8b
 - Windows console:
 	- DCI history data viewer improved

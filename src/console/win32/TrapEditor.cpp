@@ -368,9 +368,12 @@ void CTrapEditor::EditTrap(BOOL bNewTrap)
                                         sizeof(NXC_OID_MAP) * m_pTrapList[dwIndex].dwNumMaps);
             for(i = 0; i < m_pTrapList[dwIndex].dwNumMaps; i++)
             {
-               dlg.m_trap.pMaps[i].pdwObjectId = 
-                  (DWORD *)nx_memdup(m_pTrapList[dwIndex].pMaps[i].pdwObjectId, 
-                                     sizeof(DWORD) * m_pTrapList[dwIndex].pMaps[i].dwOidLen);
+               if ((m_pTrapList[dwIndex].pMaps[i].dwOidLen & 0x80000000) == 0)
+                  dlg.m_trap.pMaps[i].pdwObjectId = 
+                     (DWORD *)nx_memdup(m_pTrapList[dwIndex].pMaps[i].pdwObjectId, 
+                                        sizeof(DWORD) * m_pTrapList[dwIndex].pMaps[i].dwOidLen);
+               else
+                  dlg.m_trap.pMaps[i].pdwObjectId = NULL;
             }
 
             // Run dialog and update record list on success

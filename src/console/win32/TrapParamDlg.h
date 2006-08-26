@@ -22,6 +22,8 @@ public:
 	CEdit	m_wndEditOID;
 	CString	m_strDescription;
 	CString	m_strOID;
+	DWORD	m_dwPos;
+	int		m_nType;
 	//}}AFX_DATA
 
 
@@ -34,10 +36,15 @@ public:
 
 // Implementation
 protected:
+	void OnTypeChange(void);
 
 	// Generated message map functions
 	//{{AFX_MSG(CTrapParamDlg)
 	afx_msg void OnSelectOid();
+	afx_msg void OnRadioOid();
+	afx_msg void OnRadioPos();
+	virtual BOOL OnInitDialog();
+	virtual void OnOK();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

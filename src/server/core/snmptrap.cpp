@@ -49,7 +49,7 @@ static BOOL LoadTrapCfg(void)
 {
    DB_RESULT hResult;
    BOOL bResult = TRUE;
-   TCHAR szQuery[256];
+   TCHAR *pszOID, szQuery[256];
    DWORD i, j, pdwBuffer[MAX_OID_LEN];
 
    // Load traps
@@ -90,17 +90,26 @@ static BOOL LoadTrapCfg(void)
             m_pTrapCfg[i].pMaps = (NXC_OID_MAP *)malloc(sizeof(NXC_OID_MAP) * m_pTrapCfg[i].dwNumMaps);
             for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
             {
-               m_pTrapCfg[i].pMaps[j].dwOidLen = SNMPParseOID(DBGetField(hResult, j, 0), pdwBuffer, MAX_OID_LEN);
-               if (m_pTrapCfg[i].pMaps[j].dwOidLen > 0)
+               pszOID = DBGetField(hResult, j, 0);
+               if (!_tcsncmp(pszOID, _T("POS:"), 4))
                {
-                  m_pTrapCfg[i].pMaps[j].pdwObjectId = 
-                     (DWORD *)nx_memdup(pdwBuffer, m_pTrapCfg[i].pMaps[j].dwOidLen * sizeof(DWORD));
+                  m_pTrapCfg[i].pMaps[j].dwOidLen = _tcstoul(&pszOID[4], NULL, 10) | 0x80000000;
+                  m_pTrapCfg[i].pMaps[j].pdwObjectId = NULL;
                }
                else
                {
-                  WriteLog(MSG_INVALID_TRAP_ARG_OID, EVENTLOG_ERROR_TYPE, "sd", 
-                           DBGetField(hResult, j, 0), m_pTrapCfg[i].dwId);
-                  bResult = FALSE;
+                  m_pTrapCfg[i].pMaps[j].dwOidLen = SNMPParseOID(pszOID, pdwBuffer, MAX_OID_LEN);
+                  if (m_pTrapCfg[i].pMaps[j].dwOidLen > 0)
+                  {
+                     m_pTrapCfg[i].pMaps[j].pdwObjectId = 
+                        (DWORD *)nx_memdup(pdwBuffer, m_pTrapCfg[i].pMaps[j].dwOidLen * sizeof(DWORD));
+                  }
+                  else
+                  {
+                     WriteLog(MSG_INVALID_TRAP_ARG_OID, EVENTLOG_ERROR_TYPE, "sd", 
+                              DBGetField(hResult, j, 0), m_pTrapCfg[i].dwId);
+                     bResult = FALSE;
+                  }
                }
                nx_strncpy(m_pTrapCfg[i].pMaps[j].szDescription, DBGetField(hResult, j, 1), MAX_DB_STRING);
                DecodeSQLString(m_pTrapCfg[i].pMaps[j].szDescription);
@@ -152,23 +161,39 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
    TCHAR *pszArgList[32], szBuffer[256];
    TCHAR szFormat[] = "sssssssssssssssssssssssssssssssss";
    DWORD i, j;
+   SNMP_Variable *pVar;
    int iResult;
 
    for(i = 0; i < m_pTrapCfg[dwIndex].dwNumMaps; i++)
    {
-      for(j = 0; j < pdu->GetNumVariables(); j++)
+      if (m_pTrapCfg[dwIndex].pMaps[i].dwOidLen & 0x80000000)
       {
-         iResult = pdu->GetVariable(j)->GetName()->Compare(
-               m_pTrapCfg[dwIndex].pMaps[i].pdwObjectId,
-               m_pTrapCfg[dwIndex].pMaps[i].dwOidLen);
-         if ((iResult == OID_EQUAL) || (iResult == OID_SHORTER))
+         pVar = pdu->GetVariable((m_pTrapCfg[dwIndex].pMaps[i].dwOidLen & 0x7FFFFFFF) - 1);
+         if (pVar != NULL)
          {
-            pszArgList[i] = _tcsdup(pdu->GetVariable(j)->GetValueAsString(szBuffer, 256));
-            break;
+            pszArgList[i] = _tcsdup(pVar->GetValueAsString(szBuffer, 256));
+         }
+         else
+         {
+            pszArgList[i] = _tcsdup(_T("<null>"));
          }
       }
-      if (j == pdu->GetNumVariables())
-         pszArgList[i] = _tcsdup(_T("<null>"));
+      else
+      {
+         for(j = 0; j < pdu->GetNumVariables(); j++)
+         {
+            iResult = pdu->GetVariable(j)->GetName()->Compare(
+                  m_pTrapCfg[dwIndex].pMaps[i].pdwObjectId,
+                  m_pTrapCfg[dwIndex].pMaps[i].dwOidLen);
+            if ((iResult == OID_EQUAL) || (iResult == OID_SHORTER))
+            {
+               pszArgList[i] = _tcsdup(pdu->GetVariable(j)->GetValueAsString(szBuffer, 256));
+               break;
+            }
+         }
+         if (j == pdu->GetNumVariables())
+            pszArgList[i] = _tcsdup(_T("<null>"));
+      }
    }
 
    szFormat[m_pTrapCfg[dwIndex].dwNumMaps + 1] = 0;
@@ -395,7 +420,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 
 
 //
-// Send all traps to client
+// Send all trap configuration records to client
 //
 
 void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId)
@@ -420,7 +445,8 @@ void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId)
           j < m_pTrapCfg[i].dwNumMaps; j++, dwId1++, dwId2++)
       {
          msg.SetVariable(dwId1, m_pTrapCfg[i].pMaps[j].dwOidLen);
-         msg.SetVariableToInt32Array(dwId2, m_pTrapCfg[i].pMaps[j].dwOidLen, m_pTrapCfg[i].pMaps[j].pdwObjectId);
+         if ((m_pTrapCfg[i].pMaps[j].dwOidLen & 0x80000000) == 0)
+            msg.SetVariableToInt32Array(dwId2, m_pTrapCfg[i].pMaps[j].dwOidLen, m_pTrapCfg[i].pMaps[j].pdwObjectId);
          msg.SetVariable(dwId3, m_pTrapCfg[i].pMaps[j].szDescription);
       }
       pSession->SendMessage(&msg);
@@ -538,10 +564,17 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
              j < m_pTrapCfg[i].dwNumMaps; j++, dwId1++, dwId2++)
          {
             m_pTrapCfg[i].pMaps[j].dwOidLen = pMsg->GetVariableLong(dwId1);
-            m_pTrapCfg[i].pMaps[j].pdwObjectId = 
-               (DWORD *)malloc(sizeof(DWORD) * m_pTrapCfg[i].pMaps[j].dwOidLen);
-            pMsg->GetVariableInt32Array(dwId2, m_pTrapCfg[i].pMaps[j].dwOidLen, 
-                                        m_pTrapCfg[i].pMaps[j].pdwObjectId);
+            if ((m_pTrapCfg[i].pMaps[j].dwOidLen & 0x80000000) == 0)
+            {
+               m_pTrapCfg[i].pMaps[j].pdwObjectId = 
+                  (DWORD *)malloc(sizeof(DWORD) * m_pTrapCfg[i].pMaps[j].dwOidLen);
+               pMsg->GetVariableInt32Array(dwId2, m_pTrapCfg[i].pMaps[j].dwOidLen, 
+                                           m_pTrapCfg[i].pMaps[j].pdwObjectId);
+            }
+            else
+            {
+               m_pTrapCfg[i].pMaps[j].pdwObjectId = NULL;
+            }
             pMsg->GetVariableStr(dwId3, m_pTrapCfg[i].pMaps[j].szDescription, MAX_DB_STRING);
          }
 
@@ -551,31 +584,48 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
          _sntprintf(szQuery, 1024, _T("UPDATE snmp_trap_cfg SET snmp_oid='%s',event_code=%d,description='%s' WHERE trap_id=%d"),
                     szOID, m_pTrapCfg[i].dwEventCode, pszEscDescr, m_pTrapCfg[i].dwId);
          free(pszEscDescr);
-         bSuccess = DBQuery(g_hCoreDB, szQuery);
-         if (bSuccess)
+         if(DBBegin(g_hCoreDB))
          {
-            _sntprintf(szQuery, 1024, _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%d"), m_pTrapCfg[i].dwId);
             bSuccess = DBQuery(g_hCoreDB, szQuery);
             if (bSuccess)
             {
-               for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
+               _sntprintf(szQuery, 1024, _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%d"), m_pTrapCfg[i].dwId);
+               bSuccess = DBQuery(g_hCoreDB, szQuery);
+               if (bSuccess)
                {
-                  SNMPConvertOIDToText(m_pTrapCfg[i].pMaps[j].dwOidLen,
-                                       m_pTrapCfg[i].pMaps[j].pdwObjectId,
-                                       szOID, 1024);
-                  pszEscDescr = EncodeSQLString(m_pTrapCfg[i].pMaps[j].szDescription);
-                  _sntprintf(szQuery, 1024, _T("INSERT INTO snmp_trap_pmap (trap_id,parameter,")
-                                            _T("snmp_oid,description) VALUES (%d,%d,'%s','%s')"),
-                             m_pTrapCfg[i].dwId, j + 1, szOID, pszEscDescr);
-                  free(pszEscDescr);
-                  bSuccess = DBQuery(g_hCoreDB, szQuery);
-                  if (!bSuccess)
-                     break;
+                  for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
+                  {
+                     if ((m_pTrapCfg[i].pMaps[j].dwOidLen & 0x80000000) == 0)
+                     {
+                        SNMPConvertOIDToText(m_pTrapCfg[i].pMaps[j].dwOidLen,
+                                             m_pTrapCfg[i].pMaps[j].pdwObjectId,
+                                             szOID, 1024);
+                     }
+                     else
+                     {
+                        _stprintf(szOID, _T("POS:%d"), m_pTrapCfg[i].pMaps[j].dwOidLen & 0x7FFFFFFF);
+                     }
+                     pszEscDescr = EncodeSQLString(m_pTrapCfg[i].pMaps[j].szDescription);
+                     _sntprintf(szQuery, 1024, _T("INSERT INTO snmp_trap_pmap (trap_id,parameter,")
+                                               _T("snmp_oid,description) VALUES (%d,%d,'%s','%s')"),
+                                m_pTrapCfg[i].dwId, j + 1, szOID, pszEscDescr);
+                     free(pszEscDescr);
+                     bSuccess = DBQuery(g_hCoreDB, szQuery);
+                     if (!bSuccess)
+                        break;
+                  }
                }
             }
+            if (bSuccess)
+               DBCommit(g_hCoreDB);
+            else
+               DBRollback(g_hCoreDB);
+            dwResult = bSuccess ? RCC_SUCCESS : RCC_DB_FAILURE;
          }
-
-         dwResult = bSuccess ? RCC_SUCCESS : RCC_DB_FAILURE;
+         else
+         {
+            dwResult = RCC_DB_FAILURE;
+         }
          break;
       }
    }

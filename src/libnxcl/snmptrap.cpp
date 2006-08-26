@@ -63,8 +63,15 @@ static void TrapCfgFromMsg(CSCPMessage *pMsg, NXC_TRAP_CFG_ENTRY *pTrap)
        i < pTrap->dwNumMaps; i++, dwId1++, dwId2++)
    {
       pTrap->pMaps[i].dwOidLen = pMsg->GetVariableLong(dwId1);
-      pTrap->pMaps[i].pdwObjectId = (DWORD *)malloc(sizeof(DWORD) * pTrap->pMaps[i].dwOidLen);
-      pMsg->GetVariableInt32Array(dwId2, pTrap->pMaps[i].dwOidLen, pTrap->pMaps[i].pdwObjectId);
+      if ((pTrap->pMaps[i].dwOidLen & 0x80000000) == 0)
+      {
+         pTrap->pMaps[i].pdwObjectId = (DWORD *)malloc(sizeof(DWORD) * pTrap->pMaps[i].dwOidLen);
+         pMsg->GetVariableInt32Array(dwId2, pTrap->pMaps[i].dwOidLen, pTrap->pMaps[i].pdwObjectId);
+      }
+      else
+      {
+         pTrap->pMaps[i].pdwObjectId = NULL;
+      }
       pMsg->GetVariableStr(dwId3, pTrap->pMaps[i].szDescription, MAX_DB_STRING);
    }
 }
@@ -228,7 +235,8 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY 
        i < pTrap->dwNumMaps; i++, dwId1++, dwId2++)
    {
       msg.SetVariable(dwId1, pTrap->pMaps[i].dwOidLen);
-      msg.SetVariableToInt32Array(dwId2, pTrap->pMaps[i].dwOidLen, pTrap->pMaps[i].pdwObjectId);
+      if ((pTrap->pMaps[i].dwOidLen & 0x80000000) == 0)
+         msg.SetVariableToInt32Array(dwId2, pTrap->pMaps[i].dwOidLen, pTrap->pMaps[i].pdwObjectId);
       msg.SetVariable(dwId3, pTrap->pMaps[i].szDescription);
    }
    ((NXCL_Session *)hSession)->SendMsg(&msg);

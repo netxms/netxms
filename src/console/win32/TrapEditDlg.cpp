@@ -223,8 +223,11 @@ void CTrapEditDlg::UpdateParameterEntry(DWORD dwIndex)
 {
    TCHAR szBuffer[1024];
 
-   SNMPConvertOIDToText(m_trap.pMaps[dwIndex].dwOidLen, m_trap.pMaps[dwIndex].pdwObjectId,
-                        szBuffer, 1024);
+   if ((m_trap.pMaps[dwIndex].dwOidLen & 0x80000000) == 0)
+      SNMPConvertOIDToText(m_trap.pMaps[dwIndex].dwOidLen, m_trap.pMaps[dwIndex].pdwObjectId,
+                           szBuffer, 1024);
+   else
+      _stprintf(szBuffer, _T("POS: %d"), m_trap.pMaps[dwIndex].dwOidLen & 0x7FFFFFFF);
    m_wndArgList.SetItemText(dwIndex, 1, szBuffer);
 }
 
@@ -244,10 +247,18 @@ void CTrapEditDlg::OnButtonAdd()
          (NXC_OID_MAP *)realloc(m_trap.pMaps, sizeof(NXC_OID_MAP) * (m_trap.dwNumMaps + 1));
       nx_strncpy(m_trap.pMaps[m_trap.dwNumMaps].szDescription, 
                dlg.m_strDescription, MAX_DB_STRING);
-      m_trap.pMaps[m_trap.dwNumMaps].dwOidLen = 
-         SNMPParseOID(dlg.m_strOID, pdwOid, MAX_OID_LEN);
-      m_trap.pMaps[m_trap.dwNumMaps].pdwObjectId = 
-         (DWORD *)nx_memdup(pdwOid, sizeof(DWORD) * m_trap.pMaps[m_trap.dwNumMaps].dwOidLen);
+      if (dlg.m_nType == 0)
+      {
+         m_trap.pMaps[m_trap.dwNumMaps].dwOidLen = 
+            SNMPParseOID(dlg.m_strOID, pdwOid, MAX_OID_LEN);
+         m_trap.pMaps[m_trap.dwNumMaps].pdwObjectId = 
+            (DWORD *)nx_memdup(pdwOid, sizeof(DWORD) * m_trap.pMaps[m_trap.dwNumMaps].dwOidLen);
+      }
+      else
+      {
+         m_trap.pMaps[m_trap.dwNumMaps].dwOidLen = dlg.m_dwPos | 0x80000000;
+         m_trap.pMaps[m_trap.dwNumMaps].pdwObjectId = NULL;
+      }
       AddParameterEntry(m_trap.dwNumMaps);
       m_trap.dwNumMaps++;
    }
@@ -294,18 +305,35 @@ void CTrapEditDlg::OnButtonEdit()
          TCHAR szBuffer[1024];
 
          dlg.m_strDescription = m_trap.pMaps[iItem].szDescription;
-         SNMPConvertOIDToText(m_trap.pMaps[iItem].dwOidLen, m_trap.pMaps[iItem].pdwObjectId,
-                              szBuffer, 1024);
-         dlg.m_strOID = szBuffer;
+         if ((m_trap.pMaps[iItem].dwOidLen & 0x80000000) == 0)
+         {
+            SNMPConvertOIDToText(m_trap.pMaps[iItem].dwOidLen, m_trap.pMaps[iItem].pdwObjectId,
+                                 szBuffer, 1024);
+            dlg.m_strOID = szBuffer;
+            dlg.m_nType = 0;
+         }
+         else
+         {
+            dlg.m_dwPos = m_trap.pMaps[iItem].dwOidLen & 0x7FFFFFFF;
+            dlg.m_nType = 1;
+         }
          if (dlg.DoModal() == IDOK)
          {
             nx_strncpy(m_trap.pMaps[iItem].szDescription, 
                      dlg.m_strDescription, MAX_DB_STRING);
-            m_trap.pMaps[iItem].dwOidLen = 
-               SNMPParseOID(dlg.m_strOID, pdwOid, MAX_OID_LEN);
-            m_trap.pMaps[iItem].pdwObjectId = 
-               (DWORD *)realloc(m_trap.pMaps[iItem].pdwObjectId, sizeof(DWORD) * m_trap.pMaps[iItem].dwOidLen);
-            memcpy(m_trap.pMaps[iItem].pdwObjectId, pdwOid, sizeof(DWORD) * m_trap.pMaps[iItem].dwOidLen);
+            if (dlg.m_nType == 0)
+            {
+               m_trap.pMaps[iItem].dwOidLen = 
+                  SNMPParseOID(dlg.m_strOID, pdwOid, MAX_OID_LEN);
+               m_trap.pMaps[iItem].pdwObjectId = 
+                  (DWORD *)realloc(m_trap.pMaps[iItem].pdwObjectId, sizeof(DWORD) * m_trap.pMaps[iItem].dwOidLen);
+               memcpy(m_trap.pMaps[iItem].pdwObjectId, pdwOid, sizeof(DWORD) * m_trap.pMaps[iItem].dwOidLen);
+            }
+            else
+            {
+               m_trap.pMaps[iItem].dwOidLen = dlg.m_dwPos | 0x80000000;
+               safe_free_and_null(m_trap.pMaps[iItem].pdwObjectId);
+            }
             UpdateParameterEntry(iItem);
          }
       }
@@ -385,3 +413,4 @@ void CTrapEditDlg::OnDblclkListArgs(NMHDR* pNMHDR, LRESULT* pResult)
 	
 	*pResult = 0;
 }
+
