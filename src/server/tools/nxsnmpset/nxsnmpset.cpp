@@ -133,7 +133,11 @@ int main(int argc, char *argv[])
                    "   -p <port>    : Specify agent's port number. Default is 161.\n"
                    "   -t <type>    : Specify variable's data type. Default is octet string.\n"
                    "   -v <version> : Specify SNMP version (valid values is 1 and 2c).\n"
-                   "   -w <seconds> : Specify request timeout (default is 3 seconds)\n"
+                   "   -w <seconds> : Specify request timeout (default is 3 seconds)\n\n"
+                   "Note: You can specify data type either as number or in symbolic form.\n"
+                   "      Valid symbolic representations are following:\n"
+                   "         INTEGER, STRING, OID, IPADDR, COUNTER32, GAUGE32,\n"
+                   "         TIMETICKS, COUNTER64, UINT32.\n"
                    "\n");
             iExit = 0;
             bStart = FALSE;
@@ -154,11 +158,21 @@ int main(int argc, char *argv[])
             }
             break;
          case 't':
+            // First, check for numeric representation
             dwValue = strtoul(optarg, &eptr, 0);
             if (*eptr != 0)
             {
-               printf("Invalid data type %s\n", optarg);
-               bStart = FALSE;
+               // Try to resolve from symbolic form
+               dwValue = SNMPResolveDataType(optarg);
+               if (dwValue == ASN_NULL)
+               {
+                  printf("Invalid data type %s\n", optarg);
+                  bStart = FALSE;
+               }
+               else
+               {
+                  m_dwType = dwValue;
+               }
             }
             else
             {

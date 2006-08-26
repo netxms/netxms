@@ -118,6 +118,40 @@ const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(DWORD dwError)
 
 
 //
+// Resolve text representation of data type to integer value
+//
+
+DWORD LIBNXSNMP_EXPORTABLE SNMPResolveDataType(TCHAR *pszType)
+{
+   static struct
+   {
+      TCHAR *pszName;
+      DWORD dwValue;
+   } typeList[] =
+   {
+      { _T("INT"), ASN_INTEGER },
+      { _T("INTEGER"), ASN_INTEGER },
+      { _T("STRING"), ASN_OCTET_STRING },
+      { _T("OID"), ASN_OBJECT_ID },
+      { _T("IPADDR"), ASN_IP_ADDR },
+      { _T("COUNTER32"), ASN_COUNTER32 },
+      { _T("GAUGE32"), ASN_GAUGE32 },
+      { _T("TIMETICKS"), ASN_TIMETICKS },
+      { _T("COUNTER64"), ASN_COUNTER64 },
+      { _T("UINT32"), ASN_UINTEGER32 },
+      { _T("UINTEGER32"), ASN_UINTEGER32 },
+      { NULL, 0 }
+   };
+   int i;
+
+   for(i = 0; typeList[i].pszName != NULL; i++)
+      if (!_tcsicmp(typeList[i].pszName, pszType))
+         return typeList[i].dwValue;
+   return ASN_NULL;
+}
+
+
+//
 // DLL entry point
 //
 
