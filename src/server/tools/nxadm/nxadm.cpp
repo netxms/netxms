@@ -166,7 +166,7 @@ static void Shell(void)
 int main(int argc, char *argv[])
 {
    int iError, ch;
-   BOOL bStart = TRUE;
+   BOOL bStart = TRUE, bCmdLineOK = FALSE;
    TCHAR *pszCmd;
 
 #ifdef _WIN32
@@ -189,9 +189,11 @@ int main(int argc, char *argv[])
                break;
             case 'c':
                pszCmd = optarg;
+               bCmdLineOK = TRUE;
                break;
             case 'i':
                pszCmd = NULL;
+               bCmdLineOK = TRUE;
                break;
             case '?':
                bStart = FALSE;
@@ -201,7 +203,7 @@ int main(int argc, char *argv[])
          }
       }
 
-      if (bStart)
+      if (bStart && bCmdLineOK)
       {
          if (Connect())
          {
@@ -220,6 +222,11 @@ int main(int argc, char *argv[])
          {
             iError = 2;
          }
+      }
+      else if (bStart && !bCmdLineOK)
+      {
+         Help();
+         iError = 1;
       }
    }
    else
