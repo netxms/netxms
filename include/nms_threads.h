@@ -540,7 +540,7 @@ inline DWORD GetCurrentProcessId(void)
 
 inline DWORD GetCurrentThreadId(void)
 {
-   return thread_self();
+   return pthread_self();
 }
 
 #endif   /* _WIN32 */
