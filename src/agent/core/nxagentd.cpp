@@ -37,6 +37,10 @@
 #include <sys/utsname.h>
 #endif
 
+#if HAVE_SYS_SYSCTL_H
+#include <sys/sysctl.h>
+#endif
+
 
 //
 // Externals
@@ -1069,9 +1073,11 @@ int main(int argc, char *argv[])
          // connect() timeout, if possible
 #ifdef HAVE_SYSCTLBYNAME
          {
-            int nVal;
+            LONG nVal;
+				size_t nSize;
 
-            if (sysctlbyname("net.inet.tcp.keepinit", &nVal, sizeof(nVal), NULL, 0) == 0)
+				nSize = sizeof(nVal);
+            if (sysctlbyname("net.inet.tcp.keepinit", &nVal, &nSize, NULL, 0) == 0)
             {
                g_dwIdleTimeout = nVal / 1000 + 15;
             }
