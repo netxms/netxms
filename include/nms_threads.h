@@ -538,7 +538,7 @@ inline DWORD GetCurrentProcessId(void)
    return getpid();
 }
 
-inline DWORD GetCurrentThreadId(void)
+inline THREAD GetCurrentThreadId(void)
 {
    return pthread_self();
 }
