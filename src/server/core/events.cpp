@@ -439,7 +439,20 @@ void ShutdownEventSubsystem(void)
 {
    delete g_pEventQueue;
    delete g_pEventPolicy;
-   safe_free(m_pEventTemplates);
+
+   if (m_pEventTemplates != NULL)
+   {
+      DWORD i;
+      for(i = 0; i < m_dwNumTemplates; i++)
+      {
+         safe_free(m_pEventTemplates[i].szDescription);
+         safe_free(m_pEventTemplates[i].szMessageTemplate);
+      }
+      free(m_pEventTemplates);
+   }
+   m_dwNumTemplates = 0;
+   m_pEventTemplates = NULL;
+
    RWLockDestroy(m_rwlockTemplateAccess);
 }
 
