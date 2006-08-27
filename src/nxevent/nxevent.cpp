@@ -52,7 +52,7 @@ static void DebugCallback(char *pMsg)
 // Send event to server
 //
 
-static void SendEvent(int iNumArgs, TCHAR **pArgList)
+static void SendEvent(int iNumArgs, TCHAR **pArgList, BOOL bEncrypt)
 {
    DWORD dwResult;
    NXC_SESSION hSession;
@@ -67,7 +67,7 @@ static void SendEvent(int iNumArgs, TCHAR **pArgList)
          NXCSetDebugCallback(DebugCallback);
 
       dwResult = NXCConnect(m_szServer, m_szLogin, m_szPassword, &hSession,
-                            _T("nxevent/") NETXMS_VERSION_STRING, FALSE, FALSE);
+                            _T("nxevent/") NETXMS_VERSION_STRING, FALSE, bEncrypt);
       if (dwResult != RCC_SUCCESS)
       {
          _tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(dwResult));
@@ -91,11 +91,11 @@ static void SendEvent(int iNumArgs, TCHAR **pArgList)
 int main(int argc, char *argv[])
 {
    int ch;
-   BOOL bStart = TRUE;
+   BOOL bStart = TRUE, bEncrypt = FALSE;
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "dho:p:P:u:vw:")) != -1)
+   while((ch = getopt(argc, argv, "deho:p:P:u:vw:")) != -1)
    {
       switch(ch)
       {
@@ -103,6 +103,7 @@ int main(int argc, char *argv[])
             printf("Usage: nxevent [<options>] <server> <event_id> [<param_1> [... <param_N>]]\n"
                    "Valid options are:\n"
                    "   -d            : Turn on debug mode.\n"
+                   "   -e            : Encrypt session.\n"
                    "   -h            : Display help and exit.\n"
                    "   -o <id>       : Specify source object ID.\n"
                    "   -p <port>     : Specify server's port number. Default is %d.\n"
@@ -115,6 +116,9 @@ int main(int argc, char *argv[])
             break;
          case 'd':
             m_bDebug = TRUE;
+            break;
+         case 'e':
+            bEncrypt = TRUE;
             break;
          case 'o':
             m_dwObjectId = _tcstoul(optarg, NULL, 0);
@@ -165,7 +169,7 @@ int main(int argc, char *argv[])
 #endif
          nx_strncpy(m_szServer, argv[optind], 256);
          m_dwEventCode = _tcstoul(argv[optind + 1], NULL, 0);
-         SendEvent(argc - optind - 2, &argv[optind + 2]);
+         SendEvent(argc - optind - 2, &argv[optind + 2], bEncrypt);
       }
    }
 

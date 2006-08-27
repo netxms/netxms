@@ -538,6 +538,11 @@ inline DWORD GetCurrentProcessId(void)
    return getpid();
 }
 
+inline DWORD GetCurrentThreadId(void)
+{
+   return thread_self();
+}
+
 #endif   /* _WIN32 */
 
 #include <rwlock.h>
