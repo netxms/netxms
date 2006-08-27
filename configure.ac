@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.173 2006-08-26 21:48:58 alk Exp $
+# $Id: configure.ac,v 1.174 2006-08-27 07:36:51 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -458,7 +458,14 @@ AC_TYPE_SIZE_T
 AC_STRUCT_TIMEZONE
 
 AC_CHECK_TYPES([int64_t, uint64_t, u_int64_t])
-AC_CHECK_TYPES([off_t, socklen_t])
+AC_CHECK_TYPES([off_t, socklen_t],,,[
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+])
 
 # --------------------------------------------------------------------------
 # C/CPP caps
