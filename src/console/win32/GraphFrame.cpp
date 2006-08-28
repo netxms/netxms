@@ -672,7 +672,7 @@ void CGraphFrame::OnUpdateGraphZoomout(CCmdUI* pCmdUI)
 // NXCM_GRAPH_ZOOM_CHANGED message handler
 //
 
-void CGraphFrame::OnGraphZoomChange(WPARAM nZoomLevel)
+void CGraphFrame::OnGraphZoomChange(WPARAM nZoomLevel, LPARAM lParam)
 {
    TCHAR szBuffer[32];
 

@@ -102,7 +102,7 @@ protected:
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
    afx_msg void OnUpdateGraphPoint(DWORD dwTimeStamp, double *pdValue);
-   afx_msg void OnGraphZoomChange(WPARAM nZoomLevel);
+   afx_msg void OnGraphZoomChange(WPARAM nZoomLevel, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 private:
 	int m_iStatusBarHeight;
