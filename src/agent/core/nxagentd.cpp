@@ -188,6 +188,7 @@ static char m_szHelpText[] =
    "   -C         : Check configuration file and exit\n"
 #ifndef _NETWARE
    "   -d         : Run as daemon/service\n"
+   "   -p         : Path to pid file (default: /var/run/nxagentd.pid)\n"
 #endif
    "   -D         : Turn on debug output\n"
    "   -h         : Display help and exit\n"
