@@ -188,7 +188,6 @@ static char m_szHelpText[] =
    "   -C         : Check configuration file and exit\n"
 #ifndef _NETWARE
    "   -d         : Run as daemon/service\n"
-   "   -p         : Path to pid file (default: /var/run/nxagentd.pid)\n"
 #endif
    "   -D         : Turn on debug output\n"
    "   -h         : Display help and exit\n"
@@ -197,6 +196,9 @@ static char m_szHelpText[] =
    "   -I         : Install Windows service\n"
 #endif
    "   -M <addr>  : Download config from management server <addr>\n"
+#if !defined(_WIN32) && !defined(_NETWARE)
+   "   -p         : Path to pid file (default: /var/run/nxagentd.pid)\n"
+#endif
 #ifdef _WIN32
    "   -R         : Remove Windows service\n"
    "   -s         : Start Windows servive\n"
