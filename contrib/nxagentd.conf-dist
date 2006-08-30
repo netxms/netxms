@@ -42,6 +42,15 @@
 # MasterServers = 127.0.0.1, srv1.domain.com, srv2.domain.com
 
 #
+# ListenPort
+#
+# Defines the port number for the agent to listen on incoming connections.
+# Default values is 4700
+#
+# Examples:
+# ListenPort = 4700
+
+#
 # LogFile
 #
 # Agent's log file. To write log to syslog (or Event Log on Windows),
