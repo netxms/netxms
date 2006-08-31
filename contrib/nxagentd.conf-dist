@@ -170,6 +170,15 @@
 # EnableSubagentAutoload = yes
 
 #
+# EnableProxy
+#
+# Allow requests forwarding
+# Default value is "no"
+#
+# Example:
+# EnableProxy = no
+
+#
 # SubAgent
 #
 # Subagent to load. To load multiple subagents, you should use multiple
