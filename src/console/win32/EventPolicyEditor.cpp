@@ -743,7 +743,7 @@ void CEventPolicyEditor::OnPolicyDelete(void)
                        sizeof(DWORD) * (m_pEventPolicy->pRuleList[iRow].dwNumActions - iItem));
                if (m_pEventPolicy->pRuleList[iRow].dwNumActions == 0)
                {
-                  m_wndRuleList.ReplaceItem(iRow, iCol, 0, "Any", m_iImageAny);
+                  m_wndRuleList.ReplaceItem(iRow, iCol, 0, "None", m_iImageAny + 1);
                   m_wndRuleList.EnableCellSelection(iRow, iCol, FALSE);
                }
                else
