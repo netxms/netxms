@@ -22,10 +22,18 @@
 
 #include "libnetxms.h"
 
-#if HAVE_TERMIO_H
-#include <termio.h>
-#elif HAVE_TERMIOS_H
+#if HAVE_TERMIOS_H
 #include <termios.h>
+#elif HAVE_TERMIO_H
+#include <termio.h>
+#endif
+
+#ifndef CRTSCTS
+# ifdef CNEW_RTSCTS
+#  define CRTSCTS CNEW_RTSCTS
+# else
+#  define CRTSCTS 0
+# endif
 #endif
 
 #ifndef CBAUD
