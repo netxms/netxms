@@ -18,6 +18,7 @@ GENERAL:
 - Add SNMP SET functionality
 - ThreadSleep(1) sleeps less then second (Linux specific?)
 - Add libgd check to configure
+- Remove build-time-dependency: perl
 
 
 SERVER:
