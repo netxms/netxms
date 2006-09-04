@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.177 2006-09-04 16:38:58 alk Exp $
+# $Id: configure.ac,v 1.178 2006-09-04 17:02:40 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -22,8 +22,8 @@ AC_PROG_LN_S
 
 # --------------------------------------------------------------------------
 # Misc. settings
-CFLAGS="$CFLAGS -D_POSIX_PTHREAD_SEMANTICS"
-CPPFLAGS="$CPPFLAGS -D_POSIX_PTHREAD_SEMANTICS"
+CFLAGS="$CFLAGS -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE_EXTENDED"
+CPPFLAGS="$CPPFLAGS -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE_EXTENDED"
 SUBAGENT_LIBS=""
 
 # --------------------------------------------------------------------------
