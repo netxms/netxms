@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.178 2006-09-04 17:02:40 alk Exp $
+# $Id: configure.ac,v 1.179 2006-09-04 22:42:42 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -558,8 +558,8 @@ if test "x$PTHREAD_LIBS" = xerror; then
 fi
 # HP-UX
 if test "x$PTHREAD_LIBS" = xerror; then
-	AC_CHECK_LIB(pthreads, __pthread_attr_init_system,
-		PTHREAD_LIBS="-lpthreads")
+	AC_CHECK_LIB(pthread, __pthread_attr_init_system,
+		PTHREAD_LIBS="-lpthread")
 fi
 if test "x$PTHREAD_LIBS" = xerror; then
 	AC_MSG_ERROR(*** Unable to locate working posix thread library ***)
