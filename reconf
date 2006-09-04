@@ -10,8 +10,8 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 ACLOCAL=aclocal-1.7
-AUTOCONF=autoconf-2.59
-AUTOHEADER=autoheader-2.59
+AUTOCONF=autoconf-2.60
+AUTOHEADER=autoheader-2.60
 AUTOMAKE=automake-1.7
 LIBTOOLIZE=libtoolize
 

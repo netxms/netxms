@@ -1,7 +1,7 @@
 EXTRA_DIST = \
     Makefile.nw nxagentd.def \
     nxagentd.dsw nxagentd.dsp \
-    messages.mc \
+    messages.mc messages.h messages.c \
     nxagentd.rc \
     win32.cpp resource.h \
     nxagentd.h \
