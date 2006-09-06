@@ -1,4 +1,4 @@
-/* $Id: http.cpp,v 1.9 2006-08-13 22:58:59 victor Exp $ */
+/* $Id: http.cpp,v 1.10 2006-09-06 09:06:53 alk Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -22,16 +22,20 @@ LONG H_CheckHTTP(char *pszParam, char *pArg, char *pValue)
 	char szMatch[1024];
 	unsigned short nPort;
 
-   NxGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
-   NxGetParameterArg(pszParam, 2, szPort, sizeof(szPort));
-   NxGetParameterArg(pszParam, 3, szURI, sizeof(szURI));
-   NxGetParameterArg(pszParam, 4, szHeader, sizeof(szHeader));
-   NxGetParameterArg(pszParam, 5, szMatch, sizeof(szMatch));
+	NxGetParameterArg(pszParam, 1, szHost, sizeof(szHost));
+	NxGetParameterArg(pszParam, 2, szPort, sizeof(szPort));
+	NxGetParameterArg(pszParam, 3, szURI, sizeof(szURI));
+	NxGetParameterArg(pszParam, 4, szHeader, sizeof(szHeader));
+	NxGetParameterArg(pszParam, 5, szMatch, sizeof(szMatch));
 
-	if (szHost[0] == 0 || szPort[0] == 0 || szURI[0] == 0 || szHeader[0] == 0
-			|| szMatch[0] == 0)
+	if (szHost[0] == 0 || szPort[0] == 0 || szURI[0] == 0)
 	{
 		return SYSINFO_RC_ERROR;
+	}
+	
+	if (szMatch[0] == 0)
+	{
+		strcpy(szMatch, "^HTTP/1.[01] 200 .*");
 	}
 
 	nPort = (unsigned short)atoi(szPort);
@@ -60,18 +64,27 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 	if (nSd != INVALID_SOCKET)
 	{
 		char szTmp[4096];
+		char szHostHeader[4096];
 
 		nRet = PC_ERR_HANDSHAKE;
+		
+		szHostHeader[0] = 0;
+		if (szHost[0] != 0)
+		{
+			snprintf(szHostHeader, sizeof(szHostHeader),
+				"Host: %s:%d\r\n",
+				szHost, nPort);
+		}
 
 		snprintf(szTmp, sizeof(szTmp),
-				"GET %s HTTP/1.1\r\nConnection: close\r\nHost: %s:%d\r\n\r\n",
-				szURI, szHost, nPort);
+				"GET %s HTTP/1.1\r\nConnection: close\r\n%s\r\n",
+				szURI, szHostHeader);
 
 		if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
 		{
 			if ((nBytes = NetRead(nSd, szTmp, sizeof(szTmp))) >= 8)
 			{
-            szTmp[nBytes] = 0;
+				szTmp[nBytes] = 0;
 				if (regexec(&preg, szTmp, 0, NULL, 0) == 0)
 				{
 					nRet = PC_ERR_NONE;
@@ -94,6 +107,10 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/08/13 22:58:59  victor
+- Default session timeout changed to 120 seconds on non-Windows systems
+- Changed socket() error checking - on Windows, SOCKET is an unsigned integer, so conditions like (sock < 0) will not become true event if socket() fails - fixed
+
 Revision 1.8  2006/08/06 10:32:02  victor
 - Both 32 and 6 bit installers works correctly
 - All subagents ported to 64bit
