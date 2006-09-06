@@ -355,6 +355,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     AFX_IDS_SCRESTORE       "Restore the window to normal size"
     AFX_IDS_SCTASKLIST      "Activate Task List"
+    IDS_NXC_INIT_FAILED     "NetXMS client library initialization error"
 END
 
 #endif    // English (U.S.) resources

@@ -31,6 +31,7 @@
 #define ID_FILE_SETTINGS                32772
 #define ID_TASKBAR_OPEN                 32773
 #define ID_FILE_EXIT                    32775
+#define IDS_NXC_INIT_FAILED             61204
 
 // Next default values for new objects
 // 

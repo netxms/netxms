@@ -54,6 +54,12 @@ BOOL CNxnotifyApp::InitInstance()
 		return FALSE;
 	}
 
+   if (!NXCInitialize())
+   {
+		AfxMessageBox(IDS_NXC_INIT_FAILED, MB_OK | MB_ICONSTOP);
+		return FALSE;
+   }
+
 	// Standard initialization
 #ifdef _AFXDLL
 	Enable3dControls();			// Call this when using MFC in a shared DLL
