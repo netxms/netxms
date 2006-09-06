@@ -25,6 +25,10 @@ public:
 	enum { IDD = IDD_CREATE_NODE };
 	CEdit	m_wndObjectName;
 	CIPAddressCtrl	m_wndIPAddr;
+	BOOL	m_bDisableAgent;
+	BOOL	m_bDisableICMP;
+	BOOL	m_bDisableSNMP;
+	BOOL	m_bCreateUnmanaged;
 	//}}AFX_DATA
 
 

@@ -536,6 +536,8 @@
 #define IDC_RADIO_POS                   1379
 #define IDC_EDIT_POS                    1380
 #define IDC_SPIN_POS                    1382
+#define IDC_CHECK_UNMANAGED             1383
+#define IDC_CHECK_ICMP                  1386
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -766,7 +768,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        334
 #define _APS_NEXT_COMMAND_VALUE         33039
-#define _APS_NEXT_CONTROL_VALUE         1383
+#define _APS_NEXT_CONTROL_VALUE         1388
 #define _APS_NEXT_SYMED_VALUE           128
 #endif
 #endif

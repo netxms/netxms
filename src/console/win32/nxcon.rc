@@ -1731,7 +1731,7 @@ BEGIN
     LTEXT           "Description",IDC_STATIC,13,71,36,8
 END
 
-IDD_CREATE_NODE DIALOG DISCARDABLE  0, 0, 240, 129
+IDD_CREATE_NODE DIALOG DISCARDABLE  0, 0, 240, 220
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Create Node"
 FONT 8, "MS Sans Serif"
@@ -1740,16 +1740,28 @@ BEGIN
     CONTROL         "IPAddress1",IDC_IP_ADDR,"SysIPAddress32",WS_TABSTOP,13,
                     55,102,15
     PUSHBUTTON      "&Resolve",IDC_BUTTON_RESOLVE,121,55,50,14
-    PUSHBUTTON      "&Select...",IDC_SELECT_PARENT,121,91,50,12
+    CONTROL         "Create as &unmanaged object",IDC_CHECK_UNMANAGED,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,77,107,10
+    CONTROL         "Disable NetXMS &agent for polls",IDC_CHECK_AGENT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,91,114,10
+    CONTROL         "Disable &SNMP for polls",IDC_CHECK_SNMP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,105,88,10
+    CONTROL         "Disable &ICMP for polls",IDC_CHECK_ICMP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,119,85,10
+    EDITTEXT        IDC_EDIT_PROXY,13,145,139,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    PUSHBUTTON      "...",IDC_SELECT_PROXY,157,145,14,14
+    PUSHBUTTON      "&Select...",IDC_SELECT_PARENT,121,181,50,12
     DEFPUSHBUTTON   "OK",IDOK,183,7,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,183,24,50,14
-    GROUPBOX        "New object",IDC_STATIC,7,7,170,70
+    GROUPBOX        "New object",IDC_STATIC,7,7,170,160
     LTEXT           "Name",IDC_STATIC,13,18,20,8
-    GROUPBOX        "Parent object",IDC_STATIC,7,80,170,42
-    ICON            "",IDC_ICON_PARENT,14,93,20,20
-    LTEXT           "ID:",IDC_STATIC_ID,43,93,69,8
-    LTEXT           "Name",IDC_STATIC_NAME,44,107,127,9
+    GROUPBOX        "Parent object",IDC_STATIC,7,171,170,42
+    ICON            "",IDC_ICON_PARENT,14,183,21,20
+    LTEXT           "ID:",IDC_STATIC_ID,43,183,69,8
+    LTEXT           "Name",IDC_STATIC_NAME,44,197,127,9
     LTEXT           "IP address",IDC_STATIC,13,46,34,8
+    LTEXT           "Proxy agent",IDC_STATIC,13,134,38,8
 END
 
 IDD_DCI_TRANSFORM DIALOG DISCARDABLE  0, 0, 228, 193
@@ -2933,7 +2945,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 233
         TOPMARGIN, 7
-        BOTTOMMARGIN, 122
+        BOTTOMMARGIN, 213
     END
 
     IDD_DCI_TRANSFORM, DIALOG

@@ -19,6 +19,10 @@ CCreateNodeDlg::CCreateNodeDlg(CWnd* pParent /*=NULL*/)
 	: CCreateObjectDlg(CCreateNodeDlg::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CCreateNodeDlg)
+	m_bDisableAgent = FALSE;
+	m_bDisableICMP = FALSE;
+	m_bDisableSNMP = FALSE;
+	m_bCreateUnmanaged = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -29,6 +33,10 @@ void CCreateNodeDlg::DoDataExchange(CDataExchange* pDX)
 	//{{AFX_DATA_MAP(CCreateNodeDlg)
 	DDX_Control(pDX, IDC_EDIT_NAME, m_wndObjectName);
 	DDX_Control(pDX, IDC_IP_ADDR, m_wndIPAddr);
+	DDX_Check(pDX, IDC_CHECK_AGENT, m_bDisableAgent);
+	DDX_Check(pDX, IDC_CHECK_ICMP, m_bDisableICMP);
+	DDX_Check(pDX, IDC_CHECK_SNMP, m_bDisableSNMP);
+	DDX_Check(pDX, IDC_CHECK_UNMANAGED, m_bCreateUnmanaged);
 	//}}AFX_DATA_MAP
 }
 
