@@ -1,4 +1,4 @@
-/* $Id: http.cpp,v 1.10 2006-09-06 09:06:53 alk Exp $ */
+/* $Id: http.cpp,v 1.11 2006-09-06 09:09:20 alk Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -33,11 +33,6 @@ LONG H_CheckHTTP(char *pszParam, char *pArg, char *pValue)
 		return SYSINFO_RC_ERROR;
 	}
 	
-	if (szMatch[0] == 0)
-	{
-		strcpy(szMatch, "^HTTP/1.[01] 200 .*");
-	}
-
 	nPort = (unsigned short)atoi(szPort);
 	if (nPort == 0)
 	{
@@ -60,6 +55,11 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 		return PC_ERR_BAD_PARAMS;
 	}
 
+	if (szMatch[0] == 0)
+	{
+		strcpy(szMatch, "^HTTP/1.[01] 200 .*");
+	}
+	
 	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
 	if (nSd != INVALID_SOCKET)
 	{
@@ -107,6 +107,11 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/09/06 09:06:53  alk
+Check.HTTP, 4th and 5th params are optional now
+if "match" ($5) does not exist, default "^HTTP/1.[01] 200 .*" is used
+if "host-header" ($4) does not exist, "Host: ..." will be ommited
+
 Revision 1.9  2006/08/13 22:58:59  victor
 - Default session timeout changed to 120 seconds on non-Windows systems
 - Changed socket() error checking - on Windows, SOCKET is an unsigned integer, so conditions like (sock < 0) will not become true event if socket() fails - fixed
