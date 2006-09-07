@@ -1,3 +1,5 @@
+/* $Id: nms_util.h,v 1.84 2006-09-07 22:02:06 alk Exp $ */
+
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003 Victor Kirhenshtein
@@ -38,6 +40,12 @@
 #include <nms_cscp.h>
 #include <nms_threads.h>
 #include <time.h>
+
+#ifdef HAVE_TERMIOS_H
+# include <termios.h>
+#else
+# error termios.h not found
+#endif
 
 #if HAVE_BYTESWAP_H
 #include <byteswap.h>
@@ -97,6 +105,13 @@ enum
 	TWOSTOPBITS
 };
 
+enum
+{
+	FLOW_NONE,
+	FLOW_HARDWARE,
+	FLOW_SOFTWARE
+};
+
 #ifndef INVALID_HANDLE_VALUE
 #define INVALID_HANDLE_VALUE (-1)
 #endif
@@ -115,6 +130,7 @@ public:
 	bool Write(char *pBuff, int nSize);
 	void Flush(void);
 	bool Set(int nSpeed, int nDataBits, int nParity, int nStopBits);
+	bool Set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlowControl);
 	bool Restart(void);
 
 private:
@@ -124,9 +140,11 @@ private:
 	int m_nDataBits;
 	int m_nStopBits;
 	int m_nParity;
+	int m_nFlowControl;
 
 #ifndef _WIN32
 	int m_hPort;
+	struct termios m_originalSettings;
 #else
 	HANDLE m_hPort;
 #endif
@@ -363,3 +381,10 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 #endif
 
 #endif   /* _nms_util_h_ */
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+
+$Log: not supported by cvs2svn $
+
+*/

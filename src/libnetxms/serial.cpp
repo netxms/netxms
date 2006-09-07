@@ -1,3 +1,5 @@
+/* $Id: serial.cpp,v 1.13 2006-09-07 22:02:06 alk Exp $ */
+
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2005, 2006 Alex Kirhenshtein
@@ -23,9 +25,9 @@
 #include "libnetxms.h"
 
 #if HAVE_TERMIOS_H
-#include <termios.h>
-#elif HAVE_TERMIO_H
-#include <termio.h>
+# include <termios.h>
+#else
+# error termios.h not found, unable to continue build
 #endif
 
 #ifndef CRTSCTS
@@ -36,13 +38,6 @@
 # endif
 #endif
 
-#ifndef CBAUD
-# define CBAUD 0010017
-#endif 
-#ifndef CBAUDEX
-# define CBAUDEX 0010000
-#endif 
-
 //
 // Constructor
 //
@@ -52,6 +47,7 @@ Serial::Serial(void)
 	m_nTimeout = 0;
 	m_hPort = INVALID_HANDLE_VALUE;
    m_pszPort = NULL;
+	memset(&m_originalSettings, 0, sizeof(m_originalSettings));
 }
 
 
@@ -62,7 +58,6 @@ Serial::Serial(void)
 Serial::~Serial(void)
 {
    Close();
-   safe_free(m_pszPort);
 }
 
 
@@ -82,12 +77,14 @@ bool Serial::Open(TCHAR *pszPort)
 	m_hPort = CreateFile(pszPort, GENERIC_READ | GENERIC_WRITE, 0, NULL,
 			               OPEN_EXISTING, 0, NULL);
 	if (m_hPort != INVALID_HANDLE_VALUE)
+   {
 #else // UNIX
 	m_hPort = open(pszPort, O_RDWR | O_NOCTTY | O_NDELAY); 
 	if (m_hPort != -1)
-#endif
    {
-      Set(38400, 8, NOPARITY, ONESTOPBIT);
+		tcgetattr(m_hPort, &m_originalSettings);
+#endif
+      Set(38400, 8, NOPARITY, ONESTOPBIT, FLOW_NONE);
 	   bRet = true;
    }
 	return bRet;
@@ -97,8 +94,12 @@ bool Serial::Open(TCHAR *pszPort)
 //
 // Set communication parameters
 //
-
 bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
+{
+	return Set(nSpeed, nDataBits, nParity, nStopBits, FLOW_NONE);
+}
+
+bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlowControl)
 {
 	bool bRet = false;
 
@@ -106,6 +107,7 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 	m_nSpeed = nSpeed;
 	m_nParity = nParity;
 	m_nStopBits = nStopBits;
+	m_nFlowControl = nFlowControl;
 
 #ifdef _WIN32
 	DCB dcb;
@@ -150,26 +152,28 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 
 	newTio.c_cflag |= CLOCAL | CREAD;
 
-	newTio.c_cflag &= ~(CBAUD | CBAUDEX);
+	int baud;
 	switch(nSpeed)
 	{
-		case 50:     newTio.c_cflag |= B50;     break;
-		case 75:     newTio.c_cflag |= B75;     break;
-		case 110:    newTio.c_cflag |= B110;    break;
-		case 134:    newTio.c_cflag |= B134;    break;
-		case 150:    newTio.c_cflag |= B150;    break;
-		case 200:    newTio.c_cflag |= B200;    break;
-		case 300:    newTio.c_cflag |= B300;    break;
-		case 600:    newTio.c_cflag |= B600;    break;
-		case 1200:   newTio.c_cflag |= B1200;   break;
-		case 1800:   newTio.c_cflag |= B1800;   break;
-		case 2400:   newTio.c_cflag |= B2400;   break;
-		case 4800:   newTio.c_cflag |= B4800;   break;
-		case 9600:   newTio.c_cflag |= B9600;   break;
-		case 19200:  newTio.c_cflag |= B19200;  break;
-		case 38400:  newTio.c_cflag |= B38400;  break;
-		default:     newTio.c_cflag |= B38400;  break;
+		case 50:     baud = B50;     break;
+		case 75:     baud = B75;     break;
+		case 110:    baud = B110;    break;
+		case 134:    baud = B134;    break;
+		case 150:    baud = B150;    break;
+		case 200:    baud = B200;    break;
+		case 300:    baud = B300;    break;
+		case 600:    baud = B600;    break;
+		case 1200:   baud = B1200;   break;
+		case 1800:   baud = B1800;   break;
+		case 2400:   baud = B2400;   break;
+		case 4800:   baud = B4800;   break;
+		case 9600:   baud = B9600;   break;
+		case 19200:  baud = B19200;  break;
+		case 38400:  baud = B38400;  break;
+		default:     baud = B38400;  break;
 	}
+	cfsetispeed(&newTio, baud);
+	cfsetospeed(&newTio, baud);
 
 	newTio.c_cflag &= ~(CSIZE);
 	switch(nDataBits)
@@ -208,11 +212,23 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 		newTio.c_cflag |= CSTOPB;
 	}
 
-	newTio.c_cflag &= ~(CRTSCTS | IXON | IXOFF);
+	//newTio.c_cflag &= ~(CRTSCTS | IXON | IXOFF);
 	newTio.c_lflag &= ~(ICANON | ECHO | ECHOE | ECHOK | ECHOKE | ECHOCTL | ISIG | IEXTEN);
    newTio.c_iflag &= ~(IXON | IXOFF | IXANY | ICRNL);
    newTio.c_iflag |= IGNBRK;
    newTio.c_oflag &= ~(OPOST | ONLCR);
+
+	switch (nFlowControl)
+	{
+		case FLOW_HARDWARE:
+   		newTio.c_cflag |= CRTSCTS;
+			break;
+		case FLOW_SOFTWARE:
+   		newTio.c_iflag |= IXON | IXOFF;
+			break;
+		default:
+			break;
+	}
 
 	tcsetattr(m_hPort, TCSANOW, &newTio);
 
@@ -234,9 +250,12 @@ void Serial::Close(void)
       //PurgeComm(m_hPort, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
    	CloseHandle(m_hPort);
 #else // UNIX
+		tcsetattr(m_hPort, TCSANOW, &m_originalSettings);
 	   close(m_hPort);
 #endif // _WIN32s
       m_hPort = INVALID_HANDLE_VALUE;
+   	safe_free(m_pszPort);
+		m_pszPort = NULL;
    }
 }
 
@@ -278,7 +297,7 @@ bool Serial::Restart(void)
 	Close();
 	ThreadSleepMs(500);
 	if (Open(m_pszPort))
-	   if (Set(m_nSpeed, m_nDataBits, m_nParity, m_nStopBits))
+	   if (Set(m_nSpeed, m_nDataBits, m_nParity, m_nStopBits, m_nFlowControl))
       	return true;
    return false;
 }
@@ -395,3 +414,10 @@ void Serial::Flush(void)
 
 #endif // _WIN32
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+
+$Log: not supported by cvs2svn $
+
+*/

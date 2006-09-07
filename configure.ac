@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.179 2006-09-04 22:42:42 alk Exp $
+# $Id: configure.ac,v 1.180 2006-09-07 22:02:05 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -428,7 +428,7 @@ AC_HEADER_STAT
 AC_HEADER_TIME
 AC_CHECK_HEADERS([sys/int_types.h sys/time.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h sys/socket.h])
-AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termio.h termios.h])
+AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h],,,
 [[#ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>
@@ -509,6 +509,8 @@ AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
 
 AC_CHECK_HEADERS([sys/sysctl.h vm/vm_param.h])
 AC_CHECK_FUNCS([sysctlbyname sysctlnametomib])
+
+AC_CHECK_FUNCS([tcgetattr tcsetattr cfsetospeed cfsetispeed])
 
 # sockets/resolver (probably for solaris)
 AC_CHECK_FUNC(connect, , [AC_CHECK_LIB(socket, connect)])
