@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.180 2006-09-07 22:02:05 alk Exp $
+# $Id: configure.ac,v 1.181 2006-09-07 22:46:08 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -812,7 +812,7 @@ fi
 if test "x${BUILD_WEB_CLIENT}" = "xyes"; then
 	echo "Build Web Interface : YES"
 else
-	echo "Build Web Interface : YES"
+	echo "Build Web Interface : NO"
 fi
 if test "x${BUILD_AGENT}" = "xyes"; then
 	echo "Build Agent         : YES"
