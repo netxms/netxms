@@ -33,29 +33,30 @@
 */
 
 #undef _XOPEN_SOURCE
+#undef _XOPEN_SOURCE_EXTENDED
 
 #include "libnetxms.h"
 #include "uuidP.h"
 
 #if HAVE_SYS_IOCTL_H
-#include <sys/ioctl.h>
+# include <sys/ioctl.h>
 #endif
-#if HAVE_SYS_SOCKIO_H
+# if HAVE_SYS_SOCKIO_H
 #include <sys/sockio.h>
 #endif
-#if HAVE_NET_IF_H
+# if HAVE_NET_IF_H
 #include <net/if.h>
 #endif
-#if HAVE_NET_IF_ARP_H
+# if HAVE_NET_IF_ARP_H
 #include <net/if_arp.h>
 #endif
-#if HAVE_NET_IF_DL_H
+# if HAVE_NET_IF_DL_H
 #include <net/if_dl.h>
 #endif
 
 #ifdef HAVE_SRANDOM
-#define srand(x) 	srandom(x)
-#define rand() 		random()
+# define srand(x) 	srandom(x)
+# define rand() 		random()
 #endif
 
 #ifndef _WIN32
