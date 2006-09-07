@@ -1,6 +1,6 @@
 #!c:/apps/perl/bin/pelr -w
 
-# $Id: mc.pl,v 1.5 2004-09-03 18:17:16 alk Exp $
+# $Id: mc.pl,v 1.6 2006-09-07 22:40:59 alk Exp $
 
 ###############################################################################
 #
@@ -9,8 +9,9 @@
 #
 ###############################################################################
 
-use strict;
-use Data::Dumper;
+# disabled; broke build on HP-UX (perl 5.005_02)
+#use strict;
+#use Data::Dumper;
 
 # file names
 my $inFile = shift || die "Usage : mc.pl <input_file>";
