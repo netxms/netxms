@@ -82,9 +82,9 @@ void CheckForMgmtNode(void)
          for(i = 0; i < pIfList->iNumEntries; i++)
             if (pIfList->pInterfaces[i].dwIpAddr != 0)
             {
-               pNode = new Node(pIfList->pInterfaces[i].dwIpAddr, NF_IS_LOCAL_MGMT, DF_DEFAULT, 0);
+               pNode = new Node(pIfList->pInterfaces[i].dwIpAddr, NF_IS_LOCAL_MGMT, 0, 0);
                NetObjInsert(pNode, TRUE);
-               pNode->NewNodePoll(0);
+               pNode->ConfigurationPoll(NULL, 0, -1, pIfList->pInterfaces[i].dwIpNetMask);
                pNode->Unhide();
                g_dwMgmtNode = pNode->Id();   // Set local management node ID
                PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);
@@ -234,7 +234,7 @@ static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
       snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%d]",
                pNode->Name(), pNode->Id());
       SetPollerState((long)arg, szBuffer);
-      pNode->ConfigurationPoll(NULL, 0, (long)arg);
+      pNode->ConfigurationPoll(NULL, 0, (long)arg, 0);
       pNode->DecRefCount();
    }
    SetPollerState((long)arg, "finished");
@@ -322,7 +322,6 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
                      pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
                      pInfo->dwIpAddr = pArpCache->pEntries[j].dwIpAddr;
                      pInfo->dwNetMask = pInterface->IpNetMask();
-                     pInfo->dwFlags = DF_DEFAULT;
                      g_nodePollerQueue.Put(pInfo);
                   }
             }

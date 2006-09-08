@@ -135,10 +135,12 @@ static NXSL_DiscoveryClass m_nxslDiscoveryClass;
 // Returns pointer to new node object on success or NULL on failure
 //
 
-NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags, TCHAR *pszName)
+NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
+                    TCHAR *pszName, DWORD dwProxyNode)
 {
    Node *pNode;
    char szIpAddr1[32], szIpAddr2[32];
+   DWORD dwFlags = 0;
 
    DbgPrintf(AF_DEBUG_DISCOVERY, "PollNode(%s,%s)",  
              IpToStr(dwIpAddr, szIpAddr1), IpToStr(dwNetMask, szIpAddr2));
@@ -151,11 +153,24 @@ NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags, TCHAR *pszNa
       return NULL;
    }
 
-   pNode = new Node(dwIpAddr, 0, dwFlags, 0);
+   if (dwCreationFlags & NXC_NCF_DISABLE_ICMP)
+      dwFlags |= NF_DISABLE_ICMP;
+   if (dwCreationFlags & NXC_NCF_DISABLE_SNMP)
+      dwFlags |= NF_DISABLE_SNMP;
+   if (dwCreationFlags & NXC_NCF_DISABLE_NXCP)
+      dwFlags |= NF_DISABLE_NXCP;
+   pNode = new Node(dwIpAddr, dwFlags, dwProxyNode, 0);
    NetObjInsert(pNode, TRUE);
-   pNode->NewNodePoll(dwNetMask);
    if (pszName != NULL)
       pNode->SetName(pszName);
+   if (dwCreationFlags & NXC_NCF_CREATE_UNMANAGED)
+   {
+      pNode->SetMgmtStatus(FALSE);
+   }
+   else
+   {
+      pNode->ConfigurationPoll(NULL, 0, -1, dwNetMask);
+   }
    pNode->Unhide();
    PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);
 
@@ -327,7 +342,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
          break;   // Shutdown indicator received
 
       if (AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask))
-         PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, pInfo->dwFlags, NULL);
+         PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, NULL, 0);
       free(pInfo);
    }
    DbgPrintf(AF_DEBUG_DISCOVERY, "Node poller thread terminated");

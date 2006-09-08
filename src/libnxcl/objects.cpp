@@ -244,7 +244,6 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          break;
       case OBJECT_NODE:
          pObject->node.dwFlags = pMsg->GetVariableLong(VID_FLAGS);
-         pObject->node.dwDiscoveryFlags = pMsg->GetVariableLong(VID_DISCOVERY_FLAGS);
          pObject->node.dwNodeType = pMsg->GetVariableLong(VID_NODE_TYPE);
          pObject->node.dwPollerNode = pMsg->GetVariableLong(VID_POLLER_NODE_ID);
          pObject->node.dwProxyNode = pMsg->GetVariableLong(VID_PROXY_NODE);
@@ -790,6 +789,8 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession,
       case OBJECT_NODE:
          msg.SetVariable(VID_IP_ADDRESS, pCreateInfo->cs.node.dwIpAddr);
          msg.SetVariable(VID_IP_NETMASK, pCreateInfo->cs.node.dwNetMask);
+         msg.SetVariable(VID_CREATION_FLAGS, pCreateInfo->cs.node.dwCreationFlags);
+         msg.SetVariable(VID_PROXY_NODE, pCreateInfo->cs.node.dwProxyNode);
          break;
       case OBJECT_CONTAINER:
          msg.SetVariable(VID_CATEGORY, pCreateInfo->cs.container.dwCategory);

@@ -250,7 +250,6 @@ typedef struct
 {
    DWORD dwIpAddr;
    DWORD dwNetMask;
-   DWORD dwFlags;
 } NEW_NODE;
 
 
@@ -595,7 +594,8 @@ void WatchdogNotify(DWORD dwId);
 void WatchdogPrintStatus(CONSOLE_CTX pCtx);
 
 void CheckForMgmtNode(void);
-NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwFlags, TCHAR *pszName);
+NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
+                    TCHAR *pszName, DWORD dwProxyNode);
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 void NXCORE_EXPORTABLE NotifyClientSessions(DWORD dwCode, DWORD dwData);

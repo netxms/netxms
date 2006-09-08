@@ -434,7 +434,7 @@ typedef struct
 #define VID_IF_INDEX                ((DWORD)11)
 #define VID_IF_TYPE                 ((DWORD)12)
 #define VID_FLAGS                   ((DWORD)13)
-#define VID_DISCOVERY_FLAGS         ((DWORD)14)
+#define VID_CREATION_FLAGS          ((DWORD)14)
 #define VID_AGENT_PORT              ((DWORD)15)
 #define VID_AUTH_METHOD             ((DWORD)16)
 #define VID_SHARED_SECRET           ((DWORD)17)

@@ -17,6 +17,7 @@ class CCreateNodeDlg : public CCreateObjectDlg
 {
 // Construction
 public:
+	DWORD m_dwProxyNode;
 	DWORD m_dwIpAddr;
 	CCreateNodeDlg(CWnd* pParent = NULL);   // standard constructor
 
@@ -46,6 +47,8 @@ protected:
 	//{{AFX_MSG(CCreateNodeDlg)
 	virtual void OnOK();
 	afx_msg void OnButtonResolve();
+	afx_msg void OnSelectProxy();
+	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

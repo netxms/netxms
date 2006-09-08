@@ -76,15 +76,6 @@ extern DWORD g_dwConditionPollingInterval;
 
 
 //
-// Discovery flags
-//
-
-#define DF_CHECK_INTERFACES   0x0001
-#define DF_CHECK_ARP          0x0002
-#define DF_DEFAULT            (DF_CHECK_INTERFACES | DF_CHECK_ARP)
-
-
-//
 // Node runtime (dynamic) flags
 //
 
@@ -494,7 +485,6 @@ class NXCORE_EXPORTABLE Node : public Template
 {
 protected:
    DWORD m_dwFlags;
-   DWORD m_dwDiscoveryFlags;
    DWORD m_dwDynamicFlags;       // Flags used at runtime by server
    DWORD m_dwZoneGUID;
    WORD m_wAgentPort;
@@ -547,7 +537,7 @@ protected:
 
 public:
    Node();
-   Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags, DWORD dwZone);
+   Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwZone);
    virtual ~Node();
 
    virtual int Type(void) { return OBJECT_NODE; }
@@ -557,7 +547,6 @@ public:
    virtual BOOL CreateFromDB(DWORD dwId);
 
    DWORD Flags(void) { return m_dwFlags; }
-   DWORD DiscoveryFlags(void) { return m_dwDiscoveryFlags; }
    DWORD RuntimeFlags(void) { return m_dwDynamicFlags; }
    DWORD ZoneGUID(void) { return m_dwZoneGUID; }
 
@@ -576,7 +565,6 @@ public:
                            DWORD dwIndex = 0, DWORD dwType = 0, BYTE *pbMacAddr = NULL);
    void DeleteInterface(Interface *pInterface);
 
-   void NewNodePoll(DWORD dwNetMask);
    void ChangeIPAddress(DWORD dwIpAddr);
 
    ARP_CACHE *GetArpCache(void);
@@ -591,7 +579,7 @@ public:
 
    void SetDiscoveryPollTimeStamp(void);
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
-   void ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
+   void ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller, DWORD dwNetMask);
    void UpdateRoutingTable(void);
    BOOL ReadyForStatusPoll(void);
    BOOL ReadyForConfigurationPoll(void);

@@ -1742,12 +1742,14 @@ BEGIN
     PUSHBUTTON      "&Resolve",IDC_BUTTON_RESOLVE,121,55,50,14
     CONTROL         "Create as &unmanaged object",IDC_CHECK_UNMANAGED,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,77,107,10
-    CONTROL         "Disable NetXMS &agent for polls",IDC_CHECK_AGENT,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,91,114,10
-    CONTROL         "Disable &SNMP for polls",IDC_CHECK_SNMP,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,105,88,10
-    CONTROL         "Disable &ICMP for polls",IDC_CHECK_ICMP,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,119,85,10
+    CONTROL         "Disable access to NetXMS &agent for all polls",
+                    IDC_CHECK_AGENT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,
+                    91,155,10
+    CONTROL         "Disable usage of &SNMP for all polls",IDC_CHECK_SNMP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,105,126,10
+    CONTROL         "Disable usage of &ICMP pings for status polling",
+                    IDC_CHECK_ICMP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,
+                    119,159,10
     EDITTEXT        IDC_EDIT_PROXY,13,145,139,14,ES_AUTOHSCROLL | 
                     ES_READONLY
     PUSHBUTTON      "...",IDC_SELECT_PROXY,157,145,14,14
@@ -1757,7 +1759,7 @@ BEGIN
     GROUPBOX        "New object",IDC_STATIC,7,7,170,160
     LTEXT           "Name",IDC_STATIC,13,18,20,8
     GROUPBOX        "Parent object",IDC_STATIC,7,171,170,42
-    ICON            "",IDC_ICON_PARENT,14,183,21,20
+    ICON            "",IDC_ICON_PARENT,14,183,20,20
     LTEXT           "ID:",IDC_STATIC_ID,43,183,69,8
     LTEXT           "Name",IDC_STATIC_NAME,44,197,127,9
     LTEXT           "IP address",IDC_STATIC,13,46,34,8

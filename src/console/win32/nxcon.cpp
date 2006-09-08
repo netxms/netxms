@@ -1803,6 +1803,16 @@ void CConsoleApp::CreateNode(DWORD dwParent)
       ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);
       ci.cs.node.dwIpAddr = dlg.m_dwIpAddr;
       ci.cs.node.dwNetMask = 0;
+      ci.cs.node.dwProxyNode = dlg.m_dwProxyNode;
+      ci.cs.node.dwCreationFlags = 0;
+      if (dlg.m_bCreateUnmanaged)
+         ci.cs.node.dwCreationFlags |= NXC_NCF_CREATE_UNMANAGED;
+      if (dlg.m_bDisableAgent)
+         ci.cs.node.dwCreationFlags |= NXC_NCF_DISABLE_NXCP;
+      if (dlg.m_bDisableICMP)
+         ci.cs.node.dwCreationFlags |= NXC_NCF_DISABLE_ICMP;
+      if (dlg.m_bDisableSNMP)
+         ci.cs.node.dwCreationFlags |= NXC_NCF_DISABLE_SNMP;
       CreateObject(&ci);
    }
 }

@@ -31,7 +31,6 @@ Node::Node()
      :Template()
 {
    m_dwFlags = 0;
-   m_dwDiscoveryFlags = 0;
    m_dwDynamicFlags = 0;
    m_dwZoneGUID = 0;
    m_dwNodeType = NODE_TYPE_GENERIC;
@@ -69,7 +68,7 @@ Node::Node()
 // Constructor for new node object
 //
 
-Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags, DWORD dwZone)
+Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwZone)
      :Template()
 {
    m_dwIpAddr = dwAddr;
@@ -77,7 +76,6 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags, DWORD dwZone)
    m_dwDynamicFlags = 0;
    m_dwZoneGUID = dwZone;
    m_dwNodeType = NODE_TYPE_GENERIC;
-   m_dwDiscoveryFlags = dwDiscoveryFlags;
    m_wAgentPort = AGENT_LISTEN_PORT;
    m_wAuthMethod = AUTH_NONE;
    m_szSharedSecret[0] = 0;
@@ -101,7 +99,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwDiscoveryFlags, DWORD dwZone)
    m_dwNumParams = 0;
    m_pParamList = NULL;
    m_dwPollerNode = 0;
-   m_dwProxyNode = 0;
+   m_dwProxyNode = dwProxyNode;
    memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_bIsHidden = TRUE;
    m_pRoutingTable = NULL;
@@ -148,7 +146,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    }
 
    _sntprintf(szQuery, 512, "SELECT primary_ip,node_flags,"
-                            "snmp_version,discovery_flags,auth_method,secret,"
+                            "snmp_version,auth_method,secret,"
                             "agent_port,status_poll_type,community,snmp_oid,"
                             "description,node_type,agent_version,"
                             "platform_name,poller_node_id,zone_guid,"
@@ -167,23 +165,22 @@ BOOL Node::CreateFromDB(DWORD dwId)
    m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 0);
    m_dwFlags = DBGetFieldULong(hResult, 0, 1);
    m_iSNMPVersion = DBGetFieldLong(hResult, 0, 2);
-   m_dwDiscoveryFlags = DBGetFieldULong(hResult, 0, 3);
-   m_wAuthMethod = (WORD)DBGetFieldLong(hResult, 0, 4);
-   nx_strncpy(m_szSharedSecret, DBGetField(hResult, 0, 5), MAX_SECRET_LENGTH);
-   m_wAgentPort = (WORD)DBGetFieldLong(hResult, 0, 6);
-   m_iStatusPollType = DBGetFieldLong(hResult, 0, 7);
-   nx_strncpy(m_szCommunityString, DBGetField(hResult, 0, 8), MAX_COMMUNITY_LENGTH);
-   nx_strncpy(m_szObjectId, DBGetField(hResult, 0, 9), MAX_OID_LEN * 4);
-   m_pszDescription = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 10)));
+   m_wAuthMethod = (WORD)DBGetFieldLong(hResult, 0, 3);
+   nx_strncpy(m_szSharedSecret, DBGetField(hResult, 0, 4), MAX_SECRET_LENGTH);
+   m_wAgentPort = (WORD)DBGetFieldLong(hResult, 0, 5);
+   m_iStatusPollType = DBGetFieldLong(hResult, 0, 6);
+   nx_strncpy(m_szCommunityString, DBGetField(hResult, 0, 7), MAX_COMMUNITY_LENGTH);
+   nx_strncpy(m_szObjectId, DBGetField(hResult, 0, 8), MAX_OID_LEN * 4);
+   m_pszDescription = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 9)));
    DecodeSQLString(m_pszDescription);
-   m_dwNodeType = DBGetFieldULong(hResult, 0, 11);
-   nx_strncpy(m_szAgentVersion, CHECK_NULL_EX(DBGetField(hResult, 0, 12)), MAX_AGENT_VERSION_LEN);
+   m_dwNodeType = DBGetFieldULong(hResult, 0, 10);
+   nx_strncpy(m_szAgentVersion, CHECK_NULL_EX(DBGetField(hResult, 0, 11)), MAX_AGENT_VERSION_LEN);
    DecodeSQLString(m_szAgentVersion);
-   nx_strncpy(m_szPlatformName, CHECK_NULL_EX(DBGetField(hResult, 0, 13)), MAX_PLATFORM_NAME_LEN);
+   nx_strncpy(m_szPlatformName, CHECK_NULL_EX(DBGetField(hResult, 0, 12)), MAX_PLATFORM_NAME_LEN);
    DecodeSQLString(m_szPlatformName);
-   m_dwPollerNode = DBGetFieldULong(hResult, 0, 14);
-   m_dwZoneGUID = DBGetFieldULong(hResult, 0, 15);
-   m_dwProxyNode = DBGetFieldULong(hResult, 0, 16);
+   m_dwPollerNode = DBGetFieldULong(hResult, 0, 13);
+   m_dwZoneGUID = DBGetFieldULong(hResult, 0, 14);
+   m_dwProxyNode = DBGetFieldULong(hResult, 0, 15);
 
    DBFreeResult(hResult);
 
@@ -281,26 +278,26 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    if (bNewObject)
       snprintf(szQuery, 4096,
                "INSERT INTO nodes (id,primary_ip,"
-               "node_flags,snmp_version,community,discovery_flags,status_poll_type,"
+               "node_flags,snmp_version,community,status_poll_type,"
                "agent_port,auth_method,secret,snmp_oid,proxy_node,"
                "description,node_type,agent_version,platform_name,"
-               "poller_node_id,zone_guid) VALUES (%d,'%s',%d,%d,'%s',%d,%d,%d,%d,"
+               "poller_node_id,zone_guid) VALUES (%d,'%s',%d,%d,'%s',%d,%d,%d,"
                "'%s','%s',%d,'%s',%d,'%s','%s',%d,%d)",
                m_dwId, IpToStr(m_dwIpAddr, szIpAddr), m_dwFlags,
-               m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, m_iStatusPollType,
+               m_iSNMPVersion, m_szCommunityString, m_iStatusPollType,
                m_wAgentPort, m_wAuthMethod, m_szSharedSecret, m_szObjectId,
                m_dwProxyNode, pszEscDescr, m_dwNodeType, pszEscVersion,
                pszEscPlatform, m_dwPollerNode, m_dwZoneGUID);
    else
       snprintf(szQuery, 4096,
                "UPDATE nodes SET primary_ip='%s',"
-               "node_flags=%d,snmp_version=%d,community='%s',discovery_flags=%d,"
+               "node_flags=%d,snmp_version=%d,community='%s',"
                "status_poll_type=%d,agent_port=%d,auth_method=%d,secret='%s',"
                "snmp_oid='%s',description='%s',node_type=%d,"
                "agent_version='%s',platform_name='%s',poller_node_id=%d,"
                "zone_guid=%d,proxy_node=%d WHERE id=%d",
                IpToStr(m_dwIpAddr, szIpAddr), 
-               m_dwFlags, m_iSNMPVersion, m_szCommunityString, m_dwDiscoveryFlags, 
+               m_dwFlags, m_iSNMPVersion, m_szCommunityString,
                m_iStatusPollType, m_wAgentPort, m_wAuthMethod, m_szSharedSecret, 
                m_szObjectId, pszEscDescr, m_dwNodeType, 
                pszEscVersion, pszEscPlatform, m_dwPollerNode, m_dwZoneGUID,
@@ -350,130 +347,6 @@ BOOL Node::DeleteFromDB(void)
       QueueSQLRequest(szQuery);
    }
    return bSuccess;
-}
-
-
-//
-// Poll newly discovered node
-// Usually called once by node poller thread when new node is discovered
-// and object for it is created
-//
-
-void Node::NewNodePoll(DWORD dwNetMask)
-{
-   AgentConnection *pAgentConn;
-
-   PollerLock();
-
-   // Determine node's capabilities
-   if (SnmpGet(SNMP_VERSION_2C, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
-               ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4,
-               FALSE, FALSE) == SNMP_ERR_SUCCESS)
-   {
-      DWORD dwNodeFlags;
-
-      m_dwNodeType = OidToType(m_szObjectId, &dwNodeFlags);
-      m_dwFlags |= NF_IS_SNMP | dwNodeFlags;
-      m_iSNMPVersion = SNMP_VERSION_2C;
-   }
-   else
-   {
-      if (SnmpGet(SNMP_VERSION_1, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
-                  ".1.3.6.1.2.1.1.2.0", NULL, 0, m_szObjectId, MAX_OID_LEN * 4,
-                  FALSE, FALSE) == SNMP_ERR_SUCCESS)
-      {
-         DWORD dwNodeFlags;
-
-         m_dwNodeType = OidToType(m_szObjectId, &dwNodeFlags);
-         m_dwFlags |= NF_IS_SNMP | dwNodeFlags;
-         m_iSNMPVersion = SNMP_VERSION_1;
-      }
-   }
-
-   // Check OSPF capabilities
-   if (m_dwFlags & NF_IS_SNMP)
-   {
-      CheckOSPFSupport();
-   }
-
-   pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod,
-                                    m_szSharedSecret);
-   if (pAgentConn->Connect(g_pServerKey))
-   {
-      m_dwFlags |= NF_IS_NATIVE_AGENT;
-      pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, m_szAgentVersion);
-      pAgentConn->GetParameter("System.PlatformName", MAX_PLATFORM_NAME_LEN, m_szPlatformName);
-
-      pAgentConn->GetSupportedParameters(&m_dwNumParams, &m_pParamList);
-   }
-
-   // Get interface list
-   if ((m_dwFlags & NF_IS_SNMP) || (m_dwFlags & NF_IS_NATIVE_AGENT) ||
-       (m_dwFlags & NF_IS_LOCAL_MGMT))
-   {
-      INTERFACE_LIST *pIfList = NULL;
-      int i;
-
-      if (m_dwFlags & NF_IS_LOCAL_MGMT)    // For local machine
-         pIfList = GetLocalInterfaceList();
-      else if (m_dwFlags & NF_IS_NATIVE_AGENT)    // For others prefer native agent
-      {
-         pIfList = pAgentConn->GetInterfaceList();
-         CleanInterfaceList(pIfList);
-      }
-      if ((pIfList == NULL) && (m_dwFlags & NF_IS_SNMP))  // Use SNMP if we cannot get interfaces via agent
-         pIfList = SnmpGetInterfaceList(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort,
-                                        m_szCommunityString, m_dwNodeType);
-
-      if (pIfList != NULL)
-      {
-         CheckInterfaceNames(pIfList);
-         for(i = 0; i < pIfList->iNumEntries; i++)
-            CreateNewInterface(pIfList->pInterfaces[i].dwIpAddr, 
-                               pIfList->pInterfaces[i].dwIpNetMask,
-                               pIfList->pInterfaces[i].szName,
-                               pIfList->pInterfaces[i].dwIndex,
-                               pIfList->pInterfaces[i].dwType,
-                               pIfList->pInterfaces[i].bMacAddr);
-
-         // Check if address we are using to communicate with node
-         // is configured on one of node's interfaces
-         for(i = 0; i < pIfList->iNumEntries; i++)
-            if (pIfList->pInterfaces[i].dwIpAddr == m_dwIpAddr)
-               break;
-
-         if (i == pIfList->iNumEntries)
-         {
-            char szBuffer[MAX_OBJECT_NAME];
-
-            // Node is behind NAT
-            m_dwFlags |= NF_BEHIND_NAT;
-
-            // Create pseudo interface for NAT
-            ConfigReadStr("NATAdapterName", szBuffer, MAX_OBJECT_NAME, "NetXMS NAT Adapter");
-            CreateNewInterface(m_dwIpAddr, 0, szBuffer,
-                               0x7FFFFFFF, IFTYPE_NETXMS_NAT_ADAPTER);
-         }
-
-         DestroyInterfaceList(pIfList);
-      }
-      else
-      {
-         // We cannot get interface list from node for some reasons, create dummy one
-         CreateNewInterface(m_dwIpAddr, dwNetMask);
-      }
-   }
-   else  // No SNMP, no native agent - create pseudo interface object
-   {
-      CreateNewInterface(m_dwIpAddr, dwNetMask);
-   }
-
-   // Clean up agent connection
-   if (m_dwFlags & NF_IS_NATIVE_AGENT)
-      pAgentConn->Disconnect();
-   delete pAgentConn;
-
-   PollerUnlock();
 }
 
 
@@ -962,7 +835,8 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 // Perform configuration poll on node
 //
 
-void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
+void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
+                             int nPoller, DWORD dwNetMask)
 {
    DWORD i, dwOldFlags = m_dwFlags;
    Interface **ppDeleteList;
@@ -1397,14 +1271,14 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                if (pInterface->IpAddr() != m_dwIpAddr)
                {
                   DeleteInterface(pInterface);
-                  CreateNewInterface(m_dwIpAddr, 0);
+                  CreateNewInterface(m_dwIpAddr, dwNetMask);
                }
             }
          }
          else if (dwCount == 0)
          {
             // No interfaces at all, create pseudo-interface
-            CreateNewInterface(m_dwIpAddr, 0);
+            CreateNewInterface(m_dwIpAddr, dwNetMask);
          }
       }
 
@@ -1736,7 +1610,6 @@ void Node::CreateMessage(CSCPMessage *pMsg)
 {
    Template::CreateMessage(pMsg);
    pMsg->SetVariable(VID_FLAGS, m_dwFlags);
-   pMsg->SetVariable(VID_DISCOVERY_FLAGS, m_dwDiscoveryFlags);
    pMsg->SetVariable(VID_AGENT_PORT, m_wAgentPort);
    pMsg->SetVariable(VID_AUTH_METHOD, m_wAuthMethod);
    pMsg->SetVariable(VID_SHARED_SECRET, m_szSharedSecret);

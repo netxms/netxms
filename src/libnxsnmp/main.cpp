@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: main.cpp
+** File: main.cpp
 **
 **/
 
@@ -56,7 +56,7 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *pszText, DWORD *pdwBuffer, 
    if (*pCurr == 0)
       return 0;
 
-   // Skip initial dot if persent
+   // Skip initial dot if present
    if (*pCurr == _T('.'))
       pCurr++;
 

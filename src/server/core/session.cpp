@@ -3097,8 +3097,11 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                switch(iClass)
                {
                   case OBJECT_NODE:
-                     pObject = PollNewNode(dwIpAddr, pRequest->GetVariableLong(VID_IP_NETMASK),
-                                           DF_DEFAULT, szObjectName);
+                     pObject = PollNewNode(dwIpAddr,
+                                           pRequest->GetVariableLong(VID_IP_NETMASK),
+                                           pRequest->GetVariableLong(VID_CREATION_FLAGS),
+                                           szObjectName,
+                                           pRequest->GetVariableLong(VID_PROXY_NODE));
                      break;
                   case OBJECT_CONTAINER:
                      pDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
@@ -3793,7 +3796,7 @@ void ClientSession::PollerThread(Node *pNode, int iPollType, DWORD dwRqId)
          pNode->StatusPoll(this, dwRqId, -1);
          break;
       case POLL_CONFIGURATION:
-         pNode->ConfigurationPoll(this, dwRqId, -1);
+         pNode->ConfigurationPoll(this, dwRqId, -1, 0);
          break;
       default:
          SendPollerMsg(dwRqId, _T("Invalid poll type requested\r\n"));

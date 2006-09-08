@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "CreateNodeDlg.h"
+#include "ObjectSelDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -24,6 +25,8 @@ CCreateNodeDlg::CCreateNodeDlg(CWnd* pParent /*=NULL*/)
 	m_bDisableSNMP = FALSE;
 	m_bCreateUnmanaged = FALSE;
 	//}}AFX_DATA_INIT
+
+   m_dwProxyNode = NULL;
 }
 
 
@@ -44,11 +47,44 @@ void CCreateNodeDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CCreateNodeDlg, CCreateObjectDlg)
 	//{{AFX_MSG_MAP(CCreateNodeDlg)
 	ON_BN_CLICKED(IDC_BUTTON_RESOLVE, OnButtonResolve)
+	ON_BN_CLICKED(IDC_SELECT_PROXY, OnSelectProxy)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CCreateNodeDlg message handlers
+
+
+//
+// WM_INITDIALOG message handler
+//
+
+BOOL CCreateNodeDlg::OnInitDialog() 
+{
+	CCreateObjectDlg::OnInitDialog();
+	
+   // Proxy node
+   if (m_dwProxyNode != 0)
+   {
+      NXC_OBJECT *pNode;
+
+      pNode = NXCFindObjectById(g_hSession, m_dwProxyNode);
+      if (pNode != NULL)
+      {
+         SetDlgItemText(IDC_EDIT_PROXY, pNode->szName);
+      }
+      else
+      {
+         SetDlgItemText(IDC_EDIT_PROXY, _T("<invalid>"));
+      }
+   }
+   else
+   {
+      SetDlgItemText(IDC_EDIT_PROXY, _T("<none>"));
+   }
+	
+	return TRUE;
+}
 
 
 //
@@ -105,5 +141,42 @@ void CCreateNodeDlg::OnButtonResolve()
    else
    {
       MessageBox(_T("Unable to resolve host name!"), _T("Error"), MB_OK | MB_ICONSTOP);
+   }
+}
+
+
+//
+// Handler for proxy node selection button
+//
+
+void CCreateNodeDlg::OnSelectProxy() 
+{
+   CObjectSelDlg dlg;
+
+   dlg.m_dwAllowedClasses = SCL_NODE;
+   dlg.m_bSingleSelection = TRUE;
+   dlg.m_bAllowEmptySelection = TRUE;
+   if (dlg.DoModal() == IDOK)
+   {
+      if (dlg.m_dwNumObjects != 0)
+      {
+         NXC_OBJECT *pNode;
+
+         m_dwProxyNode = dlg.m_pdwObjectList[0];
+         pNode = NXCFindObjectById(g_hSession, m_dwProxyNode);
+         if (pNode != NULL)
+         {
+            SetDlgItemText(IDC_EDIT_PROXY, pNode->szName);
+         }
+         else
+         {
+            SetDlgItemText(IDC_EDIT_PROXY, _T("<invalid>"));
+         }
+      }
+      else
+      {
+         m_dwProxyNode = 0;
+         SetDlgItemText(IDC_EDIT_PROXY, _T("<none>"));
+      }
    }
 }
