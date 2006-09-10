@@ -1,4 +1,4 @@
-/* $Id: serial.cpp,v 1.13 2006-09-07 22:02:06 alk Exp $ */
+/* $Id: serial.cpp,v 1.14 2006-09-10 06:59:37 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -24,12 +24,6 @@
 
 #include "libnetxms.h"
 
-#if HAVE_TERMIOS_H
-# include <termios.h>
-#else
-# error termios.h not found, unable to continue build
-#endif
-
 #ifndef CRTSCTS
 # ifdef CNEW_RTSCTS
 #  define CRTSCTS CNEW_RTSCTS
@@ -37,6 +31,7 @@
 #  define CRTSCTS 0
 # endif
 #endif
+
 
 //
 // Constructor
@@ -47,7 +42,9 @@ Serial::Serial(void)
 	m_nTimeout = 0;
 	m_hPort = INVALID_HANDLE_VALUE;
    m_pszPort = NULL;
+#ifndef _WIN32
 	memset(&m_originalSettings, 0, sizeof(m_originalSettings));
+#endif
 }
 
 
@@ -218,7 +215,7 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlo
    newTio.c_iflag |= IGNBRK;
    newTio.c_oflag &= ~(OPOST | ONLCR);
 
-	switch (nFlowControl)
+	switch(nFlowControl)
 	{
 		case FLOW_HARDWARE:
    		newTio.c_cflag |= CRTSCTS;
@@ -419,5 +416,9 @@ void Serial::Flush(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2006/09/07 22:02:06  alk
+UNIX version of Serial rewritten
+termio removed from configure (depricated in favour of termio_s_?)
+
 
 */

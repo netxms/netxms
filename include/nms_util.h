@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.84 2006-09-07 22:02:06 alk Exp $ */
+/* $Id: nms_util.h,v 1.85 2006-09-10 06:59:36 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -41,15 +41,35 @@
 #include <nms_threads.h>
 #include <time.h>
 
+#if HAVE_BYTESWAP_H
+#include <byteswap.h>
+#endif
+
+
+//
+// Sirial communications
+//
+
+#ifdef _WIN32
+
+#define FLOW_NONE       0
+#define FLOW_SOFTWARE   1
+#define FLOW_HARDWARE   2
+
+#else    /* _WIN32 */
+
 #ifdef HAVE_TERMIOS_H
 # include <termios.h>
 #else
 # error termios.h not found
 #endif
 
-#if HAVE_BYTESWAP_H
-#include <byteswap.h>
-#endif
+#endif   /* _WIN32 */
+
+
+//
+// Common constants
+//
 
 #define INVALID_INDEX         0xFFFFFFFF
 #define CSCP_TEMP_BUF_SIZE    65536
@@ -386,5 +406,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.84  2006/09/07 22:02:06  alk
+UNIX version of Serial rewritten
+termio removed from configure (depricated in favour of termio_s_?)
+
 
 */

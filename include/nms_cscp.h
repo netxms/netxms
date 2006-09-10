@@ -73,7 +73,7 @@ typedef struct
 {
    DWORD dwVarId;       // Variable identifier
    BYTE  bType;         // Data type
-   BYTE  bReserved;     // Padding
+   BYTE  bPadding;      // Padding
    union
    {
       struct
