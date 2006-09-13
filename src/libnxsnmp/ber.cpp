@@ -98,10 +98,13 @@ BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
       case ASN_UINTEGER32:
          if ((dwLength >= 1) && (dwLength <= 5))
          {
-            DWORD dwValue = 0;
+            DWORD dwValue;
             BYTE *pbTemp;
 
-            // For large integers, we can have length of 5, and first byte
+            // Pre-fill buffer with 1's for negative values and 0's for positive
+            dwValue = (*pData & 0x80) ? 0xFFFFFFFF : 0;
+
+            // For large unsigned integers, we can have length of 5, and first byte
             // is usually 0. In this case, we skip first byte.
             if (dwLength == 5)
             {
@@ -117,6 +120,37 @@ BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
             }
             dwValue = ntohl(dwValue);
             memcpy(pBuffer, &dwValue, sizeof(DWORD));
+         }
+         else
+         {
+            bResult = FALSE;  // We didn't expect more than 32 bit integers
+         }
+         break;
+      case ASN_COUNTER64:
+         if ((dwLength >= 1) && (dwLength <= 9))
+         {
+            QWORD qwValue;
+            BYTE *pbTemp;
+
+            // Pre-fill buffer with 1's for negative values and 0's for positive
+            qwValue = (*pData & 0x80) ? 0xFFFFFFFFFFFFFFFF : 0;
+
+            // For large unsigned integers, we can have length of 9, and first byte
+            // is usually 0. In this case, we skip first byte.
+            if (dwLength == 9)
+            {
+               pData++;
+               dwLength--;
+            }
+
+            pbTemp = ((BYTE *)&qwValue) + (8 - dwLength);
+            while(dwLength > 0)
+            {
+               *pbTemp++ = *pData++;
+               dwLength--;
+            }
+            qwValue = ntohq(qwValue);
+            memcpy(pBuffer, &qwValue, sizeof(QWORD));
          }
          else
          {
@@ -177,6 +211,9 @@ BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
 static LONG EncodeContent(DWORD dwType, BYTE *pData, DWORD dwDataLength, BYTE *pResult)
 {
    LONG nBytes = 0;
+   DWORD dwTemp;
+   QWORD qwTemp;
+   BYTE *pTemp, sign;
    int i, iOidLength;
 
    switch(dwType)
@@ -184,14 +221,53 @@ static LONG EncodeContent(DWORD dwType, BYTE *pData, DWORD dwDataLength, BYTE *p
       case ASN_NULL:
          break;
       case ASN_INTEGER:
+         dwTemp = htonl(*((DWORD *)pData));
+         pTemp = (BYTE *)&dwTemp;
+         sign = (*pTemp & 0x80) ? 0xFF : 0;
+         for(nBytes = 4; (*pTemp == sign) && (nBytes > 1); pTemp++, nBytes--);
+         if ((*pTemp & 0x80) != (sign & 0x80))
+         {
+            memcpy(&pResult[1], pTemp, nBytes);
+            pResult[0] = sign;
+            nBytes++;
+         }
+         else
+         {
+            memcpy(pResult, pTemp, nBytes);
+         }
+         break;
       case ASN_COUNTER32:
       case ASN_GAUGE32:
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
-         *((DWORD *)pResult) = htonl(*((DWORD *)pData));
-         for(i = 0, nBytes = 4; (pResult[i] == 0) && (nBytes > 1); i++, nBytes--);
-         if (i > 0)
-            memmove(pResult, &pResult[i], nBytes);
+         dwTemp = htonl(*((DWORD *)pData));
+         pTemp = (BYTE *)&dwTemp;
+         for(nBytes = 4; (*pTemp == 0) && (nBytes > 1); pTemp++, nBytes--);
+         if (*pTemp & 0x80)
+         {
+            memcpy(&pResult[1], pTemp, nBytes);
+            pResult[0] = 0;
+            nBytes++;
+         }
+         else
+         {
+            memcpy(pResult, pTemp, nBytes);
+         }
+         break;
+      case ASN_COUNTER64:
+         qwTemp = htonq(*((QWORD *)pData));
+         pTemp = (BYTE *)&qwTemp;
+         for(nBytes = 8; (*pTemp == 0) && (nBytes > 1); pTemp++, nBytes--);
+         if (*pTemp & 0x80)
+         {
+            memcpy(&pResult[1], pTemp, nBytes);
+            pResult[0] = 0;
+            nBytes++;
+         }
+         else
+         {
+            memcpy(pResult, pTemp, nBytes);
+         }
          break;
       case ASN_OBJECT_ID:
          iOidLength = dwDataLength / sizeof(DWORD);

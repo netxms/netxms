@@ -36,7 +36,6 @@ SERVER:
 - New attribute: disable status/configuration poll
 - NxDbMgr -- backup before db recover
 - OSPF discovery
-- Add support for 64 bit counters to libnxsnmp
 
 ALL AGENTS:
 - Add Process.Count($1,$2,$3), where $3 is process command line
