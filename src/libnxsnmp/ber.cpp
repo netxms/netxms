@@ -133,7 +133,7 @@ BOOL BER_DecodeContent(DWORD dwType, BYTE *pData, DWORD dwLength, BYTE *pBuffer)
             BYTE *pbTemp;
 
             // Pre-fill buffer with 1's for negative values and 0's for positive
-            qwValue = (*pData & 0x80) ? 0xFFFFFFFFFFFFFFFF : 0;
+            qwValue = (*pData & 0x80) ? _ULL(0xFFFFFFFFFFFFFFFF) : 0;
 
             // For large unsigned integers, we can have length of 9, and first byte
             // is usually 0. In this case, we skip first byte.
