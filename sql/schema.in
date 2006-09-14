@@ -119,6 +119,7 @@ CREATE TABLE object_properties
 	status_translation varchar(8) not null,
 	status_single_threshold integer not null,
 	status_thresholds varchar(8) not null,
+	comments SQL_TEXT not null,
 	PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 

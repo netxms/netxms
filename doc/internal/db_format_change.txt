@@ -2,7 +2,65 @@
 * 46 ==> 47 *
 *************
 
+- Column "comments" added to table "object_properties"
 - Column "discovery_flags" removed from table "nodes"
+- Table "alarm_notes" redesigned:
+	CREATE TABLE alarm_notes
+	(
+		note_id integer not null,
+		alarm_id integer not null,
+		change_time integer not null,
+		user_id integer not null,	// Last edited by
+		note_text SQL_TEXT not null,
+		PRIMARY KEY(note_id)
+	) TABLE_TYPE;
+	CREATE INDEX idx_alarm_notes_alarm_id ON alarm_notes(alarm_id);
+- Table "alarms" redesigned:
+	CREATE TABLE alarms
+	(
+		alarm_id integer not null,	// Unique alarm identifier
+		alarm_state integer not null,
+		hd_state integer not null,	// Help desk system state
+		hd_ref varchar(63) not null,	// Help desk reference
+		creation_time integer not null,
+		last_change_time integer not null,
+		source_object_id integer not null,
+		source_event_code integer not null,
+		source_event_id SQL_INT64 not null,
+		message varchar(255) not null,
+		original_severity integer not null,
+		current_severity integer not null,
+		repeat_count integer not null,
+		alarm_key varchar(255) not null, // Alarm key (used for auto acknowlegment)
+		ack_by integer not null,         // ID of user who acknowleges alarm
+		PRIMARY KEY(alarm_id)
+	) TABLE_TYPE;
+- Table "alarm_change_log" added:
+	CREATE TABLE alarm_change_log
+	(
+		change_id SQL_INT64 not null,
+		change_time integer not null,
+		alarm_id integer not null,
+		opcode integer not null,	// Operation code
+		user_id integer not null,
+		info_text SQL_TEXT not null,	// Additional information
+		PRIMARY KEY(change_id)
+	) TABLE_TYPE;
+	CREATE INDEX idx_alarm_change_log_alarm_id ON alarm_change_log(alarm_id);
+- Table "alarm_groups" added:
+	CREATE TABLE alarm_grops
+	(
+		alarm_group_id integer not null,
+		group_name varchar(255) not null,
+		PRIMARY KEY(alarm_group_id)
+	) TABLE_TYPE;
+- Table "alarm_group_map" added:
+	CREATE TABLE alarm_group_map
+	(
+		alarm_group_id integer not null,
+		alarm_id integer not null,
+		PRIMARY KEY(alarm_group_id,alarm_id)
+	) TABLE_TYPE;
 
 
 *************

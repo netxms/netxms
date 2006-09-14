@@ -78,6 +78,90 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V46 to V47
+//
+
+static BOOL H_UpgradeFromV46(void)
+{
+   static TCHAR m_szBatch[] =
+      "ALTER TABLE object_properties ADD comments $SQL:TEXT\n"
+      "UPDATE object_properties SET comments='#00'\n"
+      "ALTER TABLE nodes DROP COLUMN discovery_flags\n"
+      "DROP TABLE alarm_notes\n"
+      "ALTER TABLE alarms ADD alarm_state integer\n"
+      "ALTER TABLE alarms ADD hd_state integer\n"
+      "ALTER TABLE alarms ADD hd_ref varchar(63)\n"
+      "ALTER TABLE alarms ADD creation_time integer\n"
+      "ALTER TABLE alarms ADD last_change_time integer\n"
+      "ALTER TABLE alarms ADD original_severity integer\n"
+      "ALTER TABLE alarms ADD current_severity integer\n"
+      "ALTER TABLE alarms ADD repeat_count integer\n"
+      "UPDATE alarms SET hd_state=0,hd_ref='#00',creation_time=alarm_timestamp,"
+         "last_change_time=alarm_timestamp,original_severity=severity,"
+         "current_severity=severity,repeat_count=1\n"
+      "UPDATE alarms SET alarm_state=0 WHERE is_ack=0\n"
+      "UPDATE alarms SET alarm_state=2 WHERE is_ack<>0\n"
+      "ALTER TABLE alarms DROP COLUMN severity\n"
+      "ALTER TABLE alarms DROP COLUMN alarm_timestamp\n"
+      "ALTER TABLE alarms DROP COLUMN is_ack\n"
+      "<END>";
+   static TCHAR m_szBatch2[] =
+      "CREATE INDEX idx_alarm_notes_alarm_id ON alarm_notes(alarm_id)\n"
+      "CREATE INDEX idx_alarm_change_log_alarm_id ON alarm_change_log(alarm_id)\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE alarm_notes ("
+		                 "note_id integer not null,"
+		                 "alarm_id integer not null,"
+		                 "change_time integer not null,"
+		                 "user_id integer not null,"
+		                 "note_text $SQL:TEXT not null,"
+		                 "PRIMARY KEY(note_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE alarm_change_log	("
+                  	  "change_id $SQL:INT64 not null,"
+		                 "change_time integer not null,"
+		                 "alarm_id integer not null,"
+		                 "opcode integer not null,"
+		                 "user_id integer not null,"
+		                 "info_text $SQL:TEXT not null,"
+		                 "PRIMARY KEY(change_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE alarm_grops ("
+		                 "alarm_group_id integer not null,"
+		                 "group_name varchar(255) not null,"
+		                 "PRIMARY KEY(alarm_group_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE alarm_group_map ("
+		                 "alarm_group_id integer not null,"
+                       "alarm_id integer not null,"
+		                 "PRIMARY KEY(alarm_group_id,alarm_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLBatch(m_szBatch2))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='47' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V45 to V46
 //
 
@@ -2055,6 +2139,7 @@ static struct
    { 43, H_UpgradeFromV43 },
    { 44, H_UpgradeFromV44 },
    { 45, H_UpgradeFromV45 },
+   { 46, H_UpgradeFromV46 },
    { 0, NULL }
 };
 

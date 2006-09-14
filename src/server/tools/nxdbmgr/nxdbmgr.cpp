@@ -33,6 +33,7 @@
 
 DB_HANDLE g_hCoreDB;
 BOOL g_bIgnoreErrors = FALSE;
+BOOL g_bTrace = FALSE;
 int g_iSyntax;
 TCHAR *g_pszTableSuffix = _T("");
 TCHAR *g_pszSqlType[5][2] = 
@@ -62,6 +63,24 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 static BOOL m_bForce = FALSE;
+
+
+//
+// Show query if trace mode is ON
+//
+
+void ShowQuery(TCHAR *pszQuery)
+{
+#ifdef _WIN32
+      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
+      _tprintf(_T(">>> "));
+      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0A);
+      puts(pszQuery);
+      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
+#else
+      _tprintf(_T(">>> %s\n", pszQuery);
+#endif
+}
 
 
 //
@@ -114,6 +133,9 @@ DB_RESULT SQLSelect(TCHAR *pszQuery)
 {
    DB_RESULT hResult;
 
+   if (g_bTrace)
+      ShowQuery(pszQuery);
+
    hResult = DBSelect(g_hCoreDB, pszQuery);
    if (hResult == NULL)
    {
@@ -138,6 +160,9 @@ BOOL SQLQuery(TCHAR *pszQuery)
 {
    BOOL bResult;
 
+   if (g_bTrace)
+      ShowQuery(pszQuery);
+
    bResult = DBQuery(g_hCoreDB, pszQuery);
    if (!bResult)
    {
@@ -160,9 +185,14 @@ BOOL SQLQuery(TCHAR *pszQuery)
 
 BOOL SQLBatch(TCHAR *pszBatch)
 {
-   TCHAR *pszQuery, *ptr;
+   TCHAR *pszBuffer, *pszQuery, *ptr;
+   BOOL bRet = TRUE;
 
-   pszQuery = pszBatch;
+   pszBuffer = _tcsdup(pszBatch);
+   TranslateStr(pszBuffer, _T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
+   TranslateStr(pszBuffer, _T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
+
+   pszQuery = pszBuffer;
    while(1)
    {
       ptr = _tcschr(pszQuery, _T('\n'));
@@ -170,6 +200,10 @@ BOOL SQLBatch(TCHAR *pszBatch)
          *ptr = 0;
       if (!_tcscmp(pszQuery, _T("<END>")))
          break;
+
+      if (g_bTrace)
+         ShowQuery(pszQuery);
+
       if (!DBQuery(g_hCoreDB, pszQuery))
       {
 #ifdef _WIN32
@@ -181,12 +215,16 @@ BOOL SQLBatch(TCHAR *pszBatch)
          _tprintf(_T("SQL query failed:\n%s\n"), pszQuery);
 #endif
          if (!g_bIgnoreErrors)
-            return FALSE;
+         {
+            bRet = FALSE;
+            break;
+         }
       }
       ptr++;
       pszQuery = ptr;
    }
-   return TRUE;
+   free(pszBuffer);
+   return bRet;
 }
 
 
@@ -287,7 +325,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:fhIMvX")) != -1)
+   while((ch = getopt(argc, argv, "c:fhIMtvX")) != -1)
    {
       switch(ch)
       {
@@ -304,6 +342,7 @@ int main(int argc, char *argv[])
                         "   -h           : Display help and exit.\n"
                         "   -I           : MySQL only - specify TYPE=InnoDB for new tables.\n"
                         "   -M           : MySQL only - specify TYPE=MyISAM for new tables.\n"
+                        "   -t           : Enable trace moded (show executed SQL queries).\n"
                         "   -v           : Display version and exit.\n"
                         "   -X           : Ignore SQL errors when upgrading (USE WITH CARE!!!)\n"
                         "\n"));
@@ -317,6 +356,9 @@ int main(int argc, char *argv[])
             break;
          case 'f':
             m_bForce = TRUE;
+            break;
+         case 't':
+            g_bTrace = TRUE;
             break;
          case 'I':
             g_pszTableSuffix = _T(" TYPE=InnoDB");
