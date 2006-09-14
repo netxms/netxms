@@ -243,10 +243,10 @@ void EPRule::GenerateAlarm(Event *pEvent)
    char *pszAckKey;
    int iSeverity;
 
-   // Acknowlege alarms with key == our ack_key
+   // Terminate alarms with key == our ack_key
    pszAckKey = pEvent->ExpandText(m_szAlarmAckKey);
    if (pszAckKey[0] != 0)
-      g_alarmMgr.AckByKey(pszAckKey);
+      g_alarmMgr.TerminateByKey(pszAckKey);
    free(pszAckKey);
 
    // Generate new alarm
@@ -263,7 +263,8 @@ void EPRule::GenerateAlarm(Event *pEvent)
          break;
    }
    g_alarmMgr.NewAlarm(m_szAlarmMessage, m_szAlarmKey, 
-                       (m_iAlarmSeverity == SEVERITY_NONE), iSeverity, pEvent);
+                       (m_iAlarmSeverity == SEVERITY_NONE) ? ALARM_STATE_TERMINATED : ALARM_STATE_OUTSTANDING,
+                       iSeverity, pEvent);
 }
 
 

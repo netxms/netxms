@@ -38,14 +38,20 @@ void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
 {
    pMsg->SetVariable(VID_ALARM_ID, pAlarm->dwAlarmId);
    pMsg->SetVariable(VID_ACK_BY_USER, pAlarm->dwAckByUser);
+   pMsg->SetVariable(VID_TERMINATE_BY_USER, pAlarm->dwTermByUser);
    pMsg->SetVariable(VID_EVENT_CODE, pAlarm->dwSourceEventCode);
    pMsg->SetVariable(VID_EVENT_ID, pAlarm->qwSourceEventId);
    pMsg->SetVariable(VID_OBJECT_ID, pAlarm->dwSourceObject);
-   pMsg->SetVariable(VID_TIMESTAMP, pAlarm->dwTimeStamp);
+   pMsg->SetVariable(VID_CREATION_TIME, pAlarm->dwCreationTime);
+   pMsg->SetVariable(VID_LAST_CHANGE_TIME, pAlarm->dwLastChangeTime);
    pMsg->SetVariable(VID_ALARM_KEY, pAlarm->szKey);
    pMsg->SetVariable(VID_ALARM_MESSAGE, pAlarm->szMessage);
-   pMsg->SetVariable(VID_IS_ACK, pAlarm->wIsAck);
-   pMsg->SetVariable(VID_SEVERITY, pAlarm->wSeverity);
+   pMsg->SetVariable(VID_STATE, (WORD)pAlarm->nState);
+   pMsg->SetVariable(VID_CURRENT_SEVERITY, (WORD)pAlarm->nCurrentSeverity);
+   pMsg->SetVariable(VID_ORIGINAL_SEVERITY, (WORD)pAlarm->nOriginalSeverity);
+   pMsg->SetVariable(VID_HELPDESK_STATE, (WORD)pAlarm->nHelpDeskState);
+   pMsg->SetVariable(VID_HELPDESK_REF, pAlarm->szHelpDeskRef);
+   pMsg->SetVariable(VID_REPEAT_COUNT, pAlarm->dwRepeatCount);
 }
 
 
@@ -82,9 +88,12 @@ BOOL AlarmManager::Init(void)
    DWORD i;
 
    // Load unacknowleged alarms into memory
-   hResult = DBSelect(g_hCoreDB, "SELECT alarm_id,alarm_timestamp,source_object_id,"
-                                 "source_event_code,source_event_id,message,severity,alarm_key "
-                                 "FROM alarms WHERE is_ack=0");
+   hResult = DBSelect(g_hCoreDB, "SELECT alarm_id,source_object_id,"
+                                 "source_event_code,source_event_id,message,"
+                                 "original_severity,current_severity,"
+                                 "alarm_key,creation_time,last_change_time,"
+                                 "hd_state,hd_ref,ack_by,repeat_count,"
+                                 "alarm_state FROM alarms WHERE alarm_state<2");
    if (hResult == NULL)
       return FALSE;
 
@@ -95,17 +104,23 @@ BOOL AlarmManager::Init(void)
       for(i = 0; i < m_dwNumAlarms; i++)
       {
          m_pAlarmList[i].dwAlarmId = DBGetFieldULong(hResult, i, 0);
-         m_pAlarmList[i].dwTimeStamp = DBGetFieldULong(hResult, i, 1);
-         m_pAlarmList[i].dwSourceObject = DBGetFieldULong(hResult, i, 2);
-         m_pAlarmList[i].dwSourceEventCode = DBGetFieldULong(hResult, i, 3);
-         m_pAlarmList[i].qwSourceEventId = DBGetFieldUInt64(hResult, i, 4);
-         nx_strncpy(m_pAlarmList[i].szMessage, DBGetField(hResult, i, 5), MAX_DB_STRING);
+         m_pAlarmList[i].dwSourceObject = DBGetFieldULong(hResult, i, 1);
+         m_pAlarmList[i].dwSourceEventCode = DBGetFieldULong(hResult, i, 2);
+         m_pAlarmList[i].qwSourceEventId = DBGetFieldUInt64(hResult, i, 3);
+         nx_strncpy(m_pAlarmList[i].szMessage, DBGetField(hResult, i, 4), MAX_DB_STRING);
          DecodeSQLString(m_pAlarmList[i].szMessage);
-         m_pAlarmList[i].wSeverity = (WORD)DBGetFieldLong(hResult, i, 6);
+         m_pAlarmList[i].nOriginalSeverity = (BYTE)DBGetFieldLong(hResult, i, 5);
+         m_pAlarmList[i].nCurrentSeverity = (BYTE)DBGetFieldLong(hResult, i, 6);
          nx_strncpy(m_pAlarmList[i].szKey, DBGetField(hResult, i, 7), MAX_DB_STRING);
          DecodeSQLString(m_pAlarmList[i].szKey);
-         m_pAlarmList[i].wIsAck = 0;
-         m_pAlarmList[i].dwAckByUser = 0;
+         m_pAlarmList[i].dwCreationTime = DBGetFieldULong(hResult, i, 8);
+         m_pAlarmList[i].dwLastChangeTime = DBGetFieldULong(hResult, i, 9);
+         m_pAlarmList[i].nHelpDeskState = (BYTE)DBGetFieldLong(hResult, i, 10);
+         nx_strncpy(m_pAlarmList[i].szHelpDeskRef, DBGetField(hResult, i, 11), MAX_HELPDESK_REF_LEN);
+         DecodeSQLString(m_pAlarmList[i].szHelpDeskRef);
+         m_pAlarmList[i].dwAckByUser = DBGetFieldULong(hResult, i, 12);
+         m_pAlarmList[i].dwRepeatCount = DBGetFieldULong(hResult, i, 13);
+         m_pAlarmList[i].nState = (BYTE)DBGetFieldLong(hResult, i, 14);
       }
    }
 
@@ -118,10 +133,11 @@ BOOL AlarmManager::Init(void)
 // Create new alarm
 //
 
-void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeverity, Event *pEvent)
+void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, int nState,
+                            int iSeverity, Event *pEvent)
 {
    NXC_ALARM alarm;
-   char *pszExpMsg, *pszExpKey, szQuery[2048];
+   char *pszExpMsg, *pszExpKey, *pszEscRef, szQuery[2048];
    DWORD dwObjectId = 0;
 
    // Expand alarm's message and key
@@ -129,21 +145,25 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeveri
    pszExpKey = pEvent->ExpandText(pszKey);
 
    // Create new alarm structure
+   memset(&alarm, 0, sizeof(NXC_ALARM));
    alarm.dwAlarmId = CreateUniqueId(IDG_ALARM);
    alarm.qwSourceEventId = pEvent->Id();
    alarm.dwSourceEventCode = pEvent->Code();
    alarm.dwSourceObject = pEvent->SourceId();
-   alarm.dwTimeStamp = (DWORD)time(NULL);
-   alarm.dwAckByUser = 0;
-   alarm.wIsAck = bIsAck;
-   alarm.wSeverity = iSeverity;
+   alarm.dwCreationTime = (DWORD)time(NULL);
+   alarm.dwLastChangeTime = alarm.dwCreationTime;
+   alarm.nState = nState;
+   alarm.nOriginalSeverity = iSeverity;
+   alarm.nCurrentSeverity = iSeverity;
+   alarm.dwRepeatCount = 1;
+   alarm.nHelpDeskState = ALARM_HELPDESK_IGNORED;
    nx_strncpy(alarm.szMessage, pszExpMsg, MAX_DB_STRING);
    nx_strncpy(alarm.szKey, pszExpKey, MAX_DB_STRING);
    free(pszExpMsg);
    free(pszExpKey);
 
    // Add new alarm to active alarm list if needed
-   if (!alarm.wIsAck)
+   if (alarm.nState != ALARM_STATE_TERMINATED)
    {
       Lock();
 
@@ -158,19 +178,25 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeveri
    // Save alarm to database
    pszExpMsg = EncodeSQLString(alarm.szMessage);
    pszExpKey = EncodeSQLString(alarm.szKey);
-   sprintf(szQuery, "INSERT INTO alarms (alarm_id,alarm_timestamp,source_object_id,"
-                    "source_event_code,message,severity,alarm_key,is_ack,ack_by,"
-                    "source_event_id) VALUES (%d,%d,%d,%d,'%s',%d,'%s',%d,%d,"
+   pszEscRef = EncodeSQLString(alarm.szHelpDeskRef);
+   sprintf(szQuery, "INSERT INTO alarms (alarm_id,creation_time,last_change_time,"
+                    "source_object_id,source_event_code,message,original_severity,"
+                    "current_severity,alarm_key,alarm_state,ack_by,hd_state,"
+                    "hd_ref,repeat_count,term_by,source_event_id) VALUES "
+                    "(%d,%d,%d,%d,%d,'%s',%d,%d,'%s',%d,%d,%d,'%s',%d,%d"
 #ifdef _WIN32
                     "%I64d)",
 #else
                     "%lld)",
 #endif
-           alarm.dwAlarmId, alarm.dwTimeStamp, alarm.dwSourceObject, alarm.dwSourceEventCode,
-           pszExpMsg, alarm.wSeverity, pszExpKey, alarm.wIsAck, alarm.dwAckByUser,
-           alarm.qwSourceEventId);
+           alarm.dwAlarmId, alarm.dwCreationTime, alarm.dwLastChangeTime,
+           alarm.dwSourceObject, alarm.dwSourceEventCode, pszExpMsg,
+           alarm.nOriginalSeverity, alarm.nCurrentSeverity, pszExpKey,
+           alarm.nState, alarm.dwAckByUser, alarm.nHelpDeskState, pszEscRef,
+           alarm.dwRepeatCount, alarm.dwTermByUser, alarm.qwSourceEventId);
    free(pszExpMsg);
    free(pszExpKey);
+   free(pszEscRef);
    //DBQuery(g_hCoreDB, szQuery);
    QueueSQLRequest(szQuery);
 
@@ -178,7 +204,7 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeveri
    NotifyClients(NX_NOTIFY_NEW_ALARM, &alarm);
 
    // Update status of related object if needed
-   if (dwObjectId != 0)
+   if ((dwObjectId != 0) && (alarm.nState != ALARM_STATE_TERMINATED))
       UpdateObjectStatus(dwObjectId);
 }
 
@@ -187,7 +213,7 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeveri
 // Acknowlege alarm with given ID
 //
 
-void AlarmManager::AckById(DWORD dwAlarmId, DWORD dwUserId)
+/*void AlarmManager::AckById(DWORD dwAlarmId, DWORD dwUserId)
 {
    DWORD i, dwObject;
 
@@ -196,8 +222,33 @@ void AlarmManager::AckById(DWORD dwAlarmId, DWORD dwUserId)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
          dwObject = m_pAlarmList[i].dwSourceObject;
-         NotifyClients(NX_NOTIFY_ALARM_ACKNOWLEGED, &m_pAlarmList[i]);
-         AckAlarmInDB(m_pAlarmList[i].dwAlarmId, dwUserId);
+         NotifyClients(NX_NOTIFY_ALARM_TERMINATED, &m_pAlarmList[i]);
+         SetAlarmStateInDB(m_pAlarmList[i].dwAlarmId, dwUserId, ALARM_STATE_TERMINATED);
+         m_dwNumAlarms--;
+         memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
+         break;
+      }
+   Unlock();
+
+   UpdateObjectStatus(dwObject);
+}*/
+
+
+//
+// Terminate alarm with given ID
+//
+
+void AlarmManager::TerminateById(DWORD dwAlarmId, DWORD dwUserId)
+{
+   DWORD i, dwObject;
+
+   Lock();
+   for(i = 0; i < m_dwNumAlarms; i++)
+      if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
+      {
+         dwObject = m_pAlarmList[i].dwSourceObject;
+         NotifyClients(NX_NOTIFY_ALARM_TERMINATED, &m_pAlarmList[i]);
+         SetAlarmStateInDB(m_pAlarmList[i].dwAlarmId, dwUserId, ALARM_STATE_TERMINATED);
          m_dwNumAlarms--;
          memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
          break;
@@ -209,10 +260,10 @@ void AlarmManager::AckById(DWORD dwAlarmId, DWORD dwUserId)
 
 
 //
-// Acknowlege all alarms with given key
+// Terminate all alarms with given key
 //
 
-void AlarmManager::AckByKey(char *pszKey)
+void AlarmManager::TerminateByKey(char *pszKey)
 {
    DWORD i, j, dwNumObjects, *pdwObjectList;
 
@@ -234,8 +285,8 @@ void AlarmManager::AckByKey(char *pszKey)
          }
 
          // Acknowlege alarm
-         NotifyClients(NX_NOTIFY_ALARM_ACKNOWLEGED, &m_pAlarmList[i]);
-         AckAlarmInDB(m_pAlarmList[i].dwAlarmId, 0);
+         NotifyClients(NX_NOTIFY_ALARM_TERMINATED, &m_pAlarmList[i]);
+         SetAlarmStateInDB(m_pAlarmList[i].dwAlarmId, 0, ALARM_STATE_TERMINATED);
          m_dwNumAlarms--;
          memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
          i--;
@@ -281,14 +332,15 @@ void AlarmManager::DeleteAlarm(DWORD dwAlarmId)
 
 
 //
-// Set ack flag for record in database
+// Set state for record in database
 //
 
-void AlarmManager::AckAlarmInDB(DWORD dwAlarmId, DWORD dwUserId)
+void AlarmManager::SetAlarmStateInDB(DWORD dwAlarmId, DWORD dwUserId, int nState)
 {
    char szQuery[256];
 
-   sprintf(szQuery, "UPDATE alarms SET is_ack=1,ack_by=%d WHERE alarm_id=%d",
+   sprintf(szQuery, "UPDATE alarms SET alarm_state=%d,%s=%d WHERE alarm_id=%d",
+           nState, (nState == ALARM_STATE_TERMINATED) ? "term_by" : "ack_by",
            dwUserId, dwAlarmId);
    //DBQuery(g_hCoreDB, szQuery);
    QueueSQLRequest(szQuery);
@@ -421,9 +473,9 @@ int AlarmManager::GetMostCriticalStatusForObject(DWORD dwObjectId)
    for(i = 0; i < m_dwNumAlarms; i++)
    {
       if ((m_pAlarmList[i].dwSourceObject == dwObjectId) &&
-          ((m_pAlarmList[i].wSeverity > iStatus) || (iStatus == STATUS_UNKNOWN)))
+          ((m_pAlarmList[i].nCurrentSeverity > iStatus) || (iStatus == STATUS_UNKNOWN)))
       {
-         iStatus = (int)m_pAlarmList[i].wSeverity;
+         iStatus = (int)m_pAlarmList[i].nCurrentSeverity;
       }
    }
 
@@ -458,7 +510,7 @@ void AlarmManager::GetAlarmStats(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_NUM_ALARMS, m_dwNumAlarms);
    memset(dwCount, 0, sizeof(DWORD) * 5);
    for(i = 0; i < m_dwNumAlarms; i++)
-      dwCount[m_pAlarmList[i].wSeverity]++;
+      dwCount[m_pAlarmList[i].nCurrentSeverity]++;
    Unlock();
    pMsg->SetVariableToInt32Array(VID_ALARMS_BY_SEVERITY, 5, dwCount);
 }

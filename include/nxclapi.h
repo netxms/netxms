@@ -68,6 +68,7 @@ typedef void * NXC_SESSION;
 #define MAX_AGENT_VERSION_LEN    64
 #define MAX_PLATFORM_NAME_LEN    64
 #define MAX_PACKAGE_NAME_LEN     64
+#define MAX_HELPDESK_REF_LEN     64
 #define GROUP_EVERYONE           ((DWORD)0x80000000)
 #define INVALID_UID              ((DWORD)0xFFFFFFFF)
 #define OBJECT_STATUS_COUNT      9
@@ -160,6 +161,24 @@ typedef void * NXC_SESSION;
 
 
 //
+// Alarm states
+//
+
+#define ALARM_STATE_OUTSTANDING  0
+#define ALARM_STATE_ACKNOWLEGED  1
+#define ALARM_STATE_TERMINATED   2
+
+
+//
+// Alarm state in help desk system
+//
+
+#define ALARM_HELPDESK_IGNORED   0
+#define ALARM_HELPDESK_OPENED    1
+#define ALARM_HELPDESK_CLOSED    2
+
+
+//
 // Node flags
 //
 
@@ -248,12 +267,13 @@ enum
 #define NX_NOTIFY_EVENTDB_CHANGED   2
 #define NX_NOTIFY_ALARM_DELETED     3
 #define NX_NOTIFY_NEW_ALARM         4
-#define NX_NOTIFY_ALARM_ACKNOWLEGED 5
+#define NX_NOTIFY_ALARM_CHANGED     5
 #define NX_NOTIFY_ACTION_CREATED    6
 #define NX_NOTIFY_ACTION_MODIFIED   7
 #define NX_NOTIFY_ACTION_DELETED    8
 #define NX_NOTIFY_OBJTOOLS_CHANGED  9
 #define NX_NOTIFY_DBCONN_STATUS     10
+#define NX_NOTIFY_ALARM_TERMINATED  11
 
 
 //
@@ -588,16 +608,22 @@ typedef struct
 
 typedef struct
 {
+   QWORD qwSourceEventId;  // Originating event ID
    DWORD dwAlarmId;        // Unique alarm ID
-   DWORD dwTimeStamp;      // Timestamp in time() format
+   DWORD dwCreationTime;   // Alarm creation time in UNIX time format
+   DWORD dwLastChangeTime; // Alarm's last change time in UNIX time format
    DWORD dwSourceObject;   // Source object ID
    DWORD dwSourceEventCode;// Originating event code
-   QWORD qwSourceEventId;  // Originating event ID
+   BYTE nCurrentSeverity;  // Alarm's current severity
+   BYTE nOriginalSeverity; // Alarm's original severity
+   BYTE nState;            // Current state
+   BYTE nHelpDeskState;    // State of alarm in helpdesk system
+   DWORD dwAckByUser;      // Id of user who was acknowleged this alarm (0 for system)
+   DWORD dwTermByUser;     // ID of user who was terminated this alarm (0 for system)
+   DWORD dwRepeatCount;
    TCHAR szMessage[MAX_DB_STRING];
    TCHAR szKey[MAX_DB_STRING];
-   WORD wSeverity;         // Alarm's severity
-   WORD wIsAck;            // Non-zero if acknowleged
-   DWORD dwAckByUser;      // Id of user who acknowleges this alarm (0 for system)
+   TCHAR szHelpDeskRef[MAX_HELPDESK_REF_LEN];
    void *pUserData;        // Can be freely used by client application
 } NXC_ALARM;
 

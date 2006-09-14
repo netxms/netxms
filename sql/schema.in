@@ -634,7 +634,8 @@ CREATE TABLE alarms
 	current_severity integer not null,
 	repeat_count integer not null,
 	alarm_key varchar(255) not null, // Alarm key (used for auto acknowlegment)
-	ack_by integer not null,         // ID of user who acknowleges alarm
+	ack_by integer not null,         // ID of user who was acknowleged alarm
+	term_by integer not null,        // ID of user who was terminated alarm
 	PRIMARY KEY(alarm_id)
 ) TABLE_TYPE;
 

@@ -42,7 +42,7 @@ private:
 
    static void SendAlarmNotification(ClientSession *pSession, void *pArg);
 
-   void AckAlarmInDB(DWORD dwAlarmId, DWORD dwUserId);
+   void SetAlarmStateInDB(DWORD dwAlarmId, DWORD dwUserId, int nState);
    void NotifyClients(DWORD dwCode, NXC_ALARM *pAlarm);
    void UpdateObjectStatus(DWORD dwObjectId);
 
@@ -51,9 +51,10 @@ public:
    ~AlarmManager();
 
    BOOL Init(void);
-   void NewAlarm(char *pszMsg, char *pszKey, BOOL bIsAck, int iSeverity, Event *pEvent);
+   void NewAlarm(char *pszMsg, char *pszKey, int nState, int iSeverity, Event *pEvent);
    void AckById(DWORD dwAlarmId, DWORD dwUserId);
-   void AckByKey(char *pszKey);
+   void TerminateById(DWORD dwAlarmId, DWORD dwUserId);
+   void TerminateByKey(char *pszKey);
    void DeleteAlarm(DWORD dwAlarmId);
 
    void SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSession *pSession);

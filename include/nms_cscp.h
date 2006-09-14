@@ -660,6 +660,15 @@ typedef struct
 #define VID_CONFIG_ID_2             ((DWORD)237)
 #define VID_IV_LENGTH               ((DWORD)238)
 #define VID_DBCONN_STATUS           ((DWORD)239)
+#define VID_CREATION_TIME           ((DWORD)240)
+#define VID_LAST_CHANGE_TIME        ((DWORD)241)
+#define VID_TERMINATE_BY_USER       ((DWORD)242)
+#define VID_STATE                   ((DWORD)243)
+#define VID_CURRENT_SEVERITY        ((DWORD)244)
+#define VID_ORIGINAL_SEVERITY       ((DWORD)245)
+#define VID_HELPDESK_STATE          ((DWORD)246)
+#define VID_HELPDESK_REF            ((DWORD)247)
+#define VID_REPEAT_COUNT            ((DWORD)248)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
