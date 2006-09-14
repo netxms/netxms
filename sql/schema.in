@@ -162,7 +162,6 @@ CREATE TABLE nodes
 	snmp_version integer,
 	community varchar(32),
 	snmp_oid varchar(255),
-	discovery_flags integer,
 	auth_method integer,
 	secret varchar(64),
 	agent_port integer,
@@ -529,11 +528,13 @@ CREATE TABLE event_policy
 (
 	rule_id integer not null,   // Rule number
 	flags integer not null,
-	comments SQL_TEXT,
-	alarm_message varchar(255),
-	alarm_severity integer,
-	alarm_key varchar(255),	    // Alarm key (used for auto acknowlegment)
-	alarm_ack_key varchar(255), // Acknowlege all alarms with given key
+	comments SQL_TEXT not null,
+	script SQL_TEXT not null,
+	time_range_id integer not null,
+	alarm_message varchar(255) not null,
+	alarm_severity integer not null,
+	alarm_key varchar(255) not null,    // Alarm key (used for auto acknowlegment)
+	alarm_ack_key varchar(255) not null, // Acknowlege all alarms with given key
 	PRIMARY KEY(rule_id)
 ) TABLE_TYPE;
 
@@ -556,6 +557,21 @@ CREATE TABLE policy_action_list
 	rule_id integer not null,
 	action_id integer not null,
 	PRIMARY KEY(rule_id,action_id)
+) TABLE_TYPE;
+
+
+/*
+** Time range objects
+*/
+
+CREATE TABLE time_ranges
+(
+	time_range_id integer not null,
+	wday_mask integer not null,	// Bits 0 .. 6 for each day of week
+	mday_mask integer not null,	// Bits 0 .. 30 for each day of month
+	month_mask integer not null,	// Bits 0 .. 11 for each month
+	time_range varchar(255) not null, // In format HHMMHHMM[,HHMMHHMM[,...]]
+	PRIMARY KEY(time_range_id)
 ) TABLE_TYPE;
 
 
@@ -604,17 +620,40 @@ CREATE INDEX idx_thresholds_sequence ON thresholds(sequence_number);
 CREATE TABLE alarms
 (
 	alarm_id integer not null,	// Unique alarm identifier
-	alarm_timestamp integer,
-	source_object_id integer,
-	source_event_code integer,
-	source_event_id SQL_INT64,
-	message varchar(255),
-	severity integer,
-	alarm_key varchar(255),	// Alarm key (used for auto acknowlegment)
-	is_ack integer,		// TRUE if alarm is acknowleged
-	ack_by integer,         // ID of user who acknowleges alarm
+	alarm_state integer not null,
+	hd_state integer not null,	// Help desk system state
+	hd_ref varchar(63) not null,	// Help desk reference
+	creation_time integer not null,
+	last_change_time integer not null,
+	source_object_id integer not null,
+	source_event_code integer not null,
+	source_event_id SQL_INT64 not null,
+	message varchar(255) not null,
+	original_severity integer not null,
+	current_severity integer not null,
+	repeat_count integer not null,
+	alarm_key varchar(255) not null, // Alarm key (used for auto acknowlegment)
+	ack_by integer not null,         // ID of user who acknowleges alarm
 	PRIMARY KEY(alarm_id)
 ) TABLE_TYPE;
+
+
+/*
+** Alarm change history
+*/
+
+CREATE TABLE alarm_change_log
+(
+	change_id SQL_INT64 not null,
+	change_time integer not null,
+	alarm_id integer not null,
+	opcode integer not null,	// Operation code
+	user_id integer not null,
+	info_text SQL_TEXT not null,	// Additional information
+	PRIMARY KEY(change_id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_alarm_change_log_alarm_id ON alarm_change_log(alarm_id);
 
 
 /*
@@ -625,9 +664,36 @@ CREATE TABLE alarm_notes
 (
 	note_id integer not null,
 	alarm_id integer not null,
-	alarm_note_timestamp integer,
-	note_text SQL_TEXT,
+	change_time integer not null,
+	user_id integer not null,	// Last edited by
+	note_text SQL_TEXT not null,
 	PRIMARY KEY(note_id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_alarm_notes_alarm_id ON alarm_notes(alarm_id);
+
+
+/*
+** Alarm groups
+*/
+
+CREATE TABLE alarm_grops
+(
+	alarm_group_id integer not null,
+	group_name varchar(255) not null,
+	PRIMARY KEY(alarm_group_id)
+) TABLE_TYPE;
+
+
+/*
+** Alarms to alarm groups mapping
+*/
+
+CREATE TABLE alarm_group_map
+(
+	alarm_group_id integer not null,
+	alarm_id integer not null,
+	PRIMARY KEY(alarm_group_id,alarm_id)
 ) TABLE_TYPE;
 
 
