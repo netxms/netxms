@@ -353,6 +353,7 @@ BEGIN
     POPUP "&Alarm"
     BEGIN
         MENUITEM "&Acknowlege\tCtrl+A",         ID_ALARM_ACKNOWLEGE
+        MENUITEM "&Terminate\tCtrl+T",          ID_ALARM_TERMINATE
         MENUITEM "&Delete\tDel",                ID_ALARM_DELETE
         MENUITEM "&Go to source",               ID_ALARM_GOTOSOURCE
         MENUITEM SEPARATOR
@@ -725,6 +726,7 @@ BEGIN
     POPUP "Alarm"
     BEGIN
         MENUITEM "&Acknowlege",                 ID_ALARM_ACKNOWLEGE
+        MENUITEM "&Terminate",                  ID_ALARM_TERMINATE
         MENUITEM "&Delete",                     ID_ALARM_DELETE
         MENUITEM "&Go to source",               ID_ALARM_GOTOSOURCE
     END
@@ -1639,9 +1641,9 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,235,24,50,14
     LTEXT           "Message",IDC_STATIC_MESSAGE,7,19,30,8
     LTEXT           "This alarm's key",IDC_STATIC_KEY,13,61,51,8
-    LTEXT           "Acknowlege all alarms with key",IDC_STATIC_KEYACK,13,98,
-                    99,8
-    GROUPBOX        "Auto acknowlege",IDC_STATIC_ACK,7,48,140,84
+    LTEXT           "Terminate all alarms with key",IDC_STATIC_KEYACK,13,98,
+                    91,8
+    GROUPBOX        "Automatic alarm termination",IDC_STATIC_ACK,7,48,140,84
     GROUPBOX        "Severity",IDC_STATIC_SEVERITY,152,48,76,84
 END
 

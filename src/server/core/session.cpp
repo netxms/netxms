@@ -762,6 +762,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_ACK_ALARM:
             AcknowlegeAlarm(pMsg);
             break;
+         case CMD_TERMINATE_ALARM:
+            TerminateAlarm(pMsg);
+            break;
          case CMD_DELETE_ALARM:
             DeleteAlarm(pMsg);
             break;
@@ -3383,8 +3386,48 @@ void ClientSession::AcknowlegeAlarm(CSCPMessage *pRequest)
       // User should have "acknowlege alarm" right to the object
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
       {
-         g_alarmMgr.AckById(dwAlarmId, m_dwUserId);
-         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         msg.SetVariable(VID_RCC, g_alarmMgr.AckById(dwAlarmId, m_dwUserId));
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      // Normally, for existing alarms pObject will not be NULL,
+      // so we assume that alarm id is invalid
+      msg.SetVariable(VID_RCC, RCC_INVALID_ALARM_ID);
+   }
+
+   // Send response
+   SendMessage(&msg);
+}
+
+
+//
+// Terminate alarm
+//
+
+void ClientSession::TerminateAlarm(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+   DWORD dwAlarmId;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get alarm id and it's source object
+   dwAlarmId = pRequest->GetVariableLong(VID_ALARM_ID);
+   pObject = g_alarmMgr.GetAlarmSourceObject(dwAlarmId);
+   if (pObject != NULL)
+   {
+      // User should have "acknowlege alarm" right to the object
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
+      {
+         msg.SetVariable(VID_RCC, g_alarmMgr.TerminateById(dwAlarmId, m_dwUserId));
       }
       else
       {

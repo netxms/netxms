@@ -92,6 +92,7 @@ TCHAR *g_szStatusText[] = { _T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"
 TCHAR *g_szStatusTextSmall[] = { _T("Normal"), _T("Warning"), _T("Minor"), _T("Major"),
                                  _T("Critical"), _T("Unknown"), _T("Unmanaged"),
                                  _T("Disabled"), _T("Testing"), NULL };
+TCHAR *g_szAlarmState[] = { _T("Outstanding"), _T("Acknowleged"), _T("Terminated") };
 TCHAR *g_szObjectClass[] = { _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"), _T("Network"), 
                              _T("Container"), _T("Zone"), _T("ServiceRoot"), _T("Template"), 
                              _T("TemplateGroup"), _T("TemplateRoot"), _T("NetworkService"),

@@ -31,14 +31,20 @@
 static void AlarmFromMsg(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
 {
    pAlarm->dwAckByUser = pMsg->GetVariableLong(VID_ACK_BY_USER);
+   pAlarm->dwTermByUser = pMsg->GetVariableLong(VID_TERMINATED_BY_USER);
    pAlarm->qwSourceEventId = pMsg->GetVariableInt64(VID_EVENT_ID);
    pAlarm->dwSourceEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
    pAlarm->dwSourceObject = pMsg->GetVariableLong(VID_OBJECT_ID);
-   pAlarm->dwTimeStamp = pMsg->GetVariableLong(VID_TIMESTAMP);
+   pAlarm->dwCreationTime = pMsg->GetVariableLong(VID_CREATION_TIME);
+   pAlarm->dwLastChangeTime = pMsg->GetVariableLong(VID_LAST_CHANGE_TIME);
    pMsg->GetVariableStr(VID_ALARM_KEY, pAlarm->szKey, MAX_DB_STRING);
    pMsg->GetVariableStr(VID_ALARM_MESSAGE, pAlarm->szMessage, MAX_DB_STRING);
-   pAlarm->wIsAck = pMsg->GetVariableShort(VID_IS_ACK);
-   pAlarm->wSeverity = pMsg->GetVariableShort(VID_SEVERITY);
+   pAlarm->nState = (BYTE)pMsg->GetVariableShort(VID_STATE);
+   pAlarm->nCurrentSeverity = (BYTE)pMsg->GetVariableShort(VID_CURRENT_SEVERITY);
+   pAlarm->nOriginalSeverity = (BYTE)pMsg->GetVariableShort(VID_ORIGINAL_SEVERITY);
+   pAlarm->dwRepeatCount = pMsg->GetVariableLong(VID_REPEAT_COUNT);
+   pAlarm->nHelpDeskState = (BYTE)pMsg->GetVariableShort(VID_HELPDESK_STATE);
+   pMsg->GetVariableStr(VID_HELPDESK_REF, pAlarm->szHelpDeskRef, MAX_HELPDESK_REF_LEN);
    pAlarm->pUserData = NULL;
 }
 
@@ -129,6 +135,26 @@ DWORD LIBNXCL_EXPORTABLE NXCAcknowlegeAlarm(NXC_SESSION hSession, DWORD dwAlarmI
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    msg.SetCode(CMD_ACK_ALARM);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_ALARM_ID, dwAlarmId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
+// Terminate alarm by ID
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCTerminateAlarm(NXC_SESSION hSession, DWORD dwAlarmId)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_TERMINATE_ALARM);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_ALARM_ID, dwAlarmId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);

@@ -415,6 +415,7 @@ typedef struct
 #define CMD_SAVE_AGENT_CONFIG       0x00B2
 #define CMD_DELETE_AGENT_CONFIG     0x00B3
 #define CMD_SWAP_AGENT_CONFIGS      0x00B4
+#define CMD_TERMINATE_ALARM         0x00B5
 
 
 //
@@ -662,7 +663,7 @@ typedef struct
 #define VID_DBCONN_STATUS           ((DWORD)239)
 #define VID_CREATION_TIME           ((DWORD)240)
 #define VID_LAST_CHANGE_TIME        ((DWORD)241)
-#define VID_TERMINATE_BY_USER       ((DWORD)242)
+#define VID_TERMINATED_BY_USER      ((DWORD)242)
 #define VID_STATE                   ((DWORD)243)
 #define VID_CURRENT_SEVERITY        ((DWORD)244)
 #define VID_ORIGINAL_SEVERITY       ((DWORD)245)

@@ -42,7 +42,7 @@ private:
 
    static void SendAlarmNotification(ClientSession *pSession, void *pArg);
 
-   void SetAlarmStateInDB(DWORD dwAlarmId, DWORD dwUserId, int nState);
+   void UpdateAlarmInDB(NXC_ALARM *pAlarm);
    void NotifyClients(DWORD dwCode, NXC_ALARM *pAlarm);
    void UpdateObjectStatus(DWORD dwObjectId);
 
@@ -52,8 +52,8 @@ public:
 
    BOOL Init(void);
    void NewAlarm(char *pszMsg, char *pszKey, int nState, int iSeverity, Event *pEvent);
-   void AckById(DWORD dwAlarmId, DWORD dwUserId);
-   void TerminateById(DWORD dwAlarmId, DWORD dwUserId);
+   DWORD AckById(DWORD dwAlarmId, DWORD dwUserId);
+   DWORD TerminateById(DWORD dwAlarmId, DWORD dwUserId);
    void TerminateByKey(char *pszKey);
    void DeleteAlarm(DWORD dwAlarmId);
 

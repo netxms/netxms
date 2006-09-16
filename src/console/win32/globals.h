@@ -345,6 +345,7 @@ extern TCHAR g_szPassword[];
 extern TCHAR g_szWorkDir[];
 extern TCHAR *g_szStatusText[];
 extern TCHAR *g_szStatusTextSmall[];
+extern TCHAR *g_szAlarmState[];
 extern TCHAR *g_szActionType[];
 extern TCHAR *g_szServiceType[];
 extern TCHAR *g_szDeploymentStatus[];

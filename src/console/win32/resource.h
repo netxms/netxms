@@ -757,6 +757,7 @@
 #define ID_CONFIG_MOVEUP                33033
 #define ID_CONFIG_MOVEDOWN              33034
 #define ID_GRAPH_ZOOMOUT                33037
+#define ID_ALARM_TERMINATE              33039
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -767,7 +768,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        334
-#define _APS_NEXT_COMMAND_VALUE         33039
+#define _APS_NEXT_COMMAND_VALUE         33040
 #define _APS_NEXT_CONTROL_VALUE         1388
 #define _APS_NEXT_SYMED_VALUE           128
 #endif

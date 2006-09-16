@@ -38,7 +38,7 @@ void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
 {
    pMsg->SetVariable(VID_ALARM_ID, pAlarm->dwAlarmId);
    pMsg->SetVariable(VID_ACK_BY_USER, pAlarm->dwAckByUser);
-   pMsg->SetVariable(VID_TERMINATE_BY_USER, pAlarm->dwTermByUser);
+   pMsg->SetVariable(VID_TERMINATED_BY_USER, pAlarm->dwTermByUser);
    pMsg->SetVariable(VID_EVENT_CODE, pAlarm->dwSourceEventCode);
    pMsg->SetVariable(VID_EVENT_ID, pAlarm->qwSourceEventId);
    pMsg->SetVariable(VID_OBJECT_ID, pAlarm->dwSourceObject);
@@ -138,70 +138,98 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, int nState,
 {
    NXC_ALARM alarm;
    char *pszExpMsg, *pszExpKey, *pszEscRef, szQuery[2048];
-   DWORD dwObjectId = 0;
+   DWORD i, dwObjectId = 0;
+   BOOL bNewAlarm = TRUE;
 
    // Expand alarm's message and key
    pszExpMsg = pEvent->ExpandText(pszMsg);
    pszExpKey = pEvent->ExpandText(pszKey);
 
-   // Create new alarm structure
-   memset(&alarm, 0, sizeof(NXC_ALARM));
-   alarm.dwAlarmId = CreateUniqueId(IDG_ALARM);
-   alarm.qwSourceEventId = pEvent->Id();
-   alarm.dwSourceEventCode = pEvent->Code();
-   alarm.dwSourceObject = pEvent->SourceId();
-   alarm.dwCreationTime = (DWORD)time(NULL);
-   alarm.dwLastChangeTime = alarm.dwCreationTime;
-   alarm.nState = nState;
-   alarm.nOriginalSeverity = iSeverity;
-   alarm.nCurrentSeverity = iSeverity;
-   alarm.dwRepeatCount = 1;
-   alarm.nHelpDeskState = ALARM_HELPDESK_IGNORED;
-   nx_strncpy(alarm.szMessage, pszExpMsg, MAX_DB_STRING);
-   nx_strncpy(alarm.szKey, pszExpKey, MAX_DB_STRING);
-   free(pszExpMsg);
-   free(pszExpKey);
-
-   // Add new alarm to active alarm list if needed
-   if (alarm.nState != ALARM_STATE_TERMINATED)
+   // Check if we have a duplicate alarm
+   if ((nState != ALARM_STATE_TERMINATED) && (*pszExpKey != 0))
    {
       Lock();
 
-      m_dwNumAlarms++;
-      m_pAlarmList = (NXC_ALARM *)realloc(m_pAlarmList, sizeof(NXC_ALARM) * m_dwNumAlarms);
-      memcpy(&m_pAlarmList[m_dwNumAlarms - 1], &alarm, sizeof(NXC_ALARM));
-      dwObjectId = alarm.dwSourceObject;
+      for(i = 0; i < m_dwNumAlarms; i++)
+         if (!strcmp(pszExpKey, m_pAlarmList[i].szKey))
+         {
+            m_pAlarmList[i].dwRepeatCount++;
+            m_pAlarmList[i].dwLastChangeTime = (DWORD)time(NULL);
+            m_pAlarmList[i].dwSourceObject = pEvent->SourceId();
+            m_pAlarmList[i].nState = nState;
+            m_pAlarmList[i].nCurrentSeverity = iSeverity;
+            nx_strncpy(m_pAlarmList[i].szMessage, pszExpMsg, MAX_DB_STRING);
+            
+            NotifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
+            UpdateAlarmInDB(&m_pAlarmList[i]);
+
+            bNewAlarm = FALSE;
+            break;
+         }
 
       Unlock();
    }
 
-   // Save alarm to database
-   pszExpMsg = EncodeSQLString(alarm.szMessage);
-   pszExpKey = EncodeSQLString(alarm.szKey);
-   pszEscRef = EncodeSQLString(alarm.szHelpDeskRef);
-   sprintf(szQuery, "INSERT INTO alarms (alarm_id,creation_time,last_change_time,"
-                    "source_object_id,source_event_code,message,original_severity,"
-                    "current_severity,alarm_key,alarm_state,ack_by,hd_state,"
-                    "hd_ref,repeat_count,term_by,source_event_id) VALUES "
-                    "(%d,%d,%d,%d,%d,'%s',%d,%d,'%s',%d,%d,%d,'%s',%d,%d"
-#ifdef _WIN32
-                    "%I64d)",
-#else
-                    "%lld)",
-#endif
-           alarm.dwAlarmId, alarm.dwCreationTime, alarm.dwLastChangeTime,
-           alarm.dwSourceObject, alarm.dwSourceEventCode, pszExpMsg,
-           alarm.nOriginalSeverity, alarm.nCurrentSeverity, pszExpKey,
-           alarm.nState, alarm.dwAckByUser, alarm.nHelpDeskState, pszEscRef,
-           alarm.dwRepeatCount, alarm.dwTermByUser, alarm.qwSourceEventId);
-   free(pszExpMsg);
-   free(pszExpKey);
-   free(pszEscRef);
-   //DBQuery(g_hCoreDB, szQuery);
-   QueueSQLRequest(szQuery);
+   if (bNewAlarm)
+   {
+      // Create new alarm structure
+      memset(&alarm, 0, sizeof(NXC_ALARM));
+      alarm.dwAlarmId = CreateUniqueId(IDG_ALARM);
+      alarm.qwSourceEventId = pEvent->Id();
+      alarm.dwSourceEventCode = pEvent->Code();
+      alarm.dwSourceObject = pEvent->SourceId();
+      alarm.dwCreationTime = (DWORD)time(NULL);
+      alarm.dwLastChangeTime = alarm.dwCreationTime;
+      alarm.nState = nState;
+      alarm.nOriginalSeverity = iSeverity;
+      alarm.nCurrentSeverity = iSeverity;
+      alarm.dwRepeatCount = 1;
+      alarm.nHelpDeskState = ALARM_HELPDESK_IGNORED;
+      nx_strncpy(alarm.szMessage, pszExpMsg, MAX_DB_STRING);
+      nx_strncpy(alarm.szKey, pszExpKey, MAX_DB_STRING);
+      free(pszExpMsg);
+      free(pszExpKey);
 
-   // Notify connected clients about new alarm
-   NotifyClients(NX_NOTIFY_NEW_ALARM, &alarm);
+      // Add new alarm to active alarm list if needed
+      if (alarm.nState != ALARM_STATE_TERMINATED)
+      {
+         Lock();
+
+         m_dwNumAlarms++;
+         m_pAlarmList = (NXC_ALARM *)realloc(m_pAlarmList, sizeof(NXC_ALARM) * m_dwNumAlarms);
+         memcpy(&m_pAlarmList[m_dwNumAlarms - 1], &alarm, sizeof(NXC_ALARM));
+         dwObjectId = alarm.dwSourceObject;
+
+         Unlock();
+      }
+
+      // Save alarm to database
+      pszExpMsg = EncodeSQLString(alarm.szMessage);
+      pszExpKey = EncodeSQLString(alarm.szKey);
+      pszEscRef = EncodeSQLString(alarm.szHelpDeskRef);
+      sprintf(szQuery, "INSERT INTO alarms (alarm_id,creation_time,last_change_time,"
+                       "source_object_id,source_event_code,message,original_severity,"
+                       "current_severity,alarm_key,alarm_state,ack_by,hd_state,"
+                       "hd_ref,repeat_count,term_by,source_event_id) VALUES "
+                       "(%d,%d,%d,%d,%d,'%s',%d,%d,'%s',%d,%d,%d,'%s',%d,%d,"
+#ifdef _WIN32
+                       "%I64d)",
+#else
+                       "%lld)",
+#endif
+              alarm.dwAlarmId, alarm.dwCreationTime, alarm.dwLastChangeTime,
+              alarm.dwSourceObject, alarm.dwSourceEventCode, pszExpMsg,
+              alarm.nOriginalSeverity, alarm.nCurrentSeverity, pszExpKey,
+              alarm.nState, alarm.dwAckByUser, alarm.nHelpDeskState, pszEscRef,
+              alarm.dwRepeatCount, alarm.dwTermByUser, alarm.qwSourceEventId);
+      free(pszExpMsg);
+      free(pszExpKey);
+      free(pszEscRef);
+      QueueSQLRequest(szQuery);
+
+      // Notify connected clients about new alarm
+      NotifyClients(NX_NOTIFY_NEW_ALARM, &alarm);
+   }
 
    // Update status of related object if needed
    if ((dwObjectId != 0) && (alarm.nState != ALARM_STATE_TERMINATED))
@@ -213,49 +241,75 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, int nState,
 // Acknowlege alarm with given ID
 //
 
-/*void AlarmManager::AckById(DWORD dwAlarmId, DWORD dwUserId)
+DWORD AlarmManager::AckById(DWORD dwAlarmId, DWORD dwUserId)
 {
-   DWORD i, dwObject;
+   DWORD i, dwObject, dwRet = RCC_INVALID_ALARM_ID;
 
    Lock();
    for(i = 0; i < m_dwNumAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
-         dwObject = m_pAlarmList[i].dwSourceObject;
-         NotifyClients(NX_NOTIFY_ALARM_TERMINATED, &m_pAlarmList[i]);
-         SetAlarmStateInDB(m_pAlarmList[i].dwAlarmId, dwUserId, ALARM_STATE_TERMINATED);
-         m_dwNumAlarms--;
-         memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
+         if (m_pAlarmList[i].nState == ALARM_STATE_OUTSTANDING)
+         {
+            m_pAlarmList[i].nState = ALARM_STATE_ACKNOWLEGED;
+            m_pAlarmList[i].dwAckByUser = dwUserId;
+            m_pAlarmList[i].dwLastChangeTime = (DWORD)time(NULL);
+            dwObject = m_pAlarmList[i].dwSourceObject;
+            NotifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
+            UpdateAlarmInDB(&m_pAlarmList[i]);
+            dwRet = RCC_SUCCESS;
+         }
+         else
+         {
+            dwRet = RCC_ALARM_NOT_OUTSTANDING;
+         }
          break;
       }
    Unlock();
 
-   UpdateObjectStatus(dwObject);
-}*/
+   if (dwRet == RCC_SUCCESS)
+      UpdateObjectStatus(dwObject);
+   return dwRet;
+}
 
 
 //
 // Terminate alarm with given ID
+// Should return RCC which can be sent to client
 //
 
-void AlarmManager::TerminateById(DWORD dwAlarmId, DWORD dwUserId)
+DWORD AlarmManager::TerminateById(DWORD dwAlarmId, DWORD dwUserId)
 {
-   DWORD i, dwObject;
+   DWORD i, dwObject, dwRet = RCC_INVALID_ALARM_ID;
 
    Lock();
    for(i = 0; i < m_dwNumAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
-         dwObject = m_pAlarmList[i].dwSourceObject;
-         NotifyClients(NX_NOTIFY_ALARM_TERMINATED, &m_pAlarmList[i]);
-         SetAlarmStateInDB(m_pAlarmList[i].dwAlarmId, dwUserId, ALARM_STATE_TERMINATED);
-         m_dwNumAlarms--;
-         memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
+         // If alarm is open in helpdesk, it cannot be terminated
+         if (m_pAlarmList[i].nHelpDeskState != ALARM_HELPDESK_OPEN)
+         {
+            dwObject = m_pAlarmList[i].dwSourceObject;
+            m_pAlarmList[i].dwTermByUser = dwUserId;
+            m_pAlarmList[i].dwLastChangeTime = (DWORD)time(NULL);
+            m_pAlarmList[i].nState = ALARM_STATE_TERMINATED;
+            NotifyClients(NX_NOTIFY_ALARM_TERMINATED, &m_pAlarmList[i]);
+            UpdateAlarmInDB(&m_pAlarmList[i]);
+            m_dwNumAlarms--;
+            memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
+            dwRet = RCC_SUCCESS;
+         }
+         else
+         {
+            dwRet = RCC_ALARM_OPEN_IN_HELPDESK;
+         }
          break;
       }
    Unlock();
 
-   UpdateObjectStatus(dwObject);
+   if (dwRet == RCC_SUCCESS)
+      UpdateObjectStatus(dwObject);
+   return dwRet;
 }
 
 
@@ -265,13 +319,15 @@ void AlarmManager::TerminateById(DWORD dwAlarmId, DWORD dwUserId)
 
 void AlarmManager::TerminateByKey(char *pszKey)
 {
-   DWORD i, j, dwNumObjects, *pdwObjectList;
+   DWORD i, j, dwNumObjects, *pdwObjectList, dwCurrTime;
 
    pdwObjectList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumAlarms);
 
    Lock();
+   dwCurrTime = (DWORD)time(NULL);
    for(i = 0, dwNumObjects = 0; i < m_dwNumAlarms; i++)
-      if (!strcmp(pszKey, m_pAlarmList[i].szKey))
+      if ((!strcmp(pszKey, m_pAlarmList[i].szKey)) &&
+         (m_pAlarmList[i].nHelpDeskState != ALARM_HELPDESK_OPEN))
       {
          // Add alarm's source object to update list
          for(j = 0; j < dwNumObjects; j++)
@@ -284,9 +340,12 @@ void AlarmManager::TerminateByKey(char *pszKey)
             pdwObjectList[dwNumObjects++] = m_pAlarmList[i].dwSourceObject;
          }
 
-         // Acknowlege alarm
+         // Terminate alarm
+         m_pAlarmList[i].nState = ALARM_STATE_TERMINATED;
+         m_pAlarmList[i].dwLastChangeTime = dwCurrTime;
+         m_pAlarmList[i].dwTermByUser = 0;
          NotifyClients(NX_NOTIFY_ALARM_TERMINATED, &m_pAlarmList[i]);
-         SetAlarmStateInDB(m_pAlarmList[i].dwAlarmId, 0, ALARM_STATE_TERMINATED);
+         UpdateAlarmInDB(&m_pAlarmList[i]);
          m_dwNumAlarms--;
          memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
          i--;
@@ -332,17 +391,22 @@ void AlarmManager::DeleteAlarm(DWORD dwAlarmId)
 
 
 //
-// Set state for record in database
+// Update alarm information in database
 //
 
-void AlarmManager::SetAlarmStateInDB(DWORD dwAlarmId, DWORD dwUserId, int nState)
+void AlarmManager::UpdateAlarmInDB(NXC_ALARM *pAlarm)
 {
-   char szQuery[256];
+   char szQuery[1024], *pszEscRef;
 
-   sprintf(szQuery, "UPDATE alarms SET alarm_state=%d,%s=%d WHERE alarm_id=%d",
-           nState, (nState == ALARM_STATE_TERMINATED) ? "term_by" : "ack_by",
-           dwUserId, dwAlarmId);
-   //DBQuery(g_hCoreDB, szQuery);
+   pszEscRef = EncodeSQLString(pAlarm->szHelpDeskRef);
+   sprintf(szQuery, "UPDATE alarms SET alarm_state=%d,ack_by=%d,term_by=%d,"
+                    "last_change_time=%d,current_severity=%d,repeat_count=%d,"
+                    "hd_state=%d,hd_ref='%s' WHERE alarm_id=%d",
+           pAlarm->nState, pAlarm->dwAckByUser, pAlarm->dwTermByUser,
+           pAlarm->dwLastChangeTime, pAlarm->nCurrentSeverity,
+           pAlarm->dwRepeatCount, pAlarm->nHelpDeskState, pszEscRef,
+           pAlarm->dwAlarmId);
+   free(pszEscRef);
    QueueSQLRequest(szQuery);
 }
 

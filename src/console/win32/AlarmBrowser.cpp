@@ -31,9 +31,12 @@ static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
    switch(((CAlarmBrowser *)lParamSort)->SortMode())
    {
       case 0:  // Severity
-         iResult = COMPARE_NUMBERS(pAlarm1->wSeverity, pAlarm2->wSeverity);
+         iResult = COMPARE_NUMBERS(pAlarm1->nCurrentSeverity, pAlarm2->nCurrentSeverity);
          break;
-      case 1:  // Source
+      case 1:  // State
+         iResult = -COMPARE_NUMBERS(pAlarm1->nState, pAlarm2->nState);
+         break;
+      case 2:  // Source
          pObject1 = NXCFindObjectById(g_hSession, pAlarm1->dwSourceObject);
          pObject2 = NXCFindObjectById(g_hSession, pAlarm2->dwSourceObject);
 
@@ -49,14 +52,17 @@ static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
 
          iResult = _tcsicmp(szName1, szName2);
          break;
-      case 2:  // Message
+      case 3:  // Message
          iResult = _tcsicmp(pAlarm1->szMessage, pAlarm2->szMessage);
          break;
-      case 3:  // Timestamp
-         iResult = COMPARE_NUMBERS(pAlarm1->dwTimeStamp, pAlarm2->dwTimeStamp);
+      case 4:  // Repeat count
+         iResult = COMPARE_NUMBERS(pAlarm1->dwRepeatCount, pAlarm2->dwRepeatCount);
          break;
-      case 4:  // Ack
-         iResult = COMPARE_NUMBERS(pAlarm1->wIsAck, pAlarm2->wIsAck);
+      case 5:  // Creation time
+         iResult = COMPARE_NUMBERS(pAlarm1->dwCreationTime, pAlarm2->dwCreationTime);
+         break;
+      case 6:  // Last change time
+         iResult = COMPARE_NUMBERS(pAlarm1->dwLastChangeTime, pAlarm2->dwLastChangeTime);
          break;
       default:
          iResult = 0;
@@ -121,6 +127,8 @@ BEGIN_MESSAGE_MAP(CAlarmBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_ALARM_SHOWNODES, OnAlarmShownodes)
 	ON_UPDATE_COMMAND_UI(ID_ALARM_SHOWNODES, OnUpdateAlarmShownodes)
 	ON_COMMAND(ID_ALARM_SOUNDCONFIGURATION, OnAlarmSoundconfiguration)
+	ON_COMMAND(ID_ALARM_TERMINATE, OnAlarmTerminate)
+	ON_UPDATE_COMMAND_UI(ID_ALARM_TERMINATE, OnUpdateAlarmTerminate)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(LVN_COLUMNCLICK, AFX_IDW_PANE_FIRST, OnListViewColumnClick)
 	ON_NOTIFY(LVN_COLUMNCLICK, AFX_IDW_PANE_FIRST + 1, OnListViewColumnClick)
@@ -181,7 +189,7 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Create list view control
    m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHAREIMAGELISTS,
                         rect, &m_wndSplitter, m_wndSplitter.IdFromRowCol(0, 1));
-   m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | 
+   m_wndListCtrl.SetExtendedStyle(LVS_EX_LABELTIP | LVS_EX_SUBITEMIMAGES |
                                   LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
@@ -190,6 +198,10 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_iSortImageBase = m_pImageList->GetImageCount();
    m_pImageList->Add(theApp.LoadIcon(IDI_SORT_UP));
    m_pImageList->Add(theApp.LoadIcon(IDI_SORT_DOWN));
+   m_iStateImageBase = m_pImageList->GetImageCount();
+   m_pImageList->Add(theApp.LoadIcon(IDI_TIPS));
+   m_pImageList->Add(theApp.LoadIcon(IDI_ACK));
+   m_pImageList->Add(theApp.LoadIcon(IDI_NACK));
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
 
    m_pObjectImageList = new CImageList;
@@ -197,11 +209,13 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
    // Setup columns
    m_wndListCtrl.InsertColumn(0, _T("Severity"), LVCFMT_LEFT, 80);
-   m_wndListCtrl.InsertColumn(1, _T("Source"), LVCFMT_LEFT, 140);
-   m_wndListCtrl.InsertColumn(2, _T("Message"), LVCFMT_LEFT, 400);
-   m_wndListCtrl.InsertColumn(3, _T("Time Stamp"), LVCFMT_LEFT, 135);
-   m_wndListCtrl.InsertColumn(4, _T("Ack"), LVCFMT_CENTER, 30);
-   LoadListCtrlColumns(m_wndListCtrl, _T("AlarmBrowser"), _T("ListCtrl"));
+   m_wndListCtrl.InsertColumn(1, _T("State"), LVCFMT_LEFT, 95);
+   m_wndListCtrl.InsertColumn(2, _T("Source"), LVCFMT_LEFT, 140);
+   m_wndListCtrl.InsertColumn(3, _T("Message"), LVCFMT_LEFT, 400);
+   m_wndListCtrl.InsertColumn(4, _T("Count"), LVCFMT_LEFT, 45);
+   m_wndListCtrl.InsertColumn(5, _T("Created"), LVCFMT_LEFT, 135);
+   m_wndListCtrl.InsertColumn(6, _T("Last Change"), LVCFMT_LEFT, 135);
+   LoadListCtrlColumns(m_wndListCtrl, _T("AlarmBrowser"), _T("AlarmList"));
 	
    // Mark sorting column in list control
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
@@ -313,7 +327,7 @@ void CAlarmBrowser::OnViewRefresh()
       {
          AddNodeToTree(m_pAlarmList[i].dwSourceObject);
          AddAlarm(&m_pAlarmList[i]);
-         m_iNumAlarms[m_pAlarmList[i].wSeverity]++;
+         m_iNumAlarms[m_pAlarmList[i].nCurrentSeverity]++;
       }
       UpdateStatusBar();
       m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
@@ -332,23 +346,58 @@ void CAlarmBrowser::OnViewRefresh()
 void CAlarmBrowser::AddAlarm(NXC_ALARM *pAlarm)
 {
    int iIdx;
-   struct tm *ptm;
-   TCHAR szBuffer[64];
-   NXC_OBJECT *pObject;
 
-   pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
-   iIdx = m_wndListCtrl.InsertItem(0x7FFFFFFF, g_szStatusTextSmall[pAlarm->wSeverity],
-                                   pAlarm->wSeverity);
+   iIdx = m_wndListCtrl.InsertItem(0x7FFFFFFF, g_szStatusTextSmall[pAlarm->nCurrentSeverity],
+                                   pAlarm->nCurrentSeverity);
    if (iIdx != -1)
    {
       m_wndListCtrl.SetItemData(iIdx, pAlarm->dwAlarmId);
-      m_wndListCtrl.SetItemText(iIdx, 1, pObject->szName);
-      m_wndListCtrl.SetItemText(iIdx, 2, pAlarm->szMessage);
-      ptm = localtime((const time_t *)&pAlarm->dwTimeStamp);
-      strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);
-      m_wndListCtrl.SetItemText(iIdx, 3, szBuffer);
-      m_wndListCtrl.SetItemText(iIdx, 4, pAlarm->wIsAck ? _T("X") : _T(""));
+      UpdateListItem(iIdx, pAlarm);
    }
+}
+
+
+//
+// Update existing list entry with new data
+//
+
+void CAlarmBrowser::UpdateListItem(int nItem, NXC_ALARM *pAlarm)
+{
+   struct tm *ptm;
+   TCHAR szBuffer[64];
+   NXC_OBJECT *pObject;
+   LVITEM lvi;
+
+   pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
+
+   // Set images
+   lvi.mask = LVIF_IMAGE;
+   lvi.iItem = nItem;
+
+   lvi.iSubItem = 0;
+   lvi.iImage = pAlarm->nCurrentSeverity;
+   m_wndListCtrl.SetItem(&lvi);
+
+   lvi.iSubItem = 1;
+   lvi.iImage = m_iStateImageBase + pAlarm->nState;
+   m_wndListCtrl.SetItem(&lvi);
+
+   // Set texts
+   m_wndListCtrl.SetItemText(nItem, 0, g_szStatusTextSmall[pAlarm->nCurrentSeverity]);
+   m_wndListCtrl.SetItemText(nItem, 1, g_szAlarmState[pAlarm->nState]);
+   m_wndListCtrl.SetItemText(nItem, 2, pObject->szName);
+   m_wndListCtrl.SetItemText(nItem, 3, pAlarm->szMessage);
+
+   sprintf(szBuffer, "%d", pAlarm->dwRepeatCount);
+   m_wndListCtrl.SetItemText(nItem, 4, szBuffer);
+
+   ptm = localtime((const time_t *)&pAlarm->dwCreationTime);
+   strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);
+   m_wndListCtrl.SetItemText(nItem, 5, szBuffer);
+   
+   ptm = localtime((const time_t *)&pAlarm->dwLastChangeTime);
+   strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);
+   m_wndListCtrl.SetItemText(nItem, 6, szBuffer);
 }
 
 
@@ -359,12 +408,14 @@ void CAlarmBrowser::AddAlarm(NXC_ALARM *pAlarm)
 void CAlarmBrowser::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
 {
    int iItem;
+   NXC_ALARM *pListItem;
 
    iItem = FindAlarmRecord(pAlarm->dwAlarmId);
    switch(dwCode)
    {
       case NX_NOTIFY_NEW_ALARM:
-         if ((iItem == -1) && ((m_bShowAllAlarms) || (pAlarm->wIsAck == 0)))
+         if ((iItem == -1) && ((m_bShowAllAlarms) ||
+             (pAlarm->nState != ALARM_STATE_TERMINATED)))
          {
             AddNodeToTree(pAlarm->dwSourceObject);
             if ((m_dwCurrNode == 0) || (m_dwCurrNode == pAlarm->dwSourceObject))
@@ -375,12 +426,32 @@ void CAlarmBrowser::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
             PlayAlarmSound(pAlarm, TRUE, g_hSession, &g_soundCfg);
          }
          break;
-      case NX_NOTIFY_ALARM_ACKNOWLEGED:
+      case NX_NOTIFY_ALARM_CHANGED:
+         pListItem = FindAlarmInList(pAlarm->dwAlarmId);
+         if (pListItem != NULL)
+         {
+            m_iNumAlarms[pListItem->nCurrentSeverity]--;
+            m_iNumAlarms[pAlarm->nCurrentSeverity]++;
+            memcpy(pListItem, pAlarm, sizeof(NXC_ALARM));
+            if (iItem != -1)
+            {
+               UpdateListItem(iItem, pAlarm);
+            }
+            else
+            {
+               if ((m_dwCurrNode == 0) || (m_dwCurrNode == pAlarm->dwSourceObject))
+                  AddAlarm(pAlarm);
+            }
+            m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
+            UpdateStatusBar();
+         }
+         break;
+      case NX_NOTIFY_ALARM_TERMINATED:
          if ((iItem != -1) && (!m_bShowAllAlarms))
          {
             DeleteAlarmFromList(pAlarm->dwAlarmId);
             m_wndListCtrl.DeleteItem(iItem);
-            m_iNumAlarms[pAlarm->wSeverity]--;
+            m_iNumAlarms[pAlarm->nCurrentSeverity]--;
             UpdateStatusBar();
          }
          break;
@@ -389,7 +460,7 @@ void CAlarmBrowser::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
          {
             DeleteAlarmFromList(pAlarm->dwAlarmId);
             m_wndListCtrl.DeleteItem(iItem);
-            m_iNumAlarms[pAlarm->wSeverity]--;
+            m_iNumAlarms[pAlarm->nCurrentSeverity]--;
             UpdateStatusBar();
          }
          break;
@@ -463,7 +534,11 @@ static DWORD AcknowlegeAlarms(DWORD dwNumAlarms, DWORD *pdwAlarmList)
    DWORD i, dwResult = RCC_SUCCESS;
 
    for(i = 0; (i < dwNumAlarms) && (dwResult == RCC_SUCCESS); i++)
+   {
       dwResult = NXCAcknowlegeAlarm(g_hSession, pdwAlarmList[i]);
+      if (dwResult == RCC_ALARM_NOT_OUTSTANDING)
+         dwResult = RCC_SUCCESS;
+   }
    return dwResult;
 }
 
@@ -495,6 +570,52 @@ void CAlarmBrowser::OnAlarmAcknowlege()
 }
 
 void CAlarmBrowser::OnUpdateAlarmAcknowlege(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
+}
+
+
+//
+// Alarm termination worker function
+//
+
+static DWORD TerminateAlarms(DWORD dwNumAlarms, DWORD *pdwAlarmList)
+{
+   DWORD i, dwResult = RCC_SUCCESS;
+
+   for(i = 0; (i < dwNumAlarms) && (dwResult == RCC_SUCCESS); i++)
+      dwResult = NXCTerminateAlarm(g_hSession, pdwAlarmList[i]);
+   return dwResult;
+}
+
+
+//
+// WM_COMMAND::ID_ALARM_TERMINATE message handler
+//
+
+void CAlarmBrowser::OnAlarmTerminate() 
+{
+   int iItem;
+   DWORD i, dwNumAlarms, *pdwAlarmList, dwResult;
+
+   dwNumAlarms = m_wndListCtrl.GetSelectedCount();
+   pdwAlarmList = (DWORD *)malloc(sizeof(DWORD) * dwNumAlarms);
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+   for(i = 0; (iItem != -1) && (i < dwNumAlarms); i++)
+   {
+      pdwAlarmList[i] = m_wndListCtrl.GetItemData(iItem);
+      iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+   }
+
+   dwResult = DoRequestArg2(TerminateAlarms, (void *)dwNumAlarms, pdwAlarmList,
+                            _T("Terminating alarm..."));
+   if (dwResult != RCC_SUCCESS)
+      theApp.ErrorBox(dwResult, _T("Cannot terminate alarm: %s"));
+   free(pdwAlarmList);
+}
+
+void CAlarmBrowser::OnUpdateAlarmTerminate(CCmdUI* pCmdUI) 
 {
    pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
 }
@@ -617,7 +738,7 @@ void CAlarmBrowser::AddAlarmToList(NXC_ALARM *pAlarm)
    m_pAlarmList = (NXC_ALARM *)realloc(m_pAlarmList, sizeof(NXC_ALARM) * (m_dwNumAlarms + 1));
    memcpy(&m_pAlarmList[m_dwNumAlarms], pAlarm, sizeof(NXC_ALARM));
    m_dwNumAlarms++;
-   m_iNumAlarms[pAlarm->wSeverity]++;
+   m_iNumAlarms[pAlarm->nCurrentSeverity]++;
 }
 
 

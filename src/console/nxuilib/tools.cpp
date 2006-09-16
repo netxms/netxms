@@ -184,7 +184,7 @@ void NXUILIB_EXPORTABLE PlayAlarmSound(NXC_ALARM *pAlarm, BOOL bNewAlarm,
             pObject = NXCFindObjectById(hSession, pAlarm->dwSourceObject);
             _sntprintf(szText, 1024, _T("%s%s%s%s"),
                        (pCfg->nFlags & ASF_INCLUDE_SEVERITY) ? 
-                              m_szAlarmText[pAlarm->wSeverity] : _T(""),
+                              m_szAlarmText[pAlarm->nCurrentSeverity] : _T(""),
                        (pCfg->nFlags & ASF_INCLUDE_SOURCE) ?
                               ((pObject != NULL) ? 
                                     pObject->szName : _T("unknown node")) : _T(""),

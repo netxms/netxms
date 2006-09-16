@@ -262,9 +262,11 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("No more grace logins"),
       _T("Server connection broken"),
       _T("Invalid agent configuration ID"),
-      _T("Server has lost connection with backend database")
+      _T("Server has lost connection with backend database"),
+      _T("Alarm is still open in helpdesk system"),
+      _T("Alarm is not in \"outstanding\" state")
    };
-   return ((dwError >= 0) && (dwError <= RCC_DB_CONNECTION_LOST)) ? pszErrorText[dwError] : _T("No text message for this error");
+   return ((dwError >= 0) && (dwError <= RCC_ALARM_NOT_OUTSTANDING)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 
