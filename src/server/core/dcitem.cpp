@@ -1140,6 +1140,72 @@ void DCItem::PrepareForDeletion(void)
 
 
 //
+// Match schedule element
+// NOTE: We assume that pattern can be modified during processing
+//
+
+static BOOL MatchScheduleElement(TCHAR *pszPattern, int nValue)
+{
+   TCHAR *ptr, *curr;
+   int nStep, nCurr, nPrev;
+   BOOL bRun = TRUE, bRange = FALSE;
+
+   // Check if step was specified
+   ptr = _tcschr(pszPattern, _T('/'));
+   if (ptr != NULL)
+   {
+      *ptr = 0;
+      ptr++;
+      nStep = atoi(ptr);
+   }
+   else
+   {
+      nStep = 1;
+   }
+
+   if (*pszPattern == _T('*'))
+      goto check_step;
+
+   for(curr = pszPattern; bRun; curr = ptr + 1)
+   {
+      for(ptr = curr; (*ptr != 0) && (*ptr != '-') && (*ptr != ','); ptr++);
+      switch(*ptr)
+      {
+         case '-':
+            if (bRange)
+               return FALSE;  // Form like 1-2-3 is invalid
+            bRange = TRUE;
+            *ptr = 0;
+            nPrev = atoi(curr);
+            break;
+         case 0:
+            bRun = FALSE;
+         case ',':
+            *ptr = 0;
+            nCurr = atoi(curr);
+            if (bRange)
+            {
+               if ((nValue >= nPrev) && (nValue <= nCurr))
+                  goto check_step;
+               bRange = FALSE;
+            }
+            else
+            {
+               if (nValue == nCurr)
+                  return TRUE;
+            }
+            break;
+      }
+   }
+
+   return FALSE;
+
+check_step:
+   return (nValue % nStep) == 0;
+}
+
+
+//
 // Match schedule to current time
 //
 
@@ -1149,50 +1215,28 @@ static BOOL MatchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule)
 
    // Minute
    pszCurr = ExtractWord(pszSchedule, szValue);
-   if (szValue[0] != '*')
-   {
-      if (atoi(szValue) != pCurrTime->tm_min)
+   if (!MatchScheduleElement(szValue, pCurrTime->tm_min))
          return FALSE;
-   }
 
    // Hour
    pszCurr = ExtractWord(pszCurr, szValue);
-   if (szValue[0] != '*')
-   {
-      if (atoi(szValue) != pCurrTime->tm_hour)
+   if (!MatchScheduleElement(szValue, pCurrTime->tm_hour))
          return FALSE;
-   }
 
    // Day of month
    pszCurr = ExtractWord(pszCurr, szValue);
-   if (szValue[0] != '*')
-   {
-      if (atoi(szValue) != pCurrTime->tm_mday)
+   if (!MatchScheduleElement(szValue, pCurrTime->tm_mday))
          return FALSE;
-   }
 
    // Month
    pszCurr = ExtractWord(pszCurr, szValue);
-   if (szValue[0] != '*')
-   {
-      if (atoi(szValue) != pCurrTime->tm_mon + 1)
+   if (!MatchScheduleElement(szValue, pCurrTime->tm_mon + 1))
          return FALSE;
-   }
 
    // Day of week
-   pszCurr = ExtractWord(pszCurr, szValue);
-   if (szValue[0] != '*')
-   {
-      int nValue;
-
-      nValue = atoi(szValue);
-      if (nValue == 7)
-         nValue = 0;
-      if (nValue != pCurrTime->tm_wday)
-         return FALSE;
-   }
-
-   return TRUE;
+   ExtractWord(pszCurr, szValue);
+   TranslateStr(szValue, _T("0"), _T("7"));
+   return MatchScheduleElement(szValue, pCurrTime->tm_wday);
 }
 
 
