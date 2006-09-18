@@ -49,6 +49,8 @@ WHITESPC  [[:blank:]\t\n\r]
 #define YY_NEVER_INTERACTIVE 1
 #define ECHO
 
+#undef _XOPEN_SOURCE_EXTENDED
+
 #include "mibparse.h"
 #include "parser.tab.h"/* token codes from the parser */
 #include <nms_util.h>

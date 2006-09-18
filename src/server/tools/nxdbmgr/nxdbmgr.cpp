@@ -78,7 +78,7 @@ void ShowQuery(TCHAR *pszQuery)
       puts(pszQuery);
       SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
 #else
-      _tprintf(_T(">>> %s\n", pszQuery);
+      _tprintf(_T(">>> %s\n"), pszQuery);
 #endif
 }
 
