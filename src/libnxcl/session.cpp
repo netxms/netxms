@@ -244,7 +244,7 @@ BOOL NXCL_Session::SendMsg(CSCPMessage *pMsg)
    if (m_dwFlags & NXC_SF_CONN_BROKEN)
       return FALSE;
 
-   DebugPrintf(_T("SendMsg(\"%s\"), id:%d)"), CSCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
+   DebugPrintf(_T("SendMsg(\"%s\"), id:%d)"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
    pRawMsg = pMsg->CreateMessage();
    if (m_pCtx != NULL)
    {
@@ -850,7 +850,7 @@ DWORD NXCL_Session::LoadUserDB(void)
 
 DWORD NXCL_Session::SendFile(DWORD dwRqId, TCHAR *pszFileName)
 {
-   return SendFileOverCSCP(m_hSocket, dwRqId, pszFileName, m_pCtx) ? RCC_SUCCESS : RCC_IO_ERROR;
+   return SendFileOverNXCP(m_hSocket, dwRqId, pszFileName, m_pCtx) ? RCC_SUCCESS : RCC_IO_ERROR;
 }
 
 

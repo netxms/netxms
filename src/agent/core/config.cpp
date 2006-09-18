@@ -117,9 +117,9 @@ BOOL DownloadConfig(TCHAR *pszServer)
          {
             pRawMsg = (CSCP_MESSAGE *)realloc(pRawMsg, MAX_MSG_SIZE);
             pBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
-            RecvCSCPMessage(0, NULL, pBuffer, 0, NULL, NULL, 0);
+            RecvNXCPMessage(0, NULL, pBuffer, 0, NULL, NULL, 0);
 
-            nLen = RecvCSCPMessage(hSocket, pRawMsg, pBuffer, MAX_MSG_SIZE,
+            nLen = RecvNXCPMessage(hSocket, pRawMsg, pBuffer, MAX_MSG_SIZE,
                                    &pDummyCtx, NULL, 30000);
             if (nLen >= 16)
             {

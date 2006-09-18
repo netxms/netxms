@@ -82,7 +82,7 @@ BOOL Connect(void)
    // Initialize receiver
    m_pRawMsg = (CSCP_MESSAGE *)malloc(MAX_MSG_SIZE);
    m_pRecvBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
-   RecvCSCPMessage(0, NULL, m_pRecvBuffer, 0, NULL, NULL, 0);
+   RecvNXCPMessage(0, NULL, m_pRecvBuffer, 0, NULL, NULL, 0);
 
    return TRUE;
 }
@@ -128,7 +128,7 @@ CSCPMessage *RecvMsg(void)
 
    do
    {
-      iError = RecvCSCPMessage(g_hSocket, m_pRawMsg, m_pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL, INFINITE);
+      iError = RecvNXCPMessage(g_hSocket, m_pRawMsg, m_pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL, INFINITE);
       if (iError <= 0)
          return NULL;   // Communication error or closed connection
    } while(iError == 1);

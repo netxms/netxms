@@ -296,7 +296,7 @@ void ClientSession::ReadThread(void)
    WORD wFlags;
 
    // Initialize raw message receiving function
-   RecvCSCPMessage(0, NULL, m_pMsgBuffer, 0, NULL, NULL, 0);
+   RecvNXCPMessage(0, NULL, m_pMsgBuffer, 0, NULL, NULL, 0);
 
    pRawMsg = (CSCP_MESSAGE *)malloc(RAW_MSG_SIZE);
 #ifdef _WITH_ENCRYPTION
@@ -304,7 +304,7 @@ void ClientSession::ReadThread(void)
 #endif
    while(1)
    {
-      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, 
+      if ((iErr = RecvNXCPMessage(m_hSocket, pRawMsg, 
                                   m_pMsgBuffer, RAW_MSG_SIZE, 
                                   &m_pCtx, pDecryptionBuffer, INFINITE)) <= 0)
          break;
@@ -313,7 +313,7 @@ void ClientSession::ReadThread(void)
       if (iErr == 1)
       {
          DebugPrintf("Received message %s is too large (%d bytes)\n",
-                     CSCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
+                     NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                      ntohl(pRawMsg->dwSize));
          continue;
       }
@@ -340,7 +340,7 @@ void ClientSession::ReadThread(void)
          pRawMsg->dwId = ntohl(pRawMsg->dwId);
          pRawMsg->wCode = ntohs(pRawMsg->wCode);
          pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
-         DebugPrintf("Received raw message %s\n", CSCPMessageCodeName(pRawMsg->wCode, szBuffer));
+         DebugPrintf("Received raw message %s\n", NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
 
          if ((pRawMsg->wCode == CMD_FILE_DATA) || 
              (pRawMsg->wCode == CMD_ABORT_FILE_TRANSFER))
@@ -403,7 +403,7 @@ void ClientSession::ReadThread(void)
          pMsg = new CSCPMessage(pRawMsg);
          if ((pMsg->GetCode() == CMD_SESSION_KEY) && (pMsg->GetId() == m_dwEncryptionRqId))
          {
-            m_dwEncryptionResult = SetupEncryptionContext(pMsg, &m_pCtx, NULL, g_pServerKey);
+            m_dwEncryptionResult = SetupEncryptionContext(pMsg, &m_pCtx, NULL, g_pServerKey, NXCP_VERSION);
             ConditionSet(m_condEncryptionSetup);
             m_dwEncryptionRqId = 0;
             delete pMsg;
@@ -484,7 +484,7 @@ void ClientSession::WriteThread(void)
       if (pRawMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-      DebugPrintf("Sending message %s\n", CSCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer));
+      DebugPrintf("Sending message %s\n", NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer));
       if (m_pCtx != NULL)
       {
          pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
@@ -533,7 +533,7 @@ void ClientSession::UpdateThread(void)
       {
          case INFO_CAT_EVENT:
             MutexLock(m_mutexSendEvents, INFINITE);
-            m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, 0, 0, sizeof(NXC_EVENT), pUpdate->pData, NULL));
+            m_pSendQueue->Put(CreateRawNXCPMessage(CMD_EVENT, 0, 0, sizeof(NXC_EVENT), pUpdate->pData, NULL));
             MutexUnlock(m_mutexSendEvents);
             free(pUpdate->pData);
             break;
@@ -608,7 +608,7 @@ void ClientSession::ProcessingThread(void)
          break;
 
       m_wCurrentCmd = pMsg->GetCode();
-      DebugPrintf("Received message %s\n", CSCPMessageCodeName(m_wCurrentCmd, szBuffer));
+      DebugPrintf("Received message %s\n", NXCPMessageCodeName(m_wCurrentCmd, szBuffer));
       if (!(m_dwFlags & CSF_AUTHENTICATED) && 
           (m_wCurrentCmd != CMD_LOGIN) && 
           (m_wCurrentCmd != CMD_GET_SERVER_INFO) &&
@@ -1587,7 +1587,7 @@ void ClientSession::SendAllEvents(CSCPMessage *pRequest)
          ((WCHAR *)event.szMessage)[MAX_EVENT_MSG_LENGTH - 1] = 0;
 #endif
          SwapWideString((WCHAR *)event.szMessage);
-         m_pSendQueue->Put(CreateRawCSCPMessage(CMD_EVENT, dwRqId, wFlags,
+         m_pSendQueue->Put(CreateRawNXCPMessage(CMD_EVENT, dwRqId, wFlags,
                                                 sizeof(NXC_EVENT), &event, NULL));
       }
       DBFreeAsyncResult(g_hCoreDB, hResult);
@@ -2749,7 +2749,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
 
                // Prepare and send raw message with fetched data
                m_pSendQueue->Put(
-                  CreateRawCSCPMessage(CMD_DCI_DATA, pRequest->GetId(), 0,
+                  CreateRawNXCPMessage(CMD_DCI_DATA, pRequest->GetId(), 0,
                                        dwNumRows * m_dwRowSize[iType] + sizeof(DCI_DATA_HEADER),
                                        pData, NULL));
                free(pData);
@@ -3004,7 +3004,7 @@ void ClientSession::SendMIB(DWORD dwRqId)
    // Send compiled MIB file
    strcpy(szBuffer, g_szDataDir);
    strcat(szBuffer, DFILE_COMPILED_MIB);
-   SendFileOverCSCP(m_hSocket, dwRqId, szBuffer, m_pCtx);
+   SendFileOverNXCP(m_hSocket, dwRqId, szBuffer, m_pCtx);
 }
 
 
@@ -6950,7 +6950,7 @@ void ClientSession::SendSubmapBkImage(CSCPMessage *pRequest)
    // Send bitmap file
    if (bSuccess)
    {
-      SendFileOverCSCP(m_hSocket, pRequest->GetId(), szBuffer, m_pCtx);
+      SendFileOverNXCP(m_hSocket, pRequest->GetId(), szBuffer, m_pCtx);
    }
 }
 

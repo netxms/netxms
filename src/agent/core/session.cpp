@@ -170,7 +170,7 @@ void CommSession::ReadThread(void)
    WORD wFlags;
 
    // Initialize raw message receiving function
-   RecvCSCPMessage(0, NULL, m_pMsgBuffer, 0, NULL, NULL, 0);
+   RecvNXCPMessage(0, NULL, m_pMsgBuffer, 0, NULL, NULL, 0);
 
    pRawMsg = (CSCP_MESSAGE *)malloc(RAW_MSG_SIZE);
 #ifdef _WITH_ENCRYPTION
@@ -178,7 +178,7 @@ void CommSession::ReadThread(void)
 #endif
    while(1)
    {
-      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, m_pMsgBuffer, RAW_MSG_SIZE,
+      if ((iErr = RecvNXCPMessage(m_hSocket, pRawMsg, m_pMsgBuffer, RAW_MSG_SIZE,
                                   &m_pCtx, pDecryptionBuffer, INFINITE)) <= 0)
       {
          break;
@@ -219,7 +219,7 @@ void CommSession::ReadThread(void)
             pRawMsg->dwId = ntohl(pRawMsg->dwId);
             pRawMsg->wCode = ntohs(pRawMsg->wCode);
             pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
-            DebugPrintf(m_dwIndex, "Received raw message %s", CSCPMessageCodeName(pRawMsg->wCode, szBuffer));
+            DebugPrintf(m_dwIndex, "Received raw message %s", NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
 
             if (pRawMsg->wCode == CMD_FILE_DATA)
             {
@@ -256,18 +256,39 @@ void CommSession::ReadThread(void)
                }
             }
          }
+         else if (wFlags & MF_CONTROL)
+         {
+            // Convert message header to host format
+            pRawMsg->dwId = ntohl(pRawMsg->dwId);
+            pRawMsg->wCode = ntohs(pRawMsg->wCode);
+            pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
+            DebugPrintf(m_dwIndex, "Received control message %s", NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
+
+            if (pRawMsg->wCode == CMD_GET_NXCP_CAPS)
+            {
+               CSCP_MESSAGE *pMsg;
+
+               pMsg = (CSCP_MESSAGE *)malloc(CSCP_HEADER_SIZE);
+               pMsg->dwId = htonl(pRawMsg->dwId);
+               pMsg->wCode = htons((WORD)CMD_NXCP_CAPS);
+               pMsg->wFlags = htons(MF_CONTROL);
+               pMsg->dwNumVars = htonl(NXCP_VERSION << 24);
+               pMsg->dwSize = htonl(CSCP_HEADER_SIZE);
+               SendRawMessage(pMsg, m_pCtx);
+            }
+         }
          else
          {
             // Create message object from raw message
             pMsg = new CSCPMessage(pRawMsg);
             if (pMsg->GetCode() == CMD_REQUEST_SESSION_KEY)
             {
-               DebugPrintf(m_dwIndex, "Received message %s", CSCPMessageCodeName(pMsg->GetCode(), szBuffer));
+               DebugPrintf(m_dwIndex, "Received message %s", NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
                if (m_pCtx == NULL)
                {
                   CSCPMessage *pResponse;
 
-                  SetupEncryptionContext(pMsg, &m_pCtx, &pResponse, NULL);
+                  SetupEncryptionContext(pMsg, &m_pCtx, &pResponse, NULL, NXCP_VERSION);
                   SendMessage(pResponse);
                   delete pResponse;
                }
@@ -312,7 +333,7 @@ BOOL CommSession::SendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pC
    BOOL bResult = TRUE;
    char szBuffer[128];
 
-   DebugPrintf(m_dwIndex, "Sending message %s", CSCPMessageCodeName(ntohs(pMsg->wCode), szBuffer));
+   DebugPrintf(m_dwIndex, "Sending message %s", NXCPMessageCodeName(ntohs(pMsg->wCode), szBuffer));
    if ((pCtx != NULL) && (pCtx != PROXY_ENCRYPTION_CTX))
    {
       CSCP_ENCRYPTED_MESSAGE *pEnMsg;
@@ -378,7 +399,7 @@ void CommSession::ProcessingThread(void)
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
       dwCommand = pMsg->GetCode();
-      DebugPrintf(m_dwIndex, "Received message %s", CSCPMessageCodeName((WORD)dwCommand, szBuffer));
+      DebugPrintf(m_dwIndex, "Received message %s", NXCPMessageCodeName((WORD)dwCommand, szBuffer));
 
       // Prepare response message
       msg.SetCode(CMD_REQUEST_COMPLETED);

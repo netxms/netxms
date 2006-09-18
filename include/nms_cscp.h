@@ -28,6 +28,8 @@
 // Constants
 //
 
+#define NXCP_VERSION                   2
+
 #define SERVER_LISTEN_PORT             4701
 #define MAX_DCI_STRING_VALUE           256
 #define CSCP_HEADER_SIZE               16
@@ -229,6 +231,7 @@ typedef struct
 #define MF_DONT_ENCRYPT    0x0004
 #define MF_END_OF_SEQUENCE 0x0008
 #define MF_REVERSE_ORDER   0x0010
+#define MF_CONTROL         0x0020
 
 
 //
@@ -416,6 +419,8 @@ typedef struct
 #define CMD_DELETE_AGENT_CONFIG     0x00B3
 #define CMD_SWAP_AGENT_CONFIGS      0x00B4
 #define CMD_TERMINATE_ALARM         0x00B5
+#define CMD_GET_NXCP_CAPS           0x00B6
+#define CMD_NXCP_CAPS               0x00B7
 
 
 //

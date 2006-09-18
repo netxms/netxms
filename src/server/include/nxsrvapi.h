@@ -228,6 +228,7 @@ class LIBNXSRV_EXPORTABLE AgentConnection
 {
 private:
    DWORD m_dwAddr;
+   int m_nProtocolVersion;
    int m_iAuthMethod;
    char m_szSecret[MAX_SECRET_LENGTH];
    time_t m_tLastCommandTime;

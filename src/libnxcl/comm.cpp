@@ -40,7 +40,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
 
    // Initialize raw message receiving function
    pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
-   RecvCSCPMessage(0, NULL, pMsgBuffer, 0, NULL, NULL, 0);
+   RecvNXCPMessage(0, NULL, pMsgBuffer, 0, NULL, NULL, 0);
 
    // Allocate space for raw message
    pRawMsg = (CSCP_MESSAGE *)malloc(pSession->m_dwReceiverBufferSize);
@@ -52,7 +52,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
    while(1)
    {
       // Receive raw message
-      if ((iErr = RecvCSCPMessage(pSession->m_hSocket, pRawMsg, 
+      if ((iErr = RecvNXCPMessage(pSession->m_hSocket, pRawMsg, 
                                   pMsgBuffer, pSession->m_dwReceiverBufferSize,
                                   &pSession->m_pCtx, pDecryptionBuffer, INFINITE)) <= 0)
          break;
@@ -61,7 +61,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
       if (iErr == 1)
       {
          DebugPrintf(_T("Received too large message %s (%d bytes)"), 
-                     CSCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
+                     NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                      ntohl(pRawMsg->dwSize));
          continue;
       }
@@ -90,7 +90,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
          pRawMsg->dwId = ntohl(pRawMsg->dwId);
          pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
 
-         DebugPrintf(_T("RecvRawMsg(\"%s\", id:%d)"), CSCPMessageCodeName(pRawMsg->wCode, szBuffer), pRawMsg->dwId);
+         DebugPrintf(_T("RecvRawMsg(\"%s\", id:%d)"), NXCPMessageCodeName(pRawMsg->wCode, szBuffer), pRawMsg->dwId);
 
          // Process message
          switch(pRawMsg->wCode)
@@ -141,7 +141,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
       {
          pMsg = new CSCPMessage(pRawMsg);
          bMsgNotNeeded = TRUE;
-         DebugPrintf(_T("RecvMsg(\"%s\", id:%d)"), CSCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
+         DebugPrintf(_T("RecvMsg(\"%s\", id:%d)"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
 
          // Process message
          switch(pMsg->GetCode())
@@ -154,7 +154,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
                {
                   CSCPMessage *pResponse;
 
-                  SetupEncryptionContext(pMsg, &pSession->m_pCtx, &pResponse, NULL);
+                  SetupEncryptionContext(pMsg, &pSession->m_pCtx, &pResponse, NULL, NXCP_VERSION);
                   pSession->SendMsg(pResponse);
                   delete pResponse;
                }

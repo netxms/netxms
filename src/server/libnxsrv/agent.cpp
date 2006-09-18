@@ -90,6 +90,7 @@ AgentConnection::AgentConnection()
    m_iEncryptionPolicy = m_iDefaultEncryptionPolicy;
    m_bUseProxy = FALSE;
    m_dwRecvTimeout = 420000;  // 7 minutes
+   m_nProtocolVersion = NXCP_VERSION;
 }
 
 
@@ -130,6 +131,7 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort,
    m_iEncryptionPolicy = m_iDefaultEncryptionPolicy;
    m_bUseProxy = FALSE;
    m_dwRecvTimeout = 420000;  // 7 minutes
+   m_nProtocolVersion = NXCP_VERSION;
 }
 
 
@@ -189,7 +191,7 @@ void AgentConnection::ReceiverThread(void)
 
    // Initialize raw message receiving function
    pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
-   RecvCSCPMessage(0, NULL, pMsgBuffer, 0, NULL, NULL, 0);
+   RecvNXCPMessage(0, NULL, pMsgBuffer, 0, NULL, NULL, 0);
 
    // Allocate space for raw message
    pRawMsg = (CSCP_MESSAGE *)malloc(RECEIVER_BUFFER_SIZE);
@@ -201,7 +203,7 @@ void AgentConnection::ReceiverThread(void)
    while(1)
    {
       // Receive raw message
-      if ((iErr = RecvCSCPMessage(m_hSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
+      if ((iErr = RecvNXCPMessage(m_hSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
                                   &m_pCtx, pDecryptionBuffer, m_dwRecvTimeout)) <= 0)
          break;
 
@@ -209,7 +211,7 @@ void AgentConnection::ReceiverThread(void)
       if (iErr == 1)
       {
          PrintMsg(_T("Received too large message %s (%d bytes)"), 
-                  CSCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
+                  NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                   ntohl(pRawMsg->dwSize));
          continue;
       }
@@ -236,7 +238,7 @@ void AgentConnection::ReceiverThread(void)
       }
 
       // Create message object from raw message
-      pMsg = new CSCPMessage(pRawMsg);
+      pMsg = new CSCPMessage(pRawMsg, m_nProtocolVersion);
       if (pMsg->GetCode() == CMD_TRAP)
       {
          OnTrap(pMsg);
@@ -322,6 +324,12 @@ BOOL AgentConnection::Connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError)
          PrintMsg(_T("Cannot establish connection with agent %s"),
                   IpToStr(ntohl(m_bUseProxy ? m_dwProxyAddr : m_dwAddr), szBuffer));
       dwError = ERR_CONNECT_FAILED;
+      goto connect_cleanup;
+   }
+
+   if (!NXCPGetPeerProtocolVersion(m_hSocket, &m_nProtocolVersion))
+   {
+      dwError = ERR_INTERNAL_ERROR;
       goto connect_cleanup;
    }
 
@@ -549,7 +557,7 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
 
 DWORD AgentConnection::GetParameter(TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer)
 {
-   CSCPMessage msg, *pResponse;
+   CSCPMessage msg(m_nProtocolVersion), *pResponse;
    DWORD dwRqId, dwRetCode;
 
    if (m_bIsConnected)
@@ -651,7 +659,7 @@ ARP_CACHE *AgentConnection::GetArpCache(void)
 
 DWORD AgentConnection::Nop(void)
 {
-   CSCPMessage msg;
+   CSCPMessage msg(m_nProtocolVersion);
    DWORD dwRqId;
 
    dwRqId = m_dwRequestId++;
@@ -736,7 +744,7 @@ void AgentConnection::OnTrap(CSCPMessage *pMsg)
 
 DWORD AgentConnection::GetList(TCHAR *pszParam)
 {
-   CSCPMessage msg, *pResponse;
+   CSCPMessage msg(m_nProtocolVersion), *pResponse;
    DWORD i, dwRqId, dwRetCode;
 
    if (m_bIsConnected)
@@ -786,7 +794,7 @@ DWORD AgentConnection::GetList(TCHAR *pszParam)
 
 DWORD AgentConnection::Authenticate(BOOL bProxyData)
 {
-   CSCPMessage msg;
+   CSCPMessage msg(m_nProtocolVersion);
    DWORD dwRqId;
    BYTE hash[32];
    int iAuthMethod = bProxyData ? m_iProxyAuth : m_iAuthMethod;
@@ -836,7 +844,7 @@ DWORD AgentConnection::Authenticate(BOOL bProxyData)
 
 DWORD AgentConnection::ExecAction(TCHAR *pszAction, int argc, TCHAR **argv)
 {
-   CSCPMessage msg;
+   CSCPMessage msg(m_nProtocolVersion);
    DWORD dwRqId;
    int i;
 
@@ -865,7 +873,7 @@ DWORD AgentConnection::ExecAction(TCHAR *pszAction, int argc, TCHAR **argv)
 DWORD AgentConnection::UploadFile(TCHAR *pszFile)
 {
    DWORD dwRqId, dwResult;
-   CSCPMessage msg;
+   CSCPMessage msg(m_nProtocolVersion);
    int i;
 
    if (!m_bIsConnected)
@@ -890,7 +898,7 @@ DWORD AgentConnection::UploadFile(TCHAR *pszFile)
 
    if (dwResult == ERR_SUCCESS)
    {
-      if (SendFileOverCSCP(m_hSocket, dwRqId, pszFile, m_pCtx))
+      if (SendFileOverNXCP(m_hSocket, dwRqId, pszFile, m_pCtx))
          dwResult = WaitForRCC(dwRqId, m_dwCommandTimeout);
       else
          dwResult = ERR_IO_FAILURE;
@@ -907,7 +915,7 @@ DWORD AgentConnection::UploadFile(TCHAR *pszFile)
 DWORD AgentConnection::StartUpgrade(TCHAR *pszPkgName)
 {
    DWORD dwRqId, dwResult;
-   CSCPMessage msg;
+   CSCPMessage msg(m_nProtocolVersion);
    int i;
 
    if (!m_bIsConnected)
@@ -943,7 +951,7 @@ DWORD AgentConnection::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int
                                            TCHAR *pszRequest, TCHAR *pszResponse)
 {
    DWORD dwRqId, dwResult;
-   CSCPMessage msg, *pResponse;
+   CSCPMessage msg(m_nProtocolVersion), *pResponse;
    static WORD m_wDefaultPort[] = { 7, 22, 110, 25, 21, 80 };
 
    if (!m_bIsConnected)
@@ -997,7 +1005,7 @@ DWORD AgentConnection::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int
 DWORD AgentConnection::GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList)
 {
    DWORD i, dwId, dwRqId, dwResult;
-   CSCPMessage msg, *pResponse;
+   CSCPMessage msg(m_nProtocolVersion), *pResponse;
 
    *pdwNumParams = 0;
    *ppParamList = NULL;
@@ -1050,7 +1058,7 @@ DWORD AgentConnection::GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PAR
 DWORD AgentConnection::SetupEncryption(RSA *pServerKey)
 {
 #ifdef _WITH_ENCRYPTION
-   CSCPMessage msg, *pResp;
+   CSCPMessage msg(m_nProtocolVersion), *pResp;
    DWORD dwRqId, dwError, dwResult;
 
    dwRqId = m_dwRequestId++;
@@ -1062,7 +1070,7 @@ DWORD AgentConnection::SetupEncryption(RSA *pServerKey)
       pResp = WaitForMessage(CMD_SESSION_KEY, dwRqId, m_dwCommandTimeout);
       if (pResp != NULL)
       {
-         dwResult = SetupEncryptionContext(pResp, &m_pCtx, NULL, pServerKey);
+         dwResult = SetupEncryptionContext(pResp, &m_pCtx, NULL, pServerKey, m_nProtocolVersion);
          switch(dwResult)
          {
             case RCC_SUCCESS:
@@ -1107,7 +1115,7 @@ DWORD AgentConnection::SetupEncryption(RSA *pServerKey)
 DWORD AgentConnection::GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize)
 {
    DWORD i, dwRqId, dwResult;
-   CSCPMessage msg, *pResponse;
+   CSCPMessage msg(m_nProtocolVersion), *pResponse;
 #ifdef UNICODE
    BYTE *pBuffer;
 #endif
@@ -1174,7 +1182,7 @@ DWORD AgentConnection::GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize)
 DWORD AgentConnection::UpdateConfigFile(TCHAR *pszConfig)
 {
    DWORD dwRqId, dwResult;
-   CSCPMessage msg;
+   CSCPMessage msg(m_nProtocolVersion);
 #ifdef UNICODE
    int nChars;
    BYTE *pBuffer;
@@ -1317,7 +1325,7 @@ void AgentConnection::SetProxy(DWORD dwAddr, WORD wPort, int iAuthMethod, TCHAR 
 
 DWORD AgentConnection::SetupProxyConnection(void)
 {
-   CSCPMessage msg;
+   CSCPMessage msg(m_nProtocolVersion);
    DWORD dwRqId;
 
    dwRqId = m_dwRequestId++;

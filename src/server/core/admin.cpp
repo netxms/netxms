@@ -1,4 +1,4 @@
-/* $Id: admin.cpp,v 1.17 2006-07-25 22:05:49 victor Exp $ */
+/* $Id: admin.cpp,v 1.18 2006-09-18 21:25:33 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -50,13 +50,13 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 
    pRawMsg = (CSCP_MESSAGE *)malloc(MAX_MSG_SIZE);
    pRecvBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
-   RecvCSCPMessage(0, NULL, pRecvBuffer, 0, NULL, NULL, 0);
+   RecvNXCPMessage(0, NULL, pRecvBuffer, 0, NULL, NULL, 0);
    ctx.hSocket = sock;
    ctx.pMsg = &response;
 
    while(1)
    {
-      iError = RecvCSCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL, INFINITE);
+      iError = RecvNXCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL, INFINITE);
       if (iError <= 0)
          break;   // Communication error or closed connection
 
@@ -175,6 +175,19 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2006/07/25 22:05:49  victor
+Fixed some memory leaks:
+
+Server
+1. admin.cpp - ProcessingThread()
+2. events.cpp - ReloadEvents(), DeleteEventTemplateFromList()
+3. objtools.cpp - GetAgentTable()
+4. session.cpp - ClientSession::DeployPackage()
+5. users.cpp - LoadUsers()
+
+MySQL driver
+1. DrvFreeAsyncResult()
+
 Revision 1.16  2006/03/02 12:17:06  victor
 Removed various warnings related to 64bit platforms
 

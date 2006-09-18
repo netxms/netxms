@@ -221,7 +221,7 @@ void DumpSessions(CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, "%-3d %-24s %-8s %s [%s]\n", i, 
                        (m_pSessionList[i]->GetState() != SESSION_STATE_PROCESSING) ?
                          pszStateName[m_pSessionList[i]->GetState()] :
-                         CSCPMessageCodeName(m_pSessionList[i]->GetCurrentCmd(), szBuffer),
+                         NXCPMessageCodeName(m_pSessionList[i]->GetCurrentCmd(), szBuffer),
 					        pszCipherName[m_pSessionList[i]->GetCipher() + 1],
                        m_pSessionList[i]->GetUserName(),
                        m_pSessionList[i]->GetClientInfo());
