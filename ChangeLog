@@ -2,6 +2,7 @@
 * 0.2.14
 *
 
+- Threshold state now saved across NetXMS server restarts
 - Fixed issues: #104, #109, #111
 
 

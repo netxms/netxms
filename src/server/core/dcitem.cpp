@@ -295,8 +295,8 @@ BOOL DCItem::LoadThresholdsFromDB(void)
    BOOL bResult = FALSE;
 
    sprintf(szQuery, "SELECT threshold_id,fire_value,rearm_value,check_function,"
-                    "check_operation,parameter_1,parameter_2,event_code FROM thresholds "
-                    "WHERE item_id=%d ORDER BY sequence_number", m_dwId);
+                    "check_operation,parameter_1,parameter_2,event_code,current_state "
+                    "FROM thresholds WHERE item_id=%d ORDER BY sequence_number", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {

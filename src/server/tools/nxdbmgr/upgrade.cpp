@@ -105,6 +105,8 @@ static BOOL H_UpgradeFromV46(void)
       "ALTER TABLE alarms DROP COLUMN severity\n"
       "ALTER TABLE alarms DROP COLUMN alarm_timestamp\n"
       "ALTER TABLE alarms DROP COLUMN is_ack\n"
+      "ALTER TABLE thresholds ADD current_state integer\n"
+      "UPDATE thresholds SET current_state=0\n"
       "<END>";
    static TCHAR m_szBatch2[] =
       "CREATE INDEX idx_alarm_notes_alarm_id ON alarm_notes(alarm_id)\n"

@@ -2,6 +2,7 @@
 * 46 ==> 47 *
 *************
 
+- Column "current_state" added to table "thresholds"
 - Column "comments" added to table "object_properties"
 - Column "discovery_flags" removed from table "nodes"
 - Table "alarm_notes" redesigned:

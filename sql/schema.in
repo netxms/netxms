@@ -583,10 +583,10 @@ CREATE TABLE time_ranges
 CREATE TABLE deleted_objects
 (
 	object_id integer not null,
-	object_class integer,
-	name varchar(63),
-	ip_addr varchar(15),
-	ip_netmask varchar(15),
+	object_class integer not null,
+	name varchar(63) not null,
+	ip_addr varchar(15) not null,
+	ip_netmask varchar(15) not null,
 	PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 
@@ -600,13 +600,14 @@ CREATE TABLE thresholds
 	threshold_id integer not null,
 	item_id integer not null,
 	sequence_number integer not null,
-	fire_value varchar(255),
-	rearm_value varchar(255),
-	check_function integer,
-	check_operation integer,
-	parameter_1 integer,
-	parameter_2 integer,
-	event_code integer,
+	fire_value varchar(255) not null,
+	rearm_value varchar(255) not null,
+	check_function integer not null,
+	check_operation integer not null,
+	parameter_1 integer not null,
+	parameter_2 integer not null,
+	event_code integer not null,
+	current_state integer not null,
 	PRIMARY KEY(threshold_id)
 ) TABLE_TYPE;
 

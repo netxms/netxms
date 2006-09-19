@@ -64,7 +64,7 @@ Threshold::Threshold(Threshold *pSrc)
 // Constructor for creating object from database
 // This constructor assumes that SELECT query look as following:
 // SELECT threshold_id,fire_value,rearm_value,check_function,check_operation,
-//        parameter_1,parameter_2,event_code FROM thresholds
+//        parameter_1,parameter_2,event_code,current_state FROM thresholds
 //
 
 Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
@@ -78,7 +78,7 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
    m_iDataType = pRelatedItem->DataType();
    m_iParam1 = DBGetFieldLong(hResult, iRow, 5);
    m_iParam2 = DBGetFieldLong(hResult, iRow, 6);
-   m_bIsReached = FALSE;
+   m_bIsReached = DBGetFieldLong(hResult, iRow, 8);
 }
 
 
@@ -125,15 +125,16 @@ BOOL Threshold::SaveToDB(DB_HANDLE hdb, DWORD dwIndex)
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO thresholds (threshold_id,item_id,fire_value,rearm_value,"
                        "check_function,check_operation,parameter_1,parameter_2,event_code,"
-                       "sequence_number) VALUES (%d,%d,'%s','',%d,%d,%d,%d,%d,%d)", 
+                       "sequence_number,current_state) VALUES "
+                       "(%d,%d,'%s','',%d,%d,%d,%d,%d,%d,%d)", 
               m_dwId, m_dwItemId, m_value.String(), m_iFunction, m_iOperation, m_iParam1,
-              m_iParam2, m_dwEventCode, dwIndex);
+              m_iParam2, m_dwEventCode, dwIndex, m_bIsReached);
    else
       sprintf(szQuery, "UPDATE thresholds SET item_id=%d,fire_value='%s',check_function=%d,"
                        "check_operation=%d,parameter_1=%d,parameter_2=%d,event_code=%d,"
-                       "sequence_number=%d WHERE threshold_id=%d", m_dwItemId, 
-              m_value.String(), m_iFunction, m_iOperation, m_iParam1, m_iParam2, m_dwEventCode, 
-              dwIndex, m_dwId);
+                       "sequence_number=%d,current_state=%d WHERE threshold_id=%d",
+              m_dwItemId, m_value.String(), m_iFunction, m_iOperation, m_iParam1,
+              m_iParam2, m_dwEventCode, dwIndex, m_bIsReached, m_dwId);
    return DBQuery(hdb, szQuery);
 }
 
@@ -318,6 +319,16 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
    iResult = (bMatch & !m_bIsReached) ? THRESHOLD_REACHED :
                 ((!bMatch & m_bIsReached) ? THRESHOLD_REARMED : NO_ACTION);
    m_bIsReached = bMatch;
+   if (iResult != NO_ACTION)
+   {
+      TCHAR szQuery[256];
+
+      // Update threshold status in database
+      _sntprintf(szQuery, 256,
+                 _T("UPDATE thresholds SET current_state=%d WHERE threshold_id=%d"),
+                 m_bIsReached, m_dwId);
+      QueueSQLRequest(szQuery);
+   }
    return iResult;
 }
 
