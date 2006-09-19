@@ -369,7 +369,14 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
    if (!DBInit(TRUE, g_dwFlags & AF_LOG_SQL_ERRORS, g_dwFlags & AF_DEBUG_SQL, DBEventHandler))
       return FALSE;
 
-   g_hCoreDB = DBConnect();
+   // Connect to database
+   for(i = 0; ; i++)
+   {
+      g_hCoreDB = DBConnect();
+      if ((g_hCoreDB != NULL) || (i == 5))
+         break;
+      ThreadSleep(5);
+   }
    if (g_hCoreDB == NULL)
    {
       WriteLog(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);

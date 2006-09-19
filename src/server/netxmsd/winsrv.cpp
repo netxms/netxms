@@ -91,10 +91,6 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
    status.dwWaitHint = 300000;   // Assume that startup can take up to 5 minutes
    SetServiceStatus(serviceHandle, &status);
 
-   // On system startup there is a possible situation when database engine
-   // not fully initialized, so wait some time
-   ThreadSleep(15);
-
    // Actual initialization
    if (!Initialize())
    {
