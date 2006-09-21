@@ -76,7 +76,7 @@ HMODULE LIBNETXMS_EXPORTABLE DLOpen(TCHAR *szLibName, TCHAR *pszErrorText)
 
 #if defined(_WIN32)
    hModule = LoadLibrary(szLibName);
-   if (hModule == NULL)
+   if ((hModule == NULL) && (pszErrorText != NULL))
       GetSystemErrorText(GetLastError(), pszErrorText, 255);
 #elif defined(_NETWARE)
    TCHAR szBuffer[MAX_PATH + 4];
@@ -87,16 +87,18 @@ HMODULE LIBNETXMS_EXPORTABLE DLOpen(TCHAR *szLibName, TCHAR *pszErrorText)
    if (nError == 0)
    {
       hModule = *((HMODULE *)szBuffer);
-      *pszErrorText = 0;
+		if (pszErrorText != NULL)
+      	*pszErrorText = 0;
    }
    else
    {
       hModule = NULL;
-      nx_strncpy(pszErrorText, (nError <= 19) ? m_pszErrorText[nError] : "Unknown error code", 255);
+		if (pszErrorText != NULL)
+      	nx_strncpy(pszErrorText, (nError <= 19) ? m_pszErrorText[nError] : "Unknown error code", 255);
    }
 #else    /* _WIN32 */
    hModule = dlopen(szLibName, RTLD_NOW | RTLD_GLOBAL);
-   if (hModule == NULL)
+   if ((hModule == NULL) && (pszErrorText != NULL))
       nx_strncpy(pszErrorText, dlerror(), 255);
 #endif
    return hModule;

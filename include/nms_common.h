@@ -230,6 +230,10 @@ typedef int SOCKET;
 
 /*********** UNIX *********************/
 
+#ifndef SHL_SUFFIX
+#define SHL_SUFFIX	".so"
+#endif
+
 #include <errno.h>
 
 #define FS_PATH_SEPARATOR  _T("/")

@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.27 2006-09-21 07:24:08 victor Exp $ */
+/* $Id: linux.cpp,v 1.28 2006-09-21 07:45:53 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -199,12 +199,12 @@ DECLARE_SUBAGENT_INIT(LINUX)
 // Entry points for server
 //
 
-BOOL __NxSubAgentGetIfList(NETXMS_VALUES_LIST *pValue)
+extern "C" BOOL __NxSubAgentGetIfList(NETXMS_VALUES_LIST *pValue)
 {
    return H_NetIfList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
 }
 
-BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
+extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 {
    return H_NetArpCache("Net.ArpCache", NULL, pValue) == SYSINFO_RC_SUCCESS;
 }
@@ -214,6 +214,9 @@ BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.27  2006/09/21 07:24:08  victor
+Server now can load platform subagents to obtain local ARP cache and interface list
+
 Revision 1.26  2006/06/09 07:08:40  victor
 Some minor fixes
 

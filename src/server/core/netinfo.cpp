@@ -31,20 +31,12 @@
 
 #else
 
-#if HAVE_SYS_IOCTL_H
-#include <sys/ioctl.h>
+#if HAVE_SYS_UTSNAME_H
+#include <sys/utsname.h>
 #endif
-#if HAVE_SYS_SOCKIO_H
-#include <sys/sockio.h>
-#endif
+
 #if HAVE_NET_IF_H
 #include <net/if.h>
-#endif
-#if HAVE_NET_IF_ARP_H
-#include <net/if_arp.h>
-#endif
-#if HAVE_NET_IF_DL_H
-#include <net/if_dl.h>
 #endif
 
 #endif   /* _WIN32 */
@@ -90,7 +82,7 @@ void InitLocalNetInfo(void)
          un.sysname[i] = tolower(un.sysname[i]);
       snprintf(szName, MAX_PATH, LIBDIR "/libnsm_%s" SHL_SUFFIX, un.sysname);
 
-      m_hSubAgent = DLOpen(szName, szErrorText);
+      m_hSubAgent = DLOpen(szName, NULL);
       if (m_hSubAgent != NULL)
       {
          imp_NxSubAgentGetIfList = (BOOL (*)(NETXMS_VALUES_LIST *))DLGetSymbolAddr(m_hSubAgent, "__NxSubAgentGetIfList", NULL);
@@ -190,6 +182,7 @@ static ARP_CACHE *SysGetLocalArpCache(void)
 
    if (imp_NxSubAgentGetArpCache != NULL)
    {
+		memset(&list, 0, sizeof(NETXMS_VALUES_LIST));
       if (imp_NxSubAgentGetArpCache(&list))
       {
          // Create empty structure
@@ -249,7 +242,7 @@ static ARP_CACHE *SysGetLocalArpCache(void)
 
 static INTERFACE_LIST *SysGetLocalIfList(void)
 {
-   INTERFACE_LIST *pIfList;
+   INTERFACE_LIST *pIfList = NULL;
 
 #ifdef _WIN32
    DWORD dwSize;
@@ -327,6 +320,7 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
 
    if (imp_NxSubAgentGetIfList != NULL)
    {
+		memset(&list, 0, sizeof(NETXMS_VALUES_LIST));
       if (imp_NxSubAgentGetIfList(&list))
       {
          pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
