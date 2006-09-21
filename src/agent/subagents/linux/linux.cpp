@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.26 2006-06-09 07:08:40 victor Exp $ */
+/* $Id: linux.cpp,v 1.27 2006-09-21 07:24:08 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -194,10 +194,29 @@ DECLARE_SUBAGENT_INIT(LINUX)
    return TRUE;
 }
 
+
+//
+// Entry points for server
+//
+
+BOOL __NxSubAgentGetIfList(NETXMS_VALUES_LIST *pValue)
+{
+   return H_NetIfList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
+}
+
+BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
+{
+   return H_NetArpCache("Net.ArpCache", NULL, pValue) == SYSINFO_RC_SUCCESS;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.26  2006/06/09 07:08:40  victor
+Some minor fixes
+
 Revision 1.25  2006/06/08 15:21:29  victor
 Initial support for DRBD device monitoring
 

@@ -56,6 +56,10 @@
 
 #ifdef _WIN32
 static DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD) = NULL;
+#else
+static HMODULE m_hSubAgent = NULL;
+static BOOL (* imp_NxSubAgentGetIfList)(NETXMS_VALUES_LIST *) = NULL;
+static BOOL (* imp_NxSubAgentGetArpCache)(NETXMS_VALUES_LIST *) = NULL;
 #endif
 
 
@@ -73,6 +77,31 @@ void InitLocalNetInfo(void)
    {
       imp_HrLanConnectionNameFromGuidOrPath = 
          (DWORD (__stdcall *)(LPWSTR, LPWSTR, LPWSTR, LPDWORD))GetProcAddress(hModule, "HrLanConnectionNameFromGuidOrPath");
+   }
+#elif HAVE_SYS_UTSNAME_H
+   struct utsname un;
+   char szName[MAX_PATH];
+   int i;
+
+   if (uname(&un) != -1)
+   {
+      // Convert system name to lowercase
+      for(i = 0; un.sysname[i] != 0; i++)
+         un.sysname[i] = tolower(un.sysname[i]);
+      snprintf(szName, MAX_PATH, LIBDIR "/libnsm_%s" SHL_SUFFIX, un.sysname);
+
+      m_hSubAgent = DLOpen(szName, szErrorText);
+      if (m_hSubAgent != NULL)
+      {
+         imp_NxSubAgentGetIfList = (BOOL (*)(NETXMS_VALUES_LIST *))DLGetSymbolAddr(m_hSubAgent, "__NxSubAgentGetIfList", NULL);
+         imp_NxSubAgentGetArpCache = (BOOL (*)(NETXMS_VALUES_LIST *))DLGetSymbolAddr(m_hSubAgent, "__NxSubAgentGetArpCache", NULL);
+         if ((imp_NxSubAgentGetIfList == NULL) &&
+             (imp_NxSubAgentGetArpCache == NULL))
+         {
+            DLClose(m_hSubAgent);
+            m_hSubAgent = NULL;
+         }
+      }
    }
 #endif
 }
@@ -155,48 +184,58 @@ static ARP_CACHE *SysGetLocalArpCache(void)
 
    free(sysArpCache);
 #else
-   FILE *fp;
-   char szBuffer[256], szIpAddr[256], szMacAddr[256], szIfName[256];
-   char *pNext;
-   DWORD i;
+   NETXMS_VALUES_LIST list;
+   TCHAR szByte[4], *pBuf, *pChar;
+   DWORD i, j;
 
-   fp = fopen("/proc/net/arp", "r");
-   if (fp != NULL)
+   if (imp_NxSubAgentGetArpCache != NULL)
    {
-      pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
-      pArpCache->dwNumEntries = 0;
-      pArpCache->pEntries = NULL;
-
-      fgets(szBuffer, 255, fp);  // Skip first line
-
-      while(1)
+      if (imp_NxSubAgentGetArpCache(&list))
       {
-         fgets(szBuffer, 255, fp);
-         if (feof(fp))
-            break;
+         // Create empty structure
+         pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
+         pArpCache->dwNumEntries = list.dwNumStrings;
+         pArpCache->pEntries = (ARP_ENTRY *)malloc(sizeof(ARP_ENTRY) * list.dwNumStrings);
+         memset(pArpCache->pEntries, 0, sizeof(ARP_ENTRY) * list.dwNumStrings);
 
-         // Remove newline character
-         pNext = strchr(szBuffer, '\n');
-         if (pNext != NULL)
-            *pNext = 0;
+         szByte[2] = 0;
 
-         // Field #1 is IP address, #4 is MAC address and #6 is device
-         pNext = ExtractWord(szBuffer, szIpAddr);
-         pNext = ExtractWord(pNext, szMacAddr);
-         pNext = ExtractWord(pNext, szMacAddr);
-         pNext = ExtractWord(pNext, szMacAddr);
-         pNext = ExtractWord(pNext, szIfName);
-         pNext = ExtractWord(pNext, szIfName);
+         // Parse data lines
+         // Each line has form of XXXXXXXXXXXX a.b.c.d n
+         // where XXXXXXXXXXXX is a MAC address (12 hexadecimal digits)
+         // a.b.c.d is an IP address in decimal dotted notation
+         // n is an interface index
+         for(i = 0; i < list.dwNumStrings; i++)
+         {
+            pBuf = list.ppStringList[i];
+            if (_tcslen(pBuf) < 20)     // Invalid line
+               continue;
 
-         // Create new entry in ARP_CACHE structure
-         i = pArpCache->dwNumEntries++;
-         pArpCache->pEntries = (ARP_ENTRY *)realloc(pArpCache->pEntries,
-                                 sizeof(ARP_ENTRY) * pArpCache->dwNumEntries);
-         pArpCache->pEntries[i].dwIndex = InterfaceIndexFromName(szIfName);
-         pArpCache->pEntries[i].dwIpAddr = ntohl(inet_addr(szIpAddr));
-         StrToMac(szMacAddr, pArpCache->pEntries[i].bMacAddr);
+            // MAC address
+            for(j = 0; j < 6; j++)
+            {
+               memcpy(szByte, pBuf, sizeof(TCHAR) * 2);
+               pArpCache->pEntries[i].bMacAddr[j] = (BYTE)_tcstol(szByte, NULL, 16);
+               pBuf+=2;
+            }
+
+            // IP address
+            while(*pBuf == ' ')
+               pBuf++;
+            pChar = _tcschr(pBuf, _T(' '));
+            if (pChar != NULL)
+               *pChar = 0;
+            pArpCache->pEntries[i].dwIpAddr = ntohl(_t_inet_addr(pBuf));
+
+            // Interface index
+            if (pChar != NULL)
+               pArpCache->pEntries[i].dwIndex = _tcstoul(pChar + 1, NULL, 10);
+         }
+
+         for(i = 0; i < list.dwNumStrings; i++)
+            safe_free(list.ppStringList[i]);
+         safe_free(list.ppStringList);
       }
-      fclose(fp);
    }
 #endif
 
@@ -282,96 +321,81 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
    free(pBuffer);
 
 #else
+   NETXMS_VALUES_LIST list;
+   DWORD i, dwBits;
+   TCHAR *pChar, *pBuf;
 
-   struct if_nameindex *ifni;
-   struct ifreq ifrq;
-   int i, iSock, iCount;
-   BOOL bIoFailed = FALSE;
-
-   ifni = if_nameindex();
-   if (ifni != NULL)
+   if (imp_NxSubAgentGetIfList != NULL)
    {
-      iSock = socket(AF_INET, SOCK_DGRAM, 0);
-      if (iSock != -1)
+      if (imp_NxSubAgentGetIfList(&list))
       {
-         // Count interfaces
-         for(iCount = 0; ifni[iCount].if_index != 0; iCount++);
-
-         // Allocate and initialize interface list structure
          pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
-         pIfList->iNumEntries = iCount;
-         pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * iCount);
-         memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * iCount);
-
-         for(i = 0; i < iCount; i++)
+         pIfList->iNumEntries = list.dwNumStrings;
+         pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * list.dwNumStrings);
+         memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * list.dwNumStrings);
+         for(i = 0; i < list.dwNumStrings; i++)
          {
-            // Interface name
-            strcpy(pIfList->pInterfaces[i].szName, ifni[i].if_name);
-            strcpy(ifrq.ifr_name, ifni[i].if_name);
+            pBuf = list.ppStringList[i];
 
-            // IP address
-            if (ioctl(iSock, SIOCGIFADDR, &ifrq) == 0)
+            // Index
+            pChar = _tcschr(pBuf, ' ');
+            if (pChar != NULL)
             {
-               memcpy(&pIfList->pInterfaces[i].dwIpAddr,
-                      &(((struct sockaddr_in *)&ifrq.ifr_addr)->sin_addr.s_addr),
-                      sizeof(DWORD));
-               pIfList->pInterfaces[i].dwIpAddr = ntohl(pIfList->pInterfaces[i].dwIpAddr);
+               *pChar = 0;
+               pIfList->pInterfaces[i].dwIndex = _tcstoul(pBuf, NULL, 10);
+               pBuf = pChar + 1;
             }
 
-            // IP netmask
-            if (ioctl(iSock, SIOCGIFNETMASK, &ifrq) == 0)
+            // Address and mask
+            pChar = _tcschr(pBuf, _T(' '));
+            if (pChar != NULL)
             {
-               memcpy(&pIfList->pInterfaces[i].dwIpNetMask,
-                      &(((struct sockaddr_in *)&ifrq.ifr_addr)->sin_addr.s_addr),
-                      sizeof(DWORD));
-               pIfList->pInterfaces[i].dwIpNetMask = ntohl(pIfList->pInterfaces[i].dwIpNetMask);
+               TCHAR *pSlash;
+
+               *pChar = 0;
+               pSlash = _tcschr(pBuf, _T('/'));
+               if (pSlash != NULL)
+               {
+                  *pSlash = 0;
+                  pSlash++;
+               }
+               else     // Just a paranoia protection, should'n happen if agent working correctly
+               {
+                  pSlash = _T("24");
+               }
+               pIfList->pInterfaces[i].dwIpAddr = ntohl(_t_inet_addr(pBuf));
+               dwBits = _tcstoul(pSlash, NULL, 10);
+               pIfList->pInterfaces[i].dwIpNetMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
+               pBuf = pChar + 1;
             }
 
             // Interface type
-#if HAVE_DECL_SIOCGIFHWADDR
-            if (ioctl(iSock, SIOCGIFHWADDR, &ifrq) == 0)
+            pChar = _tcschr(pBuf, ' ');
+            if (pChar != NULL)
             {
-               switch(ifrq.ifr_hwaddr.sa_family)
-               {
-                  case ARPHRD_ETHER:
-                     pIfList->pInterfaces[i].dwType = IFTYPE_ETHERNET_CSMACD;
-                     break;
-                  case ARPHRD_SLIP:
-                  case ARPHRD_CSLIP:
-                  case ARPHRD_SLIP6:
-                  case ARPHRD_CSLIP6:
-                     pIfList->pInterfaces[i].dwType = IFTYPE_SLIP;
-                     break;
-                  case ARPHRD_PPP:
-                     pIfList->pInterfaces[i].dwType = IFTYPE_PPP;
-                     break;
-                  case ARPHRD_LOOPBACK:
-                     pIfList->pInterfaces[i].dwType = IFTYPE_SOFTWARE_LOOPBACK;
-                     break;
-                  case ARPHRD_FDDI:
-                     pIfList->pInterfaces[i].dwType = IFTYPE_FDDI;
-                     break;
-                  default:
-                     pIfList->pInterfaces[i].dwType = IFTYPE_OTHER;
-                     break;
-               }
+               *pChar = 0;
+               pIfList->pInterfaces[i].dwType = _tcstoul(pBuf, NULL, 10);
+               pBuf = pChar + 1;
             }
-#else
-            pIfList->pInterfaces[i].dwType = 0;    // Unknown type
-#endif
 
-            // Interface index
-            pIfList->pInterfaces[i].dwIndex = ifni[i].if_index;
+            // MAC address
+            pChar = _tcschr(pBuf, ' ');
+            if (pChar != NULL)
+            {
+               *pChar = 0;
+               StrToBin(pBuf, pIfList->pInterfaces[i].bMacAddr, MAC_ADDR_LENGTH);
+               pBuf = pChar + 1;
+            }
+
+            // Name
+            nx_strncpy(pIfList->pInterfaces[i].szName, pBuf, MAX_OBJECT_NAME - 1);
          }
-         close(iSock);
-      }
-      if_freenameindex(ifni);
-   }
-   else
-   {
-      WriteLog(MSG_IFNAMEINDEX_FAILED, EVENTLOG_ERROR_TYPE, "e", errno);
-   }
 
+         for(i = 0; i < list.dwNumStrings; i++)
+            safe_free(list.ppStringList[i]);
+         safe_free(list.ppStringList);
+      }
+   }
 #endif
 
    return pIfList;

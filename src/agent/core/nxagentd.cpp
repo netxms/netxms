@@ -493,7 +493,7 @@ void LoadPlatformSubagent(void)
       // Convert system name to lowercase
       for(i = 0; un.sysname[i] != 0; i++)
          un.sysname[i] = tolower(un.sysname[i]);
-      sprintf(szName, LIBDIR "/libnsm_%s.so", un.sysname);
+      sprintf(szName, LIBDIR "/libnsm_%s" SHL_SUFFIX, un.sysname);
       LoadSubAgent(szName);
    }
 #endif

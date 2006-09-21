@@ -647,7 +647,9 @@ ARP_CACHE *AgentConnection::GetArpCache(void)
             pArpCache->pEntries[i].dwIndex = _tcstoul(pChar + 1, NULL, 10);
       }
 
+      Lock();
       DestroyResultData();
+      Unlock();
    }
    return pArpCache;
 }
