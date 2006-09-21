@@ -177,6 +177,8 @@ private:
    RL_Row **m_ppRowList;
 
 public:
+	void RestoreColumns(TCHAR *pszSection, TCHAR *pszPrefix);
+	void SaveColumns(TCHAR *pszSection, TCHAR *pszPrefix);
 	int GetSelectionCount(void);
 	void SetNegationFlag(int nRow, int nCol, BOOL bNegate);
 	void SetCellText(int iRow, int iColumn, char *pszText);

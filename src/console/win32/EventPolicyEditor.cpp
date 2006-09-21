@@ -143,13 +143,14 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndRuleList.SetImageList(m_pImageList);
 
    // Setup columns
-   m_wndRuleList.InsertColumn(0, "No.", 35, CF_CENTER | CF_TITLE_COLOR | CF_NON_SELECTABLE);
-   m_wndRuleList.InsertColumn(1, "Source", 150);
-   m_wndRuleList.InsertColumn(2, "Event", 150);
-   m_wndRuleList.InsertColumn(3, "Severity", 90, CF_NON_SELECTABLE);
-   m_wndRuleList.InsertColumn(4, "Alarm", 150, CF_NON_SELECTABLE);
-   m_wndRuleList.InsertColumn(5, "Action", 150);
-   m_wndRuleList.InsertColumn(6, "Comments", 200, CF_TEXTBOX | CF_NON_SELECTABLE);
+   m_wndRuleList.InsertColumn(0, _T("No."), 35, CF_CENTER | CF_TITLE_COLOR | CF_NON_SELECTABLE);
+   m_wndRuleList.InsertColumn(1, _T("Source"), 150);
+   m_wndRuleList.InsertColumn(2, _T("Event"), 150);
+   m_wndRuleList.InsertColumn(3, _T("Severity"), 90, CF_NON_SELECTABLE);
+   m_wndRuleList.InsertColumn(4, _T("Alarm"), 150, CF_NON_SELECTABLE);
+   m_wndRuleList.InsertColumn(5, _T("Action"), 150);
+   m_wndRuleList.InsertColumn(6, _T("Comments"), 200, CF_TEXTBOX | CF_NON_SELECTABLE);
+   m_wndRuleList.RestoreColumns(_T("EventEditor"), _T("RuleList"));
 
    // Fill rule list with existing rules
    for(i = 0; i < m_pEventPolicy->dwNumRules; i++)
@@ -185,6 +186,8 @@ void CEventPolicyEditor::OnClose()
 {
    DWORD dwResult;
    int iAnswer = IDNO;
+
+   m_wndRuleList.SaveColumns(_T("EventEditor"), _T("RuleList"));
 
    if (m_bIsModified)
    {

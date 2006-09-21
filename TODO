@@ -8,7 +8,7 @@ GENERAL:
 - Finish FreeBSD subagent
 - Finish Solaris subagent
 - Finish AIX subagent
-- HP-UX subagent
+- Finish HP-UX subagent
 - Write README for NetWare
 - Add ability to clear collected DCI data
 - Add possibility to set different polling timeouts for different nodes
@@ -26,9 +26,6 @@ SERVER:
 
 - Implement sending of all alarms from database
 - Check if object indexes always locked when used
-- Remove system-dependent code for getting interface list and ARP cache
-  from management server. Server should rely on SNMP or native agent for
-  this functionality.
 - Optimize SNMP subsystem
 - Add special handling for HP iLO boards
 - Add logging API for database drivers
@@ -37,9 +34,11 @@ SERVER:
 - NxDbMgr -- backup before db recover
 - OSPF discovery
 
+
 ALL AGENTS:
 - Add Process.Count($1,$2,$3), where $3 is process command line
 - Check PhysicalDisk.* on external controllers
+
 
 LINUX AGENT:
 

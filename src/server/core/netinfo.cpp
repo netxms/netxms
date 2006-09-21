@@ -35,10 +35,6 @@
 #include <sys/utsname.h>
 #endif
 
-#if HAVE_NET_IF_H
-#include <net/if.h>
-#endif
-
 #endif   /* _WIN32 */
 
 
@@ -72,7 +68,7 @@ void InitLocalNetInfo(void)
    }
 #elif HAVE_SYS_UTSNAME_H
    struct utsname un;
-   char szName[MAX_PATH];
+   char szName[MAX_PATH], szErrorText[256];
    int i;
 
    if (uname(&un) != -1)
@@ -92,7 +88,19 @@ void InitLocalNetInfo(void)
          {
             DLClose(m_hSubAgent);
             m_hSubAgent = NULL;
+            WriteLog(MSG_PLATFORM_SUBAGENT_NOT_LOADED, EVENTLOG_ERROR_TYPE,
+                     "ss", szName, _T("Subagent doesn't provide any usable parameters"));
          }
+         else
+         {
+            WriteLog(MSG_PLATFORM_SUBAGENT_LOADED,
+                     EVENTLOG_INFORMATION_TYPE, "s", szName);
+         }
+      }
+      else
+      {
+         WriteLog(MSG_PLATFORM_SUBAGENT_NOT_LOADED, EVENTLOG_ERROR_TYPE,
+                  "ss", szName, szErrorText);
       }
    }
 #endif
@@ -118,20 +126,6 @@ void StrToMac(char *pszStr, BYTE *pBuffer)
       pBuffer[4] = (BYTE)byte5;
       pBuffer[5] = (BYTE)byte6;
    }
-}
-
-
-//
-// Get interface index from name
-//
-
-static DWORD InterfaceIndexFromName(char *pszIfName)
-{
-#if HAVE_IF_NAMETOINDEX
-   return if_nametoindex(pszIfName);
-#else
-   return 0;   // By default, return 0, which means error
-#endif
 }
 
 
@@ -353,7 +347,7 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
                   *pSlash = 0;
                   pSlash++;
                }
-               else     // Just a paranoia protection, should'n happen if agent working correctly
+               else     // Just a paranoia protection, should'n happen if subagent working correctly
                {
                   pSlash = _T("24");
                }
@@ -403,18 +397,21 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
 ARP_CACHE *GetLocalArpCache(void)
 {
    ARP_CACHE *pArpCache = NULL;
-   AgentConnection conn(inet_addr("127.0.0.1"));
 
-   // Try to get local interface list from agent via loopback address
-   if (conn.Connect(g_pServerKey))
-   {
-      pArpCache = conn.GetArpCache();
-      conn.Disconnect();
-   }
+   // Get ARP cache from built-in code or platform subagent
+   pArpCache = SysGetLocalArpCache();
 
-   // Use built-in code as last resort
+   // Try to get ARP cache from agent via loopback address
    if (pArpCache == NULL)
-      pArpCache = SysGetLocalArpCache();
+   {
+      AgentConnection conn(inet_addr("127.0.0.1"));
+
+      if (conn.Connect(g_pServerKey))
+      {
+         pArpCache = conn.GetArpCache();
+         conn.Disconnect();
+      }
+   }
 
    return pArpCache;
 }
@@ -427,18 +424,21 @@ ARP_CACHE *GetLocalArpCache(void)
 INTERFACE_LIST *GetLocalInterfaceList(void)
 {
    INTERFACE_LIST *pIfList = NULL;
-   AgentConnection conn(inet_addr("127.0.0.1"));
+
+   // Get interface list from built-in code or platform subagent
+   pIfList = SysGetLocalIfList();
 
    // Try to get local interface list from agent via loopback address
-   if (conn.Connect(g_pServerKey))
-   {
-      pIfList = conn.GetInterfaceList();
-      conn.Disconnect();
-   }
-
-   // Use built-in code as last resort
    if (pIfList == NULL)
-      pIfList = SysGetLocalIfList();
+   {
+      AgentConnection conn(inet_addr("127.0.0.1"));
+
+      if (conn.Connect(g_pServerKey))
+      {
+         pIfList = conn.GetInterfaceList();
+         conn.Disconnect();
+      }
+   }
 
    CleanInterfaceList(pIfList);
    return pIfList;

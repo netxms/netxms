@@ -566,4 +566,16 @@ Language=English
 Database driver "%1" cannot be loaded because of API version mismatch (driver: %3; server: %2)
 .
 
+MessageId=
+SymbolicName=MSG_PLATFORM_SUBAGENT_LOADED
+Language=English
+Platform subagent "%1" successfully loaded
+.
+
+MessageId=
+SymbolicName=MSG_PLATFORM_SUBAGENT_NOT_LOADED
+Language=English
+Cannot loads platform subagent "%1": %2
+.
+
 ;#endif

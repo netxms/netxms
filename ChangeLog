@@ -3,6 +3,8 @@
 *
 
 - Threshold state now saved across NetXMS server restarts
+- Windows console:
+	- Event processing policy editor improved
 - Fixed issues: #104, #109, #111
 
 

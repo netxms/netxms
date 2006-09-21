@@ -579,7 +579,7 @@ int CRuleList::InsertColumn(int iInsertBefore, char *pszText, int iWidth, DWORD 
    
    RecalcWidth();
    UpdateScrollBars();
-   m_wndHeader.SetWindowPos(NULL, 0, 0, m_iTotalWidth, RULE_HEADER_HEIGHT, SWP_NOZORDER);
+   m_wndHeader.SetWindowPos(NULL, -m_iXOrg, 0, m_iTotalWidth, RULE_HEADER_HEIGHT, SWP_NOZORDER);
    return iNewCol;
 }
 
@@ -697,7 +697,7 @@ void CRuleList::OnHeaderBeginTrack(NMHEADER *pHdrInfo, LRESULT *pResult)
 {
    int x;
 
-   x = GetColumnStartPos(pHdrInfo->iItem) + pHdrInfo->pitem->cxy;
+   x = GetColumnStartPos(pHdrInfo->iItem) + pHdrInfo->pitem->cxy - m_iXOrg;
    DrawShadowLine(x, RULE_HEADER_HEIGHT, x, m_iTotalHeight + RULE_HEADER_HEIGHT);
    *pResult = 0;
 }
@@ -713,9 +713,9 @@ void CRuleList::OnHeaderTrack(NMHEADER *pHdrInfo, LRESULT *pResult)
 
    // Draw line at old and new column width
    sx = GetColumnStartPos(pHdrInfo->iItem);
-   x = sx + m_pColList[pHdrInfo->iItem].m_iWidth;
+   x = sx + m_pColList[pHdrInfo->iItem].m_iWidth - m_iXOrg;
    DrawShadowLine(x, RULE_HEADER_HEIGHT, x, m_iTotalHeight + RULE_HEADER_HEIGHT);
-   x = sx + pHdrInfo->pitem->cxy;
+   x = sx + pHdrInfo->pitem->cxy - m_iXOrg;
    DrawShadowLine(x, RULE_HEADER_HEIGHT, x, m_iTotalHeight + RULE_HEADER_HEIGHT);
 
    // New column width
@@ -732,7 +732,7 @@ void CRuleList::OnHeaderTrack(NMHEADER *pHdrInfo, LRESULT *pResult)
 void CRuleList::OnHeaderEndTrack(NMHEADER *pHdrInfo, LRESULT *pResult)
 {
    RecalcWidth();
-   m_wndHeader.SetWindowPos(NULL, 0, 0, m_iTotalWidth, RULE_HEADER_HEIGHT, SWP_NOZORDER);
+   m_wndHeader.SetWindowPos(NULL, -m_iXOrg, 0, m_iTotalWidth, RULE_HEADER_HEIGHT, SWP_NOZORDER);
    UpdateScrollBars();
    InvalidateRect(NULL);
 }
@@ -1584,4 +1584,52 @@ void CRuleList::OnContextMenu(CWnd* pWnd, CPoint point)
    }
 
    GetParent()->SendMessage(WM_CONTEXTMENU, (WPARAM)m_hWnd, MAKELPARAM(point.x, point.y));
+}
+
+
+//
+// Save column dimensions
+//
+
+void CRuleList::SaveColumns(TCHAR *pszSection, TCHAR *pszPrefix)
+{
+   int i;
+   TCHAR szParam[256];
+
+   _sntprintf(szParam, 256, _T("%s_CNT"), pszPrefix);
+   theApp.WriteProfileInt(pszSection, szParam, m_iNumColumns);
+
+   for(i = 0; i < m_iNumColumns; i++)
+   {
+      _sntprintf(szParam, 256, _T("%s_%d"), pszPrefix, i);
+      theApp.WriteProfileInt(pszSection, szParam, m_pColList[i].m_iWidth);
+   }
+}
+
+
+//
+// Restore column dimensions from registry
+//
+
+void CRuleList::RestoreColumns(TCHAR *pszSection, TCHAR *pszPrefix)
+{
+   int i, nCount;
+   TCHAR szParam[256];
+   HDITEM hdi;
+
+   _sntprintf(szParam, 256, _T("%s_CNT"), pszPrefix);
+   nCount = theApp.GetProfileInt(pszSection, szParam, 0);
+
+   hdi.mask = HDI_WIDTH;
+   for(i = 0; i < nCount; i++)
+   {
+      _sntprintf(szParam, 256, _T("%s_%d"), pszPrefix, i);
+      hdi.cxy = theApp.GetProfileInt(pszSection, szParam, 100);
+      m_pColList[i].m_iWidth = hdi.cxy;
+      m_wndHeader.SetItem(i, &hdi);
+   }
+
+   RecalcWidth();
+   UpdateScrollBars();
+   m_wndHeader.SetWindowPos(NULL, -m_iXOrg, 0, m_iTotalWidth, RULE_HEADER_HEIGHT, SWP_NOZORDER);
 }
