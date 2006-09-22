@@ -531,7 +531,6 @@ CREATE TABLE event_policy
 	flags integer not null,
 	comments SQL_TEXT not null,
 	script SQL_TEXT not null,
-	time_range_id integer not null,
 	alarm_message varchar(255) not null,
 	alarm_severity integer not null,
 	alarm_key varchar(255) not null,    // Alarm key (used for auto acknowlegment)
