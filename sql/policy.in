@@ -4,39 +4,39 @@
 ** ex: syntax=sql
 */
 
-INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key,script)
 	VALUES (0,7944,'Show alarm when node is down',
-		'%m',5,'NODE_DOWN_%i','NODE_DOWN_%i');
-INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+		'%m',5,'NODE_DOWN_%i','#00','#00');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key,script)
 	VALUES (1,7944,'Acknowlege node down alarms when node is up',
-		'%m',6,'#00','NODE_DOWN_%i');
-INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+		'%m',6,'#00','NODE_DOWN_%i','#00');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key,script)
 	VALUES (2,7944,'Show alarm when network service is down or in unknown state',
-		'%m',5,'SERVICE_DOWN_%i_%2','SERVICE_DOWN_%i_%2');
-INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+		'%m',5,'SERVICE_DOWN_%i_%2','#00','#00');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key,script)
 	VALUES (3,7944,'Acknowlege network service down/unknown alarms when service is up',
-		'%m',6,'#00','SERVICE_DOWN_%i_%2');
-INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+		'%m',6,'#00','SERVICE_DOWN_%i_%2','#00');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key,script)
 	VALUES (4,7944,'Show alarm when interface is down',
-		'%m',5,'IF_DOWN_%i_%1','IF_DOWN_%i_%1');
-INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+		'%m',5,'IF_DOWN_%i_%1','#00','#00');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key,script)
 	VALUES (5,7944,'Acknowlege interface down alarms when interface is up',
-		'%m',6,'#00','IF_DOWN_%i_%1');
-INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+		'%m',6,'#00','IF_DOWN_%i_%1','#00');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key,script)
 	VALUES (6,7944,'Generate alarm when incorrect network mask detected on interface',
-		'%m',2,'BAD_NETMASK_%i_%2','BAD_NETMASK_%i_%2');
-INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+		'%m',2,'BAD_NETMASK_%i_%2','#00','#00');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key,script)
 	VALUES (7,7944,'Generate alarm when MAC address change detected on interface',
-		'%m',1,'#00','#00');
-INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+		'%m',1,'#00','#00','#00');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key,script)
 	VALUES (8,7944,'Generate alarm when server enconters NXSL script execution error',
-		'%m',2,'SCRIPT_ERR_%1_%2','SCRIPT_ERR_%1_%2');
-INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+		'%m',2,'SCRIPT_ERR_%1_%2','#00','#00');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key,script)
 	VALUES (9,7944,'Show alarm when connection with backend database is lost',
-		'%m',4,'DB_CONN','DB_CONN');
-INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key)
+		'%m',4,'DB_CONN','#00','#00');
+INSERT INTO event_policy (rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key,script)
 	VALUES (10,7944,'Acknowlege DB connection loss alarm when connection restored',
-		'%m',6,'#00','DB_CONN');
+		'%m',6,'#00','DB_CONN','#00');
 
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (1,EVENT_NODE_UP);
