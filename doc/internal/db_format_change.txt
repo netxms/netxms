@@ -5,6 +5,7 @@
 - Column "current_state" added to table "thresholds"
 - Column "comments" added to table "object_properties"
 - Column "discovery_flags" removed from table "nodes"
+- Column "script" added to table "event_policy"
 - Table "alarm_notes" redesigned:
 	CREATE TABLE alarm_notes
 	(

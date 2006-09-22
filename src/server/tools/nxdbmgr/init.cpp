@@ -31,7 +31,7 @@ static BOOL IsEmptyQuery(char *pszQuery)
 {
    char *ptr;
 
-   for(ptr = pszQuery; *ptr != NULL; ptr++)
+   for(ptr = pszQuery; *ptr != 0; ptr++)
       if ((*ptr != ' ') && (*ptr != '\t') && (*ptr != '\r') && (*ptr != '\n'))
          return FALSE;
    return TRUE;
