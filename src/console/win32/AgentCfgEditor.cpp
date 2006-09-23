@@ -126,8 +126,8 @@ int CAgentCfgEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
    // Create edit control
    m_wndEditor.Create(_T("Edit"), WS_CHILD | WS_VISIBLE, rect, this, ID_EDIT_CTRL);
-   m_wndEditor.LoadLexer(_T("nxlexer.dll"));
-   m_wndEditor.SetLexer(_T("nxconfig"));
+   m_wndEditor.LoadLexer("nxlexer.dll");
+   m_wndEditor.SetLexer("nxconfig");
    m_wndEditor.SetKeywords(0, g_szConfigKeywords);
 
    m_dwTimer = SetTimer(1, 1000, NULL);

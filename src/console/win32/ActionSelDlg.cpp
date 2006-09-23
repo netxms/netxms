@@ -72,8 +72,8 @@ BOOL CActionSelDlg::OnInitDialog()
    // Setup list control
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
    m_wndListCtrl.GetClientRect(&rect);
-   m_wndListCtrl.InsertColumn(0, "Name", LVCFMT_LEFT, 200);
-   m_wndListCtrl.InsertColumn(1, "Type", LVCFMT_LEFT, 
+   m_wndListCtrl.InsertColumn(0, _T("Name"), LVCFMT_LEFT, 200);
+   m_wndListCtrl.InsertColumn(1, _T("Type"), LVCFMT_LEFT, 
                               rect.right - 200 - GetSystemMetrics(SM_CXVSCROLL));
    m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 	
@@ -118,7 +118,8 @@ void CActionSelDlg::OnOK()
    }
    else
    {
-      MessageBox("You should select at least one action", "Warning", MB_OK | MB_ICONEXCLAMATION);
+      MessageBox(_T("You should select at least one action"),
+                 _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
    }
 }
 

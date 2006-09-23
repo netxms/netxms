@@ -139,62 +139,62 @@ TCHAR *g_szSyslogFacility[] =
 };
 TCHAR *g_szInterfaceTypes[] = 
 {
-   "Unknown",
-   "Other",
-   "Regular 1822",
-   "HDH 1822",
-   "DDN X.25",
-   "RFC877 X.25",
-   "Ethernet CSMA/CD",
-   "ISO 802.3 CSMA/CD",
-   "ISO 802.4 Token Bus",
-   "ISO 802.5 Token Ring",
-   "ISO 802.6 MAN",
-   "StarLan",
-   "PROTEON 10 Mbps",
-   "PROTEON 80 Mbps",
-   "Hyper Channel",
-   "FDDI",
-   "LAPB",
-   "SDLC",
-   "DS1",
-   "E1",
-   "ISDN BRI",
-   "ISDN PRI",
-   "Proprietary Serial Pt-to-Pt",
-   "PPP",
-   "Software Loopback",
-   "EON (CLNP over IP)",
-   "Ethernet 3 Mbps",
-   "NSIP (XNS over IP)",
-   "SLIP",
-   "DS3",
-   "SMDS",
-   "Frame Relay",
-   "RS-232",
-   "PARA",
-   "ArcNet",
-   "ArcNet Plus",
-   "ATM",
-   "MIO X.25",
-   "SONET",
-   "X.25 PLE"
-   "ISO 88022 LLC",
-   "LocalTalk",
-   "SMDS DXI",
-   "Frame Relay Service",
-   "V.35",
-   "HSSI",
-   "HIPPI",
-   "Modem",
-   "AAL5",
-   "SONET PATH",
-   "SONET VT",
-   "SMDS ICIP",
-   "Proprietary Virtual",
-   "Proprietary Multiplexor",
-   "IEEE 802.12",
-   "FibreChannel"
+   _T("Unknown"),
+   _T("Other"),
+   _T("Regular 1822"),
+   _T("HDH 1822"),
+   _T("DDN X.25"),
+   _T("RFC877 X.25"),
+   _T("Ethernet CSMA/CD"),
+   _T("ISO 802.3 CSMA/CD"),
+   _T("ISO 802.4 Token Bus"),
+   _T("ISO 802.5 Token Ring"),
+   _T("ISO 802.6 MAN"),
+   _T("StarLan"),
+   _T("PROTEON 10 Mbps"),
+   _T("PROTEON 80 Mbps"),
+   _T("Hyper Channel"),
+   _T("FDDI"),
+   _T("LAPB"),
+   _T("SDLC"),
+   _T("DS1"),
+   _T("E1"),
+   _T("ISDN BRI"),
+   _T("ISDN PRI"),
+   _T("Proprietary Serial Pt-to-Pt"),
+   _T("PPP"),
+   _T("Software Loopback"),
+   _T("EON (CLNP over IP)"),
+   _T("Ethernet 3 Mbps"),
+   _T("NSIP (XNS over IP)"),
+   _T("SLIP"),
+   _T("DS3"),
+   _T("SMDS"),
+   _T("Frame Relay"),
+   _T("RS-232"),
+   _T("PARA"),
+   _T("ArcNet"),
+   _T("ArcNet Plus"),
+   _T("ATM"),
+   _T("MIO X.25"),
+   _T("SONET"),
+   _T("X.25 PLE"),
+   _T("ISO 88022 LLC"),
+   _T("LocalTalk"),
+   _T("SMDS DXI"),
+   _T("Frame Relay Service"),
+   _T("V.35"),
+   _T("HSSI"),
+   _T("HIPPI"),
+   _T("Modem"),
+   _T("AAL5"),
+   _T("SONET PATH"),
+   _T("SONET VT"),
+   _T("SMDS ICIP"),
+   _T("Proprietary Virtual"),
+   _T("Proprietary Multiplexor"),
+   _T("IEEE 802.12"),
+   _T("FibreChannel")
 };
 TCHAR *g_szAuthMethod[] = { _T("NetXMS Password"), _T("RADIUS"), _T("RSA SecureID"), NULL };
 
@@ -226,14 +226,14 @@ TCHAR *g_pszItemOriginLong[] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP Ag
                                  _T("CheckPoint SNMP Agent") };
 TCHAR *g_pszItemDataType[] = { _T("Integer"), _T("Unsigned Integer"), _T("Int64"), 
                                _T("Unsigned Int64"), _T("String"), _T("Float") };
-char *g_pszItemStatus[] = { "Active", "Disabled", "Not supported" };
-char *g_pszThresholdOperation[] = { "<", "<=", "=", ">=", ">", "!=", "~", "!~" };
-char *g_pszThresholdOperationLong[] = { "less", "less or equal", "equal", 
-                                        "greater or equal", "greater", "not equal", 
-                                        "like", "not like" };
-char *g_pszThresholdFunction[] = { "last", "average", "deviation", "diff" };
-char *g_pszThresholdFunctionLong[] = { "last polled value", "average value",
-                                       "mean deviation", "diff with previous value" };
+TCHAR *g_pszItemStatus[] = { _T("Active"), _T("Disabled"), _T("Not supported") };
+TCHAR *g_pszThresholdOperation[] = { _T("<"), _T("<="), _T("="), _T(">="), _T(">"), _T("!="), _T("~"), _T("!~") };
+TCHAR *g_pszThresholdOperationLong[] = { _T("less"), _T("less or equal"), _T("equal"), 
+                                         _T("greater or equal"), _T("greater"), _T("not equal"), 
+                                         _T("like"), _T("not like") };
+TCHAR *g_pszThresholdFunction[] = { _T("last"), _T("average"), _T("deviation"), _T("diff") };
+TCHAR *g_pszThresholdFunctionLong[] = { _T("last polled value"), _T("average value"),
+                                       _T("mean deviation"), _T("diff with previous value") };
 
 
 //
@@ -242,51 +242,51 @@ char *g_pszThresholdFunctionLong[] = { "last polled value", "average value",
 
 CODE_TO_TEXT g_ctSnmpMibStatus[] =
 {
-   { MIB_STATUS_MANDATORY, "Mandatory" },
-   { MIB_STATUS_OPTIONAL, "Optional" },
-   { MIB_STATUS_OBSOLETE, "Obsolete" },
-   { MIB_STATUS_DEPRECATED, "Deprecated" },
-   { MIB_STATUS_CURRENT, "Current" },
+   { MIB_STATUS_MANDATORY, _T("Mandatory") },
+   { MIB_STATUS_OPTIONAL, _T("Optional") },
+   { MIB_STATUS_OBSOLETE, _T("Obsolete") },
+   { MIB_STATUS_DEPRECATED, _T("Deprecated") },
+   { MIB_STATUS_CURRENT, _T("Current") },
    { 0, NULL }    // End of list
 };
 CODE_TO_TEXT g_ctSnmpMibAccess[] =
 {
-   { MIB_ACCESS_READONLY, "Read" },
-   { MIB_ACCESS_READWRITE, "Read/Write" },
-   { MIB_ACCESS_WRITEONLY, "Write" },
-   { MIB_ACCESS_NOACCESS, "None" },
-   { MIB_ACCESS_NOTIFY, "Notify" },
-   { MIB_ACCESS_CREATE, "Create" },
+   { MIB_ACCESS_READONLY, _T("Read") },
+   { MIB_ACCESS_READWRITE, _T("Read/Write") },
+   { MIB_ACCESS_WRITEONLY, _T("Write") },
+   { MIB_ACCESS_NOACCESS, _T("None") },
+   { MIB_ACCESS_NOTIFY, _T("Notify") },
+   { MIB_ACCESS_CREATE, _T("Create") },
    { 0, NULL }    // End of list
 };
 CODE_TO_TEXT g_ctSnmpMibType[] =
 {
-   { MIB_TYPE_OTHER, "Other" },
-   { MIB_TYPE_OBJID, "Object ID" }, 
-   { MIB_TYPE_OCTETSTR, "Octet String" },
-   { MIB_TYPE_INTEGER, "Integer" },
-   { MIB_TYPE_NETADDR, "Net Address" },
-   { MIB_TYPE_IPADDR, "IP Address" },
-   { MIB_TYPE_COUNTER, "Counter" },
-   { MIB_TYPE_COUNTER32, "Counter" },
-   { MIB_TYPE_GAUGE, "Gauge" },
-   { MIB_TYPE_GAUGE32, "Gauge" },
-   { MIB_TYPE_TIMETICKS, "Timeticks" },
-   { MIB_TYPE_OPAQUE, "Opaque" },
-   { MIB_TYPE_NULL, "Null" },
-   { MIB_TYPE_COUNTER64, "Counter 64bit" },
-   { MIB_TYPE_BITSTRING, "Bit String" },
-   { MIB_TYPE_NSAPADDRESS, "NSAP Address" },
-   { MIB_TYPE_UINTEGER, "Unsigned Integer" },
-   { MIB_TYPE_UNSIGNED32, "Unsigned Integer 32bit" },
-   { MIB_TYPE_INTEGER32, "Integer 32bit" },
-   { MIB_TYPE_TRAPTYPE, "Trap" },
-   { MIB_TYPE_NOTIFTYPE, "Notification" },
-   { MIB_TYPE_OBJGROUP, "Object Group" },
-   { MIB_TYPE_NOTIFGROUP, "NOTIFGROUP" },
-   { MIB_TYPE_MODID, "Module ID" },
-   { MIB_TYPE_AGENTCAP, "AGENTCAP" },
-   { MIB_TYPE_MODCOMP, "MODCOMP" },
+   { MIB_TYPE_OTHER, _T("Other") },
+   { MIB_TYPE_OBJID, _T("Object ID") }, 
+   { MIB_TYPE_OCTETSTR, _T("Octet String") },
+   { MIB_TYPE_INTEGER, _T("Integer") },
+   { MIB_TYPE_NETADDR, _T("Net Address") },
+   { MIB_TYPE_IPADDR, _T("IP Address") },
+   { MIB_TYPE_COUNTER, _T("Counter") },
+   { MIB_TYPE_COUNTER32, _T("Counter") },
+   { MIB_TYPE_GAUGE, _T("Gauge") },
+   { MIB_TYPE_GAUGE32, _T("Gauge") },
+   { MIB_TYPE_TIMETICKS, _T("Timeticks") },
+   { MIB_TYPE_OPAQUE, _T("Opaque") },
+   { MIB_TYPE_NULL, _T("Null") },
+   { MIB_TYPE_COUNTER64, _T("Counter 64bit") },
+   { MIB_TYPE_BITSTRING, _T("Bit String") },
+   { MIB_TYPE_NSAPADDRESS, _T("NSAP Address") },
+   { MIB_TYPE_UINTEGER, _T("Unsigned Integer") },
+   { MIB_TYPE_UNSIGNED32, _T("Unsigned Integer 32bit") },
+   { MIB_TYPE_INTEGER32, _T("Integer 32bit") },
+   { MIB_TYPE_TRAPTYPE, _T("Trap") },
+   { MIB_TYPE_NOTIFTYPE, _T("Notification") },
+   { MIB_TYPE_OBJGROUP, _T("Object Group") },
+   { MIB_TYPE_NOTIFGROUP, _T("NOTIFGROUP") },
+   { MIB_TYPE_MODID, _T("Module ID") },
+   { MIB_TYPE_AGENTCAP, _T("AGENTCAP") },
+   { MIB_TYPE_MODCOMP, _T("MODCOMP") },
    { 0, NULL }    // End of list
 };
 
@@ -341,10 +341,10 @@ NXC_OBJECT_TOOL *g_pObjectToolList = NULL;
 // Configuration file keywords
 //
 
-TCHAR g_szConfigKeywords[] = "Action ControlServers EnableActions EnabledCiphers "
-                             "EnableProxy EnableSubagentAutoload ExecTimeout"
-                             "ExternalParameter FileStore ListenPort LogFile "
-                             "LogUnresolvedSymbols MasterServers MaxSessions "
-                             "PlatformSuffix RequireAuthentication "
-                             "RequireEncryption Servers SessionIdleTimeout "
-                             "SharedSecret StartupDelay SubAgent";
+char g_szConfigKeywords[] = "Action ControlServers EnableActions EnabledCiphers "
+                            "EnableProxy EnableSubagentAutoload ExecTimeout"
+                            "ExternalParameter FileStore ListenPort LogFile "
+                            "LogUnresolvedSymbols MasterServers MaxSessions "
+                            "PlatformSuffix RequireAuthentication "
+                            "RequireEncryption Servers SessionIdleTimeout "
+                            "SharedSecret StartupDelay SubAgent";

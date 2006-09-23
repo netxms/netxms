@@ -97,10 +97,10 @@ void CCreateObjectDlg::UpdateParentInfo()
 {
    if (m_pParentObject != NULL)
    {
-      char szBuffer[16];
+      TCHAR szBuffer[16];
 
       m_wndStaticName.SetWindowText(m_pParentObject->szName);
-      sprintf(szBuffer, "ID: %d", m_pParentObject->dwId);
+      _stprintf(szBuffer, _T("ID: %d"), m_pParentObject->dwId);
       m_wndStaticId.SetWindowText(szBuffer);
       m_wndParentIcon.SetIcon(
          g_pObjectNormalImageList->ExtractIcon(
@@ -108,7 +108,7 @@ void CCreateObjectDlg::UpdateParentInfo()
    }
    else
    {
-      m_wndStaticName.SetWindowText("");
-      m_wndStaticId.SetWindowText("<no parent>");
+      m_wndStaticName.SetWindowText(_T(""));
+      m_wndStaticId.SetWindowText(_T("<no parent>"));
    }
 }

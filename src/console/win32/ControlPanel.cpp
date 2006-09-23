@@ -62,7 +62,7 @@ static int CALLBACK CompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSo
    CListCtrl *pListCtrl = (CListCtrl *)lParamSort;
    CString strItem1 = pListCtrl->GetItemText(lParam1, 0);
    CString strItem2 = pListCtrl->GetItemText(lParam2, 0);
-   return strcmp(strItem2, strItem1);
+   return _tcscmp(strItem2, strItem1);
 }
 
 
@@ -105,19 +105,19 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_NORMAL);
 
    // Populate list with items
-   AddItem("Event Processing Policy", 0, ID_CONTROLPANEL_EVENTPOLICY);
-   AddItem("Users", 1, ID_CONTROLPANEL_USERS);
-   AddItem("Events", 2, ID_CONTROLPANEL_EVENTS);
-   AddItem("Actions", 3, ID_CONTROLPANEL_ACTIONS);
-   AddItem("SNMP Traps", 4, ID_CONTROLPANEL_SNMPTRAPS);
-   AddItem("Agent Packages", 5, ID_CONTROLPANEL_AGENTPKG);
-   AddItem("Server Configuration", 6, ID_CONTROLPANEL_SERVERCFG);
-   //AddItem("Log Processing", 7, ID_CONTROLPANEL_LOGPROCESSING);
-   AddItem("Object Tools", 8, ID_CONTROLPANEL_OBJECTTOOLS);
-   AddItem("Script Library", 9, ID_CONTROLPANEL_SCRIPTLIBRARY);
-   AddItem("Modules", 10, ID_CONTROLPANEL_MODULES);
-   //AddItem("View Builder", 10, ID_CONTROLPANEL_VIEWBUILDER);
-   AddItem("Agent Configurations", 11, ID_CONTROLPANEL_AGENTCONFIGS);
+   AddItem(_T("Event Processing Policy"), 0, ID_CONTROLPANEL_EVENTPOLICY);
+   AddItem(_T("Users"), 1, ID_CONTROLPANEL_USERS);
+   AddItem(_T("Events"), 2, ID_CONTROLPANEL_EVENTS);
+   AddItem(_T("Actions"), 3, ID_CONTROLPANEL_ACTIONS);
+   AddItem(_T("SNMP Traps"), 4, ID_CONTROLPANEL_SNMPTRAPS);
+   AddItem(_T("Agent Packages"), 5, ID_CONTROLPANEL_AGENTPKG);
+   AddItem(_T("Server Configuration"), 6, ID_CONTROLPANEL_SERVERCFG);
+   //AddItem(_T("Log Processing"), 7, ID_CONTROLPANEL_LOGPROCESSING);
+   AddItem(_T("Object Tools"), 8, ID_CONTROLPANEL_OBJECTTOOLS);
+   AddItem(_T("Script Library"), 9, ID_CONTROLPANEL_SCRIPTLIBRARY);
+   AddItem(_T("Modules"), 10, ID_CONTROLPANEL_MODULES);
+   //AddItem(_T("View Builder"), 10, ID_CONTROLPANEL_VIEWBUILDER);
+   AddItem(_T("Agent Configurations"), 11, ID_CONTROLPANEL_AGENTCONFIGS);
 
    m_wndListCtrl.SortItems(CompareItems, (DWORD)&m_wndListCtrl);
 
@@ -193,7 +193,7 @@ void CControlPanel::OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResul
 // Add new item to list
 //
 
-void CControlPanel::AddItem(char *pszName, int iImage, WPARAM wParam)
+void CControlPanel::AddItem(TCHAR *pszName, int iImage, WPARAM wParam)
 {
    int iIndex;
 

@@ -89,10 +89,10 @@ int CActionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "Name", LVCFMT_LEFT, 100);
-   m_wndListCtrl.InsertColumn(1, "Type", LVCFMT_LEFT, 70);
-   m_wndListCtrl.InsertColumn(2, "Recipient", LVCFMT_LEFT, 150);
-   m_wndListCtrl.InsertColumn(3, "Data", LVCFMT_LEFT, 350);
+   m_wndListCtrl.InsertColumn(0, _T("Name"), LVCFMT_LEFT, 100);
+   m_wndListCtrl.InsertColumn(1, _T("Type"), LVCFMT_LEFT, 70);
+   m_wndListCtrl.InsertColumn(2, _T("Recipient"), LVCFMT_LEFT, 150);
+   m_wndListCtrl.InsertColumn(3, _T("Data"), LVCFMT_LEFT, 350);
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 
@@ -141,7 +141,7 @@ void CActionEditor::OnSize(UINT nType, int cx, int cy)
 
 void CActionEditor::OnClose() 
 {
-   DoRequestArg1(NXCUnlockActionDB, g_hSession, "Unlocking action configuration database...");
+   DoRequestArg1(NXCUnlockActionDB, g_hSession, _T("Unlocking action configuration database..."));
 	CMDIChildWnd::OnClose();
 }
 
@@ -256,7 +256,7 @@ void CActionEditor::OnActionNew()
    if (dlg.DoModal() == IDOK)
    {
       dwResult = DoRequestArg3(NXCCreateAction, g_hSession, (void *)((LPCTSTR)dlg.m_strName), 
-                               &dwActionId, "Creating new action...");
+                               &dwActionId, _T("Creating new action..."));
       if (dwResult == RCC_SUCCESS)
       {
          LockActions();
@@ -274,7 +274,7 @@ void CActionEditor::OnActionNew()
             g_pActionList[i].dwId = dwActionId;
             g_pActionList[i].iType = ACTION_EXEC;
             nx_strncpy(g_pActionList[i].szName, dlg.m_strName, MAX_OBJECT_NAME);
-            g_pActionList[i].pszData = strdup("");
+            g_pActionList[i].pszData = _tcsdup(_T(""));
          }
 
          iItem = AddItem(&g_pActionList[i]);
@@ -285,7 +285,7 @@ void CActionEditor::OnActionNew()
       }
       else
       {
-         theApp.ErrorBox(dwResult, "Error creating action: %s");
+         theApp.ErrorBox(dwResult, _T("Error creating action: %s"));
       }
    }
 }
@@ -328,19 +328,20 @@ void CActionEditor::OnActionProperties()
                memset(&action, 0, sizeof(NXC_ACTION));
                action.dwId = m_wndListCtrl.GetItemData(iItem);
                action.iType = dlg.m_iType;
-               action.pszData = strdup((LPCTSTR)dlg.m_strData);
+               action.pszData = _tcsdup((LPCTSTR)dlg.m_strData);
                nx_strncpy(action.szEmailSubject, (LPCTSTR)dlg.m_strSubject, MAX_EMAIL_SUBJECT_LEN);
                nx_strncpy(action.szName, (LPCTSTR)dlg.m_strName, MAX_OBJECT_NAME);
                nx_strncpy(action.szRcptAddr, (LPCTSTR)dlg.m_strRcpt, MAX_RCPT_ADDR_LEN);
 
-               dwResult = DoRequestArg2(NXCModifyAction, g_hSession, &action, "Updating action configuration...");
+               dwResult = DoRequestArg2(NXCModifyAction, g_hSession, &action,
+                                        _T("Updating action configuration..."));
                if (dwResult == RCC_SUCCESS)
                {
                   ReplaceItem(iItem, &action);
                }
                else
                {
-                  theApp.ErrorBox(dwResult, "Error updating action configuration: %s");
+                  theApp.ErrorBox(dwResult, _T("Error updating action configuration: %s"));
                }
                free(action.pszData);
             }
@@ -348,7 +349,7 @@ void CActionEditor::OnActionProperties()
          else
          {
             UnlockActions();
-            MessageBox("Internal error: cannot find requested action entry in list", "Internal Error", MB_OK | MB_ICONSTOP);
+            MessageBox(_T("Internal error: cannot find requested action entry in list"), _T("Internal Error"), MB_OK | MB_ICONSTOP);
          }
       }
    }

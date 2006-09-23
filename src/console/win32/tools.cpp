@@ -30,13 +30,13 @@
 // Format time stamp
 //
 
-char *FormatTimeStamp(DWORD dwTimeStamp, char *pszBuffer, int iType)
+TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType)
 {
    struct tm *pTime;
-   static char *pFormat[] = { "%d-%b-%Y %H:%M:%S", "%H:%M:%S", "%b/%d", "%b" };
+   static TCHAR *pFormat[] = { _T("%d-%b-%Y %H:%M:%S"), _T("%H:%M:%S"), _T("%b/%d"), _T("%b") };
 
    pTime = localtime((const time_t *)&dwTimeStamp);
-   strftime(pszBuffer, 32, pFormat[iType], pTime);
+   _tcsftime(pszBuffer, 32, pFormat[iType], pTime);
    return pszBuffer;
 }
 
@@ -111,8 +111,8 @@ void BuildOIDString(SNMP_MIBObject *pNode, TCHAR *pszBuffer)
          dwSubIdList[dwPos++] = pCurr->OID();
       while(dwPos > 0)
       {
-         sprintf(&pszBuffer[iBufPos], ".%u", dwSubIdList[--dwPos]);
-         iBufPos = strlen(pszBuffer);
+         _stprintf(&pszBuffer[iBufPos], _T(".%u"), dwSubIdList[--dwPos]);
+         iBufPos = _tcslen(pszBuffer);
       }
    }
 }
@@ -132,7 +132,7 @@ TCHAR *BuildSymbolicOIDString(SNMP_MIBObject *pNode, DWORD dwInstance)
 
    if (pNode->Parent() == NULL)
    {
-      pszBuffer = (char *)malloc(4);
+      pszBuffer = (TCHAR *)malloc(8);
       pszBuffer[0] = 0;
    }
    else
@@ -140,15 +140,15 @@ TCHAR *BuildSymbolicOIDString(SNMP_MIBObject *pNode, DWORD dwInstance)
       for(dwPos = 0, dwSize = 0, pCurr = pNode; pCurr->Parent() != NULL; pCurr = pCurr->Parent())
       {
          pszSubIdList[dwPos] = CHECK_NULL(pCurr->Name());
-         dwSize += strlen(pszSubIdList[dwPos]) + 1;
+         dwSize += _tcslen(pszSubIdList[dwPos]) + 1;
          dwPos++;
       }
-      pszBuffer = (char *)malloc(dwSize + 16);
+      pszBuffer = (TCHAR *)malloc(dwSize + 16);
       for(iBufPos = 0; dwPos > 0;)
       {
-         iBufPos += sprintf(&pszBuffer[iBufPos], ".%s", pszSubIdList[--dwPos]);
+         iBufPos += _stprintf(&pszBuffer[iBufPos], _T(".%s"), pszSubIdList[--dwPos]);
       }
-      sprintf(&pszBuffer[iBufPos], ".%lu", dwInstance);
+      _stprintf(&pszBuffer[iBufPos], _T(".%lu"), dwInstance);
    }
    return pszBuffer;
 }
@@ -158,7 +158,7 @@ TCHAR *BuildSymbolicOIDString(SNMP_MIBObject *pNode, DWORD dwInstance)
 // Translate given code to text
 //
 
-const char *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const char *pszDefaultText)
+const TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText)
 {
    int i;
 
@@ -173,23 +173,23 @@ const char *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const char *pszDefa
 // Translate UNIX text to MSDOS (i.e. convert LF to CR/LF)
 //
 
-char *TranslateUNIXText(const char *pszText)
+TCHAR *TranslateUNIXText(const TCHAR *pszText)
 {
    int n;
-   const char *ptr;
-   char *dptr, *pDst;
+   const TCHAR *ptr;
+   TCHAR *dptr, *pDst;
 
    // Count newline characters
    for(ptr = pszText, n = 0; *ptr != 0; ptr++)
-      if (*ptr == '\n')
+      if (*ptr == _T('\n'))
          n++;
 
-   pDst = (char *)malloc(strlen(pszText) + n + 1);
+   pDst = (TCHAR *)malloc(_tcslen(pszText) + n + 1);
    for(ptr = pszText, dptr = pDst; *ptr != 0; ptr++)
-      if (*ptr == '\n')
+      if (*ptr == _T('\n'))
       {
-         *dptr++ = '\r';
-         *dptr++ = '\n';
+         *dptr++ = _T('\r');
+         *dptr++ = _T('\n');
       }
       else
       {
@@ -236,7 +236,7 @@ void CreateObjectImageList(void)
 {
    HICON hIcon;
    DWORD i, dwPos;
-   char szFileName[MAX_PATH];
+   TCHAR szFileName[MAX_PATH];
 
    // Create small (16x16) image list
    if (g_pObjectSmallImageList != NULL)
@@ -250,14 +250,14 @@ void CreateObjectImageList(void)
    g_pObjectNormalImageList = new CImageList;
    g_pObjectNormalImageList->Create(32, 32, ILC_COLOR24 | ILC_MASK, 16, 8);
 
-   strcpy(szFileName, g_szWorkDir);
-   strcat(szFileName, WORKDIR_IMAGECACHE);
-   strcat(szFileName, "\\");
-   dwPos = strlen(szFileName);
+   _tcscpy(szFileName, g_szWorkDir);
+   _tcscat(szFileName, WORKDIR_IMAGECACHE);
+   _tcscat(szFileName, _T("\\"));
+   dwPos = _tcslen(szFileName);
 
    for(i = 0; i < g_pSrvImageList->dwNumImages; i++)
    {
-      sprintf(&szFileName[dwPos], "%08x.ico", g_pSrvImageList->pImageList[i].dwId);
+      _stprintf(&szFileName[dwPos], _T("%08x.ico"), g_pSrvImageList->pImageList[i].dwId);
       
       // Load and add 16x16 image
       hIcon = (HICON)LoadImage(NULL, szFileName, IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
@@ -361,14 +361,14 @@ void UpdateActions(DWORD dwCode, NXC_ACTION *pAction)
             g_dwNumActions++;
             g_pActionList = (NXC_ACTION *)realloc(g_pActionList, sizeof(NXC_ACTION) * g_dwNumActions);
             memcpy(&g_pActionList[i], pAction, sizeof(NXC_ACTION));
-            g_pActionList[i].pszData = strdup(pAction->pszData);
+            g_pActionList[i].pszData = _tcsdup(pAction->pszData);
          }
          else
          {
             // Action with given id already exist, just update it
             safe_free(pCurrAction->pszData);
             memcpy(pCurrAction, pAction, sizeof(NXC_ACTION));
-            pCurrAction->pszData = strdup(pAction->pszData);
+            pCurrAction->pszData = _tcsdup(pAction->pszData);
          }
          break;
       case NX_NOTIFY_ACTION_DELETED:

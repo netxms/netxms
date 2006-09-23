@@ -21,7 +21,7 @@ public:
 
 // Operations
 public:
-	void AddMessage(char *pszMsg);
+	void AddMessage(TCHAR *pszMsg);
 
 // Overrides
 	// ClassWizard generated virtual function overrides

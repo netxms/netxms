@@ -1136,15 +1136,15 @@ void CConsoleApp::OnViewDebug()
 // Print debug information
 //
 
-void CConsoleApp::DebugPrintf(char *szFormat, ...)
+void CConsoleApp::DebugPrintf(TCHAR *szFormat, ...)
 {
    if (m_viewState[VIEW_DEBUG].bActive)
    {
-      char szBuffer[1024];
+      TCHAR szBuffer[1024];
       va_list args;
 
       va_start(args, szFormat);
-      vsprintf(szBuffer, szFormat, args);
+      _vsntprintf(szBuffer, 1024, szFormat, args);
       va_end(args);
 
       ((CDebugFrame *)m_viewState[VIEW_DEBUG].pWnd)->AddMessage(szBuffer);
@@ -1397,7 +1397,8 @@ void CConsoleApp::ErrorBox(DWORD dwError, TCHAR *pszMessage, TCHAR *pszTitle)
 // Show window with DCI's data
 //
 
-CMDIChildWnd *CConsoleApp::ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *pszItemName, TCHAR *pszParams)
+CMDIChildWnd *CConsoleApp::ShowDCIData(DWORD dwNodeId, DWORD dwItemId,
+                                       TCHAR *pszItemName, TCHAR *pszParams)
 {
    CDCIDataView *pWnd;
 

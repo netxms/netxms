@@ -270,14 +270,15 @@ public:
 
 	CMDIChildWnd *ShowDCIGraph(DWORD dwNodeId, DWORD dwNumItems, NXC_DCI **ppItemList,
                               TCHAR *pszItemName, TCHAR *pszParams = NULL);
-	CMDIChildWnd *ShowDCIData(DWORD dwNodeId, DWORD dwItemId, char *pszItemName, TCHAR *pszParams = NULL);
+	CMDIChildWnd *ShowDCIData(DWORD dwNodeId, DWORD dwItemId,
+                             TCHAR *pszItemName, TCHAR *pszParams = NULL);
 	void ErrorBox(DWORD dwError, TCHAR *pszMessage = NULL, TCHAR *pszTitle = NULL);
 	void SetObjectMgmtStatus(NXC_OBJECT *pObject, BOOL bIsManaged);
 	void StartObjectDCEditor(NXC_OBJECT *pObject);
 	CMenu * GetContextMenu(int iIndex);
 	void ObjectProperties(DWORD dwObjectId);
-	void DebugPrintf(char *szFormat, ...);
-   void DebugCallback(char *pszMsg)
+	void DebugPrintf(TCHAR *szFormat, ...);
+   void DebugCallback(TCHAR *pszMsg)
    {
       if (m_viewState[VIEW_DEBUG].bActive)
          ((CDebugFrame *)m_viewState[VIEW_DEBUG].pWnd)->AddMessage(pszMsg);

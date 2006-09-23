@@ -54,8 +54,8 @@ int CDebugFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "Time", LVCFMT_LEFT, 120);
-   m_wndListCtrl.InsertColumn(1, "Message", LVCFMT_LEFT, 600);
+   m_wndListCtrl.InsertColumn(0, _T("Time"), LVCFMT_LEFT, 120);
+   m_wndListCtrl.InsertColumn(1, _T("Message"), LVCFMT_LEFT, 600);
 	
    theApp.OnViewCreate(VIEW_DEBUG, this);
 
@@ -117,16 +117,16 @@ BOOL CDebugFrame::PreCreateWindow(CREATESTRUCT& cs)
 // Add new message to log
 //
 
-void CDebugFrame::AddMessage(char *pszMsg)
+void CDebugFrame::AddMessage(TCHAR *pszMsg)
 {
    int iIdx;
    time_t currTime;
    struct tm *ptm;
-   char szBuffer[64];
+   TCHAR szBuffer[64];
 
    currTime = time(NULL);
    ptm = localtime((const time_t *)&currTime);
-   strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);
+   _tcsftime(szBuffer, 32, _T("%d-%b-%Y %H:%M:%S"), ptm);
    iIdx = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, 0);
    if (iIdx != -1)
    {

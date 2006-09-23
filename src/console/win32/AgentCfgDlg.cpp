@@ -69,8 +69,8 @@ BOOL CAgentCfgDlg::OnInitDialog()
    m_wndEditText.Attach(::GetDlgItem(m_hWnd, IDC_EDIT_CONFIG));
    m_wndEditText.SetDefaults();
    m_wndEditText.SetText((LPCTSTR)m_strText);
-   m_wndEditText.LoadLexer(_T("nxlexer.dll"));
-   m_wndEditText.SetLexer(_T("nxconfig"));
+   m_wndEditText.LoadLexer("nxlexer.dll");
+   m_wndEditText.SetLexer("nxconfig");
    m_wndEditText.SetKeywords(0, g_szConfigKeywords);
 	
 	return TRUE;

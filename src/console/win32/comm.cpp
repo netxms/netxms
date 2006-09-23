@@ -45,7 +45,7 @@ static BOOL m_bClearCache = FALSE;
 // Set status text in wait window
 //
 
-inline void SetInfoText(HWND hWnd, char *pszText)
+inline void SetInfoText(HWND hWnd, TCHAR *pszText)
 {
    SendMessage(hWnd, NXCM_SET_INFO_TEXT, 0, (LPARAM)pszText);
 }
@@ -157,7 +157,7 @@ static DWORD WINAPI LoginThread(void *pArg)
 
          if (SendMessage(hWnd, NXCM_CHANGE_PASSWORD, 0, (LPARAM)szPassword))
          {
-            SetInfoText(hWnd, "Changing password...");
+            SetInfoText(hWnd, _T("Changing password..."));
             dwResult = NXCSetPassword(g_hSession, NXCGetCurrentUserId(g_hSession), szPassword);
          }
       }
@@ -170,7 +170,7 @@ static DWORD WINAPI LoginThread(void *pArg)
    // If successful, load container objects' categories
    if (dwResult == RCC_SUCCESS)
    {
-      SetInfoText(hWnd, "Loading container categories...");
+      SetInfoText(hWnd, _T("Loading container categories..."));
       dwResult = NXCLoadCCList(g_hSession, &g_pCCList);
    }
 
@@ -180,7 +180,7 @@ static DWORD WINAPI LoginThread(void *pArg)
       BYTE bsServerId[8];
       TCHAR szCacheFile[MAX_PATH + 32];
 
-      SetInfoText(hWnd, "Synchronizing objects...");
+      SetInfoText(hWnd, _T("Synchronizing objects..."));
       NXCGetServerID(g_hSession, bsServerId);
       _tcscpy(szCacheFile, g_szWorkDir);
       _tcscat(szCacheFile, WORKFILE_OBJECTCACHE);
@@ -196,13 +196,13 @@ static DWORD WINAPI LoginThread(void *pArg)
 
    if (dwResult == RCC_SUCCESS)
    {
-      SetInfoText(hWnd, "Loading user database...");
+      SetInfoText(hWnd, _T("Loading user database..."));
       dwResult = NXCLoadUserDB(g_hSession);
    }
 
    if (dwResult == RCC_SUCCESS)
    {
-      SetInfoText(hWnd, "Loading action configuration...");
+      SetInfoText(hWnd, _T("Loading action configuration..."));
       dwResult = NXCLoadActions(g_hSession, &g_dwNumActions, &g_pActionList);
       if (dwResult == RCC_ACCESS_DENIED)
          dwResult = RCC_SUCCESS;    // User may not have rights to see actions, it's ok here
@@ -214,7 +214,7 @@ static DWORD WINAPI LoginThread(void *pArg)
       TCHAR szFileName[MAX_PATH];
       BOOL bNeedDownload;
 
-      SetInfoText(hWnd, "Loading and initializing MIB files...");
+      SetInfoText(hWnd, _T("Loading and initializing MIB files..."));
       _tcscpy(szFileName, g_szWorkDir);
       _tcscat(szFileName, WORKDIR_MIBCACHE);
       _tcscat(szFileName, _T("\\netxms.mib"));
@@ -259,18 +259,18 @@ static DWORD WINAPI LoginThread(void *pArg)
 
    if (dwResult == RCC_SUCCESS)
    {
-      SetInfoText(hWnd, "Loading event information...");
+      SetInfoText(hWnd, _T("Loading event information..."));
       dwResult = NXCLoadEventDB(g_hSession);
    }
 
    // Synchronize images
    if (dwResult == RCC_SUCCESS)
    {
-      char szCacheDir[MAX_PATH];
+      TCHAR szCacheDir[MAX_PATH];
 
-      SetInfoText(hWnd, "Synchronizing images...");
-      strcpy(szCacheDir, g_szWorkDir);
-      strcat(szCacheDir, WORKDIR_IMAGECACHE);
+      SetInfoText(hWnd, _T("Synchronizing images..."));
+      _tcscpy(szCacheDir, g_szWorkDir);
+      _tcscat(szCacheDir, WORKDIR_IMAGECACHE);
       dwResult = NXCSyncImages(g_hSession, &g_pSrvImageList, szCacheDir, IMAGE_FORMAT_ICO);
       if (dwResult == RCC_SUCCESS)
          CreateObjectImageList();
@@ -281,7 +281,7 @@ static DWORD WINAPI LoginThread(void *pArg)
    {
       DWORD *pdwClassId, *pdwImageId;
 
-      SetInfoText(hWnd, "Loading default image list...");
+      SetInfoText(hWnd, _T("Loading default image list..."));
       dwResult = NXCLoadDefaultImageList(g_hSession, &g_dwDefImgListSize, &pdwClassId, &pdwImageId);
       if (dwResult == RCC_SUCCESS)
       {
@@ -300,7 +300,7 @@ static DWORD WINAPI LoginThread(void *pArg)
    // Load object tools
    if (dwResult == RCC_SUCCESS)
    {
-      SetInfoText(hWnd, "Loading object tools information...");
+      SetInfoText(hWnd, _T("Loading object tools information..."));
       dwResult = LoadObjectTools();
    }
 
@@ -398,7 +398,7 @@ static DWORD WINAPI RequestThread(void *pArg)
 // Perform request (common code)
 //
 
-static DWORD ExecuteRequest(RqData *pData, char *pszInfoText)
+static DWORD ExecuteRequest(RqData *pData, TCHAR *pszInfoText)
 {
    HANDLE hThread;
    DWORD dwThreadId, dwResult;
@@ -439,7 +439,7 @@ static DWORD ExecuteRequest(RqData *pData, char *pszInfoText)
 // Perform generic request without parameters
 //
 
-DWORD DoRequest(DWORD (* pFunc)(void), char *pszInfoText)
+DWORD DoRequest(DWORD (* pFunc)(void), TCHAR *pszInfoText)
 {
    RqData rqData;
 
@@ -454,7 +454,7 @@ DWORD DoRequest(DWORD (* pFunc)(void), char *pszInfoText)
 // Perform request with 1 parameter
 //
 
-DWORD DoRequestArg1(void *pFunc, void *pArg1, char *pszInfoText)
+DWORD DoRequestArg1(void *pFunc, void *pArg1, TCHAR *pszInfoText)
 {
    RqData rqData;
 
@@ -470,7 +470,7 @@ DWORD DoRequestArg1(void *pFunc, void *pArg1, char *pszInfoText)
 // Perform request with 2 parameters
 //
 
-DWORD DoRequestArg2(void *pFunc, void *pArg1, void *pArg2, char *pszInfoText)
+DWORD DoRequestArg2(void *pFunc, void *pArg1, void *pArg2, TCHAR *pszInfoText)
 {
    RqData rqData;
 
@@ -487,7 +487,7 @@ DWORD DoRequestArg2(void *pFunc, void *pArg1, void *pArg2, char *pszInfoText)
 // Perform request with 3 parameter
 //
 
-DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, char *pszInfoText)
+DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, TCHAR *pszInfoText)
 {
    RqData rqData;
 
@@ -506,7 +506,7 @@ DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, char *ps
 //
 
 DWORD DoRequestArg4(void *pFunc, void *pArg1, void *pArg2, void *pArg3, 
-                    void *pArg4, char *pszInfoText)
+                    void *pArg4, TCHAR *pszInfoText)
 {
    RqData rqData;
 
@@ -526,7 +526,7 @@ DWORD DoRequestArg4(void *pFunc, void *pArg1, void *pArg2, void *pArg3,
 //
 
 DWORD DoRequestArg5(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
-                    void *pArg5, char *pszInfoText)
+                    void *pArg5, TCHAR *pszInfoText)
 {
    RqData rqData;
 
@@ -547,7 +547,7 @@ DWORD DoRequestArg5(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
 //
 
 DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
-                    void *pArg5, void *pArg6, char *pszInfoText)
+                    void *pArg5, void *pArg6, TCHAR *pszInfoText)
 {
    RqData rqData;
 
@@ -569,7 +569,7 @@ DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
 //
 
 DWORD DoRequestArg7(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
-                    void *pArg5, void *pArg6, void *pArg7, char *pszInfoText)
+                    void *pArg5, void *pArg6, void *pArg7, TCHAR *pszInfoText)
 {
    RqData rqData;
 

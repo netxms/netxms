@@ -106,7 +106,7 @@ void CCondPropsGeneral::OnOK()
 
 	CPropertyPage::OnOK();
 
-   m_pUpdate->pszName = (char *)((LPCTSTR)m_strName);
+   m_pUpdate->pszName = (TCHAR *)((LPCTSTR)m_strName);
 
    // Active status
    m_wndComboActive.GetWindowText(szBuffer, 256);

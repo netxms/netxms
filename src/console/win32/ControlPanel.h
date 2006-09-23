@@ -31,7 +31,7 @@ public:
 
 // Implementation
 protected:
-	void AddItem(char *pszName, int iImage, WPARAM wParam);
+	void AddItem(TCHAR *pszName, int iImage, WPARAM wParam);
 	afx_msg void OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT* pResult);
 	CImageList *m_pImageList;
 	CListCtrl m_wndListCtrl;

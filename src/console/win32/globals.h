@@ -180,7 +180,7 @@ struct RqData
 struct CODE_TO_TEXT
 {
    int iCode;
-   char *pszText;
+   TCHAR *pszText;
 };
 
 
@@ -250,17 +250,18 @@ public:
 //
 
 DWORD DoLogin(BOOL bClearCache);
-DWORD DoRequest(DWORD (* pFunc)(void), char *pszInfoText);
-DWORD DoRequestArg1(void *pFunc, void *pArg1, char *pszInfoText);
-DWORD DoRequestArg2(void *pFunc, void *pArg1, void *pArg2, char *pszInfoText);
-DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, char *pszInfoText);
-DWORD DoRequestArg4(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, char *pszInfoText);
+DWORD DoRequest(DWORD (* pFunc)(void), TCHAR *pszInfoText);
+DWORD DoRequestArg1(void *pFunc, void *pArg1, TCHAR *pszInfoText);
+DWORD DoRequestArg2(void *pFunc, void *pArg1, void *pArg2, TCHAR *pszInfoText);
+DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, TCHAR *pszInfoText);
+DWORD DoRequestArg4(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4,
+                    TCHAR *pszInfoText);
 DWORD DoRequestArg5(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
-                    void *pArg5, char *pszInfoText);
+                    void *pArg5, TCHAR *pszInfoText);
 DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
-                    void *pArg5, void *pArg6, char *pszInfoText);
+                    void *pArg5, void *pArg6, TCHAR *pszInfoText);
 DWORD DoRequestArg7(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
-                    void *pArg5, void *pArg6, void *pArg7, char *pszInfoText);
+                    void *pArg5, void *pArg6, void *pArg7, TCHAR *pszInfoText);
 DWORD WINAPI PollerThread(void *pArg);
 
 
@@ -289,19 +290,19 @@ HBITMAP LoadPicture(TCHAR *pszFile, int nScaleFactor);
 // MIB functions
 //
 
-void BuildOIDString(SNMP_MIBObject *pNode, char *pszBuffer);
-char *BuildSymbolicOIDString(SNMP_MIBObject *pNode, DWORD dwInstance);
+void BuildOIDString(SNMP_MIBObject *pNode, TCHAR *pszBuffer);
+TCHAR *BuildSymbolicOIDString(SNMP_MIBObject *pNode, DWORD dwInstance);
 
 
 //
 // Utility functions
 //
 
-char *FormatTimeStamp(DWORD dwTimeStamp, char *pszBuffer, int iType);
+TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType);
 CSize GetWindowSize(CWnd *pWnd);
 void SelectListViewItem(CListCtrl *pListCtrl, int iItem);
-const char *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const char *pszDefaultText = "Unknown");
-char *TranslateUNIXText(const char *pszText);
+const TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText = _T("Unknown"));
+TCHAR *TranslateUNIXText(const TCHAR *pszText);
 void RestoreMDIChildPlacement(CMDIChildWnd *pWnd, WINDOWPLACEMENT *pwp);
 BOOL IsButtonChecked(CDialog *pWnd, int nCtrl);
 BOOL ExtractWindowParam(TCHAR *pszStr, TCHAR *pszParam, TCHAR *pszBuffer, int iSize);
@@ -355,16 +356,16 @@ extern TCHAR *g_szSyslogSeverity[];
 extern TCHAR *g_szSyslogFacility[];
 extern TCHAR *g_szAuthMethod[];
 extern COLORREF g_statusColorTable[];
-extern char *g_szObjectClass[];
-extern char *g_szInterfaceTypes[];
+extern TCHAR *g_szObjectClass[];
+extern TCHAR *g_szInterfaceTypes[];
 extern TCHAR *g_pszItemOrigin[];
 extern TCHAR *g_pszItemOriginLong[];
 extern TCHAR *g_pszItemDataType[];
-extern char *g_pszItemStatus[];
-extern char *g_pszThresholdOperation[];
-extern char *g_pszThresholdOperationLong[];
-extern char *g_pszThresholdFunction[];
-extern char *g_pszThresholdFunctionLong[];
+extern TCHAR *g_pszItemStatus[];
+extern TCHAR *g_pszThresholdOperation[];
+extern TCHAR *g_pszThresholdOperationLong[];
+extern TCHAR *g_pszThresholdFunction[];
+extern TCHAR *g_pszThresholdFunctionLong[];
 extern CODE_TO_TEXT g_ctSnmpMibStatus[];
 extern CODE_TO_TEXT g_ctSnmpMibAccess[];
 extern CODE_TO_TEXT g_ctSnmpMibType[];
@@ -383,7 +384,7 @@ extern NXC_OBJECT_TOOL *g_pObjectToolList;
 extern SNMP_MIBObject *g_pMIBRoot;
 extern ALARM_SOUND_CFG g_soundCfg;
 extern CFont g_fontCode;
-extern TCHAR g_szConfigKeywords[];
+extern char g_szConfigKeywords[];
 
 
 //

@@ -119,11 +119,19 @@ void CCreateNodeDlg::OnOK()
 
 void CCreateNodeDlg::OnButtonResolve() 
 {
-   TCHAR szHostName[256];
+   char szHostName[256];
    struct hostent *hs;
    DWORD dwAddr = INADDR_NONE;
 
+#ifdef UNICODE
+   WCHAR wszTemp[256];
+
+   m_wndObjectName.GetWindowText(wszTemp, 256);
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wszTemp, -1,
+                       szHostName, 256, NULL, NULL);
+#else
    m_wndObjectName.GetWindowText(szHostName, 256);
+#endif
    hs = gethostbyname(szHostName);
    if (hs != NULL)
    {

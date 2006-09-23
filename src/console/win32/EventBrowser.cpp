@@ -160,7 +160,7 @@ void CEventBrowser::AddEvent(NXC_EVENT *pEvent, BOOL bAppend)
 
       m_wndListCtrl.SetItemText(iIdx, 1, g_szStatusTextSmall[pEvent->dwSeverity]);
       pObject = NXCFindObjectById(g_hSession, pEvent->dwSourceId);
-      m_wndListCtrl.SetItemText(iIdx, 2, pObject ? pObject->szName : "<unknown>");
+      m_wndListCtrl.SetItemText(iIdx, 2, pObject ? pObject->szName : _T("<unknown>"));
       m_wndListCtrl.SetItemText(iIdx, 3, pEvent->szMessage);
 
       m_wndListCtrl.EnsureVisible(iIdx, FALSE);

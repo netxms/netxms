@@ -39,16 +39,16 @@ static int CALLBACK ItemCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
          iResult = COMPARE_NUMBERS(lParam1, lParam2);
          break;
       case 1:  // Source
-         iResult = stricmp(g_pszItemOrigin[pItem1->iSource], g_pszItemOrigin[pItem2->iSource]);
+         iResult = _tcsicmp(g_pszItemOrigin[pItem1->iSource], g_pszItemOrigin[pItem2->iSource]);
          break;
       case 2:  // Description
-         iResult = stricmp(pItem1->szDescription, pItem2->szDescription);
+         iResult = _tcsicmp(pItem1->szDescription, pItem2->szDescription);
          break;
       case 3:  // Parameter
-         iResult = stricmp(pItem1->szName, pItem2->szName);
+         iResult = _tcsicmp(pItem1->szName, pItem2->szName);
          break;
       case 4:  // Data type
-         iResult = stricmp(g_pszItemDataType[pItem1->iDataType], g_pszItemDataType[pItem2->iDataType]);
+         iResult = _tcsicmp(g_pszItemDataType[pItem1->iDataType], g_pszItemDataType[pItem2->iDataType]);
          break;
       case 5:  // Polling interval
          iResult = COMPARE_NUMBERS(pItem1->iPollingInterval, pItem2->iPollingInterval);
@@ -62,8 +62,8 @@ static int CALLBACK ItemCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
       case 8:  // Template
          pObject1 = NXCFindObjectById(g_hSession, pItem1->dwTemplateId);
          pObject2 = NXCFindObjectById(g_hSession, pItem2->dwTemplateId);
-         iResult = stricmp((pObject1 != NULL) ? pObject1->szName : _T(""),
-                           (pObject2 != NULL) ? pObject2->szName : _T(""));
+         iResult = _tcsicmp((pObject1 != NULL) ? pObject1->szName : _T(""),
+                            (pObject2 != NULL) ? pObject2->szName : _T(""));
          break;
       default:
          break;
@@ -188,15 +188,15 @@ int CDataCollectionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 55);
-   m_wndListCtrl.InsertColumn(1, "Source", LVCFMT_LEFT, 80);
-   m_wndListCtrl.InsertColumn(2, "Description", LVCFMT_LEFT, 150);
-   m_wndListCtrl.InsertColumn(3, "Parameter", LVCFMT_LEFT, 150);
-   m_wndListCtrl.InsertColumn(4, "Data type", LVCFMT_LEFT, 80);
-   m_wndListCtrl.InsertColumn(5, "Polling Interval", LVCFMT_LEFT, 80);
-   m_wndListCtrl.InsertColumn(6, "Retention Time", LVCFMT_LEFT, 80);
-   m_wndListCtrl.InsertColumn(7, "Status", LVCFMT_LEFT, 90);
-   m_wndListCtrl.InsertColumn(8, "Template", LVCFMT_LEFT, 120);
+   m_wndListCtrl.InsertColumn(0, _T("ID"), LVCFMT_LEFT, 55);
+   m_wndListCtrl.InsertColumn(1, _T("Source"), LVCFMT_LEFT, 80);
+   m_wndListCtrl.InsertColumn(2, _T("Description"), LVCFMT_LEFT, 150);
+   m_wndListCtrl.InsertColumn(3, _T("Parameter"), LVCFMT_LEFT, 150);
+   m_wndListCtrl.InsertColumn(4, _T("Data type"), LVCFMT_LEFT, 80);
+   m_wndListCtrl.InsertColumn(5, _T("Polling Interval"), LVCFMT_LEFT, 80);
+   m_wndListCtrl.InsertColumn(6, _T("Retention Time"), LVCFMT_LEFT, 80);
+   m_wndListCtrl.InsertColumn(7, _T("Status"), LVCFMT_LEFT, 90);
+   m_wndListCtrl.InsertColumn(8, _T("Template"), LVCFMT_LEFT, 120);
 
    // Fill list view with data
    for(i = 0; i < m_pItemList->dwNumItems; i++)
@@ -261,9 +261,9 @@ void CDataCollectionEditor::OnSize(UINT nType, int cx, int cy)
 int CDataCollectionEditor::AddListItem(NXC_DCI *pItem)
 {
    int iItem;
-   char szBuffer[32];
+   TCHAR szBuffer[32];
 
-   sprintf(szBuffer, "%d", pItem->dwId);
+   _stprintf(szBuffer, _T("%d"), pItem->dwId);
    iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
    if (iItem != -1)
    {
@@ -280,16 +280,16 @@ int CDataCollectionEditor::AddListItem(NXC_DCI *pItem)
 
 void CDataCollectionEditor::UpdateListItem(int iItem, NXC_DCI *pItem)
 {
-   char szBuffer[32];
+   TCHAR szBuffer[32];
    NXC_OBJECT *pObject;
 
    m_wndListCtrl.SetItemText(iItem, 1, g_pszItemOrigin[pItem->iSource]);
    m_wndListCtrl.SetItemText(iItem, 2, pItem->szDescription);
    m_wndListCtrl.SetItemText(iItem, 3, pItem->szName);
    m_wndListCtrl.SetItemText(iItem, 4, g_pszItemDataType[pItem->iDataType]);
-   sprintf(szBuffer, "%d sec", pItem->iPollingInterval);
+   _stprintf(szBuffer, _T("%d sec"), pItem->iPollingInterval);
    m_wndListCtrl.SetItemText(iItem, 5, szBuffer);
-   sprintf(szBuffer, "%d days", pItem->iRetentionTime);
+   _stprintf(szBuffer, _T("%d days"), pItem->iRetentionTime);
    m_wndListCtrl.SetItemText(iItem, 6, szBuffer);
    m_wndListCtrl.SetItemText(iItem, 7, g_pszItemStatus[pItem->iStatus]);
    if (pItem->dwTemplateId != 0)
@@ -402,7 +402,7 @@ void CDataCollectionEditor::OnItemEdit()
             else
             {
                free(item.pThresholdList);
-               theApp.ErrorBox(dwResult, "Unable to update data collection item: %s");
+               theApp.ErrorBox(dwResult, _T("Unable to update data collection item: %s"));
             }
          }
          else
@@ -459,7 +459,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    pgThresholds.m_strInstance = pItem->szInstance;
 
    // Setup property sheet and run
-   dlg.SetTitle("Data Collection Item");
+   dlg.SetTitle(_T("Data Collection Item"));
    dlg.m_psh.dwFlags |= PSH_NOAPPLYNOW;
    dlg.AddPage(&pgCollection);
    dlg.AddPage(&pgSchedule);
@@ -472,15 +472,15 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
       pItem->iPollingInterval = pgCollection.m_iPollingInterval;
       pItem->iRetentionTime = pgCollection.m_iRetentionTime;
       pItem->iStatus = pgCollection.m_iStatus;
-      strcpy(pItem->szName, (LPCTSTR)pgCollection.m_strName);
-      strcpy(pItem->szDescription, (LPCTSTR)pgCollection.m_strDescription);
+      nx_strncpy(pItem->szName, (LPCTSTR)pgCollection.m_strName, MAX_ITEM_NAME);
+      nx_strncpy(pItem->szDescription, (LPCTSTR)pgCollection.m_strDescription, MAX_DB_STRING);
       StrStrip(pItem->szDescription);
       if (pItem->szDescription[0] == 0)
-         strcpy(pItem->szDescription, pItem->szName);
+         nx_strncpy(pItem->szDescription, pItem->szName, MAX_DB_STRING);
       pItem->iDeltaCalculation = pgTransform.m_iDeltaProc;
       safe_free(pItem->pszFormula);
-      pItem->pszFormula = strdup((LPCTSTR)pgTransform.m_strFormula);
-      strcpy(pItem->szInstance, (LPCTSTR)pgThresholds.m_strInstance);
+      pItem->pszFormula = _tcsdup((LPCTSTR)pgTransform.m_strFormula);
+      nx_strncpy(pItem->szInstance, (LPCTSTR)pgThresholds.m_strInstance, MAX_DB_STRING);
       StrStrip(pItem->szInstance);
       DestroyStringList(pItem->ppScheduleList, pItem->dwNumSchedules);
       pItem->iAdvSchedule = pgCollection.m_bAdvSchedule;
@@ -691,7 +691,7 @@ void CDataCollectionEditor::OnItemShowdata()
 {
    int iItem;
    DWORD dwItemId, dwIndex;
-   char szBuffer[384];
+   TCHAR szBuffer[384];
    NXC_OBJECT *pObject;
 
    iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
@@ -700,8 +700,8 @@ void CDataCollectionEditor::OnItemShowdata()
       dwItemId = m_wndListCtrl.GetItemData(iItem);
       dwIndex = NXCItemIndex(m_pItemList, dwItemId);
       pObject = NXCFindObjectById(g_hSession, m_pItemList->dwNodeId);
-      sprintf(szBuffer, "%s - %s", pObject->szName, 
-              m_pItemList->pItems[dwIndex].szDescription);
+      _stprintf(szBuffer, _T("%s - %s"), pObject->szName, 
+                m_pItemList->pItems[dwIndex].szDescription);
       theApp.ShowDCIData(m_pItemList->dwNodeId, dwItemId, szBuffer);
       iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
    }
@@ -717,7 +717,7 @@ void CDataCollectionEditor::OnItemGraph()
    int iItem;
    DWORD i, dwNumItems, dwIndex;
    NXC_DCI **ppItemList;
-   char szBuffer[384];
+   TCHAR szBuffer[384];
    NXC_OBJECT *pObject;
 
    pObject = NXCFindObjectById(g_hSession, m_pItemList->dwNodeId);
@@ -744,12 +744,12 @@ void CDataCollectionEditor::OnItemGraph()
 
    if ((dwNumItems == 1) && (ppItemList[0] != NULL))
    {
-      sprintf(szBuffer, "%s - %s", pObject->szName,
-              ppItemList[0]->szDescription);
+      _stprintf(szBuffer, _T("%s - %s"), pObject->szName,
+                ppItemList[0]->szDescription);
    }
    else
    {
-      strcpy(szBuffer, pObject->szName);
+      _tcscpy(szBuffer, pObject->szName);
    }
 
    theApp.ShowDCIGraph(m_pItemList->dwNodeId, dwNumItems, ppItemList, szBuffer);
@@ -798,7 +798,7 @@ void CDataCollectionEditor::OnItemDuplicate()
                                (void *)m_pItemList->dwNodeId, (void *)dwNumItems, 
                                pdwItemList, _T("Copying items..."));
       if (dwResult != RCC_SUCCESS)
-         theApp.ErrorBox(dwResult, "Error copying items: %s");
+         theApp.ErrorBox(dwResult, _T("Error copying items: %s"));
       PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 
       // Cleanup
@@ -820,7 +820,8 @@ void CDataCollectionEditor::OnFileExport()
    dlg.m_ofn.lpstrFilter = _T("Data Collection Templates (*.dct)\0*.dct\0XML Files (*.xml)\0*.xml\0All Files (*.*)\0*.*\0");
    if (dlg.DoModal() == IDOK)
    {
-      MessageBox(dlg.m_ofn.lpstrFile,"FILE");
+      /* TODO: implement export */
+      MessageBox(dlg.m_ofn.lpstrFile, _T("FILE"));
    }
 }
 
@@ -857,13 +858,13 @@ void CDataCollectionEditor::OnViewRefresh()
    dwResult = DoRequestArg2(NXCCloseNodeDCIList, g_hSession, m_pItemList,
                             _T("Unlocking node's data collection information..."));
    if (dwResult != RCC_SUCCESS)
-      theApp.ErrorBox(dwResult, "Unable to close data collection configuration:\n%s");
+      theApp.ErrorBox(dwResult, _T("Unable to close data collection configuration:\n%s"));
    m_pItemList = NULL;
 
    dwResult = DoRequestArg3(NXCOpenNodeDCIList, g_hSession, (void *)dwObjectId, 
-                            &m_pItemList, "Loading node's data collection information...");
+                            &m_pItemList, _T("Loading node's data collection information..."));
    if (dwResult != RCC_SUCCESS)
-      theApp.ErrorBox(dwResult, "Unable to load data collection information for node:\n%s");
+      theApp.ErrorBox(dwResult, _T("Unable to load data collection information for node:\n%s"));
 
    // Fill list view with data
    RefreshItemList();
@@ -1112,7 +1113,7 @@ void CDataCollectionEditor::OnItemMovetotemplate()
                                   (void *)dlg.m_pdwObjectList[0], 
                                   (void *)dwNumItems, pdwItemList, _T("Moving items..."));
          if (dwResult != RCC_SUCCESS)
-            theApp.ErrorBox(dwResult, "Error moving items: %s");
+            theApp.ErrorBox(dwResult, _T("Error moving items: %s"));
       }
 
       // Cleanup

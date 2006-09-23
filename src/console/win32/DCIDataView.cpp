@@ -97,8 +97,8 @@ int CDCIDataView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "Timestamp", LVCFMT_LEFT, 130);
-   m_wndListCtrl.InsertColumn(1, "Value", LVCFMT_LEFT, 
+   m_wndListCtrl.InsertColumn(0, _T("Timestamp"), LVCFMT_LEFT, 130);
+   m_wndListCtrl.InsertColumn(1, _T("Value"), LVCFMT_LEFT, 
                               rect.right - 130 - GetSystemMetrics(SM_CXVSCROLL));
 
    DisplayScale();
@@ -181,22 +181,22 @@ void CDCIDataView::OnViewRefresh()
                switch(pData->wDataType)
                {
                   case DCI_DT_INT:
-                     sprintf(szBuffer, "%d", pRow->value.dwInt32 / m_nScale);
+                     _stprintf(szBuffer, _T("%d"), pRow->value.dwInt32 / m_nScale);
                      break;
                   case DCI_DT_UINT:
-                     sprintf(szBuffer, "%u", pRow->value.dwInt32 / m_nScale);
+                     _stprintf(szBuffer, _T("%u"), pRow->value.dwInt32 / m_nScale);
                      break;
                   case DCI_DT_INT64:
-                     sprintf(szBuffer, "%I64d", pRow->value.qwInt64 / m_nScale);
+                     _stprintf(szBuffer, _T("%I64d"), pRow->value.qwInt64 / m_nScale);
                      break;
                   case DCI_DT_UINT64:
-                     sprintf(szBuffer, "%I64u", pRow->value.qwInt64 / m_nScale);
+                     _stprintf(szBuffer, _T("%I64u"), pRow->value.qwInt64 / m_nScale);
                      break;
                   case DCI_DT_FLOAT:
-                     sprintf(szBuffer, "%f", pRow->value.dFloat / m_nScale);
+                     _stprintf(szBuffer, _T("%f"), pRow->value.dFloat / m_nScale);
                      break;
                   default:
-                     sprintf(szBuffer, "Unknown data type (%d)", pData->wDataType);
+                     _stprintf(szBuffer, _T("Unknown data type (%d)"), pData->wDataType);
                      break;
                }
                m_wndListCtrl.SetItemText(iItem, 1, szBuffer);
@@ -204,14 +204,14 @@ void CDCIDataView::OnViewRefresh()
          }
          inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
       }
-      sprintf(szBuffer, "%d rows", pData->dwNumRows);
+      _stprintf(szBuffer, _T("%d rows"), pData->dwNumRows);
       m_wndStatusBar.SetText(szBuffer, 0, 0);
       NXCDestroyDCIData(pData);
    }
    else
    {
       theApp.ErrorBox(dwResult, _T("Unable to retrieve colected data: %s"));
-      iItem = m_wndListCtrl.InsertItem(0, "");
+      iItem = m_wndListCtrl.InsertItem(0, _T(""));
       if (iItem != -1)
          m_wndListCtrl.SetItemText(iItem, 1, _T("ERROR LOADING DATA FROM SERVER"));
    }
@@ -229,14 +229,14 @@ void CDCIDataView::OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
       {
          if (pNMHDR->uNewState & LVIS_FOCUSED)
          {
-            char szBuffer[64];
+            TCHAR szBuffer[64];
 
-            sprintf(szBuffer, "Current row: %d", pNMHDR->iItem + 1);
+            _stprintf(szBuffer, _T("Current row: %d"), pNMHDR->iItem + 1);
             m_wndStatusBar.SetText(szBuffer, 1, 0);
          }
          else
          {
-            m_wndStatusBar.SetText("", 1, 0);
+            m_wndStatusBar.SetText(_T(""), 1, 0);
          }
       }
 }

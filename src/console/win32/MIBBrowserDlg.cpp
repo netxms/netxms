@@ -172,7 +172,7 @@ void CMIBBrowserDlg::OnSelchangedTreeMib(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	NMTREEVIEW* pNMTreeView = (NM_TREEVIEW*)pNMHDR;
    SNMP_MIBObject *pNode;
-   char *pszTemp, szBuffer[MAX_OID_LEN * 8];
+   TCHAR *pszTemp, szBuffer[MAX_OID_LEN * 8];
 
    pNode = (SNMP_MIBObject *)m_wndTreeCtrl.GetItemData(pNMTreeView->itemNew.hItem);
 

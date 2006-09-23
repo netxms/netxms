@@ -388,15 +388,15 @@ void CAlarmBrowser::UpdateListItem(int nItem, NXC_ALARM *pAlarm)
    m_wndListCtrl.SetItemText(nItem, 2, pObject->szName);
    m_wndListCtrl.SetItemText(nItem, 3, pAlarm->szMessage);
 
-   sprintf(szBuffer, "%d", pAlarm->dwRepeatCount);
+   _stprintf(szBuffer, _T("%d"), pAlarm->dwRepeatCount);
    m_wndListCtrl.SetItemText(nItem, 4, szBuffer);
 
    ptm = localtime((const time_t *)&pAlarm->dwCreationTime);
-   strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);
+   _tcsftime(szBuffer, 32, _T("%d-%b-%Y %H:%M:%S"), ptm);
    m_wndListCtrl.SetItemText(nItem, 5, szBuffer);
    
    ptm = localtime((const time_t *)&pAlarm->dwLastChangeTime);
-   strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);
+   _tcsftime(szBuffer, 32, _T("%d-%b-%Y %H:%M:%S"), ptm);
    m_wndListCtrl.SetItemText(nItem, 6, szBuffer);
 }
 
