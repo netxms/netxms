@@ -19,8 +19,14 @@ static char THIS_FILE[] = __FILE__;
 // Static data
 //
 
-char *m_pszAuthStrings[] = { "None", "Shared Secred (Plain Text)",
-                             "Shared Secred (MD5 Hash)", "Shared Secred (SHA1 Hash)" };
+static TCHAR *m_pszAuthStrings[] = 
+{
+   _T("None"),
+   _T("Shared Secred (Plain Text)"),
+   _T("Shared Secred (MD5 Hash)"),
+   _T("Shared Secred (SHA1 Hash)")
+};
+
 
 /////////////////////////////////////////////////////////////////////////////
 // CNodePropsGeneral property page
@@ -179,16 +185,16 @@ void CNodePropsGeneral::OnRadioVersion1()
 
 void CNodePropsGeneral::OnOK() 
 {
-   char szBuffer[256];
+   TCHAR szBuffer[256];
    int i;
 
 	CPropertyPage::OnOK();
 
    // Set fields in update structure
-   m_pUpdate->pszName = (char *)((LPCTSTR)m_strName);
+   m_pUpdate->pszName = (TCHAR *)((LPCTSTR)m_strName);
    m_pUpdate->iAgentPort = m_iAgentPort;
-   m_pUpdate->pszCommunity = (char *)((LPCTSTR)m_strCommunity);
-   m_pUpdate->pszSecret = (char *)((LPCTSTR)m_strSecret);
+   m_pUpdate->pszCommunity = (TCHAR *)((LPCTSTR)m_strCommunity);
+   m_pUpdate->pszSecret = (TCHAR *)((LPCTSTR)m_strSecret);
    m_pUpdate->wSNMPVersion = (m_iSNMPVersion == 0) ? SNMP_VERSION_1 : SNMP_VERSION_2C;
    m_pUpdate->dwIpAddr = m_dwIpAddr;
    m_pUpdate->dwProxyNode = m_dwProxyNode;
@@ -200,7 +206,7 @@ void CNodePropsGeneral::OnOK()
    // Authentication type
    m_wndAuthList.GetWindowText(szBuffer, 255);
    for(i = 0; i < 4; i++)
-      if (!strcmp(szBuffer, m_pszAuthStrings[i]))
+      if (!_tcscmp(szBuffer, m_pszAuthStrings[i]))
       {
          m_pUpdate->iAuthType = i;
          break;

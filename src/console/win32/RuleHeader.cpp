@@ -76,7 +76,7 @@ void CRuleHeader::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
    Rectangle(lpDrawItemStruct->hDC, rcText.left, rcText.top, rcText.right, rcText.bottom);
    rgbOldTextColor = SetTextColor(lpDrawItemStruct->hDC, m_rgbTextColor);
    rgbOldBkColor = SetBkColor(lpDrawItemStruct->hDC, m_rgbBkColor);
-   DrawText(lpDrawItemStruct->hDC, lpBuffer, strlen(lpBuffer), 
+   DrawText(lpDrawItemStruct->hDC, lpBuffer, _tcslen(lpBuffer), 
             &rcText, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
    SetTextColor(lpDrawItemStruct->hDC, rgbOldTextColor);
    SetBkColor(lpDrawItemStruct->hDC, rgbOldBkColor);

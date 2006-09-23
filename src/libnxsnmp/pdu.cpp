@@ -74,7 +74,7 @@ SNMP_PDU::SNMP_PDU(DWORD dwCommand, char *pszCommunity, DWORD dwRqId, DWORD dwVe
 {
    m_dwVersion = dwVersion;
    m_dwCommand = dwCommand;
-   m_pszCommunity = strdup(CHECK_NULL(pszCommunity));
+   m_pszCommunity = strdup(CHECK_NULL_A(pszCommunity));
    m_dwNumVariables = 0;
    m_ppVarList = NULL;
    m_pEnterprise = NULL;

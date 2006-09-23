@@ -129,28 +129,28 @@ void RL_Cell::Recalc(void)
       }
 }
 
-int RL_Cell::AddLine(char *pszText, int iImage)
+int RL_Cell::AddLine(TCHAR *pszText, int iImage)
 {
    int iPos;
 
    iPos = m_iNumLines++;
-   m_pszTextList = (char **)realloc(m_pszTextList, sizeof(char *) * m_iNumLines);
+   m_pszTextList = (TCHAR **)realloc(m_pszTextList, sizeof(TCHAR *) * m_iNumLines);
    m_piImageList = (int *)realloc(m_piImageList, sizeof(int) * m_iNumLines);
    m_pSelectFlags = (BYTE *)realloc(m_pSelectFlags, sizeof(BYTE) * m_iNumLines);
-   m_pszTextList[iPos] = strdup(pszText);
+   m_pszTextList[iPos] = _tcsdup(pszText);
    m_piImageList[iPos] = iImage;
    m_pSelectFlags[iPos] = 0;
    Recalc();
    return iPos;
 }
 
-BOOL RL_Cell::ReplaceLine(int iLine, char *pszText, int iImage)
+BOOL RL_Cell::ReplaceLine(int iLine, TCHAR *pszText, int iImage)
 {
    if ((iLine < 0) || (iLine >= m_iNumLines))
       return FALSE;  // Invalid line number, no changes
 
    safe_free(m_pszTextList[iLine]);
-   m_pszTextList[iLine] = strdup(pszText);
+   m_pszTextList[iLine] = _tcsdup(pszText);
    m_piImageList[iLine] = iImage;
    Recalc();
    return TRUE;
@@ -191,25 +191,25 @@ BOOL RL_Cell::DeleteLine(int iLine)
    return TRUE;
 }
 
-void RL_Cell::SetText(char *pszText)
+void RL_Cell::SetText(TCHAR *pszText)
 {
    int iLen;
 
    ASSERT(pszText != NULL);
    safe_free(m_pszText);
-   iLen = strlen(pszText);
-   m_pszText = (char *)malloc(iLen + 3);
-   strcpy(m_pszText, pszText);
+   iLen = _tcslen(pszText);
+   m_pszText = (TCHAR *)malloc((iLen + 3) * sizeof(TCHAR));
+   _tcscpy(m_pszText, pszText);
 
    // Text should end with CR/LF pair for proper cell size calculation
    if (iLen < 2)
    {
-      strcpy(&m_pszText[iLen], "\r\n");
+      _tcscpy(&m_pszText[iLen], _T("\r\n"));
    }
    else
    {
-      if (memcmp(&m_pszText[iLen - 2], "\r\n", 2))
-         strcpy(&m_pszText[iLen], "\r\n");
+      if ((m_pszText[iLen - 2] != _T('\r')) || (m_pszText[iLen - 1] != _T('\n')))
+         _tcscpy(&m_pszText[iLen], _T("\r\n"));
    }
 }
 
@@ -230,7 +230,7 @@ int RL_Cell::CalculateHeight(int iTextHeight, int iWidth, BOOL bIsTextBox, CFont
 
       pDC = theApp.m_pMainWnd->GetDC();
       pOldFont = pDC->SelectObject(pFont);
-      pDC->DrawText(m_pszText, strlen(m_pszText), &rect, DT_WORDBREAK | DT_CALCRECT);
+      pDC->DrawText(m_pszText, _tcslen(m_pszText), &rect, DT_WORDBREAK | DT_CALCRECT);
       pDC->SelectObject(pOldFont);
       theApp.m_pMainWnd->ReleaseDC(pDC);
       iHeight = rect.bottom;
@@ -315,7 +315,7 @@ END_MESSAGE_MAP()
 
 BOOL CRuleList::Create(DWORD dwStyle, const RECT &rect, CWnd *pwndParent, UINT nId)
 {
-   return CWnd::Create(NULL, "", dwStyle, rect, pwndParent, nId);
+   return CWnd::Create(NULL, _T(""), dwStyle, rect, pwndParent, nId);
 }
 
 
@@ -349,9 +349,9 @@ int CRuleList::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_fontNormal.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
                           0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                          VARIABLE_PITCH | FF_DONTCARE, "Verdana");
+                          VARIABLE_PITCH | FF_DONTCARE, _T("Verdana"));
    pDC = GetDC();
-   m_iTextHeight = max(pDC->GetTextExtent("gqhXQ|", 6).cy, ITEM_IMAGE_SIZE);
+   m_iTextHeight = max(pDC->GetTextExtent(_T("gqhXQ|"), 6).cy, ITEM_IMAGE_SIZE);
    ReleaseDC(pDC);
 
    // Create internal images (for negated cells, etc.)
@@ -447,7 +447,7 @@ void CRuleList::OnPaint()
                rcText.right -= CELL_TEXT_X_MARGIN;
 
                dc.DrawText(m_ppRowList[i]->m_ppCellList[j]->m_pszText,
-                           strlen(m_ppRowList[i]->m_ppCellList[j]->m_pszText),
+                           _tcslen(m_ppRowList[i]->m_ppCellList[j]->m_pszText),
                            &rcText, DT_WORDBREAK | (m_pColList[j].m_dwFlags & CF_CENTER ? DT_CENTER : DT_LEFT));
             }
             else  // Multiline cell
@@ -482,7 +482,7 @@ void CRuleList::OnPaint()
                      m_imgListInternal.Draw(&dc, 0, CPoint(rcText.left - ITEM_IMAGE_SIZE, rcText.top), ILD_TRANSPARENT);
                      
                   dc.DrawText(m_ppRowList[i]->m_ppCellList[j]->m_pszTextList[iLine],
-                              strlen(m_ppRowList[i]->m_ppCellList[j]->m_pszTextList[iLine]),
+                              _tcslen(m_ppRowList[i]->m_ppCellList[j]->m_pszTextList[iLine]),
                               &rcText, DT_SINGLELINE | DT_VCENTER | 
                                           (m_pColList[j].m_dwFlags & CF_CENTER ? DT_CENTER : DT_LEFT));
                
@@ -547,7 +547,7 @@ void CRuleList::OnPaint()
 // Insert new column
 //
 
-int CRuleList::InsertColumn(int iInsertBefore, char *pszText, int iWidth, DWORD dwFlags)
+int CRuleList::InsertColumn(int iInsertBefore, TCHAR *pszText, int iWidth, DWORD dwFlags)
 {
    int i, iNewCol;
    HDITEM hdi;
@@ -613,7 +613,7 @@ int CRuleList::InsertRow(int iInsertBefore)
 
       // Set empty text for text box columns
       if (m_pColList[i].m_dwFlags & CF_TEXTBOX)
-         m_ppRowList[iNewRow]->m_ppCellList[i]->SetText("");
+         m_ppRowList[iNewRow]->m_ppCellList[i]->SetText(_T(""));
    }
 
    RecalcHeight();
@@ -627,7 +627,7 @@ int CRuleList::InsertRow(int iInsertBefore)
 // Add new item to cell
 //
 
-int CRuleList::AddItem(int iRow, int iColumn, char *pszText, int iImage)
+int CRuleList::AddItem(int iRow, int iColumn, TCHAR *pszText, int iImage)
 {
    int iPos;
 
@@ -650,7 +650,7 @@ int CRuleList::AddItem(int iRow, int iColumn, char *pszText, int iImage)
 // Replace item in a cell
 //
 
-void CRuleList::ReplaceItem(int iRow, int iColumn, int iItem, char *pszText, int iImage)
+void CRuleList::ReplaceItem(int iRow, int iColumn, int iItem, TCHAR *pszText, int iImage)
 {
    if ((iRow < 0) || (iRow >= m_iNumRows) || (iColumn < 0) || (iColumn >= m_iNumColumns))
       return;
@@ -1408,11 +1408,11 @@ BOOL CRuleList::DeleteRow(int iRow)
 // Set text for textbox cells
 //
 
-void CRuleList::SetCellText(int iRow, int iColumn, char *pszText)
+void CRuleList::SetCellText(int iRow, int iColumn, TCHAR *pszText)
 {
    if (m_pColList[iColumn].m_dwFlags & CF_TEXTBOX)
    {
-      m_ppRowList[iRow]->m_ppCellList[iColumn]->SetText(pszText != NULL ? pszText : "");
+      m_ppRowList[iRow]->m_ppCellList[iColumn]->SetText(pszText != NULL ? pszText : _T(""));
       m_ppRowList[iRow]->RecalcHeight(m_iTextHeight, m_pColList, &m_fontNormal);
       RecalcHeight();
       UpdateScrollBars();

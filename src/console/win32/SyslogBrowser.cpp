@@ -79,12 +79,12 @@ int CSyslogBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "Time", LVCFMT_LEFT, 135);
-   m_wndListCtrl.InsertColumn(1, "Severity", LVCFMT_LEFT, 80);
-   m_wndListCtrl.InsertColumn(2, "Facility", LVCFMT_LEFT, 80);
-   m_wndListCtrl.InsertColumn(3, "Hostname", LVCFMT_LEFT, 100);
-   m_wndListCtrl.InsertColumn(4, "Tag", LVCFMT_LEFT, 90);
-   m_wndListCtrl.InsertColumn(5, "Message", LVCFMT_LEFT, 500);
+   m_wndListCtrl.InsertColumn(0, _T("Time"), LVCFMT_LEFT, 135);
+   m_wndListCtrl.InsertColumn(1, _T("Severity"), LVCFMT_LEFT, 80);
+   m_wndListCtrl.InsertColumn(2, _T("Facility"), LVCFMT_LEFT, 80);
+   m_wndListCtrl.InsertColumn(3, _T("Hostname"), LVCFMT_LEFT, 100);
+   m_wndListCtrl.InsertColumn(4, _T("Tag"), LVCFMT_LEFT, 90);
+   m_wndListCtrl.InsertColumn(5, _T("Message"), LVCFMT_LEFT, 500);
 	
    // Create wait view
    m_wndWaitView.SetText(_T("Loading syslog..."));
@@ -220,14 +220,10 @@ void CSyslogBrowser::OnSyslogRecord(WPARAM wParam, NXC_SYSLOG_RECORD *pRec)
 void CSyslogBrowser::AddRecord(NXC_SYSLOG_RECORD *pRec, BOOL bAppend)
 {
    int iIdx;
-   time_t t;
-   struct tm *ptm;
-   char szBuffer[64];
+   TCHAR szBuffer[64];
    static int nImage[8] = { 4, 4, 3, 3, 2, 1, 0, 0 };
 
-   t = pRec->dwTimeStamp;
-   ptm = localtime(&t);
-   strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);
+   FormatTimeStamp(pRec->dwTimeStamp, szBuffer, TS_LONG_DATE_TIME);
    iIdx = m_wndListCtrl.InsertItem(bAppend ? 0x7FFFFFFF : 0, szBuffer, nImage[pRec->wSeverity]);
    if (iIdx != -1)
    {

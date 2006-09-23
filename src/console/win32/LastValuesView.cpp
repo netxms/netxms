@@ -251,12 +251,12 @@ void CLastValuesView::UpdateItem(int iItem, NXC_DCI_VALUE *pValue)
        ((item.iImage == 1) && (!_tcscmp(szTimeStamp, szOldTimeStamp))))
    {
       item.iImage = 1;  // Should be shown in red
-      m_wndListCtrl.SetItemText(iItem, 3, "X");
+      m_wndListCtrl.SetItemText(iItem, 3, _T("X"));
    }
    else
    {
       item.iImage = -1;
-      m_wndListCtrl.SetItemText(iItem, 3, " ");
+      m_wndListCtrl.SetItemText(iItem, 3, _T(" "));
    }
    m_wndListCtrl.SetItem(&item);
 
@@ -315,12 +315,12 @@ void CLastValuesView::OnItemGraph()
 
    if (dwNumItems == 1)
    {
-      sprintf(szBuffer, "%s - %s", pObject->szName,
-              ppItemList[0]->szDescription);
+      _sntprintf(szBuffer, 384, _T("%s - %s"), pObject->szName,
+                 ppItemList[0]->szDescription);
    }
    else
    {
-      strcpy(szBuffer, pObject->szName);
+      nx_strncpy(szBuffer, pObject->szName, 384);
    }
 
    theApp.ShowDCIGraph(m_dwNodeId, dwNumItems, ppItemList, szBuffer);
@@ -346,7 +346,7 @@ void CLastValuesView::OnItemShowdata()
    {
       dwItemId = m_wndListCtrl.GetItemData(iItem);
       pObject = NXCFindObjectById(g_hSession, m_dwNodeId);
-      _stprintf(szBuffer, "%s - ", pObject->szName); 
+      _stprintf(szBuffer, _T("%s - "), pObject->szName); 
       m_wndListCtrl.GetItemText(iItem, 1, &szBuffer[_tcslen(szBuffer)],
                                 384 - _tcslen(szBuffer));
       theApp.ShowDCIData(m_dwNodeId, dwItemId, szBuffer);

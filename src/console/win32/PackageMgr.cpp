@@ -107,7 +107,7 @@ int CPackageMgr::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CPackageMgr::OnClose() 
 {
-   DoRequestArg1(NXCUnlockPackageDB, g_hSession, "Unlocking package database...");
+   DoRequestArg1(NXCUnlockPackageDB, g_hSession, _T("Unlocking package database..."));
 	CMDIChildWnd::OnClose();
 }
 

@@ -208,7 +208,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_SESSION hSession, NXC_USER *pUserInfo
 //
 
 DWORD LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, DWORD dwUserId, 
-                                        char *pszNewPassword)
+                                        TCHAR *pszNewPassword)
 {
    CSCPMessage msg;
    DWORD dwRqId;
@@ -216,7 +216,15 @@ DWORD LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, DWORD dwUserId,
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
+#ifdef UNICODE
+   char szTemp[256];
+
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                       pszNewPassword, -1, szTemp, 256, NULL, NULL);
+   CalculateSHA1Hash((BYTE *)szTemp, strlen(szTemp), hash);
+#else
    CalculateSHA1Hash((BYTE *)pszNewPassword, strlen(pszNewPassword), hash);
+#endif
 
    msg.SetCode(CMD_SET_PASSWORD);
    msg.SetId(dwRqId);

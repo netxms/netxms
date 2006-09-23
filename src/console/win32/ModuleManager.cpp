@@ -66,12 +66,12 @@ int CModuleManager::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 60);
-   m_wndListCtrl.InsertColumn(1, "Name", LVCFMT_LEFT, 150);
-   m_wndListCtrl.InsertColumn(2, "Executable", LVCFMT_LEFT, 150);
-   m_wndListCtrl.InsertColumn(3, "Flags", LVCFMT_LEFT, 50);
-   m_wndListCtrl.InsertColumn(4, "Description", LVCFMT_LEFT, 200);
-   m_wndListCtrl.InsertColumn(5, "License Key", LVCFMT_LEFT, 150);
+   m_wndListCtrl.InsertColumn(0, _T("ID"), LVCFMT_LEFT, 60);
+   m_wndListCtrl.InsertColumn(1, _T("Name"), LVCFMT_LEFT, 150);
+   m_wndListCtrl.InsertColumn(2, _T("Executable"), LVCFMT_LEFT, 150);
+   m_wndListCtrl.InsertColumn(3, _T("Flags"), LVCFMT_LEFT, 50);
+   m_wndListCtrl.InsertColumn(4, _T("Description"), LVCFMT_LEFT, 200);
+   m_wndListCtrl.InsertColumn(5, _T("License Key"), LVCFMT_LEFT, 150);
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 	

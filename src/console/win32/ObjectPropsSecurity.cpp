@@ -91,7 +91,7 @@ BOOL CObjectPropsSecurity::OnInitDialog()
 
    // Setup list view
    m_wndUserList.GetClientRect(&rect);
-   m_wndUserList.InsertColumn(0, "Name", LVCFMT_LEFT, 
+   m_wndUserList.InsertColumn(0, _T("Name"), LVCFMT_LEFT, 
                               rect.right - GetSystemMetrics(SM_CXVSCROLL) - 4);
 	m_wndUserList.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT);
    m_wndUserList.SetHoverTime(0x7FFFFFFF);

@@ -906,7 +906,6 @@ src/console/win32/nxcon.dsp -text
 src/console/win32/nxcon.dsw -text
 src/console/win32/nxcon.h -text
 src/console/win32/nxcon.rc -text
-src/console/win32/nxcon.vcproj -text
 src/console/win32/res/Makefile.am -text
 src/console/win32/res/Toolbar.bmp -text
 src/console/win32/res/any.bmp -text

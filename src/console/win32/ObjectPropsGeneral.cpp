@@ -79,5 +79,5 @@ void CObjectPropsGeneral::OnChangeEditName()
 void CObjectPropsGeneral::OnOK() 
 {
 	CPropertyPage::OnOK();
-   m_pUpdate->pszName = (char *)((LPCTSTR)m_strName);
+   m_pUpdate->pszName = (TCHAR *)((LPCTSTR)m_strName);
 }

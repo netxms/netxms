@@ -46,7 +46,7 @@ END_MESSAGE_MAP()
 
 BOOL CNodeSummary::Create(DWORD dwStyle, const RECT &rect, CWnd *pParentWnd, UINT nID, CCreateContext *pContext)
 {
-	return CWnd::Create(NULL, "Node Status Summary", dwStyle, rect, pParentWnd, nID, pContext);
+	return CWnd::Create(NULL, _T("Node Status Summary"), dwStyle, rect, pParentWnd, nID, pContext);
 }
 
 
@@ -76,11 +76,11 @@ int CNodeSummary::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_fontTitle.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
                           0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                          VARIABLE_PITCH | FF_DONTCARE, "MS Sans Serif");
+                          VARIABLE_PITCH | FF_DONTCARE, _T("MS Sans Serif"));
    m_fontNormal.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
                           0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                          VARIABLE_PITCH | FF_DONTCARE, "MS Sans Serif");
+                          VARIABLE_PITCH | FF_DONTCARE, _T("MS Sans Serif"));
 	UpdateStatus();
 
 	return 0;
@@ -98,15 +98,15 @@ void CNodeSummary::OnPaint()
    int iChartTop, iChartBottom;
    RECT rect;
    CSize size;
-   char szBuffer[256];
+   TCHAR szBuffer[256];
 
    GetClientRect(&rect);
    x = X_MARGIN + X_MARGIN / 2;
 	
    // Draw title
    dc.SelectObject(&m_fontTitle);
-   dc.TextOut(x, Y_MARGIN, "Node Status Summary", 19);
-   y += dc.GetTextExtent("X", 1).cy + 2;
+   dc.TextOut(x, Y_MARGIN, _T("Node Status Summary"), 19);
+   y += dc.GetTextExtent(_T("X"), 1).cy + 2;
    dc.MoveTo(X_MARGIN, y);
    dc.LineTo(rect.right - Y_MARGIN, y);
    y += Y_MARGIN * 2;
@@ -114,7 +114,7 @@ void CNodeSummary::OnPaint()
 
    // Draw legend
    dc.SelectObject(&m_fontNormal);
-   size = dc.GetTextExtent("0000", 4);
+   size = dc.GetTextExtent(_T("0000"), 4);
    iLineHeight = size.cy;
    iCounterWidth = size.cx;
    iTabStop = 100;
@@ -123,8 +123,8 @@ void CNodeSummary::OnPaint()
       dc.FillSolidRect(x, y, iLineHeight, iLineHeight, g_statusColorTable[i]);
       dc.Draw3dRect(x, y, iLineHeight, iLineHeight, RGB(0, 0, 0), RGB(0, 0, 0));
       dc.SetBkColor(RGB(255, 255, 255));
-      sprintf(szBuffer, "%s:\t%d", g_szStatusTextSmall[i], m_dwNodeStats[i]);
-      dc.TabbedTextOut(x + iLineHeight + 5, y, szBuffer, strlen(szBuffer), 1, 
+      _stprintf(szBuffer, _T("%s:\t%d"), g_szStatusTextSmall[i], m_dwNodeStats[i]);
+      dc.TabbedTextOut(x + iLineHeight + 5, y, szBuffer, _tcslen(szBuffer), 1, 
                        &iTabStop, x + iLineHeight + 5);
    }
    iChartBottom = y;
@@ -133,8 +133,8 @@ void CNodeSummary::OnPaint()
    dc.MoveTo(X_MARGIN, y);
    dc.LineTo(x + iLineHeight + iTabStop + 30, y);
    y += 5;
-   sprintf(szBuffer, "Total:\t%d", m_dwTotalNodes);
-   dc.TabbedTextOut(x + iLineHeight + 5, y, szBuffer, strlen(szBuffer), 1, 
+   _stprintf(szBuffer, _T("Total:\t%d"), m_dwTotalNodes);
+   dc.TabbedTextOut(x + iLineHeight + 5, y, szBuffer, _tcslen(szBuffer), 1, 
                     &iTabStop, x + iLineHeight + 5);
 
    // Pie chart

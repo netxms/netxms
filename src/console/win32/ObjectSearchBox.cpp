@@ -57,7 +57,7 @@ int CObjectSearchBox::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_fontNormal.CreateFont(-MulDiv(7, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
                           0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                          VARIABLE_PITCH | FF_DONTCARE, "MS Sans Serif");
+                          VARIABLE_PITCH | FF_DONTCARE, _T("MS Sans Serif"));
 
    // Create static text
    GetClientRect(&rect);
@@ -65,7 +65,7 @@ int CObjectSearchBox::OnCreate(LPCREATESTRUCT lpCreateStruct)
    rect.right -= X_MARGIN;
    rect.top += Y_MARGIN;
    rect.bottom = rect.top + 12;
-   m_wndStatic.Create("Enter object name or IP address:", WS_CHILD | WS_VISIBLE, rect, this);
+   m_wndStatic.Create(_T("Enter object name or IP address:"), WS_CHILD | WS_VISIBLE, rect, this);
    m_wndStatic.SetFont(&m_fontNormal);
 
    // Create edit box
@@ -80,7 +80,7 @@ int CObjectSearchBox::OnCreate(LPCREATESTRUCT lpCreateStruct)
    rect.top = rect.bottom + Y_MARGIN * 2;
    rect.bottom = rect.top + 18;
    rect.left = rect.right - 70;
-   m_wndButton.Create("&Find", WS_CHILD | WS_VISIBLE, rect, this, ID_FIND_OBJECT);
+   m_wndButton.Create(_T("&Find"), WS_CHILD | WS_VISIBLE, rect, this, ID_FIND_OBJECT);
    m_wndButton.SetFont(&m_fontNormal);
 
 	return 0;

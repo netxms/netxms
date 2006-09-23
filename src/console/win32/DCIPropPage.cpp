@@ -180,7 +180,7 @@ void CDCIPropPage::SelectSNMPItem(void)
    {
       *pDot = 0;
       pDot++;
-      dlg.m_dwInstance = strtoul(pDot, NULL, 10);
+      dlg.m_dwInstance = _tcstoul(pDot, NULL, 10);
    }
    else
    {

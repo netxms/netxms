@@ -130,7 +130,7 @@ void CVPNCPropsGeneral::OnOK()
 	CPropertyPage::OnOK();
 
    // Set fields in update structure
-   m_pUpdate->pszName = (char *)((LPCTSTR)m_strName);
+   m_pUpdate->pszName = (TCHAR *)((LPCTSTR)m_strName);
    m_pUpdate->dwPeerGateway = m_dwPeerGateway;
    m_pUpdate->dwNumLocalNets = m_dwNumLocalNets;
    m_pUpdate->dwNumRemoteNets = m_dwNumRemoteNets;

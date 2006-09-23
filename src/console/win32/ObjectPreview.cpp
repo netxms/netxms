@@ -47,7 +47,7 @@ BOOL CObjectPreview::PreCreateWindow(CREATESTRUCT& cs)
 
 BOOL CObjectPreview::Create(DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, CCreateContext* pContext) 
 {
-	return CWnd::Create(NULL, "", dwStyle, rect, pParentWnd, nID, pContext);
+	return CWnd::Create(NULL, _T(""), dwStyle, rect, pParentWnd, nID, pContext);
 }
 
 
@@ -67,12 +67,12 @@ int CObjectPreview::OnCreate(LPCREATESTRUCT lpCreateStruct)
    rect.right -= TOOLBOX_X_MARGIN * 2;
    rect.top += TOOLBOX_Y_MARGIN;
    rect.bottom = 100;
-   m_wndObjectSearch.Create("Search", WS_CHILD | WS_VISIBLE,
+   m_wndObjectSearch.Create(_T("Search"), WS_CHILD | WS_VISIBLE,
                              rect, this, IDC_TOOLBOX_OBJECT_DETAILS);
 
    rect.top = rect.bottom + TOOLBOX_X_MARGIN;
    rect.bottom = rect.top + 250;
-   m_wndObjectPreview.Create("Object Details", WS_CHILD | WS_VISIBLE,
+   m_wndObjectPreview.Create(_T("Object Details"), WS_CHILD | WS_VISIBLE,
                              rect, this, IDC_TOOLBOX_OBJECT_DETAILS);
 
 	return 0;

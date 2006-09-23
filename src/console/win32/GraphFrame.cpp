@@ -215,14 +215,14 @@ void CGraphFrame::OnViewRefresh()
    {
       dwResult = DoRequestArg7(NXCGetDCIData, g_hSession, (void *)m_ppItems[i]->m_dwNodeId, 
                                (void *)m_ppItems[i]->m_dwItemId, 0, (void *)m_dwTimeFrom,
-                               (void *)m_dwTimeTo, &pData, "Loading item data...");
+                               (void *)m_dwTimeTo, &pData, _T("Loading item data..."));
       if (dwResult == RCC_SUCCESS)
       {
          m_wndGraph.SetData(i, pData);
       }
       else
       {
-         theApp.ErrorBox(dwResult, "Unable to retrieve colected data: %s");
+         theApp.ErrorBox(dwResult, _T("Unable to retrieve colected data: %s"));
       }
    }
    m_wndGraph.ClearZoomHistory();
@@ -398,10 +398,10 @@ LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
    pInfo->iWndClass = WNDC_GRAPH;
    GetWindowPlacement(&pInfo->placement);
    _sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN,
-              _T("F:%d\x7FN:%d\x7FTS:%d\x7FTF:%d\x7F" "A:%d\x7F"
-                 "TFT:%d\x7FTU:%d\x7FNTU:%d\x7FS:%d\x7F"
-                 "CA:%u\x7F" "CB:%u\x7F" "CG:%u\x7F" "CK:%u\x7F" "CL:%u\x7F"
-                 "CT:%u\x7FR:%d\x7FG:%d\x7FL:%d"),
+              _T("F:%d\x7FN:%d\x7FTS:%d\x7FTF:%d\x7F") _T("A:%d\x7F")
+              _T("TFT:%d\x7FTU:%d\x7FNTU:%d\x7FS:%d\x7F")
+              _T("CA:%u\x7F") _T("CB:%u\x7F") _T("CG:%u\x7F") _T("CK:%u\x7F") _T("CL:%u\x7F")
+              _T("CT:%u\x7FR:%d\x7FG:%d\x7FL:%d"),
               m_dwFlags, m_dwNumItems, m_dwTimeFrom, m_dwTimeTo, m_dwRefreshInterval,
               m_iTimeFrameType, m_iTimeUnit, m_dwNumTimeUnits,
               m_wndGraph.m_bAutoScale, m_wndGraph.m_rgbAxisColor, 
@@ -412,7 +412,7 @@ LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
    {
-      _sntprintf(szBuffer, 512, _T("\x7F" "C%d:%lu"), i, m_wndGraph.m_rgbLineColors[i]);
+      _sntprintf(szBuffer, 512, _T("\x7F") _T("C%d:%lu"), i, m_wndGraph.m_rgbLineColors[i]);
       if (_tcslen(pInfo->szParameters) + _tcslen(szBuffer) < MAX_WND_PARAM_LEN)
          _tcscat(pInfo->szParameters, szBuffer);
    }

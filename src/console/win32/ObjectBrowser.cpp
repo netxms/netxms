@@ -62,7 +62,7 @@ static DWORD GetObjectNetMask(NXC_OBJECT *pObject)
 static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
    CObjectBrowser *pBrowser = (CObjectBrowser *)lParamSort;
-   char *pszStr1, *pszStr2;
+   TCHAR *pszStr1, *pszStr2;
    DWORD dwNum1, dwNum2;
    int iResult;
 
@@ -72,7 +72,7 @@ static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
          iResult = COMPARE_NUMBERS(((NXC_OBJECT *)lParam1)->dwId, ((NXC_OBJECT *)lParam2)->dwId);
          break;
       case OBJECT_SORT_BY_NAME:
-         iResult = stricmp(((NXC_OBJECT *)lParam1)->szName, ((NXC_OBJECT *)lParam2)->szName);
+         iResult = _tcsicmp(((NXC_OBJECT *)lParam1)->szName, ((NXC_OBJECT *)lParam2)->szName);
          break;
       case OBJECT_SORT_BY_CLASS:
          iResult = COMPARE_NUMBERS(((NXC_OBJECT *)lParam1)->iClass, ((NXC_OBJECT *)lParam2)->iClass);
@@ -99,10 +99,10 @@ static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
          break;
       case OBJECT_SORT_BY_OID:
          pszStr1 = (((NXC_OBJECT *)lParam1)->iClass == OBJECT_NODE) ? 
-                        ((NXC_OBJECT *)lParam1)->node.szObjectId : "";
+                        ((NXC_OBJECT *)lParam1)->node.szObjectId : _T("");
          pszStr2 = (((NXC_OBJECT *)lParam2)->iClass == OBJECT_NODE) ? 
-                        ((NXC_OBJECT *)lParam2)->node.szObjectId : "";
-         iResult = stricmp(pszStr1, pszStr2);
+                        ((NXC_OBJECT *)lParam2)->node.szObjectId : _T("");
+         iResult = _tcsicmp(pszStr1, pszStr2);
          break;
       default:
          iResult = 0;
@@ -285,16 +285,16 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
    // Setup list view columns
-   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 50);
-   m_wndListCtrl.InsertColumn(1, "Name", LVCFMT_LEFT, 100);
-   m_wndListCtrl.InsertColumn(2, "Class", LVCFMT_LEFT, 70);
-   m_wndListCtrl.InsertColumn(3, "Status", LVCFMT_LEFT, 70);
-   m_wndListCtrl.InsertColumn(4, "IP Address", LVCFMT_LEFT, 100);
-   m_wndListCtrl.InsertColumn(5, "IP Netmask", LVCFMT_LEFT, 100);
-   m_wndListCtrl.InsertColumn(6, "IFIndex", LVCFMT_LEFT, 60);
-   m_wndListCtrl.InsertColumn(7, "IFType", LVCFMT_LEFT, 120);
-   m_wndListCtrl.InsertColumn(8, "Caps", LVCFMT_LEFT, 40);
-   m_wndListCtrl.InsertColumn(9, "Object ID", LVCFMT_LEFT, 150);
+   m_wndListCtrl.InsertColumn(0, _T("ID"), LVCFMT_LEFT, 50);
+   m_wndListCtrl.InsertColumn(1, _T("Name"), LVCFMT_LEFT, 100);
+   m_wndListCtrl.InsertColumn(2, _T("Class"), LVCFMT_LEFT, 70);
+   m_wndListCtrl.InsertColumn(3, _T("Status"), LVCFMT_LEFT, 70);
+   m_wndListCtrl.InsertColumn(4, _T("IP Address"), LVCFMT_LEFT, 100);
+   m_wndListCtrl.InsertColumn(5, _T("IP Netmask"), LVCFMT_LEFT, 100);
+   m_wndListCtrl.InsertColumn(6, _T("IFIndex"), LVCFMT_LEFT, 60);
+   m_wndListCtrl.InsertColumn(7, _T("IFType"), LVCFMT_LEFT, 120);
+   m_wndListCtrl.InsertColumn(8, _T("Caps"), LVCFMT_LEFT, 40);
+   m_wndListCtrl.InsertColumn(9, _T("Object ID"), LVCFMT_LEFT, 150);
 
    // Create image list
    m_pImageList = new CImageList;
@@ -434,7 +434,7 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
 {
    HTREEITEM hItem;
    TVITEM tvi;
-   char szBuffer[512];
+   TCHAR szBuffer[512];
    int iImage;
 
    // Add object record with class-dependent text
@@ -625,25 +625,25 @@ DWORD CObjectBrowser::FindObjectInTree(DWORD dwObjectId)
 // Create class-depemdent text for tree item
 //
 
-void CObjectBrowser::CreateTreeItemText(NXC_OBJECT *pObject, char *pszBuffer)
+void CObjectBrowser::CreateTreeItemText(NXC_OBJECT *pObject, TCHAR *pszBuffer)
 {
-   char szIpBuffer[32];
+   TCHAR szIpBuffer[32];
 
    switch(pObject->iClass)
    {
       case OBJECT_SUBNET:
-         sprintf(pszBuffer, "%s [Status: %s]", pObject->szName, g_szStatusText[pObject->iStatus]);
+         _stprintf(pszBuffer, _T("%s [Status: %s]"), pObject->szName, g_szStatusText[pObject->iStatus]);
          break;
       case OBJECT_INTERFACE:
          if (pObject->dwIpAddr != 0)
-            sprintf(pszBuffer, "%s [IP: %s/%d Status: %s]", pObject->szName, 
+            _stprintf(pszBuffer, _T("%s [IP: %s/%d Status: %s]"), pObject->szName, 
                     IpToStr(pObject->dwIpAddr, szIpBuffer), 
                     BitsInMask(pObject->iface.dwIpNetMask), g_szStatusText[pObject->iStatus]);
          else
-            sprintf(pszBuffer, "%s [Status: %s]", pObject->szName, g_szStatusText[pObject->iStatus]);
+            _stprintf(pszBuffer, _T("%s [Status: %s]"), pObject->szName, g_szStatusText[pObject->iStatus]);
          break;
       default:
-         strcpy(pszBuffer, pObject->szName);
+         _tcscpy(pszBuffer, pObject->szName);
          break;
    }
 }
@@ -733,7 +733,7 @@ void CObjectBrowser::UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject)
 
       if (dwIndex != INVALID_INDEX)
       {
-         char szBuffer[256];
+         TCHAR szBuffer[256];
          DWORD j, *pdwParentList;
 
          // Create a copy of object's parent list
@@ -855,9 +855,9 @@ void CObjectBrowser::UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject)
 void CObjectBrowser::AddObjectToList(NXC_OBJECT *pObject)
 {
    int iItem;
-   char szBuffer[16];
+   TCHAR szBuffer[16];
 
-   sprintf(szBuffer, "%d", pObject->dwId);
+   _stprintf(szBuffer, _T("%d"), pObject->dwId);
    iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, GetObjectImageIndex(pObject));
    if (iItem != -1)
    {
@@ -980,7 +980,7 @@ void CObjectBrowser::OnFindObject(WPARAM wParam, LPARAM lParam)
    {
       NXC_OBJECT *pObject;
 
-      pObject = NXCFindObjectByName(g_hSession, (char *)lParam);
+      pObject = NXCFindObjectByName(g_hSession, (TCHAR *)lParam);
       if (pObject != NULL)
       {
          // Object found, select it in the current view
@@ -1006,8 +1006,8 @@ void CObjectBrowser::OnFindObject(WPARAM wParam, LPARAM lParam)
                }
                else
                {
-                  MessageBox("Object found, but it's hidden and cannot be displayed at the moment",
-                             "Find", MB_OK | MB_ICONEXCLAMATION);
+                  MessageBox(_T("Object found, but it's hidden and cannot be displayed at the moment"),
+                             _T("Find"), MB_OK | MB_ICONEXCLAMATION);
                }
             }
             m_wndTreeCtrl.SetFocus();
@@ -1032,18 +1032,18 @@ void CObjectBrowser::OnFindObject(WPARAM wParam, LPARAM lParam)
             }
             else
             {
-               MessageBox("Object found, but it's hidden and cannot be displayed at the moment",
-                          "Find", MB_OK | MB_ICONEXCLAMATION);
+               MessageBox(_T("Object found, but it's hidden and cannot be displayed at the moment"),
+                          _T("Find"), MB_OK | MB_ICONEXCLAMATION);
             }
             m_wndListCtrl.SetFocus();
          }
       }
       else
       {
-         char szBuffer[384];
+         TCHAR szBuffer[384];
 
-         sprintf(szBuffer, "Matching object for pattern \"%s\" not found", lParam);
-         MessageBox(szBuffer, "Find", MB_OK | MB_ICONSTOP);
+         _stprintf(szBuffer, _T("Matching object for pattern \"%s\" not found"), lParam);
+         MessageBox(szBuffer, _T("Find"), MB_OK | MB_ICONSTOP);
       }
    }
 }
@@ -1261,7 +1261,7 @@ void CObjectBrowser::UpdateObjectList(NXC_OBJECT *pObject)
 
 void CObjectBrowser::UpdateObjectListEntry(int iItem, NXC_OBJECT *pObject)
 {
-   char szBuffer[64];
+   TCHAR szBuffer[64];
    int iPos;
 
    m_wndListCtrl.SetItemState(iItem, INDEXTOOVERLAYMASK(pObject->iStatus), LVIS_OVERLAYMASK);
@@ -1279,10 +1279,10 @@ void CObjectBrowser::UpdateObjectListEntry(int iItem, NXC_OBJECT *pObject)
          break;
       case OBJECT_INTERFACE:
          m_wndListCtrl.SetItemText(iItem, 5, IpToStr(pObject->iface.dwIpNetMask, szBuffer));
-         sprintf(szBuffer, "%d", pObject->iface.dwIfIndex);
+         _stprintf(szBuffer, _T("%d"), pObject->iface.dwIfIndex);
          m_wndListCtrl.SetItemText(iItem, 6, szBuffer);
          m_wndListCtrl.SetItemText(iItem, 7, pObject->iface.dwIfType > MAX_INTERFACE_TYPE ?
-                                     "Unknown" : g_szInterfaceTypes[pObject->iface.dwIfType]);
+                                     _T("Unknown") : g_szInterfaceTypes[pObject->iface.dwIfType]);
          break;
       case OBJECT_NODE:
          // Create node capabilities string

@@ -41,7 +41,7 @@ public:
    // Generated message map functions
 protected:
 	CFont m_fontTitle;
-	char m_szTitle[MAX_TOOLBOX_TITLE];
+	TCHAR m_szTitle[MAX_TOOLBOX_TITLE];
 	//{{AFX_MSG(CToolBox)
 	afx_msg void OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS FAR* lpncsp);
 	afx_msg void OnNcPaint();

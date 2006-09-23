@@ -116,7 +116,7 @@ void CToolBox::OnNcPaint()
                      19, TOOLBOX_TITLE_COLOR);
    dc->SetTextColor(RGB(255, 255, 255));
    dc->SetBkColor(TOOLBOX_TITLE_COLOR);
-   dc->TextOut(5, 3, m_szTitle, strlen(m_szTitle));
+   dc->TextOut(5, 3, m_szTitle, _tcslen(m_szTitle));
 
    // Cleanup
    ReleaseDC(dc);
@@ -138,7 +138,7 @@ int CToolBox::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_fontTitle.CreateFont(-MulDiv(8, GetDeviceCaps(pdc->m_hDC, LOGPIXELSY), 72),
                           0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                          VARIABLE_PITCH | FF_DONTCARE, "MS Sans Serif");
+                          VARIABLE_PITCH | FF_DONTCARE, _T("MS Sans Serif"));
 	ReleaseDC(pdc);
 	return 0;
 }

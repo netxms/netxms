@@ -200,7 +200,7 @@ void CObjectSelDlg::OnOK()
    }
    else
    {
-      MessageBox("You should select at least one object", "Warning", MB_OK | MB_ICONEXCLAMATION);
+      MessageBox(_T("You should select at least one object"), _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
    }
 }
 

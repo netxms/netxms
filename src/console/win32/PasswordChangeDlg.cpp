@@ -44,20 +44,20 @@ END_MESSAGE_MAP()
 
 void CPasswordChangeDlg::OnOK() 
 {
-   char szPasswd1[MAX_PASSWORD_LENGTH], szPasswd2[MAX_PASSWORD_LENGTH];
+   TCHAR szPasswd1[MAX_PASSWORD_LENGTH], szPasswd2[MAX_PASSWORD_LENGTH];
 
    // Compare if two passwords match
    m_wndEditBox1.GetWindowText(szPasswd1, MAX_PASSWORD_LENGTH);
    m_wndEditBox2.GetWindowText(szPasswd2, MAX_PASSWORD_LENGTH);
-   if (strcmp(szPasswd1, szPasswd2))
+   if (_tcscmp(szPasswd1, szPasswd2))
    {
-      MessageBox("The password was not correctly confirmed. "
-                 "Please ensure that password and confirmation match exactly.",
-                 "Warning", MB_ICONEXCLAMATION | MB_OK);
+      MessageBox(_T("The password was not correctly confirmed. ")
+                 _T("Please ensure that password and confirmation match exactly."),
+                 _T("Warning"), MB_ICONEXCLAMATION | MB_OK);
    }
    else
    {
-      strcpy(m_szPassword, szPasswd1);
+      _tcscpy(m_szPassword, szPasswd1);
 	   CDialog::OnOK();
    }
 }

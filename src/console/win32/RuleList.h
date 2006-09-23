@@ -36,7 +36,7 @@
 
 struct RL_COLUMN
 {
-   char m_szName[MAX_COLUMN_NAME];
+   TCHAR m_szName[MAX_COLUMN_NAME];
    int m_iWidth;
    DWORD m_dwFlags;
 };
@@ -45,25 +45,25 @@ class RL_Cell
 {
 public:
    int m_iNumLines;
-   char **m_pszTextList;
+   TCHAR **m_pszTextList;
    int *m_piImageList;
    BYTE *m_pSelectFlags;
    BOOL m_bHasImages;
    BOOL m_bSelectable;
    BOOL m_bNegate;
-   char *m_pszText;    // Text for CF_TEXTBOX cells
+   TCHAR *m_pszText;    // Text for CF_TEXTBOX cells
 
    RL_Cell();
    ~RL_Cell();
 
    void Recalc(void);
    int CalculateHeight(int iTextHeight, int iWidth, BOOL bIsTextBox, CFont *pFont);
-   int AddLine(char *pszText, int iImage = -1);
-   BOOL ReplaceLine(int iLine, char *pszText, int iImage = -1);
+   int AddLine(TCHAR *pszText, int iImage = -1);
+   BOOL ReplaceLine(int iLine, TCHAR *pszText, int iImage = -1);
    BOOL DeleteLine(int iLine);
    void Clear(void);
    void ClearSelection(void);
-   void SetText(char *pszText);
+   void SetText(TCHAR *pszText);
 };
 
 class RL_Row
@@ -108,8 +108,8 @@ public:
 public:
 	void ClearSelection(BOOL bRedraw = TRUE);
 	COLORREF m_rgbActiveBkColor;
-	int AddItem(int iRow, int iColumn, char *pszText, int iImage = -1);
-	int InsertColumn(int iInsertBefore, char *pszText, int iWidth, DWORD dwFlags = 0);
+	int AddItem(int iRow, int iColumn, TCHAR *pszText, int iImage = -1);
+	int InsertColumn(int iInsertBefore, TCHAR *pszText, int iWidth, DWORD dwFlags = 0);
 	int InsertRow(int iInsertBefore);
 	BOOL Create(DWORD dwStyle, const RECT &rect, CWnd *pwndParent, UINT nId);
 	virtual ~CRuleList();
@@ -181,7 +181,7 @@ public:
 	void SaveColumns(TCHAR *pszSection, TCHAR *pszPrefix);
 	int GetSelectionCount(void);
 	void SetNegationFlag(int nRow, int nCol, BOOL bNegate);
-	void SetCellText(int iRow, int iColumn, char *pszText);
+	void SetCellText(int iRow, int iColumn, TCHAR *pszText);
 	BOOL DeleteRow(int iRow);
 	BOOL EnableCellSelection(int iRow, int iCell, BOOL bEnable);
 	void DeleteItem(int iRow, int iCell, int iItem);
@@ -192,7 +192,7 @@ public:
 	int GetNumItems(int iRow, int iCell);
 	void EnableRow(int iRow, BOOL bEnable = TRUE);
 	int GetNextRow(int iStartAfter, DWORD dwFlags);
-	void ReplaceItem(int iRow, int iColumn, int iItem, char *pszText, int iImage = -1);
+	void ReplaceItem(int iRow, int iColumn, int iItem, TCHAR *pszText, int iImage = -1);
 	void SetImageList(CImageList *pImageList) { m_pImageList = pImageList; }
    int GetNumRows(void) { return m_iNumRows; }
    int GetCurrentRow(void) { return m_iCurrRow; }

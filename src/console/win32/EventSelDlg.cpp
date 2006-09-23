@@ -64,7 +64,7 @@ BOOL CEventSelDlg::OnInitDialog()
 {
    NXC_EVENT_TEMPLATE **pList;
    DWORD i, dwListSize;
-   char szBuffer[32];
+   TCHAR szBuffer[32];
    RECT rect;
    int iItem;
 
@@ -79,8 +79,8 @@ BOOL CEventSelDlg::OnInitDialog()
 
    // Setup list control
    m_wndListCtrl.GetClientRect(&rect);
-   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 70);
-   m_wndListCtrl.InsertColumn(1, "Name", LVCFMT_LEFT, 
+   m_wndListCtrl.InsertColumn(0, _T("ID"), LVCFMT_LEFT, 70);
+   m_wndListCtrl.InsertColumn(1, _T("Name"), LVCFMT_LEFT, 
                               rect.right - 70 - GetSystemMetrics(SM_CXVSCROLL));
    m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT);
    if (m_bSingleSelection)
@@ -95,7 +95,7 @@ BOOL CEventSelDlg::OnInitDialog()
    {
       for(i = 0; i < dwListSize; i++)
       {
-         sprintf(szBuffer, "%u", pList[i]->dwCode);
+         _stprintf(szBuffer, _T("%u"), pList[i]->dwCode);
          iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, pList[i]->dwSeverity);
          m_wndListCtrl.SetItemText(iItem, 1, pList[i]->szName);
          m_wndListCtrl.SetItemData(iItem, pList[i]->dwCode);
@@ -131,7 +131,7 @@ void CEventSelDlg::OnOK()
    }
    else
    {
-      MessageBox("You should select at least one event", "Warning", MB_OK | MB_ICONEXCLAMATION);
+      MessageBox(_T("You should select at least one event"), _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
    }
 }
 

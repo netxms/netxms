@@ -108,15 +108,15 @@ int CMapView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_fontList[0].CreateFont(-MulDiv(7, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
                             0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                            VARIABLE_PITCH | FF_DONTCARE, "Helvetica");
+                            VARIABLE_PITCH | FF_DONTCARE, _T("Helvetica"));
    m_fontList[1].CreateFont(-MulDiv(5, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
                             0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                            VARIABLE_PITCH | FF_DONTCARE, "Helvetica");
+                            VARIABLE_PITCH | FF_DONTCARE, _T("Helvetica"));
    m_fontList[2].CreateFont(-MulDiv(11, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
                             0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                            VARIABLE_PITCH | FF_DONTCARE, "Helvetica");
+                            VARIABLE_PITCH | FF_DONTCARE, _T("Helvetica"));
 
    // Create pens for different link types
    m_penLinkTypes[0].CreatePen(PS_SOLID, 0, RGB(0, 0, 0));
@@ -1490,7 +1490,7 @@ HBITMAP CMapView::GetBkImage(DWORD dwMapId, DWORD dwSubmapId, int nScaleFactor)
               g_szWorkDir, szServerId, dwMapId, dwSubmapId);
    
    // Download file if needed
-   if (access(szFileName, 4) != 0)
+   if (_taccess(szFileName, 4) != 0)
    {
       dwResult = DoRequestArg4(NXCDownloadSubmapBkImage, g_hSession, (void *)dwMapId,
                                (void *)dwSubmapId, szFileName,

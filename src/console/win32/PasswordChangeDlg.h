@@ -16,7 +16,7 @@ class CPasswordChangeDlg : public CDialog
 {
 // Construction
 public:
-	char m_szPassword[MAX_PASSWORD_LENGTH];
+	TCHAR m_szPassword[MAX_PASSWORD_LENGTH];
 	CPasswordChangeDlg(int nTemplate, CWnd* pParent = NULL);
 
 // Dialog Data

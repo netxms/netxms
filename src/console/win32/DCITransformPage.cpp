@@ -16,12 +16,12 @@ static char THIS_FILE[] = __FILE__;
 // Delta calculation methods
 //
 
-static char *m_pszMethodList[] =
+static TCHAR *m_pszMethodList[] =
 {
-   "None - Keep original value",
-   "Simple delta",
-   "Average delta per second",
-   "Average delta per minute",
+   _T("None - Keep original value"),
+   _T("Simple delta"),
+   _T("Average delta per second"),
+   _T("Average delta per minute"),
    NULL
 };
 
@@ -96,7 +96,7 @@ void CDCITransformPage::EnableWarning(void)
    ((CPropertySheet *)GetParent())->GetPage(0)->GetDlgItemText(IDC_EDIT_INTERVAL, szBuffer, 256);
 
    // Enable or disable warning message
-   nShow = ((m_iDeltaProc == DCM_AVERAGE_PER_MINUTE) && (strtol(szBuffer, NULL, 10) < 60)) ? SW_SHOWNA : SW_HIDE;
+   nShow = ((m_iDeltaProc == DCM_AVERAGE_PER_MINUTE) && (_tcstol(szBuffer, NULL, 10) < 60)) ? SW_SHOWNA : SW_HIDE;
    ::ShowWindow(::GetDlgItem(m_hWnd, IDC_STATIC_WARNING_ICON), nShow);
    ::ShowWindow(::GetDlgItem(m_hWnd, IDC_STATIC_WARNING_TEXT), nShow);
 }

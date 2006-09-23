@@ -66,10 +66,10 @@ int CLPPList::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 60);
-   m_wndListCtrl.InsertColumn(1, "Name", LVCFMT_LEFT, 200);
-   m_wndListCtrl.InsertColumn(2, "Version", LVCFMT_LEFT, 70);
-   m_wndListCtrl.InsertColumn(3, "Flags", LVCFMT_LEFT, 70);
+   m_wndListCtrl.InsertColumn(0, _T("ID"), LVCFMT_LEFT, 60);
+   m_wndListCtrl.InsertColumn(1, _T("Name"), LVCFMT_LEFT, 200);
+   m_wndListCtrl.InsertColumn(2, _T("Version"), LVCFMT_LEFT, 70);
+   m_wndListCtrl.InsertColumn(3, _T("Flags"), LVCFMT_LEFT, 70);
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 

@@ -69,7 +69,7 @@ BOOL CUserEditor::PreCreateWindow(CREATESTRUCT& cs)
 
 void CUserEditor::OnClose() 
 {
-   DoRequestArg1(NXCUnlockUserDB, g_hSession, "Unlocking user database...");
+   DoRequestArg1(NXCUnlockUserDB, g_hSession, _T("Unlocking user database..."));
 	CMDIChildWnd::OnClose();
 }
 
@@ -114,9 +114,9 @@ int CUserEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetImageList(pImageList, LVSIL_SMALL);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "Name", LVCFMT_LEFT, 100);
-   m_wndListCtrl.InsertColumn(1, "Full Name", LVCFMT_LEFT, 170);
-   m_wndListCtrl.InsertColumn(2, "Description", LVCFMT_LEFT, 300);
+   m_wndListCtrl.InsertColumn(0, _T("Name"), LVCFMT_LEFT, 100);
+   m_wndListCtrl.InsertColumn(1, _T("Full Name"), LVCFMT_LEFT, 170);
+   m_wndListCtrl.InsertColumn(2, _T("Description"), LVCFMT_LEFT, 300);
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 
@@ -195,8 +195,8 @@ void CUserEditor::OnUserCreateUser()
 {
    CNewUserDlg wndDialog;
 
-   wndDialog.m_strTitle = "New User";
-   wndDialog.m_strHeader = "Login name";
+   wndDialog.m_strTitle = _T("New User");
+   wndDialog.m_strHeader = _T("Login name");
    wndDialog.m_bDefineProperties = TRUE;
    if (wndDialog.DoModal() == IDOK)
       CreateUserObject((LPCTSTR)wndDialog.m_strName, FALSE, wndDialog.m_bDefineProperties);
@@ -211,8 +211,8 @@ void CUserEditor::OnUserCreateGroup()
 {
    CNewUserDlg wndDialog;
 
-   wndDialog.m_strTitle = "New Group";
-   wndDialog.m_strHeader = "Group name";
+   wndDialog.m_strTitle = _T("New Group");
+   wndDialog.m_strHeader = _T("Group name");
    wndDialog.m_bDefineProperties = TRUE;
    if (wndDialog.DoModal() == IDOK)
       CreateUserObject((LPCTSTR)wndDialog.m_strName, TRUE, wndDialog.m_bDefineProperties);
@@ -223,13 +223,13 @@ void CUserEditor::OnUserCreateGroup()
 // Create user or group
 //
 
-void CUserEditor::CreateUserObject(const char *pszName, BOOL bIsGroup, BOOL bShowProp)
+void CUserEditor::CreateUserObject(const TCHAR *pszName, BOOL bIsGroup, BOOL bShowProp)
 {
    DWORD dwResult, dwNewId;
 
    // Send request to server
    dwResult = DoRequestArg4(NXCCreateUser, g_hSession, (void *)pszName, (void *)bIsGroup, 
-                            &dwNewId, bIsGroup ? "Creating new group..." : "Creating new user...");
+                            &dwNewId, bIsGroup ? _T("Creating new group...") : _T("Creating new user..."));
    if (dwResult == RCC_SUCCESS)
    {
       int iItem, iOldItem;
@@ -246,7 +246,7 @@ void CUserEditor::CreateUserObject(const char *pszName, BOOL bIsGroup, BOOL bSho
 
          memset(&user, 0, sizeof(NXC_USER));
          user.dwId = dwNewId;
-         strcpy(user.szName, pszName);
+         nx_strncpy(user.szName, pszName, MAX_USER_NAME);
          iItem = AddListItem(&user);
       }
 
@@ -263,11 +263,11 @@ void CUserEditor::CreateUserObject(const char *pszName, BOOL bIsGroup, BOOL bSho
    }
    else
    {
-      char szBuffer[256];
+      TCHAR szBuffer[256];
 
-      sprintf(szBuffer, "Error creating %s object: %s", 
-              bIsGroup ? "group" : "user", NXCGetErrorText(dwResult));
-      MessageBox(szBuffer, "Error", MB_OK | MB_ICONSTOP);
+      _stprintf(szBuffer, _T("Error creating %s object: %s"), 
+                bIsGroup ? _T("group") : _T("user"), NXCGetErrorText(dwResult));
+      MessageBox(szBuffer, _T("Error"), MB_OK | MB_ICONSTOP);
    }
 }
 
@@ -367,8 +367,8 @@ void CUserEditor::OnUserProperties()
             if (dlg.DoModal() == IDOK)
             {
                userInfo.dwId = pUser->dwId;
-               strcpy(userInfo.szName, (LPCTSTR)dlg.m_strName);
-               strcpy(userInfo.szDescription, (LPCTSTR)dlg.m_strDescription);
+               nx_strncpy(userInfo.szName, (LPCTSTR)dlg.m_strName, MAX_USER_NAME);
+               nx_strncpy(userInfo.szDescription, (LPCTSTR)dlg.m_strDescription, MAX_USER_DESCR);
                userInfo.wFlags = dlg.m_bDisabled ? UF_DISABLED : 0;
                userInfo.wSystemRights = (dlg.m_bDropConn ? SYSTEM_ACCESS_MANAGE_SESSIONS : 0) |
                                         (dlg.m_bManageUsers ? SYSTEM_ACCESS_MANAGE_USERS : 0) |
@@ -413,9 +413,9 @@ void CUserEditor::OnUserProperties()
             if (dlg.DoModal() == IDOK)
             {
                userInfo.dwId = pUser->dwId;
-               strcpy(userInfo.szName, (LPCTSTR)dlg.m_strLogin);
-               strcpy(userInfo.szFullName, (LPCTSTR)dlg.m_strFullName);
-               strcpy(userInfo.szDescription, (LPCTSTR)dlg.m_strDescription);
+               nx_strncpy(userInfo.szName, (LPCTSTR)dlg.m_strLogin, MAX_USER_NAME);
+               nx_strncpy(userInfo.szFullName, (LPCTSTR)dlg.m_strFullName, MAX_USER_FULLNAME);
+               nx_strncpy(userInfo.szDescription, (LPCTSTR)dlg.m_strDescription, MAX_USER_DESCR);
                userInfo.nAuthMethod = dlg.m_nAuthMethod;
                userInfo.wFlags = (dlg.m_bAccountDisabled ? UF_DISABLED : 0) |
                                  (dlg.m_bChangePassword ? UF_CHANGE_PASSWORD : 0);
@@ -438,9 +438,9 @@ void CUserEditor::OnUserProperties()
          {
             DWORD dwResult;
 
-            dwResult = DoRequestArg2(NXCModifyUser, g_hSession, &userInfo, "Updating user database...");
+            dwResult = DoRequestArg2(NXCModifyUser, g_hSession, &userInfo, _T("Updating user database..."));
             if (dwResult != RCC_SUCCESS)
-               theApp.ErrorBox(dwResult, "Cannot modify user record: %s");
+               theApp.ErrorBox(dwResult, _T("Cannot modify user record: %s"));
 
             // Destroy group members list
             safe_free(userInfo.pdwMemberList);
@@ -448,7 +448,7 @@ void CUserEditor::OnUserProperties()
       }
       else
       {
-         MessageBox("Attempt to edit non-existing user record", "Internal Error", MB_ICONSTOP | MB_OK);
+         MessageBox(_T("Attempt to edit non-existing user record"), _T("Internal Error"), MB_ICONSTOP | MB_OK);
          PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
       }
    }
@@ -471,13 +471,13 @@ void CUserEditor::OnUserDelete()
       dwId = m_wndListCtrl.GetItemData(iItem);
       if (dwId == 0)
       {
-         MessageBox("System administrator account cannot be deleted",
-                    "Warning", MB_ICONEXCLAMATION | MB_OK);
+         MessageBox(_T("System administrator account cannot be deleted"),
+                    _T("Warning"), MB_ICONEXCLAMATION | MB_OK);
       }
       else if (dwId == GROUP_EVERYONE)
       {
-         MessageBox("Everyone group cannot be deleted",
-                    "Warning", MB_ICONEXCLAMATION | MB_OK);
+         MessageBox(_T("Everyone group cannot be deleted"),
+                    _T("Warning"), MB_ICONEXCLAMATION | MB_OK);
       }
       else
       {
@@ -486,22 +486,22 @@ void CUserEditor::OnUserDelete()
          pUser = NXCFindUserById(g_hSession, dwId);
          if (pUser != NULL)
          {
-            char szBuffer[256];
+            TCHAR szBuffer[256];
 
-            sprintf(szBuffer, "Do you really wish to delete %s %s ?",
-                    dwId & GROUP_FLAG ? "group" : "user", pUser->szName);
-            if (MessageBox(szBuffer, "Delete account", MB_ICONQUESTION | MB_YESNO) == IDYES)
+            _stprintf(szBuffer, _T("Do you really wish to delete %s %s ?"),
+                      dwId & GROUP_FLAG ? _T("group") : _T("user"), pUser->szName);
+            if (MessageBox(szBuffer, _T("Delete account"), MB_ICONQUESTION | MB_YESNO) == IDYES)
             {
                DWORD dwResult;
 
-               dwResult = DoRequestArg2(NXCDeleteUser, g_hSession, (void *)dwId, "Deleting user...");
+               dwResult = DoRequestArg2(NXCDeleteUser, g_hSession, (void *)dwId, _T("Deleting user..."));
                if (dwResult != RCC_SUCCESS)
-                  theApp.ErrorBox(dwResult, "Cannot delete user record: %s");
+                  theApp.ErrorBox(dwResult, _T("Cannot delete user record: %s"));
             }
          }
          else
          {
-            MessageBox("Attempt to delete non-existing user record", "Internal Error", MB_ICONSTOP | MB_OK);
+            MessageBox(_T("Attempt to delete non-existing user record"), _T("Internal Error"), MB_ICONSTOP | MB_OK);
             PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
          }
       }
@@ -568,16 +568,16 @@ void CUserEditor::OnUserSetpassword()
          {
             DWORD dwResult;
 
-            dwResult = DoRequestArg3(NXCSetPassword, g_hSession, (void *)dwId, dlg.m_szPassword, "Changing password...");
+            dwResult = DoRequestArg3(NXCSetPassword, g_hSession, (void *)dwId, dlg.m_szPassword, _T("Changing password..."));
             if (dwResult != RCC_SUCCESS)
-               theApp.ErrorBox(dwResult, "Cannot change password: %s");
+               theApp.ErrorBox(dwResult, _T("Cannot change password: %s"));
             else
-               MessageBox("Password was successfully changed", "Information", MB_ICONINFORMATION | MB_OK);
+               MessageBox(_T("Password was successfully changed"), _T("Information"), MB_ICONINFORMATION | MB_OK);
          }
       }
       else
       {
-         MessageBox("Attempt to modify non-existing user record", "Internal Error", MB_ICONSTOP | MB_OK);
+         MessageBox(_T("Attempt to modify non-existing user record"), _T("Internal Error"), MB_ICONSTOP | MB_OK);
          PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
       }
    }

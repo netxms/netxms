@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.85 2006-09-10 06:59:36 victor Exp $ */
+/* $Id: nms_util.h,v 1.86 2006-09-23 23:49:41 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -363,11 +363,16 @@ extern "C"
                                                 int cchWideChar);
 #endif
 
+#ifdef UNICODE
+INT64 LIBNETXMS_EXPORTABLE wcstoll(const WCHAR *nptr, WCHAR **endptr, int base);
+QWORD LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base);
+#else
 #if !(HAVE_STRTOLL)
    INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base);
 #endif
 #if !(HAVE_STRTOULL)
    QWORD LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base);
+#endif
 #endif
 
 #ifdef _WIN32
@@ -406,6 +411,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.85  2006/09/10 06:59:36  victor
+Fixed problmes with Win32 build
+
 Revision 1.84  2006/09/07 22:02:06  alk
 UNIX version of Serial rewritten
 termio removed from configure (depricated in favour of termio_s_?)

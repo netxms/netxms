@@ -572,6 +572,7 @@ typedef struct tagICMPHDR
 //
 
 #define CHECK_NULL(x)      ((x) == NULL ? ((TCHAR *)_T("(null)")) : (x))
+#define CHECK_NULL_A(x)    ((x) == NULL ? ((char *)"(null)") : (x))
 #define CHECK_NULL_EX(x)   ((x) == NULL ? ((TCHAR *)_T("")) : (x))
 
 

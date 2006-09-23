@@ -4,6 +4,7 @@
 
 - Threshold state now saved across NetXMS server restarts
 - Windows console:
+	- Console changed to use UNICODE internally
 	- Event processing policy editor improved
 - Fixed issues: #104, #109, #111
 

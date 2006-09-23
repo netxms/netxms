@@ -278,7 +278,7 @@ void CEventPolicyEditor::OnSetFocus(CWnd* pOldWnd)
 void CEventPolicyEditor::InsertNewRule(int iInsertBefore)
 {
    int iPos;
-   char szBuffer[32];
+   TCHAR szBuffer[32];
 
    // Position for new rule
    iPos = (iInsertBefore > (int)m_pEventPolicy->dwNumRules) ? 
@@ -304,7 +304,7 @@ void CEventPolicyEditor::InsertNewRule(int iInsertBefore)
    // Renumber all rows below new
    for(iPos++; iPos < (int)m_pEventPolicy->dwNumRules; iPos++)
    {
-      sprintf(szBuffer, "%d", iPos + 1);
+      _stprintf(szBuffer, _T("%d"), iPos + 1);
       m_wndRuleList.ReplaceItem(iPos, 0, 0, szBuffer);
    }
 
@@ -318,11 +318,11 @@ void CEventPolicyEditor::InsertNewRule(int iInsertBefore)
 
 void CEventPolicyEditor::UpdateRow(int iRow)
 {
-   char szBuffer[256];
+   TCHAR szBuffer[256];
    DWORD i;
 
    // Rule number
-   sprintf(szBuffer, "%d", iRow + 1);
+   _stprintf(szBuffer, _T("%d"), iRow + 1);
    if (m_wndRuleList.GetNumItems(iRow, COL_RULE) == 0)
       m_wndRuleList.AddItem(iRow, COL_RULE, szBuffer);
    else
@@ -332,7 +332,7 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    m_wndRuleList.ClearCell(iRow, COL_SOURCE);
    if (m_pEventPolicy->pRuleList[iRow].dwNumSources == 0)
    {
-      m_wndRuleList.AddItem(iRow, COL_SOURCE, "Any", m_iImageAny);
+      m_wndRuleList.AddItem(iRow, COL_SOURCE, _T("Any"), m_iImageAny);
    }
    else
    {
@@ -352,13 +352,13 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    m_wndRuleList.ClearCell(iRow, COL_EVENT);
    if (m_pEventPolicy->pRuleList[iRow].dwNumEvents == 0)
    {
-      m_wndRuleList.AddItem(iRow, COL_EVENT, "Any", m_iImageAny);
+      m_wndRuleList.AddItem(iRow, COL_EVENT, _T("Any"), m_iImageAny);
    }
    else
    {
       for(i = 0; i < m_pEventPolicy->pRuleList[iRow].dwNumEvents; i++)
          m_wndRuleList.AddItem(iRow, COL_EVENT, 
-             (char *)NXCGetEventName(g_hSession, m_pEventPolicy->pRuleList[iRow].pdwEventList[i]),
+             (TCHAR *)NXCGetEventName(g_hSession, m_pEventPolicy->pRuleList[iRow].pdwEventList[i]),
              m_iImageSeverityBase + NXCGetEventSeverity(g_hSession, m_pEventPolicy->pRuleList[iRow].pdwEventList[i]));
    }
    m_wndRuleList.SetNegationFlag(iRow, COL_EVENT, (m_pEventPolicy->pRuleList[iRow].dwFlags & RF_NEGATED_EVENTS) ? TRUE : FALSE);
@@ -367,7 +367,7 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    m_wndRuleList.ClearCell(iRow, COL_SEVERITY);
    if ((m_pEventPolicy->pRuleList[iRow].dwFlags & ANY_SEVERITY) == ANY_SEVERITY)
    {
-      m_wndRuleList.AddItem(iRow, COL_SEVERITY, "Any", m_iImageAny);
+      m_wndRuleList.AddItem(iRow, COL_SEVERITY, _T("Any"), m_iImageAny);
    }
    else
    {
@@ -392,9 +392,9 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    else
    {
       if (m_wndRuleList.GetNumItems(iRow, COL_ALARM) == 0)
-         m_wndRuleList.AddItem(iRow, COL_ALARM, "None", m_iImageAny + 1);
+         m_wndRuleList.AddItem(iRow, COL_ALARM, _T("None"), m_iImageAny + 1);
       else
-         m_wndRuleList.ReplaceItem(iRow, COL_ALARM, 0, "None", m_iImageAny + 1);
+         m_wndRuleList.ReplaceItem(iRow, COL_ALARM, 0, _T("None"), m_iImageAny + 1);
    }
 
    // Action
@@ -415,7 +415,7 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    }
    else
    {
-      m_wndRuleList.AddItem(iRow, COL_ACTION, "None", m_iImageAny + 1);
+      m_wndRuleList.AddItem(iRow, COL_ACTION, _T("None"), m_iImageAny + 1);
    }
 
    // Comment
@@ -708,7 +708,7 @@ void CEventPolicyEditor::OnPolicyDelete(void)
                        sizeof(DWORD) * (m_pEventPolicy->pRuleList[iRow].dwNumSources - iItem));
                if (m_pEventPolicy->pRuleList[iRow].dwNumSources == 0)
                {
-                  m_wndRuleList.ReplaceItem(iRow, iCol, 0, "Any", m_iImageAny);
+                  m_wndRuleList.ReplaceItem(iRow, iCol, 0, _T("Any"), m_iImageAny);
                   m_wndRuleList.EnableCellSelection(iRow, iCol, FALSE);
                }
                else
@@ -727,7 +727,7 @@ void CEventPolicyEditor::OnPolicyDelete(void)
                        sizeof(DWORD) * (m_pEventPolicy->pRuleList[iRow].dwNumEvents - iItem));
                if (m_pEventPolicy->pRuleList[iRow].dwNumEvents == 0)
                {
-                  m_wndRuleList.ReplaceItem(iRow, iCol, 0, "Any", m_iImageAny);
+                  m_wndRuleList.ReplaceItem(iRow, iCol, 0, _T("Any"), m_iImageAny);
                   m_wndRuleList.EnableCellSelection(iRow, iCol, FALSE);
                }
                else
@@ -746,7 +746,7 @@ void CEventPolicyEditor::OnPolicyDelete(void)
                        sizeof(DWORD) * (m_pEventPolicy->pRuleList[iRow].dwNumActions - iItem));
                if (m_pEventPolicy->pRuleList[iRow].dwNumActions == 0)
                {
-                  m_wndRuleList.ReplaceItem(iRow, iCol, 0, "None", m_iImageAny + 1);
+                  m_wndRuleList.ReplaceItem(iRow, iCol, 0, _T("None"), m_iImageAny + 1);
                   m_wndRuleList.EnableCellSelection(iRow, iCol, FALSE);
                }
                else
@@ -768,7 +768,7 @@ void CEventPolicyEditor::OnPolicyDelete(void)
 void CEventPolicyEditor::OnPolicyDeleterule(void) 
 {
    int i, iRow;
-   char szBuffer[32];
+   TCHAR szBuffer[32];
 
    iRow = m_wndRuleList.GetNextRow(-1, RLF_SELECTED);
    if (iRow != -1)
@@ -779,7 +779,7 @@ void CEventPolicyEditor::OnPolicyDeleterule(void)
          NXCDeletePolicyRule(m_pEventPolicy, iRow);
          for(i = iRow; i < (int)m_pEventPolicy->dwNumRules; i++)
          {
-            sprintf(szBuffer, "%d", i + 1);
+            _stprintf(szBuffer, _T("%d"), i + 1);
             m_wndRuleList.ReplaceItem(i, 0, 0, szBuffer);
          }
          iRow = m_wndRuleList.GetNextRow(iRow - 1, RLF_SELECTED);
@@ -912,7 +912,7 @@ void CEventPolicyEditor::EditComment(int iRow)
    if (dlg.DoModal() == IDOK)
    {
       safe_free(m_pEventPolicy->pRuleList[iRow].pszComment);
-      m_pEventPolicy->pRuleList[iRow].pszComment = strdup((LPCTSTR)dlg.m_strText);
+      m_pEventPolicy->pRuleList[iRow].pszComment = _tcsdup((LPCTSTR)dlg.m_strText);
       Modify();
       UpdateRow(iRow);
    }
@@ -974,10 +974,10 @@ void CEventPolicyEditor::OnPolicySave()
 {
    DWORD dwResult;
 
-   dwResult = DoRequestArg2(NXCSaveEventPolicy, g_hSession, m_pEventPolicy, "Saving event processing policy...");
+   dwResult = DoRequestArg2(NXCSaveEventPolicy, g_hSession, m_pEventPolicy, _T("Saving event processing policy..."));
    if (dwResult != RCC_SUCCESS)
    {
-      theApp.ErrorBox(dwResult, "Error saving event processing policy: %s");
+      theApp.ErrorBox(dwResult, _T("Error saving event processing policy: %s"));
    }
    else
    {

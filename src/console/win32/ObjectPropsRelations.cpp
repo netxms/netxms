@@ -68,12 +68,12 @@ BOOL CObjectPropsRelations::OnInitDialog()
 
    // Setup list controls
    m_wndListChilds.GetClientRect(&rect);
-   m_wndListChilds.InsertColumn(0, "Object", LVCFMT_LEFT, rect.right);
+   m_wndListChilds.InsertColumn(0, _T("Object"), LVCFMT_LEFT, rect.right);
    m_wndListChilds.SetExtendedStyle(LVS_EX_FULLROWSELECT);
    m_wndListChilds.SetImageList(m_pImageList, LVSIL_SMALL);
 
    m_wndListParents.GetClientRect(&rect);
-   m_wndListParents.InsertColumn(0, "Object", LVCFMT_LEFT, rect.right);
+   m_wndListParents.InsertColumn(0, _T("Object"), LVCFMT_LEFT, rect.right);
    m_wndListParents.SetExtendedStyle(LVS_EX_FULLROWSELECT);
    m_wndListParents.SetImageList(m_pImageList, LVSIL_SMALL);
 

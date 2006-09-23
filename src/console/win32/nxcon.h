@@ -12,6 +12,10 @@
 	#error include 'stdafx.h' before including this file for PCH
 #endif
 
+#ifndef UNICODE
+#error Building NetXMS console without UNICODE support is deprecated
+#endif
+
 
 //
 // Common inline functions

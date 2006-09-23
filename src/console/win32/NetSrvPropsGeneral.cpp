@@ -137,9 +137,9 @@ void CNetSrvPropsGeneral::OnOK()
 	CPropertyPage::OnOK();
 
    // Set fields in update structure
-   m_pUpdate->pszName = (char *)((LPCTSTR)m_strName);
-   m_pUpdate->pszRequest = (char *)((LPCTSTR)m_strRequest);
-   m_pUpdate->pszResponse = (char *)((LPCTSTR)m_strResponse);
+   m_pUpdate->pszName = (TCHAR *)((LPCTSTR)m_strName);
+   m_pUpdate->pszRequest = (TCHAR *)((LPCTSTR)m_strRequest);
+   m_pUpdate->pszResponse = (TCHAR *)((LPCTSTR)m_strResponse);
    m_pUpdate->iServiceType = m_iServiceType;
    m_pUpdate->wPort = (WORD)m_iPort;
    m_pUpdate->wProto = (WORD)m_iProto;

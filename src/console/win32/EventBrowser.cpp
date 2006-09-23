@@ -79,10 +79,10 @@ int CEventBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "Time", LVCFMT_LEFT, 135);
-   m_wndListCtrl.InsertColumn(1, "Severity", LVCFMT_LEFT, 70);
-   m_wndListCtrl.InsertColumn(2, "Source", LVCFMT_LEFT, 140);
-   m_wndListCtrl.InsertColumn(3, "Message", LVCFMT_LEFT, 500);
+   m_wndListCtrl.InsertColumn(0, _T("Time"), LVCFMT_LEFT, 135);
+   m_wndListCtrl.InsertColumn(1, _T("Severity"), LVCFMT_LEFT, 70);
+   m_wndListCtrl.InsertColumn(2, _T("Source"), LVCFMT_LEFT, 140);
+   m_wndListCtrl.InsertColumn(3, _T("Message"), LVCFMT_LEFT, 500);
 	
    // Create wait view
    m_wndWaitView.SetText(_T("Loading event log..."));
@@ -149,10 +149,10 @@ void CEventBrowser::AddEvent(NXC_EVENT *pEvent, BOOL bAppend)
 {
    int iIdx;
    struct tm *ptm;
-   char szBuffer[64];
+   TCHAR szBuffer[64];
 
    ptm = localtime((const time_t *)&pEvent->dwTimeStamp);
-   strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);
+   _tcsftime(szBuffer, 32, _T("%d-%b-%Y %H:%M:%S"), ptm);
    iIdx = m_wndListCtrl.InsertItem(bAppend ? 0x7FFFFFFF : 0, szBuffer, pEvent->dwSeverity);
    if (iIdx != -1)
    {

@@ -317,6 +317,9 @@ static TCHAR *ReadStringFromFile(ZFile *pFile)
 {
    TCHAR *pszStr;
    WORD wLen;
+#ifdef UNICODE
+   char *pszBuffer;
+#endif
 
    pFile->read(&wLen, 2);
    wLen = ntohs(wLen);

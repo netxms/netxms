@@ -57,8 +57,8 @@ BOOL CObjectPropCaps::OnInitDialog()
 
    // Initialize list control
    m_wndListCtrl.GetClientRect(&rect);
-   m_wndListCtrl.InsertColumn(0, "Capability", LVCFMT_LEFT, 180);
-   m_wndListCtrl.InsertColumn(1, "Value", LVCFMT_LEFT, 
+   m_wndListCtrl.InsertColumn(0, _T("Capability"), LVCFMT_LEFT, 180);
+   m_wndListCtrl.InsertColumn(1, _T("Value"), LVCFMT_LEFT, 
                               rect.right - 180 - GetSystemMetrics(SM_CXVSCROLL));
    m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 

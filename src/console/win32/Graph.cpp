@@ -6,7 +6,7 @@
 #include "Graph.h"
 #include <math.h>
 
-#define ROW_DATA(row, dt)  ((dt == DCI_DT_STRING) ? strtod(row->value.szString, NULL) : \
+#define ROW_DATA(row, dt)  ((dt == DCI_DT_STRING) ? _tcstod(row->value.szString, NULL) : \
                             (((dt == DCI_DT_INT) || (dt == DCI_DT_UINT)) ? row->value.dwInt32 : \
                              (((dt == DCI_DT_INT64) || (dt == DCI_DT_UINT64)) ? (INT64)row->value.qwInt64 : \
                               ((dt == DCI_DT_FLOAT) ? row->value.dFloat : 0) \
@@ -112,7 +112,7 @@ END_MESSAGE_MAP()
 
 BOOL CGraph::Create(DWORD dwStyle, const RECT &rect, CWnd *pwndParent, int nId)
 {
-   return CWnd::Create(NULL, "", dwStyle, rect, pwndParent, nId);
+   return CWnd::Create(NULL, _T(""), dwStyle, rect, pwndParent, nId);
 }
 
 
@@ -464,7 +464,7 @@ void CGraph::DrawGraphOnBitmap()
    int nGridSizeX, nGridSizeY, nGrids, nDataAreaHeight;
    int nColSize, nCols, nCurrCol, nTimeLabel;
    double dStep, dMark;
-   char szBuffer[256], szModifier[4];
+   TCHAR szBuffer[256], szModifier[4];
    BOOL bIntMarks;
    static double nSecPerMonth[12] = { 2678400, 2419200, 2678400, 2592000,
                                       2678400, 2592000, 2678400, 2678400,
@@ -492,7 +492,7 @@ void CGraph::DrawGraphOnBitmap()
    font.CreateFont(-MulDiv(7, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
                    0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                    OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                   VARIABLE_PITCH | FF_DONTCARE, "Verdana");
+                   VARIABLE_PITCH | FF_DONTCARE, _T("Verdana"));
    pOldFont = dc.SelectObject(&font);
    dc.SetTextColor(m_rgbTextColor);
 
@@ -703,9 +703,9 @@ void CGraph::DrawGraphOnBitmap()
    for(y = rect.bottom - iBottomMargin - textSize.cy / 2, dMark = 0; y > iTopMargin; y -= nGridSizeY, dMark += dStep)
    {
       if (bIntMarks)
-         sprintf(szBuffer, INT64_FMT "%s", (INT64)dMark / nDivider, szModifier);
+         _stprintf(szBuffer, INT64_FMT _T("%s"), (INT64)dMark / nDivider, szModifier);
       else
-         sprintf(szBuffer, "%5.3f%s", dMark, szModifier);
+         _stprintf(szBuffer, _T("%5.3f%s"), dMark, szModifier);
       CSize cz = dc.GetTextExtent(szBuffer);
       dc.TextOut(iLeftMargin - cz.cx - 5, y, szBuffer);
    }

@@ -101,10 +101,10 @@ int CTrapEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "ID", LVCFMT_LEFT, 60);
-   m_wndListCtrl.InsertColumn(1, "SNMP Trap ID", LVCFMT_LEFT, 200);
-   m_wndListCtrl.InsertColumn(2, "Event", LVCFMT_LEFT, 200);
-   m_wndListCtrl.InsertColumn(3, "Description", LVCFMT_LEFT, 250);
+   m_wndListCtrl.InsertColumn(0, _T("ID"), LVCFMT_LEFT, 60);
+   m_wndListCtrl.InsertColumn(1, _T("SNMP Trap ID"), LVCFMT_LEFT, 200);
+   m_wndListCtrl.InsertColumn(2, _T("Event"), LVCFMT_LEFT, 200);
+   m_wndListCtrl.InsertColumn(3, _T("Description"), LVCFMT_LEFT, 250);
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 
@@ -153,7 +153,7 @@ void CTrapEditor::OnSize(UINT nType, int cx, int cy)
 
 void CTrapEditor::OnClose() 
 {
-   DoRequestArg1(NXCUnlockTrapCfg, g_hSession, "Unlocking SNMP trap configuration database...");
+   DoRequestArg1(NXCUnlockTrapCfg, g_hSession, _T("Unlocking SNMP trap configuration database..."));
 	CMDIChildWnd::OnClose();
 }
 

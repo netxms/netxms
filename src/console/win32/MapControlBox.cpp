@@ -46,7 +46,7 @@ int CMapControlBox::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_font.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
                      0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                     VARIABLE_PITCH | FF_DONTCARE, "Verdana");
+                     VARIABLE_PITCH | FF_DONTCARE, _T("Verdana"));
 
    m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER,
                         rect, this, ID_LIST_VIEW);

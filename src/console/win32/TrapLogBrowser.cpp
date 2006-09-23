@@ -73,11 +73,11 @@ int CTrapLogBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, "Time", LVCFMT_LEFT, 135);
-   m_wndListCtrl.InsertColumn(1, "Source IP", LVCFMT_LEFT, 80);
-   m_wndListCtrl.InsertColumn(2, "Source Object", LVCFMT_LEFT, 80);
-   m_wndListCtrl.InsertColumn(3, "Trap OID", LVCFMT_LEFT, 100);
-   m_wndListCtrl.InsertColumn(4, "Varbinds", LVCFMT_LEFT, 500);
+   m_wndListCtrl.InsertColumn(0, _T("Time"), LVCFMT_LEFT, 135);
+   m_wndListCtrl.InsertColumn(1, _T("Source IP"), LVCFMT_LEFT, 80);
+   m_wndListCtrl.InsertColumn(2, _T("Source Object"), LVCFMT_LEFT, 80);
+   m_wndListCtrl.InsertColumn(3, _T("Trap OID"), LVCFMT_LEFT, 100);
+   m_wndListCtrl.InsertColumn(4, _T("Varbinds"), LVCFMT_LEFT, 500);
 	
    // Create wait view
    m_wndWaitView.SetText(_T("Loading SNMP trap log..."));
@@ -215,7 +215,7 @@ void CTrapLogBrowser::AddRecord(NXC_SNMP_TRAP_LOG_RECORD *pRec, BOOL bAppend)
    int iIdx;
    time_t t;
    struct tm *ptm;
-   char szBuffer[64];
+   TCHAR szBuffer[64];
    NXC_OBJECT *pNode;
 
    t = pRec->dwTimeStamp;

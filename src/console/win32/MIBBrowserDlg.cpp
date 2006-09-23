@@ -209,7 +209,7 @@ void CMIBBrowserDlg::Expand()
 {
    SetWindowPos(NULL, 0, 0, m_sizeExpanded.cx, m_sizeExpanded.cy, SWP_NOZORDER | SWP_NOMOVE);
    ShowExtControls(TRUE);
-   m_wndButtonDetails.SetWindowText("&Details <<<");
+   m_wndButtonDetails.SetWindowText(_T("&Details <<<"));
    m_bIsExpanded = TRUE;
 }
 
@@ -222,7 +222,7 @@ void CMIBBrowserDlg::Collapse()
 {
    ShowExtControls(FALSE);
    SetWindowPos(NULL, 0, 0, m_sizeCollapsed.cx, m_sizeCollapsed.cy, SWP_NOZORDER | SWP_NOMOVE);
-   m_wndButtonDetails.SetWindowText("&Details >>>");
+   m_wndButtonDetails.SetWindowText(_T("&Details >>>"));
    m_bIsExpanded = FALSE;
 }
 
@@ -341,14 +341,14 @@ void CMIBBrowserDlg::OnChangeEditInstance()
    HTREEITEM hItem;
 
    m_wndEditInstance.GetWindowText(szBuffer, 32);
-   m_dwInstance = strtoul(szBuffer, NULL, 10);
+   m_dwInstance = _tcstoul(szBuffer, NULL, 10);
 
    // Update symbolic OID
    hItem = m_wndTreeCtrl.GetNextItem(NULL, TVGN_CARET);
    if (hItem != NULL)
    {
       SNMP_MIBObject *pNode;
-      char *pszTemp;
+      TCHAR *pszTemp;
 
       pNode = (SNMP_MIBObject *)m_wndTreeCtrl.GetItemData(hItem);
 

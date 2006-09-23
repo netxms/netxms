@@ -97,9 +97,9 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	}
 
    m_wndStatusBar.GetStatusBarCtrl().SetIcon(1, NULL);
-   m_wndStatusBar.GetStatusBarCtrl().SetText("", 1, 0);
+   m_wndStatusBar.GetStatusBarCtrl().SetText(_T(""), 1, 0);
    m_wndStatusBar.GetStatusBarCtrl().SetIcon(2, NULL);
-   m_wndStatusBar.GetStatusBarCtrl().SetText("", 2, 0);
+   m_wndStatusBar.GetStatusBarCtrl().SetText(_T(""), 2, 0);
 
 	// TODO: Remove this if you don't want tool tips
 	m_wndToolBar.SetBarStyle(m_wndToolBar.GetBarStyle() |
@@ -166,7 +166,7 @@ void CMainFrame::BroadcastMessage(UINT msg, WPARAM wParam, LPARAM lParam, BOOL b
       else
          pWnd = MDIGetActive();
    }
-   theApp.DebugPrintf("CMainFrame::BroadcastMessage(%d, %d, %d)", msg, wParam, lParam);
+   theApp.DebugPrintf(_T("CMainFrame::BroadcastMessage(%d, %d, %d)"), msg, wParam, lParam);
 }
 
 
@@ -239,7 +239,7 @@ void CMainFrame::OnStateChange(WPARAM wParam, LPARAM lParam)
    else
    {
       m_wndStatusBar.GetStatusBarCtrl().SetIcon(1, NULL);
-      m_wndStatusBar.GetStatusBarCtrl().SetText("", 1, 0);
+      m_wndStatusBar.GetStatusBarCtrl().SetText(_T(""), 1, 0);
    }
 }
 

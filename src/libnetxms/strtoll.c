@@ -44,11 +44,15 @@
  * alphabets and digits are each contiguous.
  */
 
+#ifdef UNICODE
+INT64 LIBNETXMS_EXPORTABLE wcstoll(const WCHAR *nptr, WCHAR **endptr, int base)
+#else
 INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base)
+#endif
 {
-	const char *s;
+	const TCHAR *s;
 	INT64 acc, cutoff;
-	int c;
+	_TINT c;
 	int neg, any, cutlim;
 
 	/*
@@ -58,24 +62,24 @@ INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base)
 	 */
 	s = nptr;
 	do {
-		c = (unsigned char) *s++;
-	} while (isspace(c));
-	if (c == '-') {
+		c = *s++;
+	} while (_istspace(c));
+	if (c == _T('-')) {
 		neg = 1;
 		c = *s++;
 	} else {
 		neg = 0;
-		if (c == '+')
+		if (c == _T('+'))
 			c = *s++;
 	}
 	if ((base == 0 || base == 16) &&
-	    c == '0' && (*s == 'x' || *s == 'X')) {
+	    c == _T('0') && (*s == _T('x') || *s == 'X')) {
 		c = s[1];
 		s += 2;
 		base = 16;
 	}
 	if (base == 0)
-		base = c == '0' ? 8 : 10;
+		base = c == _T('0') ? 8 : 10;
 
 	/*
 	 * Compute the cutoff value between legal numbers and illegal
@@ -105,11 +109,11 @@ INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base)
 		}
 		cutlim = -cutlim;
 	}
-	for (acc = 0, any = 0;; c = (unsigned char) *s++) {
-		if (isdigit(c))
-			c -= '0';
-		else if (isalpha(c))
-			c -= isupper(c) ? 'A' - 10 : 'a' - 10;
+	for (acc = 0, any = 0;; c = *s++) {
+		if (_istdigit(c))
+			c -= _T('0');
+		else if (_istalpha(c))
+			c -= _istupper(c) ? _T('A') - 10 : _T('a') - 10;
 		else
 			break;
 		if (c >= base)
@@ -139,7 +143,7 @@ INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base)
 		}
 	}
 	if (endptr != 0)
-		*endptr = (char *) (any ? s - 1 : nptr);
+		*endptr = (TCHAR *) (any ? s - 1 : nptr);
 	return (acc);
 }
 

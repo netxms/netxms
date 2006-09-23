@@ -27,7 +27,7 @@ public:
 
 // Operations
 public:
-	void CreateUserObject(const char *pszName, BOOL bIsGroup, BOOL bShowProp);
+	void CreateUserObject(const TCHAR *pszName, BOOL bIsGroup, BOOL bShowProp);
 
 // Overrides
 	// ClassWizard generated virtual function overrides

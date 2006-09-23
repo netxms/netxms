@@ -128,9 +128,9 @@ void SendImageCatalogue(ClientSession *pSession, DWORD dwRqId, WORD wFormat)
 {
    CSCPMessage msg;
    DB_RESULT hResult;
-   DWORD i, j, k, dwNumImages;
-   NXC_IMAGE *pImageList;
-   char szQuery[256], szHashText[MD5_DIGEST_SIZE * 2 + 1];
+   DWORD i, dwNumImages, dwId;
+   BYTE hash[MD5_DIGEST_SIZE];
+   TCHAR szQuery[256], szHashText[MD5_DIGEST_SIZE * 2 + 1];
 
    // Prepare message
    msg.SetId(dwRqId);
@@ -145,23 +145,14 @@ void SendImageCatalogue(ClientSession *pSession, DWORD dwRqId, WORD wFormat)
       dwNumImages = DBGetNumRows(hResult);
       msg.SetVariable(VID_NUM_IMAGES, dwNumImages);
       
-      pImageList = (NXC_IMAGE *)malloc(sizeof(NXC_IMAGE) * dwNumImages);
-      for(i = 0; i < dwNumImages; i++)
+      for(i = 0, dwId = VID_IMAGE_LIST_BASE; i < dwNumImages; i++, dwId += 7)
       {
-         pImageList[i].dwId = htonl(DBGetFieldULong(hResult, i, 0));
-         nx_strncpy(pImageList[i].szName, DBGetField(hResult, i, 1), MAX_OBJECT_NAME);
+         msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 0));
+         msg.SetVariable(dwId++, DBGetField(hResult, i, 1));
          nx_strncpy(szHashText, DBGetField(hResult, i, 2), MD5_DIGEST_SIZE * 2 + 1);
-         for(j = 0, k = 0; j < MD5_DIGEST_SIZE; j++)
-         {
-            char ch1, ch2;
-
-            ch1 = szHashText[k++];
-            ch2 = szHashText[k++];
-            pImageList[i].hash[j] = (hex2bin(ch1) << 4) | hex2bin(ch2);
-         }
+         StrToBin(szHashText, hash, MD5_DIGEST_SIZE);
+         msg.SetVariable(dwId++, hash, MD5_DIGEST_SIZE);
       }
-      msg.SetVariable(VID_IMAGE_LIST, (BYTE *)pImageList, sizeof(NXC_IMAGE) * dwNumImages);
-      free(pImageList);
 
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
       DBFreeResult(hResult);

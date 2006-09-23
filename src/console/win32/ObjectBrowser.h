@@ -98,7 +98,7 @@ protected:
 	CListCtrl m_wndListCtrl;
 	void DeleteObjectTreeItem(HTREEITEM hItem);
 	DWORD m_dwFlags;
-	void CreateTreeItemText(NXC_OBJECT *pObject, char *pszBuffer);
+	void CreateTreeItemText(NXC_OBJECT *pObject, TCHAR *pszBuffer);
 	DWORD FindObjectInTree(DWORD dwObjectId);
 	DWORD m_dwTreeHashSize;
 	OBJ_TREE_HASH * m_pTreeHash;

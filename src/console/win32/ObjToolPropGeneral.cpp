@@ -76,7 +76,7 @@ BOOL CObjToolPropGeneral::OnInitDialog()
 	
    // Setup list view
    m_wndListCtrl.GetClientRect(&rect);
-   m_wndListCtrl.InsertColumn(0, "Name", LVCFMT_LEFT, 
+   m_wndListCtrl.InsertColumn(0, _T("Name"), LVCFMT_LEFT, 
                               rect.right - GetSystemMetrics(SM_CXVSCROLL) - 4);
 	m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 

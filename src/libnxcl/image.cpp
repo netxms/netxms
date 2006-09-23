@@ -125,7 +125,7 @@ static DWORD SyncImageFile(NXC_SESSION hSession, TCHAR *pszCacheDir,
 DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_SESSION hSession, NXC_IMAGE_LIST **ppImageList, 
                                        TCHAR *pszCacheDir, WORD wFormat)
 {
-   DWORD i, dwRqId, dwRetCode;
+   DWORD i, dwRqId, dwRetCode, dwId;
    CSCPMessage msg, *pResponse;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -147,11 +147,11 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_SESSION hSession, NXC_IMAGE_LIST **pp
          if ((*ppImageList)->dwNumImages > 0)
          {
             (*ppImageList)->pImageList = (NXC_IMAGE *)malloc(sizeof(NXC_IMAGE) * (*ppImageList)->dwNumImages);
-            pResponse->GetVariableBinary(VID_IMAGE_LIST, (BYTE *)(*ppImageList)->pImageList, 
-                                         sizeof(NXC_IMAGE) * (*ppImageList)->dwNumImages);
-            for(i = 0; i < (*ppImageList)->dwNumImages; i++)
+            for(i = 0, dwId = VID_IMAGE_LIST_BASE; i < (*ppImageList)->dwNumImages; i++, dwId += 7)
             {
-               (*ppImageList)->pImageList[i].dwId = ntohl((*ppImageList)->pImageList[i].dwId);
+               (*ppImageList)->pImageList[i].dwId = pResponse->GetVariableLong(dwId++);
+               pResponse->GetVariableStr(dwId++, (*ppImageList)->pImageList[i].szName, MAX_OBJECT_NAME);
+               pResponse->GetVariableBinary(dwId++, (*ppImageList)->pImageList[i].hash, MD5_DIGEST_SIZE);
                dwRetCode = SyncImageFile(hSession, pszCacheDir, 
                                          (*ppImageList)->pImageList[i].dwId,
                                          (*ppImageList)->pImageList[i].hash, wFormat);

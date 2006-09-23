@@ -62,7 +62,7 @@ BOOL CUserSelectDlg::OnInitDialog()
 
    // Setup list view
    m_wndListCtrl.GetClientRect(&rect);
-   m_wndListCtrl.InsertColumn(0, "Name", LVCFMT_LEFT, 
+   m_wndListCtrl.InsertColumn(0, _T("Name"), LVCFMT_LEFT, 
                               rect.right - GetSystemMetrics(SM_CXVSCROLL) - 4);
 	m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
@@ -116,7 +116,8 @@ void CUserSelectDlg::OnOK()
    }
    else
    {
-      MessageBox("You should select user or group first", "User selection", MB_OK | MB_ICONSTOP);
+      MessageBox(_T("You should select user or group first"),
+                 _T("User selection"), MB_OK | MB_ICONSTOP);
    }
 }
 

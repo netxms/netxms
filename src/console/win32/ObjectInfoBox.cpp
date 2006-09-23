@@ -65,7 +65,7 @@ void CObjectInfoBox::OnPaint()
    {
       RECT rect;
       int cy, step, w;
-      char szBuffer[64], szTemp[32];
+      TCHAR szBuffer[64], szTemp[32];
       DWORD dwImageIndex;
 
       // Draw icon and objet's name right to it
@@ -83,33 +83,33 @@ void CObjectInfoBox::OnPaint()
       
       // Current vertical position and increment
       cy = 46;
-      step = dc.GetTextExtent("X", 1).cy + 2;
+      step = dc.GetTextExtent(_T("X"), 1).cy + 2;
 
       // Display object's status
-      dc.TextOut(X_MARGIN, cy, "Status:", 7);
+      dc.TextOut(X_MARGIN, cy, _T("Status:"), 7);
       dc.SetTextColor(g_statusColorTable[m_pCurrObject->iStatus]);
-      w = dc.GetTextExtent("Status: ", 8).cx;
+      w = dc.GetTextExtent(_T("Status: "), 8).cx;
       dc.SelectObject(m_fontBold);
       dc.TextOut(X_MARGIN + w, cy, 
                  g_szStatusText[m_pCurrObject->iStatus], 
-                 strlen(g_szStatusText[m_pCurrObject->iStatus]));
+                 _tcslen(g_szStatusText[m_pCurrObject->iStatus]));
       dc.SetTextColor(RGB(0, 0, 0));
       dc.SelectObject(m_fontNormal);
       cy += step;
 
       // Object's ID and class
-      sprintf(szBuffer, "Identifier: %d", m_pCurrObject->dwId);
-      dc.TextOut(X_MARGIN, cy, szBuffer, strlen(szBuffer));
+      _stprintf(szBuffer, _T("Identifier: %d"), m_pCurrObject->dwId);
+      dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
       cy += step;
-      sprintf(szBuffer, "Class: %s", g_szObjectClass[m_pCurrObject->iClass]);
-      dc.TextOut(X_MARGIN, cy, szBuffer, strlen(szBuffer));
+      _stprintf(szBuffer, _T("Class: %s"), g_szObjectClass[m_pCurrObject->iClass]);
+      dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
       cy += step;
 
       // Object's primary IP address
       if (m_pCurrObject->dwIpAddr != 0)
       {
-         sprintf(szBuffer, "IP Address: %s", IpToStr(m_pCurrObject->dwIpAddr, szTemp));
-         dc.TextOut(X_MARGIN, cy, szBuffer, strlen(szBuffer));
+         _stprintf(szBuffer, _T("IP Address: %s"), IpToStr(m_pCurrObject->dwIpAddr, szTemp));
+         dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
          cy += step;
       }
 
@@ -117,41 +117,42 @@ void CObjectInfoBox::OnPaint()
       switch(m_pCurrObject->iClass)
       {
          case OBJECT_SUBNET:
-            sprintf(szBuffer, "IP NetMask: %s", IpToStr(m_pCurrObject->subnet.dwIpNetMask, szTemp));
-            dc.TextOut(X_MARGIN, cy, szBuffer, strlen(szBuffer));
+            _stprintf(szBuffer, _T("IP NetMask: %s"), IpToStr(m_pCurrObject->subnet.dwIpNetMask, szTemp));
+            dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
             cy += step;
             break;
          case OBJECT_NODE:
             if (m_pCurrObject->node.dwFlags & NF_IS_SNMP)
             {
-               dc.TextOut(X_MARGIN, cy, "SNMP supported", 14);
+               dc.TextOut(X_MARGIN, cy, _T("SNMP supported"), 14);
                cy += step;
 
-               sprintf(szBuffer, "OID: %s", m_pCurrObject->node.szObjectId);
-               dc.TextOut(X_MARGIN, cy, szBuffer, strlen(szBuffer));
+               _stprintf(szBuffer, _T("OID: %s"), m_pCurrObject->node.szObjectId);
+               dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
                cy += step;
             }
             break;
          case OBJECT_INTERFACE:
             if (m_pCurrObject->dwIpAddr != 0)
             {
-               sprintf(szBuffer, "IP NetMask: %s", IpToStr(m_pCurrObject->iface.dwIpNetMask, szTemp));
-               dc.TextOut(X_MARGIN, cy, szBuffer, strlen(szBuffer));
+               _stprintf(szBuffer, _T("IP NetMask: %s"), IpToStr(m_pCurrObject->iface.dwIpNetMask, szTemp));
+               dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
                cy += step;
             }
 
-            sprintf(szBuffer, "Index: %d", m_pCurrObject->iface.dwIfIndex);
-            dc.TextOut(X_MARGIN, cy, szBuffer, strlen(szBuffer));
+            _stprintf(szBuffer, _T("Index: %d"), m_pCurrObject->iface.dwIfIndex);
+            dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
             cy += step;
 
-            sprintf(szBuffer, "Type: %s", m_pCurrObject->iface.dwIfType > MAX_INTERFACE_TYPE ?
-                                 "Unknown" : g_szInterfaceTypes[m_pCurrObject->iface.dwIfType]);
-            dc.TextOut(X_MARGIN, cy, szBuffer, strlen(szBuffer));
+            _stprintf(szBuffer, _T("Type: %s"), 
+                      m_pCurrObject->iface.dwIfType > MAX_INTERFACE_TYPE ?
+                          _T("Unknown") : g_szInterfaceTypes[m_pCurrObject->iface.dwIfType]);
+            dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
             cy += step;
 
-            strcpy(szBuffer, "MAC: ");
+            _tcscpy(szBuffer, _T("MAC: "));
             BinToStr(m_pCurrObject->iface.bMacAddr, MAC_ADDR_LENGTH, &szBuffer[5]);
-            dc.TextOut(X_MARGIN, cy, szBuffer, strlen(szBuffer));
+            dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
             cy += step;
             break;
          default:
@@ -162,7 +163,7 @@ void CObjectInfoBox::OnPaint()
    {
       dc.SelectObject(m_fontNormal);
       dc.SetBkColor(RGB(255, 255, 255));
-      dc.TextOut(X_MARGIN, Y_MARGIN, "No object selected", 18);
+      dc.TextOut(X_MARGIN, Y_MARGIN, _T("No object selected"), 18);
    }
 }
 
@@ -180,11 +181,11 @@ int CObjectInfoBox::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_fontNormal.CreateFont(-MulDiv(7, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
                           0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                          VARIABLE_PITCH | FF_DONTCARE, "MS Sans Serif");
+                          VARIABLE_PITCH | FF_DONTCARE, _T("MS Sans Serif"));
    m_fontBold.CreateFont(-MulDiv(7, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
                           0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                          VARIABLE_PITCH | FF_DONTCARE, "MS Sans Serif");
+                          VARIABLE_PITCH | FF_DONTCARE, _T("MS Sans Serif"));
 	
 	return 0;
 }

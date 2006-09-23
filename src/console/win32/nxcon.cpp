@@ -70,7 +70,7 @@ static char THIS_FILE[] = __FILE__;
 // Wrapper for client library debug callback
 //
 
-static void ClientDebugCallback(char *pszMsg)
+static void ClientDebugCallback(TCHAR *pszMsg)
 {
    theApp.DebugCallback(pszMsg);
 }
@@ -160,17 +160,17 @@ BOOL CConsoleApp::SetupWorkDir()
    }
 
    // Create working directory root
-   strcat(g_szWorkDir, "\\NetXMS Console");
+   _tcscat(g_szWorkDir, _T("\\NetXMS Console"));
    if (!CreateDirectory(g_szWorkDir, NULL))
       if (GetLastError() != ERROR_ALREADY_EXISTS)
       {
          AfxMessageBox(IDS_WORKDIR_CREATION_FAILED, MB_OK | MB_ICONSTOP);
          return FALSE;
       }
-   iLastChar = strlen(g_szWorkDir);
+   iLastChar = _tcslen(g_szWorkDir);
 
    // Create MIB cache directory
-   strcpy(&g_szWorkDir[iLastChar], WORKDIR_MIBCACHE);
+   _tcscpy(&g_szWorkDir[iLastChar], WORKDIR_MIBCACHE);
    if (!CreateDirectory(g_szWorkDir, NULL))
       if (GetLastError() != ERROR_ALREADY_EXISTS)
       {
@@ -179,7 +179,7 @@ BOOL CConsoleApp::SetupWorkDir()
       }
 
    // Create image cache directory
-   strcpy(&g_szWorkDir[iLastChar], WORKDIR_IMAGECACHE);
+   _tcscpy(&g_szWorkDir[iLastChar], WORKDIR_IMAGECACHE);
    if (!CreateDirectory(g_szWorkDir, NULL))
       if (GetLastError() != ERROR_ALREADY_EXISTS)
       {
@@ -188,7 +188,7 @@ BOOL CConsoleApp::SetupWorkDir()
       }
 
    // Create background image cache directory
-   strcpy(&g_szWorkDir[iLastChar], WORKDIR_BKIMAGECACHE);
+   _tcscpy(&g_szWorkDir[iLastChar], WORKDIR_BKIMAGECACHE);
    if (!CreateDirectory(g_szWorkDir, NULL))
       if (GetLastError() != ERROR_ALREADY_EXISTS)
       {
@@ -259,8 +259,8 @@ BOOL CConsoleApp::InitInstance()
    bSetWindowPos = GetProfileBinary(_T("General"), _T("WindowPlacement"), 
                                     &pData, (UINT *)&dwBytes);
    g_dwOptions = GetProfileInt(_T("General"), _T("Options"), g_dwOptions);
-   strcpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
-   strcpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
+   _tcscpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
+   _tcscpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
    LoadAlarmSoundCfg(&g_soundCfg, NXCON_ALARM_SOUND_KEY);
 
    // Create mutex for action list access
@@ -277,13 +277,13 @@ BOOL CConsoleApp::InitInstance()
 
    // Load context menus
    if (!m_ctxMenu.LoadMenu(IDM_CONTEXT))
-      MessageBox(NULL, "FAILED", "", 0);
+      MessageBox(NULL, _T("FAILED"), _T(""), 0);
 
    // Create global fonts
    g_fontCode.CreateFont(-MulDiv(10, GetDeviceCaps(GetDC(m_pMainWnd->m_hWnd), LOGPIXELSY), 72),
                          0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                          OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                         FIXED_PITCH | FF_DONTCARE, "Courier");
+                         FIXED_PITCH | FF_DONTCARE, _T("Courier"));
 	
 	// Load shared MDI menus and accelerator table
 	HINSTANCE hInstance = AfxGetResourceHandle();
@@ -294,94 +294,94 @@ BOOL CConsoleApp::InitInstance()
    if (g_dwOptions & UI_OPT_EXPAND_CTRLPANEL)
    {
       pFrame->GetMenu()->RemoveMenu(ID_VIEW_CONTROLPANEL, MF_BYCOMMAND);
-      pFrame->GetMenu()->InsertMenu(ID_VIEW_DEBUG, MF_BYCOMMAND | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 8), "&Control panel");
+      pFrame->GetMenu()->InsertMenu(ID_VIEW_DEBUG, MF_BYCOMMAND | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 8), _T("&Control panel"));
    }
 
    m_hMDIMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hMDIMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
+   InsertMenu(m_hMDIMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
 
    m_hEventBrowserMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hEventBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hEventBrowserMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 1), "&Event");
+   InsertMenu(m_hEventBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hEventBrowserMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 1), _T("&Event"));
 
    m_hObjectBrowserMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hObjectBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hObjectBrowserMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 2), "&Object");
+   InsertMenu(m_hObjectBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hObjectBrowserMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 2), _T("&Object"));
 
    m_hUserEditorMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hUserEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hUserEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 3), "&User");
+   InsertMenu(m_hUserEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hUserEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 3), _T("&User"));
 
    m_hDCEditorMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hDCEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hDCEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 4), "&Item");
+   InsertMenu(m_hDCEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hDCEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 4), _T("&Item"));
 
    m_hPolicyEditorMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hPolicyEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hPolicyEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 5), "&Policy");
+   InsertMenu(m_hPolicyEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hPolicyEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 5), _T("&Policy"));
 
    m_hAlarmBrowserMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hAlarmBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hAlarmBrowserMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 6), "&Alarm");
+   InsertMenu(m_hAlarmBrowserMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hAlarmBrowserMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 6), _T("&Alarm"));
 
    m_hMapMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hMapMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hMapMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 21), "&Map");
-   InsertMenu(m_hMapMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 9), "&Object");
+   InsertMenu(m_hMapMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hMapMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 21), _T("&Map"));
+   InsertMenu(m_hMapMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 9), _T("&Object"));
 
    m_hEventEditorMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hEventEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hEventEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 10), "&Event");
+   InsertMenu(m_hEventEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hEventEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 10), _T("&Event"));
 
    m_hActionEditorMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hActionEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hActionEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 11), "&Action");
+   InsertMenu(m_hActionEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hActionEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 11), _T("&Action"));
 
    m_hTrapEditorMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hTrapEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hTrapEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 12), "T&rap");
+   InsertMenu(m_hTrapEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hTrapEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 12), _T("T&rap"));
 
    m_hGraphMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hGraphMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hGraphMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 13), "&Graph");
+   InsertMenu(m_hGraphMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hGraphMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 13), _T("&Graph"));
 
    m_hPackageMgrMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hPackageMgrMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hPackageMgrMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 14), "&Package");
+   InsertMenu(m_hPackageMgrMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hPackageMgrMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 14), _T("&Package"));
 
    m_hLastValuesMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hLastValuesMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hLastValuesMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 15), "&Item");
+   InsertMenu(m_hLastValuesMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hLastValuesMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 15), _T("&Item"));
 
    m_hServerCfgEditorMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hServerCfgEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hServerCfgEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 16), "V&ariable");
+   InsertMenu(m_hServerCfgEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hServerCfgEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 16), _T("V&ariable"));
 
    m_hAgentCfgEditorMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hAgentCfgEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hAgentCfgEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 17), "&Edit");
-   InsertMenu(m_hAgentCfgEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 18), "&Config");
+   InsertMenu(m_hAgentCfgEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hAgentCfgEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 17), _T("&Edit"));
+   InsertMenu(m_hAgentCfgEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 18), _T("&Config"));
 
    m_hLPPEditorMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hDCEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   //InsertMenu(m_hDCEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 4), "&Item");
+   InsertMenu(m_hDCEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   //InsertMenu(m_hDCEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 4), _T("&Item"));
 
    m_hObjToolsEditorMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hObjToolsEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hObjToolsEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 19), "&Object tools");
+   InsertMenu(m_hObjToolsEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hObjToolsEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 19), _T("&Object tools"));
 
    m_hScriptManagerMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hScriptManagerMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hScriptManagerMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 17), "&Edit");
-   InsertMenu(m_hScriptManagerMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 20), "&Script");
+   InsertMenu(m_hScriptManagerMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hScriptManagerMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 17), _T("&Edit"));
+   InsertMenu(m_hScriptManagerMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 20), _T("&Script"));
 
    m_hDataViewMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hDataViewMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hDataViewMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 22), "&Data");
+   InsertMenu(m_hDataViewMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hDataViewMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 22), _T("&Data"));
 
    m_hAgentCfgMgrMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hAgentCfgMgrMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), "&Window");
-   InsertMenu(m_hAgentCfgMgrMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 23), "&Config");
+   InsertMenu(m_hAgentCfgMgrMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hAgentCfgMgrMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 23), _T("&Config"));
 
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
@@ -822,9 +822,9 @@ void CConsoleApp::OnConnectToServer()
          PostQuitMessage(1);
          break;
       }
-      strcpy(g_szServer, (LPCTSTR)dlgLogin.m_szServer);
-      strcpy(g_szLogin, (LPCTSTR)dlgLogin.m_szLogin);
-      strcpy(g_szPassword, (LPCTSTR)dlgLogin.m_szPassword);
+      _tcscpy(g_szServer, (LPCTSTR)dlgLogin.m_szServer);
+      _tcscpy(g_szLogin, (LPCTSTR)dlgLogin.m_szLogin);
+      _tcscpy(g_szPassword, (LPCTSTR)dlgLogin.m_szPassword);
       if (dlgLogin.m_bEncrypt)
          g_dwOptions |= OPT_ENCRYPT_CONNECTION;
       else
@@ -856,7 +856,7 @@ void CConsoleApp::OnConnectToServer()
       }
       else
       {
-         ErrorBox(dwResult, "Unable to connect: %s", "Connection error");
+         ErrorBox(dwResult, _T("Unable to connect: %s"), _T("Connection error"));
       }
    }
    while(dwResult != RCC_SUCCESS);
@@ -1012,7 +1012,7 @@ void CConsoleApp::OnControlpanelEvents()
    {
       DWORD dwResult;
 
-      dwResult = DoRequestArg1(NXCLockEventDB, g_hSession, "Locking event configuration database...");
+      dwResult = DoRequestArg1(NXCLockEventDB, g_hSession, _T("Locking event configuration database..."));
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(RUNTIME_CLASS(CEventEditor), IDR_EVENT_EDITOR,
@@ -1020,7 +1020,7 @@ void CConsoleApp::OnControlpanelEvents()
       }
       else
       {
-         ErrorBox(dwResult, "Unable to open event configuration database:\n%s");
+         ErrorBox(dwResult, _T("Unable to open event configuration database:\n%s"));
       }
    }
 }
@@ -1043,7 +1043,7 @@ void CConsoleApp::OnControlpanelUsers()
    {
       DWORD dwResult;
 
-      dwResult = DoRequestArg1(NXCLockUserDB, g_hSession, "Locking user database...");
+      dwResult = DoRequestArg1(NXCLockUserDB, g_hSession, _T("Locking user database..."));
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(RUNTIME_CLASS(CUserEditor), IDR_USER_EDITOR,
@@ -1051,7 +1051,7 @@ void CConsoleApp::OnControlpanelUsers()
       }
       else
       {
-         ErrorBox(dwResult, "Unable to lock user database:\n%s");
+         ErrorBox(dwResult, _T("Unable to lock user database:\n%s"));
       }
    }
 }
@@ -1158,7 +1158,7 @@ void CConsoleApp::DebugPrintf(TCHAR *szFormat, ...)
 
 void CConsoleApp::ObjectProperties(DWORD dwObjectId)
 {
-	CObjectPropSheet wndPropSheet("Object Properties", GetMainWnd(), 0);
+	CObjectPropSheet wndPropSheet(_T("Object Properties"), GetMainWnd(), 0);
    CNodePropsGeneral wndNodeGeneral;
    CNetSrvPropsGeneral wndNetSrvGeneral;
    CObjectPropsGeneral wndObjectGeneral;
@@ -1311,7 +1311,7 @@ void CConsoleApp::StartObjectDCEditor(NXC_OBJECT *pObject)
    if (pWnd == NULL)
    {
       dwResult = DoRequestArg3(NXCOpenNodeDCIList, g_hSession, (void *)pObject->dwId, 
-                               &pItemList, "Loading node's data collection information...");
+                               &pItemList, _T("Loading node's data collection information..."));
       if (dwResult == RCC_SUCCESS)
       {
          CreateChildFrameWithSubtitle(new CDataCollectionEditor(pItemList), IDR_DC_EDITOR,
@@ -1319,7 +1319,7 @@ void CConsoleApp::StartObjectDCEditor(NXC_OBJECT *pObject)
       }
       else
       {
-         ErrorBox(dwResult, "Unable to load data collection information for node:\n%s");
+         ErrorBox(dwResult, _T("Unable to load data collection information for node:\n%s"));
       }
    }
    else
@@ -1349,14 +1349,14 @@ void CConsoleApp::SetObjectMgmtStatus(NXC_OBJECT *pObject, BOOL bIsManaged)
    DWORD dwResult;
 
    dwResult = DoRequestArg3(NXCSetObjectMgmtStatus, g_hSession, (void *)pObject->dwId, 
-                            (void *)bIsManaged, "Changing object status...");
+                            (void *)bIsManaged, _T("Changing object status..."));
    if (dwResult != RCC_SUCCESS)
    {
-      char szBuffer[256];
+      TCHAR szBuffer[256];
 
-      sprintf(szBuffer, "Unable to change management status for object %s:\n%s", 
+      _stprintf(szBuffer, _T("Unable to change management status for object %s:\n%s"), 
               pObject->szName, NXCGetErrorText(dwResult));
-      GetMainWnd()->MessageBox(szBuffer, "Error", MB_ICONSTOP);
+      GetMainWnd()->MessageBox(szBuffer, _T("Error"), MB_ICONSTOP);
    }
 }
 
@@ -1485,7 +1485,7 @@ void CConsoleApp::OnControlpanelEventpolicy()
       }
       else
       {
-         ErrorBox(dwResult, "Unable to load event processing policy:\n%s");
+         ErrorBox(dwResult, _T("Unable to load event processing policy:\n%s"));
       }
    }
 }
@@ -1582,7 +1582,7 @@ void CConsoleApp::OnViewAlarms()
 
 void CConsoleApp::OnFileSettings() 
 {
-	CPropertySheet wndPropSheet("Settings", GetMainWnd(), 0);
+	CPropertySheet wndPropSheet(_T("Settings"), GetMainWnd(), 0);
    CConsolePropsGeneral wndGeneral;
 
    // "General" page
@@ -1622,7 +1622,7 @@ void CConsoleApp::OnControlpanelActions()
    {
       DWORD dwResult;
 
-      dwResult = DoRequestArg1(NXCLockActionDB, g_hSession, "Locking action configuration database...");
+      dwResult = DoRequestArg1(NXCLockActionDB, g_hSession, _T("Locking action configuration database..."));
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(RUNTIME_CLASS(CActionEditor), IDR_ACTION_EDITOR,
@@ -1630,7 +1630,7 @@ void CConsoleApp::OnControlpanelActions()
       }
       else
       {
-         ErrorBox(dwResult, "Unable to lock action configuration database:\n%s");
+         ErrorBox(dwResult, _T("Unable to lock action configuration database:\n%s"));
       }
    }
 }
@@ -1653,7 +1653,7 @@ void CConsoleApp::OnControlpanelSnmptraps()
    {
       DWORD dwResult;
 
-      dwResult = DoRequestArg1(NXCLockTrapCfg, g_hSession, "Locking SNMP trap configuration database...");
+      dwResult = DoRequestArg1(NXCLockTrapCfg, g_hSession, _T("Locking SNMP trap configuration database..."));
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(RUNTIME_CLASS(CTrapEditor), IDR_TRAP_EDITOR,
@@ -1661,7 +1661,7 @@ void CConsoleApp::OnControlpanelSnmptraps()
       }
       else
       {
-         ErrorBox(dwResult, "Unable to lock SNMP trap configuration database:\n%s");
+         ErrorBox(dwResult, _T("Unable to lock SNMP trap configuration database:\n%s"));
       }
    }
 }
@@ -1684,7 +1684,7 @@ void CConsoleApp::OnControlpanelAgentpkg()
    {
       DWORD dwResult;
 
-      dwResult = DoRequestArg1(NXCLockPackageDB, g_hSession, "Locking package database...");
+      dwResult = DoRequestArg1(NXCLockPackageDB, g_hSession, _T("Locking package database..."));
       if (dwResult == RCC_SUCCESS)
       {
 	      pFrame->CreateNewChild(RUNTIME_CLASS(CPackageMgr), IDR_PACKAGE_MGR,
@@ -1692,7 +1692,7 @@ void CConsoleApp::OnControlpanelAgentpkg()
       }
       else
       {
-         ErrorBox(dwResult, "Unable to lock package database:\n%s");
+         ErrorBox(dwResult, _T("Unable to lock package database:\n%s"));
       }
    }
 }
@@ -1711,7 +1711,7 @@ HMENU CConsoleApp::LoadAppMenu(HMENU hViewMenu)
    if (g_dwOptions & UI_OPT_EXPAND_CTRLPANEL)
    {
       RemoveMenu(hMenu, ID_VIEW_CONTROLPANEL, MF_BYCOMMAND);
-      InsertMenu(hMenu, ID_VIEW_DEBUG, MF_BYCOMMAND | MF_POPUP, (UINT_PTR)GetSubMenu(hViewMenu, 8), "&Control panel");
+      InsertMenu(hMenu, ID_VIEW_DEBUG, MF_BYCOMMAND | MF_POPUP, (UINT_PTR)GetSubMenu(hViewMenu, 8), _T("&Control panel"));
    }
 
    return hMenu;
@@ -1726,10 +1726,10 @@ void CConsoleApp::CreateObject(NXC_OBJECT_CREATE_INFO *pInfo)
 {
    DWORD dwResult, dwObjectId;
 
-   dwResult = DoRequestArg3(NXCCreateObject, g_hSession, pInfo, &dwObjectId, "Creating object...");
+   dwResult = DoRequestArg3(NXCCreateObject, g_hSession, pInfo, &dwObjectId, _T("Creating object..."));
    if (dwResult != RCC_SUCCESS)
    {
-      ErrorBox(dwResult, "Error creating object: %s");
+      ErrorBox(dwResult, _T("Error creating object: %s"));
    }
 }
 
@@ -1871,7 +1871,7 @@ void CConsoleApp::CreateTemplate(DWORD dwParent)
    {
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
       ci.iClass = OBJECT_TEMPLATE;
-      ci.pszName = (char *)((LPCTSTR)dlg.m_strObjectName);
+      ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);
       CreateObject(&ci);
    }
 }
@@ -1896,8 +1896,8 @@ void CConsoleApp::CreateTemplateGroup(DWORD dwParent)
    {
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
       ci.iClass = OBJECT_TEMPLATEGROUP;
-      ci.pszName = (char *)((LPCTSTR)dlg.m_strObjectName);
-      ci.cs.templateGroup.pszDescription = (char *)((LPCTSTR)dlg.m_strDescription);
+      ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);
+      ci.cs.templateGroup.pszDescription = (TCHAR *)((LPCTSTR)dlg.m_strDescription);
       CreateObject(&ci);
    }
 }
@@ -1921,7 +1921,7 @@ void CConsoleApp::CreateVPNConnector(DWORD dwParent)
    {
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
       ci.iClass = OBJECT_VPNCONNECTOR;
-      ci.pszName = (char *)((LPCTSTR)dlg.m_strObjectName);
+      ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);
       CreateObject(&ci);
    }
 }
@@ -1935,9 +1935,9 @@ void CConsoleApp::DeleteNetXMSObject(NXC_OBJECT *pObject)
 {
    DWORD dwResult;
 
-   dwResult = DoRequestArg2(NXCDeleteObject, g_hSession, (void *)pObject->dwId, "Deleting object...");
+   dwResult = DoRequestArg2(NXCDeleteObject, g_hSession, (void *)pObject->dwId, _T("Deleting object..."));
    if (dwResult != RCC_SUCCESS)
-      ErrorBox(dwResult, "Unable to delete object: %s");
+      ErrorBox(dwResult, _T("Unable to delete object: %s"));
 }
 
 
@@ -2324,6 +2324,9 @@ static DWORD DoDataExport(DWORD dwNodeId, DWORD dwItemId, DWORD dwTimeFrom,
    int hFile;
    char szBuffer[MAX_DB_STRING];
    static char separator[4] = { '\t', ' ', ',', ';' };
+#ifdef UNICODE
+   WCHAR wszTemp[128];
+#endif
 
    dwResult = NXCGetDCIData(g_hSession, dwNodeId, dwItemId, 0, dwTimeFrom,
                             dwTimeTo, &pData);
@@ -2341,7 +2344,13 @@ static DWORD DoDataExport(DWORD dwNodeId, DWORD dwItemId, DWORD dwTimeFrom,
                   sprintf(szBuffer, "%lu", pRow->dwTimeStamp);
                   break;
                case 1:  // Text
+#ifdef UNICODE
+                  FormatTimeStamp(pRow->dwTimeStamp, wszTemp, TS_LONG_DATE_TIME);
+                  WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
+                                      wszTemp, -1, szBuffer, MAX_DB_STRING, NULL, NULL);
+#else
                   FormatTimeStamp(pRow->dwTimeStamp, szBuffer, TS_LONG_DATE_TIME);
+#endif
                   break;
                default:
                   strcpy(szBuffer, "<internal error>");
@@ -2352,7 +2361,7 @@ static DWORD DoDataExport(DWORD dwNodeId, DWORD dwItemId, DWORD dwTimeFrom,
             switch(pData->wDataType)
             {
                case DCI_DT_STRING:
-                  write(hFile, pRow->value.szString, strlen(pRow->value.szString));
+                  write(hFile, pRow->value.szString, _tcslen(pRow->value.szString));
                   break;
                case DCI_DT_INT:
                   sprintf(szBuffer, "%d", pRow->value.dwInt32);

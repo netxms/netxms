@@ -244,6 +244,16 @@ DWORD SNMP_Transport::CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr, W
    struct sockaddr_in addr;
    DWORD dwResult;
 
+#ifdef UNICODE
+   char szHostName[256];
+
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                       pszHostName, -1, szHostName, 256, NULL, NULL);
+#define HOSTNAME_VAR szHostName
+#else
+#define HOSTNAME_VAR pszHostName
+#endif
+
    // Fill in remote address structure
    memset(&addr, 0, sizeof(struct sockaddr_in));
    addr.sin_family = AF_INET;
@@ -254,14 +264,14 @@ DWORD SNMP_Transport::CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr, W
    {
       struct hostent *hs;
 
-      hs = gethostbyname(pszHostName);
+      hs = gethostbyname(HOSTNAME_VAR);
       if (hs != NULL)
       {
          memcpy(&addr.sin_addr.s_addr, hs->h_addr, sizeof(DWORD));
       }
       else
       {
-         addr.sin_addr.s_addr = inet_addr(pszHostName);
+         addr.sin_addr.s_addr = inet_addr(HOSTNAME_VAR);
       }
    }
    else
@@ -300,6 +310,8 @@ DWORD SNMP_Transport::CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr, W
 
    return dwResult;
 }
+
+#undef HOSTNAME_VAR
 
 
 //

@@ -40,6 +40,18 @@
 
 #include <tchar.h>
 
+#ifdef UNICODE
+
+#define _tcstoll  wcstoll
+#define _tcstoull wcstoull
+
+#else
+
+#define _tcstoll  strtoll
+#define _tcstoull strtoull
+
+#endif
+
 #else    /* not _WIN32 */
 
 #ifdef _NETWARE
@@ -61,6 +73,7 @@
 #undef _T
 #define _T(x)     x
 #define TCHAR     char
+#define _TINT     int
 
 #define _tcscpy   strcpy
 #define _tcsncpy  strncpy
@@ -82,6 +95,8 @@
 #define _fputts   fputs
 #define _tcstol   strtol
 #define _tcstoul  strtoul
+#define _tcstoll  strtoll
+#define _tcstoull strtoull
 #define _tcstod   strtod
 #define _tcsdup   strdup
 #define _tcsupr   strupr
@@ -93,6 +108,10 @@
 #define _tunlink  unlink
 #define _tcsftime strftime
 #define _tctime   ctime
+#define _istspace isspace
+#define _istdigit isdigit
+#define _istalpha isalpha
+#define _istupper isupper
 
 #endif
 
