@@ -27,7 +27,8 @@
 // API version
 //
 
-extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
+extern "C" int EXPORT drvAPIVersion;
+int EXPORT drvAPIVersion = DBDRV_API_VERSION;
 
 
 //

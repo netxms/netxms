@@ -2,7 +2,8 @@ INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 
 lib_LTLIBRARIES = libnxsrv.la
 libnxsrv_la_SOURCES = messages.c agent.cpp db.cpp log.cpp main.cpp
-libnxsrv_la_LDFLAGS = -version-info $(LIBNXSRV_LIBRARY_VERSION)
+libnxsrv_la_LDFLAGS = -version-info $(LIBNXSRV_LIBRARY_VERSION) $(PTHREAD_LIBS)
+libnxsrv_la_LIBADD = ../../libnetxms/libnetxms.la ../../libnxcscp/libnxcscp.la
 
 messages.c: ../include/messages.h
 

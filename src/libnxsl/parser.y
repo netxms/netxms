@@ -1,5 +1,9 @@
 %{
 
+// Prevent compilation error on AIX where GCC doesn't understand __attribute__
+// used in bison generated code
+#define __attribute__(x)
+
 #pragma warning(disable : 4065 4102)
 
 #define YYERROR_VERBOSE
