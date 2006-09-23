@@ -73,7 +73,7 @@ PostBuild_Cmds=copy Release\logscan.nsm C:\NetXMS\bin
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
-# PROP Ignore_Export_Lib 0
+# PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "logscan_EXPORTS" /YX /FD /GZ /c
 # ADD CPP /nologo /MDd /W3 /Gm /ZI /Od /I "..\..\..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "logscan_EXPORTS" /YX /FD /GZ /c
@@ -119,7 +119,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib /nologo /dll /machine:I386 /out:"Release/logscan.nsm" /libpath:"..\..\..\libnetxms\Release"
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib  bufferoverflowU.lib /nologo /dll /machine:I386 /out:"Release64/logscan.nsm" /libpath:"..\..\..\libnetxms\Release64" /machine:AMD64
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib bufferoverflowU.lib /nologo /dll /machine:I386 /out:"Release64/logscan.nsm" /libpath:"..\..\..\libnetxms\Release64" /machine:AMD64
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
@@ -139,7 +139,7 @@ PostBuild_Cmds=copy Release64\logscan.nsm C:\NetXMS\bin64
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug64"
 # PROP Intermediate_Dir "Debug64"
-# PROP Ignore_Export_Lib 0
+# PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /ZI /Od /I "..\..\..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "logscan_EXPORTS" /YX /FD /GZ /c
 # ADD CPP /nologo /MDd /W3 /Gm /Zi /Od /I "..\..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "logscan_EXPORTS" /D "__64BIT__" /FD /GZ /Wp64 /c
@@ -152,7 +152,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib /nologo /dll /debug /machine:I386 /out:"Debug/logscan.nsm" /pdbtype:sept /libpath:"..\..\..\libnetxms\Debug"
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib  bufferoverflowU.lib /nologo /dll /debug /machine:I386 /out:"Debug64/logscan.nsm" /pdbtype:sept /libpath:"..\..\..\libnetxms\Debug64" /machine:AMD64
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib bufferoverflowU.lib /nologo /dll /debug /machine:I386 /out:"Debug64/logscan.nsm" /pdbtype:sept /libpath:"..\..\..\libnetxms\Debug64" /machine:AMD64
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"

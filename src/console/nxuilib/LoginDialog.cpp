@@ -85,7 +85,7 @@ BOOL CLoginDialog::OnInitDialog()
       m_font.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
                         0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
                         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                        VARIABLE_PITCH | FF_DONTCARE, "Verdana");
+                        VARIABLE_PITCH | FF_DONTCARE, _T("Verdana"));
 
    SetDlgItemText(IDC_STATIC_VERSION, _T("Ver. ") NETXMS_VERSION_STRING);
 

@@ -55,10 +55,23 @@ BOOL CScintillaCtrl::Create(LPCTSTR lpszWindowName, DWORD dwStyle,
 // Set text in control
 //
 
-void CScintillaCtrl::SetText(LPCSTR lpszText)
+void CScintillaCtrl::SetText(LPCTSTR lpszText)
 {
    if (lpszText != NULL)
+   {
+#ifdef _UNICODE
+      char *pBuffer;
+      int nSize;
+
+      nSize = wcslen(lpszText) * 4;
+      pBuffer = (char *)malloc(nSize);
+      WideCharToMultiByte(CP_UTF8, 0, lpszText, -1, pBuffer, nSize, NULL, NULL);
+      SendMessage(SCI_SETTEXT, 0, (LPARAM)pBuffer);
+      free(pBuffer);
+#else
       SendMessage(SCI_SETTEXT, 0, (LPARAM)lpszText);
+#endif
+   }
    GotoPosition(0);
 }
 
@@ -70,15 +83,25 @@ void CScintillaCtrl::SetText(LPCSTR lpszText)
 void CScintillaCtrl::GetText(CString &strText)
 {
    LONG nLen;
-   TCHAR *pszText;
+   char *pszText;
+#ifdef _UNICODE
+   WCHAR *pszUniText;
+#endif
 
    nLen = SendMessage(SCI_GETLENGTH, 0, 0) + 1;
    if (nLen > 0)
    {
-      pszText = (TCHAR *)malloc(nLen * sizeof(TCHAR));
+      pszText = (char *)malloc(nLen);
       *pszText = 0;
       SendMessage(SCI_GETTEXT, nLen, (LPARAM)pszText);
+#ifdef _UNICODE
+      pszUniText = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+      MultiByteToWideChar(CP_UTF8, 0, pszText, -1, pszUniText, nLen);
+      strText = pszUniText;
+      free(pszUniText);
+#else
       strText = pszText;
+#endif
       free(pszText);
    }
    else
@@ -202,7 +225,7 @@ void CScintillaCtrl::GotoPosition(LONG nPos)
 // Load external lexer module
 //
 
-BOOL CScintillaCtrl::LoadLexer(TCHAR *pszModule)
+BOOL CScintillaCtrl::LoadLexer(char *pszModule)
 {
    SendMessage(SCI_LOADLEXERLIBRARY, 0, (LPARAM)pszModule);
    return TRUE;
@@ -213,7 +236,7 @@ BOOL CScintillaCtrl::LoadLexer(TCHAR *pszModule)
 // Set lexer by name
 //
 
-BOOL CScintillaCtrl::SetLexer(TCHAR *pszLexerName)
+BOOL CScintillaCtrl::SetLexer(char *pszLexerName)
 {
    int nLexer;
 
@@ -247,7 +270,7 @@ BOOL CScintillaCtrl::GetModify(void)
 // Set keyword list
 //
 
-void CScintillaCtrl::SetKeywords(int nSet, TCHAR *pszKeywordList)
+void CScintillaCtrl::SetKeywords(int nSet, char *pszKeywordList)
 {
    SendMessage(SCI_SETKEYWORDS, nSet, (LPARAM)pszKeywordList);
 }
@@ -279,6 +302,13 @@ void CScintillaCtrl::EmptyUndoBuffer()
 
 void CScintillaCtrl::SetDefaults(void)
 {
+   // Set UNICODE mode
+#ifdef _UNICODE
+   SendMessage(SCI_SETCODEPAGE, SC_CP_UTF8, 0);
+#else
+   SendMessage(SCI_SETCODEPAGE, 0, 0);
+#endif
+
    // Default style
    SendMessage(SCI_STYLESETFONT, STYLE_DEFAULT, (LPARAM)"Courier New");
    SendMessage(SCI_STYLESETSIZE, STYLE_DEFAULT, 10);

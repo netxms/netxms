@@ -49,7 +49,7 @@ DIR *opendir(const char *filename)
     char            scannamespc[PATHLEN];
     char           *scanname = scannamespc;
     struct stat     sbuf;
-    WIN32_FIND_DATA FindData;
+    WIN32_FIND_DATAA FindData;
     HANDLE          fh;
 
     /*
@@ -73,7 +73,7 @@ DIR *opendir(const char *filename)
     /*
      * do the FindFirstFile call 
      */
-    fh = FindFirstFile(scanname, &FindData);
+    fh = FindFirstFileA(scanname, &FindData);
     if (fh == INVALID_HANDLE_VALUE) {
         return NULL;
     }
@@ -111,7 +111,7 @@ DIR *opendir(const char *filename)
      * * the variable idx should point one past the null terminator
      * * of the previous string found.
      */
-    while (FindNextFile(fh, &FindData))
+    while (FindNextFileA(fh, &FindData))
     {
         len = (int)strlen(FindData.cFileName);
         /*

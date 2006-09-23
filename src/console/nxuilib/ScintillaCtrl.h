@@ -35,11 +35,11 @@ public:
 	void SetDefaults(void);
 	void EmptyUndoBuffer(void);
 	void SetSavePoint(void);
-	void SetKeywords(int nSet, TCHAR *pszKeywordList);
+	void SetKeywords(int nSet, char *pszKeywordList);
 	BOOL GetModify(void);
 	void Refresh(void);
-	BOOL SetLexer(TCHAR *pszLexerName);
-	BOOL LoadLexer(TCHAR *pszModule);
+	BOOL SetLexer(char *pszLexerName);
+	BOOL LoadLexer(char *pszModule);
 	void GotoPosition(LONG nPos);
 	BOOL CanPaste(void);
 	BOOL CanRedo(void);
@@ -52,7 +52,7 @@ public:
 	void Copy(void);
 	void Cut(void);
 	void GetText(CString &strText);
-	void SetText(LPCSTR lpszText);
+	void SetText(LPCTSTR lpszText);
 	BOOL Create(LPCTSTR lpszWindowName, DWORD dwStyle, const RECT &rect,
                CWnd *pParentWnd, UINT nID, DWORD dwExStyle = 0);
 	virtual ~CScintillaCtrl();

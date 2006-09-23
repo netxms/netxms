@@ -73,7 +73,7 @@ PostBuild_Cmds=copy Release\nxcore.dll C:\NetXMS\bin
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
-# PROP Ignore_Export_Lib 0
+# PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "NXCORE_EXPORTS" /YX /FD /GZ /c
 # ADD CPP /nologo /MDd /W3 /Gm /ZI /Od /I "..\include" /I "..\..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "NXCORE_EXPORTS" /FR /YX /FD /GZ /c
@@ -139,7 +139,7 @@ PostBuild_Cmds=copy Release64\nxcore.dll C:\NetXMS\bin64
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug64"
 # PROP Intermediate_Dir "Debug64"
-# PROP Ignore_Export_Lib 0
+# PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\include" /I "..\..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "NXCORE_EXPORTS" /FR /YX /FD /GZ /c
 # ADD CPP /nologo /MDd /W3 /Gm /Zi /Od /I "..\include" /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "NXCORE_EXPORTS" /D "__64BIT__" /FR /FD /GZ /c
