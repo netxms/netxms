@@ -1,9 +1,5 @@
 %{
 
-// Prevent compilation error on AIX where GCC doesn't understand __attribute__
-// used in bison generated code
-#define __attribute__(x)
-
 #pragma warning(disable : 4065 4102)
 
 #define YYERROR_VERBOSE
@@ -17,6 +13,12 @@
 void yyerror(NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
              NXSL_Program *pScript, char *pszText);
 int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
+
+// Prevent compilation error on AIX (and maybe some other platforms) where
+// GCC doesn't understand __attribute__ used in bison generated code
+#if !HAVE_GCC_ATTRIBUTES
+#define __attribute__(x)
+#endif
 
 %}
 
