@@ -18,3 +18,6 @@ lex.yy.cpp: parser.l parser.tab.cpp parser.tab.hpp
 
 parser.tab.cpp: parser.y
 	$(YACC) -b parser -o parser.tab.cpp -d -t -v parser.y
+	mv parser.tab.cpp parser.tab.xx
+	sed -e "s/__attribute__ ((__unused__))//" parser.tab.xx >> parser.tab.cpp
+	rm parser.tab.xx

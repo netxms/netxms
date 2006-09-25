@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.184 2006-09-24 19:59:48 victor Exp $
+# $Id: configure.ac,v 1.185 2006-09-25 08:11:44 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -52,23 +52,6 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 	])
 
 AC_LANG_POP([C++])
-
-# --------------------------------------------------------------------------
-# check for GCC __attribute__
-
-AH_TEMPLATE([HAVE_GCC_ATTRIBUTES],
-            [Define to 1 if GCC special attributes are supported])
-AC_MSG_CHECKING([if $CC supports __attribute__ syntax])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([typedef struct __attribute__((__packed__)) {
-   unsigned char foo;
-   char bar;
-   long baz;
-} test_struct_t;],
-	[test_struct_t mystruct;])],
-	[AC_MSG_RESULT([yes])]
-		AC_DEFINE([HAVE_GCC_ATTRIBUTES], 1),
-        [AC_MSG_RESULT([no])]
-		AC_DEFINE([HAVE_GCC_ATTRIBUTES], 0))
 
 # --------------------------------------------------------------------------
 # set LDFLAGS depending on OS
