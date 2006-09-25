@@ -41,8 +41,6 @@
 #define __STDC__	1
 #endif
 
-#undef _XOPEN_SOURCE_EXTENDED
-
 #include <string.h>
 #include <time.h>
 #include "mibparse.h"
