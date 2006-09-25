@@ -7,3 +7,6 @@ libnxddr_mysql_la_LDFLAGS = -version-info $(DBDRV_LIBRARY_VERSION)
 EXTRA_DIST = \
 	mysql.dsp mysql.dsw \
 	mysqldrv.h
+
+install-exec-hook:
+	if test "x`uname -s`" = "xAIX" ; then $(AR) x $(libdir)/libnxddr_mysql.a $(libdir)/libnxddr_mysql.so.0 ; fi

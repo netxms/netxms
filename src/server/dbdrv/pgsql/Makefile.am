@@ -7,3 +7,6 @@ libnxddr_pgsql_la_LDFLAGS = -version-info $(DBDRV_LIBRARY_VERSION)
 EXTRA_DIST = \
 	pgsql.dsp pgsql.dsw \
 	pgsqldrv.h
+
+install-exec-hook:
+	if test "x`uname -s`" = "xAIX" ; then $(AR) x $(libdir)/libnxddr_pgsql.a $(libdir)/libnxddr_pgsql.so.0 ; fi

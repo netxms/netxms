@@ -7,3 +7,6 @@ libnxddr_sqlite_la_LDFLAGS = -version-info $(DBDRV_LIBRARY_VERSION)
 EXTRA_DIST = \
 	sqlite.dsp sqlite.dsw \
 	sqlitedrv.h
+
+install-exec-hook:
+	if test "x`uname -s`" = "xAIX" ; then $(AR) x $(libdir)/libnxddr_sqlite.a $(libdir)/libnxddr_sqlite.so.0 ; fi

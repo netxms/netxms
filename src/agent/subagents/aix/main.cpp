@@ -161,3 +161,21 @@ DECLARE_SUBAGENT_INIT(AIX)
    *ppInfo = &m_info;
    return TRUE;
 }
+
+
+//
+// Entry points for server
+//
+
+/*
+extern "C" BOOL __NxSubAgentGetIfList(NETXMS_VALUES_LIST *pValue)
+{
+   return H_NetIfList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
+}  
+
+extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
+{
+   return H_NetArpCache("Net.ArpCache", NULL, pValue) == SYSINFO_RC_SUCCESS;
+}
+*/
+
