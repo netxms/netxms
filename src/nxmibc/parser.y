@@ -212,9 +212,6 @@ static int AccessFromText(char *pszText)
 %token OBJECT_SYM
 %token TAGS_SYM
 %token AUTOMATIC_SYM
-%token MAX_ACCESS_SYM 
-%token ACCESS_SYM
-%token MIN_ACCESS_SYM
 
 %token <pszString> MACRO_SYM
 %token <pszString> MODULE_SYM
@@ -1293,7 +1290,8 @@ MP_MODULE *ParseMIB(char *pszFilename)
       g_nCurrLine = 1;
       InitStateStack();
       /*mpdebug=1;*/
-	   mpparse();
+      mpparse();
+      fclose(mpin);
    }
    else
    {
