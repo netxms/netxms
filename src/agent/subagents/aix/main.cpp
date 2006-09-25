@@ -31,7 +31,6 @@ LONG H_CPUCount(char *pszParam, char *pArg, char *pValue);
 LONG H_CPUUsage(char *pszParam, char *pArg, char *pValue);
 LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue);
 LONG H_Hostname(char *pszParam, char *pArg, char *pValue);
-LONG H_KStat(char *pszParam, char *pArg, char *pValue);
 LONG H_LoadAvg(char *pszParam, char *pArg, char *pValue);
 LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue);
 LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue);
@@ -107,7 +106,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "Process.KernelTime(*)", H_ProcessInfo, (char *)PROCINFO_KTIME, DCI_DT_UINT64, "" },
    { "Process.PageFaults(*)", H_ProcessInfo, (char *)PROCINFO_PF, DCI_DT_UINT64, "" },
    { "Process.UserTime(*)", H_ProcessInfo, (char *)PROCINFO_UTIME, DCI_DT_UINT64, "" },
-	{ "System.CPU.Count", H_CPUCount, NULL, DCI_DT_UINT, "Number of CPU in the system" },
+*/
+   { "System.CPU.Count", H_CPUCount, NULL, DCI_DT_UINT, "Number of CPU in the system" },
+/*
    { "System.CPU.LoadAvg", H_LoadAvg, (char *)0, DCI_DT_FLOAT, "Average CPU load for last minute" },
    { "System.CPU.LoadAvg5", H_LoadAvg, (char *)1, DCI_DT_FLOAT, "Average CPU load for last 5 minutes" },
    { "System.CPU.LoadAvg15", H_LoadAvg, (char *)2, DCI_DT_FLOAT, "Average CPU load for last 15 minutes" },
@@ -117,11 +118,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.CPU.Usage(*)", H_CPUUsage, "C0", DCI_DT_FLOAT, "Average CPU {instance} utilization for last minute" },
    { "System.CPU.Usage5(*)", H_CPUUsage, "C1", DCI_DT_FLOAT, "Average CPU {instance} utilization for last 5 minutes" },
    { "System.CPU.Usage15(*)", H_CPUUsage, "C2", DCI_DT_FLOAT, "Average CPU {instance} utilization for last 15 minutes" },
+*/
    { "System.Hostname", H_Hostname, NULL, DCI_DT_STRING, "Host name" },
-   { "System.KStat(*)", H_KStat, NULL, DCI_DT_STRING, "" },
-	{ "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, "Available physical memory" },
-	{ "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, "Total amount of physical memory" },
-	{ "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, "Used physical memory" },
+/*
+   { "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, "Available physical memory" },
+   { "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, "Total amount of physical memory" },
+   { "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, "Used physical memory" },
    { "System.Memory.Swap.Free", H_MemoryInfo, (char *)MEMINFO_SWAP_FREE, DCI_DT_UINT64, "Free swap space" },
    { "System.Memory.Swap.Total", H_MemoryInfo, (char *)MEMINFO_SWAP_TOTAL, DCI_DT_UINT64, "Total amount of swap space" },
    { "System.Memory.Swap.Used", H_MemoryInfo, (char *)MEMINFO_SWAP_USED, DCI_DT_UINT64, "Used swap space" },

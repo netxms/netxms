@@ -1,6 +1,7 @@
+/* $Id: system.cpp,v 1.2 2006-09-25 20:55:48 victor Exp $ */
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: system.cpp
+** File: system.cpp
 **
 **/
 
@@ -25,12 +26,34 @@
 
 
 //
+// Hander for System.CPU.Count parameter
+//
+
+LONG H_CPUCount(char *pszParam, char *pArg, char *pValue)
+{
+	struct vario v;
+	LONG nRet;
+
+	if (sys_parm(SYSP_GET, SYSP_V_NCPUS_CFG, &v) == 0)
+	{
+		ret_int(pValue, v.v.v_ncpus_cfg.value);
+		nRet = SYSINFO_RC_SUCCESS;
+	}
+	else
+	{
+		nRet = SYSINFO_RC_ERROR;
+	}
+	return nRet;
+}
+
+
+//
 // Handler for System.Uname parameter
 //
 
 LONG H_Uname(char *pszParam, char *pArg, char *pValue)
 {
-	LONG nRet = SYSINFO_RC_ERROR;
+	LONG nRet;
 	struct utsname un;
 
 	if (uname(&un) == 0)
@@ -38,6 +61,10 @@ LONG H_Uname(char *pszParam, char *pArg, char *pValue)
 		sprintf(pValue, "%s %s %s %s %s", un.sysname, un.nodename, un.release,
 			un.version, un.machine);
 		nRet = SYSINFO_RC_SUCCESS;
+	}
+	else
+	{
+		nRet = SYSINFO_RC_ERROR;
 	}
 	return nRet;
 }
@@ -59,6 +86,17 @@ LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 
 LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
 {
-	LONG nRet = SYSINFO_RC_ERROR;
+	LONG nRet;
+	struct utsname un;
+
+	if (uname(&un) == 0)
+	{
+		ret_string(pValue, un.nodename);
+		nRet = SYSINFO_RC_SUCCESS;
+	}
+	else
+	{
+		nRet = SYSINFO_RC_ERROR;
+	}
 	return nRet;
 }

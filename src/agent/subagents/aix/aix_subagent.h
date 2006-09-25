@@ -26,6 +26,7 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <nms_threads.h>
+#include <sys/var.h>
 
 
 //
