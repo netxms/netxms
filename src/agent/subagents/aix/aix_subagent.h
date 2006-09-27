@@ -33,9 +33,13 @@
 // Disk info types
 //
 
-#define DISK_FREE	0
-#define DISK_USED	1
-#define DISK_TOTAL	2
+#define DISK_AVAIL		0
+#define DISK_AVAIL_PERC		1
+#define DISK_FREE		2
+#define DISK_FREE_PERC		3
+#define DISK_USED		4
+#define DISK_USED_PERC		5
+#define DISK_TOTAL		6
 
 
 //
@@ -77,13 +81,6 @@ typedef struct t_ProcEnt
 	unsigned int nPid;
 	char szProcName[128];
 } PROC_ENT;
-
-
-//
-// Functions
-//
-
-int mac_addr_dlpi(char *pszIfName, u_char *pMacAddr);
 
 
 //
