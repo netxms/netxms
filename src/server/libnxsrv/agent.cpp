@@ -484,6 +484,9 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
       pIfList->iNumEntries = m_dwNumDataLines;
       pIfList->pInterfaces = (INTERFACE_INFO *)malloc(sizeof(INTERFACE_INFO) * m_dwNumDataLines);
       memset(pIfList->pInterfaces, 0, sizeof(INTERFACE_INFO) * m_dwNumDataLines);
+
+      // Parse result set. Each line should have the following format:
+      // index ip_address/mask_bits iftype mac_address name
       for(i = 0; i < m_dwNumDataLines; i++)
       {
          pBuf = m_ppDataLines[i];
