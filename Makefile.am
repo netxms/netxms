@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = reconf configure include netxms.dsw Makefile.nw
+EXTRA_DIST = reconf configure include netxms.dsw Makefile.nw README.HPUX
 SUBDIRS = m4 contrib src doc tools netware
 SUBDIRS += @TOP_LEVEL_MODULES@
 
