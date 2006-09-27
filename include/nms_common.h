@@ -270,6 +270,10 @@ typedef int SOCKET;
 #include <netinet/in.h>
 #endif
 
+#if HAVE_NET_NH_H
+#include <net/nh.h>
+#endif
+
 #if HAVE_ARPA_INET_H
 #include <arpa/inet.h>
 #endif

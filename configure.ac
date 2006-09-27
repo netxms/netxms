@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.187 2006-09-27 04:15:24 victor Exp $
+# $Id: configure.ac,v 1.188 2006-09-27 13:04:44 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -427,7 +427,7 @@ AC_HEADER_STDC
 AC_HEADER_STAT
 AC_HEADER_TIME
 AC_CHECK_HEADERS([sys/int_types.h sys/time.h])
-AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h sys/socket.h])
+AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h net/nh.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h],,,
 [[#ifdef HAVE_SYS_TYPES_H
@@ -477,9 +477,18 @@ AC_C_BIGENDIAN
 # --------------------------------------------------------------------------
 # macros
 
-AC_CHECK_DECLS([__bswap_32, __bswap_64],,,[
+AC_CHECK_DECLS([__bswap_32, __bswap_64, htonll, ntohll],,,[
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
 #if HAVE_BYTESWAP_H
 #include <byteswap.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_NET_NH_H
+#include <net/nh.h>
 #endif
 ])
 AC_CHECK_DECLS([SIOCGIFADDR, SIOCGIFNETMASK, SIOCGIFHWADDR],,,[
@@ -494,7 +503,13 @@ AC_CHECK_DECLS([SIOCGIFADDR, SIOCGIFNETMASK, SIOCGIFHWADDR],,,[
 # --------------------------------------------------------------------------
 # AIX specific
 
+AC_CHECK_HEADERS([procinfo.h],,,[[ ]])
 AC_CHECK_DECLS([getkerninfo])
+AC_CHECK_FUNCS([getprocs64],,,[
+#if HAVE_PROCINFO_H
+#include <procinfo.h>
+#endif
+])
 
 # --------------------------------------------------------------------------
 # library functions

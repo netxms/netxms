@@ -1,7 +1,7 @@
 INCLUDES=-I@top_srcdir@/include
 
 lib_LTLIBRARIES = libnsm_aix.la
-libnsm_aix_la_SOURCES = disk.cpp main.cpp net.cpp system.cpp
+libnsm_aix_la_SOURCES = disk.cpp main.cpp net.cpp proc.cpp system.cpp
 libnsm_aix_la_LDFLAGS = $(PTHREAD_LIBS) ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = aix_subagent.h

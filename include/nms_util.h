@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.87 2006-09-27 04:15:25 victor Exp $ */
+/* $Id: nms_util.h,v 1.88 2006-09-27 13:04:45 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -256,8 +256,16 @@ typedef struct _dir_struc
 #define ntohd(x) (x)
 #define SwapWideString(x)
 #else
+#ifdef HAVE_HTONLL
+#define htonq(x) htonll(x)
+#else
 #define htonq(x) __bswap_64(x)
+#endif
+#ifdef HAVE_NTOHLL
+#define ntohq(x) ntohll(x)
+#else
 #define ntohq(x) __bswap_64(x)
+#endif
 #define htond(x) __bswap_double(x)
 #define ntohd(x) __bswap_double(x)
 #define SwapWideString(x)  __bswap_wstr(x)
@@ -411,6 +419,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.87  2006/09/27 04:15:25  victor
+AIX: implemented Net.InterfaceList
+
 Revision 1.86  2006/09/23 23:49:41  victor
 Console working with UNICODE!
 
