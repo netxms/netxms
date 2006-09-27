@@ -134,8 +134,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
-/*
    { "Net.InterfaceList", H_NetIfList, NULL },
+/*
    { "System.ProcessList", H_ProcessList, NULL }
 */
 };
@@ -169,12 +169,12 @@ DECLARE_SUBAGENT_INIT(AIX)
 // Entry points for server
 //
 
-/*
 extern "C" BOOL __NxSubAgentGetIfList(NETXMS_VALUES_LIST *pValue)
 {
    return H_NetIfList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
 }  
 
+/*
 extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 {
    return H_NetArpCache("Net.ArpCache", NULL, pValue) == SYSINFO_RC_SUCCESS;

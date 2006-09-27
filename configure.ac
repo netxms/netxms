@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.186 2006-09-25 15:29:36 victor Exp $
+# $Id: configure.ac,v 1.187 2006-09-27 04:15:24 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -490,6 +490,11 @@ AC_CHECK_DECLS([SIOCGIFADDR, SIOCGIFNETMASK, SIOCGIFHWADDR],,,[
 #include <sys/sockio.h>
 #endif
 ])
+
+# --------------------------------------------------------------------------
+# AIX specific
+
+AC_CHECK_DECLS([getkerninfo])
 
 # --------------------------------------------------------------------------
 # library functions

@@ -527,7 +527,7 @@ void LIBNETXMS_EXPORTABLE MACToStr(BYTE *pData, TCHAR *pStr)
 // Convert byte array to text representation
 //
 
-void LIBNETXMS_EXPORTABLE BinToStr(BYTE *pData, DWORD dwSize, TCHAR *pStr)
+TCHAR LIBNETXMS_EXPORTABLE *BinToStr(BYTE *pData, DWORD dwSize, TCHAR *pStr)
 {
    DWORD i;
    TCHAR *pCurr;
@@ -538,6 +538,7 @@ void LIBNETXMS_EXPORTABLE BinToStr(BYTE *pData, DWORD dwSize, TCHAR *pStr)
       *pCurr++ = bin2hex(pData[i] & 15);
    }
    *pCurr = 0;
+   return pStr;
 }
 
 

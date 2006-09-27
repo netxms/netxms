@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.86 2006-09-23 23:49:41 victor Exp $ */
+/* $Id: nms_util.h,v 1.87 2006-09-27 04:15:25 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -311,7 +311,7 @@ extern "C"
    void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize);
    void LIBNETXMS_EXPORTABLE nx_memswap(void *pBlock1, void *pBlock2, DWORD dwSize);
 
-   void LIBNETXMS_EXPORTABLE BinToStr(BYTE *pData, DWORD dwSize, TCHAR *pStr);
+   TCHAR LIBNETXMS_EXPORTABLE *BinToStr(BYTE *pData, DWORD dwSize, TCHAR *pStr);
    DWORD LIBNETXMS_EXPORTABLE StrToBin(TCHAR *pStr, BYTE *pData, DWORD dwSize);
    void LIBNETXMS_EXPORTABLE MACToStr(BYTE *pData, TCHAR *pStr);
 
@@ -411,6 +411,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.86  2006/09/23 23:49:41  victor
+Console working with UNICODE!
+
 Revision 1.85  2006/09/10 06:59:36  victor
 Fixed problmes with Win32 build
 
