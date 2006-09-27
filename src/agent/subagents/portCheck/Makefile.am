@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.10 2006-03-15 12:00:10 alk Exp $
+# $Id: Makefile.am,v 1.11 2006-09-27 19:09:18 victor Exp $
 
 INCLUDES=-I@top_srcdir@/include
 
@@ -10,4 +10,7 @@ libnsm_portCheck_la_LDFLAGS = ../../../libnetxms/libnetxms.la ../../../libnxcscp
 EXTRA_DIST = net.h main.h
 
 install-exec-hook:
-	if test "x`uname -s`" = "xAIX" ; then $(AR) x $(libdir)/libnsm_portCheck.a $(libdir)/libnsm_portCheck.so.0 ; fi
+	if test "x`uname -s`" = "xAIX" ; then \
+		rm -f $(libdir)/libnsm_portCheck.so.0 ; \
+		$(AR) x $(libdir)/libnsm_portCheck.a $(libdir)/libnsm_portCheck.so.0 ; \
+	fi

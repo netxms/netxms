@@ -7,6 +7,6 @@ libnsm_aix_la_LDFLAGS = $(PTHREAD_LIBS) ../../../libnetxms/libnetxms.la
 EXTRA_DIST = aix_subagent.h
 
 install-exec-hook:
-	rm $(libdir)/libnsm_aix.so.0
+	rm -f $(libdir)/libnsm_aix.so.0
 	$(AR) x $(libdir)/libnsm_aix.a $(libdir)/libnsm_aix.so.0
 	(cd $(libdir) && rm -f libnsm_aix.so && $(LN_S) libnsm_aix.so.0 libnsm_aix.so)

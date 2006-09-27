@@ -40,7 +40,8 @@ LONG H_NetInterfaceStats(char *pszParam, char *pArg, char *pValue);
 LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue);
 LONG H_ProcessInfo(char *pszParam, char *pArg, char *pValue);
 LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue);
-LONG H_SysProcCount(char *pszParam, char *pArg, char *pValue);
+LONG H_SysProcessCount(char *pszParam, char *pArg, char *pValue);
+LONG H_SysThreadCount(char *pszParam, char *pArg, char *pValue);
 LONG H_Uname(char *pszParam, char *pArg, char *pValue);
 LONG H_Uptime(char *pszParam, char *pArg, char *pValue);
 
@@ -106,7 +107,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "Net.Interface.PacketsIn(*)", H_NetInterfaceStats, "ipackets", DCI_DT_UINT, "Number of input packets on interface {instance}" },
    { "Net.Interface.PacketsOut(*)", H_NetInterfaceStats, "opackets", DCI_DT_UINT, "Number of output packets on interface {instance}" },
    { "Net.Interface.Speed(*)", H_NetInterfaceStats, "ifspeed", DCI_DT_UINT, "Speed of interface {instance}" },
-   { "Process.Count(*)", H_ProcessCount, NULL, DCI_DT_UINT, "Number of proceses {instance}" },
+*/
+//   { "Process.Count(*)", H_ProcessCount, NULL, DCI_DT_UINT, "Number of proceses {instance}" },
+/*
    { "Process.KernelTime(*)", H_ProcessInfo, (char *)PROCINFO_KTIME, DCI_DT_UINT64, "" },
    { "Process.PageFaults(*)", H_ProcessInfo, (char *)PROCINFO_PF, DCI_DT_UINT64, "" },
    { "Process.UserTime(*)", H_ProcessInfo, (char *)PROCINFO_UTIME, DCI_DT_UINT64, "" },
@@ -131,17 +134,16 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.Memory.Swap.Free", H_MemoryInfo, (char *)MEMINFO_SWAP_FREE, DCI_DT_UINT64, "Free swap space" },
    { "System.Memory.Swap.Total", H_MemoryInfo, (char *)MEMINFO_SWAP_TOTAL, DCI_DT_UINT64, "Total amount of swap space" },
    { "System.Memory.Swap.Used", H_MemoryInfo, (char *)MEMINFO_SWAP_USED, DCI_DT_UINT64, "Used swap space" },
-   { "System.ProcessCount", H_SysProcCount, NULL, DCI_DT_INT, "Total number of processes" },
 */
+   { "System.ProcessCount", H_SysProcessCount, NULL, DCI_DT_INT, "Total number of processes" },
+   { "System.ThreadCount", H_SysThreadCount, NULL, DCI_DT_INT, "Total number of threads" },
    { "System.Uname", H_Uname, NULL, DCI_DT_STRING, "System uname" },
 //   { "System.Uptime", H_Uptime, NULL, DCI_DT_UINT, "System uptime" }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
    { "Net.InterfaceList", H_NetIfList, NULL },
-/*
    { "System.ProcessList", H_ProcessList, NULL }
-*/
 };
 
 static NETXMS_SUBAGENT_INFO m_info =
