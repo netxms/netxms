@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.2 2006-09-25 20:55:48 victor Exp $ */
+/* $Id: system.cpp,v 1.3 2006-09-28 20:00:03 victor Exp $ */
 /*
 ** NetXMS subagent for AIX
 ** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
@@ -23,6 +23,7 @@
 
 #include "aix_subagent.h"
 #include <sys/utsname.h>
+#include <sys/vminfo.h>
 
 
 //
@@ -80,6 +81,7 @@ LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
+
 //
 // Handler for System.Hostname parameter
 //
@@ -92,6 +94,39 @@ LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
 	if (uname(&un) == 0)
 	{
 		ret_string(pValue, un.nodename);
+		nRet = SYSINFO_RC_SUCCESS;
+	}
+	else
+	{
+		nRet = SYSINFO_RC_ERROR;
+	}
+	return nRet;
+}
+
+
+//
+// Handler for System.Memory.Physical.xxx parameters
+//
+
+LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
+{
+	struct vminfo vmi;
+	LONG nRet;
+
+	if (vmgetinfo(&vmi, VMINFO, sizeof(struct vminfo)) == 0)
+	{
+		switch((int)pArg)
+		{
+			case MEMINFO_PHYSICAL_FREE:
+				ret_uint64(pValue, vmi.numfrb * getpagesize());
+				break;
+			case MEMINFO_PHYSICAL_USED:
+				ret_uint64(pValue, (vmi.memsizepgs - vmi.numfrb) * getpagesize());
+				break;
+			case MEMINFO_PHYSICAL_TOTAL:
+				ret_uint64(pValue, vmi.memsizepgs * getpagesize());
+				break;
+		}
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 	else

@@ -70,6 +70,7 @@
 #define PROCINFO_UTIME           7
 #define PROCINFO_VMSIZE          8
 #define PROCINFO_WKSET           9
+#define PROCINFO_THREADS         10
 
 
 //

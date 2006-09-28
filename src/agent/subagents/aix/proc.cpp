@@ -1,4 +1,4 @@
-/* $Id: proc.cpp,v 1.2 2006-09-27 19:09:17 victor Exp $ */
+/* $Id: proc.cpp,v 1.3 2006-09-28 20:00:03 victor Exp $ */
 /*
 ** NetXMS subagent for AIX
 ** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
@@ -23,6 +23,16 @@
 
 #include "aix_subagent.h"
 #include <procinfo.h>
+
+
+//
+// Possible consolidation types of per-process information
+//
+
+#define INFOTYPE_MIN             0
+#define INFOTYPE_MAX             1
+#define INFOTYPE_AVG             2
+#define INFOTYPE_SUM             3
 
 
 //
@@ -149,6 +159,145 @@ LONG H_SysThreadCount(char *pszParam, char *pArg, char *pValue)
 	{
 		nRet = SYSINFO_RC_ERROR;
 	}
+
+	return nRet;
+}
+
+
+//
+// Handler for Process.Count(*) parameter
+//
+
+LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
+{
+	LONG nRet;
+	PROCENTRY *pList;
+	int i, nSysProcCount, nProcCount;
+	char szProcessName[256];
+
+	if (!NxGetParameterArg(pszParam, 1, szProcessName, 256))
+		return SYSINFO_RC_UNSUPPORTED;
+
+	pList = GetProcessList(&nSysProcCount);
+	if (pList != NULL)
+	{
+		for(i = 0, nProcCount = 0; i < nSysProcCount; i++)
+		{
+			if (!strcmp(pList[i].pi_comm, szProcessName))
+				nProcCount++;
+		}
+		free(pList);
+		ret_uint(pValue, nProcCount);
+		nRet = SYSINFO_RC_SUCCESS;
+	}
+	else
+	{
+		nRet = SYSINFO_RC_ERROR;
+	}
+
+	return nRet;
+}
+
+
+//
+// Handler for Process.xxx(*) parameters
+//
+
+LONG H_ProcessInfo(char *pszParam, char *pArg, char *pValue)
+{
+	int nRet = SYSINFO_RC_SUCCESS;
+	char szBuffer[256] = "";
+	int i, nProcCount, nType, nCount;
+	PROCENTRY *pList;
+	QWORD qwValue, qwCurrVal;
+	static char *pszTypeList[]={ "min", "max", "avg", "sum", NULL };
+
+	// Get parameter type arguments
+	NxGetParameterArg(pszParam, 2, szBuffer, sizeof(szBuffer));
+	if (szBuffer[0] == 0)     // Omited type
+	{
+		nType = INFOTYPE_SUM;
+	}
+	else
+	{
+		for(nType = 0; pszTypeList[nType] != NULL; nType++)
+			if (!stricmp(pszTypeList[nType], szBuffer))
+				break;
+		if (pszTypeList[nType] == NULL)
+			return SYSINFO_RC_UNSUPPORTED;     // Unsupported type
+	}
+
+	NxGetParameterArg(pszParam, 1, szBuffer, sizeof(szBuffer));
+	pList = GetProcessList(&nProcCount);
+	if (pList != NULL)
+	{
+		for(i = 0, qwValue = 0, nCount = 0; i < nProcCount; i++)
+		{
+			if (!strcmp(pList[i].pi_comm, szBuffer))
+			{
+				switch((int)pArg)
+				{
+//					case PROCINFO_IO_READ_B:
+					case PROCINFO_IO_READ_OP:
+						qwCurrVal = pList[i].pi_ru.ru_inblock;
+						break;
+//					case PROCINFO_IO_WRITE_B:
+					case PROCINFO_IO_WRITE_OP:
+						qwCurrVal = pList[i].pi_ru.ru_oublock;
+						break;
+					case PROCINFO_KTIME:
+						qwCurrVal = pList[i].pi_ru.ru_stime.tv_sec * 1000 + pList[i].pi_ru.ru_stime.tv_usec / 1000;
+						break;
+					case PROCINFO_PF:
+						qwCurrVal = pList[i].pi_majflt + pList[i].pi_minflt;
+						break;
+					case PROCINFO_THREADS:
+						qwCurrVal = pList[i].pi_thcount;
+						break;
+					case PROCINFO_UTIME:
+						qwCurrVal = pList[i].pi_ru.ru_utime.tv_sec * 1000 + pList[i].pi_ru.ru_utime.tv_usec / 1000;
+						break;
+					case PROCINFO_VMSIZE:
+						qwCurrVal = pList[i].pi_size * getpagesize();
+						break;
+//					case PROCINFO_WKSET:
+					default:
+						nRet = SYSINFO_RC_UNSUPPORTED;
+						break;
+				}
+
+				if (nCount == 0)
+				{
+					qwValue = qwCurrVal;
+				}
+				else
+				{
+					switch(nType)
+					{
+						case INFOTYPE_MIN:
+							qwValue = min(qwValue, qwCurrVal);
+							break;
+						case INFOTYPE_MAX:
+							qwValue = max(qwValue, qwCurrVal);
+							break;
+						case INFOTYPE_AVG:
+							qwValue = (qwValue * nCount + qwCurrVal) / (nCount + 1);
+							break;
+						case INFOTYPE_SUM:
+							qwValue += qwCurrVal;
+							break;
+                }
+				}
+				nCount++;
+			}
+		}
+		free(pList);
+		ret_uint64(pValue, qwValue);
+	}
+	else
+	{
+		nRet = SYSINFO_RC_ERROR;
+	}	
 
 	return nRet;
 }
