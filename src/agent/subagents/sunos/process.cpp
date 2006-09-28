@@ -1,4 +1,4 @@
-/* $Id: process.cpp,v 1.9 2006-05-15 22:11:22 alk Exp $ */
+/* $Id: process.cpp,v 1.10 2006-09-28 20:00:35 victor Exp $ */
 
 /*
  ** NetXMS subagent for SunOS/Solaris
@@ -232,8 +232,8 @@ static BOOL ReadProcFile(pid_t nPid, char *pszFile, void *pData, size_t nDataLen
 // Get specific process attribute
 //
 
-static QWORD GetProcessAttribute(pid_t nPid, int nAttr, int nType,
-		int nCount, QWORD *pqwValue)
+static BOOL GetProcessAttribute(pid_t nPid, int nAttr, int nType,
+                                int nCount, QWORD *pqwValue)
 {
 	QWORD qwValue;  
 	char szFileName[MAX_PATH];
@@ -372,5 +372,10 @@ LONG H_ProcessInfo(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/05/15 22:11:22  alk
++ Net.Interface.Link() workaround; trying kstat() first, then
+IFF_RUNNING it kstat's link_up failed.
+- code reformated
+
 
 */
