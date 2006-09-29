@@ -206,7 +206,7 @@ void CGraphFrame::OnViewRefresh()
    if (m_iTimeFrameType == 1)
    {
       m_dwTimeTo = time(NULL);
-      m_dwTimeTo -= m_dwTimeTo % 60;   // Round to minute boundary
+      m_dwTimeTo += 60 - m_dwTimeTo % 60;   // Round to minute boundary
       m_dwTimeFrom = m_dwTimeTo - m_dwTimeFrame;
    }
    m_wndGraph.SetTimeFrame(m_dwTimeFrom, m_dwTimeTo);

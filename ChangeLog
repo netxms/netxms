@@ -6,7 +6,10 @@
 - Windows console:
 	- Console changed to use UNICODE internally
 	- Event processing policy editor improved
-- Fixed issues: #104, #109, #111
+- Server ported to AIX and HP-UX
+- Agent ported to HP-UX
+- Agent for AIX improved
+- Fixed issues: #104, #109, #111, #115
 
 
 *

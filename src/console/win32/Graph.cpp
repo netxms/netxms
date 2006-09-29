@@ -345,7 +345,7 @@ void CGraph::DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int 
       inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
    if (i < pData->dwNumRows)
    {
-      dc.MoveTo(m_rectGraph.right, 
+      dc.MoveTo(m_rectGraph.right - (int)((double)(m_dwTimeTo - pRow->dwTimeStamp) / m_dSecondsPerPixel),
                 (int)(m_rectGraph.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1));
       inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
 
