@@ -168,7 +168,7 @@ typedef struct
       DWORD dwInteger;
       QWORD qwInt64;
       double dFloat;
-      TCHAR szString[MAX_DCI_STRING_VALUE];
+      WCHAR szString[MAX_DCI_STRING_VALUE];
    } value;
 } DCI_DATA_ROW;
 
@@ -188,7 +188,7 @@ typedef struct
       DWORD dwInt32;
       INT64 qwInt64;
       double dFloat;
-      TCHAR szString[MAX_DCI_STRING_VALUE];
+      WCHAR szString[MAX_DCI_STRING_VALUE];
    } value;
    WORD wFunction;
    WORD wOperation;

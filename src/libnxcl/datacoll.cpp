@@ -181,7 +181,14 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
             dct.value.dFloat = htond(pItem->pThresholdList[i].value.dFloat);
             break;
          case DCI_DT_STRING:
-            _tcscpy(dct.value.szString, pItem->pThresholdList[i].value.szString);
+#ifdef UNICODE
+            wcscpy(dct.value.szString, pItem->pThresholdList[i].value.szString);
+#else
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
+                                pItem->pThresholdList[i].value.szString, -1,
+                                dct.value.szString, MAX_DCI_STRING_VALUE);
+#endif
+            SwapWideString(dct.value.szString);
             break;
          default:
             break;
@@ -370,7 +377,15 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(NXC_SESSION hSession, DWORD dwNodeId, DWO
                   pDst->value.dFloat = ntohd(pSrc->value.dFloat);
                   break;
                case DCI_DT_STRING:
-                  _tcscpy(pDst->value.szString, pSrc->value.szString);
+                  SwapWideString(pSrc->value.szString);
+#ifdef UNICODE
+                  wcscpy(pDst->value.szString, pSrc->value.szString);
+#else
+                  WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                                      pSrc->value.szString, -1,
+                                      pDst->value.szString, MAX_STRING_VALUE,
+                                      NULL, NULL);
+#endif
                   break;
             }
 

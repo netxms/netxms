@@ -423,7 +423,15 @@ void NXCL_Session::ProcessDCI(CSCPMessage *pMsg)
                      m_pItemList->pItems[i].pThresholdList[j].value.dFloat = ntohd(dct.value.dFloat);
                      break;
                   case DCI_DT_STRING:
-                     _tcscpy(m_pItemList->pItems[i].pThresholdList[j].value.szString, dct.value.szString);
+                     SwapWideString(dct.value.szString);
+#ifdef UNICODE
+                     wcscpy(m_pItemList->pItems[i].pThresholdList[j].value.szString, dct.value.szString);
+#else
+                     WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                                         dct.value.szString, -1,
+                                         m_pItemList->pItems[i].pThresholdList[j].value.szString,
+                                         MAX_STRING_VALUE, NULL, NULL);
+#endif
                      break;
                   default:
                      break;

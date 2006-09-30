@@ -64,6 +64,7 @@ void ProcessEvent(NXCL_Session *pSession, CSCPMessage *pMsg, CSCP_MESSAGE *pRawM
             for(pSrc = ((NXC_EVENT *)pRawMsg->df)->szMessage, 
                 pDst = event.szMessage; *pSrc != 0; pSrc++, pDst++)
                *pDst = ntohs(*pSrc);
+            *pDst = ntohs(*pSrc);
 #endif
 #else
             SwapWideString((WCHAR *)((NXC_EVENT *)pRawMsg->df)->szMessage);

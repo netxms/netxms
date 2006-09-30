@@ -2622,6 +2622,9 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
    NetObj *pObject;
    BOOL bSuccess = FALSE;
    static DWORD m_dwRowSize[] = { 8, 8, 12, 12, 260, 12 };
+#ifndef UNICODE
+   char szBuffer[MAX_DCI_STRING_VALUE];
+#endif
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -2639,7 +2642,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
             DB_ASYNC_RESULT hResult;
             DWORD dwItemId, dwMaxRows, dwTimeFrom, dwTimeTo;
             DWORD dwAllocatedRows = 100, dwNumRows = 0;
-            char szQuery[512], szCond[256];
+            TCHAR szQuery[512], szCond[256];
             int iPos = 0, iType;
             DCI_DATA_HEADER *pData = NULL;
             DCI_DATA_ROW *pCurr;
@@ -2653,12 +2656,12 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
             szCond[0] = 0;
             if (dwTimeFrom != 0)
             {
-               sprintf(szCond, " AND idata_timestamp>=%d", dwTimeFrom);
+               _stprintf(szCond, _T(" AND idata_timestamp>=%d"), dwTimeFrom);
                iPos = (int)_tcslen(szCond);
             }
             if (dwTimeTo != 0)
             {
-               sprintf(&szCond[iPos], " AND idata_timestamp<=%d", dwTimeTo);
+               _stprintf(&szCond[iPos], _T(" AND idata_timestamp<=%d"), dwTimeTo);
             }
 
             // Get item's data type to determine actual row size
@@ -2670,29 +2673,29 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
                switch(g_dwDBSyntax)
                {
                   case DB_SYNTAX_MSSQL:
-                     sprintf(szQuery, "SELECT TOP %d idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC",
-                             dwMaxRows, dwObjectId, dwItemId, szCond);
+                     _stprintf(szQuery, _T("SELECT TOP %d idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC"),
+                               dwMaxRows, dwObjectId, dwItemId, szCond);
                      break;
                   case DB_SYNTAX_ORACLE:
-                     sprintf(szQuery, "SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s AND ROWNUM <= %d ORDER BY idata_timestamp DESC",
-                             dwObjectId, dwItemId, szCond, dwMaxRows);
+                     _stprintf(szQuery, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s AND ROWNUM <= %d ORDER BY idata_timestamp DESC"),
+                               dwObjectId, dwItemId, szCond, dwMaxRows);
                      break;
                   case DB_SYNTAX_MYSQL:
                   case DB_SYNTAX_PGSQL:
                   case DB_SYNTAX_SQLITE:
-                     sprintf(szQuery, "SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC LIMIT %d",
-                             dwObjectId, dwItemId, szCond, dwMaxRows);
+                     _stprintf(szQuery, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC LIMIT %d"),
+                               dwObjectId, dwItemId, szCond, dwMaxRows);
                      break;
                   default:
-                     sprintf(szQuery, "SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC",
-                             dwObjectId, dwItemId, szCond);
+                     _stprintf(szQuery, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC"),
+                               dwObjectId, dwItemId, szCond);
                      break;
                }
             }
             else
             {
-               sprintf(szQuery, "SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC",
-                       dwObjectId, dwItemId, szCond);
+               _stprintf(szQuery, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC"),
+                         dwObjectId, dwItemId, szCond);
             }
             hResult = DBAsyncSelect(g_hCoreDB, szQuery);
             if (hResult != NULL)
@@ -2739,7 +2742,14 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
                         pCurr->value.dFloat = htond(DBGetFieldAsyncDouble(hResult, 1));
                         break;
                      case DCI_DT_STRING:
+#ifdef UNICODE
                         DBGetFieldAsync(hResult, 1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
+#else
+                        DBGetFieldAsync(hResult, 1, szBuffer, MAX_DCI_STRING_VALUE);
+                        MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szBuffer, -1,
+                                            pCurr->value.szString, MAX_DCI_STRING_VALUE);
+#endif
+                        SwapWideString(pCurr->value.szString);
                         break;
                   }
                   pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + m_dwRowSize[iType]);

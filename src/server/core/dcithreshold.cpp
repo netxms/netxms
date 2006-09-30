@@ -363,7 +363,13 @@ void Threshold::CreateMessage(DCI_THRESHOLD *pData)
          pData->value.dFloat = htond((double)m_value);
          break;
       case DCI_DT_STRING:
-         strcpy(pData->value.szString,  m_value.String());
+#ifdef UNICODE
+         wcscpy(pData->value.szString,  m_value.String());
+#else
+         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_value.String(), -1,
+                             pData->value.szString, MAX_DCI_STRING_VALUE);
+#endif
+         SwapWideString(pData->value.szString);
          break;
       default:
          break;
@@ -377,6 +383,10 @@ void Threshold::CreateMessage(DCI_THRESHOLD *pData)
 
 void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
 {
+#ifndef UNICODE
+   char szBuffer[MAX_DCI_STRING_VALUE];
+#endif
+
    m_dwEventCode = ntohl(pData->dwEvent);
    m_iFunction = (BYTE)ntohs(pData->wFunction);
    m_iOperation = (BYTE)ntohs(pData->wOperation);
@@ -400,7 +410,15 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
          m_value = ntohd(pData->value.dFloat);
          break;
       case DCI_DT_STRING:
+         SwapWideString(pData->value.szString);
+#ifdef UNICODE
          m_value = pData->value.szString;
+#else
+         WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                             pData->value.szString, -1, szBuffer,
+                             MAX_DCI_STRING_VALUE, NULL, NULL);
+         m_value = szBuffer;
+#endif
          break;
       default:
          DbgPrintf(AF_DEBUG_DC, "WARNING: Invalid datatype %d in threshold object %d", m_iDataType, m_dwId);

@@ -53,7 +53,11 @@ QWORD LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base)
 {
 	const TCHAR *s;
 	QWORD acc, cutoff;
+#ifdef UNICODE
 	_TINT c;
+#else
+   int c;
+#endif
 	int neg, any, cutlim;
 
 	/*

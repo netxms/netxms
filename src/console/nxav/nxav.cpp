@@ -348,7 +348,7 @@ void CAlarmViewApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
             break;
          case NX_NOTIFY_NEW_ALARM:
          case NX_NOTIFY_ALARM_DELETED:
-         case NX_NOTIFY_ALARM_ACKNOWLEGED:
+         case NX_NOTIFY_ALARM_CHANGED:
             m_pMainWnd->PostMessage(WM_ALARM_UPDATE, dwCode, 
                                     (LPARAM)nx_memdup(pArg, sizeof(NXC_ALARM)));
             break;

@@ -52,7 +52,11 @@ INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base)
 {
 	const TCHAR *s;
 	INT64 acc, cutoff;
+#ifdef UNICODE
 	_TINT c;
+#else
+   int c;
+#endif
 	int neg, any, cutlim;
 
 	/*

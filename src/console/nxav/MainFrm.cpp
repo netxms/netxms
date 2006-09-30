@@ -151,7 +151,7 @@ void CMainFrame::OnViewRefresh()
    if (dwRetCode == RCC_SUCCESS)
    {
       for(i = 0; i < m_dwNumAlarms; i++)
-         m_iNumAlarms[m_pAlarmList[i].wSeverity]++;
+         m_iNumAlarms[m_pAlarmList[i].nCurrentSeverity]++;
       SortAlarms();
    }
    else
@@ -179,7 +179,7 @@ void CMainFrame::AddAlarm(NXC_ALARM *pAlarm, CString &strHTML, BOOL bColoredLine
    CString strBuf;
 
    pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
-   ptm = localtime((const time_t *)&pAlarm->dwTimeStamp);
+   ptm = localtime((const time_t *)&pAlarm->dwLastChangeTime);
    strftime(szBuffer, 64, "%d-%b-%Y<br>%H:%M:%S", ptm);
    strBuf.Format("<tr bgcolor=%s><td align=left><table cellpadding=2 border=0><tr>"
                  "<td><img src=\"file:%s/%s.ico\" border=0/></td>"
@@ -189,8 +189,8 @@ void CMainFrame::AddAlarm(NXC_ALARM *pAlarm, CString &strHTML, BOOL bColoredLine
                  "<td align=center><a href=\"nxav:S?%d\"><img src=\"file:%s/%ssound.png\" alt=\"NOSOUND\" border=0/></a> "
                  "<a href=\"nxav:A?%d\"><img src=\"file:%s/ack.png\" alt=\"ACK\" border=0/></a></td></tr>\n",
                  bColoredLine ? "#EFEFEF" : "#FFFFFF", 
-                 g_szWorkDir, g_szStatusTextSmall[pAlarm->wSeverity],
-                 g_szStatusTextSmall[pAlarm->wSeverity], pObject->szName,
+                 g_szWorkDir, g_szStatusTextSmall[pAlarm->nCurrentSeverity],
+                 g_szStatusTextSmall[pAlarm->nCurrentSeverity], pObject->szName,
                  pAlarm->szMessage, szBuffer, pAlarm->dwAlarmId, g_szWorkDir,
                  pAlarm->pUserData != 0 ? "" : "no", pAlarm->dwAlarmId, g_szWorkDir);
    strHTML += strBuf;
@@ -244,7 +244,7 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
    switch(wParam)
    {
       case NX_NOTIFY_NEW_ALARM:
-         if (!pAlarm->wIsAck)
+         if (pAlarm->nState != ALARM_STATE_TERMINATED)
          {
             m_pAlarmList = (NXC_ALARM *)realloc(m_pAlarmList, sizeof(NXC_ALARM) * (m_dwNumAlarms + 1));
             memcpy(&m_pAlarmList[m_dwNumAlarms], pAlarm, sizeof(NXC_ALARM));
@@ -255,12 +255,12 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
          }
          break;
       case NX_NOTIFY_ALARM_DELETED:
-      case NX_NOTIFY_ALARM_ACKNOWLEGED:
+      case NX_NOTIFY_ALARM_CHANGED:
          for(i = 0; i < m_dwNumAlarms; i++)
             if (m_pAlarmList[i].dwAlarmId == pAlarm->dwAlarmId)
             {
                PlayAlarmSound(&m_pAlarmList[i], FALSE, g_hSession, &appAlarmViewer.m_soundCfg);
-               m_iNumAlarms[m_pAlarmList[i].wSeverity]--;
+               m_iNumAlarms[m_pAlarmList[i].nCurrentSeverity]--;
                m_dwNumAlarms--;
                if (m_dwNumAlarms > 0)
                   memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
@@ -282,7 +282,7 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
 
 static int CompareAlarms(const NXC_ALARM *p1, const NXC_ALARM *p2)
 {
-   return (p1->wSeverity > p2->wSeverity) ? -1 : ((p1->wSeverity < p2->wSeverity) ? 1 : 0);
+   return (p1->nCurrentSeverity > p2->nCurrentSeverity) ? -1 : ((p1->nCurrentSeverity < p2->nCurrentSeverity) ? 1 : 0);
 }
 
 
