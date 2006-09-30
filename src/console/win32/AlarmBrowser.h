@@ -85,10 +85,13 @@ protected:
 	afx_msg void OnAlarmSoundconfiguration();
 	afx_msg void OnAlarmTerminate();
 	afx_msg void OnUpdateAlarmTerminate(CCmdUI* pCmdUI);
+	afx_msg void OnAlarmLastdcivalues();
+	afx_msg void OnUpdateAlarmLastdcivalues(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
    afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
+   afx_msg void OnObjectTool(UINT nID);
 	DECLARE_MESSAGE_MAP()
 
 public:

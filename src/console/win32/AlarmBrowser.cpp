@@ -129,11 +129,14 @@ BEGIN_MESSAGE_MAP(CAlarmBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_ALARM_SOUNDCONFIGURATION, OnAlarmSoundconfiguration)
 	ON_COMMAND(ID_ALARM_TERMINATE, OnAlarmTerminate)
 	ON_UPDATE_COMMAND_UI(ID_ALARM_TERMINATE, OnUpdateAlarmTerminate)
+	ON_COMMAND(ID_ALARM_LASTDCIVALUES, OnAlarmLastdcivalues)
+	ON_UPDATE_COMMAND_UI(ID_ALARM_LASTDCIVALUES, OnUpdateAlarmLastdcivalues)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(LVN_COLUMNCLICK, AFX_IDW_PANE_FIRST, OnListViewColumnClick)
 	ON_NOTIFY(LVN_COLUMNCLICK, AFX_IDW_PANE_FIRST + 1, OnListViewColumnClick)
    ON_NOTIFY(TVN_SELCHANGED, AFX_IDW_PANE_FIRST, OnTreeViewSelChange)
    ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
+   ON_COMMAND_RANGE(OBJTOOL_MENU_FIRST_ID, OBJTOOL_MENU_LAST_ID, OnObjectTool)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -215,7 +218,7 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(4, _T("Count"), LVCFMT_LEFT, 45);
    m_wndListCtrl.InsertColumn(5, _T("Created"), LVCFMT_LEFT, 135);
    m_wndListCtrl.InsertColumn(6, _T("Last Change"), LVCFMT_LEFT, 135);
-   LoadListCtrlColumns(m_wndListCtrl, _T("AlarmBrowser"), _T("AlarmList"));
+   LoadListCtrlColumns(m_wndListCtrl, _T("AlarmBrowser"), _T("AlarmListV2"));
 	
    // Mark sorting column in list control
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
@@ -269,7 +272,7 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CAlarmBrowser::OnDestroy() 
 {
-   SaveListCtrlColumns(m_wndListCtrl, _T("AlarmBrowser"), _T("ListCtrl"));
+   SaveListCtrlColumns(m_wndListCtrl, _T("AlarmBrowser"), _T("AlarmListV2"));
    DoRequestArg2(NXCUnsubscribe, g_hSession, (void *)NXC_CHANNEL_ALARMS,
                  _T("Unsubscribing from ALARMS channel..."));
    theApp.OnViewDestroy(VIEW_ALARMS, this);
@@ -493,7 +496,7 @@ void CAlarmBrowser::OnContextMenu(CWnd *pWnd, CPoint point)
 {
    int iItem;
    UINT uFlags;
-   CMenu *pMenu;
+   CMenu *pMenu, *pToolsMenu;
    CPoint pt;
    CWnd *pChildWnd;
 
@@ -517,8 +520,35 @@ void CAlarmBrowser::OnContextMenu(CWnd *pWnd, CPoint point)
          iItem = m_wndListCtrl.HitTest(pt, &uFlags);
          if ((iItem != -1) && (uFlags & LVHT_ONITEM))
          {
+            BOOL bMenuInserted;
+            DWORD dwTemp;
+            NXC_ALARM *pAlarm;
+            NXC_OBJECT *pObject;
+
+            pAlarm = FindAlarmInList(m_wndListCtrl.GetItemData(iItem));
             pMenu = theApp.GetContextMenu(6);
+            if (pAlarm != NULL)
+            {
+               pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
+               if (pObject != NULL)
+               {
+                  dwTemp = 0;
+                  pToolsMenu = CreateToolsSubmenu(pObject, _T(""), &dwTemp);
+                  if (pToolsMenu->GetMenuItemCount() > 0)
+                  {
+                     pMenu->InsertMenu(5, MF_BYPOSITION | MF_STRING | MF_POPUP,
+                                       (UINT)pToolsMenu->GetSafeHmenu(), _T("&Object tools"));
+                     pToolsMenu->Detach();
+                     bMenuInserted = TRUE;
+                  }
+                  delete pToolsMenu;
+               }
+            }
             pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+            if (bMenuInserted)
+            {
+               pMenu->DeleteMenu(5, MF_BYPOSITION);
+            }
          }
       }
    }
@@ -872,5 +902,62 @@ void CAlarmBrowser::OnAlarmSoundconfiguration()
    if (ConfigureAlarmSounds(&g_soundCfg))
    {
       SaveAlarmSoundCfg(&g_soundCfg, NXCON_ALARM_SOUND_KEY);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_ALARM_LASTDCIVALUES message handler
+//
+
+void CAlarmBrowser::OnAlarmLastdcivalues() 
+{
+   int nItem;
+   NXC_ALARM *pAlarm;
+   NXC_OBJECT *pObject;
+
+   nItem = m_wndListCtrl.GetSelectionMark();
+   if (nItem != -1)
+   {
+      pAlarm = FindAlarmInList(m_wndListCtrl.GetItemData(nItem));
+      if (pAlarm != NULL)
+      {
+         pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
+         if (pObject != NULL)
+         {
+            theApp.ShowLastValues(pObject);
+         }
+      }
+   }
+}
+
+void CAlarmBrowser::OnUpdateAlarmLastdcivalues(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
+}
+
+
+//
+// Handler for object tools
+//
+
+void CAlarmBrowser::OnObjectTool(UINT nID)
+{
+   int nItem;
+   NXC_ALARM *pAlarm;
+   NXC_OBJECT *pObject;
+
+   nItem = m_wndListCtrl.GetNextItem(-1, LVIS_FOCUSED);
+   if (nItem != -1)
+   {
+      pAlarm = FindAlarmInList(m_wndListCtrl.GetItemData(nItem));
+      if (pAlarm != NULL)
+      {
+         pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
+         if (pObject != NULL)
+         {
+            theApp.ExecuteObjectTool(pObject, nID - OBJTOOL_MENU_FIRST_ID);
+         }
+      }
    }
 }
