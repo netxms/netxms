@@ -69,10 +69,12 @@ Threshold::Threshold(Threshold *pSrc)
 
 Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
 {
+   TCHAR szBuffer[MAX_DB_STRING];
+
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
    m_dwItemId = pRelatedItem->Id();
    m_dwEventCode = DBGetFieldULong(hResult, iRow, 7);
-   m_value = DBGetField(hResult, iRow, 1);
+   m_value = DBGetField(hResult, iRow, 1, szBuffer, MAX_DB_STRING);
    m_iFunction = (BYTE)DBGetFieldLong(hResult, iRow, 3);
    m_iOperation = (BYTE)DBGetFieldLong(hResult, iRow, 4);
    m_iDataType = pRelatedItem->DataType();

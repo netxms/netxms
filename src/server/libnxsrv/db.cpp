@@ -1,4 +1,5 @@
-/* 
+/* $Id: db.cpp,v 1.19 2006-09-30 22:41:10 victor Exp $ */
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
@@ -27,12 +28,12 @@
 // Global variables
 //
 
-char LIBNXSRV_EXPORTABLE g_szDbDriver[MAX_PATH] = "";
-char LIBNXSRV_EXPORTABLE g_szDbDrvParams[MAX_PATH] = "";
-char LIBNXSRV_EXPORTABLE g_szDbServer[MAX_PATH] = "127.0.0.1";
-char LIBNXSRV_EXPORTABLE g_szDbLogin[MAX_DB_LOGIN] = "netxms";
-char LIBNXSRV_EXPORTABLE g_szDbPassword[MAX_DB_PASSWORD] = "";
-char LIBNXSRV_EXPORTABLE g_szDbName[MAX_DB_NAME] = "netxms_db";
+TCHAR LIBNXSRV_EXPORTABLE g_szDbDriver[MAX_PATH] = _T("");
+TCHAR LIBNXSRV_EXPORTABLE g_szDbDrvParams[MAX_PATH] = _T("");
+TCHAR LIBNXSRV_EXPORTABLE g_szDbServer[MAX_PATH] = _T("127.0.0.1");
+TCHAR LIBNXSRV_EXPORTABLE g_szDbLogin[MAX_DB_LOGIN] = _T("netxms");
+TCHAR LIBNXSRV_EXPORTABLE g_szDbPassword[MAX_DB_PASSWORD] = _T("");
+TCHAR LIBNXSRV_EXPORTABLE g_szDbName[MAX_DB_NAME] = _T("netxms_db");
 
 
 //
@@ -47,12 +48,12 @@ static MUTEX m_mutexReconnect = INVALID_MUTEX_HANDLE;
 static HMODULE m_hDriver = NULL;
 static DB_CONNECTION (* m_fpDrvConnect)(char *, char *, char *, char *) = NULL;
 static void (* m_fpDrvDisconnect)(DB_CONNECTION) = NULL;
-static DWORD (* m_fpDrvQuery)(DB_CONNECTION, char *) = NULL;
-static DB_RESULT (* m_fpDrvSelect)(DB_CONNECTION, char *, DWORD *) = NULL;
-static DB_ASYNC_RESULT (* m_fpDrvAsyncSelect)(DB_CONNECTION, char *, DWORD *) = NULL;
+static DWORD (* m_fpDrvQuery)(DB_CONNECTION, WCHAR *) = NULL;
+static DB_RESULT (* m_fpDrvSelect)(DB_CONNECTION, WCHAR *, DWORD *) = NULL;
+static DB_ASYNC_RESULT (* m_fpDrvAsyncSelect)(DB_CONNECTION, WCHAR *, DWORD *) = NULL;
 static BOOL (* m_fpDrvFetch)(DB_ASYNC_RESULT) = NULL;
-static char* (* m_fpDrvGetField)(DB_RESULT, int, int) = NULL;
-static char* (* m_fpDrvGetFieldAsync)(DB_ASYNC_RESULT, int, char *, int) = NULL;
+static WCHAR* (* m_fpDrvGetField)(DB_RESULT, int, int, WCHAR *, int) = NULL;
+static WCHAR* (* m_fpDrvGetFieldAsync)(DB_ASYNC_RESULT, int, WCHAR *, int) = NULL;
 static int (* m_fpDrvGetNumRows)(DB_RESULT) = NULL;
 static void (* m_fpDrvFreeResult)(DB_RESULT) = NULL;
 static void (* m_fpDrvFreeAsyncResult)(DB_ASYNC_RESULT) = NULL;
@@ -67,14 +68,14 @@ static void (* m_fpEventHandler)(DWORD, TCHAR *);
 // Get symbol address and log errors
 //
 
-static void *DLGetSymbolAddrEx(HMODULE hModule, char *pszSymbol)
+static void *DLGetSymbolAddrEx(HMODULE hModule, TCHAR *pszSymbol)
 {
    void *pFunc;
    char szErrorText[256];
 
    pFunc = DLGetSymbolAddr(hModule, pszSymbol, szErrorText);
    if ((pFunc == NULL) && m_bWriteLog)
-      WriteLog(MSG_DLSYM_FAILED, EVENTLOG_WARNING_TYPE, "ss", pszSymbol, szErrorText);
+      WriteLog(MSG_DLSYM_FAILED, EVENTLOG_WARNING_TYPE, _T("ss"), pszSymbol, szErrorText);
    return pFunc;
 }
 
@@ -125,12 +126,12 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
    fpDrvInit = (BOOL (*)(char *))DLGetSymbolAddrEx(m_hDriver, "DrvInit");
    m_fpDrvConnect = (DB_CONNECTION (*)(char *, char *, char *, char *))DLGetSymbolAddrEx(m_hDriver, "DrvConnect");
    m_fpDrvDisconnect = (void (*)(DB_CONNECTION))DLGetSymbolAddrEx(m_hDriver, "DrvDisconnect");
-   m_fpDrvQuery = (DWORD (*)(DB_CONNECTION, char *))DLGetSymbolAddrEx(m_hDriver, "DrvQuery");
-   m_fpDrvSelect = (DB_RESULT (*)(DB_CONNECTION, char *, DWORD *))DLGetSymbolAddrEx(m_hDriver, "DrvSelect");
-   m_fpDrvAsyncSelect = (DB_ASYNC_RESULT (*)(DB_CONNECTION, char *, DWORD *))DLGetSymbolAddrEx(m_hDriver, "DrvAsyncSelect");
+   m_fpDrvQuery = (DWORD (*)(DB_CONNECTION, WCHAR *))DLGetSymbolAddrEx(m_hDriver, "DrvQuery");
+   m_fpDrvSelect = (DB_RESULT (*)(DB_CONNECTION, WCHAR *, DWORD *))DLGetSymbolAddrEx(m_hDriver, "DrvSelect");
+   m_fpDrvAsyncSelect = (DB_ASYNC_RESULT (*)(DB_CONNECTION, WCHAR *, DWORD *))DLGetSymbolAddrEx(m_hDriver, "DrvAsyncSelect");
    m_fpDrvFetch = (BOOL (*)(DB_ASYNC_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvFetch");
-   m_fpDrvGetField = (char* (*)(DB_RESULT, int, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetField");
-   m_fpDrvGetFieldAsync = (char* (*)(DB_ASYNC_RESULT, int, char *, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetFieldAsync");
+   m_fpDrvGetField = (WCHAR* (*)(DB_RESULT, int, int, WCHAR *, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetField");
+   m_fpDrvGetFieldAsync = (WCHAR* (*)(DB_ASYNC_RESULT, int, WCHAR *, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetFieldAsync");
    m_fpDrvGetNumRows = (int (*)(DB_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvGetNumRows");
    m_fpDrvFreeResult = (void (*)(DB_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvFreeResult");
    m_fpDrvFreeAsyncResult = (void (*)(DB_ASYNC_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvFreeAsyncResult");
@@ -283,32 +284,42 @@ static void DBReconnect(DB_HANDLE hConn)
 // Perform a non-SELECT SQL query
 //
 
-BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, char *szQuery)
+BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, TCHAR *szQuery)
 {
    DWORD dwResult;
    INT64 ms;
+#ifdef UNICODE
+#define pwszQuery szQuery
+#else
+   WCHAR *pwszQuery = WideStringFromMBString(szQuery);
+#endif
 
    MutexLock(hConn->mutexTransLock, INFINITE);
    if (m_bDumpSQL)
       ms = GetCurrentTimeMs();
 
-   dwResult = m_fpDrvQuery(hConn->hConn, szQuery);
+   dwResult = m_fpDrvQuery(hConn->hConn, pwszQuery);
    if (dwResult == DBERR_CONNECTION_LOST)
    {
       DBReconnect(hConn);
-      dwResult = m_fpDrvQuery(hConn->hConn, szQuery);
+      dwResult = m_fpDrvQuery(hConn->hConn, pwszQuery);
    }
+
+#ifndef UNICODE
+   free(pwszQuery);
+#endif
    
    if (m_bDumpSQL)
    {
       ms = GetCurrentTimeMs() - ms;
-      printf("%s sync query: \"%s\" [%d ms]\n", (dwResult == DBERR_SUCCESS) ? "Successful" : "Failed", szQuery, ms);
+      _tprintf(_T("%s sync query: \"%s\" [%d ms]\n"), (dwResult == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), szQuery, ms);
    }
    
    MutexUnlock(hConn->mutexTransLock);
    if ((dwResult != DBERR_SUCCESS) && m_bLogSQLErrors)
-      WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
+      WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, _T("s"), szQuery);
    return dwResult == DBERR_SUCCESS;
+#undef pwszQuery
 }
 
 
@@ -316,29 +327,39 @@ BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, char *szQuery)
 // Perform SELECT query
 //
 
-DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, char *szQuery)
+DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, TCHAR *szQuery)
 {
    DB_RESULT hResult;
    DWORD dwError;
    INT64 ms;
+#ifdef UNICODE
+#define pwszQuery szQuery
+#else
+   WCHAR *pwszQuery = WideStringFromMBString(szQuery);
+#endif
    
    MutexLock(hConn->mutexTransLock, INFINITE);
    if (m_bDumpSQL)
       ms = GetCurrentTimeMs();
-   hResult = m_fpDrvSelect(hConn->hConn, szQuery, &dwError);
+   hResult = m_fpDrvSelect(hConn->hConn, pwszQuery, &dwError);
    if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST))
    {
       DBReconnect(hConn);
-      hResult = m_fpDrvSelect(hConn->hConn, szQuery, &dwError);
+      hResult = m_fpDrvSelect(hConn->hConn, pwszQuery, &dwError);
    }
+
+#ifndef UNICODE
+   free(pwszQuery);
+#endif
+   
    if (m_bDumpSQL)
    {
       ms = GetCurrentTimeMs() - ms;
-      printf("%s sync query: \"%s\" [%d ms]\n", (hResult != NULL) ? "Successful" : "Failed", szQuery, (DWORD)ms);
+      _tprintf(_T("%s sync query: \"%s\" [%d ms]\n"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
    }
    MutexUnlock(hConn->mutexTransLock);
    if ((hResult == NULL) && m_bLogSQLErrors)
-      WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
+      WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, _T("s"), szQuery);
    return hResult;
 }
 
@@ -347,9 +368,59 @@ DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, char *szQuery)
 // Get field's value
 //
 
-char LIBNXSRV_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn)
+TCHAR LIBNXSRV_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
+                                      TCHAR *pszBuffer, int nBufLen)
 {
-   return m_fpDrvGetField(hResult, iRow, iColumn);
+#ifdef UNICODE
+   if (pszBuffer != NULL)
+   {
+      return m_fpDrvGetField(hResult, iRow, iColumn, pszBuffer, nBufLen);
+   }
+   else
+   {
+      return wcsdup(m_fpDrvGetField(hResult, iRow, iColumn, alloca(65536), 65536);
+   }
+#else
+   WCHAR *pwszData, *pwszBuffer;
+   char *pszRet;
+   int nLen;
+
+   if (pszBuffer != NULL)
+   {
+      pwszBuffer = (WCHAR *)malloc(nBufLen * sizeof(WCHAR));
+      pwszData = m_fpDrvGetField(hResult, iRow, iColumn, pwszBuffer, nBufLen);
+      if (pwszData != NULL)
+      {
+         WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                             pwszData, -1, pszBuffer, nBufLen, NULL, NULL);
+         pszRet = pszBuffer;
+      }
+      else
+      {
+         pszRet = NULL;
+      }
+      free(pwszBuffer);
+   }
+   else
+   {
+      pwszBuffer = (WCHAR *)malloc(65536 * sizeof(WCHAR));
+      pwszData = m_fpDrvGetField(hResult, iRow, iColumn, pwszBuffer, 65536);
+      if (pwszData != NULL)
+      {
+         nLen = wcslen(pwszData) + 1;
+         pszRet = (char *)malloc(nLen);
+         WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                             pwszData, -1, pszRet, nLen, NULL, NULL);
+         pszRet = pszBuffer;
+      }
+      else
+      {
+         pszRet = NULL;
+      }
+      free(pwszBuffer);
+   }
+   return pszRet;
+#endif
 }
 
 
@@ -361,12 +432,12 @@ DWORD LIBNXSRV_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int iRow, int iColu
 {
    LONG iVal;
    DWORD dwVal;
-   char *szVal;
+   TCHAR *pszVal, szBuffer[256];
 
-   szVal = DBGetField(hResult, iRow, iColumn);
-   if (szVal == NULL)
+   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
+   if (pszVal == NULL)
       return 0;
-   iVal = strtol(szVal, NULL, 10);
+   iVal = _tcstol(pszVal, NULL, 10);
    memcpy(&dwVal, &iVal, sizeof(LONG));   // To prevent possible conversion
    return dwVal;
 }
@@ -380,12 +451,12 @@ QWORD LIBNXSRV_EXPORTABLE DBGetFieldUInt64(DB_RESULT hResult, int iRow, int iCol
 {
    INT64 iVal;
    QWORD qwVal;
-   char *szVal;
+   TCHAR *pszVal, szBuffer[256];
 
-   szVal = DBGetField(hResult, iRow, iColumn);
-   if (szVal == NULL)
+   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
+   if (pszVal == NULL)
       return 0;
-   iVal = strtoll(szVal, NULL, 10);
+   iVal = _tcstoll(pszVal, NULL, 10);
    memcpy(&qwVal, &iVal, sizeof(INT64));   // To prevent possible conversion
    return qwVal;
 }
@@ -397,10 +468,10 @@ QWORD LIBNXSRV_EXPORTABLE DBGetFieldUInt64(DB_RESULT hResult, int iRow, int iCol
 
 LONG LIBNXSRV_EXPORTABLE DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn)
 {
-   char *szVal;
+   TCHAR *pszVal, szBuffer[256];
 
-   szVal = DBGetField(hResult, iRow, iColumn);
-   return szVal == NULL ? 0 : strtol(szVal, NULL, 10);
+   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
+   return pszVal == NULL ? 0 : _tcstol(pszVal, NULL, 10);
 }
 
 
@@ -410,10 +481,10 @@ LONG LIBNXSRV_EXPORTABLE DBGetFieldLong(DB_RESULT hResult, int iRow, int iColumn
 
 INT64 LIBNXSRV_EXPORTABLE DBGetFieldInt64(DB_RESULT hResult, int iRow, int iColumn)
 {
-   char *szVal;
+   TCHAR *pszVal, szBuffer[256];
 
-   szVal = DBGetField(hResult, iRow, iColumn);
-   return szVal == NULL ? 0 : strtoll(szVal, NULL, 10);
+   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
+   return pszVal == NULL ? 0 : _tcstoll(pszVal, NULL, 10);
 }
 
 
@@ -423,10 +494,10 @@ INT64 LIBNXSRV_EXPORTABLE DBGetFieldInt64(DB_RESULT hResult, int iRow, int iColu
 
 double LIBNXSRV_EXPORTABLE DBGetFieldDouble(DB_RESULT hResult, int iRow, int iColumn)
 {
-   char *szVal;
+   TCHAR *pszVal, szBuffer[256];
 
-   szVal = DBGetField(hResult, iRow, iColumn);
-   return szVal == NULL ? 0 : strtod(szVal, NULL);
+   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
+   return pszVal == NULL ? 0 : _tcstod(pszVal, NULL);
 }
 
 
@@ -436,10 +507,10 @@ double LIBNXSRV_EXPORTABLE DBGetFieldDouble(DB_RESULT hResult, int iRow, int iCo
 
 DWORD LIBNXSRV_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iColumn)
 {
-   char *szVal;
+   TCHAR *pszVal, szBuffer[256];
 
-   szVal = DBGetField(hResult, iRow, iColumn);
-   return szVal == NULL ? INADDR_NONE : ntohl(inet_addr(szVal));
+   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
+   return pszVal == NULL ? INADDR_NONE : ntohl(_t_inet_addr(pszVal));
 }
 
 
@@ -450,11 +521,12 @@ DWORD LIBNXSRV_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iCol
 BOOL LIBNXSRV_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iColumn,
                                              int *pnArray, int nSize, int nDefault)
 {
-   char *pszVal, pbBytes[128];
+   char pbBytes[128];
    BOOL bResult;
    int i, nLen;
+   TCHAR *pszVal, szBuffer[256];
 
-   pszVal = DBGetField(hResult, iRow, iColumn);
+   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
    if (pszVal != NULL)
    {
       StrToBin(pszVal, (BYTE *)pbBytes, 128);
@@ -482,10 +554,10 @@ BOOL LIBNXSRV_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iC
 BOOL LIBNXSRV_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow,
                                         int iColumn, uuid_t guid)
 {
-   char *pszVal;
+   TCHAR *pszVal, szBuffer[256];
    BOOL bResult;
 
-   pszVal = DBGetField(hResult, iRow, iColumn);
+   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
    if (pszVal != NULL)
    {
       if (uuid_parse(pszVal, guid) == 0)
@@ -534,31 +606,41 @@ void LIBNXSRV_EXPORTABLE DBFreeResult(DB_RESULT hResult)
 // Asyncronous SELECT query
 //
 
-DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, char *szQuery)
+DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, TCHAR *szQuery)
 {
    DB_RESULT hResult;
    DWORD dwError;
    INT64 ms;
+#ifdef UNICODE
+#define pwszQuery szQuery
+#else
+   WCHAR *pwszQuery = WideStringFromMBString(szQuery);
+#endif
    
    MutexLock(hConn->mutexTransLock, INFINITE);
    if (m_bDumpSQL)
       ms = GetCurrentTimeMs();
-   hResult = m_fpDrvAsyncSelect(hConn->hConn, szQuery, &dwError);
+   hResult = m_fpDrvAsyncSelect(hConn->hConn, pwszQuery, &dwError);
    if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST))
    {
       DBReconnect(hConn);
-      hResult = m_fpDrvAsyncSelect(hConn->hConn, szQuery, &dwError);
+      hResult = m_fpDrvAsyncSelect(hConn->hConn, pwszQuery, &dwError);
    }
+
+#ifndef UNICODE
+   free(pwszQuery);
+#endif
+   
    if (m_bDumpSQL)
    {
       ms = GetCurrentTimeMs() - ms;
-      printf("%s async query: \"%s\" [%d ms]\n", (hResult != NULL) ? "Successful" : "Failed", szQuery, (DWORD)ms);
+      _tprintf(_T("%s async query: \"%s\" [%d ms]\n"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
    }
    if (hResult == NULL)
    {
       MutexUnlock(hConn->mutexTransLock);
       if (m_bLogSQLErrors)
-        WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
+        WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, _T("s"), szQuery);
    }
    return hResult;
 }
@@ -578,9 +660,28 @@ BOOL LIBNXSRV_EXPORTABLE DBFetch(DB_ASYNC_RESULT hResult)
 // Get field's value from asynchronous SELECT result
 //
 
-char LIBNXSRV_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, char *pBuffer, int iBufSize)
+TCHAR LIBNXSRV_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, TCHAR *pBuffer, int iBufSize)
 {
+#ifdef UNICODE
    return m_fpDrvGetFieldAsync(hResult, iColumn, pBuffer, iBufSize);
+#else
+   WCHAR *pwszBuffer;
+   char *pszRet;
+
+   pwszBuffer = (WCHAR *)malloc(iBufSize * sizeof(WCHAR));
+   if (m_fpDrvGetFieldAsync(hResult, iColumn, pwszBuffer, iBufSize) != NULL)
+   {
+      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                          pwszBuffer, -1, pBuffer, iBufSize, NULL, NULL);
+      pszRet = pBuffer;
+   }
+   else
+   {
+      pszRet = NULL;
+   }
+   free(pwszBuffer);
+   return pszRet;
+#endif
 }
 
 

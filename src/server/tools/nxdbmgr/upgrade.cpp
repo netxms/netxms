@@ -1165,7 +1165,7 @@ static BOOL MoveObjectData(DWORD dwId, BOOL bInheritRights)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            nx_strncpy(szName, DBGetField(hResult, 0, 0), MAX_OBJECT_NAME);
+            DBGetField(hResult, 0, 0, szName, MAX_OBJECT_NAME);
             bIsDeleted = DBGetFieldLong(hResult, 0, 1) ? TRUE : FALSE;
             dwImageId = DBGetFieldULong(hResult, 0, 2);
             dwStatus = bIsTemplate ? STATUS_UNKNOWN : DBGetFieldULong(hResult, 0, 3);
@@ -1359,13 +1359,15 @@ static BOOL H_UpgradeFromV26(void)
 static BOOL H_UpgradeFromV25(void)
 {
    DB_RESULT hResult;
+   TCHAR szTemp[512];
 
    hResult = SQLSelect(_T("SELECT var_value FROM config WHERE var_name='IDataIndexCreationCommand'"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         if (!CreateConfigParam(_T("IDataIndexCreationCommand_0"), DBGetField(hResult, 0, 0), 0, 1))
+         if (!CreateConfigParam(_T("IDataIndexCreationCommand_0"),
+                                DBGetField(hResult, 0, 0, szTemp, 512), 0, 1))
          {
             if (!g_bIgnoreErrors)
             {
@@ -2156,6 +2158,7 @@ void UpgradeDatabase(void)
    DB_RESULT hResult;
    LONG i, iVersion = 0;
    BOOL bLocked = FALSE;
+   TCHAR szTemp[MAX_DB_STRING];
 
    _tprintf(_T("Upgrading database...\n"));
 
@@ -2184,7 +2187,7 @@ void UpgradeDatabase(void)
       if (hResult != NULL)
       {
          if (DBGetNumRows(hResult) > 0)
-            bLocked = _tcscmp(DBGetField(hResult, 0, 0), _T("UNLOCKED"));
+            bLocked = _tcscmp(DBGetField(hResult, 0, 0, szTemp, MAX_DB_STRING), _T("UNLOCKED"));
          DBFreeResult(hResult);
       }
       if (!bLocked)

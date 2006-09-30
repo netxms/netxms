@@ -86,7 +86,7 @@ static BOOL LoadActions(void)
       for(i = 0; i < m_dwNumActions; i++)
       {
          m_pActionList[i].dwId = DBGetFieldULong(hResult, i, 0);
-         nx_strncpy(m_pActionList[i].szName, DBGetField(hResult, i, 1), MAX_OBJECT_NAME);
+         DBGetField(hResult, i, 1, m_pActionList[i].szName, MAX_OBJECT_NAME);
          m_pActionList[i].iType = DBGetFieldLong(hResult, i, 2);
          m_pActionList[i].bIsDisabled = DBGetFieldLong(hResult, i, 3);
 
@@ -98,7 +98,7 @@ static BOOL LoadActions(void)
          strcpy(m_pActionList[i].szEmailSubject, CHECK_NULL(pStr));
          DecodeSQLString(m_pActionList[i].szEmailSubject);
 
-         m_pActionList[i].pszData = strdup(DBGetField(hResult, i, 6));
+         m_pActionList[i].pszData = DBGetField(hResult, i, 6, NULL, 0);
          DecodeSQLString(m_pActionList[i].pszData);
       }
       DBFreeResult(hResult);

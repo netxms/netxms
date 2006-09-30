@@ -67,9 +67,10 @@ BOOL LoadUsers(void)
 {
    DB_RESULT hResult;
    DWORD i, iNumRows;
+   TCHAR szBuffer[256];
 
    // Load users
-   hResult = DBSelect(g_hCoreDB, "SELECT id,name,password,system_access,flags,full_name,description,grace_logins,auth_method,guid FROM users ORDER BY id");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id,name,password,system_access,flags,full_name,description,grace_logins,auth_method,guid FROM users ORDER BY id"));
    if (hResult == NULL)
       return FALSE;
 
@@ -78,8 +79,8 @@ BOOL LoadUsers(void)
    for(i = 0; i < g_dwNumUsers; i++)
    {
       g_pUserList[i].dwId = DBGetFieldULong(hResult, i, 0);
-      nx_strncpy(g_pUserList[i].szName, DBGetField(hResult, i, 1), MAX_USER_NAME);
-      if (StrToBin(DBGetField(hResult, i, 2), g_pUserList[i].szPassword, SHA1_DIGEST_SIZE) != SHA1_DIGEST_SIZE)
+      DBGetField(hResult, i, 1, g_pUserList[i].szName, MAX_USER_NAME);
+      if (StrToBin(DBGetField(hResult, i, 2, szBuffer, 256), g_pUserList[i].szPassword, SHA1_DIGEST_SIZE) != SHA1_DIGEST_SIZE)
       {
          WriteLog(MSG_INVALID_SHA1_HASH, EVENTLOG_WARNING_TYPE, "s", g_pUserList[i].szName);
          CalculateSHA1Hash((BYTE *)"netxms", 6, g_pUserList[i].szPassword);
@@ -89,8 +90,8 @@ BOOL LoadUsers(void)
       else
          g_pUserList[i].wSystemRights = (WORD)DBGetFieldLong(hResult, i, 3);
       g_pUserList[i].wFlags = (WORD)DBGetFieldLong(hResult, i, 4);
-      nx_strncpy(g_pUserList[i].szFullName, DBGetField(hResult, i, 5), MAX_USER_FULLNAME);
-      nx_strncpy(g_pUserList[i].szDescription, DBGetField(hResult, i, 6), MAX_USER_DESCR);
+      DBGetField(hResult, i, 5, g_pUserList[i].szFullName, MAX_USER_FULLNAME);
+      DBGetField(hResult, i, 6, g_pUserList[i].szDescription, MAX_USER_DESCR);
       g_pUserList[i].nGraceLogins = DBGetFieldLong(hResult, i, 7);
       g_pUserList[i].nAuthMethod = DBGetFieldLong(hResult, i, 8);
       DBGetFieldGUID(hResult, i, 9, g_pUserList[i].guid);
@@ -130,10 +131,10 @@ BOOL LoadUsers(void)
    for(i = 0; i < g_dwNumGroups; i++)
    {
       g_pGroupList[i].dwId = DBGetFieldULong(hResult, i, 0);
-      nx_strncpy(g_pGroupList[i].szName, DBGetField(hResult, i, 1), MAX_USER_NAME);
+      DBGetField(hResult, i, 1, g_pGroupList[i].szName, MAX_USER_NAME);
       g_pGroupList[i].wSystemRights = (WORD)DBGetFieldLong(hResult, i, 2);
       g_pGroupList[i].wFlags = (WORD)DBGetFieldLong(hResult, i, 3);
-      nx_strncpy(g_pGroupList[i].szDescription, DBGetField(hResult, i, 4), MAX_USER_DESCR);
+      DBGetField(hResult, i, 4, g_pGroupList[i].szDescription, MAX_USER_DESCR);
       DBGetFieldGUID(hResult, i, 5, g_pGroupList[i].guid);
       g_pGroupList[i].dwNumMembers = 0;
       g_pGroupList[i].pMembers = NULL;

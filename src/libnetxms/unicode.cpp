@@ -1,6 +1,7 @@
-/* 
+/* $Id: unicode.cpp,v 1.8 2006-09-30 22:41:08 victor Exp $ */
+/*
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,14 +17,18 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: unicode.cpp
+** File: unicode.cpp
 **
 **/
 
 #include "libnetxms.h"
 
 
-#ifndef _WIN32
+#ifdef _WIN32
+
+#define __wcslen wcslen
+
+#else
 
 
 //
@@ -60,6 +65,11 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, WCHAR
    WCHAR *pSrc;
    char *pDest;
    int iPos, iSize;
+
+   if (cchByteChar == 0)
+   {
+      return __wcslen(pWideCharStr) + 1;
+   }
 
    iSize = (cchWideChar == -1) ? __wcslen(pWideCharStr) : cchWideChar;
    if (iSize >= cchByteChar)
@@ -106,4 +116,55 @@ DWORD LIBNETXMS_EXPORTABLE inet_addr_w(WCHAR *pszAddr)
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
                        pszAddr, -1, szBuffer, 256, NULL, NULL);
    return inet_addr(szBuffer);
+}
+
+
+//
+// Convert multibyte string to wide string using current codepage and
+// allocating wide string dynamically
+//
+
+WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(char *pszString)
+{
+   WCHAR *pwszOut;
+   int nLen;
+
+   nLen = strlen(pszString) + 1;
+   pwszOut = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszString, -1, pwszOut, nLen);
+   return pwszOut;
+}
+
+
+//
+// Convert wide string to multibyte string using current codepage and
+// allocating multibyte string dynamically
+//
+
+char LIBNETXMS_EXPORTABLE *MBStringFromWideString(WCHAR *pwszString)
+{
+   char *pszOut;
+   int nLen;
+
+   nLen = __wcslen(pwszString) + 1;
+   pszOut = (char *)malloc(nLen);
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                       pwszString, -1, pszOut, nLen, NULL, NULL);
+   return pszOut;
+}
+
+
+//
+// Convert wide string to UTF8 string allocating UTF8 string dynamically
+//
+
+char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(WCHAR *pwszString)
+{
+   char *pszOut;
+   int nLen;
+
+   nLen = WideCharToMultiByte(CP_UTF8, 0, pwszString, -1, NULL, 0, NULL, NULL);
+   pszOut = (char *)malloc(nLen);
+   WideCharToMultiByte(CP_UTF8, 0, pwszString, -1, pszOut, nLen, NULL, NULL);
+   return pszOut;
 }

@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.88 2006-09-27 13:04:45 victor Exp $ */
+/* $Id: nms_util.h,v 1.89 2006-09-30 22:41:08 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -370,6 +370,9 @@ extern "C"
                                                 int cchByteChar, WCHAR *pWideCharStr, 
                                                 int cchWideChar);
 #endif
+   WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(char *pszString);
+   char LIBNETXMS_EXPORTABLE *MBStringFromWideString(WCHAR *pwszString);
+   char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(WCHAR *pwszString);
 
 #ifdef UNICODE
 INT64 LIBNETXMS_EXPORTABLE wcstoll(const WCHAR *nptr, WCHAR **endptr, int base);
@@ -419,6 +422,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.88  2006/09/27 13:04:45  victor
+Preparation for process information parameters
+
 Revision 1.87  2006/09/27 04:15:25  victor
 AIX: implemented Net.InterfaceList
 

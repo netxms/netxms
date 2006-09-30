@@ -139,7 +139,7 @@ static void CheckNodes(void)
             }
             else
             {
-               nx_strncpy(szName, DBGetField(hResult2, 0, 0), MAX_OBJECT_NAME);
+               DBGetField(hResult2, 0, 0, szName, MAX_OBJECT_NAME);
                bIsDeleted = DBGetFieldLong(hResult2, 0, 1) ? TRUE : FALSE;
             }
             DBFreeResult(hResult2);
@@ -227,7 +227,7 @@ static void CheckComponents(TCHAR *pszDisplayName, TCHAR *pszTable)
             }
             else
             {
-               nx_strncpy(szName, DBGetField(hResult2, 0, 0), MAX_OBJECT_NAME);
+               DBGetField(hResult2, 0, 0, szName, MAX_OBJECT_NAME);
                bIsDeleted = DBGetFieldLong(hResult2, 0, 1) ? TRUE : FALSE;
             }
             DBFreeResult(hResult2);
@@ -293,7 +293,7 @@ static void CheckObjectProperties(void)
          {
             m_iNumErrors++;
             _tprintf(_T("\rObject %d [%s] has invalid timestamp. Correct? (Y/N) "),
-                     dwObjectId, DBGetField(hResult, i, 1));
+                     dwObjectId, DBGetField(hResult, i, 1, szQuery, 1024));
             if (GetYesNo())
             {
                _sntprintf(szQuery, 1024, _T("UPDATE object_properties SET last_modified=%ld WHERE object_id=%d"),
@@ -464,7 +464,7 @@ void CheckDatabase(void)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            nx_strncpy(szLockStatus, DBGetField(hResult, 0, 0), MAX_DB_STRING);
+            DBGetField(hResult, 0, 0, szLockStatus, MAX_DB_STRING);
             DecodeSQLString(szLockStatus);
             bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
          }
@@ -477,7 +477,7 @@ void CheckDatabase(void)
             {
                if (DBGetNumRows(hResult) > 0)
                {
-                  nx_strncpy(szLockInfo, DBGetField(hResult, 0, 0), MAX_DB_STRING);
+                  DBGetField(hResult, 0, 0, szLockInfo, MAX_DB_STRING);
                   DecodeSQLString(szLockInfo);
                }
                DBFreeResult(hResult);

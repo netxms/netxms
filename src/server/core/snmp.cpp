@@ -71,7 +71,7 @@ void SnmpInit(void)
       m_pOidTable = (OID_TABLE *)malloc(sizeof(OID_TABLE) * m_dwOidTableSize);
       for(i = 0; i < m_dwOidTableSize; i++)
       {
-         m_pOidTable[i].pszOid = _tcsdup(DBGetField(hResult, i, 0));
+         m_pOidTable[i].pszOid = DBGetField(hResult, i, 0, NULL, 0);
          m_pOidTable[i].dwNodeType = DBGetFieldULong(hResult, i, 1);
          m_pOidTable[i].dwNodeFlags = DBGetFieldULong(hResult, i, 2);
       }

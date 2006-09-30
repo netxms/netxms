@@ -95,7 +95,7 @@ BOOL Zone::CreateFromDB(DWORD dwId)
    m_dwZoneGUID = DBGetFieldULong(hResult, 0, 0);
    m_iZoneType = DBGetFieldLong(hResult, 0, 1);
    m_dwControllerIpAddr = DBGetFieldIPAddr(hResult, 0, 2);
-   m_pszDescription = _tcsdup(DBGetField(hResult, 0, 3));
+   m_pszDescription = DBGetField(hResult, 0, 3, NULL, 0);
    DecodeSQLString(m_pszDescription);
 
    DBFreeResult(hResult);

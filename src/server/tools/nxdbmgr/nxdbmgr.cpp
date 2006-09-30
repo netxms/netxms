@@ -249,7 +249,7 @@ BOOL ConfigReadStr(TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *p
 
    if (DBGetNumRows(hResult) > 0)
    {
-      nx_strncpy(pszBuffer, DBGetField(hResult, 0, 0), iBufSize - 1);
+      DBGetField(hResult, 0, 0, pszBuffer, iBufSize);
       DecodeSQLString(pszBuffer);
       bSuccess = TRUE;
    }
@@ -435,7 +435,7 @@ int main(int argc, char *argv[])
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            nx_strncpy(szSyntaxId, DBGetField(hResult, 0, 0), sizeof(szSyntaxId));
+            DBGetField(hResult, 0, 0, szSyntaxId, sizeof(szSyntaxId));
             DecodeSQLString(szSyntaxId);
          }
          else

@@ -88,7 +88,7 @@ void Template::DestroyItems(void)
 
 BOOL Template::CreateFromDB(DWORD dwId)
 {
-   TCHAR *pszStr, szQuery[256];
+   TCHAR szQuery[256];
    DB_RESULT hResult;
    DWORD i, dwNumNodes, dwNodeId;
    NetObj *pObject;
@@ -112,8 +112,9 @@ BOOL Template::CreateFromDB(DWORD dwId)
    }
 
    m_dwVersion = DBGetFieldULong(hResult, 0, 0);
-   pszStr = DBGetField(hResult, 0, 1);
-   m_pszDescription = _tcsdup(CHECK_NULL_EX(pszStr));
+   m_pszDescription = DBGetField(hResult, 0, 1, NULL, 0);
+   if (m_pszDescription == NULL)
+      m_pszDescription = _tcsdup(_T(""));
    DecodeSQLString(m_pszDescription);
 
    DBFreeResult(hResult);

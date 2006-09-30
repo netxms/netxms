@@ -117,7 +117,7 @@ BOOL Condition::CreateFromDB(DWORD dwId)
    m_dwSourceObject = DBGetFieldULong(hResult, 0, 2);
    m_nActiveStatus = DBGetFieldLong(hResult, 0, 3);
    m_nInactiveStatus = DBGetFieldLong(hResult, 0, 4);
-   m_pszScript = _tcsdup(DBGetField(hResult, 0, 5));
+   m_pszScript = DBGetField(hResult, 0, 5, NULL, 0);
    DecodeSQLString(m_pszScript);
    
    DBFreeResult(hResult);
