@@ -76,32 +76,25 @@ typedef struct
    DWORD dwVarId;       // Variable identifier
    BYTE  bType;         // Data type
    BYTE  bPadding;      // Padding
+   WORD wInt16;
    union
    {
+      DWORD dwInteger;
+      QWORD qwInt64;
+      double dFloat;
       struct
       {
-         WORD wReserved1;
          DWORD dwLen;
          WORD szValue[1];
       } string;
-      struct
-      {
-         WORD wReserved2;
-         DWORD dwInteger;
-      } integer;
-      struct
-      {
-         WORD wReserverd3;
-         QWORD qwInt64;
-      } int64;
-      struct
-      {
-         WORD wReserverd4;
-         double dFloat;
-      } fp;
-      WORD wInt16;
    } data;
 } CSCP_DF;
+
+#define df_int16  wInt16
+#define df_int32  data.dwInteger
+#define df_int64  data.qwInt64
+#define df_real   data.dFloat
+#define df_string data.string
 
 
 //
