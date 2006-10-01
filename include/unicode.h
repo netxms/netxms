@@ -115,12 +115,13 @@
 
 #endif
 
-#define CP_ACP             1
+#define CP_ACP             0
+#define CP_UTF8				65001
 #define MB_PRECOMPOSED     0x00000001
 #define WC_COMPOSITECHECK  0x00000002
 #define WC_DEFAULTCHAR     0x00000004
 
-#endif
+#endif	/* _WIN32 */
 
 
 #ifdef UNICODE

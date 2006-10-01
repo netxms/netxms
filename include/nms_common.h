@@ -234,6 +234,20 @@ typedef int SOCKET;
 #define SHL_SUFFIX	".so"
 #endif
 
+#if HAVE_USEABLE_WCHAR
+#if HAVE_WCHAR_H
+#include <wchar.h>
+#endif
+#else		/* HAVE_USEABLE_WCHAR */
+/*// Prevent wchar-related headers from being included accidentially
+#define _WCHAR_H	1
+#define _WCHAR_T
+#define _T_WCHAR
+#define _GLIBCXX_CWCHAR 1
+#define _GLIBCXX_POSTYPES_H 1
+#define _CODECVT_H 1*/
+#endif	/* HAVE_USEABLE_WCHAR */
+
 #include <errno.h>
 
 #define FS_PATH_SEPARATOR  _T("/")

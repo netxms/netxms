@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.89 2006-09-30 22:41:08 victor Exp $ */
+/* $Id: nms_util.h,v 1.90 2006-10-01 15:26:28 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -369,7 +369,11 @@ extern "C"
    int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, char *pByteStr, 
                                                 int cchByteChar, WCHAR *pWideCharStr, 
                                                 int cchWideChar);
+#ifndef HAVE_USEABLE_WCHAR
+	int LIBNETXMS_EXPORTABLE __nx__wcslen(WCHAR *pStr);
+#define wcslen __nx__wcslen
 #endif
+#endif	/* _WIN32 */
    WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(char *pszString);
    char LIBNETXMS_EXPORTABLE *MBStringFromWideString(WCHAR *pwszString);
    char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(WCHAR *pwszString);
@@ -422,6 +426,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.89  2006/09/30 22:41:08  victor
+Database driver API changed: now all SQL queries and results passed as UNICODE strings
+
 Revision 1.88  2006/09/27 13:04:45  victor
 Preparation for process information parameters
 
