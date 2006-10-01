@@ -27,4 +27,6 @@
 #include <nms_common.h>
 #include <nms_util.h>
 
+#define MAX_CODEPAGE_LEN		64
+
 #endif   /* _libnetxms_h_ */

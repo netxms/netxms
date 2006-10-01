@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.189 2006-10-01 15:26:28 victor Exp $
+# $Id: configure.ac,v 1.190 2006-10-01 19:06:42 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -631,10 +631,85 @@ fi
 # --------------------------------------------------------------------------
 # check for UNICODE stuff
 
-AC_CHECK_HEADERS([wchar.h])
+AC_CHECK_HEADERS([wchar.h iconv.h])
 AC_CHECK_SIZEOF(wchar_t)
+AC_CHECK_LIB(iconv, iconv)
+AC_CHECK_FUNCS([iconv])
 
-if test $ac_cv_sizeof_wchar = 2; then
+AC_MSG_CHECKING(whether iconv supports UCS-2-INTERNAL)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+#if HAVE_ICONV_H
+#include <iconv.h>
+#endif
+     ], [
+     return iconv_open("UTF-8","UCS-2-INTERNAL")==(iconv_t)(-1);
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_ICONV_UCS_2_INTERNAL, 1, Define to 1 if iconv supports UCS-2-INTERNAL)
+    valid_ucs2_code="UCS-2-INTERNAL"
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
+
+AC_MSG_CHECKING(whether iconv supports UCS-2)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+#if HAVE_ICONV_H
+#include <iconv.h>
+#endif
+     ], [
+     return iconv_open("UTF-8","UCS-2")==(iconv_t)(-1);
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_ICONV_UCS_2, 1, Define to 1 if iconv supports UCS-2)
+    valid_ucs2_code="UCS-2"
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_ICONV_UCS_2, 1, Define to 1 if iconv supports UCS-2)
+  ]
+)
+
+AC_MSG_CHECKING(whether iconv supports UCS2)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+#if HAVE_ICONV_H
+#include <iconv.h>
+#endif
+     ], [
+     return iconv_open("UTF-8","UCS2")==(iconv_t)(-1);
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_ICONV_UCS2, 1, Define to 1 if iconv supports UCS2)
+    valid_ucs2_code="UCS2"
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
+
+AC_MSG_CHECKING(whether iconv supports //IGNORE)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+#if HAVE_ICONV_H
+#include <iconv.h>
+#endif
+     ], [
+     return iconv_open("UTF-8//IGNORE","$valid_ucs2_code")==(iconv_t)(-1);
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_ICONV_IGNORE, 1, Define to 1 if iconv supports //IGNORE option)
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
+
+if test $ac_cv_sizeof_wchar_t -eq 2; then
 	AC_DEFINE(HAVE_USEABLE_WCHAR_T, 1, Define to 1 if you have useable wchar_t)
 fi
 

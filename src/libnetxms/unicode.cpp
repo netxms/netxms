@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.10 2006-10-01 16:01:10 victor Exp $ */
+/* $Id: unicode.cpp,v 1.11 2006-10-01 19:06:43 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -24,7 +24,45 @@
 #include "libnetxms.h"
 
 
+//
+// Static data
+//
+
+static char m_cpDefault[MAX_CODEPAGE_LEN] = "";
+
+
 #ifndef _WIN32
+
+#if HAVE_ICONV_H
+#include <iconv.h>
+#endif
+
+
+//
+// UNICODE character set
+//
+
+#if HAVE_ICONV_UCS_2_INTERNAL
+#define UCS2_CODEPAGE_NAME	"UCS-2-INTERNAL"
+#elif HAVE_ICONV_UCS_2
+#define UCS2_CODEPAGE_NAME	"UCS-2"
+#elif HAVE_ICONV_UCS2
+#define UCS2_CODEPAGE_NAME	"UCS2"
+#else
+#warning Cannot determine valid UCS-2 codepage name
+#undef HAVE_ICONV
+#endif
+
+
+//
+// Set application's default codepage
+//
+
+void LIBNETXMS_EXPORTABLE SetDefaultCodepage(char *cp)
+{
+	strncpy(m_cpDefault, cp, MAX_CODEPAGE_LEN);
+	m_cpDefault[MAX_CODEPAGE_LEN - 1] = 0;
+}
 
 
 //
@@ -50,10 +88,64 @@ int LIBNETXMS_EXPORTABLE nx_wcslen(WCHAR *pStr)
 // Convert UNICODE string to single-byte string
 //
 
-int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, WCHAR *pWideCharStr, 
-                                             int cchWideChar, char *pByteStr, int cchByteChar, 
+int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags,
+                                             WCHAR *pWideCharStr, int cchWideChar,
+															char *pByteStr, int cchByteChar, 
                                              char *pDefaultChar, BOOL *pbUsedDefChar)
 {
+#if HAVE_ICONV
+	iconv_t cd;
+	int nRet;
+	char *inbuf, *outbuf;
+	size_t inbytes, outbytes;
+	char cp[MAX_CODEPAGE_LEN + 16];
+
+	// Calculate required length. Because iconv cannot calculate
+	// resulting multibyte string length, assume the worst case - 3 bytes
+	// per character for UTF-8 and 2 bytes per character for other encodings
+   if (cchByteChar == 0)
+   {
+      return wcslen(pWideCharStr) * (iCodePage == CP_UTF8 ? 3 : 2) + 1;
+   }
+
+	strcpy(cp, m_cpDefault);
+#if HAVE_ICONV_IGNORE
+	strcat(cp, "//IGNORE");
+#endif
+	cd = iconv_open(iCodePage == CP_UTF8 ? "UTF-8" : cp, UCS2_CODEPAGE_NAME);
+	if (cd != (iconv_t)(-1))
+	{
+		inbuf = (char *)pWideCharStr;
+		inbytes = ((cchWideChar == -1) ? wcslen(pWideCharStr) + 1 : cchWideChar) * sizeof(WCHAR);
+		outbuf = pByteStr;
+		outbytes = cchByteChar;
+		nRet = iconv(cd, &inbuf, &inbytes, &outbuf, &outbytes);
+		iconv_close(cd);
+		if (nRet == -1)
+		{
+			if (errno == EILSEQ)
+			{
+				nRet = cchByteChar - outbytes;
+			}
+			else
+			{
+				nRet = 0;
+			}
+		}
+		if ((cchWideChar == -1) && (outbytes > 0))
+		{
+			*outbuf = 0;
+		}
+	}
+	else
+	{
+		*pByteStr = 0;
+		nRet = 0;
+	}
+	return nRet;
+
+#else
+
    WCHAR *pSrc;
    char *pDest;
    int iPos, iSize;
@@ -70,6 +162,8 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, WCHAR
       *pDest = (*pSrc < 256) ? (char)(*pSrc) : '?';
    *pDest = 0;
    return iSize;
+
+#endif	/* HAVE_ICONV */
 }
 
 
@@ -77,13 +171,64 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, WCHAR
 // Convert single-byte to UNICODE string
 //
 
-int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, char *pByteStr, 
-                                             int cchByteChar, WCHAR *pWideCharStr, 
-                                             int cchWideChar)
+int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags,
+                                             char *pByteStr, int cchByteChar,
+															WCHAR *pWideCharStr, int cchWideChar)
 {
+#if HAVE_ICONV
+
+	iconv_t cd;
+	int nRet;
+	char *inbuf, *outbuf;
+	size_t inbytes, outbytes;
+
+	if (cchWideChar == 0)
+	{
+		return strlen(pByteStr) + 1;
+	}
+
+	cd = iconv_open(UCS2_CODEPAGE_NAME, iCodePage == CP_UTF8 ? "UTF-8" : m_cpDefault);
+	if (cd != (iconv_t)(-1))
+	{
+		inbuf = pByteStr;
+		inbytes = (cchByteChar == -1) ? strlen(pByteStr) + 1 : cchByteChar;
+		outbuf = (char *)pWideCharStr;
+		outbytes = cchWideChar * sizeof(WCHAR);
+		nRet = iconv(cd, &inbuf, &inbytes, &outbuf, &outbytes);
+		iconv_close(cd);
+		if (nRet == -1)
+		{
+			if (errno == EILSEQ)
+			{
+				nRet = (cchWideChar * sizeof(WCHAR) - outbytes) / sizeof(WCHAR);
+			}
+			else
+			{
+				nRet = 0;
+			}
+		}
+		if ((cchByteChar == -1) && (outbytes > 1))
+		{
+			*((WCHAR *)outbuf) = 0;
+		}
+	}
+	else
+	{
+		*pWideCharStr = 0;
+		nRet = 0;
+	}
+	return nRet;
+
+#else
+
    char *pSrc;
    WCHAR *pDest;
    int iPos, iSize;
+
+	if (cchWideChar == 0)
+	{
+		return strlen(pByteStr) + 1;
+	}
 
    iSize = (cchByteChar == -1) ? strlen(pByteStr) : cchByteChar;
    if (iSize >= cchWideChar)
@@ -92,6 +237,8 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, char 
       *pDest = (WCHAR)(*pSrc);
    *pDest = 0;
    return iSize;
+
+#endif
 }
 
 #endif   /* not _WIN32 */
