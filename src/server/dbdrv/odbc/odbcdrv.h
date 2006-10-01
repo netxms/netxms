@@ -62,7 +62,7 @@ typedef struct
 {
    long iNumRows;
    long iNumCols;
-   char **pValues;
+   WCHAR **pValues;
 } ODBCDRV_QUERY_RESULT;
 
 

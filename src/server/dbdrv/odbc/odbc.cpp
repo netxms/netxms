@@ -166,7 +166,7 @@ extern "C" void EXPORT DrvDisconnect(ODBCDRV_CONN *pConn)
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, char *szQuery)
+extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, WCHAR *pwszQuery)
 {
    long iResult;
    DWORD dwResult;
@@ -178,7 +178,7 @@ extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, char *szQuery)
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
    {
       // Execute statement
-      iResult = SQLExecDirect(pConn->sqlStatement, (SQLCHAR *)szQuery, SQL_NTS);
+      iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
 	   if ((iResult == SQL_SUCCESS) || 
           (iResult == SQL_SUCCESS_WITH_INFO) || 
           (iResult == SQL_NO_DATA))
@@ -205,7 +205,7 @@ extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, char *szQuery)
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, char *szQuery, DWORD *pdwError)
+extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError)
 {
    long i, iResult, iCurrValue;
    ODBCDRV_QUERY_RESULT *pResult = NULL;
@@ -222,7 +222,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, char *szQuery, DWORD 
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
    {
       // Execute statement
-      iResult = SQLExecDirect(pConn->sqlStatement, (SQLCHAR *)szQuery, SQL_NTS);
+      iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
 	   if ((iResult == SQL_SUCCESS) || 
           (iResult == SQL_SUCCESS_WITH_INFO))
       {
@@ -239,14 +239,14 @@ extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, char *szQuery, DWORD 
                (iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
          {
             pResult->iNumRows++;
-            pResult->pValues = (char **)realloc(pResult->pValues, 
-                        sizeof(char *) * (pResult->iNumRows * pResult->iNumCols));
+            pResult->pValues = (WCHAR **)realloc(pResult->pValues, 
+                        sizeof(WCHAR *) * (pResult->iNumRows * pResult->iNumCols));
             for(i = 1; i <= pResult->iNumCols; i++)
             {
                pDataBuffer[0] = 0;
-               SQLGetData(pConn->sqlStatement, (short)i, SQL_C_CHAR, pDataBuffer, 
+               SQLGetData(pConn->sqlStatement, (short)i, SQL_C_WCHAR, pDataBuffer, 
                           DATA_BUFFER_SIZE, &iDataSize);
-               pResult->pValues[iCurrValue++] = strdup((const char *)pDataBuffer);
+               pResult->pValues[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
             }
          }
          *pdwError = DBERR_SUCCESS;
@@ -269,18 +269,41 @@ extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, char *szQuery, DWORD 
 
 
 //
-// Get field value from result
+// Get field length from result
 //
 
-extern "C" char EXPORT *DrvGetField(ODBCDRV_QUERY_RESULT *pResult, int iRow, int iColumn)
+extern "C" LONG EXPORT DrvGetFieldLength(ODBCDRV_QUERY_RESULT *pResult, int iRow, int iColumn)
 {
-   char *pValue = NULL;
+   LONG nLen = -1;
 
    if (pResult != NULL)
    {
       if ((iRow < pResult->iNumRows) && (iRow >= 0) &&
           (iColumn < pResult->iNumCols) && (iColumn >= 0))
-         pValue = pResult->pValues[iRow * pResult->iNumCols + iColumn];
+         nLen = wcslen(pResult->pValues[iRow * pResult->iNumCols + iColumn]);
+   }
+   return nLen;
+}
+
+
+//
+// Get field value from result
+//
+
+extern "C" WCHAR EXPORT *DrvGetField(ODBCDRV_QUERY_RESULT *pResult, int iRow, int iColumn,
+                                     WCHAR *pBuffer, int nBufSize)
+{
+   WCHAR *pValue = NULL;
+
+   if (pResult != NULL)
+   {
+      if ((iRow < pResult->iNumRows) && (iRow >= 0) &&
+          (iColumn < pResult->iNumCols) && (iColumn >= 0))
+      {
+         wcsncpy(pBuffer, pResult->pValues[iRow * pResult->iNumCols + iColumn], nBufSize);
+         pBuffer[nBufSize - 1] = 0;
+         pValue = pBuffer;
+      }
    }
    return pValue;
 }
@@ -319,7 +342,7 @@ extern "C" void EXPORT DrvFreeResult(ODBCDRV_QUERY_RESULT *pResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, char *szQuery,
+extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, WCHAR *pwszQuery,
                                                  DWORD *pdwError)
 {
    ODBCDRV_ASYNC_QUERY_RESULT *pResult = NULL;
@@ -333,7 +356,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, char *szQu
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
    {
       // Execute statement
-      iResult = SQLExecDirect(pConn->sqlStatement, (SQLCHAR *)szQuery, SQL_NTS);
+      iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
 	   if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
       {
          // Allocate result buffer and determine column info
@@ -387,7 +410,8 @@ extern "C" BOOL EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
 // Get field from current row in async query result
 //
 
-extern "C" char EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult, int iColumn, char *pBuffer, int iBufSize)
+extern "C" WCHAR EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult,
+                                          int iColumn, WCHAR *pBuffer, int iBufSize)
 {
    SQLLEN iDataSize;
    long iResult;
@@ -402,8 +426,8 @@ extern "C" char EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult, in
 
    if ((iColumn >= 0) && (iColumn < pResult->iNumCols))
    {
-      iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_CHAR,
-                           pBuffer, iBufSize, &iDataSize);
+      iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR,
+                           pBuffer, iBufSize * sizeof(WCHAR), &iDataSize);
       if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
          pBuffer[0] = 0;
    }
