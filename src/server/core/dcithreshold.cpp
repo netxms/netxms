@@ -368,7 +368,7 @@ void Threshold::CreateMessage(DCI_THRESHOLD *pData)
 #ifdef UNICODE
          wcscpy(pData->value.szString,  m_value.String());
 #else
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, m_value.String(), -1,
+         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_value.String(), -1,
                              pData->value.szString, MAX_DCI_STRING_VALUE);
 #endif
          SwapWideString(pData->value.szString);
