@@ -88,7 +88,7 @@ Interface::~Interface()
 
 BOOL Interface::CreateFromDB(DWORD dwId)
 {
-   TCHAR szQuery[256];
+   TCHAR szQuery[256], szBuffer[MAX_DB_STRING];
    DB_RESULT hResult;
    DWORD dwNodeId;
    NetObj *pObject;
@@ -112,7 +112,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
       m_dwIfType = DBGetFieldULong(hResult, 0, 2);
       m_dwIfIndex = DBGetFieldULong(hResult, 0, 3);
       dwNodeId = DBGetFieldULong(hResult, 0, 4);
-      StrToBin(DBGetField(hResult, 0, 5), m_bMacAddr, MAC_ADDR_LENGTH);
+      StrToBin(DBGetField(hResult, 0, 5, szBuffer, MAX_DB_STRING), m_bMacAddr, MAC_ADDR_LENGTH);
 
       // Link interface to node
       if (!m_bIsDeleted)

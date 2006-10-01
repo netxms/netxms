@@ -166,17 +166,19 @@ BOOL Node::CreateFromDB(DWORD dwId)
    m_dwFlags = DBGetFieldULong(hResult, 0, 1);
    m_iSNMPVersion = DBGetFieldLong(hResult, 0, 2);
    m_wAuthMethod = (WORD)DBGetFieldLong(hResult, 0, 3);
-   nx_strncpy(m_szSharedSecret, DBGetField(hResult, 0, 4), MAX_SECRET_LENGTH);
+   DBGetField(hResult, 0, 4, m_szSharedSecret, MAX_SECRET_LENGTH);
+   DecodeSQLString(m_szSharedSecret);
    m_wAgentPort = (WORD)DBGetFieldLong(hResult, 0, 5);
    m_iStatusPollType = DBGetFieldLong(hResult, 0, 6);
-   nx_strncpy(m_szCommunityString, DBGetField(hResult, 0, 7), MAX_COMMUNITY_LENGTH);
-   nx_strncpy(m_szObjectId, DBGetField(hResult, 0, 8), MAX_OID_LEN * 4);
-   m_pszDescription = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 9)));
+   DBGetField(hResult, 0, 7, m_szCommunityString, MAX_COMMUNITY_LENGTH);
+   DecodeSQLString(m_szCommunityString);
+   DBGetField(hResult, 0, 8, m_szObjectId, MAX_OID_LEN * 4);
+   m_pszDescription = DBGetField(hResult, 0, 9, NULL, 0);
    DecodeSQLString(m_pszDescription);
    m_dwNodeType = DBGetFieldULong(hResult, 0, 10);
-   nx_strncpy(m_szAgentVersion, CHECK_NULL_EX(DBGetField(hResult, 0, 11)), MAX_AGENT_VERSION_LEN);
+   DBGetField(hResult, 0, 11, m_szAgentVersion, MAX_AGENT_VERSION_LEN);
    DecodeSQLString(m_szAgentVersion);
-   nx_strncpy(m_szPlatformName, CHECK_NULL_EX(DBGetField(hResult, 0, 12)), MAX_PLATFORM_NAME_LEN);
+   DBGetField(hResult, 0, 12, m_szPlatformName, MAX_PLATFORM_NAME_LEN);
    DecodeSQLString(m_szPlatformName);
    m_dwPollerNode = DBGetFieldULong(hResult, 0, 13);
    m_dwZoneGUID = DBGetFieldULong(hResult, 0, 14);
@@ -250,8 +252,8 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
 BOOL Node::SaveToDB(DB_HANDLE hdb)
 {
-   TCHAR *pszEscDescr, *pszEscVersion, *pszEscPlatform;
-   TCHAR szQuery[4096], szIpAddr[16];
+   TCHAR *pszEscDescr, *pszEscVersion, *pszEscPlatform, *pszEscSecret;
+   TCHAR *pszEscCommunity, szQuery[4096], szIpAddr[16];
    DB_RESULT hResult;
    BOOL bNewObject = TRUE;
    BOOL bResult;
@@ -275,6 +277,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    pszEscDescr = EncodeSQLString(CHECK_NULL_EX(m_pszDescription));
    pszEscVersion = EncodeSQLString(m_szAgentVersion);
    pszEscPlatform = EncodeSQLString(m_szPlatformName);
+   pszEscSecret = EncodeSQLString(m_szSharedSecret);
+   pszEscCommunity = EncodeSQLString(m_szCommunityString);
    if (bNewObject)
       snprintf(szQuery, 4096,
                "INSERT INTO nodes (id,primary_ip,"
@@ -284,8 +288,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                "poller_node_id,zone_guid) VALUES (%d,'%s',%d,%d,'%s',%d,%d,%d,"
                "'%s','%s',%d,'%s',%d,'%s','%s',%d,%d)",
                m_dwId, IpToStr(m_dwIpAddr, szIpAddr), m_dwFlags,
-               m_iSNMPVersion, m_szCommunityString, m_iStatusPollType,
-               m_wAgentPort, m_wAuthMethod, m_szSharedSecret, m_szObjectId,
+               m_iSNMPVersion, pszEscCommunity, m_iStatusPollType,
+               m_wAgentPort, m_wAuthMethod, pszEscSecret, m_szObjectId,
                m_dwProxyNode, pszEscDescr, m_dwNodeType, pszEscVersion,
                pszEscPlatform, m_dwPollerNode, m_dwZoneGUID);
    else
@@ -297,8 +301,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                "agent_version='%s',platform_name='%s',poller_node_id=%d,"
                "zone_guid=%d,proxy_node=%d WHERE id=%d",
                IpToStr(m_dwIpAddr, szIpAddr), 
-               m_dwFlags, m_iSNMPVersion, m_szCommunityString,
-               m_iStatusPollType, m_wAgentPort, m_wAuthMethod, m_szSharedSecret, 
+               m_dwFlags, m_iSNMPVersion, pszEscCommunity,
+               m_iStatusPollType, m_wAgentPort, m_wAuthMethod, pszEscSecret, 
                m_szObjectId, pszEscDescr, m_dwNodeType, 
                pszEscVersion, pszEscPlatform, m_dwPollerNode, m_dwZoneGUID,
                m_dwProxyNode, m_dwId);
@@ -306,6 +310,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    free(pszEscDescr);
    free(pszEscVersion);
    free(pszEscPlatform);
+   free(pszEscSecret);
+   free(pszEscCommunity);
 
    // Save data collection items
    if (bResult)

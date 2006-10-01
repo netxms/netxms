@@ -533,14 +533,17 @@ public:
 // Functions
 //
 
-BOOL NXCORE_EXPORTABLE ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, const char *szDefault);
-int NXCORE_EXPORTABLE ConfigReadInt(char *szVar, int iDefault);
-DWORD NXCORE_EXPORTABLE ConfigReadULong(char *szVar, DWORD dwDefault);
-BOOL NXCORE_EXPORTABLE ConfigReadByteArray(char *pszVar, int *pnArray, int nSize, int nDefault);
-BOOL NXCORE_EXPORTABLE ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate);
-BOOL NXCORE_EXPORTABLE ConfigWriteInt(char *szVar, int iValue, BOOL bCreate);
-BOOL NXCORE_EXPORTABLE ConfigWriteULong(char *szVar, DWORD dwValue, BOOL bCreate);
-BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(char *pszVar, int *pnArray, int nSize, BOOL bCreate);
+BOOL NXCORE_EXPORTABLE ConfigReadStr(TCHAR *szVar, TCHAR *szBuffer, int iBufSize,
+                                     const TCHAR *szDefault);
+int NXCORE_EXPORTABLE ConfigReadInt(TCHAR *szVar, int iDefault);
+DWORD NXCORE_EXPORTABLE ConfigReadULong(TCHAR *szVar, DWORD dwDefault);
+BOOL NXCORE_EXPORTABLE ConfigReadByteArray(TCHAR *pszVar, int *pnArray,
+                                           int nSize, int nDefault);
+BOOL NXCORE_EXPORTABLE ConfigWriteStr(TCHAR *szVar, TCHAR *szValue, BOOL bCreate);
+BOOL NXCORE_EXPORTABLE ConfigWriteInt(TCHAR *szVar, int iValue, BOOL bCreate);
+BOOL NXCORE_EXPORTABLE ConfigWriteULong(TCHAR *szVar, DWORD dwValue, BOOL bCreate);
+BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(TCHAR *pszVar, int *pnArray,
+                                            int nSize, BOOL bCreate);
 
 BOOL NXCORE_EXPORTABLE LoadConfig(void);
 

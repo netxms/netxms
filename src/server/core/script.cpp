@@ -78,29 +78,30 @@ void LoadScripts(void)
 {
    DB_RESULT hResult;
    NXSL_Program *pScript;
-   TCHAR *pszCode, szError[1024];
+   TCHAR *pszCode, szError[1024], szBuffer[MAX_DB_STRING];
    int i, nRows;
 
    g_pScriptLibrary = new NXSL_Library;
-   hResult = DBSelect(g_hCoreDB, "SELECT script_id,script_name,script_code FROM script_library");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT script_id,script_name,script_code FROM script_library"));
    if (hResult != NULL)
    {
       nRows = DBGetNumRows(hResult);
       for(i = 0; i < nRows; i++)
       {
-         pszCode = _tcsdup(DBGetField(hResult, i, 2));
+         pszCode = DBGetField(hResult, i, 2, NULL, 0);
          DecodeSQLString(pszCode);
          pScript = (NXSL_Program *)NXSLCompile(pszCode, szError, 1024);
          free(pszCode);
          if (pScript != NULL)
          {
             g_pScriptLibrary->AddScript(DBGetFieldULong(hResult, i, 0),
-                                        DBGetField(hResult, i, 1), pScript);
+                                        DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING), pScript);
          }
          else
          {
-            WriteLog(MSG_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss",
-                     DBGetFieldULong(hResult, i, 0), DBGetField(hResult, i, 1), szError);
+            WriteLog(MSG_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, _T("dss"),
+                     DBGetFieldULong(hResult, i, 0),
+                     DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING), szError);
          }
       }
       DBFreeResult(hResult);
@@ -114,7 +115,7 @@ void LoadScripts(void)
 
 void ReloadScript(DWORD dwScriptId)
 {
-   TCHAR *pszCode, szQuery[256], szError[1024];
+   TCHAR *pszCode, szQuery[256], szError[1024], szBuffer[MAX_DB_STRING];
    DB_RESULT hResult;
    NXSL_Program *pScript;
 
@@ -127,18 +128,18 @@ void ReloadScript(DWORD dwScriptId)
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         pszCode = _tcsdup(DBGetField(hResult, 0, 1));
+         pszCode = DBGetField(hResult, 0, 1, NULL, 0);
          DecodeSQLString(pszCode);
          pScript = (NXSL_Program *)NXSLCompile(pszCode, szError, 1024);
          free(pszCode);
          if (pScript != NULL)
          {
-            g_pScriptLibrary->AddScript(dwScriptId, DBGetField(hResult, 0, 0), pScript);
+            g_pScriptLibrary->AddScript(dwScriptId, DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING), pScript);
          }
          else
          {
-            WriteLog(MSG_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss",
-                     dwScriptId, DBGetField(hResult, 0, 0), szError);
+            WriteLog(MSG_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, _T("dss"),
+                     dwScriptId, DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING), szError);
          }
       }
       DBFreeResult(hResult);

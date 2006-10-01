@@ -192,8 +192,10 @@ nxMapSrv::nxMapSrv(DB_RESULT hData, int nRow)
 
    CommonInit();
    m_dwMapId = DBGetFieldULong(hData, nRow, 0);
-   m_pszName = _tcsdup(DBGetField(hData, nRow, 1));
-   m_pszDescription = _tcsdup(DBGetField(hData, nRow, 2));
+   m_pszName = DBGetField(hData, nRow, 1, NULL, 0);
+   DecodeSQLString(m_pszName);
+   m_pszDescription = DBGetField(hData, nRow, 2, NULL, 0);
+   DecodeSQLString(m_pszDescription);
    m_dwObjectId = DBGetFieldULong(hData, nRow, 3);
 
    // Load ACL

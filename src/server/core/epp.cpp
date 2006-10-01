@@ -52,14 +52,14 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
 {
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
    m_dwFlags = DBGetFieldULong(hResult, iRow, 1);
-   m_pszComment = strdup(DBGetField(hResult, iRow, 2));
+   m_pszComment = DBGetField(hResult, iRow, 2, NULL, 0);
    DecodeSQLString(m_pszComment);
-   strcpy(m_szAlarmMessage, DBGetField(hResult, iRow, 3));
+   DBGetField(hResult, iRow, 3, m_szAlarmMessage, MAX_DB_STRING);
    DecodeSQLString(m_szAlarmMessage);
    m_iAlarmSeverity = DBGetFieldLong(hResult, iRow, 4);
-   strcpy(m_szAlarmKey, DBGetField(hResult, iRow, 5));
+   DBGetField(hResult, iRow, 5, m_szAlarmKey, MAX_DB_STRING);
    DecodeSQLString(m_szAlarmKey);
-   strcpy(m_szAlarmAckKey, DBGetField(hResult, iRow, 6));
+   DBGetField(hResult, iRow, 6, m_szAlarmAckKey, MAX_DB_STRING);
    DecodeSQLString(m_szAlarmAckKey);
 }
 

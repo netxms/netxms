@@ -49,11 +49,11 @@ static BOOL LoadTrapCfg(void)
 {
    DB_RESULT hResult;
    BOOL bResult = TRUE;
-   TCHAR *pszOID, szQuery[256];
+   TCHAR *pszOID, szQuery[256], szBuffer[MAX_DB_STRING];
    DWORD i, j, pdwBuffer[MAX_OID_LEN];
 
    // Load traps
-   hResult = DBSelect(g_hCoreDB, "SELECT trap_id,snmp_oid,event_code,description FROM snmp_trap_cfg");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT trap_id,snmp_oid,event_code,description FROM snmp_trap_cfg"));
    if (hResult != NULL)
    {
       m_dwNumTraps = DBGetNumRows(hResult);
@@ -62,18 +62,20 @@ static BOOL LoadTrapCfg(void)
       for(i = 0; i < m_dwNumTraps; i++)
       {
          m_pTrapCfg[i].dwId = DBGetFieldULong(hResult, i, 0);
-         m_pTrapCfg[i].dwOidLen = SNMPParseOID(DBGetField(hResult, i, 1), pdwBuffer, MAX_OID_LEN);
+         m_pTrapCfg[i].dwOidLen = SNMPParseOID(DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING),
+                                               pdwBuffer, MAX_OID_LEN);
          if (m_pTrapCfg[i].dwOidLen > 0)
          {
             m_pTrapCfg[i].pdwObjectId = (DWORD *)nx_memdup(pdwBuffer, m_pTrapCfg[i].dwOidLen * sizeof(DWORD));
          }
          else
          {
-            WriteLog(MSG_INVALID_TRAP_OID, EVENTLOG_ERROR_TYPE, "s", DBGetField(hResult, i, 1));
+            WriteLog(MSG_INVALID_TRAP_OID, EVENTLOG_ERROR_TYPE, _T("s"),
+                     DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING));
             bResult = FALSE;
          }
          m_pTrapCfg[i].dwEventCode = DBGetFieldULong(hResult, i, 2);
-         nx_strncpy(m_pTrapCfg[i].szDescription, DBGetField(hResult, i, 3), MAX_DB_STRING);
+         DBGetField(hResult, i, 3, m_pTrapCfg[i].szDescription, MAX_DB_STRING);
          DecodeSQLString(m_pTrapCfg[i].szDescription);
       }
       DBFreeResult(hResult);
@@ -81,8 +83,9 @@ static BOOL LoadTrapCfg(void)
       // Load parameter mappings
       for(i = 0; i < m_dwNumTraps; i++)
       {
-         sprintf(szQuery, "SELECT snmp_oid,description FROM snmp_trap_pmap "
-                          "WHERE trap_id=%d ORDER BY parameter", m_pTrapCfg[i].dwId);
+         _sntprintf(szQuery, 256, _T("SELECT snmp_oid,description FROM snmp_trap_pmap ")
+                                  _T("WHERE trap_id=%d ORDER BY parameter"),
+                    m_pTrapCfg[i].dwId);
          hResult = DBSelect(g_hCoreDB, szQuery);
          if (hResult != NULL)
          {
@@ -90,7 +93,7 @@ static BOOL LoadTrapCfg(void)
             m_pTrapCfg[i].pMaps = (NXC_OID_MAP *)malloc(sizeof(NXC_OID_MAP) * m_pTrapCfg[i].dwNumMaps);
             for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
             {
-               pszOID = DBGetField(hResult, j, 0);
+               pszOID = DBGetField(hResult, j, 0, szBuffer, MAX_DB_STRING);
                if (!_tcsncmp(pszOID, _T("POS:"), 4))
                {
                   m_pTrapCfg[i].pMaps[j].dwOidLen = _tcstoul(&pszOID[4], NULL, 10) | 0x80000000;
@@ -106,12 +109,12 @@ static BOOL LoadTrapCfg(void)
                   }
                   else
                   {
-                     WriteLog(MSG_INVALID_TRAP_ARG_OID, EVENTLOG_ERROR_TYPE, "sd", 
-                              DBGetField(hResult, j, 0), m_pTrapCfg[i].dwId);
+                     WriteLog(MSG_INVALID_TRAP_ARG_OID, EVENTLOG_ERROR_TYPE, _T("sd"), 
+                              DBGetField(hResult, j, 0, szBuffer, MAX_DB_STRING), m_pTrapCfg[i].dwId);
                      bResult = FALSE;
                   }
                }
-               nx_strncpy(m_pTrapCfg[i].pMaps[j].szDescription, DBGetField(hResult, j, 1), MAX_DB_STRING);
+               DBGetField(hResult, j, 1, m_pTrapCfg[i].pMaps[j].szDescription, MAX_DB_STRING);
                DecodeSQLString(m_pTrapCfg[i].pMaps[j].szDescription);
             }
             DBFreeResult(hResult);

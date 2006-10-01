@@ -164,9 +164,9 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
       m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 2);
       m_wProto = (WORD)DBGetFieldULong(hResult, 0, 3);
       m_wPort = (WORD)DBGetFieldULong(hResult, 0, 4);
-      m_pszRequest = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 5)));
+      m_pszRequest = DBGetField(hResult, 0, 5, NULL, 0);
       DecodeSQLString(m_pszRequest);
-      m_pszResponse = _tcsdup(CHECK_NULL_EX(DBGetField(hResult, 0, 6)));
+      m_pszResponse = DBGetField(hResult, 0, 6, NULL, 0);
       DecodeSQLString(m_pszResponse);
       m_dwPollerNode = DBGetFieldULong(hResult, 0, 7);
 

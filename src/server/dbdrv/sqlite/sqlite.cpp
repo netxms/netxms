@@ -210,10 +210,10 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 
 
 //
-// Perform non-SELECT query
+// Internal query
 //
 
-extern "C" DWORD EXPORT DrvQuery(SQLITE_CONN *pConn, char *pszQuery)
+static DWORD DrvQueryInternal(SQLITE_CONN *pConn, char *pszQuery)
 {
    BOOL bResult;
 
@@ -225,21 +225,54 @@ extern "C" DWORD EXPORT DrvQuery(SQLITE_CONN *pConn, char *pszQuery)
 
 
 //
+// Perform non-SELECT query
+//
+
+extern "C" DWORD EXPORT DrvQuery(SQLITE_CONN *pConn, WCHAR *pwszQuery)
+{
+   DWORD dwResult;
+   char *pszQueryUTF8;
+
+   pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
+   dwResult = DrvQueryInternal(pConn, pszQueryUTF8);
+   free(pszQueryUTF8);
+   return dwResult;
+}
+
+
+//
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, char *pszQuery, DWORD *pdwError)
+extern "C" DB_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError)
 {
    DB_RESULT pResult = NULL;
+   char *pszQueryUTF8;
 
+   pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
    MutexLock(hConn->mutexQueryLock, INFINITE);
-   if (ExecCommand(hConn, SQLITE_DRV_SELECT, pszQuery) == SQLITE_OK)
+   if (ExecCommand(hConn, SQLITE_DRV_SELECT, pszQueryUTF8) == SQLITE_OK)
    {
       pResult = hConn->pResult;
    }
    MutexUnlock(hConn->mutexQueryLock);
+   free(pszQueryUTF8);
    *pdwError = (pResult != NULL) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
    return pResult;
+}
+
+
+//
+// Get field length from result
+//
+
+extern "C" LONG EXPORT DrvGetFieldLength(DB_RESULT hResult, int iRow, int iColumn)
+{
+   if ((iRow < ((SQLITE_RESULT *)hResult)->nRows) &&
+       (iColumn < ((SQLITE_RESULT *)hResult)->nCols) &&
+       (iRow >= 0) && (iColumn >= 0))
+      return strlen(((SQLITE_RESULT *)hResult)->ppszData[iRow * ((SQLITE_RESULT *)hResult)->nCols + iColumn]);
+   return -1;
 }
 
 
@@ -247,12 +280,18 @@ extern "C" DB_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, char *pszQuery, DWORD 
 // Get field value from result
 //
 
-extern "C" char EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int iColumn)
+extern "C" WCHAR EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int iColumn,
+                                     WCHAR *pwszBuffer, int nBufLen)
 {
    if ((iRow < ((SQLITE_RESULT *)hResult)->nRows) &&
        (iColumn < ((SQLITE_RESULT *)hResult)->nCols) &&
        (iRow >= 0) && (iColumn >= 0))
-      return ((SQLITE_RESULT *)hResult)->ppszData[iRow * ((SQLITE_RESULT *)hResult)->nCols + iColumn];
+   {
+      MultiByteToWideChar(CP_UTF8, 0, ((SQLITE_RESULT *)hResult)->ppszData[iRow * ((SQLITE_RESULT *)hResult)->nCols + iColumn],
+                          -1, pwszBuffer, nBufLen);
+      pwszBuffer[nBufLen - 1] = 0;
+      return pwszBuffer;
+   }
    return NULL;
 }
 
@@ -293,13 +332,15 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, char *pszQuery,
+extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery,
                                                  DWORD *pdwError)
 {
    DB_ASYNC_RESULT hResult;
+   char *pszQueryUTF8;
 
+   pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
    MutexLock(hConn->mutexQueryLock, INFINITE);
-   if (ExecCommand(hConn, SQLITE_DRV_PREPARE, pszQuery) == SQLITE_OK)
+   if (ExecCommand(hConn, SQLITE_DRV_PREPARE, pszQueryUTF8) == SQLITE_OK)
    {
       hResult = hConn;
    }
@@ -308,6 +349,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, char *pszQu
       MutexUnlock(hConn->mutexQueryLock);
       hResult = NULL;
    }
+   free(pszQueryUTF8);
    *pdwError = (hResult != NULL) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
    return hResult;
 }
@@ -327,25 +369,23 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
 // Get field from current row in async query result
 //
 
-extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, char *pBuffer, int iBufSize)
+extern "C" WCHAR EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
+                                          WCHAR *pBuffer, int iBufSize)
 {
    char *pszData;
+   WCHAR *pwszRet = NULL;
 
    if ((iColumn >= 0) && (iColumn < ((SQLITE_CONN *)hResult)->nNumCols))
    {
       pszData = (char *)sqlite3_column_text(((SQLITE_CONN *)hResult)->pvm, iColumn);
       if (pszData != NULL)
       {
-         strncpy(pBuffer, pszData, iBufSize);
+         MultiByteToWideChar(CP_UTF8, 0, pszData, -1, pBuffer, iBufSize);
          pBuffer[iBufSize - 1] = 0;
-         pszData = pBuffer;
+         pwszRet = pBuffer;
       }
    }
-   else
-   {
-      pszData = NULL;
-   }
-   return pszData;
+   return pwszRet;
 }
 
 
@@ -369,7 +409,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
 
 extern "C" DWORD EXPORT DrvBegin(SQLITE_CONN *pConn)
 {
-   return DrvQuery(pConn, "BEGIN");
+   return DrvQueryInternal(pConn, "BEGIN");
 }
 
 
@@ -379,7 +419,7 @@ extern "C" DWORD EXPORT DrvBegin(SQLITE_CONN *pConn)
 
 extern "C" DWORD EXPORT DrvCommit(SQLITE_CONN *pConn)
 {
-   return DrvQuery(pConn, "COMMIT");
+   return DrvQueryInternal(pConn, "COMMIT");
 }
 
 
@@ -389,7 +429,7 @@ extern "C" DWORD EXPORT DrvCommit(SQLITE_CONN *pConn)
 
 extern "C" DWORD EXPORT DrvRollback(SQLITE_CONN *pConn)
 {
-   return DrvQuery(pConn, "ROLLBACK");
+   return DrvQueryInternal(pConn, "ROLLBACK");
 }
 
 

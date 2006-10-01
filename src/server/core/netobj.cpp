@@ -132,18 +132,18 @@ BOOL NetObj::LoadCommonProperties(void)
    BOOL bResult = FALSE;
 
    // Load access options
-   _sntprintf(szQuery, 256, _T("SELECT name,status,is_deleted,image_id,"
-                               "inherit_access_rights,last_modified,status_calc_alg,"
-                               "status_prop_alg,status_fixed_val,status_shift,"
-                               "status_translation,status_single_threshold,"
-                               "status_thresholds FROM object_properties "
-                               "WHERE object_id=%d"), m_dwId);
+   _sntprintf(szQuery, 256, _T("SELECT name,status,is_deleted,image_id,")
+                            _T("inherit_access_rights,last_modified,status_calc_alg,")
+                            _T("status_prop_alg,status_fixed_val,status_shift,")
+                            _T("status_translation,status_single_threshold,")
+                            _T("status_thresholds FROM object_properties ")
+                            _T("WHERE object_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         nx_strncpy(m_szName, DBGetField(hResult, 0, 0), MAX_OBJECT_NAME);
+         DBGetField(hResult, 0, 0, m_szName, MAX_OBJECT_NAME);
          m_iStatus = DBGetFieldLong(hResult, 0, 1);
          m_bIsDeleted = DBGetFieldLong(hResult, 0, 2) ? TRUE : FALSE;
          m_dwImageId = DBGetFieldULong(hResult, 0, 3);

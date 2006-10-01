@@ -107,7 +107,7 @@ BOOL Container::CreateFromDB(DWORD dwId)
    }
 
    m_dwCategory = DBGetFieldULong(hResult, 0, 0);
-   m_pszDescription = strdup(CHECK_NULL(DBGetField(hResult, 0, 1)));
+   m_pszDescription = DBGetField(hResult, 0, 1, NULL, 0);
 
    DBFreeResult(hResult);
 

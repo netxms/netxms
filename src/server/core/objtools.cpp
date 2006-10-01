@@ -162,7 +162,7 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
             pnSubstrPos = (int *)malloc(sizeof(int) * dwNumCols);
             for(i = 0; i < dwNumCols; i++)
             {
-               nx_strncpy(szBuffer, DBGetField(hResult, i, 0), 256);
+               DBGetField(hResult, i, 0, szBuffer, 256);
                DecodeSQLString(szBuffer);
                msg.SetVariable(VID_COLUMN_NAME_BASE + i, szBuffer);
                msg.SetVariable(VID_COLUMN_FMT_BASE + i, DBGetFieldULong(hResult, i, 1));
@@ -395,10 +395,10 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
          args.pNode = ((TOOL_STARTUP_INFO *)pArg)->pNode;
          for(i = 0; i < dwNumCols; i++)
          {
-            nx_strncpy(szBuffer, DBGetField(hResult, i, 0), 256);
+            DBGetField(hResult, i, 0, szBuffer, 256);
             DecodeSQLString(szBuffer);
             msg.SetVariable(VID_COLUMN_NAME_BASE + i, szBuffer);
-            args.ppszOidList[i] = _tcsdup(DBGetField(hResult, i, 1));
+            args.ppszOidList[i] = DBGetField(hResult, i, 1, NULL, 0);
             args.pnFormatList[i] = DBGetFieldLong(hResult, i, 2);
             msg.SetVariable(VID_COLUMN_FMT_BASE + i, (DWORD)args.pnFormatList[i]);
          }
@@ -473,7 +473,7 @@ DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession 
             pStartup = (TOOL_STARTUP_INFO *)malloc(sizeof(TOOL_STARTUP_INFO));
             pStartup->dwToolId = dwToolId;
             pStartup->dwRqId = dwRqId;
-            pStartup->pszToolData = _tcsdup(DBGetField(hResult, 0, 1));
+            pStartup->pszToolData = DBGetField(hResult, 0, 1, NULL, 0);
             DecodeSQLString(pStartup->pszToolData);
             pStartup->dwFlags = DBGetFieldULong(hResult, 0, 2);
             pStartup->pNode = pNode;

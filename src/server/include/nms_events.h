@@ -42,8 +42,8 @@ struct EVENT_TEMPLATE
    DWORD dwCode;
    DWORD dwSeverity;
    DWORD dwFlags;
-   char *szMessageTemplate;
-   char *szDescription;
+   TCHAR *pszMessageTemplate;
+   TCHAR *pszDescription;
 };
 
 
@@ -60,15 +60,15 @@ private:
    DWORD m_dwSeverity;
    DWORD m_dwFlags;
    DWORD m_dwSource;
-   char *m_pszMessageText;
-   char *m_pszMessageTemplate;
+   TCHAR *m_pszMessageText;
+   TCHAR *m_pszMessageTemplate;
    DWORD m_dwNumParameters;
-   char **m_ppszParameters;
+   TCHAR **m_ppszParameters;
    time_t m_tTimeStamp;
 
 public:
    Event();
-   Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_list args);
+   Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, TCHAR *szFormat, va_list args);
    ~Event();
 
    QWORD Id(void) { return m_qwId; }

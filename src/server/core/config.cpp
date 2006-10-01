@@ -69,24 +69,24 @@ BOOL NXCORE_EXPORTABLE LoadConfig(void)
 // Read string value from configuration table
 //
 
-BOOL NXCORE_EXPORTABLE ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, const char *szDefault)
+BOOL NXCORE_EXPORTABLE ConfigReadStr(TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault)
 {
    DB_RESULT hResult;
-   char szQuery[256];
+   TCHAR szQuery[256];
    BOOL bSuccess = FALSE;
 
    nx_strncpy(szBuffer, szDefault, iBufSize);
-   if (strlen(szVar) > 127)
+   if (_tcslen(szVar) > 127)
       return FALSE;
 
-   sprintf(szQuery, "SELECT var_value FROM config WHERE var_name='%s'", szVar);
+   _sntprintf(szQuery, 256, _T("SELECT var_value FROM config WHERE var_name='%s'"), szVar);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;
 
    if (DBGetNumRows(hResult) > 0)
    {
-      nx_strncpy(szBuffer, DBGetField(hResult, 0, 0), iBufSize);
+      DBGetField(hResult, 0, 0, szBuffer, iBufSize);
       DecodeSQLString(szBuffer);
       bSuccess = TRUE;
    }
@@ -100,12 +100,12 @@ BOOL NXCORE_EXPORTABLE ConfigReadStr(char *szVar, char *szBuffer, int iBufSize, 
 // Read integer value from configuration table
 //
 
-int NXCORE_EXPORTABLE ConfigReadInt(char *szVar, int iDefault)
+int NXCORE_EXPORTABLE ConfigReadInt(TCHAR *szVar, int iDefault)
 {
-   char szBuffer[64];
+   TCHAR szBuffer[64];
 
-   if (ConfigReadStr(szVar, szBuffer, 64, ""))
-      return strtol(szBuffer, NULL, 0);
+   if (ConfigReadStr(szVar, szBuffer, 64, _T("")))
+      return _tcstol(szBuffer, NULL, 0);
    else
       return iDefault;
 }
@@ -115,12 +115,12 @@ int NXCORE_EXPORTABLE ConfigReadInt(char *szVar, int iDefault)
 // Read unsigned long value from configuration table
 //
 
-DWORD NXCORE_EXPORTABLE ConfigReadULong(char *szVar, DWORD dwDefault)
+DWORD NXCORE_EXPORTABLE ConfigReadULong(TCHAR *szVar, DWORD dwDefault)
 {
-   char szBuffer[64];
+   TCHAR szBuffer[64];
 
-   if (ConfigReadStr(szVar, szBuffer, 64, ""))
-      return strtoul(szBuffer, NULL, 0);
+   if (ConfigReadStr(szVar, szBuffer, 64, _T("")))
+      return _tcstoul(szBuffer, NULL, 0);
    else
       return dwDefault;
 }
@@ -130,13 +130,14 @@ DWORD NXCORE_EXPORTABLE ConfigReadULong(char *szVar, DWORD dwDefault)
 // Read byte array (in hex form) from configuration table into integer array
 //
 
-BOOL NXCORE_EXPORTABLE ConfigReadByteArray(char *pszVar, int *pnArray, int nSize, int nDefault)
+BOOL NXCORE_EXPORTABLE ConfigReadByteArray(TCHAR *pszVar, int *pnArray, int nSize, int nDefault)
 {
-   char szBuffer[256], pbBytes[128];
+   TCHAR szBuffer[256];
+   char pbBytes[128];
    BOOL bResult;
    int i, nLen;
 
-   if (ConfigReadStr(pszVar, szBuffer, 256, ""))
+   if (ConfigReadStr(pszVar, szBuffer, 256, _T("")))
    {
       StrToBin(szBuffer, (BYTE *)pbBytes, 128);
       nLen = (int)strlen(szBuffer) / 2;
@@ -160,7 +161,7 @@ BOOL NXCORE_EXPORTABLE ConfigReadByteArray(char *pszVar, int *pnArray, int nSize
 // Write string value to configuration table
 //
 
-BOOL NXCORE_EXPORTABLE ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate)
+BOOL NXCORE_EXPORTABLE ConfigWriteStr(TCHAR *szVar, TCHAR *szValue, BOOL bCreate)
 {
    DB_RESULT hResult;
    TCHAR *pszEscValue, szQuery[1024];
@@ -170,7 +171,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate)
       return FALSE;
 
    // Check for variable existence
-   sprintf(szQuery, "SELECT var_value FROM config WHERE var_name='%s'", szVar);
+   _sntprintf(szQuery, 1024, _T("SELECT var_value FROM config WHERE var_name='%s'"), szVar);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -201,11 +202,11 @@ BOOL NXCORE_EXPORTABLE ConfigWriteStr(char *szVar, char *szValue, BOOL bCreate)
 // Write integer value to configuration table
 //
 
-BOOL NXCORE_EXPORTABLE ConfigWriteInt(char *szVar, int iValue, BOOL bCreate)
+BOOL NXCORE_EXPORTABLE ConfigWriteInt(TCHAR *szVar, int iValue, BOOL bCreate)
 {
-   char szBuffer[64];
+   TCHAR szBuffer[64];
 
-   sprintf(szBuffer, "%d", iValue);
+   _stprintf(szBuffer, _T("%d"), iValue);
    return ConfigWriteStr(szVar, szBuffer, bCreate);
 }
 
@@ -214,11 +215,11 @@ BOOL NXCORE_EXPORTABLE ConfigWriteInt(char *szVar, int iValue, BOOL bCreate)
 // Write unsigned long value to configuration table
 //
 
-BOOL NXCORE_EXPORTABLE ConfigWriteULong(char *szVar, DWORD dwValue, BOOL bCreate)
+BOOL NXCORE_EXPORTABLE ConfigWriteULong(TCHAR *szVar, DWORD dwValue, BOOL bCreate)
 {
-   char szBuffer[64];
+   TCHAR szBuffer[64];
 
-   sprintf(szBuffer, "%u", dwValue);
+   _stprintf(szBuffer, _T("%u"), dwValue);
    return ConfigWriteStr(szVar, szBuffer, bCreate);
 }
 
@@ -227,12 +228,12 @@ BOOL NXCORE_EXPORTABLE ConfigWriteULong(char *szVar, DWORD dwValue, BOOL bCreate
 // Write integer array to configuration table
 //
 
-BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(char *pszVar, int *pnArray, int nSize, BOOL bCreate)
+BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(TCHAR *pszVar, int *pnArray, int nSize, BOOL bCreate)
 {
-   char szBuffer[256];
+   TCHAR szBuffer[256];
    int i, j;
 
    for(i = 0, j = 0; (i < nSize) && (i < 127); i++, j += 2)
-      sprintf(&szBuffer[j], "%02X", (char)((pnArray[i] > 127) ? 127 : ((pnArray[i] < -127) ? -127 : pnArray[i])));
+      _stprintf(&szBuffer[j], _T("%02X"), (char)((pnArray[i] > 127) ? 127 : ((pnArray[i] < -127) ? -127 : pnArray[i])));
    return ConfigWriteStr(pszVar, szBuffer, bCreate);
 }

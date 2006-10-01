@@ -343,10 +343,6 @@ BOOL SendMagicPacket(DWORD dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
 
 void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, DWORD dwVarId, TCHAR *pszStr)
 {
-   TCHAR *pszTemp;
-
-   pszTemp = _tcsdup(pszStr);
-   DecodeSQLString(pszTemp);
-   pMsg->SetVariable(dwVarId, pszTemp);
-   free(pszTemp);
+   DecodeSQLString(pszStr);
+   pMsg->SetVariable(dwVarId, pszStr);
 }

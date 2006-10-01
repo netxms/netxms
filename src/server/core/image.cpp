@@ -50,7 +50,7 @@ void UpdateImageHashes(void)
          dwImageId = DBGetFieldULong(hResult, i, 0);
          for(iFormat = 1; iFormat < 3; iFormat++)
          {
-            strcpy(&szPath[iPathLen], DBGetField(hResult, i, iFormat));
+            DBGetField(hResult, i, iFormat, &szPath[iPathLen], MAX_PATH - iPathLen);
             if (CalculateFileMD5Hash(szPath, hash))
             {
                // Convert MD5 hash to text form and update database
@@ -130,15 +130,15 @@ void SendImageCatalogue(ClientSession *pSession, DWORD dwRqId, WORD wFormat)
    DB_RESULT hResult;
    DWORD i, dwNumImages, dwId;
    BYTE hash[MD5_DIGEST_SIZE];
-   TCHAR szQuery[256], szHashText[MD5_DIGEST_SIZE * 2 + 1];
+   TCHAR szQuery[256], szHashText[MD5_DIGEST_SIZE * 2 + 1], szBuffer[MAX_DB_STRING];
 
    // Prepare message
    msg.SetId(dwRqId);
    msg.SetCode(CMD_IMAGE_LIST);
 
    // Load image catalogue from database
-   sprintf(szQuery, "SELECT image_id,name,file_hash_%s FROM images",
-           (wFormat == IMAGE_FORMAT_PNG) ? "png" : "ico");
+   _stprintf(szQuery, _T("SELECT image_id,name,file_hash_%s FROM images"),
+             (wFormat == IMAGE_FORMAT_PNG) ? _T("png") : _T("ico"));
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -148,8 +148,8 @@ void SendImageCatalogue(ClientSession *pSession, DWORD dwRqId, WORD wFormat)
       for(i = 0, dwId = VID_IMAGE_LIST_BASE; i < dwNumImages; i++, dwId += 7)
       {
          msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 0));
-         msg.SetVariable(dwId++, DBGetField(hResult, i, 1));
-         nx_strncpy(szHashText, DBGetField(hResult, i, 2), MD5_DIGEST_SIZE * 2 + 1);
+         msg.SetVariable(dwId++, DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING));
+         DBGetField(hResult, i, 2, szHashText, MD5_DIGEST_SIZE * 2 + 1);
          StrToBin(szHashText, hash, MD5_DIGEST_SIZE);
          msg.SetVariable(dwId++, hash, MD5_DIGEST_SIZE);
       }
@@ -198,7 +198,7 @@ void SendImageFile(ClientSession *pSession, DWORD dwRqId, DWORD dwImageId, WORD 
 #else
          strcat(szFileName, "/");
 #endif
-         strcat(szFileName, DBGetField(hResult, 0, 0));
+         DBGetField(hResult, 0, 0, &szFileName[_tcslen(szFileName)], MAX_PATH - _tcslen(szFileName));
          pFile = LoadFile(szFileName, &dwFileSize);
          if (pFile != NULL)
          {

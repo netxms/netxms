@@ -73,7 +73,6 @@ static BOOL LoadActions(void)
    DB_RESULT hResult;
    BOOL bResult = FALSE;
    DWORD i;
-   char *pStr;
 
    hResult = DBSelect(g_hCoreDB, "SELECT action_id,action_name,action_type,"
                                  "is_disabled,rcpt_addr,email_subject,action_data "
@@ -83,6 +82,7 @@ static BOOL LoadActions(void)
       DestroyActionList();
       m_dwNumActions = (DWORD)DBGetNumRows(hResult);
       m_pActionList = (NXC_ACTION *)malloc(sizeof(NXC_ACTION) * m_dwNumActions);
+      memset(m_pActionList, 0, sizeof(NXC_ACTION) * m_dwNumActions);
       for(i = 0; i < m_dwNumActions; i++)
       {
          m_pActionList[i].dwId = DBGetFieldULong(hResult, i, 0);
@@ -90,12 +90,10 @@ static BOOL LoadActions(void)
          m_pActionList[i].iType = DBGetFieldLong(hResult, i, 2);
          m_pActionList[i].bIsDisabled = DBGetFieldLong(hResult, i, 3);
 
-         pStr = DBGetField(hResult, i, 4);
-         strcpy(m_pActionList[i].szRcptAddr, CHECK_NULL(pStr));
+         DBGetField(hResult, i, 4, m_pActionList[i].szRcptAddr, MAX_RCPT_ADDR_LEN);
          DecodeSQLString(m_pActionList[i].szRcptAddr);
 
-         pStr = DBGetField(hResult, i, 5);
-         strcpy(m_pActionList[i].szEmailSubject, CHECK_NULL(pStr));
+         DBGetField(hResult, i, 5, m_pActionList[i].szEmailSubject, MAX_EMAIL_SUBJECT_LEN);
          DecodeSQLString(m_pActionList[i].szEmailSubject);
 
          m_pActionList[i].pszData = DBGetField(hResult, i, 6, NULL, 0);

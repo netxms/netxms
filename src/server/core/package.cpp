@@ -96,7 +96,7 @@ BOOL IsPackageFileExist(TCHAR *pszFileName)
 
 DWORD UninstallPackage(DWORD dwPkgId)
 {
-   TCHAR szQuery[256], szFileName[MAX_PATH];
+   TCHAR szQuery[256], szFileName[MAX_PATH], szBuffer[MAX_DB_STRING];
    DB_RESULT hResult;
    DWORD dwResult;
 
@@ -110,7 +110,7 @@ DWORD UninstallPackage(DWORD dwPkgId)
          _tcscpy(szFileName, g_szDataDir);
          _tcscat(szFileName, DDIR_PACKAGES);
          _tcscat(szFileName, FS_PATH_SEPARATOR);
-         _tcscat(szFileName, CHECK_NULL_EX(DBGetField(hResult, 0, 0)));
+         _tcscat(szFileName, CHECK_NULL_EX(DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING)));
          if (_tunlink(szFileName) == 0)
          {
             // Delete record from database

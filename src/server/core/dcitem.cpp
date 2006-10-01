@@ -121,12 +121,12 @@ DCItem::DCItem(const DCItem *pSrc)
 
 DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
 {
-   TCHAR *pszTmp, szQuery[256];
+   TCHAR *pszTmp, szQuery[256], szBuffer[MAX_DB_STRING];
    DB_RESULT hTempResult;
    DWORD i;
 
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
-   nx_strncpy(m_szName, DBGetField(hResult, iRow, 1), MAX_ITEM_NAME);
+   DBGetField(hResult, iRow, 1, m_szName, MAX_ITEM_NAME);
    DecodeSQLString(m_szName);
    m_iSource = (BYTE)DBGetFieldLong(hResult, iRow, 2);
    m_iDataType = (BYTE)DBGetFieldLong(hResult, iRow, 3);
@@ -136,14 +136,14 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_iDeltaCalculation = (BYTE)DBGetFieldLong(hResult, iRow, 7);
    m_pszFormula = NULL;
    m_pScript = NULL;
-   pszTmp = _tcsdup(DBGetField(hResult, iRow, 8));
+   pszTmp = DBGetField(hResult, iRow, 8, NULL, 0);
    DecodeSQLString(pszTmp);
    NewFormula(pszTmp);
    free(pszTmp);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 9);
-   nx_strncpy(m_szDescription, DBGetField(hResult, iRow, 10), MAX_DB_STRING);
+   DBGetField(hResult, iRow, 10, m_szDescription, MAX_DB_STRING);
    DecodeSQLString(m_szDescription);
-   nx_strncpy(m_szInstance, DBGetField(hResult, iRow, 11), MAX_DB_STRING);
+   DBGetField(hResult, iRow, 11, m_szInstance, MAX_DB_STRING);
    DecodeSQLString(m_szInstance);
    m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 12);
    m_iBusy = 0;
@@ -161,7 +161,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
 
    if (m_iAdvSchedule)
    {
-      sprintf(szQuery, "SELECT schedule FROM dci_schedules WHERE item_id=%d", m_dwId);
+      _sntprintf(szQuery, 256, _T("SELECT schedule FROM dci_schedules WHERE item_id=%d"), m_dwId);
       hTempResult = DBSelect(g_hCoreDB, szQuery);
       if (hTempResult != NULL)
       {
@@ -169,7 +169,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
          m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
          for(i = 0; i < m_dwNumSchedules; i++)
          {
-            m_ppScheduleList[i] = _tcsdup(DBGetField(hTempResult, i, 0));
+            m_ppScheduleList[i] = DBGetField(hTempResult, i, 0, NULL, 0);
             DecodeSQLString(m_ppScheduleList[i]);
          }
          DBFreeResult(hTempResult);
@@ -187,13 +187,13 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    }
 
    // Load last raw value from database
-   sprintf(szQuery, "SELECT raw_value,last_poll_time FROM raw_dci_values WHERE item_id=%d", m_dwId);
+   _sntprintf(szQuery, 256, _T("SELECT raw_value,last_poll_time FROM raw_dci_values WHERE item_id=%d"), m_dwId);
    hTempResult = DBSelect(g_hCoreDB, szQuery);
    if (hTempResult != NULL)
    {
       if (DBGetNumRows(hTempResult) > 0)
       {
-         m_prevRawValue = DBGetField(hTempResult, 0, 0);
+         m_prevRawValue = DBGetField(hTempResult, 0, 0, szBuffer, MAX_DB_STRING);
          m_tPrevValueTimeStamp = DBGetFieldULong(hTempResult, 0, 1);
          m_tLastPoll = m_tPrevValueTimeStamp;
       }

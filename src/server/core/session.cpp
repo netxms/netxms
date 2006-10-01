@@ -1628,8 +1628,8 @@ void ClientSession::SendAllConfigVars(DWORD dwRqId)
          msg.SetVariable(VID_NUM_VARIABLES, dwNumRecords);
          for(i = 0, dwId = VID_VARLIST_BASE; i < dwNumRecords; i++)
          {
-            msg.SetVariable(dwId++, DBGetField(hResult, i, 0));
-            nx_strncpy(szBuffer, DBGetField(hResult, i, 1), MAX_DB_STRING);
+            msg.SetVariable(dwId++, DBGetField(hResult, i, 0, szBuffer, MAX_DB_STRING));
+            DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING);
             DecodeSQLString(szBuffer);
             msg.SetVariable(dwId++, szBuffer);
             msg.SetVariable(dwId++, (WORD)DBGetFieldLong(hResult, i, 2));
@@ -4516,9 +4516,9 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
          {
             if (DBGetNumRows(hResult) > 0)
             {
-               nx_strncpy(szPlatform, DBGetField(hResult, 0, 0), MAX_PLATFORM_NAME_LEN);
-               nx_strncpy(szPkgFile, DBGetField(hResult, 0, 1), MAX_PATH);
-               nx_strncpy(szVersion, DBGetField(hResult, 0, 2), MAX_AGENT_VERSION_LEN);
+               DBGetField(hResult, 0, 0, szPlatform, MAX_PLATFORM_NAME_LEN);
+               DBGetField(hResult, 0, 1, szPkgFile, MAX_PATH);
+               DBGetField(hResult, 0, 2, szVersion, MAX_AGENT_VERSION_LEN);
 
                // Create list of nodes to be upgraded
                dwNumObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);
@@ -4741,7 +4741,7 @@ void ClientSession::GetUserVariable(CSCPMessage *pRequest)
          {
             TCHAR *pszData;
 
-            pszData = _tcsdup(DBGetField(hResult, 0, 0));
+            pszData = DBGetField(hResult, 0, 0, NULL, 0);
             DecodeSQLString(pszData);
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
             msg.SetVariable(VID_VALUE, pszData);
@@ -4849,7 +4849,7 @@ void ClientSession::SetUserVariable(CSCPMessage *pRequest)
 void ClientSession::EnumUserVariables(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   TCHAR *pszName, szPattern[MAX_VARIABLE_NAME], szQuery[256];
+   TCHAR szPattern[MAX_VARIABLE_NAME], szQuery[256], szName[MAX_DB_STRING];
    DWORD i, dwNumRows, dwNumVars, dwId, dwUserId;
    DB_RESULT hResult;
 
@@ -4868,11 +4868,11 @@ void ClientSession::EnumUserVariables(CSCPMessage *pRequest)
          dwNumRows = DBGetNumRows(hResult);
          for(i = 0, dwNumVars = 0, dwId = VID_VARLIST_BASE; i < dwNumRows; i++)
          {
-            pszName = DBGetField(hResult, i, 0);
-            if (MatchString(szPattern, pszName, FALSE))
+            DBGetField(hResult, i, 0, szName, MAX_DB_STRING);
+            if (MatchString(szPattern, szName, FALSE))
             {
                dwNumVars++;
-               msg.SetVariable(dwId++, pszName);
+               msg.SetVariable(dwId++, szName);
             }
          }
          msg.SetVariable(VID_NUM_VARIABLES, dwNumVars);
@@ -4943,7 +4943,8 @@ void ClientSession::DeleteUserVariable(CSCPMessage *pRequest)
 void ClientSession::CopyUserVariable(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   TCHAR szVarName[MAX_VARIABLE_NAME], szQuery[8192], *pszCurrVar;
+   TCHAR szVarName[MAX_VARIABLE_NAME], szCurrVar[MAX_VARIABLE_NAME],
+         szQuery[32768], *pszValue;
    DWORD dwSrcUserId, dwDstUserId;
    int i, nRows;
    BOOL bMove, bExist;
@@ -4969,12 +4970,12 @@ void ClientSession::CopyUserVariable(CSCPMessage *pRequest)
          nRows = DBGetNumRows(hResult);
          for(i = 0; i < nRows; i++)
          {
-            pszCurrVar = DBGetField(hResult, i, 0);
+            DBGetField(hResult, i, 0, szCurrVar, MAX_VARIABLE_NAME);
 
             // Check if variable already exist in database
-            _sntprintf(szQuery, 8192,
+            _sntprintf(szQuery, 32768,
                        _T("SELECT var_name FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
-                       dwDstUserId, pszCurrVar);
+                       dwDstUserId, szCurrVar);
             hResult2 = DBSelect(g_hCoreDB, szQuery);
             if (hResult2 != NULL)
             {
@@ -4986,21 +4987,23 @@ void ClientSession::CopyUserVariable(CSCPMessage *pRequest)
                bExist = FALSE;
             }
             
+            pszValue = DBGetField(hResult, i, 1, NULL, 0);
             if (bExist)
-               _sntprintf(szQuery, 8192,
+               _sntprintf(szQuery, 32768,
                           _T("UPDATE user_profiles SET var_value='%s' WHERE user_id=%d AND var_name='%s'"),
-                          DBGetField(hResult, i, 1), dwDstUserId, pszCurrVar);
+                          pszValue, dwDstUserId, szCurrVar);
             else
-               _sntprintf(szQuery, 8192,
+               _sntprintf(szQuery, 32768,
                           _T("INSERT INTO user_profiles (user_id,var_name,var_value) VALUES (%d,'%s','%s')"),
-                          dwDstUserId, pszCurrVar, DBGetField(hResult, i, 1));
+                          dwDstUserId, szCurrVar, pszValue);
+            free(pszValue);
             DBQuery(g_hCoreDB, szQuery);
 
             if (bMove)
             {
-               _sntprintf(szQuery, 8192,
+               _sntprintf(szQuery, 32768,
                           _T("DELETE FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
-                          dwSrcUserId, pszCurrVar);
+                          dwSrcUserId, szCurrVar);
                DBQuery(g_hCoreDB, szQuery);
             }
          }
@@ -5354,7 +5357,7 @@ void ClientSession::SendObjectTools(DWORD dwRqId)
    DB_RESULT hResult;
    DWORD i, j, dwAclSize, dwNumTools, dwNumMsgRec, dwToolId, dwId;
    OBJECT_TOOL_ACL *pAccessList;
-   TCHAR *pszStr;
+   TCHAR *pszStr, szBuffer[MAX_DB_STRING];
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -5401,29 +5404,26 @@ void ClientSession::SendObjectTools(DWORD dwRqId)
             {
                msg.SetVariable(dwId, dwToolId);
 
-               pszStr = _tcsdup(DBGetField(hResult, i, 1));
-               DecodeSQLString(pszStr);
-               msg.SetVariable(dwId + 1, pszStr);
-               free(pszStr);
+               // name
+               DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING);
+               DecodeSQLStringAndSetVariable(&msg, dwId + 1, szBuffer);
 
                msg.SetVariable(dwId + 2, (WORD)DBGetFieldLong(hResult, i, 2));
 
-               pszStr = _tcsdup(DBGetField(hResult, i, 3));
-               DecodeSQLString(pszStr);
-               msg.SetVariable(dwId + 3, pszStr);
+               // data
+               pszStr = DBGetField(hResult, i, 3, NULL, 0);
+               DecodeSQLStringAndSetVariable(&msg, dwId + 3, pszStr);
                free(pszStr);
 
                msg.SetVariable(dwId + 4, DBGetFieldULong(hResult, i, 4));
 
-               pszStr = _tcsdup(DBGetField(hResult, i, 5));
-               DecodeSQLString(pszStr);
-               msg.SetVariable(dwId + 5, pszStr);
-               free(pszStr);
+               // description
+               DBGetField(hResult, i, 5, szBuffer, MAX_DB_STRING);
+               DecodeSQLStringAndSetVariable(&msg, dwId + 5, szBuffer);
 
-               pszStr = _tcsdup(DBGetField(hResult, i, 6));
-               DecodeSQLString(pszStr);
-               msg.SetVariable(dwId + 6, pszStr);
-               free(pszStr);
+               // matching OID
+               DBGetField(hResult, i, 6, szBuffer, MAX_DB_STRING);
+               DecodeSQLStringAndSetVariable(&msg, dwId + 6, szBuffer);
 
                dwNumMsgRec++;
                dwId += 10;
@@ -5459,7 +5459,7 @@ void ClientSession::SendObjectToolDetails(CSCPMessage *pRequest)
    CSCPMessage msg;
    DB_RESULT hResult;
    DWORD dwToolId, dwId, *pdwAcl;
-   TCHAR *pszStr, szQuery[1024];
+   TCHAR *pszStr, szQuery[1024], szBuffer[MAX_DB_STRING];
    int i, iNumRows, nType;
 
    // Prepare response message
@@ -5475,30 +5475,23 @@ void ClientSession::SendObjectToolDetails(CSCPMessage *pRequest)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            pszStr = _tcsdup(DBGetField(hResult, 0, 0));
-            DecodeSQLString(pszStr);
-            msg.SetVariable(VID_NAME, pszStr);
-            free(pszStr);
+            DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING);
+            DecodeSQLStringAndSetVariable(&msg, VID_NAME, szBuffer);
 
             nType = DBGetFieldLong(hResult, 0, 1);
             msg.SetVariable(VID_TOOL_TYPE, (WORD)nType);
 
-            pszStr = _tcsdup(DBGetField(hResult, 0, 2));
-            DecodeSQLString(pszStr);
-            msg.SetVariable(VID_TOOL_DATA, pszStr);
+            pszStr = DBGetField(hResult, 0, 2, NULL, 0);
+            DecodeSQLStringAndSetVariable(&msg, VID_TOOL_DATA, pszStr);
             free(pszStr);
 
-            pszStr = _tcsdup(DBGetField(hResult, 0, 3));
-            DecodeSQLString(pszStr);
-            msg.SetVariable(VID_DESCRIPTION, pszStr);
-            free(pszStr);
+            DBGetField(hResult, 0, 3, szBuffer, MAX_DB_STRING);
+            DecodeSQLStringAndSetVariable(&msg, VID_DESCRIPTION, szBuffer);
 
             msg.SetVariable(VID_FLAGS, DBGetFieldULong(hResult, 0, 4));
 
-            pszStr = _tcsdup(DBGetField(hResult, 0, 5));
-            DecodeSQLString(pszStr);
-            msg.SetVariable(VID_TOOL_OID, pszStr);
-            free(pszStr);
+            DBGetField(hResult, 0, 5, szBuffer, MAX_DB_STRING);
+            DecodeSQLStringAndSetVariable(&msg, VID_TOOL_OID, szBuffer);
             DBFreeResult(hResult);
 
             // Access list
@@ -5521,22 +5514,19 @@ void ClientSession::SendObjectToolDetails(CSCPMessage *pRequest)
                // Column information for table tools
                if ((nType == TOOL_TYPE_TABLE_SNMP) || (nType == TOOL_TYPE_TABLE_AGENT))
                {
-                  _stprintf(szQuery, _T("SELECT col_name,col_oid,col_format,col_substr "
-                                        "FROM object_tools_table_columns WHERE tool_id=%d "
-                                        "ORDER BY col_number"), dwToolId);
+                  _stprintf(szQuery, _T("SELECT col_name,col_oid,col_format,col_substr ")
+                                     _T("FROM object_tools_table_columns WHERE tool_id=%d ")
+                                     _T("ORDER BY col_number"), dwToolId);
                   hResult = DBSelect(g_hCoreDB, szQuery);
                   if (hResult != NULL)
                   {
-                     TCHAR szBuffer[256];
-
                      iNumRows = DBGetNumRows(hResult);
                      msg.SetVariable(VID_NUM_COLUMNS, (WORD)iNumRows);
                      for(i = 0, dwId = VID_COLUMN_INFO_BASE; i < iNumRows; i++)
                      {
-                        nx_strncpy(szBuffer, DBGetField(hResult, i, 0), 256);
-                        DecodeSQLString(szBuffer);
-                        msg.SetVariable(dwId++, szBuffer);
-                        msg.SetVariable(dwId++, DBGetField(hResult, i, 1));
+                        DBGetField(hResult, i, 0, szBuffer, MAX_DB_STRING);
+                        DecodeSQLStringAndSetVariable(&msg, dwId++, szBuffer);
+                        msg.SetVariable(dwId++, DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING));
                         msg.SetVariable(dwId++, (WORD)DBGetFieldLong(hResult, i, 2));
                         msg.SetVariable(dwId++, (WORD)DBGetFieldLong(hResult, i, 3));
                      }
@@ -5827,6 +5817,7 @@ void ClientSession::SendLogPoliciesList(DWORD dwRqId)
    CSCPMessage msg;
    DB_RESULT hResult;
    DWORD i, dwNumRows, dwId;
+   TCHAR szBuffer[MAX_DB_STRING];
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
@@ -5841,7 +5832,7 @@ void ClientSession::SendLogPoliciesList(DWORD dwRqId)
          for(i = 0, dwId = VID_LPP_LIST_BASE; i < dwNumRows; i++)
          {
             msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 0));
-            msg.SetVariable(dwId++, DBGetField(hResult, i, 1));
+            msg.SetVariable(dwId++, DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING));
             msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 2));
             msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 3));
          }
@@ -5902,7 +5893,7 @@ void ClientSession::OpenLPP(CSCPMessage *pRequest)
    CSCPMessage msg;
    DWORD i, dwNumRows, dwId, dwPolicy;
    DB_RESULT hResult;
-   TCHAR szQuery[256];
+   TCHAR szQuery[256], szBuffer[MAX_DB_STRING];
    BOOL bSuccess = FALSE;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -5912,20 +5903,19 @@ void ClientSession::OpenLPP(CSCPMessage *pRequest)
       dwPolicy = pRequest->GetVariableLong(VID_LPP_ID);
       if (LockLPP(dwPolicy, m_dwIndex))
       {
-         sprintf(szQuery, "SELECT lpp_name,lpp_version,lpp_flags,log_name FROM lpp WHERE lpp_id=%d", dwPolicy);
+         sprintf(szQuery, "SELECT lpp_name,lpp_version,lpp_flags FROM lpp WHERE lpp_id=%d", dwPolicy);
          hResult = DBSelect(g_hCoreDB, szQuery);
          if (hResult != NULL)
          {
             if (DBGetNumRows(hResult) > 0)
             {
                msg.SetVariable(VID_LPP_ID, dwPolicy);
-               msg.SetVariable(VID_NAME, DBGetField(hResult, 0, 0));
+               msg.SetVariable(VID_NAME, DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING));
                msg.SetVariable(VID_VERSION, DBGetFieldULong(hResult, 0, 1));
                msg.SetVariable(VID_FLAGS, DBGetFieldULong(hResult, 0, 2));
-               msg.SetVariable(VID_LOG_FILE, DBGetField(hResult, 0, 3));
                DBFreeResult(hResult);
 
-               sprintf(szQuery, "SELECT node_id FROM lpp_nodes WHERE lpp_id=%d", dwPolicy);
+               _stprintf(szQuery, _T("SELECT node_id FROM lpp_nodes WHERE lpp_id=%d"), dwPolicy);
                hResult = DBSelect(g_hCoreDB, szQuery);
                if (hResult != NULL)
                {
@@ -5948,8 +5938,8 @@ void ClientSession::OpenLPP(CSCPMessage *pRequest)
                         msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 1));
                         msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 2));
                         msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 3));
-                        msg.SetVariable(dwId++, DBGetField(hResult, i, 4));
-                        msg.SetVariable(dwId++, DBGetField(hResult, i, 5));
+                        DecodeSQLStringAndSetVariable(&msg, dwId++, DBGetField(hResult, i, 4, szBuffer, MAX_DB_STRING));
+                        DecodeSQLStringAndSetVariable(&msg, dwId++, DBGetField(hResult, i, 5, szBuffer, MAX_DB_STRING));
                      }
 
                      DBFreeResult(hResult);
@@ -6052,6 +6042,7 @@ void ClientSession::SendScriptList(DWORD dwRqId)
    CSCPMessage msg;
    DB_RESULT hResult;
    DWORD i, dwNumScripts, dwId;
+   TCHAR szBuffer[MAX_DB_STRING];
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
@@ -6066,7 +6057,7 @@ void ClientSession::SendScriptList(DWORD dwRqId)
          for(i = 0, dwId = VID_SCRIPT_LIST_BASE; i < dwNumScripts; i++)
          {
             msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 0));
-            msg.SetVariable(dwId++, DBGetField(hResult, i, 1));
+            msg.SetVariable(dwId++, DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING));
          }
          DBFreeResult(hResult);
       }
@@ -6105,7 +6096,7 @@ void ClientSession::SendScript(CSCPMessage *pRequest)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            pszCode = _tcsdup(DBGetField(hResult, 0, 0));
+            pszCode = DBGetField(hResult, 0, 0, NULL, 0);
             DecodeSQLString(pszCode);
             msg.SetVariable(VID_SCRIPT_CODE, pszCode);
             free(pszCode);
@@ -7038,7 +7029,7 @@ void ClientSession::SendModuleList(DWORD dwRqId)
    CSCPMessage msg;
    DB_RESULT hResult;
    DWORD i, dwId, dwNumModules;
-   TCHAR *pszDescr;
+   TCHAR *pszDescr, szBuffer[MAX_DB_STRING];
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
@@ -7054,14 +7045,14 @@ void ClientSession::SendModuleList(DWORD dwRqId)
          for(i = 0, dwId = VID_MODULE_LIST_BASE; i < dwNumModules; i++, dwId += 4)
          {
             msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 0));
-            msg.SetVariable(dwId++, DBGetField(hResult, i, 1));
-            msg.SetVariable(dwId++, DBGetField(hResult, i, 2));
+            msg.SetVariable(dwId++, DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING));
+            msg.SetVariable(dwId++, DBGetField(hResult, i, 2, szBuffer, MAX_DB_STRING));
             msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 3));
-            pszDescr = _tcsdup(DBGetField(hResult, i, 4));
+            pszDescr = DBGetField(hResult, i, 4, NULL, 0);
             DecodeSQLString(pszDescr);
             msg.SetVariable(dwId++, pszDescr);
             free(pszDescr);
-            msg.SetVariable(dwId++, DBGetField(hResult, i, 5));
+            msg.SetVariable(dwId++, DBGetField(hResult, i, 5, szBuffer, MAX_DB_STRING));
          }
 
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -7180,7 +7171,7 @@ void ClientSession::SendAgentCfgList(DWORD dwRqId)
          for(i = 0, dwId = VID_AGENT_CFG_LIST_BASE; i < dwNumRows; i++, dwId += 7)
          {
             msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 0));
-            _tcscpy(szText, DBGetField(hResult, i, 1));
+            DBGetField(hResult, i, 1, szText, MAX_DB_STRING);
             DecodeSQLString(szText);
             msg.SetVariable(dwId++, szText);
             msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 2));
@@ -7210,7 +7201,7 @@ void ClientSession::OpenAgentConfig(CSCPMessage *pRequest)
    CSCPMessage msg;
    DB_RESULT hResult;
    DWORD dwCfgId;
-   TCHAR szQuery[256];
+   TCHAR *pszStr, szQuery[256], szBuffer[MAX_DB_STRING];
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
@@ -7226,9 +7217,13 @@ void ClientSession::OpenAgentConfig(CSCPMessage *pRequest)
          {
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
             msg.SetVariable(VID_CONFIG_ID, dwCfgId);
-            DecodeSQLStringAndSetVariable(&msg, VID_NAME, DBGetField(hResult, 0, 0));
-            DecodeSQLStringAndSetVariable(&msg, VID_CONFIG_FILE, DBGetField(hResult, 0, 1));
-            DecodeSQLStringAndSetVariable(&msg, VID_FILTER, DBGetField(hResult, 0, 2));
+            DecodeSQLStringAndSetVariable(&msg, VID_NAME, DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING));
+            pszStr = DBGetField(hResult, 0, 1, NULL, 0);
+            DecodeSQLStringAndSetVariable(&msg, VID_CONFIG_FILE, pszStr);
+            free(pszStr);
+            pszStr = DBGetField(hResult, 0, 2, NULL, 0);
+            DecodeSQLStringAndSetVariable(&msg, VID_FILTER, pszStr);
+            free(pszStr);
             msg.SetVariable(VID_SEQUENCE_NUMBER, DBGetFieldULong(hResult, 0, 3));
          }
          else
@@ -7509,7 +7504,7 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
          dwCfgId = DBGetFieldULong(hResult, i, 0);
 
          // Compile script
-         pszText = _tcsdup(DBGetField(hResult, i, 2));
+         pszText = DBGetField(hResult, i, 2, NULL, 0);
          DecodeSQLString(pszText);
          pScript = (NXSL_Program *)NXSLCompile(pszText, szError, 256);
          free(pszText);
@@ -7538,9 +7533,8 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
                   DbgPrintf(AF_DEBUG_MISC, "Configuration script %d matched for agent %s, sending config",
                             dwCfgId, IpToStr(m_dwHostAddr, szBuffer));
                   msg.SetVariable(VID_RCC, (WORD)0);
-                  pszText = _tcsdup(DBGetField(hResult, i, 1));
-                  DecodeSQLString(pszText);
-                  msg.SetVariable(VID_CONFIG_FILE, pszText);
+                  pszText = DBGetField(hResult, i, 1, NULL, 0);
+                  DecodeSQLStringAndSetVariable(&msg, VID_CONFIG_FILE, pszText);
                   msg.SetVariable(VID_CONFIG_ID, dwCfgId);
                   free(pszText);
                   break;

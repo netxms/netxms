@@ -1,4 +1,4 @@
-/* $Id: db.cpp,v 1.19 2006-09-30 22:41:10 victor Exp $ */
+/* $Id: db.cpp,v 1.20 2006-10-01 10:54:25 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -52,6 +52,7 @@ static DWORD (* m_fpDrvQuery)(DB_CONNECTION, WCHAR *) = NULL;
 static DB_RESULT (* m_fpDrvSelect)(DB_CONNECTION, WCHAR *, DWORD *) = NULL;
 static DB_ASYNC_RESULT (* m_fpDrvAsyncSelect)(DB_CONNECTION, WCHAR *, DWORD *) = NULL;
 static BOOL (* m_fpDrvFetch)(DB_ASYNC_RESULT) = NULL;
+static LONG (* m_fpDrvGetFieldLength)(DB_RESULT, int, int) = NULL;
 static WCHAR* (* m_fpDrvGetField)(DB_RESULT, int, int, WCHAR *, int) = NULL;
 static WCHAR* (* m_fpDrvGetFieldAsync)(DB_ASYNC_RESULT, int, WCHAR *, int) = NULL;
 static int (* m_fpDrvGetNumRows)(DB_RESULT) = NULL;
@@ -130,6 +131,7 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
    m_fpDrvSelect = (DB_RESULT (*)(DB_CONNECTION, WCHAR *, DWORD *))DLGetSymbolAddrEx(m_hDriver, "DrvSelect");
    m_fpDrvAsyncSelect = (DB_ASYNC_RESULT (*)(DB_CONNECTION, WCHAR *, DWORD *))DLGetSymbolAddrEx(m_hDriver, "DrvAsyncSelect");
    m_fpDrvFetch = (BOOL (*)(DB_ASYNC_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvFetch");
+   m_fpDrvGetFieldLength = (LONG (*)(DB_RESULT, int, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetFieldLength");
    m_fpDrvGetField = (WCHAR* (*)(DB_RESULT, int, int, WCHAR *, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetField");
    m_fpDrvGetFieldAsync = (WCHAR* (*)(DB_ASYNC_RESULT, int, WCHAR *, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetFieldAsync");
    m_fpDrvGetNumRows = (int (*)(DB_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvGetNumRows");
@@ -144,7 +146,8 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
        (m_fpDrvGetNumRows == NULL) || (m_fpDrvFreeResult == NULL) || 
        (m_fpDrvUnload == NULL) || (m_fpDrvAsyncSelect == NULL) || (m_fpDrvFetch == NULL) ||
        (m_fpDrvFreeAsyncResult == NULL) || (m_fpDrvGetFieldAsync == NULL) ||
-       (m_fpDrvBegin == NULL) || (m_fpDrvCommit == NULL) || (m_fpDrvRollback == NULL))
+       (m_fpDrvBegin == NULL) || (m_fpDrvCommit == NULL) || (m_fpDrvRollback == NULL) ||
+       (m_fpDrvGetFieldLength == NULL))
    {
       if (m_bWriteLog)
          WriteLog(MSG_DBDRV_NO_ENTRY_POINTS, EVENTLOG_ERROR_TYPE, "s", g_szDbDriver);
@@ -317,7 +320,7 @@ BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, TCHAR *szQuery)
    
    MutexUnlock(hConn->mutexTransLock);
    if ((dwResult != DBERR_SUCCESS) && m_bLogSQLErrors)
-      WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, _T("s"), szQuery);
+      WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
    return dwResult == DBERR_SUCCESS;
 #undef pwszQuery
 }
@@ -359,7 +362,7 @@ DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, TCHAR *szQuery)
    }
    MutexUnlock(hConn->mutexTransLock);
    if ((hResult == NULL) && m_bLogSQLErrors)
-      WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, _T("s"), szQuery);
+      WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
    return hResult;
 }
 
@@ -378,7 +381,21 @@ TCHAR LIBNXSRV_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
    }
    else
    {
-      return wcsdup(m_fpDrvGetField(hResult, iRow, iColumn, alloca(65536), 65536);
+      LONG nLen;
+      WCHAR *pszTemp;
+
+      nLen = m_fpDrvGetFieldLength(hResult, iRow, iColumn);
+      if (nLen == -1)
+      {
+         pszTemp = NULL;
+      }
+      else
+      {
+         nLen++;
+         pszBuffer = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+         m_fpDrvGetField(hResult, iRow, iColumn, pszTemp, nLen);
+      }
+      return pszTemp;
    }
 #else
    WCHAR *pwszData, *pwszBuffer;
@@ -403,21 +420,29 @@ TCHAR LIBNXSRV_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
    }
    else
    {
-      pwszBuffer = (WCHAR *)malloc(65536 * sizeof(WCHAR));
-      pwszData = m_fpDrvGetField(hResult, iRow, iColumn, pwszBuffer, 65536);
-      if (pwszData != NULL)
-      {
-         nLen = wcslen(pwszData) + 1;
-         pszRet = (char *)malloc(nLen);
-         WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                             pwszData, -1, pszRet, nLen, NULL, NULL);
-         pszRet = pszBuffer;
-      }
-      else
+      nLen = m_fpDrvGetFieldLength(hResult, iRow, iColumn);
+      if (nLen == -1)
       {
          pszRet = NULL;
       }
-      free(pwszBuffer);
+      else
+      {
+         nLen++;
+         pwszBuffer = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+         pwszData = m_fpDrvGetField(hResult, iRow, iColumn, pwszBuffer, nLen);
+         if (pwszData != NULL)
+         {
+            nLen = wcslen(pwszData) + 1;
+            pszRet = (char *)malloc(nLen);
+            WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                                pwszData, -1, pszRet, nLen, NULL, NULL);
+         }
+         else
+         {
+            pszRet = NULL;
+         }
+         free(pwszBuffer);
+      }
    }
    return pszRet;
 #endif
@@ -884,7 +909,7 @@ TCHAR LIBNXSRV_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn)
    char *pszOut;
    int iPosIn, iPosOut, iStrSize;
 
-   if (*pszIn != 0)
+   if ((pszIn != NULL) && (*pszIn != 0))
    {
       // Allocate destination buffer
       iStrSize = (int)_tcslen(pszIn) + 1;
@@ -925,6 +950,9 @@ TCHAR LIBNXSRV_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn)
 void LIBNXSRV_EXPORTABLE DecodeSQLString(TCHAR *pszStr)
 {
    int iPosIn, iPosOut;
+
+   if (pszStr == NULL)
+      return;
 
    for(iPosIn = 0, iPosOut = 0; pszStr[iPosIn] != 0; iPosIn++)
    {

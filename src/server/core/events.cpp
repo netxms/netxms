@@ -119,7 +119,7 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_lis
       m_ppszParameters = NULL;
    }
 
-   m_pszMessageTemplate = _tcsdup(pTemplate->szMessageTemplate);
+   m_pszMessageTemplate = _tcsdup(pTemplate->pszMessageTemplate);
 }
 
 
@@ -380,10 +380,10 @@ static BOOL LoadEvents(void)
          m_pEventTemplates[i].dwCode = DBGetFieldULong(hResult, i, 0);
          m_pEventTemplates[i].dwSeverity = DBGetFieldLong(hResult, i, 1);
          m_pEventTemplates[i].dwFlags = DBGetFieldLong(hResult, i, 2);
-         m_pEventTemplates[i].szMessageTemplate = strdup(DBGetField(hResult, i, 3));
-         DecodeSQLString(m_pEventTemplates[i].szMessageTemplate);
-         m_pEventTemplates[i].szDescription = strdup(DBGetField(hResult, i, 4));
-         DecodeSQLString(m_pEventTemplates[i].szDescription);
+         m_pEventTemplates[i].pszMessageTemplate = DBGetField(hResult, i, 3, NULL, 0);
+         DecodeSQLString(m_pEventTemplates[i].pszMessageTemplate);
+         m_pEventTemplates[i].pszDescription = DBGetField(hResult, i, 4, NULL, 0);
+         DecodeSQLString(m_pEventTemplates[i].pszDescription);
       }
 
       DBFreeResult(hResult);
@@ -445,8 +445,8 @@ void ShutdownEventSubsystem(void)
       DWORD i;
       for(i = 0; i < m_dwNumTemplates; i++)
       {
-         safe_free(m_pEventTemplates[i].szDescription);
-         safe_free(m_pEventTemplates[i].szMessageTemplate);
+         safe_free(m_pEventTemplates[i].pszDescription);
+         safe_free(m_pEventTemplates[i].pszMessageTemplate);
       }
       free(m_pEventTemplates);
    }
@@ -470,8 +470,8 @@ void ReloadEvents(void)
    {
       for(i = 0; i < m_dwNumTemplates; i++)
       {
-         safe_free(m_pEventTemplates[i].szDescription);
-         safe_free(m_pEventTemplates[i].szMessageTemplate);
+         safe_free(m_pEventTemplates[i].pszDescription);
+         safe_free(m_pEventTemplates[i].pszMessageTemplate);
       }
       free(m_pEventTemplates);
    }
@@ -496,8 +496,8 @@ void DeleteEventTemplateFromList(DWORD dwEventCode)
       if (m_pEventTemplates[i].dwCode == dwEventCode)
       {
          m_dwNumTemplates--;
-         safe_free(m_pEventTemplates[i].szDescription);
-         safe_free(m_pEventTemplates[i].szMessageTemplate);
+         safe_free(m_pEventTemplates[i].pszDescription);
+         safe_free(m_pEventTemplates[i].pszMessageTemplate);
          memmove(&m_pEventTemplates[i], &m_pEventTemplates[i + 1],
                  sizeof(EVENT_TEMPLATE) * (m_dwNumTemplates - i));
          break;

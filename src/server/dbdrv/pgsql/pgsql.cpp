@@ -1,4 +1,4 @@
-/* $Id: pgsql.cpp,v 1.16 2006-09-30 22:41:10 victor Exp $ */
+/* $Id: pgsql.cpp,v 1.17 2006-10-01 10:54:25 victor Exp $ */
 /* 
 ** PostgreSQL Database Driver
 ** Copyright (C) 2003, 2005 Victor Kirhenshtein and Alex Kirhenshtein
@@ -205,6 +205,22 @@ extern "C" DB_RESULT EXPORT DrvSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *p
    free(pszQueryUTF8);
 
    return pResult;
+}
+
+
+//
+// Get field length from result
+//
+
+extern "C" LONG EXPORT DrvGetFieldLength(DB_RESULT pResult, int nRow, int nColumn)
+{
+   char *pszValue;
+
+	if (pResult == NULL)
+      return -1;
+
+   pszValue = PQgetvalue((PGresult *)pResult, nRow, nColumn);
+   return (pszValue != NULL) ? strlen(pszValue) : -1;
 }
 
 

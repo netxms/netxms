@@ -611,9 +611,10 @@ BOOL LoadObjects(void)
       for(i = 0; i < (int)g_dwNumCategories; i++)
       {
          g_pContainerCatList[i].dwCatId = DBGetFieldULong(hResult, i, 0);
-         nx_strncpy(g_pContainerCatList[i].szName, DBGetField(hResult, i, 1), MAX_OBJECT_NAME);
+         DBGetField(hResult, i, 1, g_pContainerCatList[i].szName, MAX_OBJECT_NAME);
          g_pContainerCatList[i].dwImageId = DBGetFieldULong(hResult, i, 2);
-         g_pContainerCatList[i].pszDescription = strdup(DBGetField(hResult, i, 3));
+         g_pContainerCatList[i].pszDescription = DBGetField(hResult, i, 3, NULL, 0);
+         DecodeSQLString(g_pContainerCatList[i].pszDescription);
       }
       DBFreeResult(hResult);
    }
