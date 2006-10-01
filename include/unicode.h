@@ -54,10 +54,21 @@
 
 #else    /* not _WIN32 */
 
+#if HAVE_WCHAR_H
+#include <wchar.h>
+#endif
+
 #ifdef _NETWARE
 #define WCHAR     wchar_t
 #else
 #define WCHAR     unsigned short
+#endif
+
+// Redefine wide character functions if system's wchar_t is not 2 bytes long
+#if !HAVE_USEABLE_WCHAR
+
+#define wcslen		nx_wcslen
+
 #endif
 
 #ifdef UNICODE

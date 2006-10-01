@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.9 2006-10-01 15:26:29 victor Exp $ */
+/* $Id: unicode.cpp,v 1.10 2006-10-01 16:01:10 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -24,24 +24,16 @@
 #include "libnetxms.h"
 
 
-#ifdef _WIN32
-
-#define __nx__wcslen wcslen
-
-#else
+#ifndef _WIN32
 
 
 //
 // Calculate length of wide character string
 //
 
-#if HAVE_USEABLE_WCHAR
+#if !HAVE_USEABLE_WCHAR
 
-#define __nx__wcslen wcslen
-
-#else
-
-int LIBNETXMS_EXPORTABLE __nx__wcslen(WCHAR *pStr)
+int LIBNETXMS_EXPORTABLE nx_wcslen(WCHAR *pStr)
 {
    int iLen = 0;
    WCHAR *pCurr = pStr;
@@ -68,10 +60,10 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, WCHAR
 
    if (cchByteChar == 0)
    {
-      return __nx__wcslen(pWideCharStr) + 1;
+      return wcslen(pWideCharStr) + 1;
    }
 
-   iSize = (cchWideChar == -1) ? __nx__wcslen(pWideCharStr) : cchWideChar;
+   iSize = (cchWideChar == -1) ? wcslen(pWideCharStr) : cchWideChar;
    if (iSize >= cchByteChar)
       iSize = cchByteChar - 1;
    for(pSrc = pWideCharStr, iPos = 0, pDest = pByteStr; iPos < iSize; iPos++, pSrc++, pDest++)
@@ -146,7 +138,7 @@ char LIBNETXMS_EXPORTABLE *MBStringFromWideString(WCHAR *pwszString)
    char *pszOut;
    int nLen;
 
-   nLen = __nx__wcslen(pwszString) + 1;
+   nLen = wcslen(pwszString) + 1;
    pszOut = (char *)malloc(nLen);
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
                        pwszString, -1, pszOut, nLen, NULL, NULL);

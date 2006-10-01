@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.91 2006-10-01 15:47:39 victor Exp $ */
+/* $Id: nms_util.h,v 1.92 2006-10-01 16:01:09 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -370,8 +370,7 @@ extern "C"
                                                 int cchByteChar, WCHAR *pWideCharStr, 
                                                 int cchWideChar);
 #if !HAVE_USEABLE_WCHAR
-	int LIBNETXMS_EXPORTABLE __nx__wcslen(WCHAR *pStr);
-#define wcslen __nx__wcslen
+	int LIBNETXMS_EXPORTABLE nx_wcslen(WCHAR *pStr);
 #endif
 #endif	/* _WIN32 */
    WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(char *pszString);
@@ -426,6 +425,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.91  2006/10/01 15:47:39  victor
+More UNICODE fixes
+
 Revision 1.90  2006/10/01 15:26:28  victor
 Some UNICODE-related fixes
 
