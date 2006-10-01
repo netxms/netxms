@@ -93,6 +93,9 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char *sz
 	pConn = (MYSQL_CONN *)malloc(sizeof(MYSQL_CONN));
 	pConn->pMySQL = pMySQL;
 	pConn->mutexQueryLock = MutexCreate();
+
+   // Switch to UTF-8 encoding
+   mysql_query(pMySQL, "SET NAMES 'utf8'");
 	
 	return (DB_CONNECTION)pConn;
 }
@@ -114,15 +117,15 @@ extern "C" void EXPORT DrvDisconnect(MYSQL_CONN *pConn)
 
 
 //
-// Perform non-SELECT query
+// Perform actual non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(MYSQL_CONN *pConn, char *szQuery)
+static DWORD DrvQueryInternal(MYSQL_CONN *pConn, char *pszQuery)
 {
 	DWORD dwRet = DBERR_INVALID_HANDLE;
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
-	if (mysql_query(pConn->pMySQL, szQuery) == 0)
+	if (mysql_query(pConn->pMySQL, pszQuery) == 0)
 	{
 		dwRet = DBERR_SUCCESS;
 	}
@@ -140,7 +143,22 @@ extern "C" DWORD EXPORT DrvQuery(MYSQL_CONN *pConn, char *szQuery)
 	}
 
 	MutexUnlock(pConn->mutexQueryLock);
+	return dwRet;
+}
 
+
+//
+// Perform non-SELECT query
+//
+
+extern "C" DWORD EXPORT DrvQuery(MYSQL_CONN *pConn, WCHAR *pwszQuery)
+{
+	DWORD dwRet;
+   char *pszQueryUTF8;
+
+   pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
+   dwRet = DrvQueryInternal(pConn, pszQueryUTF8);
+   free(pszQueryUTF8);
 	return dwRet;
 }
 
@@ -149,18 +167,20 @@ extern "C" DWORD EXPORT DrvQuery(MYSQL_CONN *pConn, char *szQuery)
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, char *szQuery, DWORD *pdwError)
+extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError)
 {
 	DB_RESULT pResult = NULL;
-	
+   char *pszQueryUTF8;
+
 	if (pConn == NULL)
 	{
 		*pdwError = DBERR_INVALID_HANDLE;
 		return NULL;
 	}
 
+   pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
 	MutexLock(pConn->mutexQueryLock, INFINITE);
-	if (mysql_query(pConn->pMySQL, szQuery) == 0)
+	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
 	{
 		pResult = (DB_RESULT)mysql_store_result(pConn->pMySQL);
 		*pdwError = DBERR_SUCCESS;
@@ -179,8 +199,23 @@ extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, char *szQuery, DWORD *p
 	}
 
 	MutexUnlock(pConn->mutexQueryLock);
+   free(pszQueryUTF8);
 	
 	return pResult;
+}
+
+
+//
+// Get field length from result
+//
+
+extern "C" LONG EXPORT DrvGetFieldLength(DB_RESULT hResult, int iRow, int iColumn)
+{
+	MYSQL_ROW row;
+	
+	mysql_data_seek((MYSQL_RES *)hResult, iRow);
+	row = mysql_fetch_row((MYSQL_RES *)hResult);
+	return (row == NULL) ? -1 : strlen(row[iColumn]);
 }
 
 
@@ -188,13 +223,21 @@ extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, char *szQuery, DWORD *p
 // Get field value from result
 //
 
-extern "C" char EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int iColumn)
+extern "C" WCHAR EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int iColumn,
+                                     WCHAR *pBuffer, int nBufSize)
 {
 	MYSQL_ROW row;
+   WCHAR *pRet = NULL;
 	
 	mysql_data_seek((MYSQL_RES *)hResult, iRow);
 	row = mysql_fetch_row((MYSQL_RES *)hResult);
-	return (row == NULL) ? NULL : row[iColumn];
+	if (row != NULL)
+   {
+      MultiByteToWideChar(CP_UTF8, 0, row[iColumn], -1, pBuffer, nBufSize);
+      pBuffer[nBufSize - 1] = 0;
+      pRet = pBuffer;
+   }
+   return pRet;
 }
 
 
@@ -224,9 +267,11 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, char *szQuery, DWORD *pdwError)
+extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery,
+                                                 DWORD *pdwError)
 {
 	MYSQL_ASYNC_RESULT *pResult = NULL;
+   char *pszQueryUTF8;
 	
 	if (pConn == NULL)
 	{
@@ -234,8 +279,9 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, char *szQuer
 		return NULL;
 	}
 
+   pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
 	MutexLock(pConn->mutexQueryLock, INFINITE);
-	if (mysql_query(pConn->pMySQL, szQuery) == 0)
+	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
 	{
 		pResult = (MYSQL_ASYNC_RESULT *)malloc(sizeof(MYSQL_ASYNC_RESULT));
 		pResult->pConn = pConn;
@@ -272,6 +318,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, char *szQuer
 	{
 		MutexUnlock(pConn->mutexQueryLock);
 	}
+   free(pszQueryUTF8);
 
 	return pResult;
 }
@@ -325,8 +372,8 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
 // Get field from current row in async query result
 //
 
-extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
-                                         char *pBuffer, int iBufSize)
+extern "C" WCHAR EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
+                                          WCHAR *pBuffer, int iBufSize)
 {
 	int iLen;
 	
@@ -346,7 +393,10 @@ extern "C" char EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
 	// Now get column data
 	iLen = min((int)((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths[iColumn], iBufSize - 1);
 	if (iLen > 0)
-		memcpy(pBuffer, ((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow[iColumn], iLen);
+   {
+      MultiByteToWideChar(CP_UTF8, 0, ((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow[iColumn],
+                          iLen, pBuffer, iLen);
+   }
 	pBuffer[iLen] = 0;
 	
 	return pBuffer;
@@ -385,7 +435,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
 
 extern "C" DWORD EXPORT DrvBegin(MYSQL_CONN *pConn)
 {
-	return DrvQuery(pConn, "BEGIN");
+	return DrvQueryInternal(pConn, "BEGIN");
 }
 
 
@@ -395,7 +445,7 @@ extern "C" DWORD EXPORT DrvBegin(MYSQL_CONN *pConn)
 
 extern "C" DWORD EXPORT DrvCommit(MYSQL_CONN *pConn)
 {
-	return DrvQuery(pConn, "COMMIT");
+	return DrvQueryInternal(pConn, "COMMIT");
 }
 
 
@@ -405,7 +455,7 @@ extern "C" DWORD EXPORT DrvCommit(MYSQL_CONN *pConn)
 
 extern "C" DWORD EXPORT DrvRollback(MYSQL_CONN *pConn)
 {
-	return DrvQuery(pConn, "ROLLBACK");
+	return DrvQueryInternal(pConn, "ROLLBACK");
 }
 
 
