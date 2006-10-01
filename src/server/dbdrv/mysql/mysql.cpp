@@ -233,9 +233,12 @@ extern "C" WCHAR EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int iColumn,
 	row = mysql_fetch_row((MYSQL_RES *)hResult);
 	if (row != NULL)
    {
-      MultiByteToWideChar(CP_UTF8, 0, row[iColumn], -1, pBuffer, nBufSize);
-      pBuffer[nBufSize - 1] = 0;
-      pRet = pBuffer;
+		if (row[iColumn] != NULL)
+		{
+      	MultiByteToWideChar(CP_UTF8, 0, row[iColumn], -1, pBuffer, nBufSize);
+      	pBuffer[nBufSize - 1] = 0;
+      	pRet = pBuffer;
+		}
    }
    return pRet;
 }

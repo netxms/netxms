@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.92 2006-10-01 16:01:09 victor Exp $ */
+/* $Id: nms_util.h,v 1.93 2006-10-01 20:43:37 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -376,6 +376,7 @@ extern "C"
    WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(char *pszString);
    char LIBNETXMS_EXPORTABLE *MBStringFromWideString(WCHAR *pwszString);
    char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(WCHAR *pwszString);
+	void LIBNETXMS_EXPORTABLE SetDefaultCodepage(char *cp);
 
 #ifdef UNICODE
 INT64 LIBNETXMS_EXPORTABLE wcstoll(const WCHAR *nptr, WCHAR **endptr, int base);
@@ -425,6 +426,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.92  2006/10/01 16:01:09  victor
+Yet another Linux UNICODE fix
+
 Revision 1.91  2006/10/01 15:47:39  victor
 More UNICODE fixes
 

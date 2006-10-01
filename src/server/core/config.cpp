@@ -24,12 +24,20 @@
 
 
 //
+// Static data
+//
+
+static TCHAR m_szCodePage[256];
+
+
+//
 // Load and parse configuration file
 // Returns TRUE on success and FALSE on failure
 //
 
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
+   { "CodePage", CT_STRING, 0, 0, 256, 0, m_szCodePage },
    { "DBDriver", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver },
    { "DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams },
    { "DBLogin", CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin },
@@ -59,6 +67,7 @@ BOOL NXCORE_EXPORTABLE LoadConfig(void)
       {
          g_dwFlags &= ~AF_USE_EVENT_LOG;
       }
+		SetDefaultCodepage(m_szCodePage);
       bSuccess = TRUE;
    }
    return bSuccess;
