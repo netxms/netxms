@@ -508,7 +508,7 @@ typedef struct
 #define VID_CHILD_ID                ((DWORD)79)
 #define VID_IMAGE_ID                ((DWORD)80)
 #define VID_NUM_IMAGES              ((DWORD)81)
-//#define VID_IMAGE_LIST              ((DWORD)82)
+#define VID_COMMENTS                ((DWORD)82)
 #define VID_IMAGE_FILE_SIZE         ((DWORD)83)
 #define VID_IMAGE_FILE              ((DWORD)84)
 #define VID_PARAMETER               ((DWORD)85)

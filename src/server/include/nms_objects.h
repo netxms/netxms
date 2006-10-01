@@ -141,7 +141,8 @@ protected:
    DWORD m_dwId;
    DWORD m_dwTimeStamp;       // Last change time stamp
    DWORD m_dwRefCount;        // Number of references. Object can be destroyed only when this counter is zero
-   char m_szName[MAX_OBJECT_NAME];
+   TCHAR m_szName[MAX_OBJECT_NAME];
+   TCHAR *m_pszComments;      // User comments
    int m_iStatus;
    int m_iStatusCalcAlg;      // Status calculation algorithm
    int m_iStatusPropAlg;      // Status propagation algorithm
@@ -212,7 +213,7 @@ public:
    
    DWORD IpAddr(void) { return m_dwIpAddr; }
    DWORD Id(void) { return m_dwId; }
-   const char *Name(void) { return m_szName; }
+   const TCHAR *Name(void) { return m_szName; }
    int Status(void) { return m_iStatus; }
    int PropagatedStatus(void);
    DWORD TimeStamp(void) { return m_dwTimeStamp; }
@@ -246,7 +247,7 @@ public:
 
    void SetId(DWORD dwId) { m_dwId = dwId; Modify(); }
    void SetMgmtStatus(BOOL bIsManaged);
-   void SetName(char *pszName) { nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME); Modify(); }
+   void SetName(TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME); Modify(); }
    void ResetStatus(void) { m_iStatus = STATUS_UNKNOWN; Modify(); }
 
    virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);

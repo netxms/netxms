@@ -39,6 +39,7 @@ NetObj::NetObj()
    m_rwlockChildList = RWLockCreate();
    m_iStatus = STATUS_UNKNOWN;
    m_szName[0] = 0;
+   m_pszComments = NULL;
    m_bIsModified = FALSE;
    m_bIsDeleted = FALSE;
    m_bIsHidden = FALSE;
@@ -81,6 +82,7 @@ NetObj::~NetObj()
    if (m_pParentList != NULL)
       free(m_pParentList);
    delete m_pAccessList;
+   safe_free(m_pszComments);
 }
 
 
@@ -136,7 +138,7 @@ BOOL NetObj::LoadCommonProperties(void)
                             _T("inherit_access_rights,last_modified,status_calc_alg,")
                             _T("status_prop_alg,status_fixed_val,status_shift,")
                             _T("status_translation,status_single_threshold,")
-                            _T("status_thresholds FROM object_properties ")
+                            _T("status_thresholds,comments FROM object_properties ")
                             _T("WHERE object_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
@@ -156,6 +158,9 @@ BOOL NetObj::LoadCommonProperties(void)
          DBGetFieldByteArray(hResult, 0, 10, m_iStatusTranslation, 4, STATUS_WARNING);
          m_iStatusSingleThreshold = DBGetFieldLong(hResult, 0, 11);
          DBGetFieldByteArray(hResult, 0, 12, m_iStatusThresholds, 4, 50);
+         safe_free(m_pszComments);
+         m_pszComments = DBGetField(hResult, 0, 13, NULL, 0);
+         DecodeSQLString(m_pszComments);
          bResult = TRUE;
       }
       DBFreeResult(hResult);
@@ -170,7 +175,7 @@ BOOL NetObj::LoadCommonProperties(void)
 
 BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
 {
-   TCHAR szQuery[512], szTranslation[16], szThresholds[16];
+   TCHAR szQuery[16384], szTranslation[16], szThresholds[16], *pszEscComments;
    DB_RESULT hResult;
    BOOL bResult = FALSE;
    int i, j;
@@ -185,28 +190,39 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
          _stprintf(&szTranslation[j], _T("%02X"), (char)m_iStatusTranslation[i]);
          _stprintf(&szThresholds[j], _T("%02X"), (char)m_iStatusThresholds[i]);
       }
+      pszEscComments = EncodeSQLString(CHECK_NULL_EX(m_pszComments));
+      if (_tcslen(pszEscComments) > 15500)
+         pszEscComments[15500] = 0;
       if (DBGetNumRows(hResult) > 0)
-         _sntprintf(szQuery, 512, 
-                    _T("UPDATE object_properties SET name='%s',status=%d,"
-                       "is_deleted=%d,image_id=%d,inherit_access_rights=%d,"
-                       "last_modified=%d,status_calc_alg=%d,status_prop_alg=%d,"
-                       "status_fixed_val=%d,status_shift=%d,status_translation='%s',"
-                       "status_single_threshold=%d,status_thresholds='%s' WHERE object_id=%d"),
+      {
+         _sntprintf(szQuery, 16384, 
+                    _T("UPDATE object_properties SET name='%s',status=%d,")
+                    _T("is_deleted=%d,image_id=%d,inherit_access_rights=%d,")
+                    _T("last_modified=%d,status_calc_alg=%d,status_prop_alg=%d,")
+                    _T("status_fixed_val=%d,status_shift=%d,status_translation='%s',")
+                    _T("status_single_threshold=%d,status_thresholds='%s',")
+                    _T("comments='%s' WHERE object_id=%d"),
                     m_szName, m_iStatus, m_bIsDeleted, m_dwImageId,
                     m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
                     m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,
-                    szTranslation, m_iStatusSingleThreshold, szThresholds, m_dwId);
+                    szTranslation, m_iStatusSingleThreshold, szThresholds,
+                    pszEscComments, m_dwId);
+      }
       else
-         _sntprintf(szQuery, 512, 
-                    _T("INSERT INTO object_properties (object_id,name,status,is_deleted,"
-                       "image_id,inherit_access_rights,last_modified,status_calc_alg,"
-                       "status_prop_alg,status_fixed_val,status_shift,status_translation,"
-                       "status_single_threshold,status_thresholds) "
-                       "VALUES (%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,'%s')"),
+      {
+         _sntprintf(szQuery, 16384, 
+                    _T("INSERT INTO object_properties (object_id,name,status,is_deleted,")
+                    _T("image_id,inherit_access_rights,last_modified,status_calc_alg,")
+                    _T("status_prop_alg,status_fixed_val,status_shift,status_translation,")
+                    _T("status_single_threshold,status_thresholds,comments) ")
+                    _T("VALUES (%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,'%s','%s')"),
                     m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwImageId,
                     m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
                     m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,
-                    szTranslation, m_iStatusSingleThreshold, szThresholds);
+                    szTranslation, m_iStatusSingleThreshold, szThresholds,
+                    pszEscComments);
+      }
+      free(pszEscComments);
       DBFreeResult(hResult);
       bResult = DBQuery(hdb, szQuery);
    }
@@ -674,6 +690,7 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_STATUS_THRESHOLD_2, (WORD)m_iStatusThresholds[1]);
    pMsg->SetVariable(VID_STATUS_THRESHOLD_3, (WORD)m_iStatusThresholds[2]);
    pMsg->SetVariable(VID_STATUS_THRESHOLD_4, (WORD)m_iStatusThresholds[3]);
+   pMsg->SetVariable(VID_COMMENTS, CHECK_NULL_EX(m_pszComments));
    m_pAccessList->CreateMessage(pMsg);
 }
 
