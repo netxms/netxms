@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.190 2006-10-01 19:06:42 victor Exp $
+# $Id: configure.ac,v 1.191 2006-10-04 14:59:12 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -245,6 +245,9 @@ AC_ARG_WITH(agent,
 			;;
 		AIX)
 			SUBAGENT_DIRS="aix"
+			;;
+		HP-UX)
+			SUBAGENT_DIRS="hpux"
 			;;
 		*)
 			# unknown
@@ -849,6 +852,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/linux/Makefile
 	src/agent/subagents/sunos/Makefile
 	src/agent/subagents/aix/Makefile
+	src/agent/subagents/hpux/Makefile
 	src/agent/subagents/skeleton/Makefile
 	src/agent/subagents/freebsd/Makefile
 	src/agent/subagents/openbsd/Makefile

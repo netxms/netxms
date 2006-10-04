@@ -292,6 +292,15 @@ src/agent/subagents/freebsd/net.cpp -text
 src/agent/subagents/freebsd/net.h -text
 src/agent/subagents/freebsd/system.cpp -text
 src/agent/subagents/freebsd/system.h -text
+src/agent/subagents/hpux/Makefile.am -text
+src/agent/subagents/hpux/disk.cpp -text
+src/agent/subagents/hpux/disk.h -text
+src/agent/subagents/hpux/hpux.h -text
+src/agent/subagents/hpux/main.cpp -text
+src/agent/subagents/hpux/net.cpp -text
+src/agent/subagents/hpux/net.h -text
+src/agent/subagents/hpux/system.cpp -text
+src/agent/subagents/hpux/system.h -text
 src/agent/subagents/ipso/Makefile.am -text
 src/agent/subagents/ipso/disk.cpp -text
 src/agent/subagents/ipso/ipso.cpp -text
