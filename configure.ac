@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.191 2006-10-04 14:59:12 alk Exp $
+# $Id: configure.ac,v 1.192 2006-10-04 23:38:28 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -429,6 +429,7 @@ fi
 AC_HEADER_STDC
 AC_HEADER_STAT
 AC_HEADER_TIME
+AC_CHECK_HEADERS([stdarg.h])
 AC_CHECK_HEADERS([sys/int_types.h sys/time.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h net/nh.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])

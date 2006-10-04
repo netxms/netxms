@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.11 2006-10-01 19:06:43 victor Exp $ */
+/* $Id: unicode.cpp,v 1.12 2006-10-04 23:38:30 alk Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -119,7 +119,7 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags,
 		inbytes = ((cchWideChar == -1) ? wcslen(pWideCharStr) + 1 : cchWideChar) * sizeof(WCHAR);
 		outbuf = pByteStr;
 		outbytes = cchByteChar;
-		nRet = iconv(cd, &inbuf, &inbytes, &outbuf, &outbytes);
+		nRet = iconv(cd, (const char **)&inbuf, &inbytes, &outbuf, &outbytes);
 		iconv_close(cd);
 		if (nRet == -1)
 		{
@@ -194,7 +194,7 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags,
 		inbytes = (cchByteChar == -1) ? strlen(pByteStr) + 1 : cchByteChar;
 		outbuf = (char *)pWideCharStr;
 		outbytes = cchWideChar * sizeof(WCHAR);
-		nRet = iconv(cd, &inbuf, &inbytes, &outbuf, &outbytes);
+		nRet = iconv(cd, (const char **)&inbuf, &inbytes, &outbuf, &outbytes);
 		iconv_close(cd);
 		if (nRet == -1)
 		{

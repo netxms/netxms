@@ -45,6 +45,10 @@
 #define _CRT_SECURE_NO_DEPRECATE
 #endif
 
+#ifdef HAVE_STDARG_H
+# include <stdarg.h>
+#endif
+
 #include <unicode.h>
 #include <stdio.h>
 #include <string.h>
