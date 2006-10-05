@@ -50,8 +50,10 @@ TCHAR *g_pszSqlType[5][2] =
 // Static data
 //
 
+static TCHAR m_szCodePage[MAX_PATH] = "";
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
+   { "CodePage", CT_STRING, 0, 0, MAX_PATH, 0, m_szCodePage },
    { "DBDriver", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver },
    { "DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams },
    { "DBLogin", CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin },
@@ -406,6 +408,7 @@ int main(int argc, char *argv[])
       _tprintf(_T("Error loading configuration file\n"));
       return 2;
    }
+	SetDefaultCodepage(m_szCodePage);
 
    // Connect to database
    if (!DBInit(FALSE, FALSE, FALSE, NULL))
