@@ -205,7 +205,7 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
    switch(wParam)
    {
       case NX_NOTIFY_NEW_ALARM:
-         if ((iItem == -1) && (pAlarm->wIsAck == 0))
+         if ((iItem == -1) && (pAlarm->nState != ALARM_STATE_TERMINATED))
          {
             AddAlarm(pAlarm);
             //UpdateStatusBar();
@@ -219,7 +219,7 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
             PlayAlarmSound(pAlarm, TRUE, g_hSession, &appNotify.m_soundCfg);
          }
          break;
-      case NX_NOTIFY_ALARM_ACKNOWLEGED:
+      case NX_NOTIFY_ALARM_CHANGED:
          if (iItem != -1)
          {
             m_wndListCtrl.DeleteItem(iItem);
@@ -274,17 +274,16 @@ void CMainFrame::AddAlarm(NXC_ALARM *pAlarm)
    NXC_OBJECT *pObject;
 
    pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
-   iIdx = m_wndListCtrl.InsertItem(0x7FFFFFFF, g_szStatusTextSmall[pAlarm->wSeverity],
-                                   pAlarm->wSeverity);
+   iIdx = m_wndListCtrl.InsertItem(0x7FFFFFFF, g_szStatusTextSmall[pAlarm->nCurrentSeverity],
+                                   pAlarm->nCurrentSeverity);
    if (iIdx != -1)
    {
       m_wndListCtrl.SetItemData(iIdx, pAlarm->dwAlarmId);
       m_wndListCtrl.SetItemText(iIdx, 1, pObject->szName);
       m_wndListCtrl.SetItemText(iIdx, 2, pAlarm->szMessage);
-      ptm = localtime((const time_t *)&pAlarm->dwTimeStamp);
+      ptm = localtime((const time_t *)&pAlarm->dwLastChangeTime);
       strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);
       m_wndListCtrl.SetItemText(iIdx, 3, szBuffer);
-      m_wndListCtrl.SetItemText(iIdx, 4, pAlarm->wIsAck ? _T("X") : _T(""));
    }
 }
 

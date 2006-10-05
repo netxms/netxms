@@ -68,7 +68,7 @@ void CAlarmPopup::DrawContent(CDC &dc)
    dc.FillSolidRect(&m_rcClient, RGB(255, 255, 255));
 
    // Draw severity icon
-   g_imgListSeverity.Draw(&dc, m_pAlarm->wSeverity, CPoint(5, 5), ILD_TRANSPARENT);
+   g_imgListSeverity.Draw(&dc, m_pAlarm->nCurrentSeverity, CPoint(5, 5), ILD_TRANSPARENT);
 
    // Draw source name
    pObject = NXCFindObjectById(g_hSession, m_pAlarm->dwSourceObject);
