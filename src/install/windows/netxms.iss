@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.2.13-hf1
-AppVersion=0.2.13-hf1
+AppVerName=NetXMS 0.2.14-rc1
+AppVersion=0.2.14-rc1
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.2.13-hf1
+OutputBaseFilename=netxms-0.2.14-rc1
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -35,11 +35,16 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 ; Common files
 Source: "..\..\..\ChangeLog"; DestDir: "{app}\doc"; Flags: ignoreversion; Components: base
 Source: "..\..\libnetxms\Release\libnetxms.dll"; DestDir: "{app}\bin"; BeforeInstall: StopAllServices; Flags: ignoreversion; Components: base
+Source: "..\..\libnetxms\Release_UNICODE\libnetxmsw.dll"; DestDir: "{app}\bin"; BeforeInstall: StopAllServices; Flags: ignoreversion; Components: base
 Source: "..\..\libnxcscp\Release\libnxcscp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
+Source: "..\..\libnxcscp\Release_UNICODE\libnxcscpw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 ; Executables and DLLs shared between different components (server, console, etc.)
 Source: "..\..\libnxcl\Release\libnxcl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console websrv
+Source: "..\..\libnxcl\Release_UNICODE\libnxclw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console websrv
 Source: "..\..\libnxmap\Release\libnxmap.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console server websrv
+Source: "..\..\libnxmap\Release_UNICODE\libnxmapw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console server websrv
 Source: "..\..\libnxsnmp\Release\libnxsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
+Source: "..\..\libnxsnmp\Release_UNICODE\libnxsnmpw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
 Source: "..\..\libnxsl\Release\libnxsl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
 Source: "..\..\nxscript\Release\nxscript.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
 Source: "..\..\server\tools\nxconfig\Release\nxconfig.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server websrv
@@ -81,8 +86,9 @@ Source: "..\..\..\contrib\netxmsd.conf-dist"; DestDir: "{app}\etc"; Flags: ignor
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion; Components: server
 ; Console files
 Source: "..\..\console\nxuilib\Release\nxuilib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "..\..\console\nxuilib\Release_UNICODE\nxuilibw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\console\nxlexer\Release\nxlexer.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
-Source: "..\..\console\win32\Release\nxcon.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "..\..\console\win32\Release_UNICODE\nxcon.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\console\nxav\Release\nxav.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\console\nxnotify\Release\nxnotify.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 ; Web server files
@@ -94,6 +100,7 @@ Source: "..\..\nxhttpd\static\images\*.png"; DestDir: "{app}\var\www\images"; Fl
 Source: "..\..\nxhttpd\static\images\*.jpg"; DestDir: "{app}\var\www\images"; Flags: ignoreversion; Components: websrv
 ; Third party files
 Source: "Files\mfc42.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "Files\mfc42u.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\scilexer.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
 Source: "Files\ntwdblib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mssql

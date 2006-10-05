@@ -395,7 +395,7 @@ extern "C" WCHAR EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int iColumn,
    if ((iRow < 0) || (iRow >= ((MSDB_QUERY_RESULT *)hResult)->iNumRows) ||
        (iColumn < 0) || (iColumn >= ((MSDB_QUERY_RESULT *)hResult)->iNumCols))
       return NULL;
-   MultiByteToWideChar(CP_UTF8, 0, ((MSDB_QUERY_RESULT *)hResult)->pValues[iRow * ((MSDB_QUERY_RESULT *)hResult)->iNumCols + iColumn],
+   MultiByteToWideChar(CP_ACP, 0, ((MSDB_QUERY_RESULT *)hResult)->pValues[iRow * ((MSDB_QUERY_RESULT *)hResult)->iNumCols + iColumn],
                        -1, pBuffer, nBufSize);
    pBuffer[nBufSize - 1] = 0;
    return pBuffer;
@@ -531,7 +531,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
          case SQLCHAR:
          case SQLTEXT:
          case SQLBINARY:
-            nLen = MultiByteToWideChar(CP_UTF8, 0, (char *)pData,
+            nLen = MultiByteToWideChar(CP_ACP, 0, (char *)pData,
                                        dbdatlen(((MSDB_ASYNC_QUERY_RESULT *)hResult)->pConnection->hProcess, iColumn + 1),
                                        pBuffer, iBufSize);
             pBuffer[nLen] = 0;

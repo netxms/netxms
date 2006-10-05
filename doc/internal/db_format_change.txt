@@ -1,11 +1,34 @@
 *************
+* 47 ==> 48 *
+*************
+
+- Added table "policy_time_range_list":
+	CREATE TABLE policy_time_range_list
+	(
+		rule_id integer not null,
+		time_range_id integer not null,
+		PRIMARY KEY(rule_id,time_range_id)
+	) TABLE_TYPE;
+- Added table "time_ranges":
+	CREATE TABLE time_ranges
+	(
+		time_range_id integer not null,
+		wday_mask integer not null,	// Bits 0 .. 6 for each day of week
+		mday_mask integer not null,	// Bits 0 .. 30 for each day of month
+		month_mask integer not null,	// Bits 0 .. 11 for each month
+		time_range varchar(255) not null, // In format HHMMHHMM[,HHMMHHMM[,...]]
+		PRIMARY KEY(time_range_id)
+	) TABLE_TYPE;
+- Column "script" added to table "event_policy"
+
+
+*************
 * 46 ==> 47 *
 *************
 
 - Column "current_state" added to table "thresholds"
 - Column "comments" added to table "object_properties"
 - Column "discovery_flags" removed from table "nodes"
-- Column "script" added to table "event_policy"
 - Table "alarm_notes" redesigned:
 	CREATE TABLE alarm_notes
 	(

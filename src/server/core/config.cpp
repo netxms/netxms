@@ -67,7 +67,9 @@ BOOL NXCORE_EXPORTABLE LoadConfig(void)
       {
          g_dwFlags &= ~AF_USE_EVENT_LOG;
       }
+#ifndef _WIN32
 		SetDefaultCodepage(m_szCodePage);
+#endif
       bSuccess = TRUE;
    }
    return bSuccess;

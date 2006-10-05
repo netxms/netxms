@@ -559,6 +559,13 @@ CREATE TABLE policy_action_list
 	PRIMARY KEY(rule_id,action_id)
 ) TABLE_TYPE;
 
+CREATE TABLE policy_time_range_list
+(
+	rule_id integer not null,
+	time_range_id integer not null,
+	PRIMARY KEY(rule_id,time_range_id)
+) TABLE_TYPE;
+
 
 /*
 ** Time range objects

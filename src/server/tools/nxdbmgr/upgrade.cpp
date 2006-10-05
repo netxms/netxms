@@ -78,6 +78,27 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V47 to V48
+//
+
+static BOOL H_UpgradeFromV47(void)
+{
+   static TCHAR m_szBatch[] =
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='48' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V46 to V47
 //
 
@@ -2145,6 +2166,7 @@ static struct
    { 44, H_UpgradeFromV44 },
    { 45, H_UpgradeFromV45 },
    { 46, H_UpgradeFromV46 },
+   { 47, H_UpgradeFromV47 },
    { 0, NULL }
 };
 

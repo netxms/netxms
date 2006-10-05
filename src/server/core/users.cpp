@@ -543,7 +543,7 @@ DWORD DeleteUserFromDB(DWORD dwId)
             // Delete this user from all groups
             MutexLock(m_hMutexGroupAccess, INFINITE);
             for(j = 0; j < g_dwNumGroups; j++)
-               DeleteUserFromGroup(&g_pGroupList[i], dwId);
+               DeleteUserFromGroup(&g_pGroupList[j], dwId);
             MutexUnlock(m_hMutexGroupAccess);
             break;
          }
