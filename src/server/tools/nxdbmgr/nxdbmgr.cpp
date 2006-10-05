@@ -408,7 +408,9 @@ int main(int argc, char *argv[])
       _tprintf(_T("Error loading configuration file\n"));
       return 2;
    }
+#ifndef _WIN32
 	SetDefaultCodepage(m_szCodePage);
+#endif
 
    // Connect to database
    if (!DBInit(FALSE, FALSE, FALSE, NULL))
