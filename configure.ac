@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.193 2006-10-05 05:24:04 victor Exp $
+# $Id: configure.ac,v 1.194 2006-10-05 12:41:31 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -712,6 +712,28 @@ AC_RUN_IFELSE(
   [ AC_MSG_RESULT(no) ],
   [ AC_MSG_RESULT(no) ]
 )
+
+# taken from ZSH's configure
+# Check if iconv uses const in prototype declaration
+if test "x$ac_cv_lib_iconv_iconv" = "xyes"; then
+  AC_CACHE_CHECK(for iconv declaration, ac_cv_iconv_const,
+    [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdlib.h>
+        #include <iconv.h>]],
+        [[#ifdef __cplusplus
+          "C"
+          #endif
+          #if defined(__STDC__) || defined(__cplusplus)
+          size_t iconv (iconv_t cd, char * *inbuf, size_t *inbytesleft, char * *outbuf, size_t *outbytesleft);
+          #else
+          size_t iconv();
+          #endif]])],
+      [ac_cv_iconv_const=],
+      [ac_cv_iconv_const=const])])
+  AC_DEFINE_UNQUOTED([ICONV_CONST], $ac_cv_iconv_const,
+    [Define as const if the declaration of iconv() needs const.])
+fi
+
+
 
 if test $ac_cv_sizeof_wchar_t -eq 2; then
 	AC_DEFINE(HAVE_USEABLE_WCHAR_T, 1, Define to 1 if you have useable wchar_t)

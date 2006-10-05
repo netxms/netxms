@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.9 2006-03-05 20:50:18 alk Exp $ */
+/* $Id: system.cpp,v 1.10 2006-10-05 12:41:32 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -19,6 +19,8 @@
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
 **/
+
+#undef _XOPEN_SOURCE
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -382,6 +384,9 @@ LONG H_SourcePkgSupport(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/03/05 20:50:18  alk
+Process.Count() fixed, thanks to Boris for report
+
 Revision 1.8  2005/05/30 14:39:32  alk
 * process list now works via kvm, compatible with freebsd 5+
 
