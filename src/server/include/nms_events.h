@@ -107,7 +107,8 @@ private:
    DWORD *m_pdwEventList;
    DWORD m_dwNumActions;
    DWORD *m_pdwActionList;
-   char *m_pszComment;
+   TCHAR *m_pszComment;
+   TCHAR *m_pszScript;
 
    char m_szAlarmMessage[MAX_DB_STRING];
    int m_iAlarmSeverity;

@@ -84,9 +84,28 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 static BOOL H_UpgradeFromV47(void)
 {
    static TCHAR m_szBatch[] =
+      "ALTER TABLE event_policy ADD script $SQL:TEXT\n"
+      "UPDATE event_policy SET script='#00'\n"
       "<END>";
 
    if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE policy_time_range_list (")
+		              _T("rule_id integer not null,")
+		              _T("time_range_id integer not null,")
+		              _T("PRIMARY KEY(rule_id,time_range_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE time_ranges (")
+		              _T("time_range_id integer not null,")
+		              _T("wday_mask integer not null,")
+		              _T("mday_mask integer not null,")
+		              _T("month_mask integer not null,")
+		              _T("time_range varchar(255) not null,")
+		              _T("PRIMARY KEY(time_range_id))")))
       if (!g_bIgnoreErrors)
          return FALSE;
 

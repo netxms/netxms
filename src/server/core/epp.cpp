@@ -39,13 +39,14 @@ EPRule::EPRule(DWORD dwId)
    m_pdwActionList = NULL;
    m_pszComment = NULL;
    m_iAlarmSeverity = 0;
+   m_pszScript = NULL;
 }
 
 
 //
 // Construct event policy rule from database record
 // Assuming the following field order:
-// rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key
+// rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key,script
 //
 
 EPRule::EPRule(DB_RESULT hResult, int iRow)
@@ -61,6 +62,8 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
    DecodeSQLString(m_szAlarmKey);
    DBGetField(hResult, iRow, 6, m_szAlarmAckKey, MAX_DB_STRING);
    DecodeSQLString(m_szAlarmAckKey);
+   m_pszScript = DBGetField(hResult, iRow, 7, NULL, 0);
+   DecodeSQLString(m_pszScript);
 }
 
 
@@ -90,6 +93,8 @@ EPRule::EPRule(CSCPMessage *pMsg)
    pMsg->GetVariableStr(VID_ALARM_ACK_KEY, m_szAlarmAckKey, MAX_DB_STRING);
    pMsg->GetVariableStr(VID_ALARM_MESSAGE, m_szAlarmMessage, MAX_DB_STRING);
    m_iAlarmSeverity = pMsg->GetVariableShort(VID_ALARM_SEVERITY);
+
+   m_pszScript = pMsg->GetVariableStr(VID_SCRIPT);
 }
 
 
@@ -103,6 +108,7 @@ EPRule::~EPRule()
    safe_free(m_pdwEventList);
    safe_free(m_pdwActionList);
    safe_free(m_pszComment);
+   safe_free(m_pszScript);
 }
 
 
@@ -337,48 +343,55 @@ BOOL EPRule::LoadFromDB(void)
 
 void EPRule::SaveToDB(void)
 {
-   char *pszComment, *pszEscKey, *pszEscAck, *pszEscMessage, szQuery[4096];
+   TCHAR *pszComment, *pszEscKey, *pszEscAck, *pszEscMessage, *pszEscScript, *pszQuery;
    DWORD i;
+
+   pszQuery = (TCHAR *)malloc((_tcslen(CHECK_NULL(m_pszComment)) +
+                               _tcslen(CHECK_NULL(m_pszScript)) + 4096) * sizeof(TCHAR));
 
    // General attributes
    pszComment = EncodeSQLString(m_pszComment);
    pszEscKey = EncodeSQLString(m_szAlarmKey);
    pszEscAck = EncodeSQLString(m_szAlarmAckKey);
    pszEscMessage = EncodeSQLString(m_szAlarmMessage);
-   sprintf(szQuery, "INSERT INTO event_policy (rule_id,flags,comments,alarm_message,"
-                    "alarm_severity,alarm_key,alarm_ack_key) "
-                    "VALUES (%d,%d,'%s','%s',%d,'%s','%s')",
-           m_dwId, m_dwFlags, pszComment, pszEscMessage, m_iAlarmSeverity,
-           pszEscKey, pszEscAck);
+   pszEscScript = EncodeSQLString(m_pszScript);
+   _stprintf(pszQuery, _T("INSERT INTO event_policy (rule_id,flags,comments,alarm_message,")
+                       _T("alarm_severity,alarm_key,alarm_ack_key,script) ")
+                       _T("VALUES (%d,%d,'%s','%s',%d,'%s','%s','%s')"),
+             m_dwId, m_dwFlags, pszComment, pszEscMessage, m_iAlarmSeverity,
+             pszEscKey, pszEscAck, pszEscScript);
    free(pszComment);
    free(pszEscMessage);
    free(pszEscKey);
    free(pszEscAck);
-   DBQuery(g_hCoreDB, szQuery);
+   free(pszEscScript);
+   DBQuery(g_hCoreDB, pszQuery);
 
    // Actions
    for(i = 0; i < m_dwNumActions; i++)
    {
-      sprintf(szQuery, "INSERT INTO policy_action_list (rule_id,action_id) VALUES (%d,%d)",
-              m_dwId, m_pdwActionList[i]);
-      DBQuery(g_hCoreDB, szQuery);
+      _stprintf(pszQuery, _T("INSERT INTO policy_action_list (rule_id,action_id) VALUES (%d,%d)"),
+                m_dwId, m_pdwActionList[i]);
+      DBQuery(g_hCoreDB, pszQuery);
    }
 
    // Events
    for(i = 0; i < m_dwNumEvents; i++)
    {
-      sprintf(szQuery, "INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)",
-              m_dwId, m_pdwEventList[i]);
-      DBQuery(g_hCoreDB, szQuery);
+      _stprintf(pszQuery, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"),
+                m_dwId, m_pdwEventList[i]);
+      DBQuery(g_hCoreDB, pszQuery);
    }
 
    // Sources
    for(i = 0; i < m_dwNumSources; i++)
    {
-      sprintf(szQuery, "INSERT INTO policy_source_list (rule_id,object_id) VALUES (%d,%d)",
-              m_dwId, m_pdwSourceList[i]);
-      DBQuery(g_hCoreDB, szQuery);
+      _stprintf(pszQuery, _T("INSERT INTO policy_source_list (rule_id,object_id) VALUES (%d,%d)"),
+                m_dwId, m_pdwSourceList[i]);
+      DBQuery(g_hCoreDB, pszQuery);
    }
+
+   free(pszQuery);
 }
 
 
@@ -394,13 +407,14 @@ void EPRule::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_ALARM_KEY, m_szAlarmKey);
    pMsg->SetVariable(VID_ALARM_ACK_KEY, m_szAlarmAckKey);
    pMsg->SetVariable(VID_ALARM_MESSAGE, m_szAlarmMessage);
-   pMsg->SetVariable(VID_COMMENT, m_pszComment);
+   pMsg->SetVariable(VID_COMMENT, CHECK_NULL_EX(m_pszComment));
    pMsg->SetVariable(VID_NUM_ACTIONS, m_dwNumActions);
    pMsg->SetVariableToInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
    pMsg->SetVariable(VID_NUM_EVENTS, m_dwNumEvents);
    pMsg->SetVariableToInt32Array(VID_RULE_EVENTS, m_dwNumEvents, m_pdwEventList);
    pMsg->SetVariable(VID_NUM_SOURCES, m_dwNumSources);
    pMsg->SetVariableToInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
+   pMsg->SetVariable(VID_SCRIPT, CHECK_NULL_EX(m_pszScript));
 }
 
 
@@ -466,9 +480,9 @@ BOOL EventPolicy::LoadFromDB(void)
    DB_RESULT hResult;
    BOOL bSuccess = FALSE;
 
-   hResult = DBSelect(g_hCoreDB, "SELECT rule_id,flags,comments,alarm_message,"
-                                 "alarm_severity,alarm_key,alarm_ack_key "
-                                 "FROM event_policy ORDER BY rule_id");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT rule_id,flags,comments,alarm_message,")
+                                 _T("alarm_severity,alarm_key,alarm_ack_key,script ")
+                                 _T("FROM event_policy ORDER BY rule_id"));
    if (hResult != NULL)
    {
       DWORD i;
@@ -497,12 +511,14 @@ void EventPolicy::SaveToDB(void)
    DWORD i;
 
    ReadLock();
-   DBQuery(g_hCoreDB, "DELETE FROM event_policy");
-   DBQuery(g_hCoreDB, "DELETE FROM policy_action_list");
-   DBQuery(g_hCoreDB, "DELETE FROM policy_event_list");
-   DBQuery(g_hCoreDB, "DELETE FROM policy_source_list");
+   DBBegin(g_hCoreDB);
+   DBQuery(g_hCoreDB, _T("DELETE FROM event_policy"));
+   DBQuery(g_hCoreDB, _T("DELETE FROM policy_action_list"));
+   DBQuery(g_hCoreDB, _T("DELETE FROM policy_event_list"));
+   DBQuery(g_hCoreDB, _T("DELETE FROM policy_source_list"));
    for(i = 0; i < m_dwNumRules; i++)
       m_ppRuleList[i]->SaveToDB();
+   DBCommit(g_hCoreDB);
    Unlock();
 }
 
