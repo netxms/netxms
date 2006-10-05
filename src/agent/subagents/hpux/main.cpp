@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.1 2006-10-04 14:59:14 alk Exp $ */
+/* $Id: main.cpp,v 1.2 2006-10-05 00:34:24 alk Exp $ */
 
 /*
 ** NetXMS subagent for HP-UX
@@ -140,6 +140,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_STRING,	"System uname" },
 	{ "System.Uptime",                H_Uptime,          NULL,
 		DCI_DT_UINT,	"System uptime" },
+
+	{ "System.LoggedInCount",         H_W,               NULL,
+		DCI_DT_UINT,	"Number of logged in users" },
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
@@ -193,5 +196,8 @@ extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/10/04 14:59:14  alk
+initial version of HPUX subagent
+
 
 */

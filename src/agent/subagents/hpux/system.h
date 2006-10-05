@@ -1,4 +1,4 @@
-/* $Id: system.h,v 1.1 2006-10-04 14:59:14 alk Exp $ */
+/* $Id: system.h,v 1.2 2006-10-05 00:34:24 alk Exp $ */
 
 /* 
 ** NetXMS subagent for HP-UX
@@ -46,6 +46,7 @@ LONG H_CpuUsage(char *, char *, char *);
 LONG H_ProcessCount(char *, char *, char *);
 LONG H_MemoryInfo(char *, char *, char *);
 LONG H_SourcePkgSupport(char *, char *, char *);
+LONG H_W(char *, char *, char *);
 
 void StartCpuUsageCollector(void);
 void ShutdownCpuUsageCollector(void);
@@ -56,5 +57,8 @@ void ShutdownCpuUsageCollector(void);
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/10/04 14:59:14  alk
+initial version of HPUX subagent
+
 
 */

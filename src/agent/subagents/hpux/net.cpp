@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.1 2006-10-04 14:59:14 alk Exp $ */
+/* $Id: net.cpp,v 1.2 2006-10-05 00:34:24 alk Exp $ */
 
 /* 
 ** NetXMS subagent for HP-UX
@@ -296,9 +296,17 @@ LONG H_NetIfInfoFromIOCTL(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
+LONG H_NetIfInfoFromProc(char *pszParam, char *pArg, char *pValue)
+{
+	return SYSINFO_RC_ERROR;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/10/04 14:59:14  alk
+initial version of HPUX subagent
+
 
 */

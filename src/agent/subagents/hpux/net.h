@@ -1,4 +1,4 @@
-/* $Id: net.h,v 1.1 2006-10-04 14:59:14 alk Exp $ */
+/* $Id: net.h,v 1.2 2006-10-05 00:34:24 alk Exp $ */
 
 /* 
 ** NetXMS subagent for HP-UX
@@ -39,6 +39,7 @@ enum
 
 
 LONG H_NetIfInfoFromIOCTL(char *, char *, char *);
+LONG H_NetIfInfoFromProc(char *, char *, char *);
 LONG H_NetIpForwarding(char *, char *, char *);
 LONG H_NetArpCache(char *, char *, NETXMS_VALUES_LIST *);
 LONG H_NetRoutingTable(char *, char *, NETXMS_VALUES_LIST *);
@@ -50,5 +51,8 @@ LONG H_NetIfList(char *, char *, NETXMS_VALUES_LIST *);
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/10/04 14:59:14  alk
+initial version of HPUX subagent
+
 
 */

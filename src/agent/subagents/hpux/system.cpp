@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.1 2006-10-04 14:59:14 alk Exp $ */
+/* $Id: system.cpp,v 1.2 2006-10-05 00:34:24 alk Exp $ */
 
 /* 
 ** NetXMS subagent for HP-UX
@@ -28,6 +28,7 @@
 #include <sys/statvfs.h>
 #include <utmpx.h>
 #include <sys/pstat.h>
+#include <utmp.h>
 
 #include "system.h"
 
@@ -425,9 +426,39 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
+LONG H_W(char *pszParam, char *pArg, char *pValue)
+{
+	int nRet = SYSINFO_RC_ERROR;
+	FILE *f;
+	struct utmp rec;
+	int nCount = 0;
+
+	f = fopen(UTMP_FILE, "r");
+	if (f != NULL)
+	{
+		nRet = SYSINFO_RC_SUCCESS;
+		while(fread(&rec, sizeof(rec), 1, f) == 1)
+		{
+			if (rec.ut_type == USER_PROCESS)
+			{
+				nCount++;
+			}
+		}
+		
+		fclose(f);
+
+		ret_uint(pValue, nCount);
+	}
+
+	return nRet;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/10/04 14:59:14  alk
+initial version of HPUX subagent
+
 
 */
