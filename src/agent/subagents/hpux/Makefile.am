@@ -20,4 +20,4 @@ lib_LTLIBRARIES = libnsm_hpux.la
 libnsm_hpux_la_SOURCES = main.cpp system.cpp net.cpp disk.cpp
 libnsm_hpux_la_LDFLAGS = $(PTHREAD_LIBS) ../../../libnetxms/libnetxms.la
 
-EXTRA_DIST = 
+EXTRA_DIST = disk.h hpux.h net.h system.h

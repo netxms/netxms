@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.194 2006-10-05 12:41:31 alk Exp $
+# $Id: configure.ac,v 1.195 2006-10-05 14:44:17 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -321,7 +321,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql pgsql odbc mssql sqlite"
 	MODULES="libnxsnmp libnxsl server agent libnxmap libnxcl nxevent nxreport nxmibc console nxhttpd nxscript"
-	SUBAGENT_DIRS="linux freebsd openbsd sunos aix ipso"
+	SUBAGENT_DIRS="linux freebsd openbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
    TOP_LEVEL_MODULES="sql images"
    CONTRIB_MODULES="mibs backgrounds"
@@ -637,8 +637,8 @@ fi
 
 AC_CHECK_HEADERS([wchar.h iconv.h])
 AC_CHECK_SIZEOF(wchar_t)
-AC_CHECK_LIB(iconv, iconv)
-AC_CHECK_FUNCS([iconv])
+AC_CHECK_LIB(iconv, iconv, ac_found_iconv=yes)
+AC_CHECK_FUNCS(iconv, ac_found_iconv=yes, ac_found_iconv=no)
 
 AC_MSG_CHECKING(whether iconv supports UCS-2-INTERNAL)
 AC_RUN_IFELSE(
@@ -715,7 +715,7 @@ AC_RUN_IFELSE(
 
 # taken from ZSH's configure
 # Check if iconv uses const in prototype declaration
-if test "x$ac_cv_lib_iconv_iconv" = "xyes"; then
+if test "x$ac_found_iconv" = "xyes"; then
   AC_CACHE_CHECK(for iconv declaration, ac_cv_iconv_const,
     [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdlib.h>
         #include <iconv.h>]],
