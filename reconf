@@ -34,6 +34,12 @@ fi
 mkdir -p config
 touch README
 
+echo \*\*\* ACLOCAL: `which $ACLOCAL`
+echo \*\*\* AUTOCONF: `which $AUTOCONF`
+echo \*\*\* AUTOHEADER: `which $AUTOHEADER`
+echo \*\*\* AUTOMAKE: `which $AUTOMAKE`
+echo \*\*\* LIBTOOLIZE: `which $LIBTOOLIZE`
+
 rm -f config.cache &&
 [ ! -f config/ltmain.sh ] && $LIBTOOLIZE
 echo "- aclocal." &&

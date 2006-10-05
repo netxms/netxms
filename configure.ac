@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.195 2006-10-05 14:44:17 alk Exp $
+# $Id: configure.ac,v 1.196 2006-10-05 16:55:20 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -32,22 +32,22 @@ SUBAGENT_LIBS=""
 AC_LANG_PUSH([C++])
 
 AC_MSG_CHECKING(whether C++ compiler accepts -fno-rtti)
-OLD_CPPFLGAS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS -fno-rtti"
+OLD_CXXFLGAS="$CXXFLAGS"
+CXXFLAGS="$CXXFLAGS -fno-rtti"
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 	[ AC_MSG_RESULT(yes) ], 
 	[ 
-		CPPFLAGS="$OLD_CPPFLAGS"
+		CXXFLAGS="$OLD_CXXFLAGS"
 		AC_MSG_RESULT(no)
 	])
 
 AC_MSG_CHECKING(whether C++ compiler accepts -fno-exceptions)
-OLD_CPPFLGAS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS -fno-exceptions"
+OLD_CXXFLGAS="$CXXFLAGS"
+CXXFLAGS="$CXXFLAGS -fno-exceptions"
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 	[ AC_MSG_RESULT(yes) ], 
 	[ 
-		CPPFLAGS="$OLD_CPPFLAGS"
+		CXXFLAGS="$OLD_CXXFLAGS"
 		AC_MSG_RESULT(no)
 	])
 
