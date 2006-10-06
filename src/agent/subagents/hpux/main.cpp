@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.3 2006-10-05 12:41:32 alk Exp $ */
+/* $Id: main.cpp,v 1.4 2006-10-06 14:06:11 victor Exp $ */
 
 /*
 ** NetXMS subagent for HP-UX
@@ -170,7 +170,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_INIT(AIX)
+DECLARE_SUBAGENT_INIT(HPUX)
 {
 	StartCpuUsageCollector();
 
@@ -196,6 +196,11 @@ extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/10/05 12:41:32  alk
+generic: iconv - const detection added
+hpux: System.LoggedInCount renamed to System.ConnectedUsers
+freebsd: _XOPEN_SOURCE fixed
+
 Revision 1.2  2006/10/05 00:34:24  alk
 HPUX: minor cleanup; added System.LoggedInCount (W(1) | wc -l equivalent)
 
