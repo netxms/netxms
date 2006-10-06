@@ -1,13 +1,14 @@
-# $Id: configure.ac,v 1.196 2006-10-05 16:55:20 alk Exp $
+# $Id: configure.ac,v 1.197 2006-10-06 13:34:43 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
 
-AC_INIT([NetXMS], [0.2.14-rc1], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.14-rc2], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR([config])
 AM_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
 
+ALL_STATIC_FLAG=""
 
 # --------------------------------------------------------------------------
 # checks for programs.
@@ -263,8 +264,9 @@ AC_ARG_WITH(static-agent,
    MODULES="$MODULES agent"
    CFLAGS="$CFLAGS -D_STATIC_AGENT"
    CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT"
-   LDFLAGS="$LDFLAGS -all-static"
-#   STATIC_SUBAGENT_LIST="ping portcheck"
+   LDFLAGS="$LDFLAGS"
+   ALL_STATIC_FLAG="-all-static"
+   #STATIC_SUBAGENT_LIST="ping portcheck"
 	case `uname -s` in
 		Linux)
 			SUBAGENT_DIRS="linux"
@@ -290,6 +292,11 @@ AC_ARG_WITH(static-agent,
 			SUBAGENT_DIRS="aix"
 			SUBAGENT_LIBS="../subagents/aix/libnsm_aix.la"
 			STATIC_SUBAGENT_LIST="aix $STATIC_SUBAGENT_LIST"
+			;;
+		HP-UX)
+			SUBAGENT_DIRS="hpux"
+			SUBAGENT_LIBS="../subagents/hpux/libnsm_hpux.la"
+			STATIC_SUBAGENT_LIST="hpux $STATIC_SUBAGENT_LIST"
 			;;
 		*)
 			# unknown
@@ -738,6 +745,11 @@ fi
 if test $ac_cv_sizeof_wchar_t -eq 2; then
 	AC_DEFINE(HAVE_USEABLE_WCHAR_T, 1, Define to 1 if you have useable wchar_t)
 fi
+
+# --------------------------------------------------------------------------
+# variables
+
+AC_SUBST(ALL_STATIC_FLAG)
 
 # misc
 CPPFLAGS="$CPPFLAGS -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
