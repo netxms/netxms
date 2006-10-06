@@ -143,7 +143,7 @@ TCHAR *BuildSymbolicOIDString(SNMP_MIBObject *pNode, DWORD dwInstance)
          dwSize += _tcslen(pszSubIdList[dwPos]) + 1;
          dwPos++;
       }
-      pszBuffer = (TCHAR *)malloc(dwSize + 16);
+      pszBuffer = (TCHAR *)malloc((dwSize + 16) * sizeof(TCHAR));
       for(iBufPos = 0; dwPos > 0;)
       {
          iBufPos += _stprintf(&pszBuffer[iBufPos], _T(".%s"), pszSubIdList[--dwPos]);
@@ -184,7 +184,7 @@ TCHAR *TranslateUNIXText(const TCHAR *pszText)
       if (*ptr == _T('\n'))
          n++;
 
-   pDst = (TCHAR *)malloc(_tcslen(pszText) + n + 1);
+   pDst = (TCHAR *)malloc((_tcslen(pszText) + n + 1) * sizeof(TCHAR));
    for(ptr = pszText, dptr = pDst; *ptr != 0; ptr++)
       if (*ptr == _T('\n'))
       {
