@@ -32,6 +32,7 @@ Threshold::Threshold(DCItem *pRelatedItem)
    m_dwId = 0;
    m_dwItemId = pRelatedItem->Id();
    m_dwEventCode = EVENT_THRESHOLD_REACHED;
+   m_dwRearmEventCode = EVENT_THRESHOLD_REARMED;
    m_iFunction = F_LAST;
    m_iOperation = OP_EQ;
    m_iDataType = pRelatedItem->DataType();
@@ -50,6 +51,7 @@ Threshold::Threshold(Threshold *pSrc)
    m_dwId = pSrc->m_dwId;
    m_dwItemId = pSrc->m_dwItemId;
    m_dwEventCode = pSrc->m_dwEventCode;
+   m_dwRearmEventCode = pSrc->m_dwRearmEventCode;
    m_value = pSrc->Value();
    m_iFunction = pSrc->m_iFunction;
    m_iOperation = pSrc->m_iOperation;
@@ -64,7 +66,8 @@ Threshold::Threshold(Threshold *pSrc)
 // Constructor for creating object from database
 // This constructor assumes that SELECT query look as following:
 // SELECT threshold_id,fire_value,rearm_value,check_function,check_operation,
-//        parameter_1,parameter_2,event_code,current_state FROM thresholds
+//        parameter_1,parameter_2,event_code,current_state,
+//        rearm_event_code FROM thresholds
 //
 
 Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
@@ -74,7 +77,10 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
    m_dwId = DBGetFieldULong(hResult, iRow, 0);
    m_dwItemId = pRelatedItem->Id();
    m_dwEventCode = DBGetFieldULong(hResult, iRow, 7);
-   m_value = DBGetField(hResult, iRow, 1, szBuffer, MAX_DB_STRING);
+   m_dwRearmEventCode = DBGetFieldULong(hResult, iRow, 9);
+   DBGetField(hResult, iRow, 1, szBuffer, MAX_DB_STRING);
+   DecodeSQLString(szBuffer);
+   m_value = szBuffer;
    m_iFunction = (BYTE)DBGetFieldLong(hResult, iRow, 3);
    m_iOperation = (BYTE)DBGetFieldLong(hResult, iRow, 4);
    m_iDataType = pRelatedItem->DataType();
@@ -109,12 +115,12 @@ void Threshold::CreateId(void)
 
 BOOL Threshold::SaveToDB(DB_HANDLE hdb, DWORD dwIndex)
 {
-   char szQuery[512];
+   TCHAR *pszEscValue, szQuery[512];
    DB_RESULT hResult;
    BOOL bNewObject = TRUE;
 
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT threshold_id FROM thresholds WHERE threshold_id=%d", m_dwId);
+   _stprintf(szQuery, _T("SELECT threshold_id FROM thresholds WHERE threshold_id=%d"), m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -124,19 +130,23 @@ BOOL Threshold::SaveToDB(DB_HANDLE hdb, DWORD dwIndex)
    }
 
    // Prepare and execute query
+   pszEscValue = EncodeSQLString(m_value.String());
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO thresholds (threshold_id,item_id,fire_value,rearm_value,"
                        "check_function,check_operation,parameter_1,parameter_2,event_code,"
-                       "sequence_number,current_state) VALUES "
-                       "(%d,%d,'%s','',%d,%d,%d,%d,%d,%d,%d)", 
-              m_dwId, m_dwItemId, m_value.String(), m_iFunction, m_iOperation, m_iParam1,
-              m_iParam2, m_dwEventCode, dwIndex, m_bIsReached);
+                       "sequence_number,current_state,rearm_event_code) VALUES "
+                       "(%d,%d,'%s','#00',%d,%d,%d,%d,%d,%d,%d,%d)", 
+              m_dwId, m_dwItemId, pszEscValue, m_iFunction, m_iOperation, m_iParam1,
+              m_iParam2, m_dwEventCode, dwIndex, m_bIsReached, m_dwRearmEventCode);
    else
       sprintf(szQuery, "UPDATE thresholds SET item_id=%d,fire_value='%s',check_function=%d,"
                        "check_operation=%d,parameter_1=%d,parameter_2=%d,event_code=%d,"
-                       "sequence_number=%d,current_state=%d WHERE threshold_id=%d",
-              m_dwItemId, m_value.String(), m_iFunction, m_iOperation, m_iParam1,
-              m_iParam2, m_dwEventCode, dwIndex, m_bIsReached, m_dwId);
+                       "sequence_number=%d,current_state=%d,"
+                       "rearm_event_code=%d WHERE threshold_id=%d",
+              m_dwItemId, pszEscValue, m_iFunction, m_iOperation, m_iParam1,
+              m_iParam2, m_dwEventCode, dwIndex, m_bIsReached,
+              m_dwRearmEventCode, m_dwId);
+   free(pszEscValue);
    return DBQuery(hdb, szQuery);
 }
 
@@ -343,6 +353,7 @@ void Threshold::CreateMessage(DCI_THRESHOLD *pData)
 {
    pData->dwId = htonl(m_dwId);
    pData->dwEvent = htonl(m_dwEventCode);
+   pData->dwRearmEvent = htonl(m_dwRearmEventCode);
    pData->wFunction = htons((WORD)m_iFunction);
    pData->wOperation = htons((WORD)m_iOperation);
    pData->dwArg1 = htonl(m_iParam1);
@@ -390,6 +401,7 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
 #endif
 
    m_dwEventCode = ntohl(pData->dwEvent);
+   m_dwRearmEventCode = ntohl(pData->dwRearmEvent);
    m_iFunction = (BYTE)ntohs(pData->wFunction);
    m_iOperation = (BYTE)ntohs(pData->wOperation);
    m_iParam1 = ntohl(pData->dwArg1);

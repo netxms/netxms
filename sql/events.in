@@ -194,7 +194,8 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'Parameters:#0D#0A' CONCAT
 		'   1) Parameter name#0D#0A' CONCAT
 		'   2) Item description#0D#0A' CONCAT
-		'   3) Data collection item ID'
+		'   3) Data collection item ID#0D#0A' CONCAT
+		'   4) Instance'
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(

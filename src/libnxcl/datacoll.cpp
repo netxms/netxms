@@ -108,6 +108,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_SESSION hSession, NXC_DCI_LIST *pIt
          pItemList->pItems[pItemList->dwNumItems].iAdvSchedule = 0;
          pItemList->pItems[pItemList->dwNumItems].dwNumSchedules = 0;
          pItemList->pItems[pItemList->dwNumItems].ppScheduleList = NULL;
+         pItemList->pItems[pItemList->dwNumItems].iProcessAllThresholds = 0;
          pItemList->dwNumItems++;
       }
       delete pResponse;
@@ -147,6 +148,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
    msg.SetVariable(VID_DESCRIPTION, pItem->szDescription);
    msg.SetVariable(VID_INSTANCE, pItem->szInstance);
    msg.SetVariable(VID_DCI_FORMULA, pItem->pszFormula);
+   msg.SetVariable(VID_ALL_THRESHOLDS, (WORD)pItem->iProcessAllThresholds);
    msg.SetVariable(VID_ADV_SCHEDULE, (WORD)pItem->iAdvSchedule);
    if (pItem->iAdvSchedule)
    {
@@ -163,6 +165,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
    {
       dct.dwId = htonl(pItem->pThresholdList[i].dwId);
       dct.dwEvent = htonl(pItem->pThresholdList[i].dwEvent);
+      dct.dwRearmEvent = htonl(pItem->pThresholdList[i].dwRearmEvent);
       dct.dwArg1 = htonl(pItem->pThresholdList[i].dwArg1);
       dct.dwArg2 = htonl(pItem->pThresholdList[i].dwArg2);
       dct.wFunction = htons(pItem->pThresholdList[i].wFunction);

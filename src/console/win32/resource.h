@@ -270,6 +270,7 @@
 #define IDC_EDIT_PASSWD1                1055
 #define IDC_EDIT_PASSWD2                1056
 #define IDC_BUTTON_SELECT               1062
+#define IDC_BUTTON_SELECT_REARM_EVENT   1063
 #define IDC_EDIT_INTERVAL               1064
 #define IDC_EDIT_RETENTION              1065
 #define IDC_RADIO_ACTIVE                1066
@@ -362,6 +363,7 @@
 #define IDC_BUTTON_CREATE               1166
 #define IDC_BUTTON_CHECK                1166
 #define IDC_EDIT_EVENT                  1167
+#define IDC_EDIT_REARM_EVENT            1168
 #define IDC_POLL_PROGRESS               1169
 #define IDC_EDIT_MSG                    1170
 #define IDC_CHECK_SAVE                  1172
@@ -538,6 +540,7 @@
 #define IDC_SPIN_POS                    1382
 #define IDC_CHECK_UNMANAGED             1383
 #define IDC_CHECK_ICMP                  1386
+#define IDC_CHECK_ALL_THRESHOLDS        1388
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -769,8 +772,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        334
-#define _APS_NEXT_COMMAND_VALUE         33041
-#define _APS_NEXT_CONTROL_VALUE         1388
+#define _APS_NEXT_COMMAND_VALUE         33042
+#define _APS_NEXT_CONTROL_VALUE         1389
 #define _APS_NEXT_SYMED_VALUE           128
 #endif
 #endif

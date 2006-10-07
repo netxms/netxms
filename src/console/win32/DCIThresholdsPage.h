@@ -31,6 +31,7 @@ public:
 	CButton	m_wndButtonUp;
 	CListCtrl	m_wndListCtrl;
 	CString	m_strInstance;
+	BOOL	m_bAllThresholds;
 	//}}AFX_DATA
 
 

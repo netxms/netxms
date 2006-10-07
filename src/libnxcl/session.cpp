@@ -386,6 +386,7 @@ void NXCL_Session::ProcessDCI(CSCPMessage *pMsg)
             m_pItemList->pItems[i].iSource = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
             m_pItemList->pItems[i].iStatus = (BYTE)pMsg->GetVariableShort(VID_DCI_STATUS);
             m_pItemList->pItems[i].iDeltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
+            m_pItemList->pItems[i].iProcessAllThresholds = (BYTE)pMsg->GetVariableShort(VID_ALL_THRESHOLDS);
             m_pItemList->pItems[i].iAdvSchedule = (BYTE)pMsg->GetVariableShort(VID_ADV_SCHEDULE);
             m_pItemList->pItems[i].pszFormula = pMsg->GetVariableStr(VID_DCI_FORMULA);
             pMsg->GetVariableStr(VID_NAME, m_pItemList->pItems[i].szName, MAX_ITEM_NAME);
@@ -405,6 +406,7 @@ void NXCL_Session::ProcessDCI(CSCPMessage *pMsg)
                pMsg->GetVariableBinary(dwId, (BYTE *)&dct, sizeof(DCI_THRESHOLD));
                m_pItemList->pItems[i].pThresholdList[j].dwId = ntohl(dct.dwId);
                m_pItemList->pItems[i].pThresholdList[j].dwEvent = ntohl(dct.dwEvent);
+               m_pItemList->pItems[i].pThresholdList[j].dwRearmEvent = ntohl(dct.dwRearmEvent);
                m_pItemList->pItems[i].pThresholdList[j].dwArg1 = ntohl(dct.dwArg1);
                m_pItemList->pItems[i].pThresholdList[j].dwArg2 = ntohl(dct.dwArg2);
                m_pItemList->pItems[i].pThresholdList[j].wFunction = ntohs(dct.wFunction);

@@ -1,4 +1,12 @@
 *************
+* 48 ==> 49 *
+*************
+
+- Column "rearm_event_code" added to table "thresholds"
+- Column "all_thresholds" added to table "items"
+
+
+*************
 * 47 ==> 48 *
 *************
 

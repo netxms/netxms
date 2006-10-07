@@ -14,12 +14,14 @@ class CThresholdDlg : public CDialog
 {
 // Construction
 public:
+	DWORD m_dwRearmEventId;
 	DWORD m_dwEventId;
 	CThresholdDlg(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
 	//{{AFX_DATA(CThresholdDlg)
 	enum { IDD = IDD_THRESHOLD };
+	CEdit	m_wndRearmEventName;
 	CEdit	m_wndEventName;
 	CStatic	m_wndStaticSamples;
 	CStatic	m_wndStaticFor;
@@ -48,6 +50,7 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSelchangeComboFunction();
 	afx_msg void OnButtonSelect();
+	afx_msg void OnButtonSelectRearmEvent();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

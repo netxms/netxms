@@ -985,6 +985,7 @@ typedef struct
 {
    DWORD dwId;
    DWORD dwEvent;
+   DWORD dwRearmEvent;
    WORD wFunction;
    WORD wOperation;
    DWORD dwArg1;
@@ -1017,6 +1018,7 @@ typedef struct
    BYTE iStatus;
    BYTE iDeltaCalculation;
    BYTE iAdvSchedule;
+   BYTE iProcessAllThresholds;
    DWORD dwNumThresholds;
    NXC_DCI_THRESHOLD *pThresholdList;
    TCHAR *pszFormula;

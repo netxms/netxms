@@ -57,6 +57,7 @@ DCItem::DCItem()
    m_dwNumSchedules = 0;
    m_ppScheduleList = NULL;
    m_tLastCheck = 0;
+   m_iProcessAllThresholds = 0;
 }
 
 
@@ -108,6 +109,8 @@ DCItem::DCItem(const DCItem *pSrc)
       m_ppThresholdList[i] = new Threshold(pSrc->m_ppThresholdList[i]);
       m_ppThresholdList[i]->CreateId();
    }
+
+   m_iProcessAllThresholds = pSrc->m_iProcessAllThresholds;
 }
 
 
@@ -116,7 +119,7 @@ DCItem::DCItem(const DCItem *pSrc)
 // Assumes that fields in SELECT query are in following order:
 // item_id,name,source,datatype,polling_interval,retention_time,status,
 // delta_calculation,transformation,template_id,description,instance,
-// template_item_id,adv_schedule
+// template_item_id,adv_schedule,all_thresholds
 //
 
 DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
@@ -158,6 +161,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_bCacheLoaded = FALSE;
    m_tLastCheck = 0;
    m_iAdvSchedule = (BYTE)DBGetFieldLong(hResult, iRow, 13);
+   m_iProcessAllThresholds = (BYTE)DBGetFieldLong(hResult, iRow, 14);
 
    if (m_iAdvSchedule)
    {
@@ -295,8 +299,9 @@ BOOL DCItem::LoadThresholdsFromDB(void)
    BOOL bResult = FALSE;
 
    sprintf(szQuery, "SELECT threshold_id,fire_value,rearm_value,check_function,"
-                    "check_operation,parameter_1,parameter_2,event_code,current_state "
-                    "FROM thresholds WHERE item_id=%d ORDER BY sequence_number", m_dwId);
+                    "check_operation,parameter_1,parameter_2,event_code,current_state,"
+                    "rearm_event_code FROM thresholds WHERE item_id=%d "
+                    "ORDER BY sequence_number", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -347,23 +352,25 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO items (item_id,node_id,template_id,name,description,source,"
                        "datatype,polling_interval,retention_time,status,delta_calculation,"
-                       "transformation,instance,template_item_id,adv_schedule)"
-                       " VALUES (%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,"
-                       "%d,'%s','%s',%d,%d)",
+                       "transformation,instance,template_item_id,adv_schedule,"
+                       "all_thresholds) VALUES (%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,"
+                       "%d,'%s','%s',%d,%d,%d)",
                        m_dwId, (m_pNode == NULL) ? (DWORD)0 : m_pNode->Id(), m_dwTemplateId,
                        pszEscName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation,
-                       pszEscFormula, pszEscInstance, m_dwTemplateItemId, m_iAdvSchedule);
+                       pszEscFormula, pszEscInstance, m_dwTemplateItemId,
+                       m_iAdvSchedule, m_iProcessAllThresholds);
    else
       sprintf(szQuery, "UPDATE items SET node_id=%d,template_id=%d,name='%s',source=%d,"
                        "datatype=%d,polling_interval=%d,retention_time=%d,status=%d,"
                        "delta_calculation=%d,transformation='%s',description='%s',"
-                       "instance='%s',template_item_id=%d,adv_schedule=%d WHERE item_id=%d",
+                       "instance='%s',template_item_id=%d,adv_schedule=%d,"
+                       "all_thresholds=%d WHERE item_id=%d",
                        (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
                        pszEscName, m_iSource, m_iDataType, m_iPollingInterval,
                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula,
                        pszEscDescr, pszEscInstance, m_dwTemplateItemId,
-                       m_iAdvSchedule, m_dwId);
+                       m_iAdvSchedule, m_iProcessAllThresholds, m_dwId);
    bResult = DBQuery(hdb, szQuery);
    free(pszEscName);
    free(pszEscFormula);
@@ -463,14 +470,16 @@ void DCItem::CheckThresholds(ItemValue &value)
             PostEvent(m_ppThresholdList[i]->EventCode(), m_pNode->Id(), "ssssis", m_szName,
                       m_szDescription, m_ppThresholdList[i]->StringValue(), 
                       (const char *)checkValue, m_dwId, m_szInstance);
-            i = m_dwNumThresholds;  // Stop processing
+            if (!m_iProcessAllThresholds)
+               i = m_dwNumThresholds;  // Stop processing
             break;
          case THRESHOLD_REARMED:
-            PostEvent(EVENT_THRESHOLD_REARMED, m_pNode->Id(), "ssi", m_szName, 
-                      m_szDescription, m_dwId);
+            PostEvent(m_ppThresholdList[i]->RearmEventCode(), m_pNode->Id(), "ssis", m_szName, 
+                      m_szDescription, m_dwId, m_szInstance);
             break;
          case NO_ACTION:
-            if (m_ppThresholdList[i]->IsReached())
+            if ((m_ppThresholdList[i]->IsReached()) &&
+                (!m_iProcessAllThresholds))
                i = m_dwNumThresholds;  // Threshold condition still true, stop processing
             break;
       }
@@ -500,6 +509,7 @@ void DCItem::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_DCI_STATUS, (WORD)m_iStatus);
    pMsg->SetVariable(VID_DCI_DELTA_CALCULATION, (WORD)m_iDeltaCalculation);
    pMsg->SetVariable(VID_DCI_FORMULA, CHECK_NULL_EX(m_pszFormula));
+   pMsg->SetVariable(VID_ALL_THRESHOLDS, (WORD)m_iProcessAllThresholds);
    pMsg->SetVariable(VID_NUM_THRESHOLDS, m_dwNumThresholds);
    for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < m_dwNumThresholds; i++, dwId++)
    {
@@ -557,6 +567,7 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
    m_iRetentionTime = pMsg->GetVariableLong(VID_RETENTION_TIME);
    m_iStatus = (BYTE)pMsg->GetVariableShort(VID_DCI_STATUS);
    m_iDeltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
+   m_iProcessAllThresholds = (BYTE)pMsg->GetVariableShort(VID_ALL_THRESHOLDS);
    pszStr = pMsg->GetVariableStr(VID_DCI_FORMULA);
    NewFormula(pszStr);
    free(pszStr);

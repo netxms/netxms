@@ -23,6 +23,7 @@ CDCIThresholdsPage::CDCIThresholdsPage() : CPropertyPage(CDCIThresholdsPage::IDD
 {
 	//{{AFX_DATA_INIT(CDCIThresholdsPage)
 	m_strInstance = _T("");
+	m_bAllThresholds = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -41,6 +42,7 @@ void CDCIThresholdsPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST_THRESHOLDS, m_wndListCtrl);
 	DDX_Text(pDX, IDC_EDIT_INSTANCE, m_strInstance);
 	DDV_MaxChars(pDX, m_strInstance, 255);
+	DDX_Check(pDX, IDC_CHECK_ALL_THRESHOLDS, m_bAllThresholds);
 	//}}AFX_DATA_MAP
 }
 
@@ -176,6 +178,7 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
    dlg.m_iOperation = pThreshold->wOperation;
    dlg.m_dwArg1 = pThreshold->dwArg1;
    dlg.m_dwEventId = pThreshold->dwEvent;
+   dlg.m_dwRearmEventId = pThreshold->dwRearmEvent;
    switch(g_nCurrentDCIDataType)
    {
       case DCI_DT_INT:
@@ -208,6 +211,7 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
       pThreshold->wFunction = (WORD)dlg.m_iFunction;
       pThreshold->wOperation = (WORD)dlg.m_iOperation;
       pThreshold->dwEvent = dlg.m_dwEventId;
+      pThreshold->dwRearmEvent = dlg.m_dwRearmEventId;
       switch(g_nCurrentDCIDataType)
       {
          case DCI_DT_INT:

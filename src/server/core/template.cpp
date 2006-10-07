@@ -271,7 +271,8 @@ void Template::LoadItemsFromDB(void)
 
    sprintf(szQuery, "SELECT item_id,name,source,datatype,polling_interval,retention_time,"
                     "status,delta_calculation,transformation,template_id,description,"
-                    "instance,template_item_id,adv_schedule FROM items WHERE node_id=%d", m_dwId);
+                    "instance,template_item_id,adv_schedule,all_thresholds "
+                    "FROM items WHERE node_id=%d", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
 
    if (hResult != 0)

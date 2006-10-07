@@ -97,6 +97,7 @@ private:
    DWORD m_dwId;             // Unique threshold id
    DWORD m_dwItemId;         // Related item id
    DWORD m_dwEventCode;      // Event code to be generated
+   DWORD m_dwRearmEventCode;
    ItemValue m_value;
    BYTE m_iFunction;          // Function code
    BYTE m_iOperation;         // Comparision operation code
@@ -119,6 +120,7 @@ public:
 
    DWORD Id(void) { return m_dwId; }
    DWORD EventCode(void) { return m_dwEventCode; }
+   DWORD RearmEventCode(void) { return m_dwRearmEventCode; }
    const char *StringValue(void) { return m_value.String(); }
    BOOL IsReached(void) { return m_bIsReached; }
 
@@ -157,6 +159,7 @@ private:
    BYTE m_iStatus;            // Item status: active, disabled or not supported
    BYTE m_iBusy;              // 1 when item is queued for polling, 0 if not
    BYTE m_iAdvSchedule;       // 1 if item has advanced schedule
+   BYTE m_iProcessAllThresholds; // 1 if all thresholds should be processed each time
    DWORD m_dwTemplateId;      // Related template's id
    DWORD m_dwTemplateItemId;  // Related template item's id
    DWORD m_dwNumThresholds;

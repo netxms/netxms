@@ -174,6 +174,7 @@ typedef struct
 {
    DWORD dwId;
    DWORD dwEvent;
+   DWORD dwRearmEvent;
    DWORD dwArg1;
    DWORD dwArg2;
    union
@@ -668,6 +669,7 @@ typedef struct
 #define VID_HELPDESK_STATE          ((DWORD)246)
 #define VID_HELPDESK_REF            ((DWORD)247)
 #define VID_REPEAT_COUNT            ((DWORD)248)
+#define VID_ALL_THRESHOLDS          ((DWORD)249)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

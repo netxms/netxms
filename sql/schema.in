@@ -395,16 +395,17 @@ CREATE TABLE items
 	template_id integer not null,
 	template_item_id integer not null,
 	name varchar(255) not null,
-	description varchar(255),
-	source integer,			// 0 for internal or 1 for native agent or 2 for SNMP
-	datatype integer,
-	polling_interval integer,
-	retention_time integer,
-	adv_schedule integer,		// 1 if item has advanced schedule
-	status integer,			// ACTIVE, DISABLED or NOT_SUPPORTED
-	delta_calculation integer,
-	transformation SQL_TEXT,	// Transformation formula
-	instance varchar(255),		// Free form text which can be used in events
+	description varchar(255) not null,
+	source integer not null,	// 0 for internal or 1 for native agent or 2 for SNMP
+	datatype integer not null,
+	polling_interval integer not null,
+	retention_time integer not null,
+	adv_schedule integer not null,	// 1 if item has advanced schedule
+	status integer not null,	// ACTIVE, DISABLED or NOT_SUPPORTED
+	delta_calculation integer not null,
+	transformation SQL_TEXT not null, // Transformation formula
+	instance varchar(255) not null,	  // Free form text which can be used in events
+	all_thresholds integer not null,  // 1 if all thresholds should be processed at every check
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
@@ -613,6 +614,7 @@ CREATE TABLE thresholds
 	parameter_1 integer not null,
 	parameter_2 integer not null,
 	event_code integer not null,
+	rearm_event_code integer not null,
 	current_state integer not null,
 	PRIMARY KEY(threshold_id)
 ) TABLE_TYPE;

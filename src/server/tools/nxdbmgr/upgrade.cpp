@@ -78,6 +78,31 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V48 to V49
+//
+
+static BOOL H_UpgradeFromV48(void)
+{
+   static TCHAR m_szBatch[] =
+      "ALTER TABLE items ADD all_thresholds integer\n"
+      "UPDATE items SET all_thresholds=0\n"
+      "ALTER TABLE thresholds ADD rearm_event_code integer\n"
+      "UPDATE thresholds SET rearm_event_code=18\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='49' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V47 to V48
 //
 
@@ -2186,6 +2211,7 @@ static struct
    { 45, H_UpgradeFromV45 },
    { 46, H_UpgradeFromV46 },
    { 47, H_UpgradeFromV47 },
+   { 48, H_UpgradeFromV48 },
    { 0, NULL }
 };
 

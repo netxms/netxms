@@ -3,6 +3,9 @@
 *
 
 - Threshold state now saved across NetXMS server restarts
+- Added possibility to specify custom threshold rearm event instead of
+  SYS_THRESHOLD_REARMED
+- Added threshold processing option "Always process all thresholds"
 - Windows console:
 	- Console changed to use UNICODE internally
 	- Event processing policy editor improved

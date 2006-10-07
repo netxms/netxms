@@ -37,11 +37,11 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('ClientListenerPort','4701',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('NumberOfDataCollectors','10',1,1);
+	VALUES ('NumberOfDataCollectors','25',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('NumberOfStatusPollers','10',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('NumberOfConfigurationPollers','4',1,1);
+	VALUES ('NumberOfConfigurationPollers','5',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('NumberOfDiscoveryPollers','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)

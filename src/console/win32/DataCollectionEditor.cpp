@@ -457,6 +457,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    // Setup "Thresholds" page
    pgThresholds.m_pItem = pItem;
    pgThresholds.m_strInstance = pItem->szInstance;
+   pgThresholds.m_bAllThresholds = pItem->iProcessAllThresholds ? TRUE : FALSE;
 
    // Setup property sheet and run
    dlg.SetTitle(_T("Data Collection Item"));
@@ -494,6 +495,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
          pItem->dwNumSchedules = 0;
          pItem->ppScheduleList = NULL;
       }
+      pItem->iProcessAllThresholds = pgThresholds.m_bAllThresholds ? 1 : 0;
       bSuccess = TRUE;
    }
    return bSuccess;

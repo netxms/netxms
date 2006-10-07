@@ -33,6 +33,7 @@ void CThresholdDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CThresholdDlg)
+	DDX_Control(pDX, IDC_EDIT_REARM_EVENT, m_wndRearmEventName);
 	DDX_Control(pDX, IDC_EDIT_EVENT, m_wndEventName);
 	DDX_Control(pDX, IDC_STATIC_SAMPLES, m_wndStaticSamples);
 	DDX_Control(pDX, IDC_STATIC_FOR, m_wndStaticFor);
@@ -52,6 +53,7 @@ BEGIN_MESSAGE_MAP(CThresholdDlg, CDialog)
 	//{{AFX_MSG_MAP(CThresholdDlg)
 	ON_CBN_SELCHANGE(IDC_COMBO_FUNCTION, OnSelchangeComboFunction)
 	ON_BN_CLICKED(IDC_BUTTON_SELECT, OnButtonSelect)
+	ON_BN_CLICKED(IDC_BUTTON_SELECT_REARM_EVENT, OnButtonSelectRearmEvent)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -66,6 +68,7 @@ END_MESSAGE_MAP()
 BOOL CThresholdDlg::OnInitDialog() 
 {
    DWORD i;
+   int nIndex = -1;
 
 	CDialog::OnInitDialog();
 
@@ -75,7 +78,11 @@ BOOL CThresholdDlg::OnInitDialog()
    for(i = 0; i < 8; i++)
       m_wndComboOperation.AddString(g_pszThresholdOperationLong[i]);
    m_wndComboFunction.SelectString(-1, g_pszThresholdFunctionLong[m_iFunction]);
-   m_wndComboOperation.SelectString(-1, g_pszThresholdOperationLong[m_iOperation]);
+
+   do
+   {
+      nIndex = m_wndComboOperation.SelectString(nIndex, g_pszThresholdOperationLong[m_iOperation]);
+   } while((nIndex != m_iOperation) && (nIndex != CB_ERR));
 
    if (m_iFunction == F_LAST)
    {
@@ -85,6 +92,7 @@ BOOL CThresholdDlg::OnInitDialog()
    }
 
    m_wndEventName.SetWindowText(NXCGetEventName(g_hSession, m_dwEventId));
+   m_wndRearmEventName.SetWindowText(NXCGetEventName(g_hSession, m_dwRearmEventId));
 	
 	return TRUE;
 }
@@ -104,7 +112,7 @@ void CThresholdDlg::OnSelchangeComboFunction()
 
 
 //
-// "Select" button handler
+// "Select" button handlers
 //
 
 void CThresholdDlg::OnButtonSelect() 
@@ -116,5 +124,17 @@ void CThresholdDlg::OnButtonSelect()
    {
       m_dwEventId = dlg.m_pdwEventList[0];
       m_wndEventName.SetWindowText(NXCGetEventName(g_hSession, m_dwEventId));
+   }
+}
+
+void CThresholdDlg::OnButtonSelectRearmEvent()
+{
+   CEventSelDlg dlg;
+
+   dlg.m_bSingleSelection = TRUE;
+   if (dlg.DoModal() == IDOK)
+   {
+      m_dwRearmEventId = dlg.m_pdwEventList[0];
+      m_wndRearmEventName.SetWindowText(NXCGetEventName(g_hSession, m_dwRearmEventId));
    }
 }
