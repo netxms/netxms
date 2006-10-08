@@ -501,6 +501,7 @@ src/console/nxav/nxav.dsw -text
 src/console/nxav/nxav.h -text
 src/console/nxav/nxav.rc -text
 src/console/nxav/res/Makefile.am -text
+src/console/nxav/res/ack.ico -text
 src/console/nxav/res/ack.png -text
 src/console/nxav/res/background.jpg -text
 src/console/nxav/res/critical.ico -text
@@ -510,6 +511,7 @@ src/console/nxav/res/normal.ico -text
 src/console/nxav/res/nosound.png -text
 src/console/nxav/res/nxav.ico -text
 src/console/nxav/res/nxav.rc2 -text
+src/console/nxav/res/outstanding.ico -text
 src/console/nxav/res/processing.ico -text
 src/console/nxav/res/small_logo.bmp -text
 src/console/nxav/res/sound.png -text

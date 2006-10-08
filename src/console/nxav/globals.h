@@ -69,6 +69,7 @@ extern TCHAR g_szLogin[];
 extern TCHAR g_szPassword[];
 extern TCHAR *g_szStatusText[];
 extern TCHAR *g_szStatusTextSmall[];
+extern TCHAR *g_szAlarmState[];
 extern TCHAR g_szWorkDir[];
 extern COLORREF g_rgbInfoLineBackground;
 extern COLORREF g_rgbInfoLineTimer;

@@ -275,6 +275,10 @@ SOURCE=.\StdAfx.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
+SOURCE=.\res\ack.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\ack.png
 # End Source File
 # Begin Source File
@@ -304,6 +308,10 @@ SOURCE=.\res\nxav.ico
 # Begin Source File
 
 SOURCE=.\res\nxav.rc2
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\outstanding.ico
 # End Source File
 # Begin Source File
 

@@ -1273,7 +1273,9 @@ BOOL DCItem::ReadyForPolling(time_t currTime)
          {
             if (MatchSchedule(&tmCurrLocal, m_ppScheduleList[i]))
             {
-               if (!MatchSchedule(&tmLastLocal, m_ppScheduleList[i]))
+               if ((currTime - m_tLastCheck >= 60) ||
+                   (tmCurrLocal.tm_min != tmLastLocal.tm_min))
+//               if (!MatchSchedule(&tmLastLocal, m_ppScheduleList[i]))
                {
                   bResult = TRUE;
                   break;

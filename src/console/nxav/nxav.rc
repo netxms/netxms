@@ -257,6 +257,8 @@ IDF_NORMAL              FILE    DISCARDABLE     "res\\normal.ico"
 IDF_ACK                 FILE    DISCARDABLE     "res\\ack.png"
 IDF_NOSOUND             FILE    DISCARDABLE     "res\\nosound.png"
 IDF_SOUND               FILE    DISCARDABLE     "res\\sound.png"
+IDF_ACK_ICO             FILE    DISCARDABLE     "res\\ack.ico"
+IDF_OUTSTANDING         FILE    DISCARDABLE     "res\\outstanding.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

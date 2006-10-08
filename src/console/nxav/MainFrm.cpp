@@ -181,7 +181,11 @@ void CMainFrame::AddAlarm(NXC_ALARM *pAlarm, CString &strHTML, BOOL bColoredLine
    pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
    ptm = localtime((const time_t *)&pAlarm->dwLastChangeTime);
    _tcsftime(szBuffer, 64, _T("%d-%b-%Y<br>%H:%M:%S"), ptm);
-   strBuf.Format(_T("<tr bgcolor=%s><td align=left><table cellpadding=2 border=0><tr>")
+   strBuf.Format(_T("<tr bgcolor=%s>")
+                 _T("<td align=left><table cellpadding=2 border=0><tr>")
+                 _T("<td><img src=\"file:%s/%s.ico\" border=0/></td>")
+                 _T("<td><b>%s</b></td></tr></table></td>")
+                 _T("<td align=left><table cellpadding=2 border=0><tr>")
                  _T("<td><img src=\"file:%s/%s.ico\" border=0/></td>")
                  _T("<td><b>%s</b></td></tr></table></td>")
                  _T("<td><b>%s</b></td>")
@@ -194,7 +198,9 @@ void CMainFrame::AddAlarm(NXC_ALARM *pAlarm, CString &strHTML, BOOL bColoredLine
                  _T("<a href=\"nxav:S?%d\">No Sound</a></td></tr>\n"),
                  bColoredLine ? _T("#EFEFEF") : _T("#FFFFFF"), 
                  g_szWorkDir, g_szStatusTextSmall[pAlarm->nCurrentSeverity],
-                 g_szStatusTextSmall[pAlarm->nCurrentSeverity], pObject->szName,
+                 g_szStatusTextSmall[pAlarm->nCurrentSeverity],
+                 g_szWorkDir, g_szAlarmState[pAlarm->nState],
+                 g_szAlarmState[pAlarm->nState], pObject->szName,
                  pAlarm->szMessage, szBuffer, pAlarm->dwAlarmId, //g_szWorkDir,
                  /*pAlarm->pUserData != 0 ? _T("") : _T("no"),*/ pAlarm->dwAlarmId, pAlarm->dwAlarmId);
    strHTML += strBuf;
@@ -225,9 +231,9 @@ void CMainFrame::GenerateHtml(CString &strHTML)
                   _T("<body background=\"file:%s/background.jpg\">\n")
                   _T("<font face=verdana,helvetica size=+1>\n")
                   _T("<table width=\"99%%\" align=center cellspacing=0 cellpadding=2 border=1>\n")
-                  _T("<tr bgcolor=#9AAABA><td><b>Severity</b></td>")
+                  _T("<tr bgcolor=#9AAABA><td><b>Severity</b></td><td><b>State</b></td>")
                   _T("<td><b>Source</b></td><td><b>Message</b></td>")
-                  _T("<td><b>Timestamp</b></td><td width=40 align=center><b>Action</b></td></tr>"),
+                  _T("<td><b>Timestamp</b></td><td width=50 align=center><b>Action</b></td></tr>"),
                   g_szWorkDir);
    for(i = 0; i < m_dwNumAlarms; i++)
       AddAlarm(&m_pAlarmList[i], strHTML, i & 1);

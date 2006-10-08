@@ -13,7 +13,7 @@ Class1=CAlarmViewApp
 Class3=CMainFrame
 Class4=CAboutDlg
 
-ResourceCount=10
+ResourceCount=11
 Resource1=IDD_REQUEST_WAIT
 Resource2=IDD_ABOUTBOX
 Class2=CChildView
@@ -29,6 +29,7 @@ Resource8=IDD_REQUEST_WAIT (English (U.S.))
 Resource9=IDD_SETTINGS (English (U.S.))
 Class8=CAlarmBrowser
 Resource10=IDM_CONTEXT (English (U.S.))
+Resource11=IDD_SETTINGS
 
 [CLS:CAlarmViewApp]
 Type=0
@@ -200,4 +201,21 @@ BaseClass=CDialog
 Filter=D
 VirtualFilter=dWC
 LastObject=CSettingsDlg
+
+[DLG:IDD_SETTINGS]
+Type=1
+ControlCount=13
+Control1=IDC_CHECK_AUTOLOGIN,button,1342242819
+Control2=IDC_EDIT_SERVER_NAME,edit,1350631552
+Control3=IDC_EDIT_USER,edit,1350631552
+Control4=IDC_EDIT_PASSWD,edit,1350631584
+Control5=IDC_CHECK_REPEAT,button,1342252035
+Control6=IDC_CONFIGURE_SOUNDS,button,1342242816
+Control7=IDOK,button,1342242817
+Control8=IDCANCEL,button,1342242816
+Control9=IDC_STATIC,button,1342177287
+Control10=IDC_STATIC_SERVER,static,1342308352
+Control11=IDC_STATIC_USER,static,1342308352
+Control12=IDC_STATIC_PASSWORD,static,1342308352
+Control13=IDC_STATIC,button,1342177287
 
