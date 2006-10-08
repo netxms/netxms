@@ -45,6 +45,7 @@ public:
 
 // Implementation
 protected:
+	BOOL TerminateAlarm(DWORD dwAlarmId);
 	BOOL AcknowledgeAlarm(DWORD dwAlarmId);
 	virtual ~CAlarmBrowser();
 #ifdef _DEBUG

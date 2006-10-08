@@ -343,12 +343,14 @@ void CAlarmViewApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
       switch(dwCode)
       {
          case NX_NOTIFY_SHUTDOWN:
-            m_pMainWnd->MessageBox("Server was shutdown", "Warning", MB_OK | MB_ICONSTOP);
+            m_pMainWnd->MessageBox(_T("Server was shutdown"), _T("Warning"),
+                                   MB_OK | MB_ICONSTOP);
             m_pMainWnd->DestroyWindow();
             break;
          case NX_NOTIFY_NEW_ALARM:
          case NX_NOTIFY_ALARM_DELETED:
          case NX_NOTIFY_ALARM_CHANGED:
+         case NX_NOTIFY_ALARM_TERMINATED:
             m_pMainWnd->PostMessage(WM_ALARM_UPDATE, dwCode, 
                                     (LPARAM)nx_memdup(pArg, sizeof(NXC_ALARM)));
             break;

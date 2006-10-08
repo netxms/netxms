@@ -4,7 +4,7 @@
 
 # TARGTYPE "Win32 (x86) Application" 0x0101
 
-CFG=nxav - Win32 Debug
+CFG=nxav - Win32 Debug UNICODE
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,12 +13,14 @@ CFG=nxav - Win32 Debug
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "nxav.mak" CFG="nxav - Win32 Debug"
+!MESSAGE NMAKE /f "nxav.mak" CFG="nxav - Win32 Debug UNICODE"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
 !MESSAGE "nxav - Win32 Release" (based on "Win32 (x86) Application")
 !MESSAGE "nxav - Win32 Debug" (based on "Win32 (x86) Application")
+!MESSAGE "nxav - Win32 Debug UNICODE" (based on "Win32 (x86) Application")
+!MESSAGE "nxav - Win32 Release UNICODE" (based on "Win32 (x86) Application")
 !MESSAGE 
 
 # Begin Project
@@ -91,12 +93,78 @@ PostBuild_Desc=Copy files
 PostBuild_Cmds=copy Debug\nxav.exe ..\..\..\bin
 # End Special Build Tool
 
+!ELSEIF  "$(CFG)" == "nxav - Win32 Debug UNICODE"
+
+# PROP BASE Use_MFC 6
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "nxav___Win32_Debug_UNICODE"
+# PROP BASE Intermediate_Dir "nxav___Win32_Debug_UNICODE"
+# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 6
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "Debug_UNICODE"
+# PROP Intermediate_Dir "Debug_UNICODE"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /MDd /W3 /Gm /ZI /Od /I "..\..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /ZI /Od /I "..\..\..\include" /D "UNICODE" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /FD /GZ /c
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
+# ADD BASE RSC /l 0x409 /d "_DEBUG" /d "_AFXDLL"
+# ADD RSC /l 0x409 /d "_DEBUG" /d "_AFXDLL"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 "C:\Program Files\Microsoft Visual Studio\VC98\Lib\uuid.lib" shfolder.lib libnetxms.lib libnxcl.lib nxuilib.lib /nologo /subsystem:windows /debug /machine:I386 /nodefaultlib:"uuid.lib" /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcl\Debug" /libpath:"..\nxuilib\Debug"
+# ADD LINK32 "C:\Program Files\Microsoft Visual Studio\VC98\Lib\uuid.lib" shfolder.lib libnetxmsw.lib libnxclw.lib nxuilibw.lib /nologo /entry:"wWinMainCRTStartup" /subsystem:windows /debug /machine:I386 /nodefaultlib:"uuid.lib" /pdbtype:sept /libpath:"..\..\libnetxms\Debug_UNICODE" /libpath:"..\..\libnxcl\Debug_UNICODE" /libpath:"..\nxuilib\Debug_UNICODE"
+# Begin Special Build Tool
+SOURCE="$(InputPath)"
+PostBuild_Desc=Copy files
+PostBuild_Cmds=copy Debug_UNICODE\nxav.exe ..\..\..\bin
+# End Special Build Tool
+
+!ELSEIF  "$(CFG)" == "nxav - Win32 Release UNICODE"
+
+# PROP BASE Use_MFC 6
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "nxav___Win32_Release_UNICODE"
+# PROP BASE Intermediate_Dir "nxav___Win32_Release_UNICODE"
+# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 6
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "Release_UNICODE"
+# PROP Intermediate_Dir "Release_UNICODE"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /MD /W3 /O2 /I "..\..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /I "..\..\..\include" /D "UNICODE" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Yu"stdafx.h" /FD /c
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+# ADD BASE RSC /l 0x409 /d "NDEBUG" /d "_AFXDLL"
+# ADD RSC /l 0x409 /d "NDEBUG" /d "_AFXDLL"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 shfolder.lib libnetxms.lib libnxcl.lib nxuilib.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcl\Release" /libpath:"..\nxuilib\Release"
+# ADD LINK32 shfolder.lib libnetxmsw.lib libnxclw.lib nxuilibw.lib /nologo /entry:"wWinMainCRTStartup" /subsystem:windows /machine:I386 /libpath:"..\..\libnetxms\Release_UNICODE" /libpath:"..\..\libnxcl\Release_UNICODE" /libpath:"..\nxuilib\Release_UNICODE"
+# Begin Special Build Tool
+SOURCE="$(InputPath)"
+PostBuild_Desc=Copy files
+PostBuild_Cmds=copy Release_UNICODE\nxav.exe C:\NetXMS\bin
+# End Special Build Tool
+
 !ENDIF 
 
 # Begin Target
 
 # Name "nxav - Win32 Release"
 # Name "nxav - Win32 Debug"
+# Name "nxav - Win32 Debug UNICODE"
+# Name "nxav - Win32 Release UNICODE"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"

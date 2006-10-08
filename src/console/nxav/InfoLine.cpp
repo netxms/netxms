@@ -91,7 +91,7 @@ void CInfoLine::OnPaint()
    CBitmap bmLogo;
    BITMAP bitmapInfo;
    CFont *pFont;
-   static char szVersion[] = _T("Alarm Viewer  Version ") NETXMS_VERSION_STRING;
+   static TCHAR szVersion[] = _T("Alarm Viewer  Version ") NETXMS_VERSION_STRING;
    
    GetClientRect(&rect);
 
@@ -105,7 +105,7 @@ void CInfoLine::OnPaint()
 
    // Draw program name and version
    pFont = dc.SelectObject(&m_fontSmall);
-   dc.TextOut(8, bitmapInfo.bmHeight + 7, szVersion, sizeof(szVersion) - 1);
+   dc.TextOut(8, bitmapInfo.bmHeight + 7, szVersion, sizeof(szVersion) / sizeof(TCHAR) - 1);
 
    // Draw divider at the bottom
    dc.DrawEdge(&rect, EDGE_BUMP, BF_BOTTOM);

@@ -12,6 +12,11 @@
 	#error include 'stdafx.h' before including this file for PCH
 #endif
 
+#ifndef UNICODE
+#error Building NetXMS Alarm Viewer without UNICODE support is deprecated
+#endif
+
+
 // Registry key for saving alarm sound configuration
 #define NXAV_ALARM_SOUND_KEY  _T("Software\\NetXMS\\NetXMS Alarm Viewer\\Sounds")
 

@@ -48,13 +48,13 @@
 //
 
 DWORD DoLogin(void);
-DWORD DoRequest(DWORD (* pFunc)(void), char *pszInfoText);
-DWORD DoRequestArg1(void *pFunc, void *pArg1, char *pszInfoText);
-DWORD DoRequestArg2(void *pFunc, void *pArg1, void *pArg2, char *pszInfoText);
-DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, char *pszInfoText);
-DWORD DoRequestArg4(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, char *pszInfoText);
+DWORD DoRequest(DWORD (* pFunc)(void), TCHAR *pszInfoText);
+DWORD DoRequestArg1(void *pFunc, void *pArg1, TCHAR *pszInfoText);
+DWORD DoRequestArg2(void *pFunc, void *pArg1, void *pArg2, TCHAR *pszInfoText);
+DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, TCHAR *pszInfoText);
+DWORD DoRequestArg4(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, TCHAR *pszInfoText);
 DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
-                    void *pArg5, void *pArg6, char *pszInfoText);
+                    void *pArg5, void *pArg6, TCHAR *pszInfoText);
 BOOL FileFromResource(UINT nResId, TCHAR *pszFileName);
 void CreateMonitorList(void);
 

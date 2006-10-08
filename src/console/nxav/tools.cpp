@@ -105,11 +105,11 @@ void CreateMonitorList(void)
    hModule = LoadLibrary(_T("USER32.DLL"));
    if (hModule != NULL)
    {
-      pfEnumDisplayMonitors = (BOOL (WINAPI *)(HDC, LPCRECT, MONITORENUMPROC, LPARAM))GetProcAddress(hModule, _T("EnumDisplayMonitors"));
+      pfEnumDisplayMonitors = (BOOL (WINAPI *)(HDC, LPCRECT, MONITORENUMPROC, LPARAM))GetProcAddress(hModule, "EnumDisplayMonitors");
 #ifdef UNICODE
-      pfGetMonitorInfo = (BOOL (WINAPI *)(HMONITOR, LPMONITORINFO))GetProcAddress(hModule, _T("GetMonitorInfoW"));
+      pfGetMonitorInfo = (BOOL (WINAPI *)(HMONITOR, LPMONITORINFO))GetProcAddress(hModule, "GetMonitorInfoW");
 #else
-      pfGetMonitorInfo = (BOOL (WINAPI *)(HMONITOR, LPMONITORINFO))GetProcAddress(hModule, _T("GetMonitorInfoA"));
+      pfGetMonitorInfo = (BOOL (WINAPI *)(HMONITOR, LPMONITORINFO))GetProcAddress(hModule, "GetMonitorInfoA");
 #endif
       if ((pfEnumDisplayMonitors != NULL) &&
           (pfGetMonitorInfo != NULL))

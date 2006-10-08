@@ -107,14 +107,16 @@ void CAlarmBrowser::OnBeforeNavigate2(LPCTSTR lpszURL, DWORD nFlags, LPCTSTR lps
    if (!_tcsncmp(lpszURL, _T("nxav:"), 5))
    {
       *pbCancel = TRUE;
+      dwId = _tcstoul(&lpszURL[7], NULL, 10);
       switch(lpszURL[5])
       {
          case 'A':   // Acknowlege
-            dwId = _tcstoul(&lpszURL[7], NULL, 10);
             AcknowledgeAlarm(dwId);
             break;
+         case 'T':   // Terminate
+            TerminateAlarm(dwId);
+            break;
          case 'S':   // Disable repeated sound
-            dwId = _tcstoul(&lpszURL[7], NULL, 10);
             AfxGetMainWnd()->PostMessage(WM_DISABLE_ALARM_SOUND, dwId, 0);
             break;
          default:
@@ -134,6 +136,24 @@ BOOL CAlarmBrowser::AcknowledgeAlarm(DWORD dwAlarmId)
 
    dwResult = DoRequestArg2(NXCAcknowlegeAlarm, g_hSession,
                             (void *)dwAlarmId, _T("Acknowleging alarm..."));
+   if (dwResult != RCC_SUCCESS)
+      appAlarmViewer.ErrorBox(dwResult, _T("Cannot acknowlege alarm: %s"));
+   return (dwResult == RCC_SUCCESS);
+}
+
+
+//
+// Terminate alarm by ID
+//
+
+BOOL CAlarmBrowser::TerminateAlarm(DWORD dwAlarmId)
+{
+   DWORD dwResult;
+
+   dwResult = DoRequestArg2(NXCTerminateAlarm, g_hSession,
+                            (void *)dwAlarmId, _T("Terminating alarm..."));
+   if (dwResult != RCC_SUCCESS)
+      appAlarmViewer.ErrorBox(dwResult, _T("Cannot terminate alarm: %s"));
    return (dwResult == RCC_SUCCESS);
 }
 

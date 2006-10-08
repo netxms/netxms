@@ -180,19 +180,23 @@ void CMainFrame::AddAlarm(NXC_ALARM *pAlarm, CString &strHTML, BOOL bColoredLine
 
    pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
    ptm = localtime((const time_t *)&pAlarm->dwLastChangeTime);
-   strftime(szBuffer, 64, "%d-%b-%Y<br>%H:%M:%S", ptm);
-   strBuf.Format("<tr bgcolor=%s><td align=left><table cellpadding=2 border=0><tr>"
-                 "<td><img src=\"file:%s/%s.ico\" border=0/></td>"
-                 "<td><b>%s</b></td></tr></table></td>"
-                 "<td><b>%s</b></td>"
-                 "<td><font size=-1>%s</font></td><td><font size=-1>%s</font></td>"
-                 "<td align=center><a href=\"nxav:S?%d\"><img src=\"file:%s/%ssound.png\" alt=\"NOSOUND\" border=0/></a> "
-                 "<a href=\"nxav:A?%d\"><img src=\"file:%s/ack.png\" alt=\"ACK\" border=0/></a></td></tr>\n",
-                 bColoredLine ? "#EFEFEF" : "#FFFFFF", 
+   _tcsftime(szBuffer, 64, _T("%d-%b-%Y<br>%H:%M:%S"), ptm);
+   strBuf.Format(_T("<tr bgcolor=%s><td align=left><table cellpadding=2 border=0><tr>")
+                 _T("<td><img src=\"file:%s/%s.ico\" border=0/></td>")
+                 _T("<td><b>%s</b></td></tr></table></td>")
+                 _T("<td><b>%s</b></td>")
+                 _T("<td><font size=-1>%s</font></td><td><font size=-1>%s</font></td>")
+//                 _T("<td align=center><a href=\"nxav:S?%d\"><img src=\"file:%s/%ssound.png\" alt=\"NOSOUND\" border=0/></a> ")
+//                 _T("<a href=\"nxav:A?%d\"><img src=\"file:%s/ack.png\" alt=\"ACK\" border=0/></a></td></tr>\n"),
+                 _T("<td align=left><font size=-2>")
+                 _T("<a href=\"nxav:A?%d\">Acknowlege</a><br>")
+                 _T("<a href=\"nxav:T?%d\">Terminate</a><br>")
+                 _T("<a href=\"nxav:S?%d\">No Sound</a></td></tr>\n"),
+                 bColoredLine ? _T("#EFEFEF") : _T("#FFFFFF"), 
                  g_szWorkDir, g_szStatusTextSmall[pAlarm->nCurrentSeverity],
                  g_szStatusTextSmall[pAlarm->nCurrentSeverity], pObject->szName,
-                 pAlarm->szMessage, szBuffer, pAlarm->dwAlarmId, g_szWorkDir,
-                 pAlarm->pUserData != 0 ? "" : "no", pAlarm->dwAlarmId, g_szWorkDir);
+                 pAlarm->szMessage, szBuffer, pAlarm->dwAlarmId, //g_szWorkDir,
+                 /*pAlarm->pUserData != 0 ? _T("") : _T("no"),*/ pAlarm->dwAlarmId, pAlarm->dwAlarmId);
    strHTML += strBuf;
 }
 
@@ -217,13 +221,13 @@ void CMainFrame::GenerateHtml(CString &strHTML)
 
    strHTML.Empty();
 
-   strHTML.Format("<html><head><title>NetXMS Active Alarm List</title></head>\n"
-                  "<body background=\"file:%s/background.jpg\">\n"
-                  "<font face=verdana,helvetica size=+1>\n"
-                  "<table width=\"99%%\" align=center cellspacing=0 cellpadding=2 border=1>\n"
-                  "<tr bgcolor=#9AAABA><td><b>Severity</b></td>"
-                  "<td><b>Source</b></td><td><b>Message</b></td>"
-                  "<td><b>Timestamp</b></td><td width=40 align=center><b>Ack</b></td></tr>",
+   strHTML.Format(_T("<html><head><title>NetXMS Active Alarm List</title></head>\n")
+                  _T("<body background=\"file:%s/background.jpg\">\n")
+                  _T("<font face=verdana,helvetica size=+1>\n")
+                  _T("<table width=\"99%%\" align=center cellspacing=0 cellpadding=2 border=1>\n")
+                  _T("<tr bgcolor=#9AAABA><td><b>Severity</b></td>")
+                  _T("<td><b>Source</b></td><td><b>Message</b></td>")
+                  _T("<td><b>Timestamp</b></td><td width=40 align=center><b>Action</b></td></tr>"),
                   g_szWorkDir);
    for(i = 0; i < m_dwNumAlarms; i++)
       AddAlarm(&m_pAlarmList[i], strHTML, i & 1);
@@ -240,6 +244,7 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
    NXC_ALARM *pAlarm = (NXC_ALARM *)lParam;
    DWORD i;
    CString strHTML;
+   BOOL bAlarmDeleted = FALSE;
 
    switch(wParam)
    {
@@ -255,15 +260,26 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
          }
          break;
       case NX_NOTIFY_ALARM_DELETED:
+         bAlarmDeleted = TRUE;
       case NX_NOTIFY_ALARM_CHANGED:
+      case NX_NOTIFY_ALARM_TERMINATED:
          for(i = 0; i < m_dwNumAlarms; i++)
             if (m_pAlarmList[i].dwAlarmId == pAlarm->dwAlarmId)
             {
                PlayAlarmSound(&m_pAlarmList[i], FALSE, g_hSession, &appAlarmViewer.m_soundCfg);
-               m_iNumAlarms[m_pAlarmList[i].nCurrentSeverity]--;
-               m_dwNumAlarms--;
-               if (m_dwNumAlarms > 0)
-                  memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
+               if (bAlarmDeleted || (pAlarm->nState == ALARM_STATE_TERMINATED))
+               {
+                  m_iNumAlarms[m_pAlarmList[i].nCurrentSeverity]--;
+                  m_dwNumAlarms--;
+                  if (m_dwNumAlarms > 0)
+                     memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
+               }
+               else
+               {
+                  memcpy(&m_pAlarmList[i], pAlarm, sizeof(NXC_ALARM));
+                  m_pAlarmList[i].pUserData = (void *)time(NULL);
+                  SortAlarms();
+               }
                break;
             }
          break;
