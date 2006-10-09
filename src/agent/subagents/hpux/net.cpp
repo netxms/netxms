@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.2 2006-10-05 00:34:24 alk Exp $ */
+/* $Id: net.cpp,v 1.3 2006-10-09 21:42:28 victor Exp $ */
 
 /* 
 ** NetXMS subagent for HP-UX
@@ -30,7 +30,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <net/if.h>
-#include <net/if6.h>
 
 #include "net.h"
 
@@ -305,6 +304,9 @@ LONG H_NetIfInfoFromProc(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/10/05 00:34:24  alk
+HPUX: minor cleanup; added System.LoggedInCount (W(1) | wc -l equivalent)
+
 Revision 1.1  2006/10/04 14:59:14  alk
 initial version of HPUX subagent
 

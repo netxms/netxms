@@ -1,9 +1,9 @@
-# $Id: configure.ac,v 1.198 2006-10-08 16:46:58 victor Exp $
+# $Id: configure.ac,v 1.199 2006-10-09 21:42:26 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
 
-AC_INIT([NetXMS], [0.2.14-rc3], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.14-rc4], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR([config])
 AM_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
@@ -23,12 +23,14 @@ AC_PROG_LN_S
 
 # --------------------------------------------------------------------------
 # Misc. settings
-CFLAGS="$CFLAGS -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_THREAD_SAFE"
+#CFLAGS="$CFLAGS -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_THREAD_SAFE"
 CPPFLAGS="$CPPFLAGS -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_THREAD_SAFE"
 SUBAGENT_LIBS=""
 
 # --------------------------------------------------------------------------
 # disable C++ exceptions
+
+if test "x$CC" = "xgcc" ; then
 
 AC_LANG_PUSH([C++])
 
@@ -54,12 +56,17 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 
 AC_LANG_POP([C++])
 
+fi
+
 # --------------------------------------------------------------------------
-# set LDFLAGS depending on OS
+# set CPPFLAGS and LDFLAGS depending on OS
 
 case `uname -s` in
    AIX)
       LDFLAGS="-no-undefined $LDFLAGS"
+      ;;
+   HP-UX)
+      CPPFLAGS="$CPPFLAGS -D_INCLUDE_HPUX_SOURCE"
       ;;
    *)
       ;;
