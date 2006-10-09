@@ -1314,6 +1314,7 @@ void DCItem::UpdateFromTemplate(DCItem *pItem)
    m_iDeltaCalculation = pItem->m_iDeltaCalculation;
    m_iSource = pItem->m_iSource;
    m_iStatus = pItem->m_iStatus;
+   m_iProcessAllThresholds = pItem->m_iProcessAllThresholds;
    _tcscpy(m_szName, pItem->m_szName);
    _tcscpy(m_szDescription, pItem->m_szDescription);
    _tcscpy(m_szInstance, pItem->m_szInstance);

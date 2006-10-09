@@ -252,6 +252,7 @@ void CDCIThresholdsPage::OnButtonAdd()
    memset(&dct, 0, sizeof(NXC_DCI_THRESHOLD));
    dct.dwArg1 = 1;
    dct.dwEvent = EVENT_THRESHOLD_REACHED;
+   dct.dwRearmEvent = EVENT_THRESHOLD_REARMED;
 
    // Call threshold configuration dialog
    if (EditThreshold(&dct))

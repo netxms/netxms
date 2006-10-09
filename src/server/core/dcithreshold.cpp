@@ -534,6 +534,7 @@ BOOL Threshold::Compare(Threshold *pThr)
    }
    return bMatch &&
           (pThr->m_dwEventCode == m_dwEventCode) &&
+          (pThr->m_dwRearmEventCode == m_dwRearmEventCode) &&
           (pThr->m_iDataType == m_iDataType) &&
           (pThr->m_iFunction == m_iFunction) &&
           (pThr->m_iOperation == m_iOperation) &&
