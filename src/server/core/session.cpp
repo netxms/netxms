@@ -984,6 +984,12 @@ void ClientSession::ProcessingThread(void)
          case CMD_SWAP_AGENT_CONFIGS:
             SwapAgentConfigs(pMsg);
             break;
+         case CMD_GET_OBJECT_COMMENTS:
+            SendObjectComments(pMsg);
+            break;
+         case CMD_UPDATE_OBJECT_COMMENTS:
+            UpdateObjectComments(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -7567,6 +7573,56 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
    else
    {
       msg.SetVariable(VID_RCC, (WORD)1);  // DB Failure
+   }
+
+   SendMessage(&msg);
+}
+
+
+//
+// Send object comments to client
+//
+
+void ClientSession::SendObjectComments(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   SendMessage(&msg);
+}
+
+
+//
+// Update object comments to client
+//
+
+void ClientSession::UpdateObjectComments(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
    SendMessage(&msg);

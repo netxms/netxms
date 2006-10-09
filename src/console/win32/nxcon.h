@@ -51,8 +51,18 @@ class CTrapEditor;
 // Constants
 //
 
-#define MAX_DC_EDITORS     1024
+#define MAX_OBJECT_VIEWS   1024
 #define LAST_APP_MENU      4
+
+
+//
+// Object view classes
+//
+
+#define FIRST_OBJECT_VIEW  1000
+
+#define OV_DC_EDITOR       1000
+#define OV_OBJECT_COMMENTS 1001
 
 
 //
@@ -112,10 +122,11 @@ struct CONSOLE_VIEW
 // Open DCI editor structure
 //
 
-struct DC_EDITOR
+struct OBJECT_VIEW
 {
-   DWORD dwNodeId;
-   CWnd *pWnd;
+   DWORD dwClass;
+   DWORD dwId;
+   CMDIChildWnd *pWnd;
 };
 
 
@@ -151,7 +162,7 @@ protected:
 	void CreateObject(NXC_OBJECT_CREATE_INFO *pInfo);
 	HMENU LoadAppMenu(HMENU hViewMenu);
 	BOOL SetupWorkDir(void);
-	CWnd * FindOpenDCEditor(DWORD dwNodeId);
+	CMDIChildWnd *FindObjectView(DWORD dwClass, DWORD dwId);
 	CMenu m_ctxMenu;
 	DWORD m_dwClientState;
 
@@ -239,9 +250,10 @@ public:
 	DECLARE_MESSAGE_MAP()
 private:
    CONSOLE_VIEW m_viewState[MAX_VIEW_ID];
-   DC_EDITOR m_openDCEditors[MAX_DC_EDITORS];
+   OBJECT_VIEW m_openObjectViews[MAX_OBJECT_VIEWS];
 
 public:
+	void ShowObjectComments(NXC_OBJECT *pObject);
 	void CreateCondition(DWORD dwParent);
 	void MoveObject(DWORD dwObjectId, DWORD dwParentId);
 	void StartWebBrowser(TCHAR *pszURL);

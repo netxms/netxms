@@ -82,6 +82,7 @@ EXTRA_DIST = \
 	nxcon.cpp nxcon.h \
 	nxcon.rc \
 	ObjectBrowser.cpp ObjectBrowser.h \
+	ObjectCommentsEditor.cpp ObjectCommentsEditor.h \
 	ObjectInfoBox.cpp ObjectInfoBox.h \
 	ObjectPreview.cpp ObjectPreview.h \
 	ObjectPropCaps.cpp ObjectPropCaps.h \

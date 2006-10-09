@@ -212,6 +212,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_MOVE, OnObjectMove)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_MOVE, OnUpdateObjectMove)
 	ON_COMMAND(ID_OBJECT_CREATE_CONDITION, OnObjectCreateCondition)
+	ON_COMMAND(ID_OBJECT_COMMENTS, OnObjectComments)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_COMMENTS, OnUpdateObjectComments)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
    ON_NOTIFY(TVN_GETDISPINFO, IDC_TREE_VIEW, OnTreeViewGetDispInfo)
@@ -1349,6 +1351,15 @@ void CObjectBrowser::OnUpdateObjectProperties(CCmdUI* pCmdUI)
                      (m_wndListCtrl.GetSelectedCount() == 1));
 }
 
+void CObjectBrowser::OnUpdateObjectComments(CCmdUI* pCmdUI) 
+{
+   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+      pCmdUI->Enable(m_pCurrentObject != NULL);
+   else
+      pCmdUI->Enable((m_pCurrentObject != NULL) &&
+                     (m_wndListCtrl.GetSelectedCount() == 1));
+}
+
 void CObjectBrowser::OnUpdateObjectAgentcfg(CCmdUI* pCmdUI) 
 {
    pCmdUI->Enable(CurrObjectIsNode(FALSE));
@@ -2077,4 +2088,15 @@ void CObjectBrowser::OpenObject(DWORD dwObjectId)
          }
       }
    }
+}
+
+
+//
+// WM_COMMAND::ID_OBJECT_COMMENTS message handler
+//
+
+void CObjectBrowser::OnObjectComments() 
+{
+   if (m_pCurrentObject != NULL)
+      theApp.ShowObjectComments(m_pCurrentObject);
 }

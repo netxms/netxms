@@ -293,6 +293,7 @@ BEGIN
         MENUITEM "D&ata collection\tShift+F8",  ID_OBJECT_DATACOLLECTION
         MENUITEM "&Last DCI values\tShift+F7",  ID_OBJECT_LASTDCIVALUES
         MENUITEM SEPARATOR
+        MENUITEM "Comment&s\tCtrl+C",           ID_OBJECT_COMMENTS
         MENUITEM "&Properties\tAlt+Enter",      ID_OBJECT_PROPERTIES
     END
     POPUP "&User"
@@ -429,6 +430,7 @@ BEGIN
         MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Last DCI values",            ID_OBJECT_LASTDCIVALUES
         MENUITEM SEPARATOR
+        MENUITEM "Comment&s\tCtrl+C",           ID_OBJECT_COMMENTS
         MENUITEM "&Properties",                 ID_OBJECT_PROPERTIES
     END
     POPUP "Event"
@@ -644,6 +646,7 @@ BEGIN
         MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Last DCI values",            ID_OBJECT_LASTDCIVALUES
         MENUITEM SEPARATOR
+        MENUITEM "Comment&s",                   ID_OBJECT_COMMENTS
         MENUITEM "&Properties...",              ID_OBJECT_PROPERTIES
     END
     POPUP "Item"
@@ -787,6 +790,7 @@ BEGIN
         MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Last DCI values",            ID_OBJECT_LASTDCIVALUES
         MENUITEM SEPARATOR
+        MENUITEM "Comment&s",                   ID_OBJECT_COMMENTS
         MENUITEM "&Properties...",              ID_OBJECT_PROPERTIES
     END
     POPUP "Event"
@@ -973,6 +977,7 @@ END
 IDA_OBJECT_BROWSER ACCELERATORS DISCARDABLE 
 BEGIN
     "B",            ID_OBJECT_BIND,         VIRTKEY, CONTROL, NOINVERT
+    "C",            ID_OBJECT_COMMENTS,     VIRTKEY, CONTROL, NOINVERT
     "C",            ID_OBJECT_POLL_CONFIGURATION, VIRTKEY, CONTROL, ALT, 
                                                     NOINVERT
     "F",            ID_OBJECT_FIND,         VIRTKEY, CONTROL, NOINVERT
@@ -1015,6 +1020,7 @@ END
 
 IDA_NETMAP ACCELERATORS DISCARDABLE 
 BEGIN
+    "C",            ID_OBJECT_COMMENTS,     VIRTKEY, CONTROL, NOINVERT
     "S",            ID_MAP_SAVE,            VIRTKEY, CONTROL, NOINVERT
     VK_ADD,         ID_MAP_ZOOMIN,          VIRTKEY, NOINVERT
     VK_BACK,        ID_MAP_BACK,            VIRTKEY, NOINVERT
@@ -3443,6 +3449,7 @@ BEGIN
     IDR_DESKTOP_MANAGER     "\nSaved Desktop Manager\nSaved Desktop Manager"
     IDR_AGENT_CONFIG_MANAGER 
                             "\nAgent Configuration Manager\nAgent Configuration Manager"
+    IDR_OBJECT_COMMENTS_EDITOR "\nComments\nComments"
 END
 
 STRINGTABLE DISCARDABLE 

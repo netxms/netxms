@@ -558,6 +558,7 @@
 #define IDR_MODULE_MANAGER              8114
 #define IDR_DESKTOP_MANAGER             8115
 #define IDR_AGENT_CONFIG_MANAGER        8116
+#define IDR_OBJECT_COMMENTS_EDITOR      8117
 #define IDR_CTRLPANEL                   8133
 #define IDR_EVENTS                      8137
 #define IDR_MAPFRAME                    8138
@@ -762,6 +763,7 @@
 #define ID_GRAPH_ZOOMOUT                33037
 #define ID_ALARM_TERMINATE              33039
 #define ID_ALARM_LASTDCIVALUES          33040
+#define ID_OBJECT_COMMENTS              33042
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -772,7 +774,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        334
-#define _APS_NEXT_COMMAND_VALUE         33042
+#define _APS_NEXT_COMMAND_VALUE         33043
 #define _APS_NEXT_CONTROL_VALUE         1389
 #define _APS_NEXT_SYMED_VALUE           128
 #endif

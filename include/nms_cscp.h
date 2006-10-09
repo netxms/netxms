@@ -415,6 +415,8 @@ typedef struct
 #define CMD_TERMINATE_ALARM         0x00B5
 #define CMD_GET_NXCP_CAPS           0x00B6
 #define CMD_NXCP_CAPS               0x00B7
+#define CMD_GET_OBJECT_COMMENTS     0x00B8
+#define CMD_UPDATE_OBJECT_COMMENTS  0x00B9
 
 
 //

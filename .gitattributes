@@ -754,6 +754,8 @@ src/console/win32/ObjToolPropOptions.cpp -text
 src/console/win32/ObjToolPropOptions.h -text
 src/console/win32/ObjectBrowser.cpp -text
 src/console/win32/ObjectBrowser.h -text
+src/console/win32/ObjectCommentsEditor.cpp -text
+src/console/win32/ObjectCommentsEditor.h -text
 src/console/win32/ObjectInfoBox.cpp -text
 src/console/win32/ObjectInfoBox.h -text
 src/console/win32/ObjectPreview.cpp -text

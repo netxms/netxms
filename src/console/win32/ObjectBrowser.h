@@ -160,6 +160,8 @@ protected:
 	afx_msg void OnObjectMove();
 	afx_msg void OnUpdateObjectMove(CCmdUI* pCmdUI);
 	afx_msg void OnObjectCreateCondition();
+	afx_msg void OnObjectComments();
+	afx_msg void OnUpdateObjectComments(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnFindObject(WPARAM wParam, LPARAM lParam);
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);

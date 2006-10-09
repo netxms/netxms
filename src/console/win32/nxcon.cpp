@@ -58,6 +58,7 @@
 #include "CondPropsData.h"
 #include "CondPropsScript.h"
 #include "AgentConfigMgr.h"
+#include "ObjectCommentsEditor.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -122,7 +123,7 @@ END_MESSAGE_MAP()
 CConsoleApp::CConsoleApp()
 {
    m_dwClientState = STATE_DISCONNECTED;
-   memset(m_openDCEditors, 0, sizeof(DC_EDITOR) * MAX_DC_EDITORS);
+   memset(m_openObjectViews, 0, sizeof(OBJECT_VIEW) * MAX_OBJECT_VIEWS);
    memset(m_viewState, 0, sizeof(CONSOLE_VIEW) * MAX_VIEW_ID);
    m_bIgnoreErrors = FALSE;
 }
@@ -601,20 +602,21 @@ void CConsoleApp::OnViewCreate(DWORD dwView, CMDIChildWnd *pWnd, DWORD dwArg)
 {
    DWORD i;
 
-   if (dwView == IDR_DC_EDITOR)
+   if (dwView >= FIRST_OBJECT_VIEW)
    {
-      // Register new DC editor
-      for(i = 0; i < MAX_DC_EDITORS; i++)
-         if (m_openDCEditors[i].pWnd == NULL)
+      // Register new object view
+      for(i = 0; i < MAX_OBJECT_VIEWS; i++)
+         if (m_openObjectViews[i].pWnd == NULL)
          {
-            m_openDCEditors[i].pWnd = pWnd;
-            m_openDCEditors[i].dwNodeId = dwArg;
+            m_openObjectViews[i].pWnd = pWnd;
+            m_openObjectViews[i].dwClass = dwView;
+            m_openObjectViews[i].dwId = dwArg;
             break;
          }
    }
    else
    {
-      // Regitesr view
+      // Register view
       if (dwView < MAX_VIEW_ID)
       {
          m_viewState[dwView].bActive = TRUE;
@@ -643,14 +645,15 @@ void CConsoleApp::OnViewDestroy(DWORD dwView, CMDIChildWnd *pWnd, DWORD dwArg)
 {
    DWORD i;
 
-   if (dwView == IDR_DC_EDITOR)
+   if (dwView >= FIRST_OBJECT_VIEW)
    {
-      // Unregister DC editor
-      for(i = 0; i < MAX_DC_EDITORS; i++)
-         if (m_openDCEditors[i].pWnd == pWnd)
+      // Unregister object view
+      for(i = 0; i < MAX_OBJECT_VIEWS; i++)
+         if (m_openObjectViews[i].pWnd == pWnd)
          {
-            m_openDCEditors[i].pWnd = NULL;
-            m_openDCEditors[i].dwNodeId = 0;
+            m_openObjectViews[i].pWnd = NULL;
+            m_openObjectViews[i].dwClass = 0;
+            m_openObjectViews[i].dwId = 0;
             break;
          }
    }
@@ -1307,7 +1310,7 @@ void CConsoleApp::StartObjectDCEditor(NXC_OBJECT *pObject)
    DWORD dwResult;
    CDataCollectionEditor *pWnd;
 
-   pWnd = (CDataCollectionEditor *)FindOpenDCEditor(pObject->dwId);
+   pWnd = (CDataCollectionEditor *)FindObjectView(OV_DC_EDITOR, pObject->dwId);
    if (pWnd == NULL)
    {
       dwResult = DoRequestArg3(NXCOpenNodeDCIList, g_hSession, (void *)pObject->dwId, 
@@ -1325,6 +1328,30 @@ void CConsoleApp::StartObjectDCEditor(NXC_OBJECT *pObject)
    else
    {
       // Data collection editor already open, activate it
+      pWnd->BringWindowToTop();
+   }
+}
+
+
+//
+// Open object's comment editor
+//
+
+void CConsoleApp::ShowObjectComments(NXC_OBJECT *pObject)
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+   CObjectCommentsEditor *pWnd;
+
+   pWnd = (CObjectCommentsEditor *)FindObjectView(OV_OBJECT_COMMENTS, pObject->dwId);
+   if (pWnd == NULL)
+   {
+      CreateChildFrameWithSubtitle(new CObjectCommentsEditor(pObject->dwId),
+                                   IDR_OBJECT_COMMENTS_EDITOR,
+                                   pObject->szName, m_hMDIMenu, m_hMDIAccel);
+   }
+   else
+   {
+      // Comment window already open, activate it
       pWnd->BringWindowToTop();
    }
 }
@@ -1365,13 +1392,14 @@ void CConsoleApp::SetObjectMgmtStatus(NXC_OBJECT *pObject, BOOL bIsManaged)
 // Find open data collection editor for given node, if any
 //
 
-CWnd *CConsoleApp::FindOpenDCEditor(DWORD dwNodeId)
+CMDIChildWnd *CConsoleApp::FindObjectView(DWORD dwClass, DWORD dwId)
 {
    DWORD i;
 
-   for(i = 0; i < MAX_DC_EDITORS; i++)
-      if (m_openDCEditors[i].dwNodeId == dwNodeId)
-         return m_openDCEditors[i].pWnd;
+   for(i = 0; i < MAX_OBJECT_VIEWS; i++)
+      if ((m_openObjectViews[i].dwClass == dwClass) &&
+          (m_openObjectViews[i].dwId == dwId))
+         return m_openObjectViews[i].pWnd;
    return NULL;
 }
 
