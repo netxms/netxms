@@ -1,9 +1,9 @@
-# $Id: configure.ac,v 1.199 2006-10-09 21:42:26 victor Exp $
+# $Id: configure.ac,v 1.200 2006-10-10 10:01:18 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
 
-AC_INIT([NetXMS], [0.2.14-rc4], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.14-rc5], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR([config])
 AM_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
@@ -66,7 +66,10 @@ case `uname -s` in
       LDFLAGS="-no-undefined $LDFLAGS"
       ;;
    HP-UX)
-      CPPFLAGS="$CPPFLAGS -D_INCLUDE_HPUX_SOURCE"
+      CPPFLAGS="$CPPFLAGS -D_HPUX_SOURCE"
+      if test "x$CXX" = "xaCC"; then
+         CXXFLAGS="$CXXFLAGS +W829"
+      fi
       ;;
    *)
       ;;
