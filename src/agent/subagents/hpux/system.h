@@ -1,4 +1,4 @@
-/* $Id: system.h,v 1.2 2006-10-05 00:34:24 alk Exp $ */
+/* $Id: system.h,v 1.3 2006-10-10 15:59:51 victor Exp $ */
 
 /* 
 ** NetXMS subagent for HP-UX
@@ -33,7 +33,7 @@ enum
 	SWAP_TOTAL,
 	VIRTUAL_FREE,
 	VIRTUAL_USED,
-	VIRTUAL_TOTAL,
+	VIRTUAL_TOTAL
 };
 
 LONG H_ProcessList(char *, char *, NETXMS_VALUES_LIST *);
@@ -57,6 +57,9 @@ void ShutdownCpuUsageCollector(void);
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/10/05 00:34:24  alk
+HPUX: minor cleanup; added System.LoggedInCount (W(1) | wc -l equivalent)
+
 Revision 1.1  2006/10/04 14:59:14  alk
 initial version of HPUX subagent
 

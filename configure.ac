@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.200 2006-10-10 10:01:18 victor Exp $
+# $Id: configure.ac,v 1.201 2006-10-10 15:59:49 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -68,7 +68,7 @@ case `uname -s` in
    HP-UX)
       CPPFLAGS="$CPPFLAGS -D_HPUX_SOURCE"
       if test "x$CXX" = "xaCC"; then
-         CXXFLAGS="$CXXFLAGS +W829"
+         CXXFLAGS="$CXXFLAGS +W749 +W829"
       fi
       ;;
    *)
@@ -654,7 +654,10 @@ fi
 
 AC_CHECK_HEADERS([wchar.h iconv.h])
 AC_CHECK_SIZEOF(wchar_t)
-AC_CHECK_LIB(iconv, iconv, ac_found_iconv=yes)
+AC_CHECK_LIB(iconv, iconv, 
+	[ ac_found_iconv=yes
+          LDFLAGS="$LDFLAGS -liconv"
+])
 AC_CHECK_FUNCS(iconv, ac_found_iconv=yes, ac_found_iconv=no)
 
 AC_MSG_CHECKING(whether iconv supports UCS-2-INTERNAL)
@@ -713,6 +716,24 @@ AC_RUN_IFELSE(
   [ AC_MSG_RESULT(no) ]
 )
 
+AC_MSG_CHECKING(whether iconv supports UCS-2BE)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+#if HAVE_ICONV_H
+#include <iconv.h>
+#endif
+     ], [
+     return iconv_open("UTF-8","UCS-2BE")==(iconv_t)(-1);
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_ICONV_UCS_2BE, 1, Define to 1 if iconv supports UCS-2BE)
+    valid_ucs2_code="UCS-2BE"
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
+
 AC_MSG_CHECKING(whether iconv supports //IGNORE)
 AC_RUN_IFELSE(
   [AC_LANG_PROGRAM([
@@ -749,7 +770,6 @@ if test "x$ac_found_iconv" = "xyes"; then
   AC_DEFINE_UNQUOTED([ICONV_CONST], $ac_cv_iconv_const,
     [Define as const if the declaration of iconv() needs const.])
 fi
-
 
 
 if test $ac_cv_sizeof_wchar_t -eq 2; then

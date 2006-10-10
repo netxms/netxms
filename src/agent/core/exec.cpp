@@ -123,7 +123,7 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
 		pTmp = pszCmdLine;
 		pCmd[nCount++] = pTmp;
 		int nLen = strlen(pTmp);
-		for (int i = 0; i < nLen; i++)
+		for (i = 0; i < nLen; i++)
 		{
 			switch(pTmp[i])
 			{

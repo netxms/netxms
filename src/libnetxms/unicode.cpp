@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.14 2006-10-05 12:41:32 alk Exp $ */
+/* $Id: unicode.cpp,v 1.15 2006-10-10 15:59:51 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -48,6 +48,8 @@ static char m_cpDefault[MAX_CODEPAGE_LEN] = "";
 #define UCS2_CODEPAGE_NAME	"UCS-2"
 #elif HAVE_ICONV_UCS2
 #define UCS2_CODEPAGE_NAME	"UCS2"
+#elif HAVE_ICONV_UCS_2BE && WORDS_BIGENDIAN
+#define UCS2_CODEPAGE_NAME	"UCS-2BE"
 #else
 #warning Cannot determine valid UCS-2 codepage name
 #undef HAVE_ICONV

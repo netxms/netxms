@@ -6,7 +6,7 @@ enum
 	PC_ERR_NONE,
 	PC_ERR_BAD_PARAMS,
 	PC_ERR_CONNECT,
-	PC_ERR_HANDSHAKE,
+	PC_ERR_HANDSHAKE
 };
 
 LONG H_CheckPOP3(char *, char *, char *);
