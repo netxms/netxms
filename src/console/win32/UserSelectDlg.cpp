@@ -24,8 +24,14 @@ CUserSelectDlg::CUserSelectDlg(CWnd* pParent /*=NULL*/)
 
    m_bOnlyUsers = FALSE;
    m_bAddPublic = FALSE;
+   m_bSingleSelection = FALSE;
+   m_pdwUserList = NULL;
 }
 
+CUserSelectDlg::~CUserSelectDlg()
+{
+   safe_free(m_pdwUserList);
+}
 
 void CUserSelectDlg::DoDataExchange(CDataExchange* pDX)
 {
@@ -64,8 +70,12 @@ BOOL CUserSelectDlg::OnInitDialog()
    m_wndListCtrl.GetClientRect(&rect);
    m_wndListCtrl.InsertColumn(0, _T("Name"), LVCFMT_LEFT, 
                               rect.right - GetSystemMetrics(SM_CXVSCROLL) - 4);
-	m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT);
-   m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
+	m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+   if (m_bSingleSelection)
+   {
+      ::SetWindowLong(m_wndListCtrl.m_hWnd, GWL_STYLE, 
+         ::GetWindowLong(m_wndListCtrl.m_hWnd, GWL_STYLE) | LVS_SINGLESEL);
+   }
 
    // Create image list
    pImageList = new CImageList;
@@ -107,11 +117,18 @@ BOOL CUserSelectDlg::OnInitDialog()
 void CUserSelectDlg::OnOK() 
 {
    int iItem;
+   DWORD i;
 
-   iItem = m_wndListCtrl.GetSelectionMark();
-   if (iItem != -1)
+   m_dwNumUsers = m_wndListCtrl.GetSelectedCount();
+   if (m_dwNumUsers > 0)
    {
-      m_dwUserId = m_wndListCtrl.GetItemData(iItem);
+      m_pdwUserList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumUsers);
+      iItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED);
+      for(i = 0; (iItem != -1) && (i < m_dwNumUsers); i++)
+      {
+         m_pdwUserList[i] = m_wndListCtrl.GetItemData(iItem);
+         iItem = m_wndListCtrl.GetNextItem(iItem, LVIS_SELECTED);
+      }
 	   CDialog::OnOK();
    }
    else

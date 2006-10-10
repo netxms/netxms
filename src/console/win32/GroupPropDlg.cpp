@@ -150,39 +150,42 @@ void CGroupPropDlg::OnButtonAdd()
    wndSelectDlg.m_bOnlyUsers = TRUE;      // Don't show groups in selection dialog
    if (wndSelectDlg.DoModal() == IDOK)
    {
-      DWORD i;
+      DWORD i, j;
       int iItem = -1;
 
-      // Check if we have this user in member list already
-      for(i = 0; i < m_dwNumMembers; i++)
-         if (m_pdwMembers[i] == wndSelectDlg.m_dwUserId)
-         {
-            LVFINDINFO lvfi;
-
-            // Find appropriate item in list
-            lvfi.flags = LVFI_PARAM;
-            lvfi.lParam = m_pdwMembers[i];
-            iItem = m_wndListCtrl.FindItem(&lvfi);
-            break;
-         }
-
-      if (i == m_dwNumMembers)
+      for(j = 0; j < wndSelectDlg.m_dwNumUsers; j++)
       {
-         NXC_USER *pUser;
+         // Check if we have this user in member list already
+         for(i = 0; i < m_dwNumMembers; i++)
+            if (m_pdwMembers[i] == wndSelectDlg.m_pdwUserList[j])
+            {
+               LVFINDINFO lvfi;
 
-         // Create new entry in member list
-         m_dwNumMembers++;
-         m_pdwMembers = (DWORD *)realloc(m_pdwMembers, sizeof(DWORD) * m_dwNumMembers);
-         m_pdwMembers[i] = wndSelectDlg.m_dwUserId;
+               // Find appropriate item in list
+               lvfi.flags = LVFI_PARAM;
+               lvfi.lParam = m_pdwMembers[i];
+               iItem = m_wndListCtrl.FindItem(&lvfi);
+               break;
+            }
 
-         // Add new line to user list
-         pUser = NXCFindUserById(g_hSession, wndSelectDlg.m_dwUserId);
-         if (pUser != NULL)
+         if (i == m_dwNumMembers)
          {
-            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pUser->szName,
-                                             (pUser->dwId == GROUP_EVERYONE) ? 2 :
-                                                ((pUser->dwId & GROUP_FLAG) ? 1 : 0));
-            m_wndListCtrl.SetItemData(iItem, wndSelectDlg.m_dwUserId);
+            NXC_USER *pUser;
+
+            // Create new entry in member list
+            m_dwNumMembers++;
+            m_pdwMembers = (DWORD *)realloc(m_pdwMembers, sizeof(DWORD) * m_dwNumMembers);
+            m_pdwMembers[i] = wndSelectDlg.m_pdwUserList[j];
+
+            // Add new line to user list
+            pUser = NXCFindUserById(g_hSession, wndSelectDlg.m_pdwUserList[j]);
+            if (pUser != NULL)
+            {
+               iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pUser->szName,
+                                                (pUser->dwId == GROUP_EVERYONE) ? 2 :
+                                                   ((pUser->dwId & GROUP_FLAG) ? 1 : 0));
+               m_wndListCtrl.SetItemData(iItem, wndSelectDlg.m_pdwUserList[j]);
+            }
          }
       }
 
@@ -207,6 +210,23 @@ void CGroupPropDlg::OnButtonAdd()
 
 void CGroupPropDlg::OnButtonDelete() 
 {
-	// TODO: Add your control notification handler code here
-	
+   int nItem;
+   DWORD i, dwUserId;
+
+   nItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED);
+   while(nItem != -1)
+   {
+      dwUserId = m_wndListCtrl.GetItemData(nItem);
+      for(i = 0; i < m_dwNumMembers; i++)
+      {
+         if (m_pdwMembers[i] == dwUserId)
+         {
+            m_dwNumMembers--;
+            memmove(&m_pdwMembers[i], &m_pdwMembers[i + 1], sizeof(DWORD) * (m_dwNumMembers - i));
+            break;
+         }
+      }
+      m_wndListCtrl.DeleteItem(nItem);
+      nItem = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED);
+   }
 }

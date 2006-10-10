@@ -168,40 +168,43 @@ void CObjectPropsSecurity::OnAddUser()
 
    if (wndSelectDlg.DoModal() == IDOK)
    {
-      DWORD i;
+      DWORD i, j;
       int iItem = -1;
 
-      // Check if we have this user in ACL already
-      for(i = 0; i < m_dwAclSize; i++)
-         if (m_pAccessList[i].dwUserId == wndSelectDlg.m_dwUserId)
-         {
-            LVFINDINFO lvfi;
-
-            // Find appropriate item in list
-            lvfi.flags = LVFI_PARAM;
-            lvfi.lParam = m_pAccessList[i].dwUserId;
-            iItem = m_wndUserList.FindItem(&lvfi);
-            break;
-         }
-
-      if (i == m_dwAclSize)
+      for(j = 0; j < wndSelectDlg.m_dwNumUsers; j++)
       {
-         NXC_USER *pUser;
+         // Check if we have this user in ACL already
+         for(i = 0; i < m_dwAclSize; i++)
+            if (m_pAccessList[i].dwUserId == wndSelectDlg.m_pdwUserList[j])
+            {
+               LVFINDINFO lvfi;
 
-         // Create new entry in ACL
-         m_pAccessList = (NXC_ACL_ENTRY *)realloc(m_pAccessList, sizeof(NXC_ACL_ENTRY) * (m_dwAclSize + 1));
-         m_pAccessList[m_dwAclSize].dwUserId = wndSelectDlg.m_dwUserId;
-         m_pAccessList[m_dwAclSize].dwAccessRights = OBJECT_ACCESS_READ;
-         m_dwAclSize++;
+               // Find appropriate item in list
+               lvfi.flags = LVFI_PARAM;
+               lvfi.lParam = m_pAccessList[i].dwUserId;
+               iItem = m_wndUserList.FindItem(&lvfi);
+               break;
+            }
 
-         // Add new line to user list
-         pUser = NXCFindUserById(g_hSession, wndSelectDlg.m_dwUserId);
-         if (pUser != NULL)
+         if (i == m_dwAclSize)
          {
-            iItem = m_wndUserList.InsertItem(0x7FFFFFFF, pUser->szName,
-                                             (pUser->dwId == GROUP_EVERYONE) ? 2 :
-                                                ((pUser->dwId & GROUP_FLAG) ? 1 : 0));
-            m_wndUserList.SetItemData(iItem, wndSelectDlg.m_dwUserId);
+            NXC_USER *pUser;
+
+            // Create new entry in ACL
+            m_pAccessList = (NXC_ACL_ENTRY *)realloc(m_pAccessList, sizeof(NXC_ACL_ENTRY) * (m_dwAclSize + 1));
+            m_pAccessList[m_dwAclSize].dwUserId = wndSelectDlg.m_pdwUserList[j];
+            m_pAccessList[m_dwAclSize].dwAccessRights = OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_ALARMS;
+            m_dwAclSize++;
+
+            // Add new line to user list
+            pUser = NXCFindUserById(g_hSession, wndSelectDlg.m_pdwUserList[j]);
+            if (pUser != NULL)
+            {
+               iItem = m_wndUserList.InsertItem(0x7FFFFFFF, pUser->szName,
+                                                (pUser->dwId == GROUP_EVERYONE) ? 2 :
+                                                   ((pUser->dwId & GROUP_FLAG) ? 1 : 0));
+               m_wndUserList.SetItemData(iItem, wndSelectDlg.m_pdwUserList[j]);
+            }
          }
 
          m_bIsModified = TRUE;

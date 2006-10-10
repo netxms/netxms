@@ -14,10 +14,13 @@ class CUserSelectDlg : public CDialog
 {
 // Construction
 public:
+	BOOL m_bSingleSelection;
 	BOOL m_bAddPublic;
 	BOOL m_bOnlyUsers;
-	DWORD m_dwUserId;
+   DWORD m_dwNumUsers;
+	DWORD *m_pdwUserList;
 	CUserSelectDlg(CWnd* pParent = NULL);   // standard constructor
+   ~CUserSelectDlg();
 
 // Dialog Data
 	//{{AFX_DATA(CUserSelectDlg)

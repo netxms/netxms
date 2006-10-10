@@ -350,11 +350,12 @@ void CDesktopManager::MoveOrCopyDesktop(BOOL bMove)
 
    dlg.m_bOnlyUsers = TRUE;
    dlg.m_bAddPublic = TRUE;
+   dlg.m_bSingleSelection = TRUE;
    if (dlg.DoModal() == IDOK)
    {
       _sntprintf(szVar, MAX_DB_STRING, _T("/Win32Console/Desktop/%s/*"), m_szCurrConf);
       dwResult = DoRequestArg5(NXCCopyUserVariable, g_hSession, (void *)m_dwCurrUser,
-                               (void *)dlg.m_dwUserId, szVar, (void *)bMove,
+                               (void *)dlg.m_pdwUserList[0], szVar, (void *)bMove,
                                bMove ? _T("Moving desktop configuration...") : _T("Copying desktop configuration..."));
       if (dwResult == RCC_SUCCESS)
       {
@@ -362,7 +363,7 @@ void CDesktopManager::MoveOrCopyDesktop(BOOL bMove)
          hItem = m_wndTreeCtrl.GetChildItem(TVI_ROOT);
          while(hItem != NULL)
          {
-            if (m_wndTreeCtrl.GetItemData(hItem) == dlg.m_dwUserId)
+            if (m_wndTreeCtrl.GetItemData(hItem) == dlg.m_pdwUserList[0])
                break;
             hItem = m_wndTreeCtrl.GetNextItem(hItem, TVGN_NEXT);
          }
@@ -371,7 +372,7 @@ void CDesktopManager::MoveOrCopyDesktop(BOOL bMove)
             if (FindTreeCtrlItem(m_wndTreeCtrl, hItem, m_szCurrConf) == NULL)
             {
                hChildItem = m_wndTreeCtrl.InsertItem(m_szCurrConf, 3, 3, hItem);
-               m_wndTreeCtrl.SetItemData(hChildItem, dlg.m_dwUserId);
+               m_wndTreeCtrl.SetItemData(hChildItem, dlg.m_pdwUserList[0]);
                m_wndTreeCtrl.SortChildren(hItem);
             }
          }

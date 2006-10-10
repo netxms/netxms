@@ -122,40 +122,43 @@ BOOL CObjToolPropGeneral::OnInitDialog()
 void CObjToolPropGeneral::OnButtonAdd() 
 {
    CUserSelectDlg wndSelectDlg;
-   DWORD i;
+   DWORD i, j;
    int iItem = -1;
    NXC_USER *pUser;
 
    if (wndSelectDlg.DoModal() == IDOK)
    {
-      // Check if we have this user in ACL already
-      for(i = 0; i < m_dwACLSize; i++)
-         if (m_pdwACL[i] == wndSelectDlg.m_dwUserId)
-         {
-            LVFINDINFO lvfi;
-
-            // Find appropriate item in list
-            lvfi.flags = LVFI_PARAM;
-            lvfi.lParam = wndSelectDlg.m_dwUserId;
-            iItem = m_wndListCtrl.FindItem(&lvfi);
-            break;
-         }
-
-      if (i == m_dwACLSize)
+      for(j = 0; j < wndSelectDlg.m_dwNumUsers; j++)
       {
-         // Create new entry in ACL
-         m_dwACLSize++;
-         m_pdwACL = (DWORD *)realloc(m_pdwACL, sizeof(DWORD) * m_dwACLSize);
-         m_pdwACL[i] = wndSelectDlg.m_dwUserId;
+         // Check if we have this user in ACL already
+         for(i = 0; i < m_dwACLSize; i++)
+            if (m_pdwACL[i] == wndSelectDlg.m_pdwUserList[j])
+            {
+               LVFINDINFO lvfi;
 
-         // Add new line to user list
-         pUser = NXCFindUserById(g_hSession, wndSelectDlg.m_dwUserId);
-         if (pUser != NULL)
+               // Find appropriate item in list
+               lvfi.flags = LVFI_PARAM;
+               lvfi.lParam = wndSelectDlg.m_pdwUserList[j];
+               iItem = m_wndListCtrl.FindItem(&lvfi);
+               break;
+            }
+
+         if (i == m_dwACLSize)
          {
-            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pUser->szName,
-                                             (pUser->dwId == GROUP_EVERYONE) ? 2 :
-                                                ((pUser->dwId & GROUP_FLAG) ? 1 : 0));
-            m_wndListCtrl.SetItemData(iItem, wndSelectDlg.m_dwUserId);
+            // Create new entry in ACL
+            m_dwACLSize++;
+            m_pdwACL = (DWORD *)realloc(m_pdwACL, sizeof(DWORD) * m_dwACLSize);
+            m_pdwACL[i] = wndSelectDlg.m_pdwUserList[j];
+
+            // Add new line to user list
+            pUser = NXCFindUserById(g_hSession, wndSelectDlg.m_pdwUserList[j]);
+            if (pUser != NULL)
+            {
+               iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pUser->szName,
+                                                (pUser->dwId == GROUP_EVERYONE) ? 2 :
+                                                   ((pUser->dwId & GROUP_FLAG) ? 1 : 0));
+               m_wndListCtrl.SetItemData(iItem, wndSelectDlg.m_pdwUserList[j]);
+            }
          }
       }
 
