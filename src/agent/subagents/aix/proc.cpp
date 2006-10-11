@@ -1,4 +1,4 @@
-/* $Id: proc.cpp,v 1.3 2006-09-28 20:00:03 victor Exp $ */
+/* $Id: proc.cpp,v 1.4 2006-10-11 22:23:06 victor Exp $ */
 /*
 ** NetXMS subagent for AIX
 ** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
@@ -20,6 +20,8 @@
 ** File: proc.cpp
 **
 **/
+
+#define _H_XCOFF
 
 #include "aix_subagent.h"
 #include <procinfo.h>
