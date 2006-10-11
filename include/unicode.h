@@ -58,6 +58,10 @@
 #include <wchar.h>
 #endif
 
+#if HAVE_STRING_H
+#include <string.h>
+#endif
+
 #ifdef _NETWARE
 #define WCHAR     wchar_t
 #else
