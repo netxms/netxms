@@ -541,6 +541,9 @@
 #define IDC_CHECK_UNMANAGED             1383
 #define IDC_CHECK_ICMP                  1386
 #define IDC_CHECK_ALL_THRESHOLDS        1388
+#define IDC_CHECK_CONFIRM               1389
+#define IDC_EDIT_CONFIRM                1390
+#define IDC_STATIC_CONFIRM              1391
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -775,7 +778,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        334
 #define _APS_NEXT_COMMAND_VALUE         33043
-#define _APS_NEXT_CONTROL_VALUE         1389
+#define _APS_NEXT_CONTROL_VALUE         1392
 #define _APS_NEXT_SYMED_VALUE           128
 #endif
 #endif

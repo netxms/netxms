@@ -6,6 +6,9 @@
 - Added possibility to specify custom threshold rearm event instead of
   SYS_THRESHOLD_REARMED
 - Added threshold processing option "Always process all thresholds"
+- Added possibility to set confirmation messages for object tools
+- Object tools "Shutdown system", "Restart system", "Restart agent"
+  asks confirmation by default
 - Windows console:
 	- Console changed to use UNICODE internally
 	- Event processing policy editor improved

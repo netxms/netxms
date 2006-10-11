@@ -78,6 +78,33 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V49 to V50
+//
+
+static BOOL H_UpgradeFromV49(void)
+{
+   static TCHAR m_szBatch[] =
+      "ALTER TABLE object_tools ADD confirmation_text varchar(255)\n"
+      "UPDATE object_tools SET confirmation_text='#00'\n"
+      "UPDATE object_tools SET flags=10 WHERE tool_id=1 OR tool_id=2 OR tool_id=4\n"
+      "UPDATE object_tools SET confirmation_text='Host #25OBJECT_NAME#25 (#25OBJECT_IP_ADDR#25) will be shut down. Are you sure?' WHERE tool_id=1\n"
+      "UPDATE object_tools SET confirmation_text='Host #25OBJECT_NAME#25 (#25OBJECT_IP_ADDR#25) will be restarted. Are you sure?' WHERE tool_id=2\n"
+      "UPDATE object_tools SET confirmation_text='NetXMS agent on host #25OBJECT_NAME#25 (#25OBJECT_IP_ADDR#25) will be restarted. Are you sure?' WHERE tool_id=4\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='50' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V48 to V49
 //
 
@@ -2212,6 +2239,7 @@ static struct
    { 46, H_UpgradeFromV46 },
    { 47, H_UpgradeFromV47 },
    { 48, H_UpgradeFromV48 },
+   { 49, H_UpgradeFromV49 },
    { 0, NULL }
 };
 

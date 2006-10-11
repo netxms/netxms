@@ -28,6 +28,8 @@ public:
 	BOOL	m_bMatchOID;
 	BOOL	m_bNeedSNMP;
 	int		m_nIndexType;
+	BOOL	m_bConfirmation;
+	CString	m_strConfirmationText;
 	//}}AFX_DATA
 
 
@@ -44,6 +46,7 @@ protected:
 	//{{AFX_MSG(CObjToolPropOptions)
 	virtual BOOL OnInitDialog();
 	afx_msg void OnCheckMatchOid();
+	afx_msg void OnCheckConfirm();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

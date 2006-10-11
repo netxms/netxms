@@ -1224,6 +1224,7 @@ typedef struct
    TCHAR szDescription[MAX_DB_STRING];
    TCHAR *pszMatchingOID;
    TCHAR *pszData;
+   TCHAR *pszConfirmationText;
 } NXC_OBJECT_TOOL;
 
 
@@ -1267,6 +1268,7 @@ typedef struct
    TCHAR szDescription[MAX_DB_STRING];
    TCHAR *pszMatchingOID;
    TCHAR *pszData;
+   TCHAR *pszConfirmationText;
    DWORD *pdwACL;
    DWORD dwACLSize;
    WORD wType;

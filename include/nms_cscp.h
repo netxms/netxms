@@ -680,6 +680,7 @@ typedef struct
 #define VID_HELPDESK_REF            ((DWORD)247)
 #define VID_REPEAT_COUNT            ((DWORD)248)
 #define VID_ALL_THRESHOLDS          ((DWORD)249)
+#define VID_CONFIRMATION_TEXT       ((DWORD)250)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

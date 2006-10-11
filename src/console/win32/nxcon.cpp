@@ -2486,6 +2486,28 @@ void CConsoleApp::ExecuteObjectTool(NXC_OBJECT *pObject, DWORD dwIndex)
        (pObject->iClass != OBJECT_NODE))
       return;
 
+   if (g_pObjectToolList[dwIndex].dwFlags & TF_ASK_CONFIRMATION)
+   {
+      TCHAR szBuffer[4096];
+
+      if ((g_pObjectToolList[dwIndex].pszConfirmationText != NULL) &&
+          (*g_pObjectToolList[dwIndex].pszConfirmationText != 0))
+      {
+         _stprintf(szBuffer, _T("%lu"), pObject->dwId);
+         SetEnvironmentVariable(_T("OBJECT_ID"), szBuffer);
+         SetEnvironmentVariable(_T("OBJECT_IP_ADDR"), IpToStr(pObject->dwIpAddr, szBuffer));
+         SetEnvironmentVariable(_T("OBJECT_NAME"), pObject->szName);
+         ExpandEnvironmentStrings(g_pObjectToolList[dwIndex].pszConfirmationText, szBuffer, 4096);
+      }
+      else
+      {
+         _tcscpy(szBuffer, _T("This tool requires confirmation but does not provide confirmation message. Do you wish to run this tool?"));
+      }
+
+      if (m_pMainWnd->MessageBox(szBuffer, _T("Warning"), MB_YESNO | MB_ICONEXCLAMATION) != IDYES)
+         return;
+   }
+
    switch(g_pObjectToolList[dwIndex].wType)
    {
       case TOOL_TYPE_INTERNAL:

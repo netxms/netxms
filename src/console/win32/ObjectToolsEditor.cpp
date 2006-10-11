@@ -467,6 +467,8 @@ void CObjectToolsEditor::EditTool(NXC_OBJECT_TOOL_DETAILS *pData)
    pgOptions.m_strMatchingOID = CHECK_NULL_EX(pData->pszMatchingOID);
    pgOptions.m_nIndexType = (pData->dwFlags & TF_SNMP_INDEXED_BY_VALUE) ? 1 : 0;
    pgOptions.m_iToolType = (int)pData->wType;
+   pgOptions.m_bConfirmation = (pData->dwFlags & TF_ASK_CONFIRMATION) ? TRUE : FALSE;
+   pgOptions.m_strConfirmationText = CHECK_NULL_EX(pData->pszConfirmationText);
    psh.AddPage(&pgOptions);
 
    // Setup "Columns" page
@@ -512,6 +514,16 @@ void CObjectToolsEditor::EditTool(NXC_OBJECT_TOOL_DETAILS *pData)
       else
       {
          pData->pszMatchingOID = NULL;
+      }
+      safe_free(pData->pszConfirmationText)
+      if (pgOptions.m_bConfirmation)
+      {
+         pData->dwFlags |= TF_ASK_CONFIRMATION;
+         pData->pszConfirmationText = _tcsdup((LPCTSTR)pgOptions.m_strConfirmationText);
+      }
+      else
+      {
+         pData->pszConfirmationText = NULL;
       }
       if (pgOptions.m_nIndexType == 1)
          pData->dwFlags |= TF_SNMP_INDEXED_BY_VALUE;

@@ -530,7 +530,7 @@ DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
 {
    DB_RESULT hResult;
    BOOL bUpdate = FALSE;
-   TCHAR *pszName, *pszData, *pszDescription, *pszOID, *pszTmp;
+   TCHAR *pszName, *pszData, *pszDescription, *pszOID, *pszTmp, *pszConfirm;
    TCHAR szBuffer[MAX_DB_STRING], szQuery[4096];
    DWORD i, dwToolId, dwAclSize, *pdwAcl;
    int nType;
@@ -553,26 +553,32 @@ DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg)
    pszDescription = EncodeSQLString(szBuffer);
    pMsg->GetVariableStr(VID_TOOL_OID, szBuffer, MAX_DB_STRING);
    pszOID = EncodeSQLString(szBuffer);
+   pMsg->GetVariableStr(VID_CONFIRMATION_TEXT, szBuffer, MAX_DB_STRING);
+   pszConfirm = EncodeSQLString(szBuffer);
    pszTmp = pMsg->GetVariableStr(VID_TOOL_DATA);
    pszData = EncodeSQLString(pszTmp);
    free(pszTmp);
    nType = pMsg->GetVariableShort(VID_TOOL_TYPE);
    if (bUpdate)
-      _sntprintf(szQuery, 4096, _T("UPDATE object_tools SET tool_name='%s',tool_type=%d,"
-                                   "tool_data='%s',description='%s',flags=%d,"
-                                   "matching_oid='%s' WHERE tool_id=%d"),
+      _sntprintf(szQuery, 4096, _T("UPDATE object_tools SET tool_name='%s',tool_type=%d,")
+                                _T("tool_data='%s',description='%s',flags=%d,")
+                                _T("matching_oid='%s',confirmation_text='%s' ")
+                                _T("WHERE tool_id=%d"),
                 pszName, nType, pszData, pszDescription,
-                pMsg->GetVariableLong(VID_FLAGS), pszOID, dwToolId);
+                pMsg->GetVariableLong(VID_FLAGS), pszOID, pszConfirm, dwToolId);
    else
-      _sntprintf(szQuery, 4096, _T("INSERT INTO object_tools (tool_id,tool_name,tool_type,"
-                                   "tool_data,description,flags,matching_oid) VALUES "
-                                   "(%d,'%s',%d,'%s','%s',%d,'%s')"),
+      _sntprintf(szQuery, 4096, _T("INSERT INTO object_tools (tool_id,tool_name,tool_type,")
+                                _T("tool_data,description,flags,matching_oid,")
+                                _T("confirmation_text) VALUES ")
+                                _T("(%d,'%s',%d,'%s','%s',%d,'%s','%s')"),
                 dwToolId, pszName, nType, pszData,
-                pszDescription, pMsg->GetVariableLong(VID_FLAGS), pszOID);
+                pszDescription, pMsg->GetVariableLong(VID_FLAGS),
+                pszOID, pszConfirm);
    free(pszName);
    free(pszDescription);
    free(pszData);
    free(pszOID);
+   free(pszConfirm);
    DBQuery(g_hCoreDB, szQuery);
 
    // Update ACL

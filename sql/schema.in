@@ -803,10 +803,11 @@ CREATE TABLE object_tools
 	tool_id integer not null,
 	tool_name varchar(255) not null,
 	tool_type integer not null,
-	tool_data SQL_TEXT,
-	description varchar(255),
+	tool_data SQL_TEXT not null,
+	description varchar(255) not null,
 	flags integer not null,
-	matching_oid varchar(255),
+	matching_oid varchar(255) not null,
+	confirmation_text varchar(255) not null,
 	PRIMARY KEY(tool_id)
 ) TABLE_TYPE;
 

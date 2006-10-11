@@ -61,6 +61,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetObjectTools(NXC_SESSION hSession, DWORD *pdwNumTo
             (*ppToolList)[i].dwFlags = pResponse->GetVariableLong(dwId + 4);
             pResponse->GetVariableStr(dwId + 5, (*ppToolList)[i].szDescription, MAX_DB_STRING);
             (*ppToolList)[i].pszMatchingOID = pResponse->GetVariableStr(dwId + 6);
+            (*ppToolList)[i].pszConfirmationText = pResponse->GetVariableStr(dwId + 7);
          }
       }
       delete pResponse;
@@ -87,6 +88,7 @@ void LIBNXCL_EXPORTABLE NXCDestroyObjectToolList(DWORD dwNumTools, NXC_OBJECT_TO
       {
          safe_free(pList[i].pszData);
          safe_free(pList[i].pszMatchingOID);
+         safe_free(pList[i].pszConfirmationText);
       }
       free(pList);
    }
@@ -247,6 +249,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetObjectToolDetails(NXC_SESSION hSession, DWORD dwT
          (*ppData)->dwFlags = pResponse->GetVariableLong(VID_FLAGS);
          (*ppData)->wType = pResponse->GetVariableShort(VID_TOOL_TYPE);
          (*ppData)->pszData = pResponse->GetVariableStr(VID_TOOL_DATA);
+         (*ppData)->pszConfirmationText = pResponse->GetVariableStr(VID_CONFIRMATION_TEXT);
          pResponse->GetVariableStr(VID_NAME, (*ppData)->szName, MAX_DB_STRING);
          pResponse->GetVariableStr(VID_DESCRIPTION, (*ppData)->szDescription, MAX_DB_STRING);
          (*ppData)->pszMatchingOID = pResponse->GetVariableStr(VID_TOOL_OID);
@@ -349,6 +352,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateObjectTool(NXC_SESSION hSession,
    msg.SetVariable(VID_FLAGS, pData->dwFlags);
    msg.SetVariable(VID_DESCRIPTION, pData->szDescription);
    msg.SetVariable(VID_TOOL_DATA, pData->pszData);
+   msg.SetVariable(VID_CONFIRMATION_TEXT, CHECK_NULL_EX(pData->pszConfirmationText));
    msg.SetVariable(VID_ACL_SIZE, pData->dwACLSize);
    msg.SetVariable(VID_TOOL_OID, CHECK_NULL_EX(pData->pszMatchingOID));
    msg.SetVariableToInt32Array(VID_ACL, pData->dwACLSize, pData->pdwACL);

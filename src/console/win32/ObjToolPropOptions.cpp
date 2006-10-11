@@ -24,6 +24,8 @@ CObjToolPropOptions::CObjToolPropOptions() : CPropertyPage(CObjToolPropOptions::
 	m_bMatchOID = FALSE;
 	m_bNeedSNMP = FALSE;
 	m_nIndexType = -1;
+	m_bConfirmation = FALSE;
+	m_strConfirmationText = _T("");
 	//}}AFX_DATA_INIT
 }
 
@@ -40,6 +42,9 @@ void CObjToolPropOptions::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_MATCH_OID, m_bMatchOID);
 	DDX_Check(pDX, IDC_CHECK_SNMP, m_bNeedSNMP);
 	DDX_Radio(pDX, IDC_RADIO_SUFFIX, m_nIndexType);
+	DDX_Check(pDX, IDC_CHECK_CONFIRM, m_bConfirmation);
+	DDX_Text(pDX, IDC_EDIT_CONFIRM, m_strConfirmationText);
+	DDV_MaxChars(pDX, m_strConfirmationText, 255);
 	//}}AFX_DATA_MAP
 }
 
@@ -47,6 +52,7 @@ void CObjToolPropOptions::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CObjToolPropOptions, CPropertyPage)
 	//{{AFX_MSG_MAP(CObjToolPropOptions)
 	ON_BN_CLICKED(IDC_CHECK_MATCH_OID, OnCheckMatchOid)
+	ON_BN_CLICKED(IDC_CHECK_CONFIRM, OnCheckConfirm)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -76,7 +82,13 @@ BOOL CObjToolPropOptions::OnInitDialog()
       EnableDlgItem(this, IDC_STATIC_TEMPLATE, FALSE);
    }
 	
-	return TRUE;
+   if (SendDlgItemMessage(IDC_CHECK_CONFIRM, BM_GETCHECK) != BST_CHECKED)
+   {
+      EnableDlgItem(this, IDC_EDIT_CONFIRM, FALSE);
+      EnableDlgItem(this, IDC_STATIC_CONFIRM, FALSE);
+   }
+
+   return TRUE;
 }
 
 
@@ -91,4 +103,18 @@ void CObjToolPropOptions::OnCheckMatchOid()
    bEnable = (SendDlgItemMessage(IDC_CHECK_MATCH_OID, BM_GETCHECK) == BST_CHECKED);
    EnableDlgItem(this, IDC_EDIT_TEMPLATE, bEnable);
    EnableDlgItem(this, IDC_STATIC_TEMPLATE, bEnable);
+}
+
+
+//
+// Handler for checking/unchecking "need confirmation"
+//
+
+void CObjToolPropOptions::OnCheckConfirm() 
+{
+   BOOL bEnable;
+
+   bEnable = (SendDlgItemMessage(IDC_CHECK_CONFIRM, BM_GETCHECK) == BST_CHECKED);
+   EnableDlgItem(this, IDC_EDIT_CONFIRM, bEnable);
+   EnableDlgItem(this, IDC_STATIC_CONFIRM, bEnable);
 }
