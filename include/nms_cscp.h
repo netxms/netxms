@@ -69,7 +69,11 @@
 // Data field structure
 //
 
+#ifdef _MSC_VER
 #pragma pack(1)
+#else
+#pragma pack 1
+#endif
 
 typedef struct
 {
@@ -188,7 +192,11 @@ typedef struct
    WORD wOperation;
 } DCI_THRESHOLD;
 
+#ifdef _MSC_VER
 #pragma pack()
+#else
+#pragma pack
+#endif
 
 
 //
