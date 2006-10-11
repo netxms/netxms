@@ -146,9 +146,9 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
    DT_STARTUP_INFO *pStartup = (DT_STARTUP_INFO *)pArg;
    Node *pNode;
    CSCPMessage msg;
-   BOOL bSuccess = FALSE;
+   BOOL bSuccess;
    AgentConnection *pAgentConn;
-   char *pszErrorMsg = "";
+   TCHAR *pszErrorMsg = _T("");
    DWORD dwMaxWait;
 
    // Read configuration
@@ -166,125 +166,134 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
       pNode = (Node *)pStartup->pQueue->Get();
       if (pNode == NULL)
          break;   // Queue is empty, exit
+      bSuccess = FALSE;
 
       // Preset node id in notification message
       msg.SetVariable(VID_OBJECT_ID, pNode->Id());
 
-      // Change deployment status to "Initializing"
-      msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INITIALIZE);
-      pStartup->pSession->SendMessage(&msg);
-
-      // Create agent connection
-      pAgentConn = pNode->CreateAgentConnection();
-      if (pAgentConn != NULL)
+      // Check if node is a management server itself
+      if (!(pNode->Flags() & NF_IS_LOCAL_MGMT))
       {
-         BOOL bCheckOK = FALSE;
-         char szBuffer[256];
+         // Change deployment status to "Initializing"
+         msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INITIALIZE);
+         pStartup->pSession->SendMessage(&msg);
 
-         // Check if package can be deployed on target node
-         if (!stricmp(pStartup->szPlatform, "src"))
+         // Create agent connection
+         pAgentConn = pNode->CreateAgentConnection();
+         if (pAgentConn != NULL)
          {
-            // Source package, check if target node
-            // supports source packages
-            if (pAgentConn->GetParameter("Agent.SourcePackageSupport", 32, szBuffer) == ERR_SUCCESS)
-            {
-               bCheckOK = (strtol(szBuffer, NULL, 0) != 0);
-            }
-         }
-         else
-         {
-            // Binary package, check target platform
-            if (pAgentConn->GetParameter("System.PlatformName", 256, szBuffer) == ERR_SUCCESS)
-            {
-               bCheckOK = !stricmp(szBuffer, pStartup->szPlatform);
-            }
-         }
+            BOOL bCheckOK = FALSE;
+            char szBuffer[256];
 
-         if (bCheckOK)
-         {
-            // Change deployment status to "File Transfer"
-            msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_TRANSFER);
-            pStartup->pSession->SendMessage(&msg);
-
-            // Upload package file to agent
-            strcpy(szBuffer, g_szDataDir);
-            strcat(szBuffer, DDIR_PACKAGES);
-            strcat(szBuffer, FS_PATH_SEPARATOR);
-            strcat(szBuffer, pStartup->szPkgFile);
-            if (pAgentConn->UploadFile(szBuffer) == ERR_SUCCESS)
+            // Check if package can be deployed on target node
+            if (!stricmp(pStartup->szPlatform, "src"))
             {
-               if (pAgentConn->StartUpgrade(pStartup->szPkgFile) == ERR_SUCCESS)
+               // Source package, check if target node
+               // supports source packages
+               if (pAgentConn->GetParameter(_T("Agent.SourcePackageSupport"), 32, szBuffer) == ERR_SUCCESS)
                {
-                  BOOL bConnected = FALSE;
-                  DWORD i;
-
-                  // Disconnect from agent
-                  pAgentConn->Disconnect();
-
-                  // Change deployment status to "Package installation"
-                  msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INSTALLATION);
-                  pStartup->pSession->SendMessage(&msg);
-
-                  // Wait for agent's restart
-                  ThreadSleep(20);
-                  for(i = 20; i < dwMaxWait; i += 20)
-                  {
-                     ThreadSleep(20);
-                     if (pAgentConn->Connect(g_pServerKey))
-                     {
-                        bConnected = TRUE;
-                        break;   // Connected successfully
-                     }
-                  }
-
-                  // Last attempt to reconnect
-                  if (!bConnected)
-                     bConnected = pAgentConn->Connect(g_pServerKey);
-
-                  if (bConnected)
-                  {
-                     // Check version
-                     if (pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
-                     {
-                        if (!stricmp(szBuffer, pStartup->szVersion))
-                        {
-                           bSuccess = TRUE;
-                        }
-                        else
-                        {
-                           pszErrorMsg = "Agent's version doesn't match package version after upgrade";
-                        }
-                     }
-                     else
-                     {
-                        pszErrorMsg = "Unable to get agent's version after upgrade";
-                     }
-                  }
-                  else
-                  {
-                     pszErrorMsg = "Unable to contact agent after upgrade";
-                  }
-               }
-               else
-               {
-                  pszErrorMsg = "Unable to start upgrade process";
+                  bCheckOK = (strtol(szBuffer, NULL, 0) != 0);
                }
             }
             else
             {
-               pszErrorMsg = "File transfer failed";
+               // Binary package, check target platform
+               if (pAgentConn->GetParameter(_T("System.PlatformName"), 256, szBuffer) == ERR_SUCCESS)
+               {
+                  bCheckOK = !stricmp(szBuffer, pStartup->szPlatform);
+               }
             }
+
+            if (bCheckOK)
+            {
+               // Change deployment status to "File Transfer"
+               msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_TRANSFER);
+               pStartup->pSession->SendMessage(&msg);
+
+               // Upload package file to agent
+               strcpy(szBuffer, g_szDataDir);
+               strcat(szBuffer, DDIR_PACKAGES);
+               strcat(szBuffer, FS_PATH_SEPARATOR);
+               strcat(szBuffer, pStartup->szPkgFile);
+               if (pAgentConn->UploadFile(szBuffer) == ERR_SUCCESS)
+               {
+                  if (pAgentConn->StartUpgrade(pStartup->szPkgFile) == ERR_SUCCESS)
+                  {
+                     BOOL bConnected = FALSE;
+                     DWORD i;
+
+                     // Disconnect from agent
+                     pAgentConn->Disconnect();
+
+                     // Change deployment status to "Package installation"
+                     msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INSTALLATION);
+                     pStartup->pSession->SendMessage(&msg);
+
+                     // Wait for agent's restart
+                     ThreadSleep(20);
+                     for(i = 20; i < dwMaxWait; i += 20)
+                     {
+                        ThreadSleep(20);
+                        if (pAgentConn->Connect(g_pServerKey))
+                        {
+                           bConnected = TRUE;
+                           break;   // Connected successfully
+                        }
+                     }
+
+                     // Last attempt to reconnect
+                     if (!bConnected)
+                        bConnected = pAgentConn->Connect(g_pServerKey);
+
+                     if (bConnected)
+                     {
+                        // Check version
+                        if (pAgentConn->GetParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
+                        {
+                           if (!stricmp(szBuffer, pStartup->szVersion))
+                           {
+                              bSuccess = TRUE;
+                           }
+                           else
+                           {
+                              pszErrorMsg = _T("Agent's version doesn't match package version after upgrade");
+                           }
+                        }
+                        else
+                        {
+                           pszErrorMsg = _T("Unable to get agent's version after upgrade");
+                        }
+                     }
+                     else
+                     {
+                        pszErrorMsg = _T("Unable to contact agent after upgrade");
+                     }
+                  }
+                  else
+                  {
+                     pszErrorMsg = _T("Unable to start upgrade process");
+                  }
+               }
+               else
+               {
+                  pszErrorMsg = _T("File transfer failed");
+               }
+            }
+            else
+            {
+               pszErrorMsg = _T("Package is not compatible with target machine");
+            }
+
+            delete pAgentConn;
          }
          else
          {
-            pszErrorMsg = "Package is not compatible with target machine";
+            pszErrorMsg = _T("Unable to connect to agent");
          }
-
-         delete pAgentConn;
       }
       else
       {
-         pszErrorMsg = "Unable to connect to agent";
+         pszErrorMsg = _T("Management server cannot deploy agent to itself");
       }
 
       // Finish node processing

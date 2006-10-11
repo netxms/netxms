@@ -550,6 +550,7 @@ public:
    DWORD Flags(void) { return m_dwFlags; }
    DWORD RuntimeFlags(void) { return m_dwDynamicFlags; }
    DWORD ZoneGUID(void) { return m_dwZoneGUID; }
+   void SetLocalMgmtFlag(void) { m_dwFlags |= NF_IS_LOCAL_MGMT; }
 
    BOOL IsSNMPSupported(void) { return m_dwFlags & NF_IS_SNMP ? TRUE : FALSE; }
    BOOL IsNativeAgent(void) { return m_dwFlags & NF_IS_NATIVE_AGENT ? TRUE : FALSE; }

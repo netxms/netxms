@@ -73,6 +73,12 @@ void CheckForMgmtNode(void)
       for(i = 0; i < pIfList->iNumEntries; i++)
          if ((pNode = FindNodeByIP(pIfList->pInterfaces[i].dwIpAddr)) != NULL)
          {
+            // Check management node flag
+            if (!(pNode->Flags() & NF_IS_LOCAL_MGMT))
+            {
+               pNode->SetLocalMgmtFlag();
+               DbgPrintf(AF_DEBUG_OBJECTS, _T("Local management node %s [%d] was not have NF_IS_LOCAL_MGMT flag set"), pNode->Name(), pNode->Id());
+            }
             g_dwMgmtNode = pNode->Id();   // Set local management node ID
             break;
          }
