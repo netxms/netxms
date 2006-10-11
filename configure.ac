@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.202 2006-10-11 15:16:22 alk Exp $
+# $Id: configure.ac,v 1.203 2006-10-11 21:12:49 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -66,7 +66,7 @@ case `uname -s` in
       LDFLAGS="-no-undefined $LDFLAGS"
       ;;
    HP-UX)
-      CPPFLAGS="$CPPFLAGS -D_HPUX_SOURCE"
+      CPPFLAGS="$CPPFLAGS -D_HPUX -D_HPUX_SOURCE"
       if test "x$CXX" = "xaCC"; then
          CXXFLAGS="$CXXFLAGS +W749 +W829"
       fi

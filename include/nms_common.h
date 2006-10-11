@@ -234,10 +234,6 @@ typedef int SOCKET;
 
 /*********** UNIX *********************/
 
-#ifndef SHL_SUFFIX
-#define SHL_SUFFIX	".so"
-#endif
-
 #if HAVE_WCHAR_H
 #include <wchar.h>
 #endif
@@ -361,6 +357,15 @@ typedef int SOCKET;
 
 #if !(HAVE_SOCKLEN_T)
 typedef unsigned int socklen_t;
+#endif
+
+// Shared library suffix
+#ifndef SHL_SUFFIX
+#if defined(_HPUX) && !defined(__64BIT__)
+#define SHL_SUFFIX	".sl"
+#else
+#define SHL_SUFFIX	".so"
+#endif
 #endif
 
 #endif   /* _WIN32 */
