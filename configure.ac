@@ -1,11 +1,11 @@
-# $Id: configure.ac,v 1.201 2006-10-10 15:59:49 victor Exp $
+# $Id: configure.ac,v 1.202 2006-10-11 15:16:22 alk Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
 
 AC_INIT([NetXMS], [0.2.14-rc5], [NetXMS Team <bugs@netxms.org>])
-AC_CONFIG_AUX_DIR([config])
-AM_CONFIG_HEADER([config.h])
+AC_CONFIG_AUX_DIR(config)
+AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
 
 ALL_STATIC_FLAG=""
