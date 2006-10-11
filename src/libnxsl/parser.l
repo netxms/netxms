@@ -16,6 +16,8 @@ escape		\\[bnrt0\"]
 
 %{
 
+// dirtiest hack i've ever done
+#undef yyFlexLexer
 #include "libnxsl.h"
 #include "parser.tab.hpp"
 
