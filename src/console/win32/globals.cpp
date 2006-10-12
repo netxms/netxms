@@ -54,7 +54,7 @@ TCHAR g_szPassword[MAX_PASSWORD_LEN] = _T("");
 // Global configurable parameters
 //
 
-DWORD g_dwOptions = OPT_DONT_CACHE_OBJECTS;
+DWORD g_dwOptions = OPT_DONT_CACHE_OBJECTS | UI_OPT_CONFIRM_OBJ_DELETE;
 TCHAR g_szWorkDir[MAX_PATH] = _T("");
 DWORD g_dwMaxLogRecords = 1000;
 ALARM_SOUND_CFG g_soundCfg;

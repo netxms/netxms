@@ -213,6 +213,7 @@ BOOL CConsoleApp::InitInstance()
    DWORD dwBytes;
    BYTE *pData;
    HMENU hMenu;
+   LONG nVer;
 
    // Setup our working directory
    if (!SetupWorkDir())
@@ -263,6 +264,23 @@ BOOL CConsoleApp::InitInstance()
    _tcscpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
    _tcscpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
    LoadAlarmSoundCfg(&g_soundCfg, NXCON_ALARM_SOUND_KEY);
+
+   // Check if we are upgrading
+   nVer = GetProfileInt(_T("General"), _T("CfgVersion"), 0);
+   if (nVer < NXCON_CONFIG_VERSION)
+   {
+      // Upgrade configuration
+      // Please note that thre should not be break after each case
+      // to allow configuration upgrade from any old version to current
+      switch(nVer)
+      {
+         case 0:
+            g_dwOptions |= UI_OPT_CONFIRM_OBJ_DELETE;
+         default:
+            break;
+      }
+      WriteProfileInt(_T("General"), _T("CfgVersion"), NXCON_CONFIG_VERSION);
+   }
 
    // Create mutex for action list access
    g_mutexActionListAccess = CreateMutex(NULL, FALSE, NULL);

@@ -51,6 +51,8 @@ extern CConsoleApp theApp;
 
 #define NXCON_ALARM_SOUND_KEY _T("Software\\NetXMS\\NetXMS Console\\AlarmSounds")
 
+#define NXCON_CONFIG_VERSION  1
+
 
 //
 // Window classes
@@ -72,8 +74,9 @@ extern CConsoleApp theApp;
 // User interface options
 //
 
-#define UI_OPT_EXPAND_CTRLPANEL  0x0001
-#define UI_OPT_SHOW_GRID         0x0002
+#define UI_OPT_EXPAND_CTRLPANEL     0x0001
+#define UI_OPT_SHOW_GRID            0x0002
+#define UI_OPT_CONFIRM_OBJ_DELETE   0x0004
 
 
 //

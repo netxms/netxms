@@ -1656,22 +1656,52 @@ void CObjectBrowser::OnObjectCreateVpnconnector()
 
 void CObjectBrowser::OnObjectDelete() 
 {
+   BOOL bOK;
+
    if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
    {
       if (m_pCurrentObject != NULL)
-         theApp.DeleteNetXMSObject(m_pCurrentObject);
+      {
+         if (g_dwOptions & UI_OPT_CONFIRM_OBJ_DELETE)
+         {
+            TCHAR szBuffer[256];
+
+            _sntprintf(szBuffer, 256, _T("Do you really want to delete object %s?"), m_pCurrentObject->szName);
+            bOK = (MessageBox(szBuffer, _T("Confirmation"), MB_YESNO | MB_ICONQUESTION) == IDYES);
+         }
+         else
+         {
+            bOK = TRUE;
+         }
+         if (bOK)
+            theApp.DeleteNetXMSObject(m_pCurrentObject);
+      }
    }
    else
    {
       int iItem;
       NXC_OBJECT *pObject;
 
-      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
-      while(iItem != -1)
+      if (g_dwOptions & UI_OPT_CONFIRM_OBJ_DELETE)
       {
-         pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
-         theApp.DeleteNetXMSObject(pObject);
-         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+         if (m_wndListCtrl.GetSelectedCount() > 0)
+            bOK = (MessageBox(_T("Do you really want to delete selected objects?"), _T("Confirmation"), MB_YESNO | MB_ICONQUESTION) == IDYES);
+         else
+            bOK = FALSE;
+      }
+      else
+      {
+         bOK = TRUE;
+      }
+      if (bOK)
+      {
+         iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+         while(iItem != -1)
+         {
+            pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
+            theApp.DeleteNetXMSObject(pObject);
+            iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+         }
       }
    }
 }
