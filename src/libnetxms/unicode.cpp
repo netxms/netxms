@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.15 2006-10-10 15:59:51 victor Exp $ */
+/* $Id: unicode.cpp,v 1.16 2006-10-13 09:44:23 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -42,6 +42,8 @@ static char m_cpDefault[MAX_CODEPAGE_LEN] = "";
 // UNICODE character set
 //
 
+#ifndef __DISABLE_ICONV
+
 #if HAVE_ICONV_UCS_2_INTERNAL
 #define UCS2_CODEPAGE_NAME	"UCS-2-INTERNAL"
 #elif HAVE_ICONV_UCS_2
@@ -54,6 +56,8 @@ static char m_cpDefault[MAX_CODEPAGE_LEN] = "";
 #warning Cannot determine valid UCS-2 codepage name
 #undef HAVE_ICONV
 #endif
+
+#endif   /* __DISABLE_ICONV */
 
 
 //
@@ -95,7 +99,7 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags,
 															char *pByteStr, int cchByteChar, 
                                              char *pDefaultChar, BOOL *pbUsedDefChar)
 {
-#if HAVE_ICONV
+#if HAVE_ICONV && !defined(__DISABLE_ICONV)
 	iconv_t cd;
 	int nRet;
 	char *inbuf, *outbuf;
@@ -177,7 +181,7 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags,
                                              char *pByteStr, int cchByteChar,
 															WCHAR *pWideCharStr, int cchWideChar)
 {
-#if HAVE_ICONV
+#if HAVE_ICONV && !defined(__DISABLE_ICONV)
 
 	iconv_t cd;
 	int nRet;

@@ -1,9 +1,9 @@
-# $Id: configure.ac,v 1.203 2006-10-11 21:12:49 victor Exp $
+# $Id: configure.ac,v 1.204 2006-10-13 09:44:22 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
 
-AC_INIT([NetXMS], [0.2.14-rc5], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.14-rc6], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -68,7 +68,8 @@ case `uname -s` in
    HP-UX)
       CPPFLAGS="$CPPFLAGS -D_HPUX -D_HPUX_SOURCE"
       if test "x$CXX" = "xaCC"; then
-         CXXFLAGS="$CXXFLAGS +W749 +W829"
+         CXXFLAGS="-mt $CXXFLAGS +W749 +W829"
+         LDFLAGS="$LDFLAGS -mt"
       fi
       ;;
    *)
@@ -334,6 +335,13 @@ AC_ARG_ENABLE(unstable,
 	UNSTABLE_SUBAGENT_DIRS="logscan"
 ])
 
+AC_ARG_ENABLE(iconv,
+[AS_HELP_STRING(--disable-iconv,do not use iconv() for text conversions)], ,
+[
+	DISABLE_ICONV="yes"
+	CPPFLAGS="$CPPFLAGS -D__DISABLE_ICONV"
+])
+
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql pgsql odbc mssql sqlite"
@@ -578,32 +586,42 @@ fi
 # posix threads
 AC_CHECK_HEADER(pthread.h,,AC_MSG_ERROR([*** POSIX thread support not installed - please install first ***]))
 
-PTHREAD_LIBS=error
-AC_MSG_CHECKING(for old style FreeBSD -pthread flag)
-AC_EGREP_CPP(yes,
-	[#if defined(__FreeBSD_cc_version) || defined(__OpenBSD__)
-		yes
-	#endif
-	], AC_MSG_RESULT(yes)
-	CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE" PTHREAD_LIBS="-pthread",
-	AC_MSG_RESULT(no))
-if test "x$PTHREAD_LIBS" = xerror; then
-	AC_CHECK_LIB(pthread, pthread_attr_init,
-		PTHREAD_LIBS="-lpthread")
+
+# --------------------------------------------------------------------------
+# check for pthread library
+
+if test "x$CXX" = "xaCC"; then
+	PTHREAD_LIBS=""
+else
+	PTHREAD_LIBS=error
+	AC_MSG_CHECKING(for old style FreeBSD -pthread flag)
+	AC_EGREP_CPP(yes,
+		[#if defined(__FreeBSD_cc_version) || defined(__OpenBSD__)
+			yes
+		#endif
+		], AC_MSG_RESULT(yes)
+		CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE" PTHREAD_LIBS="-pthread",
+		AC_MSG_RESULT(no))
+	if test "x$PTHREAD_LIBS" = xerror; then
+		AC_CHECK_LIB(pthread, pthread_attr_init,
+			PTHREAD_LIBS="-lpthread")
+	fi
+	if test "x$PTHREAD_LIBS" = xerror; then
+		AC_CHECK_LIB(pthreads, pthread_attr_init,
+			PTHREAD_LIBS="-lpthreads")
+	fi
+	if test "x$PTHREAD_LIBS" = xerror; then
+		AC_CHECK_FUNC(pthread_attr_init,
+			PTHREAD_LIBS="")
+	fi
 fi
-if test "x$PTHREAD_LIBS" = xerror; then
-	AC_CHECK_LIB(pthreads, pthread_attr_init,
-		PTHREAD_LIBS="-lpthreads")
-fi
-if test "x$PTHREAD_LIBS" = xerror; then
-	AC_CHECK_FUNC(pthread_attr_init,
-		PTHREAD_LIBS="")
-fi
+
 # HP-UX
-if test "x$PTHREAD_LIBS" = xerror; then
-	AC_CHECK_LIB(pthread, __pthread_attr_init_system,
-		PTHREAD_LIBS="-lpthread")
-fi
+#if test "x$PTHREAD_LIBS" = xerror; then
+#	AC_CHECK_LIB(pthread, __pthread_attr_init_system,
+#		PTHREAD_LIBS="-lpthread")
+#fi
+
 if test "x$PTHREAD_LIBS" = xerror; then
 	AC_MSG_ERROR(*** Unable to locate working posix thread library ***)
 fi
@@ -654,11 +672,16 @@ fi
 
 AC_CHECK_HEADERS([wchar.h iconv.h])
 AC_CHECK_SIZEOF(wchar_t)
-AC_CHECK_LIB(iconv, iconv, 
-	[ ac_found_iconv=yes
-          LDFLAGS="$LDFLAGS -liconv"
-])
-AC_CHECK_FUNCS(iconv, ac_found_iconv=yes, ac_found_iconv=no)
+
+if test "xDISABLE_ICONV" != "xyes"; then
+	AC_CHECK_LIB(iconv, iconv, 
+		[ ac_found_iconv=yes
+	          LDFLAGS="$LDFLAGS -liconv"
+	])
+	AC_CHECK_FUNCS(iconv, ac_found_iconv=yes, ac_found_iconv=no)
+else
+	ac_found_iconv=no
+fi
 
 AC_MSG_CHECKING(whether iconv supports UCS-2-INTERNAL)
 AC_RUN_IFELSE(

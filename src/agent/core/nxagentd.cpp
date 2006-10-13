@@ -493,6 +493,8 @@ void LoadPlatformSubagent(void)
       // Convert system name to lowercase
       for(i = 0; un.sysname[i] != 0; i++)
          un.sysname[i] = tolower(un.sysname[i]);
+      if (!strcmp(un.sysname, "hp-ux"))
+         strcpy(un.sysname, "hpux");
       sprintf(szName, LIBDIR "/libnsm_%s" SHL_SUFFIX, un.sysname);
       LoadSubAgent(szName);
    }
