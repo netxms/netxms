@@ -21,7 +21,7 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 
 INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description,confirmation_text)
 	VALUES (6,'&Connect->Open &web browser',TOOL_TYPE_URL,'http://%OBJECT_IP_ADDR%',0,'','Open embedded web browser to node','#00');
-INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description)
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description,confirmation_text)
 	VALUES (7,'&Connect->Open &web browser (HTTPS)',TOOL_TYPE_URL,'https://%OBJECT_IP_ADDR%',0,'','Open embedded web browser to node using HTTPS','#00');
 
 INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description,confirmation_text)
