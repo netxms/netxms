@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.207 2006-10-13 14:41:04 victor Exp $
+# $Id: configure.ac,v 1.208 2006-10-13 15:44:19 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -95,13 +95,6 @@ fi
 
 if test -d /usr/local/lib; then
 	LDFLAGS="$LDFLAGS -L/usr/local/lib"
-fi
-
-# --------------------------------------------------------------------------
-# check for zlib
-
-if test "x$NEED_ZLIB" = "xyes"; then
-	AC_CHECK_LIB(z, deflate)
 fi
 
 # --------------------------------------------------------------------------
@@ -428,6 +421,13 @@ AC_SUBST(STATIC_SUBAGENT_LIST)
 AC_SUBST(SUBAGENT_LIBS)
 AC_SUBST(BUILD_SERVER)
 AC_SUBST(UNSTABLE_SUBAGENT_DIRS)
+
+# --------------------------------------------------------------------------
+# check for zlib
+
+if test "x$NEED_ZLIB" = "xyes"; then
+	AC_CHECK_LIB(z, deflate)
+fi
 
 # --------------------------------------------------------------------------
 # If --with-static-agent selected, other components cannot be selected
