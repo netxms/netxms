@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.206 2006-10-13 14:23:22 victor Exp $
+# $Id: configure.ac,v 1.207 2006-10-13 14:41:04 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -366,6 +366,13 @@ AC_ARG_WITH(nxhttpd,
 	fi
 ])
 
+AC_ARG_ENABLE(encryption,
+[AS_HELP_STRING(--disable-encryption,disable encryption support)],
+[
+	DISABLE_ENCRYPTION="yes"
+])
+
+if test "x$DISABLE_ENCRYPTION" != "xyes"; then
 AC_ARG_WITH(openssl,
 	[AS_HELP_STRING(--with-openssl,specify OpenSSL location)],
 	[
@@ -409,6 +416,7 @@ AC_ARG_WITH(openssl,
 			],
 			[AC_MSG_RESULT(libcrypto is required for encryption support)])
 	 ])
+fi
 
 AC_SUBST(DB_DRIVERS)
 AC_SUBST(MODULES)
