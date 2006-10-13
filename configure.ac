@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.204 2006-10-13 09:44:22 victor Exp $
+# $Id: configure.ac,v 1.205 2006-10-13 10:20:58 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -336,7 +336,7 @@ AC_ARG_ENABLE(unstable,
 ])
 
 AC_ARG_ENABLE(iconv,
-[AS_HELP_STRING(--disable-iconv,do not use iconv() for text conversions)], ,
+[AS_HELP_STRING(--disable-iconv,do not use iconv() for text conversions)],
 [
 	DISABLE_ICONV="yes"
 	CPPFLAGS="$CPPFLAGS -D__DISABLE_ICONV"
@@ -673,7 +673,7 @@ fi
 AC_CHECK_HEADERS([wchar.h iconv.h])
 AC_CHECK_SIZEOF(wchar_t)
 
-if test "xDISABLE_ICONV" != "xyes"; then
+if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_LIB(iconv, iconv, 
 		[ ac_found_iconv=yes
 	          LDFLAGS="$LDFLAGS -liconv"
