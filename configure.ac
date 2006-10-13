@@ -1,9 +1,9 @@
-# $Id: configure.ac,v 1.205 2006-10-13 10:20:58 victor Exp $
+# $Id: configure.ac,v 1.206 2006-10-13 14:23:22 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
 
-AC_INIT([NetXMS], [0.2.14-rc6], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.14-rc7], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -100,7 +100,9 @@ fi
 # --------------------------------------------------------------------------
 # check for zlib
 
-AC_CHECK_LIB(z, deflate)
+if test "x$NEED_ZLIB" = "xyes"; then
+	AC_CHECK_LIB(z, deflate)
+fi
 
 # --------------------------------------------------------------------------
 # command line options
@@ -211,11 +213,12 @@ fi ])
 AC_ARG_WITH(server,
 [AS_HELP_STRING(--with-server,build server)],
 [
-	MODULES="$MODULES libnxmap libnxsnmp libnxsl server nxmibc nxscript"
+   MODULES="$MODULES libnxmap libnxsnmp libnxsl server nxmibc nxscript"
    TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
    CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds"
-	BUILD_SERVER="yes"
+   BUILD_SERVER="yes"
    DYNAMIC_COMPONENTS="yes"
+   NEED_ZLIB="yes"
 ])
 
 
