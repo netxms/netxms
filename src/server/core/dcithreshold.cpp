@@ -181,151 +181,163 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
          if (m_iDataType == DCI_DT_STRING)
             iDataType = DCI_DT_INT;  // diff() for strings is an integer
          break;
+      case F_ERROR:        // Check for collection error
+         fvalue = (DWORD)0;
+         break;
       default:
          break;
    }
 
    // Run comparision operation on function result and threshold value
-   switch(m_iOperation)
+   if (m_iFunction == F_ERROR)
    {
-      case OP_LE:    // Less
-         switch(iDataType)
-         {
-            case DCI_DT_INT:
-               bMatch = ((LONG)fvalue < (LONG)m_value);
-               break;
-            case DCI_DT_UINT:
-               bMatch = ((DWORD)fvalue < (DWORD)m_value);
-               break;
-            case DCI_DT_INT64:
-               bMatch = ((INT64)fvalue < (INT64)m_value);
-               break;
-            case DCI_DT_UINT64:
-               bMatch = ((QWORD)fvalue < (QWORD)m_value);
-               break;
-            case DCI_DT_FLOAT:
-               bMatch = ((double)fvalue < (double)m_value);
-               break;
-         }
-         break;
-      case OP_LE_EQ: // Less or equal
-         switch(iDataType)
-         {
-            case DCI_DT_INT:
-               bMatch = ((LONG)fvalue <= (LONG)m_value);
-               break;
-            case DCI_DT_UINT:
-               bMatch = ((DWORD)fvalue <= (DWORD)m_value);
-               break;
-            case DCI_DT_INT64:
-               bMatch = ((INT64)fvalue <= (INT64)m_value);
-               break;
-            case DCI_DT_UINT64:
-               bMatch = ((QWORD)fvalue <= (QWORD)m_value);
-               break;
-            case DCI_DT_FLOAT:
-               bMatch = ((double)fvalue <= (double)m_value);
-               break;
-         }
-         break;
-      case OP_EQ:    // Equal
-         switch(iDataType)
-         {
-            case DCI_DT_INT:
-               bMatch = ((LONG)fvalue == (LONG)m_value);
-               break;
-            case DCI_DT_UINT:
-               bMatch = ((DWORD)fvalue == (DWORD)m_value);
-               break;
-            case DCI_DT_INT64:
-               bMatch = ((INT64)fvalue == (INT64)m_value);
-               break;
-            case DCI_DT_UINT64:
-               bMatch = ((QWORD)fvalue == (QWORD)m_value);
-               break;
-            case DCI_DT_FLOAT:
-               bMatch = ((double)fvalue == (double)m_value);
-               break;
-            case DCI_DT_STRING:
-               bMatch = !strcmp(fvalue.String(), m_value.String());
-               break;
-         }
-         break;
-      case OP_GT_EQ: // Greater or equal
-         switch(iDataType)
-         {
-            case DCI_DT_INT:
-               bMatch = ((LONG)fvalue >= (LONG)m_value);
-               break;
-            case DCI_DT_UINT:
-               bMatch = ((DWORD)fvalue >= (DWORD)m_value);
-               break;
-            case DCI_DT_INT64:
-               bMatch = ((INT64)fvalue >= (INT64)m_value);
-               break;
-            case DCI_DT_UINT64:
-               bMatch = ((QWORD)fvalue >= (QWORD)m_value);
-               break;
-            case DCI_DT_FLOAT:
-               bMatch = ((double)fvalue >= (double)m_value);
-               break;
-         }
-         break;
-      case OP_GT:    // Greater
-         switch(iDataType)
-         {
-            case DCI_DT_INT:
-               bMatch = ((LONG)fvalue > (LONG)m_value);
-               break;
-            case DCI_DT_UINT:
-               bMatch = ((DWORD)fvalue > (DWORD)m_value);
-               break;
-            case DCI_DT_INT64:
-               bMatch = ((INT64)fvalue > (INT64)m_value);
-               break;
-            case DCI_DT_UINT64:
-               bMatch = ((QWORD)fvalue > (QWORD)m_value);
-               break;
-            case DCI_DT_FLOAT:
-               bMatch = ((double)fvalue > (double)m_value);
-               break;
-         }
-         break;
-      case OP_NE:    // Not equal
-         switch(iDataType)
-         {
-            case DCI_DT_INT:
-               bMatch = ((LONG)fvalue != (LONG)m_value);
-               break;
-            case DCI_DT_UINT:
-               bMatch = ((DWORD)fvalue != (DWORD)m_value);
-               break;
-            case DCI_DT_INT64:
-               bMatch = ((INT64)fvalue != (INT64)m_value);
-               break;
-            case DCI_DT_UINT64:
-               bMatch = ((QWORD)fvalue != (QWORD)m_value);
-               break;
-            case DCI_DT_FLOAT:
-               bMatch = ((double)fvalue != (double)m_value);
-               break;
-            case DCI_DT_STRING:
-               bMatch = strcmp(fvalue.String(), m_value.String());
-               break;
-         }
-         break;
-      case OP_LIKE:
-         // This operation can be performed only on strings
-         if (m_iDataType == DCI_DT_STRING)
-            bMatch = MatchString(m_value.String(), fvalue.String(), TRUE);
-         break;
-      case OP_NOTLIKE:
-         // This operation can be performed only on strings
-         if (m_iDataType == DCI_DT_STRING)
-            bMatch = !MatchString(m_value.String(), fvalue.String(), TRUE);
-         break;
-      default:
-         break;
+      // Threshold::Check() can be called only for valid values, which
+      // means that error thresholds cannot be active
+      bMatch = FALSE;
+   }
+   else
+   {
+      switch(m_iOperation)
+      {
+         case OP_LE:    // Less
+            switch(iDataType)
+            {
+               case DCI_DT_INT:
+                  bMatch = ((LONG)fvalue < (LONG)m_value);
+                  break;
+               case DCI_DT_UINT:
+                  bMatch = ((DWORD)fvalue < (DWORD)m_value);
+                  break;
+               case DCI_DT_INT64:
+                  bMatch = ((INT64)fvalue < (INT64)m_value);
+                  break;
+               case DCI_DT_UINT64:
+                  bMatch = ((QWORD)fvalue < (QWORD)m_value);
+                  break;
+               case DCI_DT_FLOAT:
+                  bMatch = ((double)fvalue < (double)m_value);
+                  break;
+            }
+            break;
+         case OP_LE_EQ: // Less or equal
+            switch(iDataType)
+            {
+               case DCI_DT_INT:
+                  bMatch = ((LONG)fvalue <= (LONG)m_value);
+                  break;
+               case DCI_DT_UINT:
+                  bMatch = ((DWORD)fvalue <= (DWORD)m_value);
+                  break;
+               case DCI_DT_INT64:
+                  bMatch = ((INT64)fvalue <= (INT64)m_value);
+                  break;
+               case DCI_DT_UINT64:
+                  bMatch = ((QWORD)fvalue <= (QWORD)m_value);
+                  break;
+               case DCI_DT_FLOAT:
+                  bMatch = ((double)fvalue <= (double)m_value);
+                  break;
+            }
+            break;
+         case OP_EQ:    // Equal
+            switch(iDataType)
+            {
+               case DCI_DT_INT:
+                  bMatch = ((LONG)fvalue == (LONG)m_value);
+                  break;
+               case DCI_DT_UINT:
+                  bMatch = ((DWORD)fvalue == (DWORD)m_value);
+                  break;
+               case DCI_DT_INT64:
+                  bMatch = ((INT64)fvalue == (INT64)m_value);
+                  break;
+               case DCI_DT_UINT64:
+                  bMatch = ((QWORD)fvalue == (QWORD)m_value);
+                  break;
+               case DCI_DT_FLOAT:
+                  bMatch = ((double)fvalue == (double)m_value);
+                  break;
+               case DCI_DT_STRING:
+                  bMatch = !strcmp(fvalue.String(), m_value.String());
+                  break;
+            }
+            break;
+         case OP_GT_EQ: // Greater or equal
+            switch(iDataType)
+            {
+               case DCI_DT_INT:
+                  bMatch = ((LONG)fvalue >= (LONG)m_value);
+                  break;
+               case DCI_DT_UINT:
+                  bMatch = ((DWORD)fvalue >= (DWORD)m_value);
+                  break;
+               case DCI_DT_INT64:
+                  bMatch = ((INT64)fvalue >= (INT64)m_value);
+                  break;
+               case DCI_DT_UINT64:
+                  bMatch = ((QWORD)fvalue >= (QWORD)m_value);
+                  break;
+               case DCI_DT_FLOAT:
+                  bMatch = ((double)fvalue >= (double)m_value);
+                  break;
+            }
+            break;
+         case OP_GT:    // Greater
+            switch(iDataType)
+            {
+               case DCI_DT_INT:
+                  bMatch = ((LONG)fvalue > (LONG)m_value);
+                  break;
+               case DCI_DT_UINT:
+                  bMatch = ((DWORD)fvalue > (DWORD)m_value);
+                  break;
+               case DCI_DT_INT64:
+                  bMatch = ((INT64)fvalue > (INT64)m_value);
+                  break;
+               case DCI_DT_UINT64:
+                  bMatch = ((QWORD)fvalue > (QWORD)m_value);
+                  break;
+               case DCI_DT_FLOAT:
+                  bMatch = ((double)fvalue > (double)m_value);
+                  break;
+            }
+            break;
+         case OP_NE:    // Not equal
+            switch(iDataType)
+            {
+               case DCI_DT_INT:
+                  bMatch = ((LONG)fvalue != (LONG)m_value);
+                  break;
+               case DCI_DT_UINT:
+                  bMatch = ((DWORD)fvalue != (DWORD)m_value);
+                  break;
+               case DCI_DT_INT64:
+                  bMatch = ((INT64)fvalue != (INT64)m_value);
+                  break;
+               case DCI_DT_UINT64:
+                  bMatch = ((QWORD)fvalue != (QWORD)m_value);
+                  break;
+               case DCI_DT_FLOAT:
+                  bMatch = ((double)fvalue != (double)m_value);
+                  break;
+               case DCI_DT_STRING:
+                  bMatch = strcmp(fvalue.String(), m_value.String());
+                  break;
+            }
+            break;
+         case OP_LIKE:
+            // This operation can be performed only on strings
+            if (m_iDataType == DCI_DT_STRING)
+               bMatch = MatchString(m_value.String(), fvalue.String(), TRUE);
+            break;
+         case OP_NOTLIKE:
+            // This operation can be performed only on strings
+            if (m_iDataType == DCI_DT_STRING)
+               bMatch = !MatchString(m_value.String(), fvalue.String(), TRUE);
+            break;
+         default:
+            break;
+      }
    }
 
    iResult = (bMatch & !m_bIsReached) ? THRESHOLD_REACHED :
@@ -342,6 +354,37 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
       QueueSQLRequest(szQuery);
    }
    return iResult;
+}
+
+
+//
+// Check for collection error thresholds
+// Return same values as Check()
+//
+
+int Threshold::CheckError(DWORD dwErrorCount)
+{
+   int nResult;
+   BOOL bMatch;
+
+   if (m_iFunction != F_ERROR)
+      return NO_ACTION;
+
+   bMatch = ((DWORD)m_iParam1 <= dwErrorCount);
+   nResult = (bMatch & !m_bIsReached) ? THRESHOLD_REACHED :
+                ((!bMatch & m_bIsReached) ? THRESHOLD_REARMED : NO_ACTION);
+   m_bIsReached = bMatch;
+   if (nResult != NO_ACTION)
+   {
+      TCHAR szQuery[256];
+
+      // Update threshold status in database
+      _sntprintf(szQuery, 256,
+                 _T("UPDATE thresholds SET current_state=%d WHERE threshold_id=%d"),
+                 m_bIsReached, m_dwId);
+      QueueSQLRequest(szQuery);
+   }
+   return nResult;
 }
 
 

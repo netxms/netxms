@@ -231,9 +231,12 @@ TCHAR *g_pszThresholdOperation[] = { _T("<"), _T("<="), _T("="), _T(">="), _T(">
 TCHAR *g_pszThresholdOperationLong[] = { _T("less"), _T("less or equal"), _T("equal"), 
                                          _T("greater or equal"), _T("greater"), _T("not equal"), 
                                          _T("like"), _T("not like") };
-TCHAR *g_pszThresholdFunction[] = { _T("last"), _T("average"), _T("deviation"), _T("diff") };
+TCHAR *g_pszThresholdFunction[] = { _T("last"), _T("average"), _T("deviation"),
+                                    _T("diff"), _T("error") };
 TCHAR *g_pszThresholdFunctionLong[] = { _T("last polled value"), _T("average value"),
-                                       _T("mean deviation"), _T("diff with previous value") };
+                                       _T("mean deviation"),
+                                       _T("diff with previous value"),
+                                       _T("data collection error") };
 
 
 //

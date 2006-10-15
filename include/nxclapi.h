@@ -494,6 +494,7 @@ enum
 #define F_AVERAGE    1
 #define F_DEVIATION  2
 #define F_DIFF       3
+#define F_ERROR      4
 
 #define OP_LE        0
 #define OP_LE_EQ     1

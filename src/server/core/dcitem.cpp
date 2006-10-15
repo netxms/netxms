@@ -58,6 +58,7 @@ DCItem::DCItem()
    m_ppScheduleList = NULL;
    m_tLastCheck = 0;
    m_iProcessAllThresholds = 0;
+   m_dwErrorCount = 0;
 }
 
 
@@ -93,6 +94,7 @@ DCItem::DCItem(const DCItem *pSrc)
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = FALSE;
    m_tLastCheck = 0;
+   m_dwErrorCount = 0;
    m_iAdvSchedule = pSrc->m_iAdvSchedule;
 
    // Copy schedules
@@ -160,6 +162,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = FALSE;
    m_tLastCheck = 0;
+   m_dwErrorCount = 0;
    m_iAdvSchedule = (BYTE)DBGetFieldLong(hResult, iRow, 13);
    m_iProcessAllThresholds = (BYTE)DBGetFieldLong(hResult, iRow, 14);
 
@@ -245,6 +248,7 @@ DCItem::DCItem(DWORD dwId, char *szName, int iSource, int iDataType,
    m_dwNumSchedules = 0;
    m_ppScheduleList = NULL;
    m_tLastCheck = 0;
+   m_dwErrorCount = 0;
 
    UpdateCacheSize();
 }
@@ -668,9 +672,9 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
 // Process new value
 //
 
-void DCItem::NewValue(time_t tmTimeStamp, const char *pszOriginalValue)
+void DCItem::NewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
 {
-   char *pszEscValue, szQuery[MAX_LINE_SIZE + 128];
+   TCHAR *pszEscValue, szQuery[MAX_LINE_SIZE + 128];
    ItemValue rawValue, *pValue;
 
    Lock();
@@ -682,10 +686,13 @@ void DCItem::NewValue(time_t tmTimeStamp, const char *pszOriginalValue)
       return;
    }
 
+   m_dwErrorCount = 0;
+
    // Save raw value into database
    pszEscValue = EncodeSQLString(pszOriginalValue);
-   sprintf(szQuery, "UPDATE raw_dci_values SET raw_value='%s',last_poll_time=" TIME_T_FMT " WHERE item_id=%d",
-           pszEscValue, tmTimeStamp, m_dwId);
+   _stprintf(szQuery, _T("UPDATE raw_dci_values SET raw_value='%s',last_poll_time=")
+                      TIME_T_FMT _T(" WHERE item_id=%d"),
+             pszEscValue, tmTimeStamp, m_dwId);
    free(pszEscValue);
    QueueSQLRequest(szQuery);
 
@@ -700,8 +707,9 @@ void DCItem::NewValue(time_t tmTimeStamp, const char *pszOriginalValue)
 
    // Save transformed value to database
    pszEscValue = EncodeSQLString(pValue->String());
-   sprintf(szQuery, "INSERT INTO idata_%d (item_id,idata_timestamp,idata_value)"
-                    " VALUES (%d," TIME_T_FMT ",'%s')", m_pNode->Id(), m_dwId, tmTimeStamp, pszEscValue);
+   _stprintf(szQuery, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value)")
+                      _T(" VALUES (%d,") TIME_T_FMT _T(",'%s')"), m_pNode->Id(),
+                      m_dwId, tmTimeStamp, pszEscValue);
    free(pszEscValue);
    QueueSQLRequest(szQuery);
 
@@ -717,6 +725,52 @@ void DCItem::NewValue(time_t tmTimeStamp, const char *pszOriginalValue)
    else
    {
       delete pValue;
+   }
+
+   Unlock();
+}
+
+
+//
+// Process new data collection error
+//
+
+void DCItem::NewError(void)
+{
+   DWORD i, iResult;
+
+   Lock();
+
+   // Normally m_pNode shouldn't be NULL for polled items, but who knows...
+   if (m_pNode == NULL)
+   {
+      Unlock();
+      return;
+   }
+
+   m_dwErrorCount++;
+
+   for(i = 0; i < m_dwNumThresholds; i++)
+   {
+      iResult = m_ppThresholdList[i]->CheckError(m_dwErrorCount);
+      switch(iResult)
+      {
+         case THRESHOLD_REACHED:
+            PostEvent(m_ppThresholdList[i]->EventCode(), m_pNode->Id(), "ssssis", m_szName,
+                      m_szDescription, _T(""), _T(""), m_dwId, m_szInstance);
+            if (!m_iProcessAllThresholds)
+               i = m_dwNumThresholds;  // Stop processing
+            break;
+         case THRESHOLD_REARMED:
+            PostEvent(m_ppThresholdList[i]->RearmEventCode(), m_pNode->Id(), "ssis", m_szName,
+                      m_szDescription, m_dwId, m_szInstance);
+            break;
+         case NO_ACTION:
+            if ((m_ppThresholdList[i]->IsReached()) &&
+                (!m_iProcessAllThresholds))
+               i = m_dwNumThresholds;  // Threshold condition still true, stop processing
+            break;
+      }
    }
 
    Unlock();

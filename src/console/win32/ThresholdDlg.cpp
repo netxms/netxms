@@ -73,7 +73,7 @@ BOOL CThresholdDlg::OnInitDialog()
 	CDialog::OnInitDialog();
 
    // Setup lists
-   for(i = 0; i < 4; i++)
+   for(i = 0; i < 5; i++)
       m_wndComboFunction.AddString(g_pszThresholdFunctionLong[i]);
    for(i = 0; i < 8; i++)
       m_wndComboOperation.AddString(g_pszThresholdOperationLong[i]);
@@ -84,11 +84,20 @@ BOOL CThresholdDlg::OnInitDialog()
       nIndex = m_wndComboOperation.SelectString(nIndex, g_pszThresholdOperationLong[m_iOperation]);
    } while((nIndex != m_iOperation) && (nIndex != CB_ERR));
 
-   if (m_iFunction == F_LAST)
+   switch(m_iFunction)
    {
-      m_wndStaticFor.EnableWindow(FALSE);
-      m_wndStaticSamples.EnableWindow(FALSE);
-      m_wndEditArg1.EnableWindow(FALSE);
+      case F_LAST:
+      case F_DIFF:
+         m_wndStaticFor.EnableWindow(FALSE);
+         m_wndStaticSamples.EnableWindow(FALSE);
+         m_wndEditArg1.EnableWindow(FALSE);
+         break;
+      case F_ERROR:
+         m_wndComboOperation.EnableWindow(FALSE);
+         EnableDlgItem(this, IDC_EDIT_VALUE, FALSE);
+         EnableDlgItem(this, IDC_STATIC_WILLBE, FALSE);
+         EnableDlgItem(this, IDC_STATIC_COMPARE, FALSE);
+         break;
    }
 
    m_wndEventName.SetWindowText(NXCGetEventName(g_hSession, m_dwEventId));
@@ -108,6 +117,10 @@ void CThresholdDlg::OnSelchangeComboFunction()
    m_wndStaticFor.EnableWindow((m_iFunction != F_LAST) && (m_iFunction != F_DIFF));
    m_wndStaticSamples.EnableWindow((m_iFunction != F_LAST) && (m_iFunction != F_DIFF));
    m_wndEditArg1.EnableWindow((m_iFunction != F_LAST) && (m_iFunction != F_DIFF));
+   m_wndComboOperation.EnableWindow(m_iFunction != F_ERROR);
+   EnableDlgItem(this, IDC_EDIT_VALUE, m_iFunction != F_ERROR);
+   EnableDlgItem(this, IDC_STATIC_WILLBE, m_iFunction != F_ERROR);
+   EnableDlgItem(this, IDC_STATIC_COMPARE, m_iFunction != F_ERROR);
 }
 
 

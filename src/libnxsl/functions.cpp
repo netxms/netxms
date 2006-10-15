@@ -173,6 +173,58 @@ int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 
 
 //
+// Minimal value from the list of values
+//
+
+int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+   int i;
+   NXSL_Value *pCurr;
+
+   if (argc == 0)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   pCurr = argv[0];
+   for(i = 1; i < argc; i++)
+   {
+      if (!argv[i]->IsNumeric())
+         return NXSL_ERR_NOT_NUMBER;
+
+      if (argv[i]->LT(pCurr))
+         pCurr = argv[i];
+   }
+   *ppResult = new NXSL_Value(pCurr);
+   return 0;
+}
+
+
+//
+// Maximal value from the list of values
+//
+
+int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+   int i;
+   NXSL_Value *pCurr;
+
+   if (argc == 0)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   pCurr = argv[0];
+   for(i = 0; i < argc; i++)
+   {
+      if (!argv[i]->IsNumeric())
+         return NXSL_ERR_NOT_NUMBER;
+
+      if (argv[i]->GT(pCurr))
+         pCurr = argv[i];
+   }
+   *ppResult = new NXSL_Value(pCurr);
+   return 0;
+}
+
+
+//
 // Check if IP address is within given range
 //
 

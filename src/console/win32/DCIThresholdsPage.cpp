@@ -123,6 +123,8 @@ void CDCIThresholdsPage::UpdateListEntry(int iItem, DWORD dwIndex)
    switch(m_pItem->pThresholdList[dwIndex].wFunction)
    {
       case F_AVERAGE:
+      case F_DEVIATION:
+      case F_ERROR:
          _stprintf(szArgs, _T("%d"), m_pItem->pThresholdList[dwIndex].dwArg1);
          break;
       default:
@@ -153,9 +155,13 @@ void CDCIThresholdsPage::UpdateListEntry(int iItem, DWORD dwIndex)
    }
 
    // Threshold expression
-   _stprintf(szBuffer, _T("%s(%s) %s %s"), g_pszThresholdFunction[m_pItem->pThresholdList[dwIndex].wFunction],
-             szArgs, g_pszThresholdOperation[m_pItem->pThresholdList[dwIndex].wOperation],
-             szValue);
+   if (m_pItem->pThresholdList[dwIndex].wFunction == F_ERROR)
+      _stprintf(szBuffer, _T("%s(%s)"),
+                g_pszThresholdFunction[m_pItem->pThresholdList[dwIndex].wFunction], szArgs);
+   else
+      _stprintf(szBuffer, _T("%s(%s) %s %s"),
+                g_pszThresholdFunction[m_pItem->pThresholdList[dwIndex].wFunction], szArgs,
+                g_pszThresholdOperation[m_pItem->pThresholdList[dwIndex].wOperation], szValue);
    m_wndListCtrl.SetItemText(iItem, 0, szBuffer);
 
    // Event

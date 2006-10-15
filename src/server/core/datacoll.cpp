@@ -96,6 +96,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
                pItem->NewValue(currTime, pBuffer);
                break;
             case DCE_COMM_ERROR:
+               pItem->NewError();
                break;
             case DCE_NOT_SUPPORTED:
                // Change item's status

@@ -126,6 +126,7 @@ public:
 
    BOOL SaveToDB(DB_HANDLE hdb, DWORD dwIndex);
    int Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue);
+   int CheckError(DWORD dwErrorCount);
 
    void CreateMessage(DCI_THRESHOLD *pData);
    void UpdateFromMessage(DCI_THRESHOLD *pData);
@@ -176,6 +177,7 @@ private:
    DWORD m_dwNumSchedules;
    TCHAR **m_ppScheduleList;
    time_t m_tLastCheck;       // Last schedule checking time
+   DWORD m_dwErrorCount;      // Consequtive collection error count
 
    void Lock(void) { MutexLock(m_hMutex, INFINITE); }
    void Unlock(void) { MutexUnlock(m_hMutex); }
@@ -223,6 +225,7 @@ public:
          { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
 
    void NewValue(time_t nTimeStamp, const char *pszValue);
+   void NewError(void);
 
    void GetLastValue(CSCPMessage *pMsg, DWORD dwId);
    NXSL_Value *GetValueForNXSL(int nFunction, int nPolls);
