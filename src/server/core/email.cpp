@@ -157,6 +157,10 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
    char szBuffer[SMTP_BUFFER_SIZE];
    int iResp, iState = STATE_INITIAL, nBufPos = 0;
    DWORD dwRetCode;
+	char szEncoding[128];
+
+	// get mail encoding from DB
+	ConfigReadStr("MailEncoding", szEncoding, sizeof(szEncoding), "iso-8859-1");
 
    // Fill in address structure
    memset(&sa, 0, sizeof(sa));
@@ -253,7 +257,9 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
                      sprintf(szBuffer, "To: <%s>\r\n", pszRcpt);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
-                     sprintf(szBuffer, "Subject: %s\r\n\r\n", pszSubject);
+                     sprintf(szBuffer, "Subject: %s\r\n", pszSubject);
+                     sprintf(szBuffer, "Content-Type: text/plain; charset=%s\r\n", szEncoding);
+                     sprintf(szBuffer, "Content-Transfer-Encoding: 8bit\r\n\r\n", pszSubject);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
 
                      // Mail body
