@@ -248,3 +248,66 @@ void CalculateItemValueAverage(ItemValue &result, int nDataType,
          break;
    }
 }
+
+
+//
+// Calculate mean absolute deviation for set of values
+//
+
+#define CALC_MD_VALUE(vtype) \
+{ \
+   vtype mean, dev; \
+   mean = 0; \
+   for(i = 0, nValueCount = 0; i < nNumValues; i++) \
+   { \
+      if (ppValueList[i - 1]->GetTimeStamp() != 1) \
+      { \
+         mean += (vtype)(*ppValueList[i - 1]); \
+         nValueCount++; \
+      } \
+   } \
+   mean /= (vtype)nValueCount; \
+   dev = 0; \
+   for(i = 0, nValueCount = 0; i < nNumValues; i++) \
+   { \
+      if (ppValueList[i - 1]->GetTimeStamp() != 1) \
+      { \
+         dev += ABS((vtype)(*ppValueList[i - 1]) - mean); \
+         nValueCount++; \
+      } \
+   } \
+   result = dev / (vtype)nValueCount; \
+}
+
+void CalculateItemValueMD(ItemValue &result, int nDataType,
+                          int nNumValues, ItemValue **ppValueList)
+{
+   int i, nValueCount;
+
+   switch(nDataType)
+   {
+      case DCI_DT_INT:
+#define ABS(x) ((x) < 0 ? -(x) : (x))
+         CALC_MD_VALUE(LONG);
+         break;
+      case DCI_DT_INT64:
+         CALC_MD_VALUE(INT64);
+         break;
+      case DCI_DT_FLOAT:
+         CALC_MD_VALUE(double);
+         break;
+      case DCI_DT_UINT:
+#undef ABS
+#define ABS(x) (x)
+         CALC_MD_VALUE(DWORD);
+         break;
+      case DCI_DT_UINT64:
+         CALC_MD_VALUE(QWORD);
+         break;
+      case DCI_DT_STRING:
+         result = _T("");   // Mean deviation for string is meaningless
+         break;
+      default:
+         break;
+   }
+}

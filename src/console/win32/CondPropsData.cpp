@@ -134,9 +134,12 @@ int CCondPropsData::AddListItem(int nPos, INPUT_DCI *pItem, TCHAR *pszName)
 
       m_wndListCtrl.SetItemText(iItem, 3, pszName);
 
-      if (pItem->nFunction == F_AVERAGE)
+      if ((pItem->nFunction == F_AVERAGE) ||
+          (pItem->nFunction == F_DEVIATION) ||
+          (pItem->nFunction == F_ERROR))
       {
-         _sntprintf(szBuffer, 64, _T("average(%d)"), pItem->nPolls);
+         _sntprintf(szBuffer, 64, _T("%s(%d)"),
+                    g_pszThresholdFunction[pItem->nFunction], pItem->nPolls);
          m_wndListCtrl.SetItemText(iItem, 4, szBuffer);
       }
       else
@@ -256,11 +259,15 @@ void CCondPropsData::OnButtonEdit()
          m_pDCIList[nIndex].nPolls = dlg.m_nPolls;
 
          // Update text in list control
-         if (m_pDCIList[nIndex].nFunction == F_AVERAGE)
+         if ((m_pDCIList[nIndex].nFunction == F_AVERAGE) ||
+             (m_pDCIList[nIndex].nFunction == F_DEVIATION) ||
+             (m_pDCIList[nIndex].nFunction == F_ERROR))
          {
             TCHAR szBuffer[64];
 
-            _sntprintf(szBuffer, 64, _T("average(%d)"), m_pDCIList[nIndex].nPolls);
+            _sntprintf(szBuffer, 64, _T("%s(%d)"),
+                       g_pszThresholdFunction[m_pDCIList[nIndex].nFunction],
+                       m_pDCIList[nIndex].nPolls);
             m_wndListCtrl.SetItemText(iItem, 4, szBuffer);
          }
          else

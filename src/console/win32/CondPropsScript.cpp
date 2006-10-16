@@ -55,7 +55,7 @@ BOOL CCondPropsScript::OnInitDialog()
 	
    m_wndEditor.Attach(::GetDlgItem(m_hWnd, IDC_EDIT_SCRIPT));
    m_wndEditor.SetDefaults();
-   m_wndEditor.SetText((LPCTSTR)m_strScript);
+   m_wndEditor.SetText(m_strScript);
 	
 	return TRUE;
 }

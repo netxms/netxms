@@ -1154,6 +1154,23 @@ NXSL_Value *DCItem::GetValueForNXSL(int nFunction, int nPolls)
             pValue = new NXSL_Value;
          }
          break;
+      case F_DEVIATION:
+         if (m_dwCacheSize > 0)
+         {
+            ItemValue result;
+
+            CalculateItemValueMD(result, m_iDataType,
+                                 min(m_dwCacheSize, (DWORD)nPolls), m_ppValueCache);
+            pValue = new NXSL_Value((TCHAR *)result.String());
+         }
+         else
+         {
+            pValue = new NXSL_Value;
+         }
+         break;
+      case F_ERROR:
+         pValue = new NXSL_Value((LONG)((m_dwErrorCount >= (DWORD)nPolls) ? 1 : 0));
+         break;
       default:
          pValue = new NXSL_Value;
          break;

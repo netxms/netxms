@@ -108,6 +108,7 @@ private:
 
    const ItemValue& Value(void) { return m_value; }
    void CalculateAverageValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
+   void CalculateMDValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
    void CalculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
 
 public:
@@ -249,6 +250,8 @@ void CalculateItemValueDiff(ItemValue &result, int nDataType,
                             ItemValue &value1, ItemValue &value2);
 void CalculateItemValueAverage(ItemValue &result, int nDataType,
                                int nNumValues, ItemValue **ppValueList);
+void CalculateItemValueMD(ItemValue &result, int nDataType,
+                          int nNumValues, ItemValue **ppValueList);
 
 
 //

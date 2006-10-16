@@ -16,6 +16,8 @@ static CODE_TO_TEXT m_ctFunctions[] =
    { F_LAST, _T("Last") },
    { F_AVERAGE, _T("Average") },
    { F_DIFF, _T("Diff") },
+   { F_ERROR, _T("Error") },
+   { F_DEVIATION, _T("Mean Deviation") },
    { 0, NULL }
 };
 
@@ -102,5 +104,8 @@ void CCondDCIPropDlg::OnSelchangeComboFunction()
    TCHAR szText[256];
 
    m_wndComboFunc.GetWindowText(szText, 256);
-   EnableDlgItem(this, IDC_EDIT_POLLS, !_tcscmp(szText, CodeToText(F_AVERAGE, m_ctFunctions, _T(""))));
+   EnableDlgItem(this, IDC_EDIT_POLLS, 
+                 (!_tcscmp(szText, CodeToText(F_AVERAGE, m_ctFunctions, _T("")))) ||
+                 (!_tcscmp(szText, CodeToText(F_DEVIATION, m_ctFunctions, _T("")))) ||
+                 (!_tcscmp(szText, CodeToText(F_ERROR, m_ctFunctions, _T("")))));
 }

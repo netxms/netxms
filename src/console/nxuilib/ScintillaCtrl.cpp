@@ -63,7 +63,7 @@ void CScintillaCtrl::SetText(LPCTSTR lpszText)
       char *pBuffer;
       int nSize;
 
-      nSize = wcslen(lpszText) * 4;
+      nSize = wcslen(lpszText) * 4 + 1;
       pBuffer = (char *)malloc(nSize);
       WideCharToMultiByte(CP_UTF8, 0, lpszText, -1, pBuffer, nSize, NULL, NULL);
       SendMessage(SCI_SETTEXT, 0, (LPARAM)pBuffer);

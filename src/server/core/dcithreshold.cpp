@@ -173,8 +173,8 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
       case F_AVERAGE:      // Check average value for last n polls
          CalculateAverageValue(&fvalue, value, ppPrevValues);
          break;
-      case F_DEVIATION:    // Check deviation from the mean value
-         /* TODO */
+      case F_DEVIATION:    // Check mean absolute deviation
+         CalculateMDValue(&fvalue, value, ppPrevValues);
          break;
       case F_DIFF:
          CalculateDiff(&fvalue, value, ppPrevValues);
@@ -531,6 +531,70 @@ void Threshold::CalculateAverageValue(ItemValue *pResult, ItemValue &lastValue, 
          break;
    }
 }
+
+
+//
+// Calculate mean absolute deviation for parameter
+//
+
+#define CALC_MD_VALUE(vtype) \
+{ \
+   vtype mean, dev; \
+   mean = (vtype)lastValue; \
+   for(i = 1, nValueCount = 1; i < m_iParam1; i++) \
+   { \
+      if (ppPrevValues[i - 1]->GetTimeStamp() != 1) \
+      { \
+         mean += (vtype)(*ppPrevValues[i - 1]); \
+         nValueCount++; \
+      } \
+   } \
+   mean /= (vtype)nValueCount; \
+   dev = ABS((vtype)lastValue - mean); \
+   for(i = 1, nValueCount = 1; i < m_iParam1; i++) \
+   { \
+      if (ppPrevValues[i - 1]->GetTimeStamp() != 1) \
+      { \
+         dev += ABS((vtype)(*ppPrevValues[i - 1]) - mean); \
+         nValueCount++; \
+      } \
+   } \
+   *pResult = dev / (vtype)nValueCount; \
+}
+
+void Threshold::CalculateMDValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
+{
+   int i, nValueCount;
+
+   switch(m_iDataType)
+   {
+      case DCI_DT_INT:
+#define ABS(x) ((x) < 0 ? -(x) : (x))
+         CALC_MD_VALUE(LONG);
+         break;
+      case DCI_DT_INT64:
+         CALC_MD_VALUE(INT64);
+         break;
+      case DCI_DT_FLOAT:
+         CALC_MD_VALUE(double);
+         break;
+      case DCI_DT_UINT:
+#undef ABS
+#define ABS(x) (x)
+         CALC_MD_VALUE(DWORD);
+         break;
+      case DCI_DT_UINT64:
+         CALC_MD_VALUE(QWORD);
+         break;
+      case DCI_DT_STRING:
+         *pResult = _T("");   // Mean deviation for string is meaningless
+         break;
+      default:
+         break;
+   }
+}
+
+#undef ABS
 
 
 //

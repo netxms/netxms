@@ -6,6 +6,8 @@
 - Added possibility to specify custom threshold rearm event instead of
   SYS_THRESHOLD_REARMED
 - Added threshold processing option "Always process all thresholds"
+- Implemented "data collection error" threshold checking function
+- Implemented "mean absolute deviation" threshold checking function
 - Added possibility to set confirmation messages for object tools
 - Object tools "Shutdown system", "Restart system", "Restart agent"
   asks confirmation by default
