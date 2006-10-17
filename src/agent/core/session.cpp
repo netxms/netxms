@@ -107,6 +107,7 @@ CommSession::CommSession(SOCKET hSocket, DWORD dwHostAddr,
    m_bMasterServer = bMasterServer;
    m_bControlServer = bControlServer;
    m_bProxyConnection = FALSE;
+   m_bAcceptTraps = FALSE;
    m_hCurrFile = -1;
    m_pCtx = NULL;
    m_ts = time(NULL);
@@ -460,6 +461,17 @@ void CommSession::ProcessingThread(void)
                if (dwRet == ERR_SUCCESS)
                   goto stop_processing;
                msg.SetVariable(VID_RCC, dwRet);
+               break;
+            case CMD_ENABLE_AGENT_TRAPS:
+               if (m_bMasterServer)
+               {
+                  m_bAcceptTraps = TRUE;
+                  msg.SetVariable(VID_RCC, ERR_SUCCESS);
+               }
+               else
+               {
+                  msg.SetVariable(VID_RCC, ERR_ACCESS_DENIED);
+               }
                break;
             default:
                // Attempt to process unknown command by subagents

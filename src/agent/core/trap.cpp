@@ -38,6 +38,8 @@ static Queue *m_pTrapQueue = NULL;
 THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
 {
    CSCP_MESSAGE *pMsg;
+   DWORD i;
+   BOOL bTrapSent;
 
    m_pTrapQueue = new Queue;
    while(1)
@@ -45,6 +47,25 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
       pMsg = (CSCP_MESSAGE *)m_pTrapQueue->GetOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)
          break;
+
+      bTrapSent = FALSE;
+      while(1)
+      {
+         MutexLock(g_hSessionListAccess, INFINITE);
+         for(i = 0; i < g_dwMaxSessions; i++)
+            if (g_pSessionList[i] != NULL)
+               if (g_pSessionList[i]->AcceptTraps())
+               {
+                  g_pSessionList[i]->SendRawMessage(pMsg);
+                  bTrapSent = TRUE;
+               }
+         MutexUnlock(g_hSessionListAccess);
+
+         if (bTrapSent)
+            break;
+
+         ThreadSleep(1);
+      }
 
       free(pMsg);
    }
@@ -87,13 +108,11 @@ void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList)
 //        i - Object ID
 //
 
-void SendTrap(DWORD dwEventCode, char *pszFormat, ...)
+void SendTrap(DWORD dwEventCode, char *pszFormat, va_list args)
 {
    int i, iNumArgs;
    TCHAR *ppArgList[64];
-   va_list args;
 
-   va_start(args, pszFormat);
    iNumArgs = (pszFormat == NULL) ? 0 : (int)strlen(pszFormat);
    for(i = 0; i < iNumArgs; i++)
    {
@@ -120,7 +139,6 @@ void SendTrap(DWORD dwEventCode, char *pszFormat, ...)
             break;
       }
    }
-   va_end(args);
 
    SendTrap(dwEventCode, iNumArgs, ppArgList);
 
@@ -128,4 +146,19 @@ void SendTrap(DWORD dwEventCode, char *pszFormat, ...)
       if ((pszFormat[i] == 'd') || (pszFormat[i] == 'x') ||
           (pszFormat[i] == 'i') || (pszFormat[i] == 'a'))
          free(ppArgList[i]);
+}
+
+
+//
+// Send trap - variant 3
+// Same as variant 2, but uses argument list instead of va_list
+//
+
+void SendTrap(DWORD dwEventCode, char *pszFormat, ...)
+{
+   va_list args;
+
+   va_start(args, pszFormat);
+   SendTrap(dwEventCode, pszFormat, args);
+   va_end(args);
 }

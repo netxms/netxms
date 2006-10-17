@@ -50,7 +50,9 @@
 // Static data
 //
 
-static void (* m_pLogFunction)(int, TCHAR *);
+static void (* m_pLogFunction)(int, TCHAR *) = NULL;
+static void (* m_pTrapFunction1)(DWORD, int, TCHAR **) = NULL;
+static void (* m_pTrapFunction2)(DWORD, char *, va_list) = NULL;
 
 
 //
@@ -564,7 +566,7 @@ DWORD LIBNETXMS_EXPORTABLE StrToBin(TCHAR *pStr, BYTE *pData, DWORD dwSize)
 
 
 //
-// Initialize loggin for subagents
+// Initialize logging for subagents
 //
 
 void LIBNETXMS_EXPORTABLE InitSubAgentsLogger(void (* pFunc)(int, TCHAR *))
@@ -589,6 +591,41 @@ void LIBNETXMS_EXPORTABLE NxWriteAgentLog(int iLevel, TCHAR *pszFormat, ...)
       va_end(args);
       m_pLogFunction(iLevel, szBuffer);
    }
+}
+
+
+//
+// Initialize trap sending functions for subagent
+//
+
+void LIBNETXMS_EXPORTABLE InitSubAgentsTrapSender(void (* pFunc1)(DWORD, int, TCHAR **),
+                                                  void (* pFunc2)(DWORD, char *, va_list))
+{
+   m_pTrapFunction1 = pFunc1;
+   m_pTrapFunction2 = pFunc2;
+}
+
+
+//
+// Send trap from agent to server
+//
+
+void LIBNETXMS_EXPORTABLE NxSendTrap(DWORD dwEvent, char *pszFormat, ...)
+{
+   va_list args;
+
+   if (m_pTrapFunction2 != NULL)
+   {
+      va_start(args, pszFormat);
+      m_pTrapFunction2(dwEvent, pszFormat, args);
+      va_end(args);
+   }
+}
+
+void LIBNETXMS_EXPORTABLE NxSendTrap2(DWORD dwEvent, int nCount, TCHAR **ppszArgList)
+{
+   if (m_pTrapFunction1 != NULL)
+      m_pTrapFunction1(dwEvent, nCount, ppszArgList);
 }
 
 

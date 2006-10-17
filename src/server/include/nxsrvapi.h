@@ -262,7 +262,7 @@ protected:
    DWORD SetupEncryption(RSA *pServerKey);
    DWORD Authenticate(BOOL bProxyData);
    DWORD SetupProxyConnection(void);
-   DWORD GetIpAddr(void) { return m_dwAddr; }
+   DWORD GetIpAddr(void) { return ntohl(m_dwAddr); }
 
    virtual void PrintMsg(TCHAR *pszFormat, ...);
    virtual void OnTrap(CSCPMessage *pMsg);
@@ -294,6 +294,7 @@ public:
    DWORD GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
    DWORD GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize);
    DWORD UpdateConfigFile(TCHAR *pszConfig);
+   DWORD EnableTraps(void);
 
    DWORD GetNumDataLines(void) { return m_dwNumDataLines; }
    const TCHAR *GetDataLine(DWORD dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }

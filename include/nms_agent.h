@@ -249,6 +249,8 @@ extern "C" {
 BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(TCHAR *param, int index, TCHAR *arg, int maxSize);
 void LIBNETXMS_EXPORTABLE NxAddResultString(NETXMS_VALUES_LIST *pList, TCHAR *pszString);
 void LIBNETXMS_EXPORTABLE NxWriteAgentLog(int iLevel, TCHAR *pszFormat, ...);
+void LIBNETXMS_EXPORTABLE NxSendTrap(DWORD dwEvent, char *pszFormat, ...);
+void LIBNETXMS_EXPORTABLE NxSendTrap2(DWORD dwEvent, int nCount, TCHAR **ppszArgList);
 
 #ifdef __cplusplus
 }

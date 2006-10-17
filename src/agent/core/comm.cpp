@@ -30,14 +30,14 @@
 DWORD g_dwAcceptErrors = 0;
 DWORD g_dwAcceptedConnections = 0;
 DWORD g_dwRejectedConnections = 0;
+CommSession **g_pSessionList = NULL;
+MUTEX g_hSessionListAccess;
 
 
 //
 // Static data
 //
 
-static CommSession **m_pSessionList = NULL;
-static MUTEX m_hSessionListAccess;
 static MUTEX m_mutexWatchdogActive = INVALID_MUTEX_HANDLE;
 
 
@@ -68,17 +68,17 @@ static BOOL RegisterSession(CommSession *pSession)
 {
    DWORD i;
 
-   MutexLock(m_hSessionListAccess, INFINITE);
+   MutexLock(g_hSessionListAccess, INFINITE);
    for(i = 0; i < g_dwMaxSessions; i++)
-      if (m_pSessionList[i] == NULL)
+      if (g_pSessionList[i] == NULL)
       {
-         m_pSessionList[i] = pSession;
+         g_pSessionList[i] = pSession;
          pSession->SetIndex(i);
-         MutexUnlock(m_hSessionListAccess);
+         MutexUnlock(g_hSessionListAccess);
          return TRUE;
       }
 
-   MutexUnlock(m_hSessionListAccess);
+   MutexUnlock(g_hSessionListAccess);
    WriteLog(MSG_TOO_MANY_SESSIONS, EVENTLOG_WARNING_TYPE, NULL);
    return FALSE;
 }
@@ -90,9 +90,9 @@ static BOOL RegisterSession(CommSession *pSession)
 
 void UnregisterSession(DWORD dwIndex)
 {
-   MutexLock(m_hSessionListAccess, INFINITE);
-   m_pSessionList[dwIndex] = NULL;
-   MutexUnlock(m_hSessionListAccess);
+   MutexLock(g_hSessionListAccess, INFINITE);
+   g_pSessionList[dwIndex] = NULL;
+   MutexUnlock(g_hSessionListAccess);
 }
 
 
@@ -142,9 +142,9 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 
    // Create session list and it's access mutex
    g_dwMaxSessions = min(max(g_dwMaxSessions, 2), 1024);
-   m_pSessionList = (CommSession **)malloc(sizeof(CommSession *) * g_dwMaxSessions);
-   memset(m_pSessionList, 0, sizeof(CommSession *) * g_dwMaxSessions);
-   m_hSessionListAccess = MutexCreate();
+   g_pSessionList = (CommSession **)malloc(sizeof(CommSession *) * g_dwMaxSessions);
+   memset(g_pSessionList, 0, sizeof(CommSession *) * g_dwMaxSessions);
+   g_hSessionListAccess = MutexCreate();
 
    // Wait for connection requests
    while(!(g_dwFlags & AF_SHUTDOWN))
@@ -229,8 +229,8 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    MutexUnlock(m_mutexWatchdogActive);
    MutexDestroy(m_mutexWatchdogActive);
 
-   MutexDestroy(m_hSessionListAccess);
-   free(m_pSessionList);
+   MutexDestroy(g_hSessionListAccess);
+   free(g_pSessionList);
    closesocket(hSocket);
    DebugPrintf(INVALID_INDEX, "Listener thread terminated");
    return THREAD_OK;
@@ -254,23 +254,23 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
    {
       ThreadSleep(1);
 
-      MutexLock(m_hSessionListAccess, INFINITE);
+      MutexLock(g_hSessionListAccess, INFINITE);
       now = time(NULL);
       for(i = 0; i < g_dwMaxSessions; i++)
-         if (m_pSessionList[i] != NULL)
+         if (g_pSessionList[i] != NULL)
          {
-            if (m_pSessionList[i]->GetTimeStamp() < now - (time_t)g_dwIdleTimeout)
-               m_pSessionList[i]->Disconnect();
+            if (g_pSessionList[i]->GetTimeStamp() < now - (time_t)g_dwIdleTimeout)
+               g_pSessionList[i]->Disconnect();
          }
-      MutexUnlock(m_hSessionListAccess);
+      MutexUnlock(g_hSessionListAccess);
    }
 
    // Disconnect all sessions
-   MutexLock(m_hSessionListAccess, INFINITE);
+   MutexLock(g_hSessionListAccess, INFINITE);
    for(i = 0; i < g_dwMaxSessions; i++)
-      if (m_pSessionList[i] != NULL)
-         m_pSessionList[i]->Disconnect();
-   MutexUnlock(m_hSessionListAccess);
+      if (g_pSessionList[i] != NULL)
+         g_pSessionList[i]->Disconnect();
+   MutexUnlock(g_hSessionListAccess);
 
    ThreadSleep(1);
    MutexUnlock(m_mutexWatchdogActive);
@@ -289,11 +289,11 @@ LONG H_ActiveConnections(char *pszCmd, char *pArg, char *pValue)
    int nCounter;
    DWORD i;
 
-   MutexLock(m_hSessionListAccess, INFINITE);
+   MutexLock(g_hSessionListAccess, INFINITE);
    for(i = 0, nCounter = 0; i < g_dwMaxSessions; i++)
-      if (m_pSessionList[i] != NULL)
+      if (g_pSessionList[i] != NULL)
          nCounter++;
-   MutexUnlock(m_hSessionListAccess);
+   MutexUnlock(g_hSessionListAccess);
    ret_int(pValue, nCounter);
    return SYSINFO_RC_SUCCESS;
 }

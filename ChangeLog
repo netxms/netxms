@@ -11,6 +11,7 @@
 - Added possibility to set confirmation messages for object tools
 - Object tools "Shutdown system", "Restart system", "Restart agent"
   asks confirmation by default
+- Implemented agent traps and added trap sending API for subagents
 - Windows console:
 	- Console changed to use UNICODE internally
 	- Event processing policy editor improved

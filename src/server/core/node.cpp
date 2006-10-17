@@ -1318,6 +1318,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 
 BOOL Node::ConnectToAgent(void)
 {
+   BOOL bRet;
+
    // Create new agent connection object if needed
    if (m_pAgentConnection == NULL)
       m_pAgentConnection = new AgentConnectionEx(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
@@ -1331,7 +1333,10 @@ BOOL Node::ConnectToAgent(void)
    m_pAgentConnection->SetPort(m_wAgentPort);
    m_pAgentConnection->SetAuthData(m_wAuthMethod, m_szSharedSecret);
    SetAgentProxy(m_pAgentConnection);
-   return m_pAgentConnection->Connect(g_pServerKey);
+   bRet = m_pAgentConnection->Connect(g_pServerKey);
+   if (bRet)
+      m_pAgentConnection->EnableTraps();
+   return bRet;
 }
 
 

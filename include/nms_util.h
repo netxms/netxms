@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.94 2006-10-05 05:24:05 victor Exp $ */
+/* $Id: nms_util.h,v 1.95 2006-10-17 21:20:25 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -351,6 +351,8 @@ extern "C"
    void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, TCHAR *szSymbol, TCHAR *pszErrorText);
 
    void LIBNETXMS_EXPORTABLE InitSubAgentsLogger(void (* pFunc)(int, TCHAR *));
+   void LIBNETXMS_EXPORTABLE InitSubAgentsTrapSender(void (* pFunc1)(DWORD, int, TCHAR **),
+                                                     void (* pFunc2)(DWORD, char *, va_list));
 
 #ifdef _WIN32
    TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufSize);
@@ -426,6 +428,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.94  2006/10/05 05:24:05  victor
+Minor changes
+
 Revision 1.93  2006/10/01 20:43:37  victor
 UNICODE-related fixes
 

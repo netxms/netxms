@@ -48,6 +48,7 @@
 
 THREAD_RESULT THREAD_CALL ListenerThread(void *);
 THREAD_RESULT THREAD_CALL SessionWatchdog(void *);
+THREAD_RESULT THREAD_CALL TrapSender(void *);
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 void InitStaticSubagents(void);
@@ -563,8 +564,9 @@ BOOL Initialize(void)
    }
 #endif
 
-   // Initialize logger for subagents
+   // Initialize API for subagents
    InitSubAgentsLogger(WriteSubAgentMsg);
+   InitSubAgentsTrapSender(SendTrap, SendTrap);
 
    // Initialize cryptografy
    if (!InitCryptoLib(m_dwEnabledCiphers))
@@ -780,6 +782,7 @@ BOOL Initialize(void)
    // Start network listener and session watchdog
    m_thListener = ThreadCreateEx(ListenerThread, 0, NULL);
    m_thSessionWatchdog = ThreadCreateEx(SessionWatchdog, 0, NULL);
+   ThreadCreate(TrapSender, 0, NULL);
 
 #if defined(_WIN32) || defined(_NETWARE)
    m_hCondShutdown = ConditionCreate(TRUE);

@@ -230,6 +230,7 @@ private:
    BOOL m_bMasterServer;
    BOOL m_bControlServer;
    BOOL m_bProxyConnection;
+   BOOL m_bAcceptTraps;
    int m_hCurrFile;
    DWORD m_dwFileRqId;
    CSCP_ENCRYPTION_CONTEXT *m_pCtx;
@@ -266,11 +267,14 @@ public:
    void Disconnect(void);
 
    void SendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
+   void SendRawMessage(CSCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->dwSize))); }
 
    DWORD GetIndex(void) { return m_dwIndex; }
    void SetIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
 
    time_t GetTimeStamp(void) { return m_ts; }
+
+   BOOL AcceptTraps(void) { return m_bAcceptTraps; }
 };
 
 
@@ -323,6 +327,7 @@ DWORD InstallLogPolicy(NX_LPP *pPolicy);
 
 void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList);
 void SendTrap(DWORD dwEventCode, char *pszFormat, ...);
+void SendTrap(DWORD dwEventCode, char *pszFormat, va_list args);
 
 #ifdef _WIN32
 
@@ -362,6 +367,9 @@ extern DWORD g_dwExecTimeout;
 extern DWORD g_dwAcceptErrors;
 extern DWORD g_dwAcceptedConnections;
 extern DWORD g_dwRejectedConnections;
+
+extern CommSession **g_pSessionList;
+extern MUTEX g_hSessionListAccess;
 
 #ifdef _WIN32
 extern BOOL (__stdcall *imp_GlobalMemoryStatusEx)(LPMEMORYSTATUSEX);

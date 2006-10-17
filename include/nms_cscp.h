@@ -425,6 +425,7 @@ typedef struct
 #define CMD_NXCP_CAPS               0x00B7
 #define CMD_GET_OBJECT_COMMENTS     0x00B8
 #define CMD_UPDATE_OBJECT_COMMENTS  0x00B9
+#define CMD_ENABLE_AGENT_TRAPS      0x00BA
 
 
 //

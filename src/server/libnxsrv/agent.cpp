@@ -1343,3 +1343,22 @@ DWORD AgentConnection::SetupProxyConnection(void)
    else
       return ERR_CONNECTION_BROKEN;
 }
+
+
+//
+// Enable trap receiving on connection
+//
+
+DWORD AgentConnection::EnableTraps(void)
+{
+   CSCPMessage msg(m_nProtocolVersion);
+   DWORD dwRqId;
+
+   dwRqId = m_dwRequestId++;
+   msg.SetCode(CMD_ENABLE_AGENT_TRAPS);
+   msg.SetId(dwRqId);
+   if (SendMessage(&msg))
+      return WaitForRCC(dwRqId, m_dwCommandTimeout);
+   else
+      return ERR_CONNECTION_BROKEN;
+}
