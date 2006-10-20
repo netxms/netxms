@@ -1507,3 +1507,56 @@ DWORD LIBNXCL_EXPORTABLE NXCExecuteAction(NXC_SESSION hSession, DWORD dwObjectId
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
+
+
+//
+// Get object's comments
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetObjectComments(NXC_SESSION hSession,
+                                              DWORD dwObjectId, TCHAR **ppszText)
+{
+   DWORD dwRqId, dwResult;
+   CSCPMessage msg, *pResponse;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_GET_OBJECT_COMMENTS);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwObjectId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwResult = pResponse->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+         *ppszText = pResponse->GetVariableStr(VID_COMMENT);
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+   }
+   return dwResult;
+}
+
+
+//
+// Update object's comments
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCUpdateObjectComments(NXC_SESSION hSession,
+                                                 DWORD dwObjectId, TCHAR *pszText)
+{
+   DWORD dwRqId;
+   CSCPMessage msg;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_UPDATE_OBJECT_COMMENTS);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwObjectId);
+   msg.SetVariable(VID_COMMENT, pszText);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}

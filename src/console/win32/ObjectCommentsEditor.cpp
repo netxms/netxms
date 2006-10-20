@@ -37,6 +37,7 @@ BEGIN_MESSAGE_MAP(CObjectCommentsEditor, CMDIChildWnd)
 	ON_WM_DESTROY()
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
+	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -102,4 +103,29 @@ void CObjectCommentsEditor::OnSetFocus(CWnd* pOldWnd)
 {
 	CMDIChildWnd::OnSetFocus(pOldWnd);
    m_wndEdit.SetFocus();
+}
+
+
+//
+// WM_COMMAND::ID_VIEW_REFRESH message handler
+//
+
+void CObjectCommentsEditor::OnViewRefresh() 
+{
+   DWORD dwResult;
+   TCHAR *pszText;
+
+   dwResult = NXCGetObjectComments(g_hSession, m_dwObjectId, &pszText);
+   if (dwResult == RCC_SUCCESS)
+   {
+      if (pszText != NULL)
+      {
+         m_wndEdit.SetWindowText(pszText);
+         free(pszText);
+      }
+   }
+   else
+   {
+      theApp.ErrorBox(dwResult, _T("Cannot get object's comments: %s"));
+   }
 }

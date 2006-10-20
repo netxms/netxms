@@ -174,10 +174,10 @@ INSERT INTO user_groups (id,name,system_access,flags,description,guid)
 #define ID_GROUP_1 -2147483647
 #define ID_GROUP_2 -2147483646
 
-INSERT INTO event_groups (id,name,description) 
-   VALUES (ID_GROUP_1,'NodeStatus','All events reporting about node status change');
-INSERT INTO event_groups (id,name,description) 
-   VALUES (ID_GROUP_2,'NewObjects','All events reporting about new objects creation');
+INSERT INTO event_groups (id,name,description,range_start,range_end) 
+   VALUES (ID_GROUP_1,'NodeStatus','All events reporting about node status change',0,0);
+INSERT INTO event_groups (id,name,description,range_start,range_end)
+   VALUES (ID_GROUP_2,'NewObjects','All events reporting about new objects creation',0,0);
 
 INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_NORMAL);
 INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_NODE_MINOR);

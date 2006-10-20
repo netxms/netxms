@@ -40,7 +40,7 @@
 #include <nms_threads.h>
 #include <dbdrv.h>
 #include <nms_cscp.h>
-#include <nxcscpapi.h>
+#include <nxcpapi.h>
 #include <nxsrvapi.h>
 
 #endif   /* _libnxsrv_h_ */

@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <nms_common.h>
 #include <nms_util.h>
-#include <nxcscpapi.h>
+#include <nxcpapi.h>
 #include <local_admin.h>
 
 

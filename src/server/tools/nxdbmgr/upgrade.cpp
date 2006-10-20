@@ -78,6 +78,30 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V50 to V51
+//
+
+static BOOL H_UpgradeFromV50(void)
+{
+   static TCHAR m_szBatch[] =
+      "ALTER TABLE event_groups ADD range_start integer\n"
+      "ALTER TABLE event_groups ADD range_END integer\n"
+      "UPDATE event_groups SET range_start=0,range_end=0\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='51' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V49 to V50
 //
 
@@ -2240,6 +2264,7 @@ static struct
    { 47, H_UpgradeFromV47 },
    { 48, H_UpgradeFromV48 },
    { 49, H_UpgradeFromV49 },
+   { 50, H_UpgradeFromV50 },
    { 0, NULL }
 };
 

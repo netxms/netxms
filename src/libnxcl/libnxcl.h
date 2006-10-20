@@ -28,7 +28,7 @@
 #include <nxclapi.h>
 #include <nms_util.h>
 #include <nms_threads.h>
-#include <nxcscpapi.h>
+#include <nxcpapi.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>

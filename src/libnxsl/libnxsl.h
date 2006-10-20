@@ -26,7 +26,7 @@
 
 #include <nms_common.h>
 #include <nms_util.h>
-#include <nxcscpapi.h>
+#include <nxcpapi.h>
 #include <nxsl.h>
 #include <FlexLexer.h>
 

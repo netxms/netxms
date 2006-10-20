@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS Agent
-AppVerName=NetXMS Agent 0.2.14-rc6
-AppVersion=0.2.14-rc6
+AppVerName=NetXMS Agent 0.2.14-rc9
+AppVersion=0.2.14-rc9
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -12,7 +12,7 @@ AppUpdatesURL=http://www.netxms.org
 DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS Agent
 AllowNoIcons=yes
-OutputBaseFilename=nxagent-0.2.14-rc6
+OutputBaseFilename=nxagent-0.2.14-rc9
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -20,7 +20,6 @@ LicenseFile=..\..\..\copying
 
 [Files]
 Source: "..\..\libnetxms\Release\libnetxms.dll"; DestDir: "{app}\bin"; BeforeInstall: StopService; Flags: ignoreversion
-Source: "..\..\libnxcscp\Release\libnxcscp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\core\Release\nxagentd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\winnt\Release\winnt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\win9x\Release\win9x.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion

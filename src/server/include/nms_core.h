@@ -68,7 +68,6 @@
 #include <nms_cscp.h>
 #include <uuid.h>
 #include <nxsrvapi.h>
-#include <nxcscpapi.h>
 #include <nximage.h>
 #include <nxqueue.h>
 #include <nxsnmp.h>

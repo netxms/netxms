@@ -38,7 +38,7 @@
 #define LIBNXCL_NO_DECLARATIONS 1
 #endif
 #include <nxclapi.h>
-#include <nxcscpapi.h>
+#include <nxcpapi.h>
 #include <nms_agent.h>
 #include <messages.h>
 #include <dbdrv.h>

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** CSCP API Library
+** NXCP API
 ** Copyright (C) 2003, 2004 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -17,33 +17,15 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxcscpapi.h
+** File: nxcpapi.h
 **
 **/
 
-#ifndef _nxcscpapi_h_
-#define _nxcscpapi_h_
+#ifndef _nxcpapi_h_
+#define _nxcpapi_h_
 
 #include <nms_threads.h>
-
-
-#ifdef _WIN32
-#ifdef LIBNXCSCP_EXPORTS
-#define LIBNXCSCP_EXPORTABLE __declspec(dllexport)
-#else
-#define LIBNXCSCP_EXPORTABLE __declspec(dllimport)
-#endif
-#else    /* _WIN32 */
-#define LIBNXCSCP_EXPORTABLE
-#endif
-
-
-//
-// Encryption methods
-//
-
-#define CSCP_ENCRYPTION_NONE           0
-#define CSCP_ENCRYPTION_BLOWFISH_SHA1  1
+#include <nms_util.h>
 
 
 //
@@ -58,11 +40,13 @@ typedef struct
 } CSCP_BUFFER;
 
 
+#ifdef __cplusplus
+
 //
 // Class for holding CSCP messages
 //
 
-class LIBNXCSCP_EXPORTABLE CSCPMessage
+class LIBNETXMS_EXPORTABLE CSCPMessage
 {
 private:
    WORD m_wCode;
@@ -138,7 +122,7 @@ typedef struct
 // Message waiting queue class
 //
 
-class LIBNXCSCP_EXPORTABLE MsgWaitQueue
+class LIBNETXMS_EXPORTABLE MsgWaitQueue
 {
 private:
    MUTEX m_mutexDataAccess;
@@ -175,6 +159,12 @@ public:
    void SetHoldTime(DWORD dwHoldTime) { m_dwMsgHoldTime = dwHoldTime; }
 };
 
+#else    /* __cplusplus */
+
+typedef void CSCPMessage;
+
+#endif
+
 
 //
 // Functions
@@ -184,35 +174,35 @@ public:
 extern "C" {
 #endif
 
-int LIBNXCSCP_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg,
+int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg,
                                          CSCP_BUFFER *pBuffer, DWORD dwMaxMsgSize,
                                          CSCP_ENCRYPTION_CONTEXT **ppCtx,
                                          BYTE *pDecryptionBuffer, DWORD dwTimeout);
-CSCP_MESSAGE LIBNXCSCP_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, DWORD dwId, WORD wFlags,
+CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, DWORD dwId, WORD wFlags,
                                                         DWORD dwDataSize, void *pData,
                                                         CSCP_MESSAGE *pBuffer);
-TCHAR LIBNXCSCP_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer);
-BOOL LIBNXCSCP_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, TCHAR *pszFile,
+TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer);
+BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, TCHAR *pszFile,
                                            CSCP_ENCRYPTION_CONTEXT *pCtx);
-BOOL LIBNXCSCP_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion);
+BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion);
    
-BOOL LIBNXCSCP_EXPORTABLE InitCryptoLib(DWORD dwEnabledCiphers);
-DWORD LIBNXCSCP_EXPORTABLE CSCPGetSupportedCiphers(void);
-CSCP_ENCRYPTED_MESSAGE LIBNXCSCP_EXPORTABLE 
+BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(DWORD dwEnabledCiphers);
+DWORD LIBNETXMS_EXPORTABLE CSCPGetSupportedCiphers(void);
+CSCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE 
    *CSCPEncryptMessage(CSCP_ENCRYPTION_CONTEXT *pCtx, CSCP_MESSAGE *pMsg);
-BOOL LIBNXCSCP_EXPORTABLE CSCPDecryptMessage(CSCP_ENCRYPTION_CONTEXT *pCtx,
+BOOL LIBNETXMS_EXPORTABLE CSCPDecryptMessage(CSCP_ENCRYPTION_CONTEXT *pCtx,
                                              CSCP_ENCRYPTED_MESSAGE *pMsg,
                                              BYTE *pDecryptionBuffer);
-DWORD LIBNXCSCP_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg, 
+DWORD LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg, 
                                                   CSCP_ENCRYPTION_CONTEXT **ppCtx,
                                                   CSCPMessage **ppResponse,
                                                   RSA *pPrivateKey, int nNXCPVersion);
-void LIBNXCSCP_EXPORTABLE DestroyEncryptionContext(CSCP_ENCRYPTION_CONTEXT *pCtx);
-void LIBNXCSCP_EXPORTABLE PrepareKeyRequestMsg(CSCPMessage *pMsg, RSA *pServerKey);
-RSA LIBNXCSCP_EXPORTABLE *LoadRSAKeys(TCHAR *pszKeyFile);
+void LIBNETXMS_EXPORTABLE DestroyEncryptionContext(CSCP_ENCRYPTION_CONTEXT *pCtx);
+void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(CSCPMessage *pMsg, RSA *pServerKey);
+RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(TCHAR *pszKeyFile);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif   /* _nxcscpapi_h_ */
+#endif   /* _nxcpapi_h_ */

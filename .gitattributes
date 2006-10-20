@@ -203,7 +203,7 @@ include/nms_cscp.h -text
 include/nms_threads.h -text
 include/nms_util.h -text
 include/nxclapi.h -text
-include/nxcscpapi.h -text
+include/nxcpapi.h -text
 include/nxevent.h -text
 include/nximage.h -text
 include/nxlexer_styles.h -text

@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.208 2006-10-13 15:44:19 victor Exp $
+# $Id: configure.ac,v 1.209 2006-10-20 09:54:49 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -851,7 +851,6 @@ CPPFLAGS="$CPPFLAGS -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\"
 #
 
 LIBNETXMS_LIBRARY_VERSION=0:2:0
-LIBNXCSCP_LIBRARY_VERSION=0:2:0
 LIBNXMAP_LIBRARY_VERSION=0:2:0
 LIBNXCL_LIBRARY_VERSION=0:2:0
 LIBNXSNMP_LIBRARY_VERSION=0:2:0
@@ -861,7 +860,6 @@ DBDRV_LIBRARY_VERSION=0:2:0
 SMSDRV_LIBRARY_VERSION=0:2:0
 LIBNXSL_LIBRARY_VERSION=0:2:0
 AC_SUBST(LIBNETXMS_LIBRARY_VERSION)
-AC_SUBST(LIBNXCSCP_LIBRARY_VERSION)
 AC_SUBST(LIBNXMAP_LIBRARY_VERSION)
 AC_SUBST(LIBNXCL_LIBRARY_VERSION)
 AC_SUBST(LIBNXSNMP_LIBRARY_VERSION)
@@ -894,7 +892,6 @@ AC_CONFIG_FILES([
 	sql/Makefile
 	src/Makefile
 	src/libnetxms/Makefile
-	src/libnxcscp/Makefile
 	src/libnxsnmp/Makefile
 	src/libnxcl/Makefile
 	src/libnxsl/Makefile

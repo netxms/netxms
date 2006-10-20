@@ -105,7 +105,7 @@ PostBuild_Cmds=copy Debug\sqlite.ddr ..\..\..\..\bin
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug64"
 # PROP Intermediate_Dir "Debug64"
-# PROP Ignore_Export_Lib 0
+# PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\..\include" /I "..\..\..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "sqlite_EXPORTS" /YX /FD /GZ /c
 # ADD CPP /nologo /MDd /W3 /Gm /Zi /Od /I "..\..\include" /I "..\..\..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "sqlite_EXPORTS" /D "__64BIT__" /FD /GZ /c

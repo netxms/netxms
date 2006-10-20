@@ -42,25 +42,7 @@ Package=<4>
     Project_Dep_Name libnetxms
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name libnxcscp
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name libnxmap
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "libnxcscp"=.\src\libnxcscp\libnxcscp.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libnetxms
     End Project Dependency
 }}}
 
@@ -77,9 +59,6 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name libnetxms
     End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxcscp
-    End Project Dependency
 }}}
 
 ###############################################################################
@@ -94,9 +73,6 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name libnetxms
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxcscp
     End Project Dependency
 }}}
 
@@ -127,9 +103,6 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name libnetxms
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxcscp
     End Project Dependency
 }}}
 
@@ -198,9 +171,6 @@ Package=<4>
     Project_Dep_Name libnetxms
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name libnxcscp
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name libnxsnmp
     End Project Dependency
     Begin Project Dependency
@@ -220,9 +190,6 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name libnetxms
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxcscp
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libnxsrv
@@ -260,9 +227,6 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name libnetxms
     End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxcscp
-    End Project Dependency
 }}}
 
 ###############################################################################
@@ -282,9 +246,6 @@ Package=<4>
     Project_Dep_Name libnxcl
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name libnxcscp
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name nxuilib
     End Project Dependency
 }}}
@@ -301,9 +262,6 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name libnxcl
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxcscp
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libnxsnmp
@@ -346,9 +304,6 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name libnetxms
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxcscp
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libnxsnmp
@@ -398,9 +353,6 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name libnxcl
     End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxcscp
-    End Project Dependency
 }}}
 
 ###############################################################################
@@ -415,9 +367,6 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name libnetxms
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxcscp
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libnxsrv
@@ -490,9 +439,6 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libnxcl
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxcscp
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name nxuilib
@@ -587,9 +533,6 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name libnxcl
     End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxcscp
-    End Project Dependency
 }}}
 
 ###############################################################################
@@ -604,9 +547,6 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name libnetxms
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxcscp
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libnxsrv
@@ -676,9 +616,6 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name libnetxms
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxcscp
     End Project Dependency
 }}}
 

@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.2.14-rc6
-AppVersion=0.2.14-rc6
+AppVerName=NetXMS 0.2.14-rc9
+AppVersion=0.2.14-rc9
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.2.14-rc6
+OutputBaseFilename=netxms-0.2.14-rc9
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -36,8 +36,6 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 Source: "..\..\..\ChangeLog"; DestDir: "{app}\doc"; Flags: ignoreversion; Components: base
 Source: "..\..\libnetxms\Release\libnetxms.dll"; DestDir: "{app}\bin"; BeforeInstall: StopAllServices; Flags: ignoreversion; Components: base
 Source: "..\..\libnetxms\Release_UNICODE\libnetxmsw.dll"; DestDir: "{app}\bin"; BeforeInstall: StopAllServices; Flags: ignoreversion; Components: base
-Source: "..\..\libnxcscp\Release\libnxcscp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
-Source: "..\..\libnxcscp\Release_UNICODE\libnxcscpw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 ; Executables and DLLs shared between different components (server, console, etc.)
 Source: "..\..\libnxcl\Release\libnxcl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console websrv
 Source: "..\..\libnxcl\Release_UNICODE\libnxclw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console websrv

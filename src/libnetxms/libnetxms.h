@@ -26,6 +26,10 @@
 
 #include <nms_common.h>
 #include <nms_util.h>
+#include <nxcpapi.h>
+
+#define LIBNXCL_NO_DECLARATIONS
+#include <nxclapi.h>
 
 #define MAX_CODEPAGE_LEN		64
 

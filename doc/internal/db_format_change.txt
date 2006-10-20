@@ -1,4 +1,11 @@
 *************
+* 50 ==> 51 *
+*************
+
+- Columns "range_start" and "range_end" added to table "object_tools"
+
+
+*************
 * 49 ==> 50 *
 *************
 

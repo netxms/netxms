@@ -55,7 +55,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib libnxcscp.lib libnxmap.lib /nologo /version:0.1 /dll /machine:I386 /libpath:"..\libnetxms\Release" /libpath:"..\libnxcscp\Release" /libpath:"..\libnxmap\Release"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib libnxmap.lib /nologo /version:0.1 /dll /machine:I386 /libpath:"..\libnetxms\Release" /libpath:"..\libnxmap\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -86,7 +86,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib libnxcscp.lib libnxmap.lib /nologo /version:0.1 /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\libnetxms\Debug" /libpath:"..\libnxcscp\Debug" /libpath:"..\libnxmap\Debug"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib libnxmap.lib /nologo /version:0.1 /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\libnetxms\Debug" /libpath:"..\libnxmap\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Cmds=copy Debug\libnxcl.dll ..\..\bin
@@ -117,7 +117,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib libnxcscp.lib /nologo /version:0.1 /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\libnetxms\Debug" /libpath:"..\libnxcscp\Debug"
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxmsw.lib ws2_32.lib libnxcscpw.lib libnxmapw.lib /nologo /version:0.1 /dll /debug /machine:I386 /out:"Debug_UNICODE/libnxclw.dll" /pdbtype:sept /libpath:"..\libnetxms\Debug_UNICODE" /libpath:"..\libnxcscp\Debug_UNICODE" /libpath:"..\libnxmap\Debug_UNICODE"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxmsw.lib ws2_32.lib libnxmapw.lib /nologo /version:0.1 /dll /debug /machine:I386 /out:"Debug_UNICODE/libnxclw.dll" /pdbtype:sept /libpath:"..\libnetxms\Debug_UNICODE" /libpath:"..\libnxmap\Debug_UNICODE"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Cmds=copy Debug_UNICODE\libnxclw.dll ..\..\bin
@@ -148,7 +148,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib libnxcscp.lib /nologo /version:0.1 /dll /machine:I386 /libpath:"..\libnetxms\Release" /libpath:"..\libnxcscp\Release"
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxmsw.lib ws2_32.lib libnxcscpw.lib libnxmapw.lib /nologo /version:0.1 /dll /machine:I386 /out:"Release_UNICODE/libnxclw.dll" /libpath:"..\libnetxms\Release_UNICODE" /libpath:"..\libnxcscp\Release_UNICODE" /libpath:"..\libnxmap\Release_UNICODE"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxmsw.lib ws2_32.lib libnxmapw.lib /nologo /version:0.1 /dll /machine:I386 /out:"Release_UNICODE/libnxclw.dll" /libpath:"..\libnetxms\Release_UNICODE" /libpath:"..\libnxmap\Release_UNICODE"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files

@@ -1,9 +1,10 @@
-/* $Id: main.cpp,v 1.13 2006-03-15 12:00:10 alk Exp $ */
+/* $Id: main.cpp,v 1.14 2006-10-20 09:54:51 victor Exp $ */
+
+#define LIBNXCL_NO_DECLARATIONS
 
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <nxclapi.h>
-#include <nxcscpapi.h>
 
 #ifdef _WIN32
 #define PORTCHECK_EXPORTABLE __declspec(dllexport) __cdecl
@@ -171,6 +172,10 @@ DECLARE_SUBAGENT_INIT(PORTCHECK)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2006/03/15 12:00:10  alk
+simple telnet service checker added: it connects, response WON'T/DON'T to
+all offers and disconnects (this prevents from "peer died" in logs)
+
 Revision 1.12  2005/10/18 09:01:16  alk
 Added commands (ServiceCheck.*) for
 	http

@@ -28,7 +28,7 @@
 #include <nms_util.h>
 #include <nxevent.h>
 #include <nximage.h>
-#include <nxcscpapi.h>
+#include <nxcpapi.h>
 #include <nxtools.h>
 #include <nxlog.h>
 #include <uuid.h>
@@ -677,19 +677,19 @@ typedef struct
 // Trap parameter mapping entry
 //
 
-struct NXC_OID_MAP
+typedef struct
 {
    DWORD *pdwObjectId;     // Trap OID
    DWORD dwOidLen;         // Trap OID length
    TCHAR szDescription[MAX_DB_STRING];
-};
+} NXC_OID_MAP;
 
 
 //
 // Trap configuration entry
 //
 
-struct NXC_TRAP_CFG_ENTRY
+typedef struct
 {
    DWORD dwId;             // Entry ID
    DWORD *pdwObjectId;     // Trap OID
@@ -698,20 +698,20 @@ struct NXC_TRAP_CFG_ENTRY
    DWORD dwNumMaps;        // Number of parameter mappings
    NXC_OID_MAP *pMaps;
    TCHAR szDescription[MAX_DB_STRING];
-};
+} NXC_TRAP_CFG_ENTRY;
 
 
 //
 // Condition's input DCI definition
 //
 
-struct INPUT_DCI
+typedef struct
 {
    DWORD dwId;
    DWORD dwNodeId;
    int nFunction;    // Average, last, diff
    int nPolls;       // Number of polls used for average
-};
+} INPUT_DCI;
 
 
 /********************************************************************
@@ -1526,6 +1526,10 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateAgentConfig(NXC_SESSION hSession, DWORD dwNode
                                               TCHAR *pszConfig, BOOL bApply);
 DWORD LIBNXCL_EXPORTABLE NXCExecuteAction(NXC_SESSION hSession, DWORD dwObjectId,
                                           TCHAR *pszAction);
+DWORD LIBNXCL_EXPORTABLE NXCGetObjectComments(NXC_SESSION hSession,
+                                              DWORD dwObjectId, TCHAR **ppszText);
+DWORD LIBNXCL_EXPORTABLE NXCUpdateObjectComments(NXC_SESSION hSession,
+                                                 DWORD dwObjectId, TCHAR *pszText);
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_SESSION hSession, NXC_CC_LIST **ppList);
 void LIBNXCL_EXPORTABLE NXCDestroyCCList(NXC_CC_LIST *pList);
