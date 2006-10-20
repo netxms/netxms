@@ -38,6 +38,7 @@ public:
 
 // Implementation
 protected:
+	void EditScript(int iRow);
 	void ModifyTitle(void);
 	BOOL m_bIsModified;
 	void AddAction(void);

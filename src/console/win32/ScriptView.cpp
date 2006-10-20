@@ -105,9 +105,9 @@ int CScriptView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
    // Create editor
    m_wndEditor.Create(_T("Edit"), WS_CHILD, rect, this, ID_EDIT_BOX);
-   //m_wndEditor.SetFont(&g_fontCode);
    m_wndEditor.LoadLexer("nxlexer.dll");
    m_wndEditor.SetLexer("nxsl");
+   m_wndEditor.SetKeywords(0, g_szScriptKeywords);
 
    // Create status bar
 

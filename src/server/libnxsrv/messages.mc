@@ -578,4 +578,16 @@ Language=English
 Cannot loads platform subagent "%1": %2
 .
 
+MessageId=
+SymbolicName=MSG_EPRULE_SCRIPT_COMPILATION_ERROR
+Language=English
+Failed to compile evaluation script for event processing policy rule #%1: %2
+.
+
+MessageId=
+SymbolicName=MSG_EPRULE_SCRIPT_EXECUTION_ERROR
+Language=English
+Failed to execute evaluation script for event processing policy rule #%1: %2
+.
+
 ;#endif

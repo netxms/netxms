@@ -37,6 +37,8 @@
 
 void ConfigLexer(UINT nStartPos, int nLen, int nInitStyle,
                  char **ppszWords, WindowAccessor &acc);
+void NXSLLexer(UINT nStartPos, int nLen, int nInitStyle,
+               char **ppszWords, WindowAccessor &acc);
 
 
 //
@@ -64,7 +66,7 @@ BOOL IsKeyword(char *pszList, char *pszWord)
 
 extern "C" int LEXER_CALL GetLexerCount(void)
 {
-   return 1;
+   return 2;
 }
 
 
@@ -78,6 +80,9 @@ extern "C" void LEXER_CALL GetLexerName(UINT nIndex, char *pszBuffer, int nBufLe
    {
       case 0:
          nx_strncpy(pszBuffer, "nxconfig", nBufLen);
+         break;
+      case 1:
+         nx_strncpy(pszBuffer, "nxsl", nBufLen);
          break;
       default:
          break;
@@ -102,6 +107,9 @@ extern "C" void LEXER_CALL Lex(UINT nIndex, UINT nStartPos, int nLen,
    {
       case 0:
          ConfigLexer(nStartPos, nLen, nStyle, ppszWords, acc);
+         break;
+      case 1:
+         NXSLLexer(nStartPos, nLen, nStyle, ppszWords, acc);
          break;
       default:
          break;

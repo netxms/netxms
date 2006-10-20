@@ -360,7 +360,8 @@ void NXSL_Program::Error(int nError)
 // Returns 0 on success and -1 on error
 //
 
-int NXSL_Program::Run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv)
+int NXSL_Program::Run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
+                      NXSL_VariableSystem *pUserLocals)
 {
    DWORD i, dwOrigCodeSize, dwOrigNumFn;
    NXSL_VariableSystem *pSavedGlobals;
@@ -386,7 +387,7 @@ int NXSL_Program::Run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv)
    m_pCodeStack = new NXSL_Stack;
 
    // Create local variable system for main() and bind arguments
-   m_pLocals = new NXSL_VariableSystem;
+   m_pLocals = (pUserLocals == NULL) ? new NXSL_VariableSystem : pUserLocals;
    for(i = 0; i < argc; i++)
    {
       sprintf(szBuffer, "$%d", i + 1);

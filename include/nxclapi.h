@@ -1103,6 +1103,7 @@ typedef struct
    DWORD *pdwEventList;
    DWORD *pdwSourceList;
    TCHAR *pszComment;
+   TCHAR *pszScript;
    TCHAR szAlarmKey[MAX_DB_STRING];
    TCHAR szAlarmAckKey[MAX_DB_STRING];
    TCHAR szAlarmMessage[MAX_DB_STRING];

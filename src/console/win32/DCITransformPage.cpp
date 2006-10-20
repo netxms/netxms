@@ -35,24 +35,26 @@ CDCITransformPage::CDCITransformPage() : CPropertyPage(CDCITransformPage::IDD)
 {
 	//{{AFX_DATA_INIT(CDCITransformPage)
 	m_iDeltaProc = -1;
-	m_strFormula = _T("");
 	//}}AFX_DATA_INIT
 }
 
 CDCITransformPage::~CDCITransformPage()
 {
+   m_wndEditScript.Detach();
 }
 
 void CDCITransformPage::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CDCITransformPage)
-	DDX_Control(pDX, IDC_EDIT_FORMULA, m_wndEditScript);
 	DDX_Control(pDX, IDC_COMBO_DELTA, m_wndDeltaList);
 	DDX_CBIndex(pDX, IDC_COMBO_DELTA, m_iDeltaProc);
-	DDX_Text(pDX, IDC_EDIT_FORMULA, m_strFormula);
-	DDV_MaxChars(pDX, m_strFormula, 1023);
 	//}}AFX_DATA_MAP
+
+   if (pDX->m_bSaveAndValidate)
+   {
+      m_wndEditScript.GetText(m_strFormula);
+   }
 }
 
 
@@ -76,7 +78,12 @@ BOOL CDCITransformPage::OnInitDialog()
       m_wndDeltaList.AddString(m_pszMethodList[i]);
    m_wndDeltaList.SelectString(-1, m_pszMethodList[m_iDeltaProc]);
 
-   m_wndEditScript.SetFont(&g_fontCode);
+   m_wndEditScript.Attach(::GetDlgItem(m_hWnd, IDC_EDIT_SCRIPT));
+   m_wndEditScript.SetDefaults();
+   m_wndEditScript.SetText((LPCTSTR)m_strFormula);
+   m_wndEditScript.LoadLexer("nxlexer.dll");
+   m_wndEditScript.SetLexer("nxsl");
+   m_wndEditScript.SetKeywords(0, g_szScriptKeywords);
 
    EnableWarning();
 	return TRUE;

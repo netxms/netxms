@@ -87,6 +87,7 @@ public:
    void ExpandMessageText(void);
    TCHAR *ExpandText(TCHAR *szTemplate, TCHAR *pszAlarmMsg = NULL);
 
+   DWORD GetParametersCount(void) { return m_dwNumParameters; }
    char *GetParameter(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? m_ppszParameters[dwIndex] : NULL; }
    DWORD GetParameterAsULong(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? strtoul(m_ppszParameters[dwIndex], NULL, 0) : 0; }
 };
@@ -109,6 +110,7 @@ private:
    DWORD *m_pdwActionList;
    TCHAR *m_pszComment;
    TCHAR *m_pszScript;
+   NXSL_Program *m_pScript;
 
    char m_szAlarmMessage[MAX_DB_STRING];
    int m_iAlarmSeverity;
@@ -118,6 +120,7 @@ private:
    BOOL MatchSource(DWORD dwObjectId);
    BOOL MatchEvent(DWORD dwEventCode);
    BOOL MatchSeverity(DWORD dwSeverity);
+   BOOL MatchScript(Event *pEvent);
 
    void GenerateAlarm(Event *pEvent);
 

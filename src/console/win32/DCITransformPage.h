@@ -1,6 +1,7 @@
 #if !defined(AFX_DCITRANSFORMPAGE_H__E637F1DF_67A3_4F66_9E73_30B9904758DA__INCLUDED_)
 #define AFX_DCITRANSFORMPAGE_H__E637F1DF_67A3_4F66_9E73_30B9904758DA__INCLUDED_
 
+#include "..\NXUILIB\ScintillaCtrl.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -16,16 +17,15 @@ class CDCITransformPage : public CPropertyPage
 
 // Construction
 public:
+	CString m_strFormula;
 	CDCITransformPage();
 	~CDCITransformPage();
 
 // Dialog Data
 	//{{AFX_DATA(CDCITransformPage)
 	enum { IDD = IDD_DCI_TRANSFORM };
-	CEdit	m_wndEditScript;
 	CComboBox	m_wndDeltaList;
 	int		m_iDeltaProc;
-	CString	m_strFormula;
 	//}}AFX_DATA
 
 
@@ -40,6 +40,7 @@ public:
 
 // Implementation
 protected:
+	CScintillaCtrl m_wndEditScript;
 	void EnableWarning(void);
 	// Generated message map functions
 	//{{AFX_MSG(CDCITransformPage)

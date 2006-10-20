@@ -37,6 +37,7 @@
 #define NX_STYLE_ERROR        5
 #define NX_STYLE_SYMBOL       6
 #define NX_STYLE_SECTION      7
+#define NX_STYLE_ML_COMMENT   8
 
 
 #endif

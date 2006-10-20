@@ -201,6 +201,7 @@
 #define IDI_CONFIGS                     331
 #define IDA_AGENT_CONFIG_MANAGER        332
 #define IDD_AGENT_CONFIG                333
+#define IDD_EDIT_RULE_SCRIPT            334
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -362,6 +363,7 @@
 #define IDC_EDIT_FORMULA                1164
 #define IDC_BUTTON_CREATE               1166
 #define IDC_BUTTON_CHECK                1166
+#define IDC_BUTTON_TEST                 1166
 #define IDC_EDIT_EVENT                  1167
 #define IDC_EDIT_REARM_EVENT            1168
 #define IDC_POLL_PROGRESS               1169
@@ -545,6 +547,7 @@
 #define IDC_EDIT_CONFIRM                1390
 #define IDC_STATIC_CONFIRM              1391
 #define IDC_STATIC_WILLBE               1392
+#define IDC_SCRIPT                      1393
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -777,9 +780,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        334
+#define _APS_NEXT_RESOURCE_VALUE        335
 #define _APS_NEXT_COMMAND_VALUE         33043
-#define _APS_NEXT_CONTROL_VALUE         1393
+#define _APS_NEXT_CONTROL_VALUE         1395
 #define _APS_NEXT_SYMED_VALUE           128
 #endif
 #endif

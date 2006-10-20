@@ -6,6 +6,7 @@
 #include "EventPolicyEditor.h"
 #include "RuleSeverityDlg.h"
 #include "RuleAlarmDlg.h"
+#include "RuleScriptDlg.h"
 #include "ActionSelDlg.h"
 
 #ifdef _DEBUG
@@ -31,9 +32,10 @@ static char THIS_FILE[] = __FILE__;
 #define COL_SOURCE    1
 #define COL_EVENT     2
 #define COL_SEVERITY  3
-#define COL_ALARM     4
-#define COL_ACTION    5
-#define COL_COMMENT   6
+#define COL_SCRIPT    4
+#define COL_ALARM     5
+#define COL_ACTION    6
+#define COL_COMMENT   7
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -147,9 +149,10 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndRuleList.InsertColumn(1, _T("Source"), 150);
    m_wndRuleList.InsertColumn(2, _T("Event"), 150);
    m_wndRuleList.InsertColumn(3, _T("Severity"), 90, CF_NON_SELECTABLE);
-   m_wndRuleList.InsertColumn(4, _T("Alarm"), 150, CF_NON_SELECTABLE);
-   m_wndRuleList.InsertColumn(5, _T("Action"), 150);
-   m_wndRuleList.InsertColumn(6, _T("Comments"), 200, CF_TEXTBOX | CF_NON_SELECTABLE);
+   m_wndRuleList.InsertColumn(4, _T("Script"), 150, CF_TEXTBOX | CF_NON_SELECTABLE);
+   m_wndRuleList.InsertColumn(5, _T("Alarm"), 150, CF_NON_SELECTABLE);
+   m_wndRuleList.InsertColumn(6, _T("Action"), 150);
+   m_wndRuleList.InsertColumn(7, _T("Comments"), 200, CF_TEXTBOX | CF_NON_SELECTABLE);
    m_wndRuleList.RestoreColumns(_T("EventEditor"), _T("RuleList"));
 
    // Fill rule list with existing rules
@@ -246,6 +249,7 @@ void CEventPolicyEditor::OnContextMenu(CWnd* pWnd, CPoint point)
          iMenu = 4;
          break;
       case COL_SEVERITY:
+      case COL_SCRIPT:
       case COL_ALARM:
       case COL_COMMENT:
          iMenu = 5;
@@ -378,6 +382,9 @@ void CEventPolicyEditor::UpdateRow(int iRow)
             m_wndRuleList.AddItem(iRow, COL_SEVERITY, g_szStatusTextSmall[i], 
                                   m_iImageSeverityBase + i);
    }
+
+   // Script
+   m_wndRuleList.SetCellText(iRow, COL_SCRIPT, m_pEventPolicy->pRuleList[iRow].pszScript);
 
    // Alarm
    if (m_pEventPolicy->pRuleList[iRow].dwFlags & RF_GENERATE_ALARM)
@@ -808,6 +815,9 @@ void CEventPolicyEditor::OnPolicyEdit()
          case COL_SEVERITY:
             EditSeverity(iRow);
             break;
+         case COL_SCRIPT:
+            EditScript(iRow);
+            break;
          case COL_ALARM:
             EditAlarm(iRow);
             break;
@@ -913,6 +923,26 @@ void CEventPolicyEditor::EditComment(int iRow)
    {
       safe_free(m_pEventPolicy->pRuleList[iRow].pszComment);
       m_pEventPolicy->pRuleList[iRow].pszComment = _tcsdup((LPCTSTR)dlg.m_strText);
+      Modify();
+      UpdateRow(iRow);
+   }
+}
+
+
+//
+// Edit script cell
+//
+
+void CEventPolicyEditor::EditScript(int iRow)
+{
+   CRuleScriptDlg dlg;
+
+   if (m_pEventPolicy->pRuleList[iRow].pszScript != NULL)
+      dlg.m_strText = m_pEventPolicy->pRuleList[iRow].pszScript;
+   if (dlg.DoModal() == IDOK)
+   {
+      safe_free(m_pEventPolicy->pRuleList[iRow].pszScript);
+      m_pEventPolicy->pRuleList[iRow].pszScript = _tcsdup((LPCTSTR)dlg.m_strText);
       Modify();
       UpdateRow(iRow);
    }

@@ -351,3 +351,12 @@ char g_szConfigKeywords[] = "Action ControlServers EnableActions EnabledCiphers 
                             "PlatformSuffix RequireAuthentication "
                             "RequireEncryption Servers SessionIdleTimeout "
                             "SharedSecret StartupDelay SubAgent";
+
+
+//
+// Script keywords
+//
+
+char g_szScriptKeywords[] = "break continue do else exit for if ilike "
+                            "int32 int64 like NULL print real return "
+                            "string sub typeof uint32 uint64 use while";

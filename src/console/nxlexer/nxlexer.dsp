@@ -112,6 +112,10 @@ SOURCE=.\nxlexer.cpp
 
 SOURCE=.\nxlexer.def
 # End Source File
+# Begin Source File
+
+SOURCE=.\nxsl.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -127,6 +131,10 @@ SOURCE=..\..\..\include\nms_util.h
 # Begin Source File
 
 SOURCE=.\nxlexer.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\nxlexer_styles.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

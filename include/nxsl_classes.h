@@ -411,7 +411,8 @@ public:
    void AddPreload(char *pszName);
    void UseModule(NXSL_Program *pModule, char *pszName);
 
-   int Run(NXSL_Environment *pEnv = NULL, DWORD argc = 0, NXSL_Value **argv = NULL);
+   int Run(NXSL_Environment *pEnv = NULL, DWORD argc = 0,
+           NXSL_Value **argv = NULL, NXSL_VariableSystem *pUserLocals = NULL);
 
    DWORD CodeSize(void) { return m_dwCodeSize; }
 

@@ -40,6 +40,7 @@ EPRule::EPRule(DWORD dwId)
    m_pszComment = NULL;
    m_iAlarmSeverity = 0;
    m_pszScript = NULL;
+   m_pScript = NULL;
 }
 
 
@@ -64,6 +65,21 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
    DecodeSQLString(m_szAlarmAckKey);
    m_pszScript = DBGetField(hResult, iRow, 7, NULL, 0);
    DecodeSQLString(m_pszScript);
+   if ((m_pszScript != NULL) && (*m_pszScript != 0))
+   {
+      TCHAR szError[256];
+
+      m_pScript = (NXSL_Program *)NXSLCompile(m_pszScript, szError, 256);
+      if (m_pScript == NULL)
+      {
+         WriteLog(MSG_EPRULE_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
+                  "ds", m_dwId, szError);
+      }
+   }
+   else
+   {
+      m_pScript = NULL;
+   }
 }
 
 
@@ -95,6 +111,21 @@ EPRule::EPRule(CSCPMessage *pMsg)
    m_iAlarmSeverity = pMsg->GetVariableShort(VID_ALARM_SEVERITY);
 
    m_pszScript = pMsg->GetVariableStr(VID_SCRIPT);
+   if ((m_pszScript != NULL) && (*m_pszScript != 0))
+   {
+      TCHAR szError[256];
+
+      m_pScript = (NXSL_Program *)NXSLCompile(m_pszScript, szError, 256);
+      if (m_pScript == NULL)
+      {
+         WriteLog(MSG_EPRULE_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
+                  "ds", m_dwId, szError);
+      }
+   }
+   else
+   {
+      m_pScript = NULL;
+   }
 }
 
 
@@ -109,6 +140,7 @@ EPRule::~EPRule()
    safe_free(m_pdwActionList);
    safe_free(m_pszComment);
    safe_free(m_pszScript);
+   delete m_pScript;
 }
 
 
@@ -202,6 +234,55 @@ BOOL EPRule::MatchSeverity(DWORD dwSeverity)
 
 
 //
+// Check if event match to the script
+//
+
+BOOL EPRule::MatchScript(Event *pEvent)
+{
+   NXSL_Environment *pEnv;
+   NXSL_Value **ppValueList, *pValue;
+   NXSL_VariableSystem *pLocals;
+   BOOL bRet = FALSE;
+   DWORD i;
+
+   if (m_pScript == NULL)
+      return FALSE;
+
+   pEnv = new NXSL_Environment;
+   pEnv->SetLibrary(g_pScriptLibrary);
+
+   // Pass event's parameters as arguments and
+   // other information as variables
+   ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * pEvent->GetParametersCount());
+   memset(ppValueList, 0, sizeof(NXSL_Value *) * pEvent->GetParametersCount());
+   for(i = 0; i < pEvent->GetParametersCount(); i++)
+      ppValueList[i] = new NXSL_Value(pEvent->GetParameter(i));
+
+   pLocals = new NXSL_VariableSystem;
+   pLocals->Create(_T("EVENT_CODE"), new NXSL_Value(pEvent->Code()));
+   pLocals->Create(_T("SEVERITY"), new NXSL_Value(pEvent->Severity()));
+   pLocals->Create(_T("OBJECT_ID"), new NXSL_Value(pEvent->SourceId()));
+   pLocals->Create(_T("EVENT_TEXT"), new NXSL_Value((TCHAR *)pEvent->Message()));
+
+   // Run script
+   if (m_pScript->Run(pEnv, pEvent->GetParametersCount(), ppValueList, pLocals) == 0)
+   {
+      pValue = m_pScript->GetResult();
+      if (pValue != NULL)
+         bRet = pValue->GetValueAsInt32() ? TRUE : FALSE;
+   }
+   else
+   {
+      WriteLog(MSG_EPRULE_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE,
+               "ds", m_dwId, m_pScript->GetErrorText());
+   }
+   free(ppValueList);
+
+   return bRet;
+}
+
+
+//
 // Check if event match to rule and perform required actions if yes
 // Method will return TRUE if event matched and RF_STOP_PROCESSING flag is set
 //
@@ -216,8 +297,8 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
    if (!(m_dwFlags & RF_DISABLED))
    {
       // Check if event match
-      if ((MatchSource(pEvent->SourceId())) && (MatchEvent(pEvent->Code())) &&
-          (MatchSeverity(pEvent->Severity())))
+      if (MatchSource(pEvent->SourceId()) && MatchEvent(pEvent->Code()) &&
+          MatchSeverity(pEvent->Severity()) && MatchScript(pEvent))
       {
          // Generate alarm if requested
          if (m_dwFlags & RF_GENERATE_ALARM)
