@@ -24,6 +24,7 @@
 #include "libnetxms.h"
 
 #if defined(_NETWARE)
+#undef SEVERITY_CRITICAL
 #include <netware.h>
 #elif !defined(_WIN32)
 #include <dlfcn.h>

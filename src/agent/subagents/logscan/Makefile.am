@@ -1,10 +1,10 @@
-# $Id: Makefile.am,v 1.2 2006-03-09 12:25:26 victor Exp $
+# $Id: Makefile.am,v 1.3 2006-10-20 10:15:54 victor Exp $
 
 INCLUDES=-I@top_srcdir@/include
 
 lib_LTLIBRARIES = libnsm_logscan.la
 libnsm_logscan_la_SOURCES = logscan.cpp
-libnsm_logscan_la_LDFLAGS = ../../../libnetxms/libnetxms.la ../../../libnxcscp/libnxcscp.la
+libnsm_logscan_la_LDFLAGS = ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = logscan.dsw logscan.dsp logscan.h
 

@@ -12,8 +12,8 @@
 /* Define to 1 if you have the `sys/utsname.h' header file. */
 #define HAVE_SYS_UTSNAME_H 1
 
-/* Define to 1 if you have the <termio.h> header file. */
-#define HAVE_TERMIO_H 1
+/* Define to 1 if you have the <termios.h> header file. */
+#define HAVE_TERMIOS_H 1
 
 /* The size of a `long', as computed by sizeof. */
 #define SIZEOF_LONG 4

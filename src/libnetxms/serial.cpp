@@ -1,4 +1,4 @@
-/* $Id: serial.cpp,v 1.14 2006-09-10 06:59:37 victor Exp $ */
+/* $Id: serial.cpp,v 1.15 2006-10-20 10:15:56 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -30,6 +30,21 @@
 # else
 #  define CRTSCTS 0
 # endif
+#endif
+
+#ifdef _NETWARE
+#ifndef ECHOKE
+#define ECHOKE   0
+#endif
+#ifndef ECHOCTL
+#define ECHOCTL  0
+#endif
+#ifndef OPOST
+#define OPOST    0
+#endif
+#ifndef ONLCR
+#define ONLCR    0
+#endif
 #endif
 
 
@@ -169,8 +184,13 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlo
 		case 38400:  baud = B38400;  break;
 		default:     baud = B38400;  break;
 	}
+#ifdef _NETWARE
+	cfsetispeed(&newTio, (speed_t)baud);
+	cfsetospeed(&newTio, (speed_t)baud);
+#else
 	cfsetispeed(&newTio, baud);
 	cfsetospeed(&newTio, baud);
+#endif
 
 	newTio.c_cflag &= ~(CSIZE);
 	switch(nDataBits)
@@ -416,6 +436,9 @@ void Serial::Flush(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2006/09/10 06:59:37  victor
+Fixed problmes with Win32 build
+
 Revision 1.13  2006/09/07 22:02:06  alk
 UNIX version of Serial rewritten
 termio removed from configure (depricated in favour of termio_s_?)

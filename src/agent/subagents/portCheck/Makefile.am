@@ -1,11 +1,11 @@
-# $Id: Makefile.am,v 1.11 2006-09-27 19:09:18 victor Exp $
+# $Id: Makefile.am,v 1.12 2006-10-20 10:15:55 victor Exp $
 
 INCLUDES=-I@top_srcdir@/include
 
 lib_LTLIBRARIES = libnsm_portCheck.la
 libnsm_portCheck_la_SOURCES = main.cpp net.cpp pop3.cpp ssh.cpp smtp.cpp \
 	http.cpp custom.cpp telnet.cpp
-libnsm_portCheck_la_LDFLAGS = ../../../libnetxms/libnetxms.la ../../../libnxcscp/libnxcscp.la
+libnsm_portCheck_la_LDFLAGS = ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = net.h main.h
 
