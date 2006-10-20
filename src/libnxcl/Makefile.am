@@ -6,7 +6,7 @@ libnxcl_la_SOURCES = actions.cpp agentcfg.cpp alarms.cpp comm.cpp datacoll.cpp \
 		     map.cpp mib.cpp objects.cpp objtools.cpp package.cpp \
 		     script.cpp server.cpp session.cpp snmptrap.cpp snmp.cpp \
 		     users.cpp
-libnxcl_la_LDFLAGS = -version-info $(LIBNXCL_LIBRARY_VERSION) $(PTHREAD_LIBS)
+libnxcl_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) $(PTHREAD_LIBS)
 libnxcl_la_LIBADD = ../libnetxms/libnetxms.la ../libnxmap/libnxmap.la
 
 EXTRA_DIST = \
