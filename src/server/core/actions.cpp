@@ -300,9 +300,10 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
       }
       else
       {
-         char *pszExpandedData, *pszExpandedSubject;
+         char *pszExpandedData, *pszExpandedSubject, *pszExpandedRcpt;
 
          pszExpandedData = pEvent->ExpandText(CHECK_NULL_EX(pAction->pszData), pszAlarmMsg);
+         pszExpandedRcpt = pEvent->ExpandText(pAction->szRcptAddr, pszAlarmMsg);
          switch(pAction->iType)
          {
             case ACTION_EXEC:
@@ -311,26 +312,27 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
                break;
             case ACTION_SEND_EMAIL:
                DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending mail to %s: \"%s\"", 
-                         pAction->szRcptAddr, pszExpandedData);
+                         pszExpandedRcpt, pszExpandedData);
                pszExpandedSubject = pEvent->ExpandText(pAction->szEmailSubject, pszAlarmMsg);
-               PostMail(pAction->szRcptAddr, pszExpandedSubject, pszExpandedData);
+               PostMail(pszExpandedRcpt, pszExpandedSubject, pszExpandedData);
                free(pszExpandedSubject);
                bSuccess = TRUE;
                break;
             case ACTION_SEND_SMS:
                DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending SMS to %s: \"%s\"", 
-                         pAction->szRcptAddr, pszExpandedData);
-               PostSMS(pAction->szRcptAddr, pszExpandedData);
+                         pszExpandedRcpt, pszExpandedData);
+               PostSMS(pszExpandedRcpt, pszExpandedData);
                bSuccess = TRUE;
                break;
             case ACTION_REMOTE:
                DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Executing on \"%s\": \"%s\"",
-                         pAction->szRcptAddr, pszExpandedData);
-               bSuccess = ExecuteRemoteAction(pAction->szRcptAddr, pszExpandedData);
+                         pszExpandedRcpt, pszExpandedData);
+               bSuccess = ExecuteRemoteAction(pszExpandedRcpt, pszExpandedData);
                break;
             default:
                break;
          }
+         free(pszExpandedRcpt);
          free(pszExpandedData);
       }
    }
