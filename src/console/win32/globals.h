@@ -386,7 +386,6 @@ extern DWORD g_dwNumObjectTools;
 extern NXC_OBJECT_TOOL *g_pObjectToolList;
 extern SNMP_MIBObject *g_pMIBRoot;
 extern ALARM_SOUND_CFG g_soundCfg;
-extern CFont g_fontCode;
 extern char g_szConfigKeywords[];
 extern char g_szScriptKeywords[];
 

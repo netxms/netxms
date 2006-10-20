@@ -61,13 +61,6 @@ ALARM_SOUND_CFG g_soundCfg;
 
 
 //
-// Global fonts
-//
-
-CFont g_fontCode;    // Font for scripts, etc.
-
-
-//
 // Server image list
 //
 
