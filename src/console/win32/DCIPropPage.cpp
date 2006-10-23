@@ -318,3 +318,25 @@ void CDCIPropPage::OnCheckSchedule()
 {
    EnablePollingInterval(SendDlgItemMessage(IDC_CHECK_SCHEDULE, BM_GETCHECK) != BST_CHECKED);
 }
+
+
+//
+// Handler for page deactivation
+//
+
+BOOL CDCIPropPage::OnKillActive() 
+{
+   TCHAR szBuffer[256];
+   
+   GetDlgItemText(IDC_EDIT_NAME, szBuffer, 256);
+   StrStrip(szBuffer);
+   if (szBuffer[0] == 0)
+   {
+      MessageBox(_T("Parameter's name cannot be empty!"), _T("Warning"),
+                 MB_OK | MB_ICONEXCLAMATION);
+      m_wndEditName.SetFocus();
+      return FALSE;
+   }
+	
+	return CPropertyPage::OnKillActive();
+}
