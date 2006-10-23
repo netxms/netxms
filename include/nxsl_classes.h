@@ -156,7 +156,8 @@ public:
    NXSL_Value(DWORD uValue);
    NXSL_Value(QWORD uValue);
    NXSL_Value(double dValue);
-   NXSL_Value(char *pszValue);
+   NXSL_Value(TCHAR *pszValue);
+   NXSL_Value(TCHAR *pszValue, DWORD dwLen);
    ~NXSL_Value();
 
    void Set(LONG nValue);
@@ -394,6 +395,7 @@ protected:
    void DoUnaryOperation(int nOpCode);
    void DoBinaryOperation(int nOpCode);
    void Error(int nError);
+   NXSL_Value *MatchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL bIgnoreCase);
 
    NXSL_Variable *FindOrCreateVariable(TCHAR *pszName);
 

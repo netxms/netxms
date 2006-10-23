@@ -261,6 +261,7 @@ BOOL EPRule::MatchScript(Event *pEvent)
    pLocals = new NXSL_VariableSystem;
    pLocals->Create(_T("EVENT_CODE"), new NXSL_Value(pEvent->Code()));
    pLocals->Create(_T("SEVERITY"), new NXSL_Value(pEvent->Severity()));
+   pLocals->Create(_T("SEVERITY_TEXT"), new NXSL_Value(g_szStatusText[pEvent->Severity()]));
    pLocals->Create(_T("OBJECT_ID"), new NXSL_Value(pEvent->SourceId()));
    pLocals->Create(_T("EVENT_TEXT"), new NXSL_Value((TCHAR *)pEvent->Message()));
 

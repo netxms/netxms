@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2005 Victor Kirhenshtein
+** Copyright (C) 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: value.cpp
+** File: value.cpp
 **
 **/
 
@@ -173,11 +173,21 @@ NXSL_Value::NXSL_Value(double dValue)
    m_value.dReal = dValue;
 }
 
-NXSL_Value::NXSL_Value(char *pszValue)
+NXSL_Value::NXSL_Value(TCHAR *pszValue)
 {
    m_nDataType = NXSL_DT_STRING;
-   m_dwStrLen = (DWORD)strlen(pszValue);
+   m_dwStrLen = (DWORD)_tcslen(pszValue);
    m_pszValStr = strdup(pszValue);
+   m_bStringIsValid = TRUE;
+   UpdateNumber();
+}
+
+NXSL_Value::NXSL_Value(TCHAR *pszValue, DWORD dwLen)
+{
+   m_nDataType = NXSL_DT_STRING;
+   m_dwStrLen = dwLen;
+   m_pszValStr = (TCHAR *)nx_memdup(pszValue, (dwLen + 1) * sizeof(TCHAR));
+   m_pszValStr[dwLen] = 0;
    m_bStringIsValid = TRUE;
    UpdateNumber();
 }

@@ -71,7 +71,7 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 %left '|'
 %left '^'
 %left '&'
-%left T_NE T_EQ T_LIKE T_ILIKE
+%left T_NE T_EQ T_LIKE T_ILIKE T_MATCH T_IMATCH
 %left '<' T_LE '>' T_GE
 %left T_LSHIFT T_RSHIFT
 %left '+' '-'
@@ -261,6 +261,14 @@ Expression:
 |	Expression T_ILIKE Expression
 {
 	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_ILIKE));
+}
+|	Expression T_MATCH Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_MATCH));
+}
+|	Expression T_IMATCH Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_IMATCH));
 }
 |	Expression T_EQ Expression
 {

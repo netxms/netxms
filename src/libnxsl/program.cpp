@@ -22,13 +22,18 @@
 **/
 
 #include "libnxsl.h"
+#ifdef _WIN32
+#include <netxms-regex.h>
+#else
+#include <regex.h>
+#endif
 
 
 //
 // Constants
 //
 
-#define MAX_ERROR_NUMBER         17
+#define MAX_ERROR_NUMBER         18
 #define CONTROL_STACK_LIMIT      32768
 
 
@@ -47,7 +52,8 @@ static char *m_szCommandMnemonic[] =
    "NRET", "JZ", "PRINT", "CONCAT",
    "BIND", "INC", "DEC", "NEG", "NOT",
    "BITNOT", "CAST", "REF", "INCP", "DECP",
-   "JNZ", "LIKE", "ILIKE"
+   "JNZ", "LIKE", "ILIKE", "MATCH",
+   "IMATCH"
 };
 
 
@@ -73,7 +79,8 @@ static TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
    _T("Left argument of -> must be a reference to object"),
    _T("Unknown object's attribute"),
    _T("Requested module not found or cannot be loaded"),
-   _T("Argument is not of string type and cannot be converted to string")
+   _T("Argument is not of string type and cannot be converted to string"),
+   _T("Invalid regular expression")
 };
 
 
@@ -683,6 +690,8 @@ void NXSL_Program::Execute(void)
       case OPCODE_CONCAT:
       case OPCODE_LIKE:
       case OPCODE_ILIKE:
+      case OPCODE_MATCH:
+      case OPCODE_IMATCH:
       case OPCODE_EQ:
       case OPCODE_NE:
       case OPCODE_LT:
@@ -977,6 +986,19 @@ void NXSL_Program::DoBinaryOperation(int nOpCode)
                      Error(NXSL_ERR_NOT_STRING);
                   }
                   break;
+               case OPCODE_MATCH:
+               case OPCODE_IMATCH:
+                  if (pVal1->IsString() && pVal2->IsString())
+                  {
+                     pRes = MatchRegexp(pVal1, pVal2, nOpCode == OPCODE_IMATCH);
+                     delete pVal1;
+                     delete pVal2;
+                  }
+                  else
+                  {
+                     Error(NXSL_ERR_NOT_STRING);
+                  }
+                  break;
                case OPCODE_ADD:
                case OPCODE_SUB:
                case OPCODE_MUL:
@@ -1187,4 +1209,49 @@ DWORD NXSL_Program::GetFunctionAddress(char *pszName)
       if (!strcmp(m_pFunctionList[i].m_szName, pszName))
          return m_pFunctionList[i].m_dwAddr;
    return INVALID_ADDRESS;
+}
+
+
+//
+// Match regular expression
+//
+
+NXSL_Value *NXSL_Program::MatchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp,
+                                      BOOL bIgnoreCase)
+{
+   regex_t preg;
+   regmatch_t fields[256];
+   NXSL_Value *pResult;
+   NXSL_Variable *pVar;
+   TCHAR szName[16];
+   int i;
+
+   if (regcomp(&preg, pRegexp->GetValueAsCString(),
+               bIgnoreCase ? REG_EXTENDED | REG_ICASE : REG_EXTENDED) == 0)
+   {
+      if (regexec(&preg, pValue->GetValueAsCString(), 256, fields, 0) == 0)
+      {
+         pResult = new NXSL_Value((LONG)1);
+         for(i = 1; (i < 256) && (fields[i].rm_so != -1); i++)
+         {
+            _stprintf(szName, _T("$%d"), i);
+            pVar = m_pLocals->Find(szName);
+            if (pVar == NULL)
+               m_pLocals->Create(szName, new NXSL_Value(pValue->GetValueAsCString() + fields[i].rm_so, fields[i].rm_eo - fields[i].rm_so));
+            else
+               pVar->Set(new NXSL_Value(pValue->GetValueAsCString() + fields[i].rm_so, fields[i].rm_eo - fields[i].rm_so));
+         }
+      }
+      else
+      {
+         pResult = new NXSL_Value((LONG)0);
+      }
+      regfree(&preg);
+   }
+   else
+   {
+      Error(NXSL_ERR_REGEXP_ERROR);
+      pResult = NULL;
+   }
+   return pResult;
 }

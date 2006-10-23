@@ -38,9 +38,11 @@ escape		\\[bnrt0\"]
 <INITIAL>"for"		return T_FOR;
 <INITIAL>"if"		return T_IF;
 <INITIAL>"ilike"	return T_ILIKE;
+<INITIAL>"imatch"	return T_IMATCH;
 <INITIAL>"int32"	return T_TYPE_INT32;
 <INITIAL>"int64"	return T_TYPE_INT64;
 <INITIAL>"like"		return T_LIKE;
+<INITIAL>"match"	return T_MATCH;
 <INITIAL>"NULL"		return T_NULL;
 <INITIAL>"print"	return T_PRINT;
 <INITIAL>"real"		return T_TYPE_REAL;
@@ -85,6 +87,7 @@ escape		\\[bnrt0\"]
 <INITIAL>"++"	return T_INC;
 <INITIAL>"--"	return T_DEC;
 <INITIAL>"->"	return T_REF;
+<INITIAL>"~="	return T_MATCH;
 <INITIAL>"."	return '.';
 <INITIAL>"{"	return '{';
 <INITIAL>"}"	return '}';

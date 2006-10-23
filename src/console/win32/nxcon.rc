@@ -2700,16 +2700,21 @@ BEGIN
     LTEXT           "Configuration file",IDC_STATIC,7,174,53,8
 END
 
-IDD_EDIT_RULE_SCRIPT DIALOGEX 0, 0, 348, 258
+IDD_EDIT_RULE_SCRIPT DIALOGEX 0, 0, 348, 279
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Edit Script"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,236,237,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,291,237,50,14
-    CONTROL         "Custom1",IDC_SCRIPT,"Scintilla",WS_TABSTOP,7,17,334,209,
+    DEFPUSHBUTTON   "OK",IDOK,236,258,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,291,258,50,14
+    CONTROL         "Custom1",IDC_SCRIPT,"Scintilla",WS_TABSTOP,7,17,334,187,
                     WS_EX_CLIENTEDGE
     LTEXT           "Script",IDC_STATIC,7,7,19,8
+    GROUPBOX        "Variables",IDC_STATIC,7,210,334,42
+    LTEXT           "EVENT_CODE\tEvent's code\nEVENT_TEXT\tEvent's message text\nOBJECT_ID\tSource object's ID",
+                    IDC_STATIC,13,221,131,26
+    LTEXT           "SEVERITY\t\tEvent's severity (as number)\nSEVERITY_TEXT\tEvent's severity as text\n$1 .. $99\t\tEvent's parameters",
+                    IDC_STATIC,153,221,180,26
 END
 
 
@@ -3321,7 +3326,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 341
         TOPMARGIN, 7
-        BOTTOMMARGIN, 251
+        BOTTOMMARGIN, 272
     END
 END
 #endif    // APSTUDIO_INVOKED

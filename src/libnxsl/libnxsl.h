@@ -97,6 +97,8 @@ union YYSTYPE;
 #define OPCODE_JNZ            42
 #define OPCODE_LIKE           43
 #define OPCODE_ILIKE          44
+#define OPCODE_MATCH          45
+#define OPCODE_IMATCH         46
 
 
 //
