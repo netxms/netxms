@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.2 2006-10-05 00:34:24 alk Exp $ */
+/* $Id: system.cpp,v 1.3 2006-10-25 16:13:37 victor Exp $ */
 
 /* 
 ** NetXMS subagent for HP-UX
@@ -32,6 +32,11 @@
 
 #include "system.h"
 
+
+//
+// Handler for System.Uptime parameter
+//
+
 LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 {
 	FILE *hFile;
@@ -55,6 +60,11 @@ LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 	return uptime > 0 ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
+
+//
+// Handler for System.Uname parameter
+//
+
 LONG H_Uname(char *pszParam, char *pArg, char *pValue)
 {
 	struct utsname utsName;
@@ -77,6 +87,11 @@ LONG H_Uname(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
+
+//
+// Handler for System.Hostname parameter
+//
+
 LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
@@ -90,6 +105,11 @@ LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
 
 	return nRet;
 }
+
+
+//
+// Handler for System.CPU.LoadAvg parameter
+//
 
 LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
 {
@@ -120,10 +140,97 @@ LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
+
+//
+// Handler for System.Memory.* parameters
+//
+
+LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
+{
+	LONG nRet = SYSINFO_RC_ERROR;
+	int mode = CAST_FROM_POINTER(pArg, int);
+	QWORD qwSwapTotal, qwSwapFree;
+	struct pst_dynamic psd;
+	struct pst_static pss;
+	struct pst_swapinfo pss;
+	int i;
+
+   // Get physical memory info
+	if ((mode != SWAP_FREE) && (mode != SWAP_TOTAL) && (mode != SWAP_USED))
+	{
+      if (!pstat_getstatic(&pss, sizeof(pss), (size_t)1, 0) ||
+          !pstat_getdynamic(&psd, sizeof(psd), (size_t)1, 0))
+         return SYSINFO_RC_ERROR;
+	}
+
+   // Get swap info
+	if ((mode != PHYSICAL_FREE) && (mode != PHYSICAL_TOTAL) && (mode != PHYSICAL_USED))
+	{
+      qwSwapTotal = 0;
+      qwSwapFree = 0;
+	   for (i = 0; pstat_getswap(&pssw, sizeof(pssw), (size_t)1, i); i++)
+	   {
+		   if (pssw.pss_flags & SW_BLOCK)
+		   {
+			   qwSwapTotal += (QWORD)pssw.pss_nblksenabled * (QWORD)pssw.pss_swapchunk;
+			   qwSwapFree += (QWORD)pssw.pss_nblksavail * (QWORD)pssw.pss_swapchunk;
+   		}
+		   else if (pssw.pss_flags & SW_FS)
+		   {
+			   qwSwapTotal += (QWORD)pssw.pss_limit * (QWORD)pssw.pss_swapchunk;
+			   qwSwapFree += (QWORD)(pssw.pss_limit - pssw.pss_allocated - pssw.pss_reserve) * (QWORD)pssw.pss_swapchunk;
+         }
+      }
+	}
+
+	nRet = SYSINFO_RC_SUCCESS;
+	switch(mode)
+	{
+		case PHYSICAL_FREE: // ph-free
+			ret_uint64(pValue, (QWORD)psd.psd_free * (QWORD)pss.page_size);
+			break;
+		case PHYSICAL_TOTAL: // ph-total
+			ret_uint64(pValue, (QWORD)pss.physical_memory * (QWORD)pss.page_size);
+			break;
+		case PHYSICAL_USED: // ph-used
+			ret_uint64(pValue, (QWORD)(pss.physical_memory - psd.psd_free) * (QWORD)pss.page_size);
+			break;
+		case SWAP_FREE: // sw-free
+			ret_uint64(pValue, qwSwapFree);
+			break;
+		case SWAP_TOTAL: // sw-total
+			ret_uint64(pValue, qwSwapTotal);
+			break;
+		case SWAP_USED: // sw-used
+			ret_uint64(pValue, qwSwapTotal - qwSwapFree);
+			break;
+		case VIRTUAL_FREE: // vi-free
+			ret_uint64(pValue, (QWORD)psd.psd_free * (QWORD)pss.page_size + qwSwapFree);
+			break;
+		case VIRTUAL_TOTAL: // vi-total
+			ret_uint64(pValue, (QWORD)pss.physical_memory * (QWORD)pss.page_size + qwSwapTotal);
+			break;
+		case VIRTUAL_USED: // vi-used
+			ret_uint64(pValue, (QWORD)(pss.physical_memory - psd.psd_free) *
+                                 (QWORD)pss.page_size + (qwSwapTotal - qwSwapFree));
+			break;
+		default: // error
+			nRet = SYSINFO_RC_ERROR;
+			break;
+	}
+
+	return nRet;
+}
+
+
+//
+// Handler for System.ProcessCount and Process.Count(*) parameters
+//
+
 LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 {
-	int nRet = SYSINFO_RC_ERROR;
-	char szArg[128] = {0};
+	LONG nRet = SYSINFO_RC_ERROR;
+	char szArg[128] = "";
 	int nTotal = -1;
 	int nCount, i;
 	int nIndex = 0;
@@ -132,7 +239,7 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 
 	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
-	while ((nCount = pstat_getproc(pst, sizeof(pst[0]), 10 , nIndex)) > 0)
+	while((nCount = pstat_getproc(pst, sizeof(struct pst_status), 10, nIndex)) > 0)
 	{
 		for (i = 0; i < nCount; i++)
 		{
@@ -161,86 +268,14 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
-{
-	int nRet = SYSINFO_RC_ERROR;
-	int64_t nMemTotal, nMemFree, nSwapTotal, nSwapFree;
-	int i;
-	int mode = CAST_FROM_POINTER(pArg, int);
 
-	nMemTotal = nMemFree = nSwapTotal = nSwapFree = 0;
-
-	if (mode == PHYSICAL_FREE || mode == PHYSICAL_TOTAL || mode == PHYSICAL_USED)
-	{
-		// get physical memory
-
-		struct pst_dynamic psd;
-		pstat_getdynamic(&psd, sizeof(psd), (size_t)1, i);
-		{
-			// ...
-		}
-	}
-	if (mode == SWAP_FREE || mode == SWAP_TOTAL || mode == SWAP_USED)
-	{
-		// get swap
-
-		struct pst_swapinfo pss;
-		for (i = 0; pstat_getswap(&pss, sizeof(pss), (size_t)1, i); i++)
-		{
-			if (pss.pss_flags & SW_BLOCK)
-			{
-				nSwapTotal += (int64_t)pss.pss_nblksenabled * pss.pss_swapchunk;
-				nSwapFree += (int64_t)pss.pss_nblksavail * pss.pss_swapchunk;
-			}
-			else if (pss.pss_flags & SW_FS)
-			{
-				nSwapTotal += (int64_t)pss.pss_limit * pss.pss_swapchunk;
-				nSwapFree += (int64_t)(pss.pss_limit - pss.pss_allocated - pss.pss_reserve) * pss.pss_swapchunk;
-			}
-		}
-	}
-
-	nRet = SYSINFO_RC_SUCCESS;
-	switch(mode)
-	{
-		case PHYSICAL_FREE: // ph-free
-			ret_uint64(pValue, ((int64_t)nMemFree) * 1024);
-			break;
-		case PHYSICAL_TOTAL: // ph-total
-			ret_uint64(pValue, ((int64_t)nMemTotal) * 1024);
-			break;
-		case PHYSICAL_USED: // ph-used
-			ret_uint64(pValue, ((int64_t)(nMemTotal - nMemFree)) * 1024);
-			break;
-		case SWAP_FREE: // sw-free
-			ret_uint64(pValue, nSwapFree);
-			break;
-		case SWAP_TOTAL: // sw-total
-			ret_uint64(pValue, nSwapTotal);
-			break;
-		case SWAP_USED: // sw-used
-			ret_uint64(pValue, nSwapTotal - nSwapFree);
-			break;
-		case VIRTUAL_FREE: // vi-free
-			ret_uint64(pValue, 0);
-			break;
-		case VIRTUAL_TOTAL: // vi-total
-			ret_uint64(pValue, 0);
-			break;
-		case VIRTUAL_USED: // vi-used
-			ret_uint64(pValue, 0);
-			break;
-		default: // error
-			nRet = SYSINFO_RC_ERROR;
-			break;
-	}
-
-	return nRet;
-}
+//
+// Handler for System.ProcessList enum
+//
 
 LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
-	int nRet = SYSINFO_RC_ERROR;
+	LONG nRet = SYSINFO_RC_ERROR;
 	char szArg[128] = {0};
 	int nTotal = -1;
 	int nCount, i;
@@ -248,7 +283,7 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 	struct pst_status pst[10];
 	char szBuff[128];
 
-	while ((nCount = pstat_getproc(pst, sizeof(pst[0]), 10 , nIndex)) > 0)
+	while((nCount = pstat_getproc(pst, sizeof(struct pst_status), 10 , nIndex)) > 0)
 	{
 		for (i = 0; i < nCount; i++)
 		{
@@ -457,6 +492,9 @@ LONG H_W(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/10/05 00:34:24  alk
+HPUX: minor cleanup; added System.LoggedInCount (W(1) | wc -l equivalent)
+
 Revision 1.1  2006/10/04 14:59:14  alk
 initial version of HPUX subagent
 
