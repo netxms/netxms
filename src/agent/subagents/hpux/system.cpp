@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.3 2006-10-25 16:13:37 victor Exp $ */
+/* $Id: system.cpp,v 1.4 2006-10-25 22:12:05 victor Exp $ */
 
 /* 
 ** NetXMS subagent for HP-UX
@@ -152,35 +152,40 @@ LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 	QWORD qwSwapTotal, qwSwapFree;
 	struct pst_dynamic psd;
 	struct pst_static pss;
-	struct pst_swapinfo pss;
+	struct pst_swapinfo pssw;
 	int i;
 
-   // Get physical memory info
+	// Get physical memory info
 	if ((mode != SWAP_FREE) && (mode != SWAP_TOTAL) && (mode != SWAP_USED))
 	{
-      if (!pstat_getstatic(&pss, sizeof(pss), (size_t)1, 0) ||
-          !pstat_getdynamic(&psd, sizeof(psd), (size_t)1, 0))
-         return SYSINFO_RC_ERROR;
+		if (!pstat_getstatic(&pss, sizeof(pss), (size_t)1, 0) ||
+		    !pstat_getdynamic(&psd, sizeof(psd), (size_t)1, 0))
+		return SYSINFO_RC_ERROR;
 	}
 
-   // Get swap info
+	// Get swap info
 	if ((mode != PHYSICAL_FREE) && (mode != PHYSICAL_TOTAL) && (mode != PHYSICAL_USED))
 	{
-      qwSwapTotal = 0;
-      qwSwapFree = 0;
-	   for (i = 0; pstat_getswap(&pssw, sizeof(pssw), (size_t)1, i); i++)
-	   {
-		   if (pssw.pss_flags & SW_BLOCK)
-		   {
-			   qwSwapTotal += (QWORD)pssw.pss_nblksenabled * (QWORD)pssw.pss_swapchunk;
-			   qwSwapFree += (QWORD)pssw.pss_nblksavail * (QWORD)pssw.pss_swapchunk;
-   		}
-		   else if (pssw.pss_flags & SW_FS)
-		   {
-			   qwSwapTotal += (QWORD)pssw.pss_limit * (QWORD)pssw.pss_swapchunk;
-			   qwSwapFree += (QWORD)(pssw.pss_limit - pssw.pss_allocated - pssw.pss_reserve) * (QWORD)pssw.pss_swapchunk;
-         }
-      }
+		qwSwapTotal = 0;
+		qwSwapFree = 0;
+		for (i = 0; pstat_getswap(&pssw, sizeof(pssw), (size_t)1, i); i++)
+		{
+			/* I was unable to find any explanation what pss_swapchunk actually
+			 * means - in header file it's commented as "block size", but on
+			 * my test system it's equal 2048, but swapinfo shows information
+			 * as block size equal 1024 bytes, and every example I was able to
+			 * find also uses * 1024 instead of * pssw.pss_swapchunk. */
+			if (pssw.pss_flags & SW_BLOCK)
+			{
+			   qwSwapTotal += (QWORD)pssw.pss_nblksenabled * 1024; //(QWORD)pssw.pss_swapchunk;
+			   qwSwapFree += (QWORD)pssw.pss_nblksavail * 1024; //(QWORD)pssw.pss_swapchunk;
+			}
+			else if (pssw.pss_flags & SW_FS)
+			{
+			   qwSwapTotal += (QWORD)pssw.pss_limit * 1024; //(QWORD)pssw.pss_swapchunk;
+			   qwSwapFree += (QWORD)(pssw.pss_limit - pssw.pss_allocated - pssw.pss_reserve) * 1024; //(QWORD)pssw.pss_swapchunk;
+			}
+		}
 	}
 
 	nRet = SYSINFO_RC_SUCCESS;
@@ -492,6 +497,9 @@ LONG H_W(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/10/25 16:13:37  victor
+Implemented Memory.xxx parameters
+
 Revision 1.2  2006/10/05 00:34:24  alk
 HPUX: minor cleanup; added System.LoggedInCount (W(1) | wc -l equivalent)
 
