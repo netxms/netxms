@@ -47,6 +47,9 @@ DWORD UpgradeAgent(TCHAR *pszPkgFile)
    chmod(pszPkgFile, 0700);   // Set execute permissions on package file
    _sntprintf(szCmdLine, 1024, _T("\"%s\" version=") NETXMS_VERSION_STRING
                                _T(" prefix=") PREFIX
+#ifdef __DISABLE_ICONV
+										 _T(" opt=--disable-iconv")
+#endif
                                _T(" config=%s"), pszPkgFile, g_szConfigFile);
    return ExecuteCommand(szCmdLine, NULL);
 

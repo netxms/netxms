@@ -6,11 +6,6 @@ log=/tmp/nxagentupdate.log
 #prefix=/usr/local
 configureAdd=
 
-##example #if [ `hostname --fqdn` = "host1.domain.tld" ]; then
-#	prefix=/opt/nagios
-#	configureAdd=--with-nice-option
-#fi
-
 ###############################################################################
 #
 # Main code
@@ -20,7 +15,11 @@ configureAdd=
 while [ "x"$1 != "x" ]; do
 	name=`echo $1|cut -d= -f1`
 	val=`echo $1|cut -d= -f2`
-	eval $name=$val
+	if [ "x$name" = "xopt" ]; then
+		configureAdd="$configureAdd $val"
+	else
+		eval $name=$val
+	fi
 	shift
 done
 

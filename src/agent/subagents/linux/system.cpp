@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.9 2006-08-17 20:10:00 alk Exp $ */
+/* $Id: system.cpp,v 1.10 2006-10-25 16:41:23 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -200,31 +200,31 @@ LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 		switch((long)pArg)
 		{
 		case PHYSICAL_FREE: // ph-free
-			ret_uint64(pValue, ((int64_t)nMemFree) * 1024);
+			ret_uint64(pValue, ((QWORD)nMemFree) * 1024);
 			break;
 		case PHYSICAL_TOTAL: // ph-total
-			ret_uint64(pValue, ((int64_t)nMemTotal) * 1024);
+			ret_uint64(pValue, ((QWORD)nMemTotal) * 1024);
 			break;
 		case PHYSICAL_USED: // ph-used
-			ret_uint64(pValue, ((int64_t)(nMemTotal - nMemFree)) * 1024);
+			ret_uint64(pValue, ((QWORD)(nMemTotal - nMemFree)) * 1024);
 			break;
 		case SWAP_FREE: // sw-free
-			ret_uint64(pValue, ((int64_t)nSwapFree) * 1024);
+			ret_uint64(pValue, ((QWORD)nSwapFree) * 1024);
 			break;
 		case SWAP_TOTAL: // sw-total
-			ret_uint64(pValue, ((int64_t)nSwapTotal) * 1024);
+			ret_uint64(pValue, ((QWORD)nSwapTotal) * 1024);
 			break;
 		case SWAP_USED: // sw-used
-			ret_uint64(pValue, ((int64_t)(nSwapTotal - nSwapFree)) * 1024);
+			ret_uint64(pValue, ((QWORD)(nSwapTotal - nSwapFree)) * 1024);
 			break;
 		case VIRTUAL_FREE: // vi-free
-			ret_uint64(pValue, 0);
+			ret_uint64(pValue, ((QWORD)nMemFree + (QWORD)nSwapFree) * 1024);
 			break;
 		case VIRTUAL_TOTAL: // vi-total
-			ret_uint64(pValue, 0);
+			ret_uint64(pValue, ((QWORD)nMemTotal + (QWORD)nSwapTotal) * 1024);
 			break;
 		case VIRTUAL_USED: // vi-used
-			ret_uint64(pValue, 0);
+			ret_uint64(pValue, ((QWORD)(nMemTotal - nMemFree) + (QWORD)(nSwapTotal - nSwapFree)) * 1024);
 			break;
 		default: // error
 			nRet = SYSINFO_RC_ERROR;
@@ -436,6 +436,9 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/08/17 20:10:00  alk
+fixed gcc4 issues
+
 Revision 1.8  2006/03/02 21:08:21  alk
 implemented:
 	System.CPU.Usage5
