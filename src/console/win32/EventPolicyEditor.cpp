@@ -153,7 +153,7 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndRuleList.InsertColumn(5, _T("Alarm"), 150, CF_NON_SELECTABLE);
    m_wndRuleList.InsertColumn(6, _T("Action"), 150);
    m_wndRuleList.InsertColumn(7, _T("Comments"), 200, CF_TEXTBOX | CF_NON_SELECTABLE);
-   m_wndRuleList.RestoreColumns(_T("EventEditor"), _T("RuleList"));
+   m_wndRuleList.RestoreColumns(_T("EventPolicyEditor"), _T("RuleList"));
 
    // Fill rule list with existing rules
    for(i = 0; i < m_pEventPolicy->dwNumRules; i++)
@@ -190,7 +190,7 @@ void CEventPolicyEditor::OnClose()
    DWORD dwResult;
    int iAnswer = IDNO;
 
-   m_wndRuleList.SaveColumns(_T("EventEditor"), _T("RuleList"));
+   m_wndRuleList.SaveColumns(_T("EventPolicyEditor"), _T("RuleList"));
 
    if (m_bIsModified)
    {

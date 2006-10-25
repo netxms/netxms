@@ -11,6 +11,17 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+
+//
+// Compare two list view items
+//
+
+static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+   return ((CTableView *)lParamSort)->CompareItems(lParam1, lParam2);
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CTableView
 
@@ -21,6 +32,9 @@ CTableView::CTableView()
    m_dwNodeId = 0;
    m_dwToolId = 0;
    m_bIsBusy = FALSE;
+   m_iSortDir = 0;
+   m_iSortMode = 0;
+   m_pData = NULL;
 }
 
 CTableView::CTableView(DWORD dwNodeId, DWORD dwToolId)
@@ -28,10 +42,15 @@ CTableView::CTableView(DWORD dwNodeId, DWORD dwToolId)
    m_dwNodeId = dwNodeId;
    m_dwToolId = dwToolId;
    m_bIsBusy = FALSE;
+   m_iSortDir = 0;
+   m_iSortMode = 0;
+   m_pData = NULL;
 }
 
 CTableView::~CTableView()
 {
+   if (m_pData != NULL)
+      NXCDestroyTableData(m_pData);
 }
 
 
@@ -41,8 +60,10 @@ BEGIN_MESSAGE_MAP(CTableView, CMDIChildWnd)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
+	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_TABLE_DATA, OnTableData)
+	ON_NOTIFY(LVN_COLUMNCLICK, ID_LIST_VIEW, OnListViewColumnClick)
 END_MESSAGE_MAP()
 
 
@@ -63,17 +84,21 @@ static void RequestDataStarter(void *pArg)
 void CTableView::RequestData()
 {
    DWORD dwResult;
-   NXC_TABLE_DATA *pData;
    HWND hWnd = m_hWnd;
 
-   dwResult = NXCExecuteTableTool(g_hSession, m_dwNodeId, m_dwToolId, &pData);
+   if (m_pData != NULL)
+   {
+      NXCDestroyTableData(m_pData);
+      m_pData = NULL;
+   }
+   dwResult = NXCExecuteTableTool(g_hSession, m_dwNodeId, m_dwToolId, &m_pData);
    theApp.DebugPrintf(_T("CTableView::RequestData(): Execution result: %d (%s)"),
                       dwResult, NXCGetErrorText(dwResult));
-   if (!::PostMessage(hWnd, NXCM_TABLE_DATA, dwResult, (LPARAM)pData))
+   if (!::PostMessage(hWnd, NXCM_TABLE_DATA, dwResult, 0))
    {
       theApp.DebugPrintf(_T("CTableView::RequestData(): Failed to post message to window %08X"), hWnd);
-      if (dwResult == RCC_SUCCESS)
-         NXCDestroyTableData(pData);
+//      if (dwResult == RCC_SUCCESS)
+//         NXCDestroyTableData(pData);
    }
 }
 
@@ -110,8 +135,14 @@ int CTableView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_iStatusBarHeight = GetWindowSize(&m_wndStatusBar).cy;
 
    // Create list view control
-   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL, rect, this, IDC_LIST_VIEW);
+   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, rect, this, ID_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
+
+   // Create image list
+   m_imageList.Create(16, 16, ILC_COLOR8 | ILC_MASK, 8, 8);
+   m_imageList.Add(AfxGetApp()->LoadIcon(IDI_SORT_UP));
+   m_imageList.Add(AfxGetApp()->LoadIcon(IDI_SORT_DOWN));
+   m_wndListCtrl.GetHeaderCtrl()->SetImageList(&m_imageList);
 
    // Create wait view
    m_wndWaitView.SetText(_T("Receiving data from server..."));
@@ -130,6 +161,12 @@ void CTableView::OnViewRefresh()
 {
    if (m_bIsBusy)
       return;     // Already requesting data
+
+   if (m_pData != NULL)
+   {
+      // Data was already shown once, save column info
+      SaveListCtrlColumns(m_wndListCtrl, _T("TableView"), m_pData->pszTitle);
+   }
 
    m_wndWaitView.ShowWindow(SW_SHOW);
    m_wndListCtrl.ShowWindow(SW_HIDE);
@@ -176,35 +213,44 @@ void CTableView::OnSetFocus(CWnd* pOldWnd)
 // WM_TABLE_DATA message handler
 //
 
-void CTableView::OnTableData(WPARAM wParam, NXC_TABLE_DATA *pData)
+void CTableView::OnTableData(WPARAM wParam, LPARAM lParam)
 {
    DWORD i, j;
    int iItem, nPos;
    TCHAR szBuffer[256];
    NXC_OBJECT *pNode;
+   LVCOLUMN lvCol;
 
    if (wParam == RCC_SUCCESS)
    {
       // Create columns
-      for(i = 0; i < pData->dwNumCols; i++)
-         m_wndListCtrl.InsertColumn(i, pData->ppszColNames[i], LVCFMT_LEFT, 100);
+      for(i = 0; i < m_pData->dwNumCols; i++)
+         m_wndListCtrl.InsertColumn(i + 1, m_pData->ppszColNames[i], LVCFMT_LEFT, 100);
+      LoadListCtrlColumns(m_wndListCtrl, _T("TableView"), m_pData->pszTitle);
 
       // Fill list control with data
-      for(i = 0, nPos = 0; i < pData->dwNumRows; i++)
+      for(i = 0, nPos = 0; i < m_pData->dwNumRows; i++)
       {
-         iItem = m_wndListCtrl.InsertItem(i, pData->ppszData[nPos++]);
-         for(j = 1; j < pData->dwNumCols; j++)
-            m_wndListCtrl.SetItemText(iItem, j, pData->ppszData[nPos++]);
+         iItem = m_wndListCtrl.InsertItem(i, m_pData->ppszData[nPos++], -1);
+         for(j = 1; j < m_pData->dwNumCols; j++)
+            m_wndListCtrl.SetItemText(iItem, j, m_pData->ppszData[nPos++]);
          m_wndListCtrl.SetItemData(iItem, i);
       }
 
+      m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
+
       pNode = NXCFindObjectById(g_hSession, m_dwNodeId);
-      _sntprintf(szBuffer, 256, _T("%s - [%s]"), pData->pszTitle, 
+      _sntprintf(szBuffer, 256, _T("%s - [%s]"), m_pData->pszTitle, 
                  (pNode != NULL) ? pNode->szName : _T("<unknown>"));
       SetTitle(szBuffer); 
       OnUpdateFrameTitle(TRUE);
 
-      NXCDestroyTableData(pData);
+      // Mark sorting column in list control
+      lvCol.mask = LVCF_IMAGE | LVCF_FMT;
+      lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
+      lvCol.iImage = m_iSortDir;
+      m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
+
       m_wndStatusBar.SetText(_T("Ready"), 0, 0);
    }
    else
@@ -216,4 +262,84 @@ void CTableView::OnTableData(WPARAM wParam, NXC_TABLE_DATA *pData)
    m_wndWaitView.ShowWindow(SW_HIDE);
    m_wndWaitView.Stop();
    m_bIsBusy = FALSE;
+}
+
+
+//
+// WM_NOTIFY::LVN_COLUMNCLICK message handler
+//
+
+void CTableView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+{
+   LVCOLUMN lvCol;
+
+   // Unmark old sorting column
+   lvCol.mask = LVCF_FMT;
+   lvCol.fmt = LVCFMT_LEFT;
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
+
+   // Change current sort mode and resort list
+   if (m_iSortMode == pNMHDR->iSubItem)
+   {
+      // Same column, change sort direction
+      m_iSortDir = 1 - m_iSortDir;
+   }
+   else
+   {
+      // Another sorting column
+      m_iSortMode = pNMHDR->iSubItem;
+   }
+   m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
+
+   // Mark new sorting column
+   lvCol.mask = LVCF_IMAGE | LVCF_FMT;
+   lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
+   lvCol.iImage = m_iSortDir;
+   m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
+   
+   *pResult = 0;
+}
+
+
+//
+// Compare two list items
+//
+
+int CTableView::CompareItems(int nItem1, int nItem2)
+{
+   LONG n1, n2;
+   int nRet;
+   TCHAR *pstr1, *pstr2, *eptr1, *eptr2;
+
+   pstr1 = m_pData->ppszData[nItem1 * m_pData->dwNumCols + m_iSortMode];
+   pstr2 = m_pData->ppszData[nItem2 * m_pData->dwNumCols + m_iSortMode];
+
+   // First, try to compare as numbers
+   n1 = _tcstol(pstr1, &eptr1, 10);
+   n2 = _tcstol(pstr2, &eptr2, 10);
+   if ((*eptr1 == 0) && (*eptr2 == 0))
+   {
+      nRet = COMPARE_NUMBERS(n1, n2);
+   }
+   else
+   {
+      nRet = _tcsicmp(pstr1, pstr2);
+   }
+   return m_iSortDir == 0 ? nRet : -nRet;
+}
+
+
+//
+// WM_CLOSE message handler
+//
+
+void CTableView::OnClose() 
+{
+   if (m_pData != NULL)
+   {
+      // Data was shown, save column info
+      SaveListCtrlColumns(m_wndListCtrl, _T("TableView"), m_pData->pszTitle);
+   }
+	
+	CMDIChildWnd::OnClose();
 }

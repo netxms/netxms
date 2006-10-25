@@ -34,6 +34,10 @@ public:
 
 // Implementation
 protected:
+   NXC_TABLE_DATA *m_pData;
+	int m_iSortMode;
+	int m_iSortDir;
+	CImageList m_imageList;
 	CWaitView m_wndWaitView;
 	BOOL m_bIsBusy;
 	int m_iStatusBarHeight;
@@ -49,9 +53,14 @@ protected:
 	afx_msg void OnViewRefresh();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg void OnClose();
 	//}}AFX_MSG
-   afx_msg void OnTableData(WPARAM wParam, NXC_TABLE_DATA *pData);
+   afx_msg void OnTableData(WPARAM wParam, LPARAM lParam);
+   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
+
+public:
+	int CompareItems(int nItem1, int nItem2);
 };
 
 /////////////////////////////////////////////////////////////////////////////
