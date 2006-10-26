@@ -233,6 +233,7 @@ DCItem::DCItem(DWORD dwId, char *szName, int iSource, int iDataType,
    m_iDeltaCalculation = DCM_ORIGINAL_VALUE;
    m_iStatus = ITEM_STATUS_ACTIVE;
    m_iBusy = 0;
+   m_iProcessAllThresholds = 0;
    m_tLastPoll = 0;
    m_pszFormula = NULL;
    m_pScript = NULL;

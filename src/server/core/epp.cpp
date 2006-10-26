@@ -242,11 +242,11 @@ BOOL EPRule::MatchScript(Event *pEvent)
    NXSL_Environment *pEnv;
    NXSL_Value **ppValueList, *pValue;
    NXSL_VariableSystem *pLocals;
-   BOOL bRet = FALSE;
+   BOOL bRet = TRUE;
    DWORD i;
 
    if (m_pScript == NULL)
-      return FALSE;
+      return TRUE;
 
    pEnv = new NXSL_Environment;
    pEnv->SetLibrary(g_pScriptLibrary);
