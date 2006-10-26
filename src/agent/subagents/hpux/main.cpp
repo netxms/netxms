@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.5 2006-10-26 06:55:17 victor Exp $ */
+/* $Id: main.cpp,v 1.6 2006-10-26 15:19:39 victor Exp $ */
 
 /*
 ** NetXMS subagent for HP-UX
@@ -99,9 +99,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "PhysicalDisk.Temperature(*)",  H_PhysicalDiskInfo, "T",
 		DCI_DT_INT,		"Temperature of hard disk {instance}" },*/
 
-	{ "Process.Count(*)",             H_ProcessCount,    (char *)0,
+	{ "Process.Count(*)",             H_ProcessCount,    NULL,
 		DCI_DT_UINT,	"Number of {instance} processes" },
-	{ "System.ProcessCount",          H_ProcessCount,    (char *)1,
+	{ "System.ProcessCount",          H_SysProcessCount, NULL,
 		DCI_DT_UINT,	"Total number of processes" },
 
 	{ "System.CPU.LoadAvg",           H_CpuLoad,         NULL,
@@ -196,6 +196,9 @@ extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/10/26 06:55:17  victor
+Minor changes
+
 Revision 1.4  2006/10/06 14:06:11  victor
 AIX -> HPUX
 

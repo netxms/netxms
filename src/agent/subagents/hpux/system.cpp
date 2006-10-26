@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.5 2006-10-26 06:55:17 victor Exp $ */
+/* $Id: system.cpp,v 1.6 2006-10-26 15:19:39 victor Exp $ */
 
 /* 
 ** NetXMS subagent for HP-UX
@@ -108,15 +108,44 @@ LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
 
 
 //
+// Handler for System.ConnectedUsers
+//
+
+LONG H_ConnectedUsers(char *pszParam, char *pArg, char *pValue)
+{
+	int nRet = SYSINFO_RC_ERROR;
+	FILE *f;
+	struct utmp rec;
+	int nCount = 0;
+
+	f = fopen(UTMP_FILE, "r");
+	if (f != NULL)
+	{
+		nRet = SYSINFO_RC_SUCCESS;
+		while(fread(&rec, sizeof(rec), 1, f) == 1)
+		{
+			if (rec.ut_type == USER_PROCESS)
+			{
+				nCount++;
+			}
+		}
+		
+		fclose(f);
+
+		ret_uint(pValue, nCount);
+	}
+
+	return nRet;
+}
+
+
+//
 // Handler for System.CPU.LoadAvg parameter
 //
 
 LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
-	struct statvfs s;
-	char szArg[128] = {0};
-	int i;
 	struct pst_dynamic info;
 
 	if(pstat_getdynamic(&info, sizeof(info), 0, 0) >= 0)
@@ -229,43 +258,80 @@ LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 
 
 //
-// Handler for System.ProcessCount and Process.Count(*) parameters
+// Get process list
+//
+
+
+static struct pst_status *GetProcessList(int *pnNumProcs)
+{
+	int nSize = 0, nCount;
+	struct pst_status *pBuffer = NULL;
+	
+	do
+	{
+		nSize += 100;
+		pBuffer = (pst_status *)realloc(pBuffer, sizeof(struct pst_status) * nSize);
+		nCount = pstat_getproc(pBuffer, sizeof(struct pst_status), nSize, 0);
+	} while(nCount == nSize);
+
+	if (nCount <= 0)
+	{
+		free(pBuffer);
+		pBuffer = NULL;
+	}
+	else
+	{
+		*pnNumProcs = nCount;
+	}
+
+	return pBuffer;
+}
+
+
+//
+// Handler for System.ProcessCount parameter
+//
+
+LONG H_SysProcessCount(char *pszParam, char *pArg, char *pValue)
+{
+	struct pst_status *pst;
+	int nCount;
+	LONG nRet = SYSINFO_RC_ERROR;
+
+	pst = GetProcessList(&nCount);
+	if (pst != NULL)
+	{
+		free(pst);
+		nRet = SYSINFO_RC_SUCCESS;
+		ret_int(pValue, nCount);
+	}
+	return nRet;
+}
+
+
+//
+// Handler for Process.Count(*) parameter
 //
 
 LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 {
+	struct pst_status *pst;
+	int i, nCount, nTotal;
+	char szArg[256];
 	LONG nRet = SYSINFO_RC_ERROR;
-	char szArg[128] = "";
-	int nTotal = -1;
-	int nCount, i;
-	int nIndex = 0;
-	struct pst_status pst[10];
-	int mode = CAST_FROM_POINTER(pArg, int);
 
-	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	if (!NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg)))
+		return SYSINFO_RC_UNSUPPORTED;
 
-	while((nCount = pstat_getproc(pst, sizeof(struct pst_status), 10, nIndex)) > 0)
+	pst = GetProcessList(&nCount);
+	if (pst != NULL)
 	{
-		for (i = 0; i < nCount; i++)
+		for (i = 0, nTotal = 0; i < nCount; i++)
 		{
-			if (mode == 1) // System.ProcessCount
-			{
+			if (!strcasecmp(pst[i].pst_ucomm, szArg))
 				nTotal++;
-			}
-			else // Process.Count(*)
-			{
-				if (!strcasecmp(pst[i].pst_ucomm, szArg))
-				{
-					nTotal++;
-				}
-			}
 		}
-		nIndex = pst[nCount - 1].pst_idx + 1;
-	}
-
-	if (nTotal >= 0)
-	{
-		nTotal++;
+		free(pst);
 		ret_int(pValue, nTotal);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
@@ -281,27 +347,19 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
-	char szArg[128] = {0};
-	int nTotal = -1;
-	int nCount, i;
-	int nIndex = 0;
-	struct pst_status pst[10];
-	char szBuff[128];
+	int i, nCount;
+	struct pst_status *pst;
+	char szBuff[256];
 
-	while((nCount = pstat_getproc(pst, sizeof(struct pst_status), 10 , nIndex)) > 0)
+	pst = GetProcessList(&nCount);
+	if (pst != NULL)
 	{
 		for (i = 0; i < nCount; i++)
 		{
-			nTotal++;
-			snprintf(szBuff, sizeof(szBuff), "%d %s", pst[i].pst_pid, pst[i].pst_ucomm);
-
+			snprintf(szBuff, sizeof(szBuff), "%d %s", (DWORD)pst[i].pst_pid, pst[i].pst_ucomm);
 			NxAddResultString(pValue, szBuff);
 		}
-		nIndex = pst[nCount - 1].pst_idx + 1;
-	}
-
-	if (nTotal >= 0)
-	{
+		free(pst);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 
@@ -326,45 +384,42 @@ static int m_currentSlot = 0;
 
 static void CpuUsageCollector()
 {
-/*
-		uint64_t user, nice, system, idle;
-		if (fscanf(hStat,
-					"cpu %llu %llu %llu %llu",
-					&user, &nice, &system, &idle) == 4)
-		{
+	uint64_t user, nice, system, idle;
+
+
+	{
 			uint64_t total =
 				(user - m_user) +
 				(system - m_system) +
 				(idle - m_idle);
 
-			if (m_currentSlot == CPU_USAGE_SLOTS)
-			{
-				m_currentSlot = 0;
-			}
+		if (m_currentSlot == CPU_USAGE_SLOTS)
+		{
+			m_currentSlot = 0;
+		}
 
-			if (total > 0)
+		if (total > 0)
+		{
+			m_cpuUsage[m_currentSlot++] =
+				100 - ((float)((idle - m_idle) * 100) / total);
+		}
+		else
+		{
+			if (m_currentSlot == 0)
 			{
-				m_cpuUsage[m_currentSlot++] =
-					100 - ((float)((idle - m_idle) * 100) / total);
+				m_cpuUsage[m_currentSlot++] = m_cpuUsage[CPU_USAGE_SLOTS - 1];
 			}
 			else
 			{
-				if (m_currentSlot == 0)
-				{
-					m_cpuUsage[m_currentSlot++] = m_cpuUsage[CPU_USAGE_SLOTS - 1];
-				}
-				else
-				{
-					m_cpuUsage[m_currentSlot] = m_cpuUsage[m_currentSlot - 1];
-					m_currentSlot++;
-				}
+				m_cpuUsage[m_currentSlot] = m_cpuUsage[m_currentSlot - 1];
+				m_currentSlot++;
 			}
-
-			m_user = user;
-			m_system = system;
-			m_idle = idle;
 		}
-*/
+
+		m_user = user;
+		m_system = system;
+		m_idle = idle;
+	}
 }
 
 static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *pArg)
@@ -466,42 +521,13 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Handler for System.ConnectedUsers
-//
-
-LONG H_ConnectedUsers(char *pszParam, char *pArg, char *pValue)
-{
-	int nRet = SYSINFO_RC_ERROR;
-	FILE *f;
-	struct utmp rec;
-	int nCount = 0;
-
-	f = fopen(UTMP_FILE, "r");
-	if (f != NULL)
-	{
-		nRet = SYSINFO_RC_SUCCESS;
-		while(fread(&rec, sizeof(rec), 1, f) == 1)
-		{
-			if (rec.ut_type == USER_PROCESS)
-			{
-				nCount++;
-			}
-		}
-		
-		fclose(f);
-
-		ret_uint(pValue, nCount);
-	}
-
-	return nRet;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/10/26 06:55:17  victor
+Minor changes
+
 Revision 1.4  2006/10/25 22:12:05  victor
 System.Memory.xxx seems to be working
 
