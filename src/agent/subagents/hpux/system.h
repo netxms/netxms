@@ -1,4 +1,4 @@
-/* $Id: system.h,v 1.3 2006-10-10 15:59:51 victor Exp $ */
+/* $Id: system.h,v 1.4 2006-10-26 06:55:17 victor Exp $ */
 
 /* 
 ** NetXMS subagent for HP-UX
@@ -46,7 +46,7 @@ LONG H_CpuUsage(char *, char *, char *);
 LONG H_ProcessCount(char *, char *, char *);
 LONG H_MemoryInfo(char *, char *, char *);
 LONG H_SourcePkgSupport(char *, char *, char *);
-LONG H_W(char *, char *, char *);
+LONG H_ConnectedUsers(char *, char *, char *);
 
 void StartCpuUsageCollector(void);
 void ShutdownCpuUsageCollector(void);
@@ -57,6 +57,9 @@ void ShutdownCpuUsageCollector(void);
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/10/10 15:59:51  victor
+More HP C++ compiler issues fixed
+
 Revision 1.2  2006/10/05 00:34:24  alk
 HPUX: minor cleanup; added System.LoggedInCount (W(1) | wc -l equivalent)
 

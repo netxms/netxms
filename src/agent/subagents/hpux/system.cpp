@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.4 2006-10-25 22:12:05 victor Exp $ */
+/* $Id: system.cpp,v 1.5 2006-10-26 06:55:17 victor Exp $ */
 
 /* 
 ** NetXMS subagent for HP-UX
@@ -466,7 +466,12 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
-LONG H_W(char *pszParam, char *pArg, char *pValue)
+
+//
+// Handler for System.ConnectedUsers
+//
+
+LONG H_ConnectedUsers(char *pszParam, char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *f;
@@ -497,6 +502,9 @@ LONG H_W(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/10/25 22:12:05  victor
+System.Memory.xxx seems to be working
+
 Revision 1.3  2006/10/25 16:13:37  victor
 Implemented Memory.xxx parameters
 

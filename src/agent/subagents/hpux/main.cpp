@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.4 2006-10-06 14:06:11 victor Exp $ */
+/* $Id: main.cpp,v 1.5 2006-10-26 06:55:17 victor Exp $ */
 
 /*
 ** NetXMS subagent for HP-UX
@@ -110,12 +110,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_FLOAT,	"Average CPU load for last 5 minutes" },
 	{ "System.CPU.LoadAvg15",         H_CpuLoad,         NULL,
 		DCI_DT_FLOAT,	"Average CPU load for last 15 minutes" },
-	{ "System.CPU.Usage",             H_CpuUsage,        (char *)0,
+/*	{ "System.CPU.Usage",             H_CpuUsage,        (char *)0,
 		DCI_DT_FLOAT,	"" },
 	{ "System.CPU.Usage5",            H_CpuUsage,        (char *)5,
 		DCI_DT_FLOAT,	"" },
 	{ "System.CPU.Usage15",           H_CpuUsage,        (char *)15,
-		DCI_DT_FLOAT,	"" },
+		DCI_DT_FLOAT,	"" },*/
 	{ "System.Hostname",              H_Hostname,        NULL,
 		DCI_DT_STRING,	"Host name" },
 	{ "System.Memory.Physical.Free",  H_MemoryInfo,      (char *)PHYSICAL_FREE,
@@ -141,7 +141,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "System.Uptime",                H_Uptime,          NULL,
 		DCI_DT_UINT,	"System uptime" },
 
-	{ "System.ConnectedUsers",        H_W,               NULL,
+	{ "System.ConnectedUsers",        H_ConnectedUsers,  NULL,
 		DCI_DT_UINT,	"Number of logged in users" },
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
@@ -196,6 +196,9 @@ extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/10/06 14:06:11  victor
+AIX -> HPUX
+
 Revision 1.3  2006/10/05 12:41:32  alk
 generic: iconv - const detection added
 hpux: System.LoggedInCount renamed to System.ConnectedUsers
