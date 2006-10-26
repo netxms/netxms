@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.6 2006-10-26 15:19:39 victor Exp $ */
+/* $Id: main.cpp,v 1.7 2006-10-26 17:46:22 victor Exp $ */
 
 /*
 ** NetXMS subagent for HP-UX
@@ -110,12 +110,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_FLOAT,	"Average CPU load for last 5 minutes" },
 	{ "System.CPU.LoadAvg15",         H_CpuLoad,         NULL,
 		DCI_DT_FLOAT,	"Average CPU load for last 15 minutes" },
-/*	{ "System.CPU.Usage",             H_CpuUsage,        (char *)0,
-		DCI_DT_FLOAT,	"" },
+	{ "System.CPU.Usage",             H_CpuUsage,        (char *)0,
+		DCI_DT_FLOAT,	"Average CPU utilization for last minute" },
 	{ "System.CPU.Usage5",            H_CpuUsage,        (char *)5,
-		DCI_DT_FLOAT,	"" },
+		DCI_DT_FLOAT,	"Average CPU utilization for last 5 minutes" },
 	{ "System.CPU.Usage15",           H_CpuUsage,        (char *)15,
-		DCI_DT_FLOAT,	"" },*/
+		DCI_DT_FLOAT,	"Average CPU utilization for last 15 minutes" },
 	{ "System.Hostname",              H_Hostname,        NULL,
 		DCI_DT_STRING,	"Host name" },
 	{ "System.Memory.Physical.Free",  H_MemoryInfo,      (char *)PHYSICAL_FREE,
@@ -196,6 +196,9 @@ extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/10/26 15:19:39  victor
+Fixed problems with Process.Count and System.ProcessCount on HP-UX 11.23
+
 Revision 1.5  2006/10/26 06:55:17  victor
 Minor changes
 

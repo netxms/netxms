@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.6 2006-10-26 15:19:39 victor Exp $ */
+/* $Id: system.cpp,v 1.7 2006-10-26 17:46:22 victor Exp $ */
 
 /* 
 ** NetXMS subagent for HP-UX
@@ -26,8 +26,9 @@
 #include <locale.h>
 #include <sys/utsname.h>
 #include <sys/statvfs.h>
-#include <utmpx.h>
 #include <sys/pstat.h>
+#include <sys/dk.h>
+#include <utmpx.h>
 #include <utmp.h>
 
 #include "system.h"
@@ -374,8 +375,7 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 static THREAD m_cpuUsageCollector = INVALID_THREAD_HANDLE;
 static MUTEX m_cpuUsageMutex = INVALID_MUTEX_HANDLE;
 static bool m_stopCollectorThread = false;
-static uint64_t m_user = 0;
-static uint64_t m_system = 0;
+static uint64_t m_total = 0;
 static uint64_t m_idle = 0;
 // 60 sec * 15 min => 900 sec
 #define CPU_USAGE_SLOTS 900
@@ -384,24 +384,26 @@ static int m_currentSlot = 0;
 
 static void CpuUsageCollector()
 {
-	uint64_t user, nice, system, idle;
+	struct pst_dynamic psd;
+	uint64_t total, delta;
+	int i;
 
-
+	if (pstat_getdynamic(&psd, sizeof(struct pst_dynamic), 1, 0) == 1)
 	{
-			uint64_t total =
-				(user - m_user) +
-				(system - m_system) +
-				(idle - m_idle);
+		for(i = 0, total = 0; i < PST_MAX_CPUSTATES; i++)
+			total += psd.psd_cpu_time[i];
+		delta = total - m_total;
 
+printf("IDLE: %lld/%lld\nTOTAL: %lld/%lld\n-------\n", m_idle, psd.psd_cpu_time[CP_IDLE], m_total, total);
 		if (m_currentSlot == CPU_USAGE_SLOTS)
 		{
 			m_currentSlot = 0;
 		}
 
-		if (total > 0)
+		if (delta > 0)
 		{
 			m_cpuUsage[m_currentSlot++] =
-				100 - ((float)((idle - m_idle) * 100) / total);
+				100 - ((float)((psd.psd_cpu_time[CP_IDLE] - m_idle) * 100) / delta);
 		}
 		else
 		{
@@ -416,9 +418,8 @@ static void CpuUsageCollector()
 			}
 		}
 
-		m_user = user;
-		m_system = system;
-		m_idle = idle;
+		m_idle = psd.psd_cpu_time[CP_IDLE];
+		m_total = total;
 	}
 }
 
@@ -431,7 +432,8 @@ static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *pArg)
 		CpuUsageCollector();
 
 		MutexUnlock(m_cpuUsageMutex);
-		ThreadSleepMs(1000); // sleep 1 second
+		//ThreadSleepMs(1000); // sleep 1 second
+sleep(1);
 	}
 
 	return THREAD_OK;
@@ -452,7 +454,8 @@ void StartCpuUsageCollector(void)
 	m_currentSlot = 0;
 	CpuUsageCollector();
 
-	sleep(1);
+	ThreadSleepMs(1000);
+sleep(1);
 
 	// fill first slot with u/s/i delta
 	m_currentSlot = 0;
@@ -481,11 +484,8 @@ void ShutdownCpuUsageCollector(void)
 
 LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 {
-	float usage = 0;
-	int i;
-	int count;
-
-	MutexLock(m_cpuUsageMutex, INFINITE);
+	double usage = 0;
+	int i, count;
 
 	switch (CAST_FROM_POINTER(pArg, int))
 	{
@@ -500,6 +500,8 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 			break;
 	}
 
+	MutexLock(m_cpuUsageMutex, INFINITE);
+
 	for (i = 0; i < count; i++)
 	{
 		int position = m_currentSlot - i - 1;
@@ -512,11 +514,10 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 		usage += m_cpuUsage[position];
 	}
 
-	usage /= count;
-
-	ret_double(pValue, usage);
-
 	MutexUnlock(m_cpuUsageMutex);
+
+	usage /= count;
+	ret_double(pValue, usage);
 
 	return SYSINFO_RC_SUCCESS;
 }
@@ -525,6 +526,9 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/10/26 15:19:39  victor
+Fixed problems with Process.Count and System.ProcessCount on HP-UX 11.23
+
 Revision 1.5  2006/10/26 06:55:17  victor
 Minor changes
 
