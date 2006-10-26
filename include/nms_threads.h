@@ -271,8 +271,15 @@ inline void ThreadSleep(int nSeconds)
 
 inline void ThreadSleepMs(DWORD dwMilliseconds)
 {
-	// select is a sort of overkill
-   usleep(dwMilliseconds * 1000);   // Convert to microseconds
+#if HAVE_NANOSLEEP
+	struct timespec interval, remainder;
+
+	interval.tv_sec = dwMilliseconds / 1000;
+	interval.tv_nsec = (dwMilliseconds % 1000) * 1000000; // milli -> nano
+	nanosleep(&interval, &remainder);
+#else
+	usleep(dwMilliseconds * 1000);   // Convert to microseconds
+#endif
 }
 
 inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
