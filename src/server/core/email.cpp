@@ -258,8 +258,9 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                      sprintf(szBuffer, "To: <%s>\r\n", pszRcpt);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
                      sprintf(szBuffer, "Subject: %s\r\n", pszSubject);
-                     sprintf(szBuffer, "Content-Type: text/plain; charset=%s\r\n", szEncoding);
-                     sprintf(szBuffer, "Content-Transfer-Encoding: 8bit\r\n\r\n", pszSubject);
+                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
+                     sprintf(szBuffer, "Content-Type: text/plain; charset=%s\r\n"
+                                       "Content-Transfer-Encoding: 8bit\r\n\r\n", szEncoding);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
 
                      // Mail body
