@@ -796,9 +796,9 @@ void CDataCollectionEditor::OnItemDuplicate()
       }
 
       // Perform request(s) to server
-      dwResult = DoRequestArg5(NXCCopyDCI, g_hSession, (void *)m_pItemList->dwNodeId, 
+      dwResult = DoRequestArg6(NXCCopyDCI, g_hSession, (void *)m_pItemList->dwNodeId, 
                                (void *)m_pItemList->dwNodeId, (void *)dwNumItems, 
-                               pdwItemList, _T("Copying items..."));
+                               pdwItemList, (void *)FALSE, _T("Copying items..."));
       if (dwResult != RCC_SUCCESS)
          theApp.ErrorBox(dwResult, _T("Error copying items: %s"));
       PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);

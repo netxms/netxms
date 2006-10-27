@@ -315,7 +315,8 @@ BOOL Template::AddItem(DCItem *pItem, BOOL bLocked)
       m_ppItems = (DCItem **)realloc(m_ppItems, sizeof(DCItem *) * m_dwNumItems);
       m_ppItems[i] = pItem;
       m_ppItems[i]->SetLastPollTime(0);    // Cause item to be polled immediatelly
-      m_ppItems[i]->SetStatus(ITEM_STATUS_ACTIVE);
+      if (m_ppItems[i]->Status() != ITEM_STATUS_DISABLED)
+         m_ppItems[i]->SetStatus(ITEM_STATUS_ACTIVE);
       m_ppItems[i]->SetBusyFlag(FALSE);
       Modify();
       bResult = TRUE;
