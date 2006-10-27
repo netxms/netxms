@@ -27,6 +27,7 @@
 // Externlals
 //
 
+LONG H_ConnectedUsers(char *pszCmd, char *pArg, char *pValue);
 LONG H_ProcessList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
 LONG H_ProcCount(char *cmd, char *arg, char *value);
 LONG H_ProcCountSpecific(char *cmd, char *arg, char *value);
@@ -134,6 +135,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "Process.UserTime(*)", H_ProcInfo, (char *)PROCINFO_UTIME, DCI_DT_UINT64, "" },
    { "Process.VMSize(*)", H_ProcInfo, (char *)PROCINFO_VMSIZE, DCI_DT_UINT64, "" },
    { "Process.WkSet(*)", H_ProcInfo, (char *)PROCINFO_WKSET, DCI_DT_UINT64, "" },
+   { "System.ConnectedUsers", H_ConnectedUsers, NULL, DCI_DT_INT, "Number of logged in users" },
    { "System.ProcessCount", H_ProcCount, NULL, DCI_DT_INT, "Total number of processes" },
    { "System.ServiceState(*)", H_ServiceState, NULL, DCI_DT_INT, "State of {instance} service" },
    { "System.ThreadCount", H_ThreadCount, NULL, DCI_DT_INT, "Total number of threads" }

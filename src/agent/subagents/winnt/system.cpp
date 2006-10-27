@@ -22,6 +22,7 @@
 **/
 
 #include "winnt_subagent.h"
+#include <wtsapi32.h>
 
 
 //
@@ -96,4 +97,33 @@ LONG H_ThreadCount(char *cmd, char *arg, char *value)
    {
       return SYSINFO_RC_UNSUPPORTED;
    }
+}
+
+
+//
+// Handler for System.ConnectedUsers parameter
+//
+
+LONG H_ConnectedUsers(char *pszCmd, char *pArg, char *pValue)
+{
+   LONG nRet;
+   WTS_SESSION_INFO *pSessionList;
+   DWORD i, dwNumSessions, dwCount;
+
+   if (WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1,
+                            &pSessionList, &dwNumSessions))
+   {
+      for(i = 0, dwCount = 0; i < dwNumSessions; i++)
+         if ((pSessionList[i].State == WTSActive) ||
+             (pSessionList[i].State == WTSConnected))
+            dwCount++;
+      WTSFreeMemory(pSessionList);
+      ret_uint(pValue, dwCount);
+      nRet = SYSINFO_RC_SUCCESS;
+   }
+   else
+   {
+      nRet = SYSINFO_RC_ERROR;
+   }
+   return nRet;
 }

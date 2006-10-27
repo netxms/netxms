@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
-# PROP Ignore_Export_Lib 0
+# PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "winnt_EXPORTS" /YX /FD /c
 # ADD CPP /nologo /MD /W3 /O2 /I "..\..\..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "winnt_EXPORTS" /YX /FD /c
@@ -55,7 +55,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib psapi.lib /nologo /dll /machine:I386 /out:"Release/winnt.nsm" /libpath:"..\..\..\libnetxms\Release"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib psapi.lib wtsapi32.lib /nologo /dll /machine:I386 /out:"Release/winnt.nsm" /libpath:"..\..\..\libnetxms\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -86,7 +86,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib psapi.lib /nologo /dll /debug /machine:I386 /out:"Debug/winnt.nsm" /pdbtype:sept /libpath:"..\..\..\libnetxms\Debug"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib psapi.lib wtsapi32.lib /nologo /dll /debug /machine:I386 /out:"Debug/winnt.nsm" /pdbtype:sept /libpath:"..\..\..\libnetxms\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -105,7 +105,7 @@ PostBuild_Cmds=copy Debug\winnt.nsm ..\..\..\..\bin
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "Release64"
 # PROP Intermediate_Dir "Release64"
-# PROP Ignore_Export_Lib 0
+# PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MD /W3 /GX /O2 /I "..\..\..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "winnt_EXPORTS" /YX /FD /c
 # ADD CPP /nologo /MD /W3 /O2 /I "..\..\..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "winnt_EXPORTS" /D "__64BIT__" /FD /c
@@ -119,7 +119,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib psapi.lib /nologo /dll /machine:I386 /out:"Release/winnt.nsm" /libpath:"..\..\..\libnetxms\Release"
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib psapi.lib bufferoverflowU.lib /nologo /dll /machine:I386 /out:"Release64/winnt.nsm" /libpath:"..\..\..\libnetxms\Release64" /machine:AMD64
+# ADD LINK32 bufferoverflowU.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib psapi.lib wtsapi32.lib /nologo /dll /machine:I386 /out:"Release64/winnt.nsm" /libpath:"..\..\..\libnetxms\Release64" /machine:AMD64
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
@@ -153,7 +153,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib psapi.lib /nologo /dll /debug /machine:I386 /out:"Debug/winnt.nsm" /pdbtype:sept /libpath:"..\..\..\libnetxms\Debug"
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib psapi.lib bufferoverflowU.lib /nologo /dll /debug /machine:I386 /out:"Debug64/winnt.nsm" /pdbtype:sept /libpath:"..\..\..\libnetxms\Debug64" /machine:AMD64
+# ADD LINK32 bufferoverflowU.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib psapi.lib wtsapi32.lib /nologo /dll /debug /machine:I386 /out:"Debug64/winnt.nsm" /pdbtype:sept /libpath:"..\..\..\libnetxms\Debug64" /machine:AMD64
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"

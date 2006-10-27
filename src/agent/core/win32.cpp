@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: win32.cpp
+** File: win32.cpp
 ** Win32 specific parameters or Win32 implementation of common parameters
 **
 **/
