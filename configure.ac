@@ -1,9 +1,9 @@
-# $Id: configure.ac,v 1.212 2006-10-27 10:00:50 victor Exp $
+# $Id: configure.ac,v 1.213 2006-10-27 11:14:31 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
 
-AC_INIT([NetXMS], [0.2.14-rc9], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.14-rc10], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -16,13 +16,11 @@ ALL_STATIC_FLAG=""
 # checks for programs.
 
 if test "x$PLATFORM" = "xHP-UX"; then
-	AC_PROG_CC(aCC gcc cc)
-	AC_PROG_CXX(aCC g++ gcc)
-else
-	AC_PROG_CC
-	AC_PROG_CXX
+	CCC="aCC"
 fi
+AC_PROG_CC(aCC gcc cc cl)
 AC_PROG_CPP
+AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LEX
 AC_PROG_YACC
@@ -68,7 +66,7 @@ fi
 # --------------------------------------------------------------------------
 # set CPPFLAGS and LDFLAGS depending on OS
 
-case $PLATFORM in
+case "$PLATFORM" in
    AIX)
       LDFLAGS="-no-undefined $LDFLAGS"
       ;;
@@ -245,7 +243,7 @@ AC_ARG_WITH(agent,
 [
 	BUILD_AGENT=yes
 	MODULES="$MODULES agent"
-	case $PLATFORM in
+	case "$PLATFORM" in
 		Linux)
 			SUBAGENT_DIRS="linux"
 			;;
