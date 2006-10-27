@@ -1,4 +1,14 @@
-Required patches for HP-UX 11.11
+* Code was tested to be compiled with both gcc and aCC. However, if you
+  plan to compile NetXMS agents and/or server on one machine and distribute
+  binaries to another machines, we recommend to use HP aCC compiler if
+  possible.
+
+* Default HP-UX implementation of iconv() interface cannot handle UNICODE
+  correctly, and if you doesn't have GNU libiconv installed or encountered
+  any problems with agent connectivity, use --disable-iconv option of
+  the "configure" script.
+
+* Required patches for HP-UX 11.11
 
 PHCO_29029
 PHCO_31923
