@@ -168,6 +168,7 @@ static int get_node_id(unsigned char *node_id)
 		 * XXX we don't have a way of getting the hardware
 		 * address
 		 */
+		a = (unsigned char *)"\x00\x00\x00\x00\x00\x00";
 		close(sd);
 		return 0;
 #endif /* SIOCGENADDR */

@@ -61,7 +61,7 @@
 // Wrappers for 64-bit constants
 //
 
-#ifdef __GNUC__
+#if defined(__GNUC__) || defined(__HP_aCC)
 #define _LL(x) (x ## LL)
 #define _ULL(x) (x ## ULL)
 #else

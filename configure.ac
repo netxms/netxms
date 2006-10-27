@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.211 2006-10-26 17:49:14 victor Exp $
+# $Id: configure.ac,v 1.212 2006-10-27 10:00:50 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -8,14 +8,21 @@ AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
 
+PLATFORM=`uname -s`
+
 ALL_STATIC_FLAG=""
 
 # --------------------------------------------------------------------------
 # checks for programs.
 
-AC_PROG_CC
+if test "x$PLATFORM" = "xHP-UX"; then
+	AC_PROG_CC(aCC gcc cc)
+	AC_PROG_CXX(aCC g++ gcc)
+else
+	AC_PROG_CC
+	AC_PROG_CXX
+fi
 AC_PROG_CPP
-AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LEX
 AC_PROG_YACC
@@ -61,7 +68,7 @@ fi
 # --------------------------------------------------------------------------
 # set CPPFLAGS and LDFLAGS depending on OS
 
-case `uname -s` in
+case $PLATFORM in
    AIX)
       LDFLAGS="-no-undefined $LDFLAGS"
       ;;
@@ -238,7 +245,7 @@ AC_ARG_WITH(agent,
 [
 	BUILD_AGENT=yes
 	MODULES="$MODULES agent"
-	case `uname -s` in
+	case $PLATFORM in
 		Linux)
 			SUBAGENT_DIRS="linux"
 			;;
