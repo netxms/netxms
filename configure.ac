@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.213 2006-10-27 11:14:31 victor Exp $
+# $Id: configure.ac,v 1.214 2006-10-27 22:36:19 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -428,13 +428,6 @@ AC_SUBST(BUILD_SERVER)
 AC_SUBST(UNSTABLE_SUBAGENT_DIRS)
 
 # --------------------------------------------------------------------------
-# check for zlib
-
-if test "x$NEED_ZLIB" = "xyes"; then
-	AC_CHECK_LIB(z, deflate)
-fi
-
-# --------------------------------------------------------------------------
 # If --with-static-agent selected, other components cannot be selected
 # Select shared or static libraries depending on agent build type
 if test "x$BUILD_STATIC_AGENT" = "xyes" ; then
@@ -518,6 +511,14 @@ AC_CHECK_TYPES([off_t, socklen_t],,,[
 AC_PROG_GCC_TRADITIONAL
 AC_C_CONST
 AC_C_BIGENDIAN
+
+# --------------------------------------------------------------------------
+# check for zlib
+
+if test "x$NEED_ZLIB" = "xyes"; then
+	AC_CHECK_HEADER(zlib.h,,AC_MSG_ERROR([*** ZLib development package not installed - please install first ***]))
+	AC_CHECK_LIB(z, deflate)
+fi
 
 # --------------------------------------------------------------------------
 # macros
