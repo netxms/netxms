@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.8 2006-10-27 10:00:51 victor Exp $ */
+/* $Id: system.cpp,v 1.9 2006-10-30 18:24:04 victor Exp $ */
 
 /* 
 ** NetXMS subagent for HP-UX
@@ -109,7 +109,7 @@ LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
 
 
 //
-// Handler for System.ConnectedUsers
+// Handler for System.ConnectedUsers parameter
 //
 
 LONG H_ConnectedUsers(char *pszParam, char *pArg, char *pValue)
@@ -134,6 +134,37 @@ LONG H_ConnectedUsers(char *pszParam, char *pArg, char *pValue)
 		fclose(f);
 
 		ret_uint(pValue, nCount);
+	}
+
+	return nRet;
+}
+
+
+//
+// Handler for System.ActiveUserSessions enum
+//
+
+LONG H_ActiveUserSessions(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+{
+	int nRet = SYSINFO_RC_ERROR;
+	FILE *f;
+	struct utmp rec;
+	char szBuffer[1024];
+
+	f = fopen(UTMP_FILE, "r");
+	if (f != NULL)
+	{
+		nRet = SYSINFO_RC_SUCCESS;
+		while(fread(&rec, sizeof(rec), 1, f) == 1)
+		{
+			if (rec.ut_type == USER_PROCESS)
+			{
+				snprintf(szBuffer, 1024, "\"%s\" \"%s\" \"%s\"", rec.ut_user,
+				         rec.ut_line, rec.ut_host);
+				NxAddResultString(pValue, szBuffer);
+			}
+		}
+		fclose(f);
 	}
 
 	return nRet;
@@ -523,6 +554,11 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/10/27 10:00:51  victor
+- Changed compiler search order on HP-UX
+- Finished System.CPU.Usage on HP-UX
+- Fix in gen_uuid.c (uninitialized variable)
+
 Revision 1.7  2006/10/26 17:46:22  victor
 System.CPU.Usage almost complete
 
