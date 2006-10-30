@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.10 2006-10-25 16:41:23 victor Exp $ */
+/* $Id: system.cpp,v 1.11 2006-10-30 17:25:10 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -26,9 +26,76 @@
 #include <locale.h>
 #include <sys/utsname.h>
 #include <sys/statvfs.h>
+#include <utmp.h>
 
 #include "system.h"
 #include "proc.h"
+
+
+//
+// Handler for System.ConnectedUsers parameter
+//
+
+LONG H_ConnectedUsers(char *pszParam, char *pArg, char *pValue)
+{
+	LONG nRet = SYSINFO_RC_ERROR;
+	FILE *f;
+	struct utmp rec;
+	int nCount = 0;
+
+	f = fopen(UTMP_FILE, "r");
+	if (f != NULL)
+	{
+		nRet = SYSINFO_RC_SUCCESS;
+		while(fread(&rec, sizeof(rec), 1, f) == 1)
+		{
+			if (rec.ut_type == USER_PROCESS)
+			{
+				nCount++;
+			}
+		}
+		fclose(f);
+		ret_uint(pValue, nCount);
+	}
+
+	return nRet;
+}
+
+
+//
+// Handler for System.ActiveUserSessions enum
+//
+
+LONG H_ActiveUserSessions(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+{
+	LONG nRet = SYSINFO_RC_ERROR;
+	FILE *f;
+	struct utmp rec;
+	char szBuffer[1024];
+
+	f = fopen(UTMP_FILE, "r");
+	if (f != NULL)
+	{
+		nRet = SYSINFO_RC_SUCCESS;
+		while(fread(&rec, sizeof(rec), 1, f) == 1)
+		{
+			if (rec.ut_type == USER_PROCESS)
+			{
+				snprintf(szBuffer, 1024, "\"%s\" \"%s\" \"%s\"", rec.ut_user,
+				         rec.ut_line, rec.ut_host);
+				NxAddResultString(pValue, szBuffer);
+			}
+		}
+		fclose(f);
+	}
+
+	return nRet;
+}
+
+
+//
+// Handler for System.Uptime parameter
+//
 
 LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 {
@@ -436,6 +503,10 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/10/25 16:41:23  victor
+- Implemented System.Memory.Virtual.xxx parameters
+- Added passing of --disable-iconv to agent upgrade script if needed
+
 Revision 1.9  2006/08/17 20:10:00  alk
 fixed gcc4 issues
 

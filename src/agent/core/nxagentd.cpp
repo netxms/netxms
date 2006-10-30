@@ -914,7 +914,7 @@ static void DoRestartActions(DWORD dwOldPID)
          break;
    }
    
-   // Kill previous instance og agent if it's still running
+   // Kill previous instance of agent if it's still running
    if (i == 30)
       kill(dwOldPID, SIGKILL);
 #endif

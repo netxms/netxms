@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.28 2006-09-21 07:45:53 victor Exp $ */
+/* $Id: linux.cpp,v 1.29 2006-10-30 17:25:10 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -119,6 +119,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.ProcessCount",          H_ProcessCount,    (char *)1,
 			DCI_DT_UINT,	"Total number of processes" },
 
+	{ "System.ConnectedUsers",        H_ConnectedUsers,  NULL,
+	      DCI_DT_INT,    "Number of logged in users" },
+
    { "System.CPU.LoadAvg",           H_CpuLoad,         NULL,
 			DCI_DT_FLOAT,	"Average CPU load for last minute" },
    { "System.CPU.LoadAvg5",          H_CpuLoad,         NULL,
@@ -162,11 +165,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
-   { "DRBD.DeviceList",              H_DRBDDeviceList,  NULL },
-   { "Net.ArpCache",                 H_NetArpCache,     NULL },
-   { "Net.IP.RoutingTable",          H_NetRoutingTable, NULL },
-   { "Net.InterfaceList",            H_NetIfList,       NULL },
-   { "System.ProcessList",           H_ProcessList,     NULL },
+   { "DRBD.DeviceList",              H_DRBDDeviceList,     NULL },
+   { "Net.ArpCache",                 H_NetArpCache,        NULL },
+   { "Net.IP.RoutingTable",          H_NetRoutingTable,    NULL },
+   { "Net.InterfaceList",            H_NetIfList,          NULL },
+   { "System.ActiveUserSessions",    H_ActiveUserSessions, NULL },
+   { "System.ProcessList",           H_ProcessList,        NULL },
 };
 
 static NETXMS_SUBAGENT_INFO m_info =
@@ -214,6 +218,9 @@ extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.28  2006/09/21 07:45:53  victor
+Fixed problems with platform subagent loading by server
+
 Revision 1.27  2006/09/21 07:24:08  victor
 Server now can load platform subagents to obtain local ARP cache and interface list
 

@@ -1,4 +1,4 @@
-/* $Id: system.h,v 1.3 2006-03-01 22:13:09 alk Exp $ */
+/* $Id: system.h,v 1.4 2006-10-30 17:25:10 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -46,6 +46,8 @@ LONG H_CpuUsage(char *, char *, char *);
 LONG H_ProcessCount(char *, char *, char *);
 LONG H_MemoryInfo(char *, char *, char *);
 LONG H_SourcePkgSupport(char *, char *, char *);
+LONG H_ConnectedUsers(char *, char *, char *);
+LONG H_ActiveUserSessions(char *, char *, NETXMS_VALUES_LIST *);
 
 void StartCpuUsageCollector(void);
 void ShutdownCpuUsageCollector(void);
@@ -56,6 +58,9 @@ void ShutdownCpuUsageCollector(void);
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/03/01 22:13:09  alk
+added System.CPU.Usage [broken]
+
 Revision 1.2  2005/01/17 23:31:01  alk
 Agent.SourcePackageSupport added
 
