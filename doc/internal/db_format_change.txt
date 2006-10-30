@@ -1,8 +1,32 @@
 *************
+* 51 ==> 52 *
+*************
+
+- New configuration parameter: MailEncoding
+- Object tool "Configured ICMP targets" updated (new column "packet size" added)
+	UPDATE object_tools SET tool_data='Configured ICMP targets#7FICMP.TargetList#7F^(.*) (.*) (.*) (.*) (.*)' WHERE tool_id=12;
+	UPDATE object_tools_table_columns SET col_number=4 WHERE col_number=3 AND tool_id=12;
+	UPDATE object_tools_table_columns SET col_number=3 WHERE col_number=2 AND tool_id=12;
+	UPDATE object_tools_table_columns SET col_substr=5 WHERE col_number=1 AND tool_id=12;
+	INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+		VALUES (12,2,'Packet size','',0,4);
+- New object tool added:
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description,confirmation_text)
+	VALUES (16,'&Info->Active &user sessions',TOOL_TYPE_TABLE_AGENT,
+                'Active User Sessions#7FSystem.ActiveUserSessions#7F^"(.*)" "(.*)" "(.*)"',2,'','Show list of active user sessions','#00');
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (16,0,'User','',0,1);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (16,1,'Terminal','',0,2);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (16,2,'From','',0,3);
+
+
+*************
 * 50 ==> 51 *
 *************
 
-- Columns "range_start" and "range_end" added to table "object_tools"
+- Columns "range_start" and "range_end" added to table "event_groups"
 
 
 *************
@@ -10,6 +34,8 @@
 *************
 
 - Column "confirmation_text" added to table "object_tools"
+- Default confirmation texts set for agent restart, system restart, and system
+  shutdown tools
 
 
 *************

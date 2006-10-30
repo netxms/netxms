@@ -27,6 +27,7 @@
 // Externlals
 //
 
+LONG H_ActiveUserSessions(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
 LONG H_ConnectedUsers(char *pszCmd, char *pArg, char *pValue);
 LONG H_ProcessList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
 LONG H_ProcCount(char *cmd, char *arg, char *value);
@@ -142,6 +143,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
+   { "System.ActiveuserSessions", H_ActiveUserSessions, NULL },
    { "System.ProcessList", H_ProcessList, NULL }
 };
 static NETXMS_SUBAGENT_ACTION m_actions[] =

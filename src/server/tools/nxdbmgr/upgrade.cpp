@@ -78,6 +78,48 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V51 to V52
+//
+
+static BOOL H_UpgradeFromV51(void)
+{
+   static TCHAR m_szBatch[] =
+	   "UPDATE object_tools SET tool_data='Configured ICMP targets#7FICMP.TargetList#7F^(.*) (.*) (.*) (.*) (.*)' WHERE tool_id=12\n"
+	   "UPDATE object_tools_table_columns SET col_number=4 WHERE col_number=3 AND tool_id=12\n"
+	   "UPDATE object_tools_table_columns SET col_number=3 WHERE col_number=2 AND tool_id=12\n"
+   	"UPDATE object_tools_table_columns SET col_substr=5 WHERE col_number=1 AND tool_id=12\n"
+	   "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+		   "VALUES (12,2,'Packet size','',0,4)\n"
+      "INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description,confirmation_text) "
+	      "VALUES (16,'&Info->Active &user sessions',3,"
+            "'Active User Sessions#7FSystem.ActiveUserSessions#7F^\"(.*)\" \"(.*)\" \"(.*)\"',"
+            "2,'','Show list of active user sessions','#00')\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (16,0,'User','',0,1)\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (16,1,'Terminal','',0,2)\n"
+      "INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) "
+	      "VALUES (16,2,'From','',0,3)\n"
+      "INSERT INTO object_tools_acl (tool_id,user_id) VALUES (16,-2147483648)\n"
+      "<END>";
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("MailEncoding"), _T("iso-8859-1"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='52' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V50 to V51
 //
 
@@ -2265,6 +2307,7 @@ static struct
    { 48, H_UpgradeFromV48 },
    { 49, H_UpgradeFromV49 },
    { 50, H_UpgradeFromV50 },
+   { 51, H_UpgradeFromV51 },
    { 0, NULL }
 };
 

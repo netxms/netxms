@@ -127,3 +127,54 @@ LONG H_ConnectedUsers(char *pszCmd, char *pArg, char *pValue)
    }
    return nRet;
 }
+
+
+//
+// Handler for System.ActiveUserSessions enum
+//
+
+LONG H_ActiveUserSessions(char *pszCmd, char *pArg, NETXMS_VALUES_LIST *pValue)
+{
+   LONG nRet;
+   WTS_SESSION_INFO *pSessionList;
+   DWORD i, dwNumSessions, dwBytes;
+   TCHAR *pszClientName, *pszUserName, szBuffer[1024];
+
+   if (WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1,
+                            &pSessionList, &dwNumSessions))
+   {
+      for(i = 0; i < dwNumSessions; i++)
+         if ((pSessionList[i].State == WTSActive) ||
+             (pSessionList[i].State == WTSConnected))
+         {
+            if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, pSessionList[i].SessionId,
+                                            WTSClientName, &pszClientName, &dwBytes))
+            {
+               pszClientName = NULL;
+            }
+            if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, pSessionList[i].SessionId,
+                                            WTSUserName, &pszUserName, &dwBytes))
+            {
+               pszUserName = NULL;
+            }
+
+            _sntprintf(szBuffer, 1024, _T("\"%s\" \"%s\" \"%s\""),
+                       pszUserName == NULL ? _T("UNKNOWN") : pszUserName,
+                       pSessionList[i].pWinStationName,
+                       pszClientName == NULL ? _T("UNKNOWN") : pszClientName);
+            NxAddResultString(pValue, szBuffer);
+
+            if (pszUserName != NULL)
+               WTSFreeMemory(pszUserName);
+            if (pszClientName != NULL)
+               WTSFreeMemory(pszClientName);
+         }
+      WTSFreeMemory(pSessionList);
+      nRet = SYSINFO_RC_SUCCESS;
+   }
+   else
+   {
+      nRet = SYSINFO_RC_ERROR;
+   }
+   return nRet;
+}

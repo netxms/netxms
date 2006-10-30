@@ -55,13 +55,15 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 	VALUES (11,2,'Data','',CFMT_STRING,3);
 
 INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description,confirmation_text)
-	VALUES (12,'&Info->&Agent->Configured &ICMP targets',TOOL_TYPE_TABLE_AGENT,'Configured ICMP targets#7FICMP.TargetList#7F^(.*) (.*) (.*) (.*)',2,'','Show list of actions supported by agent','#00');
+	VALUES (12,'&Info->&Agent->Configured &ICMP targets',TOOL_TYPE_TABLE_AGENT,'Configured ICMP targets#7FICMP.TargetList#7F^(.*) (.*) (.*) (.*) (.*)',2,'','Show list of actions supported by agent','#00');
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (12,0,'IP Address','',CFMT_STRING,1);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
-	VALUES (12,1,'Name','',CFMT_STRING,4);
+	VALUES (12,1,'Name','',CFMT_STRING,5);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
-	VALUES (12,2,'Last RTT','',CFMT_STRING,2);
+	VALUES (12,2,'Packet size','',CFMT_STRING,4);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (12,3,'Last RTT','',CFMT_STRING,2);
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (12,4,'Average RTT','',CFMT_STRING,3);
 
@@ -95,6 +97,16 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (15,4,'Port','.1.3.6.1.4.1.9.9.23.1.2.1.1.7',CFMT_STRING,0);
 
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description,confirmation_text)
+	VALUES (16,'&Info->Active &user sessions',TOOL_TYPE_TABLE_AGENT,
+                'Active User Sessions#7FSystem.ActiveUserSessions#7F^"(.*)" "(.*)" "(.*)"',2,'','Show list of active user sessions','#00');
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (16,0,'User','',CFMT_STRING,1);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (16,1,'Terminal','',CFMT_STRING,2);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (16,2,'From','',CFMT_STRING,3);
+
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (1,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (2,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (3,-2147483648);
@@ -110,3 +122,4 @@ INSERT INTO object_tools_acl (tool_id,user_id) VALUES (12,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (13,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (14,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (15,-2147483648);
+INSERT INTO object_tools_acl (tool_id,user_id) VALUES (16,-2147483648);
