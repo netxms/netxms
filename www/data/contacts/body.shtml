@@ -3,24 +3,32 @@
 	<h2>NetXMS-users</h2>
 	<p>
 	<strong>User talks and general support.</strong><br />
-		Subscribe: <a href="mailto:minimalist@alk.lv?subject=subscribe%20netxms-users">send mail to minimalist@alk.lv with &quot;subscribe netxms-users&quot; in subject line</a><br />
-		Unsubscribe: <a href="mailto:minimalist@alk.lv?subject=unsubscribe%20netxms-users">send mail to minimalist@alk.lv with &quot;unsubscribe netxms-users&quot; in subject line</a><br />
+		Subscribe: send mail to <a href="mailto:minimalist@alk.lv?subject=subscribe%20netxms-users">minimalist@alk.lv</a> with &quot;subscribe netxms-users&quot; in subject line<br />
+		Unsubscribe: send mail to <a href="mailto:minimalist@alk.lv?subject=unsubscribe%20netxms-users">minimalist@alk.lv</a> with &quot;unsubscribe netxms-users&quot; in subject line<br />
 		Archive: <a href="/archive/netxms-users/summary.html">summary</a>, <a href="/archive/netxms-users/">by thread</a><br />
+		Rules: any subscriber can post.
+	</p>
+	<h2>NetXMS-users-russian</h2>
+	<p>
+	<strong>User talks and general support in Russian language.</strong><br />
+		Subscribe: send mail to <a href="mailto:minimalist@alk.lv?subject=subscribe%20netxms-users-ru">minimalist@alk.lv</a> with &quot;subscribe netxms-users-ru&quot; in subject line<br />
+		Unsubscribe: send mail to <a href="mailto:minimalist@alk.lv?subject=unsubscribe%20netxms-users-ru">minimalist@alk.lv</a> with &quot;unsubscribe netxms-users-ru&quot; in subject line<br />
+		Archive: <a href="/archive/netxms-users-ru/summary.html">summary</a>, <a href="/archive/netxms-users-ru/">by thread</a><br />
 		Rules: any subscriber can post.
 	</p>
   	<h2>NetXMS-dev</h2>
 	<p>
 	<strong>Developers talks. Got an idea? Post it here.</strong><br />
-		Subscribe: <a href="mailto:minimalist@alk.lv?subject=subscribe%20netxms-dev">send mail to minimalist@alk.lv with &quot;subscribe netxms-dev&quot; in subject line</a><br />
-		Unsubscribe: <a href="mailto:minimalist@alk.lv?subject=unsubscribe%20netxms-dev">send mail to minimalist@alk.lv with &quot;unsubscribe netxms-dev&quot; in subject line</a><br />
+		Subscribe: send mail to <a href="mailto:minimalist@alk.lv?subject=subscribe%20netxms-dev">minimalist@alk.lv</a> with &quot;subscribe netxms-dev&quot; in subject line<br />
+		Unsubscribe: send mail to <a href="mailto:minimalist@alk.lv?subject=unsubscribe%20netxms-dev">minimalist@alk.lv</a> with &quot;unsubscribe netxms-dev&quot; in subject line<br />
 		Archive: <a href="/archive/netxms-dev/summary.html">summary</a>, <a href="/archive/netxms-dev/">by thread</a><br />
 		Rules: any subscriber can post.
 	</p>
 	<h2>NetXMS-cvs</h2>
 	<p>
 		<strong>CVS commits log goes here.</strong><br />
-		Subscribe: <a href="mailto:minimalist@alk.lv?subject=subscribe%20netxms-cvs">send mail to minimalist@alk.lv with &quot;subscribe netxms-cvs&quot; in subject line</a><br />
-		Unsubscribe: <a href="mailto:minimalist@alk.lv?subject=unsubscribe%20netxms-cvs">send mail to minimalist@alk.lv with &quot;unsubscribe netxms-cvs&quot; in subject line</a><br />
+		Subscribe: send mail to <a href="mailto:minimalist@alk.lv?subject=subscribe%20netxms-cvs">minimalist@alk.lv</a> with &quot;subscribe netxms-cvs&quot; in subject line<br />
+		Unsubscribe: send mail to <a href="mailto:minimalist@alk.lv?subject=unsubscribe%20netxms-cvs">minimalist@alk.lv</a> with &quot;unsubscribe netxms-cvs&quot; in subject line<br />
 		Archive: <a href="/archive/netxms-cvs/summary.html">summary</a>, <a href="/archive/netxms-cvs/">by thread (large page!)</a><br />
 		Rules: read only, only on-commit script can post.
 	</p>
@@ -33,7 +41,7 @@
 			<table border="0">
 				<tr>
 					<td>
-						Your contact <strong>e-mail</strong> (required, if you wish to get responce):
+						Your contact <strong>e-mail</strong> (required, if you wish to get a responce):
 					</td>
 				</tr>
 				<tr>
