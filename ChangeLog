@@ -20,8 +20,8 @@
 - Server ported to AIX and HP-UX
 - Agent ported to HP-UX
 - Agent for AIX improved
-- Fixed issues: #104, #109, #110, #111, #112, #115, #116, #117, #119, #121,
-                #124, #125, #126, #127
+- Fixed issues: #104, #109, #110, #111, #112, #113, #115, #116, #117, #119,
+                #121, #124, #125, #126, #127
 
 
 *

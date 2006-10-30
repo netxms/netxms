@@ -588,6 +588,10 @@ BEGIN
         MENUITEM "Move &up\tCtrl+Up",           ID_CONFIG_MOVEUP
         MENUITEM "Move do&wn\tCtrl+Down",       ID_CONFIG_MOVEDOWN
     END
+    POPUP "Comments"
+    BEGIN
+        MENUITEM "&Save\tCtrl+S",               ID_COMMENTS_SAVE
+    END
 END
 
 IDM_CONTEXT MENU DISCARDABLE 

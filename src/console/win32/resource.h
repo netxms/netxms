@@ -771,6 +771,7 @@
 #define ID_ALARM_TERMINATE              33039
 #define ID_ALARM_LASTDCIVALUES          33040
 #define ID_OBJECT_COMMENTS              33042
+#define ID_COMMENTS_SAVE                33043
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -781,7 +782,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        335
-#define _APS_NEXT_COMMAND_VALUE         33043
+#define _APS_NEXT_COMMAND_VALUE         33044
 #define _APS_NEXT_CONTROL_VALUE         1395
 #define _APS_NEXT_SYMED_VALUE           128
 #endif

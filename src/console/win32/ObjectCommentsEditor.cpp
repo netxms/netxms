@@ -38,6 +38,9 @@ BEGIN_MESSAGE_MAP(CObjectCommentsEditor, CMDIChildWnd)
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
+	ON_WM_CLOSE()
+	ON_COMMAND(ID_COMMENTS_SAVE, OnCommentsSave)
+	ON_UPDATE_COMMAND_UI(ID_COMMENTS_SAVE, OnUpdateCommentsSave)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -114,6 +117,23 @@ void CObjectCommentsEditor::OnViewRefresh()
 {
    DWORD dwResult;
    TCHAR *pszText;
+   int nRet;
+
+   if (m_wndEdit.GetModify())
+   {
+      nRet = MessageBox(_T("Object comments was modified. Do you wish to save changes?"),
+                        _T("Confirmation"), MB_YESNOCANCEL | MB_ICONQUESTION);
+      switch(nRet)
+      {
+         case IDCANCEL:
+            return;
+         case IDYES:
+            SaveComments();
+            break;
+         default:
+            break;
+      }
+   }
 
    dwResult = NXCGetObjectComments(g_hSession, m_dwObjectId, &pszText);
    if (dwResult == RCC_SUCCESS)
@@ -123,9 +143,79 @@ void CObjectCommentsEditor::OnViewRefresh()
          m_wndEdit.SetWindowText(pszText);
          free(pszText);
       }
+      else
+      {
+         m_wndEdit.SetWindowText(_T(""));
+      }
+      m_wndEdit.SetModify(FALSE);
    }
    else
    {
       theApp.ErrorBox(dwResult, _T("Cannot get object's comments: %s"));
+   }
+}
+
+
+//
+// WM_CLOSE message handler
+//
+
+void CObjectCommentsEditor::OnClose() 
+{
+   int nRet;
+
+   if (m_wndEdit.GetModify())
+   {
+      nRet = MessageBox(_T("Object comments was modified. Do you wish to save changes?"),
+                        _T("Confirmation"), MB_YESNOCANCEL | MB_ICONQUESTION);
+      switch(nRet)
+      {
+         case IDCANCEL:
+            return;
+         case IDYES:
+            SaveComments();
+            break;
+         default:
+            break;
+      }
+   }
+	CMDIChildWnd::OnClose();
+}
+
+
+//
+// WM_COMMAND::ID_COMMENTS_SAVE
+//
+
+void CObjectCommentsEditor::OnCommentsSave() 
+{
+   SaveComments();
+}
+
+void CObjectCommentsEditor::OnUpdateCommentsSave(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndEdit.GetModify());
+}
+
+
+//
+// Save object comments on server
+//
+
+void CObjectCommentsEditor::SaveComments()
+{
+   CString str;
+   DWORD dwResult;
+
+   m_wndEdit.GetWindowText(str);
+   dwResult = DoRequestArg3(NXCUpdateObjectComments, g_hSession, (void *)m_dwObjectId,
+                            (void *)((LPCTSTR)str), _T("Updating object's comments..."));
+   if (dwResult == RCC_SUCCESS)
+   {
+      m_wndEdit.SetModify(FALSE);
+   }
+   else
+   {
+      theApp.ErrorBox(dwResult, _T("Cannot update object's comments: %s"));
    }
 }

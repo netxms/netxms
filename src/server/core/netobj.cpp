@@ -1094,3 +1094,30 @@ int NetObj::PropagatedStatus(void)
 void NetObj::PrepareForDeletion(void)
 {
 }
+
+
+//
+// Set object's comments. 
+// NOTE: pszText should be dynamically allocated or NULL
+//
+
+void NetObj::SetComments(TCHAR *pszText)
+{
+   LockData();
+   safe_free(m_pszComments);
+   m_pszComments = pszText;
+   Modify();
+   UnlockData();
+}
+
+
+//
+// Get object's comments
+//
+
+void NetObj::CommentsToMessage(CSCPMessage *pMsg)
+{
+   LockData();
+   pMsg->SetVariable(VID_COMMENT, CHECK_NULL_EX(m_pszComments));
+   UnlockData();
+}

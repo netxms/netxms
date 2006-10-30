@@ -7602,6 +7602,15 @@ void ClientSession::SendObjectComments(CSCPMessage *pRequest)
    pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
    if (pObject != NULL)
    {
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         pObject->CommentsToMessage(&msg);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
    }
    else
    {
@@ -7627,6 +7636,14 @@ void ClientSession::UpdateObjectComments(CSCPMessage *pRequest)
    pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
    if (pObject != NULL)
    {
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      {
+         pObject->SetComments(pRequest->GetVariableStr(VID_COMMENT));
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
    }
    else
    {

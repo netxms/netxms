@@ -249,11 +249,14 @@ public:
    void SetMgmtStatus(BOOL bIsManaged);
    void SetName(TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME); Modify(); }
    void ResetStatus(void) { m_iStatus = STATUS_UNKNOWN; Modify(); }
+   void SetComments(TCHAR *pszText);
 
    virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+   void CommentsToMessage(CSCPMessage *pMsg);
 
    DWORD GetUserRights(DWORD dwUserId);
    BOOL CheckAccessRights(DWORD dwUserId, DWORD dwRequiredRights);
