@@ -316,6 +316,10 @@ SOURCE=.\DesktopManager.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\DetailsView.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\draw.cpp
 # End Source File
 # Begin Source File
@@ -826,6 +830,10 @@ SOURCE=.\DeploymentView.h
 # Begin Source File
 
 SOURCE=.\DesktopManager.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DetailsView.h
 # End Source File
 # Begin Source File
 

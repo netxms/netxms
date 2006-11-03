@@ -674,6 +674,8 @@ src/console/win32/DeploymentView.cpp -text
 src/console/win32/DeploymentView.h -text
 src/console/win32/DesktopManager.cpp -text
 src/console/win32/DesktopManager.h -text
+src/console/win32/DetailsView.cpp -text
+src/console/win32/DetailsView.h -text
 src/console/win32/EditActionDlg.cpp -text
 src/console/win32/EditActionDlg.h -text
 src/console/win32/EditBox.cpp -text
@@ -978,6 +980,7 @@ src/libnetxms/sha1.cpp -text
 src/libnetxms/sha1.h -text
 src/libnetxms/strtoll.c -text
 src/libnetxms/strtoull.c -text
+src/libnetxms/table.cpp -text
 src/libnetxms/threads.cpp -text
 src/libnetxms/tools.cpp -text
 src/libnetxms/unicode.cpp -text

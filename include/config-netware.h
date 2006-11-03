@@ -9,6 +9,21 @@
 /* Define to 1 if you have sizeof(wchar_t) == 2. */
 #define HAVE_USEABLE_WCHAR 1
 
+/* Define to 1 if you have the `iconv' function. */
+#define HAVE_ICONV 1
+
+/* Define to 1 if you have the <iconv.h> header file. */
+#define HAVE_ICONV_H 1
+
+/* Define to 1 if iconv supports //IGNORE option */
+#define HAVE_ICONV_IGNORE 1
+
+/* Define to 1 if iconv supports UCS-2 */
+#define HAVE_ICONV_UCS_2 1
+
+/* Define as const if the declaration of iconv() needs const. */
+#define ICONV_CONST
+
 /* Define to 1 if you have the `sys/utsname.h' header file. */
 #define HAVE_SYS_UTSNAME_H 1
 

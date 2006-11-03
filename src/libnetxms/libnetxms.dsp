@@ -331,6 +331,10 @@ SOURCE=.\strtoull.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\table.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\tools.cpp
 # End Source File
 # Begin Source File

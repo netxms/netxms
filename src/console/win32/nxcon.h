@@ -102,6 +102,7 @@ enum
    VIEW_MODULE_MANAGER,
    VIEW_DESKTOP_MANAGER,
    VIEW_AGENT_CONFIG_MANAGER,
+   VIEW_ALARM_DETAILS,
    MAX_VIEW_ID
 };
 
@@ -253,6 +254,7 @@ private:
    OBJECT_VIEW m_openObjectViews[MAX_OBJECT_VIEWS];
 
 public:
+	void ShowDetailsWindow(DWORD dwType, HWND hwndOrigin, Table *pData);
 	void ShowObjectComments(NXC_OBJECT *pObject);
 	void CreateCondition(DWORD dwParent);
 	void MoveObject(DWORD dwObjectId, DWORD dwParentId);

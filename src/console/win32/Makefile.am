@@ -44,6 +44,7 @@ EXTRA_DIST = \
 	DebugFrame.cpp DebugFrame.h \
 	DeploymentView.cpp DeploymentView.h \
 	DesktopManager.cpp DesktopManager.h \
+	DetailsView.cpp DetailsView.h \
 	draw.cpp \
 	EditActionDlg.cpp EditActionDlg.h \
 	EditBox.cpp EditBox.h \

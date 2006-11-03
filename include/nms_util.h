@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.95 2006-10-17 21:20:25 victor Exp $ */
+/* $Id: nms_util.h,v 1.96 2006-11-03 08:58:56 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -168,6 +168,51 @@ private:
 #else
 	HANDLE m_hPort;
 #endif
+};
+
+
+//
+// Class for table data storage
+//
+
+class LIBNETXMS_EXPORTABLE Table
+{
+private:
+   int m_nNumRows;
+   int m_nNumCols;
+   TCHAR **m_ppData;
+   TCHAR **m_ppColNames;
+
+public:
+   Table();
+   ~Table();
+
+   int GetNumRows(void) { return m_nNumRows; }
+   int GetNumColumns(void) { return m_nNumCols; }
+
+   void AddColumn(TCHAR *pszName);
+   void AddRow(void);
+
+   void SetAt(int nRow, int nCol, TCHAR *pszData);
+   void SetAt(int nRow, int nCol, LONG nData);
+   void SetAt(int nRow, int nCol, DWORD dwData);
+   void SetAt(int nRow, int nCol, double dData);
+   void SetAt(int nRow, int nCol, INT64 nData);
+   void SetAt(int nRow, int nCol, QWORD qwData);
+
+   void Set(int nCol, TCHAR *pszData) { SetAt(m_nNumRows - 1, nCol, pszData); }
+   void Set(int nCol, LONG nData) { SetAt(m_nNumRows - 1, nCol, nData); }
+   void Set(int nCol, DWORD dwData) { SetAt(m_nNumRows - 1, nCol, dwData); }
+   void Set(int nCol, double dData) { SetAt(m_nNumRows - 1, nCol, dData); }
+   void Set(int nCol, INT64 nData) { SetAt(m_nNumRows - 1, nCol, nData); }
+   void Set(int nCol, QWORD qwData) { SetAt(m_nNumRows - 1, nCol, qwData); }
+
+   TCHAR *GetAsString(int nRow, int nCol);
+   LONG GetAsInt(int nRow, int nCol);
+   DWORD GetAsUInt(int nRow, int nCol);
+   INT64 GetAsInt64(int nRow, int nCol);
+   QWORD GetAsUInt64(int nRow, int nCol);
+   double GetAsDouble(int nRow, int nCol);
 };
 
 #endif   /* __cplusplus */
@@ -428,6 +473,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.95  2006/10/17 21:20:25  victor
+Finished Implementation of agent traps and added trap sending API for subagents
+
 Revision 1.94  2006/10/05 05:24:05  victor
 Minor changes
 

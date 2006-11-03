@@ -59,6 +59,7 @@
 #include "CondPropsScript.h"
 #include "AgentConfigMgr.h"
 #include "ObjectCommentsEditor.h"
+#include "DetailsView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -2798,5 +2799,31 @@ void CConsoleApp::OnToolsChangepassword()
       {
          ErrorBox(dwResult, _T("Cannot change password: %s"));
       }
+   }
+}
+
+
+//
+// Show details window
+//
+
+void CConsoleApp::ShowDetailsWindow(DWORD dwType, HWND hwndOrigin, Table *pData)
+{
+   CDetailsView *pWnd;
+
+	// create a new MDI child window or open existing
+   if (m_viewState[VIEW_ALARM_DETAILS].bActive)
+   {
+      m_viewState[VIEW_ALARM_DETAILS].pWnd->BringWindowToTop();
+   }
+   else
+   {
+   	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+//	   pWnd = pFrame->CreateNewChild(RUNTIME_CLASS(CDetailsView), IDR_ALARM_DETAILS,
+//                                    m_hMDIMenu, m_hMDIAccel);
+      pWnd = new CDetailsView(dwType, 400, 500, pData, NULL);
+      CreateChildFrameWithSubtitle(pWnd, IDR_ALARM_DETAILS, _T("AAA"),
+                                   m_hMDIMenu, m_hMDIAccel);
    }
 }

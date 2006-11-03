@@ -87,6 +87,8 @@ protected:
 	afx_msg void OnUpdateAlarmTerminate(CCmdUI* pCmdUI);
 	afx_msg void OnAlarmLastdcivalues();
 	afx_msg void OnUpdateAlarmLastdcivalues(CCmdUI* pCmdUI);
+	afx_msg void OnAlarmDetails();
+	afx_msg void OnUpdateAlarmDetails(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
    afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);

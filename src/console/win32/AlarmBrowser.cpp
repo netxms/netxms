@@ -131,6 +131,8 @@ BEGIN_MESSAGE_MAP(CAlarmBrowser, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_ALARM_TERMINATE, OnUpdateAlarmTerminate)
 	ON_COMMAND(ID_ALARM_LASTDCIVALUES, OnAlarmLastdcivalues)
 	ON_UPDATE_COMMAND_UI(ID_ALARM_LASTDCIVALUES, OnUpdateAlarmLastdcivalues)
+	ON_COMMAND(ID_ALARM_DETAILS, OnAlarmDetails)
+	ON_UPDATE_COMMAND_UI(ID_ALARM_DETAILS, OnUpdateAlarmDetails)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(LVN_COLUMNCLICK, AFX_IDW_PANE_FIRST, OnListViewColumnClick)
 	ON_NOTIFY(LVN_COLUMNCLICK, AFX_IDW_PANE_FIRST + 1, OnListViewColumnClick)
@@ -960,4 +962,65 @@ void CAlarmBrowser::OnObjectTool(UINT nID)
          }
       }
    }
+}
+
+
+//
+// WM_COMMAND::ID_ALARM_DETAILS message handler
+//
+
+void CAlarmBrowser::OnAlarmDetails() 
+{
+   int nItem;
+   NXC_ALARM *pAlarm;
+   NXC_OBJECT *pObject;
+   Table *pTable;
+
+   nItem = m_wndListCtrl.GetNextItem(-1, LVIS_FOCUSED);
+   if (nItem != -1)
+   {
+      pAlarm = FindAlarmInList(m_wndListCtrl.GetItemData(nItem));
+      if (pAlarm != NULL)
+      {
+         pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
+         if (pObject != NULL)
+         {
+            pTable = new Table;
+            pTable->AddColumn(_T("Attribute"));
+            pTable->AddColumn(_T("Image"));
+            pTable->AddColumn(_T("Value"));
+
+            // Current severity
+            pTable->AddRow();
+            pTable->Set(0, _T("Current Severity"));
+            pTable->Set(1, (LONG)pAlarm->nCurrentSeverity);
+            pTable->Set(2, g_szStatusTextSmall[pAlarm->nCurrentSeverity]);
+
+            // Original severity
+            pTable->AddRow();
+            pTable->Set(0, _T("Original Severity"));
+            pTable->Set(1, (LONG)pAlarm->nOriginalSeverity);
+            pTable->Set(2, g_szStatusTextSmall[pAlarm->nOriginalSeverity]);
+
+            // State
+            pTable->AddRow();
+            pTable->Set(0, _T("State"));
+            pTable->Set(1, (LONG)(pAlarm->nState + 5));
+            pTable->Set(2, g_szAlarmState[pAlarm->nState]);
+
+            // Source
+            pTable->AddRow();
+            pTable->Set(0, _T("Source"));
+            pTable->Set(1, (LONG)(-1));
+            pTable->Set(2, pObject->szName);
+
+            theApp.ShowDetailsWindow(VIEW_ALARM_DETAILS, m_hWnd, pTable);
+         }
+      }
+   }
+}
+
+void CAlarmBrowser::OnUpdateAlarmDetails(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
 }

@@ -1,3 +1,4 @@
+/* $Id: tools.cpp,v 1.55 2006-11-03 08:58:58 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
@@ -16,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: tools.cpp
+** File: tools.cpp
 **
 **/
 

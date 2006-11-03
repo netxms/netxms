@@ -359,6 +359,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Last DCI values\tCtrl+L",    ID_ALARM_LASTDCIVALUES
         MENUITEM SEPARATOR
+        MENUITEM "D&etails...\tEnter",          ID_ALARM_DETAILS
+        MENUITEM SEPARATOR
         MENUITEM "&Show nodes\tAlt+N",          ID_ALARM_SHOWNODES
         MENUITEM "S&ound configuration...\tAlt+S", 
                                                 ID_ALARM_SOUNDCONFIGURATION
@@ -738,6 +740,8 @@ BEGIN
         MENUITEM "&Delete",                     ID_ALARM_DELETE
         MENUITEM SEPARATOR
         MENUITEM "&Last DCI values",            ID_ALARM_LASTDCIVALUES
+        MENUITEM SEPARATOR
+        MENUITEM "D&etails...",                 ID_ALARM_DETAILS
     END
     POPUP "Action"
     BEGIN
@@ -3485,6 +3489,7 @@ BEGIN
     IDR_AGENT_CONFIG_MANAGER 
                             "\nAgent Configuration Manager\nAgent Configuration Manager"
     IDR_OBJECT_COMMENTS_EDITOR "\nComments\nComments"
+    IDR_ALARM_DETAILS       "\nAlarm Details\nAlarm Details"
 END
 
 STRINGTABLE DISCARDABLE 
