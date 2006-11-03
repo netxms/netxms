@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.11 2006-10-30 17:25:10 victor Exp $ */
+/* $Id: system.cpp,v 1.12 2006-11-03 13:39:47 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -453,7 +453,6 @@ void ShutdownCpuUsageCollector(void)
 
 	ThreadJoin(m_cpuUsageCollector);
 	MutexDestroy(m_cpuUsageMutex);
-
 }
 
 LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
@@ -503,6 +502,9 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/10/30 17:25:10  victor
+Implemented System.ConnectedUsers and System.ActiveUserSessions
+
 Revision 1.10  2006/10/25 16:41:23  victor
 - Implemented System.Memory.Virtual.xxx parameters
 - Added passing of --disable-iconv to agent upgrade script if needed
