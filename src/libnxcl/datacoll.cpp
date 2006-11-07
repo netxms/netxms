@@ -692,16 +692,18 @@ DWORD LIBNXCL_EXPORTABLE NXCPushDCIData(NXC_SESSION hSession, DWORD dwNumItems,
 
    for(i = 0, dwId = VID_PUSH_DCI_DATA_BASE; i < dwNumItems; i++)
    {
-      msg.SetVariable(dwId++, pItems[i].dwId);
-      if (pItems[i].dwId != 0)
-      {
-         msg.SetVariable(dwId++, pItems[i].pszName);
-      }
       msg.SetVariable(dwId++, pItems[i].dwNodeId);
-      if (pItems[i].dwNodeId != 0)
+      if (pItems[i].dwNodeId == 0)
       {
          msg.SetVariable(dwId++, pItems[i].pszNodeName);
       }
+
+      msg.SetVariable(dwId++, pItems[i].dwId);
+      if (pItems[i].dwId == 0)
+      {
+         msg.SetVariable(dwId++, pItems[i].pszName);
+      }
+
       msg.SetVariable(dwId++, pItems[i].pszValue);
    }
 
