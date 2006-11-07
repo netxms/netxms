@@ -1,4 +1,4 @@
-/* $Id: nxpush.cpp,v 1.4 2006-11-07 23:28:06 alk Exp $ */
+/* $Id: nxpush.cpp,v 1.5 2006-11-07 23:54:08 alk Exp $ */
 
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
@@ -79,7 +79,7 @@ static void usage(char *argv0)
 "Options:\n"
 "  -V, --version    Display version information.\n"
 "  -h, --help       Display this help message.\n"
-"  -v, --verbose    Enable debug messages.\n"
+"  -v, --verbose    Enable verbose messages. Add twice for debug\n"
 "  -q, --quiet      Suppress all messages.\n\n"
 "  -u, --user       Login to server as user. Default is \"guest\".\n"
 "  -P, --password   Specify user's password. Default is empty.\n"
@@ -282,7 +282,7 @@ BOOL AddValuePair(char *name, char *value)
 
 	if (ret == TRUE)
 	{
-		if (optVerbose > 1)
+		if (optVerbose > 2)
 		{
 			printf("AddValuePair: dciID=\"%d\", nodeName=\"%s\", dciName=\"%s\", value=\"%s\"\n",
 				dciId, nodeName, dciName, value);
@@ -301,7 +301,7 @@ BOOL AddValuePair(char *name, char *value)
 			}
 			else
 			{
-				p[queueSize].pszName = dciName;
+				p[queueSize].pszName = strdup(dciName);
 			}
 
 			if (nodeId > 0)
@@ -310,10 +310,10 @@ BOOL AddValuePair(char *name, char *value)
 			}
 			else
 			{
-				p[queueSize].pszNodeName = nodeName;
+				p[queueSize].pszNodeName = strdup(nodeName);
 			}
 
-			p[queueSize].pszValue = value;
+			p[queueSize].pszValue = strdup(value);
 
 			queueSize++;
 		}
@@ -419,6 +419,26 @@ BOOL Send(void)
 	{
 		size = min(optBatchSize, queueSize - (optBatchSize * i));
 
+		if (optVerbose > 1)
+		{
+			printf("Sending batch #%d with %d records\n", i + 1, size);
+		}
+
+		if (optVerbose > 2)
+		{
+			for (int j = 0; j < size; j++)
+			{
+				NXC_DCI_PUSH_DATA *rec = &queue[(optBatchSize * i) + j];
+				printf("Record #%d: \"%s\" for %d(%s):%d(%s)\n",
+					(optBatchSize * i) + j + 1,
+					rec->pszValue,
+					rec->dwNodeId,
+					rec->pszNodeName != NULL ? rec->pszNodeName : "n/a",
+					rec->dwId,
+					rec->pszName != NULL ? rec->pszName : "n/a");
+			}
+		}
+
 		if (NXCPushDCIData(hSession, size, &queue[optBatchSize * i], &errIdx) != RCC_SUCCESS)
 		{
 			if (optVerbose > 0)
@@ -450,6 +470,12 @@ BOOL Teardown(void)
 
 	if (queue != NULL)
 	{
+		for (int i = 0; i < queueSize; i++)
+		{
+			if (queue[i].pszName != NULL) free(queue[i].pszName);
+			if (queue[i].pszNodeName != NULL) free(queue[i].pszNodeName);
+			if (queue[i].pszValue != NULL) free(queue[i].pszValue);
+		}
 		free(queue);
 		queue = NULL;
 		queueSize = 0;
@@ -462,6 +488,9 @@ BOOL Teardown(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/11/07 23:28:06  alk
+-b/--batchsize added; default is 0 (unlimited)
+
 Revision 1.3  2006/11/07 23:10:56  alk
 nxpush working(?)
 node/dci separator changed from '.' to ':'
