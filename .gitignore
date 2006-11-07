@@ -25,6 +25,7 @@ src/nxmibc/parser.tab.c
 src/nxmibc/parser.tab.h
 src/server/core/netxmsd
 src/server/include/messages.h
+src/server/libnxsrv/*.bin
 src/server/libnxsrv/messages.c
 src/server/netxmsd/netxmsd
 src/server/tools/nxaction/nxaction
