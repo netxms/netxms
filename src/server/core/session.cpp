@@ -1,3 +1,4 @@
+/* $Id: session.cpp,v 1.242 2006-11-07 23:42:37 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -7695,6 +7696,7 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
          else
          {
             pRequest->GetVariableStr(dwId++, szName, 256);
+            pObject = NULL;
          }
 
          // Validate object
@@ -7705,6 +7707,7 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
                if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_PUSH_DATA))
                {
                   ppNodeList[i] = (Node *)pObject;
+
                   // Object OK, find DCI by ID or name (if ID==0)
                   dwItemId = pRequest->GetVariableLong(dwId++);
                   if (dwItemId != 0)
@@ -7714,8 +7717,9 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
                   else
                   {
                      pRequest->GetVariableStr(dwId++, szName, 256);
-                     //pItem = ppNodeList[i]->Get
+                     pItem = ppNodeList[i]->GetItemByName(szName);
                   }
+
                   if (pItem != NULL)
                   {
                      if (pItem->DataSource() == DS_PUSH_AGENT)

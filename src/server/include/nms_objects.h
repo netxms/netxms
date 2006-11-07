@@ -347,6 +347,7 @@ public:
    int GetItemType(DWORD dwItemId);
    DCItem *GetItemById(DWORD dwItemId);
    DCItem *GetItemByIndex(DWORD dwIndex);
+   DCItem *GetItemByName(TCHAR *pszName);
    BOOL LockDCIList(DWORD dwSessionId);
    BOOL UnlockDCIList(DWORD dwSessionId);
    void SetDCIModificationFlag(void) { m_bDCIListModified = TRUE; }

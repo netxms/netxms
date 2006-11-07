@@ -1332,7 +1332,8 @@ BOOL DCItem::ReadyForPolling(time_t currTime)
    BOOL bResult;
 
    Lock();
-   if ((m_iStatus == ITEM_STATUS_ACTIVE) && (!m_iBusy) && m_bCacheLoaded)
+   if ((m_iStatus == ITEM_STATUS_ACTIVE) && (!m_iBusy) && 
+       m_bCacheLoaded && (m_iSource != DS_PUSH_AGENT))
    {
       if (m_iAdvSchedule)
       {

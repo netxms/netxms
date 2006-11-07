@@ -535,6 +535,29 @@ DCItem *Template::GetItemById(DWORD dwItemId)
 
 
 //
+// Get item by it's name (case-insensetive)
+//
+
+DCItem *Template::GetItemByName(TCHAR *pszName)
+{
+   DWORD i;
+   DCItem *pItem = NULL;
+
+   LockData();
+   // Check if that item exists
+   for(i = 0; i < m_dwNumItems; i++)
+      if (!_tcsicmp(m_ppItems[i]->Name(), pszName))
+      {
+         pItem = m_ppItems[i];
+         break;
+      }
+
+   UnlockData();
+   return pItem;
+}
+
+
+//
 // Get item by it's index
 //
 
