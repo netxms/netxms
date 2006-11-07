@@ -1,4 +1,4 @@
-/* $Id: nxpush.cpp,v 1.2 2006-11-07 15:45:09 victor Exp $ */
+/* $Id: nxpush.cpp,v 1.3 2006-11-07 23:10:56 alk Exp $ */
 
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
@@ -26,21 +26,10 @@
 #include <nxclapi.h>
 
 //
-// Typedefs
-//
-typedef struct SendQueue
-{
-	DWORD dciId;
-	char *nodeName;
-	char *dciName;
-	char *value;
-} SQUEUE;
-
-//
 // Global variables
 //
 NXC_SESSION hSession = NULL;
-SQUEUE *queue = NULL;
+NXC_DCI_PUSH_DATA *queue = NULL;
 int queueSize = 0;
 
 //
@@ -61,17 +50,19 @@ static char *optHost = NULL;
 static char *optUser = "guest";
 static char *optPassword = "";
 static BOOL optEncrypt = FALSE;
+static int optBatchSize = 0;
 
 static struct option longOptions[] =
 {
-	{"version",  no_argument,       NULL,        'V'},
-	{"help",     no_argument,       NULL,        'h'},
-	{"verbose",  no_argument,       NULL,        'v'},
-	{"quiet",    no_argument,       NULL,        'q'},
-	{"user",     required_argument, NULL,        'u'},
-	{"password", required_argument, NULL,        'P'},
-	{"encrypt",  required_argument, NULL,        'e'},
-	{"host",     required_argument, NULL,        'H'},
+	{"version",   no_argument,       NULL,        'V'},
+	{"help",      no_argument,       NULL,        'h'},
+	{"verbose",   no_argument,       NULL,        'v'},
+	{"quiet",     no_argument,       NULL,        'q'},
+	{"user",      required_argument, NULL,        'u'},
+	{"password",  required_argument, NULL,        'P'},
+	{"encrypt",   required_argument, NULL,        'e'},
+	{"host",      required_argument, NULL,        'H'},
+	{"batchsize", required_argument, NULL,        'b'},
 	{NULL, 0, NULL, 0}
 };
 
@@ -88,12 +79,12 @@ static void usage(char *argv0)
 "Options:\n"
 "  -V, --version    Display version information.\n"
 "  -h, --help       Display this help message.\n"
-"  -v, --verbose    Enable debug messages.\n\n"
+"  -v, --verbose    Enable debug messages.\n"
 "  -q, --quiet      Suppress all messages.\n\n"
 "  -u, --user       Login to server as user. Default is \"guest\".\n"
 "  -P, --password   Specify user's password. Default is empty.\n"
 "  -e, --encrypt    Encrypt session.\n"
-"  -H, --host       Server address. Default is \"localhost\".\n\n"
+"  -H, --host       Server address.\n\n"
 "Notes:\n"
 "  First parameter will be used as \"server\" if -H/--host is unset\n"
 "  ...\n"
@@ -140,6 +131,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'H': // host
 			optHost = optarg;
+			break;
+		case 'b': // batch size
+			optBatchSize = atoi(optarg); // 0 == unlimited
 			break;
 		}
 	}
@@ -268,26 +262,22 @@ BOOL AddValuePair(char *name, char *value)
 {
 	BOOL ret = TRUE;
 	DWORD dciId = 0;
+	DWORD nodeId = 0;
 	char *dciName = NULL;
 	char *nodeName = NULL;
 
-	dciName = strchr(name, '.');
+	nodeName = name;
+	dciName = strchr(name, ':');
 	if (dciName != NULL)
 	{
-		nodeName = name;
 		*dciName++ = 0;
+
+		nodeId = strtoul(nodeName, NULL, 10);
+		dciId = strtoul(dciName, NULL, 10);
 	}
 	else
 	{
-		dciId = strtoul(name, NULL, 10);
-		if (dciId == 0)
-		{
-			if (optVerbose > 1)
-			{
-				printf("DCI ID should be an integer or in form of node_name.dci_name\n");
-			}
-			ret = FALSE;
-		}
+		ret = FALSE;
 	}
 
 	if (ret == TRUE)
@@ -298,14 +288,33 @@ BOOL AddValuePair(char *name, char *value)
 				dciId, nodeName, dciName, value);
 		}
 
-		SQUEUE *p = (SQUEUE *)realloc(queue, sizeof(SQUEUE) * (queueSize + 1));
+		NXC_DCI_PUSH_DATA *p = (NXC_DCI_PUSH_DATA *)realloc(
+			queue, sizeof(NXC_DCI_PUSH_DATA) * (queueSize + 1));
 		if (p != NULL)
 		{
 			queue = p;
-			p[queueSize].dciId = dciId;
-			p[queueSize].dciName = dciName;
-			p[queueSize].nodeName = nodeName;
-			p[queueSize].value = value;
+			p[queueSize].dwId = dciId;
+			p[queueSize].dwNodeId = nodeId;
+			if (dciId > 0)
+			{
+				p[queueSize].pszName = NULL;
+			}
+			else
+			{
+				p[queueSize].pszName = dciName;
+			}
+
+			if (nodeId > 0)
+			{
+				p[queueSize].pszNodeName = NULL;
+			}
+			else
+			{
+				p[queueSize].pszNodeName = nodeName;
+			}
+
+			p[queueSize].pszValue = value;
+
 			queueSize++;
 		}
 		else
@@ -390,26 +399,24 @@ BOOL Startup(void)
 //
 BOOL Send(void)
 {
-	for (int i = 0; i < queueSize; i++)
+	DWORD errIdx;
+	
+	int i, j;
+	int batches = 1;
+
+	if (NXCPushDCIData(hSession, queueSize, queue, &errIdx) != RCC_SUCCESS)
+	{
+		if (optVerbose > 0)
+		{
+			printf("Push failed at record %d.\n", errIdx);
+		}
+	}
+	else
 	{
 		if (optVerbose > 1)
 		{
-			if (queue[i].dciId != NULL)
-			{
-				printf("Sending \"%s\" to %d\n",
-					queue[i].value,
-					queue[i].dciId);
-			}
-			else
-			{
-				printf("Sending \"%s\" to %s.%s\n",
-					queue[i].value,
-					queue[i].nodeName,
-					queue[i].dciName);
-			}
+			printf("Done.\n");
 		}
-
-		// :TODO: Add real sender
 	}
 
 	return TRUE;
@@ -439,6 +446,10 @@ BOOL Teardown(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/11/07 15:45:09  victor
+- Implemented frontend for push items
+- Other minor changes
+
 Revision 1.1  2006/11/07 11:10:32  victor
 - nxpush moved and added to common netxms.dsw file
 - unfinished discovery configurator in console
