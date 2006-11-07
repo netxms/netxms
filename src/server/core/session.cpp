@@ -7664,9 +7664,12 @@ void ClientSession::UpdateObjectComments(CSCPMessage *pRequest)
 void ClientSession::PushDCIData(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   DWORD dwNumItems, *pdwItemList;
+   DWORD i, dwObjectId, dwNumItems, dwId, dwItemId;
    NetObj *pObject;
-   TCHAR szName[1024];
+   Node **ppNodeList = NULL;
+   DCItem *pItem, **ppItemList = NULL;
+   TCHAR szName[256], **ppValueList;
+   BOOL bOK;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
@@ -7674,11 +7677,101 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
    dwNumItems = pRequest->GetVariableLong(VID_NUM_ITEMS);
    if (dwNumItems > 0)
    {
-      pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
-      for(i = 0, dwId = VID_DCI_PUSH_DATA_BASE; i < dwNumItems; i++)
+      ppNodeList = (Node **)malloc(sizeof(Node *) * dwNumItems);
+      ppItemList = (DCItem **)malloc(sizeof(DCItem *) * dwNumItems);
+      ppValueList = (TCHAR **)malloc(sizeof(TCHAR *) * dwNumItems);
+      memset(ppValueList, 0, sizeof(TCHAR *) * dwNumItems);
+
+      for(i = 0, dwId = VID_PUSH_DCI_DATA_BASE, bOK = TRUE; (i < dwNumItems) && bOK; i++)
       {
+         bOK = FALSE;
+
+         // Find object either by ID or name (id ID==0)
+         dwObjectId = pRequest->GetVariableLong(dwId++);
+         if (dwObjectId != 0)
+         {
+            pObject = FindObjectById(dwObjectId);
+         }
+         else
+         {
+            pRequest->GetVariableStr(dwId++, szName, 256);
+         }
+
+         // Validate object
+         if (pObject != NULL)
+         {
+            if (pObject->Type() == OBJECT_NODE)
+            {
+               if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_PUSH_DATA))
+               {
+                  ppNodeList[i] = (Node *)pObject;
+                  // Object OK, find DCI by ID or name (if ID==0)
+                  dwItemId = pRequest->GetVariableLong(dwId++);
+                  if (dwItemId != 0)
+                  {
+                     pItem = ppNodeList[i]->GetItemById(dwItemId);
+                  }
+                  else
+                  {
+                     pRequest->GetVariableStr(dwId++, szName, 256);
+                     //pItem = ppNodeList[i]->Get
+                  }
+                  if (pItem != NULL)
+                  {
+                     if (pItem->DataSource() == DS_PUSH_AGENT)
+                     {
+                        ppItemList[i] = pItem;
+                        ppValueList[i] = pRequest->GetVariableStr(dwId++);
+                        bOK = TRUE;
+                     }
+                     else
+                     {
+                        msg.SetVariable(VID_RCC, RCC_NOT_PUSH_DCI);
+                     }
+                  }
+                  else
+                  {
+                     msg.SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
+                  }
+               }
+               else
+               {
+                  msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+               }
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            }
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+         }
       }
 
+      // If all items was checked OK, push data
+      if (i == dwNumItems)
+      {
+         time_t t;
+
+         time(&t);
+         for(i = 0; i < dwNumItems; i++)
+         {
+            ppItemList[i]->NewValue(t, ppValueList[i]);
+         }
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg.SetVariable(VID_FAILED_DCI_INDEX, i);
+      }
+
+      // Cleanup
+      for(i = 0; i < dwNumItems; i++)
+         safe_free(ppValueList[i]);
+      free(ppItemList);
+      free(ppNodeList);
    }
    else
    {

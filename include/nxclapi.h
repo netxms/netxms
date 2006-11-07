@@ -347,6 +347,7 @@ enum
 #define RCC_DB_CONNECTION_LOST      ((DWORD)64)
 #define RCC_ALARM_OPEN_IN_HELPDESK  ((DWORD)65)
 #define RCC_ALARM_NOT_OUTSTANDING   ((DWORD)66)
+#define RCC_NOT_PUSH_DCI            ((DWORD)67)
 
 
 //

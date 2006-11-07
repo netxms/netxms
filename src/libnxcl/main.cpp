@@ -264,9 +264,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Invalid agent configuration ID"),
       _T("Server has lost connection with backend database"),
       _T("Alarm is still open in helpdesk system"),
-      _T("Alarm is not in \"outstanding\" state")
+      _T("Alarm is not in \"outstanding\" state"),
+      _T("DCI data source is not a push agent")
    };
-   return ((dwError >= 0) && (dwError <= RCC_ALARM_NOT_OUTSTANDING)) ? pszErrorText[dwError] : _T("No text message for this error");
+   return ((dwError >= 0) && (dwError <= RCC_NOT_PUSH_DCI)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 
