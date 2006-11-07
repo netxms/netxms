@@ -1,4 +1,4 @@
-/* $Id: nxcp.cpp,v 1.1 2006-10-20 10:15:56 victor Exp $ */
+/* $Id: nxcp.cpp,v 1.2 2006-11-07 12:33:28 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
@@ -225,10 +225,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_NXCP_CAPS"),
       _T("CMD_GET_OBJECT_COMMENTS"),
       _T("CMD_UPDATE_OBJECT_COMMENTS"),
-      _T("CMD_ENABLE_AGENT_TRAPS")
+      _T("CMD_ENABLE_AGENT_TRAPS"),
+      _T("CMD_PUSH_DCI_DATA")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_ENABLE_AGENT_TRAPS))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_PUSH_DCI_DATA))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _stprintf(pszBuffer, _T("CMD_UNKNOWN(%d)"), wCode);

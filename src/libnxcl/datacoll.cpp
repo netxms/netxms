@@ -669,3 +669,45 @@ DWORD LIBNXCL_EXPORTABLE NXCResolveDCINames(NXC_SESSION hSession, DWORD dwNumDCI
    }
    return dwResult;
 }
+
+
+//
+// Push DCI data
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCPushDCIData(NXC_SESSION hSession, DWORD dwNumItems,
+                                        NXC_DCI_PUSH_DATA *pItems)
+{
+   CSCPMessage msg;
+   DWORD i, dwRqId, dwId;
+   TCHAR szName[1024];
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_PUSH_DCI_DATA);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_NUM_ITEMS, dwNumItems);
+
+   for(i = 0, dwId = VID_PUSH_DCI_DATA_BASE; i < dwNumItems; i++)
+   {
+      if (pItems[i].dwId != 0)
+      {
+         _stprintf(szName, _T("@%d"), pItems[i].dwId);
+      }
+      else
+      {
+         if (pItems[i].dwNodeId != 0)
+         {
+            _stprintf(szName, _T("#%d#%s"), pItems[i].dwNodeId, pItems[i].pszName);
+         }
+         else
+         {
+            _stprintf(szName, _T("&%s\x7F%s"), pItems[i].pszNodeName, pItems[i].pszName);
+         }
+      }
+      msg.SetVariable(dwId++, szName);
+      msg.SetVariable(dwId++, pItems[i].pszValue);
+   }
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}

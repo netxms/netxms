@@ -426,6 +426,7 @@ typedef struct
 #define CMD_GET_OBJECT_COMMENTS     0x00B8
 #define CMD_UPDATE_OBJECT_COMMENTS  0x00B9
 #define CMD_ENABLE_AGENT_TRAPS      0x00BA
+#define CMD_PUSH_DCI_DATA           0x00BB
 
 
 //
@@ -783,6 +784,9 @@ typedef struct
 
 // Base value for image list
 #define VID_IMAGE_LIST_BASE         ((DWORD)0x10000000)
+
+// Base value for DCI push data
+#define VID_PUSH_DCI_DATA_BASE      ((DWORD)0x10000000)
 
 
 //

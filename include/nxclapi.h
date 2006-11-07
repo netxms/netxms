@@ -435,6 +435,8 @@ enum
 #define OBJECT_ACCESS_ACK_ALARMS    0x00000040
 #define OBJECT_ACCESS_SEND_EVENTS   0x00000080
 #define OBJECT_ACCESS_CONTROL       0x00000100
+#define OBJECT_ACCESS_TERM_ALARMS   0x00000200
+#define OBJECT_ACCESS_PUSH_DATA     0x00000400
 
 
 //
@@ -465,6 +467,7 @@ enum
 #define DS_NATIVE_AGENT       1
 #define DS_SNMP_AGENT         2
 #define DS_CHECKPOINT_AGENT   3
+#define DS_PUSH_AGENT         4
 
 
 //
@@ -1460,6 +1463,20 @@ typedef struct
 
 
 //
+// DCI push data
+//
+
+typedef struct
+{
+   DWORD dwId;          // DCI ID or 0 if name is used
+   TCHAR *pszName;
+   DWORD dwNodeId;      // Node ID or 0 if name is used
+   TCHAR *pszNodeName;
+   TCHAR *pszValue;
+} NXC_DCI_PUSH_DATA;
+
+
+//
 // Functions
 //
 
@@ -1605,6 +1622,8 @@ DWORD LIBNXCL_EXPORTABLE NXCQueryParameter(NXC_SESSION hSession, DWORD dwNodeId,
                                            TCHAR *pszBuffer, DWORD dwBufferSize);
 DWORD LIBNXCL_EXPORTABLE NXCResolveDCINames(NXC_SESSION hSession, DWORD dwNumDCI,
                                             INPUT_DCI *pDCIList, TCHAR ***pppszNames);
+DWORD LIBNXCL_EXPORTABLE NXCPushDCIData(NXC_SESSION hSession, DWORD dwNumItems,
+                                        NXC_DCI_PUSH_DATA *pItems);
 
 DWORD LIBNXCL_EXPORTABLE NXCGetMIBFileTimeStamp(NXC_SESSION hSession, DWORD *pdwTimeStamp);
 DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, TCHAR *pszName);
