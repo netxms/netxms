@@ -93,7 +93,7 @@ BOOL CDCIPropPage::OnInitDialog()
 	CPropertyPage::OnInitDialog();
 
    // Add origins
-   for(i = 0; i < 4; i++)
+   for(i = 0; i < 5; i++)
       m_wndOriginList.AddString(g_pszItemOriginLong[i]);
    m_wndOriginList.SelectString(-1, g_pszItemOriginLong[m_iOrigin]);
 	
@@ -106,6 +106,7 @@ BOOL CDCIPropPage::OnInitDialog()
    if (m_bAdvSchedule)
       EnablePollingInterval(FALSE);
 	
+   EnableDlgItem(this, IDC_BUTTON_SELECT, m_iOrigin != DS_PUSH_AGENT);
 	return TRUE;
 }
 
@@ -143,9 +144,13 @@ void CDCIPropPage::OnSelchangeComboOrigin()
    TCHAR szBuffer[256];
 
    m_wndOriginList.GetWindowText(szBuffer, 256);
-   for(m_iOrigin = 0; m_iOrigin < 3; m_iOrigin++)
+   for(m_iOrigin = 0; m_iOrigin < 4; m_iOrigin++)
       if (!_tcscmp(szBuffer, g_pszItemOriginLong[m_iOrigin]))
          break;
+
+   EnableDlgItem(this, IDC_BUTTON_SELECT, m_iOrigin != DS_PUSH_AGENT);
+   EnableDlgItem(this, IDC_EDIT_INTERVAL, m_iOrigin != DS_PUSH_AGENT);
+   EnableDlgItem(this, IDC_CHECK_SCHEDULE, m_iOrigin != DS_PUSH_AGENT);
 }
 
 

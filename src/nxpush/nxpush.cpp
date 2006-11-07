@@ -1,4 +1,4 @@
-/* $Id: nxpush.cpp,v 1.1 2006-11-07 11:10:32 victor Exp $ */
+/* $Id: nxpush.cpp,v 1.2 2006-11-07 15:45:09 victor Exp $ */
 
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
@@ -396,7 +396,7 @@ BOOL Send(void)
 		{
 			if (queue[i].dciId != NULL)
 			{
-				printf("Sending \"%s\" to %s\n",
+				printf("Sending \"%s\" to %d\n",
 					queue[i].value,
 					queue[i].dciId);
 			}
@@ -439,6 +439,10 @@ BOOL Teardown(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/11/07 11:10:32  victor
+- nxpush moved and added to common netxms.dsw file
+- unfinished discovery configurator in console
+
 Revision 1.2  2006/11/07 00:08:04  alk
 posilhed a bit; complete(?) set of command line switches;
 

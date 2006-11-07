@@ -493,6 +493,7 @@ private:
    void SwapAgentConfigs(CSCPMessage *pRequest);
    void SendObjectComments(CSCPMessage *pRequest);
    void UpdateObjectComments(CSCPMessage *pRequest);
+   void PushDCIData(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

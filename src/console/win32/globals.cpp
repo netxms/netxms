@@ -214,9 +214,9 @@ COLORREF g_statusColorTable[9] =
 // Data collection item texts
 //
 
-TCHAR *g_pszItemOrigin[] = { _T("Internal"), _T("Agent"), _T("SNMP"), _T("CheckPoint") };
+TCHAR *g_pszItemOrigin[] = { _T("Internal"), _T("Agent"), _T("SNMP"), _T("CheckPoint"), _T("Push") };
 TCHAR *g_pszItemOriginLong[] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP Agent"),
-                                 _T("CheckPoint SNMP Agent") };
+                                 _T("CheckPoint SNMP Agent"), _T("Push Agent") };
 TCHAR *g_pszItemDataType[] = { _T("Integer"), _T("Unsigned Integer"), _T("Int64"), 
                                _T("Unsigned Int64"), _T("String"), _T("Float") };
 TCHAR *g_pszItemStatus[] = { _T("Active"), _T("Disabled"), _T("Not supported") };

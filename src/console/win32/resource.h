@@ -557,6 +557,8 @@
 #define IDC_RADIO_PASSIVE               1396
 #define IDC_RADIO_CUSTOM                1398
 #define IDC_CHECK_RANGE                 1403
+#define IDC_CHECK_TERM_ALARMS           1409
+#define IDC_CHECK_PUSH_DATA             1410
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -795,7 +797,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        339
 #define _APS_NEXT_COMMAND_VALUE         33047
-#define _APS_NEXT_CONTROL_VALUE         1409
+#define _APS_NEXT_CONTROL_VALUE         1411
 #define _APS_NEXT_SYMED_VALUE           128
 #endif
 #endif

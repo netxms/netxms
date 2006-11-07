@@ -990,6 +990,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_UPDATE_OBJECT_COMMENTS:
             UpdateObjectComments(pMsg);
             break;
+         case CMD_PUSH_DCI_DATA:
+            PushDCIData(pMsg);
+            break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -3440,8 +3443,8 @@ void ClientSession::TerminateAlarm(CSCPMessage *pRequest)
    pObject = g_alarmMgr.GetAlarmSourceObject(dwAlarmId);
    if (pObject != NULL)
    {
-      // User should have "acknowlege alarm" right to the object
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
+      // User should have "terminate alarm" right to the object
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS))
       {
          msg.SetVariable(VID_RCC, g_alarmMgr.TerminateById(dwAlarmId, m_dwUserId));
       }
@@ -3481,9 +3484,9 @@ void ClientSession::DeleteAlarm(CSCPMessage *pRequest)
    pObject = g_alarmMgr.GetAlarmSourceObject(dwAlarmId);
    if (pObject != NULL)
    {
-      // User should have "acknowlege alarm" right to the object
+      // User should have "terminate alarm" right to the object
       // and system right "delete alarms"
-      if ((pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS)) &&
+      if ((pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS)) &&
           (m_dwSystemAccess & SYSTEM_ACCESS_DELETE_ALARMS))
       {
          g_alarmMgr.DeleteAlarm(dwAlarmId);
@@ -7639,6 +7642,38 @@ void ClientSession::UpdateObjectComments(CSCPMessage *pRequest)
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
          pObject->SetComments(pRequest->GetVariableStr(VID_COMMENT));
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   SendMessage(&msg);
+}
+
+
+//
+// Push DCI data
+//
+
+void ClientSession::PushDCIData(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_PUSH_DATA))
+      {
       }
       else
       {
