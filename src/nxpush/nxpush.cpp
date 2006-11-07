@@ -1,4 +1,4 @@
-/* $Id: nxpush.cpp,v 1.3 2006-11-07 23:10:56 alk Exp $ */
+/* $Id: nxpush.cpp,v 1.4 2006-11-07 23:28:06 alk Exp $ */
 
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
@@ -66,7 +66,7 @@ static struct option longOptions[] =
 	{NULL, 0, NULL, 0}
 };
 
-#define SHORT_OPTIONS "Vhvqu:P:eH:b"
+#define SHORT_OPTIONS "Vhvqu:P:eH:b:"
 
 //
 //
@@ -401,21 +401,37 @@ BOOL Send(void)
 {
 	DWORD errIdx;
 	
-	int i, j;
+	int i, size;
 	int batches = 1;
 
-	if (NXCPushDCIData(hSession, queueSize, queue, &errIdx) != RCC_SUCCESS)
+	if (optBatchSize == 0)
 	{
-		if (optVerbose > 0)
-		{
-			printf("Push failed at record %d.\n", errIdx);
-		}
+		optBatchSize = queueSize;
 	}
-	else
+
+	batches = queueSize / optBatchSize;
+	if (queueSize % optBatchSize != 0)
 	{
-		if (optVerbose > 1)
+		batches++;
+	}
+
+	for (i = 0; i < batches; i++)
+	{
+		size = min(optBatchSize, queueSize - (optBatchSize * i));
+
+		if (NXCPushDCIData(hSession, size, &queue[optBatchSize * i], &errIdx) != RCC_SUCCESS)
 		{
-			printf("Done.\n");
+			if (optVerbose > 0)
+			{
+				printf("Push failed at record %d.\n", errIdx);
+			}
+		}
+		else
+		{
+			if (optVerbose > 1)
+			{
+				printf("Done.\n");
+			}
 		}
 	}
 
@@ -446,6 +462,11 @@ BOOL Teardown(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/11/07 23:10:56  alk
+nxpush working(?)
+node/dci separator changed from '.' to ':'
+node id/name now required for operation
+
 Revision 1.2  2006/11/07 15:45:09  victor
 - Implemented frontend for push items
 - Other minor changes
