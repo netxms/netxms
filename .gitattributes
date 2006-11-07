@@ -1067,6 +1067,9 @@ src/nxmibc/nxmibc.dsw -text
 src/nxmibc/nxmibc.h -text
 src/nxmibc/parser.l -text
 src/nxmibc/parser.y -text
+src/nxpush/nxpush.cpp -text
+src/nxpush/nxpush.dsp -text
+src/nxpush/nxpush.dsw -text
 src/nxreport/Makefile.am -text
 src/nxreport/nx_strict_tree.cpp -text
 src/nxreport/nx_strict_tree.h -text

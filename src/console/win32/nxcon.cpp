@@ -2820,8 +2820,6 @@ void CConsoleApp::ShowDetailsWindow(DWORD dwType, HWND hwndOrigin, Table *pData)
    {
    	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
 
-//	   pWnd = pFrame->CreateNewChild(RUNTIME_CLASS(CDetailsView), IDR_ALARM_DETAILS,
-//                                    m_hMDIMenu, m_hMDIAccel);
       pWnd = new CDetailsView(dwType, 400, 500, pData, NULL);
       CreateChildFrameWithSubtitle(pWnd, IDR_ALARM_DETAILS, _T("AAA"),
                                    m_hMDIMenu, m_hMDIAccel);

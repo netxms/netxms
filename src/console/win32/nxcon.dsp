@@ -320,6 +320,18 @@ SOURCE=.\DetailsView.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\DiscoveryPropAddrList.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\DiscoveryPropGeneral.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\DiscoveryPropTargets.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\draw.cpp
 # End Source File
 # Begin Source File
@@ -834,6 +846,18 @@ SOURCE=.\DesktopManager.h
 # Begin Source File
 
 SOURCE=.\DetailsView.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DiscoveryPropAddrList.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DiscoveryPropGeneral.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DiscoveryPropTargets.h
 # End Source File
 # Begin Source File
 

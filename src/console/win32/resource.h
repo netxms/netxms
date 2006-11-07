@@ -202,6 +202,9 @@
 #define IDA_AGENT_CONFIG_MANAGER        332
 #define IDD_AGENT_CONFIG                333
 #define IDD_EDIT_RULE_SCRIPT            334
+#define IDD_DISCOVERY_GENERAL           336
+#define IDD_DISCOVERY_TARGETS           337
+#define IDD_DISCOVERY_RANGES            338
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -242,6 +245,8 @@
 #define IDC_LIST_COLUMNS                1024
 #define IDC_LIST_DATA                   1024
 #define IDC_LIST_NODES                  1024
+#define IDC_LIST_TARGETS                1024
+#define IDC_LIST_SUBNETS                1024
 #define IDC_INFO_TEXT                   1025
 #define IDC_LIST_CHILDS                 1025
 #define IDC_LIST_REMOTE                 1025
@@ -283,6 +288,7 @@
 #define IDC_RADIO_TEXT                  1068
 #define IDC_RADIO_MULTIPLE              1068
 #define IDC_RADIO_URL                   1068
+#define IDC_RADIO_AUTO                  1068
 #define IDC_COMBO_DT                    1069
 #define IDC_COMBO_ORIGIN                1070
 #define IDC_BUTTON_MODIFY               1074
@@ -548,6 +554,9 @@
 #define IDC_STATIC_CONFIRM              1391
 #define IDC_STATIC_WILLBE               1392
 #define IDC_SCRIPT                      1393
+#define IDC_RADIO_PASSIVE               1396
+#define IDC_RADIO_CUSTOM                1398
+#define IDC_CHECK_RANGE                 1403
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -774,6 +783,7 @@
 #define ID_OBJECT_COMMENTS              33042
 #define ID_COMMENTS_SAVE                33043
 #define ID_ALARM_DETAILS                33044
+#define ID_CONTROLPANEL_NETWORKDISCOVERY 33046
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -783,9 +793,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        336
-#define _APS_NEXT_COMMAND_VALUE         33046
-#define _APS_NEXT_CONTROL_VALUE         1395
+#define _APS_NEXT_RESOURCE_VALUE        339
+#define _APS_NEXT_COMMAND_VALUE         33047
+#define _APS_NEXT_CONTROL_VALUE         1409
 #define _APS_NEXT_SYMED_VALUE           128
 #endif
 #endif
