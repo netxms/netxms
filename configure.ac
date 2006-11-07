@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.214 2006-10-27 22:36:19 victor Exp $
+# $Id: configure.ac,v 1.215 2006-11-07 22:28:23 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -223,7 +223,7 @@ AC_ARG_WITH(server,
 AC_ARG_WITH(client,
 [AS_HELP_STRING(--with-client,build client library and tools)],
 [
-	MODULES="$MODULES libnxmap libnxcl nxevent nxreport console"
+	MODULES="$MODULES libnxmap libnxcl nxevent nxpush nxreport console"
 	BUILD_CLIENT="yes"
    DYNAMIC_COMPONENTS="yes"
 ])
@@ -906,6 +906,7 @@ AC_CONFIG_FILES([
 	src/console/PocketPC/Makefile
 	src/console/PocketPC/res/Makefile
 	src/nxevent/Makefile
+	src/nxpush/Makefile
 	src/nxreport/Makefile
 	src/nxmibc/Makefile
 	src/nxscript/Makefile
