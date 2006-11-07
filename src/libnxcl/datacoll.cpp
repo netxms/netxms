@@ -545,6 +545,7 @@ DWORD LIBNXCL_EXPORTABLE NXCQueryParameter(NXC_SESSION hSession, DWORD dwNodeId,
       dwResult = pResponse->GetVariableLong(VID_RCC);
       if (dwResult == RCC_SUCCESS)
          pResponse->GetVariableStr(VID_VALUE, pszBuffer, dwBufferSize);
+      delete pResponse;
    }
    else
    {
@@ -594,6 +595,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetLastValues(NXC_SESSION hSession, DWORD dwNodeId,
             (*ppValueList)[i].dwTimestamp = pResponse->GetVariableLong(dwId++);
          }
       }
+      delete pResponse;
    }
    else
    {
@@ -662,6 +664,7 @@ DWORD LIBNXCL_EXPORTABLE NXCResolveDCINames(NXC_SESSION hSession, DWORD dwNumDCI
          for(i = 0, dwId = VID_DCI_LIST_BASE; i < dwNumDCI; i++)
             (*pppszNames)[i] = pResponse->GetVariableStr(dwId++);
       }
+      delete pResponse;
    }
    else
    {
@@ -676,11 +679,10 @@ DWORD LIBNXCL_EXPORTABLE NXCResolveDCINames(NXC_SESSION hSession, DWORD dwNumDCI
 //
 
 DWORD LIBNXCL_EXPORTABLE NXCPushDCIData(NXC_SESSION hSession, DWORD dwNumItems,
-                                        NXC_DCI_PUSH_DATA *pItems)
+                                        NXC_DCI_PUSH_DATA *pItems, DWORD *pdwIndex)
 {
-   CSCPMessage msg;
-   DWORD i, dwRqId, dwId;
-   TCHAR szName[1024];
+   CSCPMessage msg, *pResponse;
+   DWORD i, dwRqId, dwId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -690,24 +692,35 @@ DWORD LIBNXCL_EXPORTABLE NXCPushDCIData(NXC_SESSION hSession, DWORD dwNumItems,
 
    for(i = 0, dwId = VID_PUSH_DCI_DATA_BASE; i < dwNumItems; i++)
    {
+      msg.SetVariable(dwId++, pItems[i].dwId);
       if (pItems[i].dwId != 0)
       {
-         _stprintf(szName, _T("@%d"), pItems[i].dwId);
+         msg.SetVariable(dwId++, pItems[i].pszName);
       }
-      else
+      msg.SetVariable(dwId++, pItems[i].dwNodeId);
+      if (pItems[i].dwNodeId != 0)
       {
-         if (pItems[i].dwNodeId != 0)
-         {
-            _stprintf(szName, _T("#%d#%s"), pItems[i].dwNodeId, pItems[i].pszName);
-         }
-         else
-         {
-            _stprintf(szName, _T("&%s\x7F%s"), pItems[i].pszNodeName, pItems[i].pszName);
-         }
+         msg.SetVariable(dwId++, pItems[i].pszNodeName);
       }
-      msg.SetVariable(dwId++, szName);
       msg.SetVariable(dwId++, pItems[i].pszValue);
    }
 
-   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwResult = pResponse->GetVariableLong(VID_RCC);
+      if (dwResult != RCC_SUCCESS)
+      {
+         *pdwIndex = pResponse->GetVariableLong(VID_FAILED_DCI_INDEX);
+      }
+      delete pResponse;
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+      *pdwIndex = 0;
+   }
+   return dwResult;
 }

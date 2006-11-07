@@ -1623,7 +1623,7 @@ DWORD LIBNXCL_EXPORTABLE NXCQueryParameter(NXC_SESSION hSession, DWORD dwNodeId,
 DWORD LIBNXCL_EXPORTABLE NXCResolveDCINames(NXC_SESSION hSession, DWORD dwNumDCI,
                                             INPUT_DCI *pDCIList, TCHAR ***pppszNames);
 DWORD LIBNXCL_EXPORTABLE NXCPushDCIData(NXC_SESSION hSession, DWORD dwNumItems,
-                                        NXC_DCI_PUSH_DATA *pItems);
+                                        NXC_DCI_PUSH_DATA *pItems, DWORD *pdwIndex);
 
 DWORD LIBNXCL_EXPORTABLE NXCGetMIBFileTimeStamp(NXC_SESSION hSession, DWORD *pdwTimeStamp);
 DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, TCHAR *pszName);

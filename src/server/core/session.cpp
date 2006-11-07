@@ -7664,25 +7664,25 @@ void ClientSession::UpdateObjectComments(CSCPMessage *pRequest)
 void ClientSession::PushDCIData(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
+   DWORD dwNumItems, *pdwItemList;
    NetObj *pObject;
+   TCHAR szName[1024];
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
-   if (pObject != NULL)
+   dwNumItems = pRequest->GetVariableLong(VID_NUM_ITEMS);
+   if (dwNumItems > 0)
    {
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_PUSH_DATA))
+      pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwNumItems);
+      for(i = 0, dwId = VID_DCI_PUSH_DATA_BASE; i < dwNumItems; i++)
       {
       }
-      else
-      {
-         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-      }
+
    }
    else
    {
-      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+      msg.SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
    }
 
    SendMessage(&msg);
