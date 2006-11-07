@@ -7751,7 +7751,7 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
       }
 
       // If all items was checked OK, push data
-      if (i == dwNumItems)
+      if (bOK)
       {
          time_t t;
 
