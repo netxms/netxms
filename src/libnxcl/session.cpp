@@ -244,7 +244,7 @@ BOOL NXCL_Session::SendMsg(CSCPMessage *pMsg)
    if (m_dwFlags & NXC_SF_CONN_BROKEN)
       return FALSE;
 
-   DebugPrintf(_T("SendMsg(\"%s\"), id:%d)"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
+   DebugPrintf(_T("SendMsg(\"%s\", id:%d)"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
    pRawMsg = pMsg->CreateMessage();
    if (m_pCtx != NULL)
    {
