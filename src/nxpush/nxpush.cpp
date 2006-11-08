@@ -1,4 +1,4 @@
-/* $Id: nxpush.cpp,v 1.9 2006-11-08 13:03:35 victor Exp $ */
+/* $Id: nxpush.cpp,v 1.10 2006-11-08 13:04:54 victor Exp $ */
 
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
@@ -178,7 +178,11 @@ int main(int argc, char *argv[])
 		if (optVerbose > 0)
 		{
 			printf("Not enough arguments\n\n");
+#if HAVE_GETOPT_LONG
 			printf("Try `%s --help' for more information.\n", argv[0]);
+#else
+			printf("Try `%s -h' for more information.\n", argv[0]);
+#endif
 		}
 		exit(1);
 	}
@@ -530,6 +534,9 @@ BOOL Teardown(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/11/08 13:03:35  victor
+Added check for getopt_long() presense
+
 Revision 1.8  2006/11/08 11:43:15  victor
 Minor changes
 
