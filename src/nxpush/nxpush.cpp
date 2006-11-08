@@ -1,4 +1,4 @@
-/* $Id: nxpush.cpp,v 1.5 2006-11-07 23:54:08 alk Exp $ */
+/* $Id: nxpush.cpp,v 1.6 2006-11-08 00:08:30 alk Exp $ */
 
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
@@ -99,6 +99,7 @@ static void usage(char *argv0)
 //
 int main(int argc, char *argv[])
 {
+	int ret = 0;
 	int c;
 
 	opterr = 0;
@@ -112,7 +113,7 @@ int main(int argc, char *argv[])
 			break;
 		case 'h': // help
 			usage(argv[0]);
-			exit(0);
+			exit(1);
 			break;
 		case 'v': // verbose
 			optVerbose++;
@@ -206,7 +207,10 @@ int main(int argc, char *argv[])
 	{
 		if (Startup())
 		{
-			Send();
+			if (Send() != TRUE)
+			{
+				ret = 3;
+			}
 		}
 	}
 	else
@@ -214,11 +218,12 @@ int main(int argc, char *argv[])
 		if (optVerbose > 0)
 		{
 			printf("No valid pairs found; nothing to send\n");
+			ret = 2;
 		}
 	}
 	Teardown();
 
-	return 0;
+	return ret;
 }
 
 //
@@ -367,7 +372,7 @@ BOOL Startup(void)
 	}
 	else
 	{
-		if (optVerbose > 1)
+		if (optVerbose > 2)
 		{
 			NXCSetDebugCallback(DebugCallback);
 
@@ -399,6 +404,7 @@ BOOL Startup(void)
 //
 BOOL Send(void)
 {
+	BOOL ret = TRUE;
 	DWORD errIdx;
 	
 	int i, size;
@@ -439,12 +445,19 @@ BOOL Send(void)
 			}
 		}
 
-		if (NXCPushDCIData(hSession, size, &queue[optBatchSize * i], &errIdx) != RCC_SUCCESS)
+		DWORD dwResult = NXCPushDCIData(hSession, size, &queue[optBatchSize * i], &errIdx);
+		if (dwResult != RCC_SUCCESS)
 		{
 			if (optVerbose > 0)
 			{
-				printf("Push failed at record %d.\n", errIdx);
+				printf("Push failed at record #%d (#%d in batch): %s.\n",
+					(i * optBatchSize) + errIdx + 1,
+					errIdx + 1,
+					NXCGetErrorText(dwResult));
 			}
+
+			ret = FALSE;
+			break;
 		}
 		else
 		{
@@ -455,7 +468,7 @@ BOOL Send(void)
 		}
 	}
 
-	return TRUE;
+	return ret;
 }
 
 //
@@ -488,6 +501,9 @@ BOOL Teardown(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/11/07 23:54:08  alk
+fixed bug in file loader
+
 Revision 1.4  2006/11/07 23:28:06  alk
 -b/--batchsize added; default is 0 (unlimited)
 
