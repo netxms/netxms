@@ -1,4 +1,4 @@
-/* $Id: nxpush.cpp,v 1.7 2006-11-08 09:05:05 victor Exp $ */
+/* $Id: nxpush.cpp,v 1.8 2006-11-08 11:43:15 victor Exp $ */
 
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
@@ -25,21 +25,26 @@
 #include <nms_util.h>
 #include <nxclapi.h>
 
+
 //
 // Global variables
 //
+
 NXC_SESSION hSession = NULL;
 NXC_DCI_PUSH_DATA *queue = NULL;
 int queueSize = 0;
 
+
 //
 // Forward declarations
 //
+
 BOOL AddValuePair(char *name, char *value);
 BOOL AddValue(char *pair);
 BOOL Startup(void);
 BOOL Send(void);
 BOOL Teardown(void);
+
 
 //
 // options
@@ -508,6 +513,10 @@ BOOL Teardown(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/11/08 09:05:05  victor
+- Implemented node name resolution for NXCPushDCIData
+- Help for nxpush improved
+
 Revision 1.6  2006/11/08 00:08:30  alk
 minor changes;
 error codes corected - 0=ok, 1=wrong params, 2=no valid data, 3=unable to send
