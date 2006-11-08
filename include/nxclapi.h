@@ -807,6 +807,91 @@ typedef struct
 // Network object structure
 //
 
+struct __nxc_object_iface
+{
+   DWORD dwIpNetMask;   // Ip netmask.
+   DWORD dwIfIndex;     // Interface index.
+   DWORD dwIfType;      // Interface type
+   BYTE bMacAddr[MAC_ADDR_LENGTH];
+};
+
+struct __nxc_object_node
+{
+   DWORD dwFlags;
+   DWORD dwNodeType;
+   DWORD dwPollerNode;
+   DWORD dwProxyNode;
+   DWORD dwZoneGUID;
+   TCHAR szSharedSecret[MAX_SECRET_LENGTH];
+   TCHAR szCommunityString[MAX_COMMUNITY_LENGTH];
+   TCHAR szObjectId[MAX_OID_LENGTH];
+   WORD wAgentPort;     // Listening TCP port for native agent
+   WORD wAuthMethod;    // Native agent's authentication method
+   TCHAR *pszDescription;
+   TCHAR szAgentVersion[MAX_AGENT_VERSION_LEN];
+   TCHAR szPlatformName[MAX_PLATFORM_NAME_LEN];
+   WORD wSNMPVersion;
+};
+
+struct __nxc_object_subnet
+{
+   DWORD dwIpNetMask;
+   DWORD dwZoneGUID;
+};
+
+struct __nxc_object_container
+{
+   DWORD dwCategory;
+   TCHAR *pszDescription;
+};
+
+struct __nxc_object_dct
+{
+   DWORD dwVersion;
+   TCHAR *pszDescription;
+};
+
+struct __nxc_object_netsrv
+{
+   int iServiceType;
+   WORD wProto;
+   WORD wPort;
+   DWORD dwPollerNode;
+   TCHAR *pszRequest;
+   TCHAR *pszResponse;
+};
+
+struct __nxc_object_zone
+{
+   DWORD dwZoneGUID;
+   DWORD dwControllerIpAddr;
+   DWORD dwAddrListSize;
+   DWORD *pdwAddrList;
+   TCHAR *pszDescription;
+   WORD wZoneType;
+};
+
+struct __nxc_object_vpnc
+{
+   DWORD dwPeerGateway;
+   DWORD dwNumLocalNets;
+   DWORD dwNumRemoteNets;
+   IP_NETWORK *pLocalNetList;
+   IP_NETWORK *pRemoteNetList;
+};
+
+struct __nxc_object_cond
+{
+   TCHAR *pszScript;
+   DWORD dwActivationEvent;
+   DWORD dwDeactivationEvent;
+   DWORD dwSourceObject;
+   WORD wActiveStatus;
+   WORD wInactiveStatus;
+   DWORD dwNumDCI;
+   INPUT_DCI *pDCIList;
+};
+
 typedef struct
 {
    DWORD dwId;          // Unique object's identifier
@@ -832,82 +917,15 @@ typedef struct
    int iStatusThresholds[4];
    union
    {
-      struct
-      {
-         DWORD dwIpNetMask;   // Ip netmask.
-         DWORD dwIfIndex;     // Interface index.
-         DWORD dwIfType;      // Interface type
-         BYTE bMacAddr[MAC_ADDR_LENGTH];
-      } iface;
-      struct
-      {
-         DWORD dwFlags;
-         DWORD dwNodeType;
-         DWORD dwPollerNode;
-         DWORD dwProxyNode;
-         DWORD dwZoneGUID;
-         TCHAR szSharedSecret[MAX_SECRET_LENGTH];
-         TCHAR szCommunityString[MAX_COMMUNITY_LENGTH];
-         TCHAR szObjectId[MAX_OID_LENGTH];
-         WORD wAgentPort;     // Listening TCP port for native agent
-         WORD wAuthMethod;    // Native agent's authentication method
-         TCHAR *pszDescription;
-         TCHAR szAgentVersion[MAX_AGENT_VERSION_LEN];
-         TCHAR szPlatformName[MAX_PLATFORM_NAME_LEN];
-         WORD wSNMPVersion;
-      } node;
-      struct
-      {
-         DWORD dwIpNetMask;
-         DWORD dwZoneGUID;
-      } subnet;
-      struct
-      {
-         DWORD dwCategory;
-         TCHAR *pszDescription;
-      } container;
-      struct
-      {
-         DWORD dwVersion;
-         TCHAR *pszDescription;
-      } dct;
-      struct
-      {
-         int iServiceType;
-         WORD wProto;
-         WORD wPort;
-         DWORD dwPollerNode;
-         TCHAR *pszRequest;
-         TCHAR *pszResponse;
-      } netsrv;
-      struct
-      {
-         DWORD dwZoneGUID;
-         DWORD dwControllerIpAddr;
-         DWORD dwAddrListSize;
-         DWORD *pdwAddrList;
-         TCHAR *pszDescription;
-         WORD wZoneType;
-      } zone;
-      struct
-      {
-         DWORD dwPeerGateway;
-         DWORD dwNumLocalNets;
-         DWORD dwNumRemoteNets;
-         IP_NETWORK *pLocalNetList;
-         IP_NETWORK *pRemoteNetList;
-      } vpnc;  // VPN connector
-      struct
-      {
-         TCHAR *pszScript;
-         DWORD dwActivationEvent;
-         DWORD dwDeactivationEvent;
-         DWORD dwSourceObject;
-         WORD wActiveStatus;
-         WORD wInactiveStatus;
-         DWORD dwNumDCI;
-         INPUT_DCI *pDCIList;
-      } cond;  // Condition
+      struct __nxc_object_iface iface;
+      struct __nxc_object_node node;
+      struct __nxc_object_subnet subnet;
+      struct __nxc_object_container container;
+      struct __nxc_object_dct dct;
+      struct __nxc_object_netsrv netsrv;
+      struct __nxc_object_zone zone;
+      struct __nxc_object_vpnc vpnc;  // VPN connector
+      struct __nxc_object_cond cond;  // Condition
    };
 } NXC_OBJECT;
 
