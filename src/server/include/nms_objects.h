@@ -991,6 +991,7 @@ void UpdateNodeIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject);
 void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject);
 
 NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId);
+NetObj NXCORE_EXPORTABLE *FindObjectByName(TCHAR *pszName);
 Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD dwAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD dwNodeAddr);

@@ -1,4 +1,4 @@
-/* $Id: nxpush.cpp,v 1.6 2006-11-08 00:08:30 alk Exp $ */
+/* $Id: nxpush.cpp,v 1.7 2006-11-08 09:05:05 victor Exp $ */
 
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
@@ -74,23 +74,30 @@ static struct option longOptions[] =
 static void usage(char *argv0)
 {
 	printf(
+"NetXMS PUSH  Version " NETXMS_VERSION_STRING "\n"
+"Copyright (c) 2006 Alex Kirhenshtein\n\n"
 "Usage: %s [OPTIONS] [server] [@batch_file] [values]\n"
 "  \n"
 "Options:\n"
-"  -V, --version    Display version information.\n"
-"  -h, --help       Display this help message.\n"
-"  -v, --verbose    Enable verbose messages. Add twice for debug\n"
-"  -q, --quiet      Suppress all messages.\n\n"
-"  -u, --user       Login to server as user. Default is \"guest\".\n"
-"  -P, --password   Specify user's password. Default is empty.\n"
-"  -e, --encrypt    Encrypt session.\n"
-"  -H, --host       Server address.\n\n"
+"  -V, --version              Display version information.\n"
+"  -h, --help                 Display this help message.\n"
+"  -v, --verbose              Enable verbose messages. Add twice for debug\n"
+"  -q, --quiet                Suppress all messages.\n\n"
+"  -u, --user     <user>      Login to server as user. Default is \"guest\".\n"
+"  -P, --password <password>  Specify user's password. Default is empty.\n"
+"  -e, --encrypt              Encrypt session.\n"
+"  -H, --host     <host>      Server address.\n\n"
 "Notes:\n"
-"  First parameter will be used as \"server\" if -H/--host is unset\n"
-"  ...\n"
-"\n\n"
+"  * Values should be given in the following format:\n"
+"    node:dci=value\n"
+"    where node and dci can be specified either by ID or name\n"
+"  * First parameter will be used as \"host\" if -H/--host is unset\n"
+"\n"
 "Examples:\n"
-"  ...\n"
+"  Push two values to server 10.0.0.1 as user \"sender\" with password \"passwd\":\n"
+"      nxpush --host 10.0.0.1 -u sender -P passwd 10:24=1 10:PushParam=4\n\n"
+"  Push values from file to server 10.0.0.1 as user \"guest\" without password:\n"
+"      nxpush 10.0.0.1 @file\n"
 	, argv0);
 }
 
@@ -501,6 +508,10 @@ BOOL Teardown(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/11/08 00:08:30  alk
+minor changes;
+error codes corected - 0=ok, 1=wrong params, 2=no valid data, 3=unable to send
+
 Revision 1.5  2006/11/07 23:54:08  alk
 fixed bug in file loader
 

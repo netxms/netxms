@@ -545,7 +545,33 @@ NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId)
 
 
 //
-// Find object by ID
+// Find object by name
+//
+
+NetObj NXCORE_EXPORTABLE *FindObjectByName(TCHAR *pszName)
+{
+   DWORD i;
+   NetObj *pObject = NULL;
+
+   if (g_pIndexById == NULL)
+      return NULL;
+
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+   for(i = 0; i < g_dwIdIndexSize; i++)
+   {
+      if (!_tcsicmp(g_pIndexById[i].pObject->Name(), pszName))
+      {
+         pObject = g_pIndexById[i].pObject;
+         break;
+      }
+   }
+   RWLockUnlock(g_rwlockIdIndex);
+   return pObject;
+}
+
+
+//
+// Find zone object by GUID
 //
 
 Zone NXCORE_EXPORTABLE *FindZoneByGUID(DWORD dwZoneGUID)
