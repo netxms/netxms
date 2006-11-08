@@ -2,6 +2,8 @@
 * 0.2.14
 *
 
+- Alarm system improved (three state alarms, helpdesk status, etc.)
+- Added new DCI data source: push agents
 - Threshold state now saved across NetXMS server restarts
 - Added possibility to specify custom threshold rearm event instead of
   SYS_THRESHOLD_REARMED
