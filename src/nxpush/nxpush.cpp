@@ -1,4 +1,4 @@
-/* $Id: nxpush.cpp,v 1.8 2006-11-08 11:43:15 victor Exp $ */
+/* $Id: nxpush.cpp,v 1.9 2006-11-08 13:03:35 victor Exp $ */
 
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
@@ -57,6 +57,7 @@ static char *optPassword = "";
 static BOOL optEncrypt = FALSE;
 static int optBatchSize = 0;
 
+#if HAVE_GETOPT_LONG
 static struct option longOptions[] =
 {
 	{"version",   no_argument,       NULL,        'V'},
@@ -70,6 +71,7 @@ static struct option longOptions[] =
 	{"batchsize", required_argument, NULL,        'b'},
 	{NULL, 0, NULL, 0}
 };
+#endif
 
 #define SHORT_OPTIONS "Vhvqu:P:eH:b:"
 
@@ -84,6 +86,7 @@ static void usage(char *argv0)
 "Usage: %s [OPTIONS] [server] [@batch_file] [values]\n"
 "  \n"
 "Options:\n"
+#if HAVE_GETOPT_LONG
 "  -V, --version              Display version information.\n"
 "  -h, --help                 Display this help message.\n"
 "  -v, --verbose              Enable verbose messages. Add twice for debug\n"
@@ -92,6 +95,16 @@ static void usage(char *argv0)
 "  -P, --password <password>  Specify user's password. Default is empty.\n"
 "  -e, --encrypt              Encrypt session.\n"
 "  -H, --host     <host>      Server address.\n\n"
+#else
+"  -V             Display version information.\n"
+"  -h             Display this help message.\n"
+"  -v             Enable verbose messages. Add twice for debug\n"
+"  -q             Suppress all messages.\n\n"
+"  -u <user>      Login to server as user. Default is \"guest\".\n"
+"  -P <password>  Specify user's password. Default is empty.\n"
+"  -e             Encrypt session.\n"
+"  -H <host>      Server address.\n\n"
+#endif
 "Notes:\n"
 "  * Values should be given in the following format:\n"
 "    node:dci=value\n"
@@ -100,7 +113,7 @@ static void usage(char *argv0)
 "\n"
 "Examples:\n"
 "  Push two values to server 10.0.0.1 as user \"sender\" with password \"passwd\":\n"
-"      nxpush --host 10.0.0.1 -u sender -P passwd 10:24=1 10:PushParam=4\n\n"
+"      nxpush -H 10.0.0.1 -u sender -P passwd 10:24=1 10:PushParam=4\n\n"
 "  Push values from file to server 10.0.0.1 as user \"guest\" without password:\n"
 "      nxpush 10.0.0.1 @file\n"
 	, argv0);
@@ -115,7 +128,11 @@ int main(int argc, char *argv[])
 	int c;
 
 	opterr = 0;
+#if HAVE_GETOPT_LONG
 	while ((c = getopt_long(argc, argv, SHORT_OPTIONS, longOptions, NULL)) != -1)
+#else
+	while ((c = getopt(argc, argv, SHORT_OPTIONS)) != -1)
+#endif
 	{
 		switch(c)
 		{
@@ -513,6 +530,9 @@ BOOL Teardown(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/11/08 11:43:15  victor
+Minor changes
+
 Revision 1.7  2006/11/08 09:05:05  victor
 - Implemented node name resolution for NXCPushDCIData
 - Help for nxpush improved

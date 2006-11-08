@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.217 2006-11-08 11:43:14 victor Exp $
+# $Id: configure.ac,v 1.218 2006-11-08 13:03:34 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -572,7 +572,7 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror])
 AC_CHECK_FUNCS([strrchr strtol strtoul strtoll strtoull])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
-AC_CHECK_FUNCS([nanosleep])
+AC_CHECK_FUNCS([nanosleep getopt_long])
 
 AC_CHECK_HEADERS([sys/sysctl.h vm/vm_param.h])
 AC_CHECK_FUNCS([sysctlbyname sysctlnametomib])
