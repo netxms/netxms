@@ -56,7 +56,10 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 //#endif
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('IDataIndexCreationCommand_0','CREATE INDEX idx_idata_%d_item_id ON idata_%d(item_id)',0,1);
-#ifndef DB_MYSQL
+#ifdef DB_MYSQL
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('IDataIndexCreationCommand_1','CREATE INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp)',0,1);
+#else
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('IDataIndexCreationCommand_1','CREATE INDEX idx_idata_%d_timestamp ON idata_%d(idata_timestamp)',0,1);
 #endif
