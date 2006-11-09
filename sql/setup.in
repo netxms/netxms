@@ -55,14 +55,12 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 #ifdef DB_MYSQL
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('IDataIndexCreationCommand_1','CREATE INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp)',0,1);
-#else
-# ifdef DB_POSTGRESQL
+#elif DB_POSTGRESQL
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('IDataIndexCreationCommand_1','CREATE INDEX idx_idata_%d_timestamp_id ON idata_%d(idata_timestamp,item_id)',0,1);
-# else
+#elif DB_MSSQL
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('IDataIndexCreationCommand_1','CREATE INDEX idx_idata_%d_timestamp ON idata_%d(idata_timestamp)',0,1);
-# endif
+	VALUES ('IDataIndexCreationCommand_1','CREATE CLUSTERED INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp)',0,1);
 #endif
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('RunNetworkDiscovery','0',1,1);
