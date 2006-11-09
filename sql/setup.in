@@ -52,13 +52,13 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('IDataTableCreationCommand','CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer not null,idata_value varchar(255) not null)',0,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('IDataIndexCreationCommand_0','CREATE INDEX idx_idata_%d_item_id ON idata_%d(item_id)',0,1);
-#ifdef DB_MYSQL
+#if defined(DB_MYSQL)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('IDataIndexCreationCommand_1','CREATE INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp)',0,1);
-#elif DB_POSTGRESQL
+#elif defined(DB_POSTGRESQL)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('IDataIndexCreationCommand_1','CREATE INDEX idx_idata_%d_timestamp_id ON idata_%d(idata_timestamp,item_id)',0,1);
-#elif DB_MSSQL
+#elif defined(DB_MSSQL)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('IDataIndexCreationCommand_1','CREATE CLUSTERED INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp)',0,1);
 #endif

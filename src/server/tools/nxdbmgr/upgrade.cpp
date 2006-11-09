@@ -78,6 +78,61 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V52 to V53
+//
+
+static BOOL H_UpgradeFromV52(void)
+{
+   DB_RESULT hResult;
+   int i, nCount;
+   DWORD dwId;
+   TCHAR szQuery[1024];
+   static TCHAR *pszNewIdx[] =
+   {
+      _T("CREATE INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp)"),  // MySQL
+      _T("CREATE INDEX idx_idata_%d_timestamp_id ON idata_%d(idata_timestamp,item_id)"),  // POstgreSQL
+      _T("CREATE CLUSTERED INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp)"), // MS SQL
+      _T("CREATE INDEX idx_idata_%d_timestamp_id ON idata_%d(idata_timestamp,item_id)"),  // Oracle
+      _T("CREATE INDEX idx_idata_%d_timestamp_id ON idata_%d(idata_timestamp,item_id)")   // SQLite
+   };
+
+   hResult = SQLSelect(_T("SELECT id FROM nodes"));
+   if (hResult == NULL)
+      return FALSE;
+
+   _tprintf(_T("Reindexing database:\n"));
+   nCount = DBGetNumRows(hResult);
+   for(i = 0; i < nCount; i++)
+   {
+      dwId = DBGetFieldULong(hResult, i, 0);
+      _tprintf("   * idata_%d\n", dwId);
+
+      // Drop old indexes
+      _stprintf(szQuery, _T("DROP INDEX idx_idata_%d_timestamp"), dwId);
+      DBQuery(g_hCoreDB, szQuery);
+
+      // Create new index
+      _stprintf(szQuery, pszNewIdx[g_iSyntax], dwId, dwId);
+      SQLQuery(szQuery);
+   }
+
+   DBFreeResult(hResult);
+
+   // Update index creation command
+   DBQuery(g_hCoreDB, _T("DELETE FROM config WHERE var_name='IDataIndexCreationCommand_1'"));
+   if (!CreateConfigParam(_T("IDataIndexCreationCommand_1"), pszNewIdx[g_iSyntax], 0, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='53' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V51 to V52
 //
 
@@ -2308,6 +2363,7 @@ static struct
    { 49, H_UpgradeFromV49 },
    { 50, H_UpgradeFromV50 },
    { 51, H_UpgradeFromV51 },
+   { 52, H_UpgradeFromV52 },
    { 0, NULL }
 };
 
