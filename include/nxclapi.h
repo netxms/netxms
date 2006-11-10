@@ -76,6 +76,7 @@ typedef void * NXC_SESSION;
 #define MAX_EMAIL_SUBJECT_LEN    256
 #define MAC_ADDR_LENGTH          6
 #define CURRENT_USER             ((DWORD)0xFFFFFFFF)
+#define MAX_DCI_DATA_RECORDS     200000
 
 
 //

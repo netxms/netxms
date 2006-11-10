@@ -60,6 +60,7 @@ CGraphFrame::CGraphFrame()
    m_iTimeUnit = 1;  // Hours
    m_dwNumTimeUnits = 1;
    m_dwTimeFrame = 3600;   // By default, graph covers 3600 seconds
+   m_bFullRefresh = TRUE;
 }
 
 CGraphFrame::~CGraphFrame()
@@ -130,14 +131,16 @@ int CGraphFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndGraph.Create(WS_CHILD | WS_VISIBLE, rect, this, IDC_GRAPH);
    m_wndGraph.SetDCIInfo(m_ppItems);
 
+   m_bFullRefresh = TRUE;
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
    if (m_dwFlags & GF_AUTOUPDATE)
       m_hTimer = SetTimer(1, 1000, NULL);
 
    m_wndStatusBar.m_dwMaxValue = m_dwRefreshInterval;
    m_wndStatusBar.SetText(m_wndGraph.m_bAutoScale ? _T("Autoscale") : _T(""), 0, 0);
-   m_wndStatusBar.SetText((m_dwFlags & GF_AUTOUPDATE) ? (LPCTSTR)m_dwSeconds : _T(""), 1,
-                          (m_dwFlags & GF_AUTOUPDATE) ? SBT_OWNERDRAW : 0);
+   m_wndStatusBar.SetText(m_dwFlags & GF_AUTOUPDATE ? _T("Autoupdate") : _T(""), 1, 0);
+//   m_wndStatusBar.SetText((m_dwFlags & GF_AUTOUPDATE) ? (LPCTSTR)m_dwSeconds : _T(""), 1,
+//                          (m_dwFlags & GF_AUTOUPDATE) ? SBT_OWNERDRAW : 0);
 
 	return 0;
 }
@@ -199,8 +202,9 @@ void CGraphFrame::SetTimeFrame(DWORD dwTimeFrom, DWORD dwTimeTo)
 
 void CGraphFrame::OnViewRefresh() 
 {
-   DWORD i, dwResult;
+   DWORD i, dwResult, dwTimeFrom, dwTimeTo;
    NXC_DCI_DATA *pData;
+   BOOL bPartial;
 
    // Set new time frame
    if (m_iTimeFrameType == 1)
@@ -213,12 +217,34 @@ void CGraphFrame::OnViewRefresh()
 
    for(i = 0; i < m_dwNumItems; i++)
    {
+      if (!m_bFullRefresh)
+      {
+         bPartial = m_wndGraph.GetTimeFrameForUpdate(i, &dwTimeFrom, &dwTimeTo);
+         if (!bPartial)
+         {
+            dwTimeFrom = m_dwTimeFrom;
+            dwTimeTo = m_dwTimeTo;
+         }
+      }
+      else
+      {
+         bPartial = FALSE;
+         dwTimeFrom = m_dwTimeFrom;
+         dwTimeTo = m_dwTimeTo;
+      }
       dwResult = DoRequestArg7(NXCGetDCIData, g_hSession, (void *)m_ppItems[i]->m_dwNodeId, 
-                               (void *)m_ppItems[i]->m_dwItemId, 0, (void *)m_dwTimeFrom,
-                               (void *)m_dwTimeTo, &pData, _T("Loading item data..."));
+                               (void *)m_ppItems[i]->m_dwItemId, 0, (void *)dwTimeFrom,
+                               (void *)dwTimeTo, &pData, _T("Loading item data..."));
       if (dwResult == RCC_SUCCESS)
       {
-         m_wndGraph.SetData(i, pData);
+         if (bPartial)
+         {
+            m_wndGraph.UpdateData(i, pData);
+         }
+         else
+         {
+            m_wndGraph.SetData(i, pData);
+         }
       }
       else
       {
@@ -227,6 +253,7 @@ void CGraphFrame::OnViewRefresh()
    }
    m_wndGraph.ClearZoomHistory();
    m_wndGraph.Update();
+   m_bFullRefresh = FALSE;
 }
 
 
@@ -322,8 +349,9 @@ void CGraphFrame::OnGraphProperties()
          m_wndGraph.m_rgbLineColors[i] = pgSettings.m_rgbItems[i];
 
       m_wndStatusBar.SetText(m_wndGraph.m_bAutoScale ? _T("Autoscale") : _T(""), 0, 0);
-      m_wndStatusBar.SetText((m_dwFlags & GF_AUTOUPDATE) ? (LPCTSTR)m_dwSeconds : _T(""), 1,
-                             (m_dwFlags & GF_AUTOUPDATE) ? SBT_OWNERDRAW : 0);
+      m_wndStatusBar.SetText(m_dwFlags & GF_AUTOUPDATE ? _T("Autoupdate") : _T(""), 1, 0);
+//      m_wndStatusBar.SetText((m_dwFlags & GF_AUTOUPDATE) ? (LPCTSTR)m_dwSeconds : _T(""), 1,
+//                             (m_dwFlags & GF_AUTOUPDATE) ? SBT_OWNERDRAW : 0);
 
       m_iTimeFrameType = pgSettings.m_iTimeFrame;
       m_iTimeUnit = pgSettings.m_iTimeUnit;
@@ -351,6 +379,7 @@ void CGraphFrame::OnGraphProperties()
       }
 
       /* TODO: send refresh only if time frame was changed */
+      m_bFullRefresh = TRUE;
       PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
    }
 }
@@ -381,8 +410,8 @@ void CGraphFrame::OnTimer(UINT nIDEvent)
       PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
       m_dwSeconds = 0;
    }
-   m_wndStatusBar.SetText((m_dwFlags & GF_AUTOUPDATE) ? (LPCTSTR)m_dwSeconds : _T(""), 1,
-                          (m_dwFlags & GF_AUTOUPDATE) ? SBT_OWNERDRAW : 0);
+//   m_wndStatusBar.SetText((m_dwFlags & GF_AUTOUPDATE) ? (LPCTSTR)m_dwSeconds : _T(""), 1,
+//                          (m_dwFlags & GF_AUTOUPDATE) ? SBT_OWNERDRAW : 0);
 }
 
 
@@ -584,6 +613,7 @@ void CGraphFrame::Preset(int nTimeUnit, DWORD dwNumUnits)
    m_iTimeUnit = nTimeUnit;
    m_dwNumTimeUnits = dwNumUnits;
    m_dwTimeFrame = m_dwNumTimeUnits * m_dwTimeUnitSize[m_iTimeUnit];
+   m_bFullRefresh = TRUE;
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 }
 

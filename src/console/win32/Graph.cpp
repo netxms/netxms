@@ -318,6 +318,40 @@ void CGraph::SetData(DWORD dwIndex, NXC_DCI_DATA *pData)
 
 
 //
+// Update data (add new items to top and remove old from bottom)
+//
+
+void CGraph::UpdateData(DWORD dwIndex, NXC_DCI_DATA *pData)
+{
+   NXC_DCI_ROW *pCurr;
+   DWORD dwSize;
+
+   if (dwIndex >= MAX_GRAPH_ITEMS)
+      return;
+
+   // Delete records older than m_dwTimeFrom
+   if (m_pData[dwIndex]->dwNumRows > 0)
+   {
+      pCurr = (NXC_DCI_ROW *)((char *)m_pData[dwIndex]->pRows + (m_pData[dwIndex]->dwNumRows - 1) * m_pData[dwIndex]->wRowSize);
+      while((pCurr->dwTimeStamp < m_dwTimeFrom) && (m_pData[dwIndex]->dwNumRows > 0))
+      {
+         m_pData[dwIndex]->dwNumRows--;
+         pCurr = (NXC_DCI_ROW *)((char *)pCurr - m_pData[dwIndex]->wRowSize);
+      }
+   }
+
+   // Insert new records
+   dwSize = m_pData[dwIndex]->dwNumRows * m_pData[dwIndex]->wRowSize;
+   m_pData[dwIndex]->dwNumRows += pData->dwNumRows;
+   m_pData[dwIndex]->pRows = (NXC_DCI_ROW *)realloc(m_pData[dwIndex]->pRows, m_pData[dwIndex]->dwNumRows * m_pData[dwIndex]->wRowSize);
+   memmove((char *)m_pData[dwIndex]->pRows + pData->dwNumRows * m_pData[dwIndex]->wRowSize, m_pData[dwIndex]->pRows, dwSize);
+   memcpy(m_pData[dwIndex]->pRows, pData->pRows, pData->dwNumRows * m_pData[dwIndex]->wRowSize);
+
+   NXCDestroyDCIData(pData);
+}
+
+
+//
 // Draw single line
 //
 
@@ -1008,4 +1042,26 @@ void CGraph::ClearZoomHistory()
 {
    m_nZoomLevel = 0;
    GetParent()->PostMessage(NXCM_GRAPH_ZOOM_CHANGED, 0, 0);
+}
+
+
+//
+// Get time frame for data that need to be updated
+//
+
+BOOL CGraph::GetTimeFrameForUpdate(DWORD dwIndex, DWORD *pdwFrom, DWORD *pdwTo)
+{
+   if (dwIndex >= MAX_GRAPH_ITEMS)
+      return FALSE;
+
+   if (m_pData[dwIndex] == NULL)
+      return FALSE;
+
+   if (m_pData[dwIndex]->dwNumRows == 0)
+      return FALSE;
+      
+   *pdwFrom = m_pData[dwIndex]->pRows->dwTimeStamp + 1;
+   *pdwTo = m_dwTimeTo;
+
+   return TRUE;
 }

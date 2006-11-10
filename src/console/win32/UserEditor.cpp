@@ -111,6 +111,8 @@ int CUserEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    pImageList->Add(AfxGetApp()->LoadIcon(IDI_USER));
    pImageList->Add(AfxGetApp()->LoadIcon(IDI_USER_GROUP));
    pImageList->Add(AfxGetApp()->LoadIcon(IDI_EVERYONE));
+   pImageList->Add(AfxGetApp()->LoadIcon(IDI_OVL_STATUS_CRITICAL));
+   pImageList->SetOverlayImage(3, 1);
    m_wndListCtrl.SetImageList(pImageList, LVSIL_SMALL);
 
    // Setup columns
@@ -161,6 +163,7 @@ int CUserEditor::AddListItem(NXC_USER *pUser)
       m_wndListCtrl.SetItemData(iItem, pUser->dwId);
       m_wndListCtrl.SetItemText(iItem, 1, pUser->szFullName);
       m_wndListCtrl.SetItemText(iItem, 2, pUser->szDescription);
+      m_wndListCtrl.SetItemState(iItem, INDEXTOOVERLAYMASK(pUser->wFlags & UF_DISABLED ? 1 : 0), LVIS_OVERLAYMASK);
    }
    return iItem;
 }
@@ -303,6 +306,7 @@ void CUserEditor::OnUserDBChange(int iCode, NXC_USER *pUserInfo)
             m_wndListCtrl.SetItemText(iItem, 0, pUserInfo->szName);
             m_wndListCtrl.SetItemText(iItem, 1, pUserInfo->szFullName);
             m_wndListCtrl.SetItemText(iItem, 2, pUserInfo->szDescription);
+            m_wndListCtrl.SetItemState(iItem, INDEXTOOVERLAYMASK(pUserInfo->wFlags & UF_DISABLED ? 1 : 0), LVIS_OVERLAYMASK);
          }
          break;
       case USER_DB_DELETE:

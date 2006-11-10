@@ -63,6 +63,7 @@ public:
 
 // Implementation
 protected:
+	BOOL m_bFullRefresh;
 	void Preset(int nTimeUnit, DWORD dwNumUnits);
 	DWORD m_dwTimeFrame;
 	DWORD m_dwNumTimeUnits;

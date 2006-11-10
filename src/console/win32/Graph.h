@@ -97,6 +97,8 @@ private:
    int m_nLastGridSizeY;
 
 public:
+	void UpdateData(DWORD dwIndex, NXC_DCI_DATA *pData);
+	BOOL GetTimeFrameForUpdate(DWORD dwIndex, DWORD *pdwFrom, DWORD *pdwTo);
 	BOOL m_bEnableZoom;
 	void ClearZoomHistory(void);
 	BOOL CanZoomOut(void);

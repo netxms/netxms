@@ -322,87 +322,121 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(NXC_SESSION hSession, DWORD dwNodeId, DWO
 {
    CSCPMessage msg;
    DWORD i, dwRqId, dwResult;
-
-   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+   BOOL bRun = TRUE;
 
    msg.SetCode(CMD_GET_DCI_DATA);
-   msg.SetId(dwRqId);
    msg.SetVariable(VID_OBJECT_ID, dwNodeId);
    msg.SetVariable(VID_DCI_ID, dwItemId);
-   msg.SetVariable(VID_MAX_ROWS, dwMaxRows);
-   msg.SetVariable(VID_TIME_FROM, dwTimeFrom);
-   msg.SetVariable(VID_TIME_TO, dwTimeTo);
-   ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   dwResult = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
-   if (dwResult == RCC_SUCCESS)
+   // Allocate memory for results and initialize header
+   *ppData = (NXC_DCI_DATA *)malloc(sizeof(NXC_DCI_DATA));
+   (*ppData)->dwNumRows = 0;
+   (*ppData)->dwNodeId = dwNodeId;
+   (*ppData)->dwItemId = dwItemId;
+   (*ppData)->pRows = NULL;
+
+   do
    {
-      CSCP_MESSAGE *pRawMsg;
+      dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-      // We wait a long time because data message can be quite large
-      pRawMsg = ((NXCL_Session *)hSession)->WaitForRawMessage(CMD_DCI_DATA, dwRqId, 30000);
-      if (pRawMsg != NULL)
+      msg.SetId(dwRqId);
+      msg.SetVariable(VID_MAX_ROWS, dwMaxRows);
+      msg.SetVariable(VID_TIME_FROM, dwTimeFrom);
+      msg.SetVariable(VID_TIME_TO, dwTimeTo);
+      ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+      dwResult = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+      if (dwResult == RCC_SUCCESS)
       {
-         DCI_DATA_HEADER *pHdr;
-         DCI_DATA_ROW *pSrc;
-         NXC_DCI_ROW *pDst;
-         static WORD m_wRowSize[] = { 8, 8, 12, 12, 260, 12 };
+         CSCP_MESSAGE *pRawMsg;
 
-         pHdr = (DCI_DATA_HEADER *)pRawMsg->df;
-
-         // Allocate memory for results and initialize header
-         *ppData = (NXC_DCI_DATA *)malloc(sizeof(NXC_DCI_DATA));
-         (*ppData)->dwNumRows = ntohl(pHdr->dwNumRows);
-         (*ppData)->dwNodeId = dwNodeId;
-         (*ppData)->dwItemId = dwItemId;
-         (*ppData)->wDataType = (WORD)ntohl(pHdr->dwDataType);
-         (*ppData)->wRowSize = m_wRowSize[(*ppData)->wDataType];
-         (*ppData)->pRows = ((*ppData)->dwNumRows > 0 ? 
-               (NXC_DCI_ROW *)malloc((*ppData)->dwNumRows * (*ppData)->wRowSize) : NULL);
-
-         // Convert and copy values from message to rows in result
-         pSrc = (DCI_DATA_ROW *)(((char *)pHdr) + sizeof(DCI_DATA_HEADER));
-         pDst = (*ppData)->pRows;
-         for(i = 0; i < (*ppData)->dwNumRows; i++)
+         // We wait a long time because data message can be quite large
+         pRawMsg = ((NXCL_Session *)hSession)->WaitForRawMessage(CMD_DCI_DATA, dwRqId, 60000);
+         if (pRawMsg != NULL)
          {
-            pDst->dwTimeStamp = ntohl(pSrc->dwTimeStamp);
-            switch((*ppData)->wDataType)
+            DCI_DATA_HEADER *pHdr;
+            DCI_DATA_ROW *pSrc;
+            NXC_DCI_ROW *pDst;
+            DWORD dwPrevRowCount, dwRecvRows;
+            static WORD m_wRowSize[] = { 8, 8, 12, 12, 260, 12 };
+
+            pHdr = (DCI_DATA_HEADER *)pRawMsg->df;
+            dwRecvRows = ntohl(pHdr->dwNumRows);
+
+            // Allocate memory for results
+            dwPrevRowCount = (*ppData)->dwNumRows;
+            (*ppData)->dwNumRows += dwRecvRows;
+            (*ppData)->wDataType = (WORD)ntohl(pHdr->dwDataType);
+            (*ppData)->wRowSize = m_wRowSize[(*ppData)->wDataType];
+            if (dwRecvRows > 0)
+               (*ppData)->pRows = (NXC_DCI_ROW *)realloc((*ppData)->pRows, (*ppData)->dwNumRows * (*ppData)->wRowSize);
+
+            // Convert and copy values from message to rows in result
+            pSrc = (DCI_DATA_ROW *)(((char *)pHdr) + sizeof(DCI_DATA_HEADER));
+            pDst = (NXC_DCI_ROW *)(((char *)((*ppData)->pRows)) + dwPrevRowCount * (*ppData)->wRowSize);
+            for(i = 0; i < dwRecvRows; i++)
             {
-               case DCI_DT_INT:
-               case DCI_DT_UINT:
-                  pDst->value.dwInt32 = ntohl(pSrc->value.dwInteger);
-                  break;
-               case DCI_DT_INT64:
-               case DCI_DT_UINT64:
-                  pDst->value.qwInt64 = ntohq(pSrc->value.qwInt64);
-                  break;
-               case DCI_DT_FLOAT:
-                  pDst->value.dFloat = ntohd(pSrc->value.dFloat);
-                  break;
-               case DCI_DT_STRING:
-                  SwapWideString(pSrc->value.szString);
+               pDst->dwTimeStamp = ntohl(pSrc->dwTimeStamp);
+               switch((*ppData)->wDataType)
+               {
+                  case DCI_DT_INT:
+                  case DCI_DT_UINT:
+                     pDst->value.dwInt32 = ntohl(pSrc->value.dwInteger);
+                     break;
+                  case DCI_DT_INT64:
+                  case DCI_DT_UINT64:
+                     pDst->value.qwInt64 = ntohq(pSrc->value.qwInt64);
+                     break;
+                  case DCI_DT_FLOAT:
+                     pDst->value.dFloat = ntohd(pSrc->value.dFloat);
+                     break;
+                  case DCI_DT_STRING:
+                     SwapWideString(pSrc->value.szString);
 #ifdef UNICODE
-                  wcscpy(pDst->value.szString, pSrc->value.szString);
+                     wcscpy(pDst->value.szString, pSrc->value.szString);
 #else
-                  WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                                      pSrc->value.szString, -1,
-                                      pDst->value.szString, MAX_STRING_VALUE,
-                                      NULL, NULL);
+                     WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                                         pSrc->value.szString, -1,
+                                         pDst->value.szString, MAX_STRING_VALUE,
+                                         NULL, NULL);
 #endif
-                  break;
+                     break;
+               }
+
+               pSrc = (DCI_DATA_ROW *)(((char *)pSrc) + (*ppData)->wRowSize);
+               pDst = (NXC_DCI_ROW *)(((char *)pDst) + (*ppData)->wRowSize);
             }
 
-            pSrc = (DCI_DATA_ROW *)(((char *)pSrc) + (*ppData)->wRowSize);
-            pDst = (NXC_DCI_ROW *)(((char *)pDst) + (*ppData)->wRowSize);
-         }
+            // Shift boundaries
+            if (((dwMaxRows == 0) || (dwMaxRows > MAX_DCI_DATA_RECORDS)) &&
+                (dwRecvRows == MAX_DCI_DATA_RECORDS))
+            {
+               // Shift to last record
+               pDst = (NXC_DCI_ROW *)(((char *)pDst) - (*ppData)->wRowSize);
+               dwTimeTo = pDst->dwTimeStamp - 1;   // Assume that we have no more than one value per second
+               if (dwMaxRows > 0)
+                  dwMaxRows -= MAX_DCI_DATA_RECORDS;
+            }
+            else
+            {
+               bRun = FALSE;
+            }
 
-         // Destroy message
-         free(pRawMsg);
+            // Destroy message
+            free(pRawMsg);
+         }
+         else
+         {
+            dwResult = RCC_TIMEOUT;
+         }
       }
-      else
-      {
-         dwResult = RCC_TIMEOUT;
-      }
+   } while((dwResult == RCC_SUCCESS) && bRun);
+
+   // Destroy already allocated buffer if request was unsuccessful
+   if (dwResult != RCC_SUCCESS)
+   {
+      safe_free((*ppData)->pRows);
+      free(*ppData);
    }
 
    return dwResult;
