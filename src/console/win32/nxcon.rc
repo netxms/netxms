@@ -135,6 +135,7 @@ IDI_MODULE              ICON    DISCARDABLE     "icons\\module.ico"
 IDI_GO_PARENT           ICON    DISCARDABLE     "icons\\go_parent.ico"
 IDI_HOME                ICON    DISCARDABLE     "icons\\home.ico"
 IDI_CONFIGS             ICON    DISCARDABLE     "icons\\configs.ico"
+IDI_DISCOVERY           ICON    DISCARDABLE     "icons\\discovery.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2771,8 +2772,8 @@ CAPTION "Active Discovery Targets"
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "List1",IDC_LIST_TARGETS,"SysListView32",LVS_REPORT | 
-                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_TABSTOP,7,19,
-                    220,183,WS_EX_CLIENTEDGE
+                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_TABSTOP,7,18,
+                    220,186,WS_EX_CLIENTEDGE
     PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,122,208,50,14
     PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,177,208,50,14
     LTEXT           "Subnets and address ranges to be scanned",IDC_STATIC,7,
@@ -2787,8 +2788,8 @@ BEGIN
     CONTROL         "List1",IDC_LIST_SUBNETS,"SysListView32",LVS_REPORT | 
                     LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_TABSTOP,7,18,
                     220,186,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,122,209,50,14
-    PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,177,209,50,14
+    PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,122,208,50,14
+    PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,177,208,50,14
     LTEXT           "Subnets and address ranges for ""match address"" filter",
                     IDC_STATIC,7,7,170,8
 END

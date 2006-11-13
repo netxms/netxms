@@ -976,3 +976,18 @@ CREATE TABLE agent_configs
 	sequence_number integer not null,
 	PRIMARY KEY(config_id)
 ) TABLE_TYPE;
+
+
+/*
+** Address lists
+*/
+
+CREATE TABLE address_lists
+(
+	list_type integer not null, // discovery filter, etc.
+	addr_type integer not null, // 0 - addr/mask, 1 - address range
+	addr1 varchar(15) not null,
+	addr2 varchar(15) not null
+) TABLE_TYPE;
+
+CREATE INDEX idx_address_lists_list_type ON address_lists(list_type);

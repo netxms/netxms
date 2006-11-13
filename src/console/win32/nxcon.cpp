@@ -60,6 +60,9 @@
 #include "AgentConfigMgr.h"
 #include "ObjectCommentsEditor.h"
 #include "DetailsView.h"
+#include "DiscoveryPropAddrList.h"
+#include "DiscoveryPropGeneral.h"
+#include "DiscoveryPropTargets.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -113,6 +116,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_DESKTOP_MANAGE, OnDesktopManage)
 	ON_COMMAND(ID_TOOLS_CHANGEPASSWORD, OnToolsChangepassword)
 	ON_COMMAND(ID_CONTROLPANEL_AGENTCONFIGS, OnControlpanelAgentconfigs)
+	ON_COMMAND(ID_CONTROLPANEL_NETWORKDISCOVERY, OnControlpanelNetworkdiscovery)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -1673,6 +1677,231 @@ void CConsoleApp::OnControlpanelActions()
       {
          ErrorBox(dwResult, _T("Unable to lock action configuration database:\n%s"));
       }
+   }
+}
+
+
+//
+// Network discovery config
+//
+
+struct ND_CONFIG
+{
+   CString strScript;
+   DWORD dwFlags;
+   BOOL bEnable;
+   BOOL bActive;
+   DWORD dwNumTargets;
+   NXC_ADDR_ENTRY *pTargetList;
+   DWORD dwNumFilters;
+   NXC_ADDR_ENTRY *pFilterList;
+   CString strCommunity;
+};
+
+
+//
+// Read network discovery configuration
+//
+
+static DWORD GetDiscoveryConf(ND_CONFIG *pConf)
+{
+   DWORD i, dwNumVars, dwResult;
+   NXC_SERVER_VARIABLE *pVarList;
+
+   // Defaults
+   pConf->bActive = FALSE;
+   pConf->bEnable = FALSE;
+   pConf->dwFlags = 0;
+   pConf->dwNumFilters = 0;
+   pConf->pFilterList = NULL;
+   pConf->dwNumTargets = 0;
+   pConf->pTargetList = NULL;
+   pConf->strScript = _T("");
+   pConf->strCommunity = _T("public");
+
+   dwResult = NXCGetServerVariables(g_hSession, &pVarList, &dwNumVars);
+   if (dwResult == RCC_SUCCESS)
+   {
+      for(i = 0; i < dwNumVars; i++)
+      {
+         if (!_tcsicmp(pVarList[i].szName, _T("RunNetworkDiscovery")))
+         {
+            pConf->bEnable = _tcstol(pVarList[i].szValue, NULL, 0) ? TRUE : FALSE;
+         }
+         else if (!_tcsicmp(pVarList[i].szName, _T("ActiveNetworkDiscovery")))
+         {
+            pConf->bActive = _tcstol(pVarList[i].szValue, NULL, 0) ? TRUE : FALSE;
+         }
+         else if (!_tcsicmp(pVarList[i].szName, _T("DiscoveryFilterFlags")))
+         {
+            pConf->dwFlags = _tcstoul(pVarList[i].szValue, NULL, 0);
+         }
+         else if (!_tcsicmp(pVarList[i].szName, _T("DiscoveryFilter")))
+         {
+            pConf->strScript = pVarList[i].szValue;
+         }
+         else if (!_tcsicmp(pVarList[i].szName, _T("DefaultCommunityString")))
+         {
+            pConf->strCommunity = pVarList[i].szValue;
+         }
+      }
+      free(pVarList);
+
+      dwResult = NXCGetAddrList(g_hSession, ADDR_LIST_DISCOVERY_TARGETS,
+                                &pConf->dwNumTargets, &pConf->pTargetList);
+      if (dwResult == RCC_SUCCESS)
+      {
+         dwResult = NXCGetAddrList(g_hSession, ADDR_LIST_DISCOVERY_FILTER,
+                                   &pConf->dwNumFilters, &pConf->pFilterList);
+         if (dwResult != RCC_SUCCESS)
+         {
+            safe_free(pConf->pTargetList);
+         }
+      }
+   }
+   return dwResult;
+}
+
+
+//
+// Update network discovery configuration
+//
+
+static DWORD SetDiscoveryConf(ND_CONFIG *pConf)
+{
+   DWORD dwResult;
+   TCHAR szBuffer[256];
+
+   dwResult = NXCSetServerVariable(g_hSession, _T("RunNetworkDiscovery"), pConf->bEnable ? _T("1") : _T("0"));
+   if (dwResult != RCC_SUCCESS)
+      goto cleanup;
+
+   dwResult = NXCSetServerVariable(g_hSession, _T("ActiveNetworkDiscovery"), pConf->bActive ? _T("1") : _T("0"));
+   if (dwResult != RCC_SUCCESS)
+      goto cleanup;
+
+   _stprintf(szBuffer, _T("%d"), pConf->dwFlags);
+   dwResult = NXCSetServerVariable(g_hSession, _T("DiscoveryFilterFlags"), szBuffer);
+   if (dwResult != RCC_SUCCESS)
+      goto cleanup;
+
+   dwResult = NXCSetServerVariable(g_hSession, _T("DiscoveryFilter"), (TCHAR *)((LPCTSTR)pConf->strScript));
+   if (dwResult != RCC_SUCCESS)
+      goto cleanup;
+
+   dwResult = NXCSetServerVariable(g_hSession, _T("DefaultCommunityString"), (TCHAR *)((LPCTSTR)pConf->strCommunity));
+   if (dwResult != RCC_SUCCESS)
+      goto cleanup;
+
+   dwResult = NXCSetAddrList(g_hSession, ADDR_LIST_DISCOVERY_TARGETS,
+                             pConf->dwNumTargets, pConf->pTargetList);
+   if (dwResult != RCC_SUCCESS)
+      goto cleanup;
+
+   dwResult = NXCSetAddrList(g_hSession, ADDR_LIST_DISCOVERY_FILTER,
+                             pConf->dwNumFilters, pConf->pFilterList);
+
+cleanup:
+   return dwResult;
+}
+
+
+//
+// WM_COMMAND::ID_CONTROLPANEL_NETWORKDISCOVERY message handler
+//
+
+void CConsoleApp::OnControlpanelNetworkdiscovery() 
+{
+   CPropertySheet psh(_T("Network Discovery Configuration"), GetMainWnd(), 0);
+   CDiscoveryPropGeneral pgGeneral;
+   CDiscoveryPropAddrList pgAddrList;
+   CDiscoveryPropTargets pgTargets;
+   ND_CONFIG config;
+   DWORD dwResult;
+
+   dwResult = DoRequestArg1(GetDiscoveryConf, &config, _T("Reading network discovery configuration..."));
+   if (dwResult == RCC_SUCCESS)
+   {
+      // "General"
+      pgGeneral.m_nMode = config.bEnable ? (config.bActive ? 2 : 1) : 0;
+      if (config.strScript.CompareNoCase(_T("none")) == 0)
+      {
+         pgGeneral.m_nFilter = 0;
+      }
+      else if (config.strScript.CompareNoCase(_T("auto")) == 0)
+      {
+         pgGeneral.m_nFilter = 2;
+      }
+      else
+      {
+         pgGeneral.m_nFilter = 1;
+         pgGeneral.m_strScript = config.strScript;
+      }
+      pgGeneral.m_bAllowAgent = config.dwFlags & DFF_ALLOW_AGENT ? TRUE : FALSE;
+      pgGeneral.m_bAllowSNMP = config.dwFlags & DFF_ALLOW_SNMP ? TRUE : FALSE;
+      pgGeneral.m_bAllowRange = config.dwFlags & DFF_ALLOW_RANGE ? TRUE : FALSE;
+      pgGeneral.m_strCommunity = config.strCommunity;
+      psh.AddPage(&pgGeneral);
+
+      // "Address Filter"
+      psh.AddPage(&pgAddrList);
+
+      // "Active Discovery Targets"
+      psh.AddPage(&pgTargets);
+
+      if (psh.DoModal() == IDOK)
+      {
+         switch(pgGeneral.m_nMode)
+         {
+            case 0:
+               config.bEnable = FALSE;
+               config.bActive = FALSE;
+               config.dwFlags = 0;
+               config.dwNumFilters = 0;
+               config.dwNumTargets = 0;
+               break;
+            case 1:
+               config.bEnable = TRUE;
+               config.bActive = FALSE;
+               break;
+            case 2:
+               config.bEnable = TRUE;
+               config.bActive = TRUE;
+               break;
+         }
+
+         config.strCommunity = pgGeneral.m_strCommunity;
+         switch(pgGeneral.m_nFilter)
+         {
+            case 0:
+               config.strScript = _T("none");
+               break;
+            case 1:
+               config.strScript = pgGeneral.m_strScript;
+               break;
+            case 2:
+               config.strScript = _T("auto");
+               break;
+         }
+
+         config.dwFlags = 0;
+         if (pgGeneral.m_bAllowAgent)
+            config.dwFlags |= DFF_ALLOW_AGENT;
+         if (pgGeneral.m_bAllowSNMP)
+            config.dwFlags |= DFF_ALLOW_SNMP;
+         if (pgGeneral.m_bAllowRange)
+            config.dwFlags |= DFF_ALLOW_RANGE;
+
+         dwResult = DoRequestArg1(SetDiscoveryConf, &config, _T("Updating network discovery configuration..."));
+         if (dwResult != RCC_SUCCESS)
+         {
+            ErrorBox(dwResult, _T("Cannot update network discovery configuration: %s"));
+         }
+      }
+   }
+   else
+   {
+      ErrorBox(dwResult, _T("Cannot read network discovery configuration: %s"));
    }
 }
 

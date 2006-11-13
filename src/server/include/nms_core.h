@@ -167,8 +167,8 @@ typedef void * HSNMPSESSION;
 
 #define AF_STANDALONE                     0x00000001
 #define AF_USE_EVENT_LOG                  0x00000002
-#define AF_ENABLE_ACCESS_CONTROL          0x00000004
-#define AF_ENABLE_EVENTS_ACCESS_CONTROL   0x00000008
+#define AF_ENABLE_NETWORK_DISCOVERY       0x00000004
+#define AF_ACTIVE_NETWORK_DISCOVERY       0x00000008
 #define AF_LOG_SQL_ERRORS                 0x00000010
 #define AF_DELETE_EMPTY_SUBNETS           0x00000020
 #define AF_ENABLE_SNMP_TRAPD              0x00000040
@@ -193,6 +193,15 @@ typedef void * HSNMPSESSION;
 
 #define IsStandalone() (g_dwFlags & AF_STANDALONE)
 #define ShutdownInProgress()  (g_dwFlags & AF_SHUTDOWN)
+
+
+//
+// Network discovery mode
+//
+
+#define DISCOVERY_DISABLED       0
+#define DISCOVERY_PASSIVE_ONLY   1
+#define DISCOVERY_ACTIVE         2
 
 
 //
@@ -494,6 +503,8 @@ private:
    void SendObjectComments(CSCPMessage *pRequest);
    void UpdateObjectComments(CSCPMessage *pRequest);
    void PushDCIData(CSCPMessage *pRequest);
+   void GetAddrList(CSCPMessage *pRequest);
+   void SetAddrList(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

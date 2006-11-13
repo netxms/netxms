@@ -1,4 +1,29 @@
 *************
+* 53 ==> 54 *
+*************
+
+- New table added:
+	CREATE TABLE address_lists
+	(
+		list_type integer not null, // discovery filter, etc.
+		addr_type integer not null, // 0 - addr/mask, 1 - address range
+		addr1 varchar(15) not null,
+		addr2 varchar(15) not null
+	) TABLE_TYPE;
+	CREATE INDEX idx_address_lists_list_type ON address_lists(list_type);
+- New configuration parameters: ActiveNetworkDiscovery, DiscoveryFilterFlags
+- Delete configuration parameters: EnableAccessControl,
+     EnableEventsAccessControl
+
+
+*************
+* 52 ==> 53 *
+*************
+
+- Indexes for idata tables changed
+
+
+*************
 * 51 ==> 52 *
 *************
 

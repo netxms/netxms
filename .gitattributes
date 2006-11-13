@@ -676,6 +676,12 @@ src/console/win32/DesktopManager.cpp -text
 src/console/win32/DesktopManager.h -text
 src/console/win32/DetailsView.cpp -text
 src/console/win32/DetailsView.h -text
+src/console/win32/DiscoveryPropAddrList.cpp -text
+src/console/win32/DiscoveryPropAddrList.h -text
+src/console/win32/DiscoveryPropGeneral.cpp -text
+src/console/win32/DiscoveryPropGeneral.h -text
+src/console/win32/DiscoveryPropTargets.cpp -text
+src/console/win32/DiscoveryPropTargets.h -text
 src/console/win32/EditActionDlg.cpp -text
 src/console/win32/EditActionDlg.h -text
 src/console/win32/EditBox.cpp -text
@@ -877,6 +883,7 @@ src/console/win32/icons/dctemplate.ico -text
 src/console/win32/icons/deploy.ico -text
 src/console/win32/icons/desktop.ico -text
 src/console/win32/icons/disabled.ico -text
+src/console/win32/icons/discovery.ico -text
 src/console/win32/icons/document.ico -text
 src/console/win32/icons/e-mail.ico -text
 src/console/win32/icons/editor.ico -text

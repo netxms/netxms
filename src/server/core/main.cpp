@@ -198,10 +198,6 @@ static void LoadGlobalConfig()
    g_dwConfigurationPollingInterval = ConfigReadInt("ConfigurationPollingInterval", 3600);
    g_dwRoutingTableUpdateInterval = ConfigReadInt("RoutingTableUpdateInterval", 300);
    g_dwConditionPollingInterval = ConfigReadInt("ConditionPollingInterval", 60);
-   if (ConfigReadInt("EnableAccessControl", 1))
-      g_dwFlags |= AF_ENABLE_ACCESS_CONTROL;
-   if (ConfigReadInt("EnableEventsAccessControl", 1))
-      g_dwFlags |= AF_ENABLE_EVENTS_ACCESS_CONTROL;
    if (ConfigReadInt("DeleteEmptySubnets", 1))
       g_dwFlags |= AF_DELETE_EMPTY_SUBNETS;
    if (ConfigReadInt("EnableSNMPTraps", 1))
@@ -210,6 +206,10 @@ static void LoadGlobalConfig()
       g_dwFlags |= AF_ENABLE_ZONING;
    if (ConfigReadInt("EnableMultipleDBConnections", 1))
       g_dwFlags |= AF_ENABLE_MULTIPLE_DB_CONN;
+   if (ConfigReadInt("RunNetworkDiscovery", 0))
+      g_dwFlags |= AF_ENABLE_NETWORK_DISCOVERY;
+   if (ConfigReadInt("ActiveNetworkDiscovery", 0))
+      g_dwFlags |= AF_ACTIVE_NETWORK_DISCOVERY;
    ConfigReadStr("DataDirectory", g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
    g_dwPingSize = ConfigReadInt("IcmpPingSize", 46);
    g_dwLockTimeout = ConfigReadInt("LockTimeout", 60000);
@@ -808,8 +808,8 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, "Flags: 0x%08X\n", g_dwFlags);
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_STANDALONE));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_USE_EVENT_LOG));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_ACCESS_CONTROL));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_EVENTS_ACCESS_CONTROL));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_NETWORK_DISCOVERY));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ACTIVE_NETWORK_DISCOVERY));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_LOG_SQL_ERRORS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DELETE_EMPTY_SUBNETS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_SNMP_TRAPD));

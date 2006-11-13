@@ -45,6 +45,9 @@ EXTRA_DIST = \
 	DeploymentView.cpp DeploymentView.h \
 	DesktopManager.cpp DesktopManager.h \
 	DetailsView.cpp DetailsView.h \
+	DiscoveryPropAddrList.cpp DiscoveryPropAddrList.h \
+	DiscoveryPropGeneral.cpp DiscoveryPropGeneral.h \
+	DiscoveryPropTargets.cpp DiscoveryPropTargets.h \
 	draw.cpp \
 	EditActionDlg.cpp EditActionDlg.h \
 	EditBox.cpp EditBox.h \

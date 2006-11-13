@@ -65,11 +65,13 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('RunNetworkDiscovery','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('ActiveNetworkDiscovery','0',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('DiscoveryFilterFlags','0',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('DiscoveryFilter','none',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('EnableAdminInterface','1',1,1);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('EnableAccessControl','1',1,0);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('EnableEventsAccessControl','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('EventLogRetentionTime','5184000',1,0); // Default retention time is 60 days == 5184000 seconds
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
@@ -126,8 +128,6 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('CapabilityExpirationTime','604800',1,0);  // In seconds
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('DefaultCommunityString','public',1,0);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('DiscoveryFilter','none',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('LogAllSNMPTraps','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)

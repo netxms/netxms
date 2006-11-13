@@ -237,6 +237,23 @@ enum
 
 
 //
+// Address list types
+//
+
+#define ADDR_LIST_DISCOVERY_TARGETS    1
+#define ADDR_LIST_DISCOVERY_FILTER     2
+
+
+//
+// Discovery filter flags
+//
+
+#define DFF_ALLOW_AGENT                0x0001
+#define DFF_ALLOW_SNMP                 0x0002
+#define DFF_ALLOW_RANGE                0x0004
+
+
+//
 // Events
 //
 
@@ -1497,6 +1514,18 @@ typedef struct
 
 
 //
+// Address entry for address list
+//
+
+typedef struct
+{
+   DWORD dwAddr1;
+   DWORD dwAddr2;
+   DWORD dwType;     // 0 = address/mask, 1 = address range
+} NXC_ADDR_ENTRY;
+
+
+//
 // Functions
 //
 
@@ -1752,6 +1781,11 @@ DWORD LIBNXCL_EXPORTABLE NXCDownloadSubmapBkImage(NXC_SESSION hSession, DWORD dw
 DWORD LIBNXCL_EXPORTABLE NXCGetServerModuleList(NXC_SESSION hSession,
                                                 NXC_SERVER_MODULE_LIST **ppModuleList);
 void LIBNXCL_EXPORTABLE NXCDestroyModuleList(NXC_SERVER_MODULE_LIST *pModuleList);
+
+DWORD LIBNXCL_EXPORTABLE NXCGetAddrList(NXC_SESSION hSession, DWORD dwListType,
+                                        DWORD *pdwAddrCount, NXC_ADDR_ENTRY **ppAddrList);
+DWORD LIBNXCL_EXPORTABLE NXCSetAddrList(NXC_SESSION hSession, DWORD dwListType,
+                                        DWORD dwAddrCount, NXC_ADDR_ENTRY *pAddrList);
 
 DWORD LIBNXCL_EXPORTABLE NXCGetAgentConfigList(NXC_SESSION hSession, DWORD *pdwNumRecs,
                                                NXC_AGENT_CONFIG_INFO **ppList);

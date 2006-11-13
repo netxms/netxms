@@ -78,6 +78,46 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V53 to V54
+//
+
+static BOOL H_UpgradeFromV53(void)
+{
+   static TCHAR m_szBatch[] =
+      _T("CREATE INDEX idx_address_lists_list_type ON address_lists(list_type)\n")
+      _T("DELETE FROM config WHERE var_name='EnableAccessControl'\n")
+      _T("DELETE FROM config WHERE var_name='EnableEventAccessControl'\n")
+      _T("<END>");
+
+   if (!CreateTable(_T("CREATE TABLE address_lists (")
+                    _T("list_type integer not null,")
+	                 _T("addr_type integer not null,")
+	                 _T("addr1 varchar(15) not null,")
+	                 _T("addr2 varchar(15) not null)")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("ActiveNetworkDiscovery"), _T("0"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("DiscoveryFilterFlags"), _T("0"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='54' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V52 to V53
 //
 
@@ -2364,6 +2404,7 @@ static struct
    { 50, H_UpgradeFromV50 },
    { 51, H_UpgradeFromV51 },
    { 52, H_UpgradeFromV52 },
+   { 53, H_UpgradeFromV53 },
    { 0, NULL }
 };
 

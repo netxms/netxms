@@ -226,3 +226,72 @@ void LIBNXCL_EXPORTABLE NXCDestroyModuleList(NXC_SERVER_MODULE_LIST *pModuleList
    safe_free(pModuleList->pModules);
    free(pModuleList);
 }
+
+
+//
+// Get address list
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetAddrList(NXC_SESSION hSession, DWORD dwListType,
+                                        DWORD *pdwAddrCount, NXC_ADDR_ENTRY **ppAddrList)
+{
+   DWORD i, dwRetCode, dwRqId, dwId;
+   CSCPMessage msg, *pResponse;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_GET_ADDR_LIST);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_ADDR_LIST_TYPE, dwListType);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      if (dwRetCode == RCC_SUCCESS)
+      {
+         *pdwAddrCount = pResponse->GetVariableLong(VID_NUM_RECORDS);
+         *ppAddrList = (NXC_ADDR_ENTRY *)malloc(sizeof(NXC_ADDR_ENTRY) * (*pdwAddrCount));
+         for(i = 0, dwId = VID_ADDR_LIST_BASE; i < *pdwAddrCount; i++, dwId += 7)
+         {
+            (*ppAddrList)[i].dwType = pResponse->GetVariableLong(dwId++);
+            (*ppAddrList)[i].dwAddr1 = pResponse->GetVariableLong(dwId++);
+            (*ppAddrList)[i].dwAddr2 = pResponse->GetVariableLong(dwId++);
+         }
+      }
+      delete pResponse;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+   return dwRetCode;
+}
+
+
+//
+// Set address list
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSetAddrList(NXC_SESSION hSession, DWORD dwListType,
+                                        DWORD dwAddrCount, NXC_ADDR_ENTRY *pAddrList)
+{
+   DWORD i, dwRqId, dwId;
+   CSCPMessage msg;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_SET_ADDR_LIST);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_ADDR_LIST_TYPE, dwListType);
+   for(i = 0, dwId = VID_ADDR_LIST_BASE; i < dwAddrCount; i++, dwId += 7)
+   {
+      msg.SetVariable(dwId++, pAddrList[i].dwType);
+      msg.SetVariable(dwId++, pAddrList[i].dwAddr1);
+      msg.SetVariable(dwId++, pAddrList[i].dwAddr2);
+   }  
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+   
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}

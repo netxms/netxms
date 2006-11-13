@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.244 2006-11-10 16:53:34 victor Exp $ */
+/* $Id: session.cpp,v 1.245 2006-11-13 23:46:58 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -993,6 +993,12 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_PUSH_DCI_DATA:
             PushDCIData(pMsg);
+            break;
+         case CMD_GET_ADDR_LIST:
+            GetAddrList(pMsg);
+            break;
+         case CMD_SET_ADDR_LIST:
+            SetAddrList(pMsg);
             break;
          default:
             // Pass message to loaded modules
@@ -7765,6 +7771,108 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
    else
    {
       msg.SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
+   }
+
+   SendMessage(&msg);
+}
+
+
+//
+// Get address list
+//
+
+void ClientSession::GetAddrList(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR szQuery[256];
+   DWORD i, dwNumRec, dwId;
+   DB_RESULT hResult;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      _stprintf(szQuery, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=%d"),
+                pRequest->GetVariableLong(VID_ADDR_LIST_TYPE));
+      hResult = DBSelect(g_hCoreDB, szQuery);
+      if (hResult != NULL)
+      {
+         dwNumRec = DBGetNumRows(hResult);
+         msg.SetVariable(VID_NUM_RECORDS, dwNumRec);
+         for(i = 0, dwId = VID_ADDR_LIST_BASE; i < dwNumRec; i++, dwId += 7)
+         {
+            msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 0));
+            msg.SetVariable(dwId++, DBGetFieldIPAddr(hResult, i, 1));
+            msg.SetVariable(dwId++, DBGetFieldIPAddr(hResult, i, 2));
+         }
+         DBFreeResult(hResult);
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   SendMessage(&msg);
+}
+
+
+//
+// Set address list
+//
+
+void ClientSession::SetAddrList(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD i, dwId, dwNumRec, dwListType;
+   TCHAR szQuery[256], szIpAddr1[24], szIpAddr2[24];
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      dwListType = pRequest->GetVariableLong(VID_ADDR_LIST_TYPE);
+      _stprintf(szQuery, _T("DELETE FROM address_lists WHERE list_type=%d"), dwListType);
+      DBBegin(g_hCoreDB);
+      if (DBQuery(g_hCoreDB, szQuery))
+      {
+         dwNumRec = pRequest->GetVariableLong(VID_NUM_RECORDS);
+         for(i = 0, dwId = VID_ADDR_LIST_BASE; i < dwNumRec; i++, dwId += 7)
+         {
+            _stprintf(szQuery, _T("INSERT INTO address_lists (list_type,addr_type,addr1,addr2) VALUES (%d,%d,'%s','%s')"),
+                      dwListType, pRequest->GetVariableLong(dwId++),
+                      IpToStr(pRequest->GetVariableLong(dwId++), szIpAddr1),
+                      IpToStr(pRequest->GetVariableLong(dwId++), szIpAddr2));
+            if (!DBQuery(g_hCoreDB, szQuery))
+               break;
+         }
+
+         if (i == dwNumRec)
+         {
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            DBRollback(g_hCoreDB);
+            msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+         }
+      }
+      else
+      {
+         DBRollback(g_hCoreDB);
+         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    SendMessage(&msg);

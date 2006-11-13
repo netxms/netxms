@@ -102,6 +102,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SCRIPT_LIBRARY));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_MODULE));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_CONFIGS));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_DISCOVERY));
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_NORMAL);
 
    // Populate list with items
@@ -118,6 +119,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    AddItem(_T("Modules"), 10, ID_CONTROLPANEL_MODULES);
    //AddItem(_T("View Builder"), 10, ID_CONTROLPANEL_VIEWBUILDER);
    AddItem(_T("Agent Configurations"), 11, ID_CONTROLPANEL_AGENTCONFIGS);
+   AddItem(_T("Network Discovery"), 12, ID_CONTROLPANEL_NETWORKDISCOVERY);
 
    m_wndListCtrl.SortItems(CompareItems, (DWORD)&m_wndListCtrl);
 

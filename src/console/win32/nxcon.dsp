@@ -1329,6 +1329,10 @@ SOURCE=.\icons\disabled.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\discovery.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\document.ico
 # End Source File
 # Begin Source File

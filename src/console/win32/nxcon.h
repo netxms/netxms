@@ -247,6 +247,7 @@ public:
 	afx_msg void OnDesktopManage();
 	afx_msg void OnToolsChangepassword();
 	afx_msg void OnControlpanelAgentconfigs();
+	afx_msg void OnControlpanelNetworkdiscovery();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

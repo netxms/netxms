@@ -427,6 +427,8 @@ typedef struct
 #define CMD_UPDATE_OBJECT_COMMENTS  0x00B9
 #define CMD_ENABLE_AGENT_TRAPS      0x00BA
 #define CMD_PUSH_DCI_DATA           0x00BB
+#define CMD_GET_ADDR_LIST           0x00BC
+#define CMD_SET_ADDR_LIST           0x00BD
 
 
 //
@@ -684,6 +686,7 @@ typedef struct
 #define VID_ALL_THRESHOLDS          ((DWORD)249)
 #define VID_CONFIRMATION_TEXT       ((DWORD)250)
 #define VID_FAILED_DCI_INDEX        ((DWORD)251)
+#define VID_ADDR_LIST_TYPE          ((DWORD)252)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -788,6 +791,9 @@ typedef struct
 
 // Base value for DCI push data
 #define VID_PUSH_DCI_DATA_BASE      ((DWORD)0x10000000)
+
+// Base value for address list
+#define VID_ADDR_LIST_BASE          ((DWORD)0x10000000)
 
 
 //
