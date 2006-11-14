@@ -105,6 +105,10 @@ static BOOL H_UpgradeFromV53(void)
       if (!g_bIgnoreErrors)
          return FALSE;
 
+   if (!CreateConfigParam(_T("ActiveDiscoveryInterval"), _T("7200"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
    if (!CreateConfigParam(_T("DiscoveryFilterFlags"), _T("0"), 1, 0))
       if (!g_bIgnoreErrors)
          return FALSE;

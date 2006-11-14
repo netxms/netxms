@@ -1800,6 +1800,10 @@ static DWORD SetDiscoveryConf(ND_CONFIG *pConf)
 
    dwResult = NXCSetAddrList(g_hSession, ADDR_LIST_DISCOVERY_FILTER,
                              pConf->dwNumFilters, pConf->pFilterList);
+   if (dwResult != RCC_SUCCESS)
+      goto cleanup;
+
+   dwResult = NXCResetServerComponent(g_hSession, SRV_COMPONENT_DISCOVERY_MGR);
 
 cleanup:
    return dwResult;
@@ -1844,9 +1848,13 @@ void CConsoleApp::OnControlpanelNetworkdiscovery()
       psh.AddPage(&pgGeneral);
 
       // "Address Filter"
+      pgAddrList.m_dwAddrCount = config.dwNumFilters;
+      pgAddrList.m_pAddrList = config.pFilterList;
       psh.AddPage(&pgAddrList);
 
       // "Active Discovery Targets"
+      pgTargets.m_dwAddrCount = config.dwNumTargets;
+      pgTargets.m_pAddrList = config.pTargetList;
       psh.AddPage(&pgTargets);
 
       if (psh.DoModal() == IDOK)
@@ -1891,6 +1899,12 @@ void CConsoleApp::OnControlpanelNetworkdiscovery()
             config.dwFlags |= DFF_ALLOW_SNMP;
          if (pgGeneral.m_bAllowRange)
             config.dwFlags |= DFF_ALLOW_RANGE;
+
+         config.dwNumFilters = pgAddrList.m_dwAddrCount;
+         config.pFilterList = pgAddrList.m_pAddrList;
+
+         config.dwNumTargets = pgTargets.m_dwAddrCount;
+         config.pTargetList = pgTargets.m_pAddrList;
 
          dwResult = DoRequestArg1(SetDiscoveryConf, &config, _T("Updating network discovery configuration..."));
          if (dwResult != RCC_SUCCESS)

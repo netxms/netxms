@@ -610,6 +610,8 @@ src/console/win32/AddDCIDlg.cpp -text
 src/console/win32/AddDCIDlg.h -text
 src/console/win32/AddrChangeDlg.cpp -text
 src/console/win32/AddrChangeDlg.h -text
+src/console/win32/AddrEntryDlg.cpp -text
+src/console/win32/AddrEntryDlg.h -text
 src/console/win32/AdvSplitter.cpp -text
 src/console/win32/AdvSplitter.h -text
 src/console/win32/AgentCfgDlg.cpp -text

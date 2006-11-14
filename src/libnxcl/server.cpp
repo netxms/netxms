@@ -285,12 +285,33 @@ DWORD LIBNXCL_EXPORTABLE NXCSetAddrList(NXC_SESSION hSession, DWORD dwListType,
    msg.SetCode(CMD_SET_ADDR_LIST);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_ADDR_LIST_TYPE, dwListType);
+   msg.SetVariable(VID_NUM_RECORDS, dwAddrCount);
    for(i = 0, dwId = VID_ADDR_LIST_BASE; i < dwAddrCount; i++, dwId += 7)
    {
       msg.SetVariable(dwId++, pAddrList[i].dwType);
       msg.SetVariable(dwId++, pAddrList[i].dwAddr1);
       msg.SetVariable(dwId++, pAddrList[i].dwAddr2);
    }  
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+   
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
+// Reset server's component
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCResetServerComponent(NXC_SESSION hSession, DWORD dwComponent)
+{
+   DWORD dwRqId;
+   CSCPMessage msg;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_RESET_COMPONENT);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_COMPONENT_ID, dwComponent);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);

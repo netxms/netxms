@@ -2754,13 +2754,13 @@ BEGIN
     CONTROL         "Automatically generated script with following rules",
                     IDC_RADIO_AUTO,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,
                     13,124,171,10
-    CONTROL         "Allow nodes with &NetXMS agent",IDC_CHECK_AGENT,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,26,136,117,10
-    CONTROL         "Allow nodes with &SNMP support",IDC_CHECK_SNMP,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,26,148,117,10
-    CONTROL         "Allow nodes within given &range or subnet",
+    CONTROL         "Allow only nodes with &NetXMS agent",IDC_CHECK_AGENT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,26,136,132,10
+    CONTROL         "Allow only nodes with &SNMP support",IDC_CHECK_SNMP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,26,148,131,10
+    CONTROL         "Allow only nodes within given &range or subnet",
                     IDC_CHECK_RANGE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,26,
-                    160,145,10
+                    160,159,10
     GROUPBOX        "Other settings",IDC_STATIC,7,179,220,44
     LTEXT           "Default SNMP community string",IDC_STATIC,13,191,100,8
     EDITTEXT        IDC_EDIT_COMMUNITY,13,201,208,14,ES_AUTOHSCROLL
@@ -2772,8 +2772,9 @@ CAPTION "Active Discovery Targets"
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "List1",IDC_LIST_TARGETS,"SysListView32",LVS_REPORT | 
-                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_TABSTOP,7,18,
-                    220,186,WS_EX_CLIENTEDGE
+                    LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | 
+                    LVS_NOSORTHEADER | WS_TABSTOP,7,18,220,186,
+                    WS_EX_CLIENTEDGE
     PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,122,208,50,14
     PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,177,208,50,14
     LTEXT           "Subnets and address ranges to be scanned",IDC_STATIC,7,
@@ -2786,12 +2787,32 @@ CAPTION "Address Filters"
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "List1",IDC_LIST_SUBNETS,"SysListView32",LVS_REPORT | 
-                    LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_TABSTOP,7,18,
-                    220,186,WS_EX_CLIENTEDGE
+                    LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | 
+                    LVS_NOSORTHEADER | WS_TABSTOP,7,18,220,186,
+                    WS_EX_CLIENTEDGE
     PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,122,208,50,14
     PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,177,208,50,14
     LTEXT           "Subnets and address ranges for ""match address"" filter",
                     IDC_STATIC,7,7,170,8
+END
+
+IDD_ADDR_ENTRY DIALOG DISCARDABLE  0, 0, 173, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Address Entry"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&Subnet",IDC_RADIO_SUBNET,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,7,7,39,10
+    CONTROL         "Address &Range",IDC_RADIO_RANGE,"Button",
+                    BS_AUTORADIOBUTTON,7,18,65,10
+    CONTROL         "IPAddress1",IDC_IPADDR1,"SysIPAddress32",WS_TABSTOP,7,
+                    43,100,15
+    CONTROL         "IPAddress2",IDC_IPADDR2,"SysIPAddress32",WS_TABSTOP,7,
+                    73,100,15
+    DEFPUSHBUTTON   "OK",IDOK,116,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,116,24,50,14
+    LTEXT           "Address",IDC_STATIC_ADDR,7,33,26,8
+    LTEXT           "Mask",IDC_STATIC_MASK,7,64,18,8
 END
 
 
@@ -3428,6 +3449,14 @@ BEGIN
         RIGHTMARGIN, 227
         TOPMARGIN, 7
         BOTTOMMARGIN, 223
+    END
+
+    IDD_ADDR_ENTRY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 166
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
     END
 END
 #endif    // APSTUDIO_INVOKED

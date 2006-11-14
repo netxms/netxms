@@ -74,26 +74,6 @@ void DbgTestRWLock(RWLOCK hLock, TCHAR *szName, CONSOLE_CTX pCtx)
 
 
 //
-// Debug printf - write text to stdout if in standalone mode
-// and specific application flag(s) is set
-//
-
-void DbgPrintf(DWORD dwFlags, TCHAR *szFormat, ...)
-{
-   va_list args;
-   TCHAR szBuffer[1024];
-
-   if (!(g_dwFlags & dwFlags))
-      return;     // Required application flag(s) not set
-
-   va_start(args, szFormat);
-   _vsntprintf(szBuffer, 1024, szFormat, args);
-   va_end(args);
-   WriteLog(MSG_DEBUG, EVENTLOG_INFORMATION_TYPE, _T("s"), szBuffer);
-}
-
-
-//
 // Print message to console, either local or remote
 //
 

@@ -429,6 +429,7 @@ typedef struct
 #define CMD_PUSH_DCI_DATA           0x00BB
 #define CMD_GET_ADDR_LIST           0x00BC
 #define CMD_SET_ADDR_LIST           0x00BD
+#define CMD_RESET_COMPONENT         0x00BE
 
 
 //
@@ -687,6 +688,7 @@ typedef struct
 #define VID_CONFIRMATION_TEXT       ((DWORD)250)
 #define VID_FAILED_DCI_INDEX        ((DWORD)251)
 #define VID_ADDR_LIST_TYPE          ((DWORD)252)
+#define VID_COMPONENT_ID            ((DWORD)253)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

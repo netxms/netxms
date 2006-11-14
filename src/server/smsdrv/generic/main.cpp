@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.6 2006-11-14 14:51:40 alk Exp $ */
+/* $Id: main.cpp,v 1.7 2006-11-14 19:49:40 victor Exp $ */
 
 #include "main.h"
 
@@ -43,7 +43,7 @@ extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 		int tmp = atoi(p);
 		if (tmp != 0)
 		{
-			portSpeed = t;
+			portSpeed = tmp;
 			
 			if ((p = strchr(p, ',')) != NULL)
 			{
@@ -75,8 +75,8 @@ extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 						{
 							*p = 0; p++;
 							
-							if (*p == 2)
-							{
+							if (*p == '2')
+                     {
 								stopBits = TWOSTOPBITS;
 							}
 						}
@@ -98,13 +98,13 @@ extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 		p = "NONE";
 		break;
 	}
-	DbgPrintf(AF_DEBUG_ALL, "SMS init: port={%s}, speed=%d, data=%d, parity=%s, stop=%d",
-		portName, portSpeed, dataBits, p, stopBits == TWOSTOPBITS ? "2" : "1");
+	DbgPrintf(AF_DEBUG_MISC, "SMS init: port={%s}, speed=%d, data=%d, parity=%s, stop=%d",
+		portName, portSpeed, dataBits, p, stopBits == TWOSTOPBITS ? 2 : 1);
 	
 	bRet = m_serial.Open(pszInitArgs);
 	if (bRet)
 	{
-		DbgPrintf(AF_DEBUG_ALL, "SMS: port opened");
+		DbgPrintf(AF_DEBUG_MISC, "SMS: port opened");
 	   	m_serial.SetTimeout(1000);
 		m_serial.Set(portSpeed, dataBits, parity, stopBits);
 
@@ -114,13 +114,13 @@ extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 		char szTmp[128];
 		m_serial.Write("ATZ\r\n", 5); // init modem && read user prefs
 		m_serial.Read(szTmp, 128); // read OK
-		DbgPrintf(AF_DEBUG_ALL, "SMS init: ATZ sent, got {%s}", szTmp);
+		DbgPrintf(AF_DEBUG_MISC, "SMS init: ATZ sent, got {%s}", szTmp);
 		m_serial.Write("ATE0\r\n", 6); // disable echo
 		m_serial.Read(szTmp, 128); // read OK
-		DbgPrintf(AF_DEBUG_ALL, "SMS init: ATE0 sent, got {%s}", szTmp);
+		DbgPrintf(AF_DEBUG_MISC, "SMS init: ATE0 sent, got {%s}", szTmp);
 		m_serial.Write("ATI3\r\n", 6); // read vendor id
 		m_serial.Read(szTmp, 128); // read version
-		DbgPrintf(AF_DEBUG_ALL, "SMS init: ATI3 sent, got {%s}", szTmp);
+		DbgPrintf(AF_DEBUG_MISC, "SMS init: ATI3 sent, got {%s}", szTmp);
 
 		if (strcasecmp(szTmp, "ERROR") != 0)
 		{
@@ -155,19 +155,19 @@ extern "C" BOOL EXPORT SMSDriverSend(TCHAR *pszPhoneNumber, TCHAR *pszText)
 
 		m_serial.Write("ATZ\r\n", 5); // init modem && read user prefs
 		m_serial.Read(szTmp, 128); // read OK
-		DbgPrintf(AF_DEBUG_ALL, "SMS send: ATZ sent, got {%s}", szTmp);
+		DbgPrintf(AF_DEBUG_MISC, "SMS send: ATZ sent, got {%s}", szTmp);
 		m_serial.Write("ATE0\r\n", 5); // disable echo
 		m_serial.Read(szTmp, 128); // read OK
-		DbgPrintf(AF_DEBUG_ALL, "SMS send: ATE0 sent, got {%s}", szTmp);
+		DbgPrintf(AF_DEBUG_MISC, "SMS send: ATE0 sent, got {%s}", szTmp);
 		m_serial.Write("AT+CMGF=1\r\n", 11); // =1 - text message
 		m_serial.Read(szTmp, 128); // read OK
-		DbgPrintf(AF_DEBUG_ALL, "SMS send: AT+CMGF=1 sent, got {%s}", szTmp);
+		DbgPrintf(AF_DEBUG_MISC, "SMS send: AT+CMGF=1 sent, got {%s}", szTmp);
 		snprintf(szTmp, sizeof(szTmp), "AT+CMGS=\"%s\"\r\n", pszPhoneNumber);
 		m_serial.Write(szTmp, strlen(szTmp)); // set number
 		snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", pszText, 0x1A);
 		m_serial.Write(szTmp, strlen(szTmp)); // send text, end with ^Z
 		m_serial.Read(szTmp, 128); // read +CMGS:ref_num
-		DbgPrintf(AF_DEBUG_ALL, "SMS send: AT+CMGS + message body sent, got {%s}", szTmp);
+		DbgPrintf(AF_DEBUG_MISC, "SMS send: AT+CMGS + message body sent, got {%s}", szTmp);
 	}
 
 	return true;
@@ -199,6 +199,13 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2006/11/14 14:51:40  alk
+init parameter parsing added, new format: port,speed,dataBits,parity,stopBits
+everything is optional - defaults will be used (/dev/ttyS0 9600 8n1)
+example: /dev/ttyS0,9600,8,n,1
+example: /dev/ttyS0,2400
+example: COM1:,115200
+
 Revision 1.5  2006/03/23 07:53:16  victor
 Added DLL entry point
 

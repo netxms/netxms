@@ -72,7 +72,6 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg);
 // Global variables
 //
 
-DWORD NXCORE_EXPORTABLE g_dwFlags = AF_USE_EVENT_LOG;
 char NXCORE_EXPORTABLE g_szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
 char NXCORE_EXPORTABLE g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
 #ifndef _WIN32

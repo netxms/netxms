@@ -11,7 +11,8 @@
 		addr2 varchar(15) not null
 	) TABLE_TYPE;
 	CREATE INDEX idx_address_lists_list_type ON address_lists(list_type);
-- New configuration parameters: ActiveNetworkDiscovery, DiscoveryFilterFlags
+- New configuration parameters: ActiveNetworkDiscovery, DiscoveryFilterFlags,
+     ActiveDiscoveryInterval
 - Delete configuration parameters: EnableAccessControl,
      EnableEventsAccessControl
 

@@ -337,3 +337,23 @@ void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, char *format, ...)
    while(--numStrings >= 0)
       free(strings[numStrings]);
 }
+
+
+//
+// Debug printf - write text to stdout if in standalone mode
+// and specific application flag(s) is set
+//
+
+void LIBNXSRV_EXPORTABLE DbgPrintf(DWORD dwFlags, TCHAR *szFormat, ...)
+{
+   va_list args;
+   TCHAR szBuffer[1024];
+
+   if (!(g_dwFlags & dwFlags))
+      return;     // Required application flag(s) not set
+
+   va_start(args, szFormat);
+   _vsntprintf(szBuffer, 1024, szFormat, args);
+   va_end(args);
+   WriteLog(MSG_DEBUG, EVENTLOG_INFORMATION_TYPE, _T("s"), szBuffer);
+}

@@ -380,6 +380,115 @@ static THREAD_RESULT THREAD_CALL ConditionPoller(void *arg)
 
 
 //
+// Check address range
+//
+
+static void CheckRange(int nType, DWORD dwAddr1, DWORD dwAddr2)
+{
+   DWORD dwAddr, dwFrom, dwTo;
+   TCHAR szIpAddr1[16], szIpAddr2[16];
+
+   if (nType == 0)
+   {
+      dwFrom = (dwAddr1 & dwAddr2) + 1;
+      dwTo = dwFrom | ~dwAddr2 - 1;
+   }
+   else
+   {
+      dwFrom = dwAddr1;
+      dwTo = dwAddr2;
+   }
+   DbgPrintf(AF_DEBUG_DISCOVERY, _T("Starting active discovery check on range %s - %s"),
+             IpToStr(dwFrom, szIpAddr1), IpToStr(dwTo, szIpAddr2));
+
+   for(dwAddr = dwFrom; dwAddr <= dwTo; dwAddr++)
+   {
+      if (IcmpPing(htonl(dwAddr), 3, 2000, NULL, g_dwPingSize) == ICMP_SUCCESS)
+      {
+         DbgPrintf(AF_DEBUG_DISCOVERY,
+                   _T("Active discovery - node %s responds to ICMP ping"),
+                   IpToStr(dwAddr, szIpAddr1));
+         if (FindNodeByIP(dwAddr) == NULL)
+         {
+            Subnet *pSubnet;
+
+            pSubnet = FindSubnetForNode(dwAddr);
+            if (pSubnet != NULL)
+            {
+               if ((pSubnet->IpAddr() != dwAddr) && 
+                   !IsBroadcastAddress(dwAddr, pSubnet->IpNetMask()))
+               {
+                  NEW_NODE *pInfo;
+
+                  pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+                  pInfo->dwIpAddr = dwAddr;
+                  pInfo->dwNetMask = pSubnet->IpNetMask();
+                  g_nodePollerQueue.Put(pInfo);
+               }
+            }
+            else
+            {
+               NEW_NODE *pInfo;
+
+               pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+               pInfo->dwIpAddr = dwAddr;
+               pInfo->dwNetMask = 0;
+               g_nodePollerQueue.Put(pInfo);
+            }
+         }
+      }
+   }
+
+   DbgPrintf(AF_DEBUG_DISCOVERY, _T("Finished active discovery check on range %s - %s"),
+             IpToStr(dwFrom, szIpAddr1), IpToStr(dwTo, szIpAddr2));
+}
+
+
+//
+// Active discovery poll thread
+//
+
+static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
+{
+   int i, nRows, nInterval;
+   DB_RESULT hResult;
+
+   // Initialize state info
+   m_pPollerState[(long)arg].iType = 'A';
+   SetPollerState((long)arg, "init");
+
+   nInterval = ConfigReadInt(_T("ActiveDiscoveryInterval"), 7200);
+
+   // Main loop
+   while(!ShutdownInProgress())
+   {
+      SetPollerState((long)arg, "wait");
+      if (SleepAndCheckForShutdown(nInterval))
+         break;
+
+      if (!(g_dwFlags & AF_ACTIVE_NETWORK_DISCOVERY))
+         continue;
+
+      SetPollerState((long)arg, "check");
+      hResult = DBSelect(g_hCoreDB, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=1"));
+      if (hResult != NULL)
+      {
+         nRows = DBGetNumRows(hResult);
+         for(i = 0; i < nRows; i++)
+         {
+            CheckRange(DBGetFieldLong(hResult, i, 0),
+                       DBGetFieldIPAddr(hResult, i, 1),
+                       DBGetFieldIPAddr(hResult, i, 2));
+         }
+         DBFreeResult(hResult);
+      }
+   }
+   SetPollerState((long)arg, "finished");
+   return THREAD_OK;
+}
+
+
+//
 // Node and condition queuing thread
 //
 
@@ -391,20 +500,15 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    int i, iCounter, iNumStatusPollers, iNumConfigPollers;
    int nIndex, iNumDiscoveryPollers, iNumRoutePollers;
    int iNumConditionPollers;
-   BOOL bDoNetworkDiscovery;
 
    // Read configuration
    iNumConditionPollers = ConfigReadInt("NumberOfConditionPollers", 10);
    iNumStatusPollers = ConfigReadInt("NumberOfStatusPollers", 10);
    iNumConfigPollers = ConfigReadInt("NumberOfConfigurationPollers", 4);
    iNumRoutePollers = ConfigReadInt("NumberOfRoutingTablePollers", 5);
-   bDoNetworkDiscovery = ConfigReadInt("RunNetworkDiscovery", 1);
-   if (bDoNetworkDiscovery)
-      iNumDiscoveryPollers = ConfigReadInt("NumberOfDiscoveryPollers", 1);
-   else
-      iNumDiscoveryPollers = 0;
+   iNumDiscoveryPollers = ConfigReadInt("NumberOfDiscoveryPollers", 1);
    m_iNumPollers = iNumStatusPollers + iNumConfigPollers + 
-                   iNumDiscoveryPollers + iNumRoutePollers + iNumConditionPollers;
+                   iNumDiscoveryPollers + iNumRoutePollers + iNumConditionPollers + 1;
    DbgPrintf(AF_DEBUG_MISC, "PollManager: %d pollers to start", m_iNumPollers);
 
    // Prepare static data
@@ -429,6 +533,9 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    // Start condition pollers
    for(i = 0; i < iNumConditionPollers; i++, nIndex++)
       ThreadCreate(ConditionPoller, 0, CAST_TO_POINTER(nIndex, void *));
+
+   // Start active discovery poller
+   ThreadCreate(ActiveDiscoveryPoller, 0, CAST_TO_POINTER(nIndex, void *));
 
    dwWatchdogId = WatchdogAddThread("Poll Manager", 60);
    iCounter = 0;
@@ -471,7 +578,7 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
             pNode->LockForRoutePoll();
             g_routePollQueue.Put(pNode);
          }
-         if (bDoNetworkDiscovery && pNode->ReadyForDiscoveryPoll())
+         if (pNode->ReadyForDiscoveryPoll())
          {
             pNode->IncRefCount();
             pNode->LockForDiscoveryPoll();
@@ -513,4 +620,30 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 
    DbgPrintf(AF_DEBUG_MISC, "PollManager: main thread terminated");
    return THREAD_OK;
+}
+
+
+//
+// Reset discovery poller after configuration change
+//
+
+void ResetDiscoveryPoller(void)
+{
+   Node *pNode;
+   NEW_NODE *pInfo;
+
+   // Clear queues
+   while((pNode = (Node *)g_discoveryPollQueue.Get()) != NULL)
+   {
+      if (pNode != INVALID_POINTER_VALUE)
+      {
+         pNode->SetDiscoveryPollTimeStamp();
+         pNode->DecRefCount();
+      }
+   }
+   while((pInfo = (NEW_NODE *)g_nodePollerQueue.Get()) != NULL)
+   {
+      if (pInfo != INVALID_POINTER_VALUE)
+         free(pInfo);
+   }
 }

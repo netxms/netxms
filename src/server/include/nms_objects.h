@@ -675,7 +675,8 @@ inline BOOL Node::ReadyForConfigurationPoll(void)
 
 inline BOOL Node::ReadyForDiscoveryPoll(void) 
 { 
-   return ((m_iStatus != STATUS_UNMANAGED) &&
+   return ((g_dwFlags & AF_ENABLE_NETWORK_DISCOVERY) &&
+           (m_iStatus != STATUS_UNMANAGED) &&
            (!(m_dwDynamicFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
            (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
            ((DWORD)time(NULL) - (DWORD)m_tLastDiscoveryPoll > g_dwDiscoveryPollingInterval))

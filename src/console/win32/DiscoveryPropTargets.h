@@ -16,6 +16,8 @@ class CDiscoveryPropTargets : public CPropertyPage
 
 // Construction
 public:
+	NXC_ADDR_ENTRY * m_pAddrList;
+	DWORD m_dwAddrCount;
 	CDiscoveryPropTargets();
 	~CDiscoveryPropTargets();
 
@@ -29,15 +31,21 @@ public:
 // Overrides
 	// ClassWizard generate virtual function overrides
 	//{{AFX_VIRTUAL(CDiscoveryPropTargets)
+	public:
+	virtual void OnOK();
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
 
 // Implementation
 protected:
-	// Generated message map functions
+	void AddRecordToList(int nItem, NXC_ADDR_ENTRY *pAddr);
+   // Generated message map functions
 	//{{AFX_MSG(CDiscoveryPropTargets)
-		// NOTE: the ClassWizard will add member functions here
+	virtual BOOL OnInitDialog();
+	afx_msg void OnDestroy();
+	afx_msg void OnButtonAdd();
+	afx_msg void OnButtonDelete();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

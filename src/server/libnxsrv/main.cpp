@@ -25,6 +25,13 @@
 
 
 //
+// Global variables
+//
+
+DWORD LIBNXSRV_EXPORTABLE g_dwFlags = AF_USE_EVENT_LOG;
+
+
+//
 // Agent result codes
 //
 

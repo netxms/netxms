@@ -184,6 +184,10 @@ SOURCE=.\AddrChangeDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\AddrEntryDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\AdvSplitter.cpp
 # End Source File
 # Begin Source File
@@ -714,6 +718,10 @@ SOURCE=.\AddDCIDlg.h
 # Begin Source File
 
 SOURCE=.\AddrChangeDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\AddrEntryDlg.h
 # End Source File
 # Begin Source File
 

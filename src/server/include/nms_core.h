@@ -162,40 +162,6 @@ typedef void * HSNMPSESSION;
 
 
 //
-// Application flags
-//
-
-#define AF_STANDALONE                     0x00000001
-#define AF_USE_EVENT_LOG                  0x00000002
-#define AF_ENABLE_NETWORK_DISCOVERY       0x00000004
-#define AF_ACTIVE_NETWORK_DISCOVERY       0x00000008
-#define AF_LOG_SQL_ERRORS                 0x00000010
-#define AF_DELETE_EMPTY_SUBNETS           0x00000020
-#define AF_ENABLE_SNMP_TRAPD              0x00000040
-#define AF_ENABLE_ZONING                  0x00000080
-#define AF_DEBUG_EVENTS                   0x00000100
-#define AF_DEBUG_CSCP                     0x00000200
-#define AF_DEBUG_DISCOVERY                0x00000400
-#define AF_DEBUG_DC                       0x00000800
-#define AF_DEBUG_HOUSEKEEPER              0x00001000
-#define AF_DEBUG_LOCKS                    0x00002000
-#define AF_DEBUG_ACTIONS                  0x00004000
-#define AF_DEBUG_MISC                     0x00008000
-#define AF_DEBUG_SQL                      0x00010000
-#define AF_DEBUG_SNMP                     0x00020000
-#define AF_DEBUG_OBJECTS                  0x00040000
-#define AF_DEBUG_ALL                      0x0006FF00
-#define AF_DB_LOCKED                      0x01000000
-#define AF_ENABLE_MULTIPLE_DB_CONN        0x02000000
-#define AF_DB_CONNECTION_LOST             0x04000000
-#define AF_SERVER_INITIALIZED             0x40000000
-#define AF_SHUTDOWN                       0x80000000
-
-#define IsStandalone() (g_dwFlags & AF_STANDALONE)
-#define ShutdownInProgress()  (g_dwFlags & AF_SHUTDOWN)
-
-
-//
 // Network discovery mode
 //
 
@@ -505,6 +471,7 @@ private:
    void PushDCIData(CSCPMessage *pRequest);
    void GetAddrList(CSCPMessage *pRequest);
    void SetAddrList(CSCPMessage *pRequest);
+   void ResetComponent(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -670,7 +637,6 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *);
 
 void DbgTestMutex(MUTEX hMutex, TCHAR *szName, CONSOLE_CTX pCtx);
 void DbgTestRWLock(RWLOCK hLock, TCHAR *szName, CONSOLE_CTX pCtx);
-void DbgPrintf(DWORD dwFlags, TCHAR *szFormat, ...);
 void DumpSessions(CONSOLE_CTX pCtx);
 void ShowPollerState(CONSOLE_CTX pCtx);
 void SetPollerInfo(int nIdx, char *pszMsg);
@@ -683,7 +649,6 @@ void DumpProcess(void);
 // Global variables
 //
 
-extern DWORD NXCORE_EXPORTABLE g_dwFlags;
 extern char NXCORE_EXPORTABLE g_szConfigFile[];
 extern char NXCORE_EXPORTABLE g_szLogFile[];
 #ifndef _WIN32

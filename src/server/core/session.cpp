@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.245 2006-11-13 23:46:58 victor Exp $ */
+/* $Id: session.cpp,v 1.246 2006-11-14 19:49:37 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -46,6 +46,7 @@
 //
 
 void UnregisterSession(DWORD dwIndex);
+void ResetDiscoveryPoller(void);
 
 
 //
@@ -999,6 +1000,9 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_SET_ADDR_LIST:
             SetAddrList(pMsg);
+            break;
+         case CMD_RESET_COMPONENT:
+            ResetComponent(pMsg);
             break;
          default:
             // Pass message to loaded modules
@@ -7844,18 +7848,19 @@ void ClientSession::SetAddrList(CSCPMessage *pRequest)
       if (DBQuery(g_hCoreDB, szQuery))
       {
          dwNumRec = pRequest->GetVariableLong(VID_NUM_RECORDS);
-         for(i = 0, dwId = VID_ADDR_LIST_BASE; i < dwNumRec; i++, dwId += 7)
+         for(i = 0, dwId = VID_ADDR_LIST_BASE; i < dwNumRec; i++, dwId += 10)
          {
             _stprintf(szQuery, _T("INSERT INTO address_lists (list_type,addr_type,addr1,addr2) VALUES (%d,%d,'%s','%s')"),
-                      dwListType, pRequest->GetVariableLong(dwId++),
-                      IpToStr(pRequest->GetVariableLong(dwId++), szIpAddr1),
-                      IpToStr(pRequest->GetVariableLong(dwId++), szIpAddr2));
+                      dwListType, pRequest->GetVariableLong(dwId),
+                      IpToStr(pRequest->GetVariableLong(dwId + 1), szIpAddr1),
+                      IpToStr(pRequest->GetVariableLong(dwId + 2), szIpAddr2));
             if (!DBQuery(g_hCoreDB, szQuery))
                break;
          }
 
          if (i == dwNumRec)
          {
+            DBCommit(g_hCoreDB);
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
          }
          else
@@ -7868,6 +7873,41 @@ void ClientSession::SetAddrList(CSCPMessage *pRequest)
       {
          DBRollback(g_hCoreDB);
          msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   SendMessage(&msg);
+}
+
+
+//
+// Reset server component
+//
+
+void ClientSession::ResetComponent(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwCode;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      dwCode = pRequest->GetVariableLong(VID_COMPONENT_ID);
+      switch(dwCode)
+      {
+         case SRV_COMPONENT_DISCOVERY_MGR:
+            ResetDiscoveryPoller();
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            break;
+         default:
+            msg.SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
+            break;
       }
    }
    else

@@ -13,6 +13,8 @@ EXTRA_DIST = \
 	ActionEditor.cpp ActionEditor.h \
 	ActionSelDlg.cpp ActionSelDlg.h \
 	AddDCIDlg.cpp AddDCIDlg.h \
+	AddrChangeDlg.cpp AddrChangeDlg.h \
+	AddrEntryDlg.cpp AddrEntryDlg.h \
 	AdvSplitter.cpp AdvSplitter.h \
 	AgentCfgDlg.cpp AgentCfgDlg.h \
 	AgentCfgEditor.cpp AgentCfgEditor.h \

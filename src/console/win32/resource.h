@@ -206,6 +206,7 @@
 #define IDD_DISCOVERY_TARGETS           337
 #define IDD_DISCOVERY_RANGES            338
 #define IDI_DISCOVERY                   339
+#define IDD_ADDR_ENTRY                  340
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -560,6 +561,12 @@
 #define IDC_CHECK_RANGE                 1403
 #define IDC_CHECK_TERM_ALARMS           1409
 #define IDC_CHECK_PUSH_DATA             1410
+#define IDC_RADIO_SUBNET                1411
+#define IDC_RADIO_RANGE                 1412
+#define IDC_IPADDR1                     1413
+#define IDC_IPADDR2                     1414
+#define IDC_STATIC_MASK                 1415
+#define IDC_STATIC_ADDR                 1416
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -796,9 +803,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        340
+#define _APS_NEXT_RESOURCE_VALUE        341
 #define _APS_NEXT_COMMAND_VALUE         33047
-#define _APS_NEXT_CONTROL_VALUE         1411
+#define _APS_NEXT_CONTROL_VALUE         1417
 #define _APS_NEXT_SYMED_VALUE           128
 #endif
 #endif

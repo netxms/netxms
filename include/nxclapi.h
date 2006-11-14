@@ -250,7 +250,7 @@ enum
 
 #define DFF_ALLOW_AGENT                0x0001
 #define DFF_ALLOW_SNMP                 0x0002
-#define DFF_ALLOW_RANGE                0x0004
+#define DFF_ONLY_RANGE                 0x0004
 
 
 //
@@ -586,6 +586,13 @@ enum
 #define NXC_NCF_DISABLE_NXCP     0x0002
 #define NXC_NCF_DISABLE_SNMP     0x0004
 #define NXC_NCF_CREATE_UNMANAGED 0x0008
+
+
+//
+// Server components
+//
+
+#define SRV_COMPONENT_DISCOVERY_MGR    1
 
 
 //
@@ -1722,6 +1729,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeployPackage(NXC_SESSION hSession, DWORD dwPkgId,
                                           DWORD dwNumObjects, DWORD *pdwObjectList,
                                           DWORD *pdwRqId);
 
+DWORD LIBNXCL_EXPORTABLE NXCResetServerComponent(NXC_SESSION hSession, DWORD dwComponent);
 DWORD LIBNXCL_EXPORTABLE NXCGetServerStats(NXC_SESSION hSession, NXC_SERVER_STATS *pStats);
 DWORD LIBNXCL_EXPORTABLE NXCGetServerVariables(NXC_SESSION hSession, 
                                                NXC_SERVER_VARIABLE **ppVarList, 

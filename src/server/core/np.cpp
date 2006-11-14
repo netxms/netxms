@@ -296,30 +296,87 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    // Cleanup
    delete pAgentConn;
 
-   g_pScriptLibrary->Lock();
-   pScript = g_pScriptLibrary->FindScript(szFilter);
-   if (pScript != NULL)
+   // Check if we use simple filter instead of script
+   if (!_tcsicmp(szFilter, "auto"))
    {
-      DbgPrintf(AF_DEBUG_DISCOVERY, "Running filter script %s", szFilter);
-      pValue = new NXSL_Value(new NXSL_Object(&m_nxslDiscoveryClass, &data));
-      if (pScript->Run(NULL, 1, &pValue) == 0)
+      DWORD dwFlags;
+      DB_RESULT hResult;
+      int i, nRows, nType;
+
+      dwFlags = ConfigReadULong(_T("DiscoveryFilterFlags"), DFF_ALLOW_AGENT | DFF_ALLOW_SNMP);
+
+      if ((dwFlags & (DFF_ALLOW_AGENT | DFF_ALLOW_SNMP)) == 0)
       {
-         bResult = (pScript->GetResult()->GetValueAsInt32() != 0) ? TRUE : FALSE;
-         DbgPrintf(AF_DEBUG_DISCOVERY, "Filter script result: %d", bResult);
+         bResult = TRUE;
       }
       else
       {
-         DbgPrintf(AF_DEBUG_DISCOVERY, "Filter script execution error: %s",
-                   pScript->GetErrorText());
-         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), szFilter,
-                   pScript->GetErrorText(), 0);
+         if (dwFlags & DFF_ALLOW_AGENT)
+         {
+            if (data.dwFlags & NNF_IS_AGENT)
+               bResult = TRUE;
+         }
+
+         if (dwFlags & DFF_ALLOW_SNMP)
+         {
+            if (data.dwFlags & NNF_IS_SNMP)
+               bResult = TRUE;
+         }
+      }
+
+      // Check range
+      if ((dwFlags & DFF_ONLY_RANGE) && bResult)
+      {
+         hResult = DBSelect(g_hCoreDB, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=2"));
+         if (hResult != NULL)
+         {
+            nRows = DBGetNumRows(hResult);
+            for(i = 0; i < nRows; i++)
+            {
+               nType = DBGetFieldLong(hResult, i, 0);
+               if (nType == 0)
+               {
+                  // Subnet
+                  bResult = (data.dwIpAddr & DBGetFieldIPAddr(hResult, i, 2)) == DBGetFieldIPAddr(hResult, i, 1);
+               }
+               else
+               {
+                  // Range
+                  bResult = ((data.dwIpAddr >= DBGetFieldIPAddr(hResult, i, 1)) &&
+                             (data.dwIpAddr <= DBGetFieldIPAddr(hResult, i, 2)));
+               }
+            }
+            DBFreeResult(hResult);
+         }
       }
    }
    else
    {
-      DbgPrintf(AF_DEBUG_DISCOVERY, "Cannot find filter script %s", szFilter);
+      g_pScriptLibrary->Lock();
+      pScript = g_pScriptLibrary->FindScript(szFilter);
+      if (pScript != NULL)
+      {
+         DbgPrintf(AF_DEBUG_DISCOVERY, "Running filter script %s", szFilter);
+         pValue = new NXSL_Value(new NXSL_Object(&m_nxslDiscoveryClass, &data));
+         if (pScript->Run(NULL, 1, &pValue) == 0)
+         {
+            bResult = (pScript->GetResult()->GetValueAsInt32() != 0) ? TRUE : FALSE;
+            DbgPrintf(AF_DEBUG_DISCOVERY, "Filter script result: %d", bResult);
+         }
+         else
+         {
+            DbgPrintf(AF_DEBUG_DISCOVERY, "Filter script execution error: %s",
+                      pScript->GetErrorText());
+            PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), szFilter,
+                      pScript->GetErrorText(), 0);
+         }
+      }
+      else
+      {
+         DbgPrintf(AF_DEBUG_DISCOVERY, "Cannot find filter script %s", szFilter);
+      }
+      g_pScriptLibrary->Unlock();
    }
-   g_pScriptLibrary->Unlock();
 
    return bResult;
 }
