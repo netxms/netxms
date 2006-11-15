@@ -1,4 +1,4 @@
-/* $Id: nxpush.cpp,v 1.10 2006-11-08 13:04:54 victor Exp $ */
+/* $Id: nxpush.cpp,v 1.11 2006-11-15 22:42:14 victor Exp $ */
 
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
@@ -24,6 +24,10 @@
 #include <nms_agent.h>
 #include <nms_util.h>
 #include <nxclapi.h>
+
+#if HAVE_GETOPT_LONG && !HAVE_DECL_GETOPT_LONG
+#include <getopt.h>
+#endif
 
 
 //
@@ -534,6 +538,9 @@ BOOL Teardown(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/11/08 13:04:54  victor
+Minor fix
+
 Revision 1.9  2006/11/08 13:03:35  victor
 Added check for getopt_long() presense
 

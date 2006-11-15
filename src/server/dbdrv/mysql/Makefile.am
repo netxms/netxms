@@ -9,4 +9,4 @@ EXTRA_DIST = \
 	mysqldrv.h
 
 install-exec-hook:
-	if test "x`uname -s`" = "xAIX" ; then $(AR) x $(libdir)/libnxddr_mysql.a $(libdir)/libnxddr_mysql.so.0 ; fi
+	if test "x`uname -s`" = "xAIX" ; then rm -f $(libdir)/libnxddr_mysql.so.0 ; $(AR) x $(libdir)/libnxddr_mysql.a $(libdir)/libnxddr_mysql.so.0 ; fi
