@@ -646,4 +646,16 @@ void ResetDiscoveryPoller(void)
       if (pInfo != INVALID_POINTER_VALUE)
          free(pInfo);
    }
+
+   // Reload discovery parameters
+   g_dwDiscoveryPollingInterval = ConfigReadInt("DiscoveryPollingInterval", 900);
+   if (ConfigReadInt("RunNetworkDiscovery", 0))
+      g_dwFlags |= AF_ENABLE_NETWORK_DISCOVERY;
+   else
+      g_dwFlags &= ~AF_ENABLE_NETWORK_DISCOVERY;
+
+   if (ConfigReadInt("ActiveNetworkDiscovery", 0))
+      g_dwFlags |= AF_ACTIVE_NETWORK_DISCOVERY;
+   else
+      g_dwFlags &= ~AF_ACTIVE_NETWORK_DISCOVERY;
 }

@@ -861,8 +861,6 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
    // Check for forced capabilities recheck
    if (m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES)
    {
-      m_dwDynamicFlags &= ~(NDF_UNREACHABLE | NDF_SNMP_UNREACHABLE |
-                            NDF_CPSNMP_UNREACHABLE | NDF_AGENT_UNREACHABLE);
       m_dwFlags &= ~(NF_IS_NATIVE_AGENT | NF_IS_SNMP | NF_IS_CPSNMP |
                      NF_IS_BRIDGE | NF_IS_ROUTER | NF_IS_OSPF);
       m_szObjectId[0] = 0;
@@ -871,7 +869,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
    }
 
    // Check if node is marked as unreachable
-   if (m_dwDynamicFlags & NDF_UNREACHABLE)
+   if ((m_dwDynamicFlags & NDF_UNREACHABLE) && !(m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES))
    {
       SendPollerMsg(dwRqId, _T("Node is marked as unreachable, configuration poll aborted\r\n"));
       DbgPrintf(AF_DEBUG_DISCOVERY, "Node is marked as unreachable, configuration poll aborted");
@@ -901,7 +899,12 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             }
 
             m_dwFlags |= NF_IS_SNMP;
-            m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
+            if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
+            {
+               m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
+               PostEvent(EVENT_SNMP_OK, m_dwId, NULL);
+               SendPollerMsg(dwRqId, "   Connectivity with SNMP agent restored\r\n");
+            }
             SendPollerMsg(dwRqId, _T("   SNMP agent is active\r\n"));
 
             // Check node type
@@ -1012,7 +1015,12 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             DbgPrintf(AF_DEBUG_DISCOVERY, "ConfPoll(%s): checking for NetXMS agent - connected", m_szName);
             LockData();
             m_dwFlags |= NF_IS_NATIVE_AGENT;
-            m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
+            if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
+            {
+               m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
+               PostEvent(EVENT_AGENT_OK, m_dwId, NULL);
+               SendPollerMsg(dwRqId, "   Connectivity with NetXMS agent restored\r\n");
+            }
             UnlockData();
       
             if (pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
