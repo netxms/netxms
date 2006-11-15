@@ -50,7 +50,7 @@ TCHAR *g_pszSqlType[5][2] =
 // Static data
 //
 
-static TCHAR m_szCodePage[MAX_PATH] = "";
+static TCHAR m_szCodePage[MAX_PATH] = ICONV_DEFAULT_CODEPAGE;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { "CodePage", CT_STRING, 0, 0, MAX_PATH, 0, m_szCodePage },

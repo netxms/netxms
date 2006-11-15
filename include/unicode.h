@@ -52,6 +52,8 @@
 
 #endif
 
+#define ICONV_DEFAULT_CODEPAGE	"ACP"
+
 #else    /* not _WIN32 */
 
 #if HAVE_WCHAR_H
@@ -135,6 +137,17 @@
 #define MB_PRECOMPOSED     0x00000001
 #define WC_COMPOSITECHECK  0x00000002
 #define WC_DEFAULTCHAR     0x00000004
+
+// Default codepage for iconv()
+#if HAVE_ICONV_ISO_8859_1
+#define ICONV_DEFAULT_CODEPAGE	"ISO-8859-1"
+#elif HAVE_ICONV_ISO8859_1
+#define ICONV_DEFAULT_CODEPAGE	"ISO8859-1"
+#elif HAVE_ICONV_ASCII
+#define ICONV_DEFAULT_CODEPAGE	"ASCII"
+#else
+#define ICONV_DEFAULT_CODEPAGE	""
+#endif
 
 #endif	/* _WIN32 */
 

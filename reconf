@@ -50,4 +50,5 @@ echo "- autoheader." &&
 $AUTOHEADER &&
 echo "- automake." &&
 $AUTOMAKE -a &&
+chmod 755 configure &&
 exit $?

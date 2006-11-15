@@ -27,7 +27,7 @@
 // Static data
 //
 
-static TCHAR m_szCodePage[256];
+static TCHAR m_szCodePage[256] = ICONV_DEFAULT_CODEPAGE;
 
 
 //

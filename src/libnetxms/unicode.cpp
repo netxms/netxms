@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.16 2006-10-13 09:44:23 victor Exp $ */
+/* $Id: unicode.cpp,v 1.17 2006-11-15 18:47:35 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -28,7 +28,7 @@
 // Static data
 //
 
-static char m_cpDefault[MAX_CODEPAGE_LEN] = "";
+static char m_cpDefault[MAX_CODEPAGE_LEN] = ICONV_DEFAULT_CODEPAGE;
 
 
 #ifndef _WIN32
