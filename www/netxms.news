@@ -1,3 +1,5 @@
+16-Nov-2006|0.2.14 released|Version 0.2.14 is out. Finally.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
+06-Oct-2006|0.2.14 is on the way|0.2.14-rc1 is packaged for internal testing; release coming soon.
 28-Aug-2006|0.2.13-hf1 released|We have found a serious bug in NetXMS console. All users experienced problems with console should upgrade to 0.2.13-hf1. Server and agents are not affected by this bug.
 28-Aug-2006|0.2.13 released|Version 0.2.13 is out.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
 25-Jul-2006|Official port numbers|Port numbers used by NetXMS are now officially registered with IANA (see updated IANA port list at <a href="http://www.iana.org/assignments/port-numbers">http://www.iana.org/assignments/port-numbers</a>).
