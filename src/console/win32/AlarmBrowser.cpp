@@ -1022,5 +1022,6 @@ void CAlarmBrowser::OnAlarmDetails()
 
 void CAlarmBrowser::OnUpdateAlarmDetails(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
+//   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
+   pCmdUI->Enable(FALSE);
 }

@@ -1843,7 +1843,7 @@ void CConsoleApp::OnControlpanelNetworkdiscovery()
       }
       pgGeneral.m_bAllowAgent = config.dwFlags & DFF_ALLOW_AGENT ? TRUE : FALSE;
       pgGeneral.m_bAllowSNMP = config.dwFlags & DFF_ALLOW_SNMP ? TRUE : FALSE;
-      pgGeneral.m_bAllowRange = config.dwFlags & DFF_ALLOW_RANGE ? TRUE : FALSE;
+      pgGeneral.m_bAllowRange = config.dwFlags & DFF_ONLY_RANGE ? TRUE : FALSE;
       pgGeneral.m_strCommunity = config.strCommunity;
       psh.AddPage(&pgGeneral);
 
@@ -1898,7 +1898,7 @@ void CConsoleApp::OnControlpanelNetworkdiscovery()
          if (pgGeneral.m_bAllowSNMP)
             config.dwFlags |= DFF_ALLOW_SNMP;
          if (pgGeneral.m_bAllowRange)
-            config.dwFlags |= DFF_ALLOW_RANGE;
+            config.dwFlags |= DFF_ONLY_RANGE;
 
          config.dwNumFilters = pgAddrList.m_dwAddrCount;
          config.pFilterList = pgAddrList.m_pAddrList;

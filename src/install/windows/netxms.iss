@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.2.14-rc12
-AppVersion=0.2.14-rc12
+AppVerName=NetXMS 0.2.14
+AppVersion=0.2.14
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.2.14-rc12
+OutputBaseFilename=netxms-0.2.14
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -89,6 +89,9 @@ Source: "..\..\console\nxlexer\Release\nxlexer.dll"; DestDir: "{app}\bin"; Flags
 Source: "..\..\console\win32\Release_UNICODE\nxcon.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\console\nxav\Release_UNICODE\nxav.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\console\nxnotify\Release\nxnotify.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "nxcon.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "nxav.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "nxnotify.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 ; Web server files
 Source: "..\..\nxhttpd\Release\nxhttpd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv
 Source: "..\..\nxhttpd\static\*.xsl"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
@@ -105,6 +108,8 @@ Source: "Files\ntwdblib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Compon
 Source: "Files\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "Files\libintl-2.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "Files\libiconv-2.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
+Source: "Files\comerr32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
+Source: "Files\krb5_32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "Files\ssleay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "Files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "Files\bgd.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv
@@ -138,7 +143,7 @@ Filename: "{app}\bin\nxconfig.exe"; Parameters: "--create-agent-config"; Working
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c ""{app}\etc\nxagentd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing agent service..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting agent service..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxconfig.exe"; Parameters: "--configure-if-needed"; WorkingDir: "{app}\bin"; StatusMsg: "Running server configuration wizard..."; Components: server
-;Filename: "{app}\bin\netxmsd.exe"; Parameters: "--config ""{app}\etc\netxmsd.conf"" install"; WorkingDir: "{app}\bin"; StatusMsg: "Installing core service..."; Flags: runhidden; Components: server
+Filename: "{app}\bin\nxdbmgr.exe"; Parameters: "-c ""{app}\etc\netxmsd.conf"" upgrade"; WorkingDir: "{app}\bin"; StatusMsg: "Upgrading database..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\netxmsd.exe"; Parameters: "start"; WorkingDir: "{app}\bin"; StatusMsg: "Starting core service..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxconfig.exe"; Parameters: "--create-nxhttpd-config {code:GetMasterServer}"; WorkingDir: "{app}\bin"; StatusMsg: "Creating web server's configuration file..."; Components: websrv
 Filename: "{app}\bin\nxhttpd.exe"; Parameters: "-c ""{app}\etc\nxhttpd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing web server service..."; Flags: runhidden; Components: websrv
