@@ -1,4 +1,35 @@
 *
+* 0.2.14
+*
+
+- Alarm system improved (three state alarms, helpdesk status, etc.)
+- Added new DCI data source: push agents
+- Threshold state now saved across NetXMS server restarts
+- Added possibility to specify custom threshold rearm event instead of
+  SYS_THRESHOLD_REARMED
+- Added threshold processing option "Always process all thresholds"
+- Implemented "data collection error" threshold checking function
+- Implemented "mean absolute deviation" threshold checking function
+- Added possibility to set confirmation messages for object tools
+- Object tools "Shutdown system", "Restart system", "Restart agent"
+  asks confirmation by default
+- Implemented agent traps and added trap sending API for subagents
+- Object comments added
+- Network discovery configuration simplified
+- Active network discovery implemented
+- Windows console:
+	- Console changed to use UNICODE internally
+	- Event processing policy editor improved
+	- Added confirmation for object deletion
+	- Implemented sorting in object tools tables
+- Server ported to AIX and HP-UX
+- Agent ported to HP-UX
+- Agent for AIX improved
+- Fixed issues: #104, #109, #110, #111, #112, #113, #115, #116, #117, #119,
+                #121, #124, #125, #126, #127, #133, #139
+
+
+*
 * 0.2.13
 *
 
