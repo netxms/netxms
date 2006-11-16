@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.17 2006-11-15 18:47:35 victor Exp $ */
+/* $Id: unicode.cpp,v 1.18 2006-11-16 09:05:53 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -274,7 +274,7 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(char *pszString)
    WCHAR *pwszOut;
    int nLen;
 
-   nLen = strlen(pszString) + 1;
+   nLen = (int)strlen(pszString) + 1;
    pwszOut = (WCHAR *)malloc(nLen * sizeof(WCHAR));
    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszString, -1, pwszOut, nLen);
    return pwszOut;
@@ -291,7 +291,7 @@ char LIBNETXMS_EXPORTABLE *MBStringFromWideString(WCHAR *pwszString)
    char *pszOut;
    int nLen;
 
-   nLen = wcslen(pwszString) + 1;
+   nLen = (int)wcslen(pwszString) + 1;
    pszOut = (char *)malloc(nLen);
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
                        pwszString, -1, pszOut, nLen, NULL, NULL);
