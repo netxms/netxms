@@ -37,6 +37,7 @@ src/server/tools/nxsnmpwalk/nxsnmpwalk
 src/server/tools/nxupload/nxupload
 /stamp-h1
 /status
+www/.htpasswd.digest
 www/GeoIP.dat
 www/bugtrackUpload
 www/data/archive

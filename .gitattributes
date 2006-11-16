@@ -1337,7 +1337,6 @@ tools/patch_libtool.pl -text
 tools/sharIt -text
 tools/stub.sh -text
 www/.cvsignore -text
-www/.htpasswd.digest -text
 www/cgi-bin/Net/Cmd.pm -text
 www/cgi-bin/Net/Config.pm -text
 www/cgi-bin/Net/SMTP.pm -text
