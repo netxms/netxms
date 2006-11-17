@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.222 2006-11-15 22:42:14 victor Exp $
+# $Id: configure.ac,v 1.223 2006-11-17 08:21:02 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -1009,6 +1009,10 @@ AC_CONFIG_FILES([
 	src/nxhttpd/Makefile
 	src/nxhttpd/static/Makefile
 	src/nxhttpd/static/images/Makefile
+	src/nxhttpd/libtpt/Makefile
+	src/nxhttpd/libtpt/include/Makefile
+	src/nxhttpd/libtpt/include/libtpt/Makefile
+	src/nxhttpd/libtpt/source/Makefile
 	tools/Makefile
 ])
 
