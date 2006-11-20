@@ -27,7 +27,7 @@
 
 #define NMS_THREADS_H_INCLUDED
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 #ifndef UNDER_CE
 #include <process.h>
@@ -175,17 +175,23 @@ inline BOOL ConditionWait(CONDITION hCond, DWORD dwTimeOut)
    return WaitForSingleObject(hCond, dwTimeOut) == WAIT_OBJECT_0;
 }
 
+#elif defined(_USE_GNU_PTH)
+
+/****************************************************************************/
+/* GNU Pth                                                                  */
+/****************************************************************************/
+
 #else    /* _WIN32 */
 
 /****************************************************************************/
-/* unix part                                                                */
+/* pthreads                                                                 */
 /****************************************************************************/
 
 #include <pthread.h>
 #include <errno.h>
 #include <sys/time.h>
 
-#if HAVE_PTHREAD_NP_H
+#if HAVE_PTHREAD_NP_H && !defined(_IPSO)
 #include <pthread_np.h>
 #endif
 
