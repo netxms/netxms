@@ -144,7 +144,94 @@ inline void RWLockUnlock(RWLOCK hLock)
       pthread_rwlock_unlock(hLock);
 }
 
-#else    /* HAVE_PTHREAD_RWLOCK */
+#elif defined(_USE_GNU_PTH)
+
+typedef pth_rwlock_t * RWLOCK;
+
+inline RWLOCK RWLockCreate(void)
+{
+   RWLOCK hLock;
+
+   hLock = (RWLOCK)malloc(sizeof(pth_rwlock_t));
+   if (!pth_rwlock_init(hLock))
+   {
+      free(hLock);
+      hLock = NULL;
+   }
+   return hLock;
+}
+
+inline void RWLockDestroy(RWLOCK hLock)
+{
+   if (hLock != NULL)
+   {
+      free(hLock);
+   }
+}
+
+inline BOOL RWLockReadLock(RWLOCK hLock, DWORD dwTimeOut)
+{
+	BOOL ret = FALSE;
+
+   if (hLock != NULL) 
+   {
+		if (dwTimeOut == INFINITE)
+		{
+			if (pth_rwlock_acquire(hLock, PTH_RWLOCK_RD, FALSE, NULL)) 
+         {
+				ret = TRUE;
+			}
+		}
+		else
+		{
+         pth_event_t ev;
+
+         ev = pth_event(PTH_EVENT_TIME, pth_timeout(dwTimeOut / 1000, (dwTimeOut % 1000) * 1000));
+			if (pth_rwlock_acquire(hLock, PTH_RWLOCK_RD, FALSE, ev)) 
+         {
+				ret = TRUE;
+			}
+         pth_event_free(ev, PTH_FREE_ALL);
+		}
+	}
+   return ret;
+}
+
+inline BOOL RWLockWriteLock(RWLOCK hLock, DWORD dwTimeOut)
+{
+	BOOL ret = FALSE;
+
+   if (hLock != NULL) 
+   {
+		if (dwTimeOut == INFINITE)
+		{
+			if (pth_rwlock_acquire(hLock, PTH_RWLOCK_RW, FALSE, NULL)) 
+         {
+				ret = TRUE;
+			}
+		}
+		else
+		{
+         pth_event_t ev;
+
+         ev = pth_event(PTH_EVENT_TIME, pth_timeout(dwTimeOut / 1000, (dwTimeOut % 1000) * 1000));
+			if (pth_rwlock_acquire(hLock, PTH_RWLOCK_RW, FALSE, ev)) 
+         {
+				ret = TRUE;
+			}
+         pth_event_free(ev, PTH_FREE_ALL);
+		}
+	}
+   return ret;
+}
+
+inline void RWLockUnlock(RWLOCK hLock)
+{
+   if (hLock != NULL)
+      pth_rwlock_release(hLock);
+}
+
+#else    /* not HAVE_PTHREAD_RWLOCK and not defined _USE_GNU_PTH */
 
 struct __rwlock_data
 {
