@@ -24,7 +24,7 @@
 #include "libnetxms.h"
 #include <assert.h>
 
-#if !HAVE_PTHREAD_RWLOCK
+#if !HAVE_PTHREAD_RWLOCK && !defined(_USE_GNU_PTH)
 
 //
 // Create read/write lock

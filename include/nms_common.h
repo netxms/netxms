@@ -292,6 +292,10 @@ typedef int SOCKET;
 
 #include <dirent.h>
 
+#if _USE_GNU_PTH
+#include <pth.h>
+#endif
+
 typedef int BOOL;
 #if (SIZEOF_LONG == 4)
 typedef long LONG;
@@ -331,8 +335,12 @@ typedef u_int64_t QWORD;
 #define TIME_T_FMT   _T("%u")
 #endif
 
+#ifndef TRUE
 #define TRUE   1
+#endif
+#ifndef FALSE
 #define FALSE  0
+#endif
 
 #ifndef MAX_PATH
 #define MAX_PATH 256
@@ -355,7 +363,7 @@ typedef int SOCKET;
 
 #define SELECT_NFDS(x)  (x)
 
-#if !(HAVE_SOCKLEN_T)
+#if !(HAVE_SOCKLEN_T) && !defined(_USE_GNU_PTH)
 typedef unsigned int socklen_t;
 #endif
 

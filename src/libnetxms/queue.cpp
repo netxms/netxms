@@ -1,3 +1,4 @@
+/* $Id: queue.cpp,v 1.6 2006-11-20 23:37:04 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -16,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: queue.cpp
+** File: queue.cpp
 **
 **/
 
@@ -30,20 +31,14 @@
 
 Queue::Queue(DWORD dwInitialSize, DWORD dwBufferIncrement)
 {
-   m_hQueueAccess = MutexCreate();
+   m_mutexQueueAccess = MutexCreate();
+   m_condWakeup = ConditionCreate(FALSE);
    m_dwNumElements = 0;
    m_dwFirst = 0;
    m_dwLast = 0;
    m_dwBufferSize = dwInitialSize;
    m_dwBufferIncrement = dwBufferIncrement;
    m_pElements = (void **)malloc(sizeof(void *) * m_dwBufferSize);
-
-#ifdef _WIN32
-   m_eventWakeup = CreateEvent(NULL, FALSE, FALSE, NULL);
-#else
-   pthread_mutex_init(&m_mutexWakeup, NULL);
-   pthread_cond_init(&m_condWakeup, NULL);
-#endif
 }
 
 
@@ -53,15 +48,9 @@ Queue::Queue(DWORD dwInitialSize, DWORD dwBufferIncrement)
 
 Queue::~Queue()
 {
-   MutexDestroy(m_hQueueAccess);
+   MutexDestroy(m_mutexQueueAccess);
+   ConditionDestroy(m_condWakeup);
    safe_free(m_pElements);
-
-#ifdef _WIN32
-   CloseHandle(m_eventWakeup);
-#else
-   pthread_mutex_destroy(&m_mutexWakeup);
-   pthread_cond_destroy(&m_condWakeup);
-#endif
 }
 
 
@@ -87,13 +76,7 @@ void Queue::Put(void *pElement)
    if (m_dwLast == m_dwBufferSize)
       m_dwLast = 0;
    m_dwNumElements++;
-#ifdef _WIN32
-   SetEvent(m_eventWakeup);
-#else
-		pthread_mutex_lock(&m_mutexWakeup);
-		pthread_cond_signal(&m_condWakeup);
-		pthread_mutex_unlock(&m_mutexWakeup);
-#endif
+   ConditionSet(m_condWakeup);
    Unlock();
 }
 
@@ -135,13 +118,7 @@ void *Queue::GetOrBlock(void)
 
    do
    {
-#ifdef _WIN32
-      WaitForSingleObject(m_eventWakeup, INFINITE);
-#else
-		pthread_mutex_lock(&m_mutexWakeup);
-		pthread_cond_wait(&m_condWakeup, &m_mutexWakeup);
-		pthread_mutex_unlock(&m_mutexWakeup);
-#endif
+      ConditionWait(m_condWakeup, INFINITE);
       pElement = Get();
    } while(pElement == NULL);
    return pElement;

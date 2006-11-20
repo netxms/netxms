@@ -518,6 +518,7 @@ BOOL Initialize(void)
 
    // Open log file
    InitLog();
+   DebugPrintf(INVALID_INDEX, "Log file opened");
 
 #ifdef _WIN32
    WSADATA wsaData;
@@ -567,6 +568,7 @@ BOOL Initialize(void)
    // Initialize API for subagents
    InitSubAgentsLogger(WriteSubAgentMsg);
    InitSubAgentsTrapSender(SendTrap, SendTrap);
+   DebugPrintf(INVALID_INDEX, "Subagent API initialized");
 
    // Initialize cryptografy
    if (!InitCryptoLib(m_dwEnabledCiphers))
@@ -1079,7 +1081,7 @@ int main(int argc, char *argv[])
       case ACTION_RUN_AGENT:
          // Set default value for session idle timeout based on
          // connect() timeout, if possible
-#ifdef HAVE_SYSCTLBYNAME
+#if HAVE_SYSCTLBYNAME && !defined(_IPSO)
          {
             LONG nVal;
 				size_t nSize;

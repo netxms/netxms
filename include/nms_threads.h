@@ -221,11 +221,7 @@ inline void ThreadSleep(int nSeconds)
 
 inline void ThreadSleepMs(DWORD dwMilliseconds)
 {
-	struct timespec interval, remainder;
-
-	interval.tv_sec = dwMilliseconds / 1000;
-	interval.tv_nsec = (dwMilliseconds % 1000) * 1000000; // milli -> nano
-	pth_nanosleep(&interval, &remainder);
+	pth_usleep(dwMilliseconds * 1000);
 }
 
 inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
@@ -249,11 +245,11 @@ inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address )(void *)
 
 	if ((id = pth_spawn(PTH_ATTR_DEFAULT, start_address, args)) != NULL) 
    {
-		return TRUE;
+		return id;
 	} 
    else 
    {
-		return FALSE;
+		return INVALID_THREAD_HANDLE;
 	}
 }
 
@@ -337,16 +333,16 @@ inline CONDITION ConditionCreate(BOOL bBroadcast)
 {
 	CONDITION cond;
 
-   cond = (CONDITION)malloc(sizeof(struct netxms_condition_t));
-   if (cond != NULL) 
-   {
-      pth_cond_init(&cond->cond, NULL);
-      pth_mutex_init(&cond->mutex, NULL);
+	cond = (CONDITION)malloc(sizeof(struct netxms_condition_t));
+	if (cond != NULL) 
+	{
+		pth_cond_init(&cond->cond);
+		pth_mutex_init(&cond->mutex);
 		cond->broadcast = bBroadcast;
-      cond->isSet = FALSE;
+		cond->isSet = FALSE;
 	}
 
-   return cond;
+	return cond;
 }
 
 inline void ConditionDestroy(CONDITION cond)
@@ -411,7 +407,7 @@ inline BOOL ConditionWait(CONDITION cond, DWORD dwTimeOut)
             pth_event_t ev;
 
             ev = pth_event(PTH_EVENT_TIME, pth_timeout(dwTimeOut / 1000, (dwTimeOut % 1000) * 1000));
-			   retcode = pthread_cond_await(&cond->cond, &cond->mutex, ev);
+			   retcode = pth_cond_await(&cond->cond, &cond->mutex, ev);
             pth_event_free(ev, PTH_FREE_ALL);
 		   }
 		   else

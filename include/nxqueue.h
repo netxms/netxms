@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxqueue.h
+** File: nxqueue.h
 **
 **/
 
@@ -33,14 +33,8 @@
 class LIBNETXMS_EXPORTABLE Queue
 {
 private:
-   MUTEX m_hQueueAccess;
-#ifdef _WIN32
-   HANDLE m_eventWakeup;
-#else
-   pthread_mutex_t m_mutexWakeup;
-   pthread_cond_t m_condWakeup;
-#endif
-   //CONDITION m_hConditionNotEmpty;
+   MUTEX m_mutexQueueAccess;
+   CONDITION m_condWakeup;
    void **m_pElements;
    DWORD m_dwNumElements;
    DWORD m_dwBufferSize;
@@ -48,8 +42,8 @@ private:
    DWORD m_dwLast;
    DWORD m_dwBufferIncrement;
 
-   void Lock(void) { MutexLock(m_hQueueAccess, INFINITE); }
-   void Unlock(void) { MutexUnlock(m_hQueueAccess); }
+   void Lock(void) { MutexLock(m_mutexQueueAccess, INFINITE); }
+   void Unlock(void) { MutexUnlock(m_mutexQueueAccess); }
 
 public:
    Queue(DWORD dwInitialSize = 256, DWORD dwBufferIncrement = 32);

@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.223 2006-11-17 08:21:02 victor Exp $
+# $Id: configure.ac,v 1.224 2006-11-20 23:37:03 victor Exp $
 #
 # Process this file with autoconf to produce a configure script.
 #
@@ -28,7 +28,6 @@ AC_PROG_LN_S
 
 # --------------------------------------------------------------------------
 # Misc. settings
-#CFLAGS="$CFLAGS -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_THREAD_SAFE"
 CPPFLAGS="$CPPFLAGS -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_THREAD_SAFE"
 SUBAGENT_LIBS=""
 
@@ -319,10 +318,10 @@ AC_ARG_WITH(static-agent,
 AC_ARG_WITH(ipso-agent,
 [AS_HELP_STRING(--with-ipso-agent,build statically linked IPSO agent)],
 [
+   USE_PTH="yes"
    BUILD_STATIC_AGENT="yes"
    MODULES="$MODULES agent"
-   CFLAGS="$CFLAGS -D_STATIC_AGENT -D_IPSO"
-   CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO"
+   CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO -D_USE_GNU_PTH -I/usr/local/include"
    LDFLAGS="$LDFLAGS -all-static"
    STATIC_SUBAGENT_LIST="ipso ping portcheck ups"
    SUBAGENT_DIRS="ipso"
@@ -604,8 +603,10 @@ fi
 
 #ALK:	CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE" PTHREAD_LIBS="-pthread",
 # posix threads
-AC_CHECK_HEADER(pthread.h,,AC_MSG_ERROR([*** POSIX thread support not installed - please install first ***]))
-
+if test "x$USE_PTH" = "xyes"; then
+	AC_CHECK_HEADER(pth.h,,AC_MSG_ERROR([*** GNU Pth thread support not installed - please install first ***]))
+else
+	AC_CHECK_HEADER(pthread.h,,AC_MSG_ERROR([*** POSIX thread support not installed - please install first ***]))
 
 # --------------------------------------------------------------------------
 # check for pthread library
@@ -685,6 +686,9 @@ if test "$ac_cv_func_pthread_rwlock_init" = "yes"; then
 	if test "$ac_cv_struct_pthread_rw" = "yes"; then
 		AC_DEFINE(HAVE_PTHREAD_RWLOCK, 1, Define to 1 if you have working pthread read/write locks)
 	fi
+fi
+
+# End of "if USE_PTH=yes then ... else ..."
 fi
 
 # --------------------------------------------------------------------------

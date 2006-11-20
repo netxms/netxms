@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.55 2006-11-03 08:58:58 victor Exp $ */
+/* $Id: tools.cpp,v 1.56 2006-11-20 23:37:04 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
@@ -1080,5 +1080,24 @@ void PrintMemoryBlocks(void)
 	printf("%dK bytes (%d bytes) in %d blocks\n", nBytes / 1024, nBytes, m_dwNumBlocks);
 	MutexUnlock(m_mutex);
 }
+
+#endif
+
+
+//
+// IPSO placeholders
+//
+
+#ifdef _IPSO
+
+extern "C" void flockfile(FILE *fp)
+{
+}
+
+extern "C" void funlockfile(FILE *fp)
+{
+}
+
+extern "C" int __isthreaded = 1;
 
 #endif
