@@ -181,7 +181,269 @@ inline BOOL ConditionWait(CONDITION hCond, DWORD dwTimeOut)
 /* GNU Pth                                                                  */
 /****************************************************************************/
 
-#else    /* _WIN32 */
+//
+// Related datatypes and constants
+//
+
+typedef pth_t THREAD;
+typedef pth_mutex_t * MUTEX;
+struct netxms_condition_t
+{
+	pth_cond_t cond;
+	pth_mutex_t mutex;
+	BOOL broadcast;
+   BOOL isSet;
+};
+typedef struct netxms_condition_t * CONDITION;
+
+#define INVALID_MUTEX_HANDLE        (NULL)
+#define INVALID_CONDITION_HANDLE    (NULL)
+#define INVALID_THREAD_HANDLE       (NULL)
+
+#ifndef INFINITE
+#define INFINITE 0
+#endif
+
+typedef void *THREAD_RESULT;
+
+#define THREAD_OK       ((void *)0)
+#define THREAD_CALL
+
+
+//
+// Inline functions
+//
+
+inline void ThreadSleep(int nSeconds)
+{
+   pth_sleep(nSeconds);
+}
+
+inline void ThreadSleepMs(DWORD dwMilliseconds)
+{
+	struct timespec interval, remainder;
+
+	interval.tv_sec = dwMilliseconds / 1000;
+	interval.tv_nsec = (dwMilliseconds % 1000) * 1000000; // milli -> nano
+	pth_nanosleep(&interval, &remainder);
+}
+
+inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
+{
+	THREAD id;
+
+	if ((id = pth_spawn(PTH_ATTR_DEFAULT, start_address, args)) != NULL) 
+   {
+      pth_attr_set(pth_attr_of(id), PTH_ATTR_JOINABLE, 0);
+		return TRUE;
+	} 
+   else 
+   {
+		return FALSE;
+	}
+}
+
+inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
+{
+	THREAD id;
+
+	if ((id = pth_spawn(PTH_ATTR_DEFAULT, start_address, args)) != NULL) 
+   {
+		return TRUE;
+	} 
+   else 
+   {
+		return FALSE;
+	}
+}
+
+inline void ThreadExit(void)
+{
+   pth_exit(NULL);
+}
+
+inline void ThreadJoin(THREAD hThread)
+{
+   if (hThread != INVALID_THREAD_HANDLE)
+      pth_join(hThread, NULL);
+}
+
+inline MUTEX MutexCreate(void)
+{
+   MUTEX mutex;
+
+   mutex = (MUTEX)malloc(sizeof(pth_mutex_t));
+   if (mutex != NULL)
+      pth_mutex_init(mutex);
+   return mutex;
+}
+
+inline MUTEX MutexCreateRecursive(void)
+{
+   MUTEX mutex;
+
+   // In libpth, recursive locking is explicitly supported,
+   // so we just create mutex
+   mutex = (MUTEX)malloc(sizeof(pth_mutex_t));
+   if (mutex != NULL)
+      pth_mutex_init(mutex);
+   return mutex;
+}
+
+inline void MutexDestroy(MUTEX mutex)
+{
+   if (mutex != NULL)
+      free(mutex);
+}
+
+inline BOOL MutexLock(MUTEX mutex, DWORD dwTimeOut)
+{
+	int i;
+	int ret = FALSE;
+
+   if (mutex != NULL)
+   {
+		if (dwTimeOut == INFINITE)
+		{
+			if (pth_mutex_acquire(mutex, FALSE, NULL))
+         {
+				ret = TRUE;
+			}
+		}
+		else
+		{
+         pth_event_t ev;
+
+         ev = pth_event(PTH_EVENT_TIME, pth_timeout(dwTimeOut / 1000, (dwTimeOut % 1000) * 1000));
+			if (pth_mutex_acquire(mutex, FALSE, ev))
+         {
+            ret = TRUE;
+         }
+         pth_event_free(ev, PTH_FREE_ALL);
+		}
+	}
+   return ret;
+}
+
+inline void MutexUnlock(MUTEX mutex)
+{
+   if (mutex != NULL) 
+   {
+      pth_mutex_release(mutex);
+	}
+}
+
+inline CONDITION ConditionCreate(BOOL bBroadcast)
+{
+	CONDITION cond;
+
+   cond = (CONDITION)malloc(sizeof(struct netxms_condition_t));
+   if (cond != NULL) 
+   {
+      pth_cond_init(&cond->cond, NULL);
+      pth_mutex_init(&cond->mutex, NULL);
+		cond->broadcast = bBroadcast;
+      cond->isSet = FALSE;
+	}
+
+   return cond;
+}
+
+inline void ConditionDestroy(CONDITION cond)
+{
+	if (cond != INVALID_CONDITION_HANDLE)
+	{
+		free(cond);
+	}
+}
+
+inline void ConditionSet(CONDITION cond)
+{
+	if (cond != INVALID_CONDITION_HANDLE)
+	{
+		pth_mutex_acquire(&cond->mutex, FALSE, NULL);
+      cond->isSet = TRUE;
+      pth_cond_notify(&cond->cond, cond->broadcast);
+		pth_mutex_release(&cond->mutex);
+	}
+}
+
+inline void ConditionReset(CONDITION cond)
+{
+	if (cond != INVALID_CONDITION_HANDLE)
+	{
+		pth_mutex_acquire(&cond->mutex, FALSE, NULL);
+      cond->isSet = FALSE;
+		pth_mutex_release(&cond->mutex);
+	}
+}
+
+inline void ConditionPulse(CONDITION cond)
+{
+	if (cond != INVALID_CONDITION_HANDLE)
+	{
+		pth_mutex_acquire(&cond->mutex, FALSE, NULL);
+      pth_cond_notify(&cond->cond, cond->broadcast);
+      cond->isSet = FALSE;
+		pth_mutex_release(&cond->mutex);
+	}
+}
+
+inline BOOL ConditionWait(CONDITION cond, DWORD dwTimeOut)
+{
+	BOOL ret = FALSE;
+
+	if (cond != NULL)
+	{
+		int retcode;
+
+		pth_mutex_acquire(&cond->mutex, FALSE, NULL);
+      if (cond->isSet)
+      {
+         ret = TRUE;
+         if (!cond->broadcast)
+            cond->isSet = FALSE;
+      }
+      else
+      {
+		   if (dwTimeOut != INFINITE)
+		   {
+            pth_event_t ev;
+
+            ev = pth_event(PTH_EVENT_TIME, pth_timeout(dwTimeOut / 1000, (dwTimeOut % 1000) * 1000));
+			   retcode = pthread_cond_await(&cond->cond, &cond->mutex, ev);
+            pth_event_free(ev, PTH_FREE_ALL);
+		   }
+		   else
+		   {
+			   retcode = pth_cond_await(&cond->cond, &cond->mutex, NULL);
+		   }
+
+		   if (retcode)
+		   {
+            if (!cond->broadcast)
+               cond->isSet = FALSE;
+			   ret = TRUE;
+		   }
+      }
+
+		pth_mutex_release(&cond->mutex);
+	}
+
+	return ret;
+}
+
+inline DWORD GetCurrentProcessId(void)
+{
+   return getpid();
+}
+
+inline THREAD GetCurrentThreadId(void)
+{
+   return pth_self();
+}
+
+#else    /* not _WIN32 && not _USE_GNU_PTH */
 
 /****************************************************************************/
 /* pthreads                                                                 */
