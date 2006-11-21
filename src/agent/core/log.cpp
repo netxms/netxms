@@ -1,6 +1,7 @@
+/* $Id: log.cpp,v 1.6 2006-11-21 11:35:29 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004,2005,2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: log.cpp
+** File: log.cpp
 **
 **/
 

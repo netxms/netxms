@@ -1,4 +1,4 @@
-/* $Id: nxpush.cpp,v 1.11 2006-11-15 22:42:14 victor Exp $ */
+/* $Id: nxpush.cpp,v 1.12 2006-11-21 11:35:29 victor Exp $ */
 
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
@@ -130,6 +130,8 @@ int main(int argc, char *argv[])
 {
 	int ret = 0;
 	int c;
+
+	InitThreadLibrary();
 
 	opterr = 0;
 #if HAVE_GETOPT_LONG
@@ -538,6 +540,9 @@ BOOL Teardown(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/11/15 22:42:14  victor
+Minor fixes
+
 Revision 1.10  2006/11/08 13:04:54  victor
 Minor fix
 

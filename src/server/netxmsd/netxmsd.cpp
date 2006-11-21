@@ -1,3 +1,4 @@
+/* $Id: netxmsd.cpp,v 1.16 2006-11-21 11:35:30 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
@@ -17,7 +18,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: main.cpp
+** File: netxmsd.cpp
 **
 **/
 
@@ -311,6 +312,8 @@ int main(int argc, char *argv[])
    FILE *fp;
    char *pszEnv;
 #endif
+
+   InitThreadLibrary();
 
 #ifdef NETXMS_MEMORY_DEBUG
 	InitMemoryDebugger();

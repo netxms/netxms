@@ -207,6 +207,8 @@ int main(int argc, char *argv[])
    char szProxy[MAX_OBJECT_NAME] = "", szProxySecret[MAX_SECRET_LENGTH] = "";
    RSA *pServerKey = NULL;
 
+   InitThreadLibrary();
+
    // Parse command line
    opterr = 1;
    while((ch = getopt(argc, argv, "a:A:bCe:hi:IK:lnO:p:P:qr:R:s:S:t:vw:X:Z:")) != -1)

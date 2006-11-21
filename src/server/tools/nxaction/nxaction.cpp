@@ -53,6 +53,8 @@ int main(int argc, char *argv[])
    char szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS;
    RSA *pServerKey = NULL;
 
+   InitThreadLibrary();
+
    // Parse command line
    opterr = 1;
    while((ch = getopt(argc, argv, "a:e:hK:p:qs:vw:")) != -1)

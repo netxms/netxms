@@ -66,6 +66,10 @@ typedef unsigned int THREAD_ID;
 // Inline functions
 //
 
+inline void InitThreadLibrary(void)
+{
+}
+
 inline void ThreadSleep(int iSeconds)
 {
    Sleep((DWORD)iSeconds * 1000);   // Convert to milliseconds
@@ -214,6 +218,15 @@ typedef void *THREAD_RESULT;
 // Inline functions
 //
 
+inline void InitThreadLibrary(void)
+{
+   if (!pth_init())
+   {
+      perror("pth_init() failed");
+      exit(200);
+   }
+}
+
 inline void ThreadSleep(int nSeconds)
 {
    pth_sleep(nSeconds);
@@ -270,7 +283,9 @@ inline MUTEX MutexCreate(void)
 
    mutex = (MUTEX)malloc(sizeof(pth_mutex_t));
    if (mutex != NULL)
+   {
       pth_mutex_init(mutex);
+   }
    return mutex;
 }
 
@@ -282,7 +297,9 @@ inline MUTEX MutexCreateRecursive(void)
    // so we just create mutex
    mutex = (MUTEX)malloc(sizeof(pth_mutex_t));
    if (mutex != NULL)
+   {
       pth_mutex_init(mutex);
+   }
    return mutex;
 }
 
@@ -518,6 +535,10 @@ typedef void *THREAD_RESULT;
 //
 // Inline functions
 //
+
+inline void InitThreadLibrary(void)
+{
+}
 
 inline void ThreadSleep(int nSeconds)
 {

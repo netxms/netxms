@@ -308,6 +308,8 @@ int main(int argc, char *argv[])
    char *pszEnv;
 #endif
 
+   InitThreadLibrary();
+
    printf("NetXMS Database Manager Version " NETXMS_VERSION_STRING "\n\n");
 
    // Check for alternate config file location

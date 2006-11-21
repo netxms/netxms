@@ -86,6 +86,8 @@ int main(int argc, char *argv[])
    int ch;
    BOOL bStart = TRUE, bDebug = FALSE, bPasswordProvided = FALSE;
 
+   InitThreadLibrary();
+
 #ifdef _WIN32
    WSADATA wsaData;
    WSAStartup(0x0002, &wsaData);

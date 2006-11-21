@@ -1,3 +1,4 @@
+/* $Id: nxagentd.cpp,v 1.83 2006-11-21 11:35:29 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -16,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxagentd.cpp
+** File: nxagentd.cpp
 **
 **/
 
@@ -983,6 +984,8 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
    char szModuleName[MAX_PATH];
 #endif
+
+   InitThreadLibrary();
    
 #ifdef _NETWARE
    g_nThreadCount++;
