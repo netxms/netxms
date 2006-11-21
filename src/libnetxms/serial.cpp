@@ -1,4 +1,4 @@
-/* $Id: serial.cpp,v 1.16 2006-11-21 22:04:07 alk Exp $ */
+/* $Id: serial.cpp,v 1.17 2006-11-21 22:06:19 alk Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -131,7 +131,7 @@ bool Serial::Open(TCHAR *pszPort)
 			dcb.ByteSize = nDataBits;
 			dcb.Parity = nParity;
 			dcb.StopBits = nStopBits;
-			dcb.fDtrControl = DTR_CONTROL_DISABLE;
+			dcb.fDtrControl = DTR_CONTROL_ENABLE;
 			dcb.fBinary = TRUE;
 			dcb.fParity = FALSE;
 			dcb.fOutxCtsFlow = FALSE;
@@ -139,7 +139,7 @@ bool Serial::Open(TCHAR *pszPort)
 			dcb.fDsrSensitivity = FALSE;
 			dcb.fOutX = FALSE;
 			dcb.fInX = FALSE;
-			dcb.fRtsControl = RTS_CONTROL_DISABLE;
+			dcb.fRtsControl = RTS_CONTROL_ENABLE;
 			dcb.fAbortOnError = FALSE;
 			
 			if (SetCommState(m_hPort, &dcb))
@@ -436,6 +436,9 @@ void Serial::Flush(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2006/11/21 22:04:07  alk
+code reformatted (mix of tab/space replaced with tabs)
+
 Revision 1.15  2006/10/20 10:15:56  victor
 - libnxcscp merged into libnetxms
 - Fixed NetWare compilation issues
