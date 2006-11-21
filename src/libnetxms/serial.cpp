@@ -1,4 +1,4 @@
-/* $Id: serial.cpp,v 1.15 2006-10-20 10:15:56 victor Exp $ */
+/* $Id: serial.cpp,v 1.16 2006-11-21 22:04:07 alk Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -56,7 +56,7 @@ Serial::Serial(void)
 {
 	m_nTimeout = 0;
 	m_hPort = INVALID_HANDLE_VALUE;
-   m_pszPort = NULL;
+	m_pszPort = NULL;
 #ifndef _WIN32
 	memset(&m_originalSettings, 0, sizeof(m_originalSettings));
 #endif
@@ -69,7 +69,7 @@ Serial::Serial(void)
 
 Serial::~Serial(void)
 {
-   Close();
+	Close();
 }
 
 
@@ -80,93 +80,93 @@ Serial::~Serial(void)
 bool Serial::Open(TCHAR *pszPort)
 {
 	bool bRet = false;
-
-   Close();    // In case if port already open
-   safe_free(m_pszPort);
+	
+	Close();    // In case if port already open
+	safe_free(m_pszPort);
 	m_pszPort = _tcsdup(pszPort);
-
+	
 #ifdef _WIN32
 	m_hPort = CreateFile(pszPort, GENERIC_READ | GENERIC_WRITE, 0, NULL,
-			               OPEN_EXISTING, 0, NULL);
+		OPEN_EXISTING, 0, NULL);
 	if (m_hPort != INVALID_HANDLE_VALUE)
-   {
-#else // UNIX
-	m_hPort = open(pszPort, O_RDWR | O_NOCTTY | O_NDELAY); 
-	if (m_hPort != -1)
-   {
-		tcgetattr(m_hPort, &m_originalSettings);
-#endif
-      Set(38400, 8, NOPARITY, ONESTOPBIT, FLOW_NONE);
-	   bRet = true;
-   }
-	return bRet;
-}
-
-
-//
-// Set communication parameters
-//
-bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
-{
-	return Set(nSpeed, nDataBits, nParity, nStopBits, FLOW_NONE);
-}
-
-bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlowControl)
-{
-	bool bRet = false;
-
-	m_nDataBits = nDataBits;
-	m_nSpeed = nSpeed;
-	m_nParity = nParity;
-	m_nStopBits = nStopBits;
-	m_nFlowControl = nFlowControl;
-
-#ifdef _WIN32
-	DCB dcb;
-
-   dcb.DCBlength = sizeof(DCB);
-	if (GetCommState(m_hPort, &dcb))
 	{
-		dcb.BaudRate = nSpeed;
-		dcb.ByteSize = nDataBits;
-		dcb.Parity = nParity;
-		dcb.StopBits = nStopBits;
-		dcb.fDtrControl = DTR_CONTROL_DISABLE;
-      dcb.fBinary = TRUE;
-		dcb.fParity = FALSE;
-		dcb.fOutxCtsFlow = FALSE;
-		dcb.fOutxDsrFlow = FALSE;
-		dcb.fDsrSensitivity = FALSE;
-		dcb.fOutX = FALSE;
-		dcb.fInX = FALSE;
-		dcb.fRtsControl = RTS_CONTROL_DISABLE;
-      dcb.fAbortOnError = FALSE;
-
-		if (SetCommState(m_hPort, &dcb))
+#else // UNIX
+		m_hPort = open(pszPort, O_RDWR | O_NOCTTY | O_NDELAY); 
+		if (m_hPort != -1)
 		{
-	      COMMTIMEOUTS ct;
-
-	      memset(&ct, 0, sizeof(COMMTIMEOUTS));
-	      ct.ReadTotalTimeoutConstant = m_nTimeout;
-	      ct.WriteTotalTimeoutConstant = m_nTimeout;
-	      SetCommTimeouts(m_hPort, &ct);
+			tcgetattr(m_hPort, &m_originalSettings);
+#endif
+			Set(38400, 8, NOPARITY, ONESTOPBIT, FLOW_NONE);
 			bRet = true;
 		}
+		return bRet;
 	}
-
-#else // UNIX
-	struct termios newTio;
-
-	tcgetattr(m_hPort, &newTio);
-
-	newTio.c_cc[VMIN] = 1;
-	newTio.c_cc[VTIME] = m_nTimeout;
-
-	newTio.c_cflag |= CLOCAL | CREAD;
-
-	int baud;
-	switch(nSpeed)
+	
+	
+	//
+	// Set communication parameters
+	//
+	bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
 	{
+		return Set(nSpeed, nDataBits, nParity, nStopBits, FLOW_NONE);
+	}
+	
+	bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlowControl)
+	{
+		bool bRet = false;
+		
+		m_nDataBits = nDataBits;
+		m_nSpeed = nSpeed;
+		m_nParity = nParity;
+		m_nStopBits = nStopBits;
+		m_nFlowControl = nFlowControl;
+		
+#ifdef _WIN32
+		DCB dcb;
+		
+		dcb.DCBlength = sizeof(DCB);
+		if (GetCommState(m_hPort, &dcb))
+		{
+			dcb.BaudRate = nSpeed;
+			dcb.ByteSize = nDataBits;
+			dcb.Parity = nParity;
+			dcb.StopBits = nStopBits;
+			dcb.fDtrControl = DTR_CONTROL_DISABLE;
+			dcb.fBinary = TRUE;
+			dcb.fParity = FALSE;
+			dcb.fOutxCtsFlow = FALSE;
+			dcb.fOutxDsrFlow = FALSE;
+			dcb.fDsrSensitivity = FALSE;
+			dcb.fOutX = FALSE;
+			dcb.fInX = FALSE;
+			dcb.fRtsControl = RTS_CONTROL_DISABLE;
+			dcb.fAbortOnError = FALSE;
+			
+			if (SetCommState(m_hPort, &dcb))
+			{
+				COMMTIMEOUTS ct;
+				
+				memset(&ct, 0, sizeof(COMMTIMEOUTS));
+				ct.ReadTotalTimeoutConstant = m_nTimeout;
+				ct.WriteTotalTimeoutConstant = m_nTimeout;
+				SetCommTimeouts(m_hPort, &ct);
+				bRet = true;
+			}
+		}
+		
+#else // UNIX
+		struct termios newTio;
+		
+		tcgetattr(m_hPort, &newTio);
+		
+		newTio.c_cc[VMIN] = 1;
+		newTio.c_cc[VTIME] = m_nTimeout;
+		
+		newTio.c_cflag |= CLOCAL | CREAD;
+		
+		int baud;
+		switch(nSpeed)
+		{
 		case 50:     baud = B50;     break;
 		case 75:     baud = B75;     break;
 		case 110:    baud = B110;    break;
@@ -183,18 +183,18 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlo
 		case 19200:  baud = B19200;  break;
 		case 38400:  baud = B38400;  break;
 		default:     baud = B38400;  break;
-	}
+		}
 #ifdef _NETWARE
-	cfsetispeed(&newTio, (speed_t)baud);
-	cfsetospeed(&newTio, (speed_t)baud);
+		cfsetispeed(&newTio, (speed_t)baud);
+		cfsetospeed(&newTio, (speed_t)baud);
 #else
-	cfsetispeed(&newTio, baud);
-	cfsetospeed(&newTio, baud);
+		cfsetispeed(&newTio, baud);
+		cfsetospeed(&newTio, baud);
 #endif
-
-	newTio.c_cflag &= ~(CSIZE);
-	switch(nDataBits)
-	{
+		
+		newTio.c_cflag &= ~(CSIZE);
+		switch(nDataBits)
+		{
 		case 5:
 			newTio.c_cflag |= CS5;
 			break;
@@ -208,11 +208,11 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlo
 		default:
 			newTio.c_cflag |= CS8;
 			break;
-	}
-
-	newTio.c_cflag &= ~(PARODD | PARENB);
-	switch(nParity)
-	{
+		}
+		
+		newTio.c_cflag &= ~(PARODD | PARENB);
+		switch(nParity)
+		{
 		case ODDPARITY:
 			newTio.c_cflag |= PARODD | PARENB;
 			break;
@@ -221,37 +221,37 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlo
 			break;
 		default:
 			break;
-	}
-
-	newTio.c_cflag &= ~(CSTOPB);
-	if (nStopBits != ONESTOPBIT)
-	{
-		newTio.c_cflag |= CSTOPB;
-	}
-
-	//newTio.c_cflag &= ~(CRTSCTS | IXON | IXOFF);
-	newTio.c_lflag &= ~(ICANON | ECHO | ECHOE | ECHOK | ECHOKE | ECHOCTL | ISIG | IEXTEN);
-   newTio.c_iflag &= ~(IXON | IXOFF | IXANY | ICRNL);
-   newTio.c_iflag |= IGNBRK;
-   newTio.c_oflag &= ~(OPOST | ONLCR);
-
-	switch(nFlowControl)
-	{
+		}
+		
+		newTio.c_cflag &= ~(CSTOPB);
+		if (nStopBits != ONESTOPBIT)
+		{
+			newTio.c_cflag |= CSTOPB;
+		}
+		
+		//newTio.c_cflag &= ~(CRTSCTS | IXON | IXOFF);
+		newTio.c_lflag &= ~(ICANON | ECHO | ECHOE | ECHOK | ECHOKE | ECHOCTL | ISIG | IEXTEN);
+		newTio.c_iflag &= ~(IXON | IXOFF | IXANY | ICRNL);
+		newTio.c_iflag |= IGNBRK;
+		newTio.c_oflag &= ~(OPOST | ONLCR);
+		
+		switch(nFlowControl)
+		{
 		case FLOW_HARDWARE:
-   		newTio.c_cflag |= CRTSCTS;
+			newTio.c_cflag |= CRTSCTS;
 			break;
 		case FLOW_SOFTWARE:
-   		newTio.c_iflag |= IXON | IXOFF;
+			newTio.c_iflag |= IXON | IXOFF;
 			break;
 		default:
 			break;
-	}
-
-	tcsetattr(m_hPort, TCSANOW, &newTio);
-
+		}
+		
+		tcsetattr(m_hPort, TCSANOW, &newTio);
+		
 #endif // _WIN32
-
-	return bRet;
+		
+		return bRet;
 }
 
 
@@ -261,19 +261,19 @@ bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlo
 
 void Serial::Close(void)
 {
-   if (m_hPort != INVALID_HANDLE_VALUE)
-   {
+	if (m_hPort != INVALID_HANDLE_VALUE)
+	{
 #ifdef _WIN32
-      //PurgeComm(m_hPort, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
-   	CloseHandle(m_hPort);
+		//PurgeComm(m_hPort, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
+		CloseHandle(m_hPort);
 #else // UNIX
 		tcsetattr(m_hPort, TCSANOW, &m_originalSettings);
-	   close(m_hPort);
+		close(m_hPort);
 #endif // _WIN32s
-      m_hPort = INVALID_HANDLE_VALUE;
-   	safe_free(m_pszPort);
+		m_hPort = INVALID_HANDLE_VALUE;
+		safe_free(m_pszPort);
 		m_pszPort = NULL;
-   }
+	}
 }
 
 
@@ -285,22 +285,22 @@ void Serial::SetTimeout(int nTimeout)
 {
 #ifdef _WIN32
 	COMMTIMEOUTS ct;
-
-   m_nTimeout = nTimeout;
+	
+	m_nTimeout = nTimeout;
 	memset(&ct, 0, sizeof(COMMTIMEOUTS));
 	ct.ReadTotalTimeoutConstant = m_nTimeout;
 	ct.WriteTotalTimeoutConstant = m_nTimeout;
-
+	
 	SetCommTimeouts(m_hPort, &ct);
 #else
 	struct termios tio;
-
+	
 	tcgetattr(m_hPort, &tio);
-
+	
 	m_nTimeout = nTimeout / 100; // convert to deciseconds (VTIME in 1/10sec)
 	tio.c_cc[VTIME] = m_nTimeout;
-
-   tcsetattr(m_hPort, TCSANOW, &tio);
+	
+	tcsetattr(m_hPort, TCSANOW, &tio);
 #endif // WIN32
 }
 
@@ -314,9 +314,9 @@ bool Serial::Restart(void)
 	Close();
 	ThreadSleepMs(500);
 	if (Open(m_pszPort))
-	   if (Set(m_nSpeed, m_nDataBits, m_nParity, m_nStopBits, m_nFlowControl))
-      	return true;
-   return false;
+		if (Set(m_nSpeed, m_nDataBits, m_nParity, m_nStopBits, m_nFlowControl))
+			return true;
+		return false;
 }
 
 
@@ -327,27 +327,27 @@ bool Serial::Restart(void)
 int Serial::Read(char *pBuff, int nSize)
 {
 	int nRet;
-
+	
 	memset(pBuff, 0, nSize);
 	if (m_hPort == INVALID_HANDLE_VALUE)
 		return -1;
-
+	
 #ifdef _WIN32
 	DWORD nDone;
-
+	
 	if (ReadFile(m_hPort, pBuff, nSize, &nDone, NULL) != 0)
 	{
-      nRet = (int)nDone;
+		nRet = (int)nDone;
 	}
 	else
 	{
-      nRet = -1;
+		nRet = -1;
 	}
-
+	
 #else // UNIX
 	fd_set rdfs;
 	struct timeval tv;
-
+	
 	FD_ZERO(&rdfs);
 	FD_SET(m_hPort, &rdfs);
 	tv.tv_sec = m_nTimeout / 10;
@@ -355,14 +355,14 @@ int Serial::Read(char *pBuff, int nSize)
 	nRet = select(m_hPort + 1, &rdfs, NULL, NULL, &tv);
 	if (nRet > 0)
 		nRet = read(m_hPort, pBuff, nSize);
-   else
-      nRet = -1;  // Timeout is an error
-
+	else
+		nRet = -1;  // Timeout is an error
+	
 #endif // _WIN32
-
-   //if (nRet == -1)
-   //   Restart();
-
+	
+	//if (nRet == -1)
+	//   Restart();
+	
 	return nRet;
 }
 
@@ -374,14 +374,14 @@ int Serial::Read(char *pBuff, int nSize)
 bool Serial::Write(char *pBuff, int nSize)
 {
 	bool bRet = false;
-
+	
 	if (m_hPort == INVALID_HANDLE_VALUE)
 		return false;
-
+	
 #ifdef _WIN32
-
+	
 	Sleep(100);
-
+	
 	DWORD nDone;
 	if (WriteFile(m_hPort, pBuff, nSize, &nDone, NULL) != 0)
 	{
@@ -394,10 +394,10 @@ bool Serial::Write(char *pBuff, int nSize)
 	{
 		Restart();
 	}
-
+	
 #else // UNIX
 	usleep(100);
-
+	
 	if (write(m_hPort, pBuff, nSize) == nSize)
 	{
 		bRet = true;
@@ -406,9 +406,9 @@ bool Serial::Write(char *pBuff, int nSize)
 	{
 		Restart();
 	}
-
+	
 #endif // _WIN32
-
+	
 	return bRet;
 }
 
@@ -420,15 +420,15 @@ bool Serial::Write(char *pBuff, int nSize)
 void Serial::Flush(void)
 {
 #ifdef _WIN32
-
+	
 	FlushFileBuffers(m_hPort);
-
+	
 #else // UNIX
-
+	
 #ifndef _NETWARE
 	tcflush(m_hPort, TCIOFLUSH);
 #endif
-
+	
 #endif // _WIN32
 }
 
@@ -436,12 +436,15 @@ void Serial::Flush(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2006/10/20 10:15:56  victor
+- libnxcscp merged into libnetxms
+- Fixed NetWare compilation issues
+
 Revision 1.14  2006/09/10 06:59:37  victor
 Fixed problmes with Win32 build
 
 Revision 1.13  2006/09/07 22:02:06  alk
 UNIX version of Serial rewritten
 termio removed from configure (depricated in favour of termio_s_?)
-
-
+	
 */
