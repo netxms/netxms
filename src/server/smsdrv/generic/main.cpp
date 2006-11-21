@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.7 2006-11-14 19:49:40 victor Exp $ */
+/* $Id: main.cpp,v 1.8 2006-11-21 21:09:09 alk Exp $ */
 
 #include "main.h"
 
@@ -28,7 +28,7 @@ extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 	{
 		portName = strdup(pszInitArgs);
 	}
-
+	
 	DbgPrintf(AF_DEBUG_MISC, "Loading Generic SMS Driver (configuration: %s)", pszInitArgs);
 	
 	char *p;
@@ -36,7 +36,7 @@ extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 	int dataBits = 8;
 	int parity = NOPARITY;
 	int stopBits = ONESTOPBIT;
-
+	
 	if ((p = strchr(portName, ',')) != NULL)
 	{
 		*p = 0; p++;
@@ -69,14 +69,14 @@ extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 							parity = EVENPARITY;
 							break;
 						}
-
+						
 						// stop bits
 						if ((p = strchr(p, ',')) != NULL)
 						{
 							*p = 0; p++;
 							
 							if (*p == '2')
-                     {
+							{
 								stopBits = TWOSTOPBITS;
 							}
 						}
@@ -85,7 +85,7 @@ extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 			}
 		}
 	}
-
+	
 	switch (parity)
 	{
 	case ODDPARITY:
@@ -105,12 +105,12 @@ extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 	if (bRet)
 	{
 		DbgPrintf(AF_DEBUG_MISC, "SMS: port opened");
-	   	m_serial.SetTimeout(1000);
+		m_serial.SetTimeout(1000);
 		m_serial.Set(portSpeed, dataBits, parity, stopBits);
-
+		
 		// enter PIN: AT+CPIN="xxxx"
 		// register network: AT+CREG1
-
+		
 		char szTmp[128];
 		m_serial.Write("ATZ\r\n", 5); // init modem && read user prefs
 		m_serial.Read(szTmp, 128); // read OK
@@ -121,11 +121,11 @@ extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 		m_serial.Write("ATI3\r\n", 6); // read vendor id
 		m_serial.Read(szTmp, 128); // read version
 		DbgPrintf(AF_DEBUG_MISC, "SMS init: ATI3 sent, got {%s}", szTmp);
-
+		
 		if (strcasecmp(szTmp, "ERROR") != 0)
 		{
 			char *sptr, *eptr;
-
+			
 			for(sptr = szTmp; (*sptr != 0) && ((*sptr == '\r') || (*sptr == '\n') || (*sptr == ' ') || (*sptr == '\t')); sptr++);
 			for(eptr = sptr; (*eptr != 0) && (*eptr != '\r') && (*eptr != '\n'); eptr++);
 			*eptr = 0;
@@ -150,9 +150,9 @@ extern "C" BOOL EXPORT SMSDriverSend(TCHAR *pszPhoneNumber, TCHAR *pszText)
 	if (pszPhoneNumber != NULL && pszText != NULL)
 	{
 		char szTmp[128];
-
+		
 		DbgPrintf(AF_DEBUG_MISC, "SMS send: to {%s}: {%s}", pszPhoneNumber, pszText);
-
+		
 		m_serial.Write("ATZ\r\n", 5); // init modem && read user prefs
 		m_serial.Read(szTmp, 128); // read OK
 		DbgPrintf(AF_DEBUG_MISC, "SMS send: ATZ sent, got {%s}", szTmp);
@@ -169,7 +169,7 @@ extern "C" BOOL EXPORT SMSDriverSend(TCHAR *pszPhoneNumber, TCHAR *pszText)
 		m_serial.Read(szTmp, 128); // read +CMGS:ref_num
 		DbgPrintf(AF_DEBUG_MISC, "SMS send: AT+CMGS + message body sent, got {%s}", szTmp);
 	}
-
+	
 	return true;
 }
 
@@ -199,6 +199,12 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/11/14 19:49:40  victor
+- Active discovery implemented
+- Discovery configuration implemented
+- DbgPrintf moved to libnxsrv
+- Other minor changes
+
 Revision 1.6  2006/11/14 14:51:40  alk
 init parameter parsing added, new format: port,speed,dataBits,parity,stopBits
 everything is optional - defaults will be used (/dev/ttyS0 9600 8n1)
@@ -220,5 +226,5 @@ project files addded
 
 Revision 1.1  2005/06/16 13:19:38  alk
 added sms-driver for generic gsm modem
-
+			  
 */
