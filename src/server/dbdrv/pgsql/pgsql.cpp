@@ -1,4 +1,4 @@
-/* $Id: pgsql.cpp,v 1.17 2006-10-01 10:54:25 victor Exp $ */
+/* $Id: pgsql.cpp,v 1.18 2006-11-23 20:54:38 victor Exp $ */
 /* 
 ** PostgreSQL Database Driver
 ** Copyright (C) 2003, 2005 Victor Kirhenshtein and Alex Kirhenshtein
@@ -220,7 +220,7 @@ extern "C" LONG EXPORT DrvGetFieldLength(DB_RESULT pResult, int nRow, int nColum
       return -1;
 
    pszValue = PQgetvalue((PGresult *)pResult, nRow, nColumn);
-   return (pszValue != NULL) ? strlen(pszValue) : -1;
+   return (pszValue != NULL) ? (LONG)strlen(pszValue) : (LONG)-1;
 }
 
 
