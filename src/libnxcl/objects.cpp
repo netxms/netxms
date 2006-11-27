@@ -1560,3 +1560,56 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateObjectComments(NXC_SESSION hSession,
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
+
+
+//
+// Actual check for parent-child relation
+//
+
+static BOOL IsParent(NXC_SESSION hSession, DWORD dwParent, DWORD dwChild)
+{
+   DWORD i;
+   NXC_OBJECT *pObject;
+   BOOL bRet = FALSE;
+
+   pObject = ((NXCL_Session *)hSession)->FindObjectById(dwChild, FALSE);
+   if (pObject != NULL)
+   {
+      for(i = 0; i < pObject->dwNumParents; i++)
+      {
+         if (pObject->pdwParentList[i] == dwParent)
+         {
+            bRet = TRUE;
+            break;
+         }
+      }
+
+      if (!bRet)
+      {
+         for(i = 0; i < pObject->dwNumParents; i++)
+         {
+            if (IsParent(hSession, dwParent, pObject->pdwParentList[i]))
+            {
+               bRet = TRUE;
+               break;
+            }
+         }
+      }
+   }
+   return bRet;
+}
+
+
+//
+// Check if first object is a parent of second object
+//
+
+BOOL LIBNXCL_EXPORTABLE NXCIsParent(NXC_SESSION hSession, DWORD dwParent, DWORD dwChild)
+{
+   BOOL bRet;
+
+   ((NXCL_Session *)hSession)->LockObjectIndex();
+   bRet = IsParent(hSession, dwParent, dwChild);
+   ((NXCL_Session *)hSession)->UnlockObjectIndex();
+   return bRet;
+}
