@@ -46,6 +46,7 @@ protected:  // control bar embedded members
 
 // Generated message map functions
 protected:
+	CImageList m_imageList;
 	void SetDesktopIndicator(void);
 	TCHAR m_szDesktopName[MAX_OBJECT_NAME];
 	//{{AFX_MSG(CMainFrame)

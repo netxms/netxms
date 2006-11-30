@@ -28,6 +28,7 @@
 #define ID_BROWSER_CTRL                 124
 #define ID_TOOLBAR_CTRL                 126
 #define IDR_MAINFRAME                   128
+#define ID_TAB_CTRL                     128
 #define IDR_NXCONTYPE                   129
 #define IDI_ALARM                       130
 #define IDS_NXC_INIT_FAILED             130
@@ -207,6 +208,7 @@
 #define IDD_DISCOVERY_RANGES            338
 #define IDI_DISCOVERY                   339
 #define IDD_ADDR_ENTRY                  340
+#define IDI_EXIT                        341
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -803,9 +805,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        341
+#define _APS_NEXT_RESOURCE_VALUE        342
 #define _APS_NEXT_COMMAND_VALUE         33047
 #define _APS_NEXT_CONTROL_VALUE         1417
-#define _APS_NEXT_SYMED_VALUE           128
+#define _APS_NEXT_SYMED_VALUE           129
 #endif
 #endif

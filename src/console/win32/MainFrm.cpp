@@ -72,15 +72,42 @@ CMainFrame::~CMainFrame()
 
 int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
+   static TBBUTTON tbButtons[] =
+   {
+      { 0, ID_VIEW_MAP, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 1, ID_VIEW_OBJECTBROWSER, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 2, ID_VIEW_ALARMS, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 3, ID_VIEW_EVENTS, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 4, ID_VIEW_CONTROLPANEL, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0, 0 },
+      { 6, ID_CONTROLPANEL_EVENTPOLICY, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 7, ID_CONTROLPANEL_SNMPTRAPS, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 5, ID_CONTROLPANEL_USERS, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 8, ID_CONTROLPANEL_SERVERCFG, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 9, ID_CONTROLPANEL_SCRIPTLIBRARY, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
+      { 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0, 0 },
+      { 10, ID_APP_EXIT, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 }
+   };
+
 	if (CMDIFrameWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
-	if (!m_wndToolBar.CreateEx(this) ||
-		!m_wndToolBar.LoadToolBar(IDR_MAINFRAME))
-	{
-		TRACE0("Failed to create toolbar\n");
-		return -1;      // fail to create
-	}
+   m_imageList.Create(16, 16, ILC_COLOR24 | ILC_MASK, 8, 1);
+   m_imageList.Add(theApp.LoadIcon(IDI_NETMAP));
+   m_imageList.Add(theApp.LoadIcon(IDI_TREE));
+   m_imageList.Add(theApp.LoadIcon(IDI_ALARM));
+   m_imageList.Add(theApp.LoadIcon(IDI_LOG));
+   m_imageList.Add(theApp.LoadIcon(IDI_SETUP));
+   m_imageList.Add(theApp.LoadIcon(IDI_USER_GROUP));
+   m_imageList.Add(theApp.LoadIcon(IDI_RULEMGR));
+   m_imageList.Add(theApp.LoadIcon(IDI_TRAP));
+   m_imageList.Add(theApp.LoadIcon(IDI_DATABASE));
+   m_imageList.Add(theApp.LoadIcon(IDI_SCRIPT_LIBRARY));
+   m_imageList.Add(theApp.LoadIcon(IDI_EXIT));
+
+   m_wndToolBar.CreateEx(this);
+   m_wndToolBar.GetToolBarCtrl().SetImageList(&m_imageList);
+   m_wndToolBar.GetToolBarCtrl().AddButtons(sizeof(tbButtons) / sizeof(TBBUTTON), tbButtons);
 
 	if (!m_wndReBar.Create(this) ||
 		!m_wndReBar.AddBar(&m_wndToolBar))
@@ -250,11 +277,14 @@ void CMainFrame::OnStateChange(WPARAM wParam, LPARAM lParam)
 
 void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
 {
-   CAlarmBrowser *pWnd;
+   CMDIChildWnd *pWnd;
 
    pWnd = theApp.GetAlarmBrowser();
    if (pWnd != NULL)
-      pWnd->OnAlarmUpdate(wParam, (NXC_ALARM *)lParam);
+      ((CAlarmBrowser *)pWnd)->OnAlarmUpdate(wParam, (NXC_ALARM *)lParam);
+   pWnd = theApp.GetObjectBrowser();
+   if (pWnd != NULL)
+      ((CObjectBrowser *)pWnd)->OnAlarmUpdate(wParam, (NXC_ALARM *)lParam);
    free((void *)lParam);
 }
 

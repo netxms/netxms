@@ -131,6 +131,9 @@ CConsoleApp::CConsoleApp()
    memset(m_openObjectViews, 0, sizeof(OBJECT_VIEW) * MAX_OBJECT_VIEWS);
    memset(m_viewState, 0, sizeof(CONSOLE_VIEW) * MAX_VIEW_ID);
    m_bIgnoreErrors = FALSE;
+   m_dwNumAlarms = 0;
+   m_pAlarmList = NULL;
+   m_mutexAlarmList = MutexCreate();
 }
 
 
@@ -140,6 +143,8 @@ CConsoleApp::CConsoleApp()
 
 CConsoleApp::~CConsoleApp()
 {
+   safe_free(m_pAlarmList);
+   MutexDestroy(m_mutexAlarmList);
 }
 
 
@@ -997,6 +1002,7 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
             case NX_NOTIFY_ALARM_DELETED:
             case NX_NOTIFY_ALARM_CHANGED:
             case NX_NOTIFY_ALARM_TERMINATED:
+               OnAlarmUpdate(dwCode, (NXC_ALARM *)pArg);
                m_pMainWnd->PostMessage(NXCM_ALARM_UPDATE, dwCode, 
                                        (LPARAM)nx_memdup(pArg, sizeof(NXC_ALARM)));
                break;
@@ -3067,4 +3073,125 @@ void CConsoleApp::ShowDetailsWindow(DWORD dwType, HWND hwndOrigin, Table *pData)
       CreateChildFrameWithSubtitle(pWnd, IDR_ALARM_DETAILS, _T("AAA"),
                                    m_hMDIMenu, m_hMDIAccel);
    }
+}
+
+
+//
+// (Re)load alarm list
+//
+
+DWORD CConsoleApp::LoadAlarms()
+{
+   m_dwNumAlarms = 0;
+   safe_free(m_pAlarmList);
+   return NXCLoadAllAlarms(g_hSession, FALSE, &m_dwNumAlarms, &m_pAlarmList);
+}
+
+
+//
+// Find alarm record in internal list
+//
+
+NXC_ALARM *CConsoleApp::FindAlarmInList(DWORD dwAlarmId)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumAlarms; i++)
+      if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
+         return &m_pAlarmList[i];
+   return NULL;
+}
+
+
+//
+// Add new alarm to internal list
+//
+
+void CConsoleApp::AddAlarmToList(NXC_ALARM *pAlarm)
+{
+   m_pAlarmList = (NXC_ALARM *)realloc(m_pAlarmList, sizeof(NXC_ALARM) * (m_dwNumAlarms + 1));
+   memcpy(&m_pAlarmList[m_dwNumAlarms], pAlarm, sizeof(NXC_ALARM));
+   m_dwNumAlarms++;
+   //m_iNumAlarms[pAlarm->nCurrentSeverity]++;
+}
+
+
+//
+// Delete alarm from internal alarms list
+//
+
+void CConsoleApp::DeleteAlarmFromList(DWORD dwAlarmId)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumAlarms; i++)
+      if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
+      {
+         PlayAlarmSound(&m_pAlarmList[i], FALSE, g_hSession, &g_soundCfg);
+         m_dwNumAlarms--;
+         memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1],
+                 sizeof(NXC_ALARM) * (m_dwNumAlarms - i));
+         break;
+      }
+}
+
+
+//
+// Handler for alarm updates
+//
+
+void CConsoleApp::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
+{
+   NXC_ALARM *pListItem;
+
+   MutexLock(m_mutexAlarmList, INFINITE);
+   switch(dwCode)
+   {
+      case NX_NOTIFY_NEW_ALARM:
+         if (pAlarm->nState != ALARM_STATE_TERMINATED)
+         {
+            AddAlarmToList(pAlarm);
+            PlayAlarmSound(pAlarm, TRUE, g_hSession, &g_soundCfg);
+         }
+         break;
+      case NX_NOTIFY_ALARM_CHANGED:
+         pListItem = FindAlarmInList(pAlarm->dwAlarmId);
+         if (pListItem != NULL)
+         {
+//            m_iNumAlarms[pListItem->nCurrentSeverity]--;
+//            m_iNumAlarms[pAlarm->nCurrentSeverity]++;
+            memcpy(pListItem, pAlarm, sizeof(NXC_ALARM));
+         }
+         break;
+      case NX_NOTIFY_ALARM_TERMINATED:
+      case NX_NOTIFY_ALARM_DELETED:
+         DeleteAlarmFromList(pAlarm->dwAlarmId);
+//         m_iNumAlarms[pAlarm->nCurrentSeverity]--;
+         break;
+      default:
+         break;
+   }
+   MutexUnlock(m_mutexAlarmList);
+}
+
+
+//
+// Open (and lock) alarm list
+//
+
+DWORD CConsoleApp::OpenAlarmList(NXC_ALARM **ppList)
+{
+   MutexLock(m_mutexAlarmList, INFINITE);
+   *ppList = m_pAlarmList;
+   return m_dwNumAlarms;
+}
+
+
+//
+// Close alarm list
+//
+
+void CConsoleApp::CloseAlarmList()
+{
+   MutexUnlock(m_mutexAlarmList);
 }

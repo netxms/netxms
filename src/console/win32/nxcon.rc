@@ -136,6 +136,7 @@ IDI_GO_PARENT           ICON    DISCARDABLE     "icons\\go_parent.ico"
 IDI_HOME                ICON    DISCARDABLE     "icons\\home.ico"
 IDI_CONFIGS             ICON    DISCARDABLE     "icons\\configs.ico"
 IDI_DISCOVERY           ICON    DISCARDABLE     "icons\\discovery.ico"
+IDI_EXIT                ICON    DISCARDABLE     "icons\\exit.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3641,7 +3642,64 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
+    ID_VIEW_CONTROLPANEL    "Control Panel\nControl Panel"
+    ID_VIEW_EVENTS          "Open event log\nEvent Log"
+    ID_VIEW_MAP             "Open default network map\nDefault network map"
+    ID_VIEW_OBJECTBROWSER   "Open object browser\nObject Browser"
     ID_VIEW_REFRESH         "Refresh current view\nRefresh"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_VIEW_ALARMS          "Open alarm browser\nAlarm Browser"
+    ID_CONTROLPANEL_ACTIONS "Open action configuration window\nAction Configuration"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_CONTROLPANEL_AGENTCONFIGS 
+                            "Open agent configurations editor\nAgent Configurations Editor"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_CONTROLPANEL_SNMPTRAPS 
+                            "Open SNMP trap mapping policy\nSNMP Trap Configuration"
+    ID_CONTROLPANEL_AGENTPKG "Manage agent packages\nAgent Package Manager"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_CONTROLPANEL_EVENTPOLICY 
+                            "Open Event Processing Policy editor\nEvent Processing Policy Editor"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_CONTROLPANEL_EVENTS  "Open event configurator\nEvent Configuration"
+    ID_CONTROLPANEL_USERS   "Open User Manager\nUser Manager"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_CONTROLPANEL_NETWORKDISCOVERY 
+                            "Network discovery settings\nNetwork Discovery Settings"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_CONTROLPANEL_OBJECTTOOLS 
+                            "Open object tools configurator\nObject Tools Configuration"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_CONTROLPANEL_SCRIPTLIBRARY "Open Script Library\nScript Library"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_CONTROLPANEL_SERVERCFG "Server Configuration\nServer Configuration"
 END
 
 #endif    // English (U.S.) resources

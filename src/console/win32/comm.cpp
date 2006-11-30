@@ -304,6 +304,15 @@ static DWORD WINAPI LoginThread(void *pArg)
       dwResult = LoadObjectTools();
    }
 
+   // Synchronizing alarms
+   if (dwResult == RCC_SUCCESS)
+   {
+      SetInfoText(hWnd, _T("Synchronizing alarms..."));
+      dwResult = theApp.LoadAlarms();
+      if (dwResult == RCC_SUCCESS)
+         dwResult = NXCSubscribe(g_hSession, NXC_CHANNEL_ALARMS);
+   }
+
    // Disconnect if some of post-login operations was failed
    if (dwResult != RCC_SUCCESS)
    {

@@ -20,6 +20,7 @@ EXTRA_DIST = \
 	AgentCfgEditor.cpp AgentCfgEditor.h \
 	AgentConfigMgr.cpp AgentConfigMgr.h \
 	AlarmBrowser.cpp AlarmBrowser.h \
+	AlarmView.cpp AlarmView.h \
 	comm.cpp \
 	CondDCIPropDlg.cpp CondDCIPropDlg.h \
 	ColorSelector.cpp ColorSelector.h \
@@ -89,8 +90,7 @@ EXTRA_DIST = \
 	nxcon.rc \
 	ObjectBrowser.cpp ObjectBrowser.h \
 	ObjectCommentsEditor.cpp ObjectCommentsEditor.h \
-	ObjectInfoBox.cpp ObjectInfoBox.h \
-	ObjectPreview.cpp ObjectPreview.h \
+	ObjectOverview.cpp ObjectOverview.h \
 	ObjectPropCaps.cpp ObjectPropCaps.h \
 	ObjectPropsGeneral.cpp ObjectPropsGeneral.h \
 	ObjectPropSheet.cpp ObjectPropSheet.h \
@@ -98,9 +98,9 @@ EXTRA_DIST = \
 	ObjectPropsRelations.cpp ObjectPropsRelations.h \
 	ObjectPropsSecurity.cpp ObjectPropsSecurity.h \
 	ObjectPropsStatus.cpp ObjectPropsStatus.h \
-	ObjectSearchBox.cpp ObjectSearchBox.h \
 	ObjectSelDlg.cpp ObjectSelDlg.h \
 	ObjectToolsEditor.cpp ObjectToolsEditor.h \
+	ObjectView.cpp ObjectView.h \
 	ObjToolPropColumns.cpp ObjToolPropColumns.h \
 	ObjToolPropGeneral.cpp ObjToolPropGeneral.h \
 	ObjToolPropOptions.cpp ObjToolPropOptions.h \

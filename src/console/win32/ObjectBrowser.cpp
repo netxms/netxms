@@ -1,4 +1,3 @@
-//
 // ObjectBrowser.cpp : implementation file
 //
 
@@ -12,14 +11,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-
-//
-// Constants
-//
-
-#define PREVIEW_PANE_WIDTH    200
-
-
 //
 // Compare two items in object tree hash for qsort()
 //
@@ -31,124 +22,27 @@ static int CompareTreeHashItems(const void *p1, const void *p2)
 }
 
 
-//
-// Get netmask value depending on object's class
-//
-
-static DWORD GetObjectNetMask(NXC_OBJECT *pObject)
-{
-   DWORD dwMask;
-
-   switch(pObject->iClass)
-   {
-      case OBJECT_SUBNET:
-         dwMask = pObject->subnet.dwIpNetMask;
-         break;
-      case OBJECT_INTERFACE:
-         dwMask = pObject->iface.dwIpNetMask;
-         break;
-      default:
-         dwMask = 0;
-         break;
-   }
-   return dwMask;
-}
-
-
-//
-// Compare two list view items
-//
-
-static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
-{
-   CObjectBrowser *pBrowser = (CObjectBrowser *)lParamSort;
-   TCHAR *pszStr1, *pszStr2;
-   DWORD dwNum1, dwNum2;
-   int iResult;
-
-   switch(SORT_MODE(lParamSort))
-   {
-      case OBJECT_SORT_BY_ID:
-         iResult = COMPARE_NUMBERS(((NXC_OBJECT *)lParam1)->dwId, ((NXC_OBJECT *)lParam2)->dwId);
-         break;
-      case OBJECT_SORT_BY_NAME:
-         iResult = _tcsicmp(((NXC_OBJECT *)lParam1)->szName, ((NXC_OBJECT *)lParam2)->szName);
-         break;
-      case OBJECT_SORT_BY_CLASS:
-         iResult = COMPARE_NUMBERS(((NXC_OBJECT *)lParam1)->iClass, ((NXC_OBJECT *)lParam2)->iClass);
-         break;
-      case OBJECT_SORT_BY_STATUS:
-         iResult = COMPARE_NUMBERS(((NXC_OBJECT *)lParam1)->iStatus, ((NXC_OBJECT *)lParam2)->iStatus);
-         break;
-      case OBJECT_SORT_BY_IP:
-         dwNum1 = ((NXC_OBJECT *)lParam1)->dwIpAddr;
-         dwNum2 = ((NXC_OBJECT *)lParam2)->dwIpAddr;
-         iResult = COMPARE_NUMBERS(dwNum1, dwNum2);
-         break;
-      case OBJECT_SORT_BY_MASK:
-         dwNum1 = GetObjectNetMask((NXC_OBJECT *)lParam1);
-         dwNum2 = GetObjectNetMask((NXC_OBJECT *)lParam2);
-         iResult = COMPARE_NUMBERS(dwNum1, dwNum2);
-         break;
-      case OBJECT_SORT_BY_IFINDEX:
-         dwNum1 = (((NXC_OBJECT *)lParam1)->iClass == OBJECT_INTERFACE) ? 
-                     ((NXC_OBJECT *)lParam1)->iface.dwIfIndex : 0;
-         dwNum2 = (((NXC_OBJECT *)lParam2)->iClass == OBJECT_INTERFACE) ? 
-                     ((NXC_OBJECT *)lParam2)->iface.dwIfIndex : 0;
-         iResult = COMPARE_NUMBERS(dwNum1, dwNum2);
-         break;
-      case OBJECT_SORT_BY_OID:
-         pszStr1 = (((NXC_OBJECT *)lParam1)->iClass == OBJECT_NODE) ? 
-                        ((NXC_OBJECT *)lParam1)->node.szObjectId : _T("");
-         pszStr2 = (((NXC_OBJECT *)lParam2)->iClass == OBJECT_NODE) ? 
-                        ((NXC_OBJECT *)lParam2)->node.szObjectId : _T("");
-         iResult = _tcsicmp(pszStr1, pszStr2);
-         break;
-      default:
-         iResult = 0;
-         break;
-   }
-
-   return (SORT_DIR(lParamSort) == SORT_ASCENDING) ? iResult : -iResult;
-}
-
-
-//
-// CObjectBrowser implementation
-//
+/////////////////////////////////////////////////////////////////////////////
+// CObjectBrowser
 
 IMPLEMENT_DYNCREATE(CObjectBrowser, CMDIChildWnd)
 
 CObjectBrowser::CObjectBrowser()
 {
+   m_dwFlags = 0;
+   m_pCurrentObject = NULL;
    m_pImageList = NULL;
    m_dwTreeHashSize = 0;
    m_pTreeHash = NULL;
-   m_dwFlags = SHOW_OBJECT_PREVIEW | VIEW_OBJECTS_AS_TREE;
-   m_dwSortMode = OBJECT_SORT_BY_NAME;
-   m_pCurrentObject = NULL;
-   m_bRestoredDesktop = FALSE;
 }
 
 CObjectBrowser::CObjectBrowser(TCHAR *pszParams)
 {
-   DWORD dwObjectId;
-
+   m_dwFlags = 0;
+   m_pCurrentObject = NULL;
    m_pImageList = NULL;
    m_dwTreeHashSize = 0;
    m_pTreeHash = NULL;
-   m_dwFlags = ExtractWindowParamULong(pszParams, _T("F"), SHOW_OBJECT_PREVIEW | VIEW_OBJECTS_AS_TREE);
-   m_dwSortMode = ExtractWindowParamULong(pszParams, _T("SM"), OBJECT_SORT_BY_NAME);
-   dwObjectId = ExtractWindowParamULong(pszParams, _T("O"), 0);
-   if (dwObjectId != 0)
-   {
-      m_pCurrentObject = NXCFindObjectById(g_hSession, dwObjectId);
-   }
-   else
-   {
-      m_pCurrentObject = NULL;
-   }
-   m_bRestoredDesktop = TRUE;
 }
 
 CObjectBrowser::~CObjectBrowser()
@@ -160,75 +54,122 @@ CObjectBrowser::~CObjectBrowser()
 
 BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	//{{AFX_MSG_MAP(CObjectBrowser)
-	ON_WM_DESTROY()
 	ON_WM_CREATE()
+	ON_WM_DESTROY()
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
-	ON_WM_GETMINMAXINFO()
-	ON_COMMAND(ID_OBJECT_VIEW_SHOWPREVIEWPANE, OnObjectViewShowpreviewpane)
-	ON_COMMAND(ID_OBJECT_VIEW_VIEWASLIST, OnObjectViewViewaslist)
-	ON_COMMAND(ID_OBJECT_VIEW_VIEWASTREE, OnObjectViewViewastree)
 	ON_WM_CONTEXTMENU()
 	ON_COMMAND(ID_OBJECT_PROPERTIES, OnObjectProperties)
-	ON_COMMAND(ID_OBJECT_VIEW_SELECTION, OnObjectViewSelection)
-	ON_UPDATE_COMMAND_UI(ID_OBJECT_VIEW_VIEWASLIST, OnUpdateObjectViewViewaslist)
-	ON_UPDATE_COMMAND_UI(ID_OBJECT_VIEW_VIEWASTREE, OnUpdateObjectViewViewastree)
-	ON_UPDATE_COMMAND_UI(ID_OBJECT_VIEW_SELECTION, OnUpdateObjectViewSelection)
-	ON_UPDATE_COMMAND_UI(ID_OBJECT_VIEW_SHOWPREVIEWPANE, OnUpdateObjectViewShowpreviewpane)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_PROPERTIES, OnUpdateObjectProperties)
-	ON_COMMAND(ID_OBJECT_DATACOLLECTION, OnObjectDatacollection)
-	ON_UPDATE_COMMAND_UI(ID_OBJECT_DATACOLLECTION, OnUpdateObjectDatacollection)
-	ON_COMMAND(ID_OBJECT_MANAGE, OnObjectManage)
-	ON_COMMAND(ID_OBJECT_UNMANAGE, OnObjectUnmanage)
-	ON_UPDATE_COMMAND_UI(ID_OBJECT_UNMANAGE, OnUpdateObjectUnmanage)
-	ON_UPDATE_COMMAND_UI(ID_OBJECT_MANAGE, OnUpdateObjectManage)
+	ON_COMMAND(ID_OBJECT_AGENTCFG, OnObjectAgentcfg)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_AGENTCFG, OnUpdateObjectAgentcfg)
+	ON_COMMAND(ID_OBJECT_APPLY, OnObjectApply)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_APPLY, OnUpdateObjectApply)
 	ON_COMMAND(ID_OBJECT_BIND, OnObjectBind)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_BIND, OnUpdateObjectBind)
-	ON_COMMAND(ID_OBJECT_CREATE_CONTAINER, OnObjectCreateContainer)
-	ON_COMMAND(ID_OBJECT_CREATE_NODE, OnObjectCreateNode)
-	ON_COMMAND(ID_OBJECT_DELETE, OnObjectDelete)
-	ON_UPDATE_COMMAND_UI(ID_OBJECT_DELETE, OnUpdateObjectDelete)
-	ON_COMMAND(ID_OBJECT_POLL_STATUS, OnObjectPollStatus)
-	ON_COMMAND(ID_OBJECT_POLL_CONFIGURATION, OnObjectPollConfiguration)
-	ON_UPDATE_COMMAND_UI(ID_OBJECT_POLL_STATUS, OnUpdateObjectPollStatus)
-	ON_UPDATE_COMMAND_UI(ID_OBJECT_POLL_CONFIGURATION, OnUpdateObjectPollConfiguration)
-	ON_WM_CLOSE()
-	ON_COMMAND(ID_OBJECT_CREATE_TEMPLATE, OnObjectCreateTemplate)
-	ON_COMMAND(ID_OBJECT_CREATE_TEMPLATEGROUP, OnObjectCreateTemplategroup)
-	ON_UPDATE_COMMAND_UI(ID_OBJECT_WAKEUP, OnUpdateObjectWakeup)
-	ON_COMMAND(ID_OBJECT_CREATE_SERVICE, OnObjectCreateService)
-	ON_UPDATE_COMMAND_UI(ID_OBJECT_LASTDCIVALUES, OnUpdateObjectLastdcivalues)
-	ON_COMMAND(ID_OBJECT_LASTDCIVALUES, OnObjectLastdcivalues)
-	ON_UPDATE_COMMAND_UI(ID_OBJECT_APPLY, OnUpdateObjectApply)
-	ON_COMMAND(ID_OBJECT_APPLY, OnObjectApply)
-	ON_UPDATE_COMMAND_UI(ID_OBJECT_UNBIND, OnUpdateObjectUnbind)
-	ON_COMMAND(ID_OBJECT_UNBIND, OnObjectUnbind)
 	ON_COMMAND(ID_OBJECT_CHANGEIPADDRESS, OnObjectChangeipaddress)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_CHANGEIPADDRESS, OnUpdateObjectChangeipaddress)
-	ON_UPDATE_COMMAND_UI(ID_OBJECT_AGENTCFG, OnUpdateObjectAgentcfg)
-	ON_COMMAND(ID_OBJECT_AGENTCFG, OnObjectAgentcfg)
-	ON_COMMAND(ID_OBJECT_CREATE_VPNCONNECTOR, OnObjectCreateVpnconnector)
-	ON_COMMAND(ID_OBJECT_MOVE, OnObjectMove)
-	ON_UPDATE_COMMAND_UI(ID_OBJECT_MOVE, OnUpdateObjectMove)
-	ON_COMMAND(ID_OBJECT_CREATE_CONDITION, OnObjectCreateCondition)
 	ON_COMMAND(ID_OBJECT_COMMENTS, OnObjectComments)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_COMMENTS, OnUpdateObjectComments)
+	ON_COMMAND(ID_OBJECT_CREATE_CONDITION, OnObjectCreateCondition)
+	ON_COMMAND(ID_OBJECT_CREATE_CONTAINER, OnObjectCreateContainer)
+	ON_COMMAND(ID_OBJECT_CREATE_NODE, OnObjectCreateNode)
+	ON_COMMAND(ID_OBJECT_CREATE_SERVICE, OnObjectCreateService)
+	ON_COMMAND(ID_OBJECT_CREATE_TEMPLATE, OnObjectCreateTemplate)
+	ON_COMMAND(ID_OBJECT_CREATE_TEMPLATEGROUP, OnObjectCreateTemplategroup)
+	ON_COMMAND(ID_OBJECT_CREATE_VPNCONNECTOR, OnObjectCreateVpnconnector)
+	ON_COMMAND(ID_OBJECT_DATACOLLECTION, OnObjectDatacollection)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_DATACOLLECTION, OnUpdateObjectDatacollection)
+	ON_COMMAND(ID_OBJECT_DELETE, OnObjectDelete)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_DELETE, OnUpdateObjectDelete)
+	ON_COMMAND(ID_OBJECT_LASTDCIVALUES, OnObjectLastdcivalues)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_LASTDCIVALUES, OnUpdateObjectLastdcivalues)
+	ON_COMMAND(ID_OBJECT_MANAGE, OnObjectManage)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_MANAGE, OnUpdateObjectManage)
+	ON_COMMAND(ID_OBJECT_MOVE, OnObjectMove)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_MOVE, OnUpdateObjectMove)
+	ON_COMMAND(ID_OBJECT_POLL_CONFIGURATION, OnObjectPollConfiguration)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_POLL_CONFIGURATION, OnUpdateObjectPollConfiguration)
+	ON_COMMAND(ID_OBJECT_POLL_STATUS, OnObjectPollStatus)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_POLL_STATUS, OnUpdateObjectPollStatus)
+	ON_COMMAND(ID_OBJECT_UNBIND, OnObjectUnbind)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_UNBIND, OnUpdateObjectUnbind)
+	ON_COMMAND(ID_OBJECT_UNMANAGE, OnObjectUnmanage)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_UNMANAGE, OnUpdateObjectUnmanage)
 	//}}AFX_MSG_MAP
-   ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_VIEW, OnTreeViewSelChange)
-   ON_NOTIFY(TVN_GETDISPINFO, IDC_TREE_VIEW, OnTreeViewGetDispInfo)
-   ON_NOTIFY(TVN_ITEMEXPANDING, IDC_TREE_VIEW, OnTreeViewItemExpanding)
-	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
-	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_VIEW, OnListViewItemChange)
-	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
+   ON_NOTIFY(TVN_SELCHANGED, AFX_IDW_PANE_FIRST, OnTreeViewSelChange)
+   ON_NOTIFY(TVN_GETDISPINFO, AFX_IDW_PANE_FIRST, OnTreeViewGetDispInfo)
+   ON_NOTIFY(TVN_ITEMEXPANDING, AFX_IDW_PANE_FIRST, OnTreeViewItemExpanding)
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
-   ON_MESSAGE(NXCM_FIND_OBJECT, OnFindObject)
-   ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
-   ON_COMMAND_RANGE(OBJTOOL_MENU_FIRST_ID, OBJTOOL_MENU_LAST_ID, OnObjectTool)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CObjectBrowser message handlers
+
+BOOL CObjectBrowser::PreCreateWindow(CREATESTRUCT& cs) 
+{
+   if (cs.lpszClass == NULL)
+      cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, NULL, NULL, 
+                                         AfxGetApp()->LoadIcon(IDI_TREE));
+	return CMDIChildWnd::PreCreateWindow(cs);
+}
+
+
+//
+// WM_CREATE message handler
+//
+
+int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+{
+   RECT rect;
+   int i;
+
+	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+   GetClientRect(&rect);
+	
+   // Create splitter
+   m_wndSplitter.CreateStatic(this, 1, 2, WS_CHILD | WS_VISIBLE, IDC_SPLITTER);
+	
+   // Create tree view control
+   m_wndTreeCtrl.Create(WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT | TVS_SHOWSELALWAYS,
+                        rect, &m_wndSplitter, m_wndSplitter.IdFromRowCol(0, 0));
+
+   // Create image list
+   m_pImageList = new CImageList;
+   m_pImageList->Create(g_pObjectSmallImageList);
+   m_nLastObjectImage = m_pImageList->GetImageCount();
+   m_pImageList->Add(theApp.LoadIcon(IDI_SORT_UP));
+   m_pImageList->Add(theApp.LoadIcon(IDI_SORT_DOWN));
+   m_nStatusImageBase = m_pImageList->GetImageCount();
+   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_WARNING));
+   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_MINOR));
+   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_MAJOR));
+   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_CRITICAL));
+   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_UNKNOWN));
+   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_UNMANAGED));
+   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_DISABLED));
+   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_TESTING));
+   for(i = STATUS_WARNING; i <= STATUS_TESTING; i++)
+      m_pImageList->SetOverlayImage(m_nStatusImageBase + i - 1, i);
+   m_wndTreeCtrl.SetImageList(m_pImageList, TVSIL_NORMAL);
+
+   // Create object view in right pane
+   m_wndObjectView.Create(NULL, _T("Object View"), WS_CHILD | WS_VISIBLE, rect,
+                          &m_wndSplitter, m_wndSplitter.IdFromRowCol(0, 1));
+
+   // Create panes in splitter
+   m_wndSplitter.SetupView(0, 0, CSize(250, 100));
+   m_wndSplitter.SetupView(0, 1, CSize(400, 100));
+   m_wndSplitter.InitComplete();
+   m_wndSplitter.SetWindowPos(NULL, 0, 0, rect.right, rect.bottom, SWP_NOZORDER);
+
+   theApp.OnViewCreate(VIEW_OBJECTS, this);
+   PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
+	return 0;
+}
 
 
 //
@@ -243,130 +184,13 @@ void CObjectBrowser::OnDestroy()
 
 
 //
-// WM_CREATE message handler
-//
-
-int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct) 
-{
-   RECT rect;
-   LVCOLUMN lvCol;
-   BYTE *pwp;
-   UINT iBytes;
-   int i;
-
-	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
-		return -1;
-
-   // Read browser configuration
-   if (!m_bRestoredDesktop)
-   {
-      m_dwFlags = theApp.GetProfileInt(_T("ObjectBrowser"), _T("Flags"), m_dwFlags);
-      m_dwSortMode = theApp.GetProfileInt(_T("ObjectBrowser"), _T("SortMode"), m_dwSortMode);
-   }
-
-   // Create preview pane
-   GetClientRect(&rect);
-   rect.right = PREVIEW_PANE_WIDTH;
-   m_wndPreviewPane.Create(WS_CHILD | ((m_dwFlags & SHOW_OBJECT_PREVIEW) ? WS_VISIBLE : 0),
-                           rect, this, IDC_PREVIEW_PANE);
-
-   // Create tree view control
-   GetClientRect(&rect);
-   if (m_dwFlags & SHOW_OBJECT_PREVIEW)
-   {
-      rect.left = PREVIEW_PANE_WIDTH;
-      rect.right -= PREVIEW_PANE_WIDTH;
-   }
-   m_wndTreeCtrl.Create(WS_CHILD | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT | TVS_SHOWSELALWAYS,
-                        rect, this, IDC_TREE_VIEW);
-
-   // Create list view control
-   m_wndListCtrl.Create(WS_CHILD | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, rect, this, IDC_LIST_VIEW);
-   m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT | 
-                                  LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_LABELTIP);
-   m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
-
-   // Setup list view columns
-   m_wndListCtrl.InsertColumn(0, _T("ID"), LVCFMT_LEFT, 50);
-   m_wndListCtrl.InsertColumn(1, _T("Name"), LVCFMT_LEFT, 100);
-   m_wndListCtrl.InsertColumn(2, _T("Class"), LVCFMT_LEFT, 70);
-   m_wndListCtrl.InsertColumn(3, _T("Status"), LVCFMT_LEFT, 70);
-   m_wndListCtrl.InsertColumn(4, _T("IP Address"), LVCFMT_LEFT, 100);
-   m_wndListCtrl.InsertColumn(5, _T("IP Netmask"), LVCFMT_LEFT, 100);
-   m_wndListCtrl.InsertColumn(6, _T("IFIndex"), LVCFMT_LEFT, 60);
-   m_wndListCtrl.InsertColumn(7, _T("IFType"), LVCFMT_LEFT, 120);
-   m_wndListCtrl.InsertColumn(8, _T("Caps"), LVCFMT_LEFT, 40);
-   m_wndListCtrl.InsertColumn(9, _T("Object ID"), LVCFMT_LEFT, 150);
-
-   // Create image list
-   m_pImageList = new CImageList;
-   m_pImageList->Create(g_pObjectSmallImageList);
-   m_iLastObjectImage = m_pImageList->GetImageCount();
-   m_pImageList->Add(theApp.LoadIcon(IDI_SORT_UP));
-   m_pImageList->Add(theApp.LoadIcon(IDI_SORT_DOWN));
-   m_iStatusImageBase = m_pImageList->GetImageCount();
-   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_WARNING));
-   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_MINOR));
-   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_MAJOR));
-   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_CRITICAL));
-   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_UNKNOWN));
-   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_UNMANAGED));
-   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_DISABLED));
-   m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_TESTING));
-   for(i = STATUS_WARNING; i <= STATUS_TESTING; i++)
-      m_pImageList->SetOverlayImage(m_iStatusImageBase + i - 1, i);
-   m_wndTreeCtrl.SetImageList(m_pImageList, TVSIL_NORMAL);
-   m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
-
-   // Mark sorting column in list control
-   lvCol.mask = LVCF_IMAGE | LVCF_FMT;
-   lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
-   lvCol.iImage = m_iLastObjectImage + SORT_DIR(m_dwSortMode);
-   m_wndListCtrl.SetColumn(SORT_MODE(m_dwSortMode), &lvCol);
-
-   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-      m_wndTreeCtrl.ShowWindow(SW_SHOW);
-   else
-      m_wndListCtrl.ShowWindow(SW_SHOW);
-
-   // Restore window size and position if we have one
-   if (theApp.GetProfileBinary(_T("ObjectBrowser"), _T("WindowPlacement"),
-                               &pwp, &iBytes))
-   {
-      if (iBytes == sizeof(WINDOWPLACEMENT))
-      {
-         RestoreMDIChildPlacement(this, (WINDOWPLACEMENT *)pwp);
-      }
-      delete pwp;
-   }
-
-   theApp.OnViewCreate(VIEW_OBJECTS, this);
-   PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
-	return 0;
-}
-
-
-//
 // WM_SIZE message handler
 //
 
 void CObjectBrowser::OnSize(UINT nType, int cx, int cy) 
 {
 	CMDIChildWnd::OnSize(nType, cx, cy);
-	
-   if (m_dwFlags & SHOW_OBJECT_PREVIEW)
-   {
-      m_wndPreviewPane.SetWindowPos(NULL, 0, 0, PREVIEW_PANE_WIDTH, cy, SWP_NOZORDER);
-      m_wndTreeCtrl.SetWindowPos(NULL, PREVIEW_PANE_WIDTH, 0, cx - PREVIEW_PANE_WIDTH, 
-                                 cy, SWP_NOZORDER);
-      m_wndListCtrl.SetWindowPos(NULL, PREVIEW_PANE_WIDTH, 0, cx - PREVIEW_PANE_WIDTH, 
-                                 cy, SWP_NOZORDER);
-   }
-   else
-   {
-      m_wndTreeCtrl.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
-      m_wndListCtrl.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
-   }
+   m_wndSplitter.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
 }
 
 
@@ -377,16 +201,12 @@ void CObjectBrowser::OnSize(UINT nType, int cx, int cy)
 void CObjectBrowser::OnSetFocus(CWnd* pOldWnd) 
 {
 	CMDIChildWnd::OnSetFocus(pOldWnd);
-	
-   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-      m_wndTreeCtrl.SetFocus();	
-   else
-      m_wndListCtrl.SetFocus();
+   m_wndTreeCtrl.SetFocus();
 }
 
 
 //
-// WM_COMMAND::ID_VIEW_REFRESH message handler
+// WM_COMMAND::ID_VIEW_REFRESH
 //
 
 void CObjectBrowser::OnViewRefresh() 
@@ -395,16 +215,13 @@ void CObjectBrowser::OnViewRefresh()
    NXC_OBJECT_INDEX *pIndex;
    DWORD i, j, dwNumObjects, dwNumRootObj;
    
-   // Populate object's list and select root objects
-   m_wndListCtrl.DeleteAllItems();
+   // Select root objects
    NXCLockObjectIndex(g_hSession);
    pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(g_hSession, &dwNumObjects);
    ppRootObjects = (NXC_OBJECT **)malloc(sizeof(NXC_OBJECT *) * dwNumObjects);
    for(i = 0, dwNumRootObj = 0; i < dwNumObjects; i++)
       if (!pIndex[i].pObject->bIsDeleted)
       {
-         AddObjectToList(pIndex[i].pObject);
-
          // Check if some of the parents are accessible
          for(j = 0; j < pIndex[i].pObject->dwNumParents; j++)
             if (NXCFindObjectByIdNoLock(g_hSession, pIndex[i].pObject->pdwParentList[j]) != NULL)
@@ -416,7 +233,6 @@ void CObjectBrowser::OnViewRefresh()
          }
       }
    NXCUnlockObjectIndex(g_hSession);
-   m_wndListCtrl.SortItems(CompareListItems, m_dwSortMode);
 
    // Populate objects' tree
    m_wndTreeCtrl.DeleteAllItems();
@@ -437,32 +253,21 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
    HTREEITEM hItem;
    TVITEM tvi;
    TCHAR szBuffer[512];
-   int iImage;
+   int nImage;
 
    // Add object record with class-dependent text
    CreateTreeItemText(pObject, szBuffer);
-   iImage = GetObjectImageIndex(pObject);
-   hItem = m_wndTreeCtrl.InsertItem(szBuffer, iImage, iImage, hParent);
+   nImage = GetObjectImageIndex(pObject);
+   hItem = m_wndTreeCtrl.InsertItem(szBuffer, nImage, nImage, hParent);
    m_wndTreeCtrl.SetItemData(hItem, (LPARAM)pObject);
    m_wndTreeCtrl.SetItemState(hItem, INDEXTOOVERLAYMASK(pObject->iStatus), TVIS_OVERLAYMASK);
 
    // Add to hash
    AddObjectEntryToHash(pObject, hItem);
 
-   // Add object's childs
-   // For node objects, don't add childs if node has more than 10 childs to
+   // Don't add childs immediatelly to
    // prevent adding millions of items if node has thousands of interfaces in
    // thousands subnets. Childs will be added only if user expands node.
-/*   if ((pObject->iClass != OBJECT_NODE) || (pObject->dwNumChilds <= 10))
-   {
-      for(i = 0; i < pObject->dwNumChilds; i++)
-      {
-         NXC_OBJECT *pChildObject = NXCFindObjectById(g_hSession, pObject->pdwChildList[i]);
-         if (pChildObject != NULL)
-            AddObjectToTree(pChildObject, hItem);
-      }
-   }
-   else*/
    tvi.mask = TVIF_CHILDREN;
    tvi.hItem = hItem;
    tvi.cChildren = I_CHILDRENCALLBACK;
@@ -471,56 +276,29 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
 
 
 //
-// Overloaded PreCreateWindow() method
+// Create class-depemdent text for tree item
 //
 
-BOOL CObjectBrowser::PreCreateWindow(CREATESTRUCT& cs) 
+void CObjectBrowser::CreateTreeItemText(NXC_OBJECT *pObject, TCHAR *pszBuffer)
 {
-   if (cs.lpszClass == NULL)
-      cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, NULL, NULL, 
-                                         AfxGetApp()->LoadIcon(IDI_TREE));
-	return CMDIChildWnd::PreCreateWindow(cs);
-}
+   TCHAR szIpBuffer[32];
 
-
-//
-// WM_GETMINMAXINFO message handler
-//
-
-void CObjectBrowser::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI) 
-{
-	CMDIChildWnd::OnGetMinMaxInfo(lpMMI);
-   lpMMI->ptMinTrackSize.x = 350;
-   lpMMI->ptMinTrackSize.y = 250;
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_VIEW_SHOWPREVIEWPANE message handler
-//
-
-void CObjectBrowser::OnObjectViewShowpreviewpane() 
-{
-   RECT rect;
-
-   GetClientRect(&rect);
-
-   if (m_dwFlags & SHOW_OBJECT_PREVIEW)
+   switch(pObject->iClass)
    {
-      m_dwFlags &= ~SHOW_OBJECT_PREVIEW;
-      m_wndPreviewPane.ShowWindow(SW_HIDE);
-      m_wndTreeCtrl.SetWindowPos(NULL, 0, 0, rect.right, rect.bottom, SWP_NOZORDER);
-      m_wndListCtrl.SetWindowPos(NULL, 0, 0, rect.right, rect.bottom, SWP_NOZORDER);
-   }
-   else
-   {
-      m_dwFlags |= SHOW_OBJECT_PREVIEW;
-      m_wndTreeCtrl.SetWindowPos(NULL, PREVIEW_PANE_WIDTH, 0, rect.right - PREVIEW_PANE_WIDTH,
-                                 rect.bottom, SWP_NOZORDER);
-      m_wndListCtrl.SetWindowPos(NULL, PREVIEW_PANE_WIDTH, 0, rect.right - PREVIEW_PANE_WIDTH,
-                                 rect.bottom, SWP_NOZORDER);
-      m_wndPreviewPane.SetWindowPos(NULL, 0, 0, PREVIEW_PANE_WIDTH, rect.bottom, SWP_NOZORDER);
-      m_wndPreviewPane.ShowWindow(SW_SHOW);
+      case OBJECT_SUBNET:
+         _stprintf(pszBuffer, _T("%s [Status: %s]"), pObject->szName, g_szStatusText[pObject->iStatus]);
+         break;
+      case OBJECT_INTERFACE:
+         if (pObject->dwIpAddr != 0)
+            _stprintf(pszBuffer, _T("%s [IP: %s/%d Status: %s]"), pObject->szName, 
+                    IpToStr(pObject->dwIpAddr, szIpBuffer), 
+                    BitsInMask(pObject->iface.dwIpNetMask), g_szStatusText[pObject->iStatus]);
+         else
+            _stprintf(pszBuffer, _T("%s [Status: %s]"), pObject->szName, g_szStatusText[pObject->iStatus]);
+         break;
+      default:
+         _tcscpy(pszBuffer, pObject->szName);
+         break;
    }
 }
 
@@ -531,24 +309,139 @@ void CObjectBrowser::OnObjectViewShowpreviewpane()
 
 void CObjectBrowser::OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult)
 {
-   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+   m_pCurrentObject = (NXC_OBJECT *)lpnmt->itemNew.lParam;
+   m_wndObjectView.SetCurrentObject(m_pCurrentObject);
+   *pResult = 0;
+}
+
+
+//
+// Handler for TVN_GETDISPINFO notification from tree view control
+//
+
+void CObjectBrowser::OnTreeViewGetDispInfo(LPNMTVDISPINFO lpdi, LRESULT *pResult)
+{
+   NXC_OBJECT *pObject;
+
+   if (lpdi->item.mask == TVIF_CHILDREN)
    {
-      m_pCurrentObject = (NXC_OBJECT *)lpnmt->itemNew.lParam;
-      m_wndPreviewPane.SetCurrentObject(m_pCurrentObject);
+      pObject = (NXC_OBJECT *)lpdi->item.lParam;
+      if (pObject != NULL)
+      {
+         lpdi->item.cChildren = (pObject->dwNumChilds > 0) ? 1 : 0;
+      }
+      else
+      {
+         lpdi->item.cChildren = 0;
+      }
    }
    *pResult = 0;
 }
 
 
 //
-// WM_OBJECT_CHANGE message handler
-// wParam contains object's ID, and lParam pointer to corresponding NXC_OBJECT structure
+// Handler for TVN_ITEMEXPANDING notification from tree view control
 //
 
-void CObjectBrowser::OnObjectChange(WPARAM wParam, LPARAM lParam)
+void CObjectBrowser::OnTreeViewItemExpanding(LPNMTREEVIEW lpnmt, LRESULT *pResult)
 {
-   UpdateObjectTree(wParam, (NXC_OBJECT *)lParam);
-   UpdateObjectList((NXC_OBJECT *)lParam);
+   if ((lpnmt->action == TVE_EXPAND) ||
+       (lpnmt->action == TVE_EXPANDPARTIAL) ||
+       (lpnmt->action == TVE_TOGGLE))
+   {
+      NXC_OBJECT *pObject, *pChildObject;
+      DWORD i;
+
+      pObject = (NXC_OBJECT *)lpnmt->itemNew.lParam;
+      if ((pObject != NULL) && ((m_wndTreeCtrl.GetItemState(lpnmt->itemNew.hItem, TVIS_EXPANDEDONCE) & TVIS_EXPANDEDONCE) == 0))
+      {
+         for(i = 0; i < pObject->dwNumChilds; i++)
+         {
+            pChildObject = NXCFindObjectById(g_hSession, pObject->pdwChildList[i]);
+            if (pChildObject != NULL)
+               AddObjectToTree(pChildObject, lpnmt->itemNew.hItem);
+         }
+         SortTreeItems(lpnmt->itemNew.hItem);
+      }
+   }
+   *pResult = 0;
+}
+
+
+//
+// Add new object entry to hash
+//
+
+void CObjectBrowser::AddObjectEntryToHash(NXC_OBJECT *pObject, HTREEITEM hItem)
+{
+   DWORD dwIndex, dwEntry;
+
+   dwIndex = FindObjectInTree(pObject->dwId);
+   if (dwIndex == INVALID_INDEX)
+   {
+      m_pTreeHash = (OBJ_TREE_HASH *)realloc(m_pTreeHash, sizeof(OBJ_TREE_HASH) * (m_dwTreeHashSize + 1));
+      m_pTreeHash[m_dwTreeHashSize].dwObjectId = pObject->dwId;
+      m_pTreeHash[m_dwTreeHashSize].dwNumEntries = 1;
+      m_pTreeHash[m_dwTreeHashSize].phTreeItemList = (HTREEITEM *)malloc(sizeof(HTREEITEM));
+      m_pTreeHash[m_dwTreeHashSize].phTreeItemList[0] = hItem;
+      m_dwTreeHashSize++;
+      if ((m_dwTreeHashSize > 1) && 
+          (m_pTreeHash[m_dwTreeHashSize - 1].dwObjectId < m_pTreeHash[m_dwTreeHashSize - 2].dwObjectId))
+      {
+         qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
+      }
+   }
+   else
+   {
+      // Object already presented in hash array, just add new HTREEITEM
+      dwEntry = m_pTreeHash[dwIndex].dwNumEntries;
+      m_pTreeHash[dwIndex].dwNumEntries++;
+      m_pTreeHash[dwIndex].phTreeItemList = (HTREEITEM *)realloc(m_pTreeHash[dwIndex].phTreeItemList, sizeof(HTREEITEM)  * m_pTreeHash[dwIndex].dwNumEntries);
+      m_pTreeHash[dwIndex].phTreeItemList[dwEntry] = hItem;
+   }
+}
+
+
+//
+// Adjust object index after new object insertion into tree
+//
+
+DWORD CObjectBrowser::AdjustIndex(DWORD dwIndex, DWORD dwObjectId)
+{
+   if (m_pTreeHash[dwIndex].dwObjectId == dwObjectId)
+      return dwIndex;
+   if ((dwIndex > 0) && (m_pTreeHash[dwIndex - 1].dwObjectId == dwObjectId))
+      return dwIndex - 1;
+   else
+      return dwIndex + 1;
+}
+
+
+//
+// Comparision function for tree items sorting
+//
+
+static int CALLBACK CompareTreeItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+   TCHAR szName1[MAX_OBJECT_NAME], szName2[MAX_OBJECT_NAME];
+
+   NXCGetComparableObjectNameEx((NXC_OBJECT *)lParam1, szName1);
+   NXCGetComparableObjectNameEx((NXC_OBJECT *)lParam2, szName2);
+   return _tcsicmp(szName1, szName2);
+}
+
+
+//
+// Sort childs of given tree item
+//
+
+void CObjectBrowser::SortTreeItems(HTREEITEM hItem)
+{
+   TVSORTCB tvs;
+
+   tvs.hParent = hItem;
+   tvs.lpfnCompare = CompareTreeItems;
+   m_wndTreeCtrl.SortChildrenCB(&tvs);
 }
 
 
@@ -624,81 +517,13 @@ DWORD CObjectBrowser::FindObjectInTree(DWORD dwObjectId)
 
 
 //
-// Create class-depemdent text for tree item
+// WM_OBJECT_CHANGE message handler
+// wParam contains object's ID, and lParam pointer to corresponding NXC_OBJECT structure
 //
 
-void CObjectBrowser::CreateTreeItemText(NXC_OBJECT *pObject, TCHAR *pszBuffer)
+void CObjectBrowser::OnObjectChange(WPARAM wParam, LPARAM lParam)
 {
-   TCHAR szIpBuffer[32];
-
-   switch(pObject->iClass)
-   {
-      case OBJECT_SUBNET:
-         _stprintf(pszBuffer, _T("%s [Status: %s]"), pObject->szName, g_szStatusText[pObject->iStatus]);
-         break;
-      case OBJECT_INTERFACE:
-         if (pObject->dwIpAddr != 0)
-            _stprintf(pszBuffer, _T("%s [IP: %s/%d Status: %s]"), pObject->szName, 
-                    IpToStr(pObject->dwIpAddr, szIpBuffer), 
-                    BitsInMask(pObject->iface.dwIpNetMask), g_szStatusText[pObject->iStatus]);
-         else
-            _stprintf(pszBuffer, _T("%s [Status: %s]"), pObject->szName, g_szStatusText[pObject->iStatus]);
-         break;
-      default:
-         _tcscpy(pszBuffer, pObject->szName);
-         break;
-   }
-}
-
-
-//
-// Delete tree item and appropriate record in hash
-//
-
-void CObjectBrowser::DeleteObjectTreeItem(HTREEITEM hRootItem)
-{
-   HTREEITEM hItem;
-   DWORD i, dwIndex;
-   NXC_OBJECT *pObject;
-
-   // Delete all child items
-   hItem = m_wndTreeCtrl.GetNextItem(hRootItem, TVGN_CHILD);
-   while(hItem != NULL)
-   {
-      DeleteObjectTreeItem(hItem);
-      hItem = m_wndTreeCtrl.GetNextItem(hRootItem, TVGN_CHILD);
-   }
-
-   // Find hash record for current item
-   pObject = (NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hRootItem);
-   dwIndex = FindObjectInTree(pObject->dwId);
-   if (dwIndex != INVALID_INDEX)
-   {
-      for(i = 0; i < m_pTreeHash[dwIndex].dwNumEntries; i++)
-         if (m_pTreeHash[dwIndex].phTreeItemList[i] == hRootItem)
-         {
-            if (m_pTreeHash[dwIndex].dwNumEntries == 1)
-            {
-               // Last entry, delete entire record in tree hash list
-               free(m_pTreeHash[dwIndex].phTreeItemList);
-               m_dwTreeHashSize--;
-               if (dwIndex < m_dwTreeHashSize)
-                  memmove(&m_pTreeHash[dwIndex], &m_pTreeHash[dwIndex + 1], 
-                          sizeof(OBJ_TREE_HASH) * (m_dwTreeHashSize - dwIndex));
-            }
-            else
-            {
-               m_pTreeHash[dwIndex].dwNumEntries--;
-               memmove(&m_pTreeHash[dwIndex].phTreeItemList[i],
-                       &m_pTreeHash[dwIndex].phTreeItemList[i + 1],
-                       sizeof(HTREEITEM) * (m_pTreeHash[dwIndex].dwNumEntries - i));
-            }
-            break;
-         }
-   }
-
-   // Delete item from tree control
-   m_wndTreeCtrl.DeleteItem(hRootItem);
+   UpdateObjectTree(wParam, (NXC_OBJECT *)lParam);
 }
 
 
@@ -770,7 +595,7 @@ void CObjectBrowser::UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject)
                   m_wndTreeCtrl.SetItemText(m_pTreeHash[dwIndex].phTreeItemList[i], szBuffer);
                   m_wndTreeCtrl.SetItemState(m_pTreeHash[dwIndex].phTreeItemList[i],
                                     INDEXTOOVERLAYMASK(pObject->iStatus), TVIS_OVERLAYMASK);
-                  SortTreeItems(hItem, FALSE);
+                  SortTreeItems(hItem);
                }
             }
             else  // Current tree item has no parent
@@ -796,7 +621,7 @@ void CObjectBrowser::UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject)
                      {
                         AddObjectToTree(pObject, m_pTreeHash[dwIndex].phTreeItemList[j]);
                         dwIndex = AdjustIndex(dwIndex, pObject->pdwParentList[i]);
-                        SortTreeItems(m_pTreeHash[dwIndex].phTreeItemList[j], FALSE);
+                        SortTreeItems(m_pTreeHash[dwIndex].phTreeItemList[j]);
                      }
                   }
                }
@@ -820,251 +645,81 @@ void CObjectBrowser::UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject)
                   {
                      AddObjectToTree(pObject, m_pTreeHash[dwIndex].phTreeItemList[j]);
                      dwIndex = AdjustIndex(dwIndex, pObject->pdwParentList[i]);
-                     SortTreeItems(m_pTreeHash[dwIndex].phTreeItemList[j], FALSE);
+                     SortTreeItems(m_pTreeHash[dwIndex].phTreeItemList[j]);
                   }
                }
             }
          }
       }
 
-      if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+      if (m_dwFlags & FOLLOW_OBJECT_UPDATES)
       {
-         if (m_dwFlags & FOLLOW_OBJECT_UPDATES)
-         {
-            dwIndex = FindObjectInTree(dwObjectId);
-            if (dwIndex != INVALID_INDEX)    // Shouldn't happen
-               m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].phTreeItemList[0], TVGN_CARET);
-         }
-         else
-         {
-            // Check if current item has been changed
-            hItem = m_wndTreeCtrl.GetSelectedItem();
-            if (hItem != NULL)
-            {
-               if (((NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem))->dwId == dwObjectId)
-                  m_wndPreviewPane.Refresh();
-            }
-         }
-      }
-   }
-}
-
-
-//
-// Add new object to objects' list
-//
-
-void CObjectBrowser::AddObjectToList(NXC_OBJECT *pObject)
-{
-   int iItem;
-   TCHAR szBuffer[16];
-
-   _stprintf(szBuffer, _T("%d"), pObject->dwId);
-   iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, GetObjectImageIndex(pObject));
-   if (iItem != -1)
-   {
-      m_wndListCtrl.SetItemData(iItem, (LPARAM)pObject);
-      UpdateObjectListEntry(iItem, pObject);
-   }
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_VIEW_VIEWASLIST message handler
-//
-
-void CObjectBrowser::OnObjectViewViewaslist() 
-{
-   int iItem;
-
-   m_dwFlags &= ~VIEW_OBJECTS_AS_TREE;
-   m_wndListCtrl.ShowWindow(SW_SHOW);
-   m_wndTreeCtrl.ShowWindow(SW_HIDE);
-
-   // Display currenly selected item in preview pane
-   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
-   m_pCurrentObject = (iItem == -1) ? NULL : (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
-   m_wndPreviewPane.SetCurrentObject(m_pCurrentObject);
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_VIEW_VIEWASTREE message handler
-//
-
-void CObjectBrowser::OnObjectViewViewastree() 
-{
-   HTREEITEM hItem = NULL;
-
-   m_dwFlags |= VIEW_OBJECTS_AS_TREE;
-   m_wndTreeCtrl.ShowWindow(SW_SHOW);
-   m_wndListCtrl.ShowWindow(SW_HIDE);
-
-   // Display currenly selected item in preview pane
-   hItem = m_wndTreeCtrl.GetSelectedItem();
-   m_pCurrentObject = (hItem == NULL) ? NULL : (NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem);
-   m_wndPreviewPane.SetCurrentObject(m_pCurrentObject);
-}
-
-
-//
-// WM_NOTIFY::LVN_COLUMNCLICK message handler
-//
-
-void CObjectBrowser::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
-{
-   LVCOLUMN lvCol;
-   int iColumn;
-
-   // Unmark old sorting column
-   iColumn = SORT_MODE(m_dwSortMode);
-   lvCol.mask = LVCF_FMT;
-   lvCol.fmt = LVCFMT_LEFT;
-   m_wndListCtrl.SetColumn(iColumn, &lvCol);
-
-   // Change current sort mode and resort list
-   if (iColumn == pNMHDR->iSubItem)
-   {
-      // Same column, change sort direction
-      m_dwSortMode = iColumn | 
-         (((SORT_DIR(m_dwSortMode) == SORT_ASCENDING) ? SORT_DESCENDING : SORT_ASCENDING) << 8);
-   }
-   else
-   {
-      // Another sorting column
-      m_dwSortMode = (m_dwSortMode & 0xFFFFFF00) | pNMHDR->iSubItem;
-   }
-   m_wndListCtrl.SortItems(CompareListItems, m_dwSortMode);
-
-   // Mark new sorting column
-   lvCol.mask = LVCF_IMAGE | LVCF_FMT;
-   lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
-   lvCol.iImage = (SORT_DIR(m_dwSortMode) == SORT_ASCENDING) ? m_iLastObjectImage : (m_iLastObjectImage + 1);
-   m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
-   
-   *pResult = 0;
-}
-
-
-//
-// WM_NOTIFY::LVN_ITEMACTIVATE message handler
-//
-
-void CObjectBrowser::OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
-{
-   if (!(m_dwFlags & VIEW_OBJECTS_AS_TREE))
-   {
-      if (pNMHDR->iItem != -1)
-         if (pNMHDR->uChanged & LVIF_STATE)
-         {
-            if (pNMHDR->uNewState & LVIS_FOCUSED)
-            {
-               m_pCurrentObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(pNMHDR->iItem);
-            }
-            else
-            {
-               m_pCurrentObject = NULL;
-            }
-            m_wndPreviewPane.SetCurrentObject(m_pCurrentObject);
-         }
-   }   
-   *pResult = 0;
-}
-
-
-//
-// WM_FIND_OBJECT message handler
-//
-
-void CObjectBrowser::OnFindObject(WPARAM wParam, LPARAM lParam)
-{
-   if (*((char *)lParam) != 0)
-   {
-      NXC_OBJECT *pObject;
-
-      pObject = NXCFindObjectByName(g_hSession, (TCHAR *)lParam);
-      if (pObject != NULL)
-      {
-         // Object found, select it in the current view
-         if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-         {
-            DWORD dwIndex;
-
-            dwIndex = FindObjectInTree(pObject->dwId);
-            if (dwIndex != INVALID_INDEX)
-            {
-               m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].phTreeItemList[0], TVGN_CARET);
-            }
-            else
-            {
-               if (pObject->dwNumParents > 0)
-               {
-                  OpenObject(pObject->pdwParentList[0]);
-                  dwIndex = FindObjectInTree(pObject->dwId);
-                  if (dwIndex != INVALID_INDEX)
-                  {
-                     m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].phTreeItemList[0], TVGN_CARET);
-                  }
-               }
-               else
-               {
-                  MessageBox(_T("Object found, but it's hidden and cannot be displayed at the moment"),
-                             _T("Find"), MB_OK | MB_ICONEXCLAMATION);
-               }
-            }
-            m_wndTreeCtrl.SetFocus();
-         }
-         else
-         {
-            LVFINDINFO lvfi;
-            int iItem, iOldItem;
-
-            lvfi.flags = LVFI_PARAM;
-            lvfi.lParam = (LPARAM)pObject;
-            iItem = m_wndListCtrl.FindItem(&lvfi);
-            if (iItem != -1)
-            {
-               ClearListSelection();
-               iOldItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
-               if (iOldItem != -1)
-                  m_wndListCtrl.SetItemState(iOldItem, 0, LVIS_FOCUSED);
-               m_wndListCtrl.EnsureVisible(iItem, FALSE);
-               m_wndListCtrl.SetItemState(iItem, LVIS_SELECTED | LVIS_FOCUSED, 
-                                          LVIS_SELECTED | LVIS_FOCUSED);
-            }
-            else
-            {
-               MessageBox(_T("Object found, but it's hidden and cannot be displayed at the moment"),
-                          _T("Find"), MB_OK | MB_ICONEXCLAMATION);
-            }
-            m_wndListCtrl.SetFocus();
-         }
+         dwIndex = FindObjectInTree(dwObjectId);
+         if (dwIndex != INVALID_INDEX)    // Shouldn't happen
+            m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].phTreeItemList[0], TVGN_CARET);
       }
       else
       {
-         TCHAR szBuffer[384];
-
-         _stprintf(szBuffer, _T("Matching object for pattern \"%s\" not found"), lParam);
-         MessageBox(szBuffer, _T("Find"), MB_OK | MB_ICONSTOP);
+         // Check if current item has been changed
+         hItem = m_wndTreeCtrl.GetSelectedItem();
+         if (hItem != NULL)
+         {
+            if (((NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem))->dwId == dwObjectId)
+               m_wndObjectView.Refresh();
+         }
       }
    }
 }
 
 
 //
-// Clear selection from list control
+// Delete tree item and appropriate record in hash
 //
 
-void CObjectBrowser::ClearListSelection()
+void CObjectBrowser::DeleteObjectTreeItem(HTREEITEM hRootItem)
 {
-   int iItem;
+   HTREEITEM hItem;
+   DWORD i, dwIndex;
+   NXC_OBJECT *pObject;
 
-   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
-   while(iItem != -1)
+   // Delete all child items
+   hItem = m_wndTreeCtrl.GetNextItem(hRootItem, TVGN_CHILD);
+   while(hItem != NULL)
    {
-      m_wndListCtrl.SetItemState(iItem, 0, LVIS_SELECTED);
-      iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+      DeleteObjectTreeItem(hItem);
+      hItem = m_wndTreeCtrl.GetNextItem(hRootItem, TVGN_CHILD);
    }
+
+   // Find hash record for current item
+   pObject = (NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hRootItem);
+   dwIndex = FindObjectInTree(pObject->dwId);
+   if (dwIndex != INVALID_INDEX)
+   {
+      for(i = 0; i < m_pTreeHash[dwIndex].dwNumEntries; i++)
+         if (m_pTreeHash[dwIndex].phTreeItemList[i] == hRootItem)
+         {
+            if (m_pTreeHash[dwIndex].dwNumEntries == 1)
+            {
+               // Last entry, delete entire record in tree hash list
+               free(m_pTreeHash[dwIndex].phTreeItemList);
+               m_dwTreeHashSize--;
+               if (dwIndex < m_dwTreeHashSize)
+                  memmove(&m_pTreeHash[dwIndex], &m_pTreeHash[dwIndex + 1], 
+                          sizeof(OBJ_TREE_HASH) * (m_dwTreeHashSize - dwIndex));
+            }
+            else
+            {
+               m_pTreeHash[dwIndex].dwNumEntries--;
+               memmove(&m_pTreeHash[dwIndex].phTreeItemList[i],
+                       &m_pTreeHash[dwIndex].phTreeItemList[i + 1],
+                       sizeof(HTREEITEM) * (m_pTreeHash[dwIndex].dwNumEntries - i));
+            }
+            break;
+         }
+   }
+
+   // Delete item from tree control
+   m_wndTreeCtrl.DeleteItem(hRootItem);
 }
 
 
@@ -1077,79 +732,42 @@ void CObjectBrowser::OnContextMenu(CWnd* pWnd, CPoint point)
    CMenu *pMenu, *pToolsMenu;
    CPoint pt;
    DWORD dwTemp;
+   HTREEITEM hItem;
+   UINT uFlags;
+   CWnd *pWndPane;
    BOOL bMenuInserted = FALSE;
 
    pt = point;
    pWnd->ScreenToClient(&pt);
+   pWndPane = pWnd->ChildWindowFromPoint(pt, CWP_SKIPINVISIBLE);
+   if (pWndPane->GetDlgCtrlID() != AFX_IDW_PANE_FIRST)
+      return;
 
-   if (pWnd->GetDlgCtrlID() == IDC_LIST_VIEW)
+   pt = point;
+   pWndPane->ScreenToClient(&pt);
+
+   hItem = m_wndTreeCtrl.HitTest(pt, &uFlags);
+   if ((hItem != NULL) && (uFlags & TVHT_ONITEM))
    {
-      int iItem;
-      UINT uFlags;
+      m_wndTreeCtrl.Select(hItem, TVGN_CARET);
 
-      iItem = m_wndListCtrl.HitTest(pt, &uFlags);
-      if ((iItem != -1) && (uFlags & LVHT_ONITEM))
+      pMenu = theApp.GetContextMenu(1);
+      dwTemp = 0;
+      pToolsMenu = CreateToolsSubmenu(m_pCurrentObject, _T(""), &dwTemp);
+      if (pToolsMenu->GetMenuItemCount() > 0)
       {
-         pMenu = theApp.GetContextMenu(1);
-         dwTemp = 0;
-         pToolsMenu = CreateToolsSubmenu(m_pCurrentObject, _T(""), &dwTemp);
-         if (pToolsMenu->GetMenuItemCount() > 0)
-         {
-            pMenu->InsertMenu(14, MF_BYPOSITION | MF_STRING | MF_POPUP,
-                              (UINT)pToolsMenu->GetSafeHmenu(), _T("&Tools"));
-            pToolsMenu->Detach();
-            bMenuInserted = TRUE;
-         }
-         delete pToolsMenu;
-         pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
-         if (bMenuInserted)
-         {
-            pMenu->DeleteMenu(14, MF_BYPOSITION);
-         }
+         pMenu->InsertMenu(14, MF_BYPOSITION | MF_STRING | MF_POPUP,
+                           (UINT)pToolsMenu->GetSafeHmenu(), _T("&Tools"));
+         pToolsMenu->Detach();
+         bMenuInserted = TRUE;
+      }
+      delete pToolsMenu;
+      pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+      if (bMenuInserted)
+      {
+         pMenu->DeleteMenu(14, MF_BYPOSITION);
       }
    }
-   else if (pWnd->GetDlgCtrlID() == IDC_TREE_VIEW)
-   {
-      HTREEITEM hItem;
-      UINT uFlags;
-
-      hItem = m_wndTreeCtrl.HitTest(pt, &uFlags);
-      if ((hItem != NULL) && (uFlags & TVHT_ONITEM))
-      {
-         m_wndTreeCtrl.Select(hItem, TVGN_CARET);
-
-         pMenu = theApp.GetContextMenu(1);
-         dwTemp = 0;
-         pToolsMenu = CreateToolsSubmenu(m_pCurrentObject, _T(""), &dwTemp);
-         if (pToolsMenu->GetMenuItemCount() > 0)
-         {
-            pMenu->InsertMenu(14, MF_BYPOSITION | MF_STRING | MF_POPUP,
-                              (UINT)pToolsMenu->GetSafeHmenu(), _T("&Tools"));
-            pToolsMenu->Detach();
-            bMenuInserted = TRUE;
-         }
-         delete pToolsMenu;
-         pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
-         if (bMenuInserted)
-         {
-            pMenu->DeleteMenu(14, MF_BYPOSITION);
-         }
-      }
-   }
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_PROPERTIES message handler
-//
-
-void CObjectBrowser::OnObjectProperties() 
-{
-   DWORD dwId;
-
-   dwId = GetSelectedObject();
-   if (dwId != 0)
-      theApp.ObjectProperties(dwId);
 }
 
 
@@ -1158,206 +776,79 @@ void CObjectBrowser::OnObjectProperties()
 // Will return 0 if there are no selection
 //
 
-DWORD CObjectBrowser::GetSelectedObject()
+DWORD CObjectBrowser::GetSelectedObject(void)
 {
-   DWORD dwId = 0;
+   HTREEITEM hItem;
 
-   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
+   hItem = m_wndTreeCtrl.GetSelectedItem();
+   return (hItem != NULL) ? ((NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem))->dwId : 0;
+}
+
+
+//
+// Returns TRUE if currently selected object is node
+//
+
+BOOL CObjectBrowser::CurrObjectIsNode(BOOL bIncludeTemplates)
+{
+   if (m_pCurrentObject == NULL)
    {
-      HTREEITEM hItem;
-
-      hItem = m_wndTreeCtrl.GetSelectedItem();
-      if (hItem != NULL)
-         dwId = ((NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem))->dwId;
+      return FALSE;
    }
    else
    {
-      if (m_wndListCtrl.GetSelectedCount() == 1)
-      {
-         int iItem;
-
-         iItem = m_wndListCtrl.GetSelectionMark();
-         if (iItem != -1)
-            dwId = ((NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem))->dwId;
-      }
+      return bIncludeTemplates ? 
+         ((m_pCurrentObject->iClass == OBJECT_NODE) || 
+          (m_pCurrentObject->iClass == OBJECT_TEMPLATE)) :
+         (m_pCurrentObject->iClass == OBJECT_NODE);
    }
-   return dwId;
 }
 
 
 //
-// Update object list with new object information
+// Returns TRUE if currently selected object is interface
 //
 
-void CObjectBrowser::UpdateObjectList(NXC_OBJECT *pObject)
+BOOL CObjectBrowser::CurrObjectIsInterface(void)
 {
-   LVFINDINFO lvfi;
-   int iItem;
-
-   // Find object in list
-   lvfi.flags = LVFI_PARAM;
-   lvfi.lParam = (LPARAM)pObject;
-   iItem = m_wndListCtrl.FindItem(&lvfi);
-
-   if (pObject->bIsDeleted)
+   if (m_pCurrentObject == NULL)
    {
-      if (iItem != -1)
-         m_wndListCtrl.DeleteItem(iItem);
+      return FALSE;
    }
    else
    {
-      if (iItem != -1)
-      {
-         UpdateObjectListEntry(iItem, pObject);
-      }
-      else
-      {
-         AddObjectToList(pObject);
-      }
-      m_wndListCtrl.SortItems(CompareListItems, m_dwSortMode);
-
-      if (!(m_dwFlags & VIEW_OBJECTS_AS_TREE))
-      {
-         if (m_dwFlags & FOLLOW_OBJECT_UPDATES)
-         {
-            lvfi.flags = LVFI_PARAM;
-            lvfi.lParam = (LPARAM)pObject;
-            iItem = m_wndListCtrl.FindItem(&lvfi);
-            if (iItem != -1)    // Shouldn't happen
-            {
-               int iOldItem;
-
-               ClearListSelection();
-               iOldItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
-               if (iOldItem != -1)
-                  m_wndListCtrl.SetItemState(iOldItem, 0, LVIS_FOCUSED);
-               m_wndListCtrl.EnsureVisible(iItem, FALSE);
-               m_wndListCtrl.SetItemState(iItem, LVIS_SELECTED | LVIS_FOCUSED, 
-                                          LVIS_SELECTED | LVIS_FOCUSED);
-            }
-         }
-         else
-         {
-            int iCurrItem;
-
-            lvfi.flags = LVFI_PARAM;
-            lvfi.lParam = (LPARAM)pObject;
-            iItem = m_wndListCtrl.FindItem(&lvfi);
-
-            // Check if current item has been changed
-            iCurrItem = m_wndListCtrl.GetNextItem(-1, LVNI_FOCUSED);
-            if (iItem == iCurrItem)
-            {
-               m_wndPreviewPane.Refresh();
-               m_wndListCtrl.EnsureVisible(iItem, FALSE);
-            }
-         }
-      }
+      return m_pCurrentObject->iClass == OBJECT_INTERFACE;
    }
 }
 
 
 //
-// Replace specific list control item with new object's data
+// Handler for "Properties" menu
 //
 
-void CObjectBrowser::UpdateObjectListEntry(int iItem, NXC_OBJECT *pObject)
+void CObjectBrowser::OnObjectProperties(void) 
 {
-   TCHAR szBuffer[64];
-   int iPos;
+   DWORD dwId;
 
-   m_wndListCtrl.SetItemState(iItem, INDEXTOOVERLAYMASK(pObject->iStatus), LVIS_OVERLAYMASK);
-
-   m_wndListCtrl.SetItemText(iItem, 1, pObject->szName);
-   m_wndListCtrl.SetItemText(iItem, 2, g_szObjectClass[pObject->iClass]);
-   m_wndListCtrl.SetItemText(iItem, 3, g_szStatusTextSmall[pObject->iStatus]);
-   m_wndListCtrl.SetItemText(iItem, 4, IpToStr(pObject->dwIpAddr, szBuffer));
-
-   // Class-specific fields
-   switch(pObject->iClass)
-   {
-      case OBJECT_SUBNET:
-         m_wndListCtrl.SetItemText(iItem, 5, IpToStr(pObject->subnet.dwIpNetMask, szBuffer));
-         break;
-      case OBJECT_INTERFACE:
-         m_wndListCtrl.SetItemText(iItem, 5, IpToStr(pObject->iface.dwIpNetMask, szBuffer));
-         _stprintf(szBuffer, _T("%d"), pObject->iface.dwIfIndex);
-         m_wndListCtrl.SetItemText(iItem, 6, szBuffer);
-         m_wndListCtrl.SetItemText(iItem, 7, pObject->iface.dwIfType > MAX_INTERFACE_TYPE ?
-                                     _T("Unknown") : g_szInterfaceTypes[pObject->iface.dwIfType]);
-         break;
-      case OBJECT_NODE:
-         // Create node capabilities string
-         iPos = 0;
-         if (pObject->node.dwFlags & NF_IS_NATIVE_AGENT)
-            szBuffer[iPos++] = 'A';
-         if (pObject->node.dwFlags & NF_IS_SNMP)
-            szBuffer[iPos++] = 'S';
-         if (pObject->node.dwFlags & NF_IS_LOCAL_MGMT)
-            szBuffer[iPos++] = 'M';
-         szBuffer[iPos] = 0;
-         m_wndListCtrl.SetItemText(iItem, 8, szBuffer);
-         m_wndListCtrl.SetItemText(iItem, 9, pObject->node.szObjectId);
-         break;
-      default:
-         break;
-   }
-}
-
-
-//
-// Change "selection follow changes" mode
-//
-
-void CObjectBrowser::OnObjectViewSelection() 
-{
-   if (m_dwFlags & FOLLOW_OBJECT_UPDATES)
-      m_dwFlags &= ~FOLLOW_OBJECT_UPDATES;
-   else
-      m_dwFlags |= FOLLOW_OBJECT_UPDATES;
-}
-
-
-//
-// ON_COMMAND_UPDATE_UI handlers
-//
-
-void CObjectBrowser::OnUpdateObjectViewViewaslist(CCmdUI* pCmdUI) 
-{
-	pCmdUI->SetRadio(!(m_dwFlags & VIEW_OBJECTS_AS_TREE));
-}
-
-void CObjectBrowser::OnUpdateObjectViewViewastree(CCmdUI* pCmdUI) 
-{
-	pCmdUI->SetRadio(m_dwFlags & VIEW_OBJECTS_AS_TREE);
-}
-
-void CObjectBrowser::OnUpdateObjectViewSelection(CCmdUI* pCmdUI) 
-{
-   pCmdUI->SetCheck(m_dwFlags & FOLLOW_OBJECT_UPDATES);
-}
-
-void CObjectBrowser::OnUpdateObjectViewShowpreviewpane(CCmdUI* pCmdUI) 
-{
-   pCmdUI->SetCheck(m_dwFlags & SHOW_OBJECT_PREVIEW);
+   dwId = GetSelectedObject();
+   if (dwId != 0)
+      theApp.ObjectProperties(dwId);
 }
 
 void CObjectBrowser::OnUpdateObjectProperties(CCmdUI* pCmdUI) 
 {
-   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-      pCmdUI->Enable(m_pCurrentObject != NULL);
-   else
-      pCmdUI->Enable((m_pCurrentObject != NULL) &&
-                     (m_wndListCtrl.GetSelectedCount() == 1));
+   pCmdUI->Enable(m_pCurrentObject != NULL);
 }
 
-void CObjectBrowser::OnUpdateObjectComments(CCmdUI* pCmdUI) 
+
+//
+// Handler for "Edit agent config" menu
+//
+
+void CObjectBrowser::OnObjectAgentcfg(void) 
 {
-   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-      pCmdUI->Enable(m_pCurrentObject != NULL);
-   else
-      pCmdUI->Enable((m_pCurrentObject != NULL) &&
-                     (m_wndListCtrl.GetSelectedCount() == 1));
+   if (m_pCurrentObject != NULL)
+      theApp.EditAgentConfig(m_pCurrentObject);
 }
 
 void CObjectBrowser::OnUpdateObjectAgentcfg(CCmdUI* pCmdUI) 
@@ -1365,72 +856,15 @@ void CObjectBrowser::OnUpdateObjectAgentcfg(CCmdUI* pCmdUI)
    pCmdUI->Enable(CurrObjectIsNode(FALSE));
 }
 
-void CObjectBrowser::OnUpdateObjectDatacollection(CCmdUI* pCmdUI) 
-{
-   pCmdUI->Enable(CurrObjectIsNode(TRUE));
-}
 
-void CObjectBrowser::OnUpdateObjectLastdcivalues(CCmdUI* pCmdUI) 
-{
-   pCmdUI->Enable(CurrObjectIsNode(FALSE));
-}
+//
+// Handler for "Apply" menu
+//
 
-void CObjectBrowser::OnUpdateObjectWakeup(CCmdUI* pCmdUI) 
+void CObjectBrowser::OnObjectApply() 
 {
-   pCmdUI->Enable(CurrObjectIsNode(FALSE) || CurrObjectIsInterface());
-}
-
-void CObjectBrowser::OnUpdateObjectUnmanage(CCmdUI* pCmdUI) 
-{
-   pCmdUI->Enable(m_pCurrentObject != NULL);
-}
-
-void CObjectBrowser::OnUpdateObjectManage(CCmdUI* pCmdUI) 
-{
-   pCmdUI->Enable(m_pCurrentObject != NULL);
-}
-
-void CObjectBrowser::OnUpdateObjectDelete(CCmdUI* pCmdUI) 
-{
-   pCmdUI->Enable(m_pCurrentObject != NULL);
-}
-
-void CObjectBrowser::OnUpdateObjectBind(CCmdUI* pCmdUI) 
-{
-   if (m_pCurrentObject == NULL)
-   {
-      pCmdUI->Enable(FALSE);
-   }
-   else
-   {
-      if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-         pCmdUI->Enable((m_pCurrentObject->iClass == OBJECT_CONTAINER) ||
-                        (m_pCurrentObject->iClass == OBJECT_SERVICEROOT));
-      else
-         pCmdUI->Enable(((m_pCurrentObject->iClass == OBJECT_CONTAINER) ||
-                         (m_pCurrentObject->iClass == OBJECT_SERVICEROOT)) &&
-                        (m_wndListCtrl.GetSelectedCount() == 1));
-   }
-}
-
-void CObjectBrowser::OnUpdateObjectUnbind(CCmdUI* pCmdUI) 
-{
-   if (m_pCurrentObject == NULL)
-   {
-      pCmdUI->Enable(FALSE);
-   }
-   else
-   {
-      if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-         pCmdUI->Enable((m_pCurrentObject->iClass == OBJECT_CONTAINER) ||
-                        (m_pCurrentObject->iClass == OBJECT_SERVICEROOT) ||
-                        (m_pCurrentObject->iClass == OBJECT_TEMPLATE));
-      else
-         pCmdUI->Enable(((m_pCurrentObject->iClass == OBJECT_CONTAINER) ||
-                         (m_pCurrentObject->iClass == OBJECT_SERVICEROOT) ||
-                         (m_pCurrentObject->iClass == OBJECT_TEMPLATE)) &&
-                        (m_wndListCtrl.GetSelectedCount() == 1));
-   }
+   if (m_pCurrentObject != NULL)
+      theApp.ApplyTemplate(m_pCurrentObject);
 }
 
 void CObjectBrowser::OnUpdateObjectApply(CCmdUI* pCmdUI) 
@@ -1441,34 +875,241 @@ void CObjectBrowser::OnUpdateObjectApply(CCmdUI* pCmdUI)
    }
    else
    {
-      if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-         pCmdUI->Enable(m_pCurrentObject->iClass == OBJECT_TEMPLATE);
-      else
-         pCmdUI->Enable((m_pCurrentObject->iClass == OBJECT_TEMPLATE) &&
-                        (m_wndListCtrl.GetSelectedCount() == 1));
+      pCmdUI->Enable(m_pCurrentObject->iClass == OBJECT_TEMPLATE);
    }
 }
 
-void CObjectBrowser::OnUpdateObjectPollStatus(CCmdUI* pCmdUI) 
+
+//
+// Handler for "Bind" menu
+//
+
+void CObjectBrowser::OnObjectBind() 
 {
-   pCmdUI->Enable(CurrObjectIsNode());
+   if (m_pCurrentObject != NULL)
+      theApp.BindObject(m_pCurrentObject);
 }
 
-void CObjectBrowser::OnUpdateObjectPollConfiguration(CCmdUI* pCmdUI) 
+void CObjectBrowser::OnUpdateObjectBind(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable(CurrObjectIsNode());
+   if (m_pCurrentObject == NULL)
+   {
+      pCmdUI->Enable(FALSE);
+   }
+   else
+   {
+      pCmdUI->Enable((m_pCurrentObject->iClass == OBJECT_CONTAINER) ||
+                     (m_pCurrentObject->iClass == OBJECT_SERVICEROOT));
+   }
+}
+
+
+//
+// Handler for "Change IP address" menu
+//
+
+void CObjectBrowser::OnObjectChangeipaddress() 
+{
+   if (m_pCurrentObject != NULL)
+      theApp.ChangeNodeAddress(m_pCurrentObject->dwId);
 }
 
 void CObjectBrowser::OnUpdateObjectChangeipaddress(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable(CurrObjectIsNode());
+   pCmdUI->Enable(CurrObjectIsNode(FALSE));
+}
+
+
+//
+// Handler for "Comments" menu
+//
+
+void CObjectBrowser::OnObjectComments() 
+{
+   if (m_pCurrentObject != NULL)
+      theApp.ShowObjectComments(m_pCurrentObject);
+}
+
+void CObjectBrowser::OnUpdateObjectComments(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_pCurrentObject != NULL);
+}
+
+
+//
+// Handler for "Create->Condition" menu
+//
+
+void CObjectBrowser::OnObjectCreateCondition() 
+{
+   theApp.CreateCondition((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+}
+
+
+//
+// Handler for "Create->Container" menu
+//
+
+void CObjectBrowser::OnObjectCreateContainer() 
+{
+   theApp.CreateContainer((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+}
+
+
+//
+// Handler for "Create->Node" menu
+//
+
+void CObjectBrowser::OnObjectCreateNode() 
+{
+   theApp.CreateNode((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+}
+
+
+//
+// Handler for "Create->Service" menu
+//
+
+void CObjectBrowser::OnObjectCreateService() 
+{
+   theApp.CreateNetworkService((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+}
+
+
+//
+// Handler for "Create->Template" menu
+//
+
+void CObjectBrowser::OnObjectCreateTemplate() 
+{
+   theApp.CreateTemplate((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+}
+
+
+//
+// Handler for "Create->Template group" menu
+//
+
+void CObjectBrowser::OnObjectCreateTemplategroup() 
+{
+   theApp.CreateTemplateGroup((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+}
+
+
+//
+// Handler for "Create->VPN connector" menu
+//
+
+void CObjectBrowser::OnObjectCreateVpnconnector() 
+{
+   theApp.CreateVPNConnector((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+}
+
+
+//
+// Handler for "Data collection" menu
+//
+
+void CObjectBrowser::OnObjectDatacollection() 
+{
+   if (m_pCurrentObject != NULL)
+      theApp.StartObjectDCEditor(m_pCurrentObject);
+}
+
+void CObjectBrowser::OnUpdateObjectDatacollection(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(CurrObjectIsNode(TRUE));
+}
+
+
+//
+// Handler for "Delete" menu
+//
+
+void CObjectBrowser::OnObjectDelete() 
+{
+   BOOL bOK;
+
+   if (m_pCurrentObject != NULL)
+   {
+      if (g_dwOptions & UI_OPT_CONFIRM_OBJ_DELETE)
+      {
+         TCHAR szBuffer[256];
+
+         _sntprintf(szBuffer, 256, _T("Do you really want to delete object %s?"), m_pCurrentObject->szName);
+         bOK = (MessageBox(szBuffer, _T("Confirmation"), MB_YESNO | MB_ICONQUESTION) == IDYES);
+      }
+      else
+      {
+         bOK = TRUE;
+      }
+      if (bOK)
+         theApp.DeleteNetXMSObject(m_pCurrentObject);
+   }
+}
+
+void CObjectBrowser::OnUpdateObjectDelete(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_pCurrentObject != NULL);
+}
+
+
+//
+// Handler for "Last DCI values" menu
+//
+
+void CObjectBrowser::OnObjectLastdcivalues() 
+{
+   if (m_pCurrentObject != NULL)
+      theApp.ShowLastValues(m_pCurrentObject);
+}
+
+void CObjectBrowser::OnUpdateObjectLastdcivalues(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(CurrObjectIsNode(FALSE));
+}
+
+
+//
+// Handler for "Manage" menu
+//
+
+void CObjectBrowser::OnObjectManage() 
+{
+   if (m_pCurrentObject != NULL)
+      theApp.SetObjectMgmtStatus(m_pCurrentObject, TRUE);
+}
+
+void CObjectBrowser::OnUpdateObjectManage(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_pCurrentObject != NULL);
+}
+
+
+//
+// Handler for "Move" menu
+//
+
+void CObjectBrowser::OnObjectMove() 
+{
+   HTREEITEM hItem;
+
+   if (m_pCurrentObject != NULL)
+   {
+      hItem = m_wndTreeCtrl.GetParentItem(m_wndTreeCtrl.GetSelectedItem());
+      if (hItem != NULL)
+      {
+         theApp.MoveObject(m_pCurrentObject->dwId, 
+                           ((NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem))->dwId);
+      }
+   }
 }
 
 void CObjectBrowser::OnUpdateObjectMove(CCmdUI* pCmdUI) 
 {
    BOOL bEnable = FALSE;
 
-   if ((m_pCurrentObject != NULL) && (m_dwFlags & VIEW_OBJECTS_AS_TREE))
+   if (m_pCurrentObject != NULL)
    {
       HTREEITEM hItem;
 
@@ -1491,86 +1132,39 @@ void CObjectBrowser::OnUpdateObjectMove(CCmdUI* pCmdUI)
 
 
 //
-// Handler for WM_NOTIFY::NM_DBLCLK from IDC_LIST_VIEW
+// Handler for "Poll->Configuration" menu
 //
 
-void CObjectBrowser::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
-{
-   PostMessage(WM_COMMAND, ID_OBJECT_PROPERTIES, 0);
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_DATACOLLECTION message handler
-//
-
-void CObjectBrowser::OnObjectDatacollection() 
+void CObjectBrowser::OnObjectPollConfiguration() 
 {
    if (m_pCurrentObject != NULL)
-      theApp.StartObjectDCEditor(m_pCurrentObject);
+      theApp.PollNode(m_pCurrentObject->dwId, POLL_CONFIGURATION);
 }
 
-
-//
-// WM_COMMAND::ID_OBJECT_MANAGE message handler
-//
-
-void CObjectBrowser::OnObjectManage() 
+void CObjectBrowser::OnUpdateObjectPollConfiguration(CCmdUI* pCmdUI) 
 {
-   ChangeMgmtStatus(TRUE);
+   pCmdUI->Enable(CurrObjectIsNode(FALSE));
 }
 
 
 //
-// WM_COMMAND::ID_OBJECT_UNMANAGE message handler
+// Handler for "Poll->Status" menu
 //
 
-void CObjectBrowser::OnObjectUnmanage() 
-{
-   ChangeMgmtStatus(FALSE);
-}
-
-
-//
-// Change management status for currently selected object(s)
-//
-
-void CObjectBrowser::ChangeMgmtStatus(BOOL bIsManaged)
-{
-   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-   {
-      if (m_pCurrentObject != NULL)
-         theApp.SetObjectMgmtStatus(m_pCurrentObject, bIsManaged);
-   }
-   else
-   {
-      int iItem;
-      NXC_OBJECT *pObject;
-
-      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
-      while(iItem != -1)
-      {
-         pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
-         theApp.SetObjectMgmtStatus(pObject, bIsManaged);
-         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
-      }
-   }
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_BIND message handler
-//
-
-void CObjectBrowser::OnObjectBind() 
+void CObjectBrowser::OnObjectPollStatus() 
 {
    if (m_pCurrentObject != NULL)
-      theApp.BindObject(m_pCurrentObject);
+      theApp.PollNode(m_pCurrentObject->dwId, POLL_STATUS);
+}
+
+void CObjectBrowser::OnUpdateObjectPollStatus(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(CurrObjectIsNode(FALSE));
 }
 
 
 //
-// WM_COMMAND::ID_OBJECT_UNBIND message handler
+// Handler for "Unbind" menu
 //
 
 void CObjectBrowser::OnObjectUnbind() 
@@ -1579,554 +1173,57 @@ void CObjectBrowser::OnObjectUnbind()
       theApp.UnbindObject(m_pCurrentObject);
 }
 
-
-//
-// WM_COMMAND::ID_OBJECT_CREATE_CONTAINER message handler
-//
-
-void CObjectBrowser::OnObjectCreateContainer() 
-{
-   theApp.CreateContainer((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_CREATE_CONDITION message handler
-//
-
-void CObjectBrowser::OnObjectCreateCondition() 
-{
-   theApp.CreateCondition((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_CREATE_NODE message handler
-//
-
-void CObjectBrowser::OnObjectCreateNode() 
-{
-   theApp.CreateNode((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_CREATE_TEMPLATE message handler
-//
-
-void CObjectBrowser::OnObjectCreateTemplate() 
-{
-   theApp.CreateTemplate((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_CREATE_TEMPLATEGROUP message handler
-//
-
-void CObjectBrowser::OnObjectCreateTemplategroup() 
-{
-   theApp.CreateTemplateGroup((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_CREATE_SERVICE message handler
-//
-
-void CObjectBrowser::OnObjectCreateService() 
-{
-   theApp.CreateNetworkService((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_CREATE_VPNCONNECTOR message handler
-//
-
-void CObjectBrowser::OnObjectCreateVpnconnector() 
-{
-   theApp.CreateVPNConnector((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_DELETE message handler
-//
-
-void CObjectBrowser::OnObjectDelete() 
-{
-   BOOL bOK;
-
-   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-   {
-      if (m_pCurrentObject != NULL)
-      {
-         if (g_dwOptions & UI_OPT_CONFIRM_OBJ_DELETE)
-         {
-            TCHAR szBuffer[256];
-
-            _sntprintf(szBuffer, 256, _T("Do you really want to delete object %s?"), m_pCurrentObject->szName);
-            bOK = (MessageBox(szBuffer, _T("Confirmation"), MB_YESNO | MB_ICONQUESTION) == IDYES);
-         }
-         else
-         {
-            bOK = TRUE;
-         }
-         if (bOK)
-            theApp.DeleteNetXMSObject(m_pCurrentObject);
-      }
-   }
-   else
-   {
-      int iItem;
-      NXC_OBJECT *pObject;
-
-      if (g_dwOptions & UI_OPT_CONFIRM_OBJ_DELETE)
-      {
-         if (m_wndListCtrl.GetSelectedCount() > 0)
-            bOK = (MessageBox(_T("Do you really want to delete selected objects?"), _T("Confirmation"), MB_YESNO | MB_ICONQUESTION) == IDYES);
-         else
-            bOK = FALSE;
-      }
-      else
-      {
-         bOK = TRUE;
-      }
-      if (bOK)
-      {
-         iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
-         while(iItem != -1)
-         {
-            pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
-            theApp.DeleteNetXMSObject(pObject);
-            iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
-         }
-      }
-   }
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_POLL_STATUS message handler
-//
-
-void CObjectBrowser::OnObjectPollStatus() 
-{
-   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-   {
-      if (m_pCurrentObject != NULL)
-         theApp.PollNode(m_pCurrentObject->dwId, POLL_STATUS);
-   }
-   else
-   {
-      int iItem;
-      NXC_OBJECT *pObject;
-
-      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
-      while(iItem != -1)
-      {
-         pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
-         theApp.PollNode(pObject->dwId, POLL_STATUS);
-         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
-      }
-   }
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_POLL_CONFIGURATION message handler
-//
-
-void CObjectBrowser::OnObjectPollConfiguration() 
-{
-   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-   {
-      if (m_pCurrentObject != NULL)
-         theApp.PollNode(m_pCurrentObject->dwId, POLL_CONFIGURATION);
-   }
-   else
-   {
-      int iItem;
-      NXC_OBJECT *pObject;
-
-      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
-      while(iItem != -1)
-      {
-         pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
-         theApp.PollNode(pObject->dwId, POLL_CONFIGURATION);
-         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
-      }
-   }
-}
-
-
-//
-// Returns TRUE if currently selected object is node
-//
-
-BOOL CObjectBrowser::CurrObjectIsNode(BOOL bIncludeTemplates)
+void CObjectBrowser::OnUpdateObjectUnbind(CCmdUI* pCmdUI) 
 {
    if (m_pCurrentObject == NULL)
    {
-      return FALSE;
+      pCmdUI->Enable(FALSE);
    }
    else
    {
-      if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-      {
-         return bIncludeTemplates ? 
-            ((m_pCurrentObject->iClass == OBJECT_NODE) || 
-             (m_pCurrentObject->iClass == OBJECT_TEMPLATE)) :
-            (m_pCurrentObject->iClass == OBJECT_NODE);
-      }
-      else
-      {
-         return ((bIncludeTemplates ? 
-            ((m_pCurrentObject->iClass == OBJECT_NODE) || 
-             (m_pCurrentObject->iClass == OBJECT_TEMPLATE)) :
-            (m_pCurrentObject->iClass == OBJECT_NODE)) &&
-                 (m_wndListCtrl.GetSelectedCount() == 1));
-      }
+      pCmdUI->Enable((m_pCurrentObject->iClass == OBJECT_CONTAINER) ||
+                     (m_pCurrentObject->iClass == OBJECT_SERVICEROOT) ||
+                     (m_pCurrentObject->iClass == OBJECT_TEMPLATE));
    }
 }
 
 
 //
-// Returns TRUE if currently selected object is interface
+// Handler for "Unmanage" menu
 //
 
-BOOL CObjectBrowser::CurrObjectIsInterface()
+void CObjectBrowser::OnObjectUnmanage() 
 {
-   if (m_pCurrentObject == NULL)
-   {
-      return FALSE;
-   }
-   else
-   {
-      if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-      {
-         return m_pCurrentObject->iClass == OBJECT_INTERFACE;
-      }
-      else
-      {
-         return ((m_pCurrentObject->iClass == OBJECT_INTERFACE) &&
-                 (m_wndListCtrl.GetSelectedCount() == 1));
-      }
-   }
+   if (m_pCurrentObject != NULL)
+      theApp.SetObjectMgmtStatus(m_pCurrentObject, FALSE);
+}
+
+void CObjectBrowser::OnUpdateObjectUnmanage(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_pCurrentObject != NULL);
 }
 
 
 //
-// WM_CLOSE message handler
+// Overrided OnCmdMsg which will route all commands
+// through active tab in CObjectView first
 //
 
-void CObjectBrowser::OnClose() 
+BOOL CObjectBrowser::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo) 
 {
-   WINDOWPLACEMENT wp;
-
-   theApp.WriteProfileInt(_T("ObjectBrowser"), _T("Flags"), m_dwFlags);
-   theApp.WriteProfileInt(_T("ObjectBrowser"), _T("SortMode"), m_dwSortMode);
-   GetWindowPlacement(&wp);
-   theApp.WriteProfileBinary(_T("ObjectBrowser"), _T("WindowPlacement"), 
-                             (BYTE *)&wp, sizeof(WINDOWPLACEMENT));
+   if (::IsWindow(m_wndObjectView.m_hWnd))
+      if (m_wndObjectView.OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))
+         return TRUE;
 	
-	CMDIChildWnd::OnClose();
+	return CMDIChildWnd::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
 }
 
 
 //
-// Comparision function for tree items sorting
+// Process alarm updates
 //
 
-static int CALLBACK CompareTreeItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+void CObjectBrowser::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
 {
-   TCHAR szName1[MAX_OBJECT_NAME], szName2[MAX_OBJECT_NAME];
-
-   NXCGetComparableObjectNameEx((NXC_OBJECT *)lParam1, szName1);
-   NXCGetComparableObjectNameEx((NXC_OBJECT *)lParam2, szName2);
-   return _tcsicmp(szName1, szName2);
-}
-
-
-//
-// Sort childs of given tree item
-//
-
-void CObjectBrowser::SortTreeItems(HTREEITEM hItem, BOOL bForcedSort)
-{
-   TVSORTCB tvs;
-
-   tvs.hParent = hItem;
-   tvs.lpfnCompare = CompareTreeItems;
-   m_wndTreeCtrl.SortChildrenCB(&tvs);
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_LASTDCIVALUES message handler
-//
-
-void CObjectBrowser::OnObjectLastdcivalues() 
-{
-   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-   {
-      if (m_pCurrentObject != NULL)
-         theApp.ShowLastValues(m_pCurrentObject);
-   }
-   else
-   {
-      int iItem;
-      NXC_OBJECT *pObject;
-
-      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
-      while(iItem != -1)
-      {
-         pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
-         theApp.ShowLastValues(pObject);
-         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
-      }
-   }
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_APPLY message handler
-//
-
-void CObjectBrowser::OnObjectApply() 
-{
-   if (m_pCurrentObject != NULL)
-      theApp.ApplyTemplate(m_pCurrentObject);
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_CHANGEIPADDRESS message handler
-//
-
-void CObjectBrowser::OnObjectChangeipaddress() 
-{
-   if (m_pCurrentObject != NULL)
-      theApp.ChangeNodeAddress(m_pCurrentObject->dwId);
-}
-
-
-//
-// Get save info for desktop saving
-//
-
-LRESULT CObjectBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
-{
-   pInfo->iWndClass = WNDC_OBJECT_BROWSER;
-   GetWindowPlacement(&pInfo->placement);
-   _sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN, _T("F:%u\x7FSM:%u\x7FO:%u"),
-              m_dwFlags, m_dwSortMode, 
-              (m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
-   return 1;
-}
-
-
-//
-// Edit agent's configuration file
-//
-
-void CObjectBrowser::OnObjectAgentcfg() 
-{
-   if (m_pCurrentObject != NULL)
-      theApp.EditAgentConfig(m_pCurrentObject);
-}
-
-
-//
-// Handler for object tools
-//
-
-void CObjectBrowser::OnObjectTool(UINT nID)
-{
-   if (m_dwFlags & VIEW_OBJECTS_AS_TREE)
-   {
-      if (m_pCurrentObject != NULL)
-         theApp.ExecuteObjectTool(m_pCurrentObject, nID - OBJTOOL_MENU_FIRST_ID);
-   }
-   else
-   {
-      int iItem;
-      NXC_OBJECT *pObject;
-
-      iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
-      while(iItem != -1)
-      {
-         pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(iItem);
-         theApp.ExecuteObjectTool(pObject, nID - OBJTOOL_MENU_FIRST_ID);
-         iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
-      }
-   }
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_MOVE message handler
-//
-
-void CObjectBrowser::OnObjectMove() 
-{
-   HTREEITEM hItem;
-
-   if ((m_dwFlags & VIEW_OBJECTS_AS_TREE) && (m_pCurrentObject != NULL))
-   {
-      hItem = m_wndTreeCtrl.GetParentItem(m_wndTreeCtrl.GetSelectedItem());
-      if (hItem != NULL)
-      {
-         theApp.MoveObject(m_pCurrentObject->dwId, 
-                           ((NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem))->dwId);
-      }
-   }
-}
-
-
-//
-// Handler for TVN_GETDISPINFO notification from tree view control
-//
-
-void CObjectBrowser::OnTreeViewGetDispInfo(LPNMTVDISPINFO lpdi, LRESULT *pResult)
-{
-   NXC_OBJECT *pObject;
-
-   if (lpdi->item.mask == TVIF_CHILDREN)
-   {
-      pObject = (NXC_OBJECT *)lpdi->item.lParam;
-      if (pObject != NULL)
-      {
-         lpdi->item.cChildren = (pObject->dwNumChilds > 0) ? 1 : 0;
-      }
-      else
-      {
-         lpdi->item.cChildren = 0;
-      }
-   }
-   *pResult = 0;
-}
-
-
-//
-// Handler for TVN_ITEMEXPANDING notification from tree view control
-//
-
-void CObjectBrowser::OnTreeViewItemExpanding(LPNMTREEVIEW lpnmt, LRESULT *pResult)
-{
-   if ((lpnmt->action == TVE_EXPAND) ||
-       (lpnmt->action == TVE_EXPANDPARTIAL) ||
-       (lpnmt->action == TVE_TOGGLE))
-   {
-      NXC_OBJECT *pObject, *pChildObject;
-      DWORD i;
-
-      pObject = (NXC_OBJECT *)lpnmt->itemNew.lParam;
-      if ((pObject != NULL) && ((m_wndTreeCtrl.GetItemState(lpnmt->itemNew.hItem, TVIS_EXPANDEDONCE) & TVIS_EXPANDEDONCE) == 0))
-      {
-         for(i = 0; i < pObject->dwNumChilds; i++)
-         {
-            pChildObject = NXCFindObjectById(g_hSession, pObject->pdwChildList[i]);
-            if (pChildObject != NULL)
-               AddObjectToTree(pChildObject, lpnmt->itemNew.hItem);
-         }
-         SortTreeItems(lpnmt->itemNew.hItem, TRUE);
-      }
-   }
-   *pResult = 0;
-}
-
-
-//
-// Add new object entry to hash
-// Return TRUE if hash array needs to be resorted
-//
-
-void CObjectBrowser::AddObjectEntryToHash(NXC_OBJECT *pObject, HTREEITEM hItem)
-{
-   DWORD dwIndex, dwEntry;
-
-   dwIndex = FindObjectInTree(pObject->dwId);
-   if (dwIndex == INVALID_INDEX)
-   {
-      m_pTreeHash = (OBJ_TREE_HASH *)realloc(m_pTreeHash, sizeof(OBJ_TREE_HASH) * (m_dwTreeHashSize + 1));
-      m_pTreeHash[m_dwTreeHashSize].dwObjectId = pObject->dwId;
-      m_pTreeHash[m_dwTreeHashSize].dwNumEntries = 1;
-      m_pTreeHash[m_dwTreeHashSize].phTreeItemList = (HTREEITEM *)malloc(sizeof(HTREEITEM));
-      m_pTreeHash[m_dwTreeHashSize].phTreeItemList[0] = hItem;
-      m_dwTreeHashSize++;
-      if ((m_dwTreeHashSize > 1) && 
-          (m_pTreeHash[m_dwTreeHashSize - 1].dwObjectId < m_pTreeHash[m_dwTreeHashSize - 2].dwObjectId))
-      {
-         qsort(m_pTreeHash, m_dwTreeHashSize, sizeof(OBJ_TREE_HASH), CompareTreeHashItems);
-      }
-   }
-   else
-   {
-      // Object already presented in hash array, just add new HTREEITEM
-      dwEntry = m_pTreeHash[dwIndex].dwNumEntries;
-      m_pTreeHash[dwIndex].dwNumEntries++;
-      m_pTreeHash[dwIndex].phTreeItemList = (HTREEITEM *)realloc(m_pTreeHash[dwIndex].phTreeItemList, sizeof(HTREEITEM)  * m_pTreeHash[dwIndex].dwNumEntries);
-      m_pTreeHash[dwIndex].phTreeItemList[dwEntry] = hItem;
-   }
-}
-
-
-//
-// Adjust object index after new object insertion into tree
-//
-
-DWORD CObjectBrowser::AdjustIndex(DWORD dwIndex, DWORD dwObjectId)
-{
-   if (m_pTreeHash[dwIndex].dwObjectId == dwObjectId)
-      return dwIndex;
-   if ((dwIndex > 0) && (m_pTreeHash[dwIndex - 1].dwObjectId == dwObjectId))
-      return dwIndex - 1;
-   else
-      return dwIndex + 1;
-}
-
-
-//
-// Open object in tree
-//
-
-void CObjectBrowser::OpenObject(DWORD dwObjectId)
-{
-   DWORD dwIndex;
-   NXC_OBJECT *pObject;
-
-   dwIndex = FindObjectInTree(dwObjectId);
-   if (dwIndex != INVALID_INDEX)
-   {
-      m_wndTreeCtrl.Expand(m_pTreeHash[dwIndex].phTreeItemList[0], TVE_EXPAND);
-   }
-   else
-   {
-      pObject = NXCFindObjectById(g_hSession, dwObjectId);
-      if (pObject != NULL)
-      {
-         if (pObject->dwNumParents > 0)
-         {
-            OpenObject(pObject->pdwParentList[0]);
-            dwIndex = FindObjectInTree(dwObjectId);
-            if (dwIndex != INVALID_INDEX)
-            {
-               m_wndTreeCtrl.Expand(m_pTreeHash[dwIndex].phTreeItemList[0], TVE_EXPAND);
-            }
-         }
-      }
-   }
-}
-
-
-//
-// WM_COMMAND::ID_OBJECT_COMMENTS message handler
-//
-
-void CObjectBrowser::OnObjectComments() 
-{
-   if (m_pCurrentObject != NULL)
-      theApp.ShowObjectComments(m_pCurrentObject);
+   m_wndObjectView.OnAlarmUpdate(dwCode, pAlarm);
 }

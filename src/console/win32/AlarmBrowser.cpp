@@ -196,7 +196,6 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
                         rect, &m_wndSplitter, m_wndSplitter.IdFromRowCol(0, 1));
    m_wndListCtrl.SetExtendedStyle(LVS_EX_LABELTIP | LVS_EX_SUBITEMIMAGES |
                                   LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
-   m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
    // Create image lists
    m_pImageList = CreateEventImageList();

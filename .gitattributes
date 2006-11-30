@@ -624,6 +624,8 @@ src/console/win32/AgentParamSelDlg.cpp -text
 src/console/win32/AgentParamSelDlg.h -text
 src/console/win32/AlarmBrowser.cpp -text
 src/console/win32/AlarmBrowser.h -text
+src/console/win32/AlarmView.cpp -text
+src/console/win32/AlarmView.h -text
 src/console/win32/ColorSelector.cpp -text
 src/console/win32/ColorSelector.h -text
 src/console/win32/CondDCIPropDlg.cpp -text
@@ -767,10 +769,8 @@ src/console/win32/ObjectBrowser.cpp -text
 src/console/win32/ObjectBrowser.h -text
 src/console/win32/ObjectCommentsEditor.cpp -text
 src/console/win32/ObjectCommentsEditor.h -text
-src/console/win32/ObjectInfoBox.cpp -text
-src/console/win32/ObjectInfoBox.h -text
-src/console/win32/ObjectPreview.cpp -text
-src/console/win32/ObjectPreview.h -text
+src/console/win32/ObjectOverview.cpp -text
+src/console/win32/ObjectOverview.h -text
 src/console/win32/ObjectPropCaps.cpp -text
 src/console/win32/ObjectPropCaps.h -text
 src/console/win32/ObjectPropSheet.cpp -text
@@ -785,12 +785,12 @@ src/console/win32/ObjectPropsSecurity.cpp -text
 src/console/win32/ObjectPropsSecurity.h -text
 src/console/win32/ObjectPropsStatus.cpp -text
 src/console/win32/ObjectPropsStatus.h -text
-src/console/win32/ObjectSearchBox.cpp -text
-src/console/win32/ObjectSearchBox.h -text
 src/console/win32/ObjectSelDlg.cpp -text
 src/console/win32/ObjectSelDlg.h -text
 src/console/win32/ObjectToolsEditor.cpp -text
 src/console/win32/ObjectToolsEditor.h -text
+src/console/win32/ObjectView.cpp -text
+src/console/win32/ObjectView.h -text
 src/console/win32/PackageMgr.cpp -text
 src/console/win32/PackageMgr.h -text
 src/console/win32/PasswordChangeDlg.cpp -text
@@ -890,6 +890,7 @@ src/console/win32/icons/document.ico -text
 src/console/win32/icons/e-mail.ico -text
 src/console/win32/icons/editor.ico -text
 src/console/win32/icons/exec.ico -text
+src/console/win32/icons/exit.ico -text
 src/console/win32/icons/folder_c.ico -text
 src/console/win32/icons/folder_o.ico -text
 src/console/win32/icons/forward.ico -text

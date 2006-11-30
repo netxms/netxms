@@ -36,6 +36,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include "DataCollectionEditor.h"
 #include "DebugFrame.h"
 #include "AlarmBrowser.h"
+#include "ObjectBrowser.h"
 
 
 //
@@ -155,6 +156,11 @@ public:
 
 // Implementation
 protected:
+	MUTEX m_mutexAlarmList;
+   void AddAlarmToList(NXC_ALARM *pAlarm);
+   NXC_ALARM *FindAlarmInList(DWORD dwAlarmId);
+   void DeleteAlarmFromList(DWORD dwAlarmId);
+	void OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
 	BOOL m_bIgnoreErrors;
 	void ExecuteCmdTool(NXC_OBJECT *pObject, TCHAR *pszCmd);
 	void ExecuteWebTool(NXC_OBJECT *pObject, TCHAR *pszURL);
@@ -166,6 +172,9 @@ protected:
 	CMDIChildWnd *FindObjectView(DWORD dwClass, DWORD dwId);
 	CMenu m_ctxMenu;
 	DWORD m_dwClientState;
+
+   NXC_ALARM *m_pAlarmList;
+	DWORD m_dwNumAlarms;
 
    HMENU m_hMDIMenu;             // Default menu for MDI
 	HACCEL m_hMDIAccel;           // Default accelerator for MDI
@@ -255,6 +264,9 @@ private:
    OBJECT_VIEW m_openObjectViews[MAX_OBJECT_VIEWS];
 
 public:
+	DWORD OpenAlarmList(NXC_ALARM **ppList);
+	void CloseAlarmList(void);
+	DWORD LoadAlarms(void);
 	void ShowDetailsWindow(DWORD dwType, HWND hwndOrigin, Table *pData);
 	void ShowObjectComments(NXC_OBJECT *pObject);
 	void CreateCondition(DWORD dwParent);
@@ -303,6 +315,7 @@ public:
          ((CDebugFrame *)m_viewState[VIEW_DEBUG].pWnd)->AddMessage(pszMsg);
    }
    CAlarmBrowser *GetAlarmBrowser(void) { return m_viewState[VIEW_ALARMS].bActive ? (CAlarmBrowser *)m_viewState[VIEW_ALARMS].pWnd : NULL; }
+   CObjectBrowser *GetObjectBrowser(void) { return m_viewState[VIEW_OBJECTS].bActive ? (CObjectBrowser *)m_viewState[VIEW_OBJECTS].pWnd : NULL; }
 };
 
 

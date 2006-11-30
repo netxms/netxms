@@ -212,6 +212,10 @@ SOURCE=.\AlarmBrowser.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\AlarmView.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ColorSelector.cpp
 # End Source File
 # Begin Source File
@@ -504,11 +508,7 @@ SOURCE=.\ObjectCommentsEditor.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\ObjectInfoBox.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\ObjectPreview.cpp
+SOURCE=.\ObjectOverview.cpp
 # End Source File
 # Begin Source File
 
@@ -540,15 +540,15 @@ SOURCE=.\ObjectPropsStatus.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\ObjectSearchBox.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\ObjectSelDlg.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\ObjectToolsEditor.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ObjectView.cpp
 # End Source File
 # Begin Source File
 
@@ -746,6 +746,10 @@ SOURCE=.\AgentParamSelDlg.h
 # Begin Source File
 
 SOURCE=.\AlarmBrowser.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\AlarmView.h
 # End Source File
 # Begin Source File
 
@@ -1065,11 +1069,7 @@ SOURCE=.\ObjectCommentsEditor.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\ObjectInfoBox.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\ObjectPreview.h
+SOURCE=.\ObjectOverview.h
 # End Source File
 # Begin Source File
 
@@ -1101,15 +1101,15 @@ SOURCE=.\ObjectPropsStatus.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\ObjectSearchBox.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\ObjectSelDlg.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\ObjectToolsEditor.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ObjectView.h
 # End Source File
 # Begin Source File
 
@@ -1370,6 +1370,10 @@ SOURCE=.\icons\event.ico
 # Begin Source File
 
 SOURCE=.\icons\exec.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\exit.ico
 # End Source File
 # Begin Source File
 
