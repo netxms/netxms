@@ -275,6 +275,8 @@ DWORD WINAPI PollerThread(void *pArg);
 
 void DrawPieChart(CDC &dc, RECT *pRect, int iNumElements, DWORD *pdwValues, COLORREF *pColors);
 void Draw3dRect(HDC hDC, LPRECT pRect, COLORREF rgbTop, COLORREF rgbBottom);
+void DrawHeading(CDC &dc, TCHAR *pszText, CFont *pFont, RECT *pRect,
+                 COLORREF rgbColor1, COLORREF rgbColor2);
 
 
 //

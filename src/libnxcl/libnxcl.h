@@ -210,7 +210,7 @@ public:
    BOOL GetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers);
    NXC_USER *FindUserById(DWORD dwId);
 
-   DWORD SyncObjects(TCHAR *pszCacheFile);
+   DWORD SyncObjects(TCHAR *pszCacheFile, BOOL bSyncComments);
    void LockObjectIndex(void) { MutexLock(m_mutexIndexAccess, INFINITE); }
    void UnlockObjectIndex(void) { MutexUnlock(m_mutexIndexAccess); }
    NXC_OBJECT *FindObjectById(DWORD dwId, BOOL bLock);

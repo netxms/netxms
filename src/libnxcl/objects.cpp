@@ -62,6 +62,7 @@ void DestroyObject(NXC_OBJECT *pObject)
    safe_free(pObject->pdwChildList);
    safe_free(pObject->pdwParentList);
    safe_free(pObject->pAccessList);
+   safe_free(pObject->pszComments);
    free(pObject);
 }
 
@@ -170,6 +171,7 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
    safe_free(pObject->pdwChildList);
    safe_free(pObject->pdwParentList);
    safe_free(pObject->pAccessList);
+   safe_free(pObject->pszComments);
    memcpy(pObject, pNewObject, sizeof(NXC_OBJECT));
    free(pNewObject);
 }
@@ -209,6 +211,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    pObject->iStatusThresholds[1] = (int)pMsg->GetVariableShort(VID_STATUS_THRESHOLD_2);
    pObject->iStatusThresholds[2] = (int)pMsg->GetVariableShort(VID_STATUS_THRESHOLD_3);
    pObject->iStatusThresholds[3] = (int)pMsg->GetVariableShort(VID_STATUS_THRESHOLD_4);
+   pObject->pszComments = pMsg->GetVariableStr(VID_COMMENTS);
 
    // Parents
    pObject->dwNumParents = pMsg->GetVariableLong(VID_PARENT_CNT);
@@ -402,7 +405,7 @@ void NXCL_Session::ProcessObjectUpdate(CSCPMessage *pMsg)
 // This function is NOT REENTRANT
 //
 
-DWORD NXCL_Session::SyncObjects(TCHAR *pszCacheFile)
+DWORD NXCL_Session::SyncObjects(TCHAR *pszCacheFile, BOOL bSyncComments)
 {
    CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
@@ -419,6 +422,7 @@ DWORD NXCL_Session::SyncObjects(TCHAR *pszCacheFile)
    msg.SetCode(CMD_GET_OBJECTS);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_TIMESTAMP, m_dwTimeStamp);
+   msg.SetVariable(VID_SYNC_COMMENTS, (WORD)bSyncComments);
    SendMsg(&msg);
 
    dwRetCode = WaitForRCC(dwRqId);
@@ -439,12 +443,13 @@ DWORD NXCL_Session::SyncObjects(TCHAR *pszCacheFile)
 
 DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(NXC_SESSION hSession)
 {
-   return ((NXCL_Session *)hSession)->SyncObjects(NULL);
+   return ((NXCL_Session *)hSession)->SyncObjects(NULL, FALSE);
 }
 
-DWORD LIBNXCL_EXPORTABLE NXCSyncObjectsEx(NXC_SESSION hSession, TCHAR *pszCacheFile)
+DWORD LIBNXCL_EXPORTABLE NXCSyncObjectsEx(NXC_SESSION hSession, TCHAR *pszCacheFile,
+                                          BOOL bSyncComments)
 {
-   return ((NXCL_Session *)hSession)->SyncObjects(pszCacheFile);
+   return ((NXCL_Session *)hSession)->SyncObjects(pszCacheFile, bSyncComments);
 }
 
 

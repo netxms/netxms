@@ -12,8 +12,8 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 
-#define X_MARGIN     4
-#define Y_MARGIN     4
+#define X_MARGIN     5
+#define Y_MARGIN     5
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -33,6 +33,7 @@ BEGIN_MESSAGE_MAP(CObjectOverview, CWnd)
 	//{{AFX_MSG_MAP(CObjectOverview)
 	ON_WM_CREATE()
 	ON_WM_PAINT()
+	ON_WM_SIZE()
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_SET_OBJECT, OnSetObject)
 END_MESSAGE_MAP()
@@ -57,6 +58,8 @@ BOOL CObjectOverview::PreCreateWindow(CREATESTRUCT& cs)
 
 int CObjectOverview::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
+   RECT rect;
+
 	if (CWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
@@ -69,6 +72,17 @@ int CObjectOverview::OnCreate(LPCREATESTRUCT lpCreateStruct)
                           0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
                           VARIABLE_PITCH | FF_DONTCARE, _T("MS Sans Serif"));
+   m_fontHeading.CreateFont(-MulDiv(10, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
+                            0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+                            VARIABLE_PITCH | FF_DONTCARE, _T("MS Sans Serif"));
+
+   GetClientRect(&rect);
+   rect.top += 50;
+   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_NOCOLUMNHEADER, rect, this, ID_LIST_VIEW);
+   m_wndListCtrl.InsertColumn(0, _T("Name"), LVCFMT_LEFT, 100);
+   m_wndListCtrl.InsertColumn(1, _T("Value"), LVCFMT_LEFT, 400);
+   m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 	
 	return 0;
 }
@@ -81,7 +95,7 @@ int CObjectOverview::OnCreate(LPCREATESTRUCT lpCreateStruct)
 void CObjectOverview::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
 {
    m_pObject = pObject;
-   Invalidate();
+   Refresh();
 }
 
 
@@ -96,99 +110,40 @@ void CObjectOverview::OnPaint()
    if (m_pObject != NULL)
    {
       RECT rect;
-      int cy, step, w;
-      TCHAR szBuffer[64], szTemp[32];
       DWORD dwImageIndex;
+      int h;
 
       // Draw icon and objet's name right to it
       dc.FillSolidRect(X_MARGIN - 1, Y_MARGIN - 1, 34, 34, g_statusColorTable[m_pObject->iStatus]);
       dwImageIndex = GetObjectImageIndex(m_pObject);
       g_pObjectNormalImageList->Draw(&dc, dwImageIndex, CPoint(X_MARGIN, Y_MARGIN), ILD_TRANSPARENT);
-      dc.SelectObject(m_fontNormal);
+      dc.SelectObject(&m_fontNormal);
       dc.SetBkColor(RGB(255, 255, 255));
       GetClientRect(&rect);
+      h = rect.bottom;
       rect.left = X_MARGIN + 37;
       rect.top = Y_MARGIN;
       rect.bottom = Y_MARGIN + 40;
       rect.right -= X_MARGIN;
       dc.DrawText(m_pObject->szName, -1, &rect, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX);
-      
-      // Current vertical position and increment
-      cy = 46;
-      step = dc.GetTextExtent(_T("X"), 1).cy + 2;
 
-      // Display object's status
-      dc.TextOut(X_MARGIN, cy, _T("Status:"), 7);
-      dc.SetTextColor(g_statusColorTable[m_pObject->iStatus]);
-      w = dc.GetTextExtent(_T("Status: "), 8).cx;
-      dc.SelectObject(m_fontBold);
-      dc.TextOut(X_MARGIN + w, cy, 
-                 g_szStatusText[m_pObject->iStatus], 
-                 _tcslen(g_szStatusText[m_pObject->iStatus]));
-      dc.SetTextColor(RGB(0, 0, 0));
-      dc.SelectObject(m_fontNormal);
-      cy += step;
+      rect.left = X_MARGIN;
+      rect.top = Y_MARGIN + 45;
+      rect.bottom = rect.top + 20;
+      DrawHeading(dc, _T("Attributes"), &m_fontHeading, &rect, RGB(0, 0, 255), RGB(128, 128, 255));
 
-      // Object's ID and class
-      _stprintf(szBuffer, _T("Identifier: %d"), m_pObject->dwId);
-      dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
-      cy += step;
-      _stprintf(szBuffer, _T("Class: %s"), g_szObjectClass[m_pObject->iClass]);
-      dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
-      cy += step;
+      rect.top = GetWindowSize(&m_wndListCtrl).cy + Y_MARGIN + 70 + 10;
+      rect.bottom = rect.top + 20;
+      DrawHeading(dc, _T("Comments"), &m_fontHeading, &rect, RGB(0, 0, 255), RGB(128, 128, 255));
 
-      // Object's primary IP address
-      if (m_pObject->dwIpAddr != 0)
+      if (m_pObject->pszComments != NULL)
       {
-         _stprintf(szBuffer, _T("IP Address: %s"), IpToStr(m_pObject->dwIpAddr, szTemp));
-         dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
-         cy += step;
-      }
-
-      // Class-specific information
-      switch(m_pObject->iClass)
-      {
-         case OBJECT_SUBNET:
-            _stprintf(szBuffer, _T("IP NetMask: %s"), IpToStr(m_pObject->subnet.dwIpNetMask, szTemp));
-            dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
-            cy += step;
-            break;
-         case OBJECT_NODE:
-            if (m_pObject->node.dwFlags & NF_IS_SNMP)
-            {
-               dc.TextOut(X_MARGIN, cy, _T("SNMP supported"), 14);
-               cy += step;
-
-               _stprintf(szBuffer, _T("OID: %s"), m_pObject->node.szObjectId);
-               dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
-               cy += step;
-            }
-            break;
-         case OBJECT_INTERFACE:
-            if (m_pObject->dwIpAddr != 0)
-            {
-               _stprintf(szBuffer, _T("IP NetMask: %s"), IpToStr(m_pObject->iface.dwIpNetMask, szTemp));
-               dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
-               cy += step;
-            }
-
-            _stprintf(szBuffer, _T("Index: %d"), m_pObject->iface.dwIfIndex);
-            dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
-            cy += step;
-
-            _stprintf(szBuffer, _T("Type: %s"), 
-                      m_pObject->iface.dwIfType > MAX_INTERFACE_TYPE ?
-                          _T("Unknown") : g_szInterfaceTypes[m_pObject->iface.dwIfType]);
-            dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
-            cy += step;
-
-            _tcscpy(szBuffer, _T("MAC: "));
-            BinToStr(m_pObject->iface.bMacAddr, MAC_ADDR_LENGTH, &szBuffer[5]);
-            dc.TextOut(X_MARGIN, cy, szBuffer, _tcslen(szBuffer));
-            cy += step;
-            break;
-         default:
-            break;
+         rect.top = rect.bottom + 5;
+         rect.bottom = h;
+         rect.left += 2;
+         rect.right -= 2;
+         dc.DrawText(m_pObject->pszComments, _tcslen(m_pObject->pszComments), &rect,
+                     DT_END_ELLIPSIS | DT_NOPREFIX | DT_WORDBREAK);
       }
    }
    else
@@ -197,4 +152,83 @@ void CObjectOverview::OnPaint()
       dc.SetBkColor(RGB(255, 255, 255));
       dc.TextOut(X_MARGIN, Y_MARGIN, _T("No object selected"), 18);
    }
+}
+
+
+//
+// WM_SIZE message handler
+//
+
+void CObjectOverview::OnSize(UINT nType, int cx, int cy) 
+{
+   RECT rect;
+
+	CWnd::OnSize(nType, cx, cy);
+
+   m_wndListCtrl.SetWindowPos(NULL, X_MARGIN, Y_MARGIN + 70, cx - X_MARGIN * 2, max(50, (cy - Y_MARGIN - 70) / 2), SWP_NOZORDER);
+   m_wndListCtrl.GetClientRect(&rect);
+   m_wndListCtrl.SetColumnWidth(1, rect.right - 100);
+}
+
+
+//
+// Refresh view
+//
+
+void CObjectOverview::Refresh()
+{
+   TCHAR szTemp[256];
+
+   m_wndListCtrl.DeleteAllItems();
+
+   InsertItem(_T("ID"), m_pObject->dwId);
+   InsertItem(_T("Class"), g_szObjectClass[m_pObject->iClass]);
+   if (m_pObject->dwIpAddr != 0)
+      InsertItem(_T("IP Address"), IpToStr(m_pObject->dwIpAddr, szTemp));
+
+   // Class-specific information
+   switch(m_pObject->iClass)
+   {
+      case OBJECT_SUBNET:
+         InsertItem(_T("Network Mask"), IpToStr(m_pObject->subnet.dwIpNetMask, szTemp));
+         break;
+      case OBJECT_NODE:
+         break;
+      case OBJECT_INTERFACE:
+         if (m_pObject->dwIpAddr != 0)
+            InsertItem(_T("IP Netmask"), IpToStr(m_pObject->iface.dwIpNetMask, szTemp));
+         InsertItem(_T("Index"), m_pObject->iface.dwIfIndex);
+         InsertItem(_T("Type"), 
+                    m_pObject->iface.dwIfType > MAX_INTERFACE_TYPE ?
+                           _T("Unknown") : g_szInterfaceTypes[m_pObject->iface.dwIfType]);
+         BinToStr(m_pObject->iface.bMacAddr, MAC_ADDR_LENGTH, szTemp);
+         InsertItem(_T("MAC Address"), szTemp);
+         break;
+      default:
+         break;
+   }
+
+   Invalidate();
+}
+
+
+//
+// Insert item into list control
+//
+
+void CObjectOverview::InsertItem(TCHAR *pszName, TCHAR *pszValue)
+{
+   int nItem;
+
+   nItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pszName);
+   if (nItem != -1)
+      m_wndListCtrl.SetItemText(nItem, 1, pszValue);
+}
+
+void CObjectOverview::InsertItem(TCHAR *pszName, DWORD dwValue)
+{
+   TCHAR szBuffer[64];
+
+   _stprintf(szBuffer, _T("%u"), dwValue);
+   InsertItem(pszName, szBuffer);
 }

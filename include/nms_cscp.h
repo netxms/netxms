@@ -689,6 +689,7 @@ typedef struct
 #define VID_FAILED_DCI_INDEX        ((DWORD)251)
 #define VID_ADDR_LIST_TYPE          ((DWORD)252)
 #define VID_COMPONENT_ID            ((DWORD)253)
+#define VID_SYNC_COMMENTS           ((DWORD)254)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

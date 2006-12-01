@@ -940,6 +940,7 @@ typedef struct
    int iStatusTrans[4];
    int iStatusSingleTh;
    int iStatusThresholds[4];
+   TCHAR *pszComments;
    union
    {
       struct __nxc_object_iface iface;
@@ -1564,7 +1565,8 @@ void LIBNXCL_EXPORTABLE *NXCGetClientData(NXC_SESSION hSession);
 void LIBNXCL_EXPORTABLE NXCSetClientData(NXC_SESSION hSession, void *pData);
 
 DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(NXC_SESSION hSession);
-DWORD LIBNXCL_EXPORTABLE NXCSyncObjectsEx(NXC_SESSION hSession, TCHAR *pszCacheFile);
+DWORD LIBNXCL_EXPORTABLE NXCSyncObjectsEx(NXC_SESSION hSession, TCHAR *pszCacheFile,
+                                          BOOL bSyncComments);
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectById(NXC_SESSION hSession, DWORD dwId);
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByIdNoLock(NXC_SESSION hSession, DWORD dwId);
 NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(NXC_SESSION hSession, TCHAR *pszName);

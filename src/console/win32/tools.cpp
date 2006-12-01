@@ -845,3 +845,44 @@ void LoadListCtrlColumns(CListCtrl &wndListCtrl, TCHAR *pszSection, TCHAR *pszPr
       wndListCtrl.SetColumn(i, &lvc);
    }
 }
+
+
+//
+// Draw text underlined by gradient-filled line
+//
+
+void DrawHeading(CDC &dc, TCHAR *pszText, CFont *pFont, RECT *pRect,
+                 COLORREF rgbColor1, COLORREF rgbColor2)
+{
+   TRIVERTEX vtx[2];
+   GRADIENT_RECT gr;
+   RECT rect;
+   CFont *pOldFont;
+
+   memcpy(&rect, pRect, sizeof(RECT));
+   rect.bottom -= 5;
+   rect.left += 2;
+   rect.right -= 2;
+   pOldFont = dc.SelectObject(pFont);
+   dc.DrawText(pszText, _tcslen(pszText), &rect, DT_LEFT | DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE);
+   dc.SelectObject(pOldFont);
+
+   vtx[0].x = pRect->left;
+   vtx[0].y = pRect->bottom - 3;
+   vtx[0].Red = (COLOR16)GetRValue(rgbColor1) << 8;
+   vtx[0].Green = (COLOR16)GetGValue(rgbColor1) << 8;
+   vtx[0].Blue = (COLOR16)GetBValue(rgbColor1) << 8;
+   vtx[0].Alpha = 0;
+
+   vtx[1].x = pRect->right;
+   vtx[1].y = pRect->bottom;
+   vtx[1].Red = (COLOR16)GetRValue(rgbColor2) << 8;
+   vtx[1].Green = (COLOR16)GetGValue(rgbColor2) << 8;
+   vtx[1].Blue = (COLOR16)GetBValue(rgbColor2) << 8;
+   vtx[1].Alpha = 0;
+
+   gr.UpperLeft = 0;
+   gr.LowerRight = 1;
+
+   GradientFill(dc.m_hDC, vtx, 2, &gr, 1, GRADIENT_FILL_RECT_H);
+}

@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.246 2006-11-14 19:49:37 victor Exp $ */
+/* $Id: session.cpp,v 1.247 2006-12-01 17:02:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -557,6 +557,8 @@ void ClientSession::UpdateThread(void)
             MutexLock(m_mutexSendObjects, INFINITE);
             msg.SetCode(CMD_OBJECT_UPDATE);
             ((NetObj *)pUpdate->pData)->CreateMessage(&msg);
+            if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
+               ((NetObj *)pUpdate->pData)->CommentsToMessage(&msg);
             SendMessage(&msg);
             MutexUnlock(m_mutexSendObjects);
             msg.DeleteAllVariables();
@@ -1482,6 +1484,12 @@ void ClientSession::SendAllObjects(CSCPMessage *pRequest)
    SendMessage(&msg);
    msg.DeleteAllVariables();
 
+   // Change "sync comments" flag
+   if (pRequest->GetVariableShort(VID_SYNC_COMMENTS))
+      m_dwFlags |= CSF_SYNC_OBJECT_COMMENTS;
+   else
+      m_dwFlags &= ~CSF_SYNC_OBJECT_COMMENTS;
+
    // Get client's last known time stamp
    dwTimeStamp = pRequest->GetVariableLong(VID_TIMESTAMP);
 
@@ -1498,6 +1506,8 @@ void ClientSession::SendAllObjects(CSCPMessage *pRequest)
           (!g_pIndexById[i].pObject->IsHidden()))
       {
          g_pIndexById[i].pObject->CreateMessage(&msg);
+         if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
+            g_pIndexById[i].pObject->CommentsToMessage(&msg);
          SendMessage(&msg);
          msg.DeleteAllVariables();
       }
