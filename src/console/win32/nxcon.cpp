@@ -63,6 +63,9 @@
 #include "DiscoveryPropAddrList.h"
 #include "DiscoveryPropGeneral.h"
 #include "DiscoveryPropTargets.h"
+#include "AlarmBrowser.h"
+#include "ObjectBrowser.h"
+#include "DataCollectionEditor.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

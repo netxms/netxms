@@ -770,6 +770,8 @@ src/console/win32/ObjectBrowser.cpp -text
 src/console/win32/ObjectBrowser.h -text
 src/console/win32/ObjectCommentsEditor.cpp -text
 src/console/win32/ObjectCommentsEditor.h -text
+src/console/win32/ObjectDepView.cpp -text
+src/console/win32/ObjectDepView.h -text
 src/console/win32/ObjectOverview.cpp -text
 src/console/win32/ObjectOverview.h -text
 src/console/win32/ObjectPropCaps.cpp -text
@@ -1034,6 +1036,7 @@ src/libnxmap/libnxmap.dsw -text
 src/libnxmap/libnxmap.h -text
 src/libnxmap/main.cpp -text
 src/libnxmap/map.cpp -text
+src/libnxmap/objlist.cpp -text
 src/libnxmap/submap.cpp -text
 src/libnxsl/Makefile.am -text
 src/libnxsl/class.cpp -text

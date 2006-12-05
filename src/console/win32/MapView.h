@@ -22,16 +22,6 @@
 
 
 //
-// Map view states
-//
-
-#define STATE_NORMAL          0
-#define STATE_OBJECT_LCLICK   1
-#define STATE_DRAGGING        2
-#define STATE_SELECTING       3
-
-
-//
 // Scale-dependent elements
 //
 
@@ -71,6 +61,11 @@ public:
 
 // Attributes
 public:
+	COLORREF m_rgbSelBkColor;
+	COLORREF m_rgbSelTextColor;
+	COLORREF m_rgbSelRectColor;
+	COLORREF m_rgbBkColor;
+	COLORREF m_rgbTextColor;
 
 // Operations
 public:
@@ -134,11 +129,6 @@ protected:
 	POINT m_ptMouseOpStart;
    RECT m_rcSelection;
 	int m_nState;
-	COLORREF m_rgbSelBkColor;
-	COLORREF m_rgbSelTextColor;
-	COLORREF m_rgbSelRectColor;
-	COLORREF m_rgbBkColor;
-	COLORREF m_rgbTextColor;
 	void SetObjectRect(DWORD dwObjectId, RECT *pRect, BOOL bTextRect);
    OBJINFO *m_pObjectInfo;
    DWORD m_dwNumObjects;

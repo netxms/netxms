@@ -159,7 +159,7 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndStatusBar.Create(WS_CHILD | (m_bShowStatusBar ? WS_VISIBLE : 0) | CCS_BOTTOM | SBARS_SIZEGRIP, rect, this, -1);
 
    // Create and initialize map view
-   m_wndMapView.Create(NULL, NULL, WS_CHILD | WS_VISIBLE, rect, this, 0);
+   m_wndMapView.CreateEx(WS_EX_CLIENTEDGE, NULL, _T("MapView"), WS_CHILD | WS_VISIBLE, rect, this, 0);
    
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 

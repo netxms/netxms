@@ -193,6 +193,26 @@ void CObjectOverview::Refresh()
          InsertItem(_T("Network Mask"), IpToStr(m_pObject->subnet.dwIpNetMask, szTemp));
          break;
       case OBJECT_NODE:
+         if (m_pObject->node.dwFlags & NF_IS_NATIVE_AGENT)
+         {
+            InsertItem(_T("NetXMS Agent"), _T("Active"));
+            InsertItem(_T("Agent Version"), m_pObject->node.szAgentVersion);
+            InsertItem(_T("Platform Name"), m_pObject->node.szPlatformName);
+         }
+         else
+         {
+            InsertItem(_T("NetXMS Agent"), _T("Inactive"));
+         }
+         if (m_pObject->node.dwFlags & NF_IS_SNMP)
+         {
+            InsertItem(_T("SNMP Agent"), _T("Active"));
+            InsertItem(_T("SNMP OID"), m_pObject->node.szObjectId);
+         }
+         else
+         {
+            InsertItem(_T("SNMP Agent"), _T("Inactive"));
+         }
+         InsertItem(_T("Node Type"), (TCHAR *)CodeToText(m_pObject->node.dwNodeType, g_ctNodeType));
          break;
       case OBJECT_INTERFACE:
          if (m_pObject->dwIpAddr != 0)

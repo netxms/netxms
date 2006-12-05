@@ -508,6 +508,10 @@ SOURCE=.\ObjectCommentsEditor.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectDepView.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ObjectOverview.cpp
 # End Source File
 # Begin Source File
@@ -1066,6 +1070,10 @@ SOURCE=.\ObjectBrowser.h
 # Begin Source File
 
 SOURCE=.\ObjectCommentsEditor.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ObjectDepView.h
 # End Source File
 # Begin Source File
 

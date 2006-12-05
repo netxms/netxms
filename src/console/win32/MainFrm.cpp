@@ -7,6 +7,8 @@
 #include "MainFrm.h"
 #include "SaveDesktopDlg.h"
 #include "LastValuesView.h"
+#include "AlarmBrowser.h"
+#include "ObjectBrowser.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

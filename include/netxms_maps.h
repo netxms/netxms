@@ -113,6 +113,33 @@ struct MAP_ACL_ENTRY
 
 
 //
+// Connected object list - used as source for nxSubmap::DoLayout
+//
+
+class LIBNXMAP_EXPORTABLE nxObjList
+{
+protected:
+   DWORD m_dwNumObjects;
+   DWORD *m_pdwObjectList;
+   DWORD m_dwNumLinks;
+   OBJLINK *m_pLinkList;
+
+public:
+   nxObjList();
+   ~nxObjList();
+
+   void AddObject(DWORD dwId);
+   void LinkObjects(DWORD dwId1, DWORD dwId2);
+   void Clear(void);
+
+   DWORD GetNumObjects(void) { return m_dwNumObjects; }
+   DWORD *GetObjects(void) { return m_pdwObjectList; }
+   DWORD GetNumLinks(void) { return m_dwNumLinks; }
+   OBJLINK *GetLinks(void) { return m_pLinkList; }
+};
+
+
+//
 // Submap class
 //
 
@@ -211,6 +238,7 @@ public:
    DWORD ObjectId(void) { return m_dwObjectId; }
    TCHAR *Name(void) { return CHECK_NULL(m_pszName); }
 
+   void AddSubmap(nxSubmap *pSubmap);
    DWORD GetSubmapCount(void) { return m_dwNumSubmaps; }
    nxSubmap *GetSubmap(DWORD dwObjectId);
    nxSubmap *GetSubmapByIndex(DWORD dwIndex) { return dwIndex < m_dwNumSubmaps ? m_ppSubmaps[dwIndex] : NULL; }

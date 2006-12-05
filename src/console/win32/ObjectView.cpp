@@ -15,7 +15,7 @@ static char THIS_FILE[] = __FILE__;
 #define TITLE_BAR_HEIGHT      33
 #define TITLE_BAR_COLOR       RGB(0, 0, 128)
 
-#define MAX_COMMON_TAB        1
+#define MAX_COMMON_TAB        0
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -78,26 +78,28 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
                          0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                          OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
                          VARIABLE_PITCH | FF_DONTCARE, _T("MS Sans Serif"));
-   ::ReleaseDC(m_hWnd, hdc);
 
    // Create image list for tabs
    m_imageList.Create(16, 16, ILC_COLOR24 | ILC_MASK, 8, 1);
    m_imageList.Add(theApp.LoadIcon(IDI_SEVERITY_NORMAL));
    m_imageList.Add(theApp.LoadIcon(IDI_ALARM));
+   m_imageList.Add(theApp.LoadIcon(IDI_TREE));
 
    GetClientRect(&rect);
    rect.top += TITLE_BAR_HEIGHT;
-   m_wndTabCtrl.Create(WS_CHILD | WS_VISIBLE | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT, rect, this, ID_TAB_CTRL);
+   m_wndTabCtrl.Create(WS_CHILD | WS_VISIBLE | /*TCS_FIXEDWIDTH |*/ TCS_FORCELABELLEFT, rect, this, ID_TAB_CTRL);
+   m_wndTabCtrl.SetMinTabWidth(110);
    m_wndTabCtrl.SetFont(&m_fontTabs);
    m_wndTabCtrl.SetImageList(&m_imageList);
 	
    // Create tab views
    m_wndOverview.Create(NULL, _T("Overview"), WS_CHILD, rect, this, 1);
    m_wndAlarms.Create(NULL, _T("Alarms"), WS_CHILD, rect, this, 2);
+   m_wndDepView.Create(NULL, _T("Deps"), WS_CHILD, rect, this, 3);
 
    // Create common tabs
    CreateTab(0, _T("Overview"), 0, &m_wndOverview);
-   CreateTab(1, _T("Alarms"), 1, &m_wndAlarms);
+//   CreateTab(1, _T("Alarms"), 1, &m_wndAlarms);
 
    // Activate current tab
    nTemp = theApp.GetProfileInt(_T("ObjectView"), _T("ActiveTab"), 0);
@@ -106,6 +108,7 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndTabCtrl.SetCurSel(nTemp);
    OnTabChange(NULL, &nTemp);
 
+   ::ReleaseDC(m_hWnd, hdc);
 	return 0;
 }
 
@@ -126,6 +129,7 @@ void CObjectView::OnSize(UINT nType, int cx, int cy)
    nOffset = TITLE_BAR_HEIGHT + (rect.bottom - rect.top) + 6;
    m_wndOverview.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
    m_wndAlarms.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
+   m_wndDepView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
 }
 
 
@@ -183,8 +187,12 @@ void CObjectView::SetCurrentObject(NXC_OBJECT *pObject)
       switch(m_pObject->iClass)
       {
          case OBJECT_NODE:
-            break;
          case OBJECT_SUBNET:
+         case OBJECT_NETWORK:
+         case OBJECT_CONTAINER:
+         case OBJECT_SERVICEROOT:
+            CreateTab(1, _T("Alarms"), 1, &m_wndAlarms);
+            CreateTab(2, _T("Dependencies"), 2, &m_wndDepView);
             break;
          default:
             break;

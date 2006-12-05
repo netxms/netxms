@@ -15,6 +15,16 @@ static char THIS_FILE[] = __FILE__;
 
 
 //
+// Map view states
+//
+
+#define STATE_NORMAL          0
+#define STATE_OBJECT_LCLICK   1
+#define STATE_DRAGGING        2
+#define STATE_SELECTING       3
+
+
+//
 // Static data
 //
 
@@ -90,7 +100,6 @@ const TCHAR *CMapView::GetScaleText(void)
 BOOL CMapView::PreCreateWindow(CREATESTRUCT& cs) 
 {
    cs.style |= WS_HSCROLL | WS_VSCROLL;
-   cs.dwExStyle |= WS_EX_CLIENTEDGE;
 	return CWnd::PreCreateWindow(cs);
 }
 
@@ -439,106 +448,110 @@ void CMapView::DoSubmapLayout()
    NXC_OBJECT *pObject;
    RECT rect;
 
-   pObject = NXCFindObjectById(g_hSession, m_pSubmap->Id());
-   ASSERT(pObject != NULL);
-   if (pObject != NULL)
+   // Submap id 0 means that automatic layout turned off
+   if (m_pSubmap->Id() != 0)
    {
-      GetClientRect(&rect);
-      if (pObject->dwId == 1)    // "Entire Network" object
+      pObject = NXCFindObjectById(g_hSession, m_pSubmap->Id());
+      ASSERT(pObject != NULL);
+      if (pObject != NULL)
       {
-         DWORD i, j, k, dwNumObjects, dwObjListSize, *pdwObjectList, dwNumLinks = 0;
-         DWORD dwNumVpns, dwNumSubnets, *pdwSubnetList = NULL;
-         OBJLINK *pLinkList = NULL;
-         NXC_OBJECT_INDEX *pIndex;
-         NXC_OBJECT *pSibling;
-         
-         dwObjListSize = pObject->dwNumChilds;
-         pdwObjectList = (DWORD *)nx_memdup(pObject->pdwChildList, sizeof(DWORD) * dwObjListSize);
-
-         NXCLockObjectIndex(g_hSession);
-         pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(g_hSession, &dwNumObjects);
-         for(i = 0; i < dwNumObjects; i++)
+         GetClientRect(&rect);
+         if (pObject->dwId == 1)    // "Entire Network" object
          {
-            if (pIndex[i].pObject->iClass == OBJECT_NODE)
+            DWORD i, j, k, dwNumObjects, dwObjListSize, *pdwObjectList, dwNumLinks = 0;
+            DWORD dwNumVpns, dwNumSubnets, *pdwSubnetList = NULL;
+            OBJLINK *pLinkList = NULL;
+            NXC_OBJECT_INDEX *pIndex;
+            NXC_OBJECT *pSibling;
+         
+            dwObjListSize = pObject->dwNumChilds;
+            pdwObjectList = (DWORD *)nx_memdup(pObject->pdwChildList, sizeof(DWORD) * dwObjListSize);
+
+            NXCLockObjectIndex(g_hSession);
+            pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(g_hSession, &dwNumObjects);
+            for(i = 0; i < dwNumObjects; i++)
             {
-               pdwSubnetList = (DWORD *)realloc(pdwSubnetList, sizeof(DWORD) * pIndex[i].pObject->dwNumParents);
-               for(j = 0, dwNumSubnets = 0; j < pIndex[i].pObject->dwNumParents; j++)
+               if (pIndex[i].pObject->iClass == OBJECT_NODE)
                {
-                  pSibling = NXCFindObjectByIdNoLock(g_hSession, pIndex[i].pObject->pdwParentList[j]);
-                  if ((pSibling != NULL) &&
-                      (pSibling->iClass == OBJECT_SUBNET))
+                  pdwSubnetList = (DWORD *)realloc(pdwSubnetList, sizeof(DWORD) * pIndex[i].pObject->dwNumParents);
+                  for(j = 0, dwNumSubnets = 0; j < pIndex[i].pObject->dwNumParents; j++)
                   {
-                     pdwSubnetList[dwNumSubnets] = pIndex[i].pObject->pdwParentList[j];
-                     dwNumSubnets++;
-                  }
-               }
-               for(j = 0, dwNumVpns = 0; j < pIndex[i].pObject->dwNumChilds; j++)
-               {
-                  pSibling = NXCFindObjectByIdNoLock(g_hSession, pIndex[i].pObject->pdwChildList[j]);
-                  if ((pSibling != NULL) &&
-                      (pSibling->iClass == OBJECT_VPNCONNECTOR))
-                  {
-                     dwNumVpns++;
-
-                     // Check for duplicated links
-                     for(k = 0; k < dwNumLinks; k++)
-                        if ((((pLinkList[k].dwId1 == pSibling->vpnc.dwPeerGateway) &&
-                              (pLinkList[k].dwId2 == pIndex[i].dwKey)) ||
-                             ((pLinkList[k].dwId1 == pIndex[i].dwKey) &&
-                              (pLinkList[k].dwId2 == pSibling->vpnc.dwPeerGateway))) &&
-                              (pLinkList[k].nType == LINK_TYPE_VPN))
-                           break;
-
-                     if (k == dwNumLinks)
+                     pSibling = NXCFindObjectByIdNoLock(g_hSession, pIndex[i].pObject->pdwParentList[j]);
+                     if ((pSibling != NULL) &&
+                         (pSibling->iClass == OBJECT_SUBNET))
                      {
-                        // Add new link
-                        dwNumLinks++;
-                        pLinkList = (OBJLINK *)realloc(pLinkList, sizeof(OBJLINK) * dwNumLinks);
-                        pLinkList[k].dwId1 = pIndex[i].dwKey;
-                        pLinkList[k].dwId2 = pSibling->vpnc.dwPeerGateway;
-                        pLinkList[k].nType = LINK_TYPE_VPN;
+                        pdwSubnetList[dwNumSubnets] = pIndex[i].pObject->pdwParentList[j];
+                        dwNumSubnets++;
+                     }
+                  }
+                  for(j = 0, dwNumVpns = 0; j < pIndex[i].pObject->dwNumChilds; j++)
+                  {
+                     pSibling = NXCFindObjectByIdNoLock(g_hSession, pIndex[i].pObject->pdwChildList[j]);
+                     if ((pSibling != NULL) &&
+                         (pSibling->iClass == OBJECT_VPNCONNECTOR))
+                     {
+                        dwNumVpns++;
+
+                        // Check for duplicated links
+                        for(k = 0; k < dwNumLinks; k++)
+                           if ((((pLinkList[k].dwId1 == pSibling->vpnc.dwPeerGateway) &&
+                                 (pLinkList[k].dwId2 == pIndex[i].dwKey)) ||
+                                ((pLinkList[k].dwId1 == pIndex[i].dwKey) &&
+                                 (pLinkList[k].dwId2 == pSibling->vpnc.dwPeerGateway))) &&
+                                 (pLinkList[k].nType == LINK_TYPE_VPN))
+                              break;
+
+                        if (k == dwNumLinks)
+                        {
+                           // Add new link
+                           dwNumLinks++;
+                           pLinkList = (OBJLINK *)realloc(pLinkList, sizeof(OBJLINK) * dwNumLinks);
+                           pLinkList[k].dwId1 = pIndex[i].dwKey;
+                           pLinkList[k].dwId2 = pSibling->vpnc.dwPeerGateway;
+                           pLinkList[k].nType = LINK_TYPE_VPN;
+                        }
+                     }
+                  }
+                  if ((dwNumSubnets > 1) || (dwNumVpns > 0))
+                  {
+                     // Node connected to more than one subnet or
+                     // have VPN connectors, so add it to the map
+                     pdwObjectList = (DWORD *)realloc(pdwObjectList, sizeof(DWORD) * (dwObjListSize + 1));
+                     pdwObjectList[dwObjListSize] = pIndex[i].dwKey;
+                     dwObjListSize++;
+
+                     j = dwNumLinks;
+                     dwNumLinks += dwNumSubnets;
+                     pLinkList = (OBJLINK *)realloc(pLinkList, sizeof(OBJLINK) * dwNumLinks);
+                     for(k = 0; k < dwNumSubnets; j++, k++)
+                     {
+                        pLinkList[j].dwId1 = pIndex[i].dwKey;
+                        pLinkList[j].dwId2 = pdwSubnetList[k];
+                        pLinkList[j].nType = LINK_TYPE_NORMAL;
                      }
                   }
                }
-               if ((dwNumSubnets > 1) || (dwNumVpns > 0))
-               {
-                  // Node connected to more than one subnet or
-                  // have VPN connectors, so add it to the map
-                  pdwObjectList = (DWORD *)realloc(pdwObjectList, sizeof(DWORD) * (dwObjListSize + 1));
-                  pdwObjectList[dwObjListSize] = pIndex[i].dwKey;
-                  dwObjListSize++;
-
-                  j = dwNumLinks;
-                  dwNumLinks += dwNumSubnets;
-                  pLinkList = (OBJLINK *)realloc(pLinkList, sizeof(OBJLINK) * dwNumLinks);
-                  for(k = 0; k < dwNumSubnets; j++, k++)
-                  {
-                     pLinkList[j].dwId1 = pIndex[i].dwKey;
-                     pLinkList[j].dwId2 = pdwSubnetList[k];
-                     pLinkList[j].nType = LINK_TYPE_NORMAL;
-                  }
-               }
             }
-         }
-         NXCUnlockObjectIndex(g_hSession);
-         safe_free(pdwSubnetList);
+            NXCUnlockObjectIndex(g_hSession);
+            safe_free(pdwSubnetList);
 
-         m_pSubmap->DoLayout(dwObjListSize, pdwObjectList,
-                             dwNumLinks, pLinkList, rect.right, rect.bottom);
-         safe_free(pdwObjectList);
-         safe_free(pLinkList);
+            m_pSubmap->DoLayout(dwObjListSize, pdwObjectList,
+                                dwNumLinks, pLinkList, rect.right, rect.bottom);
+            safe_free(pdwObjectList);
+            safe_free(pLinkList);
+         }
+         else
+         {
+            m_pSubmap->DoLayout(pObject->dwNumChilds, pObject->pdwChildList,
+                                0, NULL, rect.right, rect.bottom);
+         }
+         m_bIsModified = TRUE;
       }
       else
       {
-         m_pSubmap->DoLayout(pObject->dwNumChilds, pObject->pdwChildList,
-                             0, NULL, rect.right, rect.bottom);
+         MessageBox(_T("Internal error: cannot find root object for the current submap"),
+                    _T("Error"), MB_OK | MB_ICONSTOP);
       }
-      m_bIsModified = TRUE;
-   }
-   else
-   {
-      MessageBox(_T("Internal error: cannot find root object for the current submap"),
-                 _T("Error"), MB_OK | MB_ICONSTOP);
    }
 }
 
@@ -579,19 +592,22 @@ DWORD CMapView::PointInObject(POINT pt)
 {
    DWORD i, j, dwId;
 
-   pt.x += m_ptOrg.x;
-   pt.y += m_ptOrg.y;
-   for(i = m_pSubmap->GetNumObjects(); i > 0; i--)
+   if (m_pSubmap != NULL)
    {
-      dwId = m_pSubmap->GetObjectIdFromIndex(i - 1);
-      for(j = 0; j < m_dwNumObjects; j++)
+      pt.x += m_ptOrg.x;
+      pt.y += m_ptOrg.y;
+      for(i = m_pSubmap->GetNumObjects(); i > 0; i--)
       {
-         if (m_pObjectInfo[j].dwObjectId == dwId)
+         dwId = m_pSubmap->GetObjectIdFromIndex(i - 1);
+         for(j = 0; j < m_dwNumObjects; j++)
          {
-            if (PtInRect(&m_pObjectInfo[j].rcObject, pt) ||
-                PtInRect(&m_pObjectInfo[j].rcText, pt))
+            if (m_pObjectInfo[j].dwObjectId == dwId)
             {
-               return dwId;
+               if (PtInRect(&m_pObjectInfo[j].rcObject, pt) ||
+                   PtInRect(&m_pObjectInfo[j].rcText, pt))
+               {
+                  return dwId;
+               }
             }
          }
       }
@@ -803,10 +819,13 @@ void CMapView::ClearSelection(BOOL bRedraw)
 {
    DWORD i;
 
-   for(i = m_pSubmap->GetNumObjects(); i > 0; i--)
-      m_pSubmap->SetObjectStateByIndex(i - 1, m_pSubmap->GetObjectStateFromIndex(i - 1) & ~MOS_SELECTED);
-   if (bRedraw)
-      Update();
+   if (m_pSubmap != NULL)
+   {
+      for(i = m_pSubmap->GetNumObjects(); i > 0; i--)
+         m_pSubmap->SetObjectStateByIndex(i - 1, m_pSubmap->GetObjectStateFromIndex(i - 1) & ~MOS_SELECTED);
+      if (bRedraw)
+         Update();
+   }
 }
 
 

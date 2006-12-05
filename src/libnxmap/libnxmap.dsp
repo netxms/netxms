@@ -176,6 +176,10 @@ SOURCE=.\map.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\objlist.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\submap.cpp
 # End Source File
 # End Group

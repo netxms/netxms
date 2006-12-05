@@ -33,10 +33,7 @@ inline BOOL SafeFreeResource(HGLOBAL hRes)
 #include <nxwinui.h>
 #include "resource.h"      // Main symbols
 #include "globals.h"       // Global symbols
-#include "DataCollectionEditor.h"
 #include "DebugFrame.h"
-#include "AlarmBrowser.h"
-#include "ObjectBrowser.h"
 
 
 //
@@ -136,6 +133,9 @@ struct OBJECT_VIEW
 // CConsoleApp:
 // See nxcon.cpp for the implementation of this class
 //
+
+class CAlarmBrowser;
+class CObjectBrowser;
 
 class CConsoleApp : public CWinApp
 {

@@ -141,6 +141,43 @@ nxSubmap *nxMap::GetSubmap(DWORD dwObjectId)
 
 
 //
+// Add new or replace existing submap
+//
+
+void nxMap::AddSubmap(nxSubmap *pSubmap)
+{
+   DWORD i;
+
+   Lock();
+
+   // Check if submap with given ID exist
+   for(i = 0; i < m_dwNumSubmaps; i++)
+   {
+      if (m_ppSubmaps[i]->Id() == pSubmap->Id())
+      {
+         break;
+      }
+   }
+
+   if (i == m_dwNumSubmaps)
+   {
+      // Add new submap
+      m_dwNumSubmaps++;
+      m_ppSubmaps = (nxSubmap **)realloc(m_ppSubmaps, sizeof(nxSubmap *) * m_dwNumSubmaps);
+      m_ppSubmaps[i] = pSubmap;
+   }
+   else
+   {
+      // Replace existing submap
+      delete m_ppSubmaps[i];
+      m_ppSubmaps[i] = pSubmap;
+   }
+
+   Unlock();
+}
+
+
+//
 // Check if submap for given object exists
 //
 
