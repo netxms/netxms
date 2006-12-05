@@ -1040,6 +1040,7 @@ src/libnxsl/compiler.cpp -text
 src/libnxsl/env.cpp -text
 src/libnxsl/functions.cpp -text
 src/libnxsl/instruction.cpp -text
+src/libnxsl/lex.yy.cpp -text
 src/libnxsl/lexer.cpp -text
 src/libnxsl/libnxsl.dsp -text
 src/libnxsl/libnxsl.dsw -text
@@ -1047,6 +1048,8 @@ src/libnxsl/libnxsl.h -text
 src/libnxsl/library.cpp -text
 src/libnxsl/main.cpp -text
 src/libnxsl/parser.l -text
+src/libnxsl/parser.tab.cpp -text
+src/libnxsl/parser.tab.hpp -text
 src/libnxsl/parser.y -text
 src/libnxsl/program.cpp -text
 src/libnxsl/stack.cpp -text
