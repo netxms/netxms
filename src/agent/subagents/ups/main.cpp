@@ -167,6 +167,10 @@ static BOOL AddDeviceFromConfig(TCHAR *pszStr)
                         {
                            nProto = UPS_PROTOCOL_BCMXCP;
                         }
+                        else if (!_tcsicmp(pszCurrField, _T("MICRODOWELL")))
+                        {
+                           nProto = UPS_PROTOCOL_MICRODOWELL;
+                        }
 #ifdef _WIN32
                         else if (!_tcsicmp(pszCurrField, _T("USB")))
                         {
@@ -241,6 +245,9 @@ static BOOL AddDeviceFromConfig(TCHAR *pszStr)
             break;
          case UPS_PROTOCOL_BCMXCP:
             m_deviceInfo[nDev] = new BCMXCPInterface(szPort);
+            break;
+         case UPS_PROTOCOL_MICRODOWELL:
+            m_deviceInfo[nDev] = new MicrodowellInterface(szPort);
             break;
 #ifdef _WIN32
          case UPS_PROTOCOL_USB:

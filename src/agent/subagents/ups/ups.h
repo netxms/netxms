@@ -51,6 +51,7 @@ extern "C" {
 #define UPS_PROTOCOL_APC      1
 #define UPS_PROTOCOL_USB      2
 #define UPS_PROTOCOL_BCMXCP   3
+#define UPS_PROTOCOL_MICRODOWELL	4
 
 #define BCMXCP_BUFFER_SIZE    1024
 #define BCMXCP_MAP_SIZE       128
@@ -252,6 +253,41 @@ public:
    virtual void QuerySerialNumber(void);
    virtual void QueryOnlineStatus(void);
    virtual void QueryPowerLoad(void);
+};
+
+//
+// Microdowell UPS interface
+//
+
+class MicrodowellInterface : public SerialInterface
+{
+protected:
+   virtual BOOL Open(void);
+   virtual BOOL ValidateConnection(void);
+
+   void QueryParameter(char *req, int reqLen, UPS_PARAMETER *p, int nType);
+
+	int ge2kva;
+
+public:
+   MicrodowellInterface(TCHAR *pszDevice) : SerialInterface(pszDevice) { }
+
+   virtual TCHAR *Type(void) { return _T("MICRODOWELL"); }
+
+   virtual void QueryModel(void);
+   virtual void QueryFirmwareVersion(void);
+   virtual void QueryMfgDate(void);
+   virtual void QuerySerialNumber(void);
+   virtual void QueryTemperature(void);
+   virtual void QueryBatteryVoltage(void);
+   virtual void QueryNominalBatteryVoltage(void);
+   virtual void QueryBatteryLevel(void);
+   virtual void QueryInputVoltage(void);
+   virtual void QueryOutputVoltage(void);
+   virtual void QueryLineFrequency(void);
+   virtual void QueryPowerLoad(void);
+   virtual void QueryEstimatedRuntime(void);
+   virtual void QueryOnlineStatus(void);
 };
 
 
