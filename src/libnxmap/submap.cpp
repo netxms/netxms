@@ -346,7 +346,7 @@ POINT nxSubmap::GetMinSize(void)
 
 void nxSubmap::DoLayout(DWORD dwNumObjects, DWORD *pdwObjectList,
                         DWORD dwNumLinks, OBJLINK *pLinkList,
-                        int nIdealX, int nIdealY)
+                        int nIdealX, int nIdealY, int nMethod)
 {
    DWORD i;
    int x, y;
@@ -358,15 +358,46 @@ void nxSubmap::DoLayout(DWORD dwNumObjects, DWORD *pdwObjectList,
    safe_free_and_null(m_pObjectList);
    m_dwNumObjects = 0;
 
-   for(i = 0, x = MAP_LEFT_MARGIN, y = MAP_TOP_MARGIN; i < dwNumObjects; i++)
+   if (nMethod == SUBMAP_LAYOUT_DUMB)
    {
-      SetObjectPosition(pdwObjectList[i], x, y);
-      x += MAP_OBJECT_SIZE_X + MAP_OBJECT_INTERVAL_X;
-      if (x >= nIdealX - MAP_OBJECT_SIZE_X - MAP_OBJECT_INTERVAL_X / 2)
+      for(i = 0, x = MAP_LEFT_MARGIN, y = MAP_TOP_MARGIN; i < dwNumObjects; i++)
       {
-         x = MAP_LEFT_MARGIN;
-         y += MAP_OBJECT_SIZE_Y + MAP_TEXT_BOX_HEIGHT + MAP_OBJECT_INTERVAL_Y;
+         SetObjectPosition(pdwObjectList[i], x, y);
+         x += MAP_OBJECT_SIZE_X + MAP_OBJECT_INTERVAL_X;
+         if (x >= nIdealX - MAP_OBJECT_SIZE_X - MAP_OBJECT_INTERVAL_X / 2)
+         {
+            x = MAP_LEFT_MARGIN;
+            y += MAP_OBJECT_SIZE_Y + MAP_TEXT_BOX_HEIGHT + MAP_OBJECT_INTERVAL_Y;
+         }
       }
+   }
+   else
+   {
+      nxleGeneric *engine;
+      nxGraph *graph;
+      nxVertex *vertex;
+
+      graph = new nxGraph(dwNumObjects, pdwObjectList, dwNumLinks, pLinkList);
+      switch(nMethod)
+      {
+         case SUBMAP_LAYOUT_RADIAL:
+            engine = new nxleRadial(graph);
+            break;
+         default: // Unknown method, do nothing
+            engine = new nxleGeneric(graph);
+            break;
+      }
+
+      engine->Execute();
+      delete engine;
+
+      graph->NormalizeVertexPositions();
+      for(i = 0; i < dwNumObjects; i++)
+      {
+         vertex = graph->GetVertexByIndex(i);
+         SetObjectPosition(vertex->GetId(), vertex->GetPosX(), vertex->GetPosY());
+      }
+      delete graph;
    }
    
    m_dwAttr |= SUBMAP_ATTR_LAYOUT_COMPLETED;

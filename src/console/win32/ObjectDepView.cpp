@@ -98,7 +98,8 @@ void CObjectDepView::Refresh()
    
    pSubmap = new nxSubmap((DWORD)0);
    pSubmap->DoLayout(list.GetNumObjects(), list.GetObjects(),
-                     list.GetNumLinks(), list.GetLinks(), rect.right, rect.bottom);
+                     list.GetNumLinks(), list.GetLinks(), rect.right, rect.bottom,
+                     SUBMAP_LAYOUT_RADIAL);
    pMap->AddSubmap(pSubmap);
    m_wndMap.SetMap(pMap);
 }

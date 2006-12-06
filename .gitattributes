@@ -1031,13 +1031,16 @@ src/libnxcl/snmp.cpp -text
 src/libnxcl/snmptrap.cpp -text
 src/libnxcl/users.cpp -text
 src/libnxmap/Makefile.am -text
+src/libnxmap/graph.cpp -text
 src/libnxmap/libnxmap.dsp -text
 src/libnxmap/libnxmap.dsw -text
 src/libnxmap/libnxmap.h -text
 src/libnxmap/main.cpp -text
 src/libnxmap/map.cpp -text
 src/libnxmap/objlist.cpp -text
+src/libnxmap/radial.cpp -text
 src/libnxmap/submap.cpp -text
+src/libnxmap/vertex.cpp -text
 src/libnxsl/Makefile.am -text
 src/libnxsl/class.cpp -text
 src/libnxsl/compiler.cpp -text

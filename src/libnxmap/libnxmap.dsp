@@ -168,6 +168,10 @@ PostBuild_Cmds=copy Release_UNICODE\libnxmapw.dll C:\NetXMS\bin
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\graph.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
@@ -180,7 +184,15 @@ SOURCE=.\objlist.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\radial.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\submap.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\vertex.cpp
 # End Source File
 # End Group
 # Begin Group "Header Files"

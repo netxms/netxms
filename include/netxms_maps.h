@@ -59,6 +59,14 @@
 
 
 //
+// Submap layout methods
+//
+
+#define SUBMAP_LAYOUT_DUMB          0
+#define SUBMAP_LAYOUT_RADIAL        1
+
+
+//
 // User access rights
 //
 
@@ -140,6 +148,59 @@ public:
 
 
 //
+// Graph's vertex
+//
+
+class LIBNXMAP_EXPORTABLE nxVertex
+{
+protected:
+   DWORD m_dwId;
+   DWORD m_dwNumLinks;
+   nxVertex **m_ppLinkList;
+   int m_posX;
+   int m_posY;
+
+public:
+   nxVertex(DWORD dwId);
+   ~nxVertex();
+
+   DWORD GetId(void) { return m_dwId; }
+   int GetPosX(void) { return m_posX; }
+   int GetPosY(void) { return m_posY; }
+   DWORD GetNumLinks(void) { return m_dwNumLinks; }
+   nxVertex *GetLink(DWORD dwIndex) { return (dwIndex < m_dwNumLinks) ? m_ppLinkList[dwIndex] : NULL; }
+
+   void Link(nxVertex *pVtx);
+   void SetPosition(int x, int y) { m_posX = x; m_posY = y; }
+};
+
+
+//
+// Connected graph
+//
+
+class LIBNXMAP_EXPORTABLE nxGraph
+{
+protected:
+   DWORD m_dwVertexCount;
+   nxVertex **m_ppVertexList;
+
+public:
+   nxGraph();
+   nxGraph(DWORD dwNumObjects, DWORD *pdwObjectList, DWORD dwNumLinks, OBJLINK *pLinkList);
+   ~nxGraph();
+
+   DWORD GetVertexCount(void) { return m_dwVertexCount; }
+   nxVertex *FindVertex(DWORD dwId);
+   DWORD GetVertexIndex(nxVertex *pVertex);
+   nxVertex *GetRootVertex(void) { return m_dwVertexCount > 0 ? m_ppVertexList[0] : NULL; }
+   nxVertex *GetVertexByIndex(DWORD dwIndex) { return dwIndex < m_dwVertexCount ? m_ppVertexList[dwIndex] : NULL; }
+
+   void NormalizeVertexPositions(void);
+};
+
+
+//
 // Submap class
 //
 
@@ -171,7 +232,7 @@ public:
    BOOL IsLayoutCompleted(void) { return (m_dwAttr & SUBMAP_ATTR_LAYOUT_COMPLETED) ? TRUE : FALSE; }
    void DoLayout(DWORD dwNumObjects, DWORD *pdwObjectList,
                  DWORD dwNumLinks, OBJLINK *pLinkList,
-                 int nIdealX, int nIdealY);
+                 int nIdealX, int nIdealY, int nMethod);
    POINT GetObjectPosition(DWORD dwObjectId);
    POINT GetObjectPositionByIndex(DWORD dwIndex);
    void SetObjectPosition(DWORD dwObjectId, int x, int y);

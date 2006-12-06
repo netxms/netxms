@@ -536,14 +536,16 @@ void CMapView::DoSubmapLayout()
             safe_free(pdwSubnetList);
 
             m_pSubmap->DoLayout(dwObjListSize, pdwObjectList,
-                                dwNumLinks, pLinkList, rect.right, rect.bottom);
+                                dwNumLinks, pLinkList, rect.right, rect.bottom,
+                                SUBMAP_LAYOUT_DUMB);
             safe_free(pdwObjectList);
             safe_free(pLinkList);
          }
          else
          {
             m_pSubmap->DoLayout(pObject->dwNumChilds, pObject->pdwChildList,
-                                0, NULL, rect.right, rect.bottom);
+                                0, NULL, rect.right, rect.bottom,
+                                SUBMAP_LAYOUT_DUMB);
          }
          m_bIsModified = TRUE;
       }

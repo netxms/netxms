@@ -30,4 +30,48 @@
 #include <nxcpapi.h>
 #include <netxms_maps.h>
 
+
+//
+// Generic layout engine
+//
+
+class nxleGeneric
+{
+protected:
+   nxGraph *m_graph;
+
+public:
+   nxleGeneric(nxGraph *pGraph) { m_graph = pGraph; }
+   virtual ~nxleGeneric() { }
+
+   virtual void Execute(void) { }
+};
+
+
+//
+// Radial layout engine
+//
+
+class nxleRadial : public nxleGeneric
+{
+protected:
+   double *m_width;
+   double *m_fullWidth;
+   double *m_angle;
+   double *m_distance;
+   double m_delta;
+   double m_increase;
+   BOOL m_bConvexity;
+
+   double SetWidth(nxVertex *root);
+   void SetPlacement(nxVertex *root, double ro,
+                     double alpha1, double alpha2,	int layer);
+
+public:
+   nxleRadial(nxGraph *pGraph);
+   virtual ~nxleRadial();
+
+   virtual void Execute(void);
+};
+
 #endif   /* _libnxmap_h_ */
