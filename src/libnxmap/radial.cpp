@@ -3,6 +3,9 @@
 ** Network Maps Library
 ** Copyright (C) 2006 Victor Kirhenshtein
 **
+** This code is derived from Graph visualization library for VTK
+**	(c) 2003 D.J. Duke
+**
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 2 of the License, or
