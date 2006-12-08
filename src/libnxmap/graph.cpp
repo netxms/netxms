@@ -34,6 +34,7 @@ nxGraph::nxGraph()
    m_ppVertexList = NULL;
    m_dwVertexCount = 0;
    m_ppVertexList = NULL;
+   m_pRoot = NULL;
 }
 
 
@@ -60,8 +61,10 @@ nxGraph::nxGraph(DWORD dwNumObjects, DWORD *pdwObjectList,
       pVtx1 = FindVertex(pLinkList[i].dwId1);
       pVtx2 = FindVertex(pLinkList[i].dwId2);
       if ((pVtx1 != NULL) && (pVtx2 != NULL))
-         pVtx1->Link(pVtx2);
+         pVtx1->LinkChild(pVtx2);
    }
+
+   m_pRoot = NULL;   // No selected root by default
 }
 
 
@@ -76,6 +79,19 @@ nxGraph::~nxGraph()
    for(i = 0; i < m_dwVertexCount; i++)
       delete m_ppVertexList[i];
    safe_free(m_ppVertexList);
+}
+
+
+//
+// Set all vertexes as unprocessed
+//
+
+void nxGraph::SetAsUnprocessed(void)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwVertexCount; i++)
+      m_ppVertexList[i]->SetAsUnprocessed();
 }
 
 
@@ -137,5 +153,61 @@ void nxGraph::NormalizeVertexPositions(void)
       for(i = 0; i < m_dwVertexCount; i++)
          m_ppVertexList[i]->SetPosition(m_ppVertexList[i]->GetPosX() + dx,
                                         m_ppVertexList[i]->GetPosY() + dy);
+   }
+}
+
+
+//
+// Set root vertex
+//
+
+void nxGraph::SetRootVertex(DWORD dwId)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwVertexCount; i++)
+      if (m_ppVertexList[i]->GetId() == dwId)
+      {
+         m_pRoot = m_ppVertexList[i];
+         return;
+      }
+   m_pRoot = NULL;
+}
+
+
+//
+// Normalize links for given vertex
+//
+
+void nxGraph::NormalizeVertexLinks(nxVertex *pRoot)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwVertexCount; i++)
+   {
+      if (!m_ppVertexList[i]->IsProcessed() && m_ppVertexList[i]->IsParentOf(pRoot))
+      {
+         m_ppVertexList[i]->UnlinkChild(pRoot);
+         pRoot->LinkChild(m_ppVertexList[i]);
+      }
+      m_ppVertexList[i]->SetAsProcessed();
+   }
+
+   for(i = 0; i < pRoot->GetNumChilds(); i++)
+      NormalizeVertexLinks(pRoot->GetChild(i));
+}
+
+
+//
+// Normalize links - make all links to go from root when possible
+//
+
+void nxGraph::NormalizeLinks(void)
+{
+   if (m_pRoot != NULL)
+   {
+      SetAsUnprocessed();
+      m_pRoot->SetAsProcessed();
+      NormalizeVertexLinks(m_pRoot);
    }
 }

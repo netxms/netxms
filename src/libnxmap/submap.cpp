@@ -378,10 +378,18 @@ void nxSubmap::DoLayout(DWORD dwNumObjects, DWORD *pdwObjectList,
       nxVertex *vertex;
 
       graph = new nxGraph(dwNumObjects, pdwObjectList, dwNumLinks, pLinkList);
+      if (dwNumObjects > 0)
+      {
+         graph->SetRootVertex(pdwObjectList[0]);
+         graph->NormalizeLinks();
+      }
       switch(nMethod)
       {
          case SUBMAP_LAYOUT_RADIAL:
             engine = new nxleRadial(graph);
+            break;
+         case SUBMAP_LAYOUT_REINGOLD_TILFORD:
+            engine = new nxleReingoldTilford(graph);
             break;
          default: // Unknown method, do nothing
             engine = new nxleGeneric(graph);

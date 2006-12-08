@@ -4,6 +4,8 @@
 
 - IPSO agent improved
 - UPS subagent: added support for MICRODOWELL UPS devices
+- Windows console:
+	- Object browser improved
 
 
 *

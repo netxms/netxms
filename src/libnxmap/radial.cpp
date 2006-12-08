@@ -73,16 +73,16 @@ double nxleRadial::SetWidth(nxVertex *root)
 	double width;
    DWORD i;
 
-   if (root->GetNumLinks() == 0)
+   if (root->GetNumChilds() == 0)
    {
       width = MAP_OBJECT_SIZE_X;
    }
    else
    {
       width = 0.0;
-      for(i = 0; i < root->GetNumLinks(); i++)
+      for(i = 0; i < root->GetNumChilds(); i++)
       {
-         width += SetWidth(root->GetLink(i)) + MAP_OBJECT_INTERVAL_X;
+         width += SetWidth(root->GetChild(i)) + MAP_OBJECT_INTERVAL_X;
       }
    }
 	m_width[m_graph->GetVertexIndex(root)] = width;
@@ -111,7 +111,7 @@ void nxleRadial::SetPlacement(nxVertex *root, double ro,
 	m_angle[index] = fi;
 	m_distance[index] = ro;
 	
-   if (root->GetNumLinks() > 0)
+   if (root->GetNumChilds() > 0)
    {
       tau = m_bConvexity ? 2.0 * acos(ro / (ro + myDelta)) : 0.0;
 		rootFullWidth = m_fullWidth[index];
@@ -126,9 +126,9 @@ void nxleRadial::SetPlacement(nxVertex *root, double ro,
          alpha = alpha1;
       }
 
-      for(i = 0; i < root->GetNumLinks(); i++)
+      for(i = 0; i < root->GetNumChilds(); i++)
       {
-         child = root->GetLink(i);
+         child = root->GetChild(i);
 			childWidth = m_width[m_graph->GetVertexIndex(child)];
 			SetPlacement(child, ro + myDelta, alpha,
                       alpha + s * childWidth, layer + 1);

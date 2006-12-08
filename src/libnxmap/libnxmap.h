@@ -74,4 +74,33 @@ public:
    virtual void Execute(void);
 };
 
+
+//
+// Reingold Tilford layout engine
+//
+
+class nxleReingoldTilford : public nxleGeneric
+{
+protected:
+   double *m_xPreliminary;
+   double *m_xModifier;
+   double *m_xParentModifier;
+   int *m_passCount;
+   nxVertex **m_leftBrother;
+   DWORD *m_layer;
+   nxVertex **m_contour;
+   double m_spacing;
+
+   void Initialize(nxVertex *root, DWORD layer);
+   double TrueX(nxVertex *root);
+   void FirstPass(nxVertex *root);
+   void SecondPass(nxVertex *root, double modifier);
+
+public:
+   nxleReingoldTilford(nxGraph *pGraph);
+   virtual ~nxleReingoldTilford();
+
+   virtual void Execute(void);
+};
+
 #endif   /* _libnxmap_h_ */

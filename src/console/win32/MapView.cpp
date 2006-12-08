@@ -537,7 +537,7 @@ void CMapView::DoSubmapLayout()
 
             m_pSubmap->DoLayout(dwObjListSize, pdwObjectList,
                                 dwNumLinks, pLinkList, rect.right, rect.bottom,
-                                SUBMAP_LAYOUT_DUMB);
+                                SUBMAP_LAYOUT_RADIAL);
             safe_free(pdwObjectList);
             safe_free(pLinkList);
          }

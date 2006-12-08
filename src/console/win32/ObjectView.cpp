@@ -157,6 +157,9 @@ void CObjectView::Refresh()
    GetClientRect(&rect);
    rect.bottom = TITLE_BAR_HEIGHT;
    InvalidateRect(&rect, FALSE);
+
+   m_wndOverview.Refresh();
+   m_wndDepView.Refresh();
 }
 
 
@@ -168,6 +171,7 @@ void CObjectView::SetCurrentObject(NXC_OBJECT *pObject)
 {
    int i, nItem, nCurrTabId, nTab;
    LRESULT nTemp;
+   RECT rect;
 
    nCurrTabId = m_pTabWnd[m_wndTabCtrl.GetCurSel()]->GetDlgCtrlID();
    m_pObject = pObject;
@@ -192,7 +196,7 @@ void CObjectView::SetCurrentObject(NXC_OBJECT *pObject)
          case OBJECT_CONTAINER:
          case OBJECT_SERVICEROOT:
             CreateTab(1, _T("Alarms"), 1, &m_wndAlarms);
-            CreateTab(2, _T("Dependencies"), 2, &m_wndDepView);
+            CreateTab(2, _T("Dependants"), 2, &m_wndDepView);
             break;
          default:
             break;
@@ -212,7 +216,9 @@ void CObjectView::SetCurrentObject(NXC_OBJECT *pObject)
    OnTabChange(NULL, &nTemp);
 
    // Refresh object view
-   Refresh();
+   GetClientRect(&rect);
+   rect.bottom = TITLE_BAR_HEIGHT;
+   InvalidateRect(&rect, FALSE);
    for(i = 0; (m_pTabWnd[i] != NULL) && (i < MAX_TABS); i++)
       m_pTabWnd[i]->SendMessage(NXCM_SET_OBJECT, 0, (LPARAM)m_pObject);
 }

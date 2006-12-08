@@ -99,7 +99,7 @@ void CObjectDepView::Refresh()
    pSubmap = new nxSubmap((DWORD)0);
    pSubmap->DoLayout(list.GetNumObjects(), list.GetObjects(),
                      list.GetNumLinks(), list.GetLinks(), rect.right, rect.bottom,
-                     SUBMAP_LAYOUT_RADIAL);
+                     SUBMAP_LAYOUT_REINGOLD_TILFORD);
    pMap->AddSubmap(pSubmap);
    m_wndMap.SetMap(pMap);
 }
@@ -119,9 +119,12 @@ void CObjectDepView::AddParentsToMap(NXC_OBJECT *pChild, nxObjList &list)
       pObject = NXCFindObjectById(g_hSession, pChild->pdwParentList[i]);
       if (pObject != NULL)
       {
-         list.AddObject(pChild->pdwParentList[i]);
-         list.LinkObjects(pChild->dwId, pChild->pdwParentList[i]);
-         AddParentsToMap(pObject, list);
+         if (pObject->iClass != OBJECT_TEMPLATE)
+         {
+            list.AddObject(pChild->pdwParentList[i]);
+            list.LinkObjects(pChild->dwId, pChild->pdwParentList[i]);
+            AddParentsToMap(pObject, list);
+         }
       }
    }
 }

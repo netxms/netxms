@@ -62,8 +62,9 @@
 // Submap layout methods
 //
 
-#define SUBMAP_LAYOUT_DUMB          0
-#define SUBMAP_LAYOUT_RADIAL        1
+#define SUBMAP_LAYOUT_DUMB                0
+#define SUBMAP_LAYOUT_RADIAL              1
+#define SUBMAP_LAYOUT_REINGOLD_TILFORD    2
 
 
 //
@@ -155,10 +156,16 @@ class LIBNXMAP_EXPORTABLE nxVertex
 {
 protected:
    DWORD m_dwId;
-   DWORD m_dwNumLinks;
-   nxVertex **m_ppLinkList;
+   DWORD m_dwNumChilds;
+   nxVertex **m_ppChildList;
+   DWORD m_dwNumParents;
+   nxVertex **m_ppParentList;
    int m_posX;
    int m_posY;
+   BOOL m_isProcessed;  // Processed flag for various recursive operations
+
+   void LinkParent(nxVertex *pVtx);
+   void UnlinkParent(nxVertex *pVtx);
 
 public:
    nxVertex(DWORD dwId);
@@ -167,11 +174,18 @@ public:
    DWORD GetId(void) { return m_dwId; }
    int GetPosX(void) { return m_posX; }
    int GetPosY(void) { return m_posY; }
-   DWORD GetNumLinks(void) { return m_dwNumLinks; }
-   nxVertex *GetLink(DWORD dwIndex) { return (dwIndex < m_dwNumLinks) ? m_ppLinkList[dwIndex] : NULL; }
+   DWORD GetNumChilds(void) { return m_dwNumChilds; }
+   nxVertex *GetChild(DWORD dwIndex) { return (dwIndex < m_dwNumChilds) ? m_ppChildList[dwIndex] : NULL; }
+   DWORD GetNumParents(void) { return m_dwNumParents; }
+   nxVertex *GetParent(DWORD dwIndex) { return (dwIndex < m_dwNumParents) ? m_ppParentList[dwIndex] : NULL; }
+   BOOL IsParentOf(nxVertex *pVertex);
+   BOOL IsProcessed(void) { return m_isProcessed; }
 
-   void Link(nxVertex *pVtx);
+   void LinkChild(nxVertex *pVtx);
+   void UnlinkChild(nxVertex *pVtx);
    void SetPosition(int x, int y) { m_posX = x; m_posY = y; }
+   void SetAsProcessed(void) { m_isProcessed = TRUE; }
+   void SetAsUnprocessed(void) { m_isProcessed = FALSE; }
 };
 
 
@@ -184,6 +198,10 @@ class LIBNXMAP_EXPORTABLE nxGraph
 protected:
    DWORD m_dwVertexCount;
    nxVertex **m_ppVertexList;
+   nxVertex *m_pRoot;
+
+   void SetAsUnprocessed(void);
+   void NormalizeVertexLinks(nxVertex *pRoot);
 
 public:
    nxGraph();
@@ -193,9 +211,11 @@ public:
    DWORD GetVertexCount(void) { return m_dwVertexCount; }
    nxVertex *FindVertex(DWORD dwId);
    DWORD GetVertexIndex(nxVertex *pVertex);
-   nxVertex *GetRootVertex(void) { return m_dwVertexCount > 0 ? m_ppVertexList[0] : NULL; }
+   nxVertex *GetRootVertex(void) { return (m_pRoot != NULL) ? m_pRoot : (m_dwVertexCount > 0 ? m_ppVertexList[0] : NULL); }
    nxVertex *GetVertexByIndex(DWORD dwIndex) { return dwIndex < m_dwVertexCount ? m_ppVertexList[dwIndex] : NULL; }
 
+   void SetRootVertex(DWORD dwId);
+   void NormalizeLinks(void);
    void NormalizeVertexPositions(void);
 };
 

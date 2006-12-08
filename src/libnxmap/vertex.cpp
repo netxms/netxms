@@ -33,8 +33,10 @@ nxVertex::nxVertex(DWORD dwId)
    m_dwId = dwId;
    m_posX = 0;
    m_posY = 0;
-   m_dwNumLinks = 0;
-   m_ppLinkList = NULL;
+   m_dwNumChilds = 0;
+   m_ppChildList = NULL;
+   m_dwNumParents = 0;
+   m_ppParentList = NULL;
 }
 
 
@@ -44,25 +46,103 @@ nxVertex::nxVertex(DWORD dwId)
 
 nxVertex::~nxVertex()
 {
-   safe_free(m_ppLinkList);
+   safe_free(m_ppChildList);
+   safe_free(m_ppParentList);
 }
 
 
 //
-// Link another vertex
+// Link another vertex as child
 //
 
-void nxVertex::Link(nxVertex *pVtx)
+void nxVertex::LinkChild(nxVertex *pVtx)
 {
    DWORD i;
 
-   for(i = 0; i < m_dwNumLinks; i++)
-      if (m_ppLinkList[i] == pVtx)
+   for(i = 0; i < m_dwNumChilds; i++)
+      if (m_ppChildList[i] == pVtx)
          break;   // Already linked
-   if (i == m_dwNumLinks)
+   if (i == m_dwNumChilds)
    {
-      m_dwNumLinks++;
-      m_ppLinkList = (nxVertex **)realloc(m_ppLinkList, sizeof(nxVertex *) * m_dwNumLinks);
-      m_ppLinkList[i] = pVtx;
+      m_dwNumChilds++;
+      m_ppChildList = (nxVertex **)realloc(m_ppChildList, sizeof(nxVertex *) * m_dwNumChilds);
+      m_ppChildList[i] = pVtx;
+      pVtx->LinkParent(this);
    }
+}
+
+
+//
+// Unlink child vertex
+//
+
+void nxVertex::UnlinkChild(nxVertex *pVtx)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumChilds; i++)
+      if (m_ppChildList[i] == pVtx)
+      {
+         m_dwNumChilds--;
+         memmove(&m_ppChildList[i], &m_ppChildList[i + 1], (m_dwNumChilds - i) * sizeof(nxVertex *));
+         pVtx->UnlinkParent(this);
+         break;
+      }
+}
+
+
+//
+// Link another vertex as parent
+//
+
+void nxVertex::LinkParent(nxVertex *pVtx)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumParents; i++)
+      if (m_ppParentList[i] == pVtx)
+         break;   // Already linked
+   if (i == m_dwNumParents)
+   {
+      m_dwNumParents++;
+      m_ppParentList = (nxVertex **)realloc(m_ppParentList, sizeof(nxVertex *) * m_dwNumParents);
+      m_ppParentList[i] = pVtx;
+   }
+}
+
+
+//
+// Unlink parent vertex
+//
+
+void nxVertex::UnlinkParent(nxVertex *pVtx)
+{
+   DWORD i;
+
+   for(i = 0; i < m_dwNumParents; i++)
+      if (m_ppParentList[i] == pVtx)
+      {
+         m_dwNumParents--;
+         memmove(&m_ppParentList[i], &m_ppParentList[i + 1], (m_dwNumParents - i) * sizeof(nxVertex *));
+         break;
+      }
+}
+
+
+//
+// Check if link to given vertex exist
+//
+
+BOOL nxVertex::IsParentOf(nxVertex *pVtx)
+{
+   DWORD i;
+   BOOL bRet = FALSE;
+
+   for(i = 0; i < m_dwNumChilds; i++)
+      if (m_ppChildList[i] == pVtx)
+      {
+         bRet = TRUE;
+         break;
+      }
+   return bRet;
 }
