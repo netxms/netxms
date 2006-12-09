@@ -9,4 +9,4 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 SUBDIRS = nxget nxadm nxaction nxdbmgr nxsnmpget nxsnmpwalk nxsnmpset nxupload
-SUBDIRS += @NXCONFIG@
+SUBDIRS += @SERVER_TOOLS@

@@ -590,4 +590,10 @@ Language=English
 Failed to execute evaluation script for event processing policy rule #%1: %2
 .
 
+MessageId=
+SymbolicName=MSG_CANNOT_FIND_SELF
+Language=English
+NetXMS server cannot create node object for itself - probably because platform subagent cannot be loaded (check above error messages, if any)
+.
+
 ;#endif

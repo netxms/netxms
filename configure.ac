@@ -1,108 +1,106 @@
-# $Id: configure.ac,v 1.224 2006-11-20 23:37:03 victor Exp $
+# $Id: configure.ac,v 1.225 2006-12-09 20:02:08 victor Exp $
 #
-# Process this file with autoconf to produce a configure script.
+# NetXMS - Network Management System
+# Configure script
 #
 
-AC_INIT([NetXMS], [0.2.14], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.15-dev], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
 
+
+#--------------------------------------------------------------------
+# Functions
+#--------------------------------------------------------------------
+
+check_substr()
+{
+	for w in "$1"; do
+		if test "x$w" = "x$2"; then
+			return 0;
+		fi
+	done
+	return 1
+}
+
+
+#--------------------------------------------------------------------
+# Initialize variables
+#--------------------------------------------------------------------
+
 PLATFORM=`uname -s`
-
+COMPONENTS=""
+DISABLE_ICONV="no"
+DISABLE_ENCRYPTION="no"
+ENABLE_UNSTABLE="no"
+STATIC_BUILD="no"
+DBDRIVER_SELECTED="no"
+USE_PTH="no"
+BUILD_SERVER="no"
+BUILD_AGENT="no"
+BUILD_CLIENT="no"
+BUILD_NXHTTPD="no"
+BUILD_STATIC_AGENT="no"
+NEED_ZLIB="no"
+MODULES=""
 ALL_STATIC_FLAG=""
-
-# --------------------------------------------------------------------------
-# checks for programs.
-
-if test "x$PLATFORM" = "xHP-UX"; then
-	CCC="aCC"
-fi
-AC_PROG_CC(aCC gcc cc cl)
-AC_PROG_CPP
-AC_PROG_CXX
-AC_PROG_INSTALL
-AC_PROG_LEX
-AC_PROG_YACC
-AC_PROG_LN_S
-
-# --------------------------------------------------------------------------
-# Misc. settings
-CPPFLAGS="$CPPFLAGS -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_THREAD_SAFE"
+STATIC_SUBAGENT_LIST=""
+SUBAGENT_DIRS=""
 SUBAGENT_LIBS=""
+UNSTABLE_SUBAGENT_DIRS=""
+SERVER_TOOLS=""
+TOP_LEVEL_MODULES=""
+CONTRIB_MODULES=""
 
-# --------------------------------------------------------------------------
-# disable C++ exceptions
+CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
 
-if test "x$CC" = "xgcc" ; then
 
-AC_LANG_PUSH([C++])
+#--------------------------------------------------------------------
+# Parse command line parameters
+#--------------------------------------------------------------------
 
-AC_MSG_CHECKING(whether C++ compiler accepts -fno-rtti)
-OLD_CXXFLGAS="$CXXFLAGS"
-CXXFLAGS="$CXXFLAGS -fno-rtti"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-	[ AC_MSG_RESULT(yes) ], 
-	[ 
-		CXXFLAGS="$OLD_CXXFLAGS"
-		AC_MSG_RESULT(no)
-	])
+AC_ARG_WITH(server,
+[AS_HELP_STRING(--with-server,build server)],
+[
+	COMPONENTS="$COMPONENTS server agent"
+])
 
-AC_MSG_CHECKING(whether C++ compiler accepts -fno-exceptions)
-OLD_CXXFLGAS="$CXXFLAGS"
-CXXFLAGS="$CXXFLAGS -fno-exceptions"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-	[ AC_MSG_RESULT(yes) ], 
-	[ 
-		CXXFLAGS="$OLD_CXXFLAGS"
-		AC_MSG_RESULT(no)
-	])
+AC_ARG_WITH(client,
+[AS_HELP_STRING(--with-client,build client library and tools)],
+[
+	COMPONENTS="$COMPONENTS client"
+])
 
-AC_LANG_POP([C++])
+AC_ARG_WITH(agent,
+[AS_HELP_STRING(--with-agent,build agent)],
+[
+	COMPONENTS="$COMPONENTS agent"
+])
 
-fi
+AC_ARG_WITH(static-agent,
+[AS_HELP_STRING(--with-static-agent,build statically linked agent)],
+[
+	COMPONENTS="$COMPONENTS static-agent"
+])
 
-# --------------------------------------------------------------------------
-# set CPPFLAGS and LDFLAGS depending on OS
+AC_ARG_WITH(ipso-agent,
+[AS_HELP_STRING(--with-ipso-agent,build statically linked IPSO agent)],
+[
+	COMPONENTS="$COMPONENTS ipso-agent"
+])
 
-case "$PLATFORM" in
-   AIX)
-      LDFLAGS="-no-undefined $LDFLAGS"
-      ;;
-   HP-UX)
-      CPPFLAGS="$CPPFLAGS -D_HPUX -D_HPUX_SOURCE"
-      if test "x$CXX" = "xaCC"; then
-         CXXFLAGS="-mt $CXXFLAGS +W749 +W829"
-         LDFLAGS="$LDFLAGS -mt"
-      fi
-      ;;
-   *)
-      ;;
-esac
+AC_ARG_WITH(nxhttpd,
+[AS_HELP_STRING(--with-nxhttpd,build web interface)],
+[
+	COMPONENTS="$COMPONENTS nxhttpd"
+])
 
-# --------------------------------------------------------------------------
-# misc
-
-AC_ARG_VAR(PERL,local path to the perl interpreter)
-perl_possible_path="/usr/bin:/usr/local/bin:/bin:/opt/perl/bin:/opt/perl/usr/bin:/opt/perl/usr/local/bin"
-AC_PATH_PROG(PERL,perl,/usr/bin/env perl,$perl_possible_path)
-
-if test -d /usr/local/include; then
-	CFLAGS="$CFLAGS -I/usr/local/include"
-	CPPFLAGS="$CPPFLAGS -I/usr/local/include"
-fi
-
-if test -d /usr/kerberos/include; then
-	CFLAGS="$CFLAGS -I/usr/kerberos/include"
-	CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
-fi
-
-if test -d /usr/local/lib; then
-	LDFLAGS="$LDFLAGS -L/usr/local/lib"
-fi
-
-# --------------------------------------------------------------------------
-# command line options
+AC_ARG_WITH(mdebug,
+[AS_HELP_STRING(--with-mdebug,use debug version of memory allocation functions)],
+[
+	CPPFLAGS="$CPPFLAGS -DNETXMS_MEMORY_DEBUG"
+])
 
 AC_ARG_WITH(sqlite,
 [AS_HELP_STRING(--with-sqlite,build SQLite database driver)],
@@ -111,13 +109,9 @@ AC_ARG_WITH(sqlite,
 		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
 		LDFLAGS="$LDFLAGS -L${withval}/lib"
 		CPPFLAGS="$CPPFLAGS -I${withval}/include"
-   fi
-   DYNAMIC_COMPONENTS="yes"
-	with_sqlite="yes"
-	AC_DEFINE(WITH_SQLITE,,[with sqlite])
-	DB_DRIVERS="$DB_DRIVERS sqlite"
-	AC_CHECK_LIB(sqlite3, sqlite3_open, ,
-		[AC_MSG_ERROR(libsqlite3 is required for SQLite support)])
+	fi
+	COMPONENTS="$COMPONENTS sqlite"
+	DBDRIVER_SELECTED="yes"
 fi ])
 
 AC_ARG_WITH(odbc,
@@ -127,13 +121,9 @@ AC_ARG_WITH(odbc,
 		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
 		LDFLAGS="$LDFLAGS -L${withval}/lib"
 		CPPFLAGS="$CPPFLAGS -I${withval}/include"
-   fi
-   DYNAMIC_COMPONENTS="yes"
-	with_odbc="yes"
-	AC_DEFINE(WITH_ODBC,,[with odbc])
-	DB_DRIVERS="$DB_DRIVERS odbc"
-	AC_CHECK_LIB(odbc, SQLAllocHandle, ,
-		[AC_MSG_ERROR(libodbc is required for ODBC support)])
+	fi
+	COMPONENTS="$COMPONENTS odbc"
+	DBDRIVER_SELECTED="yes"
 fi ])
 
 AC_ARG_WITH(mysql,
@@ -148,28 +138,8 @@ AC_ARG_WITH(mysql,
 		LDFLAGS="$LDFLAGS -L/usr/local/mysql/lib -L/usr/lib64/mysql -L/usr/lib/mysql -L/usr/mysql/lib -L/usr/local/lib/mysql -L/usr/local/mysql/lib/mysql -L/usr/mysql/lib/mysql"
 		CPPFLAGS="$CPPFLAGS -I/usr/local/mysql/include -I/usr/include/mysql -I/usr/mysql/include -I/usr/local/include/mysql -I/usr/local/mysql/include/mysql -I/usr/mysql/include/mysql"
 	fi
-   DYNAMIC_COMPONENTS="yes"
-	AC_CHECK_LIB(m, floor)
-	with_mysql="yes"
-	AC_DEFINE(WITH_MYSQL,,[with mysql])
-	DB_DRIVERS="$DB_DRIVERS mysql"
-	AC_CHECK_LIB(mysqlclient, mysql_init, ,
-		[AC_MSG_ERROR(libmysqlclient is requred for MySQL support)])
-	AC_MSG_CHECKING(whether mysql clients can run)
-	AC_RUN_IFELSE([AC_LANG_SOURCE([[
-		#include <stdio.h>
-		#include <mysql.h>    
-		int main(void)
-		{
-			MYSQL *a = mysql_init(NULL);
-			return 0;
-		}
-		]])],[],[
-			AC_MSG_RESULT(no)
-			AC_MSG_ERROR(Your MySQL client libraries aren't properly installed)
-	],[])
-	AC_MSG_RESULT(yes)
-	AC_CHECK_FUNCS(mysql_real_escape_string)
+	COMPONENTS="$COMPONENTS mysql"
+	DBDRIVER_SELECTED="yes"
 fi ])
 
 AC_ARG_WITH(pgsql,
@@ -184,101 +154,76 @@ AC_ARG_WITH(pgsql,
 		LDFLAGS="$LDFLAGS -L/usr/local/pgsql/lib -L/usr/lib64/pgsql -L/usr/lib/pgsql -L/usr/pgsql/lib -L/usr/local/lib/pgsql -L/usr/local/pgsql/lib/pgsql -L/usr/pgsql/lib/pgsql -L/usr/local/postgresql/lib -L/usr/lib/postgresql -L/usr/postgresql/lib -L/usr/local/lib/postgresql -L/usr/local/postgresql/lib/postgresql -L/usr/postgresql/lib/postgresql"
 		CPPFLAGS="$CPPFLAGS -I/usr/local/pgsql/include -I/usr/include/pgsql -I/usr/pgsql/include -I/usr/local/include/pgsql -I/usr/local/pgsql/include/pgsql -I/usr/pgsql/include/pgsql -I/usr/local/postgresql/include -I/usr/include/postgresql -I/usr/postgresql/include -I/usr/local/include/postgresql -I/usr/local/postgresql/include/postgresql -I/usr/postgresql/include/postgresql"
 	fi
-   DYNAMIC_COMPONENTS="yes"
-	AC_CHECK_LIB(m, floor)
-	with_pgsql="yes"
-	DB_DRIVERS="$DB_DRIVERS pgsql"
-	AC_DEFINE(WITH_PGSQL,,[with pgsql])
-	AC_CHECK_LIB(pq, PQconnectdb, ,
-		[AC_MSG_ERROR(libpq is required for PostgreSQL support)])        
-			AC_MSG_CHECKING(whether postgresql clients can run)
-			AC_RUN_IFELSE([AC_LANG_SOURCE([[
-				#include <stdio.h>
-				#include <libpq-fe.h>
-				int main(void)
-				{
-					PGconn *a = PQconnectdb("");
-					return 0;
-				}
-			]])],[],[
-			AC_MSG_RESULT(no)
-			AC_MSG_ERROR(Your PostgreSQL client libraries aren't properly installed)
-		],[])    
-	AC_MSG_RESULT(yes)
+	COMPONENTS="$COMPONENTS pgsql"
+	DBDRIVER_SELECTED="yes"
 fi ])
 
-AC_ARG_WITH(server,
-[AS_HELP_STRING(--with-server,build server)],
+AC_ARG_WITH(openssl,
+	[AS_HELP_STRING(--with-openssl,specify OpenSSL location)],
+	[
+		if test "x$withval" != "xno" ; then
+			if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+				LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+				LDFLAGS="$LDFLAGS -L${withval}/lib"
+				CPPFLAGS="$CPPFLAGS -I${withval}/include"
+			else
+				LD_RUN_PATH="/usr/local/lib:/opt/openssl/lib:/usr/local/ssl/lib:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+				LDFLAGS="$LDFLAGS -L/usr/local/lib -L/opt/openssl/lib"
+				CPPFLAGS="$CPPFLAGS -I/usr/local/include -I/opt/openssl/include"
+			fi
+		fi
+		REQUIRE_ENCRYPTION="yes"
+	])
+fi
+
+AC_ARG_ENABLE(iconv,
+[AS_HELP_STRING(--disable-iconv,do not use iconv() for text conversions)],
 [
-   MODULES="$MODULES libnxmap libnxsnmp libnxsl server nxmibc nxscript"
-   TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
-   CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds"
-   BUILD_SERVER="yes"
-   DYNAMIC_COMPONENTS="yes"
-   NEED_ZLIB="yes"
+	DISABLE_ICONV="yes"
+	CPPFLAGS="$CPPFLAGS -D__DISABLE_ICONV"
 ])
 
-
-AC_ARG_WITH(client,
-[AS_HELP_STRING(--with-client,build client library and tools)],
+AC_ARG_ENABLE(encryption,
+[AS_HELP_STRING(--disable-encryption,disable encryption support)],
 [
-	MODULES="$MODULES libnxmap libnxcl nxevent nxpush nxreport console"
-	BUILD_CLIENT="yes"
-   DYNAMIC_COMPONENTS="yes"
+	DISABLE_ENCRYPTION="yes"
 ])
 
-
-AC_ARG_WITH(mdebug,
-[AS_HELP_STRING(--with-mdebug,use debug version of memory allocation functions)],
+AC_ARG_ENABLE(unstable,
+[AS_HELP_STRING(--enable-unstable,build experimental/unstable components)],
 [
-	CFLAGS="$CFLAGS -DNETXMS_MEMORY_DEBUG"
-	CPPFLAGS="$CPPFLAGS -DNETXMS_MEMORY_DEBUG"
+	ENABLE_UNSTABLE="yes"
 ])
 
+AC_ARG_WITH(dist,
+[AS_HELP_STRING(--with-dist,for maintainers only)],
+	DB_DRIVERS="mysql pgsql odbc mssql sqlite"
+	MODULES="libnxsnmp libnxsl server agent libnxmap libnxcl nxevent nxpush nxreport nxmibc console nxhttpd nxscript"
+	SUBAGENT_DIRS="linux freebsd openbsd sunos aix ipso hpux"
+	NXCONFIG="nxconfig"
+	TOP_LEVEL_MODULES="sql images"
+	CONTRIB_MODULES="mibs backgrounds"
+	UNSTABLE_SUBAGENT_DIRS="logscan"
+	SERVER_TOOLS="nxconfig"
+)
 
-SUBAGENT_DIRS=""
-AC_ARG_WITH(agent,
-[AS_HELP_STRING(--with-agent,build agent)],
-[
-	BUILD_AGENT=yes
+
+#--------------------------------------------------------------------
+# Validate command line parameters and set various checking options
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "static-agent"
+if [ $? -eq 0 ]; then
+	if test "x$COMPONENTS" != "x static-agent"; then
+		AC_MSG_ERROR(Static agent and other components are mutally exclusive.)
+	fi
+	STATIC_BUILD="yes"
+	BUILD_STATIC_AGENT="yes"
 	MODULES="$MODULES agent"
-	case "$PLATFORM" in
-		Linux)
-			SUBAGENT_DIRS="linux"
-			;;
-		FreeBSD)
-			SUBAGENT_DIRS="freebsd"
-			;;
-		OpenBSD)
-			SUBAGENT_DIRS="openbsd"
-			;;
-		SunOS)
-			SUBAGENT_DIRS="sunos"
-			;;
-		AIX)
-			SUBAGENT_DIRS="aix"
-			;;
-		HP-UX)
-			SUBAGENT_DIRS="hpux"
-			;;
-		*)
-			# unknown
-			;;
-	esac
-   DYNAMIC_COMPONENTS="yes"
-])
+	ALL_STATIC_FLAG="-all-static"
+	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT"
 
-AC_ARG_WITH(static-agent,
-[AS_HELP_STRING(--with-static-agent,build statically linked agent)],
-[
-   BUILD_STATIC_AGENT="yes"
-   MODULES="$MODULES agent"
-   CFLAGS="$CFLAGS -D_STATIC_AGENT"
-   CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT"
-   LDFLAGS="$LDFLAGS"
-   ALL_STATIC_FLAG="-all-static"
-   #STATIC_SUBAGENT_LIST="ping portcheck"
-	case `uname -s` in
+	case "$PLATFORM" in
 		Linux)
 			SUBAGENT_DIRS="linux"
 			SUBAGENT_LIBS="../subagents/linux/libnsm_linux.la"
@@ -313,139 +258,304 @@ AC_ARG_WITH(static-agent,
 			# unknown
 			;;
 	esac
-])
+fi
 
-AC_ARG_WITH(ipso-agent,
-[AS_HELP_STRING(--with-ipso-agent,build statically linked IPSO agent)],
-[
-   USE_PTH="yes"
-   BUILD_STATIC_AGENT="yes"
-   MODULES="$MODULES agent"
-   CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO -D_USE_GNU_PTH -I/usr/local/include"
-   LDFLAGS="$LDFLAGS -all-static"
-   STATIC_SUBAGENT_LIST="ipso ping portcheck ups"
-   SUBAGENT_DIRS="ipso"
-   SUBAGENT_LIBS="../subagents/ipso/libnsm_ipso.la ../subagents/ping/libnsm_ping.la ../subagents/portCheck/libnsm_portCheck.la ../subagents/ups/libnsm_ups.la"
-])
-
-UNSTABLE_SUBAGENT_DIRS=""
-AC_ARG_ENABLE(unstable,
-[AS_HELP_STRING(--enable-unstable,build experimental/unstable components)],
-[
-	UNSTABLE_SUBAGENT_DIRS="logscan"
-])
-
-AC_ARG_ENABLE(iconv,
-[AS_HELP_STRING(--disable-iconv,do not use iconv() for text conversions)],
-[
-	DISABLE_ICONV="yes"
-	CPPFLAGS="$CPPFLAGS -D__DISABLE_ICONV"
-])
-
-AC_ARG_WITH(dist,
-[AS_HELP_STRING(--with-dist,for maintainers only)],
-	DB_DRIVERS="mysql pgsql odbc mssql sqlite"
-	MODULES="libnxsnmp libnxsl server agent libnxmap libnxcl nxevent nxpush nxreport nxmibc console nxhttpd nxscript"
-	SUBAGENT_DIRS="linux freebsd openbsd sunos aix ipso hpux"
-	NXCONFIG="nxconfig"
-   TOP_LEVEL_MODULES="sql images"
-   CONTRIB_MODULES="mibs backgrounds"
-	UNSTABLE_SUBAGENT_DIRS="logscan"
-)
-
-AC_ARG_WITH(nxhttpd,
-[AS_HELP_STRING(--with-nxhttpd,build web interface)],
-[
-	if test "x$withval" != "xno" ; then
-		MODULES="$MODULES libnxmap libnxcl nxhttpd"
-		BUILD_WEB_CLIENT="yes"
-		DYNAMIC_COMPONENTS="yes"
+check_substr "$COMPONENTS" "ipso-agent"
+if [ $? -eq 0 ]; then
+	if test "x$COMPONENTS" != "x static-agent"; then
+		AC_MSG_ERROR(IPSO agent and other components are mutally exclusive.)
 	fi
-])
-
-AC_ARG_ENABLE(encryption,
-[AS_HELP_STRING(--disable-encryption,disable encryption support)],
-[
-	DISABLE_ENCRYPTION="yes"
-])
-
-if test "x$DISABLE_ENCRYPTION" != "xyes"; then
-AC_ARG_WITH(openssl,
-	[AS_HELP_STRING(--with-openssl,specify OpenSSL location)],
-	[
-		if test "x$withval" != "xno" ; then
-			if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-				LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-				LDFLAGS="$LDFLAGS -L${withval}/lib"
-				CPPFLAGS="$CPPFLAGS -I${withval}/include"
-			else
-				LD_RUN_PATH="/usr/local/lib:/opt/openssl/lib:/usr/local/ssl/lib:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
-				LDFLAGS="$LDFLAGS -L/usr/local/lib -L/opt/openssl/lib"
-				CPPFLAGS="$CPPFLAGS -I/usr/local/include -I/opt/openssl/include"
-			fi
-			AC_CHECK_LIB(crypto, RSA_new,
-				[
-				 	AC_DEFINE(WITH_OPENSSL,,[with openssl])
-					AC_CHECK_LIB(crypto, EVP_aes_256_cbc,
-									 [], [AC_DEFINE(NETXMS_NO_AES,,[desc])])
-					AC_CHECK_LIB(crypto, EVP_bf_cbc,
-									 [], [AC_DEFINE(NETXMS_NO_BF,,[desc])])
-					AC_CHECK_LIB(crypto, EVP_idea_cbc,
-									 [], [AC_DEFINE(NETXMS_NO_IDEA,,[desc])])
-					AC_CHECK_LIB(crypto, EVP_des_ede3_cbc,
-									 [], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
-				],
-				[AC_MSG_ERROR(libcrypto is required for encryption support)])
-		fi
-	],
-	[
-		AC_CHECK_LIB(crypto, RSA_new,
-			[
-				AC_DEFINE(WITH_OPENSSL,,[with openssl])
-				AC_CHECK_LIB(crypto, EVP_aes_256_cbc,
-								 [], [AC_DEFINE(NETXMS_NO_AES,,[desc])])
-				AC_CHECK_LIB(crypto, EVP_bf_cbc,
-								 [], [AC_DEFINE(NETXMS_NO_BF,,[desc])])
-				AC_CHECK_LIB(crypto, EVP_idea_cbc,
-								 [], [AC_DEFINE(NETXMS_NO_IDEA,,[desc])])
-				AC_CHECK_LIB(crypto, EVP_des_ede3_cbc,
-								 [], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
-			],
-			[AC_MSG_RESULT(libcrypto is required for encryption support)])
-	 ])
+	STATIC_BUILD="yes"
+	BUILD_STATIC_AGENT="yes"
+	USE_PTH="yes"
+	MODULES="$MODULES agent"
+	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO -D_USE_GNU_PTH -I/usr/local/include"
+	LDFLAGS="$LDFLAGS -all-static"
+	STATIC_SUBAGENT_LIST="ipso ping portcheck ups"
+	SUBAGENT_DIRS="ipso"
+	SUBAGENT_LIBS="../subagents/ipso/libnsm_ipso.la ../subagents/ping/libnsm_ping.la ../subagents/portCheck/libnsm_portCheck.la ../subagents/ups/libnsm_ups.la"
 fi
 
-AC_SUBST(DB_DRIVERS)
-AC_SUBST(MODULES)
-AC_SUBST(SUBAGENT_DIRS)
-AC_SUBST(NXCONFIG)
-AC_SUBST(TOP_LEVEL_MODULES)
-AC_SUBST(CONTRIB_MODULES)
-AC_SUBST(STATIC_SUBAGENT_LIST)
-AC_SUBST(SUBAGENT_LIBS)
-AC_SUBST(BUILD_SERVER)
-AC_SUBST(UNSTABLE_SUBAGENT_DIRS)
+check_substr "$COMPONENTS" "server"
+if [ $? -eq 0 ]; then
+	if test "x$DBDRIVER_SELECTED" != "xyes"; then
+		AC_MSG_ERROR(You must select at least one database driver when building server.)
+	fi
+	BUILD_SERVER="yes"
+	NEED_ZLIB="yes"
+	MODULES="$MODULES libnxmap libnxsnmp libnxsl server nxmibc nxscript"
+	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
+	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds"
+fi
 
-# --------------------------------------------------------------------------
-# If --with-static-agent selected, other components cannot be selected
-# Select shared or static libraries depending on agent build type
-if test "x$BUILD_STATIC_AGENT" = "xyes" ; then
-   if test "x$DYNAMIC_COMPONENTS" = "xyes" ; then
-      AC_MSG_ERROR(Static agent and other components are mutally exclusive.)
-   fi
-   enable_shared=no
+check_substr "$COMPONENTS" "client"
+if [ $? -eq 0 ]; then
+	BUILD_CLIENT="yes"
+	NEED_ZLIB="yes"
+	MODULES="$MODULES libnxmap libnxcl nxevent nxpush nxreport console"
+fi
+
+check_substr "$COMPONENTS" "agent"
+if [ $? -eq 0 ]; then
+	BUILD_AGENT="yes"
+	MODULES="$MODULES agent"
+	if test "x$ENABLE_UNSTABLE" = "xyes"; then
+		UNSTABLE_SUBAGENT_DIRS="logscan"
+	fi
+fi
+
+check_substr "$COMPONENTS" "nxhttpd"
+if [ $? -eq 0 ]; then
+	BUILD_NXHTTPD="yes"
+	MODULES="$MODULES libnxmap libnxcl nxhttpd"
+fi
+
+check_substr "$COMPONENTS" "mysql"
+if [ $? -eq 0 ]; then
+	DB_DRIVERS="$DB_DRIVERS mysql"
+fi
+
+check_substr "$COMPONENTS" "pgsql"
+if [ $? -eq 0 ]; then
+	DB_DRIVERS="$DB_DRIVERS pgsql"
+fi
+
+check_substr "$COMPONENTS" "sqlite"
+if [ $? -eq 0 ]; then
+	DB_DRIVERS="$DB_DRIVERS sqlite"
+fi
+
+check_substr "$COMPONENTS" "odbc"
+if [ $? -eq 0 ]; then
+	DB_DRIVERS="$DB_DRIVERS odbc"
+fi
+
+
+#--------------------------------------------------------------------
+# Check for programs
+#--------------------------------------------------------------------
+
+if test "x$PLATFORM" = "xHP-UX"; then
+	CCC="aCC"
+fi
+AC_PROG_CC(aCC gcc cc cl)
+AC_PROG_CPP
+AC_PROG_CXX
+AC_PROG_INSTALL
+AC_PROG_LEX
+AC_PROG_YACC
+AC_PROG_LN_S
+
+AC_ARG_VAR(PERL,local path to the perl interpreter)
+perl_possible_path="/usr/bin:/usr/local/bin:/bin:/opt/perl/bin:/opt/perl/usr/bin:/opt/perl/usr/local/bin"
+AC_PATH_PROG(PERL,perl,/usr/bin/env perl,$perl_possible_path)
+
+
+#--------------------------------------------------------------------
+# Initialize libtool
+#--------------------------------------------------------------------
+
+if test "x$STATIC_BUILD" = "xyes"; then
+	enable_shared=no
+	enable_static=yes
 else
-   enable_static=no
+	enable_shared=yes
+	enable_static=no
 fi
-
 AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
 
-# --------------------------------------------------------------------------
-# checks for libs.
 
-#AC_CHECK_LIB([socket], [socket])
-#AC_CHECK_LIB([nsl], [gethostbyname])
+#--------------------------------------------------------------------
+# C/C++ capabilities
+#--------------------------------------------------------------------
+
+AC_C_CONST
+AC_PROG_GCC_TRADITIONAL
+
+
+#--------------------------------------------------------------------
+# Platform-dependent settings
+#--------------------------------------------------------------------
+
+case "$PLATFORM" in
+   AIX)
+      LDFLAGS="-no-undefined $LDFLAGS"
+      ;;
+   HP-UX)
+      CPPFLAGS="$CPPFLAGS -D_HPUX -D_HPUX_SOURCE -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1"
+      if test "x$CXX" = "xaCC"; then
+         CXXFLAGS="-mt $CXXFLAGS +W749 +W829"
+         LDFLAGS="$LDFLAGS -mt"
+      fi
+      ;;
+   *)
+      ;;
+esac
+
+
+#--------------------------------------------------------------------
+# Disable C++ exceptions
+#--------------------------------------------------------------------
+
+if test "x$CC" = "xgcc" ; then
+
+	AC_LANG_PUSH([C++])
+
+	AC_MSG_CHECKING(whether C++ compiler accepts -fno-rtti)
+	OLD_CXXFLGAS="$CXXFLAGS"
+	CXXFLAGS="$CXXFLAGS -fno-rtti"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ AC_MSG_RESULT(yes) ], 
+		[ 
+			CXXFLAGS="$OLD_CXXFLAGS"
+			AC_MSG_RESULT(no)
+		])
+
+	AC_MSG_CHECKING(whether C++ compiler accepts -fno-exceptions)
+	OLD_CXXFLGAS="$CXXFLAGS"
+	CXXFLAGS="$CXXFLAGS -fno-exceptions"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ AC_MSG_RESULT(yes) ], 
+		[ 
+			CXXFLAGS="$OLD_CXXFLAGS"
+			AC_MSG_RESULT(no)
+		])
+
+	AC_LANG_POP([C++])
+
+fi
+
+
+#--------------------------------------------------------------------
+# Additional include and library directories
+#--------------------------------------------------------------------
+
+if test -d /usr/local/include; then
+	CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+fi
+
+if test -d /usr/kerberos/include; then
+	CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
+fi
+
+if test -d /usr/local/lib; then
+	LDFLAGS="$LDFLAGS -L/usr/local/lib"
+fi
+
+
+#--------------------------------------------------------------------
+# Check for threads library - either POSIX or GNU
+#--------------------------------------------------------------------
+
+if test "x$USE_PTH" = "xyes"; then
+	AC_CHECK_HEADER(pth.h,,AC_MSG_ERROR([*** GNU Pth thread support not installed - please install first ***]))
+else
+	AC_CHECK_HEADER(pthread.h,,AC_MSG_ERROR([*** POSIX thread support not installed - please install first ***]))
+
+	if test "x$CXX" = "xaCC"; then
+		PTHREAD_LIBS=""
+	else
+		PTHREAD_LIBS="error"
+		AC_MSG_CHECKING(for old style FreeBSD -pthread flag)
+		AC_EGREP_CPP(yes,
+			[#if defined(__FreeBSD_cc_version) || defined(__OpenBSD__)
+				yes
+			#endif
+			], AC_MSG_RESULT(yes)
+			CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE" PTHREAD_LIBS="-pthread",
+			AC_MSG_RESULT(no))
+		if test "x$PTHREAD_LIBS" = "xerror"; then
+			AC_CHECK_LIB(pthread, pthread_attr_init,
+				PTHREAD_LIBS="-lpthread")
+		fi
+		if test "x$PTHREAD_LIBS" = "xerror"; then
+			AC_CHECK_LIB(pthreads, pthread_attr_init,
+				PTHREAD_LIBS="-lpthreads")
+		fi
+		if test "x$PTHREAD_LIBS" = "xerror"; then
+			AC_CHECK_FUNC(pthread_attr_init,
+				PTHREAD_LIBS="")
+		fi
+	fi
+
+	if test "x$PTHREAD_LIBS" = "xerror"; then
+		AC_MSG_ERROR(*** Unable to locate working posix thread library ***)
+	fi
+	LDFLAGS="$LDFLAGS $PTHREAD_LIBS"
+
+	# Extensions to posix threads
+	AC_CHECK_HEADERS([pthread_np.h],,,[
+		#include <pthread.h>
+	])
+	AC_CHECK_FUNCS([pthread_cond_reltimedwait_np])
+
+	# Check for recursive mutexes
+	AC_CHECK_FUNCS([pthread_mutexattr_settype pthread_mutexattr_setkind_np])
+	AC_CHECK_DECLS([PTHREAD_MUTEX_RECURSIVE, PTHREAD_MUTEX_RECURSIVE_NP, MUTEX_TYPE_COUNTING_FAST],,,[
+		#include <pthread.h>
+		#if HAVE_PTHREAD_NP_H
+		#include <pthread_np.h>
+		#endif
+	])
+
+	# Check for read/write locks
+	# On Linux, rwlock functions declared always, but pthread_rwlock_t may need
+	# additional defines
+	AC_CHECK_FUNCS([pthread_rwlock_init pthread_rwlock_timedrdlock pthread_rwlock_timedwrlock])
+	if test "$ac_cv_func_pthread_rwlock_init" = "yes"; then
+		AC_CACHE_CHECK([for pthread_rwlock_t], ac_cv_struct_pthread_rw,
+			[AC_TRY_COMPILE([#include <sys/types.h>
+			#include <pthread.h>],
+			[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;],
+			ac_cv_struct_pthread_rw=yes, [
+				AC_TRY_COMPILE([#define _XOPEN_SOURCE 500
+				#include <sys/types.h>
+				#include <pthread.h>],
+				[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;],
+				ac_cv_struct_pthread_rw=yes, ac_cv_struct_pthread_rw=no)
+				if test "$ac_cv_struct_pthread_rw" = "yes"; then
+					CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=500"
+				fi
+				])])
+		if test "$ac_cv_struct_pthread_rw" = "yes"; then
+			AC_DEFINE(HAVE_PTHREAD_RWLOCK, 1, Define to 1 if you have working pthread read/write locks)
+		fi
+	fi
+
+fi
+
+
+#--------------------------------------------------------------------
+# Checks for OpenSSL
+#--------------------------------------------------------------------
+
+if test "x$DISABLE_ENCRYPTION" != "xyes" ; then
+	AC_CHECK_LIB(crypto, RSA_new,
+		[
+			AC_DEFINE(WITH_OPENSSL,,[with openssl])
+			AC_CHECK_LIB(crypto, EVP_aes_256_cbc,
+							 [], [AC_DEFINE(NETXMS_NO_AES,,[desc])])
+			AC_CHECK_LIB(crypto, EVP_bf_cbc,
+							 [], [AC_DEFINE(NETXMS_NO_BF,,[desc])])
+			AC_CHECK_LIB(crypto, EVP_idea_cbc,
+							 [], [AC_DEFINE(NETXMS_NO_IDEA,,[desc])])
+			AC_CHECK_LIB(crypto, EVP_des_ede3_cbc,
+							 [], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
+		],
+		[
+			if test "x$REQUIRE_ENCRYPTION" = "xyes"; then
+				AC_MSG_ERROR(libcrypto is required for encryption support)
+			else
+				AC_MSG_RESULT(libcrypto is required for encryption support)
+			fi
+		])
+fi
+
+
+#--------------------------------------------------------------------
+# Checks for other libs.
+#--------------------------------------------------------------------
 
 AC_CHECK_LIB(socket, if_nameindex)
 AC_CHECK_LIB(dl, dlopen)
@@ -456,16 +566,22 @@ if test "x$BUILD_SERVER" = "xyes" ; then
    AC_CHECK_LIB(readline, readline)
 fi
 
-# --------------------------------------------------------------------------
-# checks for headers.
+if test "x$NEED_ZLIB" = "xyes"; then
+	AC_CHECK_HEADER(zlib.h,,AC_MSG_ERROR([*** ZLib development package not installed - please install first ***]))
+	AC_CHECK_LIB(z, deflate)
+fi
 
-AC_HEADER_STDC
-AC_HEADER_STAT
-AC_HEADER_TIME
-AC_CHECK_HEADERS([stdarg.h])
-AC_CHECK_HEADERS([sys/int_types.h sys/time.h])
+
+#--------------------------------------------------------------------
+# Checks for header files
+#--------------------------------------------------------------------
+
+AC_CHECK_HEADERS([sys/types.h sys/stat.h unistd.h stdarg.h fcntl.h])
+AC_CHECK_HEADERS([sys/int_types.h sys/time.h sys/utsname.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h net/nh.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
+AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h])
+AC_CHECK_HEADERS([sys/sysctl.h vm/vm_param.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h],,,
 [[#ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>
@@ -477,13 +593,12 @@ AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h],,,
 # include <sys/socket.h>
 #endif
 ]])
-AC_CHECK_HEADERS([readline/readline.h])
-AC_CHECK_HEADERS([byteswap.h])
-AC_CHECK_HEADERS([sys/mman.h])
-AC_CHECK_HEADERS([sys/utsname.h])
 
-# --------------------------------------------------------------------------
-# types
+
+#--------------------------------------------------------------------
+# Checks for data types
+#--------------------------------------------------------------------
+
 AC_CHECK_SIZEOF(short)
 AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
@@ -504,64 +619,12 @@ AC_CHECK_TYPES([off_t, socklen_t],,,[
 #endif
 ])
 
-# --------------------------------------------------------------------------
-# C/CPP caps
 
-AC_PROG_GCC_TRADITIONAL
-AC_C_CONST
-AC_C_BIGENDIAN
-
-# --------------------------------------------------------------------------
-# check for zlib
-
-if test "x$NEED_ZLIB" = "xyes"; then
-	AC_CHECK_HEADER(zlib.h,,AC_MSG_ERROR([*** ZLib development package not installed - please install first ***]))
-	AC_CHECK_LIB(z, deflate)
-fi
-
-# --------------------------------------------------------------------------
-# macros
-
-AC_CHECK_DECLS([__bswap_32, __bswap_64, htonll, ntohll],,,[
-#ifdef HAVE_SYS_TYPES_H
-# include <sys/types.h>
-#endif
-#if HAVE_BYTESWAP_H
-#include <byteswap.h>
-#endif
-#if HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-#if HAVE_NET_NH_H
-#include <net/nh.h>
-#endif
-])
-AC_CHECK_DECLS([SIOCGIFADDR, SIOCGIFNETMASK, SIOCGIFHWADDR],,,[
-#if HAVE_SYS_IOCTL_H
-#include <sys/ioctl.h>
-#endif
-#if HAVE_SYS_SOCKIO_H
-#include <sys/sockio.h>
-#endif
-])
-
-# --------------------------------------------------------------------------
-# AIX specific
-
-AC_CHECK_HEADERS([procinfo.h],,,[[ ]])
-AC_CHECK_DECLS([getkerninfo])
-AC_CHECK_FUNCS([getprocs64],,,[
-#if HAVE_PROCINFO_H
-#include <procinfo.h>
-#endif
-])
-
-# --------------------------------------------------------------------------
-# library functions
+#--------------------------------------------------------------------
+# Checks for functions
+#--------------------------------------------------------------------
 
 AC_FUNC_ERROR_AT_LINE
-#AC_FUNC_MALLOC
-#AC_FUNC_REALLOC
 AC_FUNC_MEMCMP
 AC_FUNC_SELECT_ARGTYPES
 AC_FUNC_STRFTIME
@@ -575,9 +638,7 @@ AC_CHECK_FUNCS([nanosleep getopt_long])
 
 AC_CHECK_DECLS([getopt_long])
 
-AC_CHECK_HEADERS([sys/sysctl.h vm/vm_param.h])
 AC_CHECK_FUNCS([sysctlbyname sysctlnametomib])
-
 AC_CHECK_FUNCS([tcgetattr tcsetattr cfsetospeed cfsetispeed])
 
 # sockets/resolver (probably for solaris)
@@ -601,98 +662,45 @@ if test "$ac_cv_lib_nsl_gethostbyname" = "$ac_cv_func_gethostbyname" ; then
 	fi
 fi
 
-#ALK:	CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE" PTHREAD_LIBS="-pthread",
-# posix threads
-if test "x$USE_PTH" = "xyes"; then
-	AC_CHECK_HEADER(pth.h,,AC_MSG_ERROR([*** GNU Pth thread support not installed - please install first ***]))
-else
-	AC_CHECK_HEADER(pthread.h,,AC_MSG_ERROR([*** POSIX thread support not installed - please install first ***]))
 
-# --------------------------------------------------------------------------
-# check for pthread library
+#--------------------------------------------------------------------
+# Checks for macros and definitions
+#--------------------------------------------------------------------
 
-if test "x$CXX" = "xaCC"; then
-	PTHREAD_LIBS=""
-else
-	PTHREAD_LIBS=error
-	AC_MSG_CHECKING(for old style FreeBSD -pthread flag)
-	AC_EGREP_CPP(yes,
-		[#if defined(__FreeBSD_cc_version) || defined(__OpenBSD__)
-			yes
-		#endif
-		], AC_MSG_RESULT(yes)
-		CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE" PTHREAD_LIBS="-pthread",
-		AC_MSG_RESULT(no))
-	if test "x$PTHREAD_LIBS" = xerror; then
-		AC_CHECK_LIB(pthread, pthread_attr_init,
-			PTHREAD_LIBS="-lpthread")
-	fi
-	if test "x$PTHREAD_LIBS" = xerror; then
-		AC_CHECK_LIB(pthreads, pthread_attr_init,
-			PTHREAD_LIBS="-lpthreads")
-	fi
-	if test "x$PTHREAD_LIBS" = xerror; then
-		AC_CHECK_FUNC(pthread_attr_init,
-			PTHREAD_LIBS="")
-	fi
-fi
-
-# HP-UX
-#if test "x$PTHREAD_LIBS" = xerror; then
-#	AC_CHECK_LIB(pthread, __pthread_attr_init_system,
-#		PTHREAD_LIBS="-lpthread")
-#fi
-
-if test "x$PTHREAD_LIBS" = xerror; then
-	AC_MSG_ERROR(*** Unable to locate working posix thread library ***)
-fi
-LDFLAGS="$LDFLAGS $PTHREAD_LIBS"
-AC_SUBST(PTHREAD_LIBS)
-
-# Extensions to posix threads
-AC_CHECK_HEADERS([pthread_np.h],,,[
-#include <pthread.h>
-])
-AC_CHECK_FUNCS([pthread_cond_reltimedwait_np])
-
-# Check for recursive mutexes
-AC_CHECK_FUNCS([pthread_mutexattr_settype pthread_mutexattr_setkind_np])
-AC_CHECK_DECLS([PTHREAD_MUTEX_RECURSIVE, PTHREAD_MUTEX_RECURSIVE_NP, MUTEX_TYPE_COUNTING_FAST],,,[
-#include <pthread.h>
-#if HAVE_PTHREAD_NP_H
-#include <pthread_np.h>
+AC_CHECK_DECLS([__bswap_32, __bswap_64, htonll, ntohll],,,[
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+#if HAVE_BYTESWAP_H
+#include <byteswap.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_NET_NH_H
+#include <net/nh.h>
 #endif
 ])
 
-# Check for read/write locks
-# On Linux, rwlock functions declared always, but pthread_rwlock_t may need
-# additional defines
-AC_CHECK_FUNCS([pthread_rwlock_init pthread_rwlock_timedrdlock pthread_rwlock_timedwrlock])
-if test "$ac_cv_func_pthread_rwlock_init" = "yes"; then
-	AC_CACHE_CHECK([for pthread_rwlock_t], ac_cv_struct_pthread_rw,
-		[AC_TRY_COMPILE([#include <sys/types.h>
-		#include <pthread.h>],
-		[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;],
-		ac_cv_struct_pthread_rw=yes, [
-			AC_TRY_COMPILE([#define _XOPEN_SOURCE 500
-			#include <sys/types.h>
-			#include <pthread.h>],
-			[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;],
-			ac_cv_struct_pthread_rw=yes, ac_cv_struct_pthread_rw=no)
-			if test "$ac_cv_struct_pthread_rw" = "yes"; then
-				CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=500"
-			fi
-			])])
-	if test "$ac_cv_struct_pthread_rw" = "yes"; then
-		AC_DEFINE(HAVE_PTHREAD_RWLOCK, 1, Define to 1 if you have working pthread read/write locks)
-	fi
+
+#--------------------------------------------------------------------
+# AIX specific checks
+#--------------------------------------------------------------------
+
+if test "x$PLATFORM" = "xAIX"; then
+	AC_CHECK_HEADERS([procinfo.h],,,[[ ]])
+	AC_CHECK_DECLS([getkerninfo])
+	AC_CHECK_FUNCS([getprocs64],,,[
+#if HAVE_PROCINFO_H
+#include <procinfo.h>
+#endif
+	])
 fi
 
-# End of "if USE_PTH=yes then ... else ..."
-fi
 
-# --------------------------------------------------------------------------
-# check for UNICODE stuff
+#--------------------------------------------------------------------
+# Check for UNICODE stuff
+#--------------------------------------------------------------------
 
 AC_CHECK_HEADERS([wchar.h iconv.h])
 AC_CHECK_SIZEOF(wchar_t)
@@ -705,6 +713,7 @@ if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_FUNCS(iconv, ac_found_iconv=yes, ac_found_iconv=no)
 else
 	ac_found_iconv=no
+	CPPFLAGS="$CPPFLAGS -D__DISABLE_ICONV"
 fi
 
 AC_MSG_CHECKING(whether iconv supports UCS-2-INTERNAL)
@@ -869,22 +878,29 @@ if test "x$ac_found_iconv" = "xyes"; then
     [Define as const if the declaration of iconv() needs const.])
 fi
 
-
 if test $ac_cv_sizeof_wchar_t -eq 2; then
 	AC_DEFINE(HAVE_USEABLE_WCHAR_T, 1, Define to 1 if you have useable wchar_t)
 fi
 
-# --------------------------------------------------------------------------
-# variables
+
+#--------------------------------------------------------------------
+# Substitute variables
+#--------------------------------------------------------------------
 
 AC_SUBST(ALL_STATIC_FLAG)
+AC_SUBST(DB_DRIVERS)
+AC_SUBST(MODULES)
+AC_SUBST(SUBAGENT_DIRS)
+AC_SUBST(SERVER_TOOLS)
+AC_SUBST(TOP_LEVEL_MODULES)
+AC_SUBST(CONTRIB_MODULES)
+AC_SUBST(STATIC_SUBAGENT_LIST)
+AC_SUBST(SUBAGENT_LIBS)
+AC_SUBST(BUILD_SERVER)
+AC_SUBST(UNSTABLE_SUBAGENT_DIRS)
 
-# misc
-CPPFLAGS="$CPPFLAGS -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
-
-# --------------------------------------------------------------------------
-
-# shared libs versions
+#--------------------------------------------------------------------
+# Shared libs versions
 #
 # versioning scheme: current:revision:age
 #
@@ -910,17 +926,18 @@ CPPFLAGS="$CPPFLAGS -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\"
 #	interface number, current, or any of the previous two interfaces.
 #	By definition age must be less than or equal to current. At the outset,
 #	only the first ever interface is implemented, so age can only be `0'. 
-#
-#
-#
+#--------------------------------------------------------------------
 
 NETXMS_LIBRARY_VERSION=0:2:0
 AC_SUBST(NETXMS_LIBRARY_VERSION)
 
-# --------------------------------------------------------------------------
+
+#--------------------------------------------------------------------
+# Generate output files
+#--------------------------------------------------------------------
 
 AC_CONFIG_FILES([
-   README
+	README
 	Makefile
 	contrib/Makefile
 	contrib/dct/Makefile
@@ -1022,23 +1039,14 @@ AC_CONFIG_FILES([
 
 AC_OUTPUT
 
-#echo "Updating libtool-1"
-#sed 's/-lc_r/-lc_rXXX/' < ./libtool > libtool.new && mv libtool.new libtool && chmod +x ./libtool
-
-echo "Updating libtool-2"
+echo "Updating libtool"
 sed 's,$SED -e "/${host}-//g",$SED -e "s/${host}-//g",g' < ./libtool > libtool.new && mv libtool.new libtool && chmod +x ./libtool
 
-#if test ! "x$BUILD_SERVER" = "xyes" ; then
-#   echo "Updating libtool-3"
-#   $PERL tools/patch_libtool.pl <libtool >libtool.new
-#   mv libtool.new libtool
-#   chmod 755 libtool
-#fi
 
+#--------------------------------------------------------------------
+# Print summary
+#--------------------------------------------------------------------
 
-
-###########################
-#
 echo
 echo
 echo
@@ -1067,7 +1075,7 @@ if test "x${BUILD_CLIENT}" = "xyes"; then
 else
 	echo "Build Clients       : NO"
 fi
-if test "x${BUILD_WEB_CLIENT}" = "xyes"; then
+if test "x${BUILD_NXHTTPD}" = "xyes"; then
 	echo "Build Web Interface : YES"
 else
 	echo "Build Web Interface : NO"

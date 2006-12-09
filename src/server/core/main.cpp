@@ -537,11 +537,15 @@ retry_db_lock:
 
    // Check if management node object presented in database
    CheckForMgmtNode();
+   if (g_dwMgmtNode == 0)
+   {
+      WriteLog(MSG_CANNOT_FIND_SELF, EVENTLOG_ERROR_TYPE, NULL);
+      return FALSE;
+   }
 
    // Start threads
    ThreadCreate(WatchdogThread, 0, NULL);
    ThreadCreate(NodePoller, 0, NULL);
-   ThreadCreate(ClientListener, 0, NULL);
    m_thSyncer = ThreadCreateEx(Syncer, 0, NULL);
    m_thHouseKeeper = ThreadCreateEx(HouseKeeper, 0, NULL);
    m_thPollManager = ThreadCreateEx(PollManager, 0, NULL);
@@ -569,6 +573,9 @@ retry_db_lock:
 
    // Load modules
    LoadNetXMSModules();
+
+   // Allow clients to connect
+   ThreadCreate(ClientListener, 0, NULL);
 
    g_dwFlags |= AF_SERVER_INITIALIZED;
    DbgPrintf(AF_DEBUG_MISC, "Server initialization completed");
