@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.225 2006-12-09 20:02:08 victor Exp $
+# $Id: configure.ac,v 1.226 2006-12-09 21:02:09 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -16,7 +16,7 @@ AM_INIT_AUTOMAKE
 
 check_substr()
 {
-	for w in "$1"; do
+	for w in $1; do
 		if test "x$w" = "x$2"; then
 			return 0;
 		fi
@@ -159,22 +159,21 @@ AC_ARG_WITH(pgsql,
 fi ])
 
 AC_ARG_WITH(openssl,
-	[AS_HELP_STRING(--with-openssl,specify OpenSSL location)],
-	[
-		if test "x$withval" != "xno" ; then
-			if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-				LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-				LDFLAGS="$LDFLAGS -L${withval}/lib"
-				CPPFLAGS="$CPPFLAGS -I${withval}/include"
-			else
-				LD_RUN_PATH="/usr/local/lib:/opt/openssl/lib:/usr/local/ssl/lib:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
-				LDFLAGS="$LDFLAGS -L/usr/local/lib -L/opt/openssl/lib"
-				CPPFLAGS="$CPPFLAGS -I/usr/local/include -I/opt/openssl/include"
-			fi
+[AS_HELP_STRING(--with-openssl,specify OpenSSL location)],
+[
+	if test "x$withval" != "xno" ; then
+		if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+			LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+			LDFLAGS="$LDFLAGS -L${withval}/lib"
+			CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		else
+			LD_RUN_PATH="/usr/local/lib:/opt/openssl/lib:/usr/local/ssl/lib:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+			LDFLAGS="$LDFLAGS -L/usr/local/lib -L/opt/openssl/lib"
+			CPPFLAGS="$CPPFLAGS -I/usr/local/include -I/opt/openssl/include"
 		fi
-		REQUIRE_ENCRYPTION="yes"
-	])
-fi
+	fi
+	REQUIRE_ENCRYPTION="yes"
+])
 
 AC_ARG_ENABLE(iconv,
 [AS_HELP_STRING(--disable-iconv,do not use iconv() for text conversions)],
@@ -197,7 +196,7 @@ AC_ARG_ENABLE(unstable,
 
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
-	DB_DRIVERS="mysql pgsql odbc mssql sqlite"
+	DB_DRIVERS=" mysql pgsql odbc mssql sqlite"
 	MODULES="libnxsnmp libnxsl server agent libnxmap libnxcl nxevent nxpush nxreport nxmibc console nxhttpd nxscript"
 	SUBAGENT_DIRS="linux freebsd openbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
@@ -213,7 +212,7 @@ AC_ARG_WITH(dist,
 #--------------------------------------------------------------------
 
 check_substr "$COMPONENTS" "static-agent"
-if [ $? -eq 0 ]; then
+if test $? = 0; then
 	if test "x$COMPONENTS" != "x static-agent"; then
 		AC_MSG_ERROR(Static agent and other components are mutally exclusive.)
 	fi
@@ -261,7 +260,7 @@ if [ $? -eq 0 ]; then
 fi
 
 check_substr "$COMPONENTS" "ipso-agent"
-if [ $? -eq 0 ]; then
+if test $? = 0; then
 	if test "x$COMPONENTS" != "x static-agent"; then
 		AC_MSG_ERROR(IPSO agent and other components are mutally exclusive.)
 	fi
@@ -277,7 +276,7 @@ if [ $? -eq 0 ]; then
 fi
 
 check_substr "$COMPONENTS" "server"
-if [ $? -eq 0 ]; then
+if test $? = 0; then
 	if test "x$DBDRIVER_SELECTED" != "xyes"; then
 		AC_MSG_ERROR(You must select at least one database driver when building server.)
 	fi
@@ -289,44 +288,68 @@ if [ $? -eq 0 ]; then
 fi
 
 check_substr "$COMPONENTS" "client"
-if [ $? -eq 0 ]; then
+if test $? = 0; then
 	BUILD_CLIENT="yes"
 	NEED_ZLIB="yes"
 	MODULES="$MODULES libnxmap libnxcl nxevent nxpush nxreport console"
 fi
 
 check_substr "$COMPONENTS" "agent"
-if [ $? -eq 0 ]; then
+if test $? = 0; then
 	BUILD_AGENT="yes"
 	MODULES="$MODULES agent"
 	if test "x$ENABLE_UNSTABLE" = "xyes"; then
 		UNSTABLE_SUBAGENT_DIRS="logscan"
 	fi
+
+	case "$PLATFORM" in
+		Linux)
+			SUBAGENT_DIRS="linux"
+			;;
+		FreeBSD)
+			SUBAGENT_DIRS="freebsd"
+			;;
+		OpenBSD)
+			SUBAGENT_DIRS="openbsd"
+			;;
+		SunOS)
+			SUBAGENT_DIRS="sunos"
+			;;
+		AIX)
+			SUBAGENT_DIRS="aix"
+			;;
+		HP-UX)
+			SUBAGENT_DIRS="hpux"
+			;;
+		*)
+			# unknown
+			;;
+	esac
 fi
 
 check_substr "$COMPONENTS" "nxhttpd"
-if [ $? -eq 0 ]; then
+if test $? = 0; then
 	BUILD_NXHTTPD="yes"
 	MODULES="$MODULES libnxmap libnxcl nxhttpd"
 fi
 
 check_substr "$COMPONENTS" "mysql"
-if [ $? -eq 0 ]; then
+if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS mysql"
 fi
 
 check_substr "$COMPONENTS" "pgsql"
-if [ $? -eq 0 ]; then
+if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS pgsql"
 fi
 
 check_substr "$COMPONENTS" "sqlite"
-if [ $? -eq 0 ]; then
+if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS sqlite"
 fi
 
 check_substr "$COMPONENTS" "odbc"
-if [ $? -eq 0 ]; then
+if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS odbc"
 fi
 
@@ -1066,7 +1089,7 @@ else
 	echo "Encryption enabled  : NO"
 fi
 if test "x${DB_DRIVERS}" != "x"; then
-	echo "Build DB-Drivers    : ${DB_DRIVERS}"
+	echo "Build DB-Drivers    :${DB_DRIVERS}"
 else
 	echo "Build DB-Drivers    : NO"
 fi

@@ -12,6 +12,6 @@ INCLUDES=-I@top_srcdir@/include
 
 bin_PROGRAMS = nxscript
 nxscript_SOURCES = class.cpp nxscript.cpp
-nxscript_LDADD = @PTHREAD_LIBS@ ../libnetxms/libnetxms.la ../libnxsl/libnxsl.la
+nxscript_LDADD = ../libnetxms/libnetxms.la ../libnxsl/libnxsl.la
 
 EXTRA_DIST = nxscript.dsp nxscript.dsw nxscript.h

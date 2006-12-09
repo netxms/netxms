@@ -12,6 +12,6 @@ INCLUDES=-I@top_srcdir@/include
 
 bin_PROGRAMS = nxpush
 nxpush_SOURCES = nxpush.cpp
-nxpush_LDADD = @PTHREAD_LIBS@ ../libnetxms/libnetxms.la ../libnxmap/libnxmap.la ../libnxcl/libnxcl.la
+nxpush_LDADD = ../libnetxms/libnetxms.la ../libnxmap/libnxmap.la ../libnxcl/libnxcl.la
 
 EXTRA_DIST = nxpush.dsp nxpush.dsw
