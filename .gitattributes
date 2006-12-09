@@ -1039,6 +1039,7 @@ src/libnxmap/main.cpp -text
 src/libnxmap/map.cpp -text
 src/libnxmap/objlist.cpp -text
 src/libnxmap/radial.cpp -text
+src/libnxmap/rt.cpp -text
 src/libnxmap/submap.cpp -text
 src/libnxmap/vertex.cpp -text
 src/libnxsl/Makefile.am -text
