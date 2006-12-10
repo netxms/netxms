@@ -30,7 +30,6 @@
 
 // Global output configuration
 static BOOL gs_bDebug = FALSE;
-static BOOL gs_bShowContainers = FALSE;
 static BOOL gs_dwRootObj = 0; // If it will stay 0 - we'll show all objects.
 
 // Session is used in many places, so we keep it global to avoid parameter passing overhead
@@ -261,14 +260,13 @@ int main(int argc, char *argv[])
    // Parse command line
    // 
    opterr = 1;
-   while((ch = getopt(argc, argv, "cdho:p:P:u:vw:")) != -1)
+   while((ch = getopt(argc, argv, "dho:p:P:u:vw:")) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
-            _tprintf("Usage: nxreport [<options>] <server> <event_id> [<param_1> [... <param_N>]]\n"
+            _tprintf("Usage: nxreport [<options>] <server> \n"
 							"Valid options are:\n"
-							"   -c            : Show container objects too. Default is not to show.\n"
 							"   -d            : Turn on debug mode.\n"
 							"   -h            : Display help and exit.\n"
 							"   -o <obj_id>   : Specify report's root object. Default is %d (show all).\n"
@@ -280,9 +278,6 @@ int main(int argc, char *argv[])
 							"\n", gs_dwRootObj, wServerPort,szLogin,dwTimeOut);
             bStart = FALSE;
             break;
-	 case 'c':
-	    gs_bShowContainers = TRUE;
-	    break;
          case 'd':
             gs_bDebug = TRUE;
             break;
