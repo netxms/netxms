@@ -257,6 +257,7 @@ public:
 	afx_msg void OnToolsChangepassword();
 	afx_msg void OnControlpanelAgentconfigs();
 	afx_msg void OnControlpanelNetworkdiscovery();
+	afx_msg void OnToolsCreatemp();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

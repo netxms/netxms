@@ -89,6 +89,9 @@ void CObjectDepView::Refresh()
    nxObjList list;
    RECT rect;
 
+   if (m_pObject == NULL)
+      return;
+
    GetClientRect(&rect);
 
    pMap = new nxMap(0, 0, m_pObject->szName, _T("Dependency map"));

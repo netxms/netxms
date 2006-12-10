@@ -137,6 +137,7 @@ IDI_HOME                ICON    DISCARDABLE     "icons\\home.ico"
 IDI_CONFIGS             ICON    DISCARDABLE     "icons\\configs.ico"
 IDI_DISCOVERY           ICON    DISCARDABLE     "icons\\discovery.ico"
 IDI_EXIT                ICON    DISCARDABLE     "icons\\exit.ico"
+IDI_TEMPLATE_ROOT       ICON    DISCARDABLE     "icons\\template_root.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -219,6 +220,8 @@ BEGIN
         MENUITEM "SNMP &walk...\tCtrl+Shift+F11", ID_TOOLS_SNMPWALK
         MENUITEM SEPARATOR
         MENUITEM "&Change password...",         ID_TOOLS_CHANGEPASSWORD
+        MENUITEM SEPARATOR
+        MENUITEM "Create management &pack...",  ID_TOOLS_CREATEMP
     END
     POPUP "&Help"
     BEGIN
@@ -2816,6 +2819,29 @@ BEGIN
     LTEXT           "Mask",IDC_STATIC_MASK,7,64,18,8
 END
 
+IDD_CREATE_MP DIALOGEX 0, 0, 290, 255
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create Management Pack"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_FILE,7,16,221,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IDC_BUTTON_BROWSE,233,16,50,14
+    EDITTEXT        IDC_EDIT_DESCRIPTION,7,45,276,14,ES_AUTOHSCROLL
+    CONTROL         "Tree1",IDC_TREE_CONTENT,"SysTreeView32",TVS_HASBUTTONS | 
+                    TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | 
+                    TVS_INFOTIP | WS_TABSTOP,7,76,276,123,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Add &event...",IDC_BUTTON_ADD_EVENT,7,203,66,14
+    PUSHBUTTON      "Add &template...",IDC_BUTTON_ADD_TEMPLATE,77,203,66,14
+    PUSHBUTTON      "Add &SNMP trap...",IDC_BUTTON_ADD_TRAP,147,203,66,14
+    PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,217,203,66,14
+    DEFPUSHBUTTON   "OK",IDOK,177,234,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,233,234,50,14
+    LTEXT           "File name",IDC_STATIC,7,7,31,8
+    LTEXT           "Description",IDC_STATIC,7,35,36,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,224,276,1
+    LTEXT           "Content",IDC_STATIC,7,65,26,8
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -3458,6 +3484,14 @@ BEGIN
         RIGHTMARGIN, 166
         TOPMARGIN, 7
         BOTTOMMARGIN, 88
+    END
+
+    IDD_CREATE_MP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 283
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 248
     END
 END
 #endif    // APSTUDIO_INVOKED

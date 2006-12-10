@@ -1607,6 +1607,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetObjectComments(NXC_SESSION hSession,
 DWORD LIBNXCL_EXPORTABLE NXCUpdateObjectComments(NXC_SESSION hSession,
                                                  DWORD dwObjectId, TCHAR *pszText);
 BOOL LIBNXCL_EXPORTABLE NXCIsParent(NXC_SESSION hSession, DWORD dwParent, DWORD dwChild);
+DWORD LIBNXCL_EXPORTABLE NXCGetDCIEventsList(NXC_SESSION hSession, DWORD dwObjectId,
+                                             DWORD **ppdwList, DWORD *pdwListSize);
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_SESSION hSession, NXC_CC_LIST **ppList);
 void LIBNXCL_EXPORTABLE NXCDestroyCCList(NXC_CC_LIST *pList);

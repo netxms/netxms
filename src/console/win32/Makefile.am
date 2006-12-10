@@ -31,6 +31,8 @@ EXTRA_DIST = \
 	ControlPanel.cpp ControlPanel.h \
 	CreateCondDlg.cpp CreateCondDlg.h \
 	CreateContainerDlg.cpp CreateContainerDlg.h \
+	CreateMPDlg.cpp CreateMPDlg.h \
+	CreateNetSrvDlg.cpp CreateNetSrvDlg.h \
 	CreateNodeDlg.cpp CreateNodeDlg.h \
 	CreateObjectDlg.cpp CreateObjectDlg.h \
 	CreateTemplateDlg.cpp CreateTemplateDlg.h \

@@ -1459,3 +1459,28 @@ void DCItem::NewFormula(TCHAR *pszFormula)
       m_pScript = NULL;
    }
 }
+
+
+//
+// Get list of used events
+//
+
+void DCItem::GetEventList(DWORD **ppdwList, DWORD *pdwSize)
+{
+   DWORD i, j;
+
+   Lock();
+
+   if (m_dwNumThresholds > 0)
+   {
+      *ppdwList = (DWORD *)realloc(*ppdwList, sizeof(DWORD) * (*pdwSize + m_dwNumThresholds));
+      j = *pdwSize;
+      *pdwSize += m_dwNumThresholds;
+      for(i = 0; i < m_dwNumThresholds; i++, j++)
+      {
+         (*ppdwList)[j] = m_ppThresholdList[i]->EventCode();
+      }
+   }
+
+   Unlock();
+}

@@ -209,6 +209,8 @@
 #define IDI_DISCOVERY                   339
 #define IDD_ADDR_ENTRY                  340
 #define IDI_EXIT                        341
+#define IDD_CREATE_MP                   342
+#define IDI_TEMPLATE_ROOT               343
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -569,6 +571,11 @@
 #define IDC_IPADDR2                     1414
 #define IDC_STATIC_MASK                 1415
 #define IDC_STATIC_ADDR                 1416
+#define IDC_TREE_CONTENT                1418
+#define IDC_BUTTON_ADD_EVENT            1422
+#define IDC_BUTTON_ADD_TEMPLATE         1423
+#define IDC_BUTTON_ADD_TRAP             1424
+#define IDC_BUTTON_BROWSE               1425
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -796,6 +803,7 @@
 #define ID_COMMENTS_SAVE                33043
 #define ID_ALARM_DETAILS                33044
 #define ID_CONTROLPANEL_NETWORKDISCOVERY 33046
+#define ID_TOOLS_CREATEMP               33047
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -805,9 +813,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        342
-#define _APS_NEXT_COMMAND_VALUE         33047
-#define _APS_NEXT_CONTROL_VALUE         1417
+#define _APS_NEXT_RESOURCE_VALUE        344
+#define _APS_NEXT_COMMAND_VALUE         33048
+#define _APS_NEXT_CONTROL_VALUE         1426
 #define _APS_NEXT_SYMED_VALUE           129
 #endif
 #endif

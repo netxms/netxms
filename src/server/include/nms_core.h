@@ -473,6 +473,7 @@ private:
    void GetAddrList(CSCPMessage *pRequest);
    void SetAddrList(CSCPMessage *pRequest);
    void ResetComponent(CSCPMessage *pRequest);
+   void SendDCIEventList(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.247 2006-12-01 17:02:13 victor Exp $ */
+/* $Id: session.cpp,v 1.248 2006-12-10 22:25:52 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -1005,6 +1005,9 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_RESET_COMPONENT:
             ResetComponent(pMsg);
+            break;
+         case CMD_GET_DCI_EVENTS_LIST:
+            SendDCIEventList(pMsg);
             break;
          default:
             // Pass message to loaded modules
@@ -7923,6 +7926,59 @@ void ClientSession::ResetComponent(CSCPMessage *pRequest)
    else
    {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   SendMessage(&msg);
+}
+
+
+//
+// Send list of events used by template's or node's DCIs
+//
+
+void ClientSession::SendDCIEventList(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+   DWORD *pdwEventList, dwCount;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         if ((pObject->Type() == OBJECT_NODE) ||
+             (pObject->Type() == OBJECT_TEMPLATE))
+         {
+            pdwEventList = ((Template *)pObject)->GetDCIEventsList(&dwCount);
+            if (pdwEventList != NULL)
+            {
+               msg.SetVariable(VID_NUM_EVENTS, dwCount);
+               msg.SetVariableToInt32Array(VID_EVENT_LIST, dwCount, pdwEventList);
+               free(pdwEventList);
+            }
+            else
+            {
+               msg.SetVariable(VID_NUM_EVENTS, (DWORD)0);
+            }
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
    SendMessage(&msg);

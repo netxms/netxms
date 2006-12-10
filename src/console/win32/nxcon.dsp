@@ -256,6 +256,10 @@ SOURCE=.\CreateContainerDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\CreateMPDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\CreateNetSrvDlg.cpp
 # End Source File
 # Begin Source File
@@ -790,6 +794,10 @@ SOURCE=.\CreateCondDlg.h
 # Begin Source File
 
 SOURCE=.\CreateContainerDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\CreateMPDlg.h
 # End Source File
 # Begin Source File
 
@@ -1590,6 +1598,10 @@ SOURCE=.\icons\sort_up.ico
 # Begin Source File
 
 SOURCE=.\icons\sortdown.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\template_root.ico
 # End Source File
 # Begin Source File
 

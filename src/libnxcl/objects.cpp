@@ -1618,3 +1618,46 @@ BOOL LIBNXCL_EXPORTABLE NXCIsParent(NXC_SESSION hSession, DWORD dwParent, DWORD 
    ((NXCL_Session *)hSession)->UnlockObjectIndex();
    return bRet;
 }
+
+
+//
+// Get list of events used by template's or node's DCIs
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetDCIEventsList(NXC_SESSION hSession, DWORD dwObjectId,
+                                             DWORD **ppdwList, DWORD *pdwListSize)
+{
+   DWORD dwRqId, dwResult;
+   CSCPMessage msg, *pResponse;
+
+   *ppdwList = NULL;
+   *pdwListSize = 0;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_GET_DCI_EVENTS_LIST);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwObjectId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwResult = pResponse->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+      {
+         *pdwListSize = pResponse->GetVariableLong(VID_NUM_EVENTS);
+         if (*pdwListSize > 0)
+         {
+            *ppdwList = (DWORD *)malloc(sizeof(DWORD) * (*pdwListSize));
+            pResponse->GetVariableInt32Array(VID_EVENT_LIST, *pdwListSize, *ppdwList);
+         }
+      }
+      delete pResponse;
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+   }
+   return dwResult;
+}

@@ -179,6 +179,30 @@ CREATE TABLE nodes
 
 
 /*
+** Clusters information
+*/
+
+CREATE TABLE clusters
+(
+	id integer not null,
+	cluster_type integer not null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;
+
+
+/*
+** Cluster members
+*/
+
+CREATE TABLE cluster_members
+(
+	cluster_id integer not null,
+	node_id integer not null,
+	PRIMARY KEY(cluster_id,node_id)
+) TABLE_TYPE;
+
+
+/*
 ** Subnets
 */
 

@@ -66,6 +66,7 @@
 #include "AlarmBrowser.h"
 #include "ObjectBrowser.h"
 #include "DataCollectionEditor.h"
+#include "CreateMPDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -120,6 +121,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_TOOLS_CHANGEPASSWORD, OnToolsChangepassword)
 	ON_COMMAND(ID_CONTROLPANEL_AGENTCONFIGS, OnControlpanelAgentconfigs)
 	ON_COMMAND(ID_CONTROLPANEL_NETWORKDISCOVERY, OnControlpanelNetworkdiscovery)
+	ON_COMMAND(ID_TOOLS_CREATEMP, OnToolsCreatemp)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -3197,4 +3199,25 @@ DWORD CConsoleApp::OpenAlarmList(NXC_ALARM **ppList)
 void CConsoleApp::CloseAlarmList()
 {
    MutexUnlock(m_mutexAlarmList);
+}
+
+
+//
+// "Tools -> Create management pack..." menu handler
+//
+
+void CConsoleApp::OnToolsCreatemp() 
+{
+   CCreateMPDlg dlg;
+   FILE *pf;
+
+   if (dlg.DoModal() != IDOK)
+      return;
+
+   pf = _tfopen(dlg.m_strFile, _T("w"));
+   if (pf != NULL)
+   {
+      _ftprintf(pf, _T("NXMP\n{\n\tVERSION=1;\n\tDESCRIPTION=\"%s\";\n}\n\n"));
+      fclose(pf);
+   }
 }

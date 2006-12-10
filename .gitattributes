@@ -645,6 +645,8 @@ src/console/win32/CreateCondDlg.cpp -text
 src/console/win32/CreateCondDlg.h -text
 src/console/win32/CreateContainerDlg.cpp -text
 src/console/win32/CreateContainerDlg.h -text
+src/console/win32/CreateMPDlg.cpp -text
+src/console/win32/CreateMPDlg.h -text
 src/console/win32/CreateNetSrvDlg.cpp -text
 src/console/win32/CreateNetSrvDlg.h -text
 src/console/win32/CreateNodeDlg.cpp -text
@@ -929,6 +931,7 @@ src/console/win32/icons/setup.ico -text
 src/console/win32/icons/sms.ico -text
 src/console/win32/icons/sort_up.ico -text
 src/console/win32/icons/sortdown.ico -text
+src/console/win32/icons/template_root.ico -text
 src/console/win32/icons/trap.ico -text
 src/console/win32/icons/tree.ico -text
 src/console/win32/icons/unsupported.ico -text

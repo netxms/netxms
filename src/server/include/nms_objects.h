@@ -353,6 +353,7 @@ public:
    void SetDCIModificationFlag(void) { m_bDCIListModified = TRUE; }
    void SendItemsToClient(ClientSession *pSession, DWORD dwRqId);
    BOOL IsLockedBySession(DWORD dwSessionId) { return m_dwDCILockStatus == dwSessionId; }
+   DWORD *GetDCIEventsList(DWORD *pdwCount);
 
    BOOL ApplyToNode(Node *pNode);
    void QueueUpdate(void);

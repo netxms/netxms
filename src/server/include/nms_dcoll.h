@@ -235,6 +235,8 @@ public:
    void UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId);
 
    void CleanData(void);
+
+   void GetEventList(DWORD **ppdwList, DWORD *pdwSize);
 };
 
 

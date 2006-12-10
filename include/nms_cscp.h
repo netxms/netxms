@@ -430,6 +430,7 @@ typedef struct
 #define CMD_GET_ADDR_LIST           0x00BC
 #define CMD_SET_ADDR_LIST           0x00BD
 #define CMD_RESET_COMPONENT         0x00BE
+#define CMD_GET_DCI_EVENTS_LIST     0x00BF
 
 
 //
@@ -690,6 +691,7 @@ typedef struct
 #define VID_ADDR_LIST_TYPE          ((DWORD)252)
 #define VID_COMPONENT_ID            ((DWORD)253)
 #define VID_SYNC_COMMENTS           ((DWORD)254)
+#define VID_EVENT_LIST              ((DWORD)255)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

@@ -710,3 +710,40 @@ void Template::QueueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI)
    g_pTemplateUpdateQueue->Put(pInfo);
    UnlockData();
 }
+
+
+//
+// Get list of events used by DCIs
+//
+
+DWORD *Template::GetDCIEventsList(DWORD *pdwCount)
+{
+   DWORD i, j, *pdwList;
+   DCItem *pItem = NULL;
+
+   pdwList = NULL;
+   *pdwCount = 0;
+
+   LockData();
+   for(i = 0; i < m_dwNumItems; i++)
+   {
+      m_ppItems[i]->GetEventList(&pdwList, pdwCount);
+   }
+   UnlockData();
+
+   // Clean list from duplicates
+   for(i = 0; i < *pdwCount; i++)
+   {
+      for(j = i + 1; j < *pdwCount; j++)
+      {
+         if (pdwList[i] == pdwList[j])
+         {
+            (*pdwCount)--;
+            memmove(&pdwList[j], &pdwList[j + 1], sizeof(DWORD) * (*pdwCount - j));
+            j--;
+         }
+      }
+   }
+
+   return pdwList;
+}
