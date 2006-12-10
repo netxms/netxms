@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.226 2006-12-09 21:02:09 victor Exp $
+# $Id: configure.ac,v 1.227 2006-12-10 00:33:41 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -52,8 +52,6 @@ UNSTABLE_SUBAGENT_DIRS=""
 SERVER_TOOLS=""
 TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
-
-CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
 
 
 #--------------------------------------------------------------------
@@ -904,6 +902,39 @@ fi
 if test $ac_cv_sizeof_wchar_t -eq 2; then
 	AC_DEFINE(HAVE_USEABLE_WCHAR_T, 1, Define to 1 if you have useable wchar_t)
 fi
+
+
+#--------------------------------------------------------------------
+# MySQL
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "mysql"
+if test $? = 0; then
+	AC_CHECK_LIB(mysqlclient, mysql_init, ,
+		[AC_MSG_ERROR(libmysqlclient is requred for MySQL support)])
+			AC_MSG_CHECKING(whether mysql clients can run)
+			AC_RUN_IFELSE([AC_LANG_SOURCE([[
+			#include <stdio.h>
+			#include <mysql.h>    
+			int main(void)
+			{
+				MYSQL *a = mysql_init(NULL);
+				return 0;
+			}
+			]])],[],[
+				AC_MSG_RESULT(no)
+				AC_MSG_ERROR(Your MySQL client libraries aren't properly installed)
+		],[])
+	AC_MSG_RESULT(yes)
+	AC_CHECK_FUNCS(mysql_real_escape_string)
+fi
+
+
+#--------------------------------------------------------------------
+# Other settings
+#--------------------------------------------------------------------
+
+CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
 
 
 #--------------------------------------------------------------------
