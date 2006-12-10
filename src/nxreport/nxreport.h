@@ -28,5 +28,6 @@
 #include <getopt.h>
 #include <nxclapi.h>
 #include "nx_strict_tree.h"
+#include "tags.h"
 
 #endif

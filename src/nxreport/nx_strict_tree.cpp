@@ -1,3 +1,5 @@
+
+
 /*
 ** NetXMS - Network Management System
 ** Command line event sender
@@ -116,19 +118,21 @@ TREE_ITEM *StrictTree::FindObjectInTree(DWORD dwObjId)
 BOOL StrictTree::LoadTree()
 {
   DWORD i, dwIdx;
+  NXC_OBJECT *oRes;
 
   if (m_dwTreeIndexSize != 1)
 	return FALSE;
 
   for (dwIdx=0; dwIdx < m_dwTreeIndexSize; dwIdx++)
-  {
+  { 
     for (i=0; i < m_pTreeIndex[dwIdx].pTreeItem->pObject->dwNumChilds; i++)
-        AddItem(NXCFindObjectById(m_hSession, m_pTreeIndex[dwIdx].pTreeItem->pObject->pdwChildList[i]));
+            AddItem(NXCFindObjectById(m_hSession, m_pTreeIndex[dwIdx].pTreeItem->pObject->pdwChildList[i]));
   };
 
   // This step is very important. 
   // After this sorting we cant walk throw whole tree by just incrementing current index.
   qsort(m_pTreeIndex, m_dwTreeIndexSize, sizeof(TREE_INDEX_ITEM), &SortCompareForWalking);
+  
   return TRUE;
 };
 
@@ -165,6 +169,7 @@ BOOL StrictTree::AddItem(NXC_OBJECT *pObject)
   }
   else // in all other cases object is inserted only if parent is present in tree and don't have this child yet.
   { 
+    bSucceeded=FALSE;
     for (i=0; i < pObject->dwNumParents; i++)
     {
 	pParent=FindObjectInTree(pObject->pdwParentList[i]);
@@ -190,7 +195,7 @@ BOOL StrictTree::AddItem(NXC_OBJECT *pObject)
   	      pParent->pChildList=pChilds;
 	      pParent->pChildList[pParent->dwChildCount] = pNew;
               pParent->dwChildCount++;
-	      m_dwTreeIndexSize++;
+	      if (!bSucceeded)  m_dwTreeIndexSize++;
 	      bSucceeded = TRUE;
 	    }
 	    else 
@@ -199,31 +204,34 @@ BOOL StrictTree::AddItem(NXC_OBJECT *pObject)
 	      bSucceeded = FALSE;
 	    }
 	  };
-	};
+	};  
+	
     };
+    
+ 
   }
 
   // if we created new Tree Item - register it also in tree index.
   if (bSucceeded)
-  {
+  { 
     pTmpIdx = (TREE_INDEX_ITEM *) realloc(m_pTreeIndex, sizeof(TREE_INDEX_ITEM) * m_dwTreeIndexSize);
     if (pTmpIdx != NULL) 
-    {
-	m_pTreeIndex = pTmpIdx;	
+      {
+        m_pTreeIndex = pTmpIdx;	
         m_pTreeIndex[m_dwTreeIndexSize-1].dwObjId=pObject->dwId;
         m_pTreeIndex[m_dwTreeIndexSize-1].pTreeItem=pNew;
-	bSucceeded = TRUE;
-    }
-    else
-    {   // Failed to extend index. Rollback.
-	m_dwTreeIndexSize--;
-	pNew->pParent->dwChildCount--;
- 	// I suppose that realloc to smaller size will always succeed.
-	pNew->pParent->pChildList = (TREE_ITEM **) realloc(pNew->pParent->pChildList,pNew->pParent->dwChildCount*sizeof(TREE_ITEM *));
-	bSucceeded = FALSE;
-    };
-  };
-
+        bSucceeded = TRUE;
+      }
+      else
+      {   // Failed to extend index. Rollback.
+        m_dwTreeIndexSize--;
+        pNew->pParent->dwChildCount--;
+        // I suppose that realloc to smaller size will always succeed.
+        pNew->pParent->pChildList = (TREE_ITEM **) realloc(pNew->pParent->pChildList,pNew->pParent->dwChildCount*sizeof(TREE_ITEM *));
+        bSucceeded = FALSE;
+      };
+  }; 
+  
   return bSucceeded;
 };
 

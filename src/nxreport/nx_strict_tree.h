@@ -41,7 +41,7 @@ struct TREE_ITEM
 
 struct TREE_INDEX_ITEM
 {
-	DWORD			dwObjId;
+	DWORD		dwObjId;
 	TREE_ITEM	*pTreeItem;
 };	
 
