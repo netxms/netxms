@@ -431,6 +431,7 @@ typedef struct
 #define CMD_SET_ADDR_LIST           0x00BD
 #define CMD_RESET_COMPONENT         0x00BE
 #define CMD_GET_DCI_EVENTS_LIST     0x00BF
+#define CMD_CREATE_MGMT_PACK        0x00C0
 
 
 //
@@ -692,6 +693,9 @@ typedef struct
 #define VID_COMPONENT_ID            ((DWORD)253)
 #define VID_SYNC_COMMENTS           ((DWORD)254)
 #define VID_EVENT_LIST              ((DWORD)255)
+#define VID_NUM_TRAPS               ((DWORD)256)
+#define VID_TRAP_LIST               ((DWORD)257)
+#define VID_NXMP_CONTENT            ((DWORD)258)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

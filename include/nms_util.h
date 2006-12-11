@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.96 2006-11-03 08:58:56 victor Exp $ */
+/* $Id: nms_util.h,v 1.97 2006-12-11 21:19:27 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -215,6 +215,32 @@ public:
    double GetAsDouble(int nRow, int nCol);
 };
 
+
+//
+// Dynamic string class
+//
+
+class LIBNETXMS_EXPORTABLE String
+{
+protected:
+   TCHAR *m_pszBuffer;
+   DWORD m_dwBufSize;
+
+public:
+   String();
+   ~String();
+
+   void SetBuffer(TCHAR *pszBuffer);
+
+   const String& operator =(TCHAR *pszStr);
+   const String&  operator +=(TCHAR *pszStr);
+   operator TCHAR*() { return CHECK_NULL_EX(m_pszBuffer); }
+
+   void AddFormattedString(TCHAR *pszFormat, ...);
+   void EscapeCharacter(int ch, int esc);
+   void Translate(TCHAR *pszSrc, TCHAR *pszDst);
+};
+
 #endif   /* __cplusplus */
 
 
@@ -371,6 +397,7 @@ extern "C"
    void LIBNETXMS_EXPORTABLE StrStrip(TCHAR *pszStr);
    BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *string, BOOL matchCase);
    TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(TCHAR *line, TCHAR *buffer);
+   int LIBNETXMS_EXPORTABLE NumChars(TCHAR *pszStr, int ch);
    BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName);
    BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName);
    void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, TCHAR *pszSubStr, TCHAR *pszReplace);
@@ -473,6 +500,11 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.96  2006/11/03 08:58:56  victor
+- Added utillity class "Table"
+- Changed defines for iconv() usage on NetWare
+- Semi-complete "alarm details" view
+
 Revision 1.95  2006/10/17 21:20:25  victor
 Finished Implementation of agent traps and added trap sending API for subagents
 

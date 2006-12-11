@@ -370,7 +370,7 @@ static BOOL LoadEvents(void)
    DWORD i;
    BOOL bSuccess = FALSE;
 
-   hResult = DBSelect(g_hCoreDB, "SELECT event_code,severity,flags,message,description FROM event_cfg ORDER BY event_code");
+   hResult = DBSelect(g_hCoreDB, "SELECT event_code,severity,flags,message,description,event_name FROM event_cfg ORDER BY event_code");
    if (hResult != NULL)
    {
       m_dwNumTemplates = DBGetNumRows(hResult);
@@ -384,6 +384,7 @@ static BOOL LoadEvents(void)
          DecodeSQLString(m_pEventTemplates[i].pszMessageTemplate);
          m_pEventTemplates[i].pszDescription = DBGetField(hResult, i, 4, NULL, 0);
          DecodeSQLString(m_pEventTemplates[i].pszDescription);
+         DBGetField(hResult, i, 5, m_pEventTemplates[i].szName, MAX_EVENT_NAME);
       }
 
       DBFreeResult(hResult);
@@ -624,4 +625,78 @@ void ResendEvents(Queue *pQueue)
          break;
       g_pEventQueue->Put(pEvent);
    }
+}
+
+
+//
+// Create NXMP record for event
+//
+
+void CreateNXMPEventRecord(String &str, DWORD dwCode)
+{
+   EVENT_TEMPLATE *p;
+   String strText, strDescr;
+
+   RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
+
+   // Find event template
+   if (m_dwNumTemplates > 0)    // Is there any templates?
+   {
+      p = FindEventTemplate(dwCode);
+      if (p != NULL)
+      {
+         strText = p->pszMessageTemplate;
+         EscapeString(strText);
+
+         strDescr = p->pszDescription;
+         EscapeString(strDescr);
+
+         str.AddFormattedString(_T("\tEVENT %s\n\t{\n")
+                                _T("\t\tCODE=%d;\n")
+                                _T("\t\tSEVERITY=%d;\n")
+                                _T("\t\tFLAGS=%d;\n")
+                                _T("\t\tTEXT=\"%s\";\n")
+                                _T("\t\tDESCRIPTION=\"%s\";\n")
+                                _T("\t}\n"),
+                                p->szName, p->dwCode, p->dwSeverity,
+                                p->dwFlags, (TCHAR *)strText, (TCHAR *)strDescr);
+      }
+   }
+
+   RWLockUnlock(m_rwlockTemplateAccess);
+}
+
+
+//
+// Resolve event name
+//
+
+BOOL ResolveEventName(DWORD dwCode, TCHAR *pszBuffer)
+{
+   EVENT_TEMPLATE *p;
+   BOOL bRet = FALSE;
+
+   RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
+
+   // Find event template
+   if (m_dwNumTemplates > 0)    // Is there any templates?
+   {
+      p = FindEventTemplate(dwCode);
+      if (p != NULL)
+      {
+         _tcscpy(pszBuffer, p->szName);
+         bRet = TRUE;
+      }
+      else
+      {
+         _tcscpy(pszBuffer, _T("UNKNOWN_EVENT"));
+      }
+   }
+   else
+   {
+      _tcscpy(pszBuffer, _T("UNKNOWN_EVENT"));
+   }
+
+   RWLockUnlock(m_rwlockTemplateAccess);
+   return bRet;
 }

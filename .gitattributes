@@ -997,6 +997,7 @@ src/libnetxms/scandir.c -text
 src/libnetxms/serial.cpp -text
 src/libnetxms/sha1.cpp -text
 src/libnetxms/sha1.h -text
+src/libnetxms/string.cpp -text
 src/libnetxms/strtoll.c -text
 src/libnetxms/strtoull.c -text
 src/libnetxms/table.cpp -text
@@ -1024,6 +1025,7 @@ src/libnxcl/lpp.cpp -text
 src/libnxcl/main.cpp -text
 src/libnxcl/map.cpp -text
 src/libnxcl/mib.cpp -text
+src/libnxcl/mp.cpp -text
 src/libnxcl/objects.cpp -text
 src/libnxcl/objtools.cpp -text
 src/libnxcl/package.cpp -text

@@ -44,6 +44,7 @@ struct EVENT_TEMPLATE
    DWORD dwFlags;
    TCHAR *pszMessageTemplate;
    TCHAR *pszDescription;
+   TCHAR szName[MAX_EVENT_NAME];
 };
 
 
@@ -185,6 +186,8 @@ void ResendEvents(Queue *pQueue);
 void ReloadEvents(void);
 void DeleteEventTemplateFromList(DWORD dwEventCode);
 void CorrelateEvent(Event *pEvent);
+void CreateNXMPEventRecord(String &str, DWORD dwCode);
+BOOL ResolveEventName(DWORD dwCode, TCHAR *pszBuffer);
 
 
 //

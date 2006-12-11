@@ -136,6 +136,8 @@ public:
    DWORD RequiredCacheSize(void) { return (m_iFunction == F_LAST) ? 0 : m_iParam1; }
 
    BOOL Compare(Threshold *pThr);
+
+   void CreateNXMPRecord(String &str);
 };
 
 
@@ -237,6 +239,7 @@ public:
    void CleanData(void);
 
    void GetEventList(DWORD **ppdwList, DWORD *pdwSize);
+   void CreateNXMPRecord(String &str);
 };
 
 

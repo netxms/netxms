@@ -648,3 +648,29 @@ BOOL Threshold::Compare(Threshold *pThr)
           (pThr->m_iParam1 == m_iParam1) &&
           (pThr->m_iParam2 == m_iParam2);
 }
+
+
+//
+// Create management pack record
+//
+
+void Threshold::CreateNXMPRecord(String &str)
+{
+   TCHAR szEvent1[MAX_EVENT_NAME], szEvent2[MAX_EVENT_NAME];
+   String strValue;
+
+   strValue = (TCHAR *)m_value.String();
+   ResolveEventName(m_dwEventCode, szEvent1);
+   ResolveEventName(m_dwRearmEventCode, szEvent2);
+   str.AddFormattedString(_T("\t\t\t\t\tTHRESHOLD\n\t\t\t\t\t{\n")
+                          _T("\t\t\t\t\t\tFUNCTION=%d;\n")
+                          _T("\t\t\t\t\t\tCONDITION=%d;\n")
+                          _T("\t\t\t\t\t\tVALUE=\"%s\";\n")
+                          _T("\t\t\t\t\t\tACTIVATION_EVENT=\"%s\";\n")
+                          _T("\t\t\t\t\t\tDEACTIVATION_EVENT=\"%s\";\n")
+                          _T("\t\t\t\t\t\tPARAM1=%d;\n")
+                          _T("\t\t\t\t\t\tPARAM2=%d;\n")
+                          _T("\t\t\t\t\t}\n"),
+                          m_iFunction, m_iOperation, (TCHAR *)strValue,
+                          szEvent1, szEvent2, m_iParam1, m_iParam2);
+}

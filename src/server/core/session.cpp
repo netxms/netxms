@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.248 2006-12-10 22:25:52 victor Exp $ */
+/* $Id: session.cpp,v 1.249 2006-12-11 21:19:30 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -1008,6 +1008,9 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_GET_DCI_EVENTS_LIST:
             SendDCIEventList(pMsg);
+            break;
+         case CMD_CREATE_MGMT_PACK:
+            CreateManagementPack(pMsg);
             break;
          default:
             // Pass message to loaded modules
@@ -7979,6 +7982,107 @@ void ClientSession::SendDCIEventList(CSCPMessage *pRequest)
    else
    {
       msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   SendMessage(&msg);
+}
+
+
+//
+// Create management pack
+//
+
+void ClientSession::CreateManagementPack(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD i, dwCount, dwNumTemplates;
+   DWORD *pdwList, *pdwTemplateList;
+   NetObj *pObject;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   if ((m_dwSystemAccess & (SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_VIEW_EVENT_DB)) == (SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_VIEW_EVENT_DB))
+   {
+      dwNumTemplates = pRequest->GetVariableLong(VID_NUM_OBJECTS);
+      if (dwNumTemplates > 0)
+      {
+         pdwTemplateList = (DWORD *)malloc(sizeof(DWORD) * dwNumTemplates);
+         pRequest->GetVariableInt32Array(VID_OBJECT_LIST, dwNumTemplates, pdwTemplateList);
+      }
+      else
+      {
+         pdwTemplateList = NULL;
+      }
+
+      for(i = 0; i < dwNumTemplates; i++)
+      {
+         pObject = FindObjectById(pdwTemplateList[i]);
+         if (pObject != NULL)
+         {
+            if (pObject->Type() == OBJECT_TEMPLATE)
+            {
+               if (!pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+               {
+                  msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+                  break;
+               }
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+               break;
+            }
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+            break;
+         }
+      }
+
+      if (i == dwNumTemplates)   // All objects passed test
+      {
+         String str, temp;
+
+         str = _T("NXMP\n{\n\tVERSION=1;\n\tDESCRIPTION=\"");
+         temp.SetBuffer(pRequest->GetVariableStr(VID_DESCRIPTION));
+         EscapeString(temp);
+         str += (TCHAR *)temp;
+         str += _T("\";\n}\n\n");
+
+         // Write events
+         str += _T("EVENTS\n{\n");
+         dwCount = pRequest->GetVariableLong(VID_NUM_EVENTS);
+         pdwList = (DWORD *)malloc(sizeof(DWORD) * dwCount);
+         pRequest->GetVariableInt32Array(VID_EVENT_LIST, dwCount, pdwList);
+         for(i = 0; i < dwCount; i++)
+            CreateNXMPEventRecord(str, pdwList[i]);
+         safe_free(pdwList);
+         str += _T("}\n\n");
+
+         // Write templates
+         str += _T("TEMPLATES\n{\n");
+         for(i = 0; i < dwNumTemplates; i++)
+         {
+            pObject = FindObjectById(pdwTemplateList[i]);
+            if (pObject != NULL)
+            {
+               ((Template *)pObject)->CreateNXMPRecord(str);
+            }
+         }
+         str += _T("}\n\n");
+
+         // Put result into message
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         msg.SetVariable(VID_NXMP_CONTENT, (TCHAR *)str);
+      }
+
+      safe_free(pdwTemplateList);
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    SendMessage(&msg);

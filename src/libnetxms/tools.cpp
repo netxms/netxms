@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.56 2006-11-20 23:37:04 victor Exp $ */
+/* $Id: tools.cpp,v 1.57 2006-12-11 21:19:29 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
@@ -923,6 +923,22 @@ void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer)
    uname(&un);
    _stprintf(pszBuffer, _T("%s %s.%s"), un.sysname, un.version, un.release);
 #endif
+}
+
+
+//
+// Count number of characters in string
+//
+
+int LIBNETXMS_EXPORTABLE NumChars(TCHAR *pszStr, int ch)
+{
+   TCHAR *p;
+   int nCount;
+
+   for(p = pszStr, nCount = 0; *p != 0; p++)
+      if (*p == ch)
+         nCount++;
+   return nCount;
 }
 
 

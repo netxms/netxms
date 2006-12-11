@@ -474,6 +474,7 @@ private:
    void SetAddrList(CSCPMessage *pRequest);
    void ResetComponent(CSCPMessage *pRequest);
    void SendDCIEventList(CSCPMessage *pRequest);
+   void CreateManagementPack(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -626,6 +627,8 @@ DWORD DeleteObjectToolFromDB(DWORD dwToolId);
 DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg);
 
 void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_LOG_RECORD *pRec);
+
+void EscapeString(String &str);
 
 #ifdef _WIN32
 

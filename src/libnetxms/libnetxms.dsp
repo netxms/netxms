@@ -323,6 +323,10 @@ SOURCE=.\sha1.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\string.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\strtoll.c
 # End Source File
 # Begin Source File

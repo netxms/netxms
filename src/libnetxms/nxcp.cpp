@@ -1,4 +1,4 @@
-/* $Id: nxcp.cpp,v 1.3 2006-11-14 19:49:36 victor Exp $ */
+/* $Id: nxcp.cpp,v 1.4 2006-12-11 21:19:29 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
@@ -229,10 +229,12 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_PUSH_DCI_DATA"),
       _T("CMD_GET_ADDR_LIST"),
       _T("CMD_SET_ADDR_LIST"),
-      _T("CMD_RESET_COMPONENT")
+      _T("CMD_RESET_COMPONENT"),
+      _T("CMD_GET_DCI_EVENTS_LIST"),
+      _T("CMD_CREATE_MGMT_PACK")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_RESET_COMPONENT))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_CREATE_MGMT_PACK))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _stprintf(pszBuffer, _T("CMD_UNKNOWN(%d)"), wCode);

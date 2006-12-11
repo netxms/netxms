@@ -1808,6 +1808,12 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveAgentConfig(NXC_SESSION hSession, NXC_AGENT_CONF
 DWORD LIBNXCL_EXPORTABLE NXCDeleteAgentConfig(NXC_SESSION hSession, DWORD dwCfgId);
 DWORD LIBNXCL_EXPORTABLE NXCSwapAgentConfigs(NXC_SESSION hSession, DWORD dwCfgId1, DWORD dwCfgId2);
 
+DWORD LIBNXCL_EXPORTABLE NXCCreateMPFile(NXC_SESSION hSession, TCHAR *pszDescr,
+                                         DWORD dwNumEvents, DWORD *pdwEventList,
+                                         DWORD dwNumTemplates, DWORD *pdwTemplateList,
+                                         DWORD dwNumTraps, DWORD *pdwTrapList,
+                                         TCHAR **ppszContent);
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,6 +1,6 @@
 /* 
-** Project X - Network Management System
-** Copyright (C) 2003 Victor Kirhenshtein
+** NetXMS - Network Management System
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: tools.cpp
+** File: tools.cpp
 **
 **/
 
@@ -345,4 +345,18 @@ void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, DWORD dwVarId, TCHAR *pszS
 {
    DecodeSQLString(pszStr);
    pMsg->SetVariable(dwVarId, pszStr);
+}
+
+
+//
+// Escape string
+//
+
+void EscapeString(String &str)
+{
+   str.EscapeCharacter(_T('\\'), _T('\\'));
+   str.EscapeCharacter(_T('"'), _T('\\'));
+   str.Translate(_T("\r"), _T("\\r"));
+   str.Translate(_T("\n"), _T("\\n"));
+   str.Translate(_T("\t"), _T("\\t"));
 }

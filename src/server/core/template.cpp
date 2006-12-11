@@ -747,3 +747,22 @@ DWORD *Template::GetDCIEventsList(DWORD *pdwCount)
 
    return pdwList;
 }
+
+
+//
+// Create management pack record
+//
+
+void Template::CreateNXMPRecord(String &str)
+{
+   DWORD i;
+
+   str.AddFormattedString(_T("\tTEMPLATE %s\n\t{\n\t\tDCI_LIST\n\t\t{\n"), m_szName);
+
+   LockData();
+   for(i = 0; i < m_dwNumItems; i++)
+      m_ppItems[i]->CreateNXMPRecord(str);
+   UnlockData();
+
+   str += _T("\t\t}\n\t}\n");
+}

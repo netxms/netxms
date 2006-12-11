@@ -395,6 +395,14 @@ static DWORD WINAPI RequestThread(void *pArg)
          dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
                                  pData->pArg4, pData->pArg5, pData->pArg6,
                                  pData->pArg7);
+      case 8:
+         dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
+                                 pData->pArg4, pData->pArg5, pData->pArg6,
+                                 pData->pArg7, pData->pArg8);
+      case 9:
+         dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
+                                 pData->pArg4, pData->pArg5, pData->pArg6,
+                                 pData->pArg7, pData->pArg8, pData->pArg9);
          break;
    }
    if (pData->hWnd != NULL)
@@ -591,6 +599,32 @@ DWORD DoRequestArg7(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
    rqData.pArg5 = pArg5;
    rqData.pArg6 = pArg6;
    rqData.pArg7 = pArg7;
+   rqData.pFunc = (DWORD (*)(...))pFunc;
+   return ExecuteRequest(&rqData, pszInfoText);
+}
+
+
+//
+// Perform request with 7 parameter
+//
+
+DWORD DoRequestArg9(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
+                    void *pArg5, void *pArg6, void *pArg7, void *pArg8, void *pArg9,
+                    TCHAR *pszInfoText)
+{
+   RqData rqData;
+
+   rqData.hWnd = NULL;
+   rqData.dwNumParams = 9;
+   rqData.pArg1 = pArg1;
+   rqData.pArg2 = pArg2;
+   rqData.pArg3 = pArg3;
+   rqData.pArg4 = pArg4;
+   rqData.pArg5 = pArg5;
+   rqData.pArg6 = pArg6;
+   rqData.pArg7 = pArg7;
+   rqData.pArg8 = pArg8;
+   rqData.pArg9 = pArg9;
    rqData.pFunc = (DWORD (*)(...))pFunc;
    return ExecuteRequest(&rqData, pszInfoText);
 }

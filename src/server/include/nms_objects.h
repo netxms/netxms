@@ -358,6 +358,8 @@ public:
    BOOL ApplyToNode(Node *pNode);
    void QueueUpdate(void);
    void QueueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI);
+
+   void CreateNXMPRecord(String &str);
 };
 
 

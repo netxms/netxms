@@ -3209,15 +3209,51 @@ void CConsoleApp::CloseAlarmList()
 void CConsoleApp::OnToolsCreatemp() 
 {
    CCreateMPDlg dlg;
-   FILE *pf;
+   DWORD dwResult;
+   HANDLE hFile;
+   TCHAR *pszContent;
 
    if (dlg.DoModal() != IDOK)
       return;
 
-   pf = _tfopen(dlg.m_strFile, _T("w"));
-   if (pf != NULL)
+   dwResult = DoRequestArg9(NXCCreateMPFile, g_hSession, (void *)((LPCTSTR)dlg.m_strDescription),
+                            (void *)dlg.m_dwNumEvents, dlg.m_pdwEventList,
+                            (void *)dlg.m_dwNumTemplates, dlg.m_pdwTemplateList,
+                            (void *)dlg.m_dwNumTraps, dlg.m_pdwTrapList,
+                            &pszContent, _T("Creating management pack..."));
+   if (dwResult == RCC_SUCCESS)
    {
-      _ftprintf(pf, _T("NXMP\n{\n\tVERSION=1;\n\tDESCRIPTION=\"%s\";\n}\n\n"));
-      fclose(pf);
+      hFile = CreateFile(dlg.m_strFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+      if (hFile != INVALID_HANDLE_VALUE)
+      {
+#ifdef UNICODE
+         char *pszText;
+         int nLen;
+
+         nLen = wcslen(pszContent);
+         pszText = (char *)malloc(nLen * 2 + 1);
+         WideCharToMultiByte(CP_UTF8, 0, pszContent, -1, pszText, nLen * 2 + 1, NULL, NULL);
+         WriteFile(hFile, pszText, strlen(pszText), &dwResult, NULL);
+         free(pszText);
+#else
+         WriteFile(hFile, pszContent, _tcslen(pszContent), &dwResult, NULL);
+#endif
+         CloseHandle(hFile);
+
+         m_pMainWnd->MessageBox(_T("Management pack was successfully created"), _T("Success"), MB_OK | MB_ICONINFORMATION);
+      }
+      else
+      {
+         TCHAR szBuffer[1024];
+
+         _tcscpy(szBuffer, _T("Cannot create output file: "));
+         GetSystemErrorText(GetLastError(), &szBuffer[27], 990);
+         m_pMainWnd->MessageBox(szBuffer, _T("Error"), MB_OK | MB_ICONSTOP);
+      }
+      free(pszContent);
+   }
+   else
+   {
+      ErrorBox(dwResult, _T("Cannot create management pack: %s"));
    }
 }

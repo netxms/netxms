@@ -1484,3 +1484,60 @@ void DCItem::GetEventList(DWORD **ppdwList, DWORD *pdwSize)
 
    Unlock();
 }
+
+
+//
+// Create management pack record
+//
+
+void DCItem::CreateNXMPRecord(String &str)
+{
+   String strName, strDescr, strInstance, strTemp;
+   DWORD i;
+
+   Lock();
+   
+   strName = m_szName;
+   EscapeString(strName);
+
+   strDescr = m_szDescription;
+   EscapeString(strDescr);
+
+   strInstance = m_szInstance;
+   EscapeString(strInstance);
+
+   str.AddFormattedString(_T("\t\t\tDCI\n\t\t\t{\n")
+                          _T("\t\t\t\tNAME=\"%s\";\n")
+                          _T("\t\t\t\tDESCRIPTION=\"%s\";\n")
+                          _T("\t\t\t\tDATATYPE=%d;\n")
+                          _T("\t\t\t\tORIGIN=%d;\n")
+                          _T("\t\t\t\tINTERVAL=%d;\n")
+                          _T("\t\t\t\tRETENTION=%d;\n")
+                          _T("\t\t\t\tINSTANCE=\"%s\";\n")
+                          _T("\t\t\t\tALL_THRESHOLDS=%d;\n"),
+                          (TCHAR *)strName, (TCHAR *)strDescr,
+                          m_iDataType, m_iSource,
+                          m_iAdvSchedule ? 0 : m_iPollingInterval,
+                          m_iRetentionTime, (TCHAR *)strInstance,
+                          m_iProcessAllThresholds);
+   if (m_iAdvSchedule)
+   {
+      str += _T("\t\t\t\tSCHEDULE\n\t\t\t\t{\n");
+      for(i = 0; i < m_dwNumSchedules; i++)
+      {
+         strTemp = m_ppScheduleList[i];
+         EscapeString(strTemp);
+         str.AddFormattedString(_T("\t\t\t\t\t\"%s\";\n"));
+      }
+      str += _T("\t\t\t\t}\n");
+   }
+
+   str += _T("\t\t\t\tTHRESHOLDS\n\t\t\t\t{\n");
+   for(i = 0; i < m_dwNumThresholds; i++)
+   {
+      m_ppThresholdList[i]->CreateNXMPRecord(str);
+   }
+
+   Unlock();
+   str += _T("\t\t\t\t}\n\t\t\t}\n");
+}
