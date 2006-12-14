@@ -98,6 +98,8 @@ BEGIN_MESSAGE_MAP(CGraphFrame, CMDIChildWnd)
 	ON_COMMAND(ID_GRAPH_PRESETS_LASTYEAR, OnGraphPresetsLastyear)
 	ON_UPDATE_COMMAND_UI(ID_GRAPH_ZOOMOUT, OnUpdateGraphZoomout)
 	ON_COMMAND(ID_GRAPH_ZOOMOUT, OnGraphZoomout)
+	ON_COMMAND(ID_FILE_PRINT, OnFilePrint)
+	ON_COMMAND(ID_GRAPH_COPYTOCLIPBOARD, OnGraphCopytoclipboard)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
    ON_MESSAGE(NXCM_UPDATE_GRAPH_POINT, OnUpdateGraphPoint)
@@ -718,5 +720,112 @@ void CGraphFrame::OnGraphZoomChange(WPARAM nZoomLevel, LPARAM lParam)
    {
       m_wndStatusBar.SetText(_T(""), 2, 0);
       m_wndStatusBar.SetIcon(2, NULL);
+   }
+}
+
+
+//
+// WM_COMMAND::ID_FILE_PRINT message handler
+//
+
+void CGraphFrame::OnFilePrint() 
+{
+   CPrintDialog dlg(FALSE);
+   CDC dc;
+   HDC hdc;
+   DOCINFO docinfo;
+   RECT rect, rcGraph;
+   TCHAR szBuffer[1024];
+   int nLen, xmargin, ymargin;
+   double scale;
+   CBitmap bmp;
+
+   dlg.m_pd.hDevMode = CopyGlobalMem(theApp.GetDevMode());
+   dlg.m_pd.hDevNames = CopyGlobalMem(theApp.GetDevNames());
+   if (dlg.DoModal() == IDOK)
+   {
+      hdc = dlg.GetPrinterDC();
+      if (hdc == NULL)
+         return;
+
+      dc.Attach(hdc);
+      memset(&docinfo, 0, sizeof(DOCINFO));
+      docinfo.cbSize = sizeof(DOCINFO);
+      docinfo.lpszDocName = _T("NetXMS Graph");
+
+      if (dc.StartDoc(&docinfo) >= 0)
+      {
+         rect.left = 0;
+         rect.top = 0;
+         rect.right = dc.GetDeviceCaps(HORZRES);
+         rect.bottom = dc.GetDeviceCaps(VERTRES);
+         xmargin = rect.right * 10 / dc.GetDeviceCaps(HORZSIZE);  // 10mm margin
+         ymargin = rect.bottom * 10 / dc.GetDeviceCaps(VERTSIZE);  // 10mm margin
+         InflateRect(&rect, -xmargin * 2, -ymargin * 2);
+         if (dc.StartPage() >= 0)
+         {
+            // Print header
+            _sntprintf(szBuffer, 1024, _T("NetXMS History Graph - %s"), m_szSubTitle);
+            nLen = _tcslen(szBuffer);
+            dc.DrawText(szBuffer, nLen, &rect,
+                        DT_CENTER | DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE | DT_TOP);
+            rect.top += ymargin / 2 + dc.GetTextExtent(szBuffer, nLen).cy;
+
+            // Draw graph on in-memory bitmap and print it
+            memcpy(&rcGraph, &rect, sizeof(RECT));
+            OffsetRect(&rcGraph, -rcGraph.left, -rcGraph.top);
+            scale = max((double)rcGraph.right / 1024.0, (double)rcGraph.bottom / 1024.0);
+            if (scale > 0)
+            {
+               rcGraph.right = (LONG)((double)rcGraph.right / scale);
+               rcGraph.bottom = (LONG)((double)rcGraph.bottom / scale);
+            }
+            m_wndGraph.DrawGraphOnBitmap(bmp, rcGraph);
+            PrintBitmap(dc, bmp, &rect);
+
+            // Draw black frame around graph
+            InflateRect(&rect, xmargin / 4, ymargin / 4);
+            ::FrameRect(dc.m_hDC, &rect, (HBRUSH)GetStockObject(BLACK_BRUSH));
+
+            dc.EndPage();
+         }
+         else
+         {
+            MessageBox(_T("Print error: cannot start page"), _T("Error"), MB_OK | MB_ICONSTOP);
+         }
+         dc.EndDoc();
+      }
+      else
+      {
+         MessageBox(_T("Print error: cannot start document"), _T("Error"), MB_OK | MB_ICONSTOP);
+      }
+   }
+
+   SafeGlobalFree(dlg.m_pd.hDevMode);
+   SafeGlobalFree(dlg.m_pd.hDevNames);
+}
+
+
+//
+// Handler for "Copy to clipboard" menu
+//
+
+void CGraphFrame::OnGraphCopytoclipboard() 
+{
+   if (OpenClipboard())
+   {
+      if (EmptyClipboard())
+      {
+         SetClipboardData(CF_BITMAP, m_wndGraph.GetBitmap()->GetSafeHandle());
+      }
+      else
+      {
+         MessageBox(_T("Cannot empty clipboard"), _T("Error"), MB_OK | MB_ICONSTOP);
+      }
+      CloseClipboard();
+   }
+   else
+   {
+      MessageBox(_T("Cannot open clipboard"), _T("Error"), MB_OK | MB_ICONSTOP);
    }
 }

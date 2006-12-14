@@ -54,6 +54,7 @@ public:
 
 // Implementation
 public:
+	void DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect);
 	void Update(void);
 	BOOL m_bShowRuler;
 	void SetData(DWORD dwIndex, NXC_DCI_DATA *pData);
@@ -70,7 +71,6 @@ protected:
 	RECT m_rcSelection;
 	int NextMonthOffset(DWORD dwTimeStamp);
 	BOOL m_bIsActive;
-	void DrawGraphOnBitmap(void);
 	CBitmap m_bmpGraph;
 	CPoint m_ptCurrMousePos;
 	//{{AFX_MSG(CGraph)
@@ -106,6 +106,7 @@ public:
 	void ZoomOut(void);
 	void ZoomIn(RECT &rect);
    void SetDCIInfo(DCIInfo **ppInfo) { m_ppItems = ppInfo; }
+   CBitmap *GetBitmap(void) { return &m_bmpGraph; }
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -196,6 +196,7 @@ void CObjectView::SetCurrentObject(NXC_OBJECT *pObject)
          case OBJECT_CONTAINER:
          case OBJECT_SERVICEROOT:
             CreateTab(1, _T("Alarms"), 1, &m_wndAlarms);
+         case OBJECT_CONDITION:
             CreateTab(2, _T("Dependants"), 2, &m_wndDepView);
             break;
          default:

@@ -285,6 +285,13 @@ void DrawHeading(CDC &dc, TCHAR *pszText, CFont *pFont, RECT *pRect,
 
 
 //
+// Printing functions
+//
+
+void PrintBitmap(CDC &dc, CBitmap &bitmap, RECT *pRect);
+
+
+//
 // Image and image list functions
 //
 
@@ -326,6 +333,7 @@ HTREEITEM FindTreeCtrlItem(CTreeCtrl &ctrl, HTREEITEM hRoot, TCHAR *pszText);
 HTREEITEM FindTreeCtrlItemEx(CTreeCtrl &ctrl, HTREEITEM hRoot, DWORD dwData);
 void SaveListCtrlColumns(CListCtrl &wndListCtrl, TCHAR *pszSection, TCHAR *pszPrefix);
 void LoadListCtrlColumns(CListCtrl &wndListCtrl, TCHAR *pszSection, TCHAR *pszPrefix);
+HGLOBAL CopyGlobalMem(HGLOBAL hSrc);
 
 
 //
@@ -411,5 +419,17 @@ inline void UnlockActions(void)
 {
    ReleaseMutex(g_mutexActionListAccess);
 }
+
+
+//
+// Utility inline functions
+//
+
+inline void SafeGlobalFree(HGLOBAL hMem)
+{
+   if (hMem != NULL)
+      GlobalFree(hMem);
+}
+
 
 #endif

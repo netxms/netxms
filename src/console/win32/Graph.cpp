@@ -138,7 +138,7 @@ BOOL CGraph::PreCreateWindow(CREATESTRUCT& cs)
 // WM_PAINT message handler
 //
 
-void CGraph::OnPaint() 
+void CGraph::OnPaint(void) 
 {
 	CPaintDC sdc(this);  // original device context for painting
    CDC dc;              // In-memory dc
@@ -483,14 +483,13 @@ void CGraph::OnKillFocus(CWnd* pNewWnd)
       } \
    }
 
-void CGraph::DrawGraphOnBitmap()
+void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
 {
    CDC *pdc, dc;           // Window dc and in-memory dc
    CBitmap *pOldBitmap;
    CPen pen, *pOldPen;
    CFont font, *pOldFont;
    CBrush brush, *pOldBrush;
-   RECT rect;
    CSize textSize;
    DWORD i, dwTimeStamp;
    int iLeftMargin, iBottomMargin, iRightMargin = 5, iTopMargin = 5;
@@ -504,17 +503,15 @@ void CGraph::DrawGraphOnBitmap()
                                       2678400, 2592000, 2678400, 2678400,
                                       2592000, 2678400, 2592000, 2678400 };
 
-   GetClientRect(&rect);
-
    // Create compatible DC and bitmap for painting
    pdc = GetDC();
    dc.CreateCompatibleDC(pdc);
-   m_bmpGraph.DeleteObject();
-   m_bmpGraph.CreateCompatibleBitmap(pdc, rect.right, rect.bottom);
+   bmpGraph.DeleteObject();
+   bmpGraph.CreateCompatibleBitmap(pdc, rect.right, rect.bottom);
    ReleaseDC(pdc);
 
    // Initial DC setup
-   pOldBitmap = dc.SelectObject(&m_bmpGraph);
+   pOldBitmap = dc.SelectObject(&bmpGraph);
    dc.SetBkColor(m_rgbBkColor);
 
    // Fill background
@@ -818,7 +815,10 @@ void CGraph::DrawGraphOnBitmap()
 
 void CGraph::Update()
 {
-   DrawGraphOnBitmap();
+   RECT rect;
+
+   GetClientRect(&rect);
+   DrawGraphOnBitmap(m_bmpGraph, rect);
    Invalidate(FALSE);
 }
 
@@ -829,7 +829,10 @@ void CGraph::Update()
 
 void CGraph::OnSize(UINT nType, int cx, int cy) 
 {
-   DrawGraphOnBitmap();
+   RECT rect;
+
+   GetClientRect(&rect);
+   DrawGraphOnBitmap(m_bmpGraph, rect);
 	CWnd::OnSize(nType, cx, cy);
 }
 

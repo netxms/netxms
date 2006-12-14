@@ -102,6 +102,7 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
    ON_NOTIFY(TVN_GETDISPINFO, AFX_IDW_PANE_FIRST, OnTreeViewGetDispInfo)
    ON_NOTIFY(TVN_ITEMEXPANDING, AFX_IDW_PANE_FIRST, OnTreeViewItemExpanding)
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
+   ON_COMMAND_RANGE(OBJTOOL_MENU_FIRST_ID, OBJTOOL_MENU_LAST_ID, OnObjectTool)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1226,4 +1227,15 @@ BOOL CObjectBrowser::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERI
 void CObjectBrowser::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
 {
    m_wndObjectView.OnAlarmUpdate(dwCode, pAlarm);
+}
+
+
+//
+// Handler for object tools
+//
+
+void CObjectBrowser::OnObjectTool(UINT nID)
+{
+   if (m_pCurrentObject != NULL)
+      theApp.ExecuteObjectTool(m_pCurrentObject, nID - OBJTOOL_MENU_FIRST_ID);
 }

@@ -156,6 +156,8 @@ public:
 
 // Implementation
 protected:
+	HGLOBAL m_hDevNames;
+	HGLOBAL m_hDevMode;
 	MUTEX m_mutexAlarmList;
    void AddAlarmToList(NXC_ALARM *pAlarm);
    NXC_ALARM *FindAlarmInList(DWORD dwAlarmId);
@@ -258,6 +260,7 @@ public:
 	afx_msg void OnControlpanelAgentconfigs();
 	afx_msg void OnControlpanelNetworkdiscovery();
 	afx_msg void OnToolsCreatemp();
+	afx_msg void OnFilePagesetup();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:
@@ -265,6 +268,8 @@ private:
    OBJECT_VIEW m_openObjectViews[MAX_OBJECT_VIEWS];
 
 public:
+	HGLOBAL GetProfileGMem(TCHAR *pszSection, TCHAR *pszKey);
+	void WriteProfileGMem(TCHAR *pszSection, TCHAR *pszKey, HGLOBAL hMem);
 	DWORD OpenAlarmList(NXC_ALARM **ppList);
 	void CloseAlarmList(void);
 	DWORD LoadAlarms(void);
@@ -317,6 +322,9 @@ public:
    }
    CAlarmBrowser *GetAlarmBrowser(void) { return m_viewState[VIEW_ALARMS].bActive ? (CAlarmBrowser *)m_viewState[VIEW_ALARMS].pWnd : NULL; }
    CObjectBrowser *GetObjectBrowser(void) { return m_viewState[VIEW_OBJECTS].bActive ? (CObjectBrowser *)m_viewState[VIEW_OBJECTS].pWnd : NULL; }
+
+   HGLOBAL GetDevMode(void) { return m_hDevMode; }
+   HGLOBAL GetDevNames(void) { return m_hDevNames; }
 };
 
 

@@ -886,3 +886,101 @@ void DrawHeading(CDC &dc, TCHAR *pszText, CFont *pFont, RECT *pRect,
 
    GradientFill(dc.m_hDC, vtx, 2, &gr, 1, GRADIENT_FILL_RECT_H);
 }
+
+
+//
+// Print bitmap
+//
+
+void PrintBitmap(CDC &dc, CBitmap &bitmap, RECT *pRect)
+{
+   LPBITMAPINFO info;
+   BITMAP bm;
+   int i, nColors  = 0;
+   RGBQUAD rgb[256];
+
+   // Obtain information about 'hbit' and store it in 'bm'
+   GetObject(bitmap.GetSafeHandle(), sizeof(BITMAP), (LPVOID)&bm);
+
+   nColors = (1 << bm.bmBitsPixel);
+   if(nColors > 256)
+      nColors=0;           // This is when DIB is 24 bit.
+                           // In this case there is not any color table information
+
+   info = (LPBITMAPINFO) malloc(sizeof(BITMAPINFO) + (nColors * sizeof(RGBQUAD)));
+
+   // Before 'StretchDIBits()' we have to fill some "info" fields.
+   // This information was stored in 'bm'.
+   info->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+   info->bmiHeader.biWidth = bm.bmWidth;
+   info->bmiHeader.biHeight = bm.bmHeight;
+   info->bmiHeader.biPlanes = 1;
+   info->bmiHeader.biBitCount = bm.bmBitsPixel * bm.bmPlanes;
+   info->bmiHeader.biCompression = BI_RGB;
+   info->bmiHeader.biSizeImage = bm.bmWidthBytes * bm.bmHeight;
+   info->bmiHeader.biXPelsPerMeter = 0;
+   info->bmiHeader.biYPelsPerMeter = 0;
+   info->bmiHeader.biClrUsed = 0;
+   info->bmiHeader.biClrImportant = 0;
+
+   // Now for 256 or less color DIB we have to fill the "info" color table parameter
+   if(nColors <= 256)
+   {
+      HBITMAP hOldBitmap;
+      HDC hMemDC = CreateCompatibleDC(NULL);
+
+      hOldBitmap = (HBITMAP)SelectObject(hMemDC, bitmap.GetSafeHandle());
+      GetDIBColorTable(hMemDC, 0, nColors, rgb);
+
+      // Now we pass this color information to "info"
+      for(i = 0; i < nColors; i++)
+      {
+         info->bmiColors[i].rgbRed = rgb[i].rgbRed;
+         info->bmiColors[i].rgbGreen = rgb[i].rgbGreen;
+         info->bmiColors[i].rgbBlue = rgb[i].rgbBlue;
+      }
+
+      SelectObject(hMemDC, hOldBitmap);
+      DeleteDC(hMemDC);
+   }
+
+   bm.bmBits = malloc((info->bmiHeader.biBitCount / 8 + ((info->bmiHeader.biBitCount % 8) > 0 ? 1 : 0)) * bm.bmWidth * bm.bmHeight);
+   GetDIBits(dc.GetSafeHdc(), (HBITMAP)bitmap.GetSafeHandle(), 0, bm.bmHeight,
+             bm.bmBits, info, DIB_RGB_COLORS);
+
+   // Stretching all the bitmap on a destination rectangle of size (size_x, size_y)
+   // and upper left corner at (initial_pos_x, initial_pos_y)
+   StretchDIBits(dc.GetSafeHdc(), pRect->left, pRect->top,
+                 pRect->right - pRect->left, pRect->bottom - pRect->top,
+                 0, 0, bm.bmWidth, bm.bmHeight, bm.bmBits, info,
+                 DIB_RGB_COLORS, SRCCOPY);
+   free(bm.bmBits);
+   free(info);
+}
+
+
+//
+// Create a copy of global memory block
+//
+
+HGLOBAL CopyGlobalMem(HGLOBAL hSrc)
+{
+   DWORD dwLen;
+   HANDLE hDst;
+   void *pSrc, *pDst;
+
+   if (hSrc == NULL)
+      return NULL;
+
+   dwLen = GlobalSize(hSrc);
+   hDst = GlobalAlloc(GMEM_MOVEABLE, dwLen);
+   if(hDst != NULL)
+   {
+      pSrc = GlobalLock(hSrc);
+      pDst = GlobalLock(hDst);
+      CopyMemory(pDst, pSrc, dwLen);
+      GlobalUnlock(hSrc);
+      GlobalUnlock(hDst);
+   }
+   return hDst;
+}

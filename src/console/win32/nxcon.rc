@@ -144,30 +144,10 @@ IDI_TEMPLATE_ROOT       ICON    DISCARDABLE     "icons\\template_root.ico"
 // Bitmap
 //
 
-IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "res\\Toolbar.bmp"
 IDB_UP_ARROW            BITMAP  DISCARDABLE     "res\\up_arrow.bmp"
 IDB_DOWN_ARROW          BITMAP  DISCARDABLE     "res\\down_arrow.bmp"
 IDB_ANY                 BITMAP  DISCARDABLE     "res\\any.bmp"
 IDB_NONE                BITMAP  DISCARDABLE     "res\\none.bmp"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Toolbar
-//
-
-IDR_MAINFRAME TOOLBAR DISCARDABLE  16, 15
-BEGIN
-    BUTTON      ID_FILE_NEW
-    SEPARATOR
-    BUTTON      ID_EDIT_CUT
-    BUTTON      ID_EDIT_COPY
-    BUTTON      ID_EDIT_PASTE
-    SEPARATOR
-    BUTTON      ID_FILE_PRINT
-    SEPARATOR
-    BUTTON      ID_APP_ABOUT
-END
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -222,6 +202,7 @@ BEGIN
         MENUITEM "&Change password...",         ID_TOOLS_CHANGEPASSWORD
         MENUITEM SEPARATOR
         MENUITEM "Create management &pack...",  ID_TOOLS_CREATEMP
+        MENUITEM "&Import management pack...",  ID_TOOLS_IMPORTMP
     END
     POPUP "&Help"
     BEGIN
@@ -488,6 +469,9 @@ BEGIN
         MENUITEM "&Autoscale\tAlt+A",           ID_GRAPH_AUTOSCALE
         MENUITEM "&Legend\tAlt+L",              ID_GRAPH_LEGEND
         MENUITEM "R&uler\tAlt+R",               ID_GRAPH_RULER
+        MENUITEM SEPARATOR
+        MENUITEM "Pr&int...",                   ID_FILE_PRINT
+        MENUITEM "&Copy to clipboard\tCtrl+C",  ID_GRAPH_COPYTOCLIPBOARD
         MENUITEM SEPARATOR
         MENUITEM "&Zoom out\tBksp",             ID_GRAPH_ZOOMOUT
         MENUITEM SEPARATOR
@@ -847,6 +831,9 @@ BEGIN
         MENUITEM "&Legend",                     ID_GRAPH_LEGEND
         MENUITEM "R&uler",                      ID_GRAPH_RULER
         MENUITEM SEPARATOR
+        MENUITEM "Pr&int...",                   ID_FILE_PRINT
+        MENUITEM "&Copy to clipboard",          ID_GRAPH_COPYTOCLIPBOARD
+        MENUITEM SEPARATOR
         MENUITEM "&Zoom out",                   ID_GRAPH_ZOOMOUT
         MENUITEM SEPARATOR
         MENUITEM "&Properties...",              ID_GRAPH_PROPERTIES
@@ -1071,6 +1058,7 @@ END
 IDA_GRAPH ACCELERATORS DISCARDABLE 
 BEGIN
     "A",            ID_GRAPH_AUTOSCALE,     VIRTKEY, ALT, NOINVERT
+    "C",            ID_GRAPH_COPYTOCLIPBOARD, VIRTKEY, CONTROL, NOINVERT
     "P",            ID_GRAPH_PROPERTIES,    VIRTKEY, ALT, NOINVERT
     "R",            ID_GRAPH_RULER,         VIRTKEY, ALT, NOINVERT
     VK_BACK,        ID_GRAPH_ZOOMOUT,       VIRTKEY, NOINVERT

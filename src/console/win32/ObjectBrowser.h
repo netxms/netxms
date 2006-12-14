@@ -125,6 +125,7 @@ protected:
    afx_msg void OnTreeViewGetDispInfo(LPNMTVDISPINFO lpdi, LRESULT *pResult);
    afx_msg void OnTreeViewItemExpanding(LPNMTREEVIEW lpnmt, LRESULT *pResult);
    afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
+   afx_msg void OnObjectTool(UINT nID);
 	DECLARE_MESSAGE_MAP()
 };
 

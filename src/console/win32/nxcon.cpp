@@ -122,6 +122,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_CONTROLPANEL_AGENTCONFIGS, OnControlpanelAgentconfigs)
 	ON_COMMAND(ID_CONTROLPANEL_NETWORKDISCOVERY, OnControlpanelNetworkdiscovery)
 	ON_COMMAND(ID_TOOLS_CREATEMP, OnToolsCreatemp)
+	ON_COMMAND(ID_FILE_PAGESETUP, OnFilePagesetup)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -139,6 +140,8 @@ CConsoleApp::CConsoleApp()
    m_dwNumAlarms = 0;
    m_pAlarmList = NULL;
    m_mutexAlarmList = MutexCreate();
+   m_hDevMode = NULL;
+   m_hDevNames = NULL;
 }
 
 
@@ -150,6 +153,8 @@ CConsoleApp::~CConsoleApp()
 {
    safe_free(m_pAlarmList);
    MutexDestroy(m_mutexAlarmList);
+   SafeGlobalFree(m_hDevMode);
+   SafeGlobalFree(m_hDevNames);
 }
 
 
@@ -279,6 +284,8 @@ BOOL CConsoleApp::InitInstance()
    _tcscpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
    _tcscpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
    LoadAlarmSoundCfg(&g_soundCfg, NXCON_ALARM_SOUND_KEY);
+   m_hDevMode = GetProfileGMem(_T("Printer"), _T("DevMode"));
+   m_hDevNames = GetProfileGMem(_T("Printer"), _T("DevNames"));
 
    // Check if we are upgrading
    nVer = GetProfileInt(_T("General"), _T("CfgVersion"), 0);
@@ -3256,4 +3263,69 @@ void CConsoleApp::OnToolsCreatemp()
    {
       ErrorBox(dwResult, _T("Cannot create management pack: %s"));
    }
+}
+
+
+//
+// "File -> Page Setup..." menu handler
+//
+
+void CConsoleApp::OnFilePagesetup() 
+{
+   CPrintDialog dlg(TRUE);
+
+   dlg.m_pd.hDevMode = CopyGlobalMem(m_hDevMode);
+   dlg.m_pd.hDevNames = CopyGlobalMem(m_hDevNames);
+
+   if (dlg.DoModal() == IDOK)
+   {
+      SafeGlobalFree(m_hDevMode);
+      SafeGlobalFree(m_hDevNames);
+      m_hDevMode = CopyGlobalMem(dlg.m_pd.hDevMode);
+      m_hDevNames = CopyGlobalMem(dlg.m_pd.hDevNames);
+      WriteProfileGMem(_T("Printer"), _T("DevMode"), m_hDevMode);
+      WriteProfileGMem(_T("Printer"), _T("DevNames"), m_hDevNames);
+   }
+
+   SafeGlobalFree(dlg.m_pd.hDevMode);
+   SafeGlobalFree(dlg.m_pd.hDevNames);
+}
+
+
+//
+// Write global memory block to registry
+//
+
+void CConsoleApp::WriteProfileGMem(TCHAR *pszSection, TCHAR *pszKey, HGLOBAL hMem)
+{
+   void *p;
+
+   p = GlobalLock(hMem);
+   WriteProfileBinary(pszSection, pszKey, (BYTE *)p, GlobalSize(hMem));
+   GlobalUnlock(hMem);
+}
+
+
+//
+// Read global memory block from registry
+//
+
+HGLOBAL CConsoleApp::GetProfileGMem(TCHAR *pszSection, TCHAR *pszKey)
+{
+   BYTE *pData, *pMem;
+   UINT nSize;
+   HGLOBAL hMem = NULL;
+
+   if (GetProfileBinary(pszSection, pszKey, &pData, &nSize))
+   {
+      hMem = GlobalAlloc(GMEM_MOVEABLE, nSize);
+      if (hMem != NULL)
+      {
+         pMem = (BYTE *)GlobalLock(hMem);
+         CopyMemory(pMem, pData, nSize);
+         GlobalUnlock(hMem);
+      }
+      delete pData;
+   }
+   return hMem;
 }
