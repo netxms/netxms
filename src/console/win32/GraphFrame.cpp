@@ -100,6 +100,15 @@ BEGIN_MESSAGE_MAP(CGraphFrame, CMDIChildWnd)
 	ON_COMMAND(ID_GRAPH_ZOOMOUT, OnGraphZoomout)
 	ON_COMMAND(ID_FILE_PRINT, OnFilePrint)
 	ON_COMMAND(ID_GRAPH_COPYTOCLIPBOARD, OnGraphCopytoclipboard)
+	ON_UPDATE_COMMAND_UI(ID_GRAPH_PRESETS_LAST10MINUTES, OnUpdateGraphPresetsLast10minutes)
+	ON_UPDATE_COMMAND_UI(ID_GRAPH_PRESETS_LAST2HOURS, OnUpdateGraphPresetsLast2hours)
+	ON_UPDATE_COMMAND_UI(ID_GRAPH_PRESETS_LAST30MINUTES, OnUpdateGraphPresetsLast30minutes)
+	ON_UPDATE_COMMAND_UI(ID_GRAPH_PRESETS_LAST4HOURS, OnUpdateGraphPresetsLast4hours)
+	ON_UPDATE_COMMAND_UI(ID_GRAPH_PRESETS_LASTDAY, OnUpdateGraphPresetsLastday)
+	ON_UPDATE_COMMAND_UI(ID_GRAPH_PRESETS_LASTHOUR, OnUpdateGraphPresetsLasthour)
+	ON_UPDATE_COMMAND_UI(ID_GRAPH_PRESETS_LASTMONTH, OnUpdateGraphPresetsLastmonth)
+	ON_UPDATE_COMMAND_UI(ID_GRAPH_PRESETS_LASTWEEK, OnUpdateGraphPresetsLastweek)
+	ON_UPDATE_COMMAND_UI(ID_GRAPH_PRESETS_LASTYEAR, OnUpdateGraphPresetsLastyear)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
    ON_MESSAGE(NXCM_UPDATE_GRAPH_POINT, OnUpdateGraphPoint)
@@ -596,7 +605,7 @@ void CGraphFrame::OnGraphPresetsLastweek()
 
 void CGraphFrame::OnGraphPresetsLastmonth() 
 {
-   Preset(TIME_UNIT_DAY, 30);
+   Preset(TIME_UNIT_DAY, 31);
 }
 
 void CGraphFrame::OnGraphPresetsLastyear() 
@@ -828,4 +837,54 @@ void CGraphFrame::OnGraphCopytoclipboard()
    {
       MessageBox(_T("Cannot open clipboard"), _T("Error"), MB_OK | MB_ICONSTOP);
    }
+}
+
+
+//
+// Update handlers for "Presets->..." menu items
+//
+
+void CGraphFrame::OnUpdateGraphPresetsLast10minutes(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck((m_iTimeFrameType == 1) && (m_dwTimeFrame == 600));
+}
+
+void CGraphFrame::OnUpdateGraphPresetsLast2hours(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck((m_iTimeFrameType == 1) && (m_dwTimeFrame == 7200));
+}
+
+void CGraphFrame::OnUpdateGraphPresetsLast30minutes(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck((m_iTimeFrameType == 1) && (m_dwTimeFrame == 1800));
+}
+
+void CGraphFrame::OnUpdateGraphPresetsLast4hours(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck((m_iTimeFrameType == 1) && (m_dwTimeFrame == 14400));
+}
+
+void CGraphFrame::OnUpdateGraphPresetsLastday(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck((m_iTimeFrameType == 1) && (m_dwTimeFrame == 86400));
+}
+
+void CGraphFrame::OnUpdateGraphPresetsLasthour(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck((m_iTimeFrameType == 1) && (m_dwTimeFrame == 3600));
+}
+
+void CGraphFrame::OnUpdateGraphPresetsLastmonth(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck((m_iTimeFrameType == 1) && (m_dwTimeFrame == 2678400));
+}
+
+void CGraphFrame::OnUpdateGraphPresetsLastweek(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck((m_iTimeFrameType == 1) && (m_dwTimeFrame == 604800));
+}
+
+void CGraphFrame::OnUpdateGraphPresetsLastyear(CCmdUI* pCmdUI) 
+{
+   pCmdUI->SetCheck((m_iTimeFrameType == 1) && (m_dwTimeFrame == 31536000));
 }

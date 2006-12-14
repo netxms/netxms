@@ -102,6 +102,15 @@ protected:
 	afx_msg void OnGraphZoomout();
 	afx_msg void OnFilePrint();
 	afx_msg void OnGraphCopytoclipboard();
+	afx_msg void OnUpdateGraphPresetsLast10minutes(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateGraphPresetsLast2hours(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateGraphPresetsLast30minutes(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateGraphPresetsLast4hours(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateGraphPresetsLastday(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateGraphPresetsLasthour(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateGraphPresetsLastmonth(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateGraphPresetsLastweek(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateGraphPresetsLastyear(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
    afx_msg void OnUpdateGraphPoint(DWORD dwTimeStamp, double *pdValue);
