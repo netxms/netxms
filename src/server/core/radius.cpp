@@ -1,4 +1,4 @@
-/* $Id: radius.cpp,v 1.3 2006-07-21 18:18:43 alk Exp $ */
+/* $Id: radius.cpp,v 1.4 2006-12-14 23:27:33 victor Exp $ */
 
 /* 
  ** NetXMS - Network Management System
@@ -582,7 +582,7 @@ static int result_recv(DWORD host, WORD udp_port, char *buffer, int length, BYTE
 
 	if(totallen != length)
 	{
-		fprintf(stderr,"Received invalid reply length from server (want %d/ got %d)\n", totallen, length);
+		DbgPrintf(AF_DEBUG_MISC, _T("RADIUS: Received invalid reply length from server (want %d - got %d)"), totallen, length);
 		return 8;
 	}
 
@@ -595,12 +595,12 @@ static int result_recv(DWORD host, WORD udp_port, char *buffer, int length, BYTE
 
 	if(memcmp(reply_digest, calc_digest, AUTH_VECTOR_LEN) != 0)
 	{
-		fprintf(stderr,"Warning: Received invalid reply digest from server\n");
+		DbgPrintf(AF_DEBUG_MISC, _T("RADIUS: Received invalid reply digest from server"));
 	}
 
 	IpToStr(ntohl(host), szHostName);
-	DbgPrintf(AF_DEBUG_MISC, "RADIUS: Packet from host %s code=%d, id=%d, length=%d",
-			szHostName, auth->code, auth->id, totallen);
+	DbgPrintf(AF_DEBUG_MISC, _T("RADIUS: Packet from host %s code=%d, id=%d, length=%d"),
+             szHostName, auth->code, auth->id, totallen);
 	return (auth->code == PW_AUTHENTICATION_REJECT) ? 1 : 0;
 }
 
@@ -734,5 +734,8 @@ int RadiusAuth(char *cLogin, char *cPasswd)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/07/21 18:18:43  alk
+code reformatted
+
 
 */
