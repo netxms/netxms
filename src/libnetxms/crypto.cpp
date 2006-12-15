@@ -182,8 +182,10 @@ CSCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE
    pEnMsg = (CSCP_ENCRYPTED_MESSAGE *)malloc(dwMsgSize + CSCP_ENCRYPTION_HEADER_SIZE + 
                      EVP_CIPHER_block_size(EVP_CIPHER_CTX_cipher(&cipher)) + 8);
    pEnMsg->wCode = htons(CMD_ENCRYPTED_MESSAGE);
+   pEnMsg->nReserved = 0;
 
    header.dwChecksum = htonl(CalculateCRC32((BYTE *)pMsg, dwMsgSize, 0));
+   header.dwReserved = 0;
    EVP_EncryptUpdate(&cipher, pEnMsg->data, &nSize, (BYTE *)&header, CSCP_EH_ENCRYPTED_BYTES);
    dwMsgSize = nSize;
    EVP_EncryptUpdate(&cipher, pEnMsg->data + dwMsgSize, &nSize, (BYTE *)pMsg, ntohl(pMsg->dwSize));

@@ -1,4 +1,4 @@
-/* $Id: nxcp.cpp,v 1.4 2006-12-11 21:19:29 victor Exp $ */
+/* $Id: nxcp.cpp,v 1.5 2006-12-15 20:06:27 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
@@ -539,7 +539,7 @@ BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVers
       }
       else if ((nSize == 1) || (nSize == 3) || (nSize >= CSCP_HEADER_SIZE))
       {
-         // We don't receive any answr or receive invalid answer - 
+         // We don't receive any answer or receive invalid answer - 
          // assume that peer doesn't understand CMD_GET_NXCP_CAPS message
          // and set version number to 1
          bRet = TRUE;

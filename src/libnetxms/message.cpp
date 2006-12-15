@@ -119,8 +119,17 @@ CSCPMessage::CSCPMessage(CSCP_MESSAGE *pMsg, int nVersion)
    {
       pVar = (CSCP_DF *)(((BYTE *)pMsg) + dwPos);
 
-      // Calculate variable size
+      // Validate position inside message
+      if (dwPos > dwSize - 8)
+         break;
+      if ((dwPos > dwSize - 12) && 
+          ((pVar->bType == CSCP_DT_STRING) || (pVar->bType == CSCP_DT_BINARY)))
+         break;
+
+      // Calculate and validate variable size
       iVarSize = VariableSize(pVar, TRUE);
+      if (dwPos + iVarSize > dwSize)
+         break;
 
       // Create new entry
       m_ppVarList[dwVar] = (CSCP_DF *)malloc(iVarSize);
@@ -160,6 +169,9 @@ CSCPMessage::CSCPMessage(CSCP_MESSAGE *pMsg, int nVersion)
       else
          dwPos += iVarSize;
    }
+
+   // Cut unfilled variables, if any
+   m_dwNumVar = dwVar;
 }
 
 
@@ -182,8 +194,9 @@ DWORD CSCPMessage::FindVariable(DWORD dwVarId)
    DWORD i;
 
    for(i = 0; i < m_dwNumVar; i++)
-      if (m_ppVarList[i]->dwVarId == dwVarId)
-         return i;
+      if (m_ppVarList[i] != NULL)
+         if (m_ppVarList[i]->dwVarId == dwVarId)
+            return i;
    return INVALID_INDEX;
 }
 
@@ -523,7 +536,7 @@ void CSCPMessage::DeleteAllVariables(void)
       DWORD i;
 
       for(i = 0; i < m_dwNumVar; i++)
-         free(m_ppVarList[i]);
+         safe_free(m_ppVarList[i]);
       free(m_ppVarList);
 
       m_ppVarList = NULL;
