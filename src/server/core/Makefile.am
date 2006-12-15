@@ -27,7 +27,9 @@ libnxcore_la_LIBADD = ../../libnetxms/libnetxms.la \
 EXTRA_DIST = \
 	nxcore.dsp nxcore.dsw \
 	nxcore.h radius.h \
-	nxmp_parser.l nxmp_parser.y nxmp_parser.h
+	nxmp_parser.l nxmp_parser.y nxmp_parser.h nxmp_parser.tab.hpp
+
+nxmp_data.cpp: nxmp_parser.tab.cpp
 
 nxmp_lex.yy.cpp: nxmp_parser.l nxmp_parser.tab.cpp nxmp_parser.tab.hpp
 	$(LEX) -B -f -8 -+ -onxmp_lex.yy.temp nxmp_parser.l
