@@ -318,6 +318,26 @@ SOURCE=.\np.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\nxmp_data.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\nxmp_lex.yy.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\nxmp_lexer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\nxmp_parser.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\nxmp_parser.tab.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\objects.cpp
 # End Source File
 # Begin Source File
@@ -530,6 +550,14 @@ SOURCE=..\include\nxmodule.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\nxmp_parser.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\nxmp_parser.tab.hpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\include\nxnt.h
 # End Source File
 # Begin Source File
@@ -572,6 +600,124 @@ SOURCE=..\..\..\include\unicode.h
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# End Group
+# Begin Group "Parser Files"
+
+# PROP Default_Filter "l;y"
+# Begin Source File
+
+SOURCE=.\nxmp_parser.l
+
+!IF  "$(CFG)" == "nxcore - Win32 Release"
+
+# Begin Custom Build - Compiling $(InputPath)
+InputPath=.\nxmp_parser.l
+
+"nxmp_lex.yy.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	flex -Bf8+ -onxmp_lex.yy.cpp $(InputPath)
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "nxcore - Win32 Debug"
+
+# Begin Custom Build - Compiling $(InputPath)
+InputPath=.\nxmp_parser.l
+
+"nxmp_lex.yy.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	flex -Bf8+ -onxmp_lex.yy.cpp $(InputPath)
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "nxcore - Win32 Release AMD64"
+
+# Begin Custom Build - Compiling $(InputPath)
+InputPath=.\nxmp_parser.l
+
+"nxmp_lex.yy.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	flex -Bf8+ -onxmp_lex.yy.cpp $(InputPath)
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "nxcore - Win32 Debug AMD64"
+
+# Begin Custom Build - Compiling $(InputPath)
+InputPath=.\nxmp_parser.l
+
+"nxmp_lex.yy.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	flex -Bf8+ -onxmp_lex.yy.cpp $(InputPath)
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\nxmp_parser.y
+
+!IF  "$(CFG)" == "nxcore - Win32 Release"
+
+# Begin Custom Build - Compiling $(InputPath)
+InputPath=.\nxmp_parser.y
+
+BuildCmds= \
+	bison -b nxmp_parser -o nxmp_parser.tab.cpp -d -t -v $(InputPath)
+
+"nxmp_parser.tab.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"nxmp_parser.tab.hpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "nxcore - Win32 Debug"
+
+# Begin Custom Build - Compiling $(InputPath)
+InputPath=.\nxmp_parser.y
+
+BuildCmds= \
+	bison -b nxmp_parser -o nxmp_parser.tab.cpp -d -t -v $(InputPath)
+
+"nxmp_parser.tab.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"nxmp_parser.tab.hpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "nxcore - Win32 Release AMD64"
+
+# Begin Custom Build - Compiling $(InputPath)
+InputPath=.\nxmp_parser.y
+
+BuildCmds= \
+	bison -b nxmp_parser -o nxmp_parser.tab.cpp -d -t -v $(InputPath)
+
+"nxmp_parser.tab.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"nxmp_parser.tab.hpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "nxcore - Win32 Debug AMD64"
+
+# Begin Custom Build - Compiling $(InputPath)
+InputPath=.\nxmp_parser.y
+
+BuildCmds= \
+	bison -b nxmp_parser -o nxmp_parser.tab.cpp -d -t -v $(InputPath)
+
+"nxmp_parser.tab.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"nxmp_parser.tab.hpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
 # End Group
 # End Target
 # End Project

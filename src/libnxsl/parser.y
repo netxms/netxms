@@ -18,7 +18,7 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 
 %expect		1
 %pure-parser
-%lex-param	{NXSL_Lexer *pLexer}
+%lex-param		{NXSL_Lexer *pLexer}
 %parse-param	{NXSL_Lexer *pLexer}
 %parse-param	{NXSL_Compiler *pCompiler}
 %parse-param	{NXSL_Program *pScript}

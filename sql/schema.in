@@ -203,6 +203,18 @@ CREATE TABLE cluster_members
 
 
 /*
+** Cluster interconnect subnets
+*/
+
+CREATE TABLE cluster_ic_subnets
+(
+	cluster_id integer not null,
+	subnet_addr varchar(15),
+	subnet_mask varchar(15)
+) TABLE_TYPE;
+
+
+/*
 ** Subnets
 */
 

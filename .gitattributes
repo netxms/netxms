@@ -1158,6 +1158,12 @@ src/server/core/np.cpp -text
 src/server/core/nxcore.dsp -text
 src/server/core/nxcore.dsw -text
 src/server/core/nxcore.h -text
+src/server/core/nxmp_data.cpp -text
+src/server/core/nxmp_lexer.cpp -text
+src/server/core/nxmp_parser.cpp -text
+src/server/core/nxmp_parser.h -text
+src/server/core/nxmp_parser.l -text
+src/server/core/nxmp_parser.y -text
 src/server/core/objects.cpp -text
 src/server/core/objtools.cpp -text
 src/server/core/package.cpp -text
