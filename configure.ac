@@ -1,10 +1,10 @@
-# $Id: configure.ac,v 1.227 2006-12-10 00:33:41 victor Exp $
+# $Id: configure.ac,v 1.228 2006-12-17 11:21:51 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
 #
 
-AC_INIT([NetXMS], [0.2.15-dev], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.15-rc2], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -507,17 +507,17 @@ else
 
 	# Extensions to posix threads
 	AC_CHECK_HEADERS([pthread_np.h],,,[
-		#include <pthread.h>
+#include <pthread.h>
 	])
 	AC_CHECK_FUNCS([pthread_cond_reltimedwait_np])
 
 	# Check for recursive mutexes
 	AC_CHECK_FUNCS([pthread_mutexattr_settype pthread_mutexattr_setkind_np])
 	AC_CHECK_DECLS([PTHREAD_MUTEX_RECURSIVE, PTHREAD_MUTEX_RECURSIVE_NP, MUTEX_TYPE_COUNTING_FAST],,,[
-		#include <pthread.h>
-		#if HAVE_PTHREAD_NP_H
-		#include <pthread_np.h>
-		#endif
+#include <pthread.h>
+#if HAVE_PTHREAD_NP_H
+#include <pthread_np.h>
+#endif
 	])
 
 	# Check for read/write locks
@@ -526,13 +526,17 @@ else
 	AC_CHECK_FUNCS([pthread_rwlock_init pthread_rwlock_timedrdlock pthread_rwlock_timedwrlock])
 	if test "$ac_cv_func_pthread_rwlock_init" = "yes"; then
 		AC_CACHE_CHECK([for pthread_rwlock_t], ac_cv_struct_pthread_rw,
-			[AC_TRY_COMPILE([#include <sys/types.h>
-			#include <pthread.h>],
+			[AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <pthread.h>
+			],
 			[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;],
 			ac_cv_struct_pthread_rw=yes, [
-				AC_TRY_COMPILE([#define _XOPEN_SOURCE 500
-				#include <sys/types.h>
-				#include <pthread.h>],
+				AC_TRY_COMPILE([
+#define _XOPEN_SOURCE 500
+#include <sys/types.h>
+#include <pthread.h>
+				],
 				[pthread_rwlock_t rwlock=PTHREAD_RWLOCK_INITIALIZER;],
 				ac_cv_struct_pthread_rw=yes, ac_cv_struct_pthread_rw=no)
 				if test "$ac_cv_struct_pthread_rw" = "yes"; then
@@ -910,23 +914,45 @@ fi
 
 check_substr "$COMPONENTS" "mysql"
 if test $? = 0; then
-	AC_CHECK_LIB(mysqlclient, mysql_init, ,
+	AC_CHECK_LIB(mysqlclient, mysql_init, [],
 		[AC_MSG_ERROR(libmysqlclient is requred for MySQL support)])
-			AC_MSG_CHECKING(whether mysql clients can run)
-			AC_RUN_IFELSE([AC_LANG_SOURCE([[
-			#include <stdio.h>
-			#include <mysql.h>    
-			int main(void)
-			{
-				MYSQL *a = mysql_init(NULL);
-				return 0;
-			}
-			]])],[],[
-				AC_MSG_RESULT(no)
-				AC_MSG_ERROR(Your MySQL client libraries aren't properly installed)
-		],[])
+	AC_MSG_CHECKING(whether mysql clients can run)
+	AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#include <stdio.h>
+#include <mysql.h>    
+int main(void)
+{
+	MYSQL *a = mysql_init(NULL);
+	return 0;
+}
+		]])],[],[
+			AC_MSG_RESULT(no)
+			AC_MSG_ERROR(Your MySQL client libraries aren't properly installed)
+	],[])
 	AC_MSG_RESULT(yes)
 	AC_CHECK_FUNCS(mysql_real_escape_string)
+fi
+
+
+#--------------------------------------------------------------------
+# ODBC
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "odbc"
+if test $? = 0; then
+	AC_CHECK_LIB(odbc, SQLAllocHandle, [],
+		[AC_MSG_ERROR(libodbc is required for ODBC support)])
+fi
+
+
+#--------------------------------------------------------------------
+# SQLite
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "sqlite"
+if test $? = 0; then
+	AC_CHECK_LIB(sqlite3, sqlite3_open, [],
+		[AC_MSG_ERROR(libsqlite3 is required for SQLite support)])
 fi
 
 

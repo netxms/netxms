@@ -1,4 +1,4 @@
-/* $Id: nxmp_parser.h,v 1.1 2006-12-15 11:38:14 victor Exp $ */
+/* $Id: nxmp_parser.h,v 1.2 2006-12-17 11:21:52 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Server
@@ -35,6 +35,11 @@
 
 #define MAX_STRING_SIZE    4096
 
+#define CTX_NONE           0
+#define CTX_EVENT          1
+#define CTX_DCI            2
+#define CTX_THRESHOLD      3
+
 
 //
 // Management pack's data
@@ -46,6 +51,7 @@ private:
    EVENT_TEMPLATE *m_pEventList;
    EVENT_TEMPLATE *m_pCurrEvent;
    DWORD m_dwNumEvents;
+   int m_nContext;
 
 public:
    NXMP_Data();
@@ -58,6 +64,8 @@ public:
    void SetEventSeverity(DWORD dwSeverity) { if (m_pCurrEvent != NULL) m_pCurrEvent->dwSeverity = dwSeverity; }
    void SetEventFlags(DWORD dwFlags) { if (m_pCurrEvent != NULL) m_pCurrEvent->dwFlags = dwFlags; }
    void CloseEvent(void) { m_pCurrEvent = NULL; }
+
+   BOOL ParseVariable(char *pszName, char *pszValue);
 };
 
 

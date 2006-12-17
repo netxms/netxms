@@ -1,4 +1,4 @@
-/* $Id: nxmp_data.cpp,v 1.1 2006-12-15 11:38:14 victor Exp $ */
+/* $Id: nxmp_data.cpp,v 1.2 2006-12-17 11:21:52 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -34,6 +34,7 @@ NXMP_Data::NXMP_Data()
    m_pEventList = NULL;
    m_dwNumEvents = 0;
    m_pCurrEvent = NULL;
+   m_nContext = CTX_NONE;
 }
 
 
@@ -51,6 +52,29 @@ NXMP_Data::~NXMP_Data()
       safe_free(m_pEventList[i].pszDescription);
    }
    safe_free(m_pEventList);
+}
+
+
+//
+// Parse variable
+//
+
+BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
+{
+   BOOL bRet = FALSE;
+
+   switch(m_nContext)
+   {
+      case CTX_EVENT:
+         if (!stricmp(pszName, "CODE"))
+         {
+            SetEventCode()
+         }
+         break;
+      default:
+         break;
+   }
+   return bRet;
 }
 
 
