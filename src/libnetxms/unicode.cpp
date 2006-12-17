@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.18 2006-11-16 09:05:53 victor Exp $ */
+/* $Id: unicode.cpp,v 1.19 2006-12-17 10:31:38 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -77,14 +77,48 @@ void LIBNETXMS_EXPORTABLE SetDefaultCodepage(char *cp)
 
 #if !HAVE_USEABLE_WCHAR
 
-int LIBNETXMS_EXPORTABLE nx_wcslen(WCHAR *pStr)
+int LIBNETXMS_EXPORTABLE nx_wcslen(const WCHAR *pStr)
 {
    int iLen = 0;
-   WCHAR *pCurr = pStr;
+   const WCHAR *pCurr = pStr;
 
    while(*pCurr++)
       iLen++;
    return iLen;
+}
+
+#endif
+
+
+//
+// Duplicate wide character string
+//
+
+#if !HAVE_USEABLE_WCHAR
+
+WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *pStr)
+{
+	return (WCHAR *)nx_memdup(pStr, (wcslen(pStr) + 1) * sizeof(WCHAR));
+}
+
+#endif
+
+
+//
+// Copy wide character string with length limitation
+//
+
+#if !HAVE_USEABLE_WCHAR
+
+WCHAR LIBNETXMS_EXPORTABLE *nx_wcsncpy(WCHAR *pDst, WCHAR *pSrc, int nDstLen)
+{
+	int nLen;
+
+	nLen = wcslen(pSrc) + 1;
+	if (nLen > nDstLen)
+		nLen = nDstLen;
+	memcpy(pDst, pSrc, nLen * sizeof(WCHAR));
+	return pDst;
 }
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.97 2006-12-11 21:19:27 victor Exp $ */
+/* $Id: nms_util.h,v 1.98 2006-12-17 10:31:37 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -445,7 +445,9 @@ extern "C"
                                                 int cchByteChar, WCHAR *pWideCharStr, 
                                                 int cchWideChar);
 #if !HAVE_USEABLE_WCHAR
-	int LIBNETXMS_EXPORTABLE nx_wcslen(WCHAR *pStr);
+	int LIBNETXMS_EXPORTABLE nx_wcslen(const WCHAR *pStr);
+	WCHAR LIBNETXMS_EXPORTABLE *nx_wcsncpy(WCHAR *pDst, WCHAR *pSrc, int nDstLen);
+	WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *pStr);
 #endif
 #endif	/* _WIN32 */
    WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(char *pszString);
@@ -500,6 +502,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.97  2006/12/11 21:19:27  victor
+Management pack creation almost working (only SNMP traps cannot be exported)
+
 Revision 1.96  2006/11/03 08:58:56  victor
 - Added utillity class "Table"
 - Changed defines for iconv() usage on NetWare

@@ -74,6 +74,8 @@
 #if !HAVE_USEABLE_WCHAR
 
 #define wcslen		nx_wcslen
+#define wcsdup		nx_wcsdup
+#define wcsncpy	nx_wcsncpy
 
 #endif
 
