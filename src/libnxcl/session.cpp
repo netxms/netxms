@@ -44,6 +44,7 @@ NXCL_Session::NXCL_Session()
    m_dwReceiverBufferSize = 4194304;     // 4MB
    m_hSocket = -1;
    m_pItemList = NULL;
+   m_szLastLock[0] = 0;
    m_pClientData = NULL;
 
    m_ppEventTemplates = NULL;
@@ -219,6 +220,14 @@ DWORD NXCL_Session::WaitForRCC(DWORD dwRqId, DWORD dwTimeOut)
       if (pResponse != NULL)
       {
          dwRetCode = pResponse->GetVariableLong(VID_RCC);
+         if (dwRetCode == RCC_COMPONENT_LOCKED)
+         {
+            _tcscpy(m_szLastLock, _T("<unknown>"));
+            if (pResponse->IsVariableExist(VID_LOCKED_BY))
+            {
+               pResponse->GetVariableStr(VID_LOCKED_BY, m_szLastLock, MAX_LOCKINFO_LEN);
+            }
+         }
          delete pResponse;
       }
       else

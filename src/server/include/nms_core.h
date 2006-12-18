@@ -318,7 +318,7 @@ private:
    MUTEX m_mutexSendActions;
    MUTEX m_mutexPollerInit;
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
-   TCHAR m_szUserName[256];   // String in form login_name@host
+   TCHAR m_szUserName[MAX_SESSION_NAME];   // String in form login_name@host
    TCHAR m_szClientInfo[96];  // Client app info string
    DWORD m_dwOpenDCIListSize; // Number of open DCI lists
    DWORD *m_pOpenDCIList;     // List of nodes with DCI lists open
@@ -475,6 +475,7 @@ private:
    void ResetComponent(CSCPMessage *pRequest);
    void SendDCIEventList(CSCPMessage *pRequest);
    void CreateManagementPack(CSCPMessage *pRequest);
+   void InstallManagementPack(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

@@ -23,10 +23,7 @@ int yylex(YYSTYPE *lvalp, NXMP_Lexer *pLexer);
 
 %union
 {
-	LONG valInt;
-	DWORD valUInt;
 	char *valStr;
-	double valReal;
 }
 
 %token T_NXMP
@@ -44,9 +41,11 @@ int yylex(YYSTYPE *lvalp, NXMP_Lexer *pLexer);
 
 %token <valStr> T_IDENTIFIER
 %token <valStr> T_STRING
-%token <valInt> T_INT
-%token <valUInt> T_UINT
-%token <valReal> T_REAL
+%token <valStr> T_INT
+%token <valStr> T_UINT
+%token <valStr> T_REAL
+
+%type <valStr> Value
 
 %start ManagementPack
 
@@ -163,6 +162,9 @@ VariableList:
 Variable:
 	T_IDENTIFIER '=' Value ';'
 {
+	pData->ParseVariable($1, $3);
+	free($1);
+	free($3);
 }
 ;
 

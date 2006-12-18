@@ -1,4 +1,4 @@
-/* $Id: nxmp_data.cpp,v 1.2 2006-12-17 11:21:52 victor Exp $ */
+/* $Id: nxmp_data.cpp,v 1.3 2006-12-18 00:21:10 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -26,15 +26,46 @@
 
 
 //
+// Get string valus as unsigned int
+//
+
+static BOOL GetValueAsUInt(char *pszStr, DWORD *pdwValue)
+{
+   char *eptr;
+   int nLen;
+   
+   nLen = strlen(pszStr);
+   if (nLen == 0)
+      return FALSE;
+
+   if (pszStr[nLen - 1] == 'U')
+   {
+      pszStr[nLen - 1] = 0;
+      *pdwValue = strtoul(pszStr, &eptr, 0);
+   }
+   else
+   {
+      LONG nValue;
+
+      nValue = strtol(pszStr, &eptr, 0);
+      memcpy(pdwValue, &nValue, sizeof(DWORD));
+   }
+   return (*eptr == 0);
+}
+
+
+//
 // Constructor
 //
 
-NXMP_Data::NXMP_Data()
+NXMP_Data::NXMP_Data(NXMP_Lexer *pLexer, NXMP_Parser *pParser)
 {
    m_pEventList = NULL;
    m_dwNumEvents = 0;
    m_pCurrEvent = NULL;
    m_nContext = CTX_NONE;
+   m_pLexer = pLexer;
+   m_pParser = pParser;
 }
 
 
@@ -56,19 +87,78 @@ NXMP_Data::~NXMP_Data()
 
 
 //
+// Report error
+//
+
+void NXMP_Data::Error(const char *pszMsg, ...)
+{
+   va_list args;
+   char szBuffer[1024];
+
+   va_start(args, pszMsg);
+   vsnprintf(szBuffer, 1024, pszMsg, args);
+   va_end(args);
+   m_pParser->Error(szBuffer);
+   m_pLexer->SetErrorState();
+}
+
+
+//
 // Parse variable
 //
 
 BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
 {
    BOOL bRet = FALSE;
+   DWORD dwValue;
 
    switch(m_nContext)
    {
       case CTX_EVENT:
          if (!stricmp(pszName, "CODE"))
          {
-            SetEventCode()
+            if (GetValueAsUInt(pszValue, &dwValue))
+            {
+               SetEventCode(dwValue);
+            }
+            else
+            {
+               Error("Event code must be a numeric value");
+            }
+         }
+         else if (!stricmp(pszName, "SEVERITY"))
+         {
+            if (GetValueAsUInt(pszValue, &dwValue))
+            {
+               SetEventSeverity(dwValue);
+            }
+            else
+            {
+               Error("Event severity must be a numeric value");
+            }
+         }
+         else if (!stricmp(pszName, "FLAGS"))
+         {
+            if (GetValueAsUInt(pszValue, &dwValue))
+            {
+               SetEventFlags(dwValue);
+            }
+            else
+            {
+               Error("Event flags must be a numeric value");
+            }
+         }
+         else if (!stricmp(pszName, "TEXT"))
+         {
+            SetEventText(pszValue);
+         }
+         else if (!stricmp(pszName, "DESCRIPTION"))
+         {
+            SetEventDescription(pszValue);
+         }
+         else
+         {
+            Error("Unknown event attribute %s", pszName);
          }
          break;
       default:
@@ -93,6 +183,7 @@ void NXMP_Data::NewEvent(char *pszName)
 #else
    nx_strncpy(m_pCurrEvent->szName, pszName, MAX_EVENT_NAME);
 #endif
+   m_nContext = CTX_EVENT;
 }
 
 
@@ -110,9 +201,9 @@ void NXMP_Data::SetEventText(char *pszText)
    nLen = (int)strlen(pszText) + 1;
    m_pCurrEvent->pszMessageTemplate = (TCHAR *)realloc(m_pCurrEvent->pszMessageTemplate, nLen * sizeof(TCHAR));
 #ifdef UNICODE
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszText, -1, m_pCurrEvent->pszDescription, nLen);
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszText, -1, m_pCurrEvent->pszMessageTemplate, nLen);
 #else
-   strcpy(m_pCurrEvent->pszDescription, pszText);
+   strcpy(m_pCurrEvent->pszMessageTemplate, pszText);
 #endif
 }
 

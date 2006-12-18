@@ -123,6 +123,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_CONTROLPANEL_NETWORKDISCOVERY, OnControlpanelNetworkdiscovery)
 	ON_COMMAND(ID_TOOLS_CREATEMP, OnToolsCreatemp)
 	ON_COMMAND(ID_FILE_PAGESETUP, OnFilePagesetup)
+	ON_COMMAND(ID_TOOLS_IMPORTMP, OnToolsImportmp)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -1445,12 +1446,23 @@ CMDIChildWnd *CConsoleApp::FindObjectView(DWORD dwClass, DWORD dwId)
 
 void CConsoleApp::ErrorBox(DWORD dwError, TCHAR *pszMessage, TCHAR *pszTitle)
 {
-   TCHAR szBuffer[512];
+   TCHAR szBuffer[1024];
 
    if (!m_bIgnoreErrors)
    {
-      _sntprintf(szBuffer, 512, (pszMessage != NULL) ? pszMessage : _T("Error: %s"), 
-                 NXCGetErrorText(dwError));
+      if (dwError == RCC_COMPONENT_LOCKED)
+      {
+         TCHAR szTemp[300], szLock[256];
+
+         NXCGetLastLockOwner(g_hSession, szLock, 256);
+         _sntprintf(szTemp, 300, _T("Already locked by %s"), szLock);
+         _sntprintf(szBuffer, 1024, (pszMessage != NULL) ? pszMessage : _T("Error: %s"), szTemp);
+      }
+      else
+      {
+         _sntprintf(szBuffer, 1024, (pszMessage != NULL) ? pszMessage : _T("Error: %s"), 
+                    NXCGetErrorText(dwError));
+      }
       m_pMainWnd->MessageBox(szBuffer, (pszTitle != NULL) ? pszTitle : _T("Error"), MB_ICONSTOP);
    }
 }
@@ -3328,4 +3340,87 @@ HGLOBAL CConsoleApp::GetProfileGMem(TCHAR *pszSection, TCHAR *pszKey)
       delete pData;
    }
    return hMem;
+}
+
+
+//
+// "Tools -> Create management pack..." menu handler
+//
+
+void CConsoleApp::OnToolsImportmp() 
+{
+   CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_FILEMUSTEXIST,
+                   _T("NetXMS Management Packs (*.nxmp)|*.nxmp|All Files (*.*)|*.*||"));
+   DWORD dwResult, dwSize, dwSizeHigh;
+   TCHAR *pszContent, szErrorText[1024];
+   HANDLE hFile;
+
+   if (dlg.DoModal() == IDOK)
+   {
+      hFile = CreateFile(dlg.m_ofn.lpstrFile, GENERIC_READ, FILE_SHARE_READ,
+                         NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+      if (hFile != INVALID_HANDLE_VALUE)
+      {
+         dwSize = GetFileSize(hFile, &dwSizeHigh);
+         if ((dwSizeHigh == 0) && (dwSize <= 4194304))
+         {
+            pszContent = (TCHAR *)malloc((dwSize + 1) * sizeof(TCHAR));
+            memset(pszContent, 0, (dwSize + 1) * sizeof(TCHAR));
+#ifdef UNICODE
+            char *pTemp = (char *)malloc(dwSize);
+            ReadFile(hFile, pTemp, dwSize, &dwResult, NULL);
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pTemp, dwSize, pszContent, dwSize);
+            free(pTemp);
+#else
+            ReadFile(hFile, pszContent, dwSize, &dwResult, NULL);
+#endif
+         }
+         else
+         {
+            m_pMainWnd->MessageBox(_T("Input file is too large"), _T("Error"), MB_OK | MB_ICONSTOP);
+            pszContent = NULL;
+         }
+         CloseHandle(hFile);
+         if (pszContent != NULL)
+         {
+            dwResult = DoRequestArg4(NXCInstallMP, g_hSession, pszContent, szErrorText,
+                                      (void *)1024, _T("Importing management pack..."));
+            free(pszContent);
+            if (dwResult == RCC_SUCCESS)
+            {
+               m_pMainWnd->MessageBox(_T("Management pack successfully imported"), _T("Information"), MB_OK | MB_ICONINFORMATION);
+            }
+            else
+            {
+               if (dwResult == RCC_NXMP_PARSE_ERROR)
+               {
+                  TCHAR szBuffer[2048];
+
+                  _sntprintf(szBuffer, 2048, _T("Error parsing management pack file:\n%s"), szErrorText);
+                  m_pMainWnd->MessageBox(szBuffer, _T("Error"), MB_OK | MB_ICONSTOP);
+               }
+               else if (dwResult == RCC_NXMP_VALIDATION_ERROR)
+               {
+                  TCHAR szBuffer[2048];
+
+                  _sntprintf(szBuffer, 2048, _T("Management pack cannot validation failed:\n%s"), szErrorText);
+                  m_pMainWnd->MessageBox(szBuffer, _T("Error"), MB_OK | MB_ICONSTOP);
+               }
+               else
+               {
+                  ErrorBox(dwResult, _T("Cannot import management pack: %s"));
+               }
+            }
+         }
+      }
+      else
+      {
+         TCHAR szBuffer[4096];
+
+         _sntprintf(szBuffer, 4096, _T("Cannot open input file %s: %s"),
+                    dlg.m_ofn.lpstrFile, 
+                    GetSystemErrorText(GetLastError(), szErrorText, 1024));
+         m_pMainWnd->MessageBox(szBuffer, _T("Error"), MB_OK | MB_ICONSTOP);
+      }
+   }
 }

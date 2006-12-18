@@ -59,6 +59,7 @@ typedef void * NXC_SESSION;
 #define MAX_OID_LENGTH           1024
 #define MAX_EVENT_MSG_LENGTH     256
 #define MAX_EVENT_NAME           64
+#define MAX_SESSION_NAME         256
 #define MAX_USER_NAME            64
 #define MAX_USER_FULLNAME        128
 #define MAX_USER_DESCR           256
@@ -366,6 +367,8 @@ enum
 #define RCC_ALARM_OPEN_IN_HELPDESK  ((DWORD)65)
 #define RCC_ALARM_NOT_OUTSTANDING   ((DWORD)66)
 #define RCC_NOT_PUSH_DCI            ((DWORD)67)
+#define RCC_NXMP_PARSE_ERROR        ((DWORD)68)
+#define RCC_NXMP_VALIDATION_ERROR   ((DWORD)69)
 
 
 //
@@ -1560,6 +1563,8 @@ void LIBNXCL_EXPORTABLE NXCGetServerID(NXC_SESSION hSession, BYTE *pbsId);
 BOOL LIBNXCL_EXPORTABLE NXCIsDBConnLost(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCSubscribe(NXC_SESSION hSession, DWORD dwChannels);
 DWORD LIBNXCL_EXPORTABLE NXCUnsubscribe(NXC_SESSION hSession, DWORD dwChannels);
+void LIBNXCL_EXPORTABLE NXCGetLastLockOwner(NXC_SESSION hSession, TCHAR *pszBuffer,
+                                            int nBufSize);
 
 void LIBNXCL_EXPORTABLE *NXCGetClientData(NXC_SESSION hSession);
 void LIBNXCL_EXPORTABLE NXCSetClientData(NXC_SESSION hSession, void *pData);
@@ -1813,6 +1818,8 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateMPFile(NXC_SESSION hSession, TCHAR *pszDescr,
                                          DWORD dwNumTemplates, DWORD *pdwTemplateList,
                                          DWORD dwNumTraps, DWORD *pdwTrapList,
                                          TCHAR **ppszContent);
+DWORD LIBNXCL_EXPORTABLE NXCInstallMP(NXC_SESSION hSession, TCHAR *pszContent,
+                                      TCHAR *pszErrorText, int nErrorLen);
 
 #ifdef __cplusplus
 }

@@ -125,6 +125,7 @@
 #endif
 
 #define snprintf  _snprintf
+#define vsnprintf _vsnprintf
 
 typedef unsigned __int64 QWORD;
 typedef __int64 INT64;

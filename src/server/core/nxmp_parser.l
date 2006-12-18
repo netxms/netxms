@@ -41,12 +41,14 @@ escape		\\[bnrt0\"]
 <INITIAL>"RULE"			return T_RULE;
 
 <INITIAL>{ident}	{ m_plval->valStr = strdup(yytext); return T_IDENTIFIER; }
-<INITIAL>{int}		{ m_plval->valInt = strtol(yytext, NULL, 0); return T_INT; }
-<INITIAL>{uint}		{ m_plval->valUInt = strtoul(yytext, NULL, 0); return T_UINT; }
-<INITIAL>{real}		{ m_plval->valReal = strtod(yytext, NULL); return T_REAL; }
+<INITIAL>{int}		{ m_plval->valStr = strdup(yytext); return T_INT; }
+<INITIAL>{uint}		{ m_plval->valStr = strdup(yytext); return T_UINT; }
+<INITIAL>{real}		{ m_plval->valStr = strdup(yytext); return T_REAL; }
 
 <INITIAL>";"	return ';';
 <INITIAL>"="	return '=';
+<INITIAL>"{"	return '{';
+<INITIAL>"}"	return '}';
 
 <INITIAL>"/*"	{ m_nCommentLevel = 1; BEGIN COMMENT; }
 <INITIAL>\"		{ m_nStrSize = 0; BEGIN STR; }

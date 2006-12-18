@@ -191,6 +191,17 @@ void LIBNXCL_EXPORTABLE NXCStartWatchdog(NXC_SESSION hSession)
 
 
 //
+// Get last lock information (owner of already locked component)
+//
+
+void LIBNXCL_EXPORTABLE NXCGetLastLockOwner(NXC_SESSION hSession, TCHAR *pszBuffer,
+                                            int nBufSize)
+{
+   nx_strncpy(pszBuffer, ((NXCL_Session *)hSession)->GetLastLock(), nBufSize);
+}
+
+
+//
 // Get text for error
 //
 
@@ -265,9 +276,11 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Server has lost connection with backend database"),
       _T("Alarm is still open in helpdesk system"),
       _T("Alarm is not in \"outstanding\" state"),
-      _T("DCI data source is not a push agent")
+      _T("DCI data source is not a push agent"),
+      _T("Error parsing management pack file"),
+      _T("Management pack validation error")
    };
-   return ((dwError >= 0) && (dwError <= RCC_NOT_PUSH_DCI)) ? pszErrorText[dwError] : _T("No text message for this error");
+   return ((dwError >= 0) && (dwError <= RCC_NXMP_VALIDATION_ERROR)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

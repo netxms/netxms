@@ -68,3 +68,42 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateMPFile(NXC_SESSION hSession, TCHAR *pszDescr,
    }
    return dwResult;
 }
+
+
+//
+// Install management pack
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCInstallMP(NXC_SESSION hSession, TCHAR *pszContent,
+                                      TCHAR *pszErrorText, int nErrorLen)
+{
+   CSCPMessage msg, *pResponse;
+   DWORD dwRqId, dwResult;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_INSTALL_MGMT_PACK);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_NXMP_CONTENT, pszContent);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwResult = pResponse->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+      {
+         *pszErrorText = 0;
+      }
+      else
+      {
+         pResponse->GetVariableStr(VID_ERROR_TEXT, pszErrorText, nErrorLen);
+      }
+      delete pResponse;
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+   }
+   return dwResult;
+}

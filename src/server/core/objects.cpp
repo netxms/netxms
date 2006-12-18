@@ -105,8 +105,8 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
             switch(pInfo->iUpdateType)
             {
                case APPLY_TEMPLATE:
-                  bLock1 = pInfo->pTemplate->LockDCIList(0x7FFFFFFF);
-                  bLock2 = ((Node *)pNode)->LockDCIList(0x7FFFFFFF);
+                  bLock1 = pInfo->pTemplate->LockDCIList(0x7FFFFFFF, _T("SYSTEM"), NULL);
+                  bLock2 = ((Node *)pNode)->LockDCIList(0x7FFFFFFF, _T("SYSTEM"), NULL);
                   if (bLock1 && bLock2)
                   {
                      pInfo->pTemplate->ApplyToNode((Node *)pNode);
@@ -118,7 +118,7 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
                      ((Node *)pNode)->UnlockDCIList(0x7FFFFFFF);
                   break;
                case REMOVE_TEMPLATE:
-                  if (((Node *)pNode)->LockDCIList(0x7FFFFFFF))
+                  if (((Node *)pNode)->LockDCIList(0x7FFFFFFF, _T("SYSTEM"), NULL))
                   {
                      ((Node *)pNode)->UnbindFromTemplate(pInfo->pTemplate->Id(), pInfo->bRemoveDCI);
                      ((Node *)pNode)->UnlockDCIList(0x7FFFFFFF);

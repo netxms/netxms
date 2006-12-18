@@ -137,6 +137,20 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEv
       }
       else
       {
+         if (dwRetCode == RCC_COMPONENT_LOCKED)
+         {
+            if (pResponse->IsVariableExist(VID_LOCKED_BY))
+            {
+               TCHAR szBuffer[MAX_LOCKINFO_LEN];
+
+               pResponse->GetVariableStr(VID_LOCKED_BY, szBuffer, MAX_LOCKINFO_LEN);
+               ((NXCL_Session *)hSession)->SetLastLock(szBuffer);
+            }
+            else
+            {
+               ((NXCL_Session *)hSession)->SetLastLock(_T("<unknown>"));
+            }
+         }
          delete pResponse;
       }
    }

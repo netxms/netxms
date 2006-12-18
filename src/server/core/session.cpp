@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.249 2006-12-11 21:19:30 victor Exp $ */
+/* $Id: session.cpp,v 1.250 2006-12-18 00:21:10 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -22,6 +22,7 @@
 **/
 
 #include "nxcore.h"
+#include "nxmp_parser.h"
 
 #ifdef _WIN32
 #include <psapi.h>
@@ -1011,6 +1012,9 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_CREATE_MGMT_PACK:
             CreateManagementPack(pMsg);
+            break;
+         case CMD_INSTALL_MGMT_PACK:
+            InstallManagementPack(pMsg);
             break;
          default:
             // Pass message to loaded modules
@@ -2241,6 +2245,7 @@ void ClientSession::OpenNodeDCIList(CSCPMessage *pRequest)
    DWORD dwObjectId;
    NetObj *pObject;
    BOOL bSuccess = FALSE;
+   TCHAR szLockInfo[MAX_SESSION_NAME];
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -2257,15 +2262,20 @@ void ClientSession::OpenNodeDCIList(CSCPMessage *pRequest)
          if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             // Try to lock DCI list
-            bSuccess = ((Template *)pObject)->LockDCIList(m_dwIndex);
-            msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_COMPONENT_LOCKED);
-
-            // Modify list of open nodes DCI lists
-            if (bSuccess)
+            if (((Template *)pObject)->LockDCIList(m_dwIndex, m_szUserName, szLockInfo))
             {
+               bSuccess = TRUE;
+               msg.SetVariable(VID_RCC, RCC_SUCCESS);
+
+               // Modify list of open nodes DCI lists
                m_pOpenDCIList = (DWORD *)realloc(m_pOpenDCIList, sizeof(DWORD) * (m_dwOpenDCIListSize + 1));
                m_pOpenDCIList[m_dwOpenDCIListSize] = dwObjectId;
                m_dwOpenDCIListSize++;
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
+               msg.SetVariable(VID_LOCKED_BY, szLockInfo);
             }
          }
          else
@@ -2539,6 +2549,7 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pSource, *pDestination;
+   TCHAR szLockInfo[MAX_SESSION_NAME];
    BOOL bMove;
 
    // Prepare response message
@@ -2563,7 +2574,7 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
             {
                // Attempt to lock destination's DCI list
                if ((pDestination->Id() == pSource->Id()) ||
-                   (((Template *)pDestination)->LockDCIList(m_dwIndex)))
+                   (((Template *)pDestination)->LockDCIList(m_dwIndex, m_szUserName, szLockInfo)))
                {
                   DWORD i, *pdwItemList, dwNumItems;
                   const DCItem *pSrcItem;
@@ -2620,6 +2631,7 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
                else  // Destination's DCI list already locked by someone else
                {
                   msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
+                  msg.SetVariable(VID_LOCKED_BY, szLockInfo);
                }
             }
             else  // User doesn't have enough rights on object(s)
@@ -4673,12 +4685,13 @@ void ClientSession::ApplyTemplate(CSCPMessage *pRequest)
       if ((pSource->Type() == OBJECT_TEMPLATE) && 
           (pDestination->Type() == OBJECT_NODE))
       {
+         TCHAR szLockInfo[MAX_SESSION_NAME];
          BOOL bLockSucceed = FALSE;
 
          // Acquire DCI lock if needed
          if (!((Template *)pSource)->IsLockedBySession(m_dwIndex))
          {
-            bLockSucceed = ((Template *)pSource)->LockDCIList(m_dwIndex);
+            bLockSucceed = ((Template *)pSource)->LockDCIList(m_dwIndex, m_szUserName, szLockInfo);
          }
          else
          {
@@ -4692,7 +4705,7 @@ void ClientSession::ApplyTemplate(CSCPMessage *pRequest)
                 (pDestination->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
             {
                // Attempt to lock destination's DCI list
-               if (((Node *)pDestination)->LockDCIList(m_dwIndex))
+               if (((Node *)pDestination)->LockDCIList(m_dwIndex, m_szUserName, szLockInfo))
                {
                   BOOL bErrors;
 
@@ -4703,6 +4716,7 @@ void ClientSession::ApplyTemplate(CSCPMessage *pRequest)
                else  // Destination's DCI list already locked by someone else
                {
                   msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
+                  msg.SetVariable(VID_LOCKED_BY, szLockInfo);
                }
             }
             else  // User doesn't have enough rights on object(s)
@@ -4715,6 +4729,7 @@ void ClientSession::ApplyTemplate(CSCPMessage *pRequest)
          else  // Source node DCI list not locked by this session
          {
             msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
+            msg.SetVariable(VID_LOCKED_BY, szLockInfo);
          }
       }
       else     // Object(s) is not a node
@@ -8079,6 +8094,53 @@ void ClientSession::CreateManagementPack(CSCPMessage *pRequest)
       }
 
       safe_free(pdwTemplateList);
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   SendMessage(&msg);
+}
+
+
+//
+// Install management pack
+//
+
+void ClientSession::InstallManagementPack(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR *pszContent;
+   NXMP_Parser *pParser;
+   NXMP_Data *pData;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   if ((m_dwSystemAccess & (SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_EDIT_EVENT_DB | SYSTEM_ACCESS_EPP)) == (SYSTEM_ACCESS_CONFIGURE_TRAPS | SYSTEM_ACCESS_EDIT_EVENT_DB | SYSTEM_ACCESS_EPP))
+   {
+      pszContent = pRequest->GetVariableStr(VID_NXMP_CONTENT);
+      if (pszContent != NULL)
+      {
+         pParser = new NXMP_Parser;
+         pData = pParser->Parse(pszContent);
+         free(pszContent);
+         if (pData != NULL)
+         {
+            delete pData;
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_NXMP_PARSE_ERROR);
+            msg.SetVariable(VID_ERROR_TEXT, pParser->GetErrorText());
+         }
+         delete pParser;
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
+      }
    }
    else
    {

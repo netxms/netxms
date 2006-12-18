@@ -261,6 +261,7 @@ public:
 	afx_msg void OnControlpanelNetworkdiscovery();
 	afx_msg void OnToolsCreatemp();
 	afx_msg void OnFilePagesetup();
+	afx_msg void OnToolsImportmp();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

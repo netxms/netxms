@@ -43,6 +43,7 @@
 #define MAX_SERVER_NAME    64
 #define MAX_LOGIN_NAME     64
 #define MAX_PASSWORD_LEN   64
+#define MAX_LOCKINFO_LEN   256
 
 
 //
@@ -121,6 +122,7 @@ private:
    THREAD m_hRecvThread;
    THREAD m_hWatchdogThread;
    CONDITION m_condStopThreads;
+   TCHAR m_szLastLock[MAX_LOCKINFO_LEN];
    void *m_pClientData;       // Client-defined data
 
    DWORD m_dwUserId;          // Id of logged-in user
@@ -237,6 +239,9 @@ public:
    DWORD GetCurrentSystemAccess(void) { return m_dwSystemAccess; }
    BOOL NeedPasswordChange(void) { return (m_dwFlags & NXC_SF_CHANGE_PASSWD) ? TRUE : FALSE; }
    BOOL IsDBConnLost(void) { return (m_dwFlags & NXC_SF_BAD_DBCONN) ? TRUE : FALSE; }
+
+   void SetLastLock(TCHAR *pszLock) { nx_strncpy(m_szLastLock, pszLock, MAX_LOCKINFO_LEN); }
+   TCHAR *GetLastLock(void) { return m_szLastLock; }
 };
 
 inline void NXCL_Session::CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)

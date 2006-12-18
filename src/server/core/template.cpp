@@ -416,16 +416,23 @@ BOOL Template::SetItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus)
 // Lock data collection items list
 //
 
-BOOL Template::LockDCIList(DWORD dwSessionId)
+BOOL Template::LockDCIList(DWORD dwSessionId, TCHAR *pszNewOwner, TCHAR *pszCurrOwner)
 {
-   BOOL bSuccess = FALSE;
+   BOOL bSuccess;
 
    LockData();
    if (m_dwDCILockStatus == INVALID_INDEX)
    {
       m_dwDCILockStatus = dwSessionId;
       m_bDCIListModified = FALSE;
+      nx_strncpy(m_szCurrDCIOwner, pszNewOwner, MAX_SESSION_NAME);
       bSuccess = TRUE;
+   }
+   else
+   {
+      if (pszCurrOwner != NULL)
+         _tcscpy(pszCurrOwner, m_szCurrDCIOwner);
+      bSuccess = FALSE;
    }
    UnlockData();
    return bSuccess;

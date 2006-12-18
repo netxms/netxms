@@ -1,4 +1,4 @@
-/* $Id: nxmp_parser.cpp,v 1.1 2006-12-15 11:38:14 victor Exp $ */
+/* $Id: nxmp_parser.cpp,v 1.2 2006-12-18 00:21:10 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -87,7 +87,7 @@ NXMP_Data *NXMP_Parser::Parse(TCHAR *pszSource)
    NXMP_Data *pData;
 
    m_pLexer = new NXMP_Lexer(this, pszSource);
-   pData = new NXMP_Data;
+   pData = new NXMP_Data(m_pLexer, this);
    if (yyparse(m_pLexer, this, pData) != 0)
    {
       delete pData;

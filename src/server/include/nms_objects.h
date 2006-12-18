@@ -314,6 +314,7 @@ protected:
    DWORD m_dwVersion;
    TCHAR *m_pszDescription;
    BOOL m_bDCIListModified;
+   TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
 
    void LoadItemsFromDB(void);
    void DestroyItems(void);
@@ -348,7 +349,7 @@ public:
    DCItem *GetItemById(DWORD dwItemId);
    DCItem *GetItemByIndex(DWORD dwIndex);
    DCItem *GetItemByName(TCHAR *pszName);
-   BOOL LockDCIList(DWORD dwSessionId);
+   BOOL LockDCIList(DWORD dwSessionId, TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
    BOOL UnlockDCIList(DWORD dwSessionId);
    void SetDCIModificationFlag(void) { m_bDCIListModified = TRUE; }
    void SendItemsToClient(ClientSession *pSession, DWORD dwRqId);

@@ -1,4 +1,4 @@
-/* $Id: nxmp_parser.h,v 1.2 2006-12-17 11:21:52 victor Exp $ */
+/* $Id: nxmp_parser.h,v 1.3 2006-12-18 00:21:10 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Server
@@ -45,6 +45,9 @@
 // Management pack's data
 //
 
+class NXMP_Lexer;
+class NXMP_Parser;
+
 class NXMP_Data
 {
 private:
@@ -52,9 +55,13 @@ private:
    EVENT_TEMPLATE *m_pCurrEvent;
    DWORD m_dwNumEvents;
    int m_nContext;
+   NXMP_Lexer *m_pLexer;
+   NXMP_Parser *m_pParser;
+
+   void Error(const char *pszMsg, ...);
 
 public:
-   NXMP_Data();
+   NXMP_Data(NXMP_Lexer *pLexer, NXMP_Parser *pParser);
    ~NXMP_Data();
 
    void NewEvent(char *pszName);
@@ -63,7 +70,7 @@ public:
    void SetEventCode(DWORD dwCode) { if (m_pCurrEvent != NULL) m_pCurrEvent->dwCode = dwCode; }
    void SetEventSeverity(DWORD dwSeverity) { if (m_pCurrEvent != NULL) m_pCurrEvent->dwSeverity = dwSeverity; }
    void SetEventFlags(DWORD dwFlags) { if (m_pCurrEvent != NULL) m_pCurrEvent->dwFlags = dwFlags; }
-   void CloseEvent(void) { m_pCurrEvent = NULL; }
+   void CloseEvent(void) { m_pCurrEvent = NULL; m_nContext = CTX_NONE; }
 
    BOOL ParseVariable(char *pszName, char *pszValue);
 };
@@ -72,8 +79,6 @@ public:
 //
 // Modified lexer class
 //
-
-class NXMP_Parser;
 
 class NXMP_Lexer : public yyFlexLexer
 {
