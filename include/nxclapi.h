@@ -1,3 +1,4 @@
+/* $Id: nxclapi.h,v 1.245 2006-12-18 10:34:26 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -219,6 +220,15 @@ typedef void * NXC_SESSION;
 #define SA_PROPAGATE_FIXED                2
 #define SA_PROPAGATE_RELATIVE             3
 #define SA_PROPAGATE_TRANSLATED           4
+
+
+//
+// Components that can be locked by management pack installer
+//
+
+#define NXMP_LC_EVENTDB    0
+#define NXMP_LC_EPP        1
+#define NXMP_LC_TRAPCFG    2
 
 
 //
@@ -596,6 +606,14 @@ enum
 //
 
 #define SRV_COMPONENT_DISCOVERY_MGR    1
+
+
+//
+// Management pack installation flags
+//
+
+#define NXMPIF_REPLACE_EVENT_BY_CODE   0x0001
+#define NXMPIF_REPLACE_EVENT_BY_NAME   0x0002
 
 
 //

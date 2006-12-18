@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.250 2006-12-18 00:21:10 victor Exp $ */
+/* $Id: session.cpp,v 1.251 2006-12-18 10:34:27 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -8111,9 +8111,10 @@ void ClientSession::CreateManagementPack(CSCPMessage *pRequest)
 void ClientSession::InstallManagementPack(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   TCHAR *pszContent;
+   TCHAR *pszContent, szLockInfo[MAX_SESSION_NAME], szError[1024];
    NXMP_Parser *pParser;
    NXMP_Data *pData;
+   DWORD dwFlags;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
@@ -8128,6 +8129,56 @@ void ClientSession::InstallManagementPack(CSCPMessage *pRequest)
          free(pszContent);
          if (pData != NULL)
          {
+            // Lock all required components
+            if (LockComponent(CID_EVENT_DB, m_dwIndex, m_szUserName, NULL, szLockInfo))
+            {
+               m_dwFlags |= CSF_EVENT_DB_LOCKED;
+               if (LockComponent(CID_EPP, m_dwIndex, m_szUserName, NULL, szLockInfo))
+               {
+                  m_dwFlags |= CSF_EPP_LOCKED;
+                  if (LockComponent(CID_TRAP_CFG, m_dwIndex, m_szUserName, NULL, szLockInfo))
+                  {
+                     m_dwFlags |= CSF_TRAP_CFG_LOCKED;
+
+                     // Validate and install management pack
+                     dwFlags = pRequest->GetVariableLong(VID_FLAGS);
+                     if (pData->Validate(dwFlags, szError, 1024))
+                     {
+                        msg.SetVariable(VID_RCC, pData->Install(dwFlags));
+                     }
+                     else
+                     {
+                        msg.SetVariable(VID_RCC, RCC_NXMP_VALIDATION_ERROR);
+                        msg.SetVariable(VID_ERROR_TEXT, szError);
+                     }
+
+                     UnlockComponent(CID_TRAP_CFG);
+                     m_dwFlags &= ~CSF_TRAP_CFG_LOCKED;
+                  }
+                  else
+                  {
+                     msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
+                     msg.SetVariable(VID_COMPONENT, (WORD)NXMP_LC_TRAPCFG);
+                     msg.SetVariable(VID_LOCKED_BY, szLockInfo);
+                  }
+                  UnlockComponent(CID_EPP);
+                  m_dwFlags &= ~CSF_EPP_LOCKED;
+               }
+               else
+               {
+                  msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
+                  msg.SetVariable(VID_COMPONENT, (WORD)NXMP_LC_EPP);
+                  msg.SetVariable(VID_LOCKED_BY, szLockInfo);
+               }
+               UnlockComponent(CID_EVENT_DB);
+               m_dwFlags &= ~CSF_EVENT_DB_LOCKED;
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
+               msg.SetVariable(VID_COMPONENT, (WORD)NXMP_LC_EVENTDB);
+               msg.SetVariable(VID_LOCKED_BY, szLockInfo);
+            }
             delete pData;
          }
          else

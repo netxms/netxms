@@ -1,4 +1,4 @@
-/* $Id: nxmp_data.cpp,v 1.3 2006-12-18 00:21:10 victor Exp $ */
+/* $Id: nxmp_data.cpp,v 1.4 2006-12-18 10:34:27 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -226,4 +226,102 @@ void NXMP_Data::SetEventDescription(char *pszText)
 #else
    strcpy(m_pCurrEvent->pszDescription, pszText);
 #endif
+}
+
+
+//
+// Validate management pack data
+//
+
+BOOL NXMP_Data::Validate(DWORD dwFlags, TCHAR *pszErrorText, int nLen)
+{
+   DWORD i;
+   BOOL bRet = FALSE;
+   EVENT_TEMPLATE *pEvent;
+
+   // Validate events
+   for(i = 0; i < m_dwNumEvents; i++)
+   {
+      if (m_pEventList[i].dwCode >= FIRST_USER_EVENT_ID)
+      {
+         pEvent = FindEventTemplateByName(m_pEventList[i].szName);
+         if (pEvent != NULL)
+         {
+            if (!(dwFlags & NXMPIF_REPLACE_EVENT_BY_NAME))
+            {
+               _sntprintf(pszErrorText, nLen, _T("Event with name %s already exist"),
+                          m_pEventList[i].szName);
+               goto stop_processing;
+            }
+         }
+      }
+      else
+      {
+         pEvent = FindEventTemplateByCode(m_pEventList[i].dwCode);
+         if (pEvent != NULL)
+         {
+            if (!(dwFlags & NXMPIF_REPLACE_EVENT_BY_CODE))
+            {
+               _sntprintf(pszErrorText, nLen, _T("Event with code %d already exist (existing event name: %s; new event name: %s)"),
+                          pEvent->dwCode, pEvent->szName, m_pEventList[i].szName);
+               goto stop_processing;
+            }
+         }
+      }
+   }
+
+   bRet = TRUE;
+
+stop_processing:
+   return bRet;
+}
+
+
+//
+// Install management pack
+//
+
+DWORD NXMP_Data::Install(DWORD dwFlags)
+{
+   DWORD i, dwResult = RCC_SUCCESS;
+   BOOL bRet = FALSE;
+   EVENT_TEMPLATE *pEvent;
+
+   // Install events
+   for(i = 0; i < m_dwNumEvents; i++)
+   {
+      if (m_pEventList[i].dwCode >= FIRST_USER_EVENT_ID)
+      {
+         pEvent = FindEventTemplateByName(m_pEventList[i].szName);
+         if (pEvent != NULL)
+         {
+            if (!(dwFlags & NXMPIF_REPLACE_EVENT_BY_NAME))
+            {
+               dwResult = RCC_INTERNAL_ERROR;
+               goto stop_processing;
+            }
+         }
+         else
+         {
+         }
+      }
+      else
+      {
+         pEvent = FindEventTemplateByCode(m_pEventList[i].dwCode);
+         if (pEvent != NULL)
+         {
+            if (!(dwFlags & NXMPIF_REPLACE_EVENT_BY_CODE))
+            {
+               dwResult = RCC_INTERNAL_ERROR;
+               goto stop_processing;
+            }
+         }
+         else
+         {
+         }
+      }
+   }
+
+stop_processing:
+   return dwResult;
 }

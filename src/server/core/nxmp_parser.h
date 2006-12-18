@@ -1,4 +1,4 @@
-/* $Id: nxmp_parser.h,v 1.3 2006-12-18 00:21:10 victor Exp $ */
+/* $Id: nxmp_parser.h,v 1.4 2006-12-18 10:34:27 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Server
@@ -63,6 +63,9 @@ private:
 public:
    NXMP_Data(NXMP_Lexer *pLexer, NXMP_Parser *pParser);
    ~NXMP_Data();
+
+   BOOL Validate(DWORD dwFlags, TCHAR *pszErrorText, int nLen);
+   DWORD Install(DWORD dwFlags);
 
    void NewEvent(char *pszName);
    void SetEventText(char *pszText);

@@ -698,6 +698,7 @@ typedef struct
 #define VID_TRAP_LIST               ((DWORD)257)
 #define VID_NXMP_CONTENT            ((DWORD)258)
 #define VID_ERROR_TEXT              ((DWORD)259)
+#define VID_COMPONENT               ((DWORD)260)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

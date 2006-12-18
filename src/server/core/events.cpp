@@ -700,3 +700,41 @@ BOOL ResolveEventName(DWORD dwCode, TCHAR *pszBuffer)
    RWLockUnlock(m_rwlockTemplateAccess);
    return bRet;
 }
+
+
+//
+// Find event template by code - suitable for external call
+//
+
+EVENT_TEMPLATE *FindEventTemplateByCode(DWORD dwCode)
+{
+   EVENT_TEMPLATE *p = NULL;
+
+   RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
+   p = FindEventTemplate(dwCode);
+   RWLockUnlock(m_rwlockTemplateAccess);
+   return p;
+}
+
+
+//
+// Find event template by name - suitable for external call
+//
+
+EVENT_TEMPLATE *FindEventTemplateByName(TCHAR *pszName)
+{
+   EVENT_TEMPLATE *p = NULL;
+   DWORD i;
+
+   RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
+   for(i = 0; i < m_dwNumTemplates; i++)
+   {
+      if (!_tcscmp(m_pEventTemplates[i].szName, pszName))
+      {
+         p = &m_pEventTemplates[i];
+         break;
+      }
+   }
+   RWLockUnlock(m_rwlockTemplateAccess);
+   return p;
+}
