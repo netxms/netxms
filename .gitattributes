@@ -826,6 +826,8 @@ src/console/win32/ScriptManager.cpp -text
 src/console/win32/ScriptManager.h -text
 src/console/win32/ScriptView.cpp -text
 src/console/win32/ScriptView.h -text
+src/console/win32/SelectMPDlg.cpp -text
+src/console/win32/SelectMPDlg.h -text
 src/console/win32/ServerCfgEditor.cpp -text
 src/console/win32/ServerCfgEditor.h -text
 src/console/win32/StdAfx.cpp -text

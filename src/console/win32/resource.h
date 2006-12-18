@@ -211,6 +211,7 @@
 #define IDI_EXIT                        341
 #define IDD_CREATE_MP                   342
 #define IDI_TEMPLATE_ROOT               343
+#define IDD_SELECT_MP                   344
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -576,6 +577,8 @@
 #define IDC_BUTTON_ADD_TEMPLATE         1423
 #define IDC_BUTTON_ADD_TRAP             1424
 #define IDC_BUTTON_BROWSE               1425
+#define IDC_CHECK_REPLACE_BY_CODE       1427
+#define IDC_CHECK_REPLACE_BY_NAME       1428
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -815,9 +818,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        344
+#define _APS_NEXT_RESOURCE_VALUE        345
 #define _APS_NEXT_COMMAND_VALUE         33050
-#define _APS_NEXT_CONTROL_VALUE         1426
+#define _APS_NEXT_CONTROL_VALUE         1430
 #define _APS_NEXT_SYMED_VALUE           129
 #endif
 #endif

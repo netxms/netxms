@@ -2830,6 +2830,25 @@ BEGIN
     LTEXT           "Content",IDC_STATIC,7,65,26,8
 END
 
+IDD_SELECT_MP DIALOG DISCARDABLE  0, 0, 242, 103
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Import Management Pack"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_FILE,7,17,171,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse",IDC_BUTTON_BROWSE,128,35,50,14
+    CONTROL         "Replace events with matching event &code",
+                    IDC_CHECK_REPLACE_BY_CODE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,67,149,10
+    CONTROL         "Replace events with matching &name",
+                    IDC_CHECK_REPLACE_BY_NAME,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,79,131,10
+    DEFPUSHBUTTON   "Import",IDOK,185,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,185,24,50,14
+    LTEXT           "Management pack file:",IDC_STATIC,7,7,73,8
+    GROUPBOX        "Options",IDC_STATIC,7,55,171,41
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -3480,6 +3499,14 @@ BEGIN
         RIGHTMARGIN, 283
         TOPMARGIN, 7
         BOTTOMMARGIN, 248
+    END
+
+    IDD_SELECT_MP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 235
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 96
     END
 END
 #endif    // APSTUDIO_INVOKED

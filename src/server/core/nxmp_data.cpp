@@ -1,4 +1,4 @@
-/* $Id: nxmp_data.cpp,v 1.4 2006-12-18 10:34:27 victor Exp $ */
+/* $Id: nxmp_data.cpp,v 1.5 2006-12-18 19:02:46 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -242,7 +242,8 @@ BOOL NXMP_Data::Validate(DWORD dwFlags, TCHAR *pszErrorText, int nLen)
    // Validate events
    for(i = 0; i < m_dwNumEvents; i++)
    {
-      if (m_pEventList[i].dwCode >= FIRST_USER_EVENT_ID)
+      if ((m_pEventList[i].dwCode >= FIRST_USER_EVENT_ID) ||
+          (m_pEventList[i].dwCode == 0))
       {
          pEvent = FindEventTemplateByName(m_pEventList[i].szName);
          if (pEvent != NULL)
@@ -278,6 +279,48 @@ stop_processing:
 
 
 //
+// Update event in database
+//
+
+static BOOL UpdateEvent(EVENT_TEMPLATE *pEvent)
+{
+   TCHAR szQuery[4096], *pszEscMsg, *pszEscDescr;
+   BOOL bEventExist = FALSE;
+   DB_RESULT hResult;
+
+   // Check if event with specific code exists
+   _stprintf(szQuery, _T("SELECT event_code FROM event_cfg WHERE event_code=%d"), pEvent->dwCode);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         bEventExist = TRUE;
+      DBFreeResult(hResult);
+   }
+
+   // Create or update event template in database
+   pszEscMsg = EncodeSQLString(pEvent->pszMessageTemplate);
+   pszEscDescr = EncodeSQLString(pEvent->pszDescription);
+   if (bEventExist)
+   {
+      _sntprintf(szQuery, 4096, _T("UPDATE event_cfg SET event_name='%s',severity=%d,flags=%d,message='%s',description='%s' WHERE event_code=%d"),
+                 pEvent->szName, pEvent->dwSeverity, pEvent->dwFlags,
+                 pszEscMsg, pszEscDescr, pEvent->dwCode);
+   }
+   else
+   {
+      _sntprintf(szQuery, 4096, _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,")
+                                _T("message,description) VALUES (%d,'%s',%d,%d,'%s','%s')"),
+                 pEvent->dwCode, pEvent->szName, pEvent->dwSeverity,
+                 pEvent->dwFlags, pszEscMsg, pszEscDescr);
+   }
+   free(pszEscMsg);
+   free(pszEscDescr);
+   return DBQuery(g_hCoreDB, szQuery);
+}
+
+
+//
 // Install management pack
 //
 
@@ -290,7 +333,8 @@ DWORD NXMP_Data::Install(DWORD dwFlags)
    // Install events
    for(i = 0; i < m_dwNumEvents; i++)
    {
-      if (m_pEventList[i].dwCode >= FIRST_USER_EVENT_ID)
+      if ((m_pEventList[i].dwCode >= FIRST_USER_EVENT_ID) ||
+          (m_pEventList[i].dwCode == 0))
       {
          pEvent = FindEventTemplateByName(m_pEventList[i].szName);
          if (pEvent != NULL)
@@ -300,26 +344,32 @@ DWORD NXMP_Data::Install(DWORD dwFlags)
                dwResult = RCC_INTERNAL_ERROR;
                goto stop_processing;
             }
+            m_pEventList[i].dwCode = pEvent->dwCode;
          }
          else
          {
+            m_pEventList[i].dwCode = CreateUniqueId(IDG_EVENT);
          }
       }
       else
       {
          pEvent = FindEventTemplateByCode(m_pEventList[i].dwCode);
-         if (pEvent != NULL)
+         if ((pEvent != NULL) && (!(dwFlags & NXMPIF_REPLACE_EVENT_BY_CODE)))
          {
-            if (!(dwFlags & NXMPIF_REPLACE_EVENT_BY_CODE))
-            {
-               dwResult = RCC_INTERNAL_ERROR;
-               goto stop_processing;
-            }
-         }
-         else
-         {
+            dwResult = RCC_INTERNAL_ERROR;
+            goto stop_processing;
          }
       }
+      if (!UpdateEvent(&m_pEventList[i]))
+      {
+         dwResult = RCC_DB_FAILURE;
+         goto stop_processing;
+      }
+   }
+   if (m_dwNumEvents > 0)
+   {
+      ReloadEvents();
+      NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
    }
 
 stop_processing:

@@ -624,6 +624,10 @@ SOURCE=.\ScriptView.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\SelectMPDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ServerCfgEditor.cpp
 # End Source File
 # Begin Source File
@@ -1198,6 +1202,10 @@ SOURCE=.\ScriptManager.h
 # Begin Source File
 
 SOURCE=.\ScriptView.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\SelectMPDlg.h
 # End Source File
 # Begin Source File
 

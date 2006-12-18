@@ -75,7 +75,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateMPFile(NXC_SESSION hSession, TCHAR *pszDescr,
 //
 
 DWORD LIBNXCL_EXPORTABLE NXCInstallMP(NXC_SESSION hSession, TCHAR *pszContent,
-                                      TCHAR *pszErrorText, int nErrorLen)
+                                      DWORD dwFlags, TCHAR *pszErrorText, int nErrorLen)
 {
    CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwResult;
@@ -85,6 +85,7 @@ DWORD LIBNXCL_EXPORTABLE NXCInstallMP(NXC_SESSION hSession, TCHAR *pszContent,
    msg.SetCode(CMD_INSTALL_MGMT_PACK);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_NXMP_CONTENT, pszContent);
+   msg.SetVariable(VID_FLAGS, dwFlags);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);

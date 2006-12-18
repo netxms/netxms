@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.245 2006-12-18 10:34:26 victor Exp $ */
+/* $Id: nxclapi.h,v 1.246 2006-12-18 19:02:44 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -1837,7 +1837,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateMPFile(NXC_SESSION hSession, TCHAR *pszDescr,
                                          DWORD dwNumTraps, DWORD *pdwTrapList,
                                          TCHAR **ppszContent);
 DWORD LIBNXCL_EXPORTABLE NXCInstallMP(NXC_SESSION hSession, TCHAR *pszContent,
-                                      TCHAR *pszErrorText, int nErrorLen);
+                                      DWORD dwFlags, TCHAR *pszErrorText, int nErrorLen);
 
 #ifdef __cplusplus
 }

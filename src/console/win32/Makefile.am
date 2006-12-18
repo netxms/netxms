@@ -120,6 +120,7 @@ EXTRA_DIST = \
 	SNMPWalkDlg.cpp SNMPWalkDlg.h \
 	ScriptManager.cpp ScriptManager.h \
 	ScriptView.cpp ScriptView.h \
+	SelectMPDlg.cpp SelectMPDlg.h \
 	ServerCfgEditor.cpp ServerCfgEditor.h \
 	StdAfx.cpp StdAfx.h \
 	SubmapBkgndDlg.cpp SubmapBkgndDlg.h \

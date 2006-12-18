@@ -138,7 +138,7 @@ ThresholdsList:
 ;
 
 Threshold:
-	VariableList
+	T_THRESHOLD '{' VariableList '}'
 ;
 
 RulesList:
@@ -147,12 +147,12 @@ RulesList:
 ;
 
 Rule:
-	T_RULE '{' RuleBody '}'
+	T_RULE '{' VariableList '}'
 ;
 
-RuleBody:
+/*RuleBody:
 	VariableList
-;
+;*/
 
 VariableList:
 	Variable VariableList

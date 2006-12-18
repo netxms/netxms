@@ -67,6 +67,7 @@
 #include "ObjectBrowser.h"
 #include "DataCollectionEditor.h"
 #include "CreateMPDlg.h"
+#include "SelectMPDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -3349,15 +3350,28 @@ HGLOBAL CConsoleApp::GetProfileGMem(TCHAR *pszSection, TCHAR *pszKey)
 
 void CConsoleApp::OnToolsImportmp() 
 {
-   CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_FILEMUSTEXIST,
-                   _T("NetXMS Management Packs (*.nxmp)|*.nxmp|All Files (*.*)|*.*||"));
-   DWORD dwResult, dwSize, dwSizeHigh;
+   CSelectMPDlg dlg;
+   DWORD dwResult, dwSize, dwSizeHigh, dwFlags;
    TCHAR *pszContent, szErrorText[1024];
    HANDLE hFile;
 
+   dwFlags = GetProfileInt(_T("MPImportDialog"), _T("Flags"), 0);
+   dlg.m_strFile = GetProfileString(_T("MPImportDialog"), _T("FileName"), _T(""));
+   if (dwFlags & NXMPIF_REPLACE_EVENT_BY_CODE)
+      dlg.m_bReplaceEventByCode = TRUE;
+   if (dwFlags & NXMPIF_REPLACE_EVENT_BY_NAME)
+      dlg.m_bReplaceEventByName = TRUE;
    if (dlg.DoModal() == IDOK)
    {
-      hFile = CreateFile(dlg.m_ofn.lpstrFile, GENERIC_READ, FILE_SHARE_READ,
+      dwFlags = 0;
+      if (dlg.m_bReplaceEventByCode)
+         dwFlags |= NXMPIF_REPLACE_EVENT_BY_CODE;
+      if (dlg.m_bReplaceEventByName)
+         dwFlags |= NXMPIF_REPLACE_EVENT_BY_NAME;
+      WriteProfileInt(_T("MPImportDialog"), _T("Flags"), dwFlags);
+      WriteProfileString(_T("MPImportDialog"), _T("FileName"), (LPCTSTR)dlg.m_strFile);
+
+      hFile = CreateFile((LPCTSTR)dlg.m_strFile, GENERIC_READ, FILE_SHARE_READ,
                          NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
       if (hFile != INVALID_HANDLE_VALUE)
       {
@@ -3383,8 +3397,9 @@ void CConsoleApp::OnToolsImportmp()
          CloseHandle(hFile);
          if (pszContent != NULL)
          {
-            dwResult = DoRequestArg4(NXCInstallMP, g_hSession, pszContent, szErrorText,
-                                      (void *)1024, _T("Importing management pack..."));
+            dwResult = DoRequestArg5(NXCInstallMP, g_hSession, pszContent,
+                                     (void *)dwFlags, szErrorText,
+                                     (void *)1024, _T("Importing management pack..."));
             free(pszContent);
             if (dwResult == RCC_SUCCESS)
             {
@@ -3403,7 +3418,7 @@ void CConsoleApp::OnToolsImportmp()
                {
                   TCHAR szBuffer[2048];
 
-                  _sntprintf(szBuffer, 2048, _T("Management pack cannot validation failed:\n%s"), szErrorText);
+                  _sntprintf(szBuffer, 2048, _T("Management pack validation failed:\n%s"), szErrorText);
                   m_pMainWnd->MessageBox(szBuffer, _T("Error"), MB_OK | MB_ICONSTOP);
                }
                else
@@ -3418,7 +3433,7 @@ void CConsoleApp::OnToolsImportmp()
          TCHAR szBuffer[4096];
 
          _sntprintf(szBuffer, 4096, _T("Cannot open input file %s: %s"),
-                    dlg.m_ofn.lpstrFile, 
+                    (LPCTSTR)dlg.m_strFile, 
                     GetSystemErrorText(GetLastError(), szErrorText, 1024));
          m_pMainWnd->MessageBox(szBuffer, _T("Error"), MB_OK | MB_ICONSTOP);
       }
