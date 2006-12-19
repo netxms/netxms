@@ -648,7 +648,8 @@ typedef struct tagICMPHDR
 //
 
 #ifndef _WIN32
-#define stricmp strcasecmp
+#define stricmp   strcasecmp
+#define strnicmp  strncasecmp
 #endif
 
 

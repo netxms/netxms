@@ -286,7 +286,11 @@ src/agent/subagents/aix/net.cpp -text
 src/agent/subagents/aix/proc.cpp -text
 src/agent/subagents/aix/system.cpp -text
 src/agent/subagents/ecs/Makefile.am -text
+src/agent/subagents/ecs/Makefile.nw -text
 src/agent/subagents/ecs/ecs.cpp -text
+src/agent/subagents/ecs/ecs.def -text
+src/agent/subagents/ecs/ecs.dsp -text
+src/agent/subagents/ecs/ecs.dsw -text
 src/agent/subagents/freebsd/Makefile.am -text
 src/agent/subagents/freebsd/disk.cpp -text
 src/agent/subagents/freebsd/disk.h -text

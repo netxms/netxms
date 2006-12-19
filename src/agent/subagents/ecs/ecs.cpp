@@ -18,10 +18,8 @@
  **
  **/
 
-//#include <windows.h>
 #include <nms_common.h>
 #include <nms_agent.h>
-#include <stdlib.h>
 
 #ifdef _WIN32
 #define ECS_EXPORTABLE __declspec(dllexport) __cdecl
@@ -116,7 +114,7 @@ static unsigned char *GetHttpUrl(char *url, int *size)
 
 	if (ret != NULL)
 	{
-		if (*size > 7 && !strncasecmp(ret, "HTTP/1.", 7))
+		if (*size > 7 && !strnicmp(ret, "HTTP/1.", 7))
 		{
 			ret[*size] = 0;
 			char *v1 = strstr(ret, "\r\n\r\n"); // should be this
@@ -182,7 +180,7 @@ static LONG H_DoHttp(char *pszParam, char *pArg, char *pValue)
 
 	NxGetParameterArg(pszParam, 1, szArg, 255);
 
-	if (!strncasecmp(szArg, "http://", 7))
+	if (!strnicmp(szArg, "http://", 7))
 	{
 		int contentSize;
 		unsigned char *content = GetHttpUrl(szArg + 7, &contentSize);
@@ -238,7 +236,7 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("ECS"), _T("0.0.1"), UnloadHandler, NULL,
+	_T("ECS"), NETXMS_VERSION_STRING, UnloadHandler, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 //	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),

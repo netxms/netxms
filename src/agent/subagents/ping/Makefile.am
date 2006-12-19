@@ -4,7 +4,7 @@ lib_LTLIBRARIES = libnsm_ping.la
 libnsm_ping_la_SOURCES = ping.cpp
 libnsm_ping_la_LDFLAGS = ../../../libnetxms/libnetxms.la
 
-EXTRA_DIST = ping.h ping.def Makefile.nw
+EXTRA_DIST = ping.h ping.dsp ping.dsw ping.def Makefile.nw
 
 install-exec-hook:
 	if test "x`uname -s`" = "xAIX" ; then \
