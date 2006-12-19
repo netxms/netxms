@@ -186,6 +186,10 @@ SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\microdowell.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\serial.cpp
 # End Source File
 # Begin Source File

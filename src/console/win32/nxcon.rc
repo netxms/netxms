@@ -226,19 +226,6 @@ BEGIN
     END
     POPUP "&Object (browser)"
     BEGIN
-        POPUP "&View"
-        BEGIN
-            MENUITEM "&Show preview pane\tAlt+P",   ID_OBJECT_VIEW_SHOWPREVIEWPANE
-
-            MENUITEM "Selection &follow changes\tAlt+F", 
-                                                    ID_OBJECT_VIEW_SELECTION
-            MENUITEM SEPARATOR
-            MENUITEM "View as &tree\tCtrl+T",       ID_OBJECT_VIEW_VIEWASTREE
-
-            MENUITEM "View as &list\tCtrl+L",       ID_OBJECT_VIEW_VIEWASLIST
-
-        END
-        MENUITEM SEPARATOR
         MENUITEM "&Find...\tCtrl+F",            ID_OBJECT_FIND
         MENUITEM SEPARATOR
         POPUP "&Create..."

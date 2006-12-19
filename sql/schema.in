@@ -182,36 +182,36 @@ CREATE TABLE nodes
 ** Clusters information
 */
 
-CREATE TABLE clusters
+/*CREATE TABLE clusters
 (
 	id integer not null,
 	cluster_type integer not null,
 	PRIMARY KEY(id)
-) TABLE_TYPE;
+) TABLE_TYPE;*/
 
 
 /*
 ** Cluster members
 */
 
-CREATE TABLE cluster_members
+/*CREATE TABLE cluster_members
 (
 	cluster_id integer not null,
 	node_id integer not null,
 	PRIMARY KEY(cluster_id,node_id)
-) TABLE_TYPE;
+) TABLE_TYPE;*/
 
 
 /*
 ** Cluster interconnect subnets
 */
 
-CREATE TABLE cluster_ic_subnets
+/*CREATE TABLE cluster_ic_subnets
 (
 	cluster_id integer not null,
 	subnet_addr varchar(15),
 	subnet_mask varchar(15)
-) TABLE_TYPE;
+) TABLE_TYPE;*/
 
 
 /*
