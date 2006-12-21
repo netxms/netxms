@@ -433,6 +433,7 @@ typedef struct
 #define CMD_GET_DCI_EVENTS_LIST     0x00BF
 #define CMD_CREATE_MGMT_PACK        0x00C0
 #define CMD_INSTALL_MGMT_PACK       0x00C1
+#define CMD_GET_TRAP_CFG_RO			0x00C2
 
 
 //
@@ -806,6 +807,9 @@ typedef struct
 
 // Base value for address list
 #define VID_ADDR_LIST_BASE          ((DWORD)0x10000000)
+
+// Base value for trap configuration records
+#define VID_TRAP_INFO_BASE          ((DWORD)0x10000000)
 
 
 //

@@ -53,7 +53,7 @@ const String& String::operator =(TCHAR *pszStr)
 {
    safe_free(m_pszBuffer);
    m_pszBuffer = _tcsdup(pszStr);
-   m_dwBufSize = _tcslen(pszStr) + 1;
+   m_dwBufSize = (DWORD)_tcslen(pszStr) + 1;
    return *this;
 }
 
@@ -84,7 +84,7 @@ void String::AddFormattedString(TCHAR *pszFormat, ...)
    va_list args;
    TCHAR *pszBuffer;
 
-   nLen = _tcslen(pszFormat) + NumChars(pszFormat, _T('%')) * 1024;
+   nLen = (int)_tcslen(pszFormat) + NumChars(pszFormat, _T('%')) * 1024;
    pszBuffer = (TCHAR *)malloc(nLen * sizeof(TCHAR));
    va_start(args, pszFormat);
    _vsntprintf(pszBuffer, nLen, pszFormat, args);
@@ -132,7 +132,7 @@ void String::SetBuffer(TCHAR *pszBuffer)
 {
    safe_free(m_pszBuffer);
    m_pszBuffer = pszBuffer;
-   m_dwBufSize = (m_pszBuffer != NULL) ? _tcslen(m_pszBuffer) + 1 : 1;
+   m_dwBufSize = (m_pszBuffer != NULL) ? (DWORD)_tcslen(m_pszBuffer) + 1 : 1;
 }
 
 
@@ -147,8 +147,8 @@ void String::Translate(TCHAR *pszSrc, TCHAR *pszDst)
    if (m_pszBuffer == NULL)
       return;
 
-   dwLenSrc = _tcslen(pszSrc);
-   dwLenDst = _tcslen(pszDst);
+   dwLenSrc = (DWORD)_tcslen(pszSrc);
+   dwLenDst = (DWORD)_tcslen(pszDst);
 
    if (m_dwBufSize <= dwLenSrc)
       return;

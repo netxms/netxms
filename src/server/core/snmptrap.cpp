@@ -463,6 +463,28 @@ void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId)
 
 
 //
+// Prepare message with all trap configuration records
+//
+
+void CreateTrapCfgMessage(CSCPMessage &msg)
+{
+   DWORD i, dwId;
+
+   MutexLock(m_mutexTrapCfgAccess, INFINITE);
+	msg.SetVariable(VID_NUM_TRAPS, m_dwNumTraps);
+   for(i = 0, dwId = VID_TRAP_INFO_BASE; i < m_dwNumTraps; i++, dwId += 5)
+   {
+      msg.SetVariable(dwId++, m_pTrapCfg[i].dwId);
+      msg.SetVariable(dwId++, m_pTrapCfg[i].dwOidLen); 
+      msg.SetVariableToInt32Array(dwId++, m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId);
+      msg.SetVariable(dwId++, m_pTrapCfg[i].dwEventCode);
+      msg.SetVariable(dwId++, m_pTrapCfg[i].szDescription);
+   }
+   MutexUnlock(m_mutexTrapCfgAccess);
+}
+
+
+//
 // Delete trap configuration record
 //
 

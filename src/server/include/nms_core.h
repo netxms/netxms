@@ -415,6 +415,7 @@ private:
    void EditTrap(int iOperation, CSCPMessage *pRequest);
    void LockTrapCfg(DWORD dwRqId, BOOL bLock);
    void SendAllTraps(DWORD dwRqId);
+   void SendAllTraps2(DWORD dwRqId);
    void LockPackageDB(DWORD dwRqId, BOOL bLock);
    void SendAllPackages(DWORD dwRqId);
    void InstallPackage(CSCPMessage *pRequest);
@@ -617,6 +618,7 @@ void GetAccelarVLANIfList(DWORD dwVersion, DWORD dwIpAddr, WORD wPort,
 
 void InitTraps(void);
 void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId);
+void CreateTrapCfgMessage(CSCPMessage &msg);
 DWORD CreateNewTrap(DWORD *pdwTrapId);
 DWORD UpdateTrapFromMsg(CSCPMessage *pMsg);
 DWORD DeleteTrap(DWORD dwId);

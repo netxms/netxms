@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.251 2006-12-18 10:34:27 victor Exp $ */
+/* $Id: session.cpp,v 1.252 2006-12-21 09:00:57 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -824,6 +824,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_LOAD_TRAP_CFG:
             SendAllTraps(pMsg->GetId());
             break;
+			case CMD_GET_TRAP_CFG_RO:
+				SendAllTraps2(pMsg->GetId());
+				break;
          case CMD_QUERY_PARAMETER:
             QueryParameter(pMsg);
             break;
@@ -4207,6 +4210,34 @@ void ClientSession::SendAllTraps(DWORD dwRqId)
    // Send response
    if (!bSuccess)
       SendMessage(&msg);
+}
+
+
+//
+// Send all trap configuration records to client
+// Send all in one message with less information and don't need a lock
+//
+
+void ClientSession::SendAllTraps2(DWORD dwRqId)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+   if (m_dwSystemAccess & SYSTEM_ACCESS_CONFIGURE_TRAPS)
+   {
+      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      CreateTrapCfgMessage(msg);
+   }
+   else
+   {
+      // Current user has no rights for trap management
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   SendMessage(&msg);
 }
 
 
