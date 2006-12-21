@@ -212,6 +212,7 @@
 #define IDD_CREATE_MP                   342
 #define IDI_TEMPLATE_ROOT               343
 #define IDD_SELECT_MP                   344
+#define IDD_SELECT_TRAP                 345
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -542,6 +543,7 @@
 #define IDC_EDIT_SCRIPT                 1366
 #define IDC_LIST_DCI                    1367
 #define IDC_LIST2                       1367
+#define IDC_LIST_TRAPS                  1367
 #define IDC_EDIT_NODE                   1368
 #define IDC_EDIT_ITEM                   1369
 #define IDC_EDIT_POLLS                  1371
@@ -818,7 +820,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        345
+#define _APS_NEXT_RESOURCE_VALUE        346
 #define _APS_NEXT_COMMAND_VALUE         33050
 #define _APS_NEXT_CONTROL_VALUE         1430
 #define _APS_NEXT_SYMED_VALUE           129

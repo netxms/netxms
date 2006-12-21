@@ -854,6 +854,8 @@ src/console/win32/TrapLogBrowser.cpp -text
 src/console/win32/TrapLogBrowser.h -text
 src/console/win32/TrapParamDlg.cpp -text
 src/console/win32/TrapParamDlg.h -text
+src/console/win32/TrapSelDlg.cpp -text
+src/console/win32/TrapSelDlg.h -text
 src/console/win32/UserEditor.cpp -text
 src/console/win32/UserEditor.h -text
 src/console/win32/UserPropDlg.cpp -text

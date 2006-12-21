@@ -681,6 +681,10 @@ SOURCE=.\TrapParamDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\TrapSelDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\UserEditor.cpp
 # End Source File
 # Begin Source File
@@ -1258,6 +1262,10 @@ SOURCE=.\TrapLogBrowser.h
 # Begin Source File
 
 SOURCE=.\TrapParamDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\TrapSelDlg.h
 # End Source File
 # Begin Source File
 

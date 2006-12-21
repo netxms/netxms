@@ -6,6 +6,7 @@
 #include "CreateMPDlg.h"
 #include "EventSelDlg.h"
 #include "ObjectSelDlg.h"
+#include "TrapSelDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -63,6 +64,7 @@ BEGIN_MESSAGE_MAP(CCreateMPDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_ADD_EVENT, OnButtonAddEvent)
 	ON_BN_CLICKED(IDC_BUTTON_ADD_TEMPLATE, OnButtonAddTemplate)
 	ON_BN_CLICKED(IDC_BUTTON_DELETE, OnButtonDelete)
+	ON_BN_CLICKED(IDC_BUTTON_ADD_TRAP, OnButtonAddTrap)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -192,6 +194,22 @@ void CCreateMPDlg::AddTemplate(DWORD dwId)
       }
       safe_free(pdwList);
    }
+}
+
+
+//
+// Handler for "Add trap..." button
+//
+
+void CCreateMPDlg::OnButtonAddTrap() 
+{
+	CTrapSelDlg dlg;
+	
+	dlg.m_dwTrapCfgSize = m_dwTrapCfgSize;
+	dlg.m_pTrapCfg = m_pTrapCfg;
+	if (dlg.DoModal() == IDOK)
+	{
+	}
 }
 
 

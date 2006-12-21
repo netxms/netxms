@@ -133,6 +133,7 @@ EXTRA_DIST = \
 	TrapEditDlg.cpp TrapEditDlg.h \
 	TrapLogBrowser.cpp TrapLogBrowser.h \
 	TrapParamDlg.cpp TrapParamDlg.h \
+	TrapSelDlg.cpp TrapSelDlg.h \
 	UserEditor.cpp UserEditor.h \
 	UserPropDlg.cpp UserPropDlg.h \
 	UserSelectDlg.cpp UserSelectDlg.h \
