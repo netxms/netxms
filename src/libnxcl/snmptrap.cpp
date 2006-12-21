@@ -305,3 +305,49 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncSNMPTrapLog(NXC_SESSION hSession, DWORD dwMaxRec
 
    return dwRetCode;
 }
+
+
+//
+// Get read-only trap configuration without parameter bindings
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetTrapCfgRO(NXC_SESSION hSession, DWORD *pdwNumTraps,
+                                         NXC_TRAP_CFG_ENTRY **ppTrapList)
+{
+   CSCPMessage msg, *pResponse;
+   DWORD i, dwId, dwRqId, dwRetCode;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_GET_TRAP_CFG_RO);
+   msg.SetId(dwRqId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      if (dwRetCode == RCC_SUCCESS)
+      {
+         *pdwNumTraps = pResponse->GetVariableLong(VID_NUM_TRAPS);
+         *ppTrapList = (NXC_TRAP_CFG_ENTRY *)malloc(sizeof(NXC_TRAP_CFG_ENTRY) * (*pdwNumTraps));
+         memset(*ppTrapList, 0, sizeof(NXC_TRAP_CFG_ENTRY) * (*pdwNumTraps));
+
+         for(i = 0, dwId = VID_TRAP_INFO_BASE; i < *pdwNumTraps; i++, dwId += 5)
+         {
+            (*ppTrapList)[i].dwId = pResponse->GetVariableLong(dwId++);
+            (*ppTrapList)[i].dwOidLen = pResponse->GetVariableLong(dwId++);
+            (*ppTrapList)[i].pdwObjectId = (DWORD *)malloc(sizeof(DWORD) * (*ppTrapList)[i].dwOidLen);
+            pResponse->GetVariableInt32Array(dwId++, (*ppTrapList)[i].dwOidLen, (*ppTrapList)[i].pdwObjectId);
+            (*ppTrapList)[i].dwEventCode = pResponse->GetVariableLong(dwId++);
+            pResponse->GetVariableStr(dwId++, (*ppTrapList)[i].szDescription, MAX_DB_STRING);
+         }
+      }
+      delete pResponse;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+   return dwRetCode;
+}

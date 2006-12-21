@@ -41,6 +41,8 @@ public:
 
 // Implementation
 protected:
+	NXC_TRAP_CFG_ENTRY *m_pTrapCfg;
+	DWORD m_dwTrapCfgSize;
 	void CreateList(HTREEITEM hRoot, DWORD *pdwCount, DWORD **ppdwList);
 	void AddTemplate(DWORD dwId);
 	void AddEvent(DWORD dwId);

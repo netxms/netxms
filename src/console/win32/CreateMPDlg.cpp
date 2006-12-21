@@ -42,6 +42,8 @@ CCreateMPDlg::~CCreateMPDlg()
    safe_free(m_pdwEventList);
    safe_free(m_pdwTemplateList);
    safe_free(m_pdwTrapList);
+   if (m_pTrapCfg != NULL)
+      NXCDestroyTrapList(m_dwTrapCfgSize, m_pTrapCfg);
 }
 
 void CCreateMPDlg::DoDataExchange(CDataExchange* pDX)
@@ -75,6 +77,9 @@ END_MESSAGE_MAP()
 BOOL CCreateMPDlg::OnInitDialog() 
 {
 	CDialog::OnInitDialog();
+
+   DoRequestArg3(NXCGetTrapCfgRO, g_hSession, &m_dwTrapCfgSize, &m_pTrapCfg,
+                 _T("Loading SNMP trap mappings..."));
 
    // Create image list for tree control
    m_imageList.Create(16, 16, ILC_COLOR24 | ILC_MASK, 8, 4);

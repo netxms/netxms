@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.246 2006-12-18 19:02:44 victor Exp $ */
+/* $Id: nxclapi.h,v 1.247 2006-12-21 16:41:35 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -1744,6 +1744,8 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateTrap(NXC_SESSION hSession, DWORD *pdwTrapId);
 DWORD LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY *pTrap);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteTrap(NXC_SESSION hSession, DWORD dwTrapId);
 DWORD LIBNXCL_EXPORTABLE NXCSyncSNMPTrapLog(NXC_SESSION hSession, DWORD dwMaxRecords);
+DWORD LIBNXCL_EXPORTABLE NXCGetTrapCfgRO(NXC_SESSION hSession, DWORD *pdwNumTraps,
+                                         NXC_TRAP_CFG_ENTRY **ppTrapList);
 
 DWORD LIBNXCL_EXPORTABLE NXCLockPackageDB(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCUnlockPackageDB(NXC_SESSION hSession);
