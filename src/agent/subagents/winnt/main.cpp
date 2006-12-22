@@ -44,6 +44,9 @@ LONG H_ThreadCount(char *cmd, char *arg, char *value);
 BOOL (__stdcall *imp_GetProcessIoCounters)(HANDLE, PIO_COUNTERS) = NULL;
 BOOL (__stdcall *imp_GetPerformanceInfo)(PPERFORMANCE_INFORMATION, DWORD) = NULL;
 DWORD (__stdcall *imp_GetGuiResources)(HANDLE, DWORD) = NULL;
+BOOL (__stdcall *imp_WTSEnumerateSessionsA)(HANDLE, DWORD, DWORD, PWTS_SESSION_INFOA *, DWORD *) = NULL;
+BOOL (__stdcall *imp_WTSQuerySessionInformationA)(HANDLE, DWORD, WTS_INFO_CLASS, LPSTR *, DWORD *) = NULL;
+void (__stdcall *imp_WTSFreeMemory)(void *) = NULL;
 
 
 //
@@ -193,6 +196,13 @@ extern "C" BOOL __declspec(dllexport) __cdecl
       imp_GetPerformanceInfo = (BOOL (__stdcall *)(PPERFORMANCE_INFORMATION, DWORD))GetProcAddress(hModule, "GetPerformanceInfo");
    }
 
+   hModule = LoadLibrary("WTSAPI32.DLL");
+   if (hModule != NULL)
+   {
+		imp_WTSEnumerateSessionsA = (BOOL (__stdcall *)(HANDLE, DWORD, DWORD, PWTS_SESSION_INFOA *, DWORD *))GetProcAddress(hModule, "WTSEnumerateSessionsA");
+		imp_WTSQuerySessionInformationA = (BOOL (__stdcall *)(HANDLE, DWORD, WTS_INFO_CLASS, LPSTR *, DWORD *))GetProcAddress(hModule, "WTSQuerySessionInformationA");
+		imp_WTSFreeMemory = (void (__stdcall *)(void *))GetProcAddress(hModule, "WTSFreeMemory");
+	}
    *ppInfo = &m_info;
    return TRUE;
 }

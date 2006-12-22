@@ -26,6 +26,7 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <psapi.h>
+#include <wtsapi32.h>
 
 
 #define MAX_PROCESSES      4096
@@ -63,6 +64,9 @@
 extern DWORD (__stdcall *imp_GetGuiResources)(HANDLE, DWORD);
 extern BOOL (__stdcall *imp_GetProcessIoCounters)(HANDLE, PIO_COUNTERS);
 extern BOOL (__stdcall *imp_GetPerformanceInfo)(PPERFORMANCE_INFORMATION, DWORD);
+extern BOOL (__stdcall *imp_WTSEnumerateSessionsA)(HANDLE, DWORD, DWORD, PWTS_SESSION_INFOA *, DWORD *);
+extern BOOL (__stdcall *imp_WTSQuerySessionInformationA)(HANDLE, DWORD, WTS_INFO_CLASS, LPSTR *, DWORD *);
+extern void (__stdcall *imp_WTSFreeMemory)(void *);
 
 
 #endif   /* _winnt_subagent_h_ */

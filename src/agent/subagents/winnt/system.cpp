@@ -22,7 +22,6 @@
 **/
 
 #include "winnt_subagent.h"
-#include <wtsapi32.h>
 
 
 //
@@ -110,14 +109,18 @@ LONG H_ConnectedUsers(char *pszCmd, char *pArg, char *pValue)
    WTS_SESSION_INFO *pSessionList;
    DWORD i, dwNumSessions, dwCount;
 
-   if (WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1,
-                            &pSessionList, &dwNumSessions))
+	if ((imp_WTSEnumerateSessionsA == NULL) ||
+		 (imp_WTSFreeMemory == NULL))
+		return SYSINFO_RC_UNSUPPORTED;
+
+   if (imp_WTSEnumerateSessionsA(WTS_CURRENT_SERVER_HANDLE, 0, 1,
+                                 &pSessionList, &dwNumSessions))
    {
       for(i = 0, dwCount = 0; i < dwNumSessions; i++)
          if ((pSessionList[i].State == WTSActive) ||
              (pSessionList[i].State == WTSConnected))
             dwCount++;
-      WTSFreeMemory(pSessionList);
+      imp_WTSFreeMemory(pSessionList);
       ret_uint(pValue, dwCount);
       nRet = SYSINFO_RC_SUCCESS;
    }
@@ -140,20 +143,25 @@ LONG H_ActiveUserSessions(char *pszCmd, char *pArg, NETXMS_VALUES_LIST *pValue)
    DWORD i, dwNumSessions, dwBytes;
    TCHAR *pszClientName, *pszUserName, szBuffer[1024];
 
-   if (WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1,
-                            &pSessionList, &dwNumSessions))
+	if ((imp_WTSEnumerateSessionsA == NULL) ||
+		 (imp_WTSQuerySessionInformationA == NULL) ||
+		 (imp_WTSFreeMemory == NULL))
+		return SYSINFO_RC_UNSUPPORTED;
+
+   if (imp_WTSEnumerateSessionsA(WTS_CURRENT_SERVER_HANDLE, 0, 1,
+                                 &pSessionList, &dwNumSessions))
    {
       for(i = 0; i < dwNumSessions; i++)
          if ((pSessionList[i].State == WTSActive) ||
              (pSessionList[i].State == WTSConnected))
          {
-            if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, pSessionList[i].SessionId,
-                                            WTSClientName, &pszClientName, &dwBytes))
+            if (!imp_WTSQuerySessionInformationA(WTS_CURRENT_SERVER_HANDLE, pSessionList[i].SessionId,
+                                                 WTSClientName, &pszClientName, &dwBytes))
             {
                pszClientName = NULL;
             }
-            if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, pSessionList[i].SessionId,
-                                            WTSUserName, &pszUserName, &dwBytes))
+            if (!imp_WTSQuerySessionInformationA(WTS_CURRENT_SERVER_HANDLE, pSessionList[i].SessionId,
+                                                 WTSUserName, &pszUserName, &dwBytes))
             {
                pszUserName = NULL;
             }
@@ -165,11 +173,11 @@ LONG H_ActiveUserSessions(char *pszCmd, char *pArg, NETXMS_VALUES_LIST *pValue)
             NxAddResultString(pValue, szBuffer);
 
             if (pszUserName != NULL)
-               WTSFreeMemory(pszUserName);
+               imp_WTSFreeMemory(pszUserName);
             if (pszClientName != NULL)
-               WTSFreeMemory(pszClientName);
+               imp_WTSFreeMemory(pszClientName);
          }
-      WTSFreeMemory(pSessionList);
+      imp_WTSFreeMemory(pSessionList);
       nRet = SYSINFO_RC_SUCCESS;
    }
    else

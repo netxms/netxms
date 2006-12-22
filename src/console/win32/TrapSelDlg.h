@@ -37,10 +37,17 @@ public:
 
 // Implementation
 protected:
+	int CompareItems(LPARAM nItem1, LPARAM nItem2);
+	void SortList(void);
+	int m_iSortDir;
+	int m_iSortMode;
+	int m_iLastEventImage;
+	CImageList * m_pImageList;
 
 	// Generated message map functions
 	//{{AFX_MSG(CTrapSelDlg)
 	virtual BOOL OnInitDialog();
+	virtual void OnOK();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

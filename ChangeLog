@@ -4,11 +4,13 @@
 
 - IPSO agent improved
 - UPS subagent: added support for MICRODOWELL UPS devices
+- Added Extended Checksum subagent
+- Added ODBC Query subagent
 - Windows console:
 	- Object browser improved
 	- Graphs improved: implemented printing and "copy to clipboard"
 	  function
-- Fixed issues: #135, #140
+- Fixed issues: #135, #140, #145
 
 
 *
