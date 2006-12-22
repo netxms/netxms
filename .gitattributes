@@ -340,6 +340,8 @@ src/agent/subagents/netware/netware.def -text
 src/agent/subagents/netware/nwagent.h -text
 src/agent/subagents/odbcquery/Makefile.am -text
 src/agent/subagents/odbcquery/odbcquery.cpp -text
+src/agent/subagents/odbcquery/odbcquery.dsp -text
+src/agent/subagents/odbcquery/odbcquery.dsw -text
 src/agent/subagents/odbcquery/odbcquery.h -text
 src/agent/subagents/odbcquery/odbcsapi.cpp -text
 src/agent/subagents/openbsd/Makefile.am -text

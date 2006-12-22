@@ -118,7 +118,7 @@ thread_finish:
 static LONG H_PollResult(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 {
    TCHAR szName[MAX_DB_STRING];
-   DWORD i, dwIpAddr;
+   DWORD i;
 
    if (!NxGetParameterArg(pszParam, 1, szName, MAX_DB_STRING))
       return SYSINFO_RC_UNSUPPORTED;
