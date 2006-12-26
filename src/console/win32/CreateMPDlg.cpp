@@ -198,17 +198,43 @@ void CCreateMPDlg::AddTemplate(DWORD dwId)
 
 
 //
+// Add trap to tree
+//
+
+void CCreateMPDlg::AddTrap(DWORD dwId, DWORD dwEvent, TCHAR *pszName)
+{
+   HTREEITEM hItem;
+	int nImage;
+
+   if (FindTreeCtrlItemEx(m_wndTreeCtrl, m_hTrapRoot, dwId) != NULL)
+      return;  // Template already exist in the tree
+
+   nImage = NXCGetEventSeverity(g_hSession, dwEvent) + EVENT_IMAGE_BASE;
+	hItem = m_wndTreeCtrl.InsertItem(pszName, nImage, nImage, m_hTrapRoot);
+	m_wndTreeCtrl.SetItemData(hItem, dwId);
+
+	AddEvent(dwEvent);
+}
+
+
+//
 // Handler for "Add trap..." button
 //
 
 void CCreateMPDlg::OnButtonAddTrap() 
 {
 	CTrapSelDlg dlg;
+	DWORD i;
 	
 	dlg.m_dwTrapCfgSize = m_dwTrapCfgSize;
 	dlg.m_pTrapCfg = m_pTrapCfg;
 	if (dlg.DoModal() == IDOK)
 	{
+      for(i = 0; i < dlg.m_dwNumTraps; i++)
+         AddTrap(dlg.m_pdwTrapList[i], dlg.m_pdwEventList[i], dlg.m_ppszNames[i]);
+      m_wndTreeCtrl.SortChildren(m_hTrapRoot);
+      m_wndTreeCtrl.Expand(m_hTrapRoot, TVE_EXPAND);
+      m_wndTreeCtrl.SortChildren(m_hEventRoot);
 	}
 }
 

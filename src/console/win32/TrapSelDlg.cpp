@@ -33,7 +33,10 @@ CTrapSelDlg::CTrapSelDlg(CWnd* pParent /*=NULL*/)
 CTrapSelDlg::~CTrapSelDlg()
 {
 	safe_free(m_pdwTrapList);
-   theApp.WriteProfileInt(_T("TrapSelDlg"), _T("SortMode"), m_iSortMode);
+	safe_free(m_pdwEventList);
+	safe_free(m_ppszNames);
+
+	theApp.WriteProfileInt(_T("TrapSelDlg"), _T("SortMode"), m_iSortMode);
    theApp.WriteProfileInt(_T("TrapSelDlg"), _T("SortDir"), m_iSortDir);
 }
 
@@ -48,6 +51,7 @@ void CTrapSelDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CTrapSelDlg, CDialog)
 	//{{AFX_MSG_MAP(CTrapSelDlg)
+	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_TRAPS, OnColumnclickListTraps)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -104,18 +108,23 @@ BOOL CTrapSelDlg::OnInitDialog()
 void CTrapSelDlg::OnOK() 
 {
 	int nItem;
-	DWORD i;
+	DWORD i, dwIndex;
 	
 	m_dwNumTraps = m_wndListCtrl.GetSelectedCount();
 	if (m_dwNumTraps > 0)
 	{
 		m_pdwTrapList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumTraps);
+		m_pdwEventList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumTraps);
+		m_ppszNames = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumTraps);
 		for(i = 0, nItem = -1; i < m_dwNumTraps; i++)
 		{
 			nItem = m_wndListCtrl.GetNextItem(nItem, LVIS_SELECTED);
 			if (nItem != -1)
 			{
-				m_pdwTrapList[i] = m_pTrapCfg[m_wndListCtrl.GetItemData(nItem)].dwId;
+				dwIndex = m_wndListCtrl.GetItemData(nItem);
+				m_pdwTrapList[i] = m_pTrapCfg[dwIndex].dwId;
+				m_pdwEventList[i] = m_pTrapCfg[dwIndex].dwEventCode;
+				m_ppszNames[i] = m_pTrapCfg[dwIndex].szDescription;
 			}
 		}
 	}
@@ -142,7 +151,7 @@ void CTrapSelDlg::SortList()
 {
    LVCOLUMN lvCol;
 
-   m_wndListCtrl.SortItems(CompareListItems, ((m_iSortDir == 1) ? 0xABCD0000 : 0xDCBA0000) | (WORD)m_iSortMode);
+   m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
 
    // Mark sorting column
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
@@ -153,10 +162,76 @@ void CTrapSelDlg::SortList()
 
 
 //
+// Compare two OIDs
+//
+
+static int CompareOIDs(DWORD dwLen1, DWORD *pdwOid1, DWORD dwLen2, DWORD *pdwOid2)
+{
+	DWORD i, dwLen;
+
+	dwLen = min(dwLen1, dwLen2);
+	for(i = 0; i < dwLen; i++)
+	{
+		if (pdwOid1[i] < pdwOid2[i])
+			return -1;
+		if (pdwOid1[i] > pdwOid2[i])
+			return 1;
+	}
+	return COMPARE_NUMBERS(dwLen1, dwLen2);
+}
+
+
+//
 // Compare two list items
 //
 
 int CTrapSelDlg::CompareItems(LPARAM nItem1, LPARAM nItem2)
 {
+	int nRet;
 
+	switch(m_iSortMode)
+	{
+		case 0:	// OID
+			nRet = CompareOIDs(m_pTrapCfg[nItem1].dwOidLen, m_pTrapCfg[nItem1].pdwObjectId,
+			                   m_pTrapCfg[nItem2].dwOidLen, m_pTrapCfg[nItem2].pdwObjectId);
+			break;
+		case 1:	// Event
+			nRet = _tcsicmp(NXCGetEventName(g_hSession, m_pTrapCfg[nItem1].dwEventCode),
+			                NXCGetEventName(g_hSession, m_pTrapCfg[nItem2].dwEventCode));
+			break;
+		case 2:	// Description
+			nRet = _tcsicmp(m_pTrapCfg[nItem1].szDescription, m_pTrapCfg[nItem2].szDescription);
+			break;
+	}
+	return nRet * m_iSortDir;
+}
+
+
+//
+// Handler for list control column click
+//
+
+void CTrapSelDlg::OnColumnclickListTraps(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+	NM_LISTVIEW *pNMListView = (NM_LISTVIEW *)pNMHDR;
+   LVCOLUMN lvCol;
+
+   // Unmark current sorting column
+   lvCol.mask = LVCF_FMT;
+   lvCol.fmt = LVCFMT_LEFT;
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
+
+   if (pNMListView->iSubItem == m_iSortMode)
+   {
+      // Same column, change sort direction
+      m_iSortDir = -m_iSortDir;
+   }
+   else
+   {
+      // Another sorting column
+      m_iSortMode = pNMListView->iSubItem;
+   }
+
+   SortList();
+	*pResult = 0;
 }

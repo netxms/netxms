@@ -60,7 +60,7 @@ static void TrapCfgFromMsg(CSCPMessage *pMsg, NXC_TRAP_CFG_ENTRY *pTrap)
    pTrap->dwNumMaps = pMsg->GetVariableLong(VID_TRAP_NUM_MAPS);
    pTrap->pMaps = (NXC_OID_MAP *)malloc(sizeof(NXC_OID_MAP) * pTrap->dwNumMaps);
    for(i = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE;
-       i < pTrap->dwNumMaps; i++, dwId1++, dwId2++)
+       i < pTrap->dwNumMaps; i++, dwId1++, dwId2++, dwId3++)
    {
       pTrap->pMaps[i].dwOidLen = pMsg->GetVariableLong(dwId1);
       if ((pTrap->pMaps[i].dwOidLen & 0x80000000) == 0)
@@ -232,7 +232,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY 
    msg.SetVariable(VID_DESCRIPTION, pTrap->szDescription);
    msg.SetVariable(VID_TRAP_NUM_MAPS, pTrap->dwNumMaps);
    for(i = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE; 
-       i < pTrap->dwNumMaps; i++, dwId1++, dwId2++)
+       i < pTrap->dwNumMaps; i++, dwId1++, dwId2++, dwId3++)
    {
       msg.SetVariable(dwId1, pTrap->pMaps[i].dwOidLen);
       if ((pTrap->pMaps[i].dwOidLen & 0x80000000) == 0)

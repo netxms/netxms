@@ -41,6 +41,7 @@ public:
 
 // Implementation
 protected:
+	void AddTrap(DWORD dwId, DWORD dwEvent, TCHAR *pszName);
 	NXC_TRAP_CFG_ENTRY *m_pTrapCfg;
 	DWORD m_dwTrapCfgSize;
 	void CreateList(HTREEITEM hRoot, DWORD *pdwCount, DWORD **ppdwList);

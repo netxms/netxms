@@ -153,7 +153,7 @@ void String::Translate(TCHAR *pszSrc, TCHAR *pszDst)
    if (m_dwBufSize <= dwLenSrc)
       return;
    
-   for(i = 0; i < m_dwBufSize - dwLenSrc - 1; i++)
+   for(i = 0; i < m_dwBufSize - dwLenSrc; i++)
    {
       if (!memcmp(pszSrc, &m_pszBuffer[i], dwLenSrc * sizeof(TCHAR)))
       {

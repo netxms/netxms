@@ -14,12 +14,16 @@ class CTrapSelDlg : public CDialog
 {
 // Construction
 public:
+	TCHAR ** m_ppszNames;
+	DWORD * m_pdwEventList;
 	DWORD * m_pdwTrapList;
 	DWORD m_dwNumTraps;
 	NXC_TRAP_CFG_ENTRY * m_pTrapCfg;
 	DWORD m_dwTrapCfgSize;
 	CTrapSelDlg(CWnd* pParent = NULL);   // standard constructor
 	~CTrapSelDlg();
+
+	int CompareItems(LPARAM nItem1, LPARAM nItem2);
 
 // Dialog Data
 	//{{AFX_DATA(CTrapSelDlg)
@@ -37,7 +41,6 @@ public:
 
 // Implementation
 protected:
-	int CompareItems(LPARAM nItem1, LPARAM nItem2);
 	void SortList(void);
 	int m_iSortDir;
 	int m_iSortMode;
@@ -48,6 +51,7 @@ protected:
 	//{{AFX_MSG(CTrapSelDlg)
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
+	afx_msg void OnColumnclickListTraps(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

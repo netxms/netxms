@@ -1,7 +1,8 @@
+/* $Id: main.cpp,v 1.12 2006-12-26 22:53:59 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +29,7 @@
 // Convert OID to text
 //
 
-void LIBNXSNMP_EXPORTABLE SNMPConvertOIDToText(DWORD dwLength, DWORD *pdwValue, TCHAR *pszBuffer, DWORD dwBufferSize)
+TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(DWORD dwLength, DWORD *pdwValue, TCHAR *pszBuffer, DWORD dwBufferSize)
 {
    DWORD i, dwBufPos, dwNumChars;
 
@@ -38,6 +39,7 @@ void LIBNXSNMP_EXPORTABLE SNMPConvertOIDToText(DWORD dwLength, DWORD *pdwValue, 
       dwNumChars = _sntprintf(&pszBuffer[dwBufPos], dwBufferSize - dwBufPos, _T(".%d"), pdwValue[i]);
       dwBufPos += dwNumChars;
    }
+	return pszBuffer;
 }
 
 

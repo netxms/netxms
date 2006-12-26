@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -445,7 +445,7 @@ void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId)
       msg.SetVariable(VID_DESCRIPTION, m_pTrapCfg[i].szDescription);
       msg.SetVariable(VID_TRAP_NUM_MAPS, m_pTrapCfg[i].dwNumMaps);
       for(j = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE; 
-          j < m_pTrapCfg[i].dwNumMaps; j++, dwId1++, dwId2++)
+          j < m_pTrapCfg[i].dwNumMaps; j++, dwId1++, dwId2++, dwId3++)
       {
          msg.SetVariable(dwId1, m_pTrapCfg[i].pMaps[j].dwOidLen);
          if ((m_pTrapCfg[i].pMaps[j].dwOidLen & 0x80000000) == 0)
@@ -586,7 +586,7 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
          m_pTrapCfg[i].dwNumMaps = pMsg->GetVariableLong(VID_TRAP_NUM_MAPS);
          m_pTrapCfg[i].pMaps = (NXC_OID_MAP *)malloc(sizeof(NXC_OID_MAP) * m_pTrapCfg[i].dwNumMaps);
          for(j = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE; 
-             j < m_pTrapCfg[i].dwNumMaps; j++, dwId1++, dwId2++)
+             j < m_pTrapCfg[i].dwNumMaps; j++, dwId1++, dwId2++, dwId3++)
          {
             m_pTrapCfg[i].pMaps[j].dwOidLen = pMsg->GetVariableLong(dwId1);
             if ((m_pTrapCfg[i].pMaps[j].dwOidLen & 0x80000000) == 0)
@@ -657,4 +657,66 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
 
    MutexUnlock(m_mutexTrapCfgAccess);
    return dwResult;
+}
+
+
+//
+// Create trap record in NXMP file
+//
+
+void CreateNXMPTrapRecord(String &str, DWORD dwId)
+{
+	DWORD i, j;
+	TCHAR szBuffer[1024];
+	String strDescr;
+
+   MutexLock(m_mutexTrapCfgAccess, INFINITE);
+   for(i = 0; i < m_dwNumTraps; i++)
+   {
+      if (m_pTrapCfg[i].dwId == dwId)
+      {
+			str.AddFormattedString(_T("\tTRAP %s\n\t{\n"),
+			                       SNMPConvertOIDToText(m_pTrapCfg[i].dwOidLen,
+			                                            m_pTrapCfg[i].pdwObjectId,
+																	  szBuffer, 1024));
+			strDescr = m_pTrapCfg[i].szDescription;
+			strDescr.EscapeCharacter(_T('\\'), _T('\\'));
+			strDescr.EscapeCharacter(_T('"'), _T('\\'));
+			strDescr.Translate(_T("\r"), _T("\\r"));
+			strDescr.Translate(_T("\n"), _T("\\n"));
+			str.AddFormattedString(_T("\t\tDESCRIPTION=\"%s\";\n"), (TCHAR *)strDescr);
+		   ResolveEventName(m_pTrapCfg[i].dwEventCode, szBuffer);
+			str.AddFormattedString(_T("\t\tEVENT=%s;\n"), szBuffer);
+			if (m_pTrapCfg[i].dwNumMaps > 0)
+			{
+				str += _T("\t\tPARAMETERS\n\t\t{\n");
+				for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
+				{
+					strDescr = m_pTrapCfg[i].pMaps[j].szDescription;
+					strDescr.EscapeCharacter(_T('\\'), _T('\\'));
+					strDescr.EscapeCharacter(_T('"'), _T('\\'));
+					strDescr.Translate(_T("\r"), _T("\\r"));
+					strDescr.Translate(_T("\n"), _T("\\n"));
+               if ((m_pTrapCfg[i].pMaps[j].dwOidLen & 0x80000000) == 0)
+					{
+						str.AddFormattedString(_T("\t\t\t%s=\"%s\";\n"),
+						                       SNMPConvertOIDToText(m_pTrapCfg[i].pMaps[j].dwOidLen,
+													                       m_pTrapCfg[i].pMaps[j].pdwObjectId,
+																				  szBuffer, 1024),
+						                       (TCHAR *)strDescr);
+					}
+					else
+					{
+						str.AddFormattedString(_T("\t\t\tPOS:%d=\"%s\";\n"),
+						                       m_pTrapCfg[i].pMaps[j].dwOidLen & 0x7FFFFFFF,
+						                       (TCHAR *)strDescr);
+					}
+				}
+				str += _T("\t\t}\n");
+			}
+			str += _T("\t}\n");
+			break;
+		}
+	}
+   MutexUnlock(m_mutexTrapCfgAccess);
 }

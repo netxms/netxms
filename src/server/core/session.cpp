@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.252 2006-12-21 09:00:57 victor Exp $ */
+/* $Id: session.cpp,v 1.253 2006-12-26 22:53:59 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -8117,6 +8117,16 @@ void ClientSession::CreateManagementPack(CSCPMessage *pRequest)
                ((Template *)pObject)->CreateNXMPRecord(str);
             }
          }
+         str += _T("}\n\n");
+
+         // Write traps
+         str += _T("SNMP_TRAPS\n{\n");
+         dwCount = pRequest->GetVariableLong(VID_NUM_TRAPS);
+         pdwList = (DWORD *)malloc(sizeof(DWORD) * dwCount);
+         pRequest->GetVariableInt32Array(VID_TRAP_LIST, dwCount, pdwList);
+         for(i = 0; i < dwCount; i++)
+            CreateNXMPTrapRecord(str, pdwList[i]);
+         safe_free(pdwList);
          str += _T("}\n\n");
 
          // Put result into message

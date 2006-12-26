@@ -622,6 +622,7 @@ void CreateTrapCfgMessage(CSCPMessage &msg);
 DWORD CreateNewTrap(DWORD *pdwTrapId);
 DWORD UpdateTrapFromMsg(CSCPMessage *pMsg);
 DWORD DeleteTrap(DWORD dwId);
+void CreateNXMPTrapRecord(String &str, DWORD dwId);
 
 BOOL IsTableTool(DWORD dwToolId);
 BOOL CheckObjectToolAccess(DWORD dwToolId, DWORD dwUserId);

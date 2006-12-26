@@ -79,9 +79,9 @@ BOOL CEventSelDlg::OnInitDialog()
 
    // Setup list control
    m_wndListCtrl.GetClientRect(&rect);
-   m_wndListCtrl.InsertColumn(0, _T("ID"), LVCFMT_LEFT, 70);
-   m_wndListCtrl.InsertColumn(1, _T("Name"), LVCFMT_LEFT, 
+   m_wndListCtrl.InsertColumn(0, _T("Name"), LVCFMT_LEFT, 
                               rect.right - 70 - GetSystemMetrics(SM_CXVSCROLL));
+   m_wndListCtrl.InsertColumn(1, _T("ID"), LVCFMT_LEFT, 70);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT);
    if (m_bSingleSelection)
    {
@@ -96,8 +96,8 @@ BOOL CEventSelDlg::OnInitDialog()
       for(i = 0; i < dwListSize; i++)
       {
          _stprintf(szBuffer, _T("%u"), pList[i]->dwCode);
-         iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, pList[i]->dwSeverity);
-         m_wndListCtrl.SetItemText(iItem, 1, pList[i]->szName);
+         iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pList[i]->szName, pList[i]->dwSeverity);
+         m_wndListCtrl.SetItemText(iItem, 1, szBuffer);
          m_wndListCtrl.SetItemData(iItem, pList[i]->dwCode);
       }
       SortList();
@@ -156,7 +156,7 @@ static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
 {
    int iSortDir = (((DWORD)lParamSort & 0xFFFF0000) == 0xABCD0000) ? 1 : -1;
 
-   if ((lParamSort & 0xFFFF) == 0)
+   if ((lParamSort & 0xFFFF) == 1)
       return (lParam1 < lParam2) ? -iSortDir : ((lParam1 == lParam2) ? 0 : iSortDir);
    return _tcsicmp(NXCGetEventName(g_hSession, lParam1), 
                    NXCGetEventName(g_hSession, lParam2)) * iSortDir;

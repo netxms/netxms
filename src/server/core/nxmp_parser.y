@@ -14,7 +14,6 @@ int yylex(YYSTYPE *lvalp, NXMP_Lexer *pLexer);
 
 %}
 
-%expect		1
 %pure-parser
 %parse-param	{NXMP_Lexer *pLexer}
 %lex-param		{NXMP_Lexer *pLexer}
@@ -24,6 +23,7 @@ int yylex(YYSTYPE *lvalp, NXMP_Lexer *pLexer);
 %union
 {
 	char *valStr;
+	int valInt;
 }
 
 %token T_NXMP
@@ -38,8 +38,13 @@ int yylex(YYSTYPE *lvalp, NXMP_Lexer *pLexer);
 %token T_THRESHOLD
 %token T_RULES
 %token T_RULE
+%token T_SNMP_TRAPS
+%token T_TRAP
+%token T_PARAMETERS
 
 %token <valStr> T_IDENTIFIER
+%token <valStr> T_OID
+%token <valInt> T_POS
 %token <valStr> T_STRING
 %token <valStr> T_INT
 %token <valStr> T_UINT
@@ -58,19 +63,20 @@ ManagementPack:
 
 SectionList:
 	Section SectionList
-|	Section
+|
 ;
 
 Section:
 	T_NXMP '{' NXMPBody '}'
 |	T_EVENTS '{' EventList '}'
 |	T_TEMPLATES '{' TemplateList '}'
+|	T_SNMP_TRAPS '{' TrapList '}'
 |	T_RULES '{' RulesList '}'
 ;
 
 NXMPBody:
 	VariableOrDefaults NXMPBody
-|	VariableOrDefaults
+|
 ;
 
 VariableOrDefaults:
@@ -84,16 +90,16 @@ Defaults:
 
 EventList:
 	Event EventList
-|	Event
+|
 ;
 
 Event:
-	T_EVENT T_IDENTIFIER { pData->NewEvent($2); } '{' VariableList '}' { pData->CloseEvent(); }
+	T_EVENT T_IDENTIFIER { pData->NewEvent($2); free($2); } '{' VariableList '}' { pData->CloseEvent(); }
 ;
 
 TemplateList:
 	Template TemplateList
-|	Template
+|
 ;
 
 Template:
@@ -111,7 +117,7 @@ TemplateElement:
 
 DCIList:
 	DCI DCIList
-|	DCI
+|
 ;
 
 DCI:
@@ -147,16 +153,44 @@ RulesList:
 ;
 
 Rule:
-	T_RULE '{' VariableList '}'
+	T_RULE '{' RuleBody '}'
 ;
 
-/*RuleBody:
+RuleBody:
 	VariableList
-;*/
+;
+
+TrapList:
+	Trap TrapList
+|
+;
+
+Trap:
+	T_TRAP T_OID '{' TrapBody '}'
+;
+
+TrapBody:
+	Variable
+|	TrapParameters
+;
+
+TrapParameters:
+	T_PARAMETERS '{' TrapParamList '}'
+;
+
+TrapParamList:
+	TrapParam TrapParamList
+|
+;
+
+TrapParam:
+	T_OID '=' Value ';'
+|	T_POS '=' Value ';'
+;
 
 VariableList:
 	Variable VariableList
-|	Variable
+|
 ;
 
 Variable:

@@ -1,4 +1,4 @@
-/* $Id: nxmp_parser.h,v 1.4 2006-12-18 10:34:27 victor Exp $ */
+/* $Id: nxmp_parser.h,v 1.5 2006-12-26 22:53:59 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Server
@@ -39,6 +39,7 @@
 #define CTX_EVENT          1
 #define CTX_DCI            2
 #define CTX_THRESHOLD      3
+#define CTX_TRAP				4
 
 
 //
@@ -54,6 +55,11 @@ private:
    EVENT_TEMPLATE *m_pEventList;
    EVENT_TEMPLATE *m_pCurrEvent;
    DWORD m_dwNumEvents;
+
+	NXC_TRAP_CFG_ENTRY *m_pTrapList;
+	NXC_TRAP_CFG_ENTRY *m_pCurrTrap;
+	DWORD m_dwNumTraps;
+
    int m_nContext;
    NXMP_Lexer *m_pLexer;
    NXMP_Parser *m_pParser;
@@ -74,6 +80,11 @@ public:
    void SetEventSeverity(DWORD dwSeverity) { if (m_pCurrEvent != NULL) m_pCurrEvent->dwSeverity = dwSeverity; }
    void SetEventFlags(DWORD dwFlags) { if (m_pCurrEvent != NULL) m_pCurrEvent->dwFlags = dwFlags; }
    void CloseEvent(void) { m_pCurrEvent = NULL; m_nContext = CTX_NONE; }
+
+   void NewTrap(char *pszOID);
+	void SetTrapEvent(char *pszEvent);
+	void SetTrapDescription(char *pszText);
+   void CloseTrap(void) { m_pCurrTrap = NULL; m_nContext = CTX_NONE; }
 
    BOOL ParseVariable(char *pszName, char *pszValue);
 };

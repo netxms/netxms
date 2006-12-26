@@ -1,4 +1,4 @@
-/* $Id: nxmp_data.cpp,v 1.5 2006-12-18 19:02:46 victor Exp $ */
+/* $Id: nxmp_data.cpp,v 1.6 2006-12-26 22:53:59 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -230,6 +230,83 @@ void NXMP_Data::SetEventDescription(char *pszText)
 
 
 //
+// Create new trap
+//
+
+void NXMP_Data::NewTrap(char *pszOID)
+{
+	DWORD dwOID[MAX_OID_LEN];
+#ifdef UNICODE
+	WCHAR *pwszOID;
+#endif
+
+   m_dwNumTraps++;
+   m_pTrapList = (NXC_TRAP_CFG_ENTRY *)realloc(m_pTrapList, sizeof(NXC_TRAP_CFG_ENTRY) * m_dwNumTraps);
+   m_pCurrTrap = &m_pTrapList[m_dwNumTraps - 1];
+   memset(m_pCurrTrap, 0, sizeof(NXC_TRAP_CFG_ENTRY));
+#ifdef UNICODE
+	pwszOID = WideStringFromMBString(pszOID);
+	m_pCurrTrap->dwOidLen = SNMPParseOID(pwszOID, dwOID, MAX_OID_LEN);
+	free(pwszOID);
+#else
+	m_pCurrTrap->dwOidLen = SNMPParseOID(pszOID, dwOID, MAX_OID_LEN);
+#endif
+	m_pCurrTrap->pdwObjectId = (DWORD *)nx_memdup(dwOID, m_pCurrTrap->dwOidLen * sizeof(DWORD));
+   m_nContext = CTX_TRAP;
+}
+
+
+//
+// Set trap's description
+//
+
+void NXMP_Data::SetTrapDescription(char *pszText)
+{
+   if (m_pCurrTrap == NULL)
+      return;
+
+#ifdef UNICODE
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszText, -1, m_pCurrTrap->szDescription, MAX_DB_STRING);
+	m_pCurrTrap->szDescription[MAX_DB_STRING - 1] = 0;
+#else
+   nx_strncpy(m_pCurrTrap->szDescription, pszText, MAX_DB_STRING);
+#endif
+}
+
+
+//
+// Set trap's event
+//
+
+void NXMP_Data::SetTrapEvent(char *pszEvent)
+{
+   EVENT_TEMPLATE *pEvent;
+#ifdef UNICODE
+	WCHAR *pwszEvent;
+#endif
+
+   if (m_pCurrTrap == NULL)
+      return;
+
+#ifdef UNICODE
+	pwszEvent = WideStringFromMBString(pszEvent);
+   pEvent = FindEventTemplateByName(pwszEvent);
+	free(pwszEvent);
+#else
+   pEvent = FindEventTemplateByName(pszEvent);
+#endif
+   if (pEvent != NULL)
+	{
+		m_pCurrTrap->dwEventCode = pEvent->dwCode;
+	}
+	else
+	{
+		//m_pCurrTrap->dwEventCode = 
+	}
+}
+
+
+//
 // Validate management pack data
 //
 
@@ -270,6 +347,11 @@ BOOL NXMP_Data::Validate(DWORD dwFlags, TCHAR *pszErrorText, int nLen)
          }
       }
    }
+
+	// Validate traps
+	for(i = 0; i < m_dwNumTraps; i++)
+	{
+	}
 
    bRet = TRUE;
 

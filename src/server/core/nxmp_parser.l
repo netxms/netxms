@@ -9,6 +9,8 @@ ident		[A-Za-z_\$][A-Za-z_\$0-9]*
 int			\-?(0x)?[0-9]+
 uint		{int}U
 real		\-?[0-9]+\.[0-9]+
+oid			(\.[0-9]+)+
+pos			POS\:[0-9]+
 escape		\\[bnrt0\"]
 
 %{
@@ -39,11 +41,16 @@ escape		\\[bnrt0\"]
 <INITIAL>"THRESHOLD"	return T_THRESHOLD;
 <INITIAL>"RULES"		return T_RULES;
 <INITIAL>"RULE"			return T_RULE;
+<INITIAL>"SNMP_TRAPS"	return T_SNMP_TRAPS;
+<INITIAL>"TRAP"			return T_TRAP;
+<INITIAL>"PARAMETERS"	return T_PARAMETERS;
 
 <INITIAL>{ident}	{ m_plval->valStr = strdup(yytext); return T_IDENTIFIER; }
 <INITIAL>{int}		{ m_plval->valStr = strdup(yytext); return T_INT; }
 <INITIAL>{uint}		{ m_plval->valStr = strdup(yytext); return T_UINT; }
 <INITIAL>{real}		{ m_plval->valStr = strdup(yytext); return T_REAL; }
+<INITIAL>{oid}		{ m_plval->valStr = strdup(yytext); return T_OID; }
+<INITIAL>{pos}		{ m_plval->valInt = strtol(yytext, NULL, 10); return T_POS; }
 
 <INITIAL>";"	return ';';
 <INITIAL>"="	return '=';
