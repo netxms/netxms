@@ -1,4 +1,4 @@
-/* $Id: nxmp_parser.h,v 1.5 2006-12-26 22:53:59 victor Exp $ */
+/* $Id: nxmp_parser.h,v 1.6 2006-12-27 22:16:21 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Server
@@ -80,6 +80,7 @@ public:
    void SetEventSeverity(DWORD dwSeverity) { if (m_pCurrEvent != NULL) m_pCurrEvent->dwSeverity = dwSeverity; }
    void SetEventFlags(DWORD dwFlags) { if (m_pCurrEvent != NULL) m_pCurrEvent->dwFlags = dwFlags; }
    void CloseEvent(void) { m_pCurrEvent = NULL; m_nContext = CTX_NONE; }
+	DWORD FindEvent(TCHAR *pszName);
 
    void NewTrap(char *pszOID);
 	void SetTrapEvent(char *pszEvent);

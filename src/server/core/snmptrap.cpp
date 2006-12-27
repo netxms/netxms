@@ -554,6 +554,45 @@ DWORD CreateNewTrap(DWORD *pdwTrapId)
 
 
 //
+// Create new trap configuration record from NXMP data
+//
+
+DWORD CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap)
+{
+   DWORD i, dwResult = RCC_SUCCESS;
+   TCHAR szQuery[4096], szOID[1024], *pszEscDescr;
+
+   MutexLock(m_mutexTrapCfgAccess, INFINITE);
+   
+   //*pdwTrapId = CreateUniqueId(IDG_SNMP_TRAP);
+   m_pTrapCfg = (NXC_TRAP_CFG_ENTRY *)realloc(m_pTrapCfg, sizeof(NXC_TRAP_CFG_ENTRY) * (m_dwNumTraps + 1));
+   memcpy(&m_pTrapCfg[m_dwNumTraps], pTrap, sizeof(NXC_TRAP_CFG_ENTRY));
+   m_pTrapCfg[m_dwNumTraps].dwId = CreateUniqueId(IDG_SNMP_TRAP);
+	m_pTrapCfg[m_dwNumTraps].pdwObjectId = (DWORD *)nx_memdup(pTrap->pdwObjectId, sizeof(DWORD) * pTrap->dwOidLen);
+	m_pTrapCfg[m_dwNumTraps].pMaps = (NXC_OID_MAP *)nx_memdup(pTrap->pMaps, sizeof(NXC_OID_MAP) * pTrap->dwNumMaps);
+	for(i = 0; i < m_pTrapCfg[m_dwNumTraps].dwNumMaps; i++)
+	{
+      if ((m_pTrapCfg[m_dwNumTraps].pMaps[i].dwOidLen & 0x80000000) == 0)
+			m_pTrapCfg[m_dwNumTraps].pMaps[i].pdwObjectId = (DWORD *)nx_memdup(pTrap->pMaps[i].pdwObjectId, sizeof(DWORD) * pTrap->pMaps[i].dwOidLen);
+	}
+
+   SNMPConvertOIDToText(m_pTrapCfg[m_dwNumTraps].dwOidLen, m_pTrapCfg[m_dwNumTraps].pdwObjectId, szOID, 1024);
+	pszEscDescr = EncodeSQLString(m_pTrapCfg[m_dwNumTraps].szDescription);
+   _stprintf(szQuery, _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description) ")
+                      _T("VALUES (%d,'%s',%d,'%s')"), m_pTrapCfg[m_dwNumTraps].dwId,
+	          szOID, m_pTrapCfg[m_dwNumTraps].dwEventCode, pszEscDescr);
+	free(pszEscDescr);
+   if (!DBQuery(g_hCoreDB, szQuery))
+      dwResult = RCC_DB_FAILURE;
+
+   m_dwNumTraps++;
+   MutexUnlock(m_mutexTrapCfgAccess);
+
+   return dwResult;
+}
+
+
+//
 // Update trap configuration record from message
 //
 

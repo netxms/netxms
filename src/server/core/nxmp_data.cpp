@@ -1,4 +1,4 @@
-/* $Id: nxmp_data.cpp,v 1.6 2006-12-26 22:53:59 victor Exp $ */
+/* $Id: nxmp_data.cpp,v 1.7 2006-12-27 22:16:21 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -83,6 +83,12 @@ NXMP_Data::~NXMP_Data()
       safe_free(m_pEventList[i].pszDescription);
    }
    safe_free(m_pEventList);
+
+   for(i = 0; i < m_dwNumTraps; i++)
+   {
+      safe_free(m_pTrapList[i].pdwObjectId);
+   }
+   safe_free(m_pTrapList);
 }
 
 
@@ -230,6 +236,23 @@ void NXMP_Data::SetEventDescription(char *pszText)
 
 
 //
+// Find event by name and return it's index or INVALID_INDEX on error
+//
+
+DWORD NXMP_Data::FindEvent(TCHAR *pszName)
+{
+	DWORD i;
+
+	for(i = 0; i < m_dwNumEvents; i++)
+	{
+		if (!_tcsicmp(pszName, m_pEventList[i].szName))
+			return i;
+	}
+	return INVALID_INDEX;
+}
+
+
+//
 // Create new trap
 //
 
@@ -301,7 +324,15 @@ void NXMP_Data::SetTrapEvent(char *pszEvent)
 	}
 	else
 	{
-		//m_pCurrTrap->dwEventCode = 
+		DWORD dwIndex;
+
+		dwIndex = FindEvent(pszEvent);
+		if (dwIndex != INVALID_INDEX)
+		{
+			// We set group bit to indicate that event code is not an
+			// actual event code but index of a new event (coming in the same pack)
+			m_pCurrTrap->dwEventCode = dwIndex | GROUP_FLAG;
+		}
 	}
 }
 
@@ -351,6 +382,12 @@ BOOL NXMP_Data::Validate(DWORD dwFlags, TCHAR *pszErrorText, int nLen)
 	// Validate traps
 	for(i = 0; i < m_dwNumTraps; i++)
 	{
+		if (m_pTrapList[i].dwEventCode == 0)
+		{
+         _sntprintf(pszErrorText, nLen, _T("Trap \"%s\" references unknown event"),
+                    m_pTrapList[i].szDescription);
+         goto stop_processing;
+		}
 	}
 
    bRet = TRUE;
@@ -408,7 +445,7 @@ static BOOL UpdateEvent(EVENT_TEMPLATE *pEvent)
 
 DWORD NXMP_Data::Install(DWORD dwFlags)
 {
-   DWORD i, dwResult = RCC_SUCCESS;
+   DWORD i, dwTrapId, dwResult = RCC_SUCCESS;
    BOOL bRet = FALSE;
    EVENT_TEMPLATE *pEvent;
 
@@ -453,6 +490,16 @@ DWORD NXMP_Data::Install(DWORD dwFlags)
       ReloadEvents();
       NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
    }
+
+	// Install traps
+	for(i = 0; i < m_dwNumTraps; i++)
+	{
+		dwResult = CreateNewTrap(&dwTrapId);
+		if (dwResult != RCC_SUCCESS)
+			goto stop_processing;
+
+
+	}
 
 stop_processing:
    return dwResult;
