@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.228 2006-12-17 11:21:51 victor Exp $
+# $Id: configure.ac,v 1.229 2006-12-29 19:54:52 alk Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -200,7 +200,7 @@ AC_ARG_WITH(dist,
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
 	CONTRIB_MODULES="mibs backgrounds"
-	UNSTABLE_SUBAGENT_DIRS="logscan"
+	UNSTABLE_SUBAGENT_DIRS="logscan odbcquery"
 	SERVER_TOOLS="nxconfig"
 )
 
@@ -297,7 +297,7 @@ if test $? = 0; then
 	BUILD_AGENT="yes"
 	MODULES="$MODULES agent"
 	if test "x$ENABLE_UNSTABLE" = "xyes"; then
-		UNSTABLE_SUBAGENT_DIRS="logscan"
+		UNSTABLE_SUBAGENT_DIRS="logscan odbcquery"
 	fi
 
 	case "$PLATFORM" in
@@ -1107,6 +1107,8 @@ AC_CONFIG_FILES([
 	src/agent/subagents/logscan/Makefile
 	src/agent/subagents/ping/Makefile
 	src/agent/subagents/ups/Makefile
+	src/agent/subagents/ecs/Makefile
+	src/agent/subagents/odbcquery/Makefile
 	src/nxhttpd/Makefile
 	src/nxhttpd/static/Makefile
 	src/nxhttpd/static/images/Makefile
