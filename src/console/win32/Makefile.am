@@ -28,6 +28,7 @@ EXTRA_DIST = \
 	CondPropsGeneral.cpp CondPropsGeneral.h \
 	CondPropsScript.cpp CondPropsScript.h \
 	ConsolePropsGeneral.cpp ConsolePropsGeneral.h \
+	ConsoleUpgradeDlg.cpp ConsoleUpgradeDlg.h \
 	ControlPanel.cpp ControlPanel.h \
 	CreateCondDlg.cpp CreateCondDlg.h \
 	CreateContainerDlg.cpp CreateContainerDlg.h \

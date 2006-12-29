@@ -7,6 +7,7 @@
 	   VALUES (10,'.1.3.6.1.4.1.45.3.46.*',NODE_TYPE_NORTEL_BAYSTACK,0);
 	INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags)
 	   VALUES (10,'.1.3.6.1.4.1.45.3.52.*',NODE_TYPE_NORTEL_BAYSTACK,0);
+- New configuration parameters: WindowsConsoleUpgradeURL
 
 
 *************

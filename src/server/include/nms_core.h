@@ -620,6 +620,7 @@ void InitTraps(void);
 void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId);
 void CreateTrapCfgMessage(CSCPMessage &msg);
 DWORD CreateNewTrap(DWORD *pdwTrapId);
+DWORD CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap);
 DWORD UpdateTrapFromMsg(CSCPMessage *pMsg);
 DWORD DeleteTrap(DWORD dwId);
 void CreateNXMPTrapRecord(String &str, DWORD dwId);

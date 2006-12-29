@@ -764,7 +764,7 @@ void Template::CreateNXMPRecord(String &str)
 {
    DWORD i;
 
-   str.AddFormattedString(_T("\tTEMPLATE %s\n\t{\n\t\tDCI_LIST\n\t\t{\n"), m_szName);
+   str.AddFormattedString(_T("\t@TEMPLATE %s\n\t{\n\t\t@DCI_LIST\n\t\t{\n"), m_szName);
 
    LockData();
    for(i = 0; i < m_dwNumItems; i++)

@@ -34,6 +34,7 @@ int yylex(YYSTYPE *lvalp, NXMP_Lexer *pLexer);
 %token T_TEMPLATE
 %token T_DCI_LIST
 %token T_DCI
+%token T_SCHEDULE
 %token T_THRESHOLDS
 %token T_THRESHOLD
 %token T_RULES
@@ -132,6 +133,7 @@ DCIBody:
 DCIElement:
 	Variable
 |	Thresholds
+|	Schedule
 ;
 
 Thresholds:
@@ -145,6 +147,15 @@ ThresholdsList:
 
 Threshold:
 	T_THRESHOLD '{' VariableList '}'
+;
+
+Schedule:
+	T_SCHEDULE '{' ScheduleList '}'
+;
+
+ScheduleList:
+	T_STRING ';' ScheduleList
+|
 ;
 
 RulesList:
@@ -166,10 +177,15 @@ TrapList:
 ;
 
 Trap:
-	T_TRAP T_OID '{' TrapBody '}'
+	T_TRAP T_OID { pData->NewTrap($2); free($2); } '{' TrapBody '}' { pData->CloseTrap(); }
 ;
 
 TrapBody:
+	TrapElement TrapBody
+|
+;
+
+TrapElement:
 	Variable
 |	TrapParameters
 ;
@@ -185,7 +201,16 @@ TrapParamList:
 
 TrapParam:
 	T_OID '=' Value ';'
+{
+	pData->AddTrapParam($1, 0, $3);
+	free($1);
+	free($3);
+}
 |	T_POS '=' Value ';'
+{
+	pData->AddTrapParam(NULL, $1, $3);
+	free($3);
+}
 ;
 
 VariableList:

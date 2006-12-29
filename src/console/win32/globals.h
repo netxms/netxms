@@ -272,6 +272,7 @@ DWORD DoRequestArg9(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
                     void *pArg5, void *pArg6, void *pArg7, void *pArg8, void *pArg9,
                     TCHAR *pszInfoText);
 DWORD WINAPI PollerThread(void *pArg);
+BOOL DownloadUpgradeFile(HANDLE hFile);
 
 
 //
@@ -362,6 +363,7 @@ extern DWORD g_dwMaxLogRecords;
 extern TCHAR g_szServer[];
 extern TCHAR g_szLogin[];
 extern TCHAR g_szPassword[];
+extern TCHAR g_szUpgradeURL[];
 extern TCHAR g_szWorkDir[];
 extern TCHAR *g_szStatusText[];
 extern TCHAR *g_szStatusTextSmall[];

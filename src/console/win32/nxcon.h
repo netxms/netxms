@@ -156,6 +156,7 @@ public:
 
 // Implementation
 protected:
+	BOOL StartConsoleUpgrade(void);
 	HGLOBAL m_hDevNames;
 	HGLOBAL m_hDevMode;
 	MUTEX m_mutexAlarmList;

@@ -32,6 +32,14 @@
 //
 
 #define UI_THREAD_WAIT_TIME   300
+#define MAX_ERROR_TEXT			1024
+
+
+//
+// Global variables
+//
+
+TCHAR g_szUpgradeURL[1024] = _T("");
 
 
 //
@@ -39,6 +47,8 @@
 //
 
 static BOOL m_bClearCache = FALSE;
+static TCHAR m_szErrorText[MAX_ERROR_TEXT];
+static HANDLE m_hLocalFile = INVALID_HANDLE_VALUE;
 
 
 //
@@ -140,11 +150,13 @@ static DWORD WINAPI LoginThread(void *pArg)
 {
    HWND hWnd = *((HWND *)pArg);    // Handle to status window
    DWORD i, dwResult;
+	TCHAR *pszUpgradeURL;
 
    dwResult = NXCConnect(g_szServer, g_szLogin, g_szPassword, &g_hSession,
                          _T("NetXMS Console/") NETXMS_VERSION_STRING,
                          (g_dwOptions & OPT_MATCH_SERVER_VERSION) ? TRUE : FALSE,
-                         (g_dwOptions & OPT_ENCRYPT_CONNECTION) ? TRUE : FALSE);
+                         (g_dwOptions & OPT_ENCRYPT_CONNECTION) ? TRUE : FALSE,
+								 &pszUpgradeURL);
 
    if (dwResult == RCC_SUCCESS)
    {
@@ -162,6 +174,15 @@ static DWORD WINAPI LoginThread(void *pArg)
          }
       }
    }
+	else if ((dwResult == RCC_VERSION_MISMATCH) || (dwResult == RCC_BAD_PROTOCOL))
+	{
+		nx_strncpy(g_szUpgradeURL, CHECK_NULL_EX(pszUpgradeURL), 1024);
+	}
+	else
+	{
+		g_szUpgradeURL[0] = 0;
+	}
+	safe_free(pszUpgradeURL);
 
    // Setup connection watchdog
    if (dwResult == RCC_SUCCESS)
@@ -655,4 +676,149 @@ DWORD WINAPI PollerThread(void *pArg)
    if (pData->hWnd != NULL)
       PostMessage(pData->hWnd, NXCM_REQUEST_COMPLETED, 0, dwResult);
    return dwResult;
+}
+
+
+//
+// Download thread
+//
+
+static DWORD WINAPI DownloadThread(void *pArg)
+{
+   HWND hWnd = *((HWND *)pArg);    // Handle to status window
+	HINTERNET hSession, hConn, hRequest;
+	DWORD dwResult = 1, dwBytes, dwTotal, dwIndex, dwStatus;
+	TCHAR szBuffer[256], szHostName[256], szPath[1024];
+	BYTE data[8192];
+	URL_COMPONENTS url;
+	const TCHAR *pszMediaTypes[] = { _T("application/octet-stream"), NULL };
+
+	memset(&url, 0, sizeof(URL_COMPONENTS));
+	url.dwStructSize = sizeof(URL_COMPONENTS);
+	url.lpszHostName = szHostName;
+	url.dwHostNameLength = 256;
+	url.lpszUrlPath = szPath;
+	url.dwUrlPathLength = 1024;
+	InternetCrackUrl(g_szUpgradeURL, 0, 0, &url);
+
+	hSession = InternetOpen(_T("NetXMS Console/") NETXMS_VERSION_STRING,
+	                        INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+	if (hSession != NULL)
+	{
+		SetInfoText(hWnd, _T("Connecting..."));
+		hConn = InternetConnect(hSession, szHostName, url.nPort, NULL, NULL,
+		                        INTERNET_SERVICE_HTTP, 0, 0);
+		if (hConn != NULL)
+		{
+			hRequest = HttpOpenRequest(hConn, NULL, szPath, NULL, NULL,
+			                           pszMediaTypes, INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD, 0);
+			if (hRequest != NULL)
+			{
+				if (HttpSendRequest(hRequest, NULL, 0, NULL, 0))
+				{
+					dwIndex = 0;
+					dwBytes = sizeof(DWORD);
+					HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER,
+					               &dwStatus, &dwBytes, &dwIndex);
+					if (dwStatus == HTTP_STATUS_OK)
+					{
+						dwTotal = 0;
+						while(1)
+						{
+							if (!InternetReadFile(hRequest, data, 8192, &dwBytes))
+							{
+								AfxLoadString(IDS_DATA_TRANSFER_ERROR, m_szErrorText, MAX_ERROR_TEXT);
+								break;
+							}
+							WriteFile(m_hLocalFile, data, dwBytes, &dwStatus, NULL);
+							dwTotal += dwBytes;
+							_stprintf(szBuffer, _T("Downloading: %dK bytes received"), dwTotal / 1024);
+							SetInfoText(hWnd, szBuffer);
+							if (dwBytes == 0)
+							{
+								dwResult = 0;
+								break;
+							}
+						}
+					}
+					else
+					{
+						TCHAR szStatus[512];
+
+						dwBytes = 512 * sizeof(TCHAR);
+						dwIndex = 0;
+						HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE,	szStatus, &dwBytes, &dwIndex);
+						AfxLoadString(IDS_HTTP_ERROR, szBuffer, 256);
+						_sntprintf(m_szErrorText, MAX_ERROR_TEXT, szBuffer, szStatus);
+					}
+				}
+				else
+				{
+					AfxLoadString(IDS_CANNOT_SEND_HTTP_REQUEST, m_szErrorText, MAX_ERROR_TEXT);
+				}
+				InternetCloseHandle(hRequest);
+			}
+			else
+			{
+				AfxLoadString(IDS_CANNOT_OPEN_HTTP_REQUEST, m_szErrorText, MAX_ERROR_TEXT);
+			}
+			InternetCloseHandle(hConn);
+		}
+		else
+		{
+			AfxLoadString(IDS_WININET_CONNECT_FAILED, m_szErrorText, MAX_ERROR_TEXT);
+		}
+		InternetCloseHandle(hSession);
+	}
+	else
+	{
+		AfxLoadString(IDS_WININET_INIT_FAILED, m_szErrorText, MAX_ERROR_TEXT);
+	}
+
+   PostMessage(hWnd, NXCM_REQUEST_COMPLETED, 0, dwResult);
+	return dwResult;
+}
+
+
+//
+// Download upgrade file
+//
+
+BOOL DownloadUpgradeFile(HANDLE hFile)
+{
+   HANDLE hThread;
+   HWND hWnd = NULL;
+   DWORD dwThreadId;
+	BOOL bRet;
+
+	AfxLoadString(IDS_INTERNAL_ERROR, m_szErrorText, MAX_ERROR_TEXT);
+	m_hLocalFile = hFile;
+
+   hThread = CreateThread(NULL, 0, DownloadThread, &hWnd, CREATE_SUSPENDED, &dwThreadId);
+   if (hThread != NULL)
+   {
+      CRequestProcessingDlg wndWaitDlg;
+
+      wndWaitDlg.m_phWnd = &hWnd;
+      wndWaitDlg.m_hThread = hThread;
+      wndWaitDlg.m_strInfoText = _T("Initializing...");
+      bRet = ((DWORD)wndWaitDlg.DoModal() == 0);
+      CloseHandle(hThread);
+   }
+   else
+   {
+      bRet = FALSE;
+   }
+
+	if (!bRet)
+	{
+		TCHAR szError[2048], szFormat[256], szCaption[256];
+	
+		AfxLoadString(IDS_DOWNLOAD_ERROR, szFormat, 256);
+		_sntprintf(szError, 2048, szFormat, m_szErrorText);
+		AfxLoadString(IDS_CAPTION_ERROR, szCaption, 256);
+		theApp.m_pMainWnd->MessageBox(szError, szCaption, MB_OK | MB_ICONSTOP);
+	}
+
+   return bRet;
 }

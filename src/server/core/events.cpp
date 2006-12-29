@@ -651,7 +651,7 @@ void CreateNXMPEventRecord(String &str, DWORD dwCode)
          strDescr = p->pszDescription;
          EscapeString(strDescr);
 
-         str.AddFormattedString(_T("\tEVENT %s\n\t{\n")
+         str.AddFormattedString(_T("\t@EVENT %s\n\t{\n")
                                 _T("\t\tCODE=%d;\n")
                                 _T("\t\tSEVERITY=%d;\n")
                                 _T("\t\tFLAGS=%d;\n")

@@ -213,6 +213,7 @@
 #define IDI_TEMPLATE_ROOT               343
 #define IDD_SELECT_MP                   344
 #define IDD_SELECT_TRAP                 345
+#define IDD_UPGRADE                     346
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -581,6 +582,7 @@
 #define IDC_BUTTON_BROWSE               1425
 #define IDC_CHECK_REPLACE_BY_CODE       1427
 #define IDC_CHECK_REPLACE_BY_NAME       1428
+#define IDC_EDIT_URL                    1430
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -614,6 +616,17 @@
 #define IDR_PACKAGE_MGR                 8156
 #define IDR_DEPLOYMENT_VIEW             8157
 #define IDR_LAST_VALUES_VIEW            8158
+#define IDS_INTERNAL_ERROR              20000
+#define IDS_WININET_INIT_FAILED         20001
+#define IDS_DATA_TRANSFER_ERROR         20002
+#define IDS_HTTP_ERROR                  20003
+#define IDS_CANNOT_SEND_HTTP_REQUEST    20004
+#define IDS_CANNOT_OPEN_HTTP_REQUEST    20005
+#define IDS_WININET_CONNECT_FAILED      20006
+#define IDS_CAPTION_ERROR               20007
+#define IDS_CAPTION_WARNING             20008
+#define IDS_CAPTION_INFORMATION         20009
+#define IDS_DOWNLOAD_ERROR              20010
 #define ID_REQUEST_COMPLETED            32125
 #define ID_VIEW_CONTROLPANEL            32771
 #define ID_VIEW_EVENTS                  32774
@@ -820,9 +833,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        346
+#define _APS_NEXT_RESOURCE_VALUE        347
 #define _APS_NEXT_COMMAND_VALUE         33050
-#define _APS_NEXT_CONTROL_VALUE         1430
+#define _APS_NEXT_CONTROL_VALUE         1431
 #define _APS_NEXT_SYMED_VALUE           129
 #endif
 #endif

@@ -1506,7 +1506,7 @@ void DCItem::CreateNXMPRecord(String &str)
    strInstance = m_szInstance;
    EscapeString(strInstance);
 
-   str.AddFormattedString(_T("\t\t\tDCI\n\t\t\t{\n")
+   str.AddFormattedString(_T("\t\t\t@DCI\n\t\t\t{\n")
                           _T("\t\t\t\tNAME=\"%s\";\n")
                           _T("\t\t\t\tDESCRIPTION=\"%s\";\n")
                           _T("\t\t\t\tDATATYPE=%d;\n")
@@ -1522,7 +1522,7 @@ void DCItem::CreateNXMPRecord(String &str)
                           m_iProcessAllThresholds);
    if (m_iAdvSchedule)
    {
-      str += _T("\t\t\t\tSCHEDULE\n\t\t\t\t{\n");
+      str += _T("\t\t\t\t@SCHEDULE\n\t\t\t\t{\n");
       for(i = 0; i < m_dwNumSchedules; i++)
       {
          strTemp = m_ppScheduleList[i];
@@ -1532,7 +1532,7 @@ void DCItem::CreateNXMPRecord(String &str)
       str += _T("\t\t\t\t}\n");
    }
 
-   str += _T("\t\t\t\tTHRESHOLDS\n\t\t\t\t{\n");
+   str += _T("\t\t\t\t@THRESHOLDS\n\t\t\t\t{\n");
    for(i = 0; i < m_dwNumThresholds; i++)
    {
       m_ppThresholdList[i]->CreateNXMPRecord(str);

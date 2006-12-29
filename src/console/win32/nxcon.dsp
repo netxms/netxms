@@ -55,7 +55,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
-# ADD LINK32 shfolder.lib libnxcl.lib libnetxms.lib libnxsnmp.lib nxuilib.lib libnxmap.lib msimg32.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnxcl\Release" /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxsnmp\Release" /libpath:"..\nxuilib\Release" /libpath:"..\..\libnxmap\Release"
+# ADD LINK32 libnxcl.lib libnetxms.lib libnxsnmp.lib nxuilib.lib libnxmap.lib shfolder.lib msimg32.lib wininet.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnxcl\Release" /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxsnmp\Release" /libpath:"..\nxuilib\Release" /libpath:"..\..\libnxmap\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -86,7 +86,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 shfolder.lib libnxcl.lib libnetxms.lib libnxsnmp.lib nxuilib.lib libnxmap.lib msimg32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Debug" /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxsnmp\Debug" /libpath:"..\nxuilib\Debug" /libpath:"..\..\libnxmap\Debug"
+# ADD LINK32 libnxcl.lib libnetxms.lib libnxsnmp.lib nxuilib.lib libnxmap.lib shfolder.lib msimg32.lib wininet.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Debug" /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxsnmp\Debug" /libpath:"..\nxuilib\Debug" /libpath:"..\..\libnxmap\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Cmds=copy Debug\nxcon.exe ..\..\..\bin
@@ -117,7 +117,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 shfolder.lib libnxcl.lib libnetxms.lib libnxsnmp.lib libnxcscp.lib nxuilib.lib libnxmap.lib msimg32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Debug" /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxsnmp\Debug" /libpath:"..\..\libnxcscp\Debug" /libpath:"..\nxuilib\Debug" /libpath:"..\..\libnxmap\Debug"
-# ADD LINK32 shfolder.lib libnxclw.lib libnetxmsw.lib libnxsnmpw.lib nxuilibw.lib libnxmapw.lib msimg32.lib /nologo /entry:"wWinMainCRTStartup" /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Debug_UNICODE" /libpath:"..\..\libnetxms\Debug_UNICODE" /libpath:"..\..\libnxsnmp\Debug_UNICODE" /libpath:"..\nxuilib\Debug_UNICODE" /libpath:"..\..\libnxmap\Debug_UNICODE"
+# ADD LINK32 libnxclw.lib libnetxmsw.lib libnxsnmpw.lib nxuilibw.lib libnxmapw.lib shfolder.lib msimg32.lib wininet.lib /nologo /entry:"wWinMainCRTStartup" /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Debug_UNICODE" /libpath:"..\..\libnetxms\Debug_UNICODE" /libpath:"..\..\libnxsnmp\Debug_UNICODE" /libpath:"..\nxuilib\Debug_UNICODE" /libpath:"..\..\libnxmap\Debug_UNICODE"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Cmds=copy Debug_UNICODE\nxcon.exe ..\..\..\bin
@@ -148,7 +148,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 shfolder.lib libnxcl.lib libnetxms.lib libnxsnmp.lib libnxcscp.lib nxuilib.lib libnxmap.lib msimg32.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnxcl\Release" /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxsnmp\Release" /libpath:"..\..\libnxcscp\Release" /libpath:"..\nxuilib\Release" /libpath:"..\..\libnxmap\Release"
-# ADD LINK32 shfolder.lib libnxclw.lib libnetxmsw.lib libnxsnmpw.lib nxuilibw.lib libnxmapw.lib msimg32.lib /nologo /entry:"wWinMainCRTStartup" /subsystem:windows /machine:I386 /libpath:"..\..\libnxcl\Release_UNICODE" /libpath:"..\..\libnetxms\Release_UNICODE" /libpath:"..\..\libnxsnmp\Release_UNICODE" /libpath:"..\nxuilib\Release_UNICODE" /libpath:"..\..\libnxmap\Release_UNICODE"
+# ADD LINK32 libnxclw.lib libnetxmsw.lib libnxsnmpw.lib nxuilibw.lib libnxmapw.lib shfolder.lib msimg32.lib wininet.lib /nologo /entry:"wWinMainCRTStartup" /subsystem:windows /machine:I386 /libpath:"..\..\libnxcl\Release_UNICODE" /libpath:"..\..\libnetxms\Release_UNICODE" /libpath:"..\..\libnxsnmp\Release_UNICODE" /libpath:"..\nxuilib\Release_UNICODE" /libpath:"..\..\libnxmap\Release_UNICODE"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -241,6 +241,10 @@ SOURCE=.\CondPropsScript.cpp
 # Begin Source File
 
 SOURCE=.\ConsolePropsGeneral.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ConsoleUpgradeDlg.cpp
 # End Source File
 # Begin Source File
 
@@ -790,6 +794,10 @@ SOURCE=.\CondPropsScript.h
 # Begin Source File
 
 SOURCE=.\ConsolePropsGeneral.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ConsoleUpgradeDlg.h
 # End Source File
 # Begin Source File
 

@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.247 2006-12-21 16:41:35 victor Exp $ */
+/* $Id: nxclapi.h,v 1.248 2006-12-29 12:45:27 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -1572,7 +1572,7 @@ void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
 DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *szServer, TCHAR *szLogin,
                                     TCHAR *szPassword, NXC_SESSION *phSession,
                                     TCHAR *pszClientInfo, BOOL bExactVersionMatch,
-                                    BOOL bEncrypt);
+                                    BOOL bEncrypt, TCHAR **ppszUpgradeURL);
 void LIBNXCL_EXPORTABLE NXCDisconnect(NXC_SESSION hSession);
 void LIBNXCL_EXPORTABLE NXCStartWatchdog(NXC_SESSION hSession);
 void LIBNXCL_EXPORTABLE NXCSetEventHandler(NXC_SESSION hSession, NXC_EVENT_HANDLER pHandler);

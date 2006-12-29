@@ -651,6 +651,8 @@ src/console/win32/CondPropsScript.cpp -text
 src/console/win32/CondPropsScript.h -text
 src/console/win32/ConsolePropsGeneral.cpp -text
 src/console/win32/ConsolePropsGeneral.h -text
+src/console/win32/ConsoleUpgradeDlg.cpp -text
+src/console/win32/ConsoleUpgradeDlg.h -text
 src/console/win32/ControlPanel.cpp -text
 src/console/win32/ControlPanel.h -text
 src/console/win32/CreateCondDlg.cpp -text

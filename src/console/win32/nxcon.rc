@@ -2848,6 +2848,18 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,349,24,50,14
 END
 
+IDD_UPGRADE DIALOG DISCARDABLE  0, 0, 333, 84
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Console Upgrade"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "&Yes, proceed with upgrade",IDOK,38,63,108,14
+    PUSHBUTTON      "&No, return to login window",IDCANCEL,188,63,108,14
+    LTEXT           "You cannot connect to the server because server uses different version of communication protocol. However, updated version of NetXMS console is available at the URL displayed below. Do you wish to download and install new NetXMS console version?",
+                    IDC_STATIC,7,7,319,26
+    EDITTEXT        IDC_EDIT_URL,7,37,319,14,ES_AUTOHSCROLL | ES_READONLY
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -3515,6 +3527,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 171
     END
+
+    IDD_UPGRADE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 326
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 77
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -3756,6 +3776,21 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     ID_CONTROLPANEL_SERVERCFG "Server Configuration\nServer Configuration"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_INTERNAL_ERROR      "Internal error"
+    IDS_WININET_INIT_FAILED "WinInet library initialization failed"
+    IDS_DATA_TRANSFER_ERROR "Error transferring data from remote host"
+    IDS_HTTP_ERROR          "HTTP error: %s"
+    IDS_CANNOT_SEND_HTTP_REQUEST "Cannot send HTTP request to remote host"
+    IDS_CANNOT_OPEN_HTTP_REQUEST "Cannot open HTTP request"
+    IDS_WININET_CONNECT_FAILED "Cannot connect to remote host"
+    IDS_CAPTION_ERROR       "Error"
+    IDS_CAPTION_WARNING     "Warning"
+    IDS_CAPTION_INFORMATION "Information"
+    IDS_DOWNLOAD_ERROR      "Error downloading file from remote host (%s)"
 END
 
 #endif    // English (U.S.) resources

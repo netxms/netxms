@@ -1,4 +1,4 @@
-/* $Id: nxmp_data.cpp,v 1.7 2006-12-27 22:16:21 victor Exp $ */
+/* $Id: nxmp_data.cpp,v 1.8 2006-12-29 12:45:29 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -63,6 +63,9 @@ NXMP_Data::NXMP_Data(NXMP_Lexer *pLexer, NXMP_Parser *pParser)
    m_pEventList = NULL;
    m_dwNumEvents = 0;
    m_pCurrEvent = NULL;
+   m_pTrapList = NULL;
+   m_dwNumTraps = 0;
+   m_pCurrTrap = NULL;
    m_nContext = CTX_NONE;
    m_pLexer = pLexer;
    m_pParser = pParser;
@@ -165,6 +168,20 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
          else
          {
             Error("Unknown event attribute %s", pszName);
+         }
+         break;
+      case CTX_TRAP:
+         if (!stricmp(pszName, "EVENT"))
+         {
+            SetTrapEvent(pszValue);
+         }
+         else if (!stricmp(pszName, "DESCRIPTION"))
+         {
+            SetTrapDescription(pszValue);
+         }
+         else
+         {
+            Error("Unknown trap attribute %s", pszName);
          }
          break;
       default:
@@ -326,7 +343,11 @@ void NXMP_Data::SetTrapEvent(char *pszEvent)
 	{
 		DWORD dwIndex;
 
+#ifdef UNICODE
+		dwIndex = FindEvent(pwszEvent);
+#else
 		dwIndex = FindEvent(pszEvent);
+#endif
 		if (dwIndex != INVALID_INDEX)
 		{
 			// We set group bit to indicate that event code is not an
@@ -334,6 +355,52 @@ void NXMP_Data::SetTrapEvent(char *pszEvent)
 			m_pCurrTrap->dwEventCode = dwIndex | GROUP_FLAG;
 		}
 	}
+#ifdef UNICODE
+	free(pwszEvent);
+#endif
+}
+
+
+//
+// Add new trap parameter mapping
+//
+
+void NXMP_Data::AddTrapParam(char *pszOID, int nPos, char *pszDescr)
+{
+	DWORD dwIndex, dwOID[MAX_OID_LEN];
+#ifdef UNICODE
+	WCHAR *pwszOID;
+#endif
+
+   if (m_pCurrTrap == NULL)
+      return;
+
+	dwIndex = m_pCurrTrap->dwNumMaps;
+	m_pCurrTrap->dwNumMaps++;
+	m_pCurrTrap->pMaps = (NXC_OID_MAP *)realloc(m_pCurrTrap->pMaps, sizeof(NXC_OID_MAP) * m_pCurrTrap->dwNumMaps);
+	memset(&m_pCurrTrap->pMaps[dwIndex], 0, sizeof(NXC_OID_MAP));
+	if (pszOID != NULL)
+	{
+#ifdef UNICODE
+		pwszOID = WideStringFromMBString(pszOID);
+		m_pCurrTrap->pMaps[dwIndex].dwOidLen = SNMPParseOID(pwszOID, dwOID, MAX_OID_LEN);
+		free(pwszOID);
+#else
+		m_pCurrTrap->pMaps[dwIndex].dwOidLen = SNMPParseOID(pszOID, dwOID, MAX_OID_LEN);
+#endif
+		m_pCurrTrap->pMaps[dwIndex].pdwObjectId = (DWORD *)nx_memdup(dwOID, m_pCurrTrap->pMaps[dwIndex].dwOidLen * sizeof(DWORD));
+	}
+	else
+	{
+		m_pCurrTrap->pMaps[dwIndex].dwOidLen = (DWORD)nPos | 0x80000000;
+	}
+#ifdef UNICODE
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszDescr, -1,
+	                    m_pCurrTrap->pMaps[dwIndex].szDescription, MAX_DB_STRING);
+	m_pCurrTrap->pMaps[dwIndex].szDescription[MAX_DB_STRING - 1] = 0;
+#else
+	nx_strncpy(m_pCurrTrap->pMaps[dwIndex].szDescription, pszDescr, MAX_DB_STRING);
+#endif
 }
 
 
@@ -445,7 +512,7 @@ static BOOL UpdateEvent(EVENT_TEMPLATE *pEvent)
 
 DWORD NXMP_Data::Install(DWORD dwFlags)
 {
-   DWORD i, dwTrapId, dwResult = RCC_SUCCESS;
+   DWORD i, dwResult = RCC_SUCCESS;
    BOOL bRet = FALSE;
    EVENT_TEMPLATE *pEvent;
 
@@ -494,11 +561,15 @@ DWORD NXMP_Data::Install(DWORD dwFlags)
 	// Install traps
 	for(i = 0; i < m_dwNumTraps; i++)
 	{
-		dwResult = CreateNewTrap(&dwTrapId);
+		// Resolve event name if needed
+		if (m_pTrapList[i].dwEventCode & GROUP_FLAG)
+		{
+			// Correct event code should be set already at event installation phase
+			m_pTrapList[i].dwEventCode = m_pEventList[m_pTrapList[i].dwEventCode & ~GROUP_FLAG].dwCode;
+		}
+		dwResult = CreateNewTrap(&m_pTrapList[i]);
 		if (dwResult != RCC_SUCCESS)
 			goto stop_processing;
-
-
 	}
 
 stop_processing:

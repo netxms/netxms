@@ -234,7 +234,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
 DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin, 
                                     TCHAR *pszPassword, NXC_SESSION *phSession,
                                     TCHAR *pszClientInfo, BOOL bExactVersionMatch,
-                                    BOOL bEncrypt)
+                                    BOOL bEncrypt, TCHAR **ppszUpgradeURL)
 {
    struct sockaddr_in servAddr;
    CSCPMessage msg, *pResp;
@@ -245,6 +245,9 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
    WORD wPort = SERVER_LISTEN_PORT;
 
    nx_strncpy(szHostName, pszServer, 128);
+
+	if (ppszUpgradeURL != NULL)
+		*ppszUpgradeURL = NULL;
 
    // Check if server given in form host:port
    pszPort = _tcschr(szHostName, _T(':'));
@@ -311,6 +314,8 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
                      }
                      if (pResp->GetVariableLong(VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION)
                         dwRetCode = RCC_BAD_PROTOCOL;
+							if (ppszUpgradeURL != NULL)
+								*ppszUpgradeURL = pResp->GetVariableStr(VID_CONSOLE_UPGRADE_URL);
                   }
                   delete pResp;
 

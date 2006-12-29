@@ -68,6 +68,7 @@
 #include "DataCollectionEditor.h"
 #include "CreateMPDlg.h"
 #include "SelectMPDlg.h"
+#include "ConsoleUpgradeDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -895,7 +896,19 @@ void CConsoleApp::OnConnectToServer()
       }
       else
       {
-         ErrorBox(dwResult, _T("Unable to connect: %s"), _T("Connection error"));
+			if (((dwResult == RCC_VERSION_MISMATCH) || (dwResult == RCC_BAD_PROTOCOL)) &&
+				 (g_szUpgradeURL[0] != 0))
+			{
+				if (StartConsoleUpgrade())
+				{
+		         PostQuitMessage(1);
+					break;
+				}
+			}
+			else
+			{
+				ErrorBox(dwResult, _T("Unable to connect: %s"), _T("Connection error"));
+			}
       }
    }
    while(dwResult != RCC_SUCCESS);
@@ -3438,4 +3451,70 @@ void CConsoleApp::OnToolsImportmp()
          m_pMainWnd->MessageBox(szBuffer, _T("Error"), MB_OK | MB_ICONSTOP);
       }
    }
+}
+
+
+//
+// Start console upgrade. Return TRUE if upgrade was started.
+//
+
+BOOL CConsoleApp::StartConsoleUpgrade()
+{
+	CConsoleUpgradeDlg dlg;
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+	TCHAR szLocalFile[MAX_PATH], szTempDir[MAX_PATH];
+	DWORD dwResult;
+	HANDLE hFile;
+	BOOL bRet;
+
+	dlg.m_strURL = g_szUpgradeURL;
+	if (dlg.DoModal() != IDOK)
+		return FALSE;
+
+	dwResult = GetTempPath(MAX_PATH, szTempDir);
+	if ((dwResult == 0) || (dwResult > MAX_PATH))
+	{
+		m_pMainWnd->MessageBox(_T("Cannot obtain name of temporary directory"), _T("Error"), MB_OK | MB_ICONSTOP);
+		return FALSE;
+	}
+
+	if (GetTempFileName(szTempDir, _T("NXC"), 0xA00A, szLocalFile) == 0)
+	{
+		m_pMainWnd->MessageBox(_T("Cannot obtain name of temporary file"), _T("Error"), MB_OK | MB_ICONSTOP);
+		return FALSE;
+	}
+
+	hFile = CreateFile(szLocalFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, NULL);
+	if (hFile != INVALID_HANDLE_VALUE)
+	{
+		bRet = DownloadUpgradeFile(hFile);
+		CloseHandle(hFile);
+		if (bRet)
+		{
+			TCHAR szArgs[256] = _T("ARG0 /SILENT /RUNCONSOLE");
+
+			memset(&si, 0, sizeof(STARTUPINFO));
+			si.cb = sizeof(STARTUPINFO);
+			if (!CreateProcess(szLocalFile, szArgs, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+			{
+				m_pMainWnd->MessageBox(_T("Cannot create process"), _T("Error"), MB_OK | MB_ICONSTOP);
+				bRet = FALSE;
+			}
+			CloseHandle(pi.hThread);
+			CloseHandle(pi.hProcess);
+		}
+		if (!bRet)
+			DeleteFile(szLocalFile);
+	}
+	else
+	{
+      TCHAR szBuffer[1024];
+
+      _tcscpy(szBuffer, _T("Cannot create local file: "));
+      GetSystemErrorText(GetLastError(), &szBuffer[26], 990);
+      m_pMainWnd->MessageBox(szBuffer, _T("Error"), MB_OK | MB_ICONSTOP);
+		bRet = FALSE;
+	}
+	return bRet;
 }

@@ -662,7 +662,7 @@ void Threshold::CreateNXMPRecord(String &str)
    strValue = (TCHAR *)m_value.String();
    ResolveEventName(m_dwEventCode, szEvent1);
    ResolveEventName(m_dwRearmEventCode, szEvent2);
-   str.AddFormattedString(_T("\t\t\t\t\tTHRESHOLD\n\t\t\t\t\t{\n")
+   str.AddFormattedString(_T("\t\t\t\t\t@THRESHOLD\n\t\t\t\t\t{\n")
                           _T("\t\t\t\t\t\tFUNCTION=%d;\n")
                           _T("\t\t\t\t\t\tCONDITION=%d;\n")
                           _T("\t\t\t\t\t\tVALUE=\"%s\";\n")

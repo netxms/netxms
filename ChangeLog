@@ -7,6 +7,8 @@
 - Added Extended Checksum subagent
 - Added ODBC Query subagent
 - Windows console:
+	- Now able to download and install update from web server pointed
+	  by NetXMS management server
 	- Object browser improved
 	- Graphs improved: implemented printing and "copy to clipboard"
 	  function

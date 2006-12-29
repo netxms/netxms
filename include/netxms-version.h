@@ -1,3 +1,4 @@
+/* $Id: netxms-version.h,v 1.100 2006-12-29 12:45:27 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -16,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: netxms-version.h
+** File: netxms-version.h
 **
 **/
 
@@ -31,14 +32,14 @@
 #define NETXMS_VERSION_MAJOR        0
 #define NETXMS_VERSION_MINOR        2
 #define NETXMS_VERSION_BUILD        15
-#define NETXMS_VERSION_STRING       _T("0.2.15-rc2")
+#define NETXMS_VERSION_STRING       _T("0.2.15-rc3")
 
 
 //
 // Current client-server protocol version
 //
 
-#define CLIENT_PROTOCOL_VERSION     11
+#define CLIENT_PROTOCOL_VERSION     12
 
 
 #endif

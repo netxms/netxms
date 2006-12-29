@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.253 2006-12-26 22:53:59 victor Exp $ */
+/* $Id: session.cpp,v 1.254 2006-12-29 12:45:29 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -1091,6 +1091,8 @@ void ClientSession::OnFileUpload(BOOL bSuccess)
 void ClientSession::SendServerInfo(DWORD dwRqId)
 {
    CSCPMessage msg;
+	TCHAR szBuffer[1024];
+	String strURL;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -1102,6 +1104,12 @@ void ClientSession::SendServerInfo(DWORD dwRqId)
    msg.SetVariable(VID_SERVER_ID, (BYTE *)&g_qwServerId, sizeof(QWORD));
    msg.SetVariable(VID_SUPPORTED_ENCRYPTION, (DWORD)0);
    msg.SetVariable(VID_PROTOCOL_VERSION, (DWORD)CLIENT_PROTOCOL_VERSION);
+
+	ConfigReadStr(_T("WindowsConsoleUpgradeURL"), szBuffer, 1024,
+	              _T("http://www.netxms.org/download/netxms-%version%.exe"));
+	strURL = szBuffer;
+	strURL.Translate(_T("%version%"), NETXMS_VERSION_STRING);
+	msg.SetVariable(VID_CONSOLE_UPGRADE_URL, (TCHAR *)strURL);
 
    // Send response
    SendMessage(&msg);
@@ -8091,14 +8099,14 @@ void ClientSession::CreateManagementPack(CSCPMessage *pRequest)
       {
          String str, temp;
 
-         str = _T("NXMP\n{\n\tVERSION=1;\n\tDESCRIPTION=\"");
+         str = _T("@NXMP\n{\n\tVERSION=1;\n\tDESCRIPTION=\"");
          temp.SetBuffer(pRequest->GetVariableStr(VID_DESCRIPTION));
          EscapeString(temp);
          str += (TCHAR *)temp;
          str += _T("\";\n}\n\n");
 
          // Write events
-         str += _T("EVENTS\n{\n");
+         str += _T("@EVENTS\n{\n");
          dwCount = pRequest->GetVariableLong(VID_NUM_EVENTS);
          pdwList = (DWORD *)malloc(sizeof(DWORD) * dwCount);
          pRequest->GetVariableInt32Array(VID_EVENT_LIST, dwCount, pdwList);
@@ -8108,7 +8116,7 @@ void ClientSession::CreateManagementPack(CSCPMessage *pRequest)
          str += _T("}\n\n");
 
          // Write templates
-         str += _T("TEMPLATES\n{\n");
+         str += _T("@TEMPLATES\n{\n");
          for(i = 0; i < dwNumTemplates; i++)
          {
             pObject = FindObjectById(pdwTemplateList[i]);
@@ -8120,7 +8128,7 @@ void ClientSession::CreateManagementPack(CSCPMessage *pRequest)
          str += _T("}\n\n");
 
          // Write traps
-         str += _T("SNMP_TRAPS\n{\n");
+         str += _T("@SNMP_TRAPS\n{\n");
          dwCount = pRequest->GetVariableLong(VID_NUM_TRAPS);
          pdwList = (DWORD *)malloc(sizeof(DWORD) * dwCount);
          pRequest->GetVariableInt32Array(VID_TRAP_LIST, dwCount, pdwList);

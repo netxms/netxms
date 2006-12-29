@@ -525,6 +525,46 @@ DWORD DeleteTrap(DWORD dwId)
 
 
 //
+// Save parameter mapping to database
+//
+
+static BOOL SaveParameterMapping(NXC_TRAP_CFG_ENTRY *pTrap)
+{
+	TCHAR szQuery[1024], szOID[1024], *pszEscDescr;
+	BOOL bRet;
+	DWORD i;
+
+   _sntprintf(szQuery, 1024, _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%d"), pTrap->dwId);
+   bRet = DBQuery(g_hCoreDB, szQuery);
+   if (bRet)
+   {
+      for(i = 0; i < pTrap->dwNumMaps; i++)
+      {
+         if ((pTrap->pMaps[i].dwOidLen & 0x80000000) == 0)
+         {
+            SNMPConvertOIDToText(pTrap->pMaps[i].dwOidLen,
+                                 pTrap->pMaps[i].pdwObjectId,
+                                 szOID, 1024);
+         }
+         else
+         {
+            _stprintf(szOID, _T("POS:%d"), pTrap->pMaps[i].dwOidLen & 0x7FFFFFFF);
+         }
+         pszEscDescr = EncodeSQLString(pTrap->pMaps[i].szDescription);
+         _sntprintf(szQuery, 1024, _T("INSERT INTO snmp_trap_pmap (trap_id,parameter,")
+                                   _T("snmp_oid,description) VALUES (%d,%d,'%s','%s')"),
+                    pTrap->dwId, i + 1, szOID, pszEscDescr);
+         free(pszEscDescr);
+         bRet = DBQuery(g_hCoreDB, szQuery);
+         if (!bRet)
+            break;
+      }
+   }
+	return bRet;
+}
+
+
+//
 // Create new trap configuration record
 //
 
@@ -559,12 +599,12 @@ DWORD CreateNewTrap(DWORD *pdwTrapId)
 
 DWORD CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap)
 {
-   DWORD i, dwResult = RCC_SUCCESS;
+   DWORD i, dwResult;
    TCHAR szQuery[4096], szOID[1024], *pszEscDescr;
+	BOOL bSuccess;
 
    MutexLock(m_mutexTrapCfgAccess, INFINITE);
    
-   //*pdwTrapId = CreateUniqueId(IDG_SNMP_TRAP);
    m_pTrapCfg = (NXC_TRAP_CFG_ENTRY *)realloc(m_pTrapCfg, sizeof(NXC_TRAP_CFG_ENTRY) * (m_dwNumTraps + 1));
    memcpy(&m_pTrapCfg[m_dwNumTraps], pTrap, sizeof(NXC_TRAP_CFG_ENTRY));
    m_pTrapCfg[m_dwNumTraps].dwId = CreateUniqueId(IDG_SNMP_TRAP);
@@ -576,14 +616,31 @@ DWORD CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap)
 			m_pTrapCfg[m_dwNumTraps].pMaps[i].pdwObjectId = (DWORD *)nx_memdup(pTrap->pMaps[i].pdwObjectId, sizeof(DWORD) * pTrap->pMaps[i].dwOidLen);
 	}
 
+	// Write new trap to database
    SNMPConvertOIDToText(m_pTrapCfg[m_dwNumTraps].dwOidLen, m_pTrapCfg[m_dwNumTraps].pdwObjectId, szOID, 1024);
 	pszEscDescr = EncodeSQLString(m_pTrapCfg[m_dwNumTraps].szDescription);
    _stprintf(szQuery, _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description) ")
                       _T("VALUES (%d,'%s',%d,'%s')"), m_pTrapCfg[m_dwNumTraps].dwId,
 	          szOID, m_pTrapCfg[m_dwNumTraps].dwEventCode, pszEscDescr);
 	free(pszEscDescr);
-   if (!DBQuery(g_hCoreDB, szQuery))
+
+	if(DBBegin(g_hCoreDB))
+   {
+      bSuccess = DBQuery(g_hCoreDB, szQuery);
+      if (bSuccess)
+      {
+			bSuccess = SaveParameterMapping(&m_pTrapCfg[m_dwNumTraps]);
+      }
+      if (bSuccess)
+         DBCommit(g_hCoreDB);
+      else
+         DBRollback(g_hCoreDB);
+      dwResult = bSuccess ? RCC_SUCCESS : RCC_DB_FAILURE;
+   }
+   else
+   {
       dwResult = RCC_DB_FAILURE;
+   }
 
    m_dwNumTraps++;
    MutexUnlock(m_mutexTrapCfgAccess);
@@ -653,32 +710,7 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
             bSuccess = DBQuery(g_hCoreDB, szQuery);
             if (bSuccess)
             {
-               _sntprintf(szQuery, 1024, _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%d"), m_pTrapCfg[i].dwId);
-               bSuccess = DBQuery(g_hCoreDB, szQuery);
-               if (bSuccess)
-               {
-                  for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
-                  {
-                     if ((m_pTrapCfg[i].pMaps[j].dwOidLen & 0x80000000) == 0)
-                     {
-                        SNMPConvertOIDToText(m_pTrapCfg[i].pMaps[j].dwOidLen,
-                                             m_pTrapCfg[i].pMaps[j].pdwObjectId,
-                                             szOID, 1024);
-                     }
-                     else
-                     {
-                        _stprintf(szOID, _T("POS:%d"), m_pTrapCfg[i].pMaps[j].dwOidLen & 0x7FFFFFFF);
-                     }
-                     pszEscDescr = EncodeSQLString(m_pTrapCfg[i].pMaps[j].szDescription);
-                     _sntprintf(szQuery, 1024, _T("INSERT INTO snmp_trap_pmap (trap_id,parameter,")
-                                               _T("snmp_oid,description) VALUES (%d,%d,'%s','%s')"),
-                                m_pTrapCfg[i].dwId, j + 1, szOID, pszEscDescr);
-                     free(pszEscDescr);
-                     bSuccess = DBQuery(g_hCoreDB, szQuery);
-                     if (!bSuccess)
-                        break;
-                  }
-               }
+					bSuccess = SaveParameterMapping(&m_pTrapCfg[i]);
             }
             if (bSuccess)
                DBCommit(g_hCoreDB);
@@ -714,7 +746,7 @@ void CreateNXMPTrapRecord(String &str, DWORD dwId)
    {
       if (m_pTrapCfg[i].dwId == dwId)
       {
-			str.AddFormattedString(_T("\tTRAP %s\n\t{\n"),
+			str.AddFormattedString(_T("\t@TRAP %s\n\t{\n"),
 			                       SNMPConvertOIDToText(m_pTrapCfg[i].dwOidLen,
 			                                            m_pTrapCfg[i].pdwObjectId,
 																	  szBuffer, 1024));
@@ -728,7 +760,7 @@ void CreateNXMPTrapRecord(String &str, DWORD dwId)
 			str.AddFormattedString(_T("\t\tEVENT=%s;\n"), szBuffer);
 			if (m_pTrapCfg[i].dwNumMaps > 0)
 			{
-				str += _T("\t\tPARAMETERS\n\t\t{\n");
+				str += _T("\t\t@PARAMETERS\n\t\t{\n");
 				for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
 				{
 					strDescr = m_pTrapCfg[i].pMaps[j].szDescription;
