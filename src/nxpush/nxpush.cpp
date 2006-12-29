@@ -1,4 +1,4 @@
-/* $Id: nxpush.cpp,v 1.12 2006-11-21 11:35:29 victor Exp $ */
+/* $Id: nxpush.cpp,v 1.13 2006-12-29 20:26:38 alk Exp $ */
 
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
@@ -420,7 +420,7 @@ BOOL Startup(void)
 		}
 
 		dwResult = NXCConnect(optHost, optUser, optPassword, &hSession,
-					"nxpush/" NETXMS_VERSION_STRING, FALSE, optEncrypt);
+					"nxpush/" NETXMS_VERSION_STRING, FALSE, optEncrypt, NULL);
 		if (dwResult != RCC_SUCCESS)
 		{
 			if (optVerbose > 0)
@@ -540,6 +540,9 @@ BOOL Teardown(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/11/21 11:35:29  victor
+Stability fixes for IPSO
+
 Revision 1.11  2006/11/15 22:42:14  victor
 Minor fixes
 

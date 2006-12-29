@@ -344,7 +344,7 @@ int main(int argc, char *argv[])
    	      NXCSetDebugCallback(DebugCallback);
 
       	dwResult = NXCConnect(szServer, szLogin, szPassword, &gs_hSession,
-                               _T("nxreport/") NETXMS_VERSION_STRING, FALSE, FALSE);
+                               _T("nxreport/") NETXMS_VERSION_STRING, FALSE, FALSE, NULL);
 			if (dwResult != RCC_SUCCESS)
 			{
 				_tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(dwResult));\
