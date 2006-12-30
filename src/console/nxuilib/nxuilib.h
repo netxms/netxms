@@ -8,6 +8,13 @@
 
 
 //
+// Defines
+//
+
+#define NXUILIB_BASE_REGISTRY_KEY	_T("Software\\NetXMS\\NetXMS UI Library\\")
+
+
+//
 // Global variables
 //
 

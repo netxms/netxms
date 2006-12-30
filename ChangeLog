@@ -12,6 +12,7 @@
 	- Object browser improved
 	- Graphs improved: implemented printing and "copy to clipboard"
 	  function
+	- Added server history in login dialog
 - Fixed issues: #135, #140, #145
 
 

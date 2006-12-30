@@ -99,18 +99,18 @@ BOOL CAlarmViewApp::InitInstance()
          CLoginDialog dlg;
 
          dlg.m_dwFlags = LOGIN_DLG_NO_OBJECT_CACHE;
-         dlg.m_szServer = g_szServer;
-         dlg.m_szLogin = g_szLogin;
-         dlg.m_szPassword = g_szPassword;
+         dlg.m_strServer = g_szServer;
+         dlg.m_strLogin = g_szLogin;
+         dlg.m_strPassword = g_szPassword;
          dlg.m_bEncrypt = (g_dwOptions & OPT_ENCRYPT_CONNECTION) ? TRUE : FALSE;
          dlg.m_bNoCache = FALSE;
          dlg.m_bClearCache = FALSE;
          dlg.m_bMatchVersion = (g_dwOptions & OPT_MATCH_SERVER_VERSION) ? TRUE : FALSE;
          if (dlg.DoModal() != IDOK)
             return FALSE;
-         nx_strncpy(g_szServer, (LPCTSTR)dlg.m_szServer, MAX_PATH);
-         nx_strncpy(g_szLogin, (LPCTSTR)dlg.m_szLogin, MAX_USER_NAME);
-         nx_strncpy(g_szPassword, (LPCTSTR)dlg.m_szPassword, MAX_SECRET_LENGTH);
+         nx_strncpy(g_szServer, (LPCTSTR)dlg.m_strServer, MAX_PATH);
+         nx_strncpy(g_szLogin, (LPCTSTR)dlg.m_strLogin, MAX_USER_NAME);
+         nx_strncpy(g_szPassword, (LPCTSTR)dlg.m_strPassword, MAX_SECRET_LENGTH);
          if (dlg.m_bEncrypt)
             g_dwOptions |= OPT_ENCRYPT_CONNECTION;
          else

@@ -84,7 +84,7 @@ static DWORD WINAPI LoginThread(void *pArg)
    dwResult = NXCConnect(g_szServer, g_szLogin, g_szPassword, &g_hSession, 
                          _T("Alarm Viewer/") NETXMS_VERSION_STRING,
                          (g_dwOptions & OPT_MATCH_SERVER_VERSION) ? TRUE : FALSE,
-                         (g_dwOptions & OPT_ENCRYPT_CONNECTION) ? TRUE : FALSE);
+                         (g_dwOptions & OPT_ENCRYPT_CONNECTION) ? TRUE : FALSE, NULL);
 
    // Set subscriptions
    if (dwResult == RCC_SUCCESS)

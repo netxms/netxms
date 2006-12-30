@@ -841,8 +841,8 @@ void CConsoleApp::OnConnectToServer()
 	CLoginDialog dlgLogin;
    DWORD dwResult;
 
-   dlgLogin.m_szServer = g_szServer;
-   dlgLogin.m_szLogin = g_szLogin;
+   dlgLogin.m_strServer = g_szServer;
+   dlgLogin.m_strLogin = g_szLogin;
    dlgLogin.m_bEncrypt = (g_dwOptions & OPT_ENCRYPT_CONNECTION) ? TRUE : FALSE;
    if (g_dwOptions & OPT_DONT_CACHE_OBJECTS)
    {
@@ -862,9 +862,9 @@ void CConsoleApp::OnConnectToServer()
          PostQuitMessage(1);
          break;
       }
-      _tcscpy(g_szServer, (LPCTSTR)dlgLogin.m_szServer);
-      _tcscpy(g_szLogin, (LPCTSTR)dlgLogin.m_szLogin);
-      _tcscpy(g_szPassword, (LPCTSTR)dlgLogin.m_szPassword);
+      _tcscpy(g_szServer, (LPCTSTR)dlgLogin.m_strServer);
+      _tcscpy(g_szLogin, (LPCTSTR)dlgLogin.m_strLogin);
+      _tcscpy(g_szPassword, (LPCTSTR)dlgLogin.m_strPassword);
       if (dlgLogin.m_bEncrypt)
          g_dwOptions |= OPT_ENCRYPT_CONNECTION;
       else

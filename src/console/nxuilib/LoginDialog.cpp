@@ -11,6 +11,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+
 /////////////////////////////////////////////////////////////////////////////
 // CLoginDialog dialog
 
@@ -21,13 +22,13 @@ CLoginDialog::CLoginDialog(CWnd* pParent /*=NULL*/)
    LOGBRUSH lb;
 
 	//{{AFX_DATA_INIT(CLoginDialog)
-	m_szLogin = _T("");
-	m_szPassword = _T("");
-	m_szServer = _T("");
 	m_bClearCache = FALSE;
 	m_bMatchVersion = FALSE;
 	m_bNoCache = FALSE;
 	m_bEncrypt = FALSE;
+	m_strServer = _T("");
+	m_strLogin = _T("");
+	m_strPassword = _T("");
 	//}}AFX_DATA_INIT
 
    lb.lbColor = 0;
@@ -36,10 +37,15 @@ CLoginDialog::CLoginDialog(CWnd* pParent /*=NULL*/)
    m_hNullBrush = CreateBrushIndirect(&lb);
 
    m_dwFlags = 0;
+	memset(m_pszServerHistory, 0, sizeof(TCHAR *) * MAX_LOGINDLG_HISTORY_SIZE);
 }
 
 CLoginDialog::~CLoginDialog()
 {
+	int i;
+
+	for(i = 0; i < MAX_LOGINDLG_HISTORY_SIZE; i++)
+		safe_free(m_pszServerHistory[i]);
    DeleteObject(m_hNullBrush);
 }
 
@@ -48,16 +54,17 @@ void CLoginDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CLoginDialog)
-	DDX_Text(pDX, IDC_EDIT_LOGIN, m_szLogin);
-	DDV_MaxChars(pDX, m_szLogin, 64);
-	DDX_Text(pDX, IDC_EDIT_PASSWORD, m_szPassword);
-	DDV_MaxChars(pDX, m_szPassword, 64);
-	DDX_Text(pDX, IDC_EDIT_SERVER, m_szServer);
-	DDV_MaxChars(pDX, m_szServer, 64);
+	DDX_Control(pDX, IDC_COMBO_SERVER, m_wndComboServer);
 	DDX_Check(pDX, IDC_CHECK_CACHE, m_bClearCache);
 	DDX_Check(pDX, IDC_CHECK_VERSION_MATCH, m_bMatchVersion);
 	DDX_Check(pDX, IDC_CHECK_NOCACHE, m_bNoCache);
 	DDX_Check(pDX, IDC_CHECK_ENCRYPT, m_bEncrypt);
+	DDX_CBString(pDX, IDC_COMBO_SERVER, m_strServer);
+	DDV_MaxChars(pDX, m_strServer, 63);
+	DDX_Text(pDX, IDC_EDIT_LOGIN, m_strLogin);
+	DDV_MaxChars(pDX, m_strLogin, 63);
+	DDX_Text(pDX, IDC_EDIT_PASSWORD, m_strPassword);
+	DDV_MaxChars(pDX, m_strPassword, 63);
 	//}}AFX_DATA_MAP
 }
 
@@ -102,8 +109,10 @@ BOOL CLoginDialog::OnInitDialog()
    {
       EnableDlgItem(this, IDC_CHECK_CACHE, FALSE);
    }
+
+	LoadServerHistory();
 	
-   if (m_szLogin.IsEmpty() || m_szServer.IsEmpty())
+   if (m_strLogin.IsEmpty() || m_strServer.IsEmpty())
 		return TRUE;
 
    // Server and login already entered, change focus to password field
@@ -153,4 +162,105 @@ void CLoginDialog::OnCheckNocache()
    {
       EnableDlgItem(this, IDC_CHECK_CACHE, TRUE);
    }
+}
+
+
+//
+// Load history of connected servers
+//
+
+void CLoginDialog::LoadServerHistory()
+{
+	HKEY hKey;
+	DWORD i, dwSize;
+	TCHAR szBuffer[64], szData[256];
+
+	if (RegOpenKeyEx(HKEY_CURRENT_USER, NXUILIB_BASE_REGISTRY_KEY _T("LoginDialog"),
+	                 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+		return;
+
+	for(i = 0; i < MAX_LOGINDLG_HISTORY_SIZE; i++)
+	{
+		_stprintf(szBuffer, _T("HistorySrv_%d"), i);
+		dwSize = 256;
+		if (RegQueryValueEx(hKey, szBuffer, NULL, NULL, (BYTE *)szData, &dwSize) == ERROR_SUCCESS)
+		{
+			m_wndComboServer.AddString(szData);
+			m_pszServerHistory[i] = _tcsdup(szData);
+		}
+	}
+
+	RegCloseKey(hKey);
+}
+
+
+//
+// Save history of connected servers
+//
+
+void CLoginDialog::SaveServerHistory()
+{
+	HKEY hKey;
+	DWORD i;
+	TCHAR szBuffer[64];
+
+	if (RegCreateKeyEx(HKEY_CURRENT_USER, NXUILIB_BASE_REGISTRY_KEY _T("LoginDialog"),
+	                   0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
+							 NULL, &hKey, NULL) != ERROR_SUCCESS)
+		return;
+
+	for(i = 0; i < MAX_LOGINDLG_HISTORY_SIZE; i++)
+	{
+		if (m_pszServerHistory[i] != NULL)
+		{
+			_stprintf(szBuffer, _T("HistorySrv_%d"), i);
+			RegSetValueEx(hKey, szBuffer, 0, REG_SZ, (BYTE *)m_pszServerHistory[i],
+			              (_tcslen(m_pszServerHistory[i]) + 1) * sizeof(TCHAR));
+		}
+	}
+
+	RegCloseKey(hKey);
+}
+
+
+//
+// OK button handler
+//
+
+void CLoginDialog::OnOK() 
+{
+	TCHAR szServer[256];
+	int i;
+
+	m_wndComboServer.GetWindowText(szServer, 256);
+	StrStrip(szServer);
+	for(i = 0; i < MAX_LOGINDLG_HISTORY_SIZE; i++)
+		if (m_pszServerHistory[i] != NULL)
+			if (!_tcsicmp(szServer, m_pszServerHistory[i]))
+			{
+				free(m_pszServerHistory[i]);
+				m_pszServerHistory[i] = _tcsdup(szServer);
+				break;
+			}
+	if (i == MAX_LOGINDLG_HISTORY_SIZE)
+	{
+		// No such entry in history, add it
+		for(i = 0; i < MAX_LOGINDLG_HISTORY_SIZE; i++)
+			if (m_pszServerHistory[i] == NULL)
+			{
+				m_pszServerHistory[i] = _tcsdup(szServer);
+				break;
+			}
+
+		if (i == MAX_LOGINDLG_HISTORY_SIZE)
+		{
+			// No room for new entry
+			free(m_pszServerHistory[0]);
+			memmove(&m_pszServerHistory[0], &m_pszServerHistory[1], sizeof(TCHAR *) * (MAX_LOGINDLG_HISTORY_SIZE - 1));
+			m_pszServerHistory[MAX_LOGINDLG_HISTORY_SIZE - 1] = _tcsdup(szServer);
+		}
+	}
+	SaveServerHistory();
+
+	CDialog::OnOK();
 }

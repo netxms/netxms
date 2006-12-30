@@ -10,6 +10,8 @@
 #define LOGIN_DLG_NO_OBJECT_CACHE   0x0001
 #define LOGIN_DLG_NO_ENCRYPTION     0x0002
 
+#define MAX_LOGINDLG_HISTORY_SIZE	16
+
 
 /////////////////////////////////////////////////////////////////////////////
 // CLoginDialog dialog
@@ -25,13 +27,14 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CLoginDialog)
 	enum { IDD = IDD_LOGIN };
-	CString	m_szLogin;
-	CString	m_szPassword;
-	CString	m_szServer;
+	CComboBox	m_wndComboServer;
 	BOOL	m_bClearCache;
 	BOOL	m_bMatchVersion;
 	BOOL	m_bNoCache;
 	BOOL	m_bEncrypt;
+	CString	m_strServer;
+	CString	m_strLogin;
+	CString	m_strPassword;
 	//}}AFX_DATA
 
 
@@ -44,6 +47,9 @@ public:
 
 // Implementation
 protected:
+	TCHAR *m_pszServerHistory[MAX_LOGINDLG_HISTORY_SIZE];
+	void SaveServerHistory(void);
+	void LoadServerHistory(void);
 	CFont m_font;
 	HBRUSH m_hNullBrush;
 
@@ -52,6 +58,7 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnCheckNocache();
+	virtual void OnOK();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
