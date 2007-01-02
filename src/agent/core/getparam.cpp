@@ -31,8 +31,7 @@ LONG H_ActiveConnections(char *pszCmd, char *pArg, char *pValue);
 LONG H_AgentStats(char *cmd, char *arg, char *value);
 LONG H_AgentUptime(char *cmd, char *arg, char *value);
 LONG H_CRC32(char *cmd, char *arg, char *value);
-LONG H_FileSize(char *cmd, char *arg, char *value);
-LONG H_FileCount(char *pszCmd, char *pszArg, char *pValue);
+LONG H_DirInfo(char *cmd, char *arg, char *value);
 LONG H_MD5Hash(char *cmd, char *arg, char *value);
 LONG H_SHA1Hash(char *cmd, char *arg, char *value);
 LONG H_SubAgentList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
@@ -213,11 +212,11 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { "Agent.UnsupportedRequests", H_UIntPtr, (char *)&m_dwUnsupportedRequests, DCI_DT_UINT, "" },
    { "Agent.Uptime", H_AgentUptime, NULL, DCI_DT_UINT, "Agent's uptime" },
    { "Agent.Version", H_StringConstant, AGENT_VERSION_STRING, DCI_DT_STRING, "Agent's version" },
-   { "File.Count(*)", H_FileCount, NULL, DCI_DT_UINT, "" },
+   { "File.Count(*)", H_DirInfo, (char *)DIRINFO_FILE_COUNT, DCI_DT_UINT, "" },
    { "File.Hash.CRC32(*)", H_CRC32, NULL, DCI_DT_UINT, "CRC32 checksum of {instance}" },
    { "File.Hash.MD5(*)", H_MD5Hash, NULL, DCI_DT_STRING, "MD5 hash of {instance}" },
    { "File.Hash.SHA1(*)", H_SHA1Hash, NULL, DCI_DT_STRING, "SHA1 hash of {instance}" },
-   { "File.Size(*)", H_FileSize, NULL, DCI_DT_UINT64, "" },
+   { "File.Size(*)", H_DirInfo, (char *)DIRINFO_FILE_SIZE, DCI_DT_UINT64, "" },
    { "System.PlatformName", H_PlatformName, NULL, DCI_DT_STRING, "" }
 };
 

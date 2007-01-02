@@ -1,3 +1,4 @@
+/* $Id: sysinfo.cpp,v 1.17 2007-01-02 15:59:19 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004 Victor Kirhenshtein
@@ -16,14 +17,17 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: sysinfo.cpp
-**
+** File: sysinfo.cpp
 **/
 
 #include "nxagentd.h"
 
 #if HAVE_SYS_UTSNAME_H
 #include <sys/utsname.h>
+#endif
+
+#ifndef S_ISDIR
+#define S_ISDIR(m)      (((m) & S_IFMT) == S_IFDIR)
 #endif
 
 
@@ -39,62 +43,35 @@ LONG H_AgentUptime(char *cmd, char *arg, char *value)
 
 
 //
-// Handler for File.Size(*) parameter
-//
+// Helper function to GetDirInfo
+// 
 
-LONG H_FileSize(char *cmd, char *arg, char *value)
+LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
+                unsigned int &uFileCount, QWORD &llFileSize)
 {
-   char szFileName[MAX_PATH];
-#ifdef _WIN32
-   HANDLE hFind;
-   WIN32_FIND_DATA fd;
-#else
+   DIR *pDir = NULL;
+   struct dirent *pFile = NULL;
    struct stat fileInfo;
-#endif
+   char szFileName[MAX_PATH];
+   LONG nRet = SYSINFO_RC_SUCCESS;
 
-   if (!NxGetParameterArg(cmd, 1, szFileName, MAX_PATH))
-      return SYSINFO_RC_UNSUPPORTED;
+   if (stat(szPath, &fileInfo) == -1) 
+       return SYSINFO_RC_ERROR;
 
-#ifdef _WIN32
-   hFind = FindFirstFile(szFileName, &fd);
-   if (hFind == INVALID_HANDLE_VALUE)
-      return SYSINFO_RC_UNSUPPORTED;
-   FindClose(hFind);
+   // if this is just a file than simply return statistics
+   if (!S_ISDIR(fileInfo.st_mode))
+   {
+       if (MatchString(szPattern, szPath, FALSE))
+       {
+           llFileSize += (QWORD)fileInfo.st_size;
+           uFileCount++;
+       }
 
-   ret_uint64(value, (unsigned __int64)fd.nFileSizeLow + ((unsigned __int64)fd.nFileSizeHigh << 32));
-#else
-   if (stat(szFileName, &fileInfo) == -1)
-      return SYSINFO_RC_UNSUPPORTED;
+       return nRet;
+   }
 
-   ret_uint(value, fileInfo.st_size);
-#endif
-
-   return SYSINFO_RC_SUCCESS;
-}
-
-
-//
-// Handler for File.Count(*) parameter
-//
-
-LONG H_FileCount(char *pszCmd, char *pszArg, char *pValue)
-{
-   char szDirName[MAX_PATH], szPattern[MAX_PATH];
-   DIR *pDir;
-   struct dirent *pFile;
-   LONG nResult = SYSINFO_RC_ERROR, nCount = 0;
-
-   if (!NxGetParameterArg(pszCmd, 1, szDirName, MAX_PATH))
-      return SYSINFO_RC_UNSUPPORTED;
-
-   if (!NxGetParameterArg(pszCmd, 2, szPattern, MAX_PATH))
-      return SYSINFO_RC_UNSUPPORTED;
-
-   // If pattern is omited use asterisk
-   if (szPattern[0] == 0)
-      strcpy(szPattern, "*");
-
-   pDir = opendir(szDirName);
+   // this is a dir
+   pDir = opendir(szPath);
    if (pDir != NULL)
    {
       while(1)
@@ -102,18 +79,82 @@ LONG H_FileCount(char *pszCmd, char *pszArg, char *pValue)
          pFile = readdir(pDir);
          if (pFile == NULL)
             break;
-         if (strcmp(pFile->d_name, ".") && strcmp(pFile->d_name, ".."))
+
+         if (!strcmp(pFile->d_name, ".") || !strcmp(pFile->d_name, ".."))
+            continue;
+         
+         strcpy(szFileName, szPath);
+         strcat(szFileName, "/" );
+         strcat(szFileName, pFile->d_name);
+
+         // skip unaccessible entries
+         if (stat( szFileName, &fileInfo ) == -1)
+            continue;
+
+         if (S_ISDIR(fileInfo.st_mode) && bRecursive)
          {
-            if (MatchString(szPattern, pFile->d_name, FALSE))
-               nCount++;
+            nRet = GetDirInfo(szFileName, szPattern, bRecursive, uFileCount, llFileSize);
+            
+            if (nRet != SYSINFO_RC_SUCCESS)
+                break;
+         }
+
+         if (!S_ISDIR(fileInfo.st_mode) && MatchString(szPattern, pFile->d_name, FALSE))
+         {
+             llFileSize += (QWORD)fileInfo.st_size;
+             uFileCount++;
          }
       }
       closedir(pDir);
-      ret_int(pValue, nCount);
-      nResult = SYSINFO_RC_SUCCESS;
+   }
+   
+   return nRet;
+}
+
+
+//
+// Handler for File.Size(*) and File.Count(*)
+//
+
+LONG H_DirInfo(char *cmd, char *arg, char *value)
+{
+   char szPath[MAX_PATH], szPattern[MAX_PATH], szRecursive[10];
+   bool bRecursive = false;
+
+   unsigned int uFileCount = 0;
+   QWORD llFileSize = 0;
+   LONG nRet;
+
+   if (!NxGetParameterArg(cmd, 1, szPath, MAX_PATH))
+      return SYSINFO_RC_UNSUPPORTED;
+   if (!NxGetParameterArg(cmd, 2, szPattern, MAX_PATH))
+      return SYSINFO_RC_UNSUPPORTED;
+   if (!NxGetParameterArg(cmd, 3, szRecursive, 10))
+      return SYSINFO_RC_UNSUPPORTED;
+
+	// Recursion flag
+	bRecursive = (atoi(szRecursive) != 0);
+
+   // If pattern is omited use asterisk
+   if (szPattern[0] == 0)
+      strcpy(szPattern, "*");
+
+   nRet = GetDirInfo(szPath, szPattern, bRecursive, uFileCount, llFileSize);
+
+   switch((int)arg)
+   {
+   	case DIRINFO_FILE_SIZE:
+           ret_uint64(value, llFileSize);
+           break;
+   	case DIRINFO_FILE_COUNT:
+           ret_uint(value, uFileCount);
+           break;
+   	default:
+           nRet = SYSINFO_RC_UNSUPPORTED;
+			break;
    }
 
-   return nResult;
+   return nRet;
 }
 
 

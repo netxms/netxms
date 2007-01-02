@@ -154,6 +154,14 @@
 
 
 //
+// Request types for H_DirInfo
+//
+
+#define DIRINFO_FILE_COUNT       1
+#define DIRINFO_FILE_SIZE        2
+
+
+//
 // Action types
 //
 
