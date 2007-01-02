@@ -1,4 +1,4 @@
-/* $Id: libnxsl.h,v 1.23 2006-12-15 11:38:13 victor Exp $ */
+/* $Id: libnxsl.h,v 1.24 2007-01-02 09:56:17 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
@@ -29,6 +29,7 @@
 #include <nms_util.h>
 #include <nxcpapi.h>
 #include <nxsl.h>
+#include <nxqueue.h>
 #include <FlexLexer.h>
 
 #ifndef min
@@ -100,6 +101,7 @@ union YYSTYPE;
 #define OPCODE_ILIKE          44
 #define OPCODE_MATCH          45
 #define OPCODE_IMATCH         46
+#define OPCODE_CASE				47
 
 
 //
@@ -150,6 +152,7 @@ protected:
    TCHAR *m_pszErrorText;
    NXSL_Lexer *m_pLexer;
    NXSL_Stack *m_pAddrStack;
+	NXSL_Stack *m_pBreakStack;
 
 public:
    NXSL_Compiler(void);
@@ -163,6 +166,11 @@ public:
    void PushAddr(DWORD dwAddr) { m_pAddrStack->Push(CAST_TO_POINTER(dwAddr, void *)); }
    DWORD PopAddr(void);
    DWORD PeekAddr(void);
+
+	void AddBreakAddr(DWORD dwAddr);
+	void CloseBreakLevel(NXSL_Program *pScript);
+	BOOL CanUseBreak(void) { return m_pBreakStack->Size() > 0; }
+	void NewBreakLevel(void) { m_pBreakStack->Push(new Queue); }
 };
 
 

@@ -198,6 +198,10 @@ SOURCE=.\client.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\cluster.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\condition.cpp
 # End Source File
 # Begin Source File

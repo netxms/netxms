@@ -6,6 +6,7 @@
 - UPS subagent: added support for MICRODOWELL UPS devices
 - Added Extended Checksum subagent
 - Added ODBC Query subagent
+- NXSL improved: implemented switch ... case statement and break statement
 - Windows console:
 	- Now able to download and install update from web server pointed
 	  by NetXMS management server

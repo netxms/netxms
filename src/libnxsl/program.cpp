@@ -53,7 +53,7 @@ static char *m_szCommandMnemonic[] =
    "BIND", "INC", "DEC", "NEG", "NOT",
    "BITNOT", "CAST", "REF", "INCP", "DECP",
    "JNZ", "LIKE", "ILIKE", "MATCH",
-   "IMATCH"
+   "IMATCH", "CASE"
 };
 
 
@@ -224,6 +224,23 @@ void NXSL_Program::ResolveLastJump(int nOpCode)
 
 
 //
+// Create jump at given address replacing another instruction (usually NOP)
+//
+
+void NXSL_Program::CreateJumpAt(DWORD dwOpAddr, DWORD dwJumpAddr)
+{
+	int nLine;
+
+	if (dwOpAddr >= m_dwCodeSize)
+		return;
+
+	nLine = m_ppInstructionSet[dwOpAddr]->m_nSourceLine;
+	delete m_ppInstructionSet[dwOpAddr];
+	m_ppInstructionSet[dwOpAddr] = new NXSL_Instruction(nLine, OPCODE_JMP, dwJumpAddr);
+}
+
+
+//
 // Add new function to defined functions list
 // Will use first free address if dwAddr == INVALID_ADDRESS
 //
@@ -325,6 +342,7 @@ void NXSL_Program::Dump(FILE *pFile)
             fprintf(pFile, "%s\n", m_ppInstructionSet[i]->m_operand.m_pszString);
             break;
          case OPCODE_PUSH_CONSTANT:
+			case OPCODE_CASE:
             if (m_ppInstructionSet[i]->m_operand.m_pConstant->IsNull())
                fprintf(pFile, "<null>\n");
             else
@@ -705,6 +723,7 @@ void NXSL_Program::Execute(void)
       case OPCODE_BIT_XOR:
       case OPCODE_LSHIFT:
       case OPCODE_RSHIFT:
+		case OPCODE_CASE:
          DoBinaryOperation(cp->m_nOpCode);
          break;
       case OPCODE_NEG:
@@ -805,13 +824,21 @@ void NXSL_Program::DoBinaryOperation(int nOpCode)
    int nType;
    LONG nResult;
 
-   pVal2 = (NXSL_Value *)m_pDataStack->Pop();
-   pVal1 = (NXSL_Value *)m_pDataStack->Pop();
+	if (nOpCode == OPCODE_CASE)
+	{
+		pVal1 = m_ppInstructionSet[m_dwCurrPos]->m_operand.m_pConstant;
+		pVal2 = (NXSL_Value *)m_pDataStack->Peek();
+	}
+	else
+	{
+		pVal2 = (NXSL_Value *)m_pDataStack->Pop();
+		pVal1 = (NXSL_Value *)m_pDataStack->Pop();
+	}
 
    if ((pVal1 != NULL) && (pVal2 != NULL))
    {
       if ((!pVal1->IsNull() && !pVal2->IsNull()) ||
-          (nOpCode == OPCODE_EQ) || (nOpCode == OPCODE_NE))
+          (nOpCode == OPCODE_EQ) || (nOpCode == OPCODE_NE) || (nOpCode == OPCODE_CASE))
       {
          if (pVal1->IsNumeric() && pVal2->IsNumeric() &&
              (nOpCode != OPCODE_CONCAT) && (nOpCode != OPCODE_LIKE))
@@ -916,6 +943,9 @@ void NXSL_Program::DoBinaryOperation(int nOpCode)
                         delete pVal2;
                         pRes = new NXSL_Value(nResult);
                         break;
+                     case OPCODE_CASE:
+                        pRes = new NXSL_Value((LONG)pVal1->EQ(pVal2));
+                        break;
                      default:
                         Error(NXSL_ERR_INTERNAL);
                         break;
@@ -937,6 +967,7 @@ void NXSL_Program::DoBinaryOperation(int nOpCode)
             {
                case OPCODE_EQ:
                case OPCODE_NE:
+					case OPCODE_CASE:
                   if (pVal1->IsNull() && pVal2->IsNull())
                   {
                      nResult = 1;
@@ -954,9 +985,12 @@ void NXSL_Program::DoBinaryOperation(int nOpCode)
                      else
                         nResult = 0;
                   }
-                  delete pVal1;
-                  delete pVal2;
-                  pRes = new NXSL_Value((nOpCode == OPCODE_EQ) ? nResult : !nResult);
+						if (nOpCode != OPCODE_CASE)
+						{
+							delete pVal1;
+							delete pVal2;
+						}
+                  pRes = new NXSL_Value((nOpCode == OPCODE_NE) ? !nResult : nResult);
                   break;
                case OPCODE_CONCAT:
                   if (pVal1->IsNull() || pVal2->IsNull())
@@ -1254,4 +1288,64 @@ NXSL_Value *NXSL_Program::MatchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp,
       pResult = NULL;
    }
    return pResult;
+}
+
+
+//
+// Get final jump destination from a jump chain
+//
+
+DWORD NXSL_Program::FinalJumpDestination(DWORD dwAddr)
+{
+	return (m_ppInstructionSet[dwAddr]->m_nOpCode == OPCODE_JMP) ? FinalJumpDestination(m_ppInstructionSet[dwAddr]->m_operand.m_dwAddr) : dwAddr;
+}
+
+
+//
+// Optimize compiled program
+//
+
+void NXSL_Program::Optimize(void)
+{
+	DWORD i, j;
+
+	// Convert jump chains to single jump
+	for(i = 0; i < m_dwCodeSize; i++)
+	{
+		if ((m_ppInstructionSet[i]->m_nOpCode == OPCODE_JMP) ||
+			 (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JZ) ||
+			 (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JNZ))
+		{
+			m_ppInstructionSet[i]->m_operand.m_dwAddr = FinalJumpDestination(m_ppInstructionSet[i]->m_operand.m_dwAddr);
+		}
+	}
+
+	// Remove jumps to next instruction
+	for(i = 0; i < m_dwCodeSize; i++)
+	{
+		if (((m_ppInstructionSet[i]->m_nOpCode == OPCODE_JMP) ||
+			  (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JZ) ||
+			  (m_ppInstructionSet[i]->m_nOpCode == OPCODE_JNZ)) &&
+			 (m_ppInstructionSet[i]->m_operand.m_dwAddr == i + 1))
+		{
+			delete m_ppInstructionSet[i];
+			m_dwCodeSize--;
+			memmove(&m_ppInstructionSet[i], &m_ppInstructionSet[i + 1], sizeof(NXSL_Instruction *) * (m_dwCodeSize - i));
+
+			// Change jump destination addresses
+			for(j = 0; j < m_dwCodeSize; j++)
+			{
+				if (((m_ppInstructionSet[j]->m_nOpCode == OPCODE_JMP) ||
+ 				     (m_ppInstructionSet[j]->m_nOpCode == OPCODE_JZ) ||
+				     (m_ppInstructionSet[j]->m_nOpCode == OPCODE_JNZ) ||
+				     (m_ppInstructionSet[j]->m_nOpCode == OPCODE_CALL)) &&
+				    (m_ppInstructionSet[j]->m_operand.m_dwAddr > i))
+				{
+		         m_ppInstructionSet[j]->m_operand.m_dwAddr--;
+				}
+			}
+
+			i--;
+		}
+	}
 }

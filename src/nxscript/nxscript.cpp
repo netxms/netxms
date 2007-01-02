@@ -1,7 +1,8 @@
+/* $Id: nxscript.cpp,v 1.9 2007-01-02 09:56:17 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Host
-** Copyright (C) 2005 Victor Kirhenshtein
+** Copyright (C) 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +18,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxscript.cpp
+** File: nxscript.cpp
 **
 **/
 
@@ -84,37 +85,45 @@ int main(int argc, char *argv[])
    }
 
    pszSource = NXSLLoadFile(argv[optind], &dwSize);
-   pScript = (NXSL_Program *)NXSLCompile(pszSource, szError, 1024);
-   if (pScript != NULL)
-   {
-      if (bDump)
-         pScript->Dump(stdout);
-      pEnv = new NXSL_Environment;
-      pEnv->SetIO(stdin, stdout);
-      pEnv->RegisterFunctionSet(1, &func);
+	if (pszSource != NULL)
+	{
+		pScript = NXSLCompile(pszSource, szError, 1024);
+		free(pszSource);
+		if (pScript != NULL)
+		{
+			if (bDump)
+				pScript->Dump(stdout);
+			pEnv = new NXSL_Environment;
+			pEnv->SetIO(stdin, stdout);
+			pEnv->RegisterFunctionSet(1, &func);
 
-      // Prepare arguments
-      if (argc - optind > 1)
-      {
-         ppArgs = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * (argc - optind - 1));
-         for(i = optind + 1; i < argc; i++)
-            ppArgs[i - optind - 1] = new NXSL_Value(argv[i]);
-      }
-      else
-      {
-         ppArgs = NULL;
-      }
+			// Prepare arguments
+			if (argc - optind > 1)
+			{
+				ppArgs = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * (argc - optind - 1));
+				for(i = optind + 1; i < argc; i++)
+					ppArgs[i - optind - 1] = new NXSL_Value(argv[i]);
+			}
+			else
+			{
+				ppArgs = NULL;
+			}
 
-      if (pScript->Run(pEnv, argc - optind - 1, ppArgs) == -1)
-      {
-         printf("%s\n", pScript->GetErrorText());
-      }
-      delete pScript;
-      safe_free(ppArgs);
-   }
-   else
-   {
-      printf("%s\n", szError);
-   }
+			if (pScript->Run(pEnv, argc - optind - 1, ppArgs) == -1)
+			{
+				printf("%s\n", pScript->GetErrorText());
+			}
+			delete pScript;
+			safe_free(ppArgs);
+		}
+		else
+		{
+			printf("%s\n", szError);
+		}
+	}
+	else
+	{
+		printf("Error: cannot load input file \"%s\"\n", argv[optind]);
+	}
    return 0;
 }

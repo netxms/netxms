@@ -1,6 +1,7 @@
+/* $Id: nxsl.h,v 1.11 2007-01-02 09:56:16 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2005 Victor Kirhenshtein
+** Copyright (C) 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxsl.h
+** File: nxsl.h
 **
 **/
 
@@ -71,14 +72,9 @@
 
 #ifdef __cplusplus
 #include <nxsl_classes.h>
+#else
+struct NXSL_Program;
 #endif
-
-
-//
-// Script handle
-//
-
-typedef void * NXSL_SCRIPT;
 
 
 //
@@ -89,12 +85,8 @@ typedef void * NXSL_SCRIPT;
 extern "C" {
 #endif
 
-NXSL_SCRIPT LIBNXSL_EXPORTABLE NXSLCompile(TCHAR *pszSource,
-                                           TCHAR *pszError, int nBufSize);
-int LIBNXSL_EXPORTABLE NXSLRun(NXSL_SCRIPT hScript);
-TCHAR LIBNXSL_EXPORTABLE *NXSLGetRuntimeError(NXSL_SCRIPT hScript);
-void LIBNXSL_EXPORTABLE NXSLDestroy(NXSL_SCRIPT hScript);
-void LIBNXSL_EXPORTABLE NXSLDump(NXSL_SCRIPT hScript, FILE *pFile);
+NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(TCHAR *pszSource,
+                                             TCHAR *pszError, int nBufSize);
 TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(TCHAR *pszFileName, DWORD *pdwFileSize);
 
 #ifdef __cplusplus

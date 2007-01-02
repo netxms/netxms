@@ -41,6 +41,7 @@ NXSL_Compiler::NXSL_Compiler(void)
    m_pszErrorText = NULL;
    m_pLexer = NULL;
    m_pAddrStack = new NXSL_Stack;
+	m_pBreakStack = new NXSL_Stack;
 }
 
 
@@ -53,6 +54,7 @@ NXSL_Compiler::~NXSL_Compiler()
    safe_free(m_pszErrorText);
    delete m_pLexer;
    delete m_pAddrStack;
+	delete m_pBreakStack;
 }
 
 
@@ -93,6 +95,7 @@ NXSL_Program *NXSL_Compiler::Compile(TCHAR *pszSourceCode)
    if (yyparse(m_pLexer, this, pResult) == 0)
    {
       pResult->ResolveFunctions();
+		pResult->Optimize();
    }
    else
    {
@@ -137,4 +140,43 @@ DWORD NXSL_Compiler::PeekAddr(void)
 
    pAddr = m_pAddrStack->Peek();
    return pAddr ? CAST_FROM_POINTER(pAddr, DWORD) : INVALID_ADDRESS;
+}
+
+
+//
+// Add "break" statement address
+//
+
+void NXSL_Compiler::AddBreakAddr(DWORD dwAddr)
+{
+	Queue *pQueue;
+
+	pQueue = (Queue *)m_pBreakStack->Peek();
+	if (pQueue != NULL)
+	{
+		pQueue->Put(CAST_TO_POINTER(dwAddr, void *));
+	}
+}
+
+
+//
+// Resolve all breal statements at current level
+//
+
+void NXSL_Compiler::CloseBreakLevel(NXSL_Program *pScript)
+{
+	Queue *pQueue;
+	void *pAddr;
+	DWORD dwAddr;
+
+	pQueue = (Queue *)m_pBreakStack->Pop();
+	if (pQueue != NULL)
+	{
+		while((pAddr = pQueue->Get()) != NULL)
+		{
+			dwAddr = CAST_FROM_POINTER(pAddr, DWORD);
+			pScript->CreateJumpAt(dwAddr, pScript->CodeSize());
+		}
+		delete pQueue;
+	}
 }

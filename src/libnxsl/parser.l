@@ -31,7 +31,9 @@ escape		\\[bnrt0\"]
 %%
 
 <INITIAL>"break"	return T_BREAK;
+<INITIAL>"case"		return T_CASE;
 <INITIAL>"continue"	return T_CONTINUE;
+<INITIAL>"default"	return T_DEFAULT;
 <INITIAL>"do"		return T_DO;
 <INITIAL>"else"		return T_ELSE;
 <INITIAL>"exit"		return T_EXIT;
@@ -49,6 +51,7 @@ escape		\\[bnrt0\"]
 <INITIAL>"return"	return T_RETURN;
 <INITIAL>"string"	return T_TYPE_STRING;
 <INITIAL>"sub"		return T_SUB;
+<INITIAL>"switch"	return T_SWITCH;
 <INITIAL>"uint32"	return T_TYPE_UINT32;
 <INITIAL>"uint64"	return T_TYPE_UINT64;
 <INITIAL>"use"		return T_USE;
@@ -94,6 +97,7 @@ escape		\\[bnrt0\"]
 <INITIAL>"("	return '(';
 <INITIAL>")"	return ')';
 <INITIAL>";"	return ';';
+<INITIAL>":"	return ':';
 <INITIAL>"+"	return '+';
 <INITIAL>"-"	return '-';
 <INITIAL>"*"	return '*';

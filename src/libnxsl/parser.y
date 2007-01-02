@@ -36,7 +36,9 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 }
 
 %token T_BREAK
+%token T_CASE
 %token T_CONTINUE
+%token T_DEFAULT
 %token T_DO
 %token T_ELSE
 %token T_EXIT
@@ -46,6 +48,7 @@ int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
 %token T_PRINT
 %token T_RETURN
 %token T_SUB
+%token T_SWITCH
 %token T_TYPE_INT32
 %token T_TYPE_INT64
 %token T_TYPE_REAL
@@ -168,16 +171,12 @@ IdentifierList:
 
 Block:
 	'{' StatementList '}'
-|	'{' '}'
-{
-	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_NOP));
-}
 ;
 
 StatementList:
 	StatementOrBlock StatementList
-|	StatementOrBlock
-;	
+|
+;
 
 StatementOrBlock:
 	Statement
@@ -382,17 +381,31 @@ BuiltinStatement:
 |	IfStatement
 |	DoStatement
 |	WhileStatement
+|	SwitchStatement
+|	T_BREAK ';'
+{
+	if (pCompiler->CanUseBreak())
+	{
+		pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_NOP));
+		pCompiler->AddBreakAddr(pScript->CodeSize() - 1);
+	}
+	else
+	{
+		pCompiler->Error("\"break\" statement can be used only within loops and \"switch\" statements");
+		pLexer->SetErrorState();
+	}
+}
 |	T_CONTINUE ';'
 {
 	DWORD dwAddr = pCompiler->PeekAddr();
 	if (dwAddr != INVALID_ADDRESS)
 	{
-		pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(),
-					OPCODE_JMP, dwAddr));
+		pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_JMP, dwAddr));
 	}
 	else
 	{
-		pCompiler->Error("\"continue\" statement must be within loop");
+		pCompiler->Error("\"continue\" statement can be used only within loops");
+		pLexer->SetErrorState();
 	}
 }
 ;
@@ -454,31 +467,74 @@ ElseStatement:
 
 WhileStatement:
 	T_WHILE
-	{
-		pCompiler->PushAddr(pScript->CodeSize());
-	}
+{
+	pCompiler->PushAddr(pScript->CodeSize());
+	pCompiler->NewBreakLevel();
+}
 	'(' Expression ')'
-	{
-		pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_JZ, INVALID_ADDRESS));
-	}
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_JZ, INVALID_ADDRESS));
+}
 	StatementOrBlock
 {
 	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), 
 				OPCODE_JMP, pCompiler->PopAddr()));
 	pScript->ResolveLastJump(OPCODE_JZ);
+	pCompiler->CloseBreakLevel(pScript);
 }
 ;
 
 DoStatement:
 	T_DO
-	{
-		pCompiler->PushAddr(pScript->CodeSize());
-	}
+{
+	pCompiler->PushAddr(pScript->CodeSize());
+	pCompiler->NewBreakLevel();
+}
 	StatementOrBlock T_WHILE '(' Expression ')' ';'
 {
 	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(),
 				OPCODE_JNZ, pCompiler->PopAddr()));
+	pCompiler->CloseBreakLevel(pScript);
 }
+;
+
+SwitchStatement:
+	T_SWITCH
+{ 
+	pCompiler->NewBreakLevel();
+}
+	'(' Expression ')' '{' CaseList Default '}'
+{
+	pCompiler->CloseBreakLevel(pScript);
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_POP, (int)1));
+}
+;
+
+CaseList:
+	Case
+{ 
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_JMP, pScript->CodeSize() + 3));
+	pScript->ResolveLastJump(OPCODE_JZ);
+}
+	CaseList
+|	Case
+{
+	pScript->ResolveLastJump(OPCODE_JZ);
+}
+;
+
+Case:
+	T_CASE Constant
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_CASE, $2));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_JZ, INVALID_ADDRESS));
+} 
+	':' StatementList
+;
+
+Default:
+	T_DEFAULT ':' StatementList
+|
 ;
 
 FunctionCall:

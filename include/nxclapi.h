@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.248 2006-12-29 12:45:27 victor Exp $ */
+/* $Id: nxclapi.h,v 1.249 2007-01-02 09:56:16 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -133,6 +133,7 @@ typedef void * NXC_SESSION;
 #define OBJECT_NETWORKSERVICE 11
 #define OBJECT_VPNCONNECTOR   12
 #define OBJECT_CONDITION      13
+#define OBJECT_CLUSTER			14
 
 
 //

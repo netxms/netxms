@@ -365,6 +365,28 @@ public:
 
 
 //
+// Cluster class
+//
+
+class NXCORE_EXPORTABLE Cluster : public Template
+{
+protected:
+	DWORD m_dwClusterType;
+   DWORD m_dwNumSyncNets;
+   IP_NETWORK *m_pSyncNetList;
+
+public:
+	Cluster();
+	virtual ~Cluster();
+
+   virtual int Type(void) { return OBJECT_CLUSTER; }
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
+   virtual BOOL DeleteFromDB(void);
+   virtual BOOL CreateFromDB(DWORD dwId);
+};
+
+
+//
 // Interface class
 //
 

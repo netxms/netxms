@@ -38,8 +38,8 @@
 // Interface to compiler
 //
 
-NXSL_SCRIPT LIBNXSL_EXPORTABLE NXSLCompile(TCHAR *pszSource,
-                                           TCHAR *pszError, int nBufSize)
+NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(TCHAR *pszSource,
+                                             TCHAR *pszError, int nBufSize)
 {
    NXSL_Compiler compiler;
    NXSL_Program *pResult;
@@ -51,50 +51,6 @@ NXSL_SCRIPT LIBNXSL_EXPORTABLE NXSLCompile(TCHAR *pszSource,
          nx_strncpy(pszError, compiler.GetErrorText(), nBufSize);
    }
    return pResult;
-}
-
-
-//
-// Run compiled script
-//
-
-int LIBNXSL_EXPORTABLE NXSLRun(NXSL_SCRIPT hScript)
-{
-   if (hScript != NULL)
-      return ((NXSL_Program *)hScript)->Run(NULL);
-   return -1;
-}
-
-
-//
-// Destroy compiled script
-//
-
-void LIBNXSL_EXPORTABLE NXSLDestroy(NXSL_SCRIPT hScript)
-{
-   if (hScript != NULL)
-      delete ((NXSL_Program *)hScript);
-}
-
-
-//
-// Dump script disassembly to given file
-//
-
-void LIBNXSL_EXPORTABLE NXSLDump(NXSL_SCRIPT hScript, FILE *pFile)
-{
-   if (hScript != NULL)
-      ((NXSL_Program *)hScript)->Dump(pFile);
-}
-
-
-//
-// Get text of last runtime error
-//
-
-TCHAR LIBNXSL_EXPORTABLE *NXSLGetRuntimeError(NXSL_SCRIPT hScript)
-{
-   return (hScript == NULL) ? (TCHAR *)_T("Invalid script handle") : ((NXSL_Program *)hScript)->GetErrorText();
 }
 
 

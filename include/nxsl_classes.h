@@ -401,6 +401,7 @@ protected:
 
    DWORD GetFunctionAddress(char *pszName);
    void RelocateCode(DWORD dwStartOffset, DWORD dwLen, DWORD dwShift);
+	DWORD FinalJumpDestination(DWORD dwAddr);
 
 public:
    NXSL_Program(void);
@@ -410,8 +411,10 @@ public:
    void ResolveFunctions(void);
    void AddInstruction(NXSL_Instruction *pInstruction);
    void ResolveLastJump(int nOpCode);
+	void CreateJumpAt(DWORD dwOpAddr, DWORD dwJumpAddr);
    void AddPreload(char *pszName);
    void UseModule(NXSL_Program *pModule, char *pszName);
+	void Optimize(void);
 
    int Run(NXSL_Environment *pEnv = NULL, DWORD argc = 0,
            NXSL_Value **argv = NULL, NXSL_VariableSystem *pUserLocals = NULL);
