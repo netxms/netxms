@@ -1,3 +1,4 @@
+/* $Id: message.cpp,v 1.3 2007-01-03 23:11:03 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library

@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.19 2006-12-17 10:31:38 victor Exp $ */
+/* $Id: unicode.cpp,v 1.20 2007-01-03 23:11:03 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -143,10 +143,10 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags,
 	// Calculate required length. Because iconv cannot calculate
 	// resulting multibyte string length, assume the worst case - 3 bytes
 	// per character for UTF-8 and 2 bytes per character for other encodings
-   if (cchByteChar == 0)
-   {
-      return wcslen(pWideCharStr) * (iCodePage == CP_UTF8 ? 3 : 2) + 1;
-   }
+	if (cchByteChar == 0)
+	{
+		return wcslen(pWideCharStr) * (iCodePage == CP_UTF8 ? 3 : 2) + 1;
+	}
 
 	strcpy(cp, m_cpDefault);
 #if HAVE_ICONV_IGNORE
@@ -246,6 +246,12 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags,
 			{
 				nRet = 0;
 			}
+		}
+		if (*pWideCharStr == 0xFEFF)
+		{
+			// Remove UNICODE byte order indicator if presented
+			memmove(pWideCharStr, &pWideCharStr[1], (char *)outbuf - (char *)pWideCharStr - 1);
+			outbuf--;
 		}
 		if ((cchByteChar == -1) && (outbytes > 1))
 		{
