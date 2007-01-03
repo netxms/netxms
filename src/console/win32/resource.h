@@ -583,6 +583,7 @@
 #define IDC_CHECK_REPLACE_BY_CODE       1427
 #define IDC_CHECK_REPLACE_BY_NAME       1428
 #define IDC_EDIT_URL                    1430
+#define IDC_CHECK_HIDE_EMPTY            1431
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -835,7 +836,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        347
 #define _APS_NEXT_COMMAND_VALUE         33050
-#define _APS_NEXT_CONTROL_VALUE         1431
+#define _APS_NEXT_CONTROL_VALUE         1432
 #define _APS_NEXT_SYMED_VALUE           129
 #endif
 #endif

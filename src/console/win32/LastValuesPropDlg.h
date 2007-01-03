@@ -22,6 +22,7 @@ public:
 	BOOL	m_bShowGrid;
 	BOOL	m_bRefresh;
 	DWORD	m_dwSeconds;
+	BOOL	m_bHideEmpty;
 	//}}AFX_DATA
 
 

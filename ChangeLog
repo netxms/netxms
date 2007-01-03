@@ -14,6 +14,7 @@
 	- Graphs improved: implemented printing and "copy to clipboard"
 	  function
 	- Added server history in login dialog
+	- Added option "hide empty values" in last DCI values view
 - Fixed issues: #135, #140, #145
 
 

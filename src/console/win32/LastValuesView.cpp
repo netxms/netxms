@@ -211,11 +211,21 @@ void CLastValuesView::OnViewRefresh()
          iItem = m_wndListCtrl.FindItem(&lvfi, -1);
          if (iItem == -1)
          {
-            _sntprintf(szBuffer, 256, _T("%d"), m_pItemList[i].dwId);
-            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
-            m_wndListCtrl.SetItemData(iItem, m_pItemList[i].dwId);
+				if (!((m_dwFlags & LVF_HIDE_EMPTY) && (m_pItemList[i].dwTimestamp <= 1)))
+				{
+					_sntprintf(szBuffer, 256, _T("%d"), m_pItemList[i].dwId);
+					iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
+					m_wndListCtrl.SetItemData(iItem, m_pItemList[i].dwId);
+					UpdateItem(iItem, &m_pItemList[i]);
+				}
          }
-         UpdateItem(iItem, &m_pItemList[i]);
+			else
+			{
+				if ((m_dwFlags & LVF_HIDE_EMPTY) && (m_pItemList[i].dwTimestamp <= 1))
+					m_wndListCtrl.DeleteItem(iItem);
+				else
+					UpdateItem(iItem, &m_pItemList[i]);
+			}
       }
       m_wndListCtrl.SortItems(CompareItems, (DWORD)this);
    }
@@ -414,6 +424,7 @@ void CLastValuesView::OnLastvaluesProperties()
    dlg.m_dwSeconds = m_dwSeconds;
    dlg.m_bShowGrid = (m_dwFlags & LVF_SHOW_GRID) ? TRUE : FALSE;
    dlg.m_bRefresh = (m_dwFlags & LVF_AUTOREFRESH) ? TRUE : FALSE;
+   dlg.m_bHideEmpty = (m_dwFlags & LVF_HIDE_EMPTY) ? TRUE : FALSE;
    if (dlg.DoModal() == IDOK)
    {
       if (m_nTimer != 0)
@@ -429,6 +440,10 @@ void CLastValuesView::OnLastvaluesProperties()
          m_dwFlags |= LVF_AUTOREFRESH;
          m_nTimer = SetTimer(1, m_dwSeconds * 1000, NULL);
       }
+      if (dlg.m_bHideEmpty)
+      {
+         m_dwFlags |= LVF_HIDE_EMPTY;
+      }
       if (dlg.m_bShowGrid)
       {
          m_dwFlags |= LVF_SHOW_GRID;
@@ -438,6 +453,7 @@ void CLastValuesView::OnLastvaluesProperties()
       {
          m_wndListCtrl.SetExtendedStyle(m_wndListCtrl.GetExtendedStyle() & (~LVS_EX_GRIDLINES));
       }
+		PostMessage(WM_COMMAND, ID_VIEW_REFRESH);
    }
 }
 

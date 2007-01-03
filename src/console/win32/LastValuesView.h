@@ -14,6 +14,7 @@
 
 #define LVF_SHOW_GRID      0x01
 #define LVF_AUTOREFRESH    0x02
+#define LVF_HIDE_EMPTY		0x04
 
 
 /////////////////////////////////////////////////////////////////////////////
