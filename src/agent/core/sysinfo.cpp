@@ -1,4 +1,4 @@
-/* $Id: sysinfo.cpp,v 1.17 2007-01-02 15:59:19 victor Exp $ */
+/* $Id: sysinfo.cpp,v 1.18 2007-01-03 09:27:18 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004 Victor Kirhenshtein
@@ -133,7 +133,7 @@ LONG H_DirInfo(char *cmd, char *arg, char *value)
       return SYSINFO_RC_UNSUPPORTED;
 
 	// Recursion flag
-	bRecursive = (atoi(szRecursive) != 0);
+	bRecursive = ((atoi(szRecursive) != 0) || !_tcsicmp(szRecursive, _T("TRUE")));
 
    // If pattern is omited use asterisk
    if (szPattern[0] == 0)
