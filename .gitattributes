@@ -144,6 +144,7 @@ contrib/startup/redhat/netxmsd -text
 contrib/startup/redhat/nxagentd -text
 doc/Makefile.am -text
 doc/internal/Makefile.am -text
+doc/internal/coding_style.txt -text
 doc/internal/db_format_change.txt -text
 doc/internal/event_code_ranges.txt -text
 doc/internal/internals.rtf -text
@@ -160,6 +161,8 @@ doc/misc/Makefile.am -text
 doc/misc/ping_subagent.txt -text
 doc/misc/upgrade.txt -text
 images/Makefile.am -text
+images/cluster.ico -text
+images/cluster.png -text
 images/condition.ico -text
 images/condition.png -text
 images/generic_printer.ico -text

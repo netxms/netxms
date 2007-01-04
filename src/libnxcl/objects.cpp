@@ -33,21 +33,11 @@ void DestroyObject(NXC_OBJECT *pObject)
    DebugPrintf(_T("DestroyObject(id:%d, name:\"%s\")"), pObject->dwId, pObject->szName);
    switch(pObject->iClass)
    {
-      case OBJECT_CONTAINER:
-         safe_free(pObject->container.pszDescription);
-         break;
-      case OBJECT_NODE:
-         safe_free(pObject->node.pszDescription);
-         break;
-      case OBJECT_TEMPLATE:
-         safe_free(pObject->dct.pszDescription);
-         break;
       case OBJECT_NETWORKSERVICE:
          safe_free(pObject->netsrv.pszRequest);
          safe_free(pObject->netsrv.pszResponse);
          break;
       case OBJECT_ZONE:
-         safe_free(pObject->zone.pszDescription);
          safe_free(pObject->zone.pdwAddrList);
          break;
       case OBJECT_VPNCONNECTOR:
@@ -142,21 +132,11 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
    DebugPrintf(_T("ReplaceObject(id:%d, name:\"%s\")"), pObject->dwId, pObject->szName);
    switch(pObject->iClass)
    {
-      case OBJECT_CONTAINER:
-         safe_free(pObject->container.pszDescription);
-         break;
-      case OBJECT_NODE:
-         safe_free(pObject->node.pszDescription);
-         break;
-      case OBJECT_TEMPLATE:
-         safe_free(pObject->dct.pszDescription);
-         break;
       case OBJECT_NETWORKSERVICE:
          safe_free(pObject->netsrv.pszRequest);
          safe_free(pObject->netsrv.pszResponse);
          break;
       case OBJECT_ZONE:
-         safe_free(pObject->zone.pszDescription);
          safe_free(pObject->zone.pdwAddrList);
          break;
       case OBJECT_VPNCONNECTOR:
@@ -256,7 +236,6 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pMsg->GetVariableStr(VID_SHARED_SECRET, pObject->node.szSharedSecret, MAX_SECRET_LENGTH);
          pMsg->GetVariableStr(VID_COMMUNITY_STRING, pObject->node.szCommunityString, MAX_COMMUNITY_LENGTH);
          pMsg->GetVariableStr(VID_SNMP_OID, pObject->node.szObjectId, MAX_OID_LENGTH);
-         pObject->node.pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION);
          pObject->node.wSNMPVersion = pMsg->GetVariableShort(VID_SNMP_VERSION);
          pMsg->GetVariableStr(VID_AGENT_VERSION, pObject->node.szAgentVersion, MAX_AGENT_VERSION_LEN);
          pMsg->GetVariableStr(VID_PLATFORM_NAME, pObject->node.szPlatformName, MAX_PLATFORM_NAME_LEN);
@@ -267,11 +246,9 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          break;
       case OBJECT_CONTAINER:
          pObject->container.dwCategory = pMsg->GetVariableLong(VID_CATEGORY);
-         pObject->container.pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION);
          break;
       case OBJECT_TEMPLATE:
          pObject->dct.dwVersion = pMsg->GetVariableLong(VID_TEMPLATE_VERSION);
-         pObject->dct.pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION);
          break;
       case OBJECT_NETWORKSERVICE:
          pObject->netsrv.iServiceType = (int)pMsg->GetVariableShort(VID_SERVICE_TYPE);
@@ -283,7 +260,6 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          break;
       case OBJECT_ZONE:
          pObject->zone.dwZoneGUID = pMsg->GetVariableLong(VID_ZONE_GUID);
-         pObject->zone.pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION);
          pObject->zone.wZoneType = pMsg->GetVariableShort(VID_ZONE_TYPE);
          pObject->zone.dwControllerIpAddr = pMsg->GetVariableLong(VID_CONTROLLER_IP_ADDR);
          pObject->zone.dwAddrListSize = pMsg->GetVariableLong(VID_ADDR_LIST_SIZE);
@@ -647,8 +623,6 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_IMAGE_ID, pUpdate->dwImage);
    if (pUpdate->dwFlags & OBJ_UPDATE_SNMP_VERSION)
       msg.SetVariable(VID_SNMP_VERSION, pUpdate->wSNMPVersion);
-   if (pUpdate->dwFlags & OBJ_UPDATE_DESCRIPTION)
-      msg.SetVariable(VID_DESCRIPTION, pUpdate->pszDescription);
    if (pUpdate->dwFlags & OBJ_UPDATE_CHECK_REQUEST)
       msg.SetVariable(VID_SERVICE_REQUEST, pUpdate->pszRequest);
    if (pUpdate->dwFlags & OBJ_UPDATE_CHECK_RESPONSE)
@@ -789,6 +763,8 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession,
    msg.SetVariable(VID_PARENT_ID, pCreateInfo->dwParentId);
    msg.SetVariable(VID_OBJECT_CLASS, (WORD)pCreateInfo->iClass);
    msg.SetVariable(VID_OBJECT_NAME, pCreateInfo->pszName);
+	if (pCreateInfo->pszComments != NULL)
+	   msg.SetVariable(VID_COMMENTS, pCreateInfo->pszComments);
    switch(pCreateInfo->iClass)
    {
       case OBJECT_NODE:
@@ -799,10 +775,6 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession,
          break;
       case OBJECT_CONTAINER:
          msg.SetVariable(VID_CATEGORY, pCreateInfo->cs.container.dwCategory);
-         msg.SetVariable(VID_DESCRIPTION, pCreateInfo->cs.container.pszDescription);
-         break;
-      case OBJECT_TEMPLATEGROUP:
-         msg.SetVariable(VID_DESCRIPTION, pCreateInfo->cs.templateGroup.pszDescription);
          break;
       case OBJECT_NETWORKSERVICE:
          msg.SetVariable(VID_SERVICE_TYPE, (WORD)pCreateInfo->cs.netsrv.iServiceType);
@@ -1216,23 +1188,13 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, TCHAR *pszFile
                 sizeof(DWORD) * pList[i].pObject->dwNumParents, hFile);
          fwrite(pList[i].pObject->pAccessList, 1, 
                 sizeof(NXC_ACL_ENTRY) * pList[i].pObject->dwAclSize, hFile);
+         
+			dwSize = _tcslen(pList[i].pObject->pszComments) * sizeof(TCHAR);
+         fwrite(&dwSize, 1, sizeof(DWORD), hFile);
+         fwrite(pList[i].pObject->pszComments, 1, dwSize, hFile);
+
          switch(pList[i].pObject->iClass)
          {
-            case OBJECT_NODE:
-               dwSize = _tcslen(pList[i].pObject->node.pszDescription) * sizeof(TCHAR);
-               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-               fwrite(pList[i].pObject->node.pszDescription, 1, dwSize, hFile);
-               break;
-            case OBJECT_CONTAINER:
-               dwSize = _tcslen(pList[i].pObject->container.pszDescription) * sizeof(TCHAR);
-               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-               fwrite(pList[i].pObject->container.pszDescription, 1, dwSize, hFile);
-               break;
-            case OBJECT_TEMPLATE:
-               dwSize = _tcslen(pList[i].pObject->dct.pszDescription) * sizeof(TCHAR);
-               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-               fwrite(pList[i].pObject->dct.pszDescription, 1, dwSize, hFile);
-               break;
             case OBJECT_NETWORKSERVICE:
                dwSize = _tcslen(pList[i].pObject->netsrv.pszRequest) * sizeof(TCHAR);
                fwrite(&dwSize, 1, sizeof(DWORD), hFile);
@@ -1243,10 +1205,6 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, TCHAR *pszFile
                fwrite(pList[i].pObject->netsrv.pszResponse, 1, dwSize, hFile);
                break;
             case OBJECT_ZONE:
-               dwSize = _tcslen(pList[i].pObject->zone.pszDescription) * sizeof(TCHAR);
-               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
-               fwrite(pList[i].pObject->zone.pszDescription, 1, dwSize, hFile);
-
                if (pList[i].pObject->zone.dwAddrListSize > 0)
                   fwrite(pList[i].pObject->zone.pdwAddrList, sizeof(DWORD),
                          pList[i].pObject->zone.dwAddrListSize, hFile);
@@ -1320,26 +1278,13 @@ void NXCL_Session::LoadObjectsFromCache(TCHAR *pszFile)
                   object.pAccessList = (NXC_ACL_ENTRY *)malloc(sizeof(NXC_ACL_ENTRY) * object.dwAclSize);
                   fread(object.pAccessList, 1, sizeof(NXC_ACL_ENTRY) * object.dwAclSize, hFile);
 
+                  fread(&dwSize, 1, sizeof(DWORD), hFile);
+                  object.pszComments = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
+                  fread(object.pszComments, 1, dwSize, hFile);
+                  object.pszComments[dwSize / sizeof(TCHAR)] = 0;
+
                   switch(object.iClass)
                   {
-                     case OBJECT_NODE:
-                        fread(&dwSize, 1, sizeof(DWORD), hFile);
-                        object.node.pszDescription = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
-                        fread(object.node.pszDescription, 1, dwSize, hFile);
-                        object.node.pszDescription[dwSize / sizeof(TCHAR)] = 0;
-                        break;
-                     case OBJECT_CONTAINER:
-                        fread(&dwSize, 1, sizeof(DWORD), hFile);
-                        object.container.pszDescription = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
-                        fread(object.container.pszDescription, 1, dwSize, hFile);
-                        object.container.pszDescription[dwSize / sizeof(TCHAR)] = 0;
-                        break;
-                     case OBJECT_TEMPLATE:
-                        fread(&dwSize, 1, sizeof(DWORD), hFile);
-                        object.dct.pszDescription = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
-                        fread(object.dct.pszDescription, 1, dwSize, hFile);
-                        object.dct.pszDescription[dwSize / sizeof(TCHAR)] = 0;
-                        break;
                      case OBJECT_NETWORKSERVICE:
                         fread(&dwSize, 1, sizeof(DWORD), hFile);
                         object.netsrv.pszRequest = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
@@ -1352,11 +1297,6 @@ void NXCL_Session::LoadObjectsFromCache(TCHAR *pszFile)
                         object.netsrv.pszResponse[dwSize / sizeof(TCHAR)] = 0;
                         break;
                      case OBJECT_ZONE:
-                        fread(&dwSize, 1, sizeof(DWORD), hFile);
-                        object.zone.pszDescription = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
-                        fread(object.zone.pszDescription, 1, dwSize, hFile);
-                        object.zone.pszDescription[dwSize / sizeof(TCHAR)] = 0;
-
                         if (object.zone.dwAddrListSize > 0)
                         {
                            object.zone.pdwAddrList = (DWORD *)malloc(object.zone.dwAddrListSize * sizeof(DWORD));

@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.254 2006-12-29 12:45:29 victor Exp $ */
+/* $Id: session.cpp,v 1.255 2007-01-04 16:35:39 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -3114,8 +3114,8 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
    CSCPMessage msg;
    NetObj *pObject, *pParent;
    int iClass, iServiceType;
-   TCHAR *pDescription, szObjectName[MAX_OBJECT_NAME];
-   TCHAR *pszRequest, *pszResponse;
+   TCHAR szObjectName[MAX_OBJECT_NAME];
+   TCHAR *pszRequest, *pszResponse, *pszComments;
    DWORD dwIpAddr;
    WORD wIpProto, wIpPort;
    BOOL bParentAlwaysValid = FALSE;
@@ -3161,21 +3161,20 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                                            pRequest->GetVariableLong(VID_PROXY_NODE));
                      break;
                   case OBJECT_CONTAINER:
-                     pDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
                      pObject = new Container(szObjectName, 
-                                             pRequest->GetVariableLong(VID_CATEGORY),
-                                             pDescription);
-                     safe_free(pDescription);
+                                             pRequest->GetVariableLong(VID_CATEGORY));
                      NetObjInsert(pObject, TRUE);
                      break;
                   case OBJECT_TEMPLATEGROUP:
-                     pDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
-                     pObject = new TemplateGroup(szObjectName, pDescription);
-                     safe_free(pDescription);
+                     pObject = new TemplateGroup(szObjectName);
                      NetObjInsert(pObject, TRUE);
                      break;
                   case OBJECT_TEMPLATE:
                      pObject = new Template(szObjectName);
+                     NetObjInsert(pObject, TRUE);
+                     break;
+                  case OBJECT_CLUSTER:
+                     pObject = new Cluster(szObjectName);
                      NetObjInsert(pObject, TRUE);
                      break;
                   case OBJECT_NETWORKSERVICE:
@@ -3203,7 +3202,7 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                      break;
                }
 
-               // If creation was successful do binding
+               // If creation was successful do binding and set comments if needed
                if (pObject != NULL)
                {
                   if (pParent != NULL)    // parent can be NULL for nodes
@@ -3212,6 +3211,11 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                      pObject->AddParent(pParent);
                      pParent->CalculateCompoundStatus();
                   }
+						
+						pszComments = pRequest->GetVariableStr(VID_COMMENTS);
+						if (pszComments != NULL)
+							pObject->SetComments(pszComments);
+
                   pObject->Unhide();
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
                   msg.SetVariable(VID_OBJECT_ID, pObject->Id());

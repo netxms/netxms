@@ -1741,7 +1741,7 @@ BEGIN
     ICON            "",IDC_ICON_PARENT,14,117,20,20
     LTEXT           "ID:",IDC_STATIC_ID,43,117,54,8
     LTEXT           "Name",IDC_STATIC_NAME,44,131,112,9
-    LTEXT           "Description",IDC_STATIC,13,71,36,8
+    LTEXT           "Comments",IDC_STATIC,13,71,34,8
 END
 
 IDD_CREATE_NODE DIALOG DISCARDABLE  0, 0, 240, 220
@@ -1809,10 +1809,10 @@ BEGIN
     GROUPBOX        "New object",IDC_STATIC,7,7,158,66
     LTEXT           "Name",IDC_STATIC,13,17,20,8
     GROUPBOX        "Parent object",IDC_STATIC,7,77,158,42
-    ICON            "",IDC_ICON_PARENT,14,90,21,20
+    ICON            "",IDC_ICON_PARENT,14,90,20,20
     LTEXT           "ID:",IDC_STATIC_ID,43,90,54,8
     LTEXT           "Name",IDC_STATIC_NAME,44,104,112,9
-    LTEXT           "Description",IDC_STATIC,13,44,36,8
+    LTEXT           "Comments",IDC_STATIC,13,44,34,8
 END
 
 IDD_CREATE_TEMPLATE DIALOG DISCARDABLE  0, 0, 229, 100

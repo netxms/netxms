@@ -1,0 +1,61 @@
+1. Each word in function name should start with capital letter. No underscores.
+   For exaple: CreateNewUser. Underscores allowed in parameter handlers,
+   which can start with "H_" prefix, like this: H_FreeDiskSpace.
+
+2. Indentation offset: 3
+
+3. Opening { should be placed on next line without indentation, like below:
+
+   if (a < b)
+   {
+      something();
+   }
+
+4. Operators and operands should be separated by spaces, like below:
+
+   a = x + 20 / (y - z);
+ 
+5. Function arguments should be separated by spaces, like below:
+ 
+   z = function(p1, p2, p3);
+ 
+6. One-line comments should be placed with the same indentation level as code,
+   like this:
+ 
+   c = xxx();
+   if (a)
+   {
+      // comment
+      func();
+   }
+ 
+7. Brackets after for and while operators may or may not be separated by
+   spaces (I prefer not to separate them, but it's not a big problem IMHO).
+ 
+8. Variable names preferrably should start with type specifier. For example,
+   DWORD variable "index" should be called "dwIndex". Below is a common type
+   prefixes:
+ 
+   dw - DWORD
+   i - int
+   n - long
+   qw - QWORD
+   d - double
+   tm - time_t
+   sz - String (TCHAR [])
+   psz - Pointer to string (TCHAR *)
+   p - Generic pointer
+   p<data type> - Pointer to variable of type <data type> (like DWORD *pdwIndex;)
+ 
+   If variable is of custom type, it can have no prefix, and it's name should
+   start with small letter. For example:
+ 
+   struct stat fileStat;
+ 
+9. It is recommended to use typedefs as a replacement for some system
+   data types:
+      WORD  - unsigned short (16 bit unsigned integer)
+      LONG - instead of system's 32 signed integer
+      DWORD - unsigned long (32 bit unsigned integer)
+      INT64 - instead of system's 64 bit signed integer
+      QWORD - instread of system's 64 bit unsigned integer

@@ -34,7 +34,6 @@ Zone::Zone()
    m_dwZoneGUID = 0;
    m_dwControllerIpAddr = 0;
    _tcscpy(m_szName, _T("Zone 0"));
-   m_pszDescription = _tcsdup(_T(""));
    m_dwAddrListSize = 0;
    m_pdwIpAddrList = NULL;
    m_iZoneType = ZONE_TYPE_ACTIVE;
@@ -47,7 +46,6 @@ Zone::Zone()
 
 Zone::~Zone()
 {
-   safe_free(m_pszDescription);
    safe_free(m_pdwIpAddrList);
 }
 
@@ -67,8 +65,7 @@ BOOL Zone::CreateFromDB(DWORD dwId)
    if (!LoadCommonProperties())
       return FALSE;
 
-   _stprintf(szQuery, _T("SELECT zone_guid,zone_type,controller_ip,"
-                         "description FROM zones WHERE id=%d"), dwId);
+   _stprintf(szQuery, _T("SELECT zone_guid,zone_type,controller_ip FROM zones WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -80,8 +77,6 @@ BOOL Zone::CreateFromDB(DWORD dwId)
       {
          m_dwZoneGUID = 0;
          m_iZoneType = ZONE_TYPE_ACTIVE;
-         safe_free(m_pszDescription);
-         m_pszDescription = _tcsdup(_T("Built-in default zone object"));
          return TRUE;
       }
       else
@@ -90,13 +85,9 @@ BOOL Zone::CreateFromDB(DWORD dwId)
       }
    }
 
-   safe_free(m_pszDescription);
-
    m_dwZoneGUID = DBGetFieldULong(hResult, 0, 0);
    m_iZoneType = DBGetFieldLong(hResult, 0, 1);
    m_dwControllerIpAddr = DBGetFieldIPAddr(hResult, 0, 2);
-   m_pszDescription = DBGetField(hResult, 0, 3, NULL, 0);
-   DecodeSQLString(m_pszDescription);
 
    DBFreeResult(hResult);
 
@@ -129,7 +120,7 @@ BOOL Zone::CreateFromDB(DWORD dwId)
 BOOL Zone::SaveToDB(DB_HANDLE hdb)
 {
    BOOL bNewObject = TRUE;
-   TCHAR *pszEscDescr, szIpAddr[16], szQuery[8192];
+   TCHAR szIpAddr[16], szQuery[8192];
    DB_RESULT hResult;
    DWORD i;
 
@@ -148,18 +139,16 @@ BOOL Zone::SaveToDB(DB_HANDLE hdb)
    }
 
    // Form and execute INSERT or UPDATE query
-   pszEscDescr = EncodeSQLString(m_pszDescription);
    if (bNewObject)
-      _sntprintf(szQuery, 8192, "INSERT INTO zones (id,zone_guid,zone_type,controller_ip,"
-                          "description) VALUES (%d,%d,%d,'%s','%s')",
+      _sntprintf(szQuery, 8192, "INSERT INTO zones (id,zone_guid,zone_type,controller_ip)"
+                          " VALUES (%d,%d,%d,'%s')",
                  m_dwId, m_dwZoneGUID, m_iZoneType,
-                 IpToStr(m_dwControllerIpAddr, szIpAddr), pszEscDescr);
+                 IpToStr(m_dwControllerIpAddr, szIpAddr));
    else
       _sntprintf(szQuery, 8192, "UPDATE zones SET zone_guid=%d,zone_type=%d,"
-                                "controller_ip='%s',description='%s' WHERE id=%d",
+                                "controller_ip='%s' WHERE id=%d",
                  m_dwZoneGUID, m_iZoneType,
-                 IpToStr(m_dwControllerIpAddr, szIpAddr), pszEscDescr, m_dwId);
-   free(pszEscDescr);
+                 IpToStr(m_dwControllerIpAddr, szIpAddr), m_dwId);
    DBQuery(hdb, szQuery);
 
    // Save ip address list
@@ -217,7 +206,6 @@ void Zone::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_CONTROLLER_IP_ADDR, m_dwControllerIpAddr);
    pMsg->SetVariable(VID_ADDR_LIST_SIZE, m_dwAddrListSize);
    pMsg->SetVariableToInt32Array(VID_IP_ADDR_LIST, m_dwAddrListSize, m_pdwIpAddrList);
-   pMsg->SetVariable(VID_DESCRIPTION, m_pszDescription);
 }
 
 
@@ -229,13 +217,6 @@ DWORD Zone::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();
-
-   // Change description
-   if (pRequest->IsVariableExist(VID_DESCRIPTION))
-   {
-      safe_free(m_pszDescription);
-      m_pszDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
-   }
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }

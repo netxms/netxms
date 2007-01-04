@@ -2081,8 +2081,8 @@ void CConsoleApp::CreateContainer(DWORD dwParent)
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
       ci.iClass = OBJECT_CONTAINER;
       ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);
+		ci.pszComments = (TCHAR *)((LPCTSTR)dlg.m_strDescription);
       ci.cs.container.dwCategory = 1;
-      ci.cs.container.pszDescription = (TCHAR *)((LPCTSTR)dlg.m_strDescription);
       CreateObject(&ci);
    }
 }
@@ -2107,6 +2107,7 @@ void CConsoleApp::CreateCondition(DWORD dwParent)
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
       ci.iClass = OBJECT_CONDITION;
       ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);
+		ci.pszComments = NULL;
       CreateObject(&ci);
    }
 }
@@ -2131,6 +2132,7 @@ void CConsoleApp::CreateNode(DWORD dwParent)
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
       ci.iClass = OBJECT_NODE;
       ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);
+		ci.pszComments = NULL;
       ci.cs.node.dwIpAddr = dlg.m_dwIpAddr;
       ci.cs.node.dwNetMask = 0;
       ci.cs.node.dwProxyNode = dlg.m_dwProxyNode;
@@ -2170,6 +2172,7 @@ void CConsoleApp::CreateNetworkService(DWORD dwParent)
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
       ci.iClass = OBJECT_NETWORKSERVICE;
       ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);
+		ci.pszComments = NULL;
       ci.cs.netsrv.iServiceType = dlg.m_iServiceType;
       ci.cs.netsrv.wPort = (WORD)dlg.m_iPort;
       ci.cs.netsrv.wProto = (WORD)dlg.m_iProtocolNumber;
@@ -2200,6 +2203,7 @@ void CConsoleApp::CreateTemplate(DWORD dwParent)
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
       ci.iClass = OBJECT_TEMPLATE;
       ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);
+		ci.pszComments = NULL;
       CreateObject(&ci);
    }
 }
@@ -2225,7 +2229,7 @@ void CConsoleApp::CreateTemplateGroup(DWORD dwParent)
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
       ci.iClass = OBJECT_TEMPLATEGROUP;
       ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);
-      ci.cs.templateGroup.pszDescription = (TCHAR *)((LPCTSTR)dlg.m_strDescription);
+		ci.pszComments = (TCHAR *)((LPCTSTR)dlg.m_strDescription);
       CreateObject(&ci);
    }
 }
@@ -2250,6 +2254,7 @@ void CConsoleApp::CreateVPNConnector(DWORD dwParent)
       ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
       ci.iClass = OBJECT_VPNCONNECTOR;
       ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);
+		ci.pszComments = NULL;
       CreateObject(&ci);
    }
 }

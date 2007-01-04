@@ -701,6 +701,9 @@ typedef struct
 #define VID_ERROR_TEXT              ((DWORD)259)
 #define VID_COMPONENT               ((DWORD)260)
 #define VID_CONSOLE_UPGRADE_URL		((DWORD)261)
+#define VID_CLUSTER_TYPE				((DWORD)262)
+#define VID_NUM_SYNC_SUBNETS			((DWORD)263)
+#define VID_SYNC_SUBNETS				((DWORD)264)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

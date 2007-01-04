@@ -38,7 +38,7 @@
 // Constants
 //
 
-#define OBJECT_CACHE_MAGIC 0x8899DEBC
+#define OBJECT_CACHE_MAGIC 0x2007DEBC
 
 #define MAX_SERVER_NAME    64
 #define MAX_LOGIN_NAME     64

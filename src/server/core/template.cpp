@@ -33,7 +33,6 @@ Template::Template()
    m_dwNumItems = 0;
    m_ppItems = NULL;
    m_dwDCILockStatus = INVALID_INDEX;
-   m_pszDescription = NULL;
    m_dwVersion = 0x00010000;  // Initial version is 1.0
 }
 
@@ -49,7 +48,6 @@ Template::Template(TCHAR *pszName)
    m_dwNumItems = 0;
    m_ppItems = NULL;
    m_dwDCILockStatus = INVALID_INDEX;
-   m_pszDescription = NULL;
    m_dwVersion = 0x00010000;  // Initial version is 1.0
    m_bIsHidden = TRUE;
 }
@@ -62,7 +60,6 @@ Template::Template(TCHAR *pszName)
 Template::~Template()
 {
    DestroyItems();
-   safe_free(m_pszDescription);
 }
 
 
@@ -99,7 +96,7 @@ BOOL Template::CreateFromDB(DWORD dwId)
    if (!LoadCommonProperties())
       return FALSE;
 
-   _stprintf(szQuery, _T("SELECT version,description FROM templates WHERE id=%d"), dwId);
+   _stprintf(szQuery, _T("SELECT version FROM templates WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -112,11 +109,6 @@ BOOL Template::CreateFromDB(DWORD dwId)
    }
 
    m_dwVersion = DBGetFieldULong(hResult, 0, 0);
-   m_pszDescription = DBGetField(hResult, 0, 1, NULL, 0);
-   if (m_pszDescription == NULL)
-      m_pszDescription = _tcsdup(_T(""));
-   DecodeSQLString(m_pszDescription);
-
    DBFreeResult(hResult);
 
    // Load DCI and access list
@@ -169,7 +161,7 @@ BOOL Template::CreateFromDB(DWORD dwId)
 
 BOOL Template::SaveToDB(DB_HANDLE hdb)
 {
-   TCHAR *pszEscDescr, szQuery[1024];
+   TCHAR szQuery[1024];
    DB_RESULT hResult;
    DWORD i;
    BOOL bNewObject = TRUE;
@@ -190,16 +182,13 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
    }
 
    // Form and execute INSERT or UPDATE query
-   pszEscDescr = EncodeSQLString(CHECK_NULL_EX(m_pszDescription));
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO templates (id,version,"
-                       "description) VALUES (%d,%d,'%s')",
-              m_dwId, m_dwVersion, pszEscDescr);
+      sprintf(szQuery, "INSERT INTO templates (id,version) VALUES (%d,%d)",
+              m_dwId, m_dwVersion);
    else
-      sprintf(szQuery, "UPDATE templates SET version=%d,description='%s' WHERE id=%d",
-              m_dwVersion, pszEscDescr, m_dwId);
+      sprintf(szQuery, "UPDATE templates SET version=%d WHERE id=%d",
+              m_dwVersion, m_dwId);
    DBQuery(hdb, szQuery);
-   free(pszEscDescr);
 
    // Update members list
    sprintf(szQuery, "DELETE FROM dct_node_map WHERE template_id=%d", m_dwId);
@@ -600,7 +589,6 @@ void Template::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);
    pMsg->SetVariable(VID_TEMPLATE_VERSION, m_dwVersion);
-   pMsg->SetVariable(VID_DESCRIPTION, CHECK_NULL_EX(m_pszDescription));
 }
 
 
@@ -616,13 +604,6 @@ DWORD Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    // Change template version
    if (pRequest->IsVariableExist(VID_TEMPLATE_VERSION))
       m_dwVersion = pRequest->GetVariableLong(VID_TEMPLATE_VERSION);
-
-   // Change description
-   if (pRequest->IsVariableExist(VID_DESCRIPTION))
-   {
-      safe_free(m_pszDescription);
-      m_pszDescription = pRequest->GetVariableStr(VID_DESCRIPTION);
-   }
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }

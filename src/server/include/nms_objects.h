@@ -312,7 +312,6 @@ protected:
    DCItem **m_ppItems;     // Data collection items
    DWORD m_dwDCILockStatus;
    DWORD m_dwVersion;
-   TCHAR *m_pszDescription;
    BOOL m_bDCIListModified;
    TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
 
@@ -337,7 +336,6 @@ public:
 
    int VersionMajor(void) { return m_dwVersion >> 16; }
    int VersionMinor(void) { return m_dwVersion & 0xFFFF; }
-   const TCHAR *Description(void) { return CHECK_NULL(m_pszDescription); }
 
    DWORD GetItemCount(void) { return m_dwNumItems; }
    BOOL AddItem(DCItem *pItem, BOOL bLocked = FALSE);
@@ -377,12 +375,16 @@ protected:
 
 public:
 	Cluster();
+   Cluster(TCHAR *pszName);
 	virtual ~Cluster();
 
    virtual int Type(void) { return OBJECT_CLUSTER; }
    virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
+
+   virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 };
 
 
@@ -838,11 +840,10 @@ private:
 
 protected:
    DWORD m_dwCategory;
-   char *m_pszDescription;
 
 public:
    Container();
-   Container(char *pszName, DWORD dwCategory, char *pszDescription);
+   Container(TCHAR *pszName, DWORD dwCategory);
    virtual ~Container();
 
    virtual int Type(void) { return OBJECT_CONTAINER; }
@@ -854,7 +855,6 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
 
    DWORD Category(void) { return m_dwCategory; }
-   const TCHAR *Description(void) { return CHECK_NULL(m_pszDescription); }
 
    void LinkChildObjects(void);
    void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
@@ -869,7 +869,7 @@ class NXCORE_EXPORTABLE TemplateGroup : public Container
 {
 public:
    TemplateGroup() : Container() { }
-   TemplateGroup(char *pszName, char *pszDescription) : Container(pszName, 0, pszDescription) { }
+   TemplateGroup(TCHAR *pszName) : Container(pszName, 0) { }
    virtual ~TemplateGroup() { }
 
    virtual int Type(void) { return OBJECT_TEMPLATEGROUP; }
@@ -888,7 +888,6 @@ protected:
    DWORD m_dwControllerIpAddr;
    DWORD m_dwAddrListSize;
    DWORD *m_pdwIpAddrList;
-   TCHAR *m_pszDescription;
 
 public:
    Zone();

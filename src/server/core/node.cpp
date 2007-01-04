@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.163 2007-01-02 09:56:18 victor Exp $ */
+/* $Id: node.cpp,v 1.164 2007-01-04 16:35:38 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -149,7 +149,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    _sntprintf(szQuery, 512, "SELECT primary_ip,node_flags,"
                             "snmp_version,auth_method,secret,"
                             "agent_port,status_poll_type,community,snmp_oid,"
-                            "description,node_type,agent_version,"
+                            "node_type,agent_version,"
                             "platform_name,poller_node_id,zone_guid,"
                             "proxy_node FROM nodes WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
@@ -174,16 +174,14 @@ BOOL Node::CreateFromDB(DWORD dwId)
    DBGetField(hResult, 0, 7, m_szCommunityString, MAX_COMMUNITY_LENGTH);
    DecodeSQLString(m_szCommunityString);
    DBGetField(hResult, 0, 8, m_szObjectId, MAX_OID_LEN * 4);
-   m_pszDescription = DBGetField(hResult, 0, 9, NULL, 0);
-   DecodeSQLString(m_pszDescription);
-   m_dwNodeType = DBGetFieldULong(hResult, 0, 10);
-   DBGetField(hResult, 0, 11, m_szAgentVersion, MAX_AGENT_VERSION_LEN);
+   m_dwNodeType = DBGetFieldULong(hResult, 0, 9);
+   DBGetField(hResult, 0, 10, m_szAgentVersion, MAX_AGENT_VERSION_LEN);
    DecodeSQLString(m_szAgentVersion);
-   DBGetField(hResult, 0, 12, m_szPlatformName, MAX_PLATFORM_NAME_LEN);
+   DBGetField(hResult, 0, 11, m_szPlatformName, MAX_PLATFORM_NAME_LEN);
    DecodeSQLString(m_szPlatformName);
-   m_dwPollerNode = DBGetFieldULong(hResult, 0, 13);
-   m_dwZoneGUID = DBGetFieldULong(hResult, 0, 14);
-   m_dwProxyNode = DBGetFieldULong(hResult, 0, 15);
+   m_dwPollerNode = DBGetFieldULong(hResult, 0, 12);
+   m_dwZoneGUID = DBGetFieldULong(hResult, 0, 13);
+   m_dwProxyNode = DBGetFieldULong(hResult, 0, 14);
 
    DBFreeResult(hResult);
 
@@ -253,7 +251,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
 BOOL Node::SaveToDB(DB_HANDLE hdb)
 {
-   TCHAR *pszEscDescr, *pszEscVersion, *pszEscPlatform, *pszEscSecret;
+   TCHAR *pszEscVersion, *pszEscPlatform, *pszEscSecret;
    TCHAR *pszEscCommunity, szQuery[4096], szIpAddr[16];
    DB_RESULT hResult;
    BOOL bNewObject = TRUE;
@@ -275,7 +273,6 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    }
 
    // Form and execute INSERT or UPDATE query
-   pszEscDescr = EncodeSQLString(CHECK_NULL_EX(m_pszDescription));
    pszEscVersion = EncodeSQLString(m_szAgentVersion);
    pszEscPlatform = EncodeSQLString(m_szPlatformName);
    pszEscSecret = EncodeSQLString(m_szSharedSecret);
@@ -285,30 +282,29 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                "INSERT INTO nodes (id,primary_ip,"
                "node_flags,snmp_version,community,status_poll_type,"
                "agent_port,auth_method,secret,snmp_oid,proxy_node,"
-               "description,node_type,agent_version,platform_name,"
+               "node_type,agent_version,platform_name,"
                "poller_node_id,zone_guid) VALUES (%d,'%s',%d,%d,'%s',%d,%d,%d,"
-               "'%s','%s',%d,'%s',%d,'%s','%s',%d,%d)",
+               "'%s','%s',%d,%d,'%s','%s',%d,%d)",
                m_dwId, IpToStr(m_dwIpAddr, szIpAddr), m_dwFlags,
                m_iSNMPVersion, pszEscCommunity, m_iStatusPollType,
                m_wAgentPort, m_wAuthMethod, pszEscSecret, m_szObjectId,
-               m_dwProxyNode, pszEscDescr, m_dwNodeType, pszEscVersion,
+               m_dwProxyNode, m_dwNodeType, pszEscVersion,
                pszEscPlatform, m_dwPollerNode, m_dwZoneGUID);
    else
       snprintf(szQuery, 4096,
                "UPDATE nodes SET primary_ip='%s',"
                "node_flags=%d,snmp_version=%d,community='%s',"
                "status_poll_type=%d,agent_port=%d,auth_method=%d,secret='%s',"
-               "snmp_oid='%s',description='%s',node_type=%d,"
+               "snmp_oid='%s',node_type=%d,"
                "agent_version='%s',platform_name='%s',poller_node_id=%d,"
                "zone_guid=%d,proxy_node=%d WHERE id=%d",
                IpToStr(m_dwIpAddr, szIpAddr), 
                m_dwFlags, m_iSNMPVersion, pszEscCommunity,
                m_iStatusPollType, m_wAgentPort, m_wAuthMethod, pszEscSecret, 
-               m_szObjectId, pszEscDescr, m_dwNodeType, 
+               m_szObjectId, m_dwNodeType, 
                pszEscVersion, pszEscPlatform, m_dwPollerNode, m_dwZoneGUID,
                m_dwProxyNode, m_dwId);
    bResult = DBQuery(hdb, szQuery);
-   free(pszEscDescr);
    free(pszEscVersion);
    free(pszEscPlatform);
    free(pszEscSecret);

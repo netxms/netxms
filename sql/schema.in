@@ -134,7 +134,6 @@ CREATE TABLE zones
 	zone_guid integer not null,	// Globally unique ID for zone
 	zone_type integer not null,	// Active or passive zone
 	controller_ip varchar(15) not null,
-	description SQL_TEXT,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -167,7 +166,6 @@ CREATE TABLE nodes
 	secret varchar(64),
 	agent_port integer,
 	status_poll_type integer,
-	description SQL_TEXT,
 	node_type integer,
 	agent_version varchar(63),
 	platform_name varchar(63),
@@ -209,8 +207,9 @@ CREATE TABLE cluster_members
 CREATE TABLE cluster_sync_subnets
 (
 	cluster_id integer not null,
-	subnet_addr varchar(15),
-	subnet_mask varchar(15)
+	subnet_addr varchar(15) not null,
+	subnet_mask varchar(15) not null,
+	PRIMARY KEY(cluster_id,subnet_addr)
 ) TABLE_TYPE;
 
 
@@ -299,7 +298,6 @@ CREATE TABLE containers
 (
 	id integer not null,
 	category integer not null,
-	description SQL_TEXT not null,
 	object_class integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
@@ -345,7 +343,6 @@ CREATE TABLE templates
 (
 	id integer not null,
 	version integer,
-	description SQL_TEXT,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

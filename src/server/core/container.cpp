@@ -1,6 +1,7 @@
+/* $Id: container.cpp,v 1.18 2007-01-04 16:35:38 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: container.cpp
+** File: container.cpp
 **
 **/
 
@@ -45,7 +46,6 @@ CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(DWORD dwId)
 Container::Container()
           :NetObj()
 {
-   m_pszDescription = NULL;
    m_pdwChildIdList = NULL;
    m_dwChildIdListSize = 0;
    m_dwCategory = 1;
@@ -56,11 +56,10 @@ Container::Container()
 // "Normal" container class constructor
 //
 
-Container::Container(char *pszName, DWORD dwCategory, char *pszDescription)
+Container::Container(TCHAR *pszName, DWORD dwCategory)
           :NetObj()
 {
    nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME);
-   m_pszDescription = strdup(pszDescription);
    m_pdwChildIdList = NULL;
    m_dwChildIdListSize = 0;
    m_dwCategory = dwCategory;
@@ -74,7 +73,6 @@ Container::Container(char *pszName, DWORD dwCategory, char *pszDescription)
 
 Container::~Container()
 {
-   safe_free(m_pszDescription);
    safe_free(m_pdwChildIdList);
 }
 
@@ -94,7 +92,7 @@ BOOL Container::CreateFromDB(DWORD dwId)
    if (!LoadCommonProperties())
       return FALSE;
 
-   sprintf(szQuery, "SELECT category,description FROM containers WHERE id=%d", dwId);
+   sprintf(szQuery, "SELECT category FROM containers WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -107,8 +105,6 @@ BOOL Container::CreateFromDB(DWORD dwId)
    }
 
    m_dwCategory = DBGetFieldULong(hResult, 0, 0);
-   m_pszDescription = DBGetField(hResult, 0, 1, NULL, 0);
-
    DBFreeResult(hResult);
 
    // Load access list
@@ -164,13 +160,11 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
 
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO containers (id,category,"
-                       "description,object_class) VALUES (%d,%d,'%s',%d)",
-              m_dwId, m_dwCategory, CHECK_NULL(m_pszDescription), Type());
+      sprintf(szQuery, "INSERT INTO containers (id,category,object_class) VALUES (%d,%d,%d)",
+              m_dwId, m_dwCategory, Type());
    else
-      sprintf(szQuery, "UPDATE containers SET category=%d,"
-                       "description='%s',object_class=%d WHERE id=%d",
-              m_dwCategory, CHECK_NULL(m_pszDescription), Type(), m_dwId);
+      sprintf(szQuery, "UPDATE containers SET category=%d,object_class=%d WHERE id=%d",
+              m_dwCategory, Type(), m_dwId);
    DBQuery(hdb, szQuery);
 
    // Update members list
@@ -254,5 +248,4 @@ void Container::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);
    pMsg->SetVariable(VID_CATEGORY, m_dwCategory);
-   pMsg->SetVariable(VID_DESCRIPTION, CHECK_NULL(m_pszDescription));
 }

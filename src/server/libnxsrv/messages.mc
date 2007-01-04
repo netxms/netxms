@@ -596,4 +596,22 @@ Language=English
 NetXMS server cannot create node object for itself - probably because platform subagent cannot be loaded (check above error messages, if any)
 .
 
+MessageId=
+SymbolicName=MSG_INVALID_CLUSTER_MEMBER
+Language=English
+Inconsistent database: cluster object %1 has reference to non-existing node object %2
+.
+
+MessageId=
+SymbolicName=MSG_CLUSTER_MEMBER_NOT_NODE
+Language=English
+Inconsistent database: cluster object %1 has reference to child object %2 which is not a node object
+.
+
+MessageId=
+SymbolicName=MSG_CLUSTER_LOAD_FAILED
+Language=English
+Failed to load cluster object with id %1 from database
+.
+
 ;#endif

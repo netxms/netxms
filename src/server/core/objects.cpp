@@ -335,6 +335,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          case OBJECT_TEMPLATE:
          case OBJECT_TEMPLATEGROUP:
          case OBJECT_TEMPLATEROOT:
+			case OBJECT_CLUSTER:
             break;
          case OBJECT_SUBNET:
             if (pObject->IpAddr() != 0)
@@ -399,6 +400,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
       case OBJECT_TEMPLATE:
       case OBJECT_TEMPLATEGROUP:
       case OBJECT_TEMPLATEROOT:
+		case OBJECT_CLUSTER:
          break;
       case OBJECT_SUBNET:
          if (pObject->IpAddr() != 0)
@@ -858,6 +860,31 @@ BOOL LoadObjects(void)
       DBFreeResult(hResult);
    }
 
+   // Load clusters
+   DbgPrintf(AF_DEBUG_MISC, "Loading clusters...");
+   hResult = DBSelect(g_hCoreDB, "SELECT id FROM clusters");
+   if (hResult != NULL)
+   {
+      Cluster *pCluster;
+
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         pCluster = new Cluster;
+         if (pCluster->CreateFromDB(dwId))
+         {
+            NetObjInsert(pCluster, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete pCluster;
+            WriteLog(MSG_CLUSTER_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
    // Load templates
    DbgPrintf(AF_DEBUG_MISC, "Loading templates...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM templates");
@@ -1021,14 +1048,12 @@ void DumpObjects(CONSOLE_CTX pCtx)
             break;
          case OBJECT_CONTAINER:
             pCat = FindContainerCategory(((Container *)g_pIndexById[i].pObject)->Category());
-            ConsolePrintf(pCtx, "   Category: %s\n   Description: %s\n", pCat ? pCat->szName : "<unknown>",
-                          ((Container *)g_pIndexById[i].pObject)->Description());
+            ConsolePrintf(pCtx, "   Category: %s\n", pCat ? pCat->szName : "<unknown>");
             break;
          case OBJECT_TEMPLATE:
-            ConsolePrintf(pCtx, "   Version: %d.%d\n   Description: %s\n", 
+            ConsolePrintf(pCtx, "   Version: %d.%d\n", 
                           ((Template *)(g_pIndexById[i].pObject))->VersionMajor(),
-                          ((Template *)(g_pIndexById[i].pObject))->VersionMinor(),
-                          ((Template *)(g_pIndexById[i].pObject))->Description());
+                          ((Template *)(g_pIndexById[i].pObject))->VersionMinor());
             break;
       }
    }
@@ -1039,7 +1064,7 @@ void DumpObjects(CONSOLE_CTX pCtx)
 
 //
 // Check is given object class is a valid parent class for other object
-// This function is used to check manually created bindings, so i won't
+// This function is used to check manually created bindings, so it won't
 // return TRUE for node -- subnet for example
 //
 
@@ -1051,6 +1076,7 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
       case OBJECT_CONTAINER:
          if ((iChildClass == OBJECT_CONTAINER) || 
              (iChildClass == OBJECT_NODE) ||
+             (iChildClass == OBJECT_CLUSTER) ||
              (iChildClass == OBJECT_CONDITION))
             return TRUE;
          break;

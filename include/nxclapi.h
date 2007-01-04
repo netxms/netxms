@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.249 2007-01-02 09:56:16 victor Exp $ */
+/* $Id: nxclapi.h,v 1.250 2007-01-04 16:35:26 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -406,7 +406,7 @@ enum
 #define OBJ_UPDATE_SNMP_COMMUNITY   ((DWORD)0x00000020)
 #define OBJ_UPDATE_ACL              ((DWORD)0x00000040)
 #define OBJ_UPDATE_IMAGE            ((DWORD)0x00000080)
-#define OBJ_UPDATE_DESCRIPTION      ((DWORD)0x00000100)
+//#define OBJ_UPDATE_DESCRIPTION      ((DWORD)0x00000100)
 #define OBJ_UPDATE_SERVICE_TYPE     ((DWORD)0x00000200)
 #define OBJ_UPDATE_IP_PROTO         ((DWORD)0x00000400)
 #define OBJ_UPDATE_IP_PORT          ((DWORD)0x00000800)
@@ -426,9 +426,6 @@ enum
 #define OBJ_UPDATE_INACTIVE_STATUS  ((DWORD)0x02000000)
 #define OBJ_UPDATE_DCI_LIST         ((DWORD)0x04000000)
 #define OBJ_UPDATE_SCRIPT           ((DWORD)0x08000000)
-
-#define OBJ_UPDATE_NODE_ALL         ((DWORD)0x001C41FF)
-#define OBJ_UPDATE_NETSRV_ALL       ((DWORD)0x0004FEC1)
 
 
 //
@@ -874,7 +871,6 @@ struct __nxc_object_node
    TCHAR szObjectId[MAX_OID_LENGTH];
    WORD wAgentPort;     // Listening TCP port for native agent
    WORD wAuthMethod;    // Native agent's authentication method
-   TCHAR *pszDescription;
    TCHAR szAgentVersion[MAX_AGENT_VERSION_LEN];
    TCHAR szPlatformName[MAX_PLATFORM_NAME_LEN];
    WORD wSNMPVersion;
@@ -889,13 +885,11 @@ struct __nxc_object_subnet
 struct __nxc_object_container
 {
    DWORD dwCategory;
-   TCHAR *pszDescription;
 };
 
 struct __nxc_object_dct
 {
    DWORD dwVersion;
-   TCHAR *pszDescription;
 };
 
 struct __nxc_object_netsrv
@@ -914,7 +908,6 @@ struct __nxc_object_zone
    DWORD dwControllerIpAddr;
    DWORD dwAddrListSize;
    DWORD *pdwAddrList;
-   TCHAR *pszDescription;
    WORD wZoneType;
 };
 
@@ -987,7 +980,6 @@ typedef struct
    DWORD dwObjectId;
    DWORD dwFlags;
    TCHAR *pszName;
-   TCHAR *pszDescription;
    int iAgentPort;
    int iAuthType;
    TCHAR *pszSecret;
@@ -1213,6 +1205,7 @@ typedef struct
    int iClass;
    DWORD dwParentId;
    TCHAR *pszName;
+	TCHAR *pszComments;
    union
    {
       struct
@@ -1225,12 +1218,7 @@ typedef struct
       struct
       {
          DWORD dwCategory;
-         TCHAR *pszDescription;
       } container;
-      struct
-      {
-         TCHAR *pszDescription;
-      } templateGroup;
       struct
       {
          int iServiceType;
