@@ -1,7 +1,7 @@
 #!/bin/sh
 
 TIMESTAMP=`date`
-LIST=`echo $1 | tr a-z A-Z`
+LIST=`echo $1 | tr "[a-z]" "[A-Z]"`
 
 echo "/* static_subagents.cpp  Generated at $TIMESTAMP */"
 cat << EOT

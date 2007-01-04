@@ -1,10 +1,10 @@
-# $Id: configure.ac,v 1.229 2006-12-29 19:54:52 alk Exp $
+# $Id: configure.ac,v 1.230 2007-01-04 00:45:38 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
 #
 
-AC_INIT([NetXMS], [0.2.15-rc2], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.15-rc4], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -44,7 +44,6 @@ BUILD_NXHTTPD="no"
 BUILD_STATIC_AGENT="no"
 NEED_ZLIB="no"
 MODULES=""
-ALL_STATIC_FLAG=""
 STATIC_SUBAGENT_LIST=""
 SUBAGENT_DIRS=""
 SUBAGENT_LIBS=""
@@ -177,7 +176,6 @@ AC_ARG_ENABLE(iconv,
 [AS_HELP_STRING(--disable-iconv,do not use iconv() for text conversions)],
 [
 	DISABLE_ICONV="yes"
-	CPPFLAGS="$CPPFLAGS -D__DISABLE_ICONV"
 ])
 
 AC_ARG_ENABLE(encryption,
@@ -217,7 +215,7 @@ if test $? = 0; then
 	STATIC_BUILD="yes"
 	BUILD_STATIC_AGENT="yes"
 	MODULES="$MODULES agent"
-	ALL_STATIC_FLAG="-all-static"
+	DISABLE_ICONV="yes"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT"
 
 	case "$PLATFORM" in
@@ -264,6 +262,7 @@ if test $? = 0; then
 	fi
 	STATIC_BUILD="yes"
 	BUILD_STATIC_AGENT="yes"
+	DISABLE_ICONV="yes"
 	USE_PTH="yes"
 	MODULES="$MODULES agent"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO -D_USE_GNU_PTH -I/usr/local/include"
@@ -967,7 +966,6 @@ CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\
 # Substitute variables
 #--------------------------------------------------------------------
 
-AC_SUBST(ALL_STATIC_FLAG)
 AC_SUBST(DB_DRIVERS)
 AC_SUBST(MODULES)
 AC_SUBST(SUBAGENT_DIRS)
