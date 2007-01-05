@@ -120,6 +120,7 @@ protected:
 	afx_msg void OnUpdateObjectUnbind(CCmdUI* pCmdUI);
 	afx_msg void OnObjectUnmanage();
 	afx_msg void OnUpdateObjectUnmanage(CCmdUI* pCmdUI);
+	afx_msg void OnObjectCreateCluster();
 	//}}AFX_MSG
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
    afx_msg void OnTreeViewGetDispInfo(LPNMTVDISPINFO lpdi, LRESULT *pResult);

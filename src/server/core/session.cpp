@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.255 2007-01-04 16:35:39 victor Exp $ */
+/* $Id: session.cpp,v 1.256 2007-01-05 16:04:12 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -765,7 +765,7 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_ALARM:
             break;
          case CMD_ACK_ALARM:
-            AcknowlegeAlarm(pMsg);
+            AcknowledgeAlarm(pMsg);
             break;
          case CMD_TERMINATE_ALARM:
             TerminateAlarm(pMsg);
@@ -3158,7 +3158,8 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                                            pRequest->GetVariableLong(VID_IP_NETMASK),
                                            pRequest->GetVariableLong(VID_CREATION_FLAGS),
                                            szObjectName,
-                                           pRequest->GetVariableLong(VID_PROXY_NODE));
+                                           pRequest->GetVariableLong(VID_PROXY_NODE),
+														 (pParent != NULL) ? ((pParent->Type() == OBJECT_CLUSTER) ? (Cluster *)pParent : NULL) : NULL);
                      break;
                   case OBJECT_CONTAINER:
                      pObject = new Container(szObjectName, 
@@ -3423,10 +3424,10 @@ void ClientSession::SendAllAlarms(DWORD dwRqId, BOOL bIncludeAck)
 
 
 //
-// Acknowlege alarm
+// Acknowledge alarm
 //
 
-void ClientSession::AcknowlegeAlarm(CSCPMessage *pRequest)
+void ClientSession::AcknowledgeAlarm(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    NetObj *pObject;
@@ -3441,7 +3442,7 @@ void ClientSession::AcknowlegeAlarm(CSCPMessage *pRequest)
    pObject = g_alarmMgr.GetAlarmSourceObject(dwAlarmId);
    if (pObject != NULL)
    {
-      // User should have "acknowlege alarm" right to the object
+      // User should have "acknowledge alarm" right to the object
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
       {
          msg.SetVariable(VID_RCC, g_alarmMgr.AckById(dwAlarmId, m_dwUserId));

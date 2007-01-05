@@ -21,6 +21,7 @@ EXTRA_DIST = \
 	AgentConfigMgr.cpp AgentConfigMgr.h \
 	AlarmBrowser.cpp AlarmBrowser.h \
 	AlarmView.cpp AlarmView.h \
+	ClusterPropsGeneral.cpp ClusterPropsGeneral.h \
 	comm.cpp \
 	CondDCIPropDlg.cpp CondDCIPropDlg.h \
 	ColorSelector.cpp ColorSelector.h \
@@ -30,6 +31,7 @@ EXTRA_DIST = \
 	ConsolePropsGeneral.cpp ConsolePropsGeneral.h \
 	ConsoleUpgradeDlg.cpp ConsoleUpgradeDlg.h \
 	ControlPanel.cpp ControlPanel.h \
+	CreateCluster.cpp CreateCluster.h \
 	CreateCondDlg.cpp CreateCondDlg.h \
 	CreateContainerDlg.cpp CreateContainerDlg.h \
 	CreateMPDlg.cpp CreateMPDlg.h \

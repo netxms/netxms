@@ -1,6 +1,6 @@
 /*
 ** NetXMS ODBCQUERY subagent
-** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2006 Alex Kalimulin
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: ping.cpp
+** File: odbcquery.cpp
 **
 **/
 
@@ -37,9 +37,6 @@
 //
 
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
-#ifdef _NETWARE
-static CONDITION m_hCondTerminate = INVALID_CONDITION_HANDLE;
-#endif
 static BOOL m_bShutdown = FALSE;
 static DWORD m_dwNumQueries = 0;
 static ODBC_QUERY *m_pQueryList = NULL;
@@ -54,7 +51,7 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
    QWORD qwTime, qwPrevTime;
 	ODBC_QUERY* pQuery;
 
-	if ((pQuery = (ODBC_QUERY*)pArg) == NULL)
+	if ((pQuery = (ODBC_QUERY *)pArg) == NULL)
 	{
 		NxWriteAgentLog(EL_ERROR, _T("Internal error: null passed to thread"));
 		goto thread_finish;
@@ -62,7 +59,7 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 
 	if ((pQuery->pSqlCtx = OdbcCtxAlloc()) == NULL)
 	{
-		NxWriteAgentLog(EL_ERROR, _T("Failed to allocate ODBC ctx"));
+		NxWriteAgentLog(EL_ERROR, _T("Failed to allocate ODBC context"));
 		goto thread_finish;
 	}
 
@@ -73,7 +70,7 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 		goto thread_finish;
 	}
 
-	NxWriteAgentLog(EL_INFO, _T("Connected to src '%s'"), pQuery->szOdbcSrc);
+	NxWriteAgentLog(EL_INFO, _T("ODBC: Connected to src '%s'"), pQuery->szOdbcSrc);
 
 	qwPrevTime = 0;
 
@@ -85,13 +82,15 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 			if (OdbcQuerySelect1(pQuery->pSqlCtx, pQuery->szSqlQuery, 
 										pQuery->szQueryResult, (size_t)MAX_DB_STRING) < 0)
 			{
-				NxWriteAgentLog(EL_WARN, "Error: %s (%s)", 
+				pQuery->dwCompletionCode = 0x00FFFFFF;		// Generic error
+				NxWriteAgentLog(EL_WARN, "ODBC Error: %s (%s)", 
 									 OdbcGetInfo(pQuery->pSqlCtx),
 									 OdbcGetSqlError(pQuery->pSqlCtx));
 			}
 			else
 			{
-				NxWriteAgentLog(EL_INFO, _T("Result: '%s'"), pQuery->szQueryResult);
+				pQuery->dwCompletionCode = 0;
+				//NxWriteAgentLog(EL_INFO, _T("Result: '%s'"), pQuery->szQueryResult);
 			}
 			qwPrevTime = GetCurrentTimeMs();
 		}
@@ -100,7 +99,6 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
    }
 
 thread_finish:
-
 	if (pQuery->pSqlCtx)
 	{
 		OdbcDisconnect(pQuery->pSqlCtx);
@@ -115,7 +113,7 @@ thread_finish:
 // Handler for poller information
 //
 
-static LONG H_PollResult(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+static LONG H_PollResult(TCHAR *pszParam, char *pArg, TCHAR *pValue)
 {
    TCHAR szName[MAX_DB_STRING];
    DWORD i;
@@ -126,18 +124,24 @@ static LONG H_PollResult(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 
    for(i = 0; i < m_dwNumQueries; i++)
    {
-		if (!_tcscmp(m_pQueryList[i].szName, szName))
-		{
-		/*	_tcscpy(m_pQueryList[i].szQueryResult, _T("Hello"));
-			_tcscat(m_pQueryList[i].szQueryResult, szName);*/
+		if (!_tcsicmp(m_pQueryList[i].szName, szName))
 			break;
-		}
    }
 
    if (i == m_dwNumQueries)
       return SYSINFO_RC_UNSUPPORTED;   // No such target
 
-   ret_string(pValue, m_pQueryList[i].szQueryResult);
+	switch(*pArg)
+	{
+		case 'R':
+			ret_string(pValue, m_pQueryList[i].szQueryResult);
+			break;
+		case 'S':
+			ret_uint(pValue, m_pQueryList[i].dwCompletionCode);
+			break;
+		default:
+	      return SYSINFO_RC_UNSUPPORTED;
+	}
 
    return SYSINFO_RC_SUCCESS;
 }
@@ -158,11 +162,6 @@ static void UnloadHandler(void)
    for(i = 0; i < m_dwNumQueries; i++)
       ThreadJoin(m_pQueryList[i].hThread);
    safe_free(m_pQueryList);
-
-#ifdef _NETWARE
-   // Notify main thread that NLM can exit
-   ConditionSet(m_hCondTerminate);
-#endif
 }
 
 
@@ -205,8 +204,7 @@ static BOOL AddQueryFromConfig(TCHAR *pszCfg)
    }
 	else
 	{
-		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("Wrong query string format, "
-							 "ODBC source missing"));
+		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("Wrong query string format, ODBC source missing"));
 		goto finish_add_query;
 	}
 
@@ -221,8 +219,7 @@ static BOOL AddQueryFromConfig(TCHAR *pszCfg)
    }
 	else
 	{
-		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("Wrong query string format, "
-							 "SQL query missing"));
+		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("Wrong query string format, SQL query missing"));
 		goto finish_add_query;
 	}
 
@@ -281,7 +278,8 @@ finish_add_query:
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("ODBC.Query(*)"), H_PollResult, NULL, DCI_DT_STRING, _T("ODBC Query result") }
+   { _T("ODBC.QueryResult(*)"), H_PollResult, "R", DCI_DT_STRING, _T("ODBC query result") },
+   { _T("ODBC.QueryStatus(*)"), H_PollResult, "S", DCI_DT_UINT, _T("ODBC query status") }
 };
 
 static NETXMS_SUBAGENT_INFO m_info =
@@ -291,9 +289,8 @@ static NETXMS_SUBAGENT_INFO m_info =
    UnloadHandler, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	0,	// enum count
-	NULL,	// enums
-   0, NULL
+	0, NULL,	// enums
+   0, NULL	// actions
 };
 
 
@@ -363,26 +360,6 @@ DECLARE_SUBAGENT_INIT(ODBCQUERY)
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    return TRUE;
-}
-
-#endif
-
-
-//
-// NetWare entry point
-// We use main() instead of _init() and _fini() to implement
-// automatic unload of the subagent after unload handler is called
-//
-
-#ifdef _NETWARE
-
-int main(int argc, char *argv[])
-{
-   m_hCondTerminate = ConditionCreate(TRUE);
-   ConditionWait(m_hCondTerminate, INFINITE);
-   ConditionDestroy(m_hCondTerminate);
-   sleep(1);
-   return 0;
 }
 
 #endif

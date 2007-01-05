@@ -385,6 +385,8 @@ public:
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+	BOOL IsSyncAddr(DWORD dwAddr);
 };
 
 
@@ -560,6 +562,7 @@ protected:
    BOOL CheckSNMPIntegerValue(char *pszOID, int nValue);
    void CheckOSPFSupport(void);
    void SetAgentProxy(AgentConnection *pConn);
+	Cluster *GetMyCluster(void);
 
    DWORD GetInterfaceCount(Interface **ppInterface);
 

@@ -98,7 +98,7 @@ BEGIN_MESSAGE_MAP(CAlarmView, CWnd)
 	ON_COMMAND(ID_ALARM_SORTBY_SOURCE, OnAlarmSortbySource)
 	ON_COMMAND(ID_ALARM_SORTBY_MESSAGETEXT, OnAlarmSortbyMessagetext)
 	ON_COMMAND(ID_ALARM_SORTBY_TIMESTAMP, OnAlarmSortbyTimestamp)
-	ON_COMMAND(ID_ALARM_ACKNOWLEGE, OnAlarmAcknowlege)
+	ON_COMMAND(ID_ALARM_ACKNOWLEDGE, OnAlarmAcknowledge)
 	ON_COMMAND(ID_ALARM_DELETE, OnAlarmDelete)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
@@ -314,7 +314,7 @@ void CAlarmView::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
             m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
          }
          break;
-      case NX_NOTIFY_ALARM_ACKNOWLEGED:
+      case NX_NOTIFY_ALARM_ACKNOWLEDGED:
          if ((iItem != -1) && (!m_bShowAllAlarms))
          {
             DeleteAlarmFromList(pAlarm->dwAlarmId);
@@ -360,7 +360,7 @@ void CAlarmView::OnContextMenu(CWnd* pWnd, CPoint point)
 
    // Disable or check some menu items
    iNumItems = m_wndListCtrl.GetSelectedCount();
-   pMenu->EnableMenuItem(ID_ALARM_ACKNOWLEGE, MF_BYCOMMAND | (iNumItems > 0) ? MF_ENABLED : MF_GRAYED);
+   pMenu->EnableMenuItem(ID_ALARM_ACKNOWLEDGE, MF_BYCOMMAND | (iNumItems > 0) ? MF_ENABLED : MF_GRAYED);
    pMenu->EnableMenuItem(ID_ALARM_DELETE, MF_BYCOMMAND | (iNumItems > 0) ? MF_ENABLED : MF_GRAYED);
    pMenu->CheckMenuRadioItem(ID_ALARM_SORTBY_SEVERITY, ID_ALARM_SORTBY_TIMESTAMP,
                              m_iSortMode + ID_ALARM_SORTBY_SEVERITY, MF_BYCOMMAND);
@@ -475,24 +475,24 @@ void CAlarmView::OnAlarmSortbyTimestamp()
 
 
 //
-// Alarm acknowlegement worker function
+// Alarm acknowledgement worker function
 //
 
-static DWORD AcknowlegeAlarms(DWORD dwNumAlarms, DWORD *pdwAlarmList)
+static DWORD AcknowledgeAlarms(DWORD dwNumAlarms, DWORD *pdwAlarmList)
 {
    DWORD i, dwResult = RCC_SUCCESS;
 
    for(i = 0; (i < dwNumAlarms) && (dwResult == RCC_SUCCESS); i++)
-      dwResult = NXCAcknowlegeAlarm(g_hSession, pdwAlarmList[i]);
+      dwResult = NXCAcknowledgeAlarm(g_hSession, pdwAlarmList[i]);
    return dwResult;
 }
 
 
 //
-// WM_COMMAND::ID_ALARM_ACKNOWLEGE message handler
+// WM_COMMAND::ID_ALARM_ACKNOWLEDGE message handler
 //
 
-void CAlarmView::OnAlarmAcknowlege() 
+void CAlarmView::OnAlarmAcknowledge() 
 {
    int iItem;
    DWORD i, dwNumAlarms, *pdwAlarmList, dwResult;
@@ -507,10 +507,10 @@ void CAlarmView::OnAlarmAcknowlege()
       iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
    }
 
-   dwResult = DoRequestArg2(AcknowlegeAlarms, (void *)dwNumAlarms, pdwAlarmList,
-                            _T("Acknowleging alarms..."));
+   dwResult = DoRequestArg2(AcknowledgeAlarms, (void *)dwNumAlarms, pdwAlarmList,
+                            _T("Acknowledging alarms..."));
    if (dwResult != RCC_SUCCESS)
-      theApp.ErrorBox(dwResult, _T("Cannot acknowlege alarm: %s"));
+      theApp.ErrorBox(dwResult, _T("Cannot acknowledge alarm: %s"));
    free(pdwAlarmList);
 }
 
@@ -551,6 +551,6 @@ void CAlarmView::OnAlarmDelete()
    dwResult = DoRequestArg2(DeleteAlarms, (void *)dwNumAlarms, pdwAlarmList,
                             _T("Deleting alarms..."));
    if (dwResult != RCC_SUCCESS)
-      theApp.ErrorBox(dwResult, _T("Cannot acknowlege alarm: %s"));
+      theApp.ErrorBox(dwResult, _T("Cannot acknowledge alarm: %s"));
    free(pdwAlarmList);
 }

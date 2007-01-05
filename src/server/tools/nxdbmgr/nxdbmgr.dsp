@@ -177,6 +177,10 @@ SOURCE=.\nxdbmgr.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\reindex.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\unlock.cpp
 # End Source File
 # Begin Source File

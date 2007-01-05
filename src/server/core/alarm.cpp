@@ -87,7 +87,7 @@ BOOL AlarmManager::Init(void)
    DB_RESULT hResult;
    DWORD i;
 
-   // Load unacknowleged alarms into memory
+   // Load unacknowledged alarms into memory
    hResult = DBSelect(g_hCoreDB, "SELECT alarm_id,source_object_id,"
                                  "source_event_code,source_event_id,message,"
                                  "original_severity,current_severity,"
@@ -238,7 +238,7 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, int nState,
 
 
 //
-// Acknowlege alarm with given ID
+// Acknowledge alarm with given ID
 //
 
 DWORD AlarmManager::AckById(DWORD dwAlarmId, DWORD dwUserId)
@@ -251,7 +251,7 @@ DWORD AlarmManager::AckById(DWORD dwAlarmId, DWORD dwUserId)
       {
          if (m_pAlarmList[i].nState == ALARM_STATE_OUTSTANDING)
          {
-            m_pAlarmList[i].nState = ALARM_STATE_ACKNOWLEGED;
+            m_pAlarmList[i].nState = ALARM_STATE_ACKNOWLEDGED;
             m_pAlarmList[i].dwAckByUser = dwUserId;
             m_pAlarmList[i].dwLastChangeTime = (DWORD)time(NULL);
             dwObject = m_pAlarmList[i].dwSourceObject;
@@ -452,12 +452,12 @@ void AlarmManager::SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSess
 
    if (bIncludeAck)
    {
-      // Request for all alarms including acknowleged,
+      // Request for all alarms including acknowledged,
       // so we have to load them from database
    }
    else
    {
-      // Unacknowleged alarms can be sent directly from memory
+      // Unacknowledged alarms can be sent directly from memory
       Lock();
 
       for(i = 0; i < m_dwNumAlarms; i++)
@@ -549,7 +549,7 @@ int AlarmManager::GetMostCriticalStatusForObject(DWORD dwObjectId)
 
 
 //
-// Update object status after alarm acknowlegement or deletion
+// Update object status after alarm acknowledgement or deletion
 //
 
 void AlarmManager::UpdateObjectStatus(DWORD dwObjectId)

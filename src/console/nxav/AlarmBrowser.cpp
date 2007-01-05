@@ -110,7 +110,7 @@ void CAlarmBrowser::OnBeforeNavigate2(LPCTSTR lpszURL, DWORD nFlags, LPCTSTR lps
       dwId = _tcstoul(&lpszURL[7], NULL, 10);
       switch(lpszURL[5])
       {
-         case 'A':   // Acknowlege
+         case 'A':   // Acknowledge
             AcknowledgeAlarm(dwId);
             break;
          case 'T':   // Terminate
@@ -127,17 +127,17 @@ void CAlarmBrowser::OnBeforeNavigate2(LPCTSTR lpszURL, DWORD nFlags, LPCTSTR lps
 
 
 //
-// Acknowlege alarm by ID
+// Acknowledge alarm by ID
 //
 
 BOOL CAlarmBrowser::AcknowledgeAlarm(DWORD dwAlarmId)
 {
    DWORD dwResult;
 
-   dwResult = DoRequestArg2(NXCAcknowlegeAlarm, g_hSession,
-                            (void *)dwAlarmId, _T("Acknowleging alarm..."));
+   dwResult = DoRequestArg2(NXCAcknowledgeAlarm, g_hSession,
+                            (void *)dwAlarmId, _T("Acknowledging alarm..."));
    if (dwResult != RCC_SUCCESS)
-      appAlarmViewer.ErrorBox(dwResult, _T("Cannot acknowlege alarm: %s"));
+      appAlarmViewer.ErrorBox(dwResult, _T("Cannot acknowledge alarm: %s"));
    return (dwResult == RCC_SUCCESS);
 }
 

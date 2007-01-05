@@ -121,8 +121,8 @@ BEGIN_MESSAGE_MAP(CAlarmBrowser, CMDIChildWnd)
 	ON_WM_SIZE()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	ON_WM_CONTEXTMENU()
-	ON_COMMAND(ID_ALARM_ACKNOWLEGE, OnAlarmAcknowlege)
-	ON_UPDATE_COMMAND_UI(ID_ALARM_ACKNOWLEGE, OnUpdateAlarmAcknowlege)
+	ON_COMMAND(ID_ALARM_ACKNOWLEDGE, OnAlarmAcknowledge)
+	ON_UPDATE_COMMAND_UI(ID_ALARM_ACKNOWLEDGE, OnUpdateAlarmAcknowledge)
 	ON_WM_CLOSE()
 	ON_COMMAND(ID_ALARM_SHOWNODES, OnAlarmShownodes)
 	ON_UPDATE_COMMAND_UI(ID_ALARM_SHOWNODES, OnUpdateAlarmShownodes)
@@ -557,16 +557,16 @@ void CAlarmBrowser::OnContextMenu(CWnd *pWnd, CPoint point)
 
 
 //
-// Alarm acknowlegement worker function
+// Alarm acknowledgement worker function
 //
 
-static DWORD AcknowlegeAlarms(DWORD dwNumAlarms, DWORD *pdwAlarmList)
+static DWORD AcknowledgeAlarms(DWORD dwNumAlarms, DWORD *pdwAlarmList)
 {
    DWORD i, dwResult = RCC_SUCCESS;
 
    for(i = 0; (i < dwNumAlarms) && (dwResult == RCC_SUCCESS); i++)
    {
-      dwResult = NXCAcknowlegeAlarm(g_hSession, pdwAlarmList[i]);
+      dwResult = NXCAcknowledgeAlarm(g_hSession, pdwAlarmList[i]);
       if (dwResult == RCC_ALARM_NOT_OUTSTANDING)
          dwResult = RCC_SUCCESS;
    }
@@ -575,10 +575,10 @@ static DWORD AcknowlegeAlarms(DWORD dwNumAlarms, DWORD *pdwAlarmList)
 
 
 //
-// WM_COMMAND::ID_ALARM_ACKNOWLEGE message handler
+// WM_COMMAND::ID_ALARM_ACKNOWLEDGE message handler
 //
 
-void CAlarmBrowser::OnAlarmAcknowlege() 
+void CAlarmBrowser::OnAlarmAcknowledge() 
 {
    int iItem;
    DWORD i, dwNumAlarms, *pdwAlarmList, dwResult;
@@ -593,14 +593,14 @@ void CAlarmBrowser::OnAlarmAcknowlege()
       iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
    }
 
-   dwResult = DoRequestArg2(AcknowlegeAlarms, (void *)dwNumAlarms, pdwAlarmList,
-                            _T("Acknowleging alarm..."));
+   dwResult = DoRequestArg2(AcknowledgeAlarms, (void *)dwNumAlarms, pdwAlarmList,
+                            _T("Acknowledging alarm..."));
    if (dwResult != RCC_SUCCESS)
-      theApp.ErrorBox(dwResult, _T("Cannot acknowlege alarm: %s"));
+      theApp.ErrorBox(dwResult, _T("Cannot acknowledge alarm: %s"));
    free(pdwAlarmList);
 }
 
-void CAlarmBrowser::OnUpdateAlarmAcknowlege(CCmdUI* pCmdUI) 
+void CAlarmBrowser::OnUpdateAlarmAcknowledge(CCmdUI* pCmdUI) 
 {
    pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
 }

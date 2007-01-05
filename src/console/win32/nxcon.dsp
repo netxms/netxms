@@ -216,6 +216,10 @@ SOURCE=.\AlarmView.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ClusterPropsGeneral.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ColorSelector.cpp
 # End Source File
 # Begin Source File
@@ -249,6 +253,10 @@ SOURCE=.\ConsoleUpgradeDlg.cpp
 # Begin Source File
 
 SOURCE=.\ControlPanel.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\CreateClusterDlg.cpp
 # End Source File
 # Begin Source File
 
@@ -773,6 +781,10 @@ SOURCE=.\AlarmView.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ClusterPropsGeneral.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\ColorSelector.h
 # End Source File
 # Begin Source File
@@ -802,6 +814,10 @@ SOURCE=.\ConsoleUpgradeDlg.h
 # Begin Source File
 
 SOURCE=.\ControlPanel.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\CreateClusterDlg.h
 # End Source File
 # Begin Source File
 

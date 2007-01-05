@@ -58,8 +58,8 @@ protected:
 	afx_msg void OnViewRefresh();
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
-	afx_msg void OnAlarmAcknowlege();
-	afx_msg void OnUpdateAlarmAcknowlege(CCmdUI* pCmdUI);
+	afx_msg void OnAlarmAcknowledge();
+	afx_msg void OnUpdateAlarmAcknowledge(CCmdUI* pCmdUI);
 	afx_msg void OnAlarmDelete();
 	afx_msg void OnUpdateAlarmDelete(CCmdUI* pCmdUI);
 	afx_msg void OnAlarmDetails();

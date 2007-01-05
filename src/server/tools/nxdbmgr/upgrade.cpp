@@ -78,6 +78,65 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V54 to V55
+//
+
+static BOOL H_UpgradeFromV54(void)
+{
+   static TCHAR m_szBatch[] =
+		_T("ALTER TABLE containers DROP COLUMN description\n")
+		_T("ALTER TABLE nodes DROP COLUMN description\n")
+		_T("ALTER TABLE templates DROP COLUMN description\n")
+		_T("ALTER TABLE zones DROP COLUMN description\n")
+		_T("INSERT INTO images (image_id,name,file_name_png,file_hash_png,")
+			_T("file_name_ico,file_hash_ico) VALUES (16,'Obj.Cluster',")
+			_T("'cluster.png','<invalid_hash>','cluster.ico','<invalid_hash>')\n")
+		_T("INSERT INTO default_images (object_class,image_id) VALUES (14,16)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) ")
+			_T("VALUES (12,'.1.3.6.1.4.1.45.3.46.*',3,0)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) ")
+			_T("VALUES (13,'.1.3.6.1.4.1.45.3.52.*',3,0)\n")
+      _T("<END>");
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateTable(_T("CREATE TABLE clusters (")
+	                 _T("id integer not null,")
+	                 _T("cluster_type integer not null,")
+	                 _T("PRIMARY KEY(id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!CreateTable(_T("CREATE TABLE cluster_members (")
+	                 _T("cluster_id integer not null,")
+	                 _T("node_id integer not null,")
+	                 _T("PRIMARY KEY(cluster_id,node_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!CreateTable(_T("CREATE TABLE cluster_sync_subnets (")
+	                 _T("cluster_id integer not null,")
+	                 _T("subnet_addr varchar(15) not null,")
+	                 _T("subnet_mask varchar(15) not null,")
+	                 _T("PRIMARY KEY(cluster_id,subnet_addr))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("WindowsConsoleUpgradeURL"), _T("http://www.netxms.org/download/netxms-%version%.exe"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='55' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V53 to V54
 //
 
@@ -2409,6 +2468,7 @@ static struct
    { 51, H_UpgradeFromV51 },
    { 52, H_UpgradeFromV52 },
    { 53, H_UpgradeFromV53 },
+   { 54, H_UpgradeFromV54 },
    { 0, NULL }
 };
 

@@ -214,6 +214,8 @@
 #define IDD_SELECT_MP                   344
 #define IDD_SELECT_TRAP                 345
 #define IDD_UPGRADE                     346
+#define IDD_CREATE_CLUSTER              347
+#define IDD_OBJECT_CLUSTER_GENERAL      348
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -256,6 +258,7 @@
 #define IDC_LIST_NODES                  1024
 #define IDC_LIST_TARGETS                1024
 #define IDC_LIST_SUBNETS                1024
+#define IDC_LIST_NETWORKS               1024
 #define IDC_INFO_TEXT                   1025
 #define IDC_LIST_CHILDS                 1025
 #define IDC_LIST_REMOTE                 1025
@@ -687,7 +690,7 @@
 #define ID_OBJECT_CREATE_NODE           32860
 #define ID_OBJECT_CREATE_CONTAINER      32861
 #define ID_VIEW_ALARMS                  32864
-#define ID_ALARM_ACKNOWLEGE             32865
+#define ID_ALARM_ACKNOWLEDGE            32865
 #define ID_ALARM_DELETE                 32866
 #define ID_ALARM_GOTOSOURCE             32867
 #define ID_CONTROLPANEL_ACTIONS         32871
@@ -825,6 +828,7 @@
 #define ID_TOOLS_CREATEMP               33047
 #define ID_TOOLS_IMPORTMP               33048
 #define ID_GRAPH_COPYTOCLIPBOARD        33049
+#define ID_OBJECT_CREATE_CLUSTER        33050
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -834,9 +838,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        347
-#define _APS_NEXT_COMMAND_VALUE         33050
-#define _APS_NEXT_CONTROL_VALUE         1432
+#define _APS_NEXT_RESOURCE_VALUE        349
+#define _APS_NEXT_COMMAND_VALUE         33051
+#define _APS_NEXT_CONTROL_VALUE         1434
 #define _APS_NEXT_SYMED_VALUE           129
 #endif
 #endif

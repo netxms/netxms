@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.250 2007-01-04 16:35:26 victor Exp $ */
+/* $Id: nxclapi.h,v 1.251 2007-01-05 16:04:00 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -169,7 +169,7 @@ typedef void * NXC_SESSION;
 //
 
 #define ALARM_STATE_OUTSTANDING  0
-#define ALARM_STATE_ACKNOWLEGED  1
+#define ALARM_STATE_ACKNOWLEDGED 1
 #define ALARM_STATE_TERMINATED   2
 
 
@@ -406,7 +406,7 @@ enum
 #define OBJ_UPDATE_SNMP_COMMUNITY   ((DWORD)0x00000020)
 #define OBJ_UPDATE_ACL              ((DWORD)0x00000040)
 #define OBJ_UPDATE_IMAGE            ((DWORD)0x00000080)
-//#define OBJ_UPDATE_DESCRIPTION      ((DWORD)0x00000100)
+#define OBJ_UPDATE_SYNC_NETS        ((DWORD)0x00000100)
 #define OBJ_UPDATE_SERVICE_TYPE     ((DWORD)0x00000200)
 #define OBJ_UPDATE_IP_PROTO         ((DWORD)0x00000400)
 #define OBJ_UPDATE_IP_PORT          ((DWORD)0x00000800)
@@ -426,6 +426,7 @@ enum
 #define OBJ_UPDATE_INACTIVE_STATUS  ((DWORD)0x02000000)
 #define OBJ_UPDATE_DCI_LIST         ((DWORD)0x04000000)
 #define OBJ_UPDATE_SCRIPT           ((DWORD)0x08000000)
+#define OBJ_UPDATE_CLUSTER_TYPE		((DWORD)0x10000000)
 
 
 //
@@ -615,6 +616,13 @@ enum
 
 
 //
+// Cluster types
+//
+
+#define CLUSTER_TYPE_GENERIC			0
+
+
+//
 // IP network
 //
 
@@ -669,7 +677,7 @@ typedef struct
    BYTE nOriginalSeverity; // Alarm's original severity
    BYTE nState;            // Current state
    BYTE nHelpDeskState;    // State of alarm in helpdesk system
-   DWORD dwAckByUser;      // Id of user who was acknowleged this alarm (0 for system)
+   DWORD dwAckByUser;      // Id of user who was acknowledged this alarm (0 for system)
    DWORD dwTermByUser;     // ID of user who was terminated this alarm (0 for system)
    DWORD dwRepeatCount;
    TCHAR szMessage[MAX_DB_STRING];
@@ -932,6 +940,13 @@ struct __nxc_object_cond
    INPUT_DCI *pDCIList;
 };
 
+struct __nxc_object_cluster
+{
+	DWORD dwClusterType;
+	DWORD dwNumSyncNets;
+	IP_NETWORK *pSyncNetList;
+};
+
 typedef struct
 {
    DWORD dwId;          // Unique object's identifier
@@ -967,6 +982,7 @@ typedef struct
       struct __nxc_object_zone zone;
       struct __nxc_object_vpnc vpnc;  // VPN connector
       struct __nxc_object_cond cond;  // Condition
+		struct __nxc_object_cluster cluster;
    };
 } NXC_OBJECT;
 
@@ -1018,6 +1034,9 @@ typedef struct
    DWORD dwNumDCI;
    INPUT_DCI *pDCIList;
    TCHAR *pszScript;
+	DWORD dwClusterType;
+	DWORD dwNumSyncNets;
+	IP_NETWORK *pSyncNetList;
 } NXC_OBJECT_UPDATE;
 
 
@@ -1714,7 +1733,7 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(NXC_SESSION hSession, DWORD *pd
                                                  DWORD **ppdwClassId, DWORD **ppdwImageId);
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, BOOL bIncludeAck, DWORD *pdwNumAlarms, NXC_ALARM **ppAlarmList);
-DWORD LIBNXCL_EXPORTABLE NXCAcknowlegeAlarm(NXC_SESSION hSession, DWORD dwAlarmId);
+DWORD LIBNXCL_EXPORTABLE NXCAcknowledgeAlarm(NXC_SESSION hSession, DWORD dwAlarmId);
 DWORD LIBNXCL_EXPORTABLE NXCTerminateAlarm(NXC_SESSION hSession, DWORD dwAlarmId);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteAlarm(NXC_SESSION hSession, DWORD dwAlarmId);
 

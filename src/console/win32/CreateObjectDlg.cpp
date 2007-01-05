@@ -76,6 +76,9 @@ void CCreateObjectDlg::OnSelectParent()
       case OBJECT_VPNCONNECTOR:
          dlg.m_dwAllowedClasses = SCL_NODE;
          break;
+		case OBJECT_NODE:
+         dlg.m_dwAllowedClasses = SCL_CONTAINER | SCL_SERVICEROOT | SCL_CLUSTER;
+			break;
       default:
          dlg.m_dwAllowedClasses = SCL_CONTAINER | SCL_SERVICEROOT;
          break;

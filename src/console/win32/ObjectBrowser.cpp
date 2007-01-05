@@ -97,6 +97,7 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_UNBIND, OnUpdateObjectUnbind)
 	ON_COMMAND(ID_OBJECT_UNMANAGE, OnObjectUnmanage)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_UNMANAGE, OnUpdateObjectUnmanage)
+	ON_COMMAND(ID_OBJECT_CREATE_CLUSTER, OnObjectCreateCluster)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, AFX_IDW_PANE_FIRST, OnTreeViewSelChange)
    ON_NOTIFY(TVN_GETDISPINFO, AFX_IDW_PANE_FIRST, OnTreeViewGetDispInfo)
@@ -964,6 +965,16 @@ void CObjectBrowser::OnObjectCreateContainer()
 void CObjectBrowser::OnObjectCreateNode() 
 {
    theApp.CreateNode((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
+}
+
+
+//
+// Handler for "Create->Cluster" menu
+//
+
+void CObjectBrowser::OnObjectCreateCluster() 
+{
+   theApp.CreateCluster((m_pCurrentObject != NULL) ? m_pCurrentObject->dwId : 0);
 }
 
 

@@ -99,8 +99,8 @@ BEGIN_MESSAGE_MAP(CAlarmView, CWnd)
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	ON_WM_CONTEXTMENU()
 	ON_WM_SETFOCUS()
-	ON_COMMAND(ID_ALARM_ACKNOWLEGE, OnAlarmAcknowlege)
-	ON_UPDATE_COMMAND_UI(ID_ALARM_ACKNOWLEGE, OnUpdateAlarmAcknowlege)
+	ON_COMMAND(ID_ALARM_ACKNOWLEDGE, OnAlarmAcknowledge)
+	ON_UPDATE_COMMAND_UI(ID_ALARM_ACKNOWLEDGE, OnUpdateAlarmAcknowledge)
 	ON_COMMAND(ID_ALARM_DELETE, OnAlarmDelete)
 	ON_UPDATE_COMMAND_UI(ID_ALARM_DELETE, OnUpdateAlarmDelete)
 	ON_COMMAND(ID_ALARM_DETAILS, OnAlarmDetails)
@@ -457,16 +457,16 @@ void CAlarmView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
 
 
 //
-// Alarm acknowlegement worker function
+// Alarm acknowledgement worker function
 //
 
-static DWORD AcknowlegeAlarms(DWORD dwNumAlarms, DWORD *pdwAlarmList)
+static DWORD AcknowledgeAlarms(DWORD dwNumAlarms, DWORD *pdwAlarmList)
 {
    DWORD i, dwResult = RCC_SUCCESS;
 
    for(i = 0; (i < dwNumAlarms) && (dwResult == RCC_SUCCESS); i++)
    {
-      dwResult = NXCAcknowlegeAlarm(g_hSession, pdwAlarmList[i]);
+      dwResult = NXCAcknowledgeAlarm(g_hSession, pdwAlarmList[i]);
       if (dwResult == RCC_ALARM_NOT_OUTSTANDING)
          dwResult = RCC_SUCCESS;
    }
@@ -475,10 +475,10 @@ static DWORD AcknowlegeAlarms(DWORD dwNumAlarms, DWORD *pdwAlarmList)
 
 
 //
-// Handler for "Acknowlege" menu
+// Handler for "Acknowledge" menu
 //
 
-void CAlarmView::OnAlarmAcknowlege() 
+void CAlarmView::OnAlarmAcknowledge() 
 {
    int iItem;
    DWORD i, dwNumAlarms, *pdwAlarmList, dwResult;
@@ -493,14 +493,14 @@ void CAlarmView::OnAlarmAcknowlege()
       iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
    }
 
-   dwResult = DoRequestArg2(AcknowlegeAlarms, (void *)dwNumAlarms, pdwAlarmList,
-                            _T("Acknowleging alarm..."));
+   dwResult = DoRequestArg2(AcknowledgeAlarms, (void *)dwNumAlarms, pdwAlarmList,
+                            _T("Acknowledging alarm..."));
    if (dwResult != RCC_SUCCESS)
-      theApp.ErrorBox(dwResult, _T("Cannot acknowlege alarm: %s"));
+      theApp.ErrorBox(dwResult, _T("Cannot acknowledge alarm: %s"));
    free(pdwAlarmList);
 }
 
-void CAlarmView::OnUpdateAlarmAcknowlege(CCmdUI* pCmdUI) 
+void CAlarmView::OnUpdateAlarmAcknowledge(CCmdUI* pCmdUI) 
 {
    pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
 }

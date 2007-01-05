@@ -1,6 +1,6 @@
 /*
 ** NetXMS ODBCQUERY subagent
-** Copyright (C) 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: odbcparm.h
+** File: odbcparm.h
 **
 **/
 
@@ -27,12 +27,14 @@
 #include <nms_util.h>
 #include <nms_agent.h>
 
+
 //
 // Constants
 //
 
 #define MAX_POLLS_PER_MINUTE     60
-#define MAX_SQL_QUERY_LEN			(4096*sizeof(TCHAR))
+#define MAX_SQL_QUERY_LEN			4096
+
 
 //
 // Target information structure
@@ -45,9 +47,11 @@ struct ODBC_QUERY
 	TCHAR szSqlQuery[MAX_SQL_QUERY_LEN];
    DWORD dwPollInterval;
 	TCHAR	szQueryResult[MAX_DB_STRING];
+	DWORD dwCompletionCode;
    THREAD hThread;
 	void*	pSqlCtx;
 };
+
 
 //
 // ODBC functions

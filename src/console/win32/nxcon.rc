@@ -230,6 +230,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&Create..."
         BEGIN
+            MENUITEM "C&luster...",                 ID_OBJECT_CREATE_CLUSTER
             MENUITEM "C&ondition...",               ID_OBJECT_CREATE_CONDITION
 
             MENUITEM "&Container...",               ID_OBJECT_CREATE_CONTAINER
@@ -326,7 +327,7 @@ BEGIN
     END
     POPUP "&Alarm"
     BEGIN
-        MENUITEM "&Acknowlege\tCtrl+A",         ID_ALARM_ACKNOWLEGE
+        MENUITEM "&Acknowledge\tCtrl+A",        ID_ALARM_ACKNOWLEDGE
         MENUITEM "&Terminate\tCtrl+T",          ID_ALARM_TERMINATE
         MENUITEM "&Delete\tDel",                ID_ALARM_DELETE
         MENUITEM SEPARATOR
@@ -371,6 +372,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&Create..."
         BEGIN
+            MENUITEM "C&luster...",                 ID_OBJECT_CREATE_CLUSTER
             MENUITEM "C&ondition...",               ID_OBJECT_CREATE_CONDITION
 
             MENUITEM "&Container...",               ID_OBJECT_CREATE_CONTAINER
@@ -594,6 +596,7 @@ BEGIN
     BEGIN
         POPUP "&Create"
         BEGIN
+            MENUITEM "C&luster...",                 ID_OBJECT_CREATE_CLUSTER
             MENUITEM "C&ondition...",               ID_OBJECT_CREATE_CONDITION
 
             MENUITEM "&Container...",               ID_OBJECT_CREATE_CONTAINER
@@ -713,7 +716,7 @@ BEGIN
     END
     POPUP "Alarm"
     BEGIN
-        MENUITEM "&Acknowlege",                 ID_ALARM_ACKNOWLEGE
+        MENUITEM "&Acknowledge",                ID_ALARM_ACKNOWLEDGE
         MENUITEM "&Terminate",                  ID_ALARM_TERMINATE
         MENUITEM "&Delete",                     ID_ALARM_DELETE
         MENUITEM SEPARATOR
@@ -743,6 +746,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&Create"
         BEGIN
+            MENUITEM "C&luster...",                 ID_OBJECT_CREATE_CLUSTER
             MENUITEM "C&ondition...",               ID_OBJECT_CREATE_CONDITION
 
             MENUITEM "&Container...",               ID_OBJECT_CREATE_CONTAINER
@@ -1001,7 +1005,7 @@ END
 
 IDA_ALARM_BROWSER ACCELERATORS DISCARDABLE 
 BEGIN
-    "A",            ID_ALARM_ACKNOWLEGE,    VIRTKEY, CONTROL, NOINVERT
+    "A",            ID_ALARM_ACKNOWLEDGE,   VIRTKEY, CONTROL, NOINVERT
     "N",            ID_ALARM_SHOWNODES,     VIRTKEY, ALT, NOINVERT
     "S",            ID_ALARM_SOUNDCONFIGURATION, VIRTKEY, ALT, NOINVERT
     VK_DELETE,      ID_ALARM_DELETE,        VIRTKEY, NOINVERT
@@ -2862,6 +2866,41 @@ BEGIN
     EDITTEXT        IDC_EDIT_URL,7,37,319,14,ES_AUTOHSCROLL | ES_READONLY
 END
 
+IDD_CREATE_CLUSTER DIALOG DISCARDABLE  0, 0, 229, 100
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create Cluster"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_NAME,13,27,146,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Select...",IDC_SELECT_PARENT,110,62,50,12
+    DEFPUSHBUTTON   "OK",IDOK,172,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,172,24,50,14
+    GROUPBOX        "New object",IDC_STATIC,7,7,158,41
+    LTEXT           "Name",IDC_STATIC,13,18,20,8
+    GROUPBOX        "Parent object",IDC_STATIC,7,51,158,42
+    ICON            "",IDC_ICON_PARENT,14,64,21,20
+    LTEXT           "ID:",IDC_STATIC_ID,43,64,54,8
+    LTEXT           "Name",IDC_STATIC_NAME,44,78,112,9
+END
+
+IDD_OBJECT_CLUSTER_GENERAL DIALOGEX 0, 0, 292, 194
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_NAME,13,26,211,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_ID,233,26,45,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Object ID",IDC_STATIC,233,16,31,8
+    LTEXT           "Name",IDC_STATIC,13,16,20,8
+    GROUPBOX        "General",IDC_STATIC,7,7,278,39
+    GROUPBOX        "Cluster Interconnect Networks",IDC_STATIC,7,50,278,137
+    CONTROL         "List1",IDC_LIST_NETWORKS,"SysListView32",LVS_REPORT | 
+                    LVS_NOSORTHEADER | WS_TABSTOP,13,63,207,117,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,228,63,50,14
+    PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,228,82,50,14
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -3536,6 +3575,22 @@ BEGIN
         RIGHTMARGIN, 326
         TOPMARGIN, 7
         BOTTOMMARGIN, 77
+    END
+
+    IDD_CREATE_CLUSTER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 222
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 93
+    END
+
+    IDD_OBJECT_CLUSTER_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 285
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 187
     END
 END
 #endif    // APSTUDIO_INVOKED

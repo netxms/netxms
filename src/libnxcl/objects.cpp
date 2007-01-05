@@ -48,6 +48,9 @@ void DestroyObject(NXC_OBJECT *pObject)
          safe_free(pObject->cond.pszScript);
          safe_free(pObject->cond.pDCIList);
          break;
+      case OBJECT_CLUSTER:
+         safe_free(pObject->cluster.pSyncNetList);
+         break;
    }
    safe_free(pObject->pdwChildList);
    safe_free(pObject->pdwParentList);
@@ -146,6 +149,9 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
       case OBJECT_CONDITION:
          safe_free(pObject->cond.pszScript);
          safe_free(pObject->cond.pDCIList);
+         break;
+      case OBJECT_CLUSTER:
+         safe_free(pObject->cluster.pSyncNetList);
          break;
    }
    safe_free(pObject->pdwChildList);
@@ -300,6 +306,12 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
             pObject->cond.pDCIList[i].nPolls = pMsg->GetVariableShort(dwId1++);
             dwId1 += 6;
          }
+         break;
+      case OBJECT_CLUSTER:
+         pObject->cluster.dwClusterType = pMsg->GetVariableLong(VID_CLUSTER_TYPE);
+         pObject->cluster.dwNumSyncNets = pMsg->GetVariableLong(VID_NUM_SYNC_SUBNETS);
+         pObject->cluster.pSyncNetList = (IP_NETWORK *)malloc(sizeof(IP_NETWORK) * pObject->cluster.dwNumSyncNets);
+			pMsg->GetVariableInt32Array(VID_SYNC_SUBNETS, pObject->cluster.dwNumSyncNets * 2, (DWORD *)pObject->cluster.pSyncNetList);
          break;
       default:
          break;
@@ -655,6 +667,8 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_INACTIVE_STATUS, (WORD)pUpdate->nInactiveStatus);
    if (pUpdate->dwFlags & OBJ_UPDATE_SCRIPT)
       msg.SetVariable(VID_SCRIPT, pUpdate->pszScript);
+   if (pUpdate->dwFlags & OBJ_UPDATE_CLUSTER_TYPE)
+      msg.SetVariable(VID_CLUSTER_TYPE, pUpdate->dwClusterType);
    if (pUpdate->dwFlags & OBJ_UPDATE_STATUS_ALG)
    {
       msg.SetVariable(VID_STATUS_CALCULATION_ALG, (WORD)pUpdate->iStatusCalcAlg);
@@ -708,6 +722,11 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
          msg.SetVariable(dwId1++, (WORD)pUpdate->pDCIList[i].nPolls);
          dwId1 += 6;
       }
+   }
+   if (pUpdate->dwFlags & OBJ_UPDATE_SYNC_NETS)
+   {
+      msg.SetVariable(VID_NUM_SYNC_SUBNETS, pUpdate->dwNumSyncNets);
+		msg.SetVariableToInt32Array(VID_SYNC_SUBNETS, pUpdate->dwNumSyncNets * 2, (DWORD *)pUpdate->pSyncNetList);
    }
 
    // Send request

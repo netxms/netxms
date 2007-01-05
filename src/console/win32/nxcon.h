@@ -270,6 +270,7 @@ private:
    OBJECT_VIEW m_openObjectViews[MAX_OBJECT_VIEWS];
 
 public:
+	void CreateCluster(DWORD dwParent);
 	HGLOBAL GetProfileGMem(TCHAR *pszSection, TCHAR *pszKey);
 	void WriteProfileGMem(TCHAR *pszSection, TCHAR *pszKey, HGLOBAL hMem);
 	DWORD OpenAlarmList(NXC_ALARM **ppList);

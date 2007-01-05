@@ -131,14 +131,14 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,25,129,63,10
     CONTROL         "Include &message",IDC_CHECK_MESSAGE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,25,143,69,10
-    CONTROL         "Play notification when alarm being acknowleged",
+    CONTROL         "Play notification when alarm being acknowledged",
                     IDC_CHECK_ACK,"Button",BS_AUTOCHECKBOX | BS_TOP | 
                     BS_MULTILINE | WS_TABSTOP,25,156,161,17
     DEFPUSHBUTTON   "OK",IDOK,80,194,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,136,194,50,14
     LTEXT           "When new alarm arrives:",IDC_STATIC_NEW_ALARM,25,36,79,
                     8
-    LTEXT           "When alarm being acknowleged:",IDC_STATIC_ALARM_ACK,25,
+    LTEXT           "When alarm being acknowledged:",IDC_STATIC_ALARM_ACK,25,
                     68,105,8
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,56,26,130,1
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,92,105,94,1

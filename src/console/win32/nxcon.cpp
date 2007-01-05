@@ -14,6 +14,7 @@
 #include "CreateTGDlg.h"
 #include "CreateNetSrvDlg.h"
 #include "CreateVPNConnDlg.h"
+#include "CreateClusterDlg.h"
 #include "EventBrowser.h"
 #include "EventEditor.h"
 #include "EventPolicyEditor.h"
@@ -47,6 +48,7 @@
 #include "ObjectPropsSecurity.h"
 #include "ObjectPropsPresentation.h"
 #include "ObjectPropCaps.h"
+#include "ClusterPropsGeneral.h"
 #include "DCIDataView.h"
 #include "LPPList.h"
 #include "ObjectBrowser.h"
@@ -1225,6 +1227,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
    CCondPropsGeneral wndCondGeneral;
    CCondPropsData wndCondData;
    CCondPropsScript wndCondScript;
+	CClusterPropsGeneral wndClusterGeneral;
    NXC_OBJECT *pObject;
 
    pObject = NXCFindObjectById(g_hSession, dwObjectId);
@@ -1289,6 +1292,12 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
             wndCondScript.m_strScript = pObject->cond.pszScript;
             wndPropSheet.AddPage(&wndCondScript);
             break;
+			case OBJECT_CLUSTER:
+				wndClusterGeneral.m_pObject = pObject;
+            wndClusterGeneral.m_dwObjectId = dwObjectId;
+            wndClusterGeneral.m_strName = pObject->szName;
+            wndPropSheet.AddPage(&wndClusterGeneral);
+				break;
          default:
             wndObjectGeneral.m_dwObjectId = dwObjectId;
             wndObjectGeneral.m_strClass = g_szObjectClass[pObject->iClass];
@@ -2125,7 +2134,8 @@ void CConsoleApp::CreateNode(DWORD dwParent)
    dlg.m_pParentObject = NXCFindObjectById(g_hSession, dwParent);
    if (dlg.m_pParentObject != NULL)
       if ((dlg.m_pParentObject->iClass != OBJECT_CONTAINER) &&
-          (dlg.m_pParentObject->iClass != OBJECT_SERVICEROOT))
+          (dlg.m_pParentObject->iClass != OBJECT_SERVICEROOT) &&
+			 (dlg.m_pParentObject->iClass != OBJECT_CLUSTER))
          dlg.m_pParentObject = NULL;
    if (dlg.DoModal() == IDOK)
    {
@@ -2178,6 +2188,32 @@ void CConsoleApp::CreateNetworkService(DWORD dwParent)
       ci.cs.netsrv.wProto = (WORD)dlg.m_iProtocolNumber;
       ci.cs.netsrv.pszRequest = (TCHAR *)((LPCTSTR)dlg.m_strRequest);
       ci.cs.netsrv.pszResponse = (TCHAR *)((LPCTSTR)dlg.m_strResponse);
+      CreateObject(&ci);
+   }
+}
+
+
+//
+// Create cluster object
+//
+
+void CConsoleApp::CreateCluster(DWORD dwParent)
+{
+   NXC_OBJECT_CREATE_INFO ci;
+   CCreateClusterDlg dlg;
+
+   dlg.m_iObjectClass = OBJECT_CLUSTER;
+   dlg.m_pParentObject = NXCFindObjectById(g_hSession, dwParent);
+   if (dlg.m_pParentObject != NULL)
+      if ((dlg.m_pParentObject->iClass != OBJECT_CONTAINER) &&
+          (dlg.m_pParentObject->iClass != OBJECT_SERVICEROOT))
+         dlg.m_pParentObject = NULL;
+   if (dlg.DoModal() == IDOK)
+   {
+      ci.dwParentId = (dlg.m_pParentObject != NULL) ? dlg.m_pParentObject->dwId : 0;
+      ci.iClass = OBJECT_CLUSTER;
+      ci.pszName = (TCHAR *)((LPCTSTR)dlg.m_strObjectName);
+		ci.pszComments = NULL;
       CreateObject(&ci);
    }
 }
@@ -2522,7 +2558,7 @@ void CConsoleApp::BindObject(NXC_OBJECT *pObject)
    CObjectSelDlg dlg;
    DWORD dwResult;
 
-   dlg.m_dwAllowedClasses = SCL_NODE | SCL_CONTAINER | SCL_SUBNET | SCL_ZONE;
+   dlg.m_dwAllowedClasses = SCL_NODE | SCL_CONTAINER | SCL_SUBNET | SCL_ZONE | SCL_CLUSTER | SCL_CONDITION;
    if (dlg.DoModal() == IDOK)
    {
       dwResult = DoRequestArg5(DoObjectBinding, (void *)0, (void *)pObject->dwId,
@@ -2544,7 +2580,7 @@ void CConsoleApp::UnbindObject(NXC_OBJECT *pObject)
    DWORD dwResult, dwCmd = 1;
    BOOL bRun = TRUE, bRemoveDCI = FALSE;
 
-   dlg.m_dwAllowedClasses = SCL_NODE | SCL_CONTAINER | SCL_SUBNET | SCL_ZONE;
+   dlg.m_dwAllowedClasses = SCL_NODE | SCL_CONTAINER | SCL_SUBNET | SCL_ZONE | SCL_CLUSTER | SCL_CONDITION;
    dlg.m_dwParentObject = pObject->dwId;
    if (dlg.DoModal() == IDOK)
    {

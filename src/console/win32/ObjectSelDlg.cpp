@@ -69,11 +69,11 @@ BOOL CObjectSelDlg::OnInitDialog()
    DWORD i, dwNumObjects;
    int iItem;
    CBitmap bmp;
-   static DWORD dwClassMask[13] = { 0, SCL_SUBNET, SCL_NODE, SCL_INTERFACE,
+   static DWORD dwClassMask[15] = { 0, SCL_SUBNET, SCL_NODE, SCL_INTERFACE,
                                     SCL_NETWORK, SCL_CONTAINER, SCL_ZONE,
                                     SCL_SERVICEROOT, SCL_TEMPLATE, SCL_TEMPLATEGROUP,
                                     SCL_TEMPLATEROOT, SCL_NETWORKSERVICE,
-                                    SCL_VPNCONNECTOR };
+                                    SCL_VPNCONNECTOR, SCL_CONDITION, SCL_CLUSTER };
 
 	CDialog::OnInitDialog();
 

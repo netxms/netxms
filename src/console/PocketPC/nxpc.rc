@@ -106,7 +106,7 @@ IDM_CONTEXT MENU DISCARDABLE
 BEGIN
     POPUP "Alarm"
     BEGIN
-        MENUITEM "Acknowlege",                  ID_ALARM_ACKNOWLEGE
+        MENUITEM "Acknowledge",                 ID_ALARM_ACKNOWLEDGE
         MENUITEM "Delete",                      ID_ALARM_DELETE
         MENUITEM SEPARATOR
         POPUP "Sort by"

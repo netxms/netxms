@@ -338,6 +338,7 @@ int main(int argc, char *argv[])
                         "Valid commands are:\n"
                         "   check        : Check database for errors\n"
                         "   init <file>  : Initialize database\n"
+								"   reindex      : Reindex database\n"
                         "   unlock       : Forced database unlock\n"
                         "   upgrade      : Upgrade database to new version\n"
                         "Valid options are:\n"
@@ -391,6 +392,7 @@ int main(int argc, char *argv[])
       return 1;
    }
    if (strcmp(argv[optind], "check") && 
+       strcmp(argv[optind], "reindex") &&
        strcmp(argv[optind], "upgrade") &&
        strcmp(argv[optind], "unlock") &&
        strcmp(argv[optind], "init"))
@@ -494,6 +496,8 @@ int main(int argc, char *argv[])
          UpgradeDatabase();
       else if (!strcmp(argv[optind], "unlock"))
          UnlockDatabase();
+      else if (!strcmp(argv[optind], "reindex"))
+         ReindexDatabase();
    }
 
    // Shutdown

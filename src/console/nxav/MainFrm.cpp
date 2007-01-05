@@ -193,7 +193,7 @@ void CMainFrame::AddAlarm(NXC_ALARM *pAlarm, CString &strHTML, BOOL bColoredLine
 //                 _T("<td align=center><a href=\"nxav:S?%d\"><img src=\"file:%s/%ssound.png\" alt=\"NOSOUND\" border=0/></a> ")
 //                 _T("<a href=\"nxav:A?%d\"><img src=\"file:%s/ack.png\" alt=\"ACK\" border=0/></a></td></tr>\n"),
                  _T("<td align=left><font size=-2>")
-                 _T("<a href=\"nxav:A?%d\">Acknowlege</a><br>")
+                 _T("<a href=\"nxav:A?%d\">Acknowledge</a><br>")
                  _T("<a href=\"nxav:T?%d\">Terminate</a><br>")
                  _T("<a href=\"nxav:S?%d\">No Sound</a></td></tr>\n"),
                  bColoredLine ? _T("#EFEFEF") : _T("#FFFFFF"), 

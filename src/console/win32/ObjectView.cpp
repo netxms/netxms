@@ -186,18 +186,20 @@ void CObjectView::SetCurrentObject(NXC_OBJECT *pObject)
    }
 
    // Add tabs depending on object class
+	nTab = 1;
    if (m_pObject != NULL)
    {
       switch(m_pObject->iClass)
       {
          case OBJECT_NODE:
+			case OBJECT_CLUSTER:
          case OBJECT_SUBNET:
          case OBJECT_NETWORK:
          case OBJECT_CONTAINER:
          case OBJECT_SERVICEROOT:
-            CreateTab(1, _T("Alarms"), 1, &m_wndAlarms);
+            CreateTab(nTab++, _T("Alarms"), 1, &m_wndAlarms);
          case OBJECT_CONDITION:
-            CreateTab(2, _T("Dependants"), 2, &m_wndDepView);
+            CreateTab(nTab++, _T("Dependants"), 2, &m_wndDepView);
             break;
          default:
             break;

@@ -67,7 +67,7 @@
 #define ID_VIEW_REFRESH_ALL             32788
 #define ID_ALARM                        32789
 #define IDS_CAP_ALARM                   32791
-#define ID_ALARM_ACKNOWLEGE             32792
+#define ID_ALARM_ACKNOWLEDGE            32792
 #define ID_ALARM_DELETE                 32793
 #define ID_OBJECT                       32794
 #define IDS_CAP_OBJECT                  32796

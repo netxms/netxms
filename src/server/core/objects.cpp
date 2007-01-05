@@ -64,7 +64,8 @@ char *g_pszStatusName[] = { "Normal", "Warning", "Minor", "Major", "Critical",
 char *g_szClassName[]={ "Generic", "Subnet", "Node", "Interface",
                         "Network", "Container", "Zone", "ServiceRoot",
                         "Template", "TemplateGroup", "TemplateRoot",
-                        "NetworkService", "VPNConnector", "Condition" };
+                        "NetworkService", "VPNConnector", "Condition",
+                        "Cluster" };
 
 
 //
@@ -1089,6 +1090,10 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
       case OBJECT_NODE:
          if ((iChildClass == OBJECT_NETWORKSERVICE) ||
              (iChildClass == OBJECT_VPNCONNECTOR))
+            return TRUE;
+         break;
+      case OBJECT_CLUSTER:
+         if (iChildClass == OBJECT_NODE)
             return TRUE;
          break;
       case -1:    // Creating object without parent

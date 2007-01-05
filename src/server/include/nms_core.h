@@ -399,7 +399,7 @@ private:
    void CreateObject(CSCPMessage *pRequest);
    void ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind);
    void DeleteObject(CSCPMessage *pRequest);
-   void AcknowlegeAlarm(CSCPMessage *pRequest);
+   void AcknowledgeAlarm(CSCPMessage *pRequest);
    void TerminateAlarm(CSCPMessage *pRequest);
    void DeleteAlarm(CSCPMessage *pRequest);
    void CreateAction(CSCPMessage *pRequest);
@@ -584,7 +584,7 @@ void WatchdogPrintStatus(CONSOLE_CTX pCtx);
 
 void CheckForMgmtNode(void);
 NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
-                    TCHAR *pszName, DWORD dwProxyNode);
+                    TCHAR *pszName, DWORD dwProxyNode, Cluster *pCluster);
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 void NXCORE_EXPORTABLE NotifyClientSessions(DWORD dwCode, DWORD dwData);

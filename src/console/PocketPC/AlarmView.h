@@ -69,7 +69,7 @@ protected:
 	afx_msg void OnAlarmSortbySource();
 	afx_msg void OnAlarmSortbyMessagetext();
 	afx_msg void OnAlarmSortbyTimestamp();
-	afx_msg void OnAlarmAcknowlege();
+	afx_msg void OnAlarmAcknowledge();
 	afx_msg void OnAlarmDelete();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()

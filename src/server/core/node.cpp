@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.164 2007-01-04 16:35:38 victor Exp $ */
+/* $Id: node.cpp,v 1.165 2007-01-05 16:04:12 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -459,48 +459,55 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
 {
    Interface *pInterface;
    Subnet *pSubnet = NULL;
+	Cluster *pCluster;
+	BOOL bAddToSubnet;
 
    // Find subnet to place interface object to
    if (dwIpAddr != 0)
    {
-      pSubnet = FindSubnetForNode(dwIpAddr);
-      if (pSubnet == NULL)
-      {
-         // Check if netmask is 0 (detect), and if yes, create
-         // new subnet with class mask
-         if (dwNetMask == 0)
-         {
-            if (dwIpAddr < 0xE0000000)
-            {
-               dwNetMask = 0xFFFFFF00;   // Class A, B or C
-            }
-            else
-            {
-               TCHAR szBuffer[16];
+		pCluster = GetMyCluster();
+		bAddToSubnet = (pCluster != NULL) ? !pCluster->IsSyncAddr(dwIpAddr) : TRUE;
+		if (bAddToSubnet)
+		{
+			pSubnet = FindSubnetForNode(dwIpAddr);
+			if (pSubnet == NULL)
+			{
+				// Check if netmask is 0 (detect), and if yes, create
+				// new subnet with class mask
+				if (dwNetMask == 0)
+				{
+					if (dwIpAddr < 0xE0000000)
+					{
+						dwNetMask = 0xFFFFFF00;   // Class A, B or C
+					}
+					else
+					{
+						TCHAR szBuffer[16];
 
-               // Multicast address??
-               DbgPrintf(AF_DEBUG_DISCOVERY, 
-                         "Attempt to create interface object with multicast address %s", 
-                         IpToStr(dwIpAddr, szBuffer));
-            }
-         }
+						// Multicast address??
+						DbgPrintf(AF_DEBUG_DISCOVERY, 
+									 "Attempt to create interface object with multicast address %s", 
+									 IpToStr(dwIpAddr, szBuffer));
+					}
+				}
 
-         // Create new subnet object
-         if (dwIpAddr < 0xE0000000)
-         {
-            pSubnet = new Subnet(dwIpAddr & dwNetMask, dwNetMask, m_dwZoneGUID);
-            NetObjInsert(pSubnet, TRUE);
-            g_pEntireNet->AddSubnet(pSubnet);
-         }
-      }
-      else
-      {
-         // Set correct netmask if we was asked for it
-         if (dwNetMask == 0)
-         {
-            dwNetMask = pSubnet->IpNetMask();
-         }
-      }
+				// Create new subnet object
+				if (dwIpAddr < 0xE0000000)
+				{
+					pSubnet = new Subnet(dwIpAddr & dwNetMask, dwNetMask, m_dwZoneGUID);
+					NetObjInsert(pSubnet, TRUE);
+					g_pEntireNet->AddSubnet(pSubnet);
+				}
+			}
+			else
+			{
+				// Set correct netmask if we was asked for it
+				if (dwNetMask == 0)
+				{
+					dwNetMask = pSubnet->IpNetMask();
+				}
+			}
+		}
    }
 
    // Create interface object
@@ -2404,4 +2411,25 @@ void Node::CheckInterfaceNames(INTERFACE_LIST *pIfList)
       if (pIfList->pInterfaces[i].szName[0] == 0)
          _stprintf(pIfList->pInterfaces[i].szName, _T("%d"), pIfList->pInterfaces[i].dwIndex);
    }
+}
+
+
+//
+// Get cluster object this node elongs to, if any
+//
+
+Cluster *Node::GetMyCluster(void)
+{
+	DWORD i;
+	Cluster *pCluster = NULL;
+
+	LockParentList(FALSE);
+	for(i = 0; i < m_dwParentCount; i++)
+		if (m_pParentList[i]->Type() == OBJECT_CLUSTER)
+		{
+			pCluster = (Cluster *)m_pParentList[i];
+			break;
+		}
+	UnlockParentList();
+	return pCluster;
 }

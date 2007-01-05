@@ -456,7 +456,7 @@ void CommSession::ProcessingThread(void)
             case CMD_SETUP_PROXY_CONNECTION:
                dwRet = SetupProxyConnection(pMsg);
                // Proxy session established, incoming messages will
-               // not be processed locally. Acknowlegement message sent
+               // not be processed locally. Acknowledgement message sent
                // by SetupProxyConnection() in case of success.
                if (dwRet == ERR_SUCCESS)
                   goto stop_processing;

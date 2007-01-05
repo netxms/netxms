@@ -642,6 +642,8 @@ src/console/win32/AlarmBrowser.cpp -text
 src/console/win32/AlarmBrowser.h -text
 src/console/win32/AlarmView.cpp -text
 src/console/win32/AlarmView.h -text
+src/console/win32/ClusterPropsGeneral.cpp -text
+src/console/win32/ClusterPropsGeneral.h -text
 src/console/win32/ColorSelector.cpp -text
 src/console/win32/ColorSelector.h -text
 src/console/win32/CondDCIPropDlg.cpp -text
@@ -658,6 +660,8 @@ src/console/win32/ConsoleUpgradeDlg.cpp -text
 src/console/win32/ConsoleUpgradeDlg.h -text
 src/console/win32/ControlPanel.cpp -text
 src/console/win32/ControlPanel.h -text
+src/console/win32/CreateClusterDlg.cpp -text
+src/console/win32/CreateClusterDlg.h -text
 src/console/win32/CreateCondDlg.cpp -text
 src/console/win32/CreateCondDlg.h -text
 src/console/win32/CreateContainerDlg.cpp -text
@@ -1347,6 +1351,7 @@ src/server/tools/nxdbmgr/nxdbmgr.cpp -text
 src/server/tools/nxdbmgr/nxdbmgr.dsp -text
 src/server/tools/nxdbmgr/nxdbmgr.dsw -text
 src/server/tools/nxdbmgr/nxdbmgr.h -text
+src/server/tools/nxdbmgr/reindex.cpp -text
 src/server/tools/nxdbmgr/unlock.cpp -text
 src/server/tools/nxdbmgr/upgrade.cpp -text
 src/server/tools/nxget/.cvsignore -text

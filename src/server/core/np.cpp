@@ -136,7 +136,7 @@ static NXSL_DiscoveryClass m_nxslDiscoveryClass;
 //
 
 NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
-                    TCHAR *pszName, DWORD dwProxyNode)
+                    TCHAR *pszName, DWORD dwProxyNode, Cluster *pCluster)
 {
    Node *pNode;
    char szIpAddr1[32], szIpAddr2[32];
@@ -163,6 +163,14 @@ NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
    NetObjInsert(pNode, TRUE);
    if (pszName != NULL)
       pNode->SetName(pszName);
+
+	// Bind node to cluster before first configuration poll
+	if (pCluster != NULL)
+	{
+		pCluster->AddChild(pNode);
+		pNode->AddParent(pCluster);
+	}
+
    if (dwCreationFlags & NXC_NCF_CREATE_UNMANAGED)
    {
       pNode->SetMgmtStatus(FALSE);
@@ -399,7 +407,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
          break;   // Shutdown indicator received
 
       if (AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask))
-         PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, NULL, 0);
+         PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, NULL, 0, NULL);
       free(pInfo);
    }
    DbgPrintf(AF_DEBUG_DISCOVERY, "Node poller thread terminated");

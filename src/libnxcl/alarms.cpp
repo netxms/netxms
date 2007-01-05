@@ -124,10 +124,10 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, BOOL bIncludeAck
 
 
 //
-// Acknowlege alarm by ID
+// Acknowledge alarm by ID
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCAcknowlegeAlarm(NXC_SESSION hSession, DWORD dwAlarmId)
+DWORD LIBNXCL_EXPORTABLE NXCAcknowledgeAlarm(NXC_SESSION hSession, DWORD dwAlarmId)
 {
    CSCPMessage msg;
    DWORD dwRqId;
