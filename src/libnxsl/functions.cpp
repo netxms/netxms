@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2005 Victor Kirhenshtein
+** Copyright (C) 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: functions.cpp
+** File: functions.cpp
 **
 **/
 
@@ -271,4 +271,87 @@ int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
       nRet = NXSL_ERR_NOT_STRING;
    }
    return nRet;
+}
+
+
+//
+// Convert time_t into string
+// PATCH: by Edgar Chupit
+//
+
+int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{   
+   char pResult[512];
+   time_t tTime;
+	struct tm *ptm;
+   DWORD dwLen;
+	BOOL bLocalTime;
+
+   if ((argc == 0) || (argc > 3))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->IsString())
+      return NXSL_ERR_NOT_STRING;
+	if (argc > 1)
+	{
+		if (!argv[1]->IsNumeric() && !argv[1]->IsNull())
+			return NXSL_ERR_NOT_NUMBER;
+		tTime = (argv[1]->IsNull()) ? time(NULL) : (time_t)argv[1]->GetValueAsUInt64();
+
+		if (argc > 2)
+		{
+			if (!argv[2]->IsInteger())
+				return NXSL_ERR_BAD_CONDITION;
+			bLocalTime = argv[2]->GetValueAsInt32() ? TRUE : FALSE;
+		}
+		else
+		{
+			// No third argument, assume localtime
+			bLocalTime = TRUE;
+		}
+	}
+	else
+	{
+		// No second argument
+		tTime = time(NULL);
+	}
+
+   ptm = bLocalTime ? localtime(&tTime) : gmtime(&tTime);
+   dwLen = strftime(pResult, sizeof(pResult) / sizeof(pResult[0]), argv[0]->GetValueAsString(&dwLen), ptm);
+   *ppResult = new NXSL_Value(pResult);   
+   
+   return 0;
+}
+
+
+//
+// Convert seconds since uptime to string
+// PATCH: by Edgar Chupit
+//
+
+int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+   DWORD d, h, n;
+
+   if (!argv[0]->IsNumeric())
+      return NXSL_ERR_NOT_NUMBER;
+
+   QWORD arg = argv[0]->GetValueAsUInt64();
+
+   d = (DWORD)(arg / 86400);
+   arg -= d * 86400;
+   h = (DWORD)(arg / 3600);
+   arg -= h * 3600;
+   n = (DWORD)(arg / 60);
+   arg -= n * 60;
+   if (arg > 0)
+       n++;
+
+   char pResult[MAX_PATH];
+   pResult[0] = 0;
+
+   snprintf(pResult, MAX_PATH, "%u days, %2u:%02u", d, h, n);
+
+   *ppResult = new NXSL_Value(pResult);
+   return 0;
 }

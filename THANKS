@@ -5,9 +5,9 @@ Many people have further contributed to NetXMS by reporting problems,
 suggesting various improvements, or submitting actual code. Here is
 a list of these people. Help me keep it complete and exempt of errors.
 
-People from C.T.Co:
+People from C.T.Co - for good ideas and system testing:
+  Igor Kopman
+  Roman Lazarenko
+  Victoria Almazova
 
-Igor Kopman
-Roman Lazarenko
-Victoria Almazova
-
+Edgar Chupit - for many useful patches and ideas

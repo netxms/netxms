@@ -34,10 +34,12 @@ int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
+int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
+int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 
 
 //
@@ -52,10 +54,12 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { "max", F_max, -1 },
    { "min", F_min, -1 },
    { "pow", F_pow, 2 },
+	{ "strftime", F_strftime, -1 },
    { "typeof", F_typeof, 1 },
    { "upper", F_upper, 1 },
    { "AddrInRange", F_AddrInRange, 3 },
-   { "AddrInSubnet", F_AddrInSubnet, 3 }
+   { "AddrInSubnet", F_AddrInSubnet, 3 },
+	{ "SecondsToUptime", F_SecondsToUptime, 1 }
 };
 
 
