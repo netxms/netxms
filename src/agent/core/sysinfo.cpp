@@ -1,4 +1,4 @@
-/* $Id: sysinfo.cpp,v 1.18 2007-01-03 09:27:18 victor Exp $ */
+/* $Id: sysinfo.cpp,v 1.19 2007-01-08 22:05:02 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004 Victor Kirhenshtein
@@ -305,4 +305,40 @@ LONG H_PlatformName(char *cmd, char *arg, char *value)
    }
 
    return nResult;
+}
+
+
+//
+// Handler for File.Time.* parameters
+//
+
+LONG H_FileTime(char *cmd, char *arg, char *value)
+{
+	char szFilePath[MAX_PATH];
+	LONG nRet = SYSINFO_RC_SUCCESS;
+	struct stat fileInfo;
+
+	if (!NxGetParameterArg(cmd, 1, szFilePath, MAX_PATH))
+		return SYSINFO_RC_UNSUPPORTED;
+
+	if (stat(szFilePath, &fileInfo) == -1) 
+		return SYSINFO_RC_ERROR;
+
+	switch((int)arg)
+	{
+		case FILETIME_ATIME:
+			ret_uint64(value, fileInfo.st_atime);
+			break;
+		case FILETIME_MTIME:
+			ret_uint(value, fileInfo.st_mtime);
+			break;
+		case FILETIME_CTIME:
+			ret_uint(value, fileInfo.st_ctime);
+			break;
+		default:
+			nRet = SYSINFO_RC_UNSUPPORTED;
+			break;
+	}
+
+	return nRet;
 }

@@ -162,6 +162,15 @@
 
 
 //
+// Request types for H_FileTime
+//
+ 
+#define FILETIME_ATIME           1
+#define FILETIME_MTIME           2
+#define FILETIME_CTIME           3
+
+
+//
 // Action types
 //
 

@@ -32,6 +32,7 @@ LONG H_AgentStats(char *cmd, char *arg, char *value);
 LONG H_AgentUptime(char *cmd, char *arg, char *value);
 LONG H_CRC32(char *cmd, char *arg, char *value);
 LONG H_DirInfo(char *cmd, char *arg, char *value);
+LONG H_FileTime(char *cmd, char *arg, char *value);
 LONG H_MD5Hash(char *cmd, char *arg, char *value);
 LONG H_SHA1Hash(char *cmd, char *arg, char *value);
 LONG H_SubAgentList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
@@ -199,25 +200,28 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { "System.Memory.Virtual.Used", H_MemoryInfo, (char *)MEMINFO_VIRTUAL_USED, DCI_DT_UINT64, "Used virtual memory" },
    { "System.Uname", H_SystemUname, NULL, DCI_DT_STRING, "System uname" },
 #endif
-   { "Agent.AcceptedConnections", H_UIntPtr, (char *)&g_dwAcceptedConnections, DCI_DT_UINT, "" },
-   { "Agent.AcceptErrors", H_UIntPtr, (char *)&g_dwAcceptErrors, DCI_DT_UINT, "" },
+   { "Agent.AcceptedConnections", H_UIntPtr, (char *)&g_dwAcceptedConnections, DCI_DT_UINT, "Number of connections accepted by agent" },
+   { "Agent.AcceptErrors", H_UIntPtr, (char *)&g_dwAcceptErrors, DCI_DT_UINT, "Number of accept() call errors" },
    { "Agent.ActiveConnections", H_ActiveConnections, NULL, DCI_DT_INT, "Number of active connections to agent" },
-   { "Agent.AuthenticationFailures", H_UIntPtr, (char *)&m_dwAuthenticationFailures, DCI_DT_UINT, "" },
-   { "Agent.FailedRequests", H_UIntPtr, (char *)&m_dwFailedRequests, DCI_DT_UINT, "" },
-   { "Agent.ProcessedRequests", H_UIntPtr, (char *)&m_dwProcessedRequests, DCI_DT_UINT, "" },
-   { "Agent.RejectedConnections", H_UIntPtr, (char *)&g_dwRejectedConnections, DCI_DT_UINT, "" },
+   { "Agent.AuthenticationFailures", H_UIntPtr, (char *)&m_dwAuthenticationFailures, DCI_DT_UINT, "Number of authentication failures" },
+   { "Agent.FailedRequests", H_UIntPtr, (char *)&m_dwFailedRequests, DCI_DT_UINT, "Number of failed requests to agent" },
+   { "Agent.ProcessedRequests", H_UIntPtr, (char *)&m_dwProcessedRequests, DCI_DT_UINT, "Number of requests processed by agent" },
+   { "Agent.RejectedConnections", H_UIntPtr, (char *)&g_dwRejectedConnections, DCI_DT_UINT, "Number of connections rejected by agent" },
    { "Agent.SourcePackageSupport", H_StringConstant, "0", DCI_DT_INT, "" },
    { "Agent.SupportedCiphers", H_SupportedCiphers, NULL, DCI_DT_STRING, "List of ciphers supported by agent" },
-   { "Agent.TimedOutRequests", H_UIntPtr, (char *)&m_dwTimedOutRequests, DCI_DT_UINT, "" },
-   { "Agent.UnsupportedRequests", H_UIntPtr, (char *)&m_dwUnsupportedRequests, DCI_DT_UINT, "" },
+   { "Agent.TimedOutRequests", H_UIntPtr, (char *)&m_dwTimedOutRequests, DCI_DT_UINT, "Number of timed out requests to agent" },
+   { "Agent.UnsupportedRequests", H_UIntPtr, (char *)&m_dwUnsupportedRequests, DCI_DT_UINT, "Number of requests for unsupported parameters" },
    { "Agent.Uptime", H_AgentUptime, NULL, DCI_DT_UINT, "Agent's uptime" },
    { "Agent.Version", H_StringConstant, AGENT_VERSION_STRING, DCI_DT_STRING, "Agent's version" },
-   { "File.Count(*)", H_DirInfo, (char *)DIRINFO_FILE_COUNT, DCI_DT_UINT, "" },
+   { "File.Count(*)", H_DirInfo, (char *)DIRINFO_FILE_COUNT, DCI_DT_UINT, "Number of files {instance}" },
    { "File.Hash.CRC32(*)", H_CRC32, NULL, DCI_DT_UINT, "CRC32 checksum of {instance}" },
    { "File.Hash.MD5(*)", H_MD5Hash, NULL, DCI_DT_STRING, "MD5 hash of {instance}" },
    { "File.Hash.SHA1(*)", H_SHA1Hash, NULL, DCI_DT_STRING, "SHA1 hash of {instance}" },
-   { "File.Size(*)", H_DirInfo, (char *)DIRINFO_FILE_SIZE, DCI_DT_UINT64, "" },
-   { "System.PlatformName", H_PlatformName, NULL, DCI_DT_STRING, "" }
+	{ "File.Size(*)", H_DirInfo, (char *)DIRINFO_FILE_SIZE, DCI_DT_UINT64, "Size of file {instance}" },
+   { "File.Time.Access(*)", H_FileTime, (char *)FILETIME_ATIME, DCI_DT_UINT64, "Time of last access to file {instance}" },
+   { "File.Time.Change(*)", H_FileTime, (char *)FILETIME_CTIME, DCI_DT_UINT64, "Time of last status change of file {instance}" },
+   { "File.Time.Modify(*)", H_FileTime, (char *)FILETIME_MTIME, DCI_DT_UINT64, "Time of last modification of file {instance}" },
+   { "System.PlatformName", H_PlatformName, NULL, DCI_DT_STRING, "Platform name" }
 };
 
 
