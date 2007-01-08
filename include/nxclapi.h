@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.251 2007-01-05 16:04:00 victor Exp $ */
+/* $Id: nxclapi.h,v 1.252 2007-01-08 21:43:22 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -427,6 +427,7 @@ enum
 #define OBJ_UPDATE_DCI_LIST         ((DWORD)0x04000000)
 #define OBJ_UPDATE_SCRIPT           ((DWORD)0x08000000)
 #define OBJ_UPDATE_CLUSTER_TYPE		((DWORD)0x10000000)
+#define OBJ_UPDATE_RESOURCES			((DWORD)0x20000000)
 
 
 //
@@ -770,6 +771,19 @@ typedef struct
 } INPUT_DCI;
 
 
+//
+// Cluster resource
+//
+
+typedef struct
+{
+	DWORD dwId;
+	TCHAR szName[MAX_DB_STRING];
+	DWORD dwIpAddr;
+	DWORD dwCurrOwner;
+} CLUSTER_RESOURCE;
+
+
 /********************************************************************
  * Following part of this file shouldn't be included by server code *
  ********************************************************************/
@@ -945,6 +959,8 @@ struct __nxc_object_cluster
 	DWORD dwClusterType;
 	DWORD dwNumSyncNets;
 	IP_NETWORK *pSyncNetList;
+	DWORD dwNumResources;
+	CLUSTER_RESOURCE *pResourceList;
 };
 
 typedef struct
@@ -1037,6 +1053,8 @@ typedef struct
 	DWORD dwClusterType;
 	DWORD dwNumSyncNets;
 	IP_NETWORK *pSyncNetList;
+	DWORD dwNumResources;
+	CLUSTER_RESOURCE *pResourceList;
 } NXC_OBJECT_UPDATE;
 
 

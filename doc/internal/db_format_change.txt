@@ -1,4 +1,19 @@
 *************
+* 55 ==> 56 *
+*************
+
+- New table added:
+	CREATE TABLE cluster_resources
+	(
+		cluster_id integer not null,
+		resource_id integer not null,
+		resource_name varchar(255) not null,
+		ip_addr varchar(15) not null,
+		PRIMARY KEY(cluster_id,resource_id)
+	) TABLE_TYPE;
+
+
+*************
 * 54 ==> 55 *
 *************
 

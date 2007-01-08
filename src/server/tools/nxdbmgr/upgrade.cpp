@@ -78,6 +78,29 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V55 to V56
+//
+
+static BOOL H_UpgradeFromV55(void)
+{
+	if (!CreateTable(_T("CREATE TABLE cluster_resources (")
+	                 _T("cluster_id integer not null,")
+	                 _T("resource_id integer not null,")
+	                 _T("resource_name varchar(255) not null,")
+	                 _T("ip_addr varchar(15) not null,")
+	                 _T("PRIMARY KEY(cluster_id,resource_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='56' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V54 to V55
 //
 
@@ -2469,6 +2492,7 @@ static struct
    { 52, H_UpgradeFromV52 },
    { 53, H_UpgradeFromV53 },
    { 54, H_UpgradeFromV54 },
+   { 55, H_UpgradeFromV55 },
    { 0, NULL }
 };
 

@@ -704,6 +704,7 @@ typedef struct
 #define VID_CLUSTER_TYPE				((DWORD)262)
 #define VID_NUM_SYNC_SUBNETS			((DWORD)263)
 #define VID_SYNC_SUBNETS				((DWORD)264)
+#define VID_NUM_RESOURCES				((DWORD)265)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -742,6 +743,9 @@ typedef struct
 // Reservation of 0x7FFFFFFF ids for child object's list
 #define VID_CHILD_ID_BASE           ((DWORD)0x80000000)
 #define VID_CHILD_ID_LAST           ((DWORD)0xFFFFFFFE)
+
+// Base value for cluster resource list
+#define VID_RESOURCE_LIST_BASE      ((DWORD)0x20000000)
 
 // Base value for agent's enum values
 #define VID_ENUM_VALUE_BASE         ((DWORD)0x10000000)

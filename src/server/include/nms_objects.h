@@ -372,6 +372,8 @@ protected:
 	DWORD m_dwClusterType;
    DWORD m_dwNumSyncNets;
    IP_NETWORK *m_pSyncNetList;
+	DWORD m_dwNumResources;
+	CLUSTER_RESOURCE *m_pResourceList;
 
 public:
 	Cluster();

@@ -50,6 +50,7 @@ void DestroyObject(NXC_OBJECT *pObject)
          break;
       case OBJECT_CLUSTER:
          safe_free(pObject->cluster.pSyncNetList);
+			safe_free(pObject->cluster.pResourceList);
          break;
    }
    safe_free(pObject->pdwChildList);
@@ -152,6 +153,7 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
          break;
       case OBJECT_CLUSTER:
          safe_free(pObject->cluster.pSyncNetList);
+			safe_free(pObject->cluster.pResourceList);
          break;
    }
    safe_free(pObject->pdwChildList);
@@ -312,6 +314,18 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->cluster.dwNumSyncNets = pMsg->GetVariableLong(VID_NUM_SYNC_SUBNETS);
          pObject->cluster.pSyncNetList = (IP_NETWORK *)malloc(sizeof(IP_NETWORK) * pObject->cluster.dwNumSyncNets);
 			pMsg->GetVariableInt32Array(VID_SYNC_SUBNETS, pObject->cluster.dwNumSyncNets * 2, (DWORD *)pObject->cluster.pSyncNetList);
+			pObject->cluster.dwNumResources = pMsg->GetVariableLong(VID_NUM_RESOURCES);
+			if (pObject->cluster.dwNumResources > 0)
+			{
+				pObject->cluster.pResourceList = (CLUSTER_RESOURCE *)malloc(sizeof(CLUSTER_RESOURCE) * pObject->cluster.dwNumResources);
+				for(i = 0, dwId1 = VID_RESOURCE_LIST_BASE; i < pObject->cluster.dwNumResources; i++, dwId1 += 6)
+				{
+					pObject->cluster.pResourceList[i].dwId = pMsg->GetVariableLong(dwId1++);
+					pMsg->GetVariableStr(dwId1++, pObject->cluster.pResourceList[i].szName, MAX_DB_STRING);
+					pObject->cluster.pResourceList[i].dwIpAddr = pMsg->GetVariableLong(dwId1++);
+					pObject->cluster.pResourceList[i].dwCurrOwner = pMsg->GetVariableLong(dwId1++);
+				}
+			}
          break;
       default:
          break;
@@ -727,6 +741,16 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
    {
       msg.SetVariable(VID_NUM_SYNC_SUBNETS, pUpdate->dwNumSyncNets);
 		msg.SetVariableToInt32Array(VID_SYNC_SUBNETS, pUpdate->dwNumSyncNets * 2, (DWORD *)pUpdate->pSyncNetList);
+   }
+   if (pUpdate->dwFlags & OBJ_UPDATE_RESOURCES)
+   {
+      msg.SetVariable(VID_NUM_RESOURCES, pUpdate->dwNumResources);
+      for(i = 0, dwId1 = VID_RESOURCE_LIST_BASE; i < pUpdate->dwNumResources; i++, dwId1 += 7)
+      {
+         msg.SetVariable(dwId1++, pUpdate->pResourceList[i].dwId);
+         msg.SetVariable(dwId1++, pUpdate->pResourceList[i].szName);
+         msg.SetVariable(dwId1++, pUpdate->pResourceList[i].dwIpAddr);
+      }
    }
 
    // Send request

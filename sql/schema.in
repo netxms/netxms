@@ -214,14 +214,28 @@ CREATE TABLE cluster_sync_subnets
 
 
 /*
+** Cluster resources
+*/
+
+CREATE TABLE cluster_resources
+(
+	cluster_id integer not null,
+	resource_id integer not null,
+	resource_name varchar(255) not null,
+	ip_addr varchar(15) not null,
+	PRIMARY KEY(cluster_id,resource_id)
+) TABLE_TYPE;
+
+
+/*
 ** Subnets
 */
 
 CREATE TABLE subnets
 (
 	id integer not null,
-	ip_addr varchar(15),
-	ip_netmask varchar(15),
+	ip_addr varchar(15) not null,
+	ip_netmask varchar(15) not null,
 	zone_guid integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
@@ -235,11 +249,11 @@ CREATE TABLE interfaces
 (
 	id integer not null,
 	node_id integer not null,
-	ip_addr varchar(15),
-	ip_netmask varchar(15),
-	if_type integer,
-	if_index integer,
-	mac_addr varchar(15),
+	ip_addr varchar(15) not null,
+	ip_netmask varchar(15) not null,
+	if_type integer not null,
+	if_index integer not null,
+	mac_addr varchar(15) not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -252,12 +266,12 @@ CREATE TABLE network_services
 (
 	id integer not null,
 	node_id integer not null,
-	service_type integer,
-	ip_bind_addr varchar(15),
-	ip_proto integer,
-	ip_port integer,
-	check_request SQL_TEXT,
-	check_responce SQL_TEXT,
+	service_type integer not null,
+	ip_bind_addr varchar(15) not null,
+	ip_proto integer not null,
+	ip_port integer not null,
+	check_request SQL_TEXT not null,
+	check_responce SQL_TEXT not null,
 	poller_node_id integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
