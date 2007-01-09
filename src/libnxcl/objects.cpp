@@ -1266,6 +1266,12 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, TCHAR *pszFile
                fwrite(pList[i].pObject->cond.pDCIList, 1, 
                       pList[i].pObject->cond.dwNumDCI * sizeof(INPUT_DCI), hFile);
                break;
+				case OBJECT_CLUSTER:
+					fwrite(pList[i].pObject->cluster.pResourceList, 1,
+					       pList[i].pObject->cluster.dwNumResources * sizeof(CLUSTER_RESOURCE), hFile);
+					fwrite(pList[i].pObject->cluster.pSyncNetList, 1,
+					       pList[i].pObject->cluster.dwNumSyncNets * sizeof(IP_NETWORK), hFile);
+					break;
             default:
                break;
          }
@@ -1369,6 +1375,26 @@ void NXCL_Session::LoadObjectsFromCache(TCHAR *pszFile)
                         object.cond.pDCIList = (INPUT_DCI *)malloc(dwSize);
                         fread(object.cond.pDCIList, 1, dwSize, hFile);
                         break;
+							case OBJECT_CLUSTER:
+								if (object.cluster.dwNumResources > 0)
+								{
+									object.cluster.pResourceList = (CLUSTER_RESOURCE *)malloc(sizeof(CLUSTER_RESOURCE) * object.cluster.dwNumResources);
+									fread(object.cluster.pResourceList, 1, sizeof(CLUSTER_RESOURCE) * object.cluster.dwNumResources, hFile);
+								}
+								else
+								{
+									object.cluster.pResourceList = NULL;
+								}
+								if (object.cluster.dwNumSyncNets > 0)
+								{
+									object.cluster.pSyncNetList = (IP_NETWORK *)malloc(sizeof(IP_NETWORK) * object.cluster.dwNumSyncNets);
+									fread(object.cluster.pSyncNetList, 1, sizeof(IP_NETWORK) * object.cluster.dwNumSyncNets, hFile);
+								}
+								else
+								{
+									object.cluster.pSyncNetList = NULL;
+								}
+								break;
                      default:
                         break;
                   }

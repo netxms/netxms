@@ -216,6 +216,7 @@
 #define IDD_UPGRADE                     346
 #define IDD_CREATE_CLUSTER              347
 #define IDD_OBJECT_CLUSTER_GENERAL      348
+#define IDD_OBJECT_CLUSTER_RESOURCES    349
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -259,6 +260,7 @@
 #define IDC_LIST_TARGETS                1024
 #define IDC_LIST_SUBNETS                1024
 #define IDC_LIST_NETWORKS               1024
+#define IDC_LIST_RESOURCES              1024
 #define IDC_INFO_TEXT                   1025
 #define IDC_LIST_CHILDS                 1025
 #define IDC_LIST_REMOTE                 1025
@@ -838,9 +840,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        349
+#define _APS_NEXT_RESOURCE_VALUE        350
 #define _APS_NEXT_COMMAND_VALUE         33051
-#define _APS_NEXT_CONTROL_VALUE         1434
+#define _APS_NEXT_CONTROL_VALUE         1437
 #define _APS_NEXT_SYMED_VALUE           129
 #endif
 #endif

@@ -49,6 +49,7 @@
 #include "ObjectPropsPresentation.h"
 #include "ObjectPropCaps.h"
 #include "ClusterPropsGeneral.h"
+#include "ClusterPropsResources.h"
 #include "DCIDataView.h"
 #include "LPPList.h"
 #include "ObjectBrowser.h"
@@ -1228,6 +1229,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
    CCondPropsData wndCondData;
    CCondPropsScript wndCondScript;
 	CClusterPropsGeneral wndClusterGeneral;
+	CClusterPropsResources wndClusterResources;
    NXC_OBJECT *pObject;
 
    pObject = NXCFindObjectById(g_hSession, dwObjectId);
@@ -1297,6 +1299,9 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
             wndClusterGeneral.m_dwObjectId = dwObjectId;
             wndClusterGeneral.m_strName = pObject->szName;
             wndPropSheet.AddPage(&wndClusterGeneral);
+
+				wndClusterResources.m_pObject = pObject;
+            wndPropSheet.AddPage(&wndClusterResources);
 				break;
          default:
             wndObjectGeneral.m_dwObjectId = dwObjectId;

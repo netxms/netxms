@@ -220,6 +220,10 @@ SOURCE=.\ClusterPropsGeneral.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ClusterPropsResources.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ColorSelector.cpp
 # End Source File
 # Begin Source File
@@ -782,6 +786,10 @@ SOURCE=.\AlarmView.h
 # Begin Source File
 
 SOURCE=.\ClusterPropsGeneral.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ClusterPropsResources.h
 # End Source File
 # Begin Source File
 

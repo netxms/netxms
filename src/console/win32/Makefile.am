@@ -22,6 +22,7 @@ EXTRA_DIST = \
 	AlarmBrowser.cpp AlarmBrowser.h \
 	AlarmView.cpp AlarmView.h \
 	ClusterPropsGeneral.cpp ClusterPropsGeneral.h \
+	ClusterPropsResources.cpp ClusterPropsResources.h \
 	comm.cpp \
 	CondDCIPropDlg.cpp CondDCIPropDlg.h \
 	ColorSelector.cpp ColorSelector.h \

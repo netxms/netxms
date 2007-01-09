@@ -644,6 +644,8 @@ src/console/win32/AlarmView.cpp -text
 src/console/win32/AlarmView.h -text
 src/console/win32/ClusterPropsGeneral.cpp -text
 src/console/win32/ClusterPropsGeneral.h -text
+src/console/win32/ClusterPropsResources.cpp -text
+src/console/win32/ClusterPropsResources.h -text
 src/console/win32/ColorSelector.cpp -text
 src/console/win32/ColorSelector.h -text
 src/console/win32/CondDCIPropDlg.cpp -text
