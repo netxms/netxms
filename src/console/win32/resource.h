@@ -217,6 +217,7 @@
 #define IDD_CREATE_CLUSTER              347
 #define IDD_OBJECT_CLUSTER_GENERAL      348
 #define IDD_OBJECT_CLUSTER_RESOURCES    349
+#define IDD_CLUSTER_RESOURCE            350
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -589,6 +590,7 @@
 #define IDC_CHECK_REPLACE_BY_NAME       1428
 #define IDC_EDIT_URL                    1430
 #define IDC_CHECK_HIDE_EMPTY            1431
+#define IDC_IPADDR                      1438
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -840,9 +842,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        350
+#define _APS_NEXT_RESOURCE_VALUE        351
 #define _APS_NEXT_COMMAND_VALUE         33051
-#define _APS_NEXT_CONTROL_VALUE         1437
+#define _APS_NEXT_CONTROL_VALUE         1439
 #define _APS_NEXT_SYMED_VALUE           129
 #endif
 #endif

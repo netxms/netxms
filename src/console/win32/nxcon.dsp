@@ -224,6 +224,10 @@ SOURCE=.\ClusterPropsResources.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ClusterResDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ColorSelector.cpp
 # End Source File
 # Begin Source File
@@ -790,6 +794,10 @@ SOURCE=.\ClusterPropsGeneral.h
 # Begin Source File
 
 SOURCE=.\ClusterPropsResources.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ClusterResDlg.h
 # End Source File
 # Begin Source File
 

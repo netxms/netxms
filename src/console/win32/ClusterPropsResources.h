@@ -16,6 +16,7 @@ class CClusterPropsResources : public CPropertyPage
 
 // Construction
 public:
+	int CompareListItems(DWORD dwId1, DWORD dwId2);
 	NXC_OBJECT * m_pObject;
 	CClusterPropsResources();
 	~CClusterPropsResources();
@@ -36,11 +37,15 @@ public:
 
 // Implementation
 protected:
+	DWORD FindItemById(DWORD dwId);
+	int m_nSortMode;
+	int m_nSortDir;
+	void AddListItem(CLUSTER_RESOURCE *pResource);
 	DWORD m_dwNumResources;
 	CLUSTER_RESOURCE * m_pResourceList;
 	// Generated message map functions
 	//{{AFX_MSG(CClusterPropsResources)
-		// NOTE: the ClassWizard will add member functions here
+	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
