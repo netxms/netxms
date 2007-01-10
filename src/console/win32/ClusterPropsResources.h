@@ -31,12 +31,15 @@ public:
 // Overrides
 	// ClassWizard generate virtual function overrides
 	//{{AFX_VIRTUAL(CClusterPropsResources)
+	public:
+	virtual void OnOK();
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
 
 // Implementation
 protected:
+	CImageList m_imageList;
 	DWORD FindItemById(DWORD dwId);
 	int m_nSortMode;
 	int m_nSortDir;
@@ -46,9 +49,17 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CClusterPropsResources)
 	virtual BOOL OnInitDialog();
+	afx_msg void OnColumnclickListResources(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnButtonAdd();
+	afx_msg void OnButtonEdit();
+	afx_msg void OnButtonDelete();
+	afx_msg void OnItemchangedListResources(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnDblclkListResources(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
+private:
+	NXC_OBJECT_UPDATE * m_pUpdate;
 };
 
 //{{AFX_INSERT_LOCATION}}
