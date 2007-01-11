@@ -83,6 +83,39 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 static BOOL H_UpgradeFromV55(void)
 {
+   static TCHAR m_szBatch[] =
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES")
+			_T(" (38,'SYS_CLUSTER_RESOURCE_MOVED',1,1,")
+			_T("'Cluster resource \"%2\" moved from node %4 to node %6',")
+			_T("'Generated when cluster resource moved between nodes.#0D#0A")
+			_T("Parameters:#0D#0A   1) Resource ID#0D#0A")
+			_T("   2) Resource name#0D#0A   3) Previous owner node ID#0D#0A")
+			_T("   4) Previous owner node name#0D#0A   5) New owner node ID#0D#0A")
+			_T("   6) New owner node name')\n")
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES")
+			_T(" (39,'SYS_CLUSTER_RESOURCE_DOWN',3,1,")
+			_T("'Cluster resource \"%2\" is down (last owner was %4)',")
+			_T("'Generated when cluster resource goes down.#0D#0A")
+			_T("Parameters:#0D#0A   1) Resource ID#0D#0A   2) Resource name#0D#0A")
+			_T("   3) Last owner node ID#0D#0A   4) Last owner node name')\n")
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES")
+			_T(" (40,'SYS_CLUSTER_RESOURCE_UP',0,1,")
+			_T("'Cluster resource \"%2\" is up (new owner is %4)',")
+			_T("'Generated when cluster resource goes up.#0D#0A")
+			_T("Parameters:#0D#0A   1) Resource ID#0D#0A   2) Resource name#0D#0A")
+			_T("   3) New owner node ID#0D#0A   4) New owner node name')\n")
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES")
+			_T(" (41,'SYS_CLUSTER_DOWN',4,1,'Cluster is down',")
+			_T("'Generated when cluster goes down.#0D#0AParameters:#0D#0A   No message-specific parameters')\n")
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES")
+			_T(" (42,'SYS_CLUSTER_UP',0,1,'Cluster is up',")
+			_T("'Generated when cluster goes up.#0D#0AParameters:#0D#0A   No message-specific parameters')\n")
+      _T("<END>");
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
 	if (!CreateTable(_T("CREATE TABLE cluster_resources (")
 	                 _T("cluster_id integer not null,")
 	                 _T("resource_id integer not null,")

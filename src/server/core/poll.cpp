@@ -207,7 +207,7 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
       SetPollerState((long)arg, szBuffer);
 		if (pObject->Type() == OBJECT_NODE)
 			((Node *)pObject)->StatusPoll(NULL, 0, (long)arg);
-		else if (pObject->Type() == OBJECT_NODE)
+		else if (pObject->Type() == OBJECT_CLUSTER)
 			((Cluster *)pObject)->StatusPoll(NULL, 0, (long)arg);
       pObject->DecRefCount();
    }

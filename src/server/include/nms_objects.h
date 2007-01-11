@@ -701,6 +701,7 @@ inline BOOL Node::ReadyForStatusPoll(void)
    return ((m_iStatus != STATUS_UNMANAGED) && 
            (!(m_dwDynamicFlags & NDF_QUEUED_FOR_STATUS_POLL)) &&
            (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
+			  (GetMyCluster() == NULL) &&
            ((DWORD)time(NULL) - (DWORD)m_tLastStatusPoll > g_dwStatusPollingInterval))
                ? TRUE : FALSE;
 }

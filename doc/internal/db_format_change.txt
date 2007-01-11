@@ -42,7 +42,7 @@
 		(
 			EVENT_CLUSTER_RESOURCE_UP, 'SYS_CLUSTER_RESOURCE_UP',
 			EVENT_SEVERITY_NORMAL, 1,
-			'Cluster resource "%2" is up (new owner was %4)',
+			'Cluster resource "%2" is up (new owner is %4)',
 			'Generated when cluster resource goes up.#0D#0A' CONCAT
 			'Parameters:#0D#0A' CONCAT
 			'   1) Resource ID#0D#0A' CONCAT

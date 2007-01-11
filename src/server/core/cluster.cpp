@@ -1,4 +1,4 @@
-/* $Id: cluster.cpp,v 1.2 2007-01-11 10:38:05 victor Exp $ */
+/* $Id: cluster.cpp,v 1.3 2007-01-11 20:25:04 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -36,6 +36,8 @@ Cluster::Cluster()
 	m_pSyncNetList= NULL;
 	m_dwNumResources = 0;
 	m_pResourceList = NULL;
+	m_tmLastPoll = 0;
+	m_bQueuedForPolling = FALSE;
 }
 
 
@@ -51,6 +53,8 @@ Cluster::Cluster(TCHAR *pszName)
 	m_pSyncNetList= NULL;
 	m_dwNumResources = 0;
 	m_pResourceList = NULL;
+	m_tmLastPoll = 0;
+	m_bQueuedForPolling = FALSE;
 }
 
 
@@ -498,8 +502,10 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	DWORD i, j, k;
 	INTERFACE_LIST *pIfList;
 	BOOL bModified = FALSE;
+	BYTE *pbResourceFound;
 
 	// Perform status poll on all member nodes
+	DbgPrintf(AF_DEBUG_OBJECTS, _T("CLUSTER STATUS POLL [%s]: Polling member nodes"), m_szName);
 	LockChildList(FALSE);
 	for(i = 0; i < m_dwChildCount; i++)
 	{
@@ -508,10 +514,13 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 			((Node *)m_pChildList[i])->StatusPoll(pSession, dwRqId, nPoller);
 		}
 	}
-	UnlockChildList();
 
 	// Check for cluster resource movement
-	LockChildList(FALSE);
+	LockData();
+	pbResourceFound = (BYTE *)malloc(m_dwNumResources);
+	memset(pbResourceFound, 0, m_dwNumResources);
+
+	DbgPrintf(AF_DEBUG_OBJECTS, _T("CLUSTER STATUS POLL [%s]: Polling resources"), m_szName);
 	for(i = 0; i < m_dwChildCount; i++)
 	{
 		if (m_pChildList[i]->Type() == OBJECT_NODE)
@@ -527,6 +536,9 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 						{
 							if (m_pResourceList[k].dwCurrOwner != m_pChildList[i]->Id())
 							{
+								DbgPrintf(AF_DEBUG_OBJECTS, _T("CLUSTER STATUS POLL [%s]: Resource %s owner changed"),
+									       m_szName, m_pResourceList[k].szName);
+
 								// Resource moved or go up
 								if (m_pResourceList[k].dwCurrOwner == 0)
 								{
@@ -550,13 +562,38 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 								m_pResourceList[k].dwCurrOwner = m_pChildList[i]->Id();
 								bModified = TRUE;
 							}
+							pbResourceFound[k] = 1;
 						}
 					}
 				}
 				DestroyInterfaceList(pIfList);
 			}
+			else
+			{
+				DbgPrintf(AF_DEBUG_OBJECTS, _T("CLUSTER STATUS POLL [%s]: Cannot get interface list from %s"),
+				          m_szName, m_pChildList[i]->Name());
+			}
 		}
 	}
+
+	// Check for missing virtual addresses
+	for(i = 0; i < m_dwNumResources; i++)
+	{
+		if ((!pbResourceFound[i]) && (m_pResourceList[i].dwCurrOwner != 0))
+		{
+			NetObj *pObject;
+
+			pObject = FindObjectById(m_pResourceList[i].dwCurrOwner);
+			PostEvent(EVENT_CLUSTER_RESOURCE_DOWN, m_dwId, "dsds",
+						 m_pResourceList[i].dwId, m_pResourceList[i].szName,
+                   m_pResourceList[i].dwCurrOwner,
+						 (pObject != NULL) ? pObject->Name() : _T("<unknown>"));
+			m_pResourceList[k].dwCurrOwner = 0;
+		}
+	}
+	safe_free(pbResourceFound);
+
+	UnlockData();
 	UnlockChildList();
 
 	LockData();
@@ -565,4 +602,6 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	m_tmLastPoll = time(NULL);
 	m_bQueuedForPolling = FALSE;
 	UnlockData();
+
+	DbgPrintf(AF_DEBUG_OBJECTS, _T("CLUSTER STATUS POLL [%s]: Finished"), m_szName);
 }
