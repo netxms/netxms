@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.98 2006-12-17 10:31:37 victor Exp $ */
+/* $Id: nms_util.h,v 1.99 2007-01-11 18:56:14 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -396,6 +396,7 @@ extern "C"
 
    void LIBNETXMS_EXPORTABLE StrStrip(TCHAR *pszStr);
    BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *string, BOOL matchCase);
+	BOOL LIBNETXMS_EXPORTABLE RegexpMatch(TCHAR *pszStr, TCHAR *pszExpr, BOOL bMatchCase);
    TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(TCHAR *line, TCHAR *buffer);
    int LIBNETXMS_EXPORTABLE NumChars(TCHAR *pszStr, int ch);
    BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName);
@@ -502,6 +503,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.98  2006/12/17 10:31:37  victor
+ODBC driver made compatible with latest unixODBC
+
 Revision 1.97  2006/12/11 21:19:27  victor
 Management pack creation almost working (only SNMP traps cannot be exported)
 

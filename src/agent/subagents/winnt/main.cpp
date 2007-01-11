@@ -125,7 +125,8 @@ static void UnloadHandler(void)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { "Process.Count(*)", H_ProcCountSpecific, NULL, DCI_DT_INT, "Number of {instance} processes" },
+   { "Process.Count(*)", H_ProcCountSpecific, "N", DCI_DT_INT, "Number of {instance} processes" },
+   { "Process.CountEx(*)", H_ProcCountSpecific, "E", DCI_DT_INT, "Number of {instance} processes (extended)" },
    { "Process.GdiObj(*)", H_ProcInfo, (char *)PROCINFO_GDI_OBJ, DCI_DT_UINT64, "" },
    { "Process.IO.OtherB(*)", H_ProcInfo, (char *)PROCINFO_IO_OTHER_B, DCI_DT_UINT64, "" },
    { "Process.IO.OtherOp(*)", H_ProcInfo, (char *)PROCINFO_IO_OTHER_OP, DCI_DT_UINT64, "" },

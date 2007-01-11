@@ -6,9 +6,10 @@
 - UPS subagent: added support for MICRODOWELL UPS devices
 - Added Extended Checksum subagent
 - Added ODBC Query subagent
-- New agent parameters: File.Time.Access(), File.Time.Change(),
-  and File.Time.Modify()
+- New agent parameters: Process.CountEx(), File.Time.Access(),
+  File.Time.Change(), and File.Time.Modify()
 - Parameters File.Size() and File.Count() improved
+- Parameters Process.XXX improved 
 - NXSL improved: implemented switch ... case statement and break statement
 - Windows console:
 	- Now able to download and install update from web server pointed

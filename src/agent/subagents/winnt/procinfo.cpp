@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: procinfo.cpp
+** File: procinfo.cpp
 ** Win32 specific process information parameters
 **
 **/
@@ -158,9 +158,144 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
 
 
 //
+// Get command line of the process, specified by process ID
+//
+
+static BOOL GetProcessCommandLine(DWORD dwPId, TCHAR *pszCmdLine, DWORD dwLen)
+{
+	DWORD dwAddressOfCommandLine, dummy;
+	FARPROC pfnGetCommandLineA;
+	HANDLE hThread;
+	BOOL bRet = FALSE;
+
+	HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_WRITE | 
+	                              PROCESS_CREATE_THREAD | PROCESS_VM_OPERATION, FALSE, dwPId);
+	if(hProcess == INVALID_HANDLE_VALUE)
+		return FALSE;
+
+	pfnGetCommandLineA = GetProcAddress(GetModuleHandle("KERNEL32.DLL"), "GetCommandLineA"); 
+
+	hThread = CreateRemoteThread(hProcess, 0, 0, (LPTHREAD_START_ROUTINE)pfnGetCommandLineA, 0, 0, 0);
+	if (hThread != INVALID_HANDLE_VALUE)
+	{
+		WaitForSingleObject(hThread, INFINITE);
+		GetExitCodeThread(hThread, &dwAddressOfCommandLine);
+		ReadProcessMemory(hProcess, (PVOID)dwAddressOfCommandLine, pszCmdLine, dwLen, &dummy);
+		CloseHandle(hThread);
+		bRet = TRUE;
+	}
+	CloseHandle(hProcess);
+	return bRet;
+}
+
+
+//
+// Callback function for GetProcessWindows
+//
+
+static BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
+{
+   DWORD dwPID;
+	TCHAR szBuffer[MAX_PATH];
+
+   if (GetWindowLong(hWnd,GWL_STYLE) & WS_VISIBLE) 
+   {
+		WINDOW_LIST *pList = (WINDOW_LIST *)lParam;
+		if (pList == NULL)
+			return FALSE;
+
+		GetWindowThreadProcessId(hWnd, &dwPID);
+		if (dwPID == pList->dwPID)
+		{
+			GetWindowText(hWnd, szBuffer, MAX_PATH - 1);
+			szBuffer[MAX_PATH - 1] = 0;
+			NxAddResultString(pList->pWndList, szBuffer);
+		}
+	}
+
+   return TRUE;
+}
+
+
+//
+// Get list of windows belonging to given process
+//
+
+static NETXMS_VALUES_LIST *GetProcessWindows(DWORD dwPID)
+{
+	WINDOW_LIST list;
+	
+	list.dwPID = dwPID;
+	list.pWndList = (NETXMS_VALUES_LIST *)malloc(sizeof(NETXMS_VALUES_LIST));
+	list.pWndList->dwNumStrings = 0;
+	list.pWndList->ppStringList = NULL;
+
+	EnumWindows(EnumWindowsProc, (LPARAM)&list);
+	return list.pWndList;
+}
+
+
+//
+// Match process to search criteria
+//
+
+static BOOL MatchProcess(DWORD dwPID, HANDLE hProcess, HMODULE hModule, BOOL bExtMatch,
+								 char *pszModName, char *pszCmdLine, char *pszWindowName)
+{
+   char szBaseName[MAX_PATH];
+	DWORD i;
+	BOOL bRet;
+
+   GetModuleBaseName(hProcess, hModule, szBaseName, sizeof(szBaseName));
+	if (bExtMatch)	// Extended version
+	{
+		char commandLine[MAX_PATH];
+		BOOL bProcMatch, bCmdMatch, bWindowMatch;
+
+		bProcMatch = bCmdMatch = bWindowMatch = TRUE;
+
+		if (pszCmdLine[0] != 0)		// not empty, check if match
+		{
+			memset(commandLine, 0, MAX_PATH);	
+			GetProcessCommandLine(dwPID, commandLine, MAX_PATH);
+			bCmdMatch = RegexpMatch(commandLine, pszCmdLine, FALSE);
+		}
+
+		if (pszModName[0] != 0)
+		{
+			bProcMatch = RegexpMatch(szBaseName, pszModName, FALSE);
+		}
+
+		if (pszWindowName[0] != 0)
+		{
+			NETXMS_VALUES_LIST *pWndList;
+
+			pWndList = GetProcessWindows(dwPID);
+			for(i = 0, bWindowMatch = FALSE; i < pWndList->dwNumStrings; i++)
+			{
+				if (RegexpMatch(pWndList->ppStringList[i], pszWindowName, FALSE))
+				{
+					bWindowMatch = TRUE;
+					break;
+				}
+			}
+			NxDestroyValuesList(pWndList);
+		}
+
+	   bRet = bProcMatch && bCmdMatch && bWindowMatch;
+	}
+	else
+	{
+		bRet = !stricmp(szBaseName, pszModName);
+	}
+	return bRet;
+}
+
+
+//
 // Get process-specific information
 // Parameter has the following syntax:
-//    Process.XXX(<process>,<type>)
+//    Process.XXX(<process>,<type>,<cmdline>,<window>)
 // where
 //    XXX        - requested process attribute (see documentation for list of valid attributes)
 //    <process>  - process name (same as in Process.Count() parameter)
@@ -170,14 +305,16 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
 //         max - maximal value among all processes named <process>
 //         avg - average value for all processes named <process>
 //         sum - sum of values for all processes named <process>
+//    <cmdline>  - command line
+//    <window>   - window title
 //
 
 LONG H_ProcInfo(char *cmd, char *arg, char *value)
 {
-   char buffer[256];
+   char buffer[256], procName[MAX_PATH], cmdLine[MAX_PATH], windowTitle[MAX_PATH];
    int attr, type, i, procCount, counter;
    unsigned __int64 attrVal;
-   DWORD *procList, dwSize;
+   DWORD *pdwProcList, dwSize;
    HMODULE *modList;
    static char *typeList[]={ "min", "max", "avg", "sum", NULL };
 
@@ -202,33 +339,34 @@ LONG H_ProcInfo(char *cmd, char *arg, char *value)
    }
 
    // Get process name
-   NxGetParameterArg(cmd, 1, buffer, 255);
+   NxGetParameterArg(cmd, 1, procName, MAX_PATH - 1);
+	NxGetParameterArg(cmd, 3, cmdLine, MAX_PATH - 1);
+	NxGetParameterArg(cmd, 4, windowTitle, MAX_PATH - 1);
 
    // Gather information
    attrVal = 0;
-   procList = (DWORD *)malloc(MAX_PROCESSES * sizeof(DWORD));
+   pdwProcList = (DWORD *)malloc(MAX_PROCESSES * sizeof(DWORD));
    modList = (HMODULE *)malloc(MAX_MODULES * sizeof(HMODULE));
-   EnumProcesses(procList, sizeof(DWORD) * MAX_PROCESSES, &dwSize);
+   EnumProcesses(pdwProcList, sizeof(DWORD) * MAX_PROCESSES, &dwSize);
    procCount = dwSize / sizeof(DWORD);
    for(i = 0, counter = 0; i < procCount; i++)
    {
       HANDLE hProcess;
 
-      hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, procList[i]);
+      hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pdwProcList[i]);
       if (hProcess != NULL)
       {
          if (EnumProcessModules(hProcess, modList, sizeof(HMODULE) * MAX_MODULES, &dwSize))
          {
             if (dwSize >= sizeof(HMODULE))     // At least one module exist
             {
-               char baseName[MAX_PATH];
-
-               GetModuleBaseName(hProcess, modList[0], baseName, sizeof(baseName));
-               if (!stricmp(baseName, buffer))
-               {
+					if (MatchProcess(pdwProcList[i], hProcess, modList[0],
+					                 (cmdLine[0] != 0) || (windowTitle[0] != 0),
+					                 procName, cmdLine, windowTitle))
+					{
                   counter++;  // Number of processes with specific name
                   attrVal = GetProcessAttribute(hProcess, attr, type, counter, attrVal);
-               }
+					}
             }
          }
          CloseHandle(hProcess);
@@ -236,7 +374,7 @@ LONG H_ProcInfo(char *cmd, char *arg, char *value)
    }
 
    // Cleanup
-   free(procList);
+   free(pdwProcList);
    free(modList);
 
    if (counter == 0)    // No processes with given name
@@ -276,18 +414,28 @@ LONG H_ProcCount(char *cmd, char *arg, char *value)
 
 
 //
-// Handler for Process.Count(*)
+// Handler for Process.Count(*) and Process.CountEx(*)
 //
 
 LONG H_ProcCountSpecific(char *cmd, char *arg, char *value)
 {
    DWORD dwSize = 0, *pdwProcList;
    int i, counter, procCount;
-   char procName[MAX_PATH];
+   char procName[MAX_PATH], cmdLine[MAX_PATH], windowTitle[MAX_PATH];
    HANDLE hProcess;
    HMODULE modList[MAX_MODULES];
 
    NxGetParameterArg(cmd, 1, procName, MAX_PATH - 1);
+	if (*arg == 'E')
+	{
+		NxGetParameterArg(cmd, 2, cmdLine, MAX_PATH - 1);
+		NxGetParameterArg(cmd, 3, windowTitle, MAX_PATH - 1);
+
+		// Check if all 3 parameters are empty
+		if ((procName[0] == 0) && (cmdLine[0] == 0) && (windowTitle[0] == 0))
+			return SYSINFO_RC_UNSUPPORTED;
+	}
+
    pdwProcList = (DWORD *)malloc(sizeof(DWORD) * MAX_PROCESSES);
    EnumProcesses(pdwProcList, sizeof(DWORD) * MAX_PROCESSES, &dwSize);
    procCount = dwSize / sizeof(DWORD);
@@ -300,12 +448,10 @@ LONG H_ProcCountSpecific(char *cmd, char *arg, char *value)
          {
             if (dwSize >= sizeof(HMODULE))     // At least one module exist
             {
-               char baseName[MAX_PATH];
-
-               GetModuleBaseName(hProcess, modList[0], baseName, sizeof(baseName));
-               if (!stricmp(baseName, procName))
-                  counter++;
-            }
+					if (MatchProcess(pdwProcList[i], hProcess, modList[0], *arg == 'E',
+					                 procName, cmdLine, windowTitle))
+						counter++;
+				}
          }
          CloseHandle(hProcess);
       }

@@ -58,6 +58,17 @@
 
 
 //
+// Window list
+//
+
+struct WINDOW_LIST
+{
+	DWORD dwPID;
+	NETXMS_VALUES_LIST *pWndList;
+};
+
+
+//
 // Global variables
 //
 

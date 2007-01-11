@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.57 2006-12-11 21:19:29 victor Exp $ */
+/* $Id: tools.cpp,v 1.58 2007-01-11 18:56:15 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
@@ -25,6 +25,12 @@
 #include <stdarg.h>
 #include <nms_agent.h>
 #include <nms_threads.h>
+
+#ifdef _WIN32
+#include <netxms-regex.h>
+#else
+#include <regex.h>
+#endif
 
 #if !defined(_WIN32) && !defined(UNDER_CE)
 #include <sys/time.h>
@@ -255,6 +261,24 @@ void LIBNETXMS_EXPORTABLE NxAddResultString(NETXMS_VALUES_LIST *pList, TCHAR *ps
    pList->ppStringList = (TCHAR **)realloc(pList->ppStringList, sizeof(TCHAR *) * (pList->dwNumStrings + 1));
    pList->ppStringList[pList->dwNumStrings] = _tcsdup(pszString);
    pList->dwNumStrings++;
+}
+
+
+//
+// Destroy dynamically created values list
+//
+
+void LIBNETXMS_EXPORTABLE NxDestroyValuesList(NETXMS_VALUES_LIST *pList)
+{
+	DWORD i;
+
+	if (pList != NULL)
+	{
+		for(i = 0; i < pList->dwNumStrings; i++)
+			safe_free(pList->ppStringList[i]);
+		safe_free(pList->ppStringList);
+		free(pList);
+	}
 }
 
 
@@ -939,6 +963,31 @@ int LIBNETXMS_EXPORTABLE NumChars(TCHAR *pszStr, int ch)
       if (*p == ch)
          nCount++;
    return nCount;
+}
+
+
+//
+// Match string against regexp
+//
+
+BOOL LIBNETXMS_EXPORTABLE RegexpMatch(TCHAR *pszStr, TCHAR *pszExpr, BOOL bMatchCase)
+{
+#ifdef UNICODE
+	/* FIXME: implement UNICODE regexps */
+	return FALSE;
+#else
+   regex_t preg;
+   BOOL bResult = FALSE;
+
+	if (regcomp(&preg, pszExpr, bMatchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
+	{
+		if (regexec(&preg, pszStr, 0, NULL, 0) == 0) // MATCH
+			bResult = TRUE;
+		regfree(&preg);
+	}
+
+   return bResult;
+#endif
 }
 
 
