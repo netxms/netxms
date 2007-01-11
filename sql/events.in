@@ -393,6 +393,62 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'Parameters:#0D#0A' CONCAT
 		'   No message-specific parameters'
 	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_CLUSTER_RESOURCE_MOVED, 'SYS_CLUSTER_RESOURCE_MOVED',
+		EVENT_SEVERITY_WARNING, 1,
+		'Cluster resource "%2" moved from node %4 to node %6',
+		'Generated when cluster resource moved between nodes.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Resource ID#0D#0A' CONCAT
+		'   2) Resource name#0D#0A' CONCAT
+		'   3) Previous owner node ID#0D#0A' CONCAT
+		'   4) Previous owner node name#0D#0A' CONCAT
+		'   5) New owner node ID#0D#0A' CONCAT
+		'   6) New owner node name'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_CLUSTER_RESOURCE_DOWN, 'SYS_CLUSTER_RESOURCE_DOWN',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Cluster resource "%2" is down (last owner was %4)',
+		'Generated when cluster resource goes down.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Resource ID#0D#0A' CONCAT
+		'   2) Resource name#0D#0A' CONCAT
+		'   3) Last owner node ID#0D#0A' CONCAT
+		'   4) Last owner node name'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_CLUSTER_RESOURCE_UP, 'SYS_CLUSTER_RESOURCE_UP',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Cluster resource "%2" is up (new owner was %4)',
+		'Generated when cluster resource goes up.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Resource ID#0D#0A' CONCAT
+		'   2) Resource name#0D#0A' CONCAT
+		'   3) New owner node ID#0D#0A' CONCAT
+		'   4) New owner node name'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_CLUSTER_DOWN, 'SYS_CLUSTER_DOWN',
+		EVENT_SEVERITY_CRITICAL, 1,
+		'Cluster is down',
+		'Generated when cluster goes down.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   No message-specific parameters'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_CLUSTER_UP, 'SYS_CLUSTER_UP',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Cluster is up',
+		'Generated when cluster goes up.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   No message-specific parameters'
+	);
 
 
 /*

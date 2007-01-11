@@ -1,4 +1,4 @@
-/* $Id: cluster.cpp,v 1.1 2007-01-08 21:43:24 victor Exp $ */
+/* $Id: cluster.cpp,v 1.2 2007-01-11 10:38:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -463,4 +463,106 @@ BOOL Cluster::IsSyncAddr(DWORD dwAddr)
 	}
 	UnlockData();
 	return bRet;
+}
+
+
+//
+// Check if given address is a resource address
+//
+
+BOOL Cluster::IsVirtualAddr(DWORD dwAddr)
+{
+	DWORD i;
+	BOOL bRet = FALSE;
+
+	LockData();
+	for(i = 0; i < m_dwNumResources; i++)
+	{
+		if (m_pResourceList[i].dwIpAddr == dwAddr)
+		{
+			bRet = TRUE;
+			break;
+		}
+	}
+	UnlockData();
+	return bRet;
+}
+
+
+//
+// Status poll
+//
+
+void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
+{
+	DWORD i, j, k;
+	INTERFACE_LIST *pIfList;
+	BOOL bModified = FALSE;
+
+	// Perform status poll on all member nodes
+	LockChildList(FALSE);
+	for(i = 0; i < m_dwChildCount; i++)
+	{
+		if (m_pChildList[i]->Type() == OBJECT_NODE)
+		{
+			((Node *)m_pChildList[i])->StatusPoll(pSession, dwRqId, nPoller);
+		}
+	}
+	UnlockChildList();
+
+	// Check for cluster resource movement
+	LockChildList(FALSE);
+	for(i = 0; i < m_dwChildCount; i++)
+	{
+		if (m_pChildList[i]->Type() == OBJECT_NODE)
+		{
+			pIfList = ((Node *)m_pChildList[i])->GetInterfaceList();
+			if (pIfList != NULL)
+			{
+				for(j = 0; j < (DWORD)pIfList->iNumEntries; j++)
+				{
+					for(k = 0; k < m_dwNumResources; k++)
+					{
+						if (m_pResourceList[k].dwIpAddr == pIfList->pInterfaces[j].dwIpAddr)
+						{
+							if (m_pResourceList[k].dwCurrOwner != m_pChildList[i]->Id())
+							{
+								// Resource moved or go up
+								if (m_pResourceList[k].dwCurrOwner == 0)
+								{
+									// Resource up
+									PostEvent(EVENT_CLUSTER_RESOURCE_UP, m_dwId, "dsds",
+									          m_pResourceList[k].dwId, m_pResourceList[k].szName,
+                                     m_pChildList[i]->Id(), m_pChildList[i]->Name());
+								}
+								else
+								{
+									// Moved
+									NetObj *pObject;
+
+									pObject = FindObjectById(m_pResourceList[k].dwCurrOwner);
+									PostEvent(EVENT_CLUSTER_RESOURCE_MOVED, m_dwId, "dsdsds",
+									          m_pResourceList[k].dwId, m_pResourceList[k].szName,
+									          m_pResourceList[k].dwCurrOwner,
+												 (pObject != NULL) ? pObject->Name() : _T("<unknown>"),
+                                     m_pChildList[i]->Id(), m_pChildList[i]->Name());
+								}
+								m_pResourceList[k].dwCurrOwner = m_pChildList[i]->Id();
+								bModified = TRUE;
+							}
+						}
+					}
+				}
+				DestroyInterfaceList(pIfList);
+			}
+		}
+	}
+	UnlockChildList();
+
+	LockData();
+	if (bModified)
+		Modify();
+	m_tmLastPoll = time(NULL);
+	m_bQueuedForPolling = FALSE;
+	UnlockData();
 }

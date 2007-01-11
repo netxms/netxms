@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.165 2007-01-05 16:04:12 victor Exp $ */
+/* $Id: node.cpp,v 1.166 2007-01-11 10:38:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -854,6 +854,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
    AgentConnection *pAgentConn;
    INTERFACE_LIST *pIfList;
    char szBuffer[4096];
+	Cluster *pCluster;
    BOOL bHasChanges = FALSE;
 
    SetPollerInfo(nPoller, "wait for lock");
@@ -1078,6 +1079,9 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
          bHasChanges = TRUE;
       }
 
+		// Get parent cluster object, if any
+		pCluster = GetMyCluster();
+
       // Retrieve interface list
       SetPollerInfo(nPoller, "interface check");
       SendPollerMsg(dwRqId, _T("Capability check finished\r\n"
@@ -1085,6 +1089,21 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
       pIfList = GetInterfaceList();
       if (pIfList != NULL)
       {
+			// Remove cluster virtual interfaces from list
+			if (pCluster != NULL)
+			{
+				for(i = 0; i < (DWORD)pIfList->iNumEntries; i++)
+				{
+					if (pCluster->IsVirtualAddr(pIfList->pInterfaces[i].dwIpAddr))
+					{
+						pIfList->iNumEntries--;
+						memmove(&pIfList->pInterfaces[i], &pIfList->pInterfaces[i + 1],
+						        sizeof(INTERFACE_INFO) * (pIfList->iNumEntries - i));
+						i--;
+					}
+				}
+			}
+
          // Find non-existing interfaces
          LockChildList(FALSE);
          ppDeleteList = (Interface **)malloc(sizeof(Interface *) * m_dwChildCount);

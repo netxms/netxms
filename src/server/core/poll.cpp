@@ -187,7 +187,7 @@ void ShowPollerState(CONSOLE_CTX pCtx)
 
 static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
 {
-   Node *pNode;
+   NetObj *pObject;
    char szBuffer[MAX_OBJECT_NAME + 64];
 
    // Initialize state info
@@ -198,15 +198,18 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
    while(!ShutdownInProgress())
    {
       SetPollerState((long)arg, "wait");
-      pNode = (Node *)g_statusPollQueue.GetOrBlock();
-      if (pNode == INVALID_POINTER_VALUE)
+      pObject = (NetObj *)g_statusPollQueue.GetOrBlock();
+      if (pObject == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
       snprintf(szBuffer, MAX_OBJECT_NAME + 64, "poll: %s [%d]",
-               pNode->Name(), pNode->Id());
+               pObject->Name(), pObject->Id());
       SetPollerState((long)arg, szBuffer);
-      pNode->StatusPoll(NULL, 0, (long)arg);
-      pNode->DecRefCount();
+		if (pObject->Type() == OBJECT_NODE)
+			((Node *)pObject)->StatusPoll(NULL, 0, (long)arg);
+		else if (pObject->Type() == OBJECT_NODE)
+			((Cluster *)pObject)->StatusPoll(NULL, 0, (long)arg);
+      pObject->DecRefCount();
    }
    SetPollerState((long)arg, "finished");
    return THREAD_OK;
@@ -496,6 +499,7 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 {
    Node *pNode;
    Condition *pCond;
+	Cluster *pCluster;
    DWORD j, dwWatchdogId;
    int i, iCounter, iNumStatusPollers, iNumConfigPollers;
    int nIndex, iNumDiscoveryPollers, iNumRoutePollers;
@@ -554,39 +558,64 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
          CheckForMgmtNode();
       }
 
-      // Walk through nodes and queue them for status 
+      // Walk through objects and queue them for status 
       // and/or configuration poll
-      RWLockReadLock(g_rwlockNodeIndex, INFINITE);
-      for(j = 0; j < g_dwNodeAddrIndexSize; j++)
+      RWLockReadLock(g_rwlockIdIndex, INFINITE);
+      for(j = 0; j < g_dwIdIndexSize; j++)
       {
-         pNode = (Node *)g_pNodeIndexByAddr[j].pObject;
-         if (pNode->ReadyForConfigurationPoll())
-         {
-            pNode->IncRefCount();
-            pNode->LockForConfigurationPoll();
-            g_configPollQueue.Put(pNode);
-         }
-         if (pNode->ReadyForStatusPoll())
-         {
-            pNode->IncRefCount();
-            pNode->LockForStatusPoll();
-            g_statusPollQueue.Put(pNode);
-         }
-         if (pNode->ReadyForRoutePoll())
-         {
-            pNode->IncRefCount();
-            pNode->LockForRoutePoll();
-            g_routePollQueue.Put(pNode);
-         }
-         if (pNode->ReadyForDiscoveryPoll())
-         {
-            pNode->IncRefCount();
-            pNode->LockForDiscoveryPoll();
-            g_discoveryPollQueue.Put(pNode);
-         }
+			switch(g_pIndexById[j].pObject->Type())
+			{
+				case OBJECT_NODE:
+					pNode = (Node *)g_pIndexById[j].pObject;
+					if (pNode->ReadyForConfigurationPoll())
+					{
+						pNode->IncRefCount();
+						pNode->LockForConfigurationPoll();
+						g_configPollQueue.Put(pNode);
+					}
+					if (pNode->ReadyForStatusPoll())
+					{
+						pNode->IncRefCount();
+						pNode->LockForStatusPoll();
+						g_statusPollQueue.Put(pNode);
+					}
+					if (pNode->ReadyForRoutePoll())
+					{
+						pNode->IncRefCount();
+						pNode->LockForRoutePoll();
+						g_routePollQueue.Put(pNode);
+					}
+					if (pNode->ReadyForDiscoveryPoll())
+					{
+						pNode->IncRefCount();
+						pNode->LockForDiscoveryPoll();
+						g_discoveryPollQueue.Put(pNode);
+					}
+					break;
+				case OBJECT_CONDITION:
+					pCond = (Condition *)g_pIndexById[j].pObject;
+					if (pCond->ReadyForPoll())
+					{
+						pCond->LockForPoll();
+						g_conditionPollerQueue.Put(pCond);
+					}
+					break;
+				case OBJECT_CLUSTER:
+					pCluster = (Cluster *)g_pIndexById[j].pObject;
+					if (pCluster->ReadyForStatusPoll())
+					{
+						pCluster->IncRefCount();
+						pCluster->LockForStatusPoll();
+						g_statusPollQueue.Put(pCluster);
+					}
+					break;
+				default:
+					break;
+			}
       }
-      RWLockUnlock(g_rwlockNodeIndex);
+      RWLockUnlock(g_rwlockIdIndex);
 
+		/*
       // Walk through condition objects and queue them for poll
       RWLockReadLock(g_rwlockConditionIndex, INFINITE);
       for(j = 0; j < g_dwConditionIndexSize; j++)
@@ -599,6 +628,7 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
          }
       }
       RWLockUnlock(g_rwlockConditionIndex);
+		*/
    }
 
    // Send stop signal to all pollers

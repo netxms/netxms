@@ -374,6 +374,8 @@ protected:
    IP_NETWORK *m_pSyncNetList;
 	DWORD m_dwNumResources;
 	CLUSTER_RESOURCE *m_pResourceList;
+	BOOL m_bQueuedForPolling;
+	time_t m_tmLastPoll;
 
 public:
 	Cluster();
@@ -389,6 +391,17 @@ public:
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	BOOL IsSyncAddr(DWORD dwAddr);
+	BOOL IsVirtualAddr(DWORD dwAddr);
+
+   void StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
+   void LockForStatusPoll(void) { m_bQueuedForPolling = TRUE; }
+   BOOL ReadyForStatusPoll(void) 
+   {
+      return ((m_iStatus != STATUS_UNMANAGED) && 
+              (!m_bQueuedForPolling) &&
+              ((DWORD)time(NULL) - (DWORD)m_tmLastPoll > g_dwStatusPollingInterval))
+                  ? TRUE : FALSE;
+   }
 };
 
 
