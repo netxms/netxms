@@ -21,7 +21,7 @@
 	  function
 	- Added server history in login dialog
 	- Added option "hide empty values" in last DCI values view
-- Fixed issues: #123, #135, #140, #145
+- Fixed issues: #105, #123, #135, #140, #145
 
 
 *

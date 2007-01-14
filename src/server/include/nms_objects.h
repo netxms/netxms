@@ -340,7 +340,7 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-   virtual void CalculateCompoundStatus(void);
+   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    int VersionMajor(void) { return m_dwVersion >> 16; }
    int VersionMinor(void) { return m_dwVersion & 0xFFFF; }
@@ -397,6 +397,8 @@ public:
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	BOOL IsSyncAddr(DWORD dwAddr);
 	BOOL IsVirtualAddr(DWORD dwAddr);
@@ -654,7 +656,7 @@ public:
    void LockForDiscoveryPoll(void);
    void LockForRoutePoll(void);
 
-   virtual void CalculateCompoundStatus(void);
+   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    BOOL ConnectToAgent(void);
    DWORD GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer);
@@ -856,7 +858,7 @@ public:
 
    virtual int Type(void) { return OBJECT_TEMPLATEROOT; }
    virtual const char *DefaultName(void) { return "Templates"; }
-   virtual void CalculateCompoundStatus(void);
+   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
 

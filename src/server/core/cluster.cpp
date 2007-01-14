@@ -1,4 +1,4 @@
-/* $Id: cluster.cpp,v 1.4 2007-01-14 00:11:32 victor Exp $ */
+/* $Id: cluster.cpp,v 1.5 2007-01-14 20:01:50 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -455,6 +455,16 @@ DWORD Cluster::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
 
 //
+// Calculate compound status
+//
+
+void Cluster::CalculateCompoundStatus(BOOL bForcedRecalc)
+{
+	NetObj::CalculateCompoundStatus(bForcedRecalc);
+}
+
+
+//
 // Check if given address is within sync network
 //
 
@@ -506,22 +516,32 @@ BOOL Cluster::IsVirtualAddr(DWORD dwAddr)
 
 void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 {
-	DWORD i, j, k;
+	DWORD i, j, k, dwPollListSize;
 	INTERFACE_LIST *pIfList;
 	BOOL bModified = FALSE, bAllDown;
 	BYTE *pbResourceFound;
+	NetObj **ppPollList;
+
+   // Create polling list
+   ppPollList = (NetObj **)malloc(sizeof(NetObj *) * m_dwChildCount);
+   LockChildList(FALSE);
+   for(i = 0, dwPollListSize = 0; i < m_dwChildCount; i++)
+      if ((m_pChildList[i]->Status() != STATUS_UNMANAGED) &&
+			 (m_pChildList[i]->Type() == OBJECT_NODE))
+      {
+         m_pChildList[i]->IncRefCount();
+			((Node *)m_pChildList[i])->LockForStatusPoll();
+         ppPollList[dwPollListSize++] = m_pChildList[i];
+      }
+   UnlockChildList();
 
 	// Perform status poll on all member nodes
 	DbgPrintf(AF_DEBUG_OBJECTS, _T("CLUSTER STATUS POLL [%s]: Polling member nodes"), m_szName);
-	LockChildList(FALSE);
-	for(i = 0, bAllDown = TRUE; i < m_dwChildCount; i++)
+	for(i = 0, bAllDown = TRUE; i < dwPollListSize; i++)
 	{
-		if (m_pChildList[i]->Type() == OBJECT_NODE)
-		{
-			((Node *)m_pChildList[i])->StatusPoll(pSession, dwRqId, nPoller);
-			if (!((Node *)m_pChildList[i])->IsDown())
-				bAllDown = FALSE;
-		}
+		((Node *)ppPollList[i])->StatusPoll(pSession, dwRqId, nPoller);
+		if (!((Node *)ppPollList[i])->IsDown())
+			bAllDown = FALSE;
 	}
 
 	if (bAllDown)
@@ -549,58 +569,55 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 		memset(pbResourceFound, 0, m_dwNumResources);
 
 		DbgPrintf(AF_DEBUG_OBJECTS, _T("CLUSTER STATUS POLL [%s]: Polling resources"), m_szName);
-		for(i = 0; i < m_dwChildCount; i++)
+		for(i = 0; i < dwPollListSize; i++)
 		{
-			if (m_pChildList[i]->Type() == OBJECT_NODE)
+			pIfList = ((Node *)ppPollList[i])->GetInterfaceList();
+			if (pIfList != NULL)
 			{
-				pIfList = ((Node *)m_pChildList[i])->GetInterfaceList();
-				if (pIfList != NULL)
+				for(j = 0; j < (DWORD)pIfList->iNumEntries; j++)
 				{
-					for(j = 0; j < (DWORD)pIfList->iNumEntries; j++)
+					for(k = 0; k < m_dwNumResources; k++)
 					{
-						for(k = 0; k < m_dwNumResources; k++)
+						if (m_pResourceList[k].dwIpAddr == pIfList->pInterfaces[j].dwIpAddr)
 						{
-							if (m_pResourceList[k].dwIpAddr == pIfList->pInterfaces[j].dwIpAddr)
+							if (m_pResourceList[k].dwCurrOwner != ppPollList[i]->Id())
 							{
-								if (m_pResourceList[k].dwCurrOwner != m_pChildList[i]->Id())
+								DbgPrintf(AF_DEBUG_OBJECTS, _T("CLUSTER STATUS POLL [%s]: Resource %s owner changed"),
+											 m_szName, m_pResourceList[k].szName);
+
+								// Resource moved or go up
+								if (m_pResourceList[k].dwCurrOwner == 0)
 								{
-									DbgPrintf(AF_DEBUG_OBJECTS, _T("CLUSTER STATUS POLL [%s]: Resource %s owner changed"),
-												 m_szName, m_pResourceList[k].szName);
-
-									// Resource moved or go up
-									if (m_pResourceList[k].dwCurrOwner == 0)
-									{
-										// Resource up
-										PostEvent(EVENT_CLUSTER_RESOURCE_UP, m_dwId, "dsds",
-													 m_pResourceList[k].dwId, m_pResourceList[k].szName,
-													 m_pChildList[i]->Id(), m_pChildList[i]->Name());
-									}
-									else
-									{
-										// Moved
-										NetObj *pObject;
-
-										pObject = FindObjectById(m_pResourceList[k].dwCurrOwner);
-										PostEvent(EVENT_CLUSTER_RESOURCE_MOVED, m_dwId, "dsdsds",
-													 m_pResourceList[k].dwId, m_pResourceList[k].szName,
-													 m_pResourceList[k].dwCurrOwner,
-													 (pObject != NULL) ? pObject->Name() : _T("<unknown>"),
-													 m_pChildList[i]->Id(), m_pChildList[i]->Name());
-									}
-									m_pResourceList[k].dwCurrOwner = m_pChildList[i]->Id();
-									bModified = TRUE;
+									// Resource up
+									PostEvent(EVENT_CLUSTER_RESOURCE_UP, m_dwId, "dsds",
+												 m_pResourceList[k].dwId, m_pResourceList[k].szName,
+												 ppPollList[i]->Id(), ppPollList[i]->Name());
 								}
-								pbResourceFound[k] = 1;
+								else
+								{
+									// Moved
+									NetObj *pObject;
+
+									pObject = FindObjectById(m_pResourceList[k].dwCurrOwner);
+									PostEvent(EVENT_CLUSTER_RESOURCE_MOVED, m_dwId, "dsdsds",
+												 m_pResourceList[k].dwId, m_pResourceList[k].szName,
+												 m_pResourceList[k].dwCurrOwner,
+												 (pObject != NULL) ? pObject->Name() : _T("<unknown>"),
+												 ppPollList[i]->Id(), ppPollList[i]->Name());
+								}
+								m_pResourceList[k].dwCurrOwner = ppPollList[i]->Id();
+								bModified = TRUE;
 							}
+							pbResourceFound[k] = 1;
 						}
 					}
-					DestroyInterfaceList(pIfList);
 				}
-				else
-				{
-					DbgPrintf(AF_DEBUG_OBJECTS, _T("CLUSTER STATUS POLL [%s]: Cannot get interface list from %s"),
-								 m_szName, m_pChildList[i]->Name());
-				}
+				DestroyInterfaceList(pIfList);
+			}
+			else
+			{
+				DbgPrintf(AF_DEBUG_OBJECTS, _T("CLUSTER STATUS POLL [%s]: Cannot get interface list from %s"),
+							 m_szName, ppPollList[i]->Name());
 			}
 		}
 
@@ -624,7 +641,12 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 		UnlockData();
 	}
 
-	UnlockChildList();
+	// Cleanup
+	for(i = 0; i < dwPollListSize; i++)
+	{
+		ppPollList[i]->DecRefCount();
+	}
+	safe_free(ppPollList);
 
 	LockData();
 	if (bModified)

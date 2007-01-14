@@ -69,7 +69,7 @@ TemplateRoot::~TemplateRoot()
 // Redefined status calculation for template root
 //
 
-void TemplateRoot::CalculateCompoundStatus(void)
+void TemplateRoot::CalculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_UNMANAGED;
 }

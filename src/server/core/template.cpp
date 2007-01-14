@@ -575,7 +575,7 @@ DCItem *Template::GetItemByIndex(DWORD dwIndex)
 // Redefined status calculation for template
 //
 
-void Template::CalculateCompoundStatus(void)
+void Template::CalculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_UNMANAGED;
 }

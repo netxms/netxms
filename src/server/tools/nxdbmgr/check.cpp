@@ -95,6 +95,36 @@ static void EndStage(void)
 
 
 //
+// Get object name from object_properties table
+//
+
+static TCHAR *GetObjectName(DWORD dwId, TCHAR *pszBuffer)
+{
+	TCHAR szQuery[256];
+	DB_RESULT hResult;
+
+	_stprintf(szQuery, _T("SELECT name FROM object_properties WHERE object_id=%d"), dwId);
+	hResult = SQLSelect(szQuery);
+	if (hResult != NULL)
+	{
+		if (DBGetNumRows(hResult) > 0)
+		{
+			DBGetField(hResult, 0, 0, pszBuffer, MAX_OBJECT_NAME);
+		}
+		else
+		{
+			_tcscpy(pszBuffer, _T("<unknown>"));
+		}
+	}
+	else
+	{
+		_tcscpy(pszBuffer, _T("<unknown>"));
+	}
+	return pszBuffer;
+}
+
+
+//
 // Check node objects
 //
 
@@ -174,6 +204,27 @@ static void CheckNodes(void)
       DBFreeResult(hResult);
    }
    EndStage();
+}
+
+
+//
+// Check if node exists
+//
+
+static BOOL IsNodeExist(DWORD dwId)
+{
+	TCHAR szQuery[256];
+	DB_RESULT hResult;
+	BOOL bRet = FALSE;
+
+   _sntprintf(szQuery, 256, _T("SELECT id FROM nodes WHERE id=%d"), dwId);
+   hResult = SQLSelect(szQuery);
+   if (hResult != NULL)
+   {
+      bRet = (DBGetNumRows(hResult) > 0);
+      DBFreeResult(hResult);
+   }
+	return bRet;
 }
 
 
@@ -302,6 +353,46 @@ static void CheckObjectProperties(void)
                   m_iNumFixes++;
             }
          }
+      }
+      DBFreeResult(hResult);
+   }
+   EndStage();
+}
+
+
+//
+// Check cluster objects
+//
+
+static void CheckClusters(void)
+{
+   DB_RESULT hResult;
+   TCHAR szQuery[256], szName[MAX_OBJECT_NAME];
+   DWORD i, dwNumRows, dwObjectId, dwId;
+
+   StartStage(_T("Checking cluster objects..."));
+   hResult = SQLSelect(_T("SELECT cluster_id,node_id FROM cluster_members"));
+   if (hResult != NULL)
+   {
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwObjectId = DBGetFieldULong(hResult, i, 1);
+			if (!IsNodeExist(dwObjectId))
+			{
+            m_iNumErrors++;
+            dwId = DBGetFieldULong(hResult, i, 0);
+            _tprintf(_T("\rCluster object %s [%d] refers to non-existing node %d. Dereference? (Y/N) "),
+                     GetObjectName(dwId, szName), dwId, dwObjectId);
+            if (GetYesNo())
+            {
+               _sntprintf(szQuery, 256, _T("DELETE FROM cluster_members WHERE cluster_id=%d AND node_id=%d"),dwId, dwObjectId);
+               if (SQLQuery(szQuery))
+               {
+                  m_iNumFixes++;
+               }
+            }
+			}
       }
       DBFreeResult(hResult);
    }
@@ -507,6 +598,7 @@ void CheckDatabase(void)
          CheckNodes();
          CheckComponents(_T("interface"), _T("interfaces"));
          CheckComponents(_T("network service"), _T("network_services"));
+			CheckClusters();
          CheckObjectProperties();
          CheckEPP();
 

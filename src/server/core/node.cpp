@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.168 2007-01-14 14:17:55 victor Exp $ */
+/* $Id: node.cpp,v 1.169 2007-01-14 20:01:50 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -595,14 +595,14 @@ void Node::DeleteInterface(Interface *pInterface)
 // Calculate node status based on child objects status
 //
 
-void Node::CalculateCompoundStatus(void)
+void Node::CalculateCompoundStatus(BOOL bForcedRecalc)
 {
    int iOldStatus = m_iStatus;
    static DWORD dwEventCodes[] = { EVENT_NODE_NORMAL, EVENT_NODE_MINOR,
       EVENT_NODE_WARNING, EVENT_NODE_MAJOR, EVENT_NODE_CRITICAL,
       EVENT_NODE_UNKNOWN, EVENT_NODE_UNMANAGED };
 
-   NetObj::CalculateCompoundStatus();
+   NetObj::CalculateCompoundStatus(bForcedRecalc);
    if (m_iStatus != iOldStatus)
       PostEvent(dwEventCodes[m_iStatus], m_dwId, "d", iOldStatus);
 }

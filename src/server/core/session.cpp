@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.257 2007-01-14 00:11:32 victor Exp $ */
+/* $Id: session.cpp,v 1.258 2007-01-14 20:01:50 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -411,7 +411,13 @@ void ClientSession::ReadThread(void)
             m_dwEncryptionRqId = 0;
             delete pMsg;
          }
-         else
+         else if (pMsg->GetCode() == CMD_KEEPALIVE)
+			{
+		      DebugPrintf("Received message %s\n", NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
+				RespondToKeepalive(pMsg->GetId());
+				delete pMsg;
+			}
+			else
          {
             m_pMessageQueue->Put(pMsg);
          }
@@ -3217,6 +3223,10 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                      pParent->AddChild(pObject);
                      pObject->AddParent(pParent);
                      pParent->CalculateCompoundStatus();
+							if (pParent->Type() == OBJECT_CLUSTER)
+							{
+								((Cluster *)pParent)->ApplyToNode((Node *)pObject);
+							}
                   }
 						
 						pszComments = pRequest->GetVariableStr(VID_COMMENTS);
