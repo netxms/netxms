@@ -40,24 +40,6 @@
 #include <sqltypes.h>
 
 
-/* sorry cant include netxms headers */
-/*
-#ifndef UNICODE
-#define _tcscpy	strcpy
-#define _tcscat	strcat
-#define _tcscmp	strcmp
-#define _tcsncmp	strncmp
-#define _T(c)		c
-#else
-#include <wchar.h>
-#define _tcscpy	wcscpy
-#define _tcscmp	wcscmp
-#define _tcscat	wcscat
-#define _tcsncmp	wcsncmp
-#define _T(c)		L##c
-#endif
-*/
-
 #define SQLRET_OK(c)		((c) == SQL_SUCCESS || (c) == SQL_SUCCESS_WITH_INFO)
 #define SQLRET_FAIL(c)	(!SQLRET_OK(c))
 
@@ -75,7 +57,7 @@
 #endif
 #define FAIL		(-1)
 
-#define 	MSG_OK			("Ok")
+#define 	MSG_OK			("OK")
 #define 	MSG_ECTX		 	("Invalid ODBC context")
 #define	MSG_EHENV	 	("Failed to allocate env handle")
 #define	MSG_ECONNH	 	("Failed to allocate connection handle")
@@ -126,9 +108,10 @@ void OdbcCtxFree(void* pvSqlCtx)
 
 	if (pvSqlCtx)
 	{
+		if (pSqlCtx->hStmt != NULL)
+			SQLFreeHandle(SQL_HANDLE_STMT, pSqlCtx->hStmt);
 		SQLFreeHandle(SQL_HANDLE_DBC, pSqlCtx->hDbc);
 		SQLFreeHandle(SQL_HANDLE_ENV, pSqlCtx->hEnv);
-		SQLFreeHandle(SQL_HANDLE_STMT, pSqlCtx->hStmt);
 		free(pvSqlCtx);
 	}
 
@@ -232,7 +215,14 @@ int OdbcDisconnect(void* pvSqlCtx)
 	}
 
 	if (nRet == SUCCESS)
+	{
+		if (pSqlCtx->hStmt != NULL)
+		{
+			SQLFreeHandle(SQL_HANDLE_STMT, pSqlCtx->hStmt);
+			pSqlCtx->hStmt = NULL;
+		}
 		nSqlRet = SQLDisconnect(pSqlCtx->hDbc);
+	}
 
 	if (SQLRET_FAIL(nSqlRet))
 	{
@@ -255,6 +245,8 @@ int OdbcQuerySelect1(void* pvSqlCtx, const TCHAR* pszQuery,
 	SqlCtx* pSqlCtx = (SqlCtx*)pvSqlCtx;
 	BOOL bSame = TRUE, bCursorOpened = FALSE;
 
+	*pszResult = 0;
+
 	if (nRet == SUCCESS && _tcsncmp(pSqlCtx->szSqlStmt, pszQuery, MAX_STMT))
 	{
 		bSame = FALSE;
@@ -264,8 +256,11 @@ int OdbcQuerySelect1(void* pvSqlCtx, const TCHAR* pszQuery,
 
 	if (nRet == SUCCESS && !bSame)
 	{
-		if (pSqlCtx->hStmt != 0)
+		if (pSqlCtx->hStmt != NULL)
+		{
 			SQLFreeHandle(SQL_HANDLE_STMT, pSqlCtx->hStmt);
+			pSqlCtx->hStmt = NULL;
+		}
 		nSqlRet = SQLAllocHandle(SQL_HANDLE_STMT, pSqlCtx->hDbc, &pSqlCtx->hStmt);
 		if (SQLRET_FAIL(nSqlRet))
 		{
@@ -341,4 +336,11 @@ TCHAR* OdbcGetSqlError(void* pvSqlCtx)
 	SqlCtx* pSqlCtx = (SqlCtx*)pvSqlCtx;
 
 	return (TCHAR*)pSqlCtx->szSqlErr;
+}
+
+int OdbcGetSqlErrorNumber(void* pvSqlCtx)
+{
+	SqlCtx* pSqlCtx = (SqlCtx*)pvSqlCtx;
+
+	return (int)pSqlCtx->nSqlErr;
 }

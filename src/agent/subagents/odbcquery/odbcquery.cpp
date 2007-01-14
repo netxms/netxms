@@ -53,7 +53,7 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 
 	if ((pQuery = (ODBC_QUERY *)pArg) == NULL)
 	{
-		NxWriteAgentLog(EL_ERROR, _T("Internal error: null passed to thread"));
+		NxWriteAgentLog(EL_ERROR, _T("ODBC Internal error: NULL passed to thread"));
 		goto thread_finish;
 	}
 
@@ -65,12 +65,12 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 
 	if (OdbcConnect(pQuery->pSqlCtx, pQuery->szOdbcSrc) < 0)
 	{
-		NxWriteAgentLog(EL_ERROR, _T("Failed to connect to src '%s'"), 
+		NxWriteAgentLog(EL_ERROR, _T("ODBC: Failed to connect to source '%s'"), 
 							 pQuery->szOdbcSrc);
 		goto thread_finish;
 	}
 
-	NxWriteAgentLog(EL_INFO, _T("ODBC: Connected to src '%s'"), pQuery->szOdbcSrc);
+	NxWriteAgentLog(EL_INFO, _T("ODBC: Successfully connected to source '%s'"), pQuery->szOdbcSrc);
 
 	qwPrevTime = 0;
 
@@ -82,15 +82,14 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 			if (OdbcQuerySelect1(pQuery->pSqlCtx, pQuery->szSqlQuery, 
 										pQuery->szQueryResult, (size_t)MAX_DB_STRING) < 0)
 			{
-				pQuery->dwCompletionCode = 0x00FFFFFF;		// Generic error
-				NxWriteAgentLog(EL_WARN, "ODBC Error: %s (%s)", 
+				pQuery->dwCompletionCode = OdbcGetSqlErrorNumber(pQuery->pSqlCtx);
+				NxWriteAgentLog(EL_WARN, _T("ODBC Error: %s (%s)"), 
 									 OdbcGetInfo(pQuery->pSqlCtx),
 									 OdbcGetSqlError(pQuery->pSqlCtx));
 			}
 			else
 			{
 				pQuery->dwCompletionCode = 0;
-				//NxWriteAgentLog(EL_INFO, _T("Result: '%s'"), pQuery->szQueryResult);
 			}
 			qwPrevTime = GetCurrentTimeMs();
 		}
@@ -134,10 +133,15 @@ static LONG H_PollResult(TCHAR *pszParam, char *pArg, TCHAR *pValue)
 	switch(*pArg)
 	{
 		case 'R':
+			if (m_pQueryList[i].dwCompletionCode != 0)
+				return SYSINFO_RC_ERROR;
 			ret_string(pValue, m_pQueryList[i].szQueryResult);
 			break;
 		case 'S':
 			ret_uint(pValue, m_pQueryList[i].dwCompletionCode);
+			break;
+		case 'T':
+			ret_string(pValue, OdbcGetInfo(m_pQueryList[i].pSqlCtx));
 			break;
 		default:
 	      return SYSINFO_RC_UNSUPPORTED;
@@ -234,8 +238,7 @@ static BOOL AddQueryFromConfig(TCHAR *pszCfg)
    }
 	else
 	{
-		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("Wrong query string format, "
-							 "poll interval missing"));
+		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("Wrong query string format, poll interval missing"));
 		goto finish_add_query;
 	}
 
@@ -279,7 +282,8 @@ finish_add_query:
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { _T("ODBC.QueryResult(*)"), H_PollResult, "R", DCI_DT_STRING, _T("ODBC query result") },
-   { _T("ODBC.QueryStatus(*)"), H_PollResult, "S", DCI_DT_UINT, _T("ODBC query status") }
+   { _T("ODBC.QueryStatus(*)"), H_PollResult, "S", DCI_DT_UINT, _T("ODBC query status") },
+   { _T("ODBC.QueryStatusText(*)"), H_PollResult, "T", DCI_DT_STRING, _T("ODBC query status as text") }
 };
 
 static NETXMS_SUBAGENT_INFO m_info =

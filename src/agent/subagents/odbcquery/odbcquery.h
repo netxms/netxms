@@ -1,6 +1,6 @@
 /*
 ** NetXMS ODBCQUERY subagent
-** Copyright (C) 2006 Victor Kirhenshtein
+** Copyright (C) 2006 Alex Kalimulin
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -65,5 +65,6 @@ extern int OdbcQuerySelect1(void* pvSqlCtx, const TCHAR* pszQuery,
 									TCHAR* pszResult, size_t nResSize);
 extern TCHAR* OdbcGetInfo(void* pvSqlCtx);
 extern TCHAR* OdbcGetSqlError(void* pvSqlCtx);
+extern int OdbcGetSqlErrorNumber(void* pvSqlCtx);
 
 #endif

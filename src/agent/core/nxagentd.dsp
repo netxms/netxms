@@ -213,6 +213,10 @@ SOURCE=.\session.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\snmpproxy.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\subagent.cpp
 # End Source File
 # Begin Source File
