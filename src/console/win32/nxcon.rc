@@ -495,7 +495,6 @@ BEGIN
         MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
         MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
         MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
-        MENUITEM "&Delete\tDel",                ID_EDIT_DELETE
         MENUITEM SEPARATOR
         MENUITEM "&Select all\tCtrl+A",         ID_EDIT_SELECT_ALL
     END
@@ -1135,6 +1134,17 @@ BEGIN
     VK_DELETE,      ID_CONFIG_DELETE,       VIRTKEY, NOINVERT
     VK_INSERT,      ID_CONFIG_NEW,          VIRTKEY, NOINVERT
     VK_RETURN,      ID_CONFIG_EDIT,         VIRTKEY, ALT, NOINVERT
+END
+
+IDA_OBJECT_COMMENTS ACCELERATORS DISCARDABLE 
+BEGIN
+    "A",            ID_EDIT_SELECT_ALL,     VIRTKEY, CONTROL, NOINVERT
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_COMMENTS_SAVE,       VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "Y",            ID_EDIT_REDO,           VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
 END
 
 

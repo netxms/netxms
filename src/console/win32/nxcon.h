@@ -223,6 +223,8 @@ protected:
 	HACCEL m_hDataViewAccel;      // Accelerator for DCI data viewer
 	HMENU m_hAgentCfgMgrMenu;     // Menu for agent configuration manager
 	HACCEL m_hAgentCfgMgrAccel;   // Accelerator for agent configuration manager
+	HMENU m_hObjectCommentsMenu;  // Menu for object comments editor
+	HACCEL m_hObjectCommentsAccel;// Accelerator for object comments editor
 	
 public:
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);

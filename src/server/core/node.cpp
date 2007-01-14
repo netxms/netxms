@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.169 2007-01-14 20:01:50 victor Exp $ */
+/* $Id: node.cpp,v 1.170 2007-01-14 23:45:46 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -2470,6 +2470,7 @@ void Node::CheckInterfaceNames(INTERFACE_LIST *pIfList)
                memmove(pIfList->pInterfaces[i].szName, ptr, _tcslen(ptr) + 1);
             }
          }
+			StrStrip(pIfList->pInterfaces[i].szName);
       }
    }
 

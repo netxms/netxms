@@ -41,6 +41,18 @@ BEGIN_MESSAGE_MAP(CObjectCommentsEditor, CMDIChildWnd)
 	ON_WM_CLOSE()
 	ON_COMMAND(ID_COMMENTS_SAVE, OnCommentsSave)
 	ON_UPDATE_COMMAND_UI(ID_COMMENTS_SAVE, OnUpdateCommentsSave)
+	ON_COMMAND(ID_EDIT_COPY, OnEditCopy)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, OnUpdateEditCopy)
+	ON_COMMAND(ID_EDIT_CUT, OnEditCut)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_CUT, OnUpdateEditCut)
+	ON_COMMAND(ID_EDIT_PASTE, OnEditPaste)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, OnUpdateEditPaste)
+	ON_COMMAND(ID_EDIT_REDO, OnEditRedo)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_REDO, OnUpdateEditRedo)
+	ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_SELECT_ALL, OnUpdateEditSelectAll)
+	ON_COMMAND(ID_EDIT_UNDO, OnEditUndo)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, OnUpdateEditUndo)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -218,4 +230,99 @@ void CObjectCommentsEditor::SaveComments()
    {
       theApp.ErrorBox(dwResult, _T("Cannot update object's comments: %s"));
    }
+}
+
+
+//
+// Edit -> Copy
+//
+
+void CObjectCommentsEditor::OnEditCopy() 
+{
+	m_wndEdit.Copy();
+}
+
+void CObjectCommentsEditor::OnUpdateEditCopy(CCmdUI* pCmdUI) 
+{
+	CHARRANGE cr;
+
+	m_wndEdit.GetSel(cr);
+	pCmdUI->Enable(cr.cpMin != cr.cpMax);
+}
+
+
+//
+// Edit -> Cut
+//
+
+void CObjectCommentsEditor::OnEditCut() 
+{
+	m_wndEdit.Cut();
+}
+
+void CObjectCommentsEditor::OnUpdateEditCut(CCmdUI* pCmdUI) 
+{
+	CHARRANGE cr;
+
+	m_wndEdit.GetSel(cr);
+	pCmdUI->Enable(cr.cpMin != cr.cpMax);
+}
+
+
+//
+// Edit -> Paste
+//
+
+void CObjectCommentsEditor::OnEditPaste() 
+{
+	m_wndEdit.Paste();
+}
+
+void CObjectCommentsEditor::OnUpdateEditPaste(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(m_wndEdit.CanPaste());
+}
+
+
+//
+// Edit -> Redo
+//
+
+void CObjectCommentsEditor::OnEditRedo() 
+{
+}
+
+void CObjectCommentsEditor::OnUpdateEditRedo(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(FALSE);
+}
+
+
+//
+// Edit -> Select All
+//
+
+void CObjectCommentsEditor::OnEditSelectAll() 
+{
+	m_wndEdit.SetSel(0, -1);
+}
+
+void CObjectCommentsEditor::OnUpdateEditSelectAll(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(TRUE);
+}
+
+
+//
+// Edit -> Undo
+//
+
+void CObjectCommentsEditor::OnEditUndo() 
+{
+	m_wndEdit.Undo();
+}
+
+void CObjectCommentsEditor::OnUpdateEditUndo(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(m_wndEdit.CanUndo());
 }

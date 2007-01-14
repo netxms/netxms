@@ -143,7 +143,7 @@ void CObjectOverview::OnPaint()
          rect.left += 2;
          rect.right -= 2;
          dc.DrawText(m_pObject->pszComments, _tcslen(m_pObject->pszComments), &rect,
-                     DT_END_ELLIPSIS | DT_NOPREFIX | DT_WORDBREAK);
+                     DT_END_ELLIPSIS | DT_NOPREFIX | DT_WORDBREAK | DT_EXPANDTABS);
       }
    }
    else

@@ -424,6 +424,11 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hAgentCfgMgrMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
    InsertMenu(m_hAgentCfgMgrMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 23), _T("&Config"));
 
+   m_hObjectCommentsMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hObjectCommentsMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hObjectCommentsMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 24), _T("&Comments"));
+   InsertMenu(m_hObjectCommentsMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 17), _T("&Edit"));
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -445,6 +450,7 @@ BOOL CConsoleApp::InitInstance()
 	m_hScriptManagerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_SCRIPT_MANAGER));
 	m_hDataViewAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_DATA_VIEW));
 	m_hAgentCfgMgrAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_AGENT_CONFIG_MANAGER));
+	m_hObjectCommentsAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_OBJECT_COMMENTS));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)
@@ -529,6 +535,8 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hDataViewAccel);
    SafeFreeResource(m_hAgentCfgMgrMenu);
    SafeFreeResource(m_hAgentCfgMgrAccel);
+   SafeFreeResource(m_hObjectCommentsMenu);
+   SafeFreeResource(m_hObjectCommentsAccel);
 
    CloseHandle(g_mutexActionListAccess);
 
@@ -1412,7 +1420,7 @@ void CConsoleApp::ShowObjectComments(NXC_OBJECT *pObject)
    {
       CreateChildFrameWithSubtitle(new CObjectCommentsEditor(pObject->dwId),
                                    IDR_OBJECT_COMMENTS_EDITOR,
-                                   pObject->szName, m_hMDIMenu, m_hMDIAccel);
+                                   pObject->szName, m_hObjectCommentsMenu, m_hObjectCommentsAccel);
    }
    else
    {
