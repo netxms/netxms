@@ -4,7 +4,7 @@ INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 
 lib_LTLIBRARIES = libnxcore.la
 libnxcore_la_SOURCES = acl.cpp agent.cpp actions.cpp admin.cpp alarm.cpp \
-			client.cpp condition.cpp config.cpp \
+			client.cpp cluster.cpp condition.cpp config.cpp \
 			container.cpp correlate.cpp datacoll.cpp \
 			dbwrite.cpp dcitem.cpp dcithreshold.cpp dcivalue.cpp \
 			debug.cpp email.cpp entirenet.cpp epp.cpp events.cpp \

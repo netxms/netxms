@@ -1,4 +1,4 @@
-/* $Id: snmpproxy.cpp,v 1.1 2007-01-14 14:17:54 victor Exp $ */
+/* $Id: snmpproxy.cpp,v 1.2 2007-01-14 20:55:08 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -42,6 +42,7 @@ static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, DWORD *pdwSize)
 	int nBytes;
 #ifndef _WIN32
    int iErr;
+	DWORD dwTimeout = g_dwSNMPTimeout;
    QWORD qwTime;
 
    do
@@ -56,7 +57,7 @@ static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, DWORD *pdwSize)
          return FALSE;
 #else
       qwTime = GetCurrentTimeMs();
-      if ((iErr = select(m_hSocket + 1, &rdfs, NULL, NULL, &tv)) <= 0)
+      if ((iErr = select(hSocket + 1, &rdfs, NULL, NULL, &tv)) <= 0)
       {
          if (((iErr == -1) && (errno != EINTR)) ||
              (iErr == 0))
