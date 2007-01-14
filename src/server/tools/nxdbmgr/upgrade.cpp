@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: upgrade.cpp
+** File: upgrade.cpp
 **
 **/
 
@@ -74,6 +74,31 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
       bResult = SQLQuery(szQuery);
    }
    return bResult;
+}
+
+
+//
+// Upgrade from V56 to V57
+//
+
+static BOOL H_UpgradeFromV56(void)
+{
+   static TCHAR m_szBatch[] =
+		_T("ALTER TABLE items ADD resource_id integer\n")
+		_T("UPDATE items SET resource_id=0\n")
+		_T("ALTER TABLE nodes ADD snmp_proxy integer\n")
+		_T("UPDATE nodes SET snmp_proxy=0\n")
+      _T("<END>");
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='57' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
 }
 
 
@@ -2526,6 +2551,7 @@ static struct
    { 53, H_UpgradeFromV53 },
    { 54, H_UpgradeFromV54 },
    { 55, H_UpgradeFromV55 },
+   { 56, H_UpgradeFromV56 },
    { 0, NULL }
 };
 

@@ -554,12 +554,12 @@ void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, DWORD dwVarId, TCHAR *pszS
 
 void SnmpInit(void);
 DWORD SnmpNewRequestId(void);
-DWORD SnmpGet(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity,
+DWORD SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport, const char *szCommunity,
               const char *szOidStr, const DWORD *oidBinary, DWORD dwOidLen, void *pValue,
               DWORD dwBufferSize, BOOL bVerbose, BOOL bStringResult);
-DWORD SnmpEnumerate(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity,
-                    const char *szRootOid, DWORD (* pHandler)(DWORD, DWORD, WORD,
-                    const char *, SNMP_Variable *, SNMP_Transport *, void *),
+DWORD SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const char *szCommunity,
+                    const char *szRootOid,
+						  DWORD (* pHandler)(DWORD, const char *, SNMP_Variable *, SNMP_Transport *, void *),
                     void *pUserArg, BOOL bVerbose);
 void StrToMac(char *pszStr, BYTE *pBuffer);
 DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags);
@@ -567,15 +567,15 @@ DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags);
 void InitLocalNetInfo(void);
 
 ARP_CACHE *GetLocalArpCache(void);
-ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity);
+ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, SNMP_Transport *pTransport, const char *szCommunity);
 
-INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, DWORD dwAddr, WORD wPort,
+INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport,
                                      const char *szCommunity, DWORD dwNodeType);
 INTERFACE_LIST *GetLocalInterfaceList(void);
 void CleanInterfaceList(INTERFACE_LIST *pIfList);
-int SnmpGetInterfaceStatus(DWORD dwVersion, DWORD dwNodeAddr, WORD wPort, char *pszCommunity, DWORD dwIfIndex);
+int SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, char *pszCommunity, DWORD dwIfIndex);
 
-ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, DWORD dwAddr, WORD wPort, const char *szCommunity);
+ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, SNMP_Transport *pTransport, const char *szCommunity);
 
 void WatchdogInit(void);
 DWORD WatchdogAddThread(char *szName, time_t tNotifyInterval);
@@ -613,7 +613,7 @@ void InitSMSSender(void);
 void ShutdownSMSSender(void);
 void NXCORE_EXPORTABLE PostSMS(TCHAR *pszRcpt, TCHAR *pszText);
 
-void GetAccelarVLANIfList(DWORD dwVersion, DWORD dwIpAddr, WORD wPort,
+void GetAccelarVLANIfList(DWORD dwVersion, SNMP_Transport *pTransport,
                           const TCHAR *pszCommunity, INTERFACE_LIST *pIfList);
 
 void InitTraps(void);

@@ -1249,6 +1249,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
             wndNodeGeneral.m_strSecret = pObject->node.szSharedSecret;
             wndNodeGeneral.m_iSNMPVersion = (pObject->node.wSNMPVersion == SNMP_VERSION_1) ? 0 : 1;
             wndNodeGeneral.m_dwProxyNode = pObject->node.dwProxyNode;
+				wndNodeGeneral.m_dwSNMPProxy = pObject->node.dwSNMPProxy;
             wndPropSheet.AddPage(&wndNodeGeneral);
 
             // Create "Polling" tab

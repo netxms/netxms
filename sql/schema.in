@@ -172,6 +172,7 @@ CREATE TABLE nodes
 	poller_node_id integer not null,
 	zone_guid integer not null,
 	proxy_node integer not null,
+	snmp_proxy integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -453,6 +454,7 @@ CREATE TABLE items
 	transformation SQL_TEXT not null, // Transformation formula
 	instance varchar(255) not null,	  // Free form text which can be used in events
 	all_thresholds integer not null,  // 1 if all thresholds should be processed at every check
+	resource_id integer not null,  // associated cluster resource ID
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 

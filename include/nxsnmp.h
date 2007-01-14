@@ -419,10 +419,35 @@ public:
 
 
 //
-// SNMP transport
+// Generic SNMP transport
 //
 
 class LIBNXSNMP_EXPORTABLE SNMP_Transport
+{
+public:
+   SNMP_Transport() { }
+   virtual ~SNMP_Transport() { }
+
+   virtual int Read(SNMP_PDU **ppData, DWORD dwTimeout = INFINITE,
+                    struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL)
+	{
+		return -1;
+	}
+   virtual int Send(SNMP_PDU *pPDU, struct sockaddr *pRcpt = NULL, socklen_t iAddrLen = 0)
+	{
+		return -1;
+	}
+
+   DWORD DoRequest(SNMP_PDU *pRequest, SNMP_PDU **pResponse, 
+                   DWORD dwTimeout = INFINITE, DWORD dwNumRetries = 1);
+};
+
+
+//
+// UDP SNMP transport
+//
+
+class LIBNXSNMP_EXPORTABLE SNMP_UDPTransport : public SNMP_Transport
 {
 private:
    SOCKET m_hSocket;
@@ -436,15 +461,13 @@ private:
    void ClearBuffer(void);
 
 public:
-   SNMP_Transport();
-   SNMP_Transport(SOCKET hSocket);
-   ~SNMP_Transport();
+   SNMP_UDPTransport();
+   SNMP_UDPTransport(SOCKET hSocket);
+   virtual ~SNMP_UDPTransport();
 
-   int Read(SNMP_PDU **ppData, DWORD dwTimeout = INFINITE,
-            struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL);
-   int Send(SNMP_PDU *pPDU, struct sockaddr *pRcpt = NULL, socklen_t iAddrLen = 0);
-   DWORD DoRequest(SNMP_PDU *pRequest, SNMP_PDU **pResponse, 
-                   DWORD dwTimeout = INFINITE, DWORD dwNumRetries = 1);
+   virtual int Read(SNMP_PDU **ppData, DWORD dwTimeout = INFINITE,
+                    struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL);
+   virtual int Send(SNMP_PDU *pPDU, struct sockaddr *pRcpt = NULL, socklen_t iAddrLen = 0);
 
    DWORD CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr = 0, WORD wPort = SNMP_DEFAULT_PORT);
 };

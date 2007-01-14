@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.256 2007-01-05 16:04:12 victor Exp $ */
+/* $Id: session.cpp,v 1.257 2007-01-14 00:11:32 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -452,6 +452,7 @@ void ClientSession::ReadThread(void)
       pObject = FindObjectById(m_pOpenDCIList[i]);
       if (pObject != NULL)
          if ((pObject->Type() == OBJECT_NODE) ||
+             (pObject->Type() == OBJECT_CLUSTER) ||
              (pObject->Type() == OBJECT_TEMPLATE))
             ((Template *)pObject)->UnlockDCIList(m_dwIndex);
    }
@@ -2268,6 +2269,7 @@ void ClientSession::OpenNodeDCIList(CSCPMessage *pRequest)
    if (pObject != NULL)
    {
       if ((pObject->Type() == OBJECT_NODE) ||
+          (pObject->Type() == OBJECT_CLUSTER) ||
           (pObject->Type() == OBJECT_TEMPLATE))
       {
          if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -2333,6 +2335,7 @@ void ClientSession::CloseNodeDCIList(CSCPMessage *pRequest)
    if (pObject != NULL)
    {
       if ((pObject->Type() == OBJECT_NODE) ||
+          (pObject->Type() == OBJECT_CLUSTER) ||
           (pObject->Type() == OBJECT_TEMPLATE))
       {
          if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -2359,7 +2362,8 @@ void ClientSession::CloseNodeDCIList(CSCPMessage *pRequest)
             }
 
             // Queue template update
-            if (pObject->Type() == OBJECT_TEMPLATE)
+            if ((pObject->Type() == OBJECT_TEMPLATE) ||
+					 (pObject->Type() == OBJECT_CLUSTER))
                ((Template *)pObject)->QueueUpdate();
          }
          else
@@ -2402,6 +2406,7 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
    if (pObject != NULL)
    {
       if ((pObject->Type() == OBJECT_NODE) ||
+          (pObject->Type() == OBJECT_CLUSTER) ||
           (pObject->Type() == OBJECT_TEMPLATE))
       {
          if (((Template *)pObject)->IsLockedBySession(m_dwIndex))
@@ -2508,6 +2513,7 @@ void ClientSession::ChangeDCIStatus(CSCPMessage *pRequest)
    if (pObject != NULL)
    {
       if ((pObject->Type() == OBJECT_NODE) ||
+          (pObject->Type() == OBJECT_CLUSTER) ||
           (pObject->Type() == OBJECT_TEMPLATE))
       {
          if (((Template *)pObject)->IsLockedBySession(m_dwIndex))
@@ -2573,8 +2579,8 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
    if ((pSource != NULL) && (pDestination != NULL))
    {
       // Check object types
-      if (((pSource->Type() == OBJECT_NODE) || (pSource->Type() == OBJECT_TEMPLATE)) && 
-          ((pDestination->Type() == OBJECT_NODE) || (pDestination->Type() == OBJECT_TEMPLATE)))
+      if (((pSource->Type() == OBJECT_NODE) || (pSource->Type() == OBJECT_TEMPLATE) || (pSource->Type() == OBJECT_CLUSTER)) && 
+          ((pDestination->Type() == OBJECT_NODE) || (pDestination->Type() == OBJECT_TEMPLATE) || (pDestination->Type() == OBJECT_CLUSTER)))
       {
          if (((Template *)pSource)->IsLockedBySession(m_dwIndex))
          {
@@ -4538,6 +4544,7 @@ void ClientSession::SendParametersList(CSCPMessage *pRequest)
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
             ((Node *)pObject)->WriteParamListToMessage(&msg);
             break;
+         case OBJECT_CLUSTER:
          case OBJECT_TEMPLATE:
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
             WriteFullParamListToMessage(&msg);
@@ -6717,8 +6724,7 @@ typedef struct
 // SNMP walker enumeration callback
 //
 
-static DWORD WalkerCallback(DWORD dwVersion, DWORD dwAddr, WORD wPort, 
-                            const char *pszCommunity, SNMP_Variable *pVar,
+static DWORD WalkerCallback(DWORD dwVersion, const char *pszCommunity, SNMP_Variable *pVar,
                             SNMP_Transport *pTransport, void *pArg)
 {
    CSCPMessage *pMsg = ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->pMsg;
@@ -7173,23 +7179,32 @@ DWORD ClientSession::ResolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName
    pObject = FindObjectById(dwNode);
    if (pObject != NULL)
    {
-      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
-      {
-         pItem = ((Node *)pObject)->GetItemById(dwItem);
-         if (pItem != NULL)
-         {
-            *ppszName = (TCHAR *)pItem->Description();
-            dwResult = RCC_SUCCESS;
-         }
-         else
-         {
-            dwResult = RCC_INVALID_DCI_ID;
-         }
-      }
-      else
-      {
-         dwResult = RCC_ACCESS_DENIED;
-      }
+		if ((pObject->Type() == OBJECT_NODE) ||
+			 (pObject->Type() == OBJECT_CLUSTER) ||
+			 (pObject->Type() == OBJECT_TEMPLATE))
+		{
+			if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+			{
+				pItem = ((Template *)pObject)->GetItemById(dwItem);
+				if (pItem != NULL)
+				{
+					*ppszName = (TCHAR *)pItem->Description();
+					dwResult = RCC_SUCCESS;
+				}
+				else
+				{
+					dwResult = RCC_INVALID_DCI_ID;
+				}
+			}
+			else
+			{
+				dwResult = RCC_ACCESS_DENIED;
+			}
+		}
+		else
+		{
+	      dwResult = RCC_INCOMPATIBLE_OPERATION;
+		}
    }
    else
    {
@@ -8013,6 +8028,7 @@ void ClientSession::SendDCIEventList(CSCPMessage *pRequest)
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          if ((pObject->Type() == OBJECT_NODE) ||
+             (pObject->Type() == OBJECT_CLUSTER) ||
              (pObject->Type() == OBJECT_TEMPLATE))
          {
             pdwEventList = ((Template *)pObject)->GetDCIEventsList(&dwCount);

@@ -234,7 +234,9 @@ BOOL Interface::DeleteFromDB(void)
 // Perform status poll on interface
 //
 
-void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQueue)
+void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
+									Queue *pEventQueue, BOOL bClusterSync,
+									SNMP_Transport *pTransport)
 {
    int iOldStatus = m_iStatus;
    DWORD dwPingStatus;
@@ -269,7 +271,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQ
           (!(pNode->Flags() & NF_DISABLE_SNMP)))
       {
          SendPollerMsg(dwRqId, "      Retrieving interface status from SNMP agent\r\n");
-         m_iStatus = pNode->GetInterfaceStatusFromSNMP(m_dwIfIndex);
+         m_iStatus = pNode->GetInterfaceStatusFromSNMP(pTransport, m_dwIfIndex);
          if (m_iStatus != STATUS_UNKNOWN)
             bNeedPoll = FALSE;
       }
@@ -277,7 +279,8 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQ
    
    if (bNeedPoll)
    {
-      if (pNode->Flags() & NF_DISABLE_ICMP)
+		// Pings cannot be used for cluster sync interfaces
+      if ((pNode->Flags() & NF_DISABLE_ICMP) || bClusterSync)
       {
          m_iStatus = STATUS_UNKNOWN;
       }

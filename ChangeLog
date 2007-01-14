@@ -2,6 +2,7 @@
 * 0.2.15
 *
 
+- Added initial support for cluster monitoring
 - IPSO agent improved
 - UPS subagent: added support for MICRODOWELL UPS devices
 - Added Extended Checksum subagent

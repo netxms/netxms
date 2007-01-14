@@ -801,6 +801,7 @@ BOOL CObjectBrowser::CurrObjectIsNode(BOOL bIncludeTemplates)
    {
       return bIncludeTemplates ? 
          ((m_pCurrentObject->iClass == OBJECT_NODE) || 
+          (m_pCurrentObject->iClass == OBJECT_CLUSTER) || 
           (m_pCurrentObject->iClass == OBJECT_TEMPLATE)) :
          (m_pCurrentObject->iClass == OBJECT_NODE);
    }

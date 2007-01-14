@@ -43,7 +43,7 @@ static DWORD m_dwType = ASN_OCTET_STRING;
 
 static int SetVariables(int argc, char *argv[])
 {
-   SNMP_Transport *pTransport;
+   SNMP_UDPTransport *pTransport;
    SNMP_PDU *request, *response;
    SNMP_Variable *pVar;
    DWORD dwResult;
@@ -56,7 +56,7 @@ static int SetVariables(int argc, char *argv[])
 #endif
 
    // Create SNMP transport
-   pTransport = new SNMP_Transport;
+   pTransport = new SNMP_UDPTransport;
    dwResult = pTransport->CreateUDPTransport(argv[0], 0, m_wPort);
    if (dwResult != SNMP_ERR_SUCCESS)
    {

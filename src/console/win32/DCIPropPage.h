@@ -17,6 +17,7 @@ class CDCIPropPage : public CPropertyPage
 
 // Construction
 public:
+	DWORD m_dwResourceId;
 	NXC_OBJECT *m_pNode;
 	CDCIPropPage();   // standard constructor
    virtual ~CDCIPropPage();
@@ -24,6 +25,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CDCIPropPage)
 	enum { IDD = IDD_DCI_COLLECTION };
+	CComboBox	m_wndComboResources;
 	CEdit	m_wndEditName;
 	CComboBox	m_wndOriginList;
 	CComboBox	m_wndTypeList;
@@ -50,6 +52,7 @@ public:
 
 // Implementation
 protected:
+	NXC_OBJECT * m_pCluster;
 	void EnablePollingInterval(BOOL bEnable);
 	NXC_AGENT_PARAM *m_pParamList;
 	DWORD m_dwNumParams;
@@ -64,6 +67,7 @@ protected:
 	afx_msg void OnSelchangeComboOrigin();
 	afx_msg void OnCheckSchedule();
 	afx_msg void OnSelchangeComboDt();
+	afx_msg void OnSelchangeComboResources();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

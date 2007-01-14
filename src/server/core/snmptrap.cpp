@@ -369,7 +369,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    struct sockaddr_in addr;
    int iBytes;
    socklen_t nAddrLen;
-   SNMP_Transport *pTransport;
+   SNMP_UDPTransport *pTransport;
    SNMP_PDU *pdu;
 
    hSocket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -395,7 +395,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
       return THREAD_OK;
    }
 
-   pTransport = new SNMP_Transport(hSocket);
+   pTransport = new SNMP_UDPTransport(hSocket);
    DbgPrintf(AF_DEBUG_SNMP, _T("SNMP Trap Receiver started"));
 
    // Wait for packets

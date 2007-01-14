@@ -94,6 +94,14 @@ extern DWORD g_dwConditionPollingInterval;
 
 
 //
+// Cluster runtime flags
+//
+
+#define CLF_QUEUED_FOR_STATUS_POLL     0x0001
+#define CLF_DOWN								0x0002
+
+
+//
 // Status poll types
 //
 
@@ -374,7 +382,7 @@ protected:
    IP_NETWORK *m_pSyncNetList;
 	DWORD m_dwNumResources;
 	CLUSTER_RESOURCE *m_pResourceList;
-	BOOL m_bQueuedForPolling;
+	DWORD m_dwFlags;
 	time_t m_tmLastPoll;
 
 public:
@@ -392,13 +400,14 @@ public:
 
 	BOOL IsSyncAddr(DWORD dwAddr);
 	BOOL IsVirtualAddr(DWORD dwAddr);
+	BOOL IsResourceOnNode(DWORD dwResource, DWORD dwNode);
 
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
-   void LockForStatusPoll(void) { m_bQueuedForPolling = TRUE; }
+   void LockForStatusPoll(void) { m_dwFlags |= CLF_QUEUED_FOR_STATUS_POLL; }
    BOOL ReadyForStatusPoll(void) 
    {
       return ((m_iStatus != STATUS_UNMANAGED) && 
-              (!m_bQueuedForPolling) &&
+              (!(m_dwFlags & CLF_QUEUED_FOR_STATUS_POLL)) &&
               ((DWORD)time(NULL) - (DWORD)m_tmLastPoll > g_dwStatusPollingInterval))
                   ? TRUE : FALSE;
    }
@@ -447,7 +456,8 @@ public:
                               (!memcmp(m_bMacAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
    void SetIpAddr(DWORD dwNewAddr);
 
-   void StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQueue);
+   void StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQueue,
+	                BOOL bClusterSync, SNMP_Transport *pTransport);
    virtual void CreateMessage(CSCPMessage *pMsg);
 
    DWORD WakeUp(void);
@@ -562,6 +572,7 @@ protected:
    AgentConnectionEx *m_pAgentConnection;
    DWORD m_dwPollerNode;      // Node used for network service polling
    DWORD m_dwProxyNode;       // Node used as proxy for agent connection
+	DWORD m_dwSNMPProxy;			// Node used as proxy for SNMP requests
    QWORD m_qwLastEvents[MAX_LAST_EVENTS];
    ROUTING_TABLE *m_pRoutingTable;
 
@@ -574,10 +585,9 @@ protected:
    void RTLock(void) { MutexLock(m_mutexRTAccess, INFINITE); }
    void RTUnlock(void) { MutexUnlock(m_mutexRTAccess); }
 
-   BOOL CheckSNMPIntegerValue(char *pszOID, int nValue);
-   void CheckOSPFSupport(void);
+   BOOL CheckSNMPIntegerValue(SNMP_Transport *pTransport, char *pszOID, int nValue);
+   void CheckOSPFSupport(SNMP_Transport *pTransport);
    void SetAgentProxy(AgentConnection *pConn);
-	Cluster *GetMyCluster(void);
 
    DWORD GetInterfaceCount(Interface **ppInterface);
 
@@ -596,6 +606,8 @@ public:
    virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB(void);
    virtual BOOL CreateFromDB(DWORD dwId);
+
+	Cluster *GetMyCluster(void);
 
    DWORD Flags(void) { return m_dwFlags; }
    DWORD RuntimeFlags(void) { return m_dwDynamicFlags; }
@@ -622,7 +634,7 @@ public:
    ARP_CACHE *GetArpCache(void);
    INTERFACE_LIST *GetInterfaceList(void);
    Interface *FindInterface(DWORD dwIndex, DWORD dwHostAddr);
-   int GetInterfaceStatusFromSNMP(DWORD dwIndex);
+   int GetInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex);
    int GetInterfaceStatusFromAgent(DWORD dwIndex);
    ROUTING_TABLE *GetRoutingTable(void);
    ROUTING_TABLE *GetCachedRoutingTable(void) { return m_pRoutingTable; }
@@ -662,6 +674,7 @@ public:
    void CloseParamList(void) { UnlockData(); }
 
    AgentConnection *CreateAgentConnection(void);
+	SNMP_Transport *CreateSNMPTransport(void);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
@@ -677,7 +690,7 @@ public:
    void SetLastEventId(int nIndex, QWORD qwId) { if ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) m_qwLastEvents[nIndex] = qwId; }
 
    DWORD CallSnmpEnumerate(char *pszRootOid, 
-      DWORD (* pHandler)(DWORD, DWORD, WORD, const char *, SNMP_Variable *, SNMP_Transport *, void *), void *pArg);
+      DWORD (* pHandler)(DWORD, const char *, SNMP_Variable *, SNMP_Transport *, void *), void *pArg);
 };
 
 

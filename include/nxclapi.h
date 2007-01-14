@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.252 2007-01-08 21:43:22 victor Exp $ */
+/* $Id: nxclapi.h,v 1.253 2007-01-14 00:11:29 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -428,6 +428,7 @@ enum
 #define OBJ_UPDATE_SCRIPT           ((DWORD)0x08000000)
 #define OBJ_UPDATE_CLUSTER_TYPE		((DWORD)0x10000000)
 #define OBJ_UPDATE_RESOURCES			((DWORD)0x20000000)
+#define OBJ_UPDATE_SNMP_PROXY			((DWORD)0x40000000)
 
 
 //
@@ -887,6 +888,7 @@ struct __nxc_object_node
    DWORD dwNodeType;
    DWORD dwPollerNode;
    DWORD dwProxyNode;
+	DWORD dwSNMPProxy;
    DWORD dwZoneGUID;
    TCHAR szSharedSecret[MAX_SECRET_LENGTH];
    TCHAR szCommunityString[MAX_COMMUNITY_LENGTH];
@@ -1041,6 +1043,7 @@ typedef struct
    int iStatusSingleTh;
    int iStatusThresholds[4];
    DWORD dwProxyNode;
+	DWORD dwSNMPProxy;
    DWORD dwNodeFlags;
    DWORD dwActivationEvent;
    DWORD dwDeactivationEvent;
@@ -1108,6 +1111,7 @@ typedef struct
 {
    DWORD dwId;
    DWORD dwTemplateId;
+	DWORD dwResourceId;
    TCHAR szName[MAX_ITEM_NAME];
    TCHAR szDescription[MAX_DB_STRING];
    TCHAR szInstance[MAX_DB_STRING];

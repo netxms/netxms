@@ -86,6 +86,7 @@ BEGIN_MESSAGE_MAP(CNodePropsGeneral, CPropertyPage)
 	ON_BN_CLICKED(IDC_SELECT_IP, OnSelectIp)
 	ON_BN_CLICKED(IDC_SELECT_PROXY, OnSelectProxy)
 	ON_BN_CLICKED(IDC_BUTTON_GENERATE, OnButtonGenerate)
+	ON_BN_CLICKED(IDC_SELECT_SNMPPROXY, OnSelectSnmpproxy)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -126,6 +127,26 @@ BOOL CNodePropsGeneral::OnInitDialog()
    else
    {
       SetDlgItemText(IDC_EDIT_PROXY, _T("<none>"));
+   }
+
+   // SNMP proxy node
+   if (m_dwSNMPProxy != 0)
+   {
+      NXC_OBJECT *pNode;
+
+      pNode = NXCFindObjectById(g_hSession, m_dwSNMPProxy);
+      if (pNode != NULL)
+      {
+         SetDlgItemText(IDC_EDIT_SNMPPROXY, pNode->szName);
+      }
+      else
+      {
+         SetDlgItemText(IDC_EDIT_SNMPPROXY, _T("<invalid>"));
+      }
+   }
+   else
+   {
+      SetDlgItemText(IDC_EDIT_SNMPPROXY, _T("<none>"));
    }
 
    return TRUE;
@@ -198,6 +219,7 @@ void CNodePropsGeneral::OnOK()
    m_pUpdate->wSNMPVersion = (m_iSNMPVersion == 0) ? SNMP_VERSION_1 : SNMP_VERSION_2C;
    m_pUpdate->dwIpAddr = m_dwIpAddr;
    m_pUpdate->dwProxyNode = m_dwProxyNode;
+   m_pUpdate->dwSNMPProxy = m_dwSNMPProxy;
    if (m_bForceEncryption)
       m_pUpdate->dwNodeFlags |= NF_FORCE_ENCRYPTION;
    else
@@ -277,6 +299,45 @@ void CNodePropsGeneral::OnSelectProxy()
          SetDlgItemText(IDC_EDIT_PROXY, _T("<none>"));
       }
       m_pUpdate->dwFlags |= OBJ_UPDATE_PROXY_NODE;
+      SetModified();
+   }
+}
+
+
+//
+// Handler for "Select SNMP proxy" button
+//
+
+void CNodePropsGeneral::OnSelectSnmpproxy() 
+{
+   CObjectSelDlg dlg;
+
+   dlg.m_dwAllowedClasses = SCL_NODE;
+   dlg.m_bSingleSelection = TRUE;
+   dlg.m_bAllowEmptySelection = TRUE;
+   if (dlg.DoModal() == IDOK)
+   {
+      if (dlg.m_dwNumObjects != 0)
+      {
+         NXC_OBJECT *pNode;
+
+         m_dwSNMPProxy = dlg.m_pdwObjectList[0];
+         pNode = NXCFindObjectById(g_hSession, m_dwSNMPProxy);
+         if (pNode != NULL)
+         {
+            SetDlgItemText(IDC_EDIT_SNMPPROXY, pNode->szName);
+         }
+         else
+         {
+            SetDlgItemText(IDC_EDIT_SNMPPROXY, _T("<invalid>"));
+         }
+      }
+      else
+      {
+         m_dwSNMPProxy = 0;
+         SetDlgItemText(IDC_EDIT_SNMPPROXY, _T("<none>"));
+      }
+      m_pUpdate->dwFlags |= OBJ_UPDATE_SNMP_PROXY;
       SetModified();
    }
 }

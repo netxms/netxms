@@ -42,7 +42,7 @@ static DWORD m_dwTimeout = 3000;
 
 int GetData(char *pszHost, char *pszRootOid)
 {
-   SNMP_Transport *pTransport;
+   SNMP_UDPTransport *pTransport;
    SNMP_PDU *pRqPDU, *pRespPDU;
    DWORD dwResult, dwRootLen, dwNameLen;
    DWORD pdwRootName[MAX_OID_LEN], pdwName[MAX_OID_LEN];
@@ -57,7 +57,7 @@ int GetData(char *pszHost, char *pszRootOid)
 #endif
 
    // Create SNMP transport
-   pTransport = new SNMP_Transport;
+   pTransport = new SNMP_UDPTransport;
    dwResult = pTransport->CreateUDPTransport(pszHost, 0, m_wPort);
    if (dwResult != SNMP_ERR_SUCCESS)
    {

@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.166 2007-01-11 10:38:05 victor Exp $ */
+/* $Id: node.cpp,v 1.167 2007-01-14 00:11:32 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -58,6 +58,7 @@ Node::Node()
    m_pParamList = NULL;
    m_dwPollerNode = 0;
    m_dwProxyNode = 0;
+	m_dwSNMPProxy = 0;
    memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_pRoutingTable = NULL;
    m_tFailTimeSNMP = 0;
@@ -101,6 +102,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwZone)
    m_pParamList = NULL;
    m_dwPollerNode = 0;
    m_dwProxyNode = dwProxyNode;
+	m_dwSNMPProxy = 0;
    memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_bIsHidden = TRUE;
    m_pRoutingTable = NULL;
@@ -118,8 +120,7 @@ Node::~Node()
    MutexDestroy(m_hPollerMutex);
    MutexDestroy(m_hAgentAccessMutex);
    MutexDestroy(m_mutexRTAccess);
-   if (m_pAgentConnection != NULL)
-      delete m_pAgentConnection;
+   delete m_pAgentConnection;
    safe_free(m_pParamList);
    DestroyRoutingTable(m_pRoutingTable);
 }
@@ -151,7 +152,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
                             "agent_port,status_poll_type,community,snmp_oid,"
                             "node_type,agent_version,"
                             "platform_name,poller_node_id,zone_guid,"
-                            "proxy_node FROM nodes WHERE id=%d", dwId);
+                            "proxy_node,snmp_proxy FROM nodes WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -182,6 +183,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    m_dwPollerNode = DBGetFieldULong(hResult, 0, 12);
    m_dwZoneGUID = DBGetFieldULong(hResult, 0, 13);
    m_dwProxyNode = DBGetFieldULong(hResult, 0, 14);
+   m_dwSNMPProxy = DBGetFieldULong(hResult, 0, 15);
 
    DBFreeResult(hResult);
 
@@ -283,13 +285,13 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                "node_flags,snmp_version,community,status_poll_type,"
                "agent_port,auth_method,secret,snmp_oid,proxy_node,"
                "node_type,agent_version,platform_name,"
-               "poller_node_id,zone_guid) VALUES (%d,'%s',%d,%d,'%s',%d,%d,%d,"
-               "'%s','%s',%d,%d,'%s','%s',%d,%d)",
+               "poller_node_id,zone_guid,snmp_proxy) VALUES "
+					"(%d,'%s',%d,%d,'%s',%d,%d,%d,'%s','%s',%d,%d,'%s','%s',%d,%d,%d)",
                m_dwId, IpToStr(m_dwIpAddr, szIpAddr), m_dwFlags,
                m_iSNMPVersion, pszEscCommunity, m_iStatusPollType,
                m_wAgentPort, m_wAuthMethod, pszEscSecret, m_szObjectId,
                m_dwProxyNode, m_dwNodeType, pszEscVersion,
-               pszEscPlatform, m_dwPollerNode, m_dwZoneGUID);
+               pszEscPlatform, m_dwPollerNode, m_dwZoneGUID, m_dwSNMPProxy);
    else
       snprintf(szQuery, 4096,
                "UPDATE nodes SET primary_ip='%s',"
@@ -297,13 +299,13 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                "status_poll_type=%d,agent_port=%d,auth_method=%d,secret='%s',"
                "snmp_oid='%s',node_type=%d,"
                "agent_version='%s',platform_name='%s',poller_node_id=%d,"
-               "zone_guid=%d,proxy_node=%d WHERE id=%d",
+               "zone_guid=%d,proxy_node=%d,snmp_proxy=%d WHERE id=%d",
                IpToStr(m_dwIpAddr, szIpAddr), 
                m_dwFlags, m_iSNMPVersion, pszEscCommunity,
                m_iStatusPollType, m_wAgentPort, m_wAuthMethod, pszEscSecret, 
                m_szObjectId, m_dwNodeType, 
                pszEscVersion, pszEscPlatform, m_dwPollerNode, m_dwZoneGUID,
-               m_dwProxyNode, m_dwId);
+               m_dwProxyNode, m_dwSNMPProxy, m_dwId);
    bResult = DBQuery(hdb, szQuery);
    free(pszEscVersion);
    free(pszEscPlatform);
@@ -374,8 +376,12 @@ ARP_CACHE *Node::GetArpCache(void)
    }
    else if (m_dwFlags & NF_IS_SNMP)
    {
-      pArpCache = SnmpGetArpCache(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort,
+		SNMP_Transport *pTransport;
+
+		pTransport = CreateSNMPTransport();
+      pArpCache = SnmpGetArpCache(m_iSNMPVersion, pTransport,
                                   m_szCommunityString);
+		delete pTransport;
    }
 
    return pArpCache;
@@ -408,8 +414,12 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
    if ((pIfList == NULL) && (m_dwFlags & NF_IS_SNMP) &&
        (!(m_dwFlags & NF_DISABLE_SNMP)))
    {
-      pIfList = SnmpGetInterfaceList(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort,
+		SNMP_Transport *pTransport;
+
+		pTransport = CreateSNMPTransport();
+      pIfList = SnmpGetInterfaceList(m_iSNMPVersion, pTransport,
                                      m_szCommunityString, m_dwNodeType);
+		delete pTransport;
    }
 
    if (pIfList != NULL)
@@ -608,6 +618,8 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    NetObj *pPollerNode = NULL, **ppPollList;
    BOOL bAllDown;
    Queue *pQueue;    // Delayed event queue
+	SNMP_Transport *pTransport;
+	Cluster *pCluster;
    time_t tNow, tExpire;
 
    pQueue = new Queue;
@@ -626,9 +638,10 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       TCHAR szBuffer[256];
       DWORD dwResult;
 
+		pTransport = CreateSNMPTransport();
       SetPollerInfo(nPoller, "check SNMP");
       SendPollerMsg(dwRqId, "Checking SNMP agent connectivity\r\n");
-      dwResult = SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
+      dwResult = SnmpGet(m_iSNMPVersion, pTransport, m_szCommunityString,
                          ".1.3.6.1.2.1.1.2.0", NULL, 0, szBuffer, 256, 
                          FALSE, FALSE);
       if ((dwResult == SNMP_ERR_SUCCESS) || (dwResult == SNMP_ERR_NO_OBJECT))
@@ -661,6 +674,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
             m_tFailTimeSNMP = tNow;
          }
       }
+		delete pTransport;
    }
 
    // Check native agent connectivity
@@ -748,12 +762,16 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 
    // Poll interfaces and services
    SetPollerInfo(nPoller, "child poll");
+	pCluster = GetMyCluster();
+	pTransport = CreateSNMPTransport();
    for(i = 0; i < dwPollListSize; i++)
    {
       switch(ppPollList[i]->Type())
       {
          case OBJECT_INTERFACE:
-            ((Interface *)ppPollList[i])->StatusPoll(pSession, dwRqId, pQueue);
+            ((Interface *)ppPollList[i])->StatusPoll(pSession, dwRqId, pQueue,
+					(pCluster != NULL) ? pCluster->IsSyncAddr(((Interface *)ppPollList[i])->IpAddr()) : FALSE,
+					pTransport);
             break;
          case OBJECT_NETWORKSERVICE:
             ((NetworkService *)ppPollList[i])->StatusPoll(pSession, dwRqId,
@@ -764,6 +782,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       }
       ppPollList[i]->DecRefCount();
    }
+	delete pTransport;
    safe_free(ppPollList);
 
    // Check if entire node is down
@@ -855,6 +874,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
    INTERFACE_LIST *pIfList;
    char szBuffer[4096];
 	Cluster *pCluster;
+	SNMP_Transport *pTransport;
    BOOL bHasChanges = FALSE;
 
    SetPollerInfo(nPoller, "wait for lock");
@@ -889,7 +909,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
           (!(m_dwFlags & NF_DISABLE_SNMP)))
       {
          DbgPrintf(AF_DEBUG_DISCOVERY, "ConfPoll(%s): trying SNMP GET", m_szName);
-         if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
+			pTransport = CreateSNMPTransport();
+         if (SnmpGet(m_iSNMPVersion, pTransport, m_szCommunityString,
                      ".1.3.6.1.2.1.1.2.0", NULL, 0, szBuffer, 4096,
                      FALSE, FALSE) == SNMP_ERR_SUCCESS)
          {
@@ -923,7 +944,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             }
 
             // Check IP forwarding
-            if (CheckSNMPIntegerValue(".1.3.6.1.2.1.4.1.0", 1))
+            if (CheckSNMPIntegerValue(pTransport, ".1.3.6.1.2.1.4.1.0", 1))
             {
                m_dwFlags |= NF_IS_ROUTER;
             }
@@ -933,7 +954,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             }
 
             // Check for bridge MIB support
-            if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
+            if (SnmpGet(m_iSNMPVersion, pTransport, m_szCommunityString,
                         ".1.3.6.1.2.1.17.1.1.0", NULL, 0, szBuffer, 4096,
                         FALSE, FALSE) == SNMP_ERR_SUCCESS)
             {
@@ -945,7 +966,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             }
 
             // Check for CDP (Cisco Discovery Protocol) support
-            if (CheckSNMPIntegerValue(".1.3.6.1.4.1.9.9.23.1.3.1.0", 1))
+            if (CheckSNMPIntegerValue(pTransport, ".1.3.6.1.4.1.9.9.23.1.3.1.0", 1))
             {
                m_dwFlags |= NF_IS_CDP;
             }
@@ -955,7 +976,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             }
 
             // Check for Nortel topology discovery support
-            if (CheckSNMPIntegerValue(".1.3.6.1.4.1.45.1.6.13.1.2.0", 1))
+            if (CheckSNMPIntegerValue(pTransport, ".1.3.6.1.4.1.45.1.6.13.1.2.0", 1))
             {
                m_dwFlags |= NF_IS_NORTEL_TOPO;
             }
@@ -966,13 +987,13 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 
             UnlockData();
 
-            CheckOSPFSupport();
+            CheckOSPFSupport(pTransport);
          }
          else
          {
             // Check for CheckPoint SNMP agent on port 161
             DbgPrintf(AF_DEBUG_DISCOVERY, "ConfPoll(%s): checking for CheckPoint SNMP", m_szName);
-            if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
+            if (SnmpGet(m_iSNMPVersion, pTransport, m_szCommunityString,
                         ".1.3.6.1.4.1.2620.1.1.10.0", NULL, 0,
                         szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
             {
@@ -989,13 +1010,16 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
                SendPollerMsg(dwRqId, _T("   CheckPoint SNMP agent on port 161 is active\r\n"));
             }
          }
+			delete pTransport;
       }
 
       // Check for CheckPoint SNMP agent on port 260
       DbgPrintf(AF_DEBUG_DISCOVERY, "ConfPoll(%s): checking for CheckPoint SNMP on port 260", m_szName);
       if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)))
       {
-         if (SnmpGet(SNMP_VERSION_1, m_dwIpAddr, CHECKPOINT_SNMP_PORT, m_szCommunityString,
+			pTransport = new SNMP_UDPTransport;
+			((SNMP_UDPTransport *)pTransport)->CreateUDPTransport(NULL, htonl(m_dwIpAddr), CHECKPOINT_SNMP_PORT);
+         if (SnmpGet(SNMP_VERSION_1, pTransport, m_szCommunityString,
                      ".1.3.6.1.4.1.2620.1.1.10.0", NULL, 0,
                      szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
          {
@@ -1005,6 +1029,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             UnlockData();
             SendPollerMsg(dwRqId, _T("   CheckPoint SNMP agent on port 260 is active\r\n"));
          }
+			delete pTransport;
       }
 
       DbgPrintf(AF_DEBUG_DISCOVERY, "ConfPoll(%s): checking for NetXMS agent Flags={%08X} DynamicFlags={%08X}", m_szName, m_dwFlags, m_dwDynamicFlags);
@@ -1386,8 +1411,12 @@ DWORD Node::GetItemFromSNMP(const char *szParam, DWORD dwBufSize, char *szBuffer
    }
    else
    {
-      dwResult = SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
+		SNMP_Transport *pTransport;
+
+		pTransport = CreateSNMPTransport();
+      dwResult = SnmpGet(m_iSNMPVersion, pTransport, m_szCommunityString,
                          szParam, NULL, 0, szBuffer, dwBufSize, FALSE, TRUE);
+		delete pTransport;
    }
    return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : 
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
@@ -1409,9 +1438,14 @@ DWORD Node::GetItemFromCheckPointSNMP(const char *szParam, DWORD dwBufSize, char
    }
    else
    {
-      dwResult = SnmpGet(SNMP_VERSION_1, m_dwIpAddr, CHECKPOINT_SNMP_PORT,
+		SNMP_Transport *pTransport;
+
+		pTransport = new SNMP_UDPTransport;
+		((SNMP_UDPTransport *)pTransport)->CreateUDPTransport(NULL, htonl(m_dwIpAddr), CHECKPOINT_SNMP_PORT);
+      dwResult = SnmpGet(SNMP_VERSION_1, pTransport,
                          m_szCommunityString, szParam, NULL, 0, szBuffer,
                          dwBufSize, FALSE, TRUE);
+		delete pTransport;
    }
    return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : 
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
@@ -1664,6 +1698,7 @@ void Node::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_POLLER_NODE_ID, m_dwPollerNode);
    pMsg->SetVariable(VID_ZONE_GUID, m_dwZoneGUID);
    pMsg->SetVariable(VID_PROXY_NODE, m_dwProxyNode);
+   pMsg->SetVariable(VID_SNMP_PROXY, m_dwSNMPProxy);
 }
 
 
@@ -1748,6 +1783,10 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    if (pRequest->IsVariableExist(VID_PROXY_NODE))
       m_dwProxyNode = pRequest->GetVariableLong(VID_PROXY_NODE);
 
+   // Change SNMP proxy node
+   if (pRequest->IsVariableExist(VID_SNMP_PROXY))
+      m_dwSNMPProxy = pRequest->GetVariableLong(VID_SNMP_PROXY);
+
    // Change flags
    if (pRequest->IsVariableExist(VID_FLAGS))
    {
@@ -1787,10 +1826,9 @@ DWORD Node::WakeUp(void)
 // Get status of interface with given index from SNMP agent
 //
 
-int Node::GetInterfaceStatusFromSNMP(DWORD dwIndex)
+int Node::GetInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex)
 {
-   return SnmpGetInterfaceStatus(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort,
-                                 m_szCommunityString, dwIndex);
+   return SnmpGetInterfaceStatus(m_iSNMPVersion, pTransport, m_szCommunityString, dwIndex);
 }
 
 
@@ -1934,11 +1972,11 @@ void Node::OnObjectDelete(DWORD dwObjectId)
 // Check node for OSPF support
 //
 
-void Node::CheckOSPFSupport(void)
+void Node::CheckOSPFSupport(SNMP_Transport *pTransport)
 {
    LONG nAdminStatus;
 
-   if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
+   if (SnmpGet(m_iSNMPVersion, pTransport, m_szCommunityString,
                ".1.3.6.1.2.1.14.1.2.0", NULL, 0, &nAdminStatus, sizeof(LONG),
                FALSE, FALSE) == SNMP_ERR_SUCCESS)
    {
@@ -2230,7 +2268,11 @@ ROUTING_TABLE *Node::GetRoutingTable(void)
    }
    if ((pRT == NULL) && (m_dwFlags & NF_IS_SNMP) && (!(m_dwFlags & NF_DISABLE_SNMP)))
    {
-      pRT = SnmpGetRoutingTable(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString);
+		SNMP_Transport *pTransport;
+
+		pTransport = CreateSNMPTransport();
+      pRT = SnmpGetRoutingTable(m_iSNMPVersion, pTransport, m_szCommunityString);
+		delete pTransport;
    }
 
    if (pRT != NULL)
@@ -2317,16 +2359,24 @@ void Node::UpdateRoutingTable(void)
 //
 
 DWORD Node::CallSnmpEnumerate(char *pszRootOid, 
-                              DWORD (* pHandler)(DWORD, DWORD, WORD, const char *, SNMP_Variable *, SNMP_Transport *, void *),
+                              DWORD (* pHandler)(DWORD, const char *, SNMP_Variable *, SNMP_Transport *, void *),
                               void *pArg)
 {
    if ((m_dwFlags & NF_IS_SNMP) && 
        (!(m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)) &&
        (!(m_dwDynamicFlags & NDF_UNREACHABLE)))
-      return SnmpEnumerate(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort,
+	{
+		SNMP_Transport *pTransport;
+
+		pTransport = CreateSNMPTransport();
+      return SnmpEnumerate(m_iSNMPVersion, pTransport,
                            m_szCommunityString, pszRootOid, pHandler, pArg, FALSE);
+		delete pTransport;
+	}
    else
+	{
       return SNMP_ERR_COMM;
+	}
 }
 
 
@@ -2383,11 +2433,11 @@ void Node::PrepareForDeletion(void)
 // If variable doesn't exist at all, will return FALSE
 //
 
-BOOL Node::CheckSNMPIntegerValue(char *pszOID, int nValue)
+BOOL Node::CheckSNMPIntegerValue(SNMP_Transport *pTransport, char *pszOID, int nValue)
 {
    DWORD dwTemp;
 
-   if (SnmpGet(m_iSNMPVersion, m_dwIpAddr, m_wSNMPPort, m_szCommunityString,
+   if (SnmpGet(m_iSNMPVersion, pTransport, m_szCommunityString,
                pszOID, NULL, 0, &dwTemp, sizeof(DWORD), FALSE, FALSE) == SNMP_ERR_SUCCESS)
       return (int)dwTemp == nValue;
    return FALSE;
@@ -2451,4 +2501,18 @@ Cluster *Node::GetMyCluster(void)
 		}
 	UnlockParentList();
 	return pCluster;
+}
+
+
+//
+// Create SNMP transport
+//
+
+SNMP_Transport *Node::CreateSNMPTransport(void)
+{
+	SNMP_Transport *pTransport;
+
+	pTransport = new SNMP_UDPTransport;
+	((SNMP_UDPTransport *)pTransport)->CreateUDPTransport(NULL, htonl(m_dwIpAddr), m_wSNMPPort);
+	return pTransport;
 }

@@ -181,6 +181,7 @@ private:
    TCHAR **m_ppScheduleList;
    time_t m_tLastCheck;       // Last schedule checking time
    DWORD m_dwErrorCount;      // Consequtive collection error count
+	DWORD m_dwResourceId;		// Associated cluster resource ID
 
    void Lock(void) { MutexLock(m_hMutex, INFINITE); }
    void Unlock(void) { MutexUnlock(m_hMutex); }
@@ -188,6 +189,8 @@ private:
    void Transform(ItemValue &value, time_t nElapsedTime);
    void CheckThresholds(ItemValue &value);
    void ClearCache(void);
+
+	BOOL MatchClusterResource(void);
 
    void NewFormula(TCHAR *pszFormula);
 

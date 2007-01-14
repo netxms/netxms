@@ -59,6 +59,7 @@ DCItem::DCItem()
    m_tLastCheck = 0;
    m_iProcessAllThresholds = 0;
    m_dwErrorCount = 0;
+	m_dwResourceId = 0;
 }
 
 
@@ -96,6 +97,7 @@ DCItem::DCItem(const DCItem *pSrc)
    m_tLastCheck = 0;
    m_dwErrorCount = 0;
    m_iAdvSchedule = pSrc->m_iAdvSchedule;
+	m_dwResourceId = pSrc->m_dwResourceId;
 
    // Copy schedules
    m_dwNumSchedules = pSrc->m_dwNumSchedules;
@@ -121,7 +123,7 @@ DCItem::DCItem(const DCItem *pSrc)
 // Assumes that fields in SELECT query are in following order:
 // item_id,name,source,datatype,polling_interval,retention_time,status,
 // delta_calculation,transformation,template_id,description,instance,
-// template_item_id,adv_schedule,all_thresholds
+// template_item_id,adv_schedule,all_thresholds,resource_id
 //
 
 DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
@@ -165,6 +167,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_dwErrorCount = 0;
    m_iAdvSchedule = (BYTE)DBGetFieldLong(hResult, iRow, 13);
    m_iProcessAllThresholds = (BYTE)DBGetFieldLong(hResult, iRow, 14);
+	m_dwResourceId = DBGetFieldULong(hResult, iRow, 15);
 
    if (m_iAdvSchedule)
    {
@@ -250,6 +253,7 @@ DCItem::DCItem(DWORD dwId, char *szName, int iSource, int iDataType,
    m_ppScheduleList = NULL;
    m_tLastCheck = 0;
    m_dwErrorCount = 0;
+	m_dwResourceId = 0;
 
    UpdateCacheSize();
 }
@@ -358,24 +362,24 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
       sprintf(szQuery, "INSERT INTO items (item_id,node_id,template_id,name,description,source,"
                        "datatype,polling_interval,retention_time,status,delta_calculation,"
                        "transformation,instance,template_item_id,adv_schedule,"
-                       "all_thresholds) VALUES (%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,"
-                       "%d,'%s','%s',%d,%d,%d)",
+                       "all_thresholds,resource_id) VALUES (%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,"
+                       "%d,'%s','%s',%d,%d,%d,%d)",
                        m_dwId, (m_pNode == NULL) ? (DWORD)0 : m_pNode->Id(), m_dwTemplateId,
                        pszEscName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation,
                        pszEscFormula, pszEscInstance, m_dwTemplateItemId,
-                       m_iAdvSchedule, m_iProcessAllThresholds);
+                       m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId);
    else
       sprintf(szQuery, "UPDATE items SET node_id=%d,template_id=%d,name='%s',source=%d,"
                        "datatype=%d,polling_interval=%d,retention_time=%d,status=%d,"
                        "delta_calculation=%d,transformation='%s',description='%s',"
                        "instance='%s',template_item_id=%d,adv_schedule=%d,"
-                       "all_thresholds=%d WHERE item_id=%d",
+                       "all_thresholds=%d,resource_id=%d WHERE item_id=%d",
                        (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
                        pszEscName, m_iSource, m_iDataType, m_iPollingInterval,
                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula,
                        pszEscDescr, pszEscInstance, m_dwTemplateItemId,
-                       m_iAdvSchedule, m_iProcessAllThresholds, m_dwId);
+                       m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId, m_dwId);
    bResult = DBQuery(hdb, szQuery);
    free(pszEscName);
    free(pszEscFormula);
@@ -515,6 +519,7 @@ void DCItem::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_DCI_DELTA_CALCULATION, (WORD)m_iDeltaCalculation);
    pMsg->SetVariable(VID_DCI_FORMULA, CHECK_NULL_EX(m_pszFormula));
    pMsg->SetVariable(VID_ALL_THRESHOLDS, (WORD)m_iProcessAllThresholds);
+	pMsg->SetVariable(VID_RESOURCE_ID, m_dwResourceId);
    pMsg->SetVariable(VID_NUM_THRESHOLDS, m_dwNumThresholds);
    for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < m_dwNumThresholds; i++, dwId++)
    {
@@ -573,6 +578,7 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
    m_iStatus = (BYTE)pMsg->GetVariableShort(VID_DCI_STATUS);
    m_iDeltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
    m_iProcessAllThresholds = (BYTE)pMsg->GetVariableShort(VID_ALL_THRESHOLDS);
+	m_dwResourceId = pMsg->GetVariableLong(VID_RESOURCE_ID);
    pszStr = pMsg->GetVariableStr(VID_DCI_FORMULA);
    NewFormula(pszStr);
    free(pszStr);
@@ -1324,6 +1330,26 @@ static BOOL MatchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule)
 
 
 //
+// Check if associated cluster resource is active. Returns TRUE also if
+// DCI has no resource association
+//
+
+BOOL DCItem::MatchClusterResource(void)
+{
+	Cluster *pCluster;
+
+	if (m_dwResourceId == 0)
+		return TRUE;
+
+	pCluster = ((Node *)m_pNode)->GetMyCluster();
+	if (pCluster == NULL)
+		return FALSE;	// Has association, but cluster object cannot be found
+
+	return pCluster->IsResourceOnNode(m_dwResourceId, m_pNode->Id());
+}
+
+
+//
 // Check if DCI have to be polled
 //
 
@@ -1333,7 +1359,8 @@ BOOL DCItem::ReadyForPolling(time_t currTime)
 
    Lock();
    if ((m_iStatus == ITEM_STATUS_ACTIVE) && (!m_iBusy) && 
-       m_bCacheLoaded && (m_iSource != DS_PUSH_AGENT))
+       m_bCacheLoaded && (m_iSource != DS_PUSH_AGENT) &&
+		 (MatchClusterResource()))
    {
       if (m_iAdvSchedule)
       {

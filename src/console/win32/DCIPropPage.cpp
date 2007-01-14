@@ -38,6 +38,7 @@ CDCIPropPage::CDCIPropPage()
    m_pNode = NULL;
    m_pParamList = NULL;
    m_dwNumParams = 0;
+	m_dwResourceId = 0;
 }
 
 CDCIPropPage::~CDCIPropPage()
@@ -49,6 +50,7 @@ void CDCIPropPage::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CDCIPropPage)
+	DDX_Control(pDX, IDC_COMBO_RESOURCES, m_wndComboResources);
 	DDX_Control(pDX, IDC_EDIT_NAME, m_wndEditName);
 	DDX_Control(pDX, IDC_COMBO_ORIGIN, m_wndOriginList);
 	DDX_Control(pDX, IDC_COMBO_DT, m_wndTypeList);
@@ -75,6 +77,7 @@ BEGIN_MESSAGE_MAP(CDCIPropPage, CPropertyPage)
 	ON_CBN_SELCHANGE(IDC_COMBO_ORIGIN, OnSelchangeComboOrigin)
 	ON_BN_CLICKED(IDC_CHECK_SCHEDULE, OnCheckSchedule)
 	ON_CBN_SELCHANGE(IDC_COMBO_DT, OnSelchangeComboDt)
+	ON_CBN_SELCHANGE(IDC_COMBO_RESOURCES, OnSelchangeComboResources)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -89,6 +92,8 @@ END_MESSAGE_MAP()
 BOOL CDCIPropPage::OnInitDialog() 
 {
    DWORD i;
+	NXC_OBJECT *pObject;
+	BOOL bSelected;
 
 	CPropertyPage::OnInitDialog();
 
@@ -102,6 +107,49 @@ BOOL CDCIPropPage::OnInitDialog()
       m_wndTypeList.AddString(g_pszItemDataType[i]);
    m_wndTypeList.SelectString(-1, g_pszItemDataType[m_iDataType]);
    g_nCurrentDCIDataType = m_iDataType;
+
+	// Add cluster resource list
+	if (m_pNode->iClass == OBJECT_CLUSTER)
+	{
+		m_pCluster = m_pNode;
+	}
+	else
+	{
+		for(i = 0, m_pCluster = NULL; i < m_pNode->dwNumParents; i++)
+		{
+			pObject = NXCFindObjectById(g_hSession, m_pNode->pdwParentList[i]);
+			if (pObject != NULL)
+				if (pObject->iClass == OBJECT_CLUSTER)
+				{
+					m_pCluster = pObject;
+					break;
+				}
+		}
+	}
+	m_wndComboResources.AddString(_T("<none>"));
+	if (m_pCluster != NULL)
+	{
+		for(i = 0, bSelected = FALSE; i < m_pCluster->cluster.dwNumResources; i++)
+		{
+			m_wndComboResources.AddString(m_pCluster->cluster.pResourceList[i].szName);
+			if (m_pCluster->cluster.pResourceList[i].dwId == m_dwResourceId)
+			{
+				m_wndComboResources.SelectString(-1, m_pCluster->cluster.pResourceList[i].szName);
+				bSelected = TRUE;
+			}
+		}
+		if (!bSelected)
+		{
+			m_wndComboResources.SelectString(-1, _T("<none>"));
+			m_dwResourceId = 0;
+		}
+	}
+	else
+	{
+		m_wndComboResources.SelectString(-1, _T("<none>"));
+		m_dwResourceId = 0;
+		EnableDlgItem(this, IDC_COMBO_RESOURCES, FALSE);
+	}
 
    if (m_bAdvSchedule)
       EnablePollingInterval(FALSE);
@@ -344,4 +392,30 @@ BOOL CDCIPropPage::OnKillActive()
    }
 	
 	return CPropertyPage::OnKillActive();
+}
+
+
+//
+// Handler for selection change in data type combo box
+//
+
+void CDCIPropPage::OnSelchangeComboResources() 
+{
+   TCHAR szBuffer[256];
+	DWORD i;
+
+   m_wndComboResources.GetWindowText(szBuffer, 256);
+	if (!_tcscmp(szBuffer, _T("<none>")))
+	{
+		m_dwResourceId = 0;
+	}
+	else
+	{
+		for(i = 0; i < m_pCluster->cluster.dwNumResources; i++)
+			if (!_tcscmp(szBuffer, m_pCluster->cluster.pResourceList[i].szName))
+			{
+				m_dwResourceId = m_pCluster->cluster.pResourceList[i].dwId;
+				break;
+			}
+	}
 }

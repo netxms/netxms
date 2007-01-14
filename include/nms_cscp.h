@@ -705,6 +705,8 @@ typedef struct
 #define VID_NUM_SYNC_SUBNETS			((DWORD)263)
 #define VID_SYNC_SUBNETS				((DWORD)264)
 #define VID_NUM_RESOURCES				((DWORD)265)
+#define VID_RESOURCE_ID					((DWORD)266)
+#define VID_SNMP_PROXY					((DWORD)267)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

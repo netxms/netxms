@@ -1,4 +1,16 @@
 *************
+* 56 ==> 57 *
+*************
+
+- Added column "resource_id" to table "items":
+	ALTER TABLE items ADD resource_id integer;
+	UPDATE items SET resource_id=0;
+- Added column "snmp_poxy" to table "nodes":
+	ALTER TABLE nodes ADD snmp_proxy integer;
+	UPDATE nodes SET snmp_proxy=0;
+
+
+*************
 * 55 ==> 56 *
 *************
 

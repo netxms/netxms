@@ -240,6 +240,7 @@
 #define IDC_EDIT_PORT                   1020
 #define IDC_EDIT_OID                    1021
 #define IDC_COMBO_SNMP_VERSION          1022
+#define IDC_SELECT_SNMPPROXY            1022
 #define IDC_EDIT_COMMUNITY              1023
 #define IDC_LIST1                       1024
 #define IDC_LIST_CAPS                   1024
@@ -509,6 +510,7 @@
 #define IDC_RADIO_PROP_DEFAULT          1311
 #define IDC_EDIT_PROXY                  1311
 #define IDC_CHECK_SEND                  1312
+#define IDC_EDIT_SNMPPROXY              1312
 #define IDC_CHECK_CONTROL               1313
 #define IDC_EDIT_DATA                   1316
 #define IDC_EDIT_ENUM                   1317
@@ -591,6 +593,7 @@
 #define IDC_EDIT_URL                    1430
 #define IDC_CHECK_HIDE_EMPTY            1431
 #define IDC_IPADDR                      1438
+#define IDC_COMBO_RESOURCES             1439
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -844,7 +847,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        351
 #define _APS_NEXT_COMMAND_VALUE         33051
-#define _APS_NEXT_CONTROL_VALUE         1439
+#define _APS_NEXT_CONTROL_VALUE         1440
 #define _APS_NEXT_SYMED_VALUE           129
 #endif
 #endif

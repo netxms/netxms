@@ -16,6 +16,7 @@ class CNodePropsGeneral : public CPropertyPage
 
 // Construction
 public:
+	DWORD m_dwSNMPProxy;
 	DWORD m_dwProxyNode;
 	DWORD m_dwIpAddr;
 	CNodePropsGeneral();
@@ -61,6 +62,7 @@ protected:
 	afx_msg void OnSelectIp();
 	afx_msg void OnSelectProxy();
 	afx_msg void OnButtonGenerate();
+	afx_msg void OnSelectSnmpproxy();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

@@ -201,6 +201,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    NXSL_Program *pScript;
    NXSL_Value *pValue;
    BOOL bResult = FALSE;
+	SNMP_UDPTransport *pTransport;
 
    if ((FindNodeByIP(dwIpAddr) != NULL) ||
        (FindSubnetByIP(dwIpAddr) != NULL))
@@ -222,7 +223,9 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    data.dwSubnetAddr = dwIpAddr & dwNetMask;
 
    // Check SNMP support
-   if (SnmpGet(SNMP_VERSION_2C, dwIpAddr, 161, szCommunityString,
+	pTransport = new SNMP_UDPTransport;
+	pTransport->CreateUDPTransport(NULL, htonl(dwIpAddr), 161);
+   if (SnmpGet(SNMP_VERSION_2C, pTransport, szCommunityString,
                ".1.3.6.1.2.1.1.2.0", NULL, 0, data.szObjectId, MAX_OID_LEN * 4,
                FALSE, FALSE) == SNMP_ERR_SUCCESS)
    {
@@ -231,7 +234,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    }
    else
    {
-      if (SnmpGet(SNMP_VERSION_1, dwIpAddr, 161, szCommunityString,
+      if (SnmpGet(SNMP_VERSION_1, pTransport, szCommunityString,
                   ".1.3.6.1.2.1.1.2.0", NULL, 0, data.szObjectId, MAX_OID_LEN * 4,
                   FALSE, FALSE) == SNMP_ERR_SUCCESS)
       {
@@ -253,7 +256,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    // Check if node is a router
    if (data.dwFlags & NNF_IS_SNMP)
    {
-      if (SnmpGet(data.nSNMPVersion, dwIpAddr, 161, szCommunityString,
+      if (SnmpGet(data.nSNMPVersion, pTransport, szCommunityString,
                   ".1.3.6.1.2.1.4.1.0", NULL, 0, &dwTemp, sizeof(DWORD),
                   FALSE, FALSE) == SNMP_ERR_SUCCESS)
       {
@@ -275,7 +278,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    if (data.dwFlags & NNF_IS_SNMP)
    {
       // Check if node is a bridge
-      if (SnmpGet(data.nSNMPVersion, dwIpAddr, 161, szCommunityString,
+      if (SnmpGet(data.nSNMPVersion, pTransport, szCommunityString,
                   ".1.3.6.1.2.1.17.1.1.0", NULL, 0, szBuffer, 256,
                   FALSE, FALSE) == SNMP_ERR_SUCCESS)
       {
@@ -283,7 +286,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
       }
 
       // Check for CDP (Cisco Discovery Protocol) support
-      if (SnmpGet(data.nSNMPVersion, dwIpAddr, 161, szCommunityString,
+      if (SnmpGet(data.nSNMPVersion, pTransport, szCommunityString,
                   ".1.3.6.1.4.1.9.9.23.1.3.1.0", NULL, 0, &dwTemp, sizeof(DWORD),
                   FALSE, FALSE) == SNMP_ERR_SUCCESS)
       {
@@ -292,7 +295,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
       }
 
       // Check for Nortel topology discovery support
-      if (SnmpGet(data.nSNMPVersion, dwIpAddr, 161, szCommunityString,
+      if (SnmpGet(data.nSNMPVersion, pTransport, szCommunityString,
                   ".1.3.6.1.4.1.45.1.6.13.1.2.0", NULL, 0, &dwTemp, sizeof(DWORD),
                   FALSE, FALSE) == SNMP_ERR_SUCCESS)
       {
@@ -303,6 +306,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 
    // Cleanup
    delete pAgentConn;
+	delete pTransport;
 
    // Check if we use simple filter instead of script
    if (!_tcsicmp(szFilter, "auto"))

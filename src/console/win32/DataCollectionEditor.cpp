@@ -437,6 +437,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    pgCollection.m_strName = pItem->szName;
    pgCollection.m_strDescription = pItem->szDescription;
    pgCollection.m_pNode = NXCFindObjectById(g_hSession, m_pItemList->dwNodeId);
+	pgCollection.m_dwResourceId = pItem->dwResourceId;
 
    // Setup schedule page
    if (pItem->iAdvSchedule)
@@ -485,6 +486,7 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
       StrStrip(pItem->szInstance);
       DestroyStringList(pItem->ppScheduleList, pItem->dwNumSchedules);
       pItem->iAdvSchedule = pgCollection.m_bAdvSchedule;
+		pItem->dwResourceId = pgCollection.m_dwResourceId;
       if (pItem->iAdvSchedule)
       {
          pItem->dwNumSchedules = pgSchedule.m_dwNumSchedules;

@@ -42,7 +42,7 @@ static DWORD m_dwTimeout = 3000;
 
 int GetData(int argc, char *argv[])
 {
-   SNMP_Transport *pTransport;
+   SNMP_UDPTransport *pTransport;
    SNMP_PDU *request, *response;
    DWORD dwResult;
    int i, iExit = 0;
@@ -54,7 +54,7 @@ int GetData(int argc, char *argv[])
 #endif
 
    // Create SNMP transport
-   pTransport = new SNMP_Transport;
+   pTransport = new SNMP_UDPTransport;
    dwResult = pTransport->CreateUDPTransport(argv[0], 0, m_wPort);
    if (dwResult != SNMP_ERR_SUCCESS)
    {
