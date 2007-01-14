@@ -33,7 +33,7 @@ EXTRA_DIST = \
 	ConsolePropsGeneral.cpp ConsolePropsGeneral.h \
 	ConsoleUpgradeDlg.cpp ConsoleUpgradeDlg.h \
 	ControlPanel.cpp ControlPanel.h \
-	CreateCluster.cpp CreateCluster.h \
+	CreateClusterDlg.cpp CreateClusterDlg.h \
 	CreateCondDlg.cpp CreateCondDlg.h \
 	CreateContainerDlg.cpp CreateContainerDlg.h \
 	CreateMPDlg.cpp CreateMPDlg.h \
