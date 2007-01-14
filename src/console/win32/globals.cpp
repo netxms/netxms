@@ -338,9 +338,9 @@ NXC_OBJECT_TOOL *g_pObjectToolList = NULL;
 //
 
 char g_szConfigKeywords[] = "Action ControlServers EnableActions EnabledCiphers "
-                            "EnableProxy EnableSubagentAutoload ExecTimeout"
-                            "ExternalParameter FileStore ListenPort LogFile "
-                            "LogUnresolvedSymbols MasterServers MaxSessions "
+                            "EnableProxy EnableSNMPProxy EnableSubagentAutoload "
+									 "ExecTimeout ExternalParameter FileStore ListenPort "
+									 "LogFile LogUnresolvedSymbols MasterServers MaxSessions "
                             "PlatformSuffix RequireAuthentication "
                             "RequireEncryption Servers SessionIdleTimeout "
                             "SharedSecret StartupDelay SubAgent";

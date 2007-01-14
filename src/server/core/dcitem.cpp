@@ -1358,7 +1358,7 @@ BOOL DCItem::ReadyForPolling(time_t currTime)
    BOOL bResult;
 
    Lock();
-   if ((m_iStatus == ITEM_STATUS_ACTIVE) && (!m_iBusy) && 
+   if ((m_iStatus != ITEM_STATUS_DISABLED) && (!m_iBusy) && 
        m_bCacheLoaded && (m_iSource != DS_PUSH_AGENT) &&
 		 (MatchClusterResource()))
    {
@@ -1375,7 +1375,6 @@ BOOL DCItem::ReadyForPolling(time_t currTime)
             {
                if ((currTime - m_tLastCheck >= 60) ||
                    (tmCurrLocal.tm_min != tmLastLocal.tm_min))
-//               if (!MatchSchedule(&tmLastLocal, m_ppScheduleList[i]))
                {
                   bResult = TRUE;
                   break;
@@ -1386,7 +1385,10 @@ BOOL DCItem::ReadyForPolling(time_t currTime)
       }
       else
       {
-         bResult = (m_tLastPoll + m_iPollingInterval <= currTime);
+			if (m_iStatus == ITEM_STATUS_NOT_SUPPORTED)
+		      bResult = (m_tLastPoll + m_iPollingInterval * 10 <= currTime);
+			else
+		      bResult = (m_tLastPoll + m_iPollingInterval <= currTime);
       }
    }
    else
