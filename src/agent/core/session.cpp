@@ -28,6 +28,7 @@
 //
 
 void UnregisterSession(DWORD dwIndex);
+void ProxySNMPRequest(CSCPMessage *pRequest, CSCPMessage *pResponse);
 
 
 //
@@ -473,6 +474,16 @@ void CommSession::ProcessingThread(void)
                   msg.SetVariable(VID_RCC, ERR_ACCESS_DENIED);
                }
                break;
+				case CMD_SNMP_REQUEST:
+					if (m_bMasterServer && (g_dwFlags & AF_ENABLE_SNMP_PROXY))
+					{
+						ProxySNMPRequest(pMsg, &msg);
+					}
+					else
+					{
+                  msg.SetVariable(VID_RCC, ERR_ACCESS_DENIED);
+					}
+					break;
             default:
                // Attempt to process unknown command by subagents
                if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg))

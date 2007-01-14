@@ -1,4 +1,4 @@
-/* $Id: nxcp.cpp,v 1.8 2006-12-21 16:41:36 victor Exp $ */
+/* $Id: nxcp.cpp,v 1.9 2007-01-14 14:17:54 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
@@ -233,10 +233,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_GET_DCI_EVENTS_LIST"),
       _T("CMD_CREATE_MGMT_PACK"),
       _T("CMD_INSTALL_MGMT_PACK"),
-      _T("CMD_GET_TRAP_CFG_RO")
+      _T("CMD_GET_TRAP_CFG_RO"),
+		_T("CMD_SNMP_REQUEST")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_TRAP_CFG_RO))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_SNMP_REQUEST))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _stprintf(pszBuffer, _T("CMD_UNKNOWN(%d)"), wCode);

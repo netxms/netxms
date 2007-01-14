@@ -42,6 +42,7 @@
 #include <nms_agent.h>
 #include <messages.h>
 #include <dbdrv.h>
+#include <nxsnmp.h>
 
 
 //
@@ -313,6 +314,7 @@ public:
    BOOL Connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, DWORD *pdwError = NULL);
    void Disconnect(void);
    BOOL IsConnected(void) { return m_bIsConnected; }
+	int GetProtocolVersion(void) { return m_nProtocolVersion; }
 
    ARP_CACHE *GetArpCache(void);
    INTERFACE_LIST *GetInterfaceList(void);
@@ -329,6 +331,7 @@ public:
    DWORD GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize);
    DWORD UpdateConfigFile(TCHAR *pszConfig);
    DWORD EnableTraps(void);
+	CSCPMessage *CustomRequest(CSCPMessage *pRequest);
 
    DWORD GetNumDataLines(void) { return m_dwNumDataLines; }
    const TCHAR *GetDataLine(DWORD dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }
@@ -340,6 +343,28 @@ public:
                  int iAuthMethod = AUTH_NONE, TCHAR *pszSecret = NULL);
    void SetPort(WORD wPort) { m_wPort = wPort; }
    void SetAuthData(int nMethod, char *pszSecret) { m_iAuthMethod = nMethod; strncpy(m_szSecret, pszSecret, MAX_SECRET_LENGTH); }
+};
+
+
+//
+// Proxy SNMP transport
+//
+
+class LIBNXSRV_EXPORTABLE SNMP_ProxyTransport : public SNMP_Transport
+{
+protected:
+	AgentConnection *m_pAgentConnection;
+	CSCPMessage *m_pResponse;
+	DWORD m_dwIpAddr;
+	WORD m_wPort;
+
+public:
+	SNMP_ProxyTransport(AgentConnection *pConn, DWORD dwIpAddr, WORD wPort);
+	virtual ~SNMP_ProxyTransport();
+
+   virtual int Read(SNMP_PDU **ppData, DWORD dwTimeout = INFINITE,
+                    struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL);
+   virtual int Send(SNMP_PDU *pPDU);
 };
 
 

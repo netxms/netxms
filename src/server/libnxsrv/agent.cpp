@@ -1,7 +1,8 @@
+/* $Id: agent.cpp,v 1.49 2007-01-14 14:17:57 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +18,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: agent.cpp
+** File: agent.cpp
 **
 **/
 
@@ -1361,4 +1362,21 @@ DWORD AgentConnection::EnableTraps(void)
       return WaitForRCC(dwRqId, m_dwCommandTimeout);
    else
       return ERR_CONNECTION_BROKEN;
+}
+
+
+//
+// Send custom request to agent
+//
+
+CSCPMessage *AgentConnection::CustomRequest(CSCPMessage *pRequest)
+{
+   DWORD dwRqId;
+
+   dwRqId = m_dwRequestId++;
+   pRequest->SetId(dwRqId);
+   if (SendMessage(pRequest))
+      return WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+   else
+      return NULL;
 }

@@ -433,7 +433,7 @@ public:
 	{
 		return -1;
 	}
-   virtual int Send(SNMP_PDU *pPDU, struct sockaddr *pRcpt = NULL, socklen_t iAddrLen = 0)
+   virtual int Send(SNMP_PDU *pPDU)
 	{
 		return -1;
 	}
@@ -467,7 +467,7 @@ public:
 
    virtual int Read(SNMP_PDU **ppData, DWORD dwTimeout = INFINITE,
                     struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL);
-   virtual int Send(SNMP_PDU *pPDU, struct sockaddr *pRcpt = NULL, socklen_t iAddrLen = 0);
+   virtual int Send(SNMP_PDU *pPDU);
 
    DWORD CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr = 0, WORD wPort = SNMP_DEFAULT_PORT);
 };

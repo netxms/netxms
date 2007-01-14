@@ -3,6 +3,7 @@
 *
 
 - Added initial support for cluster monitoring
+- Added SNMP proxy functionality to agent
 - IPSO agent improved
 - UPS subagent: added support for MICRODOWELL UPS devices
 - Added Extended Checksum subagent

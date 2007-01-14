@@ -271,6 +271,7 @@ src/agent/core/nxagentd.rc -text
 src/agent/core/resource.h -text
 src/agent/core/service.cpp -text
 src/agent/core/session.cpp -text
+src/agent/core/snmpproxy.cpp -text
 src/agent/core/subagent.cpp -text
 src/agent/core/sysinfo.cpp -text
 src/agent/core/tools.cpp -text
@@ -1269,6 +1270,7 @@ src/server/libnxsrv/log.cpp -text
 src/server/libnxsrv/main.cpp -text
 src/server/libnxsrv/messages.mc -text
 src/server/libnxsrv/resource.h -text
+src/server/libnxsrv/snmpproxy.cpp -text
 src/server/netxmsd/.cvsignore -text
 src/server/netxmsd/Makefile.am -text
 src/server/netxmsd/netxmsd.cpp -text

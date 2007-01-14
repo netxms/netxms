@@ -179,6 +179,15 @@
 # EnableProxy = no
 
 #
+# EnableSNMPProxy
+#
+# Allow SNMP requests forwarding
+# Default value is "no"
+#
+# Example:
+# EnableSNMPProxy = no
+
+#
 # SubAgent
 #
 # Subagent to load. To load multiple subagents, you should use multiple

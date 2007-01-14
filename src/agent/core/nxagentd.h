@@ -100,6 +100,7 @@
 #define AF_ENABLE_AUTOLOAD          0x0100
 #define AF_ENABLE_PROXY             0x0200
 #define AF_CENTRAL_CONFIG           0x0400
+#define AF_ENABLE_SNMP_PROXY			0x0800
 #define AF_SHUTDOWN                 0x1000
 #define AF_RUNNING_ON_NT4           0x2000
 
@@ -380,6 +381,7 @@ extern DWORD g_dwStartupDelay;
 extern DWORD g_dwIdleTimeout;
 extern DWORD g_dwMaxSessions;
 extern DWORD g_dwExecTimeout;
+extern DWORD g_dwSNMPTimeout;
 
 extern DWORD g_dwAcceptErrors;
 extern DWORD g_dwAcceptedConnections;

@@ -434,6 +434,7 @@ typedef struct
 #define CMD_CREATE_MGMT_PACK        0x00C0
 #define CMD_INSTALL_MGMT_PACK       0x00C1
 #define CMD_GET_TRAP_CFG_RO			0x00C2
+#define CMD_SNMP_REQUEST				0x00C3
 
 
 //
@@ -707,6 +708,9 @@ typedef struct
 #define VID_NUM_RESOURCES				((DWORD)265)
 #define VID_RESOURCE_ID					((DWORD)266)
 #define VID_SNMP_PROXY					((DWORD)267)
+#define VID_PORT							((DWORD)268)
+#define VID_PDU							((DWORD)269)
+#define VID_PDU_SIZE						((DWORD)270)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

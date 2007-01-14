@@ -1,4 +1,4 @@
-/* $Id: nxagentd.cpp,v 1.83 2006-11-21 11:35:29 victor Exp $ */
+/* $Id: nxagentd.cpp,v 1.84 2007-01-14 14:17:54 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -99,6 +99,7 @@ WORD g_wListenPort = AGENT_LISTEN_PORT;
 SERVER_INFO g_pServerList[MAX_SERVERS];
 DWORD g_dwServerCount = 0;
 DWORD g_dwExecTimeout = 2000;     // External process execution timeout in milliseconds
+DWORD g_dwSNMPTimeout = 3000;
 time_t g_tmAgentStartTime;
 DWORD g_dwStartupDelay = 0;
 DWORD g_dwMaxSessions = 32;
@@ -156,6 +157,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "EnableActions", CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
    { "EnabledCiphers", CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers },
    { "EnableProxy", CT_BOOLEAN, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags },
+   { "EnableSNMPProxy", CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_PROXY, 0, &g_dwFlags },
    { "EnableSubagentAutoload", CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags },
    { "ExecTimeout", CT_LONG, 0, 0, 0, 0, &g_dwExecTimeout },
    { "ExternalParameter", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },

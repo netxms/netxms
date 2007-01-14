@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.167 2007-01-14 00:11:32 victor Exp $ */
+/* $Id: node.cpp,v 1.168 2007-01-14 14:17:55 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -2510,9 +2510,31 @@ Cluster *Node::GetMyCluster(void)
 
 SNMP_Transport *Node::CreateSNMPTransport(void)
 {
-	SNMP_Transport *pTransport;
+	SNMP_Transport *pTransport = NULL;
 
-	pTransport = new SNMP_UDPTransport;
-	((SNMP_UDPTransport *)pTransport)->CreateUDPTransport(NULL, htonl(m_dwIpAddr), m_wSNMPPort);
+	if (m_dwSNMPProxy == 0)
+	{
+		pTransport = new SNMP_UDPTransport;
+		((SNMP_UDPTransport *)pTransport)->CreateUDPTransport(NULL, htonl(m_dwIpAddr), m_wSNMPPort);
+	}
+	else
+	{
+		NetObj *pObject;
+
+		pObject = FindObjectById(m_dwSNMPProxy);
+		if (pObject != NULL)
+		{
+			if (pObject->Type() == OBJECT_NODE)
+			{
+				AgentConnection *pConn;
+
+				pConn = ((Node *)pObject)->CreateAgentConnection();
+				if (pConn != NULL)
+				{
+					pTransport = new SNMP_ProxyTransport(pConn, m_dwIpAddr, m_wSNMPPort);
+				}
+			}
+		}
+	}
 	return pTransport;
 }

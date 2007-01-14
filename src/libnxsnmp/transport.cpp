@@ -348,7 +348,7 @@ int SNMP_UDPTransport::Read(SNMP_PDU **ppData, DWORD dwTimeout,
 // Send PDU to socket
 //
 
-int SNMP_UDPTransport::Send(SNMP_PDU *pPDU, struct sockaddr *pRcpt, socklen_t iAddrSize)
+int SNMP_UDPTransport::Send(SNMP_PDU *pPDU)
 {
    BYTE *pBuffer;
    DWORD dwSize;
@@ -357,10 +357,7 @@ int SNMP_UDPTransport::Send(SNMP_PDU *pPDU, struct sockaddr *pRcpt, socklen_t iA
    dwSize = pPDU->Encode(&pBuffer);
    if (dwSize != 0)
    {
-      if (pRcpt == NULL)
-         nBytes = send(m_hSocket, (char *)pBuffer, dwSize, 0);
-      else
-         nBytes = sendto(m_hSocket, (char *)pBuffer, dwSize, 0, pRcpt, iAddrSize);
+      nBytes = send(m_hSocket, (char *)pBuffer, dwSize, 0);
       free(pBuffer);
    }
 
