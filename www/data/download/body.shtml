@@ -1,4 +1,4 @@
-<!-- $Id: body.shtml,v 1.29 2006-11-16 10:20:15 alk Exp $ -->
+<!-- $Id: body.shtml,v 1.30 2007-01-15 21:13:31 alk Exp $ -->
 <div class="twoThirds noBorderOnLeft">
 	<h1>Download Area</h1>
 
@@ -7,7 +7,54 @@
 	<a href="changelog.shtml">Current Changelog</a>
 	</p>
 
-	<h2>Current Release version 0.2.14 &ndash; Nov 16, 2006</h2>
+	<h2>Current Release version 0.2.15 &ndash; Jan 15, 2007</h2>
+	<p>
+	<a href="netxms-0.2.15.tar.gz">Source code</a>
+	<a href="netxms-0.2.15.tar.gz.md5">(MD5)</a>
+	<a href="netxms-0.2.15.tar.gz.asc">(PGP sign)</a>
+	</p>
+	<p>
+	<a href="agent_packages/nxagent-0.2.15.apkg">Agent upgrade package for UNIX systems</a>
+	<a href="agent_packages/nxagent-0.2.15.npi">NPI file</a>
+	<a href="agent_packages/nxagent-0.2.15.apkg.md5">(MD5)</a>
+	<a href="agent_packages/nxagent-0.2.15.apkg.asc">(PGP sign)</a><br />
+	</p>
+	<p>
+	<a href="netxms-0.2.15.exe">WIN32 Installer</a>
+	<a href="netxms-0.2.15.exe.md5">(MD5)</a>
+	<a href="netxms-0.2.15.exe.asc">(PGP sign)</a>
+	</p>
+	NB! We strongly recommended to use agent installer (next two packages) if you are planning on using centralised upgrade feature.
+	<p>
+	<a href="agent_packages/nxagent-0.2.15.exe">WIN32 Agent Installer (32bit)</a>
+	<a href="agent_packages/nxagent-0.2.15-win32.npi">NPI file</a>
+	<a href="agent_packages/nxagent-0.2.15.exe.md5">(MD5)</a>
+	<a href="agent_packages/nxagent-0.2.15.exe.asc">(PGP sign)</a><br />
+	</p>
+	<p>
+	<a href="agent_packages/nxagent-0.2.15-x64.exe">WIN32 Agent Installer (64bit)</a>
+	<a href="agent_packages/nxagent-0.2.15-x64.npi">NPI file</a>
+	<a href="agent_packages/nxagent-0.2.15-x64.exe.md5">(MD5)</a>
+	<a href="agent_packages/nxagent-0.2.15-x64.exe.asc">(PGP sign)</a>
+	</p>
+	<p>
+	<a href="netxms-0.2.15-win32-binary.tar.gz">WIN32 Precompiled Binaries w/o installer</a>
+	<a href="netxms-0.2.15-win32-binary.tar.gz.md5">(MD5)</a>
+	<a href="netxms-0.2.15-win32-binary.tar.gz.asc">(PGP sign)</a>
+	</p>
+	<p>
+	<a href="netxms-0.2.11-wce-binary.tar.gz">PocketPC Precompiled Binaries</a>
+	<a href="netxms-0.2.11-wce-binary.tar.gz.md5">(MD5)</a>
+	<a href="netxms-0.2.11-wce-binary.tar.gz.asc">(PGP sign)</a>
+	</p>
+	<p>
+	<a href="netxms-0.2.15-netware-binary.tar.gz">Precompiled agent for Netware (5.1-SP3 or higher)</a>
+	<a href="netxms-0.2.15-netware-binary.tar.gz.md5">(MD5)</a>
+	<a href="netxms-0.2.15-netware-binary.tar.gz.asc">(PGP sign)</a><br />
+	</p>
+
+	<!-- ---- -->
+	<h2>Previous Release version 0.2.14 &ndash; Nov 16, 2006</h2>
 	<p>
 	<a href="netxms-0.2.14.tar.gz">Source code</a>
 	<a href="netxms-0.2.14.tar.gz.md5">(MD5)</a>
@@ -20,9 +67,9 @@
 	<a href="agent_packages/nxagent-0.2.14.apkg.asc">(PGP sign)</a><br />
 	</p>
 	<p>
-	<a href="netxms-0.2.14.exe">WIN32 Installer</a>
-	<a href="netxms-0.2.14.exe.md5">(MD5)</a>
-	<a href="netxms-0.2.14.exe.asc">(PGP sign)</a>
+	<a href="netxms-0.2.14-hf1.exe">WIN32 Installer</a>
+	<a href="netxms-0.2.14-hf1.exe.md5">(MD5)</a>
+	<a href="netxms-0.2.14-hf1.exe.asc">(PGP sign)</a>
 	</p>
 	NB! We strongly recommended to use agent installer (next two packages) if you are planning on using centralised upgrade feature.
 	<p>
@@ -38,9 +85,9 @@
 	<a href="agent_packages/nxagent-0.2.14-x64.exe.asc">(PGP sign)</a>
 	</p>
 	<p>
-	<a href="netxms-0.2.14-win32-binary.tar.gz">WIN32 Precompiled Binaries w/o installer</a>
-	<a href="netxms-0.2.14-win32-binary.tar.gz.md5">(MD5)</a>
-	<a href="netxms-0.2.14-win32-binary.tar.gz.asc">(PGP sign)</a>
+	<a href="netxms-0.2.14-hf1-win32-binary.tar.gz">WIN32 Precompiled Binaries w/o installer</a>
+	<a href="netxms-0.2.14-hf1-win32-binary.tar.gz.md5">(MD5)</a>
+	<a href="netxms-0.2.14-hf1-win32-binary.tar.gz.asc">(PGP sign)</a>
 	</p>
 	<p>
 	<a href="netxms-0.2.11-wce-binary.tar.gz">PocketPC Precompiled Binaries</a>
@@ -51,53 +98,6 @@
 	<a href="netxms-0.2.14-netware-binary.tar.gz">Precompiled agent for Netware (5.1-SP3 or higher)</a>
 	<a href="netxms-0.2.14-netware-binary.tar.gz.md5">(MD5)</a>
 	<a href="netxms-0.2.14-netware-binary.tar.gz.asc">(PGP sign)</a><br />
-	</p>
-
-	<!-- ---- -->
-	<h2>Previous Release version 0.2.13 &ndash; Aug 28, 2006</h2>
-	<p>
-	<a href="netxms-0.2.13.tar.gz">Source code</a>
-	<a href="netxms-0.2.13.tar.gz.md5">(MD5)</a>
-	<a href="netxms-0.2.13.tar.gz.asc">(PGP sign)</a>
-	</p>
-	<p>
-	<a href="agent_packages/nxagent-0.2.13.apkg">Agent upgrade package for UNIX systems</a>
-	<a href="agent_packages/nxagent-0.2.13.npi">NPI file</a>
-	<a href="agent_packages/nxagent-0.2.13.apkg.md5">(MD5)</a>
-	<a href="agent_packages/nxagent-0.2.13.apkg.asc">(PGP sign)</a><br />
-	</p>
-	<p>
-	<a href="netxms-0.2.13-hf1.exe">WIN32 Installer</a>
-	<a href="netxms-0.2.13-hf1.exe.md5">(MD5)</a>
-	<a href="netxms-0.2.13-hf1.exe.asc">(PGP sign)</a>
-	</p>
-	NB! We strongly recommended to use agent installer (next two packages) if you are planning on using centralised upgrade feature.
-	<p>
-	<a href="agent_packages/nxagent-0.2.13.exe">WIN32 Agent Installer (32bit)</a>
-	<a href="agent_packages/nxagent-0.2.13-win32.npi">NPI file</a>
-	<a href="agent_packages/nxagent-0.2.13.exe.md5">(MD5)</a>
-	<a href="agent_packages/nxagent-0.2.13.exe.asc">(PGP sign)</a><br />
-	</p>
-	<p>
-	<a href="agent_packages/nxagent-0.2.13-x64.exe">WIN32 Agent Installer (64bit)</a>
-	<a href="agent_packages/nxagent-0.2.13-x64.npi">NPI file</a>
-	<a href="agent_packages/nxagent-0.2.13-x64.exe.md5">(MD5)</a>
-	<a href="agent_packages/nxagent-0.2.13-x64.exe.asc">(PGP sign)</a>
-	</p>
-	<p>
-	<a href="netxms-0.2.13-hf1-win32-binary.tar.gz">WIN32 Precompiled Binaries w/o installer</a>
-	<a href="netxms-0.2.13-hf1-win32-binary.tar.gz.md5">(MD5)</a>
-	<a href="netxms-0.2.13-hf1-win32-binary.tar.gz.asc">(PGP sign)</a>
-	</p>
-	<p>
-	<a href="netxms-0.2.11-wce-binary.tar.gz">PocketPC Precompiled Binaries</a>
-	<a href="netxms-0.2.11-wce-binary.tar.gz.md5">(MD5)</a>
-	<a href="netxms-0.2.11-wce-binary.tar.gz.asc">(PGP sign)</a>
-	</p>
-	<p>
-	<a href="netxms-0.2.13-netware-binary.tar.gz">Precompiled agent for Netware (5.1-SP3 or higher)</a>
-	<a href="netxms-0.2.13-netware-binary.tar.gz.md5">(MD5)</a>
-	<a href="netxms-0.2.13-netware-binary.tar.gz.asc">(PGP sign)</a><br />
 	</p>
 
 

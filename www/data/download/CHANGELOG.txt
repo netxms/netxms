@@ -1,4 +1,30 @@
 *
+* 0.2.15
+*
+
+- Added initial support for cluster monitoring
+- Added preliminary support for management packs
+- Added SNMP proxy functionality to agent
+- IPSO agent improved
+- Added Extended Checksum subagent
+- Added ODBC Query subagent
+- New agent parameters: Process.CountEx(), File.Time.Access(),
+  File.Time.Change(), and File.Time.Modify()
+- Parameters File.Size() and File.Count() improved
+- Parameters Process.XXX improved 
+- NXSL improved: implemented switch ... case statement and break statement
+- Windows console:
+	- Now able to download and install update from web server pointed
+	  by NetXMS management server
+	- Object browser improved
+	- Graphs improved: implemented printing and "copy to clipboard"
+	  function
+	- Added server history in login dialog
+	- Added option "hide empty values" in last DCI values view
+- Fixed issues: #105, #123, #131, #135, #140, #142, #145
+
+
+*
 * 0.2.14
 *
 

@@ -1446,6 +1446,7 @@ www/data/download/CHANGELOG.txt -text
 www/data/download/body.shtml -text
 www/data/download/changelog.shtml -text
 www/data/download/index.shtml -text
+www/data/ep.js -text
 www/data/footer.shtml -text
 www/data/header.shtml -text
 www/data/index.shtml -text

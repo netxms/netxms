@@ -41,6 +41,7 @@ www/.htpasswd.digest
 www/GeoIP.dat
 www/bugtrackUpload
 www/data/archive
+www/data/bugtrack
 www/data/bugtrack/*
 www/data/download/*.asc
 www/data/download/*.gz
@@ -48,8 +49,10 @@ www/data/download/*.md5
 www/data/download/*.zip
 www/data/download/agent_packages
 www/data/download/preview
+www/data/google*.html
 www/data/maintenance
 www/data/mwf
 www/data/webalizer
+www/data/y_key_*.html
 www/icons
 www/logs
