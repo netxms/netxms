@@ -1,4 +1,4 @@
-/* $Id: nxagentd.cpp,v 1.84 2007-01-14 14:17:54 victor Exp $ */
+/* $Id: nxagentd.cpp,v 1.85 2007-01-15 12:06:55 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -61,11 +61,11 @@ void InitStaticSubagents(void);
 //
 
 #if defined(_WIN32)
-#define VALID_OPTIONS   "c:CdDEhHIM:RsSUvX:Z:"
+#define VALID_OPTIONS   "c:CdDEfhHIM:RsSUvX:Z:"
 #elif defined(_NETWARE)
-#define VALID_OPTIONS   "c:CDhM:vX:Z:"
+#define VALID_OPTIONS   "c:CDfhM:vX:Z:"
 #else
-#define VALID_OPTIONS   "c:CdDhM:p:vX:Z:"
+#define VALID_OPTIONS   "c:CdDfhM:p:vX:Z:"
 #endif
 
 
@@ -83,6 +83,7 @@ void InitStaticSubagents(void);
 #define ACTION_INSTALL_EVENT_SOURCE    7
 #define ACTION_REMOVE_EVENT_SOURCE     8
 #define ACTION_CREATE_CONFIG           9
+#define ACTION_HELP							10
 
 
 //
@@ -194,6 +195,7 @@ static char m_szHelpText[] =
    "   -d         : Run as daemon/service\n"
 #endif
    "   -D         : Turn on debug output\n"
+	"   -f         : Run in foreground\n"
    "   -h         : Display help and exit\n"
 #ifdef _WIN32
    "   -H         : Hide agent's window when in standalone mode\n"
@@ -1003,18 +1005,22 @@ int main(int argc, char *argv[])
 #endif
 
    // Parse command line
+	if (argc == 1)
+		iAction = ACTION_HELP;
    opterr = 1;
    while((ch = getopt(argc, argv, VALID_OPTIONS)) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
-            printf(m_szHelpText);
-            iAction = ACTION_NONE;
+            iAction = ACTION_HELP;
             break;
          case 'd':   // Run as daemon
             g_dwFlags |= AF_DAEMON;
             break;
+			case 'f':	// Run in foreground
+            g_dwFlags &= ~AF_DAEMON;
+				break;
          case 'D':   // Turn on debug output
             g_dwFlags |= AF_DEBUG;
             break;
@@ -1069,7 +1075,7 @@ int main(int argc, char *argv[])
             break;
 #endif
          case '?':
-            iAction = ACTION_NONE;
+            iAction = ACTION_HELP;
             iExitCode = 1;
             break;
          default:
@@ -1225,6 +1231,9 @@ int main(int argc, char *argv[])
          StopAgentService();
          break;
 #endif
+		case ACTION_HELP:
+         printf(m_szHelpText);
+			break;
       default:
          break;
    }
