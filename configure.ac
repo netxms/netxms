@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.231 2007-01-14 23:08:32 victor Exp $
+# $Id: configure.ac,v 1.232 2007-01-15 10:54:45 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -392,6 +392,7 @@ AC_PROG_LIBTOOL
 
 AC_C_CONST
 AC_PROG_GCC_TRADITIONAL
+AC_C_BIGENDIAN
 
 
 #--------------------------------------------------------------------
