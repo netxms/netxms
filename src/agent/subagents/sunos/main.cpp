@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.18 2006-05-15 22:11:22 alk Exp $ */
+/* $Id: main.cpp,v 1.19 2007-01-15 00:27:46 alk Exp $ */
 
 /*
  ** NetXMS subagent for SunOS/Solaris
@@ -161,9 +161,23 @@ DECLARE_SUBAGENT_INIT(SUNOS)
 	return TRUE;
 }
 
+//
+// Entry points for server
+//
+
+extern "C" BOOL __NxSubAgentGetIfList(NETXMS_VALUES_LIST *pValue)
+{
+   return H_NetIfList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2006/05/15 22:11:22  alk
++ Net.Interface.Link() workaround; trying kstat() first, then
+IFF_RUNNING it kstat's link_up failed.
+- code reformated
+
 
 */
