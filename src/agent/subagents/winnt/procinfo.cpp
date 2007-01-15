@@ -163,7 +163,8 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
 
 static BOOL GetProcessCommandLine(DWORD dwPId, TCHAR *pszCmdLine, DWORD dwLen)
 {
-	DWORD dwAddressOfCommandLine, dummy;
+	DWORD dwAddressOfCommandLine;
+	SIZE_T dummy;
 	FARPROC pfnGetCommandLineA;
 	HANDLE hThread;
 	BOOL bRet = FALSE;

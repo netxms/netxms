@@ -1,4 +1,4 @@
-/* $Id: snmpproxy.cpp,v 1.2 2007-01-14 20:55:08 victor Exp $ */
+/* $Id: snmpproxy.cpp,v 1.3 2007-01-15 14:09:46 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -53,7 +53,7 @@ static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, DWORD *pdwSize)
       tv.tv_sec = g_dwSNMPTimeout / 1000;
       tv.tv_usec = (g_dwSNMPTimeout % 1000) * 1000;
 #ifdef _WIN32
-      if (select(hSocket + 1, &rdfs, NULL, NULL, &tv) <= 0)
+      if (select((int)(hSocket + 1), &rdfs, NULL, NULL, &tv) <= 0)
          return FALSE;
 #else
       qwTime = GetCurrentTimeMs();

@@ -1,4 +1,4 @@
-/* $Id: sysinfo.cpp,v 1.19 2007-01-08 22:05:02 victor Exp $ */
+/* $Id: sysinfo.cpp,v 1.20 2007-01-15 14:09:46 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004 Victor Kirhenshtein
@@ -330,10 +330,10 @@ LONG H_FileTime(char *cmd, char *arg, char *value)
 			ret_uint64(value, fileInfo.st_atime);
 			break;
 		case FILETIME_MTIME:
-			ret_uint(value, fileInfo.st_mtime);
+			ret_uint64(value, fileInfo.st_mtime);
 			break;
 		case FILETIME_CTIME:
-			ret_uint(value, fileInfo.st_ctime);
+			ret_uint64(value, fileInfo.st_ctime);
 			break;
 		default:
 			nRet = SYSINFO_RC_UNSUPPORTED;

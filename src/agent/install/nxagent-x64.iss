@@ -29,6 +29,8 @@ Source: "..\subagents\ping\Release64\ping.nsm"; DestDir: "{app}\bin"; Flags: ign
 Source: "..\subagents\portCheck\Release64\portcheck.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\logscan\Release64\logscan.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\ups\Release64\ups.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\subagents\ecs\Release64\ecs.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\subagents\odbcquery\Release64\odbcquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion
 Source: "..\..\install\windows-x64\files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 

@@ -241,6 +241,7 @@ int OdbcQuerySelect1(void* pvSqlCtx, const TCHAR* pszQuery,
 {
 	int nRet = SUCCESS;
 	SQLRETURN nSqlRet;
+	SQLLEN nLen;
 	TCHAR	szBuf[MAX_STR];
 	SqlCtx* pSqlCtx = (SqlCtx*)pvSqlCtx;
 	BOOL bSame = TRUE, bCursorOpened = FALSE;
@@ -272,7 +273,8 @@ int OdbcQuerySelect1(void* pvSqlCtx, const TCHAR* pszQuery,
 	if (nRet == SUCCESS)
 	{
 		nSqlRet = SQLBindCol(pSqlCtx->hStmt, 1, SQL_C_CHAR, szBuf, 
-									MAX_STR, &pSqlCtx->nSqlErr);
+									MAX_STR, &nLen);
+		pSqlCtx->nSqlErr = (SQLINTEGER)nLen;
 		if (SQLRET_FAIL(nSqlRet))
 		{
 			_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_EBIND));

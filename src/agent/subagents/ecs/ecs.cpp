@@ -137,7 +137,7 @@ static unsigned char *GetHttpUrl(char *url, int *size)
 
 			if (p != NULL)
 			{
-				*size -= (p - ret);
+				*size -= (int)(p - ret);
 				memmove(ret, p, *size);
 			}
 			else
