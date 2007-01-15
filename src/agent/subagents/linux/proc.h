@@ -1,4 +1,4 @@
-/* $Id: proc.h,v 1.1 2004-10-22 22:08:35 alk Exp $ */
+/* $Id: proc.h,v 1.2 2007-01-15 00:16:07 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -29,7 +29,7 @@ typedef struct t_ProcEnt
 	char szProcName[128];
 } PROC_ENT;
 
-int ProcRead(PROC_ENT **, char *);
+int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine);
 
 #endif // __PROC_H__
 
@@ -37,5 +37,15 @@ int ProcRead(PROC_ENT **, char *);
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2004/10/22 22:08:35  alk
+source restructured;
+implemented:
+	Net.IP.Forwarding
+	Net.IP6.Forwarding
+	Process.Count(*)
+	Net.ArpCache
+	Net.InterfaceList (if-type not implemented yet)
+	System.ProcessList
+
 
 */

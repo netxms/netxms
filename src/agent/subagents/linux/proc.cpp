@@ -1,4 +1,4 @@
-/* $Id: proc.cpp,v 1.5 2005-11-04 23:00:07 victor Exp $ */
+/* $Id: proc.cpp,v 1.6 2007-01-15 00:16:07 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -51,10 +51,12 @@ static int ProcFilter(const struct dirent *pEnt)
 	return 1;
 }
 
-int ProcRead(PROC_ENT **pEnt, char *szPatern)
+int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 {
 	struct dirent **pNameList;
 	int nCount, nFound;
+   BOOL bProcFound, bCmdFound;
+   BOOL bIgnoreCase = TRUE;
 
 	nFound = -1;
 
@@ -88,50 +90,82 @@ int ProcRead(PROC_ENT **pEnt, char *szPatern)
 
 		while(nCount--)
 		{
+            bProcFound = bCmdFound = FALSE;
 			char szFileName[256];
 			FILE *hFile;
-
-			snprintf(szFileName, sizeof(szFileName),
+		     char *pProcName;
+             unsigned long nPid;
+          
+			  snprintf(szFileName, sizeof(szFileName),
 					"/proc/%s/stat", pNameList[nCount]->d_name);
-			hFile = fopen(szFileName, "r");
-			if (hFile != NULL)
-			{
-				char szBuff[1024];
-				if (fgets(szBuff, sizeof(szBuff), hFile) != NULL)
-				{
-					char *pProcName;
-					unsigned long nPid;
+			  hFile = fopen(szFileName, "r");
+    		  if (hFile != NULL)
+            {
+              char szBuff[1024];
+              if (fgets(szBuff, sizeof(szBuff), hFile) != NULL)
+				  {
 
-					if (sscanf(szBuff, "%lu ", &nPid) == 1)
-					{
-						pProcName = strchr(szBuff, ')');
-						if (pProcName != NULL)
-						{
-							*pProcName = 0;
-
-							pProcName =  strchr(szBuff, '(');
-							if (pProcName != NULL)
-							{
-								pProcName++;
-
-								if (szPatern == NULL ||
-										strcasecmp(pProcName, szPatern) == 0)
-								{
-									nFound++;
-									if (pEnt != NULL)
+                 if (sscanf(szBuff, "%lu ", &nPid) == 1)
+                 {
+                     pProcName = strchr(szBuff, ')');
+                     if (pProcName != NULL)
+						   {
+							   *pProcName = 0;
+                        pProcName =  strchr(szBuff, '(');
+                        if (pProcName != NULL)
+							   {
+							      pProcName++;
+                           if (szProcName != NULL)
+                           {
+                               if (szCmdLine == NULL) // use old style compare
+                                   bProcFound = strcasecmp(pProcName, szProcName) == 0;
+                               else
+                                   bProcFound = RegexpMatch(pProcName, szProcName, bIgnoreCase);
+                           }
+									else
 									{
-										(*pEnt)[nFound].nPid = nPid;
-										nx_strncpy((*pEnt)[nFound].szProcName, pProcName,
-												sizeof((*pEnt)[nFound].szProcName));
+										bProcFound = TRUE;
 									}
-								}
+                        }
 							}
 						}
-					}
-				}
+					} // fgets
+				} // hFile
 
 				fclose(hFile);
-			}
+
+            if (szCmdLine != NULL)
+            {
+               snprintf(szFileName, sizeof(szFileName),
+					            "/proc/%s/cmdline", pNameList[nCount]->d_name);
+               hFile = fopen(szFileName, "r");
+			      if (hFile != NULL)
+               {
+                   char szBuff[1024] = {0};
+                   bCmdFound = FALSE;
+                   if (fgets(szBuff, sizeof(szBuff), hFile) != NULL)
+				       {
+                        bCmdFound = RegexpMatch(szBuff, szCmdLine, bIgnoreCase);
+                   }
+               } // hFile != NULL
+               fclose(hFile);
+            } // szCmdLine
+				else
+				{
+					bCmdFound = TRUE;
+				}
+            
+            if (bProcFound && bCmdFound)
+            {
+                nFound++;
+					 if (pEnt != NULL && pProcName != NULL )
+					 {
+						  (*pEnt)[nFound].nPid = nPid;
+						  nx_strncpy((*pEnt)[nFound].szProcName, pProcName,
+									sizeof((*pEnt)[nFound].szProcName));
+					 }
+            }
+            
 			free(pNameList[nCount]);
 		}
 		free(pNameList);
@@ -144,6 +178,9 @@ int ProcRead(PROC_ENT **pEnt, char *szPatern)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2005/11/04 23:00:07  victor
+Fixed some 64bit portability issues
+
 Revision 1.4  2005/10/27 08:24:06  victor
 Minor changes
 

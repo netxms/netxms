@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.12 2006-11-03 13:39:47 victor Exp $ */
+/* $Id: system.cpp,v 1.13 2007-01-15 00:16:07 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -215,18 +215,20 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct statvfs s;
-   char szArg[128] = {0};
+   char szArg[128] = "", szCmdLine[128] = "";
 	int nCount = -1;
 
-   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
-	if (pArg == NULL)
+	if (*pArg != 'T')
 	{
-		nCount = ProcRead(NULL, szArg);
+   	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+		if (*pArg == 'E')
+		{
+   		NxGetParameterArg(pszParam, 2, szCmdLine, sizeof(szCmdLine));
+		}
 	}
-	else
-	{
-		nCount = ProcRead(NULL, NULL);
-	}
+   
+   nCount = ProcRead(NULL, (*pArg != 'T') ? szArg : NULL, (*pArg == 'E') ? szCmdLine : NULL);
+
 	if (nCount >= 0)
 	{
 		ret_int(pValue, nCount);
@@ -308,7 +310,7 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 	PROC_ENT *pEnt;
 	int nCount;
 
-	nCount = ProcRead(&pEnt, NULL);
+	nCount = ProcRead(&pEnt, NULL, NULL);
 
 	if (nCount >= 0)
 	{
@@ -502,6 +504,9 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/11/03 13:39:47  victor
+Minor changes
+
 Revision 1.11  2006/10/30 17:25:10  victor
 Implemented System.ConnectedUsers and System.ActiveUserSessions
 

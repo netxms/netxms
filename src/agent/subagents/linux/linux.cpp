@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.29 2006-10-30 17:25:10 victor Exp $ */
+/* $Id: linux.cpp,v 1.30 2007-01-15 00:16:06 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -114,9 +114,11 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "PhysicalDisk.Temperature(*)",  H_PhysicalDiskInfo, "T",
 			DCI_DT_INT,		"Temperature of hard disk {instance}" },
 
-   { "Process.Count(*)",             H_ProcessCount,    (char *)0,
+   { "Process.Count(*)",             H_ProcessCount,    "S",
 			DCI_DT_UINT,	"Number of {instance} processes" },
-   { "System.ProcessCount",          H_ProcessCount,    (char *)1,
+   { "Process.CountEx(*)",           H_ProcessCount,    "E",
+			DCI_DT_UINT,	"Number of {instance} processes" },
+   { "System.ProcessCount",          H_ProcessCount,    "T",
 			DCI_DT_UINT,	"Total number of processes" },
 
 	{ "System.ConnectedUsers",        H_ConnectedUsers,  NULL,
@@ -218,6 +220,9 @@ extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.29  2006/10/30 17:25:10  victor
+Implemented System.ConnectedUsers and System.ActiveUserSessions
+
 Revision 1.28  2006/09/21 07:45:53  victor
 Fixed problems with platform subagent loading by server
 
