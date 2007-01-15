@@ -1,3 +1,5 @@
+15-Jan-2007|0.2.15 released|Version 0.2.15 is out. Upgrade is highly recommended.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
+01-Dec-2006|Unconfirmed problems in 0.2.14|We have received a few strage problem reports regarding our latest release. We have not yet been able to reproduce these problems on our environments, but we are working on it. Please pospone upgrade/fresh install for a few days or stick with 0.2.13.
 16-Nov-2006|0.2.14 released|Version 0.2.14 is out. Finally.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
 06-Oct-2006|0.2.14 is on the way|0.2.14-rc1 is packaged for internal testing; release coming soon.
 28-Aug-2006|0.2.13-hf1 released|We have found a serious bug in NetXMS console. All users experienced problems with console should upgrade to 0.2.13-hf1. Server and agents are not affected by this bug.
