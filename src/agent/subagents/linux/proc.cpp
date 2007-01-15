@@ -1,4 +1,4 @@
-/* $Id: proc.cpp,v 1.6 2007-01-15 00:16:07 victor Exp $ */
+/* $Id: proc.cpp,v 1.7 2007-01-15 00:25:07 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -142,13 +142,20 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 			      if (hFile != NULL)
                {
                    char szBuff[1024] = {0};
-                   bCmdFound = FALSE;
                    if (fgets(szBuff, sizeof(szBuff), hFile) != NULL)
 				       {
                         bCmdFound = RegexpMatch(szBuff, szCmdLine, bIgnoreCase);
                    }
+						 else
+							{
+                        bCmdFound = RegexpMatch("", szCmdLine, bIgnoreCase);
+							}
+               	fclose(hFile);
                } // hFile != NULL
-               fclose(hFile);
+					else
+					{
+               	bCmdFound = RegexpMatch("", szCmdLine, bIgnoreCase);
+					}
             } // szCmdLine
 				else
 				{
@@ -178,6 +185,9 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.6  2007/01/15 00:16:07  victor
+Implemented Process.CountEx for Linux
+
 Revision 1.5  2005/11/04 23:00:07  victor
 Fixed some 64bit portability issues
 
