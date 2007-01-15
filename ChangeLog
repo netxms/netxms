@@ -3,6 +3,7 @@
 *
 
 - Added initial support for cluster monitoring
+- Added preliminary support for management packs
 - Added SNMP proxy functionality to agent
 - IPSO agent improved
 - UPS subagent: added support for MICRODOWELL UPS devices
@@ -21,7 +22,7 @@
 	  function
 	- Added server history in login dialog
 	- Added option "hide empty values" in last DCI values view
-- Fixed issues: #105, #123, #131, #135, #140, #145
+- Fixed issues: #105, #123, #131, #135, #140, #142, #145
 
 
 *
