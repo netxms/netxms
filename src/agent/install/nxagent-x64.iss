@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS Agent
-AppVerName=NetXMS Agent 0.2.14
-AppVersion=0.2.14
+AppVerName=NetXMS Agent 0.2.15
+AppVersion=0.2.15
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -12,7 +12,7 @@ AppUpdatesURL=http://www.netxms.org
 DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS Agent
 AllowNoIcons=yes
-OutputBaseFilename=nxagent-0.2.14-x64
+OutputBaseFilename=nxagent-0.2.15-x64
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
