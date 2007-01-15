@@ -94,7 +94,7 @@ typedef unsigned long uint32;
 typedef unsigned int uint32;
 #endif
 
-#if WORDS_BIGENDIAN
+#if WORDS_BIGENDIAN || sparc
 #undef LITTLE_ENDIAN
 #else
 #ifndef LITTLE_ENDIAN
