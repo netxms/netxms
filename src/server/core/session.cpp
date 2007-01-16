@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.258 2007-01-14 20:01:50 victor Exp $ */
+/* $Id: session.cpp,v 1.259 2007-01-16 22:15:11 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -3914,6 +3914,7 @@ void ClientSession::PollerThread(Node *pNode, int iPollType, DWORD dwRqId)
          pNode->StatusPoll(this, dwRqId, -1);
          break;
       case POLL_CONFIGURATION:
+			pNode->SetRecheckCapsFlag();
          pNode->ConfigurationPoll(this, dwRqId, -1, 0);
          break;
       default:

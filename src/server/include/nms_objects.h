@@ -643,6 +643,7 @@ public:
    BOOL GetNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
                    DWORD *pdwIfIndex, BOOL *pbIsVPN);
 
+	void SetRecheckCapsFlag(void) { m_dwDynamicFlags |= NDF_RECHECK_CAPABILITIES; }
    void SetDiscoveryPollTimeStamp(void);
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
    void ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller, DWORD dwNetMask);
