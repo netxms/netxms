@@ -204,7 +204,10 @@
 # ExternalParameter
 #
 # Add parameter handled by external command. To add multiple parameters, you
-# should use multiple ExternalParameter entries.
+# should use multiple ExternalParameter entries. Please note that on Windows
+# agent uses system process execution API for execution of specified
+# command, so you cannot use pipes or shell commands. If you need to
+# execute command via shell, use ExternalParameterShellExec instead.
 # 
 # Syntax:
 # ExternalParameter = <parameter_name>:<command_line>
@@ -215,3 +218,21 @@
 # ExternalParameter = Test:echo test
 # ExternalParameter = LineCount(*):cat $1 | wc -l
 # ExternalParameter = Test2(*):myprog $1 $2
+
+#
+# ExternalParameterShellExec
+#
+# Add parameter handled by external command. To add multiple parameters, you
+# should use multiple ExternalParameterShellExec entries. This is similar
+# to ExternalParameter with exception that agent will use shell to execute
+# specified command instead of system process exeution API. This difference
+# presented only on Windows system, on other systems ExternalParameter and
+# ExternalParameterShellExec behaves identically.
+# 
+# Syntax:
+# ExternalParameterShellExec = <parameter_name>:<command_line>
+# If you specify parameter name as "name(*)", then you can use $1 .. $9 in
+# command line to substitute actual arguments passed from server.
+#
+# Examples:
+# ExternalParameterShellExec = Test:dir c:\ | wc -l

@@ -347,9 +347,9 @@ void AddEnum(char *pszName, LONG (* fpHandler)(char *,char *,NETXMS_VALUES_LIST 
 // Add external parameter
 //
 
-BOOL AddExternalParameter(char *pszCfgLine)
+BOOL AddExternalParameter(char *pszCfgLine, BOOL bShellExec)
 {
-   char *pszCmdLine;
+   char *pszCmdLine, *pszArg;
 
    pszCmdLine = strchr(pszCfgLine, ':');
    if (pszCmdLine == NULL)
@@ -362,7 +362,10 @@ BOOL AddExternalParameter(char *pszCfgLine)
    if ((*pszCfgLine == 0) || (*pszCmdLine == 0))
       return FALSE;
 
-   AddParameter(pszCfgLine, H_ExternalParameter, strdup(pszCmdLine), DCI_DT_STRING, "");
+	pszArg = (char *)malloc(strlen(pszCmdLine) + 2);
+	pszArg[0] = bShellExec ? 'S' : 'E';
+	strcpy(&pszArg[1], pszCmdLine);
+   AddParameter(pszCfgLine, H_ExternalParameter, pszArg, DCI_DT_STRING, "");
    return TRUE;
 }
 

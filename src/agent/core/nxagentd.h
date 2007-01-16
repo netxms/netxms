@@ -177,6 +177,7 @@
 
 #define AGENT_ACTION_EXEC        1
 #define AGENT_ACTION_SUBAGENT    2
+#define AGENT_ACTION_SHELLEXEC	3
 
 
 //
@@ -319,7 +320,7 @@ BOOL InitParameterList(void);
 void AddParameter(char *szName, LONG (* fpHandler)(char *,char *,char *), char *pArg,
                   int iDataType, char *pszDescription);
 void AddEnum(char *szName, LONG (* fpHandler)(char *,char *,NETXMS_VALUES_LIST *), char *pArg);
-BOOL AddExternalParameter(char *pszCfgLine);
+BOOL AddExternalParameter(char *pszCfgLine, BOOL bShellExec);
 DWORD GetParameterValue(DWORD dwSessionId, char *pszParam, char *pszValue);
 DWORD GetEnumValue(DWORD dwSessionId, char *pszParam, NETXMS_VALUES_LIST *pValue);
 void GetParameterList(CSCPMessage *pMsg);
@@ -334,10 +335,11 @@ BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *p
 BOOL AddAction(char *pszName, int iType, char *pArg, 
                LONG (*fpHandler)(TCHAR *, NETXMS_VALUES_LIST *, TCHAR *),
                char *pszSubAgent, char *pszDescription);
-BOOL AddActionFromConfig(char *pszLine);
+BOOL AddActionFromConfig(char *pszLine, BOOL bShellExec);
 DWORD ExecAction(char *pszAction, NETXMS_VALUES_LIST *pArgs);
 
 DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs);
+DWORD ExecuteShellCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs);
 
 DWORD UpgradeAgent(TCHAR *pszPkgFile);
 

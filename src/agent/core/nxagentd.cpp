@@ -1,4 +1,4 @@
-/* $Id: nxagentd.cpp,v 1.85 2007-01-15 12:06:55 victor Exp $ */
+/* $Id: nxagentd.cpp,v 1.86 2007-01-16 09:57:35 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -129,11 +129,13 @@ int g_nThreadCount = 0;
 //
 
 static char *m_pszActionList = NULL;
+static char *m_pszShellActionList = NULL;
 static char *m_pszServerList = NULL;
 static char *m_pszControlServerList = NULL;
 static char *m_pszMasterServerList = NULL;
 static char *m_pszSubagentList = NULL;
 static char *m_pszExtParamList = NULL;
+static char *m_pszShExtParamList = NULL;
 static DWORD m_dwEnabledCiphers = 0xFFFF;
 static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
 static THREAD m_thListener = INVALID_THREAD_HANDLE;
@@ -154,6 +156,7 @@ static pid_t m_pid;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { "Action", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszActionList },
+   { "ActionShellExec", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShellActionList },
    { "ControlServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList },
    { "EnableActions", CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
    { "EnabledCiphers", CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers },
@@ -162,6 +165,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "EnableSubagentAutoload", CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags },
    { "ExecTimeout", CT_LONG, 0, 0, 0, 0, &g_dwExecTimeout },
    { "ExternalParameter", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },
+   { "ExternalParameterShellExec", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShExtParamList },
    { "FileStore", CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore },
    { "InstallationServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList }, // Old name for MasterServers, deprecated
    { "ListenPort", CT_WORD, 0, 0, 0, 0, &g_wListenPort },
@@ -737,10 +741,23 @@ BOOL Initialize(void)
          if (pEnd != NULL)
             *pEnd = 0;
          StrStrip(pItem);
-         if (!AddActionFromConfig(pItem))
+         if (!AddActionFromConfig(pItem, FALSE))
             WriteLog(MSG_ADD_ACTION_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
       free(m_pszActionList);
+   }
+   if (m_pszShellActionList != NULL)
+   {
+      for(pItem = m_pszShellActionList; *pItem != 0; pItem = pEnd + 1)
+      {
+         pEnd = strchr(pItem, '\n');
+         if (pEnd != NULL)
+            *pEnd = 0;
+         StrStrip(pItem);
+         if (!AddActionFromConfig(pItem, TRUE))
+            WriteLog(MSG_ADD_ACTION_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
+      }
+      free(m_pszShellActionList);
    }
 
    // Parse external parameters list
@@ -752,10 +769,23 @@ BOOL Initialize(void)
          if (pEnd != NULL)
             *pEnd = 0;
          StrStrip(pItem);
-         if (!AddExternalParameter(pItem))
+         if (!AddExternalParameter(pItem, FALSE))
             WriteLog(MSG_ADD_EXT_PARAM_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
       free(m_pszExtParamList);
+   }
+   if (m_pszShExtParamList != NULL)
+   {
+      for(pItem = m_pszShExtParamList; *pItem != 0; pItem = pEnd + 1)
+      {
+         pEnd = strchr(pItem, '\n');
+         if (pEnd != NULL)
+            *pEnd = 0;
+         StrStrip(pItem);
+         if (!AddExternalParameter(pItem, TRUE))
+            WriteLog(MSG_ADD_EXT_PARAM_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
+      }
+      free(m_pszShExtParamList);
    }
 
    ThreadSleep(1);

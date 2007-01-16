@@ -55,6 +55,7 @@ BOOL AddAction(char *pszName, int iType, char *pArg,
    switch(iType)
    {
       case AGENT_ACTION_EXEC:
+      case AGENT_ACTION_SHELLEXEC:
          m_pActionList[i].handler.pszCmdLine = strdup(pArg);
          break;
       case AGENT_ACTION_SUBAGENT:
@@ -74,7 +75,7 @@ BOOL AddAction(char *pszName, int iType, char *pArg,
 // Accepts string of format <action_name>:<command_line>
 //
 
-BOOL AddActionFromConfig(char *pszLine)
+BOOL AddActionFromConfig(char *pszLine, BOOL bShellExec)
 {
    char *pCmdLine;
 
@@ -85,7 +86,7 @@ BOOL AddActionFromConfig(char *pszLine)
    pCmdLine++;
    StrStrip(pszLine);
    StrStrip(pCmdLine);
-   return AddAction(pszLine, AGENT_ACTION_EXEC, pCmdLine, NULL, NULL, "");
+   return AddAction(pszLine, bShellExec ? AGENT_ACTION_SHELLEXEC : AGENT_ACTION_EXEC, pCmdLine, NULL, NULL, "");
 }
 
 
@@ -105,6 +106,9 @@ DWORD ExecAction(char *pszAction, NETXMS_VALUES_LIST *pArgs)
          {
             case AGENT_ACTION_EXEC:
                dwErrorCode = ExecuteCommand(m_pActionList[i].handler.pszCmdLine, pArgs);
+               break;
+            case AGENT_ACTION_SHELLEXEC:
+               dwErrorCode = ExecuteShellCommand(m_pActionList[i].handler.pszCmdLine, pArgs);
                break;
             case AGENT_ACTION_SUBAGENT:
                dwErrorCode = m_pActionList[i].handler.sa.fpHandler(pszAction, pArgs, m_pActionList[i].handler.sa.pArg);

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,14 +16,16 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: exec.cpp
+** File: exec.cpp
 **
 **/
 
 #include "nxagentd.h"
 
-#ifndef _WIN32
-# include <sys/wait.h>
+#ifdef _WIN32
+#define popen _popen
+#else
+#include <sys/wait.h>
 #endif
 
 
@@ -207,9 +209,9 @@ LONG H_ExternalParameter(char *pszCmd, char *pszArg, char *pValue)
    int i, iSize, iStatus;
 
    // Substitute $1 .. $9 with actual arguments
-   iSize = (int)strlen(pszArg) + 1;
+   iSize = (int)strlen(pszArg);
    pszCmdLine = (char *)malloc(iSize);
-   for(sptr = pszArg, i = 0; *sptr != 0; sptr++)
+   for(sptr = &pszArg[1], i = 0; *sptr != 0; sptr++)
       if (*sptr == '$')
       {
          sptr++;
@@ -241,103 +243,184 @@ LONG H_ExternalParameter(char *pszCmd, char *pszArg, char *pValue)
    pszCmdLine[i] = 0;
 
 #if defined(_WIN32)
-   STARTUPINFO si;
-   PROCESS_INFORMATION pi;
-   SECURITY_ATTRIBUTES sa;
-   HANDLE hOutput;
-   DWORD dwBytes;
-
-   // Create temporary file to hold process output
-   GetTempPath(MAX_PATH - 1, szBuffer);
-   GetTempFileName(szBuffer, "nx", 0, szTempFile);
-   sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-   sa.lpSecurityDescriptor = NULL;
-   sa.bInheritHandle = TRUE;
-   hOutput = CreateFile(szTempFile, GENERIC_READ | GENERIC_WRITE, 0, &sa, 
-                        CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL);
-   if (hOutput != INVALID_HANDLE_VALUE)
-   {
-      // Fill in process startup info structure
-      memset(&si, 0, sizeof(STARTUPINFO));
-      si.cb = sizeof(STARTUPINFO);
-      si.dwFlags = STARTF_USESTDHANDLES;
-      si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
-      si.hStdOutput = hOutput;
-      si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
-
-      // Create new process
-      if (CreateProcess(NULL, pszCmdLine, NULL, NULL, TRUE,
-                        CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
-      {
-         // Wait for process termination and close all handles
-         if (WaitForSingleObject(pi.hProcess, g_dwExecTimeout) == WAIT_OBJECT_0)
-         {
-            // Rewind temporary file for reading
-            SetFilePointer(hOutput, 0, NULL, FILE_BEGIN);
-
-            // Read process output
-            ReadFile(hOutput, pValue, MAX_RESULT_LENGTH - 1, &dwBytes, NULL);
-            pValue[dwBytes] = 0;
-            sptr = strchr(pValue, '\n');
-            if (sptr != NULL)
-               *sptr = 0;
-            iStatus = SYSINFO_RC_SUCCESS;
-         }
-         else
-         {
-            // Timeout waiting for external process to complete, kill it
-            TerminateProcess(pi.hProcess, 127);
-            WriteLog(MSG_PROCESS_KILLED, EVENTLOG_WARNING_TYPE, "s", pszCmdLine);
-            iStatus = SYSINFO_RC_ERROR;
-         }
-
-         CloseHandle(pi.hThread);
-         CloseHandle(pi.hProcess);
-      }
-      else
-      {
-         WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCmdLine, GetLastError());
-         iStatus = SYSINFO_RC_ERROR;
-      }
-
-      // Remove temporary file
-      CloseHandle(hOutput);
-      DeleteFile(szTempFile);
-   }
-   else
-   {
-      WriteLog(MSG_CREATE_TMP_FILE_FAILED, EVENTLOG_ERROR_TYPE, "e", GetLastError());
-      iStatus = SYSINFO_RC_ERROR;
-   }
-#elif defined(_NETWARE)
-   /* TODO: add NetWare code here */
-#else // UNIX
-   iStatus = SYSINFO_RC_ERROR;
+	if (*pszArg == 'E')
 	{
-		FILE *hPipe;
+		STARTUPINFO si;
+		PROCESS_INFORMATION pi;
+		SECURITY_ATTRIBUTES sa;
+		HANDLE hOutput;
+		DWORD dwBytes;
 
-		if ((hPipe = popen(pszCmdLine, "r")) != NULL)
+		// Create temporary file to hold process output
+		GetTempPath(MAX_PATH - 1, szBuffer);
+		GetTempFileName(szBuffer, "nx", 0, szTempFile);
+		sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+		sa.lpSecurityDescriptor = NULL;
+		sa.bInheritHandle = TRUE;
+		hOutput = CreateFile(szTempFile, GENERIC_READ | GENERIC_WRITE, 0, &sa, 
+									CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL);
+		if (hOutput != INVALID_HANDLE_VALUE)
 		{
-			char *pTmp;
+			// Fill in process startup info structure
+			memset(&si, 0, sizeof(STARTUPINFO));
+			si.cb = sizeof(STARTUPINFO);
+			si.dwFlags = STARTF_USESTDHANDLES;
+			si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+			si.hStdOutput = hOutput;
+			si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
-			fread(pValue, 1, MAX_RESULT_LENGTH - 1, hPipe);
-			fclose(hPipe);
-         pValue[MAX_RESULT_LENGTH - 1] = 0;
-			if ((pTmp = strchr(pValue, '\n')) != NULL)
+			// Create new process
+			if (CreateProcess(NULL, pszCmdLine, NULL, NULL, TRUE,
+									CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
 			{
-				*pTmp = 0;
+				// Wait for process termination and close all handles
+				if (WaitForSingleObject(pi.hProcess, g_dwExecTimeout) == WAIT_OBJECT_0)
+				{
+					// Rewind temporary file for reading
+					SetFilePointer(hOutput, 0, NULL, FILE_BEGIN);
+
+					// Read process output
+					ReadFile(hOutput, pValue, MAX_RESULT_LENGTH - 1, &dwBytes, NULL);
+					pValue[dwBytes] = 0;
+					sptr = strchr(pValue, '\n');
+					if (sptr != NULL)
+						*sptr = 0;
+					iStatus = SYSINFO_RC_SUCCESS;
+				}
+				else
+				{
+					// Timeout waiting for external process to complete, kill it
+					TerminateProcess(pi.hProcess, 127);
+					WriteLog(MSG_PROCESS_KILLED, EVENTLOG_WARNING_TYPE, "s", pszCmdLine);
+					iStatus = SYSINFO_RC_ERROR;
+				}
+
+				CloseHandle(pi.hThread);
+				CloseHandle(pi.hProcess);
 			}
-			iStatus = SYSINFO_RC_SUCCESS;
+			else
+			{
+				WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCmdLine, GetLastError());
+				iStatus = SYSINFO_RC_ERROR;
+			}
+
+			// Remove temporary file
+			CloseHandle(hOutput);
+			DeleteFile(szTempFile);
 		}
 		else
 		{
-         WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se",
-					pszCmdLine, errno);
-         iStatus = SYSINFO_RC_ERROR;
+			WriteLog(MSG_CREATE_TMP_FILE_FAILED, EVENTLOG_ERROR_TYPE, "e", GetLastError());
+			iStatus = SYSINFO_RC_ERROR;
 		}
+	}
+	else
+	{
+#endif
+
+#ifdef _NETWARE
+   /* TODO: add NetWare code here */
+	iStatus = SYSINFO_RC_UNSUPPORTED;
+#else // UNIX or Windows
+		iStatus = SYSINFO_RC_ERROR;
+		{
+			FILE *hPipe;
+
+			if ((hPipe = popen(pszCmdLine, "r")) != NULL)
+			{
+				char *pTmp;
+
+				fread(pValue, 1, MAX_RESULT_LENGTH - 1, hPipe);
+				fclose(hPipe);
+				pValue[MAX_RESULT_LENGTH - 1] = 0;
+				if ((pTmp = strchr(pValue, '\n')) != NULL)
+				{
+					*pTmp = 0;
+				}
+				iStatus = SYSINFO_RC_SUCCESS;
+			}
+			else
+			{
+				WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se",
+						pszCmdLine, errno);
+				iStatus = SYSINFO_RC_ERROR;
+			}
+		}
+#endif
+
+#ifdef _WIN32
 	}
 #endif
 
    free(pszCmdLine);
    return iStatus;
+}
+
+
+//
+// Execute external command via shell
+//
+
+DWORD ExecuteShellCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
+{
+   char *pszCmdLine, *sptr;
+   DWORD i, dwSize, dwRetCode = ERR_SUCCESS;
+
+   DebugPrintf(INVALID_INDEX, "SH_EXEC: Expanding command \"%s\"", pszCommand);
+
+   // Substitute $1 .. $9 with actual arguments
+   if (pArgs != NULL)
+   {
+      dwSize = (DWORD)strlen(pszCommand) + 1;
+      pszCmdLine = (char *)malloc(dwSize);
+      for(sptr = pszCommand, i = 0; *sptr != 0; sptr++)
+         if (*sptr == '$')
+         {
+            sptr++;
+            if (*sptr == 0)
+               break;   // Single $ character at the end of line
+            if ((*sptr >= '1') && (*sptr <= '9'))
+            {
+               DWORD dwArg = *sptr - '1';
+
+               if (dwArg < pArgs->dwNumStrings)
+               {
+                  int iArgLength;
+
+                  // Extend resulting line
+                  iArgLength = (int)strlen(pArgs->ppStringList[dwArg]);
+                  dwSize += iArgLength;
+                  pszCmdLine = (char *)realloc(pszCmdLine, dwSize);
+                  strcpy(&pszCmdLine[i], pArgs->ppStringList[dwArg]);
+                  i += iArgLength;
+               }
+            }
+            else
+            {
+               pszCmdLine[i++] = *sptr;
+            }
+         }
+         else
+         {
+            pszCmdLine[i++] = *sptr;
+         }
+      pszCmdLine[i] = 0;
+   }
+   else
+   {
+      pszCmdLine = pszCommand;
+   }
+
+   DebugPrintf(INVALID_INDEX, "SH_EXEC: Executing \"%s\"", pszCmdLine);
+
+   if (system(pszCmdLine) == 0)
+      dwRetCode = ERR_SUCCESS;
+   else
+      dwRetCode = ERR_EXEC_FAILED;
+
+   // Cleanup
+   if (pArgs != NULL)
+      free(pszCmdLine);
+
+   return dwRetCode;
 }
