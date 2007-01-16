@@ -279,6 +279,18 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
 
 
 //
+// Run external command via system()
+//
+
+static THREAD_RESULT THREAD_CALL RunCommandThread(void *pArg)
+{
+	system((char *)pArg);
+	free(pArg);
+	return THREAD_OK;
+}
+
+
+//
 // Execute action on specific event
 //
 
@@ -308,7 +320,9 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
          {
             case ACTION_EXEC:
                DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Executing command \"%s\"", pszExpandedData);
-               bSuccess = ExecCommand(pszExpandedData);
+               //bSuccess = ExecCommand(pszExpandedData);
+					ThreadCreate(RunCommandThread, 0, strdup(pszExpandedData));
+					bSuccess = TRUE;
                break;
             case ACTION_SEND_EMAIL:
                DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending mail to %s: \"%s\"", 
