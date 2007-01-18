@@ -70,7 +70,8 @@ static DWORD WINAPI LoginThread(void *pArg)
    DWORD dwResult;
 
    dwResult = NXCConnect(g_szServer, g_szLogin, g_szPassword, &g_hSession, 
-                         _T("NetXMS Pocket Console/") NETXMS_VERSION_STRING, FALSE, FALSE);
+                         _T("NetXMS Pocket Console/") NETXMS_VERSION_STRING,
+								 FALSE, FALSE, NULL);
 
    // If successful, load container objects' categories
    if (dwResult == RCC_SUCCESS)
@@ -97,7 +98,7 @@ static DWORD WINAPI LoginThread(void *pArg)
       _tcscat(szCacheFile, g_szLogin);
       if (m_bClearCache)
          DeleteFile(szCacheFile);
-      dwResult = NXCSyncObjectsEx(g_hSession, szCacheFile);
+      dwResult = NXCSyncObjectsEx(g_hSession, szCacheFile, FALSE);
    }
 
    // Set subscriptions

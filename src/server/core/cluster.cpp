@@ -1,4 +1,4 @@
-/* $Id: cluster.cpp,v 1.5 2007-01-14 20:01:50 victor Exp $ */
+/* $Id: cluster.cpp,v 1.6 2007-01-18 17:10:28 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -633,7 +633,7 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 							 m_pResourceList[i].dwId, m_pResourceList[i].szName,
 							 m_pResourceList[i].dwCurrOwner,
 							 (pObject != NULL) ? pObject->Name() : _T("<unknown>"));
-				m_pResourceList[k].dwCurrOwner = 0;
+				m_pResourceList[i].dwCurrOwner = 0;
 			}
 		}
 		safe_free(pbResourceFound);

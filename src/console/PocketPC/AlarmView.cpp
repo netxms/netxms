@@ -31,8 +31,7 @@ static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
    switch(((CAlarmView *)lParamSort)->SortMode())
    {
       case SORT_BY_SEVERITY:
-         iResult = (pAlarm1->wSeverity < pAlarm2->wSeverity) ? -1 :
-                     ((pAlarm1->wSeverity > pAlarm2->wSeverity) ? 1 : 0);
+         iResult = COMPARE_NUMBERS(pAlarm1->nCurrentSeverity, pAlarm2->nCurrentSeverity);
          break;
       case SORT_BY_SOURCE:
          pObject1 = NXCFindObjectById(g_hSession, pAlarm1->dwSourceObject);
@@ -54,8 +53,7 @@ static int CALLBACK CompareListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
          iResult = _tcsicmp(pAlarm1->szMessage, pAlarm2->szMessage);
          break;
       case SORT_BY_TIMESTAMP:
-         iResult = (pAlarm1->dwTimeStamp < pAlarm2->dwTimeStamp) ? -1 :
-                     ((pAlarm1->dwTimeStamp > pAlarm2->dwTimeStamp) ? 1 : 0);
+         iResult = COMPARE_NUMBERS(pAlarm1->dwLastChangeTime, pAlarm2->dwLastChangeTime);
          break;
       default:
          iResult = 0;
@@ -74,7 +72,6 @@ CAlarmView::CAlarmView()
    memset(m_iNumAlarms, 0, sizeof(int) * 5);
    m_iSortMode = SORT_BY_SEVERITY;
    m_iSortDir = 1;
-   m_bShowAllAlarms = FALSE;
    m_dwNumAlarms = 0;
    m_pAlarmList = NULL;
 }
@@ -225,17 +222,17 @@ void CAlarmView::AddAlarm(NXC_ALARM *pAlarm)
 
    pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
    iIdx = m_wndListCtrl.InsertItem(0x7FFFFFFF,
-                                   g_szStatusTextSmall[pAlarm->wSeverity],
-                                   pAlarm->wSeverity);
+                                   g_szStatusTextSmall[pAlarm->nCurrentSeverity],
+                                   pAlarm->nCurrentSeverity);
    if (iIdx != -1)
    {
       m_wndListCtrl.SetItemData(iIdx, pAlarm->dwAlarmId);
       m_wndListCtrl.SetItemText(iIdx, 1, pObject->szName);
       m_wndListCtrl.SetItemText(iIdx, 2, pAlarm->szMessage);
-      m_wndListCtrl.SetItemText(iIdx, 3, FormatTimeStamp(pAlarm->dwTimeStamp, szBuffer, TS_LONG_DATE_TIME));
-      m_wndListCtrl.SetItemText(iIdx, 4, pAlarm->wIsAck ? _T("X") : _T(""));
+      m_wndListCtrl.SetItemText(iIdx, 3, FormatTimeStamp(pAlarm->dwLastChangeTime, szBuffer, TS_LONG_DATE_TIME));
+      m_wndListCtrl.SetItemText(iIdx, 4, (pAlarm->nState == ALARM_STATE_ACKNOWLEDGED) ? _T("X") : _T(""));
    }
-   m_iNumAlarms[pAlarm->wSeverity]++;
+   m_iNumAlarms[pAlarm->nCurrentSeverity]++;
 }
 
 
@@ -307,27 +304,20 @@ void CAlarmView::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
    switch(dwCode)
    {
       case NX_NOTIFY_NEW_ALARM:
-         if ((iItem == -1) && ((m_bShowAllAlarms) || (pAlarm->wIsAck == 0)))
+         if ((iItem == -1) && (pAlarm->nState != ALARM_STATE_TERMINATED))
          {
             AddAlarm(pAlarm);
             AddAlarmToList(pAlarm);
             m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
          }
          break;
-      case NX_NOTIFY_ALARM_ACKNOWLEDGED:
-         if ((iItem != -1) && (!m_bShowAllAlarms))
-         {
-            DeleteAlarmFromList(pAlarm->dwAlarmId);
-            m_wndListCtrl.DeleteItem(iItem);
-            m_iNumAlarms[pAlarm->wSeverity]--;
-         }
-         break;
+      case NX_NOTIFY_ALARM_TERMINATED:
       case NX_NOTIFY_ALARM_DELETED:
          if (iItem != -1)
          {
             DeleteAlarmFromList(pAlarm->dwAlarmId);
             m_wndListCtrl.DeleteItem(iItem);
-            m_iNumAlarms[pAlarm->wSeverity]--;
+            m_iNumAlarms[pAlarm->nCurrentSeverity]--;
          }
          break;
       default:

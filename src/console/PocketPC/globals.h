@@ -194,7 +194,6 @@ extern NXC_SESSION g_hSession;
 extern TCHAR g_szServer[];
 extern TCHAR g_szLogin[];
 extern TCHAR g_szPassword[];
-extern DWORD g_dwEncryptionMethod;
 extern TCHAR g_szWorkDir[];
 extern TCHAR *g_szStatusText[];
 extern TCHAR *g_szStatusTextSmall[];

@@ -31,10 +31,12 @@
 
 #if !(HAVE_STRTOLL)
 
+#ifndef UNDER_CE
 #include <sys/types.h>
+#include <errno.h>
+#endif
 
 #include <ctype.h>
-#include <errno.h>
 #include <stdlib.h>
 
 /*
@@ -128,7 +130,9 @@ INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base)
 			if (acc < cutoff || (acc == cutoff && c > cutlim)) {
 				any = -1;
 				acc = LLONG_MIN;
+#ifndef UNDER_CE
 				errno = ERANGE;
+#endif
 			} else {
 				any = 1;
 				acc *= base;
@@ -138,7 +142,9 @@ INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base)
 			if (acc > cutoff || (acc == cutoff && c > cutlim)) {
 				any = -1;
 				acc = LLONG_MAX;
+#ifndef UNDER_CE
 				errno = ERANGE;
+#endif
 			} else {
 				any = 1;
 				acc *= base;

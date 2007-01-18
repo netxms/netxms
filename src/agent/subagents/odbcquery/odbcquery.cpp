@@ -262,7 +262,7 @@ static BOOL AddQueryFromConfig(TCHAR *pszCfg)
 
 	nx_strncpy(m_pQueryList[m_dwNumQueries].szName, pszName, MAX_DB_STRING);
 	nx_strncpy(m_pQueryList[m_dwNumQueries].szOdbcSrc, pszSrc, MAX_DB_STRING);
-	nx_strncpy(m_pQueryList[m_dwNumQueries].szSqlQuery, pszQuery,MAX_DB_STRING);
+	nx_strncpy(m_pQueryList[m_dwNumQueries].szSqlQuery, pszQuery,MAX_SQL_QUERY_LEN);
 	m_pQueryList[m_dwNumQueries].dwPollInterval = dwPollInterval;
 	m_pQueryList[m_dwNumQueries].pSqlCtx = NULL;
 	m_dwNumQueries++;

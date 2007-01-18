@@ -43,7 +43,6 @@ public:
 
 	// Generated message map functions
 protected:
-	BOOL m_bShowAllAlarms;
    void AddAlarmToList(NXC_ALARM *pAlarm);
    void DeleteAlarmFromList(DWORD dwAlarmId);
 	int FindAlarmRecord(DWORD dwAlarmId);

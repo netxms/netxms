@@ -100,7 +100,6 @@ BOOL CNxpcApp::InitInstance()
    wcscpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
    if (g_dwFlags & AF_SAVE_PASSWORD)
       wcscpy(g_szPassword, (LPCTSTR)GetProfileString(_T("Connection"), _T("Password"), NULL));
-   g_dwEncryptionMethod = GetProfileInt(_T("Connection"), _T("Encryption"), CSCP_ENCRYPTION_NONE);
 
    // Load context menus
    m_ctxMenu.LoadMenu(IDM_CONTEXT);
@@ -235,7 +234,6 @@ void CNxpcApp::OnConnectToServer()
       // Save last connection parameters
       WriteProfileString(_T("Connection"), _T("Server"), g_szServer);
       WriteProfileString(_T("Connection"), _T("Login"), g_szLogin);
-      WriteProfileInt(_T("Connection"), _T("Encryption"), g_dwEncryptionMethod);
       if (g_dwFlags & AF_SAVE_PASSWORD)
          WriteProfileString(_T("Connection"), _T("Password"), g_szPassword);
       else
@@ -291,7 +289,8 @@ void CNxpcApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
                break;
             case NX_NOTIFY_NEW_ALARM:
             case NX_NOTIFY_ALARM_DELETED:
-            case NX_NOTIFY_ALARM_ACKNOWLEDGED:
+            case NX_NOTIFY_ALARM_CHANGED:
+            case NX_NOTIFY_ALARM_TERMINATED:
                m_pMainWnd->PostMessage(WM_ALARM_UPDATE, dwCode, 
                                        (LPARAM)nx_memdup(pArg, sizeof(NXC_ALARM)));
                break;

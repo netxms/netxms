@@ -61,7 +61,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"wWinMainCRTStartup" /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 libnetxms.lib libnxcscp.lib libnxcl.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"wWinMainCRTStartup" /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 libnetxms.lib libnxcl.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"wWinMainCRTStartup" /subsystem:$(CESubsystem) /MACHINE:IX86
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
 
@@ -94,7 +94,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"wWinMainCRTStartup" /debug /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 libnetxms.lib libnxcscp.lib libnxcl.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"wWinMainCRTStartup" /debug /libpath:"..\..\libnetxms\emulatorDbg" /libpath:"..\..\libnxcscp\emulatorDbg" /libpath:"..\..\libnxcl\emulatorDbg" /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 libnetxms.lib libnxcl.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"wWinMainCRTStartup" /debug /libpath:"..\..\libnetxms\emulatorDbg" /libpath:"..\..\libnxcscp\emulatorDbg" /libpath:"..\..\libnxcl\emulatorDbg" /subsystem:$(CESubsystem) /MACHINE:IX86
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
 
@@ -127,7 +127,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"wWinMainCRTStartup" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
-# ADD LINK32 libnetxms.lib libnxcscp.lib libnxcl.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"wWinMainCRTStartup" /libpath:"..\..\libnetxms\ARMV4Rel" /libpath:"..\..\libnxcscp\ARMV4Rel" /libpath:"..\..\libnxcl\ARMV4Rel" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 libnetxms.lib libnxcl.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"wWinMainCRTStartup" /libpath:"..\..\libnetxms\ARMV4Rel" /libpath:"..\..\libnxcl\ARMV4Rel" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
 
@@ -160,7 +160,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"wWinMainCRTStartup" /debug /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
-# ADD LINK32 libnetxms.lib libnxcscp.lib libnxcl.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"wWinMainCRTStartup" /debug /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 libnetxms.lib libnxcl.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"wWinMainCRTStartup" /debug /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
 
 !ENDIF 
 
@@ -188,7 +188,6 @@ DEP_CPP_ALARM=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -200,6 +199,7 @@ DEP_CPP_ALARM=\
 	
 NODEP_CPP_ALARM=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
@@ -213,7 +213,6 @@ DEP_CPP_ALARM=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -225,6 +224,7 @@ DEP_CPP_ALARM=\
 	
 NODEP_CPP_ALARM=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
@@ -238,10 +238,14 @@ DEP_CPP_ALARM=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxcpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
+	"..\..\..\include\nxlog.h"\
+	"..\..\..\include\nxtools.h"\
+	"..\..\..\include\rwlock.h"\
 	"..\..\..\include\unicode.h"\
+	"..\..\..\include\uuid.h"\
 	".\AlarmView.h"\
 	".\DynamicView.h"\
 	".\globals.h"\
@@ -253,7 +257,7 @@ DEP_CPP_ALARM=\
 	".\SummaryView.h"\
 	
 NODEP_CPP_ALARM=\
-	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\config.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
@@ -267,7 +271,6 @@ DEP_CPP_ALARM=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -279,6 +282,7 @@ DEP_CPP_ALARM=\
 	
 NODEP_CPP_ALARM=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ENDIF 
@@ -299,7 +303,6 @@ DEP_CPP_COMM_=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -310,6 +313,7 @@ DEP_CPP_COMM_=\
 	
 NODEP_CPP_COMM_=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
@@ -323,7 +327,6 @@ DEP_CPP_COMM_=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -334,6 +337,7 @@ DEP_CPP_COMM_=\
 	
 NODEP_CPP_COMM_=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
@@ -347,10 +351,14 @@ DEP_CPP_COMM_=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxcpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
+	"..\..\..\include\nxlog.h"\
+	"..\..\..\include\nxtools.h"\
+	"..\..\..\include\rwlock.h"\
 	"..\..\..\include\unicode.h"\
+	"..\..\..\include\uuid.h"\
 	".\AlarmView.h"\
 	".\DynamicView.h"\
 	".\globals.h"\
@@ -362,7 +370,7 @@ DEP_CPP_COMM_=\
 	".\SummaryView.h"\
 	
 NODEP_CPP_COMM_=\
-	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\config.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
@@ -376,7 +384,6 @@ DEP_CPP_COMM_=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -387,6 +394,7 @@ DEP_CPP_COMM_=\
 	
 NODEP_CPP_COMM_=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ENDIF 
@@ -407,7 +415,6 @@ DEP_CPP_DATAV=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -424,6 +431,7 @@ DEP_CPP_DATAV=\
 	
 NODEP_CPP_DATAV=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
@@ -437,7 +445,6 @@ DEP_CPP_DATAV=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -454,6 +461,7 @@ DEP_CPP_DATAV=\
 	
 NODEP_CPP_DATAV=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
@@ -467,10 +475,14 @@ DEP_CPP_DATAV=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxcpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
+	"..\..\..\include\nxlog.h"\
+	"..\..\..\include\nxtools.h"\
+	"..\..\..\include\rwlock.h"\
 	"..\..\..\include\unicode.h"\
+	"..\..\..\include\uuid.h"\
 	".\AlarmView.h"\
 	".\DataView.h"\
 	".\DynamicView.h"\
@@ -483,7 +495,7 @@ DEP_CPP_DATAV=\
 	".\SummaryView.h"\
 	
 NODEP_CPP_DATAV=\
-	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\config.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
@@ -497,7 +509,6 @@ DEP_CPP_DATAV=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -514,6 +525,7 @@ DEP_CPP_DATAV=\
 	
 NODEP_CPP_DATAV=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ENDIF 
@@ -534,7 +546,6 @@ DEP_CPP_DYNAM=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -550,6 +561,7 @@ DEP_CPP_DYNAM=\
 	
 NODEP_CPP_DYNAM=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
@@ -563,7 +575,6 @@ DEP_CPP_DYNAM=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -579,6 +590,7 @@ DEP_CPP_DYNAM=\
 	
 NODEP_CPP_DYNAM=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
@@ -592,10 +604,14 @@ DEP_CPP_DYNAM=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxcpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
+	"..\..\..\include\nxlog.h"\
+	"..\..\..\include\nxtools.h"\
+	"..\..\..\include\rwlock.h"\
 	"..\..\..\include\unicode.h"\
+	"..\..\..\include\uuid.h"\
 	".\AlarmView.h"\
 	".\DynamicView.h"\
 	".\globals.h"\
@@ -607,7 +623,7 @@ DEP_CPP_DYNAM=\
 	".\SummaryView.h"\
 	
 NODEP_CPP_DYNAM=\
-	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\config.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
@@ -621,7 +637,6 @@ DEP_CPP_DYNAM=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -637,6 +652,7 @@ DEP_CPP_DYNAM=\
 	
 NODEP_CPP_DYNAM=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ENDIF 
@@ -657,7 +673,6 @@ DEP_CPP_GLOBA=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\nxnt.h"\
@@ -669,6 +684,7 @@ DEP_CPP_GLOBA=\
 	
 NODEP_CPP_GLOBA=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
@@ -682,7 +698,6 @@ DEP_CPP_GLOBA=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\nxnt.h"\
@@ -694,6 +709,7 @@ DEP_CPP_GLOBA=\
 	
 NODEP_CPP_GLOBA=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
@@ -707,11 +723,15 @@ DEP_CPP_GLOBA=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxcpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
+	"..\..\..\include\nxlog.h"\
 	"..\..\..\include\nxnt.h"\
+	"..\..\..\include\nxtools.h"\
+	"..\..\..\include\rwlock.h"\
 	"..\..\..\include\unicode.h"\
+	"..\..\..\include\uuid.h"\
 	".\AlarmView.h"\
 	".\DynamicView.h"\
 	".\globals.h"\
@@ -723,7 +743,7 @@ DEP_CPP_GLOBA=\
 	".\SummaryView.h"\
 	
 NODEP_CPP_GLOBA=\
-	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\config.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
@@ -737,7 +757,6 @@ DEP_CPP_GLOBA=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\nxnt.h"\
@@ -749,6 +768,7 @@ DEP_CPP_GLOBA=\
 	
 NODEP_CPP_GLOBA=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ENDIF 
@@ -769,7 +789,6 @@ DEP_CPP_GRAPH=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -786,6 +805,7 @@ DEP_CPP_GRAPH=\
 	
 NODEP_CPP_GRAPH=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
@@ -799,7 +819,6 @@ DEP_CPP_GRAPH=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -816,6 +835,7 @@ DEP_CPP_GRAPH=\
 	
 NODEP_CPP_GRAPH=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
@@ -829,10 +849,14 @@ DEP_CPP_GRAPH=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxcpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
+	"..\..\..\include\nxlog.h"\
+	"..\..\..\include\nxtools.h"\
+	"..\..\..\include\rwlock.h"\
 	"..\..\..\include\unicode.h"\
+	"..\..\..\include\uuid.h"\
 	".\AlarmView.h"\
 	".\DynamicView.h"\
 	".\globals.h"\
@@ -845,7 +869,7 @@ DEP_CPP_GRAPH=\
 	".\SummaryView.h"\
 	
 NODEP_CPP_GRAPH=\
-	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\config.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
@@ -859,7 +883,6 @@ DEP_CPP_GRAPH=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -876,6 +899,7 @@ DEP_CPP_GRAPH=\
 	
 NODEP_CPP_GRAPH=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ENDIF 
@@ -896,7 +920,6 @@ DEP_CPP_GRAPHV=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -914,6 +937,7 @@ DEP_CPP_GRAPHV=\
 	
 NODEP_CPP_GRAPHV=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
@@ -927,7 +951,6 @@ DEP_CPP_GRAPHV=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -945,6 +968,7 @@ DEP_CPP_GRAPHV=\
 	
 NODEP_CPP_GRAPHV=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
@@ -958,10 +982,14 @@ DEP_CPP_GRAPHV=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxcpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
+	"..\..\..\include\nxlog.h"\
+	"..\..\..\include\nxtools.h"\
+	"..\..\..\include\rwlock.h"\
 	"..\..\..\include\unicode.h"\
+	"..\..\..\include\uuid.h"\
 	".\AlarmView.h"\
 	".\DynamicView.h"\
 	".\globals.h"\
@@ -975,7 +1003,7 @@ DEP_CPP_GRAPHV=\
 	".\SummaryView.h"\
 	
 NODEP_CPP_GRAPHV=\
-	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\config.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
@@ -989,7 +1017,6 @@ DEP_CPP_GRAPHV=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1007,6 +1034,7 @@ DEP_CPP_GRAPHV=\
 	
 NODEP_CPP_GRAPHV=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ENDIF 
@@ -1027,7 +1055,6 @@ DEP_CPP_LASTV=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1044,6 +1071,7 @@ DEP_CPP_LASTV=\
 	
 NODEP_CPP_LASTV=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
@@ -1057,7 +1085,6 @@ DEP_CPP_LASTV=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1074,6 +1101,7 @@ DEP_CPP_LASTV=\
 	
 NODEP_CPP_LASTV=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
@@ -1087,14 +1115,20 @@ DEP_CPP_LASTV=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxcpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
+	"..\..\..\include\nxlog.h"\
+	"..\..\..\include\nxtools.h"\
+	"..\..\..\include\rwlock.h"\
 	"..\..\..\include\unicode.h"\
+	"..\..\..\include\uuid.h"\
 	".\AlarmView.h"\
 	".\DataView.h"\
 	".\DynamicView.h"\
 	".\globals.h"\
+	".\Graph.h"\
+	".\GraphView.h"\
 	".\LastValuesView.h"\
 	".\MainFrm.h"\
 	".\nxpc.h"\
@@ -1104,7 +1138,7 @@ DEP_CPP_LASTV=\
 	".\SummaryView.h"\
 	
 NODEP_CPP_LASTV=\
-	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\config.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
@@ -1118,7 +1152,6 @@ DEP_CPP_LASTV=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1135,6 +1168,7 @@ DEP_CPP_LASTV=\
 	
 NODEP_CPP_LASTV=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ENDIF 
@@ -1155,7 +1189,6 @@ DEP_CPP_LOGIN=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1167,6 +1200,7 @@ DEP_CPP_LOGIN=\
 	
 NODEP_CPP_LOGIN=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
@@ -1180,7 +1214,6 @@ DEP_CPP_LOGIN=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1192,6 +1225,7 @@ DEP_CPP_LOGIN=\
 	
 NODEP_CPP_LOGIN=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
@@ -1205,10 +1239,14 @@ DEP_CPP_LOGIN=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxcpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
+	"..\..\..\include\nxlog.h"\
+	"..\..\..\include\nxtools.h"\
+	"..\..\..\include\rwlock.h"\
 	"..\..\..\include\unicode.h"\
+	"..\..\..\include\uuid.h"\
 	".\AlarmView.h"\
 	".\DynamicView.h"\
 	".\globals.h"\
@@ -1221,7 +1259,7 @@ DEP_CPP_LOGIN=\
 	".\SummaryView.h"\
 	
 NODEP_CPP_LOGIN=\
-	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\config.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
@@ -1235,7 +1273,6 @@ DEP_CPP_LOGIN=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1247,6 +1284,7 @@ DEP_CPP_LOGIN=\
 	
 NODEP_CPP_LOGIN=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ENDIF 
@@ -1278,7 +1316,6 @@ DEP_CPP_MAINF=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1293,6 +1330,7 @@ DEP_CPP_MAINF=\
 	
 NODEP_CPP_MAINF=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
@@ -1306,10 +1344,14 @@ DEP_CPP_MAINF=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxcpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
+	"..\..\..\include\nxlog.h"\
+	"..\..\..\include\nxtools.h"\
+	"..\..\..\include\rwlock.h"\
 	"..\..\..\include\unicode.h"\
+	"..\..\..\include\uuid.h"\
 	".\AlarmView.h"\
 	".\DynamicView.h"\
 	".\globals.h"\
@@ -1321,7 +1363,7 @@ DEP_CPP_MAINF=\
 	".\SummaryView.h"\
 	
 NODEP_CPP_MAINF=\
-	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\config.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
@@ -1364,7 +1406,6 @@ DEP_CPP_NXPC_=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1380,6 +1421,7 @@ DEP_CPP_NXPC_=\
 	
 NODEP_CPP_NXPC_=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
@@ -1393,10 +1435,14 @@ DEP_CPP_NXPC_=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxcpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
+	"..\..\..\include\nxlog.h"\
+	"..\..\..\include\nxtools.h"\
+	"..\..\..\include\rwlock.h"\
 	"..\..\..\include\unicode.h"\
+	"..\..\..\include\uuid.h"\
 	".\AlarmView.h"\
 	".\DynamicView.h"\
 	".\globals.h"\
@@ -1409,7 +1455,7 @@ DEP_CPP_NXPC_=\
 	".\SummaryView.h"\
 	
 NODEP_CPP_NXPC_=\
-	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\config.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
@@ -1456,7 +1502,6 @@ DEP_CPP_OBJEC=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1468,6 +1513,7 @@ DEP_CPP_OBJEC=\
 	
 NODEP_CPP_OBJEC=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
@@ -1481,7 +1527,6 @@ DEP_CPP_OBJEC=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1493,6 +1538,7 @@ DEP_CPP_OBJEC=\
 	
 NODEP_CPP_OBJEC=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	".\EmptyDlg.h"\
 	".\LastValuesDlg.h"\
 	
@@ -1508,10 +1554,14 @@ DEP_CPP_OBJEC=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxcpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
+	"..\..\..\include\nxlog.h"\
+	"..\..\..\include\nxtools.h"\
+	"..\..\..\include\rwlock.h"\
 	"..\..\..\include\unicode.h"\
+	"..\..\..\include\uuid.h"\
 	".\AlarmView.h"\
 	".\DynamicView.h"\
 	".\globals.h"\
@@ -1524,7 +1574,7 @@ DEP_CPP_OBJEC=\
 	".\SummaryView.h"\
 	
 NODEP_CPP_OBJEC=\
-	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\config.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
@@ -1538,7 +1588,6 @@ DEP_CPP_OBJEC=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1550,6 +1599,7 @@ DEP_CPP_OBJEC=\
 	
 NODEP_CPP_OBJEC=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ENDIF 
@@ -1570,7 +1620,6 @@ DEP_CPP_REQUE=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1581,6 +1630,7 @@ DEP_CPP_REQUE=\
 	
 NODEP_CPP_REQUE=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
@@ -1594,7 +1644,6 @@ DEP_CPP_REQUE=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1605,6 +1654,7 @@ DEP_CPP_REQUE=\
 	
 NODEP_CPP_REQUE=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
@@ -1618,10 +1668,14 @@ DEP_CPP_REQUE=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxcpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
+	"..\..\..\include\nxlog.h"\
+	"..\..\..\include\nxtools.h"\
+	"..\..\..\include\rwlock.h"\
 	"..\..\..\include\unicode.h"\
+	"..\..\..\include\uuid.h"\
 	".\AlarmView.h"\
 	".\DynamicView.h"\
 	".\globals.h"\
@@ -1633,7 +1687,7 @@ DEP_CPP_REQUE=\
 	".\SummaryView.h"\
 	
 NODEP_CPP_REQUE=\
-	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\config.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
@@ -1647,7 +1701,6 @@ DEP_CPP_REQUE=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1658,6 +1711,7 @@ DEP_CPP_REQUE=\
 	
 NODEP_CPP_REQUE=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ENDIF 
@@ -1713,7 +1767,6 @@ DEP_CPP_SUMMA=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1725,6 +1778,7 @@ DEP_CPP_SUMMA=\
 	
 NODEP_CPP_SUMMA=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
@@ -1738,7 +1792,6 @@ DEP_CPP_SUMMA=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1753,6 +1806,7 @@ DEP_CPP_SUMMA=\
 	
 NODEP_CPP_SUMMA=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
@@ -1766,10 +1820,14 @@ DEP_CPP_SUMMA=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxcpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
+	"..\..\..\include\nxlog.h"\
+	"..\..\..\include\nxtools.h"\
+	"..\..\..\include\rwlock.h"\
 	"..\..\..\include\unicode.h"\
+	"..\..\..\include\uuid.h"\
 	".\AlarmView.h"\
 	".\DynamicView.h"\
 	".\globals.h"\
@@ -1781,7 +1839,7 @@ DEP_CPP_SUMMA=\
 	".\SummaryView.h"\
 	
 NODEP_CPP_SUMMA=\
-	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\config.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
@@ -1795,7 +1853,6 @@ DEP_CPP_SUMMA=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1807,6 +1864,7 @@ DEP_CPP_SUMMA=\
 	
 NODEP_CPP_SUMMA=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ENDIF 
@@ -1827,7 +1885,6 @@ DEP_CPP_TOOLS=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1838,6 +1895,7 @@ DEP_CPP_TOOLS=\
 	
 NODEP_CPP_TOOLS=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE emulator) Debug"
@@ -1851,7 +1909,6 @@ DEP_CPP_TOOLS=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1862,6 +1919,7 @@ DEP_CPP_TOOLS=\
 	
 NODEP_CPP_TOOLS=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Release"
@@ -1875,10 +1933,14 @@ DEP_CPP_TOOLS=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
+	"..\..\..\include\nxcpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
+	"..\..\..\include\nxlog.h"\
+	"..\..\..\include\nxtools.h"\
+	"..\..\..\include\rwlock.h"\
 	"..\..\..\include\unicode.h"\
+	"..\..\..\include\uuid.h"\
 	".\AlarmView.h"\
 	".\DynamicView.h"\
 	".\globals.h"\
@@ -1890,7 +1952,7 @@ DEP_CPP_TOOLS=\
 	".\SummaryView.h"\
 	
 NODEP_CPP_TOOLS=\
-	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\config.h"\
 	
 
 !ELSEIF  "$(CFG)" == "nxpc - Win32 (WCE ARMV4) Debug"
@@ -1904,7 +1966,6 @@ DEP_CPP_TOOLS=\
 	"..\..\..\include\nms_threads.h"\
 	"..\..\..\include\nms_util.h"\
 	"..\..\..\include\nxclapi.h"\
-	"..\..\..\include\nxcscpapi.h"\
 	"..\..\..\include\nxevent.h"\
 	"..\..\..\include\nximage.h"\
 	"..\..\..\include\unicode.h"\
@@ -1915,6 +1976,7 @@ DEP_CPP_TOOLS=\
 	
 NODEP_CPP_TOOLS=\
 	"..\..\..\..\..\usr\include\pthread.h"\
+	"..\..\..\include\nxcscpapi.h"\
 	
 
 !ENDIF 
