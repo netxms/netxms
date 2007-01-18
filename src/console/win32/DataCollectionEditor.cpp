@@ -1195,7 +1195,7 @@ void CDataCollectionEditor::CopyOrMoveItems(BOOL bMove)
       }
 
       // Ask for destination nodes
-      dlg.m_dwAllowedClasses = SCL_NODE | SCL_TEMPLATE;
+      dlg.m_dwAllowedClasses = SCL_NODE | SCL_CLUSTER | SCL_TEMPLATE;
       dlg.m_bSingleSelection = bMove;
       if (dlg.DoModal() == IDOK)
       {

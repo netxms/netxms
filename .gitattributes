@@ -649,6 +649,8 @@ src/console/win32/ClusterPropsResources.cpp -text
 src/console/win32/ClusterPropsResources.h -text
 src/console/win32/ClusterResDlg.cpp -text
 src/console/win32/ClusterResDlg.h -text
+src/console/win32/ClusterView.cpp -text
+src/console/win32/ClusterView.h -text
 src/console/win32/ColorSelector.cpp -text
 src/console/win32/ColorSelector.h -text
 src/console/win32/CondDCIPropDlg.cpp -text

@@ -84,6 +84,7 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(theApp.LoadIcon(IDI_SEVERITY_NORMAL));
    m_imageList.Add(theApp.LoadIcon(IDI_ALARM));
    m_imageList.Add(theApp.LoadIcon(IDI_TREE));
+   m_imageList.Add(theApp.LoadIcon(IDI_CLUSTER));
 
    GetClientRect(&rect);
    rect.top += TITLE_BAR_HEIGHT;
@@ -96,6 +97,7 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndOverview.Create(NULL, _T("Overview"), WS_CHILD, rect, this, 1);
    m_wndAlarms.Create(NULL, _T("Alarms"), WS_CHILD, rect, this, 2);
    m_wndDepView.Create(NULL, _T("Deps"), WS_CHILD, rect, this, 3);
+   m_wndClusterView.Create(NULL, _T("Cluster"), WS_CHILD, rect, this, 4);
 
    // Create common tabs
    CreateTab(0, _T("Overview"), 0, &m_wndOverview);
@@ -130,6 +132,7 @@ void CObjectView::OnSize(UINT nType, int cx, int cy)
    m_wndOverview.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
    m_wndAlarms.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
    m_wndDepView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
+   m_wndClusterView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
 }
 
 
@@ -191,8 +194,9 @@ void CObjectView::SetCurrentObject(NXC_OBJECT *pObject)
    {
       switch(m_pObject->iClass)
       {
-         case OBJECT_NODE:
 			case OBJECT_CLUSTER:
+            CreateTab(nTab++, _T("Cluster"), 3, &m_wndClusterView);
+         case OBJECT_NODE:
          case OBJECT_SUBNET:
          case OBJECT_NETWORK:
          case OBJECT_CONTAINER:

@@ -4,6 +4,7 @@
 #include "ObjectOverview.h"	// Added by ClassView
 #include "AlarmView.h"	// Added by ClassView
 #include "ObjectDepView.h"	// Added by ClassView
+#include "ClusterView.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -46,6 +47,7 @@ public:
 
 	// Generated message map functions
 protected:
+	CClusterView m_wndClusterView;
 	CObjectDepView m_wndDepView;
 	CAlarmView m_wndAlarms;
 	void CreateTab(int nIndex, TCHAR *pszName, int nImage, CWnd *pWnd);

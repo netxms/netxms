@@ -24,9 +24,10 @@ EXTRA_DIST = \
 	ClusterPropsGeneral.cpp ClusterPropsGeneral.h \
 	ClusterPropsResources.cpp ClusterPropsResources.h \
 	ClusterResDlg.cpp ClusterResDlg.h \
+	ClusterView.cpp ClusterView.h \
+	ColorSelector.cpp ColorSelector.h \
 	comm.cpp \
 	CondDCIPropDlg.cpp CondDCIPropDlg.h \
-	ColorSelector.cpp ColorSelector.h \
 	CondPropsData.cpp CondPropsData.h \
 	CondPropsGeneral.cpp CondPropsGeneral.h \
 	CondPropsScript.cpp CondPropsScript.h \

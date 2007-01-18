@@ -138,6 +138,7 @@ IDI_CONFIGS             ICON    DISCARDABLE     "icons\\configs.ico"
 IDI_DISCOVERY           ICON    DISCARDABLE     "icons\\discovery.ico"
 IDI_EXIT                ICON    DISCARDABLE     "icons\\exit.ico"
 IDI_TEMPLATE_ROOT       ICON    DISCARDABLE     "icons\\template_root.ico"
+IDI_CLUSTER             ICON    DISCARDABLE     "icons\\cluster.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -228,6 +228,10 @@ SOURCE=.\ClusterResDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ClusterView.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ColorSelector.cpp
 # End Source File
 # Begin Source File
@@ -801,6 +805,10 @@ SOURCE=.\ClusterResDlg.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ClusterView.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\ColorSelector.h
 # End Source File
 # Begin Source File
@@ -1370,6 +1378,10 @@ SOURCE=.\res\bitmap1.bmp
 # Begin Source File
 
 SOURCE=.\res\bmp00001.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\cluster.ico
 # End Source File
 # Begin Source File
 
