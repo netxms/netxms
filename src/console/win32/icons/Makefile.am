@@ -23,4 +23,4 @@ EXTRA_DIST = \
 	command.ico script_library.ico script.ico folder_c.ico \
 	folder_o.ico ZoomIn.ico ZoomOut.ico print.ico refresh.ico save.ico \
 	back.ico forward.ico go_parent.ico module.ico home.ico \
-	discovery.ico exit.ico template_root.ico
+	discovery.ico exit.ico template_root.ico cluster.ico
