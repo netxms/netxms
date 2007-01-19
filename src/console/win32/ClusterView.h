@@ -31,14 +31,20 @@ public:
 
 // Implementation
 public:
+	void Refresh(void);
 	virtual ~CClusterView();
 
 	// Generated message map functions
 protected:
+	CImageList m_imageList;
+	CListCtrl m_wndListCtrl;
+	CFont m_fontHeading;
+	CFont m_fontNormal;
 	NXC_OBJECT * m_pObject;
 	//{{AFX_MSG(CClusterView)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnPaint();
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 	//}}AFX_MSG
    afx_msg void OnSetObject(WPARAM wParam, NXC_OBJECT *pObject);
 	DECLARE_MESSAGE_MAP()

@@ -960,6 +960,7 @@ src/console/win32/icons/running.ico -text
 src/console/win32/icons/save.ico -text
 src/console/win32/icons/script.ico -text
 src/console/win32/icons/script_library.ico -text
+src/console/win32/icons/server.ico -text
 src/console/win32/icons/setup.ico -text
 src/console/win32/icons/sms.ico -text
 src/console/win32/icons/sort_up.ico -text

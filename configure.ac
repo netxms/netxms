@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.233 2007-01-15 13:51:07 victor Exp $
+# $Id: configure.ac,v 1.234 2007-01-19 21:09:06 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -931,6 +931,32 @@ int main(void)
 	],[])
 	AC_MSG_RESULT(yes)
 	AC_CHECK_FUNCS(mysql_real_escape_string)
+fi
+
+
+#--------------------------------------------------------------------
+# PostgreSQL
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "mysql"
+if test $? = 0; then
+	AC_CHECK_LIB(m, floor)
+	AC_CHECK_LIB(pq, PQconnectdb, ,
+		[AC_MSG_ERROR(libpq is required for PostgreSQL support)])        
+			AC_MSG_CHECKING(whether postgresql clients can run)
+			AC_RUN_IFELSE([AC_LANG_SOURCE([[
+				#include <stdio.h>
+				#include <libpq-fe.h>
+				int main(void)
+				{
+					PGconn *a = PQconnectdb("");
+					return 0;
+				}
+			]])],[],[
+			AC_MSG_RESULT(no)
+			AC_MSG_ERROR(Your PostgreSQL client libraries aren't properly installed)
+		],[])    
+	AC_MSG_RESULT(yes)
 fi
 
 

@@ -1629,6 +1629,10 @@ SOURCE=.\icons\script_library.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\server.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\setup.ico
 # End Source File
 # Begin Source File

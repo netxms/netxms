@@ -163,6 +163,7 @@ void CObjectView::Refresh()
 
    m_wndOverview.Refresh();
    m_wndDepView.Refresh();
+   m_wndClusterView.Refresh();
 }
 
 
