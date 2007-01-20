@@ -473,6 +473,8 @@ src/console/PocketPC/res/btn_close.bmp -text
 src/console/PocketPC/res/btn_close_dis.bmp -text
 src/console/PocketPC/res/btn_next.bmp -text
 src/console/PocketPC/res/btn_prev.bmp -text
+src/console/PocketPC/res/cluster.ico -text
+src/console/PocketPC/res/condition.ico -text
 src/console/PocketPC/res/connect.ico -text
 src/console/PocketPC/res/container.ico -text
 src/console/PocketPC/res/interface.ico -text
@@ -482,6 +484,7 @@ src/console/PocketPC/res/network_service.ico -text
 src/console/PocketPC/res/node.ico -text
 src/console/PocketPC/res/nxpc.ico -text
 src/console/PocketPC/res/nxpc.rc2 -text
+src/console/PocketPC/res/outstanding.ico -text
 src/console/PocketPC/res/question.ico -text
 src/console/PocketPC/res/subnet.ico -text
 src/console/PocketPC/res/template.ico -text

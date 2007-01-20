@@ -89,6 +89,8 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(theApp.LoadIcon(IDI_TEMPLATE_ROOT));
    m_imageList.Add(theApp.LoadIcon(IDI_SERVICE));
    m_imageList.Add(theApp.LoadIcon(IDI_VPNC));
+   m_imageList.Add(theApp.LoadIcon(IDI_CONDITION));
+   m_imageList.Add(theApp.LoadIcon(IDI_CLUSTER));
    m_wndTreeCtrl.SetImageList(&m_imageList, TVSIL_NORMAL);
 	
 	return 0;
@@ -193,11 +195,13 @@ void CObjectView::CreateTreeItemText(NXC_OBJECT *pObject, TCHAR *pszBuffer)
    switch(pObject->iClass)
    {
       case OBJECT_NODE:
+      case OBJECT_CLUSTER:
       case OBJECT_SUBNET:
       case OBJECT_NETWORK:
       case OBJECT_CONTAINER:
       case OBJECT_SERVICEROOT:
       case OBJECT_NETWORKSERVICE:
+      case OBJECT_CONDITION:
          if (pObject->iStatus != STATUS_NORMAL)
             swprintf(pszBuffer, L"%s [%s]", pObject->szName, g_szStatusText[pObject->iStatus]);
          else

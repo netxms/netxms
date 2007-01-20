@@ -44,6 +44,9 @@
 #define IDB_BTN_PREV                    167
 #define IDB_BTN_NEXT                    168
 #define IDI_VPNC                        169
+#define IDI_CLUSTER                     170
+#define IDI_CONDITION                   171
+#define IDI_OUTSTANDING                 172
 #define IDC_INFO_TEXT                   1000
 #define IDC_EDIT_SERVER                 1001
 #define IDC_EDIT_LOGIN                  1002
@@ -102,6 +105,7 @@
 #define ID_GRAPH_FULLSCREEN             32833
 #define ID_GRAPH_PROPERTIES             32834
 #define ID_VIEW_FULLSCREEN              32835
+#define ID_ALARM_TERMINATE              32837
 #define IDS_NEW                         65000
 #define IDS_SUMMARY                     65000
 #define IDS_FILE                        65001
@@ -119,8 +123,8 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        170
-#define _APS_NEXT_COMMAND_VALUE         32837
+#define _APS_NEXT_RESOURCE_VALUE        173
+#define _APS_NEXT_COMMAND_VALUE         32838
 #define _APS_NEXT_CONTROL_VALUE         1009
 #define _APS_NEXT_SYMED_VALUE           105
 #endif

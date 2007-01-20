@@ -59,6 +59,8 @@ extern CNxpcApp theApp;
 
 #define TS_LONG_DATE_TIME  0
 #define TS_LONG_TIME       1
+#define TS_DAY_AND_MONTH   2
+#define TS_MONTH           3
 
 
 //
@@ -209,5 +211,6 @@ extern TCHAR *g_pszItemStatus[];
 extern NXC_CC_LIST *g_pCCList;
 extern CODE_TO_TEXT g_ctNodeType[];
 extern DWORD g_dwFlags;
+extern TCHAR g_szMonthAbbr[12][4];
 
 #endif

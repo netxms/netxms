@@ -50,6 +50,8 @@ public:
 
 	// Generated message map functions
 protected:
+	int NextMonthOffset(DWORD dwTimeStamp);
+
 	//{{AFX_MSG(CGraph)
 	afx_msg void OnPaint();
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
@@ -63,12 +65,11 @@ private:
 	BOOL m_bIsActive;
 	double m_dCurrMaxValue;
 	double m_dSecondsPerPixel;
-	void DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor);
+	void DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int nGridSize);
 	DWORD m_dwTimeTo;
 	DWORD m_dwTimeFrom;
 	DWORD m_dwNumItems;
 	double m_dMaxValue;
-	int m_iGridSize;
 	NXC_DCI_DATA *m_pData[MAX_GRAPH_ITEMS];
 };
 

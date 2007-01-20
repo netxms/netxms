@@ -83,14 +83,32 @@ void CSummaryView::OnPaint()
 	CPaintDC dc(this); // device context for painting
    RECT rect;
 
-   GetClientRect(&rect);
-   rect.left += X_MARGIN;
-   rect.top += Y_MARGIN;
-   rect.right -= X_MARGIN;
+	if (g_hSession != NULL)
+	{
+		GetClientRect(&rect);
+		rect.left += X_MARGIN;
+		rect.top += Y_MARGIN;
 
-   PaintAlarmSummary(dc, rect);
-   rect.top += 120;
-   PaintNodeSummary(dc, rect);
+		if (IsPortraitOrientation())
+		{
+			rect.right -= X_MARGIN;
+			PaintAlarmSummary(dc, rect);
+			rect.top += 120;
+			PaintServerStats(dc, rect);
+		}
+		else
+		{
+			int cx;
+
+			cx = rect.right;
+			rect.bottom -= Y_MARGIN;
+			rect.right = rect.right / 2 - X_MARGIN;
+			PaintAlarmSummary(dc, rect);
+			rect.left = rect.right + X_MARGIN * 2;
+			rect.right = cx - X_MARGIN;
+			PaintServerStats(dc, rect);
+		}
+	}
 }
 
 
@@ -98,58 +116,48 @@ void CSummaryView::OnPaint()
 // Paint nodes status summary
 //
 
-void CSummaryView::PaintNodeSummary(CDC &dc, RECT &rcView)
+void CSummaryView::PaintServerStats(CDC &dc, RECT &rcView)
 {
-   DrawTitle(dc, L"Node Status", rcView);
-/*   int i, x, y = Y_MARGIN, iTabStop, iLineHeight, iCounterWidth;
-   int iChartTop, iChartBottom;
-   RECT rect;
-   CSize size;
-   WCHAR szBuffer[256];
+	RECT rcTitle, rcText;
+   TCHAR szBuffer[256];
+	int cy;
 
-   GetClientRect(&rect);
-   x = X_MARGIN + X_MARGIN / 2;
-	
-   // Draw title
-   dc.SelectObject(&m_fontTitle);
-//   dc.TextOut(x, Y_MARGIN, L"Node Status Summary", 19);
-   y += dc.GetTextExtent(L"X", 1).cy + 2;
-   dc.MoveTo(X_MARGIN, y);
-   dc.LineTo(rect.right - Y_MARGIN, y);
-   y += Y_MARGIN * 2;
-   iChartTop = y;
+	CopyRect(&rcTitle, &rcView);
+   DrawTitle(dc, L"Server Statistics", rcTitle);
 
-   // Draw legend
-   dc.SelectObject(&m_fontNormal);
-   size = dc.GetTextExtent(L"0000", 4);
-   iLineHeight = size.cy;
-   iCounterWidth = size.cx;
-   iTabStop = 100;
-   for(i = 0; i < OBJECT_STATUS_COUNT; i++, y+= 20)
-   {
-      dc.FillSolidRect(x, y, iLineHeight, iLineHeight, g_statusColorTable[i]);
-      dc.Draw3dRect(x, y, iLineHeight, iLineHeight, RGB(0, 0, 0), RGB(0, 0, 0));
-      dc.SetBkColor(RGB(255, 255, 255));
-      swprintf(szBuffer, L"%s:\t%d", g_szStatusTextSmall[i], m_dwNodeStats[i]);
-//      dc.TabbedTextOut(x + iLineHeight + 5, y, szBuffer, wcslen(szBuffer), 1, 
-//                       &iTabStop, x + iLineHeight + 5);
-   }
-   iChartBottom = y;
+	CopyRect(&rcText, &rcTitle);
+	rcText.left += X_MARGIN / 2;
+	rcText.right -= X_MARGIN / 2;
+	cy = dc.GetTextExtent(L"Mqh|", 4).cy;
+	rcText.bottom = rcText.top + cy;
+	cy += 2;
 
-   // Total
-   dc.MoveTo(X_MARGIN, y);
-   dc.LineTo(x + iLineHeight + iTabStop + 30, y);
-   y += 5;
-   swprintf(szBuffer, L"Total:\t%d", m_dwTotalNodes);
-//   dc.TabbedTextOut(x + iLineHeight + 5, y, szBuffer, wcslen(szBuffer), 1, 
-//                    &iTabStop, x + iLineHeight + 5);
+   _snwprintf(szBuffer, 256, L"Version %s", m_serverStats.szServerVersion);
+   dc.DrawText(szBuffer, -1, &rcText, DT_LEFT | DT_NOPREFIX | DT_EXPANDTABS);
+	OffsetRect(&rcText, 0, cy);
 
-   // Pie chart
-   rect.left = 200;
-   rect.top = iChartTop;
-   rect.bottom = iChartBottom;
-   rect.right = rect.left + (rect.bottom - rect.top);
-   DrawPieChart(dc, &rect, OBJECT_STATUS_COUNT, m_dwNodeStats, g_statusColorTable);*/
+   _snwprintf(szBuffer, 256, L"Uptime %d days %2d:%02d:%02d",
+	           m_serverStats.dwServerUptime / 86400,
+				  (m_serverStats.dwServerUptime % 86400) / 3600,
+				  (m_serverStats.dwServerUptime % 3600) / 60,
+				  m_serverStats.dwServerUptime % 60);
+   dc.DrawText(szBuffer, -1, &rcText, DT_LEFT | DT_NOPREFIX | DT_EXPANDTABS);
+	OffsetRect(&rcText, 0, cy);
+
+   _snwprintf(szBuffer, 256, L"%d client sessions", m_serverStats.dwNumClientSessions);
+   dc.DrawText(szBuffer, -1, &rcText, DT_LEFT | DT_NOPREFIX | DT_EXPANDTABS);
+	OffsetRect(&rcText, 0, cy);
+
+   _snwprintf(szBuffer, 256, L"%d managed nodes", m_serverStats.dwNumNodes);
+   dc.DrawText(szBuffer, -1, &rcText, DT_LEFT | DT_NOPREFIX | DT_EXPANDTABS);
+	OffsetRect(&rcText, 0, cy);
+
+	if (m_serverStats.dwServerProcessVMSize != 0)
+	{
+		_snwprintf(szBuffer, 256, L"%dK memory used", m_serverStats.dwServerProcessVMSize);
+		dc.DrawText(szBuffer, -1, &rcText, DT_LEFT | DT_NOPREFIX | DT_EXPANDTABS);
+		OffsetRect(&rcText, 0, cy);
+	}
 }
 
 
@@ -161,11 +169,12 @@ void CSummaryView::PaintAlarmSummary(CDC &dc, RECT &rcView)
 {
    int i, y, *piAlarmStats;
    TCHAR szBuffer[256];
-   RECT rcText;
+   RECT rcText, rcTitle;
 
-   DrawTitle(dc, L"Active Alarms", rcView);
+	CopyRect(&rcTitle, &rcView);
+   DrawTitle(dc, L"Active Alarms", rcTitle);
    piAlarmStats = ((CMainFrame *)theApp.m_pMainWnd)->GetAlarmStats();
-   for(i = 0, y = rcView.top; i < 5; i++, y += 20)
+   for(i = 0, y = rcTitle.top; i < 5; i++, y += 20)
    {
       m_pImageList->Draw(&dc, i, CPoint(rcView.left + X_MARGIN, y), ILD_TRANSPARENT);
       _snwprintf(szBuffer, 256, L"%-10s\t%d", g_szStatusTextSmall[i], piAlarmStats[i]);
@@ -208,5 +217,19 @@ void CSummaryView::DrawTitle(CDC &dc, TCHAR *pszText, RECT &rect)
 
 void CSummaryView::OnViewRefresh() 
 {
+	DoRequestArg2(NXCGetServerStats, g_hSession, &m_serverStats, L"Loading server statistics...");
    InvalidateRect(NULL);
+}
+
+
+//
+// Check if screen has portrait or landscape orientation
+//
+
+BOOL CSummaryView::IsPortraitOrientation()
+{
+	RECT rect;
+
+	GetClientRect(&rect);
+	return rect.bottom > rect.right;
 }

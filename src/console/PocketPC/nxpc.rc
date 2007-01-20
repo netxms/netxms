@@ -49,6 +49,9 @@ IDI_TEMPLATE            ICON    DISCARDABLE     "res\\template.ico"
 IDI_TEMPLATE_GROUP      ICON    DISCARDABLE     "res\\template_group.ico"
 IDI_INTERFACE           ICON    DISCARDABLE     "res\\interface.ico"
 IDI_VPNC                ICON    DISCARDABLE     "res\\vpnc.ico"
+IDI_CLUSTER             ICON    DISCARDABLE     "res\\cluster.ico"
+IDI_CONDITION           ICON    DISCARDABLE     "res\\condition.ico"
+IDI_OUTSTANDING         ICON    DISCARDABLE     "res\\outstanding.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -107,6 +110,7 @@ BEGIN
     POPUP "Alarm"
     BEGIN
         MENUITEM "Acknowledge",                 ID_ALARM_ACKNOWLEDGE
+        MENUITEM "&Terminate",                  ID_ALARM_TERMINATE
         MENUITEM "Delete",                      ID_ALARM_DELETE
         MENUITEM SEPARATOR
         POPUP "Sort by"
@@ -226,17 +230,17 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 140, 110
+IDD_ABOUTBOX DIALOGEX 0, 0, 140, 110
 STYLE WS_POPUP | WS_CAPTION
 EXSTYLE 0x80000000L
 CAPTION "About nxpc"
 FONT 8, "System"
 BEGIN
-    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,21,20
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
     LTEXT           "NetXMS Pocket Console",IDC_STATIC,40,10,93,10,
                     SS_NOPREFIX
-    LTEXT           "Copyright © 2005 Victor Kirhenshtein",IDC_STATIC,40,33,
-                    93,33
+    LTEXT           "Copyright © 2005, 2006 Victor Kirhenshtein",IDC_STATIC,
+                    40,33,93,33
     LTEXT           "Static",IDC_STATIC_VERSION,40,22,93,8
 END
 

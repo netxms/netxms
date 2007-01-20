@@ -43,6 +43,9 @@ public:
 
 	// Generated message map functions
 protected:
+	int m_cx;
+	int GetTextWidth(WCHAR *pszText);
+	void UpdateAlarm(int nItem, NXC_ALARM *pAlarm);
    void AddAlarmToList(NXC_ALARM *pAlarm);
    void DeleteAlarmFromList(DWORD dwAlarmId);
 	int FindAlarmRecord(DWORD dwAlarmId);
@@ -70,10 +73,14 @@ protected:
 	afx_msg void OnAlarmSortbyTimestamp();
 	afx_msg void OnAlarmAcknowledge();
 	afx_msg void OnAlarmDelete();
+	afx_msg void OnAlarmTerminate();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
 public:
+	COLORREF m_rgbText;
+	COLORREF m_rgbLine2;
+	COLORREF m_rgbLine1;
    int SortMode(void) { return m_iSortMode; }
    int SortDir(void) { return m_iSortDir; }
 };

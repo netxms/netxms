@@ -2096,7 +2096,15 @@ SOURCE=.\res\btn_prev.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\cluster.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\Cmdbar.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\condition.ico
 # End Source File
 # Begin Source File
 
@@ -2140,6 +2148,10 @@ SOURCE=.\res\nxpc.rc2
 # PROP Exclude_From_Scan -1
 # PROP BASE Exclude_From_Build 1
 # PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\outstanding.ico
 # End Source File
 # Begin Source File
 

@@ -20,6 +20,8 @@ EXTRA_DIST = \
 	btn_close_dis.bmp \
 	btn_next.bmp \
 	btn_prev.bmp \
+	cluster.ico \
+	condition.ico \
 	connect.ico \
 	container.ico \
 	interface.ico \
@@ -29,6 +31,7 @@ EXTRA_DIST = \
 	node.ico \
 	nxpc.ico \
 	nxpc.rc2 \
+	outstanding.ico \
 	question.ico \
 	subnet.ico \
 	template.ico \

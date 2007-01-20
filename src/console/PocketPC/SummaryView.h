@@ -1,6 +1,7 @@
 #if !defined(AFX_SUMMARYVIEW_H__54818CA0_DFF4_4351_8B01_224C56A92FD9__INCLUDED_)
 #define AFX_SUMMARYVIEW_H__54818CA0_DFF4_4351_8B01_224C56A92FD9__INCLUDED_
 
+#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -35,6 +36,8 @@ public:
 
 	// Generated message map functions
 protected:
+	NXC_SERVER_STATS m_serverStats;
+	BOOL IsPortraitOrientation(void);
 	CImageList *m_pImageList;
 	void DrawTitle(CDC &dc, TCHAR *pszText, RECT &rcText);
 	void PaintAlarmSummary(CDC &dc, RECT &rcView);
@@ -42,7 +45,7 @@ protected:
 	DWORD m_dwTotalNodes;
 	CFont m_fontNormal;
 	CFont m_fontTitle;
-	void PaintNodeSummary(CDC &dc, RECT &rcView);
+	void PaintServerStats(CDC &dc, RECT &rcView);
 	//{{AFX_MSG(CSummaryView)
 	afx_msg void OnPaint();
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);

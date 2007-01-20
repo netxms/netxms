@@ -11,6 +11,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+#define TEXT_LEFT_MARGIN	40
+
 
 //
 // Alarm comparision function
@@ -74,6 +76,9 @@ CAlarmView::CAlarmView()
    m_iSortDir = 1;
    m_dwNumAlarms = 0;
    m_pAlarmList = NULL;
+	m_rgbLine1 = RGB(255, 255, 255);
+	m_rgbLine2 = RGB(255, 255, 192);
+	m_rgbText = RGB(0, 0, 0);
 }
 
 CAlarmView::~CAlarmView()
@@ -97,6 +102,7 @@ BEGIN_MESSAGE_MAP(CAlarmView, CWnd)
 	ON_COMMAND(ID_ALARM_SORTBY_TIMESTAMP, OnAlarmSortbyTimestamp)
 	ON_COMMAND(ID_ALARM_ACKNOWLEDGE, OnAlarmAcknowledge)
 	ON_COMMAND(ID_ALARM_DELETE, OnAlarmDelete)
+	ON_COMMAND(ID_ALARM_TERMINATE, OnAlarmTerminate)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -118,13 +124,13 @@ int CAlarmView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
    // Create font for alarm list
    m_fontSmall.CreateFont(-MulDiv(7, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
-                          0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                          0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-                          VARIABLE_PITCH | FF_DONTCARE, L"System");
+                          VARIABLE_PITCH | FF_DONTCARE, L"Microsoft Sans Serif");
    m_fontLarge.CreateFont(-MulDiv(14, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
-                          0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                          0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-                          VARIABLE_PITCH | FF_DONTCARE, L"System");
+                          VARIABLE_PITCH | FF_DONTCARE, L"Microsoft Sans Serif");
 
    GetClientRect(&rect);
    m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | 
@@ -134,14 +140,18 @@ int CAlarmView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	
    // Create image list
    m_pImageList = CreateEventImageList();
+	m_pImageList->Add(theApp.LoadIcon(IDI_ACK));
+	m_pImageList->Add(theApp.LoadIcon(IDI_OUTSTANDING));
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_SMALL);
 
    // Setup columns
+	m_wndListCtrl.GetClientRect(&rect);
+	m_cx = rect.right - GetSystemMetrics(SM_CXVSCROLL);
    m_wndListCtrl.InsertColumn(0, _T("Severity"), LVCFMT_LEFT, 1);
    m_wndListCtrl.InsertColumn(1, _T("Source"), LVCFMT_LEFT, 1);
    m_wndListCtrl.InsertColumn(2, _T("Message"), LVCFMT_LEFT, 1);
    m_wndListCtrl.InsertColumn(3, _T("Time Stamp"), LVCFMT_LEFT, 1);
-   m_wndListCtrl.InsertColumn(4, _T("Ack"), LVCFMT_CENTER, 700);
+   m_wndListCtrl.InsertColumn(4, _T("Ack"), LVCFMT_CENTER, m_cx);
 
 	return 0;
 }
@@ -189,11 +199,14 @@ void CAlarmView::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct)
 void CAlarmView::OnViewRefresh() 
 {
    DWORD i, dwRetCode;
+	RECT rect;
 
    m_wndListCtrl.DeleteAllItems();
    safe_free(m_pAlarmList);
    m_dwNumAlarms = 0;
    m_pAlarmList = NULL;
+	m_wndListCtrl.GetClientRect(&rect);
+	m_cx = rect.right - GetSystemMetrics(SM_CXVSCROLL);
    dwRetCode = DoRequestArg4(NXCLoadAllAlarms, g_hSession, (void *)FALSE, 
                              &m_dwNumAlarms, &m_pAlarmList, _T("Loading alarms..."));
    if (dwRetCode == RCC_SUCCESS)
@@ -216,23 +229,52 @@ void CAlarmView::OnViewRefresh()
 
 void CAlarmView::AddAlarm(NXC_ALARM *pAlarm)
 {
-   int iIdx;
-   TCHAR szBuffer[64];
+   int nItem;
    NXC_OBJECT *pObject;
 
    pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
-   iIdx = m_wndListCtrl.InsertItem(0x7FFFFFFF,
-                                   g_szStatusTextSmall[pAlarm->nCurrentSeverity],
-                                   pAlarm->nCurrentSeverity);
-   if (iIdx != -1)
+   nItem = m_wndListCtrl.InsertItem(0x7FFFFFFF,
+                                    g_szStatusTextSmall[pAlarm->nCurrentSeverity],
+                                    pAlarm->nCurrentSeverity);
+   if (nItem != -1)
    {
-      m_wndListCtrl.SetItemData(iIdx, pAlarm->dwAlarmId);
-      m_wndListCtrl.SetItemText(iIdx, 1, pObject->szName);
-      m_wndListCtrl.SetItemText(iIdx, 2, pAlarm->szMessage);
-      m_wndListCtrl.SetItemText(iIdx, 3, FormatTimeStamp(pAlarm->dwLastChangeTime, szBuffer, TS_LONG_DATE_TIME));
-      m_wndListCtrl.SetItemText(iIdx, 4, (pAlarm->nState == ALARM_STATE_ACKNOWLEDGED) ? _T("X") : _T(""));
+      m_wndListCtrl.SetItemData(nItem, pAlarm->dwAlarmId);
+		UpdateAlarm(nItem, pAlarm);
    }
    m_iNumAlarms[pAlarm->nCurrentSeverity]++;
+}
+
+
+//
+// Update alarm entry in list control
+//
+
+void CAlarmView::UpdateAlarm(int nItem, NXC_ALARM *pAlarm)
+{
+   TCHAR szBuffer[64];
+   NXC_OBJECT *pObject;
+	LVITEM lvi;
+	int cx;
+
+   pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
+	lvi.iItem = nItem;
+	lvi.iSubItem = 0;
+	lvi.mask = LVIF_TEXT | LVIF_IMAGE;
+	lvi.pszText = g_szStatusTextSmall[pAlarm->nCurrentSeverity];
+	lvi.iImage = pAlarm->nCurrentSeverity;
+	m_wndListCtrl.SetItem(&lvi);
+   m_wndListCtrl.SetItemText(nItem, 1, pObject->szName);
+   m_wndListCtrl.SetItemText(nItem, 2, pAlarm->szMessage);
+   m_wndListCtrl.SetItemText(nItem, 3, FormatTimeStamp(pAlarm->dwLastChangeTime, szBuffer, TS_LONG_DATE_TIME));
+   m_wndListCtrl.SetItemText(nItem, 4, (pAlarm->nState == ALARM_STATE_ACKNOWLEDGED) ? _T("X") : _T(""));
+
+	// Update list width
+	cx = GetTextWidth(pAlarm->szMessage);
+	if (cx + TEXT_LEFT_MARGIN > m_cx)
+	{
+		m_cx = cx + TEXT_LEFT_MARGIN;
+		m_wndListCtrl.SetColumnWidth(4, m_cx);
+	}
 }
 
 
@@ -264,8 +306,10 @@ void CAlarmView::DrawListItem(CDC &dc, RECT &rcItem, int iItem, UINT nData)
    }
    else
    {
-      dc.FillSolidRect(&rcItem, GetSysColor(COLOR_WINDOW));
-      rgbOldColor = dc.SetTextColor(GetSysColor(COLOR_WINDOWTEXT));
+//      dc.FillSolidRect(&rcItem, GetSysColor(COLOR_WINDOW));
+//      rgbOldColor = dc.SetTextColor(GetSysColor(COLOR_WINDOWTEXT));
+      dc.FillSolidRect(&rcItem, ((iItem & 1) == 0) ? m_rgbLine1 : m_rgbLine2);
+      rgbOldColor = dc.SetTextColor(m_rgbText);
    }
 
    // Draw severity icon
@@ -273,8 +317,14 @@ void CAlarmView::DrawListItem(CDC &dc, RECT &rcItem, int iItem, UINT nData)
    m_pImageList->Draw(&dc, item.iImage, 
                       CPoint(rcItem.left + 2, rcItem.top + 2), ILD_TRANSPARENT);
 
+   // Draw state icon
+   m_wndListCtrl.GetItemText(iItem, 4, szBuffer, 256);
+   iHeight = rcItem.bottom - rcItem.top;
+   m_pImageList->Draw(&dc, (szBuffer[0] == L'X') ? STATUS_CRITICAL + 1 : STATUS_CRITICAL + 2, 
+                      CPoint(rcItem.left + 20, rcItem.top + 2), ILD_TRANSPARENT);
+
    memcpy(&rcText, &rcItem, sizeof(RECT));
-   rcText.left += 24;
+   rcText.left += TEXT_LEFT_MARGIN;
    pOldFont = dc.SelectObject(&m_fontSmall);
    m_wndListCtrl.GetItemText(iItem, 1, szBuffer, 256);
    wcscat(szBuffer, L" [");
@@ -299,6 +349,7 @@ void CAlarmView::DrawListItem(CDC &dc, RECT &rcItem, int iItem, UINT nData)
 void CAlarmView::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
 {
    int iItem;
+	NXC_ALARM *pCurr;
 
    iItem = FindAlarmRecord(pAlarm->dwAlarmId);
    switch(dwCode)
@@ -309,6 +360,20 @@ void CAlarmView::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
             AddAlarm(pAlarm);
             AddAlarmToList(pAlarm);
             m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
+         }
+         break;
+      case NX_NOTIFY_ALARM_CHANGED:
+         if (iItem != -1)
+         {
+				pCurr = FindAlarmInList(pAlarm->dwAlarmId);
+				if (pCurr != NULL)
+				{
+	            m_iNumAlarms[pCurr->nCurrentSeverity]--;
+					memcpy(pCurr, pAlarm, sizeof(NXC_ALARM));
+					UpdateAlarm(iItem, pAlarm);
+	            m_iNumAlarms[pAlarm->nCurrentSeverity]++;
+					m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
+				}
          }
          break;
       case NX_NOTIFY_ALARM_TERMINATED:
@@ -506,6 +571,47 @@ void CAlarmView::OnAlarmAcknowledge()
 
 
 //
+// Alarm termination worker function
+//
+
+static DWORD TerminateAlarms(DWORD dwNumAlarms, DWORD *pdwAlarmList)
+{
+   DWORD i, dwResult = RCC_SUCCESS;
+
+   for(i = 0; (i < dwNumAlarms) && (dwResult == RCC_SUCCESS); i++)
+      dwResult = NXCTerminateAlarm(g_hSession, pdwAlarmList[i]);
+   return dwResult;
+}
+
+
+//
+// WM_COMMAND::ID_ALARM_TERMINATE message handler
+//
+
+void CAlarmView::OnAlarmTerminate() 
+{
+   int iItem;
+   DWORD i, dwNumAlarms, *pdwAlarmList, dwResult;
+
+   dwNumAlarms = m_wndListCtrl.GetSelectedCount();
+   pdwAlarmList = (DWORD *)malloc(sizeof(DWORD) * dwNumAlarms);
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+   for(i = 0; (iItem != -1) && (i < dwNumAlarms); i++)
+   {
+      pdwAlarmList[i] = m_wndListCtrl.GetItemData(iItem);
+      iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+   }
+
+   dwResult = DoRequestArg2(TerminateAlarms, (void *)dwNumAlarms, pdwAlarmList,
+                            _T("Terminating alarms..."));
+   if (dwResult != RCC_SUCCESS)
+      theApp.ErrorBox(dwResult, _T("Cannot terminate alarm: %s"));
+   free(pdwAlarmList);
+}
+
+
+//
 // Alarm deletion worker function
 //
 
@@ -543,4 +649,23 @@ void CAlarmView::OnAlarmDelete()
    if (dwResult != RCC_SUCCESS)
       theApp.ErrorBox(dwResult, _T("Cannot acknowledge alarm: %s"));
    free(pdwAlarmList);
+}
+
+
+//
+// Calculate width of text
+//
+
+int CAlarmView::GetTextWidth(WCHAR *pszText)
+{
+	CDC *pdc;
+	CFont *pOldFont;
+	int nRet;
+
+	pdc = GetDC();
+   pOldFont = pdc->SelectObject(&m_fontSmall);
+	nRet = pdc->GetTextExtent(pszText, wcslen(pszText)).cx;
+	pdc->SelectObject(pOldFont);
+	ReleaseDC(pdc);
+	return nRet;
 }

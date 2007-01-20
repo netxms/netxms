@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** PocketPC Console
-** Copyright (C) 2005 Victor Kirhenshtein
+** Copyright (C) 2005, 2006 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: tools.cpp
+** File: tools.cpp
 ** Various tools and helper functions
 **
 **/
@@ -39,10 +39,16 @@ TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType)
    {
       case TS_LONG_DATE_TIME:
          _stprintf(pszBuffer, _T("%02d-%02d-%04d %02d:%02d:%02d"), ptm->tm_mday,
-                   ptm->tm_mon, ptm->tm_year + 1900, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+                   ptm->tm_mon + 1, ptm->tm_year + 1900, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
          break;
       case TS_LONG_TIME:
          _stprintf(pszBuffer, _T("%02d:%02d:%02d"), ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+         break;
+      case TS_DAY_AND_MONTH:
+         _stprintf(pszBuffer, _T("%s/%d"), g_szMonthAbbr[ptm->tm_mon], ptm->tm_mday);
+         break;
+      case TS_MONTH:
+         wcscpy(pszBuffer, g_szMonthAbbr[ptm->tm_mon]);
          break;
       default:
          *pszBuffer = 0;

@@ -55,6 +55,8 @@ TCHAR g_szWorkDir[MAX_PATH] = L"";
 // Global string constants
 //
 
+TCHAR g_szMonthAbbr[12][4] = { L"Jan", L"Feb", L"Mar", L"Apr", L"May", L"Jun",
+                               L"Jul", L"Aug", L"Sep", L"Oct", L"Nov", L"Dec" };
 TCHAR *g_szStatusText[] = { L"NORMAL", L"WARNING", L"MINOR", L"MAJOR",
                             L"CRITICAL", L"UNKNOWN", L"UNMANAGED",
                             L"DISABLED", L"TESTING" };
