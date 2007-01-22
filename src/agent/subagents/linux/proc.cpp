@@ -1,4 +1,4 @@
-/* $Id: proc.cpp,v 1.7 2007-01-15 00:25:07 victor Exp $ */
+/* $Id: proc.cpp,v 1.8 2007-01-22 09:16:43 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -29,162 +29,174 @@
 
 #include "proc.h"
 
+
 static int ProcFilter(const struct dirent *pEnt)
 {
-	char *pTmp;
+   char *pTmp;
 
-	if (pEnt == NULL)
-	{
-		return 0; // ignore file
-	}
+   if (pEnt == NULL)
+   {
+      return 0; // ignore file
+   }
 
-	pTmp = (char *)pEnt->d_name;
-	while (*pTmp != 0)
-	{
-		if (*pTmp < '0' || *pTmp > '9')
-		{
-			return 0; // skip
-		}
-		pTmp++;
-	}
+   pTmp = (char *)pEnt->d_name;
+   while (*pTmp != 0)
+   {
+      if (*pTmp < '0' || *pTmp > '9')
+      {
+         return 0; // skip
+      }
+      pTmp++;
+   }
 
-	return 1;
+   return 1;
 }
 
 int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 {
-	struct dirent **pNameList;
-	int nCount, nFound;
+   struct dirent **pNameList;
+   int nCount, nFound;
    BOOL bProcFound, bCmdFound;
    BOOL bIgnoreCase = TRUE;
 
-	nFound = -1;
+   nFound = -1;
 
-	nCount = scandir("/proc", &pNameList, &ProcFilter, alphasort);
-	if (nCount < 0)
-	{
-		//perror("scandir");
-	}
-	else
-	{
-		nFound = 0;
+   nCount = scandir("/proc", &pNameList, &ProcFilter, alphasort);
+   // if everything is null we can simply return nCount!!!
+   if (nCount < 0 )
+   {
+       //perror("scandir");
+   }
+   else if( pEnt == NULL && szProcName == NULL && szCmdLine == NULL ) // get process count, we can skip long loop
+   {
+      nFound = nCount;
+      // clean up
+      while(nCount--)
+      {
+         free(pNameList[nCount]);
+      }
+      free(pNameList);
+   }
+   else 
+   {
+      nFound = 0;
 
-		if (nCount > 0 && pEnt != NULL)
-		{
-			*pEnt = (PROC_ENT *)malloc(sizeof(PROC_ENT) * (nCount + 1));
+      if (nCount > 0 && pEnt != NULL)
+      {
+         *pEnt = (PROC_ENT *)malloc(sizeof(PROC_ENT) * (nCount + 1));
 
-			if (*pEnt == NULL)
-			{
-				nFound = -1;
-				// cleanup
-				while(nCount--)
-				{
-					free(pNameList[nCount]);
-				}
-			}
-			else
-			{
-				memset(*pEnt, 0, sizeof(PROC_ENT) * (nCount + 1));
-			}
-		}
-
-		while(nCount--)
-		{
-            bProcFound = bCmdFound = FALSE;
-			char szFileName[256];
-			FILE *hFile;
-		     char *pProcName;
-             unsigned long nPid;
-          
-			  snprintf(szFileName, sizeof(szFileName),
-					"/proc/%s/stat", pNameList[nCount]->d_name);
-			  hFile = fopen(szFileName, "r");
-    		  if (hFile != NULL)
+         if (*pEnt == NULL)
+         {
+            nFound = -1;
+            // cleanup
+            while(nCount--)
             {
-              char szBuff[1024];
-              if (fgets(szBuff, sizeof(szBuff), hFile) != NULL)
-				  {
-
-                 if (sscanf(szBuff, "%lu ", &nPid) == 1)
-                 {
-                     pProcName = strchr(szBuff, ')');
-                     if (pProcName != NULL)
-						   {
-							   *pProcName = 0;
-                        pProcName =  strchr(szBuff, '(');
-                        if (pProcName != NULL)
-							   {
-							      pProcName++;
-                           if (szProcName != NULL)
-                           {
-                               if (szCmdLine == NULL) // use old style compare
-                                   bProcFound = strcasecmp(pProcName, szProcName) == 0;
-                               else
-                                   bProcFound = RegexpMatch(pProcName, szProcName, bIgnoreCase);
-                           }
-									else
-									{
-										bProcFound = TRUE;
-									}
-                        }
-							}
-						}
-					} // fgets
-				} // hFile
-
-				fclose(hFile);
-
-            if (szCmdLine != NULL)
-            {
-               snprintf(szFileName, sizeof(szFileName),
-					            "/proc/%s/cmdline", pNameList[nCount]->d_name);
-               hFile = fopen(szFileName, "r");
-			      if (hFile != NULL)
-               {
-                   char szBuff[1024] = {0};
-                   if (fgets(szBuff, sizeof(szBuff), hFile) != NULL)
-				       {
-                        bCmdFound = RegexpMatch(szBuff, szCmdLine, bIgnoreCase);
-                   }
-						 else
-							{
-                        bCmdFound = RegexpMatch("", szCmdLine, bIgnoreCase);
-							}
-               	fclose(hFile);
-               } // hFile != NULL
-					else
-					{
-               	bCmdFound = RegexpMatch("", szCmdLine, bIgnoreCase);
-					}
-            } // szCmdLine
-				else
-				{
-					bCmdFound = TRUE;
-				}
-            
-            if (bProcFound && bCmdFound)
-            {
-                nFound++;
-					 if (pEnt != NULL && pProcName != NULL )
-					 {
-						  (*pEnt)[nFound].nPid = nPid;
-						  nx_strncpy((*pEnt)[nFound].szProcName, pProcName,
-									sizeof((*pEnt)[nFound].szProcName));
-					 }
+               free(pNameList[nCount]);
             }
-            
-			free(pNameList[nCount]);
-		}
-		free(pNameList);
-	}
+         }
+         else
+         {
+            memset(*pEnt, 0, sizeof(PROC_ENT) * (nCount + 1));
+         }
+      }
 
-	return nFound;
+      while(nCount--)
+      {
+         bProcFound = bCmdFound = FALSE;
+         char szFileName[512];
+         FILE *hFile;
+         char szBuff[1024] = {0}; 
+         char *pProcName = NULL;
+         unsigned long nPid;
+          
+         snprintf(szFileName, sizeof(szFileName),
+                                        "/proc/%s/stat", pNameList[nCount]->d_name);
+         hFile = fopen(szFileName, "r");
+         if (hFile != NULL)
+         {
+            if (fgets(szBuff, sizeof(szBuff), hFile) != NULL)
+            {
+               if (sscanf(szBuff, "%lu ", &nPid) == 1)
+               {
+                  pProcName = strchr(szBuff, ')');
+                  if (pProcName != NULL)
+                  {
+                     *pProcName = 0;
+                     pProcName =  strchr(szBuff, '(');
+                     if (pProcName != NULL)
+                     {
+                        pProcName++;
+                        if (szProcName != NULL)
+                        {
+                           if (szCmdLine == NULL) // use old style compare
+                              bProcFound = strcasecmp(pProcName, szProcName) == 0;
+                           else
+                              bProcFound = RegexpMatch(pProcName, szProcName, bIgnoreCase);
+                        }
+                        else
+                        {
+                              bProcFound = TRUE;
+                        }
+                     }
+                  } // pProcName != NULL
+               }
+            } // fgets   
+            fclose(hFile);
+         } // hFile
+          
+         if (szCmdLine != NULL)
+         {
+            snprintf(szFileName, sizeof(szFileName),
+                                              "/proc/%s/cmdline", pNameList[nCount]->d_name);
+            hFile = fopen(szFileName, "r");
+            if (hFile != NULL)
+            {
+               char szBuff[1024] = {0};
+               if (fgets(szBuff, sizeof(szBuff), hFile) != NULL)
+               {
+                  bCmdFound = RegexpMatch(szBuff, szCmdLine, bIgnoreCase);
+               }
+               else
+               {
+                  bCmdFound = RegexpMatch("", szCmdLine, bIgnoreCase);
+               }
+               fclose(hFile);
+            } // hFile != NULL
+            else
+            {
+                bCmdFound = RegexpMatch("", szCmdLine, bIgnoreCase);
+            }
+         } // szCmdLine
+         else
+         {
+            bCmdFound = TRUE;
+         }
+            
+         if (bProcFound && bCmdFound)
+         {
+            nFound++;
+            if (pEnt != NULL && pProcName != NULL )
+            {
+               (*pEnt)[nFound].nPid = nPid;
+               nx_strncpy((*pEnt)[nFound].szProcName, pProcName, sizeof((*pEnt)[nFound].szProcName));
+            }
+         }
+            
+         free(pNameList[nCount]);
+      }
+      free(pNameList);
+   }
+
+   return nFound;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2007/01/15 00:25:07  victor
+Minor fix
+
 Revision 1.6  2007/01/15 00:16:07  victor
 Implemented Process.CountEx for Linux
 
@@ -203,12 +215,12 @@ process name matching chaged from patern to exact match
 Revision 1.1  2004/10/22 22:08:34  alk
 source restructured;
 implemented:
-	Net.IP.Forwarding
-	Net.IP6.Forwarding
-	Process.Count(*)
-	Net.ArpCache
-	Net.InterfaceList (if-type not implemented yet)
-	System.ProcessList
+        Net.IP.Forwarding
+        Net.IP6.Forwarding
+        Process.Count(*)
+        Net.ArpCache
+        Net.InterfaceList (if-type not implemented yet)
+        System.ProcessList
 
 
 */
