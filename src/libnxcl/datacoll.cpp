@@ -761,3 +761,43 @@ DWORD LIBNXCL_EXPORTABLE NXCPushDCIData(NXC_SESSION hSession, DWORD dwNumItems,
    }
    return dwResult;
 }
+
+
+//
+// Get DCI info
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetDCIInfo(NXC_SESSION hSession, DWORD dwNodeId,
+													DWORD dwItemId, NXC_DCI *pInfo)
+{
+   CSCPMessage msg, *pResponse;
+   DWORD dwRqId, dwResult;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_GET_DCI_INFO);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_NODE_ID, dwNodeId);
+   msg.SetVariable(VID_ITEM_ID, dwItemId);
+
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwResult = pResponse->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+      {
+			pInfo->dwId= dwItemId;
+			pInfo->dwResourceId = pResponse->GetVariableLong(VID_RESOURCE_ID);
+			pInfo->dwTemplateId = pResponse->GetVariableLong(VID_TEMPLATE_ID);
+			pInfo->iDataType = pResponse->GetVariableShort(VID_DATA_TYPE);
+      }
+      delete pResponse;
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+   }
+   return dwResult;
+}

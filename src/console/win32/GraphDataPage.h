@@ -41,6 +41,8 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CGraphDataPage)
 	virtual BOOL OnInitDialog();
+	afx_msg void OnButtonDelete();
+	afx_msg void OnButtonAdd();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

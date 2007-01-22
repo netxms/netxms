@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.259 2007-01-16 22:15:11 victor Exp $ */
+/* $Id: session.cpp,v 1.260 2007-01-22 10:19:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -3171,6 +3171,7 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                                            pRequest->GetVariableLong(VID_CREATION_FLAGS),
                                            szObjectName,
                                            pRequest->GetVariableLong(VID_PROXY_NODE),
+                                           pRequest->GetVariableLong(VID_SNMP_PROXY),
 														 (pParent != NULL) ? ((pParent->Type() == OBJECT_CLUSTER) ? (Cluster *)pParent : NULL) : NULL);
                      break;
                   case OBJECT_CONTAINER:

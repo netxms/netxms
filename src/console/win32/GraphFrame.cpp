@@ -262,6 +262,13 @@ void CGraphFrame::OnViewRefresh()
          theApp.ErrorBox(dwResult, _T("Unable to retrieve colected data: %s"));
       }
    }
+	if (m_bFullRefresh)
+	{
+		for(;i < MAX_GRAPH_ITEMS; i++)
+		{
+         m_wndGraph.SetData(i, NULL);
+		}
+	}
    m_wndGraph.ClearZoomHistory();
    m_wndGraph.Update();
    m_bFullRefresh = FALSE;
@@ -389,7 +396,10 @@ void CGraphFrame::OnGraphProperties()
          m_dwTimeFrame = m_dwNumTimeUnits * m_dwTimeUnitSize[m_iTimeUnit];
       }
 
-      /* TODO: send refresh only if time frame was changed */
+		m_dwNumItems = pgData.m_dwNumItems;
+		memcpy(m_ppItems, pgData.m_ppItems, sizeof(DCIInfo *) * MAX_GRAPH_ITEMS);
+
+      /* TODO: send refresh only if time frame or DCI list was changed */
       m_bFullRefresh = TRUE;
       PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
    }

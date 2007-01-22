@@ -818,6 +818,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession,
          msg.SetVariable(VID_IP_NETMASK, pCreateInfo->cs.node.dwNetMask);
          msg.SetVariable(VID_CREATION_FLAGS, pCreateInfo->cs.node.dwCreationFlags);
          msg.SetVariable(VID_PROXY_NODE, pCreateInfo->cs.node.dwProxyNode);
+         msg.SetVariable(VID_SNMP_PROXY, pCreateInfo->cs.node.dwSNMPProxy);
          break;
       case OBJECT_CONTAINER:
          msg.SetVariable(VID_CATEGORY, pCreateInfo->cs.container.dwCategory);

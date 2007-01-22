@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.170 2007-01-14 23:45:46 victor Exp $ */
+/* $Id: node.cpp,v 1.171 2007-01-22 10:19:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -70,7 +70,7 @@ Node::Node()
 // Constructor for new node object
 //
 
-Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwZone)
+Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DWORD dwZone)
      :Template()
 {
    m_dwIpAddr = dwAddr;
@@ -102,7 +102,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwZone)
    m_pParamList = NULL;
    m_dwPollerNode = 0;
    m_dwProxyNode = dwProxyNode;
-	m_dwSNMPProxy = 0;
+	m_dwSNMPProxy = dwSNMPProxy;
    memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_bIsHidden = TRUE;
    m_pRoutingTable = NULL;

@@ -26,7 +26,8 @@ CCreateNodeDlg::CCreateNodeDlg(CWnd* pParent /*=NULL*/)
 	m_bCreateUnmanaged = FALSE;
 	//}}AFX_DATA_INIT
 
-   m_dwProxyNode = NULL;
+   m_dwProxyNode = 0;
+	m_dwSNMPProxy = 0;
 }
 
 
@@ -48,6 +49,7 @@ BEGIN_MESSAGE_MAP(CCreateNodeDlg, CCreateObjectDlg)
 	//{{AFX_MSG_MAP(CCreateNodeDlg)
 	ON_BN_CLICKED(IDC_BUTTON_RESOLVE, OnButtonResolve)
 	ON_BN_CLICKED(IDC_SELECT_PROXY, OnSelectProxy)
+	ON_BN_CLICKED(IDC_SELECT_SNMPPROXY, OnSelectSnmpproxy)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -63,25 +65,9 @@ BOOL CCreateNodeDlg::OnInitDialog()
 {
 	CCreateObjectDlg::OnInitDialog();
 	
-   // Proxy node
-   if (m_dwProxyNode != 0)
-   {
-      NXC_OBJECT *pNode;
-
-      pNode = NXCFindObjectById(g_hSession, m_dwProxyNode);
-      if (pNode != NULL)
-      {
-         SetDlgItemText(IDC_EDIT_PROXY, pNode->szName);
-      }
-      else
-      {
-         SetDlgItemText(IDC_EDIT_PROXY, _T("<invalid>"));
-      }
-   }
-   else
-   {
-      SetDlgItemText(IDC_EDIT_PROXY, _T("<none>"));
-   }
+   // Proxy nodes
+	ShowProxyName(m_dwProxyNode, IDC_EDIT_PROXY);
+	ShowProxyName(m_dwSNMPProxy, IDC_EDIT_SNMPPROXY);
 	
 	return TRUE;
 }
@@ -166,25 +152,53 @@ void CCreateNodeDlg::OnSelectProxy()
    dlg.m_bAllowEmptySelection = TRUE;
    if (dlg.DoModal() == IDOK)
    {
-      if (dlg.m_dwNumObjects != 0)
-      {
-         NXC_OBJECT *pNode;
+		m_dwProxyNode = (dlg.m_dwNumObjects != 0) ? dlg.m_pdwObjectList[0] : 0;
+		ShowProxyName(m_dwProxyNode, IDC_EDIT_PROXY);
+   }
+}
 
-         m_dwProxyNode = dlg.m_pdwObjectList[0];
-         pNode = NXCFindObjectById(g_hSession, m_dwProxyNode);
-         if (pNode != NULL)
-         {
-            SetDlgItemText(IDC_EDIT_PROXY, pNode->szName);
-         }
-         else
-         {
-            SetDlgItemText(IDC_EDIT_PROXY, _T("<invalid>"));
-         }
+
+//
+// Handler for SNMP proxy node selection button
+//
+
+void CCreateNodeDlg::OnSelectSnmpproxy() 
+{
+   CObjectSelDlg dlg;
+
+   dlg.m_dwAllowedClasses = SCL_NODE;
+   dlg.m_bSingleSelection = TRUE;
+   dlg.m_bAllowEmptySelection = TRUE;
+   if (dlg.DoModal() == IDOK)
+   {
+		m_dwSNMPProxy = (dlg.m_dwNumObjects != 0) ? dlg.m_pdwObjectList[0] : 0;
+		ShowProxyName(m_dwSNMPProxy, IDC_EDIT_SNMPPROXY);
+   }
+}
+
+
+//
+// Show name of proxy node in edit control
+//
+
+void CCreateNodeDlg::ShowProxyName(DWORD dwId, int nCtrl)
+{
+   if (dwId != 0)
+   {
+      NXC_OBJECT *pNode;
+
+      pNode = NXCFindObjectById(g_hSession, dwId);
+      if (pNode != NULL)
+      {
+         SetDlgItemText(nCtrl, pNode->szName);
       }
       else
       {
-         m_dwProxyNode = 0;
-         SetDlgItemText(IDC_EDIT_PROXY, _T("<none>"));
+         SetDlgItemText(nCtrl, _T("<invalid>"));
       }
+   }
+   else
+   {
+      SetDlgItemText(nCtrl, _T("<none>"));
    }
 }

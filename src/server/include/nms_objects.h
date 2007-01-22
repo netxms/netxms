@@ -600,7 +600,7 @@ protected:
 
 public:
    Node();
-   Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwZone);
+   Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DWORD dwZone);
    virtual ~Node();
 
    virtual int Type(void) { return OBJECT_NODE; }

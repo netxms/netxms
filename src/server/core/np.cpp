@@ -136,7 +136,8 @@ static NXSL_DiscoveryClass m_nxslDiscoveryClass;
 //
 
 NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
-                    TCHAR *pszName, DWORD dwProxyNode, Cluster *pCluster)
+                    TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy,
+						  Cluster *pCluster)
 {
    Node *pNode;
    char szIpAddr1[32], szIpAddr2[32];
@@ -159,7 +160,7 @@ NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
       dwFlags |= NF_DISABLE_SNMP;
    if (dwCreationFlags & NXC_NCF_DISABLE_NXCP)
       dwFlags |= NF_DISABLE_NXCP;
-   pNode = new Node(dwIpAddr, dwFlags, dwProxyNode, 0);
+   pNode = new Node(dwIpAddr, dwFlags, dwProxyNode, dwSNMPProxy, 0);
    NetObjInsert(pNode, TRUE);
    if (pszName != NULL)
       pNode->SetName(pszName);
@@ -411,7 +412,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
          break;   // Shutdown indicator received
 
       if (AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask))
-         PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, NULL, 0, NULL);
+         PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, NULL, 0, 0, NULL);
       free(pInfo);
    }
    DbgPrintf(AF_DEBUG_DISCOVERY, "Node poller thread terminated");

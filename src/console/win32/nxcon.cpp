@@ -2160,6 +2160,7 @@ void CConsoleApp::CreateNode(DWORD dwParent)
       ci.cs.node.dwIpAddr = dlg.m_dwIpAddr;
       ci.cs.node.dwNetMask = 0;
       ci.cs.node.dwProxyNode = dlg.m_dwProxyNode;
+		ci.cs.node.dwSNMPProxy = dlg.m_dwSNMPProxy;
       ci.cs.node.dwCreationFlags = 0;
       if (dlg.m_bCreateUnmanaged)
          ci.cs.node.dwCreationFlags |= NXC_NCF_CREATE_UNMANAGED;

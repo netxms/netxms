@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.253 2007-01-14 00:11:29 victor Exp $ */
+/* $Id: nxclapi.h,v 1.254 2007-01-22 10:19:11 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -1255,6 +1255,7 @@ typedef struct
          DWORD dwNetMask;
          DWORD dwCreationFlags;
          DWORD dwProxyNode;
+			DWORD dwSNMPProxy;
       } node;
       struct
       {
