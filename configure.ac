@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.234 2007-01-19 21:09:06 victor Exp $
+# $Id: configure.ac,v 1.235 2007-01-23 22:42:52 alk Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -91,6 +91,11 @@ AC_ARG_WITH(nxhttpd,
 [AS_HELP_STRING(--with-nxhttpd,build web interface)],
 [
 	COMPONENTS="$COMPONENTS nxhttpd"
+
+	AC_CHECK_HEADER(gd.h,,AC_MSG_ERROR([*** GD support not installed - please install first ***]))
+	AC_CHECK_LIB(gd, gdImageCreate, [], [
+		AC_MSG_ERROR(libgd is required for web interface)
+	])
 ])
 
 AC_ARG_WITH(mdebug,
@@ -1135,12 +1140,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/odbcquery/Makefile
 	src/nxhttpd/Makefile
-	src/nxhttpd/static/Makefile
-	src/nxhttpd/static/images/Makefile
-	src/nxhttpd/libtpt/Makefile
-	src/nxhttpd/libtpt/include/Makefile
-	src/nxhttpd/libtpt/include/libtpt/Makefile
-	src/nxhttpd/libtpt/source/Makefile
+	src/nxhttpd/templates/Makefile
 	tools/Makefile
 ])
 
