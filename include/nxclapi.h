@@ -1,8 +1,8 @@
-/* $Id: nxclapi.h,v 1.254 2007-01-22 10:19:11 victor Exp $ */
+/* $Id: nxclapi.h,v 1.255 2007-01-23 08:29:39 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
-** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1663,6 +1663,8 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateObjectComments(NXC_SESSION hSession,
 BOOL LIBNXCL_EXPORTABLE NXCIsParent(NXC_SESSION hSession, DWORD dwParent, DWORD dwChild);
 DWORD LIBNXCL_EXPORTABLE NXCGetDCIEventsList(NXC_SESSION hSession, DWORD dwObjectId,
                                              DWORD **ppdwList, DWORD *pdwListSize);
+DWORD LIBNXCL_EXPORTABLE NXCGetDCIInfo(NXC_SESSION hSession, DWORD dwNodeId,
+													DWORD dwItemId, NXC_DCI *pInfo);
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_SESSION hSession, NXC_CC_LIST **ppList);
 void LIBNXCL_EXPORTABLE NXCDestroyCCList(NXC_CC_LIST *pList);

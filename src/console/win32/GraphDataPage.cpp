@@ -54,9 +54,6 @@ END_MESSAGE_MAP()
 BOOL CGraphDataPage::OnInitDialog() 
 {
    DWORD i;
-   int iItem;
-   TCHAR szBuffer[256];
-   NXC_OBJECT *pObject;
 
 	CPropertyPage::OnInitDialog();
 
@@ -71,17 +68,7 @@ BOOL CGraphDataPage::OnInitDialog()
    // Add items to list control
    for(i = 0; i < m_dwNumItems; i++)
    {
-      _stprintf(szBuffer, _T("%d"), i + 1);
-      iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
-      m_wndListCtrl.SetItemData(iItem, i);
-      pObject = NXCFindObjectById(g_hSession, m_ppItems[i]->m_dwNodeId);
-      if (pObject != NULL)
-         m_wndListCtrl.SetItemText(iItem, 1, pObject->szName);
-      else
-         m_wndListCtrl.SetItemText(iItem, 1, _T("<unknown>"));
-      m_wndListCtrl.SetItemText(iItem, 2, g_pszItemOrigin[m_ppItems[i]->m_iSource]);
-      m_wndListCtrl.SetItemText(iItem, 3, m_ppItems[i]->m_pszParameter);
-      m_wndListCtrl.SetItemText(iItem, 4, m_ppItems[i]->m_pszDescription);
+		AddListItem(i);
    }
 	
 	return TRUE;
@@ -129,11 +116,46 @@ void CGraphDataPage::OnButtonDelete()
 void CGraphDataPage::OnButtonAdd() 
 {
 	CAddDCIDlg dlg;
+	DWORD dwResult;
+	NXC_DCI dci;
 
-	if (dlg.DoModal())
+	if (dlg.DoModal() == IDOK)
 	{
-		m_ppItems[m_dwNumItems] = new DCIInfo;
-		m_ppItems[m_dwNumItems]->m_dwNodeId = dlg.m_dwNodeId;
-		m_ppItems[m_dwNumItems]->m_dwItemId = dlg.m_dwItemId;
+		dwResult = DoRequestArg4(NXCGetDCIInfo, g_hSession, (void *)dlg.m_dwNodeId,
+		                         (void *)dlg.m_dwItemId, &dci, _T("Retrieving DCI information..."));
+		if (dwResult == RCC_SUCCESS)
+		{
+			m_ppItems[m_dwNumItems] = new DCIInfo(dlg.m_dwNodeId, &dci);
+			AddListItem(m_dwNumItems);
+			m_dwNumItems++;
+		}
+		else
+		{
+			theApp.ErrorBox(dwResult, _T("Cannot get detailed DCI information: %s"));
+		}
 	}
+}
+
+
+//
+// Add item to list control
+//
+
+void CGraphDataPage::AddListItem(DWORD dwIndex)
+{
+   int iItem;
+   TCHAR szBuffer[256];
+   NXC_OBJECT *pObject;
+
+   _stprintf(szBuffer, _T("%d"), dwIndex + 1);
+   iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
+   m_wndListCtrl.SetItemData(iItem, dwIndex);
+   pObject = NXCFindObjectById(g_hSession, m_ppItems[dwIndex]->m_dwNodeId);
+   if (pObject != NULL)
+      m_wndListCtrl.SetItemText(iItem, 1, pObject->szName);
+   else
+      m_wndListCtrl.SetItemText(iItem, 1, _T("<unknown>"));
+   m_wndListCtrl.SetItemText(iItem, 2, g_pszItemOrigin[m_ppItems[dwIndex]->m_iSource]);
+   m_wndListCtrl.SetItemText(iItem, 3, m_ppItems[dwIndex]->m_pszParameter);
+   m_wndListCtrl.SetItemText(iItem, 4, m_ppItems[dwIndex]->m_pszDescription);
 }

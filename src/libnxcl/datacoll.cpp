@@ -777,8 +777,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIInfo(NXC_SESSION hSession, DWORD dwNodeId,
 
    msg.SetCode(CMD_GET_DCI_INFO);
    msg.SetId(dwRqId);
-   msg.SetVariable(VID_NODE_ID, dwNodeId);
-   msg.SetVariable(VID_ITEM_ID, dwItemId);
+   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+   msg.SetVariable(VID_DCI_ID, dwItemId);
 
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
@@ -788,10 +788,14 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIInfo(NXC_SESSION hSession, DWORD dwNodeId,
       dwResult = pResponse->GetVariableLong(VID_RCC);
       if (dwResult == RCC_SUCCESS)
       {
+			memset(pInfo, 0, sizeof(NXC_DCI));
 			pInfo->dwId= dwItemId;
 			pInfo->dwResourceId = pResponse->GetVariableLong(VID_RESOURCE_ID);
 			pInfo->dwTemplateId = pResponse->GetVariableLong(VID_TEMPLATE_ID);
-			pInfo->iDataType = pResponse->GetVariableShort(VID_DATA_TYPE);
+			pInfo->iDataType = (BYTE)pResponse->GetVariableShort(VID_DCI_DATA_TYPE);
+			pInfo->iSource = (BYTE)pResponse->GetVariableShort(VID_DCI_SOURCE_TYPE);
+			pResponse->GetVariableStr(VID_NAME, pInfo->szName, MAX_ITEM_NAME);
+			pResponse->GetVariableStr(VID_DESCRIPTION, pInfo->szDescription, MAX_DB_STRING);
       }
       delete pResponse;
    }

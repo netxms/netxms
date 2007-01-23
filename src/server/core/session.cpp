@@ -1,7 +1,7 @@
-/* $Id: session.cpp,v 1.260 2007-01-22 10:19:13 victor Exp $ */
+/* $Id: session.cpp,v 1.261 2007-01-23 08:29:40 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -984,6 +984,15 @@ void ClientSession::ProcessingThread(void)
          case CMD_RESOLVE_DCI_NAMES:
             ResolveDCINames(pMsg);
             break;
+			case CMD_GET_DCI_INFO:
+				SendDCIInfo(pMsg);
+				break;
+         case CMD_GET_DCI_EVENTS_LIST:
+            SendDCIEventList(pMsg);
+            break;
+         case CMD_PUSH_DCI_DATA:
+            PushDCIData(pMsg);
+            break;
          case CMD_GET_AGENT_CFG_LIST:
             SendAgentCfgList(pMsg->GetId());
             break;
@@ -1005,9 +1014,6 @@ void ClientSession::ProcessingThread(void)
          case CMD_UPDATE_OBJECT_COMMENTS:
             UpdateObjectComments(pMsg);
             break;
-         case CMD_PUSH_DCI_DATA:
-            PushDCIData(pMsg);
-            break;
          case CMD_GET_ADDR_LIST:
             GetAddrList(pMsg);
             break;
@@ -1016,9 +1022,6 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_RESET_COMPONENT:
             ResetComponent(pMsg);
-            break;
-         case CMD_GET_DCI_EVENTS_LIST:
-            SendDCIEventList(pMsg);
             break;
          case CMD_CREATE_MGMT_PACK:
             CreateManagementPack(pMsg);
@@ -8278,6 +8281,63 @@ void ClientSession::InstallManagementPack(CSCPMessage *pRequest)
    else
    {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   SendMessage(&msg);
+}
+
+
+//
+// Send basic DCI info to client
+//
+
+void ClientSession::SendDCIInfo(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+	DCItem *pItem;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         if ((pObject->Type() == OBJECT_NODE) ||
+             (pObject->Type() == OBJECT_CLUSTER) ||
+             (pObject->Type() == OBJECT_TEMPLATE))
+         {
+				pItem = ((Template *)pObject)->GetItemById(pRequest->GetVariableLong(VID_DCI_ID));
+				if (pItem != NULL)
+				{
+					msg.SetVariable(VID_TEMPLATE_ID, pItem->TemplateId());
+					msg.SetVariable(VID_RESOURCE_ID, pItem->ResourceId());
+					msg.SetVariable(VID_DCI_DATA_TYPE, (WORD)pItem->DataType());
+					msg.SetVariable(VID_DCI_SOURCE_TYPE, (WORD)pItem->DataSource());
+					msg.SetVariable(VID_NAME, (TCHAR *)pItem->Name());
+					msg.SetVariable(VID_DESCRIPTION, (TCHAR *)pItem->Description());
+	            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				}
+				else
+				{
+			      msg.SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
+				}
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
    SendMessage(&msg);

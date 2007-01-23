@@ -38,6 +38,7 @@ public:
 
 // Implementation
 protected:
+	void AddListItem(DWORD dwIndex);
 	// Generated message map functions
 	//{{AFX_MSG(CGraphDataPage)
 	virtual BOOL OnInitDialog();

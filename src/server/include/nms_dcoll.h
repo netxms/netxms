@@ -221,6 +221,7 @@ public:
    Template *RelatedNode(void) { return m_pNode; }
    DWORD TemplateId(void) { return m_dwTemplateId; }
    DWORD TemplateItemId(void) { return m_dwTemplateItemId; }
+	DWORD ResourceId(void) { return m_dwResourceId; }
 
    BOOL ReadyForPolling(time_t currTime);
    void SetLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }

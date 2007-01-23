@@ -475,6 +475,7 @@ private:
    void SetAddrList(CSCPMessage *pRequest);
    void ResetComponent(CSCPMessage *pRequest);
    void SendDCIEventList(CSCPMessage *pRequest);
+	void SendDCIInfo(CSCPMessage *pRequest);
    void CreateManagementPack(CSCPMessage *pRequest);
    void InstallManagementPack(CSCPMessage *pRequest);
 
