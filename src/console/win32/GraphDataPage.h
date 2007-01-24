@@ -17,6 +17,7 @@ class CGraphDataPage : public CPropertyPage
 
 // Construction
 public:
+	int CompareListItems(int nItem1, int nItem2);
 	DWORD m_dwNumItems;
    DCIInfo *m_ppItems[MAX_GRAPH_ITEMS];
 	CGraphDataPage();
@@ -38,12 +39,19 @@ public:
 
 // Implementation
 protected:
+	int m_nSortDir;
+	int m_nSortMode;
+	CImageList m_imageList;
 	void AddListItem(DWORD dwIndex);
 	// Generated message map functions
 	//{{AFX_MSG(CGraphDataPage)
 	virtual BOOL OnInitDialog();
 	afx_msg void OnButtonDelete();
 	afx_msg void OnButtonAdd();
+	afx_msg void OnColumnclickListDci(LPNMHDR pNMHDR, LRESULT* pResult);
+	afx_msg void OnItemchangedListDci(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnButtonDown();
+	afx_msg void OnButtonUp();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

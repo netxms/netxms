@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.2.15-hf1
-AppVersion=0.2.15-hf1
+AppVerName=NetXMS 0.2.16-rc3
+AppVersion=0.2.16-rc3
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.2.15-hf1
+OutputBaseFilename=netxms-0.2.16-rc3
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -95,12 +95,12 @@ Source: "nxcon.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Compon
 Source: "nxav.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "nxnotify.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 ; Web server files
-Source: "..\..\nxhttpd\Release\nxhttpd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv
-Source: "..\..\nxhttpd\static\*.xsl"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
-Source: "..\..\nxhttpd\static\*.js"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
-Source: "..\..\nxhttpd\static\screen.css"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
-Source: "..\..\nxhttpd\static\images\*.png"; DestDir: "{app}\var\www\images"; Flags: ignoreversion; Components: websrv
-Source: "..\..\nxhttpd\static\images\*.jpg"; DestDir: "{app}\var\www\images"; Flags: ignoreversion; Components: websrv
+;Source: "..\..\nxhttpd\Release\nxhttpd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv
+;Source: "..\..\nxhttpd\static\*.xsl"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
+;Source: "..\..\nxhttpd\static\*.js"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
+;Source: "..\..\nxhttpd\static\screen.css"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
+;Source: "..\..\nxhttpd\static\images\*.png"; DestDir: "{app}\var\www\images"; Flags: ignoreversion; Components: websrv
+;Source: "..\..\nxhttpd\static\images\*.jpg"; DestDir: "{app}\var\www\images"; Flags: ignoreversion; Components: websrv
 ; Third party files
 Source: "Files\mfc42.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\mfc42u.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console

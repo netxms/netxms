@@ -43,6 +43,7 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnItemchangedListNodes(NMHDR* pNMHDR, LRESULT* pResult);
 	virtual void OnOK();
+	afx_msg void OnDblclkListDci(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -144,6 +144,7 @@ contrib/startup/redhat/netxmsd -text
 contrib/startup/redhat/nxagentd -text
 doc/Makefile.am -text
 doc/internal/Makefile.am -text
+doc/internal/build.w64 -text
 doc/internal/coding_style.txt -text
 doc/internal/db_format_change.txt -text
 doc/internal/event_code_ranges.txt -text

@@ -36,6 +36,7 @@ void CAddDCIDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CAddDCIDlg, CDialog)
 	//{{AFX_MSG_MAP(CAddDCIDlg)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_NODES, OnItemchangedListNodes)
+	ON_NOTIFY(NM_DBLCLK, IDC_LIST_DCI, OnDblclkListDci)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -58,7 +59,7 @@ BOOL CAddDCIDlg::OnInitDialog()
    m_wndListNodes.SetImageList(&m_imageList, LVSIL_SMALL);
    m_wndListNodes.GetClientRect(&rect);
    m_wndListNodes.InsertColumn(0, _T("Name"), LVCFMT_LEFT, rect.right - GetSystemMetrics(SM_CXVSCROLL));
-   m_wndListNodes.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+   m_wndListNodes.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
 
    // Fill in node list
    NXCLockObjectIndex(g_hSession);
@@ -76,7 +77,7 @@ BOOL CAddDCIDlg::OnInitDialog()
    // Setup DCI list
    m_wndListDCI.GetClientRect(&rect);
    m_wndListDCI.InsertColumn(0, _T("Parameter"), LVCFMT_LEFT, rect.right - GetSystemMetrics(SM_CXVSCROLL));
-   m_wndListDCI.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+   m_wndListDCI.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
 	
 	return TRUE;
 }
@@ -142,4 +143,16 @@ void CAddDCIDlg::OnOK()
    }
    MessageBox(_T("You should select data collection item before pressing OK"),
               _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
+}
+
+
+//
+// Handler for double click in DCI list
+//
+
+void CAddDCIDlg::OnDblclkListDci(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+	if (m_wndListDCI.GetSelectedCount() > 0)
+		PostMessage(WM_COMMAND, IDOK, 0);
+	*pResult = 0;
 }

@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -74,6 +74,46 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
       bResult = SQLQuery(szQuery);
    }
    return bResult;
+}
+
+
+//
+// Upgrade from V57 to V58
+//
+
+static BOOL H_UpgradeFromV57(void)
+{
+   static TCHAR m_szBatch[] =
+		_T("ALTER TABLE object_properties ADD is_system integer\n")
+		_T("UPDATE object_properties SET is_system=0\n")
+      _T("<END>");
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!CreateTable(_T("CREATE TABLE graphs (")
+	                 _T("graph_id integer not null,")
+	                 _T("owner_id integer not null,")
+	                 _T("name varchar(255) not null,")
+	                 _T("config $SQL:TEXT not null,")
+	                 _T("PRIMARY KEY(graph_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!CreateTable(_T("CREATE TABLE graph_acl (")
+	                 _T("graph_id integer not null,")
+	                 _T("user_id integer not null,")
+	                 _T("user_rights integer not null,")
+	                 _T("PRIMARY KEY(graph_id,user_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='58' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
 }
 
 
@@ -2552,6 +2592,7 @@ static struct
    { 54, H_UpgradeFromV54 },
    { 55, H_UpgradeFromV55 },
    { 56, H_UpgradeFromV56 },
+   { 57, H_UpgradeFromV57 },
    { 0, NULL }
 };
 

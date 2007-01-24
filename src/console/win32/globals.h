@@ -246,6 +246,7 @@ public:
    // Methods
 public:
    DCIInfo();
+   DCIInfo(DCIInfo *pSrc);
    DCIInfo(DWORD dwNodeId, NXC_DCI *pItem);
    ~DCIInfo();
 };

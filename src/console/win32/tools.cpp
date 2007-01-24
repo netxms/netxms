@@ -524,6 +524,16 @@ DCIInfo::DCIInfo()
    m_pszDescription = NULL;
 }
 
+DCIInfo::DCIInfo(DCIInfo *pSrc)
+{
+   m_dwNodeId = pSrc->m_dwNodeId;
+   m_dwItemId = pSrc->m_dwItemId;
+   m_iSource = pSrc->m_iSource;
+   m_iDataType = pSrc->m_iDataType;
+   m_pszParameter = _tcsdup(pSrc->m_pszParameter);
+   m_pszDescription = _tcsdup(pSrc->m_pszDescription);
+}
+
 DCIInfo::DCIInfo(DWORD dwNodeId, NXC_DCI *pItem)
 {
    m_dwNodeId = dwNodeId;

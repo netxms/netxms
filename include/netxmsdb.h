@@ -1,7 +1,7 @@
-/* $Id: netxmsdb.h,v 1.59 2007-01-14 00:11:29 victor Exp $ */
+/* $Id: netxmsdb.h,v 1.60 2007-01-24 08:26:16 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,6 +24,6 @@
 #ifndef _netxmsdb_h
 #define _netxmsdb_h
 
-#define DB_FORMAT_VERSION	57
+#define DB_FORMAT_VERSION	58
 
 #endif

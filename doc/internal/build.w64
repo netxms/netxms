@@ -1,0 +1,57 @@
+Building NetXMS for 64-bit Windows
+
+Configuring Visual Studio 6 for x64:
+
+Out of the box Visual Studio 6 (let's abbreviate it as VS6) wants to load its
+own Win32 32-bit toolchain. You can easily configure command-line options to
+launch it using the proper AMD64 64-bit toolchain, using the /USEENV option to
+select a specific user environment that's been predefined using a batch file
+that's came with the Microsoft Windows platform SDK. That batch file sets PATH,
+INCLUDE and LIB environment variables to point to the correct compilers,
+libraries and so-on.
+To tell VS6 to load up the 64-bit toolchain, execute the statements
+
+call "C:\Program Files\SDK\SetEnv.Bat" /AMD64 /RETAIL
+start "" "C:\Program Files\Microsoft Visual Studio\Common\MSDev98\Bin\MSDEV.EXE" /useenv
+
+To resume working with the 32-bit toolchain, quit VS6 and then use the following statements to relaunch the IDE:
+
+call "C:\Program Files\Microsoft Visual Studio\VC98\Bin\VCVARS32.BAT"
+start "" "C:\Program Files\Microsoft Visual Studio\Common\MSDev98\Bin\MSDEV.EXE" /useenv
+
+Once you've launched VS6 with the proper environment, you'll need to build the
+right type of release and debug project configurations for the AMD64 platform.
+Here are the steps:
+Step 1: Select the Build menu, select Configurations, then click Add.
+Step 2: In the "Configuration" text field, add a name, for example
+        "Release AMD64" or "Debug AMD64," and choose from the list "Copy 
+        settings from" the corresponding configuration for the Win32 platform,
+        such as "Win32 Release" and "Win32 Debug."
+Step 3: Repeat step 2 for the debug configuration and any other configuration
+        in the project, so that for each Win32 configuration there is a
+        corresponding one for the AMD64 platform. Figure 2 shows what the
+        configurations will look like.
+You may also need to set other options for the AMD64 project. For each
+sub-project, select the Project menu, then select the Setting option:
+In all AMD64 configurations, under the General tab, change the output
+directories in order to avoid confusing the environment by mixing AMD64 and
+Win32 object files. 
+In all AMD64 configurations, under the Link tab, append /machine:AMD64 to the
+options list. VS6 won't let you remove the /machine:I386 option, but as long as
+/machine:AMD64 comes after it, everything is fine. 
+In all AMD64 configurations, under the C/C++ tab, in the General category, make
+sure that if any debug info is enabled, it is not "Program Database for Edit
+and Continue." 
+In the AMD64 debug configuration, under the C/C++ tab, add /Wp64 to the options
+list to help to make the source code 64-bit compliant.
+Now that VS6 is configured properly.
+
+
+For Visual Studio 2005:
+
+You should have 64-bit OpenSSL DLLs, with correct manifest file embedded.
+To embed manifest file produced by compiler into DLLs, use the following
+commands:
+
+mt.exe -manifest libeay32.dll.manifest -outputresource:libeay32.dll;2
+mt.exe -manifest ssleay32.dll.manifest -outputresource:ssleay32.dll;2

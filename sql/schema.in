@@ -109,6 +109,7 @@ CREATE TABLE object_properties
 	name varchar(63) not null,
 	status integer not null,
 	is_deleted integer not null,
+	is_system integer not null,
 	image_id integer,
 	last_modified integer not null,
 	inherit_access_rights integer not null,
@@ -1040,3 +1041,30 @@ CREATE TABLE address_lists
 ) TABLE_TYPE;
 
 CREATE INDEX idx_address_lists_list_type ON address_lists(list_type);
+
+
+/*
+** Graphs
+*/
+
+CREATE TABLE graphs
+(
+	graph_id integer not null,
+	owner_id integer not null,
+	name varchar(255) not null,
+	config SQL_TEXT not null,
+	PRIMARY KEY(graph_id)
+) TABLE_TYPE;
+
+
+/*
+** Graph access lists
+*/
+
+CREATE TABLE graph_acl
+(
+	graph_id integer not null,
+	user_id integer not null,
+	user_rights integer not null,
+	PRIMARY KEY(graph_id,user_id)
+) TABLE_TYPE;

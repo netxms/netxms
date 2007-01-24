@@ -197,6 +197,10 @@ SOURCE=..\..\include\dbdrv.h
 # End Source File
 # Begin Source File
 
+SOURCE="..\..\..\..\include\netxms-version.h"
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\include\netxmsdb.h
 # End Source File
 # Begin Source File
