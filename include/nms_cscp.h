@@ -712,6 +712,7 @@ typedef struct
 #define VID_PORT							((DWORD)268)
 #define VID_PDU							((DWORD)269)
 #define VID_PDU_SIZE						((DWORD)270)
+#define VID_IS_SYSTEM					((DWORD)271)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

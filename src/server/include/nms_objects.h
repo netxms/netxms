@@ -162,6 +162,7 @@ protected:
    BOOL m_bIsModified;
    BOOL m_bIsDeleted;
    BOOL m_bIsHidden;
+	BOOL m_bIsSystem;
    MUTEX m_mutexData;         // Object data access mutex
    MUTEX m_mutexRefCount;     // Reference counter access mutex
    RWLOCK m_rwlockParentList; // Lock for parent list
@@ -230,6 +231,7 @@ public:
    BOOL IsDeleted(void) { return m_bIsDeleted; }
    BOOL IsOrphaned(void) { return m_dwParentCount == 0 ? TRUE : FALSE; }
    BOOL IsEmpty(void) { return m_dwChildCount == 0 ? TRUE : FALSE; }
+	BOOL IsSystem(void) { return m_bIsSystem; }
 
    DWORD RefCount(void);
    void IncRefCount(void);

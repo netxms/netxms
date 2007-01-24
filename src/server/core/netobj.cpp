@@ -43,6 +43,7 @@ NetObj::NetObj()
    m_bIsModified = FALSE;
    m_bIsDeleted = FALSE;
    m_bIsHidden = FALSE;
+	m_bIsSystem = FALSE;
    m_dwIpAddr = 0;
    m_dwChildCount = 0;
    m_pChildList = NULL;
@@ -138,7 +139,7 @@ BOOL NetObj::LoadCommonProperties(void)
                             _T("inherit_access_rights,last_modified,status_calc_alg,")
                             _T("status_prop_alg,status_fixed_val,status_shift,")
                             _T("status_translation,status_single_threshold,")
-                            _T("status_thresholds,comments FROM object_properties ")
+                            _T("status_thresholds,comments,is_system FROM object_properties ")
                             _T("WHERE object_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
@@ -161,6 +162,7 @@ BOOL NetObj::LoadCommonProperties(void)
          safe_free(m_pszComments);
          m_pszComments = DBGetField(hResult, 0, 13, NULL, 0);
          DecodeSQLString(m_pszComments);
+         m_bIsSystem = DBGetFieldLong(hResult, 0, 14) ? TRUE : FALSE;
          bResult = TRUE;
       }
       DBFreeResult(hResult);
@@ -201,12 +203,12 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
                     _T("last_modified=%d,status_calc_alg=%d,status_prop_alg=%d,")
                     _T("status_fixed_val=%d,status_shift=%d,status_translation='%s',")
                     _T("status_single_threshold=%d,status_thresholds='%s',")
-                    _T("comments='%s' WHERE object_id=%d"),
+                    _T("comments='%s',is_system=%d WHERE object_id=%d"),
                     m_szName, m_iStatus, m_bIsDeleted, m_dwImageId,
                     m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
                     m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,
                     szTranslation, m_iStatusSingleThreshold, szThresholds,
-                    pszEscComments, m_dwId);
+                    pszEscComments, m_bIsSystem, m_dwId);
       }
       else
       {
@@ -214,13 +216,13 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
                     _T("INSERT INTO object_properties (object_id,name,status,is_deleted,")
                     _T("image_id,inherit_access_rights,last_modified,status_calc_alg,")
                     _T("status_prop_alg,status_fixed_val,status_shift,status_translation,")
-                    _T("status_single_threshold,status_thresholds,comments) ")
-                    _T("VALUES (%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,'%s','%s')"),
+                    _T("status_single_threshold,status_thresholds,comments,is_system) ")
+                    _T("VALUES (%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,%d,'%s',%d,'%s','%s',%d)"),
                     m_dwId, m_szName, m_iStatus, m_bIsDeleted, m_dwImageId,
                     m_bInheritAccessRights, m_dwTimeStamp, m_iStatusCalcAlg,
                     m_iStatusPropAlg, m_iFixedStatus, m_iStatusShift,
                     szTranslation, m_iStatusSingleThreshold, szThresholds,
-                    pszEscComments);
+                    pszEscComments, m_bIsSystem);
       }
       free(pszEscComments);
       DBFreeResult(hResult);
@@ -671,6 +673,7 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_PARENT_CNT, m_dwParentCount);
    pMsg->SetVariable(VID_CHILD_CNT, m_dwChildCount);
    pMsg->SetVariable(VID_IS_DELETED, (WORD)m_bIsDeleted);
+   pMsg->SetVariable(VID_IS_SYSTEM, (WORD)m_bIsSystem);
    for(i = 0, dwId = VID_PARENT_ID_BASE; i < m_dwParentCount; i++, dwId++)
       pMsg->SetVariable(dwId, m_pParentList[i]->Id());
    for(i = 0, dwId = VID_CHILD_ID_BASE; i < m_dwChildCount; i++, dwId++)
@@ -799,6 +802,10 @@ DWORD NetObj::GetUserRights(DWORD dwUserId)
    // Admin always has all rights to any object
    if (dwUserId == 0)
       return 0xFFFFFFFF;
+
+	// Non-admin users have no rights to system objects
+	if (m_bIsSystem)
+		return 0;
 
    LockACL();
 

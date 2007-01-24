@@ -1,4 +1,4 @@
-/* $Id: serial.cpp,v 1.18 2007-01-24 00:54:17 alk Exp $ */
+/* $Id: serial.cpp,v 1.19 2007-01-24 21:34:55 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -379,11 +379,11 @@ int Serial::ReadAll(char *pBuff, int nSize)
 		return -1;
 	
 #ifdef _WIN32
-	DWORD nDone;
+	DWORD dwBytes;
 
-	if (ReadFile(m_hPort, pBuff + nOffset, nSize - nOffset, &nDone, NULL) != 0)
+	if (ReadFile(m_hPort, pBuff, nSize, &dwBytes, NULL))
 	{
-		nRet = (int)nDone;
+		nRet = (int)dwBytes;
 	}
 	else
 	{
@@ -505,6 +505,9 @@ void Serial::Flush(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2007/01/24 00:54:17  alk
+Serial::ReadAll() implementation
+
 Revision 1.17  2006/11/21 22:06:19  alk
 DTR/RTS issues fixed (req. for nokia gsm modem on serial port)
 
