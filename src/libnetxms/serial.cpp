@@ -1,4 +1,4 @@
-/* $Id: serial.cpp,v 1.17 2006-11-21 22:06:19 alk Exp $ */
+/* $Id: serial.cpp,v 1.18 2007-01-24 00:54:17 alk Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -366,6 +366,75 @@ int Serial::Read(char *pBuff, int nSize)
 	return nRet;
 }
 
+//
+// Read character(s) from port
+//
+
+int Serial::ReadAll(char *pBuff, int nSize)
+{
+	int nRet;
+	
+	memset(pBuff, 0, nSize);
+	if (m_hPort == INVALID_HANDLE_VALUE)
+		return -1;
+	
+#ifdef _WIN32
+	DWORD nDone;
+
+	if (ReadFile(m_hPort, pBuff + nOffset, nSize - nOffset, &nDone, NULL) != 0)
+	{
+		nRet = (int)nDone;
+	}
+	else
+	{
+		nRet = -1;
+	}
+	
+#else // UNIX
+	fd_set rdfs;
+	struct timeval tv;
+	int got, offset;
+
+	offset = 0;
+
+	while (offset < nSize)
+	{
+		FD_ZERO(&rdfs);
+		FD_SET(m_hPort, &rdfs);
+		tv.tv_sec = m_nTimeout / 10;
+		tv.tv_usec = 0;
+		nRet = select(m_hPort + 1, &rdfs, NULL, NULL, &tv);
+		if (nRet > 0)
+		{
+			got = read(m_hPort, pBuff + offset, nSize - offset);
+			if (got >= 0)
+			{
+				offset += got;
+				nRet = offset;
+			}
+			else
+			{
+				nRet = -1;
+				break;
+			}
+		}
+		else
+		{
+			if (offset == 0) // got no data
+			{
+				nRet = -1;
+			}
+			break;
+		}
+	}
+	
+#endif // _WIN32
+	
+	//if (nRet == -1)
+	//   Restart();
+	
+	return nRet;
+}
 
 //
 // Write character(s) to port
@@ -436,6 +505,9 @@ void Serial::Flush(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2006/11/21 22:06:19  alk
+DTR/RTS issues fixed (req. for nokia gsm modem on serial port)
+
 Revision 1.16  2006/11/21 22:04:07  alk
 code reformatted (mix of tab/space replaced with tabs)
 
