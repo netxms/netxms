@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.99 2007-01-11 18:56:14 victor Exp $ */
+/* $Id: nms_util.h,v 1.100 2007-01-24 00:52:28 alk Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -146,7 +146,8 @@ public:
 	bool Open(TCHAR *pszPort);
 	void Close(void);
 	void SetTimeout(int nTimeout);
-	int Read(char *pBuff, int nSize);
+	int Read(char *pBuff, int nSize); /* waits up to timeout and do single read */
+	int ReadAll(char *pBuff, int nSize); /* read until timeout or out of space */
 	bool Write(char *pBuff, int nSize);
 	void Flush(void);
 	bool Set(int nSpeed, int nDataBits, int nParity, int nStopBits);
@@ -503,6 +504,10 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.99  2007/01/11 18:56:14  victor
+- Added Process.COuntEx parameter
+- Added filtering by command line and window title to process.XXX parameters
+
 Revision 1.98  2006/12/17 10:31:37  victor
 ODBC driver made compatible with latest unixODBC
 
