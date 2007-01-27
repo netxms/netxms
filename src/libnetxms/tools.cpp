@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.58 2007-01-11 18:56:15 victor Exp $ */
+/* $Id: tools.cpp,v 1.59 2007-01-27 00:25:41 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
@@ -973,8 +973,22 @@ int LIBNETXMS_EXPORTABLE NumChars(TCHAR *pszStr, int ch)
 BOOL LIBNETXMS_EXPORTABLE RegexpMatch(TCHAR *pszStr, TCHAR *pszExpr, BOOL bMatchCase)
 {
 #ifdef UNICODE
-	/* FIXME: implement UNICODE regexps */
-	return FALSE;
+   regex_t preg;
+	char *mbStr, *mbExpr;
+   BOOL bResult = FALSE;
+
+	mbStr = MBStringFromWideString(pszStr);
+	mbExpr = MBStringFromWideString(pszExpr);
+	if (regcomp(&preg, mbExpr, bMatchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
+	{
+		if (regexec(&preg, mbStr, 0, NULL, 0) == 0) // MATCH
+			bResult = TRUE;
+		regfree(&preg);
+	}
+	free(mbStr);
+	free(mbExpr);
+
+   return bResult;
 #else
    regex_t preg;
    BOOL bResult = FALSE;

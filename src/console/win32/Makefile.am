@@ -69,6 +69,7 @@ EXTRA_DIST = \
 	EventEditor.cpp EventEditor.h \
 	EventPolicyEditor.cpp EventPolicyEditor.h \
 	EventSelDlg.cpp EventSelDlg.h \
+	ExtEditCtrl.cpp ExtEditCtrl.h \
 	globals.cpp globals.h \
 	Graph.cpp Graph.h \
 	GraphFrame.cpp GraphFrame.h \

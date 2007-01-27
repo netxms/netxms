@@ -131,16 +131,16 @@ BOOL NetObj::DeleteFromDB(void)
 BOOL NetObj::LoadCommonProperties(void)
 {
    DB_RESULT hResult;
-   TCHAR szQuery[256];
+   TCHAR szQuery[1024];
    BOOL bResult = FALSE;
 
    // Load access options
-   _sntprintf(szQuery, 256, _T("SELECT name,status,is_deleted,image_id,")
-                            _T("inherit_access_rights,last_modified,status_calc_alg,")
-                            _T("status_prop_alg,status_fixed_val,status_shift,")
-                            _T("status_translation,status_single_threshold,")
-                            _T("status_thresholds,comments,is_system FROM object_properties ")
-                            _T("WHERE object_id=%d"), m_dwId);
+   _sntprintf(szQuery, 1024, _T("SELECT name,status,is_deleted,image_id,")
+                             _T("inherit_access_rights,last_modified,status_calc_alg,")
+                             _T("status_prop_alg,status_fixed_val,status_shift,")
+                             _T("status_translation,status_single_threshold,")
+                             _T("status_thresholds,comments,is_system FROM object_properties ")
+                             _T("WHERE object_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {

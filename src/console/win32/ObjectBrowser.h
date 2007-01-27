@@ -12,6 +12,11 @@
 #define FOLLOW_OBJECT_UPDATES    ((DWORD)0x00000001)
 
 
+#define OBJECT_FIND_FIRST		0x00
+#define OBJECT_FIND_NEXT		0x01
+#define OBJECT_FIND_PREV		0x02
+
+
 //
 // Hash for tree items
 //
@@ -52,6 +57,8 @@ public:
 
 // Implementation
 protected:
+	void FindNextObjectEntry(void);
+	void OpenObject(DWORD dwObjectId);
    BOOL CurrObjectIsNode(BOOL bIncludeTemplates);
    BOOL CurrObjectIsInterface(void);
 	DWORD GetSelectedObject(void);
@@ -121,12 +128,14 @@ protected:
 	afx_msg void OnObjectUnmanage();
 	afx_msg void OnUpdateObjectUnmanage(CCmdUI* pCmdUI);
 	afx_msg void OnObjectCreateCluster();
+	afx_msg void OnObjectFind();
 	//}}AFX_MSG
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
    afx_msg void OnTreeViewGetDispInfo(LPNMTVDISPINFO lpdi, LRESULT *pResult);
    afx_msg void OnTreeViewItemExpanding(LPNMTREEVIEW lpnmt, LRESULT *pResult);
    afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
    afx_msg void OnObjectTool(UINT nID);
+   afx_msg void OnFindObject(WPARAM wParam, TCHAR *pszSearchStr);
 	DECLARE_MESSAGE_MAP()
 };
 

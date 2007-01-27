@@ -739,6 +739,8 @@ src/console/win32/EventPolicyEditor.cpp -text
 src/console/win32/EventPolicyEditor.h -text
 src/console/win32/EventSelDlg.cpp -text
 src/console/win32/EventSelDlg.h -text
+src/console/win32/ExtEditCtrl.cpp -text
+src/console/win32/ExtEditCtrl.h -text
 src/console/win32/Graph.cpp -text
 src/console/win32/Graph.h -text
 src/console/win32/GraphDataPage.cpp -text
@@ -984,6 +986,7 @@ src/console/win32/nxcon.rc -text
 src/console/win32/res/Makefile.am -text
 src/console/win32/res/Toolbar.bmp -text
 src/console/win32/res/any.bmp -text
+src/console/win32/res/close.bmp -text
 src/console/win32/res/down_arrow.bmp -text
 src/console/win32/res/none.bmp -text
 src/console/win32/res/nxcon.ico -text

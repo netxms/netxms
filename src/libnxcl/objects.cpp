@@ -503,7 +503,7 @@ NXC_OBJECT *NXCL_Session::FindObjectByName(TCHAR *pszName)
          LockObjectIndex();
 
          for(i = 0; i < m_dwNumObjects; i++)
-            if (MatchString(pszName, m_pIndexById[i].pObject->szName, FALSE))
+            if (RegexpMatch(m_pIndexById[i].pObject->szName, pszName, FALSE))
             {
                pObject = m_pIndexById[i].pObject;
                break;

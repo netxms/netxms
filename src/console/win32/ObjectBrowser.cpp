@@ -98,11 +98,13 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_UNMANAGE, OnObjectUnmanage)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_UNMANAGE, OnUpdateObjectUnmanage)
 	ON_COMMAND(ID_OBJECT_CREATE_CLUSTER, OnObjectCreateCluster)
+	ON_COMMAND(ID_OBJECT_FIND, OnObjectFind)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, AFX_IDW_PANE_FIRST, OnTreeViewSelChange)
    ON_NOTIFY(TVN_GETDISPINFO, AFX_IDW_PANE_FIRST, OnTreeViewGetDispInfo)
    ON_NOTIFY(TVN_ITEMEXPANDING, AFX_IDW_PANE_FIRST, OnTreeViewItemExpanding)
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
+   ON_MESSAGE(NXCM_FIND_OBJECT, OnFindObject)
    ON_COMMAND_RANGE(OBJTOOL_MENU_FIRST_ID, OBJTOOL_MENU_LAST_ID, OnObjectTool)
 END_MESSAGE_MAP()
 
@@ -737,19 +739,35 @@ void CObjectBrowser::OnContextMenu(CWnd* pWnd, CPoint point)
    HTREEITEM hItem;
    UINT uFlags;
    CWnd *pWndPane;
+	RECT rect;
    BOOL bMenuInserted = FALSE;
 
-   pt = point;
-   pWnd->ScreenToClient(&pt);
-   pWndPane = pWnd->ChildWindowFromPoint(pt, CWP_SKIPINVISIBLE);
-   if (pWndPane->GetDlgCtrlID() != AFX_IDW_PANE_FIRST)
-      return;
+	if (point.x >= 0)
+	{
+		pt = point;
+		pWnd->ScreenToClient(&pt);
+		pWndPane = pWnd->ChildWindowFromPoint(pt, CWP_SKIPINVISIBLE);
+		if (pWndPane->GetDlgCtrlID() != AFX_IDW_PANE_FIRST)
+			return;
 
-   pt = point;
-   pWndPane->ScreenToClient(&pt);
+		pt = point;
+		pWndPane->ScreenToClient(&pt);
 
-   hItem = m_wndTreeCtrl.HitTest(pt, &uFlags);
-   if ((hItem != NULL) && (uFlags & TVHT_ONITEM))
+		hItem = m_wndTreeCtrl.HitTest(pt, &uFlags);
+		pt = point;
+	}
+	else
+	{
+		hItem = m_wndTreeCtrl.GetSelectedItem();
+		if (hItem != NULL)
+		{
+			m_wndTreeCtrl.GetItemRect(hItem, &rect, TRUE);
+			pt.x = rect.left;
+			pt.y = rect.bottom;
+			m_wndTreeCtrl.ClientToScreen(&pt);
+		}
+	}
+   if ((hItem != NULL) && ((uFlags & TVHT_ONITEM) || (point.x < 0)))
    {
       m_wndTreeCtrl.Select(hItem, TVGN_CARET);
 
@@ -764,7 +782,7 @@ void CObjectBrowser::OnContextMenu(CWnd* pWnd, CPoint point)
          bMenuInserted = TRUE;
       }
       delete pToolsMenu;
-      pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+      pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, this, NULL);
       if (bMenuInserted)
       {
          pMenu->DeleteMenu(14, MF_BYPOSITION);
@@ -1250,4 +1268,128 @@ void CObjectBrowser::OnObjectTool(UINT nID)
 {
    if (m_pCurrentObject != NULL)
       theApp.ExecuteObjectTool(m_pCurrentObject, nID - OBJTOOL_MENU_FIRST_ID);
+}
+
+
+//
+// Open object search bar
+//
+
+void CObjectBrowser::OnObjectFind() 
+{
+	m_wndObjectView.ShowSearchBar(TRUE);
+}
+
+
+//
+// Open object in tree
+//
+
+void CObjectBrowser::OpenObject(DWORD dwObjectId)
+{
+   DWORD dwIndex;
+   NXC_OBJECT *pObject;
+
+   dwIndex = FindObjectInTree(dwObjectId);
+   if (dwIndex != INVALID_INDEX)
+   {
+      m_wndTreeCtrl.Expand(m_pTreeHash[dwIndex].phTreeItemList[0], TVE_EXPAND);
+   }
+   else
+   {
+      pObject = NXCFindObjectById(g_hSession, dwObjectId);
+      if (pObject != NULL)
+      {
+         if (pObject->dwNumParents > 0)
+         {
+            OpenObject(pObject->pdwParentList[0]);
+            dwIndex = FindObjectInTree(dwObjectId);
+            if (dwIndex != INVALID_INDEX)
+            {
+               m_wndTreeCtrl.Expand(m_pTreeHash[dwIndex].phTreeItemList[0], TVE_EXPAND);
+            }
+         }
+      }
+   }
+}
+
+
+//
+// NXCM_FIND_OBJECT message handler
+//
+
+void CObjectBrowser::OnFindObject(WPARAM wParam, TCHAR *pszSearchStr)
+{
+	NXC_OBJECT *pObject;
+   DWORD dwIndex;
+
+	if (wParam & OBJECT_FIND_NEXT)
+	{
+		FindNextObjectEntry();
+		return;
+	}
+
+   pObject = NXCFindObjectByName(g_hSession, pszSearchStr);
+   if (pObject != NULL)
+   {
+      // Object found, select it in the tree
+      dwIndex = FindObjectInTree(pObject->dwId);
+      if (dwIndex != INVALID_INDEX)
+      {
+         m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].phTreeItemList[0], TVGN_CARET);
+      }
+      else
+      {
+         if (pObject->dwNumParents > 0)
+         {
+            OpenObject(pObject->pdwParentList[0]);
+            dwIndex = FindObjectInTree(pObject->dwId);
+            if (dwIndex != INVALID_INDEX)
+            {
+               m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].phTreeItemList[0], TVGN_CARET);
+            }
+         }
+         else
+         {
+            MessageBox(_T("Object found, but it's hidden and cannot be displayed at the moment"),
+                       _T("Find"), MB_OK | MB_ICONEXCLAMATION);
+         }
+      }
+      m_wndTreeCtrl.SetFocus();
+   }
+   else
+   {
+      TCHAR szBuffer[384];
+
+      _stprintf(szBuffer, _T("Matching object for pattern \"%s\" not found"), pszSearchStr);
+      MessageBox(szBuffer, _T("Find"), MB_OK | MB_ICONSTOP);
+   }
+}
+
+
+//
+// Find next occurence of current object
+//
+
+void CObjectBrowser::FindNextObjectEntry()
+{
+	HTREEITEM hItem;
+	DWORD i, dwIndex;
+
+	hItem = m_wndTreeCtrl.GetSelectedItem();
+	if ((m_pCurrentObject == NULL) || (hItem == NULL))
+		return;
+
+	dwIndex = FindObjectInTree(m_pCurrentObject->dwId);
+   if (dwIndex != INVALID_INDEX)
+   {
+		for(i = 0; i < m_pTreeHash[dwIndex].dwNumEntries; i++)
+			if (m_pTreeHash[dwIndex].phTreeItemList[i] == hItem)
+				break;
+		i++;
+		if (i < m_pTreeHash[dwIndex].dwNumEntries)
+		{
+         m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].phTreeItemList[i], TVGN_CARET);
+		}
+	}
 }

@@ -408,6 +408,10 @@ SOURCE=.\EventSelDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ExtEditCtrl.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\globals.cpp
 # End Source File
 # Begin Source File
@@ -977,6 +981,10 @@ SOURCE=.\EventSelDlg.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ExtEditCtrl.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\nxuilib\FlatButton.h
 # End Source File
 # Begin Source File
@@ -1381,6 +1389,10 @@ SOURCE=.\res\bmp00001.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\close.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\cluster.ico
 # End Source File
 # Begin Source File
@@ -1461,6 +1473,10 @@ SOURCE=.\icons\exit.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\find.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\folder_c.ico
 # End Source File
 # Begin Source File
@@ -1526,6 +1542,10 @@ SOURCE=.\icons\network.ico
 # Begin Source File
 
 SOURCE=.\icons\netxms.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\next.ico
 # End Source File
 # Begin Source File
 

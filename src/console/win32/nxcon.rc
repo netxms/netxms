@@ -140,6 +140,8 @@ IDI_EXIT                ICON    DISCARDABLE     "icons\\exit.ico"
 IDI_TEMPLATE_ROOT       ICON    DISCARDABLE     "icons\\template_root.ico"
 IDI_CLUSTER             ICON    DISCARDABLE     "icons\\cluster.ico"
 IDI_SERVER              ICON    DISCARDABLE     "icons\\server.ico"
+IDI_NEXT                ICON    DISCARDABLE     "icons\\next.ico"
+IDI_FIND                ICON    DISCARDABLE     "icons\\find.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -150,6 +152,7 @@ IDB_UP_ARROW            BITMAP  DISCARDABLE     "res\\up_arrow.bmp"
 IDB_DOWN_ARROW          BITMAP  DISCARDABLE     "res\\down_arrow.bmp"
 IDB_ANY                 BITMAP  DISCARDABLE     "res\\any.bmp"
 IDB_NONE                BITMAP  DISCARDABLE     "res\\none.bmp"
+IDB_CLOSE               BITMAP  DISCARDABLE     "res\\close.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3915,6 +3918,8 @@ BEGIN
     IDS_CAPTION_WARNING     "Warning"
     IDS_CAPTION_INFORMATION "Information"
     IDS_DOWNLOAD_ERROR      "Error downloading file from remote host (%s)"
+    IDS_BUTTON_NEXT         "&Next"
+    IDS_BUTTON_FIND         "&Find"
 END
 
 #endif    // English (U.S.) resources

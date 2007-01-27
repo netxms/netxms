@@ -5,6 +5,7 @@
 #include "AlarmView.h"	// Added by ClassView
 #include "ObjectDepView.h"	// Added by ClassView
 #include "ClusterView.h"	// Added by ClassView
+#include "ExtEditCtrl.h"
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -40,6 +41,7 @@ public:
 
 // Implementation
 public:
+	void ShowSearchBar(BOOL bShow);
    void OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
 	void SetCurrentObject(NXC_OBJECT *pObject);
 	void Refresh(void);
@@ -47,6 +49,13 @@ public:
 
 	// Generated message map functions
 protected:
+	int m_nSearchTextOffset;
+	CImageList m_imageListSearch;
+	CToolBarCtrl m_wndSearchButtons;
+	CExtEditCtrl m_wndSearchText;
+	int m_nTitleBarOffset;
+	void AdjustView(void);
+	BOOL m_bShowSearchBar;
 	CClusterView m_wndClusterView;
 	CObjectDepView m_wndDepView;
 	CAlarmView m_wndAlarms;
@@ -64,8 +73,12 @@ protected:
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnPaint();
 	afx_msg void OnDestroy();
+	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 	//}}AFX_MSG
    afx_msg void OnTabChange(LPNMHDR lpnmh, LRESULT *pResult);
+	afx_msg void OnSearchFind();
+	afx_msg void OnSearchNext();
+	afx_msg void OnSearchClose();
 	DECLARE_MESSAGE_MAP()
 };
 

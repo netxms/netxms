@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "ObjectView.h"
+#include "ObjectBrowser.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -15,6 +16,10 @@ static char THIS_FILE[] = __FILE__;
 #define TITLE_BAR_HEIGHT      33
 #define TITLE_BAR_COLOR       RGB(0, 0, 128)
 
+#define SEARCH_BAR_HEIGHT		37
+#define SEARCH_TEXT_WIDTH		200
+#define SEARCH_BAR_X_MARGIN	5
+
 #define MAX_COMMON_TAB        0
 
 
@@ -25,6 +30,8 @@ CObjectView::CObjectView()
 {
    m_pObject = NULL;
    memset(m_pTabWnd, 0, sizeof(CWnd *) * MAX_TABS);
+	m_bShowSearchBar = FALSE;
+	m_nTitleBarOffset = 0;
 }
 
 CObjectView::~CObjectView()
@@ -39,8 +46,12 @@ BEGIN_MESSAGE_MAP(CObjectView, CWnd)
 	ON_WM_SETFOCUS()
 	ON_WM_PAINT()
 	ON_WM_DESTROY()
+	ON_WM_KEYDOWN()
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TCN_SELCHANGE, ID_TAB_CTRL, OnTabChange)
+	ON_COMMAND(ID_SEARCH_FIND, OnSearchFind)
+	ON_COMMAND(ID_SEARCH_NEXT, OnSearchNext)
+	ON_COMMAND(ID_SEARCH_CLOSE, OnSearchClose)
 END_MESSAGE_MAP()
 
 
@@ -62,22 +73,50 @@ BOOL CObjectView::PreCreateWindow(CREATESTRUCT& cs)
 int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
-   HDC hdc;
+	CDC *pdc;
    LRESULT nTemp;
+	CBitmap bm;
+	CFont *pf;
+   static TBBUTTON tbButtons[] =
+   {
+      { 0, ID_SEARCH_FIND, TBSTATE_ENABLED, TBSTYLE_BUTTON, "", 0, 0 },
+      { 1, ID_SEARCH_NEXT, TBSTATE_ENABLED, TBSTYLE_BUTTON, "", 0, 1 },
+      { 2, ID_SEARCH_CLOSE, TBSTATE_ENABLED, TBSTYLE_BUTTON, "", 0, 2 }
+	};
 
 	if (CWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
    // Create fonts
-   hdc = ::GetDC(m_hWnd);
-   m_fontHeader.CreateFont(-MulDiv(12, GetDeviceCaps(hdc, LOGPIXELSY), 72),
+	pdc = GetDC();
+   m_fontHeader.CreateFont(-MulDiv(12, GetDeviceCaps(pdc->m_hDC, LOGPIXELSY), 72),
                            0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
                            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
                            VARIABLE_PITCH | FF_DONTCARE, _T("Verdana"));
-   m_fontTabs.CreateFont(-MulDiv(8, GetDeviceCaps(hdc, LOGPIXELSY), 72),
+   m_fontTabs.CreateFont(-MulDiv(8, GetDeviceCaps(pdc->m_hDC, LOGPIXELSY), 72),
                          0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                          OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
                          VARIABLE_PITCH | FF_DONTCARE, _T("MS Sans Serif"));
+	
+	pf = pdc->SelectObject(&m_fontTabs);
+	m_nSearchTextOffset = pdc->GetTextExtent(_T("Find:"), 5).cx + SEARCH_BAR_X_MARGIN + 5;
+	pdc->SelectObject(pf);
+
+	// Create controls for search bar
+	m_wndSearchText.Create(WS_CHILD | WS_BORDER | ES_AUTOHSCROLL, rect, this, ID_EDIT_CTRL);
+	m_wndSearchText.SetFont(&m_fontTabs, FALSE);
+	m_wndSearchText.SetReturnCommand(ID_SEARCH_FIND);
+	m_wndSearchText.SetEscapeCommand(ID_SEARCH_CLOSE);
+	m_wndSearchButtons.Create(WS_CHILD | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE | TBSTYLE_FLAT | TBSTYLE_LIST, rect, this, -1);
+   m_imageListSearch.Create(16, 16, ILC_COLOR24 | ILC_MASK, 8, 1);
+	bm.LoadBitmap(IDB_CLOSE);
+   m_imageListSearch.Add(theApp.LoadIcon(IDI_FIND));
+   m_imageListSearch.Add(theApp.LoadIcon(IDI_NEXT));
+	m_imageListSearch.Add(&bm, RGB(0, 0, 0));
+	m_wndSearchButtons.SetImageList(&m_imageListSearch);
+	m_wndSearchButtons.AddStrings(L"Find\0&Next\0Close\0");
+	m_wndSearchButtons.AddButtons(sizeof(tbButtons) / sizeof(TBBUTTON), tbButtons);
+	m_wndSearchButtons.SetButtonSize(CSize(60, 22));
 
    // Create image list for tabs
    m_imageList.Create(16, 16, ILC_COLOR24 | ILC_MASK, 8, 1);
@@ -110,7 +149,7 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndTabCtrl.SetCurSel(nTemp);
    OnTabChange(NULL, &nTemp);
 
-   ::ReleaseDC(m_hWnd, hdc);
+   ReleaseDC(pdc);
 	return 0;
 }
 
@@ -121,18 +160,8 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CObjectView::OnSize(UINT nType, int cx, int cy) 
 {
-   RECT rect;
-   int nOffset;
-
 	CWnd::OnSize(nType, cx, cy);
-   m_wndTabCtrl.GetItemRect(0, &rect);
-   m_wndTabCtrl.SetWindowPos(NULL, -1, TITLE_BAR_HEIGHT, cx + 2, (rect.bottom - rect.top) + 6, SWP_NOZORDER);
-
-   nOffset = TITLE_BAR_HEIGHT + (rect.bottom - rect.top) + 6;
-   m_wndOverview.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
-   m_wndAlarms.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
-   m_wndDepView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
-   m_wndClusterView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
+	AdjustView();
 }
 
 
@@ -158,7 +187,7 @@ void CObjectView::Refresh()
    RECT rect;
 
    GetClientRect(&rect);
-   rect.bottom = TITLE_BAR_HEIGHT;
+   rect.bottom = TITLE_BAR_HEIGHT + m_nTitleBarOffset;
    InvalidateRect(&rect, FALSE);
 
    m_wndOverview.Refresh();
@@ -225,7 +254,7 @@ void CObjectView::SetCurrentObject(NXC_OBJECT *pObject)
 
    // Refresh object view
    GetClientRect(&rect);
-   rect.bottom = TITLE_BAR_HEIGHT;
+   rect.bottom = TITLE_BAR_HEIGHT + m_nTitleBarOffset;
    InvalidateRect(&rect, FALSE);
    for(i = 0; (m_pTabWnd[i] != NULL) && (i < MAX_TABS); i++)
       m_pTabWnd[i]->SendMessage(NXCM_SET_OBJECT, 0, (LPARAM)m_pObject);
@@ -238,24 +267,54 @@ void CObjectView::SetCurrentObject(NXC_OBJECT *pObject)
 
 void CObjectView::OnPaint() 
 {
-   RECT rect;
+   RECT rect, rcText;
    CFont *pOldFont;
 	CPaintDC dc(this); // device context for painting
 
    GetClientRect(&rect);
-   dc.FillSolidRect(0, 0, rect.right, TITLE_BAR_HEIGHT, TITLE_BAR_COLOR);
+
+	// Draw search box
+	if (m_bShowSearchBar)
+	{
+		dc.FillSolidRect(0, 0, rect.right, SEARCH_BAR_HEIGHT - 3, GetSysColor(COLOR_3DFACE));
+
+		//m_imageListSearch.Draw(&dc, 0, CPoint(5, 9), ILD_TRANSPARENT);
+
+      pOldFont = dc.SelectObject(&m_fontTabs);
+		rcText.left = SEARCH_BAR_X_MARGIN;
+		rcText.top = 7;
+		rcText.bottom = 27;
+		rcText.right = m_nSearchTextOffset;
+      dc.DrawText(_T("Find:"), 5, &rcText, DT_LEFT | DT_SINGLELINE | DT_VCENTER);
+      dc.SelectObject(pOldFont);
+
+		// Draw divider between search bar and header
+		rect.bottom = SEARCH_BAR_HEIGHT;
+		rect.top = rect.bottom - 1;
+		dc.FillSolidRect(&rect, GetSysColor(COLOR_WINDOWFRAME));
+		rect.bottom = SEARCH_BAR_HEIGHT - 1;
+		rect.top = rect.bottom - 3;
+		rect.left--;
+		rect.right++;
+		dc.Draw3dRect(&rect, GetSysColor(COLOR_3DHILIGHT), GetSysColor(COLOR_3DDKSHADOW));
+		InflateRect(&rect, -1, -1);
+		dc.FillSolidRect(&rect, GetSysColor(COLOR_3DFACE));
+	}
+
+	// Draw title
+   dc.FillSolidRect(0, m_nTitleBarOffset, rect.right, TITLE_BAR_HEIGHT, TITLE_BAR_COLOR);
 
    if (m_pObject != NULL)
    {
       pOldFont = dc.SelectObject(&m_fontHeader);
       dc.SetTextColor(RGB(255, 255, 255));
       dc.SetBkColor(TITLE_BAR_COLOR);
-      dc.TextOut(10, 5, m_pObject->szName);
+      dc.TextOut(10, 5 + m_nTitleBarOffset, m_pObject->szName);
       dc.SelectObject(pOldFont);
    }
 
    // Draw divider between header and tab control
-   rect.bottom = TITLE_BAR_HEIGHT;
+   rect.bottom = TITLE_BAR_HEIGHT + m_nTitleBarOffset;
    rect.top = rect.bottom - 3;
    rect.left--;
    rect.right++;
@@ -330,4 +389,114 @@ BOOL CObjectView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO
 void CObjectView::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
 {
    m_wndAlarms.OnAlarmUpdate(dwCode, pAlarm);
+}
+
+
+//
+// Show or hide search bar
+//
+
+void CObjectView::ShowSearchBar(BOOL bShow)
+{
+	RECT rect;
+
+	if ((bShow && m_bShowSearchBar) == (bShow || m_bShowSearchBar))
+	{
+		if (bShow)
+			m_wndSearchText.SetFocus();
+		return;	// Nothing to change
+	}
+
+	m_bShowSearchBar = bShow;
+	if (m_bShowSearchBar)
+	{
+		m_nTitleBarOffset = SEARCH_BAR_HEIGHT;
+		m_wndSearchText.ShowWindow(SW_SHOW);
+		m_wndSearchButtons.ShowWindow(SW_SHOW);
+		m_wndSearchText.SetFocus();
+	}
+	else
+	{
+		m_nTitleBarOffset = 0;
+		m_wndSearchText.ShowWindow(SW_HIDE);
+		m_wndSearchButtons.ShowWindow(SW_HIDE);
+	}
+	AdjustView();
+
+	GetClientRect(&rect);
+   rect.bottom = TITLE_BAR_HEIGHT + m_nTitleBarOffset;
+   InvalidateRect(&rect, FALSE);
+}
+
+
+//
+// Adjust components inside view
+//
+
+void CObjectView::AdjustView()
+{
+   RECT rect;
+   int cx, cy, nOffset;
+
+	GetClientRect(&rect);
+	cx = rect.right;
+	cy = rect.bottom;
+
+   m_wndTabCtrl.GetItemRect(0, &rect);
+   m_wndTabCtrl.SetWindowPos(NULL, -1, TITLE_BAR_HEIGHT + m_nTitleBarOffset,
+	                          cx + 2, (rect.bottom - rect.top) + 6, SWP_NOZORDER);
+
+   nOffset = TITLE_BAR_HEIGHT + (rect.bottom - rect.top) + 6 + m_nTitleBarOffset;
+   m_wndOverview.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
+   m_wndAlarms.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
+   m_wndDepView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
+   m_wndClusterView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
+
+	if (m_bShowSearchBar)
+	{
+		m_wndSearchText.SetWindowPos(NULL, m_nSearchTextOffset, 7, SEARCH_TEXT_WIDTH, 20, SWP_NOZORDER);
+		m_wndSearchButtons.SetWindowPos(NULL, m_nSearchTextOffset + SEARCH_TEXT_WIDTH + 5, 6, 200, 22, SWP_NOZORDER);
+	}
+}
+
+
+//
+// Handler for search bar "Close" button
+//
+
+void CObjectView::OnSearchClose() 
+{
+	ShowSearchBar(FALSE);
+}
+
+
+//
+// Handler for search bar "Find" button
+//
+
+void CObjectView::OnSearchFind() 
+{
+	CString strName;
+
+	m_wndSearchText.GetWindowText(strName);
+	GetParent()->GetParent()->SendMessage(NXCM_FIND_OBJECT, 0, (LPARAM)((LPCTSTR)strName));
+}
+
+
+//
+// Handler for search bar "Next" button
+//
+
+void CObjectView::OnSearchNext() 
+{
+	GetParent()->GetParent()->SendMessage(NXCM_FIND_OBJECT, OBJECT_FIND_NEXT, 0);
+}
+
+void CObjectView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) 
+{
+
+	if (nChar == VK_ESCAPE) 
+		MessageBox(L"ENTER");
+	
+	CWnd::OnKeyDown(nChar, nRepCnt, nFlags);
 }
