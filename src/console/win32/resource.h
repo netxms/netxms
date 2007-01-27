@@ -30,12 +30,13 @@
 #define IDR_MAINFRAME                   128
 #define ID_TAB_CTRL                     128
 #define IDR_NXCONTYPE                   129
-#define ID_SEARCH_FIND                  129
+#define ID_SEARCH_FIND_FIRST            129
 #define IDI_ALARM                       130
 #define IDS_NXC_INIT_FAILED             130
-#define ID_SEARCH_NEXT                  130
+#define ID_SEARCH_NEXT_INSTANCE         130
 #define IDI_SETUP                       131
 #define ID_SEARCH_CLOSE                 131
+#define ID_SEARCH_FIND_NEXT             132
 #define IDI_RULEMGR                     134
 #define IDI_EVENT                       135
 #define IDI_USER_GROUP                  136
@@ -227,6 +228,7 @@
 #define IDI_NEXT                        354
 #define IDI_FIND                        355
 #define IDB_CLOSE                       356
+#define IDI_AGAIN                       357
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -856,9 +858,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        357
+#define _APS_NEXT_RESOURCE_VALUE        358
 #define _APS_NEXT_COMMAND_VALUE         33051
 #define _APS_NEXT_CONTROL_VALUE         1442
-#define _APS_NEXT_SYMED_VALUE           132
+#define _APS_NEXT_SYMED_VALUE           133
 #endif
 #endif

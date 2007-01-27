@@ -73,11 +73,11 @@ protected:
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnPaint();
 	afx_msg void OnDestroy();
-	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 	//}}AFX_MSG
    afx_msg void OnTabChange(LPNMHDR lpnmh, LRESULT *pResult);
-	afx_msg void OnSearchFind();
-	afx_msg void OnSearchNext();
+	afx_msg void OnSearchFindFirst();
+	afx_msg void OnSearchFindNext();
+	afx_msg void OnSearchNextInstance();
 	afx_msg void OnSearchClose();
 	DECLARE_MESSAGE_MAP()
 };

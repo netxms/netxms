@@ -492,7 +492,7 @@ NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByIdNoLock(NXC_SESSION hSession, DWO
 // Find object by name
 //
 
-NXC_OBJECT *NXCL_Session::FindObjectByName(TCHAR *pszName)
+NXC_OBJECT *NXCL_Session::FindObjectByName(TCHAR *pszName, DWORD dwCurrObject)
 {
    NXC_OBJECT *pObject = NULL;
    DWORD i;
@@ -502,11 +502,39 @@ NXC_OBJECT *NXCL_Session::FindObjectByName(TCHAR *pszName)
       {
          LockObjectIndex();
 
+			if (dwCurrObject != 0)
+			{
+				pObject = FindObjectById(dwCurrObject, FALSE);
+				if (pObject != NULL)
+				{
+	            if (!RegexpMatch(pObject->szName, pszName, FALSE))
+					{
+						// Current object doesn't match, start search from the beginning
+						dwCurrObject = 0;
+					}
+				}
+				else
+				{
+					dwCurrObject = 0;
+				}
+				pObject = NULL;
+			}
+
          for(i = 0; i < m_dwNumObjects; i++)
             if (RegexpMatch(m_pIndexById[i].pObject->szName, pszName, FALSE))
             {
-               pObject = m_pIndexById[i].pObject;
-               break;
+					if (dwCurrObject == 0)
+					{
+						pObject = m_pIndexById[i].pObject;
+						break;
+					}
+					else
+					{
+						if (m_pIndexById[i].dwKey == dwCurrObject)
+						{
+							dwCurrObject = 0;	// Next match will stop the loop
+						}
+					}
             }
 
          UnlockObjectIndex();
@@ -514,9 +542,9 @@ NXC_OBJECT *NXCL_Session::FindObjectByName(TCHAR *pszName)
    return pObject;
 }
 
-NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(NXC_SESSION hSession, TCHAR *pszName)
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(NXC_SESSION hSession, TCHAR *pszName, DWORD dwCurrObject)
 {
-   return ((NXCL_Session *)hSession)->FindObjectByName(pszName);
+   return ((NXCL_Session *)hSession)->FindObjectByName(pszName, dwCurrObject);
 }
 
 

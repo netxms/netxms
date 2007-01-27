@@ -917,6 +917,7 @@ src/console/win32/icons/ZoomIn.ico -text
 src/console/win32/icons/ZoomOut.ico -text
 src/console/win32/icons/ack.ico -text
 src/console/win32/icons/active.ico -text
+src/console/win32/icons/again.ico -text
 src/console/win32/icons/alarm.ico -text
 src/console/win32/icons/back.ico -text
 src/console/win32/icons/cluster.ico -text

@@ -12,9 +12,10 @@
 #define FOLLOW_OBJECT_UPDATES    ((DWORD)0x00000001)
 
 
-#define OBJECT_FIND_FIRST		0x00
-#define OBJECT_FIND_NEXT		0x01
-#define OBJECT_FIND_PREV		0x02
+#define OBJECT_FIND_NEXT		0
+#define OBJECT_FIND_FIRST		1
+#define OBJECT_NEXT_INSTANCE	2
+#define OBJECT_PREV_INSTANCE	3
 
 
 //
@@ -129,6 +130,7 @@ protected:
 	afx_msg void OnUpdateObjectUnmanage(CCmdUI* pCmdUI);
 	afx_msg void OnObjectCreateCluster();
 	afx_msg void OnObjectFind();
+	afx_msg void OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI);
 	//}}AFX_MSG
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
    afx_msg void OnTreeViewGetDispInfo(LPNMTVDISPINFO lpdi, LRESULT *pResult);
@@ -136,6 +138,7 @@ protected:
    afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
    afx_msg void OnObjectTool(UINT nID);
    afx_msg void OnFindObject(WPARAM wParam, TCHAR *pszSearchStr);
+	afx_msg void OnActivateObjectTree(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

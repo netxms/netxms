@@ -46,11 +46,11 @@ BEGIN_MESSAGE_MAP(CObjectView, CWnd)
 	ON_WM_SETFOCUS()
 	ON_WM_PAINT()
 	ON_WM_DESTROY()
-	ON_WM_KEYDOWN()
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TCN_SELCHANGE, ID_TAB_CTRL, OnTabChange)
-	ON_COMMAND(ID_SEARCH_FIND, OnSearchFind)
-	ON_COMMAND(ID_SEARCH_NEXT, OnSearchNext)
+	ON_COMMAND(ID_SEARCH_FIND_FIRST, OnSearchFindFirst)
+	ON_COMMAND(ID_SEARCH_FIND_NEXT, OnSearchFindNext)
+	ON_COMMAND(ID_SEARCH_NEXT_INSTANCE, OnSearchNextInstance)
 	ON_COMMAND(ID_SEARCH_CLOSE, OnSearchClose)
 END_MESSAGE_MAP()
 
@@ -79,9 +79,10 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	CFont *pf;
    static TBBUTTON tbButtons[] =
    {
-      { 0, ID_SEARCH_FIND, TBSTATE_ENABLED, TBSTYLE_BUTTON, "", 0, 0 },
-      { 1, ID_SEARCH_NEXT, TBSTATE_ENABLED, TBSTYLE_BUTTON, "", 0, 1 },
-      { 2, ID_SEARCH_CLOSE, TBSTATE_ENABLED, TBSTYLE_BUTTON, "", 0, 2 }
+      { 0, ID_SEARCH_FIND_NEXT, TBSTATE_ENABLED, TBSTYLE_BUTTON, "", 0, 0 },
+      { 1, ID_SEARCH_FIND_FIRST, TBSTATE_ENABLED, TBSTYLE_BUTTON, "", 0, 1 },
+      { 2, ID_SEARCH_NEXT_INSTANCE, TBSTATE_ENABLED, TBSTYLE_BUTTON, "", 0, 2 },
+      { 3, ID_SEARCH_CLOSE, TBSTATE_ENABLED, TBSTYLE_BUTTON, "", 0, 3 }
 	};
 
 	if (CWnd::OnCreate(lpCreateStruct) == -1)
@@ -105,18 +106,19 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	// Create controls for search bar
 	m_wndSearchText.Create(WS_CHILD | WS_BORDER | ES_AUTOHSCROLL, rect, this, ID_EDIT_CTRL);
 	m_wndSearchText.SetFont(&m_fontTabs, FALSE);
-	m_wndSearchText.SetReturnCommand(ID_SEARCH_FIND);
+	m_wndSearchText.SetReturnCommand(ID_SEARCH_FIND_NEXT);
 	m_wndSearchText.SetEscapeCommand(ID_SEARCH_CLOSE);
 	m_wndSearchButtons.Create(WS_CHILD | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE | TBSTYLE_FLAT | TBSTYLE_LIST, rect, this, -1);
    m_imageListSearch.Create(16, 16, ILC_COLOR24 | ILC_MASK, 8, 1);
 	bm.LoadBitmap(IDB_CLOSE);
    m_imageListSearch.Add(theApp.LoadIcon(IDI_FIND));
+   m_imageListSearch.Add(theApp.LoadIcon(IDI_AGAIN));
    m_imageListSearch.Add(theApp.LoadIcon(IDI_NEXT));
 	m_imageListSearch.Add(&bm, RGB(0, 0, 0));
 	m_wndSearchButtons.SetImageList(&m_imageListSearch);
-	m_wndSearchButtons.AddStrings(L"Find\0&Next\0Close\0");
+	m_wndSearchButtons.AddStrings(L"Find next\0Find from top\0Next instance\0Close\0");
 	m_wndSearchButtons.AddButtons(sizeof(tbButtons) / sizeof(TBBUTTON), tbButtons);
-	m_wndSearchButtons.SetButtonSize(CSize(60, 22));
+	//m_wndSearchButtons.SetButtonSize(CSize(60, 22));
 
    // Create image list for tabs
    m_imageList.Create(16, 16, ILC_COLOR24 | ILC_MASK, 8, 1);
@@ -455,7 +457,8 @@ void CObjectView::AdjustView()
 	if (m_bShowSearchBar)
 	{
 		m_wndSearchText.SetWindowPos(NULL, m_nSearchTextOffset, 7, SEARCH_TEXT_WIDTH, 20, SWP_NOZORDER);
-		m_wndSearchButtons.SetWindowPos(NULL, m_nSearchTextOffset + SEARCH_TEXT_WIDTH + 5, 6, 200, 22, SWP_NOZORDER);
+		m_wndSearchButtons.SetWindowPos(NULL, m_nSearchTextOffset + SEARCH_TEXT_WIDTH + 5, 6,
+		                                cx - m_nSearchTextOffset - SEARCH_TEXT_WIDTH - 10, 22, SWP_NOZORDER);
 	}
 }
 
@@ -467,19 +470,35 @@ void CObjectView::AdjustView()
 void CObjectView::OnSearchClose() 
 {
 	ShowSearchBar(FALSE);
+	GetParent()->GetParent()->SendMessage(NXCM_ACTIVATE_OBJECT_TREE);
 }
 
 
 //
-// Handler for search bar "Find" button
+// Handler for search bar "Find first" button
 //
 
-void CObjectView::OnSearchFind() 
+void CObjectView::OnSearchFindFirst() 
 {
 	CString strName;
 
 	m_wndSearchText.GetWindowText(strName);
-	GetParent()->GetParent()->SendMessage(NXCM_FIND_OBJECT, 0, (LPARAM)((LPCTSTR)strName));
+	GetParent()->GetParent()->SendMessage(NXCM_FIND_OBJECT, OBJECT_FIND_FIRST, (LPARAM)((LPCTSTR)strName));
+	m_wndSearchText.SetFocus();
+}
+
+
+//
+// Handler for search bar "Find next" button
+//
+
+void CObjectView::OnSearchFindNext() 
+{
+	CString strName;
+
+	m_wndSearchText.GetWindowText(strName);
+	GetParent()->GetParent()->SendMessage(NXCM_FIND_OBJECT, OBJECT_FIND_NEXT, (LPARAM)((LPCTSTR)strName));
+	m_wndSearchText.SetFocus();
 }
 
 
@@ -487,16 +506,7 @@ void CObjectView::OnSearchFind()
 // Handler for search bar "Next" button
 //
 
-void CObjectView::OnSearchNext() 
+void CObjectView::OnSearchNextInstance() 
 {
-	GetParent()->GetParent()->SendMessage(NXCM_FIND_OBJECT, OBJECT_FIND_NEXT, 0);
-}
-
-void CObjectView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) 
-{
-
-	if (nChar == VK_ESCAPE) 
-		MessageBox(L"ENTER");
-	
-	CWnd::OnKeyDown(nChar, nRepCnt, nFlags);
+	GetParent()->GetParent()->SendMessage(NXCM_FIND_OBJECT, OBJECT_NEXT_INSTANCE, 0);
 }

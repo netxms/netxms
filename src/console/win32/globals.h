@@ -125,6 +125,7 @@ extern CConsoleApp theApp;
 #define NXCM_CHANGE_PASSWORD       (WM_USER + 123)
 #define NXCM_GRAPH_ZOOM_CHANGED    (WM_USER + 124)
 #define NXCM_SET_OBJECT            (WM_USER + 125)
+#define NXCM_ACTIVATE_OBJECT_TREE  (WM_USER + 126)
 
 
 //

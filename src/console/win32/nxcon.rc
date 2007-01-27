@@ -142,6 +142,7 @@ IDI_CLUSTER             ICON    DISCARDABLE     "icons\\cluster.ico"
 IDI_SERVER              ICON    DISCARDABLE     "icons\\server.ico"
 IDI_NEXT                ICON    DISCARDABLE     "icons\\next.ico"
 IDI_FIND                ICON    DISCARDABLE     "icons\\find.ico"
+IDI_AGAIN               ICON    DISCARDABLE     "icons\\again.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

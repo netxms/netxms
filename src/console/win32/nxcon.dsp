@@ -1369,6 +1369,10 @@ SOURCE=.\icons\active.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\again.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\alarm.ico
 # End Source File
 # Begin Source File

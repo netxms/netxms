@@ -99,12 +99,14 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_UNMANAGE, OnUpdateObjectUnmanage)
 	ON_COMMAND(ID_OBJECT_CREATE_CLUSTER, OnObjectCreateCluster)
 	ON_COMMAND(ID_OBJECT_FIND, OnObjectFind)
+	ON_WM_GETMINMAXINFO()
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, AFX_IDW_PANE_FIRST, OnTreeViewSelChange)
    ON_NOTIFY(TVN_GETDISPINFO, AFX_IDW_PANE_FIRST, OnTreeViewGetDispInfo)
    ON_NOTIFY(TVN_ITEMEXPANDING, AFX_IDW_PANE_FIRST, OnTreeViewItemExpanding)
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(NXCM_FIND_OBJECT, OnFindObject)
+   ON_MESSAGE(NXCM_ACTIVATE_OBJECT_TREE, OnActivateObjectTree)
    ON_COMMAND_RANGE(OBJTOOL_MENU_FIRST_ID, OBJTOOL_MENU_LAST_ID, OnObjectTool)
 END_MESSAGE_MAP()
 
@@ -1323,13 +1325,14 @@ void CObjectBrowser::OnFindObject(WPARAM wParam, TCHAR *pszSearchStr)
 	NXC_OBJECT *pObject;
    DWORD dwIndex;
 
-	if (wParam & OBJECT_FIND_NEXT)
+	if (wParam == OBJECT_NEXT_INSTANCE)
 	{
 		FindNextObjectEntry();
 		return;
 	}
 
-   pObject = NXCFindObjectByName(g_hSession, pszSearchStr);
+   pObject = NXCFindObjectByName(g_hSession, pszSearchStr,
+		                           ((m_pCurrentObject != NULL) && (wParam == OBJECT_FIND_NEXT))? m_pCurrentObject->dwId : 0);
    if (pObject != NULL)
    {
       // Object found, select it in the tree
@@ -1392,4 +1395,26 @@ void CObjectBrowser::FindNextObjectEntry()
          m_wndTreeCtrl.Select(m_pTreeHash[dwIndex].phTreeItemList[i], TVGN_CARET);
 		}
 	}
+}
+
+
+//
+// NXCM_ACTIVATE_OBJECT_TREE message handler
+//
+
+void CObjectBrowser::OnActivateObjectTree(WPARAM wParam, LPARAM lParam)
+{
+	m_wndTreeCtrl.SetFocus();
+}
+
+
+//
+// WM_GETMINMAXINFO message handler
+//
+
+void CObjectBrowser::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI) 
+{
+	CMDIChildWnd::OnGetMinMaxInfo(lpMMI);
+	lpMMI->ptMinTrackSize.x = 300;
+	lpMMI->ptMinTrackSize.y = 100;
 }

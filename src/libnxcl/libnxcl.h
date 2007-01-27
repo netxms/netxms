@@ -216,7 +216,7 @@ public:
    void LockObjectIndex(void) { MutexLock(m_mutexIndexAccess, INFINITE); }
    void UnlockObjectIndex(void) { MutexUnlock(m_mutexIndexAccess); }
    NXC_OBJECT *FindObjectById(DWORD dwId, BOOL bLock);
-   NXC_OBJECT *FindObjectByName(TCHAR *pszName);
+   NXC_OBJECT *FindObjectByName(TCHAR *pszName, DWORD dwCurrObject);
    void EnumerateObjects(BOOL (* pHandler)(NXC_OBJECT *));
    NXC_OBJECT *GetRootObject(DWORD dwId, DWORD dwIndex);
    void *GetObjectIndex(DWORD *pdwNumObjects);
