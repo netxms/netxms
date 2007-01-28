@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: objtools.cpp
+** File: objtools.cpp
 **
 **/
 
@@ -93,19 +93,34 @@ BOOL CheckObjectToolAccess(DWORD dwToolId, DWORD dwUserId)
 {
    DB_RESULT hResult;
    TCHAR szBuffer[256];
+	int i, nRows;
+	DWORD dwId;
    BOOL bResult = FALSE;
 
    if (dwUserId == 0)
       return TRUE;
 
-   _stprintf(szBuffer, _T("SELECT tool_id FROM object_tools_acl WHERE tool_id=%d AND user_id=%d"),
-             dwToolId, dwUserId);
+   _stprintf(szBuffer, _T("SELECT user_id FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
    hResult = DBSelect(g_hCoreDB, szBuffer);
    if (hResult != NULL)
    {
-      if (DBGetNumRows(hResult) > 0)
+		nRows = DBGetNumRows(hResult);
+      for(i = 0; i < nRows; i++)
       {
-         bResult = TRUE;
+			dwId = DBGetFieldULong(hResult, i, 0);
+			if ((dwId == dwUserId) || (dwId == GROUP_EVERYONE))
+			{
+				bResult = TRUE;
+				break;
+			}
+			if (dwId & GROUP_FLAG)
+			{
+				if (CheckUserMembership(dwUserId, dwId))
+				{
+					bResult = TRUE;
+					break;
+				}
+			}
       }
       DBFreeResult(hResult);
    }
