@@ -111,6 +111,7 @@
 #define AF_DEBUG_SNMP                     0x00020000
 #define AF_DEBUG_OBJECTS                  0x00040000
 #define AF_DEBUG_ALL                      0x0006FF00
+#define AF_RESOLVE_NODE_NAMES             0x00100000
 #define AF_DB_LOCKED                      0x01000000
 #define AF_ENABLE_MULTIPLE_DB_CONN        0x02000000
 #define AF_DB_CONNECTION_LOST             0x04000000

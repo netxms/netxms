@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nms_cscp.h
+** File: nms_cscp.h
 **
 **/
 
@@ -436,6 +436,9 @@ typedef struct
 #define CMD_GET_TRAP_CFG_RO			0x00C2
 #define CMD_SNMP_REQUEST				0x00C3
 #define CMD_GET_DCI_INFO				0x00C4
+#define CMD_GET_GRAPH_LIST				0x00C5
+#define CMD_DEFINE_GRAPH				0x00C6
+#define CMD_DELETE_GRAPH				0x00C7
 
 
 //
@@ -713,6 +716,7 @@ typedef struct
 #define VID_PDU							((DWORD)269)
 #define VID_PDU_SIZE						((DWORD)270)
 #define VID_IS_SYSTEM					((DWORD)271)
+#define VID_GRAPH_CONFIG				((DWORD)272)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

@@ -209,6 +209,8 @@ static void LoadGlobalConfig()
       g_dwFlags |= AF_ENABLE_NETWORK_DISCOVERY;
    if (ConfigReadInt("ActiveNetworkDiscovery", 0))
       g_dwFlags |= AF_ACTIVE_NETWORK_DISCOVERY;
+   if (ConfigReadInt("ResolveNodeNames", 1))
+      g_dwFlags |= AF_RESOLVE_NODE_NAMES;
    ConfigReadStr("DataDirectory", g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
    g_dwPingSize = ConfigReadInt("IcmpPingSize", 46);
    g_dwLockTimeout = ConfigReadInt("LockTimeout", 60000);
@@ -820,6 +822,8 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DELETE_EMPTY_SUBNETS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_SNMP_TRAPD));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_ZONING));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_RESOLVE_NODE_NAMES));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_MULTIPLE_DB_CONN));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_EVENTS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_CSCP));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_DISCOVERY));
@@ -832,7 +836,6 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_SNMP));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_OBJECTS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_LOCKED));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_MULTIPLE_DB_CONN));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_CONNECTION_LOST));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));

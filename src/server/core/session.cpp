@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.261 2007-01-23 08:29:40 victor Exp $ */
+/* $Id: session.cpp,v 1.262 2007-02-01 20:03:03 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1029,6 +1029,15 @@ void ClientSession::ProcessingThread(void)
          case CMD_INSTALL_MGMT_PACK:
             InstallManagementPack(pMsg);
             break;
+			case CMD_GET_GRAPH_LIST:
+				SendGraphList(pMsg->GetId());
+				break;
+			case CMD_DEFINE_GRAPH:
+				DefineGraph(pMsg);
+				break;
+			case CMD_DELETE_GRAPH:
+				DeleteGraph(pMsg);
+				break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -8339,6 +8348,69 @@ void ClientSession::SendDCIInfo(CSCPMessage *pRequest)
    {
       msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
+
+   SendMessage(&msg);
+}
+
+
+//
+// Send list of available graphs to client
+//
+
+void ClientSession::SendGraphList(DWORD dwRqId)
+{
+   CSCPMessage msg;
+	DB_RESULT hResult;
+	int i, nRows;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+	hResult = DBSelect(g_hCoreDB, _T("SELECT graph_id,owner_id,name,config FROM graphs"));
+	if (hResult != NULL)
+	{
+		nRows = DBGetNumRows(hResult);
+		for(i = 0; i < nRows; i++)
+		{
+
+		}
+		DBFreeResult(hResult);
+		msg.SetVariable(VID_RCC, RCC_SUCCESS);
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+	}
+
+   SendMessage(&msg);
+}
+
+
+//
+// Define grap
+//
+
+void ClientSession::DefineGraph(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   SendMessage(&msg);
+}
+
+
+//
+// Delete graph
+//
+
+void ClientSession::DeleteGraph(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
 
    SendMessage(&msg);
 }

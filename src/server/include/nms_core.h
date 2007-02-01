@@ -478,6 +478,9 @@ private:
 	void SendDCIInfo(CSCPMessage *pRequest);
    void CreateManagementPack(CSCPMessage *pRequest);
    void InstallManagementPack(CSCPMessage *pRequest);
+	void SendGraphList(DWORD dwRqId);
+	void DefineGraph(CSCPMessage *pRequest);
+	void DeleteGraph(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
