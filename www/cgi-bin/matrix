@@ -5,7 +5,7 @@ use DBI;
 
 print "Content-type: text/html\n\n";
 
-my $db = DBI->connect("DBI:mysql:database=netxms_web_db;host=10.0.0.4", "netxms_web", "n4tW0rkX", { RaiseError => 0 });
+my $db = DBI->connect("DBI:mysql:database=netxms_web_db;host=10.0.0.30", "netxms_web", "n4tW0rkX", { RaiseError => 0 });
 
 #####################
 # html header

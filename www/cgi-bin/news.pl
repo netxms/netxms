@@ -44,9 +44,9 @@ while (<F>)
 		my $date = $1;
 		my $title = $2;
 		my $summary =  $3;
-		if ($cut != 0 && length($summary) > 200)
+		if ($cut != 0 && length($summary) > 500)
 		{
-			$summary = substr($summary, 0, 300);
+			$summary = substr($summary, 0, 500);
 			$summary =~ s/(.*) .[^ ]*$/$1/g;
 			$summary .= "&#133;"
 		}
