@@ -591,6 +591,7 @@ protected:
 
    BOOL CheckSNMPIntegerValue(SNMP_Transport *pTransport, char *pszOID, int nValue);
    void CheckOSPFSupport(SNMP_Transport *pTransport);
+	BOOL ResolveName(void);
    void SetAgentProxy(AgentConnection *pConn);
 
    DWORD GetInterfaceCount(Interface **ppInterface);
@@ -638,6 +639,7 @@ public:
    ARP_CACHE *GetArpCache(void);
    INTERFACE_LIST *GetInterfaceList(void);
    Interface *FindInterface(DWORD dwIndex, DWORD dwHostAddr);
+	BOOL IsMyIP(DWORD dwIpAddr);
    int GetInterfaceStatusFromSNMP(SNMP_Transport *pTransport, DWORD dwIndex);
    int GetInterfaceStatusFromAgent(DWORD dwIndex);
    ROUTING_TABLE *GetRoutingTable(void);

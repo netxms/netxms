@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.171 2007-01-22 10:19:13 victor Exp $ */
+/* $Id: node.cpp,v 1.172 2007-02-02 12:53:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -461,6 +461,29 @@ Interface *Node::FindInterface(DWORD dwIndex, DWORD dwHostAddr)
 
 
 //
+// Check if given IP address is one of node's interfaces
+//
+
+BOOL Node::IsMyIP(DWORD dwIpAddr)
+{
+   DWORD i;
+
+   LockChildList(FALSE);
+   for(i = 0; i < m_dwChildCount; i++)
+      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+      {
+         if (((Interface *)m_pChildList[i])->IpAddr() == dwIpAddr)
+         {
+            UnlockChildList();
+            return TRUE;
+         }
+      }
+   UnlockChildList();
+   return FALSE;
+}
+
+
+//
 // Create new interface
 //
 
@@ -867,7 +890,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
                              int nPoller, DWORD dwNetMask)
 {
-   DWORD i, dwOldFlags = m_dwFlags;
+   DWORD i, dwOldFlags = m_dwFlags, dwAddr;
    Interface **ppDeleteList;
    int j, iDelCount;
    AgentConnection *pAgentConn;
@@ -1345,10 +1368,36 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
       }
 
       m_tLastConfigurationPoll = time(NULL);
-      SendPollerMsg(dwRqId, _T("Interface configuration check finished\r\n"
-                               "Finished configuration poll for node %s\r\n"
-                               "Node configuration was%schanged after poll\r\n"),
-                    m_szName, bHasChanges ? _T(" ") : _T(" not "));
+      SendPollerMsg(dwRqId, _T("Interface configuration check finished\r\n"));
+
+		// Check node name
+		SendPollerMsg(dwRqId, _T("Checking node name\r\n"));
+		dwAddr = ntohl(_t_inet_addr(m_szName));
+		if ((g_dwFlags & AF_RESOLVE_NODE_NAMES) &&
+			 (dwAddr != INADDR_NONE) && 
+			 (dwAddr != INADDR_ANY) &&
+			 IsMyIP(dwAddr))
+		{
+			SendPollerMsg(dwRqId, _T("Node name is an IP address and need to be resolved\r\n"));
+	      SetPollerInfo(nPoller, "resolving name");
+			if (ResolveName())
+			{
+				SendPollerMsg(dwRqId, _T("Node name resolved to %s\r\n"), m_szName);
+				bHasChanges = TRUE;
+			}
+			else
+			{
+				SendPollerMsg(dwRqId, _T("Node name cannot be resolved\r\n"));
+			}
+		}
+		else
+		{
+			SendPollerMsg(dwRqId, _T("Node name is OK\r\n"));
+		}
+
+		SendPollerMsg(dwRqId, _T("Finished configuration poll for node %s\r\n")
+		                      _T("Node configuration was%schanged after poll\r\n"),
+		              m_szName, bHasChanges ? _T(" ") : _T(" not "));
    }
 
    // Finish configuration poll
@@ -2538,4 +2587,70 @@ SNMP_Transport *Node::CreateSNMPTransport(void)
 		}
 	}
 	return pTransport;
+}
+
+
+//
+// Resolve node's name
+//
+
+BOOL Node::ResolveName(void)
+{
+	BOOL bSuccess = FALSE;
+	HOSTENT *hs;
+	DWORD i, dwAddr;
+
+	DbgPrintf(AF_DEBUG_DISCOVERY, _T("Resolving name for node %d [%s]..."), m_dwId, m_szName);
+
+	// Try to resolve primary IP
+	dwAddr = htonl(m_dwIpAddr);
+	hs = gethostbyaddr((const char *)&dwAddr, 4, AF_INET);
+	if (hs != NULL)
+	{
+		nx_strncpy(m_szName, hs->h_name, MAX_OBJECT_NAME);
+		bSuccess = TRUE;
+	}
+	else
+	{
+		// Try to resolve each interface's IP address
+		LockChildList(FALSE);
+		for(i = 0; i < m_dwChildCount; i++)
+		{
+			if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+			{
+				dwAddr = htonl(m_pChildList[i]->IpAddr());
+				if (dwAddr != 0)
+				{
+					hs = gethostbyaddr((const char *)&dwAddr, 4, AF_INET);
+					if (hs != NULL)
+					{
+						nx_strncpy(m_szName, hs->h_name, MAX_OBJECT_NAME);
+						bSuccess = TRUE;
+						break;
+					}
+				}
+			}
+		}
+		UnlockChildList();
+
+		// Try to get hostname from agent if address resolution fails
+		if (!bSuccess)
+		{
+			DbgPrintf(AF_DEBUG_DISCOVERY, _T("Resolving name for node %d [%s] via agent..."), m_dwId, m_szName);
+			bSuccess = (GetItemFromAgent("System.Hostname", MAX_OBJECT_NAME, m_szName) == DCE_SUCCESS);
+		}
+
+		// Try to get hostname from SNMP if other methods fails
+		if (!bSuccess)
+		{
+			DbgPrintf(AF_DEBUG_DISCOVERY, _T("Resolving name for node %d [%s] via SNMP..."), m_dwId, m_szName);
+			bSuccess = (GetItemFromSNMP(".1.3.6.1.2.1.1.5.0", MAX_OBJECT_NAME, m_szName) == DCE_SUCCESS);
+		}
+	}
+
+	if (bSuccess)
+		DbgPrintf(AF_DEBUG_DISCOVERY, _T("Name for node %d was resolved to %s"), m_dwId, m_szName);
+	else
+		DbgPrintf(AF_DEBUG_DISCOVERY, _T("Name for node %d was not resolved"), m_dwId, m_szName);
+	return bSuccess;
 }

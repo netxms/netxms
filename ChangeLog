@@ -3,6 +3,7 @@
 *
 
 - Cluster monitoring improved
+- Node names resolution working
 - Windows console:
 	- Object search improved
 - Fixed issues: #148
