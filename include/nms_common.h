@@ -231,8 +231,6 @@ typedef int SOCKET;
 
 #define SELECT_NFDS(x)  (x)
 
-typedef struct hostent HOSTENT;
-
 #else    /* not _WIN32 and not _NETWARE */
 
 /*********** UNIX *********************/
@@ -378,6 +376,8 @@ typedef unsigned int socklen_t;
 #define SHL_SUFFIX	".so"
 #endif
 #endif
+
+typedef struct hostent HOSTENT;
 
 #endif   /* _WIN32 */
 
