@@ -231,6 +231,8 @@ typedef int SOCKET;
 
 #define SELECT_NFDS(x)  (x)
 
+typedef struct hostent HOSTENT;
+
 #else    /* not _WIN32 and not _NETWARE */
 
 /*********** UNIX *********************/
