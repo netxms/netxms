@@ -458,8 +458,10 @@ void CGraph::OnKillFocus(CWnd* pNewWnd)
       { \
          if (m_pData[i] != NULL) \
          { \
-            if (m_pData[i]->wDataType == DCI_DT_FLOAT) \
+            if ((m_pData[i]->wDataType == DCI_DT_FLOAT) || \
+                (m_pData[i]->wDataType == DCI_DT_STRING)) \
             { \
+					/* Strings can contain any numbers, including floating point numbers */ \
                bIntMarks = FALSE; \
                break; \
             } \
