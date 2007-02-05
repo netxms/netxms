@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.10 2006-10-05 12:41:32 alk Exp $ */
+/* $Id: system.cpp,v 1.11 2007-02-05 11:55:20 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -111,11 +111,11 @@ LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
 	double dLoad[3];
 
 	// get processor
-   //NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	//NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	if (getloadavg(dLoad, 3) == 3)
 	{
-		switch (pszParam[19])
+		switch (pszParam[18])
 		{
 		case '1': // 15 min
 			ret_double(pValue, dLoad[2]);
@@ -384,6 +384,11 @@ LONG H_SourcePkgSupport(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2006/10/05 12:41:32  alk
+generic: iconv - const detection added
+hpux: System.LoggedInCount renamed to System.ConnectedUsers
+freebsd: _XOPEN_SOURCE fixed
+
 Revision 1.9  2006/03/05 20:50:18  alk
 Process.Count() fixed, thanks to Boris for report
 
