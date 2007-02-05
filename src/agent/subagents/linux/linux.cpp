@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.30 2007-01-15 00:16:06 victor Exp $ */
+/* $Id: linux.cpp,v 1.31 2007-02-05 12:57:12 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -124,11 +124,11 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "System.ConnectedUsers",        H_ConnectedUsers,  NULL,
 	      DCI_DT_INT,    "Number of logged in users" },
 
-   { "System.CPU.LoadAvg",           H_CpuLoad,         NULL,
+   { "System.CPU.LoadAvg",           H_CpuLoad,         (char *)0,
 			DCI_DT_FLOAT,	"Average CPU load for last minute" },
-   { "System.CPU.LoadAvg5",          H_CpuLoad,         NULL,
+   { "System.CPU.LoadAvg5",          H_CpuLoad,         (char *)5,
 			DCI_DT_FLOAT,	"Average CPU load for last 5 minutes" },
-   { "System.CPU.LoadAvg15",         H_CpuLoad,         NULL,
+   { "System.CPU.LoadAvg15",         H_CpuLoad,         (char *)15,
 			DCI_DT_FLOAT,	"Average CPU load for last 15 minutes" },
    { "System.CPU.Usage",             H_CpuUsage,        (char *)0,
 			DCI_DT_FLOAT,	"" },
@@ -220,6 +220,9 @@ extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.30  2007/01/15 00:16:06  victor
+Implemented Process.CountEx for Linux
+
 Revision 1.29  2006/10/30 17:25:10  victor
 Implemented System.ConnectedUsers and System.ActiveUserSessions
 
