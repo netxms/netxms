@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.20 2007-01-03 23:11:03 victor Exp $ */
+/* $Id: unicode.cpp,v 1.21 2007-02-05 11:38:04 alk Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -211,9 +211,8 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags,
 // Convert single-byte to UNICODE string
 //
 
-int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags,
-                                             char *pByteStr, int cchByteChar,
-															WCHAR *pWideCharStr, int cchWideChar)
+int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, char *pByteStr,
+	int cchByteChar, WCHAR *pWideCharStr, int cchWideChar)
 {
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
 
@@ -247,7 +246,7 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags,
 				nRet = 0;
 			}
 		}
-		if (*pWideCharStr == 0xFEFF)
+		if (outbytes > 2 && *pWideCharStr == 0xFEFF)
 		{
 			// Remove UNICODE byte order indicator if presented
 			memmove(pWideCharStr, &pWideCharStr[1], (char *)outbuf - (char *)pWideCharStr - 1);
@@ -267,23 +266,23 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags,
 
 #else
 
-   char *pSrc;
-   WCHAR *pDest;
-   int iPos, iSize;
+	char *pSrc;
+	WCHAR *pDest;
+	int iPos, iSize;
 
 	if (cchWideChar == 0)
 	{
 		return strlen(pByteStr) + 1;
 	}
 
-   iSize = (cchByteChar == -1) ? strlen(pByteStr) : cchByteChar;
-   if (iSize >= cchWideChar)
-      iSize = cchWideChar - 1;
-   for(pSrc = pByteStr, iPos = 0, pDest = pWideCharStr; iPos < iSize; iPos++, pSrc++, pDest++)
-      *pDest = (WCHAR)(*pSrc);
-   *pDest = 0;
-   return iSize;
+	iSize = (cchByteChar == -1) ? strlen(pByteStr) : cchByteChar;
+	if (iSize >= cchWideChar)
+		iSize = cchWideChar - 1;
+	for(pSrc = pByteStr, iPos = 0, pDest = pWideCharStr; iPos < iSize; iPos++, pSrc++, pDest++)
+		*pDest = (WCHAR)(*pSrc);
+	*pDest = 0;
 
+	return iSize;
 #endif
 }
 
