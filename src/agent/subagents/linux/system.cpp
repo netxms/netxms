@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.14 2007-02-05 11:27:49 alk Exp $ */
+/* $Id: system.cpp,v 1.15 2007-02-05 11:28:21 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -187,7 +187,7 @@ LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
 			setlocale(LC_NUMERIC, "C");
 			if (sscanf(szTmp, "%lf %lf %lf", &dLoad1, &dLoad5, &dLoad15) == 3)
 			{
-				switch (pszParam[19])
+				switch (pszParam[18])
 				{
 				case '1': // 15 min
 					ret_double(pValue, dLoad15);
@@ -503,6 +503,9 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2007/02/05 11:27:49  alk
+code reformatted
+
 Revision 1.13  2007/01/15 00:16:07  victor
 Implemented Process.CountEx for Linux
 
