@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.13 2007-01-15 00:16:07 victor Exp $ */
+/* $Id: system.cpp,v 1.14 2007-02-05 11:27:49 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -123,10 +123,10 @@ LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 	
 	if (uUptime > 0)
 	{
-   	ret_uint(pValue, uUptime);
+		ret_uint(pValue, uUptime);
 	}
 
-   return uUptime > 0 ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+	return uUptime > 0 ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
 LONG H_Uname(char *pszParam, char *pArg, char *pValue)
@@ -143,12 +143,12 @@ LONG H_Uname(char *pszParam, char *pArg, char *pValue)
 				utsName.machine);
 		// TODO: processor & platform
 
-   	ret_string(pValue, szBuff);
+		ret_string(pValue, szBuff);
 
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 
-   return nRet;
+	return nRet;
 }
 
 LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
@@ -158,22 +158,22 @@ LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
 
 	if (gethostname(szBuff, sizeof(szBuff)) == 0)
 	{
-   	ret_string(pValue, szBuff);
+		ret_string(pValue, szBuff);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 
-   return nRet;
+	return nRet;
 }
 
 LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct statvfs s;
-   char szArg[128] = {0};
+	char szArg[128] = {0};
 	FILE *hFile;
 
 	// get processor
-   //NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	//NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	hFile = fopen("/proc/loadavg", "r");
 	if (hFile != NULL)
@@ -207,7 +207,6 @@ LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
 		fclose(hFile);
 	}
 	
-
 	return nRet;
 }
 
@@ -215,19 +214,19 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct statvfs s;
-   char szArg[128] = "", szCmdLine[128] = "";
+	char szArg[128] = "", szCmdLine[128] = "";
 	int nCount = -1;
 
 	if (*pArg != 'T')
 	{
-   	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+		NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 		if (*pArg == 'E')
 		{
-   		NxGetParameterArg(pszParam, 2, szCmdLine, sizeof(szCmdLine));
+			NxGetParameterArg(pszParam, 2, szCmdLine, sizeof(szCmdLine));
 		}
 	}
    
-   nCount = ProcRead(NULL, (*pArg != 'T') ? szArg : NULL, (*pArg == 'E') ? szCmdLine : NULL);
+	nCount = ProcRead(NULL, (*pArg != 'T') ? szArg : NULL, (*pArg == 'E') ? szCmdLine : NULL);
 
 	if (nCount >= 0)
 	{
@@ -504,6 +503,9 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2007/01/15 00:16:07  victor
+Implemented Process.CountEx for Linux
+
 Revision 1.12  2006/11/03 13:39:47  victor
 Minor changes
 
