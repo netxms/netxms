@@ -1,4 +1,4 @@
-/* $Id: sysinfo.cpp,v 1.21 2007-01-15 14:22:53 victor Exp $ */
+/* $Id: sysinfo.cpp,v 1.22 2007-02-06 07:56:41 alk Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004 Victor Kirhenshtein
@@ -141,7 +141,7 @@ LONG H_DirInfo(char *cmd, char *arg, char *value)
 
    nRet = GetDirInfo(szPath, szPattern, bRecursive, uFileCount, llFileSize);
 
-   switch((int)arg)
+   switch(CAST_FROM_POINTER(arg, int))
    {
    	case DIRINFO_FILE_SIZE:
            ret_uint64(value, llFileSize);
@@ -324,7 +324,7 @@ LONG H_FileTime(char *cmd, char *arg, char *value)
 	if (stat(szFilePath, &fileInfo) == -1) 
 		return SYSINFO_RC_ERROR;
 
-	switch((int)arg)
+	switch(CAST_FROM_POINTER(arg, int))
 	{
 		case FILETIME_ATIME:
 #ifdef _NETWARE
