@@ -849,6 +849,9 @@
 #define ID_TOOLS_IMPORTMP               33048
 #define ID_GRAPH_COPYTOCLIPBOARD        33049
 #define ID_OBJECT_CREATE_CLUSTER        33050
+#define ID_TOOLS_GRAPHS_MANAGE          33051
+#define ID_GRAPH_DEFINE                 33052
+#define ID_ALWAYS_DISABLED              43210
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
 #define IDS_SCINTILLA_INIT_FAILED       61218
@@ -859,8 +862,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        358
-#define _APS_NEXT_COMMAND_VALUE         33051
+#define _APS_NEXT_COMMAND_VALUE         33053
 #define _APS_NEXT_CONTROL_VALUE         1442
-#define _APS_NEXT_SYMED_VALUE           133
+#define _APS_NEXT_SYMED_VALUE           134
 #endif
 #endif

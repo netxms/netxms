@@ -729,10 +729,6 @@ SOURCE=.\ValueList.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\ViewEditor.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\VPNCPropsGeneral.cpp
 # End Source File
 # Begin Source File
@@ -1338,10 +1334,6 @@ SOURCE=.\UserSelectDlg.h
 # Begin Source File
 
 SOURCE=.\ValueList.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\ViewEditor.h
 # End Source File
 # Begin Source File
 

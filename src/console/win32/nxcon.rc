@@ -204,6 +204,11 @@ BEGIN
         MENUITEM "&Add node...\tF11",           ID_TOOLS_ADDNODE
         MENUITEM "&MIB Browser\tCtrl+Alt+M",    ID_TOOLS_MIBBROWSER
         MENUITEM "SNMP &walk...\tCtrl+Shift+F11", ID_TOOLS_SNMPWALK
+        POPUP "&Graphs"
+        BEGIN
+            MENUITEM SEPARATOR
+            MENUITEM "&Manage...",                  ID_TOOLS_GRAPHS_MANAGE
+        END
         MENUITEM SEPARATOR
         MENUITEM "&Change password...",         ID_TOOLS_CHANGEPASSWORD
         MENUITEM SEPARATOR
@@ -367,7 +372,6 @@ BEGIN
         MENUITEM "Server &configuration",       ID_CONTROLPANEL_SERVERCFG
         MENUITEM "&SNMP Traps",                 ID_CONTROLPANEL_SNMPTRAPS
         MENUITEM "&Users",                      ID_CONTROLPANEL_USERS
-        MENUITEM "&View Builder",               ID_CONTROLPANEL_VIEWBUILDER
     END
     POPUP "&Object (map)"
     BEGIN
@@ -461,16 +465,17 @@ BEGIN
 
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Autoscale\tAlt+A",           ID_GRAPH_AUTOSCALE
-        MENUITEM "&Legend\tAlt+L",              ID_GRAPH_LEGEND
-        MENUITEM "R&uler\tAlt+R",               ID_GRAPH_RULER
+        MENUITEM "&Autoscale\tCtrl+Alt+A",      ID_GRAPH_AUTOSCALE
+        MENUITEM "&Legend\tCtrl+Alt+L",         ID_GRAPH_LEGEND
+        MENUITEM "R&uler\tCtrl+Alt+R",          ID_GRAPH_RULER
         MENUITEM SEPARATOR
+        MENUITEM "&Save as predefined...\tCtrl+S", ID_GRAPH_DEFINE
         MENUITEM "Pr&int...",                   ID_FILE_PRINT
         MENUITEM "&Copy to clipboard\tCtrl+C",  ID_GRAPH_COPYTOCLIPBOARD
         MENUITEM SEPARATOR
         MENUITEM "&Zoom out\tBksp",             ID_GRAPH_ZOOMOUT
         MENUITEM SEPARATOR
-        MENUITEM "&Properties...\tAlt+P",       ID_GRAPH_PROPERTIES
+        MENUITEM "&Properties...\tCtrl+Alt+P",  ID_GRAPH_PROPERTIES
     END
     POPUP "Package"
     BEGIN
@@ -1050,10 +1055,12 @@ END
 
 IDA_GRAPH ACCELERATORS DISCARDABLE 
 BEGIN
-    "A",            ID_GRAPH_AUTOSCALE,     VIRTKEY, ALT, NOINVERT
+    "A",            ID_GRAPH_AUTOSCALE,     VIRTKEY, CONTROL, ALT, NOINVERT
     "C",            ID_GRAPH_COPYTOCLIPBOARD, VIRTKEY, CONTROL, NOINVERT
-    "P",            ID_GRAPH_PROPERTIES,    VIRTKEY, ALT, NOINVERT
-    "R",            ID_GRAPH_RULER,         VIRTKEY, ALT, NOINVERT
+    "L",            ID_GRAPH_LEGEND,        VIRTKEY, CONTROL, ALT, NOINVERT
+    "P",            ID_GRAPH_PROPERTIES,    VIRTKEY, CONTROL, ALT, NOINVERT
+    "R",            ID_GRAPH_RULER,         VIRTKEY, CONTROL, ALT, NOINVERT
+    "S",            ID_GRAPH_DEFINE,        VIRTKEY, CONTROL, NOINVERT
     VK_BACK,        ID_GRAPH_ZOOMOUT,       VIRTKEY, NOINVERT
 END
 

@@ -717,6 +717,8 @@ typedef struct
 #define VID_PDU_SIZE						((DWORD)270)
 #define VID_IS_SYSTEM					((DWORD)271)
 #define VID_GRAPH_CONFIG				((DWORD)272)
+#define VID_NUM_GRAPHS					((DWORD)273)
+#define VID_GRAPH_ID						((DWORD)274)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -830,6 +832,10 @@ typedef struct
 
 // Base value for trap configuration records
 #define VID_TRAP_INFO_BASE          ((DWORD)0x10000000)
+
+// Base value for graph list
+#define VID_GRAPH_LIST_BASE         ((DWORD)0x10000000)
+#define VID_GRAPH_ACL_BASE				((DWORD)0x20000000)
 
 
 //

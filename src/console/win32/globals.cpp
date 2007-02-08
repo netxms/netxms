@@ -42,6 +42,15 @@ SNMP_MIBObject *g_pMIBRoot = NULL;
 
 
 //
+// Graphs
+//
+
+DWORD g_dwNumGraphs = 0;
+NXC_GRAPH *g_pGraphList = NULL;
+HANDLE g_mutexGraphListAccess = INVALID_HANDLE_VALUE;
+
+
+//
 // Connection parameters
 //
 

@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.256 2007-01-27 20:00:22 victor Exp $ */
+/* $Id: nxclapi.h,v 1.257 2007-02-08 22:25:20 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -304,6 +304,7 @@ enum
 #define NX_NOTIFY_OBJTOOLS_CHANGED  9
 #define NX_NOTIFY_DBCONN_STATUS     10
 #define NX_NOTIFY_ALARM_TERMINATED  11
+#define NX_NOTIFY_GRAPHS_CHANGED		12
 
 
 //
@@ -380,6 +381,7 @@ enum
 #define RCC_NOT_PUSH_DCI            ((DWORD)67)
 #define RCC_NXMP_PARSE_ERROR        ((DWORD)68)
 #define RCC_NXMP_VALIDATION_ERROR   ((DWORD)69)
+#define RCC_INVALID_GRAPH_ID			((DWORD)70)
 
 
 //
@@ -615,6 +617,14 @@ enum
 
 #define NXMPIF_REPLACE_EVENT_BY_CODE   0x0001
 #define NXMPIF_REPLACE_EVENT_BY_NAME   0x0002
+
+
+//
+// Graph access flags
+//
+
+#define NXGRAPH_ACCESS_READ		0x01
+#define NXGRAPH_ACCESS_WRITE		0x02
 
 
 //
@@ -1586,6 +1596,32 @@ typedef struct
 
 
 //
+// Graph ACL element
+//
+
+typedef struct
+{
+	DWORD dwUserId;
+	DWORD dwAccess;
+} NXC_GRAPH_ACL_ENTRY;
+
+
+//
+// Graph information
+//
+
+typedef struct
+{
+	DWORD dwId;
+	TCHAR *pszName;
+	TCHAR *pszConfig;
+	DWORD dwOwner;
+	DWORD dwAclSize;
+	NXC_GRAPH_ACL_ENTRY *pACL;
+} NXC_GRAPH;
+
+
+//
 // Functions
 //
 
@@ -1873,6 +1909,11 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateMPFile(NXC_SESSION hSession, TCHAR *pszDescr,
                                          TCHAR **ppszContent);
 DWORD LIBNXCL_EXPORTABLE NXCInstallMP(NXC_SESSION hSession, TCHAR *pszContent,
                                       DWORD dwFlags, TCHAR *pszErrorText, int nErrorLen);
+
+DWORD LIBNXCL_EXPORTABLE NXCGetGraphList(NXC_SESSION hSession, DWORD *pdwNumGraphs, NXC_GRAPH **ppGraphList);
+void LIBNXCL_EXPORTABLE NXCDestroyGraphList(DWORD dwNumGraphs, NXC_GRAPH *pList);
+DWORD LIBNXCL_EXPORTABLE NXCDefineGraph(NXC_SESSION hSession, NXC_GRAPH *pGraph);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteGraph(NXC_SESSION hSession, DWORD dwGraphId);
 
 #ifdef __cplusplus
 }

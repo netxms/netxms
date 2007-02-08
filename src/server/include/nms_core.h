@@ -150,6 +150,7 @@ typedef void * HSNMPSESSION;
 #define IDG_OBJECT_TOOL       15
 #define IDG_SCRIPT            16
 #define IDG_AGENT_CONFIG      17
+#define IDG_GRAPH					18
 
 
 //
@@ -359,7 +360,7 @@ private:
    void SetupEncryption(DWORD dwRqId);
    void RespondToKeepalive(DWORD dwRqId);
    void OnFileUpload(BOOL bSuccess);
-   void DebugPrintf(char *szFormat, ...);
+   void DebugPrintf(TCHAR *pszFormat, ...);
    void SendServerInfo(DWORD dwRqId);
    void Login(CSCPMessage *pRequest);
    void SendAllObjects(CSCPMessage *pRequest);

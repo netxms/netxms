@@ -109,6 +109,7 @@ BEGIN_MESSAGE_MAP(CGraphFrame, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_GRAPH_PRESETS_LASTMONTH, OnUpdateGraphPresetsLastmonth)
 	ON_UPDATE_COMMAND_UI(ID_GRAPH_PRESETS_LASTWEEK, OnUpdateGraphPresetsLastweek)
 	ON_UPDATE_COMMAND_UI(ID_GRAPH_PRESETS_LASTYEAR, OnUpdateGraphPresetsLastyear)
+	ON_COMMAND(ID_GRAPH_DEFINE, OnGraphDefine)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
    ON_MESSAGE(NXCM_UPDATE_GRAPH_POINT, OnUpdateGraphPoint)
@@ -897,4 +898,16 @@ void CGraphFrame::OnUpdateGraphPresetsLastweek(CCmdUI* pCmdUI)
 void CGraphFrame::OnUpdateGraphPresetsLastyear(CCmdUI* pCmdUI) 
 {
    pCmdUI->SetCheck((m_iTimeFrameType == 1) && (m_dwTimeFrame == 31536000));
+}
+
+
+//
+// Save graph as predefined
+//
+
+void CGraphFrame::OnGraphDefine() 
+{
+	DWORD dwResult;
+
+//	SendMessage(NXCM_GET_SAVE_INFO
 }

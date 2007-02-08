@@ -217,8 +217,6 @@ protected:
 	HACCEL m_hObjToolsEditorAccel;// Accelerator for object tools editor
 	HMENU m_hScriptManagerMenu;   // Menu for script manager
 	HACCEL m_hScriptManagerAccel; // Accelerator for script manager
-	HMENU m_hViewBuilderMenu;     // Menu for view builder
-	HACCEL m_hViewBuilderAccel;   // Accelerator for view builder
 	HMENU m_hDataViewMenu;        // Menu for DCI data viewer
 	HACCEL m_hDataViewAccel;      // Accelerator for DCI data viewer
 	HMENU m_hAgentCfgMgrMenu;     // Menu for agent configuration manager
@@ -256,7 +254,6 @@ public:
 	afx_msg void OnControlpanelObjecttools();
 	afx_msg void OnControlpanelScriptlibrary();
 	afx_msg void OnViewSnmptraplog();
-	afx_msg void OnControlpanelViewbuilder();
 	afx_msg void OnControlpanelModules();
 	afx_msg void OnDesktopManage();
 	afx_msg void OnToolsChangepassword();
@@ -266,6 +263,7 @@ public:
 	afx_msg void OnFilePagesetup();
 	afx_msg void OnToolsImportmp();
 	//}}AFX_MSG
+	afx_msg void OnGraphListUpdate(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 private:
    CONSOLE_VIEW m_viewState[MAX_VIEW_ID];

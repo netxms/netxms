@@ -278,9 +278,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("Alarm is not in \"outstanding\" state"),
       _T("DCI data source is not a push agent"),
       _T("Error parsing management pack file"),
-      _T("Management pack validation error")
+      _T("Management pack validation error"),
+		_T("Invalid graph ID")
    };
-   return ((dwError >= 0) && (dwError <= RCC_NXMP_VALIDATION_ERROR)) ? pszErrorText[dwError] : _T("No text message for this error");
+   return ((dwError >= 0) && (dwError <= RCC_INVALID_GRAPH_ID)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

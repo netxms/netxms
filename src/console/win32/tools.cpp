@@ -392,6 +392,26 @@ void UpdateActions(DWORD dwCode, NXC_ACTION *pAction)
 
 
 //
+// Update graph list
+//
+
+static void GraphUpdater(void *)
+{
+	LockGraphs();
+	if (g_pGraphList != NULL)
+		NXCDestroyGraphList(g_dwNumGraphs, g_pGraphList);
+	NXCGetGraphList(g_hSession, &g_dwNumGraphs, &g_pGraphList);
+	UnlockGraphs();
+	theApp.PostThreadMessage(NXCM_GRAPH_LIST_UPDATED, 0, 0);
+}
+
+void UpdateGraphList(void)
+{
+	_beginthread(GraphUpdater, 0, NULL);
+}
+
+
+//
 // Restore placement of MDI child window
 //
 

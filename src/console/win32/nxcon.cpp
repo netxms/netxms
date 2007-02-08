@@ -53,7 +53,6 @@
 #include "DCIDataView.h"
 #include "LPPList.h"
 #include "ObjectBrowser.h"
-#include "ViewEditor.h"
 #include "PackageMgr.h"
 #include "ModuleManager.h"
 #include "DesktopManager.h"
@@ -120,7 +119,6 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_CONTROLPANEL_OBJECTTOOLS, OnControlpanelObjecttools)
 	ON_COMMAND(ID_CONTROLPANEL_SCRIPTLIBRARY, OnControlpanelScriptlibrary)
 	ON_COMMAND(ID_VIEW_SNMPTRAPLOG, OnViewSnmptraplog)
-	ON_COMMAND(ID_CONTROLPANEL_VIEWBUILDER, OnControlpanelViewbuilder)
 	ON_COMMAND(ID_CONTROLPANEL_MODULES, OnControlpanelModules)
 	ON_COMMAND(ID_DESKTOP_MANAGE, OnDesktopManage)
 	ON_COMMAND(ID_TOOLS_CHANGEPASSWORD, OnToolsChangepassword)
@@ -130,6 +128,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_FILE_PAGESETUP, OnFilePagesetup)
 	ON_COMMAND(ID_TOOLS_IMPORTMP, OnToolsImportmp)
 	//}}AFX_MSG_MAP
+	ON_THREAD_MESSAGE(NXCM_GRAPH_LIST_UPDATED, OnGraphListUpdate)
 END_MESSAGE_MAP()
 
 
@@ -310,8 +309,9 @@ BOOL CConsoleApp::InitInstance()
       WriteProfileInt(_T("General"), _T("CfgVersion"), NXCON_CONFIG_VERSION);
    }
 
-   // Create mutex for action list access
+   // Create mutexes for action and graph lists access
    g_mutexActionListAccess = CreateMutex(NULL, FALSE, NULL);
+   g_mutexGraphListAccess = CreateMutex(NULL, FALSE, NULL);
 
 	// To create the main window, this code creates a new frame window
 	// object and then sets it as the application's main window object.
@@ -329,7 +329,7 @@ BOOL CConsoleApp::InitInstance()
 	// Load shared MDI menus and accelerator table
 	HINSTANCE hInstance = AfxGetResourceHandle();
 
-	hMenu  = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDM_VIEW_SPECIFIC));
+	hMenu = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDM_VIEW_SPECIFIC));
 
    // Modify application menu as needed
    if (g_dwOptions & UI_OPT_EXPAND_CTRLPANEL)
@@ -539,6 +539,7 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hObjectCommentsAccel);
 
    CloseHandle(g_mutexActionListAccess);
+   CloseHandle(g_mutexGraphListAccess);
 
    SpeakerShutdown();
 
@@ -1049,6 +1050,9 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
             case NX_NOTIFY_ACTION_DELETED:
                UpdateActions(dwCode, (NXC_ACTION *)pArg);
                break;
+				case NX_NOTIFY_GRAPHS_CHANGED:
+					UpdateGraphList();
+					break;
             default:
                break;
          }
@@ -1620,27 +1624,6 @@ void CConsoleApp::OnControlpanelLogprocessing()
 
 	   pFrame->CreateNewChild(RUNTIME_CLASS(CLPPList), IDR_LPP_EDITOR,
                              m_hLPPEditorMenu, m_hLPPEditorAccel);
-   }
-}
-
-
-//
-// Open view builder
-//
-
-void CConsoleApp::OnControlpanelViewbuilder() 
-{
-	// create a new MDI child window or open existing
-   if (m_viewState[VIEW_BUILDER].bActive)
-   {
-      m_viewState[VIEW_BUILDER].pWnd->BringWindowToTop();
-   }
-   else
-   {
-   	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
-
-	   pFrame->CreateNewChild(RUNTIME_CLASS(CViewEditor), IDR_VIEW_BUILDER,
-                             m_hViewBuilderMenu, m_hViewBuilderAccel);
    }
 }
 
@@ -3573,4 +3556,83 @@ BOOL CConsoleApp::StartConsoleUpgrade()
 		bRet = FALSE;
 	}
 	return bRet;
+}
+
+
+//
+// Update Tools->Graph submenu
+//
+
+static void UpdateGraphSubmenu(CMenu *pToolsMenu)
+{
+	CMenu *pMenu;
+	DWORD i;
+
+	if (pToolsMenu == NULL)
+		return;
+
+	pMenu = pToolsMenu->GetSubMenu(3);
+	if (pMenu != NULL)
+	{
+		// Clear menu
+		while(pMenu->GetMenuItemCount() > 2)
+			pMenu->DeleteMenu(0, MF_BYPOSITION);
+
+		// Add new items
+		if (g_dwNumGraphs > 0)
+		{
+			for(i = 0; i < g_dwNumGraphs; i++)
+				pMenu->InsertMenu(i, MF_BYPOSITION, GRAPH_MENU_FIRST_ID + i, g_pGraphList[i].pszName);
+		}
+		else
+		{
+			pMenu->InsertMenu(0, MF_BYPOSITION, ID_ALWAYS_DISABLED, _T("<no graphs defined>"));
+		}
+	}
+}
+
+
+//
+// Update UI after graph list update
+//
+
+#define UPDATE_MENU(handle, pos) \
+{ \
+	menu.Attach(handle); \
+	UpdateGraphSubmenu(menu.GetSubMenu(pos)); \
+	menu.Detach(); \
+}
+
+void CConsoleApp::OnGraphListUpdate(WPARAM wParam, LPARAM lParam)
+{
+	CMenu menu;
+
+	LockGraphs();
+
+	UpdateGraphSubmenu(m_pMainWnd->GetMenu()->GetSubMenu(3));
+
+	UPDATE_MENU(m_hMDIMenu, 3);
+	UPDATE_MENU(m_hAlarmBrowserMenu, 4);
+	UPDATE_MENU(m_hEventBrowserMenu, 4);
+	UPDATE_MENU(m_hEventEditorMenu, 4);
+	UPDATE_MENU(m_hUserEditorMenu, 4);
+	UPDATE_MENU(m_hDCEditorMenu, 4);
+	UPDATE_MENU(m_hLPPEditorMenu, 4);
+	UPDATE_MENU(m_hPolicyEditorMenu, 4);
+	UPDATE_MENU(m_hMapMenu, 5);
+	UPDATE_MENU(m_hTrapEditorMenu, 4);
+	UPDATE_MENU(m_hActionEditorMenu, 4);
+	UPDATE_MENU(m_hGraphMenu, 4);
+	UPDATE_MENU(m_hPackageMgrMenu, 4);
+	UPDATE_MENU(m_hLastValuesMenu, 4);
+	UPDATE_MENU(m_hServerCfgEditorMenu, 4);
+	UPDATE_MENU(m_hAgentCfgEditorMenu, 5);
+	UPDATE_MENU(m_hObjToolsEditorMenu, 4);
+	UPDATE_MENU(m_hScriptManagerMenu, 5);
+	UPDATE_MENU(m_hDataViewMenu, 4);
+	UPDATE_MENU(m_hAgentCfgMgrMenu, 4);
+	UPDATE_MENU(m_hObjectCommentsMenu, 5);
+	UPDATE_MENU(m_hObjectBrowserMenu, 4);
+
+	UnlockGraphs();
 }

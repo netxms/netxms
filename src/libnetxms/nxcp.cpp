@@ -1,4 +1,4 @@
-/* $Id: nxcp.cpp,v 1.11 2007-02-01 20:03:03 victor Exp $ */
+/* $Id: nxcp.cpp,v 1.12 2007-02-08 22:25:21 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
@@ -236,7 +236,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_GET_TRAP_CFG_RO"),
 		_T("CMD_SNMP_REQUEST"),
 		_T("CMD_GET_DCI_INFO"),
-		_T("CMD_GET_GRAPH_LIST")
+		_T("CMD_GET_GRAPH_LIST"),
 		_T("CMD_DEFINE_GRAPH"),
 		_T("CMD_DELETE_GRAPH")
    };

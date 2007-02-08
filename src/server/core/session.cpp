@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.262 2007-02-01 20:03:03 victor Exp $ */
+/* $Id: session.cpp,v 1.263 2007-02-08 22:25:21 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -72,6 +72,18 @@ typedef struct
    DWORD dwToolId;
    DWORD dwUserId;
 } OBJECT_TOOL_ACL;
+
+
+//
+// Graph ACL entry
+//
+
+struct GRAPH_ACL_ENTRY
+{
+	DWORD dwGraphId;
+	DWORD dwUserId;
+	DWORD dwAccess;
+};
 
 
 //
@@ -269,16 +281,17 @@ void ClientSession::Run(void)
 // Print debug information
 //
 
-void ClientSession::DebugPrintf(char *szFormat, ...)
+void ClientSession::DebugPrintf(TCHAR *pszFormat, ...)
 {
-   if ((g_dwFlags & AF_STANDALONE) && (g_dwFlags & AF_DEBUG_CSCP))
+   if (g_dwFlags & AF_DEBUG_CSCP)
    {
       va_list args;
+		TCHAR szBuffer[4096];
 
-      printf("*CSCP(%d)* ", m_dwIndex);
-      va_start(args, szFormat);
-      vprintf(szFormat, args);
+      va_start(args, pszFormat);
+      _vsntprintf(szBuffer, 4096, pszFormat, args);
       va_end(args);
+		DbgPrintf(AF_DEBUG_CSCP, _T("[CLSN-%d] %s"), m_dwIndex, szBuffer);
    }
 }
 
@@ -315,7 +328,7 @@ void ClientSession::ReadThread(void)
       // Check if message is too large
       if (iErr == 1)
       {
-         DebugPrintf("Received message %s is too large (%d bytes)\n",
+         DebugPrintf("Received message %s is too large (%d bytes)",
                      NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                      ntohl(pRawMsg->dwSize));
          continue;
@@ -324,14 +337,14 @@ void ClientSession::ReadThread(void)
       // Check for decryption error
       if (iErr == 2)
       {
-         DebugPrintf("Unable to decrypt received message\n");
+         DebugPrintf("Unable to decrypt received message");
          continue;
       }
 
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(pRawMsg->dwSize) != iErr)
       {
-         DebugPrintf("Actual message size doesn't match wSize value (%d,%d)\n", iErr, ntohl(pRawMsg->dwSize));
+         DebugPrintf("Actual message size doesn't match wSize value (%d,%d)", iErr, ntohl(pRawMsg->dwSize));
          continue;   // Bad packet, wait for next
       }
 
@@ -343,7 +356,7 @@ void ClientSession::ReadThread(void)
          pRawMsg->dwId = ntohl(pRawMsg->dwId);
          pRawMsg->wCode = ntohs(pRawMsg->wCode);
          pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
-         DebugPrintf("Received raw message %s\n", NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
+         DebugPrintf("Received raw message %s", NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
 
          if ((pRawMsg->wCode == CMD_FILE_DATA) || 
              (pRawMsg->wCode == CMD_ABORT_FILE_TRANSFER))
@@ -396,7 +409,7 @@ void ClientSession::ReadThread(void)
             }
             else
             {
-               DebugPrintf("Out of state message (ID: %d)\n", pRawMsg->dwId);
+               DebugPrintf("Out of state message (ID: %d)", pRawMsg->dwId);
             }
          }
       }
@@ -413,7 +426,7 @@ void ClientSession::ReadThread(void)
          }
          else if (pMsg->GetCode() == CMD_KEEPALIVE)
 			{
-		      DebugPrintf("Received message %s\n", NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
+		      DebugPrintf("Received message %s", NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
 				RespondToKeepalive(pMsg->GetId());
 				delete pMsg;
 			}
@@ -466,14 +479,14 @@ void ClientSession::ReadThread(void)
    // Waiting while reference count becomes 0
    if (m_dwRefCount > 0)
    {
-      DebugPrintf("Waiting for pending requests...\n");
+      DebugPrintf("Waiting for pending requests...");
       do
       {
          ThreadSleep(1);
       } while(m_dwRefCount > 0);
    }
 
-   DebugPrintf("Session closed\n");
+   DebugPrintf("Session closed");
 }
 
 
@@ -494,7 +507,7 @@ void ClientSession::WriteThread(void)
       if (pRawMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-      DebugPrintf("Sending message %s\n", NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer));
+      DebugPrintf("Sending message %s", NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer));
       if (m_pCtx != NULL)
       {
          pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
@@ -620,7 +633,7 @@ void ClientSession::ProcessingThread(void)
          break;
 
       m_wCurrentCmd = pMsg->GetCode();
-      DebugPrintf("Received message %s\n", NXCPMessageCodeName(m_wCurrentCmd, szBuffer));
+      DebugPrintf("Received message %s", NXCPMessageCodeName(m_wCurrentCmd, szBuffer));
       if (!(m_dwFlags & CSF_AUTHENTICATED) && 
           (m_wCurrentCmd != CMD_LOGIN) && 
           (m_wCurrentCmd != CMD_GET_SERVER_INFO) &&
@@ -1181,7 +1194,7 @@ void ClientSession::Login(CSCPMessage *pRequest)
          msg.SetVariable(VID_USER_ID, m_dwUserId);
          msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)bChangePasswd);
          msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_dwFlags & AF_DB_CONNECTION_LOST) ? FALSE : TRUE));
-         DebugPrintf("User %s authenticated\n", m_szUserName);
+         DebugPrintf("User %s authenticated", m_szUserName);
       }
       else
       {
@@ -3008,7 +3021,7 @@ void ClientSession::SaveEPP(CSCPMessage *pRequest)
             m_ppEPPRuleList = (EPRule **)malloc(sizeof(EPRule *) * m_dwNumRecordsToUpload);
             memset(m_ppEPPRuleList, 0, sizeof(EPRule *) * m_dwNumRecordsToUpload);
          }
-         DebugPrintf("Accepted EPP upload request for %d rules\n", m_dwNumRecordsToUpload);
+         DebugPrintf("Accepted EPP upload request for %d rules", m_dwNumRecordsToUpload);
       }
       else
       {
@@ -3052,7 +3065,7 @@ void ClientSession::ProcessEPPRecord(CSCPMessage *pRequest)
             CSCPMessage msg;
 
             // All records received, replace event policy...
-            DebugPrintf("Replacing event processing policy with a new one at %p (%d rules)\n",
+            DebugPrintf("Replacing event processing policy with a new one at %p (%d rules)",
                         m_ppEPPRuleList, m_dwNumRecordsToUpload);
             g_pEventPolicy->ReplacePolicy(m_dwNumRecordsToUpload, m_ppEPPRuleList);
             g_pEventPolicy->SaveToDB();
@@ -8354,6 +8367,76 @@ void ClientSession::SendDCIInfo(CSCPMessage *pRequest)
 
 
 //
+// Check access to the graph
+//
+
+static BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, DWORD dwGraphId,
+									  DWORD dwUserId, DWORD dwDesiredAccess)
+{
+	int i;
+
+	for(i = 0; i < nACLSize; i++)
+	{
+		if (pACL[i].dwGraphId == dwGraphId)
+		{
+			if ((pACL[i].dwUserId == dwUserId) ||
+				 ((pACL[i].dwUserId & GROUP_FLAG) && CheckUserMembership(dwUserId, pACL[i].dwUserId)))
+			{
+				if ((pACL[i].dwAccess & dwDesiredAccess) == dwDesiredAccess)
+					return TRUE;
+			}
+		}
+	}
+	return FALSE;
+}
+
+
+//
+// Load graph's ACL - load for all graphs if dwGraphId is 0
+//
+
+static GRAPH_ACL_ENTRY *LoadGraphACL(DWORD dwGraphId, int *pnACLSize)
+{
+	int i, nSize;
+	GRAPH_ACL_ENTRY *pACL = NULL;
+	DB_RESULT hResult;
+
+	if (dwGraphId == 0)
+	{
+		hResult = DBSelect(g_hCoreDB, _T("SELECT graph_id,user_id,user_rights FROM graph_acl"));
+	}
+	else
+	{
+		TCHAR szQuery[256];
+
+		_stprintf(szQuery, _T("SELECT graph_id,user_id,user_rights FROM graph_acl WHERE graph_id=%d"), dwGraphId);
+		hResult = DBSelect(g_hCoreDB, szQuery);
+	}
+	if (hResult != NULL)
+	{
+		nSize = DBGetNumRows(hResult);
+		if (nSize > 0)
+		{
+			pACL = (GRAPH_ACL_ENTRY *)malloc(sizeof(GRAPH_ACL_ENTRY) * nSize);
+			for(i = 0; i < nSize; i++)
+			{
+				pACL[i].dwGraphId = DBGetFieldULong(hResult, i, 0);
+				pACL[i].dwUserId = DBGetFieldULong(hResult, i, 1);
+				pACL[i].dwAccess = DBGetFieldULong(hResult, i, 2);
+			}
+		}
+		*pnACLSize = nSize;
+		DBFreeResult(hResult);
+	}
+	else
+	{
+		*pnACLSize = -1;	// Database error
+	}
+	return pACL;
+}
+
+
+//
 // Send list of available graphs to client
 //
 
@@ -8361,21 +8444,56 @@ void ClientSession::SendGraphList(DWORD dwRqId)
 {
    CSCPMessage msg;
 	DB_RESULT hResult;
-	int i, nRows;
+	GRAPH_ACL_ENTRY *pACL = NULL;
+	int i, nRows, nACLSize;
+	DWORD dwId, dwNumGraphs, dwGraphId, dwOwner;
+	TCHAR *pszStr;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
-	hResult = DBSelect(g_hCoreDB, _T("SELECT graph_id,owner_id,name,config FROM graphs"));
-	if (hResult != NULL)
+	pACL = LoadGraphACL(0, &nACLSize);
+	if (nACLSize != -1)
 	{
-		nRows = DBGetNumRows(hResult);
-		for(i = 0; i < nRows; i++)
+		hResult = DBSelect(g_hCoreDB, _T("SELECT graph_id,owner_id,name,config FROM graphs"));
+		if (hResult != NULL)
 		{
-
+			nRows = DBGetNumRows(hResult);
+			for(i = 0, dwNumGraphs = 0, dwId = VID_GRAPH_LIST_BASE; i < nRows; i++)
+			{
+				dwGraphId = DBGetFieldULong(hResult, i, 0);
+				dwOwner = DBGetFieldULong(hResult, i, 1);
+				if ((m_dwUserId == 0) ||
+				    (m_dwUserId == dwOwner) ||
+				    CheckGraphAccess(pACL, nACLSize, dwGraphId, m_dwUserId, FALSE))
+				{
+					msg.SetVariable(dwId++, dwGraphId);
+					msg.SetVariable(dwId++, dwOwner);
+					pszStr = DBGetField(hResult, i, 2, NULL, 0);
+					if (pszStr != NULL)
+					{
+						DecodeSQLStringAndSetVariable(&msg, dwId++, pszStr);
+						free(pszStr);
+					}
+					pszStr = DBGetField(hResult, i, 3, NULL, 0);
+					if (pszStr != NULL)
+					{
+						DecodeSQLStringAndSetVariable(&msg, dwId++, pszStr);
+						free(pszStr);
+					}
+					dwId += 6;
+					dwNumGraphs++;
+				}
+			}
+			DBFreeResult(hResult);
+			msg.SetVariable(VID_NUM_GRAPHS, dwNumGraphs);
+			msg.SetVariable(VID_RCC, RCC_SUCCESS);
 		}
-		DBFreeResult(hResult);
-		msg.SetVariable(VID_RCC, RCC_SUCCESS);
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+		}
+		safe_free(pACL);
 	}
 	else
 	{
@@ -8387,15 +8505,145 @@ void ClientSession::SendGraphList(DWORD dwRqId)
 
 
 //
-// Define grap
+// Define graph
 //
 
 void ClientSession::DefineGraph(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
+	BOOL bNew, bSuccess;
+	DWORD dwId, dwGraphId, dwOwner, dwUserId, dwAccess;
+	TCHAR szQuery[16384], *pszEscName, *pszEscData, *pszTemp;
+	GRAPH_ACL_ENTRY *pACL = NULL;
+	int i, nACLSize;
+	DB_RESULT hResult;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
+
+	dwGraphId = pRequest->GetVariableLong(VID_GRAPH_ID);
+	if (dwGraphId == 0)
+	{
+		// New graph
+		dwGraphId = CreateUniqueId(IDG_GRAPH);
+		bNew = TRUE;
+		bSuccess = TRUE;
+	}
+	else
+	{
+		bNew = FALSE;
+		bSuccess = FALSE;
+
+		// Check existence and access rights
+		_stprintf(szQuery, _T("SELECT owner_id FROM graphs WHERE graph_id=%d"), dwGraphId);
+		hResult = DBSelect(g_hCoreDB, szQuery);
+		if (hResult != NULL)
+		{
+			if (DBGetNumRows(hResult) > 0)
+			{
+				dwOwner = DBGetFieldULong(hResult, 0, 0);
+				pACL = LoadGraphACL(dwGraphId, &nACLSize);
+				if (nACLSize != -1)
+				{
+					if ((m_dwUserId == 0) ||
+						 (m_dwUserId == dwOwner) ||
+						 CheckGraphAccess(pACL, nACLSize, dwGraphId, m_dwUserId, NXGRAPH_ACCESS_WRITE))
+					{
+						bSuccess = TRUE;
+					}
+					else
+					{
+						msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+					}
+					safe_free(pACL);
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+				}
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_INVALID_GRAPH_ID);
+			}
+			DBFreeResult(hResult);
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+		}
+	}
+
+	// Create/update graph
+	if (bSuccess)
+	{
+		DebugPrintf(_T("%s graph %d"), bNew ? _T("Creating") : _T("Updating"), dwGraphId);
+		bSuccess = FALSE;
+		if (DBBegin(g_hCoreDB))
+		{
+			pRequest->GetVariableStr(VID_NAME, szQuery, 256);
+			pszEscName = EncodeSQLString(szQuery);
+			pszTemp = pRequest->GetVariableStr(VID_GRAPH_CONFIG);
+			if (pszTemp != NULL)
+			{
+				pszEscData = EncodeSQLString(CHECK_NULL(pszTemp));
+				free(pszTemp);
+			}
+			if (bNew)
+			{
+				_sntprintf(szQuery, 16384, _T("INSERT INTO graphs (graph_id,owner_id,name,config) VALUES (%d,%d,'%s','%s')"),
+				           dwGraphId, m_dwUserId, pszEscName, pszEscData);
+			}
+			else
+			{
+				_stprintf(szQuery, _T("DELETE FROM graph_acl WHERE graph_id=%d"), dwGraphId);
+				DBQuery(g_hCoreDB, szQuery);
+
+				_sntprintf(szQuery, 16384, _T("UPDATE graphs SET name='%s',config='%s' WHERE graph_id=%d"),
+				           pszEscName, pszEscData, dwGraphId);
+			}
+			free(pszEscName);
+			free(pszEscData);
+
+			if (DBQuery(g_hCoreDB, szQuery))
+			{
+				// Insert new ACL
+				nACLSize = (int)pRequest->GetVariableLong(VID_ACL_SIZE);
+				for(i = 0, dwId = VID_GRAPH_ACL_BASE, bSuccess = TRUE; i < nACLSize; i++)
+				{
+					dwUserId = pRequest->GetVariableLong(dwId++);
+					dwAccess = pRequest->GetVariableLong(dwId++);
+					_stprintf(szQuery, _T("INSERT INTO graph_acl (graph_id,user_id,user_rights) VALUES (%d,%d,%d)"),
+					          dwGraphId, dwUserId, dwAccess);
+					if (!DBQuery(g_hCoreDB, szQuery))
+					{
+						bSuccess = FALSE;
+						msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+						break;
+					}
+				}
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+			}
+
+			if (bSuccess)
+			{
+				DBCommit(g_hCoreDB);
+				msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				Notify(NX_NOTIFY_GRAPHS_CHANGED);
+			}
+			else
+			{
+				DBRollback(g_hCoreDB);
+			}
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+		}
+	}
 
    SendMessage(&msg);
 }
@@ -8408,9 +8656,64 @@ void ClientSession::DefineGraph(CSCPMessage *pRequest)
 void ClientSession::DeleteGraph(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
+	DWORD dwGraphId, dwOwner;
+	GRAPH_ACL_ENTRY *pACL = NULL;
+	int nACLSize;
+	DB_RESULT hResult;
+	TCHAR szQuery[256];
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
+
+	dwGraphId = pRequest->GetVariableLong(VID_GRAPH_ID);
+	_stprintf(szQuery, _T("SELECT owner_id FROM graphs WHERE graph_id=%d"), dwGraphId);
+	hResult = DBSelect(g_hCoreDB, szQuery);
+	if (hResult != NULL)
+	{
+		if (DBGetNumRows(hResult) > 0)
+		{
+			dwOwner = DBGetFieldULong(hResult, 0, 0);
+			pACL = LoadGraphACL(dwGraphId, &nACLSize);
+			if (nACLSize != -1)
+			{
+				if ((m_dwUserId == 0) ||
+				    (m_dwUserId == dwOwner) ||
+				    CheckGraphAccess(pACL, nACLSize, dwGraphId, m_dwUserId, NXGRAPH_ACCESS_READ))
+				{
+					_stprintf(szQuery, _T("DELETE FROM graphs WHERE graph_id=%d"), dwGraphId);
+					if (DBQuery(g_hCoreDB, szQuery))
+					{
+						_stprintf(szQuery, _T("DELETE FROM graph_acl WHERE graph_id=%d"), dwGraphId);
+						DBQuery(g_hCoreDB, szQuery);
+						msg.SetVariable(VID_RCC, RCC_SUCCESS);
+						Notify(NX_NOTIFY_GRAPHS_CHANGED);
+					}
+					else
+					{
+						msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+					}
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+				}
+				safe_free(pACL);
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+			}
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_INVALID_GRAPH_ID);
+		}
+		DBFreeResult(hResult);
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+	}
 
    SendMessage(&msg);
 }

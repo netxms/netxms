@@ -49,6 +49,9 @@ extern CConsoleApp theApp;
 #define OBJTOOL_MENU_FIRST_ID 4000
 #define OBJTOOL_MENU_LAST_ID  4999
 
+#define GRAPH_MENU_FIRST_ID	5000
+#define GRAPH_MENU_LAST_ID		5999
+
 #define NXCON_ALARM_SOUND_KEY _T("Software\\NetXMS\\NetXMS Console\\AlarmSounds")
 
 #define NXCON_CONFIG_VERSION  1
@@ -126,6 +129,7 @@ extern CConsoleApp theApp;
 #define NXCM_GRAPH_ZOOM_CHANGED    (WM_USER + 124)
 #define NXCM_SET_OBJECT            (WM_USER + 125)
 #define NXCM_ACTIVATE_OBJECT_TREE  (WM_USER + 126)
+#define NXCM_GRAPH_LIST_UPDATED    (WM_USER + 127)
 
 
 //
@@ -337,6 +341,7 @@ HTREEITEM FindTreeCtrlItemEx(CTreeCtrl &ctrl, HTREEITEM hRoot, DWORD dwData);
 void SaveListCtrlColumns(CListCtrl &wndListCtrl, TCHAR *pszSection, TCHAR *pszPrefix);
 void LoadListCtrlColumns(CListCtrl &wndListCtrl, TCHAR *pszSection, TCHAR *pszPrefix);
 HGLOBAL CopyGlobalMem(HGLOBAL hSrc);
+void UpdateGraphList(void);
 
 
 //
@@ -408,6 +413,9 @@ extern SNMP_MIBObject *g_pMIBRoot;
 extern ALARM_SOUND_CFG g_soundCfg;
 extern char g_szConfigKeywords[];
 extern char g_szScriptKeywords[];
+extern DWORD g_dwNumGraphs;
+extern NXC_GRAPH *g_pGraphList;
+extern HANDLE g_mutexGraphListAccess;
 
 
 //
@@ -422,6 +430,21 @@ inline void LockActions(void)
 inline void UnlockActions(void)
 {
    ReleaseMutex(g_mutexActionListAccess);
+}
+
+
+//
+// Lock/unlock access to graph list
+//
+
+inline void LockGraphs(void)
+{
+   WaitForSingleObject(g_mutexGraphListAccess, INFINITE);
+}
+
+inline void UnlockGraphs(void)
+{
+   ReleaseMutex(g_mutexGraphListAccess);
 }
 
 

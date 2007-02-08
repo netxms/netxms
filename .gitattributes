@@ -894,8 +894,6 @@ src/console/win32/VPNCPropsGeneral.cpp -text
 src/console/win32/VPNCPropsGeneral.h -text
 src/console/win32/ValueList.cpp -text
 src/console/win32/ValueList.h -text
-src/console/win32/ViewEditor.cpp -text
-src/console/win32/ViewEditor.h -text
 src/console/win32/WaitView.cpp -text
 src/console/win32/WaitView.h -text
 src/console/win32/WebBrowser.cpp -text
@@ -1057,6 +1055,7 @@ src/libnxcl/datacoll.cpp -text
 src/libnxcl/epp.cpp -text
 src/libnxcl/eventdb.cpp -text
 src/libnxcl/events.cpp -text
+src/libnxcl/graph.cpp -text
 src/libnxcl/image.cpp -text
 src/libnxcl/libnxcl.dsp -text
 src/libnxcl/libnxcl.dsw -text

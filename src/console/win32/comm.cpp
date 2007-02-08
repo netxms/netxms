@@ -325,6 +325,14 @@ static DWORD WINAPI LoginThread(void *pArg)
       dwResult = LoadObjectTools();
    }
 
+   // Load predefined graphs
+   if (dwResult == RCC_SUCCESS)
+   {
+      SetInfoText(hWnd, _T("Loading predefined graphs..."));
+		NXCDestroyGraphList(g_dwNumGraphs, g_pGraphList);
+      dwResult = NXCGetGraphList(g_hSession, &g_dwNumGraphs, &g_pGraphList);
+   }
+
    // Synchronizing alarms
    if (dwResult == RCC_SUCCESS)
    {
@@ -343,6 +351,8 @@ static DWORD WINAPI LoginThread(void *pArg)
    }
 
    PostMessage(hWnd, NXCM_REQUEST_COMPLETED, 0, dwResult);
+	if (dwResult == RCC_SUCCESS)
+		theApp.PostThreadMessage(NXCM_GRAPH_LIST_UPDATED, 0, 0);
    return dwResult;
 }
 

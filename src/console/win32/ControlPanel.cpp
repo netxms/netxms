@@ -117,7 +117,6 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    AddItem(_T("Object Tools"), 8, ID_CONTROLPANEL_OBJECTTOOLS);
    AddItem(_T("Script Library"), 9, ID_CONTROLPANEL_SCRIPTLIBRARY);
    AddItem(_T("Modules"), 10, ID_CONTROLPANEL_MODULES);
-   //AddItem(_T("View Builder"), 10, ID_CONTROLPANEL_VIEWBUILDER);
    AddItem(_T("Agent Configurations"), 11, ID_CONTROLPANEL_AGENTCONFIGS);
    AddItem(_T("Network Discovery"), 12, ID_CONTROLPANEL_NETWORKDISCOVERY);
 

@@ -200,6 +200,10 @@ SOURCE=.\events.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\graph.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\image.cpp
 # End Source File
 # Begin Source File
