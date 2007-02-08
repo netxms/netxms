@@ -196,7 +196,7 @@ NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
 static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 {
    DISCOVERY_FILTER_DATA data;
-   char szCommunityString[MAX_DB_STRING], szFilter[MAX_DB_STRING], szBuffer[256];
+   char szCommunityString[MAX_DB_STRING], szFilter[MAX_DB_STRING], szBuffer[256], szIpAddr[16];
    DWORD dwTemp;
    AgentConnection *pAgentConn;
    NXSL_Program *pScript;
@@ -204,9 +204,13 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    BOOL bResult = FALSE;
 	SNMP_UDPTransport *pTransport;
 
+	IpToStr(dwIpAddr, szIpAddr);
    if ((FindNodeByIP(dwIpAddr) != NULL) ||
        (FindSubnetByIP(dwIpAddr) != NULL))
+	{
+		DbgPrintf(AF_DEBUG_DISCOVERY, "AcceptNewNode(%s): node already exist in database", szIpAddr);
       return FALSE;  // Node already exist in database
+	}
 
    // Read configuration
    ConfigReadStr("DefaultCommunityString", szCommunityString, MAX_DB_STRING, "public");
@@ -215,7 +219,10 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 
    // Run filter script
    if ((szFilter[0] == 0) || (!_tcsicmp(szFilter, "none")))
+	{
+		DbgPrintf(AF_DEBUG_DISCOVERY, "AcceptNewNode(%s): no filtering, node accepted", szIpAddr);
       return TRUE;   // No filtering
+	}
 
    // Initialize new node data
    memset(&data, 0, sizeof(DISCOVERY_FILTER_DATA));
@@ -224,6 +231,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    data.dwSubnetAddr = dwIpAddr & dwNetMask;
 
    // Check SNMP support
+	DbgPrintf(AF_DEBUG_DISCOVERY, "AcceptNewNode(%s): checking SNMP support", szIpAddr);
 	pTransport = new SNMP_UDPTransport;
 	pTransport->CreateUDPTransport(NULL, htonl(dwIpAddr), 161);
    if (SnmpGet(SNMP_VERSION_2C, pTransport, szCommunityString,
@@ -245,6 +253,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    }
 
    // Check NetXMS agent support
+	DbgPrintf(AF_DEBUG_DISCOVERY, "AcceptNewNode(%s): checking NetXMS agent", szIpAddr);
    pAgentConn = new AgentConnection(htonl(dwIpAddr), AGENT_LISTEN_PORT,
                                     AUTH_NONE, "");
    if (pAgentConn->Connect(g_pServerKey))
@@ -317,6 +326,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
       int i, nRows, nType;
 
       dwFlags = ConfigReadULong(_T("DiscoveryFilterFlags"), DFF_ALLOW_AGENT | DFF_ALLOW_SNMP);
+		DbgPrintf(AF_DEBUG_DISCOVERY, "AcceptNewNode(%s): auto filter, dwFlags=%04X", szIpAddr, dwFlags);
 
       if ((dwFlags & (DFF_ALLOW_AGENT | DFF_ALLOW_SNMP)) == 0)
       {
@@ -340,11 +350,12 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
       // Check range
       if ((dwFlags & DFF_ONLY_RANGE) && bResult)
       {
+			DbgPrintf(AF_DEBUG_DISCOVERY, "AcceptNewNode(%s): auto filter - checking range", szIpAddr);
          hResult = DBSelect(g_hCoreDB, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=2"));
          if (hResult != NULL)
          {
             nRows = DBGetNumRows(hResult);
-            for(i = 0; i < nRows; i++)
+            for(i = 0, bResult = FALSE; (i < nRows) && (!bResult); i++)
             {
                nType = DBGetFieldLong(hResult, i, 0);
                if (nType == 0)
@@ -362,6 +373,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
             DBFreeResult(hResult);
          }
       }
+		DbgPrintf(AF_DEBUG_DISCOVERY, "AcceptNewNode(%s): auto filter - bResult=%d", szIpAddr, bResult);
    }
    else
    {
@@ -369,24 +381,24 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
       pScript = g_pScriptLibrary->FindScript(szFilter);
       if (pScript != NULL)
       {
-         DbgPrintf(AF_DEBUG_DISCOVERY, "Running filter script %s", szFilter);
+         DbgPrintf(AF_DEBUG_DISCOVERY, "AcceptNewNode(%s): Running filter script %s", szIpAddr, szFilter);
          pValue = new NXSL_Value(new NXSL_Object(&m_nxslDiscoveryClass, &data));
          if (pScript->Run(NULL, 1, &pValue) == 0)
          {
             bResult = (pScript->GetResult()->GetValueAsInt32() != 0) ? TRUE : FALSE;
-            DbgPrintf(AF_DEBUG_DISCOVERY, "Filter script result: %d", bResult);
+            DbgPrintf(AF_DEBUG_DISCOVERY, "AcceptNewNode(%s): Filter script result: %d", szIpAddr, bResult);
          }
          else
          {
-            DbgPrintf(AF_DEBUG_DISCOVERY, "Filter script execution error: %s",
-                      pScript->GetErrorText());
+            DbgPrintf(AF_DEBUG_DISCOVERY, "AcceptNewNode(%s): Filter script execution error: %s",
+                      szIpAddr, pScript->GetErrorText());
             PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), szFilter,
                       pScript->GetErrorText(), 0);
          }
       }
       else
       {
-         DbgPrintf(AF_DEBUG_DISCOVERY, "Cannot find filter script %s", szFilter);
+         DbgPrintf(AF_DEBUG_DISCOVERY, "AcceptNewNode(%s): Cannot find filter script %s", szIpAddr, szFilter);
       }
       g_pScriptLibrary->Unlock();
    }
@@ -402,6 +414,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 {
    NEW_NODE *pInfo;
+	TCHAR szIpAddr[16], szNetMask[16];
 
    DbgPrintf(AF_DEBUG_DISCOVERY, "Node poller started");
 
@@ -411,6 +424,9 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
       if (pInfo == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator received
 
+		DbgPrintf(AF_DEBUG_DISCOVERY, "NodePoller: processing node %s/%s",
+		          IpToStr(pInfo->dwIpAddr, szIpAddr),
+		          IpToStr(pInfo->dwNetMask, szNetMask));
       if (AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask))
          PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, NULL, 0, 0, NULL);
       free(pInfo);

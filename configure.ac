@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.235 2007-01-23 22:42:52 alk Exp $
+# $Id: configure.ac,v 1.236 2007-02-08 07:56:53 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -943,7 +943,7 @@ fi
 # PostgreSQL
 #--------------------------------------------------------------------
 
-check_substr "$COMPONENTS" "mysql"
+check_substr "$COMPONENTS" "pgsql"
 if test $? = 0; then
 	AC_CHECK_LIB(m, floor)
 	AC_CHECK_LIB(pq, PQconnectdb, ,
@@ -1139,8 +1139,6 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ups/Makefile
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/odbcquery/Makefile
-	src/nxhttpd/Makefile
-	src/nxhttpd/templates/Makefile
 	tools/Makefile
 ])
 
