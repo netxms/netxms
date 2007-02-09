@@ -101,7 +101,7 @@ TCHAR LIBNETXMS_EXPORTABLE *SEHExceptionName(DWORD code)
    static struct 
    {
       DWORD code;
-      char *name;
+      TCHAR *name;
    } exceptionList[] =
    {
       { EXCEPTION_ACCESS_VIOLATION, _T("Access violation") },
@@ -161,7 +161,7 @@ void LIBNETXMS_EXPORTABLE SEHDefaultConsoleHandler(EXCEPTION_POINTERS *pInfo)
             pInfo->ContextRecord->EFlags);
 #endif
 
-	_tprintf("\nCall stack:\n");
+	_tprintf(_T("\nCall stack:\n"));
 	NxStackWalker sw(NxStackWalker::StackWalkOptions::OptionsAll, NULL, GetCurrentProcessId(), GetCurrentProcess());
 	sw.ShowCallstack(GetCurrentThread(), pInfo->ContextRecord);
 

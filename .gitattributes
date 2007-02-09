@@ -741,6 +741,8 @@ src/console/win32/EventSelDlg.cpp -text
 src/console/win32/EventSelDlg.h -text
 src/console/win32/ExtEditCtrl.cpp -text
 src/console/win32/ExtEditCtrl.h -text
+src/console/win32/FatalErrorDlg.cpp -text
+src/console/win32/FatalErrorDlg.h -text
 src/console/win32/Graph.cpp -text
 src/console/win32/Graph.h -text
 src/console/win32/GraphDataPage.cpp -text

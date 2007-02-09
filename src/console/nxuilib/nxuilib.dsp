@@ -55,11 +55,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 libnetxms.lib libnxcl.lib sapi.lib winmm.lib /nologo /subsystem:windows /dll /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcl\Release"
+# ADD LINK32 libnetxms.lib libnxcl.lib sapi.lib winmm.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcl\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Release\nxuilib.dll C:\NetXMS\bin
+PostBuild_Cmds=copy Release\nxuilib.dll C:\NetXMS\bin	copy Release\nxuilib.pdb C:\NetXMS\bin
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "nxuilib - Win32 Debug"
@@ -90,7 +90,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Debug\nxuilib.dll ..\..\..\bin
+PostBuild_Cmds=copy Debug\nxuilib.dll ..\..\..\bin	copy Debug\nxuilib.pdb ..\..\..\bin
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "nxuilib - Win32 Debug UNICODE"
@@ -123,7 +123,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Debug_UNICODE\nxuilibw.dll ..\..\..\bin
+PostBuild_Cmds=copy Debug_UNICODE\nxuilibw.dll ..\..\..\bin	copy Debug_UNICODE\nxuilibw.pdb ..\..\..\bin
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "nxuilib - Win32 Release UNICODE"
@@ -151,12 +151,12 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 libnetxms.lib libnxcl.lib sapi.lib winmm.lib /nologo /subsystem:windows /dll /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcl\Release"
-# ADD LINK32 libnetxmsw.lib libnxclw.lib sapi.lib winmm.lib /nologo /subsystem:windows /dll /machine:I386 /def:".\nxuilibw.def" /out:"Release_UNICODE/nxuilibw.dll" /libpath:"..\..\libnetxms\Release_UNICODE" /libpath:"..\..\libnxcl\Release_UNICODE"
+# ADD LINK32 libnetxmsw.lib libnxclw.lib sapi.lib winmm.lib /nologo /subsystem:windows /dll /debug /machine:I386 /def:".\nxuilibw.def" /out:"Release_UNICODE/nxuilibw.dll" /pdbtype:sept /libpath:"..\..\libnetxms\Release_UNICODE" /libpath:"..\..\libnxcl\Release_UNICODE"
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Release_UNICODE\nxuilibw.dll C:\NetXMS\bin
+PostBuild_Cmds=copy Release_UNICODE\nxuilibw.dll C:\NetXMS\bin	copy Release_UNICODE\nxuilibw.pdb C:\NetXMS\bin
 # End Special Build Tool
 
 !ENDIF 

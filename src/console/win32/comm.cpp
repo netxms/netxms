@@ -676,7 +676,7 @@ static void PollerCallback(TCHAR *pszMsg, void *pArg)
 // Poller thread
 //
 
-DWORD WINAPI PollerThread(void *pArg)
+THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 {
    RqData *pData = (RqData *)pArg;
    DWORD dwResult;
@@ -685,7 +685,7 @@ DWORD WINAPI PollerThread(void *pArg)
                           PollerCallback, pArg);
    if (pData->hWnd != NULL)
       PostMessage(pData->hWnd, NXCM_REQUEST_COMPLETED, 0, dwResult);
-   return dwResult;
+   return THREAD_OK;
 }
 
 

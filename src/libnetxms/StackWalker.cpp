@@ -22,9 +22,8 @@
  *                       (thanks to owillebo: http://www.codeproject.com/script/profile/whos_who.asp?id=536268)
  *
  **********************************************************************/
-#include <windows.h>
-#include <tchar.h>
-#include <stdio.h>
+
+#include "libnetxms.h"
 #pragma comment(lib, "version.lib")  // for "VerQueryValue"
 
 #include "StackWalker.h"

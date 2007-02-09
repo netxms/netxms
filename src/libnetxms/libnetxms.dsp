@@ -126,7 +126,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Debug64\libnetxms.dll ..\..\bin64
+PostBuild_Cmds=copy Debug64\libnetxms.dll ..\..\bin64	copy Debug64\libnetxms.pdb ..\..\bin64
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 Release AMD64"
@@ -154,12 +154,12 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib /nologo /version:0.1 /dll /machine:I386
-# ADD LINK32 bufferoverflowU.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libeay32.lib dbghelp.lib /nologo /version:0.1 /dll /machine:IX86 /machine:AMD64
+# ADD LINK32 bufferoverflowU.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libeay32.lib dbghelp.lib /nologo /version:0.1 /dll /debug /machine:IX86 /pdbtype:sept /machine:AMD64
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Release64\libnetxms.dll C:\NetXMS\bin64
+PostBuild_Cmds=copy Release64\libnetxms.dll C:\NetXMS\bin64	copy Release64\libnetxms.pdb C:\NetXMS\bin64
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 Debug UNICODE"
@@ -193,7 +193,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Debug_UNICODE\libnetxmsw.dll ..\..\bin
+PostBuild_Cmds=copy Debug_UNICODE\libnetxmsw.dll ..\..\bin	copy Debug_UNICODE\libnetxmsw.pdb ..\..\bin
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 Release UNICODE"
@@ -221,11 +221,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib ntdll.lib /nologo /version:0.1 /dll /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libeay32.lib dbghelp.lib /nologo /version:0.1 /dll /machine:I386 /out:"Release_UNICODE/libnetxmsw.dll"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libeay32.lib dbghelp.lib /nologo /version:0.1 /dll /debug /machine:I386 /out:"Release_UNICODE/libnetxmsw.dll" /pdbtype:sept
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Release_UNICODE\libnetxmsw.dll C:\NetXMS\bin
+PostBuild_Cmds=copy Release_UNICODE\libnetxmsw.dll C:\NetXMS\bin	copy Release_UNICODE\libnetxmsw.pdb C:\NetXMS\bin
 # End Special Build Tool
 
 !ENDIF 

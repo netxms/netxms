@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.59 2007-01-27 00:25:41 victor Exp $ */
+/* $Id: tools.cpp,v 1.60 2007-02-09 22:38:08 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
@@ -1002,6 +1002,43 @@ BOOL LIBNETXMS_EXPORTABLE RegexpMatch(TCHAR *pszStr, TCHAR *pszExpr, BOOL bMatch
 
    return bResult;
 #endif
+}
+
+
+//
+// Load file into memory
+//
+
+BYTE LIBNETXMS_EXPORTABLE *LoadFile(TCHAR *pszFileName, DWORD *pdwFileSize)
+{
+   int fd, iBufPos, iNumBytes, iBytesRead;
+   BYTE *pBuffer = NULL;
+   struct stat fs;
+
+   fd = _topen(pszFileName, O_RDONLY | O_BINARY);
+   if (fd != -1)
+   {
+      if (fstat(fd, &fs) != -1)
+      {
+         pBuffer = (BYTE *)malloc(fs.st_size + 1);
+         if (pBuffer != NULL)
+         {
+            *pdwFileSize = fs.st_size;
+            for(iBufPos = 0; iBufPos < fs.st_size; iBufPos += iBytesRead)
+            {
+               iNumBytes = min(16384, fs.st_size - iBufPos);
+               if ((iBytesRead = read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
+               {
+                  free(pBuffer);
+                  pBuffer = NULL;
+                  break;
+               }
+            }
+         }
+      }
+      close(fd);
+   }
+   return pBuffer;
 }
 
 

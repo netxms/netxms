@@ -152,6 +152,7 @@ public:
 	public:
 	virtual BOOL InitInstance();
 	virtual int ExitInstance();
+	virtual int Run();
 	//}}AFX_VIRTUAL
 
 // Implementation

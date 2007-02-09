@@ -909,5 +909,6 @@ void CGraphFrame::OnGraphDefine()
 {
 	DWORD dwResult;
 
+	char *p=NULL;*p=0;
 //	SendMessage(NXCM_GET_SAVE_INFO
 }

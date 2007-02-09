@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.100 2007-01-24 00:52:28 alk Exp $ */
+/* $Id: nms_util.h,v 1.101 2007-02-09 22:38:07 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -405,7 +405,8 @@ extern "C"
    void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, TCHAR *pszSubStr, TCHAR *pszReplace);
    TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(TCHAR *pszFileName);
    void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer);
-   
+	BYTE LIBNETXMS_EXPORTABLE *LoadFile(TCHAR *pszFileName, DWORD *pdwFileSize);
+ 
    DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *pData, DWORD dwSize, DWORD dwCRC);
    void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, size_t nbytes, unsigned char *hash);
    void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, size_t nbytes, unsigned char *hash);
@@ -504,6 +505,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.100  2007/01/24 00:52:28  alk
+Serial::ReadAll() added: read all data until timeout. returns data size, -1 it timeout w/o any data
+
 Revision 1.99  2007/01/11 18:56:14  victor
 - Added Process.COuntEx parameter
 - Added filtering by command line and window title to process.XXX parameters

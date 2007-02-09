@@ -75,8 +75,6 @@ int CNodePoller::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CNodePoller::OnPollRestart() 
 {
-   DWORD dwThreadId;
-
    if (m_bPollingStopped)
    {
       m_wndMsgArea.DeleteAllItems();
@@ -85,8 +83,7 @@ void CNodePoller::OnPollRestart()
       m_data.pArg1 = (void *)m_dwObjectId;
       m_data.pArg2 = (void *)m_iPollType;
       m_data.hWnd = m_hWnd;
-      m_hThread = CreateThread(NULL, 0, PollerThread, &m_data, 0, &dwThreadId);
-      CloseHandle(m_hThread);
+      ThreadCreate(PollerThread, 0, &m_data);
    }
 }
 

@@ -277,7 +277,7 @@ DWORD DoRequestArg7(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
 DWORD DoRequestArg9(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
                     void *pArg5, void *pArg6, void *pArg7, void *pArg8, void *pArg9,
                     TCHAR *pszInfoText);
-DWORD WINAPI PollerThread(void *pArg);
+THREAD_RESULT THREAD_CALL PollerThread(void *pArg);
 BOOL DownloadUpgradeFile(HANDLE hFile);
 
 

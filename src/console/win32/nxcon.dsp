@@ -55,7 +55,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
-# ADD LINK32 libnxcl.lib libnetxms.lib libnxsnmp.lib nxuilib.lib libnxmap.lib shfolder.lib msimg32.lib wininet.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnxcl\Release" /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxsnmp\Release" /libpath:"..\nxuilib\Release" /libpath:"..\..\libnxmap\Release"
+# ADD LINK32 libnxcl.lib libnetxms.lib libnxsnmp.lib nxuilib.lib libnxmap.lib shfolder.lib msimg32.lib wininet.lib dbghelp.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Release" /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxsnmp\Release" /libpath:"..\nxuilib\Release" /libpath:"..\..\libnxmap\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -86,7 +86,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libnxcl.lib libnetxms.lib libnxsnmp.lib nxuilib.lib libnxmap.lib shfolder.lib msimg32.lib wininet.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Debug" /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxsnmp\Debug" /libpath:"..\nxuilib\Debug" /libpath:"..\..\libnxmap\Debug"
+# ADD LINK32 libnxcl.lib libnetxms.lib libnxsnmp.lib nxuilib.lib libnxmap.lib shfolder.lib msimg32.lib wininet.lib dbghelp.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Debug" /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxsnmp\Debug" /libpath:"..\nxuilib\Debug" /libpath:"..\..\libnxmap\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Cmds=copy Debug\nxcon.exe ..\..\..\bin
@@ -117,10 +117,10 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 shfolder.lib libnxcl.lib libnetxms.lib libnxsnmp.lib libnxcscp.lib nxuilib.lib libnxmap.lib msimg32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Debug" /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxsnmp\Debug" /libpath:"..\..\libnxcscp\Debug" /libpath:"..\nxuilib\Debug" /libpath:"..\..\libnxmap\Debug"
-# ADD LINK32 libnxclw.lib libnetxmsw.lib libnxsnmpw.lib nxuilibw.lib libnxmapw.lib shfolder.lib msimg32.lib wininet.lib /nologo /entry:"wWinMainCRTStartup" /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Debug_UNICODE" /libpath:"..\..\libnetxms\Debug_UNICODE" /libpath:"..\..\libnxsnmp\Debug_UNICODE" /libpath:"..\nxuilib\Debug_UNICODE" /libpath:"..\..\libnxmap\Debug_UNICODE"
+# ADD LINK32 libnxclw.lib libnetxmsw.lib libnxsnmpw.lib nxuilibw.lib libnxmapw.lib shfolder.lib msimg32.lib wininet.lib dbghelp.lib /nologo /entry:"wWinMainCRTStartup" /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Debug_UNICODE" /libpath:"..\..\libnetxms\Debug_UNICODE" /libpath:"..\..\libnxsnmp\Debug_UNICODE" /libpath:"..\nxuilib\Debug_UNICODE" /libpath:"..\..\libnxmap\Debug_UNICODE"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
-PostBuild_Cmds=copy Debug_UNICODE\nxcon.exe ..\..\..\bin
+PostBuild_Cmds=copy Debug_UNICODE\nxcon.exe ..\..\..\bin	copy Debug_UNICODE\nxcon.pdb ..\..\..\bin
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "nxcon - Win32 Release UNICODE"
@@ -148,11 +148,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 shfolder.lib libnxcl.lib libnetxms.lib libnxsnmp.lib libnxcscp.lib nxuilib.lib libnxmap.lib msimg32.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnxcl\Release" /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxsnmp\Release" /libpath:"..\..\libnxcscp\Release" /libpath:"..\nxuilib\Release" /libpath:"..\..\libnxmap\Release"
-# ADD LINK32 libnxclw.lib libnetxmsw.lib libnxsnmpw.lib nxuilibw.lib libnxmapw.lib shfolder.lib msimg32.lib wininet.lib /nologo /entry:"wWinMainCRTStartup" /subsystem:windows /machine:I386 /libpath:"..\..\libnxcl\Release_UNICODE" /libpath:"..\..\libnetxms\Release_UNICODE" /libpath:"..\..\libnxsnmp\Release_UNICODE" /libpath:"..\nxuilib\Release_UNICODE" /libpath:"..\..\libnxmap\Release_UNICODE"
+# ADD LINK32 libnxclw.lib libnetxmsw.lib libnxsnmpw.lib nxuilibw.lib libnxmapw.lib shfolder.lib msimg32.lib wininet.lib dbghelp.lib /nologo /entry:"wWinMainCRTStartup" /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnxcl\Release_UNICODE" /libpath:"..\..\libnetxms\Release_UNICODE" /libpath:"..\..\libnxsnmp\Release_UNICODE" /libpath:"..\nxuilib\Release_UNICODE" /libpath:"..\..\libnxmap\Release_UNICODE"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Release_UNICODE\nxcon.exe C:\NetXMS\bin
+PostBuild_Cmds=copy Release_UNICODE\nxcon.exe C:\NetXMS\bin	copy Release_UNICODE\nxcon.pdb C:\NetXMS\bin
 # End Special Build Tool
 
 !ENDIF 
@@ -409,6 +409,10 @@ SOURCE=.\EventSelDlg.cpp
 # Begin Source File
 
 SOURCE=.\ExtEditCtrl.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\FatalErrorDlg.cpp
 # End Source File
 # Begin Source File
 
@@ -978,6 +982,10 @@ SOURCE=.\EventSelDlg.h
 # Begin Source File
 
 SOURCE=.\ExtEditCtrl.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\FatalErrorDlg.h
 # End Source File
 # Begin Source File
 

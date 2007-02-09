@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include <dbghelp.h>
 #include "nxcon.h"
 #include "MainFrm.h"
 #include "ActionEditor.h"
@@ -71,6 +72,7 @@
 #include "CreateMPDlg.h"
 #include "SelectMPDlg.h"
 #include "ConsoleUpgradeDlg.h"
+#include "FatalErrorDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -3635,4 +3637,180 @@ void CConsoleApp::OnGraphListUpdate(WPARAM wParam, LPARAM lParam)
 	UPDATE_MENU(m_hObjectBrowserMenu, 4);
 
 	UnlockGraphs();
+}
+
+
+//
+// Static data for excepion handler
+//
+
+static FILE *m_pExInfoFile = NULL;
+
+
+//
+// Writer for SEHShowCallStack()
+//
+
+static void ExceptionDataWriter(char *pszText)
+{
+	if (m_pExInfoFile != NULL)
+		fputs(pszText, m_pExInfoFile);
+}
+
+
+//
+// Exception handler
+//
+
+static void ExceptionHandler(EXCEPTION_POINTERS *pInfo)
+{
+	TCHAR szBuffer[MAX_PATH], szInfoFile[MAX_PATH], szDumpFile[MAX_PATH];
+	HANDLE hFile;
+	time_t t;
+	DWORD dwSize;
+	MINIDUMP_EXCEPTION_INFORMATION mei;
+	OSVERSIONINFO ver;
+   SYSTEM_INFO sysInfo;
+	CFatalErrorDlg dlg;
+	BYTE *pData;
+
+	t = time(NULL);
+
+	// Create info file
+	_sntprintf(szInfoFile, MAX_PATH, _T("%s\\nxcon-%d-%u.info"),
+	           g_szWorkDir, GetCurrentProcessId(), (DWORD)t);
+	m_pExInfoFile = _tfopen(szInfoFile, _T("w"));
+	if (m_pExInfoFile != NULL)
+	{
+		fprintf(m_pExInfoFile, "NETXMS CONSOLE CRASH DUMP\n%s\n", ctime(&t));
+		_ftprintf(m_pExInfoFile, _T("EXCEPTION: %08X (%s) at %08X\n"),
+		          pInfo->ExceptionRecord->ExceptionCode,
+		          SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
+		          pInfo->ExceptionRecord->ExceptionAddress);
+
+		// NetXMS and OS version
+		ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+		GetVersionEx(&ver);
+		if (ver.dwMajorVersion == 5)
+		{
+			switch(ver.dwMinorVersion)
+			{
+				case 0:
+					_tcscpy(szBuffer, _T("2000"));
+					break;
+				case 1:
+					_tcscpy(szBuffer, _T("XP"));
+					break;
+				case 2:
+					_tcscpy(szBuffer, _T("Server 2003"));
+					break;
+				default:
+					_stprintf(szBuffer, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
+					break;
+			}
+		}
+		else
+		{
+			_stprintf(szBuffer, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
+		}
+		_ftprintf(m_pExInfoFile, _T("\nNetXMS Console Version: ") NETXMS_VERSION_STRING _T("\n")
+		                         _T("OS Version: Windows %s Build %d %s\n"),
+		          szBuffer, ver.dwBuildNumber, ver.szCSDVersion);
+
+		// Processor architecture
+		fprintf(m_pExInfoFile, "Processor architecture: ");
+		GetSystemInfo(&sysInfo);
+		switch(sysInfo.wProcessorArchitecture)
+		{
+			case PROCESSOR_ARCHITECTURE_INTEL:
+				fprintf(m_pExInfoFile, "Intel x86\n");
+				break;
+			case PROCESSOR_ARCHITECTURE_MIPS:
+				fprintf(m_pExInfoFile, "MIPS\n");
+				break;
+			case PROCESSOR_ARCHITECTURE_ALPHA:
+				fprintf(m_pExInfoFile, "ALPHA\n");
+				break;
+			case PROCESSOR_ARCHITECTURE_PPC:
+				fprintf(m_pExInfoFile, "PowerPC\n");
+				break;
+			case PROCESSOR_ARCHITECTURE_IA64:
+				fprintf(m_pExInfoFile, "Intel IA-64\n");
+				break;
+			case PROCESSOR_ARCHITECTURE_IA32_ON_WIN64:
+				fprintf(m_pExInfoFile, "Intel x86 on Win64\n");
+				break;
+			case PROCESSOR_ARCHITECTURE_AMD64:
+				fprintf(m_pExInfoFile, "AMD64 (Intel EM64T)\n");
+				break;
+			default:
+				fprintf(m_pExInfoFile, "UNKNOWN\n");
+				break;
+		}
+
+#ifdef _X86_
+		fprintf(m_pExInfoFile, "\nRegister information:\n"
+		        "  eax=%08X  ebx=%08X  ecx=%08X  edx=%08X\n"
+		        "  esi=%08X  edi=%08X  ebp=%08X  esp=%08X\n"
+		        "  cs=%04X  ds=%04X  es=%04X  ss=%04X  fs=%04X  gs=%04X  flags=%08X\n",
+		        pInfo->ContextRecord->Eax, pInfo->ContextRecord->Ebx,
+		        pInfo->ContextRecord->Ecx, pInfo->ContextRecord->Edx,
+		        pInfo->ContextRecord->Esi, pInfo->ContextRecord->Edi,
+		        pInfo->ContextRecord->Ebp, pInfo->ContextRecord->Esp,
+		        pInfo->ContextRecord->SegCs, pInfo->ContextRecord->SegDs,
+		        pInfo->ContextRecord->SegEs, pInfo->ContextRecord->SegSs,
+		        pInfo->ContextRecord->SegFs, pInfo->ContextRecord->SegGs,
+		        pInfo->ContextRecord->EFlags);
+#endif
+
+		fprintf(m_pExInfoFile, "\nCall stack:\n");
+		SEHShowCallStack(pInfo->ContextRecord);
+
+		fclose(m_pExInfoFile);
+	}
+
+	// Create minidump
+	_sntprintf(szDumpFile, MAX_PATH, _T("%s\\nxcon-%d-%u.mdmp"),
+	           g_szWorkDir, GetCurrentProcessId(), (DWORD)t);
+   hFile = CreateFile(szDumpFile, GENERIC_WRITE, 0, NULL,
+                      CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+   if (hFile != INVALID_HANDLE_VALUE)
+   {
+		mei.ThreadId = GetCurrentThreadId();
+		mei.ExceptionPointers = pInfo;
+		mei.ClientPointers = FALSE;
+      MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile,
+                        MiniDumpNormal, &mei, NULL, NULL);
+      CloseHandle(hFile);
+   }
+
+	dwSize = 0;
+	pData = LoadFile(szInfoFile, &dwSize);
+	pData = (BYTE *)realloc(pData, dwSize + 1);
+	pData[dwSize] = 0;
+	dlg.m_strText = WideStringFromMBString(CHECK_NULL_A((char *)pData));
+	dlg.m_strFile = szDumpFile;
+	dlg.DoModal();
+}
+
+
+//
+// Main message loop
+//
+
+int CConsoleApp::Run() 
+{
+	int nRet;
+
+	SetExceptionHandler(ExceptionHandler, ExceptionDataWriter);
+	__try
+	{
+		nRet = CWinApp::Run();
+	}
+	__except(___ExceptionHandler((EXCEPTION_POINTERS *)_exception_info()))
+	{
+		ExitProcess(99);
+	}
+
+	return nRet;
 }

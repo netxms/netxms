@@ -17,9 +17,6 @@ class CNodePoller : public CMDIChildWnd
 protected:
 	CNodePoller();           // protected constructor used by dynamic creation
 
-// Attributes
-	HANDLE m_hThread;
-
 public:
 
 // Operations

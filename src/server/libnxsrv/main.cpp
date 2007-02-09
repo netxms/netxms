@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: main.cpp
+** File: main.cpp
 **
 **/
 
@@ -144,43 +144,6 @@ static int CompareRoutes(const void *p1, const void *p2)
 void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT)
 {
    qsort(pRT->pRoutes, pRT->iNumEntries, sizeof(ROUTE), CompareRoutes);
-}
-
-
-//
-// Load file into memory
-//
-
-BYTE LIBNXSRV_EXPORTABLE *LoadFile(char *pszFileName, DWORD *pdwFileSize)
-{
-   int fd, iBufPos, iNumBytes, iBytesRead;
-   BYTE *pBuffer = NULL;
-   struct stat fs;
-
-   fd = open(pszFileName, O_RDONLY | O_BINARY);
-   if (fd != -1)
-   {
-      if (fstat(fd, &fs) != -1)
-      {
-         pBuffer = (BYTE *)malloc(fs.st_size + 1);
-         if (pBuffer != NULL)
-         {
-            *pdwFileSize = fs.st_size;
-            for(iBufPos = 0; iBufPos < fs.st_size; iBufPos += iBytesRead)
-            {
-               iNumBytes = min(16384, fs.st_size - iBufPos);
-               if ((iBytesRead = read(fd, &pBuffer[iBufPos], iNumBytes)) < 0)
-               {
-                  free(pBuffer);
-                  pBuffer = NULL;
-                  break;
-               }
-            }
-         }
-      }
-      close(fd);
-   }
-   return pBuffer;
 }
 
 
