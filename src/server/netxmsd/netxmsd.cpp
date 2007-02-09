@@ -1,8 +1,8 @@
-/* $Id: netxmsd.cpp,v 1.16 2006-11-21 11:35:30 victor Exp $ */
+/* $Id: netxmsd.cpp,v 1.17 2007-02-09 17:31:57 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
-** Copyright (C) 2003, 2004, 2005, 2006 NetXMS Team
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 NetXMS Team
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 **/
 
 #include "netxmsd.h"
+#include <dbghelp.h>
 
 
 //
@@ -81,6 +82,169 @@ static char help_text[]="NetXMS Server Version " NETXMS_VERSION_STRING "\n"
                         "   version             : Display version and exit\n"
                         "\n"
                         "NOTE: All debug options will work only in standalone mode.\n\n";
+
+
+//
+// Windows exception handling
+// ****************************************************
+//
+
+#ifdef _WIN32
+
+
+//
+// Static data
+//
+
+static FILE *m_pExInfoFile = NULL;
+
+
+//
+// Writer for SEHShowCallStack()
+//
+
+static void ExceptionDataWriter(char *pszText)
+{
+	if (m_pExInfoFile != NULL)
+		fputs(pszText, m_pExInfoFile);
+}
+
+
+//
+// Exception handler
+//
+
+static void ExceptionHandler(EXCEPTION_POINTERS *pInfo)
+{
+	char szBuffer[MAX_PATH];
+	HANDLE hFile;
+	time_t t;
+	MINIDUMP_EXCEPTION_INFORMATION mei;
+	OSVERSIONINFO ver;
+   SYSTEM_INFO sysInfo;
+
+	t = time(NULL);
+
+	// Create info file
+	_snprintf(szBuffer, MAX_PATH, "%s\\netxmsd-%d-%u.info",
+	          g_szDumpDir, GetCurrentProcessId(), (DWORD)t);
+	m_pExInfoFile = fopen(szBuffer, "w");
+	if (m_pExInfoFile != NULL)
+	{
+		fprintf(m_pExInfoFile, "NETXMSD CRASH DUMP\n%s\n", ctime(&t));
+		fprintf(m_pExInfoFile, "EXCEPTION: %08X (%s) at %08X\n",
+		        pInfo->ExceptionRecord->ExceptionCode,
+		        SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
+		        pInfo->ExceptionRecord->ExceptionAddress);
+
+		// NetXMS and OS version
+		ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+		GetVersionEx(&ver);
+		if (ver.dwMajorVersion == 5)
+		{
+			switch(ver.dwMinorVersion)
+			{
+				case 0:
+					strcpy(szBuffer, "2000");
+					break;
+				case 1:
+					strcpy(szBuffer, "XP");
+					break;
+				case 2:
+					strcpy(szBuffer, "Server 2003");
+					break;
+				default:
+					sprintf(szBuffer, "NT %d.%d", ver.dwMajorVersion, ver.dwMinorVersion);
+					break;
+			}
+		}
+		else
+		{
+			sprintf(szBuffer, "NT %d.%d", ver.dwMajorVersion, ver.dwMinorVersion);
+		}
+		fprintf(m_pExInfoFile, "\nNetXMS Server Version: " NETXMS_VERSION_STRING "\n"
+		                       "OS Version: Windows %s Build %d %s\n",
+		        szBuffer, ver.dwBuildNumber, ver.szCSDVersion);
+
+		// Processor architecture
+		fprintf(m_pExInfoFile, "Processor architecture: ");
+		GetSystemInfo(&sysInfo);
+		switch(sysInfo.wProcessorArchitecture)
+		{
+			case PROCESSOR_ARCHITECTURE_INTEL:
+				fprintf(m_pExInfoFile, "Intel x86\n");
+				break;
+			case PROCESSOR_ARCHITECTURE_MIPS:
+				fprintf(m_pExInfoFile, "MIPS\n");
+				break;
+			case PROCESSOR_ARCHITECTURE_ALPHA:
+				fprintf(m_pExInfoFile, "ALPHA\n");
+				break;
+			case PROCESSOR_ARCHITECTURE_PPC:
+				fprintf(m_pExInfoFile, "PowerPC\n");
+				break;
+			case PROCESSOR_ARCHITECTURE_IA64:
+				fprintf(m_pExInfoFile, "Intel IA-64\n");
+				break;
+			case PROCESSOR_ARCHITECTURE_IA32_ON_WIN64:
+				fprintf(m_pExInfoFile, "Intel x86 on Win64\n");
+				break;
+			case PROCESSOR_ARCHITECTURE_AMD64:
+				fprintf(m_pExInfoFile, "AMD64 (Intel EM64T)\n");
+				break;
+			default:
+				fprintf(m_pExInfoFile, "UNKNOWN\n");
+				break;
+		}
+
+#ifdef _X86_
+		fprintf(m_pExInfoFile, "\nRegister information:\n"
+		        "  eax=%08X  ebx=%08X  ecx=%08X  edx=%08X\n"
+		        "  esi=%08X  edi=%08X  ebp=%08X  esp=%08X\n"
+		        "  cs=%04X  ds=%04X  es=%04X  ss=%04X  fs=%04X  gs=%04X  flags=%08X\n",
+		        pInfo->ContextRecord->Eax, pInfo->ContextRecord->Ebx,
+		        pInfo->ContextRecord->Ecx, pInfo->ContextRecord->Edx,
+		        pInfo->ContextRecord->Esi, pInfo->ContextRecord->Edi,
+		        pInfo->ContextRecord->Ebp, pInfo->ContextRecord->Esp,
+		        pInfo->ContextRecord->SegCs, pInfo->ContextRecord->SegDs,
+		        pInfo->ContextRecord->SegEs, pInfo->ContextRecord->SegSs,
+		        pInfo->ContextRecord->SegFs, pInfo->ContextRecord->SegGs,
+		        pInfo->ContextRecord->EFlags);
+#endif
+
+		fprintf(m_pExInfoFile, "\nCall stack:\n");
+		SEHShowCallStack(pInfo->ContextRecord);
+
+		fclose(m_pExInfoFile);
+	}
+
+	// Create minidump
+	_snprintf(szBuffer, MAX_PATH, "%s\\netxmsd-%d-%u.mdmp",
+	          g_szDumpDir, GetCurrentProcessId(), (DWORD)t);
+   hFile = CreateFile(szBuffer, GENERIC_WRITE, 0, NULL,
+                      CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+   if (hFile != INVALID_HANDLE_VALUE)
+   {
+		mei.ThreadId = GetCurrentThreadId();
+		mei.ExceptionPointers = pInfo;
+		mei.ClientPointers = FALSE;
+      MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile,
+                        MiniDumpNormal, &mei, NULL, NULL);
+      CloseHandle(hFile);
+   }
+
+	if (IsStandalone())
+	{
+		printf("\n\n*************************************************************\n"
+		       "EXCEPTION: %08X (%s) at %08X\nPROCESS TERMINATED",
+             pInfo->ExceptionRecord->ExceptionCode,
+             SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
+             pInfo->ExceptionRecord->ExceptionAddress);
+	}
+}
+
+
+#endif	/* _WIN32 */
 
 
 //
@@ -343,6 +507,12 @@ int main(int argc, char *argv[])
          printf("Error loading configuration file\n");
       return 1;
    }
+
+	// Set exception handler
+#ifdef _WIN32
+	if (g_dwFlags & AF_CATCH_EXCEPTIONS)
+		SetExceptionHandler(ExceptionHandler, ExceptionDataWriter);
+#endif
 
    // Check database before start if requested
    if (g_bCheckDB)

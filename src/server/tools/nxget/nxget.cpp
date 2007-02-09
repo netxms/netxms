@@ -208,6 +208,9 @@ int main(int argc, char *argv[])
    RSA *pServerKey = NULL;
 
    InitThreadLibrary();
+#ifdef _WIN32
+	SetExceptionHandler(SEHDefaultConsoleHandler, NULL);
+#endif
 
    // Parse command line
    opterr = 1;

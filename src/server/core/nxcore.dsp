@@ -55,11 +55,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 minidump.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxsrv.lib libnxsnmp.lib iphlpapi.lib libeay32.lib version.lib psapi.lib libnxsl.lib libnxmap.lib /nologo /dll /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxsnmp\Release" /libpath:"..\libnxsrv\Release" /libpath:"..\..\libnxsl\Release" /libpath:"..\..\libnxmap\Release"
+# ADD LINK32 minidump.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libnetxms.lib libnxsrv.lib libnxsnmp.lib iphlpapi.lib libeay32.lib version.lib psapi.lib libnxsl.lib libnxmap.lib /nologo /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxsnmp\Release" /libpath:"..\libnxsrv\Release" /libpath:"..\..\libnxsl\Release" /libpath:"..\..\libnxmap\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Release\nxcore.dll C:\NetXMS\bin
+PostBuild_Cmds=copy Release\nxcore.dll C:\NetXMS\bin	copy Release\nxcore.pdb C:\NetXMS\bin
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "nxcore - Win32 Debug"
@@ -90,7 +90,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Debug\nxcore.dll ..\..\..\bin
+PostBuild_Cmds=copy Debug\nxcore.dll ..\..\..\bin	copy Debug\nxcore.pdb ..\..\..\bin
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "nxcore - Win32 Release AMD64"

@@ -1,7 +1,8 @@
+/* $Id: main.cpp,v 1.12 2007-02-09 17:31:57 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +18,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: main.cpp
+** File: main.cpp
 **
 **/
 
@@ -112,7 +113,10 @@ void LIBNETXMS_EXPORTABLE strupr(char *in)
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)
+	{
       DisableThreadLibraryCalls(hInstance);
+		SEHInit();
+	}
    return TRUE;
 }
 #endif // UNDER_CE

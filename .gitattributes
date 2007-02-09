@@ -1008,6 +1008,8 @@ src/install/windows/nxcon.exe.manifest -text
 src/install/windows/nxnotify.exe.manifest -text
 src/libnetxms/Makefile.am -text
 src/libnetxms/Makefile.nw -text
+src/libnetxms/StackWalker.cpp -text
+src/libnetxms/StackWalker.h -text
 src/libnetxms/c_lgcc3.cpp -text
 src/libnetxms/config.cpp -text
 src/libnetxms/crypto.cpp -text
@@ -1034,6 +1036,7 @@ src/libnetxms/queue.cpp -text
 src/libnetxms/regex.c -text
 src/libnetxms/rwlock.cpp -text
 src/libnetxms/scandir.c -text
+src/libnetxms/seh.cpp -text
 src/libnetxms/serial.cpp -text
 src/libnetxms/sha1.cpp -text
 src/libnetxms/sha1.h -text

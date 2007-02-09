@@ -1,6 +1,7 @@
+/* $Id: config.cpp,v 1.45 2007-02-09 17:31:57 victor Exp $ */
 /* 
-** Project X - Network Management System
-** Copyright (C) 2003 Victor Kirhenshtein
+** NetXMS - Network Management System
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: config.cpp
+** File: config.cpp
 **
 **/
 
@@ -38,12 +39,14 @@ static TCHAR m_szCodePage[256] = ICONV_DEFAULT_CODEPAGE;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { "CodePage", CT_STRING, 0, 0, 256, 0, m_szCodePage },
+   { "CreateCrashDumps", CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags },
    { "DBDriver", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver },
    { "DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams },
    { "DBLogin", CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin },
    { "DBName", CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbName },
    { "DBPassword", CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, g_szDbPassword },
    { "DBServer", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer },
+   { "DumpDirectory", CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir },
    { "LogFailedSQLQueries", CT_BOOLEAN, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_dwFlags },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }

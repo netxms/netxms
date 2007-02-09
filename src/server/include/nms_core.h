@@ -666,6 +666,7 @@ void DumpProcess(void);
 
 extern char NXCORE_EXPORTABLE g_szConfigFile[];
 extern char NXCORE_EXPORTABLE g_szLogFile[];
+extern char NXCORE_EXPORTABLE g_szDumpDir[];
 #ifndef _WIN32
 extern char NXCORE_EXPORTABLE g_szPIDFile[];
 #endif

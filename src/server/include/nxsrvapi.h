@@ -56,6 +56,7 @@
 # define DEFAULT_SHELL         "cmd.exe"
 # define DEFAULT_LOG_FILE      "C:\\NetXMS.log"
 # define DEFAULT_DATA_DIR      "C:\\NetXMS\\var"
+# define DEFAULT_DUMP_DIR      "C:\\"
 
 # define DDIR_MIBS             "\\mibs"
 # define DDIR_IMAGES           "\\images"
@@ -76,6 +77,7 @@
 
 # define DEFAULT_LOG_FILE      DATADIR"/log/netxmsd.log"
 # define DEFAULT_DATA_DIR      DATADIR
+# define DEFAULT_DUMP_DIR      "/"
 
 # define DDIR_MIBS             "/mibs"
 # define DDIR_IMAGES           "/images"
@@ -112,6 +114,7 @@
 #define AF_DEBUG_OBJECTS                  0x00040000
 #define AF_DEBUG_ALL                      0x0006FF00
 #define AF_RESOLVE_NODE_NAMES             0x00100000
+#define AF_CATCH_EXCEPTIONS					0x00200000
 #define AF_DB_LOCKED                      0x01000000
 #define AF_ENABLE_MULTIPLE_DB_CONN        0x02000000
 #define AF_DB_CONNECTION_LOST             0x04000000

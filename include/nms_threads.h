@@ -59,6 +59,21 @@ typedef unsigned int THREAD_ID;
 #define THREAD_CALL
 #else
 #define THREAD_CALL     __stdcall
+
+typedef struct
+{
+	THREAD_RESULT (THREAD_CALL *start_address)(void *);
+	void *args;
+} THREAD_START_DATA;
+
+THREAD_RESULT LIBNETXMS_EXPORTABLE THREAD_CALL SEHThreadStarter(void *);
+
+void LIBNETXMS_EXPORTABLE SetExceptionHandler(void (*pfHandler)(EXCEPTION_POINTERS *),
+															 void (*pfWriter)(char *));
+void LIBNETXMS_EXPORTABLE SEHDefaultConsoleHandler(EXCEPTION_POINTERS *pInfo);
+TCHAR LIBNETXMS_EXPORTABLE *SEHExceptionName(DWORD code);
+void LIBNETXMS_EXPORTABLE SEHShowCallStack(CONTEXT *pCtx);
+
 #endif
 
 
@@ -80,7 +95,7 @@ inline void ThreadSleepMs(DWORD dwMilliseconds)
    Sleep(dwMilliseconds);
 }
 
-inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
+inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address)(void *), int stack_size, void *args)
 {
    HANDLE hThread;
    THREAD_ID dwThreadId;
@@ -88,21 +103,27 @@ inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address )(void *), in
 #ifdef UNDER_CE
 	hThread = CreateThread(NULL, (DWORD)stack_size, start_address, args, 0, &dwThreadId);
 #else
-   hThread = (HANDLE)_beginthreadex(NULL, stack_size, start_address, args, 0, &dwThreadId);
+	THREAD_START_DATA *data = (THREAD_START_DATA *)malloc(sizeof(THREAD_START_DATA));
+	data->start_address = start_address;
+	data->args = args;
+   hThread = (HANDLE)_beginthreadex(NULL, stack_size, SEHThreadStarter, data, 0, &dwThreadId);
 #endif
    if (hThread != NULL)
       CloseHandle(hThread);
    return (hThread != NULL);
 }
 
-inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
+inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address)(void *), int stack_size, void *args)
 {
    THREAD_ID dwThreadId;
 
 #ifdef UNDER_CE
 	return CreateThread(NULL, (DWORD)stack_size, start_address, args, 0, &dwThreadId);
 #else
-   return (HANDLE)_beginthreadex(NULL, stack_size, start_address, args, 0, &dwThreadId);
+	THREAD_START_DATA *data = (THREAD_START_DATA *)malloc(sizeof(THREAD_START_DATA));
+	data->start_address = start_address;
+	data->args = args;
+   return (HANDLE)_beginthreadex(NULL, stack_size, SEHThreadStarter, data, 0, &dwThreadId);
 #endif
 }
 
