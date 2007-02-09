@@ -1,4 +1,4 @@
-/* $Id: agent.cpp,v 1.50 2007-02-09 17:31:57 victor Exp $ */
+/* $Id: agent.cpp,v 1.51 2007-02-09 21:33:11 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Server Library
@@ -200,7 +200,6 @@ void AgentConnection::ReceiverThread(void)
    pDecryptionBuffer = (BYTE *)malloc(RECEIVER_BUFFER_SIZE);
 #endif
 
-//char *p=NULL;*p=1;
    // Message receiving loop
    while(1)
    {

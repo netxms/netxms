@@ -696,6 +696,7 @@ BOOL StackWalker::LoadModules()
       strcat_s(szSymPath, nSymPathLen, ";");
     }
 
+/*
     if ( (this->m_options & SymBuildPath) != 0)
     {
       if (GetEnvironmentVariableA("SYSTEMDRIVE", szTemp, nTempLen) > 0)
@@ -708,6 +709,7 @@ BOOL StackWalker::LoadModules()
       else
         strcat_s(szSymPath, nSymPathLen, "SRV*c:\\websymbols*http://msdl.microsoft.com/download/symbols;");
     }
+*/
   }
 
   // First Init the whole stuff...
@@ -775,7 +777,9 @@ BOOL StackWalker::ShowCallstack(HANDLE hThread, CONTEXT *context, PReadProcessMe
     }
   }
   else
-    c = *context;
+  {
+    memcpy(&c, context, sizeof(CONTEXT));
+  }
 
   // init STACKFRAME for first call
   STACKFRAME64 s; // in/out stackframe

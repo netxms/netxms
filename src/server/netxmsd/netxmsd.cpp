@@ -1,4 +1,4 @@
-/* $Id: netxmsd.cpp,v 1.17 2007-02-09 17:31:57 victor Exp $ */
+/* $Id: netxmsd.cpp,v 1.18 2007-02-09 21:33:11 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
@@ -116,7 +116,7 @@ static void ExceptionDataWriter(char *pszText)
 
 static void ExceptionHandler(EXCEPTION_POINTERS *pInfo)
 {
-	char szBuffer[MAX_PATH];
+	char szBuffer[MAX_PATH], szInfoFile[MAX_PATH], szDumpFile[MAX_PATH];
 	HANDLE hFile;
 	time_t t;
 	MINIDUMP_EXCEPTION_INFORMATION mei;
@@ -126,9 +126,9 @@ static void ExceptionHandler(EXCEPTION_POINTERS *pInfo)
 	t = time(NULL);
 
 	// Create info file
-	_snprintf(szBuffer, MAX_PATH, "%s\\netxmsd-%d-%u.info",
+	_snprintf(szInfoFile, MAX_PATH, "%s\\netxmsd-%d-%u.info",
 	          g_szDumpDir, GetCurrentProcessId(), (DWORD)t);
-	m_pExInfoFile = fopen(szBuffer, "w");
+	m_pExInfoFile = fopen(szInfoFile, "w");
 	if (m_pExInfoFile != NULL)
 	{
 		fprintf(m_pExInfoFile, "NETXMSD CRASH DUMP\n%s\n", ctime(&t));
@@ -219,9 +219,9 @@ static void ExceptionHandler(EXCEPTION_POINTERS *pInfo)
 	}
 
 	// Create minidump
-	_snprintf(szBuffer, MAX_PATH, "%s\\netxmsd-%d-%u.mdmp",
+	_snprintf(szDumpFile, MAX_PATH, "%s\\netxmsd-%d-%u.mdmp",
 	          g_szDumpDir, GetCurrentProcessId(), (DWORD)t);
-   hFile = CreateFile(szBuffer, GENERIC_WRITE, 0, NULL,
+   hFile = CreateFile(szDumpFile, GENERIC_WRITE, 0, NULL,
                       CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
    if (hFile != INVALID_HANDLE_VALUE)
    {
@@ -232,6 +232,13 @@ static void ExceptionHandler(EXCEPTION_POINTERS *pInfo)
                         MiniDumpNormal, &mei, NULL, NULL);
       CloseHandle(hFile);
    }
+
+	// Write event log
+	WriteLog(MSG_EXCEPTION, EVENTLOG_ERROR_TYPE, "xsxss",
+            pInfo->ExceptionRecord->ExceptionCode,
+            SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
+            pInfo->ExceptionRecord->ExceptionAddress,
+				szInfoFile, szDumpFile);
 
 	if (IsStandalone())
 	{
@@ -512,6 +519,7 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
 	if (g_dwFlags & AF_CATCH_EXCEPTIONS)
 		SetExceptionHandler(ExceptionHandler, ExceptionDataWriter);
+	__try {
 #endif
 
    // Check database before start if requested
@@ -585,5 +593,9 @@ int main(int argc, char *argv[])
    // Everything is OK, start common main loop
    StartMainLoop(SignalHandler, Main);
 #endif   /* _WIN32 */
+
+#ifdef _WIN32
+	LIBNETXMS_EXCEPTION_HANDLER
+#endif
    return 0;
 }

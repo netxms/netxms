@@ -795,6 +795,31 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
       DumpProcess();
       ConsolePrintf(pCtx, "Done.\n");
    }
+   else if (IsCommand("RAISE", szBuffer, 5))
+   {
+      // Get argument
+      pArg = ExtractWord(pArg, szBuffer);
+      
+		if (IsCommand("ACCESS", szBuffer, 6))
+		{
+         ConsolePrintf(pCtx, "Raising exception...\n");
+			char *p = NULL;
+			*p = 0;
+		}
+		else if (IsCommand("BREAKPOINT", szBuffer, 5))
+      {
+#ifdef _WIN32
+         ConsolePrintf(pCtx, "Raising exception...\n");
+			RaiseException(EXCEPTION_BREAKPOINT, 0, 0, NULL);
+#else
+         ConsolePrintf(pCtx, "ERROR: Not supported on current platform\n");
+#endif
+		}
+		else
+		{
+         ConsolePrintf(pCtx, "Invalid exception name\n");
+		}
+   }
    else if (IsCommand("EXIT", szBuffer, 4))
    {
       if (pCtx->hSocket != -1)
@@ -824,6 +849,7 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_SNMP_TRAPD));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_ZONING));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_RESOLVE_NODE_NAMES));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CATCH_EXCEPTIONS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_MULTIPLE_DB_CONN));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_EVENTS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_CSCP));
@@ -1067,6 +1093,7 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
                           "   down                      - Down NetXMS server\n"
                           "   exit                      - Exit from remote session\n"
                           "   help                      - Display this help\n"
+								  "   raise <exception>         - Raise exception\n"
                           "   show flags                - Show internal server flags\n"
                           "   show index <index>        - Show internal index\n"
                           "   show mutex                - Display mutex status\n"

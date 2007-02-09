@@ -184,7 +184,7 @@ void LIBNETXMS_EXPORTABLE SEHShowCallStack(CONTEXT *pCtx)
 // Exception handler
 //
 
-static int ExceptionHandler(EXCEPTION_POINTERS *pInfo)
+int LIBNETXMS_EXPORTABLE ___ExceptionHandler(EXCEPTION_POINTERS *pInfo)
 {
 	if (m_pfExceptionHandler != NULL)
 	{
@@ -210,7 +210,7 @@ THREAD_RESULT LIBNETXMS_EXPORTABLE THREAD_CALL SEHThreadStarter(void *pArg)
 	{
 		((THREAD_START_DATA *)pArg)->start_address(((THREAD_START_DATA *)pArg)->args);
 	}
-	__except(ExceptionHandler((EXCEPTION_POINTERS *)_exception_info()))
+	__except(___ExceptionHandler((EXCEPTION_POINTERS *)_exception_info()))
 	{
 		ExitProcess(99);
 	}

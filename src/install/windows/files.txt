@@ -2,6 +2,7 @@ Additional files required for installation:
 
 MFC42.DLL
 MFC42U.DLL
+DBGHELP.DLL
 LIBMYSQL.DLL
 NTWDBLIB.DLL
 LIBPQ.DLL

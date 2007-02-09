@@ -614,4 +614,10 @@ Language=English
 Failed to load cluster object with id %1 from database
 .
 
+MessageId=
+SymbolicName=MSG_EXCEPTION
+Language=English
+EXCEPTION %1 (%2) at %3 (crash dump was generated); please send files %4 and %5 to dump@netxms.org
+.
+
 ;#endif
