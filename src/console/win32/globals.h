@@ -130,6 +130,7 @@ extern CConsoleApp theApp;
 #define NXCM_SET_OBJECT            (WM_USER + 125)
 #define NXCM_ACTIVATE_OBJECT_TREE  (WM_USER + 126)
 #define NXCM_GRAPH_LIST_UPDATED    (WM_USER + 127)
+#define NXCM_SHOW_FATAL_ERROR      (WM_USER + 128)
 
 
 //

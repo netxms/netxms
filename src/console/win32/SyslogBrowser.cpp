@@ -147,10 +147,11 @@ void CSyslogBrowser::OnSetFocus(CWnd* pOldWnd)
 // Message loading thread
 //
 
-static void LoadMessages(void *pArg)
+static THREAD_RESULT THREAD_CALL LoadMessages(void *pArg)
 {
    NXCSyncSyslog(g_hSession, g_dwMaxLogRecords);
    PostMessage((HWND)pArg, WM_COMMAND, ID_REQUEST_COMPLETED, 0);
+	return THREAD_OK;
 }
 
 
@@ -167,7 +168,7 @@ void CSyslogBrowser::OnViewRefresh()
       m_wndListCtrl.ShowWindow(SW_HIDE);
       m_wndWaitView.Start();
       m_wndListCtrl.DeleteAllItems();
-      _beginthread(LoadMessages, 0, m_hWnd);
+      ThreadCreate(LoadMessages, 0, m_hWnd);
    }
 }
 

@@ -186,7 +186,9 @@ void LIBNETXMS_EXPORTABLE SEHShowCallStack(CONTEXT *pCtx)
 
 int LIBNETXMS_EXPORTABLE ___ExceptionHandler(EXCEPTION_POINTERS *pInfo)
 {
-	if (m_pfExceptionHandler != NULL)
+	if ((m_pfExceptionHandler != NULL) &&
+		 (pInfo->ExceptionRecord->ExceptionCode != EXCEPTION_BREAKPOINT) &&
+		 (pInfo->ExceptionRecord->ExceptionCode != EXCEPTION_SINGLE_STEP))
 	{
 		// Only one exception handler can be executed at a time
 		// We will never release mutex because __except block

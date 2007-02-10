@@ -111,7 +111,7 @@ int CDeploymentView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 // Deployment worker thread
 //
 
-static DWORD WINAPI DeploymentThread(DEPLOYMENT_JOB *pJob)
+static THREAD_RESULT THREAD_CALL DeploymentThread(DEPLOYMENT_JOB *pJob)
 {
    DWORD dwResult;
 
@@ -120,7 +120,7 @@ static DWORD WINAPI DeploymentThread(DEPLOYMENT_JOB *pJob)
    PostMessage(pJob->hWnd, NXCM_DEPLOYMENT_FINISHED, 0, dwResult);
    safe_free(pJob->pdwObjectList);
    free(pJob);
-   return 0;
+   return THREAD_OK;
 }
 
 
@@ -130,21 +130,13 @@ static DWORD WINAPI DeploymentThread(DEPLOYMENT_JOB *pJob)
 
 void CDeploymentView::OnStartDeployment(WPARAM wParam, DEPLOYMENT_JOB *pJob)
 {
-   DWORD dwThreadId;
-   HANDLE hThread;
-
    m_wndProgressCtrl.SetRange32(0, pJob->dwNumObjects);
    m_wndProgressCtrl.SetStep(1);
    m_wndProgressCtrl.SetPos(0);
 
    pJob->hWnd = m_hWnd;
    pJob->pdwRqId = &m_dwRqId;
-   hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)DeploymentThread,
-                          pJob, 0, &dwThreadId);
-   if (hThread != NULL)
-   {
-      CloseHandle(hThread);
-   }
+	ThreadCreate((THREAD_RESULT (THREAD_CALL *)(void *))DeploymentThread, 0, pJob);
 }
 
 

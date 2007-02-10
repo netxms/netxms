@@ -97,7 +97,7 @@ static void WalkerCallback(TCHAR *pszName, DWORD dwType, TCHAR *pszValue, void *
 // Walker thread
 //
 
-static void WalkerThread(void *pArg)
+static THREAD_RESULT THREAD_CALL WalkerThread(void *pArg)
 {
    DWORD dwResult;
 
@@ -107,6 +107,7 @@ static void WalkerThread(void *pArg)
    PostMessage(((WALKER_ARGS *)pArg)->hWnd, NXCM_REQUEST_COMPLETED, 0, dwResult);
    free(((WALKER_ARGS *)pArg)->pszRootOID);
    free(pArg);
+	return THREAD_OK;
 }
 
 
@@ -125,7 +126,7 @@ void CSNMPWalkDlg::OnViewRefresh()
    pArgs->pszRootOID = _tcsdup((LPCTSTR)m_strRootOID);
    EnableDlgItem(this, IDCANCEL, FALSE);
    m_wndStatus.SetWindowText(_T("Retrieving data..."));
-   _beginthread(WalkerThread, 0, pArgs);
+   ThreadCreate(WalkerThread, 0, pArgs);
    BeginWaitCursor();
 }
 

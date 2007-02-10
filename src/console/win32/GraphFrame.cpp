@@ -6,6 +6,7 @@
 #include "GraphFrame.h"
 #include "GraphSettingsPage.h"
 #include "GraphDataPage.h"
+#include "DefineGraphDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -908,7 +909,41 @@ void CGraphFrame::OnUpdateGraphPresetsLastyear(CCmdUI* pCmdUI)
 void CGraphFrame::OnGraphDefine() 
 {
 	DWORD dwResult;
+	TCHAR szBuffer[256], *ptr;
+	CDefineGraphDlg dlg;
+	WINDOW_SAVE_INFO *pInfo;
+	NXC_GRAPH graph;
 
-	char *p=NULL;*p=0;
-//	SendMessage(NXCM_GET_SAVE_INFO
+	GetWindowText(szBuffer, 256);
+	ptr = _tcschr(szBuffer, _T('['));
+	if (ptr != NULL)
+	{
+		ptr++;
+		memmove(szBuffer, ptr, (_tcslen(ptr) + 1) * sizeof(TCHAR));
+		ptr = _tcsrchr(szBuffer, _T(']'));
+		if (ptr != NULL)
+			*ptr = 0;
+	}
+	dlg.m_strName = szBuffer;
+	if (dlg.DoModal() == IDOK)
+	{
+		pInfo = (WINDOW_SAVE_INFO *)malloc(sizeof(WINDOW_SAVE_INFO));
+		if (SendMessage(NXCM_GET_SAVE_INFO, 0, (LPARAM)pInfo) != 0)
+		{
+			graph.dwId = 0;	// New graph
+			graph.pszName = (TCHAR *)((LPCTSTR)dlg.m_strName);
+			graph.pszConfig = pInfo->szParameters;
+			graph.dwAclSize = dlg.m_dwACLSize;
+			graph.pACL = dlg.m_pACL;
+			dwResult = DoRequestArg2(NXCDefineGraph, g_hSession, &graph, _T("Saving graph configuration on server..."));
+			if (dwResult != RCC_SUCCESS)
+			{
+				theApp.ErrorBox(dwResult, _T("Cannot save graph configuration: %s"));
+			}
+		}
+		else
+		{
+			MessageBox(_T("Cannot save graph - internal console error"), _T("Error"), MB_OK | MB_ICONSTOP);
+		}
+	}
 }

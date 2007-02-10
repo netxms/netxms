@@ -344,6 +344,10 @@ SOURCE=.\DebugFrame.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\DefineGraphDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\DeploymentView.cpp
 # End Source File
 # Begin Source File
@@ -918,6 +922,10 @@ SOURCE=.\DCITransformPage.h
 # Begin Source File
 
 SOURCE=.\DebugFrame.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DefineGraphDlg.h
 # End Source File
 # Begin Source File
 

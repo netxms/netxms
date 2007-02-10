@@ -395,7 +395,7 @@ void UpdateActions(DWORD dwCode, NXC_ACTION *pAction)
 // Update graph list
 //
 
-static void GraphUpdater(void *)
+static THREAD_RESULT THREAD_CALL GraphUpdater(void *)
 {
 	LockGraphs();
 	if (g_pGraphList != NULL)
@@ -403,11 +403,12 @@ static void GraphUpdater(void *)
 	NXCGetGraphList(g_hSession, &g_dwNumGraphs, &g_pGraphList);
 	UnlockGraphs();
 	theApp.PostThreadMessage(NXCM_GRAPH_LIST_UPDATED, 0, 0);
+	return THREAD_OK;
 }
 
 void UpdateGraphList(void)
 {
-	_beginthread(GraphUpdater, 0, NULL);
+	ThreadCreate(GraphUpdater, 0, NULL);
 }
 
 

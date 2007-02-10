@@ -71,9 +71,10 @@ END_MESSAGE_MAP()
 // Data requesting thread starter
 //
 
-static void RequestDataStarter(void *pArg)
+static THREAD_RESULT THREAD_CALL RequestDataStarter(void *pArg)
 {
    ((CTableView *)pArg)->RequestData();
+	return THREAD_OK;
 }
 
 
@@ -177,7 +178,7 @@ void CTableView::OnViewRefresh()
    m_wndStatusBar.SetText(_T("Requesting data..."), 0, 0);
    m_bIsBusy = TRUE;
 
-   _beginthread(RequestDataStarter, 0, this);
+   ThreadCreate(RequestDataStarter, 0, this);
 }
 
 

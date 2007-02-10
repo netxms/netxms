@@ -38,6 +38,7 @@ public:
 
 // Implementation
 protected:
+	CImageList m_imageList;
 
 	// Generated message map functions
 	//{{AFX_MSG(CUserSelectDlg)

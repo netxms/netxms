@@ -39,7 +39,7 @@ static Queue *m_pSpeakerQueue = NULL;
 // Speaker thread
 //
 
-static void SpeakerThread(void *pArg)
+static THREAD_RESULT THREAD_CALL SpeakerThread(void *pArg)
 {
    TCHAR *pszText;
    ISpVoice *pVoice = NULL;
@@ -75,6 +75,7 @@ static void SpeakerThread(void *pArg)
       }
       CoUninitialize();
    }
+	return THREAD_OK;
 }
 
 
@@ -84,7 +85,7 @@ static void SpeakerThread(void *pArg)
 
 void NXUILIB_EXPORTABLE SpeakerInit(void)
 {
-   _beginthread(SpeakerThread, 0, NULL);
+	ThreadCreate(SpeakerThread, 0, NULL);
 }
 
 

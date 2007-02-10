@@ -53,6 +53,7 @@ EXTRA_DIST = \
 	DCIThresholdsPage.cpp DCIThresholdsPage.h \
 	DCITransformPage.cpp DCITransformPage.h \
 	DebugFrame.cpp DebugFrame.h \
+	DefineGraphDlg.cpp DefineGraphDlg.h \
 	DeploymentView.cpp DeploymentView.h \
 	DesktopManager.cpp DesktopManager.h \
 	DetailsView.cpp DetailsView.h \

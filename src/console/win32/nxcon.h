@@ -265,12 +265,14 @@ public:
 	afx_msg void OnToolsImportmp();
 	//}}AFX_MSG
 	afx_msg void OnGraphListUpdate(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnPredefinedGraph(UINT nCmd);
 	DECLARE_MESSAGE_MAP()
 private:
    CONSOLE_VIEW m_viewState[MAX_VIEW_ID];
    OBJECT_VIEW m_openObjectViews[MAX_OBJECT_VIEWS];
 
 public:
+	DWORD m_dwMainThreadId;
 	void CreateCluster(DWORD dwParent);
 	HGLOBAL GetProfileGMem(TCHAR *pszSection, TCHAR *pszKey);
 	void WriteProfileGMem(TCHAR *pszSection, TCHAR *pszKey, HGLOBAL hMem);

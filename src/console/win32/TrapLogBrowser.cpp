@@ -140,10 +140,11 @@ void CTrapLogBrowser::OnSize(UINT nType, int cx, int cy)
 // Trap loading thread
 //
 
-static void LoadTraps(void *pArg)
+static THREAD_RESULT THREAD_CALL LoadTraps(void *pArg)
 {
    NXCSyncSNMPTrapLog(g_hSession, g_dwMaxLogRecords);
    PostMessage((HWND)pArg, WM_COMMAND, ID_REQUEST_COMPLETED, 0);
+	return THREAD_OK;
 }
 
 
@@ -160,7 +161,7 @@ void CTrapLogBrowser::OnViewRefresh()
       m_wndListCtrl.ShowWindow(SW_HIDE);
       m_wndWaitView.Start();
       m_wndListCtrl.DeleteAllItems();
-      _beginthread(LoadTraps, 0, m_hWnd);
+      ThreadCreate(LoadTraps, 0, m_hWnd);
    }
 }
 

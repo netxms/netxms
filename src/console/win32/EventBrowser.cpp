@@ -172,10 +172,11 @@ void CEventBrowser::AddEvent(NXC_EVENT *pEvent, BOOL bAppend)
 // Event loading thread
 //
 
-static void LoadEvents(void *pArg)
+static THREAD_RESULT THREAD_CALL LoadEvents(void *pArg)
 {
    NXCSyncEvents(g_hSession, g_dwMaxLogRecords);
    PostMessage((HWND)pArg, WM_COMMAND, ID_REQUEST_COMPLETED, 0);
+	return THREAD_OK;
 }
 
 
@@ -192,7 +193,7 @@ void CEventBrowser::OnViewRefresh()
       m_wndListCtrl.ShowWindow(SW_HIDE);
       m_wndWaitView.Start();
       m_wndListCtrl.DeleteAllItems();
-      _beginthread(LoadEvents, 0, m_hWnd);
+      ThreadCreate(LoadEvents, 0, m_hWnd);
    }
 }
 

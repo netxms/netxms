@@ -358,6 +358,26 @@ static DWORD WINAPI LoginThread(void *pArg)
 
 
 //
+// Starter for login thread
+//
+
+static DWORD WINAPI LoginThreadStarter(void *pArg)
+{
+	DWORD dwResult;
+
+	__try
+	{
+		dwResult = LoginThread(pArg);
+	}
+	__except(___ExceptionHandler((EXCEPTION_POINTERS *)_exception_info()))
+	{
+		ExitProcess(99);
+	}
+	return dwResult;
+}
+
+
+//
 // Perform login
 //
 
@@ -368,7 +388,7 @@ DWORD DoLogin(BOOL bClearCache)
    DWORD dwThreadId, dwResult;
 
    m_bClearCache = bClearCache;
-   hThread = CreateThread(NULL, 0, LoginThread, &hWnd, CREATE_SUSPENDED, &dwThreadId);
+   hThread = CreateThread(NULL, 0, LoginThreadStarter, &hWnd, CREATE_SUSPENDED, &dwThreadId);
    if (hThread != NULL)
    {
       CRequestProcessingDlg wndWaitDlg;
@@ -397,47 +417,54 @@ static DWORD WINAPI RequestThread(void *pArg)
    RqData *pData = (RqData *)pArg;
    DWORD dwResult;
 
-   switch(pData->dwNumParams)
-   {
-      case 0:
-         dwResult = pData->pFunc();
-         break;
-      case 1:
-         dwResult = pData->pFunc(pData->pArg1);
-         break;
-      case 2:
-         dwResult = pData->pFunc(pData->pArg1, pData->pArg2);
-         break;
-      case 3:
-         dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3);
-         break;
-      case 4:
-         dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, pData->pArg4);
-         break;
-      case 5:
-         dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
-                                 pData->pArg4, pData->pArg5);
-         break;
-      case 6:
-         dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
-                                 pData->pArg4, pData->pArg5, pData->pArg6);
-         break;
-      case 7:
-         dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
-                                 pData->pArg4, pData->pArg5, pData->pArg6,
-                                 pData->pArg7);
-      case 8:
-         dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
-                                 pData->pArg4, pData->pArg5, pData->pArg6,
-                                 pData->pArg7, pData->pArg8);
-      case 9:
-         dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
-                                 pData->pArg4, pData->pArg5, pData->pArg6,
-                                 pData->pArg7, pData->pArg8, pData->pArg9);
-         break;
-   }
-   if (pData->hWnd != NULL)
-      PostMessage(pData->hWnd, NXCM_REQUEST_COMPLETED, 0, dwResult);
+	__try
+	{
+		switch(pData->dwNumParams)
+		{
+			case 0:
+				dwResult = pData->pFunc();
+				break;
+			case 1:
+				dwResult = pData->pFunc(pData->pArg1);
+				break;
+			case 2:
+				dwResult = pData->pFunc(pData->pArg1, pData->pArg2);
+				break;
+			case 3:
+				dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3);
+				break;
+			case 4:
+				dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, pData->pArg4);
+				break;
+			case 5:
+				dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
+												pData->pArg4, pData->pArg5);
+				break;
+			case 6:
+				dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
+												pData->pArg4, pData->pArg5, pData->pArg6);
+				break;
+			case 7:
+				dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
+												pData->pArg4, pData->pArg5, pData->pArg6,
+												pData->pArg7);
+			case 8:
+				dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
+												pData->pArg4, pData->pArg5, pData->pArg6,
+												pData->pArg7, pData->pArg8);
+			case 9:
+				dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
+												pData->pArg4, pData->pArg5, pData->pArg6,
+												pData->pArg7, pData->pArg8, pData->pArg9);
+				break;
+		}
+		if (pData->hWnd != NULL)
+			PostMessage(pData->hWnd, NXCM_REQUEST_COMPLETED, 0, dwResult);
+	}
+	__except(___ExceptionHandler((EXCEPTION_POINTERS *)_exception_info()))
+	{
+		ExitProcess(99);
+	}
    return dwResult;
 }
 
@@ -791,6 +818,26 @@ static DWORD WINAPI DownloadThread(void *pArg)
 
 
 //
+// Download thread
+//
+
+static DWORD WINAPI DownloadThreadStarter(void *pArg)
+{
+	DWORD dwResult;
+
+	__try
+	{
+		dwResult = DownloadThread(pArg);
+	}
+	__except(___ExceptionHandler((EXCEPTION_POINTERS *)_exception_info()))
+	{
+		ExitProcess(99);
+	}
+	return dwResult;
+}
+
+
+//
 // Download upgrade file
 //
 
@@ -804,7 +851,7 @@ BOOL DownloadUpgradeFile(HANDLE hFile)
 	AfxLoadString(IDS_INTERNAL_ERROR, m_szErrorText, MAX_ERROR_TEXT);
 	m_hLocalFile = hFile;
 
-   hThread = CreateThread(NULL, 0, DownloadThread, &hWnd, CREATE_SUSPENDED, &dwThreadId);
+   hThread = CreateThread(NULL, 0, DownloadThreadStarter, &hWnd, CREATE_SUSPENDED, &dwThreadId);
    if (hThread != NULL)
    {
       CRequestProcessingDlg wndWaitDlg;

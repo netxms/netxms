@@ -2975,6 +2975,28 @@ BEGIN
                     IDC_STATIC,7,185,148,8
 END
 
+IDD_DEFINE_GRAPH DIALOGEX 0, 0, 279, 196
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Define Graph"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_NAME,7,17,265,14,ES_AUTOHSCROLL
+    CONTROL         "List1",IDC_LIST_USERS,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER | 
+                    WS_TABSTOP,13,50,196,110,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,215,50,50,14
+    PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,215,69,50,14
+    CONTROL         "&Read",IDC_CHECK_READ,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,215,98,33,10
+    CONTROL         "&Modify",IDC_CHECK_MODIFY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,215,110,37,10
+    DEFPUSHBUTTON   "OK",IDOK,167,175,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,222,175,50,14
+    LTEXT           "Graph name (you can use -> to separate menu levels)",
+                    IDC_STATIC,7,7,169,8
+    GROUPBOX        "Access List",IDC_STATIC,7,38,265,130
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -3689,6 +3711,14 @@ BEGIN
         RIGHTMARGIN, 297
         TOPMARGIN, 7
         BOTTOMMARGIN, 235
+    END
+
+    IDD_DEFINE_GRAPH, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 272
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 189
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -62,7 +62,6 @@ BOOL CUserSelectDlg::OnInitDialog()
    NXC_USER *pUserList;
    DWORD i, dwNumUsers;
    int iItem;
-   CImageList *pImageList;
 
 	CDialog::OnInitDialog();
 
@@ -78,12 +77,11 @@ BOOL CUserSelectDlg::OnInitDialog()
    }
 
    // Create image list
-   pImageList = new CImageList;
-   pImageList->Create(16, 16, ILC_COLOR8 | ILC_MASK, 8, 8);
-   pImageList->Add(AfxGetApp()->LoadIcon(IDI_USER));
-   pImageList->Add(AfxGetApp()->LoadIcon(IDI_USER_GROUP));
-   pImageList->Add(AfxGetApp()->LoadIcon(IDI_EVERYONE));
-   m_wndListCtrl.SetImageList(pImageList, LVSIL_SMALL);
+   m_imageList.Create(16, 16, ILC_COLOR8 | ILC_MASK, 8, 8);
+   m_imageList.Add(theApp.LoadIcon(IDI_USER));
+   m_imageList.Add(theApp.LoadIcon(IDI_USER_GROUP));
+   m_imageList.Add(theApp.LoadIcon(IDI_EVERYONE));
+   m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
 
    // Fill in list view
    if (m_bAddPublic)

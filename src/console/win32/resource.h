@@ -230,6 +230,7 @@
 #define IDB_CLOSE                       356
 #define IDI_AGAIN                       357
 #define IDD_FATAL_ERROR                 358
+#define IDD_DEFINE_GRAPH                359
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -862,9 +863,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        359
+#define _APS_NEXT_RESOURCE_VALUE        360
 #define _APS_NEXT_COMMAND_VALUE         33053
-#define _APS_NEXT_CONTROL_VALUE         1444
+#define _APS_NEXT_CONTROL_VALUE         1450
 #define _APS_NEXT_SYMED_VALUE           134
 #endif
 #endif

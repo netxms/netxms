@@ -9,6 +9,7 @@
 #include "LastValuesView.h"
 #include "AlarmBrowser.h"
 #include "ObjectBrowser.h"
+#include "FatalErrorDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -41,6 +42,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
    ON_MESSAGE(NXCM_DEPLOYMENT_INFO, OnDeploymentInfo)
    ON_MESSAGE(NXCM_UPDATE_EVENT_LIST, OnUpdateEventList)
    ON_MESSAGE(NXCM_UPDATE_OBJECT_TOOLS, OnUpdateObjectTools)
+	ON_MESSAGE(NXCM_SHOW_FATAL_ERROR, OnShowFatalError)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -606,4 +608,14 @@ void CMainFrame::OnDesktopNew()
 {
    m_szDesktopName[0] = 0;
    SetDesktopIndicator();
+}
+
+
+//
+// NXCM_SHOW_FATAL_ERROR message handler
+//
+
+void CMainFrame::OnShowFatalError(WPARAM wParam, LPARAM lParam)
+{
+	((CFatalErrorDlg *)lParam)->DoModal();
 }

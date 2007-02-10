@@ -131,6 +131,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_TOOLS_IMPORTMP, OnToolsImportmp)
 	//}}AFX_MSG_MAP
 	ON_THREAD_MESSAGE(NXCM_GRAPH_LIST_UPDATED, OnGraphListUpdate)
+	ON_COMMAND_RANGE(GRAPH_MENU_FIRST_ID, GRAPH_MENU_LAST_ID, OnPredefinedGraph)
 END_MESSAGE_MAP()
 
 
@@ -149,6 +150,7 @@ CConsoleApp::CConsoleApp()
    m_mutexAlarmList = MutexCreate();
    m_hDevMode = NULL;
    m_hDevNames = NULL;
+	m_dwMainThreadId = GetCurrentThreadId();
 }
 
 
@@ -3562,6 +3564,26 @@ BOOL CConsoleApp::StartConsoleUpgrade()
 
 
 //
+// Open predefined graph
+//
+
+void CConsoleApp::OnPredefinedGraph(UINT nCmd)
+{
+   CGraphFrame *pWnd;
+	UINT nIndex;
+
+	nIndex = nCmd - GRAPH_MENU_FIRST_ID;
+	if (nIndex < g_dwNumGraphs)
+	{
+		pWnd = new CGraphFrame;
+		pWnd->RestoreFromServer(g_pGraphList[nIndex].pszConfig);
+		CreateChildFrameWithSubtitle(pWnd, IDR_DCI_HISTORY_GRAPH,
+											  pWnd->GetSubTitle(), m_hGraphMenu, m_hGraphAccel);
+	}
+}
+
+
+//
 // Update Tools->Graph submenu
 //
 
@@ -3784,13 +3806,23 @@ static void ExceptionHandler(EXCEPTION_POINTERS *pInfo)
       CloseHandle(hFile);
    }
 
+	// Prepare error dialog
 	dwSize = 0;
 	pData = LoadFile(szInfoFile, &dwSize);
 	pData = (BYTE *)realloc(pData, dwSize + 1);
 	pData[dwSize] = 0;
 	dlg.m_strText = WideStringFromMBString(CHECK_NULL_A((char *)pData));
 	dlg.m_strFile = szDumpFile;
-	dlg.DoModal();
+
+	// Dialog should be executed from GUI thread
+	if (GetCurrentThreadId() == theApp.m_dwMainThreadId)
+	{
+		dlg.DoModal();
+	}
+	else
+	{
+		theApp.m_pMainWnd->SendMessage(NXCM_SHOW_FATAL_ERROR, 0, (LPARAM)&dlg);
+	}
 }
 
 
