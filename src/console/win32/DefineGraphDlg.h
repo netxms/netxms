@@ -36,11 +36,18 @@ public:
 
 // Implementation
 protected:
+	DWORD m_dwCurrAclEntry;
+	void AddListEntry(NXC_GRAPH_ACL_ENTRY *pEntry);
 	CImageList m_imageList;
 
 	// Generated message map functions
 	//{{AFX_MSG(CDefineGraphDlg)
 	virtual BOOL OnInitDialog();
+	afx_msg void OnButtonAdd();
+	afx_msg void OnButtonDelete();
+	afx_msg void OnItemchangedListUsers(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnCheckRead();
+	afx_msg void OnCheckModify();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -55,11 +55,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib psapi.lib /nologo /dll /machine:I386 /out:"Release/winnt.nsm" /libpath:"..\..\..\libnetxms\Release"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib psapi.lib /nologo /dll /debug /machine:I386 /out:"Release/winnt.nsm" /pdbtype:sept /libpath:"..\..\..\libnetxms\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Release\winnt.nsm C:\NetXMS\bin
+PostBuild_Cmds=copy Release\winnt.nsm C:\NetXMS\bin	copy Release\winnt.pdb C:\NetXMS\bin
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "winnt - Win32 Debug"
@@ -90,7 +90,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Debug\winnt.nsm ..\..\..\..\bin
+PostBuild_Cmds=copy Debug\winnt.nsm ..\..\..\..\bin	copy Debug\winnt.pdb ..\..\..\..\bin
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "winnt - Win32 Release AMD64"
@@ -119,12 +119,12 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib psapi.lib /nologo /dll /machine:I386 /out:"Release/winnt.nsm" /libpath:"..\..\..\libnetxms\Release"
-# ADD LINK32 bufferoverflowU.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib psapi.lib /nologo /dll /machine:I386 /out:"Release64/winnt.nsm" /libpath:"..\..\..\libnetxms\Release64" /machine:AMD64
+# ADD LINK32 bufferoverflowU.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib psapi.lib /nologo /dll /debug /machine:I386 /out:"Release64/winnt.nsm" /pdbtype:sept /libpath:"..\..\..\libnetxms\Release64" /machine:AMD64
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Release64\winnt.nsm C:\NetXMS\bin64
+PostBuild_Cmds=copy Release64\winnt.nsm C:\NetXMS\bin64	copy Release64\winnt.pdb C:\NetXMS\bin64
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "winnt - Win32 Debug AMD64"
@@ -158,7 +158,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Debug64\winnt.nsm ..\..\..\..\bin64
+PostBuild_Cmds=copy Debug64\winnt.nsm ..\..\..\..\bin64	copy Debug64\winnt.pdb ..\..\..\..\bin64
 # End Special Build Tool
 
 !ENDIF 

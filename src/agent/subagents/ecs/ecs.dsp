@@ -55,11 +55,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib /nologo /dll /machine:I386 /out:"Release/ecs.nsm" /libpath:"..\..\..\libnetxms\Release"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib /nologo /dll /debug /machine:I386 /out:"Release/ecs.nsm" /pdbtype:sept /libpath:"..\..\..\libnetxms\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Release\ecs.nsm C:\NetXMS\bin
+PostBuild_Cmds=copy Release\ecs.nsm C:\NetXMS\bin	copy Release\ecs.pdb C:\NetXMS\bin
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "ecs - Win32 Debug"
@@ -90,7 +90,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Debug\ecs.nsm ..\..\..\..\bin
+PostBuild_Cmds=copy Debug\ecs.nsm ..\..\..\..\bin	copy Debug\ecs.pdb ..\..\..\..\bin
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "ecs - Win32 Release AMD64"
@@ -119,12 +119,12 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib /nologo /dll /machine:I386 /out:"Release/ecs.nsm" /libpath:"..\..\..\libnetxms\Release"
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib bufferoverflowU.lib /nologo /dll /machine:I386 /out:"Release64/ecs.nsm" /libpath:"..\..\..\libnetxms\Release64" /machine:AMD64
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib bufferoverflowU.lib /nologo /dll /debug /machine:I386 /out:"Release64/ecs.nsm" /pdbtype:sept /libpath:"..\..\..\libnetxms\Release64" /machine:AMD64
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Release64\ecs.nsm C:\NetXMS\bin64
+PostBuild_Cmds=copy Release64\ecs.nsm C:\NetXMS\bin64	copy Release64\ecs.pdb C:\NetXMS\bin64
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "ecs - Win32 Debug AMD64"
@@ -157,7 +157,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Debug64\ecs.nsm ..\..\..\..\bin64
+PostBuild_Cmds=copy Debug64\ecs.nsm ..\..\..\..\bin64	copy Debug64\ecs.pdb ..\..\..\..\bin64
 # End Special Build Tool
 
 !ENDIF 

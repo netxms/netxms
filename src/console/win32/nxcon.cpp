@@ -325,6 +325,7 @@ BOOL CConsoleApp::InitInstance()
 	// create main MDI frame window
 	if (!pFrame->LoadFrame(IDR_MAINFRAME))
 		return FALSE;
+	m_hMainMenu = pFrame->GetMenu()->GetSafeHmenu();
 
    // Load context menus
    if (!m_ctxMenu.LoadMenu(IDM_CONTEXT))
@@ -3633,8 +3634,7 @@ void CConsoleApp::OnGraphListUpdate(WPARAM wParam, LPARAM lParam)
 
 	LockGraphs();
 
-	UpdateGraphSubmenu(m_pMainWnd->GetMenu()->GetSubMenu(3));
-
+	UPDATE_MENU(m_hMainMenu, 3);
 	UPDATE_MENU(m_hMDIMenu, 3);
 	UPDATE_MENU(m_hAlarmBrowserMenu, 4);
 	UPDATE_MENU(m_hEventBrowserMenu, 4);

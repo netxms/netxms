@@ -157,6 +157,7 @@ public:
 
 // Implementation
 protected:
+	HMENU m_hMainMenu;
 	BOOL StartConsoleUpgrade(void);
 	HGLOBAL m_hDevNames;
 	HGLOBAL m_hDevMode;

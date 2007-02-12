@@ -53,11 +53,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
-# ADD LINK32 libnetxms.lib libnxcl.lib nxuilib.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\nxuilib\Release" /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcl\Release"
+# ADD LINK32 libnetxms.lib libnxcl.lib nxuilib.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\nxuilib\Release" /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcl\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Release\nxnotify.exe C:\NetXMS\bin
+PostBuild_Cmds=copy Release\nxnotify.exe C:\NetXMS\bin	copy Release\nxnotify.pdb C:\NetXMS\bin
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "nxnotify - Win32 Debug"
@@ -88,7 +88,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Debug\nxnotify.exe ..\..\..\bin
+PostBuild_Cmds=copy Debug\nxnotify.exe ..\..\..\bin	copy Debug\nxnotify.pdb ..\..\..\bin
 # End Special Build Tool
 
 !ENDIF 

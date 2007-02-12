@@ -2987,11 +2987,14 @@ BEGIN
     PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,215,50,50,14
     PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,215,69,50,14
     CONTROL         "&Read",IDC_CHECK_READ,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,215,98,33,10
+                    WS_TABSTOP,223,101,33,10
     CONTROL         "&Modify",IDC_CHECK_MODIFY,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,215,110,37,10
+                    WS_TABSTOP,223,113,37,10
     DEFPUSHBUTTON   "OK",IDOK,167,175,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,222,175,50,14
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,238,93,27,1
+    CONTROL         "Rights",IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | 
+                    WS_GROUP,215,89,21,8,WS_EX_TRANSPARENT
     LTEXT           "Graph name (you can use -> to separate menu levels)",
                     IDC_STATIC,7,7,169,8
     GROUPBOX        "Access List",IDC_STATIC,7,38,265,130

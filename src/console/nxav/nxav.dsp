@@ -122,7 +122,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Debug_UNICODE\nxav.exe ..\..\..\bin
+PostBuild_Cmds=copy Debug_UNICODE\nxav.exe ..\..\..\bin	copy Debug_UNICODE\nxav.pdb ..\..\..\bin
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "nxav - Win32 Release UNICODE"
@@ -150,11 +150,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 shfolder.lib libnetxms.lib libnxcl.lib nxuilib.lib /nologo /subsystem:windows /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcl\Release" /libpath:"..\nxuilib\Release"
-# ADD LINK32 shfolder.lib libnetxmsw.lib libnxclw.lib nxuilibw.lib /nologo /entry:"wWinMainCRTStartup" /subsystem:windows /machine:I386 /libpath:"..\..\libnetxms\Release_UNICODE" /libpath:"..\..\libnxcl\Release_UNICODE" /libpath:"..\nxuilib\Release_UNICODE"
+# ADD LINK32 shfolder.lib libnetxmsw.lib libnxclw.lib nxuilibw.lib /nologo /entry:"wWinMainCRTStartup" /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Release_UNICODE" /libpath:"..\..\libnxcl\Release_UNICODE" /libpath:"..\nxuilib\Release_UNICODE"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Release_UNICODE\nxav.exe C:\NetXMS\bin
+PostBuild_Cmds=copy Release_UNICODE\nxav.exe C:\NetXMS\bin	copy Release_UNICODE\nxav.pdb C:\NetXMS\bin
 # End Special Build Tool
 
 !ENDIF 
