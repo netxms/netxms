@@ -928,6 +928,12 @@ BEGIN
         MENUITEM "Move &up",                    ID_CONFIG_MOVEUP
         MENUITEM "Move do&wn",                  ID_CONFIG_MOVEDOWN
     END
+    POPUP "Graph Manager"
+    BEGIN
+        MENUITEM "&Edit...",                    ID_GRAPHMANAGER_EDIT
+        MENUITEM "&Rename",                     ID_GRAPHMANAGER_RENAME
+        MENUITEM "&Delete",                     ID_GRAPHMANAGER_DELETE
+    END
 END
 
 
@@ -3000,6 +3006,20 @@ BEGIN
     GROUPBOX        "Access List",IDC_STATIC,7,38,265,130
 END
 
+IDD_MANAGE_GRAPHS DIALOGEX 0, 0, 327, 241
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Preconfigured Graphs Manager"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Tree1",IDC_TREE_GRAPHS,"SysTreeView32",TVS_HASBUTTONS | 
+                    TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | 
+                    TVS_SHOWSELALWAYS | TVS_INFOTIP | WS_TABSTOP,7,7,256,227,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&Edit...",IDC_BUTTON_PROPERTIES,270,7,50,14
+    PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,270,26,50,14
+    PUSHBUTTON      "Close",IDCANCEL,270,45,50,14
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -3722,6 +3742,14 @@ BEGIN
         RIGHTMARGIN, 272
         TOPMARGIN, 7
         BOTTOMMARGIN, 189
+    END
+
+    IDD_MANAGE_GRAPHS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 320
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 234
     END
 END
 #endif    // APSTUDIO_INVOKED

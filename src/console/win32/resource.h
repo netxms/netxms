@@ -231,6 +231,7 @@
 #define IDI_AGAIN                       357
 #define IDD_FATAL_ERROR                 358
 #define IDD_DEFINE_GRAPH                359
+#define IDD_MANAGE_GRAPHS               360
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -607,6 +608,8 @@
 #define IDC_CHECK_HIDE_EMPTY            1431
 #define IDC_IPADDR                      1438
 #define IDC_COMBO_RESOURCES             1439
+#define IDC_TREE_GRAPHS                 1451
+#define IDC_BUTTON_PROPERTIES           1452
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -853,6 +856,9 @@
 #define ID_OBJECT_CREATE_CLUSTER        33050
 #define ID_TOOLS_GRAPHS_MANAGE          33051
 #define ID_GRAPH_DEFINE                 33052
+#define ID_GRAPHMANAGER_RENAME          33053
+#define ID_GRAPHMANAGER_DELETE          33054
+#define ID_GRAPHMANAGER_EDIT            33055
 #define ID_ALWAYS_DISABLED              43210
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
@@ -863,9 +869,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        360
-#define _APS_NEXT_COMMAND_VALUE         33053
-#define _APS_NEXT_CONTROL_VALUE         1451
+#define _APS_NEXT_RESOURCE_VALUE        361
+#define _APS_NEXT_COMMAND_VALUE         33056
+#define _APS_NEXT_CONTROL_VALUE         1455
 #define _APS_NEXT_SYMED_VALUE           134
 #endif
 #endif

@@ -637,6 +637,7 @@ CMenu *CreateToolsSubmenu(NXC_OBJECT *pObject, TCHAR *pszCurrPath, DWORD *pdwSta
             _tcscpy(szName, g_pObjectToolList[i].szName);
          }
 
+			// Add menu item if we are on right level, otherwise create submenu or go one level up
          if (!_tcsicmp(szPath, pszCurrPath))
          {
             StrStrip(szName);

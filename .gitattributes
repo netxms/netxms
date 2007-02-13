@@ -751,6 +751,8 @@ src/console/win32/GraphDataPage.cpp -text
 src/console/win32/GraphDataPage.h -text
 src/console/win32/GraphFrame.cpp -text
 src/console/win32/GraphFrame.h -text
+src/console/win32/GraphManagerDlg.cpp -text
+src/console/win32/GraphManagerDlg.h -text
 src/console/win32/GraphSettingsPage.cpp -text
 src/console/win32/GraphSettingsPage.h -text
 src/console/win32/GroupPropDlg.cpp -text

@@ -264,6 +264,7 @@ public:
 	afx_msg void OnToolsCreatemp();
 	afx_msg void OnFilePagesetup();
 	afx_msg void OnToolsImportmp();
+	afx_msg void OnToolsGraphsManage();
 	//}}AFX_MSG
 	afx_msg void OnGraphListUpdate(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnPredefinedGraph(UINT nCmd);

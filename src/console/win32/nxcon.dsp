@@ -436,6 +436,10 @@ SOURCE=.\GraphFrame.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\GraphManagerDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\GraphSettingsPage.cpp
 # End Source File
 # Begin Source File
@@ -1014,6 +1018,10 @@ SOURCE=.\GraphDataPage.h
 # Begin Source File
 
 SOURCE=.\GraphFrame.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\GraphManagerDlg.h
 # End Source File
 # Begin Source File
 

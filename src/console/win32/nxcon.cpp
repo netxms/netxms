@@ -73,6 +73,7 @@
 #include "SelectMPDlg.h"
 #include "ConsoleUpgradeDlg.h"
 #include "FatalErrorDlg.h"
+#include "GraphManagerDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -129,6 +130,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_TOOLS_CREATEMP, OnToolsCreatemp)
 	ON_COMMAND(ID_FILE_PAGESETUP, OnFilePagesetup)
 	ON_COMMAND(ID_TOOLS_IMPORTMP, OnToolsImportmp)
+	ON_COMMAND(ID_TOOLS_GRAPHS_MANAGE, OnToolsGraphsManage)
 	//}}AFX_MSG_MAP
 	ON_THREAD_MESSAGE(NXCM_GRAPH_LIST_UPDATED, OnGraphListUpdate)
 	ON_COMMAND_RANGE(GRAPH_MENU_FIRST_ID, GRAPH_MENU_LAST_ID, OnPredefinedGraph)
@@ -3585,6 +3587,78 @@ void CConsoleApp::OnPredefinedGraph(UINT nCmd)
 
 
 //
+// Create graph submenu
+//
+
+static void CreateGraphSubmenu(CMenu *pMenu, TCHAR *pszCurrPath, DWORD *pdwStart)
+{
+	DWORD i, j;
+   TCHAR szName[MAX_DB_STRING], szPath[MAX_DB_STRING];
+	int nPos; 
+
+	for(i = *pdwStart, nPos = 0; i < g_dwNumGraphs; i++, nPos++)
+	{
+      // Separate item name and path
+      memset(szPath, 0, sizeof(TCHAR) * MAX_DB_STRING);
+      if (_tcsstr(g_pGraphList[i].pszName, _T("->")) != NULL)
+      {
+         for(j = _tcslen(g_pGraphList[i].pszName) - 1; j > 0; j--)
+            if ((g_pGraphList[i].pszName[j] == _T('>')) &&
+                (g_pGraphList[i].pszName[j - 1] == _T('-')))
+            {
+               _tcscpy(szName, &g_pGraphList[i].pszName[j + 1]);
+               j--;
+               break;
+            }
+         memcpy(szPath, g_pGraphList[i].pszName, j * sizeof(TCHAR));
+      }
+      else
+      {
+         _tcscpy(szName, g_pGraphList[i].pszName);
+      }
+
+		// Add menu item if we are on right level, otherwise create submenu or go one level up
+      if (!_tcsicmp(szPath, pszCurrPath))
+      {
+         StrStrip(szName);
+         pMenu->InsertMenu(nPos, MF_BYPOSITION, GRAPH_MENU_FIRST_ID + i, szName);
+      }
+      else
+      {
+         for(j = _tcslen(pszCurrPath); (szPath[j] == _T(' ')) || (szPath[j] == _T('\t')); j++);
+         if ((*pszCurrPath == 0) ||
+             ((!memicmp(szPath, pszCurrPath, _tcslen(pszCurrPath) * sizeof(TCHAR))) &&
+              (szPath[j] == _T('-')) && (szPath[j + 1] == _T('>'))))
+         {
+            CMenu *pSubMenu;
+            TCHAR *pszName;
+
+            // Submenu of current menu
+            if (*pszCurrPath != 0)
+               j += 2;
+            pszName = &szPath[j];
+            for(; (szPath[j] != 0) && (memcmp(&szPath[j], _T("->"), sizeof(TCHAR) * 2)); j++);
+            szPath[j] = 0;
+            pSubMenu = new CMenu;
+				pSubMenu->CreatePopupMenu();
+				CreateGraphSubmenu(pSubMenu, szPath, &i);
+            StrStrip(pszName);
+            pMenu->InsertMenu(nPos, MF_ENABLED | MF_STRING | MF_POPUP | MF_BYPOSITION,
+                              (UINT)pSubMenu->Detach(), pszName);
+            delete pSubMenu;
+         }
+         else
+         {
+            i--;
+            break;
+         }
+		}
+	}
+   *pdwStart = i;
+}
+
+
+//
 // Update Tools->Graph submenu
 //
 
@@ -3606,14 +3680,31 @@ static void UpdateGraphSubmenu(CMenu *pToolsMenu)
 		// Add new items
 		if (g_dwNumGraphs > 0)
 		{
-			for(i = 0; i < g_dwNumGraphs; i++)
-				pMenu->InsertMenu(i, MF_BYPOSITION, GRAPH_MENU_FIRST_ID + i, g_pGraphList[i].pszName);
+			i = 0;
+			CreateGraphSubmenu(pMenu, _T(""), &i);
 		}
 		else
 		{
 			pMenu->InsertMenu(0, MF_BYPOSITION, ID_ALWAYS_DISABLED, _T("<no graphs defined>"));
 		}
 	}
+}
+
+
+//
+// Callback for qsort() which compares graph names
+//
+
+static int CompareGraphNames(const void *elem1, const void *elem2)
+{
+	int nRet;
+
+	TranslateStr(((NXC_GRAPH *)elem1)->pszName, _T("->"), _T("\x01\x02"));
+	TranslateStr(((NXC_GRAPH *)elem2)->pszName, _T("->"), _T("\x01\x02"));
+	nRet = _tcsicmp(((NXC_GRAPH *)elem1)->pszName, ((NXC_GRAPH *)elem2)->pszName);
+	TranslateStr(((NXC_GRAPH *)elem1)->pszName, _T("\x01\x02"), _T("->"));
+	TranslateStr(((NXC_GRAPH *)elem2)->pszName, _T("\x01\x02"), _T("->"));
+	return nRet;
 }
 
 
@@ -3634,6 +3725,10 @@ void CConsoleApp::OnGraphListUpdate(WPARAM wParam, LPARAM lParam)
 
 	LockGraphs();
 
+	// Sort graph entries
+	qsort(g_pGraphList, g_dwNumGraphs, sizeof(NXC_GRAPH), CompareGraphNames);
+
+	// Update menus
 	UPDATE_MENU(m_hMainMenu, 3);
 	UPDATE_MENU(m_hMDIMenu, 3);
 	UPDATE_MENU(m_hAlarmBrowserMenu, 4);
@@ -3845,4 +3940,16 @@ int CConsoleApp::Run()
 	}
 
 	return nRet;
+}
+
+
+//
+// Start graph manager
+//
+
+void CConsoleApp::OnToolsGraphsManage() 
+{
+	CGraphManagerDlg dlg;
+
+	dlg.DoModal();
 }
