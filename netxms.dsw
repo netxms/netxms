@@ -618,6 +618,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "oracle"=.\src\server\dbdrv\oracle\oracle.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "pgsql"=.\src\server\dbdrv\pgsql\pgsql.dsp - Package Owner=<4>
 
 Package=<5>

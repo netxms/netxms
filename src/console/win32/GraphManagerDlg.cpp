@@ -38,6 +38,7 @@ BEGIN_MESSAGE_MAP(CGraphManagerDlg, CDialog)
 	ON_NOTIFY(TVN_ITEMEXPANDED, IDC_TREE_GRAPHS, OnItemexpandedTreeGraphs)
 	ON_WM_CONTEXTMENU()
 	ON_BN_CLICKED(IDC_BUTTON_DELETE, OnButtonDelete)
+	ON_COMMAND(ID_GRAPHMANAGER_DELETE, OnGraphmanagerDelete)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -207,22 +208,7 @@ void CGraphManagerDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 
 void CGraphManagerDlg::OnButtonDelete() 
 {
-	HTREEITEM hItem, hParent;
-
-	hItem = m_wndTreeCtrl.GetSelectedItem();
-	if (hItem == NULL)
-		return;
-
-	hParent = m_wndTreeCtrl.GetParentItem(hItem);
-	if (DeleteGraph(hItem))
-	{
-		while((hParent != NULL) && (m_wndTreeCtrl.GetChildItem(hParent) == NULL))
-		{
-			hItem = hParent;
-			hParent = m_wndTreeCtrl.GetParentItem(hItem);
-			m_wndTreeCtrl.DeleteItem(hItem);
-		}
-	}
+	PostMessage(WM_COMMAND, ID_GRAPHMANAGER_DELETE, 0);
 }
 
 
@@ -262,4 +248,29 @@ BOOL CGraphManagerDlg::DeleteGraph(HTREEITEM hItem)
 		}
 	}
 	return bRet;
+}
+
+
+//
+// Handler for "Delete" item in context menu
+//
+
+void CGraphManagerDlg::OnGraphmanagerDelete() 
+{
+	HTREEITEM hItem, hParent;
+
+	hItem = m_wndTreeCtrl.GetSelectedItem();
+	if (hItem == NULL)
+		return;
+
+	hParent = m_wndTreeCtrl.GetParentItem(hItem);
+	if (DeleteGraph(hItem))
+	{
+		while((hParent != NULL) && (m_wndTreeCtrl.GetChildItem(hParent) == NULL))
+		{
+			hItem = hParent;
+			hParent = m_wndTreeCtrl.GetParentItem(hItem);
+			m_wndTreeCtrl.DeleteItem(hItem);
+		}
+	}
 }

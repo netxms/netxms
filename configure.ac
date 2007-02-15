@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.236 2007-02-08 07:56:53 victor Exp $
+# $Id: configure.ac,v 1.237 2007-02-15 23:00:36 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -197,7 +197,7 @@ AC_ARG_ENABLE(unstable,
 
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
-	DB_DRIVERS=" mysql pgsql odbc mssql sqlite"
+	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle"
 	MODULES="libnxsnmp libnxsl server agent libnxmap libnxcl nxevent nxpush nxreport nxmibc console nxhttpd nxscript"
 	SUBAGENT_DIRS="linux freebsd openbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"

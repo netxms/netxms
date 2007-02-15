@@ -42,6 +42,7 @@ protected:
 	afx_msg void OnItemexpandedTreeGraphs(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnButtonDelete();
+	afx_msg void OnGraphmanagerDelete();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
