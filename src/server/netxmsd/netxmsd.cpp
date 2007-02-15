@@ -1,4 +1,4 @@
-/* $Id: netxmsd.cpp,v 1.18 2007-02-09 21:33:11 victor Exp $ */
+/* $Id: netxmsd.cpp,v 1.19 2007-02-15 15:31:43 alk Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
@@ -23,7 +23,10 @@
 **/
 
 #include "netxmsd.h"
-#include <dbghelp.h>
+
+#ifdef _WIN32
+# include <dbghelp.h>
+#endif
 
 
 //
