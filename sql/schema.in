@@ -940,7 +940,7 @@ CREATE TABLE snmp_trap_log
 	PRIMARY KEY(trap_id)
 ) TABLE_TYPE;
 
-CREATE INDEX idx_snmp_trap_log_trap_timestamp ON snmp_trap_log(trap_timestamp);
+CREATE INDEX idx_snmp_trap_log_tt ON snmp_trap_log(trap_timestamp);
 
 
 /*
