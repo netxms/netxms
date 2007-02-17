@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.2.16-rc5
-AppVersion=0.2.16-rc5
+AppVerName=NetXMS 0.2.16-rc6
+AppVersion=0.2.16-rc6
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.2.16-rc5
+OutputBaseFilename=netxms-0.2.16-rc6
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -25,6 +25,7 @@ Name: "server"; Description: "NetXMS Server"; Types: full compact
 Name: "server\mssql"; Description: "Microsoft SQL DB-Library"; Types: full
 Name: "server\mysql"; Description: "MySQL Client Library"; Types: full
 Name: "server\pgsql"; Description: "PostgreSQL Client Library"; Types: full
+Name: "server\oracle"; Description: "Oracle Instant Client"; Types: full
 Name: "websrv"; Description: "Web Server"; Types: full
 Name: "pdb"; Description: "Install PDB files for selected components"; Types: custom
 
@@ -139,6 +140,9 @@ Source: "Files\libiconv-2.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Comp
 Source: "Files\comerr32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "Files\krb5_32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "Files\ssleay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
+Source: "Files\oci.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
+Source: "Files\orannzsbb10.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
+Source: "Files\oraociicus10.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
 Source: "Files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "Files\bgd.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv
 Source: "Files\zlib1.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base

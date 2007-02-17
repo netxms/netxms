@@ -38,7 +38,7 @@ static TCHAR *m_pszValidDrivers[MAX_DB_ENGINES][MAX_DB_DRIVERS] =
    { _T("mysql.ddr"), _T("odbc.ddr") },
    { _T("pgsql.ddr"), _T("odbc.ddr") },
    { _T("mssql.ddr"), _T("odbc.ddr") },
-   { _T("odbc.ddr"), NULL },
+   { _T("oracle.ddr"), _T("odbc.ddr") },
    { _T("sqlite.ddr"), NULL }
 };
 
