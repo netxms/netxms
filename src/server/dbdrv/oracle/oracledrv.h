@@ -1,4 +1,4 @@
-/* $Id: oracledrv.h,v 1.2 2007-02-17 00:05:21 victor Exp $ */
+/* $Id: oracledrv.h,v 1.3 2007-02-17 15:32:48 victor Exp $ */
 /** Oracle Database Driver
 ** Copyright (C) 2007 Victor Kirhenshtein
 **
@@ -40,23 +40,26 @@
 
 typedef struct
 {
-	OCIEnv *handleEnv;
-	OCIServer *handleServer;
-	OCISvcCtx *handleService;
-	OCISession *handleSession;
-	OCIError *handleError;
-	MUTEX mutexQueryLock;
-	int nTransLevel;
-	WCHAR szLastError[MAX_ORACLE_ERROR_TEXT];
-} ORACLE_CONN;
-
-typedef struct
-{
 	WCHAR *pData;
 	ub2 nLength;
 	ub2 nCode;
 	sb2 isNull;
 } ORACLE_FETCH_BUFFER;
+
+typedef struct
+{
+	OCIEnv *handleEnv;
+	OCIServer *handleServer;
+	OCISvcCtx *handleService;
+	OCISession *handleSession;
+	OCIStmt *handleStmt;
+	OCIError *handleError;
+	MUTEX mutexQueryLock;
+	int nTransLevel;
+	WCHAR szLastError[MAX_ORACLE_ERROR_TEXT];
+	ORACLE_FETCH_BUFFER *pBuffers;
+	int nCols;
+} ORACLE_CONN;
 
 typedef struct
 {

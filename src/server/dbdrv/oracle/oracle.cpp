@@ -1,4 +1,4 @@
-/* $Id: oracle.cpp,v 1.2 2007-02-17 00:05:21 victor Exp $ */
+/* $Id: oracle.cpp,v 1.3 2007-02-17 15:32:48 victor Exp $ */
 /* 
 ** Oracle Database Driver
 ** Copyright (C) 2007 Victor Kirhenshtein
@@ -240,7 +240,6 @@ extern "C" DB_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWOR
 	ORACLE_FETCH_BUFFER *pBuffers;
 	int i, nPos;
 
-//pwszQuery=L"SELECT * FROM nodes";
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 	OCIHandleAlloc(pConn->handleEnv, (void **)&handleStmt, OCI_HTYPE_STMT, 0, NULL);
 	if (OCIStmtPrepare(handleStmt, pConn->handleError, (text *)pwszQuery,
@@ -420,6 +419,81 @@ extern "C" void EXPORT DrvFreeResult(ORACLE_RESULT *pResult)
 extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery,
                                                  DWORD *pdwError)
 {
+	OCIParam *handleParam;
+	OCIDefine *handleDefine;
+	ub4 nCount;
+	ub2 nWidth;
+	int i;
+
+	MutexLock(pConn->mutexQueryLock, INFINITE);
+
+	pConn->pBuffers = NULL;
+	pConn->nCols = 0;
+
+	OCIHandleAlloc(pConn->handleEnv, (void **)&pConn->handleStmt, OCI_HTYPE_STMT, 0, NULL);
+	if (OCIStmtPrepare(pConn->handleStmt, pConn->handleError, (text *)pwszQuery,
+	                   wcslen(pwszQuery) * sizeof(WCHAR), OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
+	{
+		if (OCIStmtExecute(pConn->handleService, pConn->handleStmt, pConn->handleError,
+		                   0, 0, NULL, NULL, OCI_DEFAULT) == OCI_SUCCESS)
+		{
+			OCIAttrGet(pConn->handleStmt, OCI_HTYPE_STMT, &nCount, NULL, OCI_ATTR_PARAM_COUNT, pConn->handleError);
+			pConn->nCols = nCount;
+			if (pConn->nCols > 0)
+			{
+				// Prepare receive buffers
+				pConn->pBuffers = (ORACLE_FETCH_BUFFER *)malloc(sizeof(ORACLE_FETCH_BUFFER) * pConn->nCols);
+				memset(pConn->pBuffers, 0, sizeof(ORACLE_FETCH_BUFFER) * pConn->nCols);
+				for(i = 0; i < pConn->nCols; i++)
+				{
+					pConn->pBuffers[i].isNull = 1;	// Mark all columns as NULL initially
+					if (OCIParamGet(pConn->handleStmt, OCI_HTYPE_STMT, pConn->handleError,
+					                (void **)&handleParam, (ub4)(i + 1)) == OCI_SUCCESS)
+					{
+						OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &nWidth, NULL, OCI_ATTR_DATA_SIZE, pConn->handleError);
+						pConn->pBuffers[i].pData = (WCHAR *)malloc((nWidth + 1) * sizeof(WCHAR));
+						handleDefine = NULL;
+						if (OCIDefineByPos(pConn->handleStmt, &handleDefine, pConn->handleError, i + 1,
+						                   pConn->pBuffers[i].pData, (nWidth + 1) * sizeof(WCHAR),
+						                   SQLT_CHR, &pConn->pBuffers[i].isNull, &pConn->pBuffers[i].nLength,
+						                   &pConn->pBuffers[i].nCode, OCI_DEFAULT) == OCI_SUCCESS)
+						{
+							*pdwError = DBERR_SUCCESS;
+						}
+						else
+						{
+							SetLastErrorText(pConn);
+							*pdwError = IsConnectionError(pConn);
+						}
+					}
+					else
+					{
+						SetLastErrorText(pConn);
+						*pdwError = IsConnectionError(pConn);
+					}
+				}
+			}
+		}
+		else
+		{
+			SetLastErrorText(pConn);
+			*pdwError = IsConnectionError(pConn);
+		}
+	}
+	else
+	{
+		SetLastErrorText(pConn);
+		*pdwError = IsConnectionError(pConn);
+	}
+
+	if (*pdwError == DBERR_SUCCESS)
+		return pConn;
+
+	// On failure, unlock query mutex and do cleanup
+	for(i = 0; i < pConn->nCols; i++)
+		safe_free(pConn->pBuffers[i].pData);
+	safe_free(pConn->pBuffers);
+	MutexUnlock(pConn->mutexQueryLock);
 	return NULL;
 }
 
@@ -428,9 +502,11 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwsz
 // Fetch next result line from asynchronous SELECT results
 //
 
-extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT pConn)
+extern "C" BOOL EXPORT DrvFetch(ORACLE_CONN *pConn)
 {
-	return FALSE;
+	if (pConn == NULL)
+		return FALSE;
+	return OCIStmtFetch(pConn->handleStmt, pConn->handleError, 1, OCI_FETCH_NEXT, OCI_DEFAULT) == OCI_SUCCESS;
 }
 
 
@@ -441,7 +517,26 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT pConn)
 extern "C" WCHAR EXPORT *DrvGetFieldAsync(ORACLE_CONN *pConn, int nColumn,
 														WCHAR *pBuffer, int nBufSize)
 {
-	return NULL;
+	int nLen;
+
+	if (pConn == NULL)
+		return NULL;
+
+	if ((nColumn < 0) || (nColumn >= pConn->nCols))
+		return NULL;
+
+	if (pConn->pBuffers[nColumn].isNull)
+	{
+		*pBuffer = 0;
+	}
+	else
+	{
+		nLen = min(nBufSize - 1, (int)(pConn->pBuffers[nColumn].nLength / sizeof(WCHAR)));
+		memcpy(pBuffer, pConn->pBuffers[nColumn].pData, nLen * sizeof(WCHAR));
+		pBuffer[nLen] = 0;
+	}
+
+	return pBuffer;
 }
 
 
@@ -451,6 +546,16 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(ORACLE_CONN *pConn, int nColumn,
 
 extern "C" void EXPORT DrvFreeAsyncResult(ORACLE_CONN *pConn)
 {
+	int i;
+
+	if (pConn == NULL)
+		return;
+
+	for(i = 0; i < pConn->nCols; i++)
+		safe_free(pConn->pBuffers[i].pData);
+	safe_free_and_null(pConn->pBuffers);
+	pConn->nCols = 0;
+	MutexUnlock(pConn->mutexQueryLock);
 }
 
 
@@ -473,6 +578,7 @@ extern "C" DWORD EXPORT DrvBegin(ORACLE_CONN *pConn)
 	}
 	else
 	{
+		SetLastErrorText(pConn);
       dwResult = IsConnectionError(pConn);
 	}
 	MutexUnlock(pConn->mutexQueryLock);
@@ -501,6 +607,7 @@ extern "C" DWORD EXPORT DrvCommit(ORACLE_CONN *pConn)
 		}
 		else
 		{
+			SetLastErrorText(pConn);
 			dwResult = IsConnectionError(pConn);
 		}
 	}
@@ -534,6 +641,7 @@ extern "C" DWORD EXPORT DrvRollback(ORACLE_CONN *pConn)
 		}
 		else
 		{
+			SetLastErrorText(pConn);
 			dwResult = IsConnectionError(pConn);
 		}
 	}
