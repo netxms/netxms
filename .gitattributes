@@ -547,6 +547,7 @@ src/console/nxlexer/nxlexer.def -text
 src/console/nxlexer/nxlexer.dsp -text
 src/console/nxlexer/nxlexer.dsw -text
 src/console/nxlexer/nxlexer.h -text
+src/console/nxlexer/nxsl.cpp -text
 src/console/nxnotify/AlarmPopup.cpp -text
 src/console/nxnotify/AlarmPopup.h -text
 src/console/nxnotify/ConnectionPage.cpp -text
