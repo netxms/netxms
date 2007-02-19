@@ -307,6 +307,19 @@ void CDBSelectPage::OnDriverSelect()
       EnableDlgItem(this, IDC_EDIT_DB_NAME, TRUE);
       EnableDlgItem(this, IDC_RADIO_NEWDB, TRUE);
    }
+   else if (!_tcscmp(pc->m_szDBDriver, _T("oracle.ddr")))
+   {
+      SetDlgItemText(IDC_STATIC_SERVER, _T("Oracle connect string"));
+      SetDlgItemText(IDC_STATIC_DBNAME, _T("Database name"));
+      EnableDlgItem(this, IDC_EDIT_SERVER, TRUE);
+      EnableDlgItem(this, IDC_EDIT_DB_LOGIN, TRUE);
+      EnableDlgItem(this, IDC_EDIT_DB_PASSWORD, TRUE);
+      EnableDlgItem(this, IDC_EDIT_DB_NAME, FALSE);
+      SendDlgItemMessage(IDC_RADIO_NEWDB, BM_SETCHECK, BST_UNCHECKED);
+      SendDlgItemMessage(IDC_RADIO_EXISTINGDB, BM_SETCHECK, BST_CHECKED);
+      pc->m_bCreateDB = FALSE;
+      EnableDlgItem(this, IDC_RADIO_NEWDB, FALSE);
+   }
    else
    {
       SetDlgItemText(IDC_STATIC_SERVER, _T("Database server"));
