@@ -73,6 +73,10 @@ typedef struct
 #include "../src/console/nxuilib/ScintillaCtrl.h"
 #include "../src/console/nxuilib/SimpleListCtrl.h"
 #include "../src/console/nxuilib/TaskBarPopupWnd.h"
+#include "../src/console/nxuilib/ComboListCtrl.h"
+#include "../src/console/nxuilib/InPlaceEdit.h"
+#include "../src/console/nxuilib/InPlaceCombo.h"
+#include "../src/console/nxuilib/ColourPickerXP.h"
 
 #endif
 

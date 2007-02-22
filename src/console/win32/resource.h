@@ -232,6 +232,7 @@
 #define IDD_FATAL_ERROR                 358
 #define IDD_DEFINE_GRAPH                359
 #define IDD_MANAGE_GRAPHS               360
+#define IDD_GRAPH_PROP_STYLES           361
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -277,6 +278,7 @@
 #define IDC_LIST_SUBNETS                1024
 #define IDC_LIST_NETWORKS               1024
 #define IDC_LIST_RESOURCES              1024
+#define IDC_LIST_ITEMS                  1024
 #define IDC_INFO_TEXT                   1025
 #define IDC_LIST_CHILDS                 1025
 #define IDC_LIST_REMOTE                 1025
@@ -437,33 +439,17 @@
 #define IDC_STATIC_WARNING_ICON         1213
 #define IDC_CB_TEXT                     1214
 #define IDC_STATIC_WARNING_TEXT         1214
-#define IDC_CB_LABELBK                  1215
-#define IDC_CB_LABEL                    1216
-#define IDC_CB_ITEM1                    1217
-#define IDC_CB_ITEM5                    1218
-#define IDC_CB_ITEM2                    1219
+#define IDC_CB_RULER                    1215
+#define IDC_CB_SELECTION                1216
 #define IDC_COMBO_TYPES                 1219
-#define IDC_CB_ITEM6                    1220
-#define IDC_CB_ITEM3                    1221
 #define IDC_RADIO_TCP                   1221
-#define IDC_CB_ITEM7                    1222
 #define IDC_RADIO_UDP                   1222
-#define IDC_CB_ITEM4                    1223
 #define IDC_RADIO_ICMP                  1223
-#define IDC_CB_ITEM8                    1224
 #define IDC_RADIO_OTHER                 1224
-#define IDC_CB_ITEM9                    1225
 #define IDC_EDIT_PROTO                  1225
-#define IDC_CB_ITEM13                   1226
 #define IDC_EDIT_REQUEST                1226
-#define IDC_CB_ITEM10                   1227
 #define IDC_EDIT_RESPONSE               1227
-#define IDC_CB_ITEM14                   1228
 #define IDC_COMBO_TYPE                  1228
-#define IDC_CB_ITEM11                   1229
-#define IDC_CB_ITEM15                   1230
-#define IDC_CB_ITEM12                   1231
-#define IDC_CB_ITEM16                   1232
 #define IDC_EDIT_POLLER                 1232
 #define IDC_EDIT_IPADDR                 1233
 #define IDC_BUTTON_UNBIND_PARENT        1236
@@ -869,9 +855,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        361
+#define _APS_NEXT_RESOURCE_VALUE        362
 #define _APS_NEXT_COMMAND_VALUE         33056
-#define _APS_NEXT_CONTROL_VALUE         1455
+#define _APS_NEXT_CONTROL_VALUE         1462
 #define _APS_NEXT_SYMED_VALUE           134
 #endif
 #endif

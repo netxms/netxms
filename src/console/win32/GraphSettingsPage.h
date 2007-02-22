@@ -23,13 +23,12 @@ class CGraphSettingsPage : public CPropertyPage
 // Construction
 public:
 	int m_iTimeUnit;
-	COLORREF m_rgbItems[MAX_GRAPH_ITEMS];
-	COLORREF m_rgbLabelBkgnd;
-	COLORREF m_rgbLabelText;
+	COLORREF m_rgbSelection;
 	COLORREF m_rgbGridLines;
 	COLORREF m_rgbAxisLines;
 	COLORREF m_rgbText;
 	COLORREF m_rgbBackground;
+	COLORREF m_rgbRuler;
 
 	CGraphSettingsPage();
 	~CGraphSettingsPage();
@@ -65,13 +64,12 @@ public:
 
 // Implementation
 protected:
-	CColorSelector m_pwndCSItem[MAX_GRAPH_ITEMS];
-	CColorSelector m_wndCSText;
-	CColorSelector m_wndCSLabelText;
-	CColorSelector m_wndCSLabelBkgnd;
-	CColorSelector m_wndCSGridLines;
-	CColorSelector m_wndCSAxisLines;
-	CColorSelector m_wndCSBackground;
+	CColourPickerXP m_wndCSText;
+	CColourPickerXP m_wndCSRuler;
+	CColourPickerXP m_wndCSSelection;
+	CColourPickerXP m_wndCSGridLines;
+	CColourPickerXP m_wndCSAxisLines;
+	CColourPickerXP m_wndCSBackground;
 
 	// Generated message map functions
 	//{{AFX_MSG(CGraphSettingsPage)

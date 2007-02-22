@@ -78,6 +78,7 @@ EXTRA_DIST = \
 	GraphDataPage.cpp GraphDataPage.h \
 	GraphManagerDlg.cpp GraphManagerDlg.h \
 	GraphSettingsPage.cpp GraphSettingsPage.h \
+	GraphStylePage.cpp GraphStylePage.h \
 	LastValuesView.cpp LastValuesView.h \
 	LPPList.cpp LPPList.h \
 	MainFrm.cpp MainFrm.h \

@@ -14,17 +14,17 @@ Class3=CMainFrame
 Class4=CAboutDlg
 
 ResourceCount=7
-Resource1=IDD_ABOUTBOX
+Resource1=IDR_MAINFRAME
 Resource2=IDM_TASKBAR
 Resource3=IDM_CONTEXT
-Resource4=IDD_CONNECTION_PAGE
-Resource5=IDD_REQUEST_WAIT
-Resource6=IDD_POUP_CFG_PAGE
+Resource4=IDD_POUP_CFG_PAGE
+Resource5=IDD_ABOUTBOX
+Resource6=IDD_REQUEST_WAIT
 Class2=CChildView
 Class5=CAlarmPopup
 Class6=CConnectionPage
 Class7=CPopupCfgPage
-Resource7=IDR_MAINFRAME
+Resource7=IDD_CONNECTION_PAGE
 
 [CLS:CNxnotifyApp]
 Type=0

@@ -2,7 +2,7 @@
 
 [General Info]
 Version=1
-ClassCount=6
+ClassCount=10
 ResourceCount=6
 NewFileInclude1=#include "stdafx.h"
 Class1=CLoginDialog
@@ -15,9 +15,13 @@ Class4=CScintillaCtrl
 Class5=CSimpleListCtrl
 Resource2=IDD_ALARM_SOUNDS (English (U.S.))
 Resource3=IDD_NOTIFY (English (U.S.))
-Resource4=IDD_ALARM_SOUNDS
-Resource5=IDD_LOGIN
+Resource4=IDD_LOGIN
+Resource5=IDD_ALARM_SOUNDS
 Class6=CTaskBarPopupWnd
+Class7=CComboListCtrl
+Class8=CInPlaceEdit
+Class9=CInPlaceCombo
+Class10=CColourPickerXP
 Resource6=IDD_NOTIFY
 
 [DLG:IDD_LOGIN (English (U.S.))]
@@ -175,4 +179,36 @@ ImplementationFile=TaskBarPopupWnd.cpp
 BaseClass=CWnd
 Filter=W
 VirtualFilter=WC
+
+[CLS:CComboListCtrl]
+Type=0
+HeaderFile=ComboListCtrl.h
+ImplementationFile=ComboListCtrl.cpp
+BaseClass=CListCtrl
+Filter=W
+VirtualFilter=FWC
+
+[CLS:CInPlaceEdit]
+Type=0
+HeaderFile=InPlaceEdit.h
+ImplementationFile=InPlaceEdit.cpp
+BaseClass=CEdit
+Filter=W
+VirtualFilter=FWC
+
+[CLS:CInPlaceCombo]
+Type=0
+HeaderFile=InPlaceCombo.h
+ImplementationFile=InPlaceCombo.cpp
+BaseClass=CComboBox
+Filter=W
+VirtualFilter=FWC
+
+[CLS:CColourPickerXP]
+Type=0
+HeaderFile=ColourPickerXP.h
+ImplementationFile=ColourPickerXP.cpp
+BaseClass=CButton
+Filter=W
+VirtualFilter=FWC
 

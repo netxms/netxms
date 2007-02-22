@@ -18,6 +18,16 @@ struct ZOOM_INFO
    DWORD dwTimeTo;
 };
 
+struct GRAPH_ITEM_STYLE
+{
+	int nType;	// Line. area, or stacked
+	COLORREF rgbColor;
+	int nLineWidth;
+	BOOL bShowAverage;
+	BOOL bShowThresholds;
+	BOOL bShowTrend;
+};
+
 
 /////////////////////////////////////////////////////////////////////////////
 // CGraph window
@@ -33,14 +43,13 @@ public:
 	BOOL m_bShowGrid;
 	BOOL m_bAutoScale;
 	BOOL m_bShowLegend;
-	COLORREF m_rgbLabelTextColor;
-	COLORREF m_rgbLabelBkColor;
-	COLORREF m_rgbLineColors[MAX_GRAPH_ITEMS];
 	COLORREF m_rgbGridColor;
 	COLORREF m_rgbBkColor;
 	COLORREF m_rgbAxisColor;
 	COLORREF m_rgbTextColor;
 	COLORREF m_rgbSelRectColor;
+	COLORREF m_rgbRulerColor;
+	GRAPH_ITEM_STYLE m_graphItemStyles[MAX_GRAPH_ITEMS];
 
 // Operations
 public:

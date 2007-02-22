@@ -444,6 +444,10 @@ SOURCE=.\GraphSettingsPage.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\GraphStylePage.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\GroupPropDlg.cpp
 # End Source File
 # Begin Source File
@@ -1026,6 +1030,10 @@ SOURCE=.\GraphManagerDlg.h
 # Begin Source File
 
 SOURCE=.\GraphSettingsPage.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\GraphStylePage.h
 # End Source File
 # Begin Source File
 

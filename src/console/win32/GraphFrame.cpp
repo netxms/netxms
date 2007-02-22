@@ -5,6 +5,7 @@
 #include "nxcon.h"
 #include "GraphFrame.h"
 #include "GraphSettingsPage.h"
+#include "GraphStylePage.h"
 #include "GraphDataPage.h"
 #include "DefineGraphDlg.h"
 
@@ -298,6 +299,7 @@ void CGraphFrame::OnGraphProperties()
 {
    CPropertySheet dlg(_T("Graph Properties"), theApp.GetMainWnd(), 0);
    CGraphSettingsPage pgSettings;
+	CGraphStylePage pgStyle;
    CGraphDataPage pgData;
    int i;
 
@@ -312,11 +314,9 @@ void CGraphFrame::OnGraphProperties()
    pgSettings.m_rgbAxisLines = m_wndGraph.m_rgbAxisColor;
    pgSettings.m_rgbBackground = m_wndGraph.m_rgbBkColor;
    pgSettings.m_rgbGridLines = m_wndGraph.m_rgbGridColor;
-   pgSettings.m_rgbLabelBkgnd = m_wndGraph.m_rgbLabelBkColor;
-   pgSettings.m_rgbLabelText = m_wndGraph.m_rgbLabelTextColor;
+   pgSettings.m_rgbSelection = m_wndGraph.m_rgbSelRectColor;
+	pgSettings.m_rgbRuler = m_wndGraph.m_rgbRulerColor;
    pgSettings.m_rgbText = m_wndGraph.m_rgbTextColor;
-   for(i = 0; i < MAX_GRAPH_ITEMS; i++)
-      pgSettings.m_rgbItems[i] = m_wndGraph.m_rgbLineColors[i];
    pgSettings.m_iTimeFrame = m_iTimeFrameType;
    pgSettings.m_iTimeUnit = m_iTimeUnit;
    pgSettings.m_dwNumUnits = m_dwNumTimeUnits;
@@ -325,6 +325,13 @@ void CGraphFrame::OnGraphProperties()
    pgSettings.m_dateTo = (time_t)m_dwTimeTo;
    pgSettings.m_timeTo = (time_t)m_dwTimeTo;
    dlg.AddPage(&pgSettings);
+
+	// Create "Style" page
+   for(i = 0; i < MAX_GRAPH_ITEMS; i++)
+	{
+		pgStyle.m_rgbColors[i] = m_wndGraph.m_graphItemStyles[i].rgbColor;
+	}
+	dlg.AddPage(&pgStyle);
 
    // Create "Data Sources" page
    pgData.m_dwNumItems = m_dwNumItems;
@@ -362,11 +369,11 @@ void CGraphFrame::OnGraphProperties()
       m_wndGraph.m_rgbAxisColor = pgSettings.m_rgbAxisLines;
       m_wndGraph.m_rgbBkColor = pgSettings.m_rgbBackground;
       m_wndGraph.m_rgbGridColor = pgSettings.m_rgbGridLines;
-      m_wndGraph.m_rgbLabelBkColor = pgSettings.m_rgbLabelBkgnd;
-      m_wndGraph.m_rgbLabelTextColor = pgSettings.m_rgbLabelText;
+      m_wndGraph.m_rgbSelRectColor = pgSettings.m_rgbSelection;
       m_wndGraph.m_rgbTextColor = pgSettings.m_rgbText;
+		m_wndGraph.m_rgbRulerColor = pgSettings.m_rgbRuler;
       for(i = 0; i < MAX_GRAPH_ITEMS; i++)
-         m_wndGraph.m_rgbLineColors[i] = pgSettings.m_rgbItems[i];
+         m_wndGraph.m_graphItemStyles[i].rgbColor = pgStyle.m_rgbColors[i];
 
       m_wndStatusBar.SetText(m_wndGraph.m_bAutoScale ? _T("Autoscale") : _T(""), 0, 0);
       m_wndStatusBar.SetText(m_dwFlags & GF_AUTOUPDATE ? _T("Autoupdate") : _T(""), 1, 0);
@@ -452,19 +459,19 @@ LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
    _sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN,
               _T("F:%d\x7FN:%d\x7FTS:%d\x7FTF:%d\x7F") _T("A:%d\x7F")
               _T("TFT:%d\x7FTU:%d\x7FNTU:%d\x7FS:%d\x7F")
-              _T("CA:%u\x7F") _T("CB:%u\x7F") _T("CG:%u\x7F") _T("CK:%u\x7F") _T("CL:%u\x7F")
-              _T("CT:%u\x7FR:%d\x7FG:%d\x7FL:%d"),
+              _T("CA:%u\x7F") _T("CB:%u\x7F") _T("CG:%u\x7F") _T("CS:%u\x7F")
+              _T("CT:%u\x7F") _T("CR:%u\x7FR:%d\x7FG:%d\x7FL:%d"),
               m_dwFlags, m_dwNumItems, m_dwTimeFrom, m_dwTimeTo, m_dwRefreshInterval,
               m_iTimeFrameType, m_iTimeUnit, m_dwNumTimeUnits,
               m_wndGraph.m_bAutoScale, m_wndGraph.m_rgbAxisColor, 
               m_wndGraph.m_rgbBkColor, m_wndGraph.m_rgbGridColor,
-              m_wndGraph.m_rgbLabelBkColor, m_wndGraph.m_rgbLabelTextColor,
-              m_wndGraph.m_rgbTextColor, m_wndGraph.m_bShowRuler,
+              m_wndGraph.m_rgbSelRectColor, m_wndGraph.m_rgbTextColor,
+				  m_wndGraph.m_rgbRulerColor, m_wndGraph.m_bShowRuler,
               m_wndGraph.m_bShowGrid, m_wndGraph.m_bShowLegend);
 
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
    {
-      _sntprintf(szBuffer, 512, _T("\x7F") _T("C%d:%lu"), i, m_wndGraph.m_rgbLineColors[i]);
+      _sntprintf(szBuffer, 512, _T("\x7F") _T("C%d:%lu"), i, m_wndGraph.m_graphItemStyles[i].rgbColor);
       if (_tcslen(pInfo->szParameters) + _tcslen(szBuffer) < MAX_WND_PARAM_LEN)
          _tcscat(pInfo->szParameters, szBuffer);
    }
@@ -510,15 +517,15 @@ void CGraphFrame::RestoreFromServer(TCHAR *pszParams)
    m_wndGraph.m_rgbAxisColor = ExtractWindowParamULong(pszParams, _T("CA"), m_wndGraph.m_rgbAxisColor);
    m_wndGraph.m_rgbBkColor = ExtractWindowParamULong(pszParams, _T("CB"), m_wndGraph.m_rgbBkColor);
    m_wndGraph.m_rgbGridColor = ExtractWindowParamULong(pszParams, _T("CG"), m_wndGraph.m_rgbGridColor);
-   m_wndGraph.m_rgbLabelBkColor = ExtractWindowParamULong(pszParams, _T("CK"), m_wndGraph.m_rgbLabelBkColor);
-   m_wndGraph.m_rgbLabelTextColor = ExtractWindowParamULong(pszParams, _T("CL"), m_wndGraph.m_rgbLabelTextColor);
+   m_wndGraph.m_rgbSelRectColor = ExtractWindowParamULong(pszParams, _T("CS"), m_wndGraph.m_rgbSelRectColor);
    m_wndGraph.m_rgbTextColor = ExtractWindowParamULong(pszParams, _T("CT"), m_wndGraph.m_rgbTextColor);
+   m_wndGraph.m_rgbRulerColor = ExtractWindowParamULong(pszParams, _T("CR"), m_wndGraph.m_rgbRulerColor);
 
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
    {
       _sntprintf(szBuffer, 32, _T("C%d"), i);
-      m_wndGraph.m_rgbLineColors[i] = 
-         ExtractWindowParamULong(pszParams, szBuffer, m_wndGraph.m_rgbLineColors[i]);
+      m_wndGraph.m_graphItemStyles[i].rgbColor = 
+         ExtractWindowParamULong(pszParams, szBuffer, m_wndGraph.m_graphItemStyles[i].rgbColor);
    }
 
    for(i = 0; i < m_dwNumItems; i++)

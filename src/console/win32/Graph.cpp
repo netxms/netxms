@@ -53,27 +53,27 @@ CGraph::CGraph()
    m_rgbBkColor = RGB(0,0,0);
    m_rgbGridColor = RGB(64, 64, 64);
    m_rgbAxisColor = RGB(127, 127, 127);
+   m_rgbRulerColor = RGB(127, 127, 127);
    m_rgbTextColor = RGB(255, 255, 255);
-   m_rgbLabelBkColor = RGB(255, 255, 170);
-   m_rgbLabelTextColor = RGB(85, 0, 0);
    m_rgbSelRectColor = RGB(0, 255, 255);
 
-   m_rgbLineColors[0] = RGB(0, 255, 0);
-   m_rgbLineColors[1] = RGB(255, 255, 0);
-   m_rgbLineColors[2] = RGB(0, 255, 255);
-   m_rgbLineColors[3] = RGB(0, 0, 255);
-   m_rgbLineColors[4] = RGB(255, 0, 255);
-   m_rgbLineColors[5] = RGB(255, 0, 0);
-   m_rgbLineColors[6] = RGB(0, 128, 128);
-   m_rgbLineColors[7] = RGB(0, 128, 0);
-   m_rgbLineColors[8] = RGB(128, 128, 255);
-   m_rgbLineColors[9] = RGB(255, 128, 0);
-   m_rgbLineColors[10] = RGB(128, 128, 0);
-   m_rgbLineColors[11] = RGB(128, 0, 255);
-   m_rgbLineColors[12] = RGB(255, 255, 128);
-   m_rgbLineColors[13] = RGB(0, 128, 64);
-   m_rgbLineColors[14] = RGB(0, 128, 255);
-   m_rgbLineColors[15] = RGB(192, 192, 192);
+	memset(m_graphItemStyles, 0, sizeof(GRAPH_ITEM_STYLE) * MAX_GRAPH_ITEMS);
+   m_graphItemStyles[0].rgbColor = RGB(0, 255, 0);
+   m_graphItemStyles[1].rgbColor = RGB(255, 255, 0);
+   m_graphItemStyles[2].rgbColor = RGB(0, 255, 255);
+   m_graphItemStyles[3].rgbColor = RGB(0, 0, 255);
+   m_graphItemStyles[4].rgbColor = RGB(255, 0, 255);
+   m_graphItemStyles[5].rgbColor = RGB(255, 0, 0);
+   m_graphItemStyles[6].rgbColor = RGB(0, 128, 128);
+   m_graphItemStyles[7].rgbColor = RGB(0, 128, 0);
+   m_graphItemStyles[8].rgbColor = RGB(128, 128, 255);
+   m_graphItemStyles[9].rgbColor = RGB(255, 128, 0);
+   m_graphItemStyles[10].rgbColor = RGB(128, 128, 0);
+   m_graphItemStyles[11].rgbColor = RGB(128, 0, 255);
+   m_graphItemStyles[12].rgbColor = RGB(255, 255, 128);
+   m_graphItemStyles[13].rgbColor = RGB(0, 128, 64);
+   m_graphItemStyles[14].rgbColor = RGB(0, 128, 255);
+   m_graphItemStyles[15].rgbColor = RGB(192, 192, 192);
 
    memset(m_pData, 0, sizeof(NXC_DCI_DATA *) * MAX_GRAPH_ITEMS);
    m_ppItems = NULL;
@@ -167,7 +167,7 @@ void CGraph::OnPaint(void)
       // Move drawing from in-memory DC to in-memory DC #2
       dc2.BitBlt(0, 0, rect.right, rect.bottom, &dc, 0, 0, SRCCOPY);
 
-      pen.CreatePen(PS_DOT, 1, m_rgbAxisColor);
+      pen.CreatePen(PS_DOT, 1, m_rgbRulerColor);
       pOldPen = dc2.SelectObject(&pen);
 
       dc2.SetBkColor(m_rgbBkColor);
@@ -717,7 +717,7 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
    dc.SelectClipRgn(&rgn);
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
       if (m_pData[i] != NULL)
-         DrawLineGraph(dc, m_pData[i], m_rgbLineColors[i], nGridSizeY);
+         DrawLineGraph(dc, m_pData[i], m_graphItemStyles[i].rgbColor, nGridSizeY);
    dc.SelectClipRgn(NULL);
    rgn.DeleteObject();
 
@@ -772,7 +772,7 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
           i < MAX_GRAPH_ITEMS; i++)
          if (m_pData[i] != NULL)
          {
-            brush.CreateSolidBrush(m_rgbLineColors[i]);
+            brush.CreateSolidBrush(m_graphItemStyles[i].rgbColor);
             pOldBrush = dc.SelectObject(&brush);
             dc.Rectangle(x, y, x + textSize.cy, y + textSize.cy);
             dc.SelectObject(pOldBrush);

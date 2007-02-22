@@ -11,8 +11,13 @@
 SUBDIRS = res sounds
 EXTRA_DIST = \
 	AlarmSoundDlg.cpp AlarmSoundDlg.h \
+	ColourPickerXP.cpp ColourPickerXP.h \
+	ComboListCtrl.cpp ComboListCtrl.h \
 	FlatButton.cpp FlatButton.h \
+	InPlaceCombo.cpp InPlaceCombo.h \
+	InPlaceEdit.cpp InPlaceEdit.h \
 	LoginDialog.cpp LoginDialog.h \
+	MemDC.h \
 	nxuilib.clw \
 	nxuilib.cpp \
 	nxuilib.def \
@@ -23,4 +28,5 @@ EXTRA_DIST = \
 	SimpleListCtrl.cpp SimpleListCtrl.h \
 	speaker.cpp \
 	StdAfx.cpp StdAfx.h \
-	tools.cpp
+	tools.cpp \
+	XPTheme.cpp XPTheme.h

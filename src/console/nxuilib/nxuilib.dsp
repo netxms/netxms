@@ -176,7 +176,23 @@ SOURCE=.\AlarmSoundDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ColourPickerXP.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ComboListCtrl.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\FlatButton.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\InPlaceCombo.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\InPlaceEdit.cpp
 # End Source File
 # Begin Source File
 
@@ -234,6 +250,10 @@ SOURCE=.\TaskBarPopupWnd.cpp
 
 SOURCE=.\tools.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\XPTheme.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -244,11 +264,31 @@ SOURCE=.\AlarmSoundDlg.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ColourPickerXP.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ComboListCtrl.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\FlatButton.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\InPlaceCombo.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\InPlaceEdit.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\LoginDialog.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\MemDC.h
 # End Source File
 # Begin Source File
 
@@ -281,6 +321,10 @@ SOURCE=.\StdAfx.h
 # Begin Source File
 
 SOURCE=.\TaskBarPopupWnd.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\XPTheme.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
