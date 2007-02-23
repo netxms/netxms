@@ -6,6 +6,10 @@
 - Node names resolution working
 - Windows console:
 	- Object search improved
+	- Graphs improved:
+		- Area graphs
+		- Predefined graphs
+		- Minor UI improvements
 - Fixed issues: #148, #152
 
 

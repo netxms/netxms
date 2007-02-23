@@ -78,8 +78,21 @@ BOOL CGraphStylePage::OnInitDialog()
 		nItem = m_wndListCtrl.InsertItem(i, szBuffer);
 		if (nItem != -1)
 		{
-			_stprintf(szBuffer, _T("%08X"), m_rgbColors[i]);
+			_stprintf(szBuffer, _T("%08X"), m_styles[i].rgbColor);
 			m_wndListCtrl.SetItemText(nItem, 1, szBuffer);
+			m_wndListCtrl.SetItemText(nItem, 2, g_szGraphType[m_styles[i].nType]);
+			if (m_styles[i].nLineWidth == 0)
+			{
+				m_wndListCtrl.SetItemText(nItem, 3, _T("Automatic"));
+			}
+			else
+			{
+				_stprintf(szBuffer, _T("%d"), m_styles[i].nLineWidth);
+				m_wndListCtrl.SetItemText(nItem, 3, szBuffer);
+			}
+			m_wndListCtrl.SetItemText(nItem, 4, m_styles[i].bShowThresholds ? _T("Yes") : _T("No"));
+			m_wndListCtrl.SetItemText(nItem, 5, m_styles[i].bShowAverage ? _T("Yes") : _T("No"));
+			m_wndListCtrl.SetItemText(nItem, 6, m_styles[i].bShowTrend ? _T("Yes") : _T("No"));
 		}
 	}
 
@@ -205,4 +218,52 @@ void CGraphStylePage::DrawTextCell(int nSubItem, LPDRAWITEMSTRUCT lpDrawItemStru
 	InflateRect(&rcSubItem, -4, 0);
 	m_wndListCtrl.GetItemText(lpDrawItemStruct->itemID, nSubItem, szBuffer, 256);
 	DrawText(lpDrawItemStruct->hDC, szBuffer, _tcslen(szBuffer), &rcSubItem, DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+}
+
+
+//
+// OK button handler
+//
+
+void CGraphStylePage::OnOK() 
+{
+	int i, j;
+	TCHAR szBuffer[256];
+
+	for(i = 0; i < MAX_GRAPH_ITEMS; i++)
+	{
+		// Color
+		m_wndListCtrl.GetItemText(i, 1, szBuffer, 256);
+		m_styles[i].rgbColor = _tcstoul(szBuffer, NULL, 16);
+
+		// Type
+		m_wndListCtrl.GetItemText(i, 2, szBuffer, 256);
+		for(j = 0; g_szGraphType[j] != NULL; j++)
+			if (!_tcsicmp(szBuffer, g_szGraphType[j]))
+			{
+				m_styles[i].nType = j;
+				break;
+			}
+
+		// Line width
+		m_wndListCtrl.GetItemText(i, 3, szBuffer, 256);
+		if (!_tcsicmp(szBuffer, _T("Automatic")))
+			m_styles[i].nLineWidth = 0;
+		else
+			m_styles[i].nLineWidth = _tcstol(szBuffer, NULL, 10);
+
+		// Show thresholds
+		m_wndListCtrl.GetItemText(i, 4, szBuffer, 256);
+		m_styles[i].bShowThresholds = !_tcsicmp(szBuffer, _T("Yes"));
+
+		// Show average
+		m_wndListCtrl.GetItemText(i, 5, szBuffer, 256);
+		m_styles[i].bShowAverage = !_tcsicmp(szBuffer, _T("Yes"));
+
+		// Show trend
+		m_wndListCtrl.GetItemText(i, 6, szBuffer, 256);
+		m_styles[i].bShowTrend = !_tcsicmp(szBuffer, _T("Yes"));
+	}
+
+	CPropertyPage::OnOK();
 }

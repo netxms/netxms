@@ -18,7 +18,7 @@ class CGraphStylePage : public CPropertyPage
 
 // Construction
 public:
-	COLORREF m_rgbColors[MAX_GRAPH_ITEMS];
+	GRAPH_ITEM_STYLE m_styles[MAX_GRAPH_ITEMS];
 	CGraphStylePage();
 	~CGraphStylePage();
 
@@ -31,6 +31,8 @@ public:
 // Overrides
 	// ClassWizard generate virtual function overrides
 	//{{AFX_VIRTUAL(CGraphStylePage)
+	public:
+	virtual void OnOK();
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL

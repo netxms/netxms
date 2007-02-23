@@ -199,6 +199,7 @@ TCHAR *g_szInterfaceTypes[] =
    _T("FibreChannel")
 };
 TCHAR *g_szAuthMethod[] = { _T("NetXMS Password"), _T("RADIUS"), _T("RSA SecureID"), NULL };
+TCHAR *g_szGraphType[] = { _T("Line"), _T("Area"), _T("Stacked"), NULL };
 
 
 //

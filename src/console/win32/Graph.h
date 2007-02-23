@@ -12,6 +12,10 @@
 #define MAX_GRAPH_ITEMS    16
 #define ZOOM_HISTORY_SIZE  16
 
+#define GRAPH_TYPE_LINE		0
+#define GRAPH_TYPE_AREA		1
+#define GRAPH_TYPE_STACKED	2
+
 struct ZOOM_INFO
 {
    DWORD dwTimeFrom;
@@ -98,6 +102,7 @@ private:
 	double m_dCurrMaxValue;
 	double m_dSecondsPerPixel;
 	void DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int nGridSize);
+	void DrawAreaGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int nGridSize);
 	DWORD m_dwTimeTo;
 	DWORD m_dwTimeFrom;
 	DWORD m_dwNumItems;

@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.172 2007-02-02 12:53:05 victor Exp $ */
+/* $Id: node.cpp,v 1.173 2007-02-23 15:56:20 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -2599,6 +2599,7 @@ BOOL Node::ResolveName(void)
 	BOOL bSuccess = FALSE;
 	HOSTENT *hs;
 	DWORD i, dwAddr;
+	TCHAR szBuffer[256];
 
 	DbgPrintf(AF_DEBUG_DISCOVERY, _T("Resolving name for node %d [%s]..."), m_dwId, m_szName);
 
@@ -2637,14 +2638,30 @@ BOOL Node::ResolveName(void)
 		if (!bSuccess)
 		{
 			DbgPrintf(AF_DEBUG_DISCOVERY, _T("Resolving name for node %d [%s] via agent..."), m_dwId, m_szName);
-			bSuccess = (GetItemFromAgent("System.Hostname", MAX_OBJECT_NAME, m_szName) == DCE_SUCCESS);
+			if (GetItemFromAgent("System.Hostname", 256, szBuffer) == DCE_SUCCESS)
+			{
+				StrStrip(szBuffer);
+				if (szBuffer[0] != 0)
+				{
+					nx_strncpy(m_szName, szBuffer, MAX_OBJECT_NAME);
+					bSuccess = TRUE;
+				}
+			}
 		}
 
 		// Try to get hostname from SNMP if other methods fails
 		if (!bSuccess)
 		{
 			DbgPrintf(AF_DEBUG_DISCOVERY, _T("Resolving name for node %d [%s] via SNMP..."), m_dwId, m_szName);
-			bSuccess = (GetItemFromSNMP(".1.3.6.1.2.1.1.5.0", MAX_OBJECT_NAME, m_szName) == DCE_SUCCESS);
+			if (GetItemFromSNMP(".1.3.6.1.2.1.1.5.0", 256, szBuffer) == DCE_SUCCESS)
+			{
+				StrStrip(szBuffer);
+				if (szBuffer[0] != 0)
+				{
+					nx_strncpy(m_szName, szBuffer, MAX_OBJECT_NAME);
+					bSuccess = TRUE;
+				}
+			}
 		}
 	}
 

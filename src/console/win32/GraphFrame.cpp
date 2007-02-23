@@ -301,7 +301,6 @@ void CGraphFrame::OnGraphProperties()
    CGraphSettingsPage pgSettings;
 	CGraphStylePage pgStyle;
    CGraphDataPage pgData;
-   int i;
 
    // Create "Settings" page
    pgSettings.m_bAutoscale = m_wndGraph.m_bAutoScale;
@@ -327,10 +326,7 @@ void CGraphFrame::OnGraphProperties()
    dlg.AddPage(&pgSettings);
 
 	// Create "Style" page
-   for(i = 0; i < MAX_GRAPH_ITEMS; i++)
-	{
-		pgStyle.m_rgbColors[i] = m_wndGraph.m_graphItemStyles[i].rgbColor;
-	}
+	memcpy(pgStyle.m_styles, m_wndGraph.m_graphItemStyles, sizeof(GRAPH_ITEM_STYLE) * MAX_GRAPH_ITEMS);
 	dlg.AddPage(&pgStyle);
 
    // Create "Data Sources" page
@@ -372,8 +368,8 @@ void CGraphFrame::OnGraphProperties()
       m_wndGraph.m_rgbSelRectColor = pgSettings.m_rgbSelection;
       m_wndGraph.m_rgbTextColor = pgSettings.m_rgbText;
 		m_wndGraph.m_rgbRulerColor = pgSettings.m_rgbRuler;
-      for(i = 0; i < MAX_GRAPH_ITEMS; i++)
-         m_wndGraph.m_graphItemStyles[i].rgbColor = pgStyle.m_rgbColors[i];
+
+		memcpy(m_wndGraph.m_graphItemStyles, pgStyle.m_styles, sizeof(GRAPH_ITEM_STYLE) * MAX_GRAPH_ITEMS);
 
       m_wndStatusBar.SetText(m_wndGraph.m_bAutoScale ? _T("Autoscale") : _T(""), 0, 0);
       m_wndStatusBar.SetText(m_dwFlags & GF_AUTOUPDATE ? _T("Autoupdate") : _T(""), 1, 0);

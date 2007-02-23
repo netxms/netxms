@@ -397,6 +397,62 @@ void CGraph::DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int 
 
 
 //
+// Draw single area
+//
+
+void CGraph::DrawAreaGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int nGridSize)
+{
+   DWORD i;
+   CPen pen, *pOldPen;
+	CBrush brush, *pOldBrush;
+	POINT pts[4];
+   NXC_DCI_ROW *pRow;
+   double dScale;
+
+   if (pData->dwNumRows < 2)
+      return;  // Nothing to draw
+
+   pen.CreatePen(PS_SOLID, 1, rgbColor);
+   pOldPen = dc.SelectObject(&pen);
+	brush.CreateSolidBrush(rgbColor);
+	pOldBrush = dc.SelectObject(&brush);
+
+   // Calculate scale factor for values
+   dScale = (double)(m_rectGraph.bottom - m_rectGraph.top - 
+               (m_rectGraph.bottom - m_rectGraph.top) % nGridSize) / m_dCurrMaxValue;
+
+   // Move to first position
+   pRow = pData->pRows;
+   for(i = 0; (i < pData->dwNumRows) && (pRow->dwTimeStamp > m_dwTimeTo); i++)
+      inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
+   if (i < pData->dwNumRows)
+   {
+		pts[0].x = m_rectGraph.right - (int)((double)(m_dwTimeTo - pRow->dwTimeStamp) / m_dSecondsPerPixel);
+		pts[0].y = m_rectGraph.bottom;
+		pts[1].x = pts[0].x;
+		pts[1].y = (int)(m_rectGraph.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1);
+      inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
+
+      for(i++; (i < pData->dwNumRows) && (pRow->dwTimeStamp >= m_dwTimeFrom); i++)
+      {
+         // Calculate timestamp position on graph
+         pts[2].x = m_rectGraph.right - (int)((double)(m_dwTimeTo - pRow->dwTimeStamp) / m_dSecondsPerPixel);
+			pts[2].y = (int)(m_rectGraph.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1);
+			pts[3].x = pts[2].x;
+			pts[3].y = m_rectGraph.bottom;
+			dc.Polygon(pts, 4);
+			memcpy(&pts[0], &pts[3], sizeof(POINT));
+			memcpy(&pts[1], &pts[2], sizeof(POINT));
+         inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
+      }
+   }
+
+   dc.SelectObject(pOldPen);
+	dc.SelectObject(pOldBrush);
+}
+
+
+//
 // WM_SETFOCUS message handler
 //
 
@@ -716,8 +772,22 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
    rgn.CreateRectRgn(m_rectGraph.left, m_rectGraph.top, m_rectGraph.right, m_rectGraph.bottom);
    dc.SelectClipRgn(&rgn);
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
+	{
       if (m_pData[i] != NULL)
-         DrawLineGraph(dc, m_pData[i], m_graphItemStyles[i].rgbColor, nGridSizeY);
+		{
+			switch(m_graphItemStyles[i].nType)
+			{
+				case GRAPH_TYPE_LINE:
+					DrawLineGraph(dc, m_pData[i], m_graphItemStyles[i].rgbColor, nGridSizeY);
+					break;
+				case GRAPH_TYPE_AREA:
+					DrawAreaGraph(dc, m_pData[i], m_graphItemStyles[i].rgbColor, nGridSizeY);
+					break;
+				default:
+					break;
+			}
+		}
+	}
    dc.SelectClipRgn(NULL);
    rgn.DeleteObject();
 
