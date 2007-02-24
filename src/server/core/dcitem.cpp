@@ -1570,3 +1570,17 @@ void DCItem::CreateNXMPRecord(String &str)
    Unlock();
    str += _T("\t\t\t\t}\n\t\t\t}\n");
 }
+
+
+//
+// Modify item - intended for updating items in system templates
+//
+
+void DCItem::SystemModify(TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType)
+{
+   m_iDataType = nDataType;
+   m_iPollingInterval = nInterval;
+   m_iRetentionTime = nRetention;
+   m_iSource = nOrigin;
+	nx_strncpy(m_szName, pszName, MAX_ITEM_NAME);
+}

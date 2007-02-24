@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.173 2007-02-23 15:56:20 victor Exp $ */
+/* $Id: node.cpp,v 1.174 2007-02-24 18:51:26 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -2151,10 +2151,10 @@ void Node::CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD
 {
    DWORD i, j, dwNumDeleted, *pdwDeleteList;
 
+   LockData();
+
    pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
    dwNumDeleted = 0;
-
-   LockData();
 
    for(i = 0; i < m_dwNumItems; i++)
       if (m_ppItems[i]->TemplateId() == dwTemplateId)
@@ -2168,10 +2168,10 @@ void Node::CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD
             pdwDeleteList[dwNumDeleted++] = m_ppItems[i]->Id();
       }
 
-   UnlockData();
-
    for(i = 0; i < dwNumDeleted; i++)
-      DeleteItem(pdwDeleteList[i]);
+      DeleteItem(pdwDeleteList[i], FALSE);
+
+   UnlockData();
    free(pdwDeleteList);
 }
 
@@ -2183,16 +2183,14 @@ void Node::CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD
 
 void Node::UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
 {
-   DWORD i;
+   DWORD i, dwNumDeleted, *pdwDeleteList;
 
    if (bRemoveDCI)
    {
-      DWORD dwNumDeleted, *pdwDeleteList;
-
-      pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
-      dwNumDeleted = 0;
-
       LockData();
+
+		pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
+		dwNumDeleted = 0;
 
       for(i = 0; i < m_dwNumItems; i++)
          if (m_ppItems[i]->TemplateId() == dwTemplateId)
@@ -2200,11 +2198,10 @@ void Node::UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
             pdwDeleteList[dwNumDeleted++] = m_ppItems[i]->Id();
          }
 
-      UnlockData();
+		for(i = 0; i < dwNumDeleted; i++)
+			DeleteItem(pdwDeleteList[i], FALSE);
 
-      for(i = 0; i < dwNumDeleted; i++)
-         DeleteItem(pdwDeleteList[i]);
-      free(pdwDeleteList);
+      UnlockData();
    }
    else
    {
@@ -2534,7 +2531,7 @@ void Node::CheckInterfaceNames(INTERFACE_LIST *pIfList)
 
 
 //
-// Get cluster object this node elongs to, if any
+// Get cluster object this node belongs to, if any
 //
 
 Cluster *Node::GetMyCluster(void)

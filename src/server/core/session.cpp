@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.263 2007-02-08 22:25:21 victor Exp $ */
+/* $Id: session.cpp,v 1.264 2007-02-24 18:51:26 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -2494,7 +2494,7 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                      break;
                   case CMD_DELETE_NODE_DCI:
                      dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
-                     bSuccess = ((Template *)pObject)->DeleteItem(dwItemId);
+                     bSuccess = ((Template *)pObject)->DeleteItem(dwItemId, TRUE);
                      msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_INVALID_DCI_ID);
                      break;
                }
@@ -2648,7 +2648,7 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
                            if (bMove)
                            {
                               // Delete original item
-                              if (!((Template *)pSource)->DeleteItem(pdwItemList[i]))
+                              if (!((Template *)pSource)->DeleteItem(pdwItemList[i], TRUE))
                               {
                                  iErrors++;
                               }

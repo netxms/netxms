@@ -230,6 +230,7 @@ public:
    void ChangeBinding(DWORD dwNewId, Template *pNode);
    void SetTemplateId(DWORD dwTemplateId, DWORD dwItemId) 
          { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
+	void SystemModify(TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType);
 
    void NewValue(time_t nTimeStamp, const char *pszValue);
    void NewError(void);

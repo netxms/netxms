@@ -140,6 +140,22 @@ struct TEMPLATE_UPDATE_INFO
 
 
 //
+// DCI configuration for system templates
+//
+
+typedef struct
+{
+	TCHAR *pszName;
+	TCHAR *pszParam;
+	int nInterval;
+	int nRetention;
+	int nDataType;
+	int nOrigin;
+	int nFound;
+} DCI_CFG;
+
+
+//
 // Base class for network objects
 //
 
@@ -231,7 +247,9 @@ public:
    BOOL IsDeleted(void) { return m_bIsDeleted; }
    BOOL IsOrphaned(void) { return m_dwParentCount == 0 ? TRUE : FALSE; }
    BOOL IsEmpty(void) { return m_dwChildCount == 0 ? TRUE : FALSE; }
+	
 	BOOL IsSystem(void) { return m_bIsSystem; }
+	void SetSystemFlag(BOOL bFlag) { m_bIsSystem = bFlag; }
 
    DWORD RefCount(void);
    void IncRefCount(void);
@@ -327,6 +345,7 @@ protected:
 
    void LoadItemsFromDB(void);
    void DestroyItems(void);
+	void ValidateDCIList(DCI_CFG *cfg);
 
 public:
    Template();
@@ -351,7 +370,7 @@ public:
    BOOL AddItem(DCItem *pItem, BOOL bLocked = FALSE);
    BOOL UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
                    DWORD **ppdwMapIndex, DWORD **ppdwMapId);
-   BOOL DeleteItem(DWORD dwItemId);
+   BOOL DeleteItem(DWORD dwItemId, BOOL bNeedLock);
    BOOL SetItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus);
    int GetItemType(DWORD dwItemId);
    DCItem *GetItemById(DWORD dwItemId);
@@ -363,6 +382,7 @@ public:
    void SendItemsToClient(ClientSession *pSession, DWORD dwRqId);
    BOOL IsLockedBySession(DWORD dwSessionId) { return m_dwDCILockStatus == dwSessionId; }
    DWORD *GetDCIEventsList(DWORD *pdwCount);
+	void ValidateSystemTemplate(void);
 
    BOOL ApplyToNode(Node *pNode);
    void QueueUpdate(void);
@@ -1057,6 +1077,7 @@ void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject)
 
 NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId);
 NetObj NXCORE_EXPORTABLE *FindObjectByName(TCHAR *pszName);
+Template NXCORE_EXPORTABLE *FindTemplateByName(TCHAR *pszName);
 Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD dwAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD dwNodeAddr);

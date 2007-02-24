@@ -574,6 +574,33 @@ NetObj NXCORE_EXPORTABLE *FindObjectByName(TCHAR *pszName)
 
 
 //
+// Find template object by name
+//
+
+Template NXCORE_EXPORTABLE *FindTemplateByName(TCHAR *pszName)
+{
+   DWORD i;
+   Template *pObject = NULL;
+
+   if (g_pIndexById == NULL)
+      return NULL;
+
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+   for(i = 0; i < g_dwIdIndexSize; i++)
+   {
+      if ((g_pIndexById[i].pObject->Type() == OBJECT_TEMPLATE) &&
+			 (!_tcsicmp(g_pIndexById[i].pObject->Name(), pszName)))
+      {
+         pObject = (Template *)g_pIndexById[i].pObject;
+         break;
+      }
+   }
+   RWLockUnlock(g_rwlockIdIndex);
+   return pObject;
+}
+
+
+//
 // Find zone object by GUID
 //
 
@@ -623,8 +650,9 @@ DWORD FindLocalMgmtNode(void)
 BOOL LoadObjects(void)
 {
    DB_RESULT hResult;
-   DWORD i, dwNumRows;
+   DWORD i, j, dwNumRows;
    DWORD dwId;
+   Template *pTemplate;
    char szQuery[256];
 
    // Prevent objects to change it's modification flag
@@ -891,8 +919,6 @@ BOOL LoadObjects(void)
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM templates");
    if (hResult != NULL)
    {
-      Template *pTemplate;
-
       dwNumRows = DBGetNumRows(hResult);
       for(i = 0; i < dwNumRows; i++)
       {
@@ -988,6 +1014,49 @@ BOOL LoadObjects(void)
       for(i = 0; i < g_dwZoneGUIDIndexSize; i++)
          g_pZoneIndexByGUID[i].pObject->CalculateCompoundStatus();
    }
+
+	// Apply system templates
+   DbgPrintf(AF_DEBUG_MISC, "Applying system templates...");
+
+	pTemplate = FindTemplateByName(_T("@System.Agent"));
+	if (pTemplate == NULL)
+	{
+		pTemplate = new Template(_T("@System.Agent"));
+		pTemplate->SetSystemFlag(TRUE);
+      NetObjInsert(pTemplate, TRUE);
+		g_pTemplateRoot->AddChild(pTemplate);
+		pTemplate->AddParent(g_pTemplateRoot);
+		pTemplate->Unhide();
+	}
+	pTemplate->ValidateSystemTemplate();
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+	for(j = 0; j < g_dwIdIndexSize; j++)
+		if (g_pIndexById[j].pObject->Type() == OBJECT_NODE)
+		{
+			if (((Node *)g_pIndexById[j].pObject)->IsNativeAgent())
+				pTemplate->ApplyToNode((Node *)g_pIndexById[j].pObject);
+		}
+   RWLockUnlock(g_rwlockIdIndex);
+
+	pTemplate = FindTemplateByName(_T("@System.SNMP"));
+	if (pTemplate == NULL)
+	{
+		pTemplate = new Template(_T("@System.SNMP"));
+		pTemplate->SetSystemFlag(TRUE);
+      NetObjInsert(pTemplate, TRUE);
+		g_pTemplateRoot->AddChild(pTemplate);
+		pTemplate->AddParent(g_pTemplateRoot);
+		pTemplate->Unhide();
+	}
+	pTemplate->ValidateSystemTemplate();
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+	for(j = 0; j < g_dwIdIndexSize; j++)
+		if (g_pIndexById[j].pObject->Type() == OBJECT_NODE)
+		{
+			if (((Node *)g_pIndexById[j].pObject)->IsSNMPSupported())
+				pTemplate->ApplyToNode((Node *)g_pIndexById[j].pObject);
+		}
+   RWLockUnlock(g_rwlockIdIndex);
 
    return TRUE;
 }

@@ -321,12 +321,14 @@ BOOL Template::AddItem(DCItem *pItem, BOOL bLocked)
 // Delete item from node
 //
 
-BOOL Template::DeleteItem(DWORD dwItemId)
+BOOL Template::DeleteItem(DWORD dwItemId, BOOL bNeedLock)
 {
    DWORD i;
    BOOL bResult = FALSE;
 
-   LockData();
+	if (bNeedLock)
+			LockData();
+
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
       if (m_ppItems[i]->Id() == dwItemId)
@@ -341,7 +343,8 @@ BOOL Template::DeleteItem(DWORD dwItemId)
          break;
       }
 
-   UnlockData();
+	if (bNeedLock)
+	   UnlockData();
    return bResult;
 }
 
@@ -753,4 +756,80 @@ void Template::CreateNXMPRecord(String &str)
    UnlockData();
 
    str += _T("\t\t}\n\t}\n");
+}
+
+
+//
+// Validate template agains specific DCI list
+//
+
+void Template::ValidateDCIList(DCI_CFG *cfg)
+{
+	DWORD i, j, dwNumDeleted, *pdwDeleteList;
+
+	LockData();
+
+	pdwDeleteList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
+	dwNumDeleted = 0;
+
+	for(i = 0; i < m_dwNumItems; i++)
+	{
+		for(j = 0; cfg[j].pszName != NULL; j++)
+		{
+			if (!_tcsicmp(m_ppItems[i]->Description(), cfg[j].pszName))
+			{
+				m_ppItems[i]->SystemModify(cfg[j].pszParam, DS_NATIVE_AGENT,
+					                        cfg[j].nRetention, cfg[j].nInterval,
+													cfg[j].nDataType);
+				cfg[j].nFound = 1;
+				break;
+			}
+		}
+
+		// Mark non-existing items
+		if (cfg[j].pszName == NULL)
+         pdwDeleteList[dwNumDeleted++] = m_ppItems[i]->Id();
+	}
+
+	// Delete unneeded items
+	for(i = 0; i < dwNumDeleted; i++)
+		DeleteItem(pdwDeleteList[i], FALSE);
+
+	// Create missing items
+	for(i = 0; cfg[i].pszName != NULL; i++)
+	{
+		if (!cfg[i].nFound)
+		{
+			AddItem(new DCItem(CreateUniqueId(IDG_ITEM), cfg[i].pszParam,
+				                cfg[i].nOrigin, cfg[i].nDataType,
+									 cfg[i].nInterval, cfg[i].nRetention,
+									 this, cfg[i].pszName), TRUE);
+		}
+	}
+
+	UnlockData();
+}
+
+
+//
+// Validate system template
+//
+
+void Template::ValidateSystemTemplate(void)
+{
+	if (!_tcsicmp(m_szName, _T("@System.Agent")))
+	{
+		DCI_CFG dciCfgAgent[] =
+		{
+			{ _T("@system.cpu_usage"), _T("System.CPU.Usage"), 60, 1, DCI_DT_INT, DS_NATIVE_AGENT, 0 },
+			{ _T("@system.load_avg"), _T("System.CPU.LoadAvg"), 60, 1, DCI_DT_FLOAT, DS_NATIVE_AGENT, 0 },
+			{ _T("@system.freemem"), _T("System.Memory.Physical.Free"), 60, 1, DCI_DT_UINT64, DS_NATIVE_AGENT, 0 },
+			{ NULL, NULL, 0, 0, 0, 0 }
+		};
+
+		ValidateDCIList(dciCfgAgent);
+	}
+	else if (!_tcsicmp(m_szName, _T("@System.SNMP")))
+	{
+	}
 }
