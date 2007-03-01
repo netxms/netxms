@@ -42,11 +42,13 @@ private:
    DWORD m_dwLast;
    DWORD m_dwBufferIncrement;
 
+	void CommonInit(void);
    void Lock(void) { MutexLock(m_mutexQueueAccess, INFINITE); }
    void Unlock(void) { MutexUnlock(m_mutexQueueAccess); }
 
 public:
-   Queue(DWORD dwInitialSize = 256, DWORD dwBufferIncrement = 32);
+   Queue();
+   Queue(DWORD dwInitialSize, DWORD dwBufferIncrement = 32);
    ~Queue();
 
    void Put(void *pObject);

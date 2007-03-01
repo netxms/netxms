@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.264 2007-02-24 18:51:26 victor Exp $ */
+/* $Id: session.cpp,v 1.265 2007-03-01 23:29:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1003,6 +1003,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_GET_DCI_EVENTS_LIST:
             SendDCIEventList(pMsg);
             break;
+			case CMD_GET_SYSTEM_DCI_LIST:
+				SendSystemDCIList(pMsg);
+				break;
          case CMD_PUSH_DCI_DATA:
             PushDCIData(pMsg);
             break;
@@ -8713,6 +8716,46 @@ void ClientSession::DeleteGraph(CSCPMessage *pRequest)
 	else
 	{
 		msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+	}
+
+   SendMessage(&msg);
+}
+
+
+//
+// Send list of system DCIs
+//
+
+void ClientSession::SendSystemDCIList(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+	NetObj *pObject;
+
+	msg.SetId(pRequest->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+	if (pObject != NULL)
+	{
+		if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		{
+			if (pObject->Type() == OBJECT_NODE)
+			{
+				msg.SetVariable(VID_RCC, ((Node *)pObject)->GetSystemDCIList(&msg));
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			}
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
    SendMessage(&msg);

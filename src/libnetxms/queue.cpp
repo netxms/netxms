@@ -1,7 +1,7 @@
-/* $Id: queue.cpp,v 1.6 2006-11-20 23:37:04 victor Exp $ */
+/* $Id: queue.cpp,v 1.7 2007-03-01 23:29:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,13 +31,35 @@
 
 Queue::Queue(DWORD dwInitialSize, DWORD dwBufferIncrement)
 {
+   m_dwBufferSize = dwInitialSize;
+   m_dwBufferIncrement = dwBufferIncrement;
+	CommonInit();
+}
+
+
+//
+// Default queue constructor
+//
+
+Queue::Queue()
+{
+   m_dwBufferSize = 256;
+   m_dwBufferIncrement = 32;
+	CommonInit();
+}
+
+
+//
+// Common initialization (used by all constructors)
+//
+
+void Queue::CommonInit(void)
+{
    m_mutexQueueAccess = MutexCreate();
    m_condWakeup = ConditionCreate(FALSE);
    m_dwNumElements = 0;
    m_dwFirst = 0;
    m_dwLast = 0;
-   m_dwBufferSize = dwInitialSize;
-   m_dwBufferIncrement = dwBufferIncrement;
    m_pElements = (void **)malloc(sizeof(void *) * m_dwBufferSize);
 }
 

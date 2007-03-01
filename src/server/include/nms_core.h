@@ -477,6 +477,7 @@ private:
    void ResetComponent(CSCPMessage *pRequest);
    void SendDCIEventList(CSCPMessage *pRequest);
 	void SendDCIInfo(CSCPMessage *pRequest);
+   void SendSystemDCIList(CSCPMessage *pRequest);
    void CreateManagementPack(CSCPMessage *pRequest);
    void InstallManagementPack(CSCPMessage *pRequest);
 	void SendGraphList(DWORD dwRqId);

@@ -1,4 +1,4 @@
-/* $Id: netxmsd.cpp,v 1.19 2007-02-15 15:31:43 alk Exp $ */
+/* $Id: netxmsd.cpp,v 1.20 2007-03-01 23:29:06 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
@@ -23,10 +23,7 @@
 **/
 
 #include "netxmsd.h"
-
-#ifdef _WIN32
-# include <dbghelp.h>
-#endif
+#include <dbghelp.h>
 
 
 //
@@ -117,7 +114,7 @@ static void ExceptionDataWriter(char *pszText)
 // Exception handler
 //
 
-static void ExceptionHandler(EXCEPTION_POINTERS *pInfo)
+static BOOL ExceptionHandler(EXCEPTION_POINTERS *pInfo)
 {
 	char szBuffer[MAX_PATH], szInfoFile[MAX_PATH], szDumpFile[MAX_PATH];
 	HANDLE hFile;
@@ -251,6 +248,8 @@ static void ExceptionHandler(EXCEPTION_POINTERS *pInfo)
              SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
              pInfo->ExceptionRecord->ExceptionAddress);
 	}
+
+	return TRUE;	// Terminate process
 }
 
 

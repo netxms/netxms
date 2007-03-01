@@ -49,31 +49,11 @@ CGraph::CGraph()
    m_bShowRuler = TRUE;
    m_bShowLegend = TRUE;
    m_bEnableZoom = TRUE;
+	m_bSet3DEdge = TRUE;
    m_dwNumItems = 0;
-   m_rgbBkColor = RGB(0,0,0);
-   m_rgbGridColor = RGB(64, 64, 64);
-   m_rgbAxisColor = RGB(127, 127, 127);
-   m_rgbRulerColor = RGB(127, 127, 127);
-   m_rgbTextColor = RGB(255, 255, 255);
-   m_rgbSelRectColor = RGB(0, 255, 255);
 
 	memset(m_graphItemStyles, 0, sizeof(GRAPH_ITEM_STYLE) * MAX_GRAPH_ITEMS);
-   m_graphItemStyles[0].rgbColor = RGB(0, 255, 0);
-   m_graphItemStyles[1].rgbColor = RGB(255, 255, 0);
-   m_graphItemStyles[2].rgbColor = RGB(0, 255, 255);
-   m_graphItemStyles[3].rgbColor = RGB(0, 0, 255);
-   m_graphItemStyles[4].rgbColor = RGB(255, 0, 255);
-   m_graphItemStyles[5].rgbColor = RGB(255, 0, 0);
-   m_graphItemStyles[6].rgbColor = RGB(0, 128, 128);
-   m_graphItemStyles[7].rgbColor = RGB(0, 128, 0);
-   m_graphItemStyles[8].rgbColor = RGB(128, 128, 255);
-   m_graphItemStyles[9].rgbColor = RGB(255, 128, 0);
-   m_graphItemStyles[10].rgbColor = RGB(128, 128, 0);
-   m_graphItemStyles[11].rgbColor = RGB(128, 0, 255);
-   m_graphItemStyles[12].rgbColor = RGB(255, 255, 128);
-   m_graphItemStyles[13].rgbColor = RGB(0, 128, 64);
-   m_graphItemStyles[14].rgbColor = RGB(0, 128, 255);
-   m_graphItemStyles[15].rgbColor = RGB(192, 192, 192);
+	SetColorScheme(GCS_CLASSIC);
 
    memset(m_pData, 0, sizeof(NXC_DCI_DATA *) * MAX_GRAPH_ITEMS);
    m_ppItems = NULL;
@@ -125,8 +105,11 @@ BOOL CGraph::PreCreateWindow(CREATESTRUCT& cs)
 	if (!CWnd::PreCreateWindow(cs))
 		return FALSE;
 
-	cs.dwExStyle |= WS_EX_CLIENTEDGE;
-	cs.style &= ~WS_BORDER;
+	if (m_bSet3DEdge)
+	{
+		cs.dwExStyle |= WS_EX_CLIENTEDGE;
+		cs.style &= ~WS_BORDER;
+	}
 	cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, 
       ::LoadCursor(NULL, IDC_ARROW), ::CreateSolidBrush(RGB(0, 0, 0)), NULL);
 
@@ -1139,4 +1122,66 @@ BOOL CGraph::GetTimeFrameForUpdate(DWORD dwIndex, DWORD *pdwFrom, DWORD *pdwTo)
    *pdwTo = m_dwTimeTo;
 
    return TRUE;
+}
+
+
+//
+// Set predefined color scheme
+//
+
+void CGraph::SetColorScheme(int nScheme)
+{
+	switch(nScheme)
+	{
+		case GCS_CLASSIC:
+			m_rgbBkColor = RGB(0, 0, 0);
+			m_rgbGridColor = RGB(64, 64, 64);
+			m_rgbAxisColor = RGB(127, 127, 127);
+			m_rgbRulerColor = RGB(127, 127, 127);
+			m_rgbTextColor = RGB(255, 255, 255);
+			m_rgbSelRectColor = RGB(0, 255, 255);
+			m_graphItemStyles[0].rgbColor = RGB(0, 255, 0);
+			m_graphItemStyles[1].rgbColor = RGB(255, 255, 0);
+			m_graphItemStyles[2].rgbColor = RGB(0, 255, 255);
+			m_graphItemStyles[3].rgbColor = RGB(0, 0, 255);
+			m_graphItemStyles[4].rgbColor = RGB(255, 0, 255);
+			m_graphItemStyles[5].rgbColor = RGB(255, 0, 0);
+			m_graphItemStyles[6].rgbColor = RGB(0, 128, 128);
+			m_graphItemStyles[7].rgbColor = RGB(0, 128, 0);
+			m_graphItemStyles[8].rgbColor = RGB(128, 128, 255);
+			m_graphItemStyles[9].rgbColor = RGB(255, 128, 0);
+			m_graphItemStyles[10].rgbColor = RGB(128, 128, 0);
+			m_graphItemStyles[11].rgbColor = RGB(128, 0, 255);
+			m_graphItemStyles[12].rgbColor = RGB(255, 255, 128);
+			m_graphItemStyles[13].rgbColor = RGB(0, 128, 64);
+			m_graphItemStyles[14].rgbColor = RGB(0, 128, 255);
+			m_graphItemStyles[15].rgbColor = RGB(192, 192, 192);
+			break;
+		case GCS_LIGHT:
+			m_rgbBkColor = RGB(255, 255, 255);
+			m_rgbGridColor = RGB(56, 142, 142);
+			m_rgbAxisColor = RGB(56, 142, 142);
+			m_rgbRulerColor = RGB(0, 0, 0);
+			m_rgbTextColor = RGB(0, 0, 0);
+			m_rgbSelRectColor = RGB(0, 0, 94);
+			m_graphItemStyles[0].rgbColor = RGB(0, 147, 0);
+			m_graphItemStyles[1].rgbColor = RGB(165, 42, 0);
+			m_graphItemStyles[2].rgbColor = RGB(0, 64, 64);
+			m_graphItemStyles[3].rgbColor = RGB(0, 0, 255);
+			m_graphItemStyles[4].rgbColor = RGB(255, 0, 255);
+			m_graphItemStyles[5].rgbColor = RGB(255, 0, 0);
+			m_graphItemStyles[6].rgbColor = RGB(0, 128, 128);
+			m_graphItemStyles[7].rgbColor = RGB(0, 128, 0);
+			m_graphItemStyles[8].rgbColor = RGB(128, 128, 255);
+			m_graphItemStyles[9].rgbColor = RGB(255, 128, 0);
+			m_graphItemStyles[10].rgbColor = RGB(128, 128, 0);
+			m_graphItemStyles[11].rgbColor = RGB(128, 0, 255);
+			m_graphItemStyles[12].rgbColor = RGB(0, 0, 0);
+			m_graphItemStyles[13].rgbColor = RGB(0, 128, 64);
+			m_graphItemStyles[14].rgbColor = RGB(0, 128, 255);
+			m_graphItemStyles[15].rgbColor = RGB(192, 192, 192);
+			break;
+		default:
+			break;
+	}
 }

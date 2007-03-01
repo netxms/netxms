@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Windows Console
-** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: tools.cpp
+** File: tools.cpp
 ** Various tools and helper functions
 **
 **/
@@ -36,7 +36,10 @@ TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType)
    static TCHAR *pFormat[] = { _T("%d-%b-%Y %H:%M:%S"), _T("%H:%M:%S"), _T("%b/%d"), _T("%b") };
 
    pTime = localtime((const time_t *)&dwTimeStamp);
-   _tcsftime(pszBuffer, 32, pFormat[iType], pTime);
+	if (pTime != NULL)
+		_tcsftime(pszBuffer, 32, pFormat[iType], pTime);
+	else
+		_tcscpy(pszBuffer, _T("(null)"));
    return pszBuffer;
 }
 

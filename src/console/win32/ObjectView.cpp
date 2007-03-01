@@ -126,6 +126,7 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(theApp.LoadIcon(IDI_ALARM));
    m_imageList.Add(theApp.LoadIcon(IDI_TREE));
    m_imageList.Add(theApp.LoadIcon(IDI_CLUSTER));
+   m_imageList.Add(theApp.LoadIcon(IDI_GRAPH));
 
    GetClientRect(&rect);
    rect.top += TITLE_BAR_HEIGHT;
@@ -139,10 +140,10 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndAlarms.Create(NULL, _T("Alarms"), WS_CHILD, rect, this, 2);
    m_wndDepView.Create(NULL, _T("Deps"), WS_CHILD, rect, this, 3);
    m_wndClusterView.Create(NULL, _T("Cluster"), WS_CHILD, rect, this, 4);
+   m_wndPerfView.Create(NULL, _T("Performance"), WS_CHILD, rect, this, 5);
 
    // Create common tabs
    CreateTab(0, _T("Overview"), 0, &m_wndOverview);
-//   CreateTab(1, _T("Alarms"), 1, &m_wndAlarms);
 
    // Activate current tab
    nTemp = theApp.GetProfileInt(_T("ObjectView"), _T("ActiveTab"), 0);
@@ -224,6 +225,8 @@ void CObjectView::SetCurrentObject(NXC_OBJECT *pObject)
 	nTab = 1;
    if (m_pObject != NULL)
    {
+		if (m_pObject->iClass == OBJECT_NODE)
+         CreateTab(nTab++, _T("Performance"), 4, &m_wndPerfView);
       switch(m_pObject->iClass)
       {
 			case OBJECT_CLUSTER:
@@ -453,6 +456,7 @@ void CObjectView::AdjustView()
    m_wndAlarms.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
    m_wndDepView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
    m_wndClusterView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
+   m_wndPerfView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
 
 	if (m_bShowSearchBar)
 	{

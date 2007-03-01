@@ -439,6 +439,7 @@ typedef struct
 #define CMD_GET_GRAPH_LIST				0x00C5
 #define CMD_DEFINE_GRAPH				0x00C6
 #define CMD_DELETE_GRAPH				0x00C7
+#define CMD_GET_SYSTEM_DCI_LIST		0x00C8
 
 
 //
@@ -836,6 +837,9 @@ typedef struct
 // Base value for graph list
 #define VID_GRAPH_LIST_BASE         ((DWORD)0x10000000)
 #define VID_GRAPH_ACL_BASE				((DWORD)0x20000000)
+
+// Base value for system DCI list
+#define VID_SYSDCI_LIST_BASE			((DWORD)0x10000000)
 
 
 //

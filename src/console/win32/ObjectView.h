@@ -5,6 +5,7 @@
 #include "AlarmView.h"	// Added by ClassView
 #include "ObjectDepView.h"	// Added by ClassView
 #include "ClusterView.h"	// Added by ClassView
+#include "NodePerfView.h"
 #include "ExtEditCtrl.h"
 #if _MSC_VER > 1000
 #pragma once
@@ -56,6 +57,7 @@ protected:
 	int m_nTitleBarOffset;
 	void AdjustView(void);
 	BOOL m_bShowSearchBar;
+	CNodePerfView m_wndPerfView;
 	CClusterView m_wndClusterView;
 	CObjectDepView m_wndDepView;
 	CAlarmView m_wndAlarms;

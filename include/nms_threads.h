@@ -69,9 +69,9 @@ typedef struct
 THREAD_RESULT LIBNETXMS_EXPORTABLE THREAD_CALL SEHThreadStarter(void *);
 int LIBNETXMS_EXPORTABLE ___ExceptionHandler(EXCEPTION_POINTERS *pInfo);
 
-void LIBNETXMS_EXPORTABLE SetExceptionHandler(void (*pfHandler)(EXCEPTION_POINTERS *),
+void LIBNETXMS_EXPORTABLE SetExceptionHandler(BOOL (*pfHandler)(EXCEPTION_POINTERS *),
 															 void (*pfWriter)(char *));
-void LIBNETXMS_EXPORTABLE SEHDefaultConsoleHandler(EXCEPTION_POINTERS *pInfo);
+BOOL LIBNETXMS_EXPORTABLE SEHDefaultConsoleHandler(EXCEPTION_POINTERS *pInfo);
 TCHAR LIBNETXMS_EXPORTABLE *SEHExceptionName(DWORD code);
 void LIBNETXMS_EXPORTABLE SEHShowCallStack(CONTEXT *pCtx);
 

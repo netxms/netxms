@@ -3779,7 +3779,7 @@ static void ExceptionDataWriter(char *pszText)
 // Exception handler
 //
 
-static void ExceptionHandler(EXCEPTION_POINTERS *pInfo)
+static BOOL ExceptionHandler(EXCEPTION_POINTERS *pInfo)
 {
 	TCHAR szBuffer[MAX_PATH], szInfoFile[MAX_PATH], szDumpFile[MAX_PATH];
 	HANDLE hFile;
@@ -3790,6 +3790,7 @@ static void ExceptionHandler(EXCEPTION_POINTERS *pInfo)
    SYSTEM_INFO sysInfo;
 	CFatalErrorDlg dlg;
 	BYTE *pData;
+	BOOL bRet;
 
 	t = time(NULL);
 
@@ -3912,12 +3913,14 @@ static void ExceptionHandler(EXCEPTION_POINTERS *pInfo)
 	// Dialog should be executed from GUI thread
 	if (GetCurrentThreadId() == theApp.m_dwMainThreadId)
 	{
-		dlg.DoModal();
+		bRet = (dlg.DoModal() != IDOK);
 	}
 	else
 	{
-		theApp.m_pMainWnd->SendMessage(NXCM_SHOW_FATAL_ERROR, 0, (LPARAM)&dlg);
+		bRet = (BOOL)theApp.m_pMainWnd->SendMessage(NXCM_SHOW_FATAL_ERROR, 0, (LPARAM)&dlg);
 	}
+
+	return bRet;
 }
 
 

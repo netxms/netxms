@@ -368,6 +368,8 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(NXC_SESSION hSession, DWORD dwNodeId, DWO
             dwPrevRowCount = (*ppData)->dwNumRows;
             (*ppData)->dwNumRows += dwRecvRows;
             (*ppData)->wDataType = (WORD)ntohl(pHdr->dwDataType);
+				if ((*ppData)->wDataType > 5)
+					(*ppData)->wDataType = 0;
             (*ppData)->wRowSize = m_wRowSize[(*ppData)->wDataType];
             if (dwRecvRows > 0)
                (*ppData)->pRows = (NXC_DCI_ROW *)realloc((*ppData)->pRows, (*ppData)->dwNumRows * (*ppData)->wRowSize);
@@ -768,7 +770,7 @@ DWORD LIBNXCL_EXPORTABLE NXCPushDCIData(NXC_SESSION hSession, DWORD dwNumItems,
 //
 
 DWORD LIBNXCL_EXPORTABLE NXCGetDCIInfo(NXC_SESSION hSession, DWORD dwNodeId,
-													DWORD dwItemId, NXC_DCI *pInfo)
+                                       DWORD dwItemId, NXC_DCI *pInfo)
 {
    CSCPMessage msg, *pResponse;
    DWORD dwRqId, dwResult;
@@ -796,6 +798,51 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIInfo(NXC_SESSION hSession, DWORD dwNodeId,
 			pInfo->iSource = (BYTE)pResponse->GetVariableShort(VID_DCI_SOURCE_TYPE);
 			pResponse->GetVariableStr(VID_NAME, pInfo->szName, MAX_ITEM_NAME);
 			pResponse->GetVariableStr(VID_DESCRIPTION, pInfo->szDescription, MAX_DB_STRING);
+      }
+      delete pResponse;
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+   }
+   return dwResult;
+}
+
+
+//
+// Get list of system DCIs
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetSystemDCIList(NXC_SESSION hSession, DWORD dwNodeId,
+                                             DWORD *pdwNumItems, NXC_SYSTEM_DCI **ppList)
+{
+   CSCPMessage msg, *pResponse;
+   DWORD i, dwId, dwRqId, dwResult;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+	*ppList = NULL;
+	*pdwNumItems = 0;
+
+   msg.SetCode(CMD_GET_SYSTEM_DCI_LIST);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwResult = pResponse->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+      {
+			*pdwNumItems = pResponse->GetVariableLong(VID_NUM_ITEMS);
+			*ppList = (NXC_SYSTEM_DCI *)malloc(sizeof(NXC_SYSTEM_DCI) * (*pdwNumItems));
+			for(i = 0, dwId = VID_SYSDCI_LIST_BASE; i < *pdwNumItems; i++, dwId += 7)
+			{
+				(*ppList)[i].dwId = pResponse->GetVariableLong(dwId++);
+				pResponse->GetVariableStr(dwId++, (*ppList)[i].szName, MAX_DB_STRING);
+				(*ppList)[i].nStatus = pResponse->GetVariableShort(dwId++);
+			}
       }
       delete pResponse;
    }

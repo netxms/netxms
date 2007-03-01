@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.174 2007-02-24 18:51:26 victor Exp $ */
+/* $Id: node.cpp,v 1.175 2007-03-01 23:29:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -2667,4 +2667,32 @@ BOOL Node::ResolveName(void)
 	else
 		DbgPrintf(AF_DEBUG_DISCOVERY, _T("Name for node %d was not resolved"), m_dwId, m_szName);
 	return bSuccess;
+}
+
+
+//
+// Send list of system DCIs
+//
+
+DWORD Node::GetSystemDCIList(CSCPMessage *pMsg)
+{
+   DWORD i, dwId, dwCount;
+
+   LockData();
+
+   for(i = 0, dwId = VID_SYSDCI_LIST_BASE, dwCount = 0; i < m_dwNumItems; i++)
+	{
+		if (!_tcsnicmp(m_ppItems[i]->Description(), _T("@System."), 8))
+		{
+			pMsg->SetVariable(dwId++, m_ppItems[i]->Id());
+			pMsg->SetVariable(dwId++, (TCHAR *)m_ppItems[i]->Description());
+			pMsg->SetVariable(dwId++, (WORD)m_ppItems[i]->Status());
+			dwId += 7;
+			dwCount++;
+		}
+	}
+   pMsg->SetVariable(VID_NUM_ITEMS, dwCount);
+
+   UnlockData();
+   return RCC_SUCCESS;
 }

@@ -696,6 +696,7 @@ public:
    void CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD *pdwItemList);
    void UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI);
    void UpdateDCICache(void);
+	DWORD GetSystemDCIList(CSCPMessage *pMsg);
 
    void OpenParamList(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
    void CloseParamList(void) { UnlockData(); }

@@ -94,6 +94,7 @@ EXTRA_DIST = \
 	NewActionDlg.cpp NewActionDlg.h \
 	NewObjectToolDlg.cpp NewObjectToolDlg.h \
 	NewUserDlg.cpp NewUserDlg.h \
+	NodePerfView.cpp NodePerfView.h \
 	NodePoller.cpp NodePoller.h \
 	NodePropsGeneral.cpp NodePropsGeneral.h \
 	NodePropsPolling.cpp NodePropsPolling.h \

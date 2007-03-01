@@ -65,7 +65,7 @@ protected:
    afx_msg void OnDeploymentInfo(WPARAM wParam, LPARAM lParam);
    afx_msg void OnUpdateEventList(WPARAM wParam, LPARAM lParam);
    afx_msg void OnUpdateObjectTools(WPARAM wParam, LPARAM lParam);
-   afx_msg void OnShowFatalError(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnShowFatalError(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

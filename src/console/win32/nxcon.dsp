@@ -524,6 +524,10 @@ SOURCE=.\NewUserDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\NodePerfView.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\NodePoller.cpp
 # End Source File
 # Begin Source File
@@ -1126,6 +1130,10 @@ SOURCE=..\..\..\include\nms_common.h
 # Begin Source File
 
 SOURCE=..\..\..\include\nms_util.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\NodePerfView.h
 # End Source File
 # Begin Source File
 

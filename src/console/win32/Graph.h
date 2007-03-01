@@ -16,6 +16,9 @@
 #define GRAPH_TYPE_AREA		1
 #define GRAPH_TYPE_STACKED	2
 
+#define GCS_CLASSIC			0
+#define GCS_LIGHT				1
+
 struct ZOOM_INFO
 {
    DWORD dwTimeFrom;
@@ -111,6 +114,8 @@ private:
    int m_nLastGridSizeY;
 
 public:
+	BOOL m_bSet3DEdge;
+	void SetColorScheme(int nScheme);
 	void UpdateData(DWORD dwIndex, NXC_DCI_DATA *pData);
 	BOOL GetTimeFrameForUpdate(DWORD dwIndex, DWORD *pdwFrom, DWORD *pdwTo);
 	BOOL m_bEnableZoom;

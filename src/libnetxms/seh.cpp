@@ -46,7 +46,7 @@ public:
 // Static data
 //
 
-static void (*m_pfExceptionHandler)(EXCEPTION_POINTERS *) = NULL;
+static BOOL (*m_pfExceptionHandler)(EXCEPTION_POINTERS *) = NULL;
 static void (*m_pfWriter)(char *pszText) = NULL;
 static HANDLE m_hExceptionLock = INVALID_HANDLE_VALUE;
 
@@ -84,7 +84,7 @@ void SEHInit(void)
 // Set exception handler
 //
 
-void LIBNETXMS_EXPORTABLE SetExceptionHandler(void (*pfHandler)(EXCEPTION_POINTERS *),
+void LIBNETXMS_EXPORTABLE SetExceptionHandler(BOOL (*pfHandler)(EXCEPTION_POINTERS *),
 															 void (*pfWriter)(char *))
 {
 	m_pfExceptionHandler = pfHandler;
@@ -140,7 +140,7 @@ TCHAR LIBNETXMS_EXPORTABLE *SEHExceptionName(DWORD code)
 // Default exception handler for console applications
 //
 
-void LIBNETXMS_EXPORTABLE SEHDefaultConsoleHandler(EXCEPTION_POINTERS *pInfo)
+BOOL LIBNETXMS_EXPORTABLE SEHDefaultConsoleHandler(EXCEPTION_POINTERS *pInfo)
 {
 	_tprintf(_T("EXCEPTION: %08X (%s) at %08X\n"),
             pInfo->ExceptionRecord->ExceptionCode,
@@ -166,6 +166,7 @@ void LIBNETXMS_EXPORTABLE SEHDefaultConsoleHandler(EXCEPTION_POINTERS *pInfo)
 	sw.ShowCallstack(GetCurrentThread(), pInfo->ContextRecord);
 
 	_tprintf(_T("\nPROCESS TERMINATED\n"));
+	return TRUE;
 }
 
 
@@ -195,8 +196,7 @@ int LIBNETXMS_EXPORTABLE ___ExceptionHandler(EXCEPTION_POINTERS *pInfo)
 		// will call ExitProcess anyway and we want to log only first
 		// exception in case of multiple simultaneous exceptions
 		WaitForSingleObject(m_hExceptionLock, INFINITE);
-		m_pfExceptionHandler(pInfo);
-		return EXCEPTION_EXECUTE_HANDLER;
+		return m_pfExceptionHandler(pInfo) ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH;
 	}
 	return EXCEPTION_CONTINUE_SEARCH;
 }

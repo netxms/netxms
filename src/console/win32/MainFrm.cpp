@@ -615,7 +615,7 @@ void CMainFrame::OnDesktopNew()
 // NXCM_SHOW_FATAL_ERROR message handler
 //
 
-void CMainFrame::OnShowFatalError(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnShowFatalError(WPARAM wParam, LPARAM lParam)
 {
-	((CFatalErrorDlg *)lParam)->DoModal();
+	return ((CFatalErrorDlg *)lParam)->DoModal() != IDOK;		// IDOK == Debug
 }

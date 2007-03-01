@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.257 2007-02-08 22:25:20 victor Exp $ */
+/* $Id: nxclapi.h,v 1.258 2007-03-01 23:29:04 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -1622,6 +1622,18 @@ typedef struct
 
 
 //
+// System DCI information
+//
+
+typedef struct
+{
+	DWORD dwId;
+	TCHAR szName[MAX_DB_STRING];
+	int nStatus;
+} NXC_SYSTEM_DCI;
+
+
+//
 // Functions
 //
 
@@ -1775,6 +1787,8 @@ DWORD LIBNXCL_EXPORTABLE NXCQueryParameter(NXC_SESSION hSession, DWORD dwNodeId,
                                            TCHAR *pszBuffer, DWORD dwBufferSize);
 DWORD LIBNXCL_EXPORTABLE NXCResolveDCINames(NXC_SESSION hSession, DWORD dwNumDCI,
                                             INPUT_DCI *pDCIList, TCHAR ***pppszNames);
+DWORD LIBNXCL_EXPORTABLE NXCGetSystemDCIList(NXC_SESSION hSession, DWORD dwNodeId,
+                                             DWORD *pdwNumItems, NXC_SYSTEM_DCI **ppList);
 DWORD LIBNXCL_EXPORTABLE NXCPushDCIData(NXC_SESSION hSession, DWORD dwNumItems,
                                         NXC_DCI_PUSH_DATA *pItems, DWORD *pdwIndex);
 

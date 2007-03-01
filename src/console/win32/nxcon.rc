@@ -2937,7 +2937,8 @@ BEGIN
     EDITTEXT        IDC_EDIT_TEXT,7,18,290,162,ES_MULTILINE | ES_AUTOHSCROLL | 
                     ES_READONLY | WS_VSCROLL
     EDITTEXT        IDC_EDIT_FILE,7,196,290,14,ES_AUTOHSCROLL | ES_READONLY
-    DEFPUSHBUTTON   "Close",IDOK,247,221,50,14
+    PUSHBUTTON      "&Debug",IDOK,191,221,50,14
+    DEFPUSHBUTTON   "Close",IDCANCEL,247,221,50,14
     LTEXT           "Fatal application error occured. Please send the following information to dump@netxms.org.",
                     IDC_STATIC,7,7,287,8
     LTEXT           "If possible, please also attach the following file:",
