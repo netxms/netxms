@@ -15,7 +15,7 @@ typedef struct
 {
 	TCHAR *pszTitle;
 	CGraph *pWnd;
-	DWORD dwItemId;
+	DWORD dwItemId[MAX_GRAPH_ITEMS];
 } PERF_GRAPH;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -47,7 +47,15 @@ public:
 
 	// Generated message map functions
 protected:
-	void CreateGraph(NXC_SYSTEM_DCI *pItemList, DWORD dwNumItems, TCHAR *pszParam, TCHAR *pszTitle, RECT &rect);
+	DWORD FindItemByName(NXC_SYSTEM_DCI *pItemList, DWORD dwNumItems, TCHAR *pszName);
+	int m_nViewHeight;
+	int m_nOrigin;
+	int m_nTotalHeight;
+	void AdjustView(void);
+	CFont m_fontTitle;
+	int m_nTitleHeight;
+	BOOL CreateGraph(NXC_SYSTEM_DCI *pItemList, DWORD dwNumItems, TCHAR *pszParam,
+	                 TCHAR *pszTitle, RECT &rect, BOOL bArea);
 	DWORD m_dwTimeTo;
 	DWORD m_dwTimeFrom;
 	void UpdateAllGraphs(void);
@@ -63,6 +71,8 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg void OnDestroy();
 	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	//}}AFX_MSG
    afx_msg void OnSetObject(WPARAM wParam, NXC_OBJECT *pObject);
 	afx_msg void OnRequestCompleted(WPARAM wParam, LPARAM lParam);

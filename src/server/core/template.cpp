@@ -778,7 +778,7 @@ void Template::ValidateDCIList(DCI_CFG *cfg)
 		{
 			if (!_tcsicmp(m_ppItems[i]->Description(), cfg[j].pszName))
 			{
-				m_ppItems[i]->SystemModify(cfg[j].pszParam, DS_NATIVE_AGENT,
+				m_ppItems[i]->SystemModify(cfg[j].pszParam, cfg[j].nOrigin,
 					                        cfg[j].nRetention, cfg[j].nInterval,
 													cfg[j].nDataType);
 				cfg[j].nFound = 1;
@@ -823,7 +823,8 @@ void Template::ValidateSystemTemplate(void)
 		{
 			{ _T("@system.cpu_usage"), _T("System.CPU.Usage"), 60, 1, DCI_DT_INT, DS_NATIVE_AGENT, 0 },
 			{ _T("@system.load_avg"), _T("System.CPU.LoadAvg"), 60, 1, DCI_DT_FLOAT, DS_NATIVE_AGENT, 0 },
-			{ _T("@system.freemem"), _T("System.Memory.Physical.Free"), 60, 1, DCI_DT_UINT64, DS_NATIVE_AGENT, 0 },
+			{ _T("@system.usedmem"), _T("System.Memory.Physical.Used"), 60, 1, DCI_DT_UINT64, DS_NATIVE_AGENT, 0 },
+			{ _T("@system.totalmem"), _T("System.Memory.Physical.Total"), 60, 1, DCI_DT_UINT64, DS_NATIVE_AGENT, 0 },
 			{ NULL, NULL, 0, 0, 0, 0 }
 		};
 
@@ -831,5 +832,13 @@ void Template::ValidateSystemTemplate(void)
 	}
 	else if (!_tcsicmp(m_szName, _T("@System.SNMP")))
 	{
+		DCI_CFG dciCfgSNMP[] =
+		{
+			{ _T("@system.cpu_usage.passport"), _T(".1.3.6.1.4.1.2272.1.1.20.0"),
+			  60, 1, DCI_DT_INT, DS_SNMP_AGENT, 0 },		// Nortel Passport switches
+			{ NULL, NULL, 0, 0, 0, 0 }
+		};
+
+		ValidateDCIList(dciCfgSNMP);
 	}
 }

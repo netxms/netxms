@@ -23,7 +23,9 @@ static char THIS_FILE[] = __FILE__;
 
 #define GRAPH_X_MARGIN		30
 #define GRAPH_Y_MARGIN		50
-#define GRAPH_HEIGHT			150
+#define GRAPH_HEIGHT			210
+#define GRAPH_TITLE_MARGIN	7
+#define SPLIT_LIMIT			800
 
 
 //
@@ -73,6 +75,7 @@ CNodePerfView::CNodePerfView()
 	m_pGraphList = NULL;
 	m_hWorkerThread = INVALID_THREAD_HANDLE;
 	m_nTimer = 0;
+	m_nOrigin = 0;
 }
 
 CNodePerfView::~CNodePerfView()
@@ -93,6 +96,8 @@ BEGIN_MESSAGE_MAP(CNodePerfView, CWnd)
 	ON_WM_PAINT()
 	ON_WM_DESTROY()
 	ON_WM_TIMER()
+	ON_WM_SIZE()
+	ON_WM_VSCROLL()
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_SET_OBJECT, OnSetObject)
    ON_MESSAGE(NXCM_REQUEST_COMPLETED, OnRequestCompleted)
@@ -120,9 +125,21 @@ BOOL CNodePerfView::PreCreateWindow(CREATESTRUCT& cs)
 
 int CNodePerfView::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
+	CDC *pDC;
+	CFont *pOldFont;
+
 	if (CWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
+	pDC = GetDC();
+   m_fontTitle.CreateFont(-MulDiv(8, GetDeviceCaps(pDC->m_hDC, LOGPIXELSY), 72),
+                          0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                          OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+                          VARIABLE_PITCH | FF_DONTCARE, _T("Verdana"));
+	pOldFont = pDC->SelectObject(&m_fontTitle);
+	m_nTitleHeight = pDC->GetTextExtent(_T("MXh|qg"), 6).cy;
+	pDC->SelectObject(pOldFont);
+	ReleaseDC(pDC);
 	m_hWorkerThread = ThreadCreateEx(PerfViewWorkerThread, 0, this);
 
 	return 0;
@@ -152,6 +169,7 @@ void CNodePerfView::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
    m_pObject = pObject;
 	m_nState = STATE_LOADING;
 	InvalidateRect(NULL);
+	AdjustView();
 	m_workerQueue.Put(new WorkerTask(TASK_GET_AVAIL_DCI));
 }
 
@@ -163,6 +181,9 @@ void CNodePerfView::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
 void CNodePerfView::OnPaint() 
 {
 	CPaintDC dc(this); // device context for painting
+	RECT rect;
+	CFont *pOldFont;
+	DWORD i;
 	
 	switch(m_nState)
 	{
@@ -172,6 +193,23 @@ void CNodePerfView::OnPaint()
 		case STATE_NO_DATA:
 			dc.TextOut(10, 10, _T("No performance data available"), 29);
 			break;
+/*		case STATE_IDLE:
+		case STATE_UPDATING:
+			GetClientRect(&rect);
+			rect.left += GRAPH_X_MARGIN;
+			rect.right -= GRAPH_X_MARGIN;
+			rect.top = GRAPH_Y_MARGIN - GRAPH_TITLE_MARGIN - m_nTitleHeight - m_nOrigin;
+			rect.bottom = rect.top + m_nTitleHeight + 1;
+			pOldFont = dc.SelectObject(&m_fontTitle);
+			for(i = 0; i < m_dwNumGraphs; i++)
+			{
+				dc.DrawText(m_pGraphList[i].pszTitle, _tcslen(m_pGraphList[i].pszTitle),
+				            &rect, DT_CENTER | DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+				rect.top += GRAPH_HEIGHT + GRAPH_Y_MARGIN;
+				rect.bottom = rect.top + m_nTitleHeight + 1;
+			}
+			dc.SelectObject(pOldFont);
+			break;*/
 		default:
 			break;
 	}
@@ -179,11 +217,28 @@ void CNodePerfView::OnPaint()
 
 
 //
+// Find DCI by name
+//
+
+DWORD CNodePerfView::FindItemByName(NXC_SYSTEM_DCI *pItemList, DWORD dwNumItems, TCHAR *pszName)
+{
+	DWORD i;
+
+	for(i = 0; i < dwNumItems; i++)
+		if ((!_tcsicmp(pItemList[i].szName, pszName)) &&
+			 (pItemList[i].nStatus == ITEM_STATUS_ACTIVE))
+			return pItemList[i].dwId;
+	return 0;
+}
+
+
+//
 // Create graph if appropriate parameter exists
 //
 
-void CNodePerfView::CreateGraph(NXC_SYSTEM_DCI *pItemList, DWORD dwNumItems,
-										  TCHAR *pszParam, TCHAR *pszTitle, RECT &rect)
+BOOL CNodePerfView::CreateGraph(NXC_SYSTEM_DCI *pItemList, DWORD dwNumItems,
+										  TCHAR *pszParam, TCHAR *pszTitle, RECT &rect,
+										  BOOL bArea)
 {
 	DWORD i;
 
@@ -192,18 +247,22 @@ void CNodePerfView::CreateGraph(NXC_SYSTEM_DCI *pItemList, DWORD dwNumItems,
 		if ((!_tcsicmp(pItemList[i].szName, pszParam)) &&
 			 (pItemList[i].nStatus == ITEM_STATUS_ACTIVE))
 		{
-			m_pGraphList[m_dwNumGraphs].dwItemId = pItemList[i].dwId;
+			memset(m_pGraphList[m_dwNumGraphs].dwItemId, 0, sizeof(DWORD) * MAX_GRAPH_ITEMS);
+			m_pGraphList[m_dwNumGraphs].dwItemId[0] = pItemList[i].dwId;
+			m_pGraphList[m_dwNumGraphs].pszTitle = pszTitle;
 			m_pGraphList[m_dwNumGraphs].pWnd = new CGraph;
 			m_pGraphList[m_dwNumGraphs].pWnd->m_bSet3DEdge = FALSE;
 			m_pGraphList[m_dwNumGraphs].pWnd->m_bShowLegend = FALSE;
 			m_pGraphList[m_dwNumGraphs].pWnd->SetColorScheme(GCS_LIGHT);
+			m_pGraphList[m_dwNumGraphs].pWnd->m_graphItemStyles[0].nType = bArea ? GRAPH_TYPE_AREA : GRAPH_TYPE_LINE;
 			m_pGraphList[m_dwNumGraphs].pWnd->Create(WS_CHILD | WS_VISIBLE, rect, this, m_dwNumGraphs);
 			m_dwNumGraphs++;
 			rect.top += GRAPH_HEIGHT + GRAPH_Y_MARGIN;
 			rect.bottom = rect.top + GRAPH_HEIGHT;
-			break;
+			return TRUE;
 		}
 	}
+	return FALSE;
 }
 
 
@@ -229,12 +288,22 @@ void CNodePerfView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 		m_pGraphList = (PERF_GRAPH *)realloc(m_pGraphList, wParam * sizeof(PERF_GRAPH));
 		m_dwNumGraphs = 0;
 
-		CreateGraph((NXC_SYSTEM_DCI *)lParam, wParam, _T("@system.cpu_usage"), _T("CPU Utilization"), rect);
-		CreateGraph((NXC_SYSTEM_DCI *)lParam, wParam, _T("@system.freemem"), _T("Free Physical Memory"), rect);
+		// CPU utilization
+		if (!CreateGraph((NXC_SYSTEM_DCI *)lParam, wParam, _T("@system.cpu_usage"), _T("CPU Utilization"), rect, FALSE))
+			CreateGraph((NXC_SYSTEM_DCI *)lParam, wParam, _T("@system.cpu_usage.passport"), _T("CPU Utilization"), rect, FALSE);
+
+		// Physical memory
+		if (CreateGraph((NXC_SYSTEM_DCI *)lParam, wParam, _T("@system.usedmem"), _T("Physical Memory"), rect, TRUE))
+		{
+			m_pGraphList[m_dwNumGraphs - 1].dwItemId[1] = FindItemByName((NXC_SYSTEM_DCI *)lParam, wParam, _T("@system.totalmem"));
+			m_pGraphList[m_dwNumGraphs - 1].pWnd->m_graphItemStyles[0].rgbColor = RGB(75, 0, 130);
+			m_pGraphList[m_dwNumGraphs - 1].pWnd->m_graphItemStyles[1].rgbColor = RGB(192, 0, 0);
+		}
 
 		safe_free(CAST_TO_POINTER(lParam, void *));
 		if (m_dwNumGraphs > 0)
 		{
+			AdjustView();
 			UpdateAllGraphs();
 			m_nTimer = SetTimer(1, 30000, NULL);
 		}
@@ -338,15 +407,17 @@ void CNodePerfView::OnUpdateFinished(WPARAM wParam, LPARAM lParam)
 
 void CNodePerfView::UpdateAllGraphs()
 {
-	DWORD i;
+	DWORD i, j;
 
 	m_nState = STATE_UPDATING;
    m_dwTimeTo = time(NULL);
    m_dwTimeTo += 60 - m_dwTimeTo % 60;   // Round to minute boundary
    m_dwTimeFrom = m_dwTimeTo - 3600;
 	for(i = 0; i < m_dwNumGraphs; i++)
-		m_workerQueue.Put(new WorkerTask(TASK_UPDATE_GRAPH, m_pGraphList[i].dwItemId,
-		                                 m_pObject->dwId, m_dwTimeFrom, m_dwTimeTo));
+		for(j = 0; j < MAX_GRAPH_ITEMS; j++)
+			if (m_pGraphList[i].dwItemId[j] != 0)
+				m_workerQueue.Put(new WorkerTask(TASK_UPDATE_GRAPH, m_pGraphList[i].dwItemId[j],
+															m_pObject->dwId, m_dwTimeFrom, m_dwTimeTo));
 	m_workerQueue.Put(new WorkerTask(TASK_FINISH_UPDATE, m_pObject->dwId));
 }
 
@@ -357,22 +428,168 @@ void CNodePerfView::UpdateAllGraphs()
 
 void CNodePerfView::OnGraphData(WPARAM wParam, LPARAM lParam)
 {
-	DWORD i;
+	DWORD i, j;
 
 	if (m_nState != STATE_UPDATING)
 		return;
 
 	for(i = 0; i < m_dwNumGraphs; i++)
 	{
-		if (m_pGraphList[i].dwItemId == wParam)
+		for(j = 0; j < MAX_GRAPH_ITEMS; j++)
 		{
-			m_pGraphList[i].pWnd->SetData(0, CAST_TO_POINTER(lParam, NXC_DCI_DATA *));
-			m_pGraphList[i].pWnd->SetTimeFrame(m_dwTimeFrom, m_dwTimeTo);
-			m_pGraphList[i].pWnd->Update();
-			break;
+			if (m_pGraphList[i].dwItemId[j] == wParam)
+			{
+				m_pGraphList[i].pWnd->SetData(j, CAST_TO_POINTER(lParam, NXC_DCI_DATA *));
+				m_pGraphList[i].pWnd->SetTimeFrame(m_dwTimeFrom, m_dwTimeTo);
+				m_pGraphList[i].pWnd->Update();
+				goto stop_search;
+			}
 		}
 	}
 
+stop_search:
 	if (i == m_dwNumGraphs)		// Graph for given DCI ID not found
 		NXCDestroyDCIData(CAST_TO_POINTER(lParam, NXC_DCI_DATA *));
+}
+
+
+//
+// WM_SIZE message handler
+//
+
+void CNodePerfView::OnSize(UINT nType, int cx, int cy) 
+{
+	CWnd::OnSize(nType, cx, cy);
+	AdjustView();	
+}
+
+
+//
+// Adjust view
+//
+
+void CNodePerfView::AdjustView()
+{
+	DWORD i;
+	RECT rect;
+	int y, nCol, nWidth, nColumns;
+	SCROLLINFO si;
+
+	GetClientRect(&rect);
+	if ((rect.right > SPLIT_LIMIT) && (m_dwNumGraphs > 1))
+	{
+		nColumns = 2;
+	}
+	else
+	{
+		nColumns = 1;
+	}
+
+	// Setup scroll bar
+	m_nTotalHeight = m_dwNumGraphs / nColumns * (GRAPH_Y_MARGIN + GRAPH_HEIGHT);
+	m_nViewHeight = rect.bottom;
+	if (m_nTotalHeight > m_nViewHeight)
+	{
+		ShowScrollBar(SB_VERT, TRUE);
+		si.cbSize = sizeof(SCROLLINFO);
+		si.fMask = SIF_ALL;
+		si.nMin = 0;
+		si.nMax = m_nTotalHeight;
+		si.nPage = m_nViewHeight;
+		si.nPos = m_nOrigin;
+		SetScrollInfo(SB_VERT, &si);
+	}
+	else
+	{
+		ShowScrollBar(SB_VERT, FALSE);
+	}
+
+	GetClientRect(&rect);
+	nWidth = rect.right - GRAPH_X_MARGIN * 2;
+	if (nColumns > 1)
+	{
+		nWidth = nWidth / nColumns - GRAPH_X_MARGIN * (nColumns - 1);
+	}
+	y = GRAPH_Y_MARGIN - m_nOrigin;
+
+	for(i = 0, nCol = 0; i < m_dwNumGraphs; i++)
+	{
+		m_pGraphList[i].pWnd->SetWindowPos(NULL, GRAPH_X_MARGIN + nCol * (nWidth + GRAPH_X_MARGIN), y, nWidth, GRAPH_HEIGHT, SWP_NOZORDER);
+		nCol++;
+		if (nCol == nColumns)
+		{
+			nCol = 0;
+			y += GRAPH_HEIGHT + GRAPH_Y_MARGIN;
+		}
+	}
+}
+
+
+//
+// WM_VSCROLL message handler
+//
+
+void CNodePerfView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
+{
+	int nPrevOrigin = m_nOrigin;
+	BOOL bUpdate = FALSE;
+
+	switch(nSBCode)
+	{
+		case SB_TOP:
+			if (m_nOrigin > 0)
+			{
+				m_nOrigin = 0;
+				bUpdate = TRUE;
+			}
+			break;
+		case SB_BOTTOM:
+			if (m_nOrigin < m_nTotalHeight - m_nViewHeight)
+			{
+				m_nOrigin = m_nTotalHeight - m_nViewHeight;
+				bUpdate = TRUE;
+			}
+			break;
+		case SB_LINEUP:
+			if (m_nOrigin > 0)
+			{
+				m_nOrigin -= min(m_nOrigin, 10);
+				bUpdate = TRUE;
+			}
+			break;
+		case SB_LINEDOWN:
+			if (m_nOrigin < m_nTotalHeight - m_nViewHeight)
+			{
+				m_nOrigin += min(m_nTotalHeight - m_nViewHeight - m_nOrigin, 10);
+				bUpdate = TRUE;
+			}
+			break;
+		case SB_PAGEUP:
+			if (m_nOrigin > 0)
+			{
+				m_nOrigin -= min(m_nOrigin, m_nViewHeight);
+				bUpdate = TRUE;
+			}
+			break;
+		case SB_PAGEDOWN:
+			if (m_nOrigin < m_nTotalHeight - m_nViewHeight)
+			{
+				m_nOrigin += min(m_nTotalHeight - m_nViewHeight - m_nOrigin, m_nViewHeight);
+				bUpdate = TRUE;
+			}
+			break;
+		case SB_THUMBPOSITION:
+		case SB_THUMBTRACK:
+			m_nOrigin = nPos;
+			bUpdate = TRUE;
+			break;
+		default:
+			break;
+	}
+
+	if (bUpdate)
+	{
+		ScrollWindow(0, nPrevOrigin - m_nOrigin);
+		AdjustView();
+	}
 }

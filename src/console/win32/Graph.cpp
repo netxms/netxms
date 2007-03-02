@@ -111,7 +111,7 @@ BOOL CGraph::PreCreateWindow(CREATESTRUCT& cs)
 		cs.style &= ~WS_BORDER;
 	}
 	cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, 
-      ::LoadCursor(NULL, IDC_ARROW), ::CreateSolidBrush(RGB(0, 0, 0)), NULL);
+      ::LoadCursor(NULL, IDC_ARROW), NULL, NULL);
 
 	return TRUE;
 }
