@@ -76,6 +76,8 @@ static struct
      300, COUNTER_TYPE_INT32, _T("Average CPU utilization for last 5 minutes"), DCI_DT_INT },
    { _T("System.CPU.Usage15"), _T("\\Processor(_Total)\\% Processor Time"), 0,
      900, COUNTER_TYPE_INT32, _T("Average CPU utilization for last 15 minutes"), DCI_DT_INT },
+   { _T("System.IO.DiskQueue"), _T("\\PhysicalDisk(_Total)\\Avg. Disk Queue Length"), 0,
+     60, COUNTER_TYPE_FLOAT, _T("Average disk queue length for last minute"), DCI_DT_FLOAT },
    { NULL, NULL, 0, 0, 0, NULL, 0 }
 };
 

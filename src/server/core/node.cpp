@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.175 2007-03-01 23:29:05 victor Exp $ */
+/* $Id: node.cpp,v 1.176 2007-03-03 22:52:30 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -2072,13 +2072,20 @@ AgentConnection *Node::CreateAgentConnection(void)
 
 DWORD Node::GetLastValues(CSCPMessage *pMsg)
 {
-   DWORD i, dwId;
+   DWORD i, dwId, dwCount;
 
    LockData();
 
-   pMsg->SetVariable(VID_NUM_ITEMS, m_dwNumItems);
-   for(i = 0, dwId = VID_DCI_VALUES_BASE; i < m_dwNumItems; i++, dwId += 7)
-      m_ppItems[i]->GetLastValue(pMsg, dwId);
+   for(i = 0, dwId = VID_DCI_VALUES_BASE, dwCount = 0; i < m_dwNumItems; i++)
+	{
+		if (_tcsnicmp(m_ppItems[i]->Description(), _T("@system."), 8))
+		{
+			m_ppItems[i]->GetLastValue(pMsg, dwId);
+			dwId += 7;
+			dwCount++;
+		}
+	}
+   pMsg->SetVariable(VID_NUM_ITEMS, dwCount);
 
    UnlockData();
    return RCC_SUCCESS;

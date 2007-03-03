@@ -80,6 +80,7 @@ public:
 
 	// Generated message map functions
 protected:
+	TCHAR m_szTitle[MAX_DB_STRING];
    ZOOM_INFO m_zoomInfo[ZOOM_HISTORY_SIZE];
    int m_nZoomLevel;
 	POINT m_ptMouseOpStart;
@@ -114,6 +115,7 @@ private:
    int m_nLastGridSizeY;
 
 public:
+	BOOL m_bShowTitle;
 	BOOL m_bSet3DEdge;
 	void SetColorScheme(int nScheme);
 	void UpdateData(DWORD dwIndex, NXC_DCI_DATA *pData);
@@ -126,6 +128,7 @@ public:
 	void ZoomIn(RECT &rect);
    void SetDCIInfo(DCIInfo **ppInfo) { m_ppItems = ppInfo; }
    CBitmap *GetBitmap(void) { return &m_bmpGraph; }
+	void SetTitle(TCHAR *pszTitle) { nx_strncpy(m_szTitle, pszTitle, MAX_DB_STRING); }
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -50,7 +50,9 @@ CGraph::CGraph()
    m_bShowLegend = TRUE;
    m_bEnableZoom = TRUE;
 	m_bSet3DEdge = TRUE;
+	m_bShowTitle = FALSE;
    m_dwNumItems = 0;
+	m_szTitle[0] = 0;
 
 	memset(m_graphItemStyles, 0, sizeof(GRAPH_ITEM_STYLE) * MAX_GRAPH_ITEMS);
 	SetColorScheme(GCS_CLASSIC);
@@ -569,7 +571,7 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
    dc.SetTextColor(m_rgbTextColor);
 
    // Calculate text size and left margin
-   textSize = dc.GetTextExtent("00000.000");
+   textSize = dc.GetTextExtent("0000.000");
    iLeftMargin = textSize.cx + 10;
    if (m_bShowLegend)
    {
@@ -606,6 +608,20 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
    {
       iBottomMargin = textSize.cy + 8;
    }
+
+	// Draw title if needed and adjust top margin
+	if (m_bShowTitle)
+	{
+		RECT rcTitle;
+
+		memcpy(&rcTitle, &rect, sizeof(RECT));
+		rcTitle.left += iLeftMargin;
+		rcTitle.top += iTopMargin;
+		rcTitle.right -= iRightMargin;
+		rcTitle.bottom = rcTitle.top + textSize.cy;
+		dc.DrawText(m_szTitle, _tcslen(m_szTitle), &rcTitle, DT_CENTER | DT_END_ELLIPSIS | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+		iTopMargin += textSize.cy + 7;
+	}
 
    // Calculate data rectangle
    memcpy(&m_rectGraph, &rect, sizeof(RECT));

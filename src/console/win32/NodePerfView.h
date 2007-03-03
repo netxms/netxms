@@ -13,7 +13,6 @@
 
 typedef struct
 {
-	TCHAR *pszTitle;
 	CGraph *pWnd;
 	DWORD dwItemId[MAX_GRAPH_ITEMS];
 } PERF_GRAPH;

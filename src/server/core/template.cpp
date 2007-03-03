@@ -474,9 +474,13 @@ void Template::SendItemsToClient(ClientSession *pSession, DWORD dwRqId)
    // Walk through items list
    for(i = 0; i < m_dwNumItems; i++)
    {
-      m_ppItems[i]->CreateMessage(&msg);
-      pSession->SendMessage(&msg);
-      msg.DeleteAllVariables();
+		if ((_tcsnicmp(m_ppItems[i]->Description(), _T("@system."), 8)) ||
+			 (Type() == OBJECT_TEMPLATE))
+		{
+			m_ppItems[i]->CreateMessage(&msg);
+			pSession->SendMessage(&msg);
+			msg.DeleteAllVariables();
+		}
    }
 
    UnlockData();
@@ -825,6 +829,7 @@ void Template::ValidateSystemTemplate(void)
 			{ _T("@system.load_avg"), _T("System.CPU.LoadAvg"), 60, 1, DCI_DT_FLOAT, DS_NATIVE_AGENT, 0 },
 			{ _T("@system.usedmem"), _T("System.Memory.Physical.Used"), 60, 1, DCI_DT_UINT64, DS_NATIVE_AGENT, 0 },
 			{ _T("@system.totalmem"), _T("System.Memory.Physical.Total"), 60, 1, DCI_DT_UINT64, DS_NATIVE_AGENT, 0 },
+			{ _T("@system.disk_queue"), _T("System.IO.DiskQueue"), 60, 1, DCI_DT_FLOAT, DS_NATIVE_AGENT, 0 },
 			{ NULL, NULL, 0, 0, 0, 0 }
 		};
 
