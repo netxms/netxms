@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.258 2007-03-01 23:29:04 victor Exp $ */
+/* $Id: nxclapi.h,v 1.259 2007-03-04 23:59:07 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -105,6 +105,14 @@ typedef void * NXC_SESSION;
 #define AUTH_PLAINTEXT        1
 #define AUTH_MD5_HASH         2
 #define AUTH_SHA1_HASH        3
+
+
+//
+// Client-server authentication types
+//
+
+#define NETXMS_AUTH_TYPE_PASSWORD       0
+#define NETXMS_AUTH_TYPE_CERTIFICATE    1
 
 
 //
@@ -382,6 +390,9 @@ enum
 #define RCC_NXMP_PARSE_ERROR        ((DWORD)68)
 #define RCC_NXMP_VALIDATION_ERROR   ((DWORD)69)
 #define RCC_INVALID_GRAPH_ID			((DWORD)70)
+#define RCC_LOCAL_CRYPTO_ERROR		((DWORD)71)
+#define RCC_UNSUPPORTED_AUTH_TYPE	((DWORD)72)
+#define RCC_BAD_CERTIFICATE			((DWORD)73)
 
 
 //
@@ -800,6 +811,16 @@ typedef struct
  ********************************************************************/
 
 #ifndef LIBNXCL_NO_DECLARATIONS
+
+
+//
+// NXCConnect flags
+//
+
+#define NXCF_DEFAULT						0
+#define NXCF_ENCRYPT						0x01
+#define NXCF_EXACT_VERSION_MATCH		0x02
+#define NXCF_USE_CERTIFICATE			0x04
 
 
 //
@@ -1648,10 +1669,11 @@ BOOL LIBNXCL_EXPORTABLE NXCInitialize(void);
 void LIBNXCL_EXPORTABLE NXCShutdown(void);
 void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
 
-DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *szServer, TCHAR *szLogin,
-                                    TCHAR *szPassword, NXC_SESSION *phSession,
-                                    TCHAR *pszClientInfo, BOOL bExactVersionMatch,
-                                    BOOL bEncrypt, TCHAR **ppszUpgradeURL);
+DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, TCHAR *pszServer, TCHAR *pszLogin, 
+                                    TCHAR *pszPassword, DWORD dwCertLen,
+												BYTE *pSignature, DWORD dwSigLen,
+												NXC_SESSION *phSession, TCHAR *pszClientInfo,
+												TCHAR **ppszUpgradeURL);
 void LIBNXCL_EXPORTABLE NXCDisconnect(NXC_SESSION hSession);
 void LIBNXCL_EXPORTABLE NXCStartWatchdog(NXC_SESSION hSession);
 void LIBNXCL_EXPORTABLE NXCSetEventHandler(NXC_SESSION hSession, NXC_EVENT_HANDLER pHandler);

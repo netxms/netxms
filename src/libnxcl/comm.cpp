@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: comm.cpp
+** File: comm.cpp
 **
 **/
 
@@ -231,10 +231,11 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
 // Connect to server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin, 
-                                    TCHAR *pszPassword, NXC_SESSION *phSession,
-                                    TCHAR *pszClientInfo, BOOL bExactVersionMatch,
-                                    BOOL bEncrypt, TCHAR **ppszUpgradeURL)
+DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, TCHAR *pszServer, TCHAR *pszLogin, 
+                                    TCHAR *pszPassword, DWORD dwCertLen,
+												BYTE *pSignature, DWORD dwSigLen,
+												NXC_SESSION *phSession, TCHAR *pszClientInfo,
+												TCHAR **ppszUpgradeURL)
 {
    struct sockaddr_in servAddr;
    CSCPMessage msg, *pResp;
@@ -304,7 +305,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
                   if (dwRetCode == RCC_SUCCESS)
                   {
                      pResp->GetVariableBinary(VID_SERVER_ID, pSession->m_bsServerId, 8);
-                     if (bExactVersionMatch)
+                     if (dwFlags & NXCF_EXACT_VERSION_MATCH)
                      {
                         TCHAR szServerVersion[64];
 
@@ -320,7 +321,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
                   delete pResp;
 
                   // Request encryption if needed
-                  if ((dwRetCode == RCC_SUCCESS) && bEncrypt)
+                  if ((dwRetCode == RCC_SUCCESS) && (dwFlags & NXCF_ENCRYPT))
                   {
                      msg.DeleteAllVariables();
                      msg.SetId(pSession->CreateRqId());
@@ -337,40 +338,46 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(TCHAR *pszServer, TCHAR *pszLogin,
 
                   if (dwRetCode == RCC_SUCCESS)
                   {
-                     // Do login if we are requested to do so
-                     if (pszLogin != NULL)
+                     // Prepare login message
+                     msg.DeleteAllVariables();
+                     msg.SetId(pSession->CreateRqId());
+                     msg.SetCode(CMD_LOGIN);
+                     msg.SetVariable(VID_LOGIN_NAME, pszLogin);
+							if (dwFlags & NXCF_USE_CERTIFICATE)
+							{
+								msg.SetVariable(VID_CERTIFICATE, (BYTE *)pszPassword, dwCertLen);
+								msg.SetVariable(VID_SIGNATURE, pSignature, dwSigLen);
+								msg.SetVariable(VID_AUTH_TYPE, (WORD)NETXMS_AUTH_TYPE_CERTIFICATE);
+							}
+							else
+							{
+								msg.SetVariable(VID_PASSWORD, pszPassword);
+								msg.SetVariable(VID_AUTH_TYPE, (WORD)NETXMS_AUTH_TYPE_PASSWORD);
+							}
+                     msg.SetVariable(VID_CLIENT_INFO, pszClientInfo);
+                     msg.SetVariable(VID_LIBNXCL_VERSION, NETXMS_VERSION_STRING);
+                     GetOSVersionString(szBuffer);
+                     msg.SetVariable(VID_OS_INFO, szBuffer);
+                     if (pSession->SendMsg(&msg))
                      {
-                        // Prepare login message
-                        msg.DeleteAllVariables();
-                        msg.SetId(pSession->CreateRqId());
-                        msg.SetCode(CMD_LOGIN);
-                        msg.SetVariable(VID_LOGIN_NAME, pszLogin);
-                        msg.SetVariable(VID_PASSWORD, pszPassword);
-                        msg.SetVariable(VID_CLIENT_INFO, pszClientInfo);
-                        msg.SetVariable(VID_LIBNXCL_VERSION, NETXMS_VERSION_STRING);
-                        GetOSVersionString(szBuffer);
-                        msg.SetVariable(VID_OS_INFO, szBuffer);
-                        if (pSession->SendMsg(&msg))
+                        // Receive response message
+                        pResp = pSession->WaitForMessage(CMD_LOGIN_RESP, msg.GetId());
+                        if (pResp != NULL)
                         {
-                           // Receive response message
-                           pResp = pSession->WaitForMessage(CMD_LOGIN_RESP, msg.GetId());
-                           if (pResp != NULL)
-                           {
-                              dwRetCode = pResp->GetVariableLong(VID_RCC);
-                              if (dwRetCode == RCC_SUCCESS)
-                                 pSession->ParseLoginMessage(pResp);
-                              delete pResp;
-                           }
-                           else
-                           {
-                              // Connection is broken or timed out
-                              dwRetCode = RCC_TIMEOUT;
-                           }
+                           dwRetCode = pResp->GetVariableLong(VID_RCC);
+                           if (dwRetCode == RCC_SUCCESS)
+                              pSession->ParseLoginMessage(pResp);
+                           delete pResp;
                         }
                         else
                         {
-                           dwRetCode = RCC_COMM_FAILURE;
+                           // Connection is broken or timed out
+                           dwRetCode = RCC_TIMEOUT;
                         }
+                     }
+                     else
+                     {
+                        dwRetCode = RCC_COMM_FAILURE;
                      }
                   }
                }

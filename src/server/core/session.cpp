@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.265 2007-03-01 23:29:05 victor Exp $ */
+/* $Id: session.cpp,v 1.266 2007-03-04 23:59:08 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1158,10 +1158,13 @@ void ClientSession::SendServerInfo(DWORD dwRqId)
 void ClientSession::Login(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   //BYTE szPassword[SHA1_DIGEST_SIZE];
-   char szLogin[MAX_USER_NAME], szPassword[MAX_DB_STRING], szBuffer[32];
+   TCHAR szLogin[MAX_USER_NAME], szPassword[MAX_DB_STRING], szBuffer[32];
+	int nAuthType;
    BOOL bChangePasswd;
    DWORD dwResult;
+#ifdef _WITH_ENCRYPTION
+	X509 *pCert;
+#endif
 
    // Prepare response message
    msg.SetCode(CMD_LOGIN_RESP);
@@ -1181,13 +1184,41 @@ void ClientSession::Login(CSCPMessage *pRequest)
 
    if (!(m_dwFlags & CSF_AUTHENTICATED))
    {
-      
       pRequest->GetVariableStr(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
-      pRequest->GetVariableStr(VID_PASSWORD, szPassword, MAX_DB_STRING);
-      //pRequest->GetVariableBinary(VID_PASSWORD, szPassword, SHA1_DIGEST_SIZE);
+		nAuthType = (int)pRequest->GetVariableShort(VID_AUTH_TYPE);
+		switch(nAuthType)
+		{
+			case NETXMS_AUTH_TYPE_PASSWORD:
+				pRequest->GetVariableStr(VID_PASSWORD, szPassword, MAX_DB_STRING);
+				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, &m_dwUserId,
+													 &m_dwSystemAccess, &bChangePasswd);
+				break;
+			case NETXMS_AUTH_TYPE_CERTIFICATE:
+#ifdef _WITH_ENCRYPTION
+				pCert = CertificateFromLoginMessage(pRequest);
+				if (pCert != NULL)
+				{
+					BYTE signature[256];
+					DWORD dwSigLen;
 
-      dwResult = AuthenticateUser(szLogin, szPassword, &m_dwUserId,
-                                  &m_dwSystemAccess, &bChangePasswd);
+					dwSigLen = pRequest->GetVariableBinary(VID_SIGNATURE, signature, 256);
+					dwResult = AuthenticateUser(szLogin, (TCHAR *)signature, dwSigLen, pCert,
+														 &m_dwUserId, &m_dwSystemAccess, &bChangePasswd);
+					X509_free(pCert);
+				}
+				else
+				{
+					dwResult = RCC_BAD_CERTIFICATE;
+				}
+#else
+				dwResult = RCC_NOT_IMPLEMENTED;
+#endif
+				break;
+			default:
+				dwResult = RCC_UNSUPPORTED_AUTH_TYPE;
+				break;
+		}
+
       if (dwResult == RCC_SUCCESS)
       {
          m_dwFlags |= CSF_AUTHENTICATED;

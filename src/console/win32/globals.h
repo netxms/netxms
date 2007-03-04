@@ -264,7 +264,7 @@ public:
 // Communication functions
 //
 
-DWORD DoLogin(BOOL bClearCache);
+DWORD DoLogin(BOOL bClearCache, const CERT_CONTEXT *pCert);
 DWORD DoRequest(DWORD (* pFunc)(void), TCHAR *pszInfoText);
 DWORD DoRequestArg1(void *pFunc, void *pArg1, TCHAR *pszInfoText);
 DWORD DoRequestArg2(void *pFunc, void *pArg1, void *pArg2, TCHAR *pszInfoText);
@@ -373,6 +373,7 @@ extern DWORD g_dwMaxLogRecords;
 extern TCHAR g_szServer[];
 extern TCHAR g_szLogin[];
 extern TCHAR g_szPassword[];
+extern int g_nAuthType;
 extern TCHAR g_szUpgradeURL[];
 extern TCHAR g_szWorkDir[];
 extern TCHAR *g_szStatusText[];

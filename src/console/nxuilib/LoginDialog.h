@@ -11,6 +11,13 @@
 #define LOGIN_DLG_NO_ENCRYPTION     0x0002
 
 #define MAX_LOGINDLG_HISTORY_SIZE	16
+#define MAX_CERT_NAME					512
+
+struct LOGIN_CERTIFICATE
+{
+	const CERT_CONTEXT *pCert;
+	TCHAR szName[MAX_CERT_NAME];
+};
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -20,6 +27,8 @@ class NXUILIB_EXPORTABLE CLoginDialog : public CDialog
 {
 // Construction
 public:
+	LOGIN_CERTIFICATE *m_pCertList;
+	DWORD m_dwNumCerts;
 	DWORD m_dwFlags;
 	CLoginDialog(CWnd* pParent = NULL);   // standard constructor
    virtual ~CLoginDialog();
@@ -27,6 +36,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CLoginDialog)
 	enum { IDD = IDD_LOGIN };
+	CComboBox	m_wndComboCerts;
 	CComboBox	m_wndComboServer;
 	BOOL	m_bClearCache;
 	BOOL	m_bMatchVersion;
@@ -35,6 +45,8 @@ public:
 	CString	m_strServer;
 	CString	m_strLogin;
 	CString	m_strPassword;
+	int		m_nAuthType;
+	int		m_nCertificateIndex;
 	//}}AFX_DATA
 
 
@@ -59,6 +71,8 @@ protected:
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnCheckNocache();
 	virtual void OnOK();
+	afx_msg void OnRadioCert();
+	afx_msg void OnRadioPassword();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

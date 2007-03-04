@@ -27,6 +27,10 @@
 #include <nms_threads.h>
 #include <nms_util.h>
 
+#ifdef _WIN32
+#include <wincrypt.h>
+#endif
+
 
 //
 // Temporary buffer structure for RecvCSCPMessage() function
@@ -200,6 +204,11 @@ DWORD LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg,
 void LIBNETXMS_EXPORTABLE DestroyEncryptionContext(CSCP_ENCRYPTION_CONTEXT *pCtx);
 void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(CSCPMessage *pMsg, RSA *pServerKey);
 RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(TCHAR *pszKeyFile);
+
+#ifdef _WIN32
+BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, DWORD dwMsgLen, const CERT_CONTEXT *pCert,
+												          BYTE *pBuffer, DWORD dwBufSize, DWORD *pdwSigLen);
+#endif
 
 #ifdef __cplusplus
 }

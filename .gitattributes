@@ -1187,6 +1187,7 @@ src/server/core/actions.cpp -text
 src/server/core/admin.cpp -text
 src/server/core/agent.cpp -text
 src/server/core/alarm.cpp -text
+src/server/core/cert.cpp -text
 src/server/core/client.cpp -text
 src/server/core/cluster.cpp -text
 src/server/core/condition.cpp -text

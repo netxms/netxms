@@ -839,8 +839,14 @@ void Template::ValidateSystemTemplate(void)
 	{
 		DCI_CFG dciCfgSNMP[] =
 		{
+			{ _T("@system.cpu_usage.cisco"), _T(".1.3.6.1.4.1.9.9.109.1.1.1.1.7.0"),
+			  60, 1, DCI_DT_INT, DS_SNMP_AGENT, 0 },		// Cisco devices
 			{ _T("@system.cpu_usage.passport"), _T(".1.3.6.1.4.1.2272.1.1.20.0"),
 			  60, 1, DCI_DT_INT, DS_SNMP_AGENT, 0 },		// Nortel Passport switches
+			{ _T("@system.cpu_usage.netscreen"), _T(".1.3.6.1.4.1.3224.16.1.2.0"),
+			  60, 1, DCI_DT_INT, DS_SNMP_AGENT, 0 },		// Netscreen devices
+			{ _T("@system.cpu_usage.ipso"), _T(".1.3.6.1.4.1.94.1.21.1.7.1.0"),
+			  60, 1, DCI_DT_INT, DS_SNMP_AGENT, 0 },		// Nokia IPSO
 			{ NULL, NULL, 0, 0, 0, 0 }
 		};
 

@@ -318,10 +318,11 @@ void SaveUsers(DB_HANDLE hdb)
 // Authenticate user
 // Checks if provided login name and password are correct, and returns RCC_SUCCESS
 // on success and appropriate RCC otherwise. On success authentication, user's ID is stored
-// int pdwId.
+// int pdwId. If password authentication is used, dwSigLen should be set to zero.
 //
 
-DWORD AuthenticateUser(char *szName, char *szPassword, DWORD *pdwId,
+DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
+							  DWORD dwSigLen, void *pCert, DWORD *pdwId,
                        DWORD *pdwSystemRights, BOOL *pbChangePasswd)
 {
    DWORD i, j;
@@ -332,21 +333,41 @@ DWORD AuthenticateUser(char *szName, char *szPassword, DWORD *pdwId,
    MutexLock(m_hMutexUserAccess, INFINITE);
    for(i = 0; i < g_dwNumUsers; i++)
    {
-      if ((!strcmp(szName, g_pUserList[i].szName)) &&
+      if ((!strcmp(pszName, g_pUserList[i].szName)) &&
           (!(g_pUserList[i].wFlags & UF_DELETED)))
       {
          switch(g_pUserList[i].nAuthMethod)
          {
             case AUTH_NETXMS_PASSWORD:
-               CalculateSHA1Hash((BYTE *)szPassword, strlen(szPassword), hash);
-               bPasswordValid = !memcmp(hash, g_pUserList[i].szPassword, SHA1_DIGEST_SIZE);
+					if (dwSigLen == 0)
+					{
+						CalculateSHA1Hash((BYTE *)pszPassword, strlen(pszPassword), hash);
+						bPasswordValid = !memcmp(hash, g_pUserList[i].szPassword, SHA1_DIGEST_SIZE);
+					}
+					else
+					{
+						// We got certificate instead of password
+						bPasswordValid = FALSE;
+					}
                break;
             case AUTH_RADIUS:
-               bPasswordValid = (RadiusAuth(szName, szPassword) == 0);
+					if (dwSigLen == 0)
+					{
+	               bPasswordValid = (RadiusAuth(pszName, pszPassword) == 0);
+					}
+					else
+					{
+						// We got certificate instead of password
+						bPasswordValid = FALSE;
+					}
                break;
+				case AUTH_CERTIFICATE:
+printf("CERTIFICATE FOR %s: \"%s\"\n", pszName, ((X509 *)pCert)->name);
+					bPasswordValid = FALSE;
+					break;
             default:
                WriteLog(MSG_UNKNOWN_AUTH_METHOD, EVENTLOG_WARNING_TYPE, "ds",
-                        g_pUserList[i].nAuthMethod, szName);
+                        g_pUserList[i].nAuthMethod, pszName);
                bPasswordValid = FALSE;
                break;
          }

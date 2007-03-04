@@ -874,6 +874,7 @@ void CConsoleApp::OnConnectToServer()
       dlgLogin.m_bClearCache = (g_dwOptions & OPT_CLEAR_OBJECT_CACHE) ? TRUE : FALSE;
    }
    dlgLogin.m_bMatchVersion = (g_dwOptions & OPT_MATCH_SERVER_VERSION) ? TRUE : FALSE;
+	dlgLogin.m_nAuthType = g_nAuthType;
    do
    {
       if (dlgLogin.DoModal() != IDOK)
@@ -884,6 +885,7 @@ void CConsoleApp::OnConnectToServer()
       _tcscpy(g_szServer, (LPCTSTR)dlgLogin.m_strServer);
       _tcscpy(g_szLogin, (LPCTSTR)dlgLogin.m_strLogin);
       _tcscpy(g_szPassword, (LPCTSTR)dlgLogin.m_strPassword);
+		g_nAuthType = dlgLogin.m_nAuthType;
       if (dlgLogin.m_bEncrypt)
          g_dwOptions |= OPT_ENCRYPT_CONNECTION;
       else
@@ -906,7 +908,8 @@ void CConsoleApp::OnConnectToServer()
       WriteProfileString(_T("Connection"), _T("Login"), g_szLogin);
 
       // Initiate connection
-      dwResult = DoLogin(dlgLogin.m_bClearCache);
+      dwResult = DoLogin(dlgLogin.m_bClearCache,
+			(g_nAuthType == NETXMS_AUTH_TYPE_CERTIFICATE) ? dlgLogin.m_pCertList[dlgLogin.m_nCertificateIndex].pCert : NULL);
       if (dwResult == RCC_SUCCESS)
       {
          if (NXCIsDBConnLost(g_hSession))

@@ -12,6 +12,16 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 
+//
+// Compare certificate names
+//
+
+static int CompareCertificates(const void *p1, const void *p2)
+{
+	return _tcsicmp(((LOGIN_CERTIFICATE *)p1)->szName, ((LOGIN_CERTIFICATE *)p2)->szName);
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CLoginDialog dialog
 
@@ -20,6 +30,8 @@ CLoginDialog::CLoginDialog(CWnd* pParent /*=NULL*/)
 	: CDialog(CLoginDialog::IDD, pParent)
 {
    LOGBRUSH lb;
+	HCERTSTORE hStore;
+	const CERT_CONTEXT *pCert = NULL;
 
 	//{{AFX_DATA_INIT(CLoginDialog)
 	m_bClearCache = FALSE;
@@ -29,6 +41,8 @@ CLoginDialog::CLoginDialog(CWnd* pParent /*=NULL*/)
 	m_strServer = _T("");
 	m_strLogin = _T("");
 	m_strPassword = _T("");
+	m_nAuthType = -1;
+	m_nCertificateIndex = -1;
 	//}}AFX_DATA_INIT
 
    lb.lbColor = 0;
@@ -38,15 +52,41 @@ CLoginDialog::CLoginDialog(CWnd* pParent /*=NULL*/)
 
    m_dwFlags = 0;
 	memset(m_pszServerHistory, 0, sizeof(TCHAR *) * MAX_LOGINDLG_HISTORY_SIZE);
+
+	// Fill certificate list
+	m_pCertList = NULL;
+	m_dwNumCerts = 0;
+	hStore = CertOpenSystemStore(NULL, _T("MY"));
+	if (hStore != NULL)
+	{
+		// Create certificate list
+		while((pCert = CertEnumCertificatesInStore(hStore, pCert)) != NULL)
+		{
+			m_pCertList = (LOGIN_CERTIFICATE *)realloc(m_pCertList, sizeof(LOGIN_CERTIFICATE) * (m_dwNumCerts + 1));
+			CertGetNameString(pCert, CERT_NAME_FRIENDLY_DISPLAY_TYPE, 0,
+									NULL, m_pCertList[m_dwNumCerts].szName, MAX_CERT_NAME);
+			m_pCertList[m_dwNumCerts].pCert = CertDuplicateCertificateContext(pCert);
+			m_dwNumCerts++;
+		}
+		CertCloseStore(hStore, 0);
+
+		// Sort certificates by name and fill combo box
+		if (m_dwNumCerts > 0)
+			qsort(m_pCertList, m_dwNumCerts, sizeof(LOGIN_CERTIFICATE), CompareCertificates);
+	}
 }
 
 CLoginDialog::~CLoginDialog()
 {
-	int i;
+	DWORD i;
 
 	for(i = 0; i < MAX_LOGINDLG_HISTORY_SIZE; i++)
 		safe_free(m_pszServerHistory[i]);
    DeleteObject(m_hNullBrush);
+
+	for(i = 0; i < m_dwNumCerts; i++)
+		CertFreeCertificateContext(m_pCertList[i].pCert);
+	safe_free(m_pCertList);
 }
 
 
@@ -54,6 +94,7 @@ void CLoginDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CLoginDialog)
+	DDX_Control(pDX, IDC_COMBO_CERTS, m_wndComboCerts);
 	DDX_Control(pDX, IDC_COMBO_SERVER, m_wndComboServer);
 	DDX_Check(pDX, IDC_CHECK_CACHE, m_bClearCache);
 	DDX_Check(pDX, IDC_CHECK_VERSION_MATCH, m_bMatchVersion);
@@ -65,6 +106,8 @@ void CLoginDialog::DoDataExchange(CDataExchange* pDX)
 	DDV_MaxChars(pDX, m_strLogin, 63);
 	DDX_Text(pDX, IDC_EDIT_PASSWORD, m_strPassword);
 	DDV_MaxChars(pDX, m_strPassword, 63);
+	DDX_Radio(pDX, IDC_RADIO_PASSWORD, m_nAuthType);
+	DDX_CBIndex(pDX, IDC_COMBO_CERTS, m_nCertificateIndex);
 	//}}AFX_DATA_MAP
 }
 
@@ -73,6 +116,8 @@ BEGIN_MESSAGE_MAP(CLoginDialog, CDialog)
 	//{{AFX_MSG_MAP(CLoginDialog)
 	ON_WM_CTLCOLOR()
 	ON_BN_CLICKED(IDC_CHECK_NOCACHE, OnCheckNocache)
+	ON_BN_CLICKED(IDC_RADIO_CERT, OnRadioCert)
+	ON_BN_CLICKED(IDC_RADIO_PASSWORD, OnRadioPassword)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -86,6 +131,8 @@ END_MESSAGE_MAP()
 
 BOOL CLoginDialog::OnInitDialog() 
 {
+	DWORD i;
+
 	CDialog::OnInitDialog();
 
    if (m_font.m_hObject == NULL)
@@ -110,13 +157,27 @@ BOOL CLoginDialog::OnInitDialog()
       EnableDlgItem(this, IDC_CHECK_CACHE, FALSE);
    }
 
+	if (m_nAuthType == NETXMS_AUTH_TYPE_CERTIFICATE)
+	{
+		::ShowWindow(::GetDlgItem(m_hWnd, IDC_EDIT_PASSWORD), SW_HIDE);
+		SetDlgItemText(IDC_STATIC_PASSWORD, _T("Certificate:"));
+	}
+	else
+	{
+		m_wndComboCerts.ShowWindow(SW_HIDE);
+	}
+
+	// Fill certificate list
+	for(i = 0; i < m_dwNumCerts; i++)
+		m_wndComboCerts.AddString(m_pCertList[i].szName);
+
 	LoadServerHistory();
 	
    if (m_strLogin.IsEmpty() || m_strServer.IsEmpty())
 		return TRUE;
 
    // Server and login already entered, change focus to password field
-   ::SetFocus(::GetDlgItem(m_hWnd, IDC_EDIT_PASSWORD));
+   ::SetFocus(::GetDlgItem(m_hWnd, (m_nAuthType == NETXMS_AUTH_TYPE_CERTIFICATE) ? IDC_COMBO_CERTS : IDC_EDIT_PASSWORD));
    return FALSE;
 }
 
@@ -186,7 +247,12 @@ void CLoginDialog::LoadServerHistory()
 		if (RegQueryValueEx(hKey, szBuffer, NULL, NULL, (BYTE *)szData, &dwSize) == ERROR_SUCCESS)
 		{
 			m_wndComboServer.AddString(szData);
+			safe_free(m_pszServerHistory[i]);
 			m_pszServerHistory[i] = _tcsdup(szData);
+		}
+		else
+		{
+			safe_free_and_null(m_pszServerHistory[i]);
 		}
 	}
 
@@ -229,17 +295,28 @@ void CLoginDialog::SaveServerHistory()
 
 void CLoginDialog::OnOK() 
 {
-	TCHAR szServer[256];
+	TCHAR szBuffer[1024];
 	int i;
 
-	m_wndComboServer.GetWindowText(szServer, 256);
-	StrStrip(szServer);
+	// Check if certificate is selected
+	if (m_nAuthType == NETXMS_AUTH_TYPE_CERTIFICATE)
+	{
+		m_wndComboCerts.GetWindowText(szBuffer, 1024);
+		if (szBuffer[0] == 0)
+		{
+			MessageBox(_T("You must select certificate from the list!"), _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
+			return;
+		}
+	}
+
+	m_wndComboServer.GetWindowText(szBuffer, 256);
+	StrStrip(szBuffer);
 	for(i = 0; i < MAX_LOGINDLG_HISTORY_SIZE; i++)
 		if (m_pszServerHistory[i] != NULL)
-			if (!_tcsicmp(szServer, m_pszServerHistory[i]))
+			if (!_tcsicmp(szBuffer, m_pszServerHistory[i]))
 			{
 				free(m_pszServerHistory[i]);
-				m_pszServerHistory[i] = _tcsdup(szServer);
+				m_pszServerHistory[i] = _tcsdup(szBuffer);
 				break;
 			}
 	if (i == MAX_LOGINDLG_HISTORY_SIZE)
@@ -248,7 +325,7 @@ void CLoginDialog::OnOK()
 		for(i = 0; i < MAX_LOGINDLG_HISTORY_SIZE; i++)
 			if (m_pszServerHistory[i] == NULL)
 			{
-				m_pszServerHistory[i] = _tcsdup(szServer);
+				m_pszServerHistory[i] = _tcsdup(szBuffer);
 				break;
 			}
 
@@ -257,10 +334,36 @@ void CLoginDialog::OnOK()
 			// No room for new entry
 			free(m_pszServerHistory[0]);
 			memmove(&m_pszServerHistory[0], &m_pszServerHistory[1], sizeof(TCHAR *) * (MAX_LOGINDLG_HISTORY_SIZE - 1));
-			m_pszServerHistory[MAX_LOGINDLG_HISTORY_SIZE - 1] = _tcsdup(szServer);
+			m_pszServerHistory[MAX_LOGINDLG_HISTORY_SIZE - 1] = _tcsdup(szBuffer);
 		}
 	}
 	SaveServerHistory();
 
 	CDialog::OnOK();
+}
+
+
+//
+// Switch to certificate authentication
+//
+
+void CLoginDialog::OnRadioCert() 
+{
+	::ShowWindow(::GetDlgItem(m_hWnd, IDC_EDIT_PASSWORD), SW_HIDE);
+	SetDlgItemText(IDC_STATIC_PASSWORD, _T("Certificate:"));
+	m_wndComboCerts.ShowWindow(SW_SHOW);
+	m_nAuthType = NETXMS_AUTH_TYPE_CERTIFICATE;
+}
+
+
+//
+// Switch to password authentication
+//
+
+void CLoginDialog::OnRadioPassword() 
+{
+	m_wndComboCerts.ShowWindow(SW_HIDE);
+	SetDlgItemText(IDC_STATIC_PASSWORD, _T("Password:"));
+	::ShowWindow(::GetDlgItem(m_hWnd, IDC_EDIT_PASSWORD), SW_SHOW);
+	m_nAuthType = NETXMS_AUTH_TYPE_PASSWORD;
 }

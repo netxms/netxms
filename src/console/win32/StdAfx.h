@@ -27,6 +27,7 @@
 #include <afxhtml.h>
 
 #include <wininet.h>
+#include <wincrypt.h>
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

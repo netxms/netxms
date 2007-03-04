@@ -641,6 +641,10 @@ void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_LOG_RECORD *pRec);
 
 void EscapeString(String &str);
 
+#ifdef _WITH_ENCRYPTION
+X509 *CertificateFromLoginMessage(CSCPMessage *pMsg);
+#endif
+
 #ifdef _WIN32
 
 char NXCORE_EXPORTABLE *GetSystemErrorText(DWORD error);

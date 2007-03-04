@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: main.cpp
+** File: main.cpp
 **
 **/
 
@@ -279,9 +279,12 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("DCI data source is not a push agent"),
       _T("Error parsing management pack file"),
       _T("Management pack validation error"),
-		_T("Invalid graph ID")
+		_T("Invalid graph ID"),
+		_T("Local cryptographic provider failure"),
+		_T("Unsupported authentication type"),
+		_T("Bad certificate")
    };
-   return ((dwError >= 0) && (dwError <= RCC_INVALID_GRAPH_ID)) ? pszErrorText[dwError] : _T("No text message for this error");
+   return ((dwError >= 0) && (dwError <= RCC_BAD_CERTIFICATE)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

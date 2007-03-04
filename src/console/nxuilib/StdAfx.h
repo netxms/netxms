@@ -39,6 +39,7 @@
 
 #include <comdef.h>
 #include <mmsystem.h>
+#include <wincrypt.h>
 
 
 //{{AFX_INSERT_LOCATION}}

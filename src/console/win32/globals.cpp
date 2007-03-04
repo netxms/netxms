@@ -57,6 +57,7 @@ HANDLE g_mutexGraphListAccess = INVALID_HANDLE_VALUE;
 TCHAR g_szServer[MAX_SERVER_NAME_LEN] = _T("localhost");
 TCHAR g_szLogin[MAX_LOGIN_NAME_LEN] = _T("");
 TCHAR g_szPassword[MAX_PASSWORD_LEN] = _T("");
+int g_nAuthType = NETXMS_AUTH_TYPE_PASSWORD;
 
 
 //
@@ -198,7 +199,7 @@ TCHAR *g_szInterfaceTypes[] =
    _T("IEEE 802.12"),
    _T("FibreChannel")
 };
-TCHAR *g_szAuthMethod[] = { _T("NetXMS Password"), _T("RADIUS"), _T("RSA SecureID"), NULL };
+TCHAR *g_szAuthMethod[] = { _T("NetXMS Password"), _T("RADIUS"), _T("Certificate"), NULL };
 TCHAR *g_szGraphType[] = { _T("Line"), _T("Area"), _T("Stacked"), NULL };
 
 

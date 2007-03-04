@@ -720,6 +720,9 @@ typedef struct
 #define VID_GRAPH_CONFIG				((DWORD)272)
 #define VID_NUM_GRAPHS					((DWORD)273)
 #define VID_GRAPH_ID						((DWORD)274)
+#define VID_AUTH_TYPE					((DWORD)275)
+#define VID_CERTIFICATE					((DWORD)276)
+#define VID_SIGNATURE					((DWORD)277)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

@@ -55,7 +55,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 libnetxms.lib libnxcl.lib sapi.lib winmm.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcl\Release"
+# ADD LINK32 libnetxms.lib libnxcl.lib sapi.lib winmm.lib crypt32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcl\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -86,7 +86,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libnetxms.lib libnxcl.lib sapi.lib winmm.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcl\Debug"
+# ADD LINK32 libnetxms.lib libnxcl.lib sapi.lib winmm.lib crypt32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcl\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -118,7 +118,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 libnetxms.lib libnxcl.lib sapi.lib winmm.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\..\libnetxms\Debug" /libpath:"..\..\libnxcl\Debug"
-# ADD LINK32 libnetxmsw.lib libnxclw.lib sapi.lib winmm.lib /nologo /subsystem:windows /dll /debug /machine:I386 /def:".\nxuilibw.def" /out:"Debug_UNICODE/nxuilibw.dll" /pdbtype:sept /libpath:"..\..\libnetxms\Debug_UNICODE" /libpath:"..\..\libnxcl\Debug_UNICODE"
+# ADD LINK32 libnetxmsw.lib libnxclw.lib sapi.lib winmm.lib crypt32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /def:".\nxuilibw.def" /out:"Debug_UNICODE/nxuilibw.dll" /pdbtype:sept /libpath:"..\..\libnetxms\Debug_UNICODE" /libpath:"..\..\libnxcl\Debug_UNICODE"
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
@@ -151,7 +151,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 libnetxms.lib libnxcl.lib sapi.lib winmm.lib /nologo /subsystem:windows /dll /machine:I386 /libpath:"..\..\libnetxms\Release" /libpath:"..\..\libnxcl\Release"
-# ADD LINK32 libnetxmsw.lib libnxclw.lib sapi.lib winmm.lib /nologo /subsystem:windows /dll /debug /machine:I386 /def:".\nxuilibw.def" /out:"Release_UNICODE/nxuilibw.dll" /pdbtype:sept /libpath:"..\..\libnetxms\Release_UNICODE" /libpath:"..\..\libnxcl\Release_UNICODE"
+# ADD LINK32 libnetxmsw.lib libnxclw.lib sapi.lib winmm.lib crypt32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /def:".\nxuilibw.def" /out:"Release_UNICODE/nxuilibw.dll" /pdbtype:sept /libpath:"..\..\libnetxms\Release_UNICODE" /libpath:"..\..\libnxcl\Release_UNICODE"
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"

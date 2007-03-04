@@ -498,3 +498,44 @@ RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(TCHAR *pszKeyFile)
    return NULL;
 #endif
 }
+
+
+//
+// Create signature for message using certificate (MS CAPI version)
+// Paraeters:
+//    pMsg and dwMsgLen - message to sign and it's length
+//    pCert - certificate
+//    pBuffer - output buffer
+//    dwBufSize - buffer size
+//    pdwSigLen - actual signature size
+//
+
+#ifdef _WIN32
+
+BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, DWORD dwMsgLen, const CERT_CONTEXT *pCert,
+												          BYTE *pBuffer, DWORD dwBufSize, DWORD *pdwSigLen)
+{
+	BOOL bFreeProv, bRet = FALSE;
+	DWORD dwKeySpec;
+	HCRYPTPROV hProv;
+	HCRYPTHASH hHash;
+
+	if (CryptAcquireCertificatePrivateKey(pCert, CRYPT_ACQUIRE_COMPARE_KEY_FLAG,
+		                                   NULL, &hProv, &dwKeySpec, &bFreeProv))
+	{
+		if (CryptCreateHash(hProv, CALG_SHA1, NULL, 0, &hHash))
+		{
+			if (CryptHashData(hHash, pMsg, dwMsgLen, 0))
+			{
+				*pdwSigLen = dwBufSize;
+				bRet = CryptSignHash(hHash, dwKeySpec, NULL, 0, pBuffer, pdwSigLen);
+			}
+		}
+
+		if (bFreeProv)
+			CryptReleaseContext(hProv, 0);
+	}
+	return bRet;
+}
+
+#endif

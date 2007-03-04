@@ -47,6 +47,7 @@ TCHAR g_szUpgradeURL[1024] = _T("");
 //
 
 static BOOL m_bClearCache = FALSE;
+static const CERT_CONTEXT *m_pCert = NULL;
 static TCHAR m_szErrorText[MAX_ERROR_TEXT];
 static HANDLE m_hLocalFile = INVALID_HANDLE_VALUE;
 
@@ -149,14 +150,39 @@ DWORD LoadObjectTools(void)
 static DWORD WINAPI LoginThread(void *pArg)
 {
    HWND hWnd = *((HWND *)pArg);    // Handle to status window
-   DWORD i, dwResult;
-	TCHAR *pszUpgradeURL;
+   DWORD i, dwResult, dwFlags, dwSigLen;
+	TCHAR *pszUpgradeURL = NULL;
+	BYTE signature[256];
 
-   dwResult = NXCConnect(g_szServer, g_szLogin, g_szPassword, &g_hSession,
-                         _T("NetXMS Console/") NETXMS_VERSION_STRING,
-                         (g_dwOptions & OPT_MATCH_SERVER_VERSION) ? TRUE : FALSE,
-                         (g_dwOptions & OPT_ENCRYPT_CONNECTION) ? TRUE : FALSE,
-								 &pszUpgradeURL);
+	dwFlags = 0;
+	if (g_dwOptions & OPT_MATCH_SERVER_VERSION)
+		dwFlags |= NXCF_EXACT_VERSION_MATCH;
+	if (g_dwOptions & OPT_ENCRYPT_CONNECTION)
+		dwFlags |= NXCF_ENCRYPT;
+	if (g_nAuthType == NETXMS_AUTH_TYPE_CERTIFICATE)		// Use certificate authentication
+	{
+		BYTE msg[256];
+
+		dwFlags |= NXCF_USE_CERTIFICATE;
+#ifdef UNICODE
+		WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, g_szLogin, -1, (char *)msg, 256, NULL, NULL);
+#else
+		strncpy(msg, g_szLogin, 256);
+#endif
+		dwResult = SignMessageWithCAPI(msg, _tcslen(g_szLogin), m_pCert, signature, 256, &dwSigLen) ? RCC_SUCCESS : RCC_LOCAL_CRYPTO_ERROR;
+	}
+	else
+	{
+		m_pCert = NULL;
+		dwResult = RCC_SUCCESS;
+	}
+
+	if (dwResult == RCC_SUCCESS)
+		dwResult = NXCConnect(dwFlags, g_szServer, g_szLogin,
+									 (m_pCert != NULL) ? (TCHAR *)m_pCert->pbCertEncoded : g_szPassword,
+									 (m_pCert != NULL) ? m_pCert->cbCertEncoded : 0,
+									 signature, dwSigLen, &g_hSession,
+									 _T("NetXMS Console/") NETXMS_VERSION_STRING, &pszUpgradeURL);
 
    if (dwResult == RCC_SUCCESS)
    {
@@ -381,13 +407,14 @@ static DWORD WINAPI LoginThreadStarter(void *pArg)
 // Perform login
 //
 
-DWORD DoLogin(BOOL bClearCache)
+DWORD DoLogin(BOOL bClearCache, const CERT_CONTEXT *pCert)
 {
    HANDLE hThread;
    HWND hWnd = NULL;
    DWORD dwThreadId, dwResult;
 
    m_bClearCache = bClearCache;
+	m_pCert = pCert;
    hThread = CreateThread(NULL, 0, LoginThreadStarter, &hWnd, CREATE_SUSPENDED, &dwThreadId);
    if (hThread != NULL)
    {
