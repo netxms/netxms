@@ -362,8 +362,19 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
 					}
                break;
 				case AUTH_CERTIFICATE:
-printf("CERTIFICATE FOR %s: \"%s\"\n", pszName, ((X509 *)pCert)->name);
-					bPasswordValid = FALSE;
+					if ((dwSigLen != 0) && (pCert != NULL))
+					{
+#ifdef _WITH_ENCRYPTION
+						bPasswordValid = ValidateUserCertificate((X509 *)pCert, pszName, (BYTE *)pszPassword, dwSigLen);
+#else
+						bPasswordValid = FALSE;
+#endif
+					}
+					else
+					{
+						// We got password instead of certificate
+						bPasswordValid = FALSE;
+					}
 					break;
             default:
                WriteLog(MSG_UNKNOWN_AUTH_METHOD, EVENTLOG_WARNING_TYPE, "ds",

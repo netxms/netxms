@@ -48,4 +48,16 @@ X509 *CertificateFromLoginMessage(CSCPMessage *pMsg)
 }
 
 
-#endif
+//
+// Validate user's certificate
+//
+
+BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pSignature, DWORD dwSigLen)
+{
+	DbgPrintf(AF_DEBUG_MISC, "Validating certificate \"%s\" for user %s", CHECK_NULL(pCert->name), pszLogin);
+
+	return FALSE;
+}
+
+
+#endif	/* _WITH_ENCRYPTION */

@@ -643,6 +643,7 @@ void EscapeString(String &str);
 
 #ifdef _WITH_ENCRYPTION
 X509 *CertificateFromLoginMessage(CSCPMessage *pMsg);
+BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pSignature, DWORD dwSigLen);
 #endif
 
 #ifdef _WIN32
