@@ -171,15 +171,7 @@ static DWORD WINAPI LoginThread(void *pArg)
 		dwFlags |= NXCF_ENCRYPT;
 	if (g_nAuthType == NETXMS_AUTH_TYPE_CERTIFICATE)		// Use certificate authentication
 	{
-		BYTE msg[256];
-
 		dwFlags |= NXCF_USE_CERTIFICATE;
-#ifdef UNICODE
-		WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, g_szLogin, -1, (char *)msg, 256, NULL, NULL);
-#else
-		strncpy(msg, g_szLogin, 256);
-#endif
-		dwResult = SignMessageWithCAPI(msg, _tcslen(g_szLogin), m_pCert, signature, 256, &dwSigLen) ? RCC_SUCCESS : RCC_LOCAL_CRYPTO_ERROR;
 	}
 	else
 	{

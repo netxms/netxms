@@ -118,7 +118,8 @@ void CObjectOverview::OnPaint()
       dwImageIndex = GetObjectImageIndex(m_pObject);
       g_pObjectNormalImageList->Draw(&dc, dwImageIndex, CPoint(X_MARGIN, Y_MARGIN), ILD_TRANSPARENT);
       dc.SelectObject(&m_fontNormal);
-      dc.SetBkColor(RGB(255, 255, 255));
+      dc.SetBkColor(GetSysColor(COLOR_WINDOW));
+		dc.SetTextColor(GetSysColor(COLOR_WINDOWTEXT));
       GetClientRect(&rect);
       h = rect.bottom;
       rect.left = X_MARGIN + 37;
@@ -149,7 +150,8 @@ void CObjectOverview::OnPaint()
    else
    {
       dc.SelectObject(m_fontNormal);
-      dc.SetBkColor(RGB(255, 255, 255));
+      dc.SetBkColor(GetSysColor(COLOR_WINDOW));
+		dc.SetTextColor(GetSysColor(COLOR_WINDOWTEXT));
       dc.TextOut(X_MARGIN, Y_MARGIN, _T("No object selected"), 18);
    }
 }

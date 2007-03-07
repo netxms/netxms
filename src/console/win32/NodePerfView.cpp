@@ -181,6 +181,8 @@ void CNodePerfView::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
 	
+	dc.SetBkColor(GetSysColor(COLOR_WINDOW));
+	dc.SetTextColor(GetSysColor(COLOR_WINDOWTEXT));
 	switch(m_nState)
 	{
 		case STATE_LOADING:
@@ -234,6 +236,8 @@ BOOL CNodePerfView::CreateGraph(NXC_SYSTEM_DCI *pItemList, DWORD dwNumItems,
 			m_pGraphList[m_dwNumGraphs].pWnd->m_bShowTitle = TRUE;
 			m_pGraphList[m_dwNumGraphs].pWnd->SetTitle(pszTitle);
 			m_pGraphList[m_dwNumGraphs].pWnd->SetColorScheme(GCS_LIGHT);
+			m_pGraphList[m_dwNumGraphs].pWnd->m_rgbBkColor = GetSysColor(COLOR_WINDOW);
+			m_pGraphList[m_dwNumGraphs].pWnd->m_rgbTextColor = GetSysColor(COLOR_WINDOWTEXT);
 			m_pGraphList[m_dwNumGraphs].pWnd->m_graphItemStyles[0].nType = bArea ? GRAPH_TYPE_AREA : GRAPH_TYPE_LINE;
 			m_pGraphList[m_dwNumGraphs].pWnd->Create(WS_CHILD | WS_VISIBLE, rect, this, m_dwNumGraphs);
 			m_dwNumGraphs++;

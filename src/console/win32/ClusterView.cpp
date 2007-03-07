@@ -124,6 +124,9 @@ void CClusterView::OnPaint()
 	if (m_pObject == NULL)
 		return;
 
+	dc.SetBkColor(GetSysColor(COLOR_WINDOW));
+	dc.SetTextAlign(GetSysColor(COLOR_WINDOWTEXT));
+
 	// Draw nodes
 	pOldFont = dc.SelectObject(&m_fontNormal);
 	for(i = 0, x = CLV_LEFT_MARGIN + CLV_ICON_SPACING / 2; i < m_pObject->dwNumChilds; i++)
