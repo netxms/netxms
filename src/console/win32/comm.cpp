@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Windows Console
-** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -144,6 +144,16 @@ DWORD LoadObjectTools(void)
 
 
 //
+// Callback for signing server's challenge
+//
+
+static BOOL SignChallenge(BYTE *pChallenge, DWORD dwChLen, BYTE *pSinature, DWORD *pdwSigLen, void *pArg)
+{
+	return SignMessageWithCAPI(pChallenge, dwChLen, m_pCert, pSinature, *pdwSigLen, pdwSigLen);
+}
+
+
+//
 // Login thread
 //
 
@@ -181,7 +191,7 @@ static DWORD WINAPI LoginThread(void *pArg)
 		dwResult = NXCConnect(dwFlags, g_szServer, g_szLogin,
 									 (m_pCert != NULL) ? (TCHAR *)m_pCert->pbCertEncoded : g_szPassword,
 									 (m_pCert != NULL) ? m_pCert->cbCertEncoded : 0,
-									 signature, dwSigLen, &g_hSession,
+									 SignChallenge, NULL, &g_hSession,
 									 _T("NetXMS Console/") NETXMS_VERSION_STRING, &pszUpgradeURL);
 
    if (dwResult == RCC_SUCCESS)

@@ -125,8 +125,9 @@ void SaveUsers(DB_HANDLE hdb);
 void AddUserToGroup(DWORD dwUserId, DWORD dwGroupId);
 BOOL CheckUserMembership(DWORD dwUserId, DWORD dwGroupId);
 DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
-							  DWORD dwSigLen, void *pCert, DWORD *pdwId,
-                       DWORD *pdwSystemRights, BOOL *pbChangePasswd);
+							  DWORD dwSigLen, void *pCert, BYTE *pChallenge,
+							  DWORD *pdwId, DWORD *pdwSystemRights,
+							  BOOL *pbChangePasswd);
 void DumpUsers(CONSOLE_CTX pCtx);
 DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId);
 DWORD DeleteUserFromDB(DWORD dwId);

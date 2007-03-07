@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.266 2007-03-04 23:59:08 victor Exp $ */
+/* $Id: session.cpp,v 1.267 2007-03-07 00:18:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1133,12 +1133,16 @@ void ClientSession::SendServerInfo(DWORD dwRqId)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
+	// Generate challenge for certificate authentication
+	RAND_bytes(m_challenge, CLIENT_CHALLENGE_SIZE);
+
    // Fill message with server info
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
    msg.SetVariable(VID_SERVER_VERSION, NETXMS_VERSION_STRING);
    msg.SetVariable(VID_SERVER_ID, (BYTE *)&g_qwServerId, sizeof(QWORD));
    msg.SetVariable(VID_SUPPORTED_ENCRYPTION, (DWORD)0);
    msg.SetVariable(VID_PROTOCOL_VERSION, (DWORD)CLIENT_PROTOCOL_VERSION);
+	msg.SetVariable(VID_CHALLENGE, m_challenge, CLIENT_CHALLENGE_SIZE);
 
 	ConfigReadStr(_T("WindowsConsoleUpgradeURL"), szBuffer, 1024,
 	              _T("http://www.netxms.org/download/netxms-%version%.exe"));
@@ -1190,7 +1194,7 @@ void ClientSession::Login(CSCPMessage *pRequest)
 		{
 			case NETXMS_AUTH_TYPE_PASSWORD:
 				pRequest->GetVariableStr(VID_PASSWORD, szPassword, MAX_DB_STRING);
-				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, &m_dwUserId,
+				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
 													 &m_dwSystemAccess, &bChangePasswd);
 				break;
 			case NETXMS_AUTH_TYPE_CERTIFICATE:
@@ -1203,7 +1207,7 @@ void ClientSession::Login(CSCPMessage *pRequest)
 
 					dwSigLen = pRequest->GetVariableBinary(VID_SIGNATURE, signature, 256);
 					dwResult = AuthenticateUser(szLogin, (TCHAR *)signature, dwSigLen, pCert,
-														 &m_dwUserId, &m_dwSystemAccess, &bChangePasswd);
+														 m_challenge, &m_dwUserId, &m_dwSystemAccess, &bChangePasswd);
 					X509_free(pCert);
 				}
 				else

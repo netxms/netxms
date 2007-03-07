@@ -52,11 +52,31 @@ X509 *CertificateFromLoginMessage(CSCPMessage *pMsg)
 // Validate user's certificate
 //
 
-BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pSignature, DWORD dwSigLen)
+BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pChallenge, BYTE *pSignature, DWORD dwSigLen)
 {
+	EVP_PKEY *pKey;
+	BYTE hash[SHA1_DIGEST_SIZE];
+	BOOL bValid = FALSE;
+
 	DbgPrintf(AF_DEBUG_MISC, "Validating certificate \"%s\" for user %s", CHECK_NULL(pCert->name), pszLogin);
 
-	return FALSE;
+	// Validate signature
+	pKey = X509_get_pubkey(pCert);
+	if (pKey != NULL)
+	{
+		CalculateSHA1Hash(pChallenge, CLIENT_CHALLENGE_SIZE, hash);
+		switch(pKey->type)
+		{
+			case EVP_PKEY_RSA:
+				bValid = RSA_verify(NID_sha1, hash, SHA1_DIGEST_SIZE, pSignature, dwSigLen, pKey->pkey.rsa);
+				break;
+			default:
+				DbgPrintf(AF_DEBUG_MISC, "Unknown key type %d in certificate \"%s\" for user %s", pKey->type, CHECK_NULL(pCert->name), pszLogin);
+				break;
+		}
+	}
+
+	return bValid;
 }
 
 

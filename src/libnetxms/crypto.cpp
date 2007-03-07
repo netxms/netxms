@@ -516,9 +516,10 @@ BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, DWORD dwMsgLen, const 
 												          BYTE *pBuffer, DWORD dwBufSize, DWORD *pdwSigLen)
 {
 	BOOL bFreeProv, bRet = FALSE;
-	DWORD dwKeySpec;
+	DWORD i, j, dwLen, dwKeySpec;
 	HCRYPTPROV hProv;
 	HCRYPTHASH hHash;
+	BYTE *pTemp;
 
 	if (CryptAcquireCertificatePrivateKey(pCert, CRYPT_ACQUIRE_COMPARE_KEY_FLAG,
 		                                   NULL, &hProv, &dwKeySpec, &bFreeProv))
@@ -527,9 +528,15 @@ BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, DWORD dwMsgLen, const 
 		{
 			if (CryptHashData(hHash, pMsg, dwMsgLen, 0))
 			{
-				*pdwSigLen = dwBufSize;
-				bRet = CryptSignHash(hHash, dwKeySpec, NULL, 0, pBuffer, pdwSigLen);
+				dwLen = dwBufSize;
+				pTemp = (BYTE *)malloc(dwBufSize);;
+				bRet = CryptSignHash(hHash, dwKeySpec, NULL, 0, pTemp, &dwLen);
+				*pdwSigLen = dwLen;
+				// we have to reverse the byte-order in the result from CryptSignHash()
+				for(i = 0, j = dwLen - 1; i < dwLen; i++, j--)
+					pBuffer[i] = pTemp[j];			
 			}
+			CryptDestroyHash(hHash);
 		}
 
 		if (bFreeProv)

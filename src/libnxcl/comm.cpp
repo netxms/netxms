@@ -233,8 +233,8 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
 
 DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, TCHAR *pszServer, TCHAR *pszLogin, 
                                     TCHAR *pszPassword, DWORD dwCertLen,
-												BYTE *pSignature, DWORD dwSigLen,
-												NXC_SESSION *phSession, TCHAR *pszClientInfo,
+												BOOL (* pfSign)(BYTE *, DWORD, BYTE *, DWORD *, void *),
+												void *pSignArg, NXC_SESSION *phSession, TCHAR *pszClientInfo,
 												TCHAR **ppszUpgradeURL)
 {
    struct sockaddr_in servAddr;
@@ -243,6 +243,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, TCHAR *pszServer, TCHAR *pszL
    SOCKET hSocket;
    THREAD hThread;
    TCHAR  *pszPort, szBuffer[64], szHostName[128];
+	BYTE challenge[CLIENT_CHALLENGE_SIZE];
    WORD wPort = SERVER_LISTEN_PORT;
 
    nx_strncpy(szHostName, pszServer, 128);
@@ -317,6 +318,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, TCHAR *pszServer, TCHAR *pszL
                         dwRetCode = RCC_BAD_PROTOCOL;
 							if (ppszUpgradeURL != NULL)
 								*ppszUpgradeURL = pResp->GetVariableStr(VID_CONSOLE_UPGRADE_URL);
+							pResp->GetVariableBinary(VID_CHALLENGE, challenge, CLIENT_CHALLENGE_SIZE);
                   }
                   delete pResp;
 
@@ -345,8 +347,17 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, TCHAR *pszServer, TCHAR *pszL
                      msg.SetVariable(VID_LOGIN_NAME, pszLogin);
 							if (dwFlags & NXCF_USE_CERTIFICATE)
 							{
+								BYTE signature[256];
+								DWORD dwSigLen;
+
+								dwSigLen = 256;
+								if (!pfSign(challenge, CLIENT_CHALLENGE_SIZE, signature, &dwSigLen, pSignArg))
+								{
+									dwRetCode = RCC_LOCAL_CRYPTO_ERROR;
+									goto crypto_error;
+								}
+								msg.SetVariable(VID_SIGNATURE, signature, dwSigLen);
 								msg.SetVariable(VID_CERTIFICATE, (BYTE *)pszPassword, dwCertLen);
-								msg.SetVariable(VID_SIGNATURE, pSignature, dwSigLen);
 								msg.SetVariable(VID_AUTH_TYPE, (WORD)NETXMS_AUTH_TYPE_CERTIFICATE);
 							}
 							else
@@ -379,6 +390,8 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, TCHAR *pszServer, TCHAR *pszL
                      {
                         dwRetCode = RCC_COMM_FAILURE;
                      }
+crypto_error:
+							;
                   }
                }
                else

@@ -308,6 +308,7 @@ private:
    DWORD m_dwFlags;           // Session flags
    CSCP_BUFFER *m_pMsgBuffer;
    CSCP_ENCRYPTION_CONTEXT *m_pCtx;
+	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
    THREAD m_hWriteThread;
    THREAD m_hProcessingThread;
    THREAD m_hUpdateThread;
@@ -643,7 +644,7 @@ void EscapeString(String &str);
 
 #ifdef _WITH_ENCRYPTION
 X509 *CertificateFromLoginMessage(CSCPMessage *pMsg);
-BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pSignature, DWORD dwSigLen);
+BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pChallenge, BYTE *pSignature, DWORD dwSigLen);
 #endif
 
 #ifdef _WIN32

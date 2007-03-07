@@ -322,8 +322,9 @@ void SaveUsers(DB_HANDLE hdb)
 //
 
 DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
-							  DWORD dwSigLen, void *pCert, DWORD *pdwId,
-                       DWORD *pdwSystemRights, BOOL *pbChangePasswd)
+							  DWORD dwSigLen, void *pCert, BYTE *pChallenge,
+							  DWORD *pdwId, DWORD *pdwSystemRights,
+							  BOOL *pbChangePasswd)
 {
    DWORD i, j;
    DWORD dwResult = RCC_ACCESS_DENIED;
@@ -365,7 +366,8 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
 					if ((dwSigLen != 0) && (pCert != NULL))
 					{
 #ifdef _WITH_ENCRYPTION
-						bPasswordValid = ValidateUserCertificate((X509 *)pCert, pszName, (BYTE *)pszPassword, dwSigLen);
+						bPasswordValid = ValidateUserCertificate((X509 *)pCert, pszName, pChallenge,
+						                                         (BYTE *)pszPassword, dwSigLen);
 #else
 						bPasswordValid = FALSE;
 #endif

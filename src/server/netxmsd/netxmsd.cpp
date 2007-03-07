@@ -1,4 +1,4 @@
-/* $Id: netxmsd.cpp,v 1.20 2007-03-01 23:29:06 victor Exp $ */
+/* $Id: netxmsd.cpp,v 1.21 2007-03-07 00:18:06 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
@@ -53,6 +53,7 @@ static char help_text[]="NetXMS Server Version " NETXMS_VERSION_STRING "\n"
                         "   --debug-events      : Print events to console.\n"
                         "   --debug-housekeeper : Print debug information for housekeeping thread.\n"
                         "   --debug-locks       : Print debug information about component locking.\n"
+                        "   --debug-misc        : Print miscellanious debug information.\n"
                         "   --debug-objects     : Print object manager debug information.\n"
                         "   --debug-snmp        : Print SNMP debug information.\n"
                         "   --dump-sql          : Dump all SQL queries to log.\n"
@@ -80,8 +81,7 @@ static char help_text[]="NetXMS Server Version " NETXMS_VERSION_STRING "\n"
                         "   stop                : Stop service\n"
 #endif
                         "   version             : Display version and exit\n"
-                        "\n"
-                        "NOTE: All debug options will work only in standalone mode.\n\n";
+                        "\n\n";
 
 
 //
@@ -364,6 +364,10 @@ static BOOL ParseCommandLine(int argc, char *argv[])
       else if (!strcmp(argv[i], "--debug-dc"))
       {
          g_dwFlags |= AF_DEBUG_DC;
+      }
+      else if (!strcmp(argv[i], "--debug-misc"))
+      {
+         g_dwFlags |= AF_DEBUG_MISC;
       }
       else if (!strcmp(argv[i], "--debug-locks"))
       {

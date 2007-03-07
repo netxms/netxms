@@ -32,6 +32,7 @@
 
 #define SERVER_LISTEN_PORT             4701
 #define MAX_DCI_STRING_VALUE           256
+#define CLIENT_CHALLENGE_SIZE				256
 #define CSCP_HEADER_SIZE               16
 #define CSCP_ENCRYPTION_HEADER_SIZE    16
 #define CSCP_EH_UNENCRYPTED_BYTES      8
@@ -723,6 +724,7 @@ typedef struct
 #define VID_AUTH_TYPE					((DWORD)275)
 #define VID_CERTIFICATE					((DWORD)276)
 #define VID_SIGNATURE					((DWORD)277)
+#define VID_CHALLENGE					((DWORD)278)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

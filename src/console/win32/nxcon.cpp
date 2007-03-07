@@ -294,6 +294,8 @@ BOOL CConsoleApp::InitInstance()
    g_dwOptions = GetProfileInt(_T("General"), _T("Options"), g_dwOptions);
    _tcscpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
    _tcscpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
+   _tcscpy(g_szLastCertName, (LPCTSTR)GetProfileString(_T("Connection"), _T("Certificate"), NULL));
+	g_nAuthType = GetProfileInt(_T("Connection"), _T("AuthType"), NETXMS_AUTH_TYPE_PASSWORD);
    LoadAlarmSoundCfg(&g_soundCfg, NXCON_ALARM_SOUND_KEY);
    m_hDevMode = GetProfileGMem(_T("Printer"), _T("DevMode"));
    m_hDevNames = GetProfileGMem(_T("Printer"), _T("DevNames"));
@@ -877,6 +879,7 @@ void CConsoleApp::OnConnectToServer()
 	dlgLogin.m_nAuthType = g_nAuthType;
    do
    {
+		dlgLogin.m_strLastCertName = g_szLastCertName;
       if (dlgLogin.DoModal() != IDOK)
       {
          PostQuitMessage(1);
@@ -886,6 +889,11 @@ void CConsoleApp::OnConnectToServer()
       _tcscpy(g_szLogin, (LPCTSTR)dlgLogin.m_strLogin);
       _tcscpy(g_szPassword, (LPCTSTR)dlgLogin.m_strPassword);
 		g_nAuthType = dlgLogin.m_nAuthType;
+		if (g_nAuthType == NETXMS_AUTH_TYPE_CERTIFICATE)
+			nx_strncpy(g_szLastCertName, dlgLogin.m_pCertList[dlgLogin.m_nCertificateIndex].szName, MAX_DB_STRING);
+		else
+			g_szLastCertName[0] = 0;
+
       if (dlgLogin.m_bEncrypt)
          g_dwOptions |= OPT_ENCRYPT_CONNECTION;
       else
@@ -906,6 +914,8 @@ void CConsoleApp::OnConnectToServer()
       // Save last connection parameters
       WriteProfileString(_T("Connection"), _T("Server"), g_szServer);
       WriteProfileString(_T("Connection"), _T("Login"), g_szLogin);
+      WriteProfileString(_T("Connection"), _T("Certificate"), g_szLastCertName);
+      WriteProfileInt(_T("Connection"), _T("AuthType"), g_nAuthType);
 
       // Initiate connection
       dwResult = DoLogin(dlgLogin.m_bClearCache,

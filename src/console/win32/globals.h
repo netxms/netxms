@@ -374,6 +374,7 @@ extern TCHAR g_szServer[];
 extern TCHAR g_szLogin[];
 extern TCHAR g_szPassword[];
 extern int g_nAuthType;
+extern TCHAR g_szLastCertName[];
 extern TCHAR g_szUpgradeURL[];
 extern TCHAR g_szWorkDir[];
 extern TCHAR *g_szStatusText[];

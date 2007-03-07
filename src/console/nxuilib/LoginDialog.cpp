@@ -170,6 +170,7 @@ BOOL CLoginDialog::OnInitDialog()
 	// Fill certificate list
 	for(i = 0; i < m_dwNumCerts; i++)
 		m_wndComboCerts.AddString(m_pCertList[i].szName);
+	m_wndComboCerts.SelectString(-1, m_strLastCertName);
 
 	LoadServerHistory();
 	

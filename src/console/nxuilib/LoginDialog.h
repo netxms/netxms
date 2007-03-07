@@ -27,6 +27,7 @@ class NXUILIB_EXPORTABLE CLoginDialog : public CDialog
 {
 // Construction
 public:
+	CString m_strLastCertName;
 	LOGIN_CERTIFICATE *m_pCertList;
 	DWORD m_dwNumCerts;
 	DWORD m_dwFlags;
