@@ -160,9 +160,8 @@ static BOOL SignChallenge(BYTE *pChallenge, DWORD dwChLen, BYTE *pSinature, DWOR
 static DWORD WINAPI LoginThread(void *pArg)
 {
    HWND hWnd = *((HWND *)pArg);    // Handle to status window
-   DWORD i, dwResult, dwFlags, dwSigLen;
+   DWORD i, dwResult, dwFlags;
 	TCHAR *pszUpgradeURL = NULL;
-	BYTE signature[256];
 
 	dwFlags = 0;
 	if (g_dwOptions & OPT_MATCH_SERVER_VERSION)
@@ -176,15 +175,13 @@ static DWORD WINAPI LoginThread(void *pArg)
 	else
 	{
 		m_pCert = NULL;
-		dwResult = RCC_SUCCESS;
 	}
 
-	if (dwResult == RCC_SUCCESS)
-		dwResult = NXCConnect(dwFlags, g_szServer, g_szLogin,
-									 (m_pCert != NULL) ? (TCHAR *)m_pCert->pbCertEncoded : g_szPassword,
-									 (m_pCert != NULL) ? m_pCert->cbCertEncoded : 0,
-									 SignChallenge, NULL, &g_hSession,
-									 _T("NetXMS Console/") NETXMS_VERSION_STRING, &pszUpgradeURL);
+	dwResult = NXCConnect(dwFlags, g_szServer, g_szLogin,
+								 (m_pCert != NULL) ? (TCHAR *)m_pCert->pbCertEncoded : g_szPassword,
+								 (m_pCert != NULL) ? m_pCert->cbCertEncoded : 0,
+								 SignChallenge, NULL, &g_hSession,
+								 _T("NetXMS Console/") NETXMS_VERSION_STRING, &pszUpgradeURL);
 
    if (dwResult == RCC_SUCCESS)
    {
