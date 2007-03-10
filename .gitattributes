@@ -1028,6 +1028,8 @@ src/install/windows/netxms.iss -text
 src/install/windows/nxav.exe.manifest -text
 src/install/windows/nxcon.exe.manifest -text
 src/install/windows/nxnotify.exe.manifest -text
+src/java/nxjclient/.classpath -text
+src/java/nxjclient/.project -text
 src/libnetxms/Makefile.am -text
 src/libnetxms/Makefile.nw -text
 src/libnetxms/StackWalker.cpp -text
