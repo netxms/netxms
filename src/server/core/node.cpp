@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.176 2007-03-03 22:52:30 victor Exp $ */
+/* $Id: node.cpp,v 1.177 2007-03-11 11:00:43 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -898,6 +898,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
    char szBuffer[4096];
 	Cluster *pCluster;
 	SNMP_Transport *pTransport;
+	Template *pTemplate;
    BOOL bHasChanges = FALSE;
 
    SetPollerInfo(nPoller, "wait for lock");
@@ -1393,6 +1394,49 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 		else
 		{
 			SendPollerMsg(dwRqId, _T("Node name is OK\r\n"));
+		}
+
+		// Apply system templates
+		pTemplate = FindTemplateByName(_T("@System.Agent"));
+		if (pTemplate != NULL)
+		{
+			if (IsNativeAgent())
+			{
+				if (!pTemplate->IsChild(m_dwId))
+				{
+					pTemplate->ApplyToNode(this);
+				}
+			}
+			else
+			{
+				if (pTemplate->IsChild(m_dwId))
+				{
+					pTemplate->DeleteChild(this);
+					DeleteParent(pTemplate);
+					pTemplate->QueueRemoveFromNode(m_dwId, TRUE);
+				}
+			}
+		}
+
+		pTemplate = FindTemplateByName(_T("@System.SNMP"));
+		if (pTemplate != NULL)
+		{
+			if (IsSNMPSupported())
+			{
+				if (!pTemplate->IsChild(m_dwId))
+				{
+					pTemplate->ApplyToNode(this);
+				}
+			}
+			else
+			{
+				if (pTemplate->IsChild(m_dwId))
+				{
+					pTemplate->DeleteChild(this);
+					DeleteParent(pTemplate);
+					pTemplate->QueueRemoveFromNode(m_dwId, TRUE);
+				}
+			}
 		}
 
 		SendPollerMsg(dwRqId, _T("Finished configuration poll for node %s\r\n")

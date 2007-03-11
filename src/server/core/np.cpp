@@ -183,7 +183,7 @@ NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
    pNode->Unhide();
    PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);
 
-   // DEBUG
+   // Add default DCIs
    pNode->AddItem(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), DS_INTERNAL, DCI_DT_INT, 60, 30, pNode));
    return pNode;
 }
