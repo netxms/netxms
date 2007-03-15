@@ -54,6 +54,8 @@ CREATE TABLE users
 	description varchar(255) not null,
 	grace_logins integer not null,
 	auth_method integer not null,
+	cert_mapping_method integer not null,
+	cert_mapping_data SQL_TEXT not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

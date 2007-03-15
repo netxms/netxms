@@ -1,4 +1,16 @@
 *************
+* 58 ==> 59 *
+*************
+
+- Added columns "cert_mapping_method" and "cert_mapping_data" to table "users":
+	ALTER TABLE users ADD cert_mapping_method integer;
+	ALTER TABLE users ADD cert_mapping_data SQL_TEXT;
+	UPDATE users SET cert_mapping_method=0;
+	UPDATE users SET cert_mapping_data='#00';
+- New configuration parameters: InternalCA
+
+
+*************
 * 57 ==> 58 *
 *************
 

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nms_users.h
+** File: nms_users.h
 **
 **/
 
@@ -47,16 +47,18 @@
 typedef struct
 {
    DWORD dwId;
-   char szName[MAX_USER_NAME];
-   BYTE szPassword[SHA1_DIGEST_SIZE];
+   TCHAR szName[MAX_USER_NAME];
+   BYTE passwordHash[SHA1_DIGEST_SIZE];
    WORD wSystemRights;      // System-wide user's rights
    WORD wFlags;
-   char szFullName[MAX_USER_FULLNAME];
-   char szDescription[MAX_USER_DESCR];
+   TCHAR szFullName[MAX_USER_FULLNAME];
+   TCHAR szDescription[MAX_USER_DESCR];
    int nGraceLogins;
    int nAuthMethod;
+	int nCertMappingMethod;
+	TCHAR *pszCertMappingData;
    uuid_t guid;
-} NMS_USER;
+} NETXMS_USER;
 
 
 //
@@ -66,14 +68,14 @@ typedef struct
 typedef struct
 {
    DWORD dwId;
-   char szName[MAX_USER_NAME];
+   TCHAR szName[MAX_USER_NAME];
    WORD wSystemRights;
    WORD wFlags;
    DWORD dwNumMembers;
    DWORD *pMembers;
-   char szDescription[MAX_USER_DESCR];
+   TCHAR szDescription[MAX_USER_DESCR];
    uuid_t guid;
-} NMS_USER_GROUP;
+} NETXMS_USER_GROUP;
 
 
 //
@@ -129,21 +131,21 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
 							  DWORD *pdwId, DWORD *pdwSystemRights,
 							  BOOL *pbChangePasswd);
 void DumpUsers(CONSOLE_CTX pCtx);
-DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId);
+DWORD CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwId);
 DWORD DeleteUserFromDB(DWORD dwId);
-DWORD ModifyUser(NMS_USER *pUserInfo);
-DWORD ModifyGroup(NMS_USER_GROUP *pGroupInfo);
+DWORD ModifyUser(NETXMS_USER *pUserInfo);
+DWORD ModifyGroup(NETXMS_USER_GROUP *pGroupInfo);
 DWORD SetUserPassword(DWORD dwId, BYTE *pszPassword, BOOL bResetChPasswd);
-void SendUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, NMS_USER_GROUP *pUserGroup);
+void SendUserDBUpdate(int iCode, DWORD dwUserId, NETXMS_USER *pUser, NETXMS_USER_GROUP *pUserGroup);
 
 
 //
 // Global variables
 //
 
-extern NMS_USER *g_pUserList;
+extern NETXMS_USER *g_pUserList;
 extern DWORD g_dwNumUsers;
-extern NMS_USER_GROUP *g_pGroupList;
+extern NETXMS_USER_GROUP *g_pGroupList;
 extern DWORD g_dwNumGroups;
 
 #endif

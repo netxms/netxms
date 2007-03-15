@@ -78,6 +78,35 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V58 to V59
+//
+
+static BOOL H_UpgradeFromV58(void)
+{
+   static TCHAR m_szBatch[] =
+		_T("ALTER TABLE users ADD cert_mapping_method integer\n")
+		_T("ALTER TABLE users ADD cert_mapping_data $SQL:TEXT\n")
+		_T("UPDATE users SET cert_mapping_method=0\n")
+		_T("UPDATE users SET cert_mapping_data='#00'\n")
+      _T("<END>");
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("InternalCA"), _T("0"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='59' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V57 to V58
 //
 
@@ -2593,6 +2622,7 @@ static struct
    { 55, H_UpgradeFromV55 },
    { 56, H_UpgradeFromV56 },
    { 57, H_UpgradeFromV57 },
+   { 58, H_UpgradeFromV58 },
    { 0, NULL }
 };
 

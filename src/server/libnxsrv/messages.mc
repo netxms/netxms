@@ -620,4 +620,28 @@ Language=English
 EXCEPTION %1 (%2) at %3 (crash dump was generated); please send files %4 and %5 to dump@netxms.org
 .
 
+MessageId=
+SymbolicName=MSG_CANNOT_INIT_CERT_STORE
+Language=English
+Cannot initialize certificate store: %1
+.
+
+MessageId=
+SymbolicName=MSG_CANNOT_ADD_CERT_LOOKUP
+Language=English
+Cannot add lookup context to certificate store: %1
+.
+
+MessageId=
+SymbolicName=MSG_CANNOT_LOAD_ROOT_CERT
+Language=English
+Cannot load root certificate from file "%1": %2
+.
+
+MessageId=
+SymbolicName=MSG_CERT_AUTH_DISABLED
+Language=English
+User authentication using certificates is disabled because of certificate subsystem initialization failure
+.
+
 ;#endif

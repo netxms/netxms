@@ -51,6 +51,8 @@ extern Queue g_nodePollerQueue;
 extern Queue g_conditionPollerQueue;
 extern Queue *g_pItemQueue;
 
+BOOL InitCertificates(void);
+
 
 //
 // Thread functions
@@ -212,6 +214,8 @@ static void LoadGlobalConfig()
       g_dwFlags |= AF_ACTIVE_NETWORK_DISCOVERY;
    if (ConfigReadInt("ResolveNodeNames", 1))
       g_dwFlags |= AF_RESOLVE_NODE_NAMES;
+   if (ConfigReadInt("InternalCA", 0))
+      g_dwFlags |= AF_INTERNAL_CA;
    ConfigReadStr("DataDirectory", g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
    g_dwPingSize = ConfigReadInt("IcmpPingSize", 46);
    g_dwLockTimeout = ConfigReadInt("LockTimeout", 60000);
@@ -479,6 +483,13 @@ retry_db_lock:
       WriteLog(MSG_INIT_CRYPTO_FAILED, EVENTLOG_ERROR_TYPE, NULL);
       return FALSE;
    }
+
+   // Initialize certificate store and CA
+   if (!InitCertificates())
+	{
+		WriteLog(MSG_CERT_AUTH_DISABLED, EVENTLOG_WARNING_TYPE, NULL);
+		g_dwFlags |= AF_CERT_AUTH_DISABLED;
+	}
 
    // Initialize SNMP stuff
    SnmpInit();
@@ -851,6 +862,7 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_RESOLVE_NODE_NAMES));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CATCH_EXCEPTIONS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_MULTIPLE_DB_CONN));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_INTERNAL_CA));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_EVENTS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_CSCP));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_DISCOVERY));
@@ -864,6 +876,7 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_OBJECTS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_LOCKED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_CONNECTION_LOST));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CERT_AUTH_DISABLED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(pCtx, "\n");

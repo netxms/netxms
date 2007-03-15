@@ -407,6 +407,7 @@ typedef struct hostent HOSTENT;
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 #include <openssl/opensslv.h>
+#include <openssl/err.h>
 
 #ifdef NETXMS_NO_AES
 #ifndef OPENSSL_NO_AES

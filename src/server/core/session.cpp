@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.267 2007-03-07 00:18:05 victor Exp $ */
+/* $Id: session.cpp,v 1.268 2007-03-15 19:56:46 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -90,7 +90,7 @@ struct GRAPH_ACL_ENTRY
 // Fill CSCP message with user data
 //
 
-static void FillUserInfoMessage(CSCPMessage *pMsg, NMS_USER *pUser)
+static void FillUserInfoMessage(CSCPMessage *pMsg, NETXMS_USER *pUser)
 {
    pMsg->SetVariable(VID_USER_ID, pUser->dwId);
    pMsg->SetVariable(VID_USER_NAME, pUser->szName);
@@ -107,7 +107,7 @@ static void FillUserInfoMessage(CSCPMessage *pMsg, NMS_USER *pUser)
 // Fill CSCP message with user group data
 //
 
-static void FillGroupInfoMessage(CSCPMessage *pMsg, NMS_USER_GROUP *pGroup)
+static void FillGroupInfoMessage(CSCPMessage *pMsg, NETXMS_USER_GROUP *pGroup)
 {
    DWORD i, dwId;
 
@@ -2065,7 +2065,7 @@ void ClientSession::UpdateUser(CSCPMessage *pRequest)
       dwUserId = pRequest->GetVariableLong(VID_USER_ID);
       if (dwUserId & GROUP_FLAG)
       {
-         NMS_USER_GROUP group;
+         NETXMS_USER_GROUP group;
          DWORD i, dwId;
 
          group.dwId = dwUserId;
@@ -2082,7 +2082,7 @@ void ClientSession::UpdateUser(CSCPMessage *pRequest)
       }
       else
       {
-         NMS_USER user;
+         NETXMS_USER user;
 
          user.dwId = dwUserId;
          pRequest->GetVariableStr(VID_USER_DESCRIPTION, user.szDescription, MAX_USER_DESCR);
@@ -2091,7 +2091,10 @@ void ClientSession::UpdateUser(CSCPMessage *pRequest)
          user.wFlags = pRequest->GetVariableShort(VID_USER_FLAGS);
          user.wSystemRights = pRequest->GetVariableShort(VID_USER_SYS_RIGHTS);
          user.nAuthMethod = pRequest->GetVariableShort(VID_AUTH_METHOD);
+			user.nCertMappingMethod = pRequest->GetVariableShort(VID_CERT_MAPPING_METHOD);
+			user.pszCertMappingData = pRequest->GetVariableStr(VID_CERT_MAPPING_DATA);
          dwResult = ModifyUser(&user);
+			safe_free(user.pszCertMappingData);
       }
       msg.SetVariable(VID_RCC, dwResult);
    }
@@ -2202,7 +2205,7 @@ void ClientSession::LockUserDB(DWORD dwRqId, BOOL bLock)
 // Notify client on user database update
 //
 
-void ClientSession::OnUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, NMS_USER_GROUP *pGroup)
+void ClientSession::OnUserDBUpdate(int iCode, DWORD dwUserId, NETXMS_USER *pUser, NETXMS_USER_GROUP *pGroup)
 {
    CSCPMessage msg;
 

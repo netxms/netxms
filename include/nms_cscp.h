@@ -725,6 +725,8 @@ typedef struct
 #define VID_CERTIFICATE					((DWORD)276)
 #define VID_SIGNATURE					((DWORD)277)
 #define VID_CHALLENGE					((DWORD)278)
+#define VID_CERT_MAPPING_METHOD		((DWORD)279)
+#define VID_CERT_MAPPING_DATA       ((DWORD)280)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

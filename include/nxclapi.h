@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.260 2007-03-07 00:18:05 victor Exp $ */
+/* $Id: nxclapi.h,v 1.261 2007-03-15 19:56:46 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -494,6 +494,14 @@ enum
 #define UF_DISABLED                 0x0004
 #define UF_CHANGE_PASSWORD          0x0008
 #define UF_CANNOT_CHANGE_PASSWORD   0x0010
+
+
+//
+// User certificate mapping methods
+//
+
+#define USER_MAP_CERT_BY_SUBJECT		0
+#define USER_MAP_CERT_BY_PUBKEY		1
 
 
 //

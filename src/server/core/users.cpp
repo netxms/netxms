@@ -1,6 +1,7 @@
+/* $Id: users.cpp,v 1.44 2007-03-15 19:56:46 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: users.cpp
+** File: users.cpp
 **
 **/
 
@@ -34,9 +35,9 @@ int RadiusAuth(char *pszLogin, char *pszPasswd);
 // Global variables
 //
 
-NMS_USER *g_pUserList = NULL;
+NETXMS_USER *g_pUserList = NULL;
 DWORD g_dwNumUsers = 0;
-NMS_USER_GROUP *g_pGroupList = NULL;
+NETXMS_USER_GROUP *g_pGroupList = NULL;
 DWORD g_dwNumGroups = 0;
 
 
@@ -70,20 +71,23 @@ BOOL LoadUsers(void)
    TCHAR szBuffer[256];
 
    // Load users
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id,name,password,system_access,flags,full_name,description,grace_logins,auth_method,guid FROM users ORDER BY id"));
+   hResult = DBSelect(g_hCoreDB,
+	                   _T("SELECT id,name,password,system_access,flags,full_name,")
+							 _T("description,grace_logins,auth_method,guid,")
+							 _T("cert_mapping_method,cert_mapping_data FROM users ORDER BY id"));
    if (hResult == NULL)
       return FALSE;
 
    g_dwNumUsers = DBGetNumRows(hResult);
-   g_pUserList = (NMS_USER *)malloc(sizeof(NMS_USER) * g_dwNumUsers);
+   g_pUserList = (NETXMS_USER *)malloc(sizeof(NETXMS_USER) * g_dwNumUsers);
    for(i = 0; i < g_dwNumUsers; i++)
    {
       g_pUserList[i].dwId = DBGetFieldULong(hResult, i, 0);
       DBGetField(hResult, i, 1, g_pUserList[i].szName, MAX_USER_NAME);
-      if (StrToBin(DBGetField(hResult, i, 2, szBuffer, 256), g_pUserList[i].szPassword, SHA1_DIGEST_SIZE) != SHA1_DIGEST_SIZE)
+      if (StrToBin(DBGetField(hResult, i, 2, szBuffer, 256), g_pUserList[i].passwordHash, SHA1_DIGEST_SIZE) != SHA1_DIGEST_SIZE)
       {
          WriteLog(MSG_INVALID_SHA1_HASH, EVENTLOG_WARNING_TYPE, "s", g_pUserList[i].szName);
-         CalculateSHA1Hash((BYTE *)"netxms", 6, g_pUserList[i].szPassword);
+         CalculateSHA1Hash((BYTE *)"netxms", 6, g_pUserList[i].passwordHash);
       }
       if (g_pUserList[i].dwId == 0)
          g_pUserList[i].wSystemRights = SYSTEM_ACCESS_FULL;    // Ignore database value for superuser
@@ -95,6 +99,9 @@ BOOL LoadUsers(void)
       g_pUserList[i].nGraceLogins = DBGetFieldLong(hResult, i, 7);
       g_pUserList[i].nAuthMethod = DBGetFieldLong(hResult, i, 8);
       DBGetFieldGUID(hResult, i, 9, g_pUserList[i].guid);
+		g_pUserList[i].nCertMappingMethod = DBGetFieldLong(hResult, i, 10);
+		g_pUserList[i].pszCertMappingData = DBGetField(hResult, i, 11, NULL, 0);
+		DecodeSQLString(g_pUserList[i].pszCertMappingData);
    }
 
    DBFreeResult(hResult);
@@ -107,17 +114,19 @@ BOOL LoadUsers(void)
    if (i == g_dwNumUsers)
    {
       g_dwNumUsers++;
-      g_pUserList = (NMS_USER *)realloc(g_pUserList, sizeof(NMS_USER) * g_dwNumUsers);
+      g_pUserList = (NETXMS_USER *)realloc(g_pUserList, sizeof(NETXMS_USER) * g_dwNumUsers);
       g_pUserList[i].dwId = 0;
       strcpy(g_pUserList[i].szName, "admin");
       g_pUserList[i].wFlags = UF_MODIFIED | UF_CHANGE_PASSWORD;
       g_pUserList[i].wSystemRights = SYSTEM_ACCESS_FULL;
       g_pUserList[i].szFullName[0] = 0;
       strcpy(g_pUserList[i].szDescription, "Built-in system administrator account");
-      CalculateSHA1Hash((BYTE *)"netxms", 6, g_pUserList[i].szPassword);
+      CalculateSHA1Hash((BYTE *)"netxms", 6, g_pUserList[i].passwordHash);
       g_pUserList[i].nGraceLogins = MAX_GRACE_LOGINS;
       g_pUserList[i].nAuthMethod = AUTH_NETXMS_PASSWORD;
       uuid_generate(g_pUserList[i].guid);
+		g_pUserList[i].nCertMappingMethod = 0;
+		g_pUserList[i].pszCertMappingData = NULL;
       WriteLog(MSG_SUPERUSER_CREATED, EVENTLOG_WARNING_TYPE, NULL);
    }
 
@@ -127,7 +136,7 @@ BOOL LoadUsers(void)
       return FALSE;
 
    g_dwNumGroups = DBGetNumRows(hResult);
-   g_pGroupList = (NMS_USER_GROUP *)malloc(sizeof(NMS_USER_GROUP) * g_dwNumGroups);
+   g_pGroupList = (NETXMS_USER_GROUP *)malloc(sizeof(NETXMS_USER_GROUP) * g_dwNumGroups);
    for(i = 0; i < g_dwNumGroups; i++)
    {
       g_pGroupList[i].dwId = DBGetFieldULong(hResult, i, 0);
@@ -150,7 +159,7 @@ BOOL LoadUsers(void)
    if (i == g_dwNumGroups)
    {
       g_dwNumGroups++;
-      g_pGroupList = (NMS_USER_GROUP *)realloc(g_pGroupList, sizeof(NMS_USER_GROUP) * g_dwNumGroups);
+      g_pGroupList = (NETXMS_USER_GROUP *)realloc(g_pGroupList, sizeof(NETXMS_USER_GROUP) * g_dwNumGroups);
       g_pGroupList[i].dwId = GROUP_EVERYONE;
       g_pGroupList[i].dwNumMembers = 0;
       g_pGroupList[i].pMembers = NULL;
@@ -182,7 +191,7 @@ BOOL LoadUsers(void)
 void SaveUsers(DB_HANDLE hdb)
 {
    DWORD i;
-   char szQuery[1024], szPassword[SHA1_DIGEST_SIZE * 2 + 1], szGUID[64];
+   TCHAR szQuery[1024], szPassword[SHA1_DIGEST_SIZE * 2 + 1], szGUID[64], *pszEscData;
 
    // Save users
    MutexLock(m_hMutexUserAccess, INFINITE);
@@ -197,8 +206,9 @@ void SaveUsers(DB_HANDLE hdb)
          DBQuery(hdb, szQuery);
 
          // Delete user record from memory
+			safe_free(g_pUserList[i].pszCertMappingData);
          g_dwNumUsers--;
-         memmove(&g_pUserList[i], &g_pUserList[i + 1], sizeof(NMS_USER) * (g_dwNumUsers - i));
+         memmove(&g_pUserList[i], &g_pUserList[i + 1], sizeof(NETXMS_USER) * (g_dwNumUsers - i));
          i--;
       }
       else if (g_pUserList[i].wFlags & UF_MODIFIED)
@@ -220,23 +230,28 @@ void SaveUsers(DB_HANDLE hdb)
          }
 
          // Create or update record in database
-         BinToStr(g_pUserList[i].szPassword, SHA1_DIGEST_SIZE, szPassword);
+         BinToStr(g_pUserList[i].passwordHash, SHA1_DIGEST_SIZE, szPassword);
+			pszEscData = EncodeSQLString(CHECK_NULL_EX(g_pUserList[i].pszCertMappingData));
          if (bUserExists)
             sprintf(szQuery, "UPDATE users SET name='%s',password='%s',system_access=%d,flags=%d,"
-                             "full_name='%s',description='%s',grace_logins=%d,guid='%s',auth_method=%d WHERE id=%d",
+                             "full_name='%s',description='%s',grace_logins=%d,guid='%s',"
+									  "auth_method=%d,cert_mapping_method=%d,cert_mapping_data='%s' WHERE id=%d",
                     g_pUserList[i].szName, szPassword, g_pUserList[i].wSystemRights,
                     g_pUserList[i].wFlags, g_pUserList[i].szFullName,
                     g_pUserList[i].szDescription, g_pUserList[i].nGraceLogins,
                     uuid_to_string(g_pUserList[i].guid, szGUID),
-                    g_pUserList[i].nAuthMethod, g_pUserList[i].dwId);
+                    g_pUserList[i].nAuthMethod, g_pUserList[i].nCertMappingMethod,
+						  pszEscData, g_pUserList[i].dwId);
          else
-            sprintf(szQuery, "INSERT INTO users (id,name,password,system_access,flags,full_name,description,grace_logins,guid,auth_method) "
-                             "VALUES (%d,'%s','%s',%d,%d,'%s','%s',%d,'%s',%d)",
+            sprintf(szQuery, "INSERT INTO users (id,name,password,system_access,flags,full_name,"
+				                 "description,grace_logins,guid,auth_method,cert_mapping_method,"
+                             "cert_mapping_data) VALUES (%d,'%s','%s',%d,%d,'%s','%s',%d,'%s',%d)",
                     g_pUserList[i].dwId, g_pUserList[i].szName, szPassword,
                     g_pUserList[i].wSystemRights, g_pUserList[i].wFlags,
                     g_pUserList[i].szFullName, g_pUserList[i].szDescription,
                     g_pUserList[i].nGraceLogins, uuid_to_string(g_pUserList[i].guid, szGUID),
-                    g_pUserList[i].nAuthMethod);
+                    g_pUserList[i].nAuthMethod, g_pUserList[i].nCertMappingMethod, pszEscData);
+			free(pszEscData);
          DBQuery(hdb, szQuery);
       }
    }
@@ -258,7 +273,7 @@ void SaveUsers(DB_HANDLE hdb)
          if (g_pGroupList[i].pMembers != NULL)
             free(g_pGroupList[i].pMembers);
          g_dwNumGroups--;
-         memmove(&g_pGroupList[i], &g_pGroupList[i + 1], sizeof(NMS_USER_GROUP) * (g_dwNumGroups - i));
+         memmove(&g_pGroupList[i], &g_pGroupList[i + 1], sizeof(NETXMS_USER_GROUP) * (g_dwNumGroups - i));
          i--;
       }
       else if (g_pGroupList[i].wFlags & UF_MODIFIED)
@@ -343,7 +358,7 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
 					if (dwSigLen == 0)
 					{
 						CalculateSHA1Hash((BYTE *)pszPassword, strlen(pszPassword), hash);
-						bPasswordValid = !memcmp(hash, g_pUserList[i].szPassword, SHA1_DIGEST_SIZE);
+						bPasswordValid = !memcmp(hash, g_pUserList[i].passwordHash, SHA1_DIGEST_SIZE);
 					}
 					else
 					{
@@ -367,7 +382,9 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
 					{
 #ifdef _WITH_ENCRYPTION
 						bPasswordValid = ValidateUserCertificate((X509 *)pCert, pszName, pChallenge,
-						                                         (BYTE *)pszPassword, dwSigLen);
+						                                         (BYTE *)pszPassword, dwSigLen,
+																			  g_pUserList[i].nCertMappingMethod,
+																			  g_pUserList[i].pszCertMappingData);
 #else
 						bPasswordValid = FALSE;
 #endif
@@ -469,7 +486,7 @@ void AddUserToGroup(DWORD dwUserId, DWORD dwGroupId)
 // Delete user from group
 //
 
-static void DeleteUserFromGroup(NMS_USER_GROUP *pGroup, DWORD dwUserId)
+static void DeleteUserFromGroup(NETXMS_USER_GROUP *pGroup, DWORD dwUserId)
 {
    DWORD i;
 
@@ -595,7 +612,7 @@ DWORD DeleteUserFromDB(DWORD dwId)
 // Create new user or group
 //
 
-DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId)
+DWORD CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwId)
 {
    DWORD i, dwResult = RCC_SUCCESS;
    DWORD dwNewId;
@@ -616,7 +633,7 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId)
       if (i == g_dwNumGroups)
       {
          g_dwNumGroups++;
-         g_pGroupList = (NMS_USER_GROUP *)realloc(g_pGroupList, sizeof(NMS_USER_GROUP) * g_dwNumGroups);
+         g_pGroupList = (NETXMS_USER_GROUP *)realloc(g_pGroupList, sizeof(NETXMS_USER_GROUP) * g_dwNumGroups);
          g_pGroupList[i].dwId = dwNewId = CreateUniqueId(IDG_USER_GROUP);
          g_pGroupList[i].dwNumMembers = 0;
          g_pGroupList[i].pMembers = NULL;
@@ -648,7 +665,7 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId)
       if (i == g_dwNumUsers)
       {
          g_dwNumUsers++;
-         g_pUserList = (NMS_USER *)realloc(g_pUserList, sizeof(NMS_USER) * g_dwNumUsers);
+         g_pUserList = (NETXMS_USER *)realloc(g_pUserList, sizeof(NETXMS_USER) * g_dwNumUsers);
          g_pUserList[i].dwId = dwNewId = CreateUniqueId(IDG_USER);
          nx_strncpy(g_pUserList[i].szName, pszName, MAX_USER_NAME);
          g_pUserList[i].wFlags = UF_MODIFIED;
@@ -657,6 +674,10 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId)
          g_pUserList[i].szDescription[0] = 0;
          g_pUserList[i].nGraceLogins = MAX_GRACE_LOGINS;
          uuid_generate(g_pUserList[i].guid);
+			g_pUserList[i].nAuthMethod = AUTH_NETXMS_PASSWORD;
+			g_pUserList[i].nCertMappingMethod = USER_MAP_CERT_BY_SUBJECT;
+			g_pUserList[i].pszCertMappingData = NULL;
+			CalculateSHA1Hash((BYTE *)"", 0, g_pUserList[i].passwordHash);
       }
 
       if (dwResult == RCC_SUCCESS)
@@ -675,7 +696,7 @@ DWORD CreateNewUser(char *pszName, BOOL bIsGroup, DWORD *pdwId)
 // Modify user record
 //
 
-DWORD ModifyUser(NMS_USER *pUserInfo)
+DWORD ModifyUser(NETXMS_USER *pUserInfo)
 {
    DWORD i, dwResult = RCC_INVALID_USER_ID;
 
@@ -695,6 +716,9 @@ DWORD ModifyUser(NMS_USER *pUserInfo)
          strcpy(g_pUserList[i].szFullName, pUserInfo->szFullName);
          strcpy(g_pUserList[i].szDescription, pUserInfo->szDescription);
          g_pUserList[i].nAuthMethod = pUserInfo->nAuthMethod;
+			g_pUserList[i].nCertMappingMethod = pUserInfo->nCertMappingMethod;
+			safe_free(g_pUserList[i].pszCertMappingData);
+			g_pUserList[i].pszCertMappingData = (pUserInfo->pszCertMappingData != NULL) ? _tcsdup(pUserInfo->pszCertMappingData) : NULL;
          
          // We will not replace system access rights for UID 0
          if (g_pUserList[i].dwId != 0)
@@ -724,7 +748,7 @@ DWORD ModifyUser(NMS_USER *pUserInfo)
 // Modify group record
 //
 
-DWORD ModifyGroup(NMS_USER_GROUP *pGroupInfo)
+DWORD ModifyGroup(NETXMS_USER_GROUP *pGroupInfo)
 {
    DWORD i, dwResult = RCC_INVALID_USER_ID;
 
@@ -782,7 +806,7 @@ DWORD SetUserPassword(DWORD dwId, BYTE *pszPassword, BOOL bResetChPasswd)
    for(i = 0; i < g_dwNumUsers; i++)
       if (g_pUserList[i].dwId == dwId)
       {
-         memcpy(g_pUserList[i].szPassword, pszPassword, SHA1_DIGEST_SIZE);
+         memcpy(g_pUserList[i].passwordHash, pszPassword, SHA1_DIGEST_SIZE);
          g_pUserList[i].nGraceLogins = MAX_GRACE_LOGINS;
          g_pUserList[i].wFlags |= UF_MODIFIED;
          if (bResetChPasswd)

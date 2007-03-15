@@ -515,7 +515,7 @@ public:
    void OnSyslogMessage(NX_LOG_RECORD *pRec);
    void OnNewSNMPTrap(CSCPMessage *pMsg);
    void OnObjectChange(NetObj *pObject);
-   void OnUserDBUpdate(int iCode, DWORD dwUserId, NMS_USER *pUser, NMS_USER_GROUP *pGroup);
+   void OnUserDBUpdate(int iCode, DWORD dwUserId, NETXMS_USER *pUser, NETXMS_USER_GROUP *pGroup);
    void OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
    void OnActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction);
 };
@@ -644,7 +644,9 @@ void EscapeString(String &str);
 
 #ifdef _WITH_ENCRYPTION
 X509 *CertificateFromLoginMessage(CSCPMessage *pMsg);
-BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pChallenge, BYTE *pSignature, DWORD dwSigLen);
+BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pChallenge,
+									  BYTE *pSignature, DWORD dwSigLen, int nMappingMethod,
+									  TCHAR *pszMappingData);
 #endif
 
 #ifdef _WIN32
