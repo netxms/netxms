@@ -1,6 +1,7 @@
+/* $Id: nms_core.h,v 1.125 2007-03-23 15:59:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -151,6 +152,7 @@ typedef void * HSNMPSESSION;
 #define IDG_SCRIPT            16
 #define IDG_AGENT_CONFIG      17
 #define IDG_GRAPH					18
+#define IDG_CERTIFICATE			19
 
 
 //
@@ -207,6 +209,14 @@ typedef void * HSNMPSESSION;
 #define INFO_CAT_ACTION          4
 #define INFO_CAT_SYSLOG_MSG      5
 #define INFO_CAT_SNMP_TRAP       6
+
+
+//
+// Certificate types
+//
+
+#define CERT_TYPE_TRUSTED_CA		0
+#define CERT_TYPE_USER				1
 
 
 //
@@ -484,6 +494,9 @@ private:
 	void SendGraphList(DWORD dwRqId);
 	void DefineGraph(CSCPMessage *pRequest);
 	void DeleteGraph(CSCPMessage *pRequest);
+	void AddCACertificate(CSCPMessage *pRequest);
+	void DeleteCertificate(CSCPMessage *pRequest);
+	void SendCertificateList(DWORD dwRqId);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -647,6 +660,7 @@ X509 *CertificateFromLoginMessage(CSCPMessage *pMsg);
 BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pChallenge,
 									  BYTE *pSignature, DWORD dwSigLen, int nMappingMethod,
 									  TCHAR *pszMappingData);
+void ReloadCertificates(void);
 #endif
 
 #ifdef _WIN32

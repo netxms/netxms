@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.101 2007-02-09 22:38:07 victor Exp $ */
+/* $Id: nms_util.h,v 1.102 2007-03-23 15:59:04 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -457,6 +457,10 @@ extern "C"
    char LIBNETXMS_EXPORTABLE *MBStringFromWideString(WCHAR *pwszString);
    char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(WCHAR *pwszString);
 
+#ifdef _WITH_ENCRYPTION
+	WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer);
+#endif
+
 #ifdef UNICODE
 INT64 LIBNETXMS_EXPORTABLE wcstoll(const WCHAR *nptr, WCHAR **endptr, int base);
 QWORD LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base);
@@ -505,6 +509,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.101  2007/02/09 22:38:07  victor
+Crash dump generator added to console
+
 Revision 1.100  2007/01/24 00:52:28  alk
 Serial::ReadAll() added: read all data until timeout. returns data size, -1 it timeout w/o any data
 

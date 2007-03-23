@@ -368,6 +368,11 @@ void CUserEditor::OnUserProperties()
             dlg.m_bManageEPP = (pUser->wSystemRights & SYSTEM_ACCESS_EPP) ? TRUE : FALSE;
             dlg.m_bDeleteAlarms = (pUser->wSystemRights & SYSTEM_ACCESS_DELETE_ALARMS) ? TRUE : FALSE;
             dlg.m_bManagePkg = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_PACKAGES) ? TRUE : FALSE;
+            dlg.m_bManageTools = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_TOOLS) ? TRUE : FALSE;
+            dlg.m_bManageScripts = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_SCRIPTS) ? TRUE : FALSE;
+            dlg.m_bViewTrapLog = (pUser->wSystemRights & SYSTEM_ACCESS_VIEW_TRAP_LOG) ? TRUE : FALSE;
+            dlg.m_bManageAgentCfg = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG) ? TRUE : FALSE;
+            dlg.m_bManageModules = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_MODULES) ? TRUE : FALSE;
             if (dlg.DoModal() == IDOK)
             {
                userInfo.dwId = pUser->dwId;
@@ -383,7 +388,12 @@ void CUserEditor::OnUserProperties()
                                         (dlg.m_bEditEventDB ? SYSTEM_ACCESS_EDIT_EVENT_DB : 0) |
                                         (dlg.m_bViewEventDB ? SYSTEM_ACCESS_VIEW_EVENT_DB : 0) |
                                         (dlg.m_bDeleteAlarms ? SYSTEM_ACCESS_DELETE_ALARMS : 0) |
-                                        (dlg.m_bManagePkg ? SYSTEM_ACCESS_MANAGE_PACKAGES : 0);
+                                        (dlg.m_bManagePkg ? SYSTEM_ACCESS_MANAGE_PACKAGES : 0) |
+                                        (dlg.m_bManageTools ? SYSTEM_ACCESS_MANAGE_TOOLS : 0) |
+                                        (dlg.m_bManageScripts ? SYSTEM_ACCESS_MANAGE_SCRIPTS : 0) |
+                                        (dlg.m_bViewTrapLog ? SYSTEM_ACCESS_VIEW_TRAP_LOG : 0) |
+                                        (dlg.m_bManageAgentCfg ? SYSTEM_ACCESS_MANAGE_AGENT_CFG : 0) |
+                                        (dlg.m_bManageModules ? SYSTEM_ACCESS_MANAGE_MODULES : 0);
                userInfo.dwNumMembers = dlg.m_dwNumMembers;
                if (userInfo.dwNumMembers > 0)
                {
@@ -402,6 +412,8 @@ void CUserEditor::OnUserProperties()
             dlg.m_strFullName = pUser->szFullName;
             dlg.m_strDescription = pUser->szDescription;
             dlg.m_nAuthMethod = pUser->nAuthMethod;
+				dlg.m_nMappingMethod = pUser->nCertMappingMethod;
+				dlg.m_strMappingData = CHECK_NULL_EX(pUser->pszCertMappingData);
             dlg.m_bAccountDisabled = (pUser->wFlags & UF_DISABLED) ? TRUE : FALSE;
             dlg.m_bChangePassword = (pUser->wFlags & UF_CHANGE_PASSWORD) ? TRUE : FALSE;
             dlg.m_bDropConn = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_SESSIONS) ? TRUE : FALSE;
@@ -414,6 +426,11 @@ void CUserEditor::OnUserProperties()
             dlg.m_bManageEPP = (pUser->wSystemRights & SYSTEM_ACCESS_EPP) ? TRUE : FALSE;
             dlg.m_bDeleteAlarms = (pUser->wSystemRights & SYSTEM_ACCESS_DELETE_ALARMS) ? TRUE : FALSE;
             dlg.m_bManagePkg = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_PACKAGES) ? TRUE : FALSE;
+            dlg.m_bManageTools = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_TOOLS) ? TRUE : FALSE;
+            dlg.m_bManageScripts = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_SCRIPTS) ? TRUE : FALSE;
+            dlg.m_bViewTrapLog = (pUser->wSystemRights & SYSTEM_ACCESS_VIEW_TRAP_LOG) ? TRUE : FALSE;
+            dlg.m_bManageAgentCfg = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG) ? TRUE : FALSE;
+            dlg.m_bManageModules = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_MODULES) ? TRUE : FALSE;
             if (dlg.DoModal() == IDOK)
             {
                userInfo.dwId = pUser->dwId;
@@ -421,6 +438,8 @@ void CUserEditor::OnUserProperties()
                nx_strncpy(userInfo.szFullName, (LPCTSTR)dlg.m_strFullName, MAX_USER_FULLNAME);
                nx_strncpy(userInfo.szDescription, (LPCTSTR)dlg.m_strDescription, MAX_USER_DESCR);
                userInfo.nAuthMethod = dlg.m_nAuthMethod;
+					userInfo.nCertMappingMethod = dlg.m_nMappingMethod;
+					userInfo.pszCertMappingData = _tcsdup((LPCTSTR)dlg.m_strMappingData);
                userInfo.wFlags = (dlg.m_bAccountDisabled ? UF_DISABLED : 0) |
                                  (dlg.m_bChangePassword ? UF_CHANGE_PASSWORD : 0);
                userInfo.wSystemRights = (dlg.m_bDropConn ? SYSTEM_ACCESS_MANAGE_SESSIONS : 0) |
@@ -432,7 +451,12 @@ void CUserEditor::OnUserProperties()
                                         (dlg.m_bEditEventDB ? SYSTEM_ACCESS_EDIT_EVENT_DB : 0) |
                                         (dlg.m_bViewEventDB ? SYSTEM_ACCESS_VIEW_EVENT_DB : 0) |
                                         (dlg.m_bDeleteAlarms ? SYSTEM_ACCESS_DELETE_ALARMS : 0) |
-                                        (dlg.m_bManagePkg ? SYSTEM_ACCESS_MANAGE_PACKAGES : 0);
+                                        (dlg.m_bManagePkg ? SYSTEM_ACCESS_MANAGE_PACKAGES : 0) |
+                                        (dlg.m_bManageTools ? SYSTEM_ACCESS_MANAGE_TOOLS : 0) |
+                                        (dlg.m_bManageScripts ? SYSTEM_ACCESS_MANAGE_SCRIPTS : 0) |
+                                        (dlg.m_bViewTrapLog ? SYSTEM_ACCESS_VIEW_TRAP_LOG : 0) |
+                                        (dlg.m_bManageAgentCfg ? SYSTEM_ACCESS_MANAGE_AGENT_CFG : 0) |
+                                        (dlg.m_bManageModules ? SYSTEM_ACCESS_MANAGE_MODULES : 0);
                bModify = TRUE;
             }
          }
@@ -446,8 +470,9 @@ void CUserEditor::OnUserProperties()
             if (dwResult != RCC_SUCCESS)
                theApp.ErrorBox(dwResult, _T("Cannot modify user record: %s"));
 
-            // Destroy group members list
+            // Cleanup
             safe_free(userInfo.pdwMemberList);
+				safe_free(userInfo.pszCertMappingData);
          }
       }
       else

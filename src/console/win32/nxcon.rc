@@ -143,6 +143,8 @@ IDI_SERVER              ICON    DISCARDABLE     "icons\\server.ico"
 IDI_NEXT                ICON    DISCARDABLE     "icons\\next.ico"
 IDI_FIND                ICON    DISCARDABLE     "icons\\find.ico"
 IDI_AGAIN               ICON    DISCARDABLE     "icons\\again.ico"
+IDI_CERT                ICON    DISCARDABLE     "icons\\cert.ico"
+IDI_CERTMGR             ICON    DISCARDABLE     "icons\\certmgr.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -359,6 +361,7 @@ BEGIN
         MENUITEM "&Actions",                    ID_CONTROLPANEL_ACTIONS
         MENUITEM "A&gent configs",              ID_CONTROLPANEL_AGENTCONFIGS
         MENUITEM "Agent Pac&kages",             ID_CONTROLPANEL_AGENTPKG
+        MENUITEM "Ce&rtificates",               ID_CONTROLPANEL_CERTIFICATES
         MENUITEM "&Events",                     ID_CONTROLPANEL_EVENTS
         MENUITEM "Event &Policy\tF4",           ID_CONTROLPANEL_EVENTPOLICY
         MENUITEM "&Log processing",             ID_CONTROLPANEL_LOGPROCESSING
@@ -583,6 +586,12 @@ BEGIN
     POPUP "Comments"
     BEGIN
         MENUITEM "&Save\tCtrl+S",               ID_COMMENTS_SAVE
+    END
+    POPUP "Certificate"
+    BEGIN
+        MENUITEM "&Import trusted CA certificate...\tCtrl+I", 
+                                                ID_CERTIFICATE_IMPORT
+        MENUITEM "&Delete\tDel",                ID_CERTIFICATE_DELETE
     END
 END
 
@@ -933,6 +942,10 @@ BEGIN
         MENUITEM "&Edit...",                    ID_GRAPHMANAGER_EDIT
         MENUITEM "&Rename",                     ID_GRAPHMANAGER_RENAME
         MENUITEM "&Delete",                     ID_GRAPHMANAGER_DELETE
+    END
+    POPUP "Certificate"
+    BEGIN
+        MENUITEM "&Delete",                     ID_CERTIFICATE_DELETE
     END
 END
 
@@ -1349,94 +1362,123 @@ BEGIN
     LTEXT           "Login name",IDC_STATIC_HEADER,7,7,113,8
 END
 
-IDD_USER_PROPERTIES DIALOG DISCARDABLE  0, 0, 222, 241
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_USER_PROPERTIES DIALOG DISCARDABLE  0, 0, 329, 229
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
 CAPTION "User Properties"
 FONT 8, "MS Sans Serif"
 BEGIN
-    EDITTEXT        IDC_EDIT_LOGIN_NAME,53,7,162,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_NAME,54,26,162,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_DESCRIPTION,54,45,162,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_LOGIN_NAME,60,18,131,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_NAME,60,37,131,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_DESCRIPTION,60,56,131,14,ES_AUTOHSCROLL
     CONTROL         "&Account disabled",IDC_CHECK_DISABLED,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,74,71,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,91,71,10
     CONTROL         "&User must change password at next logon",
                     IDC_CHECK_PASSWORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
-                    13,86,148,10
-    CONTROL         "&Manage users",IDC_CHECK_MANAGE_USERS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,117,61,10
-    CONTROL         "Configure SNMP &traps",IDC_CHECK_SNMP_TRAPS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,128,86,10
-    CONTROL         "Manage server &configuration",IDC_CHECK_MANAGE_CONFIG,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,139,106,10
-    CONTROL         "Manage event &policy",IDC_CHECK_MANAGE_EPP,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,150,82,10
-    CONTROL         "Manage agent packa&ges",IDC_CHECK_MANAGE_PKG,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,161,95,10
-    CONTROL         "&Drop client connections",IDC_CHECK_DROP_CONN,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,119,117,91,10
-    CONTROL         "V&iew event database",IDC_CHECK_VIEW_EVENTDB,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,119,128,83,10
-    CONTROL         "&Edit event database",IDC_CHECK_EDIT_EVENTDB,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,119,139,79,10
-    CONTROL         "Manage &actions",IDC_CHECK_MANAGE_ACTIONS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,119,150,86,10
-    CONTROL         "Delete ala&rms",IDC_CHECK_DELETE_ALARMS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,119,161,86,10
-    COMBOBOX        IDC_COMBO_AUTH,92,192,117,61,CBS_DROPDOWNLIST | 
+                    13,103,148,10
+    COMBOBOX        IDC_COMBO_AUTH,105,133,90,61,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,110,220,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,165,220,50,14
-    LTEXT           "Login name:",IDC_STATIC,7,10,40,8
-    LTEXT           "Full name:",IDC_STATIC,7,29,33,8
-    LTEXT           "Description:",IDC_STATIC,7,48,38,8
-    GROUPBOX        "Flags",IDC_STATIC,7,63,208,38
-    GROUPBOX        "System Rights",IDC_STATIC,7,106,208,70
-    GROUPBOX        "Authentication",IDC_STATIC,7,181,208,31
-    LTEXT           "Authentication method:",IDC_STATIC,13,194,74,8
+    COMBOBOX        IDC_COMBO_MAPPING,105,152,90,30,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_EDIT_MAPPING_DATA,13,180,181,14,ES_AUTOHSCROLL
+    CONTROL         "&Manage users",IDC_CHECK_MANAGE_USERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,212,18,61,10
+    CONTROL         "&Drop client connections",IDC_CHECK_DROP_CONN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,212,30,91,10
+    CONTROL         "Configure SNMP &traps",IDC_CHECK_SNMP_TRAPS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,212,42,86,10
+    CONTROL         "View SNMP t&rap log",IDC_CHECK_VIEW_TRAP_LOG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,212,54,79,10
+    CONTROL         "Manage server &configuration",IDC_CHECK_MANAGE_CONFIG,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,212,66,106,10
+    CONTROL         "Manage mo&dules",IDC_CHECK_MANAGE_MODULES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,212,78,70,10
+    CONTROL         "Manage agent packa&ges",IDC_CHECK_MANAGE_PKG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,212,90,95,10
+    CONTROL         "Manage age&nt configurations",
+                    IDC_CHECK_MANAGE_AGENT_CFG,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,212,102,108,10
+    CONTROL         "Manage event &policy",IDC_CHECK_MANAGE_EPP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,212,114,82,10
+    CONTROL         "V&iew event database",IDC_CHECK_VIEW_EVENTDB,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,212,126,83,10
+    CONTROL         "&Edit event database",IDC_CHECK_EDIT_EVENTDB,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,212,138,79,10
+    CONTROL         "Manage &actions",IDC_CHECK_MANAGE_ACTIONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,212,150,86,10
+    CONTROL         "Delete ala&rms",IDC_CHECK_DELETE_ALARMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,212,162,86,10
+    CONTROL         "Manage &object tools",IDC_CHECK_MANAGE_TOOLS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,212,174,80,10
+    CONTROL         "Manage &scripts",IDC_CHECK_MANAGE_SCRIPTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,212,186,64,10
+    DEFPUSHBUTTON   "OK",IDOK,217,208,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,272,208,50,14
+    LTEXT           "Login name:",IDC_STATIC,13,21,40,8
+    LTEXT           "Full name:",IDC_STATIC,13,40,33,8
+    LTEXT           "Description:",IDC_STATIC,13,59,38,8
+    GROUPBOX        "Flags",IDC_STATIC,7,80,193,38
+    GROUPBOX        "System Rights",IDC_STATIC,206,7,116,194
+    GROUPBOX        "Authentication",IDC_STATIC,7,122,193,79
+    LTEXT           "Authentication method:",IDC_STATIC,13,135,74,8
+    LTEXT           "Certificate mapping method:",IDC_STATIC,13,154,88,8
+    LTEXT           "Certificate mapping data",IDC_STATIC,13,170,77,8
+    GROUPBOX        "General",IDC_STATIC,7,7,193,70
 END
 
-IDD_GROUP_PROPERTIES DIALOGEX 0, 0, 223, 266
+IDD_GROUP_PROPERTIES DIALOGEX 0, 0, 230, 301
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Group Properties"
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
-    EDITTEXT        IDC_EDIT_NAME,50,7,165,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_DESCRIPTION,50,27,165,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_NAME,57,7,165,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_DESCRIPTION,57,27,165,14,ES_AUTOHSCROLL
     CONTROL         "&Group is disabled",IDC_CHECK_DISABLED,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,58,79,10
     CONTROL         "&Manage users",IDC_CHECK_MANAGE_USERS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,90,61,10
-    CONTROL         "Configure SNMP &traps",IDC_CHECK_SNMP_TRAPS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,101,86,10
-    CONTROL         "Manage server &configuration",IDC_CHECK_MANAGE_CONFIG,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,112,106,10
     CONTROL         "Manage event &policy",IDC_CHECK_MANAGE_EPP,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,123,82,10
-    CONTROL         "Manage agent packa&ges",IDC_CHECK_MANAGE_PKG,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,135,95,10
-    CONTROL         "D&rop client connections",IDC_CHECK_DROP_CONN,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,119,90,91,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,129,90,82,10
+    CONTROL         "&Drop client connections",IDC_CHECK_DROP_CONN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,101,91,10
     CONTROL         "V&iew event database",IDC_CHECK_VIEW_EVENTDB,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,119,101,83,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,129,101,83,10
+    CONTROL         "Configure SNMP &traps",IDC_CHECK_SNMP_TRAPS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,112,86,10
     CONTROL         "&Edit event database",IDC_CHECK_EDIT_EVENTDB,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,119,112,79,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,129,112,79,10
+    CONTROL         "View SNMP t&rap log",IDC_CHECK_VIEW_TRAP_LOG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,123,79,10
     CONTROL         "Manage &actions",IDC_CHECK_MANAGE_ACTIONS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,119,123,67,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,129,123,86,10
+    CONTROL         "Manage server &configuration",IDC_CHECK_MANAGE_CONFIG,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,134,106,10
     CONTROL         "Delete ala&rms",IDC_CHECK_DELETE_ALARMS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,119,135,86,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,129,134,86,10
+    CONTROL         "Manage mo&dules",IDC_CHECK_MANAGE_MODULES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,145,70,10
+    CONTROL         "Manage &object tools",IDC_CHECK_MANAGE_TOOLS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,129,145,80,10
+    CONTROL         "Manage agent packa&ges",IDC_CHECK_MANAGE_PKG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,156,95,10
+    CONTROL         "Manage &scripts",IDC_CHECK_MANAGE_SCRIPTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,129,156,64,10
+    CONTROL         "Manage age&nt configurations",
+                    IDC_CHECK_MANAGE_AGENT_CFG,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,167,108,10
     CONTROL         "List1",IDC_LIST_MEMBERS,"SysListView32",LVS_REPORT | 
                     LVS_SHOWSELALWAYS | LVS_SORTASCENDING | 
                     LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_TABSTOP,12,
-                    163,143,72,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,160,163,50,14
-    PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,160,182,50,14
-    DEFPUSHBUTTON   "OK",IDOK,110,245,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,165,245,50,14
+                    198,148,72,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,166,198,50,14
+    PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,166,217,50,14
+    DEFPUSHBUTTON   "OK",IDOK,116,280,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,172,280,50,14
     LTEXT           "Name:",IDC_STATIC,7,10,22,8
     LTEXT           "Description:",IDC_STATIC,7,30,38,8
-    GROUPBOX        "System Rights",IDC_STATIC,7,79,208,71
-    GROUPBOX        "Flags",IDC_STATIC,7,46,208,27
-    GROUPBOX        "Members",IDC_STATIC,7,153,208,86
+    GROUPBOX        "System Rights",IDC_STATIC,7,79,215,104
+    GROUPBOX        "Flags",IDC_STATIC,7,46,215,27
+    GROUPBOX        "Members",IDC_STATIC,7,188,215,86
 END
 
 IDD_SET_PASSWORD DIALOGEX 0, 0, 251, 63
@@ -2995,6 +3037,21 @@ BEGIN
                     WS_EX_CLIENTEDGE
 END
 
+IDD_IMPORT_CA_CERT DIALOG DISCARDABLE  0, 0, 258, 84
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Import CA Certificate"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_FILE,7,17,183,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IDC_BUTTON_BROWSE,140,35,50,14
+    EDITTEXT        IDC_EDIT_COMMENTS,7,62,183,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,201,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,201,24,50,14
+    LTEXT           "Certificate file (should be in PEM format)",IDC_STATIC,
+                    7,7,126,8
+    LTEXT           "Comments",IDC_STATIC,7,51,34,8
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -3122,17 +3179,17 @@ BEGIN
     IDD_USER_PROPERTIES, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 215
+        RIGHTMARGIN, 322
         TOPMARGIN, 7
-        BOTTOMMARGIN, 234
+        BOTTOMMARGIN, 222
     END
 
     IDD_GROUP_PROPERTIES, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 215
+        RIGHTMARGIN, 222
         TOPMARGIN, 7
-        BOTTOMMARGIN, 259
+        BOTTOMMARGIN, 294
     END
 
     IDD_SET_PASSWORD, DIALOG
@@ -3734,6 +3791,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 167
     END
+
+    IDD_IMPORT_CA_CERT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 251
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 76
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -3888,6 +3953,7 @@ BEGIN
                             "\nAgent Configuration Manager\nAgent Configuration Manager"
     IDR_OBJECT_COMMENTS_EDITOR "\nComments\nComments"
     IDR_ALARM_DETAILS       "\nAlarm Details\nAlarm Details"
+    IDR_CERT_MANAGER        "\nCertificates\nCertificates"
 END
 
 STRINGTABLE DISCARDABLE 

@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.268 2007-03-15 19:56:46 victor Exp $ */
+/* $Id: session.cpp,v 1.269 2007-03-23 15:59:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -100,6 +100,8 @@ static void FillUserInfoMessage(CSCPMessage *pMsg, NETXMS_USER *pUser)
    pMsg->SetVariable(VID_USER_DESCRIPTION, pUser->szDescription);
    pMsg->SetVariable(VID_GUID, pUser->guid, UUID_LENGTH);
    pMsg->SetVariable(VID_AUTH_METHOD, (WORD)pUser->nAuthMethod);
+	pMsg->SetVariable(VID_CERT_MAPPING_METHOD, (WORD)pUser->nCertMappingMethod);
+	pMsg->SetVariable(VID_CERT_MAPPING_DATA, CHECK_NULL_EX(pUser->pszCertMappingData));
 }
 
 
@@ -1053,6 +1055,15 @@ void ClientSession::ProcessingThread(void)
 				break;
 			case CMD_DELETE_GRAPH:
 				DeleteGraph(pMsg);
+				break;
+			case CMD_ADD_CA_CERTIFICATE:
+				AddCACertificate(pMsg);
+				break;
+			case CMD_DELETE_CERTIFICATE:
+				DeleteCertificate(pMsg);
+				break;
+			case CMD_GET_CERT_LIST:
+				SendCertificateList(pMsg->GetId());
 				break;
          default:
             // Pass message to loaded modules
@@ -8797,4 +8808,182 @@ void ClientSession::SendSystemDCIList(CSCPMessage *pRequest)
 	}
 
    SendMessage(&msg);
+}
+
+
+//
+// Add CA certificate
+//
+
+void ClientSession::AddCACertificate(CSCPMessage *pRequest)
+{
+	DWORD dwLen, dwCertId;
+	BYTE *pData;
+	OPENSSL_CONST BYTE *p;
+	X509 *pCert;
+	TCHAR *pszQuery, *pszEscSubject, *pszComments, *pszEscComments;
+   CSCPMessage msg;
+
+	msg.SetId(pRequest->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
+	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+	{
+		dwLen = pRequest->GetVariableBinary(VID_CERTIFICATE, NULL, 0);
+		if (dwLen > 0)
+		{
+			pData = (BYTE *)malloc(dwLen);
+			pRequest->GetVariableBinary(VID_CERTIFICATE, pData, dwLen);
+
+			// Validate certificate
+			p = pData;
+			pCert = d2i_X509(NULL, &p, dwLen);
+			if (pCert != NULL)
+			{
+				pszEscSubject = EncodeSQLString(CHECK_NULL(pCert->name));
+				X509_free(pCert);
+				pszComments = pRequest->GetVariableStr(VID_COMMENTS);
+				pszEscComments = EncodeSQLString(pszComments);
+				free(pszComments);
+				dwCertId = CreateUniqueId(IDG_CERTIFICATE);
+				pszQuery = (TCHAR *)malloc((dwLen * 2 + _tcslen(pszEscComments) + _tcslen(pszEscSubject) + 256) * sizeof(TCHAR));
+				_stprintf(pszQuery, _T("INSERT INTO certificates (cert_id,cert_type,subject,comments,cert_data) VALUES (%d,%d,'%s','%s','"),
+				          dwCertId, CERT_TYPE_TRUSTED_CA, pszEscSubject, pszEscComments);
+				free(pszEscSubject);
+				free(pszEscComments);
+				BinToStr(pData, dwLen, &pszQuery[_tcslen(pszQuery)]);
+				_tcscat(pszQuery, _T("')"));
+				if (DBQuery(g_hCoreDB, pszQuery))
+				{
+					msg.SetVariable(VID_RCC, RCC_SUCCESS);
+					ReloadCertificates();
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+				}
+				free(pszQuery);
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_BAD_CERTIFICATE);
+			}
+			free(pData);
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_INVALID_REQUEST);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+	SendMessage(&msg);
+}
+
+
+//
+// Delete certificate
+//
+
+void ClientSession::DeleteCertificate(CSCPMessage *pRequest)
+{
+	DWORD dwCertId;
+	TCHAR szQuery[256];
+   CSCPMessage msg;
+
+	msg.SetId(pRequest->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
+	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+	{
+		dwCertId = pRequest->GetVariableLong(VID_CERTIFICATE_ID);
+		_stprintf(szQuery, _T("DELETE FROM certificates WHERE cert_id=%d"), dwCertId);
+		if (DBQuery(g_hCoreDB, szQuery))
+		{
+			msg.SetVariable(VID_RCC, RCC_SUCCESS);
+			ReloadCertificates();
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+	SendMessage(&msg);
+}
+
+
+//
+// Send list of installed certificates to client
+//
+
+void ClientSession::SendCertificateList(DWORD dwRqId)
+{
+   CSCPMessage msg;
+	DB_RESULT hResult;
+	int i, nRows;
+	DWORD dwId;
+	TCHAR *pszText;
+
+	msg.SetId(dwRqId);
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
+	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+	{
+		hResult = DBSelect(g_hCoreDB, _T("SELECT cert_id,cert_type,comments,subject FROM certificates"));
+		if (hResult != NULL)
+		{
+			nRows = DBGetNumRows(hResult);
+			msg.SetVariable(VID_RCC, RCC_SUCCESS);
+			msg.SetVariable(VID_NUM_CERTIFICATES, (DWORD)nRows);
+			for(i = 0, dwId = VID_CERT_LIST_BASE; i < nRows; i++, dwId += 6)
+			{
+				msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 0));
+				msg.SetVariable(dwId++, (WORD)DBGetFieldLong(hResult, i, 1));
+
+				pszText = DBGetField(hResult, i, 2, NULL, 0);
+				if (pszText != NULL)
+				{
+					DecodeSQLString(pszText);
+					msg.SetVariable(dwId++, pszText);
+				}
+				else
+				{
+					msg.SetVariable(dwId++, _T(""));
+				}
+
+				pszText = DBGetField(hResult, i, 3, NULL, 0);
+				if (pszText != NULL)
+				{
+					DecodeSQLString(pszText);
+					msg.SetVariable(dwId++, pszText);
+				}
+				else
+				{
+					msg.SetVariable(dwId++, _T(""));
+				}
+			}
+			DBFreeResult(hResult);
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+	SendMessage(&msg);
 }

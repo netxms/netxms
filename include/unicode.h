@@ -45,10 +45,14 @@
 #define _tcstoll  wcstoll
 #define _tcstoull wcstoull
 
+#define _ERR_error_tstring		ERR_error_string_W
+
 #else
 
 #define _tcstoll  strtoll
 #define _tcstoull strtoull
+
+#define _ERR_error_tstring		ERR_error_string
 
 #endif
 
@@ -131,6 +135,8 @@
 #define _istdigit isdigit
 #define _istalpha isalpha
 #define _istupper isupper
+
+#define _ERR_error_tstring		ERR_error_string
 
 #endif
 

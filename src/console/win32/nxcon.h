@@ -101,6 +101,7 @@ enum
    VIEW_DESKTOP_MANAGER,
    VIEW_AGENT_CONFIG_MANAGER,
    VIEW_ALARM_DETAILS,
+	VIEW_CERTIFICATE_MANAGER,
    MAX_VIEW_ID
 };
 
@@ -225,6 +226,8 @@ protected:
 	HACCEL m_hAgentCfgMgrAccel;   // Accelerator for agent configuration manager
 	HMENU m_hObjectCommentsMenu;  // Menu for object comments editor
 	HACCEL m_hObjectCommentsAccel;// Accelerator for object comments editor
+	HMENU m_hCertManagerMenu;     // Menu for certificate manager
+	HACCEL m_hCertManagerAccel;   // Accelerator for certificate manager
 	
 public:
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
@@ -265,6 +268,7 @@ public:
 	afx_msg void OnFilePagesetup();
 	afx_msg void OnToolsImportmp();
 	afx_msg void OnToolsGraphsManage();
+	afx_msg void OnControlpanelCertificates();
 	//}}AFX_MSG
 	afx_msg void OnGraphListUpdate(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnPredefinedGraph(UINT nCmd);

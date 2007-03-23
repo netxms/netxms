@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,9 +62,7 @@
 # define DDIR_IMAGES           "\\images"
 # define DDIR_PACKAGES         "\\packages"
 # define DDIR_BACKGROUNDS      "\\backgrounds"
-# define DDIR_CERT             "\\cert"
 # define DFILE_KEYS            "\\server_key"
-# define DFILE_ROOT_CERT       "\\root.cer"
 # define DFILE_COMPILED_MIB    "\\mibs\\netxms.mib"
 
 #else    /* _WIN32 */
@@ -85,9 +83,7 @@
 # define DDIR_IMAGES           "/images"
 # define DDIR_PACKAGES         "/packages"
 # define DDIR_BACKGROUNDS      "/backgrounds"
-# define DDIR_CERT             "/cert"
 # define DFILE_KEYS            "/.server_key"
-# define DFILE_ROOT_CERT       "/.root.cer"
 # define DFILE_COMPILED_MIB    "/mibs/netxms.mib"
 
 #endif   /* _WIN32 */
@@ -123,7 +119,6 @@
 #define AF_DB_LOCKED                      0x01000000
 #define AF_ENABLE_MULTIPLE_DB_CONN        0x02000000
 #define AF_DB_CONNECTION_LOST             0x04000000
-#define AF_CERT_AUTH_DISABLED             0x08000000
 #define AF_SERVER_INITIALIZED             0x40000000
 #define AF_SHUTDOWN                       0x80000000
 

@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.261 2007-03-15 19:56:46 victor Exp $ */
+/* $Id: nxclapi.h,v 1.262 2007-03-23 15:59:04 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -1116,6 +1116,8 @@ typedef struct
    DWORD *pdwMemberList;   // Only for groups
    TCHAR szFullName[MAX_USER_FULLNAME];    // Only for users
    TCHAR szDescription[MAX_USER_DESCR];
+	int nCertMappingMethod;	// Only for users
+	TCHAR *pszCertMappingData;	// Only for users
 } NXC_USER;
 
 
@@ -1663,6 +1665,30 @@ typedef struct
 
 
 //
+// Certificate information
+//
+
+typedef struct
+{
+	DWORD dwId;
+	int nType;
+	TCHAR *pszSubject;
+	TCHAR *pszComments;
+} NXC_CERT_INFO;
+
+
+//
+// Certificate list
+//
+
+typedef struct
+{
+	DWORD dwNumElements;
+	NXC_CERT_INFO *pElements;
+} NXC_CERT_LIST;
+
+
+//
 // Functions
 //
 
@@ -1958,6 +1984,12 @@ DWORD LIBNXCL_EXPORTABLE NXCGetGraphList(NXC_SESSION hSession, DWORD *pdwNumGrap
 void LIBNXCL_EXPORTABLE NXCDestroyGraphList(DWORD dwNumGraphs, NXC_GRAPH *pList);
 DWORD LIBNXCL_EXPORTABLE NXCDefineGraph(NXC_SESSION hSession, NXC_GRAPH *pGraph);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteGraph(NXC_SESSION hSession, DWORD dwGraphId);
+
+DWORD LIBNXCL_EXPORTABLE NXCAddCACertificate(NXC_SESSION hSession, DWORD dwCertLen,
+                                             BYTE *pCert, TCHAR *pszComments);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteCertificate(NXC_SESSION hSession, DWORD dwCertId);
+DWORD LIBNXCL_EXPORTABLE NXCGetCertificateList(NXC_SESSION hSession, NXC_CERT_LIST **ppList);
+void LIBNXCL_EXPORTABLE NXCDestroyCertificateList(NXC_CERT_LIST *pList);
 
 #ifdef __cplusplus
 }

@@ -1070,3 +1070,18 @@ CREATE TABLE graph_acl
 	user_rights integer not null,
 	PRIMARY KEY(graph_id,user_id)
 ) TABLE_TYPE;
+
+
+/*
+** Certificates
+*/
+
+CREATE TABLE certificates
+(
+	cert_id integer not null,
+	cert_type integer not null,
+	cert_data SQL_TEXT not null,	// Certificate in PEM format
+	subject SQL_TEXT not null,
+	comments SQL_TEXT not null,
+	PRIMARY KEY(cert_id)
+) TABLE_TYPE;

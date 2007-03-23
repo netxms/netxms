@@ -2,6 +2,7 @@
 * 0.2.16
 *
 
+- Implemented user authentification by certificates
 - Cluster monitoring improved
 - Node names resolution working
 - Windows console:

@@ -33,6 +33,11 @@ CGroupPropDlg::CGroupPropDlg(CWnd* pParent /*=NULL*/)
 	m_bConfigureTraps = FALSE;
 	m_bManagePkg = FALSE;
 	m_bDeleteAlarms = FALSE;
+	m_bManageAgentCfg = FALSE;
+	m_bManageModules = FALSE;
+	m_bManageScripts = FALSE;
+	m_bManageTools = FALSE;
+	m_bViewTrapLog = FALSE;
 	//}}AFX_DATA_INIT
 
    m_pdwMembers = NULL;
@@ -63,6 +68,11 @@ void CGroupPropDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_SNMP_TRAPS, m_bConfigureTraps);
 	DDX_Check(pDX, IDC_CHECK_MANAGE_PKG, m_bManagePkg);
 	DDX_Check(pDX, IDC_CHECK_DELETE_ALARMS, m_bDeleteAlarms);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_AGENT_CFG, m_bManageAgentCfg);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_MODULES, m_bManageModules);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_SCRIPTS, m_bManageScripts);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_TOOLS, m_bManageTools);
+	DDX_Check(pDX, IDC_CHECK_VIEW_TRAP_LOG, m_bViewTrapLog);
 	//}}AFX_DATA_MAP
 }
 

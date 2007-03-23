@@ -74,11 +74,13 @@
 #include "ConsoleUpgradeDlg.h"
 #include "FatalErrorDlg.h"
 #include "GraphManagerDlg.h"
+#include "CertManager.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
+#include <openssl/applink.c>
 #endif
 
 
@@ -131,6 +133,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_FILE_PAGESETUP, OnFilePagesetup)
 	ON_COMMAND(ID_TOOLS_IMPORTMP, OnToolsImportmp)
 	ON_COMMAND(ID_TOOLS_GRAPHS_MANAGE, OnToolsGraphsManage)
+	ON_COMMAND(ID_CONTROLPANEL_CERTIFICATES, OnControlpanelCertificates)
 	//}}AFX_MSG_MAP
 	ON_THREAD_MESSAGE(NXCM_GRAPH_LIST_UPDATED, OnGraphListUpdate)
 	ON_COMMAND_RANGE(GRAPH_MENU_FIRST_ID, GRAPH_MENU_LAST_ID, OnPredefinedGraph)
@@ -245,6 +248,8 @@ BOOL CConsoleApp::InitInstance()
    BYTE *pData;
    HMENU hMenu;
    LONG nVer;
+
+	CRYPTO_malloc_init();
 
    // Setup our working directory
    if (!SetupWorkDir())
@@ -438,6 +443,10 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hObjectCommentsMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 24), _T("&Comments"));
    InsertMenu(m_hObjectCommentsMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 17), _T("&Edit"));
 
+   m_hCertManagerMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hCertManagerMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hCertManagerMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 25), _T("&Certificate"));
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -546,6 +555,8 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hAgentCfgMgrAccel);
    SafeFreeResource(m_hObjectCommentsMenu);
    SafeFreeResource(m_hObjectCommentsAccel);
+   SafeFreeResource(m_hCertManagerMenu);
+   SafeFreeResource(m_hCertManagerAccel);
 
    CloseHandle(g_mutexActionListAccess);
    CloseHandle(g_mutexGraphListAccess);
@@ -1110,6 +1121,28 @@ void CConsoleApp::OnControlpanelEvents()
       {
          ErrorBox(dwResult, _T("Unable to open event configuration database:\n%s"));
       }
+   }
+}
+
+
+//
+// Handler for WM_COMMAND::ID_CONTROLPANEL_CERTIFICATES message
+//
+
+void CConsoleApp::OnControlpanelCertificates() 
+{
+	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_viewState[VIEW_CERTIFICATE_MANAGER].bActive)
+   {
+      m_viewState[VIEW_CERTIFICATE_MANAGER].pWnd->BringWindowToTop();
+   }
+   else
+   {
+	   pFrame->CreateNewChild(RUNTIME_CLASS(CCertManager),
+                             IDR_CERT_MANAGER,
+                             m_hCertManagerMenu, m_hCertManagerAccel);
    }
 }
 

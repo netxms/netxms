@@ -1,6 +1,7 @@
+/* $Id: id.cpp,v 1.23 2007-03-23 15:59:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: id.cpp
+** File: id.cpp
 **
 **/
 
@@ -27,7 +28,7 @@
 // Constants
 //
 
-#define NUMBER_OF_GROUPS   19
+#define NUMBER_OF_GROUPS   20
 
 
 //
@@ -38,13 +39,13 @@ static MUTEX m_mutexTableAccess;
 static DWORD m_dwFreeIdTable[NUMBER_OF_GROUPS] = { 10, 1, FIRST_USER_EVENT_ID, 1, 1, 
                                                    1000, 1, 0x80000000,
                                                    1, 1, 0x80000001, 1, 1, 1, 1,
-                                                   10000, 10000, 1, 1
+                                                   10000, 10000, 1, 1, 1
                                                  };
 static DWORD m_dwIdLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 
                                                 0x7FFFFFFF, 0xFFFFFFFE, 0x7FFFFFFF, 0xFFFFFFFF,
                                                 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE,
                                                 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-                                                0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFF
+                                                0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
                                               };
 static QWORD m_qwFreeEventId = 1;
 static char *m_pszGroupNames[NUMBER_OF_GROUPS] =
@@ -67,7 +68,8 @@ static char *m_pszGroupNames[NUMBER_OF_GROUPS] =
    "Object Tools",
    "Scripts",
    "Agent Configs",
-	"Graphs"
+	"Graphs",
+	"Certificates"
 };
 
 
@@ -337,6 +339,16 @@ BOOL InitIdTable(void)
       if (DBGetNumRows(hResult) > 0)
          m_dwFreeIdTable[IDG_GRAPH] = max(m_dwFreeIdTable[IDG_GRAPH],
                                           DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available certificate id
+   hResult = DBSelect(g_hCoreDB, "SELECT max(cert_id) FROM certificates");
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_CERTIFICATE] = max(m_dwFreeIdTable[IDG_CERTIFICATE],
+                                                DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
    return TRUE;

@@ -627,21 +627,21 @@ Cannot initialize certificate store: %1
 .
 
 MessageId=
-SymbolicName=MSG_CANNOT_ADD_CERT_LOOKUP
+SymbolicName=MSG_CANNOT_LOAD_CERT
 Language=English
-Cannot add lookup context to certificate store: %1
+Cannot load certificate %1 from database: %2
 .
 
 MessageId=
-SymbolicName=MSG_CANNOT_LOAD_ROOT_CERT
+SymbolicName=MSG_CANNOT_ADD_CERT
 Language=English
-Cannot load root certificate from file "%1": %2
+Cannot add certificate %1 to store: %2
 .
 
 MessageId=
-SymbolicName=MSG_CERT_AUTH_DISABLED
+SymbolicName=MSG_CA_CERTIFICATES_LOADED
 Language=English
-User authentication using certificates is disabled because of certificate subsystem initialization failure
+Successfully loaded %1 trusted CA certificates
 .
 
 ;#endif

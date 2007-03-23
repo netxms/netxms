@@ -659,6 +659,8 @@ src/console/win32/AlarmBrowser.cpp -text
 src/console/win32/AlarmBrowser.h -text
 src/console/win32/AlarmView.cpp -text
 src/console/win32/AlarmView.h -text
+src/console/win32/CertManager.cpp -text
+src/console/win32/CertManager.h -text
 src/console/win32/ClusterPropsGeneral.cpp -text
 src/console/win32/ClusterPropsGeneral.h -text
 src/console/win32/ClusterPropsResources.cpp -text
@@ -771,6 +773,8 @@ src/console/win32/GraphStylePage.cpp -text
 src/console/win32/GraphStylePage.h -text
 src/console/win32/GroupPropDlg.cpp -text
 src/console/win32/GroupPropDlg.h -text
+src/console/win32/ImportCertDlg.cpp -text
+src/console/win32/ImportCertDlg.h -text
 src/console/win32/InputBox.cpp -text
 src/console/win32/InputBox.h -text
 src/console/win32/InternalItemSelDlg.cpp -text
@@ -940,6 +944,8 @@ src/console/win32/icons/active.ico -text
 src/console/win32/icons/again.ico -text
 src/console/win32/icons/alarm.ico -text
 src/console/win32/icons/back.ico -text
+src/console/win32/icons/cert.ico -text
+src/console/win32/icons/certmgr.ico -text
 src/console/win32/icons/cluster.ico -text
 src/console/win32/icons/command.ico -text
 src/console/win32/icons/configs.ico -text
@@ -1077,6 +1083,7 @@ src/libnxcl/Makefile.am -text
 src/libnxcl/actions.cpp -text
 src/libnxcl/agentcfg.cpp -text
 src/libnxcl/alarms.cpp -text
+src/libnxcl/cert.cpp -text
 src/libnxcl/comm.cpp -text
 src/libnxcl/datacoll.cpp -text
 src/libnxcl/epp.cpp -text

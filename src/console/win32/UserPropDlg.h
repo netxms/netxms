@@ -14,6 +14,7 @@ class CUserPropDlg : public CDialog
 {
 // Construction
 public:
+	int m_nMappingMethod;
 	int m_nAuthMethod;
 	NXC_USER * m_pUser;
 	CUserPropDlg(CWnd* pParent = NULL);   // standard constructor
@@ -21,6 +22,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CUserPropDlg)
 	enum { IDD = IDD_USER_PROPERTIES };
+	CComboBox	m_wndComboMapping;
 	CComboBox	m_wndComboAuth;
 	BOOL	m_bAccountDisabled;
 	BOOL	m_bDropConn;
@@ -37,6 +39,12 @@ public:
 	BOOL	m_bConfigureTraps;
 	BOOL	m_bDeleteAlarms;
 	BOOL	m_bManagePkg;
+	BOOL	m_bManageAgentCfg;
+	BOOL	m_bManageModules;
+	BOOL	m_bManageScripts;
+	BOOL	m_bManageTools;
+	BOOL	m_bViewTrapLog;
+	CString	m_strMappingData;
 	//}}AFX_DATA
 
 

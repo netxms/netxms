@@ -1,7 +1,8 @@
+/* $Id: users.cpp,v 1.28 2007-03-23 15:59:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +18,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: users.cpp
+** File: users.cpp
 **
 **/
 
@@ -47,11 +48,14 @@ void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser)
       pUser->pdwMemberList = (DWORD *)realloc(pUser->pdwMemberList, sizeof(DWORD) * pUser->dwNumMembers);
       for(i = 0, dwId = VID_GROUP_MEMBER_BASE; i < pUser->dwNumMembers; i++, dwId++)
          pUser->pdwMemberList[i] = pMsg->GetVariableLong(dwId);
+		pUser->pszCertMappingData = NULL;
    }
    else     // User-specific data
    {
       pUser->nAuthMethod = pMsg->GetVariableShort(VID_AUTH_METHOD);
       pMsg->GetVariableStr(VID_USER_FULL_NAME, pUser->szFullName, MAX_USER_FULLNAME);
+		pUser->nCertMappingMethod = pMsg->GetVariableShort(VID_CERT_MAPPING_METHOD);
+		pUser->pszCertMappingData = pMsg->GetVariableStr(VID_CERT_MAPPING_DATA);
       pUser->pdwMemberList = NULL;
    }
 }
@@ -194,6 +198,8 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_SESSION hSession, NXC_USER *pUserInfo
    {
       msg.SetVariable(VID_USER_FULL_NAME, pUserInfo->szFullName);
       msg.SetVariable(VID_AUTH_METHOD, (WORD)pUserInfo->nAuthMethod);
+		msg.SetVariable(VID_CERT_MAPPING_METHOD, (WORD)pUserInfo->nCertMappingMethod);
+		msg.SetVariable(VID_CERT_MAPPING_DATA, CHECK_NULL_EX(pUserInfo->pszCertMappingData));
    }
 
    ((NXCL_Session *)hSession)->SendMsg(&msg);

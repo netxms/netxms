@@ -441,6 +441,9 @@ typedef struct
 #define CMD_DEFINE_GRAPH				0x00C6
 #define CMD_DELETE_GRAPH				0x00C7
 #define CMD_GET_SYSTEM_DCI_LIST		0x00C8
+#define CMD_ADD_CA_CERTIFICATE		0x00C9
+#define CMD_DELETE_CERTIFICATE		0x00CA
+#define CMD_GET_CERT_LIST				0x00CB
 
 
 //
@@ -727,6 +730,8 @@ typedef struct
 #define VID_CHALLENGE					((DWORD)278)
 #define VID_CERT_MAPPING_METHOD		((DWORD)279)
 #define VID_CERT_MAPPING_DATA       ((DWORD)280)
+#define VID_CERTIFICATE_ID				((DWORD)281)
+#define VID_NUM_CERTIFICATES        ((DWORD)282)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -847,6 +852,9 @@ typedef struct
 
 // Base value for system DCI list
 #define VID_SYSDCI_LIST_BASE			((DWORD)0x10000000)
+
+// Base value for certificate list
+#define VID_CERT_LIST_BASE 			((DWORD)0x10000000)
 
 
 //

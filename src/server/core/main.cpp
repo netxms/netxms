@@ -51,7 +51,7 @@ extern Queue g_nodePollerQueue;
 extern Queue g_conditionPollerQueue;
 extern Queue *g_pItemQueue;
 
-BOOL InitCertificates(void);
+void InitCertificates(void);
 
 
 //
@@ -485,11 +485,7 @@ retry_db_lock:
    }
 
    // Initialize certificate store and CA
-   if (!InitCertificates())
-	{
-		WriteLog(MSG_CERT_AUTH_DISABLED, EVENTLOG_WARNING_TYPE, NULL);
-		g_dwFlags |= AF_CERT_AUTH_DISABLED;
-	}
+   InitCertificates();
 
    // Initialize SNMP stuff
    SnmpInit();
@@ -876,7 +872,6 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_OBJECTS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_LOCKED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_CONNECTION_LOST));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CERT_AUTH_DISABLED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(pCtx, "\n");

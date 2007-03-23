@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.21 2007-02-05 11:38:04 alk Exp $ */
+/* $Id: unicode.cpp,v 1.22 2007-03-23 15:59:05 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -352,3 +352,23 @@ char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(WCHAR *pwszString)
    WideCharToMultiByte(CP_UTF8, 0, pwszString, -1, pszOut, nLen, NULL, NULL);
    return pszOut;
 }
+
+
+//
+// Get OpenSSL error string as UNICODE string
+// Buffer must be at least 256 character long
+//
+
+#ifdef _WITH_ENCRYPTION
+
+WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer)
+{
+	char text[256];
+
+	memset(text, 0, sizeof(text));
+	ERR_error_string(nError, text);
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, text, -1, pwszBuffer, 256);
+	return pwszBuffer;
+}
+
+#endif

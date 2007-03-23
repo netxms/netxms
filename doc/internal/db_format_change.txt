@@ -1,4 +1,20 @@
 *************
+* 59 ==> 60 *
+*************
+
+- New table added:
+	CREATE TABLE certificates
+	(
+		cert_id integer not null,
+		cert_type integer not null,
+		cert_data SQL_TEXT not null,
+		subject SQL_TEXT not null,
+		comments SQL_TEXT not null,
+		PRIMARY KEY(cert_id)
+	) TABLE_TYPE;
+
+
+*************
 * 58 ==> 59 *
 *************
 

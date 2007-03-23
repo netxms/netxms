@@ -78,6 +78,30 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V59 to V60
+//
+
+static BOOL H_UpgradeFromV59(void)
+{
+	if (!CreateTable(_T("CREATE TABLE certificates (")
+	                 _T("cert_id integer not null,")
+	                 _T("cert_type integer not null,")
+	                 _T("cert_data $SQL:TEXT not null,")
+	                 _T("subject $SQL:TEXT not null,")
+	                 _T("comments $SQL:TEXT not null,")
+	                 _T("PRIMARY KEY(cert_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='60' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V58 to V59
 //
 
@@ -2623,6 +2647,7 @@ static struct
    { 56, H_UpgradeFromV56 },
    { 57, H_UpgradeFromV57 },
    { 58, H_UpgradeFromV58 },
+   { 59, H_UpgradeFromV59 },
    { 0, NULL }
 };
 

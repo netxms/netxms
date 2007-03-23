@@ -1,4 +1,4 @@
-/* $Id: nxcp.cpp,v 1.13 2007-03-01 23:29:05 victor Exp $ */
+/* $Id: nxcp.cpp,v 1.14 2007-03-23 15:59:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
@@ -239,10 +239,13 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_GET_GRAPH_LIST"),
 		_T("CMD_DEFINE_GRAPH"),
 		_T("CMD_DELETE_GRAPH"),
-		_T("CMD_GET_SYSTEM_DCI_LIST")
+		_T("CMD_GET_SYSTEM_DCI_LIST"),
+		_T("CMD_ADD_CA_CERTIFICATE"),
+		_T("CMD_DELETE_CERTIFICATE"),
+		_T("CMD_GET_CERT_LIST")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_SYSTEM_DCI_LIST))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_CERT_LIST))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _stprintf(pszBuffer, _T("CMD_UNKNOWN(%d)"), wCode);

@@ -37,6 +37,11 @@ public:
 	BOOL	m_bConfigureTraps;
 	BOOL	m_bManagePkg;
 	BOOL	m_bDeleteAlarms;
+	BOOL	m_bManageAgentCfg;
+	BOOL	m_bManageModules;
+	BOOL	m_bManageScripts;
+	BOOL	m_bManageTools;
+	BOOL	m_bViewTrapLog;
 	//}}AFX_DATA
 
 

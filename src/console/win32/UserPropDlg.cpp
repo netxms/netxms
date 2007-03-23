@@ -34,6 +34,12 @@ CUserPropDlg::CUserPropDlg(CWnd* pParent /*=NULL*/)
 	m_bConfigureTraps = FALSE;
 	m_bDeleteAlarms = FALSE;
 	m_bManagePkg = FALSE;
+	m_bManageAgentCfg = FALSE;
+	m_bManageModules = FALSE;
+	m_bManageScripts = FALSE;
+	m_bManageTools = FALSE;
+	m_bViewTrapLog = FALSE;
+	m_strMappingData = _T("");
 	//}}AFX_DATA_INIT
    m_nAuthMethod = 0;
 }
@@ -43,6 +49,7 @@ void CUserPropDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CUserPropDlg)
+	DDX_Control(pDX, IDC_COMBO_MAPPING, m_wndComboMapping);
 	DDX_Control(pDX, IDC_COMBO_AUTH, m_wndComboAuth);
 	DDX_Check(pDX, IDC_CHECK_DISABLED, m_bAccountDisabled);
 	DDX_Check(pDX, IDC_CHECK_DROP_CONN, m_bDropConn);
@@ -62,6 +69,12 @@ void CUserPropDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_SNMP_TRAPS, m_bConfigureTraps);
 	DDX_Check(pDX, IDC_CHECK_DELETE_ALARMS, m_bDeleteAlarms);
 	DDX_Check(pDX, IDC_CHECK_MANAGE_PKG, m_bManagePkg);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_AGENT_CFG, m_bManageAgentCfg);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_MODULES, m_bManageModules);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_SCRIPTS, m_bManageScripts);
+	DDX_Check(pDX, IDC_CHECK_MANAGE_TOOLS, m_bManageTools);
+	DDX_Check(pDX, IDC_CHECK_VIEW_TRAP_LOG, m_bViewTrapLog);
+	DDX_Text(pDX, IDC_EDIT_MAPPING_DATA, m_strMappingData);
 	//}}AFX_DATA_MAP
 }
 
@@ -94,6 +107,11 @@ BOOL CUserPropDlg::OnInitDialog()
       EnableDlgItem(this, IDC_CHECK_MANAGE_EPP, FALSE);
       EnableDlgItem(this, IDC_CHECK_MANAGE_PKG, FALSE);
       EnableDlgItem(this, IDC_CHECK_DELETE_ALARMS, FALSE);
+      EnableDlgItem(this, IDC_CHECK_MANAGE_TOOLS, FALSE);
+      EnableDlgItem(this, IDC_CHECK_MANAGE_MODULES, FALSE);
+      EnableDlgItem(this, IDC_CHECK_MANAGE_AGENT_CFG, FALSE);
+      EnableDlgItem(this, IDC_CHECK_MANAGE_SCRIPTS, FALSE);
+      EnableDlgItem(this, IDC_CHECK_VIEW_TRAP_LOG, FALSE);
    }
 
    for(i = 0; g_szAuthMethod[i] != NULL; i++)
@@ -101,6 +119,12 @@ BOOL CUserPropDlg::OnInitDialog()
    if ((m_nAuthMethod < 0) || (m_nAuthMethod >= i))
       m_nAuthMethod = 0;
    m_wndComboAuth.SelectString(-1, g_szAuthMethod[m_nAuthMethod]);
+
+   for(i = 0; g_szCertMappingMethod[i] != NULL; i++)
+      m_wndComboMapping.AddString(g_szCertMappingMethod[i]);
+   if ((m_nMappingMethod < 0) || (m_nMappingMethod >= i))
+      m_nMappingMethod = 0;
+   m_wndComboMapping.SelectString(-1, g_szCertMappingMethod[m_nMappingMethod]);
 
 	return TRUE;
 }
@@ -120,6 +144,14 @@ void CUserPropDlg::OnOK()
       if (!_tcscmp(szText, g_szAuthMethod[i]))
       {
          m_nAuthMethod = i;
+         break;
+      }
+
+   m_wndComboMapping.GetWindowText(szText, 256);
+   for(i = 0; g_szCertMappingMethod[i] != NULL; i++)
+      if (!_tcscmp(szText, g_szCertMappingMethod[i]))
+      {
+         m_nMappingMethod = i;
          break;
       }
 

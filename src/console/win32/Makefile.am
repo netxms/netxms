@@ -21,6 +21,7 @@ EXTRA_DIST = \
 	AgentConfigMgr.cpp AgentConfigMgr.h \
 	AlarmBrowser.cpp AlarmBrowser.h \
 	AlarmView.cpp AlarmView.h \
+	CertManager.cpp CertManager.h \
 	ClusterPropsGeneral.cpp ClusterPropsGeneral.h \
 	ClusterPropsResources.cpp ClusterPropsResources.h \
 	ClusterResDlg.cpp ClusterResDlg.h \
@@ -79,6 +80,7 @@ EXTRA_DIST = \
 	GraphManagerDlg.cpp GraphManagerDlg.h \
 	GraphSettingsPage.cpp GraphSettingsPage.h \
 	GraphStylePage.cpp GraphStylePage.h \
+	ImportCertDlg.cpp ImportCertDlg.h \
 	LastValuesView.cpp LastValuesView.h \
 	LPPList.cpp LPPList.h \
 	MainFrm.cpp MainFrm.h \

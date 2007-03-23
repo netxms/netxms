@@ -30,7 +30,7 @@
 //
 
 static X509_STORE *m_pTrustedCertStore = NULL;
-static X509_LOOKUP *m_pCertLookup = NULL;
+static MUTEX m_mutexStoreAccess = INVALID_MUTEX_HANDLE;
 
 
 //
@@ -41,7 +41,7 @@ X509 *CertificateFromLoginMessage(CSCPMessage *pMsg)
 {
 	DWORD dwLen;
 	BYTE *pData;
-	const BYTE *p;
+	OPENSSL_CONST BYTE *p;
 	X509 *pCert = NULL;
 
 	dwLen = pMsg->GetVariableBinary(VID_CERTIFICATE, NULL, 0);
@@ -69,10 +69,12 @@ BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pChallenge, BYT
 	BOOL bValid = FALSE;
 
 	DbgPrintf(AF_DEBUG_MISC, "Validating certificate \"%s\" for user %s", CHECK_NULL(pCert->name), pszLogin);
+	MutexLock(m_mutexStoreAccess, INFINITE);
 
-	if (g_dwFlags & AF_CERT_AUTH_DISABLED)
+	if (m_pTrustedCertStore == NULL)
 	{
-		DbgPrintf(AF_DEBUG_MISC, "Cannot validate user certificate because certificate authentication is disabled");
+		DbgPrintf(AF_DEBUG_MISC, "Cannot validate user certificate because certificate store is not initialized");
+		MutexUnlock(m_mutexStoreAccess);
 		return FALSE;
 	}
 
@@ -130,7 +132,84 @@ BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pChallenge, BYT
 		}
 	}
 
+	MutexUnlock(m_mutexStoreAccess);
 	return bValid;
+}
+
+
+//
+// Reload certificates from database
+//
+
+void ReloadCertificates(void)
+{
+	BYTE *pBinCert;
+	OPENSSL_CONST BYTE *p;
+	DB_RESULT hResult;
+	int i, nRows, nLoaded;
+	DWORD dwLen;
+	X509 *pCert;
+	TCHAR szBuffer[256], szSubject[256], *pszCertData;
+
+	MutexLock(m_mutexStoreAccess, INFINITE);
+
+	if (m_pTrustedCertStore != NULL)
+		X509_STORE_free(m_pTrustedCertStore);
+
+	m_pTrustedCertStore = X509_STORE_new();
+	if (m_pTrustedCertStore != NULL)
+	{
+		_stprintf(szBuffer, _T("SELECT cert_data,subject FROM certificates WHERE cert_type=%d"), CERT_TYPE_TRUSTED_CA);
+		hResult = DBSelect(g_hCoreDB, szBuffer);
+		if (hResult != NULL)
+		{
+			nRows = DBGetNumRows(hResult);
+			for(i = 0, nLoaded = 0; i < nRows; i++)
+			{
+				pszCertData = DBGetField(hResult, i, 0, NULL, 0);
+				if (pszCertData != NULL)
+				{
+					dwLen = (DWORD)_tcslen(pszCertData);
+					pBinCert = (BYTE *)malloc(dwLen);
+					StrToBin(pszCertData, pBinCert, dwLen);
+					free(pszCertData);
+					p = pBinCert;
+					pCert = d2i_X509(NULL, &p, dwLen);
+					free(pBinCert);
+					if (pCert != NULL)
+					{
+						if (X509_STORE_add_cert(m_pTrustedCertStore, pCert))
+						{
+							nLoaded++;
+						}
+						else
+						{
+							WriteLog(MSG_CANNOT_ADD_CERT, EVENTLOG_ERROR_TYPE,
+										"ss", DBGetField(hResult, i, 1, szSubject, 256),
+										_ERR_error_tstring(ERR_get_error(), szBuffer));
+						}
+					}
+					else
+					{
+						WriteLog(MSG_CANNOT_LOAD_CERT, EVENTLOG_ERROR_TYPE,
+									"ss", DBGetField(hResult, i, 1, szSubject, 256),
+									_ERR_error_tstring(ERR_get_error(), szBuffer));
+					}
+				}
+			}
+			DBFreeResult(hResult);
+
+			if (nLoaded > 0)
+				WriteLog(MSG_CA_CERTIFICATES_LOADED, EVENTLOG_INFORMATION_TYPE, "d", nLoaded);
+		}
+	}
+	else
+	{
+		WriteLog(MSG_CANNOT_INIT_CERT_STORE, EVENTLOG_ERROR_TYPE,
+		         "s", _ERR_error_tstring(ERR_get_error(), szBuffer));
+	}
+
+	MutexUnlock(m_mutexStoreAccess);
 }
 
 
@@ -138,52 +217,17 @@ BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pChallenge, BYT
 // Certificate stuff initialization
 //
 
-BOOL InitCertificates(void)
+void InitCertificates(void)
 {
-	TCHAR szError[256], szCertFile[MAX_PATH];
-	BOOL bSuccess = FALSE;
-
-	// Root certificate file
-	_tcscpy(szCertFile, g_szDataDir);
-	_tcscat(szCertFile, DFILE_ROOT_CERT);
+	m_mutexStoreAccess = MutexCreate();
 
 	// Create self-signed root certificate if needed
 	if (g_dwFlags & AF_INTERNAL_CA)
 	{
-		if (_taccess(szCertFile, 0) != 0)
-		{
-			/* TODO: implement generation of self-signed certificate */
-		}
+		/* TODO: implement generation of self-signed certificate */
 	}
 
-	m_pTrustedCertStore = X509_STORE_new();
-	if (m_pTrustedCertStore != NULL)
-	{
-		m_pCertLookup = X509_STORE_add_lookup(m_pTrustedCertStore, X509_LOOKUP_file());
-		if (m_pCertLookup != NULL)
-		{
-			if (X509_LOOKUP_load_file(m_pCertLookup, szCertFile, X509_FILETYPE_PEM))
-			{
-				bSuccess = TRUE;
-			}
-			else
-			{
-				WriteLog(MSG_CANNOT_LOAD_ROOT_CERT, EVENTLOG_ERROR_TYPE,
-							"ss", szCertFile, ERR_error_string(ERR_get_error(), szError));
-			}
-		}
-		else
-		{
-			WriteLog(MSG_CANNOT_ADD_CERT_LOOKUP, EVENTLOG_ERROR_TYPE,
-						"s", ERR_error_string(ERR_get_error(), szError));
-		}
-	}
-	else
-	{
-		WriteLog(MSG_CANNOT_INIT_CERT_STORE, EVENTLOG_ERROR_TYPE,
-		         "s", ERR_error_string(ERR_get_error(), szError));
-	}
-	return bSuccess;
+	ReloadCertificates();
 }
 
 
@@ -194,9 +238,8 @@ BOOL InitCertificates(void)
 // Stub for certificate initialization
 //
 
-BOOL InitCertificates(void)
+void InitCertificates(void)
 {
-	return TRUE;
 }
 
 #endif	/* _WITH_ENCRYPTION */

@@ -233,6 +233,9 @@
 #define IDD_DEFINE_GRAPH                359
 #define IDD_MANAGE_GRAPHS               360
 #define IDD_GRAPH_PROP_STYLES           361
+#define IDI_CERT                        362
+#define IDI_CERTMGR                     363
+#define IDD_IMPORT_CA_CERT              364
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -596,6 +599,14 @@
 #define IDC_COMBO_RESOURCES             1439
 #define IDC_TREE_GRAPHS                 1451
 #define IDC_BUTTON_PROPERTIES           1452
+#define IDC_COMBO_MAPPING               1464
+#define IDC_CHECK_MANAGE_TOOLS          1465
+#define IDC_CHECK_MANAGE_SCRIPTS        1466
+#define IDC_CHECK_VIEW_TRAP_LOG         1467
+#define IDC_CHECK_MANAGE_AGENT_CFG      1468
+#define IDC_EDIT_MAPPING_DATA           1469
+#define IDC_CHECK_MANAGE_MODULES        1470
+#define IDC_EDIT_COMMENTS               1472
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -615,6 +626,7 @@
 #define IDR_AGENT_CONFIG_MANAGER        8116
 #define IDR_OBJECT_COMMENTS_EDITOR      8117
 #define IDR_ALARM_DETAILS               8118
+#define IDR_CERT_MANAGER                8119
 #define IDR_CTRLPANEL                   8133
 #define IDR_EVENTS                      8137
 #define IDR_MAPFRAME                    8138
@@ -845,6 +857,9 @@
 #define ID_GRAPHMANAGER_RENAME          33053
 #define ID_GRAPHMANAGER_DELETE          33054
 #define ID_GRAPHMANAGER_EDIT            33055
+#define ID_CONTROLPANEL_CERTIFICATES    33056
+#define ID_CERTIFICATE_IMPORT           33057
+#define ID_CERTIFICATE_DELETE           33058
 #define ID_ALWAYS_DISABLED              43210
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
@@ -855,9 +870,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        362
-#define _APS_NEXT_COMMAND_VALUE         33056
-#define _APS_NEXT_CONTROL_VALUE         1463
+#define _APS_NEXT_RESOURCE_VALUE        365
+#define _APS_NEXT_COMMAND_VALUE         33060
+#define _APS_NEXT_CONTROL_VALUE         1474
 #define _APS_NEXT_SYMED_VALUE           134
 #endif
 #endif

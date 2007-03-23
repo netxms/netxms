@@ -180,6 +180,10 @@ SOURCE=.\alarms.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\cert.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\comm.cpp
 # End Source File
 # Begin Source File
