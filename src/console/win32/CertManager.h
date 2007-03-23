@@ -46,6 +46,9 @@ protected:
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnViewRefresh();
 	afx_msg void OnCertificateImport();
+	afx_msg void OnCertificateDelete();
+	afx_msg void OnUpdateCertificateDelete(CCmdUI* pCmdUI);
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

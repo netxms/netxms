@@ -52,6 +52,7 @@ int CObjectDepView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndMap.CreateEx(0, NULL, _T("Map"), WS_CHILD | WS_VISIBLE, rect, this, 0);
    m_wndMap.m_rgbBkColor = GetSysColor(COLOR_WINDOW);
 	m_wndMap.m_rgbTextColor = GetSysColor(COLOR_WINDOWTEXT);
+	m_wndMap.m_bCanOpenObjects = FALSE;
 	
 	return 0;
 }

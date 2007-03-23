@@ -60,6 +60,7 @@ CMapView::CMapView()
    m_dwHistorySize = 0;
    m_hBkImage = NULL;
    m_bIsModified = FALSE;
+	m_bCanOpenObjects = TRUE;
 }
 
 CMapView::~CMapView()
@@ -702,9 +703,12 @@ void CMapView::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
    DWORD dwId;
 
-   dwId = PointInObject(point);
-   if (dwId != 0)
-      OpenSubmap(dwId);
+	if (m_bCanOpenObjects)
+	{
+		dwId = PointInObject(point);
+		if (dwId != 0)
+			OpenSubmap(dwId);
+	}
 }
 
 

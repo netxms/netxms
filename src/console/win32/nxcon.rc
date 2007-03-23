@@ -591,6 +591,7 @@ BEGIN
     BEGIN
         MENUITEM "&Import trusted CA certificate...\tCtrl+I", 
                                                 ID_CERTIFICATE_IMPORT
+        MENUITEM "&Edit comments...",           ID_CERTIFICATE_EDITCOMMENTS
         MENUITEM "&Delete\tDel",                ID_CERTIFICATE_DELETE
     END
 END
@@ -945,6 +946,8 @@ BEGIN
     END
     POPUP "Certificate"
     BEGIN
+        MENUITEM "&Import trusted CA certificate...", ID_CERTIFICATE_IMPORT
+        MENUITEM "&Edit comments",              ID_CERTIFICATE_EDITCOMMENTS
         MENUITEM "&Delete",                     ID_CERTIFICATE_DELETE
     END
 END
@@ -1174,6 +1177,12 @@ BEGIN
     "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
     "Y",            ID_EDIT_REDO,           VIRTKEY, CONTROL, NOINVERT
     "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+END
+
+IDA_CERT_MANAGER ACCELERATORS DISCARDABLE 
+BEGIN
+    "I",            ID_CERTIFICATE_IMPORT,  VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      ID_CERTIFICATE_DELETE,  VIRTKEY, NOINVERT
 END
 
 

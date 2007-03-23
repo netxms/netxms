@@ -469,6 +469,7 @@ BOOL CConsoleApp::InitInstance()
 	m_hDataViewAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_DATA_VIEW));
 	m_hAgentCfgMgrAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_AGENT_CONFIG_MANAGER));
 	m_hObjectCommentsAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_OBJECT_COMMENTS));
+	m_hCertManagerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_CERT_MANAGER));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)

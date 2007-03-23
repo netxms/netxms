@@ -40,6 +40,9 @@ BEGIN_MESSAGE_MAP(CCertManager, CMDIChildWnd)
 	ON_WM_SETFOCUS()
 	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
 	ON_COMMAND(ID_CERTIFICATE_IMPORT, OnCertificateImport)
+	ON_COMMAND(ID_CERTIFICATE_DELETE, OnCertificateDelete)
+	ON_UPDATE_COMMAND_UI(ID_CERTIFICATE_DELETE, OnUpdateCertificateDelete)
+	ON_WM_CONTEXTMENU()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -232,4 +235,36 @@ void CCertManager::OnCertificateImport()
 			MessageBox(_T("Cannot open input file"), _T("Error"), MB_OK | MB_ICONSTOP);
 		}
 	}
+}
+
+
+//
+// WM_COMMAND::ID_CERTIFICATE_DELETE message handlers
+//
+
+void CCertManager::OnCertificateDelete() 
+{
+	int i, nCount;
+
+	nCount = m_wndListCtrl.GetSelectedCount();
+	if (nCount <= 0)
+		return;
+}
+
+void CCertManager::OnUpdateCertificateDelete(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CCertManager::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+
+   pMenu = theApp.GetContextMenu(24);
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
 }
