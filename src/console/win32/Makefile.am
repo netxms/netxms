@@ -81,6 +81,7 @@ EXTRA_DIST = \
 	GraphSettingsPage.cpp GraphSettingsPage.h \
 	GraphStylePage.cpp GraphStylePage.h \
 	ImportCertDlg.cpp ImportCertDlg.h \
+	InputBox.cpp InputBox.h \
 	LastValuesView.cpp LastValuesView.h \
 	LPPList.cpp LPPList.h \
 	MainFrm.cpp MainFrm.h \

@@ -142,7 +142,7 @@ TCHAR LIBNETXMS_EXPORTABLE *SEHExceptionName(DWORD code)
 
 BOOL LIBNETXMS_EXPORTABLE SEHDefaultConsoleHandler(EXCEPTION_POINTERS *pInfo)
 {
-	_tprintf(_T("EXCEPTION: %08X (%s) at %08X\n"),
+	_tprintf(_T("EXCEPTION: %08X (%s) at %p\n"),
             pInfo->ExceptionRecord->ExceptionCode,
 				SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
 				pInfo->ExceptionRecord->ExceptionAddress);

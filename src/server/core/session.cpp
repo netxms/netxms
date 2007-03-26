@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.269 2007-03-23 15:59:05 victor Exp $ */
+/* $Id: session.cpp,v 1.270 2007-03-26 16:01:51 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1061,6 +1061,9 @@ void ClientSession::ProcessingThread(void)
 				break;
 			case CMD_DELETE_CERTIFICATE:
 				DeleteCertificate(pMsg);
+				break;
+			case CMD_UPDATE_CERT_COMMENTS:
+				UpdateCertificateComments(pMsg);
 				break;
 			case CMD_GET_CERT_LIST:
 				SendCertificateList(pMsg->GetId());
@@ -8911,6 +8914,73 @@ void ClientSession::DeleteCertificate(CSCPMessage *pRequest)
 		else
 		{
 			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+	SendMessage(&msg);
+}
+
+
+//
+// Update certificate's comments
+//
+
+void ClientSession::UpdateCertificateComments(CSCPMessage *pRequest)
+{
+	DWORD dwCertId;
+	TCHAR *pszQuery, *pszComments, *pszEscComments;
+	DB_RESULT hResult;
+   CSCPMessage msg;
+
+	msg.SetId(pRequest->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
+	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+	{
+		dwCertId = pRequest->GetVariableLong(VID_CERTIFICATE_ID);
+		pszComments= pRequest->GetVariableStr(VID_COMMENTS);
+		if (pszComments != NULL)
+		{
+			pszEscComments = EncodeSQLString(pszComments);
+			free(pszComments);
+			pszQuery = (TCHAR *)malloc((_tcslen(pszEscComments) + 256) * sizeof(TCHAR));
+			_stprintf(pszQuery, _T("SELECT subject FROM certificates WHERE cert_id=%d"), dwCertId);
+			hResult = DBSelect(g_hCoreDB, pszQuery);
+			if (hResult != NULL)
+			{
+				if (DBGetNumRows(hResult) > 0)
+				{
+					_stprintf(pszQuery, _T("UPDATE certificates SET comments='%s' WHERE cert_id=%d"), pszEscComments, dwCertId);
+					if (DBQuery(g_hCoreDB, pszQuery))
+					{
+						msg.SetVariable(VID_RCC, RCC_SUCCESS);
+					}
+					else
+					{
+						msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+					}
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, RCC_INVALID_CERT_ID);
+				}
+				DBFreeResult(hResult);
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+			}
+			free(pszEscComments);
+			free(pszQuery);
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_INVALID_REQUEST);
 		}
 	}
 	else

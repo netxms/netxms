@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.125 2007-03-23 15:59:05 victor Exp $ */
+/* $Id: nms_core.h,v 1.126 2007-03-26 16:01:51 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -496,6 +496,7 @@ private:
 	void DeleteGraph(CSCPMessage *pRequest);
 	void AddCACertificate(CSCPMessage *pRequest);
 	void DeleteCertificate(CSCPMessage *pRequest);
+	void UpdateCertificateComments(CSCPMessage *pRequest);
 	void SendCertificateList(DWORD dwRqId);
 
 public:

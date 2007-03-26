@@ -49,6 +49,8 @@ protected:
 	afx_msg void OnCertificateDelete();
 	afx_msg void OnUpdateCertificateDelete(CCmdUI* pCmdUI);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnCertificateEditcomments();
+	afx_msg void OnUpdateCertificateEditcomments(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -5,6 +5,7 @@
 #include "nxcon.h"
 #include "CertManager.h"
 #include "ImportCertDlg.h"
+#include "InputBox.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -43,6 +44,8 @@ BEGIN_MESSAGE_MAP(CCertManager, CMDIChildWnd)
 	ON_COMMAND(ID_CERTIFICATE_DELETE, OnCertificateDelete)
 	ON_UPDATE_COMMAND_UI(ID_CERTIFICATE_DELETE, OnUpdateCertificateDelete)
 	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_CERTIFICATE_EDITCOMMENTS, OnCertificateEditcomments)
+	ON_UPDATE_COMMAND_UI(ID_CERTIFICATE_EDITCOMMENTS, OnUpdateCertificateEditcomments)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -161,6 +164,7 @@ void CCertManager::OnViewRefresh()
 			if (nItem != -1)
 			{
 				m_wndListCtrl.SetItemData(nItem, i);
+				m_wndListCtrl.SetItemText(nItem, 1, g_szCertType[m_pCertList->pElements[i].nType]);
 				m_wndListCtrl.SetItemText(nItem, 2, m_pCertList->pElements[i].pszSubject);
 				m_wndListCtrl.SetItemText(nItem, 3, m_pCertList->pElements[i].pszComments);
 			}
@@ -170,6 +174,19 @@ void CCertManager::OnViewRefresh()
 	{
 		theApp.ErrorBox(dwResult, _T("Error loading certificate list: %s"));
 	}
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CCertManager::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+
+   pMenu = theApp.GetContextMenu(24);
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
 }
 
 
@@ -239,16 +256,50 @@ void CCertManager::OnCertificateImport()
 
 
 //
+// Certificate deletion worker function
+//
+
+static DWORD DeleteCertificates(DWORD dwCount, DWORD *pdwList)
+{
+	DWORD i, dwResult;
+
+	for(i = 0; i < dwCount; i++)
+	{
+		dwResult = NXCDeleteCertificate(g_hSession, pdwList[i]);
+		if (dwResult != RCC_SUCCESS)
+			break;
+	}
+	return dwResult;
+}
+
+
+//
 // WM_COMMAND::ID_CERTIFICATE_DELETE message handlers
 //
 
 void CCertManager::OnCertificateDelete() 
 {
-	int i, nCount;
+	int i, nCount, nItem;
+	DWORD *pdwList, dwResult;
 
 	nCount = m_wndListCtrl.GetSelectedCount();
 	if (nCount <= 0)
 		return;
+
+	pdwList = (DWORD *)malloc(sizeof(DWORD) * nCount);
+	for(i = 0, nItem = -1; i < nCount; i++)
+	{
+		nItem = m_wndListCtrl.GetNextItem(nItem, LVIS_SELECTED);
+		if (nItem == -1)
+			break;	// Shouldn't happen
+		pdwList[i] = m_pCertList->pElements[m_wndListCtrl.GetItemData(nItem)].dwId;
+	}
+
+	dwResult = DoRequestArg2(DeleteCertificates, (void *)nCount, pdwList, _T("Deleting certificates..."));
+	free(pdwList);
+	if (dwResult != RCC_SUCCESS)
+		theApp.ErrorBox(dwResult, _T("Cannot delete certificate: %s"));
+	PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 }
 
 void CCertManager::OnUpdateCertificateDelete(CCmdUI* pCmdUI) 
@@ -258,13 +309,42 @@ void CCertManager::OnUpdateCertificateDelete(CCmdUI* pCmdUI)
 
 
 //
-// WM_CONTEXTMENU message handler
+// WM_COMMAND::ID_CERTIFICATE_EDITCOMMENTS message handlers
 //
 
-void CCertManager::OnContextMenu(CWnd* pWnd, CPoint point) 
+void CCertManager::OnCertificateEditcomments() 
 {
-   CMenu *pMenu;
+	CInputBox dlg;
+	DWORD dwResult, dwIndex;
+	int nItem;
 
-   pMenu = theApp.GetContextMenu(24);
-   pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+	if (m_wndListCtrl.GetSelectedCount() != 1)
+		return;
+
+	nItem = m_wndListCtrl.GetSelectionMark();
+	dlg.m_strText = m_wndListCtrl.GetItemText(nItem, 3);
+	dlg.m_strTitle = _T("Edit Certificate Comments");
+	dlg.m_strHeader = _T("Comments:");
+	if (dlg.DoModal() == IDOK)
+	{
+		dwIndex = m_wndListCtrl.GetItemData(nItem);
+		dwResult = DoRequestArg3(NXCUpdateCertificateComments, g_hSession,
+		                         (void *)m_pCertList->pElements[dwIndex].dwId,
+										 (void *)((LPCTSTR)dlg.m_strText), _T("Updating certificate comments..."));
+		if (dwResult == RCC_SUCCESS)
+		{
+			safe_free(m_pCertList->pElements[dwIndex].pszComments);
+			m_pCertList->pElements[dwIndex].pszComments = _tcsdup(dlg.m_strText);
+			m_wndListCtrl.SetItemText(nItem, 3, m_pCertList->pElements[dwIndex].pszComments);
+		}
+		else
+		{
+			theApp.ErrorBox(dwResult, _T("Cannot update certificate comments: %s"));
+		}
+	}
+}
+
+void CCertManager::OnUpdateCertificateEditcomments(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
 }

@@ -282,9 +282,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 		_T("Invalid graph ID"),
 		_T("Local cryptographic provider failure"),
 		_T("Unsupported authentication type"),
-		_T("Bad certificate")
+		_T("Bad certificate"),
+		_T("Invalid certificate ID")
    };
-   return ((dwError >= 0) && (dwError <= RCC_BAD_CERTIFICATE)) ? pszErrorText[dwError] : _T("No text message for this error");
+   return ((dwError >= 0) && (dwError <= RCC_INVALID_CERT_ID)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

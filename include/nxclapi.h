@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.262 2007-03-23 15:59:04 victor Exp $ */
+/* $Id: nxclapi.h,v 1.263 2007-03-26 16:01:50 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -393,6 +393,7 @@ enum
 #define RCC_LOCAL_CRYPTO_ERROR		((DWORD)71)
 #define RCC_UNSUPPORTED_AUTH_TYPE	((DWORD)72)
 #define RCC_BAD_CERTIFICATE			((DWORD)73)
+#define RCC_INVALID_CERT_ID         ((DWORD)74)
 
 
 //
@@ -1987,6 +1988,8 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteGraph(NXC_SESSION hSession, DWORD dwGraphId);
 
 DWORD LIBNXCL_EXPORTABLE NXCAddCACertificate(NXC_SESSION hSession, DWORD dwCertLen,
                                              BYTE *pCert, TCHAR *pszComments);
+DWORD LIBNXCL_EXPORTABLE NXCUpdateCertificateComments(NXC_SESSION hSession, DWORD dwCertId,
+                                                      TCHAR *pszComments);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteCertificate(NXC_SESSION hSession, DWORD dwCertId);
 DWORD LIBNXCL_EXPORTABLE NXCGetCertificateList(NXC_SESSION hSession, NXC_CERT_LIST **ppList);
 void LIBNXCL_EXPORTABLE NXCDestroyCertificateList(NXC_CERT_LIST *pList);

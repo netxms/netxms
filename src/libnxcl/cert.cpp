@@ -1,4 +1,4 @@
-/* $Id: cert.cpp,v 1.1 2007-03-23 15:59:05 victor Exp $ */
+/* $Id: cert.cpp,v 1.2 2007-03-26 16:01:51 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library
@@ -40,6 +40,28 @@ DWORD LIBNXCL_EXPORTABLE NXCAddCACertificate(NXC_SESSION hSession, DWORD dwCertL
    msg.SetCode(CMD_ADD_CA_CERTIFICATE);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_CERTIFICATE, pCert, dwCertLen);
+	msg.SetVariable(VID_COMMENTS, pszComments);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
+// Update certificate's comments
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCUpdateCertificateComments(NXC_SESSION hSession, DWORD dwCertId,
+                                                      TCHAR *pszComments)
+{
+	CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_UPDATE_CERT_COMMENTS);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_CERTIFICATE_ID, dwCertId);
 	msg.SetVariable(VID_COMMENTS, pszComments);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 

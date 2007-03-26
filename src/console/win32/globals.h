@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: globals.h
+** File: globals.h
 **
 **/
 
@@ -388,6 +388,7 @@ extern TCHAR *g_szToolColFmt[];
 extern TCHAR *g_szSyslogSeverity[];
 extern TCHAR *g_szSyslogFacility[];
 extern TCHAR *g_szAuthMethod[];
+extern TCHAR *g_szCertType[];
 extern TCHAR *g_szCertMappingMethod[];
 extern TCHAR *g_szGraphType[];
 extern COLORREF g_statusColorTable[];
