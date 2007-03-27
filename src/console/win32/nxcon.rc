@@ -145,6 +145,7 @@ IDI_FIND                ICON    DISCARDABLE     "icons\\find.ico"
 IDI_AGAIN               ICON    DISCARDABLE     "icons\\again.ico"
 IDI_CERT                ICON    DISCARDABLE     "icons\\cert.ico"
 IDI_CERTMGR             ICON    DISCARDABLE     "icons\\certmgr.ico"
+IDI_TOPOLOGY            ICON    DISCARDABLE     "icons\\topology.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

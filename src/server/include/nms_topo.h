@@ -23,6 +23,8 @@
 #ifndef _nms_topo_h_
 #define _nms_topo_h_
 
+#include <netxms_maps.h>
+
 
 //
 // Hop information structure
@@ -54,6 +56,8 @@ struct NETWORK_PATH_TRACE
 
 NETWORK_PATH_TRACE *TraceRoute(Node *pSrc, Node *pDest);
 void DestroyTraceData(NETWORK_PATH_TRACE *pTrace);
+DWORD BuildL2Topology(nxObjList &topology, Node *pRoot, Node *pParent,
+							 int nDepth, TCHAR *pszParentIfName);
 
 
 #endif   /* _nms_topo_h_ */

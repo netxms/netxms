@@ -47,6 +47,7 @@
 #define MAP_LEFT_MARGIN       20
 #define MAP_BOTTOM_MARGIN     10
 #define MAP_RIGHT_MARGIN      20
+#define MAX_CONNECTOR_NAME		64
 
 
 //
@@ -107,6 +108,8 @@ struct OBJLINK
    DWORD dwId1;
    DWORD dwId2;
    LONG nType;
+	TCHAR szPort1[MAX_CONNECTOR_NAME];
+	TCHAR szPort2[MAX_CONNECTOR_NAME];
 };
 
 
@@ -135,16 +138,20 @@ protected:
 
 public:
    nxObjList();
+   nxObjList(CSCPMessage *pMsg);
    ~nxObjList();
 
    void AddObject(DWORD dwId);
    void LinkObjects(DWORD dwId1, DWORD dwId2);
+   void LinkObjectsEx(DWORD dwId1, DWORD dwId2, TCHAR *pszPort1, TCHAR *pszPort2);
    void Clear(void);
 
    DWORD GetNumObjects(void) { return m_dwNumObjects; }
    DWORD *GetObjects(void) { return m_pdwObjectList; }
    DWORD GetNumLinks(void) { return m_dwNumLinks; }
    OBJLINK *GetLinks(void) { return m_pLinkList; }
+
+	void CreateMessage(CSCPMessage *pMsg);
 };
 
 

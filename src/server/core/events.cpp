@@ -21,7 +21,6 @@
 **/
 
 #include "nxcore.h"
-#include <stdarg.h>
 
 
 //

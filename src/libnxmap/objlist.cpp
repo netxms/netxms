@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Network Maps Library
-** Copyright (C) 2006 Victor Kirhenshtein
+** Copyright (C) 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 
 
 //
-// Constructor
+// Constructors
 //
 
 nxObjList::nxObjList()
@@ -34,6 +34,25 @@ nxObjList::nxObjList()
    m_pdwObjectList = NULL;
    m_dwNumLinks = 0;
    m_pLinkList = NULL;
+}
+
+nxObjList::nxObjList(CSCPMessage *pMsg)
+{
+	DWORD i, dwId;
+
+   m_dwNumObjects = pMsg->GetVariableLong(VID_NUM_OBJECTS);
+   m_pdwObjectList = (DWORD *)malloc(m_dwNumObjects * sizeof(DWORD));
+	pMsg->GetVariableInt32Array(VID_OBJECT_LIST, m_dwNumObjects, m_pdwObjectList);
+   m_dwNumLinks = pMsg->GetVariableLong(VID_NUM_LINKS);
+   m_pLinkList = (OBJLINK *)malloc(m_dwNumLinks * sizeof(OBJLINK));
+	for(i = 0, dwId = VID_OBJECT_LINKS_BASE; i < m_dwNumLinks; i++, dwId += 5)
+	{
+		m_pLinkList[i].dwId1 = pMsg->GetVariableLong(dwId++);
+		m_pLinkList[i].dwId2 = pMsg->GetVariableLong(dwId++);
+		m_pLinkList[i].nType = (int)pMsg->GetVariableShort(dwId++);
+		pMsg->GetVariableStr(dwId++, m_pLinkList[i].szPort1, MAX_CONNECTOR_NAME);
+		pMsg->GetVariableStr(dwId++, m_pLinkList[i].szPort2, MAX_CONNECTOR_NAME);
+	}
 }
 
 
@@ -117,6 +136,76 @@ void nxObjList::LinkObjects(DWORD dwId1, DWORD dwId2)
          m_pLinkList[i].dwId1 = dwId1;
          m_pLinkList[i].dwId2 = dwId2;
          m_pLinkList[i].nType = LINK_TYPE_NORMAL;
+			m_pLinkList[i].szPort1[0] = 0;
+			m_pLinkList[i].szPort2[0] = 0;
       }
    }
+}
+
+
+//
+// Link two objects with named links
+//
+
+void nxObjList::LinkObjectsEx(DWORD dwId1, DWORD dwId2, TCHAR *pszPort1, TCHAR *pszPort2)
+{
+   DWORD i;
+   int nCount;
+
+   // Validate object IDs
+   for(i = 0, nCount = 0; (i < m_dwNumObjects) && (nCount < 2); i++)
+   {
+      if ((m_pdwObjectList[i] == dwId1) ||
+          (m_pdwObjectList[i] == dwId2))
+         nCount++;
+   }
+
+   if (nCount == 2)  // Both objects exist?
+   {
+      // Check for duplicate links
+      for(i = 0; i < m_dwNumLinks; i++)
+      {
+         if (((m_pLinkList[i].dwId1 == dwId1) && (m_pLinkList[i].dwId2 == dwId2) &&
+				  (!_tcsicmp(m_pLinkList[i].szPort1, pszPort1)) && (!_tcsicmp(m_pLinkList[i].szPort2, pszPort2))) ||
+             ((m_pLinkList[i].dwId2 == dwId1) && (m_pLinkList[i].dwId1 == dwId2) &&
+				  (!_tcsicmp(m_pLinkList[i].szPort2, pszPort1)) && (!_tcsicmp(m_pLinkList[i].szPort1, pszPort2))))
+            break;
+      }
+      if (i == m_dwNumLinks)
+      {
+         m_dwNumLinks++;
+         m_pLinkList = (OBJLINK *)realloc(m_pLinkList, sizeof(OBJLINK) * m_dwNumLinks);
+         m_pLinkList[i].dwId1 = dwId1;
+         m_pLinkList[i].dwId2 = dwId2;
+         m_pLinkList[i].nType = LINK_TYPE_NORMAL;
+			nx_strncpy(m_pLinkList[i].szPort1, pszPort1, MAX_CONNECTOR_NAME);
+			nx_strncpy(m_pLinkList[i].szPort2, pszPort2, MAX_CONNECTOR_NAME);
+      }
+   }
+}
+
+
+//
+// Create NXCP message
+//
+
+void nxObjList::CreateMessage(CSCPMessage *pMsg)
+{
+	DWORD i, dwId;
+
+	// Object list
+	pMsg->SetVariable(VID_NUM_OBJECTS, m_dwNumObjects);
+	if (m_dwNumObjects > 0)
+		pMsg->SetVariableToInt32Array(VID_OBJECT_LIST, m_dwNumObjects, m_pdwObjectList);
+
+	// Links between objects
+	pMsg->SetVariable(VID_NUM_LINKS, m_dwNumLinks);
+	for(i = 0, dwId = VID_OBJECT_LINKS_BASE; i < m_dwNumLinks; i++, dwId += 5)
+	{
+		pMsg->SetVariable(dwId++, m_pLinkList[i].dwId1);
+		pMsg->SetVariable(dwId++, m_pLinkList[i].dwId2);
+		pMsg->SetVariable(dwId++, (WORD)m_pLinkList[i].nType);
+		pMsg->SetVariable(dwId++, m_pLinkList[i].szPort1);
+		pMsg->SetVariable(dwId++, m_pLinkList[i].szPort2);
+	}
 }

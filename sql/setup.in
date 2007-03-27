@@ -159,11 +159,12 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 */
 
 INSERT INTO users (id,name,password,system_access,flags,full_name,
-                   description,grace_logins,auth_method,guid)
+                   description,grace_logins,auth_method,guid,
+                   cert_mapping_method,cert_mapping_data)
    VALUES (0,'admin',
            '3A445C0072CD69D9030CC6644020E5C4576051B1', // Default password: netxms
            65535,8,'#00','Built-in system administrator account',5,0,
-           '00000000-0000-0000-0000-000000000000'
+           '00000000-0000-0000-0000-000000000000',0,'#00'
           );
 
 

@@ -283,9 +283,11 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 		_T("Local cryptographic provider failure"),
 		_T("Unsupported authentication type"),
 		_T("Bad certificate"),
-		_T("Invalid certificate ID")
+		_T("Invalid certificate ID"),
+		_T("SNMP failure"),
+		_T("Node has no support for layer 2 topology discovery")
    };
-   return ((dwError >= 0) && (dwError <= RCC_INVALID_CERT_ID)) ? pszErrorText[dwError] : _T("No text message for this error");
+   return ((dwError >= 0) && (dwError <= RCC_NO_L2_TOPOLOGY_SUPPORT)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

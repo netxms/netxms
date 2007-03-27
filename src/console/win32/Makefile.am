@@ -102,6 +102,7 @@ EXTRA_DIST = \
 	NodePropsGeneral.cpp NodePropsGeneral.h \
 	NodePropsPolling.cpp NodePropsPolling.h \
 	NodeSummary.cpp NodeSummary.h \
+	NodeTopologyView.cpp NodeTopologyView.h \
 	nxcon.clw nxcon.dsp nxcon.dsw \
 	nxcon.cpp nxcon.h \
 	nxcon.rc \

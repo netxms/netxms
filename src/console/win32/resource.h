@@ -237,6 +237,7 @@
 #define IDI_CERTMGR                     363
 #define IDD_IMPORT_CA_CERT              364
 #define IDA_CERT_MANAGER                365
+#define IDI_TOPOLOGY                    366
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -872,8 +873,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        366
-#define _APS_NEXT_COMMAND_VALUE         33061
+#define _APS_NEXT_RESOURCE_VALUE        367
+#define _APS_NEXT_COMMAND_VALUE         33062
 #define _APS_NEXT_CONTROL_VALUE         1474
 #define _APS_NEXT_SYMED_VALUE           134
 #endif

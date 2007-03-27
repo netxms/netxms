@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.270 2007-03-26 16:01:51 victor Exp $ */
+/* $Id: session.cpp,v 1.271 2007-03-27 16:21:42 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1067,6 +1067,9 @@ void ClientSession::ProcessingThread(void)
 				break;
 			case CMD_GET_CERT_LIST:
 				SendCertificateList(pMsg->GetId());
+				break;
+			case CMD_QUERY_L2_TOPOLOGY:
+				QueryL2Topology(pMsg);
 				break;
          default:
             // Pass message to loaded modules
@@ -9053,6 +9056,65 @@ void ClientSession::SendCertificateList(DWORD dwRqId)
 	else
 	{
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+	SendMessage(&msg);
+}
+
+
+//
+// Query layer 2 topology from device
+//
+
+void ClientSession::QueryL2Topology(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+	NetObj *pObject;
+	DWORD dwResult;
+
+	msg.SetId(pRequest->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+	if (pObject != NULL)
+	{
+		if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		{
+			if (pObject->Type() == OBJECT_NODE)
+			{
+				if (((Node *)pObject)->IsBridge())
+				{
+					nxObjList topology;
+
+					dwResult = BuildL2Topology(topology, (Node *)pObject, NULL, 5, NULL);
+					if (dwResult == RCC_SUCCESS)
+					{
+						msg.SetVariable(VID_RCC, RCC_SUCCESS);
+						topology.CreateMessage(&msg);
+					}
+					else
+					{
+						msg.SetVariable(VID_RCC, dwResult);
+					}
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, RCC_NO_L2_TOPOLOGY_SUPPORT);
+				}
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			}
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
 	SendMessage(&msg);

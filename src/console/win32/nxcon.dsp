@@ -552,6 +552,10 @@ SOURCE=.\NodeSummary.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\NodeTopologyView.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\nxcon.cpp
 # End Source File
 # Begin Source File
@@ -1169,6 +1173,10 @@ SOURCE=.\NodeSummary.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\NodeTopologyView.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\include\nxclapi.h
 # End Source File
 # Begin Source File
@@ -1762,6 +1770,10 @@ SOURCE=.\icons\Tips.ico
 # Begin Source File
 
 SOURCE=.\res\Toolbar.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\topology.ico
 # End Source File
 # Begin Source File
 

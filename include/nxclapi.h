@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.263 2007-03-26 16:01:50 victor Exp $ */
+/* $Id: nxclapi.h,v 1.264 2007-03-27 16:21:41 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -394,6 +394,8 @@ enum
 #define RCC_UNSUPPORTED_AUTH_TYPE	((DWORD)72)
 #define RCC_BAD_CERTIFICATE			((DWORD)73)
 #define RCC_INVALID_CERT_ID         ((DWORD)74)
+#define RCC_SNMP_FAILURE				((DWORD)75)
+#define RCC_NO_L2_TOPOLOGY_SUPPORT	((DWORD)76)
 
 
 //
@@ -1993,6 +1995,8 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateCertificateComments(NXC_SESSION hSession, DWOR
 DWORD LIBNXCL_EXPORTABLE NXCDeleteCertificate(NXC_SESSION hSession, DWORD dwCertId);
 DWORD LIBNXCL_EXPORTABLE NXCGetCertificateList(NXC_SESSION hSession, NXC_CERT_LIST **ppList);
 void LIBNXCL_EXPORTABLE NXCDestroyCertificateList(NXC_CERT_LIST *pList);
+
+DWORD LIBNXCL_EXPORTABLE NXCQueryL2Topology(NXC_SESSION hSession, DWORD dwNodeId, void **ppTopology);
 
 #ifdef __cplusplus
 }

@@ -212,6 +212,10 @@ SOURCE=.\image.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\layer2.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\lpp.cpp
 # End Source File
 # Begin Source File

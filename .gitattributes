@@ -822,6 +822,8 @@ src/console/win32/NodePropsPolling.cpp -text
 src/console/win32/NodePropsPolling.h -text
 src/console/win32/NodeSummary.cpp -text
 src/console/win32/NodeSummary.h -text
+src/console/win32/NodeTopologyView.cpp -text
+src/console/win32/NodeTopologyView.h -text
 src/console/win32/ObjToolPropColumns.cpp -text
 src/console/win32/ObjToolPropColumns.h -text
 src/console/win32/ObjToolPropGeneral.cpp -text
@@ -999,6 +1001,7 @@ src/console/win32/icons/sms.ico -text
 src/console/win32/icons/sort_up.ico -text
 src/console/win32/icons/sortdown.ico -text
 src/console/win32/icons/template_root.ico -text
+src/console/win32/icons/topology.ico -text
 src/console/win32/icons/trap.ico -text
 src/console/win32/icons/tree.ico -text
 src/console/win32/icons/unsupported.ico -text
@@ -1091,6 +1094,7 @@ src/libnxcl/eventdb.cpp -text
 src/libnxcl/events.cpp -text
 src/libnxcl/graph.cpp -text
 src/libnxcl/image.cpp -text
+src/libnxcl/layer2.cpp -text
 src/libnxcl/libnxcl.dsp -text
 src/libnxcl/libnxcl.dsw -text
 src/libnxcl/libnxcl.h -text
@@ -1261,6 +1265,7 @@ src/server/core/hk.cpp -text
 src/server/core/id.cpp -text
 src/server/core/image.cpp -text
 src/server/core/interface.cpp -text
+src/server/core/layer2.cpp -text
 src/server/core/locks.cpp -text
 src/server/core/lpp.cpp -text
 src/server/core/main.cpp -text

@@ -6,6 +6,7 @@
 #include "ObjectDepView.h"	// Added by ClassView
 #include "ClusterView.h"	// Added by ClassView
 #include "NodePerfView.h"
+#include "NodeTopologyView.h"
 #include "ExtEditCtrl.h"
 #if _MSC_VER > 1000
 #pragma once
@@ -57,6 +58,7 @@ protected:
 	int m_nTitleBarOffset;
 	void AdjustView(void);
 	BOOL m_bShowSearchBar;
+	CNodeTopologyView m_wndTopologyView;
 	CNodePerfView m_wndPerfView;
 	CClusterView m_wndClusterView;
 	CObjectDepView m_wndDepView;

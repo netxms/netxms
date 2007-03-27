@@ -445,6 +445,7 @@ typedef struct
 #define CMD_DELETE_CERTIFICATE		0x00CA
 #define CMD_GET_CERT_LIST				0x00CB
 #define CMD_UPDATE_CERT_COMMENTS		0x00CC
+#define CMD_QUERY_L2_TOPOLOGY			0x00CD
 
 
 //
@@ -856,6 +857,9 @@ typedef struct
 
 // Base value for certificate list
 #define VID_CERT_LIST_BASE 			((DWORD)0x10000000)
+
+// Base value for object links list
+#define VID_OBJECT_LINKS_BASE			((DWORD)0x10000000)
 
 
 //
