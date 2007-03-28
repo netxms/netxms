@@ -1,4 +1,11 @@
 *************
+* 60 ==> 61 *
+*************
+
+- New configuration parameters: SNMPRequestTimeout
+
+
+*************
 * 59 ==> 60 *
 *************
 

@@ -137,7 +137,7 @@ DWORD SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport, const char *szCommuni
    if (dwResult == SNMP_ERR_SUCCESS)   // Still no errors
    {
       pRqPDU->BindVariable(new SNMP_Variable(pdwVarName, dwNameLen));
-      dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, 1000, 3);
+      dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 
       // Analyze response
       if (dwResult == SNMP_ERR_SUCCESS)
@@ -240,7 +240,7 @@ DWORD SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const char *szC
       {
          pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, (char *)szCommunity, m_dwRequestId++, dwVersion);
          pRqPDU->BindVariable(new SNMP_Variable(pdwName, dwNameLen));
-         dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, 1000, 3);
+         dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 
          // Analyze response
          if (dwResult == SNMP_ERR_SUCCESS)

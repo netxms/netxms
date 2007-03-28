@@ -1,3 +1,4 @@
+/* $Id: transport.cpp,v 1.15 2007-03-28 13:42:16 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
@@ -39,7 +40,7 @@
 DWORD SNMP_Transport::DoRequest(SNMP_PDU *pRequest, SNMP_PDU **ppResponse, 
                                 DWORD dwTimeout, DWORD dwNumRetries)
 {
-   DWORD dwResult = SNMP_ERR_SUCCESS;
+   DWORD dwResult;
    int iBytes;
 
    if ((pRequest == NULL) || (ppResponse == NULL) || (dwNumRetries == 0))
@@ -49,6 +50,7 @@ DWORD SNMP_Transport::DoRequest(SNMP_PDU *pRequest, SNMP_PDU **ppResponse,
 
    while(dwNumRetries-- > 0)
    {
+		dwResult = SNMP_ERR_SUCCESS;
       if (Send(pRequest) <= 0)
       {
          dwResult = SNMP_ERR_COMM;

@@ -5,7 +5,7 @@
 %x STR
 
 whitespace	[[:blank:]\t\r]+
-ident		[A-Za-z_\$][A-Za-z_\$0-9]*
+ident		[A-Za-z_\$\@\-][A-Za-z_\$\@\-0-9]*
 int			\-?(0x)?[0-9]+
 uint		{int}U
 real		\-?[0-9]+\.[0-9]+

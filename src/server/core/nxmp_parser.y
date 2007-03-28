@@ -104,7 +104,7 @@ TemplateList:
 ;
 
 Template:
-	T_TEMPLATE T_IDENTIFIER '{' TemplateBody '}'
+	T_TEMPLATE T_IDENTIFIER { pData->NewTemplate($2); free($2); } '{' TemplateBody '}'
 ;
 
 TemplateBody:

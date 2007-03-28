@@ -1,4 +1,4 @@
-/* $Id: nxmp_data.cpp,v 1.8 2006-12-29 12:45:29 victor Exp $ */
+/* $Id: nxmp_data.cpp,v 1.9 2007-03-28 13:42:16 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -66,6 +66,7 @@ NXMP_Data::NXMP_Data(NXMP_Lexer *pLexer, NXMP_Parser *pParser)
    m_pTrapList = NULL;
    m_dwNumTraps = 0;
    m_pCurrTrap = NULL;
+	m_dwNumTemplates = 0;
    m_nContext = CTX_NONE;
    m_pLexer = pLexer;
    m_pParser = pParser;
@@ -401,6 +402,25 @@ void NXMP_Data::AddTrapParam(char *pszOID, int nPos, char *pszDescr)
 #else
 	nx_strncpy(m_pCurrTrap->pMaps[dwIndex].szDescription, pszDescr, MAX_DB_STRING);
 #endif
+}
+
+
+//
+// Create new template
+//
+
+void NXMP_Data::NewTemplate(char *pszName)
+{
+   m_dwNumTemplates++;
+   m_pEventList = (EVENT_TEMPLATE *)realloc(m_pEventList, sizeof(EVENT_TEMPLATE) * m_dwNumEvents);
+   m_pCurrEvent = &m_pEventList[m_dwNumEvents - 1];
+   memset(m_pCurrEvent, 0, sizeof(EVENT_TEMPLATE));
+#ifdef UNICODE
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszName, -1, m_pCurrEvent->szName, MAX_EVENT_NAME - 1);
+#else
+   nx_strncpy(m_pCurrEvent->szName, pszName, MAX_EVENT_NAME);
+#endif
+   m_nContext = CTX_EVENT;
 }
 
 

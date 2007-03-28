@@ -349,7 +349,7 @@ static DWORD TableHandler(DWORD dwVersion, const char *szCommunity, SNMP_Variabl
       }
    }
 
-   dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, 1000, 3);
+   dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
    delete pRqPDU;
    if (dwResult == SNMP_ERR_SUCCESS)
    {

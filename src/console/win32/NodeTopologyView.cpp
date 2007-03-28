@@ -89,6 +89,7 @@ int CNodeTopologyView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndMap.m_rgbBkColor = GetSysColor(COLOR_WINDOW);
 	m_wndMap.m_rgbTextColor = GetSysColor(COLOR_WINDOWTEXT);
 	m_wndMap.m_bCanOpenObjects = FALSE;
+	m_wndMap.m_bShowConnectorNames = TRUE;
 	
 	return 0;
 }

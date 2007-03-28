@@ -61,6 +61,7 @@ CMapView::CMapView()
    m_hBkImage = NULL;
    m_bIsModified = FALSE;
 	m_bCanOpenObjects = TRUE;
+	m_bShowConnectorNames = FALSE;
 }
 
 CMapView::~CMapView()
@@ -330,12 +331,31 @@ void CMapView::DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel)
             dc.SelectObject(&m_penLinkTypes[m_pSubmap->GetLinkByIndex(i)->nType]);
             dc.MoveTo(ptLinkStart);
             dc.LineTo(ptLinkEnd);
+
          }
          dc.SelectObject(pOldPen);
 
          // Draw objects
          for(i = 0; i < m_pSubmap->GetNumObjects(); i++)
             DrawObject(dc, i, pImageList, ptOffset, TRUE);
+
+			if (m_bShowConnectorNames && (m_scaleInfo[m_nScale].nFontIndex != -1))
+				for(i = 0; i < m_pSubmap->GetNumLinks(); i++)
+				{
+            ptLinkStart = m_pSubmap->GetObjectPosition(m_pSubmap->GetLinkByIndex(i)->dwId1);
+            ptLinkEnd = m_pSubmap->GetObjectPosition(m_pSubmap->GetLinkByIndex(i)->dwId2);
+
+            ScalePosMapToScreen(&ptLinkStart);
+            ptLinkStart.x += m_scaleInfo[m_nScale].ptObjectSize.x / 2;
+            ptLinkStart.y += m_scaleInfo[m_nScale].ptObjectSize.y / 2;
+
+            ScalePosMapToScreen(&ptLinkEnd);
+            ptLinkEnd.x += m_scaleInfo[m_nScale].ptObjectSize.x / 2;
+            ptLinkEnd.y += m_scaleInfo[m_nScale].ptObjectSize.y / 2;
+					// Draw connector names
+						dc.TextOut(ptLinkStart.x, ptLinkStart.y, m_pSubmap->GetLinkByIndex(i)->szPort1, _tcslen(m_pSubmap->GetLinkByIndex(i)->szPort1));
+						dc.TextOut(ptLinkEnd.x, ptLinkEnd.y, m_pSubmap->GetLinkByIndex(i)->szPort2, _tcslen(m_pSubmap->GetLinkByIndex(i)->szPort2));
+				}
       }
    }
    else

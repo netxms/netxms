@@ -93,6 +93,7 @@ QWORD g_qwServerId;
 RSA *g_pServerKey = NULL;
 time_t g_tServerStartTime = 0;
 DWORD g_dwLockTimeout = 60000;   // Default timeout for acquiring mutex
+DWORD g_dwSNMPTimeout = 2000;		// Default timeout for SNMP requests
 
 
 //
@@ -219,6 +220,7 @@ static void LoadGlobalConfig()
    ConfigReadStr("DataDirectory", g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
    g_dwPingSize = ConfigReadInt("IcmpPingSize", 46);
    g_dwLockTimeout = ConfigReadInt("LockTimeout", 60000);
+   g_dwSNMPTimeout = ConfigReadInt("SNMPRequestTimeout", 2000);
 }
 
 

@@ -30,7 +30,6 @@
 struct PEER
 {
 	DWORD dwAddr;
-	DWORD dwIfIndex;
 	TCHAR szIfName[MAX_CONNECTOR_NAME];
 };
 
@@ -43,11 +42,10 @@ public:
 	PeerList() { m_dwNumPeers = 0; m_pPeerList = NULL; }
 	~PeerList() { safe_free(m_pPeerList); }
 
-	void Add(DWORD dwIpAddr, DWORD dwIfIndex, TCHAR *pszIfName)
+	void Add(DWORD dwIpAddr, TCHAR *pszIfName)
 	{
 		m_pPeerList = (PEER *)realloc(m_pPeerList, sizeof(PEER) * (m_dwNumPeers + 1));
 		m_pPeerList[m_dwNumPeers].dwAddr = dwIpAddr;
-		m_pPeerList[m_dwNumPeers].dwIfIndex = dwIfIndex;
 		nx_strncpy(m_pPeerList[m_dwNumPeers].szIfName, pszIfName, MAX_CONNECTOR_NAME);
 		m_dwNumPeers++;
 	}
@@ -59,8 +57,8 @@ public:
 //
 
 static DWORD NortelTopoHandler(DWORD dwVersion, const char *pszCommunity,
-										 SNMP_Variable *pVar, SNMP_Transport *pTransport,
-										 void *pArg)
+                               SNMP_Variable *pVar, SNMP_Transport *pTransport,
+                               void *pArg)
 {
    SNMP_ObjectId *pOid;
    TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4], szIfName[MAX_CONNECTOR_NAME];
@@ -78,15 +76,50 @@ static DWORD NortelTopoHandler(DWORD dwVersion, const char *pszCommunity,
    _tcscpy(szOid, ".1.3.6.1.4.1.45.1.6.13.2.1.1.2");	// Port
    _tcscat(szOid, szSuffix);
 	pRqPDU->BindVariable(new SNMP_Variable(szOid));
-   dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, 1000, 3);
+   dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
    delete pRqPDU;
 
    if (dwResult == SNMP_ERR_SUCCESS)
    {
 		_stprintf(szIfName, _T("%d/%d"), pRespPDU->GetVariable(0)->GetValueAsUInt(),
 		          pRespPDU->GetVariable(1)->GetValueAsUInt());
-		((PeerList *)pArg)->Add(ntohl(pVar->GetValueAsUInt()),
-		                        pRespPDU->GetVariable(1)->GetValueAsUInt(), szIfName);
+		((PeerList *)pArg)->Add(ntohl(pVar->GetValueAsUInt()), szIfName);
+      delete pRespPDU;
+	}
+
+	return dwResult;
+}
+
+
+//
+// Topology table walker's callback for CDP topology table
+//
+
+static DWORD CDPTopoHandler(DWORD dwVersion, const char *pszCommunity,
+                            SNMP_Variable *pVar, SNMP_Transport *pTransport,
+                            void *pArg)
+{
+   SNMP_ObjectId *pOid;
+   TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4],
+	      szIfName[MAX_CONNECTOR_NAME], szIpAddr[16];
+   SNMP_PDU *pRqPDU, *pRespPDU;
+	DWORD dwResult;
+
+   pOid = pVar->GetName();
+   SNMPConvertOIDToText(pOid->Length() - 14, (DWORD *)&(pOid->GetValue())[14], szSuffix, MAX_OID_LEN * 4);
+
+	// Get interface
+   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, (char *)pszCommunity, SnmpNewRequestId(), dwVersion);
+   _tcscpy(szOid, ".1.3.6.1.4.1.9.9.23.1.2.1.1.7");	// Remote port name
+   _tcscat(szOid, szSuffix);
+	pRqPDU->BindVariable(new SNMP_Variable(szOid));
+   dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+   delete pRqPDU;
+
+   if (dwResult == SNMP_ERR_SUCCESS)
+   {
+		((PeerList *)pArg)->Add(ntohl(inet_addr(pVar->GetValueAsIPAddr(szIpAddr))),
+		                        pRespPDU->GetVariable(0)->GetValueAsString(szIfName, MAX_CONNECTOR_NAME));
       delete pRespPDU;
 	}
 
@@ -113,6 +146,8 @@ DWORD BuildL2Topology(nxObjList &topology, Node *pRoot, Node *pParent, int nDept
 	}
 	else if (pRoot->Flags() & NF_IS_CDP)
 	{
+		if (pRoot->CallSnmpEnumerate(".1.3.6.1.4.1.9.9.23.1.2.1.1.4", CDPTopoHandler, pList) != SNMP_ERR_SUCCESS)
+			goto cleanup;
 	}
 
 	dwResult = RCC_SUCCESS;
@@ -127,13 +162,22 @@ DWORD BuildL2Topology(nxObjList &topology, Node *pRoot, Node *pParent, int nDept
 			{
 				_tcscpy(pszParentIfName, pList->m_pPeerList[i].szIfName);
 			}
-			else if (nDepth > 0)
+			else if ((pNode->Id() != pRoot->Id()) && (nDepth > 0))
 			{
 				dwResult = BuildL2Topology(topology, pNode, pRoot, nDepth - 1, szPeerIfName);
 				if (dwResult != RCC_SUCCESS)
 					break;
 				topology.AddObject(pNode->Id());
-				topology.LinkObjectsEx(pRoot->Id(), pNode->Id(), pList->m_pPeerList[i].szIfName, szPeerIfName);
+
+				// If we use CDP, szIfname member contains remote port name, not a local port name
+				if (pRoot->Flags() & NF_IS_CDP)
+				{
+					topology.LinkObjectsEx(pRoot->Id(), pNode->Id(), szPeerIfName , pList->m_pPeerList[i].szIfName);
+				}
+				else
+				{
+					topology.LinkObjectsEx(pRoot->Id(), pNode->Id(), pList->m_pPeerList[i].szIfName, szPeerIfName);
+				}
 			}
 		}
 	}

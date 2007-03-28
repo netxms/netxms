@@ -156,6 +156,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 public:
+	BOOL m_bShowConnectorNames;
 	BOOL m_bCanOpenObjects;
 	BOOL m_bIsModified;
    int GetScaleFactor(void);

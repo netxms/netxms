@@ -1,4 +1,4 @@
-/* $Id: nxmp_parser.h,v 1.7 2006-12-29 12:45:29 victor Exp $ */
+/* $Id: nxmp_parser.h,v 1.8 2007-03-28 13:42:16 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Server
@@ -60,6 +60,8 @@ private:
 	NXC_TRAP_CFG_ENTRY *m_pCurrTrap;
 	DWORD m_dwNumTraps;
 
+	DWORD m_dwNumTemplates;
+
    int m_nContext;
    NXMP_Lexer *m_pLexer;
    NXMP_Parser *m_pParser;
@@ -87,6 +89,8 @@ public:
 	void SetTrapDescription(char *pszText);
 	void AddTrapParam(char *pszOID, int nPos, char *pszDescr);
    void CloseTrap(void) { m_pCurrTrap = NULL; m_nContext = CTX_NONE; }
+
+   void NewTemplate(char *pszName);
 
    BOOL ParseVariable(char *pszName, char *pszValue);
 };

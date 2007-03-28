@@ -140,9 +140,8 @@ void nxleReingoldTilford::FirstPass(nxVertex *root)
       else 
       {
          // Find coordinate relative to brother.  Include the
-         // size of the node and a factor of 0.5 to allow some
-         // minimum distance of either side.
-         xRoot = TrueX(brother) + MAP_OBJECT_SIZE_X * 1.5;
+         // size of the node and an internode interval
+         xRoot = TrueX(brother) + MAP_OBJECT_SIZE_X + MAP_OBJECT_INTERVAL_X;
       }
 		modifier = 0.0;
    }
@@ -164,7 +163,7 @@ void nxleReingoldTilford::FirstPass(nxVertex *root)
       if (brother != NULL) 
       {
          xBrother = TrueX(brother);
-         modifier = MAP_OBJECT_SIZE_X * 1.5 - (xRoot - xBrother);
+         modifier = MAP_OBJECT_SIZE_X + MAP_OBJECT_INTERVAL_X - (xRoot - xBrother);
 			if (modifier < 0) 
 				modifier = 0;
       }

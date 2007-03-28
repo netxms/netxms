@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.127 2007-03-27 16:21:42 victor Exp $ */
+/* $Id: nms_core.h,v 1.128 2007-03-28 13:42:17 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -701,6 +701,7 @@ extern RSA *g_pServerKey;
 extern DWORD g_dwPingSize;
 extern time_t g_tServerStartTime;
 extern DWORD g_dwLockTimeout;
+extern DWORD g_dwSNMPTimeout;
 
 extern DB_HANDLE g_hCoreDB;
 extern Queue *g_pLazyRequestQueue;
