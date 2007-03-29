@@ -66,6 +66,8 @@ public:
 	COLORREF m_rgbSelRectColor;
 	COLORREF m_rgbBkColor;
 	COLORREF m_rgbTextColor;
+	COLORREF m_rgbLabelBkColor;
+	COLORREF m_rgbLabelTextColor;
 
 // Operations
 public:

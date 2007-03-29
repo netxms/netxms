@@ -33,7 +33,7 @@
 #define IDC_CHECK_AUTOLOGIN             1001
 #define IDC_STATIC_SERVER               1003
 #define IDC_STATIC_USER                 1004
-#define IDC_STATIC_PASSWORD             1005
+//#define IDC_STATIC_PASSWORD             1005
 #define IDC_EDIT_USER                   1007
 #define IDC_CONFIGURE_SOUNDS            1008
 #define IDC_CHECK_REPEAT                1009

@@ -48,6 +48,8 @@ CMapView::CMapView()
    m_pSubmap = NULL;
    m_rgbBkColor = RGB(224, 224, 224);
    m_rgbTextColor = RGB(0, 0, 0);
+	m_rgbLabelTextColor = RGB(0, 0, 0);
+	m_rgbLabelBkColor = RGB(128, 255, 128);
    m_rgbSelBkColor = GetSysColor(COLOR_HIGHLIGHT);
    m_rgbSelTextColor = GetSysColor(COLOR_HIGHLIGHTTEXT);
    m_rgbSelRectColor = RGB(0, 0, 128);
@@ -246,6 +248,9 @@ void CMapView::DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel)
    CImageList *pImageList;
    CFont *pOldFont;
    POINT ptOffset, ptLinkStart, ptLinkEnd;
+	CSize te;
+	int dx, dy, nLen;
+	TCHAR *pszText;
    
    GetClientRect(&rcClient);
 
@@ -315,6 +320,8 @@ void CMapView::DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel)
       {
          // Draw links between objects
          pOldPen = dc.SelectObject(&m_penLinkTypes[0]);
+			dc.SetBkColor(m_rgbLabelBkColor);
+			dc.SetTextColor(m_rgbLabelTextColor);
          for(i = 0; i < m_pSubmap->GetNumLinks(); i++)
          {
             ptLinkStart = m_pSubmap->GetObjectPosition(m_pSubmap->GetLinkByIndex(i)->dwId1);
@@ -332,30 +339,31 @@ void CMapView::DrawOnBitmap(CBitmap &bitmap, BOOL bSelectionOnly, RECT *prcSel)
             dc.MoveTo(ptLinkStart);
             dc.LineTo(ptLinkEnd);
 
+				if (m_bShowConnectorNames && (m_scaleInfo[m_nScale].nFontIndex != -1))
+				{
+					dx = (ptLinkEnd.x - ptLinkStart.x) / 3;
+					//if (abs(dx) > 20 + MAP_OBJECT_SIZE_X)
+					//	dx = dx < 0 ? (-20 - MAP_OBJECT_SIZE_X): (20 + MAP_OBJECT_SIZE_X);
+					dy = (ptLinkEnd.y - ptLinkStart.y) / 3;
+					//if (abs(dy) > 20 + MAP_OBJECT_SIZE_Y)
+					//	dy = dy < 0 ? (-20 - MAP_OBJECT_SIZE_Y): (20 + MAP_OBJECT_SIZE_Y);
+
+					pszText = m_pSubmap->GetLinkByIndex(i)->szPort1;
+					nLen = _tcslen(pszText);
+					te = dc.GetTextExtent(pszText, nLen);
+					dc.TextOut(ptLinkStart.x + dx - te.cx / 2, ptLinkStart.y + dy - te.cy / 2, pszText, nLen);
+
+					pszText = m_pSubmap->GetLinkByIndex(i)->szPort2;
+					nLen = _tcslen(pszText);
+					te = dc.GetTextExtent(pszText, nLen);
+					dc.TextOut(ptLinkEnd.x - dx - te.cx / 2, ptLinkEnd.y - dy - te.cy / 2, pszText, nLen);
+				}
          }
          dc.SelectObject(pOldPen);
 
          // Draw objects
          for(i = 0; i < m_pSubmap->GetNumObjects(); i++)
             DrawObject(dc, i, pImageList, ptOffset, TRUE);
-
-			if (m_bShowConnectorNames && (m_scaleInfo[m_nScale].nFontIndex != -1))
-				for(i = 0; i < m_pSubmap->GetNumLinks(); i++)
-				{
-            ptLinkStart = m_pSubmap->GetObjectPosition(m_pSubmap->GetLinkByIndex(i)->dwId1);
-            ptLinkEnd = m_pSubmap->GetObjectPosition(m_pSubmap->GetLinkByIndex(i)->dwId2);
-
-            ScalePosMapToScreen(&ptLinkStart);
-            ptLinkStart.x += m_scaleInfo[m_nScale].ptObjectSize.x / 2;
-            ptLinkStart.y += m_scaleInfo[m_nScale].ptObjectSize.y / 2;
-
-            ScalePosMapToScreen(&ptLinkEnd);
-            ptLinkEnd.x += m_scaleInfo[m_nScale].ptObjectSize.x / 2;
-            ptLinkEnd.y += m_scaleInfo[m_nScale].ptObjectSize.y / 2;
-					// Draw connector names
-						dc.TextOut(ptLinkStart.x, ptLinkStart.y, m_pSubmap->GetLinkByIndex(i)->szPort1, _tcslen(m_pSubmap->GetLinkByIndex(i)->szPort1));
-						dc.TextOut(ptLinkEnd.x, ptLinkEnd.y, m_pSubmap->GetLinkByIndex(i)->szPort2, _tcslen(m_pSubmap->GetLinkByIndex(i)->szPort2));
-				}
       }
    }
    else

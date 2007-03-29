@@ -1,4 +1,4 @@
-/* $Id: nxpush.cpp,v 1.13 2006-12-29 20:26:38 alk Exp $ */
+/* $Id: nxpush.cpp,v 1.14 2007-03-29 12:36:55 victor Exp $ */
 
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
@@ -419,8 +419,9 @@ BOOL Startup(void)
 				optEncrypt == TRUE ? "enabled" : "disabled");
 		}
 
-		dwResult = NXCConnect(optHost, optUser, optPassword, &hSession,
-					"nxpush/" NETXMS_VERSION_STRING, FALSE, optEncrypt, NULL);
+		dwResult = NXCConnect(optEncrypt ? NXCF_ENCRYPT : 0, optHost, optUser, optPassword,
+		                      0, NULL, NULL, &hSession,
+		                      "nxpush/" NETXMS_VERSION_STRING, NULL);
 		if (dwResult != RCC_SUCCESS)
 		{
 			if (optVerbose > 0)
@@ -540,6 +541,9 @@ BOOL Teardown(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.13  2006/12/29 20:26:38  alk
+updated to match new NXCConnect()
+
 Revision 1.12  2006/11/21 11:35:29  victor
 Stability fixes for IPSO
 

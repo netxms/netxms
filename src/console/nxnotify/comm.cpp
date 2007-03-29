@@ -79,12 +79,16 @@ static void __EventHandler(NXC_SESSION hSession, DWORD dwEvent, DWORD dwCode, vo
 static DWORD WINAPI LoginThread(void *pArg)
 {
    HWND hWnd = *((HWND *)pArg);    // Handle to status window
-   DWORD dwResult;
+   DWORD dwFlags, dwResult;
 
-   dwResult = NXCConnect(g_szServer, g_szLogin, g_szPassword, &g_hSession, 
-                         _T("nxnotify/") NETXMS_VERSION_STRING,
-                         (g_dwOptions & OPT_MATCH_SERVER_VERSION) ? TRUE : FALSE,
-                         (g_dwOptions & OPT_ENCRYPT_CONNECTION) ? TRUE : FALSE, NULL);
+	dwFlags = 0;
+	if (g_dwOptions & OPT_MATCH_SERVER_VERSION)
+		dwFlags |= NXCF_EXACT_VERSION_MATCH;
+	if (g_dwOptions & OPT_ENCRYPT_CONNECTION)
+		dwFlags |= NXCF_ENCRYPT;
+   dwResult = NXCConnect(dwFlags, g_szServer, g_szLogin, g_szPassword,
+	                      0, NULL, NULL, &g_hSession, 
+                         _T("nxnotify/") NETXMS_VERSION_STRING, NULL);
 
    // Set subscriptions
    if (dwResult == RCC_SUCCESS)

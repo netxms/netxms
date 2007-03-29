@@ -33,8 +33,10 @@ static char THIS_FILE[] = __FILE__;
 static int MonthFromTS(DWORD dwTimeStamp)
 {
    time_t t = dwTimeStamp;
-
-   return localtime(&t)->tm_mon; 
+	struct tm *ltm;
+	
+	ltm = localtime(&t);
+   return ltm != NULL ? ltm->tm_mon : -1;
 }
 
 
@@ -53,6 +55,8 @@ CGraph::CGraph()
 	m_bShowTitle = FALSE;
    m_dwNumItems = 0;
 	m_szTitle[0] = 0;
+	m_dwTimeFrom = 0;
+	m_dwTimeTo = 0;
 
 	memset(m_graphItemStyles, 0, sizeof(GRAPH_ITEM_STYLE) * MAX_GRAPH_ITEMS);
 	SetColorScheme(GCS_CLASSIC);
@@ -254,6 +258,9 @@ void CGraph::SetTimeFrame(DWORD dwTimeFrom, DWORD dwTimeTo)
 {
    struct tm lt;
    time_t t = dwTimeFrom;
+
+	if (dwTimeFrom > dwTimeTo)
+		return;
 
    m_dwTimeTo = dwTimeTo;
 
@@ -517,13 +524,14 @@ void CGraph::OnKillFocus(CWnd* pNewWnd)
 \
       dwTimeStamp = m_dwTimeFrom + (DWORD)((double)(x - iLeftMargin) * m_dSecondsPerPixel); \
       nMonth = MonthFromTS(dwTimeStamp); \
-      while(1) \
-      { \
-         dwTimeStamp = m_dwTimeFrom + (DWORD)((double)(x - iLeftMargin - 1) * m_dSecondsPerPixel); \
-         if (MonthFromTS(dwTimeStamp) != nMonth) \
-            break; \
-         x--; \
-      } \
+		if (nMonth != -1) \
+			while(1) \
+			{ \
+				dwTimeStamp = m_dwTimeFrom + (DWORD)((double)(x - iLeftMargin - 1) * m_dSecondsPerPixel); \
+				if (MonthFromTS(dwTimeStamp) != nMonth) \
+					break; \
+				x--; \
+			} \
    }
 
 void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)

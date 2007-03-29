@@ -93,6 +93,10 @@ static BOOL H_UpgradeFromV59(void)
       if (!g_bIgnoreErrors)
          return FALSE;
 
+   if (!CreateConfigParam(_T("SNMPRequestTimeout"), _T("2000"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
    if (!SQLQuery(_T("UPDATE config SET var_value='60' WHERE var_name='DBFormatVersion'")))
       if (!g_bIgnoreErrors)
          return FALSE;

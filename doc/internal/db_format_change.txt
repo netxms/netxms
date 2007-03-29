@@ -1,11 +1,4 @@
 *************
-* 60 ==> 61 *
-*************
-
-- New configuration parameters: SNMPRequestTimeout
-
-
-*************
 * 59 ==> 60 *
 *************
 
@@ -19,6 +12,7 @@
 		comments SQL_TEXT not null,
 		PRIMARY KEY(cert_id)
 	) TABLE_TYPE;
+- New configuration parameters: SNMPRequestTimeout
 
 
 *************

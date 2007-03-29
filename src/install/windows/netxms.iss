@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.2.16-rc6
-AppVersion=0.2.16-rc6
+AppVerName=NetXMS 0.2.16-rc8
+AppVersion=0.2.16-rc8
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.2.16-rc6
+OutputBaseFilename=netxms-0.2.16-rc8
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -71,6 +71,7 @@ Source: "..\..\server\dbdrv\mssql\Release\mssql.pdb"; DestDir: "{app}\bin"; Flag
 Source: "..\..\server\dbdrv\odbc\Release\odbc.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\dbdrv\pgsql\Release\pgsql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\dbdrv\sqlite\Release\sqlite.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\server\dbdrv\oracle\Release\oracle.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\smsdrv\generic\Release\generic.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\smsdrv\generic\Release\generic.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\server\tools\nxaction\Release\nxaction.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server

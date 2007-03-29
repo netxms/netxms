@@ -66,9 +66,9 @@ static void SendEvent(int iNumArgs, TCHAR **pArgList, BOOL bEncrypt)
       if (m_bDebug)
          NXCSetDebugCallback(DebugCallback);
 
-      dwResult = NXCConnect(m_szServer, m_szLogin, m_szPassword, &hSession,
-                            _T("nxevent/") NETXMS_VERSION_STRING, FALSE,
-									 bEncrypt, NULL);
+      dwResult = NXCConnect(bEncrypt ? NXCF_ENCRYPT : 0, m_szServer, m_szLogin,
+		                      m_szPassword, 0, NULL, NULL, &hSession,
+                            _T("nxevent/") NETXMS_VERSION_STRING, NULL);
       if (dwResult != RCC_SUCCESS)
       {
          _tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(dwResult));
