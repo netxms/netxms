@@ -1,4 +1,4 @@
-/* $Id: nxmp_lexer.cpp,v 1.1 2006-12-15 11:38:14 victor Exp $ */
+/* $Id: nxmp_lexer.cpp,v 1.2 2007-03-31 05:20:54 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -23,6 +23,10 @@
 
 #include "nxcore.h"
 #include "nxmp_parser.h"
+
+#ifndef min
+#define min(a,b) ((a) < (b) ? (a) : (b))
+#endif
 
 
 //

@@ -142,6 +142,8 @@ contrib/startup/gentoo/nxhttpd -text
 contrib/startup/redhat/Makefile.am -text
 contrib/startup/redhat/netxmsd -text
 contrib/startup/redhat/nxagentd -text
+contrib/startup/suse/Makefile.am -text
+contrib/startup/suse/nxagentd -text
 doc/Makefile.am -text
 doc/internal/Makefile.am -text
 doc/internal/build.w64 -text

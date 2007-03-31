@@ -80,17 +80,7 @@ static void PushState(int nState)
    BEGIN(nState);
 }
 
-static void PopState(void)
-{
-   if (m_nCurrStackPos > 0)
-   {
-      BEGIN(m_nStateStack[--m_nCurrStackPos]);
-   }
-	else
-	{
-      BEGIN(INITIAL);
-	}
-}
+static void PopState(void);
 
 
 //
@@ -431,3 +421,16 @@ static void CountNewlines(char *pszStr, int len)
 }
 
 %%
+
+
+static void PopState(void)
+{
+   if (m_nCurrStackPos > 0)
+   {
+      BEGIN(m_nStateStack[--m_nCurrStackPos]);
+   }
+	else
+	{
+      BEGIN(INITIAL);
+	}
+}

@@ -154,7 +154,7 @@ void *da_get(DynArray *pArray, int nIndex);
 int da_size(DynArray *pArray);
 void da_destroy(DynArray *pArray);
 
-void *mpalloc(int nSize);
+void *mpalloc(unsigned int nSize);
 
 #ifdef __cplusplus
 }

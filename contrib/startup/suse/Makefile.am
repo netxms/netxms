@@ -9,4 +9,4 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 
-SUBDIRS= gentoo redhat suse
+EXTRA_DIST = nxagentd

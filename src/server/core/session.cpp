@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.271 2007-03-27 16:21:42 victor Exp $ */
+/* $Id: session.cpp,v 1.272 2007-03-31 05:20:54 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -28,6 +28,10 @@
 #include <psapi.h>
 #else
 #include <dirent.h>
+#endif
+
+#ifndef min
+#define min(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
 

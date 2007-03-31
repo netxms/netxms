@@ -82,7 +82,7 @@ MP_SYNTAX *create_std_syntax(int nSyntax)
    return p;
 }
 
-void *mpalloc(int nSize)
+void *mpalloc(unsigned int nSize)
 {
    void *p;
 

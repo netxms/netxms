@@ -1,10 +1,10 @@
-# $Id: configure.ac,v 1.237 2007-02-15 23:00:36 victor Exp $
+# $Id: configure.ac,v 1.238 2007-03-31 05:20:53 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
 #
 
-AC_INIT([NetXMS], [0.2.15], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.16-rc9], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -1054,6 +1054,7 @@ AC_CONFIG_FILES([
 	contrib/startup/Makefile
 	contrib/startup/gentoo/Makefile
 	contrib/startup/redhat/Makefile
+	contrib/startup/suse/Makefile
 	contrib/mibs/Makefile
 	contrib/backgrounds/Makefile
 	doc/Makefile
@@ -1103,6 +1104,7 @@ AC_CONFIG_FILES([
 	src/server/dbdrv/mysql/Makefile
 	src/server/dbdrv/pgsql/Makefile
 	src/server/dbdrv/sqlite/Makefile
+	src/server/dbdrv/oracle/Makefile
 	src/server/smsdrv/Makefile
 	src/server/smsdrv/generic/Makefile
 	src/server/tools/Makefile
@@ -1139,6 +1141,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ups/Makefile
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/odbcquery/Makefile
+	src/nxhttpd/Makefile
 	tools/Makefile
 ])
 
