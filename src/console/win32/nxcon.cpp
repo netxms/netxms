@@ -3979,15 +3979,19 @@ int CConsoleApp::Run()
 {
 	int nRet;
 
+#ifndef _DEBUG
 	SetExceptionHandler(ExceptionHandler, ExceptionDataWriter);
 	__try
 	{
+#endif
 		nRet = CWinApp::Run();
+#ifndef _DEBUG
 	}
 	__except(___ExceptionHandler((EXCEPTION_POINTERS *)_exception_info()))
 	{
 		ExitProcess(99);
 	}
+#endif
 
 	return nRet;
 }
