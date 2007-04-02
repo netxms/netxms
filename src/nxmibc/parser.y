@@ -41,6 +41,9 @@
 #define __STDC__	1
 #endif
 
+#define YYMALLOC	malloc
+#define YYFREE		free
+
 #include <string.h>
 #include <time.h>
 #include "mibparse.h"
@@ -82,7 +85,7 @@ MP_SYNTAX *create_std_syntax(int nSyntax)
    return p;
 }
 
-void *mpalloc(unsigned int nSize)
+void *__zmalloc(unsigned int nSize)
 {
    void *p;
 

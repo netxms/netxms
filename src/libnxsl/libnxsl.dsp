@@ -302,7 +302,7 @@ SOURCE=.\parser.l
 InputPath=.\parser.l
 
 "lex.yy.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	flex -Bf8+ -olex.yy.cpp $(InputPath)
+	flex -B -f -8 -olex.yy.cpp --nounistd $(InputPath)
 
 # End Custom Build
 
@@ -312,7 +312,7 @@ InputPath=.\parser.l
 InputPath=.\parser.l
 
 "lex.yy.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	flex -Bf8+ -olex.yy.cpp $(InputPath)
+	flex -B -f -8 -olex.yy.cpp --nounistd $(InputPath)
 
 # End Custom Build
 
@@ -322,7 +322,7 @@ InputPath=.\parser.l
 InputPath=.\parser.l
 
 "lex.yy.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	flex -Bf8+ -olex.yy.cpp $(InputPath)
+	flex -B -f -8 -olex.yy.cpp --nounistd $(InputPath)
 
 # End Custom Build
 
@@ -332,7 +332,7 @@ InputPath=.\parser.l
 InputPath=.\parser.l
 
 "lex.yy.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	flex -Bf8+ -olex.yy.cpp $(InputPath)
+	flex -B -f -8 -olex.yy.cpp --nounistd $(InputPath)
 
 # End Custom Build
 

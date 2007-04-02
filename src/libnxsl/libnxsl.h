@@ -1,4 +1,4 @@
-/* $Id: libnxsl.h,v 1.24 2007-01-02 09:56:17 victor Exp $ */
+/* $Id: libnxsl.h,v 1.25 2007-04-02 07:23:45 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
@@ -30,7 +30,6 @@
 #include <nxcpapi.h>
 #include <nxsl.h>
 #include <nxqueue.h>
-#include <FlexLexer.h>
 
 #ifndef min
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -40,6 +39,7 @@
 #endif
 
 union YYSTYPE;
+typedef void *yyscan_t;
 
 
 //
@@ -110,8 +110,10 @@ union YYSTYPE;
 
 class NXSL_Compiler;
 
-class NXSL_Lexer : public yyFlexLexer
+class NXSL_Lexer
 {
+	friend int yylex(YYSTYPE *, yyscan_t);
+
 protected:
    int m_nSourceSize;
    int m_nSourcePos;
@@ -122,20 +124,16 @@ protected:
    int m_nCommentLevel;
    int m_nStrSize;
    char m_szStr[MAX_STRING_SIZE];
-   YYSTYPE *m_plval;
    BOOL m_bErrorState;
-
-	virtual int LexerInput(char *pBuffer, int nMaxSize);
-   virtual void LexerError(const char *pszMsg);
 
 public:
 	NXSL_Lexer(NXSL_Compiler *pCompiler, TCHAR *pszCode);
 	virtual ~NXSL_Lexer();
 
-   virtual int yylex(void);
-   void SetLvalPtr(YYSTYPE *plval) { m_plval = plval; }
+	int LexerInput(char *pBuffer, int nMaxSize);
 
-   int GetCurrLine(void) { return m_nCurrLine; }
+	int GetCurrLine(void) { return m_nCurrLine; }
+	void Error(char *pszText);
 
    void SetErrorState(void) { m_bErrorState = TRUE; }
    BOOL IsErrorState(void) { return m_bErrorState; }

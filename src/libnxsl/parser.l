@@ -1,5 +1,7 @@
 %option noyywrap
-%option yyclass="NXSL_Lexer"
+%option reentrant
+%option bison-bridge
+%option never-interactive
 
 %x COMMENT
 %x STR
@@ -16,15 +18,13 @@ escape		\\[bnrt0\"]
 
 %{
 
-// dirtiest hack i've ever done
-#undef yyFlexLexer
+#define YY_EXTRA_TYPE	NXSL_Lexer*
+#define YY_INPUT(buf, result, maxSize) { result = yyextra->LexerInput(buf, maxSize); }
+
 #include "libnxsl.h"
 #include "parser.tab.hpp"
 
-#ifdef _WIN32
-#pragma warning(disable: 4244)
-#define isatty __declspec(dllimport) _isatty
-#endif
+static void LexerError(char *pszMsg, yyscan_t scanner);
 
 %}
 
@@ -57,27 +57,27 @@ escape		\\[bnrt0\"]
 <INITIAL>"use"		return T_USE;
 <INITIAL>"while"	return T_WHILE;
 
-<INITIAL>{identifier}	{ m_plval->valStr = strdup(yytext); return T_IDENTIFIER; }
-<INITIAL>{compound_ident} { m_plval->valStr = strdup(yytext); return T_COMPOUND_IDENTIFIER; }
+<INITIAL>{identifier}	{ yylval->valStr = strdup(yytext); return T_IDENTIFIER; }
+<INITIAL>{compound_ident} { yylval->valStr = strdup(yytext); return T_COMPOUND_IDENTIFIER; }
 <INITIAL>{integer}	{
 				INT64 nVal;
 
 				nVal = strtoll(yytext, NULL, 0);
 				if ((nVal < -2147483647) || (nVal > 2147483647))
 				{
-					m_plval->valInt64 = nVal;
+					yylval->valInt64 = nVal;
 					return T_INT64;
 				}
 				else
 				{
-					m_plval->valInt32 = (LONG)nVal;
+					yylval->valInt32 = (LONG)nVal;
 					return T_INT32;
 				}
 			}
-<INITIAL>{uint32}	{ m_plval->valUInt32 = strtoul(yytext, NULL, 0); return T_UINT32; }
-<INITIAL>{int64}	{ m_plval->valInt64 = strtoll(yytext, NULL, 0); return T_INT64; }
-<INITIAL>{uint64}	{ m_plval->valUInt64 = strtoull(yytext, NULL, 0); return T_UINT64; }
-<INITIAL>{real}		{ m_plval->valReal = strtod(yytext, NULL); return T_REAL; }
+<INITIAL>{uint32}	{ yylval->valUInt32 = strtoul(yytext, NULL, 0); return T_UINT32; }
+<INITIAL>{int64}	{ yylval->valInt64 = strtoll(yytext, NULL, 0); return T_INT64; }
+<INITIAL>{uint64}	{ yylval->valUInt64 = strtoull(yytext, NULL, 0); return T_UINT64; }
+<INITIAL>{real}		{ yylval->valReal = strtod(yytext, NULL); return T_REAL; }
 
 <INITIAL>"=="	return T_EQ;
 <INITIAL>"!="	return T_NE;
@@ -113,51 +113,51 @@ escape		\\[bnrt0\"]
 <INITIAL>"<"	return '<';
 <INITIAL>">"	return '>';
 
-<INITIAL>"/*"	{ m_nCommentLevel = 1; BEGIN COMMENT; }
-<INITIAL>\"	{ m_nStrSize = 0; BEGIN STR; }
+<INITIAL>"/*"	{ yyextra->m_nCommentLevel = 1; BEGIN COMMENT; }
+<INITIAL>\"	{ yyextra->m_nStrSize = 0; BEGIN STR; }
 
 <INITIAL>"//".*$	;
 
-<INITIAL>\n	m_nCurrLine++;
+<INITIAL>\n	yyextra->m_nCurrLine++;
 <INITIAL>{whitespace}	;
 <INITIAL>.	{
 			char szBuffer[128]; 
 			sprintf(szBuffer, "Invalid character '%c' (0x%02X)", *yytext, *yytext);
-			LexerError(szBuffer);
+			LexerError(szBuffer, yyscanner);
 			return -1;
 		}
 
 <STR>{escape}	{		
-			if (m_nStrSize < MAX_STRING_SIZE)
+			if (yyextra->m_nStrSize < MAX_STRING_SIZE)
 			{
 				switch(yytext[1])
 				{
 					case '"':
-						m_szStr[m_nStrSize++] = '"';
+						yyextra->m_szStr[yyextra->m_nStrSize++] = '"';
 						break;
 					case 'n':
-						m_szStr[m_nStrSize++] = '\n';
+						yyextra->m_szStr[yyextra->m_nStrSize++] = '\n';
 						break;
 					case 'r':
-						m_szStr[m_nStrSize++] = '\r';
+						yyextra->m_szStr[yyextra->m_nStrSize++] = '\r';
 						break;
 					case 'b':
-						m_szStr[m_nStrSize++] = '\b';
+						yyextra->m_szStr[yyextra->m_nStrSize++] = '\b';
 						break;
 					case 't':
-						m_szStr[m_nStrSize++] = '\t';
+						yyextra->m_szStr[yyextra->m_nStrSize++] = '\t';
 						break;
 					case '0':
-						m_szStr[m_nStrSize++] = 0;
+						yyextra->m_szStr[yyextra->m_nStrSize++] = 0;
 						break;
 					default:
-						m_szStr[m_nStrSize++] = yytext[1];
+						yyextra->m_szStr[yyextra->m_nStrSize++] = yytext[1];
 						break;
 				}
 			}
 			else
 			{
-				LexerError("String constant is too long");
+				LexerError("String constant is too long", yyscanner);
 				return -1;
 			}
 		}
@@ -170,42 +170,49 @@ escape		\\[bnrt0\"]
 			{
 				if ((nVal >= 0) && (nVal <= 255))
 				{
-					m_szStr[m_nStrSize++] = nVal;
+					yyextra->m_szStr[yyextra->m_nStrSize++] = nVal;
 				}
 				else
 				{
-					LexerError("Character code must be in range 0x00 .. 0xFF");
+					LexerError("Character code must be in range 0x00 .. 0xFF", yyscanner);
 				}
 			}
 			else
 			{
-				LexerError("Invalid hex number");
+				LexerError("Invalid hex number", yyscanner);
 			}
 		}
 <STR>\"		{
 			BEGIN INITIAL;
-			m_szStr[m_nStrSize] = 0;
-			m_plval->valStr = strdup(m_szStr);
+			yyextra->m_szStr[yyextra->m_nStrSize] = 0;
+			yylval->valStr = strdup(yyextra->m_szStr);
 			return T_STRING;
 		}
 <STR>\r		;
 <STR>\n		{
-			LexerError("Newline in string constant");
+			LexerError("Newline in string constant", yyscanner);
 			return -1;
 		}
 <STR>.		{
-			if (m_nStrSize < MAX_STRING_SIZE)
+			if (yyextra->m_nStrSize < MAX_STRING_SIZE)
 			{
-				m_szStr[m_nStrSize++] = *yytext;
+				yyextra->m_szStr[yyextra->m_nStrSize++] = *yytext;
 			}
 			else
 			{
-				LexerError("String constant is too long");
+				LexerError("String constant is too long", yyscanner);
 				return -1;
 			}
 		}
 
-<COMMENT>"/*"	m_nCommentLevel++;
-<COMMENT>"*/"	{ m_nCommentLevel--; if (m_nCommentLevel == 0) BEGIN INITIAL; }
-<COMMENT>\n	m_nCurrLine++;
+<COMMENT>"/*"	yyextra->m_nCommentLevel++;
+<COMMENT>"*/"	{ yyextra->m_nCommentLevel--; if (yyextra->m_nCommentLevel == 0) BEGIN INITIAL; }
+<COMMENT>\n	yyextra->m_nCurrLine++;
 <COMMENT>.	;
+
+%%
+
+static void LexerError(char *pszMsg, yyscan_t scanner)
+{
+   yyget_extra(scanner)->Error(pszMsg);
+}

@@ -1,3 +1,5 @@
+%option never-interactive
+
 %a 14000
 %p 12000
 %e 2000
@@ -47,14 +49,18 @@ WHITESPC  [[:blank:]\t\n\r]
  */
 
 #define YY_NEVER_INTERACTIVE 1
+#define YY_NO_UNISTD_H
 #define ECHO
 
 #include "mibparse.h"
 #include "parser.tab.h"/* token codes from the parser */
 #include <nms_util.h>
 
-#if defined(_WIN32) && defined(__64BIT__)
+#if defined(_WIN32) 
+#pragma warning(disable: 4018)
+#if defined(__64BIT__)
 #pragma warning(disable: 4244 4267)
+#endif
 #endif
 
 int mperror(char *pszMsg);

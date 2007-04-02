@@ -10,15 +10,16 @@
 #include "libnxsl.h"
 #include "parser.tab.hpp"
 
-void yyerror(NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
+void yyerror(yyscan_t scanner, NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
              NXSL_Program *pScript, char *pszText);
-int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer);
+int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 
 %}
 
 %expect		1
 %pure-parser
-%lex-param		{NXSL_Lexer *pLexer}
+%lex-param		{yyscan_t scanner}
+%parse-param	{yyscan_t scanner}
 %parse-param	{NXSL_Lexer *pLexer}
 %parse-param	{NXSL_Compiler *pCompiler}
 %parse-param	{NXSL_Program *pScript}

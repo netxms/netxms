@@ -28,8 +28,11 @@
 // Externals
 //
 
-int yyparse(NXSL_Lexer *, NXSL_Compiler *, NXSL_Program *);
+int yyparse(yyscan_t scanner, NXSL_Lexer *, NXSL_Compiler *, NXSL_Program *);
 extern int yydebug;
+void yyset_extra(NXSL_Lexer *, yyscan_t);
+int yylex_init(yyscan_t *);
+int yylex_destroy(yyscan_t);
 
 
 //
@@ -88,11 +91,14 @@ void NXSL_Compiler::Error(const char *pszMsg)
 NXSL_Program *NXSL_Compiler::Compile(TCHAR *pszSourceCode)
 {
    NXSL_Program *pResult;
+	yyscan_t scanner;
 
    m_pLexer = new NXSL_Lexer(this, pszSourceCode);
    pResult = new NXSL_Program;
+	yylex_init(&scanner);
+	yyset_extra(m_pLexer, scanner);
 //yydebug=1;
-   if (yyparse(m_pLexer, this, pResult) == 0)
+   if (yyparse(scanner, m_pLexer, this, pResult) == 0)
    {
       pResult->ResolveFunctions();
 		pResult->Optimize();
@@ -102,6 +108,7 @@ NXSL_Program *NXSL_Compiler::Compile(TCHAR *pszSourceCode)
       delete pResult;
       pResult = NULL;
    }
+	yylex_destroy(scanner);
    return pResult;
 }
 
@@ -110,7 +117,7 @@ NXSL_Program *NXSL_Compiler::Compile(TCHAR *pszSourceCode)
 // yyerror() for parser
 //
 
-void yyerror(NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
+void yyerror(yyscan_t scanner, NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
              NXSL_Program *pScript, char *pszText)
 {
    pCompiler->Error(pszText);

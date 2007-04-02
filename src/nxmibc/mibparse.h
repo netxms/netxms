@@ -28,7 +28,7 @@
 
 #define YYERROR_VERBOSE
 
-#define CREATE(x) (x *)mpalloc(sizeof(x));
+#define CREATE(x) (x *)__zmalloc(sizeof(x));
 
 
 //
@@ -154,7 +154,7 @@ void *da_get(DynArray *pArray, int nIndex);
 int da_size(DynArray *pArray);
 void da_destroy(DynArray *pArray);
 
-void *mpalloc(unsigned int nSize);
+void *__zmalloc(unsigned int nSize);
 
 #ifdef __cplusplus
 }

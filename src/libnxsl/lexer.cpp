@@ -30,7 +30,6 @@
 //
 
 NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *pCompiler, TCHAR *pszCode)
-           :yyFlexLexer(NULL, NULL)
 {
 #ifdef UNICODE
    m_nSourceSize = wcslen(pszCode);
@@ -81,24 +80,10 @@ int NXSL_Lexer::LexerInput(char *pBuffer, int nMaxSize)
 
 
 //
-// Overrided error handler
+// Report error
 //
 
-void NXSL_Lexer::LexerError(const char *pszMsg)
+void NXSL_Lexer::Error(char *pszText)
 {
-   m_pCompiler->Error(pszMsg);
-}
-
-
-//
-// yylex() for Bison
-//
-
-int yylex(YYSTYPE *lvalp, NXSL_Lexer *pLexer)
-{
-   if (pLexer->IsErrorState())
-      return -1;
-
-   pLexer->SetLvalPtr(lvalp);
-   return pLexer->yylex();
+	m_pCompiler->Error(pszText);
 }
