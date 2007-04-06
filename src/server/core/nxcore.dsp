@@ -626,7 +626,7 @@ SOURCE=.\nxmp_parser.l
 InputPath=.\nxmp_parser.l
 
 "nxmp_lex.yy.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	flex -Bf8+ -onxmp_lex.yy.cpp $(InputPath)
+	flex -B -f -8 --nounistd -onxmp_lex.yy.cpp $(InputPath)
 
 # End Custom Build
 
@@ -636,7 +636,7 @@ InputPath=.\nxmp_parser.l
 InputPath=.\nxmp_parser.l
 
 "nxmp_lex.yy.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	flex -Bf8+ -onxmp_lex.yy.cpp $(InputPath)
+	flex -B -f -8 --nounistd -onxmp_lex.yy.cpp $(InputPath)
 
 # End Custom Build
 
@@ -646,7 +646,7 @@ InputPath=.\nxmp_parser.l
 InputPath=.\nxmp_parser.l
 
 "nxmp_lex.yy.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	flex -Bf8+ -onxmp_lex.yy.cpp $(InputPath)
+	flex -B -f -8 --nounistd -onxmp_lex.yy.cpp $(InputPath)
 
 # End Custom Build
 
@@ -656,7 +656,7 @@ InputPath=.\nxmp_parser.l
 InputPath=.\nxmp_parser.l
 
 "nxmp_lex.yy.cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	flex -Bf8+ -onxmp_lex.yy.cpp $(InputPath)
+	flex -B -f -8 --nounistd -onxmp_lex.yy.cpp $(InputPath)
 
 # End Custom Build
 

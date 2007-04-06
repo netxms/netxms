@@ -3,6 +3,7 @@
 
 #include "AdvSplitter.h"	// Added by ClassView
 #include "ObjectView.h"	// Added by ClassView
+#include "ObjectTree.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -58,6 +59,7 @@ public:
 
 // Implementation
 protected:
+	CObjectTree m_wndObjectTree;
 	void FindNextObjectEntry(void);
 	void OpenObject(DWORD dwObjectId);
    BOOL CurrObjectIsNode(BOOL bIncludeTemplates);

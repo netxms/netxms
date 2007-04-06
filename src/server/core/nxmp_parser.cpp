@@ -1,7 +1,7 @@
-/* $Id: nxmp_parser.cpp,v 1.2 2006-12-18 00:21:10 victor Exp $ */
+/* $Id: nxmp_parser.cpp,v 1.3 2007-04-06 10:44:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,8 +29,11 @@
 // Externals
 //
 
-int yyparse(NXMP_Lexer *, NXMP_Parser *, NXMP_Data *);
+int yyparse(yyscan_t scanner, NXMP_Lexer *, NXMP_Parser *, NXMP_Data *);
 extern int yydebug;
+void yyset_extra(NXMP_Lexer *, yyscan_t);
+int yylex_init(yyscan_t *);
+int yylex_destroy(yyscan_t);
 
 
 //
@@ -85,14 +88,18 @@ void NXMP_Parser::Error(const char *pszMsg)
 NXMP_Data *NXMP_Parser::Parse(TCHAR *pszSource)
 {
    NXMP_Data *pData;
+	yyscan_t scanner;
 
    m_pLexer = new NXMP_Lexer(this, pszSource);
    pData = new NXMP_Data(m_pLexer, this);
-   if (yyparse(m_pLexer, this, pData) != 0)
+	yylex_init(&scanner);
+	yyset_extra(m_pLexer, scanner);
+   if (yyparse(scanner, m_pLexer, this, pData) != 0)
    {
       delete pData;
       pData = NULL;
    }
+	yylex_destroy(scanner);
    return pData;
 }
 
@@ -101,7 +108,7 @@ NXMP_Data *NXMP_Parser::Parse(TCHAR *pszSource)
 // yyerror() for parser
 //
 
-void yyerror(NXMP_Lexer *pLexer, NXMP_Parser *pParser, NXMP_Data *pData, char *pszText)
+void yyerror(yyscan_t scanner, NXMP_Lexer *pLexer, NXMP_Parser *pParser, NXMP_Data *pData, char *pszText)
 {
    pParser->Error(pszText);
 }

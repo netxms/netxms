@@ -1,6 +1,7 @@
+/* $Id: template.cpp,v 1.36 2007-04-06 10:44:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: template.cpp
+** File: template.cpp
 **
 **/
 
@@ -852,4 +853,42 @@ void Template::ValidateSystemTemplate(void)
 
 		ValidateDCIList(dciCfgSNMP);
 	}
+}
+
+
+//
+// Enumerate all DCIs
+//
+
+BOOL Template::EnumDCI(BOOL (* pfCallback)(DCItem *, DWORD, void *), void *pArg)
+{
+	DWORD i;
+	BOOL bRet = TRUE;
+
+	LockData();
+	for(i = 0; i < m_dwNumItems; i++)
+	{
+		if (!pfCallback(m_ppItems[i], i, pArg))
+		{
+			bRet = FALSE;
+			break;
+		}
+	}
+	UnlockData();
+	return bRet;
+}
+
+
+//
+// (Re)associate all DCIs
+//
+
+void Template::AssociateItems(void)
+{
+	DWORD i;
+
+	LockData();
+	for(i = 0; i < m_dwNumItems; i++)
+		m_ppItems[i]->ChangeBinding(0, this);
+	UnlockData();
 }

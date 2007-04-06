@@ -101,9 +101,9 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_FIND, OnObjectFind)
 	ON_WM_GETMINMAXINFO()
 	//}}AFX_MSG_MAP
-   ON_NOTIFY(TVN_SELCHANGED, AFX_IDW_PANE_FIRST, OnTreeViewSelChange)
-   ON_NOTIFY(TVN_GETDISPINFO, AFX_IDW_PANE_FIRST, OnTreeViewGetDispInfo)
-   ON_NOTIFY(TVN_ITEMEXPANDING, AFX_IDW_PANE_FIRST, OnTreeViewItemExpanding)
+   ON_NOTIFY(TVN_SELCHANGED, ID_TREE_CTRL, OnTreeViewSelChange)
+   ON_NOTIFY(TVN_GETDISPINFO, ID_TREE_CTRL, OnTreeViewGetDispInfo)
+   ON_NOTIFY(TVN_ITEMEXPANDING, ID_TREE_CTRL, OnTreeViewItemExpanding)
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(NXCM_FIND_OBJECT, OnFindObject)
    ON_MESSAGE(NXCM_ACTIVATE_OBJECT_TREE, OnActivateObjectTree)
@@ -139,9 +139,11 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Create splitter
    m_wndSplitter.CreateStatic(this, 1, 2, WS_CHILD | WS_VISIBLE, IDC_SPLITTER);
 	
-   // Create tree view control
+   // Create object tree control with standard tree view control inside
+	m_wndObjectTree.Create(NULL, NULL, WS_CHILD | WS_VISIBLE, rect, &m_wndSplitter, m_wndSplitter.IdFromRowCol(0, 0));
    m_wndTreeCtrl.Create(WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT | TVS_SHOWSELALWAYS,
-                        rect, &m_wndSplitter, m_wndSplitter.IdFromRowCol(0, 0));
+                        rect, &m_wndObjectTree, ID_TREE_CTRL);
+	m_wndObjectTree.SetTreeCtrl(&m_wndTreeCtrl);
 
    // Create image list
    m_pImageList = new CImageList;

@@ -19,7 +19,6 @@ EXIT _LibCPostlude
 
 # NLM header
 OUTPUT netware.nsm
-COPYRIGHT "Copyright (c) 2004, 2005, 2006 NetXMS Team"
 DESCRIPTION "NetXMS NetWare Platform Subagent"
 SCREENNAME "System Console"
 

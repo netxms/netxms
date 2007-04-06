@@ -1,6 +1,7 @@
+/* $Id: nms_dcoll.h,v 1.31 2007-04-06 10:44:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nms_dcoll.h
+** File: nms_dcoll.h
 **
 **/
 
@@ -112,6 +113,7 @@ private:
    void CalculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
 
 public:
+	Threshold();
    Threshold(DCItem *pRelatedItem);
    Threshold(Threshold *pSrc);
    Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem);
@@ -138,6 +140,15 @@ public:
    BOOL Compare(Threshold *pThr);
 
    void CreateNXMPRecord(String &str);
+
+	void Associate(DCItem *pItem);
+	void SetFunction(int nFunc) { m_iFunction = nFunc; }
+	void SetOperation(int nOp) { m_iOperation = nOp; }
+	void SetEvent(DWORD dwEvent) { m_dwEventCode = dwEvent; }
+	void SetRearmEvent(DWORD dwEvent) { m_dwRearmEventCode = dwEvent; }
+	void SetParam1(int nVal) { m_iParam1 = nVal; }
+	void SetParam2(int nVal) { m_iParam2 = nVal; }
+	void SetValue(TCHAR *pszValue) { m_value = pszValue; }
 };
 
 
@@ -245,6 +256,22 @@ public:
 
    void GetEventList(DWORD **ppdwList, DWORD *pdwSize);
    void CreateNXMPRecord(String &str);
+
+	BOOL EnumThresholds(BOOL (* pfCallback)(Threshold *, DWORD, void *), void *pArg);
+
+	void FinishMPParsing(void);
+	void SetName(TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_ITEM_NAME); }
+	void SetDescription(TCHAR *pszDescr) { nx_strncpy(m_szDescription, pszDescr, MAX_DB_STRING); }
+	void SetInstance(TCHAR *pszInstance) { nx_strncpy(m_szInstance, pszInstance, MAX_DB_STRING); }
+	void SetOrigin(int nOrigin) { m_iSource = nOrigin; }
+	void SetDataType(int nDataType) { m_iDataType = nDataType; }
+	void SetRetentionTime(int nTime) { m_iRetentionTime = nTime; }
+	void SetInterval(int nInt) { m_iPollingInterval = nInt; }
+	void SetDeltaCalcMethod(int nMethod) { m_iDeltaCalculation = nMethod; }
+	void SetAllThresholdsFlag(BOOL bFlag) { m_iProcessAllThresholds = bFlag ? 1 : 0; }
+	void SetAdvScheduleFlag(BOOL bFlag) { m_iAdvSchedule = bFlag ? 1 : 0; }
+	void AddThreshold(Threshold *pThreshold);
+	void AddSchedule(TCHAR *pszSchedule);
 };
 
 

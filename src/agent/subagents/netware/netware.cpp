@@ -1,6 +1,7 @@
+/* $Id: netware.cpp,v 1.16 2007-04-06 10:44:12 victor Exp $ */
 /*
 ** NetXMS subagent for Novell NetWare
-** Copyright (C) 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: netware.cpp
+** File: netware.cpp
 **
 **/
 
@@ -100,6 +101,14 @@ static LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
          break;
       case 'U':   // Used space
          ret_uint64(pValue, ((QWORD)(vi.VolumeSizeInClusters - vi.FreedClusters - vi.SubAllocFreeableClusters) * (QWORD)vi.SectorsPerCluster - (QWORD)vi.FreeableLimboSectors) * (QWORD)vi.SectorSize);
+         break;
+      case 'f':   // Free space percentage
+         ret_double(pValue, (double)(((QWORD)vi.FreedClusters + (QWORD)vi.SubAllocFreeableClusters) * (QWORD)dwClusterSize + (QWORD)vi.FreeableLimboSectors * (QWORD)vi.SectorSize) /
+			                   (double)((QWORD)vi.VolumeSizeInClusters * (QWORD)dwClusterSize) * 100);
+         break;
+      case 'u':   // Used space percentage
+         ret_double(pValue, (double)((((QWORD)(vi.VolumeSizeInClusters - vi.FreedClusters - vi.SubAllocFreeableClusters) * (QWORD)vi.SectorsPerCluster - (QWORD)vi.FreeableLimboSectors) * (QWORD)vi.SectorSize)) /
+			                   (double)((QWORD)vi.VolumeSizeInClusters * (QWORD)dwClusterSize) * 100);
          break;
       default:
          return SYSINFO_RC_UNSUPPORTED;
@@ -206,8 +215,22 @@ static LONG H_ArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 
 static LONG H_ActionShutdown(char *pszAction, NETXMS_VALUES_LIST *pArgList, char *pData)
 {
-   LONG nRet = ERR_INTERNAL_ERROR;
+   LONG nRet;
 
+	switch(*pData)
+	{
+		case 'S':	// Shutdown
+			ShutdownServer(getscreenhandle(), 1, NULL, SHUTDOWN_POWEROFF);
+			nRet = ERR_SUCCESS;
+			break;
+		case 'R':	// Restart
+			ShutdownServer(getscreenhandle(), 1, NULL, SHUTDOWN_RESET);
+			nRet = ERR_SUCCESS;
+			break;
+		default:
+			nRet = ERR_INTERNAL_ERROR;
+			break;
+	}
    return nRet;
 }
 
@@ -272,8 +295,10 @@ static void UnloadHandler(void)
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { "Disk.Free(*)", H_DiskInfo, "F", DCI_DT_UINT64, "Free disk space on {instance}" },
+   { "Disk.FreePerc(*)", H_DiskInfo, "f", DCI_DT_FLOAT, "Percentage of free disk space on {instance}" },
    { "Disk.Total(*)", H_DiskInfo, "T", DCI_DT_UINT64, "Total disk space on {instance}" },
    { "Disk.Used(*)", H_DiskInfo, "U", DCI_DT_UINT64, "Used disk space on {instance}" },
+   { "Disk.UsedPerc(*)", H_DiskInfo, "u", DCI_DT_FLOAT, "Percentage of used disk space on {instance}" },
    { "System.CPU.Count", H_CpuCount, NULL, DCI_DT_UINT, "Number of CPU in the system" },
    { "System.CPU.Usage", H_CpuUsage, (char *)60, DCI_DT_FLOAT, "Average CPU(s) utilization for last minute" },
    { "System.CPU.Usage5", H_CpuUsage, (char *)300, DCI_DT_FLOAT, "Average CPU(s) utilization for last 5 minutes" },

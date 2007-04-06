@@ -3,6 +3,8 @@
 *
 
 - Implemented user authentification by certificates
+- Management packs fully functional - templates, events, and SNMP traps
+  can be exported and imported
 - Cluster monitoring improved
 - Node names resolution working
 - Windows console:

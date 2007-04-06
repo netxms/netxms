@@ -858,6 +858,8 @@ src/console/win32/ObjectSelDlg.cpp -text
 src/console/win32/ObjectSelDlg.h -text
 src/console/win32/ObjectToolsEditor.cpp -text
 src/console/win32/ObjectToolsEditor.h -text
+src/console/win32/ObjectTree.cpp -text
+src/console/win32/ObjectTree.h -text
 src/console/win32/ObjectView.cpp -text
 src/console/win32/ObjectView.h -text
 src/console/win32/PackageMgr.cpp -text

@@ -1,4 +1,4 @@
-/* $Id: nxmp_data.cpp,v 1.9 2007-03-28 13:42:16 victor Exp $ */
+/* $Id: nxmp_data.cpp,v 1.10 2007-04-06 10:44:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -63,10 +63,15 @@ NXMP_Data::NXMP_Data(NXMP_Lexer *pLexer, NXMP_Parser *pParser)
    m_pEventList = NULL;
    m_dwNumEvents = 0;
    m_pCurrEvent = NULL;
+
    m_pTrapList = NULL;
    m_dwNumTraps = 0;
    m_pCurrTrap = NULL;
+
+	m_ppTemplateList = NULL;
 	m_dwNumTemplates = 0;
+	m_pCurrTemplate = NULL;
+
    m_nContext = CTX_NONE;
    m_pLexer = pLexer;
    m_pParser = pParser;
@@ -93,6 +98,12 @@ NXMP_Data::~NXMP_Data()
       safe_free(m_pTrapList[i].pdwObjectId);
    }
    safe_free(m_pTrapList);
+
+	for(i = 0; i < m_dwNumTemplates; i++)
+	{
+		delete m_ppTemplateList[i];
+	}
+	safe_free(m_ppTemplateList);
 }
 
 
@@ -121,6 +132,10 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
 {
    BOOL bRet = FALSE;
    DWORD dwValue;
+	char *eptr;
+	int nVal;
+	static TCHAR szNotNumberDCI[] = _T("DCI attribute %s must have numeric value");
+	static TCHAR szNotNumberThreshold[] = _T("Threshold attribute %s must have numeric value");
 
    switch(m_nContext)
    {
@@ -174,7 +189,7 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
       case CTX_TRAP:
          if (!stricmp(pszName, "EVENT"))
          {
-            SetTrapEvent(pszValue);
+            SetEvent(pszValue, NXMP_SETEVENT_TRAP);
          }
          else if (!stricmp(pszName, "DESCRIPTION"))
          {
@@ -185,10 +200,241 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
             Error("Unknown trap attribute %s", pszName);
          }
          break;
+		case CTX_DCI:
+         if (!stricmp(pszName, "NAME"))
+         {
+            m_pCurrDCI->SetName(pszValue);
+         }
+         else if (!stricmp(pszName, "DESCRIPTION"))
+         {
+            m_pCurrDCI->SetDescription(pszValue);
+         }
+         else if (!stricmp(pszName, "INSTANCE"))
+         {
+            m_pCurrDCI->SetInstance(pszValue);
+         }
+         else if (!stricmp(pszName, "DATATYPE"))
+         {
+				nVal = strtol(pszValue, &eptr, 0);
+				if (*eptr == 0)
+				{
+					m_pCurrDCI->SetDataType(nVal);
+				}
+				else
+				{
+					Error(szNotNumberDCI, pszName);
+				}
+         }
+         else if (!stricmp(pszName, "ORIGIN"))
+         {
+				nVal = strtol(pszValue, &eptr, 0);
+				if (*eptr == 0)
+				{
+					m_pCurrDCI->SetOrigin(nVal);
+				}
+				else
+				{
+					Error(szNotNumberDCI, pszName);
+				}
+         }
+         else if (!stricmp(pszName, "INTERVAL"))
+         {
+				nVal = strtol(pszValue, &eptr, 0);
+				if (*eptr == 0)
+				{
+					m_pCurrDCI->SetInterval(nVal);
+				}
+				else
+				{
+					Error(szNotNumberDCI, pszName);
+				}
+         }
+         else if (!stricmp(pszName, "RETENTION"))
+         {
+				nVal = strtol(pszValue, &eptr, 0);
+				if (*eptr == 0)
+				{
+					m_pCurrDCI->SetRetentionTime(nVal);
+				}
+				else
+				{
+					Error(szNotNumberDCI, pszName);
+				}
+         }
+         else if (!stricmp(pszName, "ALL_THRESHOLDS"))
+         {
+				nVal = strtol(pszValue, &eptr, 0);
+				if (*eptr == 0)
+				{
+					m_pCurrDCI->SetAllThresholdsFlag(nVal);
+				}
+				else
+				{
+					Error(szNotNumberDCI, pszName);
+				}
+         }
+         else if (!stricmp(pszName, "DELTA"))
+         {
+				nVal = strtol(pszValue, &eptr, 0);
+				if (*eptr == 0)
+				{
+					m_pCurrDCI->SetDeltaCalcMethod(nVal);
+				}
+				else
+				{
+					Error(szNotNumberDCI, pszName);
+				}
+         }
+         else if (!stricmp(pszName, "ADVANCED_SCHEDULE"))
+         {
+				nVal = strtol(pszValue, &eptr, 0);
+				if (*eptr == 0)
+				{
+					m_pCurrDCI->SetAdvScheduleFlag(nVal);
+				}
+				else
+				{
+					Error(szNotNumberDCI, pszName);
+				}
+         }
+         else
+         {
+            Error("Unknown DCI attribute %s", pszName);
+         }
+			break;
+		case CTX_THRESHOLD:
+         if (!stricmp(pszName, "FUNCTION"))
+         {
+				nVal = strtol(pszValue, &eptr, 0);
+				if (*eptr == 0)
+				{
+					m_pCurrThreshold->SetFunction(nVal);
+				}
+				else
+				{
+					Error(szNotNumberThreshold, pszName);
+				}
+         }
+         else if (!stricmp(pszName, "CONDITION"))
+         {
+				nVal = strtol(pszValue, &eptr, 0);
+				if (*eptr == 0)
+				{
+					m_pCurrThreshold->SetOperation(nVal);
+				}
+				else
+				{
+					Error(szNotNumberThreshold, pszName);
+				}
+         }
+         else if (!stricmp(pszName, "VALUE"))
+         {
+				m_pCurrThreshold->SetValue(pszValue);
+         }
+         else if (!stricmp(pszName, "ACTIVATION_EVENT"))
+         {
+            SetEvent(pszValue, NXMP_SETEVENT_THRESHOLD_ACTIVATE);
+         }
+         else if (!stricmp(pszName, "DEACTIVATION_EVENT"))
+         {
+            SetEvent(pszValue, NXMP_SETEVENT_THRESHOLD_DEACTIVATE);
+         }
+         else if (!stricmp(pszName, "PARAM1"))
+         {
+				nVal = strtol(pszValue, &eptr, 0);
+				if (*eptr == 0)
+				{
+					m_pCurrThreshold->SetParam1(nVal);
+				}
+				else
+				{
+					Error(szNotNumberThreshold, pszName);
+				}
+         }
+         else if (!stricmp(pszName, "PARAM2"))
+         {
+				nVal = strtol(pszValue, &eptr, 0);
+				if (*eptr == 0)
+				{
+					m_pCurrThreshold->SetParam2(nVal);
+				}
+				else
+				{
+					Error(szNotNumberThreshold, pszName);
+				}
+         }
+         else
+         {
+            Error("Unknown threshold attribute %s", pszName);
+         }
+			break;
       default:
          break;
    }
    return bRet;
+}
+
+
+//
+// Set event for target (trap, threshold, etc.)
+//
+
+void NXMP_Data::SetEvent(char *pszEvent, int nTarget)
+{
+   EVENT_TEMPLATE *pEvent;
+	DWORD dwEventCode = 0;
+#ifdef UNICODE
+	WCHAR *pwszEvent;
+#endif
+
+#ifdef UNICODE
+	pwszEvent = WideStringFromMBString(pszEvent);
+   pEvent = FindEventTemplateByName(pwszEvent);
+	free(pwszEvent);
+#else
+   pEvent = FindEventTemplateByName(pszEvent);
+#endif
+   if (pEvent != NULL)
+	{
+		dwEventCode = pEvent->dwCode;
+	}
+	else
+	{
+		DWORD dwIndex;
+
+#ifdef UNICODE
+		dwIndex = FindEvent(pwszEvent);
+#else
+		dwIndex = FindEvent(pszEvent);
+#endif
+		if (dwIndex != INVALID_INDEX)
+		{
+			// We set group bit to indicate that event code is not an
+			// actual event code but index of a new event (coming in the same pack)
+			dwEventCode = dwIndex | GROUP_FLAG;
+		}
+	}
+#ifdef UNICODE
+	free(pwszEvent);
+#endif
+
+	switch(nTarget)
+	{
+		case NXMP_SETEVENT_TRAP:
+			if (m_pCurrTrap != NULL)
+				m_pCurrTrap->dwEventCode = dwEventCode;
+			break;
+		case NXMP_SETEVENT_THRESHOLD_ACTIVATE:
+			if (m_pCurrThreshold != NULL)
+				m_pCurrThreshold->SetEvent(dwEventCode);
+			break;
+		case NXMP_SETEVENT_THRESHOLD_DEACTIVATE:
+			if (m_pCurrThreshold != NULL)
+				m_pCurrThreshold->SetRearmEvent(dwEventCode);
+			break;
+		default:
+			break;
+	}
 }
 
 
@@ -316,53 +562,6 @@ void NXMP_Data::SetTrapDescription(char *pszText)
 
 
 //
-// Set trap's event
-//
-
-void NXMP_Data::SetTrapEvent(char *pszEvent)
-{
-   EVENT_TEMPLATE *pEvent;
-#ifdef UNICODE
-	WCHAR *pwszEvent;
-#endif
-
-   if (m_pCurrTrap == NULL)
-      return;
-
-#ifdef UNICODE
-	pwszEvent = WideStringFromMBString(pszEvent);
-   pEvent = FindEventTemplateByName(pwszEvent);
-	free(pwszEvent);
-#else
-   pEvent = FindEventTemplateByName(pszEvent);
-#endif
-   if (pEvent != NULL)
-	{
-		m_pCurrTrap->dwEventCode = pEvent->dwCode;
-	}
-	else
-	{
-		DWORD dwIndex;
-
-#ifdef UNICODE
-		dwIndex = FindEvent(pwszEvent);
-#else
-		dwIndex = FindEvent(pszEvent);
-#endif
-		if (dwIndex != INVALID_INDEX)
-		{
-			// We set group bit to indicate that event code is not an
-			// actual event code but index of a new event (coming in the same pack)
-			m_pCurrTrap->dwEventCode = dwIndex | GROUP_FLAG;
-		}
-	}
-#ifdef UNICODE
-	free(pwszEvent);
-#endif
-}
-
-
-//
 // Add new trap parameter mapping
 //
 
@@ -412,15 +611,119 @@ void NXMP_Data::AddTrapParam(char *pszOID, int nPos, char *pszDescr)
 void NXMP_Data::NewTemplate(char *pszName)
 {
    m_dwNumTemplates++;
-   m_pEventList = (EVENT_TEMPLATE *)realloc(m_pEventList, sizeof(EVENT_TEMPLATE) * m_dwNumEvents);
-   m_pCurrEvent = &m_pEventList[m_dwNumEvents - 1];
-   memset(m_pCurrEvent, 0, sizeof(EVENT_TEMPLATE));
+   m_ppTemplateList = (Template **)realloc(m_ppTemplateList, sizeof(Template *) * m_dwNumTemplates);
+   m_pCurrTemplate = new Template;
+	m_ppTemplateList[m_dwNumTemplates - 1] = m_pCurrTemplate;
 #ifdef UNICODE
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszName, -1, m_pCurrEvent->szName, MAX_EVENT_NAME - 1);
+	WCHAR wszName[MAX_OBJECT_NAME];
+
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszName, -1, wszName, MAX_OBJECT_NAME - 1);
+	m_pCurrTemplate->SetName(wszName);
 #else
-   nx_strncpy(m_pCurrEvent->szName, pszName, MAX_EVENT_NAME);
+	m_pCurrTemplate->SetName(pszName);
 #endif
-   m_nContext = CTX_EVENT;
+   m_nContext = CTX_TEMPLATE;
+}
+
+
+//
+// Create new DCI in template
+//
+
+void NXMP_Data::NewDCI(void)
+{
+	m_pCurrDCI = new DCItem;
+   m_nContext = CTX_DCI;
+}
+
+
+//
+// Add DCI schedule
+//
+
+void NXMP_Data::AddDCISchedule(char *pszStr)
+{
+	if (m_pCurrDCI != NULL)
+		m_pCurrDCI->AddSchedule(pszStr);
+}
+
+
+//
+// Close DCI
+//
+
+void NXMP_Data::CloseDCI(void)
+{
+	m_pCurrDCI->FinishMPParsing();
+	m_pCurrTemplate->AddItem(m_pCurrDCI);
+   m_nContext = CTX_TEMPLATE;
+}
+
+
+//
+// Create new threshold in DCI
+//
+
+void NXMP_Data::NewThreshold(void)
+{
+	m_pCurrThreshold = new Threshold;
+   m_nContext = CTX_THRESHOLD;
+}
+
+
+//
+// Close DCI
+//
+
+void NXMP_Data::CloseThreshold(void)
+{
+	m_pCurrDCI->AddThreshold(m_pCurrThreshold);
+   m_nContext = CTX_DCI;
+}
+
+
+//
+// Validate threshold
+//
+
+BOOL NXMP_Data::ValidateThreshold(Threshold *pThreshold, DWORD dwIndex)
+{
+	if (pThreshold->EventCode() == 0)
+	{
+		_sntprintf(m_pszValidationErrorText, m_nMaxValidationErrorLen,
+		           _T("Template %s DCI %d threshold %d attribute \"activation event\" refers to unknown event"),
+					  m_pCurrTemplate->Name(), m_dwCurrDCIIndex, dwIndex);
+		return FALSE;
+	}
+	if (pThreshold->RearmEventCode() == 0)
+	{
+		_sntprintf(m_pszValidationErrorText, m_nMaxValidationErrorLen,
+		           _T("Template %s DCI %d threshold %d attribute \"deactivation event\" refers to unknown event"),
+					  m_pCurrTemplate->Name(), m_dwCurrDCIIndex, dwIndex);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+
+//
+// Threshold validation callback
+//
+
+static BOOL ThresholdValidationCallback(Threshold *pThreshold, DWORD dwIndex, void *pArg)
+{
+	return ((NXMP_Data *)pArg)->ValidateThreshold(pThreshold, dwIndex);
+}
+
+
+//
+// DCI validation callback
+//
+
+static BOOL DCIValidationCallback(DCItem *pItem, DWORD dwIndex, void *pArg)
+{
+	((NXMP_Data *)pArg)->SetCurrDCIIndex(dwIndex);
+	return pItem->EnumThresholds(ThresholdValidationCallback, pArg);
 }
 
 
@@ -475,6 +778,16 @@ BOOL NXMP_Data::Validate(DWORD dwFlags, TCHAR *pszErrorText, int nLen)
                     m_pTrapList[i].szDescription);
          goto stop_processing;
 		}
+	}
+
+	// Validate templates
+	m_pszValidationErrorText = pszErrorText;
+	m_nMaxValidationErrorLen = nLen;
+	for(i = 0; i < m_dwNumTemplates; i++)
+	{
+		m_pCurrTemplate = m_ppTemplateList[i];
+		if (!m_ppTemplateList[i]->EnumDCI(DCIValidationCallback, this))
+			goto stop_processing;
 	}
 
    bRet = TRUE;
@@ -590,6 +903,17 @@ DWORD NXMP_Data::Install(DWORD dwFlags)
 		dwResult = CreateNewTrap(&m_pTrapList[i]);
 		if (dwResult != RCC_SUCCESS)
 			goto stop_processing;
+	}
+
+	// Install templates
+	for(i = 0; i < m_dwNumTemplates; i++)
+	{
+		m_ppTemplateList[i]->AssociateItems();
+		NetObjInsert(m_ppTemplateList[i], TRUE);
+		m_ppTemplateList[i]->AddParent(g_pTemplateRoot);
+		g_pTemplateRoot->AddChild(m_ppTemplateList[i]);
+		m_ppTemplateList[i]->Unhide();
+		m_ppTemplateList[i] = NULL;	// Prevent object deletion by NXMP_Data destructor
 	}
 
 stop_processing:

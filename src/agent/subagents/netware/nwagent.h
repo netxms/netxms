@@ -29,6 +29,7 @@
 #include <netdb.h>
 #include <monitor.h>
 #include <nks/plat.h>
+#include <netware.h>
 
 
 //

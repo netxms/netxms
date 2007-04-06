@@ -38,6 +38,7 @@
 #define ID_SEARCH_CLOSE                 131
 #define ID_SEARCH_FIND_NEXT             132
 #define IDI_RULEMGR                     134
+#define ID_TREE_CTRL                    134
 #define IDI_EVENT                       135
 #define IDI_USER_GROUP                  136
 #define IDC_EDIT_LOGIN_NAME             137
@@ -863,6 +864,11 @@
 #define ID_CERTIFICATE_IMPORT           33057
 #define ID_CERTIFICATE_DELETE           33058
 #define ID_CERTIFICATE_EDITCOMMENTS     33060
+#define ID_STATUS_HIDENORMAL            33062
+#define ID_STATUS_HIDEUNMANAGED         33063
+#define ID_STATUS_HIDEUNKNOWN           33064
+#define ID_STATUS_HIDENONOPERATIONAL    33065
+#define ID_STATUS_ICONS                 33066
 #define ID_ALWAYS_DISABLED              43210
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
@@ -874,8 +880,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        367
-#define _APS_NEXT_COMMAND_VALUE         33062
+#define _APS_NEXT_COMMAND_VALUE         33067
 #define _APS_NEXT_CONTROL_VALUE         1474
-#define _APS_NEXT_SYMED_VALUE           134
+#define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif

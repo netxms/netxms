@@ -1,6 +1,7 @@
+/* $Id: dcivalue.cpp,v 1.13 2007-04-06 10:44:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: dcivalue.cpp
+** File: dcivalue.cpp
 **
 **/
 

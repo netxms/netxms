@@ -1,6 +1,7 @@
+/* $Id: dcitem.cpp,v 1.77 2007-04-06 10:44:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: dcitem.cpp
+** File: dcitem.cpp
 **
 **/
 
@@ -934,7 +935,7 @@ void DCItem::Transform(ItemValue &value, time_t nElapsedTime)
 
 
 //
-// Set new ID
+// Set new ID and node/template association
 //
 
 void DCItem::ChangeBinding(DWORD dwNewId, Template *pNewNode)
@@ -943,9 +944,12 @@ void DCItem::ChangeBinding(DWORD dwNewId, Template *pNewNode)
 
    Lock();
    m_pNode = pNewNode;
-   m_dwId = dwNewId;
-   for(i = 0; i < m_dwNumThresholds; i++)
-      m_ppThresholdList[i]->BindToItem(m_dwId);
+	if (dwNewId != 0)
+	{
+		m_dwId = dwNewId;
+		for(i = 0; i < m_dwNumThresholds; i++)
+			m_ppThresholdList[i]->BindToItem(m_dwId);
+	}
    ClearCache();
    UpdateCacheSize();
    Unlock();
@@ -1543,11 +1547,14 @@ void DCItem::CreateNXMPRecord(String &str)
                           _T("\t\t\t\tINTERVAL=%d;\n")
                           _T("\t\t\t\tRETENTION=%d;\n")
                           _T("\t\t\t\tINSTANCE=\"%s\";\n")
+                          _T("\t\t\t\tDELTA=%d;\n")
+                          _T("\t\t\t\tADVANCED_SCHEDULE=%d;\n")
                           _T("\t\t\t\tALL_THRESHOLDS=%d;\n"),
                           (TCHAR *)strName, (TCHAR *)strDescr,
                           m_iDataType, m_iSource,
                           m_iAdvSchedule ? 0 : m_iPollingInterval,
                           m_iRetentionTime, (TCHAR *)strInstance,
+								  m_iDeltaCalculation, m_iAdvSchedule, 
                           m_iProcessAllThresholds);
    if (m_iAdvSchedule)
    {
@@ -1583,4 +1590,71 @@ void DCItem::SystemModify(TCHAR *pszName, int nOrigin, int nRetention, int nInte
    m_iRetentionTime = nRetention;
    m_iSource = nOrigin;
 	nx_strncpy(m_szName, pszName, MAX_ITEM_NAME);
+}
+
+
+//
+// Finish DCI parsing from management pack:
+// 1. Generate unique ID for DCI
+// 2. Generate unique ID for thresholds
+// 3. Associate all thresholds
+//
+
+void DCItem::FinishMPParsing(void)
+{
+	DWORD i;
+
+	m_dwId = CreateUniqueId(IDG_ITEM);
+	for(i = 0; i < m_dwNumThresholds; i++)
+	{
+		m_ppThresholdList[i]->CreateId();
+		m_ppThresholdList[i]->Associate(this);
+	}
+}
+
+
+//
+// Add threshold to the list
+//
+
+void DCItem::AddThreshold(Threshold *pThreshold)
+{
+	m_dwNumThresholds++;
+	m_ppThresholdList = (Threshold **)realloc(m_ppThresholdList, sizeof(Threshold *) * m_dwNumThresholds);
+   m_ppThresholdList[m_dwNumThresholds - 1] = pThreshold;
+}
+
+
+//
+// Add schedule
+//
+
+void DCItem::AddSchedule(TCHAR *pszSchedule)
+{
+	m_dwNumSchedules++;
+	m_ppScheduleList = (TCHAR **)realloc(m_ppScheduleList, sizeof(TCHAR *) * m_dwNumSchedules);
+	m_ppScheduleList[m_dwNumSchedules - 1] = _tcsdup(pszSchedule);
+}
+
+
+//
+// Enumerate all thresholds
+//
+
+BOOL DCItem::EnumThresholds(BOOL (* pfCallback)(Threshold *, DWORD, void *), void *pArg)
+{
+	DWORD i;
+	BOOL bRet = TRUE;
+
+	Lock();
+	for(i = 0; i < m_dwNumThresholds; i++)
+	{
+		if (!pfCallback(m_ppThresholdList[i], i, pArg))
+		{
+			bRet = FALSE;
+			break;
+		}
+	}
+	Unlock();
+	return bRet;
 }

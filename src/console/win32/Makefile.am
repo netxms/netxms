@@ -119,6 +119,7 @@ EXTRA_DIST = \
 	ObjectPropsStatus.cpp ObjectPropsStatus.h \
 	ObjectSelDlg.cpp ObjectSelDlg.h \
 	ObjectToolsEditor.cpp ObjectToolsEditor.h \
+	ObjectTree.cpp ObjectTree.h \
 	ObjectView.cpp ObjectView.h \
 	ObjToolPropColumns.cpp ObjToolPropColumns.h \
 	ObjToolPropGeneral.cpp ObjToolPropGeneral.h \

@@ -1,8 +1,8 @@
-/* $Id: nxmp_parser.h,v 1.8 2007-03-28 13:42:16 victor Exp $ */
+/* $Id: nxmp_parser.h,v 1.9 2007-04-06 10:44:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Server
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,8 +25,9 @@
 #ifndef _nxmp_parser_h
 #define _nxmp_parser_h
 
-#include <FlexLexer.h>
 #include "nxmp_parser.tab.hpp"
+
+typedef void *yyscan_t;
 
 
 //
@@ -40,6 +41,11 @@
 #define CTX_DCI            2
 #define CTX_THRESHOLD      3
 #define CTX_TRAP				4
+#define CTX_TEMPLATE			5
+
+#define NXMP_SETEVENT_TRAP							0
+#define NXMP_SETEVENT_THRESHOLD_ACTIVATE		1
+#define NXMP_SETEVENT_THRESHOLD_DEACTIVATE	2
 
 
 //
@@ -60,7 +66,15 @@ private:
 	NXC_TRAP_CFG_ENTRY *m_pCurrTrap;
 	DWORD m_dwNumTraps;
 
+	Template **m_ppTemplateList;
+	Template *m_pCurrTemplate;
 	DWORD m_dwNumTemplates;
+	DCItem *m_pCurrDCI;
+	Threshold *m_pCurrThreshold;
+
+	DWORD m_dwCurrDCIIndex;
+	TCHAR *m_pszValidationErrorText;
+	int m_nMaxValidationErrorLen;
 
    int m_nContext;
    NXMP_Lexer *m_pLexer;
@@ -72,8 +86,12 @@ public:
    NXMP_Data(NXMP_Lexer *pLexer, NXMP_Parser *pParser);
    ~NXMP_Data();
 
+	void SetCurrDCIIndex(DWORD dwIndex) { m_dwCurrDCIIndex = dwIndex; }
    BOOL Validate(DWORD dwFlags, TCHAR *pszErrorText, int nLen);
+	BOOL ValidateThreshold(Threshold *pThreshold, DWORD dwIndex);
    DWORD Install(DWORD dwFlags);
+
+	void SetEvent(char *pszEvent, int nTarget);
 
    void NewEvent(char *pszName);
    void SetEventText(char *pszText);
@@ -85,12 +103,19 @@ public:
 	DWORD FindEvent(TCHAR *pszName);
 
    void NewTrap(char *pszOID);
-	void SetTrapEvent(char *pszEvent);
 	void SetTrapDescription(char *pszText);
 	void AddTrapParam(char *pszOID, int nPos, char *pszDescr);
    void CloseTrap(void) { m_pCurrTrap = NULL; m_nContext = CTX_NONE; }
 
    void NewTemplate(char *pszName);
+	void CloseTemplate(void) { m_pCurrTemplate = NULL; m_nContext = CTX_NONE; }
+
+	void NewDCI(void);
+	void AddDCISchedule(char *pszStr);
+	void CloseDCI(void);
+
+	void NewThreshold(void);
+	void CloseThreshold(void);
 
    BOOL ParseVariable(char *pszName, char *pszValue);
 };
@@ -100,8 +125,10 @@ public:
 // Modified lexer class
 //
 
-class NXMP_Lexer : public yyFlexLexer
+class NXMP_Lexer
 {
+	friend int yylex(YYSTYPE *, yyscan_t);
+
 protected:
    int m_nSourceSize;
    int m_nSourcePos;
@@ -112,18 +139,14 @@ protected:
    int m_nCommentLevel;
    int m_nStrSize;
    char m_szStr[MAX_STRING_SIZE];
-   YYSTYPE *m_plval;
    BOOL m_bErrorState;
-
-	virtual int LexerInput(char *pBuffer, int nMaxSize);
-   virtual void LexerError(const char *pszMsg);
 
 public:
 	NXMP_Lexer(NXMP_Parser *pParser, TCHAR *pszSource);
 	virtual ~NXMP_Lexer();
 
-   virtual int yylex(void);
-   void SetLvalPtr(YYSTYPE *plval) { m_plval = plval; }
+	int LexerInput(char *pBuffer, int nMaxSize);
+	void Error(const char *pszMsg);
 
    int GetCurrLine(void) { return m_nCurrLine; }
 

@@ -213,14 +213,14 @@ TCHAR *g_szGraphType[] = { _T("Line"), _T("Area"), _T("Stacked"), NULL };
 COLORREF g_statusColorTable[9] =
 {
    RGB(0, 127, 0),      // Normal
-   RGB(255, 255, 0),    // Warning
-   RGB(249, 131, 0),    // Minor
-   RGB(248, 63, 1),     // Major
+   RGB(0, 255, 255),    // Warning
+   RGB(255, 255, 0),    // Minor
+   RGB(255, 128, 0),    // Major
    RGB(200, 0, 0),      // Critical
    RGB(61, 12, 187),    // Unknown
    RGB(192, 192, 192),  // Unmanaged
-   RGB(91, 0, 6),       // Disabled
-   RGB(255, 135, 255)   // Testing
+   RGB(92, 0, 0),       // Disabled
+   RGB(255, 128, 255)   // Testing
 };
 
 

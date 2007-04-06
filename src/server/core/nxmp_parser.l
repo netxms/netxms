@@ -1,5 +1,7 @@
 %option noyywrap
-%option yyclass="NXMP_Lexer"
+%option reentrant
+%option bison-bridge
+%option never-interactive
 
 %x COMMENT
 %x STR
@@ -15,15 +17,17 @@ escape		\\[bnrt0\"]
 
 %{
 
-// dirtiest hack i've ever done
-#undef yyFlexLexer
+#define YY_EXTRA_TYPE	NXMP_Lexer*
+#define YY_INPUT(buf, result, maxSize) { result = yyextra->LexerInput(buf, maxSize); }
+
 #include "nxcore.h"
 #include "nxmp_parser.h"
 
 #ifdef _WIN32
-#pragma warning(disable: 4244)
-#define isatty __declspec(dllimport) _isatty
+//#pragma warning(disable: 4244)
 #endif
+
+#define LexerError(s) yyextra->Error(s)
 
 %}
 
@@ -46,25 +50,25 @@ escape		\\[bnrt0\"]
 <INITIAL>"@TRAP"		return T_TRAP;
 <INITIAL>"@PARAMETERS"	return T_PARAMETERS;
 
-<INITIAL>{ident}	{ m_plval->valStr = strdup(yytext); return T_IDENTIFIER; }
-<INITIAL>{int}		{ m_plval->valStr = strdup(yytext); return T_INT; }
-<INITIAL>{uint}		{ m_plval->valStr = strdup(yytext); return T_UINT; }
-<INITIAL>{real}		{ m_plval->valStr = strdup(yytext); return T_REAL; }
-<INITIAL>{oid}		{ m_plval->valStr = strdup(yytext); return T_OID; }
-<INITIAL>{pos}		{ m_plval->valInt = strtol(&yytext[4], NULL, 10); return T_POS; }
+<INITIAL>{ident}	{ yylval->valStr = strdup(yytext); return T_IDENTIFIER; }
+<INITIAL>{int}		{ yylval->valStr = strdup(yytext); return T_INT; }
+<INITIAL>{uint}		{ yylval->valStr = strdup(yytext); return T_UINT; }
+<INITIAL>{real}		{ yylval->valStr = strdup(yytext); return T_REAL; }
+<INITIAL>{oid}		{ yylval->valStr = strdup(yytext); return T_OID; }
+<INITIAL>{pos}		{ yylval->valInt = strtol(&yytext[4], NULL, 10); return T_POS; }
 
 <INITIAL>";"	return ';';
 <INITIAL>"="	return '=';
 <INITIAL>"{"	return '{';
 <INITIAL>"}"	return '}';
 
-<INITIAL>"/*"	{ m_nCommentLevel = 1; BEGIN COMMENT; }
-<INITIAL>\"		{ m_nStrSize = 0; BEGIN STR; }
+<INITIAL>"/*"	{ yyextra->m_nCommentLevel = 1; BEGIN COMMENT; }
+<INITIAL>\"		{ yyextra->m_nStrSize = 0; BEGIN STR; }
 
 <INITIAL>"//".*$	;
 <INITIAL>"#".*$		;
 
-<INITIAL>\n	m_nCurrLine++;
+<INITIAL>\n	yyextra->m_nCurrLine++;
 <INITIAL>{whitespace}	;
 <INITIAL>.	{
 			char szBuffer[128]; 
@@ -74,30 +78,30 @@ escape		\\[bnrt0\"]
 		}
 
 <STR>{escape}	{		
-			if (m_nStrSize < MAX_STRING_SIZE)
+			if (yyextra->m_nStrSize < MAX_STRING_SIZE)
 			{
 				switch(yytext[1])
 				{
 					case '"':
-						m_szStr[m_nStrSize++] = '"';
+						yyextra->m_szStr[yyextra->m_nStrSize++] = '"';
 						break;
 					case 'n':
-						m_szStr[m_nStrSize++] = '\n';
+						yyextra->m_szStr[yyextra->m_nStrSize++] = '\n';
 						break;
 					case 'r':
-						m_szStr[m_nStrSize++] = '\r';
+						yyextra->m_szStr[yyextra->m_nStrSize++] = '\r';
 						break;
 					case 'b':
-						m_szStr[m_nStrSize++] = '\b';
+						yyextra->m_szStr[yyextra->m_nStrSize++] = '\b';
 						break;
 					case 't':
-						m_szStr[m_nStrSize++] = '\t';
+						yyextra->m_szStr[yyextra->m_nStrSize++] = '\t';
 						break;
 					case '0':
-						m_szStr[m_nStrSize++] = 0;
+						yyextra->m_szStr[yyextra->m_nStrSize++] = 0;
 						break;
 					default:
-						m_szStr[m_nStrSize++] = yytext[1];
+						yyextra->m_szStr[yyextra->m_nStrSize++] = yytext[1];
 						break;
 				}
 			}
@@ -116,7 +120,7 @@ escape		\\[bnrt0\"]
 			{
 				if ((nVal >= 0) && (nVal <= 255))
 				{
-					m_szStr[m_nStrSize++] = nVal;
+					yyextra->m_szStr[yyextra->m_nStrSize++] = nVal;
 				}
 				else
 				{
@@ -130,8 +134,8 @@ escape		\\[bnrt0\"]
 		}
 <STR>\"		{
 			BEGIN INITIAL;
-			m_szStr[m_nStrSize] = 0;
-			m_plval->valStr = strdup(m_szStr);
+			yyextra->m_szStr[yyextra->m_nStrSize] = 0;
+			yylval->valStr = strdup(yyextra->m_szStr);
 			return T_STRING;
 		}
 <STR>\r		;
@@ -140,9 +144,9 @@ escape		\\[bnrt0\"]
 			return -1;
 		}
 <STR>.		{
-			if (m_nStrSize < MAX_STRING_SIZE)
+			if (yyextra->m_nStrSize < MAX_STRING_SIZE)
 			{
-				m_szStr[m_nStrSize++] = *yytext;
+				yyextra->m_szStr[yyextra->m_nStrSize++] = *yytext;
 			}
 			else
 			{
@@ -151,7 +155,7 @@ escape		\\[bnrt0\"]
 			}
 		}
 
-<COMMENT>"/*"	m_nCommentLevel++;
-<COMMENT>"*/"	{ m_nCommentLevel--; if (m_nCommentLevel == 0) BEGIN INITIAL; }
-<COMMENT>\n	m_nCurrLine++;
+<COMMENT>"/*"	yyextra->m_nCommentLevel++;
+<COMMENT>"*/"	{ yyextra->m_nCommentLevel--; if (yyextra->m_nCommentLevel == 0) BEGIN INITIAL; }
+<COMMENT>\n	yyextra->m_nCurrLine++;
 <COMMENT>.	;

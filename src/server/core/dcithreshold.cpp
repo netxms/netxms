@@ -1,6 +1,7 @@
+/* $Id: dcithreshold.cpp,v 1.32 2007-04-06 10:44:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: dcithreshold.cpp
+** File: dcithreshold.cpp
 **
 **/
 
@@ -36,6 +37,25 @@ Threshold::Threshold(DCItem *pRelatedItem)
    m_iFunction = F_LAST;
    m_iOperation = OP_EQ;
    m_iDataType = pRelatedItem->DataType();
+   m_iParam1 = 0;
+   m_iParam2 = 0;
+   m_bIsReached = FALSE;
+}
+
+
+//
+// Constructor for NXMP parser
+//
+
+Threshold::Threshold()
+{
+   m_dwId = 0;
+   m_dwItemId = 0;
+   m_dwEventCode = EVENT_THRESHOLD_REACHED;
+   m_dwRearmEventCode = EVENT_THRESHOLD_REARMED;
+   m_iFunction = F_LAST;
+   m_iOperation = OP_EQ;
+   m_iDataType = 0;
    m_iParam1 = 0;
    m_iParam2 = 0;
    m_bIsReached = FALSE;
@@ -673,4 +693,15 @@ void Threshold::CreateNXMPRecord(String &str)
                           _T("\t\t\t\t\t}\n"),
                           m_iFunction, m_iOperation, (TCHAR *)strValue,
                           szEvent1, szEvent2, m_iParam1, m_iParam2);
+}
+
+
+//
+// Made an association with DCI (used by management pack parser)
+//
+
+void Threshold::Associate(DCItem *pItem)
+{
+   m_dwItemId = pItem->Id();
+   m_iDataType = pItem->DataType();
 }

@@ -389,6 +389,9 @@ public:
    void QueueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI);
 
    void CreateNXMPRecord(String &str);
+	
+	BOOL EnumDCI(BOOL (* pfCallback)(DCItem *, DWORD, void *), void *pArg);
+	void AssociateItems(void);
 };
 
 

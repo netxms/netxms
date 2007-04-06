@@ -951,6 +951,15 @@ BEGIN
         MENUITEM "&Edit comments",              ID_CERTIFICATE_EDITCOMMENTS
         MENUITEM "&Delete",                     ID_CERTIFICATE_DELETE
     END
+    POPUP "Status"
+    BEGIN
+        MENUITEM "Hide &normal",                ID_STATUS_HIDENORMAL
+        MENUITEM "Hide &unmanaged",             ID_STATUS_HIDEUNMANAGED
+        MENUITEM "Hide un&known",               ID_STATUS_HIDEUNKNOWN
+        MENUITEM "Hide non-&operational",       ID_STATUS_HIDENONOPERATIONAL
+        MENUITEM SEPARATOR
+        MENUITEM "Show status using &icons",    ID_STATUS_ICONS
+    END
 END
 
 

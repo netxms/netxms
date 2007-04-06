@@ -1,4 +1,4 @@
-/* $Id: nxmp_lexer.cpp,v 1.2 2007-03-31 05:20:54 victor Exp $ */
+/* $Id: nxmp_lexer.cpp,v 1.3 2007-04-06 10:44:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -34,7 +34,6 @@
 //
 
 NXMP_Lexer::NXMP_Lexer(NXMP_Parser *pParser, TCHAR *pszSource)
-           :yyFlexLexer(NULL, NULL)
 {
 #ifdef UNICODE
    m_nSourceSize = wcslen(pszCode);
@@ -88,21 +87,7 @@ int NXMP_Lexer::LexerInput(char *pBuffer, int nMaxSize)
 // Overrided error handler
 //
 
-void NXMP_Lexer::LexerError(const char *pszMsg)
+void NXMP_Lexer::Error(const char *pszMsg)
 {
    m_pParser->Error(pszMsg);
-}
-
-
-//
-// yylex() for Bison
-//
-
-int yylex(YYSTYPE *lvalp, NXMP_Lexer *pLexer)
-{
-   if (pLexer->IsErrorState())
-      return -1;
-
-   pLexer->SetLvalPtr(lvalp);
-   return pLexer->yylex();
 }

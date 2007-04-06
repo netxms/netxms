@@ -9,14 +9,15 @@
 #include "nxcore.h"
 #include "nxmp_parser.h"
 
-void yyerror(NXMP_Lexer *pLexer, NXMP_Parser *pParser, NXMP_Data *pData, char *pszText);
-int yylex(YYSTYPE *lvalp, NXMP_Lexer *pLexer);
+void yyerror(yyscan_t scanner, NXMP_Lexer *pLexer, NXMP_Parser *pParser, NXMP_Data *pData, char *pszText);
+int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 
 %}
 
 %pure-parser
+%lex-param		{yyscan_t scanner}
+%parse-param	{yyscan_t scanner}
 %parse-param	{NXMP_Lexer *pLexer}
-%lex-param		{NXMP_Lexer *pLexer}
 %parse-param	{NXMP_Parser *pParser}
 %parse-param	{NXMP_Data *pData}
 
@@ -104,7 +105,7 @@ TemplateList:
 ;
 
 Template:
-	T_TEMPLATE T_IDENTIFIER { pData->NewTemplate($2); free($2); } '{' TemplateBody '}'
+	T_TEMPLATE T_IDENTIFIER { pData->NewTemplate($2); free($2); } '{' TemplateBody '}' { pData->CloseTemplate(); }
 ;
 
 TemplateBody:
@@ -122,7 +123,7 @@ DCIList:
 ;
 
 DCI:
-	T_DCI '{' DCIBody '}'
+	T_DCI { pData->NewDCI(); } '{' DCIBody '}' { pData->CloseDCI(); }
 ;
 
 DCIBody:
@@ -146,7 +147,7 @@ ThresholdsList:
 ;
 
 Threshold:
-	T_THRESHOLD '{' VariableList '}'
+	T_THRESHOLD { pData->NewThreshold(); } '{' VariableList '}' { pData->CloseThreshold(); }
 ;
 
 Schedule:
@@ -154,7 +155,7 @@ Schedule:
 ;
 
 ScheduleList:
-	T_STRING ';' ScheduleList
+	T_STRING ';' { pData->AddDCISchedule($1); free($1); } ScheduleList
 |
 ;
 
