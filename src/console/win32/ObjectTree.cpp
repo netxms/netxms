@@ -21,15 +21,21 @@ static char THIS_FILE[] = __FILE__;
 CObjectTree::CObjectTree()
 {
 	m_pwndTreeCtrl = NULL;
-	m_bUseIcons = FALSE;
-	m_bHideNormal = FALSE;
-	m_bHideUnknown = TRUE;
-	m_bHideUnmanaged = TRUE;
-	m_bHideNonOperational = TRUE;
+	m_bUseIcons = theApp.GetProfileInt(_T("ObjectTree"), _T("UseIcons"), FALSE);
+	m_bHideNormal = theApp.GetProfileInt(_T("ObjectTree"), _T("HideNormal"), TRUE);
+	m_bHideUnknown = theApp.GetProfileInt(_T("ObjectTree"), _T("HideUnknown"), TRUE);
+	m_bHideUnmanaged = theApp.GetProfileInt(_T("ObjectTree"), _T("HideNonOperational"), TRUE);
+	m_bHideNonOperational = theApp.GetProfileInt(_T("ObjectTree"), _T("UseIcons"), TRUE);
+	m_hFirstVisibleItem = NULL;
 }
 
 CObjectTree::~CObjectTree()
 {
+	theApp.WriteProfileInt(_T("ObjectTree"), _T("HideNormal"), m_bHideNormal);
+	theApp.WriteProfileInt(_T("ObjectTree"), _T("HideUnknown"), m_bHideUnknown);
+	theApp.WriteProfileInt(_T("ObjectTree"), _T("HideUnmanaged"), m_bHideUnmanaged);
+	theApp.WriteProfileInt(_T("ObjectTree"), _T("HideNonOperational"), m_bHideNonOperational);
+	theApp.WriteProfileInt(_T("ObjectTree"), _T("UseIcons"), m_bUseIcons);
 }
 
 
@@ -39,6 +45,11 @@ BEGIN_MESSAGE_MAP(CObjectTree, CWnd)
 	ON_WM_SIZE()
 	ON_WM_PAINT()
 	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_STATUS_HIDENORMAL, OnStatusHidenormal)
+	ON_COMMAND(ID_STATUS_HIDENONOPERATIONAL, OnStatusHidenonoperational)
+	ON_COMMAND(ID_STATUS_HIDEUNKNOWN, OnStatusHideunknown)
+	ON_COMMAND(ID_STATUS_HIDEUNMANAGED, OnStatusHideunmanaged)
+	ON_COMMAND(ID_STATUS_ICONS, OnStatusIcons)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -94,14 +105,25 @@ void CObjectTree::OnSize(UINT nType, int cx, int cy)
 
 BOOL CObjectTree::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult) 
 {
+	HTREEITEM hItem;
+
 	if (m_pwndTreeCtrl != NULL)
 	{
 		if (wParam == (WPARAM)m_pwndTreeCtrl->GetDlgCtrlID())
 		{
 			NMTREEVIEW *pn = (LPNMTREEVIEW)lParam;
 
-			if (pn->hdr.code == TVN_ITEMEXPANDED)
-				InvalidateRect(NULL);
+			switch(pn->hdr.code)
+			{
+				case TVN_ITEMEXPANDED:
+					InvalidateRect(NULL);
+					break;
+				case TVN_SELCHANGED:
+					hItem = m_pwndTreeCtrl->GetNextItem(NULL, TVGN_FIRSTVISIBLE);
+					if (hItem != m_hFirstVisibleItem)
+						InvalidateRect(NULL);
+					break;
+			}
 		}
 	}
 	*pResult = GetParent()->SendMessage(WM_NOTIFY, wParam, lParam);
@@ -200,6 +222,11 @@ void CObjectTree::OnContextMenu(CWnd* pWnd, CPoint point)
 		CMenu *pMenu;
 
 		pMenu = theApp.GetContextMenu(25);
+		pMenu->CheckMenuItem(ID_STATUS_HIDENORMAL, MF_BYCOMMAND | (m_bHideNormal ? MF_CHECKED : MF_UNCHECKED));
+		pMenu->CheckMenuItem(ID_STATUS_HIDEUNKNOWN, MF_BYCOMMAND | (m_bHideUnknown ? MF_CHECKED : MF_UNCHECKED));
+		pMenu->CheckMenuItem(ID_STATUS_HIDEUNMANAGED, MF_BYCOMMAND | (m_bHideUnmanaged ? MF_CHECKED : MF_UNCHECKED));
+		pMenu->CheckMenuItem(ID_STATUS_HIDENONOPERATIONAL, MF_BYCOMMAND | (m_bHideNonOperational ? MF_CHECKED : MF_UNCHECKED));
+		pMenu->CheckMenuItem(ID_STATUS_ICONS, MF_BYCOMMAND | (m_bUseIcons ? MF_CHECKED : MF_UNCHECKED));
 		pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
 	}
 	else
@@ -207,4 +234,39 @@ void CObjectTree::OnContextMenu(CWnd* pWnd, CPoint point)
 		// Pass to parent
 		GetParent()->SendMessage(WM_CONTEXTMENU, (WPARAM)pWnd->m_hWnd, MAKELPARAM(point.x, point.y));
 	}
+}
+
+
+//
+// Handlers for context menu items
+//
+
+void CObjectTree::OnStatusHidenormal() 
+{
+	m_bHideNormal = !m_bHideNormal;
+	InvalidateRect(NULL);
+}
+
+void CObjectTree::OnStatusHidenonoperational() 
+{
+	m_bHideNonOperational = !m_bHideNonOperational;
+	InvalidateRect(NULL);
+}
+
+void CObjectTree::OnStatusHideunknown() 
+{
+	m_bHideUnknown = !m_bHideUnknown;
+	InvalidateRect(NULL);
+}
+
+void CObjectTree::OnStatusHideunmanaged() 
+{
+	m_bHideUnmanaged = !m_bHideUnmanaged;
+	InvalidateRect(NULL);
+}
+
+void CObjectTree::OnStatusIcons() 
+{
+	m_bUseIcons = !m_bUseIcons;
+	InvalidateRect(NULL);
 }

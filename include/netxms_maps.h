@@ -138,6 +138,7 @@ protected:
 
 public:
    nxObjList();
+   nxObjList(nxObjList *pSrc);
    nxObjList(CSCPMessage *pMsg);
    ~nxObjList();
 

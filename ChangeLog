@@ -8,6 +8,7 @@
 - Cluster monitoring improved
 - Node names resolution working
 - Windows console:
+	- Added layer 2 topology view for compatible switches
 	- Object search improved
 	- Graphs improved:
 		- Area graphs

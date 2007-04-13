@@ -1,7 +1,7 @@
-/* $Id: node.cpp,v 1.177 2007-03-11 11:00:43 victor Exp $ */
+/* $Id: node.cpp,v 1.178 2007-04-13 21:43:37 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -51,6 +51,7 @@ Node::Node()
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
    m_mutexRTAccess = MutexCreate();
+	m_mutexTopoAccess = MutexCreate();
    m_pAgentConnection = NULL;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
@@ -63,6 +64,8 @@ Node::Node()
    m_pRoutingTable = NULL;
    m_tFailTimeSNMP = 0;
    m_tFailTimeAgent = 0;
+	m_pTopology = NULL;
+	m_tLastTopologyPoll = 0;
 }
 
 
@@ -95,6 +98,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
    m_hPollerMutex = MutexCreate();
    m_hAgentAccessMutex = MutexCreate();
    m_mutexRTAccess = MutexCreate();
+	m_mutexTopoAccess = MutexCreate();
    m_pAgentConnection = NULL;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
@@ -108,6 +112,8 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
    m_pRoutingTable = NULL;
    m_tFailTimeSNMP = 0;
    m_tFailTimeAgent = 0;
+	m_pTopology = NULL;
+	m_tLastTopologyPoll = 0;
 }
 
 
@@ -120,9 +126,11 @@ Node::~Node()
    MutexDestroy(m_hPollerMutex);
    MutexDestroy(m_hAgentAccessMutex);
    MutexDestroy(m_mutexRTAccess);
+	MutexDestroy(m_mutexTopoAccess);
    delete m_pAgentConnection;
    safe_free(m_pParamList);
    DestroyRoutingTable(m_pRoutingTable);
+	delete m_pTopology;
 }
 
 
@@ -2746,4 +2754,66 @@ DWORD Node::GetSystemDCIList(CSCPMessage *pMsg)
 
    UnlockData();
    return RCC_SUCCESS;
+}
+
+
+//
+// Get current layer 2 topology (as dynamically created list which should be destroyed by caller)
+// Will return NULL if there are no topology information or it is expired
+//
+
+nxObjList *Node::GetL2Topology(void)
+{
+	nxObjList *pResult;
+	DWORD dwExpTime;
+
+	dwExpTime = ConfigReadULong(_T("TopologyExpirationTime"), 900);
+	MutexLock(m_mutexTopoAccess, INFINITE);
+	if ((m_pTopology == NULL) || (m_tLastTopologyPoll + (time_t)dwExpTime < time(NULL)))
+	{
+		pResult = NULL;
+	}
+	else
+	{
+		pResult = new nxObjList(m_pTopology);
+	}
+	MutexUnlock(m_mutexTopoAccess);
+	return pResult;
+}
+
+
+//
+// Rebuild layer 2 topology and return it as dynamically reated list which should be destroyed by caller
+//
+
+nxObjList *Node::BuildL2Topology(DWORD *pdwStatus)
+{
+	nxObjList *pResult;
+	int nDepth;
+
+	nDepth = ConfigReadInt(_T("TopologyDiscoveryRadius"), 5);
+	MutexLock(m_mutexTopoAccess, INFINITE);
+	delete m_pTopology;
+	if ((m_dwFlags & NF_IS_CDP) || (m_dwFlags & NF_IS_NORTEL_TOPO))
+	{
+		m_pTopology = new nxObjList;
+		if ((*pdwStatus = ::BuildL2Topology(*m_pTopology, this, NULL, nDepth, NULL)) == RCC_SUCCESS)
+		{
+			m_tLastTopologyPoll = time(NULL);
+			pResult = new nxObjList(m_pTopology);
+		}
+		else
+		{
+			delete_and_null(m_pTopology);
+			pResult = NULL;
+		}
+	}
+	else
+	{
+		pResult = NULL;
+		m_pTopology = NULL;
+		*pdwStatus = RCC_NO_L2_TOPOLOGY_SUPPORT;
+	}
+	MutexUnlock(m_mutexTopoAccess);
+	return pResult;
 }

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 
 #include <nms_agent.h>
 #include <nxnt.h>
+#include <netxms_maps.h>
 
 
 //
@@ -596,12 +597,15 @@ protected:
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    MUTEX m_mutexRTAccess;
+	MUTEX m_mutexTopoAccess;
    AgentConnectionEx *m_pAgentConnection;
    DWORD m_dwPollerNode;      // Node used for network service polling
    DWORD m_dwProxyNode;       // Node used as proxy for agent connection
 	DWORD m_dwSNMPProxy;			// Node used as proxy for SNMP requests
    QWORD m_qwLastEvents[MAX_LAST_EVENTS];
    ROUTING_TABLE *m_pRoutingTable;
+	nxObjList *m_pTopology;		// Layer 2 topology
+	time_t m_tLastTopologyPoll;
 
    void PollerLock(void) { MutexLock(m_hPollerMutex, INFINITE); }
    void PollerUnlock(void) { MutexUnlock(m_hPollerMutex); }
@@ -722,6 +726,9 @@ public:
 
    DWORD CallSnmpEnumerate(char *pszRootOid, 
       DWORD (* pHandler)(DWORD, const char *, SNMP_Variable *, SNMP_Transport *, void *), void *pArg);
+
+	nxObjList *GetL2Topology(void);
+	nxObjList *BuildL2Topology(DWORD *pdwStatus);
 };
 
 

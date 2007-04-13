@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.128 2007-03-28 13:42:17 victor Exp $ */
+/* $Id: nms_core.h,v 1.129 2007-04-13 21:43:38 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -303,6 +303,8 @@ public:
 // Client session
 //
 
+#define DECLARE_THREAD_STARTER(func) static THREAD_RESULT THREAD_CALL ThreadStarter_##func(void *);
+
 class ClientSession
 {
 private:
@@ -355,6 +357,10 @@ private:
    static THREAD_RESULT THREAD_CALL ProcessingThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL UpdateThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL PollerThreadStarter(void *);
+
+	DECLARE_THREAD_STARTER(GetCollectedData)
+	DECLARE_THREAD_STARTER(QueryL2Topology)
+	DECLARE_THREAD_STARTER(SendAllEvents)
 
    void ReadThread(void);
    void WriteThread(void);

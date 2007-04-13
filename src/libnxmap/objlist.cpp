@@ -55,6 +55,14 @@ nxObjList::nxObjList(CSCPMessage *pMsg)
 	}
 }
 
+nxObjList::nxObjList(nxObjList *pSrc)
+{
+   m_dwNumObjects = pSrc->m_dwNumObjects;
+   m_pdwObjectList = (DWORD *)nx_memdup(pSrc->m_pdwObjectList, sizeof(DWORD) * m_dwNumObjects);
+   m_dwNumLinks = pSrc->m_dwNumLinks;
+   m_pLinkList = (OBJLINK *)nx_memdup(pSrc->m_pLinkList, sizeof(OBJLINK) * m_dwNumLinks);
+}
+
 
 //
 // Destructor

@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.272 2007-03-31 05:20:54 victor Exp $ */
+/* $Id: session.cpp,v 1.273 2007-04-13 21:43:37 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -68,6 +68,17 @@ typedef struct
 
 
 //
+// Additional processing thread strt data
+//
+
+typedef struct
+{
+	ClientSession *pSession;
+	CSCPMessage *pMsg;
+} PROCTHREAD_START_DATA;
+
+
+//
 // Object tool acl entry
 //
 
@@ -88,6 +99,35 @@ struct GRAPH_ACL_ENTRY
 	DWORD dwUserId;
 	DWORD dwAccess;
 };
+
+
+//
+// Additional message processing thread starters
+//
+
+#define CALL_IN_NEW_THREAD(func, msg) \
+{ \
+	PROCTHREAD_START_DATA *pData = (PROCTHREAD_START_DATA *)malloc(sizeof(PROCTHREAD_START_DATA)); \
+	pData->pSession = this; \
+	pData->pMsg = msg; \
+	msg = NULL; /* prevent deletion by main processing thread*/ \
+	m_dwRefCount++; \
+	ThreadCreate(ThreadStarter_##func, 0, pData); \
+}
+
+#define DEFINE_THREAD_STARTER(func) \
+THREAD_RESULT THREAD_CALL ClientSession::ThreadStarter_##func(void *pArg) \
+{ \
+   ((PROCTHREAD_START_DATA *)pArg)->pSession->##func(((PROCTHREAD_START_DATA *)pArg)->pMsg); \
+	((PROCTHREAD_START_DATA *)pArg)->pSession->m_dwRefCount--; \
+	delete ((PROCTHREAD_START_DATA *)pArg)->pMsg; \
+	free(pArg); \
+   return THREAD_OK; \
+}
+
+DEFINE_THREAD_STARTER(GetCollectedData)
+DEFINE_THREAD_STARTER(QueryL2Topology)
+DEFINE_THREAD_STARTER(SendAllEvents)
 
 
 //
@@ -669,7 +709,7 @@ void ClientSession::ProcessingThread(void)
             SendAllObjects(pMsg);
             break;
          case CMD_GET_EVENTS:
-            SendAllEvents(pMsg);
+            CALL_IN_NEW_THREAD(SendAllEvents, pMsg);
             break;
          case CMD_GET_CONFIG_VARLIST:
             SendAllConfigVars(pMsg->GetId());
@@ -1073,7 +1113,7 @@ void ClientSession::ProcessingThread(void)
 				SendCertificateList(pMsg->GetId());
 				break;
 			case CMD_QUERY_L2_TOPOLOGY:
-				QueryL2Topology(pMsg);
+				CALL_IN_NEW_THREAD(QueryL2Topology, pMsg);
 				break;
          default:
             // Pass message to loaded modules
@@ -9088,13 +9128,22 @@ void ClientSession::QueryL2Topology(CSCPMessage *pRequest)
 			{
 				if (((Node *)pObject)->IsBridge())
 				{
-					nxObjList topology;
+					nxObjList *pTopology;
 
-					dwResult = BuildL2Topology(topology, (Node *)pObject, NULL, 5, NULL);
-					if (dwResult == RCC_SUCCESS)
+					pTopology = ((Node *)pObject)->GetL2Topology();
+					if (pTopology == NULL)
+					{
+						pTopology = ((Node *)pObject)->BuildL2Topology(&dwResult);
+					}
+					else
+					{
+						dwResult = RCC_SUCCESS;
+					}
+					if (pTopology != NULL)
 					{
 						msg.SetVariable(VID_RCC, RCC_SUCCESS);
-						topology.CreateMessage(&msg);
+						pTopology->CreateMessage(&msg);
+						delete pTopology;
 					}
 					else
 					{
