@@ -146,6 +146,7 @@ IDI_AGAIN               ICON    DISCARDABLE     "icons\\again.ico"
 IDI_CERT                ICON    DISCARDABLE     "icons\\cert.ico"
 IDI_CERTMGR             ICON    DISCARDABLE     "icons\\certmgr.ico"
 IDI_TOPOLOGY            ICON    DISCARDABLE     "icons\\topology.ico"
+IDI_EMPTY               ICON    DISCARDABLE     "icons\\empty.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -240,6 +241,16 @@ BEGIN
     END
     POPUP "&Object (browser)"
     BEGIN
+        POPUP "&View"
+        BEGIN
+            MENUITEM "Show &container objects first", 
+                                                    ID_OBJECT_VIEW_CONTAINERSFIRST
+
+            MENUITEM "&Hide unmanaged leaf objects", 
+                                                    ID_OBJECT_VIEW_HIDEUNMANAGED
+
+        END
+        MENUITEM SEPARATOR
         MENUITEM "&Find...\tCtrl+F",            ID_OBJECT_FIND
         MENUITEM SEPARATOR
         POPUP "&Create..."
@@ -271,6 +282,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Manage object(s)\tCtrl+M",   ID_OBJECT_MANAGE
         MENUITEM "&Unmanage object(s)\tCtrl+U", ID_OBJECT_UNMANAGE
+        MENUITEM "Set childs mana&gement status...", ID_OBJECT_SETCHILDMGMT
         POPUP "P&oll"
         BEGIN
             MENUITEM "&Status\tCtrl+Alt+S",         ID_OBJECT_POLL_STATUS
@@ -413,6 +425,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Manage object(s)\tCtrl+M",   ID_OBJECT_MANAGE
         MENUITEM "&Unmanage object(s)\tCtrl+U", ID_OBJECT_UNMANAGE
+        MENUITEM "Set childs mana&gement status...", ID_OBJECT_SETCHILDMGMT
         POPUP "P&oll"
         BEGIN
             MENUITEM "&Status\tCtrl+Alt+S",         ID_OBJECT_POLL_STATUS
@@ -615,6 +628,16 @@ BEGIN
     END
     POPUP "Object"
     BEGIN
+        POPUP "&View"
+        BEGIN
+            MENUITEM "Show &container objects first", 
+                                                    ID_OBJECT_VIEW_CONTAINERSFIRST
+
+            MENUITEM "&Hide unmanaged leaf objects", 
+                                                    ID_OBJECT_VIEW_HIDEUNMANAGED
+
+        END
+        MENUITEM SEPARATOR
         POPUP "&Create"
         BEGIN
             MENUITEM "C&luster...",                 ID_OBJECT_CREATE_CLUSTER
@@ -644,6 +667,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Manage",                     ID_OBJECT_MANAGE
         MENUITEM "&Unmanage",                   ID_OBJECT_UNMANAGE
+        MENUITEM "Set childs mana&gement status...", ID_OBJECT_SETCHILDMGMT
         POPUP "P&oll"
         BEGIN
             MENUITEM "&Status",                     ID_OBJECT_POLL_STATUS
@@ -791,6 +815,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Manage",                     ID_OBJECT_MANAGE
         MENUITEM "&Unmanage",                   ID_OBJECT_UNMANAGE
+        MENUITEM "Set childs mana&gement status...", ID_OBJECT_SETCHILDMGMT
         POPUP "P&oll"
         BEGIN
             MENUITEM "&Status",                     ID_OBJECT_POLL_STATUS
@@ -3071,6 +3096,18 @@ BEGIN
     LTEXT           "Comments",IDC_STATIC,7,51,34,8
 END
 
+IDD_SET_CHILD_MGMT_STATUS DIALOGEX 0, 0, 351, 166
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Set management status for child objects"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List1",IDC_LIST_OBJECTS,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_EDITLABELS | LVS_NOSORTHEADER | 
+                    WS_TABSTOP,7,7,279,151,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "OK",IDOK,294,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,294,24,50,14
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -3817,6 +3854,14 @@ BEGIN
         RIGHTMARGIN, 251
         TOPMARGIN, 7
         BOTTOMMARGIN, 76
+    END
+
+    IDD_SET_CHILD_MGMT_STATUS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 344
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 159
     END
 END
 #endif    // APSTUDIO_INVOKED

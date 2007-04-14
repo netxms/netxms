@@ -220,6 +220,10 @@ SOURCE=.\CertManager.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ChildMgmtStatusDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ClusterPropsGeneral.cpp
 # End Source File
 # Begin Source File
@@ -830,6 +834,10 @@ SOURCE=.\AlarmView.h
 # Begin Source File
 
 SOURCE=.\CertManager.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ChildMgmtStatusDlg.h
 # End Source File
 # Begin Source File
 
@@ -1530,6 +1538,10 @@ SOURCE=.\icons\EARTH.ICO
 # Begin Source File
 
 SOURCE=.\icons\editor.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\empty.ico
 # End Source File
 # Begin Source File
 

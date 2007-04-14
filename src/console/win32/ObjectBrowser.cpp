@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "ObjectBrowser.h"
+#include "ChildMgmtStatusDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -29,7 +30,7 @@ IMPLEMENT_DYNCREATE(CObjectBrowser, CMDIChildWnd)
 
 CObjectBrowser::CObjectBrowser()
 {
-   m_dwFlags = 0;
+   m_dwFlags = theApp.GetProfileInt(_T("ObjectBrowser"), _T("Flags"), PLACE_CONTAINERS_FIRST);
    m_pCurrentObject = NULL;
    m_pImageList = NULL;
    m_dwTreeHashSize = 0;
@@ -38,7 +39,7 @@ CObjectBrowser::CObjectBrowser()
 
 CObjectBrowser::CObjectBrowser(TCHAR *pszParams)
 {
-   m_dwFlags = 0;
+   m_dwFlags = PLACE_CONTAINERS_FIRST;
    m_pCurrentObject = NULL;
    m_pImageList = NULL;
    m_dwTreeHashSize = 0;
@@ -49,6 +50,7 @@ CObjectBrowser::~CObjectBrowser()
 {
    delete m_pImageList;
    safe_free(m_pTreeHash);
+	theApp.WriteProfileInt(_T("ObjectBrowser"), _T("Flags"), m_dwFlags);
 }
 
 
@@ -100,6 +102,12 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_CREATE_CLUSTER, OnObjectCreateCluster)
 	ON_COMMAND(ID_OBJECT_FIND, OnObjectFind)
 	ON_WM_GETMINMAXINFO()
+	ON_COMMAND(ID_OBJECT_VIEW_CONTAINERSFIRST, OnObjectViewContainersfirst)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_VIEW_CONTAINERSFIRST, OnUpdateObjectViewContainersfirst)
+	ON_COMMAND(ID_OBJECT_VIEW_HIDEUNMANAGED, OnObjectViewHideunmanaged)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_VIEW_HIDEUNMANAGED, OnUpdateObjectViewHideunmanaged)
+	ON_COMMAND(ID_OBJECT_SETCHILDMGMT, OnObjectSetchildmgmt)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_SETCHILDMGMT, OnUpdateObjectSetchildmgmt)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, ID_TREE_CTRL, OnTreeViewSelChange)
    ON_NOTIFY(TVN_GETDISPINFO, ID_TREE_CTRL, OnTreeViewGetDispInfo)
@@ -151,6 +159,7 @@ int CObjectBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_nLastObjectImage = m_pImageList->GetImageCount();
    m_pImageList->Add(theApp.LoadIcon(IDI_SORT_UP));
    m_pImageList->Add(theApp.LoadIcon(IDI_SORT_DOWN));
+   m_pImageList->Add(theApp.LoadIcon(IDI_EMPTY));
    m_nStatusImageBase = m_pImageList->GetImageCount();
    m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_WARNING));
    m_pImageList->Add(theApp.LoadIcon(IDI_OVL_STATUS_MINOR));
@@ -263,6 +272,20 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
    TCHAR szBuffer[512];
    int nImage;
 
+	// Don't add unmanaged leaf objects if requested
+	if ((m_dwFlags & HIDE_UNMANAGED_OBJECTS) &&
+		 (pObject->iStatus == STATUS_UNMANAGED) &&
+		 (pObject->dwNumChilds == 0))
+		return;
+
+	// Check parent item for presense of "all objects are hidden" item
+	hItem = m_wndTreeCtrl.GetChildItem(hParent);
+	if (hItem != NULL)
+	{
+		if (m_wndTreeCtrl.GetItemData(hItem) == 0)	// Only "fake" items can have lParam == 0
+			m_wndTreeCtrl.DeleteItem(hItem);
+	}
+
    // Add object record with class-dependent text
    CreateTreeItemText(pObject, szBuffer);
    nImage = GetObjectImageIndex(pObject);
@@ -369,6 +392,18 @@ void CObjectBrowser::OnTreeViewItemExpanding(LPNMTREEVIEW lpnmt, LRESULT *pResul
             if (pChildObject != NULL)
                AddObjectToTree(pChildObject, lpnmt->itemNew.hItem);
          }
+
+			// Check if child objects was really added
+			// If all child objects are unmanaged they may be hidden
+			if (m_wndTreeCtrl.GetChildItem(lpnmt->itemNew.hItem) == NULL)
+			{
+				HTREEITEM hItem;
+
+				hItem = m_wndTreeCtrl.InsertItem(_T("(all child objects are hidden)"), m_nLastObjectImage + 2,
+				                                 m_nLastObjectImage + 2, lpnmt->itemNew.hItem);
+				m_wndTreeCtrl.SetItemData(hItem, 0);
+			}
+
          SortTreeItems(lpnmt->itemNew.hItem);
       }
    }
@@ -433,6 +468,18 @@ static int CALLBACK CompareTreeItems(LPARAM lParam1, LPARAM lParam2, LPARAM lPar
 {
    TCHAR szName1[MAX_OBJECT_NAME], szName2[MAX_OBJECT_NAME];
 
+	if (lParamSort & PLACE_CONTAINERS_FIRST)
+	{
+		int notContainer1, notContainer2, nResult;
+
+		notContainer1 = ((((NXC_OBJECT *)lParam1)->iClass == OBJECT_CONTAINER) || 
+		                 (((NXC_OBJECT *)lParam1)->iClass == OBJECT_TEMPLATEGROUP)) ? 0 : 1;
+		notContainer2 = ((((NXC_OBJECT *)lParam2)->iClass == OBJECT_CONTAINER) || 
+		                 (((NXC_OBJECT *)lParam2)->iClass == OBJECT_TEMPLATEGROUP)) ? 0 : 1;
+		nResult = COMPARE_NUMBERS(notContainer1, notContainer2);
+		if (nResult != 0)
+			return nResult;
+	}
    NXCGetComparableObjectNameEx((NXC_OBJECT *)lParam1, szName1);
    NXCGetComparableObjectNameEx((NXC_OBJECT *)lParam2, szName2);
    return _tcsicmp(szName1, szName2);
@@ -449,6 +496,7 @@ void CObjectBrowser::SortTreeItems(HTREEITEM hItem)
 
    tvs.hParent = hItem;
    tvs.lpfnCompare = CompareTreeItems;
+	tvs.lParam = m_dwFlags;
    m_wndTreeCtrl.SortChildrenCB(&tvs);
 }
 
@@ -742,7 +790,7 @@ void CObjectBrowser::OnContextMenu(CWnd* pWnd, CPoint point)
    DWORD dwTemp;
    HTREEITEM hItem;
    UINT uFlags;
-   CWnd *pWndPane;
+   CWnd *pWndPane, *pWndChild;
 	RECT rect;
    BOOL bMenuInserted = FALSE;
 
@@ -756,6 +804,12 @@ void CObjectBrowser::OnContextMenu(CWnd* pWnd, CPoint point)
 
 		pt = point;
 		pWndPane->ScreenToClient(&pt);
+		pWndChild = pWndPane->ChildWindowFromPoint(pt, CWP_SKIPINVISIBLE);
+		if (pWndChild->GetDlgCtrlID() != ID_TREE_CTRL)
+			return;
+
+		pt = point;
+		pWndChild->ScreenToClient(&pt);
 
 		hItem = m_wndTreeCtrl.HitTest(pt, &uFlags);
 		pt = point;
@@ -1419,4 +1473,65 @@ void CObjectBrowser::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI)
 	CMDIChildWnd::OnGetMinMaxInfo(lpMMI);
 	lpMMI->ptMinTrackSize.x = 300;
 	lpMMI->ptMinTrackSize.y = 100;
+}
+
+
+//
+// Handlers for "View" submenu items
+//
+
+void CObjectBrowser::OnObjectViewContainersfirst() 
+{
+	if (m_dwFlags & PLACE_CONTAINERS_FIRST)
+		m_dwFlags &= ~PLACE_CONTAINERS_FIRST;
+	else
+		m_dwFlags |= PLACE_CONTAINERS_FIRST;
+	PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
+}
+
+void CObjectBrowser::OnUpdateObjectViewContainersfirst(CCmdUI* pCmdUI) 
+{
+	pCmdUI->SetCheck(m_dwFlags & PLACE_CONTAINERS_FIRST);
+}
+
+void CObjectBrowser::OnObjectViewHideunmanaged() 
+{
+	if (m_dwFlags & HIDE_UNMANAGED_OBJECTS)
+		m_dwFlags &= ~HIDE_UNMANAGED_OBJECTS;
+	else
+		m_dwFlags |= HIDE_UNMANAGED_OBJECTS;
+	PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
+}
+
+void CObjectBrowser::OnUpdateObjectViewHideunmanaged(CCmdUI* pCmdUI) 
+{
+	pCmdUI->SetCheck(m_dwFlags & HIDE_UNMANAGED_OBJECTS);
+}
+
+
+//
+// Handlers for "Set childs management status" menu item
+//
+
+void CObjectBrowser::OnObjectSetchildmgmt() 
+{
+	CChildMgmtStatusDlg dlg;
+
+	if (m_pCurrentObject != NULL)
+	{
+		dlg.m_pObject = m_pCurrentObject;
+		dlg.DoModal();
+	}
+}
+
+void CObjectBrowser::OnUpdateObjectSetchildmgmt(CCmdUI* pCmdUI) 
+{
+	if (m_pCurrentObject != NULL)
+	{
+		pCmdUI->Enable(m_pCurrentObject->dwNumChilds > 0);
+	}
+	else
+	{
+		pCmdUI->Enable(FALSE);
+	}
 }

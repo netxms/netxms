@@ -239,6 +239,8 @@
 #define IDD_IMPORT_CA_CERT              364
 #define IDA_CERT_MANAGER                365
 #define IDI_TOPOLOGY                    366
+#define IDI_EMPTY                       367
+#define IDD_SET_CHILD_MGMT_STATUS       368
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -869,6 +871,9 @@
 #define ID_STATUS_HIDEUNKNOWN           33064
 #define ID_STATUS_HIDENONOPERATIONAL    33065
 #define ID_STATUS_ICONS                 33066
+#define ID_OBJECT_VIEW_CONTAINERSFIRST  33067
+#define ID_OBJECT_VIEW_HIDEUNMANAGED    33068
+#define ID_OBJECT_SETCHILDMGMT          33069
 #define ID_ALWAYS_DISABLED              43210
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
@@ -879,8 +884,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        367
-#define _APS_NEXT_COMMAND_VALUE         33067
+#define _APS_NEXT_RESOURCE_VALUE        369
+#define _APS_NEXT_COMMAND_VALUE         33070
 #define _APS_NEXT_CONTROL_VALUE         1474
 #define _APS_NEXT_SYMED_VALUE           135
 #endif

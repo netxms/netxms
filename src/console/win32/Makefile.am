@@ -22,6 +22,7 @@ EXTRA_DIST = \
 	AlarmBrowser.cpp AlarmBrowser.h \
 	AlarmView.cpp AlarmView.h \
 	CertManager.cpp CertManager.h \
+	ChildMgmtStatusDlg.cpp ChildMgmtStatusDlg.h \
 	ClusterPropsGeneral.cpp ClusterPropsGeneral.h \
 	ClusterPropsResources.cpp ClusterPropsResources.h \
 	ClusterResDlg.cpp ClusterResDlg.h \

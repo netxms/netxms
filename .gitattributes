@@ -663,6 +663,8 @@ src/console/win32/AlarmView.cpp -text
 src/console/win32/AlarmView.h -text
 src/console/win32/CertManager.cpp -text
 src/console/win32/CertManager.h -text
+src/console/win32/ChildMgmtStatusDlg.cpp -text
+src/console/win32/ChildMgmtStatusDlg.h -text
 src/console/win32/ClusterPropsGeneral.cpp -text
 src/console/win32/ClusterPropsGeneral.h -text
 src/console/win32/ClusterPropsResources.cpp -text
@@ -966,6 +968,7 @@ src/console/win32/icons/discovery.ico -text
 src/console/win32/icons/document.ico -text
 src/console/win32/icons/e-mail.ico -text
 src/console/win32/icons/editor.ico -text
+src/console/win32/icons/empty.ico -text
 src/console/win32/icons/exec.ico -text
 src/console/win32/icons/exit.ico -text
 src/console/win32/icons/folder_c.ico -text

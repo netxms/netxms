@@ -183,52 +183,55 @@ void CObjectOverview::Refresh()
 
    m_wndListCtrl.DeleteAllItems();
 
-   InsertItem(_T("ID"), m_pObject->dwId);
-   InsertItem(_T("Class"), g_szObjectClass[m_pObject->iClass]);
-   if (m_pObject->dwIpAddr != 0)
-      InsertItem(_T("IP Address"), IpToStr(m_pObject->dwIpAddr, szTemp));
+	if (m_pObject != NULL)
+	{
+		InsertItem(_T("ID"), m_pObject->dwId);
+		InsertItem(_T("Class"), g_szObjectClass[m_pObject->iClass]);
+		if (m_pObject->dwIpAddr != 0)
+			InsertItem(_T("IP Address"), IpToStr(m_pObject->dwIpAddr, szTemp));
 
-   // Class-specific information
-   switch(m_pObject->iClass)
-   {
-      case OBJECT_SUBNET:
-         InsertItem(_T("Network Mask"), IpToStr(m_pObject->subnet.dwIpNetMask, szTemp));
-         break;
-      case OBJECT_NODE:
-         if (m_pObject->node.dwFlags & NF_IS_NATIVE_AGENT)
-         {
-            InsertItem(_T("NetXMS Agent"), _T("Active"));
-            InsertItem(_T("Agent Version"), m_pObject->node.szAgentVersion);
-            InsertItem(_T("Platform Name"), m_pObject->node.szPlatformName);
-         }
-         else
-         {
-            InsertItem(_T("NetXMS Agent"), _T("Inactive"));
-         }
-         if (m_pObject->node.dwFlags & NF_IS_SNMP)
-         {
-            InsertItem(_T("SNMP Agent"), _T("Active"));
-            InsertItem(_T("SNMP OID"), m_pObject->node.szObjectId);
-         }
-         else
-         {
-            InsertItem(_T("SNMP Agent"), _T("Inactive"));
-         }
-         InsertItem(_T("Node Type"), (TCHAR *)CodeToText(m_pObject->node.dwNodeType, g_ctNodeType));
-         break;
-      case OBJECT_INTERFACE:
-         if (m_pObject->dwIpAddr != 0)
-            InsertItem(_T("IP Netmask"), IpToStr(m_pObject->iface.dwIpNetMask, szTemp));
-         InsertItem(_T("Index"), m_pObject->iface.dwIfIndex);
-         InsertItem(_T("Type"), 
-                    m_pObject->iface.dwIfType > MAX_INTERFACE_TYPE ?
-                           _T("Unknown") : g_szInterfaceTypes[m_pObject->iface.dwIfType]);
-         BinToStr(m_pObject->iface.bMacAddr, MAC_ADDR_LENGTH, szTemp);
-         InsertItem(_T("MAC Address"), szTemp);
-         break;
-      default:
-         break;
-   }
+		// Class-specific information
+		switch(m_pObject->iClass)
+		{
+			case OBJECT_SUBNET:
+				InsertItem(_T("Network Mask"), IpToStr(m_pObject->subnet.dwIpNetMask, szTemp));
+				break;
+			case OBJECT_NODE:
+				if (m_pObject->node.dwFlags & NF_IS_NATIVE_AGENT)
+				{
+					InsertItem(_T("NetXMS Agent"), _T("Active"));
+					InsertItem(_T("Agent Version"), m_pObject->node.szAgentVersion);
+					InsertItem(_T("Platform Name"), m_pObject->node.szPlatformName);
+				}
+				else
+				{
+					InsertItem(_T("NetXMS Agent"), _T("Inactive"));
+				}
+				if (m_pObject->node.dwFlags & NF_IS_SNMP)
+				{
+					InsertItem(_T("SNMP Agent"), _T("Active"));
+					InsertItem(_T("SNMP OID"), m_pObject->node.szObjectId);
+				}
+				else
+				{
+					InsertItem(_T("SNMP Agent"), _T("Inactive"));
+				}
+				InsertItem(_T("Node Type"), (TCHAR *)CodeToText(m_pObject->node.dwNodeType, g_ctNodeType));
+				break;
+			case OBJECT_INTERFACE:
+				if (m_pObject->dwIpAddr != 0)
+					InsertItem(_T("IP Netmask"), IpToStr(m_pObject->iface.dwIpNetMask, szTemp));
+				InsertItem(_T("Index"), m_pObject->iface.dwIfIndex);
+				InsertItem(_T("Type"), 
+							  m_pObject->iface.dwIfType > MAX_INTERFACE_TYPE ?
+										_T("Unknown") : g_szInterfaceTypes[m_pObject->iface.dwIfType]);
+				BinToStr(m_pObject->iface.bMacAddr, MAC_ADDR_LENGTH, szTemp);
+				InsertItem(_T("MAC Address"), szTemp);
+				break;
+			default:
+				break;
+		}
+	}
 
    Invalidate();
 }

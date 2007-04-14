@@ -11,6 +11,8 @@
 //
 
 #define FOLLOW_OBJECT_UPDATES    ((DWORD)0x00000001)
+#define HIDE_UNMANAGED_OBJECTS	((DWORD)0x00000002)
+#define PLACE_CONTAINERS_FIRST	((DWORD)0x00000004)
 
 
 #define OBJECT_FIND_NEXT		0
@@ -133,6 +135,12 @@ protected:
 	afx_msg void OnObjectCreateCluster();
 	afx_msg void OnObjectFind();
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI);
+	afx_msg void OnObjectViewContainersfirst();
+	afx_msg void OnUpdateObjectViewContainersfirst(CCmdUI* pCmdUI);
+	afx_msg void OnObjectViewHideunmanaged();
+	afx_msg void OnUpdateObjectViewHideunmanaged(CCmdUI* pCmdUI);
+	afx_msg void OnObjectSetchildmgmt();
+	afx_msg void OnUpdateObjectSetchildmgmt(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
    afx_msg void OnTreeViewGetDispInfo(LPNMTVDISPINFO lpdi, LRESULT *pResult);
