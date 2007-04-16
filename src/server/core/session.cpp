@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.273 2007-04-13 21:43:37 victor Exp $ */
+/* $Id: session.cpp,v 1.274 2007-04-16 15:15:56 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -118,7 +118,7 @@ struct GRAPH_ACL_ENTRY
 #define DEFINE_THREAD_STARTER(func) \
 THREAD_RESULT THREAD_CALL ClientSession::ThreadStarter_##func(void *pArg) \
 { \
-   ((PROCTHREAD_START_DATA *)pArg)->pSession->##func(((PROCTHREAD_START_DATA *)pArg)->pMsg); \
+   ((PROCTHREAD_START_DATA *)pArg)->pSession->func(((PROCTHREAD_START_DATA *)pArg)->pMsg); \
 	((PROCTHREAD_START_DATA *)pArg)->pSession->m_dwRefCount--; \
 	delete ((PROCTHREAD_START_DATA *)pArg)->pMsg; \
 	free(pArg); \
