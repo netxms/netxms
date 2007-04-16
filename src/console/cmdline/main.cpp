@@ -163,8 +163,8 @@ int main(int argc, char *argv[])
       NXCSetDebugCallback(DebugCallback);
 
    printf("Connecting to server %s as user %s ...\n", szServer, szLogin);
-   dwResult = NXCConnect(szServer, szLogin, szPassword, &g_hSession, 
-                         "nxcmd/" NETXMS_VERSION_STRING, FALSE, FALSE, NULL);
+   dwResult = NXCConnect(0, szServer, szLogin, szPassword, 0, NULL, NULL, &g_hSession, 
+                         "nxcmd/" NETXMS_VERSION_STRING, NULL);
    if (dwResult != RCC_SUCCESS)
    {
       printf("Unable to connect to server: %s\n", NXCGetErrorText(dwResult));
