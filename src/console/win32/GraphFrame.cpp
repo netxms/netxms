@@ -63,6 +63,7 @@ CGraphFrame::CGraphFrame()
    m_dwNumTimeUnits = 1;
    m_dwTimeFrame = 3600;   // By default, graph covers 3600 seconds
    m_bFullRefresh = TRUE;
+	m_nPendingUpdates = 0;
 }
 
 CGraphFrame::~CGraphFrame()
@@ -116,6 +117,8 @@ BEGIN_MESSAGE_MAP(CGraphFrame, CMDIChildWnd)
    ON_MESSAGE(NXCM_GET_SAVE_INFO, OnGetSaveInfo)
    ON_MESSAGE(NXCM_UPDATE_GRAPH_POINT, OnUpdateGraphPoint)
    ON_MESSAGE(NXCM_GRAPH_ZOOM_CHANGED, OnGraphZoomChange)
+   ON_MESSAGE(NXCM_REQUEST_COMPLETED, OnRequestCompleted)
+   ON_MESSAGE(NXCM_PROCESSING_REQUEST, OnProcessingRequest)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -216,9 +219,13 @@ void CGraphFrame::SetTimeFrame(DWORD dwTimeFrom, DWORD dwTimeTo)
 
 void CGraphFrame::OnViewRefresh() 
 {
-   DWORD i, dwResult, dwTimeFrom, dwTimeTo;
-   NXC_DCI_DATA *pData;
+   DWORD i, dwTimeFrom, dwTimeTo;
    BOOL bPartial;
+
+	if (m_nPendingUpdates > 0)
+		return;
+
+	m_nPendingUpdates = m_dwNumItems;
 
    // Set new time frame
    if (m_iTimeFrameType == 1)
@@ -246,24 +253,10 @@ void CGraphFrame::OnViewRefresh()
          dwTimeFrom = m_dwTimeFrom;
          dwTimeTo = m_dwTimeTo;
       }
-      dwResult = DoRequestArg7(NXCGetDCIData, g_hSession, (void *)m_ppItems[i]->m_dwNodeId, 
-                               (void *)m_ppItems[i]->m_dwItemId, 0, (void *)dwTimeFrom,
-                               (void *)dwTimeTo, &pData, _T("Loading item data..."));
-      if (dwResult == RCC_SUCCESS)
-      {
-         if (bPartial)
-         {
-            m_wndGraph.UpdateData(i, pData);
-         }
-         else
-         {
-            m_wndGraph.SetData(i, pData);
-         }
-      }
-      else
-      {
-         theApp.ErrorBox(dwResult, _T("Unable to retrieve colected data: %s"));
-      }
+      DoAsyncRequestArg7(m_hWnd, MAKEWPARAM(i, bPartial), NXCGetDCIData, g_hSession,
+		                   (void *)m_ppItems[i]->m_dwNodeId, 
+                         (void *)m_ppItems[i]->m_dwItemId, 0, (void *)dwTimeFrom,
+                         (void *)dwTimeTo, &m_pDCIData[i]);
    }
 	if (m_bFullRefresh)
 	{
@@ -272,9 +265,6 @@ void CGraphFrame::OnViewRefresh()
          m_wndGraph.SetData(i, NULL);
 		}
 	}
-   m_wndGraph.ClearZoomHistory();
-   m_wndGraph.Update();
-   m_bFullRefresh = FALSE;
 }
 
 
@@ -949,4 +939,51 @@ void CGraphFrame::OnGraphDefine()
 			MessageBox(_T("Cannot save graph - internal console error"), _T("Error"), MB_OK | MB_ICONSTOP);
 		}
 	}
+}
+
+
+//
+// NXCM_REQUEST_COMPLETED message handler
+//
+
+void CGraphFrame::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
+{
+	int nIndex;
+
+   if (lParam == RCC_SUCCESS)
+   {
+		nIndex = LOWORD(wParam);
+      if (HIWORD(wParam))
+      {
+         m_wndGraph.UpdateData(nIndex, m_pDCIData[nIndex]);
+      }
+      else
+      {
+         m_wndGraph.SetData(nIndex, m_pDCIData[nIndex]);
+      }
+   }
+   else
+   {
+      theApp.ErrorBox(lParam, _T("Unable to retrieve colected data: %s"));
+   }
+
+	m_nPendingUpdates--;
+	if (m_nPendingUpdates == 0)
+	{
+		m_wndGraph.m_bUpdating = FALSE;
+		m_wndGraph.ClearZoomHistory();
+		m_wndGraph.Update();
+		m_bFullRefresh = FALSE;
+	}
+}
+
+
+//
+// NXCM_PROCESSING_REQUEST message handler
+//
+
+void CGraphFrame::OnProcessingRequest(WPARAM wParam, LPARAM lParam)
+{
+	m_wndGraph.m_bUpdating = TRUE;
+	m_wndGraph.Invalidate(FALSE);
 }

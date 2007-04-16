@@ -133,6 +133,7 @@ extern CConsoleApp theApp;
 #define NXCM_SHOW_FATAL_ERROR      (WM_USER + 128)
 #define NXCM_UPDATE_FINISHED       (WM_USER + 129)
 #define NXCM_GRAPH_DATA            (WM_USER + 130)
+#define NXCM_PROCESSING_REQUEST    (WM_USER + 131)
 
 
 //
@@ -174,6 +175,8 @@ struct RqData
 {
    HWND hWnd;
    DWORD (* pFunc)(...);
+	WPARAM wParam;
+	BOOL bDynamic;
    DWORD dwNumParams;
    void *pArg1;
    void *pArg2;
@@ -280,6 +283,8 @@ DWORD DoRequestArg7(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
 DWORD DoRequestArg9(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
                     void *pArg5, void *pArg6, void *pArg7, void *pArg8, void *pArg9,
                     TCHAR *pszInfoText);
+void DoAsyncRequestArg7(HWND hWnd, WPARAM wParam, void *pFunc, void *pArg1, void *pArg2,
+                        void *pArg3, void *pArg4, void *pArg5, void *pArg6, void *pArg7);
 THREAD_RESULT THREAD_CALL PollerThread(void *pArg);
 BOOL DownloadUpgradeFile(HANDLE hFile);
 

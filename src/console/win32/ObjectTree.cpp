@@ -24,8 +24,8 @@ CObjectTree::CObjectTree()
 	m_bUseIcons = theApp.GetProfileInt(_T("ObjectTree"), _T("UseIcons"), FALSE);
 	m_bHideNormal = theApp.GetProfileInt(_T("ObjectTree"), _T("HideNormal"), TRUE);
 	m_bHideUnknown = theApp.GetProfileInt(_T("ObjectTree"), _T("HideUnknown"), TRUE);
-	m_bHideUnmanaged = theApp.GetProfileInt(_T("ObjectTree"), _T("HideNonOperational"), TRUE);
-	m_bHideNonOperational = theApp.GetProfileInt(_T("ObjectTree"), _T("UseIcons"), TRUE);
+	m_bHideUnmanaged = theApp.GetProfileInt(_T("ObjectTree"), _T("HideUnmanaged"), TRUE);
+	m_bHideNonOperational = theApp.GetProfileInt(_T("ObjectTree"), _T("HideNonOperational"), TRUE);
 	m_hFirstVisibleItem = NULL;
 }
 

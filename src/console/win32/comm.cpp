@@ -1,3 +1,4 @@
+/* $Id: comm.cpp,v 1.55 2007-04-16 08:33:28 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Windows Console
@@ -485,7 +486,9 @@ static DWORD WINAPI RequestThread(void *pArg)
 				break;
 		}
 		if (pData->hWnd != NULL)
-			PostMessage(pData->hWnd, NXCM_REQUEST_COMPLETED, 0, dwResult);
+			PostMessage(pData->hWnd, NXCM_REQUEST_COMPLETED, pData->wParam, dwResult);
+		if (pData->bDynamic)
+			free(pData);
 	}
 	__except(___ExceptionHandler((EXCEPTION_POINTERS *)_exception_info()))
 	{
@@ -545,6 +548,7 @@ DWORD DoRequest(DWORD (* pFunc)(void), TCHAR *pszInfoText)
    RqData rqData;
 
    rqData.hWnd = NULL;
+	rqData.bDynamic = FALSE;
    rqData.dwNumParams = 0;
    rqData.pFunc = (DWORD (*)(...))pFunc;
    return ExecuteRequest(&rqData, pszInfoText);
@@ -560,6 +564,7 @@ DWORD DoRequestArg1(void *pFunc, void *pArg1, TCHAR *pszInfoText)
    RqData rqData;
 
    rqData.hWnd = NULL;
+	rqData.bDynamic = FALSE;
    rqData.dwNumParams = 1;
    rqData.pArg1 = pArg1;
    rqData.pFunc = (DWORD (*)(...))pFunc;
@@ -576,6 +581,7 @@ DWORD DoRequestArg2(void *pFunc, void *pArg1, void *pArg2, TCHAR *pszInfoText)
    RqData rqData;
 
    rqData.hWnd = NULL;
+	rqData.bDynamic = FALSE;
    rqData.dwNumParams = 2;
    rqData.pArg1 = pArg1;
    rqData.pArg2 = pArg2;
@@ -593,6 +599,7 @@ DWORD DoRequestArg3(void *pFunc, void *pArg1, void *pArg2, void *pArg3, TCHAR *p
    RqData rqData;
 
    rqData.hWnd = NULL;
+	rqData.bDynamic = FALSE;
    rqData.dwNumParams = 3;
    rqData.pArg1 = pArg1;
    rqData.pArg2 = pArg2;
@@ -612,6 +619,7 @@ DWORD DoRequestArg4(void *pFunc, void *pArg1, void *pArg2, void *pArg3,
    RqData rqData;
 
    rqData.hWnd = NULL;
+	rqData.bDynamic = FALSE;
    rqData.dwNumParams = 4;
    rqData.pArg1 = pArg1;
    rqData.pArg2 = pArg2;
@@ -632,6 +640,7 @@ DWORD DoRequestArg5(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
    RqData rqData;
 
    rqData.hWnd = NULL;
+	rqData.bDynamic = FALSE;
    rqData.dwNumParams = 5;
    rqData.pArg1 = pArg1;
    rqData.pArg2 = pArg2;
@@ -653,6 +662,7 @@ DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
    RqData rqData;
 
    rqData.hWnd = NULL;
+	rqData.bDynamic = FALSE;
    rqData.dwNumParams = 6;
    rqData.pArg1 = pArg1;
    rqData.pArg2 = pArg2;
@@ -675,6 +685,7 @@ DWORD DoRequestArg7(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
    RqData rqData;
 
    rqData.hWnd = NULL;
+	rqData.bDynamic = FALSE;
    rqData.dwNumParams = 7;
    rqData.pArg1 = pArg1;
    rqData.pArg2 = pArg2;
@@ -689,7 +700,7 @@ DWORD DoRequestArg7(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
 
 
 //
-// Perform request with 7 parameter
+// Perform request with 9 parameter
 //
 
 DWORD DoRequestArg9(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
@@ -699,6 +710,7 @@ DWORD DoRequestArg9(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
    RqData rqData;
 
    rqData.hWnd = NULL;
+	rqData.bDynamic = FALSE;
    rqData.dwNumParams = 9;
    rqData.pArg1 = pArg1;
    rqData.pArg2 = pArg2;
@@ -711,6 +723,64 @@ DWORD DoRequestArg9(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
    rqData.pArg9 = pArg9;
    rqData.pFunc = (DWORD (*)(...))pFunc;
    return ExecuteRequest(&rqData, pszInfoText);
+}
+
+
+//
+// Perform async request (common code)
+//
+
+static void ExecuteAsyncRequest(RqData *pData)
+{
+   HANDLE hThread;
+   DWORD dwThreadId;
+	HWND hWnd;
+	WPARAM wParam;
+
+	hWnd = pData->hWnd;
+	wParam = pData->wParam;
+   hThread = CreateThread(NULL, 0, RequestThread, pData, 0, &dwThreadId);
+   if (hThread != NULL)
+   {
+      // Wait for request completion
+      if (WaitForSingleObject(hThread, UI_THREAD_WAIT_TIME) == WAIT_TIMEOUT)
+      {
+         // Thread still not finished, notify calling window
+         PostMessage(hWnd, NXCM_PROCESSING_REQUEST, wParam, 0);
+      }
+      CloseHandle(hThread);
+   }
+	else
+	{
+      PostMessage(hWnd, NXCM_REQUEST_COMPLETED, wParam, RCC_SYSTEM_FAILURE);
+		free(pData);
+	}
+}
+
+
+//
+// Perform async request with 7 parameter
+//
+
+void DoAsyncRequestArg7(HWND hWnd, WPARAM wParam, void *pFunc, void *pArg1, void *pArg2,
+                        void *pArg3, void *pArg4, void *pArg5, void *pArg6, void *pArg7)
+{
+   RqData *pData;
+
+	pData = (RqData *)malloc(sizeof(RqData));
+   pData->hWnd = hWnd;
+	pData->bDynamic = TRUE;
+	pData->wParam = wParam;
+   pData->dwNumParams = 7;
+   pData->pArg1 = pArg1;
+   pData->pArg2 = pArg2;
+   pData->pArg3 = pArg3;
+   pData->pArg4 = pArg4;
+   pData->pArg5 = pArg5;
+   pData->pArg6 = pArg6;
+   pData->pArg7 = pArg7;
+   pData->pFunc = (DWORD (*)(...))pFunc;
+   ExecuteAsyncRequest(pData);
 }
 
 

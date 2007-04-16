@@ -53,6 +53,7 @@ CGraph::CGraph()
    m_bEnableZoom = TRUE;
 	m_bSet3DEdge = TRUE;
 	m_bShowTitle = FALSE;
+	m_bUpdating = FALSE;
    m_dwNumItems = 0;
 	m_szTitle[0] = 0;
 	m_dwTimeFrom = 0;
@@ -243,6 +244,24 @@ void CGraph::OnPaint(void)
          sdc.BitBlt(0, 0, rect.right, rect.bottom, &dc, 0, 0, SRCCOPY);
       }
    }
+
+	// Draw "Updating..." message
+	if (m_bUpdating)
+	{
+		RECT rcText;
+		CSize size;
+
+		size = sdc.GetTextExtent(_T("Updating..."), 11);
+		rcText.left = 10;
+		rcText.top = 10;
+		rcText.right = rcText.left + size.cx + 10;
+		rcText.bottom = rcText.top + size.cy + 8;
+		sdc.SetBkColor(RGB(64, 0, 0));
+		sdc.SetTextColor(RGB(255, 0, 0));
+		sdc.FillSolidRect(&rcText, RGB(64, 0, 0));
+		sdc.DrawText(_T("Updating..."), 11, &rcText, DT_CENTER | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+		sdc.Draw3dRect(&rcText, RGB(255, 0, 0), RGB(255, 0, 0));
+	}
 
    // Cleanup
    dc.SelectObject(pOldBitmap);

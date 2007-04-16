@@ -63,6 +63,8 @@ public:
 
 // Implementation
 protected:
+	NXC_DCI_DATA * m_pDCIData[MAX_GRAPH_ITEMS];
+	int m_nPendingUpdates;
 	BOOL m_bFullRefresh;
 	void Preset(int nTimeUnit, DWORD dwNumUnits);
 	DWORD m_dwTimeFrame;
@@ -116,6 +118,8 @@ protected:
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
    afx_msg void OnUpdateGraphPoint(DWORD dwTimeStamp, double *pdValue);
    afx_msg void OnGraphZoomChange(WPARAM nZoomLevel, LPARAM lParam);
+	afx_msg void OnRequestCompleted(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnProcessingRequest(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 private:
 	int m_iStatusBarHeight;
