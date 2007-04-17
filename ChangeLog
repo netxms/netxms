@@ -17,7 +17,8 @@
 	- Added possibility to manage/unmanage set of child objects
 	- Added possibility to hide unmanaged leaf objects
 	- Container objects can be placed above all others
-- Fixed issues: #148, #152
+	- Other small UI improvements
+- Fixed issues: #90, #106, #143, #147, #148, #149, #150, #152, #153
 
 
 *
