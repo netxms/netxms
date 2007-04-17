@@ -1,0 +1,205 @@
+/* general */
+
+body
+{
+	font-family: Verdana, Helvetica;
+	font-size: 73%;
+	margin: 0;
+	padding: 0;
+	background-color: #FFFFFF;
+
+	height: 100%;
+	border: 0;
+}
+
+html > body
+{
+	font-size: 9pt;
+
+	text-align: left;
+}
+
+table, tr, td, th
+{
+	font-size: 100%;
+	border-collapse: collapse;
+	empty-cells: show;
+}
+
+th
+{
+	background-color: rgb(214, 225, 235);
+	//background-color: rgb(222, 231, 239);
+}
+
+td
+{
+	vertical-align: top;
+}
+
+#odd td
+{
+	background-color: rgb(255, 255, 255);
+}
+
+#even td
+{
+	background-color: rgb(244, 248, 253);
+}
+
+img
+{
+	border: 0;
+}
+
+/* menu */
+
+#nav_menu
+{
+	background-color: #3D5C7A;
+
+	font-weight: bold;
+	/* text-transform: uppercase; */
+	
+	width: 100%;
+	height: 2.3em;
+}
+
+#nav_menu ul
+{
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+#nav_menu li
+{
+	float: left;
+	margin: 0.15em 0.15em;
+}
+
+#nav_menu a
+{
+	height: 2em;
+	line-height: 2em;
+	float: left;
+	width: 9em;
+	display: block;
+	color: #FFFFFF;
+	/* background-color: rgb(71, 107, 143); */
+	background-color: transparent;
+	text-decoration: none;
+	text-align: center;
+	/* border: 1px solid transparent; */
+}
+
+/*#nav_menu a:focus
+{
+	border: 1px solid red;
+}*/
+
+#nav_menu a:hover
+{
+	text-decoration: none;
+	color: #FFCC00;
+	background-color: #7590AE;
+}
+
+/* main body */
+
+#main-copy
+{
+	margin: 0;
+	/* padding: 0.5em 0.5em; */
+	clear: left;
+}
+
+#main-copy h1
+{
+	color: rgb(117,144,174);
+	background-color: transparent;
+	font-family: "trebuchet ms", verdana, helvetica, arial, sans-serif;
+	font-size: 200%;
+	margin: 0 0 0.5em 0;
+	padding: 0;
+}
+
+#main-copy p
+{
+	line-height: 1.75em;
+	margin: 1em 0 1.5em 0;
+	padding: 0;
+}
+
+/*
+ * ripped from http://www.wpdfd.com/editorial/wpd0103.htm
+ */
+#horizon        
+{
+	text-align: center;
+	position: absolute;
+	top: 50%;
+	left: 0px;
+	width: 100%;
+	height: 1px;
+	overflow: visible;
+	visibility: visible;
+	display: block;
+}
+
+#content    
+{
+	background-color: transparent;
+	margin-left: -250px;
+	position: absolute;
+	top: -120px;
+	left: 50%;
+	width: 500px;
+	height: 210px;
+	visibility: visible
+}
+
+#login_dialog
+{
+	border: 1px dotted;
+}
+
+#login_dialog td
+{
+	font-size: 9pt;
+}
+
+/* */
+.left, .right, .full
+{
+	margin: 1em 0;
+	float: left;
+	border-left: 1px solid rgb(204,204,204);
+}
+
+.left
+{
+	width: 22%;
+	padding: 0 1.9%;
+}
+
+.right
+{
+	text-align: justify;
+	width: 70%;
+	padding: 0 1.9%;
+}
+
+.full
+{
+	width: 92%;
+	padding: 0 1.9%;
+	border-left: none;
+}
+
+/* */
+
+#alarms img
+{
+	vertical-align: bottom;
+}
