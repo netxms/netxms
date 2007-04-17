@@ -1168,6 +1168,7 @@ src/nxevent/nxevent.cpp -text
 src/nxevent/nxevent.dsp -text
 src/nxevent/nxevent.dsw -text
 src/nxevent/nxevent.h -text
+src/nxhttpd/Makefile.am -text
 src/nxhttpd/httprequest.cpp -text
 src/nxhttpd/httprequest.h -text
 src/nxhttpd/httpresponse.cpp -text

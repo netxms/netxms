@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.240 2007-04-17 20:36:49 victor Exp $
+# $Id: configure.ac,v 1.241 2007-04-17 21:20:20 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -1142,6 +1142,8 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/odbcquery/Makefile
 	src/nxhttpd/Makefile
+	src/nxhttpd/static/Makefile
+	src/nxhttpd/static/images/Makefile
 	tools/Makefile
 ])
 
