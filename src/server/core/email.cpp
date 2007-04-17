@@ -272,7 +272,7 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
 #else
                      pCurrentTM = gmtime(&currentTime);
 #endif
-                     strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S %Z\r\n", pCurrentTM);
+                     strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S %z\r\n", pCurrentTM);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
                      // content-type
                      sprintf(szBuffer, "Content-Type: text/plain; charset=%s\r\n"
