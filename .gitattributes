@@ -1206,6 +1206,8 @@ src/nxhttpd/main.cpp -text
 src/nxhttpd/misc.cpp -text
 src/nxhttpd/misc.h -text
 src/nxhttpd/nxhttpd.cpp -text
+src/nxhttpd/nxhttpd.dsp -text
+src/nxhttpd/nxhttpd.dsw -text
 src/nxhttpd/nxhttpd.h -text
 src/nxhttpd/nxpie.cpp -text
 src/nxhttpd/nxpie.h -text

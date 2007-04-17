@@ -1,4 +1,6 @@
-/* $Id: nxhttpd.cpp,v 1.1 2007-03-21 10:15:18 alk Exp $ */
+/* $Id: nxhttpd.cpp,v 1.2 2007-04-17 21:21:32 victor Exp $ */
+
+#pragma warning(disable: 4100 4511 4512 4245 4018 4663)
 
 #include "nxhttpd.h"
 
@@ -257,5 +259,8 @@ string NxHttpd::FilterEnt(string in)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2007/03/21 10:15:18  alk
+web, non working; second try;
+
 
 */

@@ -16,4 +16,5 @@ bin_PROGRAMS = nxhttpd
 nxhttpd_SOURCES = httprequest.cpp httpresponse.cpp main.cpp misc.cpp nxhttpd.cpp nxpie.cpp nxweb.cpp
 nxhttpd_LDADD = ../libnetxms/libnetxms.la ../libnxmap/libnxmap.la ../libnxcl/libnxcl.la
 
-EXTRA_DIST = httprequest.h httpresponse.h misc.h nxhttpd.h nxpie.h nxweb.h winsrv.cpp
+EXTRA_DIST = httprequest.h httpresponse.h misc.h nxhttpd.h \
+             nxpie.h nxweb.h winsrv.cpp nxhttpd.dsp nxhttpd.dsw
