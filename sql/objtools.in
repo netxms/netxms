@@ -109,6 +109,38 @@ INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_
 INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
 	VALUES (16,2,'From',' ',CFMT_STRING,3);
 
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description,confirmation_text)
+	VALUES (17,'&Info->AR&P cache (SNMP)',TOOL_TYPE_TABLE_SNMP,'ARP Cache',1,' ','Show ARP cache','#00');
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (17,0,'IP Address','.1.3.6.1.2.1.4.22.1.3',CFMT_IP_ADDR,0);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (17,1,'MAC Address','.1.3.6.1.2.1.4.22.1.2',CFMT_MAC_ADDR,0);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (17,2,'Interface','.1.3.6.1.2.1.4.22.1.1',CFMT_IFINDEX,0);
+
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description,confirmation_text)
+	VALUES (18,'&Info->AR&P cache (Agent)',TOOL_TYPE_TABLE_AGENT,
+		'ARP Cache#7FNet.ArpCache#7F(.*) (.*) (.*)',2,' ','Show ARP cache','#00');
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (18,0,'IP Address','.1.3.6.1.2.1.4.22.1.3',CFMT_STRING,2);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (18,1,'MAC Address','.1.3.6.1.2.1.4.22.1.2',CFMT_STRING,1);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (18,2,'Interface','.1.3.6.1.2.1.4.22.1.1',CFMT_IFINDEX,3);
+
+INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description,confirmation_text)
+	VALUES (19,'&Info->&Routing table (SNMP)',TOOL_TYPE_TABLE_SNMP,'Routing Table',1,' ','Show IP routing table','#00');
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (19,0,'Destination','.1.3.6.1.2.1.4.21.1.1',CFMT_IP_ADDR,0);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (19,1,'Mask','.1.3.6.1.2.1.4.21.1.11',CFMT_IP_ADDR,0);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (19,2,'Next hop','.1.3.6.1.2.1.4.21.1.7',CFMT_IP_ADDR,0);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (19,3,'Metric','.1.3.6.1.2.1.4.21.1.3',CFMT_INTEGER,0);
+INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)
+	VALUES (19,4,'Interface','.1.3.6.1.2.1.4.21.1.2',CFMT_IFINDEX,0);
+
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (1,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (2,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (3,-2147483648);
@@ -125,3 +157,6 @@ INSERT INTO object_tools_acl (tool_id,user_id) VALUES (13,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (14,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (15,-2147483648);
 INSERT INTO object_tools_acl (tool_id,user_id) VALUES (16,-2147483648);
+INSERT INTO object_tools_acl (tool_id,user_id) VALUES (17,-2147483648);
+INSERT INTO object_tools_acl (tool_id,user_id) VALUES (18,-2147483648);
+INSERT INTO object_tools_acl (tool_id,user_id) VALUES (19,-2147483648);

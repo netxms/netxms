@@ -78,6 +78,78 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V60 to V61
+//
+
+static BOOL H_UpgradeFromV60(void)
+{
+   static TCHAR m_szBatch[] =
+		_T("DELETE FROM object_tools WHERE tool_id=14\n")
+		_T("INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description,confirmation_text) ")
+			_T("VALUES (14,'&Info->Topology table (Nortel)',2,'Topology table',1,' ','Show topology table (Nortel protocol)','#00')\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) ")
+			_T("VALUES (14,0,'Peer IP','.1.3.6.1.4.1.45.1.6.13.2.1.1.3',3,0)\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) ")
+			_T("VALUES (14,1,'Peer MAC','.1.3.6.1.4.1.45.1.6.13.2.1.1.5',4,0)\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) ")
+			_T("VALUES (14,2,'Slot','.1.3.6.1.4.1.45.1.6.13.2.1.1.1',1,0)\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) ")
+			_T("VALUES (14,3,'Port','.1.3.6.1.4.1.45.1.6.13.2.1.1.2',1,0)\n")
+		_T("INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description,confirmation_text) ")
+			_T("VALUES (17,'&Info->AR&P cache (SNMP)',2,'ARP Cache',1,' ','Show ARP cache','#00')\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) ")
+			_T("VALUES (17,0,'IP Address','.1.3.6.1.2.1.4.22.1.3',3,0)\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) ")
+			_T("VALUES (17,1,'MAC Address','.1.3.6.1.2.1.4.22.1.2',4,0)\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) ")
+			_T("VALUES (17,2,'Interface','.1.3.6.1.2.1.4.22.1.1',5,0)\n")
+		_T("INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description,confirmation_text) ")
+			_T("VALUES (18,'&Info->AR&P cache (Agent)',3,")
+			_T("'ARP Cache#7FNet.ArpCache#7F(.*) (.*) (.*)',2,' ','Show ARP cache','#00')\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) ")
+			_T("VALUES (18,0,'IP Address','.1.3.6.1.2.1.4.22.1.3',0,2)\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) ")
+			_T("VALUES (18,1,'MAC Address','.1.3.6.1.2.1.4.22.1.2',0,1)\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) ")
+			_T("VALUES (18,2,'Interface','.1.3.6.1.2.1.4.22.1.1',5,3)\n")
+		_T("INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description,confirmation_text) ")
+			_T("VALUES (19,'&Info->&Routing table (SNMP)',TOOL_TYPE_TABLE_SNMP,'Routing Table',1,' ','Show IP routing table','#00')\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) ")
+			_T("VALUES (19,0,'Destination','.1.3.6.1.2.1.4.21.1.1',3,0)\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) ")
+			_T("VALUES (19,1,'Mask','.1.3.6.1.2.1.4.21.1.11',3,0)\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) ")
+			_T("VALUES (19,2,'Next hop','.1.3.6.1.2.1.4.21.1.7',3,0)\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) ")
+			_T("VALUES (19,3,'Metric','.1.3.6.1.2.1.4.21.1.3',1,0)\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr) ")
+			_T("VALUES (19,4,'Interface','.1.3.6.1.2.1.4.21.1.2',5,0)\n")
+		_T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (17,-2147483648)\n")
+		_T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (18,-2147483648)\n")
+		_T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (19,-2147483648)\n")
+      _T("<END>");
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("TopologyExpirationTime"), _T("900"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("TopologyDiscoveryRadius"), _T("7"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!SQLQuery(_T("UPDATE config SET var_value='61' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V59 to V60
 //
 
@@ -2652,6 +2724,7 @@ static struct
    { 57, H_UpgradeFromV57 },
    { 58, H_UpgradeFromV58 },
    { 59, H_UpgradeFromV59 },
+   { 60, H_UpgradeFromV60 },
    { 0, NULL }
 };
 

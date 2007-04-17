@@ -264,9 +264,10 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
                      // date
                      time_t currentTime;
-                     struct tm currentTM, *pCurrentTM;
+							struct tm *pCurrentTM;
                      time(&currentTime);
 #ifdef HAVE_GMTIME_R
+                     struct tm currentTM;
                      gmtime_r(&currentTime, &currentTM);
                      pCurrentTM = &currentTM;
 #else

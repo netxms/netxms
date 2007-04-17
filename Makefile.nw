@@ -4,7 +4,8 @@
 #
 
 SUBDIRS = src/libnetxms src/agent/core \
-          src/agent/subagents/netware src/agent/subagents/ping
+          src/agent/subagents/netware src/agent/subagents/ping \
+           src/agent/subagents/ecs
 COMMAND = for dir in $(SUBDIRS); do \
           if ! make -C $$dir -f Makefile.nw $@; then exit $$?; fi; done
 
