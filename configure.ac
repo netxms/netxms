@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.238 2007-03-31 05:20:53 victor Exp $
+# $Id: configure.ac,v 1.239 2007-04-17 15:22:33 alk Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -664,7 +664,7 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror])
 AC_CHECK_FUNCS([strrchr strtol strtoul strtoll strtoull])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
-AC_CHECK_FUNCS([nanosleep getopt_long])
+AC_CHECK_FUNCS([nanosleep getopt_long gmtime_r])
 
 AC_CHECK_DECLS([getopt_long])
 
