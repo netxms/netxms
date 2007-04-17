@@ -266,6 +266,7 @@ protected:
    virtual BOOL ValidateConnection(void);
 
    void QueryParameter(char *req, int reqLen, UPS_PARAMETER *p, int nType);
+	BOOL SendCmd(char *cmd, int cmdLen, char *ret, int *retLen);
 
 	int ge2kva;
 

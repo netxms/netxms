@@ -1,4 +1,4 @@
-/* $Id: microdowell.cpp,v 1.2 2006-12-09 21:02:11 victor Exp $ */
+/* $Id: microdowell.cpp,v 1.3 2007-04-17 19:04:54 alk Exp $ */
 
 /*
 ** NetXMS UPS management subagent
@@ -28,7 +28,7 @@
 //
 // Prepare and send data packet
 //
-static BOOL SendCmd(char *cmd, int cmdLen, char *ret, int *retLen)
+BOOL MicrodowellInterface::SendCmd(char *cmd, int cmdLen, char *ret, int *retLen)
 {
 	char buff[512];
 	int i, crc;
@@ -45,17 +45,17 @@ static BOOL SendCmd(char *cmd, int cmdLen, char *ret, int *retLen)
 	}
 	buff[i++] = crc;
 
-   //m_serial.Write(buff, i);
+   m_serial.Write(buff, i);
 
 	for (c = 0; c != '['; )
 	{
-		//if (m_serial.Read(&c, 1) != 1)
+		if (m_serial.Read((char *)&c, 1) != 1)
 		{
 			return FALSE;
 		}
 	}
 
-//	if (m_serial.Read(buf, i + 1) < i + 1)
+	if (m_serial.Read(buff, i + 1) < i + 1)
 	{
 		return FALSE;
 	}
@@ -107,7 +107,7 @@ BOOL MicrodowellInterface::Open(void)
 			SetConnected();
 		}
 
-		//ge2kva = buff[4] > '2' || ( mod[4] == '2' && mod[5] > '0' );
+		ge2kva = buff[4] > '2' || ( buff[4] == '2' && buff[5] > '0' );
 	}
 
    return bRet;
@@ -368,7 +368,7 @@ void MicrodowellInterface::QueryPowerLoad(void)
 	int len;
 	if (SendCmd("\x03", 1, buff, &len))
 	{
-		//snprintf(p->szValue, MAX_RESULT_LENGTH, "%d", (int)buf[7]);
+		snprintf(p->szValue, MAX_RESULT_LENGTH, "%d", (int)buff[7]);
 		p->dwFlags &= ~(UPF_NOT_SUPPORTED | UPF_NULL_VALUE);
 	}
 	else
@@ -441,6 +441,9 @@ void MicrodowellInterface::QueryOnlineStatus(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2006/12/09 21:02:11  victor
+New configure works on Gentoo Linux
+
 Revision 1.1  2006/12/05 13:20:15  alk
 Microdowell UPS support added
 
