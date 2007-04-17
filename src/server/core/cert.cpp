@@ -24,6 +24,16 @@
 
 #ifdef _WITH_ENCRYPTION
 
+// WARNING! this hack works only for d2i_X509(); be carefull when adding new code
+#ifdef OPENSSL_CONST
+# undef OPENSSL_CONST
+#endif
+#if OPENSSL_VERSION_NUMBER >= 0x0090800fL
+# define OPENSSL_CONST const
+#else
+# define OPENSSL_CONST
+#endif
+
 
 //
 // Static data
