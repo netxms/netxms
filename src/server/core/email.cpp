@@ -252,13 +252,29 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                   {
                      iState = STATE_MAIL_BODY;
 
-                     // Mail header
+                     // Mail headers
+                     // from
                      sprintf(szBuffer, "From: NetXMS Server <%s>\r\n", m_szFromAddr);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
+                     // to
                      sprintf(szBuffer, "To: <%s>\r\n", pszRcpt);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
+                     // subject
                      sprintf(szBuffer, "Subject: %s\r\n", pszSubject);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
+                     // date
+                     time_t currentTime;
+                     struct tm currentTM, *pCurrentTM;
+                     time(&currentTime);
+#ifdef HAVE_GMTIME_R
+                     gmtime_r(&currentTime, &currentTM);
+                     pCurrentTM = &currentTM;
+#else
+                     pCurrentTM = gmtime(&currentTime);
+#endif
+                     strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S %Z\r\n", pCurrentTM);
+                     SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
+                     // content-type
                      sprintf(szBuffer, "Content-Type: text/plain; charset=%s\r\n"
                                        "Content-Transfer-Encoding: 8bit\r\n\r\n", szEncoding);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
