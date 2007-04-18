@@ -123,12 +123,11 @@ Source: "nxcon.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Compon
 Source: "nxav.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "nxnotify.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 ; Web server files
-;Source: "..\..\nxhttpd\Release\nxhttpd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv
-;Source: "..\..\nxhttpd\static\*.xsl"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
-;Source: "..\..\nxhttpd\static\*.js"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
-;Source: "..\..\nxhttpd\static\screen.css"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
-;Source: "..\..\nxhttpd\static\images\*.png"; DestDir: "{app}\var\www\images"; Flags: ignoreversion; Components: websrv
-;Source: "..\..\nxhttpd\static\images\*.jpg"; DestDir: "{app}\var\www\images"; Flags: ignoreversion; Components: websrv
+Source: "..\..\nxhttpd\Release\nxhttpd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv
+Source: "..\..\nxhttpd\static\*.xsl"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
+Source: "..\..\nxhttpd\static\*.js"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
+Source: "..\..\nxhttpd\static\screen.css"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
+Source: "..\..\nxhttpd\static\images\*.png"; DestDir: "{app}\var\www\images"; Flags: ignoreversion; Components: websrv
 ; Third party files
 Source: "Files\mfc42.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\mfc42u.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
