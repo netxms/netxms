@@ -1,9 +1,11 @@
-/* $Id: nxweb.h,v 1.1 2007-03-21 10:15:18 alk Exp $ */
-
-#ifndef __NXWEB__H__
-#define __NXWEB__H__
+#if !defined(AFX_NXWEB_H__07A21931_F638_4A98_914C_70D09408483E__INCLUDED_)
+#define AFX_NXWEB_H__07A21931_F638_4A98_914C_70D09408483E__INCLUDED_
 
 #pragma warning (disable : 4786)
+
+#if _MSC_VER > 1000
+#pragma once
+#endif // _MSC_VER > 1000
 
 #include <stdio.h>
 
@@ -57,7 +59,6 @@ public:
 	NxWeb();
 	virtual ~NxWeb();
 
-	void SetTemplateRoot(string);
 	bool HandleRequest(HttpRequest &, HttpResponse &);
 
 private:
@@ -111,11 +112,4 @@ extern char g_szLogFile[MAX_PATH];
 extern char g_szMasterServer[MAX_OBJECT_NAME];
 
 
-#endif
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-
-*/
+#endif // !defined(AFX_NXWEB_H__07A21931_F638_4A98_914C_70D09408483E__INCLUDED_)

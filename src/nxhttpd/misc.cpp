@@ -1,5 +1,3 @@
-/* $Id: misc.cpp,v 1.1 2007-03-21 10:15:18 alk Exp $ */
-
 #pragma warning(disable: 4786)
 
 #include "nxhttpd.h"
@@ -19,10 +17,3 @@ void Split(vector<string> &out, const string str, const string delim)
 		out.push_back(str.substr(firstPos, secondPos - firstPos));
 	}
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-
-*/

@@ -1,9 +1,7 @@
-/* $Id: main.cpp,v 1.1 2007-03-21 10:15:18 alk Exp $ */
-
 #pragma warning(disable: 4786)
 
 #include "nxhttpd.h"
-#include "nxweb.h"
+#include "NxWeb.h"
 
 using namespace std;
 
@@ -29,12 +27,10 @@ char g_szLogFile[MAX_PATH] = "/var/log/nxhttpd";
 static WORD m_wListenPort = 8080;
 static NxWeb m_server;
 #ifdef _WIN32
-static char m_szDocumentRoot[MAX_PATH] = "C:\\NetXMS\\var\\www\\data";
-static char m_szTemplateRoot[MAX_PATH] = "C:\\NetXMS\\var\\www\\tpl";
+static char m_szDocumentRoot[MAX_PATH] = "C:\\NetXMS\\var\\www";
 static HANDLE m_eventMainStopped = INVALID_HANDLE_VALUE;
 #else
-static char m_szDocumentRoot[MAX_PATH] = DATADIR "/nxhttpd/data";
-static char m_szTemplateRoot[MAX_PATH] = DATADIR "/nxhttpd/tpl";
+static char m_szDocumentRoot[MAX_PATH] = DATADIR "/nxhttpd";
 char m_szPidFile[MAX_PATH] = "/var/run/nxhttpd.pid";
 #endif
 
@@ -45,12 +41,11 @@ char m_szPidFile[MAX_PATH] = "/var/run/nxhttpd.pid";
 
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-	{ "DocumentRoot", CT_STRING, 0, 0, MAX_PATH, 0, m_szDocumentRoot },
-	{ "TemplateRoot", CT_STRING, 0, 0, MAX_PATH, 0, m_szTemplateRoot },
-	{ "ListenPort", CT_WORD, 0, 0, 0, 0, &m_wListenPort },
-	{ "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
-	{ "MasterServer", CT_STRING, 0, 0, MAX_PATH, 0, g_szMasterServer },
-	{ "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   { "DocumentRoot", CT_STRING, 0, 0, MAX_PATH, 0, m_szDocumentRoot },
+   { "ListenPort", CT_WORD, 0, 0, 0, 0, &m_wListenPort },
+   { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
+   { "MasterServer", CT_STRING, 0, 0, MAX_PATH, 0, g_szMasterServer },
+   { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
 
@@ -62,8 +57,8 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 
 static BOOL WINAPI CtrlHandler(DWORD dwCtrlType)
 {
-	printf("Initiating web server shutdown...\n");
-	m_server.Stop();
+   printf("Initiating web server shutdown...\n");
+   m_server.Stop();
 	return TRUE;
 }
 
@@ -127,7 +122,7 @@ static THREAD_RESULT THREAD_CALL SignalHandler(void *pArg)
 
 stop_handler:
 	sigprocmask(SIG_UNBLOCK, &signals, NULL);
-	m_server.Stop();
+   m_server.Stop();
 	return THREAD_OK;
 }
 
@@ -157,7 +152,7 @@ BOOL Initialize(void)
 
 void Shutdown(void)
 {
-	m_server.Stop();
+   m_server.Stop();
 #ifdef _WIN32
 	// Wait for Main()
 	WaitForSingleObject(m_eventMainStopped, INFINITE);
@@ -177,7 +172,7 @@ THREAD_RESULT THREAD_CALL Main(void *)
 #endif
 
 	m_server.SetDocumentRoot(m_szDocumentRoot);
-	m_server.SetPort(m_wListenPort);
+   m_server.SetPort(m_wListenPort);
 	m_server.Start();
 
 #ifdef _WIN32
@@ -205,23 +200,23 @@ THREAD_RESULT THREAD_CALL Main(void *)
 //
 
 static char m_szHelpText[] =
-"NetXMS Web Server  Version " NETXMS_VERSION_STRING "\n"
-"Copyright (c) 2006 Alex Kirhenshtein\n\n"
-"Usage:\n"
-"   nxhttpd [options]\n\n"
-"Where valid options are:\n"
-"   -c <file>  : Read configuration from given file\n"
-"   -d         : Start as daemon (service)\n"
-"   -h         : Show this help\n"
+   "NetXMS Web Server  Version " NETXMS_VERSION_STRING "\n"
+   "Copyright (c) 2006 Alex Kirhenshtein\n\n"
+   "Usage:\n"
+   "   nxhttpd [options]\n\n"
+   "Where valid options are:\n"
+   "   -c <file>  : Read configuration from given file\n"
+   "   -d         : Start as daemon (service)\n"
+   "   -h         : Show this help\n"
 #ifdef _WIN32
-"   -I         : Install service\n"
-"   -R         : Remove service\n"
-"   -s         : Start service\n"
-"   -S         : Stop service\n"
+   "   -I         : Install service\n"
+   "   -R         : Remove service\n"
+   "   -s         : Start service\n"
+   "   -S         : Stop service\n"
 #else
-"   -p <file>  : Write PID to given file\n"
+   "   -p <file>  : Write PID to given file\n"
 #endif
-"\n";
+   "\n";
 
 
 //
@@ -279,51 +274,51 @@ int main(int argc, char *argv[])
 	switch(nAction)
 	{
 		case 0:  // Start server
-			if (NxLoadConfig(g_szConfigFile, "", m_cfgTemplate, !bDaemon) == NXCFG_ERR_OK)
-			{
+         if (NxLoadConfig(g_szConfigFile, "", m_cfgTemplate, !bDaemon) == NXCFG_ERR_OK)
+         {
 #ifdef _WIN32
-				if (bDaemon)
-				{
-					InitService();
-				}
-				else
-				{
-					if (Initialize())
-					{
-						printf("Server started. Press Ctrl+C to terminate.\n");
-						Main(NULL);
-					}
-				}
+			   if (bDaemon)
+			   {
+				   InitService();
+			   }
+			   else
+			   {
+				   if (Initialize())
+               {
+                  printf("Server started. Press Ctrl+C to terminate.\n");
+					   Main(NULL);
+               }
+			   }
 #else
-				if (bDaemon)
-				{
-					if (daemon(0, 0) == -1)
-					{
-						perror("Unable to setup itself as a daemon");
-						return 2;
-					}
-				}
+			   if (bDaemon)
+			   {
+				   if (daemon(0, 0) == -1)
+				   {
+					   perror("Unable to setup itself as a daemon");
+					   return 2;
+				   }
+			   }
 
-				if (Initialize())
-				{
-					FILE *pf;
+			   if (Initialize())
+			   {
+				   FILE *pf;
 
-					pf = fopen(m_szPidFile, "w");
-					if (pf != NULL)
-					{
-						fprintf(pf, "%d", getpid());
-						fclose(pf);
-					}
-					StartMainLoop(SignalHandler, Main);
-					unlink(m_szPidFile);
-				}
+				   pf = fopen(m_szPidFile, "w");
+				   if (pf != NULL)
+				   {
+					   fprintf(pf, "%d", getpid());
+					   fclose(pf);
+				   }
+				   StartMainLoop(SignalHandler, Main);
+				   unlink(m_szPidFile);
+			   }
 #endif
-			}
-			else
-			{
-				printf("Error loading configuration file\n");
-				return 2;
-			}
+         }
+         else
+         {
+            printf("Error loading configuration file\n");
+            return 2;
+         }
 			break;
 #ifdef _WIN32
 		case 1:  // Install service
@@ -346,10 +341,3 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-
-*/

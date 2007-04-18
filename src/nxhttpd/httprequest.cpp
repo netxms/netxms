@@ -1,4 +1,27 @@
-/* $Id: httprequest.cpp,v 1.1 2007-03-21 10:15:18 alk Exp $ */
+/* 
+** NetXMS - Network Management System
+** HTTP Server
+** Copyright (C) 2006 Alex Kirhenshtein
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: httprequest.cpp
+**
+**/
+
+#pragma warning(disable: 4018)
 
 #include "nxhttpd.h"
 
@@ -24,7 +47,7 @@ bool HttpRequest::Read(SOCKET s)
 	bool ret = false;
 	time_t started;
 	char buffer[2048];
-
+	
 	time(&started);
 
 	while(ret == false && m_raw.size() < 10240)
@@ -37,7 +60,7 @@ bool HttpRequest::Read(SOCKET s)
 
 		FD_ZERO(&rdfs);
 		FD_SET(s, &rdfs);
-
+		
 		tv.tv_sec = 0;
 		tv.tv_usec = 100;
 
@@ -85,7 +108,7 @@ bool HttpRequest::IsComplete(void)
 		return false;
 	}
 
-	// we assume that EOS marker is CRLF, not LF or any mix of them
+	// we assume that eos is CRLF, not LF or any mix of them
 	if (m_raw.substr(0, 3) == "GET")
 	{
 		if (m_raw.substr(m_raw.size() - 4, 4) == "\r\n\r\n")
@@ -109,7 +132,7 @@ bool HttpRequest::IsComplete(void)
 					if (end > start)
 					{
 						if (m_raw.size() >=
-								endOfHeaders + 4 + atoi(m_raw.substr(start, end - start).c_str()))
+							endOfHeaders + 4 + atoi(m_raw.substr(start, end - start).c_str()))
 						{
 							method = METHOD_POST;
 							ret = true;
@@ -136,6 +159,7 @@ bool HttpRequest::Parse(void)
 	{
 		return false;
 	}
+
 
 	int start = m_raw.find(" ", 0);
 	int end = m_raw.find(" ", start + 1);
@@ -228,10 +252,3 @@ string HttpRequest::GetURI(void)
 {
 	return m_uri;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-
-*/

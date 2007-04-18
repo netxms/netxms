@@ -1,12 +1,6 @@
-/* $Id: httpresponse.cpp,v 1.1 2007-03-21 10:15:18 alk Exp $ */
-
 #pragma warning(disable: 4786)
 
 #include "nxhttpd.h"
-#include <libtpt/tpt.h>
-#include <iostream>
-#include <stdexcept>
-#include <sstream>
 
 using namespace std;
 
@@ -95,31 +89,31 @@ void HttpResponse::SetCode(int code)
 
 	switch (code)
 	{
-		case HTTP_OK:
-			text = "200 OK";
-			break;
-		case HTTP_MOVEDPERMANENTLY:
-			text = "301 Moved";
-			break;
-		case HTTP_FOUND:
-			text = "302 Found";
-			break;
-		case HTTP_BADREQUEST:
-			text = "400 Bad Request";
-			break;
-		case HTTP_UNAUTHORIZED:
-			text = "401 Unauthorized";
-			break;
-		case HTTP_FORBIDDEN:
-			text = "403 Forbidden";
-			break;
-		case HTTP_NOTFOUND:
-			text = "404 Not Found";
-			break;
-		default:
-			code = 500;
-			text = "500 Internal server error";
-			break;
+	case HTTP_OK:
+		text = "200 OK";
+		break;
+	case HTTP_MOVEDPERMANENTLY:
+		text = "301 Moved";
+		break;
+	case HTTP_FOUND:
+		text = "302 Found";
+		break;
+	case HTTP_BADREQUEST:
+		text = "400 Bad Request";
+		break;
+	case HTTP_UNAUTHORIZED:
+		text = "401 Unauthorized";
+		break;
+	case HTTP_FORBIDDEN:
+		text = "403 Forbidden";
+		break;
+	case HTTP_NOTFOUND:
+		text = "404 Not Found";
+		break;
+	default:
+		code = 500;
+		text = "500 Internal server error";
+		break;
 	}
 
 	m_code = code;
@@ -172,64 +166,3 @@ void HttpResponse::CleanStream(char *ptr)
 		free(ptr);
 	}
 }
-
-void HttpResponse::TptSet(string var, string value)
-{
-//	m_symbols.set(var, value);
-}
-
-void HttpResponse::TptPush(string array, string value)
-{
-//	m_symbols.push(var, value);
-}
-
-void HttpResponse::TptRender(string tplFile, string contentType)
-{
-	try
-	{
-		stringstream stream(stringstream::out);
-
-		TPT::Buffer buffer(tplFile.c_str());
-		if (buffer)
-		{
-			TPT::Parser p(buffer);
-			p.addincludepath("/home/alk/work/nms/src/console/web/templates/");
-
-			p.run(stream);
-
-			TPT::ErrorList errlist;
-
-			if (p.geterrorlist(errlist)) {
-				std::cout << "Errors!" << std::endl;
-				TPT::ErrorList::const_iterator it(errlist.begin()), end(errlist.end());
-				for (; it != end; ++it)
-					std::cout << (*it) << std::endl;
-			}
-
-			SetCode(HTTP_OK);
-			SetType(contentType);
-			SetBody(stream.str());
-		}
-		else
-		{
-			SetCode(HTTP_INTERNALSERVERERROR);
-			SetType("text/plain");
-			SetBody("Internal error (template not available)\nContact administrator.");
-		}
-	}
-	catch (const exception& e)
-	{
-		cout << "EXCETPION: " << e.what() << endl;
-	}
-	catch (...)
-	{
-		cout << "UNKNOWN EXCEPTION" << endl;
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-
-*/

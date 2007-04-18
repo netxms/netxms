@@ -1213,6 +1213,8 @@ src/nxhttpd/nxpie.cpp -text
 src/nxhttpd/nxpie.h -text
 src/nxhttpd/nxweb.cpp -text
 src/nxhttpd/nxweb.h -text
+src/nxhttpd/nxwebhandlers.cpp -text
+src/nxhttpd/nxwebhtml.cpp -text
 src/nxhttpd/static/Makefile.am -text
 src/nxhttpd/static/global.xsl -text
 src/nxhttpd/static/images/I.png -text

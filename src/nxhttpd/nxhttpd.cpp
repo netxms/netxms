@@ -1,6 +1,3 @@
-/* $Id: nxhttpd.cpp,v 1.2 2007-04-17 21:21:32 victor Exp $ */
-
-#pragma warning(disable: 4100 4511 4512 4245 4018 4663)
 
 #include "nxhttpd.h"
 
@@ -37,8 +34,6 @@ bool NxHttpd::Start(void)
 		sa.sin_family = AF_INET;
 		sa.sin_addr.s_addr = INADDR_ANY;
 		sa.sin_port = htons(m_port);
-
-		SetSocketReuseFlag(m_socket);
 
 		if (bind(m_socket, (sockaddr *)&sa, sizeof(sa)) != (-1))
 		{
@@ -255,12 +250,4 @@ string NxHttpd::FilterEnt(string in)
 	return out;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.1  2007/03/21 10:15:18  alk
-web, non working; second try;
-
-
-*/
+//////////////////////////////////////////////////////////////////////////

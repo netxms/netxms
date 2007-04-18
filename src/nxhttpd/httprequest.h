@@ -1,5 +1,3 @@
-/* $Id: httprequest.h,v 1.1 2007-03-21 10:15:18 alk Exp $ */
-
 #ifndef __HTTP_REQUEST__H__
 #define __HTTP_REQUEST__H__
 
@@ -42,10 +40,3 @@ private:
 };
 
 #endif // __HTTP_REQUEST__H__
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-
-*/

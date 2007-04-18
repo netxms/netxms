@@ -1,4 +1,4 @@
-/* $Id: nxpie.cpp,v 1.1 2007-03-21 10:15:18 alk Exp $ */
+/* $Id: nxpie.cpp,v 1.2 2007-04-18 07:12:46 victor Exp $ */
 
 #include "nxpie.h"
 
@@ -64,16 +64,16 @@ bool NxPie::build()
 	colorCount = 5;
 
 	/* excel colors
-		color[0] = gdImageColorAllocate(img, 144, 151, 255);
-		color[1] = gdImageColorAllocate(img, 144,  48,  96);
-		color[2] = gdImageColorAllocate(img, 255, 255, 192);
-		color[3] = gdImageColorAllocate(img, 207, 255, 255);
-		color[4] = gdImageColorAllocate(img,  95,   0,  95);
-		color[5] = gdImageColorAllocate(img, 255, 127, 127);
-		color[6] = gdImageColorAllocate(img, 207, 255, 255);
-		color[7] = gdImageColorAllocate(img,   0,  96, 192);
-		color[8] = gdImageColorAllocate(img, 207, 200, 255);
-		*/
+	color[0] = gdImageColorAllocate(img, 144, 151, 255);
+	color[1] = gdImageColorAllocate(img, 144,  48,  96);
+	color[2] = gdImageColorAllocate(img, 255, 255, 192);
+	color[3] = gdImageColorAllocate(img, 207, 255, 255);
+	color[4] = gdImageColorAllocate(img,  95,   0,  95);
+	color[5] = gdImageColorAllocate(img, 255, 127, 127);
+	color[6] = gdImageColorAllocate(img, 207, 255, 255);
+	color[7] = gdImageColorAllocate(img,   0,  96, 192);
+	color[8] = gdImageColorAllocate(img, 207, 200, 255);
+	*/
 
 	gdImageFill(img, 0, 0, background);
 	gdImageColorTransparent(img, background);
@@ -103,7 +103,7 @@ bool NxPie::build()
 		gdImageLine(img, centX, centY, posX, posY, black);
 		gdImageArc(img, centX, centY, d, d, (int)(arc_dec[i - 1]), (int)(arc_dec[i]), black);
 	}
-
+	
 	int currentColor = 0;
 	//int hfw = gdImageFontWidth(1);
 	//int vfw = gdImageFontHeight(1);
@@ -132,7 +132,7 @@ bool NxPie::build()
 			char s[128];
 			snprintf(s, 128, "%s (%.2lf%%)", name[i].c_str(), perc[i] * 100);
 			s[127] = 0;
-
+			
 			posX = (int)(centX + (1.1 * (d / 2) * sin(arc_rad_label)));
 			posY = (int)(centY + (1.1 * (d / 2) * cos(arc_rad_label)));
 			if ((arc_rad_label > 0.5 * PI) && (arc_rad_label < 1.5 * PI))
@@ -178,8 +178,7 @@ int NxPie::getRawImageSize(void)
 	return rawDataSize;
 }
 
-/*
-int main(int argc, char *argv[])
+/*int main(int argc, char *argv[])
 {
 	NxPie pie;
 
@@ -201,12 +200,28 @@ int main(int argc, char *argv[])
 	pie.free();
 
 	return 0;
-}
-*/
+}*/
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2006/03/01 22:06:00  alk
+unix port
+makefiles added
+
+Revision 1.2  2006/02/14 00:30:19  alk
+*) pie - titles for 0% not displayed anymore
+*) alarms - view/confirm
+*) misc changes in css - borders removed
+
+Revision 1.1  2006/02/13 23:21:30  alk
+*** empty log message ***
+
+Revision 1.1  2006/02/13 23:15:12  alk
+- login
+- logout
+- overview
+
 
 */

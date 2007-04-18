@@ -1,5 +1,3 @@
-/* $Id: httpresponse.h,v 1.1 2007-03-21 10:15:18 alk Exp $ */
-
 #ifndef __HTTP_RESPONSE__H__
 #define __HTTP_RESPONSE__H__
 
@@ -38,41 +36,27 @@ enum ResponseCode
 
 class HttpResponse
 {
-	public:
-		HttpResponse();
-		~HttpResponse();
+public:
+	HttpResponse();
+	~HttpResponse();
 
-		void SetHeader(const string, const string);
-		void SetBody(std::string, bool = false);
-		void SetBody(const char *, int, bool = false);
-		void SetType(const string);
-		void SetCode(int);
+	void SetHeader(const string, const string);
+	void SetBody(std::string, bool = false);
+	void SetBody(const char *, int, bool = false);
+	void SetType(const string);
+	void SetCode(int);
 
-		string GetCodeString(void);
+	string GetCodeString(void);
+	
+	char *BuildStream(int &);
+	void CleanStream(char *);
 
-		char *BuildStream(int &);
-		void CleanStream(char *);
-
-		// set variable
-		void TptSet(std::string, std::string);
-		// push value to array
-		void TptPush(std::string, std::string);
-		// render to response, w/ optional content-type
-		void TptRender(std::string, std::string = "text/html");
-
-	private:
-		int m_code;
-		string m_codeString;
-		map<string, string> m_headers;
-		char *m_body;
-		int m_bodyLen;
+private:
+	int m_code;
+	string m_codeString;
+	map<string, string> m_headers;
+	char *m_body;
+	int m_bodyLen;
 };
 
 #endif // __HTTP_RESPONSE__H__
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-
-*/

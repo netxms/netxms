@@ -1,8 +1,12 @@
-/* $Id: nxweb.cpp,v 1.1 2007-03-21 10:15:18 alk Exp $ */
+// NxWeb.cpp: implementation of the NxWeb class.
+//
+//////////////////////////////////////////////////////////////////////
 
-#include "nxweb.h"
+#include "NxWeb.h"
 
-#define SESSION_TIMEOUT (10 * 60)
+//////////////////////////////////////////////////////////////////////
+// Construction/Destruction
+//////////////////////////////////////////////////////////////////////
 
 NxWeb::NxWeb()
 {
@@ -16,7 +20,7 @@ NxWeb::~NxWeb()
 
 bool NxWeb::HandleRequest(HttpRequest &request, HttpResponse &response)
 {
-	// redirect to /netxms.app
+	//////////////////////////////////////////////////////////////////////////
 	if (request.GetURI() == "/")
 	{
 		response.SetCode(HTTP_FOUND);
@@ -24,43 +28,13 @@ bool NxWeb::HandleRequest(HttpRequest &request, HttpResponse &response)
 		return true;
 	}
 
+	//////////////////////////////////////////////////////////////////////////
 	if (request.GetURI() == "/netxms.app")
 	{
-		string sid;
+		string sid = "";
 		string cmd;
+		string err = "";
 
-		Session *session = NULL;
-		if (request.GetQueryParam("sid", sid))
-		{
-			session = CheckSession(sid);
-		}
-
-		if (session != NULL)
-		{
-			if (request.GetQueryParam("cmd", cmd))
-			{
-				// got command
-				if (cmd == "login")
-					;
-				else if (cmd == "objects")
-					;
-				else
-				{
-					// unknown command; show error page
-					//response.RenderTemplate("templates/error.tpt");
-				}
-			}
-			// got valid session
-			response.SetCode(HTTP_OK);
-			response.SetType("text/plain");
-			response.SetBody("Got valid session");
-		}
-		else
-		{
-			//response.RenderTemplate("templates/login.tpt");
-		}
-
-		/*
 		response.SetCode(HTTP_OK);
 		response.SetType("application/xml");
 
@@ -120,7 +94,6 @@ bool NxWeb::HandleRequest(HttpRequest &request, HttpResponse &response)
 		{
 			response.SetBody(_Login(request, err));
 		}
-		*/
 
 		return true;
 	}
@@ -159,7 +132,7 @@ bool NxWeb::HandleRequest(HttpRequest &request, HttpResponse &response)
 				break;
 			}
 		}
-
+		
 		if (count > 0)
 		{
 			// show chart
@@ -199,7 +172,7 @@ Session *NxWeb::CheckSession(string sid)
 	// expire
 	for (it = sessions.begin(); it != sessions.end(); it++)
 	{
-		if (it->second->lastSeen + (SESSION_TIMEOUT) < time(NULL))
+		if (it->second->lastSeen + 60 * 10 < time(NULL))
 		{
 			NXCDisconnect(it->second->handle);
 			delete it->second;
@@ -212,7 +185,7 @@ Session *NxWeb::CheckSession(string sid)
 			}
 		}
 	}
-
+	
 	// find
 	it = sessions.find(sid);
 
@@ -225,10 +198,3 @@ Session *NxWeb::CheckSession(string sid)
 
 	return ret;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-
-*/
