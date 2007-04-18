@@ -1,4 +1,4 @@
-/* $Id: disk.cpp,v 1.1 2005-01-17 17:14:32 alk Exp $ */
+/* $Id: disk.cpp,v 1.2 2007-04-18 20:26:29 victor Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -41,14 +41,26 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 		nRet = SYSINFO_RC_SUCCESS;
 		switch((int)pArg)
 		{
-		case DISK_FREE:
+		case DISK_AVAIL:
 			ret_uint64(pValue, (QWORD)s.f_bavail * (QWORD)s.f_bsize);
+			break;
+		case DISK_AVAIL_PERC:
+			ret_double(pValue, 100.0 * s.f_bavail / s.f_blocks);
+			break;
+		case DISK_FREE:
+			ret_uint64(pValue, (QWORD)s.f_bfree * (QWORD)s.f_bsize);
+			break;
+		case DISK_FREE_PERC:
+			ret_double(pValue, 100.0 * s.f_bfree / s.f_blocks);
 			break;
 		case DISK_TOTAL:
 			ret_uint64(pValue, (QWORD)s.f_blocks * (QWORD)s.f_bsize);
 			break;
 		case DISK_USED:
 			ret_uint64(pValue, (QWORD)(s.f_blocks - s.f_bfree) * (QWORD)s.f_bsize);
+			break;
+		case DISK_USED_PERC:
+			ret_double(pValue, 100.0 * (s.f_blocks - s.f_bfree) / s.f_blocks);
 			break;
 		default: // YIC
 			nRet = SYSINFO_RC_ERROR;
@@ -63,6 +75,9 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/01/17 17:14:32  alk
+freebsd agent, incomplete (but working)
+
 Revision 1.1  2004/10/22 22:08:34  alk
 source restructured;
 implemented:

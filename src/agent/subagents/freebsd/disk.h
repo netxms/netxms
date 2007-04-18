@@ -1,4 +1,4 @@
-/* $Id: disk.h,v 1.1 2005-01-17 17:14:32 alk Exp $ */
+/* $Id: disk.h,v 1.2 2007-04-18 20:26:29 victor Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -25,8 +25,12 @@
 
 enum
 {
+	DISK_AVAIL,
+	DISK_AVAIL_PERC,
 	DISK_FREE,
+	DISK_FREE_PERC,
 	DISK_USED,
+	DISK_USED_PERC,
 	DISK_TOTAL,
 };
 
@@ -38,6 +42,9 @@ LONG H_DiskInfo(char *, char *, char *);
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2005/01/17 17:14:32  alk
+freebsd agent, incomplete (but working)
+
 Revision 1.1  2004/10/22 22:08:34  alk
 source restructured;
 implemented:

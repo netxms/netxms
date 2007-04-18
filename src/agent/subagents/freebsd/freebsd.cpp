@@ -1,4 +1,4 @@
-/* $Id: freebsd.cpp,v 1.7 2005-09-15 21:47:02 victor Exp $ */
+/* $Id: freebsd.cpp,v 1.8 2007-04-18 20:26:29 victor Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -33,43 +33,46 @@
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { "System.CPU.Count",             H_CpuCount,        NULL },
-
+   { "Disk.Avail(*)",                H_DiskInfo,        (char *)DISK_AVAIL,
+			DCI_DT_UINT64,	"Available disk space on {instance}" },
+   { "Disk.AvailPerc(*)",            H_DiskInfo,        (char *)DISK_AVAIL_PERC,
+			DCI_DT_FLOAT,	"Percentage of available disk space on {instance}" },
    { "Disk.Free(*)",                 H_DiskInfo,        (char *)DISK_FREE,
-			DCI_DT_UINT64,	"Free disk space on *" },
+			DCI_DT_UINT64,	"Free disk space on {instance}" },
+   { "Disk.FreePerc(*)",             H_DiskInfo,        (char *)DISK_FREE_PERC,
+			DCI_DT_FLOAT,	"Percentage of free disk space on {instance}" },
    { "Disk.Total(*)",                H_DiskInfo,        (char *)DISK_TOTAL,
-			DCI_DT_UINT64,	"Total disk space on *" },
+			DCI_DT_UINT64,	"Total disk space on {instance}" },
    { "Disk.Used(*)",                 H_DiskInfo,        (char *)DISK_USED,
-			DCI_DT_UINT64,	"Used disk space on *" },
+			DCI_DT_UINT64,	"Used disk space on {instance}" },
+   { "Disk.UsedPerc(*)",             H_DiskInfo,        (char *)DISK_USED_PERC,
+			DCI_DT_FLOAT,	"Percentage of used disk space on {instance}" },
 
    { "Net.IP.Forwarding",            H_NetIpForwarding, (char *)4,
 			DCI_DT_INT,		"IP forwarding status" },
    { "Net.IP6.Forwarding",           H_NetIpForwarding, (char *)6,
 			DCI_DT_INT,		"IPv6 forwarding status" },
    { "Net.Interface.AdminStatus(*)", H_NetIfAdmStatus,  NULL,
-			DCI_DT_INT,		"Administrative status of *" },
+			DCI_DT_INT,		"Administrative status of interface {instance}" },
    { "Net.Interface.Link(*)",        H_NetIfLink,       NULL,
-			DCI_DT_INT,		"Physical link status of *" },
+			DCI_DT_INT,		"Physical link status of interface {instance}" },
 
    { "Process.Count(*)",             H_ProcessCount,    (char *)0,
-			DCI_DT_UINT,	"" },
+			DCI_DT_UINT,	"Number of {instance} processes" },
    { "System.ProcessCount",          H_ProcessCount,    (char *)1,
-			DCI_DT_UINT,	"" },
+			DCI_DT_UINT,	"Total number of processes" },
+
+   { "System.CPU.Count",             H_CpuCount,        NULL,
+			DCI_DT_INT,	"Number of CPU in the system" },
 
    { "System.CPU.LoadAvg",           H_CpuLoad,         NULL,
-			DCI_DT_FLOAT,	"" },
+			DCI_DT_FLOAT,	"Average CPU load for last minute" },
    { "System.CPU.LoadAvg5",          H_CpuLoad,         NULL,
-			DCI_DT_FLOAT,	"" },
+			DCI_DT_FLOAT,	"Average CPU load for last 5 minutes" },
    { "System.CPU.LoadAvg15",         H_CpuLoad,         NULL,
-			DCI_DT_FLOAT,	"" },
-/*   { "System.CPU.Usage",             H_CpuUsage,        NULL,
-			DCI_DT_FLOAT,	"" },
-   { "System.CPU.Usage5",            H_CpuUsage,        NULL,
-			DCI_DT_FLOAT,	"" },
-   { "System.CPU.Usage15",           H_CpuUsage,        NULL,
-			DCI_DT_FLOAT,	"" }, */
+			DCI_DT_FLOAT,	"Average CPU load for last 15 minutes" },
    { "System.Hostname",              H_Hostname,        NULL,
-			DCI_DT_FLOAT,	"" },
+			DCI_DT_FLOAT,	"Host name" },
    { "System.Memory.Physical.Free",  H_MemoryInfo,      (char *)PHYSICAL_FREE,
 			DCI_DT_UINT64,	"Free physical memory" },
    { "System.Memory.Physical.Total", H_MemoryInfo,      (char *)PHYSICAL_TOTAL,
@@ -89,7 +92,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.Memory.Virtual.Used",   H_MemoryInfo,      (char *)VIRTUAL_USED,
 			DCI_DT_UINT64,	"Used virtual memory" },
    { "System.Uname",                 H_Uname,           NULL,
-			DCI_DT_STRING,	"" },
+			DCI_DT_STRING,	"System uname" },
    { "System.Uptime",                H_Uptime,          NULL,
 			DCI_DT_UINT,	"System uptime" },
 
@@ -131,6 +134,9 @@ DECLARE_SUBAGENT_INIT(FREEBSD)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2005/09/15 21:47:02  victor
+Added macro DECLARE_SUBAGENT_INIT to simplify initialization function declaration
+
 Revision 1.6  2005/08/22 23:00:05  alk
 Net.IP.RoutingTable added
 
