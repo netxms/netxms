@@ -1,4 +1,4 @@
-/* $Id: nxagentd.cpp,v 1.86 2007-01-16 09:57:35 victor Exp $ */
+/* $Id: nxagentd.cpp,v 1.87 2007-04-18 21:13:40 alk Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -392,30 +392,16 @@ static void WriteSubAgentMsg(int iLevel, TCHAR *pszMsg)
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 
-void SignalHandlerStub(int nSignal)
-{
-	// should be unused, but JIC...
-	if (nSignal == SIGCHLD)
-	{
-		while (waitpid(-1, NULL, WNOHANG) > 0)
-			;
-	}
-}
-
 static THREAD_RESULT THREAD_CALL SignalHandler(void *pArg)
 {
 	sigset_t signals;
 	int nSignal;
-
-	// default for SIGCHLD: ignore
-	signal(SIGCHLD, &SignalHandlerStub);
 
 	sigemptyset(&signals);
 	sigaddset(&signals, SIGTERM);
 	sigaddset(&signals, SIGINT);
 	sigaddset(&signals, SIGPIPE);
 	sigaddset(&signals, SIGSEGV);
-	sigaddset(&signals, SIGCHLD);
 	sigaddset(&signals, SIGHUP);
 	sigaddset(&signals, SIGUSR1);
 	sigaddset(&signals, SIGUSR2);
@@ -433,10 +419,6 @@ static THREAD_RESULT THREAD_CALL SignalHandler(void *pArg)
 					goto stop_handler;
 				case SIGSEGV:
 					abort();
-					break;
-				case SIGCHLD:
-					while (waitpid(-1, NULL, WNOHANG) > 0)
-						;
 					break;
 				default:
 					break;

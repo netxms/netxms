@@ -1,3 +1,5 @@
+/* $Id: exec.cpp,v 1.16 2007-04-18 21:13:40 alk Exp $ */
+
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -33,6 +35,98 @@
 // Execute external command
 //
 
+#ifndef _WIN32 // unix-only hack
+void *Waiter (void *arg)
+{
+	pid_t pid = *((pid_t *)arg);
+	waitpid(pid, NULL, 0);
+	free(arg);
+}
+
+void *Worker (void *arg)
+{ 
+	char *cmd = (char *)arg;
+	if (cmd == NULL)
+	{
+		return NULL;
+	}
+
+	char *pCmd[128];
+	char *pTmp = cmd;
+	int state = 0;
+	int nCount = 0;
+
+	pCmd[nCount++] = pTmp;
+	int nLen = strlen(pTmp);
+	for (int i = 0; i < nLen; i++)
+	{
+		switch(pTmp[i])
+		{
+			case ' ':
+				if (state == 0)
+				{
+					pTmp[i] = 0;
+					if (pTmp[i + 1] != 0)
+					{
+						pCmd[nCount++] = pTmp + i + 1;
+					}
+				}
+				break;
+			case '"':
+				state == 0 ? state++ : state--;
+
+				memmove(pTmp + i, pTmp + i + 1, nLen - i);
+				i--;
+				break;
+			case '\\':
+				if (pTmp[i+1] == '"')
+				{
+					memmove(pTmp + i, pTmp + i + 1, nLen - i);
+				}
+				break;
+			default:
+				break;
+		}
+	}
+	pCmd[nCount] = NULL;
+
+	// DO EXEC
+	pid_t p;
+	p = fork();
+	switch(p)
+	{
+		case -1: // error
+			break;
+		case 0: // child
+			{
+				int sd = open("/dev/null", O_RDWR);
+				if (sd == -1)
+				{
+					sd = open("/dev/null", O_RDONLY);
+				}
+				close(0); close(1); close(2);
+				dup2(sd, 0); dup2(sd, 1); dup2(sd, 2);
+				close(sd);
+				execv(pCmd[0], pCmd);
+				_exit(127);
+			}
+			break;
+		default: // parent
+			{
+				pid_t *pp = (pid_t *)malloc(sizeof(pid_t));
+				*pp = p;
+				ThreadCreate(Waiter, 0, (void *)pp);
+			}
+			break;
+	}
+
+	free(cmd);
+
+	return NULL;
+}
+#endif
+
+
 DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
 {
    char *pszCmdLine, *sptr;
@@ -45,39 +139,39 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
    {
       dwSize = (DWORD)strlen(pszCommand) + 1;
       pszCmdLine = (char *)malloc(dwSize);
-      for(sptr = pszCommand, i = 0; *sptr != 0; sptr++)
-         if (*sptr == '$')
-         {
-            sptr++;
-            if (*sptr == 0)
-               break;   // Single $ character at the end of line
-            if ((*sptr >= '1') && (*sptr <= '9'))
-            {
-               DWORD dwArg = *sptr - '1';
+		for(sptr = pszCommand, i = 0; *sptr != 0; sptr++)
+			if (*sptr == '$')
+			{
+				sptr++;
+				if (*sptr == 0)
+					break;   // Single $ character at the end of line
+				if ((*sptr >= '1') && (*sptr <= '9'))
+				{
+					DWORD dwArg = *sptr - '1';
 
-               if (dwArg < pArgs->dwNumStrings)
-               {
-                  int iArgLength;
+					if (dwArg < pArgs->dwNumStrings)
+					{
+						int iArgLength;
 
-                  // Extend resulting line
-                  iArgLength = (int)strlen(pArgs->ppStringList[dwArg]);
-                  dwSize += iArgLength;
-                  pszCmdLine = (char *)realloc(pszCmdLine, dwSize);
-                  strcpy(&pszCmdLine[i], pArgs->ppStringList[dwArg]);
-                  i += iArgLength;
-               }
-            }
-            else
-            {
-               pszCmdLine[i++] = *sptr;
-            }
-         }
-         else
-         {
-            pszCmdLine[i++] = *sptr;
-         }
-      pszCmdLine[i] = 0;
-   }
+						// Extend resulting line
+						iArgLength = (int)strlen(pArgs->ppStringList[dwArg]);
+						dwSize += iArgLength;
+						pszCmdLine = (char *)realloc(pszCmdLine, dwSize);
+						strcpy(&pszCmdLine[i], pArgs->ppStringList[dwArg]);
+						i += iArgLength;
+					}
+				}
+				else
+				{
+					pszCmdLine[i++] = *sptr;
+				}
+			}
+			else
+			{
+				pszCmdLine[i++] = *sptr;
+			}
+		pszCmdLine[i] = 0;
+	}
    else
    {
       pszCmdLine = pszCommand;
@@ -112,81 +206,9 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
    else
       dwRetCode = ERR_EXEC_FAILED;
 #else
-   dwRetCode = ERR_EXEC_FAILED;
+	if (!ThreadCreate(Worker, 0, (void *)strdup(pszCmdLine)))
 	{
-		int nPid;
-		char *pCmd[128];
-		int i;
-		char *pTmp;
-		struct stat st;
-		int state = 0;
-		int nCount = 0;
-
-		pTmp = pszCmdLine;
-		pCmd[nCount++] = pTmp;
-		int nLen = strlen(pTmp);
-		for (i = 0; i < nLen; i++)
-		{
-			switch(pTmp[i])
-			{
-				case ' ':
-					if (state == 0)
-					{
-						pTmp[i] = 0;
-						if (pTmp[i + 1] != 0)
-						{
-							pCmd[nCount++] = pTmp + i + 1;
-						}
-					}
-					break;
-				case '"':
-					state == 0 ? state++ : state--;
-
-					memmove(pTmp + i, pTmp + i + 1, nLen - i);
-					i--;
-					break;
-				case '\\':
-					if (pTmp[i+1] == '"')
-					{
-						memmove(pTmp + i, pTmp + i + 1, nLen - i);
-					}
-					break;
-				default:
-					break;
-			}
-		}
-		pCmd[nCount] = NULL;
-
-		if (stat(pCmd[0], &st) == 0 && st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
-		{
-			switch ((nPid = fork()))
-			{
-				case -1:
-					perror("fork()");
-					break;
-				case 0: // child
-					{
-						int sd = open("/dev/null", O_RDWR);
-						if (sd == -1)
-							sd = open("/dev/null", O_RDONLY);
-						close(0);
-						close(1);
-						close(2);
-						dup2(sd, 0);
-						dup2(sd, 1);
-						dup2(sd, 2);
-						close(sd);
-						execv(pCmd[0], pCmd);
-						// should not be reached
-						//_exit((errno == EACCES || errno == ENOEXEC) ? 126 : 127);
-						_exit(127);
-					}
-					break;
-				default: // parent
-					dwRetCode = ERR_SUCCESS;
-					break;
-			}
-		}
+   	dwRetCode = ERR_EXEC_FAILED;
 	}
 #endif
 
@@ -424,3 +446,10 @@ DWORD ExecuteShellCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
 
    return dwRetCode;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+
+$Log: not supported by cvs2svn $
+
+*/
