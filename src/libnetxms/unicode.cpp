@@ -1,7 +1,7 @@
-/* $Id: unicode.cpp,v 1.22 2007-03-23 15:59:05 victor Exp $ */
+/* $Id: unicode.cpp,v 1.23 2007-04-18 07:47:31 victor Exp $ */
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -246,13 +246,13 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, char 
 				nRet = 0;
 			}
 		}
-		if (outbytes > 2 && *pWideCharStr == 0xFEFF)
+		if (((char *)outbuf - (char *)pWideCharStr > sizeof(WCHAR)) && (*pWideCharStr == 0xFEFF))
 		{
 			// Remove UNICODE byte order indicator if presented
-			memmove(pWideCharStr, &pWideCharStr[1], (char *)outbuf - (char *)pWideCharStr - 1);
-			outbuf--;
+			memmove(pWideCharStr, &pWideCharStr[1], (char *)outbuf - (char *)pWideCharStr - sizeof(WCHAR));
+			outbuf -= sizeof(WCHAR);
 		}
-		if ((cchByteChar == -1) && (outbytes > 1))
+		if ((cchByteChar == -1) && (outbytes >= sizeof(WCHAR)))
 		{
 			*((WCHAR *)outbuf) = 0;
 		}
