@@ -1,4 +1,4 @@
-/* $Id: microdowell.cpp,v 1.3 2007-04-17 19:04:54 alk Exp $ */
+/* $Id: microdowell.cpp,v 1.4 2007-04-18 20:55:08 victor Exp $ */
 
 /*
 ** NetXMS UPS management subagent
@@ -83,7 +83,6 @@ BOOL MicrodowellInterface::SendCmd(char *cmd, int cmdLen, char *ret, int *retLen
 
 BOOL MicrodowellInterface::Open(void)
 {
-   char szLine[256];
    BOOL bRet = FALSE;
 
    if (!SerialInterface::Open())
@@ -99,7 +98,7 @@ BOOL MicrodowellInterface::Open(void)
 		buff[11] = 0;
 		if (buff[3] != 'E' || buff[4] != 'N' || buff[5] != 'T')
 		{
-			printf("Unknown Microdowell UPS model on port %s (%s)\n", m_pszDevice, buff);
+			NxWriteAgentLog(EVENTLOG_WARNING_TYPE, "Unknown Microdowell UPS model on port %s (%s)\n", m_pszDevice, buff);
 		}
 		else
 		{
@@ -164,7 +163,7 @@ void MicrodowellInterface::QueryFirmwareVersion(void)
 {
 	UPS_PARAMETER *p = &m_paramList[UPS_PARAM_FIRMWARE];
 
-	p->dwFlags != UPF_NOT_SUPPORTED;
+	p->dwFlags |= UPF_NOT_SUPPORTED;
 }
 
 
@@ -441,6 +440,9 @@ void MicrodowellInterface::QueryOnlineStatus(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2007/04/17 19:04:54  alk
+microdowell fixed(?). should test on a real hardware
+
 Revision 1.2  2006/12/09 21:02:11  victor
 New configure works on Gentoo Linux
 
