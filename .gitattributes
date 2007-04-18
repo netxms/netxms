@@ -1233,6 +1233,7 @@ src/nxhttpd/static/images/ack.png -text
 src/nxhttpd/static/images/blank.png -text
 src/nxhttpd/static/images/file.png -text
 src/nxhttpd/static/images/foldericon.png -text
+src/nxhttpd/static/images/login.jpg -text
 src/nxhttpd/static/images/login.png -text
 src/nxhttpd/static/images/login_small.png -text
 src/nxhttpd/static/images/menu_background.png -text
