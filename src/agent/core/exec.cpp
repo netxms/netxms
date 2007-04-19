@@ -1,4 +1,4 @@
-/* $Id: exec.cpp,v 1.18 2007-04-19 05:38:21 victor Exp $ */
+/* $Id: exec.cpp,v 1.19 2007-04-19 05:46:53 victor Exp $ */
 
 /* 
 ** NetXMS multiplatform core agent
@@ -354,7 +354,7 @@ LONG H_ExternalParameter(char *pszCmd, char *pszArg, char *pValue)
 				char *pTmp;
 				int nRet;
 
-				nRet = fread(pValue, 1, MAX_RESULT_LENGTH - 1, hPipe);
+				nRet = (int)fread(pValue, 1, MAX_RESULT_LENGTH - 1, hPipe);
 				fclose(hPipe);
 				if (nRet > 0)
 				{
@@ -460,6 +460,9 @@ DWORD ExecuteShellCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2007/04/19 05:38:21  victor
+Added error handling for failed external parameters
+
 Revision 1.17  2007/04/19 05:24:25  victor
 Minor changes
 
