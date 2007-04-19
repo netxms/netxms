@@ -1,4 +1,4 @@
-/* $Id: exec.cpp,v 1.17 2007-04-19 05:24:25 victor Exp $ */
+/* $Id: exec.cpp,v 1.18 2007-04-19 05:38:21 victor Exp $ */
 
 /* 
 ** NetXMS multiplatform core agent
@@ -352,20 +352,28 @@ LONG H_ExternalParameter(char *pszCmd, char *pszArg, char *pValue)
 			if ((hPipe = popen(pszCmdLine, "r")) != NULL)
 			{
 				char *pTmp;
+				int nRet;
 
-				fread(pValue, 1, MAX_RESULT_LENGTH - 1, hPipe);
+				nRet = fread(pValue, 1, MAX_RESULT_LENGTH - 1, hPipe);
 				fclose(hPipe);
-				pValue[MAX_RESULT_LENGTH - 1] = 0;
-				if ((pTmp = strchr(pValue, '\n')) != NULL)
+				if (nRet > 0)
 				{
-					*pTmp = 0;
+					pValue[MAX_RESULT_LENGTH - 1] = 0;
+					if ((pTmp = strchr(pValue, '\n')) != NULL)
+					{
+						*pTmp = 0;
+					}
+					iStatus = SYSINFO_RC_SUCCESS;
 				}
-				iStatus = SYSINFO_RC_SUCCESS;
+				else
+				{
+					iStatus = SYSINFO_RC_ERROR;
+				}
 			}
 			else
 			{
 				WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se",
-						pszCmdLine, errno);
+				         pszCmdLine, errno);
 				iStatus = SYSINFO_RC_ERROR;
 			}
 		}
@@ -452,6 +460,9 @@ DWORD ExecuteShellCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2007/04/19 05:24:25  victor
+Minor changes
+
 Revision 1.16  2007/04/18 21:13:40  alk
 exec scheme changed
 
