@@ -1,4 +1,4 @@
-/* $Id: exec.cpp,v 1.16 2007-04-18 21:13:40 alk Exp $ */
+/* $Id: exec.cpp,v 1.17 2007-04-19 05:24:25 victor Exp $ */
 
 /* 
 ** NetXMS multiplatform core agent
@@ -36,19 +36,20 @@
 //
 
 #ifndef _WIN32 // unix-only hack
-void *Waiter (void *arg)
+static THREAD_RESULT THREAD_CALL Waiter(void *arg)
 {
 	pid_t pid = *((pid_t *)arg);
 	waitpid(pid, NULL, 0);
 	free(arg);
+	return THREAD_OK;
 }
 
-void *Worker (void *arg)
+static THREAD_RESULT THREAD_CALL Worker(void *arg)
 { 
 	char *cmd = (char *)arg;
 	if (cmd == NULL)
 	{
-		return NULL;
+		return THREAD_OK;
 	}
 
 	char *pCmd[128];
@@ -122,7 +123,7 @@ void *Worker (void *arg)
 
 	free(cmd);
 
-	return NULL;
+	return THREAD_OK;
 }
 #endif
 
@@ -451,5 +452,8 @@ DWORD ExecuteShellCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2007/04/18 21:13:40  alk
+exec scheme changed
+
 
 */
