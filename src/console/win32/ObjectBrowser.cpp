@@ -108,6 +108,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_VIEW_HIDEUNMANAGED, OnUpdateObjectViewHideunmanaged)
 	ON_COMMAND(ID_OBJECT_SETCHILDMGMT, OnObjectSetchildmgmt)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_SETCHILDMGMT, OnUpdateObjectSetchildmgmt)
+	ON_COMMAND(ID_OBJECT_VIEW_FOLLOWOBJECTUPDATES, OnObjectViewFollowobjectupdates)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_VIEW_FOLLOWOBJECTUPDATES, OnUpdateObjectViewFollowobjectupdates)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, ID_TREE_CTRL, OnTreeViewSelChange)
    ON_NOTIFY(TVN_GETDISPINFO, ID_TREE_CTRL, OnTreeViewGetDispInfo)
@@ -1506,6 +1508,19 @@ void CObjectBrowser::OnObjectViewHideunmanaged()
 void CObjectBrowser::OnUpdateObjectViewHideunmanaged(CCmdUI* pCmdUI) 
 {
 	pCmdUI->SetCheck(m_dwFlags & HIDE_UNMANAGED_OBJECTS);
+}
+
+void CObjectBrowser::OnObjectViewFollowobjectupdates() 
+{
+	if (m_dwFlags & FOLLOW_OBJECT_UPDATES)
+		m_dwFlags &= ~FOLLOW_OBJECT_UPDATES;
+	else
+		m_dwFlags |= FOLLOW_OBJECT_UPDATES;
+}
+
+void CObjectBrowser::OnUpdateObjectViewFollowobjectupdates(CCmdUI* pCmdUI) 
+{
+	pCmdUI->SetCheck(m_dwFlags & FOLLOW_OBJECT_UPDATES);
 }
 
 

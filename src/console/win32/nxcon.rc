@@ -249,6 +249,8 @@ BEGIN
             MENUITEM "&Hide unmanaged leaf objects", 
                                                     ID_OBJECT_VIEW_HIDEUNMANAGED
 
+            MENUITEM "&Follow object updates",      ID_OBJECT_VIEW_FOLLOWOBJECTUPDATES
+
         END
         MENUITEM SEPARATOR
         MENUITEM "&Find...\tCtrl+F",            ID_OBJECT_FIND
@@ -635,6 +637,8 @@ BEGIN
 
             MENUITEM "&Hide unmanaged leaf objects", 
                                                     ID_OBJECT_VIEW_HIDEUNMANAGED
+
+            MENUITEM "&Follow object updates",      ID_OBJECT_VIEW_FOLLOWOBJECTUPDATES
 
         END
         MENUITEM SEPARATOR

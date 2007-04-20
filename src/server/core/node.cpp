@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.178 2007-04-13 21:43:37 victor Exp $ */
+/* $Id: node.cpp,v 1.179 2007-04-20 11:44:37 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -2472,11 +2472,13 @@ DWORD Node::CallSnmpEnumerate(char *pszRootOid,
        (!(m_dwDynamicFlags & NDF_UNREACHABLE)))
 	{
 		SNMP_Transport *pTransport;
+		DWORD dwResult;
 
 		pTransport = CreateSNMPTransport();
-      return SnmpEnumerate(m_iSNMPVersion, pTransport,
-                           m_szCommunityString, pszRootOid, pHandler, pArg, FALSE);
+      dwResult = SnmpEnumerate(m_iSNMPVersion, pTransport,
+                               m_szCommunityString, pszRootOid, pHandler, pArg, FALSE);
 		delete pTransport;
+		return dwResult;
 	}
    else
 	{

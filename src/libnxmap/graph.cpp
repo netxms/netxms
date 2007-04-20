@@ -190,11 +190,13 @@ void nxGraph::NormalizeVertexLinks(nxVertex *pRoot)
          m_ppVertexList[i]->UnlinkChild(pRoot);
          pRoot->LinkChild(m_ppVertexList[i]);
       }
-      m_ppVertexList[i]->SetAsProcessed();
    }
 
    for(i = 0; i < pRoot->GetNumChilds(); i++)
+	{
+		pRoot->GetChild(i)->SetAsProcessed();
       NormalizeVertexLinks(pRoot->GetChild(i));
+	}
 }
 
 
