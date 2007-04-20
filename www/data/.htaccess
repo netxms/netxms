@@ -1,1 +1,8 @@
-Redirect /wiki/ http://wiki.netxms.org/wiki/
+Redirect 301 /wiki http://wiki.netxms.org/wiki
+
+RewriteEngine on
+RewriteCond %{http_host} ^netxms.org [nc]
+RewriteRule ^(.*)$ http://www.netxms.org/$1 [r=301,nc]
+
+RewriteCond %{http_host} ^netxms.com [nc]
+RewriteRule ^(.*)$ http://www.netxms.com/$1 [r=301,nc]
