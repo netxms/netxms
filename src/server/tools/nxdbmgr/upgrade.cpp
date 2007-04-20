@@ -138,7 +138,7 @@ static BOOL H_UpgradeFromV60(void)
       if (!g_bIgnoreErrors)
          return FALSE;
 
-   if (!CreateConfigParam(_T("TopologyDiscoveryRadius"), _T("7"), 1, 0))
+   if (!CreateConfigParam(_T("TopologyDiscoveryRadius"), _T("3"), 1, 0))
       if (!g_bIgnoreErrors)
          return FALSE;
 
