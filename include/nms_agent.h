@@ -32,14 +32,14 @@
 //
 
 #if defined(_STATIC_AGENT) || defined(_NETWARE)
-#define DECLARE_SUBAGENT_INIT(name) extern "C" BOOL NxSubAgentInit_##name(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
+#define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" BOOL NxSubAgentRegister_##name(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
 #else
 #ifdef _WIN32
 #define DECLSPEC_EXPORT __declspec(dllexport) __cdecl
 #else
 #define DECLSPEC_EXPORT
 #endif
-#define DECLARE_SUBAGENT_INIT(name) extern "C" BOOL DECLSPEC_EXPORT NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
+#define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" BOOL DECLSPEC_EXPORT NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
 #endif
 
 
@@ -160,7 +160,7 @@ typedef struct
 // Subagent initialization structure
 //
 
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((DWORD)0xAD000204)
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((DWORD)0x20070424)
 
 class CSCPMessage;
 
@@ -169,7 +169,8 @@ typedef struct
    DWORD dwMagic;    // Magic number to check if subagent uses correct version of this structure
    TCHAR szName[MAX_SUBAGENT_NAME];
    TCHAR szVersion[32];
-   void (* pUnloadHandler)(void);   // Called at subagent unload. Can be NULL.
+	BOOL (* pInit)(TCHAR *);   // Called to initialize subagent. Can be NULL.
+   void (* pShutdown)(void);  // Called at subagent unload. Can be NULL.
    BOOL (* pCommandHandler)(DWORD dwCommand, CSCPMessage *pRequest,
                             CSCPMessage *pResponse);
    DWORD dwNumParameters;

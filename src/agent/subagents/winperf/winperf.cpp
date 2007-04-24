@@ -337,10 +337,23 @@ static LONG H_CounterAlias(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 
 
 //
+// Initialize subagent
+//
+
+static BOOL SubAgentInit(TCHAR *pszConfigFile)
+{
+   // Create shutdown condition object
+   g_hCondShutdown = CreateEvent(NULL, TRUE, FALSE, NULL);
+   StartCollectorThreads();
+	return TRUE;
+}
+
+
+//
 // Handler for subagent unload
 //
 
-static void OnUnload(void)
+static void SubAgentShutdown(void)
 {
    if (g_hCondShutdown != NULL)
       SetEvent(g_hCondShutdown);
@@ -373,7 +386,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("WinPerf"), _T(NETXMS_VERSION_STRING) _T(DEBUG_SUFFIX),
-   OnUnload, NULL,      // handlers
+   SubAgentInit, SubAgentShutdown, NULL,      // handlers
    0, NULL,             // parameters
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
 	m_enums,
@@ -465,9 +478,12 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
 //
 
 extern "C" BOOL __declspec(dllexport) __cdecl 
-   NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
+   NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
 {
    DWORD dwResult;
+
+	if (m_info.pParamList != NULL)
+		return FALSE;	// Most likely another instance of WINPERF subagent already loaded
 
    // Init parameters list
    m_info.dwNumParameters = sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM);
@@ -498,11 +514,6 @@ extern "C" BOOL __declspec(dllexport) __cdecl
 
       if (m_dwFlags & WPF_ENABLE_DEFAULT_COUNTERS)
          AddPredefinedCounters();
-
-      // Create shitdown condition object
-      g_hCondShutdown = CreateEvent(NULL, TRUE, FALSE, NULL);
-
-      StartCollectorThreads();
    }
    else
    {
@@ -519,5 +530,7 @@ extern "C" BOOL __declspec(dllexport) __cdecl
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
    return TRUE;
 }

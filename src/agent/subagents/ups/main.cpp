@@ -102,23 +102,6 @@ static LONG H_DeviceList(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValu
 
 
 //
-// Called by master agent at unload
-//
-
-static void UnloadHandler(void)
-{
-   int i;
-
-   // Close all devices
-   for(i = 0; i < MAX_UPS_DEVICES; i++)
-      if (m_deviceInfo[i] != NULL)
-      {
-         delete_and_null(m_deviceInfo[i]);
-      }
-}
-
-
-//
 // Add device from configuration file parameter
 // Parameter value should be <device_id>:<port>:<protocol>
 //
@@ -266,6 +249,84 @@ static BOOL AddDeviceFromConfig(TCHAR *pszStr)
 
 
 //
+// Configuration file template
+//
+
+static TCHAR *m_pszDeviceList = NULL;
+static NX_CFG_TEMPLATE cfgTemplate[] =
+{
+   { _T("Device"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_pszDeviceList },
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+};
+
+
+//
+// Subagent initialization
+//
+
+static BOOL SubAgentInit(TCHAR *pszConfigFile)
+{
+   DWORD i, dwResult;
+
+   memset(m_deviceInfo, 0, sizeof(UPSInterface *) * MAX_UPS_DEVICES);
+
+   // Load configuration
+   dwResult = NxLoadConfig(pszConfigFile, _T("UPS"), cfgTemplate, FALSE);
+   if (dwResult == NXCFG_ERR_OK)
+   {
+      TCHAR *pItem, *pEnd;
+
+      // Parse device list
+      if (m_pszDeviceList != NULL)
+      {
+         for(pItem = m_pszDeviceList; *pItem != 0; pItem = pEnd + 1)
+         {
+            pEnd = _tcschr(pItem, _T('\n'));
+            if (pEnd != NULL)
+               *pEnd = 0;
+            StrStrip(pItem);
+            if (!AddDeviceFromConfig(pItem))
+               NxWriteAgentLog(EVENTLOG_WARNING_TYPE,
+                               _T("Unable to add UPS device from configuration file. ")
+                               _T("Original configuration record: %s"), pItem);
+         }
+         free(m_pszDeviceList);
+
+         // Start communicating with configured devices
+         for(i = 0; i < MAX_UPS_DEVICES; i++)
+         {
+            if (m_deviceInfo[i] != NULL)
+               m_deviceInfo[i]->StartCommunication();
+         }
+      }
+   }
+   else
+   {
+      safe_free(m_pszDeviceList);
+   }
+
+   return dwResult == NXCFG_ERR_OK;
+}
+
+
+//
+// Called by master agent at unload
+//
+
+static void SubAgentShutdown(void)
+{
+   int i;
+
+   // Close all devices
+   for(i = 0; i < MAX_UPS_DEVICES; i++)
+      if (m_deviceInfo[i] != NULL)
+      {
+         delete_and_null(m_deviceInfo[i]);
+      }
+}
+
+
+//
 // Subagent information
 //
 
@@ -355,7 +416,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("UPS"), _T(NETXMS_VERSION_STRING),
-   UnloadHandler, NULL,
+   SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
@@ -365,64 +426,13 @@ static NETXMS_SUBAGENT_INFO m_info =
 
 
 //
-// Configuration file template
-//
-
-static TCHAR *m_pszDeviceList = NULL;
-static NX_CFG_TEMPLATE cfgTemplate[] =
-{
-   { _T("Device"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_pszDeviceList },
-   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
-};
-
-
-//
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_INIT(UPS)
+DECLARE_SUBAGENT_ENTRY_POINT(UPS)
 {
-   DWORD i, dwResult;
-
-   memset(m_deviceInfo, 0, sizeof(UPSInterface *) * MAX_UPS_DEVICES);
-
-   // Load configuration
-   dwResult = NxLoadConfig(pszConfigFile, _T("UPS"), cfgTemplate, FALSE);
-   if (dwResult == NXCFG_ERR_OK)
-   {
-      TCHAR *pItem, *pEnd;
-
-      // Parse device list
-      if (m_pszDeviceList != NULL)
-      {
-         for(pItem = m_pszDeviceList; *pItem != 0; pItem = pEnd + 1)
-         {
-            pEnd = _tcschr(pItem, _T('\n'));
-            if (pEnd != NULL)
-               *pEnd = 0;
-            StrStrip(pItem);
-            if (!AddDeviceFromConfig(pItem))
-               NxWriteAgentLog(EVENTLOG_WARNING_TYPE,
-                               _T("Unable to add UPS device from configuration file. ")
-                               _T("Original configuration record: %s"), pItem);
-         }
-         free(m_pszDeviceList);
-
-         // Start communicating with configured devices
-         for(i = 0; i < MAX_UPS_DEVICES; i++)
-         {
-            if (m_deviceInfo[i] != NULL)
-               m_deviceInfo[i]->StartCommunication();
-         }
-      }
-   }
-   else
-   {
-      safe_free(m_pszDeviceList);
-   }
-
    *ppInfo = &m_info;
-   return dwResult == NXCFG_ERR_OK;
+   return TRUE;
 }
 
 

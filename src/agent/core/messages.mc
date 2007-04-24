@@ -212,4 +212,10 @@ Language=English
 Debug: {%1} %2
 .
 
+MessageId=
+SymbolicName=MSG_SUBAGENT_REGISTRATION_FAILED
+Language=English
+Registration of subagent "%1" failed
+.
+
 ;#endif

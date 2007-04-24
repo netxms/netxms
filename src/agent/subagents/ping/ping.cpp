@@ -200,7 +200,7 @@ static LONG H_TargetList(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValu
 // Called by master agent at unload
 //
 
-static void UnloadHandler(void)
+static void SubagentShutdown(void)
 {
    DWORD i;
 
@@ -274,34 +274,6 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 
 
 //
-// Subagent information
-//
-
-static NETXMS_SUBAGENT_PARAM m_parameters[] =
-{
-   { _T("Icmp.AvgPingTime(*)"), H_PollResult, _T("A"), DCI_DT_UINT, _T("Average response time of ICMP ping to {instance} for last minute") },
-   { _T("Icmp.LastPingTime(*)"), H_PollResult, _T("L"), DCI_DT_UINT, _T("Response time of last ICMP ping to {instance}") },
-   { _T("Icmp.Ping(*)"), H_IcmpPing, NULL, DCI_DT_UINT, _T("ICMP ping response time for {instance}") }
-};
-static NETXMS_SUBAGENT_ENUM m_enums[] =
-{
-   { _T("Icmp.TargetList"), H_TargetList, NULL }
-};
-
-static NETXMS_SUBAGENT_INFO m_info =
-{
-   NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("PING"), _T(NETXMS_VERSION_STRING),
-   UnloadHandler, NULL,
-	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
-	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
-	m_enums,
-   0, NULL
-};
-
-
-//
 // Configuration file template
 //
 
@@ -317,10 +289,10 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
 
 
 //
-// Entry point for NetXMS agent
+// Subagent initialization
 //
 
-DECLARE_SUBAGENT_INIT(PING)
+static BOOL SubagentInit(TCHAR *pszConfigFile)
 {
    DWORD i, dwResult;
 
@@ -362,8 +334,46 @@ DECLARE_SUBAGENT_INIT(PING)
       safe_free(m_pszTargetList);
    }
 
-   *ppInfo = &m_info;
    return dwResult == NXCFG_ERR_OK;
+}
+
+
+//
+// Subagent information
+//
+
+static NETXMS_SUBAGENT_PARAM m_parameters[] =
+{
+   { _T("Icmp.AvgPingTime(*)"), H_PollResult, _T("A"), DCI_DT_UINT, _T("Average response time of ICMP ping to {instance} for last minute") },
+   { _T("Icmp.LastPingTime(*)"), H_PollResult, _T("L"), DCI_DT_UINT, _T("Response time of last ICMP ping to {instance}") },
+   { _T("Icmp.Ping(*)"), H_IcmpPing, NULL, DCI_DT_UINT, _T("ICMP ping response time for {instance}") }
+};
+static NETXMS_SUBAGENT_ENUM m_enums[] =
+{
+   { _T("Icmp.TargetList"), H_TargetList, NULL }
+};
+
+static NETXMS_SUBAGENT_INFO m_info =
+{
+   NETXMS_SUBAGENT_INFO_MAGIC,
+	_T("PING"), _T(NETXMS_VERSION_STRING),
+   SubagentInit, SubagentShutdown, NULL,
+	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
+	m_parameters,
+	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
+	m_enums,
+   0, NULL
+};
+
+
+//
+// Entry point for NetXMS agent
+//
+
+DECLARE_SUBAGENT_ENTRY_POINT(PING)
+{
+   *ppInfo = &m_info;
+   return TRUE;
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: logscan.cpp,v 1.4 2006-03-09 15:18:49 alk Exp $ */
+/* $Id: logscan.cpp,v 1.5 2007-04-24 18:22:11 victor Exp $ */
 /*
 ** NetXMS LogScan subagent
 ** Copyright (C) 2006 Alex Kirhenshtein
@@ -23,12 +23,6 @@
 
 #include "logscan.h"
 
-#ifdef _WIN32
-#define LOGSCAN_EXPORTABLE __declspec(dllexport) __cdecl
-#else
-#define LOGSCAN_EXPORTABLE
-#endif
-
 using namespace std;
 
 
@@ -40,21 +34,37 @@ typedef map<string, long> tLocations;
 //
 // static vars
 //
+
 static tLocations m_locations;
 static MUTEX m_locationsMutex;
 
 //
 // Forward declarations
 //
+
 LONG H_GetString(char *, char *, char *);
+
+
+//
+// initialization callback
+//
+
+static BOOL SubAgentInit(TCHAR *pszConfigFile)
+{
+	m_locationsMutex = MutexCreate();
+	return TRUE;
+}
+
 
 //
 // Cleanup callback
 //
-static void Cleanup(void)
+
+static void SubAgentShutdown(void)
 {
 	MutexDestroy(m_locationsMutex);
 }
+
 
 //
 // Subagent information
@@ -68,10 +78,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
-	"logscan",
-	NETXMS_VERSION_STRING,
-	&Cleanup, // unload handler
-	NULL, // command handler
+	"LOGSCAN", NETXMS_VERSION_STRING,
+	SubAgentInit, SubAgentShutdown, NULL,  // Handlers
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	0, //sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
@@ -83,12 +91,9 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_INIT(PORTCHECK)
+DECLARE_SUBAGENT_ENTRY_POINT(LOGSCAN)
 {
    *ppInfo = &m_info;
-
-	m_locationsMutex = MutexCreate();
-
    return TRUE;
 }
 
@@ -176,6 +181,9 @@ LONG H_GetString(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/03/09 15:18:49  alk
+lineends are removed before sending responce
+
 Revision 1.3  2006/03/09 12:25:26  victor
 Windows port
 

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: subagent.cpp
+** File: subagent.cpp
 **
 **/
 
@@ -42,13 +42,13 @@ static SUBAGENT *m_pSubAgentList = NULL;
 //
 
 BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
-                  BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, TCHAR *),
+                  BOOL (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, TCHAR *),
                   TCHAR *pszEntryPoint)
 {
    NETXMS_SUBAGENT_INFO *pInfo;
-   BOOL bSuccess = FALSE;
+   BOOL bSuccess = FALSE, bInitOK;
 
-   if (SubAgentInit(&pInfo, g_szConfigFile))
+   if (SubAgentRegister(&pInfo, g_szConfigFile))
    {
       // Check if information structure is valid
       if (pInfo->dwMagic == NETXMS_SUBAGENT_INFO_MAGIC)
@@ -61,50 +61,59 @@ BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
                break;
          if (i == m_dwNumSubAgents)
          {
-            // Add subagent to subagent's list
-            m_pSubAgentList = (SUBAGENT *)realloc(m_pSubAgentList, 
-                                    sizeof(SUBAGENT) * (m_dwNumSubAgents + 1));
-            m_pSubAgentList[m_dwNumSubAgents].hModule = hModule;
-            nx_strncpy(m_pSubAgentList[m_dwNumSubAgents].szName, pszModuleName, MAX_PATH);
-            m_pSubAgentList[m_dwNumSubAgents].pInfo = pInfo;
+				// Initialize subagent
+				bInitOK = (pInfo->pInit != NULL) ? pInfo->pInit(g_szConfigFile) : TRUE;
+				if (bInitOK)
+				{
+					// Add subagent to subagent's list
+					m_pSubAgentList = (SUBAGENT *)realloc(m_pSubAgentList, 
+													sizeof(SUBAGENT) * (m_dwNumSubAgents + 1));
+					m_pSubAgentList[m_dwNumSubAgents].hModule = hModule;
+					nx_strncpy(m_pSubAgentList[m_dwNumSubAgents].szName, pszModuleName, MAX_PATH);
+					m_pSubAgentList[m_dwNumSubAgents].pInfo = pInfo;
 #ifdef _NETWARE
-            nx_strncpy(m_pSubAgentList[m_dwNumSubAgents].szEntryPoint, pszEntryPoint, 256);
+	            nx_strncpy(m_pSubAgentList[m_dwNumSubAgents].szEntryPoint, pszEntryPoint, 256);
 #endif
-            m_dwNumSubAgents++;
+					m_dwNumSubAgents++;
 
-            // Add parameters provided by this subagent to common list
-            for(i = 0; i < pInfo->dwNumParameters; i++)
-               AddParameter(pInfo->pParamList[i].szName, 
-                            pInfo->pParamList[i].fpHandler,
-                            pInfo->pParamList[i].pArg,
-                            pInfo->pParamList[i].iDataType,
-                            pInfo->pParamList[i].szDescription);
+					// Add parameters provided by this subagent to common list
+					for(i = 0; i < pInfo->dwNumParameters; i++)
+						AddParameter(pInfo->pParamList[i].szName, 
+										 pInfo->pParamList[i].fpHandler,
+										 pInfo->pParamList[i].pArg,
+										 pInfo->pParamList[i].iDataType,
+										 pInfo->pParamList[i].szDescription);
 
-            // Add enums provided by this subagent to common list
-            for(i = 0; i < pInfo->dwNumEnums; i++)
-               AddEnum(pInfo->pEnumList[i].szName, 
-                       pInfo->pEnumList[i].fpHandler,
-                       pInfo->pEnumList[i].pArg);
+					// Add enums provided by this subagent to common list
+					for(i = 0; i < pInfo->dwNumEnums; i++)
+						AddEnum(pInfo->pEnumList[i].szName, 
+								  pInfo->pEnumList[i].fpHandler,
+								  pInfo->pEnumList[i].pArg);
 
-            // Add actions provided by this subagent to common list
-            for(i = 0; i < pInfo->dwNumActions; i++)
-               AddAction(pInfo->pActionList[i].szName,
-                         AGENT_ACTION_SUBAGENT,
-                         pInfo->pActionList[i].pArg,
-                         pInfo->pActionList[i].fpHandler,
-                         pInfo->szName,
-                         pInfo->pActionList[i].szDescription);
+					// Add actions provided by this subagent to common list
+					for(i = 0; i < pInfo->dwNumActions; i++)
+						AddAction(pInfo->pActionList[i].szName,
+									 AGENT_ACTION_SUBAGENT,
+									 pInfo->pActionList[i].pArg,
+									 pInfo->pActionList[i].fpHandler,
+									 pInfo->szName,
+									 pInfo->pActionList[i].szDescription);
 
-            WriteLog(MSG_SUBAGENT_LOADED, EVENTLOG_INFORMATION_TYPE,
-                     "s", pszModuleName);
-            bSuccess = TRUE;
+					WriteLog(MSG_SUBAGENT_LOADED, EVENTLOG_INFORMATION_TYPE,
+								"s", pszModuleName);
+					bSuccess = TRUE;
+				}
+				else
+				{
+					WriteLog(MSG_SUBAGENT_INIT_FAILED, EVENTLOG_ERROR_TYPE,
+								"s", pszModuleName);
+					DLClose(hModule);
+				}
          }
          else
          {
             WriteLog(MSG_SUBAGENT_ALREADY_LOADED, EVENTLOG_WARNING_TYPE,
                      "ss", pInfo->szName, m_pSubAgentList[i].szName);
-            if (pInfo->pUnloadHandler != NULL)
-               pInfo->pUnloadHandler();
             // On NetWare, DLClose will unload module, and if first instance
             // was loaded from the same module, it will be killed, so
             // we don't call DLClose on NetWare
@@ -117,14 +126,12 @@ BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
       {
          WriteLog(MSG_SUBAGENT_BAD_MAGIC, EVENTLOG_ERROR_TYPE,
                   "s", pszModuleName);
-         // We shouldn't unload subagent after call to Init(),
-         // because subagent may already start worker threads
-         //DLClose(hModule);
+         DLClose(hModule);
       }
    }
    else
    {
-      WriteLog(MSG_SUBAGENT_INIT_FAILED, EVENTLOG_ERROR_TYPE,
+      WriteLog(MSG_SUBAGENT_REGISTRATION_FAILED, EVENTLOG_ERROR_TYPE,
                "s", pszModuleName);
       DLClose(hModule);
    }
@@ -146,13 +153,13 @@ BOOL LoadSubAgent(char *szModuleName)
    hModule = DLOpen(szModuleName, szErrorText);
    if (hModule != NULL)
    {
-      BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, TCHAR *);
+      BOOL (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, TCHAR *);
 
       // Under NetWare, we have slightly different subagent
       // initialization procedure. Because normally two NLMs
       // cannot export symbols with identical names, we cannot 
-      // simply export NxSubAgentInit in each subagent. Instead,
-      // agent expect to find symbol called NxSubAgentInit_<module_file_name>
+      // simply export NxSubAgentRegister in each subagent. Instead,
+      // agent expect to find symbol called NxSubAgentRegister_<module_file_name>
       // in every subagent. Note that module file name should
       // be in capital letters.
 #ifdef _NETWARE
@@ -164,20 +171,20 @@ BOOL LoadSubAgent(char *szModuleName)
       if (pExt != NULL)
          *pExt = 0;
       strupr(szFileName);
-      sprintf(szEntryPoint, "NxSubAgentInit_%s", szFileName);
-      SubAgentInit = (BOOL (*)(NETXMS_SUBAGENT_INFO **, TCHAR *))DLGetSymbolAddr(hModule, szEntryPoint, szErrorText);
+      sprintf(szEntryPoint, "NxSubAgentRegister_%s", szFileName);
+      SubAgentRegister = (BOOL (*)(NETXMS_SUBAGENT_INFO **, TCHAR *))DLGetSymbolAddr(hModule, szEntryPoint, szErrorText);
 #else
-      SubAgentInit = (BOOL (*)(NETXMS_SUBAGENT_INFO **, TCHAR *))DLGetSymbolAddr(hModule, "NxSubAgentInit", szErrorText);
+      SubAgentRegister = (BOOL (*)(NETXMS_SUBAGENT_INFO **, TCHAR *))DLGetSymbolAddr(hModule, "NxSubAgentRegister", szErrorText);
 #endif
 
-      if (SubAgentInit != NULL)
+      if (SubAgentRegister != NULL)
       {
 #ifdef _NETWARE
-         bSuccess = InitSubAgent(hModule, szModuleName, SubAgentInit, szEntryPoint);
+         bSuccess = InitSubAgent(hModule, szModuleName, SubAgentRegister, szEntryPoint);
          if (bSuccess)
             setdontunloadflag(hModule);
 #else
-         bSuccess = InitSubAgent(hModule, szModuleName, SubAgentInit, NULL);
+         bSuccess = InitSubAgent(hModule, szModuleName, SubAgentRegister, NULL);
 #endif
       }
       else
@@ -212,8 +219,8 @@ void UnloadAllSubAgents(void)
       UnImportPublicObject(m_pSubAgentList[i].hModule, m_pSubAgentList[i].szEntryPoint);
       cleardontunloadflag(m_pSubAgentList[i].hModule);
 #endif
-      if (m_pSubAgentList[i].pInfo->pUnloadHandler != NULL)
-         m_pSubAgentList[i].pInfo->pUnloadHandler();
+      if (m_pSubAgentList[i].pInfo->pShutdown != NULL)
+         m_pSubAgentList[i].pInfo->pShutdown();
 #ifndef _NETWARE
       DLClose(m_pSubAgentList[i].hModule);
 #endif

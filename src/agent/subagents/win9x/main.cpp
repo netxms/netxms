@@ -44,15 +44,6 @@ static LONG H_ActionShutdown(char *pszAction, NETXMS_VALUES_LIST *pArgList, char
 
 
 //
-// Called by master agent at unload
-//
-
-static void UnloadHandler(void)
-{
-}
-
-
-//
 // Subagent information
 //
 
@@ -75,7 +66,8 @@ static NETXMS_SUBAGENT_ACTION m_actions[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("Win9x"), NETXMS_VERSION_STRING, UnloadHandler, NULL,
+	_T("Win9x"), NETXMS_VERSION_STRING,
+	NULL, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
@@ -90,7 +82,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 //
 
 extern "C" BOOL __declspec(dllexport) __cdecl
-   NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
+   NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
 {
    *ppInfo = &m_info;
    return TRUE;
@@ -103,5 +95,7 @@ extern "C" BOOL __declspec(dllexport) __cdecl
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
    return TRUE;
 }

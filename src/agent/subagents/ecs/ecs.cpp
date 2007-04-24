@@ -205,14 +205,6 @@ static LONG H_DoHttp(char *pszParam, char *pArg, char *pValue)
 	return ret;
 }
 
-//
-// Called by master agent at unload
-//
-
-static void UnloadHandler(void)
-{
-}
-
 
 //
 // Subagent information
@@ -236,7 +228,8 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("ECS"), NETXMS_VERSION_STRING, UnloadHandler, NULL,
+	_T("ECS"), NETXMS_VERSION_STRING,
+	NULL, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 //	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
@@ -250,7 +243,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_INIT(ECS)
+DECLARE_SUBAGENT_ENTRY_POINT(ECS)
 {
 	*ppInfo = &m_info;
 	return TRUE;
@@ -265,6 +258,8 @@ DECLARE_SUBAGENT_INIT(ECS)
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
 	return TRUE;
 }
 

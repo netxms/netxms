@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.14 2006-10-20 09:54:51 victor Exp $ */
+/* $Id: main.cpp,v 1.15 2007-04-24 18:22:11 victor Exp $ */
 
 #define LIBNXCL_NO_DECLARATIONS
 
@@ -148,8 +148,8 @@ static NETXMS_SUBAGENT_INFO m_info =
    NETXMS_SUBAGENT_INFO_MAGIC,
 	"portCheck",
 	NETXMS_VERSION_STRING,
-	NULL, // unload handler
-	&CommandHandler,
+	NULL, NULL, // init and shutdown routines
+	CommandHandler,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	0, //sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
@@ -161,10 +161,9 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_INIT(PORTCHECK)
+DECLARE_SUBAGENT_ENTRY_POINT(PORTCHECK)
 {
    *ppInfo = &m_info;
-
    return TRUE;
 }
 
@@ -172,6 +171,9 @@ DECLARE_SUBAGENT_INIT(PORTCHECK)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2006/10/20 09:54:51  victor
+libnxcscp merged into libnetxms
+
 Revision 1.13  2006/03/15 12:00:10  alk
 simple telnet service checker added: it connects, response WON'T/DON'T to
 all offers and disconnects (this prevents from "peer died" in logs)

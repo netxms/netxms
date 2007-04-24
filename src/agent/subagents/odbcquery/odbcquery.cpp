@@ -154,24 +154,6 @@ static LONG H_PollResult(TCHAR *pszParam, char *pArg, TCHAR *pValue)
 
 
 //
-// Called by master agent at unload
-//
-
-static void UnloadHandler(void)
-{
-   DWORD i;
-
-   m_bShutdown = TRUE;
-   if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
-      ConditionSet(m_hCondShutdown);
-
-   for(i = 0; i < m_dwNumQueries; i++)
-      ThreadJoin(m_pQueryList[i].hThread);
-   safe_free(m_pQueryList);
-}
-
-
-//
 // Add query string from configuration file parameter
 // Parameter value should be <query_name>:<sql_source>:<sql>:<poll_interval>
 //
@@ -278,29 +260,6 @@ finish_add_query:
 
 
 //
-// Subagent information
-//
-
-static NETXMS_SUBAGENT_PARAM m_parameters[] =
-{
-   { _T("ODBC.QueryResult(*)"), H_PollResult, "R", DCI_DT_STRING, _T("ODBC query result") },
-   { _T("ODBC.QueryStatus(*)"), H_PollResult, "S", DCI_DT_UINT, _T("ODBC query status") },
-   { _T("ODBC.QueryStatusText(*)"), H_PollResult, "T", DCI_DT_STRING, _T("ODBC query status as text") }
-};
-
-static NETXMS_SUBAGENT_INFO m_info =
-{
-   NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("ODBCQUERY"), _T(NETXMS_VERSION_STRING),
-   UnloadHandler, NULL,
-	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
-	m_parameters,
-	0, NULL,	// enums
-   0, NULL	// actions
-};
-
-
-//
 // Configuration file template
 //
 
@@ -313,10 +272,10 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
 
 
 //
-// Entry point for NetXMS agent
+// Subagent initialization
 //
 
-DECLARE_SUBAGENT_INIT(ODBCQUERY)
+static BOOL SubAgentInit(TCHAR *pszConfigFile)
 {
    DWORD i, dwResult;
 
@@ -353,8 +312,59 @@ DECLARE_SUBAGENT_INIT(ODBCQUERY)
       safe_free(m_pszQueryList);
    }
 
-   *ppInfo = &m_info;
    return dwResult == NXCFG_ERR_OK;
+}
+
+
+//
+// Called by master agent at unload
+//
+
+static void SubAgentShutdown(void)
+{
+   DWORD i;
+
+   m_bShutdown = TRUE;
+   if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
+      ConditionSet(m_hCondShutdown);
+
+   for(i = 0; i < m_dwNumQueries; i++)
+      ThreadJoin(m_pQueryList[i].hThread);
+   safe_free(m_pQueryList);
+}
+
+
+//
+// Subagent information
+//
+
+static NETXMS_SUBAGENT_PARAM m_parameters[] =
+{
+   { _T("ODBC.QueryResult(*)"), H_PollResult, "R", DCI_DT_STRING, _T("ODBC query result") },
+   { _T("ODBC.QueryStatus(*)"), H_PollResult, "S", DCI_DT_UINT, _T("ODBC query status") },
+   { _T("ODBC.QueryStatusText(*)"), H_PollResult, "T", DCI_DT_STRING, _T("ODBC query status as text") }
+};
+
+static NETXMS_SUBAGENT_INFO m_info =
+{
+   NETXMS_SUBAGENT_INFO_MAGIC,
+	_T("ODBCQUERY"), _T(NETXMS_VERSION_STRING),
+   SubAgentInit, SubAgentShutdown, NULL,
+	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
+	m_parameters,
+	0, NULL,	// enums
+   0, NULL	// actions
+};
+
+
+//
+// Entry point for NetXMS agent
+//
+
+DECLARE_SUBAGENT_ENTRY_POINT(ODBCQUERY)
+{
+   *ppInfo = &m_info;
+   return TRUE;
 }
 
 //
@@ -365,6 +375,8 @@ DECLARE_SUBAGENT_INIT(ODBCQUERY)
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
    return TRUE;
 }
 

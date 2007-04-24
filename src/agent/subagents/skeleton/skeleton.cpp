@@ -65,10 +65,21 @@ static LONG H_Enum(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 
 
 //
+// Called by master agent to initialize subagent
+//
+
+static BOOL SubAgentInit(TCHAR *pszConfigFile)
+{
+   /* you can perform any initialization tasks here */
+	return TRUE;
+}
+
+
+//
 // Called by master agent at unload
 //
 
-static void UnloadHandler(void)
+static void SubAgentShutdown(void)
 {
    /* you can perform necessary shutdown tasks here */
 }
@@ -83,7 +94,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "Skeleton.Version",				H_Version,				NULL,
 			DCI_DT_STRING, "Skeleton version" },
    { "Skeleton.Echo(*)",				H_Echo,					NULL,
-			DCI_DT_STRING, "Echoes * string back" }
+			DCI_DT_STRING, "Echoes string back" }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
@@ -93,7 +104,8 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("SKELETON"), _T("1.0"), UnloadHandler, NULL,
+	_T("SKELETON"), _T("1.0"),
+	SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
@@ -105,7 +117,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_INIT(SKELETON)
+DECLARE_SUBAGENT_ENTRY_POINT(SKELETON)
 {
    *ppInfo = &m_info;
    return TRUE;
@@ -120,6 +132,8 @@ DECLARE_SUBAGENT_INIT(SKELETON)
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
    return TRUE;
 }
 
