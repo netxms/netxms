@@ -1,4 +1,4 @@
-/* $Id: proc.cpp,v 1.8 2007-01-22 09:16:43 victor Exp $ */
+/* $Id: proc.cpp,v 1.9 2007-04-24 11:58:24 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -151,10 +151,27 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
             hFile = fopen(szFileName, "r");
             if (hFile != NULL)
             {
-               char szBuff[1024] = {0};
-               if (fgets(szBuff, sizeof(szBuff), hFile) != NULL)
+               char szBuff[1024];
+	       memset(szBuff, 0, sizeof(szBuff));
+
+               int len = fread(szBuff, 1, sizeof(szBuff) - 1, hFile);
+               if (len > 0) // got a valid record in format: argv[0]\x00argv[1]\x00...
                {
-                  bCmdFound = RegexpMatch(szBuff, szCmdLine, bIgnoreCase);
+		       int j;
+		       char *pArgs;
+
+		       j = strlen(szBuff) + 1;
+		       pArgs = szBuff + j; // skip first (argv[0])
+		       len -= j;
+		       // replace 0x00 with spaces
+		       for (j = 0; j < len - 1; j++)
+		       {
+			       if (pArgs[j] == 0)
+			       {
+				       pArgs[j] = ' ';
+			       }
+		       }
+                  bCmdFound = RegexpMatch(pArgs, szCmdLine, bIgnoreCase);
                }
                else
                {
@@ -194,6 +211,9 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2007/01/22 09:16:43  victor
+Fixed bug in Process.CountEx()
+
 Revision 1.7  2007/01/15 00:25:07  victor
 Minor fix
 
