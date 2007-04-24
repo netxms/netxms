@@ -54,6 +54,10 @@
 #define COMMAND_TIMEOUT          60
 #define MAX_SUBAGENT_NAME        64
 
+#ifndef EVENTLOG_DEBUG_TYPE
+#define EVENTLOG_DEBUG_TYPE		255
+#endif
+
 
 //
 // Error codes

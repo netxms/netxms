@@ -105,7 +105,7 @@ void CObjectDepView::Refresh()
    pSubmap = new nxSubmap((DWORD)0);
    pSubmap->DoLayout(list.GetNumObjects(), list.GetObjects(),
                      list.GetNumLinks(), list.GetLinks(), rect.right, rect.bottom,
-                     SUBMAP_LAYOUT_REINGOLD_TILFORD);
+                     SUBMAP_LAYOUT_REINGOLD_TILFORD, FALSE);
    pMap->AddSubmap(pSubmap);
    m_wndMap.SetMap(pMap);
 }

@@ -46,6 +46,7 @@ mibs_DATA = \
 	IF-MIB.txt \
 	INET-ADDRESS-MIB.txt \
 	IP-MIB.txt \
+	LLDP-MIB.txt \
 	MAU-MIB.txt \
 	MTA-MIB.txt \
 	NET-SNMP-AGENT-MIB.txt \

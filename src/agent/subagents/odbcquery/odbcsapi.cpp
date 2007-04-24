@@ -18,16 +18,6 @@
 **
 **/
 
-/*
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <string.h>
-#include <sql.h>
-#include <sqlext.h>
-#include <sqltypes.h>
-*/
-
 #include "odbcquery.h"
 
 #ifndef _WIN32

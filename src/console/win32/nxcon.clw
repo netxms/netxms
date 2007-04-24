@@ -347,7 +347,7 @@ Resource188=IDD_GRAPH_PROP_STYLES
 Class146=CCreateClusterDlg
 Resource189=IDD_GRAPH_PROP_SETTINGS
 Class147=CClusterPropsGeneral
-Resource190=IDR_MAINFRAME
+Resource190=IDD_SET_CHILD_MGMT_STATUS
 Class148=CClusterPropsResources
 Resource191=IDA_AGENT_CONFIG_MANAGER
 Class149=CClusterResDlg
@@ -372,7 +372,7 @@ Class160=CObjectStatusBar
 Class161=CObjectTree
 Resource199=IDD_SELECT_AGENT_PARAM
 Class162=CChildMgmtStatusDlg
-Resource200=IDD_SET_CHILD_MGMT_STATUS
+Resource200=IDR_MAINFRAME
 
 [CLS:CConsoleApp]
 Type=0

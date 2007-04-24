@@ -147,7 +147,7 @@ void CNodeTopologyView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 			GetClientRect(&rect);
 			pSubmap->DoLayout(pList->GetNumObjects(), pList->GetObjects(),
 									pList->GetNumLinks(), pList->GetLinks(), rect.right, rect.bottom,
-									SUBMAP_LAYOUT_RADIAL);
+									SUBMAP_LAYOUT_RADIAL, TRUE);
 								   //SUBMAP_LAYOUT_REINGOLD_TILFORD);
 			pMap->AddSubmap(pSubmap);
 			m_wndMap.SetMap(pMap);

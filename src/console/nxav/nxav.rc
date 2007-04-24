@@ -134,7 +134,7 @@ BEGIN
     GROUPBOX        "Automatic login",IDC_STATIC,7,7,159,112
     LTEXT           "Server",IDC_STATIC_SERVER,13,33,22,8
     LTEXT           "User name",IDC_STATIC_USER,13,60,35,8
-    LTEXT           "Password",IDC_STATIC_PASSWORD,13,88,32,8
+    LTEXT           "Password",IDC_STATIC_PASSWD,13,88,32,8
     GROUPBOX        "Alarm sounds",IDC_STATIC,7,121,159,57
 END
 

@@ -1,4 +1,4 @@
-/* $Id: nxagentd.cpp,v 1.87 2007-04-18 21:13:40 alk Exp $ */
+/* $Id: nxagentd.cpp,v 1.88 2007-04-24 07:44:00 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -382,7 +382,14 @@ static LONG H_RestartAgent(TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, TCHAR *p
 
 static void WriteSubAgentMsg(int iLevel, TCHAR *pszMsg)
 {
-   WriteLog(MSG_SUBAGENT_MSG, iLevel, "s", pszMsg);
+	if (iLevel == EVENTLOG_DEBUG_TYPE)
+	{
+		DebugPrintf(INVALID_INDEX, "%s", pszMsg);
+	}
+	else
+	{
+		WriteLog(MSG_SUBAGENT_MSG, iLevel, "s", pszMsg);
+	}
 }
 
 

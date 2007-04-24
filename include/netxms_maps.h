@@ -260,7 +260,8 @@ public:
    BOOL IsLayoutCompleted(void) { return (m_dwAttr & SUBMAP_ATTR_LAYOUT_COMPLETED) ? TRUE : FALSE; }
    void DoLayout(DWORD dwNumObjects, DWORD *pdwObjectList,
                  DWORD dwNumLinks, OBJLINK *pLinkList,
-                 int nIdealX, int nIdealY, int nMethod);
+                 int nIdealX, int nIdealY, int nMethod,
+					  BOOL bNormalize);
    POINT GetObjectPosition(DWORD dwObjectId);
    POINT GetObjectPositionByIndex(DWORD dwIndex);
    void SetObjectPosition(DWORD dwObjectId, int x, int y);

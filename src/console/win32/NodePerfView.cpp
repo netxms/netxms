@@ -39,6 +39,7 @@ public:
 	DWORD m_dwId2;
 	DWORD m_dwTimeFrom;
 	DWORD m_dwTimeTo;
+	HWND hWnd;
 
 	WorkerTask(int nTask) { m_nTask = nTask; }
 	WorkerTask(int nTask, DWORD dwId) { m_nTask = nTask; m_dwId = dwId; }
@@ -84,7 +85,7 @@ CNodePerfView::~CNodePerfView()
 	while((pTask = (WorkerTask *)m_workerQueue.Get()) != NULL)
 		delete pTask;
 	m_workerQueue.Put(new WorkerTask(TASK_SHUTDOWN));
-	ThreadJoin(PerfViewWorkerThread);
+	ThreadJoin(m_hWorkerThread);
 	safe_free(m_pGraphList);
 }
 
@@ -345,18 +346,18 @@ void CNodePerfView::WorkerThread()
 		{
 			case TASK_GET_AVAIL_DCI:
 				dwResult = NXCGetSystemDCIList(g_hSession, m_pObject->dwId, &dwNumItems, &pItemList);
-				PostMessage(NXCM_REQUEST_COMPLETED,
-				            (dwResult == RCC_SUCCESS) ? dwNumItems : 0xFFFFFFFF,
-				            CAST_FROM_POINTER(pItemList, LPARAM));
+				::PostMessage(pTask->hWnd, NXCM_REQUEST_COMPLETED,
+				              (dwResult == RCC_SUCCESS) ? dwNumItems : 0xFFFFFFFF,
+				              CAST_FROM_POINTER(pItemList, LPARAM));
 				break;
 			case TASK_FINISH_UPDATE:
-				PostMessage(NXCM_UPDATE_FINISHED, 0, pTask->m_dwId);
+				::PostMessage(pTask->hWnd, NXCM_UPDATE_FINISHED, 0, pTask->m_dwId);
 				break;
 			case TASK_UPDATE_GRAPH:
 				dwResult = NXCGetDCIData(g_hSession, pTask->m_dwId2, pTask->m_dwId, 0,
 				                         pTask->m_dwTimeFrom, pTask->m_dwTimeTo, &pData);
-				PostMessage(NXCM_GRAPH_DATA, pTask->m_dwId,
-				            (dwResult == RCC_SUCCESS) ? CAST_FROM_POINTER(pData, LPARAM) : 0);
+				::PostMessage(pTask->hWnd, NXCM_GRAPH_DATA, pTask->m_dwId,
+				              (dwResult == RCC_SUCCESS) ? CAST_FROM_POINTER(pData, LPARAM) : 0);
 				break;
 			default:
 				break;

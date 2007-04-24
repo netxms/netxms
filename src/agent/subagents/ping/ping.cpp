@@ -1,6 +1,6 @@
 /*
 ** NetXMS PING subagent
-** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,17 +16,11 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: ping.cpp
+** File: ping.cpp
 **
 **/
 
 #include "ping.h"
-
-#ifdef _WIN32
-#define PING_EXPORTABLE __declspec(dllexport) __cdecl
-#else
-#define PING_EXPORTABLE
-#endif
 
 
 //
@@ -381,6 +375,8 @@ DECLARE_SUBAGENT_INIT(PING)
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
    return TRUE;
 }
 

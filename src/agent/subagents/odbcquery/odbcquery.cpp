@@ -31,6 +31,8 @@
 #define EL_WARN		EVENTLOG_WARNING_TYPE
 #define EL_INFO		EVENTLOG_INFORMATION_TYPE
 #define EL_ERROR		EVENTLOG_ERROR_TYPE
+#define EL_DEBUG		EVENTLOG_DEBUG_TYPE
+
 
 //
 // Static data
@@ -63,33 +65,34 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 		goto thread_finish;
 	}
 
-	if (OdbcConnect(pQuery->pSqlCtx, pQuery->szOdbcSrc) < 0)
-	{
-		NxWriteAgentLog(EL_ERROR, _T("ODBC: Failed to connect to source '%s'"), 
-							 pQuery->szOdbcSrc);
-		goto thread_finish;
-	}
-
-	NxWriteAgentLog(EL_INFO, _T("ODBC: Successfully connected to source '%s'"), pQuery->szOdbcSrc);
-
 	qwPrevTime = 0;
-
    while(!m_bShutdown)
    {
 		qwTime = GetCurrentTimeMs();
-		if (qwTime - qwPrevTime >= ((QWORD)pQuery->dwPollInterval)*1000)
+		if (qwTime - qwPrevTime >= ((QWORD)pQuery->dwPollInterval) * 1000)
 		{
-			if (OdbcQuerySelect1(pQuery->pSqlCtx, pQuery->szSqlQuery, 
-										pQuery->szQueryResult, (size_t)MAX_DB_STRING) < 0)
+			if (OdbcConnect(pQuery->pSqlCtx, pQuery->szOdbcSrc) < 0)
 			{
 				pQuery->dwCompletionCode = OdbcGetSqlErrorNumber(pQuery->pSqlCtx);
-				NxWriteAgentLog(EL_WARN, _T("ODBC Error: %s (%s)"), 
+				NxWriteAgentLog(EL_DEBUG, _T("ODBC connect error: %s (%s)"), 
 									 OdbcGetInfo(pQuery->pSqlCtx),
 									 OdbcGetSqlError(pQuery->pSqlCtx));
 			}
 			else
 			{
-				pQuery->dwCompletionCode = 0;
+				if (OdbcQuerySelect1(pQuery->pSqlCtx, pQuery->szSqlQuery, 
+											pQuery->szQueryResult, (size_t)MAX_DB_STRING) < 0)
+				{
+					pQuery->dwCompletionCode = OdbcGetSqlErrorNumber(pQuery->pSqlCtx);
+					NxWriteAgentLog(EL_DEBUG, _T("ODBC query error: %s (%s)"), 
+										 OdbcGetInfo(pQuery->pSqlCtx),
+										 OdbcGetSqlError(pQuery->pSqlCtx));
+				}
+				else
+				{
+					pQuery->dwCompletionCode = 0;
+				}
+				OdbcDisconnect(pQuery->pSqlCtx);
 			}
 			qwPrevTime = GetCurrentTimeMs();
 		}
@@ -100,7 +103,6 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 thread_finish:
 	if (pQuery->pSqlCtx)
 	{
-		OdbcDisconnect(pQuery->pSqlCtx);
 		OdbcCtxFree(pQuery->pSqlCtx);
 	}
 

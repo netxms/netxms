@@ -564,6 +564,8 @@ int CConsoleApp::ExitInstance()
 
    SpeakerShutdown();
 
+	delete g_pMIBRoot;
+
    return CWinApp::ExitInstance();
 }
 

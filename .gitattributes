@@ -59,6 +59,7 @@ contrib/mibs/IEEE802dot11-MIB.txt -text
 contrib/mibs/IF-MIB.txt -text
 contrib/mibs/INET-ADDRESS-MIB.txt -text
 contrib/mibs/IP-MIB.txt -text
+contrib/mibs/LLDP-MIB.txt -text
 contrib/mibs/MAU-MIB.txt -text
 contrib/mibs/MTA-MIB.txt -text
 contrib/mibs/Makefile.am -text

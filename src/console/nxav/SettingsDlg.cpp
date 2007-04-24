@@ -75,7 +75,7 @@ void CSettingsDlg::EnableControls()
    bEnable = (SendDlgItemMessage(IDC_CHECK_AUTOLOGIN, BM_GETCHECK) == BST_CHECKED);
    EnableDlgItem(this, IDC_STATIC_SERVER, bEnable);
    EnableDlgItem(this, IDC_STATIC_USER, bEnable);
-   EnableDlgItem(this, IDC_STATIC_PASSWORD, bEnable);
+   EnableDlgItem(this, IDC_STATIC_PASSWD, bEnable);
    EnableDlgItem(this, IDC_EDIT_SERVER_NAME, bEnable);
    EnableDlgItem(this, IDC_EDIT_USER, bEnable);
    EnableDlgItem(this, IDC_EDIT_PASSWD, bEnable);

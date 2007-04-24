@@ -72,6 +72,7 @@ CMapView::~CMapView()
    delete m_pDragImageList;
    if (m_hBkImage != NULL)
       DeleteObject(m_hBkImage);
+	delete m_pMap;
 }
 
 
@@ -566,7 +567,7 @@ void CMapView::DoSubmapLayout()
 
             m_pSubmap->DoLayout(dwObjListSize, pdwObjectList,
                                 dwNumLinks, pLinkList, rect.right, rect.bottom,
-                                SUBMAP_LAYOUT_RADIAL);
+                                SUBMAP_LAYOUT_RADIAL, TRUE);
             safe_free(pdwObjectList);
             safe_free(pLinkList);
          }
@@ -574,7 +575,7 @@ void CMapView::DoSubmapLayout()
          {
             m_pSubmap->DoLayout(pObject->dwNumChilds, pObject->pdwChildList,
                                 0, NULL, rect.right, rect.bottom,
-                                SUBMAP_LAYOUT_DUMB);
+                                SUBMAP_LAYOUT_DUMB, FALSE);
          }
          m_bIsModified = TRUE;
       }

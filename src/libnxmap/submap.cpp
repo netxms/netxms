@@ -346,7 +346,8 @@ POINT nxSubmap::GetMinSize(void)
 
 void nxSubmap::DoLayout(DWORD dwNumObjects, DWORD *pdwObjectList,
                         DWORD dwNumLinks, OBJLINK *pLinkList,
-                        int nIdealX, int nIdealY, int nMethod)
+                        int nIdealX, int nIdealY, int nMethod,
+								BOOL bNormalize)
 {
    DWORD i;
    int x, y;
@@ -381,7 +382,8 @@ void nxSubmap::DoLayout(DWORD dwNumObjects, DWORD *pdwObjectList,
       if (dwNumObjects > 0)
       {
          graph->SetRootVertex(pdwObjectList[0]);
-         graph->NormalizeLinks();
+			if (bNormalize)
+				graph->NormalizeLinks();
       }
       switch(nMethod)
       {

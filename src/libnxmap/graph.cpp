@@ -194,8 +194,11 @@ void nxGraph::NormalizeVertexLinks(nxVertex *pRoot)
 
    for(i = 0; i < pRoot->GetNumChilds(); i++)
 	{
-		pRoot->GetChild(i)->SetAsProcessed();
-      NormalizeVertexLinks(pRoot->GetChild(i));
+		if (!pRoot->GetChild(i)->IsProcessed())
+		{
+			pRoot->GetChild(i)->SetAsProcessed();
+			NormalizeVertexLinks(pRoot->GetChild(i));
+		}
 	}
 }
 

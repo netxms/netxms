@@ -50,10 +50,10 @@ void DebugPrintf(DWORD dwSessionId, char *pszFormat, ...)
    if (g_dwFlags & AF_DEBUG)
    {
       va_list args;
-      char szBuffer[1024];
+      char szBuffer[4096];
 
       va_start(args, pszFormat);
-      _vsntprintf(szBuffer, 1024, pszFormat, args);
+      _vsntprintf(szBuffer, 4096, pszFormat, args);
       va_end(args);
       
       if (dwSessionId != INVALID_INDEX)
