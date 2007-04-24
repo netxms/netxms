@@ -1,3 +1,5 @@
+/* $Id: drbd.h,v 1.2 2007-04-24 12:04:10 alk Exp $ */
+
 /*
   drbd.h
   Kernel module for 2.4.x/2.6.x Kernels
@@ -59,7 +61,7 @@
 				   must be at least one bigger than
 				   the AF_UNIX size (see net/unix/af_unix.c
 				   :unix_mkname()).
-				 */
+				   */
 
 enum io_error_handler {
 	PassOn,
@@ -245,3 +247,10 @@ struct ioctl_get_config {
 
 #endif
 
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+
+$Log: not supported by cvs2svn $
+
+*/

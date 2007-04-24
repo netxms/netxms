@@ -1,3 +1,5 @@
+/* $Id: drbd.cpp,v 1.3 2007-04-24 12:04:10 alk Exp $ */
+
 /* 
 ** NetXMS subagent for GNU/Linux
 ** Copyright (C) 2006 Victor Kirhenshtein
@@ -119,10 +121,10 @@ LONG H_DRBDDeviceList(TCHAR *pszCmd, TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
 			if (ioctl(nFd, DRBD_IOCTL_GET_CONFIG, &drbdConfig) == 0)
 			{
 				snprintf(szBuffer, 1024, "/dev/drbd%d %d %d/%d %s %s/%s %s",
-						   nDev, drbdConfig.cstate, drbdConfig.state,
-							drbdConfig.peer_state, CStateText(drbdConfig.cstate),
-							StateText(drbdConfig.state), StateText(drbdConfig.peer_state),
-							drbdConfig.lower_device_name);
+						nDev, drbdConfig.cstate, drbdConfig.state,
+						drbdConfig.peer_state, CStateText(drbdConfig.cstate),
+						StateText(drbdConfig.state), StateText(drbdConfig.peer_state),
+						drbdConfig.lower_device_name);
 				NxAddResultString(pValue, szBuffer);
 			}
 			close(nFd);
@@ -189,3 +191,10 @@ LONG H_DRBDDeviceInfo(TCHAR *pszCmd, TCHAR *pArg, TCHAR *pValue)
 
 	return nRet;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+
+$Log: not supported by cvs2svn $
+
+*/

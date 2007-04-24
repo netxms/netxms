@@ -1,3 +1,5 @@
+/* $Id: drbd_config.h,v 1.2 2007-04-24 12:04:10 alk Exp $ */
+
 /*
   drbd_config.h
   DRBD's compile time configuration.
@@ -70,3 +72,10 @@ extern const char * drbd_buildtag(void);
 #define HAVE_UML_TO_VIRT
 
 #endif
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+
+$Log: not supported by cvs2svn $
+
+*/

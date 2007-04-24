@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.11 2006-03-02 12:17:05 victor Exp $ */
+/* $Id: net.cpp,v 1.12 2007-04-24 12:04:10 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -44,12 +44,12 @@ LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue)
 
 	switch (nVer)
 	{
-	case 4:
-		pFileName = "/proc/sys/net/ipv4/conf/all/forwarding";
-		break;
-	case 6:
-		pFileName = "/proc/sys/net/ipv6/conf/all/forwarding";
-		break;
+		case 4:
+			pFileName = "/proc/sys/net/ipv4/conf/all/forwarding";
+			break;
+		case 6:
+			pFileName = "/proc/sys/net/ipv6/conf/all/forwarding";
+			break;
 	}
 
 	if (pFileName != NULL)
@@ -64,15 +64,15 @@ LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue)
 				nRet = SYSINFO_RC_SUCCESS;
 				switch (szBuff[0])
 				{
-				case '0':
-					ret_int(pValue, 0);
-					break;
-				case '1':
-					ret_int(pValue, 1);
-					break;
-				default:
-					nRet = SYSINFO_RC_ERROR;
-					break;
+					case '0':
+						ret_int(pValue, 0);
+						break;
+					case '1':
+						ret_int(pValue, 1);
+						break;
+					default:
+						nRet = SYSINFO_RC_ERROR;
+						break;
 				}
 			}
 			fclose(hFile);
@@ -110,18 +110,18 @@ LONG H_NetArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 				char szIf[256];
 
 				if (sscanf(szBuff,
-						"%d.%d.%d.%d %s %s %02X:%02X:%02X:%02X:%02X:%02X %s %s",
-						&nIP1, &nIP2, &nIP3, &nIP4,
-						szTmp1, szTmp2,
-						&nMAC1, &nMAC2, &nMAC3, &nMAC4, &nMAC5, &nMAC6,
-						szTmp3, szIf) == 14)
+							"%d.%d.%d.%d %s %s %02X:%02X:%02X:%02X:%02X:%02X %s %s",
+							&nIP1, &nIP2, &nIP3, &nIP4,
+							szTmp1, szTmp2,
+							&nMAC1, &nMAC2, &nMAC3, &nMAC4, &nMAC5, &nMAC6,
+							szTmp3, szIf) == 14)
 				{
 					int nIndex;
 					struct ifreq irq;
 
 					if (nMAC1 == 0 && nMAC2 == 0 &&
-						nMAC3 == 0 && nMAC4 == 0 &&
-						nMAC5 == 0 && nMAC6 == 0)
+							nMAC3 == 0 && nMAC4 == 0 &&
+							nMAC5 == 0 && nMAC6 == 0)
 					{
 						// incomplete
 						continue;
@@ -137,7 +137,7 @@ LONG H_NetArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 					{
 						nIndex = irq.ifr_ifindex;
 					}
-					
+
 					snprintf(szBuff, sizeof(szBuff),
 							"%02X%02X%02X%02X%02X%02X %d.%d.%d.%d %d",
 							nMAC1, nMAC2, nMAC3, nMAC4, nMAC5, nMAC6,
@@ -150,7 +150,7 @@ LONG H_NetArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 
 			close(nFd);
 		}
-		
+
 		fclose(hFile);
 	}
 
@@ -236,9 +236,9 @@ LONG H_NetRoutingTable(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
-   struct if_nameindex *pIndex;
-   struct ifreq irq;
-   struct sockaddr_in *sa;
+	struct if_nameindex *pIndex;
+	struct ifreq irq;
+	struct sockaddr_in *sa;
 	int nFd;
 
 	int s;
@@ -279,7 +279,7 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 							if (ioctl(s, SIOCGIFNETMASK, &irq) == 0)
 							{
 								mask = 33 - ffs(htonl(((struct sockaddr_in *)
-													&irq.ifr_addr)->sin_addr.s_addr));
+												&irq.ifr_addr)->sin_addr.s_addr));
 							}
 
 							strcpy(irq.ifr_name, ifc.ifc_req[i].ifr_name);
@@ -336,196 +336,199 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 
 LONG H_NetIfInfoFromIOCTL(char *pszParam, char *pArg, char *pValue)
 {
-   char *eptr, szBuffer[256];
-   LONG nRet = SYSINFO_RC_SUCCESS;
-   struct ifreq ifr;
-   int fd;
+	char *eptr, szBuffer[256];
+	LONG nRet = SYSINFO_RC_SUCCESS;
+	struct ifreq ifr;
+	int fd;
 
-   if (!NxGetParameterArg(pszParam, 1, szBuffer, 256))
-      return SYSINFO_RC_UNSUPPORTED;
+	if (!NxGetParameterArg(pszParam, 1, szBuffer, 256))
+		return SYSINFO_RC_UNSUPPORTED;
 
-   fd = socket(AF_INET, SOCK_DGRAM, 0);
-   if (fd == -1)
-   {
-      return 1;
-   }
+	fd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (fd == -1)
+	{
+		return 1;
+	}
 
-   // Check if we have interface name or index
-   ifr.ifr_ifindex = strtol(szBuffer, &eptr, 10);
-   if (*eptr == 0)
-   {
-      // Index passed as argument, convert to name
-      if (ioctl(fd, SIOCGIFNAME, &ifr) != 0)
-         nRet = SYSINFO_RC_ERROR;
-   }
-   else
-   {
-      // Name passed as argument
-      nx_strncpy(ifr.ifr_name, szBuffer, IFNAMSIZ);
-   }
+	// Check if we have interface name or index
+	ifr.ifr_ifindex = strtol(szBuffer, &eptr, 10);
+	if (*eptr == 0)
+	{
+		// Index passed as argument, convert to name
+		if (ioctl(fd, SIOCGIFNAME, &ifr) != 0)
+			nRet = SYSINFO_RC_ERROR;
+	}
+	else
+	{
+		// Name passed as argument
+		nx_strncpy(ifr.ifr_name, szBuffer, IFNAMSIZ);
+	}
 
-   // Get interface information
-   if (nRet == SYSINFO_RC_SUCCESS)
-   {
-      switch((long)pArg)
-      {
-         case IF_INFO_ADMIN_STATUS:
-            if (ioctl(fd, SIOCGIFFLAGS, &ifr) == 0)
-            {
-               ret_int(pValue, (ifr.ifr_flags & IFF_UP) ? 1 : 2);
-            }
-            else
-            {
-               nRet = SYSINFO_RC_ERROR;
-            }
-            break;
-         case IF_INFO_OPER_STATUS:
-            if (ioctl(fd, SIOCGIFFLAGS, &ifr) == 0)
-            {
-               // IFF_RUNNING should be set only if interface can
-               // transmit/receive data, but in fact looks like it
-               // always set. I have unverified information that
-               // newer kernels set this flag correctly.
-               ret_int(pValue, (ifr.ifr_flags & IFF_RUNNING) ? 1 : 0);
-            }
-            else
-            {
-               nRet = SYSINFO_RC_ERROR;
-            }
-            break;
-         case IF_INFO_DESCRIPTION:
-            ret_string(pValue, ifr.ifr_name);
-            break;
-         default:
-            nRet = SYSINFO_RC_UNSUPPORTED;
-            break;
-      }
-   }
+	// Get interface information
+	if (nRet == SYSINFO_RC_SUCCESS)
+	{
+		switch((long)pArg)
+		{
+			case IF_INFO_ADMIN_STATUS:
+				if (ioctl(fd, SIOCGIFFLAGS, &ifr) == 0)
+				{
+					ret_int(pValue, (ifr.ifr_flags & IFF_UP) ? 1 : 2);
+				}
+				else
+				{
+					nRet = SYSINFO_RC_ERROR;
+				}
+				break;
+			case IF_INFO_OPER_STATUS:
+				if (ioctl(fd, SIOCGIFFLAGS, &ifr) == 0)
+				{
+					// IFF_RUNNING should be set only if interface can
+					// transmit/receive data, but in fact looks like it
+					// always set. I have unverified information that
+					// newer kernels set this flag correctly.
+					ret_int(pValue, (ifr.ifr_flags & IFF_RUNNING) ? 1 : 0);
+				}
+				else
+				{
+					nRet = SYSINFO_RC_ERROR;
+				}
+				break;
+			case IF_INFO_DESCRIPTION:
+				ret_string(pValue, ifr.ifr_name);
+				break;
+			default:
+				nRet = SYSINFO_RC_UNSUPPORTED;
+				break;
+		}
+	}
 
-   // Cleanup
-   close(fd);
+	// Cleanup
+	close(fd);
 
-   return nRet;
+	return nRet;
 }
 
 static LONG ValueFromLine(char *pszLine, int nPos, char *pValue)
 {
-   int i;
-   char *eptr, *pszWord, szBuffer[256];
-   DWORD dwValue;
-   LONG nRet = SYSINFO_RC_ERROR;
+	int i;
+	char *eptr, *pszWord, szBuffer[256];
+	DWORD dwValue;
+	LONG nRet = SYSINFO_RC_ERROR;
 
-   for(i = 0, pszWord = pszLine; i <= nPos; i++)
-      pszWord = ExtractWord(pszWord, szBuffer);
-   dwValue = strtoul(szBuffer, &eptr, 0);
-   if (*eptr == 0)
-   {
-      ret_uint(pValue, dwValue);
-      nRet = SYSINFO_RC_SUCCESS;
-   }
-   return nRet;
+	for(i = 0, pszWord = pszLine; i <= nPos; i++)
+		pszWord = ExtractWord(pszWord, szBuffer);
+	dwValue = strtoul(szBuffer, &eptr, 0);
+	if (*eptr == 0)
+	{
+		ret_uint(pValue, dwValue);
+		nRet = SYSINFO_RC_SUCCESS;
+	}
+	return nRet;
 }
 
 LONG H_NetIfInfoFromProc(char *pszParam, char *pArg, char *pValue)
 {
-   char *ptr, szBuffer[256], szName[IFNAMSIZ];
-   LONG nIndex, nRet = SYSINFO_RC_SUCCESS;
-   FILE *fp;
+	char *ptr, szBuffer[256], szName[IFNAMSIZ];
+	LONG nIndex, nRet = SYSINFO_RC_SUCCESS;
+	FILE *fp;
 
-   if (!NxGetParameterArg(pszParam, 1, szBuffer, 256))
-      return SYSINFO_RC_UNSUPPORTED;
+	if (!NxGetParameterArg(pszParam, 1, szBuffer, 256))
+		return SYSINFO_RC_UNSUPPORTED;
 
-   // Check if we have interface name or index
-   nIndex = strtol(szBuffer, &ptr, 10);
-   if (*ptr == 0)
-   {
-      // Index passed as argument, convert to name
-      if (if_indextoname(nIndex, szName) == NULL)
-         nRet = SYSINFO_RC_ERROR;
-   }
-   else
-   {
-      // Name passed as argument
-      nx_strncpy(szName, szBuffer, IFNAMSIZ);
-   }
+	// Check if we have interface name or index
+	nIndex = strtol(szBuffer, &ptr, 10);
+	if (*ptr == 0)
+	{
+		// Index passed as argument, convert to name
+		if (if_indextoname(nIndex, szName) == NULL)
+			nRet = SYSINFO_RC_ERROR;
+	}
+	else
+	{
+		// Name passed as argument
+		nx_strncpy(szName, szBuffer, IFNAMSIZ);
+	}
 
-   // Get interface information
-   if (nRet == SYSINFO_RC_SUCCESS)
-   {
-      // If name is an alias (i.e. eth0:1), remove alias number
-      ptr = strchr(szName, ':');
-      if (ptr != NULL)
-         *ptr = 0;
+	// Get interface information
+	if (nRet == SYSINFO_RC_SUCCESS)
+	{
+		// If name is an alias (i.e. eth0:1), remove alias number
+		ptr = strchr(szName, ':');
+		if (ptr != NULL)
+			*ptr = 0;
 
-      fp = fopen("/proc/net/dev", "r");
-      if (fp != NULL)
-      {
-         while(1)
-         {
-            fgets(szBuffer, 256, fp);
-            if (feof(fp))
-            {
-               nRet = SYSINFO_RC_ERROR;   // Interface record not found
-               break;
-            }
+		fp = fopen("/proc/net/dev", "r");
+		if (fp != NULL)
+		{
+			while(1)
+			{
+				fgets(szBuffer, 256, fp);
+				if (feof(fp))
+				{
+					nRet = SYSINFO_RC_ERROR;   // Interface record not found
+					break;
+				}
 
-            // We expect line in form interface:stats
-            StrStrip(szBuffer);
-            ptr = strchr(szBuffer, ':');
-            if (ptr == NULL)
-               continue;
-            *ptr = 0;
+				// We expect line in form interface:stats
+				StrStrip(szBuffer);
+				ptr = strchr(szBuffer, ':');
+				if (ptr == NULL)
+					continue;
+				*ptr = 0;
 
-            if (!stricmp(szBuffer, szName))
-            {
-               ptr++;
-               break;
-            }
-         }
-         fclose(fp);
-      }
-      else
-      {
-         nRet = SYSINFO_RC_ERROR;
-      }
+				if (!stricmp(szBuffer, szName))
+				{
+					ptr++;
+					break;
+				}
+			}
+			fclose(fp);
+		}
+		else
+		{
+			nRet = SYSINFO_RC_ERROR;
+		}
 
-      if (nRet == SYSINFO_RC_SUCCESS)
-      {
-         StrStrip(ptr);
-         switch((long)pArg)
-         {
-            case IF_INFO_BYTES_IN:
-               nRet = ValueFromLine(ptr, 0, pValue);
-               break;
-            case IF_INFO_PACKETS_IN:
-               nRet = ValueFromLine(ptr, 1, pValue);
-               break;
-            case IF_INFO_IN_ERRORS:
-               nRet = ValueFromLine(ptr, 2, pValue);
-               break;
-            case IF_INFO_BYTES_OUT:
-               nRet = ValueFromLine(ptr, 8, pValue);
-               break;
-            case IF_INFO_PACKETS_OUT:
-               nRet = ValueFromLine(ptr, 9, pValue);
-               break;
-            case IF_INFO_OUT_ERRORS:
-               nRet = ValueFromLine(ptr, 10, pValue);
-               break;
-            default:
-               nRet = SYSINFO_RC_UNSUPPORTED;
-               break;
-         }
-      }
-   }
+		if (nRet == SYSINFO_RC_SUCCESS)
+		{
+			StrStrip(ptr);
+			switch((long)pArg)
+			{
+				case IF_INFO_BYTES_IN:
+					nRet = ValueFromLine(ptr, 0, pValue);
+					break;
+				case IF_INFO_PACKETS_IN:
+					nRet = ValueFromLine(ptr, 1, pValue);
+					break;
+				case IF_INFO_IN_ERRORS:
+					nRet = ValueFromLine(ptr, 2, pValue);
+					break;
+				case IF_INFO_BYTES_OUT:
+					nRet = ValueFromLine(ptr, 8, pValue);
+					break;
+				case IF_INFO_PACKETS_OUT:
+					nRet = ValueFromLine(ptr, 9, pValue);
+					break;
+				case IF_INFO_OUT_ERRORS:
+					nRet = ValueFromLine(ptr, 10, pValue);
+					break;
+				default:
+					nRet = SYSINFO_RC_UNSUPPORTED;
+					break;
+			}
+		}
+	}
 
-   return nRet;
+	return nRet;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2006/03/02 12:17:05  victor
+Removed various warnings related to 64bit platforms
+
 Revision 1.10  2005/10/17 20:45:46  victor
 Fixed incorrect usage of strncpy
 

@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.15 2007-02-05 11:28:21 alk Exp $ */
+/* $Id: system.cpp,v 1.16 2007-04-24 12:04:10 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -82,7 +82,7 @@ LONG H_ActiveUserSessions(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue
 			if (rec.ut_type == USER_PROCESS)
 			{
 				snprintf(szBuffer, 1024, "\"%s\" \"%s\" \"%s\"", rec.ut_user,
-				         rec.ut_line, rec.ut_host);
+						rec.ut_line, rec.ut_host);
 				NxAddResultString(pValue, szBuffer);
 			}
 		}
@@ -120,7 +120,7 @@ LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 		}
 		fclose(hFile);
 	}
-	
+
 	if (uUptime > 0)
 	{
 		ret_uint(pValue, uUptime);
@@ -189,15 +189,15 @@ LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
 			{
 				switch (pszParam[18])
 				{
-				case '1': // 15 min
-					ret_double(pValue, dLoad15);
-					break;
-				case '5': // 5 min
-					ret_double(pValue, dLoad5);
-					break;
-				default: // 1 min
-					ret_double(pValue, dLoad1);
-					break;
+					case '1': // 15 min
+						ret_double(pValue, dLoad15);
+						break;
+					case '5': // 5 min
+						ret_double(pValue, dLoad5);
+						break;
+					default: // 1 min
+						ret_double(pValue, dLoad1);
+						break;
 				}
 				nRet = SYSINFO_RC_SUCCESS;
 			}
@@ -206,7 +206,7 @@ LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
 
 		fclose(hFile);
 	}
-	
+
 	return nRet;
 }
 
@@ -225,7 +225,7 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 			NxGetParameterArg(pszParam, 2, szCmdLine, sizeof(szCmdLine));
 		}
 	}
-   
+
 	nCount = ProcRead(NULL, (*pArg != 'T') ? szArg : NULL, (*pArg == 'E') ? szCmdLine : NULL);
 
 	if (nCount >= 0)
@@ -267,36 +267,36 @@ LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 		nRet = SYSINFO_RC_SUCCESS;
 		switch((long)pArg)
 		{
-		case PHYSICAL_FREE: // ph-free
-			ret_uint64(pValue, ((QWORD)nMemFree) * 1024);
-			break;
-		case PHYSICAL_TOTAL: // ph-total
-			ret_uint64(pValue, ((QWORD)nMemTotal) * 1024);
-			break;
-		case PHYSICAL_USED: // ph-used
-			ret_uint64(pValue, ((QWORD)(nMemTotal - nMemFree)) * 1024);
-			break;
-		case SWAP_FREE: // sw-free
-			ret_uint64(pValue, ((QWORD)nSwapFree) * 1024);
-			break;
-		case SWAP_TOTAL: // sw-total
-			ret_uint64(pValue, ((QWORD)nSwapTotal) * 1024);
-			break;
-		case SWAP_USED: // sw-used
-			ret_uint64(pValue, ((QWORD)(nSwapTotal - nSwapFree)) * 1024);
-			break;
-		case VIRTUAL_FREE: // vi-free
-			ret_uint64(pValue, ((QWORD)nMemFree + (QWORD)nSwapFree) * 1024);
-			break;
-		case VIRTUAL_TOTAL: // vi-total
-			ret_uint64(pValue, ((QWORD)nMemTotal + (QWORD)nSwapTotal) * 1024);
-			break;
-		case VIRTUAL_USED: // vi-used
-			ret_uint64(pValue, ((QWORD)(nMemTotal - nMemFree) + (QWORD)(nSwapTotal - nSwapFree)) * 1024);
-			break;
-		default: // error
-			nRet = SYSINFO_RC_ERROR;
-			break;
+			case PHYSICAL_FREE: // ph-free
+				ret_uint64(pValue, ((QWORD)nMemFree) * 1024);
+				break;
+			case PHYSICAL_TOTAL: // ph-total
+				ret_uint64(pValue, ((QWORD)nMemTotal) * 1024);
+				break;
+			case PHYSICAL_USED: // ph-used
+				ret_uint64(pValue, ((QWORD)(nMemTotal - nMemFree)) * 1024);
+				break;
+			case SWAP_FREE: // sw-free
+				ret_uint64(pValue, ((QWORD)nSwapFree) * 1024);
+				break;
+			case SWAP_TOTAL: // sw-total
+				ret_uint64(pValue, ((QWORD)nSwapTotal) * 1024);
+				break;
+			case SWAP_USED: // sw-used
+				ret_uint64(pValue, ((QWORD)(nSwapTotal - nSwapFree)) * 1024);
+				break;
+			case VIRTUAL_FREE: // vi-free
+				ret_uint64(pValue, ((QWORD)nMemFree + (QWORD)nSwapFree) * 1024);
+				break;
+			case VIRTUAL_TOTAL: // vi-total
+				ret_uint64(pValue, ((QWORD)nMemTotal + (QWORD)nSwapTotal) * 1024);
+				break;
+			case VIRTUAL_USED: // vi-used
+				ret_uint64(pValue, ((QWORD)(nMemTotal - nMemFree) + (QWORD)(nSwapTotal - nSwapFree)) * 1024);
+				break;
+			default: // error
+				nRet = SYSINFO_RC_ERROR;
+				break;
 		}
 	}
 
@@ -407,7 +407,7 @@ static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *pArg)
 		MutexLock(m_cpuUsageMutex, INFINITE);
 
 		CpuUsageCollector();
-		
+
 		MutexUnlock(m_cpuUsageMutex);
 		ThreadSleepMs(1000); // sleep 1 second
 	}
@@ -503,6 +503,9 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2007/02/05 11:28:21  alk
+Fixed "Conditional jump or move depends on uninitialised value(s)" in CpuLoad
+
 Revision 1.14  2007/02/05 11:27:49  alk
 code reformatted
 

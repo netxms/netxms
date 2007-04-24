@@ -1,4 +1,4 @@
-/* $Id: disk.h,v 1.2 2005-08-19 15:23:50 victor Exp $ */
+/* $Id: disk.h,v 1.3 2007-04-24 12:04:10 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -26,12 +26,12 @@
 enum
 {
 	DISK_FREE,
-   DISK_AVAIL,
+	DISK_AVAIL,
 	DISK_USED,
 	DISK_TOTAL,
-   DISK_FREE_PERC,
-   DISK_AVAIL_PERC,
-   DISK_USED_PERC
+	DISK_FREE_PERC,
+	DISK_AVAIL_PERC,
+	DISK_USED_PERC
 };
 
 LONG H_DiskInfo(char *, char *, char *);
@@ -42,6 +42,9 @@ LONG H_DiskInfo(char *, char *, char *);
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/08/19 15:23:50  victor
+Added new parameters
+
 Revision 1.1  2004/10/22 22:08:34  alk
 source restructured;
 implemented:
