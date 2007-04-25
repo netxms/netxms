@@ -39,13 +39,14 @@ public:
 	DWORD m_dwId2;
 	DWORD m_dwTimeFrom;
 	DWORD m_dwTimeTo;
-	HWND hWnd;
+	HWND m_hWnd;
 
-	WorkerTask(int nTask) { m_nTask = nTask; }
-	WorkerTask(int nTask, DWORD dwId) { m_nTask = nTask; m_dwId = dwId; }
-	WorkerTask(int nTask, DWORD dwId, DWORD dwId2,
+	WorkerTask(HWND hWnd, int nTask) { m_hWnd = hWnd; m_nTask = nTask; }
+	WorkerTask(HWND hWnd, int nTask, DWORD dwId) { m_hWnd = hWnd; m_nTask = nTask; m_dwId = dwId; }
+	WorkerTask(HWND hWnd, int nTask, DWORD dwId, DWORD dwId2,
 	           DWORD dwTimeFrom, DWORD dwTimeTo)
 	{
+		m_hWnd = hWnd;
 		m_nTask = nTask;
 		m_dwId = dwId;
 		m_dwId2 = dwId2;
@@ -84,7 +85,7 @@ CNodePerfView::~CNodePerfView()
 
 	while((pTask = (WorkerTask *)m_workerQueue.Get()) != NULL)
 		delete pTask;
-	m_workerQueue.Put(new WorkerTask(TASK_SHUTDOWN));
+	m_workerQueue.Put(new WorkerTask(NULL, TASK_SHUTDOWN));
 	ThreadJoin(m_hWorkerThread);
 	safe_free(m_pGraphList);
 }
@@ -170,7 +171,7 @@ void CNodePerfView::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
 	m_nState = STATE_LOADING;
 	InvalidateRect(NULL);
 	AdjustView();
-	m_workerQueue.Put(new WorkerTask(TASK_GET_AVAIL_DCI));
+	m_workerQueue.Put(new WorkerTask(m_hWnd, TASK_GET_AVAIL_DCI));
 }
 
 
@@ -346,17 +347,17 @@ void CNodePerfView::WorkerThread()
 		{
 			case TASK_GET_AVAIL_DCI:
 				dwResult = NXCGetSystemDCIList(g_hSession, m_pObject->dwId, &dwNumItems, &pItemList);
-				::PostMessage(pTask->hWnd, NXCM_REQUEST_COMPLETED,
+				::PostMessage(pTask->m_hWnd, NXCM_REQUEST_COMPLETED,
 				              (dwResult == RCC_SUCCESS) ? dwNumItems : 0xFFFFFFFF,
 				              CAST_FROM_POINTER(pItemList, LPARAM));
 				break;
 			case TASK_FINISH_UPDATE:
-				::PostMessage(pTask->hWnd, NXCM_UPDATE_FINISHED, 0, pTask->m_dwId);
+				::PostMessage(pTask->m_hWnd, NXCM_UPDATE_FINISHED, 0, pTask->m_dwId);
 				break;
 			case TASK_UPDATE_GRAPH:
 				dwResult = NXCGetDCIData(g_hSession, pTask->m_dwId2, pTask->m_dwId, 0,
 				                         pTask->m_dwTimeFrom, pTask->m_dwTimeTo, &pData);
-				::PostMessage(pTask->hWnd, NXCM_GRAPH_DATA, pTask->m_dwId,
+				::PostMessage(pTask->m_hWnd, NXCM_GRAPH_DATA, pTask->m_dwId,
 				              (dwResult == RCC_SUCCESS) ? CAST_FROM_POINTER(pData, LPARAM) : 0);
 				break;
 			default:
@@ -421,9 +422,9 @@ void CNodePerfView::UpdateAllGraphs()
 	for(i = 0; i < m_dwNumGraphs; i++)
 		for(j = 0; j < MAX_GRAPH_ITEMS; j++)
 			if (m_pGraphList[i].dwItemId[j] != 0)
-				m_workerQueue.Put(new WorkerTask(TASK_UPDATE_GRAPH, m_pGraphList[i].dwItemId[j],
+				m_workerQueue.Put(new WorkerTask(m_hWnd, TASK_UPDATE_GRAPH, m_pGraphList[i].dwItemId[j],
 															m_pObject->dwId, m_dwTimeFrom, m_dwTimeTo));
-	m_workerQueue.Put(new WorkerTask(TASK_FINISH_UPDATE, m_pObject->dwId));
+	m_workerQueue.Put(new WorkerTask(m_hWnd, TASK_FINISH_UPDATE, m_pObject->dwId));
 }
 
 

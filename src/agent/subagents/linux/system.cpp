@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.16 2007-04-24 12:04:10 alk Exp $ */
+/* $Id: system.cpp,v 1.17 2007-04-25 07:44:09 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -343,7 +343,7 @@ LONG H_SourcePkgSupport(char *pszParam, char *pArg, char *pValue)
 
 static THREAD m_cpuUsageCollector = INVALID_THREAD_HANDLE;
 static MUTEX m_cpuUsageMutex = INVALID_MUTEX_HANDLE;
-static bool m_stopCollectorThread = false;
+static bool volatile m_stopCollectorThread = false;
 static uint64_t m_user = 0;
 static uint64_t m_system = 0;
 static uint64_t m_idle = 0;
@@ -368,6 +368,8 @@ static void CpuUsageCollector()
 				(system - m_system) +
 				(idle - m_idle);
 
+			MutexLock(m_cpuUsageMutex, INFINITE);
+
 			if (m_currentSlot == CPU_USAGE_SLOTS)
 			{
 				m_currentSlot = 0;
@@ -391,6 +393,8 @@ static void CpuUsageCollector()
 				}
 			}
 
+			MutexUnlock(m_cpuUsageMutex);
+
 			m_user = user;
 			m_system = system;
 			m_idle = idle;
@@ -402,13 +406,9 @@ static void CpuUsageCollector()
 static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *pArg)
 {
 	setlocale(LC_NUMERIC, "C");
-	while (m_stopCollectorThread == false)
+	while(m_stopCollectorThread == false)
 	{
-		MutexLock(m_cpuUsageMutex, INFINITE);
-
 		CpuUsageCollector();
-
-		MutexUnlock(m_cpuUsageMutex);
 		ThreadSleepMs(1000); // sleep 1 second
 	}
 
@@ -420,11 +420,7 @@ void StartCpuUsageCollector(void)
 	int i;
 
 	m_cpuUsageMutex = MutexCreate();
-
-	for (i = 0; i < CPU_USAGE_SLOTS; i++)
-	{
-		m_cpuUsage[i] = 0;
-	}
+	memset(m_cpuUsage, 0, sizeof(float) * CPU_USAGE_SLOTS);
 
 	// get initial count of user/system/idle time
 	m_currentSlot = 0;
@@ -448,10 +444,7 @@ void StartCpuUsageCollector(void)
 
 void ShutdownCpuUsageCollector(void)
 {
-	MutexLock(m_cpuUsageMutex, INFINITE);
 	m_stopCollectorThread = true;
-	MutexUnlock(m_cpuUsageMutex);
-
 	ThreadJoin(m_cpuUsageCollector);
 	MutexDestroy(m_cpuUsageMutex);
 }
@@ -461,8 +454,6 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 	float usage = 0;
 	int i;
 	int count;
-
-	MutexLock(m_cpuUsageMutex, INFINITE);
 
 	switch (CAST_FROM_POINTER(pArg, int))
 	{
@@ -477,6 +468,8 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 			break;
 	}
 
+	MutexLock(m_cpuUsageMutex, INFINITE);
+
 	for (i = 0; i < count; i++)
 	{
 		int position = m_currentSlot - i - 1;
@@ -489,11 +482,10 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 		usage += m_cpuUsage[position];
 	}
 
-	usage /= count;
-
-	ret_double(pValue, usage);
-
 	MutexUnlock(m_cpuUsageMutex);
+
+	usage /= count;
+	ret_double(pValue, usage);
 
 	return SYSINFO_RC_SUCCESS;
 }
@@ -503,6 +495,9 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.16  2007/04/24 12:04:10  alk
+code reformat
+
 Revision 1.15  2007/02/05 11:28:21  alk
 Fixed "Conditional jump or move depends on uninitialised value(s)" in CpuLoad
 

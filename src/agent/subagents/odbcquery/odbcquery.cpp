@@ -167,14 +167,14 @@ static BOOL AddQueryFromConfig(TCHAR *pszCfg)
 
 	if (pszCfg == NULL)
 	{
-		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("Null config entry, ignored"));
+		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("ODBC: Null config entry, ignored"));
 		bResult = TRUE;
 		goto finish_add_query;
 	}
 
    if ((pszLine = _tcsdup(pszCfg)) == NULL)
 	{
-		NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("String allocation failed"));
+		NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("ODBC: String allocation failed"));
 		goto finish_add_query;
 	}
 
@@ -192,7 +192,7 @@ static BOOL AddQueryFromConfig(TCHAR *pszCfg)
    }
 	else
 	{
-		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("Wrong query string format, ODBC source missing"));
+		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("ODBC: Wrong query string format, ODBC source missing"));
 		goto finish_add_query;
 	}
 
@@ -207,7 +207,7 @@ static BOOL AddQueryFromConfig(TCHAR *pszCfg)
    }
 	else
 	{
-		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("Wrong query string format, SQL query missing"));
+		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("ODBC: Wrong query string format, SQL query missing"));
 		goto finish_add_query;
 	}
 
@@ -222,7 +222,7 @@ static BOOL AddQueryFromConfig(TCHAR *pszCfg)
    }
 	else
 	{
-		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("Wrong query string format, poll interval missing"));
+		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("ODBC: Wrong query string format, poll interval missing"));
 		goto finish_add_query;
 	}
 
@@ -231,8 +231,7 @@ static BOOL AddQueryFromConfig(TCHAR *pszCfg)
 		 dwPollInterval == (DWORD)LONG_MAX ||
 		 dwPollInterval == 0)
 	{
-		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("Wrong query string format, "
-							 "invalid poll interval"));
+		NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("ODBC: Wrong query string format, invalid poll interval"));
 		goto finish_add_query;
 	}
 
@@ -240,7 +239,7 @@ static BOOL AddQueryFromConfig(TCHAR *pszCfg)
 						sizeof(ODBC_QUERY) * (m_dwNumQueries + 1));
 	if (m_pQueryList == NULL)
 	{
-		NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("QueryList allocation failed"));
+		NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("ODBC: QueryList allocation failed"));
 		goto finish_add_query;
 	}
 
@@ -251,7 +250,7 @@ static BOOL AddQueryFromConfig(TCHAR *pszCfg)
 	m_pQueryList[m_dwNumQueries].pSqlCtx = NULL;
 	m_dwNumQueries++;
 	bResult = TRUE;
-	NxWriteAgentLog(EVENTLOG_INFORMATION_TYPE, _T("Query: %s"), pszQuery);
+	NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("ODBC: query \"%s\" successfully registered"), pszQuery);
 
 finish_add_query:
    free(pszLine);

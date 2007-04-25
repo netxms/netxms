@@ -1,4 +1,12 @@
 *
+* 0.2.17
+*
+
+- ODBCQUERY subagent improved
+- Fixed issues: #122, #128, #130, #136, #138, #141
+
+
+*
 * 0.2.16
 *
 

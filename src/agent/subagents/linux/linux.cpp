@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.32 2007-04-24 12:04:10 alk Exp $ */
+/* $Id: linux.cpp,v 1.33 2007-04-25 07:44:09 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -18,7 +18,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: linux.cpp
+** File: linux.cpp
 **
 **/
 
@@ -29,11 +29,23 @@
 #include "system.h"
 #include "disk.h"
 
+
 //
-// Cleanup callback
+// Initalization callback
 //
 
-static void Cleanup(void)
+static BOOL SubAgentInit(TCHAR *pszConfigFile)
+{
+	StartCpuUsageCollector();
+	return TRUE;
+}
+
+
+//
+// Shutdown callback
+//
+
+static void SubAgentShutdown(void)
 {
 	ShutdownCpuUsageCollector();
 }
@@ -180,8 +192,9 @@ static NETXMS_SUBAGENT_INFO m_info =
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	"Linux",
 	NETXMS_VERSION_STRING,
-	&Cleanup, /* unload handler */
-	NULL, /* command handler */
+	SubAgentInit,     /* initialization handler */
+	SubAgentShutdown, /* unload handler */
+	NULL,             /* command handler */
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
@@ -192,10 +205,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_INIT(LINUX)
+DECLARE_SUBAGENT_ENTRY_POINT(LINUX)
 {
-	StartCpuUsageCollector();
-
 	*ppInfo = &m_info;
 	return TRUE;
 }
@@ -220,6 +231,9 @@ extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.32  2007/04/24 12:04:10  alk
+code reformat
+
 Revision 1.31  2007/02/05 12:57:12  alk
 *** empty log message ***
 

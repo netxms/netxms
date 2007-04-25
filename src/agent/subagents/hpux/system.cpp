@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.9 2006-10-30 18:24:04 victor Exp $ */
+/* $Id: system.cpp,v 1.10 2007-04-25 07:44:09 victor Exp $ */
 
 /* 
 ** NetXMS subagent for HP-UX
@@ -425,6 +425,8 @@ static void CpuUsageCollector()
 			total += psd.psd_cpu_time[i];
 		delta = total - m_total;
 
+		MutexLock(m_cpuUsageMutex, INFINITE);
+
 		if (m_currentSlot == CPU_USAGE_SLOTS)
 		{
 			m_currentSlot = 0;
@@ -448,6 +450,8 @@ static void CpuUsageCollector()
 			}
 		}
 
+		MutexUnlock(m_cpuUsageMutex);
+
 		m_idle = psd.psd_cpu_time[CP_IDLE];
 		m_total = total;
 	}
@@ -455,16 +459,11 @@ static void CpuUsageCollector()
 
 static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *pArg)
 {
-	while (m_stopCollectorThread == false)
+	while(m_stopCollectorThread == false)
 	{
-		MutexLock(m_cpuUsageMutex, INFINITE);
-
 		CpuUsageCollector();
-
-		MutexUnlock(m_cpuUsageMutex);
 		ThreadSleepMs(1000); // sleep 1 second
 	}
-
 	return THREAD_OK;
 }
 
@@ -473,11 +472,7 @@ void StartCpuUsageCollector(void)
 	int i;
 
 	m_cpuUsageMutex = MutexCreate();
-
-	for (i = 0; i < CPU_USAGE_SLOTS; i++)
-	{
-		m_cpuUsage[i] = 0;
-	}
+	memset(m_cpuUsage, 0, sizeof(float) * CPU_USAGE_SLOTS);
 
 	// get initial count of user/system/idle time
 	m_currentSlot = 0;
@@ -501,13 +496,9 @@ void StartCpuUsageCollector(void)
 
 void ShutdownCpuUsageCollector(void)
 {
-	MutexLock(m_cpuUsageMutex, INFINITE);
 	m_stopCollectorThread = true;
-	MutexUnlock(m_cpuUsageMutex);
-
 	ThreadJoin(m_cpuUsageCollector);
 	MutexDestroy(m_cpuUsageMutex);
-
 }
 
 LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
@@ -554,6 +545,9 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2006/10/30 18:24:04  victor
+Implemented System.ActiveUserSessions
+
 Revision 1.8  2006/10/27 10:00:51  victor
 - Changed compiler search order on HP-UX
 - Finished System.CPU.Usage on HP-UX

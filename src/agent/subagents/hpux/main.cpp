@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.7 2006-10-26 17:46:22 victor Exp $ */
+/* $Id: main.cpp,v 1.8 2007-04-25 07:44:09 victor Exp $ */
 
 /*
 ** NetXMS subagent for HP-UX
@@ -36,10 +36,21 @@ static LONG H_SourcePkg(char *pszParam, char *pArg, char *pValue)
 
 
 //
+// Initialization callback
+//
+
+static BOOL SubAgentInit(TCHAR *pszConfigFile)
+{
+	StartCpuUsageCollector();
+	return TRUE;
+}
+
+
+//
 // Called by master agent at unload
 //
 
-static void UnloadHandler(void)
+static void SubAgentShutdown(void)
 {
 	ShutdownCpuUsageCollector();
 }
@@ -157,8 +168,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	"HP-UX",
 	NETXMS_VERSION_STRING,
-	UnloadHandler,
-	NULL,
+	SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
@@ -170,10 +180,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_INIT(HPUX)
+DECLARE_SUBAGENT_ENTRY_POINT(HPUX)
 {
-	StartCpuUsageCollector();
-
 	*ppInfo = &m_info;
 	return TRUE;
 }
@@ -196,6 +204,9 @@ extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.7  2006/10/26 17:46:22  victor
+System.CPU.Usage almost complete
+
 Revision 1.6  2006/10/26 15:19:39  victor
 Fixed problems with Process.Count and System.ProcessCount on HP-UX 11.23
 
