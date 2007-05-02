@@ -99,9 +99,13 @@ NXSL_Value *NXSL_DiscoveryClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
    {
       pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_CDP) ? 1 : 0));
    }
-   else if (!strcmp(pszAttr, "isNortelTopo"))
+   else if (!strcmp(pszAttr, "isSONMP"))
    {
-      pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_NORTEL_TOPO) ? 1 : 0));
+      pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_SONMP) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isLLDP"))
+   {
+      pValue = new NXSL_Value((LONG)((pData->dwFlags & NNF_IS_LLDP) ? 1 : 0));
    }
    else if (!strcmp(pszAttr, "snmpVersion"))
    {
@@ -304,13 +308,22 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
             data.dwFlags |= NNF_IS_CDP;
       }
 
-      // Check for Nortel topology discovery support
+      // Check for SONMP (Nortel topology discovery protocol) support
       if (SnmpGet(data.nSNMPVersion, pTransport, szCommunityString,
                   ".1.3.6.1.4.1.45.1.6.13.1.2.0", NULL, 0, &dwTemp, sizeof(DWORD),
                   FALSE, FALSE) == SNMP_ERR_SUCCESS)
       {
          if (dwTemp == 1)
-            data.dwFlags |= NNF_IS_NORTEL_TOPO;
+            data.dwFlags |= NNF_IS_SONMP;
+      }
+
+      // Check for LLDP (Link Layer Discovery Protocol) support
+      if (SnmpGet(data.nSNMPVersion, pTransport, szCommunityString,
+                  ".1.3.6.1.4.1.45.1.6.13.1.2.0", NULL, 0, &dwTemp, sizeof(DWORD),
+                  FALSE, FALSE) == SNMP_ERR_SUCCESS)
+      {
+         if (dwTemp == 1)
+            data.dwFlags |= NNF_IS_SONMP;
       }
    }
 

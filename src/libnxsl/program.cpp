@@ -33,7 +33,7 @@
 // Constants
 //
 
-#define MAX_ERROR_NUMBER         18
+#define MAX_ERROR_NUMBER         19
 #define CONTROL_STACK_LIMIT      32768
 
 
@@ -80,7 +80,8 @@ static TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
    _T("Unknown object's attribute"),
    _T("Requested module not found or cannot be loaded"),
    _T("Argument is not of string type and cannot be converted to string"),
-   _T("Invalid regular expression")
+   _T("Invalid regular expression"),
+	_T("Function or operation argument is not a whole number")
 };
 
 

@@ -24,44 +24,18 @@
 #ifndef __NXHTTPD__H__
 #define __NXHTTPD__H__
 
-#pragma warning(disable: 4530 4786)
-
-#ifdef _WIN32
-#include <winsock2.h>
-#include <windows.h>
-#include <process.h>
-#endif
-
 #include <nms_common.h>
 #include <nms_util.h>
-
-#include <stdio.h>
-#include <time.h>
-#include <string>
-#include <iostream>
-#include <map>
-#include <string>
-#include <vector>
-
-#include <sys/stat.h>
-#include "httprequest.h"
-#include "httpresponse.h"
-#include "misc.h"
-
-
-#ifndef _WIN32
-# include <signal.h>
-# include <sys/types.h>
-# include <sys/wait.h>
-#endif
-
+#include <nxclapi.h>
 
 #ifdef _WIN32
 #define NXHTTPD_SERVICE_NAME     "nxhttpd"
 #endif
 
 
-//////////////////////////////////////////////////////////////////////////
+//
+// Generic HTTP daemon instance
+//
 
 class NxHttpd
 {
@@ -81,24 +55,24 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	
-	string FilterEnt(string);
+	String FilterEnt(String);
 
 	//////////////////////////////////////////////////////////////////////////
 
-	virtual bool HandleRequest(HttpRequest &, HttpResponse &);
+	virtual BOOL HandleRequest(HttpRequest &, HttpResponse &);
 
 private:
-	bool DefaultHandleRequest(HttpRequest &, HttpResponse &);
+	BOOL DefaultHandleRequest(HttpRequest &, HttpResponse &);
 	static THREAD_RESULT THREAD_CALL ClientHandler(void *);
 	
-	bool m_goDown;
+	BOOL m_goDown;
 
 	unsigned short m_port;
 
 	SOCKET m_socket;
 	SOCKET m_clientSocket;
 
-	string m_documentRoot;
+	String m_documentRoot;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -110,6 +84,5 @@ public:
 	NxHttpd *instance;
 };
 
-//////////////////////////////////////////////////////////////////////////
 
 #endif // __NXHTTPD__H__

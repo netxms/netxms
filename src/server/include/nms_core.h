@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.129 2007-04-13 21:43:38 victor Exp $ */
+/* $Id: nms_core.h,v 1.130 2007-05-02 12:40:34 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -249,7 +249,8 @@ typedef struct
 #define NNF_IS_BRIDGE         0x0008
 #define NNF_IS_PRINTER        0x0010
 #define NNF_IS_CDP            0x0020
-#define NNF_IS_NORTEL_TOPO    0x0040
+#define NNF_IS_SONMP          0x0040
+#define NNF_IS_LLDP           0x0080
 
 
 //

@@ -355,3 +355,84 @@ int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
    *ppResult = new NXSL_Value(pResult);
    return 0;
 }
+
+
+//
+// Get current time
+//
+
+int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+   *ppResult = new NXSL_Value(time(NULL));
+   return 0;
+}
+
+
+//
+// Get substring of a string
+// Possible usage:
+//    substr(string, start) - all characters from position 'start'
+//    substr(string, start, n) - n characters from position 'start'
+//    substr(string, NULL, n) - first n characters
+//
+
+int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	int nStart, nCount;
+	TCHAR *pBase;
+	DWORD dwLen;
+
+   if ((argc < 2) || (argc > 3))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->IsString())
+      return NXSL_ERR_NOT_STRING;
+
+	if (argv[1]->IsNull())
+	{
+		nStart = 0;
+	}
+	else if (argv[1]->IsInteger())
+	{
+		nStart = argv[1]->GetValueAsInt32();
+		if (nStart > 0)
+			nStart--;
+		else
+			nStart = 0;
+	}
+	else
+	{
+		return NXSL_ERR_NOT_INTEGER;
+	}
+
+	if (argc == 3)
+	{
+		if (!argv[2]->IsInteger())
+			return NXSL_ERR_NOT_INTEGER;
+		nCount = argv[2]->GetValueAsInt32();
+		if (nCount < 0)
+			nCount = 0;
+	}
+	else
+	{
+		nCount = -1;
+	}
+
+	pBase = argv[0]->GetValueAsString(&dwLen);
+	if ((DWORD)nStart < dwLen)
+	{
+		pBase += nStart;
+		dwLen -= nStart;
+		if ((nCount == -1) || ((DWORD)nCount > dwLen))
+		{
+			nCount = dwLen;
+		}
+		*ppResult = new NXSL_Value(pBase, (DWORD)nCount);
+	}
+	else
+	{
+		*ppResult = new NXSL_Value("");
+	}
+
+	return 0;
+}

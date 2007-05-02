@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.264 2007-03-27 16:21:41 victor Exp $ */
+/* $Id: nxclapi.h,v 1.265 2007-05-02 12:40:33 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -207,7 +207,8 @@ typedef void * NXC_SESSION;
 #define NF_BEHIND_NAT         0x00000080
 #define NF_IS_CPSNMP          0x00000100  /* CheckPoint SNMP agent on port 260 */
 #define NF_IS_CDP             0x00000200
-#define NF_IS_NORTEL_TOPO     0x00000400  /* Supports Nortel topology discovery */
+#define NF_IS_SONMP           0x00000400  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */
+#define NF_IS_LLDP				0x00000800	/* Supports Link Layer Discovery Protocol */
 
 #define NF_DISABLE_SNMP       0x01000000
 #define NF_DISABLE_NXCP       0x02000000

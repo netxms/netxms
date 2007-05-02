@@ -53,12 +53,12 @@ public:
 
 
 //
-// Topology table walker's callback for Nortel topology table
+// Topology table walker's callback for SONMP topology table
 //
 
-static DWORD NortelTopoHandler(DWORD dwVersion, const char *pszCommunity,
-                               SNMP_Variable *pVar, SNMP_Transport *pTransport,
-                               void *pArg)
+static DWORD SONMPTopoHandler(DWORD dwVersion, const char *pszCommunity,
+                              SNMP_Variable *pVar, SNMP_Transport *pTransport,
+                              void *pArg)
 {
    SNMP_ObjectId *pOid;
    TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4], szIfName[MAX_CONNECTOR_NAME];
@@ -139,9 +139,9 @@ DWORD BuildL2Topology(nxObjList &topology, Node *pRoot, Node *pParent, int nDept
 	Node *pNode;
 
 	pList = new PeerList;
-	if (pRoot->Flags() & NF_IS_NORTEL_TOPO)
+	if (pRoot->Flags() & NF_IS_SONMP)
 	{
-		if (pRoot->CallSnmpEnumerate(".1.3.6.1.4.1.45.1.6.13.2.1.1.3", NortelTopoHandler, pList) != SNMP_ERR_SUCCESS)
+		if (pRoot->CallSnmpEnumerate(".1.3.6.1.4.1.45.1.6.13.2.1.1.3", SONMPTopoHandler, pList) != SNMP_ERR_SUCCESS)
 			goto cleanup;
 	}
 	else if (pRoot->Flags() & NF_IS_CDP)

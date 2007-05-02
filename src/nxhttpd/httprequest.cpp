@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
-** Copyright (C) 2006 Alex Kirhenshtein
+** Copyright (C) 2006, 2007 Alex Kirhenshtein & Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,11 +21,7 @@
 **
 **/
 
-#pragma warning(disable: 4018)
-
 #include "nxhttpd.h"
-
-using namespace std;
 
 HttpRequest::HttpRequest()
 {

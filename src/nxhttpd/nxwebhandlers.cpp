@@ -27,7 +27,7 @@ bool NxWeb::DoLogin(HttpRequest req, HttpResponse &resp, string &sid)
 						(char *)password.c_str(),
 						0, NULL, NULL,
 						&s->handle,
-						"NetXMS WSM/" NETXMS_VERSION_STRING,
+						"nxhttpd/" NETXMS_VERSION_STRING,
 						NULL);
 
 				if (err == RCC_SUCCESS)

@@ -1,4 +1,4 @@
-/* $Id: nxsl.h,v 1.11 2007-01-02 09:56:16 victor Exp $ */
+/* $Id: nxsl.h,v 1.12 2007-05-02 12:40:33 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2005, 2006 Victor Kirhenshtein
@@ -64,6 +64,7 @@
 #define NXSL_ERR_MODULE_NOT_FOUND         16
 #define NXSL_ERR_NOT_STRING               17
 #define NXSL_ERR_REGEXP_ERROR             18
+#define NXSL_ERR_NOT_INTEGER					19
 
 
 //

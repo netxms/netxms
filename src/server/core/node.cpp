@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.179 2007-04-20 11:44:37 victor Exp $ */
+/* $Id: node.cpp,v 1.180 2007-05-02 12:40:34 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1007,14 +1007,14 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
                m_dwFlags &= ~NF_IS_CDP;
             }
 
-            // Check for Nortel topology discovery support
+            // Check for SONMP (Nortel topology discovery discovery protocol) support
             if (CheckSNMPIntegerValue(pTransport, ".1.3.6.1.4.1.45.1.6.13.1.2.0", 1))
             {
-               m_dwFlags |= NF_IS_NORTEL_TOPO;
+               m_dwFlags |= NF_IS_SONMP;
             }
             else
             {
-               m_dwFlags &= ~NF_IS_NORTEL_TOPO;
+               m_dwFlags &= ~NF_IS_SONMP;
             }
 
             UnlockData();
@@ -2796,7 +2796,7 @@ nxObjList *Node::BuildL2Topology(DWORD *pdwStatus)
 	nDepth = ConfigReadInt(_T("TopologyDiscoveryRadius"), 5);
 	MutexLock(m_mutexTopoAccess, INFINITE);
 	delete m_pTopology;
-	if ((m_dwFlags & NF_IS_CDP) || (m_dwFlags & NF_IS_NORTEL_TOPO))
+	if ((m_dwFlags & NF_IS_CDP) || (m_dwFlags & NF_IS_SONMP) || (m_dwFlags & NF_IS_LLDP))
 	{
 		m_pTopology = new nxObjList;
 		if ((*pdwStatus = ::BuildL2Topology(*m_pTopology, this, NULL, nDepth, NULL)) == RCC_SUCCESS)

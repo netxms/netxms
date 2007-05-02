@@ -1,18 +1,12 @@
 #ifndef __HTTP_REQUEST__H__
 #define __HTTP_REQUEST__H__
 
-#pragma warning(disable: 4786)
-
-#include <string>
-#include <map>
-
 enum
 {
 	METHOD_INVALID,
 	METHOD_GET,
 	METHOD_POST
 };
-
 
 class HttpRequest
 {
