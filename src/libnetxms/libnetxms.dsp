@@ -335,6 +335,10 @@ SOURCE=.\string.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\strmap.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\strtoll.c
 # End Source File
 # Begin Source File

@@ -1,0 +1,215 @@
+/* $Id: smgr.cpp,v 1.1 2007-05-07 11:35:42 victor Exp $ */
+/* 
+** NetXMS - Network Management System
+** HTTP Server
+** Copyright (C) 2006, 2007 Alex Kirhenshtein and Victor Kirhenshtein
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: smgr.cpp
+**
+**/
+
+#include "nxhttpd.h"
+
+
+//
+// Static data
+//
+
+static MUTEX m_mutexSessionAccess = INVALID_MUTEX_HANDLE;
+static ClientSession *m_sessionList[MAX_SESSIONS];
+
+
+//
+// Session watchdog thread
+//
+
+THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
+{
+	return THREAD_OK;
+}
+
+
+//
+// Initialize sessions
+//
+
+void InitSessions(void)
+{
+	memset(m_sessionList, 0, sizeof(ClientSession *) * MAX_SESSIONS);
+	m_mutexSessionAccess = MutexCreate();
+}
+
+
+//
+// Register new session
+//
+
+static BOOL RegisterNewSession(ClientSession *pSession)
+{
+   DWORD i;
+   BOOL bResult = FALSE;
+
+   MutexLock(m_mutexSessionAccess, INFINITE);
+   for(i = 0; i < MAX_SESSIONS; i++)
+      if (m_sessionList[i] == NULL)
+      {
+         m_sessionList[i] = pSession;
+			pSession->SetIndex(i);
+         bResult = TRUE;
+         break;
+      }
+   MutexUnlock(m_mutexSessionAccess);
+   return bResult;
+}
+
+
+//
+// Delete session
+//
+
+static void DeleteSession(ClientSession *pSession)
+{
+	DWORD dwIndex;
+
+	MutexLock(m_mutexSessionAccess, INFINITE);
+	dwIndex = pSession->GetIndex();
+	m_sessionList[dwIndex] = NULL;
+	delete pSession;
+   MutexUnlock(m_mutexSessionAccess);
+}
+
+
+//
+// Find session by SID
+//
+
+static ClientSession *FindSessionBySID(TCHAR *pszSID)
+{
+   DWORD i;
+	ClientSession *pSession = NULL;
+
+   MutexLock(m_mutexSessionAccess, INFINITE);
+   for(i = 0; i < MAX_SESSIONS; i++)
+      if (m_sessionList[i] != NULL)
+      {
+         if (m_sessionList[i]->IsMySID(pszSID))
+			{
+				pSession = m_sessionList[i];
+				break;
+			}
+      }
+   MutexUnlock(m_mutexSessionAccess);
+   return pSession;
+}
+
+
+//
+// Session request handler
+//
+
+BOOL SessionRequestHandler(HttpRequest &request, HttpResponse &response)
+{
+	BOOL bProcessed = FALSE;
+	TCHAR *pszURI, *pszExt, szModule[MAX_MODULE_NAME];
+
+	pszURI = request.GetURI();
+	pszExt = _tcsrchr(pszURI, _T('.'));
+	if (pszExt != NULL)
+	{
+		pszExt++;
+		if (!_tcscmp(pszExt, _T("app")))
+		{
+			nx_strncpy(szModule, (*pszURI == _T('/')) ? &pszURI[1] : pszURI, MAX_MODULE_NAME);
+			pszExt = _tcsrchr(szModule, _T('.'));
+			if (pszExt != NULL)
+				*pszExt = 0;
+			if (!_tcscmp(szModule, _T("login")))
+			{
+				String user, passwd;
+				ClientSession *pSession;
+				DWORD dwResult;
+
+				if (request.GetQueryParam(_T("user"), user) &&
+					 request.GetQueryParam(_T("pwd"), passwd))
+				{
+					pSession = new ClientSession;
+					dwResult = pSession->DoLogin(user, passwd);
+					if (dwResult == RCC_SUCCESS)
+					{
+						if (RegisterNewSession(pSession))
+						{
+							pSession->GenerateSID();
+							pSession->ShowForm(response, FORM_OVERVIEW);
+						}
+						else
+						{
+							delete pSession;
+							ShowFormLogin(response, _T("Allowed number of simultaneous sessions exceeded"));
+						}
+					}
+					else
+					{
+						delete pSession;
+						ShowFormLogin(response, (TCHAR *)NXCGetErrorText(dwResult));
+					}
+				}
+				else
+				{
+					ShowFormLogin(response, NULL);
+				}
+				response.SetCode(HTTP_OK);
+			}
+			else if (!_tcscmp(szModule, _T("main")))
+			{
+				String sid;
+
+				if (request.GetQueryParam(_T("sid"), sid))
+				{
+					ClientSession *pSession;
+
+					pSession = FindSessionBySID(sid);
+					if (pSession != NULL)
+					{
+						if (!pSession->ProcessRequest(request, response))
+						{
+							DeleteSession(pSession);
+							ShowFormLogin(response, NULL);
+						}
+					}
+					else
+					{
+						// TODO: Show expired session form instead of 403
+						response.SetCode(HTTP_FORBIDDEN);
+						response.SetBody("ERROR 403: Forbidden");
+					}
+				}
+				else
+				{
+					response.SetCode(HTTP_FORBIDDEN);
+					response.SetBody("ERROR 403: Forbidden");
+				}
+			}
+			else
+			{
+				response.SetCode(HTTP_NOTFOUND);
+				response.SetBody("ERROR 404: File not found");
+			}
+			bProcessed = TRUE;
+		}
+	}
+	return bProcessed;
+}

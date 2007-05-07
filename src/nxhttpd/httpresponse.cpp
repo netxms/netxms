@@ -1,49 +1,37 @@
-#pragma warning(disable: 4786)
-
 #include "nxhttpd.h"
 
-using namespace std;
 
-//////////////////////////////////////////////////////////////////////////
+//
+// Constructor
+//
 
 HttpResponse::HttpResponse()
 {
 	m_code = HTTP_INTERNALSERVERERROR;
+	m_codeString = _T("500 Internal server error");
 	m_body = NULL;
 	m_bodyLen = 0;
-	m_headers.clear();
 }
+
+
+//
+// Destructor
+//
 
 HttpResponse::~HttpResponse()
 {
-	if (m_body != NULL)
-	{
-		free(m_body);
-		m_body = NULL;
-	}
+	safe_free(m_body);
 }
 
-//////////////////////////////////////////////////////////////////////////
 
-void HttpResponse::SetHeader(const string name, const string value)
-{
-	m_headers[name] = value;
-}
+//
+// Set body
+//
 
-void HttpResponse::SetType(const string type)
-{
-	m_headers["Content-type"] = type;
-}
-
-void HttpResponse::SetBody(std::string data, bool bAppend)
-{
-	SetBody(data.c_str(), data.size(), bAppend);
-}
-
-void HttpResponse::SetBody(const char *data, int size, bool bAppend)
+void HttpResponse::SetBody(TCHAR *data, int size, BOOL bAppend)
 {
 	// FIXME: add validation
-	if (m_body != NULL && bAppend == false)
+	if ((m_body != NULL) && !bAppend)
 	{
 		free(m_body);
 		m_body = NULL;
@@ -53,9 +41,9 @@ void HttpResponse::SetBody(const char *data, int size, bool bAppend)
 	{
 		int offset;
 
-		if (size == 0)
+		if (size == -1)
 		{
-			size = strlen(data);
+			size = _tcslen(data);
 		}
 
 		if (bAppend)
@@ -71,98 +59,111 @@ void HttpResponse::SetBody(const char *data, int size, bool bAppend)
 
 		m_bodyLen = offset + size;
 		memcpy(m_body + offset, data, size);
-
-		char tmp[64];
-		snprintf(tmp, sizeof(tmp), "%lu", m_bodyLen);
-		m_headers["Content-Lenght"] = tmp;
 	}
 	else
 	{
-		m_bodyLen = 0;
-		m_headers["Content-Lenght"] = "0";
+		if (!bAppend)
+			m_bodyLen = 0;
 	}
 }
+
+
+//
+// Set response code
+//
 
 void HttpResponse::SetCode(int code)
 {
-	char *text;
-
 	switch (code)
 	{
-	case HTTP_OK:
-		text = "200 OK";
-		break;
-	case HTTP_MOVEDPERMANENTLY:
-		text = "301 Moved";
-		break;
-	case HTTP_FOUND:
-		text = "302 Found";
-		break;
-	case HTTP_BADREQUEST:
-		text = "400 Bad Request";
-		break;
-	case HTTP_UNAUTHORIZED:
-		text = "401 Unauthorized";
-		break;
-	case HTTP_FORBIDDEN:
-		text = "403 Forbidden";
-		break;
-	case HTTP_NOTFOUND:
-		text = "404 Not Found";
-		break;
-	default:
-		code = 500;
-		text = "500 Internal server error";
-		break;
+		case HTTP_OK:
+			m_codeString = _T("200 OK");
+			break;
+		case HTTP_MOVEDPERMANENTLY:
+			m_codeString = _T("301 Moved");
+			break;
+		case HTTP_FOUND:
+			m_codeString = _T("302 Found");
+			break;
+		case HTTP_BADREQUEST:
+			m_codeString = _T("400 Bad Request");
+			break;
+		case HTTP_UNAUTHORIZED:
+			m_codeString = _T("401 Unauthorized");
+			break;
+		case HTTP_FORBIDDEN:
+			m_codeString = _T("403 Forbidden");
+			break;
+		case HTTP_NOTFOUND:
+			m_codeString = _T("404 Not Found");
+			break;
+		default:
+			code = HTTP_INTERNALSERVERERROR;
+			m_codeString = _T("500 Internal server error");
+			break;
 	}
-
 	m_code = code;
-	m_codeString = text;
 }
 
-string HttpResponse::GetCodeString(void)
-{
-	return m_codeString;
-}
 
-//////////////////////////////////////////////////////////////////////////
+//
+// Build output stream
+//
 
 char *HttpResponse::BuildStream(int &size)
 {
-	string tmp;
+	String tmp;
+	TCHAR szBuffer[64];
 	char *out;
+	DWORD i;
+
+	_sntprintf(szBuffer, 64, _T("%u"), m_bodyLen);
+	SetHeader(_T("Content-Lenght"), szBuffer);
 
 	// FIXME: hack
-	SetHeader("Pragma", "no-cache");
-	SetHeader("Cache-Control", "max-age=1, must-revalidate");
-	SetHeader("Expires", "Fri, 30 Oct 1998 14:19:41 GMT");
+	SetHeader(_T("Pragma"), _T("no-cache"));
+	SetHeader(_T("Cache-Control"), _T("max-age=1, must-revalidate"));
+	SetHeader(_T("Expires"), _T("Fri, 30 Oct 1998 14:19:41 GMT"));
 
-	tmp = string("HTTP/1.0 ") + m_codeString + string("\r\n");
+	tmp = _T("HTTP/1.0 ");
+	tmp += (TCHAR *)m_codeString;
+	tmp += _T("\r\n");
 
-	map<string, string>::const_iterator it = m_headers.begin();
-	for (; it != m_headers.end(); it++)
+	for(i = 0; i < m_headers.Size(); i++)
 	{
-		tmp += it->first + string(": ") + it->second + string("\r\n");
+		tmp += m_headers.GetKeyByIndex(i);
+		tmp += _T(": ");
+		tmp += m_headers.GetValueByIndex(i);
+		tmp += _T("\r\n");
 	}
-	tmp += string("\r\n");
+	tmp += _T("\r\n");
 
-	// add validation!
-	size = tmp.size() + m_bodyLen;
+	// TODO: add validation!
+	size = tmp.Size() + m_bodyLen;
 	out = (char *)malloc(size);
 
-	memcpy(out, tmp.c_str(), tmp.size());
-	if (m_bodyLen > 0 && m_body != NULL)
-	{
-		memcpy(out + tmp.size(), m_body, m_bodyLen);
-	}
+#ifdef UNICODE
+#error NOT IMPLEMENTED YET
+#else
+	memcpy(out, (TCHAR *)tmp, tmp.Size());
+	if ((m_bodyLen > 0) && (m_body != NULL))
+		memcpy(out + tmp.Size(), m_body, m_bodyLen);
+#endif
 
 	return out;
 }
 
-void HttpResponse::CleanStream(char *ptr)
+
+//
+// Start HTML page
+//
+
+void HttpResponse::BeginPage(TCHAR *pszTitle)
 {
-	if (ptr != NULL)
-	{
-		free(ptr);
-	}
+	SetType(_T("text/html"));
+	SetBody(_T("<html><head><title>"));
+	SetBody(pszTitle != NULL ? pszTitle : _T("NetXMS Web Interface"), -1, TRUE);
+	SetBody(_T("</title>\r\n")
+		     _T("<link rel=\"stylesheet\" type=\"text/css\" href=\"/netxms.css\" media=\"screen, tv, projection\" title=\"Default\" />\r\n")
+			  _T("</head><body>"), -1, TRUE);
 }

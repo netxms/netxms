@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
-** Copyright (C) 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 **
 **/
 
-#include "NxWeb.h"
+#include "nxhttpd.h"
 
 
 //
@@ -103,7 +103,7 @@ static VOID WINAPI NXHTTPDServiceMain(DWORD argc, LPTSTR *argv)
    status.dwWaitHint = 0;
    SetServiceStatus(serviceHandle, &status);
 
-   Main(NULL);
+   Main();
 }
 
 
@@ -160,6 +160,8 @@ void NXHTTPDInstallService(char *pszExecName)
    }
 
    CloseServiceHandle(mgr);
+
+   InstallEventSource(pszExecName);
 }
 
 
@@ -198,6 +200,8 @@ void NXHTTPDRemoveService(void)
    }
 
    CloseServiceHandle(mgr);
+
+   RemoveEventSource();
 }
 
 
@@ -276,4 +280,52 @@ void NXHTTPDStopService(void)
    }
 
    CloseServiceHandle(mgr);
+}
+
+
+//
+// Install event source
+//
+
+void InstallEventSource(TCHAR *pszPath)
+{
+   HKEY hKey;
+   DWORD dwTypes = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
+   TCHAR szErrorText[256];
+
+   if (ERROR_SUCCESS != RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+         _T("System\\CurrentControlSet\\Services\\EventLog\\System\\") NXHTTPD_EVENT_SOURCE,
+         0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL))
+   {
+      _tprintf(_T("Unable to create registry key: %s\n"),
+               GetSystemErrorText(GetLastError(), szErrorText, 256));
+      return;
+   }
+
+   RegSetValueEx(hKey, _T("TypesSupported"), 0, REG_DWORD, (BYTE *)&dwTypes, sizeof(DWORD));
+   RegSetValueEx(hKey, _T("EventMessageFile"), 0, REG_EXPAND_SZ, (BYTE *)pszPath, (DWORD)(_tcslen(pszPath) + 1) * sizeof(TCHAR));
+
+   RegCloseKey(hKey);
+   _tprintf(_T("Event source \"") NXHTTPD_EVENT_SOURCE _T("\" installed successfully\n"));
+}
+
+
+//
+// Remove event source
+//
+
+void RemoveEventSource(void)
+{
+   TCHAR szErrorText[256];
+
+   if (ERROR_SUCCESS == RegDeleteKey(HKEY_LOCAL_MACHINE,
+         _T("System\\CurrentControlSet\\Services\\EventLog\\System\\") NXHTTPD_EVENT_SOURCE))
+   {
+      _tprintf(_T("Event source \"") NXHTTPD_EVENT_SOURCE _T("\" uninstalled successfully\n"));
+   }
+   else
+   {
+      _tprintf(_T("Unable to uninstall event source \"") NXHTTPD_EVENT_SOURCE _T("\": %s\n"),
+               GetSystemErrorText(GetLastError(), szErrorText, 256));
+   }
 }

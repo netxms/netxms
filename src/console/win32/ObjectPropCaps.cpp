@@ -72,7 +72,8 @@ BOOL CObjectPropCaps::OnInitDialog()
    AddListRecord(_T("isBridge"), (m_pObject->node.dwFlags & NF_IS_BRIDGE));
    AddListRecord(_T("isRouter"), (m_pObject->node.dwFlags & NF_IS_ROUTER));
    AddListRecord(_T("isCDP"), (m_pObject->node.dwFlags & NF_IS_CDP));
-   AddListRecord(_T("isNortelTopo"), (m_pObject->node.dwFlags & NF_IS_NORTEL_TOPO));
+   AddListRecord(_T("isSONMP"), (m_pObject->node.dwFlags & NF_IS_SONMP));
+   AddListRecord(_T("isLLDP"), (m_pObject->node.dwFlags & NF_IS_LLDP));
    AddListRecord(_T("nodeType"), CodeToText(m_pObject->node.dwNodeType, g_ctNodeType));
    AddListRecord(_T("platformName"), m_pObject->node.szPlatformName);
    AddListRecord(_T("snmpOID"), m_pObject->node.szObjectId);

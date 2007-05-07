@@ -582,6 +582,7 @@ DWORD CObjectBrowser::FindObjectInTree(DWORD dwObjectId)
 void CObjectBrowser::OnObjectChange(WPARAM wParam, LPARAM lParam)
 {
    UpdateObjectTree(wParam, (NXC_OBJECT *)lParam);
+	m_wndObjectTree.Invalidate();
 }
 
 

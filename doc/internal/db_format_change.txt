@@ -1,4 +1,14 @@
 *************
+* 61 ==> 62 *
+*************
+
+- Column "alarm_ack_key" removed from table "event_policy"
+- New columns added to table "event_policy":
+	ALTER TABLE event_policy ADD alarm_timeout integer not null
+	ALTER TABLE event_policy ADD alarm_timeout_event integer not null
+
+
+*************
 * 60 ==> 61 *
 *************
 

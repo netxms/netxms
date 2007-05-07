@@ -218,6 +218,7 @@ BOOL CEventEditor::EditEvent(int iItem)
             //UpdateItem(iItem, m_ppEventTemplates[dwIndex]);
             UpdateItem(iItem, &evt);
             bResult = TRUE;
+			   m_wndListCtrl.SortItems(CompareItems, (UINT_PTR)this);
          }
          else
          {
@@ -405,6 +406,9 @@ void CEventEditor::OnEventDelete()
 {
    int iItem;
    DWORD i, dwNumEvents, *pdwEventList, dwResult;
+
+	if (MessageBox(_T("Do you really want to delete selected event(s)?"), _T("Confirmation"), MB_YESNO | MB_ICONQUESTION) != IDYES)
+		return;
 
    dwNumEvents = m_wndListCtrl.GetSelectedCount();
    pdwEventList = (DWORD *)malloc(sizeof(DWORD) * dwNumEvents);

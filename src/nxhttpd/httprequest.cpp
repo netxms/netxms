@@ -23,32 +23,54 @@
 
 #include "nxhttpd.h"
 
+#ifdef _DEBUG
+#define REQUEST_READ_TIMESLICE	300
+#else
+#define REQUEST_READ_TIMESLICE	5
+#endif
+
+
+//
+// Constructor
+//
+
 HttpRequest::HttpRequest()
 {
 	m_raw = "";
 	m_uri = "";
 	m_rawQuery = "";
 
-	method = METHOD_INVALID;
+	m_method = METHOD_INVALID;
 }
+
+
+//
+// Destructor
+//
 
 HttpRequest::~HttpRequest()
 {
 }
 
-bool HttpRequest::Read(SOCKET s)
+
+//
+// Read request from socket
+//
+
+BOOL HttpRequest::Read(SOCKET s)
 {
 	struct timeval tv;
 	fd_set rdfs;
-	bool ret = false;
+	BOOL ret = FALSE;
 	time_t started;
-	char buffer[2048];
+	TCHAR buffer[2048];
+	int err, size;
 	
 	time(&started);
 
-	while(ret == false && m_raw.size() < 10240)
+	while(!ret && m_raw.Size() < 10240)
 	{
-		if (started + 5 < time(NULL))
+		if (started + REQUEST_READ_TIMESLICE < time(NULL))
 		{
 			// timeout
 			break;
@@ -60,11 +82,18 @@ bool HttpRequest::Read(SOCKET s)
 		tv.tv_sec = 0;
 		tv.tv_usec = 100;
 
-		int err = select(s + 1, &rdfs, NULL, NULL, &tv);
+		err = select(s + 1, &rdfs, NULL, NULL, &tv);
 		if (err == -1)
 		{
 			// error
-			break;
+#ifndef _WIN32
+			if (errno != EINTR)
+#endif
+				break;
+#ifndef _WIN32
+			else
+				continue;
+#endif
 		}
 		if (err == 0)
 		{
@@ -72,22 +101,21 @@ bool HttpRequest::Read(SOCKET s)
 			continue;
 		}
 
-		int size = ::recv(s, buffer, sizeof(buffer), 0);
+		size = recv(s, buffer, sizeof(buffer), 0);
 		if (size <= 0)
 		{
 			// error/eof
 			break;
 		}
 
-		m_raw += string(buffer, size);
+		m_raw.AddString(buffer, size);
 
 		if (IsComplete())
 		{
 			if (Parse())
 			{
-				ret = true;
+				ret = TRUE;
 			}
-
 			break;
 		}
 	}
@@ -95,50 +123,65 @@ bool HttpRequest::Read(SOCKET s)
 	return ret;
 }
 
-bool HttpRequest::IsComplete(void)
-{
-	bool ret = false;
 
-	if (m_raw.size() < 15) // minimal: 'GET / HTTP/1.0\n' = 15
+//
+// Check if request is complete
+//
+
+BOOL HttpRequest::IsComplete(void)
+{
+	BOOL ret = FALSE;
+	TCHAR szBuffer[256];
+	int start, end, endOfHeaders;
+
+	if (m_raw.Size() < 15) // minimal: 'GET / HTTP/1.0\n' = 15
 	{
-		return false;
+		return FALSE;
 	}
 
 	// we assume that eos is CRLF, not LF or any mix of them
-	if (m_raw.substr(0, 3) == "GET")
+	if (!_tcscmp(m_raw.SubStr(0, 3, szBuffer), _T("GET")))
 	{
-		if (m_raw.substr(m_raw.size() - 4, 4) == "\r\n\r\n")
+		if (!_tcscmp(m_raw.SubStr(m_raw.Size() - 4, 4, szBuffer), _T("\r\n\r\n")))
 		{
-			method = METHOD_GET;
-			ret = true;
+			m_method = METHOD_GET;
+			ret = TRUE;
 		}
 	}
 	else
 	{
-		if (m_raw.substr(0, 4) == "POST")
+		if (!_tcscmp(m_raw.SubStr(0, 4, szBuffer), _T("POST")))
 		{
-			int endOfHeaders = m_raw.find("\r\n\r\n", 0);
-			if (endOfHeaders != string::npos)
+			endOfHeaders = m_raw.Find(_T("\r\n\r\n"), 0);
+			if (endOfHeaders != String::npos)
 			{
-				int start = m_raw.find("\r\nContent-Length: ", 0);
-				if (start != string::npos)
+				start = m_raw.Find(_T("\r\nContent-Length: "), 0);
+				if (start != String::npos)
 				{
 					start += 18; // strlen("\r\nContent-Length: ")
-					int end = m_raw.find("\r\n", start + 1);
+					end = m_raw.Find(_T("\r\n"), start + 1);
 					if (end > start)
 					{
-						if (m_raw.size() >=
-							endOfHeaders + 4 + atoi(m_raw.substr(start, end - start).c_str()))
+						if (end - start <= 8)
 						{
-							method = METHOD_POST;
-							ret = true;
+							if ((int)m_raw.Size() >=
+								endOfHeaders + 4 + atoi(m_raw.SubStr(start, end - start, szBuffer)))
+							{
+								m_method = METHOD_POST;
+								ret = TRUE;
+							}
+						}
+						else
+						{
+							// Too large content length
+							ret = TRUE;
 						}
 					}
 				}
 				else
 				{
 					// broken POST?
-					ret = true;
+					ret = TRUE;
 				}
 			}
 		}
@@ -147,49 +190,54 @@ bool HttpRequest::IsComplete(void)
 	return ret;
 }
 
-bool HttpRequest::Parse(void)
-{
-	bool ret = false;
 
-	if (method == METHOD_INVALID)
+//
+// Parse request
+//
+
+BOOL HttpRequest::Parse(void)
+{
+	BOOL ret = FALSE;
+	int start, end;
+
+	if (m_method == METHOD_INVALID)
 	{
-		return false;
+		return FALSE;
 	}
 
+	start = m_raw.Find(_T(" "), 0);
+	end = m_raw.Find(_T(" "), start + 1);
 
-	int start = m_raw.find(" ", 0);
-	int end = m_raw.find(" ", start + 1);
-
-	if (start != string::npos && end != string::npos)
+	if ((start != String::npos) && (end != String::npos))
 	{
 		// get uri
-		m_uri = m_raw.substr(start + 1, end - start - 1);
+		m_uri.SetBuffer(m_raw.SubStr(start + 1, end - start - 1));
 
-		start = m_uri.find("?");
-		if (start != string::npos)
+		start = m_uri.Find(_T("?"));
+		if (start != String::npos)
 		{
 			// found query data
-			m_rawQuery = m_uri.substr(start + 1);
-			m_uri = m_uri.substr(0, start);
+			m_rawQuery.SetBuffer(m_uri.SubStr(start + 1, -1));
+			m_uri.SetBuffer(m_uri.SubStr(0, start));
 		}
 
-		if (method == METHOD_POST)
+		if (m_method == METHOD_POST)
 		{
-			start = m_raw.find("\r\n\r\n");
+			start = m_raw.Find(_T("\r\n\r\n"));
 
-			m_rawQuery += "&";
-			m_rawQuery += m_raw.substr(start + 4);
+			m_rawQuery += _T("&");
+			m_rawQuery.AddDynamicString(m_raw.SubStr(start + 4, -1));
 
 			// ie sends \r\n at the end of req.
-			start = m_rawQuery.find("\r");
-			if (start != string::npos)
+			start = m_rawQuery.Find(_T("\r"));
+			if (start != String::npos)
 			{
-				m_rawQuery = m_rawQuery.substr(0, start);
+				m_rawQuery.SetBuffer(m_rawQuery.SubStr(0, start));
 			}
-			start = m_rawQuery.find("\n");
-			if (start != string::npos)
+			start = m_rawQuery.Find(_T("\n"));
+			if (start != String::npos)
 			{
-				m_rawQuery = m_rawQuery.substr(0, start);
+				m_rawQuery.SetBuffer(m_rawQuery.SubStr(0, start));
 			}
 		}
 
@@ -200,51 +248,91 @@ bool HttpRequest::Parse(void)
 	return ret;
 }
 
-bool HttpRequest::ParseQueryString(void)
+
+//
+// Parse query string (exctract separate arguments divided by &)
+//
+
+BOOL HttpRequest::ParseQueryString(void)
 {
-	bool ret = true;
+	int firstPos, secondPos;
+	TCHAR *pszParam;
 
-	vector<string> v;
-	Split(v, m_rawQuery, "&");
-
-	vector<string>::const_iterator it;
-	for (it = v.begin(); it != v.end(); it++)
+	firstPos = 0;
+	secondPos = m_rawQuery.Find(_T("&"));
+	pszParam = m_rawQuery.SubStr(firstPos, secondPos);
+	ParseParameter(pszParam);
+	while(secondPos != String::npos)
 	{
-		vector<string> v1;
-		Split(v1, *it, "=");
+		firstPos = secondPos + 1;
+		secondPos = m_rawQuery.Find(_T("&"), firstPos);
+		pszParam = m_rawQuery.SubStr(firstPos, (secondPos != String::npos) ? (secondPos - firstPos) : -1);
+		ParseParameter(pszParam);
+	}
+	return TRUE;
+}
 
-		if (v1.size() == 2 && !v1[0].empty())
+
+//
+// Parse single query parameter and add it to parameter map
+//
+
+BOOL HttpRequest::ParseParameter(TCHAR *pszParam)
+{
+	TCHAR *pSep;
+	BOOL bRet = FALSE;
+
+	if (pszParam != NULL)
+	{
+		pSep = _tcschr(pszParam, _T('='));
+		if (pSep != NULL)
 		{
+			*pSep = 0;
+			pSep++;
 			// TODO: add %xx decode
-			m_query[v1[0]] = v1[1];
+			m_query.Set(pszParam, pSep);
+			bRet = TRUE;
 		}
+		free(pszParam);
 	}
-
-	return ret;
+	return bRet;
 }
 
-void HttpRequest::SetQueryParam(const std::string name, std::string value)
+
+//
+// Set query parameter
+//
+
+void HttpRequest::SetQueryParam(TCHAR *pszName, TCHAR *pszValue)
 {
-	m_query[name] = value;
+	m_query.Set(pszName, pszValue);
 }
 
-bool HttpRequest::GetQueryParam(const std::string name, std::string &value)
+
+//
+// Get query parameter
+//
+
+BOOL HttpRequest::GetQueryParam(TCHAR *pszName, String &value)
 {
-	bool ret = false;
-	map<string, string>::iterator it;
+	BOOL ret = FALSE;
+	TCHAR *pszValue;
 
-	it = m_query.find(name);
-
-	if (it != m_query.end())
+	pszValue = m_query.Get(pszName);
+	if (pszValue != NULL)
 	{
-		ret = true;
-		value = m_query[name];
+		value = pszValue;
+		ret = TRUE;
 	}
-
 	return ret;
 }
 
-string HttpRequest::GetURI(void)
+
+//
+// Get URI
+//
+
+TCHAR *HttpRequest::GetURI(void)
 {
 	return m_uri;
 }

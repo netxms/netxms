@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.102 2007-03-23 15:59:04 victor Exp $ */
+/* $Id: nms_util.h,v 1.103 2007-05-07 11:35:41 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -228,6 +228,8 @@ protected:
    DWORD m_dwBufSize;
 
 public:
+	static const int npos;
+
    String();
    ~String();
 
@@ -237,9 +239,45 @@ public:
    const String&  operator +=(TCHAR *pszStr);
    operator TCHAR*() { return CHECK_NULL_EX(m_pszBuffer); }
 
+	void AddString(TCHAR *pStr, DWORD dwLen);
+	void AddDynamicString(TCHAR *pszStr) { if (pszStr != NULL) { *this += pszStr; free(pszStr); } }
+
    void AddFormattedString(TCHAR *pszFormat, ...);
    void EscapeCharacter(int ch, int esc);
    void Translate(TCHAR *pszSrc, TCHAR *pszDst);
+
+	DWORD Size(void) { return m_dwBufSize > 0 ? m_dwBufSize - 1 : 0; }
+
+	TCHAR *SubStr(int nStart, int nLen, TCHAR *pszBuffer);
+	TCHAR *SubStr(int nStart, int nLen) { return SubStr(nStart, nLen, NULL); }
+	int Find(TCHAR *pszStr, int nStart = 0);
+};
+
+
+//
+// String map class
+//
+
+class LIBNETXMS_EXPORTABLE StringMap
+{
+protected:
+	DWORD m_dwSize;
+	TCHAR **m_ppszKeys;
+	TCHAR **m_ppszValues;
+
+	DWORD Find(TCHAR *pszKey);
+
+public:
+	StringMap();
+	~StringMap();
+
+	void Set(TCHAR *pszKey, TCHAR *pszValue);
+	TCHAR *Get(TCHAR *pszKey);
+	void Clear(void);
+
+	DWORD Size(void) { return m_dwSize; }
+	TCHAR *GetKeyByIndex(DWORD idx) { return (idx < m_dwSize) ? m_ppszKeys[idx] : NULL; }
+	TCHAR *GetValueByIndex(DWORD idx) { return (idx < m_dwSize) ? m_ppszValues[idx] : NULL; }
 };
 
 #endif   /* __cplusplus */
@@ -509,6 +547,12 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.102  2007/03/23 15:59:04  victor
+- All certificates now stored in database
+- CA certificates can be imported from management console
+- Fixed problems with some "invisible" system rights
+- Minor UI fixes
+
 Revision 1.101  2007/02/09 22:38:07  victor
 Crash dump generator added to console
 

@@ -1,4 +1,4 @@
-/* $Id: nxagentd.cpp,v 1.88 2007-04-24 07:44:00 victor Exp $ */
+/* $Id: nxagentd.cpp,v 1.89 2007-05-07 11:35:41 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -825,8 +825,7 @@ BOOL Initialize(void)
 
 void Shutdown(void)
 {
-   // Set shutdowm flag and sleep for some time
-   // to allow other threads to finish
+   // Set shutdowm flag
    g_dwFlags |= AF_SHUTDOWN;
    ThreadJoin(m_thSessionWatchdog);
    ThreadJoin(m_thListener);

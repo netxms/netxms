@@ -13,8 +13,9 @@ INCLUDES=-I@top_srcdir@/include
 SUBDIRS = static
 
 bin_PROGRAMS = nxhttpd
-nxhttpd_SOURCES = httprequest.cpp httpresponse.cpp main.cpp misc.cpp nxhttpd.cpp nxpie.cpp nxweb.cpp nxwebhandlers.cpp nxwebhtml.cpp
+nxhttpd_SOURCES = client.cpp html.cpp httprequest.cpp httpresponse.cpp \
+		  log.cpp nxhttpd.cpp session.cpp smgr.cpp tools.cpp
 nxhttpd_LDADD = ../libnetxms/libnetxms.la ../libnxmap/libnxmap.la ../libnxcl/libnxcl.la
 
-EXTRA_DIST = httprequest.h httpresponse.h misc.h nxhttpd.h \
-             nxpie.h nxweb.h winsrv.cpp nxhttpd.dsp nxhttpd.dsw
+EXTRA_DIST = nxhttpd.h winsrv.cpp nxhttpd.dsp nxhttpd.dsw \
+	     resource.h nxhttpd.rc messages.mc

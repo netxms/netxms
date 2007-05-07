@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,13 @@
 **/
 
 #include "libnetxms.h"
+
+
+//
+// Static members
+//
+
+const int String::npos = -1;
 
 
 //
@@ -91,6 +98,19 @@ void String::AddFormattedString(TCHAR *pszFormat, ...)
    va_end(args);
    *this += pszBuffer;
    free(pszBuffer);
+}
+
+
+//
+// Add formatted string to the end of buffer
+//
+
+void String::AddString(TCHAR *pStr, DWORD dwSize)
+{
+   m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwSize) * sizeof(TCHAR));
+   memcpy(&m_pszBuffer[m_dwBufSize - 1], pStr, dwSize * sizeof(TCHAR));
+   m_dwBufSize += dwSize;
+	m_pszBuffer[m_dwBufSize - 1] = 0;
 }
 
 
@@ -182,4 +202,52 @@ void String::Translate(TCHAR *pszSrc, TCHAR *pszDst)
          }
       }
    }
+}
+
+
+//
+// Extract substring into buffer
+//
+
+TCHAR *String::SubStr(int nStart, int nLen, TCHAR *pszBuffer)
+{
+	int nCount;
+	TCHAR *pszOut;
+
+	if ((nStart < (int)m_dwBufSize - 1) && (nStart >= 0))
+	{
+		if (nLen == -1)
+		{
+			nCount = (int)m_dwBufSize - nStart - 1;
+		}
+		else
+		{
+			nCount = min(nLen, (int)m_dwBufSize - nStart - 1);
+		}
+		pszOut = (pszBuffer != NULL) ? pszBuffer : (TCHAR *)malloc((nCount + 1) * sizeof(TCHAR));
+		memcpy(pszOut, &m_pszBuffer[nStart], nCount * sizeof(TCHAR));
+		pszOut[nCount] = 0;
+	}
+	else
+	{
+		pszOut = (pszBuffer != NULL) ? pszBuffer : (TCHAR *)malloc(sizeof(TCHAR));
+		*pszOut = 0;
+	}
+	return pszOut;
+}
+
+
+//
+// Find substring in a string
+//
+
+int String::Find(TCHAR *pszStr, int nStart)
+{
+	TCHAR *p;
+
+	if ((nStart >= (int)m_dwBufSize - 1) || (nStart < 0))
+		return npos;
+
+	p = _tcsstr(&m_pszBuffer[nStart], pszStr);
+	return (p != NULL) ? (((char *)p - (char *)m_pszBuffer) / sizeof(TCHAR)) : npos;
 }

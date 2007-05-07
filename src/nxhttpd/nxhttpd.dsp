@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MT /W4 /GX /O2 /I "..\..\include" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /I "..\..\include" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
 # ADD BASE RSC /l 0x809 /d "NDEBUG"
 # ADD RSC /l 0x809 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -71,7 +71,7 @@ PostBuild_Cmds=copy Release\nxhttpd.exe C:\NetXMS\bin
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W4 /Gm /GX /ZI /Od /I "..\..\include" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /ZI /Od /I "..\..\include" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x809 /d "_DEBUG"
 # ADD RSC /l 0x809 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -97,6 +97,14 @@ PostBuild_Cmds=copy Debug\nxhttpd.exe ..\..\bin
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\client.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\html.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\httprequest.cpp
 # End Source File
 # Begin Source File
@@ -105,11 +113,7 @@ SOURCE=.\httpresponse.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\main.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\misc.cpp
+SOURCE=.\log.cpp
 # End Source File
 # Begin Source File
 
@@ -117,19 +121,15 @@ SOURCE=.\nxhttpd.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\nxpie.cpp
+SOURCE=.\session.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\nxweb.cpp
+SOURCE=.\smgr.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\nxwebhandlers.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\nxwebhtml.cpp
+SOURCE=.\tools.cpp
 # End Source File
 # Begin Source File
 
@@ -141,32 +141,69 @@ SOURCE=.\winsrv.cpp
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=.\httprequest.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\httpresponse.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\misc.h
+SOURCE=.\messages.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\nxhttpd.h
 # End Source File
-# Begin Source File
-
-SOURCE=.\nxpie.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\nxweb.h
-# End Source File
 # End Group
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# Begin Source File
+
+SOURCE=.\nxhttpd.rc
+# End Source File
+# End Group
+# Begin Group "Message FIles"
+
+# PROP Default_Filter "mc"
+# Begin Source File
+
+SOURCE=.\messages.mc
+
+!IF  "$(CFG)" == "nxhttpd - Win32 Release"
+
+# Begin Custom Build - Running Message Compiler on $(InputPath)
+ProjDir=.
+InputPath=.\messages.mc
+InputName=messages
+
+BuildCmds= \
+	mc -s -U -h $(ProjDir) -r $(ProjDir) $(InputName) \
+	del $(ProjDir)\$(InputName).rc \
+	
+
+"$(InputName).h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"Msg00001.bin" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "nxhttpd - Win32 Debug"
+
+# Begin Custom Build - Running Message Compiler on $(InputPath)
+ProjDir=.
+InputPath=.\messages.mc
+InputName=messages
+
+BuildCmds= \
+	mc -s -U -h $(ProjDir) -r $(ProjDir) $(InputName) \
+	del $(ProjDir)\$(InputName).rc \
+	
+
+"$(InputName).h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"Msg00001.bin" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
 # End Group
 # End Target
 # End Project

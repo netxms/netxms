@@ -12,7 +12,6 @@ SUBDIRS = images
 
 staticdir=$(pkgdatadir)/nxhttpd
 
-static_DATA = global.xsl Makefile.am nxweb.xsl pngfix.js \
-				 screen.css xloadtree.js xmlextras.js xtree.js
+static_DATA = pngfix.js netxms.css xloadtree.js xmlextras.js xtree.js
 
 EXTRA_DIST = $(static_DATA)
