@@ -27,6 +27,7 @@
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nxclapi.h>
+#include <nxnt.h>
 #include "messages.h"
 
 #ifdef _WIN32
@@ -37,6 +38,7 @@
 #define MAX_MODULE_NAME				128
 #define MAX_SID_LEN					(SHA1_DIGEST_SIZE * 2 + 1)
 #define MAX_SESSIONS					256
+#define MAX_INTERFACE_TYPE			56
 
 
 //
@@ -57,6 +59,17 @@ struct NXC_OBJECT_INDEX
 {
    DWORD dwKey;
    NXC_OBJECT *pObject;
+};
+
+
+//
+// Code translation structure
+//
+
+struct CODE_TO_TEXT
+{
+   int iCode;
+   TCHAR *pszText;
 };
 
 
@@ -155,15 +168,28 @@ enum
 	FORM_ALARMS
 };
 
+enum
+{
+	OBJVIEW_CURRENT,
+	OBJVIEW_OVERVIEW,
+	OBJVIEW_ALARMS,
+	OBJVIEW_LAST_VALUES,
+	OBJVIEW_PERFORMANCE,
+	OBJVIEW_LAST_VIEW_CODE
+};
+
 class ClientSession
 {
 protected:
 	TCHAR m_sid[MAX_SID_LEN];
 	DWORD m_dwIndex;
 	NXC_SESSION m_hSession;
+	int m_nCurrObjectView;
 
 	void ShowMainMenu(HttpResponse &response);
 	void ShowFormObjects(HttpResponse &response);
+	void ShowObjectView(HttpRequest &request, HttpResponse &response);
+	void ShowObjectOverview(HttpResponse &response, NXC_OBJECT *pObject);
 	void SendObjectTree(HttpRequest &request, HttpResponse &response);
 
 public:
@@ -203,6 +229,8 @@ BOOL SessionRequestHandler(HttpRequest &request, HttpResponse &response);
 TCHAR *EscapeHTMLText(String &text);
 void ShowFormLogin(HttpResponse &response, TCHAR *pszErrorText);
 
+TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, TCHAR *pszDefaultText);
+
 #ifdef _WIN32
 
 void InitService(void);
@@ -226,6 +254,12 @@ extern TCHAR g_szLogFile[];
 extern TCHAR g_szMasterServer[];
 extern TCHAR g_szDocumentRoot[];
 extern WORD g_wListenPort;
+extern TCHAR *g_szStatusText[];
+extern TCHAR *g_szStatusTextSmall[];
+extern TCHAR *g_szAlarmState[];
+extern TCHAR *g_szObjectClass[];
+extern TCHAR *g_szInterfaceTypes[];
+extern CODE_TO_TEXT g_ctNodeType[];
 
 
 #endif // __NXHTTPD__H__

@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.1 2007-05-07 11:35:42 victor Exp $ */
+/* $Id: tools.cpp,v 1.2 2007-05-07 17:58:02 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -45,4 +45,19 @@ void DebugPrintf(DWORD dwSessionId, char *pszFormat, ...)
       else
          WriteLog(MSG_DEBUG, EVENTLOG_INFORMATION_TYPE, "s", szBuffer);
    }
+}
+
+
+//
+// Translate given code to text
+//
+
+TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, TCHAR *pszDefaultText)
+{
+   int i;
+
+   for(i = 0; pTranslator[i].pszText != NULL; i++)
+      if (pTranslator[i].iCode == iCode)
+         return pTranslator[i].pszText;
+   return pszDefaultText;
 }

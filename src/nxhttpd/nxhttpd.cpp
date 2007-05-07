@@ -55,6 +55,90 @@ WORD g_wListenPort = 8080;
 
 
 //
+// Global string constants
+//
+
+TCHAR *g_szStatusText[] = { _T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"),
+                            _T("CRITICAL"), _T("UNKNOWN"), _T("UNMANAGED"),
+                            _T("DISABLED"), _T("TESTING"), NULL };
+TCHAR *g_szStatusTextSmall[] = { _T("Normal"), _T("Warning"), _T("Minor"), _T("Major"),
+                                 _T("Critical"), _T("Unknown"), _T("Unmanaged"),
+                                 _T("Disabled"), _T("Testing"), NULL };
+TCHAR *g_szAlarmState[] = { _T("Outstanding"), _T("Acknowledged"), _T("Terminated") };
+TCHAR *g_szObjectClass[] = { _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"), _T("Network"), 
+                             _T("Container"), _T("Zone"), _T("ServiceRoot"), _T("Template"), 
+                             _T("TemplateGroup"), _T("TemplateRoot"), _T("NetworkService"),
+                             _T("VPNConnector"), _T("Condition"), _T("Cluster") };
+TCHAR *g_szInterfaceTypes[] = 
+{
+   _T("Unknown"),
+   _T("Other"),
+   _T("Regular 1822"),
+   _T("HDH 1822"),
+   _T("DDN X.25"),
+   _T("RFC877 X.25"),
+   _T("Ethernet CSMA/CD"),
+   _T("ISO 802.3 CSMA/CD"),
+   _T("ISO 802.4 Token Bus"),
+   _T("ISO 802.5 Token Ring"),
+   _T("ISO 802.6 MAN"),
+   _T("StarLan"),
+   _T("PROTEON 10 Mbps"),
+   _T("PROTEON 80 Mbps"),
+   _T("Hyper Channel"),
+   _T("FDDI"),
+   _T("LAPB"),
+   _T("SDLC"),
+   _T("DS1"),
+   _T("E1"),
+   _T("ISDN BRI"),
+   _T("ISDN PRI"),
+   _T("Proprietary Serial Pt-to-Pt"),
+   _T("PPP"),
+   _T("Software Loopback"),
+   _T("EON (CLNP over IP)"),
+   _T("Ethernet 3 Mbps"),
+   _T("NSIP (XNS over IP)"),
+   _T("SLIP"),
+   _T("DS3"),
+   _T("SMDS"),
+   _T("Frame Relay"),
+   _T("RS-232"),
+   _T("PARA"),
+   _T("ArcNet"),
+   _T("ArcNet Plus"),
+   _T("ATM"),
+   _T("MIO X.25"),
+   _T("SONET"),
+   _T("X.25 PLE"),
+   _T("ISO 88022 LLC"),
+   _T("LocalTalk"),
+   _T("SMDS DXI"),
+   _T("Frame Relay Service"),
+   _T("V.35"),
+   _T("HSSI"),
+   _T("HIPPI"),
+   _T("Modem"),
+   _T("AAL5"),
+   _T("SONET PATH"),
+   _T("SONET VT"),
+   _T("SMDS ICIP"),
+   _T("Proprietary Virtual"),
+   _T("Proprietary Multiplexor"),
+   _T("IEEE 802.12"),
+   _T("FibreChannel")
+};
+CODE_TO_TEXT g_ctNodeType[] =
+{
+   { NODE_TYPE_GENERIC, _T("Generic") },
+   { NODE_TYPE_NORTEL_ACCELAR, _T("Nortel Networks Passport switch") },
+   { NODE_TYPE_NETSCREEN, _T("NetScreen Firewall/VPN") },
+   { NODE_TYPE_NORTEL_BAYSTACK, _T("Nortel Ethernet switch (former BayStack)") },
+   { 0, NULL }    // End of list
+};
+
+
+//
 // Static data
 //
 

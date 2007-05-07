@@ -52,7 +52,22 @@ img
 	border: 0;
 }
 
-/* menu */
+.subheader
+{
+	height: 1.6em;
+	font-size: 110%;
+	font-weight: bold;
+	border-bottom: 1px solid rgb(204,204,204);
+	position: relative;
+}
+
+.subheader > span
+{
+	position: absolute;
+	bottom: 0;
+}
+
+/* main menu */
 
 #nav_menu
 {
@@ -105,6 +120,60 @@ img
 	background-color: #7590AE;
 }
 
+/* submenu */
+
+#nav_submenu
+{
+	background-color: #3D5C7A;
+
+	font-weight: bold;
+	font-size: 8pt;
+	/* text-transform: uppercase; */
+	
+	width: 100%;
+	height: 2em;
+}
+
+#nav_submenu ul
+{
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+#nav_submenu li
+{
+	float: left;
+	margin: 0.10em 0.10em;
+}
+
+#nav_submenu a
+{
+	height: 1.6em;
+	line-height: 1.6em;
+	float: left;
+	width: 9em;
+	display: block;
+	color: #FFFFFF;
+	/* background-color: rgb(71, 107, 143); */
+	background-color: transparent;
+	text-decoration: none;
+	text-align: center;
+	/* border: 1px solid transparent; */
+}
+
+/*#nav_submenu a:focus
+{
+	border: 1px solid red;
+}*/
+
+#nav_submenu a:hover
+{
+	text-decoration: none;
+	color: #FFCC00;
+	background-color: #7590AE;
+}
+
 /* main body */
 
 #main-copy
@@ -130,6 +199,16 @@ img
 	margin: 1em 0 1.5em 0;
 	padding: 0;
 }
+
+/* Object view */
+
+#objview_header
+{
+	height: 1.6em;
+	font-size: 130%;
+	font-weight: bold;
+}
+
 
 /*
  * ripped from http://www.wpdfd.com/editorial/wpd0103.htm
@@ -202,4 +281,62 @@ img
 #alarms img
 {
 	vertical-align: bottom;
+}
+
+
+/* XTree */
+
+.webfx-tree-container {
+	margin: 0px;
+	padding: 0px;
+	font: icon;
+	white-space: nowrap;
+}
+
+.webfx-tree-item {
+	padding: 0px;
+	margin: 0px;
+	font: icon;
+	color: black;
+	white-space: nowrap;
+}
+
+.webfx-tree-item a, .webfx-tree-item a:active, .webfx-tree-item a:hover {
+	margin-left: 3px;
+	padding: 1px 2px 1px 2px;
+}
+
+.webfx-tree-item a {
+	color: black;
+	text-decoration: none;
+}
+
+.webfx-tree-item a:hover {
+	color: blue;
+	text-decoration: underline;
+}
+
+.webfx-tree-item a:active {
+	background: highlight;
+	color: highlighttext;
+	text-decoration: none;
+}
+
+.webfx-tree-item img {
+	vertical-align: middle;
+	border: 0px;
+}
+
+.webfx-tree-icon {
+	width: 16px;
+	height: 16px;
+}
+.webfx-tree-item a.selected {
+	color: selectedtext;
+	background: selected;
+}
+
+.webfx-tree-item a.selected-inactive {
+	color: windowtext;
+	background: buttonface;
 }

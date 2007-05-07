@@ -164,7 +164,6 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *pArg)
    struct sockaddr_in servAddr;
    int iNumErrors = 0, nRet;
    socklen_t iSize;
-   char szBuffer[256];
    struct timeval tv;
    fd_set rdfs;
 
@@ -221,8 +220,6 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *pArg)
          }
 
          iNumErrors = 0;     // Reset consecutive errors counter
-         DebugPrintf(INVALID_INDEX, "Incoming connection from %s", IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer));
-
 			ThreadCreate(ClientHandler, 0, (void *)hClientSocket);
       }
       else if (nRet == -1)
