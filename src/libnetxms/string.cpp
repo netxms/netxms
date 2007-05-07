@@ -249,5 +249,5 @@ int String::Find(TCHAR *pszStr, int nStart)
 		return npos;
 
 	p = _tcsstr(&m_pszBuffer[nStart], pszStr);
-	return (p != NULL) ? (((char *)p - (char *)m_pszBuffer) / sizeof(TCHAR)) : npos;
+	return (p != NULL) ? (int)(((char *)p - (char *)m_pszBuffer) / sizeof(TCHAR)) : npos;
 }

@@ -1082,6 +1082,7 @@ src/libnetxms/serial.cpp -text
 src/libnetxms/sha1.cpp -text
 src/libnetxms/sha1.h -text
 src/libnetxms/string.cpp -text
+src/libnetxms/strmap.cpp -text
 src/libnetxms/strtoll.c -text
 src/libnetxms/strtoull.c -text
 src/libnetxms/table.cpp -text
