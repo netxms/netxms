@@ -12,7 +12,7 @@ body
 	border: 0;
 }
 
-html > body
+html body
 {
 	font-size: 9pt;
 
@@ -35,16 +35,6 @@ th
 td
 {
 	vertical-align: top;
-}
-
-#odd td
-{
-	background-color: rgb(255, 255, 255);
-}
-
-#even td
-{
-	background-color: rgb(244, 248, 253);
 }
 
 img
@@ -176,14 +166,15 @@ img
 
 /* main body */
 
-#main-copy
+#clientarea
 {
 	margin: 0;
 	/* padding: 0.5em 0.5em; */
 	clear: left;
+	float: none;
 }
 
-#main-copy h1
+#clientarea h1
 {
 	color: rgb(117,144,174);
 	background-color: transparent;
@@ -193,11 +184,52 @@ img
 	padding: 0;
 }
 
-#main-copy p
+#clientarea p
 {
 	line-height: 1.75em;
 	margin: 1em 0 1.5em 0;
 	padding: 0;
+}
+
+/* box */
+
+.box
+{
+	border: 2px solid rgb(204,204,204);
+}
+
+.boxTitle
+{
+	height: 2em;
+	font-size: 110%;
+	font-weight: bold;
+	border-bottom: 2px solid rgb(204,204,204);
+	position: relative;
+	padding-left: 0.5em;
+}
+
+.boxTitle > span
+{
+	position: absolute;
+	bottom: 0;
+}
+
+.tableHeader
+{
+	color: rgb(255, 255, 255);
+	background-color: rgb(109, 136, 173);
+	font-size: 110%;
+	font-weight: bold;
+}
+
+.odd td
+{
+	background-color: rgb(231, 233, 242);
+}
+
+.even td
+{
+	background-color: rgb(255, 255, 255);
 }
 
 /* Object view */
@@ -209,6 +241,25 @@ img
 	font-weight: bold;
 }
 
+
+/* alarms */
+
+#alarm_list
+{
+	border: none;
+}
+
+#alarm_list table
+{
+	border: 2px solid rgb(204,204,204);
+	width: 100%;
+}
+
+#alarm_list td
+{
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+}
 
 /*
  * ripped from http://www.wpdfd.com/editorial/wpd0103.htm
@@ -258,14 +309,15 @@ img
 
 .left
 {
-	width: 22%;
+	width: 20%;
 	padding: 0 1.9%;
+	overflow: auto;
 }
 
 .right
 {
 	text-align: justify;
-	width: 70%;
+	width: 72%;
 	padding: 0 1.9%;
 }
 
@@ -284,7 +336,7 @@ img
 }
 
 
-/* XTree */
+/* WebFX XTree */
 
 .webfx-tree-container {
 	margin: 0px;
@@ -339,4 +391,107 @@ img
 .webfx-tree-item a.selected-inactive {
 	color: windowtext;
 	background: buttonface;
+}
+
+
+/* WebFX Table */
+
+.webfx-columnlist {
+//	border: 1px solid;
+//	border-color: threedshadow threedhighlight threedhighlight threedshadow;
+	overflow: hidden;
+	display: block;
+	-moz-user-select: none;
+	-moz-user-focus: normal;
+	-moz-user-input: enabled;
+}
+
+.webfx-columnlist td {
+	font: menu;
+	padding: 1px;
+	white-space: nowrap;
+}
+
+.webfx-columnlist-head {
+	position: absolute;
+	background: threedface;
+	overflow: hidden;
+	-moz-user-select: none;
+}
+
+.webfx-columnlist-head table {
+	table-layout: fixed;
+}
+
+.webfx-columnlist-head td {
+	border: 1px solid;
+	border-color: threedhighlight threedshadow threedshadow threedhighlight;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.webfx-columnlist-head td img {
+	width:    8px;
+	height:   7px;
+	margin:   0px 5px 0px 5px;
+	display:  none;
+}
+
+.webfx-columnlist-body {
+	border: 1px solid;
+	border-color: threedhighlight threedface threedface threedhighlight;
+	background: window;
+	overflow: auto;
+}
+
+.webfx-columnlist-body table {
+	table-layout: fixed;
+}
+
+.webfx-columnlist-body td {
+	border-bottom: solid white;
+	border-width:  0px 1px 1px 0px;
+	overflow:      hidden;
+	text-overflow: ellipsis;
+	white-space:   no-wrap;
+}
+
+.webfx-columnlist-body tr.selected td {
+	background:   #C0C0FF;
+}
+
+.webfx-columnlist-body tr.odd td {
+	background:   #FFFFC0;
+}
+
+.webfx-columnlist-body tr.even td {
+	background:   window;
+}
+
+.webfx-columnlist-move-header {
+	position: absolute;
+	background: threedshadow;
+	top: 0px;
+	font: menu;
+	padding: 2px;
+	height: 1em;
+	filter: Alpha(Opacity=50);
+	-moz-opacity: 0.5;
+	-moz-user-select: none;
+}
+
+.webfx-columnlist-active-header {
+	border-color: threedface !important;
+}
+
+.webfx-columnlist-separator-header {
+	position: absolute;
+	top: 0px;
+	left: 10px;
+	font: menu;
+	height: 1em;
+	width: 1px;
+	overflow: hidden;
+	background: blue;
+	padding: 3px 0px;
 }

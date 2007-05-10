@@ -164,6 +164,79 @@ void HttpResponse::BeginPage(TCHAR *pszTitle)
 	SetBody(_T("<html><head><title>"));
 	SetBody(pszTitle != NULL ? pszTitle : _T("NetXMS Web Interface"), -1, TRUE);
 	SetBody(_T("</title>\r\n")
-		     _T("<link rel=\"stylesheet\" type=\"text/css\" href=\"/netxms.css\" media=\"screen, tv, projection\" title=\"Default\" />\r\n")
-			  _T("</head><body>"), -1, TRUE);
+	        _T("<script type=\"text/javascript\" src=\"/resize.js\"></script>\r\n")
+/*	        _T("<script language=\"javascript\">\r\n")
+	        _T("<!--\r\n")
+	        _T("function changeDivHeight() {\r\n")
+	        _T("	 var clArea = document.getElementById('clientarea');\r\n")
+			  _T("	 if (clArea != null) {\r\n")
+//			  _T("	    var t = clArea.offsetTop;\r\n")
+//	        _T("		 var b = document.body.scrollHeight - document.getElementById('footer').offsetTop;\r\n")
+	        _T("		 var h = document.body.clientHeight - clArea.offsetTop;\r\n")
+	        _T("	    clArea.style.height = h + \"px\";\r\n")
+	        _T("	 }\r\n")
+	        _T("}\r\n")
+	        _T("onload = changeDivHeight;\r\n")
+	        _T("onresize = changeDivHeight;\r\n")
+	        _T("-->\r\n")
+	        _T("</script>\r\n")*/
+	        _T("<link rel=\"stylesheet\" type=\"text/css\" href=\"/netxms.css\" media=\"screen, tv, projection\" title=\"Default\" />\r\n")
+	        _T("</head><body>"), -1, TRUE);
+}
+
+
+//
+// Start box
+//
+
+void HttpResponse::StartBox(TCHAR *pszTitle, TCHAR *pszClass, TCHAR *pszId)
+{
+	String temp;
+
+	if (pszId != NULL)
+	{
+		temp.AddFormattedString(_T("<div id=\"%s\""), pszId);
+		if (pszClass != NULL)
+		{
+			temp.AddFormattedString(_T(" class=\"%s\">\r\n"), pszClass);
+		}
+		else
+		{
+			temp += _T(">\r\n");
+		}
+	}
+	else
+	{
+		temp.AddFormattedString(_T("<div class=\"%s\">\r\n"), (pszClass != NULL) ? pszClass : _T("box"));
+	}
+	AppendBody(temp);
+   m_dwBoxRowNumber = 0;
+	if (pszTitle != NULL)
+	{
+		AppendBody(_T("<div class=\"boxTitle\"><span>"));
+		AppendBody(pszTitle);
+		AppendBody(_T("</span></div><table>\r\n"));
+	}
+	else
+	{
+		AppendBody(_T("<table>\r\n"));
+	}
+}
+
+
+//
+// Start box row
+//
+
+void HttpResponse::StartBoxRow(void)
+{
+   if (m_dwBoxRowNumber & 1)
+   {
+      AppendBody(_T("<tr class=\"odd\">"));
+   }
+   else
+   {
+      AppendBody(_T("<tr class=\"even\">"));
+   }
+   m_dwBoxRowNumber++;
 }

@@ -135,6 +135,7 @@ protected:
 	StringMap m_headers;
 	TCHAR *m_body;
 	int m_bodyLen;
+	DWORD m_dwBoxRowNumber;
 
 public:
 	HttpResponse();
@@ -154,6 +155,9 @@ public:
 	// HTML helpers
 	void BeginPage(TCHAR *pszTitle);
 	void EndPage(void) { SetBody(_T("</body></html>"), -1, TRUE); }
+	void StartBox(TCHAR *pszTitle, TCHAR *pszClass = NULL, TCHAR *pszId = NULL);
+	void StartBoxRow(void);
+	void EndBox(void) { AppendBody(_T("</table></div>\r\n")); }
 };
 
 
@@ -186,15 +190,27 @@ protected:
 	NXC_SESSION m_hSession;
 	int m_nCurrObjectView;
 
+	DWORD m_dwNumAlarms;
+	NXC_ALARM *m_pAlarmList;
+	MUTEX m_mutexAlarmList;
+
+	void OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
+	void DeleteAlarmFromList(DWORD dwAlarmId);
+	void AddAlarmToList(NXC_ALARM *pAlarm);
+	NXC_ALARM *FindAlarmInList(DWORD dwAlarmId);
+
 	void ShowMainMenu(HttpResponse &response);
 	void ShowFormObjects(HttpResponse &response);
 	void ShowObjectView(HttpRequest &request, HttpResponse &response);
 	void ShowObjectOverview(HttpResponse &response, NXC_OBJECT *pObject);
 	void SendObjectTree(HttpRequest &request, HttpResponse &response);
+	void ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj);
 
 public:
 	ClientSession();
 	~ClientSession();
+
+	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
 
 	void GenerateSID(void);
 	void SetIndex(DWORD idx) { m_dwIndex = idx; }
@@ -228,6 +244,7 @@ BOOL SessionRequestHandler(HttpRequest &request, HttpResponse &response);
 
 TCHAR *EscapeHTMLText(String &text);
 void ShowFormLogin(HttpResponse &response, TCHAR *pszErrorText);
+void AddTableHeader(HttpResponse &response, TCHAR *pszClass, ...);
 
 TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, TCHAR *pszDefaultText);
 

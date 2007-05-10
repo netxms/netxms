@@ -13,7 +13,7 @@ INCLUDES=-I@top_srcdir@/include
 SUBDIRS = static
 
 bin_PROGRAMS = nxhttpd
-nxhttpd_SOURCES = client.cpp html.cpp httprequest.cpp httpresponse.cpp \
+nxhttpd_SOURCES = alarm.cpp client.cpp html.cpp httprequest.cpp httpresponse.cpp \
 		  log.cpp nxhttpd.cpp session.cpp smgr.cpp tools.cpp
 nxhttpd_LDADD = ../libnetxms/libnetxms.la ../libnxmap/libnxmap.la ../libnxcl/libnxcl.la
 

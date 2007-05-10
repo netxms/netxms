@@ -37,7 +37,7 @@
 static void Help(void)
 {
    printf("NetXMS Administartor Tool  Version " NETXMS_VERSION_STRING "\n"
-          "Copyright (c) 2004, 2005 NetXMS Development Team\n\n"
+          "Copyright (c) 2004, 2005, 2006, 2007 Victor Kirhenshtein\n\n"
           "Usage: nxadm -c <command>\n"
           "       nxadm -i\n"
           "       nxadm -h\n\n"

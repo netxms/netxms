@@ -89,9 +89,10 @@ void ConsolePrintf(CONSOLE_CTX pCtx, char *pszFormat, ...)
    else
    {
       CSCP_MESSAGE *pRawMsg;
-      TCHAR szBuffer[1024];
+      TCHAR szBuffer[8192];
 
-      _vsntprintf(szBuffer, 1024, pszFormat, args);
+      _vsntprintf(szBuffer, 8191, pszFormat, args);
+		szBuffer[8191] = 0;
       pCtx->pMsg->SetVariable(VID_MESSAGE, szBuffer);
       pRawMsg = pCtx->pMsg->CreateMessage();
       SendEx(pCtx->hSocket, pRawMsg, ntohl(pRawMsg->dwSize), 0);

@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.2 2007-05-07 17:58:02 victor Exp $ */
+/* $Id: session.cpp,v 1.3 2007-05-10 16:19:16 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -38,6 +38,20 @@ struct SID_SOURCE
 
 
 //
+// Client library event handler
+//
+
+void SessionEventHandler(NXC_SESSION hSession, DWORD dwEvent, DWORD dwCode, void *pArg)
+{
+	ClientSession *pSession;
+
+	pSession = (ClientSession *)NXCGetClientData(hSession);
+	if (pSession != NULL)
+		pSession->EventHandler(dwEvent, dwCode, pArg);
+}
+
+
+//
 // Constructor
 //
 
@@ -45,6 +59,9 @@ ClientSession::ClientSession()
 {
 	m_hSession = NULL;
 	m_nCurrObjectView = OBJVIEW_OVERVIEW;
+	m_dwNumAlarms = 0;
+	m_pAlarmList = NULL;
+	m_mutexAlarmList = MutexCreate();
 }
 
 
@@ -56,6 +73,31 @@ ClientSession::~ClientSession()
 {
 	if (m_hSession != NULL)
 		NXCDisconnect(m_hSession);
+	safe_free(m_pAlarmList);
+	MutexDestroy(m_mutexAlarmList);
+}
+
+
+//
+// Handler for client library events
+//
+
+void ClientSession::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
+{
+	if (dwEvent == NXC_EVENT_NOTIFICATION)
+	{
+		switch(dwCode)
+		{
+         case NX_NOTIFY_NEW_ALARM:
+         case NX_NOTIFY_ALARM_DELETED:
+         case NX_NOTIFY_ALARM_CHANGED:
+         case NX_NOTIFY_ALARM_TERMINATED:
+            OnAlarmUpdate(dwCode, (NXC_ALARM *)pArg);
+            break;
+			default:
+				break;
+		}
+	}
 }
 
 
@@ -72,9 +114,23 @@ DWORD ClientSession::DoLogin(TCHAR *pszLogin, TCHAR *pszPassword)
 								 _T("nxhttpd/") NETXMS_VERSION_STRING, NULL);
 	if (dwResult == RCC_SUCCESS)
 	{
+		NXCSetClientData(m_hSession, this);
       dwResult = NXCSubscribe(m_hSession, NXC_CHANNEL_OBJECTS);
       if (dwResult == RCC_SUCCESS)
          dwResult = NXCSyncObjects(m_hSession);
+	}
+
+	// Synchronize alarms
+	if (dwResult == RCC_SUCCESS)
+	{
+		dwResult = NXCLoadAllAlarms(m_hSession, FALSE, &m_dwNumAlarms, &m_pAlarmList);
+		if (dwResult == RCC_SUCCESS)
+	      dwResult = NXCSubscribe(m_hSession, NXC_CHANNEL_ALARMS);
+	}
+
+	if (dwResult == RCC_SUCCESS)
+	{
+		NXCSetEventHandler(m_hSession, SessionEventHandler);
 	}
 
    // Disconnect if some of post-login operations was failed
@@ -147,15 +203,20 @@ void ClientSession::ShowForm(HttpResponse &response, int nForm)
 
 	response.BeginPage(formName[nForm]);
 	ShowMainMenu(response);
-	response.AppendBody(_T("<div id=\"main-copy\">\r\n"));
+	response.AppendBody(_T("<div id=\"clientarea\">\r\n"));
+	//response.AppendBody(_T("<table id=\"clientarea\" width=\"100%\"><tr><td>\r\n"));
 	switch(nForm)
 	{
 		case FORM_OBJECTS:
 			ShowFormObjects(response);
 			break;
+		case FORM_ALARMS:
+			ShowAlarmList(response, NULL);
+			break;
 		default:
 			break;
 	}
+	//response.AppendBody(_T("</td></tr></table>\r\n"));
 	response.AppendBody(_T("</div>\r\n"));
 	response.EndPage();
 }
@@ -173,7 +234,7 @@ void ClientSession::ShowFormObjects(HttpResponse &response)
 		_T("<script type=\"text/javascript\" src=\"/xtree.js\"></script>\r\n")
 		_T("<script type=\"text/javascript\" src=\"/xmlextras.js\"></script>\r\n")
 		_T("<script type=\"text/javascript\" src=\"/xloadtree.js\"></script>\r\n")
-		_T("<div class=\"left\">\r\n")
+		_T("<div class=\"left\" id=\"object_tree\">\r\n")
 		_T("	<div id=\"jsTree\"></div>\r\n")
 		_T("</div>\r\n")
 		_T("<div class=\"right\">\r\n")
@@ -394,6 +455,9 @@ void ClientSession::ShowObjectView(HttpRequest &request, HttpResponse &response)
 		case OBJVIEW_OVERVIEW:
 			ShowObjectOverview(response, pObject);
 			break;
+		case OBJVIEW_ALARMS:
+			ShowAlarmList(response, pObject);
+			break;
 		default:
 			response.AppendBody(_T("<br>Not implemented yet"));
 			break;
@@ -526,6 +590,10 @@ BOOL ClientSession::ProcessRequest(HttpRequest &request, HttpResponse &response)
 		else if (!_tcscmp((TCHAR *)cmd, _T("objectView")))
 		{
 			ShowObjectView(request, response);
+		}
+		else if (!_tcscmp((TCHAR *)cmd, _T("alarms")))
+		{
+			ShowForm(response, FORM_ALARMS);
 		}
 		else
 		{

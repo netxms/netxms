@@ -109,3 +109,42 @@ TCHAR *EscapeHTMLText(String &text)
 	text.Translate(_T("\""), _T("&quot;"));
 	return (TCHAR *)text;
 }
+
+
+//
+// Start table in a box
+//
+
+void AddTableHeader(HttpResponse &response, TCHAR *pszClass, ...)
+{
+   va_list args;
+   TCHAR *pszTitle, *pszOptions;
+
+	if (pszClass == NULL)
+	{
+		response.AppendBody(_T("<tr class=\"tableHeader\">\r\n"));
+	}
+	else
+	{
+		response.AppendBody(_T("<tr class=\""));
+		response.AppendBody(pszClass);
+		response.AppendBody(_T("\">\r\n"));
+	}
+   va_start(args, pszClass);
+   while(1)
+   {
+      pszTitle = va_arg(args, TCHAR *);
+      if (pszTitle == NULL)
+         break;
+      pszOptions = va_arg(args, TCHAR *);
+      response.AppendBody(_T("<td "));
+      if (pszOptions != NULL)
+      {
+         response.AppendBody(pszOptions);
+      }
+      response.AppendBody(_T(">"));
+		response.AppendBody(pszTitle);
+		response.AppendBody(_T("</td>"));
+   }
+   response.AppendBody(_T("</tr>\r\n"));
+}
