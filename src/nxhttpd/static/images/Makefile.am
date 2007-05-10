@@ -11,11 +11,10 @@
 imagesdir=$(pkgdatadir)/nxhttpd/images
 
 images_DATA = ack.png blank.png file.png foldericon.png _interface.png \
-				 I.png Lminus.png login.png login_small.png Lplus.png L.png \
-				 menu_background.png menu_button_hover.png menu_button.png \
-				 _network.png new.png _node.png openfoldericon.png \
-				 status_Critical.png status_Major.png status_Minor.png \
-				 status_Normal.png status_Warning.png _subnet.png \
-				 Tminus.png Tplus.png T.png login.jpg
+		 I.png Lminus.png login.png Lplus.png L.png \
+		 _network.png new.png _node.png openfoldericon.png \
+		 status_Critical.png status_Major.png status_Minor.png \
+		 status_Normal.png status_Warning.png _subnet.png \
+		 Tminus.png Tplus.png T.png document.png graph.png
 
 EXTRA_DIST = $(images_DATA)

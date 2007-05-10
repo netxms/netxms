@@ -52,6 +52,16 @@
 
 
 //
+// Timestamp formats
+//
+
+#define TS_LONG_DATE_TIME  0
+#define TS_LONG_TIME       1
+#define TS_DAY_AND_MONTH   2
+#define TS_MONTH           3
+
+
+//
 // libnxcl internal object index structure
 //
 
@@ -154,7 +164,7 @@ public:
 
 	// HTML helpers
 	void BeginPage(TCHAR *pszTitle);
-	void EndPage(void) { SetBody(_T("</body></html>"), -1, TRUE); }
+	void EndPage(void) { SetBody(_T("</body>\r\n</html>\r\n"), -1, TRUE); }
 	void StartBox(TCHAR *pszTitle, TCHAR *pszClass = NULL, TCHAR *pszId = NULL);
 	void StartBoxRow(void);
 	void EndBox(void) { AppendBody(_T("</table></div>\r\n")); }
@@ -205,6 +215,7 @@ protected:
 	void ShowObjectOverview(HttpResponse &response, NXC_OBJECT *pObject);
 	void SendObjectTree(HttpRequest &request, HttpResponse &response);
 	void ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj);
+	void ShowLastValues(HttpResponse &response, NXC_OBJECT *pObject);
 
 public:
 	ClientSession();
@@ -245,8 +256,11 @@ BOOL SessionRequestHandler(HttpRequest &request, HttpResponse &response);
 TCHAR *EscapeHTMLText(String &text);
 void ShowFormLogin(HttpResponse &response, TCHAR *pszErrorText);
 void AddTableHeader(HttpResponse &response, TCHAR *pszClass, ...);
+void ShowErrorMessage(HttpResponse &response, DWORD dwError);
+void ShowInfoMessage(HttpResponse &response, TCHAR *pszText);
 
 TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, TCHAR *pszDefaultText);
+TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType);
 
 #ifdef _WIN32
 

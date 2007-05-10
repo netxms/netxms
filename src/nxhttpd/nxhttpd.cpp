@@ -414,7 +414,6 @@ int main(int argc, char *argv[])
 			   {
 				   if (Initialize())
                {
-                  printf("Server started. Press Ctrl+C to terminate.\n");
 					   Main();
                }
 			   }

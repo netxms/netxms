@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.3 2007-05-10 16:19:16 victor Exp $ */
+/* $Id: session.cpp,v 1.4 2007-05-10 22:43:31 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -166,6 +166,54 @@ void ClientSession::GenerateSID(void)
 
 
 //
+// Process user's request
+// Should return FALSE if session should be terminated for any reason
+//
+
+BOOL ClientSession::ProcessRequest(HttpRequest &request, HttpResponse &response)
+{
+	String cmd;
+	BOOL bRet = TRUE;
+
+	response.SetCode(HTTP_OK);
+	if (request.GetQueryParam(_T("cmd"), cmd))
+	{
+		if (!_tcscmp((TCHAR *)cmd, _T("logout")))
+		{
+			bRet = FALSE;
+		}
+		else if (!_tcscmp((TCHAR *)cmd, _T("objects")))
+		{
+			ShowForm(response, FORM_OBJECTS);
+		}
+		else if (!_tcscmp((TCHAR *)cmd, _T("getObjectTree")))
+		{
+			SendObjectTree(request, response);
+		}
+		else if (!_tcscmp((TCHAR *)cmd, _T("objectView")))
+		{
+			ShowObjectView(request, response);
+		}
+		else if (!_tcscmp((TCHAR *)cmd, _T("alarms")))
+		{
+			ShowForm(response, FORM_ALARMS);
+		}
+		else
+		{
+			response.SetCode(HTTP_BADREQUEST);
+			response.SetBody(_T("ERROR 400: Bad request"));
+		}
+	}
+	else
+	{
+		response.SetCode(HTTP_BADREQUEST);
+		response.SetBody(_T("ERROR 400: Bad request"));
+	}
+	return bRet;
+}
+
+
+//
 // Show main menu area
 //
 
@@ -204,19 +252,19 @@ void ClientSession::ShowForm(HttpResponse &response, int nForm)
 	response.BeginPage(formName[nForm]);
 	ShowMainMenu(response);
 	response.AppendBody(_T("<div id=\"clientarea\">\r\n"));
-	//response.AppendBody(_T("<table id=\"clientarea\" width=\"100%\"><tr><td>\r\n"));
 	switch(nForm)
 	{
 		case FORM_OBJECTS:
 			ShowFormObjects(response);
 			break;
 		case FORM_ALARMS:
+			response.AppendBody(_T("<div id=\"alarm_view\">\r\n"));
 			ShowAlarmList(response, NULL);
+			response.AppendBody(_T("</div>\r\n"));
 			break;
 		default:
 			break;
 	}
-	//response.AppendBody(_T("</td></tr></table>\r\n"));
 	response.AppendBody(_T("</div>\r\n"));
 	response.EndPage();
 }
@@ -238,7 +286,7 @@ void ClientSession::ShowFormObjects(HttpResponse &response)
 		_T("	<div id=\"jsTree\"></div>\r\n")
 		_T("</div>\r\n")
 		_T("<div class=\"right\">\r\n")
-		_T("	<div id=\"objectData\"></div>\r\n")
+		_T("	<div id=\"object_view\"></div>\r\n")
 		_T("</div>\r\n")
 		_T("<script type=\"text/javascript\">\r\n")
 		_T("	var net = new WebFXLoadTree(\"NetXMS Objects\", \"/main.app?cmd=getObjectTree&sid={$sid}\");\r\n")
@@ -248,7 +296,8 @@ void ClientSession::ShowFormObjects(HttpResponse &response)
 		_T("		var xmlHttp = XmlHttp.create();\r\n")
 		_T("		xmlHttp.open(\"GET\", \"/main.app?cmd=objectView&sid={$sid}&view=\" + viewId + \"&id=\" + id, false);\r\n")
 		_T("		xmlHttp.send(null);\r\n")
-		_T("		document.getElementById(\"objectData\").innerHTML = xmlHttp.responseText;\r\n")
+		_T("		document.getElementById(\"object_view\").innerHTML = xmlHttp.responseText;\r\n")
+		_T("     resizeElements();\r\n")
 		_T("	}\r\n")
 		_T("</script>\r\n");
 	data.Translate(_T("{$sid}"), m_sid);
@@ -438,13 +487,13 @@ void ClientSession::ShowObjectView(HttpRequest &request, HttpResponse &response)
 	data.Translate(_T("{$name}"), pObject->szName);
 	response.AppendBody(data);
 
-	// Object menu
+	// Object menu and start of object_data div
 	data = _T("<div id=\"nav_submenu\">\r\n	<ul>\r\n");
 	AddObjectSubmenu(data, pObject->iClass, OBJVIEW_OVERVIEW, _T("Overview"));
 	AddObjectSubmenu(data, pObject->iClass, OBJVIEW_ALARMS, _T("Alarms"));
 	AddObjectSubmenu(data, pObject->iClass, OBJVIEW_LAST_VALUES, _T("DataView"));
 	AddObjectSubmenu(data, pObject->iClass, OBJVIEW_PERFORMANCE, _T("PerfView"));
-	data += _T("	</ul>\r\n</div>\r\n");
+	data += _T("	</ul>\r\n</div><div id=\"object_data\">\r\n");
 	//data.Translate(_T("{$sid}"), m_sid);
 	data.Translate(_T("{$id}"), (TCHAR *)id);
 	response.AppendBody(data);
@@ -458,10 +507,14 @@ void ClientSession::ShowObjectView(HttpRequest &request, HttpResponse &response)
 		case OBJVIEW_ALARMS:
 			ShowAlarmList(response, pObject);
 			break;
+		case OBJVIEW_LAST_VALUES:
+			ShowLastValues(response, pObject);
+			break;
 		default:
-			response.AppendBody(_T("<br>Not implemented yet"));
+			ShowInfoMessage(response, _T("Not implemented yet"));
 			break;
 	}
+	response.AppendBody(_T("</div>"));	// Close object_data div
 }
 
 
@@ -563,48 +616,55 @@ void ClientSession::ShowObjectOverview(HttpResponse &response, NXC_OBJECT *pObje
 
 
 //
-// Process user's request
-// Should return FALSE if session should be terminated for any reason
+// Show last values table
 //
 
-BOOL ClientSession::ProcessRequest(HttpRequest &request, HttpResponse &response)
+void ClientSession::ShowLastValues(HttpResponse &response, NXC_OBJECT *pObject)
 {
-	String cmd;
-	BOOL bRet = TRUE;
+	DWORD i, dwResult, dwNumItems;
+	NXC_DCI_VALUE *pValueList;
+	String row, descr, value;
+	TCHAR szTemp[64];
 
-	response.SetCode(HTTP_OK);
-	if (request.GetQueryParam(_T("cmd"), cmd))
+	dwResult = NXCGetLastValues(m_hSession, pObject->dwId, &dwNumItems, &pValueList);
+	if (dwResult == RCC_SUCCESS)
 	{
-		if (!_tcscmp((TCHAR *)cmd, _T("logout")))
+		if (dwNumItems > 0)
 		{
-			bRet = FALSE;
-		}
-		else if (!_tcscmp((TCHAR *)cmd, _T("objects")))
-		{
-			ShowForm(response, FORM_OBJECTS);
-		}
-		else if (!_tcscmp((TCHAR *)cmd, _T("getObjectTree")))
-		{
-			SendObjectTree(request, response);
-		}
-		else if (!_tcscmp((TCHAR *)cmd, _T("objectView")))
-		{
-			ShowObjectView(request, response);
-		}
-		else if (!_tcscmp((TCHAR *)cmd, _T("alarms")))
-		{
-			ShowForm(response, FORM_ALARMS);
+			response.StartBox(NULL, _T("objectTable"), _T("last_values"));
+			AddTableHeader(response, NULL,
+								_T("ID"), NULL,
+								_T("Description"), NULL,
+								_T("Value"), NULL,
+								_T("Timestamp"), NULL,
+								_T(""), NULL,
+								NULL);
+
+			for(i = 0; i < dwNumItems; i++)
+			{
+				response.StartBoxRow();
+				row = _T("");
+				descr = pValueList[i].szDescription;
+				value = pValueList[i].szValue;
+				row.AddFormattedString(_T("<td>%d</td><td>%s</td><td>%s</td><td>%s</td>")
+				                       _T("<td><img src=\"/images/graph.png\" alt=\"Show graph\"/>&nbsp;")
+				                       _T("<img src=\"/images/document.png\" alt=\"Show history\"/></td></tr>"),
+											  pValueList[i].dwId, EscapeHTMLText(descr),
+											  EscapeHTMLText(value),
+											  FormatTimeStamp(pValueList[i].dwTimestamp, szTemp, TS_LONG_DATE_TIME));
+				response.AppendBody(row);
+			}
+
+			response.EndBox();
 		}
 		else
 		{
-			response.SetCode(HTTP_BADREQUEST);
-			response.SetBody(_T("ERROR 400: Bad request"));
+			ShowInfoMessage(response, _T("No available data"));
 		}
+		safe_free(pValueList);
 	}
 	else
 	{
-		response.SetCode(HTTP_BADREQUEST);
-		response.SetBody(_T("ERROR 400: Bad request"));
+		ShowErrorMessage(response, dwResult);
 	}
-	return bRet;
 }

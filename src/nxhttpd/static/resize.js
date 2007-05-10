@@ -1,4 +1,13 @@
-function changeDivHeight()
+function changeDivHeight(winHeight, elementId)
+{
+	var element = document.getElementById(elementId);
+	if (element != null)
+	{
+		element.style.height = (winHeight - element.offsetTop) + "px";
+	}
+}
+
+function resizeElements()
 {
 	var winHeight = 0;
 	if (typeof(window.innerWidth) == 'number')
@@ -17,23 +26,17 @@ function changeDivHeight()
 		winHeight = document.body.clientHeight;
 	}
 
-	var clArea = document.getElementById('object_tree');
-	if (clArea != null)
-	{
-		var t = clArea.offsetTop;
-		//var b = document.body.scrollHeight - document.getElementById('footer').offsetTop;
-		var h = winHeight - clArea.offsetTop;
-		clArea.style.height = h + "px";
-	}
+	changeDivHeight(winHeight, 'object_tree');
+	changeDivHeight(winHeight, 'object_data');
 }
 
 if (window.addEventListener)
 {
-	window.addEventListener("load", changeDivHeight, false);
-	window.addEventListener("resize", changeDivHeight, false);
+	window.addEventListener("load", resizeElements, false);
+	window.addEventListener("resize", resizeElements, false);
 }
 else if (window.attachEvent)
 {
-	window.attachEvent("onload", changeDivHeight);
-	window.attachEvent("onresize", changeDivHeight);
+	window.attachEvent("onload", resizeElements);
+	window.attachEvent("onresize", resizeElements);
 }

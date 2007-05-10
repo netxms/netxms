@@ -1,22 +1,19 @@
 /* general */
 
+html
+{
+	height: 100%;
+}
+
 body
 {
 	font-family: Verdana, Helvetica;
 	font-size: 73%;
 	margin: 0;
 	padding: 0;
-	background-color: #FFFFFF;
-
-	height: 100%;
 	border: 0;
-}
-
-html body
-{
-	font-size: 9pt;
-
-	text-align: left;
+	background-color: #FFFFFF;
+	overflow: hidden;
 }
 
 table, tr, td, th
@@ -56,6 +53,23 @@ img
 	position: absolute;
 	bottom: 0;
 }
+
+.errorMessage
+{
+	font-size: 120%;
+	font-weight: bold;
+	color: rgb(210, 0, 0);
+	margin: 0.5em;
+}
+
+.infoMessage
+{
+	font-size: 110%;
+	font-weight: normal;
+	color: rgb(0, 0, 0);
+	margin: 0.5em;
+}
+
 
 /* main menu */
 
@@ -172,6 +186,7 @@ img
 	/* padding: 0.5em 0.5em; */
 	clear: left;
 	float: none;
+	width: 100%;
 }
 
 #clientarea h1
@@ -234,6 +249,11 @@ img
 
 /* Object view */
 
+#object_view
+{
+	margin: 4px;
+}
+
 #objview_header
 {
 	height: 1.6em;
@@ -241,6 +261,29 @@ img
 	font-weight: bold;
 }
 
+#object_data
+{
+	border: none;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.objectTable
+{
+	border: none;
+}
+
+.objectTable table
+{
+	border: 2px solid rgb(204,204,204);
+	width: 100%;
+}
+
+.objectTable td
+{
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+}
 
 /* alarms */
 
@@ -302,28 +345,27 @@ img
 /* */
 .left, .right, .full
 {
-	margin: 1em 0;
 	float: left;
-	border-left: 1px solid rgb(204,204,204);
 }
 
 .left
 {
 	width: 20%;
-	padding: 0 1.9%;
+/*//	padding: 0 0.5em;*/
 	overflow: auto;
+	border-right: 1px solid rgb(204,204,204);
 }
 
 .right
 {
 	text-align: justify;
-	width: 72%;
-	padding: 0 1.9%;
+	width: 78%;
+/*//	padding: 0 0.5em;*/
 }
 
 .full
 {
-	width: 92%;
+	width: 96%;
 	padding: 0 1.9%;
 	border-left: none;
 }
@@ -337,6 +379,11 @@ img
 
 
 /* WebFX XTree */
+
+#jsTree
+{
+	margin: 4px;
+}
 
 .webfx-tree-container {
 	margin: 0px;
@@ -391,107 +438,4 @@ img
 .webfx-tree-item a.selected-inactive {
 	color: windowtext;
 	background: buttonface;
-}
-
-
-/* WebFX Table */
-
-.webfx-columnlist {
-//	border: 1px solid;
-//	border-color: threedshadow threedhighlight threedhighlight threedshadow;
-	overflow: hidden;
-	display: block;
-	-moz-user-select: none;
-	-moz-user-focus: normal;
-	-moz-user-input: enabled;
-}
-
-.webfx-columnlist td {
-	font: menu;
-	padding: 1px;
-	white-space: nowrap;
-}
-
-.webfx-columnlist-head {
-	position: absolute;
-	background: threedface;
-	overflow: hidden;
-	-moz-user-select: none;
-}
-
-.webfx-columnlist-head table {
-	table-layout: fixed;
-}
-
-.webfx-columnlist-head td {
-	border: 1px solid;
-	border-color: threedhighlight threedshadow threedshadow threedhighlight;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.webfx-columnlist-head td img {
-	width:    8px;
-	height:   7px;
-	margin:   0px 5px 0px 5px;
-	display:  none;
-}
-
-.webfx-columnlist-body {
-	border: 1px solid;
-	border-color: threedhighlight threedface threedface threedhighlight;
-	background: window;
-	overflow: auto;
-}
-
-.webfx-columnlist-body table {
-	table-layout: fixed;
-}
-
-.webfx-columnlist-body td {
-	border-bottom: solid white;
-	border-width:  0px 1px 1px 0px;
-	overflow:      hidden;
-	text-overflow: ellipsis;
-	white-space:   no-wrap;
-}
-
-.webfx-columnlist-body tr.selected td {
-	background:   #C0C0FF;
-}
-
-.webfx-columnlist-body tr.odd td {
-	background:   #FFFFC0;
-}
-
-.webfx-columnlist-body tr.even td {
-	background:   window;
-}
-
-.webfx-columnlist-move-header {
-	position: absolute;
-	background: threedshadow;
-	top: 0px;
-	font: menu;
-	padding: 2px;
-	height: 1em;
-	filter: Alpha(Opacity=50);
-	-moz-opacity: 0.5;
-	-moz-user-select: none;
-}
-
-.webfx-columnlist-active-header {
-	border-color: threedface !important;
-}
-
-.webfx-columnlist-separator-header {
-	position: absolute;
-	top: 0px;
-	left: 10px;
-	font: menu;
-	height: 1em;
-	width: 1px;
-	overflow: hidden;
-	background: blue;
-	padding: 3px 0px;
 }

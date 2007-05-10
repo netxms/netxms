@@ -118,9 +118,9 @@ void ClientSession::ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj)
 	DWORD i;
 	String row, name, msg;
 	NXC_OBJECT *pObject;
+	TCHAR szTemp1[64], szTemp2[64];
 
-	//response.AppendBody(_T("<div id=\"alarm_list\">);
-	response.StartBox(NULL, NULL, _T("alarm_list"));
+	response.StartBox(NULL, _T("objectTable"), _T("alarm_list"));
 	AddTableHeader(response, NULL,
 	               _T("<input name=\"A0\" type=\"checkbox\"/>"), NULL,
 	               _T("Severity"), NULL,
@@ -137,85 +137,25 @@ void ClientSession::ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj)
 	{
 		if (pRootObj != NULL)
 		{
-
+			if (pRootObj->dwId != m_pAlarmList[i].dwSourceObject)
+				if (!NXCIsParent(m_hSession, pRootObj->dwId, m_pAlarmList[i].dwSourceObject))
+					continue;
 		}
 		pObject = NXCFindObjectById(m_hSession, m_pAlarmList[i].dwSourceObject);
 		row = _T("");
 		name = (pObject != NULL) ? pObject->szName : _T("<unknown>");
 		msg = m_pAlarmList[i].szMessage;
-		row.AddFormattedString(_T("<td><input name=\"A%d\" type=\"checkbox\"/></td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td></tr>"),
+		row.AddFormattedString(_T("<td><input name=\"A%d\" type=\"checkbox\"/></td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td></tr>\r\n"),
 		                       m_pAlarmList[i].dwAlarmId,
 		                       g_szStatusTextSmall[m_pAlarmList[i].nCurrentSeverity],
 									  g_szAlarmState[m_pAlarmList[i].nState],
 									  EscapeHTMLText(name), EscapeHTMLText(msg),
 									  m_pAlarmList[i].dwRepeatCount,
-									  "tt", "tt");
+									  FormatTimeStamp(m_pAlarmList[i].dwCreationTime, szTemp1, TS_LONG_DATE_TIME),
+									  FormatTimeStamp(m_pAlarmList[i].dwLastChangeTime, szTemp2, TS_LONG_DATE_TIME));
 		response.StartBoxRow();
 		response.AppendBody(row);
 	}
    MutexUnlock(m_mutexAlarmList);
-
-	response.AppendBody(_T("</table></div>"));
-
-/*	response.AppendBody(
-		_T("<script type=\"text/javascript\" src=\"/sortabletable.js\"></script>\r\n")
-		_T("<script type=\"text/javascript\" src=\"/columnlist.js\"></script>\r\n")
-		_T("<div>\r\n")
-		_T("	<div id=\"alarm_container\" class=\"webfx-columnlist\" style=\"width: 98%;\">\r\n")
-		_T("		<div id=\"alarm_head\" class=\"webfx-columnlist-head\">\r\n")
-		_T("			<table cellspacing=\"0\" cellpadding=\"0\">\r\n")
-		_T("				<tr>\r\n")
-		_T("					<td>Severity<img src=\"/images/asc.png\"/></td><td>State<img src=\"/images/asc.png\"/></td><td>Source<img src=\"/images/asc.png\"/></td><td>Message<img src=\"/images/asc.png\"/></td><td>Count<img src=\"/images/asc.png\"/></td><td>Created<img src=\"/images/asc.png\"/></td><td>Last Change<img src=\"/images/asc.png\"/></td>\r\n")
-		_T("				</tr>\r\n")
-		_T("			</table>\r\n")
-		_T("		</div>\r\n")
-		_T("		<div id=\"alarm_body\" class=\"webfx-columnlist-body\">\r\n")
-		_T("			<table cellspacing=\"0\" cellpadding=\"0\">\r\n")
-		_T("				<colgroup span=\"7\">\r\n")
-		_T("					<col style=\"width: 10%;\" />\r\n")
-		_T("					<col style=\"width: 10%;\" />\r\n")
-		_T("					<col style=\"width: 20%;\" />\r\n")
-		_T("					<col style=\"width: 35%;\" />\r\n")
-		_T("					<col style=\"width: 5%;\" />\r\n")
-		_T("					<col style=\"width: 10%;\" />\r\n")
-		_T("					<col style=\"width: 10%;\" />\r\n")
-		_T("				</colgroup>\r\n")
-	);
-
-   MutexLock(m_mutexAlarmList, INFINITE);
-	for(i = 0; i < m_dwNumAlarms; i++)
-	{
-		if (pRootObj != NULL)
-		{
-
-		}
-		pObject = NXCFindObjectById(m_hSession, m_pAlarmList[i].dwSourceObject);
-		row = _T("");
-		name = (pObject != NULL) ? pObject->szName : _T("<unknown>");
-		msg = m_pAlarmList[i].szMessage;
-		row.AddFormattedString(_T("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td></tr>"),
-		                       g_szStatusTextSmall[m_pAlarmList[i].nCurrentSeverity],
-									  g_szAlarmState[m_pAlarmList[i].nState],
-									  EscapeHTMLText(name), EscapeHTMLText(msg),
-									  m_pAlarmList[i].dwRepeatCount,
-									  "tt", "tt");
-		response.AppendBody(row);
-	}
-   MutexUnlock(m_mutexAlarmList);
-
-	response.AppendBody(
-		_T("			</table>\r\n")
-		_T("		</div>\r\n")
-		_T("	</div>\r\n")
-		_T("	<script type=\"text/javascript\">\r\n")
-		_T("		var alarmList = new WebFXColumnList();\r\n")
-		_T("		alarmList.moveColumns = false;\r\n")
-		_T("		alarmList.bind(document.getElementById('alarm_container'),\r\n")
-		_T("		               document.getElementById('alarm_head'),\r\n")
-		_T("		               document.getElementById('alarm_body'));\r\n")
-		_T("		alarmList.setSortTypes([TYPE_STRING, TYPE_STRING, TYPE_STRING, TYPE_STRING, TYPE_NUMBER, TYPE_STRING, TYPE_STRING]);\r\n")
-		_T("		alarmList._setAlignment();\r\n")
-		_T("	</script>\r\n")
-		_T("</div>\r\n")
-	);*/
+	response.EndBox();
 }

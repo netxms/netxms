@@ -161,25 +161,12 @@ char *HttpResponse::BuildStream(int &size)
 void HttpResponse::BeginPage(TCHAR *pszTitle)
 {
 	SetType(_T("text/html"));
-	SetBody(_T("<html><head><title>"));
+	SetBody(_T("<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n")	// Push IE6 and IE 5 into quirks mode
+	        _T("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">\r\n")
+	        _T("<html>\r\n<head>\r\n<title>"));
 	SetBody(pszTitle != NULL ? pszTitle : _T("NetXMS Web Interface"), -1, TRUE);
 	SetBody(_T("</title>\r\n")
 	        _T("<script type=\"text/javascript\" src=\"/resize.js\"></script>\r\n")
-/*	        _T("<script language=\"javascript\">\r\n")
-	        _T("<!--\r\n")
-	        _T("function changeDivHeight() {\r\n")
-	        _T("	 var clArea = document.getElementById('clientarea');\r\n")
-			  _T("	 if (clArea != null) {\r\n")
-//			  _T("	    var t = clArea.offsetTop;\r\n")
-//	        _T("		 var b = document.body.scrollHeight - document.getElementById('footer').offsetTop;\r\n")
-	        _T("		 var h = document.body.clientHeight - clArea.offsetTop;\r\n")
-	        _T("	    clArea.style.height = h + \"px\";\r\n")
-	        _T("	 }\r\n")
-	        _T("}\r\n")
-	        _T("onload = changeDivHeight;\r\n")
-	        _T("onresize = changeDivHeight;\r\n")
-	        _T("-->\r\n")
-	        _T("</script>\r\n")*/
 	        _T("<link rel=\"stylesheet\" type=\"text/css\" href=\"/netxms.css\" media=\"screen, tv, projection\" title=\"Default\" />\r\n")
 	        _T("</head><body>"), -1, TRUE);
 }

@@ -148,3 +148,30 @@ void AddTableHeader(HttpResponse &response, TCHAR *pszClass, ...)
    }
    response.AppendBody(_T("</tr>\r\n"));
 }
+
+
+//
+// Show error message
+//
+
+void ShowErrorMessage(HttpResponse &response, DWORD dwError)
+{
+	response.AppendBody(_T("<div class=\"errorMessage\">ERROR: "));
+	response.AppendBody((TCHAR *)NXCGetErrorText(dwError));
+	response.AppendBody(_T("</div>"));
+}
+
+
+//
+// Show informational message
+//
+
+void ShowInfoMessage(HttpResponse &response, TCHAR *pszText)
+{
+	String tmp;
+
+	tmp = pszText;
+	response.AppendBody(_T("<div class=\"infoMessage\">"));
+	response.AppendBody(EscapeHTMLText(tmp));
+	response.AppendBody(_T("</div>"));
+}

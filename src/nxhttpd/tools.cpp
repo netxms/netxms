@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.2 2007-05-07 17:58:02 victor Exp $ */
+/* $Id: tools.cpp,v 1.3 2007-05-10 22:43:31 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -60,4 +60,22 @@ TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, TCHAR *pszDefaultText)
       if (pTranslator[i].iCode == iCode)
          return pTranslator[i].pszText;
    return pszDefaultText;
+}
+
+
+//
+// Format time stamp
+//
+
+TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType)
+{
+   struct tm *pTime;
+   static TCHAR *pFormat[] = { _T("%d-%b-%Y %H:%M:%S"), _T("%H:%M:%S"), _T("%b/%d"), _T("%b") };
+
+   pTime = localtime((const time_t *)&dwTimeStamp);
+	if (pTime != NULL)
+		_tcsftime(pszBuffer, 32, pFormat[iType], pTime);
+	else
+		_tcscpy(pszBuffer, _T("(null)"));
+   return pszBuffer;
 }
