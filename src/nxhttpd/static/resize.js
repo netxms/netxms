@@ -4,7 +4,7 @@ function changeDivHeight(winHeight, elementId)
 	if (element != null)
 	{
 		var t = element.offsetTop;
-		p = element.offsetparent;
+		p = element.offsetParent;
 		while(p != null)
 		{
 			if (typeof(p.offsetTop) == 'number')

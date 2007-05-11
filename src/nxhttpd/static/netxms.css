@@ -13,7 +13,9 @@ body
 	padding: 0;
 	border: 0;
 	background-color: #FFFFFF;
-	overflow: hidden;
+	overflow-x: auto;
+	overflow-y: hidden;
+	min-width: 700px;
 }
 
 table, tr, td, th
@@ -259,7 +261,7 @@ img
 
 #object_view
 {
-	width: 100%;
+	width: 99%;
 	float: left;
 	margin: 4px;
 	text-align: justify;
