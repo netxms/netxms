@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.4 2007-05-10 22:43:31 victor Exp $ */
+/* $Id: session.cpp,v 1.5 2007-05-11 06:33:17 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -282,12 +282,12 @@ void ClientSession::ShowFormObjects(HttpResponse &response)
 		_T("<script type=\"text/javascript\" src=\"/xtree.js\"></script>\r\n")
 		_T("<script type=\"text/javascript\" src=\"/xmlextras.js\"></script>\r\n")
 		_T("<script type=\"text/javascript\" src=\"/xloadtree.js\"></script>\r\n")
-		_T("<div class=\"left\" id=\"object_tree\">\r\n")
+		_T("<table width=\"100%\"><tr><td width=\"20%\">\r\n")
+		_T("<div id=\"object_tree\">\r\n")
 		_T("	<div id=\"jsTree\"></div>\r\n")
-		_T("</div>\r\n")
-		_T("<div class=\"right\">\r\n")
-		_T("	<div id=\"object_view\"></div>\r\n")
-		_T("</div>\r\n")
+		_T("</div></td>\r\n")
+		_T("<td><div id=\"object_view\"></div></td>\r\n")
+		_T("</tr></table>\r\n")
 		_T("<script type=\"text/javascript\">\r\n")
 		_T("	var net = new WebFXLoadTree(\"NetXMS Objects\", \"/main.app?cmd=getObjectTree&sid={$sid}\");\r\n")
 		_T("	document.getElementById(\"jsTree\").innerHTML = net;\r\n")

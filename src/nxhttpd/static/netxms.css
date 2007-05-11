@@ -249,9 +249,20 @@ img
 
 /* Object view */
 
+#object_tree
+{
+	width: 100%;
+	float: left;
+	overflow: auto;
+	border-right: 1px solid rgb(204,204,204);
+}
+
 #object_view
 {
+	width: 100%;
+	float: left;
 	margin: 4px;
+	text-align: justify;
 }
 
 #objview_header
@@ -271,6 +282,8 @@ img
 .objectTable
 {
 	border: none;
+	font-family: "ms sans serif", sans-serif, Verdana, Helvetica;
+	font-size: 100%;
 }
 
 .objectTable table
@@ -287,21 +300,11 @@ img
 
 /* alarms */
 
-#alarm_list
+#alarm_view
 {
 	border: none;
-}
-
-#alarm_list table
-{
-	border: 2px solid rgb(204,204,204);
-	width: 100%;
-}
-
-#alarm_list td
-{
-	padding-left: 0.5em;
-	padding-right: 0.5em;
+	overflow-x: hidden;
+	overflow-y: auto;
 }
 
 /*
