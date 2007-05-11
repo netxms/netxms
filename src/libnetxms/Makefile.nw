@@ -6,9 +6,9 @@
 include ../../netware/Makefile.inc
 
 OBJECTS  = c_lgcc3.o config.o crypto.o gen_uuid.o dload.o hash.o icmp.o \
-	   inline.o main.o md5.o message.o msgwq.o nxcp.o queue.o serial.o \
-	   sha1.o string.o strmap.o strtoll.o strtoull.o table.o tools.o \
-	   unicode.o uuid.o
+	   inline.o main.o md5.o message.o msgwq.o nxcp.o qsort.o queue.o \
+	   serial.o sha1.o string.o strmap.o strtoll.o strtoull.o table.o \
+	   tools.o unicode.o uuid.o
 EXEC     = netxms.nlm
 DEF      = netxms.def
 OBJTMP   = netxms_r.o

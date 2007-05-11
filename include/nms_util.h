@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.103 2007-05-07 11:35:41 victor Exp $ */
+/* $Id: nms_util.h,v 1.104 2007-05-11 15:44:46 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -419,6 +419,9 @@ extern "C"
    void LIBNETXMS_EXPORTABLE strupr(TCHAR *in);
 #endif
    
+	void LIBNETXMS_EXPORTABLE QSortEx(void *base, size_t nmemb, size_t size, void *arg,
+												 int (*compare)(const void *, const void *, void *));
+
    INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs(void);
    QWORD LIBNETXMS_EXPORTABLE FileSize(TCHAR *pszFileName);
 
@@ -547,6 +550,10 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.103  2007/05/07 11:35:41  victor
+- Unfinished changes in alarm generation code
+- nxhttpd redesigned
+
 Revision 1.102  2007/03/23 15:59:04  victor
 - All certificates now stored in database
 - CA certificates can be imported from management console

@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.5 2007-05-11 06:33:17 victor Exp $ */
+/* $Id: session.cpp,v 1.6 2007-05-11 15:44:46 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -62,6 +62,10 @@ ClientSession::ClientSession()
 	m_dwNumAlarms = 0;
 	m_pAlarmList = NULL;
 	m_mutexAlarmList = MutexCreate();
+	m_nAlarmSortMode = 0;
+	m_nAlarmSortDir = -1;
+	m_nLastValuesSortMode = 1;
+	m_nLastValuesSortDir = 1;
 }
 
 

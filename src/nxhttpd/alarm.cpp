@@ -110,6 +110,40 @@ NXC_ALARM *ClientSession::FindAlarmInList(DWORD dwAlarmId)
 
 
 //
+// Compare alarms - QSortEx callback
+//
+
+static int CompareAlarmsCB(const void *p1, const void *p2, void *pArg)
+{
+	return ((ClientSession *)pArg)->CompareAlarms((NXC_ALARM *)p1, (NXC_ALARM *)p2);
+}
+
+
+//
+// Compare alarms
+//
+
+int ClientSession::CompareAlarms(NXC_ALARM *p1, NXC_ALARM *p2)
+{
+	int nRet;
+
+	switch(m_nAlarmSortMode)
+	{
+		case 0:	// Severity
+			nRet = COMPARE_NUMBERS(p1->nCurrentSeverity, p2->nCurrentSeverity);
+			break;
+		case 1:	// State
+			nRet = COMPARE_NUMBERS(p1->nState, p2->nState);
+			break;
+		default:
+			nRet = 0;
+			break;
+	}
+	return nRet * m_nAlarmSortDir;
+}
+
+
+//
 // Show alarm list
 //
 
@@ -133,6 +167,7 @@ void ClientSession::ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj)
 						NULL);
 
    MutexLock(m_mutexAlarmList, INFINITE);
+	QSortEx(m_pAlarmList, m_dwNumAlarms, sizeof(NXC_ALARM), this, CompareAlarmsCB);
 	for(i = 0; i < m_dwNumAlarms; i++)
 	{
 		if (pRootObj != NULL)

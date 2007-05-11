@@ -203,6 +203,11 @@ protected:
 	DWORD m_dwNumAlarms;
 	NXC_ALARM *m_pAlarmList;
 	MUTEX m_mutexAlarmList;
+	int m_nAlarmSortMode;
+	int m_nAlarmSortDir;
+
+	int m_nLastValuesSortMode;
+	int m_nLastValuesSortDir;
 
 	void OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
 	void DeleteAlarmFromList(DWORD dwAlarmId);
@@ -233,6 +238,8 @@ public:
 	BOOL ProcessRequest(HttpRequest &request, HttpResponse &response);
 
 	void ShowForm(HttpResponse &response, int nForm);
+
+	int CompareAlarms(NXC_ALARM *p1, NXC_ALARM *p2);
 };
 
 

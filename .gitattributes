@@ -1074,6 +1074,7 @@ src/libnetxms/message.cpp -text
 src/libnetxms/msgwq.cpp -text
 src/libnetxms/netxms.def -text
 src/libnetxms/nxcp.cpp -text
+src/libnetxms/qsort.c -text
 src/libnetxms/queue.cpp -text
 src/libnetxms/regex.c -text
 src/libnetxms/rwlock.cpp -text

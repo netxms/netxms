@@ -299,6 +299,10 @@ SOURCE=.\nxcp.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\qsort.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\queue.cpp
 # End Source File
 # Begin Source File
