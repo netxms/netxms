@@ -3,7 +3,17 @@ function changeDivHeight(winHeight, elementId)
 	var element = document.getElementById(elementId);
 	if (element != null)
 	{
-		element.style.height = (winHeight - element.offsetTop) + "px";
+		var t = element.offsetTop;
+		p = element.offsetparent;
+		while(p != null)
+		{
+			if (typeof(p.offsetTop) == 'number')
+			{
+				t += p.offsetTop;
+			}
+			p = p.offsetParent;
+		}
+		element.style.height = (winHeight - t) + "px";
 	}
 }
 
@@ -28,6 +38,7 @@ function resizeElements()
 
 	changeDivHeight(winHeight, 'object_tree');
 	changeDivHeight(winHeight, 'object_data');
+	changeDivHeight(winHeight, 'alarm_view');
 }
 
 if (window.addEventListener)
