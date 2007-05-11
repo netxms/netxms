@@ -129,6 +129,7 @@ static THREAD_RESULT THREAD_CALL ClientHandler(void *pArg)
 	int size;
 	HttpRequest req;
 	HttpResponse resp;
+	TCHAR *pq;
 	char *ptr;
 
 	if (req.Read((SOCKET)pArg))
@@ -142,7 +143,9 @@ static THREAD_RESULT THREAD_CALL ClientHandler(void *pArg)
 		resp.SetBody(_T("Your browser sent a request that this server could not understand"));
 	}
 
-	DebugPrintf(INVALID_INDEX, _T("RESP %03d >>> %s"), resp.GetCode(), req.GetURI());
+	pq = req.GetRawQuery();	
+	DebugPrintf(INVALID_INDEX, _T("[%03d] %s %s%s%s"), resp.GetCode(), req.GetMethodName(), req.GetURI(), 
+	            (*pq != 0) ? _T("?") :  _T(""), pq);
 
 	ptr = resp.BuildStream(size);
 	SendEx((SOCKET)pArg, ptr, size, 0);

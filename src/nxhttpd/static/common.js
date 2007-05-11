@@ -1,3 +1,17 @@
+/*** Reload content of given div ***/
+function loadDivContent(divId, sid, cmd)
+{
+	var xmlHttp = XmlHttp.create();
+	xmlHttp.open('GET', '/main.app?sid=' + sid + cmd, false);
+	xmlHttp.send(null);
+	document.getElementById(divId).innerHTML = xmlHttp.responseText;
+	if (correctPNG)
+	{
+		correctPNG();
+	}
+}
+
+/*** Change height of single div ***/
 function changeDivHeight(winHeight, elementId)
 {
 	var element = document.getElementById(elementId);
@@ -17,6 +31,7 @@ function changeDivHeight(winHeight, elementId)
 	}
 }
 
+/*** Resize all needed elements on page ***/
 function resizeElements()
 {
 	var winHeight = 0;
@@ -41,6 +56,7 @@ function resizeElements()
 	changeDivHeight(winHeight, 'alarm_view');
 }
 
+/*** Event handlers ***/
 if (window.addEventListener)
 {
 	window.addEventListener("load", resizeElements, false);

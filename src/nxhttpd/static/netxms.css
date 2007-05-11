@@ -225,7 +225,7 @@ img
 	padding-left: 0.5em;
 }
 
-.boxTitle > span
+.boxTitle span
 {
 	position: absolute;
 	bottom: 0;
@@ -237,6 +237,21 @@ img
 	background-color: rgb(109, 136, 173);
 	font-size: 110%;
 	font-weight: bold;
+	text-decoration: none;
+}
+
+.tableHeader a
+{
+	color: rgb(255, 255, 255);
+	background-color: rgb(109, 136, 173);
+	font-size: 110%;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+.tableHeader a:hover
+{
+	text-decoration: underline;
 }
 
 .odd td

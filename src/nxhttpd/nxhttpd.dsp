@@ -105,6 +105,10 @@ SOURCE=.\client.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\dataview.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\html.cpp
 # End Source File
 # Begin Source File

@@ -329,10 +329,10 @@ BOOL HttpRequest::GetQueryParam(TCHAR *pszName, String &value)
 
 
 //
-// Get URI
+// Get method name
 //
 
-TCHAR *HttpRequest::GetURI(void)
+TCHAR *HttpRequest::GetMethodName(void)
 {
-	return m_uri;
+	return (m_method == METHOD_GET) ? _T("GET") : ((m_method == METHOD_POST) ? _T("POST") : _T("INVALID"));
 }

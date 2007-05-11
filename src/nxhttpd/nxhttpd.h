@@ -117,7 +117,9 @@ public:
 
 	BOOL GetQueryParam(TCHAR *pszName, String &value);
 	void SetQueryParam(TCHAR *pszName, TCHAR *pszValue);
-	TCHAR *GetURI(void);
+	TCHAR *GetURI(void) { return m_uri; }
+	TCHAR *GetRawQuery(void) { return m_rawQuery; }
+	TCHAR *GetMethodName(void);
 };
 
 
@@ -165,9 +167,10 @@ public:
 	// HTML helpers
 	void BeginPage(TCHAR *pszTitle);
 	void EndPage(void) { SetBody(_T("</body>\r\n</html>\r\n"), -1, TRUE); }
-	void StartBox(TCHAR *pszTitle, TCHAR *pszClass = NULL, TCHAR *pszId = NULL);
+	void StartBox(TCHAR *pszTitle, TCHAR *pszClass = NULL, TCHAR *pszId = NULL, BOOL bContentOnly = FALSE);
+	void StartTableHeader(TCHAR *pszClass);
 	void StartBoxRow(void);
-	void EndBox(void) { AppendBody(_T("</table></div>\r\n")); }
+	void EndBox(BOOL bContentOnly = FALSE) { AppendBody(bContentOnly ? _T("</table>") : _T("</table></div>\r\n")); }
 };
 
 
@@ -179,7 +182,8 @@ enum
 {
 	FORM_OVERVIEW,
 	FORM_OBJECTS,
-	FORM_ALARMS
+	FORM_ALARMS,
+	FORM_TOOLS
 };
 
 enum
@@ -206,6 +210,8 @@ protected:
 	int m_nAlarmSortMode;
 	int m_nAlarmSortDir;
 
+	DWORD m_dwNumValues;
+	NXC_DCI_VALUE *m_pValueList;
 	int m_nLastValuesSortMode;
 	int m_nLastValuesSortDir;
 
@@ -219,8 +225,10 @@ protected:
 	void ShowObjectView(HttpRequest &request, HttpResponse &response);
 	void ShowObjectOverview(HttpResponse &response, NXC_OBJECT *pObject);
 	void SendObjectTree(HttpRequest &request, HttpResponse &response);
-	void ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj);
-	void ShowLastValues(HttpResponse &response, NXC_OBJECT *pObject);
+	void ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj, BOOL bReload);
+	void SendAlarmList(HttpRequest &request, HttpResponse &response);
+	void ShowLastValues(HttpResponse &response, NXC_OBJECT *pObject, BOOL bReload);
+	void SendLastValues(HttpRequest &request, HttpResponse &response);
 
 public:
 	ClientSession();
@@ -240,6 +248,7 @@ public:
 	void ShowForm(HttpResponse &response, int nForm);
 
 	int CompareAlarms(NXC_ALARM *p1, NXC_ALARM *p2);
+	int CompareDCIValues(NXC_DCI_VALUE *p1, NXC_DCI_VALUE *p2);
 };
 
 

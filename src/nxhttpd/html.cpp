@@ -120,16 +120,7 @@ void AddTableHeader(HttpResponse &response, TCHAR *pszClass, ...)
    va_list args;
    TCHAR *pszTitle, *pszOptions;
 
-	if (pszClass == NULL)
-	{
-		response.AppendBody(_T("<tr class=\"tableHeader\">\r\n"));
-	}
-	else
-	{
-		response.AppendBody(_T("<tr class=\""));
-		response.AppendBody(pszClass);
-		response.AppendBody(_T("\">\r\n"));
-	}
+	response.StartTableHeader(pszClass);
    va_start(args, pszClass);
    while(1)
    {

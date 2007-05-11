@@ -126,6 +126,7 @@ static int CompareAlarmsCB(const void *p1, const void *p2, void *pArg)
 int ClientSession::CompareAlarms(NXC_ALARM *p1, NXC_ALARM *p2)
 {
 	int nRet;
+	NXC_OBJECT *pObj1, *pObj2;
 
 	switch(m_nAlarmSortMode)
 	{
@@ -134,6 +135,23 @@ int ClientSession::CompareAlarms(NXC_ALARM *p1, NXC_ALARM *p2)
 			break;
 		case 1:	// State
 			nRet = COMPARE_NUMBERS(p1->nState, p2->nState);
+			break;
+		case 2:	// Source
+			pObj1 = NXCFindObjectById(m_hSession, p1->dwSourceObject);
+			pObj2 = NXCFindObjectById(m_hSession, p2->dwSourceObject);
+			nRet = _tcsicmp((pObj1 != NULL) ? pObj1->szName : _T("(null)"), (pObj2 != NULL) ? pObj2->szName : _T("(null)"));
+			break;
+		case 3:	// Message
+			nRet = _tcsicmp(p1->szMessage, p2->szMessage);
+			break;
+		case 4:	// Count
+			nRet = COMPARE_NUMBERS(p1->dwRepeatCount, p2->dwRepeatCount);
+			break;
+		case 5:	// Created
+			nRet = COMPARE_NUMBERS(p1->dwCreationTime, p2->dwCreationTime);
+			break;
+		case 6:	// Changed
+			nRet = COMPARE_NUMBERS(p1->dwLastChangeTime, p2->dwLastChangeTime);
 			break;
 		default:
 			nRet = 0;
@@ -144,27 +162,49 @@ int ClientSession::CompareAlarms(NXC_ALARM *p1, NXC_ALARM *p2)
 
 
 //
+// Add alarm table column header
+//
+
+static void AddAlarmColumnHeader(HttpResponse &response, TCHAR *sid, int nCol, DWORD dwObjectId,
+										   int nSortDir, BOOL bSortBy)
+{
+	TCHAR szTemp[1024];
+	static TCHAR *colNames[] = 
+	{ 
+		_T("Severity"),
+		_T("State"),
+		_T("Source"),
+		_T("Message"),
+		_T("Count"),
+		_T("Created"),
+		_T("Changed")
+	};
+
+	_sntprintf(szTemp, 1024, _T("<td valign=\"center\"><a href=\"\" onclick=\"javascript:loadDivContent('alarm_list','%s','&cmd=getAlarmList&mode=%d&dir=%d&obj=%d'); return false;\">%s</a>%s</td>\r\n"),
+	           sid, nCol, bSortBy ? -nSortDir : nSortDir, dwObjectId, colNames[nCol],
+				  (!bSortBy) ? _T("") : ((nSortDir < 0) ? _T("&nbsp;<img src=\"/images/sort_down.png\"/>") : _T("&nbsp;<img src=\"/images/sort_up.png\"/>")));
+	response.AppendBody(szTemp);
+}
+
+
+//
 // Show alarm list
 //
 
-void ClientSession::ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj)
+void ClientSession::ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj, BOOL bReload)
 {
 	DWORD i;
 	String row, name, msg;
 	NXC_OBJECT *pObject;
 	TCHAR szTemp1[64], szTemp2[64];
 
-	response.StartBox(NULL, _T("objectTable"), _T("alarm_list"));
-	AddTableHeader(response, NULL,
-	               _T("<input name=\"A0\" type=\"checkbox\"/>"), NULL,
-	               _T("Severity"), NULL,
-	               _T("State"), NULL,
-	               _T("Source"), NULL,
-	               _T("Message"), NULL,
-	               _T("Count"), NULL,
-	               _T("Created"), NULL,
-	               _T("Changed"), NULL,
-						NULL);
+	response.StartBox(NULL, _T("objectTable"), _T("alarm_list"), bReload);
+	response.StartTableHeader(NULL);
+	response.AppendBody(_T("<td></td>"));
+	for(i = 0; i < 7; i++)
+		AddAlarmColumnHeader(response, m_sid, i, (pRootObj != NULL) ? pRootObj->dwId : 0,
+		                     m_nAlarmSortDir, (m_nAlarmSortMode == (int)i));
+	response.AppendBody(_T("</tr>\r\n"));
 
    MutexLock(m_mutexAlarmList, INFINITE);
 	QSortEx(m_pAlarmList, m_dwNumAlarms, sizeof(NXC_ALARM), this, CompareAlarmsCB);
@@ -192,5 +232,39 @@ void ClientSession::ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj)
 		response.AppendBody(row);
 	}
    MutexUnlock(m_mutexAlarmList);
-	response.EndBox();
+	response.EndBox(bReload);
+}
+
+
+//
+// Send alarm list in a response to reload request
+//
+
+void ClientSession::SendAlarmList(HttpRequest &request, HttpResponse &response)
+{
+	NXC_OBJECT *pObject;
+	DWORD dwId;
+	String tmp;
+
+	if (request.GetQueryParam(_T("mode"), tmp))
+		m_nAlarmSortMode = _tcstol(tmp, NULL, 10);
+	if (request.GetQueryParam(_T("dir"), tmp))
+		m_nAlarmSortDir = _tcstol(tmp, NULL, 10);
+
+	if (request.GetQueryParam(_T("obj"), tmp))
+	{
+		dwId = _tcstoul(tmp, NULL, 10);
+		if (dwId != 0)
+		{
+			pObject = NXCFindObjectById(m_hSession, dwId);
+			if (pObject != NULL)
+			{
+				ShowAlarmList(response, pObject, TRUE);
+			}
+		}
+		else
+		{
+			ShowAlarmList(response, NULL, TRUE);
+		}
+	}
 }

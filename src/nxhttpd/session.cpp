@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.6 2007-05-11 15:44:46 victor Exp $ */
+/* $Id: session.cpp,v 1.7 2007-05-11 22:16:42 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -64,6 +64,8 @@ ClientSession::ClientSession()
 	m_mutexAlarmList = MutexCreate();
 	m_nAlarmSortMode = 0;
 	m_nAlarmSortDir = -1;
+	m_dwNumValues = 0;
+	m_pValueList = NULL;
 	m_nLastValuesSortMode = 1;
 	m_nLastValuesSortDir = 1;
 }
@@ -78,6 +80,7 @@ ClientSession::~ClientSession()
 	if (m_hSession != NULL)
 		NXCDisconnect(m_hSession);
 	safe_free(m_pAlarmList);
+	safe_free(m_pValueList);
 	MutexDestroy(m_mutexAlarmList);
 }
 
@@ -186,6 +189,10 @@ BOOL ClientSession::ProcessRequest(HttpRequest &request, HttpResponse &response)
 		{
 			bRet = FALSE;
 		}
+		else if (!_tcscmp((TCHAR *)cmd, _T("overview")))
+		{
+			ShowForm(response, FORM_OVERVIEW);
+		}
 		else if (!_tcscmp((TCHAR *)cmd, _T("objects")))
 		{
 			ShowForm(response, FORM_OBJECTS);
@@ -198,9 +205,21 @@ BOOL ClientSession::ProcessRequest(HttpRequest &request, HttpResponse &response)
 		{
 			ShowObjectView(request, response);
 		}
+		else if (!_tcscmp((TCHAR *)cmd, _T("getLastValues")))
+		{
+			SendLastValues(request, response);
+		}
 		else if (!_tcscmp((TCHAR *)cmd, _T("alarms")))
 		{
 			ShowForm(response, FORM_ALARMS);
+		}
+		else if (!_tcscmp((TCHAR *)cmd, _T("getAlarmList")))
+		{
+			SendAlarmList(request, response);
+		}
+		else if (!_tcscmp((TCHAR *)cmd, _T("tools")))
+		{
+			ShowForm(response, FORM_TOOLS);
 		}
 		else
 		{
@@ -262,11 +281,13 @@ void ClientSession::ShowForm(HttpResponse &response, int nForm)
 			ShowFormObjects(response);
 			break;
 		case FORM_ALARMS:
-			response.AppendBody(_T("<div id=\"alarm_view\">\r\n"));
-			ShowAlarmList(response, NULL);
+			response.AppendBody(_T("<script type=\"text/javascript\" src=\"/alarms.js\"></script>\r\n")
+			                    _T("<div id=\"alarm_view\">\r\n"));
+			ShowAlarmList(response, NULL, FALSE);
 			response.AppendBody(_T("</div>\r\n"));
 			break;
 		default:
+			ShowInfoMessage(response, _T("Not implemented yet"));
 			break;
 	}
 	response.AppendBody(_T("</div>\r\n"));
@@ -284,8 +305,8 @@ void ClientSession::ShowFormObjects(HttpResponse &response)
 
 	data =
 		_T("<script type=\"text/javascript\" src=\"/xtree.js\"></script>\r\n")
-		_T("<script type=\"text/javascript\" src=\"/xmlextras.js\"></script>\r\n")
 		_T("<script type=\"text/javascript\" src=\"/xloadtree.js\"></script>\r\n")
+		_T("<script type=\"text/javascript\" src=\"/alarms.js\"></script>\r\n")
 		_T("<table width=\"100%\"><tr><td width=\"20%\">\r\n")
 		_T("<div id=\"object_tree\">\r\n")
 		_T("	<div id=\"jsTree\"></div>\r\n")
@@ -509,10 +530,10 @@ void ClientSession::ShowObjectView(HttpRequest &request, HttpResponse &response)
 			ShowObjectOverview(response, pObject);
 			break;
 		case OBJVIEW_ALARMS:
-			ShowAlarmList(response, pObject);
+			ShowAlarmList(response, pObject, FALSE);
 			break;
 		case OBJVIEW_LAST_VALUES:
-			ShowLastValues(response, pObject);
+			ShowLastValues(response, pObject, FALSE);
 			break;
 		default:
 			ShowInfoMessage(response, _T("Not implemented yet"));
@@ -616,59 +637,4 @@ void ClientSession::ShowObjectOverview(HttpResponse &response, NXC_OBJECT *pObje
 	temp = CHECK_NULL_EX(pObject->pszComments);
 	response.AppendBody(EscapeHTMLText(temp));
 	response.AppendBody(_T("</div>\r\n"));
-}
-
-
-//
-// Show last values table
-//
-
-void ClientSession::ShowLastValues(HttpResponse &response, NXC_OBJECT *pObject)
-{
-	DWORD i, dwResult, dwNumItems;
-	NXC_DCI_VALUE *pValueList;
-	String row, descr, value;
-	TCHAR szTemp[64];
-
-	dwResult = NXCGetLastValues(m_hSession, pObject->dwId, &dwNumItems, &pValueList);
-	if (dwResult == RCC_SUCCESS)
-	{
-		if (dwNumItems > 0)
-		{
-			response.StartBox(NULL, _T("objectTable"), _T("last_values"));
-			AddTableHeader(response, NULL,
-								_T("ID"), NULL,
-								_T("Description"), NULL,
-								_T("Value"), NULL,
-								_T("Timestamp"), NULL,
-								_T(""), NULL,
-								NULL);
-
-			for(i = 0; i < dwNumItems; i++)
-			{
-				response.StartBoxRow();
-				row = _T("");
-				descr = pValueList[i].szDescription;
-				value = pValueList[i].szValue;
-				row.AddFormattedString(_T("<td>%d</td><td>%s</td><td>%s</td><td>%s</td>")
-				                       _T("<td><img src=\"/images/graph.png\" alt=\"Show graph\"/>&nbsp;")
-				                       _T("<img src=\"/images/document.png\" alt=\"Show history\"/></td></tr>"),
-											  pValueList[i].dwId, EscapeHTMLText(descr),
-											  EscapeHTMLText(value),
-											  FormatTimeStamp(pValueList[i].dwTimestamp, szTemp, TS_LONG_DATE_TIME));
-				response.AppendBody(row);
-			}
-
-			response.EndBox();
-		}
-		else
-		{
-			ShowInfoMessage(response, _T("No available data"));
-		}
-		safe_free(pValueList);
-	}
-	else
-	{
-		ShowErrorMessage(response, dwResult);
-	}
 }

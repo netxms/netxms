@@ -1175,6 +1175,7 @@ src/nxevent/nxevent.h -text
 src/nxhttpd/Makefile.am -text
 src/nxhttpd/alarm.cpp -text
 src/nxhttpd/client.cpp -text
+src/nxhttpd/dataview.cpp -text
 src/nxhttpd/html.cpp -text
 src/nxhttpd/httprequest.cpp -text
 src/nxhttpd/httpresponse.cpp -text
@@ -1189,6 +1190,7 @@ src/nxhttpd/resource.h -text
 src/nxhttpd/session.cpp -text
 src/nxhttpd/smgr.cpp -text
 src/nxhttpd/static/Makefile.am -text
+src/nxhttpd/static/common.js -text
 src/nxhttpd/static/images/I.png -text
 src/nxhttpd/static/images/L.png -text
 src/nxhttpd/static/images/Lminus.png -text
@@ -1217,7 +1219,6 @@ src/nxhttpd/static/images/status_Normal.png -text
 src/nxhttpd/static/images/status_Warning.png -text
 src/nxhttpd/static/netxms.css -text
 src/nxhttpd/static/pngfix.js -text
-src/nxhttpd/static/resize.js -text
 src/nxhttpd/static/xloadtree.js -text
 src/nxhttpd/static/xmlextras.js -text
 src/nxhttpd/static/xtree.js -text

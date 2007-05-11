@@ -1,3 +1,27 @@
+/* 
+** NetXMS - Network Management System
+** HTTP Server
+** Copyright (C) 2006, 2007 Alex Kirhenshtein and Victor Kirhenshtein
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: httpresponse.cpp
+**
+**/
+
+
 #include "nxhttpd.h"
 
 
@@ -166,8 +190,12 @@ void HttpResponse::BeginPage(TCHAR *pszTitle)
 	        _T("<html>\r\n<head>\r\n<title>"));
 	SetBody(pszTitle != NULL ? pszTitle : _T("NetXMS Web Interface"), -1, TRUE);
 	SetBody(_T("</title>\r\n")
-	        _T("<script type=\"text/javascript\" src=\"/resize.js\"></script>\r\n")
+	        _T("<script type=\"text/javascript\" src=\"/xmlextras.js\"></script>\r\n")
+	        _T("<script type=\"text/javascript\" src=\"/common.js\"></script>\r\n")
 	        _T("<link rel=\"stylesheet\" type=\"text/css\" href=\"/netxms.css\" media=\"screen, tv, projection\" title=\"Default\" />\r\n")
+	        _T("<!--[if lt IE 7.]>\r\n")
+	        _T("<script defer type=\"text/javascript\" src=\"/pngfix.js\"></script>\r\n")
+	        _T("<![endif]-->\r\n")
 	        _T("</head><body>"), -1, TRUE);
 }
 
@@ -176,27 +204,30 @@ void HttpResponse::BeginPage(TCHAR *pszTitle)
 // Start box
 //
 
-void HttpResponse::StartBox(TCHAR *pszTitle, TCHAR *pszClass, TCHAR *pszId)
+void HttpResponse::StartBox(TCHAR *pszTitle, TCHAR *pszClass, TCHAR *pszId, BOOL bContentOnly)
 {
 	String temp;
 
-	if (pszId != NULL)
+	if (!bContentOnly)
 	{
-		temp.AddFormattedString(_T("<div id=\"%s\""), pszId);
-		if (pszClass != NULL)
+		if (pszId != NULL)
 		{
-			temp.AddFormattedString(_T(" class=\"%s\">\r\n"), pszClass);
+			temp.AddFormattedString(_T("<div id=\"%s\""), pszId);
+			if (pszClass != NULL)
+			{
+				temp.AddFormattedString(_T(" class=\"%s\">\r\n"), pszClass);
+			}
+			else
+			{
+				temp += _T(">\r\n");
+			}
 		}
 		else
 		{
-			temp += _T(">\r\n");
+			temp.AddFormattedString(_T("<div class=\"%s\">\r\n"), (pszClass != NULL) ? pszClass : _T("box"));
 		}
+		AppendBody(temp);
 	}
-	else
-	{
-		temp.AddFormattedString(_T("<div class=\"%s\">\r\n"), (pszClass != NULL) ? pszClass : _T("box"));
-	}
-	AppendBody(temp);
    m_dwBoxRowNumber = 0;
 	if (pszTitle != NULL)
 	{
@@ -207,6 +238,25 @@ void HttpResponse::StartBox(TCHAR *pszTitle, TCHAR *pszClass, TCHAR *pszId)
 	else
 	{
 		AppendBody(_T("<table>\r\n"));
+	}
+}
+
+
+//
+// Start table header
+//
+
+void HttpResponse::StartTableHeader(TCHAR *pszClass)
+{
+	if (pszClass == NULL)
+	{
+		AppendBody(_T("<tr class=\"tableHeader\">\r\n"));
+	}
+	else
+	{
+		AppendBody(_T("<tr class=\""));
+		AppendBody(pszClass);
+		AppendBody(_T("\">\r\n"));
 	}
 }
 
