@@ -166,3 +166,25 @@ void ShowInfoMessage(HttpResponse &response, TCHAR *pszText)
 	response.AppendBody(EscapeHTMLText(tmp));
 	response.AppendBody(_T("</div>"));
 }
+
+
+//
+// Add button control
+//
+
+void AddButton(HttpResponse &response, TCHAR *pszName, TCHAR *pszDescription, TCHAR *pszHandler)
+{
+	TCHAR szTemp[4096];
+
+	_sntprintf(szTemp, 4096,
+	           _T("<a href=\"#\" hidefocus=\"true\" unselectable=\"on\" title=\"%s\" ")
+				  _T("onClick=\"return %s('%s');\" onMouseOver=\"window.top.status='%s';return true\" ")
+				  _T("onMouseOut=\"setButtonState('%s',0);window.top.status='';return true;\" ")
+				  _T("onMouseDown=\"return setButtonState('%s',1);\" ")
+				  _T("onMouseUp=\"return setButtonState('%s',0);\">\r\n")
+				  _T("   <img class=\"pushbutton\" id=\"img_%s\" src=\"/images/buttons/normal/%s.png\" ")
+				  _T("border=\"0\" width=\"90\" height=\"25\">\r\n</a>\r\n"),
+	           pszDescription, pszHandler, pszName, pszDescription, pszName, pszName, pszName,
+				  pszName, pszName);
+	response.AppendBody(szTemp);
+}

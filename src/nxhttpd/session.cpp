@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.7 2007-05-11 22:16:42 victor Exp $ */
+/* $Id: session.cpp,v 1.8 2007-05-13 21:10:27 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -281,8 +281,7 @@ void ClientSession::ShowForm(HttpResponse &response, int nForm)
 			ShowFormObjects(response);
 			break;
 		case FORM_ALARMS:
-			response.AppendBody(_T("<script type=\"text/javascript\" src=\"/alarms.js\"></script>\r\n")
-			                    _T("<div id=\"alarm_view\">\r\n"));
+			response.AppendBody(_T("<div id=\"alarm_view\">\r\n"));
 			ShowAlarmList(response, NULL, FALSE);
 			response.AppendBody(_T("</div>\r\n"));
 			break;
@@ -306,7 +305,6 @@ void ClientSession::ShowFormObjects(HttpResponse &response)
 	data =
 		_T("<script type=\"text/javascript\" src=\"/xtree.js\"></script>\r\n")
 		_T("<script type=\"text/javascript\" src=\"/xloadtree.js\"></script>\r\n")
-		_T("<script type=\"text/javascript\" src=\"/alarms.js\"></script>\r\n")
 		_T("<table width=\"100%\"><tr><td width=\"20%\">\r\n")
 		_T("<div id=\"object_tree\">\r\n")
 		_T("	<div id=\"jsTree\"></div>\r\n")
@@ -323,6 +321,12 @@ void ClientSession::ShowFormObjects(HttpResponse &response)
 		_T("		xmlHttp.send(null);\r\n")
 		_T("		document.getElementById(\"object_view\").innerHTML = xmlHttp.responseText;\r\n")
 		_T("     resizeElements();\r\n")
+		_T("	}\r\n")
+		_T("</script>\r\n")
+		_T("<script type=\"text/javascript\">\r\n")
+		_T("  function alarmButtonHandler(button)\r\n")
+		_T("	{\r\n")
+		_T("    window.alert('BUTTON: ' + button);\r\n")
 		_T("	}\r\n")
 		_T("</script>\r\n");
 	data.Translate(_T("{$sid}"), m_sid);

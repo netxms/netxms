@@ -84,7 +84,11 @@ static void DefaultRequestHandler(HttpRequest &request, HttpResponse &response)
 						fname = g_szDocumentRoot;
 						fname += _T("/");
 						fname += uri;
-						f = _tfopen((TCHAR *)fname, _T("r+b"));
+						fname.Translate(_T("//"), _T("/"));
+#ifdef _WIN32
+						fname.Translate(_T("/"), _T("\\"));
+#endif
+						f = _tfopen((TCHAR *)fname, _T("rb"));
 						if (f != NULL)
 						{
 							char buffer[10240];
@@ -135,7 +139,9 @@ static THREAD_RESULT THREAD_CALL ClientHandler(void *pArg)
 	if (req.Read((SOCKET)pArg))
 	{
 		if (!SessionRequestHandler(req, resp))
+		{
 			DefaultRequestHandler(req, resp);
+		}
 	}
 	else
 	{

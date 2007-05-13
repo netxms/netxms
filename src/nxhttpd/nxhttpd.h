@@ -274,6 +274,7 @@ void ShowFormLogin(HttpResponse &response, TCHAR *pszErrorText);
 void AddTableHeader(HttpResponse &response, TCHAR *pszClass, ...);
 void ShowErrorMessage(HttpResponse &response, DWORD dwError);
 void ShowInfoMessage(HttpResponse &response, TCHAR *pszText);
+void AddButton(HttpResponse &response, TCHAR *pszImage, TCHAR *pszDescription, TCHAR *pszHandler);
 
 TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, TCHAR *pszDefaultText);
 TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType);

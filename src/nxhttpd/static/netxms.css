@@ -180,6 +180,23 @@ img
 	background-color: #7590AE;
 }
 
+/* control buttons */
+
+.button_row
+{
+	float: right;
+	margin-top: 0.5em;
+}
+
+.button_row tr
+{
+}
+
+.button_row td
+{
+	padding-left: 0.7em;
+}
+
 /* main body */
 
 #clientarea

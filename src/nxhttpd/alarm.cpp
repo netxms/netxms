@@ -233,6 +233,18 @@ void ClientSession::ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj, 
 	}
    MutexUnlock(m_mutexAlarmList);
 	response.EndBox(bReload);
+
+	// Show control buttons
+	if (!bReload)
+	{
+		response.AppendBody(_T("<table class=\"button_row\"><tr><td>\r\n"));
+		AddButton(response, _T("ack"), _T("Acknowledge selected alarms"), _T("alarmButtonHandler"));
+		response.AppendBody(_T("</td><td>\r\n"));
+		AddButton(response, _T("terminate"), _T("Terminate selected alarms"), _T("alarmButtonHandler"));
+		response.AppendBody(_T("</td><td>\r\n"));
+		AddButton(response, _T("delete"), _T("Delete selected alarms"), _T("alarmButtonHandler"));
+		response.AppendBody(_T("</td></tr></table>\r\n"));
+	}
 }
 
 

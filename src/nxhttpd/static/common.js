@@ -1,3 +1,14 @@
+/*** Set button's state ***/
+function setButtonState(name, isPressed)
+{
+	img = document.getElementById('img_' + name);
+	if (img != null)
+	{
+		img.src = '/images/buttons/' + (isPressed ? 'pressed' : 'normal') + '/' + name + '.png';
+	}
+	return true;
+}
+
 /*** Reload content of given div ***/
 function loadDivContent(divId, sid, cmd)
 {
@@ -5,7 +16,7 @@ function loadDivContent(divId, sid, cmd)
 	xmlHttp.open('GET', '/main.app?sid=' + sid + cmd, false);
 	xmlHttp.send(null);
 	document.getElementById(divId).innerHTML = xmlHttp.responseText;
-	if (correctPNG)
+	if (self.correctPNG)
 	{
 		correctPNG();
 	}
