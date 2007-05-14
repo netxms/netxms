@@ -147,6 +147,7 @@ contrib/startup/redhat/nxagentd -text
 contrib/startup/suse/Makefile.am -text
 contrib/startup/suse/nxagentd -text
 doc/Makefile.am -text
+doc/comparison_netxms_nnm.doc -text
 doc/internal/Makefile.am -text
 doc/internal/build.w64 -text
 doc/internal/coding_style.txt -text
