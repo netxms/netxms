@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.3 2007-05-10 22:43:31 victor Exp $ */
+/* $Id: tools.cpp,v 1.4 2007-05-15 09:36:32 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -78,4 +78,50 @@ TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType)
 	else
 		_tcscpy(pszBuffer, _T("(null)"));
    return pszBuffer;
+}
+
+
+//
+// Create ID list from string of form (id1)(id2)..(idN)
+//
+
+DWORD *IdListFromString(TCHAR *pszStr, DWORD *pdwCount)
+{
+	DWORD i, *pdwList;
+	TCHAR *curr, *start;
+
+	*pdwCount = NumChars(pszStr, _T('('));
+	if (*pdwCount > 0)
+	{
+		pdwList = (DWORD *)malloc(sizeof(DWORD) * (*pdwCount));
+		memset(pdwList, 0, sizeof(DWORD) * (*pdwCount));
+		for(i = 0, start = pszStr; i < *pdwCount; i++)
+		{
+			curr = _tcschr(start, _T('('));
+			if (curr == NULL)
+				break;
+			curr++;
+			pdwList[i] = _tcstoul(curr, &start, 10);
+		}
+	}
+	else
+	{
+		pdwList = NULL;
+	}
+	return pdwList;
+}
+
+
+//
+// Check if given ID is a member of list
+//
+
+BOOL IsListMember(DWORD dwId, DWORD dwCount, DWORD *pdwList)
+{
+	DWORD i;
+
+	for(i = 0; i < dwCount; i++)
+		if (pdwList[i] == dwId)
+			return TRUE;
+	return FALSE;
 }

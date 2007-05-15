@@ -9,6 +9,22 @@ function setButtonState(name, isPressed)
 	return true;
 }
 
+/*** Toggle checkbox ***/
+function toggleCheckbox(handler, name)
+{
+	img = document.getElementById('img_' + name);
+	if (img != null)
+	{
+		var newState = (img.src.indexOf('checkbox_on') != -1) ? 0 : 1;
+		img.src = '/images/checkbox_' + ((newState == 0) ? 'off' : 'on') + '.png';
+		if (handler != null)
+		{
+			handler(name, newState);
+		}
+	}
+	return true;
+}
+
 /*** Reload content of given div ***/
 function loadDivContent(divId, sid, cmd)
 {

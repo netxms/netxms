@@ -313,16 +313,25 @@ img
 	overflow-y: auto;
 }
 
+#object_tools
+{
+	padding: 1em;
+}
+
+#object_tools td
+{
+	right-margin: 0.5em;
+}
+
 .objectTable
 {
-	border: none;
+	border: 2px solid rgb(204,204,204);
 	font-family: "ms sans serif", sans-serif, Verdana, Helvetica;
 	font-size: 100%;
 }
 
 .objectTable table
 {
-	border: 2px solid rgb(204,204,204);
 	width: 100%;
 }
 
@@ -330,6 +339,29 @@ img
 {
 	padding-left: 0.5em;
 	padding-right: 0.5em;
+	vertical-align: middle;
+	border-right: 1px solid rgb(204,204,204);
+}
+
+.inner_table
+{
+	border: none;
+}
+
+.inner_table table
+{
+	border: none;
+}
+
+.inner_table tr
+{
+	border: none;
+}
+
+.inner_table td
+{
+	border: none;
+	padding: 0;
 }
 
 /* alarms */

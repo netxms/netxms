@@ -1,8 +1,7 @@
-/* $Id: nms_util.h,v 1.104 2007-05-11 15:44:46 victor Exp $ */
-
+/* $Id: nms_util.h,v 1.105 2007-05-15 09:36:32 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -18,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nms_util.h
+** File: nms_util.h
 **
 **/
 
@@ -550,6 +549,10 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.104  2007/05/11 15:44:46  victor
+- Added improved qsort()
+- Minor changes in web ui
+
 Revision 1.103  2007/05/07 11:35:41  victor
 - Unfinished changes in alarm generation code
 - nxhttpd redesigned

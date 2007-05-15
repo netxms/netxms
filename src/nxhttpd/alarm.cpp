@@ -168,7 +168,7 @@ int ClientSession::CompareAlarms(NXC_ALARM *p1, NXC_ALARM *p2)
 static void AddAlarmColumnHeader(HttpResponse &response, TCHAR *sid, int nCol, DWORD dwObjectId,
 										   int nSortDir, BOOL bSortBy)
 {
-	TCHAR szTemp[1024];
+	TCHAR szTemp[16384];
 	static TCHAR *colNames[] = 
 	{ 
 		_T("Severity"),
@@ -180,7 +180,7 @@ static void AddAlarmColumnHeader(HttpResponse &response, TCHAR *sid, int nCol, D
 		_T("Changed")
 	};
 
-	_sntprintf(szTemp, 1024, _T("<td valign=\"center\"><a href=\"\" onclick=\"javascript:loadDivContent('alarm_list','%s','&cmd=getAlarmList&mode=%d&dir=%d&obj=%d'); return false;\">%s</a>%s</td>\r\n"),
+	_sntprintf(szTemp, 16384, _T("<td valign=\"center\"><a href=\"\" onclick=\"javascript:loadDivContent('alarm_list','%s','&cmd=getAlarmList&mode=%d&dir=%d&obj=%d&sel='+selectedAlarms); return false;\">%s</a>%s</td>\r\n"),
 	           sid, nCol, bSortBy ? -nSortDir : nSortDir, dwObjectId, colNames[nCol],
 				  (!bSortBy) ? _T("") : ((nSortDir < 0) ? _T("&nbsp;<img src=\"/images/sort_down.png\"/>") : _T("&nbsp;<img src=\"/images/sort_up.png\"/>")));
 	response.AppendBody(szTemp);
@@ -191,12 +191,15 @@ static void AddAlarmColumnHeader(HttpResponse &response, TCHAR *sid, int nCol, D
 // Show alarm list
 //
 
-void ClientSession::ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj, BOOL bReload)
+void ClientSession::ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj,
+                                  BOOL bReload, TCHAR *pszSelection)
 {
-	DWORD i;
+	DWORD i, dwSelCount, *pdwSelList;
 	String row, name, msg;
 	NXC_OBJECT *pObject;
 	TCHAR szTemp1[64], szTemp2[64];
+
+	m_dwCurrAlarmRoot = (pRootObj != NULL) ? pRootObj->dwId : 0;
 
 	response.StartBox(NULL, _T("objectTable"), _T("alarm_list"), bReload);
 	response.StartTableHeader(NULL);
@@ -204,7 +207,9 @@ void ClientSession::ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj, 
 	for(i = 0; i < 7; i++)
 		AddAlarmColumnHeader(response, m_sid, i, (pRootObj != NULL) ? pRootObj->dwId : 0,
 		                     m_nAlarmSortDir, (m_nAlarmSortMode == (int)i));
-	response.AppendBody(_T("</tr>\r\n"));
+	response.AppendBody(_T("<td></td></tr>\r\n"));
+
+	pdwSelList = IdListFromString(pszSelection, &dwSelCount);
 
    MutexLock(m_mutexAlarmList, INFINITE);
 	QSortEx(m_pAlarmList, m_dwNumAlarms, sizeof(NXC_ALARM), this, CompareAlarmsCB);
@@ -220,15 +225,22 @@ void ClientSession::ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj, 
 		row = _T("");
 		name = (pObject != NULL) ? pObject->szName : _T("<unknown>");
 		msg = m_pAlarmList[i].szMessage;
-		row.AddFormattedString(_T("<td><input name=\"A%d\" type=\"checkbox\"/></td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td></tr>\r\n"),
-		                       m_pAlarmList[i].dwAlarmId,
+		response.StartBoxRow();
+		response.AppendBody(_T("<td>"));
+		_stprintf(szTemp1, _T("%d"), m_pAlarmList[i].dwAlarmId);
+		AddCheckbox(response, szTemp1, _T("Select alarm"), _T("onAlarmSelect"), IsListMember(m_pAlarmList[i].dwAlarmId, dwSelCount, pdwSelList));
+		row.AddFormattedString(_T("</td><td><table class=\"inner_table\"><tr><td><img src=\"/images/status/%s.png\"></td><td>%s</td></tr></table></td>")
+		                       _T("<td>%s</td><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td>")
+		                       _T("<td><table class=\"inner_table\"><tr><td><a href=\"#\" onclick=\"javascript:alarmCtrl('%s',%d,'ack'); return false;\"><img src=\"/images/ack.png\" alt=\"Acknowledge alarm\"></a></td>")
+		                       _T("<td><a href=\"#\" onclick=\"javascript:alarmCtrl('%s',%d,'terminate'); return false;\"><img src=\"/images/terminate.png\" alt=\"Terminate alarm\"></a></td></tr></table></td></tr>\r\n"),
+									  g_szStatusImageName[m_pAlarmList[i].nCurrentSeverity],
 		                       g_szStatusTextSmall[m_pAlarmList[i].nCurrentSeverity],
 									  g_szAlarmState[m_pAlarmList[i].nState],
 									  EscapeHTMLText(name), EscapeHTMLText(msg),
 									  m_pAlarmList[i].dwRepeatCount,
 									  FormatTimeStamp(m_pAlarmList[i].dwCreationTime, szTemp1, TS_LONG_DATE_TIME),
-									  FormatTimeStamp(m_pAlarmList[i].dwLastChangeTime, szTemp2, TS_LONG_DATE_TIME));
-		response.StartBoxRow();
+									  FormatTimeStamp(m_pAlarmList[i].dwLastChangeTime, szTemp2, TS_LONG_DATE_TIME),
+									  m_sid, m_pAlarmList[i].dwAlarmId, m_sid, m_pAlarmList[i].dwAlarmId);
 		response.AppendBody(row);
 	}
    MutexUnlock(m_mutexAlarmList);
@@ -238,11 +250,11 @@ void ClientSession::ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj, 
 	if (!bReload)
 	{
 		response.AppendBody(_T("<table class=\"button_row\"><tr><td>\r\n"));
-		AddButton(response, _T("ack"), _T("Acknowledge selected alarms"), _T("alarmButtonHandler"));
+		AddButton(response, m_sid, _T("ack"), _T("Acknowledge selected alarms"), _T("alarmButtonHandler"));
 		response.AppendBody(_T("</td><td>\r\n"));
-		AddButton(response, _T("terminate"), _T("Terminate selected alarms"), _T("alarmButtonHandler"));
+		AddButton(response, m_sid, _T("terminate"), _T("Terminate selected alarms"), _T("alarmButtonHandler"));
 		response.AppendBody(_T("</td><td>\r\n"));
-		AddButton(response, _T("delete"), _T("Delete selected alarms"), _T("alarmButtonHandler"));
+		AddButton(response, m_sid, _T("delete"), _T("Delete selected alarms"), _T("alarmButtonHandler"));
 		response.AppendBody(_T("</td></tr></table>\r\n"));
 	}
 }
@@ -256,27 +268,84 @@ void ClientSession::SendAlarmList(HttpRequest &request, HttpResponse &response)
 {
 	NXC_OBJECT *pObject;
 	DWORD dwId;
-	String tmp;
+	String tmp, sel;
 
 	if (request.GetQueryParam(_T("mode"), tmp))
 		m_nAlarmSortMode = _tcstol(tmp, NULL, 10);
 	if (request.GetQueryParam(_T("dir"), tmp))
 		m_nAlarmSortDir = _tcstol(tmp, NULL, 10);
+	request.GetQueryParam(_T("sel"), sel);
 
 	if (request.GetQueryParam(_T("obj"), tmp))
 	{
 		dwId = _tcstoul(tmp, NULL, 10);
-		if (dwId != 0)
+	}
+	else
+	{
+		dwId = m_dwCurrAlarmRoot;
+	}
+	if (dwId != 0)
+	{
+		pObject = NXCFindObjectById(m_hSession, dwId);
+		if (pObject != NULL)
 		{
-			pObject = NXCFindObjectById(m_hSession, dwId);
-			if (pObject != NULL)
-			{
-				ShowAlarmList(response, pObject, TRUE);
-			}
+			ShowAlarmList(response, pObject, TRUE, sel);
+		}
+	}
+	else
+	{
+		ShowAlarmList(response, NULL, TRUE, sel);
+	}
+}
+
+
+//
+// Alarm control handler
+//
+
+void ClientSession::AlarmCtrlHandler(HttpRequest &request, HttpResponse &response)
+{
+	String action, list;
+	DWORD i, dwCount, *pdwList, dwResult;
+	DWORD (*pf)(NXC_SESSION, DWORD);
+
+	if (request.GetQueryParam(_T("action"), action) &&
+		 request.GetQueryParam(_T("alarmList"), list))
+	{
+		if (!_tcsicmp(action, _T("ack")))
+		{
+			pf = NXCAcknowledgeAlarm;
+		}
+		else if (!_tcsicmp(action, _T("terminate")))
+		{
+			pf = NXCTerminateAlarm;
+		}
+		else if (!_tcsicmp(action, _T("delete")))
+		{
+			pf = NXCDeleteAlarm;
 		}
 		else
 		{
-			ShowAlarmList(response, NULL, TRUE);
+			pf = NULL;
 		}
+		
+		if (pf != NULL)
+		{
+			pdwList = IdListFromString(list, &dwCount);
+			for(i = 0; i < dwCount; i++)
+			{
+				dwResult = pf(m_hSession, pdwList[i]);
+				if (dwResult != RCC_SUCCESS)
+				{
+					ShowErrorMessage(response, dwResult);
+					break;
+				}
+			}
+			safe_free(pdwList);
+
+			// FIXME: add normal synchronization mechanism
+			ThreadSleepMs(500);
+		}
+		SendAlarmList(request, response);
 	}
 }

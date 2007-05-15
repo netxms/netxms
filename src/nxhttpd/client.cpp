@@ -138,7 +138,15 @@ static THREAD_RESULT THREAD_CALL ClientHandler(void *pArg)
 
 	if (req.Read((SOCKET)pArg))
 	{
-		if (!SessionRequestHandler(req, resp))
+		if (SessionRequestHandler(req, resp))
+		{
+			// Mark content as dynamic
+			// FIXME: hack
+			resp.SetHeader(_T("Pragma"), _T("no-cache"));
+			resp.SetHeader(_T("Cache-Control"), _T("max-age=1, must-revalidate"));
+			resp.SetHeader(_T("Expires"), _T("Fri, 30 Oct 1998 14:19:41 GMT"));
+		}
+		else
 		{
 			DefaultRequestHandler(req, resp);
 		}

@@ -193,7 +193,16 @@ enum
 	OBJVIEW_ALARMS,
 	OBJVIEW_LAST_VALUES,
 	OBJVIEW_PERFORMANCE,
+	OBJVIEW_TOOLS,
 	OBJVIEW_LAST_VIEW_CODE
+};
+
+enum
+{
+	OBJTOOL_CREATE,
+	OBJTOOL_DELETE,
+	OBJTOOL_MANAGE,
+	OBJTOOL_UNMANAGE
 };
 
 class ClientSession
@@ -209,6 +218,7 @@ protected:
 	MUTEX m_mutexAlarmList;
 	int m_nAlarmSortMode;
 	int m_nAlarmSortDir;
+	DWORD m_dwCurrAlarmRoot;
 
 	DWORD m_dwNumValues;
 	NXC_DCI_VALUE *m_pValueList;
@@ -224,9 +234,11 @@ protected:
 	void ShowFormObjects(HttpResponse &response);
 	void ShowObjectView(HttpRequest &request, HttpResponse &response);
 	void ShowObjectOverview(HttpResponse &response, NXC_OBJECT *pObject);
+	void ShowObjectTools(HttpResponse &response, NXC_OBJECT *pObject);
 	void SendObjectTree(HttpRequest &request, HttpResponse &response);
-	void ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj, BOOL bReload);
+	void ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj, BOOL bReload, TCHAR *pszSelection);
 	void SendAlarmList(HttpRequest &request, HttpResponse &response);
+	void AlarmCtrlHandler(HttpRequest &request, HttpResponse &response);
 	void ShowLastValues(HttpResponse &response, NXC_OBJECT *pObject, BOOL bReload);
 	void SendLastValues(HttpRequest &request, HttpResponse &response);
 
@@ -274,10 +286,13 @@ void ShowFormLogin(HttpResponse &response, TCHAR *pszErrorText);
 void AddTableHeader(HttpResponse &response, TCHAR *pszClass, ...);
 void ShowErrorMessage(HttpResponse &response, DWORD dwError);
 void ShowInfoMessage(HttpResponse &response, TCHAR *pszText);
-void AddButton(HttpResponse &response, TCHAR *pszImage, TCHAR *pszDescription, TCHAR *pszHandler);
+void AddButton(HttpResponse &response, TCHAR *pszSID, TCHAR *pszImage, TCHAR *pszDescription, TCHAR *pszHandler);
+void AddCheckbox(HttpResponse &response, TCHAR *pszName,TCHAR *pszDescription, TCHAR *pszHandler, BOOL bChecked);
 
 TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, TCHAR *pszDefaultText);
 TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType);
+DWORD *IdListFromString(TCHAR *pszStr, DWORD *pdwCount);
+BOOL IsListMember(DWORD dwId, DWORD dwCount, DWORD *pdwList);
 
 #ifdef _WIN32
 
@@ -304,6 +319,7 @@ extern TCHAR g_szDocumentRoot[];
 extern WORD g_wListenPort;
 extern TCHAR *g_szStatusText[];
 extern TCHAR *g_szStatusTextSmall[];
+extern TCHAR *g_szStatusImageName[];
 extern TCHAR *g_szAlarmState[];
 extern TCHAR *g_szObjectClass[];
 extern TCHAR *g_szInterfaceTypes[];

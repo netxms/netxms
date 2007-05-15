@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.8 2007-05-13 21:10:27 victor Exp $ */
+/* $Id: session.cpp,v 1.9 2007-05-15 09:36:32 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -64,6 +64,7 @@ ClientSession::ClientSession()
 	m_mutexAlarmList = MutexCreate();
 	m_nAlarmSortMode = 0;
 	m_nAlarmSortDir = -1;
+	m_dwCurrAlarmRoot = 0;
 	m_dwNumValues = 0;
 	m_pValueList = NULL;
 	m_nLastValuesSortMode = 1;
@@ -217,6 +218,10 @@ BOOL ClientSession::ProcessRequest(HttpRequest &request, HttpResponse &response)
 		{
 			SendAlarmList(request, response);
 		}
+		else if (!_tcscmp((TCHAR *)cmd, _T("alarmCtrl")))
+		{
+			AlarmCtrlHandler(request, response);
+		}
 		else if (!_tcscmp((TCHAR *)cmd, _T("tools")))
 		{
 			ShowForm(response, FORM_TOOLS);
@@ -281,8 +286,9 @@ void ClientSession::ShowForm(HttpResponse &response, int nForm)
 			ShowFormObjects(response);
 			break;
 		case FORM_ALARMS:
-			response.AppendBody(_T("<div id=\"alarm_view\">\r\n"));
-			ShowAlarmList(response, NULL, FALSE);
+			response.AppendBody(_T("<script type=\"text/javascript\" src=\"/alarms.js\"></script>\r\n")
+			                    _T("<div id=\"alarm_view\">\r\n"));
+			ShowAlarmList(response, NULL, FALSE, _T(""));
 			response.AppendBody(_T("</div>\r\n"));
 			break;
 		default:
@@ -305,6 +311,7 @@ void ClientSession::ShowFormObjects(HttpResponse &response)
 	data =
 		_T("<script type=\"text/javascript\" src=\"/xtree.js\"></script>\r\n")
 		_T("<script type=\"text/javascript\" src=\"/xloadtree.js\"></script>\r\n")
+		_T("<script type=\"text/javascript\" src=\"/alarms.js\"></script>\r\n")
 		_T("<table width=\"100%\"><tr><td width=\"20%\">\r\n")
 		_T("<div id=\"object_tree\">\r\n")
 		_T("	<div id=\"jsTree\"></div>\r\n")
@@ -316,17 +323,22 @@ void ClientSession::ShowFormObjects(HttpResponse &response)
 		_T("	document.getElementById(\"jsTree\").innerHTML = net;\r\n")
 		_T("	function showObjectInfo(id, viewId)\r\n")
 		_T("	{\r\n")
+		_T("     selectedAlarms = '';\r\n")
+		_T("		loadDivContent('object_view', '{$sid}', '&cmd=');\r\n")
 		_T("		var xmlHttp = XmlHttp.create();\r\n")
 		_T("		xmlHttp.open(\"GET\", \"/main.app?cmd=objectView&sid={$sid}&view=\" + viewId + \"&id=\" + id, false);\r\n")
 		_T("		xmlHttp.send(null);\r\n")
 		_T("		document.getElementById(\"object_view\").innerHTML = xmlHttp.responseText;\r\n")
 		_T("     resizeElements();\r\n")
 		_T("	}\r\n")
-		_T("</script>\r\n")
-		_T("<script type=\"text/javascript\">\r\n")
-		_T("  function alarmButtonHandler(button)\r\n")
+		_T("	function execObjectTool(id,tool)\r\n")
 		_T("	{\r\n")
-		_T("    window.alert('BUTTON: ' + button);\r\n")
+		_T("     selectedAlarms = '';\r\n")
+		_T("		loadDivContent('object_view', '{$sid}', '&cmd=');\r\n")
+		_T("		xmlHttp.open(\"GET\", \"/main.app?cmd=objectView&sid={$sid}&view=\" + viewId + \"&id=\" + id, false);\r\n")
+		_T("		xmlHttp.send(null);\r\n")
+		_T("		document.getElementById(\"object_view\").innerHTML = xmlHttp.responseText;\r\n")
+		_T("     resizeElements();\r\n")
 		_T("	}\r\n")
 		_T("</script>\r\n");
 	data.Translate(_T("{$sid}"), m_sid);
@@ -447,6 +459,7 @@ static BOOL IsValidObjectView(int nClass, int nView)
 	switch(nView)
 	{
 		case OBJVIEW_OVERVIEW:
+		case OBJVIEW_TOOLS:
 			return TRUE;
 		case OBJVIEW_ALARMS:
 			return ((nClass == OBJECT_NODE) || (nClass == OBJECT_SUBNET) ||
@@ -511,8 +524,9 @@ void ClientSession::ShowObjectView(HttpRequest &request, HttpResponse &response)
 	// Object's name
 	data =
 		_T("<div id=\"objview_header\">\r\n")
-		_T("{$name}\r\n")
-		_T("</div>\r\n");
+		_T("<table><tr><td valign=\"middle\"><img src=\"/images/status/{$status}.png\"></td><td>{$name}</td>\r\n")
+		_T("</tr></table></div>\r\n");
+	data.Translate(_T("{$status}"), g_szStatusImageName[pObject->iStatus]);
 	data.Translate(_T("{$name}"), pObject->szName);
 	response.AppendBody(data);
 
@@ -522,6 +536,7 @@ void ClientSession::ShowObjectView(HttpRequest &request, HttpResponse &response)
 	AddObjectSubmenu(data, pObject->iClass, OBJVIEW_ALARMS, _T("Alarms"));
 	AddObjectSubmenu(data, pObject->iClass, OBJVIEW_LAST_VALUES, _T("DataView"));
 	AddObjectSubmenu(data, pObject->iClass, OBJVIEW_PERFORMANCE, _T("PerfView"));
+	AddObjectSubmenu(data, pObject->iClass, OBJVIEW_TOOLS, _T("Tools"));
 	data += _T("	</ul>\r\n</div><div id=\"object_data\">\r\n");
 	//data.Translate(_T("{$sid}"), m_sid);
 	data.Translate(_T("{$id}"), (TCHAR *)id);
@@ -534,10 +549,13 @@ void ClientSession::ShowObjectView(HttpRequest &request, HttpResponse &response)
 			ShowObjectOverview(response, pObject);
 			break;
 		case OBJVIEW_ALARMS:
-			ShowAlarmList(response, pObject, FALSE);
+			ShowAlarmList(response, pObject, FALSE, _T(""));
 			break;
 		case OBJVIEW_LAST_VALUES:
 			ShowLastValues(response, pObject, FALSE);
+			break;
+		case OBJVIEW_TOOLS:
+			ShowObjectTools(response, pObject);
 			break;
 		default:
 			ShowInfoMessage(response, _T("Not implemented yet"));
@@ -640,5 +658,37 @@ void ClientSession::ShowObjectOverview(HttpResponse &response, NXC_OBJECT *pObje
 	                    _T("<div class=\"subheader\"><span>Comments</span></div>\r\n"));
 	temp = CHECK_NULL_EX(pObject->pszComments);
 	response.AppendBody(EscapeHTMLText(temp));
+	response.AppendBody(_T("</div>\r\n"));
+}
+
+
+//
+// Add tool
+//
+
+static void AddTool(HttpResponse &response, TCHAR *pszName, TCHAR *pszImage, DWORD dwObjectId, int nTool)
+{
+	String tmp;
+
+	tmp.AddFormattedString(_T("<table class=\"inner_table\"><tr><td>")
+	                       _T("<img src=\"%s\"></td><td>")
+								  _T("<a href=\"#\" onclick=\"javascript:execObjectTool(%d,%d); return false;\">%s</a></td></tr></table>\r\n"),
+								  pszImage, dwObjectId, nTool, pszName);
+	response.AppendBody(tmp);
+}
+
+
+//
+// Show "Tools" object's view
+//
+
+void ClientSession::ShowObjectTools(HttpResponse &response, NXC_OBJECT *pObject)
+{
+	response.AppendBody(_T("<div id=\"object_tools\">\r\n"));
+	AddTool(response, _T("Create child object"), _T("/images/file.png"), pObject->dwId);
+	AddTool(response, _T("Delete"), _T("/images/terminate.png"), pObject->dwId);
+	response.AppendBody(_T("<br>\r\n"));
+	AddTool(response, _T("Manage"), _T("/images/status/normal.png"), pObject->dwId);
+	AddTool(response, _T("Unmanage"), _T("/images/status/unmanaged.png"), pObject->dwId);
 	response.AppendBody(_T("</div>\r\n"));
 }

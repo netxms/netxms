@@ -144,11 +144,6 @@ char *HttpResponse::BuildStream(int &size)
 	_sntprintf(szBuffer, 64, _T("%u"), m_bodyLen);
 	SetHeader(_T("Content-Lenght"), szBuffer);
 
-	// FIXME: hack
-	SetHeader(_T("Pragma"), _T("no-cache"));
-	SetHeader(_T("Cache-Control"), _T("max-age=1, must-revalidate"));
-	SetHeader(_T("Expires"), _T("Fri, 30 Oct 1998 14:19:41 GMT"));
-
 	tmp = _T("HTTP/1.0 ");
 	tmp += (TCHAR *)m_codeString;
 	tmp += _T("\r\n");

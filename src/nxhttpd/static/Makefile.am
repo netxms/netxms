@@ -12,6 +12,6 @@ SUBDIRS = images
 
 staticdir=$(pkgdatadir)/nxhttpd
 
-static_DATA = netxms.css pngfix.js resize.js xloadtree.js xmlextras.js xtree.js
+static_DATA = alarms.js common.js netxms.css pngfix.js xloadtree.js xmlextras.js xtree.js
 
 EXTRA_DIST = $(static_DATA)

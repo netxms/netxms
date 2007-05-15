@@ -172,19 +172,39 @@ void ShowInfoMessage(HttpResponse &response, TCHAR *pszText)
 // Add button control
 //
 
-void AddButton(HttpResponse &response, TCHAR *pszName, TCHAR *pszDescription, TCHAR *pszHandler)
+void AddButton(HttpResponse &response, TCHAR *pszSID, TCHAR *pszName, TCHAR *pszDescription, TCHAR *pszHandler)
 {
 	TCHAR szTemp[4096];
 
 	_sntprintf(szTemp, 4096,
 	           _T("<a href=\"#\" hidefocus=\"true\" unselectable=\"on\" title=\"%s\" ")
-				  _T("onClick=\"return %s('%s');\" onMouseOver=\"window.top.status='%s';return true\" ")
+				  _T("onClick=\"return %s('%s','%s');\" onMouseOver=\"window.top.status='%s';return true\" ")
 				  _T("onMouseOut=\"setButtonState('%s',0);window.top.status='';return true;\" ")
 				  _T("onMouseDown=\"return setButtonState('%s',1);\" ")
 				  _T("onMouseUp=\"return setButtonState('%s',0);\">\r\n")
 				  _T("   <img class=\"pushbutton\" id=\"img_%s\" src=\"/images/buttons/normal/%s.png\" ")
 				  _T("border=\"0\" width=\"90\" height=\"25\">\r\n</a>\r\n"),
-	           pszDescription, pszHandler, pszName, pszDescription, pszName, pszName, pszName,
+	           pszDescription, pszHandler, pszSID, pszName, pszDescription, pszName, pszName, pszName,
 				  pszName, pszName);
+	response.AppendBody(szTemp);
+}
+
+
+//
+// Add checkbox control
+//
+
+void AddCheckbox(HttpResponse &response, TCHAR *pszName,TCHAR *pszDescription, TCHAR *pszHandler, BOOL bChecked)
+{
+	TCHAR szTemp[4096];
+
+	_sntprintf(szTemp, 4096,
+	           _T("<a href=\"#\" hidefocus=\"true\" unselectable=\"on\" title=\"%s\" ")
+				  _T("onClick=\"return toggleCheckbox(%s,'%s');\" onMouseOver=\"window.top.status='%s';return true\" ")
+				  _T("onMouseOut=\"window.top.status='';return true;\">\r\n")
+				  _T("   <img class=\"checkbox\" id=\"img_%s\" src=\"/images/checkbox_%s.png\" ")
+				  _T("border=\"0\" width=\"13\" height=\"13\">\r\n</a>\r\n"),
+	           pszDescription, pszHandler, pszName, pszDescription, pszName,
+				  bChecked ? _T("on") : _T("off"));
 	response.AppendBody(szTemp);
 }
