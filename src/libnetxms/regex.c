@@ -46,7 +46,9 @@
 #endif
 
 /* We need this for `regex.h', and perhaps for the Emacs include files.  */
+#ifndef UNDER_CE
 #include <sys/types.h>
+#endif
 
 /* This is for other GNU distributions with internationalized messages.  */
 #if HAVE_LIBINTL_H || defined (_LIBC)
@@ -3156,7 +3158,11 @@ re_compile_fastmap (bufp)
 
 
 	default:
+#ifdef UNDER_CE
+		ExitProcess(200);
+#else
 		abort(); /* We have listed all the cases.  */
+#endif
 	   } /* switch *p++ */
 
 	 /* Getting here means we have found the possible starting
@@ -4760,7 +4766,11 @@ re_match_2_internal (bufp, string1, size1, string2, size2, pos, regs, stop)
 #endif /* not emacs */
 		
 	   default:
+#ifdef UNDER_CE
+			ExitProcess(200);
+#else
 		abort ();
+#endif
 	}
 	 continue;  /* Successfully executed one pattern command; keep going.  */
 
@@ -5376,7 +5386,11 @@ regerror (err_code, preg, errbuf, errbuf_size)
 	  to this routine.  If we are given anything else, or if other regex
 	  code generates an invalid error code, then the program has a bug.
 	  Dump core so we can fix it.  */
+#ifdef UNDER_CE
+	ExitProcess(200);
+#else
     abort ();
+#endif
 
   msg = gettext (re_error_msgid[err_code]);
 

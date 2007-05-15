@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.60 2007-02-09 22:38:08 victor Exp $ */
+/* $Id: tools.cpp,v 1.61 2007-05-15 12:51:34 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
@@ -1009,6 +1009,8 @@ BOOL LIBNETXMS_EXPORTABLE RegexpMatch(TCHAR *pszStr, TCHAR *pszExpr, BOOL bMatch
 // Load file into memory
 //
 
+#ifndef UNDER_CE
+
 BYTE LIBNETXMS_EXPORTABLE *LoadFile(TCHAR *pszFileName, DWORD *pdwFileSize)
 {
    int fd, iBufPos, iNumBytes, iBytesRead;
@@ -1040,6 +1042,8 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFile(TCHAR *pszFileName, DWORD *pdwFileSize)
    }
    return pBuffer;
 }
+
+#endif
 
 
 //

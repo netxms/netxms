@@ -91,7 +91,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSII_FP) Debug"
 
@@ -124,7 +124,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSII) Release"
 
@@ -157,7 +157,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSII) Debug"
 
@@ -190,7 +190,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE SH4) Release"
 
@@ -223,7 +223,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE SH4) Debug"
 
@@ -256,7 +256,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE SH3) Release"
 
@@ -289,7 +289,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3 /align:4096
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3 /align:4096
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3 /align:4096
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE SH3) Debug"
 
@@ -322,7 +322,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3 /align:4096
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3 /align:4096
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3 /align:4096
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSIV) Release"
 
@@ -355,7 +355,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSIV) Debug"
 
@@ -388,7 +388,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE emulator) Release"
 
@@ -421,7 +421,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE emulator) Debug"
 
@@ -454,7 +454,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4I) Release"
 
@@ -487,7 +487,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4I) Debug"
 
@@ -520,7 +520,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSIV_FP) Release"
 
@@ -553,7 +553,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSIV_FP) Debug"
 
@@ -586,7 +586,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4) Release"
 
@@ -619,7 +619,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4) Debug"
 
@@ -652,7 +652,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPS16) Release"
 
@@ -685,7 +685,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS16 /ALIGN:4096
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS16 /ALIGN:4096
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS16 /ALIGN:4096
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPS16) Debug"
 
@@ -718,7 +718,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS16 /ALIGN:4096
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS16 /ALIGN:4096
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS16 /ALIGN:4096
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4T) Release"
 
@@ -751,7 +751,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4T) Debug"
 
@@ -784,7 +784,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
-# ADD LINK32 commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE x86) Release"
 
@@ -817,7 +817,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
 
 !ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE x86) Debug"
 
@@ -850,7 +850,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 $(CEx86Corelibc) commctrl.lib coredll.lib winsock.lib crypt32.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
 
 !ENDIF 
 
@@ -5842,6 +5842,493 @@ NODEP_CPP_QUEUE=\
 # End Source File
 # Begin Source File
 
+SOURCE=.\regex.c
+
+!IF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSII_FP) Release"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSII_FP) Debug"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSII) Release"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSII) Debug"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE SH4) Release"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE SH4) Debug"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE SH3) Release"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE SH3) Debug"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSIV) Release"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSIV) Debug"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE emulator) Release"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE emulator) Debug"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4I) Debug"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSIV_FP) Release"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSIV_FP) Debug"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4) Debug"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPS16) Release"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPS16) Debug"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4T) Release"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4T) Debug"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE x86) Release"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE x86) Debug"
+
+DEP_CPP_REGEX=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-regex.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	
+NODEP_CPP_REGEX=\
+	"..\..\include\config.h"\
+	".\lisp.h"\
+	".\syntax.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\serial.cpp
 
 !IF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSII_FP) Release"
@@ -6432,6 +6919,613 @@ DEP_CPP_SHA1_=\
 
 DEP_CPP_SHA1_=\
 	".\sha1.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\string.cpp
+
+!IF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSII_FP) Release"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSII_FP) Debug"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSII) Release"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSII) Debug"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE SH4) Release"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE SH4) Debug"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE SH3) Release"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE SH3) Debug"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSIV) Release"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSIV) Debug"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE emulator) Release"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE emulator) Debug"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4I) Debug"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSIV_FP) Release"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPSIV_FP) Debug"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4) Debug"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPS16) Release"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE MIPS16) Debug"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4T) Release"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE ARMV4T) Debug"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE x86) Release"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
+	
+
+!ELSEIF  "$(CFG)" == "libnetxms - Win32 (WCE x86) Debug"
+
+DEP_CPP_STRIN=\
+	"..\..\include\config-netware.h"\
+	"..\..\include\getopt.h"\
+	"..\..\include\netxms-version.h"\
+	"..\..\include\nms_common.h"\
+	"..\..\include\nms_cscp.h"\
+	"..\..\include\nms_threads.h"\
+	"..\..\include\nms_util.h"\
+	"..\..\include\nxclapi.h"\
+	"..\..\include\nxcpapi.h"\
+	"..\..\include\nxevent.h"\
+	"..\..\include\nximage.h"\
+	"..\..\include\nxlog.h"\
+	"..\..\include\nxtools.h"\
+	"..\..\include\rwlock.h"\
+	"..\..\include\unicode.h"\
+	"..\..\include\uuid.h"\
+	".\libnetxms.h"\
+	
+NODEP_CPP_STRIN=\
+	"..\..\include\config.h"\
 	
 
 !ENDIF 

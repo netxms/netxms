@@ -69,9 +69,10 @@ static DWORD WINAPI LoginThread(void *pArg)
    HWND hWnd = *((HWND *)pArg);    // Handle to status window
    DWORD dwResult;
 
-   dwResult = NXCConnect(g_szServer, g_szLogin, g_szPassword, &g_hSession, 
+   dwResult = NXCConnect(0, g_szServer, g_szLogin, g_szPassword, 0,
+	                      NULL, NULL, &g_hSession, 
                          _T("NetXMS Pocket Console/") NETXMS_VERSION_STRING,
-								 FALSE, FALSE, NULL);
+								 NULL);
 
    // If successful, load container objects' categories
    if (dwResult == RCC_SUCCESS)
