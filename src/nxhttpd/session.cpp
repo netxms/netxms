@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.9 2007-05-15 09:36:32 victor Exp $ */
+/* $Id: session.cpp,v 1.10 2007-05-16 20:24:47 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -412,16 +412,32 @@ void ClientSession::SendObjectTree(HttpRequest &request, HttpResponse &response)
 		switch(ppRootObjects[i]->iClass)
 		{
 			case OBJECT_SUBNET:
-				ico = "/images/_subnet.png";
+				ico = "/images/objects/subnet.png";
 				break;
 			case OBJECT_NODE:
-				ico = "/images/_node.png";
+				ico = "/images/objects/node.png";
 				break;
 			case OBJECT_INTERFACE:
-				ico = "/images/_interface.png";
+				ico = "/images/objects/interface.png";
+				break;
+			case OBJECT_NETWORKSERVICE:
+				ico = "/images/objects/service.png";
 				break;
 			case OBJECT_NETWORK:
-				ico = "/images/_network.png";
+			case OBJECT_SERVICEROOT:
+				ico = "/images/objects/network.png";
+				break;
+			case OBJECT_CONTAINER:
+				ico = "/images/objects/container.png";
+				break;
+			case OBJECT_TEMPLATEROOT:
+				ico = "/images/objects/template_root.png";
+				break;
+			case OBJECT_TEMPLATEGROUP:
+				ico = "/images/objects/template_group.png";
+				break;
+			case OBJECT_TEMPLATE:
+				ico = "/images/objects/template.png";
 				break;
 		}
 
@@ -685,10 +701,10 @@ static void AddTool(HttpResponse &response, TCHAR *pszName, TCHAR *pszImage, DWO
 void ClientSession::ShowObjectTools(HttpResponse &response, NXC_OBJECT *pObject)
 {
 	response.AppendBody(_T("<div id=\"object_tools\">\r\n"));
-	AddTool(response, _T("Create child object"), _T("/images/file.png"), pObject->dwId);
-	AddTool(response, _T("Delete"), _T("/images/terminate.png"), pObject->dwId);
+	AddTool(response, _T("Create child object"), _T("/images/file.png"), pObject->dwId, OBJTOOL_CREATE);
+	AddTool(response, _T("Delete"), _T("/images/terminate.png"), pObject->dwId, OBJTOOL_DELETE);
 	response.AppendBody(_T("<br>\r\n"));
-	AddTool(response, _T("Manage"), _T("/images/status/normal.png"), pObject->dwId);
-	AddTool(response, _T("Unmanage"), _T("/images/status/unmanaged.png"), pObject->dwId);
+	AddTool(response, _T("Manage"), _T("/images/status/normal.png"), pObject->dwId, OBJTOOL_MANAGE);
+	AddTool(response, _T("Unmanage"), _T("/images/status/unmanaged.png"), pObject->dwId, OBJTOOL_UNMANAGE);
 	response.AppendBody(_T("</div>\r\n"));
 }

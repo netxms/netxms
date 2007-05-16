@@ -8,14 +8,14 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = buttons objects status
-
-imagesdir=$(pkgdatadir)/nxhttpd/images
-
-images_DATA = ack.png blank.png checkbox_off.png checkbox_on.png file.png \
-              foldericon.png \
-              I.png Lminus.png login.png Lplus.png L.png \
-              new.png openfoldericon.png \
-              Tminus.png Tplus.png T.png document.png graph.png
-
-EXTRA_DIST = $(images_DATA)
+EXTRA_DIST = \
+	cluster.png \
+	container.png \
+	interface.png \
+	network.png \
+	node.png \
+	service.png \
+	subnet.png \
+	templale.png \
+	templale_group.png \
+	templale_root.png
