@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.2.16
-AppVersion=0.2.16
+AppVerName=NetXMS 0.2.17
+AppVersion=0.2.17
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.2.16
+OutputBaseFilename=netxms-0.2.17
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -124,11 +124,13 @@ Source: "nxav.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Compone
 Source: "nxnotify.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 ; Web server files
 Source: "..\..\nxhttpd\Release\nxhttpd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv
-Source: "..\..\nxhttpd\static\*.xsl"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
 Source: "..\..\nxhttpd\static\*.js"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
-Source: "..\..\nxhttpd\static\screen.css"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
+Source: "..\..\nxhttpd\static\netxms.css"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
 Source: "..\..\nxhttpd\static\images\*.png"; DestDir: "{app}\var\www\images"; Flags: ignoreversion; Components: websrv
-Source: "..\..\nxhttpd\static\images\*.jpg"; DestDir: "{app}\var\www\images"; Flags: ignoreversion; Components: websrv
+Source: "..\..\nxhttpd\static\images\buttons\normal\*.png"; DestDir: "{app}\var\www\images\buttons\normal"; Flags: ignoreversion; Components: websrv
+Source: "..\..\nxhttpd\static\images\buttons\pressed\*.png"; DestDir: "{app}\var\www\images\buttons\pressed"; Flags: ignoreversion; Components: websrv
+Source: "..\..\nxhttpd\static\images\objects\*.png"; DestDir: "{app}\var\www\images\objects"; Flags: ignoreversion; Components: websrv
+Source: "..\..\nxhttpd\static\images\status\*.png"; DestDir: "{app}\var\www\images\status"; Flags: ignoreversion; Components: websrv
 ; Third party files
 Source: "Files\mfc42.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\mfc42u.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
