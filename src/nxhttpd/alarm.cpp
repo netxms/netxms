@@ -180,9 +180,10 @@ static void AddAlarmColumnHeader(HttpResponse &response, TCHAR *sid, int nCol, D
 		_T("Changed")
 	};
 
-	_sntprintf(szTemp, 16384, _T("<td valign=\"center\"><a href=\"\" onclick=\"javascript:loadDivContent('alarm_list','%s','&cmd=getAlarmList&mode=%d&dir=%d&obj=%d&sel='+selectedAlarms); return false;\">%s</a>%s</td>\r\n"),
-	           sid, nCol, bSortBy ? -nSortDir : nSortDir, dwObjectId, colNames[nCol],
-				  (!bSortBy) ? _T("") : ((nSortDir < 0) ? _T("&nbsp;<img src=\"/images/sort_down.png\"/>") : _T("&nbsp;<img src=\"/images/sort_up.png\"/>")));
+	_sntprintf(szTemp, 16384, _T("<td valign=\"center\">%s<a href=\"\" onclick=\"javascript:loadDivContent('alarm_list','%s','&cmd=getAlarmList&mode=%d&dir=%d&obj=%d&sel='+selectedAlarms); return false;\">%s</a>%s</td>\r\n"),
+	           bSortBy ? _T("<table class=\"inner_table\"><tr><td width=\"5%\" style=\"padding-right: 0.3em;\">") : _T(""),
+				  sid, nCol, bSortBy ? -nSortDir : nSortDir, dwObjectId, colNames[nCol],
+				  bSortBy ? ((nSortDir < 0) ? _T("</td><td><img src=\"/images/sort_down.png\"/></td></tr></table>") : _T("</td><td><img src=\"/images/sort_up.png\"/></td></tr></table>")) : _T(""));
 	response.AppendBody(szTemp);
 }
 

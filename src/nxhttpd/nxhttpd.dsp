@@ -129,6 +129,10 @@ SOURCE=.\nxhttpd.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\object.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\session.cpp
 # End Source File
 # Begin Source File

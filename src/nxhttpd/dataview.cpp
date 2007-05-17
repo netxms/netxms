@@ -80,9 +80,10 @@ static void AddLastValuesColumnHeader(HttpResponse &response, TCHAR *sid, int nC
 		_T("Timestamp")
 	};
 
-	_sntprintf(szTemp, 1024, _T("<td valign=\"center\"><a href=\"\" onclick=\"javascript:loadDivContent('last_values','%s','&cmd=getLastValues&mode=%d&dir=%d&obj=%d'); return false;\">%s</a>%s</td>\r\n"),
+	_sntprintf(szTemp, 1024, _T("<td valign=\"center\">%s<a href=\"\" onclick=\"javascript:loadDivContent('last_values','%s','&cmd=getLastValues&mode=%d&dir=%d&obj=%d'); return false;\">%s</a>%s</td>\r\n"),
+	           bSortBy ? _T("<table class=\"inner_table\"><tr><td width=\"5%\" style=\"padding-right: 0.3em;\">") : _T(""),
 	           sid, nCol, bSortBy ? -nSortDir : nSortDir, dwObjectId, colNames[nCol],
-				  (!bSortBy) ? _T("") : ((nSortDir < 0) ? _T("&nbsp;<img src=\"/images/sort_down.png\"/>") : _T("&nbsp;<img src=\"/images/sort_up.png\"/>")));
+				  bSortBy ? ((nSortDir < 0) ? _T("</td><td><img src=\"/images/sort_down.png\"/></td></tr></table>") : _T("</td><td><img src=\"/images/sort_up.png\"/></td></tr></table>")) : _T(""));
 	response.AppendBody(szTemp);
 }
 

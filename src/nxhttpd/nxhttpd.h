@@ -231,6 +231,7 @@ protected:
 	NXC_ALARM *FindAlarmInList(DWORD dwAlarmId);
 
 	void ShowMainMenu(HttpResponse &response);
+	void ShowFormOverview(HttpResponse &response);
 	void ShowFormObjects(HttpResponse &response);
 	void ShowObjectView(HttpRequest &request, HttpResponse &response);
 	void ShowObjectOverview(HttpResponse &response, NXC_OBJECT *pObject);

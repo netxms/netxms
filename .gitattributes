@@ -1187,6 +1187,7 @@ src/nxhttpd/nxhttpd.dsp -text
 src/nxhttpd/nxhttpd.dsw -text
 src/nxhttpd/nxhttpd.h -text
 src/nxhttpd/nxhttpd.rc -text
+src/nxhttpd/object.cpp -text
 src/nxhttpd/resource.h -text
 src/nxhttpd/session.cpp -text
 src/nxhttpd/smgr.cpp -text
