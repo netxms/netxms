@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nms_alarm.h
+** File: nms_alarm.h
 **
 **/
 
@@ -51,10 +51,11 @@ public:
    ~AlarmManager();
 
    BOOL Init(void);
-   void NewAlarm(char *pszMsg, char *pszKey, int nState, int iSeverity, Event *pEvent);
+   void NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
+	              int iSeverity, DWORD dwTimeout, DWORD dwTimeoutEvent, Event *pEvent);
    DWORD AckById(DWORD dwAlarmId, DWORD dwUserId);
    DWORD TerminateById(DWORD dwAlarmId, DWORD dwUserId);
-   void TerminateByKey(char *pszKey);
+   void TerminateByKey(TCHAR *pszKey);
    void DeleteAlarm(DWORD dwAlarmId);
 
    void SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSession *pSession);

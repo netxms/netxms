@@ -449,6 +449,32 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'Parameters:#0D#0A' CONCAT
 		'   No message-specific parameters'
 	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_ALARM_TIMEOUT, 'SYS_ALARM_TIMEOUT',
+		EVENT_SEVERITY_WARNING, 1,
+		'Alarm timeout expired (ID: %1; Text: %2)',
+		'Generated when alarm timeout expires.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Alarm ID#0D#0A' CONCAT
+		'   2) Alarm message#0D#0A' CONCAT
+		'   3) Alarm key#0D#0A' CONCAT
+		'   4) Original event code'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_LOG_RECORD_MATCHED, 'SYS_LOG_RECORD_MATCHED',
+		EVENT_SEVERITY_WARNING, 1,
+		'Log record matched (Policy: %1; File: %2; Record: %4)',
+		'Default event for log record match.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Policy name#0D#0A' CONCAT
+		'   2) Log file name#0D#0A' CONCAT
+		'   3) Matching regular expression#0D#0A' CONCAT
+		'   4) Matched record#0D#0A' CONCAT
+		'   5 .. 9) Reserved#0D#0A' CONCAT
+		'   10 .. 99) Substrings extracted by regular expression'
+	);
 
 
 /*

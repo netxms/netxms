@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.265 2007-05-02 12:40:33 victor Exp $ */
+/* $Id: nxclapi.h,v 1.266 2007-05-20 20:52:49 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -169,7 +169,7 @@ typedef void * NXC_SESSION;
 #define SEVERITY_MAJOR        3
 #define SEVERITY_CRITICAL     4
 #define SEVERITY_FROM_EVENT   5
-#define SEVERITY_NONE         6
+#define SEVERITY_TERMINATE    6
 
 
 //
@@ -715,6 +715,8 @@ typedef struct
    DWORD dwAckByUser;      // Id of user who was acknowledged this alarm (0 for system)
    DWORD dwTermByUser;     // ID of user who was terminated this alarm (0 for system)
    DWORD dwRepeatCount;
+	DWORD dwTimeout;
+	DWORD dwTimeoutEvent;
    TCHAR szMessage[MAX_DB_STRING];
    TCHAR szKey[MAX_DB_STRING];
    TCHAR szHelpDeskRef[MAX_HELPDESK_REF_LEN];
@@ -1253,9 +1255,10 @@ typedef struct
    TCHAR *pszComment;
    TCHAR *pszScript;
    TCHAR szAlarmKey[MAX_DB_STRING];
-   TCHAR szAlarmAckKey[MAX_DB_STRING];
    TCHAR szAlarmMessage[MAX_DB_STRING];
    WORD wAlarmSeverity;
+	DWORD dwAlarmTimeout;
+	DWORD dwAlarmTimeoutEvent;
 } NXC_EPP_RULE;
 
 

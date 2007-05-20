@@ -45,7 +45,7 @@ Resource15=IDD_SERVICE
 Resource16=IDD_FINISH
 Resource17=IDD_POLLING
 Resource18=IDD_PROCESSING
-Resource19=IDR_MAINFRAME
+Resource19=IDD_SRV_DEPS
 Resource20=IDD_INTRO
 Resource21=IDD_ODBC
 Resource22=IDD_SELECT_DB
@@ -53,7 +53,7 @@ Resource23=IDD_SMTP
 Resource24=IDD_SUMMARY
 Resource25=IDD_LOG_FILE
 Class17=CSrvDepsPage
-Resource26=IDD_SRV_DEPS
+Resource26=IDR_MAINFRAME
 
 [CLS:CNxconfigApp]
 Type=0

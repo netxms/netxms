@@ -23,8 +23,11 @@ CRuleAlarmDlg::CRuleAlarmDlg(CWnd* pParent /*=NULL*/)
 	m_strMessage = _T("");
 	m_strKey = _T("");
 	m_strAckKey = _T("");
-	m_bGenerateAlarm = FALSE;
+	m_dwTimeout = 0;
 	//}}AFX_DATA_INIT
+	m_nMode = -1;
+	m_iSeverity = 0;
+	m_dwTimeout = 0;
 }
 
 
@@ -37,27 +40,23 @@ void CRuleAlarmDlg::DoDataExchange(CDataExchange* pDX)
 	DDV_MaxChars(pDX, m_strMessage, 255);
 	DDX_Text(pDX, IDC_EDIT_KEY, m_strKey);
 	DDV_MaxChars(pDX, m_strKey, 255);
-	DDX_Text(pDX, IDC_EDIT_KEYACK, m_strAckKey);
+	DDX_Text(pDX, IDC_EDIT_ACKKEY, m_strAckKey);
 	DDV_MaxChars(pDX, m_strAckKey, 255);
-	DDX_Check(pDX, IDC_CHECK_ALARM, m_bGenerateAlarm);
+	DDX_Text(pDX, IDC_EDIT_TIMEOUT, m_dwTimeout);
 	//}}AFX_DATA_MAP
 }
 
 
 BEGIN_MESSAGE_MAP(CRuleAlarmDlg, CDialog)
 	//{{AFX_MSG_MAP(CRuleAlarmDlg)
-	ON_BN_CLICKED(IDC_CHECK_ALARM, OnCheckAlarm)
+	ON_BN_CLICKED(IDC_RADIO_NONE, OnRadioNone)
+	ON_BN_CLICKED(IDC_RADIO_NEWALARM, OnRadioNewalarm)
+	ON_BN_CLICKED(IDC_RADIO_TERMINATE, OnRadioTerminate)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CRuleAlarmDlg message handlers
-
-void CRuleAlarmDlg::OnCheckAlarm() 
-{
-	EnableControls(SendDlgItemMessage(IDC_CHECK_ALARM, BM_GETCHECK, 0, 0) == BST_CHECKED);
-}
-
 
 //
 // WM_INITDIALOG message handler
@@ -67,8 +66,20 @@ BOOL CRuleAlarmDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	
-   EnableControls(m_bGenerateAlarm);
-	return TRUE;
+   if (m_nMode == 0)
+	{
+		SendDlgItemMessage(IDC_RADIO_NEWALARM, BM_SETCHECK, BST_CHECKED, 0);
+	}
+   else if (m_nMode == 1)
+	{
+		SendDlgItemMessage(IDC_RADIO_TERMINATE, BM_SETCHECK, BST_CHECKED, 0);
+	}
+	else
+	{
+		SendDlgItemMessage(IDC_RADIO_NONE, BM_SETCHECK, BST_CHECKED, 0);
+	}
+   EnableControls(m_nMode);
+	return FALSE;
 }
 
 
@@ -76,18 +87,77 @@ BOOL CRuleAlarmDlg::OnInitDialog()
 // Enable or disable all controls except "generate alarm" checkbox
 //
 
-void CRuleAlarmDlg::EnableControls(BOOL bEnable)
+void CRuleAlarmDlg::EnableControls(int nMode)
 {
-   static int iCtrlList[] = { IDC_EDIT_MESSAGE, IDC_EDIT_KEY, IDC_EDIT_KEYACK,
-                              IDC_RADIO_NORMAL, IDC_RADIO_WARNING, IDC_RADIO_MINOR,
-                              IDC_RADIO_MAJOR, IDC_RADIO_CRITICAL, IDC_RADIO_EVENT,
-                              IDC_RADIO_NONE, IDC_STATIC_MESSAGE, IDC_STATIC_KEY,
-                              IDC_STATIC_KEYACK, IDC_STATIC_ACK, IDC_STATIC_SEVERITY, -1 };
-   int i;
+   static int iCtrlList[2][18] = 
+	{
+		{ 
+	      IDC_EDIT_MESSAGE, IDC_EDIT_KEY,
+         IDC_RADIO_NORMAL, IDC_RADIO_WARNING, IDC_RADIO_MINOR,
+         IDC_RADIO_MAJOR, IDC_RADIO_CRITICAL, IDC_RADIO_EVENT,
+         IDC_STATIC_MESSAGE, IDC_STATIC_KEY, IDC_STATIC_SECONDS,
+         IDC_STATIC_SEVERITY, IDC_STATIC_TIMEOUT,
+			IDC_STATIC_EVENT, IDC_EDIT_EVENT, IDC_EDIT_TIMEOUT,
+			IDC_SELECT_EVENT, -1
+		},
+		{
+			IDC_EDIT_ACKKEY, IDC_STATIC_ACKKEY, -1
+		}
+	};
+   int i, j;
 
-   for(i = 0; iCtrlList[i] != -1; i++)
-      GetDlgItem(iCtrlList[i])->EnableWindow(bEnable);
+	for(j = 0; j < 2; j++)
+		for(i = 0; iCtrlList[j][i] != -1; i++)
+			GetDlgItem(iCtrlList[j][i])->EnableWindow(j == nMode);
    
-   if (bEnable)
+   if (nMode == 0)
+	{
       GetDlgItem(IDC_EDIT_MESSAGE)->SetFocus();
+	}
+   else if (nMode == 1)
+	{
+      GetDlgItem(IDC_EDIT_ACKKEY)->SetFocus();
+	}
+	else
+	{
+      GetDlgItem(IDC_RADIO_NONE)->SetFocus();
+	}
+}
+
+
+//
+// Handlers for radio buttons
+//
+
+void CRuleAlarmDlg::OnRadioNone() 
+{
+	if (SendDlgItemMessage(IDC_RADIO_NONE, BM_GETCHECK, 0, 0) == BST_CHECKED)
+	{
+		m_nMode = -1;
+		SendDlgItemMessage(IDC_RADIO_NEWALARM, BM_SETCHECK, BST_UNCHECKED, 0);
+		SendDlgItemMessage(IDC_RADIO_TERMINATE, BM_SETCHECK, BST_UNCHECKED, 0);
+		EnableControls(m_nMode);
+	}
+}
+
+void CRuleAlarmDlg::OnRadioNewalarm() 
+{
+	if (SendDlgItemMessage(IDC_RADIO_NEWALARM, BM_GETCHECK, 0, 0) == BST_CHECKED)
+	{
+		m_nMode = 0;
+		SendDlgItemMessage(IDC_RADIO_NONE, BM_SETCHECK, BST_UNCHECKED, 0);
+		SendDlgItemMessage(IDC_RADIO_TERMINATE, BM_SETCHECK, BST_UNCHECKED, 0);
+		EnableControls(m_nMode);
+	}
+}
+
+void CRuleAlarmDlg::OnRadioTerminate() 
+{
+	if (SendDlgItemMessage(IDC_RADIO_TERMINATE, BM_GETCHECK, 0, 0) == BST_CHECKED)
+	{
+		m_nMode = 1;
+		SendDlgItemMessage(IDC_RADIO_NONE, BM_SETCHECK, BST_UNCHECKED, 0);
+		SendDlgItemMessage(IDC_RADIO_NEWALARM, BM_SETCHECK, BST_UNCHECKED, 0);
+		EnableControls(m_nMode);
+	}
 }

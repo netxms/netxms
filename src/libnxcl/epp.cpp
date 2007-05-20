@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: epp.cpp
+** File: epp.cpp
 **
 **/
 
@@ -114,13 +114,12 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEv
                pResponse->GetVariableStr(VID_ALARM_KEY, 
                                          (*ppEventPolicy)->pRuleList[i].szAlarmKey,
                                          MAX_DB_STRING);
-               pResponse->GetVariableStr(VID_ALARM_ACK_KEY, 
-                                         (*ppEventPolicy)->pRuleList[i].szAlarmAckKey,
-                                         MAX_DB_STRING);
                pResponse->GetVariableStr(VID_ALARM_MESSAGE, 
                                          (*ppEventPolicy)->pRuleList[i].szAlarmMessage,
                                          MAX_DB_STRING);
                (*ppEventPolicy)->pRuleList[i].wAlarmSeverity = pResponse->GetVariableShort(VID_ALARM_SEVERITY);
+					(*ppEventPolicy)->pRuleList[i].dwAlarmTimeout = pResponse->GetVariableLong(VID_ALARM_TIMEOUT);
+					(*ppEventPolicy)->pRuleList[i].dwAlarmTimeoutEvent = pResponse->GetVariableLong(VID_ALARM_TIMEOUT_EVENT);
 
                delete pResponse;
             }
@@ -216,9 +215,10 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEven
                                      pEventPolicy->pRuleList[i].dwNumSources,
                                      pEventPolicy->pRuleList[i].pdwSourceList);
          msg.SetVariable(VID_ALARM_KEY, pEventPolicy->pRuleList[i].szAlarmKey);
-         msg.SetVariable(VID_ALARM_ACK_KEY, pEventPolicy->pRuleList[i].szAlarmAckKey);
          msg.SetVariable(VID_ALARM_MESSAGE, pEventPolicy->pRuleList[i].szAlarmMessage);
          msg.SetVariable(VID_ALARM_SEVERITY, pEventPolicy->pRuleList[i].wAlarmSeverity);
+			msg.SetVariable(VID_ALARM_TIMEOUT, pEventPolicy->pRuleList[i].dwAlarmTimeout);
+			msg.SetVariable(VID_ALARM_TIMEOUT_EVENT, pEventPolicy->pRuleList[i].dwAlarmTimeoutEvent);
 
          ((NXCL_Session *)hSession)->SendMsg(&msg);
       }

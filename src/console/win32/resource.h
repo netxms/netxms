@@ -367,6 +367,7 @@
 #define IDC_BUTTON_ALL                  1118
 #define IDC_EDIT_KEY                    1121
 #define IDC_EDIT_KEYACK                 1122
+#define IDC_EDIT_ACKKEY                 1122
 #define IDC_RADIO_NORMAL                1127
 #define IDC_RADIO_WARNING               1128
 #define IDC_RADIO_MINOR                 1129
@@ -378,6 +379,7 @@
 #define IDC_STATIC_ACK                  1135
 #define IDC_STATIC_KEY                  1136
 #define IDC_STATIC_KEYACK               1137
+#define IDC_STATIC_ACKKEY               1137
 #define IDC_STATIC_SEVERITY             1138
 #define IDC_CHECK_VIEW_ALARMS           1139
 #define IDC_CHECK_ACK_ALARMS            1140
@@ -612,6 +614,11 @@
 #define IDC_EDIT_MAPPING_DATA           1469
 #define IDC_CHECK_MANAGE_MODULES        1470
 #define IDC_EDIT_COMMENTS               1472
+#define IDC_RADIO_NEWALARM              1475
+#define IDC_RADIO_TERMINATE             1476
+#define IDC_STATIC_TIMEOUT              1477
+#define IDC_EDIT_TIMEOUT                1479
+#define IDC_STATIC_EVENT                1480
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -887,7 +894,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        369
 #define _APS_NEXT_COMMAND_VALUE         33071
-#define _APS_NEXT_CONTROL_VALUE         1474
+#define _APS_NEXT_CONTROL_VALUE         1481
 #define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: alarm.cpp
+** File: alarm.cpp
 **
 **/
 
@@ -52,6 +52,8 @@ void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
    pMsg->SetVariable(VID_HELPDESK_STATE, (WORD)pAlarm->nHelpDeskState);
    pMsg->SetVariable(VID_HELPDESK_REF, pAlarm->szHelpDeskRef);
    pMsg->SetVariable(VID_REPEAT_COUNT, pAlarm->dwRepeatCount);
+	pMsg->SetVariable(VID_ALARM_TIMEOUT, pAlarm->dwTimeout);
+	pMsg->SetVariable(VID_ALARM_TIMEOUT_EVENT, pAlarm->dwTimeoutEvent);
 }
 
 
@@ -133,11 +135,12 @@ BOOL AlarmManager::Init(void)
 // Create new alarm
 //
 
-void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, int nState,
-                            int iSeverity, Event *pEvent)
+void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
+                            int iSeverity, DWORD dwTimeout,
+									 DWORD dwTimeoutEvent, Event *pEvent)
 {
    NXC_ALARM alarm;
-   char *pszExpMsg, *pszExpKey, *pszEscRef, szQuery[2048];
+   TCHAR *pszExpMsg, *pszExpKey, *pszEscRef, szQuery[2048];
    DWORD i, dwObjectId = 0;
    BOOL bNewAlarm = TRUE;
 
@@ -151,13 +154,15 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, int nState,
       Lock();
 
       for(i = 0; i < m_dwNumAlarms; i++)
-         if (!strcmp(pszExpKey, m_pAlarmList[i].szKey))
+         if (!_tcscmp(pszExpKey, m_pAlarmList[i].szKey))
          {
             m_pAlarmList[i].dwRepeatCount++;
             m_pAlarmList[i].dwLastChangeTime = (DWORD)time(NULL);
             m_pAlarmList[i].dwSourceObject = pEvent->SourceId();
             m_pAlarmList[i].nState = nState;
             m_pAlarmList[i].nCurrentSeverity = iSeverity;
+				m_pAlarmList[i].dwTimeout = dwTimeout;
+				m_pAlarmList[i].dwTimeoutEvent = dwTimeoutEvent;
             nx_strncpy(m_pAlarmList[i].szMessage, pszExpMsg, MAX_DB_STRING);
             
             NotifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
@@ -185,6 +190,8 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, int nState,
       alarm.nCurrentSeverity = iSeverity;
       alarm.dwRepeatCount = 1;
       alarm.nHelpDeskState = ALARM_HELPDESK_IGNORED;
+		alarm.dwTimeout = dwTimeout;
+		alarm.dwTimeoutEvent = dwTimeoutEvent;
       nx_strncpy(alarm.szMessage, pszExpMsg, MAX_DB_STRING);
       nx_strncpy(alarm.szKey, pszExpKey, MAX_DB_STRING);
       free(pszExpMsg);
@@ -210,8 +217,8 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, int nState,
       sprintf(szQuery, "INSERT INTO alarms (alarm_id,creation_time,last_change_time,"
                        "source_object_id,source_event_code,message,original_severity,"
                        "current_severity,alarm_key,alarm_state,ack_by,hd_state,"
-                       "hd_ref,repeat_count,term_by,source_event_id) VALUES "
-                       "(%d,%d,%d,%d,%d,'%s',%d,%d,'%s',%d,%d,%d,'%s',%d,%d,"
+                       "hd_ref,repeat_count,term_by,timeout,timeout_event,source_event_id) VALUES "
+                       "(%d,%d,%d,%d,%d,'%s',%d,%d,'%s',%d,%d,%d,'%s',%d,%d,%d,%d,"
 #ifdef _WIN32
                        "%I64d)",
 #else
@@ -221,7 +228,8 @@ void AlarmManager::NewAlarm(char *pszMsg, char *pszKey, int nState,
               alarm.dwSourceObject, alarm.dwSourceEventCode, pszExpMsg,
               alarm.nOriginalSeverity, alarm.nCurrentSeverity, pszExpKey,
               alarm.nState, alarm.dwAckByUser, alarm.nHelpDeskState, pszEscRef,
-              alarm.dwRepeatCount, alarm.dwTermByUser, alarm.qwSourceEventId);
+              alarm.dwRepeatCount, alarm.dwTermByUser, alarm.dwTimeout,
+				  alarm.dwTimeoutEvent, alarm.qwSourceEventId);
       free(pszExpMsg);
       free(pszExpKey);
       free(pszEscRef);
@@ -401,11 +409,11 @@ void AlarmManager::UpdateAlarmInDB(NXC_ALARM *pAlarm)
    pszEscRef = EncodeSQLString(pAlarm->szHelpDeskRef);
    sprintf(szQuery, "UPDATE alarms SET alarm_state=%d,ack_by=%d,term_by=%d,"
                     "last_change_time=%d,current_severity=%d,repeat_count=%d,"
-                    "hd_state=%d,hd_ref='%s' WHERE alarm_id=%d",
+                    "hd_state=%d,hd_ref='%s',timeout=%d,timeout_event=%d WHERE alarm_id=%d",
            pAlarm->nState, pAlarm->dwAckByUser, pAlarm->dwTermByUser,
            pAlarm->dwLastChangeTime, pAlarm->nCurrentSeverity,
            pAlarm->dwRepeatCount, pAlarm->nHelpDeskState, pszEscRef,
-           pAlarm->dwAlarmId);
+           pAlarm->dwTimeout, pAlarm->dwTimeoutEvent, pAlarm->dwAlarmId);
    free(pszEscRef);
    QueueSQLRequest(szQuery);
 }

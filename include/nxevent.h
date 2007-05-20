@@ -97,6 +97,8 @@
 #define EVENT_CLUSTER_RESOURCE_UP      40
 #define EVENT_CLUSTER_DOWN             41
 #define EVENT_CLUSTER_UP               42
+#define EVENT_ALARM_TIMEOUT            43
+#define EVENT_LOG_RECORD_MATCHED       44
 
 #define EVENT_SNMP_UNMATCHED_TRAP      500
 #define EVENT_SNMP_COLD_START          501

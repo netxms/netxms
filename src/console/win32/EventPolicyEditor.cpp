@@ -390,10 +390,12 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    if (m_pEventPolicy->pRuleList[iRow].dwFlags & RF_GENERATE_ALARM)
    {
       if (m_wndRuleList.GetNumItems(iRow, COL_ALARM) == 0)
-         m_wndRuleList.AddItem(iRow, COL_ALARM, m_pEventPolicy->pRuleList[iRow].szAlarmMessage,
+         m_wndRuleList.AddItem(iRow, COL_ALARM,
+			                      (m_pEventPolicy->pRuleList[iRow].wAlarmSeverity == SEVERITY_TERMINATE) ? m_pEventPolicy->pRuleList[iRow].szAlarmKey : m_pEventPolicy->pRuleList[iRow].szAlarmMessage,
                                m_iImageSeverityBase + m_pEventPolicy->pRuleList[iRow].wAlarmSeverity);
       else
-         m_wndRuleList.ReplaceItem(iRow, COL_ALARM, 0, m_pEventPolicy->pRuleList[iRow].szAlarmMessage,
+         m_wndRuleList.ReplaceItem(iRow, COL_ALARM, 0,
+			                          (m_pEventPolicy->pRuleList[iRow].wAlarmSeverity == SEVERITY_TERMINATE) ? m_pEventPolicy->pRuleList[iRow].szAlarmKey : m_pEventPolicy->pRuleList[iRow].szAlarmMessage,
                                    m_iImageSeverityBase + m_pEventPolicy->pRuleList[iRow].wAlarmSeverity);
    }
    else
@@ -874,30 +876,38 @@ void CEventPolicyEditor::EditAlarm(int iRow)
 {
    CRuleAlarmDlg dlg;
 
-   dlg.m_bGenerateAlarm = (m_pEventPolicy->pRuleList[iRow].dwFlags & RF_GENERATE_ALARM) ? TRUE : FALSE;
-   if (dlg.m_bGenerateAlarm)
+   dlg.m_nMode = (m_pEventPolicy->pRuleList[iRow].dwFlags & RF_GENERATE_ALARM) ? ((m_pEventPolicy->pRuleList[iRow].wAlarmSeverity == SEVERITY_TERMINATE) ? 1 : 0) : -1;
+   if (dlg.m_nMode == 0)
    {
       dlg.m_strMessage = m_pEventPolicy->pRuleList[iRow].szAlarmMessage;
       dlg.m_strKey = m_pEventPolicy->pRuleList[iRow].szAlarmKey;
-      dlg.m_strAckKey = m_pEventPolicy->pRuleList[iRow].szAlarmAckKey;
       dlg.m_iSeverity = m_pEventPolicy->pRuleList[iRow].wAlarmSeverity;
    }
-   else
+   else if (dlg.m_nMode == 1)
    {
-      dlg.m_strMessage = "";
-      dlg.m_strKey = "";
-      dlg.m_strAckKey = "";
+      dlg.m_strAckKey = m_pEventPolicy->pRuleList[iRow].szAlarmKey;
       dlg.m_iSeverity = 0;
    }
+	else
+	{
+      dlg.m_iSeverity = 0;
+	}
    if (dlg.DoModal() == IDOK)
    {
-      if (dlg.m_bGenerateAlarm)
+      if (dlg.m_nMode != -1)
       {
          m_pEventPolicy->pRuleList[iRow].dwFlags |= RF_GENERATE_ALARM;
-         m_pEventPolicy->pRuleList[iRow].wAlarmSeverity = dlg.m_iSeverity;
-         nx_strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmMessage, (LPCTSTR)dlg.m_strMessage, MAX_DB_STRING);
-         nx_strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmKey, (LPCTSTR)dlg.m_strKey, MAX_DB_STRING);
-         nx_strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmAckKey, (LPCTSTR)dlg.m_strAckKey, MAX_DB_STRING);
+			if (dlg.m_nMode == 0)
+			{
+				m_pEventPolicy->pRuleList[iRow].wAlarmSeverity = dlg.m_iSeverity;
+				nx_strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmMessage, (LPCTSTR)dlg.m_strMessage, MAX_DB_STRING);
+				nx_strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmKey, (LPCTSTR)dlg.m_strKey, MAX_DB_STRING);
+			}
+			else
+			{
+				m_pEventPolicy->pRuleList[iRow].wAlarmSeverity = SEVERITY_TERMINATE;
+				nx_strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmKey, (LPCTSTR)dlg.m_strAckKey, MAX_DB_STRING);
+			}
       }
       else
       {

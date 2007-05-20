@@ -14,6 +14,7 @@ class CRuleAlarmDlg : public CDialog
 {
 // Construction
 public:
+	DWORD m_dwTimeoutEvent;
 	CRuleAlarmDlg(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
@@ -23,9 +24,9 @@ public:
 	CString	m_strMessage;
 	CString	m_strKey;
 	CString	m_strAckKey;
-	BOOL	m_bGenerateAlarm;
+	DWORD	m_dwTimeout;
 	//}}AFX_DATA
-
+	int m_nMode;
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -36,12 +37,14 @@ public:
 
 // Implementation
 protected:
-	void EnableControls(BOOL bEnable);
+	void EnableControls(int nMode);
 
 	// Generated message map functions
 	//{{AFX_MSG(CRuleAlarmDlg)
-	afx_msg void OnCheckAlarm();
 	virtual BOOL OnInitDialog();
+	afx_msg void OnRadioNone();
+	afx_msg void OnRadioNewalarm();
+	afx_msg void OnRadioTerminate();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

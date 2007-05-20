@@ -516,7 +516,7 @@ typedef struct
 #define VID_COMMENT                 ((DWORD)62)
 #define VID_ALARM_SEVERITY          ((DWORD)63)
 #define VID_ALARM_KEY               ((DWORD)64)
-#define VID_ALARM_ACK_KEY           ((DWORD)65)
+#define VID_ALARM_TIMEOUT           ((DWORD)65)
 #define VID_ALARM_MESSAGE           ((DWORD)66)
 #define VID_RULE_ID                 ((DWORD)67)
 #define VID_NUM_SOURCES             ((DWORD)68)
@@ -734,6 +734,7 @@ typedef struct
 #define VID_CERT_MAPPING_DATA       ((DWORD)280)
 #define VID_CERTIFICATE_ID				((DWORD)281)
 #define VID_NUM_CERTIFICATES        ((DWORD)282)
+#define VID_ALARM_TIMEOUT_EVENT     ((DWORD)283)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

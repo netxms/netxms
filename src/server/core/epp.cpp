@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: epp.cpp
+** File: epp.cpp
 **
 **/
 
@@ -41,13 +41,15 @@ EPRule::EPRule(DWORD dwId)
    m_iAlarmSeverity = 0;
    m_pszScript = NULL;
    m_pScript = NULL;
+	m_dwAlarmTimeout = 0;
+	m_dwAlarmTimeoutEvent = EVENT_ALARM_TIMEOUT;
 }
 
 
 //
 // Construct event policy rule from database record
 // Assuming the following field order:
-// rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,alarm_ack_key,script
+// rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event
 //
 
 EPRule::EPRule(DB_RESULT hResult, int iRow)
@@ -61,9 +63,7 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
    m_iAlarmSeverity = DBGetFieldLong(hResult, iRow, 4);
    DBGetField(hResult, iRow, 5, m_szAlarmKey, MAX_DB_STRING);
    DecodeSQLString(m_szAlarmKey);
-   DBGetField(hResult, iRow, 6, m_szAlarmAckKey, MAX_DB_STRING);
-   DecodeSQLString(m_szAlarmAckKey);
-   m_pszScript = DBGetField(hResult, iRow, 7, NULL, 0);
+   m_pszScript = DBGetField(hResult, iRow, 6, NULL, 0);
    DecodeSQLString(m_pszScript);
    if ((m_pszScript != NULL) && (*m_pszScript != 0))
    {
@@ -80,6 +80,8 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
    {
       m_pScript = NULL;
    }
+	m_dwAlarmTimeout = DBGetFieldULong(hResult, iRow, 7);
+	m_dwAlarmTimeoutEvent = DBGetFieldULong(hResult, iRow, 8);
 }
 
 
@@ -106,9 +108,10 @@ EPRule::EPRule(CSCPMessage *pMsg)
    pMsg->GetVariableInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
 
    pMsg->GetVariableStr(VID_ALARM_KEY, m_szAlarmKey, MAX_DB_STRING);
-   pMsg->GetVariableStr(VID_ALARM_ACK_KEY, m_szAlarmAckKey, MAX_DB_STRING);
    pMsg->GetVariableStr(VID_ALARM_MESSAGE, m_szAlarmMessage, MAX_DB_STRING);
    m_iAlarmSeverity = pMsg->GetVariableShort(VID_ALARM_SEVERITY);
+	m_dwAlarmTimeout = pMsg->GetVariableLong(VID_ALARM_TIMEOUT);
+	m_dwAlarmTimeoutEvent = pMsg->GetVariableLong(VID_ALARM_TIMEOUT_EVENT);
 
    m_pszScript = pMsg->GetVariableStr(VID_SCRIPT);
    if ((m_pszScript != NULL) && (*m_pszScript != 0))
@@ -328,31 +331,22 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
 
 void EPRule::GenerateAlarm(Event *pEvent)
 {
-   char *pszAckKey;
-   int iSeverity;
+   TCHAR *pszAckKey;
 
    // Terminate alarms with key == our ack_key
-   pszAckKey = pEvent->ExpandText(m_szAlarmAckKey);
-   if (pszAckKey[0] != 0)
-      g_alarmMgr.TerminateByKey(pszAckKey);
-   free(pszAckKey);
-
-   // Generate new alarm
-   switch(m_iAlarmSeverity)
-   {
-      case SEVERITY_FROM_EVENT:
-         iSeverity = pEvent->Severity();
-         break;
-      case SEVERITY_NONE:
-         iSeverity = SEVERITY_NORMAL;
-         break;
-      default:
-         iSeverity = m_iAlarmSeverity;
-         break;
-   }
-   g_alarmMgr.NewAlarm(m_szAlarmMessage, m_szAlarmKey, 
-                       (m_iAlarmSeverity == SEVERITY_NONE) ? ALARM_STATE_TERMINATED : ALARM_STATE_OUTSTANDING,
-                       iSeverity, pEvent);
+	if (m_iAlarmSeverity == SEVERITY_TERMINATE)
+	{
+		pszAckKey = pEvent->ExpandText(m_szAlarmKey);
+		if (pszAckKey[0] != 0)
+			g_alarmMgr.TerminateByKey(pszAckKey);
+		free(pszAckKey);
+	}
+	else	// Generate new alarm
+	{
+		g_alarmMgr.NewAlarm(m_szAlarmMessage, m_szAlarmKey, ALARM_STATE_OUTSTANDING,
+								  (m_iAlarmSeverity == SEVERITY_FROM_EVENT) ? pEvent->Severity() : m_iAlarmSeverity,
+								  m_dwAlarmTimeout, m_dwAlarmTimeoutEvent, pEvent);
+	}
 }
 
 
@@ -425,7 +419,7 @@ BOOL EPRule::LoadFromDB(void)
 
 void EPRule::SaveToDB(void)
 {
-   TCHAR *pszComment, *pszEscKey, *pszEscAck, *pszEscMessage, *pszEscScript, *pszQuery;
+   TCHAR *pszComment, *pszEscKey, *pszEscMessage, *pszEscScript, *pszQuery;
    DWORD i;
 
    pszQuery = (TCHAR *)malloc((_tcslen(CHECK_NULL(m_pszComment)) +
@@ -434,18 +428,16 @@ void EPRule::SaveToDB(void)
    // General attributes
    pszComment = EncodeSQLString(m_pszComment);
    pszEscKey = EncodeSQLString(m_szAlarmKey);
-   pszEscAck = EncodeSQLString(m_szAlarmAckKey);
    pszEscMessage = EncodeSQLString(m_szAlarmMessage);
    pszEscScript = EncodeSQLString(m_pszScript);
    _stprintf(pszQuery, _T("INSERT INTO event_policy (rule_id,flags,comments,alarm_message,")
-                       _T("alarm_severity,alarm_key,alarm_ack_key,script) ")
-                       _T("VALUES (%d,%d,'%s','%s',%d,'%s','%s','%s')"),
+                       _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event) ")
+                       _T("VALUES (%d,%d,'%s','%s',%d,'%s','%s',%d,%d)"),
              m_dwId, m_dwFlags, pszComment, pszEscMessage, m_iAlarmSeverity,
-             pszEscKey, pszEscAck, pszEscScript);
+             pszEscKey, pszEscScript, m_dwAlarmTimeout, m_dwAlarmTimeoutEvent);
    free(pszComment);
    free(pszEscMessage);
    free(pszEscKey);
-   free(pszEscAck);
    free(pszEscScript);
    DBQuery(g_hCoreDB, pszQuery);
 
@@ -487,8 +479,9 @@ void EPRule::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_RULE_ID, m_dwId);
    pMsg->SetVariable(VID_ALARM_SEVERITY, (WORD)m_iAlarmSeverity);
    pMsg->SetVariable(VID_ALARM_KEY, m_szAlarmKey);
-   pMsg->SetVariable(VID_ALARM_ACK_KEY, m_szAlarmAckKey);
    pMsg->SetVariable(VID_ALARM_MESSAGE, m_szAlarmMessage);
+   pMsg->SetVariable(VID_ALARM_TIMEOUT, m_dwAlarmTimeout);
+   pMsg->SetVariable(VID_ALARM_TIMEOUT_EVENT, m_dwAlarmTimeoutEvent);
    pMsg->SetVariable(VID_COMMENT, CHECK_NULL_EX(m_pszComment));
    pMsg->SetVariable(VID_NUM_ACTIONS, m_dwNumActions);
    pMsg->SetVariableToInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
@@ -563,7 +556,7 @@ BOOL EventPolicy::LoadFromDB(void)
    BOOL bSuccess = FALSE;
 
    hResult = DBSelect(g_hCoreDB, _T("SELECT rule_id,flags,comments,alarm_message,")
-                                 _T("alarm_severity,alarm_key,alarm_ack_key,script ")
+                                 _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event ")
                                  _T("FROM event_policy ORDER BY rule_id"));
    if (hResult != NULL)
    {

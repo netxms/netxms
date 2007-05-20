@@ -78,6 +78,92 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V61 to V62
+//
+
+static BOOL H_UpgradeFromV61(void)
+{
+   static TCHAR m_szBatch[] =
+		_T("UPDATE event_policy SET alarm_key=alarm_ack_key WHERE alarm_severity=6\n")
+		_T("ALTER TABLE event_policy DROP COLUMN alarm_ack_key\n")
+		_T("ALTER TABLE event_policy ADD alarm_timeout integer\n")
+		_T("ALTER TABLE event_policy ADD alarm_timeout_event integer\n")
+		_T("UPDATE event_policy SET alarm_timeout=0,alarm_timeout_event=43\n")
+		_T("ALTER TABLE alarms ADD timeout integer\n")
+		_T("ALTER TABLE alarms ADD timeout_event integer\n")
+		_T("UPDATE alarms SET timeout=0,timeout_event=43\n")
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) ")
+			_T("VALUES (43,'SYS_ALARM_TIMEOUT',1,1,'Alarm timeout expired (ID: %1; Text: %2)',")
+			_T("'Generated when alarm timeout expires.#0D#0AParameters:#0D#0A")
+			_T("   1) Alarm ID#0D#0A   2) Alarm message#0D#0A   3) Alarm key#0D#0A   4) Event code')\n")
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) ")
+			_T("VALUES (44,'SYS_LOG_RECORD_MATCHED',1,1,")
+			_T("'Log record matched (Policy: %1; File: %2; Record: %4)',")
+			_T("'Default event for log record match.#0D#0AParameters:#0D#0A")
+			_T("   1) Policy name#0D#0A   2) Log file name#0D#0A   3) Matching regular expression#0D#0A")
+			_T("   4) Matched record#0D#0A   5 .. 9) Reserved#0D#0A")
+			_T("   10 .. 99) Substrings extracted by regular expression')\n")
+      _T("<END>");
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!CreateTable(_T("CREATE TABLE lpp_groups (")
+	                 _T("lpp_group_id integer not null,")
+	                 _T("lpp_group_name varchar(63) not null,")
+	                 _T("parent_group integer not null,")
+	                 _T("PRIMARY KEY(lpp_group_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!CreateTable(_T("CREATE TABLE lpp (")
+	                 _T("lpp_id integer not null,")
+	                 _T("lpp_group_id integer not null,")
+	                 _T("lpp_name varchar(63) not null,")
+	                 _T("lpp_version integer not null,")
+	                 _T("lpp_flags integer not null,")
+	                 _T("PRIMARY KEY(lpp_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!CreateTable(_T("CREATE TABLE lpp_associations (")
+	                 _T("lpp_id integer not null,")
+	                 _T("node_id integer not null,")
+	                 _T("log_file varchar(255) not null)")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!CreateTable(_T("CREATE TABLE lpp_rulesets (")
+	                 _T("ruleset_id integer not null,")
+	                 _T("ruleset_name varchar(63),")
+	                 _T("PRIMARY KEY(ruleset_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!CreateTable(_T("CREATE TABLE lpp_rules (")
+	                 _T("lpp_id integer not null,")
+	                 _T("rule_number integer not null,")
+	                 _T("ruleset_id integer not null,")
+	                 _T("msg_id_start integer not null,")
+	                 _T("msg_id_end integer not null,")
+	                 _T("severity integer not null,")
+	                 _T("source_name varchar(255) not null,")
+	                 _T("msg_text_regexp varchar(255) not null,")
+	                 _T("event_code integer not null,")
+	                 _T("PRIMARY KEY(lpp_id,rule_number))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='62' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V60 to V61
 //
 
@@ -2726,6 +2812,7 @@ static struct
    { 58, H_UpgradeFromV58 },
    { 59, H_UpgradeFromV59 },
    { 60, H_UpgradeFromV60 },
+   { 61, H_UpgradeFromV61 },
    { 0, NULL }
 };
 

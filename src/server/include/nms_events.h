@@ -113,10 +113,11 @@ private:
    TCHAR *m_pszScript;
    NXSL_Program *m_pScript;
 
-   char m_szAlarmMessage[MAX_DB_STRING];
+   TCHAR m_szAlarmMessage[MAX_DB_STRING];
    int m_iAlarmSeverity;
-   char m_szAlarmKey[MAX_DB_STRING];
-   char m_szAlarmAckKey[MAX_DB_STRING];
+   TCHAR m_szAlarmKey[MAX_DB_STRING];
+	DWORD m_dwAlarmTimeout;
+	DWORD m_dwAlarmTimeoutEvent;
 
    BOOL MatchSource(DWORD dwObjectId);
    BOOL MatchEvent(DWORD dwEventCode);
