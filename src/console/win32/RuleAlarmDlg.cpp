@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "RuleAlarmDlg.h"
+#include "EventSelDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -28,6 +29,7 @@ CRuleAlarmDlg::CRuleAlarmDlg(CWnd* pParent /*=NULL*/)
 	m_nMode = -1;
 	m_iSeverity = 0;
 	m_dwTimeout = 0;
+	m_dwTimeoutEvent = EVENT_ALARM_TIMEOUT;
 }
 
 
@@ -52,6 +54,7 @@ BEGIN_MESSAGE_MAP(CRuleAlarmDlg, CDialog)
 	ON_BN_CLICKED(IDC_RADIO_NONE, OnRadioNone)
 	ON_BN_CLICKED(IDC_RADIO_NEWALARM, OnRadioNewalarm)
 	ON_BN_CLICKED(IDC_RADIO_TERMINATE, OnRadioTerminate)
+	ON_BN_CLICKED(IDC_SELECT_EVENT, OnSelectEvent)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -78,6 +81,7 @@ BOOL CRuleAlarmDlg::OnInitDialog()
 	{
 		SendDlgItemMessage(IDC_RADIO_NONE, BM_SETCHECK, BST_CHECKED, 0);
 	}
+   SetDlgItemText(IDC_EDIT_EVENT, NXCGetEventName(g_hSession, m_dwTimeoutEvent));
    EnableControls(m_nMode);
 	return FALSE;
 }
@@ -160,4 +164,21 @@ void CRuleAlarmDlg::OnRadioTerminate()
 		SendDlgItemMessage(IDC_RADIO_NEWALARM, BM_SETCHECK, BST_UNCHECKED, 0);
 		EnableControls(m_nMode);
 	}
+}
+
+
+//
+// "Select..." button handler
+//
+
+void CRuleAlarmDlg::OnSelectEvent() 
+{
+   CEventSelDlg dlg;
+
+   dlg.m_bSingleSelection = TRUE;
+   if (dlg.DoModal() == IDOK)
+   {
+      m_dwTimeoutEvent = dlg.m_pdwEventList[0];
+	   SetDlgItemText(IDC_EDIT_EVENT, NXCGetEventName(g_hSession, m_dwTimeoutEvent));
+   }
 }

@@ -66,6 +66,8 @@ AlarmManager::AlarmManager()
    m_dwNumAlarms = 0;
    m_pAlarmList = NULL;
    m_mutex = MutexCreate();
+	m_condShutdown = ConditionCreate(FALSE);
+	m_hWatchdogThread = INVALID_THREAD_HANDLE;
 }
 
 
@@ -77,6 +79,19 @@ AlarmManager::~AlarmManager()
 {
    safe_free(m_pAlarmList);
    MutexDestroy(m_mutex);
+	ConditionSet(m_condShutdown);
+	ThreadJoin(m_hWatchdogThread);
+}
+
+
+//
+// Watchdog thread starter
+//
+
+static THREAD_RESULT THREAD_CALL WatchdogThreadStarter(void *pArg)
+{
+	((AlarmManager *)pArg)->WatchdogThread();
+	return THREAD_OK;
 }
 
 
@@ -127,6 +142,8 @@ BOOL AlarmManager::Init(void)
    }
 
    DBFreeResult(hResult);
+
+	m_hWatchdogThread = ThreadCreateEx(WatchdogThreadStarter, 0, this);
    return TRUE;
 }
 
@@ -585,4 +602,18 @@ void AlarmManager::GetAlarmStats(CSCPMessage *pMsg)
       dwCount[m_pAlarmList[i].nCurrentSeverity]++;
    Unlock();
    pMsg->SetVariableToInt32Array(VID_ALARMS_BY_SEVERITY, 5, dwCount);
+}
+
+
+//
+// Watchdog thread
+//
+
+void AlarmManager::WatchdogThread(void)
+{
+	while(1)
+	{
+		if (ConditionWait(m_condShutdown, 1000))
+			break;
+	}
 }

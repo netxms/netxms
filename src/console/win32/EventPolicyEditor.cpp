@@ -882,16 +882,13 @@ void CEventPolicyEditor::EditAlarm(int iRow)
       dlg.m_strMessage = m_pEventPolicy->pRuleList[iRow].szAlarmMessage;
       dlg.m_strKey = m_pEventPolicy->pRuleList[iRow].szAlarmKey;
       dlg.m_iSeverity = m_pEventPolicy->pRuleList[iRow].wAlarmSeverity;
+		dlg.m_dwTimeout = m_pEventPolicy->pRuleList[iRow].dwAlarmTimeout;
+		dlg.m_dwTimeoutEvent = m_pEventPolicy->pRuleList[iRow].dwAlarmTimeoutEvent;
    }
    else if (dlg.m_nMode == 1)
    {
       dlg.m_strAckKey = m_pEventPolicy->pRuleList[iRow].szAlarmKey;
-      dlg.m_iSeverity = 0;
    }
-	else
-	{
-      dlg.m_iSeverity = 0;
-	}
    if (dlg.DoModal() == IDOK)
    {
       if (dlg.m_nMode != -1)
@@ -902,6 +899,8 @@ void CEventPolicyEditor::EditAlarm(int iRow)
 				m_pEventPolicy->pRuleList[iRow].wAlarmSeverity = dlg.m_iSeverity;
 				nx_strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmMessage, (LPCTSTR)dlg.m_strMessage, MAX_DB_STRING);
 				nx_strncpy(m_pEventPolicy->pRuleList[iRow].szAlarmKey, (LPCTSTR)dlg.m_strKey, MAX_DB_STRING);
+				m_pEventPolicy->pRuleList[iRow].dwAlarmTimeout = dlg.m_dwTimeout;
+				m_pEventPolicy->pRuleList[iRow].dwAlarmTimeoutEvent = dlg.m_dwTimeoutEvent;
 			}
 			else
 			{

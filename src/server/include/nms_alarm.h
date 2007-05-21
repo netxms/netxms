@@ -36,6 +36,8 @@ private:
    MUTEX m_mutex;
    DWORD m_dwNotifyCode;
    NXC_ALARM *m_pNotifyAlarmInfo;
+	CONDITION m_condShutdown;
+	THREAD m_hWatchdogThread;
 
    void Lock(void) { MutexLock(m_mutex, INFINITE); }
    void Unlock(void) { MutexUnlock(m_mutex); }
@@ -49,6 +51,8 @@ private:
 public:
    AlarmManager();
    ~AlarmManager();
+
+	void WatchdogThread(void);
 
    BOOL Init(void);
    void NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,

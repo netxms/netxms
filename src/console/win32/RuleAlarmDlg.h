@@ -45,6 +45,7 @@ protected:
 	afx_msg void OnRadioNone();
 	afx_msg void OnRadioNewalarm();
 	afx_msg void OnRadioTerminate();
+	afx_msg void OnSelectEvent();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
