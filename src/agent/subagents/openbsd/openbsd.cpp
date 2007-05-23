@@ -1,4 +1,4 @@
-/* $Id: openbsd.cpp,v 1.1 2006-03-07 09:42:48 alk Exp $ */
+/* $Id: openbsd.cpp,v 1.2 2007-05-23 10:46:59 victor Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -36,20 +36,20 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.CPU.Count",             H_CpuCount,        NULL },
 
    { "Disk.Free(*)",                 H_DiskInfo,        (char *)DISK_FREE,
-			DCI_DT_UINT64,	"Free disk space on *" },
+			DCI_DT_UINT64,	"Free disk space on {instance}" },
    { "Disk.Total(*)",                H_DiskInfo,        (char *)DISK_TOTAL,
-			DCI_DT_UINT64,	"Total disk space on *" },
+			DCI_DT_UINT64,	"Total disk space on {instance}" },
    { "Disk.Used(*)",                 H_DiskInfo,        (char *)DISK_USED,
-			DCI_DT_UINT64,	"Used disk space on *" },
+			DCI_DT_UINT64,	"Used disk space on {instance}" },
 
    { "Net.IP.Forwarding",            H_NetIpForwarding, (char *)4,
 			DCI_DT_INT,		"IP forwarding status" },
    { "Net.IP6.Forwarding",           H_NetIpForwarding, (char *)6,
 			DCI_DT_INT,		"IPv6 forwarding status" },
    { "Net.Interface.AdminStatus(*)", H_NetIfAdmStatus,  NULL,
-			DCI_DT_INT,		"Administrative status of *" },
+			DCI_DT_INT,		"Administrative status of interface {instance}" },
    { "Net.Interface.Link(*)",        H_NetIfLink,       NULL,
-			DCI_DT_INT,		"Physical link status of *" },
+			DCI_DT_INT,		"Physical link status of interface {instance}" },
 
    { "Process.Count(*)",             H_ProcessCount,    (char *)0,
 			DCI_DT_UINT,	"" },
@@ -131,6 +131,10 @@ DECLARE_SUBAGENT_INIT(FREEBSD)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.1  2006/03/07 09:42:48  alk
+OpenBSD subagent incorporated
+flex params changed in libnxsl's makefile
+
 Revision 1.7  2005/09/15 21:47:02  victor
 Added macro DECLARE_SUBAGENT_INIT to simplify initialization function declaration
 

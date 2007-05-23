@@ -2,6 +2,7 @@
 * 0.2.17
 *
 
+- Implemented alarm timeouts
 - ODBCQUERY subagent improved
 - Fixed issues: #122, #128, #130, #136, #138, #141, #157, #158, #162
 
