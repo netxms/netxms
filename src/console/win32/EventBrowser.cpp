@@ -82,7 +82,8 @@ int CEventBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(0, _T("Time"), LVCFMT_LEFT, 135);
    m_wndListCtrl.InsertColumn(1, _T("Severity"), LVCFMT_LEFT, 70);
    m_wndListCtrl.InsertColumn(2, _T("Source"), LVCFMT_LEFT, 140);
-   m_wndListCtrl.InsertColumn(3, _T("Message"), LVCFMT_LEFT, 500);
+   m_wndListCtrl.InsertColumn(3, _T("Event"), LVCFMT_LEFT, 140);
+   m_wndListCtrl.InsertColumn(4, _T("Message"), LVCFMT_LEFT, 500);
 	
    // Create wait view
    m_wndWaitView.SetText(_T("Loading event log..."));
@@ -161,7 +162,8 @@ void CEventBrowser::AddEvent(NXC_EVENT *pEvent, BOOL bAppend)
       m_wndListCtrl.SetItemText(iIdx, 1, g_szStatusTextSmall[pEvent->dwSeverity]);
       pObject = NXCFindObjectById(g_hSession, pEvent->dwSourceId);
       m_wndListCtrl.SetItemText(iIdx, 2, pObject ? pObject->szName : _T("<unknown>"));
-      m_wndListCtrl.SetItemText(iIdx, 3, pEvent->szMessage);
+      m_wndListCtrl.SetItemText(iIdx, 3, NXCGetEventName(g_hSession, pEvent->dwEventCode));
+      m_wndListCtrl.SetItemText(iIdx, 4, pEvent->szMessage);
 
       m_wndListCtrl.EnsureVisible(iIdx, FALSE);
    }

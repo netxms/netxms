@@ -735,6 +735,7 @@ typedef struct
 #define VID_CERTIFICATE_ID				((DWORD)281)
 #define VID_NUM_CERTIFICATES        ((DWORD)282)
 #define VID_ALARM_TIMEOUT_EVENT     ((DWORD)283)
+#define VID_NUM_GROUPS              ((DWORD)284)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -807,6 +808,7 @@ typedef struct
 // Base value for log policy rules
 #define VID_LPP_RULE_BASE           ((DWORD)0x10000000)
 #define VID_LPP_LIST_BASE           ((DWORD)0x10000000)
+#define VID_LPPGROUP_LIST_BASE      ((DWORD)0x20000000)
 #define VID_LPP_NODE_LIST_BASE      ((DWORD)0x01000000)
 
 // Base value for syslog records

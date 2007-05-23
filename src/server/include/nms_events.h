@@ -180,9 +180,9 @@ public:
 
 BOOL InitEventSubsystem(void);
 void ShutdownEventSubsystem(void);
-BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, TCHAR *pszFormat, ...);
+BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, char *pszFormat, ...);
 BOOL PostEventEx(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId, 
-                 TCHAR *pszFormat, ...);
+                 char *pszFormat, ...);
 void ResendEvents(Queue *pQueue);
 void ReloadEvents(void);
 void DeleteEventTemplateFromList(DWORD dwEventCode);

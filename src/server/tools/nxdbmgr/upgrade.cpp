@@ -78,6 +78,51 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V62 to V63
+//
+
+static BOOL H_UpgradeFromV62(void)
+{
+   static TCHAR m_szBatch[] =
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) ")
+			_T("VALUES (45,'SYS_IF_UNKNOWN',1,1,")
+			_T("'Interface \"%2\" changed state to UNKNOWN (IP Addr: %3/%4, IfIndex: %5)',")
+			_T("'Generated when interface goes to unknown state.#0D#0A")
+			_T("Please note that source of event is node, not an interface itself.#0D#0A")
+			_T("Parameters:#0D#0A   1) Interface object ID#0D#0A   2) Interface name#0D#0A")
+			_T("   3) Interface IP address#0D#0A   4) Interface netmask#0D#0A")
+			_T("   5) Interface index')\n")
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) ")
+			_T("VALUES (46,'SYS_IF_DISABLED',0,1,")
+			_T("'Interface \"%2\" disabled (IP Addr: %3/%4, IfIndex: %5)',")
+			_T("'Generated when interface administratively disabled.#0D#0A")
+			_T("Please note that source of event is node, not an interface itself.#0D#0A")
+			_T("Parameters:#0D#0A   1) Interface object ID#0D#0A   2) Interface name#0D#0A")
+			_T("   3) Interface IP address#0D#0A   4) Interface netmask#0D#0A")
+			_T("   5) Interface index')\n")
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) ")
+			_T("VALUES (47,'SYS_IF_TESTING',0,1,")
+			_T("'Interface \"%2\" is testing (IP Addr: %3/%4, IfIndex: %5)',")
+			_T("'Generated when interface goes to testing state.#0D#0A")
+			_T("Please note that source of event is node, not an interface itself.#0D#0A")
+			_T("Parameters:#0D#0A   1) Interface object ID#0D#0A   2) Interface name#0D#0A")
+			_T("   3) Interface IP address#0D#0A   4) Interface netmask#0D#0A")
+			_T("   5) Interface index')\n")
+      _T("<END>");
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='63' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V61 to V62
 //
 
@@ -2813,6 +2858,7 @@ static struct
    { 59, H_UpgradeFromV59 },
    { 60, H_UpgradeFromV60 },
    { 61, H_UpgradeFromV61 },
+   { 62, H_UpgradeFromV62 },
    { 0, NULL }
 };
 

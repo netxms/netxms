@@ -96,6 +96,10 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_lis
                m_ppszParameters[i] = (char *)malloc(16);
                sprintf(m_ppszParameters[i], "%d", va_arg(args, LONG));
                break;
+            case 'D':
+               m_ppszParameters[i] = (char *)malloc(32);
+               sprintf(m_ppszParameters[i], INT64_FMT, va_arg(args, INT64));
+               break;
             case 'x':
             case 'i':
                m_ppszParameters[i] = (char *)malloc(16);
@@ -549,6 +553,7 @@ static EVENT_TEMPLATE *FindEventTemplate(DWORD dwCode)
 //    The following format characters can be used:
 //        s - String
 //        d - Decimal integer
+//        D - 64-bit decimal integer
 //        x - Hex integer
 //        a - IP address
 //        i - Object ID
@@ -557,7 +562,7 @@ static EVENT_TEMPLATE *FindEventTemplate(DWORD dwCode)
 //
 
 static BOOL RealPostEvent(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId,
-                          TCHAR *pszFormat, va_list args)
+                          char *pszFormat, va_list args)
 {
    EVENT_TEMPLATE *pEventTemplate;
    Event *pEvent;
@@ -585,7 +590,7 @@ static BOOL RealPostEvent(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId,
    return bResult;
 }
 
-BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, TCHAR *pszFormat, ...)
+BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, char *pszFormat, ...)
 {
    va_list args;
    BOOL bResult;
@@ -597,7 +602,7 @@ BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, TCHAR *pszFormat, ...)
 }
 
 BOOL PostEventEx(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId, 
-                 TCHAR *pszFormat, ...)
+                 char *pszFormat, ...)
 {
    va_list args;
    BOOL bResult;

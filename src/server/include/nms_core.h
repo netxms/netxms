@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.130 2007-05-02 12:40:34 victor Exp $ */
+/* $Id: nms_core.h,v 1.131 2007-05-23 10:44:34 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -362,6 +362,7 @@ private:
 	DECLARE_THREAD_STARTER(GetCollectedData)
 	DECLARE_THREAD_STARTER(QueryL2Topology)
 	DECLARE_THREAD_STARTER(SendAllEvents)
+	DECLARE_THREAD_STARTER(SendSyslog)
 
    void ReadThread(void);
    void WriteThread(void);
@@ -659,6 +660,8 @@ BOOL CheckObjectToolAccess(DWORD dwToolId, DWORD dwUserId);
 DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession *pSession);
 DWORD DeleteObjectToolFromDB(DWORD dwToolId);
 DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg);
+
+void CreateLPPDirectoryMessage(CSCPMessage &msg);
 
 void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_LOG_RECORD *pRec);
 

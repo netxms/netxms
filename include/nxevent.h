@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxevent.h
+** File: nxevent.h
 **
 **/
 
@@ -99,6 +99,9 @@
 #define EVENT_CLUSTER_UP               42
 #define EVENT_ALARM_TIMEOUT            43
 #define EVENT_LOG_RECORD_MATCHED       44
+#define EVENT_INTERFACE_UNKNOWN        45
+#define EVENT_INTERFACE_DISABLED       46
+#define EVENT_INTERFACE_TESTING        47
 
 #define EVENT_SNMP_UNMATCHED_TRAP      500
 #define EVENT_SNMP_COLD_START          501

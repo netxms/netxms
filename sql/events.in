@@ -61,9 +61,51 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_INTERFACE_DOWN, 'SYS_IF_DOWN',
-		EVENT_SEVERITY_WARNING, 1,
+		EVENT_SEVERITY_MINOR, 1,
 		'Interface "%2" changed state to DOWN (IP Addr: %3/%4, IfIndex: %5)',
 		'Generated when interface goes down.#0D#0A' CONCAT
+		'Please note that source of event is node, not an interface itself.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Interface object ID#0D#0A' CONCAT
+		'   2) Interface name#0D#0A' CONCAT
+		'   3) Interface IP address#0D#0A' CONCAT
+		'   4) Interface netmask#0D#0A' CONCAT
+		'   5) Interface index'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_INTERFACE_UNKNOWN, 'SYS_IF_UNKNOWN',
+		EVENT_SEVERITY_WARNING, 1,
+		'Interface "%2" changed state to UNKNOWN (IP Addr: %3/%4, IfIndex: %5)',
+		'Generated when interface goes to unknown state.#0D#0A' CONCAT
+		'Please note that source of event is node, not an interface itself.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Interface object ID#0D#0A' CONCAT
+		'   2) Interface name#0D#0A' CONCAT
+		'   3) Interface IP address#0D#0A' CONCAT
+		'   4) Interface netmask#0D#0A' CONCAT
+		'   5) Interface index'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_INTERFACE_DISABLED, 'SYS_IF_DISABLED',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Interface "%2" disabled (IP Addr: %3/%4, IfIndex: %5)',
+		'Generated when interface administratively disabled.#0D#0A' CONCAT
+		'Please note that source of event is node, not an interface itself.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Interface object ID#0D#0A' CONCAT
+		'   2) Interface name#0D#0A' CONCAT
+		'   3) Interface IP address#0D#0A' CONCAT
+		'   4) Interface netmask#0D#0A' CONCAT
+		'   5) Interface index'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_INTERFACE_TESTING, 'SYS_IF_TESTING',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Interface "%2" is testing (IP Addr: %3/%4, IfIndex: %5)',
+		'Generated when interface goes to testing state.#0D#0A' CONCAT
 		'Please note that source of event is node, not an interface itself.#0D#0A' CONCAT
 		'Parameters:#0D#0A' CONCAT
 		'   1) Interface object ID#0D#0A' CONCAT

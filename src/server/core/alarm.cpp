@@ -611,9 +611,29 @@ void AlarmManager::GetAlarmStats(CSCPMessage *pMsg)
 
 void AlarmManager::WatchdogThread(void)
 {
+	DWORD i;
+	time_t now;
+
 	while(1)
 	{
 		if (ConditionWait(m_condShutdown, 1000))
 			break;
+
+		Lock();
+		now = time(NULL);
+	   for(i = 0; i < m_dwNumAlarms; i++)
+		{
+			if ((m_pAlarmList[i].dwTimeout > 0) &&
+				 (m_pAlarmList[i].nState == ALARM_STATE_OUTSTANDING) &&
+				 ((time_t)m_pAlarmList[i].dwLastChangeTime + (time_t)m_pAlarmList[i].dwTimeout > now))
+			{
+				PostEvent(EVENT_ALARM_TIMEOUT, m_pAlarmList[i].dwSourceObject, "dssd",
+				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage,
+							 m_pAlarmList[i].szKey, m_pAlarmList[i].dwSourceEventCode);
+				m_pAlarmList[i].dwTimeout = 0;	// Disable repeated timeout events
+				UpdateAlarmInDB(&m_pAlarmList[i]);
+			}
+		}
+		Unlock();
 	}
 }

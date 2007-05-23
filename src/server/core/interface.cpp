@@ -307,9 +307,22 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 
    if (m_iStatus != iOldStatus)
    {
+		static DWORD statusToEvent[] =
+		{
+			EVENT_INTERFACE_UP,       // Normal
+			EVENT_INTERFACE_UP,       // Warning
+			EVENT_INTERFACE_UP,       // Minor
+			EVENT_INTERFACE_UP,       // Major
+			EVENT_INTERFACE_DOWN,     // Critical
+			EVENT_INTERFACE_UNKNOWN,  // Unknown
+			EVENT_INTERFACE_UNKNOWN,  // Unmanaged
+			EVENT_INTERFACE_DISABLED, // Disabled
+			EVENT_INTERFACE_TESTING   // Testing
+		};
+
       SendPollerMsg(dwRqId, "      Interface status changed to %s\r\n", g_pszStatusName[m_iStatus]);
       PostEventEx(pEventQueue, 
-                  m_iStatus == STATUS_NORMAL ? EVENT_INTERFACE_UP : EVENT_INTERFACE_DOWN,
+                  statusToEvent[m_iStatus],
                   pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask,
                   m_dwIfIndex);
       LockData();

@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.275 2007-04-17 20:04:21 alk Exp $ */
+/* $Id: session.cpp,v 1.276 2007-05-23 10:44:34 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -139,6 +139,7 @@ THREAD_RESULT THREAD_CALL ClientSession::ThreadStarter_##func(void *pArg) \
 DEFINE_THREAD_STARTER(GetCollectedData)
 DEFINE_THREAD_STARTER(QueryL2Topology)
 DEFINE_THREAD_STARTER(SendAllEvents)
+DEFINE_THREAD_STARTER(SendSyslog)
 
 
 //
@@ -989,7 +990,7 @@ void ClientSession::ProcessingThread(void)
             ChangeSubscription(pMsg);
             break;
          case CMD_GET_SYSLOG:
-            SendSyslog(pMsg);
+            CALL_IN_NEW_THREAD(SendSyslog, pMsg);
             break;
          case CMD_GET_LPP_LIST:
             SendLogPoliciesList(pMsg->GetId());
@@ -6060,33 +6061,13 @@ void ClientSession::ChangeSubscription(CSCPMessage *pRequest)
 void ClientSession::SendLogPoliciesList(DWORD dwRqId)
 {
    CSCPMessage msg;
-   DB_RESULT hResult;
-   DWORD i, dwNumRows, dwId;
-   TCHAR szBuffer[MAX_DB_STRING];
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_LPP)
    {
-      hResult = DBSelect(g_hCoreDB, _T("SELECT lpp_id,lpp_name,lpp_version,lpp_flags FROM lpp"));
-      if (hResult != NULL)
-      {
-         dwNumRows = DBGetNumRows(hResult);
-         msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
-         for(i = 0, dwId = VID_LPP_LIST_BASE; i < dwNumRows; i++)
-         {
-            msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 0));
-            msg.SetVariable(dwId++, DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING));
-            msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 2));
-            msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 3));
-         }
-         DBFreeResult(hResult);
-      }
-      else
-      {
-         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
-      }
+		CreateLPPDirectoryMessage(msg);
    }
    else
    {
