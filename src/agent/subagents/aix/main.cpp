@@ -72,10 +72,22 @@ static LONG H_SourcePkg(char *pszParam, char *pArg, char *pValue)
 
 
 //
+// Initalization callback
+//
+
+static BOOL SubAgentInit(TCHAR *pszConfigFile)
+{
+  // m_hCPUStatThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
+
+	return TRUE;
+}
+
+
+//
 // Called by master agent at unload
 //
 
-static void UnloadHandler(void)
+static void SubAgentShutdown(void)
 {
 	g_bShutdown = TRUE;
 	//ThreadJoin(m_hCPUStatThread);
@@ -152,7 +164,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("AIX"), NETXMS_VERSION_STRING,
-   UnloadHandler, NULL,
+   SubAgentInit, SubAgentShutdown, NULL,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
@@ -164,10 +176,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_INIT(AIX)
+DECLARE_SUBAGENT_ENTRY_POINT(AIX)
 {
-  // m_hCPUStatThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
-
    *ppInfo = &m_info;
    return TRUE;
 }
