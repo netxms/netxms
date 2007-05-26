@@ -1,4 +1,4 @@
-/* $Id: sysinfo.cpp,v 1.22 2007-02-06 07:56:41 alk Exp $ */
+/* $Id: sysinfo.cpp,v 1.23 2007-05-26 10:42:19 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004 Victor Kirhenshtein
@@ -281,7 +281,12 @@ LONG H_PlatformName(char *cmd, char *arg, char *value)
 
    if (uname(&info) != -1)
    {
+#ifdef _AIX
+      // Assume that we are running on PowerPC
+      sprintf(value, "%s-powerpc", info.sysname);
+#else
       sprintf(value, "%s-%s", info.sysname, info.machine);
+#endif
    }
    else
    {

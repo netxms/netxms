@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: installBinaryAgent.sh,v 1.1 2007-05-11 08:46:38 alk Exp $
+# $Id: installBinaryAgent.sh,v 1.2 2007-05-26 10:42:19 victor Exp $
 
 # Copyright (c) 2007, NetXMS Team
 #
@@ -47,21 +47,6 @@ while [ "x"$1 != "x" ]; do
 	shift
 done
 
-case `uname -s` in
-	Linux)
-		pkill=killall
-		;;
-	SunOS)
-		pkill=pkill
-		;;
-	*BSD)
-		pkill=killall
-		;;
-	*)
-		pkill=pkill
-		;;
-esac
-
 cd `dirname $0`
 name=`ls nxagent-*.tar.gz 2>/dev/null|sed s',\.tar\.gz$,,'`
 if [ "x$name" = "x" ]; then
@@ -78,14 +63,14 @@ if [ $? != 0 ]; then
 	exit 2
 fi
 
-# ask nxagentd gently
-$pkill nxagentd >>$log 2>&1
-# wait a few seconds and smash it down
-sleep 15 && $pkill -9 nxagentd >>$log 2>&1
+pids=`ps -e | grep nxagentd | grep -v grep | awk '{ print $1; }'`
 
-# backup current version
-rm -rf $prefix.backup
-cp -R $prefix $prefix.backup 2>/dev/null
+if [ "x$pids" != "x" ]; then
+	# ask nxagentd gently
+	kill $pids >>$log 2>&1
+	# wait a few seconds and smash it down
+	sleep 15 && kill -9 $pids >>$log 2>&1
+fi
 
 # install new files
 mkdir $prefix 2>/dev/null

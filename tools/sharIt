@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/usr/local/bin/bash
 
-trap '
-	rm -f tmp
-' INT EXIT
+#trap '
+#	rm -f tmp
+#' INT EXIT
 
 if [ "x"$3 = "x" ]; then
 	echo "Usage: $0 input.tar.gz scriptname output.sh"
@@ -29,16 +29,11 @@ if [ $? != 0 ]; then
 fi
 
 case `uname -s` in
-	Linux)
-		#skip=`wc -l stub.sh|cut -d' ' -f1`
-		skip=`cat stub.sh | wc -l | sed 's,^ *,,'`
-		;;
 	*BSD)
 		skip=`echo \`wc -l stub.sh|cut -b1-8\``
 		;;
 	*)
-		echo unknown system, duh
-		exit;
+		skip=`cat stub.sh | wc -l | sed 's,^ *,,'`
 		;;
 esac
 if [ "x$BASH" == "x" ]; then
@@ -51,7 +46,7 @@ fi
 sed "s,__SKIP__,$skip,g" < stub.sh |
 	sed "s,__SKIP1__,$skip1,g" |
 	sed "s,__COMMAND__,$2,g" > tmp
-hash1=`tail -n+5 tmp | $md5 | cut -b1-32 | tr A-Z a-z`
+hash1=`tail -n +5 tmp | $md5 | cut -b1-32 | tr A-Z a-z`
 hash2=`cat $1 | $md5 | cut -b1-32 | tr A-Z a-z`
 sed "s,__HASH1__,$hash1,g" < tmp | sed "s,__HASH2__,$hash2,g" > $3
 
