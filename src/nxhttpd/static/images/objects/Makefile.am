@@ -16,6 +16,6 @@ EXTRA_DIST = \
 	node.png \
 	service.png \
 	subnet.png \
-	templale.png \
-	templale_group.png \
-	templale_root.png
+	template.png \
+	template_group.png \
+	template_root.png
