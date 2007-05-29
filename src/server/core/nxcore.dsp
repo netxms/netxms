@@ -194,6 +194,10 @@ SOURCE=.\alarm.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\audit.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\cert.cpp
 # End Source File
 # Begin Source File

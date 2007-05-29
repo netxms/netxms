@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.266 2007-05-20 20:52:49 victor Exp $ */
+/* $Id: nxclapi.h,v 1.267 2007-05-29 18:50:45 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -604,6 +604,14 @@ enum
 #define DEPLOYMENT_STATUS_FAILED       4
 #define DEPLOYMENT_STATUS_INITIALIZE   5
 #define DEPLOYMENT_STATUS_FINISHED     255
+
+
+//
+// Audit flags
+//
+
+#define AUDIT_OBJECTS     0x0001
+#define AUDIT_USERS       0x0002
 
 
 //

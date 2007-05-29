@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.131 2007-05-23 10:44:34 victor Exp $ */
+/* $Id: nms_core.h,v 1.132 2007-05-29 18:50:45 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -667,6 +667,8 @@ void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_LOG_RECORD *pRec);
 
 void EscapeString(String &str);
 
+//void WriteAuditLog(DWORD dwCategory, DWORD dwUserId, DWORD dwObjectId, TCHAR *pszText);
+
 #ifdef _WITH_ENCRYPTION
 X509 *CertificateFromLoginMessage(CSCPMessage *pMsg);
 BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pChallenge,
@@ -709,6 +711,7 @@ extern char g_szDataDir[];
 extern QWORD g_qwServerId;
 extern RSA *g_pServerKey;
 extern DWORD g_dwPingSize;
+extern DWORD g_dwAuditFlags;
 extern time_t g_tServerStartTime;
 extern DWORD g_dwLockTimeout;
 extern DWORD g_dwSNMPTimeout;

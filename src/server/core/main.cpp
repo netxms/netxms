@@ -87,6 +87,7 @@ DWORD g_dwConfigurationPollingInterval;
 DWORD g_dwRoutingTableUpdateInterval;
 DWORD g_dwConditionPollingInterval;
 DWORD g_dwPingSize;
+DWORD g_dwAuditFlags;
 char g_szDataDir[MAX_PATH];
 DWORD g_dwDBSyntax = DB_SYNTAX_GENERIC;
 QWORD g_qwServerId;

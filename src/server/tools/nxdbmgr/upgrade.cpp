@@ -78,6 +78,44 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V63 to V64
+//
+
+static BOOL H_UpgradeFromV63(void)
+{
+   static TCHAR m_szBatch[] =
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (15,'.1.3.6.1.4.1.45.3.29.*',3,0)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (16,'.1.3.6.1.4.1.45.3.41.*',3,0)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (17,'.1.3.6.1.4.1.45.3.45.*',3,0)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (18,'.1.3.6.1.4.1.45.3.43.*',3,0)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (19,'.1.3.6.1.4.1.45.3.57.*',3,0)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (20,'.1.3.6.1.4.1.45.3.49.*',3,0)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (21,'.1.3.6.1.4.1.45.3.54.*',3,0)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (22,'.1.3.6.1.4.1.45.3.63.*',3,0)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (23,'.1.3.6.1.4.1.45.3.64.*',3,0)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (24,'.1.3.6.1.4.1.45.3.53.*',3,0)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (25,'.1.3.6.1.4.1.45.3.59.*',3,0)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (26,'.1.3.6.1.4.1.45.3.39.*',3,0)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (27,'.1.3.6.1.4.1.45.3.65.*',3,0)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (28,'.1.3.6.1.4.1.45.3.66.*',3,0)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (29,'.1.3.6.1.4.1.45.3.44.*',4,0)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (30,'.1.3.6.1.4.1.45.3.47.*',4,0)\n")
+		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (31,'.1.3.6.1.4.1.45.3.48.*',4,0)\n")
+      _T("<END>");
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='64' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V62 to V63
 //
 
@@ -2859,6 +2897,7 @@ static struct
    { 60, H_UpgradeFromV60 },
    { 61, H_UpgradeFromV61 },
    { 62, H_UpgradeFromV62 },
+   { 63, H_UpgradeFromV63 },
    { 0, NULL }
 };
 
