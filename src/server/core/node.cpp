@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.180 2007-05-02 12:40:34 victor Exp $ */
+/* $Id: node.cpp,v 1.181 2007-05-31 22:48:34 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -2560,13 +2560,19 @@ void Node::CheckInterfaceNames(INTERFACE_LIST *pIfList)
    int i;
    TCHAR *ptr;
 
-   if (m_dwNodeType == NODE_TYPE_NORTEL_BAYSTACK)
+   if ((m_dwNodeType == NODE_TYPE_NORTEL_BAYSTACK) ||
+		 (m_dwNodeType == NODE_TYPE_NORTEL_OPTERA))
    {
       // Translate interface names
       for(i = 0; i < pIfList->iNumEntries; i++)
       {
-         if ((_tcsstr(pIfList->pInterfaces[i].szName, _T("BayStack")) != NULL) ||
-             (_tcsstr(pIfList->pInterfaces[i].szName, _T("Nortel Ethernet Switch")) != NULL))
+         if ((ptr = _tcsstr(pIfList->pInterfaces[i].szName, _T("- Port"))) != NULL)
+			{
+				ptr += 2;
+            memmove(pIfList->pInterfaces[i].szName, ptr, _tcslen(ptr) + 1);
+			}
+         else if ((_tcsstr(pIfList->pInterfaces[i].szName, _T("BayStack")) != NULL) ||
+                  (_tcsstr(pIfList->pInterfaces[i].szName, _T("Nortel Ethernet Switch")) != NULL))
          {
             ptr = _tcsrchr(pIfList->pInterfaces[i].szName, _T('-'));
             if (ptr != NULL)

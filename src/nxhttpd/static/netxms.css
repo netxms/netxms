@@ -47,13 +47,16 @@ img
 	font-size: 110%;
 	font-weight: bold;
 	border-bottom: 1px solid rgb(204,204,204);
-	position: relative;
 }
 
-.subheader > span
+.subheader table
 {
-	position: absolute;
-	bottom: 0;
+	height: 100%;
+}
+
+.subheader td
+{
+	vertical-align: bottom;
 }
 
 .errorMessage
@@ -235,17 +238,21 @@ img
 .boxTitle
 {
 	height: 2em;
+	color: rgb(255, 255, 255);
+	background-color: rgb(109, 136, 173);
 	font-size: 110%;
 	font-weight: bold;
-	border-bottom: 2px solid rgb(204,204,204);
-	position: relative;
 	padding-left: 0.5em;
 }
 
-.boxTitle span
+.boxTitle table
 {
-	position: absolute;
-	bottom: 0;
+	height: 100%;
+}
+
+.boxTitle td
+{
+	vertical-align: middle;
 }
 
 .tableHeader
@@ -280,6 +287,11 @@ img
 .even td
 {
 	background-color: rgb(255, 255, 255);
+}
+
+.infoBoxTable
+{
+	margin: 0.3em;
 }
 
 /* Object view */

@@ -167,7 +167,7 @@ public:
 	// HTML helpers
 	void BeginPage(TCHAR *pszTitle);
 	void EndPage(void) { SetBody(_T("</body>\r\n</html>\r\n"), -1, TRUE); }
-	void StartBox(TCHAR *pszTitle, TCHAR *pszClass = NULL, TCHAR *pszId = NULL, BOOL bContentOnly = FALSE);
+	void StartBox(TCHAR *pszTitle, TCHAR *pszClass = NULL, TCHAR *pszId = NULL, TCHAR *pszTableClass = NULL, BOOL bContentOnly = FALSE);
 	void StartTableHeader(TCHAR *pszClass);
 	void StartBoxRow(void);
 	void EndBox(BOOL bContentOnly = FALSE) { AppendBody(bContentOnly ? _T("</table>") : _T("</table></div>\r\n")); }
@@ -242,6 +242,7 @@ protected:
 	void AlarmCtrlHandler(HttpRequest &request, HttpResponse &response);
 	void ShowLastValues(HttpResponse &response, NXC_OBJECT *pObject, BOOL bReload);
 	void SendLastValues(HttpRequest &request, HttpResponse &response);
+	void ShowPieChart(HttpRequest &request, HttpResponse &response);
 
 public:
 	ClientSession();
@@ -262,6 +263,48 @@ public:
 
 	int CompareAlarms(NXC_ALARM *p1, NXC_ALARM *p2);
 	int CompareDCIValues(NXC_DCI_VALUE *p1, NXC_DCI_VALUE *p2);
+};
+
+
+//
+// Pie chart drawing class
+//
+
+#define MAX_PIE_ELEMENTS		16
+#define MAX_COLORS				16
+#define PIE_WIDTH					400
+#define PIE_HEIGHT				192
+
+#ifndef PI
+#define PI 3.141592653589793238462643
+#endif
+
+#ifndef ROUND
+#define ROUND(x) (int)floor(x + 0.5)
+#endif
+
+class PieChart
+{
+public:
+	PieChart();
+	~PieChart();
+
+	BOOL SetValue(TCHAR *label, double value);
+
+	BOOL Build(void);
+	void Clear(void);
+	void *GetRawImage(void) { return m_rawData; }
+	int GetRawImageSize(void) { return m_rawDataSize; }
+
+private:
+	int m_valueCount;
+	TCHAR *m_labels[MAX_PIE_ELEMENTS];
+	double m_values[MAX_PIE_ELEMENTS];
+	void *m_rawData;
+	int m_rawDataSize;
+
+	int m_color[MAX_COLORS];
+	int m_colorCount;
 };
 
 

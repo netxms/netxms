@@ -133,6 +133,10 @@ SOURCE=.\object.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\piechart.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\session.cpp
 # End Source File
 # Begin Source File

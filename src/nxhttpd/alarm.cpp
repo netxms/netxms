@@ -202,7 +202,7 @@ void ClientSession::ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj,
 
 	m_dwCurrAlarmRoot = (pRootObj != NULL) ? pRootObj->dwId : 0;
 
-	response.StartBox(NULL, _T("objectTable"), _T("alarm_list"), bReload);
+	response.StartBox(NULL, _T("objectTable"), _T("alarm_list"), NULL, bReload);
 	response.StartTableHeader(NULL);
 	response.AppendBody(_T("<td></td>"));
 	for(i = 0; i < 7; i++)

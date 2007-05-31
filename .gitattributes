@@ -1188,6 +1188,7 @@ src/nxhttpd/nxhttpd.dsw -text
 src/nxhttpd/nxhttpd.h -text
 src/nxhttpd/nxhttpd.rc -text
 src/nxhttpd/object.cpp -text
+src/nxhttpd/piechart.cpp -text
 src/nxhttpd/resource.h -text
 src/nxhttpd/session.cpp -text
 src/nxhttpd/smgr.cpp -text
@@ -1209,12 +1210,14 @@ src/nxhttpd/static/images/buttons/normal/Makefile.am -text
 src/nxhttpd/static/images/buttons/normal/ack.png -text
 src/nxhttpd/static/images/buttons/normal/cancel.png -text
 src/nxhttpd/static/images/buttons/normal/delete.png -text
+src/nxhttpd/static/images/buttons/normal/login.png -text
 src/nxhttpd/static/images/buttons/normal/ok.png -text
 src/nxhttpd/static/images/buttons/normal/terminate.png -text
 src/nxhttpd/static/images/buttons/pressed/Makefile.am -text
 src/nxhttpd/static/images/buttons/pressed/ack.png -text
 src/nxhttpd/static/images/buttons/pressed/cancel.png -text
 src/nxhttpd/static/images/buttons/pressed/delete.png -text
+src/nxhttpd/static/images/buttons/pressed/login.png -text
 src/nxhttpd/static/images/buttons/pressed/ok.png -text
 src/nxhttpd/static/images/buttons/pressed/terminate.png -text
 src/nxhttpd/static/images/checkbox_off.png -text

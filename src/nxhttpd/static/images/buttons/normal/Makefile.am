@@ -12,5 +12,6 @@ EXTRA_DIST = \
 	ack.png \
 	cancel.png \
 	delete.png \
+	login.png \
 	ok.png \
 	terminate.png

@@ -199,7 +199,7 @@ void HttpResponse::BeginPage(TCHAR *pszTitle)
 // Start box
 //
 
-void HttpResponse::StartBox(TCHAR *pszTitle, TCHAR *pszClass, TCHAR *pszId, BOOL bContentOnly)
+void HttpResponse::StartBox(TCHAR *pszTitle, TCHAR *pszClass, TCHAR *pszId, TCHAR *pszTableClass, BOOL bContentOnly)
 {
 	String temp;
 
@@ -226,13 +226,31 @@ void HttpResponse::StartBox(TCHAR *pszTitle, TCHAR *pszClass, TCHAR *pszId, BOOL
    m_dwBoxRowNumber = 0;
 	if (pszTitle != NULL)
 	{
-		AppendBody(_T("<div class=\"boxTitle\"><span>"));
+		AppendBody(_T("<div class=\"boxTitle\"><table><tr valign=\"middle\"><td>"));
 		AppendBody(pszTitle);
-		AppendBody(_T("</span></div><table>\r\n"));
+		if (pszTableClass != NULL)
+		{
+			temp = _T("");
+			temp.AddFormattedString(_T("</td></tr></table></div><table class=\"%s\">\r\n"), pszTableClass);
+			AppendBody(temp);
+		}
+		else
+		{
+			AppendBody(_T("</td></tr></table></div><table>\r\n"));
+		}
 	}
 	else
 	{
-		AppendBody(_T("<table>\r\n"));
+		if (pszTableClass != NULL)
+		{
+			temp = _T("");
+			temp.AddFormattedString(_T("</td></tr></table></div><table class=\"%s\">\r\n"), pszTableClass);
+			AppendBody(temp);
+		}
+		else
+		{
+			AppendBody(_T("<table>\r\n"));
+		}
 	}
 }
 

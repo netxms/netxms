@@ -339,7 +339,7 @@ void ClientSession::ShowObjectOverview(HttpResponse &response, NXC_OBJECT *pObje
 	String temp;
 
 	response.AppendBody(
-		_T("<div class=\"subheader\"><span>Attributes</span></div>\r\n")
+		_T("<div class=\"subheader\"><table><tr><td>Attributes</td></tr></table></div>\r\n")
 		_T("<div>\r\n")
 		_T("	<table width=\"100%\">\r\n")
 	);
@@ -388,6 +388,9 @@ void ClientSession::ShowObjectOverview(HttpResponse &response, NXC_OBJECT *pObje
 				ShowObjectAttribute(response, _T("SNMP Agent"), _T("Inactive"));
 			}
 			ShowObjectAttribute(response, _T("Node Type"), CodeToText(pObject->node.dwNodeType, g_ctNodeType, _T("Unknown")));
+			ShowObjectAttribute(response, _T("CDP Support"), (pObject->node.dwFlags & NF_IS_CDP) ? _T("Yes") : _T("No"));
+			ShowObjectAttribute(response, _T("SONMP Support"), (pObject->node.dwFlags & NF_IS_SONMP) ? _T("Yes") : _T("No"));
+			ShowObjectAttribute(response, _T("LLDP Support"), (pObject->node.dwFlags & NF_IS_LLDP) ? _T("Yes") : _T("No"));
 			break;
 		default:
 			break;
@@ -395,7 +398,7 @@ void ClientSession::ShowObjectOverview(HttpResponse &response, NXC_OBJECT *pObje
 
 	// Finish attributes table and start comments
 	response.AppendBody(_T("</table></div><br>\r\n")
-	                    _T("<div class=\"subheader\"><span>Comments</span></div>\r\n"));
+	                    _T("<div class=\"subheader\"><table><tr><td>Comments</td></tr></table></div>\r\n"));
 	temp = CHECK_NULL_EX(pObject->pszComments);
 	response.AppendBody(EscapeHTMLText(temp));
 	response.AppendBody(_T("</div>\r\n"));

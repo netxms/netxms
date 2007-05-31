@@ -115,7 +115,7 @@ void ClientSession::ShowLastValues(HttpResponse &response, NXC_OBJECT *pObject, 
 		if (m_dwNumValues > 0)
 		{
 			QSortEx(m_pValueList, m_dwNumValues, sizeof(NXC_DCI_VALUE), this, CompareDCIValuesCB);
-			response.StartBox(NULL, _T("objectTable"), _T("last_values"), bReload);
+			response.StartBox(NULL, _T("objectTable"), _T("last_values"), NULL, bReload);
 			response.StartTableHeader(NULL);
 			for(i = 0; i < 4; i++)
 				AddLastValuesColumnHeader(response, m_sid, i, pObject->dwId,

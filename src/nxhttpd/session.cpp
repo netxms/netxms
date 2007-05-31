@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.11 2007-05-17 20:23:36 victor Exp $ */
+/* $Id: session.cpp,v 1.12 2007-05-31 22:48:33 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -226,6 +226,10 @@ BOOL ClientSession::ProcessRequest(HttpRequest &request, HttpResponse &response)
 		{
 			ShowForm(response, FORM_TOOLS);
 		}
+		else if (!_tcscmp((TCHAR *)cmd, _T("pieChart")))
+		{
+			ShowPieChart(request, response);
+		}
 		else
 		{
 			response.SetCode(HTTP_BADREQUEST);
@@ -312,12 +316,25 @@ void ClientSession::ShowFormOverview(HttpResponse &response)
 	DWORD dwResult;
 	NXC_SERVER_STATS stats;
 	TCHAR szTmp[1024];
+	String str;
 
-	response.StartBox(_T("Server Stats"));
+	response.AppendBody(_T("<table width=\"98%\" align=\"center\"><tr><td><table width=\"100%\"><tr><td>\r\n"));
+
+	response.StartBox(_T("Message of the Day"), NULL, NULL, _T("infoBoxTable"));
+	response.AppendBody(_T("<tr><td>No message of the day was set</td></tr>"));
+	response.EndBox();
+
+	response.AppendBody(_T("</td></tr><tr><td>\r\n"));
+
+	response.StartBox(_T("Server Stats"), NULL, NULL, _T("infoBoxTable"));
 	dwResult = NXCGetServerStats(m_hSession, &stats);
 	if (dwResult == RCC_SUCCESS)
 	{
 		response.StartBoxRow();
+
+		_sntprintf(szTmp, 1024, _T("<td>Server version:</td><td>%s</td></tr>\r\n"), stats.szServerVersion);
+		response.AppendBody(szTmp);
+
 		_sntprintf(szTmp, 1024, _T("<td>Server Uptime:</td><td>%d days, %02d:%02d</td></tr>\r\n"),
 		           stats.dwServerUptime / 86400, (stats.dwServerUptime % 86400) / 3600,
 					  (stats.dwServerUptime % 3600) / 60);
@@ -328,10 +345,120 @@ void ClientSession::ShowFormOverview(HttpResponse &response)
 
 		_sntprintf(szTmp, 1024, _T("<td>Total number of nodes:</td><td>%d</td></tr>\r\n"), stats.dwNumNodes);
 		response.AppendBody(szTmp);
+
+		_sntprintf(szTmp, 1024, _T("<td>Total number of DCIs:</td><td>%d</td></tr>\r\n"), stats.dwNumDCI);
+		response.AppendBody(szTmp);
+
+		_sntprintf(szTmp, 1024, _T("<td>Active client sessions:</td><td>%d</td></tr>\r\n"), stats.dwNumClientSessions);
+		response.AppendBody(szTmp);
+
+		if (stats.dwServerProcessVMSize > 0)
+		{
+			_sntprintf(szTmp, 1024, _T("<td>Physical memory used by server:</td><td>%d KBytes</td></tr>\r\n"), stats.dwServerProcessWorkSet);
+			response.AppendBody(szTmp);
+
+			_sntprintf(szTmp, 1024, _T("<td>Virtual memory used by server:</td><td>%d KBytes</td></tr>\r\n"), stats.dwServerProcessVMSize);
+			response.AppendBody(szTmp);
+		}
 	}
 	else
 	{
 		ShowErrorMessage(response, dwResult);
 	}
 	response.EndBox();
+
+	response.AppendBody(_T("</td></tr></table></td><td width=\"5%\"><table><tr><td>\r\n"));
+
+	response.StartBox(_T("Alarm Distribution"));
+	str = _T("<img src=\"/main.app?sid={$sid}&cmd=pieChart&type=0\">\r\n");
+	str.Translate(_T("{$sid}"), m_sid);
+	response.AppendBody(str);
+	response.EndBox();
+
+	response.AppendBody(_T("</td></tr><tr><td>\r\n"));
+
+	response.StartBox(_T("Node Status Distribution"));
+	str = _T("<img src=\"/main.app?sid={$sid}&cmd=pieChart&type=1\">\r\n");
+	str.Translate(_T("{$sid}"), m_sid);
+	response.AppendBody(str);
+	response.EndBox();
+	
+	response.AppendBody(_T("</td></tr></table>\r\n"));
+
+	response.AppendBody(_T("</td></tr></table>\r\n"));
+}
+
+
+//
+// Show pie chart
+//
+
+void ClientSession::ShowPieChart(HttpRequest &request, HttpResponse &response)
+{
+	PieChart pie;
+	String value;
+	int nType, counters[9];
+	DWORD i, dwNumObjects;
+	NXC_OBJECT_INDEX *pIndex;
+
+	if (request.GetQueryParam("type", value))
+	{
+		nType = _tcstol(value, NULL, 10);
+		if ((nType < 0) && (nType > 1))
+			nType = 0;
+	}
+	else
+	{
+		nType = 0;
+	}
+
+	switch(nType)
+	{
+		case 0:	// Alarm severity distribution
+			memset(counters, 0, sizeof(int) * 5);
+		   MutexLock(m_mutexAlarmList, INFINITE);
+			for(i = 0; i < m_dwNumAlarms; i++)
+			{
+				counters[m_pAlarmList[i].nCurrentSeverity]++;
+			}
+		   MutexUnlock(m_mutexAlarmList);
+			pie.SetValue(_T("Normal"), counters[0]);
+			pie.SetValue(_T("Warning"), counters[1]);
+			pie.SetValue(_T("Minor"), counters[2]);
+			pie.SetValue(_T("Major"), counters[3]);
+			pie.SetValue(_T("Critical"), counters[4]);
+			break;
+		case 1:	// Node status distribution
+			memset(counters, 0, sizeof(int) * 9);
+			pIndex = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(m_hSession, &dwNumObjects);
+			for(i = 0; i < dwNumObjects; i++)
+			{
+				if (pIndex[i].pObject->iClass == OBJECT_NODE)
+				{
+					counters[pIndex[i].pObject->iStatus]++;
+				}
+			}
+			NXCUnlockObjectIndex(m_hSession);
+			pie.SetValue(_T("Normal"), counters[0]);
+			pie.SetValue(_T("Warning"), counters[1]);
+			pie.SetValue(_T("Minor"), counters[2]);
+			pie.SetValue(_T("Major"), counters[3]);
+			pie.SetValue(_T("Critical"), counters[4]);
+			pie.SetValue(_T("Unknown"), counters[5]);
+			pie.SetValue(_T("Unmanaged"), counters[6]);
+			pie.SetValue(_T("Disabled"), counters[7]);
+			pie.SetValue(_T("Testing"), counters[8]);
+			break;
+	}
+
+	if (pie.Build())
+	{
+		response.SetType("image/png");
+		response.SetBody((char *)pie.GetRawImage(), pie.GetRawImageSize());
+	}
+	else
+	{
+		response.SetType("text/plain");
+		response.SetBody("error");
+	}
 }
