@@ -71,12 +71,38 @@ void ClientSession::ShowFormObjects(HttpResponse &response)
 
 
 //
+// Comparision function for tree items sorting
+//
+
+static int CompareObjects(const void *p1, const void *p2)
+{
+   TCHAR szName1[MAX_OBJECT_NAME], szName2[MAX_OBJECT_NAME];
+	NXC_OBJECT *obj1 = *((NXC_OBJECT **)p1);
+	NXC_OBJECT *obj2 = *((NXC_OBJECT **)p2);
+	int notContainer1, notContainer2, nResult;
+
+	notContainer1 = ((obj1->iClass == OBJECT_CONTAINER) || 
+		              (obj1->iClass == OBJECT_TEMPLATEGROUP)) ? 0 : 1;
+	notContainer2 = ((obj2->iClass == OBJECT_CONTAINER) || 
+		              (obj2->iClass == OBJECT_TEMPLATEGROUP)) ? 0 : 1;
+	nResult = COMPARE_NUMBERS(notContainer1, notContainer2);
+	if (nResult != 0)
+		return nResult;
+
+   NXCGetComparableObjectNameEx(obj1, szName1);
+   NXCGetComparableObjectNameEx(obj2, szName2);
+   return _tcsicmp(szName1, szName2);
+}
+
+
+//
 // Send object tree to client as XML
 //
 
 void ClientSession::SendObjectTree(HttpRequest &request, HttpResponse &response)
 {
-	String parent, data, ico, tmp;
+	String parent, data, tmp;
+	TCHAR *ico;
 	int parentId = 0;
 	NXC_OBJECT **ppRootObjects = NULL;
 	NXC_OBJECT_INDEX *pIndex = NULL;
@@ -128,6 +154,8 @@ void ClientSession::SendObjectTree(HttpRequest &request, HttpResponse &response)
 		}
 	}
 
+	qsort(ppRootObjects, dwNumRootObj, sizeof(NXC_OBJECT *), CompareObjects);
+
 	data = _T("<tree>");
 
 	for(i = 0; i < dwNumRootObj; i++)
@@ -169,9 +197,9 @@ void ClientSession::SendObjectTree(HttpRequest &request, HttpResponse &response)
 		tmp = ppRootObjects[i]->szName;
 		data += EscapeHTMLText(tmp);
 		data += _T("\" ");
-		if (ico.Size() > 0)
+		if (*ico != 0)
 		{
-			data.AddFormattedString(_T("openIcon=\"%s\" icon=\"%s\" "), (TCHAR *)ico, (TCHAR *)ico);
+			data.AddFormattedString(_T("openIcon=\"%s\" icon=\"%s\" "), ico, ico);
 		}
 
 		if (ppRootObjects[i]->dwNumChilds > 0)
