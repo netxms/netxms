@@ -1,6 +1,12 @@
 /*
-** System configuration table
+** NetXMS Database Schema
+**
 ** ex: syntax=sql
+*/
+
+
+/*
+** System configuration table
 */
 
 CREATE TABLE config
