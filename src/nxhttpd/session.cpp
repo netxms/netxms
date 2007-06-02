@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.12 2007-05-31 22:48:33 victor Exp $ */
+/* $Id: session.cpp,v 1.13 2007-06-02 12:36:10 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -360,6 +360,33 @@ void ClientSession::ShowFormOverview(HttpResponse &response)
 			_sntprintf(szTmp, 1024, _T("<td>Virtual memory used by server:</td><td>%d KBytes</td></tr>\r\n"), stats.dwServerProcessVMSize);
 			response.AppendBody(szTmp);
 		}
+
+		_sntprintf(szTmp, 1024, _T("<td>Condition poller queue size:</td><td>%d</td></tr>\r\n"), stats.dwQSizeConditionPoller);
+		response.AppendBody(szTmp);
+
+		_sntprintf(szTmp, 1024, _T("<td>Configuration poller queue size:</td><td>%d</td></tr>\r\n"), stats.dwQSizeConfPoller);
+		response.AppendBody(szTmp);
+
+		_sntprintf(szTmp, 1024, _T("<td>Data collector queue size:</td><td>%d</td></tr>\r\n"), stats.dwQSizeDCIPoller);
+		response.AppendBody(szTmp);
+
+		_sntprintf(szTmp, 1024, _T("<td>Database writer queue size:</td><td>%d</td></tr>\r\n"), stats.dwQSizeDBWriter);
+		response.AppendBody(szTmp);
+
+		_sntprintf(szTmp, 1024, _T("<td>Event queue size:</td><td>%d</td></tr>\r\n"), stats.dwQSizeEvents);
+		response.AppendBody(szTmp);
+
+		_sntprintf(szTmp, 1024, _T("<td>Discovery poller queue size:</td><td>%d</td></tr>\r\n"), stats.dwQSizeDiscovery);
+		response.AppendBody(szTmp);
+
+		_sntprintf(szTmp, 1024, _T("<td>Node poller queue size:</td><td>%d</td></tr>\r\n"), stats.dwQSizeNodePoller);
+		response.AppendBody(szTmp);
+
+		_sntprintf(szTmp, 1024, _T("<td>Route poller queue size:</td><td>%d</td></tr>\r\n"), stats.dwQSizeRoutePoller);
+		response.AppendBody(szTmp);
+
+		_sntprintf(szTmp, 1024, _T("<td>Status poller queue size:</td><td>%d</td></tr>\r\n"), stats.dwQSizeStatusPoller);
+		response.AppendBody(szTmp);
 	}
 	else
 	{

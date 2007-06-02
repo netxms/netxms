@@ -149,6 +149,15 @@ DWORD LIBNXCL_EXPORTABLE NXCGetServerStats(NXC_SESSION hSession, NXC_SERVER_STAT
          pStats->dwServerProcessWorkSet = pResponse->GetVariableLong(VID_NETXMSD_PROCESS_WKSET);
          pStats->dwServerUptime = pResponse->GetVariableLong(VID_SERVER_UPTIME);
          pResponse->GetVariableStr(VID_SERVER_VERSION, pStats->szServerVersion, MAX_DB_STRING);
+			pStats->dwQSizeConditionPoller = pResponse->GetVariableLong(VID_QSIZE_CONDITION_POLLER);
+			pStats->dwQSizeConfPoller = pResponse->GetVariableLong(VID_QSIZE_CONF_POLLER);
+			pStats->dwQSizeDBWriter = pResponse->GetVariableLong(VID_QSIZE_DBWRITER);
+			pStats->dwQSizeDCIPoller = pResponse->GetVariableLong(VID_QSIZE_DCI_POLLER);
+			pStats->dwQSizeDiscovery = pResponse->GetVariableLong(VID_QSIZE_DISCOVERY);
+			pStats->dwQSizeEvents = pResponse->GetVariableLong(VID_QSIZE_EVENT);
+			pStats->dwQSizeNodePoller = pResponse->GetVariableLong(VID_QSIZE_NODE_POLLER);
+			pStats->dwQSizeRoutePoller = pResponse->GetVariableLong(VID_QSIZE_ROUTE_POLLER);
+			pStats->dwQSizeStatusPoller = pResponse->GetVariableLong(VID_QSIZE_STATUS_POLLER);
       }
       delete pResponse;
    }

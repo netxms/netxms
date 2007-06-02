@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.267 2007-05-29 18:50:45 victor Exp $ */
+/* $Id: nxclapi.h,v 1.268 2007-06-02 12:36:10 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -1498,16 +1498,25 @@ typedef struct
 
 typedef struct
 {
-   DWORD dwNumAlarms;
-   DWORD dwAlarmsBySeverity[5];
-   DWORD dwNumObjects;
-   DWORD dwNumNodes;
-   DWORD dwNumDCI;
-   DWORD dwNumClientSessions;
-   DWORD dwServerUptime;
-   DWORD dwServerProcessVMSize;
-   DWORD dwServerProcessWorkSet;
-   TCHAR szServerVersion[MAX_DB_STRING];
+	DWORD dwNumAlarms;
+	DWORD dwAlarmsBySeverity[5];
+	DWORD dwNumObjects;
+	DWORD dwNumNodes;
+	DWORD dwNumDCI;
+	DWORD dwNumClientSessions;
+	DWORD dwServerUptime;
+	DWORD dwServerProcessVMSize;
+	DWORD dwServerProcessWorkSet;
+	TCHAR szServerVersion[MAX_DB_STRING];
+	DWORD dwQSizeConditionPoller;
+	DWORD dwQSizeConfPoller;
+	DWORD dwQSizeDCIPoller;
+	DWORD dwQSizeDBWriter;
+	DWORD dwQSizeEvents;
+	DWORD dwQSizeDiscovery;
+	DWORD dwQSizeNodePoller;
+	DWORD dwQSizeRoutePoller;
+	DWORD dwQSizeStatusPoller;
 } NXC_SERVER_STATS;
 
 

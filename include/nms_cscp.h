@@ -736,6 +736,15 @@ typedef struct
 #define VID_NUM_CERTIFICATES        ((DWORD)282)
 #define VID_ALARM_TIMEOUT_EVENT     ((DWORD)283)
 #define VID_NUM_GROUPS              ((DWORD)284)
+#define VID_QSIZE_CONDITION_POLLER  ((DWORD)285)
+#define VID_QSIZE_CONF_POLLER       ((DWORD)286)
+#define VID_QSIZE_DCI_POLLER        ((DWORD)287)
+#define VID_QSIZE_DBWRITER          ((DWORD)288)
+#define VID_QSIZE_EVENT             ((DWORD)289)
+#define VID_QSIZE_DISCOVERY         ((DWORD)290)
+#define VID_QSIZE_NODE_POLLER       ((DWORD)291)
+#define VID_QSIZE_ROUTE_POLLER      ((DWORD)292)
+#define VID_QSIZE_STATUS_POLLER     ((DWORD)293)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

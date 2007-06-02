@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.277 2007-05-29 18:50:45 victor Exp $ */
+/* $Id: session.cpp,v 1.278 2007-06-02 12:36:10 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -60,6 +60,14 @@
 //
 // Externals
 //
+
+extern Queue g_statusPollQueue;
+extern Queue g_configPollQueue;
+extern Queue g_routePollQueue;
+extern Queue g_discoveryPollQueue;
+extern Queue g_nodePollerQueue;
+extern Queue g_conditionPollerQueue;
+extern Queue *g_pItemQueue;
 
 void UnregisterSession(DWORD dwIndex);
 void ResetDiscoveryPoller(void);
@@ -6254,6 +6262,17 @@ void ClientSession::SendServerStats(DWORD dwRqId)
       msg.SetVariable(VID_NETXMSD_PROCESS_VMSIZE, (DWORD)(mc.PagefileUsage / 1024));
    }
 #endif
+
+	// Queues
+	msg.SetVariable(VID_QSIZE_CONDITION_POLLER, g_conditionPollerQueue.Size());
+	msg.SetVariable(VID_QSIZE_CONF_POLLER, g_configPollQueue.Size());
+	msg.SetVariable(VID_QSIZE_DCI_POLLER, g_pItemQueue->Size());
+	msg.SetVariable(VID_QSIZE_DBWRITER, g_pLazyRequestQueue->Size());
+	msg.SetVariable(VID_QSIZE_EVENT, g_pEventQueue->Size());
+	msg.SetVariable(VID_QSIZE_DISCOVERY, g_discoveryPollQueue.Size());
+	msg.SetVariable(VID_QSIZE_NODE_POLLER, g_nodePollerQueue.Size());
+	msg.SetVariable(VID_QSIZE_ROUTE_POLLER, g_routePollQueue.Size());
+	msg.SetVariable(VID_QSIZE_STATUS_POLLER, g_statusPollQueue.Size());
 
    // Send response
    SendMessage(&msg);
