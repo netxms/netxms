@@ -1,8 +1,10 @@
 #!/usr/local/bin/bash
+#
+# vim:ts=3 sw=3
 
-#trap '
-#	rm -f tmp
-#' INT EXIT
+trap '
+	rm -f tmp
+' INT EXIT
 
 if [ "x"$3 = "x" ]; then
 	echo "Usage: $0 input.tar.gz scriptname output.sh"
@@ -11,6 +13,12 @@ fi
 
 if [ ! -r $1 ]; then
 	echo "Can't read $1"
+	exit
+fi
+
+stub=`dirname `echo $0``/stub.sh
+if [ ! -r $stub ]; then
+	echo "$stub not found!"
 	exit
 fi
 
@@ -28,14 +36,8 @@ if [ $? != 0 ]; then
 	fi
 fi
 
-case `uname -s` in
-	*BSD)
-		skip=`echo \`wc -l stub.sh|cut -b1-8\``
-		;;
-	*)
-		skip=`cat stub.sh | wc -l | sed 's,^ *,,'`
-		;;
-esac
+skip=`echo \`wc -l stub.sh|cut -b1-8\``
+
 if [ "x$BASH" == "x" ]; then
 	skip1=`let $skip+1`
 else
@@ -43,7 +45,7 @@ else
 	let skip1++
 fi
 
-sed "s,__SKIP__,$skip,g" < stub.sh |
+sed "s,__SKIP__,$skip,g" < $stub |
 	sed "s,__SKIP1__,$skip1,g" |
 	sed "s,__COMMAND__,$2,g" > tmp
 hash1=`tail -n +5 tmp | $md5 | cut -b1-32 | tr A-Z a-z`
