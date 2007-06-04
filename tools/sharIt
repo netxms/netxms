@@ -16,7 +16,7 @@ if [ ! -r $1 ]; then
 	exit
 fi
 
-stub=`dirname `echo $0``/stub.sh
+stub=`dirname \`echo $0\``/stub.sh
 if [ ! -r $stub ]; then
 	echo "$stub not found!"
 	exit
