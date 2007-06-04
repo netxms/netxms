@@ -39,20 +39,25 @@ for dir in /bin /sbin /usr/bin /usr/local/bin /opt/openssl*/bin; do
 	fi
 done
 
-tmp=`which mktemp 2>/dev/null`
-if [ $? = 0 ]; then
-	echo $tmp | grep "no mptemp in " >/dev/null 2>&1
-	[ $? = 0 ] && alias mktemp=_mktemp
-fi
-
+tail="tail -n"
 case `uname -s` in
 	SunOS)
 		tail="tail"
 		;;
+	HP-UX)
+		alias mktemp=_mktemp
+		;;
 	*)
-		tail="tail -n"
 		;;
 esac
+
+tmp=`which mktemp 2>/dev/null`
+if [ $? = 0 ]; then
+	echo $tmp | grep "no mktemp in " >/dev/null 2>&1
+	[ $? = 0 ] && alias mktemp=_mktemp
+else
+	alias mktemp=_mktemp
+fi
 
 if [ "x$md5" != "x" ]; then
 	if [ "X"`head -n $skip $0 |
