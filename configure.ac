@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.246 2007-05-29 18:50:44 victor Exp $
+# $Id: configure.ac,v 1.247 2007-06-05 22:03:34 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -361,7 +361,7 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$PLATFORM" = "xHP-UX"; then
-	CCC="aCC"
+	AC_CHECK_PROG([CCC], [aCC], [aCC])
 fi
 AC_PROG_CC(aCC gcc cc cl)
 AC_PROG_CPP
