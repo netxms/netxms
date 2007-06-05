@@ -8,6 +8,7 @@
 #include "NodePerfView.h"
 #include "NodeTopologyView.h"
 #include "ExtEditCtrl.h"
+#include "NodeLastValuesView.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -51,6 +52,7 @@ public:
 
 	// Generated message map functions
 protected:
+	CNodeLastValuesView m_wndLastValuesView;
 	int m_nSearchTextOffset;
 	CImageList m_imageListSearch;
 	CToolBarCtrl m_wndSearchButtons;

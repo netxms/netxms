@@ -540,6 +540,10 @@ SOURCE=.\NewUserDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\NodeLastValuesView.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\NodePerfView.cpp
 # End Source File
 # Begin Source File
@@ -1170,6 +1174,10 @@ SOURCE=..\..\..\include\nms_common.h
 # Begin Source File
 
 SOURCE=..\..\..\include\nms_util.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\NodeLastValuesView.h
 # End Source File
 # Begin Source File
 

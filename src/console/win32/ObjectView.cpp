@@ -128,6 +128,7 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(theApp.LoadIcon(IDI_CLUSTER));
    m_imageList.Add(theApp.LoadIcon(IDI_GRAPH));
    m_imageList.Add(theApp.LoadIcon(IDI_TOPOLOGY));
+   m_imageList.Add(theApp.LoadIcon(IDI_DOCUMENT));
 
    GetClientRect(&rect);
    rect.top += TITLE_BAR_HEIGHT;
@@ -143,6 +144,7 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndClusterView.Create(NULL, _T("Cluster"), WS_CHILD, rect, this, 4);
    m_wndPerfView.Create(NULL, _T("Performance"), WS_CHILD, rect, this, 5);
    m_wndTopologyView.Create(NULL, _T("Topology"), WS_CHILD, rect, this, 6);
+   m_wndLastValuesView.Create(NULL, _T("Last Values"), WS_CHILD, rect, this, 7);
 
    // Create common tabs
    CreateTab(0, _T("Overview"), 0, &m_wndOverview);
@@ -229,6 +231,7 @@ void CObjectView::SetCurrentObject(NXC_OBJECT *pObject)
    {
 		if (m_pObject->iClass == OBJECT_NODE)
 		{
+         CreateTab(nTab++, _T("Last Values"), 6, &m_wndLastValuesView);
          CreateTab(nTab++, _T("Performance"), 4, &m_wndPerfView);
 			if (m_pObject->node.dwFlags & NF_IS_BRIDGE)
 	         CreateTab(nTab++, _T("Topology"), 5, &m_wndTopologyView);
@@ -464,6 +467,7 @@ void CObjectView::AdjustView()
    m_wndClusterView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
    m_wndPerfView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
    m_wndTopologyView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
+   m_wndLastValuesView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
 
 	if (m_bShowSearchBar)
 	{
