@@ -7,6 +7,9 @@
 // NodeLastValuesView.h : header file
 //
 
+#include <nxqueue.h>
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CNodeLastValuesView window
 
@@ -29,10 +32,14 @@ public:
 
 // Implementation
 public:
+	int CompareListItems(LPARAM nItem1, LPARAM nItem2);
+	void WorkerThread(void);
 	virtual ~CNodeLastValuesView();
 
 	// Generated message map functions
 protected:
+	NXC_DCI_VALUE * m_pItemList;
+	DWORD m_dwNumItems;
 	Queue m_workerQueue;
 	THREAD m_hWorkerThread;
 	int m_nTimer;
@@ -47,8 +54,15 @@ protected:
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnDestroy();
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnItemGraph();
+	afx_msg void OnItemExportdata();
+	afx_msg void OnItemShowdata();
+	afx_msg void OnTimer(UINT nIDEvent);
 	//}}AFX_MSG
    afx_msg void OnSetObject(WPARAM wParam, NXC_OBJECT *pObject);
+	afx_msg void OnRequestCompleted(WPARAM wParam, LPARAM lParam);
+   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 

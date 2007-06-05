@@ -997,6 +997,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Show status using &icons",    ID_STATUS_ICONS
     END
+    POPUP "Last Values (Object Browser)"
+    BEGIN
+        MENUITEM "&Show history",               ID_ITEM_SHOWDATA
+        MENUITEM "&Graph",                      ID_ITEM_GRAPH
+        MENUITEM "&Export data...",             ID_ITEM_EXPORTDATA
+    END
 END
 
 

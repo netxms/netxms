@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "NodeLastValuesView.h"
+#include "DataExportDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -15,9 +16,9 @@ static char THIS_FILE[] = __FILE__;
 // Worker thread
 //
 
-static THREAD_RESULT THREAD_CALL PerfViewWorkerThread(void *pArg)
+static THREAD_RESULT THREAD_CALL LastValuesViewWorkerThread(void *pArg)
 {
-	((CNodePerfView *)pArg)->WorkerThread();
+	((CNodeLastValuesView *)pArg)->WorkerThread();
 	return THREAD_OK;
 }
 
@@ -31,6 +32,8 @@ CNodeLastValuesView::CNodeLastValuesView()
    m_iSortMode = theApp.GetProfileInt(_T("NodeLastValuesView"), _T("SortMode"), 1);
    m_iSortDir = theApp.GetProfileInt(_T("NodeLastValuesView"), _T("SortDir"), 1);
 	m_hWorkerThread = INVALID_THREAD_HANDLE;
+	m_pItemList = NULL;
+	m_dwNumItems = 0;
 }
 
 CNodeLastValuesView::~CNodeLastValuesView()
@@ -40,6 +43,7 @@ CNodeLastValuesView::~CNodeLastValuesView()
 	m_workerQueue.Clear();
 	m_workerQueue.Put((void *)INVALID_INDEX);
 	ThreadJoin(m_hWorkerThread);
+	safe_free(m_pItemList);
 }
 
 
@@ -49,8 +53,15 @@ BEGIN_MESSAGE_MAP(CNodeLastValuesView, CWnd)
 	ON_WM_SETFOCUS()
 	ON_WM_SIZE()
 	ON_WM_DESTROY()
+	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_ITEM_GRAPH, OnItemGraph)
+	ON_COMMAND(ID_ITEM_EXPORTDATA, OnItemExportdata)
+	ON_COMMAND(ID_ITEM_SHOWDATA, OnItemShowdata)
+	ON_WM_TIMER()
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_SET_OBJECT, OnSetObject)
+   ON_MESSAGE(NXCM_REQUEST_COMPLETED, OnRequestCompleted)
+	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
 END_MESSAGE_MAP()
 
 
@@ -92,8 +103,7 @@ int CNodeLastValuesView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(0, _T("ID"), LVCFMT_LEFT, 55);
    m_wndListCtrl.InsertColumn(1, _T("Description"), LVCFMT_LEFT, 250);
    m_wndListCtrl.InsertColumn(2, _T("Value"), LVCFMT_LEFT | LVCFMT_BITMAP_ON_RIGHT, 100);
-   m_wndListCtrl.InsertColumn(3, _T("Changed"), LVCFMT_LEFT, 26);
-   m_wndListCtrl.InsertColumn(4, _T("Timestamp"), LVCFMT_LEFT, 124);
+   m_wndListCtrl.InsertColumn(3, _T("Timestamp"), LVCFMT_LEFT, 124);
 
    // Mark sorting column
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
@@ -101,6 +111,8 @@ int CNodeLastValuesView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    lvCol.iImage = (m_iSortDir > 0) ? m_iSortImageBase : (m_iSortImageBase + 1);
    m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 		
+	m_hWorkerThread = ThreadCreateEx(LastValuesViewWorkerThread, 0, this);
+
 	return 0;
 }
 
@@ -140,6 +152,8 @@ void CNodeLastValuesView::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
 	}
 
    m_pObject = pObject;
+	m_workerQueue.Clear();
+	m_workerQueue.Put((void *)pObject->dwId);
 }
 
 
@@ -152,4 +166,278 @@ void CNodeLastValuesView::OnDestroy()
 	if (m_nTimer != 0)
 		KillTimer(m_nTimer);
 	CWnd::OnDestroy();
+}
+
+
+//
+// Worker thread
+//
+
+void CNodeLastValuesView::WorkerThread(void)
+{
+	DWORD dwNodeId, dwResult, dwNumItems;
+	NXC_DCI_VALUE *pValueList;
+
+	while(1)
+	{
+		dwNodeId = (DWORD)m_workerQueue.GetOrBlock();
+		if (dwNodeId == INVALID_INDEX)
+			break;
+
+		dwResult = NXCGetLastValues(g_hSession, dwNodeId, &dwNumItems, &pValueList);
+		if (dwResult == RCC_SUCCESS)
+		{
+			if (!::PostMessage(m_hWnd, NXCM_REQUEST_COMPLETED, dwNumItems, (LPARAM)pValueList))
+			{
+				safe_free(pValueList);
+			}
+		}
+		else
+		{
+			::PostMessage(m_wndListCtrl.m_hWnd, LVM_DELETEALLITEMS, 0, 0);
+		}
+	}
+}
+
+
+//
+// Callback for item sorting
+//
+
+static int CALLBACK CompareListItemsCB(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+	return ((CNodeLastValuesView *)lParamSort)->CompareListItems(lParam1, lParam2);
+}
+
+
+//
+// Compare two list items
+//
+
+int CNodeLastValuesView::CompareListItems(LPARAM nItem1, LPARAM nItem2)
+{
+	int nResult;
+
+	if (m_pItemList == NULL)
+		return 0;	// Paranoia check
+
+	switch(m_iSortMode)
+	{
+		case 0:	// ID
+			nResult = COMPARE_NUMBERS(m_pItemList[nItem1].dwId, m_pItemList[nItem2].dwId);
+			break;
+		case 1:	// Description
+			nResult = _tcsicmp(m_pItemList[nItem1].szDescription, m_pItemList[nItem2].szDescription);
+			break;
+		case 2:	// Value
+			nResult = _tcsicmp(m_pItemList[nItem1].szValue, m_pItemList[nItem2].szValue);
+			break;
+		case 3:	// Timestamp
+			nResult = COMPARE_NUMBERS(m_pItemList[nItem1].dwTimestamp, m_pItemList[nItem2].dwTimestamp);
+			break;
+		default:
+			nResult = 0;
+			break;
+	}
+	return nResult * m_iSortDir;
+}
+
+
+//
+// Handler for NXCM_REQUEST_COMPLETED message
+//
+
+void CNodeLastValuesView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
+{
+	DWORD i;
+	int nItem;
+	TCHAR szBuffer[128];
+
+	safe_free(m_pItemList);
+	m_dwNumItems = wParam;
+	m_pItemList = (NXC_DCI_VALUE *)lParam;
+	m_wndListCtrl.DeleteAllItems();
+	for(i = 0; i < m_dwNumItems; i++)
+	{
+		_stprintf(szBuffer, _T("%d"), m_pItemList[i].dwId);
+		nItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, 0);
+		if (nItem != -1)
+		{
+			m_wndListCtrl.SetItemData(nItem, i);
+			m_wndListCtrl.SetItemText(nItem, 1, m_pItemList[i].szDescription);
+			m_wndListCtrl.SetItemText(nItem, 2, m_pItemList[i].szValue);
+			m_wndListCtrl.SetItemText(nItem, 3, FormatTimeStamp(m_pItemList[i].dwTimestamp, szBuffer, TS_LONG_DATE_TIME));
+		}
+	}
+	m_wndListCtrl.SortItems(CompareListItemsCB, (UINT_PTR)this);
+	m_nTimer = SetTimer(1, 30000, NULL);
+}
+
+
+//
+// Handler for list view column click
+//
+
+void CNodeLastValuesView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+{
+   LVCOLUMN lvCol;
+
+   // Unmark old sorting column
+   lvCol.mask = LVCF_FMT;
+   lvCol.fmt = LVCFMT_LEFT;
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
+
+   // Change current sort mode and resort list
+   if (m_iSortMode == pNMHDR->iSubItem)
+   {
+      // Same column, change sort direction
+      m_iSortDir = -m_iSortDir;
+   }
+   else
+   {
+      // Another sorting column
+      m_iSortMode = pNMHDR->iSubItem;
+   }
+   m_wndListCtrl.SortItems(CompareListItemsCB, (UINT_PTR)this);
+
+   // Mark new sorting column
+   lvCol.mask = LVCF_IMAGE | LVCF_FMT;
+   lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
+   lvCol.iImage = (m_iSortDir > 0) ? m_iSortImageBase : (m_iSortImageBase + 1);
+   m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
+   
+   *pResult = 0;
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CNodeLastValuesView::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+	UINT nCount;
+
+   pMenu = theApp.GetContextMenu(26);
+	nCount = m_wndListCtrl.GetSelectedCount();
+	pMenu->EnableMenuItem(ID_ITEM_SHOWDATA, MF_BYCOMMAND | ((nCount > 0) ? MF_ENABLED : MF_GRAYED));
+	pMenu->EnableMenuItem(ID_ITEM_GRAPH, MF_BYCOMMAND | ((nCount > 0) ? MF_ENABLED : MF_GRAYED));
+	pMenu->EnableMenuItem(ID_ITEM_EXPORTDATA, MF_BYCOMMAND | ((nCount == 1) ? MF_ENABLED : MF_GRAYED));
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+}
+
+
+//
+// Handler for "Graph" context menu item
+//
+
+void CNodeLastValuesView::OnItemGraph() 
+{
+   int iItem;
+   DWORD i, dwNumItems, dwIndex;
+   NXC_DCI **ppItemList;
+   TCHAR szBuffer[384];
+
+	if ((m_pObject == NULL) || (m_pItemList == NULL))
+		return;	// Paranoia check
+
+   dwNumItems = m_wndListCtrl.GetSelectedCount();
+   ppItemList = (NXC_DCI **)malloc(sizeof(NXC_DCI *) * dwNumItems);
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+   for(i = 0; (iItem != -1) && (i < dwNumItems); i++)
+   {
+      ppItemList[i] = (NXC_DCI *)malloc(sizeof(NXC_DCI));
+      memset(ppItemList[i], 0, sizeof(NXC_DCI));
+		dwIndex = m_wndListCtrl.GetItemData(iItem);
+      ppItemList[i]->dwId = m_pItemList[dwIndex].dwId;
+      _tcscpy(ppItemList[i]->szName, m_pItemList[dwIndex].szName);
+      _tcscpy(ppItemList[i]->szDescription, m_pItemList[dwIndex].szDescription);
+      ppItemList[i]->iDataType = m_pItemList[dwIndex].iDataType;
+      ppItemList[i]->iSource = m_pItemList[dwIndex].iSource;
+      iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+   }
+
+   if (dwNumItems == 1)
+   {
+      _sntprintf(szBuffer, 384, _T("%s - %s"), m_pObject->szName,
+                 ppItemList[0]->szDescription);
+   }
+   else
+   {
+      nx_strncpy(szBuffer, m_pObject->szName, 384);
+   }
+
+   theApp.ShowDCIGraph(m_pObject->dwId, dwNumItems, ppItemList, szBuffer);
+   for(i = 0; i < dwNumItems; i++)
+      free(ppItemList[i]);
+   free(ppItemList);
+}
+
+
+//
+// Handler for "Export data" context menu item
+//
+
+void CNodeLastValuesView::OnItemExportdata() 
+{
+   CDataExportDlg dlg;
+   DWORD dwItemId, dwTimeFrom, dwTimeTo;
+
+	if ((m_pObject == NULL) || (m_pItemList == NULL))
+		return;	// Paranoia check
+
+   dwItemId = m_pItemList[m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark())].dwId;
+   if (dlg.DoModal() == IDOK)
+   {
+      dlg.SaveLastSelection();
+      dwTimeFrom = CTime(dlg.m_dateFrom.GetYear(), dlg.m_dateFrom.GetMonth(),
+                         dlg.m_dateFrom.GetDay(), dlg.m_timeFrom.GetHour(),
+                         dlg.m_timeFrom.GetMinute(),
+                         dlg.m_timeFrom.GetSecond(), -1).GetTime();
+      dwTimeTo = CTime(dlg.m_dateTo.GetYear(), dlg.m_dateTo.GetMonth(),
+                       dlg.m_dateTo.GetDay(), dlg.m_timeTo.GetHour(),
+                       dlg.m_timeTo.GetMinute(),
+                       dlg.m_timeTo.GetSecond(), -1).GetTime();
+      theApp.ExportDCIData(m_pObject->dwId, dwItemId, dwTimeFrom, dwTimeTo,
+                           dlg.m_iSeparator, dlg.m_iTimeStampFormat,
+                           (LPCTSTR)dlg.m_strFileName);
+   }
+}
+
+
+//
+// Handler for "Show data" context menu item
+//
+
+void CNodeLastValuesView::OnItemShowdata() 
+{
+   int iItem;
+   DWORD dwItemId;
+   TCHAR szBuffer[384];
+
+	if ((m_pObject == NULL) || (m_pItemList == NULL))
+		return;	// Paranoia check
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+   while(iItem != -1)
+   {
+      dwItemId = m_pItemList[m_wndListCtrl.GetItemData(iItem)].dwId;
+      _stprintf(szBuffer, _T("%s - "), m_pObject->szName); 
+      m_wndListCtrl.GetItemText(iItem, 1, &szBuffer[_tcslen(szBuffer)],
+                                384 - _tcslen(szBuffer));
+      theApp.ShowDCIData(m_pObject->dwId, dwItemId, szBuffer);
+      iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+   }
+}
+
+
+//
+// WM_TIMER message handler
+//
+
+void CNodeLastValuesView::OnTimer(UINT nIDEvent) 
+{
+	m_workerQueue.Put((void *)m_pObject->dwId);
 }

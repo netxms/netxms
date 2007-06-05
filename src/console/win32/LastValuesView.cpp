@@ -351,11 +351,11 @@ void CLastValuesView::OnItemShowdata()
    TCHAR szBuffer[384];
    NXC_OBJECT *pObject;
 
+   pObject = NXCFindObjectById(g_hSession, m_dwNodeId);
    iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
    while(iItem != -1)
    {
       dwItemId = m_wndListCtrl.GetItemData(iItem);
-      pObject = NXCFindObjectById(g_hSession, m_dwNodeId);
       _stprintf(szBuffer, _T("%s - "), pObject->szName); 
       m_wndListCtrl.GetItemText(iItem, 1, &szBuffer[_tcslen(szBuffer)],
                                 384 - _tcslen(szBuffer));

@@ -5,6 +5,7 @@
 - Implemented alarm timeouts
 - ODBCQUERY subagent improved
 - Web interface improved
+- Object browser in Windows console improved
 - Fixed issues: #122, #128, #130, #136, #138, #141, #157, #158, #159, #161,
                 #162
 
