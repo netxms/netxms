@@ -294,6 +294,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "D&ata collection\tShift+F8",  ID_OBJECT_DATACOLLECTION
         MENUITEM "&Last DCI values\tShift+F7",  ID_OBJECT_LASTDCIVALUES
+        MENUITEM "Create DCIs for this interface...", 
+                                                ID_OBJECT_CREATE_IF_DCI
         MENUITEM SEPARATOR
         MENUITEM "Comment&s\tCtrl+C",           ID_OBJECT_COMMENTS
         MENUITEM "&Properties\tAlt+Enter",      ID_OBJECT_PROPERTIES
@@ -437,6 +439,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Last DCI values",            ID_OBJECT_LASTDCIVALUES
+        MENUITEM "Create DCIs for this interface...", 
+                                                ID_OBJECT_CREATE_IF_DCI
         MENUITEM SEPARATOR
         MENUITEM "Comment&s\tCtrl+C",           ID_OBJECT_COMMENTS
         MENUITEM "&Properties",                 ID_OBJECT_PROPERTIES
@@ -681,6 +685,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Last DCI values",            ID_OBJECT_LASTDCIVALUES
+        MENUITEM "Create DCIs for this interface...", 
+                                                ID_OBJECT_CREATE_IF_DCI
         MENUITEM SEPARATOR
         MENUITEM "Comment&s",                   ID_OBJECT_COMMENTS
         MENUITEM "&Properties...",              ID_OBJECT_PROPERTIES
@@ -829,6 +835,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "D&ata collection",            ID_OBJECT_DATACOLLECTION
         MENUITEM "&Last DCI values",            ID_OBJECT_LASTDCIVALUES
+        MENUITEM "Create DCIs for this interface...", 
+                                                ID_OBJECT_CREATE_IF_DCI
         MENUITEM SEPARATOR
         MENUITEM "Comment&s",                   ID_OBJECT_COMMENTS
         MENUITEM "&Properties...",              ID_OBJECT_PROPERTIES
@@ -3122,6 +3130,59 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,294,24,50,14
 END
 
+IDD_CREATE_IF_DCI DIALOG DISCARDABLE  0, 0, 342, 286
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create Interface Data Collection Items"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Inbound traffic (in bytes)",IDC_CHECK_IN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,12,19,91,10
+    CONTROL         "Delta value (average per second)",IDC_CHECK_DELTA_IN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,141,19,121,10
+    EDITTEXT        IDC_EDIT_IN,53,31,209,14,ES_AUTOHSCROLL
+    CONTROL         "Outbound traffic (bytes)",IDC_CHECK_OUT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,12,54,89,10
+    CONTROL         "Delta value (average per second)",IDC_CHECK_DELTA_OUT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,141,54,121,10
+    EDITTEXT        IDC_EDIT_OUT,53,66,209,14,ES_AUTOHSCROLL
+    CONTROL         "Inbound traffic (packets)",IDC_CHECK_INP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,12,89,93,10
+    CONTROL         "Delta value (average per second)",IDC_CHECK_DELTA_INP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,141,89,121,10
+    EDITTEXT        IDC_EDIT_INP,53,101,209,14,ES_AUTOHSCROLL
+    CONTROL         "Outbound traffic (packets)",IDC_CHECK_OUTP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,12,124,98,10
+    CONTROL         "Delta value (average per second)",IDC_CHECK_DELTA_OUTP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,141,124,121,10
+    EDITTEXT        IDC_EDIT_OUTP,53,136,209,14,ES_AUTOHSCROLL
+    CONTROL         "Input errors",IDC_CHECK_ERRORS_IN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,12,159,51,10
+    CONTROL         "Delta value (average per second)",IDC_CHECK_DELTA_INE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,141,159,121,10
+    EDITTEXT        IDC_EDIT_IN_ERRORS,53,170,209,14,ES_AUTOHSCROLL
+    CONTROL         "Output errors",IDC_CHECK_ERRORS_OUT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,12,194,57,10
+    CONTROL         "Delta value (average per second)",IDC_CHECK_DELTA_OUTE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,141,194,121,10
+    EDITTEXT        IDC_EDIT_OUT_ERRORS,53,205,209,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_INTERVAL,13,256,40,14,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    EDITTEXT        IDC_EDIT_RETENTION,138,256,40,14,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    DEFPUSHBUTTON   "OK",IDOK,285,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,285,24,50,14
+    GROUPBOX        "Data Collection Settings",IDC_STATIC,7,7,267,221
+    LTEXT           "Description:",IDC_STATIC,12,34,38,8
+    LTEXT           "Description:",IDC_STATIC,12,69,38,8
+    LTEXT           "Description:",IDC_STATIC,12,104,38,8
+    LTEXT           "Description:",IDC_STATIC,12,139,38,8
+    LTEXT           "Description:",IDC_STATIC,12,173,38,8
+    LTEXT           "Description:",IDC_STATIC,12,208,38,8
+    GROUPBOX        "Data Collection Settings",IDC_STATIC,7,232,267,47
+    LTEXT           "Polling interval (seconds)",IDC_STATIC,13,245,79,8
+    LTEXT           "Retention time (days)",IDC_STATIC,138,245,67,8
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -3876,6 +3937,14 @@ BEGIN
         RIGHTMARGIN, 344
         TOPMARGIN, 7
         BOTTOMMARGIN, 159
+    END
+
+    IDD_CREATE_IF_DCI, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 335
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 279
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -25,6 +25,7 @@ public:
 	virtual ~CDataCollectionEditor();
 
    DWORD MoveItemsToTemplate(DWORD dwTemplate, DWORD dwNumItems, DWORD *pdwItemList);
+	void RefreshItemList(void);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -36,7 +37,6 @@ public:
 // Implementation
 protected:
 	void CopyOrMoveItems(BOOL bMove);
-	void RefreshItemList(void);
 	int m_iSortImageBase;
 	BOOL m_bIsTemplate;
 	void ChangeItemsStatus(int iStatus);
@@ -100,6 +100,7 @@ public:
       dwIndex = NXCItemIndex(m_pItemList, dwItemId);
       return (dwIndex != INVALID_INDEX) ? &m_pItemList->pItems[dwIndex] : NULL;
    }
+	NXC_DCI_LIST *GetDCIList(void) { return m_pItemList; }
 };
 
 /////////////////////////////////////////////////////////////////////////////

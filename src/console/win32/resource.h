@@ -241,6 +241,7 @@
 #define IDI_TOPOLOGY                    366
 #define IDI_EMPTY                       367
 #define IDD_SET_CHILD_MGMT_STATUS       368
+#define IDD_CREATE_IF_DCI               369
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -619,6 +620,24 @@
 #define IDC_STATIC_TIMEOUT              1477
 #define IDC_EDIT_TIMEOUT                1479
 #define IDC_STATIC_EVENT                1480
+#define IDC_CHECK_IN                    1481
+#define IDC_CHECK_OUT                   1482
+#define IDC_CHECK_INP                   1483
+#define IDC_CHECK_OUTP                  1484
+#define IDC_CHECK_ERRORS_IN             1485
+#define IDC_CHECK_ERRORS_OUT            1486
+#define IDC_EDIT_IN                     1487
+#define IDC_EDIT_OUT                    1488
+#define IDC_EDIT_INP                    1489
+#define IDC_EDIT_OUTP                   1490
+#define IDC_EDIT_IN_ERRORS              1491
+#define IDC_EDIT_OUT_ERRORS             1492
+#define IDC_CHECK_DELTA_IN              1493
+#define IDC_CHECK_DELTA_OUT             1496
+#define IDC_CHECK_DELTA_INP             1497
+#define IDC_CHECK_DELTA_OUTP            1498
+#define IDC_CHECK_DELTA_INE             1499
+#define IDC_CHECK_DELTA_OUTE            1500
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -882,6 +901,7 @@
 #define ID_OBJECT_VIEW_HIDEUNMANAGED    33068
 #define ID_OBJECT_SETCHILDMGMT          33069
 #define ID_OBJECT_VIEW_FOLLOWOBJECTUPDATES 33070
+#define ID_OBJECT_CREATE_IF_DCI         33071
 #define ID_ALWAYS_DISABLED              43210
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
@@ -892,9 +912,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        369
-#define _APS_NEXT_COMMAND_VALUE         33071
-#define _APS_NEXT_CONTROL_VALUE         1481
+#define _APS_NEXT_RESOURCE_VALUE        370
+#define _APS_NEXT_COMMAND_VALUE         33072
+#define _APS_NEXT_CONTROL_VALUE         1496
 #define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif

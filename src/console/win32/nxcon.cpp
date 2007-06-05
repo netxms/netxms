@@ -75,6 +75,7 @@
 #include "FatalErrorDlg.h"
 #include "GraphManagerDlg.h"
 #include "CertManager.h"
+#include "CreateIfDCIDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -4008,4 +4009,275 @@ void CConsoleApp::OnToolsGraphsManage()
 	CGraphManagerDlg dlg;
 
 	dlg.DoModal();
+}
+
+
+//
+// Interface DCI types
+//
+
+#define IFDCI_IN_BYTES     0
+#define IFDCI_OUT_BYTES    1
+#define IFDCI_IN_PACKETS   2
+#define IFDCI_OUT_PACKETS  3
+#define IFDCI_IN_ERRORS    4
+#define IFDCI_OUT_ERRORS   5
+
+
+//
+// Create single interface DCI
+//
+
+static DWORD CreateDCI(NXC_OBJECT *pNode, NXC_OBJECT *pInterface, int nType,
+                       NXC_DCI_LIST *pList, LPCTSTR pszText, BOOL bDelta,
+                       int nInterval, int nRetention)
+{
+	DWORD dwResult, dwItemId, dwIndex;
+	NXC_DCI item;
+
+	dwResult = NXCCreateNewDCI(g_hSession, pList, &dwItemId);
+	if (dwResult == RCC_SUCCESS)
+	{
+	   memset(&item, 0, sizeof(NXC_DCI));
+      item.dwId = dwItemId;
+		item.iPollingInterval = nInterval;
+		item.iRetentionTime = nRetention;
+		item.iSource = (pNode->node.dwFlags & NF_IS_NATIVE_AGENT) ? DS_NATIVE_AGENT : DS_SNMP_AGENT;
+		item.iStatus = ITEM_STATUS_ACTIVE;
+		item.iDataType = DCI_DT_UINT;
+		item.iDeltaCalculation = bDelta ? DCM_AVERAGE_PER_SECOND : DCM_ORIGINAL_VALUE;
+		nx_strncpy(item.szDescription, pszText, MAX_DB_STRING);
+		if (item.iSource == DS_NATIVE_AGENT)
+		{
+			switch(nType)
+			{
+				case IFDCI_IN_BYTES:
+					_stprintf(item.szName, _T("Net.Interface.BytesIn(%d)"), pInterface->iface.dwIfIndex);
+					break;
+				case IFDCI_OUT_BYTES:
+					_stprintf(item.szName, _T("Net.Interface.BytesOut(%d)"), pInterface->iface.dwIfIndex);
+					break;
+				case IFDCI_IN_PACKETS:
+					_stprintf(item.szName, _T("Net.Interface.PacketsIn(%d)"), pInterface->iface.dwIfIndex);
+					break;
+				case IFDCI_OUT_PACKETS:
+					_stprintf(item.szName, _T("Net.Interface.PacketsOut(%d)"), pInterface->iface.dwIfIndex);
+					break;
+				case IFDCI_IN_ERRORS:
+					_stprintf(item.szName, _T("Net.Interface.InErrors(%d)"), pInterface->iface.dwIfIndex);
+					break;
+				case IFDCI_OUT_ERRORS:
+					_stprintf(item.szName, _T("Net.Interface.OutErrors(%d)"), pInterface->iface.dwIfIndex);
+					break;
+			}
+		}
+		else	// SNMP
+		{
+			switch(nType)
+			{
+				case IFDCI_IN_BYTES:
+					_stprintf(item.szName, _T(".1.3.6.1.2.1.2.2.1.10.%d"), pInterface->iface.dwIfIndex);
+					break;
+				case IFDCI_OUT_BYTES:
+					_stprintf(item.szName, _T(".1.3.6.1.2.1.2.2.1.16.%d"), pInterface->iface.dwIfIndex);
+					break;
+				case IFDCI_IN_PACKETS:
+					_stprintf(item.szName, _T(".1.3.6.1.2.1.2.2.1.11.%d"), pInterface->iface.dwIfIndex);
+					break;
+				case IFDCI_OUT_PACKETS:
+					_stprintf(item.szName, _T(".1.3.6.1.2.1.2.2.1.17.%d"), pInterface->iface.dwIfIndex);
+					break;
+				case IFDCI_IN_ERRORS:
+					_stprintf(item.szName, _T(".1.3.6.1.2.1.2.2.1.14.%d"), pInterface->iface.dwIfIndex);
+					break;
+				case IFDCI_OUT_ERRORS:
+					_stprintf(item.szName, _T(".1.3.6.1.2.1.2.2.1.20.%d"), pInterface->iface.dwIfIndex);
+					break;
+			}
+		}
+
+      dwIndex = NXCItemIndex(pList, dwItemId);
+      if (dwIndex != INVALID_INDEX)
+      {
+			dwResult = NXCUpdateDCI(g_hSession, pNode->dwId, &item);
+         if (dwResult == RCC_SUCCESS)
+         {
+            memcpy(&pList->pItems[dwIndex], &item, sizeof(NXC_DCI));
+         }
+		}
+		else
+		{
+			dwResult = RCC_INTERNAL_ERROR;
+		}
+	}
+	return dwResult;
+}
+
+
+//
+// Worker function for interface DCIs creation
+//
+
+static DWORD CreateInterfaceDCI(NXC_OBJECT *pNode, NXC_OBJECT *pInterface, CCreateIfDCIDlg *pDlg)
+{
+   CDataCollectionEditor *pWnd;
+	NXC_DCI_LIST *pList;
+	DWORD dwResult;
+
+	// Check if DC editor for given node already open. If yes, we already
+	// have the lock and don't need to call NXCOpenNodeDCIList
+	pWnd = (CDataCollectionEditor *)theApp.FindObjectView(OV_DC_EDITOR, pNode->dwId);
+	if (pWnd != NULL)
+	{
+		pList = pWnd->GetDCIList();
+	}
+	else
+	{
+		dwResult = NXCOpenNodeDCIList(g_hSession, pNode->dwId, &pList);
+		if (dwResult != RCC_SUCCESS)
+			return dwResult;	// Unable to obtain lock on DCI list
+	}
+
+	if (pDlg->m_bInBytes)
+	{
+		dwResult = CreateDCI(pNode, pInterface, IFDCI_IN_BYTES, pList, pDlg->m_strInBytes,
+		                     pDlg->m_bDeltaInBytes, pDlg->m_dwInterval, pDlg->m_dwRetention);
+		if (dwResult != RCC_SUCCESS)
+			goto cleanup;
+	}
+
+	if (pDlg->m_bInErrors)
+	{
+		dwResult = CreateDCI(pNode, pInterface, IFDCI_IN_ERRORS, pList, pDlg->m_strInErrors,
+		                     pDlg->m_bDeltaInErrors, pDlg->m_dwInterval, pDlg->m_dwRetention);
+		if (dwResult != RCC_SUCCESS)
+			goto cleanup;
+	}
+
+	if (pDlg->m_bInPackets)
+	{
+		dwResult = CreateDCI(pNode, pInterface, IFDCI_IN_PACKETS, pList, pDlg->m_strInPackets,
+		                     pDlg->m_bDeltaInPackets, pDlg->m_dwInterval, pDlg->m_dwRetention);
+		if (dwResult != RCC_SUCCESS)
+			goto cleanup;
+	}
+
+	if (pDlg->m_bOutBytes)
+	{
+		dwResult = CreateDCI(pNode, pInterface, IFDCI_OUT_BYTES, pList, pDlg->m_strOutBytes,
+		                     pDlg->m_bDeltaOutBytes, pDlg->m_dwInterval, pDlg->m_dwRetention);
+		if (dwResult != RCC_SUCCESS)
+			goto cleanup;
+	}
+
+	if (pDlg->m_bOutErrors)
+	{
+		dwResult = CreateDCI(pNode, pInterface, IFDCI_OUT_ERRORS, pList, pDlg->m_strOutErrors,
+		                     pDlg->m_bDeltaOutErrors, pDlg->m_dwInterval, pDlg->m_dwRetention);
+		if (dwResult != RCC_SUCCESS)
+			goto cleanup;
+	}
+
+	if (pDlg->m_bOutPackets)
+	{
+		dwResult = CreateDCI(pNode, pInterface, IFDCI_OUT_PACKETS, pList, pDlg->m_strOutPackets,
+		                     pDlg->m_bDeltaOutPackets, pDlg->m_dwInterval, pDlg->m_dwRetention);
+		if (dwResult != RCC_SUCCESS)
+			goto cleanup;
+	}
+
+cleanup:
+	if (pWnd != NULL)
+	{
+		pWnd->RefreshItemList();
+	}
+	else
+	{
+		dwResult = NXCCloseNodeDCIList(g_hSession, pList);
+	}
+
+	return dwResult;
+}
+
+
+//
+// Create DCIs for given interface
+//
+
+void CConsoleApp::CreateIfDCI(NXC_OBJECT *pObject)
+{
+	CCreateIfDCIDlg dlg;
+	NXC_OBJECT *pNode;
+	DWORD dwResult;
+
+	dlg.m_bDeltaInBytes = GetProfileInt(_T("CreateIfDCIDlg"), _T("DeltaInBytes"), TRUE);
+	dlg.m_bDeltaInErrors = GetProfileInt(_T("CreateIfDCIDlg"), _T("DeltaInErrors"), TRUE);
+	dlg.m_bDeltaInPackets = GetProfileInt(_T("CreateIfDCIDlg"), _T("DeltaInPackets"), TRUE);
+	dlg.m_bDeltaOutBytes = GetProfileInt(_T("CreateIfDCIDlg"), _T("DeltaOutBytes"), TRUE);
+	dlg.m_bDeltaOutErrors = GetProfileInt(_T("CreateIfDCIDlg"), _T("DeltaOutErrors"), TRUE);
+	dlg.m_bDeltaOutPackets = GetProfileInt(_T("CreateIfDCIDlg"), _T("DeltaOutPackets"), TRUE);
+	dlg.m_bInBytes = GetProfileInt(_T("CreateIfDCIDlg"), _T("InBytes"), TRUE);
+	dlg.m_bInErrors = GetProfileInt(_T("CreateIfDCIDlg"), _T("InErrors"), FALSE);
+	dlg.m_bInPackets = GetProfileInt(_T("CreateIfDCIDlg"), _T("InPackets"), FALSE);
+	dlg.m_bOutBytes = GetProfileInt(_T("CreateIfDCIDlg"), _T("OutBytes"), TRUE);
+	dlg.m_bOutErrors = GetProfileInt(_T("CreateIfDCIDlg"), _T("OutErrors"), FALSE);
+	dlg.m_bOutPackets = GetProfileInt(_T("CreateIfDCIDlg"), _T("OutPackets"), FALSE);
+	dlg.m_dwInterval = GetProfileInt(_T("CreateIfDCIDlg"), _T("Interval"), 60);
+	dlg.m_dwRetention = GetProfileInt(_T("CreateIfDCIDlg"), _T("Retention"), 30);
+	dlg.m_strInBytes = GetProfileString(_T("CreateIfDCIDlg"), _T("InBytesText"), _T("Inbound traffic on {interface} (bytes/sec)"));
+	dlg.m_strInErrors = GetProfileString(_T("CreateIfDCIDlg"), _T("InErrorsText"), _T("Inbound error rate on {interface} (errors/sec)"));
+	dlg.m_strInPackets = GetProfileString(_T("CreateIfDCIDlg"), _T("InPacketsText"), _T("Inbound traffic on {interface} (packets/sec)"));
+	dlg.m_strOutBytes = GetProfileString(_T("CreateIfDCIDlg"), _T("OutBytesText"), _T("Outbound traffic on {interface} (bytes/sec)"));
+	dlg.m_strOutErrors = GetProfileString(_T("CreateIfDCIDlg"), _T("OutErrorsText"), _T("Outbound error rate on {interface} (errors/sec)"));
+	dlg.m_strOutPackets = GetProfileString(_T("CreateIfDCIDlg"), _T("OutPacketsText"), _T("Outbound traffic on {interface} (packets/sec)"));
+
+	dlg.m_strInBytes.Replace(_T("{interface}"), pObject->szName);
+	dlg.m_strInErrors.Replace(_T("{interface}"), pObject->szName);
+	dlg.m_strInPackets.Replace(_T("{interface}"), pObject->szName);
+	dlg.m_strOutBytes.Replace(_T("{interface}"), pObject->szName);
+	dlg.m_strOutErrors.Replace(_T("{interface}"), pObject->szName);
+	dlg.m_strOutPackets.Replace(_T("{interface}"), pObject->szName);
+
+	if (dlg.DoModal() == IDOK)
+	{
+		WriteProfileInt(_T("CreateIfDCIDlg"), _T("DeltaInBytes"), dlg.m_bDeltaInBytes);
+		WriteProfileInt(_T("CreateIfDCIDlg"), _T("DeltaInErrors"), dlg.m_bDeltaInErrors);
+		WriteProfileInt(_T("CreateIfDCIDlg"), _T("DeltaInPackets"), dlg.m_bDeltaInPackets);
+		WriteProfileInt(_T("CreateIfDCIDlg"), _T("DeltaOutBytes"), dlg.m_bDeltaOutBytes);
+		WriteProfileInt(_T("CreateIfDCIDlg"), _T("DeltaOutErrors"), dlg.m_bDeltaOutErrors);
+		WriteProfileInt(_T("CreateIfDCIDlg"), _T("DeltaOutPackets"), dlg.m_bDeltaOutPackets);
+		WriteProfileInt(_T("CreateIfDCIDlg"), _T("InBytes"), dlg.m_bInBytes);
+		WriteProfileInt(_T("CreateIfDCIDlg"), _T("InErrors"), dlg.m_bInErrors);
+		WriteProfileInt(_T("CreateIfDCIDlg"), _T("InPackets"), dlg.m_bInPackets);
+		WriteProfileInt(_T("CreateIfDCIDlg"), _T("OutBytes"), dlg.m_bOutBytes);
+		WriteProfileInt(_T("CreateIfDCIDlg"), _T("OutErrors"), dlg.m_bOutErrors);
+		WriteProfileInt(_T("CreateIfDCIDlg"), _T("OutPackets"), dlg.m_bOutPackets);
+		WriteProfileInt(_T("CreateIfDCIDlg"), _T("Interval"), dlg.m_dwInterval);
+		WriteProfileInt(_T("CreateIfDCIDlg"), _T("Retention"), dlg.m_dwRetention);
+
+		if (pObject->dwNumParents > 0)
+		{
+			pNode = NXCFindObjectById(g_hSession, pObject->pdwParentList[0]);
+			if (pNode != NULL)
+			{
+				dwResult = DoRequestArg3(CreateInterfaceDCI, pNode, pObject, &dlg, _T("Creating data collection items..."));
+				if (dwResult == RCC_SUCCESS)
+				{
+					m_pMainWnd->MessageBox(_T("Interface DCIs successfully created"), _T("Success"), MB_OK | MB_ICONINFORMATION);
+				}
+				else
+				{
+					ErrorBox(dwResult, _T("Cannot add interface DCIs: %s"));
+				}
+			}
+			else
+			{
+				m_pMainWnd->MessageBox(_T("Cannot add interface DCIs: parent node object inaccessible"), _T("Error"), MB_OK | MB_ICONSTOP);
+			}
+		}
+		else
+		{
+			m_pMainWnd->MessageBox(_T("Internal error"), _T("Error"), MB_OK | MB_ICONSTOP);
+		}
+	}
 }

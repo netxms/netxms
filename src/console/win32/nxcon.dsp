@@ -288,6 +288,10 @@ SOURCE=.\CreateContainerDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\CreateIfDCIDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\CreateMPDlg.cpp
 # End Source File
 # Begin Source File
@@ -898,6 +902,10 @@ SOURCE=.\CreateCondDlg.h
 # Begin Source File
 
 SOURCE=.\CreateContainerDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\CreateIfDCIDlg.h
 # End Source File
 # Begin Source File
 

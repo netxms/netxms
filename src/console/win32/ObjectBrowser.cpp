@@ -110,6 +110,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_SETCHILDMGMT, OnUpdateObjectSetchildmgmt)
 	ON_COMMAND(ID_OBJECT_VIEW_FOLLOWOBJECTUPDATES, OnObjectViewFollowobjectupdates)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_VIEW_FOLLOWOBJECTUPDATES, OnUpdateObjectViewFollowobjectupdates)
+	ON_COMMAND(ID_OBJECT_CREATE_IF_DCI, OnObjectCreateIfDci)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_CREATE_IF_DCI, OnUpdateObjectCreateIfDci)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, ID_TREE_CTRL, OnTreeViewSelChange)
    ON_NOTIFY(TVN_GETDISPINFO, ID_TREE_CTRL, OnTreeViewGetDispInfo)
@@ -1293,6 +1295,30 @@ void CObjectBrowser::OnObjectUnmanage()
 void CObjectBrowser::OnUpdateObjectUnmanage(CCmdUI* pCmdUI) 
 {
    pCmdUI->Enable(m_pCurrentObject != NULL);
+}
+
+
+//
+// Handler for "Create DCIs for this interface" menu
+//
+
+void CObjectBrowser::OnObjectCreateIfDci() 
+{
+	if (m_pCurrentObject != NULL)
+		if (m_pCurrentObject->iClass == OBJECT_INTERFACE)
+			theApp.CreateIfDCI(m_pCurrentObject);
+}
+
+void CObjectBrowser::OnUpdateObjectCreateIfDci(CCmdUI* pCmdUI) 
+{
+   if (m_pCurrentObject == NULL)
+   {
+      pCmdUI->Enable(FALSE);
+   }
+   else
+   {
+      pCmdUI->Enable(m_pCurrentObject->iClass == OBJECT_INTERFACE);
+   }
 }
 
 

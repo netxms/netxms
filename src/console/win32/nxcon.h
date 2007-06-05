@@ -175,7 +175,6 @@ protected:
 	void CreateObject(NXC_OBJECT_CREATE_INFO *pInfo);
 	HMENU LoadAppMenu(HMENU hViewMenu);
 	BOOL SetupWorkDir(void);
-	CMDIChildWnd *FindObjectView(DWORD dwClass, DWORD dwId);
 	CMenu m_ctxMenu;
 	DWORD m_dwClientState;
 
@@ -230,6 +229,7 @@ protected:
 	HACCEL m_hCertManagerAccel;   // Accelerator for certificate manager
 	
 public:
+	CMDIChildWnd *FindObjectView(DWORD dwClass, DWORD dwId);
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
 	void OnViewDestroy(DWORD dwView, CMDIChildWnd *pWnd, DWORD dwArg = 0);
 	void OnViewCreate(DWORD dwView, CMDIChildWnd *pWnd, DWORD dwArg = 0);
@@ -278,6 +278,7 @@ private:
    OBJECT_VIEW m_openObjectViews[MAX_OBJECT_VIEWS];
 
 public:
+	void CreateIfDCI(NXC_OBJECT *pObject);
 	DWORD m_dwMainThreadId;
 	void CreateCluster(DWORD dwParent);
 	HGLOBAL GetProfileGMem(TCHAR *pszSection, TCHAR *pszKey);

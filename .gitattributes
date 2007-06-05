@@ -698,6 +698,8 @@ src/console/win32/CreateCondDlg.cpp -text
 src/console/win32/CreateCondDlg.h -text
 src/console/win32/CreateContainerDlg.cpp -text
 src/console/win32/CreateContainerDlg.h -text
+src/console/win32/CreateIfDCIDlg.cpp -text
+src/console/win32/CreateIfDCIDlg.h -text
 src/console/win32/CreateMPDlg.cpp -text
 src/console/win32/CreateMPDlg.h -text
 src/console/win32/CreateNetSrvDlg.cpp -text
