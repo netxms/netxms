@@ -1,4 +1,4 @@
-/* $Id: smgr.cpp,v 1.1 2007-05-07 11:35:42 victor Exp $ */
+/* $Id: smgr.cpp,v 1.2 2007-06-06 22:40:49 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -39,6 +39,28 @@ static ClientSession *m_sessionList[MAX_SESSIONS];
 
 THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
 {
+	int i;
+	time_t now;
+
+	DebugPrintf(INVALID_INDEX, _T("Session watchdog thread started"));
+   while(!(g_dwFlags & AF_SHUTDOWN))
+	{
+		ThreadSleep(5);
+		MutexLock(m_mutexSessionAccess, INFINITE);
+		now = time(NULL);
+		for(i = 0; i < MAX_SESSIONS; i++)
+			if (m_sessionList[i] != NULL)
+			{
+				if (m_sessionList[i]->GetLastAccessTime() + (time_t)g_dwSessionTimeout < now)
+				{
+					DebugPrintf(i, _T("Session terminated by watchdog"));
+					delete m_sessionList[i];
+					m_sessionList[i] = NULL;
+				}
+			}
+		MutexUnlock(m_mutexSessionAccess);
+	}
+	DebugPrintf(INVALID_INDEX, _T("Session watchdog thread terminated"));
 	return THREAD_OK;
 }
 
@@ -184,6 +206,7 @@ BOOL SessionRequestHandler(HttpRequest &request, HttpResponse &response)
 					pSession = FindSessionBySID(sid);
 					if (pSession != NULL)
 					{
+						pSession->SetLastAccessTime();
 						if (!pSession->ProcessRequest(request, response))
 						{
 							DeleteSession(pSession);

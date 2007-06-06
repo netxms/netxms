@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.13 2007-06-02 12:36:10 victor Exp $ */
+/* $Id: session.cpp,v 1.14 2007-06-06 22:40:49 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -69,6 +69,7 @@ ClientSession::ClientSession()
 	m_pValueList = NULL;
 	m_nLastValuesSortMode = 1;
 	m_nLastValuesSortDir = 1;
+	m_tmLastAccess = time(NULL);
 }
 
 

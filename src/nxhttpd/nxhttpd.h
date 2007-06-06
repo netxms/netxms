@@ -211,6 +211,7 @@ protected:
 	TCHAR m_sid[MAX_SID_LEN];
 	DWORD m_dwIndex;
 	NXC_SESSION m_hSession;
+	time_t m_tmLastAccess;
 	int m_nCurrObjectView;
 
 	DWORD m_dwNumAlarms;
@@ -255,6 +256,8 @@ public:
 
 	BOOL IsMySID(TCHAR *sid) { return !_tcsicmp(sid, m_sid); }
 	DWORD GetIndex(void) { return m_dwIndex; }
+	time_t GetLastAccessTime(void) { return m_tmLastAccess; }
+	void SetLastAccessTime(void) { m_tmLastAccess = time(NULL); }
 
 	DWORD DoLogin(TCHAR *pszLogin, TCHAR *pszPasswd);
 	BOOL ProcessRequest(HttpRequest &request, HttpResponse &response);
@@ -356,6 +359,7 @@ void RemoveEventSource(void);
 //
 
 extern DWORD g_dwFlags;
+extern DWORD g_dwSessionTimeout;
 extern TCHAR g_szConfigFile[];
 extern TCHAR g_szLogFile[];
 extern TCHAR g_szMasterServer[];
