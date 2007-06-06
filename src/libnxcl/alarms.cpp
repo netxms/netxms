@@ -63,6 +63,7 @@ void ProcessAlarmUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
    dwCode = pMsg->GetVariableLong(VID_NOTIFICATION_CODE);
    alarm.dwAlarmId = pMsg->GetVariableLong(VID_ALARM_ID);
    AlarmFromMsg(pMsg, &alarm);
+	DebugPrintf(_T("Processing alarm at %p: %d \"%s\""), &alarm, alarm.dwAlarmId, alarm.szMessage);
    pSession->CallEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &alarm);
 }
 

@@ -302,7 +302,7 @@ void CAlarmView::UpdateListItem(int nItem, NXC_ALARM *pAlarm)
    // Set texts
    m_wndListCtrl.SetItemText(nItem, 0, g_szStatusTextSmall[pAlarm->nCurrentSeverity]);
    m_wndListCtrl.SetItemText(nItem, 1, g_szAlarmState[pAlarm->nState]);
-   m_wndListCtrl.SetItemText(nItem, 2, pObject->szName);
+   m_wndListCtrl.SetItemText(nItem, 2, (pObject != NULL) ? pObject->szName : _T("<unknown>"));
    m_wndListCtrl.SetItemText(nItem, 3, pAlarm->szMessage);
 
    _stprintf(szBuffer, _T("%d"), pAlarm->dwRepeatCount);
