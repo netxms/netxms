@@ -1,4 +1,4 @@
-/* $Id: freebsd.cpp,v 1.8 2007-04-18 20:26:29 victor Exp $ */
+/* $Id: freebsd.cpp,v 1.9 2007-06-06 08:46:39 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -33,71 +33,41 @@
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { "Disk.Avail(*)",                H_DiskInfo,        (char *)DISK_AVAIL,
-			DCI_DT_UINT64,	"Available disk space on {instance}" },
-   { "Disk.AvailPerc(*)",            H_DiskInfo,        (char *)DISK_AVAIL_PERC,
-			DCI_DT_FLOAT,	"Percentage of available disk space on {instance}" },
-   { "Disk.Free(*)",                 H_DiskInfo,        (char *)DISK_FREE,
-			DCI_DT_UINT64,	"Free disk space on {instance}" },
-   { "Disk.FreePerc(*)",             H_DiskInfo,        (char *)DISK_FREE_PERC,
-			DCI_DT_FLOAT,	"Percentage of free disk space on {instance}" },
-   { "Disk.Total(*)",                H_DiskInfo,        (char *)DISK_TOTAL,
-			DCI_DT_UINT64,	"Total disk space on {instance}" },
-   { "Disk.Used(*)",                 H_DiskInfo,        (char *)DISK_USED,
-			DCI_DT_UINT64,	"Used disk space on {instance}" },
-   { "Disk.UsedPerc(*)",             H_DiskInfo,        (char *)DISK_USED_PERC,
-			DCI_DT_FLOAT,	"Percentage of used disk space on {instance}" },
+   { "Disk.Avail(*)",                H_DiskInfo,        (char *)DISK_AVAIL,		DCI_DT_UINT64,	DCIDESC_DISK_AVAIL },
+   { "Disk.AvailPerc(*)",            H_DiskInfo,        (char *)DISK_AVAIL_PERC,	DCI_DT_FLOAT,	DCIDESC_DISK_AVAILPERC },
+   { "Disk.Free(*)",                 H_DiskInfo,        (char *)DISK_FREE,		DCI_DT_UINT64,	DCIDESC_DISK_FREE },
+   { "Disk.FreePerc(*)",             H_DiskInfo,        (char *)DISK_FREE_PERC,		DCI_DT_FLOAT,	DCIDESC_DISK_FREEPERC },
+   { "Disk.Total(*)",                H_DiskInfo,        (char *)DISK_TOTAL,		DCI_DT_UINT64,	DCIDESC_DISK_TOTAL },
+   { "Disk.Used(*)",                 H_DiskInfo,        (char *)DISK_USED,		DCI_DT_UINT64,	DCIDESC_DISK_USED },
+   { "Disk.UsedPerc(*)",             H_DiskInfo,        (char *)DISK_USED_PERC,		DCI_DT_FLOAT,	DCIDESC_DISK_USEDPERC },
 
-   { "Net.IP.Forwarding",            H_NetIpForwarding, (char *)4,
-			DCI_DT_INT,		"IP forwarding status" },
-   { "Net.IP6.Forwarding",           H_NetIpForwarding, (char *)6,
-			DCI_DT_INT,		"IPv6 forwarding status" },
-   { "Net.Interface.AdminStatus(*)", H_NetIfAdmStatus,  NULL,
-			DCI_DT_INT,		"Administrative status of interface {instance}" },
-   { "Net.Interface.Link(*)",        H_NetIfLink,       NULL,
-			DCI_DT_INT,		"Physical link status of interface {instance}" },
+   { "Net.IP.Forwarding",            H_NetIpForwarding, (char *)4,			DCI_DT_INT,	DCIDESC_NET_IP_FORWARDING },
+   { "Net.IP6.Forwarding",           H_NetIpForwarding, (char *)6,			DCI_DT_INT,	DCIDESC_NET_IP6_FORWARDING },
+   { "Net.Interface.AdminStatus(*)", H_NetIfAdmStatus,  NULL,				DCI_DT_INT,	DCIDESC_NET_INTERFACE_ADMINSTATUS },
+   { "Net.Interface.Link(*)",        H_NetIfLink,       NULL,				DCI_DT_INT,	DCIDESC_NET_INTERFACE_LINK },
 
-   { "Process.Count(*)",             H_ProcessCount,    (char *)0,
-			DCI_DT_UINT,	"Number of {instance} processes" },
-   { "System.ProcessCount",          H_ProcessCount,    (char *)1,
-			DCI_DT_UINT,	"Total number of processes" },
+   { "Process.Count(*)",             H_ProcessCount,    (char *)0,			DCI_DT_UINT,	DCIDESC_PROCESS_COUNT },
+   { "System.ProcessCount",          H_ProcessCount,    (char *)1,			DCI_DT_UINT,	DCIDESC_SYSTEM_PROCESS_COUNT },
 
-   { "System.CPU.Count",             H_CpuCount,        NULL,
-			DCI_DT_INT,	"Number of CPU in the system" },
+   { "System.CPU.Count",             H_CpuCount,        NULL,				DCI_DT_INT,	DCIDESC_SYSTEM_CPU_COUNT },
 
-   { "System.CPU.LoadAvg",           H_CpuLoad,         NULL,
-			DCI_DT_FLOAT,	"Average CPU load for last minute" },
-   { "System.CPU.LoadAvg5",          H_CpuLoad,         NULL,
-			DCI_DT_FLOAT,	"Average CPU load for last 5 minutes" },
-   { "System.CPU.LoadAvg15",         H_CpuLoad,         NULL,
-			DCI_DT_FLOAT,	"Average CPU load for last 15 minutes" },
-   { "System.Hostname",              H_Hostname,        NULL,
-			DCI_DT_FLOAT,	"Host name" },
-   { "System.Memory.Physical.Free",  H_MemoryInfo,      (char *)PHYSICAL_FREE,
-			DCI_DT_UINT64,	"Free physical memory" },
-   { "System.Memory.Physical.Total", H_MemoryInfo,      (char *)PHYSICAL_TOTAL,
-			DCI_DT_UINT64,	"Total amount of physical memory" },
-   { "System.Memory.Physical.Used",  H_MemoryInfo,      (char *)PHYSICAL_USED,
-			DCI_DT_UINT64,	"Used physical memory" },
-   { "System.Memory.Swap.Free",      H_MemoryInfo,      (char *)SWAP_FREE,
-			DCI_DT_UINT64,	"Free swap space" },
-   { "System.Memory.Swap.Total",     H_MemoryInfo,      (char *)SWAP_TOTAL,
-			DCI_DT_UINT64,	"Total amount of swap space" },
-   { "System.Memory.Swap.Used",      H_MemoryInfo,      (char *)SWAP_USED,
-			DCI_DT_UINT64,	"Used swap space" },
-   { "System.Memory.Virtual.Free",   H_MemoryInfo,      (char *)VIRTUAL_FREE,
-			DCI_DT_UINT64,	"Free virtual memory" },
-   { "System.Memory.Virtual.Total",  H_MemoryInfo,      (char *)VIRTUAL_TOTAL,
-			DCI_DT_UINT64,	"Total amount of virtual memory" },
-   { "System.Memory.Virtual.Used",   H_MemoryInfo,      (char *)VIRTUAL_USED,
-			DCI_DT_UINT64,	"Used virtual memory" },
-   { "System.Uname",                 H_Uname,           NULL,
-			DCI_DT_STRING,	"System uname" },
-   { "System.Uptime",                H_Uptime,          NULL,
-			DCI_DT_UINT,	"System uptime" },
+   { "System.CPU.LoadAvg",           H_CpuLoad,         NULL,				DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG },
+   { "System.CPU.LoadAvg5",          H_CpuLoad,         NULL,				DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG5 },
+   { "System.CPU.LoadAvg15",         H_CpuLoad,         NULL,				DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG15 },
+   { "System.Hostname",              H_Hostname,        NULL,				DCI_DT_FLOAT,	DCIDESC_SYSTEM_HOSTNAME },
+   { "System.Memory.Physical.Free",  H_MemoryInfo,      (char *)PHYSICAL_FREE,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
+   { "System.Memory.Physical.Total", H_MemoryInfo,      (char *)PHYSICAL_TOTAL,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
+   { "System.Memory.Physical.Used",  H_MemoryInfo,      (char *)PHYSICAL_USED,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
+   { "System.Memory.Swap.Free",      H_MemoryInfo,      (char *)SWAP_FREE,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_SWAP_FREE },
+   { "System.Memory.Swap.Total",     H_MemoryInfo,      (char *)SWAP_TOTAL,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_SWAP_TOTAL },
+   { "System.Memory.Swap.Used",      H_MemoryInfo,      (char *)SWAP_USED,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_SWAP_USED },
+   { "System.Memory.Virtual.Free",   H_MemoryInfo,      (char *)VIRTUAL_FREE,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE },
+   { "System.Memory.Virtual.Total",  H_MemoryInfo,      (char *)VIRTUAL_TOTAL,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_TOTAL },
+   { "System.Memory.Virtual.Used",   H_MemoryInfo,      (char *)VIRTUAL_USED,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
+   { "System.Uname",                 H_Uname,           NULL,				DCI_DT_STRING,	DCIDESC_SYSTEM_UNAME },
+   { "System.Uptime",                H_Uptime,          NULL,				DCI_DT_UINT,	DCIDESC_SYSTEM_UPTIME },
 
-   { "Agent.SourcePackageSupport",   H_SourcePkgSupport,NULL,
-			DCI_DT_INT,		""},
+   { "Agent.SourcePackageSupport",   H_SourcePkgSupport,NULL,				DCI_DT_INT,	DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
 };
 
 static NETXMS_SUBAGENT_ENUM m_enums[] =
@@ -134,6 +104,10 @@ DECLARE_SUBAGENT_INIT(FREEBSD)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2007/04/18 20:26:29  victor
+
+FreeBSD agent improved
+
 Revision 1.7  2005/09/15 21:47:02  victor
 Added macro DECLARE_SUBAGENT_INIT to simplify initialization function declaration
 
