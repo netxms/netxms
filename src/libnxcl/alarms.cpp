@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: alarms.cpp
+** File: alarms.cpp
 **
 **/
 
@@ -63,7 +63,6 @@ void ProcessAlarmUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
    dwCode = pMsg->GetVariableLong(VID_NOTIFICATION_CODE);
    alarm.dwAlarmId = pMsg->GetVariableLong(VID_ALARM_ID);
    AlarmFromMsg(pMsg, &alarm);
-	DebugPrintf(_T("Processing alarm at %p: %d \"%s\""), &alarm, alarm.dwAlarmId, alarm.szMessage);
    pSession->CallEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &alarm);
 }
 
