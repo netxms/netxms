@@ -1,4 +1,4 @@
-/* $Id: netware.cpp,v 1.16 2007-04-06 10:44:12 victor Exp $ */
+/* $Id: netware.cpp,v 1.17 2007-06-06 22:15:43 victor Exp $ */
 /*
 ** NetXMS subagent for Novell NetWare
 ** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -273,10 +273,27 @@ static THREAD_RESULT THREAD_CALL CollectorThread(void *pArg)
 
 
 //
+// Called by master agent at startup
+//
+
+static BOOL SubAgentInit(TCHAR *pszConfigFile)
+{
+   // Setup internal variables
+   memset(m_iCpuUtilHistory, 0, sizeof(int) * CPU_HISTORY_SIZE * MAX_CPU);
+
+   // Start collector thread
+   m_hCondShutdown = ConditionCreate(TRUE);
+   m_hCollectorThread = ThreadCreateEx(CollectorThread, 0, NULL);
+
+   return TRUE;
+}
+
+
+//
 // Called by master agent at unload
 //
 
-static void UnloadHandler(void)
+static void SubAgentShutdown(void)
 {
    if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
       ConditionSet(m_hCondShutdown);
@@ -306,7 +323,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "System.CPU.Usage(*)", H_CpuUsage, (char *)60, DCI_DT_FLOAT, "Average CPU {instance} utilization for last minute" },
    { "System.CPU.Usage5(*)", H_CpuUsage, (char *)300, DCI_DT_FLOAT, "Average CPU {instance} utilization for last 5 minutes" },
    { "System.CPU.Usage15(*)", H_CpuUsage, (char *)900, DCI_DT_FLOAT, "Average CPU {instance} utilization for last 15 minutes" },
-   { "System.Hostname", H_HostName, NULL, DCI_DT_STRING, "Host name" },
+   { "System.Hostname", H_HostName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
    { "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, "Available physical memory" },
    { "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, "Total amount of physical memory" },
    { "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, "Used physical memory" },
@@ -327,7 +344,7 @@ static NETXMS_SUBAGENT_INFO m_info =
    NETXMS_SUBAGENT_INFO_MAGIC,
    "NETWARE", 
    NETXMS_VERSION_STRING,
-   UnloadHandler, NULL,
+   SubAgentInit, SubAgentShutdown, NULL,
    sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
    m_parameters,
    sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
@@ -341,19 +358,9 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-extern "C" BOOL NxSubAgentInit_NETWARE(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
+extern "C" BOOL NxSubAgentInit_NETWARE(NETXMS_SUBAGENT_INFO **ppInfo)
 {
-   char szServerName[MAX_PATH];
-
    *ppInfo = &m_info;
-
-   // Setup internal variables
-   memset(m_iCpuUtilHistory, 0, sizeof(int) * CPU_HISTORY_SIZE * MAX_CPU);
-
-   // Start collector thread
-   m_hCondShutdown = ConditionCreate(TRUE);
-   m_hCollectorThread = ThreadCreateEx(CollectorThread, 0, NULL);
-
    return TRUE;
 }
 
