@@ -1,4 +1,4 @@
-/* $Id: freebsd.cpp,v 1.9 2007-06-06 08:46:39 alk Exp $ */
+/* $Id: freebsd.cpp,v 1.10 2007-06-07 23:46:33 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -47,7 +47,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "Net.Interface.Link(*)",        H_NetIfLink,       NULL,				DCI_DT_INT,	DCIDESC_NET_INTERFACE_LINK },
 
    { "Process.Count(*)",             H_ProcessCount,    (char *)0,			DCI_DT_UINT,	DCIDESC_PROCESS_COUNT },
-   { "System.ProcessCount",          H_ProcessCount,    (char *)1,			DCI_DT_UINT,	DCIDESC_SYSTEM_PROCESS_COUNT },
+   { "System.ProcessCount",          H_ProcessCount,    (char *)1,			DCI_DT_UINT,	DCIDESC_SYSTEM_PROCESSCOUNT },
 
    { "System.CPU.Count",             H_CpuCount,        NULL,				DCI_DT_INT,	DCIDESC_SYSTEM_CPU_COUNT },
 
@@ -83,7 +83,9 @@ static NETXMS_SUBAGENT_INFO m_info =
    NETXMS_SUBAGENT_INFO_MAGIC,
 	"FreeBSD",
 	NETXMS_VERSION_STRING,
-	NULL, NULL,
+	NULL, // init handler
+	NULL, // shutdown handler
+	NULL, // command handler
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
@@ -94,7 +96,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_INIT(FREEBSD)
+DECLARE_SUBAGENT_ENTRY_POINT(FREEBSD)
 {
    *ppInfo = &m_info;
    return TRUE;
@@ -104,6 +106,9 @@ DECLARE_SUBAGENT_INIT(FREEBSD)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2007/06/06 08:46:39  alk
+DCI descriptions replaced with defines
+
 Revision 1.8  2007/04/18 20:26:29  victor
 
 FreeBSD agent improved
