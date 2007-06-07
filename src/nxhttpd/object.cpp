@@ -81,6 +81,9 @@ static int CompareObjects(const void *p1, const void *p2)
 	NXC_OBJECT *obj2 = *((NXC_OBJECT **)p2);
 	int notContainer1, notContainer2, nResult;
 
+	if ((obj1->dwId < 10) || (obj2->dwId < 10))
+		return COMPARE_NUMBERS(obj1->dwId, obj2->dwId);
+
 	notContainer1 = ((obj1->iClass == OBJECT_CONTAINER) || 
 		              (obj1->iClass == OBJECT_TEMPLATEGROUP)) ? 0 : 1;
 	notContainer2 = ((obj2->iClass == OBJECT_CONTAINER) || 
