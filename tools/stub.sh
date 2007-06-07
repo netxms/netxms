@@ -43,6 +43,9 @@ tail="tail -n"
 case `uname -s` in
 	SunOS)
 		tail="tail"
+		mktemp() {
+			_mktemp $*
+		}
 		;;
 	HP-UX)
 		alias mktemp=_mktemp
