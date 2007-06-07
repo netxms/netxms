@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.14 2007-06-06 22:40:49 victor Exp $ */
+/* $Id: session.cpp,v 1.15 2007-06-07 20:45:22 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -279,7 +279,8 @@ void ClientSession::ShowForm(HttpResponse &response, int nForm)
 	{
 		_T("NetXMS :: Overview"),
 		_T("NetXMS :: Object Browser"),
-		_T("NetXMS :: Alarms")
+		_T("NetXMS :: Alarms"),
+		_T("NetXMS :: Tools")
 	};
 
 	response.BeginPage(formName[nForm]);
