@@ -8,4 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = nwmkimp.pl mc.pl patch_libtool.pl create_ssa_list.sh
+EXTRA_DIST = nwmkimp.pl mc.pl patch_libtool.pl create_ssa_list.sh create_apkg.sh

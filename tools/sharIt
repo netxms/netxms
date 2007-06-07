@@ -36,7 +36,7 @@ if [ $? != 0 ]; then
 	fi
 fi
 
-skip=`echo \`wc -l stub.sh|cut -b1-8\``
+skip=`echo \`wc -l stub.sh|cut -d " " -f 1\``
 
 if [ "x$BASH" == "x" ]; then
 	skip1=`let $skip+1`
