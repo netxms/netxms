@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.8 2007-04-25 07:44:09 victor Exp $ */
+/* $Id: main.cpp,v 1.9 2007-06-07 22:07:11 alk Exp $ */
 
 /*
 ** NetXMS subagent for HP-UX
@@ -63,97 +63,97 @@ static void SubAgentShutdown(void)
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ "Agent.SourcePackageSupport",	H_SourcePkg,		NULL,
-		DCI_DT_INT, "" },
+		DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
 
 	{ "Disk.Avail(*)",                H_DiskInfo,        (char *)DISK_AVAIL,
-		DCI_DT_UINT64,	"Available disk space on {instance}" },
+		DCI_DT_UINT64,	DCIDESC_DISK_AVAIL },
 	{ "Disk.AvailPerc(*)",            H_DiskInfo,        (char *)DISK_AVAIL_PERC,
-		DCI_DT_FLOAT,	"Percentage of available disk space on {instance}" },
+		DCI_DT_FLOAT,	DCIDESC_DISK_AVAILPERC },
 	{ "Disk.Free(*)",                 H_DiskInfo,        (char *)DISK_FREE,
-		DCI_DT_UINT64,	"Free disk space on {instance}" },
+		DCI_DT_UINT64,	DCIDESC_DISK_FREE },
 	{ "Disk.FreePerc(*)",             H_DiskInfo,        (char *)DISK_FREE_PERC,
-		DCI_DT_FLOAT,	"Percentage of free disk space on {instance}" },
+		DCI_DT_FLOAT,	DCIDESC_DISK_FREEPERC },
 	{ "Disk.Total(*)",                H_DiskInfo,        (char *)DISK_TOTAL,
-		DCI_DT_UINT64,	"Total disk space on {instance}" },
+		DCI_DT_UINT64,	DCIDESC_DISK_TOTAL },
 	{ "Disk.Used(*)",                 H_DiskInfo,        (char *)DISK_USED,
-		DCI_DT_UINT64,	"Used disk space on {instance}" },
+		DCI_DT_UINT64,	DCIDESC_DISK_USED },
 	{ "Disk.UsedPerc(*)",             H_DiskInfo,        (char *)DISK_USED_PERC,
-		DCI_DT_FLOAT,	"Percentage of used disk space on {instance}" },
+		DCI_DT_FLOAT,	DCIDESC_DISK_USEDPERC },
 
 	{ "Net.Interface.AdminStatus(*)", H_NetIfInfoFromIOCTL, (char *)IF_INFO_ADMIN_STATUS,
-		DCI_DT_INT,		"Administrative status of interface {instance}" },
+		DCI_DT_INT,		DCIDESC_NET_INTERFACE_ADMINSTATUS },
 	{ "Net.Interface.BytesIn(*)",     H_NetIfInfoFromProc, (char *)IF_INFO_BYTES_IN,
-		DCI_DT_UINT,	"Number of input bytes on interface {instance}" },
+		DCI_DT_UINT,	DCIDESC_NET_INTERFACE_BYTESIN },
 	{ "Net.Interface.BytesOut(*)",    H_NetIfInfoFromProc, (char *)IF_INFO_BYTES_OUT,
-		DCI_DT_UINT,	"Number of output bytes on interface {instance}" },
+		DCI_DT_UINT,	DCIDESC_NET_INTERFACE_BYTESOUT },
 	{ "Net.Interface.Description(*)", H_NetIfInfoFromIOCTL, (char *)IF_INFO_DESCRIPTION,
-		DCI_DT_STRING, "Description of interface {instance}" },
+		DCI_DT_STRING, DCIDESC_NET_INTERFACE_DESCRIPTION },
 	{ "Net.Interface.InErrors(*)",    H_NetIfInfoFromProc, (char *)IF_INFO_IN_ERRORS,
-		DCI_DT_UINT,	"Number of input errors on interface {instance}" },
+		DCI_DT_UINT,	DCIDESC_NET_INTERFACE_INERRORS },
 	{ "Net.Interface.Link(*)",        H_NetIfInfoFromIOCTL, (char *)IF_INFO_OPER_STATUS,
-		DCI_DT_INT,		"Operational status of interface {instance}" },
+		DCI_DT_INT,		DCIDESC_NET_INTERFACE_LINK },
 	{ "Net.Interface.OutErrors(*)",   H_NetIfInfoFromProc, (char *)IF_INFO_OUT_ERRORS,
-		DCI_DT_UINT,	"Number of output errors on interface {instance}" },
+		DCI_DT_UINT,	DCIDESC_NET_INTERFACE_OUTERRORS },
 	{ "Net.Interface.PacketsIn(*)",   H_NetIfInfoFromProc, (char *)IF_INFO_PACKETS_IN,
-		DCI_DT_UINT,	"Number of input packets on interface {instance}" },
+		DCI_DT_UINT,	DCIDESC_NET_INTERFACE_PACKETSIN },
 	{ "Net.Interface.PacketsOut(*)",  H_NetIfInfoFromProc, (char *)IF_INFO_PACKETS_OUT,
-		DCI_DT_UINT,	"Number of output packets on interface {instance}" },
+		DCI_DT_UINT,	DCIDESC_NET_INTERFACE_PACKETSOUT },
 	{ "Net.IP.Forwarding",            H_NetIpForwarding, (char *)4,
-		DCI_DT_INT,		"IP forwarding status" },
+		DCI_DT_INT,		DCIDESC_NET_IP_FORWARDING },
 	{ "Net.IP6.Forwarding",           H_NetIpForwarding, (char *)6,
-		DCI_DT_INT,		"IPv6 forwarding status" },
+		DCI_DT_INT,		DCIDESC_NET_IPV6_FORWARDING },
 
 /*	{ "PhysicalDisk.SmartAttr(*)",    H_PhysicalDiskInfo, "A",
-		DCI_DT_STRING,	"" },
+		DCI_DT_STRING,	DCIDESC_PHYSICALDISK_SMARTATTR },
 	{ "PhysicalDisk.SmartStatus(*)",  H_PhysicalDiskInfo, "S",
-		DCI_DT_INT,		"Status of hard disk {instance} reported by SMART" },
+		DCI_DT_INT,		DCIDESC_PHYSICALDISK_SMARTSTATUS },
 	{ "PhysicalDisk.Temperature(*)",  H_PhysicalDiskInfo, "T",
-		DCI_DT_INT,		"Temperature of hard disk {instance}" },*/
+		DCI_DT_INT,		DCIDESC_PHYSICALDISK_TEMPERATURE },*/
 
 	{ "Process.Count(*)",             H_ProcessCount,    NULL,
-		DCI_DT_UINT,	"Number of {instance} processes" },
+		DCI_DT_UINT,	DCIDESC_PROCESS_COUNT },
 	{ "System.ProcessCount",          H_SysProcessCount, NULL,
-		DCI_DT_UINT,	"Total number of processes" },
+		DCI_DT_UINT,	DCIDESC_SYSTEM_PROCESSCOUNT },
 
 	{ "System.CPU.LoadAvg",           H_CpuLoad,         NULL,
-		DCI_DT_FLOAT,	"Average CPU load for last minute" },
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG },
 	{ "System.CPU.LoadAvg5",          H_CpuLoad,         NULL,
-		DCI_DT_FLOAT,	"Average CPU load for last 5 minutes" },
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG5 },
 	{ "System.CPU.LoadAvg15",         H_CpuLoad,         NULL,
-		DCI_DT_FLOAT,	"Average CPU load for last 15 minutes" },
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG15 },
 	{ "System.CPU.Usage",             H_CpuUsage,        (char *)0,
-		DCI_DT_FLOAT,	"Average CPU utilization for last minute" },
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE },
 	{ "System.CPU.Usage5",            H_CpuUsage,        (char *)5,
-		DCI_DT_FLOAT,	"Average CPU utilization for last 5 minutes" },
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5 },
 	{ "System.CPU.Usage15",           H_CpuUsage,        (char *)15,
-		DCI_DT_FLOAT,	"Average CPU utilization for last 15 minutes" },
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15 },
 	{ "System.Hostname",              H_Hostname,        NULL,
-		DCI_DT_STRING,	"Host name" },
+		DCI_DT_STRING,	DCIDESC_SYSTEM_HOSTNAME },
 	{ "System.Memory.Physical.Free",  H_MemoryInfo,      (char *)PHYSICAL_FREE,
-		DCI_DT_UINT64,	"Free physical memory" },
+		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
 	{ "System.Memory.Physical.Total", H_MemoryInfo,      (char *)PHYSICAL_TOTAL,
-		DCI_DT_UINT64,	"Total amount of physical memory" },
+		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
 	{ "System.Memory.Physical.Used",  H_MemoryInfo,      (char *)PHYSICAL_USED,
-		DCI_DT_UINT64,	"Used physical memory" },
+		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
 	{ "System.Memory.Swap.Free",      H_MemoryInfo,      (char *)SWAP_FREE,
-		DCI_DT_UINT64,	"Free swap space" },
+		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_SWAP_FREE },
 	{ "System.Memory.Swap.Total",     H_MemoryInfo,      (char *)SWAP_TOTAL,
-		DCI_DT_UINT64,	"Total amount of swap space" },
+		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_SWAP_TOTAL },
 	{ "System.Memory.Swap.Used",      H_MemoryInfo,      (char *)SWAP_USED,
-		DCI_DT_UINT64,	"Used swap space" },
+		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_SWAP_USED },
 	{ "System.Memory.Virtual.Free",   H_MemoryInfo,      (char *)VIRTUAL_FREE,
-		DCI_DT_UINT64,	"Free virtual memory" },
+		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE },
 	{ "System.Memory.Virtual.Total",  H_MemoryInfo,      (char *)VIRTUAL_TOTAL,
-		DCI_DT_UINT64,	"Total amount of virtual memory" },
+		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_TOTAL },
 	{ "System.Memory.Virtual.Used",   H_MemoryInfo,      (char *)VIRTUAL_USED,
-		DCI_DT_UINT64,	"Used virtual memory" },
+		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
 	{ "System.Uname",                 H_Uname,           NULL,
-		DCI_DT_STRING,	"System uname" },
+		DCI_DT_STRING,	DCIDESC_SYSTEM_UNAME },
 	{ "System.Uptime",                H_Uptime,          NULL,
-		DCI_DT_UINT,	"System uptime" },
+		DCI_DT_UINT,	DCIDESC_SYSTEM_UPTIME },
 
 	{ "System.ConnectedUsers",        H_ConnectedUsers,  NULL,
-		DCI_DT_UINT,	"Number of logged in users" },
+		DCI_DT_UINT,	DCIDESC_SYSTEM_CONNECTEDUSERS },
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
@@ -204,6 +204,10 @@ extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2007/04/25 07:44:09  victor
+- Linux and HPUX subagents changed to new model
+- ODBCQUERY subagent code cleaned
+
 Revision 1.7  2006/10/26 17:46:22  victor
 System.CPU.Usage almost complete
 

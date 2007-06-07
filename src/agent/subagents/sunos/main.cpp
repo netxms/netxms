@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.19 2007-01-15 00:27:46 alk Exp $ */
+/* $Id: main.cpp,v 1.20 2007-06-07 22:07:11 alk Exp $ */
 
 /*
  ** NetXMS subagent for SunOS/Solaris
@@ -91,46 +91,47 @@ static void UnloadHandler(void)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ "Agent.SourcePackageSupport", H_SourcePkg, NULL, DCI_DT_INT, "" },
-	{ "Disk.Free(*)", H_DiskInfo, (char *)DISK_FREE, DCI_DT_UINT64, "Free disk space on *" },
-	{ "Disk.Total(*)", H_DiskInfo, (char *)DISK_TOTAL, DCI_DT_UINT64, "Total disk space on *" },
-	{ "Disk.Used(*)", H_DiskInfo, (char *)DISK_USED, DCI_DT_UINT64, "Used disk space on *" },
-	{ "Net.Interface.AdminStatus(*)", H_NetIfAdminStatus, NULL, DCI_DT_INT, "Administrative status of interface {instance}" },
-	{ "Net.Interface.BytesIn(*)", H_NetInterfaceStats, "rbytes", DCI_DT_UINT, "Number of input bytes on interface {instance}" },
-	{ "Net.Interface.BytesOut(*)", H_NetInterfaceStats, "obytes", DCI_DT_UINT, "Number of output bytes on interface {instance}" },
-	{ "Net.Interface.Description(*)", H_NetIfDescription, NULL, DCI_DT_STRING, "" },
-	{ "Net.Interface.InErrors(*)", H_NetInterfaceStats, "ierrors", DCI_DT_UINT, "Number of input errors on interface {instance}" },
-	{ "Net.Interface.Link(*)", H_NetInterfaceLink, NULL, DCI_DT_INT, "Link status for interface {instance}" },
-	{ "Net.Interface.OutErrors(*)", H_NetInterfaceStats, "oerrors", DCI_DT_UINT, "Number of output errors on interface {instance}" },
-	{ "Net.Interface.PacketsIn(*)", H_NetInterfaceStats, "ipackets", DCI_DT_UINT, "Number of input packets on interface {instance}" },
-	{ "Net.Interface.PacketsOut(*)", H_NetInterfaceStats, "opackets", DCI_DT_UINT, "Number of output packets on interface {instance}" },
-	{ "Net.Interface.Speed(*)", H_NetInterfaceStats, "ifspeed", DCI_DT_UINT, "Speed of interface {instance}" },
-	{ "Process.Count(*)", H_ProcessCount, NULL, DCI_DT_UINT, "Number of proceses {instance}" },
-	{ "Process.KernelTime(*)", H_ProcessInfo, (char *)PROCINFO_KTIME, DCI_DT_UINT64, "" },
-	{ "Process.PageFaults(*)", H_ProcessInfo, (char *)PROCINFO_PF, DCI_DT_UINT64, "" },
-	{ "Process.UserTime(*)", H_ProcessInfo, (char *)PROCINFO_UTIME, DCI_DT_UINT64, "" },
-	{ "System.CPU.Count", H_CPUCount, NULL, DCI_DT_UINT, "Number of CPU in the system" },
-	{ "System.CPU.LoadAvg", H_LoadAvg, (char *)0, DCI_DT_FLOAT, "Average CPU load for last minute" },
-	{ "System.CPU.LoadAvg5", H_LoadAvg, (char *)1, DCI_DT_FLOAT, "Average CPU load for last 5 minutes" },
-	{ "System.CPU.LoadAvg15", H_LoadAvg, (char *)2, DCI_DT_FLOAT, "Average CPU load for last 15 minutes" },
-	{ "System.CPU.Usage", H_CPUUsage, "T0", DCI_DT_FLOAT, "Average CPU(s) utilization for last minute" },
-	{ "System.CPU.Usage5", H_CPUUsage, "T1", DCI_DT_FLOAT, "Average CPU(s) utilization for last 5 minutes" },
-	{ "System.CPU.Usage15", H_CPUUsage, "T2", DCI_DT_FLOAT, "Average CPU(s) utilization for last 15 minutes" },
-	{ "System.CPU.Usage(*)", H_CPUUsage, "C0", DCI_DT_FLOAT, "Average CPU {instance} utilization for last minute" },
-	{ "System.CPU.Usage5(*)", H_CPUUsage, "C1", DCI_DT_FLOAT, "Average CPU {instance} utilization for last 5 minutes" },
-	{ "System.CPU.Usage15(*)", H_CPUUsage, "C2", DCI_DT_FLOAT, "Average CPU {instance} utilization for last 15 minutes" },
-	{ "System.Hostname", H_Hostname, NULL, DCI_DT_STRING, "Host name" },
+	{ "Agent.SourcePackageSupport", H_SourcePkg, NULL, DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
+	{ "Disk.Free(*)", H_DiskInfo, (char *)DISK_FREE, DCI_DT_UINT64, DCIDESC_DISK_FREE },
+	{ "Disk.Total(*)", H_DiskInfo, (char *)DISK_TOTAL, DCI_DT_UINT64, DCIDESC_DISK_TOTAL },
+	{ "Disk.Used(*)", H_DiskInfo, (char *)DISK_USED, DCI_DT_UINT64, DCIDESC_DISK_USED },
+	{ "Net.Interface.AdminStatus(*)", H_NetIfAdminStatus, NULL, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
+	{ "Net.Interface.BytesIn(*)", H_NetInterfaceStats, "rbytes", DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
+	{ "Net.Interface.BytesOut(*)", H_NetInterfaceStats, "obytes", DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESOUT },
+	{ "Net.Interface.Description(*)", H_NetIfDescription, NULL, DCI_DT_STRING, DCIDESC_NET_INTERFACE_DESCRIPTION },
+	{ "Net.Interface.InErrors(*)", H_NetInterfaceStats, "ierrors", DCI_DT_UINT, DCIDESC_NET_INTERFACE_INERRORS },
+	{ "Net.Interface.Link(*)", H_NetInterfaceLink, NULL, DCI_DT_INT, DCIDESC_NET_INTERFACE_LINK },
+	{ "Net.Interface.OutErrors(*)", H_NetInterfaceStats, "oerrors", DCI_DT_UINT, DCIDESC_NET_INTERFACE_OUTERRORS },
+	{ "Net.Interface.PacketsIn(*)", H_NetInterfaceStats, "ipackets", DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSIN },
+	{ "Net.Interface.PacketsOut(*)", H_NetInterfaceStats, "opackets", DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSOUT },
+	{ "Net.Interface.Speed(*)", H_NetInterfaceStats, "ifspeed", DCI_DT_UINT, DCIDESC_NET_INTERFACE_SPEED },
+	{ "Process.Count(*)", H_ProcessCount, NULL, DCI_DT_UINT, DCIDESC_PROCESS_COUNT },
+	{ "Process.KernelTime(*)", H_ProcessInfo, (char *)PROCINFO_KTIME, DCI_DT_UINT64, DCIDESC_PROCESS_KERNELTIME },
+	{ "Process.PageFaults(*)", H_ProcessInfo, (char *)PROCINFO_PF, DCI_DT_UINT64, DCIDESC_PROCESS_PAGEFAULTS },
+	{ "Process.UserTime(*)", H_ProcessInfo, (char *)PROCINFO_UTIME, DCI_DT_UINT64, DCIDESC_PROCESS_USERTIME },
+	{ "System.CPU.Count", H_CPUCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
+	{ "System.CPU.LoadAvg", H_LoadAvg, (char *)0, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
+	{ "System.CPU.LoadAvg5", H_LoadAvg, (char *)1, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG5 },
+	{ "System.CPU.LoadAvg15", H_LoadAvg, (char *)2, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG15 },
+	{ "System.CPU.Usage", H_CPUUsage, "T0", DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE },
+	{ "System.CPU.Usage5", H_CPUUsage, "T1", DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5 },
+	{ "System.CPU.Usage15", H_CPUUsage, "T2", DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15 },
+	{ "System.CPU.Usage(*)", H_CPUUsage, "C0", DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_EX },
+	{ "System.CPU.Usage5(*)", H_CPUUsage, "C1", DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_EX },
+	{ "System.CPU.Usage15(*)", H_CPUUsage, "C2", DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_EX },
+	{ "System.Hostname", H_Hostname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
 	{ "System.KStat(*)", H_KStat, NULL, DCI_DT_STRING, "" },
-	{ "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, "Available physical memory" },
-	{ "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, "Total amount of physical memory" },
-	{ "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, "Used physical memory" },
-	{ "System.Memory.Swap.Free", H_MemoryInfo, (char *)MEMINFO_SWAP_FREE, DCI_DT_UINT64, "Free swap space" },
-	{ "System.Memory.Swap.Total", H_MemoryInfo, (char *)MEMINFO_SWAP_TOTAL, DCI_DT_UINT64, "Total amount of swap space" },
-	{ "System.Memory.Swap.Used", H_MemoryInfo, (char *)MEMINFO_SWAP_USED, DCI_DT_UINT64, "Used swap space" },
-	{ "System.ProcessCount", H_SysProcCount, NULL, DCI_DT_INT, "Total number of processes" },
-	{ "System.Uname", H_Uname, NULL, DCI_DT_STRING, "System uname" },
-	{ "System.Uptime", H_Uptime, NULL, DCI_DT_UINT, "System uptime" }
+	{ "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
+	{ "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
+	{ "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
+	{ "System.Memory.Swap.Free", H_MemoryInfo, (char *)MEMINFO_SWAP_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_FREE },
+	{ "System.Memory.Swap.Total", H_MemoryInfo, (char *)MEMINFO_SWAP_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_TOTAL },
+	{ "System.Memory.Swap.Used", H_MemoryInfo, (char *)MEMINFO_SWAP_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_SWAP_USED },
+	{ "System.ProcessCount", H_SysProcCount, NULL, DCI_DT_INT, DCIDESC_SYSTEM_PROCESSCOUNT },
+	{ "System.Uname", H_Uname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
+	{ "System.Uptime", H_Uptime, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME }
 };
+
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
 	{ "Net.InterfaceList", H_NetIfList, NULL },
@@ -167,13 +168,16 @@ DECLARE_SUBAGENT_INIT(SUNOS)
 
 extern "C" BOOL __NxSubAgentGetIfList(NETXMS_VALUES_LIST *pValue)
 {
-   return H_NetIfList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
+	return H_NetIfList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2007/01/15 00:27:46  alk
+__NxSubAgentGetIfList() added
+
 Revision 1.18  2006/05/15 22:11:22  alk
 + Net.Interface.Link() workaround; trying kstat() first, then
 IFF_RUNNING it kstat's link_up failed.

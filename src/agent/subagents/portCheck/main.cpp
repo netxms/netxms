@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.15 2007-04-24 18:22:11 victor Exp $ */
+/* $Id: main.cpp,v 1.16 2007-06-07 22:07:11 alk Exp $ */
 
 #define LIBNXCL_NO_DECLARATIONS
 
@@ -26,7 +26,7 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 	char szRequest[1024 * 10];
 	char szResponse[1024 * 10];
 	DWORD nRet;
-	
+
 	if (dwCommand != CMD_CHECK_NETWORK_SERVICE)
 	{
 		return FALSE;
@@ -40,85 +40,85 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 
 	switch(wType)
 	{
-	case NETSRV_CUSTOM:
-		// unsupported for now
-		nRet = CheckCustom(NULL, dwAddress, wPort, szRequest, szResponse);
-		pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-		pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
-		break;
-	case NETSRV_SSH:
+		case NETSRV_CUSTOM:
+			// unsupported for now
+			nRet = CheckCustom(NULL, dwAddress, wPort, szRequest, szResponse);
+			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
+			pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
+			break;
+		case NETSRV_SSH:
 			nRet = CheckSSH(NULL, dwAddress, wPort, NULL, NULL);
 
 			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
 			pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
-		break;
-	case NETSRV_TELNET:
+			break;
+		case NETSRV_TELNET:
 			nRet = CheckTelnet(NULL, dwAddress, wPort, NULL, NULL);
 
 			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
 			pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
-		break;
-	case NETSRV_POP3:
-		{
-			char *pUser, *pPass;
+			break;
+		case NETSRV_POP3:
+			{
+				char *pUser, *pPass;
+				nRet = PC_ERR_BAD_PARAMS;
+
+				pUser = szRequest;
+				pPass = strchr(szRequest, ':');
+				if (pPass != NULL)
+				{
+					*pPass = 0;
+					pPass++;
+
+					nRet = CheckPOP3(NULL, dwAddress, wPort, pUser, pPass);
+
+				}
+
+				pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
+				pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
+			}
+			break;
+		case NETSRV_SMTP:
 			nRet = PC_ERR_BAD_PARAMS;
 
-			pUser = szRequest;
-			pPass = strchr(szRequest, ':');
-			if (pPass != NULL)
+			if (szRequest[0] != 0)
 			{
-				*pPass = 0;
-				pPass++;
-
-				nRet = CheckPOP3(NULL, dwAddress, wPort, pUser, pPass);
-
+				nRet = CheckSMTP(NULL, dwAddress, wPort, szRequest);
+				pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
+				pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
 			}
 
 			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
 			pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
-		}
-		break;
-	case NETSRV_SMTP:
-		nRet = PC_ERR_BAD_PARAMS;
-
-		if (szRequest[0] != 0)
-		{
-			nRet = CheckSMTP(NULL, dwAddress, wPort, szRequest);
-			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-			pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
-		}
-
-		pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-		pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
-		break;
-	case NETSRV_FTP:
-		bHandled = FALSE;
-		break;
-	case NETSRV_HTTP:
-		{
-			char *pHost;
-			char *pURI;
-
-			nRet = PC_ERR_BAD_PARAMS;
-
-			pHost = szRequest;
-			pURI = strchr(szRequest, ':');
-			if (pURI != NULL)
+			break;
+		case NETSRV_FTP:
+			bHandled = FALSE;
+			break;
+		case NETSRV_HTTP:
 			{
-				*pURI = 0;
-				pURI++;
+				char *pHost;
+				char *pURI;
 
-				nRet = CheckHTTP(NULL, dwAddress, wPort, pURI, pHost,
-						szResponse);
+				nRet = PC_ERR_BAD_PARAMS;
+
+				pHost = szRequest;
+				pURI = strchr(szRequest, ':');
+				if (pURI != NULL)
+				{
+					*pURI = 0;
+					pURI++;
+
+					nRet = CheckHTTP(NULL, dwAddress, wPort, pURI, pHost,
+							szResponse);
+				}
+
+				pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
+				pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
 			}
-
-			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-			pResponse->SetVariable(VID_SERVICE_STATUS, (DWORD)nRet);
-		}
-		break;
-	default:
-		bHandled = FALSE;
-		break;
+			break;
+		default:
+			bHandled = FALSE;
+			break;
 	}
 
 	return bHandled;
@@ -130,22 +130,30 @@ BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespon
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { "ServiceCheck.POP3(*)",         H_CheckPOP3,       NULL },
-   { "ServiceCheck.SMTP(*)",         H_CheckSMTP,       NULL },
-   { "ServiceCheck.SSH(*)",          H_CheckSSH,        NULL },
-   { "ServiceCheck.HTTP(*)",         H_CheckHTTP,       NULL },
-   { "ServiceCheck.Custom(*)",       H_CheckCustom,     NULL },
-   { "ServiceCheck.Telnet(*)",       H_CheckTelnet,     NULL },
+	{ "ServiceCheck.POP3(*)",         H_CheckPOP3,       NULL,
+		DCI_DT_INT,		"" },
+	{ "ServiceCheck.SMTP(*)",         H_CheckSMTP,       NULL,
+		DCI_DT_INT,		"" },
+	{ "ServiceCheck.SSH(*)",          H_CheckSSH,        NULL,
+		DCI_DT_INT,		"" },
+	{ "ServiceCheck.HTTP(*)",         H_CheckHTTP,       NULL,
+		DCI_DT_INT,		"" },
+	{ "ServiceCheck.Custom(*)",       H_CheckCustom,     NULL,
+		DCI_DT_INT,		"" },
+	{ "ServiceCheck.Telnet(*)",       H_CheckTelnet,     NULL,
+		DCI_DT_INT,		"" },
 };
 
-/*static NETXMS_SUBAGENT_ENUM m_enums[] =
+/*
+static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
-   //{ "Net.ArpCache",                 H_NetArpCache,     NULL },
-};*/
+	{ "Net.ArpCache",                 H_NetArpCache,     NULL },
+};
+*/
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
-   NETXMS_SUBAGENT_INFO_MAGIC,
+	NETXMS_SUBAGENT_INFO_MAGIC,
 	"portCheck",
 	NETXMS_VERSION_STRING,
 	NULL, NULL, // init and shutdown routines
@@ -154,7 +162,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 	m_parameters,
 	0, //sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
 	NULL, //m_enums,
-   0, NULL     // actions
+	0, NULL     // actions
 };
 
 //
@@ -163,14 +171,17 @@ static NETXMS_SUBAGENT_INFO m_info =
 
 DECLARE_SUBAGENT_ENTRY_POINT(PORTCHECK)
 {
-   *ppInfo = &m_info;
-   return TRUE;
+	*ppInfo = &m_info;
+	return TRUE;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.15  2007/04/24 18:22:11  victor
+Subagent API changed
+
 Revision 1.14  2006/10/20 09:54:51  victor
 libnxcscp merged into libnetxms
 
