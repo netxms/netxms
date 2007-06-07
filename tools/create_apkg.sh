@@ -1,12 +1,12 @@
 #!/bin/sh
 
 version=$1
-if [ "x$version" == "x" ]; then
+if [ -z "$version" ]; then
 	echo "Usage: tools/create_apkg.sh <version>"
 	exit 1
 fi
 
-if [ ! \( -a netxms-$version.tar.gz \) ]; then
+if [ ! -r netxms-$version.tar.gz ]; then
 	echo "Unable to find distribution package netxms-$version.tar.gz"
 	exit 1
 fi
@@ -17,13 +17,13 @@ if [ $? != 0 ]; then
 	exit 1
 fi
 
-rm -rf inst
-mkdir inst
-cp ../netxms-$version.tar.gz inst/
-cp installAgent.sh inst
-tar zcvf inst.tar.gz inst
-mv inst.tar.gz ../tools/
-cd ../tools/
-bash ./sharIt inst.tar.gz inst/installAgent.sh ../nxagent-$version.apkg
-cd ..
+rm -rf inst &&
+mkdir inst &&
+cp ../netxms-$version.tar.gz inst/ &&
+cp installAgent.sh inst/ &&
+tar zcvf inst.tar.gz inst &&
+mv inst.tar.gz ../tools/ &&
+cd ../tools/ &&
+bash ./sharIt inst.tar.gz inst/installAgent.sh ../nxagent-$version.apkg &&
+cd .. &&
 rm -rf contrib/inst
