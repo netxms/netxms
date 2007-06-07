@@ -196,12 +196,6 @@
 #define DCIDESC_SYSTEM_CPU_USAGE5		"Average CPU utilization for last 5 minutes"
 #define DCIDESC_SYSTEM_CPU_USAGE15		"Average CPU utilization for last 15 minutes"
 #define DCIDESC_SYSTEM_IO_DISKQUEUE		"Average disk queue length for last minute"
-#define DCIDESC_SERVICECHECK_POP3		""
-#define DCIDESC_SERVICECHECK_SMTP		""
-#define DCIDESC_SERVICECHECK_SSH		""
-#define DCIDESC_SERVICECHECK_HTTP		""
-#define DCIDESC_SERVICECHECK_CUSTOM		""
-#define DCIDESC_SERVICECHECK_TELNET		""
 
 
 //
