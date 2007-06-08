@@ -24,20 +24,34 @@ _mktemp() {
 	mkdir $d && echo $d || false
 }
 
-for dir in /bin /sbin /usr/bin /usr/local/bin /opt/openssl*/bin; do
-	if [ -d $dir ]; then
-		for app in openssl md5sum md5; do
-			if [ -x "$dir/$app" ]; then
-				md5="$dir/$app"
-				if [ "openssl" = $app ]; then
-					md5="$md5 md5"
-				fi
-				break
-			fi
-		done
-		[ "x" != "x$md5" ] && break
+for app in openssl md5sum md5; do
+	tmp=`which $app 2>/dev/null`
+	if [ $? = 0 ]; then
+		echo $tmp | grep "no $app in " >/dev/null 2>&1
+		if [ $? != 0 ]; then
+			md5=$tmp
+			break
+		fi
 	fi
 done
+
+if [ -z "$md5" ]; then
+	for dir in /bin /sbin /usr/bin /usr/local/bin /opt/openssl*/bin /opt/freeware/bin; do
+		if [ -d $dir ]; then
+			for app in openssl md5sum md5; do
+				if [ -x "$dir/$app" ]; then
+					md5="$dir/$app"
+					break
+				fi
+			done
+			[ "x" != "x$md5" ] && break
+		fi
+	done
+fi
+
+if [ "`basename $md5`" = "openssl" ]; then
+	md5="$md5 md5"
+fi
 
 tail="tail -n"
 case `uname -s` in
