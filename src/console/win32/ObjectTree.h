@@ -53,6 +53,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 public:
+	void UpdateStatusBar(void);
 	BOOL m_bHideNonOperational;
 	BOOL m_bHideUnknown;
 	BOOL m_bHideUnmanaged;

@@ -116,12 +116,15 @@ BOOL CObjectTree::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult)
 			switch(pn->hdr.code)
 			{
 				case TVN_ITEMEXPANDED:
-					InvalidateRect(NULL);
+					UpdateStatusBar();
 					break;
 				case TVN_SELCHANGED:
 					hItem = m_pwndTreeCtrl->GetNextItem(NULL, TVGN_FIRSTVISIBLE);
 					if (hItem != m_hFirstVisibleItem)
-						InvalidateRect(NULL);
+					{
+						UpdateStatusBar();
+						m_hFirstVisibleItem = hItem;
+					}
 					break;
 			}
 		}
@@ -269,4 +272,18 @@ void CObjectTree::OnStatusIcons()
 {
 	m_bUseIcons = !m_bUseIcons;
 	InvalidateRect(NULL);
+}
+
+
+//
+// Update status bar
+//
+
+void CObjectTree::UpdateStatusBar()
+{
+	RECT rect;
+
+	GetClientRect(&rect);
+	rect.right = STATUS_BAR_WIDTH;
+	InvalidateRect(&rect, TRUE);
 }
