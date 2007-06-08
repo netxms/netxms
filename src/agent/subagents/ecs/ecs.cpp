@@ -235,6 +235,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 //	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
 //	m_enums
 	0,
+	NULL,
+	0,
 	NULL
 };
 

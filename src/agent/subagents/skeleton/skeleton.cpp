@@ -37,30 +37,30 @@
 
 static LONG H_Version(char *pszParam, char *pArg, char *pValue)
 {
-   ret_uint(pValue, 0x01000000);
-   return SYSINFO_RC_SUCCESS;
+	ret_uint(pValue, 0x01000000);
+	return SYSINFO_RC_SUCCESS;
 }
 
 static LONG H_Echo(char *pszParam, char *pArg, char *pValue)
 {
-   char szArg[256];
+	char szArg[256];
 
-   NxGetParameterArg(pszParam, 1, szArg, 255);
-   ret_string(pValue, szArg);
-   return SYSINFO_RC_SUCCESS;
+	NxGetParameterArg(pszParam, 1, szArg, 255);
+	ret_string(pValue, szArg);
+	return SYSINFO_RC_SUCCESS;
 }
 
 static LONG H_Enum(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 {
-   int i;
-   char szValue[256];
+	int i;
+	char szValue[256];
 
-   for(i = 0; i < 10; i++)
-   {
-      sprintf(szValue, "Value %d", i);
-      NxAddResultString(pValue, szValue);
-   }
-   return SYSINFO_RC_SUCCESS;
+	for(i = 0; i < 10; i++)
+	{
+		sprintf(szValue, "Value %d", i);
+		NxAddResultString(pValue, szValue);
+	}
+	return SYSINFO_RC_SUCCESS;
 }
 
 
@@ -70,7 +70,7 @@ static LONG H_Enum(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 
 static BOOL SubAgentInit(TCHAR *pszConfigFile)
 {
-   /* you can perform any initialization tasks here */
+	/* you can perform any initialization tasks here */
 	return TRUE;
 }
 
@@ -81,7 +81,7 @@ static BOOL SubAgentInit(TCHAR *pszConfigFile)
 
 static void SubAgentShutdown(void)
 {
-   /* you can perform necessary shutdown tasks here */
+	/* you can perform necessary shutdown tasks here */
 }
 
 
@@ -91,25 +91,27 @@ static void SubAgentShutdown(void)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { "Skeleton.Version",				H_Version,				NULL,
-			DCI_DT_STRING, "Skeleton version" },
-   { "Skeleton.Echo(*)",				H_Echo,					NULL,
-			DCI_DT_STRING, "Echoes string back" }
+	{ "Skeleton.Version",				H_Version,				NULL,
+		DCI_DT_STRING, "Skeleton version" },
+	{ "Skeleton.Echo(*)",				H_Echo,					NULL,
+		DCI_DT_STRING, "Echoes string back" }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
-   { "Skeleton.Enum", H_Enum, NULL }
+	{ "Skeleton.Enum", H_Enum, NULL }
 };
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
-   NETXMS_SUBAGENT_INFO_MAGIC,
+	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("SKELETON"), _T("1.0"),
 	SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
-	m_enums
+	m_enums,
+	0,
+	NULL
 };
 
 
@@ -119,8 +121,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 
 DECLARE_SUBAGENT_ENTRY_POINT(SKELETON)
 {
-   *ppInfo = &m_info;
-   return TRUE;
+	*ppInfo = &m_info;
+	return TRUE;
 }
 
 
@@ -132,9 +134,9 @@ DECLARE_SUBAGENT_ENTRY_POINT(SKELETON)
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-   if (dwReason == DLL_PROCESS_ATTACH)
-      DisableThreadLibraryCalls(hInstance);
-   return TRUE;
+	if (dwReason == DLL_PROCESS_ATTACH)
+		DisableThreadLibraryCalls(hInstance);
+	return TRUE;
 }
 
 #endif
@@ -148,12 +150,12 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 
 int _init(void)
 {
-   return 0;
+	return 0;
 }
 
 int _fini(void)
 {
-   return 0;
+	return 0;
 }
 
 #endif

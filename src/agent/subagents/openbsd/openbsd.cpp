@@ -1,4 +1,4 @@
-/* $Id: openbsd.cpp,v 1.3 2007-06-07 22:06:53 alk Exp $ */
+/* $Id: openbsd.cpp,v 1.4 2007-06-08 00:02:36 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -65,11 +65,11 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG15 },
 /*
 	{ "System.CPU.Usage",             H_CpuUsage,        NULL,
-		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE },
+	DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE },
 	{ "System.CPU.Usage5",            H_CpuUsage,        NULL,
-		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5 },
+	DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5 },
 	{ "System.CPU.Usage15",           H_CpuUsage,        NULL,
-		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15 },
+	DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15 },
 */
 	{ "System.Hostname",              H_Hostname,        NULL,
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_HOSTNAME },
@@ -111,20 +111,21 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	"FreeBSD",
+	"OpenBSD",
 	NETXMS_VERSION_STRING,
 	NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
-	m_enums
+	m_enums,
+	NULL
 };
 
 //
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_INIT(FREEBSD)
+DECLARE_SUBAGENT_ENTRY_POINT(OPENBSD)
 {
 	*ppInfo = &m_info;
 	return TRUE;
@@ -134,6 +135,10 @@ DECLARE_SUBAGENT_INIT(FREEBSD)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2007/06/07 22:06:53  alk
+1) descriptions changed to defines
+2) params structure was filled incorrectly
+
 Revision 1.2  2007/05/23 10:46:59  victor
 Minor changes
 

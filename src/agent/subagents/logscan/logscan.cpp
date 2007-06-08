@@ -1,4 +1,4 @@
-/* $Id: logscan.cpp,v 1.5 2007-04-24 18:22:11 victor Exp $ */
+/* $Id: logscan.cpp,v 1.6 2007-06-08 00:02:36 alk Exp $ */
 /*
 ** NetXMS LogScan subagent
 ** Copyright (C) 2006 Alex Kirhenshtein
@@ -72,19 +72,19 @@ static void SubAgentShutdown(void)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { "LogScan.FindString(*)", H_GetString, NULL, DCI_DT_STRING, ""},
+	{ "LogScan.FindString(*)", H_GetString, NULL, DCI_DT_STRING, ""},
 };
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
-   NETXMS_SUBAGENT_INFO_MAGIC,
+	NETXMS_SUBAGENT_INFO_MAGIC,
 	"LOGSCAN", NETXMS_VERSION_STRING,
 	SubAgentInit, SubAgentShutdown, NULL,  // Handlers
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	0, //sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
 	NULL, //m_enums,
-   0, NULL     // actions
+	0, NULL     // actions
 };
 
 //
@@ -93,8 +93,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 
 DECLARE_SUBAGENT_ENTRY_POINT(LOGSCAN)
 {
-   *ppInfo = &m_info;
-   return TRUE;
+	*ppInfo = &m_info;
+	return TRUE;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -108,8 +108,8 @@ LONG H_GetString(char *pszParam, char *pArg, char *pValue)
 	char fileName[1024];
 	char subString[1024];
 
-   NxGetParameterArg(pszParam, 1, fileName, sizeof(fileName));
-   NxGetParameterArg(pszParam, 2, subString, sizeof(subString));
+	NxGetParameterArg(pszParam, 1, fileName, sizeof(fileName));
+	NxGetParameterArg(pszParam, 2, subString, sizeof(subString));
 
 	if (fileName[0] != 0 && subString[0] != 0)
 	{
@@ -181,6 +181,9 @@ LONG H_GetString(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2007/04/24 18:22:11  victor
+Subagent API changed
+
 Revision 1.4  2006/03/09 15:18:49  alk
 lineends are removed before sending responce
 

@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.34 2007-06-07 22:07:11 alk Exp $ */
+/* $Id: linux.cpp,v 1.35 2007-06-08 00:02:36 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -198,7 +198,9 @@ static NETXMS_SUBAGENT_INFO m_info =
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
-	m_enums
+	m_enums,
+	0,
+	NULL
 };
 
 //
@@ -231,6 +233,9 @@ extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.34  2007/06/07 22:07:11  alk
+descriptions changed to defines
+
 Revision 1.33  2007/04/25 07:44:09  victor
 - Linux and HPUX subagents changed to new model
 - ODBCQUERY subagent code cleaned

@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.2 2005-10-17 20:45:47 victor Exp $ */
+/* $Id: main.cpp,v 1.3 2007-06-08 00:02:36 alk Exp $ */
 
 //#include <windows.h>
 #include <Python.h>
@@ -26,8 +26,8 @@ static PyThreadState *m_gtState = NULL;
  */
 static LONG H_Param(char *pszParam, char *pArg, char *pValue)
 {
-   ret_uint(pValue, 0x01000000);
-   return SYSINFO_RC_SUCCESS;
+	ret_uint(pValue, 0x01000000);
+	return SYSINFO_RC_SUCCESS;
 }
 
 /*
@@ -56,13 +56,16 @@ static NETXMS_SUBAGENT_PARAM m_param[] =
 //
 static NETXMS_SUBAGENT_INFO m_info =
 {
-   NETXMS_SUBAGENT_INFO_MAGIC,
+	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("nxPython"),
 	_T("0.0.1"),
 	UnloadHandler,
 	NULL,
+	NULL,
 	0,
 	m_param,
+	0,
+	NULL,
 	0,
 	NULL
 };
@@ -84,7 +87,7 @@ extern "C" BOOL SKELETON_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo
 	{
 		{ "Command", CT_STRING, 0, 0, sizeof(szCommand), 0, szCommand },
 		{ "Module", CT_STRING, 0, 0, sizeof(m_szModule), 0, m_szModule },
-   	{ "ReturnType", CT_LONG, 0, 0, 0, 0, &m_nRetType },
+		{ "ReturnType", CT_LONG, 0, 0, 0, 0, &m_nRetType },
 	};
 
 	szCommand[0] = 0;
@@ -102,15 +105,15 @@ extern "C" BOOL SKELETON_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo
 			m_info.dwNumParameters = 1;
 			nx_strncpy(m_param[0].szName, szCommand, sizeof(m_param[0].szName));
 			m_param[0].iDataType = m_nRetType;
-			
-	   	*ppInfo = &m_info;
+
+			*ppInfo = &m_info;
 		}
 	}
 	else
 	{
 		fprintf(stderr, "Can't load config\n");
 	}
-   return bRet;
+	return bRet;
 }
 
 
@@ -121,7 +124,7 @@ extern "C" BOOL SKELETON_EXPORTABLE NxSubAgentInit(NETXMS_SUBAGENT_INFO **ppInfo
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-   return TRUE;
+	return TRUE;
 }
 
 #endif
@@ -134,12 +137,12 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 
 int _init(void)
 {
-   return 0;
+	return 0;
 }
 
 int _fini(void)
 {
-   return 0;
+	return 0;
 }
 
 #endif
@@ -148,6 +151,9 @@ int _fini(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.2  2005/10/17 20:45:47  victor
+Fixed incorrect usage of strncpy
+
 Revision 1.1.1.1  2005/02/01 20:18:04  alk
 initial import
 

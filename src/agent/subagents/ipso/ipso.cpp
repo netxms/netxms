@@ -1,4 +1,4 @@
-/* $Id: ipso.cpp,v 1.9 2007-06-07 22:07:11 alk Exp $ */
+/* $Id: ipso.cpp,v 1.10 2007-06-08 00:02:36 alk Exp $ */
 
 /* 
 ** NetXMS subagent for IPSO
@@ -136,21 +136,25 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
-   NETXMS_SUBAGENT_INFO_MAGIC,
-	"FreeBSD",
+	NETXMS_SUBAGENT_INFO_MAGIC,
+	"IPSO",
 	NETXMS_VERSION_STRING,
-	NULL, NULL,
+	NULL,
+	NULL,
+	NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
-	m_enums
+	m_enums,
+	0,
+	NULL
 };
 
 //
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_INIT(IPSO)
+DECLARE_SUBAGENT_ENTRY_POINT(IPSO)
 {
    *ppInfo = &m_info;
    return TRUE;
@@ -256,6 +260,9 @@ LONG IPSCTLGetString(int nCallerHandle, char *pszName,
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.9  2007/06/07 22:07:11  alk
+descriptions changed to defines
+
 Revision 1.8  2006/08/25 22:24:02  victor
 Implemented Net.InterfaceList and Net.ArpCache
 

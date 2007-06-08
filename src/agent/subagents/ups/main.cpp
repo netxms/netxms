@@ -36,23 +36,23 @@ static UPSInterface *m_deviceInfo[MAX_UPS_DEVICES];
 
 static LONG H_UPSData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 {
-   LONG nDev;
-   TCHAR *pErr, szArg[256];
+	LONG nDev;
+	TCHAR *pErr, szArg[256];
 
-   if (!NxGetParameterArg(pszParam, 1, szArg, 256))
-      return SYSINFO_RC_UNSUPPORTED;
+	if (!NxGetParameterArg(pszParam, 1, szArg, 256))
+		return SYSINFO_RC_UNSUPPORTED;
 
-   nDev = _tcstol(szArg, &pErr, 0);
-   if ((*pErr != 0) || (nDev < 0) || (nDev >= MAX_UPS_DEVICES))
-      return SYSINFO_RC_UNSUPPORTED;
+	nDev = _tcstol(szArg, &pErr, 0);
+	if ((*pErr != 0) || (nDev < 0) || (nDev >= MAX_UPS_DEVICES))
+		return SYSINFO_RC_UNSUPPORTED;
 
-   if (m_deviceInfo[nDev] == NULL)
-      return SYSINFO_RC_UNSUPPORTED;
+	if (m_deviceInfo[nDev] == NULL)
+		return SYSINFO_RC_UNSUPPORTED;
 
-   if (!m_deviceInfo[nDev]->IsConnected())
-      return SYSINFO_RC_ERROR;
+	if (!m_deviceInfo[nDev]->IsConnected())
+		return SYSINFO_RC_ERROR;
 
-   return m_deviceInfo[nDev]->GetParameter(CAST_FROM_POINTER(pArg, int), pValue);
+	return m_deviceInfo[nDev]->GetParameter(CAST_FROM_POINTER(pArg, int), pValue);
 }
 
 
@@ -62,21 +62,21 @@ static LONG H_UPSData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 
 static LONG H_UPSConnStatus(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 {
-   LONG nDev;
-   TCHAR *pErr, szArg[256];
+	LONG nDev;
+	TCHAR *pErr, szArg[256];
 
-   if (!NxGetParameterArg(pszParam, 1, szArg, 256))
-      return SYSINFO_RC_UNSUPPORTED;
+	if (!NxGetParameterArg(pszParam, 1, szArg, 256))
+		return SYSINFO_RC_UNSUPPORTED;
 
-   nDev = _tcstol(szArg, &pErr, 0);
-   if ((*pErr != 0) || (nDev < 0) || (nDev >= MAX_UPS_DEVICES))
-      return SYSINFO_RC_UNSUPPORTED;
+	nDev = _tcstol(szArg, &pErr, 0);
+	if ((*pErr != 0) || (nDev < 0) || (nDev >= MAX_UPS_DEVICES))
+		return SYSINFO_RC_UNSUPPORTED;
 
-   if (m_deviceInfo[nDev] == NULL)
-      return SYSINFO_RC_UNSUPPORTED;
+	if (m_deviceInfo[nDev] == NULL)
+		return SYSINFO_RC_UNSUPPORTED;
 
-   ret_int(pValue, m_deviceInfo[nDev]->IsConnected() ? 0 : 1);
-   return SYSINFO_RC_SUCCESS;
+	ret_int(pValue, m_deviceInfo[nDev]->IsConnected() ? 0 : 1);
+	return SYSINFO_RC_SUCCESS;
 }
 
 
@@ -86,18 +86,18 @@ static LONG H_UPSConnStatus(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 
 static LONG H_DeviceList(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
 {
-   TCHAR szBuffer[256];
-   int i;
+	TCHAR szBuffer[256];
+	int i;
 
-   for(i = 0; i < MAX_UPS_DEVICES; i++)
-      if (m_deviceInfo[i] != NULL)
-      {
-         _sntprintf(szBuffer, 256, _T("%d %s %s %s"), i,
-                    m_deviceInfo[i]->Device(), m_deviceInfo[i]->Type(),
-                    m_deviceInfo[i]->Name());
-         NxAddResultString(pValue, szBuffer);
-      }
-   return SYSINFO_RC_SUCCESS;
+	for(i = 0; i < MAX_UPS_DEVICES; i++)
+		if (m_deviceInfo[i] != NULL)
+		{
+			_sntprintf(szBuffer, 256, _T("%d %s %s %s"), i,
+					m_deviceInfo[i]->Device(), m_deviceInfo[i]->Type(),
+					m_deviceInfo[i]->Name());
+			NxAddResultString(pValue, szBuffer);
+		}
+	return SYSINFO_RC_SUCCESS;
 }
 
 
@@ -108,143 +108,143 @@ static LONG H_DeviceList(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValu
 
 static BOOL AddDeviceFromConfig(TCHAR *pszStr)
 {
-   TCHAR *ptr, *eptr, *pszCurrField;
-   TCHAR szPort[MAX_PATH], szName[MAX_DB_STRING] = _T("");
-   int nState, nField, nDev, nPos, nProto;
+	TCHAR *ptr, *eptr, *pszCurrField;
+	TCHAR szPort[MAX_PATH], szName[MAX_DB_STRING] = _T("");
+	int nState, nField, nDev, nPos, nProto;
 
-   // Parse line
-   pszCurrField = (TCHAR *)malloc(sizeof(TCHAR) * (_tcslen(pszStr) + 1));
-   for(ptr = pszStr, nState = 0, nField = 0, nPos = 0;
-       (nState != -1) && (nState != 255); ptr++)
-   {
-      switch(nState)
-      {
-         case 0:  // Normal text
-            switch(*ptr)
-            {
-               case '\'':
-                  nState = 1;
-                  break;
-               case '"':
-                  nState = 2;
-                  break;
-               case ':':   // New field
-               case 0:
-                  pszCurrField[nPos] = 0;
-                  switch(nField)
-                  {
-                     case 0:  // Device number
-                        nDev = _tcstol(pszCurrField, &eptr, 0);
-                        if ((*eptr != 0) || (nDev < 0) || (nDev >= MAX_UPS_DEVICES))
-                           nState = 255;  // Error
-                        break;
-                     case 1:  // Serial port
-                        nx_strncpy(szPort, pszCurrField, MAX_PATH);
-                        break;
-                     case 2:  // Protocol
-                        if (!_tcsicmp(pszCurrField, _T("APC")))
-                        {
-                           nProto = UPS_PROTOCOL_APC;
-                        }
-                        else if (!_tcsicmp(pszCurrField, _T("BCMXCP")))
-                        {
-                           nProto = UPS_PROTOCOL_BCMXCP;
-                        }
-                        else if (!_tcsicmp(pszCurrField, _T("MICRODOWELL")))
-                        {
-                           nProto = UPS_PROTOCOL_MICRODOWELL;
-                        }
+	// Parse line
+	pszCurrField = (TCHAR *)malloc(sizeof(TCHAR) * (_tcslen(pszStr) + 1));
+	for(ptr = pszStr, nState = 0, nField = 0, nPos = 0;
+			(nState != -1) && (nState != 255); ptr++)
+	{
+		switch(nState)
+		{
+			case 0:  // Normal text
+				switch(*ptr)
+				{
+					case '\'':
+						nState = 1;
+						break;
+					case '"':
+						nState = 2;
+						break;
+					case ':':   // New field
+					case 0:
+						pszCurrField[nPos] = 0;
+						switch(nField)
+						{
+							case 0:  // Device number
+								nDev = _tcstol(pszCurrField, &eptr, 0);
+								if ((*eptr != 0) || (nDev < 0) || (nDev >= MAX_UPS_DEVICES))
+									nState = 255;  // Error
+								break;
+							case 1:  // Serial port
+								nx_strncpy(szPort, pszCurrField, MAX_PATH);
+								break;
+							case 2:  // Protocol
+								if (!_tcsicmp(pszCurrField, _T("APC")))
+								{
+									nProto = UPS_PROTOCOL_APC;
+								}
+								else if (!_tcsicmp(pszCurrField, _T("BCMXCP")))
+								{
+									nProto = UPS_PROTOCOL_BCMXCP;
+								}
+								else if (!_tcsicmp(pszCurrField, _T("MICRODOWELL")))
+								{
+									nProto = UPS_PROTOCOL_MICRODOWELL;
+								}
 #ifdef _WIN32
-                        else if (!_tcsicmp(pszCurrField, _T("USB")))
-                        {
-                           nProto = UPS_PROTOCOL_USB;
-                        }
+								else if (!_tcsicmp(pszCurrField, _T("USB")))
+								{
+									nProto = UPS_PROTOCOL_USB;
+								}
 #endif
-                        else
-                        {
-                           nState = 255;  // Error
-                        }
-                        break;
-                     case 3:  // Name
-                        nx_strncpy(szName, pszCurrField, MAX_DB_STRING);
-                        break;
-                     default:
-                        nState = 255;  // Error
-                        break;
-                  }
-                  nField++;
-                  nPos = 0;
-                  if ((nState != 255) && (*ptr == 0))
-                     nState = -1;   // Finish
-                  break;
-               default:
-                  pszCurrField[nPos++] = *ptr;
-                  break;
-            }
-            break;
-         case 1:  // Single quotes
-            switch(*ptr)
-            {
-               case '\'':
-                  nState = 0;
-                  break;
-               case 0:  // Unexpected end of line
-                  nState = 255;
-                  break;
-               default:
-                  pszCurrField[nPos++] = *ptr;
-                  break;
-            }
-            break;
-         case 2:  // Double quotes
-            switch(*ptr)
-            {
-               case '"':
-                  nState = 0;
-                  break;
-               case 0:  // Unexpected end of line
-                  nState = 255;
-                  break;
-               default:
-                  pszCurrField[nPos++] = *ptr;
-                  break;
-            }
-            break;
-         default:
-            break;
-      }
-   }
-   free(pszCurrField);
+								else
+								{
+									nState = 255;  // Error
+								}
+								break;
+							case 3:  // Name
+								nx_strncpy(szName, pszCurrField, MAX_DB_STRING);
+								break;
+							default:
+								nState = 255;  // Error
+								break;
+						}
+						nField++;
+						nPos = 0;
+						if ((nState != 255) && (*ptr == 0))
+							nState = -1;   // Finish
+						break;
+					default:
+						pszCurrField[nPos++] = *ptr;
+						break;
+				}
+				break;
+			case 1:  // Single quotes
+				switch(*ptr)
+				{
+					case '\'':
+						nState = 0;
+						break;
+					case 0:  // Unexpected end of line
+						nState = 255;
+						break;
+					default:
+						pszCurrField[nPos++] = *ptr;
+						break;
+				}
+				break;
+			case 2:  // Double quotes
+				switch(*ptr)
+				{
+					case '"':
+						nState = 0;
+						break;
+					case 0:  // Unexpected end of line
+						nState = 255;
+						break;
+					default:
+						pszCurrField[nPos++] = *ptr;
+						break;
+				}
+				break;
+			default:
+				break;
+		}
+	}
+	free(pszCurrField);
 
-   // Add new device if parsing was successful
-   if ((nState == -1) && (nField >= 3))
-   {
-      if (m_deviceInfo[nDev] != NULL)
-         delete m_deviceInfo[nDev];
-      switch(nProto)
-      {
-         case UPS_PROTOCOL_APC:
-            m_deviceInfo[nDev] = new APCInterface(szPort);
-            break;
-         case UPS_PROTOCOL_BCMXCP:
-            m_deviceInfo[nDev] = new BCMXCPInterface(szPort);
-            break;
-         case UPS_PROTOCOL_MICRODOWELL:
-            m_deviceInfo[nDev] = new MicrodowellInterface(szPort);
-            break;
+	// Add new device if parsing was successful
+	if ((nState == -1) && (nField >= 3))
+	{
+		if (m_deviceInfo[nDev] != NULL)
+			delete m_deviceInfo[nDev];
+		switch(nProto)
+		{
+			case UPS_PROTOCOL_APC:
+				m_deviceInfo[nDev] = new APCInterface(szPort);
+				break;
+			case UPS_PROTOCOL_BCMXCP:
+				m_deviceInfo[nDev] = new BCMXCPInterface(szPort);
+				break;
+			case UPS_PROTOCOL_MICRODOWELL:
+				m_deviceInfo[nDev] = new MicrodowellInterface(szPort);
+				break;
 #ifdef _WIN32
-         case UPS_PROTOCOL_USB:
-            m_deviceInfo[nDev] = new USBInterface(szPort);
-            break;
+			case UPS_PROTOCOL_USB:
+				m_deviceInfo[nDev] = new USBInterface(szPort);
+				break;
 #endif
-         default:
-            break;
-      }
-      m_deviceInfo[nDev]->SetName(szName);
-      m_deviceInfo[nDev]->SetIndex(nDev);
-   }
+			default:
+				break;
+		}
+		m_deviceInfo[nDev]->SetName(szName);
+		m_deviceInfo[nDev]->SetIndex(nDev);
+	}
 
-   return ((nState == -1) && (nField >= 3));
+	return ((nState == -1) && (nField >= 3));
 }
 
 
@@ -255,8 +255,8 @@ static BOOL AddDeviceFromConfig(TCHAR *pszStr)
 static TCHAR *m_pszDeviceList = NULL;
 static NX_CFG_TEMPLATE cfgTemplate[] =
 {
-   { _T("Device"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_pszDeviceList },
-   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+	{ _T("Device"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_pszDeviceList },
+	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
 
@@ -266,46 +266,46 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
 
 static BOOL SubAgentInit(TCHAR *pszConfigFile)
 {
-   DWORD i, dwResult;
+	DWORD i, dwResult;
 
-   memset(m_deviceInfo, 0, sizeof(UPSInterface *) * MAX_UPS_DEVICES);
+	memset(m_deviceInfo, 0, sizeof(UPSInterface *) * MAX_UPS_DEVICES);
 
-   // Load configuration
-   dwResult = NxLoadConfig(pszConfigFile, _T("UPS"), cfgTemplate, FALSE);
-   if (dwResult == NXCFG_ERR_OK)
-   {
-      TCHAR *pItem, *pEnd;
+	// Load configuration
+	dwResult = NxLoadConfig(pszConfigFile, _T("UPS"), cfgTemplate, FALSE);
+	if (dwResult == NXCFG_ERR_OK)
+	{
+		TCHAR *pItem, *pEnd;
 
-      // Parse device list
-      if (m_pszDeviceList != NULL)
-      {
-         for(pItem = m_pszDeviceList; *pItem != 0; pItem = pEnd + 1)
-         {
-            pEnd = _tcschr(pItem, _T('\n'));
-            if (pEnd != NULL)
-               *pEnd = 0;
-            StrStrip(pItem);
-            if (!AddDeviceFromConfig(pItem))
-               NxWriteAgentLog(EVENTLOG_WARNING_TYPE,
-                               _T("Unable to add UPS device from configuration file. ")
-                               _T("Original configuration record: %s"), pItem);
-         }
-         free(m_pszDeviceList);
+		// Parse device list
+		if (m_pszDeviceList != NULL)
+		{
+			for(pItem = m_pszDeviceList; *pItem != 0; pItem = pEnd + 1)
+			{
+				pEnd = _tcschr(pItem, _T('\n'));
+				if (pEnd != NULL)
+					*pEnd = 0;
+				StrStrip(pItem);
+				if (!AddDeviceFromConfig(pItem))
+					NxWriteAgentLog(EVENTLOG_WARNING_TYPE,
+							_T("Unable to add UPS device from configuration file. ")
+							_T("Original configuration record: %s"), pItem);
+			}
+			free(m_pszDeviceList);
 
-         // Start communicating with configured devices
-         for(i = 0; i < MAX_UPS_DEVICES; i++)
-         {
-            if (m_deviceInfo[i] != NULL)
-               m_deviceInfo[i]->StartCommunication();
-         }
-      }
-   }
-   else
-   {
-      safe_free(m_pszDeviceList);
-   }
+			// Start communicating with configured devices
+			for(i = 0; i < MAX_UPS_DEVICES; i++)
+			{
+				if (m_deviceInfo[i] != NULL)
+					m_deviceInfo[i]->StartCommunication();
+			}
+		}
+	}
+	else
+	{
+		safe_free(m_pszDeviceList);
+	}
 
-   return dwResult == NXCFG_ERR_OK;
+	return dwResult == NXCFG_ERR_OK;
 }
 
 
@@ -315,14 +315,14 @@ static BOOL SubAgentInit(TCHAR *pszConfigFile)
 
 static void SubAgentShutdown(void)
 {
-   int i;
+	int i;
 
-   // Close all devices
-   for(i = 0; i < MAX_UPS_DEVICES; i++)
-      if (m_deviceInfo[i] != NULL)
-      {
-         delete_and_null(m_deviceInfo[i]);
-      }
+	// Close all devices
+	for(i = 0; i < MAX_UPS_DEVICES; i++)
+		if (m_deviceInfo[i] != NULL)
+		{
+			delete_and_null(m_deviceInfo[i]);
+		}
 }
 
 
@@ -332,96 +332,96 @@ static void SubAgentShutdown(void)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("UPS.BatteryLevel(*)"),           H_UPSData,
-      CAST_TO_POINTER(UPS_PARAM_BATTERY_LEVEL, char *),
-      DCI_DT_INT,      _T("UPS {instance} battery charge level")
-   },
+	{ _T("UPS.BatteryLevel(*)"),           H_UPSData,
+		CAST_TO_POINTER(UPS_PARAM_BATTERY_LEVEL, char *),
+		DCI_DT_INT,      _T("UPS {instance} battery charge level")
+	},
 
-   { _T("UPS.BatteryVoltage(*)"),         H_UPSData,
-      CAST_TO_POINTER(UPS_PARAM_BATTERY_VOLTAGE, char *),
-      DCI_DT_FLOAT,    _T("UPS {instance} battery voltage")
-   },
+	{ _T("UPS.BatteryVoltage(*)"),         H_UPSData,
+		CAST_TO_POINTER(UPS_PARAM_BATTERY_VOLTAGE, char *),
+		DCI_DT_FLOAT,    _T("UPS {instance} battery voltage")
+	},
 
-   { _T("UPS.ConnectionStatus(*)"),       H_UPSConnStatus,
-      NULL,
-      DCI_DT_INT,      _T("UPS {instance} connection status")
-   },
+	{ _T("UPS.ConnectionStatus(*)"),       H_UPSConnStatus,
+		NULL,
+		DCI_DT_INT,      _T("UPS {instance} connection status")
+	},
 
-   { _T("UPS.EstimatedRuntime(*)"),       H_UPSData,
-      CAST_TO_POINTER(UPS_PARAM_EST_RUNTIME, char *),
-      DCI_DT_INT,      _T("UPS {instance} estimated on-battery runtime (minutes)")
-   },
+	{ _T("UPS.EstimatedRuntime(*)"),       H_UPSData,
+		CAST_TO_POINTER(UPS_PARAM_EST_RUNTIME, char *),
+		DCI_DT_INT,      _T("UPS {instance} estimated on-battery runtime (minutes)")
+	},
 
-   { _T("UPS.Firmware(*)"),               H_UPSData,
-      CAST_TO_POINTER(UPS_PARAM_FIRMWARE, char *),
-      DCI_DT_STRING,   _T("UPS {instance} firmware version")
-   },
+	{ _T("UPS.Firmware(*)"),               H_UPSData,
+		CAST_TO_POINTER(UPS_PARAM_FIRMWARE, char *),
+		DCI_DT_STRING,   _T("UPS {instance} firmware version")
+	},
 
-   { _T("UPS.InputVoltage(*)"),           H_UPSData,
-      CAST_TO_POINTER(UPS_PARAM_INPUT_VOLTAGE, char *),
-      DCI_DT_FLOAT,    _T("UPS {instance} input line voltage")
-   },
+	{ _T("UPS.InputVoltage(*)"),           H_UPSData,
+		CAST_TO_POINTER(UPS_PARAM_INPUT_VOLTAGE, char *),
+		DCI_DT_FLOAT,    _T("UPS {instance} input line voltage")
+	},
 
-   { _T("UPS.LineFrequency(*)"),          H_UPSData,
-      CAST_TO_POINTER(UPS_PARAM_LINE_FREQ, char *),
-      DCI_DT_INT,      _T("UPS {instance} input line frequency")
-   },
+	{ _T("UPS.LineFrequency(*)"),          H_UPSData,
+		CAST_TO_POINTER(UPS_PARAM_LINE_FREQ, char *),
+		DCI_DT_INT,      _T("UPS {instance} input line frequency")
+	},
 
-   { _T("UPS.Load(*)"),                   H_UPSData,
-      CAST_TO_POINTER(UPS_PARAM_LOAD, char *),
-      DCI_DT_INT,      _T("UPS {instance} load")
-   },
+	{ _T("UPS.Load(*)"),                   H_UPSData,
+		CAST_TO_POINTER(UPS_PARAM_LOAD, char *),
+		DCI_DT_INT,      _T("UPS {instance} load")
+	},
 
-   { _T("UPS.MfgDate(*)"),                H_UPSData,
-      CAST_TO_POINTER(UPS_PARAM_MFG_DATE, char *),
-      DCI_DT_STRING,   _T("UPS {instance} manufacturing date")
-   },
+	{ _T("UPS.MfgDate(*)"),                H_UPSData,
+		CAST_TO_POINTER(UPS_PARAM_MFG_DATE, char *),
+		DCI_DT_STRING,   _T("UPS {instance} manufacturing date")
+	},
 
-   { _T("UPS.Model(*)"),                  H_UPSData,
-      CAST_TO_POINTER(UPS_PARAM_MODEL, char *),
-      DCI_DT_STRING,   _T("UPS {instance} model")
-   },
+	{ _T("UPS.Model(*)"),                  H_UPSData,
+		CAST_TO_POINTER(UPS_PARAM_MODEL, char *),
+		DCI_DT_STRING,   _T("UPS {instance} model")
+	},
 
-   { _T("UPS.NominalBatteryVoltage(*)"),  H_UPSData,
-      CAST_TO_POINTER(UPS_PARAM_NOMINAL_BATT_VOLTAGE, char *),
-      DCI_DT_FLOAT,    _T("UPS {instance} nominal battery voltage")
-   },
+	{ _T("UPS.NominalBatteryVoltage(*)"),  H_UPSData,
+		CAST_TO_POINTER(UPS_PARAM_NOMINAL_BATT_VOLTAGE, char *),
+		DCI_DT_FLOAT,    _T("UPS {instance} nominal battery voltage")
+	},
 
-   { _T("UPS.OnlineStatus(*)"),           H_UPSData,
-      CAST_TO_POINTER(UPS_PARAM_ONLINE_STATUS, char *),
-      DCI_DT_INT,      _T("UPS {instance} online status")
-   },
+	{ _T("UPS.OnlineStatus(*)"),           H_UPSData,
+		CAST_TO_POINTER(UPS_PARAM_ONLINE_STATUS, char *),
+		DCI_DT_INT,      _T("UPS {instance} online status")
+	},
 
-   { _T("UPS.OutputVoltage(*)"),          H_UPSData,
-      CAST_TO_POINTER(UPS_PARAM_OUTPUT_VOLTAGE, char *),
-      DCI_DT_FLOAT,    _T("UPS {instance} output voltage")
-   },
+	{ _T("UPS.OutputVoltage(*)"),          H_UPSData,
+		CAST_TO_POINTER(UPS_PARAM_OUTPUT_VOLTAGE, char *),
+		DCI_DT_FLOAT,    _T("UPS {instance} output voltage")
+	},
 
-   { _T("UPS.SerialNumber(*)"),           H_UPSData,
-      CAST_TO_POINTER(UPS_PARAM_SERIAL, char *),
-      DCI_DT_STRING,   _T("UPS {instance} serial number")
-   },
+	{ _T("UPS.SerialNumber(*)"),           H_UPSData,
+		CAST_TO_POINTER(UPS_PARAM_SERIAL, char *),
+		DCI_DT_STRING,   _T("UPS {instance} serial number")
+	},
 
-   { _T("UPS.Temperature(*)"),            H_UPSData,
-      CAST_TO_POINTER(UPS_PARAM_TEMP, char *),
-      DCI_DT_INT,      _T("UPS {instance} temperature")
-   }
+	{ _T("UPS.Temperature(*)"),            H_UPSData,
+		CAST_TO_POINTER(UPS_PARAM_TEMP, char *),
+		DCI_DT_INT,      _T("UPS {instance} temperature")
+	}
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
-   { _T("UPS.DeviceList"), H_DeviceList, NULL }
+	{ _T("UPS.DeviceList"), H_DeviceList, NULL }
 };
 
 static NETXMS_SUBAGENT_INFO m_info =
 {
-   NETXMS_SUBAGENT_INFO_MAGIC,
+	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("UPS"), _T(NETXMS_VERSION_STRING),
-   SubAgentInit, SubAgentShutdown, NULL,
+	SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
 	m_enums,
-   0, NULL
+	0, NULL
 };
 
 
@@ -431,8 +431,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 
 DECLARE_SUBAGENT_ENTRY_POINT(UPS)
 {
-   *ppInfo = &m_info;
-   return TRUE;
+	*ppInfo = &m_info;
+	return TRUE;
 }
 
 
@@ -444,9 +444,9 @@ DECLARE_SUBAGENT_ENTRY_POINT(UPS)
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-   if (dwReason == DLL_PROCESS_ATTACH)
-      DisableThreadLibraryCalls(hInstance);
-   return TRUE;
+	if (dwReason == DLL_PROCESS_ATTACH)
+		DisableThreadLibraryCalls(hInstance);
+	return TRUE;
 }
 
 #endif
