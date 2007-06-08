@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.21 2007-06-08 00:02:36 alk Exp $ */
+/* $Id: main.cpp,v 1.22 2007-06-08 01:18:59 alk Exp $ */
 
 /*
  ** NetXMS subagent for SunOS/Solaris
@@ -73,6 +73,16 @@ static LONG H_SourcePkg(char *pszParam, char *pArg, char *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
+//
+// Initalization callback
+//
+
+static BOOL SubAgentInit(TCHAR *pszConfigFile)
+{
+	m_hCPUStatThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
+
+	return TRUE;
+}
 
 //
 // Called by master agent at unload
@@ -142,7 +152,9 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("SUNOS"), NETXMS_VERSION_STRING,
-	UnloadHandler, NULL, NULL,
+	NULL, // init handler
+	UnloadHandler, // unload handler
+	NULL, // command handler
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
@@ -158,8 +170,6 @@ static NETXMS_SUBAGENT_INFO m_info =
 
 DECLARE_SUBAGENT_ENTRY_POINT(SUNOS)
 {
-	m_hCPUStatThread = ThreadCreateEx(CPUStatCollector, 0, NULL);
-
 	*ppInfo = &m_info;
 	return TRUE;
 }
@@ -177,6 +187,11 @@ extern "C" BOOL __NxSubAgentGetIfList(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2007/06/08 00:02:36  alk
+DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
+
+NETXMS_SUBAGENT_INFO initialization fixed (actions)
+
 Revision 1.20  2007/06/07 22:07:11  alk
 descriptions changed to defines
 
