@@ -42,6 +42,11 @@ case `uname -s` in
 			[ ! -z "$pids" ] && kill $1 $pids
 		}
 		;;
+	*)
+		KILLALL() {
+			killall $*
+		}
+		;;
 esac
 
 cd `dirname $0`
