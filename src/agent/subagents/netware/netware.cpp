@@ -1,4 +1,4 @@
-/* $Id: netware.cpp,v 1.18 2007-06-07 22:07:11 alk Exp $ */
+/* $Id: netware.cpp,v 1.19 2007-06-08 21:23:18 victor Exp $ */
 
 /*
 ** NetXMS subagent for Novell NetWare
@@ -327,7 +327,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "System.Hostname", H_HostName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
 	{ "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
 	{ "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
-	{ "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED<F2>},
+	{ "System.Memory.Physical.Used", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
 	{ "System.PlatformName", H_PlatformName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_PLATFORMNAME }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
@@ -385,5 +385,8 @@ int main(int argc, char *argv[])
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2007/06/07 22:07:11  alk
+descriptions changed to defines
+
 
 */
