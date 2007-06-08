@@ -251,7 +251,7 @@ typedef struct { char * first; char * last; } stack_entry;
 static char * pivot_big(char *first, char *mid, char *last, size_t size, void *arg,
                         int compare(const void *, const void *, void *))
 {
-  int d=(((last-first)/size)>>3)*size;
+  int d=(int)((((last-first)/size)>>3)*size);
   char *m1,*m2,*m3;
   { char *a=first, *b=first+d, *c=first+2*d;
 #ifdef DEBUG_QSORT
