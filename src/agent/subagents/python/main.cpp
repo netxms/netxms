@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.3 2007-06-08 00:02:36 alk Exp $ */
+/* $Id: main.cpp,v 1.4 2007-06-08 13:49:50 alk Exp $ */
 
 //#include <windows.h>
 #include <Python.h>
@@ -59,15 +59,12 @@ static NETXMS_SUBAGENT_INFO m_info =
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("nxPython"),
 	_T("0.0.1"),
-	UnloadHandler,
-	NULL,
-	NULL,
-	0,
-	m_param,
-	0,
-	NULL,
-	0,
-	NULL
+	NULL, // init
+	UnloadHandler, // cleanup
+	NULL, // command
+	0, m_param,
+	0, NULL,
+	0, NULL
 };
 
 //
@@ -151,6 +148,11 @@ int _fini(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.3  2007/06/08 00:02:36  alk
+DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
+
+NETXMS_SUBAGENT_INFO initialization fixed (actions)
+
 Revision 1.2  2005/10/17 20:45:47  victor
 Fixed incorrect usage of strncpy
 

@@ -1,4 +1,4 @@
-/* $Id: openbsd.cpp,v 1.4 2007-06-08 00:02:36 alk Exp $ */
+/* $Id: openbsd.cpp,v 1.5 2007-06-08 13:49:49 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -113,11 +113,13 @@ static NETXMS_SUBAGENT_INFO m_info =
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	"OpenBSD",
 	NETXMS_VERSION_STRING,
-	NULL, NULL,
+	NULL, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
 	m_enums,
+	NULL,
+	0,
 	NULL
 };
 
@@ -135,6 +137,11 @@ DECLARE_SUBAGENT_ENTRY_POINT(OPENBSD)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2007/06/08 00:02:36  alk
+DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
+
+NETXMS_SUBAGENT_INFO initialization fixed (actions)
+
 Revision 1.3  2007/06/07 22:06:53  alk
 1) descriptions changed to defines
 2) params structure was filled incorrectly
