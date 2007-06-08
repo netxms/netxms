@@ -1,4 +1,4 @@
-/* $Id: openbsd.cpp,v 1.5 2007-06-08 13:49:49 alk Exp $ */
+/* $Id: openbsd.cpp,v 1.6 2007-06-08 14:06:39 alk Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -118,7 +118,6 @@ static NETXMS_SUBAGENT_INFO m_info =
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_ENUM),
 	m_enums,
-	NULL,
 	0,
 	NULL
 };
@@ -137,6 +136,9 @@ DECLARE_SUBAGENT_ENTRY_POINT(OPENBSD)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2007/06/08 13:49:49  alk
+fixed NETXMS_SUBAGENT_INFO init
+
 Revision 1.4  2007/06/08 00:02:36  alk
 DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
 
