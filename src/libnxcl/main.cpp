@@ -197,7 +197,10 @@ void LIBNXCL_EXPORTABLE NXCStartWatchdog(NXC_SESSION hSession)
 void LIBNXCL_EXPORTABLE NXCGetLastLockOwner(NXC_SESSION hSession, TCHAR *pszBuffer,
                                             int nBufSize)
 {
-   nx_strncpy(pszBuffer, ((NXCL_Session *)hSession)->GetLastLock(), nBufSize);
+	if (hSession != NULL)
+		nx_strncpy(pszBuffer, ((NXCL_Session *)hSession)->GetLastLock(), nBufSize);
+	else
+		nx_strncpy(pszBuffer, _T("INVALID SESSION HANDLE"), nBufSize);
 }
 
 
