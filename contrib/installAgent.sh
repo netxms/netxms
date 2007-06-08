@@ -80,7 +80,7 @@ fi
 # build
 $make >>$log 2>&1
 if [ $? != 0 ]; then
-	echo build failed, restarting olf agent >>$log
+	echo build failed, restarting old agent >>$log
    # Try to restart existing agent
    $prefix/bin/nxagentd -d -c $config >>$log 2>&1
 	exit 4
