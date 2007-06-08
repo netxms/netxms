@@ -31,17 +31,16 @@ else
 fi
 
 case `uname -s` in
-	Linux)
-		pkill=killall
-		;;
 	SunOS)
-		pkill=pkill
+		KILLALL() {
+			pkill $*
+		}
 		;;
-	*BSD)
-		pkill=killall
-		;;
-	*)
-		pkill=pkill
+	AIX|HP-UX)
+		KILLALL() {
+			pids=`/usr/bin/ps -ef | grep $2 | grep -v grep | awk '{ print $2 }'`
+			[ ! -z "$pids" ] && kill $1 $pids
+		}
 		;;
 esac
 
@@ -64,16 +63,16 @@ if [ $? != 0 ]; then
 fi
 
 # ask nxagentd gently
-$pkill nxagentd >>$log 2>&1
+KILLALL -15 nxagentd >>$log 2>&1
 # wait a few seconds and smash it down
-sleep 15 && $pkill -9 nxagentd >>$log 2>&1
+sleep 15 && KILLALL -9 nxagentd >>$log 2>&1
 
 # do configure
 ./configure --prefix=$prefix --with-agent $configureAdd >>$log 2>&1
-if [ $? != 0 ]; then
+	if [ $? != 0 ]; then
 	echo configure failed, restarting old agent  >>$log
-   # Try to restart existing agent
-   $prefix/bin/nxagentd -d -c $config >>$log 2>&1
+	# Try to restart existing agent
+	$prefix/bin/nxagentd -d -c $config >>$log 2>&1
 	exit 4
 fi
 
@@ -81,8 +80,8 @@ fi
 $make >>$log 2>&1
 if [ $? != 0 ]; then
 	echo build failed, restarting old agent >>$log
-   # Try to restart existing agent
-   $prefix/bin/nxagentd -d -c $config >>$log 2>&1
+	# Try to restart existing agent
+	$prefix/bin/nxagentd -d -c $config >>$log 2>&1
 	exit 4
 fi
 
@@ -90,8 +89,8 @@ fi
 $make install >>$log 2>&1
 if [ $? != 0 ]; then
 	echo install failed, restarting old agent >>$log
-   # Try to restart existing agent
-   $prefix/bin/nxagentd -d -c $config >>$log 2>&1
+	# Try to restart existing agent
+	$prefix/bin/nxagentd -d -c $config >>$log 2>&1
 	exit 5
 fi
 
