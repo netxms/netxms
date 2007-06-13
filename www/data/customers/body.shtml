@@ -57,6 +57,13 @@
 	</p>
 	<p>
 
+	<!-- LDZ -->
+	<h2>Latvian Railway IT Center (<a href="http://www.ldz.lv/isc/en/index.htm">www.ldz.lv/isc/en/index.htm</a>)</h2>
+	<p>
+		Latvian Railway IT Center uses NetXMS for monitoring entire IT infrastructure across the country.
+	</p>
+	<p>
+
 	<!-- LBB -->
 	<h2>Latvijas Biznesa Banka (Latvian Business Bank) (<a href="http://www.lbb.lv">www.lbb.lv</a>)</h2>
 	<p>
@@ -76,6 +83,13 @@
 			</ul>
 		</p>
 	</p>
+
+	<!-- Ventbunkers -->
+	<h2>Ventbunkers (<a href="http://www.ventbunkers.lv/EN/">www.ventbunkers.lv</a>)</h2>
+	<p>
+		Ventbunkers is an oil terminal in Ventspils, Latvia. Ventbunkers uses NetXMS for monitoring servers, SAN devices, and network equipment.
+	</p>
+	<p>
 
 	<!-- ZF Passau GmbH -->
 	<h2>ZF Passau GmbH (<a href="http://www.zf.com/a-passau">http://www.zf.com/a-passau</a>)</h2>
