@@ -10,6 +10,7 @@
 
 EXTRA_DIST = \
 	ack.png \
+	add.png \
 	cancel.png \
 	delete.png \
 	login.png \

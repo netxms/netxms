@@ -183,7 +183,8 @@ enum
 	FORM_OVERVIEW,
 	FORM_OBJECTS,
 	FORM_ALARMS,
-	FORM_TOOLS
+	FORM_TOOLS,
+	FORM_CONTROL_PANEL
 };
 
 enum
@@ -244,6 +245,9 @@ protected:
 	void ShowLastValues(HttpResponse &response, NXC_OBJECT *pObject, BOOL bReload);
 	void SendLastValues(HttpRequest &request, HttpResponse &response);
 	void ShowPieChart(HttpRequest &request, HttpResponse &response);
+	void ShowFormControlPanel(HttpResponse &response);
+	void ShowCtrlPanelView(HttpRequest &request, HttpResponse &response);
+	void CtrlPanelServerVariables(HttpRequest &request, HttpResponse &response);
 
 public:
 	ClientSession();

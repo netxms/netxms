@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.15 2007-06-07 20:45:22 victor Exp $ */
+/* $Id: session.cpp,v 1.16 2007-06-13 22:18:35 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -227,6 +227,14 @@ BOOL ClientSession::ProcessRequest(HttpRequest &request, HttpResponse &response)
 		{
 			ShowForm(response, FORM_TOOLS);
 		}
+		else if (!_tcscmp((TCHAR *)cmd, _T("ctrlPanel")))
+		{
+			ShowForm(response, FORM_CONTROL_PANEL);
+		}
+		else if (!_tcscmp((TCHAR *)cmd, _T("ctrlPanelView")))
+		{
+			ShowCtrlPanelView(request, response);
+		}
 		else if (!_tcscmp((TCHAR *)cmd, _T("pieChart")))
 		{
 			ShowPieChart(request, response);
@@ -261,6 +269,7 @@ void ClientSession::ShowMainMenu(HttpResponse &response)
 		_T("		<li><a href=\"/main.app?cmd=alarms&sid={$sid}\">Alarms</a></li>\r\n")
 		_T("		<li><a href=\"/main.app?cmd=objects&sid={$sid}\">Objects</a></li>\r\n")
 		_T("		<li><a href=\"/main.app?cmd=tools&sid={$sid}\">Tools</a></li>\r\n")
+		_T("		<li><a href=\"/main.app?cmd=ctrlPanel&sid={$sid}\">Admin</a></li>\r\n")
 		_T("		<li style=\"float: right\"><a href=\"/main.app?cmd=logout&sid={$sid}\">Logout</a></li>\r\n")
 		_T("	</ul>\r\n")
 		_T("</div>\r\n");
@@ -281,6 +290,7 @@ void ClientSession::ShowForm(HttpResponse &response, int nForm)
 		_T("NetXMS :: Object Browser"),
 		_T("NetXMS :: Alarms"),
 		_T("NetXMS :: Tools")
+		_T("NetXMS :: Control Panel")
 	};
 
 	response.BeginPage(formName[nForm]);
@@ -299,6 +309,9 @@ void ClientSession::ShowForm(HttpResponse &response, int nForm)
 			break;
 		case FORM_OVERVIEW:
 			ShowFormOverview(response);
+			break;
+		case FORM_CONTROL_PANEL:
+			ShowFormControlPanel(response);
 			break;
 		default:
 			ShowInfoMessage(response, _T("Not implemented yet"));

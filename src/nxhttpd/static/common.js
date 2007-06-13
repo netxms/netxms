@@ -81,6 +81,8 @@ function resizeElements()
 	changeDivHeight(winHeight, 'object_tree');
 	changeDivHeight(winHeight, 'object_data');
 	changeDivHeight(winHeight, 'alarm_view');
+	changeDivHeight(winHeight, 'admin_tool_tree');
+	changeDivHeight(winHeight, 'admin_tool_data');
 }
 
 /*** Event handlers ***/

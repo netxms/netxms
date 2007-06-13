@@ -385,6 +385,30 @@ img
 	overflow-y: auto;
 }
 
+/* Control Panel (admin tools) */
+
+#ctrlpanel_tree
+{
+	width: 100%;
+	float: left;
+	overflow: auto;
+	border-right: 1px solid rgb(204,204,204);
+}
+
+#ctrlpanel_view
+{
+	width: 99%;
+	float: left;
+	margin: 4px;
+}
+
+#ctrlpanel_data
+{
+	border: none;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
 /*
  * ripped from http://www.wpdfd.com/editorial/wpd0103.htm
  */

@@ -1180,6 +1180,7 @@ src/nxevent/nxevent.h -text
 src/nxhttpd/Makefile.am -text
 src/nxhttpd/alarm.cpp -text
 src/nxhttpd/client.cpp -text
+src/nxhttpd/ctrlpanel.cpp -text
 src/nxhttpd/dataview.cpp -text
 src/nxhttpd/html.cpp -text
 src/nxhttpd/httprequest.cpp -text
@@ -1212,6 +1213,7 @@ src/nxhttpd/static/images/blank.png -text
 src/nxhttpd/static/images/buttons/Makefile.am -text
 src/nxhttpd/static/images/buttons/normal/Makefile.am -text
 src/nxhttpd/static/images/buttons/normal/ack.png -text
+src/nxhttpd/static/images/buttons/normal/add.png -text
 src/nxhttpd/static/images/buttons/normal/cancel.png -text
 src/nxhttpd/static/images/buttons/normal/delete.png -text
 src/nxhttpd/static/images/buttons/normal/login.png -text
@@ -1219,6 +1221,7 @@ src/nxhttpd/static/images/buttons/normal/ok.png -text
 src/nxhttpd/static/images/buttons/normal/terminate.png -text
 src/nxhttpd/static/images/buttons/pressed/Makefile.am -text
 src/nxhttpd/static/images/buttons/pressed/ack.png -text
+src/nxhttpd/static/images/buttons/pressed/add.png -text
 src/nxhttpd/static/images/buttons/pressed/cancel.png -text
 src/nxhttpd/static/images/buttons/pressed/delete.png -text
 src/nxhttpd/static/images/buttons/pressed/login.png -text
@@ -1226,6 +1229,21 @@ src/nxhttpd/static/images/buttons/pressed/ok.png -text
 src/nxhttpd/static/images/buttons/pressed/terminate.png -text
 src/nxhttpd/static/images/checkbox_off.png -text
 src/nxhttpd/static/images/checkbox_on.png -text
+src/nxhttpd/static/images/ctrlpanel/actions.png -text
+src/nxhttpd/static/images/ctrlpanel/cert.png -text
+src/nxhttpd/static/images/ctrlpanel/cfgvar.png -text
+src/nxhttpd/static/images/ctrlpanel/ctrlpanel.png -text
+src/nxhttpd/static/images/ctrlpanel/discovery.png -text
+src/nxhttpd/static/images/ctrlpanel/epp.png -text
+src/nxhttpd/static/images/ctrlpanel/group.png -text
+src/nxhttpd/static/images/ctrlpanel/module.png -text
+src/nxhttpd/static/images/ctrlpanel/objtools.png -text
+src/nxhttpd/static/images/ctrlpanel/package.png -text
+src/nxhttpd/static/images/ctrlpanel/scripts.png -text
+src/nxhttpd/static/images/ctrlpanel/servercfg.png -text
+src/nxhttpd/static/images/ctrlpanel/snmptrap.png -text
+src/nxhttpd/static/images/ctrlpanel/user.png -text
+src/nxhttpd/static/images/ctrlpanel/users.png -text
 src/nxhttpd/static/images/document.png -text
 src/nxhttpd/static/images/file.png -text
 src/nxhttpd/static/images/foldericon.png -text
