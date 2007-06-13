@@ -572,8 +572,8 @@ ValueConstraint:
 ;
 
 NumericValueConstraintList:
-    NumericValueConstraintList BAR_SYM NumericValue 
-|   NumericValueConstraintList COMMA_SYM NumericValue 
+    NumericValue BAR_SYM NumericValueConstraintList
+|   NumericValue COMMA_SYM NumericValueConstraintList
 |   NumericValue 
 {
 }
@@ -673,6 +673,12 @@ TypeOrValueAssignment:
    $$->iType = MIBC_SEQUENCE;
    $$->pszName = $1;
 }
+|   LCidentifier ASSIGNMENT_SYM SEQUENCE_SYM SequenceAssignment
+{
+   $$ = CREATE(MP_OBJECT);
+   $$->iType = MIBC_SEQUENCE;
+   $$->pszName = $1;
+}
 |   UCidentifier ASSIGNMENT_SYM CHOICE_SYM SequenceAssignment
 {
    $$ = CREATE(MP_OBJECT);
@@ -707,7 +713,7 @@ Type:
 ;
 
 NamedType:
-    SnmpTypeTagPart UCidentifier
+    SnmpTypeTagPart Identifier
 {
    $$ = CREATE(MP_SYNTAX);
    $$->nSyntax = -1;

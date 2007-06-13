@@ -389,12 +389,12 @@ static void CountNewlines(char *pszStr, int len)
    return CSTRING_SYM;
 }
 
-<INITIAL,IMPORTS,EXPORTS,KEYWORD>[A-Z][a-zA-Z0-9]*[-a-zA-Z0-9]* {
+<INITIAL,IMPORTS,EXPORTS,KEYWORD>[A-Z][a-zA-Z0-9_\-\/]* {
    mplval.pszString = strdup(mptext);
    return UCASEFIRST_IDENT_SYM;
 }
 
-<INITIAL,IMPORTS,EXPORTS,KEYWORD>[a-z][a-zA-Z0-9]*[-a-zA-Z0-9]* {
+<INITIAL,IMPORTS,EXPORTS,KEYWORD>[a-z][a-zA-Z0-9_\-\/]* {
    mplval.pszString = strdup(mptext);
    return LCASEFIRST_IDENT_SYM;
 }
