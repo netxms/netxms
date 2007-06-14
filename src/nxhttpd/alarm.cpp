@@ -229,7 +229,7 @@ void ClientSession::ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj,
 		response.StartBoxRow();
 		response.AppendBody(_T("<td>"));
 		_stprintf(szTemp1, _T("%d"), m_pAlarmList[i].dwAlarmId);
-		AddCheckbox(response, szTemp1, _T("Select alarm"), _T("onAlarmSelect"), IsListMember(m_pAlarmList[i].dwAlarmId, dwSelCount, pdwSelList));
+		AddCheckbox(response, m_pAlarmList[i].dwAlarmId, szTemp1, _T("Select alarm"), _T("onAlarmSelect"), IsListMember(m_pAlarmList[i].dwAlarmId, dwSelCount, pdwSelList));
 		row.AddFormattedString(_T("</td><td><table class=\"inner_table\"><tr><td><img src=\"/images/status/%s.png\"></td><td>%s</td></tr></table></td>")
 		                       _T("<td>%s</td><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td>")
 		                       _T("<td><table class=\"inner_table\"><tr><td><a href=\"#\" onclick=\"javascript:alarmCtrl('%s',%d,'ack'); return false;\"><img src=\"/images/ack.png\" alt=\"Acknowledge alarm\"></a></td>")

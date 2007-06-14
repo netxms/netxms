@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.16 2007-06-13 22:18:35 victor Exp $ */
+/* $Id: session.cpp,v 1.17 2007-06-14 20:42:48 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -140,6 +140,12 @@ DWORD ClientSession::DoLogin(TCHAR *pszLogin, TCHAR *pszPassword)
 	if (dwResult == RCC_SUCCESS)
 	{
 		NXCSetEventHandler(m_hSession, SessionEventHandler);
+	}
+
+	// Synchronize user database
+	if (dwResult == RCC_SUCCESS)
+	{
+		dwResult = NXCLoadUserDB(m_hSession);
 	}
 
    // Disconnect if some of post-login operations was failed

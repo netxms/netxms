@@ -194,17 +194,62 @@ void AddButton(HttpResponse &response, TCHAR *pszSID, TCHAR *pszName, TCHAR *psz
 // Add checkbox control
 //
 
-void AddCheckbox(HttpResponse &response, TCHAR *pszName,TCHAR *pszDescription, TCHAR *pszHandler, BOOL bChecked)
+void AddCheckbox(HttpResponse &response, int nId, TCHAR *pszName,TCHAR *pszDescription, TCHAR *pszHandler, BOOL bChecked)
 {
 	TCHAR szTemp[4096];
 
 	_sntprintf(szTemp, 4096,
 	           _T("<a href=\"#\" hidefocus=\"true\" unselectable=\"on\" title=\"%s\" ")
-				  _T("onClick=\"return toggleCheckbox(%s,'%s');\" onMouseOver=\"window.top.status='%s';return true\" ")
+				  _T("onClick=\"return toggleCheckbox(%s,%d,'%s');\" onMouseOver=\"window.top.status='%s';return true\" ")
 				  _T("onMouseOut=\"window.top.status='';return true;\">\r\n")
-				  _T("   <img class=\"checkbox\" id=\"img_%s\" src=\"/images/checkbox_%s.png\" ")
+				  _T("   <img class=\"checkbox\" id=\"img_%d\" src=\"/images/checkbox_%s.png\" ")
 				  _T("border=\"0\" width=\"13\" height=\"13\">\r\n</a>\r\n"),
-	           pszDescription, pszHandler, pszName, pszDescription, pszName,
+	           pszDescription, pszHandler, nId, pszName, pszDescription, nId,
 				  bChecked ? _T("on") : _T("off"));
 	response.AppendBody(szTemp);
+}
+
+
+//
+// Add action link
+//
+
+void AddActionLink(HttpResponse &response, TCHAR *pszSID, TCHAR *pszName, TCHAR *pszImage,
+						 TCHAR *pszFunction, TCHAR *pszArgs)
+{
+	TCHAR szTemp[8192];
+
+//	_sntprintf(szTemp, 8192, _T("<table class=\"inner_table\"><tr><td width=\"1%\"><a href=\"#\" onClick=\"%s('%s' %s); return false;\"><img src=\"/images/%s\"></a></td><td width=\"1%\">&nbsp</td><td><a href=\"#\" onClick=\"%s('%s' %s); return false;\">%s</a></td></tr></table>"),
+//	           pszFunction, pszSID, pszArgs, pszImage, pszFunction, pszSID, pszArgs, pszName);
+	_sntprintf(szTemp, 8192, _T("<a href=\"#\" onClick=\"%s('%s' %s); return false;\"><table class=\"inner_table\"><tr><td width=\"1%\"><img src=\"/images/%s\"></td><td width=\"1%\">&nbsp</td><td>%s</td></tr></table></a>"),
+	           pszFunction, pszSID, pszArgs, pszImage, pszName);
+	response.AppendBody(szTemp);
+}
+
+
+//
+// Add action menu
+//
+
+void AddActionMenu(HttpResponse &response, TCHAR *sid, ...)
+{
+	va_list args;
+	TCHAR *pszName, *pszImage, *pszFunction, *pszArgs;
+
+	response.AppendBody(_T("<div class=\"action_menu\"><table><tr>"));
+	va_start(args, sid);
+	while(1)
+	{
+		pszName = va_arg(args, TCHAR *);
+		if (pszName == NULL)
+			break;
+		response.AppendBody(_T("<td>"));
+		pszImage = va_arg(args, TCHAR *);
+		pszFunction = va_arg(args, TCHAR *);
+		pszArgs = va_arg(args, TCHAR *);
+		AddActionLink(response, sid, pszName, pszImage, pszFunction, pszArgs);
+		response.AppendBody(_T("</td>"));
+	}
+	va_end(args);
+	response.AppendBody(_T("</tr></table></div>\r\n"));
 }

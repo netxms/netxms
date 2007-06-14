@@ -1,3 +1,6 @@
+/*** Global Variables ***/
+var checkBoxState = new Object();
+
 /*** Set button's state ***/
 function setButtonState(name, isPressed)
 {
@@ -10,19 +13,27 @@ function setButtonState(name, isPressed)
 }
 
 /*** Toggle checkbox ***/
-function toggleCheckbox(handler, name)
+function toggleCheckbox(handler, id, name)
 {
-	img = document.getElementById('img_' + name);
+	img = document.getElementById('img_' + id);
 	if (img != null)
 	{
 		var newState = (img.src.indexOf('checkbox_on') != -1) ? 0 : 1;
 		img.src = '/images/checkbox_' + ((newState == 0) ? 'off' : 'on') + '.png';
+		checkBoxState[name] = newState;
 		if (handler != null)
 		{
-			handler(name, newState);
+			handler(id, name, newState);
 		}
 	}
 	return true;
+}
+
+/*** Reset checkbox states ***/
+function resetCheckboxStates()
+{
+	delete checkBoxState;
+	checkBoxState = new Object();
 }
 
 /*** Reload content of given div ***/
@@ -81,8 +92,8 @@ function resizeElements()
 	changeDivHeight(winHeight, 'object_tree');
 	changeDivHeight(winHeight, 'object_data');
 	changeDivHeight(winHeight, 'alarm_view');
-	changeDivHeight(winHeight, 'admin_tool_tree');
-	changeDivHeight(winHeight, 'admin_tool_data');
+	changeDivHeight(winHeight, 'ctrlpanel_tree');
+	changeDivHeight(winHeight, 'ctrlpanel_data');
 }
 
 /*** Event handlers ***/

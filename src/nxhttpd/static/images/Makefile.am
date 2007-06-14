@@ -12,10 +12,11 @@ SUBDIRS = buttons ctrlpanel objects status
 
 imagesdir=$(pkgdatadir)/nxhttpd/images
 
-images_DATA = ack.png blank.png checkbox_off.png checkbox_on.png file.png \
-              foldericon.png \
+images_DATA = ack.png blank.png checkbox_off.png checkbox_on.png \
+	      delete.png edit.png file.png foldericon.png \
               I.png Lminus.png login.png Lplus.png L.png \
               new.png openfoldericon.png \
-              Tminus.png Tplus.png T.png document.png graph.png
+              Tminus.png Tplus.png T.png document.png graph.png \
+	      sort_down.png sort_up.png
 
 EXTRA_DIST = $(images_DATA)

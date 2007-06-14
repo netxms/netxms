@@ -248,6 +248,7 @@ protected:
 	void ShowFormControlPanel(HttpResponse &response);
 	void ShowCtrlPanelView(HttpRequest &request, HttpResponse &response);
 	void CtrlPanelServerVariables(HttpRequest &request, HttpResponse &response);
+	void CtrlPanelUsers(HttpRequest &request, HttpResponse &response, BOOL bUsers);
 
 public:
 	ClientSession();
@@ -338,7 +339,10 @@ void AddTableHeader(HttpResponse &response, TCHAR *pszClass, ...);
 void ShowErrorMessage(HttpResponse &response, DWORD dwError);
 void ShowInfoMessage(HttpResponse &response, TCHAR *pszText);
 void AddButton(HttpResponse &response, TCHAR *pszSID, TCHAR *pszImage, TCHAR *pszDescription, TCHAR *pszHandler);
-void AddCheckbox(HttpResponse &response, TCHAR *pszName,TCHAR *pszDescription, TCHAR *pszHandler, BOOL bChecked);
+void AddCheckbox(HttpResponse &response, int nId, TCHAR *pszName,TCHAR *pszDescription, TCHAR *pszHandler, BOOL bChecked);
+void AddActionLink(HttpResponse &response, TCHAR *pszSID, TCHAR *pszName, TCHAR *pszImage,
+						 TCHAR *pszFunction, TCHAR *pszArgs);
+void AddActionMenu(HttpResponse &response, TCHAR *sid, ...);
 
 TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, TCHAR *pszDefaultText);
 TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType);

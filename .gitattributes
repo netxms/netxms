@@ -1200,6 +1200,7 @@ src/nxhttpd/smgr.cpp -text
 src/nxhttpd/static/Makefile.am -text
 src/nxhttpd/static/alarms.js -text
 src/nxhttpd/static/common.js -text
+src/nxhttpd/static/ctrlpanel.js -text
 src/nxhttpd/static/images/I.png -text
 src/nxhttpd/static/images/L.png -text
 src/nxhttpd/static/images/Lminus.png -text
@@ -1244,7 +1245,9 @@ src/nxhttpd/static/images/ctrlpanel/servercfg.png -text
 src/nxhttpd/static/images/ctrlpanel/snmptrap.png -text
 src/nxhttpd/static/images/ctrlpanel/user.png -text
 src/nxhttpd/static/images/ctrlpanel/users.png -text
+src/nxhttpd/static/images/delete.png -text
 src/nxhttpd/static/images/document.png -text
+src/nxhttpd/static/images/edit.png -text
 src/nxhttpd/static/images/file.png -text
 src/nxhttpd/static/images/foldericon.png -text
 src/nxhttpd/static/images/graph.png -text

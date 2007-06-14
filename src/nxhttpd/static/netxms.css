@@ -75,6 +75,46 @@ img
 	margin: 0.5em;
 }
 
+.input_form
+{
+	margin: 0.5em;
+}
+
+.input_form input
+{
+	color: rgb(0, 0, 128);
+	border: 1px solid rgb(204,204,204);
+	padding: 1px;
+}
+
+.input_form_inner_table
+{
+	font-family: "ms sans serif", sans-serif, Verdana, Helvetica;
+}
+
+.input_form_inner_table td
+{
+	padding-right: 0.5em;
+	vertical-align: middle;
+}
+
+.action_menu
+{
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	font-family: "ms sans serif", sans-serif, Verdana, Helvetica;
+	font-size: 100%;
+	background-color: rgb(214, 225, 235);
+}
+
+.action_menu td
+{
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+	padding-top: 0.3em;
+	padding-bottom: 0.1em;
+	vertical-align: middle;
+}
 
 /* main menu */
 

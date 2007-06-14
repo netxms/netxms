@@ -274,6 +274,32 @@ BOOL HttpRequest::ParseQueryString(void)
 
 
 //
+// Decode %xx in query parameter
+//
+
+static void DecodeQueryParam(TCHAR *pszText)
+{
+	int nCode;
+	TCHAR *p;
+
+	for(p = pszText; *p != 0; p++)
+	{
+		if (*p == '%')
+		{
+			if (*(p + 1) != 0)
+			{
+				nCode = hex2bin(*(p + 1)) << 4;
+				if (*(p + 2) != 0)
+					nCode += hex2bin(*(p + 2));
+				*p = nCode;
+				memmove(p + 1, p + 3, _tcslen(p + 2) * sizeof(TCHAR));
+			}
+		}
+	}
+}
+
+
+//
 // Parse single query parameter and add it to parameter map
 //
 
@@ -289,7 +315,7 @@ BOOL HttpRequest::ParseParameter(TCHAR *pszParam)
 		{
 			*pSep = 0;
 			pSep++;
-			// TODO: add %xx decode
+			DecodeQueryParam(pSep);
 			m_query.Set(pszParam, pSep);
 			bRet = TRUE;
 		}

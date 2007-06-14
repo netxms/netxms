@@ -2,7 +2,7 @@
 var selectedAlarms = '';
 
 /*** Handler for alarm selection change ***/
-function onAlarmSelect(alarmId, isSelected)
+function onAlarmSelect(ctrlId, alarmId, isSelected)
 {
 	if (isSelected)
 	{

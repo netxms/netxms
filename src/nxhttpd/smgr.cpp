@@ -1,4 +1,4 @@
-/* $Id: smgr.cpp,v 1.2 2007-06-06 22:40:49 victor Exp $ */
+/* $Id: smgr.cpp,v 1.3 2007-06-14 20:42:48 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -215,9 +215,10 @@ BOOL SessionRequestHandler(HttpRequest &request, HttpResponse &response)
 					}
 					else
 					{
-						// TODO: Show expired session form instead of 403
-						response.SetCode(HTTP_FORBIDDEN);
-						response.SetBody("ERROR 403: Forbidden");
+						response.SetCode(HTTP_OK);
+						response.BeginPage(_T("NetXMS :: Session Expired"));
+						response.SetBody("ERROR: You session has expired.<br><br><a href=\"/login.app\">Return to login page</a><br>");
+						response.EndPage();
 					}
 				}
 				else
