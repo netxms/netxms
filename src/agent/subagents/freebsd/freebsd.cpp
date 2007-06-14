@@ -1,4 +1,4 @@
-/* $Id: freebsd.cpp,v 1.11 2007-06-08 00:02:35 alk Exp $ */
+/* $Id: freebsd.cpp,v 1.12 2007-06-14 17:42:48 victor Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -104,10 +104,31 @@ DECLARE_SUBAGENT_ENTRY_POINT(FREEBSD)
 	return TRUE;
 }
 
+
+//
+// Entry points for server
+//
+
+extern "C" BOOL __NxSubAgentGetIfList(NETXMS_VALUES_LIST *pValue)
+{
+	return H_NetIfList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
+}
+
+extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
+{
+	return H_NetArpCache("Net.ArpCache", NULL, pValue) == SYSINFO_RC_SUCCESS;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2007/06/08 00:02:35  alk
+DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
+
+NETXMS_SUBAGENT_INFO initialization fixed (actions)
+
 Revision 1.10  2007/06/07 23:46:33  alk
 DECLARE_SUBAGENT_INIT replaced w/ DECLARE_SUBAGENT_ENTRY_POINT
 
