@@ -195,15 +195,17 @@ enum
 	OBJVIEW_LAST_VALUES,
 	OBJVIEW_PERFORMANCE,
 	OBJVIEW_TOOLS,
+	OBJVIEW_MANAGE,
 	OBJVIEW_LAST_VIEW_CODE
 };
 
 enum
 {
-	OBJTOOL_CREATE,
-	OBJTOOL_DELETE,
-	OBJTOOL_MANAGE,
-	OBJTOOL_UNMANAGE
+	OBJECT_ACTION_CREATE,
+	OBJECT_ACTION_DELETE,
+	OBJECT_ACTION_MANAGE,
+	OBJECT_ACTION_UNMANAGE,
+	OBJECT_ACTION_PROPERTIES
 };
 
 class ClientSession
@@ -238,6 +240,7 @@ protected:
 	void ShowObjectView(HttpRequest &request, HttpResponse &response);
 	void ShowObjectOverview(HttpResponse &response, NXC_OBJECT *pObject);
 	void ShowObjectTools(HttpResponse &response, NXC_OBJECT *pObject);
+	void ShowObjectMgmt(HttpRequest &request, HttpResponse &response, NXC_OBJECT *pObject);
 	void SendObjectTree(HttpRequest &request, HttpResponse &response);
 	void ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj, BOOL bReload, TCHAR *pszSelection);
 	void SendAlarmList(HttpRequest &request, HttpResponse &response);
@@ -338,6 +341,7 @@ void ShowFormLogin(HttpResponse &response, TCHAR *pszErrorText);
 void AddTableHeader(HttpResponse &response, TCHAR *pszClass, ...);
 void ShowErrorMessage(HttpResponse &response, DWORD dwError);
 void ShowInfoMessage(HttpResponse &response, TCHAR *pszText);
+void ShowSuccessMessage(HttpResponse &response, TCHAR *pszText = NULL);
 void AddButton(HttpResponse &response, TCHAR *pszSID, TCHAR *pszImage, TCHAR *pszDescription, TCHAR *pszHandler);
 void AddCheckbox(HttpResponse &response, int nId, TCHAR *pszName,TCHAR *pszDescription, TCHAR *pszHandler, BOOL bChecked);
 void AddActionLink(HttpResponse &response, TCHAR *pszSID, TCHAR *pszName, TCHAR *pszImage,

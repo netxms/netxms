@@ -169,6 +169,21 @@ void ShowInfoMessage(HttpResponse &response, TCHAR *pszText)
 
 
 //
+// Show success message
+//
+
+void ShowSuccessMessage(HttpResponse &response, TCHAR *pszText)
+{
+	String tmp;
+
+	tmp = (pszText != NULL) ? pszText : _T("Operation completed successfully");
+	response.AppendBody(_T("<div class=\"successMessage\">"));
+	response.AppendBody(EscapeHTMLText(tmp));
+	response.AppendBody(_T("</div>"));
+}
+
+
+//
 // Add button control
 //
 

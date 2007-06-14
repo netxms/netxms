@@ -57,6 +57,12 @@ void ClientSession::ShowFormObjects(HttpResponse &response)
 		_T("		loadDivContent('object_view', '{$sid}', '&cmd=objectView&view=' + viewId + '&id=' + id);\r\n")
 		_T("     resizeElements();\r\n")
 		_T("	}\r\n")
+		_T("	function manageObject(sid,id,action)\r\n")
+		_T("	{\r\n")
+		_T("     selectedAlarms = '';\r\n")
+		_T("		loadDivContent('object_view', sid, '&cmd=objectView&view=6&id=' + id + '&action=' + action);\r\n")
+		_T("     resizeElements();\r\n")
+		_T("	}\r\n")
 		_T("</script>\r\n");
 	data.Translate(_T("{$sid}"), m_sid);
 	response.AppendBody(data);
@@ -223,7 +229,7 @@ static BOOL IsValidObjectView(int nClass, int nView)
 	switch(nView)
 	{
 		case OBJVIEW_OVERVIEW:
-		case OBJVIEW_TOOLS:
+		case OBJVIEW_MANAGE:
 			return TRUE;
 		case OBJVIEW_ALARMS:
 			return ((nClass == OBJECT_NODE) || (nClass == OBJECT_SUBNET) ||
@@ -231,6 +237,7 @@ static BOOL IsValidObjectView(int nClass, int nView)
 			        (nClass == OBJECT_CLUSTER) || (nClass == OBJECT_SERVICEROOT));
 		case OBJVIEW_LAST_VALUES:
 		case OBJVIEW_PERFORMANCE:
+		case OBJVIEW_TOOLS:
 			return (nClass == OBJECT_NODE);
 	}
 	return FALSE;
@@ -301,6 +308,7 @@ void ClientSession::ShowObjectView(HttpRequest &request, HttpResponse &response)
 	AddObjectSubmenu(data, pObject->iClass, OBJVIEW_LAST_VALUES, _T("DataView"));
 	AddObjectSubmenu(data, pObject->iClass, OBJVIEW_PERFORMANCE, _T("PerfView"));
 	AddObjectSubmenu(data, pObject->iClass, OBJVIEW_TOOLS, _T("Tools"));
+	AddObjectSubmenu(data, pObject->iClass, OBJVIEW_MANAGE, _T("Manage"));
 	data += _T("	</ul>\r\n</div><div id=\"object_data\">\r\n");
 	//data.Translate(_T("{$sid}"), m_sid);
 	data.Translate(_T("{$id}"), (TCHAR *)id);
@@ -320,6 +328,9 @@ void ClientSession::ShowObjectView(HttpRequest &request, HttpResponse &response)
 			break;
 		case OBJVIEW_TOOLS:
 			ShowObjectTools(response, pObject);
+			break;
+		case OBJVIEW_MANAGE:
+			ShowObjectMgmt(request, response, pObject);
 			break;
 		default:
 			ShowInfoMessage(response, _T("Not implemented yet"));
@@ -452,10 +463,75 @@ static void AddTool(HttpResponse &response, TCHAR *pszName, TCHAR *pszImage, DWO
 void ClientSession::ShowObjectTools(HttpResponse &response, NXC_OBJECT *pObject)
 {
 	response.AppendBody(_T("<div id=\"object_tools\">\r\n"));
-	AddTool(response, _T("Create child object"), _T("/images/file.png"), pObject->dwId, OBJTOOL_CREATE);
+/*	AddTool(response, _T("Create child object"), _T("/images/file.png"), pObject->dwId, OBJTOOL_CREATE);
 	AddTool(response, _T("Delete"), _T("/images/terminate.png"), pObject->dwId, OBJTOOL_DELETE);
 	response.AppendBody(_T("<br>\r\n"));
 	AddTool(response, _T("Manage"), _T("/images/status/normal.png"), pObject->dwId, OBJTOOL_MANAGE);
-	AddTool(response, _T("Unmanage"), _T("/images/status/unmanaged.png"), pObject->dwId, OBJTOOL_UNMANAGE);
+	AddTool(response, _T("Unmanage"), _T("/images/status/unmanaged.png"), pObject->dwId, OBJTOOL_UNMANAGE);*/
+	response.AppendBody(_T("</div>\r\n"));
+}
+
+
+//
+// Add object management link
+//
+
+static void AddObjectMgmtLink(HttpResponse &response, NXC_OBJECT *pObject, TCHAR *sid,
+										TCHAR *pszName, TCHAR *pszImage, int nAction)
+{
+	TCHAR szTemp[256];
+
+	response.AppendBody(_T("<td>"));
+	_stprintf(szTemp, _T(",%d,%d"), pObject->dwId, nAction);
+	AddActionLink(response, sid, pszName, pszImage, _T("manageObject"), szTemp);
+	response.AppendBody(_T("</td>"));
+}
+
+
+//
+// Show "Manage" object's view
+//
+
+void ClientSession::ShowObjectMgmt(HttpRequest &request, HttpResponse &response, NXC_OBJECT *pObject)
+{
+	String action;
+	int nAction;
+	DWORD dwResult;
+
+	if (request.GetQueryParam(_T("action"), action))
+	{
+		nAction = _tcstol(action, NULL, 10);
+		switch(nAction)
+		{
+			case OBJECT_ACTION_MANAGE:
+				dwResult = NXCSetObjectMgmtStatus(m_hSession, pObject->dwId, TRUE);
+				break;
+			case OBJECT_ACTION_UNMANAGE:
+				dwResult = NXCSetObjectMgmtStatus(m_hSession, pObject->dwId, FALSE);
+				break;
+			default:
+				dwResult = RCC_SUCCESS;
+				break;
+		}
+		if (dwResult == RCC_SUCCESS)
+		{
+			ShowSuccessMessage(response);
+		}
+		else
+		{
+			ShowErrorMessage(response, dwResult);
+		}
+	}
+
+	// Show list of available actions
+	response.AppendBody(_T("<div class=\"action_menu\"><table><tr>"));
+	AddObjectMgmtLink(response, pObject, m_sid, _T("Manage"), _T("status/normal.png"), OBJECT_ACTION_MANAGE);
+	AddObjectMgmtLink(response, pObject, m_sid, _T("Unmanage"), _T("status/unmanaged.png"), OBJECT_ACTION_UNMANAGE);
+	AddObjectMgmtLink(response, pObject, m_sid, _T("Delete"), _T("status/unmanaged.png"), OBJECT_ACTION_DELETE);
+	AddObjectMgmtLink(response, pObject, m_sid, _T("Properties"), _T("edit.png"), OBJECT_ACTION_PROPERTIES);
+	response.AppendBody(_T("</tr></table></div>\r\n"));
+
+	response.AppendBody(_T("<div id=\"object_tools\">\r\n"));
+
 	response.AppendBody(_T("</div>\r\n"));
 }

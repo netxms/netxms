@@ -75,6 +75,14 @@ img
 	margin: 0.5em;
 }
 
+.successMessage
+{
+	font-size: 100%;
+	font-weight: normal;
+	color: rgb(0, 127, 0);
+	margin: 0.5em;
+}
+
 .input_form
 {
 	margin: 0.5em;
