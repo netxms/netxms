@@ -363,7 +363,7 @@ int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 
 int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 {
-   *ppResult = new NXSL_Value(time(NULL));
+   *ppResult = new NXSL_Value((DWORD)time(NULL));
    return 0;
 }
 
