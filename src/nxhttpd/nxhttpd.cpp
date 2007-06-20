@@ -25,6 +25,8 @@
 
 #ifdef _WIN32
 #include <conio.h>
+#else
+#include <signal.h>
 #endif
 
 
@@ -49,7 +51,8 @@ TCHAR g_szDocumentRoot[MAX_PATH] = _T("C:\\NetXMS\\var\\www");
 #else
 TCHAR g_szConfigFile[MAX_PATH] = _T("/etc/nxhttpd.conf");
 TCHAR g_szLogFile[MAX_PATH] = _T("/var/log/nxhttpd");
-TCHAR m_szDocumentRoot[MAX_PATH] = DATADIR _T("/nxhttpd");
+TCHAR g_szDocumentRoot[MAX_PATH] = DATADIR _T("/nxhttpd");
+TCHAR g_szPidFile[MAX_PATH] = _T("/var/run/nxhttpd.pid");
 #endif
 WORD g_wListenPort = 8080;
 DWORD g_dwSessionTimeout = 300;		// 5 minutes

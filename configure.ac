@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.248 2007-06-13 22:18:35 victor Exp $
+# $Id: configure.ac,v 1.249 2007-06-20 13:28:35 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -421,7 +421,10 @@ esac
 
 
 #--------------------------------------------------------------------
-# Disable C++ exceptions
+# C++ compiler tuning:
+#  * Disable C++ exceptions
+#  * Disable compiling string constants as "const char *"
+#  * Disable some GCC warnings
 #--------------------------------------------------------------------
 
 if test "x$CC" = "xgcc" ; then
@@ -441,6 +444,26 @@ if test "x$CC" = "xgcc" ; then
 	AC_MSG_CHECKING(whether C++ compiler accepts -fno-exceptions)
 	OLD_CXXFLGAS="$CXXFLAGS"
 	CXXFLAGS="$CXXFLAGS -fno-exceptions"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ AC_MSG_RESULT(yes) ], 
+		[ 
+			CXXFLAGS="$OLD_CXXFLAGS"
+			AC_MSG_RESULT(no)
+		])
+
+	AC_MSG_CHECKING(whether C++ compiler accepts -fno-const-strings)
+	OLD_CXXFLGAS="$CXXFLAGS"
+	CXXFLAGS="$CXXFLAGS -fno-const-strings"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ AC_MSG_RESULT(yes) ], 
+		[ 
+			CXXFLAGS="$OLD_CXXFLAGS"
+			AC_MSG_RESULT(no)
+		])
+
+	AC_MSG_CHECKING(whether C++ compiler accepts -Wno-deprecated)
+	OLD_CXXFLGAS="$CXXFLAGS"
+	CXXFLAGS="$CXXFLAGS -Wno-deprecated"
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 		[ AC_MSG_RESULT(yes) ], 
 		[ 

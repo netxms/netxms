@@ -69,7 +69,7 @@ void StringMap::Clear(void)
 // Find value by key
 //
 
-DWORD StringMap::Find(TCHAR *pszKey)
+DWORD StringMap::Find(const TCHAR *pszKey)
 {
 	DWORD i;
 
@@ -86,7 +86,7 @@ DWORD StringMap::Find(TCHAR *pszKey)
 // Set value
 //
 
-void StringMap::Set(TCHAR *pszKey, TCHAR *pszValue)
+void StringMap::Set(const TCHAR *pszKey, const TCHAR *pszValue)
 {
 	DWORD dwIndex;
 
@@ -111,7 +111,7 @@ void StringMap::Set(TCHAR *pszKey, TCHAR *pszValue)
 // Get value by key
 //
 
-TCHAR *StringMap::Get(TCHAR *pszKey)
+TCHAR *StringMap::Get(const TCHAR *pszKey)
 {
 	DWORD dwIndex;
 

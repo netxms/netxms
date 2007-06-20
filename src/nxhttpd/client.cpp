@@ -136,7 +136,7 @@ static THREAD_RESULT THREAD_CALL ClientHandler(void *pArg)
 	TCHAR *pq;
 	char *ptr;
 
-	if (req.Read((SOCKET)pArg))
+	if (req.Read(CAST_FROM_POINTER(pArg, SOCKET)))
 	{
 		if (SessionRequestHandler(req, resp))
 		{
@@ -162,11 +162,11 @@ static THREAD_RESULT THREAD_CALL ClientHandler(void *pArg)
 	            (*pq != 0) ? _T("?") :  _T(""), pq);
 
 	ptr = resp.BuildStream(size);
-	SendEx((SOCKET)pArg, ptr, size, 0);
+	SendEx(CAST_FROM_POINTER(pArg, SOCKET), ptr, size, 0);
 	free(ptr);
 
-	shutdown((SOCKET)pArg, SHUT_RDWR);
-	closesocket((SOCKET)pArg);
+	shutdown(CAST_FROM_POINTER(pArg, SOCKET), SHUT_RDWR);
+	closesocket(CAST_FROM_POINTER(pArg, SOCKET));
 	return THREAD_OK;
 }
 

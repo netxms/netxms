@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.105 2007-05-15 09:36:32 victor Exp $ */
+/* $Id: nms_util.h,v 1.106 2007-06-20 13:28:35 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -264,14 +264,14 @@ protected:
 	TCHAR **m_ppszKeys;
 	TCHAR **m_ppszValues;
 
-	DWORD Find(TCHAR *pszKey);
+	DWORD Find(const TCHAR *pszKey);
 
 public:
 	StringMap();
 	~StringMap();
 
-	void Set(TCHAR *pszKey, TCHAR *pszValue);
-	TCHAR *Get(TCHAR *pszKey);
+	void Set(const TCHAR *pszKey, const TCHAR *pszValue);
+	TCHAR *Get(const TCHAR *pszKey);
 	void Clear(void);
 
 	DWORD Size(void) { return m_dwSize; }
@@ -549,6 +549,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.105  2007/05/15 09:36:32  victor
+Various improvements in web UI
+
 Revision 1.104  2007/05/11 15:44:46  victor
 - Added improved qsort()
 - Minor changes in web ui

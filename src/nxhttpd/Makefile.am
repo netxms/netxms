@@ -15,8 +15,16 @@ SUBDIRS = static
 bin_PROGRAMS = nxhttpd
 nxhttpd_SOURCES = alarm.cpp ctrlpanel.cpp client.cpp dataview.cpp html.cpp \
 		  httprequest.cpp httpresponse.cpp log.cpp nxhttpd.cpp \
-		  object.cpp piechart.cpp session.cpp smgr.cpp tools.cpp
+		  object.cpp piechart.cpp session.cpp smgr.cpp tools.cpp \
+		  messages.c
 nxhttpd_LDADD = ../libnetxms/libnetxms.la ../libnxmap/libnxmap.la ../libnxcl/libnxcl.la
+
+CLEANFILES = messages.c messages.h
+
+messages.c: messages.h
+
+messages.h: messages.mc
+	$(PERL) @top_builddir@/tools/mc.pl messages.mc
 
 EXTRA_DIST = nxhttpd.h winsrv.cpp nxhttpd.dsp nxhttpd.dsw \
 	     resource.h nxhttpd.rc messages.mc
