@@ -529,6 +529,7 @@ void ClientSession::ShowObjectMgmt(HttpRequest &request, HttpResponse &response,
 	AddObjectMgmtLink(response, pObject, m_sid, _T("Unmanage"), _T("status/unmanaged.png"), OBJECT_ACTION_UNMANAGE);
 	AddObjectMgmtLink(response, pObject, m_sid, _T("Delete"), _T("status/unmanaged.png"), OBJECT_ACTION_DELETE);
 	AddObjectMgmtLink(response, pObject, m_sid, _T("Properties"), _T("edit.png"), OBJECT_ACTION_PROPERTIES);
+	AddObjectMgmtLink(response, pObject, m_sid, _T("Security"), _T("security.png"), OBJECT_ACTION_SECURITY);
 	response.AppendBody(_T("</tr></table></div>\r\n"));
 
 	response.AppendBody(_T("<div id=\"object_tools\">\r\n"));

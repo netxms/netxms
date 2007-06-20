@@ -1266,6 +1266,8 @@ src/nxhttpd/static/images/objects/template.png -text
 src/nxhttpd/static/images/objects/template_group.png -text
 src/nxhttpd/static/images/objects/template_root.png -text
 src/nxhttpd/static/images/openfoldericon.png -text
+src/nxhttpd/static/images/sort_down.png -text
+src/nxhttpd/static/images/sort_up.png -text
 src/nxhttpd/static/images/status/Makefile.am -text
 src/nxhttpd/static/images/status/critical.png -text
 src/nxhttpd/static/images/status/disabled.png -text
@@ -1276,6 +1278,7 @@ src/nxhttpd/static/images/status/testing.png -text
 src/nxhttpd/static/images/status/unknown.png -text
 src/nxhttpd/static/images/status/unmanaged.png -text
 src/nxhttpd/static/images/status/warning.png -text
+src/nxhttpd/static/images/terminate.png -text
 src/nxhttpd/static/netxms.css -text
 src/nxhttpd/static/pngfix.js -text
 src/nxhttpd/static/xloadtree.js -text
