@@ -8,7 +8,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = \
+normaldir=$(pkgdatadir)/nxhttpd/images/buttons/normal
+
+normal_DATA = \
 	ack.png \
 	add.png \
 	cancel.png \
@@ -16,3 +18,5 @@ EXTRA_DIST = \
 	login.png \
 	ok.png \
 	terminate.png
+
+EXTRA_DIST = $(normal_DATA)

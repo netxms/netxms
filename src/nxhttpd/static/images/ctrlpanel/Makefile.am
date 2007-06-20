@@ -8,7 +8,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = \
+ctrlpaneldir=$(pkgdatadir)/nxhttpd/images/ctrlpanel
+
+ctrlpanel_DATA = \
 	actions.png \
 	cert.png \
 	cfgvar.png \
@@ -24,3 +26,5 @@ EXTRA_DIST = \
 	snmptrap.png \
 	user.png \
 	users.png
+
+EXTRA_DIST = $(ctrlpanel_DATA)

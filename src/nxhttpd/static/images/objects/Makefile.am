@@ -8,7 +8,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = \
+objectsdir=$(pkgdatadir)/nxhttpd/images/objects
+
+objects_DATA = \
 	cluster.png \
 	container.png \
 	interface.png \
@@ -19,3 +21,5 @@ EXTRA_DIST = \
 	template.png \
 	template_group.png \
 	template_root.png
+
+EXTRA_DIST = $(objects_DATA)

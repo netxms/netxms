@@ -8,7 +8,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = \
+statusdir=$(pkgdatadir)/nxhttpd/images/status
+
+status_DATA = \
 	critical.png \
 	disabled.png \
 	major.png \
@@ -18,3 +20,5 @@ EXTRA_DIST = \
 	unknown.png \
 	unmanaged.png \
 	warning.png
+
+EXTRA_DIST = $(status_DATA)
