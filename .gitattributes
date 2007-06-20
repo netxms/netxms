@@ -1230,6 +1230,7 @@ src/nxhttpd/static/images/buttons/pressed/ok.png -text
 src/nxhttpd/static/images/buttons/pressed/terminate.png -text
 src/nxhttpd/static/images/checkbox_off.png -text
 src/nxhttpd/static/images/checkbox_on.png -text
+src/nxhttpd/static/images/ctrlpanel/Makefile.am -text
 src/nxhttpd/static/images/ctrlpanel/actions.png -text
 src/nxhttpd/static/images/ctrlpanel/cert.png -text
 src/nxhttpd/static/images/ctrlpanel/cfgvar.png -text
