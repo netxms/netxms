@@ -136,6 +136,7 @@ contrib/mibs/WF-COM.txt -text
 contrib/mibs/WWW-MIB.txt -text
 contrib/netxmsd.conf-dist -text
 contrib/nxagentd.conf-dist -text
+contrib/nxhttpd.conf-dist -text
 contrib/startup/Makefile.am -text
 contrib/startup/gentoo/Makefile.am -text
 contrib/startup/gentoo/netxmsd -text

@@ -1,0 +1,51 @@
+#
+# Sample configuration file for NetXMS web interface
+#
+
+#
+# DocumentRoot
+#
+# Location of static data files (netxms.css, images, etc.)
+#
+# Default (unix)    : PREFIX/share/nxhttpd (check "--datadir" switch for configure)
+# Default (windows) : C:\NetXMS\var\www
+#
+
+# DocumentRoot=/usr/local/share/nxhttpd
+
+#
+# ListenPort
+#
+# Default: 8080
+#
+
+# ListenPort=8080
+
+#
+# LogFile
+#
+# Log file name (no syslog/event log support yet)
+#
+# Default (unix)    : /var/log/nxhttpd
+# Default (windows) : C:\nxhttpd.log
+#
+
+# LogFile=/var/log/nxhttpd
+
+#
+# MasterServer
+#
+# Server we should connect to
+#
+# Default: localhost
+#
+
+# MasterServer=localhost
+
+#
+# SessionTimeout
+#
+# Session timeout in seconds
+#
+
+# SessionTimeout=300
