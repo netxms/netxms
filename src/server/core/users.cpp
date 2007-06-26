@@ -1,4 +1,4 @@
-/* $Id: users.cpp,v 1.44 2007-03-15 19:56:46 victor Exp $ */
+/* $Id: users.cpp,v 1.45 2007-06-26 14:29:59 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -191,7 +191,7 @@ BOOL LoadUsers(void)
 void SaveUsers(DB_HANDLE hdb)
 {
    DWORD i;
-   TCHAR szQuery[1024], szPassword[SHA1_DIGEST_SIZE * 2 + 1], szGUID[64], *pszEscData;
+   TCHAR szQuery[4096], szPassword[SHA1_DIGEST_SIZE * 2 + 1], szGUID[64], *pszEscData, *pszEscFullName, *pszEscDescr;
 
    // Save users
    MutexLock(m_hMutexUserAccess, INFINITE);
@@ -232,26 +232,30 @@ void SaveUsers(DB_HANDLE hdb)
          // Create or update record in database
          BinToStr(g_pUserList[i].passwordHash, SHA1_DIGEST_SIZE, szPassword);
 			pszEscData = EncodeSQLString(CHECK_NULL_EX(g_pUserList[i].pszCertMappingData));
+			pszEscFullName = EncodeSQLString(g_pUserList[i].szFullName);
+			pszEscDescr = EncodeSQLString(g_pUserList[i].szDescription);
          if (bUserExists)
             sprintf(szQuery, "UPDATE users SET name='%s',password='%s',system_access=%d,flags=%d,"
                              "full_name='%s',description='%s',grace_logins=%d,guid='%s',"
 									  "auth_method=%d,cert_mapping_method=%d,cert_mapping_data='%s' WHERE id=%d",
                     g_pUserList[i].szName, szPassword, g_pUserList[i].wSystemRights,
-                    g_pUserList[i].wFlags, g_pUserList[i].szFullName,
-                    g_pUserList[i].szDescription, g_pUserList[i].nGraceLogins,
+                    g_pUserList[i].wFlags, pszEscFullName,
+                    pszEscDescr, g_pUserList[i].nGraceLogins,
                     uuid_to_string(g_pUserList[i].guid, szGUID),
                     g_pUserList[i].nAuthMethod, g_pUserList[i].nCertMappingMethod,
 						  pszEscData, g_pUserList[i].dwId);
          else
             sprintf(szQuery, "INSERT INTO users (id,name,password,system_access,flags,full_name,"
 				                 "description,grace_logins,guid,auth_method,cert_mapping_method,"
-                             "cert_mapping_data) VALUES (%d,'%s','%s',%d,%d,'%s','%s',%d,'%s',%d)",
+                             "cert_mapping_data) VALUES (%d,'%s','%s',%d,%d,'%s','%s',%d,'%s',%d,%d,'%s')",
                     g_pUserList[i].dwId, g_pUserList[i].szName, szPassword,
                     g_pUserList[i].wSystemRights, g_pUserList[i].wFlags,
-                    g_pUserList[i].szFullName, g_pUserList[i].szDescription,
+                    pszEscFullName, pszEscDescr,
                     g_pUserList[i].nGraceLogins, uuid_to_string(g_pUserList[i].guid, szGUID),
                     g_pUserList[i].nAuthMethod, g_pUserList[i].nCertMappingMethod, pszEscData);
 			free(pszEscData);
+			free(pszEscFullName);
+			free(pszEscDescr);
          DBQuery(hdb, szQuery);
       }
    }
