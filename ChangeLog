@@ -2,6 +2,7 @@
 * 0.2.18
 *
 
+- WinPerf subagent: improved non-English Windows support
 - Fixed issues: #164, #167, #168, #170
 
 

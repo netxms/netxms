@@ -84,9 +84,22 @@ struct WINPERF_COUNTER_SET
 
 
 //
+// Counter index structure
+//
+
+struct COUNTER_INDEX
+{
+	DWORD dwIndex;
+	TCHAR *pszName;
+};
+
+
+//
 // Functions
 //
 
+void CreateCounterIndex(TCHAR *pData);
+BOOL TranslateCounterName(TCHAR *pszName, TCHAR *pszOut);
 void StartCollectorThreads(void);
 TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufferSize);
 void ReportPdhError(TCHAR *pszFunction, TCHAR *pszPdhCall, PDH_STATUS dwError);

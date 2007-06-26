@@ -39,7 +39,7 @@ WINPERF_COUNTER_SET m_cntSet[3] =
 // Check that counter's name is valid and determine counter's type
 //
 
-static int CheckCounter(TCHAR *pszName)
+static int CheckCounter(TCHAR *pszName, TCHAR **ppszNewName)
 {
    HQUERY hQuery;
    HCOUNTER hCounter;
@@ -48,17 +48,38 @@ static int CheckCounter(TCHAR *pszName)
    DWORD dwSize;
    static TCHAR szFName[] = _T("CheckCounter");
 
+	*ppszNewName = NULL;
+
    if ((rc = PdhOpenQuery(NULL, 0, &hQuery)) != ERROR_SUCCESS)
    {
       ReportPdhError(szFName, _T("PdhOpenQuery"), rc);
       return -1;
    }
 
-   if ((rc = PdhAddCounter(hQuery, pszName, 0, &hCounter)) != ERROR_SUCCESS)
+	rc = PdhAddCounter(hQuery, pszName, 0, &hCounter);
+   if (rc != ERROR_SUCCESS)
    {
-      ReportPdhError(szFName, _T("PdhAddCounter"), rc);
-      PdhCloseQuery(hQuery);
-      return -1;
+		// Attempt to translate counter name
+		if ((rc == PDH_CSTATUS_NO_COUNTER) || (rc == PDH_CSTATUS_NO_OBJECT))
+		{
+			*ppszNewName = (TCHAR *)malloc(_tcslen(pszName) * sizeof(TCHAR) * 4);
+			if (TranslateCounterName(pszName, *ppszNewName))
+			{
+				NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("WINPERF: Counter translated: %s ==> %s"), pszName, *ppszNewName);
+				rc = PdhAddCounter(hQuery, *ppszNewName, 0, &hCounter);
+				if (rc != ERROR_SUCCESS)
+				{
+					free(*ppszNewName);
+					*ppszNewName = NULL;
+				}
+			}
+		}
+	   if (rc != ERROR_SUCCESS)
+		{
+			ReportPdhError(szFName, _T("PdhAddCounter"), rc);
+			PdhCloseQuery(hQuery);
+			return -1;
+		}
    }
 
    dwSize = sizeof(ci);
@@ -81,6 +102,7 @@ static int CheckCounter(TCHAR *pszName)
 WINPERF_COUNTER *AddCounter(TCHAR *pszName, int iClass, int iNumSamples, int iDataType)
 {
    WINPERF_COUNTER *pCnt;
+	TCHAR *pszNewName;
    int iType;
 
    // Check for valid class
@@ -88,14 +110,24 @@ WINPERF_COUNTER *AddCounter(TCHAR *pszName, int iClass, int iNumSamples, int iDa
       return NULL;
 
    // Check counter's name and get it's type
-   iType = CheckCounter(pszName);
+   iType = CheckCounter(pszName, &pszNewName);
    if (iType == -1)
+	{
+		safe_free(pszNewName);
       return NULL;
+	}
 
    // Create new counter
    pCnt = (WINPERF_COUNTER *)malloc(sizeof(WINPERF_COUNTER));
    memset(pCnt, 0, sizeof(WINPERF_COUNTER));
-   pCnt->pszName = _tcsdup(pszName);
+	if (pszNewName != NULL)
+	{
+		pCnt->pszName = (TCHAR *)realloc(pszNewName, (_tcslen(pszNewName) + 1) * sizeof(TCHAR));
+	}
+	else
+	{
+		pCnt->pszName = _tcsdup(pszName);
+	}
    pCnt->wType = (iDataType == COUNTER_TYPE_AUTO) ? iType : iDataType;
    pCnt->wNumSamples = iNumSamples;
    pCnt->pRawValues = (PDH_RAW_COUNTER *)malloc(sizeof(PDH_RAW_COUNTER) * iNumSamples);
@@ -234,7 +266,7 @@ BOOL AddCounterFromConfig(TCHAR *pszStr)
    // Add new counter if parsing was successful
    if ((iState == -1) && (iField >= 4) && (iField <= 6))
    {
-      pCnt = AddCounter(szCounterPath, iClass, iNumSamples, COUNTER_TYPE_AUTO);
+      pCnt = AddCounter(szCounterPath, iClass, iNumSamples, (iDataType == DCI_DT_FLOAT) ? COUNTER_TYPE_FLOAT : COUNTER_TYPE_AUTO);
       if (pCnt != NULL)
          AddParameter(szParamName, H_CollectedCounterData, (TCHAR *)pCnt,
                       iDataType, szDescription);

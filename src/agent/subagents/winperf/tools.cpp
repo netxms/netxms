@@ -1,6 +1,6 @@
 /*
 ** Windows Performance NetXMS subagent
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,11 +16,26 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: tools.cpp
+** File: tools.cpp
 **
 **/
 
 #include "winperf.h"
+
+
+//
+// Constants
+//
+
+#define MAX_ELEMENT_LENGTH		1024
+
+
+//
+// Static data
+//
+
+static COUNTER_INDEX *m_pCounterList = NULL;
+static DWORD m_dwNumCounters = 0;
 
 
 //
@@ -60,4 +75,120 @@ void ReportPdhError(TCHAR *pszFunction, TCHAR *pszPdhCall, PDH_STATUS dwError)
 
    NxWriteAgentLog(EVENTLOG_WARNING_TYPE, _T("%s: PDH Error %08X in call to %s (%s)"), 
                    pszFunction, dwError, pszPdhCall, GetPdhErrorText(dwError, szBuffer, 1024));
+}
+
+
+//
+// Create index of counters
+//
+
+void CreateCounterIndex(TCHAR *pData)
+{
+	TCHAR *pCurr;
+
+	for(pCurr = pData; *pCurr != 0; )
+	{
+		m_pCounterList = (COUNTER_INDEX *)realloc(m_pCounterList, sizeof(COUNTER_INDEX) * (m_dwNumCounters + 1));
+		m_pCounterList[m_dwNumCounters].dwIndex = _tcstoul(pCurr, NULL, 10);
+		pCurr += _tcslen(pCurr) + 1;
+		m_pCounterList[m_dwNumCounters].pszName = _tcsdup(pCurr);
+		pCurr += _tcslen(pCurr) + 1;
+		m_dwNumCounters++;
+	}
+}
+
+
+//
+// Translate single counter name's element
+//
+
+static BOOL TranslateElement(TCHAR *pszText)
+{
+	DWORD i, dwSize;
+
+	for(i = 0; i < m_dwNumCounters; i++)
+	{
+		if (!_tcsicmp(m_pCounterList[i].pszName, pszText))
+		{
+			dwSize = MAX_ELEMENT_LENGTH * sizeof(TCHAR);
+			return PdhLookupPerfNameByIndex(NULL, m_pCounterList[i].dwIndex, pszText, &dwSize) == ERROR_SUCCESS;
+		}
+	}
+	return FALSE;
+}
+
+
+//
+// Translate counter name from English to localized
+//
+
+BOOL TranslateCounterName(TCHAR *pszName, TCHAR *pszOut)
+{
+	TCHAR *pCurr = pszName, *pSlash, *pBrace, *pNext, szTemp[MAX_ELEMENT_LENGTH];
+	BOOL bs1, bs2;
+	int nLen;
+
+	// Generic counter name looks like following:
+	// \\machine\object(parent/instance#index)\counter
+	// where machine, parent, instance, and index parts may be omited.
+	// We should translate object and counter parts if possible.
+
+	if (*pCurr != _T('\\'))
+		return FALSE;	// Counter name should always start with "\"  or "\\"
+	pCurr++;
+
+	// Skip machine name
+	if (*pCurr == _T('\\'))
+	{
+		pCurr++;
+		pCurr = _tcschr(pCurr, _T('\\'));
+		if (pCurr == NULL)
+			return FALSE;	// Object name missing
+		pCurr++;
+	}
+	memcpy(pszOut, pszName, (pCurr - pszName) * sizeof(TCHAR));
+	pszOut[pCurr - pszName] = 0;
+
+	// Object name ends by \ or (
+	pSlash = _tcschr(pCurr, _T('\\'));
+	pBrace = _tcschr(pCurr, _T('('));
+	if (pSlash == NULL)
+		return FALSE;
+	if ((pSlash < pBrace) || (pBrace == NULL))
+	{
+		if (pSlash - pCurr >= MAX_ELEMENT_LENGTH)
+			return FALSE;
+		memcpy(szTemp, pCurr, (pSlash - pCurr) * sizeof(TCHAR));
+		szTemp[pSlash - pCurr] = 0;
+		pCurr = pSlash;
+		pNext = pSlash + 1;
+	}
+	else
+	{
+		if (pBrace - pCurr >= MAX_ELEMENT_LENGTH)
+			return FALSE;
+		memcpy(szTemp, pCurr, pBrace - pCurr);
+		szTemp[pBrace - pCurr] = 0;
+		pCurr = pBrace;
+		pNext = _tcschr(pCurr, _T(')'));
+		if (pNext == NULL)
+			return FALSE;
+		pNext++;
+		if (*pNext != _T('\\'))
+			return FALSE;
+		pNext++;
+	}
+	bs1 = TranslateElement(szTemp);
+	_tcscat(pszOut, szTemp);
+	nLen = _tcslen(pszOut);
+	memcpy(&pszOut[nLen], pCurr, (pNext - pCurr) * sizeof(TCHAR));
+	pszOut[nLen + (pNext - pCurr)] = 0;
+	pCurr = pNext;
+
+	// Translate counter name
+	nx_strncpy(szTemp, pCurr, MAX_ELEMENT_LENGTH);
+	bs2 = TranslateElement(szTemp);
+	_tcscat(pszOut, szTemp);
+
+	return bs1 || bs2;
 }

@@ -1,6 +1,6 @@
 /*
 ** Windows Performance NetXMS subagent
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: winperf.cpp
+** File: winperf.cpp
 **
 **/
 
@@ -480,10 +480,27 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
 extern "C" BOOL __declspec(dllexport) __cdecl 
    NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
 {
-   DWORD dwResult;
+   DWORD dwResult, dwBufferSize, dwBytes, dwType, dwStatus;
+	TCHAR *pBuffer;
 
 	if (m_info.pParamList != NULL)
 		return FALSE;	// Most likely another instance of WINPERF subagent already loaded
+
+	// Read performance counter indexes
+	pBuffer = NULL;
+	dwBufferSize = 0;
+	do
+	{
+		dwBufferSize += 8192;
+		pBuffer = (TCHAR *)realloc(pBuffer, dwBufferSize);
+		dwBytes = dwBufferSize;
+		dwStatus = RegQueryValueEx(HKEY_PERFORMANCE_DATA, _T("Counter 009"), NULL, &dwType, (BYTE *)pBuffer, &dwBytes);
+	} while(dwStatus == ERROR_MORE_DATA);
+	if (dwStatus == ERROR_SUCCESS)
+	{
+		CreateCounterIndex(pBuffer);
+	}
+	safe_free(pBuffer);
 
    // Init parameters list
    m_info.dwNumParameters = sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM);
