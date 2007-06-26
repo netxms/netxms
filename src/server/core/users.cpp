@@ -1,4 +1,4 @@
-/* $Id: users.cpp,v 1.45 2007-06-26 14:29:59 victor Exp $ */
+/* $Id: users.cpp,v 1.46 2007-06-26 15:26:03 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -95,7 +95,9 @@ BOOL LoadUsers(void)
          g_pUserList[i].wSystemRights = (WORD)DBGetFieldLong(hResult, i, 3);
       g_pUserList[i].wFlags = (WORD)DBGetFieldLong(hResult, i, 4);
       DBGetField(hResult, i, 5, g_pUserList[i].szFullName, MAX_USER_FULLNAME);
+      DecodeSQLString(g_pUserList[i].szFullName);
       DBGetField(hResult, i, 6, g_pUserList[i].szDescription, MAX_USER_DESCR);
+      DecodeSQLString(g_pUserList[i].szDescription);
       g_pUserList[i].nGraceLogins = DBGetFieldLong(hResult, i, 7);
       g_pUserList[i].nAuthMethod = DBGetFieldLong(hResult, i, 8);
       DBGetFieldGUID(hResult, i, 9, g_pUserList[i].guid);
@@ -144,6 +146,7 @@ BOOL LoadUsers(void)
       g_pGroupList[i].wSystemRights = (WORD)DBGetFieldLong(hResult, i, 2);
       g_pGroupList[i].wFlags = (WORD)DBGetFieldLong(hResult, i, 3);
       DBGetField(hResult, i, 4, g_pGroupList[i].szDescription, MAX_USER_DESCR);
+      DecodeSQLString(g_pGroupList[i].szDescription);
       DBGetFieldGUID(hResult, i, 5, g_pGroupList[i].guid);
       g_pGroupList[i].dwNumMembers = 0;
       g_pGroupList[i].pMembers = NULL;
@@ -299,18 +302,20 @@ void SaveUsers(DB_HANDLE hdb)
          }
 
          // Create or update record in database
+         pszEscDescr = EncodeSQLString(g_pGroupList[i].szDescription);
          if (bGroupExists)
             sprintf(szQuery, "UPDATE user_groups SET name='%s',system_access=%d,flags=%d,"
                              "description='%s',guid='%s' WHERE id=%d",
                     g_pGroupList[i].szName, g_pGroupList[i].wSystemRights,
-                    g_pGroupList[i].wFlags, g_pGroupList[i].szDescription,
+                    g_pGroupList[i].wFlags, pszEscDescr,
                     uuid_to_string(g_pGroupList[i].guid, szGUID), g_pGroupList[i].dwId);
          else
             sprintf(szQuery, "INSERT INTO user_groups (id,name,system_access,flags,description,guid) "
                              "VALUES (%d,'%s',%d,%d,'%s','%s')",
                     g_pGroupList[i].dwId, g_pGroupList[i].szName, g_pGroupList[i].wSystemRights,
-                    g_pGroupList[i].wFlags, g_pGroupList[i].szDescription,
+                    g_pGroupList[i].wFlags, pszEscDescr,
                     uuid_to_string(g_pGroupList[i].guid, szGUID));
+         free(pszEscDescr);
          DBBegin(hdb);
          DBQuery(hdb, szQuery);
 
