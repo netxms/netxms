@@ -1,10 +1,10 @@
-# $Id: configure.ac,v 1.250 2007-06-25 17:16:40 victor Exp $
+# $Id: configure.ac,v 1.251 2007-06-27 18:44:08 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
 #
 
-AC_INIT([NetXMS], [0.2.18-rc2], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.18], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
