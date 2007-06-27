@@ -258,7 +258,7 @@ void AddActionMenu(HttpResponse &response, TCHAR *sid, ...)
 		pszName = va_arg(args, TCHAR *);
 		if (pszName == NULL)
 			break;
-		response.AppendBody(_T("<td>"));
+		response.AppendBody(_T("<td width=\"1%\">"));
 		pszImage = va_arg(args, TCHAR *);
 		pszFunction = va_arg(args, TCHAR *);
 		pszArgs = va_arg(args, TCHAR *);
