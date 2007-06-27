@@ -13,10 +13,10 @@ INCLUDES=-I@top_srcdir@/include
 SUBDIRS = static
 
 bin_PROGRAMS = nxhttpd
-nxhttpd_SOURCES = alarm.cpp ctrlpanel.cpp client.cpp dataview.cpp html.cpp \
-		  httprequest.cpp httpresponse.cpp log.cpp nxhttpd.cpp \
-		  object.cpp piechart.cpp session.cpp smgr.cpp tools.cpp \
-		  messages.c
+nxhttpd_SOURCES = \
+	messages.c alarm.cpp ctrlpanel.cpp client.cpp dataview.cpp html.cpp \
+	httprequest.cpp httpresponse.cpp log.cpp nxhttpd.cpp \
+	object.cpp piechart.cpp session.cpp smgr.cpp tools.cpp
 nxhttpd_LDADD = ../libnetxms/libnetxms.la ../libnxmap/libnxmap.la ../libnxcl/libnxcl.la
 
 CLEANFILES = messages.c messages.h
