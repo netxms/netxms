@@ -78,6 +78,8 @@ static struct
      900, COUNTER_TYPE_INT32, _T("Average CPU utilization for last 15 minutes"), DCI_DT_INT },
    { _T("System.IO.DiskQueue"), _T("\\PhysicalDisk(_Total)\\Avg. Disk Queue Length"), 0,
      60, COUNTER_TYPE_FLOAT, _T("Average disk queue length for last minute"), DCI_DT_FLOAT },
+   { _T("System.IO.DiskTime"), _T("\\PhysicalDisk(_Total)\\% Disk Time"), 0,
+     60, COUNTER_TYPE_FLOAT, _T("Average disk busy time for last minute"), DCI_DT_FLOAT },
    { NULL, NULL, 0, 0, 0, NULL, 0 }
 };
 
