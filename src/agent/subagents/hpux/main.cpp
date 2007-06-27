@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.10 2007-06-08 00:02:36 alk Exp $ */
+/* $Id: main.cpp,v 1.11 2007-06-27 18:41:56 victor Exp $ */
 
 /*
 ** NetXMS subagent for HP-UX
@@ -101,7 +101,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "Net.IP.Forwarding",            H_NetIpForwarding, (char *)4,
 		DCI_DT_INT,		DCIDESC_NET_IP_FORWARDING },
 	{ "Net.IP6.Forwarding",           H_NetIpForwarding, (char *)6,
-		DCI_DT_INT,		DCIDESC_NET_IPV6_FORWARDING },
+		DCI_DT_INT,		DCIDESC_NET_IP6_FORWARDING },
 
 /*	{ "PhysicalDisk.SmartAttr(*)",    H_PhysicalDiskInfo, "A",
 		DCI_DT_STRING,	DCIDESC_PHYSICALDISK_SMARTATTR },
@@ -206,6 +206,11 @@ extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2007/06/08 00:02:36  alk
+DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
+
+NETXMS_SUBAGENT_INFO initialization fixed (actions)
+
 Revision 1.9  2007/06/07 22:07:11  alk
 descriptions changed to defines
 
