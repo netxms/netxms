@@ -1,4 +1,4 @@
-/* $Id: log.cpp,v 1.1 2007-05-07 11:35:42 victor Exp $ */
+/* $Id: log.cpp,v 1.2 2007-06-28 09:14:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -30,7 +30,7 @@
 //
 
 #ifndef _WIN32
-extern DWORD g_dwNumMessages;
+extern unsigned int g_dwNumMessages;
 extern char *g_szMessages[];
 #endif
 

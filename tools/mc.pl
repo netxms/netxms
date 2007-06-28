@@ -1,6 +1,6 @@
 #!c:/apps/perl/bin/pelr -w
 
-# $Id: mc.pl,v 1.6 2006-09-07 22:40:59 alk Exp $
+# $Id: mc.pl,v 1.7 2007-06-28 09:14:05 victor Exp $
 
 ###############################################################################
 #
@@ -119,7 +119,7 @@ for ($i = 0; $i < $keys[$#keys] + 1; $i++) {
 }
 
 print OUTS "};\n";
-print OUTS "\nunsigned long g_dwNumMessages = $i;\n";
+print OUTS "\nunsigned int g_dwNumMessages = $i;\n";
 
 close IN;
 close OUTH;

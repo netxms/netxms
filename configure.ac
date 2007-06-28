@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.251 2007-06-27 18:44:08 victor Exp $
+# $Id: configure.ac,v 1.252 2007-06-28 09:14:04 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -425,6 +425,7 @@ esac
 #  * Disable C++ exceptions
 #  * Disable compiling string constants as "const char *"
 #  * Disable some GCC warnings
+#  * Turn on 64bit mode on HP-UX/Itanium
 #--------------------------------------------------------------------
 
 if test "x$CC" = "xgcc" ; then
@@ -472,6 +473,21 @@ if test "x$CC" = "xgcc" ; then
 		])
 
 	AC_LANG_POP([C++])
+
+	if test "x$PLATFORM" = "xHP-UX"; then
+		AC_MSG_CHECKING(whether C compiler accepts -mlp64)
+		OLD_CPPFLGAS="$CPPFLAGS"
+		CPPFLAGS="$CPPFLAGS -mlp64"
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+			[ 
+				LDFLAGS="-mlp64 -L/usr/lib/hpux64 -L/usr/local/lib/hpux64 $LDFLAGS"
+				AC_MSG_RESULT(yes) 
+			], 
+			[ 
+				CPPFLAGS="$OLD_CPPFLAGS"
+				AC_MSG_RESULT(no)
+			])
+	fi
 
 fi
 
@@ -610,6 +626,7 @@ fi
 # Checks for other libs.
 #--------------------------------------------------------------------
 
+AC_CHECK_LIB(xnet, accept)
 AC_CHECK_LIB(socket, if_nameindex)
 AC_CHECK_LIB(dl, dlopen)
 AC_CHECK_LIB(kstat, kstat_open)
@@ -1180,6 +1197,11 @@ AC_OUTPUT
 
 echo "Updating libtool"
 sed 's,$SED -e "/${host}-//g",$SED -e "s/${host}-//g",g' < ./libtool > libtool.new && mv libtool.new libtool && chmod +x ./libtool
+
+# On HP-UX, libtool passes +b instead of -Wl,+b even if gcc/g++ used as linker 
+if test "x$CC" = "xgcc" && test "x$PLATFORM" = "xHP-UX"; then
+	sed "s,hardcode_libdir_flag_spec_ld=,#hardcode_libdir_flag_spec_ld=,g" < ./libtool > libtool.new && mv libtool.new libtool && chmod +x ./libtool
+fi
 
 
 #--------------------------------------------------------------------

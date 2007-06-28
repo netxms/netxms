@@ -1,4 +1,4 @@
-/* $Id: log.cpp,v 1.6 2006-11-21 11:35:29 victor Exp $ */
+/* $Id: log.cpp,v 1.7 2007-06-28 09:14:05 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004,2005,2006 Victor Kirhenshtein
@@ -30,7 +30,7 @@
 //
 
 #ifndef _WIN32
-extern DWORD g_dwNumMessages;
+extern unsigned int g_dwNumMessages;
 extern char *g_szMessages[];
 #endif
 

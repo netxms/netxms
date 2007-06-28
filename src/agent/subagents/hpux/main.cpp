@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.11 2007-06-27 18:41:56 victor Exp $ */
+/* $Id: main.cpp,v 1.12 2007-06-28 09:14:05 victor Exp $ */
 
 /*
 ** NetXMS subagent for HP-UX
@@ -188,6 +188,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(HPUX)
 	return TRUE;
 }
 
+
 //
 // Entry points for server
 //
@@ -206,6 +207,9 @@ extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2007/06/27 18:41:56  victor
+Fixed bug 163
+
 Revision 1.10  2007/06/08 00:02:36  alk
 DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
 

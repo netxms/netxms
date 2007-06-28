@@ -29,7 +29,7 @@
 //
 
 #ifndef _WIN32
-extern DWORD g_dwNumMessages;
+extern unsigned int g_dwNumMessages;
 extern char *g_szMessages[];
 #endif
 
