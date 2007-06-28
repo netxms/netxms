@@ -624,6 +624,10 @@ SOURCE=.\ObjectSelDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectSubordinateView.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ObjectToolsEditor.cpp
 # End Source File
 # Begin Source File
@@ -1273,6 +1277,10 @@ SOURCE=.\ObjectSelDlg.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectSubordinateView.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\ObjectToolsEditor.h
 # End Source File
 # Begin Source File
@@ -1794,6 +1802,10 @@ SOURCE=.\icons\sort_up.ico
 # Begin Source File
 
 SOURCE=.\icons\sortdown.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\subordinates.ico
 # End Source File
 # Begin Source File
 

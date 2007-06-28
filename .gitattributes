@@ -866,6 +866,8 @@ src/console/win32/ObjectPropsStatus.cpp -text
 src/console/win32/ObjectPropsStatus.h -text
 src/console/win32/ObjectSelDlg.cpp -text
 src/console/win32/ObjectSelDlg.h -text
+src/console/win32/ObjectSubordinateView.cpp -text
+src/console/win32/ObjectSubordinateView.h -text
 src/console/win32/ObjectToolsEditor.cpp -text
 src/console/win32/ObjectToolsEditor.h -text
 src/console/win32/ObjectTree.cpp -text
@@ -1015,6 +1017,7 @@ src/console/win32/icons/setup.ico -text
 src/console/win32/icons/sms.ico -text
 src/console/win32/icons/sort_up.ico -text
 src/console/win32/icons/sortdown.ico -text
+src/console/win32/icons/subordinates.ico -text
 src/console/win32/icons/template_root.ico -text
 src/console/win32/icons/topology.ico -text
 src/console/win32/icons/trap.ico -text

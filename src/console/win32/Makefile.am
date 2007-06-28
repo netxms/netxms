@@ -121,6 +121,7 @@ EXTRA_DIST = \
 	ObjectPropsSecurity.cpp ObjectPropsSecurity.h \
 	ObjectPropsStatus.cpp ObjectPropsStatus.h \
 	ObjectSelDlg.cpp ObjectSelDlg.h \
+	ObjectSubordinateView.cpp ObjectSubordinateView.h \
 	ObjectToolsEditor.cpp ObjectToolsEditor.h \
 	ObjectTree.cpp ObjectTree.h \
 	ObjectView.cpp ObjectView.h \

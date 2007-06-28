@@ -242,6 +242,7 @@
 #define IDI_EMPTY                       367
 #define IDD_SET_CHILD_MGMT_STATUS       368
 #define IDD_CREATE_IF_DCI               369
+#define IDI_SUBORDINATES                371
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -902,6 +903,11 @@
 #define ID_OBJECT_SETCHILDMGMT          33069
 #define ID_OBJECT_VIEW_FOLLOWOBJECTUPDATES 33070
 #define ID_OBJECT_CREATE_IF_DCI         33071
+#define ID_SUBORDINATE_MANAGE           33072
+#define ID_SUBORDINATE_UNMANAGE         33073
+#define ID_SUBORDINATE_UNBIND           33074
+#define ID_SUBORDINATE_DELETE           33075
+#define ID_SUBORDINATE_PROPERTIES       33076
 #define ID_ALWAYS_DISABLED              43210
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
@@ -912,8 +918,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        370
-#define _APS_NEXT_COMMAND_VALUE         33072
+#define _APS_NEXT_RESOURCE_VALUE        372
+#define _APS_NEXT_COMMAND_VALUE         33077
 #define _APS_NEXT_CONTROL_VALUE         1496
 #define _APS_NEXT_SYMED_VALUE           135
 #endif

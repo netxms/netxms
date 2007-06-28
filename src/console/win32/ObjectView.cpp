@@ -129,6 +129,7 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(theApp.LoadIcon(IDI_GRAPH));
    m_imageList.Add(theApp.LoadIcon(IDI_TOPOLOGY));
    m_imageList.Add(theApp.LoadIcon(IDI_DOCUMENT));
+   m_imageList.Add(theApp.LoadIcon(IDI_SUBORDINATES));
 
    GetClientRect(&rect);
    rect.top += TITLE_BAR_HEIGHT;
@@ -145,6 +146,7 @@ int CObjectView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndPerfView.Create(NULL, _T("Performance"), WS_CHILD, rect, this, 5);
    m_wndTopologyView.Create(NULL, _T("Topology"), WS_CHILD, rect, this, 6);
    m_wndLastValuesView.Create(NULL, _T("Last Values"), WS_CHILD, rect, this, 7);
+   m_wndSubordinateView.Create(NULL, _T("Subordinates"), WS_CHILD, rect, this, 8);
 
    // Create common tabs
    CreateTab(0, _T("Overview"), 0, &m_wndOverview);
@@ -200,6 +202,7 @@ void CObjectView::Refresh()
    m_wndOverview.Refresh();
    m_wndDepView.Refresh();
    m_wndClusterView.Refresh();
+   m_wndSubordinateView.Refresh();
 }
 
 
@@ -252,6 +255,12 @@ void CObjectView::SetCurrentObject(NXC_OBJECT *pObject)
          default:
             break;
       }
+		if ((m_pObject->iClass != OBJECT_INTERFACE) &&
+			 (m_pObject->iClass != OBJECT_CONDITION) &&
+			 (m_pObject->iClass != OBJECT_NETWORKSERVICE))
+		{
+         CreateTab(nTab++, _T("Subordinates"), 7, &m_wndSubordinateView);
+		}
    }
 
    // Try to re-select same tab
@@ -468,6 +477,7 @@ void CObjectView::AdjustView()
    m_wndPerfView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
    m_wndTopologyView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
    m_wndLastValuesView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
+   m_wndSubordinateView.SetWindowPos(NULL, 0, nOffset, cx, cy - nOffset, SWP_NOZORDER);
 
 	if (m_bShowSearchBar)
 	{

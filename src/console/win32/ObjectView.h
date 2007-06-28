@@ -9,6 +9,7 @@
 #include "NodeTopologyView.h"
 #include "ExtEditCtrl.h"
 #include "NodeLastValuesView.h"	// Added by ClassView
+#include "ObjectSubordinateView.h"
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -52,6 +53,7 @@ public:
 
 	// Generated message map functions
 protected:
+	CObjectSubordinateView m_wndSubordinateView;
 	CNodeLastValuesView m_wndLastValuesView;
 	int m_nSearchTextOffset;
 	CImageList m_imageListSearch;

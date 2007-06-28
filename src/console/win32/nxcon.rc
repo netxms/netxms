@@ -147,6 +147,7 @@ IDI_CERT                ICON    DISCARDABLE     "icons\\cert.ico"
 IDI_CERTMGR             ICON    DISCARDABLE     "icons\\certmgr.ico"
 IDI_TOPOLOGY            ICON    DISCARDABLE     "icons\\topology.ico"
 IDI_EMPTY               ICON    DISCARDABLE     "icons\\empty.ico"
+IDI_SUBORDINATES        ICON    DISCARDABLE     "icons\\subordinates.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1002,6 +1003,16 @@ BEGIN
         MENUITEM "&Show history",               ID_ITEM_SHOWDATA
         MENUITEM "&Graph",                      ID_ITEM_GRAPH
         MENUITEM "&Export data...",             ID_ITEM_EXPORTDATA
+    END
+    POPUP "Subordinate"
+    BEGIN
+        MENUITEM "&Manage",                     ID_SUBORDINATE_MANAGE
+        MENUITEM "&Unmanage",                   ID_SUBORDINATE_UNMANAGE
+        MENUITEM SEPARATOR
+        MENUITEM "Un&bind",                     ID_SUBORDINATE_UNBIND
+        MENUITEM "&Delete",                     ID_SUBORDINATE_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties...",              ID_SUBORDINATE_PROPERTIES
     END
 END
 
