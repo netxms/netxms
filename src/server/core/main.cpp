@@ -118,7 +118,6 @@ static THREAD m_thSyslogDaemon = INVALID_THREAD_HANDLE;
 static int m_nShutdownReason = SHUTDOWN_DEFAULT;
 
 #ifndef _WIN32
-static pid_t m_pid = -1;     // Server process ID
 static pthread_t m_signalHandlerThread;
 #endif
 
@@ -1164,7 +1163,6 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
 	int nSignal;
 	BOOL bCallShutdown = FALSE;
 
-	m_pid = getpid();
 	m_signalHandlerThread = pthread_self();
 
 	// default for SIGCHLD: ignore
@@ -1323,7 +1321,7 @@ void InitiateShutdown(void)
 	}
 	else
 	{
-		kill(m_pid, SIGTERM);
+		pthread_kill(m_signalHandlerThread, SIGTERM);
 	}
 #endif
 }
