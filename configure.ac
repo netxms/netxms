@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.252 2007-06-28 09:14:04 victor Exp $
+# $Id: configure.ac,v 1.253 2007-06-28 16:06:49 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -415,6 +415,10 @@ case "$PLATFORM" in
          LDFLAGS="$LDFLAGS -mt"
       fi
       ;;
+   SunOS)
+      LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+      export LD_LIBRARY_PATH
+      ;;
    *)
       ;;
 esac
@@ -776,11 +780,18 @@ AC_CHECK_HEADERS([wchar.h iconv.h])
 AC_CHECK_SIZEOF(wchar_t)
 
 if test "x$DISABLE_ICONV" != "xyes"; then
-	AC_CHECK_LIB(iconv, iconv, 
+	AC_CHECK_LIB(iconv, libiconv_open,
 		[ ac_found_iconv=yes
-	          LDFLAGS="$LDFLAGS -liconv"
-	])
-	AC_CHECK_FUNCS(iconv, ac_found_iconv=yes, ac_found_iconv=no)
+		  LDFLAGS="$LDFLAGS -liconv"
+		  AC_CHECK_FUNCS(libiconv, ac_found_iconv=yes, ac_found_iconv=no)
+		],
+		[
+			AC_CHECK_LIB(iconv, iconv, 
+				[ ac_found_iconv=yes
+			          LDFLAGS="$LDFLAGS -liconv"
+			])
+			AC_CHECK_FUNCS(iconv, ac_found_iconv=yes, ac_found_iconv=no)
+		])
 else
 	ac_found_iconv=no
 	CPPFLAGS="$CPPFLAGS -D__DISABLE_ICONV"
@@ -1022,6 +1033,7 @@ fi
 
 check_substr "$COMPONENTS" "sqlite"
 if test $? = 0; then
+	AC_CHECK_LIB(rt, fdatasync)
 	AC_CHECK_LIB(sqlite3, sqlite3_open, [],
 		[AC_MSG_ERROR(libsqlite3 is required for SQLite support)])
 fi
