@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 NetXMS Team
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 NetXMS Team
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,6 +37,15 @@
 # include <signal.h>
 # include <sys/wait.h>
 #endif
+
+
+//
+// Shutdown reasons
+//
+
+#define SHUTDOWN_DEFAULT	0
+#define SHUTDOWN_FROM_CONSOLE	1
+#define SHUTDOWN_BY_SIGNAL	2
 
 
 //
@@ -106,9 +115,11 @@ static THREAD m_thPollManager = INVALID_THREAD_HANDLE;
 static THREAD m_thHouseKeeper = INVALID_THREAD_HANDLE;
 static THREAD m_thSyncer = INVALID_THREAD_HANDLE;
 static THREAD m_thSyslogDaemon = INVALID_THREAD_HANDLE;
+static int m_nShutdownReason = SHUTDOWN_DEFAULT;
 
 #ifndef _WIN32
 static pid_t m_pid = -1;     // Server process ID
+static pthread_t m_signalHandlerThread;
 #endif
 
 
@@ -612,8 +623,10 @@ void NXCORE_EXPORTABLE Shutdown(void)
 	ConditionSet(m_condShutdown);
 
 #ifndef _WIN32
-	if (IsStandalone())
-		kill(m_pid, SIGUSR1);   // Terminate signal handler
+	if (IsStandalone() && (m_nShutdownReason != SHUTDOWN_BY_SIGNAL))
+	{
+		pthread_kill(m_signalHandlerThread, SIGUSR1);   // Terminate signal handler
+	}
 #endif
 
 	// Stop event processor(s)
@@ -1152,6 +1165,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
 	BOOL bCallShutdown = FALSE;
 
 	m_pid = getpid();
+	m_signalHandlerThread = pthread_self();
 
 	// default for SIGCHLD: ignore
 	signal(SIGCHLD, &SignalHandlerStub);
@@ -1176,6 +1190,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
 			{
 				case SIGTERM:
 				case SIGINT:
+					m_nShutdownReason = SHUTDOWN_BY_SIGNAL;
 					if (IsStandalone())
 						bCallShutdown = TRUE;
 					ConditionSet(m_condShutdown);
@@ -1278,6 +1293,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 #if USE_READLINE
 		free(ptr);
 #endif
+		m_nShutdownReason = SHUTDOWN_FROM_CONSOLE;
 		Shutdown();
 	}
 	else
