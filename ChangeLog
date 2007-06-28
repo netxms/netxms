@@ -5,7 +5,7 @@
 - WinPerf subagent:
 	- Improved non-English Windows support
 	- Added new parameter: System.IO.DiskTime
-- Fixed issues: #164, #167, #168, #170, #172, #175
+- Fixed issues: #129, #163, #164, #167, #168, #170, #172, #175
 
 
 *
