@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.253 2007-06-28 16:06:49 victor Exp $
+# $Id: configure.ac,v 1.254 2007-06-29 15:29:25 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -409,7 +409,7 @@ case "$PLATFORM" in
       LDFLAGS="-no-undefined $LDFLAGS"
       ;;
    HP-UX)
-      CPPFLAGS="$CPPFLAGS -D_HPUX -D_HPUX_SOURCE -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1"
+      CPPFLAGS="$CPPFLAGS -D_HPUX -D_HPUX_SOURCE -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_REENTRANT"
       if test "x$CXX" = "xaCC"; then
          CXXFLAGS="-mt $CXXFLAGS +W749 +W829"
          LDFLAGS="$LDFLAGS -mt"
