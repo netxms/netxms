@@ -23,6 +23,8 @@
 #if !defined(_WIN32) && !defined(_NETWARE)
 
 #include "libnetxms.h"
+#include <signal.h>
+#include <sys/wait.h>
 
 #if HAVE_SYS_UTSNAME_H
 #include <sys/utsname.h>
@@ -40,6 +42,19 @@ void LIBNETXMS_EXPORTABLE
    THREAD hThread;
    struct utsname un;
    int nModel = 0;
+   sigset_t signals;
+
+   // Block signals
+   sigemptyset(&signals);
+   sigaddset(&signals, SIGTERM);
+   sigaddset(&signals, SIGINT);
+   sigaddset(&signals, SIGPIPE);
+   sigaddset(&signals, SIGSEGV);
+   sigaddset(&signals, SIGCHLD);
+   sigaddset(&signals, SIGHUP);
+   sigaddset(&signals, SIGUSR1);
+   sigaddset(&signals, SIGUSR2);
+   sigprocmask(SIG_BLOCK, &signals, NULL);
 
    if (uname(&un) != -1)
    {
