@@ -36,7 +36,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
    BYTE *pDecryptionBuffer = NULL;
    int i, iErr;
    BOOL bMsgNotNeeded;
-   TCHAR szBuffer[128];
+   TCHAR szBuffer[256];
 
    // Initialize raw message receiving function
    pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
@@ -367,7 +367,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, TCHAR *pszServer, TCHAR *pszL
 							}
                      msg.SetVariable(VID_CLIENT_INFO, pszClientInfo);
                      msg.SetVariable(VID_LIBNXCL_VERSION, NETXMS_VERSION_STRING);
-                     GetOSVersionString(szBuffer);
+                     GetOSVersionString(szBuffer, 64);
                      msg.SetVariable(VID_OS_INFO, szBuffer);
                      if (pSession->SendMsg(&msg))
                      {

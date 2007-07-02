@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.61 2007-05-15 12:51:34 victor Exp $ */
+/* $Id: tools.cpp,v 1.62 2007-07-02 23:14:16 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
@@ -906,9 +906,11 @@ DWORD LIBNETXMS_EXPORTABLE ResolveHostName(TCHAR *pszName)
 // Get OS name and version
 //
 
-void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer)
+void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize)
 {
-   *pszBuffer = 0;
+   int nSize = nBufSize - 1;
+
+   memset(pszBuffer, 0, nBufSize);
 
 #if defined(_WIN32)
    OSVERSIONINFO ver;
@@ -918,34 +920,39 @@ void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer)
    switch(ver.dwPlatformId)
    {
       case VER_PLATFORM_WIN32_WINDOWS:
-         _stprintf(pszBuffer, _T("Win%s"), ver.dwMinorVersion == 0 ? _T("95") :
-                   (ver.dwMinorVersion == 10 ? _T("98") :
-                   (ver.dwMinorVersion == 90 ? _T("Me") : _T("9x"))));
+         _sntprintf(pszBuffer, nSize, _T("Win%s"), ver.dwMinorVersion == 0 ? _T("95") :
+                    (ver.dwMinorVersion == 10 ? _T("98") :
+                    (ver.dwMinorVersion == 90 ? _T("Me") : _T("9x"))));
          break;
       case VER_PLATFORM_WIN32_NT:
-         _stprintf(pszBuffer, _T("WinNT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
+         _sntprintf(pszBuffer, nSize, _T("WinNT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
          break;
 #ifdef VER_PLATFORM_WIN32_CE
       case VER_PLATFORM_WIN32_CE:
-         _stprintf(pszBuffer, _T("WinCE %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
+         _sntprintf(pszBuffer, nSize, _T("WinCE %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
          break;
 #endif
       default:
-         _stprintf(pszBuffer, _T("WinX %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
+         _sntprintf(pszBuffer, nSize, _T("WinX %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
          break;
    }
 #elif defined(_NETWARE)
    struct utsname un;
 
    uname(&un);
-   _stprintf(pszBuffer, _T("NetWare %d.%d"), un.netware_major, un.netware_minor);
+   _sntprintf(pszBuffer, nSize, _T("NetWare %d.%d"), un.netware_major, un.netware_minor);
    if (un.servicepack > 0)
-      _stprintf(&pszBuffer[_tcslen(pszBuffer)], _T(" sp%d"), un.servicepack);
+   {
+      int nLen = (int)_tcslen(pszBuffer);
+      nSize -= nLen;
+      if (nSize > 0)
+         _sntprintf(&pszBuffer[nLen], nSize, _T(" sp%d"), un.servicepack);
+   }
 #else
    struct utsname un;
 
    uname(&un);
-   _stprintf(pszBuffer, _T("%s %s.%s"), un.sysname, un.version, un.release);
+   _sntprintf(pszBuffer, nSize, _T("%s %s"), un.sysname, un.release);
 #endif
 }
 

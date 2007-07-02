@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.255 2007-07-02 21:54:53 alk Exp $
+# $Id: configure.ac,v 1.256 2007-07-02 23:14:15 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -91,21 +91,6 @@ AC_ARG_WITH(nxhttpd,
 [AS_HELP_STRING(--with-nxhttpd,build web interface)],
 [
 	COMPONENTS="$COMPONENTS nxhttpd"
-
-	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"    
-		LDFLAGS="$LDFLAGS -L${withval}/lib"
-		CPPFLAGS="$CPPFLAGS -I${withval}/include"
-	else
-		LD_RUN_PATH="/usr/local/lib:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
-		LDFLAGS="$LDFLAGS -L/usr/local/lib"
-		CPPFLAGS="$CPPFLAGS -I/usr/local/include"
-	fi
-
-	AC_CHECK_HEADER(gd.h,,AC_MSG_ERROR([*** GD support not installed - please install first ***]))
-	AC_CHECK_LIB(gd, gdImageCreate, [], [
-		AC_MSG_ERROR(libgd is required for web interface)
-	])
 ])
 
 AC_ARG_WITH(mdebug,
@@ -185,6 +170,16 @@ AC_ARG_WITH(openssl,
 		fi
 	fi
 	REQUIRE_ENCRYPTION="yes"
+])
+
+AC_ARG_WITH(gd,
+[AS_HELP_STRING(--with-gd,specify GD location)],
+[
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"    
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+	fi
 ])
 
 AC_ARG_ENABLE(iconv,
@@ -376,6 +371,12 @@ fi
 AC_PROG_CC(aCC gcc cc cl)
 AC_PROG_CPP
 AC_PROG_CXX
+if test "x$CXX" = "xg++"; then
+	AC_CHECK_PROG([RC], [g++], [yes], [no])
+	if test "x$RC" = "xno"; then
+		AC_MSG_ERROR([*** FATAL: Cannot find any usable C++ compiler])
+	fi
+fi
 AC_PROG_INSTALL
 AC_PROG_LEX
 AC_PROG_YACC
@@ -1050,6 +1051,20 @@ fi
 
 
 #--------------------------------------------------------------------
+# nxhttpd
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "nxhttpd"
+if test $? = 0; then
+	AC_CHECK_HEADER(gd.h,,AC_MSG_ERROR([*** GD support not installed - please install first ***]))
+	AC_CHECK_LIB(gd, gdImageCreate, [], [
+			AC_MSG_ERROR(libgd is required for web interface)
+		])
+
+fi
+
+
+#--------------------------------------------------------------------
 # Other settings
 #--------------------------------------------------------------------
 
@@ -1112,7 +1127,6 @@ AC_CONFIG_FILES([
 	README
 	Makefile
 	contrib/Makefile
-	contrib/dct/Makefile
 	contrib/startup/Makefile
 	contrib/startup/gentoo/Makefile
 	contrib/startup/redhat/Makefile

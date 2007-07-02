@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.106 2007-06-20 13:28:35 victor Exp $ */
+/* $Id: nms_util.h,v 1.107 2007-07-02 23:14:16 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -444,7 +444,7 @@ extern "C"
    BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName);
    void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, TCHAR *pszSubStr, TCHAR *pszReplace);
    TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(TCHAR *pszFileName);
-   void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer);
+   void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize);
 	BYTE LIBNETXMS_EXPORTABLE *LoadFile(TCHAR *pszFileName, DWORD *pdwFileSize);
  
    DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *pData, DWORD dwSize, DWORD dwCRC);
@@ -549,6 +549,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.106  2007/06/20 13:28:35  victor
+Fixed 'const char *' to 'char *' conversion error with some GCC versions
+
 Revision 1.105  2007/05/15 09:36:32  victor
 Various improvements in web UI
 
