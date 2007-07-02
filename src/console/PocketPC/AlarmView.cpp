@@ -320,7 +320,7 @@ void CAlarmView::DrawListItem(CDC &dc, RECT &rcItem, int iItem, UINT nData)
    // Draw state icon
    m_wndListCtrl.GetItemText(iItem, 4, szBuffer, 256);
    iHeight = rcItem.bottom - rcItem.top;
-   m_pImageList->Draw(&dc, (szBuffer[0] == L'X') ? STATUS_CRITICAL + 1 : STATUS_CRITICAL + 2, 
+   m_pImageList->Draw(&dc, (szBuffer[0] == L'X') ? STATUS_CRITICAL + 2 : STATUS_CRITICAL + 1, 
                       CPoint(rcItem.left + 20, rcItem.top + 2), ILD_TRANSPARENT);
 
    memcpy(&rcText, &rcItem, sizeof(RECT));
