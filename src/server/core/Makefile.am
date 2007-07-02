@@ -33,10 +33,7 @@ EXTRA_DIST = \
 nxmp_data.cpp: nxmp_parser.tab.cpp
 
 nxmp_lex.yy.cpp: nxmp_parser.l nxmp_parser.tab.cpp nxmp_parser.tab.hpp
-	$(LEX) -B -f -8 -onxmp_lex.yy.temp nxmp_parser.l
-	echo "using namespace std;" > nxmp_lex.yy.cpp
-	sed -e "s/class istream;/#include <iostream>/" nxmp_lex.yy.temp >> nxmp_lex.yy.cpp
-	rm nxmp_lex.yy.temp
+	$(LEX) -B -f -8 -onxmp_lex.yy.cpp nxmp_parser.l
 
 nxmp_parser.tab.cpp: nxmp_parser.y
 	$(YACC) -b nxmp_parser -o nxmp_parser.tab.cpp -d -t -v nxmp_parser.y
