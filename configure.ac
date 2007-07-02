@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.254 2007-06-29 15:29:25 victor Exp $
+# $Id: configure.ac,v 1.255 2007-07-02 21:54:53 alk Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -91,6 +91,16 @@ AC_ARG_WITH(nxhttpd,
 [AS_HELP_STRING(--with-nxhttpd,build web interface)],
 [
 	COMPONENTS="$COMPONENTS nxhttpd"
+
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"    
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+	else
+		LD_RUN_PATH="/usr/local/lib:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+		LDFLAGS="$LDFLAGS -L/usr/local/lib"
+		CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+	fi
 
 	AC_CHECK_HEADER(gd.h,,AC_MSG_ERROR([*** GD support not installed - please install first ***]))
 	AC_CHECK_LIB(gd, gdImageCreate, [], [
