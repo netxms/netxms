@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.278 2007-06-02 12:36:10 victor Exp $ */
+/* $Id: session.cpp,v 1.279 2007-07-02 21:32:25 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1215,7 +1215,11 @@ void ClientSession::SendServerInfo(DWORD dwRqId)
    msg.SetId(dwRqId);
 
 	// Generate challenge for certificate authentication
+#ifdef _WITH_ENCRYPTION
 	RAND_bytes(m_challenge, CLIENT_CHALLENGE_SIZE);
+#else
+	memset(m_challenge, 0, CLIENT_CHALLENGE_SIZE);
+#endif
 
    // Fill message with server info
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -8879,12 +8883,14 @@ void ClientSession::SendSystemDCIList(CSCPMessage *pRequest)
 
 void ClientSession::AddCACertificate(CSCPMessage *pRequest)
 {
+   CSCPMessage msg;
+#ifdef _WITH_ENCRYPTION
 	DWORD dwLen, dwCertId;
 	BYTE *pData;
 	OPENSSL_CONST BYTE *p;
 	X509 *pCert;
 	TCHAR *pszQuery, *pszEscSubject, *pszComments, *pszEscComments;
-   CSCPMessage msg;
+#endif
 
 	msg.SetId(pRequest->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -8892,6 +8898,7 @@ void ClientSession::AddCACertificate(CSCPMessage *pRequest)
 	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
 	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
 	{
+#ifdef _WITH_ENCRYPTION
 		dwLen = pRequest->GetVariableBinary(VID_CERTIFICATE, NULL, 0);
 		if (dwLen > 0)
 		{
@@ -8937,6 +8944,9 @@ void ClientSession::AddCACertificate(CSCPMessage *pRequest)
 		{
 			msg.SetVariable(VID_RCC, RCC_INVALID_REQUEST);
 		}
+#else
+		msg.SetVariable(VID_RCC, RCC_NO_ENCRYPTION_SUPPORT);
+#endif
 	}
 	else
 	{
@@ -8953,9 +8963,11 @@ void ClientSession::AddCACertificate(CSCPMessage *pRequest)
 
 void ClientSession::DeleteCertificate(CSCPMessage *pRequest)
 {
+   CSCPMessage msg;
+#ifdef _WITH_ENCRYPTION
 	DWORD dwCertId;
 	TCHAR szQuery[256];
-   CSCPMessage msg;
+#endif
 
 	msg.SetId(pRequest->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -8963,6 +8975,7 @@ void ClientSession::DeleteCertificate(CSCPMessage *pRequest)
 	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
 	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
 	{
+#ifdef _WITH_ENCRYPTION
 		dwCertId = pRequest->GetVariableLong(VID_CERTIFICATE_ID);
 		_stprintf(szQuery, _T("DELETE FROM certificates WHERE cert_id=%d"), dwCertId);
 		if (DBQuery(g_hCoreDB, szQuery))
@@ -8974,6 +8987,9 @@ void ClientSession::DeleteCertificate(CSCPMessage *pRequest)
 		{
 			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 		}
+#else
+		msg.SetVariable(VID_RCC, RCC_NO_ENCRYPTION_SUPPORT);
+#endif
 	}
 	else
 	{
