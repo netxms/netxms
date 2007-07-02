@@ -104,7 +104,8 @@
 
 /********** WINDOWS ********************/
 
-#define FS_PATH_SEPARATOR  _T("\\")
+#define FS_PATH_SEPARATOR			_T("\\")
+#define FS_PATH_SEPARATOR_CHAR	_T('\\')
 
 #include <winsock2.h>
 #include <windows.h>
@@ -162,7 +163,8 @@ typedef int socklen_t;
 
 /********** NETWARE ********************/
 
-#define FS_PATH_SEPARATOR  _T("/")
+#define FS_PATH_SEPARATOR       _T("/")
+#define FS_PATH_SEPARATOR_CHAR  _T('/')
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -243,7 +245,8 @@ typedef int SOCKET;
 
 #include <errno.h>
 
-#define FS_PATH_SEPARATOR  _T("/")
+#define FS_PATH_SEPARATOR       _T("/")
+#define FS_PATH_SEPARATOR_CHAR  _T('/')
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
