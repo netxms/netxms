@@ -1577,9 +1577,9 @@ tools/create_apkg.sh -text
 tools/create_ssa_list.sh -text
 tools/mc.pl -text
 tools/nwmkimp.pl -text
-tools/patch_libtool.pl -text
 tools/sharIt -text
 tools/stub.sh -text
+tools/update_xrc.pl -text
 www/.cvsignore -text
 www/cgi-bin/Net/Cmd.pm -text
 www/cgi-bin/Net/Config.pm -text
