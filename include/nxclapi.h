@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.268 2007-06-02 12:36:10 victor Exp $ */
+/* $Id: nxclapi.h,v 1.269 2007-07-02 12:32:12 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -56,7 +56,7 @@ typedef void * NXC_SESSION;
 // Some constants
 //
 
-#define MAX_COMMUNITY_LENGTH     32
+#define MAX_COMMUNITY_LENGTH     128
 #define MAX_OID_LENGTH           1024
 #define MAX_EVENT_MSG_LENGTH     256
 #define MAX_EVENT_NAME           64

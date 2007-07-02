@@ -62,6 +62,7 @@ DB_RESULT SQLSelect(TCHAR *pszQuery);
 BOOL SQLQuery(TCHAR *pszQuery);
 BOOL SQLBatch(TCHAR *pszBatch);
 BOOL GetYesNo(void);
+void ShowQuery(TCHAR *pszQuery);
 
 BOOL ConfigReadStr(TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault);
 int ConfigReadInt(TCHAR *pszVar, int iDefault);
@@ -74,6 +75,7 @@ DWORD ConfigReadULong(TCHAR *pszVar, DWORD dwDefault);
 
 extern DB_HANDLE g_hCoreDB;
 extern BOOL g_bIgnoreErrors;
+extern BOOL g_bTrace;
 extern int g_iSyntax;
 extern TCHAR *g_pszTableSuffix;
 extern TCHAR *g_pszSqlType[][2];

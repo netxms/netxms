@@ -7,7 +7,7 @@
 	- Improved non-English Windows support
 	- Added new parameter: System.IO.DiskTime
 - New MIB added: FIBRE-CHANNEL-FE-MIB
-- Fixed issues: #129, #163, #164, #167, #168, #170, #172, #175, #177
+- Fixed issues: #129, #163, #164, #167, #168, #170, #172, #175, #177, #178
 
 
 *

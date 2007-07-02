@@ -78,6 +78,61 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V64 to V65
+//
+
+static BOOL H_UpgradeFromV64(void)
+{
+   static TCHAR m_szPGSQLBatch[] =
+		_T("ALTER TABLE nodes ADD new_community varchar(127)\n")
+		_T("UPDATE nodes SET new_community=community\n")
+		_T("ALTER TABLE nodes DROP COLUMN community\n")
+		_T("ALTER TABLE nodes RENAME COLUMN new_community TO community\n")
+		_T("ALTER TABLE nodes ALTER COLUMN community SET NOT NULL\n")
+      _T("<END>");
+
+	switch(g_iSyntax)
+	{
+		case DB_SYNTAX_MYSQL:
+		case DB_SYNTAX_ORACLE:
+			if (!SQLQuery(_T("ALTER TABLE nodes MODIFY community varchar(127)")))
+		      if (!g_bIgnoreErrors)
+					return FALSE;
+			break;
+		case DB_SYNTAX_PGSQL:
+			if (g_bTrace)
+				ShowQuery(_T("ALTER TABLE nodes ALTER COLUMN community TYPE varchar(127)"));
+
+			if (!DBQuery(g_hCoreDB, _T("ALTER TABLE nodes ALTER COLUMN community TYPE varchar(127)")))
+			{
+				// Assume that we are using PostgreSQL oldest than 8.x
+				if (!SQLBatch(m_szPGSQLBatch))
+					if (!g_bIgnoreErrors)
+						return FALSE;
+			}
+			break;
+		case DB_SYNTAX_MSSQL:
+			if (!SQLQuery(_T("ALTER TABLE nodes ALTER COLUMN community varchar(127)")))
+		      if (!g_bIgnoreErrors)
+					return FALSE;
+			break;
+		case DB_SYNTAX_SQLITE:
+			_tprintf(_T("WARNING: Due to limitations of SQLite requested operation cannot be completed\nYou system will still be limited to use SNMP commonity strings not longer than 32 characters.\n"));
+			break;
+		default:
+			_tprintf(_T("INTERNAL ERROR: Unknown database syntax %d\n"), g_iSyntax);
+			break;
+	}
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='65' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V63 to V64
 //
 
@@ -2898,6 +2953,7 @@ static struct
    { 61, H_UpgradeFromV61 },
    { 62, H_UpgradeFromV62 },
    { 63, H_UpgradeFromV63 },
+   { 64, H_UpgradeFromV64 },
    { 0, NULL }
 };
 
