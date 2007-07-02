@@ -19,9 +19,6 @@
 contrib/Makefile.am -text
 contrib/backgrounds/.keep -text
 contrib/backgrounds/Makefile.am -text
-contrib/dct/Makefile.am -text
-contrib/dct/generic_agent.dct -text
-contrib/dct/generic_object.dct -text
 contrib/installAgent.sh -text
 contrib/installBinaryAgent.sh -text
 contrib/logo.jpg -text

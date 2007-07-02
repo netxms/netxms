@@ -9,6 +9,6 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 
-EXTRA_DIST = netxmsd.conf-dist nxagentd.conf-dist
-SUBDIRS= dct startup
+EXTRA_DIST = netxmsd.conf-dist nxagentd.conf-dist nxhttpd.conf-dist
+SUBDIRS= startup
 SUBDIRS += @CONTRIB_MODULES@

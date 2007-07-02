@@ -1,51 +1,48 @@
 #
-# Sample configuration file for NetXMS web interface
+# Sample configuration file for NetXMS web server
 #
 
 #
 # DocumentRoot
 #
-# Location of static data files (netxms.css, images, etc.)
+# Root directory for static web interface content. Default values:
+#   on UNIX: /usr/local/share/netxms
+#   on Windows: C:\NetXMS\var\www
 #
-# Default (unix)    : PREFIX/share/nxhttpd (check "--datadir" switch for configure)
-# Default (windows) : C:\NetXMS\var\www
-#
-
-# DocumentRoot=/usr/local/share/nxhttpd
-
-#
-# ListenPort
-#
-# Default: 8080
-#
-
-# ListenPort=8080
-
-#
-# LogFile
-#
-# Log file name (no syslog/event log support yet)
-#
-# Default (unix)    : /var/log/nxhttpd
-# Default (windows) : C:\nxhttpd.log
-#
-
-# LogFile=/var/log/nxhttpd
+# Example:
+# DocumentRoot = C:\Program Files\NetXMS\var\www
 
 #
 # MasterServer
 #
-# Server we should connect to
+# Host name or address of master NetXMS server (server for which nxhttpd
+# will provide web interface). Default value is localhost.
 #
-# Default: localhost
-#
+# Example:
+# MasterServer = localhost
 
-# MasterServer=localhost
+#
+# LogFile
+#
+# Server's log file. To write log to syslog (or Event Log on Windows),
+# use {syslog} as file name.
+#
+# Examples:
+# LogFile = {syslog}
+# LogFile = /var/log/nxhttpd
+
+#
+# ListenPort
+#
+# TCP port for incoming connections. Default is 8080.
+#
+# Example:
+# ListenPort=8080
 
 #
 # SessionTimeout
 #
-# Session timeout in seconds
+# Client session timeout in seconds. Default is 300.
 #
-
+# Example:
 # SessionTimeout=300
