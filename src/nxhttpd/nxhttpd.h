@@ -302,6 +302,7 @@ public:
 	~PieChart();
 
 	BOOL SetValue(TCHAR *label, double value);
+	void SetNoDataLabel(TCHAR *label);
 
 	BOOL Build(void);
 	void Clear(void);
@@ -311,6 +312,7 @@ public:
 private:
 	int m_valueCount;
 	TCHAR *m_labels[MAX_PIE_ELEMENTS];
+	TCHAR *m_noDataLabel;
 	double m_values[MAX_PIE_ELEMENTS];
 	void *m_rawData;
 	int m_rawDataSize;

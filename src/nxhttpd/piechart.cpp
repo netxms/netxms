@@ -1,4 +1,4 @@
-/* $Id: piechart.cpp,v 1.2 2007-07-03 13:03:58 alk Exp $ */
+/* $Id: piechart.cpp,v 1.3 2007-07-03 16:09:16 alk Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -25,6 +25,7 @@
 #include "nxhttpd.h"
 #include <gd.h>
 #include <gdfontt.h>
+#include <gdfonts.h>
 #include <math.h>
 
 
@@ -39,6 +40,7 @@ PieChart::PieChart()
 	memset(m_labels, 0, sizeof(TCHAR *) * MAX_PIE_ELEMENTS);
 	memset(m_values, 0, sizeof(double) * MAX_PIE_ELEMENTS);
 	m_valueCount = 0;
+	m_noDataLabel = "No data to display (total is zero).";
 }
 
 
@@ -75,6 +77,19 @@ BOOL PieChart::SetValue(TCHAR *label, double value)
 
 
 //
+// Set value
+//
+
+void PieChart::SetNoDataLabel(TCHAR *label)
+{
+	if (label != NULL)
+	{
+		m_noDataLabel = label;
+	}
+}
+
+
+//
 // Build chart
 //
 
@@ -105,17 +120,6 @@ BOOL PieChart::Build(void)
 	gdImageFill(img, 0, 0, background);
 	gdImageColorTransparent(img, background);
 
-	m_color[0] = gdImageColorAllocate(img,   0, 127,   0);
-	m_color[1] = gdImageColorAllocate(img,   0, 255,   255);
-	m_color[2] = gdImageColorAllocate(img, 255, 255,   0);
-	m_color[3] = gdImageColorAllocate(img, 255, 128,   0);
-	m_color[4] = gdImageColorAllocate(img, 200,   0,   0);
-	m_color[5] = gdImageColorAllocate(img,  61,  12, 187);
-	m_color[6] = gdImageColorAllocate(img, 192, 192, 192);
-	m_color[7] = gdImageColorAllocate(img,  92,   0,   0);
-	m_color[8] = gdImageColorAllocate(img, 255, 128, 255);
-	m_colorCount = 9;
-
 	// count total
 	for(i = 1; i <= m_valueCount; i++)
 	{
@@ -124,67 +128,88 @@ BOOL PieChart::Build(void)
 		arc_dec[i] = total * 360;
 	}
 
-	arc_rad[0] = 0;
-	arc_dec[0] = 0;
-
-	// draw boundaries
-	for(i = 1; i <= m_valueCount; i++)
+	if (total > 0)
 	{
-		perc[i - 1] = m_values[i - 1] / total;
+		m_color[0] = gdImageColorAllocate(img,   0, 127,   0);
+		m_color[1] = gdImageColorAllocate(img,   0, 255, 255);
+		m_color[2] = gdImageColorAllocate(img, 255, 255,   0);
+		m_color[3] = gdImageColorAllocate(img, 255, 128,   0);
+		m_color[4] = gdImageColorAllocate(img, 200,   0,   0);
+		m_color[5] = gdImageColorAllocate(img,  61,  12, 187);
+		m_color[6] = gdImageColorAllocate(img, 192, 192, 192);
+		m_color[7] = gdImageColorAllocate(img,  92,   0,   0);
+		m_color[8] = gdImageColorAllocate(img, 255, 128, 255);
+		m_colorCount = 9;
 
-		arc_rad[i] /= total;
-		arc_dec[i] /= total;
+		arc_rad[0] = 0;
+		arc_dec[0] = 0;
 
-		posX = (int)ROUND(centX + (d / 2) * sin(arc_rad[i]));
-		posY = (int)ROUND(centY + (d / 2) * cos(arc_rad[i]));
+		// draw boundaries
+		for(i = 1; i <= m_valueCount; i++)
+		{
+			perc[i - 1] = m_values[i - 1] / total;
 
-		gdImageLine(img, centX, centY, posX, posY, black);
-		gdImageArc(img, centX, centY, d, d, (int)(arc_dec[i - 1]), (int)(arc_dec[i]), black);
+			arc_rad[i] /= total;
+			arc_dec[i] /= total;
+
+			posX = (int)ROUND(centX + (d / 2) * sin(arc_rad[i]));
+			posY = (int)ROUND(centY + (d / 2) * cos(arc_rad[i]));
+
+			gdImageLine(img, centX, centY, posX, posY, black);
+			gdImageArc(img, centX, centY, d, d, (int)(arc_dec[i - 1]), (int)(arc_dec[i]), black);
+		}
+		
+		int currentColor = 0;
+		//int hfw = gdImageFontWidth(1);
+		//int vfw = gdImageFontHeight(1);
+		int fontX = gdFontTiny->w;
+		int fontY = gdFontTiny->h;
+
+		// draw labels and fill
+		for(i = 0; i < m_valueCount; i++)
+		{
+			double arc_rad_label = arc_rad[i] + 0.5 * perc[i] * 2 * PI;
+
+			// fill
+			posX = (int)(centX + (0.8 * (d / 2) * sin(arc_rad_label)));
+			posY = (int)(centY + (0.8 * (d / 2) * cos(arc_rad_label)));
+
+			if (perc[i] > 0)
+			{
+				gdImageFillToBorder(img, posX, posY, black, m_color[currentColor]);
+
+				// label
+				TCHAR s[128];
+
+				_sntprintf(s, 128, _T("%s (%.2lf%%)"), m_labels[i], perc[i] * 100);
+				s[127] = 0;
+				
+				posX = (int)(centX + (1.1 * (d / 2) * sin(arc_rad_label)));
+				posY = (int)(centY + (1.1 * (d / 2) * cos(arc_rad_label)));
+				if ((arc_rad_label > 0.5 * PI) && (arc_rad_label < 1.5 * PI))
+				{
+					posY = posY - fontY;
+				}
+				if (arc_rad_label > PI)
+				{
+					posX = posX - fontX * _tcslen(s);
+				}
+				gdImageString(img, gdFontTiny, posX, posY, (unsigned char *)s, black);
+			}
+
+			currentColor++;
+			if (currentColor == m_colorCount)
+			{
+				currentColor = 0;
+			}
+		}
 	}
-	
-	int currentColor = 0;
-	//int hfw = gdImageFontWidth(1);
-	//int vfw = gdImageFontHeight(1);
-	int fontX = gdFontTiny->w;
-	int fontY = gdFontTiny->h;
-
-	// draw labels and fill
-	for(i = 0; i < m_valueCount; i++)
+	else
 	{
-		double arc_rad_label = arc_rad[i] + 0.5 * perc[i] * 2 * PI;
-
-		// fill
-		posX = (int)(centX + (0.8 * (d / 2) * sin(arc_rad_label)));
-		posY = (int)(centY + (0.8 * (d / 2) * cos(arc_rad_label)));
-
-		if (perc[i] > 0)
-		{
-			gdImageFillToBorder(img, posX, posY, black, m_color[currentColor]);
-
-			// label
-			TCHAR s[128];
-
-			_sntprintf(s, 128, _T("%s (%.2lf%%)"), m_labels[i], perc[i] * 100);
-			s[127] = 0;
-			
-			posX = (int)(centX + (1.1 * (d / 2) * sin(arc_rad_label)));
-			posY = (int)(centY + (1.1 * (d / 2) * cos(arc_rad_label)));
-			if ((arc_rad_label > 0.5 * PI) && (arc_rad_label < 1.5 * PI))
-			{
-				posY = posY - fontY;
-			}
-			if (arc_rad_label > PI)
-			{
-				posX = posX - fontX * _tcslen(s);
-			}
-			gdImageString(img, gdFontTiny, posX, posY, (unsigned char *)s, black);
-		}
-
-		currentColor++;
-		if (currentColor == m_colorCount)
-		{
-			currentColor = 0;
-		}
+		gdImageString(img, gdFontSmall,
+				img->sx / 2 - (strlen(m_noDataLabel) * gdFontSmall->w / 2),
+				img->sy / 2 - gdFontSmall->h / 2,
+				(unsigned char *)m_noDataLabel, black);
 	}
 
 	m_rawData = gdImagePngPtr(img, &m_rawDataSize);
