@@ -1,4 +1,4 @@
-/* $Id: piechart.cpp,v 1.1 2007-05-31 22:48:33 victor Exp $ */
+/* $Id: piechart.cpp,v 1.2 2007-07-03 13:03:58 alk Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -145,8 +145,8 @@ BOOL PieChart::Build(void)
 	int currentColor = 0;
 	//int hfw = gdImageFontWidth(1);
 	//int vfw = gdImageFontHeight(1);
-	int fontX = gdFontGetTiny()->w;
-	int fontY = gdFontGetTiny()->h;
+	int fontX = gdFontTiny->w;
+	int fontY = gdFontTiny->h;
 
 	// draw labels and fill
 	for(i = 0; i < m_valueCount; i++)
@@ -177,7 +177,7 @@ BOOL PieChart::Build(void)
 			{
 				posX = posX - fontX * _tcslen(s);
 			}
-			gdImageString(img, gdFontGetTiny(), posX, posY, (unsigned char *)s, black);
+			gdImageString(img, gdFontTiny, posX, posY, (unsigned char *)s, black);
 		}
 
 		currentColor++;
