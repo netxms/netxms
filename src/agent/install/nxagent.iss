@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS Agent
-AppVerName=NetXMS Agent 0.2.17
-AppVersion=0.2.17
+AppVerName=NetXMS Agent 0.2.18
+AppVersion=0.2.18
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -12,7 +12,7 @@ AppUpdatesURL=http://www.netxms.org
 DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS Agent
 AllowNoIcons=yes
-OutputBaseFilename=nxagent-0.2.17
+OutputBaseFilename=nxagent-0.2.18
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -51,7 +51,7 @@ Filename: "{app}\bin\nxagentd.exe"; Parameters: "-R"; StatusMsg: "Uninstalling s
 Var
   ServerSelectionPage: TInputQueryWizardPage;
   SubagentSelectionPage: TInputOptionWizardPage;
-  serverName, sbPing, sbPortCheck, sbWinPerf, sbUPS: String;
+  serverName, sbECS, sbPing, sbPortCheck, sbWinPerf, sbUPS: String;
 
 Procedure StopService;
 Var
@@ -98,6 +98,7 @@ Begin
   
   // Empty values for installation data
   serverName := '';
+  sbECS := 'FALSE';
   sbPing := 'FALSE';
   sbPortCheck := 'FALSE';
   sbWinPerf := 'TRUE';
@@ -116,6 +117,8 @@ Begin
     If Pos('/SUBAGENT=', param) = 1 Then Begin
       Delete(param, 1, 10);
       param := Uppercase(param);
+      If param = 'ECS' Then
+        sbECS := 'TRUE';
       If param = 'PING' Then
         sbPing := 'TRUE';
       If param = 'PORTCHECK' Then
@@ -129,6 +132,8 @@ Begin
     If Pos('/NOSUBAGENT=', param) = 1 Then Begin
       Delete(param, 1, 12);
       param := Uppercase(param);
+      If param = 'ECS' Then
+        sbECS := 'FALSE';
       If param = 'PING' Then
         sbPing := 'FALSE';
       If param = 'PORTCHECK' Then
@@ -152,23 +157,26 @@ Begin
   SubagentSelectionPage := CreateInputOptionPage(ServerSelectionPage.Id,
     'Subagent Selection', 'Select desired subagents.',
     'Please select additional subagents you wish to load.', False, False);
+  SubagentSelectionPage.Add('Extended Checksum Subagent - ecs.nsm');
   SubagentSelectionPage.Add('ICMP Pinger Subagent - ping.nsm');
   SubagentSelectionPage.Add('Port Checker Subagent - portcheck.nsm');
   SubagentSelectionPage.Add('Windows Performance Subagent - winperf.nsm');
   SubagentSelectionPage.Add('UPS Monitoring Subagent - ups.nsm');
-  SubagentSelectionPage.Values[0] := StrToBool(GetPreviousData('Subagent_PING', sbPing));
-  SubagentSelectionPage.Values[1] := StrToBool(GetPreviousData('Subagent_PORTCHECK', sbPortCheck));
-  SubagentSelectionPage.Values[2] := StrToBool(GetPreviousData('Subagent_WINPERF', sbWinPerf));
-  SubagentSelectionPage.Values[3] := StrToBool(GetPreviousData('Subagent_UPS', sbUPS));
+  SubagentSelectionPage.Values[0] := StrToBool(GetPreviousData('Subagent_ECS', sbECS));
+  SubagentSelectionPage.Values[1] := StrToBool(GetPreviousData('Subagent_PING', sbPing));
+  SubagentSelectionPage.Values[2] := StrToBool(GetPreviousData('Subagent_PORTCHECK', sbPortCheck));
+  SubagentSelectionPage.Values[3] := StrToBool(GetPreviousData('Subagent_WINPERF', sbWinPerf));
+  SubagentSelectionPage.Values[4] := StrToBool(GetPreviousData('Subagent_UPS', sbUPS));
 End;
 
 Procedure RegisterPreviousData(PreviousDataKey: Integer);
 Begin
   SetPreviousData(PreviousDataKey, 'MasterServer', ServerSelectionPage.Values[0]);
-  SetPreviousData(PreviousDataKey, 'Subagent_PING', BoolToStr(SubagentSelectionPage.Values[0]));
-  SetPreviousData(PreviousDataKey, 'Subagent_PORTCHECK', BoolToStr(SubagentSelectionPage.Values[1]));
-  SetPreviousData(PreviousDataKey, 'Subagent_WINPERF', BoolToStr(SubagentSelectionPage.Values[2]));
-  SetPreviousData(PreviousDataKey, 'Subagent_UPS', BoolToStr(SubagentSelectionPage.Values[3]));
+  SetPreviousData(PreviousDataKey, 'Subagent_ECS', BoolToStr(SubagentSelectionPage.Values[0]));
+  SetPreviousData(PreviousDataKey, 'Subagent_PING', BoolToStr(SubagentSelectionPage.Values[1]));
+  SetPreviousData(PreviousDataKey, 'Subagent_PORTCHECK', BoolToStr(SubagentSelectionPage.Values[2]));
+  SetPreviousData(PreviousDataKey, 'Subagent_WINPERF', BoolToStr(SubagentSelectionPage.Values[3]));
+  SetPreviousData(PreviousDataKey, 'Subagent_UPS', BoolToStr(SubagentSelectionPage.Values[4]));
 End;
 
 Function GetMasterServer(Param: String): String;
@@ -180,12 +188,14 @@ Function GetSubagentList(Param: String): String;
 Begin
   Result := '';
   If SubagentSelectionPage.Values[0] Then
-    Result := Result + 'ping.nsm ';
+    Result := Result + 'ecs.nsm ';
   If SubagentSelectionPage.Values[1] Then
-    Result := Result + 'portcheck.nsm ';
+    Result := Result + 'ping.nsm ';
   If SubagentSelectionPage.Values[2] Then
-    Result := Result + 'winperf.nsm ';
+    Result := Result + 'portcheck.nsm ';
   If SubagentSelectionPage.Values[3] Then
+    Result := Result + 'winperf.nsm ';
+  If SubagentSelectionPage.Values[4] Then
     Result := Result + 'ups.nsm ';
 End;
 

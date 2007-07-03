@@ -180,7 +180,7 @@ BOOL TranslateCounterName(TCHAR *pszName, TCHAR *pszOut)
 	}
 	bs1 = TranslateElement(szTemp);
 	_tcscat(pszOut, szTemp);
-	nLen = _tcslen(pszOut);
+	nLen = (int)_tcslen(pszOut);
 	memcpy(&pszOut[nLen], pCurr, (pNext - pCurr) * sizeof(TCHAR));
 	pszOut[nLen + (pNext - pCurr)] = 0;
 	pCurr = pNext;
