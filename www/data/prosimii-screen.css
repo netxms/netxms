@@ -366,6 +366,10 @@ dd {
 .screenShot {
 }
 
+.screenShot > a > img {
+	border: 1px black solid;
+}
+
 /* ##### Footer ##### */
 
 #footer {

@@ -1,4 +1,17 @@
 *
+* 0.2.18
+*
+
+- Windows console: added "subordinates" view in object browser
+- WinPerf subagent:
+	- Improved non-English Windows support
+	- Added new parameter: System.IO.DiskTime
+- New MIB added: FIBRE-CHANNEL-FE-MIB
+- Fixed issues: #23, #129, #163, #164, #165, #167, #168, #170, #172, #173,
+                #174, #175, #176, #177, #178
+
+
+*
 * 0.2.17
 *
 
