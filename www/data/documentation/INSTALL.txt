@@ -2,7 +2,7 @@ Step-By-Step guide:
 
 NB! "VERSION" should be replaced with actual version
 
-1) Grab latest version from http://netxms.org/download/
+1) Grab latest version from http://www.netxms.org/download/
 2) Unpack it
 	$ tar zxvf netxms-VERSION.tar.gz
 3) Change directory to netxms-VERSION and run "configure" script.

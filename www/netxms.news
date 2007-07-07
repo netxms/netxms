@@ -1,3 +1,5 @@
+07-Jul-2007|Forum engine changed|We have switched to the new forum engine. Everything <b>except passwords</b> is migrated. Use "Password reminder" to get a new one.
+03-Jul-2007|0.2.18 released|Version 0.2.18 is out.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
 10-Jun-2007|0.2.17 released|Version 0.2.17 is out.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
 20-Apr-2007|0.2.16 released|Version 0.2.16 is out.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
 01-Feb-2007|Forum is online again|Database server was successfully restored on new hardware. Forum, wiki and bugtracker are online again.
