@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.256 2007-07-02 23:14:15 victor Exp $
+# $Id: configure.ac,v 1.257 2007-07-11 20:28:47 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -40,6 +40,7 @@ USE_PTH="no"
 BUILD_SERVER="no"
 BUILD_AGENT="no"
 BUILD_CLIENT="no"
+BUILD_CONSOLE="no"
 BUILD_NXHTTPD="no"
 BUILD_STATIC_AGENT="no"
 NEED_ZLIB="no"
@@ -51,6 +52,7 @@ UNSTABLE_SUBAGENT_DIRS=""
 SERVER_TOOLS=""
 TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
+CLIENT_COMPONENTS=""
 
 
 #--------------------------------------------------------------------
@@ -69,6 +71,13 @@ AC_ARG_WITH(client,
 	COMPONENTS="$COMPONENTS client"
 ])
 
+AC_ARG_WITH(console,
+[AS_HELP_STRING(--with-console,build management console)],
+[
+	COMPONENTS="$COMPONENTS console client"
+])
+
+AC_ARG_WITH(agent,
 AC_ARG_WITH(agent,
 [AS_HELP_STRING(--with-agent,build agent)],
 [
@@ -298,7 +307,13 @@ check_substr "$COMPONENTS" "client"
 if test $? = 0; then
 	BUILD_CLIENT="yes"
 	NEED_ZLIB="yes"
-	MODULES="$MODULES libnxmap libnxcl nxevent nxpush nxreport console"
+	MODULES="$MODULES libnxmap libnxcl nxevent nxpush nxreport console client"
+fi
+
+check_substr "$COMPONENTS" "console"
+if test $? = 0; then
+	BUILD_CONSOLE="yes"
+	CLIENT_COMPONENTS="$CLIENT_COMPONENTS console"
 fi
 
 check_substr "$COMPONENTS" "agent"
@@ -1081,6 +1096,7 @@ AC_SUBST(SUBAGENT_DIRS)
 AC_SUBST(SERVER_TOOLS)
 AC_SUBST(TOP_LEVEL_MODULES)
 AC_SUBST(CONTRIB_MODULES)
+AC_SUBST(CLIENT_COMPONENTS)
 AC_SUBST(STATIC_SUBAGENT_LIST)
 AC_SUBST(SUBAGENT_LIBS)
 AC_SUBST(BUILD_SERVER)
@@ -1150,6 +1166,14 @@ AC_CONFIG_FILES([
 	src/libnxmap/Makefile
 	src/install/Makefile
 	src/install/windows/Makefile
+	src/client/Makefile
+	src/client/console/Makefile
+	src/client/console/include/Makefile
+	src/client/console/libnxmc/Makefile
+	src/client/console/nxmc/Makefile
+	src/client/console/nxmc/rc/Makefile
+	src/client/console/plugins/Makefile
+	src/client/console/plugins/ObjectBrowser/Makefile
 	src/console/Makefile
 	src/console/nxuilib/Makefile
 	src/console/nxuilib/res/Makefile
@@ -1271,6 +1295,11 @@ if test "x${BUILD_CLIENT}" = "xyes"; then
 	echo "Build Clients       : YES"
 else
 	echo "Build Clients       : NO"
+fi
+if test "x${BUILD_CONSOLE}" = "xyes"; then
+	echo "Build Console       : YES"
+else
+	echo "Build Console       : NO"
 fi
 if test "x${BUILD_NXHTTPD}" = "xyes"; then
 	echo "Build Web Interface : YES"
