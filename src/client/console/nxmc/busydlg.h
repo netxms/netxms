@@ -1,7 +1,7 @@
-/* $Id: netxms-version.h,v 1.122 2007-07-11 19:46:57 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Portable management console
+** Copyright (C) 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,30 +17,29 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: netxms-version.h
+** File: busydlg.h
 **
 **/
 
-#ifndef _netxms_version_h_
-#define _netxms_version_h_
+#ifndef _busydlg_h_
+#define _busydlg_h_
 
+class nxBusyDialog : public wxDialog
+{
+public:
+	DWORD m_rcc;
 
-//
-// Version constants 
-//
+	nxBusyDialog(wxWindow *parent, TCHAR *initialText);
 
-#define NETXMS_VERSION_MAJOR        0
-#define NETXMS_VERSION_MINOR        2
-#define NETXMS_VERSION_BUILD        19
-#define NETXMS_VERSION_HOTFIX       0
-#define NETXMS_VERSION_STRING       _T("0.2.19-rc1")
+	void ReportCompletion(DWORD rcc);
+	void SetStatusText(TCHAR *newText);
 
+	// Event handlers
+protected:
+	void OnSetStatusText(wxCommandEvent &event);
+	void OnRequestCompleted(wxCommandEvent &event);
 
-//
-// Current client-server protocol version
-//
-
-#define CLIENT_PROTOCOL_VERSION     14
-
+	DECLARE_EVENT_TABLE()
+};
 
 #endif

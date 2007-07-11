@@ -14,22 +14,22 @@ Class3=CMainFrame
 Class4=CAboutDlg
 
 ResourceCount=11
-Resource1=IDD_REQUEST_WAIT
-Resource2=IDD_ABOUTBOX
+Resource1=IDR_MAINFRAME
+Resource2=IDD_SETTINGS
 Class2=CChildView
 Class5=CAlarmList
 Class6=CInfoLine
 Class7=CRequestProcessingDlg
 Resource3=IDD_ABOUTBOX (English (U.S.))
-Resource4=IDD_SETTINGS
+Resource4=IDD_ABOUTBOX
 Class9=CSettingsDlg
-Resource5=IDM_CONTEXT
+Resource5=IDD_REQUEST_WAIT
 Resource7=IDR_MAINFRAME (English (U.S.))
 Resource8=IDD_REQUEST_WAIT (English (U.S.))
 Resource9=IDD_SETTINGS (English (U.S.))
 Class8=CAlarmBrowser
 Resource10=IDM_CONTEXT (English (U.S.))
-Resource11=IDR_MAINFRAME
+Resource11=IDM_CONTEXT
 
 [CLS:CAlarmViewApp]
 Type=0
@@ -204,7 +204,7 @@ LastObject=CSettingsDlg
 
 [DLG:IDD_SETTINGS]
 Type=1
-Class=?
+Class=CSettingsDlg
 ControlCount=13
 Control1=IDC_CHECK_AUTOLOGIN,button,1342242819
 Control2=IDC_EDIT_SERVER_NAME,edit,1350631552

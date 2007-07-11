@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.107 2007-07-02 23:14:16 victor Exp $ */
+/* $Id: nms_util.h,v 1.108 2007-07-11 19:46:57 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -461,9 +461,9 @@ extern "C"
                                            NX_CFG_TEMPLATE *pTemplateList, BOOL bPrint);
    int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(TCHAR *pszText);
 
-   HMODULE LIBNETXMS_EXPORTABLE DLOpen(TCHAR *szLibName, TCHAR *pszErrorText);
+   HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText);
    void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule);
-   void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, TCHAR *szSymbol, TCHAR *pszErrorText);
+   void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const TCHAR *pszSymbol, TCHAR *pszErrorText);
 
    void LIBNETXMS_EXPORTABLE InitSubAgentsLogger(void (* pFunc)(int, TCHAR *));
    void LIBNETXMS_EXPORTABLE InitSubAgentsTrapSender(void (* pFunc1)(DWORD, int, TCHAR **),
@@ -549,6 +549,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.107  2007/07/02 23:14:16  victor
+Various fixes
+
 Revision 1.106  2007/06/20 13:28:35  victor
 Fixed 'const char *' to 'char *' conversion error with some GCC versions
 

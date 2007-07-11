@@ -167,7 +167,7 @@ private:
 
    void ProcessObjectUpdate(CSCPMessage *pMsg);
    void AddObject(NXC_OBJECT *pObject, BOOL bSortIndex);
-   void LoadObjectsFromCache(TCHAR *pszCacheFile);
+   void LoadObjectsFromCache(const TCHAR *pszCacheFile);
 
    void WatchdogThread(void);
    static THREAD_RESULT THREAD_CALL WatchdogThreadStarter(void *pArg);
@@ -212,7 +212,7 @@ public:
    BOOL GetUserDB(NXC_USER **ppUserList, DWORD *pdwNumUsers);
    NXC_USER *FindUserById(DWORD dwId);
 
-   DWORD SyncObjects(TCHAR *pszCacheFile, BOOL bSyncComments);
+   DWORD SyncObjects(const TCHAR *pszCacheFile, BOOL bSyncComments);
    void LockObjectIndex(void) { MutexLock(m_mutexIndexAccess, INFINITE); }
    void UnlockObjectIndex(void) { MutexUnlock(m_mutexIndexAccess); }
    NXC_OBJECT *FindObjectById(DWORD dwId, BOOL bLock);

@@ -1,7 +1,7 @@
-/* $Id: netxms-version.h,v 1.122 2007-07-11 19:46:57 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Portable management console - plugin API library
+** Copyright (C) 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,30 +17,45 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: netxms-version.h
+** File: libnxmc.h
 **
 **/
 
-#ifndef _netxms_version_h_
-#define _netxms_version_h_
+#ifndef _libnxmc_h_
+#define _libnxmc_h_
+
+#define WXUSINGDLL
+
+#include <nms_common.h>
+#include <nms_util.h>
+#include <nxclapi.h>
+
+#ifdef _WIN32
+#include <wx/msw/winundef.h>
+#endif
+
+#include <wx/wx.h>
+
+#ifndef WX_PRECOMP
+#include <wx/app.h>
+#include <wx/frame.h>
+#include <wx/artprov.h>
+#include <wx/xrc/xmlres.h>
+#include <wx/filesys.h>
+#include <wx/fs_arc.h>
+#include <wx/fs_mem.h>
+#include <wx/aui/aui.h>
+#include <wx/dir.h>
+#endif
+
+#include <nxmc_api.h>
 
 
 //
-// Version constants 
+// Hash map types
 //
 
-#define NETXMS_VERSION_MAJOR        0
-#define NETXMS_VERSION_MINOR        2
-#define NETXMS_VERSION_BUILD        19
-#define NETXMS_VERSION_HOTFIX       0
-#define NETXMS_VERSION_STRING       _T("0.2.19-rc1")
-
-
-//
-// Current client-server protocol version
-//
-
-#define CLIENT_PROTOCOL_VERSION     14
+WX_DECLARE_STRING_HASH_MAP(nxView*, nxViewHash);
 
 
 #endif

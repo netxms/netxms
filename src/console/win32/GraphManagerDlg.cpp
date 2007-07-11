@@ -124,8 +124,9 @@ void CGraphManagerDlg::CreateGraphTree(HTREEITEM hRoot, TCHAR *pszCurrPath, DWOR
             pszName = &szPath[j];
             for(; (szPath[j] != 0) && (memcmp(&szPath[j], _T("->"), sizeof(TCHAR) * 2)); j++);
             szPath[j] = 0;
-            StrStrip(pszName);
-				hSubTree = m_wndTreeCtrl.InsertItem(pszName, 1, 1, hRoot);
+				nx_strncpy(szName, pszName, MAX_DB_STRING);
+            StrStrip(szName);
+				hSubTree = m_wndTreeCtrl.InsertItem(szName, 1, 1, hRoot);
 				m_wndTreeCtrl.SetItemData(hSubTree, 0);
 				CreateGraphTree(hSubTree, szPath, &i);
          }

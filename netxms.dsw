@@ -78,6 +78,24 @@ Package=<4>
 
 ###############################################################################
 
+Project: "libnxmc"=.\src\client\console\libnxmc\libnxmc.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcl
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "libnxsl"=.\src\libnxsl\libnxsl.dsp - Package Owner=<4>
 
 Package=<5>
@@ -145,6 +163,27 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name libnetxms
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "mcpObjectBrowser"=.\src\client\console\plugins\ObjectBrowser\mcpObjectBrowser.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcl
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxmc
     End Project Dependency
 }}}
 
@@ -433,6 +472,30 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name libnetxms
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "nxmc"=.\src\client\console\nxmc\nxmc.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxcl
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxmap
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxmc
     End Project Dependency
 }}}
 

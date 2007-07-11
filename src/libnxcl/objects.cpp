@@ -408,7 +408,7 @@ void NXCL_Session::ProcessObjectUpdate(CSCPMessage *pMsg)
 // This function is NOT REENTRANT
 //
 
-DWORD NXCL_Session::SyncObjects(TCHAR *pszCacheFile, BOOL bSyncComments)
+DWORD NXCL_Session::SyncObjects(const TCHAR *pszCacheFile, BOOL bSyncComments)
 {
    CSCPMessage msg;
    DWORD dwRetCode, dwRqId;
@@ -449,7 +449,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(NXC_SESSION hSession)
    return ((NXCL_Session *)hSession)->SyncObjects(NULL, FALSE);
 }
 
-DWORD LIBNXCL_EXPORTABLE NXCSyncObjectsEx(NXC_SESSION hSession, TCHAR *pszCacheFile,
+DWORD LIBNXCL_EXPORTABLE NXCSyncObjectsEx(NXC_SESSION hSession, const TCHAR *pszCacheFile,
                                           BOOL bSyncComments)
 {
    return ((NXCL_Session *)hSession)->SyncObjects(pszCacheFile, bSyncComments);
@@ -1232,7 +1232,7 @@ void LIBNXCL_EXPORTABLE NXCGetComparableObjectNameEx(NXC_OBJECT *pObject, TCHAR 
 // Save object's cache to file
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, TCHAR *pszFile)
+DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *pszFile)
 {
    FILE *hFile;
    OBJECT_CACHE_HEADER hdr;
@@ -1326,7 +1326,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, TCHAR *pszFile
 // Load objects from cache file
 //
 
-void NXCL_Session::LoadObjectsFromCache(TCHAR *pszFile)
+void NXCL_Session::LoadObjectsFromCache(const TCHAR *pszFile)
 {
    FILE *hFile;
    OBJECT_CACHE_HEADER hdr;

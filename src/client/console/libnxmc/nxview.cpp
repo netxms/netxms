@@ -1,7 +1,7 @@
-/* $Id: netxms-version.h,v 1.122 2007-07-11 19:46:57 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Portable management console - plugin API library
+** Copyright (C) 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,30 +17,46 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: netxms-version.h
+** File: nxview.cpp
 **
 **/
 
-#ifndef _netxms_version_h_
-#define _netxms_version_h_
+#include "libnxmc.h"
 
 
 //
-// Version constants 
+// Event table
 //
 
-#define NETXMS_VERSION_MAJOR        0
-#define NETXMS_VERSION_MINOR        2
-#define NETXMS_VERSION_BUILD        19
-#define NETXMS_VERSION_HOTFIX       0
-#define NETXMS_VERSION_STRING       _T("0.2.19-rc1")
+BEGIN_EVENT_TABLE(nxView, wxWindow)
+	EVT_NC_RIGHT_DOWN(OnNcRightDown)
+END_EVENT_TABLE()
 
 
 //
-// Current client-server protocol version
+// Constructor
 //
 
-#define CLIENT_PROTOCOL_VERSION     14
+nxView::nxView(wxWindow *parent)
+       : wxWindow(parent, wxID_ANY,  wxDefaultPosition, wxDefaultSize)
+{
+}
 
 
-#endif
+//
+// Destructor
+//
+
+nxView::~nxView()
+{
+}
+
+
+//
+// Right mouse button down in non-client area
+//
+
+void nxView::OnNcRightDown(wxMouseEvent &event)
+{
+	MessageBox(NULL, L"right click", L"", 0);
+}

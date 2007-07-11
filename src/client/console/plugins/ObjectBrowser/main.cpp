@@ -1,7 +1,7 @@
-/* $Id: netxms-version.h,v 1.122 2007-07-11 19:46:57 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Portable management console - Object Browser plugin
+** Copyright (C) 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,30 +17,25 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: netxms-version.h
+** File: main.cpp
 **
 **/
 
-#ifndef _netxms_version_h_
-#define _netxms_version_h_
+#include "object_browser.h"
 
 
 //
-// Version constants 
+// Registration function
 //
 
-#define NETXMS_VERSION_MAJOR        0
-#define NETXMS_VERSION_MINOR        2
-#define NETXMS_VERSION_BUILD        19
-#define NETXMS_VERSION_HOTFIX       0
-#define NETXMS_VERSION_STRING       _T("0.2.19-rc1")
+NXMC_IMPLEMENT_PLUGIN_REGISTRATION(_T("ObjectBrowser"), NETXMS_VERSION_STRING, NXMC_IP_MAIN_MENU)
 
 
 //
-// Current client-server protocol version
+// Initialization function
 //
 
-#define CLIENT_PROTOCOL_VERSION     14
-
-
-#endif
+extern "C" bool NXMC_PLUGIN_EXPORT nxmcInitializePlugin(void)
+{
+	return true;
+}

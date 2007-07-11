@@ -71,19 +71,19 @@ static char *m_pszErrorText[] =
 // Load DLL/shared library
 //
 
-HMODULE LIBNETXMS_EXPORTABLE DLOpen(TCHAR *szLibName, TCHAR *pszErrorText)
+HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText)
 {
    HMODULE hModule;
 
 #if defined(_WIN32)
-   hModule = LoadLibrary(szLibName);
+   hModule = LoadLibrary(pszLibName);
    if ((hModule == NULL) && (pszErrorText != NULL))
       GetSystemErrorText(GetLastError(), pszErrorText, 255);
 #elif defined(_NETWARE)
    TCHAR szBuffer[MAX_PATH + 4];
    int nError;
 
-   nx_strncpy(&szBuffer[4], szLibName, MAX_PATH);
+   nx_strncpy(&szBuffer[4], pszLibName, MAX_PATH);
    nError = LoadModule(getnetwarelogger(), &szBuffer[4], LO_RETURN_HANDLE);
    if (nError == 0)
    {
@@ -98,7 +98,7 @@ HMODULE LIBNETXMS_EXPORTABLE DLOpen(TCHAR *szLibName, TCHAR *pszErrorText)
       	nx_strncpy(pszErrorText, (nError <= 19) ? m_pszErrorText[nError] : "Unknown error code", 255);
    }
 #else    /* _WIN32 */
-   hModule = dlopen(szLibName, RTLD_NOW | RTLD_GLOBAL);
+   hModule = dlopen(pszLibName, RTLD_NOW | RTLD_GLOBAL);
    if ((hModule == NULL) && (pszErrorText != NULL))
       nx_strncpy(pszErrorText, dlerror(), 255);
 #endif
@@ -134,7 +134,7 @@ void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule)
 //
 
 void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule,
-										   TCHAR *pszSymbol,
+										   const TCHAR *pszSymbol,
 										   TCHAR *pszErrorText)
 {
    void *pAddr;
