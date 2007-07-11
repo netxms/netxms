@@ -30,8 +30,8 @@
 //
 
 BEGIN_EVENT_TABLE(nxBusyDialog, wxDialog)
-	EVT_NX_REQUEST_COMPLETED(OnRequestCompleted)
-	EVT_NX_SET_STATUS_TEXT(OnSetStatusText)
+	EVT_NX_REQUEST_COMPLETED(nxBusyDialog::OnRequestCompleted)
+	EVT_NX_SET_STATUS_TEXT(nxBusyDialog::OnSetStatusText)
 END_EVENT_TABLE()
 
 

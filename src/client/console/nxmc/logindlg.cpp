@@ -30,7 +30,7 @@
 //
 
 BEGIN_EVENT_TABLE(nxLoginDialog, wxDialog)
-	EVT_INIT_DIALOG(OnInitDialog)
+	EVT_INIT_DIALOG(nxLoginDialog::OnInitDialog)
 END_EVENT_TABLE()
 
 

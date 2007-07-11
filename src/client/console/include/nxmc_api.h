@@ -24,10 +24,14 @@
 #endif
 
 
+#ifdef _WIN32
 #ifdef LIBNXMC_EXPORTS
 #define LIBNXMC_EXPORTABLE __declspec(dllexport)
 #else
 #define LIBNXMC_EXPORTABLE __declspec(dllimport)
+#endif
+#else
+#define LIBNXMC_EXPORTABLE
 #endif
 
 

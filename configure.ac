@@ -1,10 +1,10 @@
-# $Id: configure.ac,v 1.257 2007-07-11 20:28:47 victor Exp $
+# $Id: configure.ac,v 1.258 2007-07-11 21:31:52 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
 #
 
-AC_INIT([NetXMS], [0.2.18], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.19-rc1], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -44,6 +44,7 @@ BUILD_CONSOLE="no"
 BUILD_NXHTTPD="no"
 BUILD_STATIC_AGENT="no"
 NEED_ZLIB="no"
+NEED_WXWIDGETS="no"
 MODULES=""
 STATIC_SUBAGENT_LIST=""
 SUBAGENT_DIRS=""
@@ -77,7 +78,6 @@ AC_ARG_WITH(console,
 	COMPONENTS="$COMPONENTS console client"
 ])
 
-AC_ARG_WITH(agent,
 AC_ARG_WITH(agent,
 [AS_HELP_STRING(--with-agent,build agent)],
 [
@@ -212,11 +212,12 @@ AC_ARG_ENABLE(unstable,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle"
-	MODULES="libnxsnmp libnxsl server agent libnxmap libnxcl nxevent nxpush nxreport nxmibc console nxhttpd nxscript"
+	MODULES="libnxsnmp libnxsl server agent libnxmap libnxcl nxevent nxpush nxreport nxmibc client console nxhttpd nxscript"
 	SUBAGENT_DIRS="linux freebsd openbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
 	CONTRIB_MODULES="mibs backgrounds"
+	CLIENT_COMPONENTS="console"
 	UNSTABLE_SUBAGENT_DIRS="logscan odbcquery"
 	SERVER_TOOLS="nxconfig"
 )
@@ -313,6 +314,7 @@ fi
 check_substr "$COMPONENTS" "console"
 if test $? = 0; then
 	BUILD_CONSOLE="yes"
+	NEED_WXWIDGETS="yes"
 	CLIENT_COMPONENTS="$CLIENT_COMPONENTS console"
 fi
 
@@ -1076,6 +1078,21 @@ if test $? = 0; then
 			AC_MSG_ERROR(libgd is required for web interface)
 		])
 
+fi
+
+
+#--------------------------------------------------------------------
+# Check for wxWidgets
+#--------------------------------------------------------------------
+
+if test "x$NEED_WXWIDGETS" = "xyes"; then
+	AC_CHECK_PROG([RC], [wx-config], [yes], [no])
+	if test "x$RC" = "xyes"; then
+		CXXFLAGS="$CXXFLAGS `wx-config --cxxflags`"
+		LDFLAGS="$CXXFLAGS `wx-config --libs`"
+	else
+		AC_MSG_ERROR([*** wxWidgets not installed - unable to build GUI components ***])
+	fi
 fi
 
 

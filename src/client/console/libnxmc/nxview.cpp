@@ -29,7 +29,6 @@
 //
 
 BEGIN_EVENT_TABLE(nxView, wxWindow)
-	EVT_NC_RIGHT_DOWN(OnNcRightDown)
 END_EVENT_TABLE()
 
 
@@ -49,14 +48,4 @@ nxView::nxView(wxWindow *parent)
 
 nxView::~nxView()
 {
-}
-
-
-//
-// Right mouse button down in non-client area
-//
-
-void nxView::OnNcRightDown(wxMouseEvent &event)
-{
-	MessageBox(NULL, L"right click", L"", 0);
 }

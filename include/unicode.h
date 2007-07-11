@@ -136,6 +136,7 @@
 #define _istdigit isdigit
 #define _istalpha isalpha
 #define _istupper isupper
+#define _tgetenv  getenv
 
 #define _ERR_error_tstring		ERR_error_string
 

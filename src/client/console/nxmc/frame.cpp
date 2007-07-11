@@ -1,4 +1,4 @@
-/* $Id: frame.cpp,v 1.1 2007-07-11 19:46:58 victor Exp $ */
+/* $Id: frame.cpp,v 1.2 2007-07-11 21:31:53 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -30,7 +30,7 @@
 //
 
 BEGIN_EVENT_TABLE(nxFrame, wxFrame)
-	EVT_SIZE(OnSize)
+	EVT_SIZE(nxFrame::OnSize)
 END_EVENT_TABLE()
 
 

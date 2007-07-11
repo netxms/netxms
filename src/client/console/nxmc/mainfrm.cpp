@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.1 2007-07-11 19:46:58 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.2 2007-07-11 21:31:53 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -39,16 +39,16 @@ DWORD DoLogin(nxLoginDialog &dlgLogin);
 //
 
 BEGIN_EVENT_TABLE(nxMainFrame, wxFrame)
-	EVT_CLOSE(OnClose)
-	EVT_CONTEXT_MENU(OnContextMenu)
-	EVT_NX_CONNECT(OnConnect)
-	EVT_MENU(XRCID("menuFileExit"), OnFileExit)
-	EVT_MENU(XRCID("menuViewConsoleLog"), OnViewConsoleLog)
-	EVT_MENU(XRCID("menuHelpAbout"), OnHelpAbout)
-	EVT_MENU(wxID_PANE_CLOSE, OnPaneClose)
-	EVT_MENU(wxID_PANE_DETACH, OnPaneDetach)
-	EVT_MENU(wxID_PANE_FLOAT, OnPaneFloat)
-	EVT_MENU(wxID_PANE_MOVE_TO_NOTEBOOK, OnPaneMoveToNotebook)
+	EVT_CLOSE(nxMainFrame::OnClose)
+	EVT_CONTEXT_MENU(nxMainFrame::OnContextMenu)
+	EVT_NX_CONNECT(nxMainFrame::OnConnect)
+	EVT_MENU(XRCID("menuFileExit"), nxMainFrame::OnFileExit)
+	EVT_MENU(XRCID("menuViewConsoleLog"), nxMainFrame::OnViewConsoleLog)
+	EVT_MENU(XRCID("menuHelpAbout"), nxMainFrame::OnHelpAbout)
+	EVT_MENU(wxID_PANE_CLOSE, nxMainFrame::OnPaneClose)
+	EVT_MENU(wxID_PANE_DETACH, nxMainFrame::OnPaneDetach)
+	EVT_MENU(wxID_PANE_FLOAT, nxMainFrame::OnPaneFloat)
+	EVT_MENU(wxID_PANE_MOVE_TO_NOTEBOOK, nxMainFrame::OnPaneMoveToNotebook)
 END_EVENT_TABLE()
 
 

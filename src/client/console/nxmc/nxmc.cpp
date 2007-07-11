@@ -33,6 +33,7 @@ IMPLEMENT_APP(nxApp)
 
 bool nxApp::OnInit()
 {
+printf("step 1\n");
 	SetAppName(_T("nxmc"));
 	SetVendorName(_T("NetXMS"));
 
@@ -48,12 +49,15 @@ bool nxApp::OnInit()
 
 	if (!NXCInitialize())
 		return false;
+printf("step 2\n");
 
 	wxFileSystem::AddHandler(new wxArchiveFSHandler);
 	wxImage::AddHandler(new wxPNGHandler);
 	wxImage::AddHandler(new wxICOHandler);
 
+printf("step 2a\n");
 	wxXmlResource::Get()->InitAllHandlers();
+printf("step 2b\n");
 #ifdef _WIN32
 	HRSRC hRes;
 	HGLOBAL hMem;
@@ -78,10 +82,11 @@ bool nxApp::OnInit()
 	if (!wxXmlResource::Get()->Load(_T("memory:resource.xrs")))
 	  return false;
 #else
-	if (!wxXmlResource::Get()->Load(_T("nxmc.xrs")))
+	if (!wxXmlResource::Get()->Load(_T("/root/resource.xrc")))
 	  return false;
 #endif
 
+printf("step 3\n");
 	// Create application directories if needed
 	wxFileName::Mkdir(wxStandardPaths::Get().GetUserDataDir(), 0700, wxPATH_MKDIR_FULL);
 
@@ -103,6 +108,7 @@ bool nxApp::OnInit()
 	wxCommandEvent event(nxEVT_CONNECT);
 	wxPostEvent(m_mainFrame, event);
 
+printf("Init complete\n");
 	return true;
 }
 
@@ -174,10 +180,13 @@ void nxApp::LoadPlugins(void)
 	wxDir dir(path);
 	if (dir.IsOpened())
 	{
+		wxString fullName;
+
 		success = dir.GetFirst(&fname, _T("*.so"));
 		while(success)
 		{
-			LoadPlugin(path + fname);
+			fullName = path + fname;
+			LoadPlugin(fullName);
 			success = dir.GetNext(&fname);
 		}
 	}

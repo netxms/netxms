@@ -32,8 +32,6 @@ public:
 
 	// Event handlers
 protected:
-	void OnNcRightDown(wxMouseEvent &event);
-
 	DECLARE_EVENT_TABLE()
 };
 
