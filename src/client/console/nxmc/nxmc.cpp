@@ -82,7 +82,7 @@ printf("step 2b\n");
 	if (!wxXmlResource::Get()->Load(_T("memory:resource.xrs")))
 	  return false;
 #else
-	if (!wxXmlResource::Get()->Load(_T("/root/resource.xrc")))
+	if (!wxXmlResource::Get()->Load(_T("/root/nxmc.xrs")))
 	  return false;
 #endif
 
