@@ -1,5 +1,7 @@
 #include "nxmc.h"
 #include "mainfrm.h"
+#include "conlog.h"
+#include <wx/splash.h>
 
 
 //
@@ -33,7 +35,6 @@ IMPLEMENT_APP(nxApp)
 
 bool nxApp::OnInit()
 {
-printf("step 1\n");
 	SetAppName(_T("nxmc"));
 	SetVendorName(_T("NetXMS"));
 
@@ -49,15 +50,14 @@ printf("step 1\n");
 
 	if (!NXCInitialize())
 		return false;
-printf("step 2\n");
+
+	nxConsoleLogger::Init();
 
 	wxFileSystem::AddHandler(new wxArchiveFSHandler);
 	wxImage::AddHandler(new wxPNGHandler);
 	wxImage::AddHandler(new wxICOHandler);
 
-printf("step 2a\n");
 	wxXmlResource::Get()->InitAllHandlers();
-printf("step 2b\n");
 #ifdef _WIN32
 	HRSRC hRes;
 	HGLOBAL hMem;
@@ -86,17 +86,24 @@ printf("step 2b\n");
 	  return false;
 #endif
 
-printf("step 3\n");
+/*	wxBitmap bitmap = wxXmlResource::Get()->LoadBitmap(_T("bmpSplash"));
+	wxSplashScreen *splash = new wxSplashScreen(bitmap,
+		wxSPLASH_CENTRE_ON_SCREEN | wxSPLASH_TIMEOUT,
+		6000, NULL, -1, wxDefaultPosition, wxDefaultSize,
+		wxSIMPLE_BORDER|wxSTAY_ON_TOP);
+	wxYield();*/
+
 	// Create application directories if needed
 	wxFileName::Mkdir(wxStandardPaths::Get().GetUserDataDir(), 0700, wxPATH_MKDIR_FULL);
 
 	// Create global config object
 	wxConfig::Set(new wxConfig(GetAppName(), GetVendorName(), wxEmptyString, wxEmptyString, wxCONFIG_USE_LOCAL_FILE));
 
+	LoadPlugins();
+	NXMCInitializationComplete();
+
 	m_mainFrame = new nxMainFrame(wxDefaultPosition, wxSize(700, 500));
 	SetTopWindow(m_mainFrame);
-
-	LoadPlugins();
 
 	bool flag;
 	wxConfig::Get()->Read(_T("/MainFrame/IsMaximized"), &flag, true);
@@ -108,7 +115,6 @@ printf("step 3\n");
 	wxCommandEvent event(nxEVT_CONNECT);
 	wxPostEvent(m_mainFrame, event);
 
-printf("Init complete\n");
 	return true;
 }
 
@@ -136,60 +142,8 @@ int nxApp::OnExit()
 		NXCSaveObjectCache(g_hSession, cacheFile.c_str());
 	}
 	NXCDisconnect(g_hSession);
+	nxConsoleLogger::Shutdown();
 	return wxApp::OnExit();
-}
-
-
-//
-// Load plugins
-//
-
-void nxApp::LoadPlugins(void)
-{
-	TCHAR *p;
-	wxString fname, path;
-	bool success;
-
-	// Determine plugin path
-	p = _tgetenv(_T("NXMC_PLUGIN_PATH"));
-	if (p != NULL)
-	{
-		path = p;
-		if (path.Last() != FS_PATH_SEPARATOR_CHAR)
-			path.Append(FS_PATH_SEPARATOR_CHAR, 1);
-	}
-	else
-	{
-		// Search plugins in <install_dir>/lib/nxmc directory
-		path = wxStandardPaths::Get().GetPluginsDir();
-#ifdef _WIN32
-		// On Windows, GetPluginsDir() will return bin directory, change it to lib\nxmc
-		int idx = path.Find(FS_PATH_SEPARATOR_CHAR, true);
-		if (idx != wxNOT_FOUND)
-		{
-			path.Truncate(idx);
-			path.Append(_T("\\lib\\nxmc\\"));
-		}
-#else
-		if (path.Last() != FS_PATH_SEPARATOR_CHAR)
-			path.Append(FS_PATH_SEPARATOR_CHAR, 1);
-#endif
-	}
-
-	// Find and load plugins
-	wxDir dir(path);
-	if (dir.IsOpened())
-	{
-		wxString fullName;
-
-		success = dir.GetFirst(&fname, _T("*.so"));
-		while(success)
-		{
-			fullName = path + fname;
-			LoadPlugin(fullName);
-			success = dir.GetNext(&fname);
-		}
-	}
 }
 
 

@@ -12,18 +12,49 @@ END_EVENT_TABLE()
 
 
 //
+// Static data
+//
+
+wxLog *nxConsoleLogger::m_logOld = NULL;
+nxDummyFrame *nxConsoleLogger::m_wndDummy = NULL;
+wxTextCtrl *nxConsoleLogger::m_wndTextCtrl = NULL;
+
+
+//
+// Globally initialize
+//
+
+void nxConsoleLogger::Init()
+{
+	m_wndDummy = new nxDummyFrame;
+	m_wndDummy->Hide();
+	m_wndTextCtrl = new wxTextCtrl(m_wndDummy, wxID_ANY, wxEmptyString,
+	                               wxDefaultPosition, wxDefaultSize,
+	                               wxTE_MULTILINE | wxSUNKEN_BORDER);
+	m_logOld = wxLog::SetActiveTarget(new wxLogTextCtrl(m_wndTextCtrl));
+	wxLogMessage(_T("Message Logger started"));
+}
+
+
+//
+// Global shutdown
+//
+
+void nxConsoleLogger::Shutdown()
+{
+	delete wxLog::SetActiveTarget(m_logOld);
+}
+
+
+//
 // Constructor
 //
 
 nxConsoleLogger::nxConsoleLogger(wxWindow *parent)
                 : nxView(parent)
 {
-	m_wndTextCtrl = new wxTextCtrl(this, wxID_ANY, wxEmptyString,
-	                               wxDefaultPosition, wxDefaultSize,
-	                               wxTE_MULTILINE | wxSUNKEN_BORDER);
-	m_logOld = wxLog::SetActiveTarget(new wxLogTextCtrl(m_wndTextCtrl));
-	wxLogMessage(_T("Message Logger Console started"));
 	RegisterUniqueView(_T("conlog"), this);
+	m_wndTextCtrl->Reparent(this);
 }
 
 
@@ -33,7 +64,7 @@ nxConsoleLogger::nxConsoleLogger(wxWindow *parent)
 
 nxConsoleLogger::~nxConsoleLogger()
 {
-	delete wxLog::SetActiveTarget(m_logOld);
+	m_wndTextCtrl->Reparent(m_wndDummy);
 	UnregisterUniqueView(_T("conlog"));
 }
 

@@ -277,7 +277,7 @@ InputPath=.\rc\wxfb_code.xrc
 
 "rc\nxmc.xrs" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	perl ..\..\..\..\tools\update_xrc.pl < $(InputPath) > $(ProjDir)\rc\resource.xrc 
-	wxrc $(ProjDir)\rc\resource.xrc -o $(ProjDir)\rc\nxmc.xrs 
+	wxrc $(ProjDir)\rc\resource.xrc $(ProjDir)\rc\manual.xrc -o $(ProjDir)\rc\nxmc.xrs 
 	
 # End Custom Build
 
@@ -289,7 +289,7 @@ InputPath=.\rc\wxfb_code.xrc
 
 "rc\nxmc.xrs" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	perl ..\..\..\..\tools\update_xrc.pl < $(InputPath) > $(ProjDir)\rc\resource.xrc 
-	wxrc $(ProjDir)\rc\resource.xrc -o $(ProjDir)\rc\nxmc.xrs 
+	wxrc $(ProjDir)\rc\resource.xrc $(ProjDir)\rc\manual.xrc -o $(ProjDir)\rc\nxmc.xrs 
 	
 # End Custom Build
 
@@ -301,7 +301,7 @@ InputPath=.\rc\wxfb_code.xrc
 
 "rc\nxmc.xrs" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	perl ..\..\..\..\tools\update_xrc.pl < $(InputPath) > $(ProjDir)\rc\resource.xrc 
-	wxrc $(ProjDir)\rc\resource.xrc -o $(ProjDir)\rc\nxmc.xrs 
+	wxrc $(ProjDir)\rc\resource.xrc $(ProjDir)\rc\manual.xrc -o $(ProjDir)\rc\nxmc.xrs 
 	
 # End Custom Build
 
@@ -313,7 +313,7 @@ InputPath=.\rc\wxfb_code.xrc
 
 "rc\nxmc.xrs" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	perl ..\..\..\..\tools\update_xrc.pl < $(InputPath) > $(ProjDir)\rc\resource.xrc 
-	wxrc $(ProjDir)\rc\resource.xrc -o $(ProjDir)\rc\nxmc.xrs 
+	wxrc $(ProjDir)\rc\resource.xrc $(ProjDir)\rc\manual.xrc -o $(ProjDir)\rc\nxmc.xrs 
 	
 # End Custom Build
 

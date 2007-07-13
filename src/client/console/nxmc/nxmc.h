@@ -66,8 +66,6 @@ class nxApp : public wxApp
 private:
 	nxMainFrame *m_mainFrame;
 
-	void LoadPlugins(void);
-
 public:
     virtual bool OnInit();
 	 virtual int OnExit();
@@ -84,7 +82,7 @@ DECLARE_APP(nxApp)
 // Functions
 //
 
-bool LoadPlugin(wxString &file);
+void LoadPlugins(void);
 
 
 //

@@ -21,6 +21,7 @@
 #include <wx/dir.h>
 #include <wx/config.h>
 #include <wx/stdpaths.h>
+#include <wx/dynarray.h>
 #endif
 
 
@@ -138,6 +139,39 @@ typedef struct
 
 
 //
+// Menu/Control Panel item registration
+//
+
+class nxmcItemRegistration
+{
+private:
+	TCHAR *m_name;
+	int m_id;
+	int m_type;
+	void (*m_fpHandler)(int);
+
+public:
+	nxmcItemRegistration(const TCHAR *name, int id, int type, void (*fpHandler)(int));
+	~nxmcItemRegistration();
+
+	const TCHAR *GetName(void) { return m_name; }
+	int GetId(void) { return m_id; }
+
+	void CallHandler(int param) { m_fpHandler(param); }
+};
+
+WX_DECLARE_OBJARRAY(nxmcItemRegistration, nxmcArrayOfRegItems);
+
+
+//
+// Registration item types
+//
+
+#define REGITEM_VIEW_MENU        0
+#define REGITEM_CONTROL_PANEL    1
+
+
+//
 // Classes
 //
 
@@ -147,6 +181,11 @@ typedef struct
 //
 // Functions
 //
+
+void LIBNXMC_EXPORTABLE NXMCInitializationComplete(void);
+
+bool LIBNXMC_EXPORTABLE NXMCAddControlPanelItem(const TCHAR *name, int id, void (*fpHandler)(int));
+bool LIBNXMC_EXPORTABLE NXMCAddViewMenuItem(const TCHAR *name, int id, void (*fpHandler)(int));
 
 void LIBNXMC_EXPORTABLE InitViewTracker(wxAuiManager *mgr, wxAuiNotebook *nb);
 void LIBNXMC_EXPORTABLE RegisterUniqueView(const TCHAR *name, nxView *view);

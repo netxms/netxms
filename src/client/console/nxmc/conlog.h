@@ -24,15 +24,26 @@
 #ifndef _conlog_h_
 #define _conlog_h_
 
+class nxDummyFrame : public wxFrame
+{
+public:
+	nxDummyFrame() : wxFrame(NULL, wxID_ANY, _T("dummy"), wxPoint(-1, -1), wxSize(0, 0)) { }
+	virtual bool ShouldPreventAppExit() const { return false; }
+};
+
 class nxConsoleLogger : public nxView
 {
 private:
-	wxLog *m_logOld;
-	wxTextCtrl *m_wndTextCtrl;
+	static wxLog *m_logOld;
+	static nxDummyFrame *m_wndDummy;
+	static wxTextCtrl *m_wndTextCtrl;
 
 public:
 	nxConsoleLogger(wxWindow *parent);
 	virtual ~nxConsoleLogger();
+
+	static void Init();
+	static void Shutdown();
 
 protected:
 	void OnSize(wxSizeEvent &event);
