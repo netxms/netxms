@@ -431,6 +431,7 @@ src/agent/subagents/winperf/winperf.dsp -text
 src/agent/subagents/winperf/winperf.dsw -text
 src/agent/subagents/winperf/winperf.h -text
 src/client/Makefile.am -text
+src/client/console/Makefile.am -text
 src/client/console/include/Makefile.am -text
 src/client/console/include/nxmc_api.h -text
 src/client/console/libnxmc/Makefile.am -text
@@ -462,6 +463,7 @@ src/client/console/nxmc/rc/login.png -text
 src/client/console/nxmc/rc/nxmc.fbp -text
 src/client/console/nxmc/rc/processing.png -text
 src/client/console/nxmc/resource.h -text
+src/client/console/plugins/Makefile.am -text
 src/client/console/plugins/ObjectBrowser/Makefile.am -text
 src/client/console/plugins/ObjectBrowser/main.cpp -text
 src/client/console/plugins/ObjectBrowser/mcpObjectBrowser.dsp -text
