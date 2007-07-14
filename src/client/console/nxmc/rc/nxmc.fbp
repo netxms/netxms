@@ -413,21 +413,21 @@
                 </object>
             </object>
         </object>
-        <object class="Dialog" expanded="0">
+        <object class="Dialog" expanded="1">
             <property name="bg"></property>
             <property name="center"></property>
             <property name="context_help"></property>
             <property name="enabled">1</property>
             <property name="extra_style"></property>
             <property name="fg"></property>
-            <property name="font">MS Sans Serif,90,90,8</property>
+            <property name="font">Arial,90,90,8</property>
             <property name="hidden">0</property>
             <property name="id">wxID_ANY</property>
             <property name="maximum_size"></property>
             <property name="minimum_size"></property>
             <property name="name">nxLoginDialog</property>
             <property name="pos"></property>
-            <property name="size">501,279</property>
+            <property name="size">501,344</property>
             <property name="style">wxDEFAULT_DIALOG_STYLE</property>
             <property name="subclass"></property>
             <property name="title">Connect to Server</property>
@@ -466,7 +466,7 @@
             <event name="OnUpdateUI"></event>
             <object class="wxBoxSizer" expanded="1">
                 <property name="minimum_size"></property>
-                <property name="name">bSizer2</property>
+                <property name="name">dlgMainSizer</property>
                 <property name="orient">wxVERTICAL</property>
                 <property name="permission">none</property>
                 <object class="sizeritem" expanded="1">
@@ -548,14 +548,14 @@
                                                 <property name="vgap">0</property>
                                                 <object class="sizeritem" expanded="1">
                                                     <property name="border">5</property>
-                                                    <property name="flag">wxALL</property>
+                                                    <property name="flag">wxALIGN_CENTER_VERTICAL|wxALL</property>
                                                     <property name="proportion">0</property>
                                                     <object class="wxStaticText" expanded="1">
                                                         <property name="bg"></property>
                                                         <property name="context_help"></property>
                                                         <property name="enabled">1</property>
                                                         <property name="fg"></property>
-                                                        <property name="font">MS Sans Serif,90,90,8</property>
+                                                        <property name="font">Arial,90,90,8</property>
                                                         <property name="hidden">0</property>
                                                         <property name="id">wxID_ANY</property>
                                                         <property name="label">Server:</property>
@@ -576,7 +576,7 @@
                                                 </object>
                                                 <object class="sizeritem" expanded="1">
                                                     <property name="border">5</property>
-                                                    <property name="flag">wxALL|wxEXPAND</property>
+                                                    <property name="flag">wxALIGN_CENTER_VERTICAL|wxALL|wxEXPAND</property>
                                                     <property name="proportion">0</property>
                                                     <object class="wxComboBox" expanded="1">
                                                         <property name="bg"></property>
@@ -584,7 +584,7 @@
                                                         <property name="context_help"></property>
                                                         <property name="enabled">1</property>
                                                         <property name="fg"></property>
-                                                        <property name="font">MS Sans Serif,90,90,8</property>
+                                                        <property name="font">Arial,90,90,8</property>
                                                         <property name="hidden">0</property>
                                                         <property name="id">wxID_ANY</property>
                                                         <property name="maximum_size"></property>
@@ -607,14 +607,14 @@
                                                 </object>
                                                 <object class="sizeritem" expanded="1">
                                                     <property name="border">5</property>
-                                                    <property name="flag">wxALL</property>
+                                                    <property name="flag">wxALIGN_CENTER_VERTICAL|wxALL</property>
                                                     <property name="proportion">0</property>
                                                     <object class="wxStaticText" expanded="1">
                                                         <property name="bg"></property>
                                                         <property name="context_help"></property>
                                                         <property name="enabled">1</property>
                                                         <property name="fg"></property>
-                                                        <property name="font">MS Sans Serif,90,90,8</property>
+                                                        <property name="font">Arial,90,90,8</property>
                                                         <property name="hidden">0</property>
                                                         <property name="id">wxID_ANY</property>
                                                         <property name="label">User name:</property>
@@ -635,14 +635,14 @@
                                                 </object>
                                                 <object class="sizeritem" expanded="1">
                                                     <property name="border">5</property>
-                                                    <property name="flag">wxALL|wxEXPAND</property>
+                                                    <property name="flag">wxALIGN_CENTER_VERTICAL|wxALL|wxEXPAND</property>
                                                     <property name="proportion">0</property>
                                                     <object class="wxTextCtrl" expanded="1">
                                                         <property name="bg"></property>
                                                         <property name="context_help"></property>
                                                         <property name="enabled">1</property>
                                                         <property name="fg"></property>
-                                                        <property name="font">MS Sans Serif,90,90,8</property>
+                                                        <property name="font">Arial,90,90,8</property>
                                                         <property name="hidden">0</property>
                                                         <property name="id">wxID_ANY</property>
                                                         <property name="maximum_size"></property>
@@ -667,14 +667,14 @@
                                                 </object>
                                                 <object class="sizeritem" expanded="1">
                                                     <property name="border">5</property>
-                                                    <property name="flag">wxALL</property>
+                                                    <property name="flag">wxALIGN_CENTER_VERTICAL|wxALL</property>
                                                     <property name="proportion">0</property>
                                                     <object class="wxStaticText" expanded="1">
                                                         <property name="bg"></property>
                                                         <property name="context_help"></property>
                                                         <property name="enabled">1</property>
                                                         <property name="fg"></property>
-                                                        <property name="font">MS Sans Serif,90,90,8</property>
+                                                        <property name="font">Arial,90,90,8</property>
                                                         <property name="hidden">0</property>
                                                         <property name="id">wxID_ANY</property>
                                                         <property name="label">Password:</property>
@@ -695,14 +695,14 @@
                                                 </object>
                                                 <object class="sizeritem" expanded="1">
                                                     <property name="border">5</property>
-                                                    <property name="flag">wxALL|wxEXPAND</property>
+                                                    <property name="flag">wxALIGN_CENTER_VERTICAL|wxALL|wxEXPAND</property>
                                                     <property name="proportion">0</property>
                                                     <object class="wxTextCtrl" expanded="1">
                                                         <property name="bg"></property>
                                                         <property name="context_help"></property>
                                                         <property name="enabled">1</property>
                                                         <property name="fg"></property>
-                                                        <property name="font">MS Sans Serif,90,90,8</property>
+                                                        <property name="font">Arial,90,90,8</property>
                                                         <property name="hidden">0</property>
                                                         <property name="id">wxID_ANY</property>
                                                         <property name="maximum_size"></property>
@@ -752,7 +752,7 @@
                                         <property name="permission">none</property>
                                         <object class="sizeritem" expanded="1">
                                             <property name="border">5</property>
-                                            <property name="flag">wxALL</property>
+                                            <property name="flag">wxALIGN_CENTER_VERTICAL|wxALL</property>
                                             <property name="proportion">0</property>
                                             <object class="wxCheckBox" expanded="1">
                                                 <property name="bg"></property>
@@ -760,7 +760,7 @@
                                                 <property name="context_help"></property>
                                                 <property name="enabled">1</property>
                                                 <property name="fg"></property>
-                                                <property name="font">MS Sans Serif,90,90,8</property>
+                                                <property name="font">Arial,90,90,8</property>
                                                 <property name="hidden">0</property>
                                                 <property name="id">wxID_ANY</property>
                                                 <property name="label">&amp;Encrypt connection</property>
@@ -781,7 +781,7 @@
                                         </object>
                                         <object class="sizeritem" expanded="1">
                                             <property name="border">5</property>
-                                            <property name="flag">wxALL</property>
+                                            <property name="flag">wxALIGN_CENTER_VERTICAL|wxALL</property>
                                             <property name="proportion">0</property>
                                             <object class="wxCheckBox" expanded="1">
                                                 <property name="bg"></property>
@@ -789,7 +789,7 @@
                                                 <property name="context_help"></property>
                                                 <property name="enabled">1</property>
                                                 <property name="fg"></property>
-                                                <property name="font">MS Sans Serif,90,90,8</property>
+                                                <property name="font">Arial,90,90,8</property>
                                                 <property name="hidden">0</property>
                                                 <property name="id">wxID_ANY</property>
                                                 <property name="label">&amp;Clear object cache on connect</property>
@@ -810,7 +810,7 @@
                                         </object>
                                         <object class="sizeritem" expanded="1">
                                             <property name="border">5</property>
-                                            <property name="flag">wxALL</property>
+                                            <property name="flag">wxALIGN_CENTER_VERTICAL|wxALL</property>
                                             <property name="proportion">0</property>
                                             <object class="wxCheckBox" expanded="1">
                                                 <property name="bg"></property>
@@ -818,7 +818,7 @@
                                                 <property name="context_help"></property>
                                                 <property name="enabled">1</property>
                                                 <property name="fg"></property>
-                                                <property name="font">MS Sans Serif,90,90,8</property>
+                                                <property name="font">Arial,90,90,8</property>
                                                 <property name="hidden">0</property>
                                                 <property name="id">wxID_ANY</property>
                                                 <property name="label">&amp;Do not cache this session</property>
@@ -839,7 +839,7 @@
                                         </object>
                                         <object class="sizeritem" expanded="1">
                                             <property name="border">5</property>
-                                            <property name="flag">wxALL</property>
+                                            <property name="flag">wxALIGN_CENTER_VERTICAL|wxALL</property>
                                             <property name="proportion">0</property>
                                             <object class="wxCheckBox" expanded="1">
                                                 <property name="bg"></property>
@@ -847,7 +847,7 @@
                                                 <property name="context_help"></property>
                                                 <property name="enabled">1</property>
                                                 <property name="fg"></property>
-                                                <property name="font">MS Sans Serif,90,90,8</property>
+                                                <property name="font">Arial,90,90,8</property>
                                                 <property name="hidden">0</property>
                                                 <property name="id">wxID_ANY</property>
                                                 <property name="label">&amp;Server version should match client version</property>
