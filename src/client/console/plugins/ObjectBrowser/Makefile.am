@@ -7,11 +7,13 @@ libnxmcp_ObjectBrowser_la_LDFLAGS = ../../../../libnetxms/libnetxms.la ../../../
 EXTRA_DIST = object_browser.h mcpObjectBrowser.dsp
 
 install-exec-hook:
-	mkdir -f $(libdir)/nxmc
+	if test ! -e $(libdir)/nxmc ; then \
+		mkdir $(libdir)/nxmc ; \
+	fi ; \
 	if test "x`uname -s`" = "xAIX" ; then \
 		rm -f $(libdir)/nxmc/libnxmcp_ObjectBrowser.so.0 ; \
 		$(AR) x $(libdir)/libnxmcp_ObjectBrowser.a $(libdir)/nxmc/libnxmcp_ObjectBrowser.so.0 ; \
-		mv $(libdir)/nxmc/libnxmcp_ObjectBrowser.so.0 $(libdir)/nxmc/libnxmcp_ObjectBrowser.so
-	else
-		mv $(libdir)/libnxmcp_ObjectBrowser.* $(libdir)/nxmc/
+		mv $(libdir)/nxmc/libnxmcp_ObjectBrowser.so.0 $(libdir)/nxmc/libnxmcp_ObjectBrowser.so ; \
+	else \
+		mv $(libdir)/libnxmcp_ObjectBrowser.* $(libdir)/nxmc/ ; \
 	fi

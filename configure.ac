@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.258 2007-07-11 21:31:52 victor Exp $
+# $Id: configure.ac,v 1.259 2007-07-14 20:17:17 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -1100,7 +1100,7 @@ fi
 # Other settings
 #--------------------------------------------------------------------
 
-CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
+CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DPREFIX=\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
 
 
 #--------------------------------------------------------------------

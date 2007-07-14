@@ -37,6 +37,9 @@ bool nxApp::OnInit()
 {
 	SetAppName(_T("nxmc"));
 	SetVendorName(_T("NetXMS"));
+#ifndef _WIN32
+	((wxStandardPaths &)wxStandardPaths::Get()).SetInstallPrefix(PREFIX);
+#endif
 
    InitThreadLibrary();
 
@@ -82,22 +85,17 @@ bool nxApp::OnInit()
 	if (!wxXmlResource::Get()->Load(_T("memory:resource.xrs")))
 	  return false;
 #else
-	if (!wxXmlResource::Get()->Load(_T("/root/nxmc.xrs")))
+	wxString xrsFile = wxStandardPaths::Get().GetResourcesDir();
+	xrsFile += _T("/nxmc.xrs");
+	if (!wxXmlResource::Get()->Load(xrsFile))
 	  return false;
 #endif
-
-/*	wxBitmap bitmap = wxXmlResource::Get()->LoadBitmap(_T("bmpSplash"));
-	wxSplashScreen *splash = new wxSplashScreen(bitmap,
-		wxSPLASH_CENTRE_ON_SCREEN | wxSPLASH_TIMEOUT,
-		6000, NULL, -1, wxDefaultPosition, wxDefaultSize,
-		wxSIMPLE_BORDER|wxSTAY_ON_TOP);
-	wxYield();*/
 
 	// Create application directories if needed
 	wxFileName::Mkdir(wxStandardPaths::Get().GetUserDataDir(), 0700, wxPATH_MKDIR_FULL);
 
 	// Create global config object
-	wxConfig::Set(new wxConfig(GetAppName(), GetVendorName(), wxEmptyString, wxEmptyString, wxCONFIG_USE_LOCAL_FILE));
+	wxConfig::Set(new wxConfig(GetAppName(), GetVendorName(), wxEmptyString, wxEmptyString, wxCONFIG_USE_LOCAL_FILE | wxCONFIG_USE_SUBDIR));
 
 	LoadPlugins();
 	NXMCInitializationComplete();
