@@ -460,6 +460,7 @@ src/client/console/nxmc/nxmc.rc -text
 src/client/console/nxmc/plugins.cpp -text
 src/client/console/nxmc/rc/Makefile.am -text
 src/client/console/nxmc/rc/login.png -text
+src/client/console/nxmc/rc/manual.xrc -text
 src/client/console/nxmc/rc/nxmc.fbp -text
 src/client/console/nxmc/rc/processing.png -text
 src/client/console/nxmc/rc/wxfb_code.xrc -text
