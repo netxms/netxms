@@ -415,12 +415,12 @@
         </object>
         <object class="Dialog" expanded="1">
             <property name="bg"></property>
-            <property name="center"></property>
+            <property name="center">wxBOTH</property>
             <property name="context_help"></property>
             <property name="enabled">1</property>
             <property name="extra_style"></property>
             <property name="fg"></property>
-            <property name="font">Arial,90,90,8</property>
+            <property name="font">Arial,90,90,9</property>
             <property name="hidden">0</property>
             <property name="id">wxID_ANY</property>
             <property name="maximum_size"></property>
@@ -555,7 +555,7 @@
                                                         <property name="context_help"></property>
                                                         <property name="enabled">1</property>
                                                         <property name="fg"></property>
-                                                        <property name="font">Arial,90,90,8</property>
+                                                        <property name="font">Arial,90,90,9</property>
                                                         <property name="hidden">0</property>
                                                         <property name="id">wxID_ANY</property>
                                                         <property name="label">Server:</property>
@@ -584,7 +584,7 @@
                                                         <property name="context_help"></property>
                                                         <property name="enabled">1</property>
                                                         <property name="fg"></property>
-                                                        <property name="font">Arial,90,90,8</property>
+                                                        <property name="font">Arial,90,90,9</property>
                                                         <property name="hidden">0</property>
                                                         <property name="id">wxID_ANY</property>
                                                         <property name="maximum_size"></property>
@@ -614,7 +614,7 @@
                                                         <property name="context_help"></property>
                                                         <property name="enabled">1</property>
                                                         <property name="fg"></property>
-                                                        <property name="font">Arial,90,90,8</property>
+                                                        <property name="font">Arial,90,90,9</property>
                                                         <property name="hidden">0</property>
                                                         <property name="id">wxID_ANY</property>
                                                         <property name="label">User name:</property>
@@ -642,7 +642,7 @@
                                                         <property name="context_help"></property>
                                                         <property name="enabled">1</property>
                                                         <property name="fg"></property>
-                                                        <property name="font">Arial,90,90,8</property>
+                                                        <property name="font">Arial,90,90,9</property>
                                                         <property name="hidden">0</property>
                                                         <property name="id">wxID_ANY</property>
                                                         <property name="maximum_size"></property>
@@ -674,7 +674,7 @@
                                                         <property name="context_help"></property>
                                                         <property name="enabled">1</property>
                                                         <property name="fg"></property>
-                                                        <property name="font">Arial,90,90,8</property>
+                                                        <property name="font">Arial,90,90,9</property>
                                                         <property name="hidden">0</property>
                                                         <property name="id">wxID_ANY</property>
                                                         <property name="label">Password:</property>
@@ -702,7 +702,7 @@
                                                         <property name="context_help"></property>
                                                         <property name="enabled">1</property>
                                                         <property name="fg"></property>
-                                                        <property name="font">Arial,90,90,8</property>
+                                                        <property name="font">Arial,90,90,9</property>
                                                         <property name="hidden">0</property>
                                                         <property name="id">wxID_ANY</property>
                                                         <property name="maximum_size"></property>
@@ -760,7 +760,7 @@
                                                 <property name="context_help"></property>
                                                 <property name="enabled">1</property>
                                                 <property name="fg"></property>
-                                                <property name="font">Arial,90,90,8</property>
+                                                <property name="font">Arial,90,90,9</property>
                                                 <property name="hidden">0</property>
                                                 <property name="id">wxID_ANY</property>
                                                 <property name="label">&amp;Encrypt connection</property>
@@ -789,7 +789,7 @@
                                                 <property name="context_help"></property>
                                                 <property name="enabled">1</property>
                                                 <property name="fg"></property>
-                                                <property name="font">Arial,90,90,8</property>
+                                                <property name="font">Arial,90,90,9</property>
                                                 <property name="hidden">0</property>
                                                 <property name="id">wxID_ANY</property>
                                                 <property name="label">&amp;Clear object cache on connect</property>
@@ -818,7 +818,7 @@
                                                 <property name="context_help"></property>
                                                 <property name="enabled">1</property>
                                                 <property name="fg"></property>
-                                                <property name="font">Arial,90,90,8</property>
+                                                <property name="font">Arial,90,90,9</property>
                                                 <property name="hidden">0</property>
                                                 <property name="id">wxID_ANY</property>
                                                 <property name="label">&amp;Do not cache this session</property>
@@ -847,7 +847,7 @@
                                                 <property name="context_help"></property>
                                                 <property name="enabled">1</property>
                                                 <property name="fg"></property>
-                                                <property name="font">Arial,90,90,8</property>
+                                                <property name="font">Arial,90,90,9</property>
                                                 <property name="hidden">0</property>
                                                 <property name="id">wxID_ANY</property>
                                                 <property name="label">&amp;Server version should match client version</property>

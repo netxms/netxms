@@ -121,7 +121,7 @@
 		<style>wxDEFAULT_DIALOG_STYLE</style>
 		<size>501,344</size>
 		<font>
-			<size>8</size>
+			<size>9</size>
 			<family>swiss</family>
 			<style>normal</style>
 			<weight>normal</weight>
@@ -129,6 +129,7 @@
 			<face>Arial</face>
 		</font>
 		<title>Connect to Server</title>
+		<centered>1</centered>
 		<object class="wxBoxSizer">
 			<orient>wxVERTICAL</orient>
 			<object class="sizeritem">
@@ -188,7 +189,7 @@
 												<border>5</border>
 												<object class="wxStaticText" name="m_staticText5">
 													<font>
-														<size>8</size>
+														<size>9</size>
 														<family>swiss</family>
 														<style>normal</style>
 														<weight>normal</weight>
@@ -205,7 +206,7 @@
 												<object class="wxComboBox" name="comboServer">
 													<style>wxCB_DROPDOWN|wxCB_SORT</style>
 													<font>
-														<size>8</size>
+														<size>9</size>
 														<family>swiss</family>
 														<style>normal</style>
 														<weight>normal</weight>
@@ -222,7 +223,7 @@
 												<border>5</border>
 												<object class="wxStaticText" name="m_staticText6">
 													<font>
-														<size>8</size>
+														<size>9</size>
 														<family>swiss</family>
 														<style>normal</style>
 														<weight>normal</weight>
@@ -238,7 +239,7 @@
 												<border>5</border>
 												<object class="wxTextCtrl" name="textUserName">
 													<font>
-														<size>8</size>
+														<size>9</size>
 														<family>swiss</family>
 														<style>normal</style>
 														<weight>normal</weight>
@@ -255,7 +256,7 @@
 												<border>5</border>
 												<object class="wxStaticText" name="m_staticText7">
 													<font>
-														<size>8</size>
+														<size>9</size>
 														<family>swiss</family>
 														<style>normal</style>
 														<weight>normal</weight>
@@ -272,7 +273,7 @@
 												<object class="wxTextCtrl" name="textPassword">
 													<style>wxTE_PASSWORD</style>
 													<font>
-														<size>8</size>
+														<size>9</size>
 														<family>swiss</family>
 														<style>normal</style>
 														<weight>normal</weight>
@@ -308,7 +309,7 @@
 										<border>5</border>
 										<object class="wxCheckBox" name="cbEncrypt">
 											<font>
-												<size>8</size>
+												<size>9</size>
 												<family>swiss</family>
 												<style>normal</style>
 												<weight>normal</weight>
@@ -325,7 +326,7 @@
 										<border>5</border>
 										<object class="wxCheckBox" name="cbClearCache">
 											<font>
-												<size>8</size>
+												<size>9</size>
 												<family>swiss</family>
 												<style>normal</style>
 												<weight>normal</weight>
@@ -342,7 +343,7 @@
 										<border>5</border>
 										<object class="wxCheckBox" name="cbNoCache">
 											<font>
-												<size>8</size>
+												<size>9</size>
 												<family>swiss</family>
 												<style>normal</style>
 												<weight>normal</weight>
@@ -359,7 +360,7 @@
 										<border>5</border>
 										<object class="wxCheckBox" name="cbMatchVersion">
 											<font>
-												<size>8</size>
+												<size>9</size>
 												<family>swiss</family>
 												<style>normal</style>
 												<weight>normal</weight>
