@@ -42,7 +42,6 @@ nxLoginDialog::nxLoginDialog(wxWindow *parent)
               : wxDialog()
 {
 	wxXmlResource::Get()->LoadDialog(this, parent, _T("nxLoginDialog"));
-//	XRCCTRL(*this, "dlgMainSizer", wxBoxSizer)->Fit(this);
 	GetSizer()->Fit(this);
 }
 

@@ -2,6 +2,7 @@
 
 $mode = 0;
 $level = 0;
+$isFont = 0;
 
 while(<>)
 {
@@ -38,6 +39,22 @@ while(<>)
       {
          $line = "";
       }
+   }
+   if ($isFont == 0)
+   {
+      if ($line =~ /^.*\<font\>.*/)
+      {
+         $line = "";
+         $isFont = 1;   
+      }
+   }
+   else
+   {
+      if ($line =~ /^.*\<\/font\>.*/)
+      {
+         $isFont = 0;   
+      }
+      $line = "";
    }
    if ($line ne "")
    {
