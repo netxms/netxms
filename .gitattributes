@@ -462,6 +462,7 @@ src/client/console/nxmc/rc/Makefile.am -text
 src/client/console/nxmc/rc/login.png -text
 src/client/console/nxmc/rc/nxmc.fbp -text
 src/client/console/nxmc/rc/processing.png -text
+src/client/console/nxmc/rc/wxfb_code.xrc -text
 src/client/console/nxmc/resource.h -text
 src/client/console/plugins/Makefile.am -text
 src/client/console/plugins/ObjectBrowser/Makefile.am -text
