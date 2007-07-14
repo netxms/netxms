@@ -58,4 +58,12 @@
 WX_DECLARE_STRING_HASH_MAP(nxView*, nxViewHash);
 
 
+//
+// Global variables
+//
+
+extern wxAuiNotebook *g_auiNotebook;
+extern wxAuiManager *g_auiManager;
+
+
 #endif

@@ -25,6 +25,14 @@
 
 
 //
+// Global variables
+//
+
+wxAuiNotebook *g_auiNotebook = NULL;
+wxAuiManager *g_auiManager = NULL;
+
+
+//
 // Static data
 //
 
@@ -36,8 +44,9 @@ static nxmcArrayOfRegItems s_regItemList;
 // Registration item class implementation
 //
 
-nxmcItemRegistration::nxmcItemRegistration(const TCHAR *name, int id, int type, void (*fpHandler)(int))
+nxmcItemRegistration::nxmcItemRegistration(NXMC_PLUGIN_HANDLE plugin, const TCHAR *name, int id, int type, void (*fpHandler)(int))
 {
+	m_plugin = plugin;
 	m_name = _tcsdup(name);
 	m_id = id;
 	m_type = type;
@@ -57,12 +66,15 @@ WX_DEFINE_OBJARRAY(nxmcArrayOfRegItems);
 // Add Control Panel item
 //
 
-bool LIBNXMC_EXPORTABLE NXMCAddControlPanelItem(const TCHAR *name, int id, void (*fpHandler)(int))
+bool LIBNXMC_EXPORTABLE NXMCAddControlPanelItem(NXMC_PLUGIN_HANDLE handle, const TCHAR *name, int id)
 {
 	if (s_isUiInitialized)
 		return false;	// Currently this registration is not allowed after initialization
 
-	s_regItemList.Add(new nxmcItemRegistration(name, id, REGITEM_CONTROL_PANEL, fpHandler));
+	if ((id < 0) || (id >= NXMC_PLUGIN_ID_LIMIT))
+		return false;	// ID is out of allowed range
+
+	s_regItemList.Add(new nxmcItemRegistration(handle, name, id, REGITEM_CONTROL_PANEL, NULL));
 	return true;
 }
 
@@ -71,13 +83,26 @@ bool LIBNXMC_EXPORTABLE NXMCAddControlPanelItem(const TCHAR *name, int id, void 
 // Add View menu item
 //
 
-bool LIBNXMC_EXPORTABLE NXMCAddViewMenuItem(const TCHAR *name, int id, void (*fpHandler)(int))
+bool LIBNXMC_EXPORTABLE NXMCAddViewMenuItem(NXMC_PLUGIN_HANDLE handle, const TCHAR *name, int id)
 {
 	if (s_isUiInitialized)
 		return false;	// Currently this registration is not allowed after initialization
 
-	s_regItemList.Add(new nxmcItemRegistration(name, id, REGITEM_VIEW_MENU, fpHandler));
+	if ((id < 0) || (id >= NXMC_PLUGIN_ID_LIMIT))
+		return false;	// ID is out of allowed range
+
+	s_regItemList.Add(new nxmcItemRegistration(handle, name, id, REGITEM_VIEW_MENU, NULL));
 	return true;
+}
+
+
+//
+// Get list of current registrations
+//
+
+nxmcArrayOfRegItems LIBNXMC_EXPORTABLE &NXMCGetRegistrations()
+{
+	return s_regItemList;
 }
 
 
@@ -88,6 +113,17 @@ bool LIBNXMC_EXPORTABLE NXMCAddViewMenuItem(const TCHAR *name, int id, void (*fp
 void LIBNXMC_EXPORTABLE NXMCInitializationComplete(void)
 {
 	s_isUiInitialized = true;
+}
+
+
+//
+// Set AUI elements
+//
+
+void LIBNXMC_EXPORTABLE NXMCInitAUI(wxAuiManager *mgr, wxAuiNotebook *nb)
+{
+	g_auiManager = mgr;
+	g_auiNotebook = nb;
 }
 
 

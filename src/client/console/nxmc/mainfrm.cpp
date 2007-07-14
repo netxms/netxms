@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.2 2007-07-11 21:31:53 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.3 2007-07-14 23:07:39 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -28,20 +28,12 @@
 
 
 //
-// Externals
-//
-
-DWORD DoLogin(nxLoginDialog &dlgLogin);
-
-
-//
 // Event table
 //
 
 BEGIN_EVENT_TABLE(nxMainFrame, wxFrame)
 	EVT_CLOSE(nxMainFrame::OnClose)
 	EVT_CONTEXT_MENU(nxMainFrame::OnContextMenu)
-	EVT_NX_CONNECT(nxMainFrame::OnConnect)
 	EVT_MENU(XRCID("menuFileExit"), nxMainFrame::OnFileExit)
 	EVT_MENU(XRCID("menuViewConsoleLog"), nxMainFrame::OnViewConsoleLog)
 	EVT_MENU(XRCID("menuHelpAbout"), nxMainFrame::OnHelpAbout)
@@ -49,6 +41,7 @@ BEGIN_EVENT_TABLE(nxMainFrame, wxFrame)
 	EVT_MENU(wxID_PANE_DETACH, nxMainFrame::OnPaneDetach)
 	EVT_MENU(wxID_PANE_FLOAT, nxMainFrame::OnPaneFloat)
 	EVT_MENU(wxID_PANE_MOVE_TO_NOTEBOOK, nxMainFrame::OnPaneMoveToNotebook)
+	EVT_MENU_RANGE(wxID_PLUGIN_RANGE_START, wxID_PLUGIN_RANGE_END, nxMainFrame::OnPluginCommand)
 END_EVENT_TABLE()
 
 
@@ -63,6 +56,7 @@ nxMainFrame::nxMainFrame(const wxPoint &pos, const wxSize &size)
 
 	m_mgr.AddPane(CreateNotebook(), wxAuiPaneInfo().Name(_T("notebook")).CenterPane().PaneBorder(false));
 	InitViewTracker(&m_mgr, m_notebook);
+	NXMCInitAUI(&m_mgr, m_notebook);
 
 	m_mgr.AddPane(new nxConsoleLogger(this), wxAuiPaneInfo().Name(_T("conlog")).Caption(_T("Console Log")).Bottom().BestSize(700, 150));
 
@@ -106,6 +100,26 @@ wxAuiNotebook *nxMainFrame::CreateNotebook()
 
 
 //
+// Update main menu from plugin registrations
+//
+
+void nxMainFrame::UpdateMenuFromPlugins()
+{
+	nxmcArrayOfRegItems &regList = NXMCGetRegistrations();
+	wxMenu *menu = GetMenuBar()->GetMenu(1);
+	size_t i;
+
+	for(i = 0; i < regList.GetCount(); i++)
+	{
+		if (regList[i].GetType() == REGITEM_VIEW_MENU)
+		{
+			menu->Append(regList[i].GetId() + ((nxmcPlugin *)regList[i].GetPlugin())->GetBaseId(), regList[i].GetName());
+		}
+	}
+}
+
+
+//
 // Close event handler
 //
 
@@ -137,61 +151,11 @@ void nxMainFrame::OnHelpAbout(wxCommandEvent &event)
 
 	dlg = wxXmlResource::Get()->LoadDialog(this, _T("nxDlgAbout"));
 	dlg->SetAffirmativeId(XRCID("buttonOK"));
+	dlg->GetSizer()->Fit(dlg);
 	versionTextCtrl = XRCCTRL(*dlg, "staticTextVersion", wxStaticText);
 	versionTextCtrl->SetLabel(_T("Version ") NETXMS_VERSION_STRING);
 	dlg->ShowModal();
 	delete dlg;
-}
-
-
-//
-// File->Connect menu handler
-//
-
-void nxMainFrame::OnConnect(wxCommandEvent &event)
-{
-	nxLoginDialog dlg(this);
-	DWORD rcc;
-	int result;
-	wxConfigBase *cfg;
-
-	cfg = wxConfig::Get();
-	dlg.m_server = cfg->Read(_T("/Connect/Server"), _T("localhost"));
-	dlg.m_login = cfg->Read(_T("/Connect/Login"), _T(""));
-	cfg->Read(_T("/Connect/Encrypt"), &dlg.m_isEncrypt, false);
-	cfg->Read(_T("/Connect/ClearCache"), &dlg.m_isClearCache, true);
-	cfg->Read(_T("/Connect/DisableCaching"), &dlg.m_isCacheDisabled, true);
-	cfg->Read(_T("/Connect/MatchVersion"), &dlg.m_isMatchVersion, false);
-	do
-	{
-		result = dlg.ShowModal();
-		if (result == wxID_CANCEL)
-		{
-			Close(true);
-			break;
-		}
-
-		rcc = DoLogin(dlg);
-		if (rcc == RCC_SUCCESS)
-		{
-			cfg->Write(_T("/Connect/Server"), dlg.m_server);
-			cfg->Write(_T("/Connect/Login"), dlg.m_login);
-			cfg->Write(_T("/Connect/Encrypt"), dlg.m_isEncrypt);
-			cfg->Write(_T("/Connect/ClearCache"), dlg.m_isClearCache);
-			cfg->Write(_T("/Connect/DisableCaching"), dlg.m_isCacheDisabled);
-			cfg->Write(_T("/Connect/MatchVersion"), dlg.m_isMatchVersion);
-			if (!dlg.m_isCacheDisabled)
-			{
-				g_appFlags |= AF_SAVE_OBJECT_CACHE;
-			}
-			nx_strncpy(g_userName, dlg.m_login.c_str(), MAX_DB_STRING);
-			wxLogMessage(_T("Successfully connected to server %s as %s"), dlg.m_server.c_str(), dlg.m_login.c_str());
-		}
-		else
-		{
-			wxGetApp().ShowClientError(rcc, _T("Cannot establish session with management server: %s"));
-		}
-	} while(rcc != RCC_SUCCESS);
 }
 
 
@@ -307,4 +271,14 @@ void nxMainFrame::OnPaneMoveToNotebook(wxCommandEvent &event)
 		m_notebook->AddPage(wnd, caption, true);
 		m_mgr.Update();
 	}
+}
+
+
+//
+// Handler for menu items added by plugins
+//
+
+void nxMainFrame::OnPluginCommand(wxCommandEvent &event)
+{
+	CallPluginCommandHandler(event.GetId());
 }

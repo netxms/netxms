@@ -1,7 +1,14 @@
 #include "nxmc.h"
 #include "mainfrm.h"
 #include "conlog.h"
-#include <wx/splash.h>
+#include "logindlg.h"
+
+
+//
+// Externals
+//
+
+DWORD DoLogin(nxLoginDialog &dlgLogin);
 
 
 //
@@ -27,6 +34,16 @@ DEFINE_LOCAL_EVENT_TYPE(nxEVT_SET_STATUS_TEXT)
 //
 
 IMPLEMENT_APP(nxApp)
+
+
+//
+// Constructor
+//
+
+nxApp::nxApp() : wxApp()
+{
+	m_mainFrame = NULL;
+}
 
 
 //
@@ -100,18 +117,18 @@ bool nxApp::OnInit()
 	LoadPlugins();
 	NXMCInitializationComplete();
 
+	if (!Connect())
+		return false;
+
 	m_mainFrame = new nxMainFrame(wxDefaultPosition, wxSize(700, 500));
 	SetTopWindow(m_mainFrame);
+	m_mainFrame->UpdateMenuFromPlugins();
 
 	bool flag;
 	wxConfig::Get()->Read(_T("/MainFrame/IsMaximized"), &flag, true);
 	if (flag)
 		m_mainFrame->Maximize();
 	m_mainFrame->Show(true);
-
-	// Cause main window to show login dialog
-	wxCommandEvent event(nxEVT_CONNECT);
-	wxPostEvent(m_mainFrame, event);
 
 	return true;
 }
@@ -156,4 +173,57 @@ void nxApp::ShowClientError(DWORD rcc, TCHAR *msgTemplate)
 	_sntprintf(msg, 4096, msgTemplate, NXCGetErrorText(rcc));
 	wxLogMessage(msg);
 	wxMessageBox(msg, _T("NetXMS Console - Error"), wxOK | wxICON_ERROR, m_mainFrame);
+}
+
+
+//
+// Connect to server
+//
+
+bool nxApp::Connect()
+{
+	nxLoginDialog dlg(NULL);
+	DWORD rcc = RCC_INTERNAL_ERROR;
+	int result;
+	wxConfigBase *cfg;
+
+	cfg = wxConfig::Get();
+	dlg.m_server = cfg->Read(_T("/Connect/Server"), _T("localhost"));
+	dlg.m_login = cfg->Read(_T("/Connect/Login"), _T(""));
+	cfg->Read(_T("/Connect/Encrypt"), &dlg.m_isEncrypt, false);
+	cfg->Read(_T("/Connect/ClearCache"), &dlg.m_isClearCache, true);
+	cfg->Read(_T("/Connect/DisableCaching"), &dlg.m_isCacheDisabled, true);
+	cfg->Read(_T("/Connect/MatchVersion"), &dlg.m_isMatchVersion, false);
+	do
+	{
+		result = dlg.ShowModal();
+		if (result == wxID_CANCEL)
+		{
+			//Close(true);
+			break;
+		}
+
+		rcc = DoLogin(dlg);
+		if (rcc == RCC_SUCCESS)
+		{
+			cfg->Write(_T("/Connect/Server"), dlg.m_server);
+			cfg->Write(_T("/Connect/Login"), dlg.m_login);
+			cfg->Write(_T("/Connect/Encrypt"), dlg.m_isEncrypt);
+			cfg->Write(_T("/Connect/ClearCache"), dlg.m_isClearCache);
+			cfg->Write(_T("/Connect/DisableCaching"), dlg.m_isCacheDisabled);
+			cfg->Write(_T("/Connect/MatchVersion"), dlg.m_isMatchVersion);
+			if (!dlg.m_isCacheDisabled)
+			{
+				g_appFlags |= AF_SAVE_OBJECT_CACHE;
+			}
+			nx_strncpy(g_userName, dlg.m_login.c_str(), MAX_DB_STRING);
+			wxLogMessage(_T("Successfully connected to server %s as %s"), dlg.m_server.c_str(), dlg.m_login.c_str());
+		}
+		else
+		{
+			wxGetApp().ShowClientError(rcc, _T("Cannot establish session with management server: %s"));
+		}
+	} while(rcc != RCC_SUCCESS);
+
+	return (rcc == RCC_SUCCESS);
 }

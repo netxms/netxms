@@ -25,6 +25,35 @@
 
 
 //
+// Static data
+//
+
+static nxmcArrayOfPlugins s_pluginList;
+static int s_freeBaseId = wxID_PLUGIN_RANGE_START;
+
+
+//
+// nxmcPlugin class implementation
+//
+
+nxmcPlugin::nxmcPlugin(HMODULE hmod, NXMC_PLUGIN_INFO *info, int baseId, void (*fpCmdHandler)(int))
+{
+	m_moduleHandle = hmod;
+	m_info = (NXMC_PLUGIN_INFO *)nx_memdup(info, sizeof(NXMC_PLUGIN_INFO));
+	m_baseId = baseId;
+	m_fpCommandHandler = fpCmdHandler;
+}
+
+nxmcPlugin::~nxmcPlugin()
+{
+	safe_free(m_info);
+}
+
+#include <wx/arrimpl.cpp>
+WX_DEFINE_OBJARRAY(nxmcArrayOfPlugins);
+
+
+//
 // Load plugin
 //
 
@@ -34,23 +63,50 @@ static bool LoadPlugin(wxString &file)
 	TCHAR errorText[256];
 	bool status = false;
 	void (*fpReg)(NXMC_PLUGIN_INFO *);
-	bool (*fpInit)();
+	bool (*fpInit)(NXMC_PLUGIN_HANDLE);
+	void (*fpCmdHandler)(int);
 	NXMC_PLUGIN_INFO info;
+	nxmcPlugin *plugin;
+	size_t i;
 
 	wxLogDebug(_T("Loading plugin %s..."), file.c_str());
 	module = DLOpen(file.c_str(), errorText);
 	if (module != NULL)
 	{
 		fpReg = (void (*)(NXMC_PLUGIN_INFO *))DLGetSymbolAddr(module, _T("nxmcRegisterPlugin"), NULL);
-		fpInit = (bool (*)())DLGetSymbolAddr(module, _T("nxmcInitializePlugin"), NULL);
+		fpInit = (bool (*)(NXMC_PLUGIN_HANDLE))DLGetSymbolAddr(module, _T("nxmcInitializePlugin"), NULL);
+		fpCmdHandler = (void (*)(int))DLGetSymbolAddr(module, _T("nxmcCommandHandler"), NULL);
 		if ((fpReg != NULL) && (fpInit != NULL))
 		{
 			fpReg(&info);
 
 			// Check for duplicate plugin names
+			for(i = 0; i < s_pluginList.GetCount(); i++)
+				if (!_tcsicmp(s_pluginList[i].GetName(), info.name))
+				{
+					wxLogWarning(_T("Plugin with name %s already loaded"), info.name);
+					break;
+				}
 
-			status = true;
-			wxLogMessage(_T("Plugin %s successfully loaded form %s"), info.name, file.c_str());
+			if (i == s_pluginList.GetCount())
+			{
+				plugin = new nxmcPlugin(module, &info, s_freeBaseId, fpCmdHandler);
+				if (fpInit(plugin))
+				{
+					s_pluginList.Add(plugin);
+					s_freeBaseId += NXMC_PLUGIN_ID_LIMIT;
+					status = true;
+					wxLogMessage(_T("Plugin %s successfully loaded form %s"), info.name, file.c_str());
+				}
+				else
+				{
+					delete plugin;
+					wxLogWarning(_T("Plugin %s loaded from %s failed to initialize itself"), info.name, file.c_str());
+				}
+			}
+
+			if (!status)
+				DLClose(module);
 		}
 		else
 		{
@@ -115,4 +171,18 @@ void LoadPlugins(void)
 			success = dir.GetNext(&fname);
 		}
 	}
+}
+
+
+//
+// Call plugin's command handler
+//
+
+void CallPluginCommandHandler(int cmd)
+{
+	size_t index;
+
+	index = (cmd - wxID_PLUGIN_RANGE_START) / NXMC_PLUGIN_ID_LIMIT;
+	if (index < s_pluginList.GetCount())
+		s_pluginList[index].CallCommandHandler(cmd - s_pluginList[index].GetBaseId());
 }

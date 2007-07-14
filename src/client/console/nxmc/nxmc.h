@@ -31,7 +31,6 @@ extern "C" WXDLLIMPEXP_BASE HINSTANCE wxGetInstance();
 //
 
 BEGIN_DECLARE_EVENT_TYPES()
-    DECLARE_LOCAL_EVENT_TYPE(nxEVT_CONNECT, 0)
     DECLARE_LOCAL_EVENT_TYPE(nxEVT_REQUEST_COMPLETED, 0)
     DECLARE_LOCAL_EVENT_TYPE(nxEVT_SET_STATUS_TEXT, 0)
 END_DECLARE_EVENT_TYPES()
@@ -42,7 +41,6 @@ END_DECLARE_EVENT_TYPES()
 		  (wxObjectEventFunction)(wxEventFunction) wxStaticCastEvent( wxCommandEventFunction, &fn ), \
         (wxObject *) NULL \
     ),
-#define EVT_NX_CONNECT(fn)             EVT_NXMC_EVENT(nxEVT_CONNECT, fn)
 #define EVT_NX_REQUEST_COMPLETED(fn)   EVT_NXMC_EVENT(nxEVT_REQUEST_COMPLETED, fn)
 #define EVT_NX_SET_STATUS_TEXT(fn)     EVT_NXMC_EVENT(nxEVT_SET_STATUS_TEXT, fn)
 
@@ -56,6 +54,35 @@ END_DECLARE_EVENT_TYPES()
 #define wxID_PANE_FLOAT					(wxID_HIGHEST + 3)
 #define wxID_PANE_MOVE_TO_NOTEBOOK	(wxID_HIGHEST + 4)
 
+#define wxID_PLUGIN_RANGE_START		(wxID_HIGHEST + 1000)
+#define wxID_PLUGIN_RANGE_END			(wxID_HIGHEST + NXMC_PLUGIN_ID_LIMIT * NXMC_MAX_PLUGINS - 1)
+
+
+//
+// Plugin class
+//
+
+class nxmcPlugin
+{
+private:
+	HMODULE m_moduleHandle;
+	NXMC_PLUGIN_INFO *m_info;
+	int m_baseId;
+	void (*m_fpCommandHandler)(int);
+
+public:
+	nxmcPlugin(HMODULE hmod, NXMC_PLUGIN_INFO *info, int baseId, void (*fpCmdHandler)(int));
+	~nxmcPlugin();
+
+	const TCHAR *GetName() { return m_info->name; }
+	const TCHAR *GetVersion() { return m_info->version; }
+	int GetBaseId() { return m_baseId; }
+
+	void CallCommandHandler(int cmd) { if (m_fpCommandHandler != NULL) m_fpCommandHandler(cmd); }
+};
+
+WX_DECLARE_OBJARRAY(nxmcPlugin, nxmcArrayOfPlugins);
+
 
 //
 // Application class
@@ -66,13 +93,17 @@ class nxApp : public wxApp
 private:
 	nxMainFrame *m_mainFrame;
 
+	bool Connect();
+
 public:
-    virtual bool OnInit();
-	 virtual int OnExit();
+	nxApp();
 
-	 nxMainFrame *GetMainFrame(void) { return m_mainFrame; }
+   virtual bool OnInit();
+	virtual int OnExit();
 
-	 void ShowClientError(DWORD rcc, TCHAR *msgTemplate);
+	nxMainFrame *GetMainFrame(void) { return m_mainFrame; }
+
+	void ShowClientError(DWORD rcc, TCHAR *msgTemplate);
 };
 
 DECLARE_APP(nxApp)
@@ -83,6 +114,7 @@ DECLARE_APP(nxApp)
 //
 
 void LoadPlugins(void);
+void CallPluginCommandHandler(int cmd);
 
 
 //

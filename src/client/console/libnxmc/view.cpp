@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: nxview.cpp
+** File: view.cpp
 **
 **/
 
@@ -25,28 +25,31 @@
 
 
 //
-// Event table
+// Create view in given area
 //
 
-BEGIN_EVENT_TABLE(nxView, wxWindow)
-END_EVENT_TABLE()
-
-
-//
-// Constructor
-//
-
-nxView::nxView(wxWindow *parent)
-       : wxWindow(parent, wxID_ANY,  wxDefaultPosition, wxDefaultSize)
+bool LIBNXMC_EXPORTABLE NXMCCreateView(nxView *view, int area)
 {
-	m_icon = wxNullBitmap;
-}
+	if ((g_auiManager == NULL) || (g_auiNotebook == NULL))
+		return false;
 
-
-//
-// Destructor
-//
-
-nxView::~nxView()
-{
+	switch(area)
+	{
+		case VIEWAREA_MAIN:
+			view->Reparent(g_auiNotebook);
+			g_auiNotebook->AddPage(view, view->GetLabel(), true, view->GetBitmap());
+			break;
+		case VIEWAREA_DOCKED:
+			g_auiManager->AddPane(view, wxAuiPaneInfo().Name(view->GetName()).Caption(view->GetLabel()));
+			g_auiManager->Update();
+			break;
+		case VIEWAREA_FLOATING:
+			g_auiManager->AddPane(view, wxAuiPaneInfo().Name(view->GetName()).Caption(view->GetLabel()).Float());
+			g_auiManager->Update();
+			break;
+		default:
+			wxLogWarning(_T("INTERNAL ERROR: invalid area code %d passed to NXMCCreateView()"), area);
+			break;
+	}
+	return true;
 }

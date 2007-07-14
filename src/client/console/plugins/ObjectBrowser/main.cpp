@@ -25,6 +25,16 @@
 
 
 //
+// Create object browser
+//
+
+extern "C" void NXMC_PLUGIN_EXPORT nxmcCommandHandler(int cmd)
+{
+	MessageBox(NULL, L"Handler called!!!", L"OB", 0);
+}
+
+
+//
 // Registration function
 //
 
@@ -35,7 +45,24 @@ NXMC_IMPLEMENT_PLUGIN_REGISTRATION(_T("ObjectBrowser"), NETXMS_VERSION_STRING, N
 // Initialization function
 //
 
-extern "C" bool NXMC_PLUGIN_EXPORT nxmcInitializePlugin(void)
+extern "C" bool NXMC_PLUGIN_EXPORT nxmcInitializePlugin(NXMC_PLUGIN_HANDLE handle)
 {
+	NXMCAddViewMenuItem(handle, _T("&Object Browser\tF3"), 0);
 	return true;
 }
+
+
+//
+// DLL entry point
+//
+
+#ifdef _WIN32
+
+BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+{
+	if (dwReason == DLL_PROCESS_ATTACH)
+		DisableThreadLibraryCalls(hInstance);
+	return TRUE;
+}
+
+#endif

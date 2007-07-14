@@ -18,6 +18,7 @@ END_EVENT_TABLE()
 wxLog *nxConsoleLogger::m_logOld = NULL;
 nxDummyFrame *nxConsoleLogger::m_wndDummy = NULL;
 wxTextCtrl *nxConsoleLogger::m_wndTextCtrl = NULL;
+bool nxDummyFrame::m_isDeleted = false;
 
 
 //
@@ -64,7 +65,8 @@ nxConsoleLogger::nxConsoleLogger(wxWindow *parent)
 
 nxConsoleLogger::~nxConsoleLogger()
 {
-	m_wndTextCtrl->Reparent(m_wndDummy);
+	if (!nxDummyFrame::IsDeleted())
+		m_wndTextCtrl->Reparent(m_wndDummy);
 	UnregisterUniqueView(_T("conlog"));
 }
 

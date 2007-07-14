@@ -44,6 +44,7 @@ nxBusyDialog::nxBusyDialog(wxWindow *parent, TCHAR *initialText)
 {
 	m_rcc = RCC_INTERNAL_ERROR;
 	wxXmlResource::Get()->LoadDialog(this, parent, _T("nxBusyDialog"));
+	GetSizer()->Fit(this);
 	XRCCTRL(*this, "textMessage", wxStaticText)->SetLabel((initialText != NULL) ? initialText : _T("Processing request..."));
 }
 

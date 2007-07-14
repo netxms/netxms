@@ -26,9 +26,14 @@
 
 class LIBNXMC_EXPORTABLE nxView : public wxWindow
 {
+private:
+	wxBitmap m_icon;	// Icon associated with this view
+
 public:
 	nxView(wxWindow *parent);
 	virtual ~nxView();
+
+	const wxBitmap& GetBitmap() { return m_icon; }
 
 	// Event handlers
 protected:

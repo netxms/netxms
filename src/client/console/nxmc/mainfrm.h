@@ -1,4 +1,4 @@
-/* $Id: mainfrm.h,v 1.1 2007-07-11 19:46:58 victor Exp $ */
+/* $Id: mainfrm.h,v 1.2 2007-07-14 23:07:39 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -60,10 +60,11 @@ public:
 	nxMainFrame(const wxPoint &pos, const wxSize &size);
 	virtual ~nxMainFrame();
 
+	void UpdateMenuFromPlugins();
+
 	// Event handlers
 protected:
 	void OnClose(wxCloseEvent &event);
-	void OnConnect(wxCommandEvent &event);
 	void OnFileExit(wxCommandEvent &event);
 	void OnViewConsoleLog(wxCommandEvent &event);
 	void OnHelpAbout(wxCommandEvent &event);
@@ -71,6 +72,7 @@ protected:
 	void OnPaneDetach(wxCommandEvent &event);
 	void OnPaneFloat(wxCommandEvent &event);
 	void OnPaneMoveToNotebook(wxCommandEvent &event);
+	void OnPluginCommand(wxCommandEvent &event);
 	void OnContextMenu(wxContextMenuEvent &event);
 
 	DECLARE_EVENT_TABLE()

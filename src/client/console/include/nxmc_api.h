@@ -42,6 +42,8 @@
 
 #define MAX_PLUGIN_NAME_LEN      256
 #define MAX_PLUGIN_VERSION_LEN   64
+#define NXMC_PLUGIN_ID_LIMIT		100
+#define NXMC_MAX_PLUGINS			100
 
 
 //
@@ -62,6 +64,13 @@
 #else
 #define NXMC_PLUGIN_EXPORT
 #endif
+
+
+//
+// Plugin handle
+//
+
+typedef void * NXMC_PLUGIN_HANDLE;
 
 
 //
@@ -145,17 +154,20 @@ typedef struct
 class nxmcItemRegistration
 {
 private:
+	NXMC_PLUGIN_HANDLE m_plugin;
 	TCHAR *m_name;
 	int m_id;
 	int m_type;
 	void (*m_fpHandler)(int);
 
 public:
-	nxmcItemRegistration(const TCHAR *name, int id, int type, void (*fpHandler)(int));
+	nxmcItemRegistration(NXMC_PLUGIN_HANDLE plugin, const TCHAR *name, int id, int type, void (*fpHandler)(int));
 	~nxmcItemRegistration();
 
-	const TCHAR *GetName(void) { return m_name; }
-	int GetId(void) { return m_id; }
+	const TCHAR *GetName() { return m_name; }
+	int GetType() { return m_type; }
+	int GetId() { return m_id; }
+	NXMC_PLUGIN_HANDLE GetPlugin() { return m_plugin; }
 
 	void CallHandler(int param) { m_fpHandler(param); }
 };
@@ -172,6 +184,16 @@ WX_DECLARE_OBJARRAY(nxmcItemRegistration, nxmcArrayOfRegItems);
 
 
 //
+// View creation areas
+//
+
+#define VIEWAREA_MAIN			0
+#define VIEWAREA_DOCKED			1
+#define VIEWAREA_FLOATING		2
+#define VIEWAREA_DETACHED		3
+
+
+//
 // Classes
 //
 
@@ -182,10 +204,15 @@ WX_DECLARE_OBJARRAY(nxmcItemRegistration, nxmcArrayOfRegItems);
 // Functions
 //
 
-void LIBNXMC_EXPORTABLE NXMCInitializationComplete(void);
+void LIBNXMC_EXPORTABLE NXMCInitAUI(wxAuiManager *mgr, wxAuiNotebook *nb);
+void LIBNXMC_EXPORTABLE NXMCInitializationComplete();
 
-bool LIBNXMC_EXPORTABLE NXMCAddControlPanelItem(const TCHAR *name, int id, void (*fpHandler)(int));
-bool LIBNXMC_EXPORTABLE NXMCAddViewMenuItem(const TCHAR *name, int id, void (*fpHandler)(int));
+nxmcArrayOfRegItems LIBNXMC_EXPORTABLE &NXMCGetRegistrations();
+
+bool LIBNXMC_EXPORTABLE NXMCAddControlPanelItem(NXMC_PLUGIN_HANDLE handle, const TCHAR *name, int id);
+bool LIBNXMC_EXPORTABLE NXMCAddViewMenuItem(NXMC_PLUGIN_HANDLE handle, const TCHAR *name, int id);
+
+bool LIBNXMC_EXPORTABLE NXMCCreateView(nxView *view, int area, const wxBitmap &bitmap = wxNullBitmap);
 
 void LIBNXMC_EXPORTABLE InitViewTracker(wxAuiManager *mgr, wxAuiNotebook *nb);
 void LIBNXMC_EXPORTABLE RegisterUniqueView(const TCHAR *name, nxView *view);

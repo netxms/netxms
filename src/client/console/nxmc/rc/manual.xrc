@@ -1,3 +1,33 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
+	<object class="wxDialog" name="nxBusyDialog">
+		<size>436,63</size>
+		<title>NetXMS Console - Processing</title>
+		<centered>1</centered>
+		<object class="wxFlexGridSizer">
+			<rows>1</rows>
+			<cols>2</cols>
+			<vgap>0</vgap>
+			<hgap>0</hgap>
+			<growablecols>1</growablecols>
+			<growablerows></growablerows>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALIGN_CENTER|wxALL</flag>
+				<border>5</border>
+				<object class="wxStaticBitmap" name="m_bitmap3">
+					<bitmap>processing.png</bitmap>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALIGN_CENTER_VERTICAL|wxALIGN_LEFT|wxALL</flag>
+				<border>5</border>
+				<minsize>400,-1</minsize>
+				<object class="wxStaticText" name="textMessage">
+					<label>MyLabel</label>
+				</object>
+			</object>
+		</object>
+	</object>
 </resource>

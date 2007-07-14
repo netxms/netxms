@@ -111,7 +111,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy  Release_UNICODE\ObjectBrowser.so  C:\NetXMS\lib\nxmc\ 
+PostBuild_Cmds=copy   Release_UNICODE\ObjectBrowser.so   C:\NetXMS\lib\nxmc\ 
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "mcpObjectBrowser - Win32 Debug UNICODE"
@@ -166,7 +166,31 @@ SOURCE=.\main.cpp
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
+SOURCE=..\..\..\..\..\include\nms_common.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\..\include\nms_threads.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\..\include\nms_util.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\..\include\nxclapi.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\nxmc_api.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\object_browser.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\..\include\unicode.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

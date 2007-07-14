@@ -26,9 +26,14 @@
 
 class nxDummyFrame : public wxFrame
 {
+private:
+	static bool m_isDeleted;
+
 public:
 	nxDummyFrame() : wxFrame(NULL, wxID_ANY, _T("dummy"), wxPoint(-1, -1), wxSize(0, 0)) { }
+	virtual ~nxDummyFrame() { m_isDeleted = true; }
 	virtual bool ShouldPreventAppExit() const { return false; }
+	static bool IsDeleted() { return m_isDeleted; }
 };
 
 class nxConsoleLogger : public nxView
