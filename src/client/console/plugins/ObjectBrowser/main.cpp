@@ -30,7 +30,7 @@
 
 extern "C" void NXMC_PLUGIN_EXPORT nxmcCommandHandler(int cmd)
 {
-	MessageBox(NULL, L"Handler called!!!", L"OB", 0);
+	wxMessageBox(_T("Handler called!!!"), _T("OB"), 0);
 }
 
 
