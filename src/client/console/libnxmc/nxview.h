@@ -27,11 +27,15 @@
 class LIBNXMC_EXPORTABLE nxView : public wxWindow
 {
 private:
+	wxString m_label;
 	wxBitmap m_icon;	// Icon associated with this view
 
 public:
 	nxView(wxWindow *parent);
 	virtual ~nxView();
+
+	virtual void SetLabel(const wxString& label);
+	virtual wxString GetLabel() const;
 
 	const wxBitmap& GetBitmap() { return m_icon; }
 

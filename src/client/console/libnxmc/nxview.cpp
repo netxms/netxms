@@ -50,3 +50,24 @@ nxView::nxView(wxWindow *parent)
 nxView::~nxView()
 {
 }
+
+
+//
+// Set view label
+//
+
+void nxView::SetLabel(const wxString& label)
+{
+	m_label = label;
+}
+
+
+//
+// Get view label
+//
+
+wxString nxView::GetLabel() const
+{
+	return m_label;
+}
+

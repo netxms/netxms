@@ -31,11 +31,25 @@
 
 
 //
+// libnxcl object index structure
+//
+
+struct NXC_OBJECT_INDEX
+{
+   DWORD key;
+   NXC_OBJECT *object;
+};
+
+
+//
 // Object view class
 //
 
 class nxObjectView : public wxWindow
 {
+private:
+	wxNotebook *m_notebook;
+	
 public:
 	nxObjectView(wxWindow *parent);
 };
@@ -49,15 +63,25 @@ class nxObjectBrowser : public nxView
 {
 private:
 	wxSplitterWindow *m_wndSplitter;
+	wxTreeCtrl *m_wndTreeCtrl;
+	nxObjectView *m_wndObjectView;
+	bool m_isFirstResize;
+	
+	void AddObjectToTree(NXC_OBJECT *object, wxTreeItemId &root);
+	void CreateTreeItemText(NXC_OBJECT *object, TCHAR *buffer);
 
 public:
 	nxObjectBrowser();
+	virtual ~nxObjectBrowser();
 
 	// Event handlers
 protected:
 	void OnSize(wxSizeEvent &event);
+	void OnViewRefresh(wxCommandEvent &event);
+	void OnTreeItemExpanding(wxTreeEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };
 
 #endif
+

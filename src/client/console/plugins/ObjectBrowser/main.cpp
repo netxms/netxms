@@ -30,7 +30,16 @@
 
 extern "C" void NXMC_PLUGIN_EXPORT nxmcCommandHandler(int cmd)
 {
-	NXMCCreateView(new nxObjectBrowser, VIEWAREA_MAIN);
+	nxView *view;
+	
+	if ((view = FindUniqueView(_T("objectbrowser"))) == NULL)
+	{
+		NXMCCreateView(new nxObjectBrowser, VIEWAREA_MAIN);
+	}
+	else
+	{
+		ActivateView(view);
+	}
 }
 
 

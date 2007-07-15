@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.4 2007-07-15 08:12:45 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.5 2007-07-15 14:18:38 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -36,6 +36,7 @@ BEGIN_EVENT_TABLE(nxMainFrame, wxFrame)
 	EVT_CONTEXT_MENU(nxMainFrame::OnContextMenu)
 	EVT_MENU(XRCID("menuFileExit"), nxMainFrame::OnFileExit)
 	EVT_MENU(XRCID("menuViewConsoleLog"), nxMainFrame::OnViewConsoleLog)
+	EVT_MENU(XRCID("menuViewRefresh"), nxMainFrame::OnViewRefresh)
 	EVT_MENU(XRCID("menuHelpAbout"), nxMainFrame::OnHelpAbout)
 	EVT_MENU(wxID_PANE_CLOSE, nxMainFrame::OnPaneClose)
 	EVT_MENU(wxID_PANE_DETACH, nxMainFrame::OnPaneDetach)
@@ -282,3 +283,21 @@ void nxMainFrame::OnPluginCommand(wxCommandEvent &event)
 {
 	CallPluginCommandHandler(event.GetId());
 }
+
+
+//
+// Handler for View->Refresh menu
+//
+
+void nxMainFrame::OnViewRefresh(wxCommandEvent &event)
+{
+	wxWindow *page;
+	
+	page = m_notebook->GetPage(m_notebook->GetSelection());
+	if (page != NULL)
+	{
+		wxCommandEvent event(nxEVT_REFRESH_VIEW);
+		page->AddPendingEvent(event);
+	}
+}
+

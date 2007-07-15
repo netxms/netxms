@@ -24,6 +24,7 @@
 #include <wx/dynarray.h>
 #include <wx/splitter.h>
 #include <wx/treectrl.h>
+#include <wx/notebook.h>
 #endif
 
 
@@ -154,6 +155,24 @@ typedef struct
 //
 
 #define wxID_TREE_CTRL		(wxID_HIGHEST + 500)
+#define wxID_NOTEBOOK_CTRL	(wxID_HIGHEST + 501)
+
+
+//
+// Custom events
+//
+
+BEGIN_DECLARE_EVENT_TYPES()
+    DECLARE_EVENT_TYPE(nxEVT_REFRESH_VIEW, 0)
+END_DECLARE_EVENT_TYPES()
+
+#define EVT_LIBNXMC_EVENT(evt, fn) \
+    DECLARE_EVENT_TABLE_ENTRY( \
+        evt, wxID_ANY, wxID_ANY, \
+                  (wxObjectEventFunction)(wxEventFunction) wxStaticCastEvent(wxCommandEventFunction, &fn), \
+        (wxObject *) NULL \
+    ),
+#define EVT_NX_REFRESH_VIEW(fn)			EVT_LIBNXMC_EVENT(nxEVT_REFRESH_VIEW, fn)
 
 
 //
@@ -224,11 +243,17 @@ bool LIBNXMC_EXPORTABLE NXMCAddViewMenuItem(NXMC_PLUGIN_HANDLE handle, const TCH
 wxWindow LIBNXMC_EXPORTABLE *NXMCGetDefaultParent();
 bool LIBNXMC_EXPORTABLE NXMCCreateView(nxView *view, int area);
 
+void LIBNXMC_EXPORTABLE NXMCSetSession(NXC_SESSION session);
+NXC_SESSION LIBNXMC_EXPORTABLE NXMCGetSession();
+
 void LIBNXMC_EXPORTABLE InitViewTracker(wxAuiManager *mgr, wxAuiNotebook *nb);
 void LIBNXMC_EXPORTABLE RegisterUniqueView(const TCHAR *name, nxView *view);
 void LIBNXMC_EXPORTABLE UnregisterUniqueView(const TCHAR *name);
 nxView LIBNXMC_EXPORTABLE *FindUniqueView(const TCHAR *name);
 void LIBNXMC_EXPORTABLE ActivateView(nxView *view);
 
+const TCHAR LIBNXMC_EXPORTABLE *NXMCGetStatusText(int status);
+const TCHAR LIBNXMC_EXPORTABLE *NXMCGetStatusTextSmall(int status);
 
 #endif
+

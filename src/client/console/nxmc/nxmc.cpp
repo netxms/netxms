@@ -24,7 +24,6 @@ TCHAR g_userName[MAX_DB_STRING];
 // Custom events
 //
 
-DEFINE_LOCAL_EVENT_TYPE(nxEVT_CONNECT)
 DEFINE_LOCAL_EVENT_TYPE(nxEVT_REQUEST_COMPLETED)
 DEFINE_LOCAL_EVENT_TYPE(nxEVT_SET_STATUS_TEXT)
 
@@ -119,6 +118,7 @@ bool nxApp::OnInit()
 
 	if (!Connect())
 		return false;
+	NXMCSetSession(g_hSession);
 
 	m_mainFrame = new nxMainFrame(wxDefaultPosition, wxSize(700, 500));
 	SetTopWindow(m_mainFrame);

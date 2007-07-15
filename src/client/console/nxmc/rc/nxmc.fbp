@@ -19,7 +19,7 @@
         <property name="relative_path">1</property>
         <property name="use_enum">0</property>
         <property name="use_microsoft_bom">0</property>
-        <object class="Frame" expanded="0">
+        <object class="Frame" expanded="1">
             <property name="bg"></property>
             <property name="center"></property>
             <property name="context_help"></property>
@@ -70,7 +70,7 @@
             <event name="OnSetFocus"></event>
             <event name="OnSize"></event>
             <event name="OnUpdateUI"></event>
-            <object class="wxMenuBar" expanded="0">
+            <object class="wxMenuBar" expanded="1">
                 <property name="bg"></property>
                 <property name="context_help"></property>
                 <property name="enabled">1</property>
@@ -139,6 +139,21 @@
                         <property name="label">&amp;Control Panel</property>
                         <property name="name">menuViewControlPanel</property>
                         <property name="shortcut">F9</property>
+                        <property name="unchecked_bitmap"></property>
+                        <event name="OnMenuSelection"></event>
+                        <event name="OnUpdateUI"></event>
+                    </object>
+                    <object class="separator" expanded="1" />
+                    <object class="wxMenuItem" expanded="1">
+                        <property name="bitmap"></property>
+                        <property name="checked">0</property>
+                        <property name="enabled">1</property>
+                        <property name="help"></property>
+                        <property name="id">wxID_ANY</property>
+                        <property name="kind">wxITEM_NORMAL</property>
+                        <property name="label">&amp;Refresh</property>
+                        <property name="name">menuViewRefresh</property>
+                        <property name="shortcut">F5</property>
                         <property name="unchecked_bitmap"></property>
                         <event name="OnMenuSelection"></event>
                         <event name="OnUpdateUI"></event>

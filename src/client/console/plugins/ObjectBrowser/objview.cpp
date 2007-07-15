@@ -31,4 +31,6 @@
 nxObjectView::nxObjectView(wxWindow *parent)
              : wxWindow(parent, wxID_ANY)
 {
+	m_notebook = new wxNotebook(this, wxID_NOTEBOOK_CTRL);
 }
+

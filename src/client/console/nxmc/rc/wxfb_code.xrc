@@ -24,6 +24,11 @@
 					<label>&amp;Control Panel\tF9</label>
 					<help></help>
 				</object>
+				<object class="separator" />
+				<object class="wxMenuItem" name="menuViewRefresh">
+					<label>&amp;Refresh\tF5</label>
+					<help></help>
+				</object>
 			</object>
 			<object class="wxMenu" name="menuPerspective">
 				<label>_Perspective</label>
@@ -55,7 +60,7 @@
 			<style>normal</style>
 			<weight>normal</weight>
 			<underlined>0</underlined>
-			<face>MS Sans Serif</face>
+			<face>sans</face>
 		</font>
 		<title>About</title>
 		<centered>1</centered>
@@ -143,7 +148,7 @@
 						<style>normal</style>
 						<weight>normal</weight>
 						<underlined>0</underlined>
-						<face>MS Sans Serif</face>
+						<face>sans</face>
 					</font>
 					<bitmap>login.png</bitmap>
 				</object>

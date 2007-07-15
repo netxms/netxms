@@ -34,11 +34,19 @@ wxWindow *g_auiDefaultParent = NULL;
 
 
 //
+// Custom events
+//
+
+DEFINE_LOCAL_EVENT_TYPE(nxEVT_REFRESH_VIEW)
+
+
+//
 // Static data
 //
 
 static bool s_isUiInitialized = false;
 static nxmcArrayOfRegItems s_regItemList;
+static NXC_SESSION s_session = NULL;
 
 
 //
@@ -136,6 +144,58 @@ void LIBNXMC_EXPORTABLE NXMCInitAUI(wxAuiManager *mgr, wxAuiNotebook *nb, wxWind
 wxWindow LIBNXMC_EXPORTABLE *NXMCGetDefaultParent()
 {
 	return g_auiDefaultParent;
+}
+
+
+//
+// Set current session handle
+//
+
+void LIBNXMC_EXPORTABLE NXMCSetSession(NXC_SESSION session)
+{
+	s_session = session;
+}
+
+
+//
+// Get current session handle
+//
+
+NXC_SESSION LIBNXMC_EXPORTABLE NXMCGetSession()
+{
+	return s_session;
+}
+
+
+//
+// Get status text
+//
+
+const TCHAR LIBNXMC_EXPORTABLE *NXMCGetStatusText(int status)
+{
+	static TCHAR *texts[] =
+	{
+		_T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"), _T("CRITICAL"),
+		_T("UNKNOWN"), _T("UNMANAGED"), _T("DISABLED"), _T("TESTING")
+	};
+	
+	return ((status >= 0) && (status < 9)) ? texts[status] : _T("INVALID");
+}
+
+
+//
+// Get status text in small letters
+//
+
+const TCHAR LIBNXMC_EXPORTABLE *NXMCGetStatusTextSmall(int status)
+{
+	static TCHAR *texts[] =
+	{
+		_T("Normal"), _T("Warning"), _T("Minor"), _T("Major"), _T("Critical"),
+		_T("Unknown"), _T("Unmanaged"), _T("Disabled"), _T("Testing")
+	};
+	
+	return ((status >= 0) && (status < 9)) ? texts[status] : _T("Invalid");
 }
 
 

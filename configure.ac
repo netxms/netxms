@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.259 2007-07-14 20:17:17 victor Exp $
+# $Id: configure.ac,v 1.260 2007-07-15 14:18:38 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -34,6 +34,7 @@ COMPONENTS=""
 DISABLE_ICONV="no"
 DISABLE_ENCRYPTION="no"
 ENABLE_UNSTABLE="no"
+ENABLE_DEBUG="no"
 STATIC_BUILD="no"
 DBDRIVER_SELECTED="no"
 USE_PTH="no"
@@ -207,6 +208,12 @@ AC_ARG_ENABLE(unstable,
 [AS_HELP_STRING(--enable-unstable,build experimental/unstable components)],
 [
 	ENABLE_UNSTABLE="yes"
+])
+
+AC_ARG_ENABLE(debug,
+[AS_HELP_STRING(--enable-debug,enable additional debugging functionality)],
+[
+	ENABLE_DEBUG="yes"
 ])
 
 AC_ARG_WITH(dist,
@@ -1088,8 +1095,8 @@ fi
 if test "x$NEED_WXWIDGETS" = "xyes"; then
 	AC_CHECK_PROG([RC], [wx-config], [yes], [no])
 	if test "x$RC" = "xyes"; then
-		CXXFLAGS="$CXXFLAGS `wx-config --cxxflags`"
-		LDFLAGS="$CXXFLAGS `wx-config --libs`"
+		CXXFLAGS="$CXXFLAGS `wx-config --cxxflags --debug=$ENABLE_DEBUG`"
+		LDFLAGS="$CXXFLAGS `wx-config --libs --debug=$ENABLE_DEBUG`"
 	else
 		AC_MSG_ERROR([*** wxWidgets not installed - unable to build GUI components ***])
 	fi
