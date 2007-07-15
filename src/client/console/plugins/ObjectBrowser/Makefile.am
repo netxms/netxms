@@ -1,7 +1,7 @@
 INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/client/console/include
 
 lib_LTLIBRARIES = libnxmcp_ObjectBrowser.la
-libnxmcp_ObjectBrowser_la_SOURCES = main.cpp
+libnxmcp_ObjectBrowser_la_SOURCES = browser.cpp main.cpp objview.cpp
 libnxmcp_ObjectBrowser_la_LDFLAGS = ../../../../libnetxms/libnetxms.la ../../../../libnxcl/libnxcl.la ../../libnxmc/libnxmc.la
 
 EXTRA_DIST = object_browser.h mcpObjectBrowser.dsp

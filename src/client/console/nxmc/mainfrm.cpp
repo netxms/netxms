@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.3 2007-07-14 23:07:39 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.4 2007-07-15 08:12:45 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -56,7 +56,7 @@ nxMainFrame::nxMainFrame(const wxPoint &pos, const wxSize &size)
 
 	m_mgr.AddPane(CreateNotebook(), wxAuiPaneInfo().Name(_T("notebook")).CenterPane().PaneBorder(false));
 	InitViewTracker(&m_mgr, m_notebook);
-	NXMCInitAUI(&m_mgr, m_notebook);
+	NXMCInitAUI(&m_mgr, m_notebook, this);
 
 	m_mgr.AddPane(new nxConsoleLogger(this), wxAuiPaneInfo().Name(_T("conlog")).Caption(_T("Console Log")).Bottom().BestSize(700, 150));
 

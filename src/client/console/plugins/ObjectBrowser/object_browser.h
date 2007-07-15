@@ -29,4 +29,35 @@
 #include <nxclapi.h>
 #include <nxmc_api.h>
 
+
+//
+// Object view class
+//
+
+class nxObjectView : public wxWindow
+{
+public:
+	nxObjectView(wxWindow *parent);
+};
+
+
+//
+// Object browser class
+//
+
+class nxObjectBrowser : public nxView
+{
+private:
+	wxSplitterWindow *m_wndSplitter;
+
+public:
+	nxObjectBrowser();
+
+	// Event handlers
+protected:
+	void OnSize(wxSizeEvent &event);
+
+	DECLARE_EVENT_TABLE()
+};
+
 #endif

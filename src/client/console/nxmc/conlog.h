@@ -50,6 +50,7 @@ public:
 	static void Init();
 	static void Shutdown();
 
+	// Event handlers
 protected:
 	void OnSize(wxSizeEvent &event);
 

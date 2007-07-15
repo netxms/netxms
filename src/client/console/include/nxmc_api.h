@@ -22,6 +22,8 @@
 #include <wx/config.h>
 #include <wx/stdpaths.h>
 #include <wx/dynarray.h>
+#include <wx/splitter.h>
+#include <wx/treectrl.h>
 #endif
 
 
@@ -148,6 +150,13 @@ typedef struct
 
 
 //
+// Predefined IDs
+//
+
+#define wxID_TREE_CTRL		(wxID_HIGHEST + 500)
+
+
+//
 // Menu/Control Panel item registration
 //
 
@@ -204,7 +213,7 @@ WX_DECLARE_OBJARRAY(nxmcItemRegistration, nxmcArrayOfRegItems);
 // Functions
 //
 
-void LIBNXMC_EXPORTABLE NXMCInitAUI(wxAuiManager *mgr, wxAuiNotebook *nb);
+void LIBNXMC_EXPORTABLE NXMCInitAUI(wxAuiManager *mgr, wxAuiNotebook *nb, wxWindow *defParent);
 void LIBNXMC_EXPORTABLE NXMCInitializationComplete();
 
 nxmcArrayOfRegItems LIBNXMC_EXPORTABLE &NXMCGetRegistrations();
@@ -212,7 +221,8 @@ nxmcArrayOfRegItems LIBNXMC_EXPORTABLE &NXMCGetRegistrations();
 bool LIBNXMC_EXPORTABLE NXMCAddControlPanelItem(NXMC_PLUGIN_HANDLE handle, const TCHAR *name, int id);
 bool LIBNXMC_EXPORTABLE NXMCAddViewMenuItem(NXMC_PLUGIN_HANDLE handle, const TCHAR *name, int id);
 
-bool LIBNXMC_EXPORTABLE NXMCCreateView(nxView *view, int area, const wxBitmap &bitmap = wxNullBitmap);
+wxWindow LIBNXMC_EXPORTABLE *NXMCGetDefaultParent();
+bool LIBNXMC_EXPORTABLE NXMCCreateView(nxView *view, int area);
 
 void LIBNXMC_EXPORTABLE InitViewTracker(wxAuiManager *mgr, wxAuiNotebook *nb);
 void LIBNXMC_EXPORTABLE RegisterUniqueView(const TCHAR *name, nxView *view);

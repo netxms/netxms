@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: main.cpp
+** File: objview.cpp
 **
 **/
 
@@ -25,44 +25,10 @@
 
 
 //
-// Create object browser
+// Constructor
 //
 
-extern "C" void NXMC_PLUGIN_EXPORT nxmcCommandHandler(int cmd)
+nxObjectView::nxObjectView(wxWindow *parent)
+             : wxWindow(parent, wxID_ANY)
 {
-	NXMCCreateView(new nxObjectBrowser, VIEWAREA_MAIN);
 }
-
-
-//
-// Registration function
-//
-
-NXMC_IMPLEMENT_PLUGIN_REGISTRATION(_T("ObjectBrowser"), NETXMS_VERSION_STRING, NXMC_IP_MAIN_MENU)
-
-
-//
-// Initialization function
-//
-
-extern "C" bool NXMC_PLUGIN_EXPORT nxmcInitializePlugin(NXMC_PLUGIN_HANDLE handle)
-{
-	NXMCAddViewMenuItem(handle, _T("&Object Browser\tF3"), 0);
-	return true;
-}
-
-
-//
-// DLL entry point
-//
-
-#ifdef _WIN32
-
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
-{
-	if (dwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hInstance);
-	return TRUE;
-}
-
-#endif

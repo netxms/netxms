@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: main.cpp
+** File: browser.cpp
 **
 **/
 
@@ -25,44 +25,35 @@
 
 
 //
-// Create object browser
+// Event table
 //
 
-extern "C" void NXMC_PLUGIN_EXPORT nxmcCommandHandler(int cmd)
+BEGIN_EVENT_TABLE(nxObjectBrowser, nxView)
+	EVT_SIZE(nxObjectBrowser::OnSize)
+END_EVENT_TABLE()
+
+
+//
+// Constructor
+//
+
+nxObjectBrowser::nxObjectBrowser()
+                : nxView(NXMCGetDefaultParent())
 {
-	NXMCCreateView(new nxObjectBrowser, VIEWAREA_MAIN);
+	SetName(_T("objectbrowser"));
+	SetLabel(_T("Object Browser"));
+	m_wndSplitter = new wxSplitterWindow(this, wxID_ANY);
+	m_wndSplitter->SplitVertically(new wxTreeCtrl(m_wndSplitter, wxID_TREE_CTRL),
+	                               new nxObjectView(m_wndSplitter));
 }
 
 
 //
-// Registration function
+// Resize handler
 //
 
-NXMC_IMPLEMENT_PLUGIN_REGISTRATION(_T("ObjectBrowser"), NETXMS_VERSION_STRING, NXMC_IP_MAIN_MENU)
-
-
-//
-// Initialization function
-//
-
-extern "C" bool NXMC_PLUGIN_EXPORT nxmcInitializePlugin(NXMC_PLUGIN_HANDLE handle)
+void nxObjectBrowser::OnSize(wxSizeEvent &event)
 {
-	NXMCAddViewMenuItem(handle, _T("&Object Browser\tF3"), 0);
-	return true;
+	wxSize size = GetClientSize();
+	m_wndSplitter->SetSize(0, 0, size.x, size.y);
 }
-
-
-//
-// DLL entry point
-//
-
-#ifdef _WIN32
-
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
-{
-	if (dwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hInstance);
-	return TRUE;
-}
-
-#endif

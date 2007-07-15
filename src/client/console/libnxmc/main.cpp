@@ -30,6 +30,7 @@
 
 wxAuiNotebook *g_auiNotebook = NULL;
 wxAuiManager *g_auiManager = NULL;
+wxWindow *g_auiDefaultParent = NULL;
 
 
 //
@@ -120,10 +121,21 @@ void LIBNXMC_EXPORTABLE NXMCInitializationComplete(void)
 // Set AUI elements
 //
 
-void LIBNXMC_EXPORTABLE NXMCInitAUI(wxAuiManager *mgr, wxAuiNotebook *nb)
+void LIBNXMC_EXPORTABLE NXMCInitAUI(wxAuiManager *mgr, wxAuiNotebook *nb, wxWindow *defParent)
 {
 	g_auiManager = mgr;
 	g_auiNotebook = nb;
+	g_auiDefaultParent = defParent;
+}
+
+
+//
+// Get default parent window
+//
+
+wxWindow LIBNXMC_EXPORTABLE *NXMCGetDefaultParent()
+{
+	return g_auiDefaultParent;
 }
 
 

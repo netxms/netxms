@@ -468,9 +468,11 @@ src/client/console/nxmc/rc/wxfb_code.xrc -text
 src/client/console/nxmc/resource.h -text
 src/client/console/plugins/Makefile.am -text
 src/client/console/plugins/ObjectBrowser/Makefile.am -text
+src/client/console/plugins/ObjectBrowser/browser.cpp -text
 src/client/console/plugins/ObjectBrowser/main.cpp -text
 src/client/console/plugins/ObjectBrowser/mcpObjectBrowser.dsp -text
 src/client/console/plugins/ObjectBrowser/object_browser.h -text
+src/client/console/plugins/ObjectBrowser/objview.cpp -text
 src/console/Makefile.am -text
 src/console/PocketPC/AlarmView.cpp -text
 src/console/PocketPC/AlarmView.h -text
