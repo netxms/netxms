@@ -80,6 +80,67 @@ static THREAD_RESULT THREAD_CALL LoginThread(void *arg)
          rcc = NXCSyncObjectsEx(g_hSession, (data->objectCacheMode != 0) ? cacheFile.c_str() : NULL, TRUE);
 	}
 
+   if (rcc == RCC_SUCCESS)
+   {
+      data->dlg->SetStatusText(_T("Loading user database..."));
+      rcc = NXCLoadUserDB(g_hSession);
+   }
+
+   if (rcc == RCC_SUCCESS)
+   {
+      DWORD dwServerTS, dwLocalTS;
+      wxString mibFile;
+      BOOL bNeedDownload;
+
+      data->dlg->SetStatusText(_T("Loading and initializing MIB files..."));
+      mibFile = wxStandardPaths::Get().GetUserDataDir();
+      mibFile += FS_PATH_SEPARATOR;
+      mibFile += _T("netxms.mib");
+      if (SNMPGetMIBTreeTimestamp(mibFile.c_str(), &dwLocalTS) == SNMP_ERR_SUCCESS)
+      {
+         if (NXCGetMIBFileTimeStamp(g_hSession, &dwServerTS) == RCC_SUCCESS)
+         {
+            bNeedDownload = (dwServerTS > dwLocalTS);
+         }
+         else
+         {
+            bNeedDownload = FALSE;
+         }
+      }
+      else
+      {
+         bNeedDownload = TRUE;
+      }
+
+      if (bNeedDownload)
+      {
+         rcc = NXCDownloadMIBFile(g_hSession, mibFile.c_str());
+         if (rcc != RCC_SUCCESS)
+         {
+            wxGetApp().ShowClientError(rcc, _T("Error downloading MIB file from server: %s"));
+            rcc = RCC_SUCCESS;
+         }
+      }
+
+      if (rcc == RCC_SUCCESS)
+      {
+         if (SNMPLoadMIBTree(mibFile.c_str(), &g_mibRoot) == SNMP_ERR_SUCCESS)
+         {
+            g_mibRoot->SetName(_T("[root]"));
+         }
+         else
+         {
+            g_mibRoot = new SNMP_MIBObject(0, _T("[root]"));
+         }
+      }
+   }
+
+   if (rcc == RCC_SUCCESS)
+   {
+      data->dlg->SetStatusText(_T("Loading event information..."));
+      rcc = NXCLoadEventDB(g_hSession);
+   }
+
 	data->dlg->ReportCompletion(rcc);
    return THREAD_OK;
 }

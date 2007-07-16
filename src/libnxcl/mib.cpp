@@ -32,7 +32,7 @@
 // Download MIB file from server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, TCHAR *pszName)
+DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, const TCHAR *pszName)
 {
    DWORD dwRqId, dwRetCode;
    CSCPMessage msg;

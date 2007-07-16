@@ -4,6 +4,7 @@
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nxclapi.h>
+#include <nxsnmp.h>
 
 #include <nxmc_api.h>
 
@@ -124,6 +125,7 @@ void CallPluginCommandHandler(int cmd);
 extern NXC_SESSION g_hSession;
 extern DWORD g_appFlags;
 extern TCHAR g_userName[];
-
+extern SNMP_MIBObject *g_mibRoot;
 
 #endif
+

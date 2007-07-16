@@ -18,6 +18,7 @@ DWORD DoLogin(nxLoginDialog &dlgLogin);
 NXC_SESSION g_hSession = NULL;
 DWORD g_appFlags = 0;
 TCHAR g_userName[MAX_DB_STRING];
+SNMP_MIBObject *g_mibRoot = NULL;
 
 
 //

@@ -132,7 +132,7 @@ void nxObjectBrowser::AddObjectToTree(NXC_OBJECT *object, wxTreeItemId &root)
 	wxTreeItemId item;
 	
    CreateTreeItemText(object, itemText);
-	item = m_wndTreeCtrl->AppendItem(root, itemText, -1, -1);
+	item = m_wndTreeCtrl->AppendItem(root, itemText, -1, -1, new nxObjectTreeItemData(object));
 
    // Don't add childs immediatelly to
    // prevent adding millions of items if node has thousands of interfaces in
@@ -175,12 +175,23 @@ void nxObjectBrowser::CreateTreeItemText(NXC_OBJECT *object, TCHAR *buffer)
 
 void nxObjectBrowser::OnTreeItemExpanding(wxTreeEvent &event)
 {
-	wxTreeItemId item;
+	wxTreeItemId item, temp;
+	NXC_OBJECT *object, *childObject;
+	DWORD i;
 	
 	item = event.GetItem();
-	if (m_wndTreeCtrl->ItemHasChildren(item))
+	temp = m_wndTreeCtrl->GetLastChild(item);
+	if (m_wndTreeCtrl->ItemHasChildren(item) && !temp.IsOk())
 	{
-	wxMessageBox(_T("has children"), _T("item"));
+		object = ((nxObjectTreeItemData *)m_wndTreeCtrl->GetItemData(item))->GetObject();
+      for(i = 0; i < object->dwNumChilds; i++)
+      {
+         childObject = NXCFindObjectById(NXMCGetSession(), object->pdwChildList[i]);
+         if (childObject != NULL)
+         {
+            AddObjectToTree(childObject, item);
+         }
+      }
 	}
 }
 

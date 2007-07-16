@@ -56,6 +56,22 @@ public:
 
 
 //
+// Object tree item data
+//
+
+class nxObjectTreeItemData : public wxTreeItemData
+{
+private:
+	NXC_OBJECT *m_object;
+	
+public:
+	nxObjectTreeItemData(NXC_OBJECT *object) : wxTreeItemData() { m_object = object; }
+	
+	NXC_OBJECT *GetObject() { return m_object; }
+};
+
+
+//
 // Object browser class
 //
 

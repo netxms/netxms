@@ -899,7 +899,7 @@ DWORD NXCL_Session::SetSubscriptionStatus(DWORD dwChannels, int nOperation)
 // Prepares file transfer from server to client
 //
 
-DWORD NXCL_Session::PrepareFileTransfer(TCHAR *pszFile, DWORD dwRqId)
+DWORD NXCL_Session::PrepareFileTransfer(const TCHAR *pszFile, DWORD dwRqId)
 {
    DWORD dwResult;
 

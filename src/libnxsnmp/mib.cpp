@@ -278,7 +278,7 @@ void SNMP_MIBObject::WriteToFile(ZFile *pFile, DWORD dwFlags)
 // Save MIB tree to file
 //
 
-DWORD LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(TCHAR *pszFile, SNMP_MIBObject *pRoot,
+DWORD LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *pszFile, SNMP_MIBObject *pRoot,
                                            DWORD dwFlags)
 {
    FILE *pFile;
@@ -426,7 +426,7 @@ BOOL SNMP_MIBObject::ReadFromFile(ZFile *pFile)
 // Load MIB tree from file
 //
 
-DWORD LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(TCHAR *pszFile, SNMP_MIBObject **ppRoot)
+DWORD LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject **ppRoot)
 {
    FILE *pFile;
    ZFile *pZFile;
@@ -476,7 +476,7 @@ DWORD LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(TCHAR *pszFile, SNMP_MIBObject **ppRo
 // Get timestamp from saved MIB tree
 //
 
-DWORD LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(TCHAR *pszFile, DWORD *pdwTimestamp)
+DWORD LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(const TCHAR *pszFile, DWORD *pdwTimestamp)
 {
    FILE *pFile;
    SNMP_MIB_HEADER header;

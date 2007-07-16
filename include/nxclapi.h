@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.270 2007-07-11 19:46:57 victor Exp $ */
+/* $Id: nxclapi.h,v 1.271 2007-07-16 17:02:47 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -1873,7 +1873,7 @@ DWORD LIBNXCL_EXPORTABLE NXCPushDCIData(NXC_SESSION hSession, DWORD dwNumItems,
                                         NXC_DCI_PUSH_DATA *pItems, DWORD *pdwIndex);
 
 DWORD LIBNXCL_EXPORTABLE NXCGetMIBFileTimeStamp(NXC_SESSION hSession, DWORD *pdwTimeStamp);
-DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, TCHAR *pszName);
+DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, const TCHAR *pszName);
 
 DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEventPolicy);
 DWORD LIBNXCL_EXPORTABLE NXCCloseEventPolicy(NXC_SESSION hSession);

@@ -226,7 +226,7 @@ public:
 
    DWORD SetSubscriptionStatus(DWORD dwChannels, int nOperation);
 
-   DWORD PrepareFileTransfer(TCHAR *pszFile, DWORD dwRqId);
+   DWORD PrepareFileTransfer(const TCHAR *pszFile, DWORD dwRqId);
    DWORD WaitForFileTransfer(DWORD dwTimeout);
    void AbortFileTransfer(void);
 
