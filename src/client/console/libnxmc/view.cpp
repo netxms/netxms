@@ -33,7 +33,6 @@ bool LIBNXMC_EXPORTABLE NXMCCreateView(nxView *view, int area)
 	if ((g_auiManager == NULL) || (g_auiNotebook == NULL))
 		return false;
 
-wxLogDebug("NAME=%s LABEL=%s", view->GetName().c_str(), view->GetLabel().c_str());
 	switch(area)
 	{
 		case VIEWAREA_MAIN:

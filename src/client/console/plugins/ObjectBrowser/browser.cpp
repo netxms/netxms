@@ -180,7 +180,7 @@ void nxObjectBrowser::OnTreeItemExpanding(wxTreeEvent &event)
 	item = event.GetItem();
 	if (m_wndTreeCtrl->ItemHasChildren(item))
 	{
-	wxMessageBox("has children", "item");
+	wxMessageBox(_T("has children"), _T("item"));
 	}
 }
 
