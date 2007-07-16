@@ -12,7 +12,7 @@ extern "C"
 EOT
 
 for sa in $LIST; do
-   echo "   BOOL NxSubAgentInit_$sa(NETXMS_SUBAGENT_INFO **, TCHAR *);"
+   echo "   BOOL NxSubAgentRegister_$sa(NETXMS_SUBAGENT_INFO **, TCHAR *);"
 done
 
 cat << EOT
@@ -23,7 +23,7 @@ void InitStaticSubagents(void)
 EOT
 
 for sa in $LIST; do
-   echo "   InitSubAgent(NULL, \"static:$sa\", NxSubAgentInit_$sa, \"NxSubAgentInit_$sa\");"
+   echo "   InitSubAgent(NULL, \"static:$sa\", NxSubAgentRegister_$sa, \"NxSubAgentRegister_$sa\");"
 done
 
 echo "}"
