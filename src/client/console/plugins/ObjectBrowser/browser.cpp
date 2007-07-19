@@ -194,4 +194,3 @@ void nxObjectBrowser::OnTreeItemExpanding(wxTreeEvent &event)
       }
 	}
 }
-

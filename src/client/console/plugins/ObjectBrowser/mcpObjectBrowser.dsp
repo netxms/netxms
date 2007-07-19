@@ -111,7 +111,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy    Release_UNICODE\ObjectBrowser.so    C:\NetXMS\lib\nxmc\ 
+PostBuild_Cmds=copy     Release_UNICODE\ObjectBrowser.so     C:\NetXMS\lib\nxmc\ 
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "mcpObjectBrowser - Win32 Debug UNICODE"
