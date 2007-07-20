@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
-	<object class="wxBitmap" name="icoSmallNode">icons/small/node.png</object>
+
+	<-- Small icons -->
+	<object class="wxIcon" name="icoSmallNetwork">icons/small/network.xpm</object>
+	<object class="wxIcon" name="icoSmallSubnet">icons/small/subnet.xpm</object>
+	<object class="wxIcon" name="icoSmallNode">icons/small/node.xpm</object>
+	<object class="wxIcon" name="icoSmallCluster">icons/small/cluster.xpm</object>
+	<object class="wxIcon" name="icoSmallInterface">icons/small/interface.xpm</object>
+	<object class="wxIcon" name="icoSmallNetworkService">icons/small/network_service.xpm</object>
+	<object class="wxIcon" name="icoSmallTemplate">icons/small/template.xpm</object>
+	<object class="wxIcon" name="icoSmallTemplateGroup">icons/small/template_group.xpm</object>
+	<object class="wxIcon" name="icoSmallTemplateRoot">icons/small/template_root.xpm</object>
+
+	<-- Busy dialog -->
 	<object class="wxDialog" name="nxBusyDialog">
 		<size>436,63</size>
 		<title>NetXMS Console - Processing</title>

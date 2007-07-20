@@ -112,7 +112,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy    Release_UNICODE\libnxmc.dll    C:\NetXMS\bin\ 
+PostBuild_Cmds=copy     Release_UNICODE\libnxmc.dll     C:\NetXMS\bin\ 
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "libnxmc - Win32 Debug UNICODE"
@@ -158,6 +158,10 @@ PostBuild_Cmds=copy Debug_UNICODE\libnxmc.dll ..\..\..\..\bin
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
+# Begin Source File
+
+SOURCE=.\image.cpp
+# End Source File
 # Begin Source File
 
 SOURCE=.\main.cpp

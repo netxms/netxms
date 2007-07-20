@@ -25,6 +25,7 @@
 #include <wx/splitter.h>
 #include <wx/treectrl.h>
 #include <wx/notebook.h>
+#include <wx/imaglist.h>
 #endif
 
 
@@ -56,6 +57,13 @@
 #define NXMC_IP_CONTROL_PANEL			0x0001
 #define NXMC_IP_MAIN_MENU				0x0002
 #define NXMC_IP_PLUGIN_CONTEXT_MENU	0x0004
+
+
+//
+// Image lists
+//
+
+#define IMAGE_LIST_OBJECTS_SMALL		1
 
 
 //
@@ -163,7 +171,7 @@ typedef struct
 //
 
 BEGIN_DECLARE_EVENT_TYPES()
-    DECLARE_EVENT_TYPE(nxEVT_REFRESH_VIEW, 0)
+    DECLARE_EXPORTED_EVENT_TYPE(LIBNXMC_EXPORTABLE, nxEVT_REFRESH_VIEW, 0)
 END_DECLARE_EVENT_TYPES()
 
 #define EVT_LIBNXMC_EVENT(evt, fn) \
@@ -254,6 +262,9 @@ void LIBNXMC_EXPORTABLE ActivateView(nxView *view);
 
 const TCHAR LIBNXMC_EXPORTABLE *NXMCGetStatusText(int status);
 const TCHAR LIBNXMC_EXPORTABLE *NXMCGetStatusTextSmall(int status);
+
+void LIBNXMC_EXPORTABLE NXMCInitImageLists();
+wxImageList LIBNXMC_EXPORTABLE *NXMCGetImageList(int list);
 
 #endif
 

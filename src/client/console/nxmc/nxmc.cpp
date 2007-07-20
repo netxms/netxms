@@ -120,6 +120,7 @@ bool nxApp::OnInit()
 	if (!Connect())
 		return false;
 	NXMCSetSession(g_hSession);
+	NXMCInitImageLists();
 
 	m_mainFrame = new nxMainFrame(wxDefaultPosition, wxSize(700, 500));
 	SetTopWindow(m_mainFrame);

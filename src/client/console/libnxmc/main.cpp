@@ -37,7 +37,7 @@ wxWindow *g_auiDefaultParent = NULL;
 // Custom events
 //
 
-DEFINE_LOCAL_EVENT_TYPE(nxEVT_REFRESH_VIEW)
+DEFINE_EVENT_TYPE(nxEVT_REFRESH_VIEW)
 
 
 //

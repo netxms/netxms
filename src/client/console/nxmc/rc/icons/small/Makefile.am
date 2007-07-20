@@ -8,20 +8,14 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = icons
-
-resourcedir = $(datadir)/nxmc
-resource_DATA = nxmc.xrs
-
 EXTRA_DIST = \
-	login.png \
-	nxmc.fbp \
-	nxmc.xrs \
-	processing.png \
-	wxfb_code.xrc
-
-nxmc.xrs: resource.xrc manual.xrc
-	wxrc resource.xrc manual.xrc -o nxmc.xrs
-
-resource.xrc: wxfb_code.xrc
-	$(PERL) @top_builddir@/tools/update_xrc.pl < wxfb_code.xrc > $@
+	cluster.xpm \
+	condition.xpm \
+	container.xpm \
+	interface.xpm \
+	network.xpm \
+	network_service.xpm \
+	node.xpm \
+	subnet.xpm \
+	template.xpm \
+	template_root.xpm

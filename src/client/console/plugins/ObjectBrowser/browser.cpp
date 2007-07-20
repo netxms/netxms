@@ -48,6 +48,7 @@ nxObjectBrowser::nxObjectBrowser()
 	m_wndSplitter->SetMinimumPaneSize(30);
 	m_wndTreeCtrl = new wxTreeCtrl(m_wndSplitter, wxID_TREE_CTRL, wxDefaultPosition, wxDefaultSize,
 	                               wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_HIDE_ROOT);
+	m_wndTreeCtrl->SetImageList(NXMCGetImageList(IMAGE_LIST_OBJECTS_SMALL));
 	m_wndObjectView = new nxObjectView(m_wndSplitter);
 	m_wndSplitter->SplitVertically(m_wndTreeCtrl, m_wndObjectView, 250);
 	RegisterUniqueView(_T("objectbrowser"), this);
@@ -132,7 +133,7 @@ void nxObjectBrowser::AddObjectToTree(NXC_OBJECT *object, wxTreeItemId &root)
 	wxTreeItemId item;
 	
    CreateTreeItemText(object, itemText);
-	item = m_wndTreeCtrl->AppendItem(root, itemText, -1, -1, new nxObjectTreeItemData(object));
+	item = m_wndTreeCtrl->AppendItem(root, itemText, object->iClass, object->iClass, new nxObjectTreeItemData(object));
 
    // Don't add childs immediatelly to
    // prevent adding millions of items if node has thousands of interfaces in
