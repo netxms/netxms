@@ -66,6 +66,7 @@ void nxObjOverviewHeader::OnPaint(wxPaintEvent &event)
 	if (m_object == NULL)
 		return;
 		
+	dc.SetFont(GetFont());
 	dc.DrawText(m_object->szName, 40, 3);
 }
 
@@ -127,6 +128,7 @@ void nxObjectOverview::SetObject(NXC_OBJECT *object)
 	m_attrList->DeleteAllItems();
 	InsertItem(_T("ID"), m_object->dwId);
 	InsertItem(_T("Class"), NXMCGetClassName(m_object->iClass));
+	InsertItem(_T("Status"), NXMCGetStatusText(m_object->iStatus));
 	if (m_object->dwIpAddr != 0)
 		InsertItem(_T("IP Address"), IpToStr(m_object->dwIpAddr, temp));
 

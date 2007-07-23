@@ -43,6 +43,8 @@ nxObjectView::nxObjectView(wxWindow *parent)
 {
 	wxImageList *imgList;
 
+	SetOwnFont(wxFont(12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, _T("Verdana")));
+
 	m_object = NULL;
 	m_notebook = new wxAuiNotebook(this, wxID_NOTEBOOK_CTRL, wxDefaultPosition, wxDefaultSize, 0);
 	m_headerOffset = 33;
@@ -80,6 +82,7 @@ void nxObjectView::OnPaint(wxPaintEvent &event)
 	if (m_object != NULL)
 	{
 		dc.SetTextForeground(*wxWHITE);
+		dc.SetFont(GetFont());
 		dc.DrawLabel(m_object->szName, wxRect(5, 0, size.x - 10, m_headerOffset), wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL);
 	}
 }
