@@ -15,7 +15,7 @@ COMMENT=	NetXMS - network monitoring system
 
 NO_PACKAGE=	yes
 GNU_CONFIGURE=	yes
-CONFIGURE_TARGET=       --build=${MACHINE_ARCH}-portbld-freebsd${OSREL}
+CONFIGURE_TARGET=	--build=${MACHINE_ARCH}-portbld-freebsd${OSREL}
 
 CC=	gcc
 CXX=	g++
@@ -34,14 +34,14 @@ OPTIONS=	SERVER          "Install NetXMS server & agent" off\
 		MYSQL             "Enable MySQL support" off \
 		PGSQL             "Enable PostgreSQL support" off
 
-NETXMS_OWN=     netxms
-NETXMS_GRP=     netxms
+NETXMS_OWN=	netxms
+NETXMS_GRP=	netxms
 
 .include <bsd.port.pre.mk>
 
 .if !defined(WITH_SERVER)
 .if defined(WITH_MYSQL) || !defined(WITHOUT_PGSQL)
-IGNORE= is useless database support without a SERVER. Please (re)run 'make config' and choose SERVER with database
+IGNORE=	is useless database support without a SERVER. Please (re)run 'make config' and choose SERVER with database
 .endif
 .endif
 
