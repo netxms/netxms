@@ -1,10 +1,10 @@
-# $Id: configure.ac,v 1.260 2007-07-15 14:18:38 victor Exp $
+# $Id: configure.ac,v 1.261 2007-07-23 15:58:19 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
 #
 
-AC_INIT([NetXMS], [0.2.19-rc1], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.19-rc2], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -311,18 +311,19 @@ if test $? = 0; then
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds"
 fi
 
+check_substr "$COMPONENTS" "console"
+if test $? = 0; then
+	BUILD_CONSOLE="yes"
+	NEED_WXWIDGETS="yes"
+	MODULES="$MODULES libnxsnmp"
+	CLIENT_COMPONENTS="$CLIENT_COMPONENTS console"
+fi
+
 check_substr "$COMPONENTS" "client"
 if test $? = 0; then
 	BUILD_CLIENT="yes"
 	NEED_ZLIB="yes"
 	MODULES="$MODULES libnxmap libnxcl nxevent nxpush nxreport console client"
-fi
-
-check_substr "$COMPONENTS" "console"
-if test $? = 0; then
-	BUILD_CONSOLE="yes"
-	NEED_WXWIDGETS="yes"
-	CLIENT_COMPONENTS="$CLIENT_COMPONENTS console"
 fi
 
 check_substr "$COMPONENTS" "agent"
@@ -1196,7 +1197,11 @@ AC_CONFIG_FILES([
 	src/client/console/libnxmc/Makefile
 	src/client/console/nxmc/Makefile
 	src/client/console/nxmc/rc/Makefile
+	src/client/console/nxmc/rc/icons/Makefile
+	src/client/console/nxmc/rc/icons/small/Makefile
 	src/client/console/plugins/Makefile
+	src/client/console/plugins/AlarmBrowser/Makefile
+	src/client/console/plugins/AlarmBrowser/rc/Makefile
 	src/client/console/plugins/ObjectBrowser/Makefile
 	src/console/Makefile
 	src/console/nxuilib/Makefile

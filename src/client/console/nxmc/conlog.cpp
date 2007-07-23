@@ -33,6 +33,10 @@ void nxConsoleLogger::Init()
 	                               wxDefaultPosition, wxDefaultSize,
 	                               wxTE_MULTILINE | wxSUNKEN_BORDER);
 	m_logOld = wxLog::SetActiveTarget(new wxLogTextCtrl(m_wndTextCtrl));
+//	wxLogChain *chain = new wxLogChain(new wxLogTextCtrl(m_wndTextCtrl));
+#if defined(__WXDEBUG__) && !defined(_WIN32)
+	wxLogChain *chain = new wxLogChain(new wxLogStderr);
+#endif
 	wxLogMessage(_T("Message Logger started"));
 }
 

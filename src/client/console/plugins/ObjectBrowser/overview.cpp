@@ -63,6 +63,9 @@ void nxObjOverviewHeader::OnPaint(wxPaintEvent &event)
 {
 	wxPaintDC dc(this);
 
+	if (m_object == NULL)
+		return;
+		
 	dc.DrawText(m_object->szName, 40, 3);
 }
 
@@ -71,17 +74,17 @@ void nxObjOverviewHeader::OnPaint(wxPaintEvent &event)
 // Constructor
 //
 
-nxObjectOverview::nxObjectOverview(wxWindow *parent)
+nxObjectOverview::nxObjectOverview(wxWindow *parent, NXC_OBJECT *object)
                  : wxPanel(parent, wxID_ANY)
 {
 	wxBoxSizer *sizer;
 
-	Hide();
 	SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
 
-	m_object = NULL;
+	m_object = object;
 
 	m_header = new nxObjOverviewHeader(this);
+	m_header->SetObject(object);
 
 	sizer = new wxBoxSizer(wxVERTICAL);
 	sizer->Add(m_header, 0, wxALL | wxEXPAND, 7);

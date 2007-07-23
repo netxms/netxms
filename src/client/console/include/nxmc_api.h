@@ -49,24 +49,24 @@
 
 #define MAX_PLUGIN_NAME_LEN      256
 #define MAX_PLUGIN_VERSION_LEN   64
-#define NXMC_PLUGIN_ID_LIMIT		100
-#define NXMC_MAX_PLUGINS			100
+#define NXMC_PLUGIN_ID_LIMIT     100
+#define NXMC_MAX_PLUGINS         100
 
 
 //
 // Integration points
 //
 
-#define NXMC_IP_CONTROL_PANEL			0x0001
-#define NXMC_IP_MAIN_MENU				0x0002
-#define NXMC_IP_PLUGIN_CONTEXT_MENU	0x0004
+#define NXMC_IP_CONTROL_PANEL           0x0001
+#define NXMC_IP_MAIN_MENU               0x0002
+#define NXMC_IP_PLUGIN_CONTEXT_MENU     0x0004
 
 
 //
 // Image lists
 //
 
-#define IMAGE_LIST_OBJECTS_SMALL		1
+#define IMAGE_LIST_OBJECTS_SMALL    1
 #define IMAGE_LIST_OBJECTS_NORMAL   2
 #define IMAGE_LIST_STATUS_SMALL     3
 
@@ -93,15 +93,17 @@
 
 
 //
-// DLL instance
+// Windows/UNIX compatibility defines
 //
 
 #ifdef _WIN32
-#define NXMC_LIB_INSTANCE				HINSTANCE
-#define NXMC_LIB_INSTANCE_ARG(x)		(x)
+#define NXMC_LIB_INSTANCE          HINSTANCE
+#define NXMC_LIB_INSTANCE_ARG(x)   (x)
+#define wxMAKEINTRESOURCE(x)       MAKEINTRESOURCE(x)
 #else
-#define NXMC_LIB_INSTANCE				int
-#define NXMC_LIB_INSTANCE_ARG(x)		0
+#define NXMC_LIB_INSTANCE          int
+#define NXMC_LIB_INSTANCE_ARG(x)   0
+#define wxMAKEINTRESOURCE(x)       NULL
 #endif
 
 

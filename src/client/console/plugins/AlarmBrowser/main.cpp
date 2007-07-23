@@ -69,7 +69,7 @@ NXMC_IMPLEMENT_PLUGIN_REGISTRATION(_T("AlarmBrowser"), NETXMS_VERSION_STRING, NX
 
 extern "C" bool NXMC_PLUGIN_EXPORT nxmcInitializePlugin(NXMC_PLUGIN_HANDLE handle)
 {
-	if (!NXMCLoadResources(_T("AlarmBrowser.xrs"), NXMC_LIB_INSTANCE_ARG(s_libInstance), MAKEINTRESOURCE(IDR_XRS)))
+	if (!NXMCLoadResources(_T("AlarmBrowser.xrs"), NXMC_LIB_INSTANCE_ARG(s_libInstance), wxMAKEINTRESOURCE(IDR_XRS)))
 		wxLogWarning(_T("AlarmBrowser: cannot load resource file"));
 	NXMCAddViewMenuItem(handle, _T("&Alarm Browser\tF8"), 0);
 	return true;

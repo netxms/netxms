@@ -48,13 +48,13 @@ static void ClientEventHandler(NXC_SESSION session, DWORD event, DWORD code, voi
 {
 	switch(event)
 	{
-      case NXC_EVENT_NOTIFICATION:
-         switch(code)
-         {
-            case NX_NOTIFY_NEW_ALARM:
-            case NX_NOTIFY_ALARM_DELETED:
-            case NX_NOTIFY_ALARM_CHANGED:
-            case NX_NOTIFY_ALARM_TERMINATED:
+		case NXC_EVENT_NOTIFICATION:
+			switch(code)
+			{
+				case NX_NOTIFY_NEW_ALARM:
+				case NX_NOTIFY_ALARM_DELETED:
+				case NX_NOTIFY_ALARM_CHANGED:
+				case NX_NOTIFY_ALARM_TERMINATED:
 					NXMCUpdateAlarms(code, (NXC_ALARM *)arg);
 					break;
 				default:
@@ -83,14 +83,14 @@ static THREAD_RESULT THREAD_CALL LoginThread(void *arg)
 	// Synchronize objects
 	if (rcc == RCC_SUCCESS)
 	{
-      BYTE serverId[8];
+		BYTE serverId[8];
 		TCHAR serverIdAsText[32];
 		wxString cacheFile;
 
-      NXCSetEventHandler(g_hSession, ClientEventHandler);
+		NXCSetEventHandler(g_hSession, ClientEventHandler);
 
-      data->dlg->SetStatusText(_T("Synchronizing objects..."));
-      if (data->objectCacheMode != 0)
+		data->dlg->SetStatusText(_T("Synchronizing objects..."));
+		if (data->objectCacheMode != 0)
 		{
 			NXCGetServerID(g_hSession, serverId);
 			BinToStr(serverId, 8, serverIdAsText);
@@ -170,31 +170,31 @@ static THREAD_RESULT THREAD_CALL LoginThread(void *arg)
       rcc = NXCLoadEventDB(g_hSession);
    }
 
-   // Synchronizing alarms
-   if (rcc == RCC_SUCCESS)
-   {
+	// Synchronizing alarms
+	if (rcc == RCC_SUCCESS)
+	{
 		NXC_ALARM *list;
 		DWORD count;
 
-      data->dlg->SetStatusText(_T("Synchronizing alarms..."));
-      rcc = NXCLoadAllAlarms(g_hSession, FALSE, &count, &list);
-      if (rcc == RCC_SUCCESS)
+		data->dlg->SetStatusText(_T("Synchronizing alarms..."));
+		rcc = NXCLoadAllAlarms(g_hSession, FALSE, &count, &list);
+		if (rcc == RCC_SUCCESS)
 		{
 			NXMCInitAlarms(count, list);
 			safe_free(list);
-         rcc = NXCSubscribe(g_hSession, NXC_CHANNEL_ALARMS);
+			rcc = NXCSubscribe(g_hSession, NXC_CHANNEL_ALARMS);
 		}
-   }
+	}
 
-   // Disconnect if some of post-login operations was failed
-   if (rcc != RCC_SUCCESS)
-   {
-      NXCDisconnect(g_hSession);
-      g_hSession = NULL;
-   }
+	// Disconnect if some of post-login operations was failed
+	if (rcc != RCC_SUCCESS)
+	{
+		NXCDisconnect(g_hSession);
+		g_hSession = NULL;
+	}
 
 	data->dlg->ReportCompletion(rcc);
-   return THREAD_OK;
+	return THREAD_OK;
 }
 
 

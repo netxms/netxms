@@ -97,7 +97,9 @@ bool LIBNXMC_EXPORTABLE NXMCLoadResources(const TCHAR *name, NXMC_LIB_INSTANCE i
 	wxString xrsFile = _T("memory:");
 #else
 	wxString xrsFile = wxStandardPaths::Get().GetResourcesDir();
+	xrsFile += FS_PATH_SEPARATOR;
 #endif
 	xrsFile += name;
+	wxLogDebug(_T("Loading resource file %s"), xrsFile.c_str());
 	return wxXmlResource::Get()->Load(xrsFile);
 }

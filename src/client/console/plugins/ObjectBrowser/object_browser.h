@@ -77,7 +77,7 @@ private:
 	void InsertItem(const TCHAR *name, DWORD value);
 
 public:
-	nxObjectOverview(wxWindow *parent);
+	nxObjectOverview(wxWindow *parent, NXC_OBJECT *object);
 
 	void SetObject(NXC_OBJECT *object);
 };

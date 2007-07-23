@@ -12,7 +12,7 @@ nxmc_SOURCES = \
 	mainfrm.cpp \
 	nxmc.cpp \
 	plugins.cpp
-nxmc_LDADD = ../../../libnetxms/libnetxms.la ../../../libnxcl/libnxcl.la ../../../libnxmap/libnxmap.la ../libnxmc/libnxmc.la
+nxmc_LDADD = ../../../libnetxms/libnetxms.la ../../../libnxcl/libnxcl.la ../../../libnxmap/libnxmap.la ../../../libnxsnmp/libnxsnmp.la ../libnxmc/libnxmc.la
 
 EXTRA_DIST = \
 	nxmc.dsp \

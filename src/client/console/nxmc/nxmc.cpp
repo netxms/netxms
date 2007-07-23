@@ -81,7 +81,7 @@ bool nxApp::OnInit()
 	wxImage::AddHandler(new wxXPMHandler);
 
 	wxXmlResource::Get()->InitAllHandlers();
-	if (!NXMCLoadResources(_T("nxmc.xrs"), NXMC_LIB_INSTANCE_ARG(wxGetInstance()), MAKEINTRESOURCE(IDR_XRS)))
+	if (!NXMCLoadResources(_T("nxmc.xrs"), NXMC_LIB_INSTANCE_ARG(wxGetInstance()), wxMAKEINTRESOURCE(IDR_XRS)))
 		return false;
 
 	// Create application directories if needed
