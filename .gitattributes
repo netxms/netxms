@@ -233,6 +233,15 @@ netware/Makefile.inc -text
 netware/bin/.keep -text
 netware/nlmconv.inc -text
 /netxms.dsw -text
+packages/freebsd/Makefile -text
+packages/freebsd/distinfo -text
+packages/freebsd/files/netxmsd.in -text
+packages/freebsd/files/nxagentd.in -text
+packages/freebsd/files/nxhttpd.in -text
+packages/freebsd/pkg-deinstall -text
+packages/freebsd/pkg-descr -text
+packages/freebsd/pkg-install -text
+packages/freebsd/pkg-plist -text
 /reconf -text
 sql/.cvsignore -text
 sql/Makefile.am -text
