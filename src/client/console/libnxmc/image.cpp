@@ -29,6 +29,8 @@
 //
 
 static wxImageList s_imgObjectsSmall(16, 16);	// Small object images
+static wxImageList s_imgObjectsNormal(32, 32);	// Normal object images
+static wxImageList s_imgStatusSmall(16, 16);		// Small status/severity images
 
 
 //
@@ -37,6 +39,7 @@ static wxImageList s_imgObjectsSmall(16, 16);	// Small object images
 
 void LIBNXMC_EXPORTABLE NXMCInitImageLists()
 {
+	// Small object icons
 	s_imgObjectsSmall.Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallUnknown")));
 	s_imgObjectsSmall.Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallSubnet")));
 	s_imgObjectsSmall.Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallNode")));
@@ -52,6 +55,17 @@ void LIBNXMC_EXPORTABLE NXMCInitImageLists()
 	s_imgObjectsSmall.Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallVPNConnector")));
 	s_imgObjectsSmall.Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallCondition")));
 	s_imgObjectsSmall.Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallCluster")));
+
+	// Small status/severity icons
+	s_imgStatusSmall.Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallNormal")));
+	s_imgStatusSmall.Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallWarning")));
+	s_imgStatusSmall.Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallMinor")));
+	s_imgStatusSmall.Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallMajor")));
+	s_imgStatusSmall.Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallCritical")));
+	s_imgStatusSmall.Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallUnknown")));
+	s_imgStatusSmall.Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallUnmanaged")));
+	s_imgStatusSmall.Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallDisabled")));
+	s_imgStatusSmall.Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallTesting")));
 }
 
 
@@ -65,6 +79,37 @@ wxImageList LIBNXMC_EXPORTABLE *NXMCGetImageList(int list)
 	{
 		case IMAGE_LIST_OBJECTS_SMALL:
 			return &s_imgObjectsSmall;
+		case IMAGE_LIST_OBJECTS_NORMAL:
+			return &s_imgObjectsNormal;
+		case IMAGE_LIST_STATUS_SMALL:
+			return &s_imgStatusSmall;
 	}
 	return NULL;
+}
+
+
+//
+// Get copy of image list
+//
+
+wxImageList LIBNXMC_EXPORTABLE *NXMCGetImageListCopy(int list)
+{
+	wxImageList *newList, *origList;
+
+	origList = NXMCGetImageList(list);
+	if (origList != NULL)
+	{
+		int i, w, h, count;
+
+		origList->GetSize(0, w, h);
+		count = origList->GetImageCount();
+		newList = new wxImageList(w, h, true, count);
+		for(i = 0; i < count; i++)
+			newList->Add(origList->GetIcon(i));
+	}
+	else
+	{
+		newList = NULL;
+	}
+	return newList;
 }

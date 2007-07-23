@@ -112,7 +112,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy     Release_UNICODE\libnxmc.dll     C:\NetXMS\bin\ 
+PostBuild_Cmds=copy        Release_UNICODE\libnxmc.dll        C:\NetXMS\bin\ 
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "libnxmc - Win32 Debug UNICODE"
@@ -160,6 +160,14 @@ PostBuild_Cmds=copy Debug_UNICODE\libnxmc.dll ..\..\..\..\bin
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\alarms.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\heading.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\image.cpp
 # End Source File
 # Begin Source File
@@ -169,6 +177,10 @@ SOURCE=.\main.cpp
 # Begin Source File
 
 SOURCE=.\nxview.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\tools.cpp
 # End Source File
 # Begin Source File
 
@@ -182,6 +194,10 @@ SOURCE=.\viewtracker.cpp
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=.\heading.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\libnxmc.h

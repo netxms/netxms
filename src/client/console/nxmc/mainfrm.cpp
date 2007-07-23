@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.5 2007-07-15 14:18:38 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.6 2007-07-23 06:39:12 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -42,6 +42,10 @@ BEGIN_EVENT_TABLE(nxMainFrame, wxFrame)
 	EVT_MENU(wxID_PANE_DETACH, nxMainFrame::OnPaneDetach)
 	EVT_MENU(wxID_PANE_FLOAT, nxMainFrame::OnPaneFloat)
 	EVT_MENU(wxID_PANE_MOVE_TO_NOTEBOOK, nxMainFrame::OnPaneMoveToNotebook)
+	EVT_MENU(wxID_TAB_CLOSE, nxMainFrame::OnTabClose)
+	EVT_MENU(wxID_TAB_DETACH, nxMainFrame::OnTabDetach)
+	EVT_MENU(wxID_TAB_FLOAT, nxMainFrame::OnTabFloat)
+	EVT_MENU(wxID_TAB_DOCK, nxMainFrame::OnTabDock)
 	EVT_MENU_RANGE(wxID_PLUGIN_RANGE_START, wxID_PLUGIN_RANGE_END, nxMainFrame::OnPluginCommand)
 END_EVENT_TABLE()
 
@@ -53,6 +57,9 @@ END_EVENT_TABLE()
 nxMainFrame::nxMainFrame(const wxPoint &pos, const wxSize &size)
             :wxFrame((wxWindow *)NULL, wxID_ANY, _T("NetXMS Management Console"), pos, size)
 {
+	m_currPane = NULL;
+	m_currTab = NULL;
+
 	m_mgr.SetManagedWindow(this);
 
 	m_mgr.AddPane(CreateNotebook(), wxAuiPaneInfo().Name(_T("notebook")).CenterPane().PaneBorder(false));
@@ -87,10 +94,9 @@ wxAuiNotebook *nxMainFrame::CreateNotebook()
    // create the notebook off-window to avoid flicker
    wxSize clientSize = GetClientSize();
    
-   m_notebook = new wxAuiNotebook(this, wxID_ANY,
+   m_notebook = new nxAuiNotebook(this,
                                   wxPoint(clientSize.x, clientSize.y),
-                                  wxSize(430,200),
-                                  wxAUI_NB_DEFAULT_STYLE | wxAUI_NB_TAB_EXTERNAL_MOVE | wxNO_BORDER);
+                                  wxSize(430,200));
    
    wxBitmap bmp = wxArtProvider::GetBitmap(wxART_NORMAL_FILE, wxART_OTHER, wxSize(16,16));
    m_notebook->AddPage(new wxTextCtrl(m_notebook, wxID_ANY, wxT("Some text"),
@@ -200,6 +206,16 @@ void nxMainFrame::OnContextMenu(wxContextMenuEvent &event)
 		menu.Append(wxID_PANE_CLOSE, _T("&Close"));
 		PopupMenu(&menu);
 	}
+	else if ((m_currTab = m_notebook->TabFromPoint(event.GetPosition())) != NULL)
+	{
+		wxMenu menu;
+
+		menu.Append(wxID_TAB_DETACH, _T("&Detach"));
+		menu.Append(wxID_TAB_FLOAT, _T("&Float"));
+		menu.Append(wxID_TAB_DOCK, _T("D&ock"));
+		menu.Append(wxID_TAB_CLOSE, _T("&Close"));
+		PopupMenu(&menu);
+	}
 	else
 	{
 		event.Skip();
@@ -276,6 +292,69 @@ void nxMainFrame::OnPaneMoveToNotebook(wxCommandEvent &event)
 
 
 //
+// Close pane on request from context menu
+//
+
+void nxMainFrame::OnTabClose(wxCommandEvent &event)
+{
+	if (m_currTab != NULL)
+	{
+		m_notebook->DeletePage(m_notebook->GetPageIndex(m_currTab));
+	}
+}
+
+
+//
+// Detach pane on request from context menu
+//
+
+void nxMainFrame::OnTabDetach(wxCommandEvent &event)
+{
+	nxFrame *frame;
+
+	if (m_currTab != NULL)
+	{
+		wxString caption = _T("NetXMS Console - ") + m_currTab->GetLabel();
+		m_notebook->RemovePage(m_notebook->GetPageIndex(m_currTab));
+		frame = new nxFrame(caption, m_currTab);
+		frame->Show(true);
+	}
+}
+
+
+//
+// Float tab on request from context menu
+//
+
+void nxMainFrame::OnTabFloat(wxCommandEvent &event)
+{
+	if (m_currTab != NULL)
+	{
+		m_notebook->RemovePage(m_notebook->GetPageIndex(m_currTab));
+		m_currTab->Reparent(this);
+		m_mgr.AddPane(m_currTab, wxAuiPaneInfo().Name(m_currTab->GetName()).Caption(m_currTab->GetLabel()).Float());
+		m_mgr.Update();
+	}
+}
+
+
+//
+// Move tab from notebook to dock area on request from context menu
+//
+
+void nxMainFrame::OnTabDock(wxCommandEvent &event)
+{
+	if (m_currTab != NULL)
+	{
+		m_notebook->RemovePage(m_notebook->GetPageIndex(m_currTab));
+		m_currTab->Reparent(this);
+		m_mgr.AddPane(m_currTab, wxAuiPaneInfo().Name(m_currTab->GetName()).Caption(m_currTab->GetLabel()).Left().BestSize(200, 300));
+		m_mgr.Update();
+	}
+}
+
+
+//
 // Handler for menu items added by plugins
 //
 
@@ -300,4 +379,3 @@ void nxMainFrame::OnViewRefresh(wxCommandEvent &event)
 		page->AddPendingEvent(event);
 	}
 }
-

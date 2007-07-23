@@ -17,54 +17,25 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: libnxmc.h
+** File: heading.h
 **
 **/
 
-#ifndef _libnxmc_h_
-#define _libnxmc_h_
+#ifndef _heading_h_
+#define _heading_h_
 
-#define WXUSINGDLL
+class LIBNXMC_EXPORTABLE nxHeading : public wxWindow
+{
+private:
+	wxString m_text;
 
-#include <nms_common.h>
-#include <nms_util.h>
-#include <nxclapi.h>
-#include <nxnt.h>
+public:
+	nxHeading(wxWindow *parent, const wxString &text, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
 
-#ifdef _WIN32
-#include <wx/msw/winundef.h>
-#endif
+protected:
+	void OnPaint(wxPaintEvent &event);
 
-#include <wx/wx.h>
-
-#ifndef WX_PRECOMP
-#include <wx/app.h>
-#include <wx/frame.h>
-#include <wx/artprov.h>
-#include <wx/xrc/xmlres.h>
-#include <wx/filesys.h>
-#include <wx/fs_arc.h>
-#include <wx/fs_mem.h>
-#include <wx/aui/aui.h>
-#include <wx/dir.h>
-#endif
-
-#include <nxmc_api.h>
-
-
-//
-// Hash map and array types
-//
-
-WX_DECLARE_STRING_HASH_MAP(nxView*, nxViewHash);
-
-
-//
-// Global variables
-//
-
-extern wxAuiNotebook *g_auiNotebook;
-extern wxAuiManager *g_auiManager;
-
+	DECLARE_EVENT_TABLE();
+};
 
 #endif

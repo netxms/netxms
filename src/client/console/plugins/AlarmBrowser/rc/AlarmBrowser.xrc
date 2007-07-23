@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
+	<object class="wxMenu" name="menuCtxAlarm">
+		<label>Alarm</label>
+		<object class="wxMenuItem" name="menuAlarmAck">
+			<label>&amp;Acknowledge</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuAlarmTerminate">
+			<label>&amp;Terminate</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuAlarmDelete">
+			<label>&amp;Delete</label>
+			<help></help>
+		</object>
+	</object>
+</resource>

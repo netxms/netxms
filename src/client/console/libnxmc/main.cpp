@@ -200,6 +200,126 @@ const TCHAR LIBNXMC_EXPORTABLE *NXMCGetStatusTextSmall(int status)
 
 
 //
+// Get alarm state name
+//
+
+const TCHAR LIBNXMC_EXPORTABLE *NXMCGetAlarmStateName(int state)
+{
+	static TCHAR *texts[] =
+	{
+		_T("Outstanding"), _T("Acknowledged"), _T("Terminated")
+	};
+	
+	return ((state >= 0) && (state < 3)) ? texts[state] : _T("Invalid");
+}
+
+
+//
+// Get object class name
+//
+
+const TCHAR LIBNXMC_EXPORTABLE *NXMCGetClassName(int objClass)
+{
+	static TCHAR *names[] = { _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"), _T("Network"), 
+                             _T("Container"), _T("Zone"), _T("ServiceRoot"), _T("Template"), 
+                             _T("TemplateGroup"), _T("TemplateRoot"), _T("NetworkService"),
+                             _T("VPNConnector"), _T("Condition"), _T("Cluster") };
+	
+	return ((objClass >= 0) && (objClass <= OBJECT_CLUSTER)) ? names[objClass] : _T("Unknown");
+}
+
+
+//
+// Get interface type name
+//
+
+const TCHAR LIBNXMC_EXPORTABLE *NXMCGetIfTypeName(int type)
+{
+	TCHAR *types[] = 
+	{
+		_T("Unknown"),
+		_T("Other"),
+		_T("Regular 1822"),
+		_T("HDH 1822"),
+		_T("DDN X.25"),
+		_T("RFC877 X.25"),
+		_T("Ethernet CSMA/CD"),
+		_T("ISO 802.3 CSMA/CD"),
+		_T("ISO 802.4 Token Bus"),
+		_T("ISO 802.5 Token Ring"),
+		_T("ISO 802.6 MAN"),
+		_T("StarLan"),
+		_T("PROTEON 10 Mbps"),
+		_T("PROTEON 80 Mbps"),
+		_T("Hyper Channel"),
+		_T("FDDI"),
+		_T("LAPB"),
+		_T("SDLC"),
+		_T("DS1"),
+		_T("E1"),
+		_T("ISDN BRI"),
+		_T("ISDN PRI"),
+		_T("Proprietary Serial Pt-to-Pt"),
+		_T("PPP"),
+		_T("Software Loopback"),
+		_T("EON (CLNP over IP)"),
+		_T("Ethernet 3 Mbps"),
+		_T("NSIP (XNS over IP)"),
+		_T("SLIP"),
+		_T("DS3"),
+		_T("SMDS"),
+		_T("Frame Relay"),
+		_T("RS-232"),
+		_T("PARA"),
+		_T("ArcNet"),
+		_T("ArcNet Plus"),
+		_T("ATM"),
+		_T("MIO X.25"),
+		_T("SONET"),
+		_T("X.25 PLE"),
+		_T("ISO 88022 LLC"),
+		_T("LocalTalk"),
+		_T("SMDS DXI"),
+		_T("Frame Relay Service"),
+		_T("V.35"),
+		_T("HSSI"),
+		_T("HIPPI"),
+		_T("Modem"),
+		_T("AAL5"),
+		_T("SONET PATH"),
+		_T("SONET VT"),
+		_T("SMDS ICIP"),
+		_T("Proprietary Virtual"),
+		_T("Proprietary Multiplexor"),
+		_T("IEEE 802.12"),
+		_T("FibreChannel")
+	};
+	
+	return ((type >= 0) && (type < sizeof(types) / sizeof(TCHAR *))) ? types[type] : _T("Unknown");
+}
+
+
+//
+// Get node type
+//
+
+const TCHAR LIBNXMC_EXPORTABLE *NXMCGetNodeTypeName(int type)
+{
+	CODE_TO_TEXT types[] =
+	{
+		{ NODE_TYPE_GENERIC, _T("Generic") },
+		{ NODE_TYPE_NORTEL_ACCELAR, _T("Nortel Networks Passport switch") },
+		{ NODE_TYPE_NETSCREEN, _T("NetScreen Firewall/VPN") },
+		{ NODE_TYPE_NORTEL_BAYSTACK, _T("Nortel Ethernet switch (former BayStack)") },
+		{ NODE_TYPE_NORTEL_OPTERA, _T("Nortel Optera Metro switch") },
+		{ 0, NULL }    // End of list
+	};
+	
+	return NXMCCodeToText(type, types, _T("Unknown"));
+}
+
+
+//
 // DLL entry point
 //
 

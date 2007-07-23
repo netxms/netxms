@@ -1,6 +1,8 @@
 #ifndef _nxmc_api_h_
 #define _nxmc_api_h_
 
+#pragma warning(disable: 4284)
+
 #define WXUSINGDLL
 
 #ifdef _WIN32
@@ -24,6 +26,7 @@
 #include <wx/dynarray.h>
 #include <wx/splitter.h>
 #include <wx/treectrl.h>
+#include <wx/listctrl.h>
 #include <wx/notebook.h>
 #include <wx/imaglist.h>
 #endif
@@ -64,6 +67,18 @@
 //
 
 #define IMAGE_LIST_OBJECTS_SMALL		1
+#define IMAGE_LIST_OBJECTS_NORMAL   2
+#define IMAGE_LIST_STATUS_SMALL     3
+
+
+//
+// Timestamp formats
+//
+
+#define TS_LONG_DATE_TIME  0
+#define TS_LONG_TIME       1
+#define TS_DAY_AND_MONTH   2
+#define TS_MONTH           3
 
 
 //
@@ -74,6 +89,19 @@
 #define NXMC_PLUGIN_EXPORT __declspec(dllexport)
 #else
 #define NXMC_PLUGIN_EXPORT
+#endif
+
+
+//
+// DLL instance
+//
+
+#ifdef _WIN32
+#define NXMC_LIB_INSTANCE				HINSTANCE
+#define NXMC_LIB_INSTANCE_ARG(x)		(x)
+#else
+#define NXMC_LIB_INSTANCE				int
+#define NXMC_LIB_INSTANCE_ARG(x)		0
 #endif
 
 
@@ -164,6 +192,7 @@ typedef struct
 
 #define wxID_TREE_CTRL		(wxID_HIGHEST + 500)
 #define wxID_NOTEBOOK_CTRL	(wxID_HIGHEST + 501)
+#define wxID_LIST_CTRL		(wxID_HIGHEST + 502)
 
 
 //
@@ -230,10 +259,29 @@ WX_DECLARE_OBJARRAY(nxmcItemRegistration, nxmcArrayOfRegItems);
 
 
 //
+// Code translation structure
+//
+
+struct CODE_TO_TEXT
+{
+   int code;
+   TCHAR *text;
+};
+
+
+//
+// Additional array types
+//
+
+WX_DEFINE_ARRAY(NXC_ALARM*, nxArrayOfAlarms);
+
+
+//
 // Classes
 //
 
 #include "../libnxmc/nxview.h"
+#include "../libnxmc/heading.h"
 
 
 //
@@ -244,6 +292,8 @@ void LIBNXMC_EXPORTABLE NXMCInitAUI(wxAuiManager *mgr, wxAuiNotebook *nb, wxWind
 void LIBNXMC_EXPORTABLE NXMCInitializationComplete();
 
 nxmcArrayOfRegItems LIBNXMC_EXPORTABLE &NXMCGetRegistrations();
+
+bool LIBNXMC_EXPORTABLE NXMCLoadResources(const TCHAR *name, NXMC_LIB_INSTANCE instance, TCHAR *resName);
 
 bool LIBNXMC_EXPORTABLE NXMCAddControlPanelItem(NXMC_PLUGIN_HANDLE handle, const TCHAR *name, int id);
 bool LIBNXMC_EXPORTABLE NXMCAddViewMenuItem(NXMC_PLUGIN_HANDLE handle, const TCHAR *name, int id);
@@ -260,11 +310,23 @@ void LIBNXMC_EXPORTABLE UnregisterUniqueView(const TCHAR *name);
 nxView LIBNXMC_EXPORTABLE *FindUniqueView(const TCHAR *name);
 void LIBNXMC_EXPORTABLE ActivateView(nxView *view);
 
+const TCHAR LIBNXMC_EXPORTABLE *NXMCCodeToText(int code, CODE_TO_TEXT *translator, const TCHAR *defaultText);
 const TCHAR LIBNXMC_EXPORTABLE *NXMCGetStatusText(int status);
 const TCHAR LIBNXMC_EXPORTABLE *NXMCGetStatusTextSmall(int status);
+const TCHAR LIBNXMC_EXPORTABLE *NXMCGetAlarmStateName(int state);
+const TCHAR LIBNXMC_EXPORTABLE *NXMCGetClassName(int objClass);
+const TCHAR LIBNXMC_EXPORTABLE *NXMCGetIfTypeName(int type);
+const TCHAR LIBNXMC_EXPORTABLE *NXMCGetNodeTypeName(int type);
 
 void LIBNXMC_EXPORTABLE NXMCInitImageLists();
 wxImageList LIBNXMC_EXPORTABLE *NXMCGetImageList(int list);
+wxImageList LIBNXMC_EXPORTABLE *NXMCGetImageListCopy(int list);
+
+void LIBNXMC_EXPORTABLE NXMCInitAlarms(DWORD count, NXC_ALARM *list);
+void LIBNXMC_EXPORTABLE NXMCUpdateAlarms(DWORD code, NXC_ALARM *data);
+nxArrayOfAlarms LIBNXMC_EXPORTABLE *NXMCGetAlarmList();
+void LIBNXMC_EXPORTABLE NXMCUnlockAlarmList();
+
+TCHAR LIBNXMC_EXPORTABLE *NXMCFormatTimeStamp(time_t timeStamp, TCHAR *buffer, int type);
 
 #endif
-

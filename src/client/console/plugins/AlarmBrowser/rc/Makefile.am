@@ -8,31 +8,12 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
+resourcedir = $(datadir)/nxmc
+resource_DATA = AlarmBrowser.xrs
+
 EXTRA_DIST = \
-	acknowledged.xpm \
-	cluster.xpm \
-	condition.xpm \
-	container.xpm \
-	critical.xpm \
-	disabled.xpm \
-	information.xpm \
-	interface.xpm \
-	major.xpm \
-	minor.xpm \
-	network.xpm \
-	network_service.xpm \
-	node.xpm \
-	normal.xpm \
-	outstanding.xpm \
-	service_root.xpm \
-	subnet.xpm \
-	template.xpm \
-	template_group.xpm \
-	template_root.xpm \
-	terminated.xpm \
-	testing.xpm \
-	unknown.xpm \
-	unmanaged.xpm \
-	vpn_connector.xpm \
-	warning.xpm \
-	zone.xpm
+	AlarmBrowser.xrc \
+	AlarmBrowser.xrs
+
+AlarmBrowser.xrs: AlarmBrowser.xrc
+	wxrc AlarmBrowser.xrc -o AlarmBrowser.xrs

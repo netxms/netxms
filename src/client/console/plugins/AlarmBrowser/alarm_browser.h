@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Portable management console - plugin API library
+** Portable management console - Alarm Browser plugin
 ** Copyright (C) 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -17,54 +17,64 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: libnxmc.h
+** File: alarm_browser.h
 **
 **/
 
-#ifndef _libnxmc_h_
-#define _libnxmc_h_
-
-#define WXUSINGDLL
+#ifndef _alarm_browser_h_
+#define _alarm_browser_h_
 
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nxclapi.h>
-#include <nxnt.h>
-
-#ifdef _WIN32
-#include <wx/msw/winundef.h>
-#endif
-
-#include <wx/wx.h>
-
-#ifndef WX_PRECOMP
-#include <wx/app.h>
-#include <wx/frame.h>
-#include <wx/artprov.h>
-#include <wx/xrc/xmlres.h>
-#include <wx/filesys.h>
-#include <wx/fs_arc.h>
-#include <wx/fs_mem.h>
-#include <wx/aui/aui.h>
-#include <wx/dir.h>
-#endif
-
 #include <nxmc_api.h>
 
 
 //
-// Hash map and array types
+// Alarm view class
 //
 
-WX_DECLARE_STRING_HASH_MAP(nxView*, nxViewHash);
+class nxAlarmView : public wxWindow
+{
+private:
+	wxListCtrl *m_wndListCtrl;
+
+	void AddAlarm(NXC_ALARM *alarm);
+	void UpdateAlarm(long item, NXC_ALARM *alarm);
+
+public:
+	nxAlarmView(wxWindow *parent);
+
+	void RefreshView();
+
+	// Event handlers
+protected:
+	void OnSize(wxSizeEvent &event);
+	void OnListItemRightClick(wxListEvent &event);
+
+	DECLARE_EVENT_TABLE()
+};
 
 
 //
-// Global variables
+// Alarm browser class
 //
 
-extern wxAuiNotebook *g_auiNotebook;
-extern wxAuiManager *g_auiManager;
+class nxAlarmBrowser : public nxView
+{
+private:
+	nxAlarmView *m_view;
+	
+public:
+	nxAlarmBrowser();
+	virtual ~nxAlarmBrowser();
 
+	// Event handlers
+protected:
+	void OnSize(wxSizeEvent &event);
+	void OnViewRefresh(wxCommandEvent &event);
+
+	DECLARE_EVENT_TABLE()
+};
 
 #endif

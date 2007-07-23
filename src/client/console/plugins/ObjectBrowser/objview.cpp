@@ -25,12 +25,98 @@
 
 
 //
+// Event table
+//
+
+BEGIN_EVENT_TABLE(nxObjectView, wxWindow)
+	EVT_SIZE(nxObjectView::OnSize)
+	EVT_PAINT(nxObjectView::OnPaint)
+END_EVENT_TABLE()
+
+
+//
 // Constructor
 //
 
 nxObjectView::nxObjectView(wxWindow *parent)
              : wxWindow(parent, wxID_ANY)
 {
+	wxImageList *imgList;
+
+	m_object = NULL;
 	m_notebook = new wxNotebook(this, wxID_NOTEBOOK_CTRL);
+	m_headerOffset = 33;
+
+	imgList = new wxImageList(16, 16);
+	imgList->Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallInformation")));
+	m_notebook->AssignImageList(imgList);
+
+	m_pageOverview = new nxObjectOverview(m_notebook);
 }
 
+
+//
+// Resize handler
+//
+
+void nxObjectView::OnSize(wxSizeEvent &event)
+{
+	wxSize size = GetClientSize();
+	m_notebook->SetSize(0, m_headerOffset, size.x, size.y - m_headerOffset);
+}
+
+
+//
+// Paint event handler
+//
+
+void nxObjectView::OnPaint(wxPaintEvent &event)
+{
+	wxPaintDC dc(this);
+	wxSize size = GetClientSize();
+	wxBrush *brush;
+
+	brush = wxTheBrushList->FindOrCreateBrush(wxColour(0, 0, 128));
+	dc.SetBrush(*brush);
+
+	dc.DrawRectangle(0, 0, size.x, m_headerOffset);
+	if (m_object != NULL)
+	{
+		dc.SetTextForeground(*wxWHITE);
+		dc.DrawLabel(m_object->szName, wxRect(5, 0, size.x - 10, m_headerOffset), wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL);
+	}
+}
+
+
+//
+// Remove all pages
+//
+
+void nxObjectView::RemoveAllPages()
+{
+	size_t i, count;
+
+	count = m_notebook->GetPageCount();
+	for(i = 0; i < count; i++)
+		m_notebook->RemovePage(0);
+}
+
+
+//
+// Set current object
+//
+
+void nxObjectView::SetObject(NXC_OBJECT *object)
+{
+	m_object = object;
+	RefreshRect(wxRect(0, 0, GetClientSize().x, m_headerOffset), false);
+
+	Freeze();
+	RemoveAllPages();
+
+	m_notebook->AddPage(m_pageOverview, _T("Overview"), false, 0);
+
+	m_pageOverview->SetObject(object);
+
+	Thaw();
+}

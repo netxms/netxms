@@ -111,7 +111,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy     Release_UNICODE\ObjectBrowser.so     C:\NetXMS\lib\nxmc\ 
+PostBuild_Cmds=copy      Release_UNICODE\ObjectBrowser.so      C:\NetXMS\lib\nxmc\ 
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "mcpObjectBrowser - Win32 Debug UNICODE"
@@ -167,6 +167,10 @@ SOURCE=.\main.cpp
 # Begin Source File
 
 SOURCE=.\objview.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\overview.cpp
 # End Source File
 # End Group
 # Begin Group "Header Files"

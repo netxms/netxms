@@ -32,6 +32,7 @@ BEGIN_EVENT_TABLE(nxObjectBrowser, nxView)
 	EVT_SIZE(nxObjectBrowser::OnSize)
 	EVT_NX_REFRESH_VIEW(nxObjectBrowser::OnViewRefresh)
 	EVT_TREE_ITEM_EXPANDING(wxID_TREE_CTRL, nxObjectBrowser::OnTreeItemExpanding)
+	EVT_TREE_SEL_CHANGED(wxID_TREE_CTRL, nxObjectBrowser::OnTreeSelChanged)
 END_EVENT_TABLE()
 
 
@@ -53,6 +54,9 @@ nxObjectBrowser::nxObjectBrowser()
 	m_wndSplitter->SplitVertically(m_wndTreeCtrl, m_wndObjectView, 250);
 	RegisterUniqueView(_T("objectbrowser"), this);
 	m_isFirstResize = true;
+
+	wxCommandEvent event(nxEVT_REFRESH_VIEW);
+	AddPendingEvent(event);
 }
 
 
@@ -133,7 +137,7 @@ void nxObjectBrowser::AddObjectToTree(NXC_OBJECT *object, wxTreeItemId &root)
 	wxTreeItemId item;
 	
    CreateTreeItemText(object, itemText);
-	item = m_wndTreeCtrl->AppendItem(root, itemText, object->iClass, object->iClass, new nxObjectTreeItemData(object));
+	item = m_wndTreeCtrl->AppendItem(root, itemText, object->iClass, -1, new nxObjectTreeItemData(object));
 
    // Don't add childs immediatelly to
    // prevent adding millions of items if node has thousands of interfaces in
@@ -194,4 +198,17 @@ void nxObjectBrowser::OnTreeItemExpanding(wxTreeEvent &event)
          }
       }
 	}
+}
+
+
+//
+// Handler for object tree selection change
+//
+
+void nxObjectBrowser::OnTreeSelChanged(wxTreeEvent &event)
+{
+	wxTreeItemId item;
+
+	item = event.GetItem();
+	m_wndObjectView->SetObject(((nxObjectTreeItemData *)m_wndTreeCtrl->GetItemData(item))->GetObject());
 }

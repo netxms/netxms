@@ -1,18 +1,42 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
 
-	<-- Small icons -->
+	<!-- Small object icons -->
 	<object class="wxIcon" name="icoSmallNetwork">icons/small/network.xpm</object>
 	<object class="wxIcon" name="icoSmallSubnet">icons/small/subnet.xpm</object>
 	<object class="wxIcon" name="icoSmallNode">icons/small/node.xpm</object>
 	<object class="wxIcon" name="icoSmallCluster">icons/small/cluster.xpm</object>
 	<object class="wxIcon" name="icoSmallInterface">icons/small/interface.xpm</object>
 	<object class="wxIcon" name="icoSmallNetworkService">icons/small/network_service.xpm</object>
+	<object class="wxIcon" name="icoSmallVPNConnector">icons/small/vpn_connector.xpm</object>
 	<object class="wxIcon" name="icoSmallTemplate">icons/small/template.xpm</object>
 	<object class="wxIcon" name="icoSmallTemplateGroup">icons/small/template_group.xpm</object>
 	<object class="wxIcon" name="icoSmallTemplateRoot">icons/small/template_root.xpm</object>
+	<object class="wxIcon" name="icoSmallServiceRoot">icons/small/service_root.xpm</object>
+	<object class="wxIcon" name="icoSmallContainer">icons/small/container.xpm</object>
+	<object class="wxIcon" name="icoSmallCondition">icons/small/condition.xpm</object>
+	<object class="wxIcon" name="icoSmallZone">icons/small/zone.xpm</object>
 
-	<-- Busy dialog -->
+	<!-- Small status/severity icons -->
+	<object class="wxIcon" name="icoSmallNormal">icons/small/normal.xpm</object>
+	<object class="wxIcon" name="icoSmallWarning">icons/small/warning.xpm</object>
+	<object class="wxIcon" name="icoSmallMinor">icons/small/minor.xpm</object>
+	<object class="wxIcon" name="icoSmallMajor">icons/small/major.xpm</object>
+	<object class="wxIcon" name="icoSmallCritical">icons/small/critical.xpm</object>
+	<object class="wxIcon" name="icoSmallUnknown">icons/small/unknown.xpm</object>
+	<object class="wxIcon" name="icoSmallUnmanaged">icons/small/unmanaged.xpm</object>
+	<object class="wxIcon" name="icoSmallDisabled">icons/small/disabled.xpm</object>
+	<object class="wxIcon" name="icoSmallTesting">icons/small/testing.xpm</object>
+
+	<!-- Small alarm states icons -->
+	<object class="wxIcon" name="icoSmallOutstanding">icons/small/outstanding.xpm</object>
+	<object class="wxIcon" name="icoSmallAcknowledged">icons/small/acknowledged.xpm</object>
+	<object class="wxIcon" name="icoSmallTerminated">icons/small/terminated.xpm</object>
+
+	<!-- Miscellanious small icons -->
+	<object class="wxIcon" name="icoSmallInformation">icons/small/information.xpm</object>
+
+	<!-- Busy dialog -->
 	<object class="wxDialog" name="nxBusyDialog">
 		<size>436,63</size>
 		<title>NetXMS Console - Processing</title>

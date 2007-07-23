@@ -74,39 +74,15 @@ bool nxApp::OnInit()
 	nxConsoleLogger::Init();
 
 	wxFileSystem::AddHandler(new wxArchiveFSHandler);
+#ifdef _WIN32
+	wxFileSystem::AddHandler(new wxMemoryFSHandler);
+#endif
 	wxImage::AddHandler(new wxPNGHandler);
-	wxImage::AddHandler(new wxICOHandler);
+	wxImage::AddHandler(new wxXPMHandler);
 
 	wxXmlResource::Get()->InitAllHandlers();
-#ifdef _WIN32
-	HRSRC hRes;
-	HGLOBAL hMem;
-	void *data;
-
-	wxFileSystem::AddHandler(new wxMemoryFSHandler);
-	hRes = FindResource(wxGetInstance(), MAKEINTRESOURCE(IDR_XRS), _T("XRS"));
-	if (hRes != NULL)
-	{
-		hMem = LoadResource(NULL, hRes);
-		if (hMem != NULL)
-		{
-			data = LockResource(hMem);
-			if (data != NULL)
-			{
-				wxMemoryFSHandler::AddFile(_T("resource.xrs"), data, SizeofResource(NULL, hRes));
-				UnlockResource(hMem);
-			}
-			FreeResource(hMem);
-		}
-	}
-	if (!wxXmlResource::Get()->Load(_T("memory:resource.xrs")))
-	  return false;
-#else
-	wxString xrsFile = wxStandardPaths::Get().GetResourcesDir();
-	xrsFile += _T("/nxmc.xrs");
-	if (!wxXmlResource::Get()->Load(xrsFile))
-	  return false;
-#endif
+	if (!NXMCLoadResources(_T("nxmc.xrs"), NXMC_LIB_INSTANCE_ARG(wxGetInstance()), MAKEINTRESOURCE(IDR_XRS)))
+		return false;
 
 	// Create application directories if needed
 	wxFileName::Mkdir(wxStandardPaths::Get().GetUserDataDir(), 0700, wxPATH_MKDIR_FULL);

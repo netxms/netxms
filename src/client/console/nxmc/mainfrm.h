@@ -1,4 +1,4 @@
-/* $Id: mainfrm.h,v 1.3 2007-07-15 14:18:38 victor Exp $ */
+/* $Id: mainfrm.h,v 1.4 2007-07-23 06:39:12 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -44,6 +44,29 @@ public:
 
 
 //
+// Customized wxAuiNotebook class
+//
+
+class nxAuiNotebook : public wxAuiNotebook
+{
+public:
+	nxAuiNotebook(wxWindow *parent, const wxPoint& pos, const wxSize& size) : wxAuiNotebook(parent, wxID_ANY, pos, size, wxAUI_NB_DEFAULT_STYLE | wxAUI_NB_TAB_EXTERNAL_MOVE | wxNO_BORDER) { }
+	nxView *TabFromPoint(const wxPoint &point)
+	{
+		wxWindow *wnd = NULL;
+		wxPoint pt = ScreenToClient(point);
+		wxAuiTabCtrl *tabs = GetTabCtrlFromPoint(pt);
+		if (tabs != NULL)
+		{
+			pt = tabs->ScreenToClient(point);
+			tabs->TabHitTest(pt.x, pt.y, &wnd);
+		}
+		return (nxView *)wnd;
+	}
+};
+
+
+//
 // Main frame class
 //
 
@@ -51,8 +74,9 @@ class nxMainFrame : public wxFrame
 {
 protected:
 	nxAuiManager m_mgr;
-	wxAuiNotebook *m_notebook;
+	nxAuiNotebook *m_notebook;
 	wxAuiPaneInfo *m_currPane;	// Current pane for context menu operation
+	wxWindow *m_currTab;			// Current tab for context menu operation
 
 	wxAuiNotebook *CreateNotebook(void);
 
@@ -73,6 +97,10 @@ protected:
 	void OnPaneDetach(wxCommandEvent &event);
 	void OnPaneFloat(wxCommandEvent &event);
 	void OnPaneMoveToNotebook(wxCommandEvent &event);
+	void OnTabClose(wxCommandEvent &event);
+	void OnTabDetach(wxCommandEvent &event);
+	void OnTabFloat(wxCommandEvent &event);
+	void OnTabDock(wxCommandEvent &event);
 	void OnPluginCommand(wxCommandEvent &event);
 	void OnContextMenu(wxContextMenuEvent &event);
 

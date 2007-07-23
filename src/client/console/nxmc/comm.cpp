@@ -41,6 +41,33 @@ struct LOGIN_DATA
 
 
 //
+// Client library event handler
+//
+
+static void ClientEventHandler(NXC_SESSION session, DWORD event, DWORD code, void *arg)
+{
+	switch(event)
+	{
+      case NXC_EVENT_NOTIFICATION:
+         switch(code)
+         {
+            case NX_NOTIFY_NEW_ALARM:
+            case NX_NOTIFY_ALARM_DELETED:
+            case NX_NOTIFY_ALARM_CHANGED:
+            case NX_NOTIFY_ALARM_TERMINATED:
+					NXMCUpdateAlarms(code, (NXC_ALARM *)arg);
+					break;
+				default:
+					break;
+			}
+			break;
+		default:
+			break;
+	}
+}
+
+
+//
 // Login thread
 //
 
@@ -59,6 +86,8 @@ static THREAD_RESULT THREAD_CALL LoginThread(void *arg)
       BYTE serverId[8];
 		TCHAR serverIdAsText[32];
 		wxString cacheFile;
+
+      NXCSetEventHandler(g_hSession, ClientEventHandler);
 
       data->dlg->SetStatusText(_T("Synchronizing objects..."));
       if (data->objectCacheMode != 0)
@@ -139,6 +168,29 @@ static THREAD_RESULT THREAD_CALL LoginThread(void *arg)
    {
       data->dlg->SetStatusText(_T("Loading event information..."));
       rcc = NXCLoadEventDB(g_hSession);
+   }
+
+   // Synchronizing alarms
+   if (rcc == RCC_SUCCESS)
+   {
+		NXC_ALARM *list;
+		DWORD count;
+
+      data->dlg->SetStatusText(_T("Synchronizing alarms..."));
+      rcc = NXCLoadAllAlarms(g_hSession, FALSE, &count, &list);
+      if (rcc == RCC_SUCCESS)
+		{
+			NXMCInitAlarms(count, list);
+			safe_free(list);
+         rcc = NXCSubscribe(g_hSession, NXC_CHANNEL_ALARMS);
+		}
+   }
+
+   // Disconnect if some of post-login operations was failed
+   if (rcc != RCC_SUCCESS)
+   {
+      NXCDisconnect(g_hSession);
+      g_hSession = NULL;
    }
 
 	data->dlg->ReportCompletion(rcc);

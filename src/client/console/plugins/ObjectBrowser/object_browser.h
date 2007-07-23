@@ -42,6 +42,48 @@ struct NXC_OBJECT_INDEX
 
 
 //
+// Header for object overview
+//
+
+class nxObjOverviewHeader : public wxWindow
+{
+private:
+	NXC_OBJECT *m_object;
+
+public:
+	nxObjOverviewHeader(wxWindow *parent);
+
+	void SetObject(NXC_OBJECT *object);
+
+protected:
+	void OnPaint(wxPaintEvent &event);
+
+	DECLARE_EVENT_TABLE()
+};
+
+
+//
+// Object overview
+//
+
+class nxObjectOverview : public wxPanel
+{
+private:
+	nxObjOverviewHeader *m_header;
+	wxListCtrl *m_attrList;
+	NXC_OBJECT *m_object;
+
+	void InsertItem(const TCHAR *name, const TCHAR *value);
+	void InsertItem(const TCHAR *name, DWORD value);
+
+public:
+	nxObjectOverview(wxWindow *parent);
+
+	void SetObject(NXC_OBJECT *object);
+};
+
+
+//
 // Object view class
 //
 
@@ -49,9 +91,24 @@ class nxObjectView : public wxWindow
 {
 private:
 	wxNotebook *m_notebook;
+	int m_headerOffset;
+	NXC_OBJECT *m_object;
+
+	nxObjectOverview *m_pageOverview;
+
+	void RemoveAllPages();
 	
 public:
 	nxObjectView(wxWindow *parent);
+
+	void SetObject(NXC_OBJECT *object);
+
+	// Event handlers
+protected:
+	void OnSize(wxSizeEvent &event);
+	void OnPaint(wxPaintEvent &event);
+
+	DECLARE_EVENT_TABLE()
 };
 
 
@@ -95,6 +152,7 @@ protected:
 	void OnSize(wxSizeEvent &event);
 	void OnViewRefresh(wxCommandEvent &event);
 	void OnTreeItemExpanding(wxTreeEvent &event);
+	void OnTreeSelChanged(wxTreeEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };

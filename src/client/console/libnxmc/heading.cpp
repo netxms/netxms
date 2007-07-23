@@ -17,54 +17,42 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: libnxmc.h
+** File: heading.cpp
 **
 **/
 
-#ifndef _libnxmc_h_
-#define _libnxmc_h_
-
-#define WXUSINGDLL
-
-#include <nms_common.h>
-#include <nms_util.h>
-#include <nxclapi.h>
-#include <nxnt.h>
-
-#ifdef _WIN32
-#include <wx/msw/winundef.h>
-#endif
-
-#include <wx/wx.h>
-
-#ifndef WX_PRECOMP
-#include <wx/app.h>
-#include <wx/frame.h>
-#include <wx/artprov.h>
-#include <wx/xrc/xmlres.h>
-#include <wx/filesys.h>
-#include <wx/fs_arc.h>
-#include <wx/fs_mem.h>
-#include <wx/aui/aui.h>
-#include <wx/dir.h>
-#endif
-
-#include <nxmc_api.h>
+#include "libnxmc.h"
 
 
 //
-// Hash map and array types
+// Event table
 //
 
-WX_DECLARE_STRING_HASH_MAP(nxView*, nxViewHash);
+BEGIN_EVENT_TABLE(nxHeading, wxWindow)
+	EVT_PAINT(nxHeading::OnPaint)
+END_EVENT_TABLE()
 
 
 //
-// Global variables
+// Constructor
 //
 
-extern wxAuiNotebook *g_auiNotebook;
-extern wxAuiManager *g_auiManager;
+nxHeading::nxHeading(wxWindow *parent, const wxString &text, const wxPoint &pos, const wxSize &size)
+          : wxWindow(parent, wxID_ANY, pos, size)
+{
+	m_text = text;
+}
 
 
-#endif
+//
+// Paint event handler
+//
+
+void nxHeading::OnPaint(wxPaintEvent &event)
+{
+	wxPaintDC dc(this);
+	wxSize size = GetClientSize();
+
+	dc.DrawLabel(m_text, wxRect(0, 0, size.x, size.y - 3), wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL);
+	dc.GradientFillLinear(wxRect(0, size.y - 3, size.x, size.y), wxColor(0, 0, 255), wxColor(128, 128, 255));
+}
