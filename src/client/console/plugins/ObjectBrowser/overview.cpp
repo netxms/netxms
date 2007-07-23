@@ -71,32 +71,45 @@ void nxObjOverviewHeader::OnPaint(wxPaintEvent &event)
 
 
 //
+// Event table
+//
+
+BEGIN_EVENT_TABLE(nxObjectOverview, wxWindow)
+	EVT_SIZE(nxObjectOverview::OnSize)
+END_EVENT_TABLE()
+
+
+//
 // Constructor
 //
 
 nxObjectOverview::nxObjectOverview(wxWindow *parent, NXC_OBJECT *object)
-                 : wxPanel(parent, wxID_ANY)
+                 : wxWindow(parent, wxID_ANY)
 {
 	wxBoxSizer *sizer;
 
 	SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
 
-	m_object = object;
-
 	m_header = new nxObjOverviewHeader(this);
-	m_header->SetObject(object);
 
 	sizer = new wxBoxSizer(wxVERTICAL);
 	sizer->Add(m_header, 0, wxALL | wxEXPAND, 7);
-	sizer->Add(new nxHeading(this, _T("Attributes"), wxDefaultPosition, wxSize(500, 20)), 0, wxALL | wxEXPAND, 7);
+	sizer->Add(new nxHeading(this, _T("Attributes"), wxDefaultPosition, wxSize(100, 20)), 0, wxALL | wxEXPAND, 7);
 
-	m_attrList = new wxListCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER);
-	m_attrList->InsertColumn(0, _T("Name"), wxLIST_FORMAT_LEFT, 100);
-	m_attrList->InsertColumn(1, _T("Value"), wxLIST_FORMAT_LEFT, -1);
+	m_attrList = new wxListCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxNO_BORDER);
+	m_attrList->InsertColumn(0, _T("Name"), wxLIST_FORMAT_LEFT, wxLIST_AUTOSIZE);
+	m_attrList->InsertColumn(1, _T("Value"), wxLIST_FORMAT_LEFT, wxLIST_AUTOSIZE);
 	sizer->Add(m_attrList, 1, wxALL | wxEXPAND, 7);
+
+	sizer->Add(new nxHeading(this, _T("Comments"), wxDefaultPosition, wxSize(100, 20)), 0, wxALL | wxEXPAND, 7);
+	m_comments = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition,
+	                            wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP | wxTE_RICH | wxTE_AUTO_URL | wxNO_BORDER);
+	sizer->Add(m_comments, 1, wxALL | wxEXPAND, 7);
 
 	SetSizer(sizer);
 	sizer->SetSizeHints(this);
+
+	SetObject(object);
 }
 
 
@@ -156,6 +169,10 @@ void nxObjectOverview::SetObject(NXC_OBJECT *object)
 		default:
 			break;
 	}
+
+	m_comments->SetValue(CHECK_NULL_EX(object->pszComments));
+
+	AdjustAttrList();
 }
 
 
@@ -177,4 +194,38 @@ void nxObjectOverview::InsertItem(const TCHAR *name, DWORD value)
 
 	_stprintf(buffer, _T("%d"), value);
 	InsertItem(name, buffer);
+}
+
+
+//
+// Resize handler
+//
+
+void nxObjectOverview::OnSize(wxSizeEvent &event)
+{
+	Layout();
+}
+
+
+//
+// Adjust attribute list
+//
+
+void nxObjectOverview::AdjustAttrList()
+{
+	int i, count, w, h, width;
+	wxListItem item;
+
+	count = m_attrList->GetItemCount();
+	for(i = 0, width = 0; i < count; i++)
+	{
+		item.SetId(i);
+		item.SetColumn(1);
+		item.SetMask(wxLIST_MASK_TEXT);
+		m_attrList->GetItem(item);
+		m_attrList->GetTextExtent(item.GetText(), &w, &h);
+		if (width < w)
+			width = w;
+	}
+	m_attrList->SetColumnWidth(1, width + 20);
 }

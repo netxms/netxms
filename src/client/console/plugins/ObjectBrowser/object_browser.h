@@ -66,20 +66,28 @@ protected:
 // Object overview
 //
 
-class nxObjectOverview : public wxPanel
+class nxObjectOverview : public wxWindow
 {
 private:
 	nxObjOverviewHeader *m_header;
 	wxListCtrl *m_attrList;
+	wxTextCtrl *m_comments;
 	NXC_OBJECT *m_object;
 
 	void InsertItem(const TCHAR *name, const TCHAR *value);
 	void InsertItem(const TCHAR *name, DWORD value);
+	void AdjustAttrList();
 
 public:
 	nxObjectOverview(wxWindow *parent, NXC_OBJECT *object);
 
 	void SetObject(NXC_OBJECT *object);
+	
+	// Event handlers
+protected:
+	void OnSize(wxSizeEvent &event);
+
+	DECLARE_EVENT_TABLE()
 };
 
 
@@ -90,14 +98,10 @@ public:
 class nxObjectView : public wxWindow
 {
 private:
-	wxNotebook *m_notebook;
+	wxAuiNotebook *m_notebook;
 	int m_headerOffset;
 	NXC_OBJECT *m_object;
 
-	nxObjectOverview *m_pageOverview;
-
-	void RemoveAllPages();
-	
 public:
 	nxObjectView(wxWindow *parent);
 

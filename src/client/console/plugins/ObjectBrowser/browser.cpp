@@ -45,7 +45,7 @@ nxObjectBrowser::nxObjectBrowser()
 {
 	SetName(_T("objectbrowser"));
 	SetLabel(_T("Object Browser"));
-	m_wndSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D);
+	m_wndSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_NOBORDER);
 	m_wndSplitter->SetMinimumPaneSize(30);
 	m_wndTreeCtrl = new wxTreeCtrl(m_wndSplitter, wxID_TREE_CTRL, wxDefaultPosition, wxDefaultSize,
 	                               wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_HIDE_ROOT);

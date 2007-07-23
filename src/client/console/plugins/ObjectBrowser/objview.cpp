@@ -44,12 +44,11 @@ nxObjectView::nxObjectView(wxWindow *parent)
 	wxImageList *imgList;
 
 	m_object = NULL;
-	m_notebook = new wxNotebook(this, wxID_NOTEBOOK_CTRL, wxDefaultPosition, wxDefaultSize, wxNB_TOP | wxSIMPLE_BORDER);
+	m_notebook = new wxAuiNotebook(this, wxID_NOTEBOOK_CTRL, wxDefaultPosition, wxDefaultSize, 0);
 	m_headerOffset = 33;
 
 	imgList = new wxImageList(16, 16);
 	imgList->Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallInformation")));
-	m_notebook->AssignImageList(imgList);
 }
 
 
@@ -87,20 +86,6 @@ void nxObjectView::OnPaint(wxPaintEvent &event)
 
 
 //
-// Remove all pages
-//
-
-void nxObjectView::RemoveAllPages()
-{
-	size_t i, count;
-
-	count = m_notebook->GetPageCount();
-	for(i = 1; i < count; i++)
-		m_notebook->RemovePage(1);
-}
-
-
-//
 // Set current object
 //
 
@@ -111,10 +96,11 @@ void nxObjectView::SetObject(NXC_OBJECT *object)
 
 	Freeze();
 
-	m_notebook->DeleteAllPages();
+	while(m_notebook->GetPageCount() > 0)
+		m_notebook->DeletePage(0);
 
-	m_notebook->AddPage(new nxObjectOverview(m_notebook, object), _T("Overview"), false, 0);
+	m_notebook->AddPage(new nxObjectOverview(m_notebook, object), _T("Overview"), false,
+	                    wxXmlResource::Get()->LoadIcon(_T("icoSmallInformation")));
 
 	Thaw();
 }
-
