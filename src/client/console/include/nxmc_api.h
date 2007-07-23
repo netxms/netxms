@@ -195,6 +195,7 @@ typedef struct
 #define wxID_TREE_CTRL		(wxID_HIGHEST + 500)
 #define wxID_NOTEBOOK_CTRL	(wxID_HIGHEST + 501)
 #define wxID_LIST_CTRL		(wxID_HIGHEST + 502)
+#define wxID_TEXT_CTRL		(wxID_HIGHEST + 503)
 
 
 //
@@ -272,10 +273,10 @@ struct CODE_TO_TEXT
 
 
 //
-// Additional array types
+// Additional array and hash types
 //
 
-WX_DEFINE_ARRAY(NXC_ALARM*, nxArrayOfAlarms);
+WX_DECLARE_HASH_MAP(DWORD, NXC_ALARM*, wxIntegerHash, wxIntegerEqual, nxAlarmList);
 
 
 //
@@ -326,7 +327,7 @@ wxImageList LIBNXMC_EXPORTABLE *NXMCGetImageListCopy(int list);
 
 void LIBNXMC_EXPORTABLE NXMCInitAlarms(DWORD count, NXC_ALARM *list);
 void LIBNXMC_EXPORTABLE NXMCUpdateAlarms(DWORD code, NXC_ALARM *data);
-nxArrayOfAlarms LIBNXMC_EXPORTABLE *NXMCGetAlarmList();
+nxAlarmList LIBNXMC_EXPORTABLE *NXMCGetAlarmList();
 void LIBNXMC_EXPORTABLE NXMCUnlockAlarmList();
 
 TCHAR LIBNXMC_EXPORTABLE *NXMCFormatTimeStamp(time_t timeStamp, TCHAR *buffer, int type);

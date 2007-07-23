@@ -86,6 +86,7 @@ public:
 	// Event handlers
 protected:
 	void OnSize(wxSizeEvent &event);
+	void OnTextURL(wxTextUrlEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };

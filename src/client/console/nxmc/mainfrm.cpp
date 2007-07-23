@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.6 2007-07-23 06:39:12 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.7 2007-07-23 22:38:06 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -97,11 +97,6 @@ wxAuiNotebook *nxMainFrame::CreateNotebook()
    m_notebook = new nxAuiNotebook(this,
                                   wxPoint(clientSize.x, clientSize.y),
                                   wxSize(430,200));
-   
-   wxBitmap bmp = wxArtProvider::GetBitmap(wxART_NORMAL_FILE, wxART_OTHER, wxSize(16,16));
-   m_notebook->AddPage(new wxTextCtrl(m_notebook, wxID_ANY, wxT("Some text"),
-                wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxNO_BORDER) , wxT("wxTextCtrl 1"), false, bmp);
-
 	return m_notebook;
 }
 

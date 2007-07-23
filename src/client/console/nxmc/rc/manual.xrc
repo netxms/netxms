@@ -35,6 +35,8 @@
 
 	<!-- Miscellanious small icons -->
 	<object class="wxIcon" name="icoSmallInformation">icons/small/information.xpm</object>
+	<object class="wxIcon" name="icoSortDown">icons/small/sort_down.xpm</object>
+	<object class="wxIcon" name="icoSortUp">icons/small/sort_up.xpm</object>
 
 	<!-- Busy dialog -->
 	<object class="wxDialog" name="nxBusyDialog">

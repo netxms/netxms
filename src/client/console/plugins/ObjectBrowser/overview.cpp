@@ -78,6 +78,7 @@ void nxObjOverviewHeader::OnPaint(wxPaintEvent &event)
 
 BEGIN_EVENT_TABLE(nxObjectOverview, wxWindow)
 	EVT_SIZE(nxObjectOverview::OnSize)
+	EVT_TEXT_URL(wxID_TEXT_CTRL, nxObjectOverview::OnTextURL)
 END_EVENT_TABLE()
 
 
@@ -104,7 +105,7 @@ nxObjectOverview::nxObjectOverview(wxWindow *parent, NXC_OBJECT *object)
 	sizer->Add(m_attrList, 1, wxALL | wxEXPAND, 7);
 
 	sizer->Add(new nxHeading(this, _T("Comments"), wxDefaultPosition, wxSize(100, 20)), 0, wxALL | wxEXPAND, 7);
-	m_comments = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition,
+	m_comments = new wxTextCtrl(this, wxID_TEXT_CTRL, wxEmptyString, wxDefaultPosition,
 	                            wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP | wxTE_RICH | wxTE_AUTO_URL | wxNO_BORDER);
 	sizer->Add(m_comments, 1, wxALL | wxEXPAND, 7);
 
@@ -231,4 +232,19 @@ void nxObjectOverview::AdjustAttrList()
 			width = w;
 	}
 	m_attrList->SetColumnWidth(1, width + 20);
+}
+
+
+//
+// URL event handler
+//
+
+void nxObjectOverview::OnTextURL(wxTextUrlEvent &event)
+{
+	if (event.GetMouseEvent().LeftDown())
+	{
+		wxString url = m_comments->GetRange(event.GetURLStart(), event.GetURLEnd());
+		wxLogDebug(_T("Opening URL: %s"), url.c_str());
+		wxLaunchDefaultBrowser(url, wxBROWSER_NEW_WINDOW);
+	}
 }

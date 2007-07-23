@@ -25,6 +25,8 @@ EXTRA_DIST = \
 	normal.xpm \
 	outstanding.xpm \
 	service_root.xpm \
+	sort_down.xpm \
+	sort_up.xpm \
 	subnet.xpm \
 	template.xpm \
 	template_group.xpm \

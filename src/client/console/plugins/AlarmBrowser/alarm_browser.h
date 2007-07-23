@@ -37,7 +37,9 @@
 class nxAlarmView : public wxWindow
 {
 private:
-	wxListCtrl *m_wndListCtrl;
+	wxListView *m_wndListCtrl;
+	long m_sortMode;
+	long m_sortDir;
 
 	void AddAlarm(NXC_ALARM *alarm);
 	void UpdateAlarm(long item, NXC_ALARM *alarm);
@@ -51,6 +53,7 @@ public:
 protected:
 	void OnSize(wxSizeEvent &event);
 	void OnListItemRightClick(wxListEvent &event);
+	void OnListColumnClick(wxListEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };

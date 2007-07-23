@@ -492,6 +492,8 @@ src/client/console/nxmc/rc/icons/small/node.xpm -text
 src/client/console/nxmc/rc/icons/small/normal.xpm -text
 src/client/console/nxmc/rc/icons/small/outstanding.xpm -text
 src/client/console/nxmc/rc/icons/small/service_root.xpm -text
+src/client/console/nxmc/rc/icons/small/sort_down.xpm -text
+src/client/console/nxmc/rc/icons/small/sort_up.xpm -text
 src/client/console/nxmc/rc/icons/small/subnet.xpm -text
 src/client/console/nxmc/rc/icons/small/template.xpm -text
 src/client/console/nxmc/rc/icons/small/template_group.xpm -text

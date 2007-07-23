@@ -31,6 +31,7 @@
 BEGIN_EVENT_TABLE(nxAlarmView, wxWindow)
 	EVT_SIZE(nxAlarmView::OnSize)
 	EVT_LIST_ITEM_RIGHT_CLICK(wxID_LIST_CTRL, nxAlarmView::OnListItemRightClick)
+	EVT_LIST_COL_CLICK(wxID_LIST_CTRL, nxAlarmView::OnListColumnClick)
 END_EVENT_TABLE()
 
 
@@ -41,7 +42,10 @@ END_EVENT_TABLE()
 nxAlarmView::nxAlarmView(wxWindow *parent)
             : wxWindow(parent, wxID_ANY)
 {
-	m_wndListCtrl = new wxListCtrl(this, wxID_LIST_CTRL, wxDefaultPosition, wxDefaultSize,
+	wxConfig::Get()->Read(_T("/AlarmView/SortMode"), &m_sortMode, 0);
+	wxConfig::Get()->Read(_T("/AlarmView/SortDir"), &m_sortDir, -1);
+
+	m_wndListCtrl = new wxListView(this, wxID_LIST_CTRL, wxDefaultPosition, wxDefaultSize,
 	                               wxLC_REPORT | wxLC_HRULES | wxLC_VRULES);
 	m_wndListCtrl->InsertColumn(0, _T("Severity"), wxLIST_FORMAT_LEFT, 70);
 	m_wndListCtrl->InsertColumn(1, _T("State"), wxLIST_FORMAT_LEFT, 70);
@@ -54,6 +58,8 @@ nxAlarmView::nxAlarmView(wxWindow *parent)
 	imgList->Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallOutstanding")));
 	imgList->Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallAcknowledged")));
 	imgList->Add(wxXmlResource::Get()->LoadIcon(_T("icoSmallTerminated")));
+	imgList->Add(wxXmlResource::Get()->LoadIcon(_T("icoSortUp")));
+	imgList->Add(wxXmlResource::Get()->LoadIcon(_T("icoSortDown")));
 	m_wndListCtrl->AssignImageList(imgList, wxIMAGE_LIST_SMALL);
 }
 
@@ -75,15 +81,15 @@ void nxAlarmView::OnSize(wxSizeEvent &event)
 
 void nxAlarmView::RefreshView()
 {
-	nxArrayOfAlarms *list;
-	size_t i;
+	nxAlarmList *list;
+	nxAlarmList::iterator it;
 
 	m_wndListCtrl->DeleteAllItems();
 	list = NXMCGetAlarmList();
-
-	for(i = 0; i < list->GetCount(); i++)
+	
+	for(it = list->begin(); it != list->end(); it++)
 	{
-		AddAlarm((*list)[i]);
+		AddAlarm(it->second);
 	}
 
 	NXMCUnlockAlarmList();
@@ -153,4 +159,69 @@ void nxAlarmView::OnListItemRightClick(wxListEvent &event)
 		PopupMenu(menu);
 		delete menu;
 	}
+}
+
+
+//
+// Alarm comparision callback
+//
+
+static nxAlarmList *s_alarmList;
+
+static int wxCALLBACK CompareAlarms(long item1, long item2, long sortData)
+{
+	long mode = sortData & 0x7FFF;
+	int rc;
+	nxAlarmList::iterator it1, it2;
+
+	it1 = s_alarmList->find(item1);
+	it2 = s_alarmList->find(item2);
+	if ((it1 == s_alarmList->end()) || (it2 == s_alarmList->end()))
+	{
+		wxLogWarning(_T("CompareAlarms: invalid iterator returned"));
+		return 0;	// Shouldn't happen
+	}
+
+	switch(mode)
+	{
+		case 0:		// Severity
+			rc = COMPARE_NUMBERS(it1->second->nCurrentSeverity, it2->second->nCurrentSeverity);
+			break;
+		case 1:		// State
+			rc = COMPARE_NUMBERS(it1->second->nState, it2->second->nState);
+			break;
+		case 3:		// Message
+			rc = _tcsicmp(it1->second->szMessage, it2->second->szMessage);
+			break;
+		default:
+			rc = 0;
+			break;
+	}
+
+	return (sortData & 0x8000) ? rc : -rc;
+}
+
+
+//
+// Handler for column click
+//
+
+void nxAlarmView::OnListColumnClick(wxListEvent &event)
+{
+	m_wndListCtrl->ClearColumnImage(m_sortMode);
+
+	if (m_sortMode == event.GetColumn())
+	{
+		m_sortDir = -m_sortDir;
+	}
+	else
+	{
+		m_sortMode = event.GetColumn();
+	}
+
+	s_alarmList = NXMCGetAlarmList();
+	m_wndListCtrl->SortItems(CompareAlarms, m_sortMode | ((m_sortDir == 1) ? 0x8000 : 0));
+	NXMCUnlockAlarmList();
+
+	m_wndListCtrl->SetColumnImage(m_sortMode, STATUS_TESTING + ((m_sortDir == 1) ? 4 : 5));
 }

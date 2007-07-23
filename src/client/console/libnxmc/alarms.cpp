@@ -28,7 +28,7 @@
 // Static data
 //
 
-static nxArrayOfAlarms s_alarmList;
+static nxAlarmList s_alarmList;
 static MUTEX s_mutexAlarmAccess = INVALID_MUTEX_HANDLE;
 
 
@@ -42,22 +42,7 @@ void LIBNXMC_EXPORTABLE NXMCInitAlarms(DWORD count, NXC_ALARM *list)
 
 	s_mutexAlarmAccess = MutexCreate();
 	for(i = 0; i < count; i++)
-		s_alarmList.Add((NXC_ALARM *)nx_memdup(&list[i], sizeof(NXC_ALARM)));
-}
-
-
-//
-// Find alarm in list
-//
-
-static int FindAlarm(DWORD id)
-{
-	int i;
-
-	for(i = 0; i < (int)s_alarmList.GetCount(); i++)
-		if (s_alarmList[i]->dwAlarmId == id)
-			return i;
-	return wxNOT_FOUND;
+		s_alarmList[list[i].dwAlarmId] = (NXC_ALARM *)nx_memdup(&list[i], sizeof(NXC_ALARM));
 }
 
 
@@ -67,32 +52,32 @@ static int FindAlarm(DWORD id)
 
 void LIBNXMC_EXPORTABLE NXMCUpdateAlarms(DWORD code, NXC_ALARM *data)
 {
-	int index;
+	nxAlarmList::iterator it;
 
 	MutexLock(s_mutexAlarmAccess, INFINITE);
 	switch(code)
 	{
 		case NX_NOTIFY_NEW_ALARM:
-			s_alarmList.Add((NXC_ALARM *)nx_memdup(data, sizeof(NXC_ALARM)));
+			s_alarmList[data->dwAlarmId] = (NXC_ALARM *)nx_memdup(data, sizeof(NXC_ALARM));
 			break;
       case NX_NOTIFY_ALARM_DELETED:
       case NX_NOTIFY_ALARM_TERMINATED:
-			index = FindAlarm(data->dwAlarmId);
-			if (index != wxNOT_FOUND)
+			it = s_alarmList.find(data->dwAlarmId);
+			if (it != s_alarmList.end())
 			{
-				free(s_alarmList[index]);
-				s_alarmList.RemoveAt(index);
+				free(it->second);
+				s_alarmList.erase(it);
 			}
 			break;
       case NX_NOTIFY_ALARM_CHANGED:
-			index = FindAlarm(data->dwAlarmId);
-			if (index != wxNOT_FOUND)
+			it = s_alarmList.find(data->dwAlarmId);
+			if (it != s_alarmList.end())
 			{
-				memcpy(s_alarmList[index], data, sizeof(NXC_ALARM));
+				memcpy(it->second, data, sizeof(NXC_ALARM));
 			}
 			else
 			{
-				s_alarmList.Add((NXC_ALARM *)nx_memdup(data, sizeof(NXC_ALARM)));
+				s_alarmList[data->dwAlarmId] = (NXC_ALARM *)nx_memdup(data, sizeof(NXC_ALARM));
 			}
 			break;
 	}
@@ -104,7 +89,7 @@ void LIBNXMC_EXPORTABLE NXMCUpdateAlarms(DWORD code, NXC_ALARM *data)
 // Get alarm list
 //
 
-nxArrayOfAlarms LIBNXMC_EXPORTABLE *NXMCGetAlarmList()
+nxAlarmList LIBNXMC_EXPORTABLE *NXMCGetAlarmList()
 {
 	MutexLock(s_mutexAlarmAccess, INFINITE);
 	return &s_alarmList;
