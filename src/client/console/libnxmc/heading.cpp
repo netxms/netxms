@@ -41,6 +41,7 @@ nxHeading::nxHeading(wxWindow *parent, const wxString &text, const wxPoint &pos,
           : wxWindow(parent, wxID_ANY, pos, size)
 {
 	m_text = text;
+	SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
 }
 
 

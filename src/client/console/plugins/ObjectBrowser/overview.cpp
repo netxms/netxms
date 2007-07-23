@@ -41,6 +41,7 @@ nxObjOverviewHeader::nxObjOverviewHeader(wxWindow *parent)
                     : wxWindow(parent, wxID_ANY, wxDefaultPosition, wxSize(100, 40))
 {
 	m_object = NULL;
+	SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
 }
 
 
