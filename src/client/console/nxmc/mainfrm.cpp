@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.7 2007-07-23 22:38:06 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.8 2007-07-24 22:34:21 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -47,6 +47,7 @@ BEGIN_EVENT_TABLE(nxMainFrame, wxFrame)
 	EVT_MENU(wxID_TAB_FLOAT, nxMainFrame::OnTabFloat)
 	EVT_MENU(wxID_TAB_DOCK, nxMainFrame::OnTabDock)
 	EVT_MENU_RANGE(wxID_PLUGIN_RANGE_START, wxID_PLUGIN_RANGE_END, nxMainFrame::OnPluginCommand)
+	EVT_NXC_ALARM_CHANGE(nxMainFrame::OnAlarmChange)
 END_EVENT_TABLE()
 
 
@@ -373,4 +374,17 @@ void nxMainFrame::OnViewRefresh(wxCommandEvent &event)
 		wxCommandEvent event(nxEVT_REFRESH_VIEW);
 		page->AddPendingEvent(event);
 	}
+}
+
+
+//
+// Handler for alarm change events
+//
+
+void nxMainFrame::OnAlarmChange(wxCommandEvent &event)
+{
+	wxLogDebug(_T("MAINFRAME: onAlarmChange %d"), event.GetInt());
+	// nxMainFrame is a final destination for client library events,
+	// so it should destroy dynamic data associated with event
+	safe_free(event.GetClientData());
 }

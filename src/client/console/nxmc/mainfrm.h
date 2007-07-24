@@ -1,4 +1,4 @@
-/* $Id: mainfrm.h,v 1.4 2007-07-23 06:39:12 victor Exp $ */
+/* $Id: mainfrm.h,v 1.5 2007-07-24 22:34:21 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -103,6 +103,7 @@ protected:
 	void OnTabDock(wxCommandEvent &event);
 	void OnPluginCommand(wxCommandEvent &event);
 	void OnContextMenu(wxContextMenuEvent &event);
+	void OnAlarmChange(wxCommandEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };

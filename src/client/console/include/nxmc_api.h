@@ -204,6 +204,8 @@ typedef struct
 
 BEGIN_DECLARE_EVENT_TYPES()
     DECLARE_EXPORTED_EVENT_TYPE(LIBNXMC_EXPORTABLE, nxEVT_REFRESH_VIEW, 0)
+    DECLARE_EXPORTED_EVENT_TYPE(LIBNXMC_EXPORTABLE, nxEVT_NXC_ALARM_CHANGE, 0)
+    DECLARE_EXPORTED_EVENT_TYPE(LIBNXMC_EXPORTABLE, nxEVT_NXC_OBJECT_CHANGE, 0)
 END_DECLARE_EVENT_TYPES()
 
 #define EVT_LIBNXMC_EVENT(evt, fn) \
@@ -213,6 +215,8 @@ END_DECLARE_EVENT_TYPES()
         (wxObject *) NULL \
     ),
 #define EVT_NX_REFRESH_VIEW(fn)			EVT_LIBNXMC_EVENT(nxEVT_REFRESH_VIEW, fn)
+#define EVT_NXC_ALARM_CHANGE(fn)			EVT_LIBNXMC_EVENT(nxEVT_NXC_ALARM_CHANGE, fn)
+#define EVT_NXC_OBJECT_CHANGE(fn)		EVT_LIBNXMC_EVENT(nxEVT_NXC_OBJECT_CHANGE, fn)
 
 
 //
@@ -334,5 +338,9 @@ TCHAR LIBNXMC_EXPORTABLE *NXMCFormatTimeStamp(time_t timeStamp, TCHAR *buffer, i
 
 void LIBNXMC_EXPORTABLE NXMCSaveListCtrlColumns(wxConfigBase *cfg, wxListCtrl &wndListCtrl, const TCHAR *prefix);
 void LIBNXMC_EXPORTABLE NXMCLoadListCtrlColumns(wxConfigBase *cfg, wxListCtrl &wndListCtrl, const TCHAR *prefix);
+
+void LIBNXMC_EXPORTABLE NXMCSetMainEventHandler(wxEvtHandler *evtHandler);
+void LIBNXMC_EXPORTABLE NXMCEvtConnect(wxEventType eventType, wxObjectEventFunction func, wxEvtHandler *sink);
+void LIBNXMC_EXPORTABLE NXMCEvtDisconnect(wxEventType eventType, wxObjectEventFunction func, wxEvtHandler *sink);
 
 #endif

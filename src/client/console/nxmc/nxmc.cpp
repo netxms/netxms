@@ -100,6 +100,7 @@ bool nxApp::OnInit()
 
 	m_mainFrame = new nxMainFrame(wxDefaultPosition, wxSize(700, 500));
 	SetTopWindow(m_mainFrame);
+	NXMCSetMainEventHandler(m_mainFrame);
 	m_mainFrame->UpdateMenuFromPlugins();
 
 	bool flag;

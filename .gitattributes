@@ -445,6 +445,7 @@ src/client/console/include/Makefile.am -text
 src/client/console/include/nxmc_api.h -text
 src/client/console/libnxmc/Makefile.am -text
 src/client/console/libnxmc/alarms.cpp -text
+src/client/console/libnxmc/events.cpp -text
 src/client/console/libnxmc/heading.cpp -text
 src/client/console/libnxmc/heading.h -text
 src/client/console/libnxmc/image.cpp -text

@@ -41,12 +41,25 @@ struct LOGIN_DATA
 
 
 //
+// Post NetXMS event
+//
+
+static void PostNetXMSEvent(WXTYPE type, int code, void *data)
+{
+	wxCommandEvent event(type);
+	event.SetClientData(data);
+	event.SetInt(code);
+	wxPostEvent(wxGetApp().GetTopWindow(), event);
+}
+
+
+//
 // Client library event handler
 //
 
-static void ClientEventHandler(NXC_SESSION session, DWORD event, DWORD code, void *arg)
+static void ClientEventHandler(NXC_SESSION session, DWORD nxcEvent, DWORD code, void *arg)
 {
-	switch(event)
+	switch(nxcEvent)
 	{
 		case NXC_EVENT_NOTIFICATION:
 			switch(code)
@@ -56,6 +69,7 @@ static void ClientEventHandler(NXC_SESSION session, DWORD event, DWORD code, voi
 				case NX_NOTIFY_ALARM_CHANGED:
 				case NX_NOTIFY_ALARM_TERMINATED:
 					NXMCUpdateAlarms(code, (NXC_ALARM *)arg);
+					PostNetXMSEvent(nxEVT_NXC_ALARM_CHANGE, code, nx_memdup(arg, sizeof(NXC_ALARM)));
 					break;
 				default:
 					break;

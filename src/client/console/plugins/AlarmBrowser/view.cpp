@@ -70,6 +70,8 @@ nxAlarmView::nxAlarmView(wxWindow *parent, const TCHAR *context)
 	NXMCLoadListCtrlColumns(cfg, *m_wndListCtrl, _T("AlarmView"));
 
 	cfg->SetPath(path);
+
+	NXMCEvtConnect(nxEVT_NXC_ALARM_CHANGE, wxCommandEventHandler(nxAlarmView::OnAlarmChange), this);
 }
 
 
@@ -79,9 +81,10 @@ nxAlarmView::nxAlarmView(wxWindow *parent, const TCHAR *context)
 
 nxAlarmView::~nxAlarmView()
 {
+	NXMCEvtDisconnect(nxEVT_NXC_ALARM_CHANGE, wxCommandEventHandler(nxAlarmView::OnAlarmChange), this);
+
 	wxConfigBase *cfg = wxConfig::Get();
 	wxString path = cfg->GetPath();
-
 	cfg->SetPath(m_context);
 	cfg->Write(_T("AlarmView/SortMode"), m_sortMode);
 	cfg->Write(_T("AlarmView/SortDir"), m_sortDir);
@@ -277,4 +280,15 @@ void nxAlarmView::OnListColumnClick(wxListEvent &event)
 		m_sortMode = event.GetColumn();
 	}
 	SortAlarmList();
+}
+
+
+//
+// Handler for alarm change event
+//
+
+void nxAlarmView::OnAlarmChange(wxCommandEvent &event)
+{
+	wxLogDebug(_T("AlarmView: onAlarmChange %d"), event.GetInt());
+	event.Skip();
 }
