@@ -332,4 +332,7 @@ void LIBNXMC_EXPORTABLE NXMCUnlockAlarmList();
 
 TCHAR LIBNXMC_EXPORTABLE *NXMCFormatTimeStamp(time_t timeStamp, TCHAR *buffer, int type);
 
+void LIBNXMC_EXPORTABLE NXMCSaveListCtrlColumns(wxConfigBase *cfg, wxListCtrl &wndListCtrl, const TCHAR *prefix);
+void LIBNXMC_EXPORTABLE NXMCLoadListCtrlColumns(wxConfigBase *cfg, wxListCtrl &wndListCtrl, const TCHAR *prefix);
+
 #endif

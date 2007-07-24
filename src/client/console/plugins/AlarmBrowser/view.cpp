@@ -39,11 +39,17 @@ END_EVENT_TABLE()
 // Constructor
 //
 
-nxAlarmView::nxAlarmView(wxWindow *parent)
+nxAlarmView::nxAlarmView(wxWindow *parent, const TCHAR *context)
             : wxWindow(parent, wxID_ANY)
 {
-	wxConfig::Get()->Read(_T("/AlarmView/SortMode"), &m_sortMode, 0);
-	wxConfig::Get()->Read(_T("/AlarmView/SortDir"), &m_sortDir, -1);
+	wxConfigBase *cfg = wxConfig::Get();
+	wxString path = cfg->GetPath();
+
+	m_context = context;
+
+	cfg->SetPath(m_context);
+	cfg->Read(_T("AlarmView/SortMode"), &m_sortMode, 0);
+	cfg->Read(_T("AlarmView/SortDir"), &m_sortDir, -1);
 
 	m_wndListCtrl = new wxListView(this, wxID_LIST_CTRL, wxDefaultPosition, wxDefaultSize,
 	                               wxLC_REPORT | wxLC_HRULES | wxLC_VRULES);
@@ -61,6 +67,26 @@ nxAlarmView::nxAlarmView(wxWindow *parent)
 	imgList->Add(wxXmlResource::Get()->LoadIcon(_T("icoSortUp")));
 	imgList->Add(wxXmlResource::Get()->LoadIcon(_T("icoSortDown")));
 	m_wndListCtrl->AssignImageList(imgList, wxIMAGE_LIST_SMALL);
+	NXMCLoadListCtrlColumns(cfg, *m_wndListCtrl, _T("AlarmView"));
+
+	cfg->SetPath(path);
+}
+
+
+//
+// Destructor
+//
+
+nxAlarmView::~nxAlarmView()
+{
+	wxConfigBase *cfg = wxConfig::Get();
+	wxString path = cfg->GetPath();
+
+	cfg->SetPath(m_context);
+	cfg->Write(_T("AlarmView/SortMode"), m_sortMode);
+	cfg->Write(_T("AlarmView/SortDir"), m_sortDir);
+	NXMCSaveListCtrlColumns(cfg, *m_wndListCtrl, _T("AlarmView"));
+	cfg->SetPath(path);
 }
 
 
@@ -93,6 +119,8 @@ void nxAlarmView::RefreshView()
 	}
 
 	NXMCUnlockAlarmList();
+
+	SortAlarmList();
 }
 
 
@@ -173,6 +201,7 @@ static int wxCALLBACK CompareAlarms(long item1, long item2, long sortData)
 	long mode = sortData & 0x7FFF;
 	int rc;
 	nxAlarmList::iterator it1, it2;
+	NXC_OBJECT *obj1, *obj2;
 
 	it1 = s_alarmList->find(item1);
 	it2 = s_alarmList->find(item2);
@@ -190,8 +219,22 @@ static int wxCALLBACK CompareAlarms(long item1, long item2, long sortData)
 		case 1:		// State
 			rc = COMPARE_NUMBERS(it1->second->nState, it2->second->nState);
 			break;
+		case 2:		// Source
+			obj1 = NXCFindObjectById(NXMCGetSession(), it1->second->dwSourceObject);
+			obj2 = NXCFindObjectById(NXMCGetSession(), it2->second->dwSourceObject);
+			rc = _tcsicmp((obj1 != NULL) ? obj1->szName : _T("(null)"), (obj2 != NULL) ? obj2->szName : _T("(null)"));
+			break;
 		case 3:		// Message
 			rc = _tcsicmp(it1->second->szMessage, it2->second->szMessage);
+			break;
+		case 4:		// Count
+			rc = COMPARE_NUMBERS(it1->second->dwRepeatCount, it2->second->dwRepeatCount);
+			break;
+		case 5:		// Created
+			rc = COMPARE_NUMBERS(it1->second->dwCreationTime, it2->second->dwCreationTime);
+			break;
+		case 6:		// Last changed
+			rc = COMPARE_NUMBERS(it1->second->dwLastChangeTime, it2->second->dwLastChangeTime);
 			break;
 		default:
 			rc = 0;
@@ -199,6 +242,21 @@ static int wxCALLBACK CompareAlarms(long item1, long item2, long sortData)
 	}
 
 	return (sortData & 0x8000) ? rc : -rc;
+}
+
+
+//
+// Sort aarm list
+//
+
+void nxAlarmView::SortAlarmList()
+{
+	s_alarmList = NXMCGetAlarmList();
+	m_wndListCtrl->SortItems(CompareAlarms, m_sortMode | ((m_sortDir == 1) ? 0x8000 : 0));
+	NXMCUnlockAlarmList();
+
+	// Mark sorting column
+	m_wndListCtrl->SetColumnImage(m_sortMode, STATUS_TESTING + ((m_sortDir == 1) ? 4 : 5));
 }
 
 
@@ -218,10 +276,5 @@ void nxAlarmView::OnListColumnClick(wxListEvent &event)
 	{
 		m_sortMode = event.GetColumn();
 	}
-
-	s_alarmList = NXMCGetAlarmList();
-	m_wndListCtrl->SortItems(CompareAlarms, m_sortMode | ((m_sortDir == 1) ? 0x8000 : 0));
-	NXMCUnlockAlarmList();
-
-	m_wndListCtrl->SetColumnImage(m_sortMode, STATUS_TESTING + ((m_sortDir == 1) ? 4 : 5));
+	SortAlarmList();
 }

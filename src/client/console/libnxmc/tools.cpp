@@ -103,3 +103,49 @@ bool LIBNXMC_EXPORTABLE NXMCLoadResources(const TCHAR *name, NXMC_LIB_INSTANCE i
 	wxLogDebug(_T("Loading resource file %s"), xrsFile.c_str());
 	return wxXmlResource::Get()->Load(xrsFile);
 }
+
+
+//
+// Save dimensions of all list control columns into config
+//
+
+void LIBNXMC_EXPORTABLE NXMCSaveListCtrlColumns(wxConfigBase *cfg, wxListCtrl &wndListCtrl, const TCHAR *prefix)
+{
+   int i, count;
+	wxString path = cfg->GetPath();
+   TCHAR item[64];
+
+	cfg->SetPath(prefix);
+	count = wndListCtrl.GetColumnCount();
+	cfg->Write(_T("ColumnCount"), count);
+	for(i = 0; i < count; i++)
+   {
+      _stprintf(item, _T("Column%d"), i);
+		cfg->Write(item, wndListCtrl.GetColumnWidth(i));
+   }
+	cfg->SetPath(path);
+}
+
+
+//
+// Load and set dimensions of all list control columns
+//
+
+void LIBNXMC_EXPORTABLE NXMCLoadListCtrlColumns(wxConfigBase *cfg, wxListCtrl &wndListCtrl, const TCHAR *prefix)
+{
+   long i, count, width;
+	wxString path = cfg->GetPath();
+   TCHAR item[64];
+
+	cfg->SetPath(prefix);
+	cfg->Read(_T("ColumnCount"), &count, 0);
+
+   for(i = 0; i < count; i++)
+   {
+      _stprintf(item, _T("Column%d"), i);
+		cfg->Read(item, &width, 50);
+      wndListCtrl.SetColumnWidth(i, width);
+   }
+
+	cfg->SetPath(path);
+}

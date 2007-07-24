@@ -40,12 +40,15 @@ private:
 	wxListView *m_wndListCtrl;
 	long m_sortMode;
 	long m_sortDir;
+	wxString m_context;
 
 	void AddAlarm(NXC_ALARM *alarm);
 	void UpdateAlarm(long item, NXC_ALARM *alarm);
+	void SortAlarmList();
 
 public:
-	nxAlarmView(wxWindow *parent);
+	nxAlarmView(wxWindow *parent, const TCHAR *context);
+	virtual ~nxAlarmView();
 
 	void RefreshView();
 

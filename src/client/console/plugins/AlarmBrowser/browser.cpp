@@ -45,7 +45,7 @@ nxAlarmBrowser::nxAlarmBrowser()
 	SetLabel(_T("Alarm Browser"));
 	RegisterUniqueView(_T("alarmbrowser"), this);
 
-	m_view = new nxAlarmView(this);
+	m_view = new nxAlarmView(this, _T("/AlarmBrowser"));
 
 	wxCommandEvent event(nxEVT_REFRESH_VIEW);
 	AddPendingEvent(event);
