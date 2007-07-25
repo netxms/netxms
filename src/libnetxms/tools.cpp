@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.63 2007-07-25 11:27:36 victor Exp $ */
+/* $Id: tools.cpp,v 1.64 2007-07-25 12:03:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
@@ -573,10 +573,10 @@ TCHAR LIBNETXMS_EXPORTABLE *BinToStr(BYTE *pData, DWORD dwSize, TCHAR *pStr)
 // Convert string of hexadecimal digits to byte array
 //
 
-DWORD LIBNETXMS_EXPORTABLE StrToBin(TCHAR *pStr, BYTE *pData, DWORD dwSize)
+DWORD LIBNETXMS_EXPORTABLE StrToBin(const TCHAR *pStr, BYTE *pData, DWORD dwSize)
 {
    DWORD i;
-   TCHAR *pCurr;
+   const TCHAR *pCurr;
 
    memset(pData, 0, dwSize);
    for(i = 0, pCurr = pStr; (i < dwSize) && (*pCurr != 0); i++)
@@ -687,7 +687,7 @@ void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr,
 // Get size of file in bytes
 //
 
-QWORD LIBNETXMS_EXPORTABLE FileSize(TCHAR *pszFileName)
+QWORD LIBNETXMS_EXPORTABLE FileSize(const TCHAR *pszFileName)
 {
 #ifdef _WIN32
    HANDLE hFind;
@@ -731,7 +731,7 @@ TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(TCHAR *pszFileName)
 // Translate DCI data type from text form to code
 //
 
-int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(TCHAR *pszText)
+int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText)
 {
    static TCHAR *m_pszValidTypes[] = { _T("INT"), _T("UINT"), _T("INT64"),
                                        _T("UINT64"), _T("STRING"),
@@ -861,7 +861,7 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
 // Resolve host name to IP address
 //
 
-DWORD LIBNETXMS_EXPORTABLE ResolveHostName(TCHAR *pszName)
+DWORD LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName)
 {
    DWORD dwAddr;
    struct hostent *hs;
@@ -1018,7 +1018,7 @@ BOOL LIBNETXMS_EXPORTABLE RegexpMatch(TCHAR *pszStr, TCHAR *pszExpr, BOOL bMatch
 
 #ifndef UNDER_CE
 
-BYTE LIBNETXMS_EXPORTABLE *LoadFile(TCHAR *pszFileName, DWORD *pdwFileSize)
+BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, DWORD *pdwFileSize)
 {
    int fd, iBufPos, iNumBytes, iBytesRead;
    BYTE *pBuffer = NULL;

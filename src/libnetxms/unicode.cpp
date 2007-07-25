@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.23 2007-04-18 07:47:31 victor Exp $ */
+/* $Id: unicode.cpp,v 1.24 2007-07-25 12:03:05 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -64,7 +64,7 @@ static char m_cpDefault[MAX_CODEPAGE_LEN] = ICONV_DEFAULT_CODEPAGE;
 // Set application's default codepage
 //
 
-void LIBNETXMS_EXPORTABLE SetDefaultCodepage(char *cp)
+void LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp)
 {
 	strncpy(m_cpDefault, cp, MAX_CODEPAGE_LEN);
 	m_cpDefault[MAX_CODEPAGE_LEN - 1] = 0;
@@ -110,7 +110,7 @@ WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *pStr)
 
 #if !HAVE_USEABLE_WCHAR
 
-WCHAR LIBNETXMS_EXPORTABLE *nx_wcsncpy(WCHAR *pDst, WCHAR *pSrc, int nDstLen)
+WCHAR LIBNETXMS_EXPORTABLE *nx_wcsncpy(WCHAR *pDst, const WCHAR *pSrc, int nDstLen)
 {
 	int nLen;
 
@@ -129,14 +129,15 @@ WCHAR LIBNETXMS_EXPORTABLE *nx_wcsncpy(WCHAR *pDst, WCHAR *pSrc, int nDstLen)
 //
 
 int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags,
-                                             WCHAR *pWideCharStr, int cchWideChar,
+                                             const WCHAR *pWideCharStr, int cchWideChar,
 															char *pByteStr, int cchByteChar, 
                                              char *pDefaultChar, BOOL *pbUsedDefChar)
 {
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
 	iconv_t cd;
 	int nRet;
-	char *inbuf, *outbuf;
+	const char *inbuf;
+	char *outbuf;
 	size_t inbytes, outbytes;
 	char cp[MAX_CODEPAGE_LEN + 16];
 
@@ -155,7 +156,7 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags,
 	cd = iconv_open(iCodePage == CP_UTF8 ? "UTF-8" : cp, UCS2_CODEPAGE_NAME);
 	if (cd != (iconv_t)(-1))
 	{
-		inbuf = (char *)pWideCharStr;
+		inbuf = (const char *)pWideCharStr;
 		inbytes = ((cchWideChar == -1) ? wcslen(pWideCharStr) + 1 : cchWideChar) * sizeof(WCHAR);
 		outbuf = pByteStr;
 		outbytes = cchByteChar;
@@ -186,7 +187,7 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags,
 
 #else
 
-   WCHAR *pSrc;
+   const WCHAR *pSrc;
    char *pDest;
    int iPos, iSize;
 
@@ -211,14 +212,15 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags,
 // Convert single-byte to UNICODE string
 //
 
-int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, char *pByteStr,
-	int cchByteChar, WCHAR *pWideCharStr, int cchWideChar)
+int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, const char *pByteStr,
+                                             int cchByteChar, WCHAR *pWideCharStr, int cchWideChar)
 {
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
 
 	iconv_t cd;
 	int nRet;
-	char *inbuf, *outbuf;
+	const char *inbuf;
+	char *outbuf;
 	size_t inbytes, outbytes;
 
 	if (cchWideChar == 0)
@@ -266,7 +268,7 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, char 
 
 #else
 
-	char *pSrc;
+	const char *pSrc;
 	WCHAR *pDest;
 	int iPos, iSize;
 
@@ -293,7 +295,7 @@ int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, char 
 // UNICODE version of inet_addr()
 //
 
-DWORD LIBNETXMS_EXPORTABLE inet_addr_w(WCHAR *pszAddr)
+DWORD LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr)
 {
    char szBuffer[256];
 
@@ -308,7 +310,7 @@ DWORD LIBNETXMS_EXPORTABLE inet_addr_w(WCHAR *pszAddr)
 // allocating wide string dynamically
 //
 
-WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(char *pszString)
+WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString)
 {
    WCHAR *pwszOut;
    int nLen;
@@ -325,7 +327,7 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(char *pszString)
 // allocating multibyte string dynamically
 //
 
-char LIBNETXMS_EXPORTABLE *MBStringFromWideString(WCHAR *pwszString)
+char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString)
 {
    char *pszOut;
    int nLen;
@@ -342,7 +344,7 @@ char LIBNETXMS_EXPORTABLE *MBStringFromWideString(WCHAR *pwszString)
 // Convert wide string to UTF8 string allocating UTF8 string dynamically
 //
 
-char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(WCHAR *pwszString)
+char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString)
 {
    char *pszOut;
    int nLen;

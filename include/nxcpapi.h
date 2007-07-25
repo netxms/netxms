@@ -89,7 +89,7 @@ public:
    void SetVariable(DWORD dwVarId, TCHAR *pszValue) { Set(dwVarId, CSCP_DT_STRING, pszValue); }
    void SetVariable(DWORD dwVarId, BYTE *pValue, DWORD dwSize) { Set(dwVarId, CSCP_DT_BINARY, pValue, dwSize); }
    void SetVariableToInt32Array(DWORD dwVarId, DWORD dwNumElements, DWORD *pdwData);
-   BOOL SetVariableFromFile(DWORD dwVarId, TCHAR *pszFileName);
+   BOOL SetVariableFromFile(DWORD dwVarId, const TCHAR *pszFileName);
 
    DWORD GetVariableLong(DWORD dwVarId);
    QWORD GetVariableInt64(DWORD dwVarId);
@@ -203,7 +203,7 @@ DWORD LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg,
                                                   RSA *pPrivateKey, int nNXCPVersion);
 void LIBNETXMS_EXPORTABLE DestroyEncryptionContext(CSCP_ENCRYPTION_CONTEXT *pCtx);
 void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(CSCPMessage *pMsg, RSA *pServerKey);
-RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(TCHAR *pszKeyFile);
+RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile);
 
 #ifdef _WIN32
 BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, DWORD dwMsgLen, const CERT_CONTEXT *pCert,

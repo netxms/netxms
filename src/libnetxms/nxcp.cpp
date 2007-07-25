@@ -1,4 +1,4 @@
-/* $Id: nxcp.cpp,v 1.16 2007-03-27 16:21:41 victor Exp $ */
+/* $Id: nxcp.cpp,v 1.17 2007-07-25 12:03:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
@@ -38,7 +38,7 @@
 
 TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 {
-   static TCHAR *pszMsgNames[] =
+   static const TCHAR *pszMsgNames[] =
    {
       _T("CMD_LOGIN"),
       _T("CMD_LOGIN_RESP"),

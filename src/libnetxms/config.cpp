@@ -44,7 +44,7 @@
  * @return Error code (NXCFG_ERR_OK/NXCFG_ERR_NOFILE/NXCFG_ERR_SYNTAX)
  */
 
-DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(TCHAR *pszFileName, TCHAR *pszSection,
+DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(const TCHAR *pszFileName, const TCHAR *pszSection,
                                         NX_CFG_TEMPLATE *pTemplateList, BOOL bPrint)
 {
    FILE *cfg;

@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.109 2007-07-25 11:27:36 victor Exp $ */
+/* $Id: nms_util.h,v 1.110 2007-07-25 12:03:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -394,7 +394,7 @@ typedef struct _dir_struc
    }
 #endif
 #else
-   TCHAR LIBNETXMS_EXPORTABLE *nx_strncpy(TCHAR *pszDest, TCHAR *pszSrc, int nLen);
+   TCHAR LIBNETXMS_EXPORTABLE *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, int nLen);
 #endif
 
 #ifdef __cplusplus
@@ -422,17 +422,17 @@ extern "C"
 												 int (*compare)(const void *, const void *, void *));
 
    INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs(void);
-   QWORD LIBNETXMS_EXPORTABLE FileSize(TCHAR *pszFileName);
+   QWORD LIBNETXMS_EXPORTABLE FileSize(const TCHAR *pszFileName);
 
    int LIBNETXMS_EXPORTABLE BitsInMask(DWORD dwMask);
    TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer);
-   DWORD LIBNETXMS_EXPORTABLE ResolveHostName(TCHAR *pszName);
+   DWORD LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName);
 
    void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, DWORD dwSize);
    void LIBNETXMS_EXPORTABLE nx_memswap(void *pBlock1, void *pBlock2, DWORD dwSize);
 
    TCHAR LIBNETXMS_EXPORTABLE *BinToStr(BYTE *pData, DWORD dwSize, TCHAR *pStr);
-   DWORD LIBNETXMS_EXPORTABLE StrToBin(TCHAR *pStr, BYTE *pData, DWORD dwSize);
+   DWORD LIBNETXMS_EXPORTABLE StrToBin(const TCHAR *pStr, BYTE *pData, DWORD dwSize);
    void LIBNETXMS_EXPORTABLE MACToStr(BYTE *pData, TCHAR *pStr);
 
    void LIBNETXMS_EXPORTABLE StrStrip(TCHAR *pszStr);
@@ -445,21 +445,21 @@ extern "C"
    void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr, const TCHAR *pszReplace);
    TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(TCHAR *pszFileName);
    void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize);
-	BYTE LIBNETXMS_EXPORTABLE *LoadFile(TCHAR *pszFileName, DWORD *pdwFileSize);
+	BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, DWORD *pdwFileSize);
  
    DWORD LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *pData, DWORD dwSize, DWORD dwCRC);
    void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, size_t nbytes, unsigned char *hash);
    void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, size_t nbytes, unsigned char *hash);
-   BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(TCHAR *pszFileName, BYTE *pHash);
-   BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(TCHAR *pszFileName, BYTE *pHash);
-   BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(TCHAR *pszFileName, DWORD *pResult);
+   BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *pszFileName, BYTE *pHash);
+   BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *pszFileName, BYTE *pHash);
+   BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *pszFileName, DWORD *pResult);
 
    DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout,
                                        DWORD *pdwRTT, DWORD dwPacketSize);
 
-   DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(TCHAR *pszFileName, TCHAR *pszSection, 
+   DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(const TCHAR *pszFileName, const TCHAR *pszSection, 
                                            NX_CFG_TEMPLATE *pTemplateList, BOOL bPrint);
-   int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(TCHAR *pszText);
+   int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText);
 
    HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText);
    void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule);
@@ -477,25 +477,25 @@ extern "C"
    int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose);
 #endif
 
-   DWORD LIBNETXMS_EXPORTABLE inet_addr_w(WCHAR *pszAddr);
+   DWORD LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr);
 
 #ifndef _WIN32
-	void LIBNETXMS_EXPORTABLE SetDefaultCodepage(char *cp);
-   int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, WCHAR *pWideCharStr, 
+	void LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp);
+   int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr, 
                                                 int cchWideChar, char *pByteStr, int cchByteChar, 
                                                 char *pDefaultChar, BOOL *pbUsedDefChar);
-   int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, char *pByteStr, 
+   int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, const char *pByteStr, 
                                                 int cchByteChar, WCHAR *pWideCharStr, 
                                                 int cchWideChar);
 #if !HAVE_USEABLE_WCHAR
 	int LIBNETXMS_EXPORTABLE nx_wcslen(const WCHAR *pStr);
-	WCHAR LIBNETXMS_EXPORTABLE *nx_wcsncpy(WCHAR *pDst, WCHAR *pSrc, int nDstLen);
+	WCHAR LIBNETXMS_EXPORTABLE *nx_wcsncpy(WCHAR *pDst, const WCHAR *pSrc, int nDstLen);
 	WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *pStr);
 #endif
 #endif	/* _WIN32 */
-   WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(char *pszString);
-   char LIBNETXMS_EXPORTABLE *MBStringFromWideString(WCHAR *pwszString);
-   char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(WCHAR *pwszString);
+   WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString);
+   char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString);
+   char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString);
 
 #ifdef _WITH_ENCRYPTION
 	WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer);
@@ -549,6 +549,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.109  2007/07/25 11:27:36  victor
+Fixed some issues with char* -> const char* conversion
+
 Revision 1.108  2007/07/11 19:46:57  victor
 - New client source tree added
 - Minor changes in libraris for better support of new console

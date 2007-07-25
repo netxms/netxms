@@ -453,7 +453,7 @@ void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(CSCPMessage *pMsg, RSA *pServerKe
 // Load RSA key(s) from file
 //
 
-RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(TCHAR *pszKeyFile)
+RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile)
 {
 #ifdef _WITH_ENCRYPTION
    FILE *fp;

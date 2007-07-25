@@ -1,4 +1,4 @@
-/* $Id: message.cpp,v 1.3 2007-01-03 23:11:03 victor Exp $ */
+/* $Id: message.cpp,v 1.4 2007-07-25 12:03:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
@@ -584,7 +584,7 @@ DWORD CSCPMessage::GetVariableInt32Array(DWORD dwVarId, DWORD dwNumElements, DWO
 // Set binary variable from file
 //
 
-BOOL CSCPMessage::SetVariableFromFile(DWORD dwVarId, TCHAR *pszFileName)
+BOOL CSCPMessage::SetVariableFromFile(DWORD dwVarId, const TCHAR *pszFileName)
 {
    FILE *pFile;
    BYTE *pBuffer;

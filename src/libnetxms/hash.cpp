@@ -148,7 +148,7 @@ void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, size_t nbytes, 
 // Calculate MD5 hash for given file
 //
 
-BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(TCHAR *pszFileName, BYTE *pHash)
+BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *pszFileName, BYTE *pHash)
 {
 	size_t iSize;
 	md5_state_t state;
@@ -181,7 +181,7 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(TCHAR *pszFileName, BYTE *pHash)
 // Calculate SHA1 hash for given file
 //
 
-BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(TCHAR *pszFileName, BYTE *pHash)
+BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *pszFileName, BYTE *pHash)
 {
    size_t iSize;
    FILE *fileHandle;
@@ -214,7 +214,7 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(TCHAR *pszFileName, BYTE *pHash)
 // Calculate CRC32 for given file
 //
 
-BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(TCHAR *pszFileName, DWORD *pResult)
+BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *pszFileName, DWORD *pResult)
 {
 	size_t iSize;
 	unsigned char szBuffer[FILE_BLOCK_SIZE];
