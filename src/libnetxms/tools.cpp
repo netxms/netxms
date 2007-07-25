@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.62 2007-07-02 23:14:16 victor Exp $ */
+/* $Id: tools.cpp,v 1.63 2007-07-25 11:27:36 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
@@ -659,7 +659,7 @@ void LIBNETXMS_EXPORTABLE NxSendTrap2(DWORD dwEvent, int nCount, TCHAR **ppszArg
 // NOTE: replacement string shouldn't be longer than original
 //
 
-void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, TCHAR *pszSubStr, TCHAR *pszReplace)
+void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr, const TCHAR *pszReplace)
 {
    TCHAR *pszSrc, *pszDst;
    int iSrcLen, iRepLen;
@@ -961,9 +961,9 @@ void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize)
 // Count number of characters in string
 //
 
-int LIBNETXMS_EXPORTABLE NumChars(TCHAR *pszStr, int ch)
+int LIBNETXMS_EXPORTABLE NumChars(const TCHAR *pszStr, int ch)
 {
-   TCHAR *p;
+   const TCHAR *p;
    int nCount;
 
    for(p = pszStr, nCount = 0; *p != 0; p++)

@@ -56,7 +56,7 @@ String::~String()
 // Operator =
 //
 
-const String& String::operator =(TCHAR *pszStr)
+const String& String::operator =(const TCHAR *pszStr)
 {
    safe_free(m_pszBuffer);
    m_pszBuffer = _tcsdup(pszStr);
@@ -69,7 +69,7 @@ const String& String::operator =(TCHAR *pszStr)
 // Operator +=
 //
 
-const String&  String::operator +=(TCHAR *pszStr)
+const String&  String::operator +=(const TCHAR *pszStr)
 {
    DWORD dwLen;
 
@@ -85,7 +85,7 @@ const String&  String::operator +=(TCHAR *pszStr)
 // Add formatted string to the end of buffer
 //
 
-void String::AddFormattedString(TCHAR *pszFormat, ...)
+void String::AddFormattedString(const TCHAR *pszFormat, ...)
 {
    int nLen;
    va_list args;
@@ -105,7 +105,7 @@ void String::AddFormattedString(TCHAR *pszFormat, ...)
 // Add formatted string to the end of buffer
 //
 
-void String::AddString(TCHAR *pStr, DWORD dwSize)
+void String::AddString(const TCHAR *pStr, DWORD dwSize)
 {
    m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwSize) * sizeof(TCHAR));
    memcpy(&m_pszBuffer[m_dwBufSize - 1], pStr, dwSize * sizeof(TCHAR));
@@ -160,7 +160,7 @@ void String::SetBuffer(TCHAR *pszBuffer)
 // Translate given substring
 //
 
-void String::Translate(TCHAR *pszSrc, TCHAR *pszDst)
+void String::Translate(const TCHAR *pszSrc, const TCHAR *pszDst)
 {
    DWORD i, dwLenSrc, dwLenDst, dwDelta;
 
@@ -241,7 +241,7 @@ TCHAR *String::SubStr(int nStart, int nLen, TCHAR *pszBuffer)
 // Find substring in a string
 //
 
-int String::Find(TCHAR *pszStr, int nStart)
+int String::Find(const TCHAR *pszStr, int nStart)
 {
 	TCHAR *p;
 

@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.108 2007-07-11 19:46:57 victor Exp $ */
+/* $Id: nms_util.h,v 1.109 2007-07-25 11:27:36 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -234,22 +234,22 @@ public:
 
    void SetBuffer(TCHAR *pszBuffer);
 
-   const String& operator =(TCHAR *pszStr);
-   const String&  operator +=(TCHAR *pszStr);
+   const String& operator =(const TCHAR *pszStr);
+   const String&  operator +=(const TCHAR *pszStr);
    operator TCHAR*() { return CHECK_NULL_EX(m_pszBuffer); }
 
-	void AddString(TCHAR *pStr, DWORD dwLen);
+	void AddString(const TCHAR *pStr, DWORD dwLen);
 	void AddDynamicString(TCHAR *pszStr) { if (pszStr != NULL) { *this += pszStr; free(pszStr); } }
 
-   void AddFormattedString(TCHAR *pszFormat, ...);
+   void AddFormattedString(const TCHAR *pszFormat, ...);
    void EscapeCharacter(int ch, int esc);
-   void Translate(TCHAR *pszSrc, TCHAR *pszDst);
+   void Translate(const TCHAR *pszSrc, const TCHAR *pszDst);
 
 	DWORD Size(void) { return m_dwBufSize > 0 ? m_dwBufSize - 1 : 0; }
 
 	TCHAR *SubStr(int nStart, int nLen, TCHAR *pszBuffer);
 	TCHAR *SubStr(int nStart, int nLen) { return SubStr(nStart, nLen, NULL); }
-	int Find(TCHAR *pszStr, int nStart = 0);
+	int Find(const TCHAR *pszStr, int nStart = 0);
 };
 
 
@@ -439,10 +439,10 @@ extern "C"
    BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *string, BOOL matchCase);
 	BOOL LIBNETXMS_EXPORTABLE RegexpMatch(TCHAR *pszStr, TCHAR *pszExpr, BOOL bMatchCase);
    TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(TCHAR *line, TCHAR *buffer);
-   int LIBNETXMS_EXPORTABLE NumChars(TCHAR *pszStr, int ch);
+   int LIBNETXMS_EXPORTABLE NumChars(const TCHAR *pszStr, int ch);
    BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName);
    BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName);
-   void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, TCHAR *pszSubStr, TCHAR *pszReplace);
+   void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr, const TCHAR *pszReplace);
    TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(TCHAR *pszFileName);
    void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize);
 	BYTE LIBNETXMS_EXPORTABLE *LoadFile(TCHAR *pszFileName, DWORD *pdwFileSize);
@@ -549,6 +549,10 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.108  2007/07/11 19:46:57  victor
+- New client source tree added
+- Minor changes in libraris for better support of new console
+
 Revision 1.107  2007/07/02 23:14:16  victor
 Various fixes
 
