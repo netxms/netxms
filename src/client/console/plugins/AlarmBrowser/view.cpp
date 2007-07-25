@@ -32,6 +32,7 @@ BEGIN_EVENT_TABLE(nxAlarmView, wxWindow)
 	EVT_SIZE(nxAlarmView::OnSize)
 	EVT_LIST_ITEM_RIGHT_CLICK(wxID_LIST_CTRL, nxAlarmView::OnListItemRightClick)
 	EVT_LIST_COL_CLICK(wxID_LIST_CTRL, nxAlarmView::OnListColumnClick)
+	EVT_MENU(XRCID("menuAlarmAck"), nxAlarmView::OnAlarmAck)
 END_EVENT_TABLE()
 
 
@@ -210,7 +211,7 @@ static int wxCALLBACK CompareAlarms(long item1, long item2, long sortData)
 	it2 = s_alarmList->find(item2);
 	if ((it1 == s_alarmList->end()) || (it2 == s_alarmList->end()))
 	{
-		wxLogWarning(_T("CompareAlarms: invalid iterator returned"));
+		wxLogDebug(_T("CompareAlarms: invalid iterator returned"));
 		return 0;	// Shouldn't happen
 	}
 
@@ -289,6 +290,40 @@ void nxAlarmView::OnListColumnClick(wxListEvent &event)
 
 void nxAlarmView::OnAlarmChange(wxCommandEvent &event)
 {
-	wxLogDebug(_T("AlarmView: onAlarmChange %d"), event.GetInt());
+	long item;
+	
+	switch(event.GetInt())
+	{
+		case NX_NOTIFY_NEW_ALARM:
+		case NX_NOTIFY_ALARM_CHANGED:
+			item = m_wndListCtrl->FindItem(-1, ((NXC_ALARM *)event.GetClientData())->dwAlarmId);
+			if (item != -1)
+			{
+				UpdateAlarm(item, (NXC_ALARM *)event.GetClientData());
+			}
+			else
+			{
+				AddAlarm((NXC_ALARM *)event.GetClientData());
+			}
+			SortAlarmList();
+			break;
+		case NX_NOTIFY_ALARM_TERMINATED:
+		case NX_NOTIFY_ALARM_DELETED:
+			item = m_wndListCtrl->FindItem(-1, ((NXC_ALARM *)event.GetClientData())->dwAlarmId);
+			if (item != -1)
+				m_wndListCtrl->DeleteItem(item);
+			break;
+	}
 	event.Skip();
 }
+
+
+//
+// Handler for acknowledge alarm menu
+//
+
+void nxAlarmView::OnAlarmAck(wxCommandEvent &event)
+{
+wxLogDebug("ACK");
+}
+

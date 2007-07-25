@@ -57,7 +57,8 @@ protected:
 	void OnSize(wxSizeEvent &event);
 	void OnListItemRightClick(wxListEvent &event);
 	void OnListColumnClick(wxListEvent &event);
-void OnAlarmChange(wxCommandEvent &event);
+	void OnAlarmChange(wxCommandEvent &event);
+	void OnAlarmAck(wxCommandEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };
