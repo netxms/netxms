@@ -520,6 +520,7 @@ src/client/console/plugins/AlarmBrowser/main.cpp -text
 src/client/console/plugins/AlarmBrowser/mcpAlarmBrowser.dsp -text
 src/client/console/plugins/AlarmBrowser/rc/AlarmBrowser.xrc -text
 src/client/console/plugins/AlarmBrowser/rc/Makefile.am -text
+src/client/console/plugins/AlarmBrowser/rc/alarmview.xpm -text
 src/client/console/plugins/AlarmBrowser/resource.h -text
 src/client/console/plugins/AlarmBrowser/view.cpp -text
 src/client/console/plugins/Makefile.am -text

@@ -13,7 +13,8 @@ resource_DATA = AlarmBrowser.xrs
 
 EXTRA_DIST = \
 	AlarmBrowser.xrc \
-	AlarmBrowser.xrs
+	AlarmBrowser.xrs \
+	alarmview.xpm
 
 AlarmBrowser.xrs: AlarmBrowser.xrc
 	wxrc AlarmBrowser.xrc -o AlarmBrowser.xrs
