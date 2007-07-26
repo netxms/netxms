@@ -294,6 +294,13 @@ WX_DECLARE_HASH_MAP(DWORD, NXC_ALARM*, wxIntegerHash, wxIntegerEqual, nxAlarmLis
 
 
 //
+// View creator callback type
+//
+
+typedef nxView* (*nxViewCreator)(wxWindow *, const TCHAR *, NXC_OBJECT *, void *);
+
+
+//
 // Functions
 //
 
@@ -318,6 +325,11 @@ void LIBNXMC_EXPORTABLE RegisterUniqueView(const TCHAR *name, nxView *view);
 void LIBNXMC_EXPORTABLE UnregisterUniqueView(const TCHAR *name);
 nxView LIBNXMC_EXPORTABLE *FindUniqueView(const TCHAR *name);
 void LIBNXMC_EXPORTABLE ActivateView(nxView *view);
+
+void LIBNXMC_EXPORTABLE NXMCRegisterViewCreator(const TCHAR *viewClass, nxViewCreator func);
+nxView LIBNXMC_EXPORTABLE *NXMCCreateViewByClass(const TCHAR *viewClass, wxWindow *parent,
+                                                 const TCHAR *context, NXC_OBJECT *object,
+                                                 void *userData);
 
 const TCHAR LIBNXMC_EXPORTABLE *NXMCCodeToText(int code, CODE_TO_TEXT *translator, const TCHAR *defaultText);
 const TCHAR LIBNXMC_EXPORTABLE *NXMCGetStatusText(int status);

@@ -57,8 +57,8 @@ class LIBNXMC_EXPORTABLE nxView : public wxWindow
 {
 private:
 	wxString m_label;
-	wxBitmap m_icon;	// Icon associated with this view
 	wxTimer *m_timer;
+	wxIcon m_icon;	// Icon associated with this view
 	int m_activeRequestCount;
 	int m_freeRqId;	// First free request id
 	bool m_isBusy;
@@ -66,6 +66,7 @@ private:
 	int DoRequest(RqData *data);
 	
 protected:
+	
 	int DoRequestArg1(void *func, wxUIntPtr arg1);
 	int DoRequestArg2(void *func, wxUIntPtr arg1, wxUIntPtr arg2);
 	int DoRequestArg3(void *func, wxUIntPtr arg1, wxUIntPtr arg2, wxUIntPtr arg3);
@@ -78,11 +79,14 @@ public:
 
 	virtual void SetLabel(const wxString& label);
 	virtual wxString GetLabel() const;
+	
+	virtual void RefreshView();
 
-	const wxBitmap& GetBitmap() { return m_icon; }
+	void SetIcon(const wxIcon &icon) { m_icon = icon; }
+	const wxIcon& GetIcon() { return m_icon; }
 	
 	bool IsBusy() { return m_isBusy; }
-
+	
 	// Event handlers
 protected:
 	void OnTimer(wxTimerEvent &event);

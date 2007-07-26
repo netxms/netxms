@@ -57,6 +57,7 @@
 //
 
 WX_DECLARE_STRING_HASH_MAP(nxView*, nxViewHash);
+WX_DECLARE_STRING_HASH_MAP(nxViewCreator, nxViewCreatorsHash);
 
 
 //

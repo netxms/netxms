@@ -48,7 +48,7 @@ END_EVENT_TABLE()
 nxView::nxView(wxWindow *parent)
        : wxWindow(parent, wxID_ANY,  wxDefaultPosition, wxDefaultSize)
 {
-	m_icon = wxNullBitmap;
+	m_icon = wxNullIcon;
 	m_timer = new wxTimer(this, RQ_TIMER_ID);
 	m_activeRequestCount = 0;
 	m_freeRqId = 0;
@@ -229,6 +229,15 @@ void nxView::OnRequestCompleted(wxCommandEvent &event)
 //
 
 void nxView::RequestCompletionHandler(int rqId, DWORD rcc)
+{
+}
+
+
+//
+// Virtual refresh view method
+//
+
+void nxView::RefreshView()
 {
 }
 

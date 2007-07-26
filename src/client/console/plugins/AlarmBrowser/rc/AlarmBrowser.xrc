@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
+	<object class="wxIcon" name="icoAlarmView">alarmview.xpm</object>
 	<object class="wxMenu" name="menuCtxAlarm">
 		<label>Alarm</label>
 		<object class="wxMenuItem" name="menuAlarmAck">

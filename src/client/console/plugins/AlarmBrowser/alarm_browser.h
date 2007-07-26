@@ -41,16 +41,18 @@ private:
 	long m_sortMode;
 	long m_sortDir;
 	wxString m_context;
+	NXC_OBJECT *m_object;
 
 	void AddAlarm(NXC_ALARM *alarm);
 	void UpdateAlarm(long item, NXC_ALARM *alarm);
 	void SortAlarmList();
+	bool MatchAlarm(NXC_ALARM *pAlarm);
 
 public:
-	nxAlarmView(wxWindow *parent, const TCHAR *context);
+	nxAlarmView(wxWindow *parent, const TCHAR *context, NXC_OBJECT *object = NULL);
 	virtual ~nxAlarmView();
 
-	void RefreshView();
+	virtual void RefreshView();
 
 	// Event handlers
 protected:

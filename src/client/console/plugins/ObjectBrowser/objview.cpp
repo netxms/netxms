@@ -94,6 +94,8 @@ void nxObjectView::OnPaint(wxPaintEvent &event)
 
 void nxObjectView::SetObject(NXC_OBJECT *object)
 {
+	nxView *view;
+	
 	m_object = object;
 	RefreshRect(wxRect(0, 0, GetClientSize().x, m_headerOffset), false);
 
@@ -105,5 +107,18 @@ void nxObjectView::SetObject(NXC_OBJECT *object)
 	m_notebook->AddPage(new nxObjectOverview(m_notebook, object), _T("Overview"), false,
 	                    wxXmlResource::Get()->LoadIcon(_T("icoSmallInformation")));
 
+	if ((object->iClass == OBJECT_NETWORK) || (object->iClass == OBJECT_SUBNET) ||
+	    (object->iClass == OBJECT_NODE) || (object->iClass == OBJECT_SERVICEROOT) ||
+	    (object->iClass == OBJECT_CONTAINER) || (object->iClass == OBJECT_ZONE))
+	{
+		view = NXMCCreateViewByClass(_T("AlarmView"), m_notebook, _T("ObjectBrowser"), object, NULL);
+		if (view != NULL)
+		{
+			m_notebook->AddPage(view, _T("Alarms"), false, view->GetIcon());
+			view->RefreshView();
+		}
+	}
+
 	Thaw();
 }
+

@@ -42,13 +42,14 @@ END_EVENT_TABLE()
 // Constructor
 //
 
-nxAlarmView::nxAlarmView(wxWindow *parent, const TCHAR *context)
+nxAlarmView::nxAlarmView(wxWindow *parent, const TCHAR *context, NXC_OBJECT *object)
             : nxView(parent)
 {
 	wxConfigBase *cfg = wxConfig::Get();
 	wxString path = cfg->GetPath();
 
 	m_context = context;
+	m_object = object;
 
 	cfg->SetPath(m_context);
 	cfg->Read(_T("AlarmView/SortMode"), &m_sortMode, 0);
@@ -73,6 +74,8 @@ nxAlarmView::nxAlarmView(wxWindow *parent, const TCHAR *context)
 	NXMCLoadListCtrlColumns(cfg, *m_wndListCtrl, _T("AlarmView"));
 
 	cfg->SetPath(path);
+	
+	SetIcon(wxXmlResource::Get()->LoadIcon(_T("icoAlarmView")));
 
 	NXMCEvtConnect(nxEVT_NXC_ALARM_CHANGE, wxCommandEventHandler(nxAlarmView::OnAlarmChange), this);
 }
@@ -121,12 +124,28 @@ void nxAlarmView::RefreshView()
 	
 	for(it = list->begin(); it != list->end(); it++)
 	{
-		AddAlarm(it->second);
+		if (MatchAlarm(it->second))
+			AddAlarm(it->second);
 	}
 
 	NXMCUnlockAlarmList();
 
 	SortAlarmList();
+}
+
+
+//
+// Check if alarm matched to current filter settings
+//
+
+bool nxAlarmView::MatchAlarm(NXC_ALARM *alarm)
+{
+	if (m_object == NULL)
+		return true;
+printf("MATCHING against %s\n", m_object->szName);		
+	if (m_object->dwId == alarm->dwSourceObject)
+		return true;
+	return NXCIsParent(NXMCGetSession(), m_object->dwId, alarm->dwSourceObject);
 }
 
 
@@ -296,25 +315,31 @@ void nxAlarmView::OnListColumnClick(wxListEvent &event)
 void nxAlarmView::OnAlarmChange(wxCommandEvent &event)
 {
 	long item;
+	NXC_ALARM *alarm;
 	
+	alarm = (NXC_ALARM *)event.GetClientData();
 	switch(event.GetInt())
 	{
 		case NX_NOTIFY_NEW_ALARM:
 		case NX_NOTIFY_ALARM_CHANGED:
-			item = m_wndListCtrl->FindItem(-1, ((NXC_ALARM *)event.GetClientData())->dwAlarmId);
+			item = m_wndListCtrl->FindItem(-1, alarm->dwAlarmId);
 			if (item != -1)
 			{
-				UpdateAlarm(item, (NXC_ALARM *)event.GetClientData());
+				if (MatchAlarm(alarm))
+					UpdateAlarm(item, (NXC_ALARM *)event.GetClientData());
+				else
+					m_wndListCtrl->DeleteItem(item);		// Alarm no longer match filter
 			}
 			else
 			{
-				AddAlarm((NXC_ALARM *)event.GetClientData());
+				if (MatchAlarm(alarm))
+					AddAlarm(alarm);
 			}
 			SortAlarmList();
 			break;
 		case NX_NOTIFY_ALARM_TERMINATED:
 		case NX_NOTIFY_ALARM_DELETED:
-			item = m_wndListCtrl->FindItem(-1, ((NXC_ALARM *)event.GetClientData())->dwAlarmId);
+			item = m_wndListCtrl->FindItem(-1, alarm->dwAlarmId);
 			if (item != -1)
 				m_wndListCtrl->DeleteItem(item);
 			break;

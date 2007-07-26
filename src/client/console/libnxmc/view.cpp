@@ -25,6 +25,13 @@
 
 
 //
+// Static data
+//
+
+static nxViewCreatorsHash s_viewCreators;
+
+
+//
 // Create view in given area
 //
 
@@ -37,7 +44,7 @@ bool LIBNXMC_EXPORTABLE NXMCCreateView(nxView *view, int area)
 	{
 		case VIEWAREA_MAIN:
 			view->Reparent(g_auiNotebook);
-			g_auiNotebook->AddPage(view, view->GetLabel(), true, view->GetBitmap());
+			g_auiNotebook->AddPage(view, view->GetLabel(), true, view->GetIcon());
 			break;
 		case VIEWAREA_DOCKED:
 			g_auiManager->AddPane(view, wxAuiPaneInfo().Name(view->GetName()).Caption(view->GetLabel()));
@@ -53,3 +60,29 @@ bool LIBNXMC_EXPORTABLE NXMCCreateView(nxView *view, int area)
 	}
 	return true;
 }
+
+
+//
+// Register view creator
+//
+
+void LIBNXMC_EXPORTABLE NXMCRegisterViewCreator(const TCHAR *viewClass, nxViewCreator func)
+{
+	s_viewCreators[viewClass] = func;
+}
+
+
+//
+// Create view provided by plugin or main app by class name
+//
+
+nxView LIBNXMC_EXPORTABLE *NXMCCreateViewByClass(const TCHAR *viewClass, wxWindow *parent,
+                                                 const TCHAR *context, NXC_OBJECT *object,
+                                                 void *userData)
+{
+	nxViewCreatorsHash::iterator it;
+		
+	it = s_viewCreators.find(viewClass);
+	return (it == s_viewCreators.end()) ? NULL : it->second(parent, context, object, userData);
+}
+

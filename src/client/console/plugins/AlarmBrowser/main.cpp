@@ -64,6 +64,16 @@ NXMC_IMPLEMENT_PLUGIN_REGISTRATION(_T("AlarmBrowser"), NETXMS_VERSION_STRING, NX
 
 
 //
+// Alarm view creator
+//
+
+static nxView *CreateAlarmView(wxWindow *parent, const TCHAR *context, NXC_OBJECT *object, void *userData)
+{
+	return new nxAlarmView(parent, context, object);
+}
+
+
+//
 // Initialization function
 //
 
@@ -72,6 +82,7 @@ extern "C" bool NXMC_PLUGIN_EXPORT nxmcInitializePlugin(NXMC_PLUGIN_HANDLE handl
 	if (!NXMCLoadResources(_T("AlarmBrowser.xrs"), NXMC_LIB_INSTANCE_ARG(s_libInstance), wxMAKEINTRESOURCE(IDR_XRS)))
 		wxLogWarning(_T("AlarmBrowser: cannot load resource file"));
 	NXMCAddViewMenuItem(handle, _T("&Alarm Browser\tF8"), 0);
+	NXMCRegisterViewCreator(_T("AlarmView"), CreateAlarmView);
 	return true;
 }
 
