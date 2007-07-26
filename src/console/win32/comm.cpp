@@ -1,4 +1,4 @@
-/* $Id: comm.cpp,v 1.55 2007-04-16 08:33:28 victor Exp $ */
+/* $Id: comm.cpp,v 1.56 2007-07-26 17:16:04 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Windows Console
@@ -475,10 +475,12 @@ static DWORD WINAPI RequestThread(void *pArg)
 				dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
 												pData->pArg4, pData->pArg5, pData->pArg6,
 												pData->pArg7);
+				break;
 			case 8:
 				dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
 												pData->pArg4, pData->pArg5, pData->pArg6,
 												pData->pArg7, pData->pArg8);
+				break;
 			case 9:
 				dwResult = pData->pFunc(pData->pArg1, pData->pArg2, pData->pArg3, 
 												pData->pArg4, pData->pArg5, pData->pArg6,
