@@ -29,6 +29,7 @@ class LIBNXMC_EXPORTABLE nxView : public wxWindow
 private:
 	wxString m_label;
 	wxBitmap m_icon;	// Icon associated with this view
+	wxTimer *m_timer;
 
 public:
 	nxView(wxWindow *parent);
@@ -41,6 +42,8 @@ public:
 
 	// Event handlers
 protected:
+	void OnTimer(wxTimerEvent &event);
+
 	DECLARE_EVENT_TABLE()
 };
 

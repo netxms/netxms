@@ -324,6 +324,6 @@ void nxAlarmView::OnAlarmChange(wxCommandEvent &event)
 
 void nxAlarmView::OnAlarmAck(wxCommandEvent &event)
 {
-wxLogDebug("ACK");
+//	NXCAcknowledgeAlarm(NXMCGetSession(), m_wndListCtrl->GetItemData(m_wndListCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED)));
 }
 

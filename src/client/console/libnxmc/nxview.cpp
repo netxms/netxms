@@ -25,10 +25,18 @@
 
 
 //
+// Constants
+//
+
+#define RQ_TIMER_ID		1000
+
+
+//
 // Event table
 //
 
 BEGIN_EVENT_TABLE(nxView, wxWindow)
+	EVT_TIMER(RQ_TIMER_ID, nxView::OnTimer)
 END_EVENT_TABLE()
 
 
@@ -40,6 +48,7 @@ nxView::nxView(wxWindow *parent)
        : wxWindow(parent, wxID_ANY,  wxDefaultPosition, wxDefaultSize)
 {
 	m_icon = wxNullBitmap;
+	m_timer = new wxTimer(this, RQ_TIMER_ID);
 }
 
 
@@ -49,6 +58,7 @@ nxView::nxView(wxWindow *parent)
 
 nxView::~nxView()
 {
+	delete m_timer;
 }
 
 
@@ -71,3 +81,90 @@ wxString nxView::GetLabel() const
 	return m_label;
 }
 
+
+//
+// Request processing thread
+//
+
+static THREAD_RESULT THREAD_CALL RequestThread(void *arg)
+{
+   RqData *data = (RqData *)arg;
+   DWORD dwResult;
+
+	switch(data->dwNumParams)
+	{
+		case 0:
+			dwResult = data->func();
+			break;
+		case 1:
+			dwResult = data->func(data->arg1);
+			break;
+		case 2:
+			dwResult = data->func(data->arg1, data->arg2);
+			break;
+		case 3:
+			dwResult = data->func(data->arg1, data->arg2, data->arg3);
+			break;
+		case 4:
+			dwResult = data->func(data->arg1, data->arg2, data->arg3, data->arg4);
+			break;
+		case 5:
+			dwResult = data->func(data->arg1, data->arg2, data->arg3, 
+											data->arg4, data->arg5);
+			break;
+		case 6:
+			dwResult = data->func(data->arg1, data->arg2, data->arg3, 
+											data->arg4, data->arg5, data->arg6);
+			break;
+		case 7:
+			dwResult = data->func(data->arg1, data->arg2, data->arg3, 
+											data->arg4, data->arg5, data->arg6,
+											data->arg7);
+		case 8:
+			dwResult = data->func(data->arg1, data->arg2, data->arg3, 
+											data->arg4, data->arg5, data->arg6,
+											data->arg7, data->arg8);
+		case 9:
+			dwResult = data->func(data->arg1, data->arg2, data->arg3, 
+											data->arg4, data->arg5, data->arg6,
+											data->arg7, data->arg8, data->arg9);
+			break;
+	}
+	if (data->hWnd != NULL)
+		PostMessage(data->hWnd, NXCM_REQUEST_COMPLETED, data->wParam, dwResult);
+	if (data->bDynamic)
+		free(data);
+   return dwResult;
+}
+
+
+//
+// Execute async request
+//
+
+DWORD nxView::DoRequest(RqData *data)
+{
+	m_timer->Start(300, true);
+	ThreadCreate(RequestThread, 0, data);
+}
+
+DWORD nxView::DoRequestArg1(void *func, void *arg1)
+{
+   RqData rqData;
+
+   rqData.hWnd = NULL;
+	rqData.isDynamic = false;
+   rqData.numParams = 1;
+   rqData.arg1 = arg1;
+   rqData.func = (DWORD (*)(...))func;
+   return ExecuteRequest(&rqData, pszInfoText);
+}
+
+
+//
+// Timer event handler
+//
+
+void OnTimer(wxTimerEvent &event)
+{
+}
