@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.261 2007-07-23 15:58:19 victor Exp $
+# $Id: configure.ac,v 1.262 2007-07-26 12:55:49 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -454,6 +454,9 @@ case "$PLATFORM" in
    SunOS)
       LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
       export LD_LIBRARY_PATH
+      ;;
+   Linux)
+      CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
       ;;
    *)
       ;;

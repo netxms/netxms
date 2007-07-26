@@ -34,7 +34,7 @@
 // Alarm view class
 //
 
-class nxAlarmView : public wxWindow
+class nxAlarmView : public nxView
 {
 private:
 	wxListView *m_wndListCtrl;
@@ -59,6 +59,8 @@ protected:
 	void OnListColumnClick(wxListEvent &event);
 	void OnAlarmChange(wxCommandEvent &event);
 	void OnAlarmAck(wxCommandEvent &event);
+	void OnAlarmTerminate(wxCommandEvent &event);
+	void OnAlarmDelete(wxCommandEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };

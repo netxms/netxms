@@ -24,12 +24,53 @@
 #ifndef _nxview_h_
 #define _nxview_h_
 
+
+//
+// Request data
+//
+
+class RqData
+{
+public:
+	RqData(int id, wxEvtHandler *owner, void *func, int numArgs)
+	{ 
+		m_id = id;
+		m_owner = owner;
+		m_func = (DWORD (*)(...))func;
+		m_numArgs = numArgs;
+	}
+	
+	int m_id;
+	wxEvtHandler *m_owner;
+	DWORD (* m_func)(...);
+	int m_numArgs;
+	wxUIntPtr m_arg[9];
+	DWORD m_rcc;
+};
+
+
+//
+// Basic console view class
+//
+
 class LIBNXMC_EXPORTABLE nxView : public wxWindow
 {
 private:
 	wxString m_label;
 	wxBitmap m_icon;	// Icon associated with this view
 	wxTimer *m_timer;
+	int m_activeRequestCount;
+	int m_freeRqId;	// First free request id
+	bool m_isBusy;
+	
+	int DoRequest(RqData *data);
+	
+protected:
+	int DoRequestArg1(void *func, wxUIntPtr arg1);
+	int DoRequestArg2(void *func, wxUIntPtr arg1, wxUIntPtr arg2);
+	int DoRequestArg3(void *func, wxUIntPtr arg1, wxUIntPtr arg2, wxUIntPtr arg3);
+	
+	virtual void RequestCompletionHandler(int rqId, DWORD rcc);
 
 public:
 	nxView(wxWindow *parent);
@@ -39,10 +80,13 @@ public:
 	virtual wxString GetLabel() const;
 
 	const wxBitmap& GetBitmap() { return m_icon; }
+	
+	bool IsBusy() { return m_isBusy; }
 
 	// Event handlers
 protected:
 	void OnTimer(wxTimerEvent &event);
+	void OnRequestCompleted(wxCommandEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };

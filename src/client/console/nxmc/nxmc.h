@@ -32,7 +32,6 @@ extern "C" WXDLLIMPEXP_BASE HINSTANCE wxGetInstance();
 //
 
 BEGIN_DECLARE_EVENT_TYPES()
-    DECLARE_LOCAL_EVENT_TYPE(nxEVT_REQUEST_COMPLETED, 0)
     DECLARE_LOCAL_EVENT_TYPE(nxEVT_SET_STATUS_TEXT, 0)
 END_DECLARE_EVENT_TYPES()
 
@@ -42,7 +41,6 @@ END_DECLARE_EVENT_TYPES()
 		  (wxObjectEventFunction)(wxEventFunction) wxStaticCastEvent( wxCommandEventFunction, &fn ), \
         (wxObject *) NULL \
     ),
-#define EVT_NX_REQUEST_COMPLETED(fn)   EVT_NXMC_EVENT(nxEVT_REQUEST_COMPLETED, fn)
 #define EVT_NX_SET_STATUS_TEXT(fn)     EVT_NXMC_EVENT(nxEVT_SET_STATUS_TEXT, fn)
 
 

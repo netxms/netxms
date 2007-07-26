@@ -37,6 +37,7 @@
 
 BEGIN_EVENT_TABLE(nxView, wxWindow)
 	EVT_TIMER(RQ_TIMER_ID, nxView::OnTimer)
+	EVT_NX_REQUEST_COMPLETED(nxView::OnRequestCompleted)
 END_EVENT_TABLE()
 
 
@@ -49,6 +50,9 @@ nxView::nxView(wxWindow *parent)
 {
 	m_icon = wxNullBitmap;
 	m_timer = new wxTimer(this, RQ_TIMER_ID);
+	m_activeRequestCount = 0;
+	m_freeRqId = 0;
+	m_isBusy = false;
 }
 
 
@@ -89,52 +93,54 @@ wxString nxView::GetLabel() const
 static THREAD_RESULT THREAD_CALL RequestThread(void *arg)
 {
    RqData *data = (RqData *)arg;
-   DWORD dwResult;
 
-	switch(data->dwNumParams)
+	switch(data->m_numArgs)
 	{
 		case 0:
-			dwResult = data->func();
+			data->m_rcc = data->m_func();
 			break;
 		case 1:
-			dwResult = data->func(data->arg1);
+			data->m_rcc = data->m_func(data->m_arg[0]);
 			break;
 		case 2:
-			dwResult = data->func(data->arg1, data->arg2);
+			data->m_rcc = data->m_func(data->m_arg[0], data->m_arg[1]);
 			break;
 		case 3:
-			dwResult = data->func(data->arg1, data->arg2, data->arg3);
+			data->m_rcc = data->m_func(data->m_arg[0], data->m_arg[1], data->m_arg[2]);
 			break;
 		case 4:
-			dwResult = data->func(data->arg1, data->arg2, data->arg3, data->arg4);
+			data->m_rcc = data->m_func(data->m_arg[0], data->m_arg[1], data->m_arg[2], data->m_arg[3]);
 			break;
 		case 5:
-			dwResult = data->func(data->arg1, data->arg2, data->arg3, 
-											data->arg4, data->arg5);
+			data->m_rcc = data->m_func(data->m_arg[0], data->m_arg[1], data->m_arg[2], 
+											data->m_arg[3], data->m_arg[4]);
 			break;
 		case 6:
-			dwResult = data->func(data->arg1, data->arg2, data->arg3, 
-											data->arg4, data->arg5, data->arg6);
+			data->m_rcc = data->m_func(data->m_arg[0], data->m_arg[1], data->m_arg[2], 
+											data->m_arg[3], data->m_arg[4], data->m_arg[5]);
 			break;
 		case 7:
-			dwResult = data->func(data->arg1, data->arg2, data->arg3, 
-											data->arg4, data->arg5, data->arg6,
-											data->arg7);
+			data->m_rcc = data->m_func(data->m_arg[0], data->m_arg[1], data->m_arg[2], 
+											data->m_arg[3], data->m_arg[4], data->m_arg[5],
+											data->m_arg[6]);
+			break;
 		case 8:
-			dwResult = data->func(data->arg1, data->arg2, data->arg3, 
-											data->arg4, data->arg5, data->arg6,
-											data->arg7, data->arg8);
+			data->m_rcc = data->m_func(data->m_arg[0], data->m_arg[1], data->m_arg[2], 
+											data->m_arg[3], data->m_arg[4], data->m_arg[5],
+											data->m_arg[6], data->m_arg[7]);
+			break;
 		case 9:
-			dwResult = data->func(data->arg1, data->arg2, data->arg3, 
-											data->arg4, data->arg5, data->arg6,
-											data->arg7, data->arg8, data->arg9);
+			data->m_rcc = data->m_func(data->m_arg[0], data->m_arg[1], data->m_arg[2], 
+											data->m_arg[3], data->m_arg[4], data->m_arg[5],
+											data->m_arg[6], data->m_arg[7], data->m_arg[8]);
 			break;
 	}
-	if (data->hWnd != NULL)
-		PostMessage(data->hWnd, NXCM_REQUEST_COMPLETED, data->wParam, dwResult);
-	if (data->bDynamic)
-		free(data);
-   return dwResult;
+	
+	wxCommandEvent event(nxEVT_REQUEST_COMPLETED);
+	event.SetClientData(data);
+	wxPostEvent(data->m_owner, event);
+	
+   return THREAD_OK;
 }
 
 
@@ -142,22 +148,43 @@ static THREAD_RESULT THREAD_CALL RequestThread(void *arg)
 // Execute async request
 //
 
-DWORD nxView::DoRequest(RqData *data)
+int nxView::DoRequest(RqData *data)
 {
-	m_timer->Start(300, true);
+	if (m_activeRequestCount == 0)
+		m_timer->Start(300, true);
+	m_activeRequestCount++;
 	ThreadCreate(RequestThread, 0, data);
+	return data->m_id;
 }
 
-DWORD nxView::DoRequestArg1(void *func, void *arg1)
+int nxView::DoRequestArg1(void *func, wxUIntPtr arg1)
 {
-   RqData rqData;
+   RqData *data;
 
-   rqData.hWnd = NULL;
-	rqData.isDynamic = false;
-   rqData.numParams = 1;
-   rqData.arg1 = arg1;
-   rqData.func = (DWORD (*)(...))func;
-   return ExecuteRequest(&rqData, pszInfoText);
+	data = new RqData(m_freeRqId++, this, func, 1);
+   data->m_arg[0] = arg1;
+   return DoRequest(data);
+}
+
+int nxView::DoRequestArg2(void *func, wxUIntPtr arg1, wxUIntPtr arg2)
+{
+   RqData *data;
+
+	data = new RqData(m_freeRqId++, this, func, 2);
+   data->m_arg[0] = arg1;
+   data->m_arg[1] = arg2;
+   return DoRequest(data);
+}
+
+int nxView::DoRequestArg3(void *func, wxUIntPtr arg1, wxUIntPtr arg2, wxUIntPtr arg3)
+{
+   RqData *data;
+
+	data = new RqData(m_freeRqId++, this, func, 3);
+   data->m_arg[0] = arg1;
+   data->m_arg[1] = arg2;
+   data->m_arg[2] = arg3;
+   return DoRequest(data);
 }
 
 
@@ -165,6 +192,43 @@ DWORD nxView::DoRequestArg1(void *func, void *arg1)
 // Timer event handler
 //
 
-void OnTimer(wxTimerEvent &event)
+void nxView::OnTimer(wxTimerEvent &event)
+{
+	if (m_activeRequestCount > 0)
+	{
+		// Set busy mode
+		SetCursor(*wxHOURGLASS_CURSOR);
+		m_isBusy = true;
+	}
+}
+
+
+//
+// Request completion event handler
+//
+
+void nxView::OnRequestCompleted(wxCommandEvent &event)
+{
+	RqData *data = (RqData *)event.GetClientData();
+	m_activeRequestCount--;
+	if (m_activeRequestCount == 0)
+	{
+		m_timer->Stop();
+
+		// Exit busy mode
+		SetCursor(wxNullCursor);
+		m_isBusy = false;
+	}
+	RequestCompletionHandler(data->m_id, data->m_rcc);
+	delete data;
+}
+
+
+//
+// Virtual request completion handler
+//
+
+void nxView::RequestCompletionHandler(int rqId, DWORD rcc)
 {
 }
+

@@ -28,11 +28,13 @@
 // Event table
 //
 
-BEGIN_EVENT_TABLE(nxAlarmView, wxWindow)
+BEGIN_EVENT_TABLE(nxAlarmView, nxView)
 	EVT_SIZE(nxAlarmView::OnSize)
 	EVT_LIST_ITEM_RIGHT_CLICK(wxID_LIST_CTRL, nxAlarmView::OnListItemRightClick)
 	EVT_LIST_COL_CLICK(wxID_LIST_CTRL, nxAlarmView::OnListColumnClick)
 	EVT_MENU(XRCID("menuAlarmAck"), nxAlarmView::OnAlarmAck)
+	EVT_MENU(XRCID("menuAlarmTerminate"), nxAlarmView::OnAlarmTerminate)
+	EVT_MENU(XRCID("menuAlarmDelete"), nxAlarmView::OnAlarmDelete)
 END_EVENT_TABLE()
 
 
@@ -41,7 +43,7 @@ END_EVENT_TABLE()
 //
 
 nxAlarmView::nxAlarmView(wxWindow *parent, const TCHAR *context)
-            : wxWindow(parent, wxID_ANY)
+            : nxView(parent)
 {
 	wxConfigBase *cfg = wxConfig::Get();
 	wxString path = cfg->GetPath();
@@ -185,11 +187,14 @@ void nxAlarmView::OnListItemRightClick(wxListEvent &event)
 {
 	wxMenu *menu;
 
-	menu = wxXmlResource::Get()->LoadMenu(_T("menuCtxAlarm"));
-	if (menu != NULL)
+	if (!IsBusy())
 	{
-		PopupMenu(menu);
-		delete menu;
+		menu = wxXmlResource::Get()->LoadMenu(_T("menuCtxAlarm"));
+		if (menu != NULL)
+		{
+			PopupMenu(menu);
+			delete menu;
+		}
 	}
 }
 
@@ -322,8 +327,109 @@ void nxAlarmView::OnAlarmChange(wxCommandEvent &event)
 // Handler for acknowledge alarm menu
 //
 
+static DWORD AckAlarms(int count, DWORD *list)
+{
+	int i;
+	DWORD rcc;
+	NXC_SESSION session = NXMCGetSession();
+	
+	for(i = 0; i < count; i++)
+	{
+		rcc = NXCAcknowledgeAlarm(session, list[i]);
+		if (rcc != RCC_SUCCESS)
+			break;
+	}
+	delete list;
+	return rcc;
+}
+
 void nxAlarmView::OnAlarmAck(wxCommandEvent &event)
 {
-//	NXCAcknowledgeAlarm(NXMCGetSession(), m_wndListCtrl->GetItemData(m_wndListCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED)));
+	int i, count = m_wndListCtrl->GetSelectedItemCount();
+	DWORD *idList = new DWORD[count];
+	long item;
+
+	for(i = 0, item = -1; i < count; i++)
+	{
+		item = m_wndListCtrl->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+		if (item == -1)
+			break;
+		idList[i] = m_wndListCtrl->GetItemData(item);
+	}
+	DoRequestArg2((void *)AckAlarms, count, CAST_FROM_POINTER(idList, wxUIntPtr));
+}
+
+
+//
+// Handler for terminate alarm menu
+//
+
+static DWORD TerminateAlarms(int count, DWORD *list)
+{
+	int i;
+	DWORD rcc;
+	NXC_SESSION session = NXMCGetSession();
+	
+	for(i = 0; i < count; i++)
+	{
+		rcc = NXCTerminateAlarm(session, list[i]);
+		if (rcc != RCC_SUCCESS)
+			break;
+	}
+	delete list;
+	return rcc;
+}
+
+void nxAlarmView::OnAlarmTerminate(wxCommandEvent &event)
+{
+	int i, count = m_wndListCtrl->GetSelectedItemCount();
+	DWORD *idList = new DWORD[count];
+	long item;
+
+	for(i = 0, item = -1; i < count; i++)
+	{
+		item = m_wndListCtrl->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+		if (item == -1)
+			break;
+		idList[i] = m_wndListCtrl->GetItemData(item);
+	}
+	DoRequestArg2((void *)TerminateAlarms, count, CAST_FROM_POINTER(idList, wxUIntPtr));
+}
+
+
+//
+// Handler for delete alarm menu
+//
+
+static DWORD DeleteAlarms(int count, DWORD *list)
+{
+	int i;
+	DWORD rcc;
+	NXC_SESSION session = NXMCGetSession();
+	
+	for(i = 0; i < count; i++)
+	{
+		rcc = NXCDeleteAlarm(session, list[i]);
+		if (rcc != RCC_SUCCESS)
+			break;
+	}
+	delete list;
+	return rcc;
+}
+
+void nxAlarmView::OnAlarmDelete(wxCommandEvent &event)
+{
+	int i, count = m_wndListCtrl->GetSelectedItemCount();
+	DWORD *idList = new DWORD[count];
+	long item;
+
+	for(i = 0, item = -1; i < count; i++)
+	{
+		item = m_wndListCtrl->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+		if (item == -1)
+			break;
+		idList[i] = m_wndListCtrl->GetItemData(item);
+	}
+	DoRequestArg2((void *)DeleteAlarms, count, CAST_FROM_POINTER(idList, wxUIntPtr));
 }
 
