@@ -6,7 +6,7 @@ lib_LTLIBRARIES = libnxmcp_ObjectBrowser.la
 libnxmcp_ObjectBrowser_la_SOURCES = browser.cpp main.cpp objview.cpp overview.cpp
 libnxmcp_ObjectBrowser_la_LDFLAGS = ../../../../libnetxms/libnetxms.la ../../../../libnxcl/libnxcl.la ../../libnxmc/libnxmc.la
 
-EXTRA_DIST = object_browser.h mcpObjectBrowser.dsp
+EXTRA_DIST = object_browser.h mcpObjectBrowser.dsp ObjectBrowser.rc resource.h
 
 install-exec-hook:
 	if test ! -e $(libdir)/nxmc ; then \

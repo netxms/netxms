@@ -23,6 +23,19 @@
 
 #include "object_browser.h"
 
+#ifdef _WIN32
+#include "resource.h"
+#endif
+
+
+//
+// Static data
+//
+
+#ifdef _WIN32
+static HINSTANCE s_libInstance;
+#endif
+
 
 //
 // Create object browser
@@ -73,6 +86,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)
 		DisableThreadLibraryCalls(hInstance);
+	s_libInstance = hInstance;
 	return TRUE;
 }
 

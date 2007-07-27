@@ -111,7 +111,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy       Release_UNICODE\ObjectBrowser.so       C:\NetXMS\lib\nxmc\ 
+PostBuild_Cmds=copy        Release_UNICODE\ObjectBrowser.so        C:\NetXMS\lib\nxmc\ 
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "mcpObjectBrowser - Win32 Debug UNICODE"
@@ -202,12 +202,75 @@ SOURCE=.\object_browser.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\resource.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\..\include\unicode.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# Begin Source File
+
+SOURCE=.\ObjectBrowser.rc
+# End Source File
+# Begin Source File
+
+SOURCE=.\rc\ObjectBrowser.xrc
+
+!IF  "$(CFG)" == "mcpObjectBrowser - Win32 Release"
+
+# Begin Custom Build
+ProjDir=.
+InputPath=.\rc\ObjectBrowser.xrc
+
+"rc\ObjectBrowser.xrs" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	wxrc $(ProjDir)\rc\ObjectBrowser.xrc -o $(ProjDir)\rc\ObjectBrowser.xrs
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "mcpObjectBrowser - Win32 Debug"
+
+# Begin Custom Build
+ProjDir=.
+InputPath=.\rc\ObjectBrowser.xrc
+
+"rc\ObjectBrowser.xrs" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	wxrc $(ProjDir)\rc\ObjectBrowser.xrc -o $(ProjDir)\rc\ObjectBrowser.xrs
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "mcpObjectBrowser - Win32 Release UNICODE"
+
+# Begin Custom Build
+ProjDir=.
+InputPath=.\rc\ObjectBrowser.xrc
+
+"rc\ObjectBrowser.xrs" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	wxrc $(ProjDir)\rc\ObjectBrowser.xrc -o $(ProjDir)\rc\ObjectBrowser.xrs
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "mcpObjectBrowser - Win32 Debug UNICODE"
+
+# Begin Custom Build
+ProjDir=.
+InputPath=.\rc\ObjectBrowser.xrc
+
+"rc\ObjectBrowser.xrs" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	wxrc $(ProjDir)\rc\ObjectBrowser.xrc -o $(ProjDir)\rc\ObjectBrowser.xrs
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\rc\ObjectBrowser.xrs
+# End Source File
 # End Group
 # End Target
 # End Project

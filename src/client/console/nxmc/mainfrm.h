@@ -1,4 +1,4 @@
-/* $Id: mainfrm.h,v 1.5 2007-07-24 22:34:21 victor Exp $ */
+/* $Id: mainfrm.h,v 1.6 2007-07-27 20:24:45 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -50,7 +50,8 @@ public:
 class nxAuiNotebook : public wxAuiNotebook
 {
 public:
-	nxAuiNotebook(wxWindow *parent, const wxPoint& pos, const wxSize& size) : wxAuiNotebook(parent, wxID_ANY, pos, size, wxAUI_NB_DEFAULT_STYLE | wxAUI_NB_TAB_EXTERNAL_MOVE | wxNO_BORDER) { }
+	nxAuiNotebook(wxWindow *parent, const wxPoint& pos, const wxSize& size) 
+		: wxAuiNotebook(parent, wxID_ANY, pos, size, wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS | wxAUI_NB_CLOSE_ON_ALL_TABS | wxNO_BORDER) { }
 	nxView *TabFromPoint(const wxPoint &point)
 	{
 		wxWindow *wnd = NULL;

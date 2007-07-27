@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.9 2007-07-27 07:07:37 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.10 2007-07-27 20:24:45 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -98,6 +98,7 @@ wxAuiNotebook *nxMainFrame::CreateNotebook()
    m_notebook = new nxAuiNotebook(this,
                                   wxPoint(clientSize.x, clientSize.y),
                                   wxSize(430,200));
+	//m_notebook->SetArtProvider(new nxAuiConsoleTabArt);
 	return m_notebook;
 }
 

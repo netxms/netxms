@@ -404,6 +404,7 @@ void nxObjectBrowser::OnTreeItemMenu(wxTreeEvent &event)
 	if (!IsBusy())
 	{
 		item = event.GetItem();
+		m_wndTreeCtrl->SelectItem(item);
 		object = ((nxObjectTreeItemData *)m_wndTreeCtrl->GetItemData(item))->GetObject();
 		menu = wxXmlResource::Get()->LoadMenu(_T("menuCtxObject"));
 		if (menu != NULL)

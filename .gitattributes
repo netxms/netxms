@@ -525,6 +525,7 @@ src/client/console/plugins/AlarmBrowser/resource.h -text
 src/client/console/plugins/AlarmBrowser/view.cpp -text
 src/client/console/plugins/Makefile.am -text
 src/client/console/plugins/ObjectBrowser/Makefile.am -text
+src/client/console/plugins/ObjectBrowser/ObjectBrowser.rc -text
 src/client/console/plugins/ObjectBrowser/browser.cpp -text
 src/client/console/plugins/ObjectBrowser/main.cpp -text
 src/client/console/plugins/ObjectBrowser/mcpObjectBrowser.dsp -text
@@ -534,6 +535,7 @@ src/client/console/plugins/ObjectBrowser/overview.cpp -text
 src/client/console/plugins/ObjectBrowser/rc/Makefile.am -text
 src/client/console/plugins/ObjectBrowser/rc/ObjectBrowser.xrc -text
 src/client/console/plugins/ObjectBrowser/rc/objectbrowser.xpm -text
+src/client/console/plugins/ObjectBrowser/resource.h -text
 src/console/Makefile.am -text
 src/console/PocketPC/AlarmView.cpp -text
 src/console/PocketPC/AlarmView.h -text
