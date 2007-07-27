@@ -25,6 +25,14 @@
 
 
 //
+// Page IDs
+//
+
+#define OBJECT_PAGE_OVERVIEW		0
+#define OBJECT_PAGE_ALARMS			1
+
+
+//
 // Event table
 //
 
@@ -95,16 +103,25 @@ void nxObjectView::OnPaint(wxPaintEvent &event)
 void nxObjectView::SetObject(NXC_OBJECT *object)
 {
 	nxView *view;
+	wxWindow *wnd;
+	int page;
+	size_t index;
 	
 	m_object = object;
 	RefreshRect(wxRect(0, 0, GetClientSize().x, m_headerOffset), false);
 
 	Freeze();
 
+	index = m_notebook->GetSelection();
+	wnd = (index != wxNOT_FOUND) ? m_notebook->GetPage(index) : NULL;
+	page = (wnd != NULL) ? wnd->GetId() : OBJECT_PAGE_OVERVIEW;
+
 	while(m_notebook->GetPageCount() > 0)
 		m_notebook->DeletePage(0);
 
-	m_notebook->AddPage(new nxObjectOverview(m_notebook, object), _T("Overview"), false,
+	wnd = new nxObjectOverview(m_notebook, object);
+	wnd->SetId(OBJECT_PAGE_OVERVIEW);
+	m_notebook->AddPage(wnd, _T("Overview"), page == OBJECT_PAGE_OVERVIEW,
 	                    wxXmlResource::Get()->LoadIcon(_T("icoSmallInformation")));
 
 	if ((object->iClass == OBJECT_NETWORK) || (object->iClass == OBJECT_SUBNET) ||
@@ -114,7 +131,8 @@ void nxObjectView::SetObject(NXC_OBJECT *object)
 		view = NXMCCreateViewByClass(_T("AlarmView"), m_notebook, _T("ObjectBrowser"), object, NULL);
 		if (view != NULL)
 		{
-			m_notebook->AddPage(view, _T("Alarms"), false, view->GetIcon());
+			view->SetId(OBJECT_PAGE_ALARMS);
+			m_notebook->AddPage(view, _T("Alarms"), page == OBJECT_PAGE_ALARMS, view->GetIcon());
 			view->RefreshView();
 		}
 	}

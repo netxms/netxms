@@ -31,6 +31,14 @@
 
 
 //
+// Arrays and hashes
+//
+
+WX_DECLARE_OBJARRAY(wxTreeItemId, nxTreeItemList);
+WX_DECLARE_HASH_MAP(DWORD, nxTreeItemList*, wxIntegerHash, wxIntegerEqual, nxObjectItemsHash);
+
+
+//
 // libnxcl object index structure
 //
 
@@ -144,9 +152,10 @@ private:
 	wxTreeCtrl *m_wndTreeCtrl;
 	nxObjectView *m_wndObjectView;
 	bool m_isFirstResize;
+	nxObjectItemsHash m_objectItemsHash;
 	
 	void AddObjectToTree(NXC_OBJECT *object, wxTreeItemId &root);
-	void CreateTreeItemText(NXC_OBJECT *object, TCHAR *buffer);
+	void ClearObjectItemsHash();
 
 public:
 	nxObjectBrowser();
@@ -158,6 +167,7 @@ protected:
 	void OnViewRefresh(wxCommandEvent &event);
 	void OnTreeItemExpanding(wxTreeEvent &event);
 	void OnTreeSelChanged(wxTreeEvent &event);
+	void OnObjectChange(wxCommandEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };

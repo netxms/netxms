@@ -25,6 +25,14 @@
 
 
 //
+// Implementation of dynamic array of tree item references
+//
+
+#include <wx/arrimpl.cpp>
+WX_DEFINE_OBJARRAY(nxTreeItemList);
+
+
+//
 // Event table
 //
 
@@ -57,6 +65,8 @@ nxObjectBrowser::nxObjectBrowser()
 
 	wxCommandEvent event(nxEVT_REFRESH_VIEW);
 	AddPendingEvent(event);
+
+	NXMCEvtConnect(nxEVT_NXC_OBJECT_CHANGE, wxCommandEventHandler(nxObjectBrowser::OnObjectChange), this);
 }
 
 
@@ -66,6 +76,7 @@ nxObjectBrowser::nxObjectBrowser()
 
 nxObjectBrowser::~nxObjectBrowser()
 {
+	NXMCEvtDisconnect(nxEVT_NXC_OBJECT_CHANGE, wxCommandEventHandler(nxObjectBrowser::OnObjectChange), this);
 	UnregisterUniqueView(_T("objectbrowser"));
 }
 
@@ -119,7 +130,7 @@ void nxObjectBrowser::OnViewRefresh(wxCommandEvent &event)
    // Populate objects' tree
 	m_wndTreeCtrl->DeleteAllItems();
 	root = m_wndTreeCtrl->AddRoot(_T("[root]"));
-//   m_dwTreeHashSize = 0;
+	ClearObjectItemsHash();
 
    for(i = 0; i < dwNumRootObj; i++)
       AddObjectToTree(ppRootObjects[i], root);
@@ -133,44 +144,29 @@ void nxObjectBrowser::OnViewRefresh(wxCommandEvent &event)
 
 void nxObjectBrowser::AddObjectToTree(NXC_OBJECT *object, wxTreeItemId &root)
 {
-	TCHAR itemText[256];
 	wxTreeItemId item;
+	nxObjectItemsHash::iterator it;
+	nxTreeItemList *list;
 	
-   CreateTreeItemText(object, itemText);
-	item = m_wndTreeCtrl->AppendItem(root, itemText, object->iClass, -1, new nxObjectTreeItemData(object));
+	item = m_wndTreeCtrl->AppendItem(root, object->szName, object->iClass, -1, new nxObjectTreeItemData(object));
+	
+	// Add item to hash
+	it = m_objectItemsHash.find(object->dwId);
+	if (it != m_objectItemsHash.end())
+	{
+		list = it->second;
+	}
+	else
+	{
+		list = new nxTreeItemList;
+		m_objectItemsHash[object->dwId] = list;
+	}
+	list->Add(item);
 
    // Don't add childs immediatelly to
    // prevent adding millions of items if node has thousands of interfaces in
    // thousands subnets. Childs will be added only if user expands node.
 	m_wndTreeCtrl->SetItemHasChildren(item, object->dwNumChilds > 0);
-}
-
-
-//
-// Create class-depemdent text for tree item
-//
-
-void nxObjectBrowser::CreateTreeItemText(NXC_OBJECT *object, TCHAR *buffer)
-{
-   TCHAR szIpBuffer[32];
-
-   switch(object->iClass)
-   {
-      case OBJECT_SUBNET:
-         _stprintf(buffer, _T("%s [Status: %s]"), object->szName, NXMCGetStatusText(object->iStatus));
-         break;
-      case OBJECT_INTERFACE:
-         if (object->dwIpAddr != 0)
-            _stprintf(buffer, _T("%s [IP: %s/%d Status: %s]"), object->szName, 
-                    IpToStr(object->dwIpAddr, szIpBuffer), 
-                    BitsInMask(object->iface.dwIpNetMask), NXMCGetStatusText(object->iStatus));
-         else
-            _stprintf(buffer, _T("%s [Status: %s]"), object->szName, NXMCGetStatusText(object->iStatus));
-         break;
-      default:
-         _tcscpy(buffer, object->szName);
-         break;
-   }
 }
 
 
@@ -211,4 +207,94 @@ void nxObjectBrowser::OnTreeSelChanged(wxTreeEvent &event)
 
 	item = event.GetItem();
 	m_wndObjectView->SetObject(((nxObjectTreeItemData *)m_wndTreeCtrl->GetItemData(item))->GetObject());
+}
+
+
+//
+// Handler for object change events
+//
+
+void nxObjectBrowser::OnObjectChange(wxCommandEvent &event)
+{
+	NXC_OBJECT *object = (NXC_OBJECT *)event.GetClientData();
+	nxObjectItemsHash::iterator it;
+	nxTreeItemList *list;
+	size_t i, count;
+
+	wxLogDebug(_T("OBJ CHANGE: %s"), object->szName);
+
+	it = m_objectItemsHash.find(object->dwId);
+	list = (it != m_objectItemsHash.end()) ? it->second : NULL;
+
+	if (object->bIsDeleted)
+	{
+		if (list != NULL)
+		{
+			count = list->GetCount();
+			for(i = 0; i < count; i++)
+				m_wndTreeCtrl->Delete(list->Item(i));
+			delete list;
+			m_objectItemsHash.erase(object->dwId);
+		}
+	}
+	else
+	{
+		// Check object's parents
+		if (list != NULL)
+		{
+			wxTreeItemId item;
+			NXC_OBJECT *parent;
+			DWORD j;
+
+			// Create a copy of object's parent list
+			DWORD *parentList = (DWORD *)nx_memdup(object->pdwParentList, 
+			                                       sizeof(DWORD) * object->dwNumParents);
+
+			count = list->GetCount();
+			for(i = 0; i < count; i++)
+			{
+            // Check if this item's parent still in object's parents list
+				item = m_wndTreeCtrl->GetItemParent(list->Item(i));
+				if (item.IsOk())
+				{
+					parent = ((nxObjectTreeItemData *)m_wndTreeCtrl->GetItemData(item))->GetObject();
+               for(j = 0; j < object->dwNumParents; j++)
+                  if (object->pdwParentList[j] == parent->dwId)
+                  {
+                     parentList[j] = 0;   // Mark this parent as presented
+                     break;
+                  }
+               if (j == object->dwNumParents)  // Not a parent anymore
+               {
+						m_wndTreeCtrl->Delete(list->Item(i));
+						list->RemoveAt(i);
+						count--;
+						i--;
+					}
+					else  // Current tree item is still valid
+					{
+						m_wndTreeCtrl->SetItemText(list->Item(i), object->szName);
+					}
+				}
+            else  // Current tree item has no parent
+				{
+					m_wndTreeCtrl->SetItemText(list->Item(i), object->szName);
+				}
+			}
+		}
+	}
+}
+
+
+//
+// Clear has of object items
+//
+
+void nxObjectBrowser::ClearObjectItemsHash()
+{
+	nxObjectItemsHash::iterator it;
+
+	for(it = m_objectItemsHash.begin(); it != m_objectItemsHash.end(); it++)
+		delete it->second;
+	m_objectItemsHash.clear();
 }

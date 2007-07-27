@@ -61,6 +61,9 @@ static void ClientEventHandler(NXC_SESSION session, DWORD nxcEvent, DWORD code, 
 {
 	switch(nxcEvent)
 	{
+      case NXC_EVENT_OBJECT_CHANGED:
+			PostNetXMSEvent(nxEVT_NXC_OBJECT_CHANGE, code, arg);
+			break;
 		case NXC_EVENT_NOTIFICATION:
 			switch(code)
 			{

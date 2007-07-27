@@ -43,6 +43,7 @@ nxAlarmBrowser::nxAlarmBrowser()
 {
 	SetName(_T("alarmbrowser"));
 	SetLabel(_T("Alarm Browser"));
+	SetIcon(wxXmlResource::Get()->LoadIcon(_T("icoAlarmView")));
 	RegisterUniqueView(_T("alarmbrowser"), this);
 
 	m_view = new nxAlarmView(this, _T("/AlarmBrowser"));

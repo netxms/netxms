@@ -142,10 +142,9 @@ bool nxAlarmView::MatchAlarm(NXC_ALARM *alarm)
 {
 	if (m_object == NULL)
 		return true;
-printf("MATCHING against %s\n", m_object->szName);		
 	if (m_object->dwId == alarm->dwSourceObject)
 		return true;
-	return NXCIsParent(NXMCGetSession(), m_object->dwId, alarm->dwSourceObject);
+	return NXCIsParent(NXMCGetSession(), m_object->dwId, alarm->dwSourceObject) ? true : false;
 }
 
 

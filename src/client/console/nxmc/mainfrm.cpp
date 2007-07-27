@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.8 2007-07-24 22:34:21 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.9 2007-07-27 07:07:37 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -383,7 +383,6 @@ void nxMainFrame::OnViewRefresh(wxCommandEvent &event)
 
 void nxMainFrame::OnAlarmChange(wxCommandEvent &event)
 {
-	wxLogDebug(_T("MAINFRAME: onAlarmChange %d"), event.GetInt());
 	// nxMainFrame is a final destination for client library events,
 	// so it should destroy dynamic data associated with event
 	safe_free(event.GetClientData());
