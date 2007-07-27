@@ -1,7 +1,7 @@
-/* $Id: db.cpp,v 1.20 2006-10-01 10:54:25 victor Exp $ */
+/* $Id: db.cpp,v 1.21 2007-07-27 12:03:43 victor Exp $ */
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -718,11 +718,11 @@ DWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iCol
 {
    LONG iVal;
    DWORD dwVal;
-   char szBuffer[64];
+   TCHAR szBuffer[64];
 
    if (DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL)
       return 0;
-   iVal = strtol(szBuffer, NULL, 10);
+   iVal = _tcstol(szBuffer, NULL, 10);
    memcpy(&dwVal, &iVal, sizeof(LONG));   // To prevent possible conversion
    return dwVal;
 }
@@ -736,11 +736,11 @@ QWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncUInt64(DB_ASYNC_RESULT hResult, int iCo
 {
    INT64 iVal;
    QWORD qwVal;
-   char szBuffer[64];
+   TCHAR szBuffer[64];
 
    if (DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL)
       return 0;
-   iVal = strtoll(szBuffer, NULL, 10);
+   iVal = _tcstoll(szBuffer, NULL, 10);
    memcpy(&qwVal, &iVal, sizeof(INT64));   // To prevent possible conversion
    return qwVal;
 }
@@ -752,9 +752,9 @@ QWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncUInt64(DB_ASYNC_RESULT hResult, int iCo
 
 LONG LIBNXSRV_EXPORTABLE DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn)
 {
-   char szBuffer[64];
+   TCHAR szBuffer[64];
    
-   return DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL ? 0 : strtol(szBuffer, NULL, 10);
+   return DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL ? 0 : _tcstol(szBuffer, NULL, 10);
 }
 
 
@@ -764,9 +764,9 @@ LONG LIBNXSRV_EXPORTABLE DBGetFieldAsyncLong(DB_RESULT hResult, int iColumn)
 
 INT64 LIBNXSRV_EXPORTABLE DBGetFieldAsyncInt64(DB_RESULT hResult, int iColumn)
 {
-   char szBuffer[64];
+   TCHAR szBuffer[64];
    
-   return DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL ? 0 : strtoll(szBuffer, NULL, 10);
+   return DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL ? 0 : _tcstoll(szBuffer, NULL, 10);
 }
 
 
@@ -776,9 +776,9 @@ INT64 LIBNXSRV_EXPORTABLE DBGetFieldAsyncInt64(DB_RESULT hResult, int iColumn)
 
 double LIBNXSRV_EXPORTABLE DBGetFieldAsyncDouble(DB_RESULT hResult, int iColumn)
 {
-   char szBuffer[64];
+   TCHAR szBuffer[64];
    
-   return DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL ? 0 : strtod(szBuffer, NULL);
+   return DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL ? 0 : _tcstod(szBuffer, NULL);
 }
 
 
@@ -788,7 +788,7 @@ double LIBNXSRV_EXPORTABLE DBGetFieldAsyncDouble(DB_RESULT hResult, int iColumn)
 
 DWORD LIBNXSRV_EXPORTABLE DBGetFieldAsyncIPAddr(DB_RESULT hResult, int iColumn)
 {
-   char szBuffer[64];
+   TCHAR szBuffer[64];
    
    return DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL ? INADDR_NONE : 
       ntohl(inet_addr(szBuffer));

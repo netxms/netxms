@@ -1,4 +1,4 @@
-/* $Id: oracle.cpp,v 1.3 2007-02-17 15:32:48 victor Exp $ */
+/* $Id: oracle.cpp,v 1.4 2007-07-27 12:03:42 victor Exp $ */
 /* 
 ** Oracle Database Driver
 ** Copyright (C) 2007 Victor Kirhenshtein
@@ -515,7 +515,7 @@ extern "C" BOOL EXPORT DrvFetch(ORACLE_CONN *pConn)
 //
 
 extern "C" WCHAR EXPORT *DrvGetFieldAsync(ORACLE_CONN *pConn, int nColumn,
-														WCHAR *pBuffer, int nBufSize)
+                                          WCHAR *pBuffer, int nBufSize)
 {
 	int nLen;
 
