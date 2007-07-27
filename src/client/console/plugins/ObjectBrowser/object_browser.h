@@ -167,6 +167,8 @@ protected:
 	void OnViewRefresh(wxCommandEvent &event);
 	void OnTreeItemExpanding(wxTreeEvent &event);
 	void OnTreeSelChanged(wxTreeEvent &event);
+	void OnTreeDeleteItem(wxTreeEvent &event);
+	void OnTreeItemMenu(wxTreeEvent &event);
 	void OnObjectChange(wxCommandEvent &event);
 
 	DECLARE_EVENT_TABLE()

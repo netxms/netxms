@@ -41,6 +41,8 @@ BEGIN_EVENT_TABLE(nxObjectBrowser, nxView)
 	EVT_NX_REFRESH_VIEW(nxObjectBrowser::OnViewRefresh)
 	EVT_TREE_ITEM_EXPANDING(wxID_TREE_CTRL, nxObjectBrowser::OnTreeItemExpanding)
 	EVT_TREE_SEL_CHANGED(wxID_TREE_CTRL, nxObjectBrowser::OnTreeSelChanged)
+	EVT_TREE_DELETE_ITEM(wxID_TREE_CTRL, nxObjectBrowser::OnTreeDeleteItem)
+	EVT_TREE_ITEM_MENU(wxID_TREE_CTRL, nxObjectBrowser::OnTreeItemMenu)
 END_EVENT_TABLE()
 
 
@@ -53,6 +55,7 @@ nxObjectBrowser::nxObjectBrowser()
 {
 	SetName(_T("objectbrowser"));
 	SetLabel(_T("Object Browser"));
+	SetIcon(wxXmlResource::Get()->LoadIcon(_T("icoObjectBrowser")));
 	m_wndSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_NOBORDER);
 	m_wndSplitter->SetMinimumPaneSize(30);
 	m_wndTreeCtrl = new wxTreeCtrl(m_wndSplitter, wxID_TREE_CTRL, wxDefaultPosition, wxDefaultSize,
@@ -193,6 +196,7 @@ void nxObjectBrowser::OnTreeItemExpanding(wxTreeEvent &event)
             AddObjectToTree(childObject, item);
          }
       }
+		m_wndTreeCtrl->SortChildren(item);
 	}
 }
 
@@ -207,6 +211,39 @@ void nxObjectBrowser::OnTreeSelChanged(wxTreeEvent &event)
 
 	item = event.GetItem();
 	m_wndObjectView->SetObject(((nxObjectTreeItemData *)m_wndTreeCtrl->GetItemData(item))->GetObject());
+	m_wndTreeCtrl->SetFocus();   // Return focus to tree control
+}
+
+
+//
+// Handler for tree item deletion
+//
+
+void nxObjectBrowser::OnTreeDeleteItem(wxTreeEvent &event)
+{
+	wxTreeItemId item;
+	NXC_OBJECT *object;
+	nxObjectItemsHash::iterator it;
+	nxTreeItemList *list;
+	size_t i, count;
+
+	// Find item being deleted in object items hash and remove
+	item = event.GetItem();
+	object = ((nxObjectTreeItemData *)m_wndTreeCtrl->GetItemData(item))->GetObject();
+	it = m_objectItemsHash.find(object->dwId);
+	list = (it != m_objectItemsHash.end()) ? it->second : NULL;
+	if (list != NULL)
+	{
+		count = list->GetCount();
+		for(i = 0; i < count; i++)
+		{
+			if (list->Item(i) == item)
+			{
+				list->RemoveAt(i);
+				break;
+			}
+		}
+	}
 }
 
 
@@ -220,8 +257,6 @@ void nxObjectBrowser::OnObjectChange(wxCommandEvent &event)
 	nxObjectItemsHash::iterator it;
 	nxTreeItemList *list;
 	size_t i, count;
-
-	wxLogDebug(_T("OBJ CHANGE: %s"), object->szName);
 
 	it = m_objectItemsHash.find(object->dwId);
 	list = (it != m_objectItemsHash.end()) ? it->second : NULL;
@@ -239,23 +274,31 @@ void nxObjectBrowser::OnObjectChange(wxCommandEvent &event)
 	}
 	else
 	{
-		// Check object's parents
-		if (list != NULL)
+		DWORD j;
+		
+		if (list != NULL)    // Check object's parents
 		{
 			wxTreeItemId item;
 			NXC_OBJECT *parent;
-			DWORD j;
 
+			// Update "hasChildren" attribute
+			count = list->GetCount();
+			for(i = 0; i < count; i++)
+			{
+				m_wndTreeCtrl->SetItemHasChildren(list->Item(i), object->dwNumChilds > 0);
+			}
+			
 			// Create a copy of object's parent list
 			DWORD *parentList = (DWORD *)nx_memdup(object->pdwParentList, 
 			                                       sizeof(DWORD) * object->dwNumParents);
 
+restart_check:
 			count = list->GetCount();
 			for(i = 0; i < count; i++)
 			{
             // Check if this item's parent still in object's parents list
 				item = m_wndTreeCtrl->GetItemParent(list->Item(i));
-				if (item.IsOk())
+				if (item.IsOk() && (item != m_wndTreeCtrl->GetRootItem()))
 				{
 					parent = ((nxObjectTreeItemData *)m_wndTreeCtrl->GetItemData(item))->GetObject();
                for(j = 0; j < object->dwNumParents; j++)
@@ -267,13 +310,12 @@ void nxObjectBrowser::OnObjectChange(wxCommandEvent &event)
                if (j == object->dwNumParents)  // Not a parent anymore
                {
 						m_wndTreeCtrl->Delete(list->Item(i));
-						list->RemoveAt(i);
-						count--;
-						i--;
+						goto restart_check;
 					}
 					else  // Current tree item is still valid
 					{
 						m_wndTreeCtrl->SetItemText(list->Item(i), object->szName);
+						m_wndTreeCtrl->SortChildren(item);
 					}
 				}
             else  // Current tree item has no parent
@@ -281,7 +323,56 @@ void nxObjectBrowser::OnObjectChange(wxCommandEvent &event)
 					m_wndTreeCtrl->SetItemText(list->Item(i), object->szName);
 				}
 			}
+			
+			// Now walk through all object's parents which hasn't corresponding
+			// items in tree view
+			for(j = 0; j < object->dwNumParents; j++)
+			{
+				if (parentList[j] != 0)
+				{
+					it = m_objectItemsHash.find(parentList[j]);
+					if (it != m_objectItemsHash.end())
+               {
+                  // Walk through all occurences of current parent object
+	               list = it->second;
+						count = list->GetCount();
+						for(i = 0; i < count; i++)
+						{
+							if (m_wndTreeCtrl->ItemHasChildren(list->Item(i)) && m_wndTreeCtrl->GetLastChild(list->Item(i)).IsOk())
+                     {
+                        AddObjectToTree(object, list->Item(i));
+	                     m_wndTreeCtrl->SortChildren(list->Item(i));
+							}
+						}
+					}
+				}
+			}
+
+			// Destroy copy of object's parents list
+			safe_free(parentList);
 		}
+		else
+		{
+			// New object, link to all parents
+			for(j = 0; j < object->dwNumParents; j++)
+			{
+				it = m_objectItemsHash.find(object->pdwParentList[j]);
+				if (it != m_objectItemsHash.end())
+            {
+               // Walk through all occurences of current parent object
+               list = it->second;
+					count = list->GetCount();
+					for(i = 0; i < count; i++)
+               {
+                  if (m_wndTreeCtrl->ItemHasChildren(list->Item(i)) && m_wndTreeCtrl->GetLastChild(list->Item(i)).IsOk())
+                  {
+                     AddObjectToTree(object, list->Item(i));
+                     m_wndTreeCtrl->SortChildren(list->Item(i));
+                  }
+               }
+            }
+         }
+      }
 	}
 }
 
@@ -298,3 +389,28 @@ void nxObjectBrowser::ClearObjectItemsHash()
 		delete it->second;
 	m_objectItemsHash.clear();
 }
+
+
+//
+// Handler for context menu on tree item
+//
+
+void nxObjectBrowser::OnTreeItemMenu(wxTreeEvent &event)
+{
+	wxTreeItemId item;
+	NXC_OBJECT *object;
+	wxMenu *menu;
+
+	if (!IsBusy())
+	{
+		item = event.GetItem();
+		object = ((nxObjectTreeItemData *)m_wndTreeCtrl->GetItemData(item))->GetObject();
+		menu = wxXmlResource::Get()->LoadMenu(_T("menuCtxObject"));
+		if (menu != NULL)
+		{
+			PopupMenu(menu);
+			delete menu;
+		}
+	}
+}
+

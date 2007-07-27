@@ -531,6 +531,8 @@ src/client/console/plugins/ObjectBrowser/mcpObjectBrowser.dsp -text
 src/client/console/plugins/ObjectBrowser/object_browser.h -text
 src/client/console/plugins/ObjectBrowser/objview.cpp -text
 src/client/console/plugins/ObjectBrowser/overview.cpp -text
+src/client/console/plugins/ObjectBrowser/rc/Makefile.am -text
+src/client/console/plugins/ObjectBrowser/rc/ObjectBrowser.xrc -text
 src/client/console/plugins/ObjectBrowser/rc/objectbrowser.xpm -text
 src/console/Makefile.am -text
 src/console/PocketPC/AlarmView.cpp -text

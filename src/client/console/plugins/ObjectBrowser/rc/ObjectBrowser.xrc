@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
+	<object class="wxIcon" name="icoObjectBrowser">objectbrowser.xpm</object>
+	<object class="wxMenu" name="menuCtxObject">
+		<label>Object</label>
+		<object class="wxMenu" name="menuObjectView">
+			<label>&amp;View</label>
+			<help></help>
+			<object class="wxMenuItem" name="menuObjectViewContFirst">
+				<label>Show &amp;container objects first</label>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="menuObjectViewHideUnmanaged">
+				<label>&amp;Hide unmanaged leaf objects</label>
+				<help></help>
+			</object>
+		</object>
+		<object class="separator" />
+		<object class="wxMenuItem" name="menuObjectBind">
+			<label>&amp;Bind...</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuObjectUnbind">
+			<label>U&amp;nbind...</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuObjectRename">
+			<label>&amp;Rename</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuObjectDelete">
+			<label>&amp;Delete</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuObjectMove">
+			<label>M&amp;ove to another container...</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuObjectChangeIP">
+			<label>Change &amp;IP address...</label>
+			<help></help>
+		</object>
+		<object class="separator" />
+		<object class="wxMenuItem" name="menuObjectEditAgentCfg">
+			<label>&amp;Edit agent's configuration...</label>
+			<help></help>
+		</object>
+		<object class="separator" />
+		<object class="wxMenuItem" name="menuObjectApply">
+			<label>Appl&amp;y...</label>
+			<help></help>
+		</object>
+		<object class="separator" />
+		<object class="wxMenuItem" name="menuObjectManage">
+			<label>&amp;Manage</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuObjectUnmanage">
+			<label>&amp;Unmanage</label>
+			<help></help>
+		</object>
+		<object class="wxMenu" name="menuObjectPoll">
+			<label>P&amp;oll</label>
+			<help></help>
+			<object class="wxMenuItem" name="menuObjectPollStatus">
+				<label>&amp;Status</label>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="menuObjectPollCfg">
+				<label>&amp;Configuration</label>
+				<help></help>
+			</object>
+		</object>
+		<object class="separator" />
+		<object class="wxMenuItem" name="menuObjectDataColl">
+			<label>D&amp;ata collection</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuObjectLastValues">
+			<label>&amp;Last DCI values</label>
+			<help></help>
+		</object>
+		<object class="separator" />
+		<object class="wxMenuItem" name="menuObjectProperties">
+			<label>&amp;Properties...</label>
+			<help></help>
+		</object>
+	</object>
+</resource>

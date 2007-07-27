@@ -56,6 +56,8 @@ NXMC_IMPLEMENT_PLUGIN_REGISTRATION(_T("ObjectBrowser"), NETXMS_VERSION_STRING, N
 
 extern "C" bool NXMC_PLUGIN_EXPORT nxmcInitializePlugin(NXMC_PLUGIN_HANDLE handle)
 {
+	if (!NXMCLoadResources(_T("ObjectBrowser.xrs"), NXMC_LIB_INSTANCE_ARG(s_libInstance), wxMAKEINTRESOURCE(IDR_XRS)))
+		wxLogWarning(_T("ObjectBrowser: cannot load resource file"));
 	NXMCAddViewMenuItem(handle, _T("&Object Browser\tF3"), 0);
 	return true;
 }
