@@ -1,6 +1,6 @@
 /* 
 ** MySQL Database Driver
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: mysql.cpp
+** File: mysql.cpp
 **
 **/
 
@@ -170,7 +170,7 @@ extern "C" DWORD EXPORT DrvQuery(MYSQL_CONN *pConn, WCHAR *pwszQuery)
 extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError)
 {
 	DB_RESULT pResult = NULL;
-   char *pszQueryUTF8;
+	char *pszQueryUTF8;
 
 	if (pConn == NULL)
 	{
@@ -178,7 +178,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD
 		return NULL;
 	}
 
-   pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
+	pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
 	{
@@ -199,7 +199,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD
 	}
 
 	MutexUnlock(pConn->mutexQueryLock);
-   free(pszQueryUTF8);
+	free(pszQueryUTF8);
 	
 	return pResult;
 }
@@ -227,20 +227,20 @@ extern "C" WCHAR EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int iColumn,
                                      WCHAR *pBuffer, int nBufSize)
 {
 	MYSQL_ROW row;
-   WCHAR *pRet = NULL;
+	WCHAR *pRet = NULL;
 	
 	mysql_data_seek((MYSQL_RES *)hResult, iRow);
 	row = mysql_fetch_row((MYSQL_RES *)hResult);
 	if (row != NULL)
-   {
+	{
 		if (row[iColumn] != NULL)
 		{
-      	MultiByteToWideChar(CP_UTF8, 0, row[iColumn], -1, pBuffer, nBufSize);
-      	pBuffer[nBufSize - 1] = 0;
-      	pRet = pBuffer;
+			MultiByteToWideChar(CP_UTF8, 0, row[iColumn], -1, pBuffer, nBufSize);
+			pBuffer[nBufSize - 1] = 0;
+			pRet = pBuffer;
 		}
-   }
-   return pRet;
+	}
+	return pRet;
 }
 
 
@@ -274,7 +274,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pwszQ
                                                  DWORD *pdwError)
 {
 	MYSQL_ASYNC_RESULT *pResult = NULL;
-   char *pszQueryUTF8;
+	char *pszQueryUTF8;
 	
 	if (pConn == NULL)
 	{
@@ -282,7 +282,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pwszQ
 		return NULL;
 	}
 
-   pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
+	pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
 	{
@@ -321,7 +321,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pwszQ
 	{
 		MutexUnlock(pConn->mutexQueryLock);
 	}
-   free(pszQueryUTF8);
+	free(pszQueryUTF8);
 
 	return pResult;
 }
@@ -396,10 +396,10 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
 	// Now get column data
 	iLen = min((int)((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths[iColumn], iBufSize - 1);
 	if (iLen > 0)
-   {
-      MultiByteToWideChar(CP_UTF8, 0, ((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow[iColumn],
-                          iLen, pBuffer, iLen);
-   }
+	{
+		MultiByteToWideChar(CP_UTF8, 0, ((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow[iColumn],
+		                    iLen, pBuffer, iBufSize);
+	}
 	pBuffer[iLen] = 0;
 	
 	return pBuffer;
