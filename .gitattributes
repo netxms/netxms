@@ -454,6 +454,8 @@ src/client/console/libnxmc/libnxmc.h -text
 src/client/console/libnxmc/main.cpp -text
 src/client/console/libnxmc/nxview.cpp -text
 src/client/console/libnxmc/nxview.h -text
+src/client/console/libnxmc/objseldlg.cpp -text
+src/client/console/libnxmc/objseldlg.h -text
 src/client/console/libnxmc/tools.cpp -text
 src/client/console/libnxmc/view.cpp -text
 src/client/console/libnxmc/viewtracker.cpp -text
