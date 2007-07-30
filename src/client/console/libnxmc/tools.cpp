@@ -155,7 +155,7 @@ void LIBNXMC_EXPORTABLE NXMCLoadListCtrlColumns(wxConfigBase *cfg, wxListCtrl &w
 // Show client library error
 //
 
-void LIBNXMC_EXPORTABLE NXMCShowClientError(DWORD rcc, TCHAR *msgTemplate)
+void LIBNXMC_EXPORTABLE NXMCShowClientError(DWORD rcc, const TCHAR *msgTemplate)
 {
 	TCHAR msg[4096];
 

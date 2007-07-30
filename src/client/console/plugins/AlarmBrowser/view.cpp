@@ -380,7 +380,7 @@ void nxAlarmView::OnAlarmAck(wxCommandEvent &event)
 			break;
 		idList[i] = m_wndListCtrl->GetItemData(item);
 	}
-	DoRequestArg2((void *)AckAlarms, count, CAST_FROM_POINTER(idList, wxUIntPtr));
+	DoRequestArg2((void *)AckAlarms, count, CAST_FROM_POINTER(idList, wxUIntPtr), _T("Cannot acknowledge alarm: %s"));
 }
 
 
@@ -417,7 +417,7 @@ void nxAlarmView::OnAlarmTerminate(wxCommandEvent &event)
 			break;
 		idList[i] = m_wndListCtrl->GetItemData(item);
 	}
-	DoRequestArg2((void *)TerminateAlarms, count, CAST_FROM_POINTER(idList, wxUIntPtr));
+	DoRequestArg2((void *)TerminateAlarms, count, CAST_FROM_POINTER(idList, wxUIntPtr), _T("Cannot terminate alarm: %s"));
 }
 
 
@@ -454,5 +454,5 @@ void nxAlarmView::OnAlarmDelete(wxCommandEvent &event)
 			break;
 		idList[i] = m_wndListCtrl->GetItemData(item);
 	}
-	DoRequestArg2((void *)DeleteAlarms, count, CAST_FROM_POINTER(idList, wxUIntPtr));
+	DoRequestArg2((void *)DeleteAlarms, count, CAST_FROM_POINTER(idList, wxUIntPtr), _T("Cannot delete alarm: %s"));
 }

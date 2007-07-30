@@ -32,12 +32,17 @@
 class RqData
 {
 public:
-	RqData(int id, wxEvtHandler *owner, void *func, int numArgs)
+	RqData(int id, wxEvtHandler *owner, void *func, int numArgs, const TCHAR *errMsg)
 	{ 
 		m_id = id;
 		m_owner = owner;
 		m_func = (DWORD (*)(...))func;
 		m_numArgs = numArgs;
+		m_errMsg = (errMsg != NULL) ? _tcsdup(errMsg) : NULL;
+	}
+	~RqData()
+	{
+		safe_free(m_errMsg);
 	}
 	
 	int m_id;
@@ -46,6 +51,7 @@ public:
 	int m_numArgs;
 	wxUIntPtr m_arg[9];
 	DWORD m_rcc;
+	TCHAR *m_errMsg;
 };
 
 
@@ -68,11 +74,11 @@ private:
 	
 protected:
 	
-	int DoRequestArg1(void *func, wxUIntPtr arg1);
-	int DoRequestArg2(void *func, wxUIntPtr arg1, wxUIntPtr arg2);
-	int DoRequestArg3(void *func, wxUIntPtr arg1, wxUIntPtr arg2, wxUIntPtr arg3);
+	int DoRequestArg1(void *func, wxUIntPtr arg1, const TCHAR *errMsg);
+	int DoRequestArg2(void *func, wxUIntPtr arg1, wxUIntPtr arg2, const TCHAR *errMsg);
+	int DoRequestArg3(void *func, wxUIntPtr arg1, wxUIntPtr arg2, wxUIntPtr arg3, const TCHAR *errMsg);
 	
-	virtual void RequestCompletionHandler(int rqId, DWORD rcc);
+	virtual void RequestCompletionHandler(int rqId, DWORD rcc, const TCHAR *errMsg);
 
 public:
 	nxView(wxWindow *parent);

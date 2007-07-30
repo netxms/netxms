@@ -45,6 +45,8 @@ BEGIN_EVENT_TABLE(nxObjectBrowser, nxView)
 	EVT_TREE_ITEM_MENU(wxID_TREE_CTRL, nxObjectBrowser::OnTreeItemMenu)
 	EVT_MENU(XRCID("menuObjectBind"), nxObjectBrowser::OnObjectBind)
 	EVT_UPDATE_UI(XRCID("menuObjectBind"), nxObjectBrowser::OnUpdateUIObjectBind)
+	EVT_MENU(XRCID("menuObjectUnbind"), nxObjectBrowser::OnObjectUnbind)
+	EVT_UPDATE_UI(XRCID("menuObjectUnbind"), nxObjectBrowser::OnUpdateUIObjectUnbind)
 END_EVENT_TABLE()
 
 
@@ -453,7 +455,7 @@ void nxObjectBrowser::OnObjectBind(wxCommandEvent &event)
 		dlg.m_allowedClasses = SCL_SUBNET | SCL_NODE | SCL_CONTAINER | SCL_CONDITION;
 		if (dlg.ShowModal() == wxID_OK)
 		{
-			DoRequestArg2(BindObjects, m_currentObject->dwId, CAST_FROM_POINTER(new wxArrayLong(dlg.m_objectList), wxUIntPtr));
+			DoRequestArg2((void *)BindObjects, m_currentObject->dwId, CAST_FROM_POINTER(new wxArrayLong(dlg.m_objectList), wxUIntPtr), _T("Error binding object: %s"));
 		}
 	}
 }
@@ -470,3 +472,59 @@ void nxObjectBrowser::OnUpdateUIObjectBind(wxUpdateUIEvent &event)
 		             (m_currentObject->iClass == OBJECT_CONTAINER));
 	}
 }
+
+
+//
+// Handlers for Object->Unbind menu
+//
+
+static DWORD UnbindObjects(DWORD parentId, wxArrayLong *childList)
+{
+	size_t i, count;
+	DWORD rcc;
+	NXC_SESSION session = NXMCGetSession();
+
+	count = childList->GetCount();
+	for(i = 0; i < count; i++)
+	{
+		rcc = NXCUnbindObject(session, parentId, childList->Item(i));
+		if (rcc != RCC_SUCCESS)
+			break;
+	}
+	delete childList;
+	return rcc;
+}
+
+void nxObjectBrowser::OnObjectUnbind(wxCommandEvent &event)
+{
+	if ((m_currentObject != NULL) &&
+		 ((m_currentObject->iClass == OBJECT_SERVICEROOT) ||
+		  (m_currentObject->iClass == OBJECT_CONTAINER) ||
+		  (m_currentObject->iClass == OBJECT_TEMPLATE)))
+	{
+		nxObjectSelDlg dlg(this);
+
+		dlg.m_isSingleSelection = false;
+		dlg.m_allowedClasses = SCL_SUBNET | SCL_NODE | SCL_CONTAINER | SCL_CONDITION;
+		dlg.m_parentObjectId = m_currentObject->dwId;
+		if (dlg.ShowModal() == wxID_OK)
+		{
+			DoRequestArg2((void *)UnbindObjects, m_currentObject->dwId, CAST_FROM_POINTER(new wxArrayLong(dlg.m_objectList), wxUIntPtr), _T("Error unbinding object: %s"));
+		}
+	}
+}
+
+void nxObjectBrowser::OnUpdateUIObjectUnbind(wxUpdateUIEvent &event)
+{
+	if (m_currentObject == NULL)
+	{
+		event.Enable(false);
+	}
+	else
+	{
+		event.Enable((m_currentObject->iClass == OBJECT_SERVICEROOT) ||
+		             (m_currentObject->iClass == OBJECT_CONTAINER) ||
+		             (m_currentObject->iClass == OBJECT_TEMPLATE));
+	}
+}
+

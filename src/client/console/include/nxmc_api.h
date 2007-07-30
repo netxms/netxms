@@ -323,7 +323,7 @@ void LIBNXMC_EXPORTABLE NXMCInitializationComplete();
 
 nxmcArrayOfRegItems LIBNXMC_EXPORTABLE &NXMCGetRegistrations();
 
-void LIBNXMC_EXPORTABLE NXMCShowClientError(DWORD rcc, TCHAR *msgTemplate);
+void LIBNXMC_EXPORTABLE NXMCShowClientError(DWORD rcc, const TCHAR *msgTemplate);
 
 bool LIBNXMC_EXPORTABLE NXMCLoadResources(const TCHAR *name, NXMC_LIB_INSTANCE instance, TCHAR *resName);
 

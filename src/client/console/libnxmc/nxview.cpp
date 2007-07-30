@@ -148,7 +148,7 @@ static THREAD_RESULT THREAD_CALL RequestThread(void *arg)
 // Execute async request
 //
 
-int nxView::DoRequest(RqData *data, TCHAR *errMsg)
+int nxView::DoRequest(RqData *data)
 {
 	if (m_activeRequestCount == 0)
 		m_timer->Start(300, true);
@@ -157,30 +157,30 @@ int nxView::DoRequest(RqData *data, TCHAR *errMsg)
 	return data->m_id;
 }
 
-int nxView::DoRequestArg1(void *func, wxUIntPtr arg1)
+int nxView::DoRequestArg1(void *func, wxUIntPtr arg1, const TCHAR *errMsg)
 {
    RqData *data;
 
-	data = new RqData(m_freeRqId++, this, func, 1);
+	data = new RqData(m_freeRqId++, this, func, 1, errMsg);
    data->m_arg[0] = arg1;
    return DoRequest(data);
 }
 
-int nxView::DoRequestArg2(void *func, wxUIntPtr arg1, wxUIntPtr arg2)
+int nxView::DoRequestArg2(void *func, wxUIntPtr arg1, wxUIntPtr arg2, const TCHAR *errMsg)
 {
    RqData *data;
 
-	data = new RqData(m_freeRqId++, this, func, 2);
+	data = new RqData(m_freeRqId++, this, func, 2, errMsg);
    data->m_arg[0] = arg1;
    data->m_arg[1] = arg2;
    return DoRequest(data);
 }
 
-int nxView::DoRequestArg3(void *func, wxUIntPtr arg1, wxUIntPtr arg2, wxUIntPtr arg3)
+int nxView::DoRequestArg3(void *func, wxUIntPtr arg1, wxUIntPtr arg2, wxUIntPtr arg3, const TCHAR *errMsg)
 {
    RqData *data;
 
-	data = new RqData(m_freeRqId++, this, func, 3);
+	data = new RqData(m_freeRqId++, this, func, 3, errMsg);
    data->m_arg[0] = arg1;
    data->m_arg[1] = arg2;
    data->m_arg[2] = arg3;
@@ -209,6 +209,8 @@ void nxView::OnTimer(wxTimerEvent &event)
 
 void nxView::OnRequestCompleted(wxCommandEvent &event)
 {
+	nxIntToStringHash::iterator it;
+	
 	RqData *data = (RqData *)event.GetClientData();
 	m_activeRequestCount--;
 	if (m_activeRequestCount == 0)
@@ -219,7 +221,7 @@ void nxView::OnRequestCompleted(wxCommandEvent &event)
 		SetCursor(wxNullCursor);
 		m_isBusy = false;
 	}
-	RequestCompletionHandler(data->m_id, data->m_rcc);
+	RequestCompletionHandler(data->m_id, data->m_rcc, data->m_errMsg);
 	delete data;
 }
 
@@ -228,19 +230,11 @@ void nxView::OnRequestCompleted(wxCommandEvent &event)
 // Virtual request completion handler
 //
 
-void nxView::RequestCompletionHandler(int rqId, DWORD rcc)
+void nxView::RequestCompletionHandler(int rqId, DWORD rcc, const TCHAR *errMsg)
 {
-	nxIntToStringHash::iterator it;
-
-	it = m_requestErrorMessages.find(rqId);
-	if (it != m_requestErrorMessages.end())
+	if ((rcc != RCC_SUCCESS) && (errMsg != NULL))
 	{
-		if (rcc != RCC_SUCCESS)
-		{
-			NXMCShowClientError(rcc, it->second);
-		}
-		free(it->second);
-		m_requestErrorMessages.erase(it);
+		NXMCShowClientError(rcc, errMsg);
 	}
 }
 

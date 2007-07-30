@@ -162,6 +162,8 @@ protected:
 	void OnObjectChange(wxCommandEvent &event);
 	void OnObjectBind(wxCommandEvent &event);
 	void OnUpdateUIObjectBind(wxUpdateUIEvent &event);
+	void OnObjectUnbind(wxCommandEvent &event);
+	void OnUpdateUIObjectUnbind(wxUpdateUIEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };
