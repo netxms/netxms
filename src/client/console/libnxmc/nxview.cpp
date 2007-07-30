@@ -148,7 +148,7 @@ static THREAD_RESULT THREAD_CALL RequestThread(void *arg)
 // Execute async request
 //
 
-int nxView::DoRequest(RqData *data)
+int nxView::DoRequest(RqData *data, TCHAR *errMsg)
 {
 	if (m_activeRequestCount == 0)
 		m_timer->Start(300, true);
@@ -230,6 +230,18 @@ void nxView::OnRequestCompleted(wxCommandEvent &event)
 
 void nxView::RequestCompletionHandler(int rqId, DWORD rcc)
 {
+	nxIntToStringHash::iterator it;
+
+	it = m_requestErrorMessages.find(rqId);
+	if (it != m_requestErrorMessages.end())
+	{
+		if (rcc != RCC_SUCCESS)
+		{
+			NXMCShowClientError(rcc, it->second);
+		}
+		free(it->second);
+		m_requestErrorMessages.erase(it);
+	}
 }
 
 
@@ -240,4 +252,3 @@ void nxView::RequestCompletionHandler(int rqId, DWORD rcc)
 void nxView::RefreshView()
 {
 }
-

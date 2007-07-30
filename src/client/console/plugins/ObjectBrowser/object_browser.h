@@ -39,17 +39,6 @@ WX_DECLARE_HASH_MAP(DWORD, nxTreeItemList*, wxIntegerHash, wxIntegerEqual, nxObj
 
 
 //
-// libnxcl object index structure
-//
-
-struct NXC_OBJECT_INDEX
-{
-   DWORD key;
-   NXC_OBJECT *object;
-};
-
-
-//
 // Header for object overview
 //
 
@@ -153,6 +142,7 @@ private:
 	nxObjectView *m_wndObjectView;
 	bool m_isFirstResize;
 	nxObjectItemsHash m_objectItemsHash;
+	NXC_OBJECT *m_currentObject;
 	
 	void AddObjectToTree(NXC_OBJECT *object, wxTreeItemId &root);
 	void ClearObjectItemsHash();
@@ -170,9 +160,10 @@ protected:
 	void OnTreeDeleteItem(wxTreeEvent &event);
 	void OnTreeItemMenu(wxTreeEvent &event);
 	void OnObjectChange(wxCommandEvent &event);
+	void OnObjectBind(wxCommandEvent &event);
+	void OnUpdateUIObjectBind(wxUpdateUIEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };
 
 #endif
-

@@ -279,10 +279,22 @@ struct CODE_TO_TEXT
 
 
 //
+// libnxcl object index structure
+//
+
+struct NXC_OBJECT_INDEX
+{
+   DWORD key;
+   NXC_OBJECT *object;
+};
+
+
+//
 // Additional array and hash types
 //
 
 WX_DECLARE_HASH_MAP(DWORD, NXC_ALARM*, wxIntegerHash, wxIntegerEqual, nxAlarmList);
+WX_DECLARE_HASH_MAP_WITH_DECL(int, TCHAR*, wxIntegerHash, wxIntegerEqual, nxIntToStringHash, class LIBNXMC_EXPORTABLE);
 
 
 //
@@ -291,6 +303,7 @@ WX_DECLARE_HASH_MAP(DWORD, NXC_ALARM*, wxIntegerHash, wxIntegerEqual, nxAlarmLis
 
 #include "../libnxmc/nxview.h"
 #include "../libnxmc/heading.h"
+#include "../libnxmc/objseldlg.h"
 
 
 //
@@ -305,9 +318,12 @@ typedef nxView* (*nxViewCreator)(wxWindow *, const TCHAR *, NXC_OBJECT *, void *
 //
 
 void LIBNXMC_EXPORTABLE NXMCInitAUI(wxAuiManager *mgr, wxAuiNotebook *nb, wxWindow *defParent);
+void LIBNXMC_EXPORTABLE NXMCSetMainFrame(wxFrame *frame);
 void LIBNXMC_EXPORTABLE NXMCInitializationComplete();
 
 nxmcArrayOfRegItems LIBNXMC_EXPORTABLE &NXMCGetRegistrations();
+
+void LIBNXMC_EXPORTABLE NXMCShowClientError(DWORD rcc, TCHAR *msgTemplate);
 
 bool LIBNXMC_EXPORTABLE NXMCLoadResources(const TCHAR *name, NXMC_LIB_INSTANCE instance, TCHAR *resName);
 

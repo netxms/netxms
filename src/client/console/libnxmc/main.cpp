@@ -31,6 +31,7 @@
 wxAuiNotebook *g_auiNotebook = NULL;
 wxAuiManager *g_auiManager = NULL;
 wxWindow *g_auiDefaultParent = NULL;
+wxFrame *g_appMainFrame = NULL;
 
 
 //
@@ -137,6 +138,16 @@ void LIBNXMC_EXPORTABLE NXMCInitAUI(wxAuiManager *mgr, wxAuiNotebook *nb, wxWind
 	g_auiManager = mgr;
 	g_auiNotebook = nb;
 	g_auiDefaultParent = defParent;
+}
+
+
+//
+// Set app main frame window
+//
+
+void LIBNXMC_EXPORTABLE NXMCSetMainFrame(wxFrame *frame)
+{
+	g_appMainFrame = frame;
 }
 
 

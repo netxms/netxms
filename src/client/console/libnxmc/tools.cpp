@@ -149,3 +149,17 @@ void LIBNXMC_EXPORTABLE NXMCLoadListCtrlColumns(wxConfigBase *cfg, wxListCtrl &w
 
 	cfg->SetPath(path);
 }
+
+
+//
+// Show client library error
+//
+
+void LIBNXMC_EXPORTABLE NXMCShowClientError(DWORD rcc, TCHAR *msgTemplate)
+{
+	TCHAR msg[4096];
+
+	_sntprintf(msg, 4096, msgTemplate, NXCGetErrorText(rcc));
+	wxLogMessage(msg);
+	wxMessageBox(msg, _T("NetXMS Console - Error"), wxOK | wxICON_ERROR, g_appMainFrame);
+}

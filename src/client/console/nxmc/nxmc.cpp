@@ -141,20 +141,6 @@ int nxApp::OnExit()
 
 
 //
-// Show client library error
-//
-
-void nxApp::ShowClientError(DWORD rcc, TCHAR *msgTemplate)
-{
-	TCHAR msg[4096];
-
-	_sntprintf(msg, 4096, msgTemplate, NXCGetErrorText(rcc));
-	wxLogMessage(msg);
-	wxMessageBox(msg, _T("NetXMS Console - Error"), wxOK | wxICON_ERROR, m_mainFrame);
-}
-
-
-//
 // Connect to server
 //
 
@@ -199,7 +185,7 @@ bool nxApp::Connect()
 		}
 		else
 		{
-			wxGetApp().ShowClientError(rcc, _T("Cannot establish session with management server: %s"));
+			NXMCShowClientError(rcc, _T("Cannot establish session with management server: %s"));
 		}
 	} while(rcc != RCC_SUCCESS);
 

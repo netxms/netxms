@@ -60,7 +60,7 @@
 			<style>normal</style>
 			<weight>normal</weight>
 			<underlined>0</underlined>
-			<face>sans</face>
+			<face>MS Sans Serif</face>
 		</font>
 		<title>About</title>
 		<centered>1</centered>
@@ -148,7 +148,7 @@
 						<style>normal</style>
 						<weight>normal</weight>
 						<underlined>0</underlined>
-						<face>sans</face>
+						<face>MS Sans Serif</face>
 					</font>
 					<bitmap>login.png</bitmap>
 				</object>
@@ -399,6 +399,75 @@
 						<border>5</border>
 						<object class="wxButton" name="wxID_CANCEL">
 							<label>&amp;Cancel</label>
+						</object>
+					</object>
+				</object>
+			</object>
+		</object>
+	</object>
+	<object class="wxDialog" name="nxObjectSelDlg">
+		<style>wxDEFAULT_DIALOG_STYLE</style>
+		<size>508,387</size>
+		<title>Select Object</title>
+		<centered>1</centered>
+		<object class="wxBoxSizer">
+			<orient>wxHORIZONTAL</orient>
+			<object class="sizeritem">
+				<option>1</option>
+				<flag>wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxBoxSizer">
+					<orient>wxVERTICAL</orient>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>7</border>
+						<object class="wxStaticText" name="m_staticText7">
+							<label>Object list</label>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>1</option>
+						<flag>wxBOTTOM|wxEXPAND|wxLEFT|wxRIGHT</flag>
+						<border>7</border>
+						<object class="wxListCtrl" name="wndListCtrl">
+							<style>wxLC_REPORT</style>
+							<size>400,320</size>
+						</object>
+					</object>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxBoxSizer">
+					<orient>wxVERTICAL</orient>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="wxID_OK">
+							<label>_OK</label>
+							<default>0</default>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="wxID_CANCEL">
+							<label>_Cancel</label>
+							<default>0</default>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="btnNone">
+							<label>_None</label>
+							<default>0</default>
 						</object>
 					</object>
 				</object>

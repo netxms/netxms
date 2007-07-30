@@ -62,6 +62,7 @@ private:
 	int m_activeRequestCount;
 	int m_freeRqId;	// First free request id
 	bool m_isBusy;
+	nxIntToStringHash m_rqErrorMessages;	// Error messages for active requests
 	
 	int DoRequest(RqData *data);
 	

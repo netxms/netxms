@@ -105,8 +105,6 @@ public:
 	virtual int OnExit();
 
 	nxMainFrame *GetMainFrame(void) { return m_mainFrame; }
-
-	void ShowClientError(DWORD rcc, TCHAR *msgTemplate);
 };
 
 DECLARE_APP(nxApp)

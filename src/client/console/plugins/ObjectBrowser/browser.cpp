@@ -43,6 +43,8 @@ BEGIN_EVENT_TABLE(nxObjectBrowser, nxView)
 	EVT_TREE_SEL_CHANGED(wxID_TREE_CTRL, nxObjectBrowser::OnTreeSelChanged)
 	EVT_TREE_DELETE_ITEM(wxID_TREE_CTRL, nxObjectBrowser::OnTreeDeleteItem)
 	EVT_TREE_ITEM_MENU(wxID_TREE_CTRL, nxObjectBrowser::OnTreeItemMenu)
+	EVT_MENU(XRCID("menuObjectBind"), nxObjectBrowser::OnObjectBind)
+	EVT_UPDATE_UI(XRCID("menuObjectBind"), nxObjectBrowser::OnUpdateUIObjectBind)
 END_EVENT_TABLE()
 
 
@@ -65,6 +67,7 @@ nxObjectBrowser::nxObjectBrowser()
 	m_wndSplitter->SplitVertically(m_wndTreeCtrl, m_wndObjectView, 250);
 	RegisterUniqueView(_T("objectbrowser"), this);
 	m_isFirstResize = true;
+	m_currentObject = NULL;
 
 	wxCommandEvent event(nxEVT_REFRESH_VIEW);
 	AddPendingEvent(event);
@@ -210,7 +213,8 @@ void nxObjectBrowser::OnTreeSelChanged(wxTreeEvent &event)
 	wxTreeItemId item;
 
 	item = event.GetItem();
-	m_wndObjectView->SetObject(((nxObjectTreeItemData *)m_wndTreeCtrl->GetItemData(item))->GetObject());
+	m_currentObject = ((nxObjectTreeItemData *)m_wndTreeCtrl->GetItemData(item))->GetObject();
+	m_wndObjectView->SetObject(m_currentObject);
 	m_wndTreeCtrl->SetFocus();   // Return focus to tree control
 }
 
@@ -415,3 +419,54 @@ void nxObjectBrowser::OnTreeItemMenu(wxTreeEvent &event)
 	}
 }
 
+
+//
+// Handlers for Object->Bind menu
+//
+
+static DWORD BindObjects(DWORD parentId, wxArrayLong *childList)
+{
+	size_t i, count;
+	DWORD rcc;
+	NXC_SESSION session = NXMCGetSession();
+
+	count = childList->GetCount();
+	for(i = 0; i < count; i++)
+	{
+		rcc = NXCBindObject(session, parentId, childList->Item(i));
+		if (rcc != RCC_SUCCESS)
+			break;
+	}
+	delete childList;
+	return rcc;
+}
+
+void nxObjectBrowser::OnObjectBind(wxCommandEvent &event)
+{
+	if ((m_currentObject != NULL) &&
+		 ((m_currentObject->iClass == OBJECT_SERVICEROOT) ||
+		  (m_currentObject->iClass == OBJECT_CONTAINER)))
+	{
+		nxObjectSelDlg dlg(this);
+
+		dlg.m_isSingleSelection = false;
+		dlg.m_allowedClasses = SCL_SUBNET | SCL_NODE | SCL_CONTAINER | SCL_CONDITION;
+		if (dlg.ShowModal() == wxID_OK)
+		{
+			DoRequestArg2(BindObjects, m_currentObject->dwId, CAST_FROM_POINTER(new wxArrayLong(dlg.m_objectList), wxUIntPtr));
+		}
+	}
+}
+
+void nxObjectBrowser::OnUpdateUIObjectBind(wxUpdateUIEvent &event)
+{
+	if (m_currentObject == NULL)
+	{
+		event.Enable(false);
+	}
+	else
+	{
+		event.Enable((m_currentObject->iClass == OBJECT_SERVICEROOT) ||
+		             (m_currentObject->iClass == OBJECT_CONTAINER));
+	}
+}

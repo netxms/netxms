@@ -163,7 +163,7 @@ static THREAD_RESULT THREAD_CALL LoginThread(void *arg)
          rcc = NXCDownloadMIBFile(g_hSession, mibFile.c_str());
          if (rcc != RCC_SUCCESS)
          {
-            wxGetApp().ShowClientError(rcc, _T("Error downloading MIB file from server: %s"));
+            NXMCShowClientError(rcc, _T("Error downloading MIB file from server: %s"));
             rcc = RCC_SUCCESS;
          }
       }

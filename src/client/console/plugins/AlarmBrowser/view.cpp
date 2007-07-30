@@ -273,7 +273,7 @@ static int wxCALLBACK CompareAlarms(long item1, long item2, long sortData)
 
 
 //
-// Sort aarm list
+// Sort alarm list
 //
 
 void nxAlarmView::SortAlarmList()
@@ -456,4 +456,3 @@ void nxAlarmView::OnAlarmDelete(wxCommandEvent &event)
 	}
 	DoRequestArg2((void *)DeleteAlarms, count, CAST_FROM_POINTER(idList, wxUIntPtr));
 }
-

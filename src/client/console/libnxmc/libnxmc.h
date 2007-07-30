@@ -66,6 +66,7 @@ WX_DECLARE_STRING_HASH_MAP(nxViewCreator, nxViewCreatorsHash);
 
 extern wxAuiNotebook *g_auiNotebook;
 extern wxAuiManager *g_auiManager;
+extern wxFrame *g_appMainFrame;
 
 
 #endif
