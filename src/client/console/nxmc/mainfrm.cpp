@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.10 2007-07-27 20:24:45 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.11 2007-07-31 19:49:19 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -248,7 +248,7 @@ void nxMainFrame::OnPaneDetach(wxCommandEvent &event)
 		wnd = m_currPane->window;
 		wxString caption = _T("NetXMS Console - ") + m_currPane->caption;
 		m_mgr.DetachPane(wnd);
-		frame = new nxFrame(caption, wnd);
+		frame = new nxFrame(caption, (nxView *)wnd);
 		m_mgr.Update();
 		frame->Show(true);
 	}
@@ -313,7 +313,7 @@ void nxMainFrame::OnTabDetach(wxCommandEvent &event)
 	{
 		wxString caption = _T("NetXMS Console - ") + m_currTab->GetLabel();
 		m_notebook->RemovePage(m_notebook->GetPageIndex(m_currTab));
-		frame = new nxFrame(caption, m_currTab);
+		frame = new nxFrame(caption, (nxView *)m_currTab);
 		frame->Show(true);
 	}
 }
@@ -387,4 +387,22 @@ void nxMainFrame::OnAlarmChange(wxCommandEvent &event)
 	// nxMainFrame is a final destination for client library events,
 	// so it should destroy dynamic data associated with event
 	safe_free(event.GetClientData());
+}
+
+
+//
+// Attach view
+//
+
+void nxMainFrame::AttachView(nxView *view, int area)
+{
+	switch(area)
+	{
+		case VIEWAREA_MAIN:
+			view->Reparent(m_notebook);
+			m_notebook->AddPage(view, view->GetLabel(), true, view->GetIcon());
+			break;
+		default:
+			break;
+	}
 }

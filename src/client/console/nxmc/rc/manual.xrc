@@ -38,6 +38,10 @@
 	<object class="wxIcon" name="icoSortDown">icons/small/sort_down.xpm</object>
 	<object class="wxIcon" name="icoSortUp">icons/small/sort_up.xpm</object>
 
+	<!-- Icons for detached window toolar -->
+	<object class="wxIcon" name="icoAttachView">attach_view.xpm</object>
+	<object class="wxIcon" name="icoClose">close.xpm</object>
+
 	<!-- Busy dialog -->
 	<object class="wxDialog" name="nxBusyDialog">
 		<size>436,63</size>
@@ -67,6 +71,35 @@
 					<label>MyLabel</label>
 				</object>
 			</object>
+		</object>
+	</object>
+
+	<!-- Drop-down menu for attach button in detached window -->
+	<object class="wxMenu" name="menuDropdownAttach">
+		<label>Attach</label>
+		<object class="wxMenuItem" name="menuAttachMain">
+			<label>Attach to &amp;main area</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuAttachFloat">
+			<label>Attach as &amp;floating window</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuAttachDockLeft">
+			<label>Dock at &amp;left</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuAttachDockRight">
+			<label>Dock at &amp;right</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuAttachDockTop">
+			<label>Dock at &amp;top</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuAttachDockBottom">
+			<label>Dock at &amp;bottom</label>
+			<help></help>
 		</object>
 	</object>
 </resource>

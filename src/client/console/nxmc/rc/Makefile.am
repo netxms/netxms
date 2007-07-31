@@ -14,6 +14,8 @@ resourcedir = $(datadir)/nxmc
 resource_DATA = nxmc.xrs
 
 EXTRA_DIST = \
+	attach_view.xpm \
+	close.xpm \
 	login.png \
 	nxmc.fbp \
 	nxmc.xrs \

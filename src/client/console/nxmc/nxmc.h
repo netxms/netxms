@@ -56,6 +56,8 @@ END_DECLARE_EVENT_TYPES()
 #define wxID_TAB_CLOSE              (wxID_HIGHEST + 6)
 #define wxID_TAB_FLOAT              (wxID_HIGHEST + 7)
 #define wxID_TAB_DOCK               (wxID_HIGHEST + 8)
+#define wxID_TOOL_ATTACH            (wxID_HIGHEST + 9)
+#define wxID_TOOL_CLOSE             (wxID_HIGHEST + 10)
 
 #define wxID_PLUGIN_RANGE_START		(wxID_HIGHEST + 1000)
 #define wxID_PLUGIN_RANGE_END			(wxID_HIGHEST + NXMC_PLUGIN_ID_LIMIT * NXMC_MAX_PLUGINS - 1)

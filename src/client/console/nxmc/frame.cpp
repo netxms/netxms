@@ -1,4 +1,4 @@
-/* $Id: frame.cpp,v 1.2 2007-07-11 21:31:53 victor Exp $ */
+/* $Id: frame.cpp,v 1.3 2007-07-31 19:49:19 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -31,6 +31,8 @@
 
 BEGIN_EVENT_TABLE(nxFrame, wxFrame)
 	EVT_SIZE(nxFrame::OnSize)
+	EVT_MENU(wxID_TOOL_ATTACH, nxFrame::OnFrameAttach)
+	EVT_MENU(wxID_TOOL_CLOSE, nxFrame::OnFrameClose)
 END_EVENT_TABLE()
 
 
@@ -38,9 +40,17 @@ END_EVENT_TABLE()
 // Constructor
 //
 
-nxFrame::nxFrame(const wxString& title, wxWindow *child)
+nxFrame::nxFrame(const wxString& title, nxView *child)
         : wxFrame(NULL, wxID_ANY, title)
 {
+	SetIcon(child->GetIcon());
+
+	m_toolBar = CreateToolBar(wxTB_FLAT | wxTB_HORIZONTAL | wxTB_TEXT | wxTB_HORZ_LAYOUT);
+	m_toolBar->AddTool(wxID_TOOL_ATTACH, _T("Attach"), wxXmlResource::Get()->LoadIcon(_T("icoAttachView")));
+//	m_toolBar->SetDropdownMenu(wxID_TOOL_ATTACH, wxXmlResource::Get()->LoadMenu(_T("menuDropdownAttach")));
+	m_toolBar->AddTool(wxID_TOOL_CLOSE, _T("Close"), wxXmlResource::Get()->LoadIcon(_T("icoClose")));
+	m_toolBar->Realize();
+
 	m_child = child;
 	m_child->Reparent(this);
 }
@@ -54,4 +64,25 @@ void nxFrame::OnSize(wxSizeEvent &event)
 {
 	wxSize size = GetClientSize();
 	m_child->SetSize(0, 0, size.x, size.y);
+}
+
+
+//
+// Handler for "Attach" command
+//
+
+void nxFrame::OnFrameAttach(wxCommandEvent &event)
+{
+	wxGetApp().GetMainFrame()->AttachView(m_child, VIEWAREA_MAIN);
+	Close();
+}
+
+
+//
+// Handler for "Close" command
+//
+
+void nxFrame::OnFrameClose(wxCommandEvent &event)
+{
+	Close();
 }

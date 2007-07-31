@@ -1,4 +1,4 @@
-/* $Id: mainfrm.h,v 1.6 2007-07-27 20:24:45 victor Exp $ */
+/* $Id: mainfrm.h,v 1.7 2007-07-31 19:49:19 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -86,6 +86,7 @@ public:
 	virtual ~nxMainFrame();
 
 	void UpdateMenuFromPlugins();
+	void AttachView(nxView *view, int area);
 
 	// Event handlers
 protected:
