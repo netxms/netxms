@@ -527,4 +527,3 @@ void nxObjectBrowser::OnUpdateUIObjectUnbind(wxUpdateUIEvent &event)
 		             (m_currentObject->iClass == OBJECT_TEMPLATE));
 	}
 }
-
