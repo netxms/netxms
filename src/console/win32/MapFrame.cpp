@@ -5,6 +5,7 @@
 #include "nxcon.h"
 #include "MapFrame.h"
 #include "SubmapBkgndDlg.h"
+#include "MapLinkPropDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -81,6 +82,10 @@ BEGIN_MESSAGE_MAP(CMapFrame, CMDIChildWnd)
 	ON_COMMAND(ID_OBJECT_BIND, OnObjectBind)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_BIND, OnUpdateObjectBind)
 	ON_UPDATE_COMMAND_UI(ID_MAP_SAVE, OnUpdateMapSave)
+	ON_COMMAND(ID_MAP_LINK, OnMapLink)
+	ON_UPDATE_COMMAND_UI(ID_MAP_LINK, OnUpdateMapLink)
+	ON_COMMAND(ID_MAP_AUTOLAYOUT, OnMapAutolayout)
+	ON_UPDATE_COMMAND_UI(ID_MAP_AUTOLAYOUT, OnUpdateMapAutolayout)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(NXCM_SUBMAP_CHANGE, OnSubmapChange)
@@ -123,7 +128,7 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
       { 4, ID_FILE_PRINT, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
       { 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0, 0 },
       { 3, ID_VIEW_REFRESH, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 },
-      { 3, ID_MAP_REDOLAYOUT, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 }
+      { 9, ID_MAP_REDOLAYOUT, TBSTATE_ENABLED, TBSTYLE_BUTTON, 0, 0 }
       //{ 0, 0, TBSTATE_ENABLED, TBSTYLE_SEP, 0, 0 }
    };
 
@@ -147,6 +152,7 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(theApp.LoadIcon(IDI_FORWARD));
    m_imageList.Add(theApp.LoadIcon(IDI_GO_PARENT));
    m_imageList.Add(theApp.LoadIcon(IDI_HOME));
+   m_imageList.Add(theApp.LoadIcon(IDI_REDO_LAYOUT));
 
    // Create toolbar
    m_wndToolBar.CreateEx(this, CCS_TOP | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT,
@@ -160,6 +166,7 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
    // Create and initialize map view
    m_wndMapView.CreateEx(WS_EX_CLIENTEDGE, NULL, _T("MapView"), WS_CHILD | WS_VISIBLE, rect, this, 0);
+	m_wndMapView.m_bShowConnectorNames = TRUE;
    
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 
@@ -805,4 +812,90 @@ void CMapFrame::OnSubmapChange(WPARAM wParam, nxSubmap *pSubmap)
    {
       m_wndStatusBar.SetText(_T(""), STATUS_PANE_LAYOUT, 0);
    }
+}
+
+
+//
+// Handler for "Create link" menu
+//
+
+void CMapFrame::OnMapLink() 
+{
+	nxSubmap *submap;
+	NXC_OBJECT *object;
+
+	submap = m_wndMapView.GetSubmap();
+	if (submap != NULL)
+	{
+		object = NXCFindObjectById(g_hSession, submap->Id());
+		if (object != NULL)
+		{
+			CMapLinkPropDlg dlg;
+
+			dlg.m_dwParentObject = submap->Id();
+			if (dlg.DoModal() == IDOK)
+			{
+				submap->LinkObjects(dlg.m_dwObject1, dlg.m_strPort1, dlg.m_dwObject2, dlg.m_strPort2, LINK_TYPE_NORMAL);
+				m_wndMapView.m_bIsModified = TRUE;
+				m_wndMapView.Update();
+			}
+		}
+	}
+}
+
+void CMapFrame::OnUpdateMapLink(CCmdUI* pCmdUI) 
+{
+	nxSubmap *submap;
+	NXC_OBJECT *object;
+
+	submap = m_wndMapView.GetSubmap();
+	if (submap != NULL)
+	{
+		object = NXCFindObjectById(g_hSession, submap->Id());
+		if (object != NULL)
+		{
+			pCmdUI->Enable(object->iClass == OBJECT_CONTAINER);
+		}
+		else
+		{
+			pCmdUI->Enable(FALSE);
+		}
+	}
+	else
+	{
+		pCmdUI->Enable(FALSE);
+	}
+}
+
+
+//
+// Handler for "Enable automatic layout" menu
+//
+
+void CMapFrame::OnMapAutolayout() 
+{
+	nxSubmap *submap;
+
+	submap = m_wndMapView.GetSubmap();
+	if (submap != NULL)
+	{
+		submap->SetAutoLayoutFlag(!submap->GetAutoLayoutFlag());
+		m_wndMapView.m_bIsModified = TRUE;
+	}
+}
+
+void CMapFrame::OnUpdateMapAutolayout(CCmdUI* pCmdUI) 
+{
+	nxSubmap *submap;
+
+	submap = m_wndMapView.GetSubmap();
+	if (submap != NULL)
+	{
+		pCmdUI->Enable(TRUE);
+		pCmdUI->SetCheck(submap->GetAutoLayoutFlag());
+	}
+	else
+	{
+		pCmdUI->Enable(FALSE);
+	}
 }

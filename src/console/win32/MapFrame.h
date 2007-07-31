@@ -94,6 +94,10 @@ protected:
 	afx_msg void OnObjectBind();
 	afx_msg void OnUpdateObjectBind(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateMapSave(CCmdUI* pCmdUI);
+	afx_msg void OnMapLink();
+	afx_msg void OnUpdateMapLink(CCmdUI* pCmdUI);
+	afx_msg void OnMapAutolayout();
+	afx_msg void OnUpdateMapAutolayout(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnObjectChange(WPARAM wParam, NXC_OBJECT *pObject);
    afx_msg void OnSubmapChange(WPARAM wParam, nxSubmap *pSubmap);

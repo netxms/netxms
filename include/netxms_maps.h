@@ -282,8 +282,10 @@ public:
    BOOL GetBkImageFlag(void) { return (m_dwAttr & SUBMAP_ATTR_HAS_BK_IMAGE) ? TRUE : FALSE; }
    void SetBkImageFlag(BOOL bFlag) { if (bFlag) m_dwAttr |= SUBMAP_ATTR_HAS_BK_IMAGE; else m_dwAttr &= ~SUBMAP_ATTR_HAS_BK_IMAGE; }
 
-   BOOL GetAutoLayoutFlag(void) { return (m_dwAttr & SUBMAP_ATTR_LAYOUT_COMPLETED) ? TRUE : FALSE; }
-   void SetAutoLayoutFlag(BOOL bFlag) { if (bFlag) m_dwAttr |= SUBMAP_ATTR_LAYOUT_COMPLETED; else m_dwAttr &= ~SUBMAP_ATTR_LAYOUT_COMPLETED; }
+   BOOL GetAutoLayoutFlag(void) { return (m_dwAttr & SUBMAP_ATTR_AUTOMATIC_LAYOUT) ? TRUE : FALSE; }
+   void SetAutoLayoutFlag(BOOL bFlag) { if (bFlag) m_dwAttr |= SUBMAP_ATTR_AUTOMATIC_LAYOUT; else m_dwAttr &= ~SUBMAP_ATTR_AUTOMATIC_LAYOUT; }
+
+	void LinkObjects(DWORD dwObj1, const TCHAR *pszPort1, DWORD dwObj2, const TCHAR *pszPort2, int nType);
 };
 
 

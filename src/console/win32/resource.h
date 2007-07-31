@@ -243,6 +243,8 @@
 #define IDD_SET_CHILD_MGMT_STATUS       368
 #define IDD_CREATE_IF_DCI               369
 #define IDI_SUBORDINATES                371
+#define IDI_REDO_LAYOUT                 372
+#define IDD_MAP_LINK                    373
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -635,10 +637,18 @@
 #define IDC_EDIT_OUT_ERRORS             1492
 #define IDC_CHECK_DELTA_IN              1493
 #define IDC_CHECK_DELTA_OUT             1496
+#define IDC_EDIT_OBJECT1                1496
 #define IDC_CHECK_DELTA_INP             1497
+#define IDC_EDIT_PORT1                  1497
 #define IDC_CHECK_DELTA_OUTP            1498
+#define IDC_SELECT_OBJECT1              1498
 #define IDC_CHECK_DELTA_INE             1499
+#define IDC_SELECT_PORT1                1499
 #define IDC_CHECK_DELTA_OUTE            1500
+#define IDC_EDIT_OBJECT2                1500
+#define IDC_EDIT_PORT2                  1501
+#define IDC_SELECT_OBJECT2              1502
+#define IDC_SELECT_PORT2                1503
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -908,6 +918,9 @@
 #define ID_SUBORDINATE_UNBIND           33074
 #define ID_SUBORDINATE_DELETE           33075
 #define ID_SUBORDINATE_PROPERTIES       33076
+#define ID_MAP_LINK                     33077
+#define ID_MAP_UNLINK                   33078
+#define ID_MAP_AUTOLAYOUT               33079
 #define ID_ALWAYS_DISABLED              43210
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
@@ -918,9 +931,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        372
-#define _APS_NEXT_COMMAND_VALUE         33077
-#define _APS_NEXT_CONTROL_VALUE         1496
+#define _APS_NEXT_RESOURCE_VALUE        374
+#define _APS_NEXT_COMMAND_VALUE         33080
+#define _APS_NEXT_CONTROL_VALUE         1499
 #define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif

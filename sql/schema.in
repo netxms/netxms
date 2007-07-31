@@ -1020,6 +1020,8 @@ CREATE TABLE submap_links
 	object_id1 integer not null,
 	object_id2 integer not null,
 	link_type integer not null,
+	port1 varchar(255) not null,
+	port2 varchar(255) not null,
 	PRIMARY KEY(map_id,submap_id,object_id1,object_id2)
 ) TABLE_TYPE;
 

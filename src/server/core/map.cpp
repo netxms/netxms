@@ -92,7 +92,7 @@ nxSubmapSrv::nxSubmapSrv(DB_RESULT hData, int nRow, DWORD dwMapId)
    }
 
    // Load links between objects
-   _sntprintf(szQuery, 1024, _T("SELECT object_id1,object_id2,link_type FROM submap_links WHERE map_id=%d AND submap_id=%d"),
+   _sntprintf(szQuery, 1024, _T("SELECT object_id1,object_id2,link_type,port1,port2 FROM submap_links WHERE map_id=%d AND submap_id=%d"),
               m_dwMapId, m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
@@ -106,6 +106,10 @@ nxSubmapSrv::nxSubmapSrv(DB_RESULT hData, int nRow, DWORD dwMapId)
             m_pLinkList[i].dwId1 = DBGetFieldULong(hResult, i, 0);
             m_pLinkList[i].dwId2 = DBGetFieldULong(hResult, i, 1);
             m_pLinkList[i].nType = DBGetFieldLong(hResult, i, 2);
+				DBGetField(hResult, i, 3, m_pLinkList[i].szPort1, MAX_CONNECTOR_NAME);
+				DecodeSQLString(m_pLinkList[i].szPort1);
+				DBGetField(hResult, i, 4, m_pLinkList[i].szPort2, MAX_CONNECTOR_NAME);
+				DecodeSQLString(m_pLinkList[i].szPort2);
          }
       }
       DBFreeResult(hResult);
@@ -121,7 +125,7 @@ nxSubmapSrv::nxSubmapSrv(DB_RESULT hData, int nRow, DWORD dwMapId)
 
 DWORD nxSubmapSrv::SaveToDB(void)
 {
-   TCHAR szQuery[256];
+   TCHAR szQuery[2048], *pszEscPort1, *pszEscPort2;
    DB_RESULT hResult;
    BOOL bExist;
    DWORD i, dwResult = RCC_DB_FAILURE;
@@ -164,9 +168,13 @@ DWORD nxSubmapSrv::SaveToDB(void)
    // INSERT is used because old records was deleted by nxMapSrv::SaveToDB()
    for(i = 0; i < m_dwNumLinks; i++)
    {
-      _sntprintf(szQuery, 256, _T("INSERT INTO submap_links (map_id,submap_id,object_id1,object_id2,link_type) VALUES (%d,%d,%d,%d,%d)"),
+		pszEscPort1 = EncodeSQLString(m_pLinkList[i].szPort1);
+		pszEscPort2 = EncodeSQLString(m_pLinkList[i].szPort2);
+      _sntprintf(szQuery, 2048, _T("INSERT INTO submap_links (map_id,submap_id,object_id1,object_id2,link_type,port1,port2) VALUES (%d,%d,%d,%d,%d,'%s','%s')"),
                  m_dwMapId, m_dwId, m_pLinkList[i].dwId1, m_pLinkList[i].dwId2,
-                 m_pLinkList[i].nType);
+                 m_pLinkList[i].nType, pszEscPort1, pszEscPort2);
+		free(pszEscPort1);
+		free(pszEscPort2);
       if (!DBQuery(g_hCoreDB, szQuery))
          goto exit_save;
    }
@@ -246,6 +254,7 @@ DWORD nxMapSrv::SaveToDB(void)
    BOOL bExist;
 
    Lock();
+	DBBegin(g_hCoreDB);
 
    // Check if map record exist in database
    _sntprintf(szQuery, 256, _T("SELECT map_id FROM maps WHERE map_id=%d"), m_dwMapId);
@@ -317,6 +326,12 @@ DWORD nxMapSrv::SaveToDB(void)
 
 exit_save:
    Unlock();
+
+	if (dwResult == RCC_SUCCESS)
+		DBCommit(g_hCoreDB);
+	else
+		DBRollback(g_hCoreDB);
+
    return dwResult;
 }
 

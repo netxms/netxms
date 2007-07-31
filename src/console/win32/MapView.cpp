@@ -987,7 +987,7 @@ void CMapView::OpenSubmap(DWORD dwId, BOOL bAddToHistory)
       m_pSubmap = pSubmap;
 
       // Prepare objects on submap
-      if (!m_pSubmap->IsLayoutCompleted())
+      if ((!m_pSubmap->IsLayoutCompleted()) && m_pSubmap->GetAutoLayoutFlag())
          DoSubmapLayout();
       ClearSelection(FALSE);
 
@@ -1462,6 +1462,7 @@ void CMapView::OnObjectChange(DWORD dwObjectId, NXC_OBJECT *pObject)
          }
          else
          {
+				m_pSubmap->SetObjectPosition(dwObjectId, 0, 0);		// Will add object implicitely
          }
       }
       Update();

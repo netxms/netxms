@@ -88,7 +88,7 @@ nxSubmap::~nxSubmap()
 
 void nxSubmap::CreateMessage(CSCPMessage *pMsg)
 {
-   DWORD i, j, *pdwList;
+   DWORD i, j, dwId, *pdwList;
 
    pMsg->SetVariable(VID_OBJECT_ID, m_dwId);
    pMsg->SetVariable(VID_SUBMAP_ATTR, m_dwAttr);
@@ -110,11 +110,13 @@ void nxSubmap::CreateMessage(CSCPMessage *pMsg)
    if (m_dwNumLinks > 0)
    {
       pdwList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumLinks * 3);
-      for(i = 0, j = 0; i < m_dwNumLinks; i++)
+      for(i = 0, j = 0, dwId = VID_SUBMAP_LINK_NAMES_BASE; i < m_dwNumLinks; i++)
       {
          pdwList[j++] = m_pLinkList[i].dwId1;
          pdwList[j++] = m_pLinkList[i].dwId2;
          pdwList[j++] = m_pLinkList[i].nType;
+			pMsg->SetVariable(dwId++, m_pLinkList[i].szPort1);
+			pMsg->SetVariable(dwId++, m_pLinkList[i].szPort2);
       }
       pMsg->SetVariableToInt32Array(VID_LINK_LIST, m_dwNumLinks * 3, pdwList);
       free(pdwList);
@@ -128,13 +130,13 @@ void nxSubmap::CreateMessage(CSCPMessage *pMsg)
 
 void nxSubmap::ModifyFromMessage(CSCPMessage *pMsg)
 {
-   DWORD i, j, *pdwList;
+   DWORD i, j, dwId, *pdwList;
 
    safe_free_and_null(m_pObjectList);
    safe_free_and_null(m_pLinkList);
 
    m_dwId = pMsg->GetVariableLong(VID_OBJECT_ID);
-   m_dwAttr = pMsg->GetVariableLong(VID_SUBMAP_ATTR);
+   m_dwAttr = pMsg->GetVariableLong(VID_SUBMAP_ATTR) & 0xFFFF;	// Clear run-time attributes
 
    m_dwNumObjects = pMsg->GetVariableLong(VID_NUM_OBJECTS);
    if (m_dwNumObjects > 0)
@@ -160,9 +162,10 @@ void nxSubmap::ModifyFromMessage(CSCPMessage *pMsg)
    if (m_dwNumLinks > 0)
    {
       m_pLinkList = (OBJLINK *)realloc(m_pLinkList, sizeof(OBJLINK) * m_dwNumLinks);
+		memset(m_pLinkList, 0, sizeof(OBJLINK) * m_dwNumLinks);
       pdwList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumLinks * 3);
       pMsg->GetVariableInt32Array(VID_LINK_LIST, m_dwNumLinks * 3, pdwList);
-      for(i = 0, j = 0; i < m_dwNumLinks; i++)
+      for(i = 0, j = 0, dwId = VID_SUBMAP_LINK_NAMES_BASE; i < m_dwNumLinks; i++)
       {
          m_pLinkList[i].dwId1 = pdwList[j++];
          m_pLinkList[i].dwId2 = pdwList[j++];
@@ -170,6 +173,8 @@ void nxSubmap::ModifyFromMessage(CSCPMessage *pMsg)
          if ((m_pLinkList[i].nType < LINK_TYPE_NORMAL) ||
              (m_pLinkList[i].nType > LINK_TYPE_VPN))
             m_pLinkList[i].nType = LINK_TYPE_NORMAL;
+			pMsg->GetVariableStr(dwId++, m_pLinkList[i].szPort1, MAX_CONNECTOR_NAME);
+			pMsg->GetVariableStr(dwId++, m_pLinkList[i].szPort2, MAX_CONNECTOR_NAME);
       }
       free(pdwList);
    }
@@ -411,4 +416,38 @@ void nxSubmap::DoLayout(DWORD dwNumObjects, DWORD *pdwObjectList,
    }
    
    m_dwAttr |= SUBMAP_ATTR_LAYOUT_COMPLETED;
+}
+
+
+//
+// Add link between two objects
+//
+
+void nxSubmap::LinkObjects(DWORD dwObj1, const TCHAR *pszPort1, DWORD dwObj2, const TCHAR *pszPort2, int nType)
+{
+	DWORD i;
+
+	// Validate object IDs
+	if ((GetObjectIndex(dwObj1) == INVALID_INDEX) ||
+	    (GetObjectIndex(dwObj2) == INVALID_INDEX))
+		return;	// At least one object not exist on submap
+
+	// Find if requested link already exist
+	for(i = 0; i < m_dwNumLinks; i++)
+	{
+		if (((m_pLinkList[i].dwId1 == dwObj1) && (m_pLinkList[i].dwId2 == dwObj2)) ||
+		    ((m_pLinkList[i].dwId1 == dwObj2) && (m_pLinkList[i].dwId2 == dwObj1)))
+			break;
+	}
+	if (i == m_dwNumLinks)
+	{
+		// Create new link
+		m_dwNumLinks++;
+		m_pLinkList = (OBJLINK *)realloc(m_pLinkList, sizeof(OBJLINK) * m_dwNumLinks);
+	}
+	m_pLinkList[i].dwId1 = dwObj1;
+	m_pLinkList[i].dwId2 = dwObj2;
+	m_pLinkList[i].nType = nType;
+	nx_strncpy(m_pLinkList[i].szPort1, pszPort1, MAX_CONNECTOR_NAME);
+	nx_strncpy(m_pLinkList[i].szPort2, pszPort2, MAX_CONNECTOR_NAME);
 }

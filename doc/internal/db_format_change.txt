@@ -1,4 +1,20 @@
 *************
+* 65 ==> 66 *
+*************
+
+- New columns added to table "submap_links":
+	ALTER TABLE submap_links ADD port1 varchar(255) not null
+	ALTER TABLE submap_links ADD port2 varchar(255) not null
+
+
+*************
+* 64 ==> 65 *
+*************
+
+- Field "community" in table "nodes" changed to varchar(127)
+
+
+*************
 * 63 ==> 64 *
 *************
 

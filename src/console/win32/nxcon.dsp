@@ -500,6 +500,10 @@ SOURCE=.\MapFrame.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\MapLinkPropDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\MapToolbox.cpp
 # End Source File
 # Begin Source File
@@ -1129,6 +1133,10 @@ SOURCE=.\MapFrame.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\MapLinkPropDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\MapToolbox.h
 # End Source File
 # Begin Source File
@@ -1730,6 +1738,10 @@ SOURCE=.\res\psym_any.bmp
 # Begin Source File
 
 SOURCE=.\icons\question.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\redo_layout.ico
 # End Source File
 # Begin Source File
 

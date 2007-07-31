@@ -1112,6 +1112,7 @@ src/console/win32/icons/passwd.ico -text
 src/console/win32/icons/pending.ico -text
 src/console/win32/icons/print.ico -text
 src/console/win32/icons/question.ico -text
+src/console/win32/icons/redo_layout.ico -text
 src/console/win32/icons/refresh.ico -text
 src/console/win32/icons/rexec.ico -text
 src/console/win32/icons/running.ico -text

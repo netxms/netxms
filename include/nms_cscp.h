@@ -872,6 +872,7 @@ typedef struct
 
 // Base value for object links list
 #define VID_OBJECT_LINKS_BASE			((DWORD)0x10000000)
+#define VID_SUBMAP_LINK_NAMES_BASE  ((DWORD)0x20000000)
 
 
 //
