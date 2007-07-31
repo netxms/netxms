@@ -86,6 +86,9 @@ BEGIN_MESSAGE_MAP(CMapFrame, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_MAP_LINK, OnUpdateMapLink)
 	ON_COMMAND(ID_MAP_AUTOLAYOUT, OnMapAutolayout)
 	ON_UPDATE_COMMAND_UI(ID_MAP_AUTOLAYOUT, OnUpdateMapAutolayout)
+	ON_WM_CLOSE()
+	ON_COMMAND(ID_MAP_UNLINK, OnMapUnlink)
+	ON_UPDATE_COMMAND_UI(ID_MAP_UNLINK, OnUpdateMapUnlink)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(NXCM_SUBMAP_CHANGE, OnSubmapChange)
@@ -822,6 +825,7 @@ void CMapFrame::OnSubmapChange(WPARAM wParam, nxSubmap *pSubmap)
 void CMapFrame::OnMapLink() 
 {
 	nxSubmap *submap;
+	DWORD *selection, count;
 	NXC_OBJECT *object;
 
 	submap = m_wndMapView.GetSubmap();
@@ -833,6 +837,16 @@ void CMapFrame::OnMapLink()
 			CMapLinkPropDlg dlg;
 
 			dlg.m_dwParentObject = submap->Id();
+			selection = m_wndMapView.GetSelectedObjects(&count);
+			if (count > 0)
+			{
+				dlg.m_dwObject1 = selection[0];
+				if (count > 1)
+				{
+					dlg.m_dwObject2 = selection[1];
+				}
+			}
+			safe_free(selection);
 			if (dlg.DoModal() == IDOK)
 			{
 				submap->LinkObjects(dlg.m_dwObject1, dlg.m_strPort1, dlg.m_dwObject2, dlg.m_strPort2, LINK_TYPE_NORMAL);
@@ -881,6 +895,8 @@ void CMapFrame::OnMapAutolayout()
 	{
 		submap->SetAutoLayoutFlag(!submap->GetAutoLayoutFlag());
 		m_wndMapView.m_bIsModified = TRUE;
+      m_wndStatusBar.SetText(submap->GetAutoLayoutFlag() ? _T("Automatic") : _T("Manual"),
+                             STATUS_PANE_LAYOUT, 0);
 	}
 }
 
@@ -893,6 +909,90 @@ void CMapFrame::OnUpdateMapAutolayout(CCmdUI* pCmdUI)
 	{
 		pCmdUI->Enable(TRUE);
 		pCmdUI->SetCheck(submap->GetAutoLayoutFlag());
+	}
+	else
+	{
+		pCmdUI->Enable(FALSE);
+	}
+}
+
+
+//
+// WM_CLOSE message handler
+//
+
+void CMapFrame::OnClose() 
+{
+	int ret = IDNO;
+
+	if (m_wndMapView.m_bIsModified)
+	{
+		ret = MessageBox(_T("Map is modified. Do you wish to save changes?"), _T("Warning"), MB_YESNOCANCEL | MB_ICONQUESTION);
+		if (ret == IDYES)
+			OnMapSave();
+	}
+	
+	if (ret != IDCANCEL)
+		CMDIChildWnd::OnClose();
+}
+
+
+//
+// Handler for "Remove link between objects" menu
+//
+
+void CMapFrame::OnMapUnlink() 
+{
+	nxSubmap *submap;
+	DWORD *selection, count;
+	NXC_OBJECT *object;
+
+	submap = m_wndMapView.GetSubmap();
+	if (submap != NULL)
+	{
+		object = NXCFindObjectById(g_hSession, submap->Id());
+		if (object != NULL)
+		{
+			CMapLinkPropDlg dlg;
+
+			dlg.m_dwParentObject = submap->Id();
+			selection = m_wndMapView.GetSelectedObjects(&count);
+			if (count > 0)
+			{
+				dlg.m_dwObject1 = selection[0];
+				if (count > 1)
+				{
+					dlg.m_dwObject2 = selection[1];
+				}
+			}
+			safe_free(selection);
+			if (dlg.DoModal() == IDOK)
+			{
+				submap->UnlinkObjects(dlg.m_dwObject1, dlg.m_dwObject2);
+				m_wndMapView.m_bIsModified = TRUE;
+				m_wndMapView.Update();
+			}
+		}
+	}
+}
+
+void CMapFrame::OnUpdateMapUnlink(CCmdUI* pCmdUI) 
+{
+	nxSubmap *submap;
+	NXC_OBJECT *object;
+
+	submap = m_wndMapView.GetSubmap();
+	if (submap != NULL)
+	{
+		object = NXCFindObjectById(g_hSession, submap->Id());
+		if (object != NULL)
+		{
+			pCmdUI->Enable(object->iClass == OBJECT_CONTAINER);
+		}
+		else
+		{
+			pCmdUI->Enable(FALSE);
+		}
 	}
 	else
 	{

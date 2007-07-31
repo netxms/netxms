@@ -1463,10 +1463,21 @@ void CMapView::OnObjectChange(DWORD dwObjectId, NXC_OBJECT *pObject)
          else
          {
 				m_pSubmap->SetObjectPosition(dwObjectId, 0, 0);		// Will add object implicitely
+				m_bIsModified = TRUE;
          }
       }
       Update();
    }
+	else
+	{
+		// Check if object should be removed from submap
+      if (m_pSubmap->GetObjectIndex(dwObjectId) != INVALID_INDEX)
+		{
+			m_pSubmap->DeleteObject(dwObjectId);
+			m_bIsModified = TRUE;
+	      Update();
+		}
+	}
 }
 
 

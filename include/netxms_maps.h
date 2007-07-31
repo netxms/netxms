@@ -257,7 +257,14 @@ public:
 
    POINT GetMinSize(void);
 
+   BOOL GetAutoLayoutFlag(void) { return (m_dwAttr & SUBMAP_ATTR_AUTOMATIC_LAYOUT) ? TRUE : FALSE; }
+   void SetAutoLayoutFlag(BOOL bFlag) { if (bFlag) m_dwAttr |= SUBMAP_ATTR_AUTOMATIC_LAYOUT; else m_dwAttr &= ~SUBMAP_ATTR_AUTOMATIC_LAYOUT; }
+
+   BOOL GetBkImageFlag(void) { return (m_dwAttr & SUBMAP_ATTR_HAS_BK_IMAGE) ? TRUE : FALSE; }
+   void SetBkImageFlag(BOOL bFlag) { if (bFlag) m_dwAttr |= SUBMAP_ATTR_HAS_BK_IMAGE; else m_dwAttr &= ~SUBMAP_ATTR_HAS_BK_IMAGE; }
+
    BOOL IsLayoutCompleted(void) { return (m_dwAttr & SUBMAP_ATTR_LAYOUT_COMPLETED) ? TRUE : FALSE; }
+
    void DoLayout(DWORD dwNumObjects, DWORD *pdwObjectList,
                  DWORD dwNumLinks, OBJLINK *pLinkList,
                  int nIdealX, int nIdealY, int nMethod,
@@ -279,13 +286,10 @@ public:
    DWORD GetNumLinks(void) { return m_dwNumLinks; }
    OBJLINK *GetLinkByIndex(DWORD dwIndex) { return &m_pLinkList[dwIndex]; }
 
-   BOOL GetBkImageFlag(void) { return (m_dwAttr & SUBMAP_ATTR_HAS_BK_IMAGE) ? TRUE : FALSE; }
-   void SetBkImageFlag(BOOL bFlag) { if (bFlag) m_dwAttr |= SUBMAP_ATTR_HAS_BK_IMAGE; else m_dwAttr &= ~SUBMAP_ATTR_HAS_BK_IMAGE; }
-
-   BOOL GetAutoLayoutFlag(void) { return (m_dwAttr & SUBMAP_ATTR_AUTOMATIC_LAYOUT) ? TRUE : FALSE; }
-   void SetAutoLayoutFlag(BOOL bFlag) { if (bFlag) m_dwAttr |= SUBMAP_ATTR_AUTOMATIC_LAYOUT; else m_dwAttr &= ~SUBMAP_ATTR_AUTOMATIC_LAYOUT; }
-
 	void LinkObjects(DWORD dwObj1, const TCHAR *pszPort1, DWORD dwObj2, const TCHAR *pszPort2, int nType);
+	void UnlinkObjects(DWORD dwObj1, DWORD dwObj2);
+
+	void DeleteObject(DWORD dwObject);
 };
 
 

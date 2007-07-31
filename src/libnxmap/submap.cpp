@@ -451,3 +451,53 @@ void nxSubmap::LinkObjects(DWORD dwObj1, const TCHAR *pszPort1, DWORD dwObj2, co
 	nx_strncpy(m_pLinkList[i].szPort1, pszPort1, MAX_CONNECTOR_NAME);
 	nx_strncpy(m_pLinkList[i].szPort2, pszPort2, MAX_CONNECTOR_NAME);
 }
+
+
+//
+// Remove link between two objects
+//
+
+void nxSubmap::UnlinkObjects(DWORD dwObj1, DWORD dwObj2)
+{
+	DWORD i;
+
+	for(i = 0; i < m_dwNumLinks; i++)
+	{
+		if (((m_pLinkList[i].dwId1 == dwObj1) && (m_pLinkList[i].dwId2 == dwObj2)) ||
+		    ((m_pLinkList[i].dwId1 == dwObj2) && (m_pLinkList[i].dwId2 == dwObj1)))
+		{
+			m_dwNumLinks--;
+			memmove(&m_pLinkList[i], &m_pLinkList[i + 1], sizeof(OBJLINK) * (m_dwNumLinks - i));
+			i--;
+		}
+	}
+}
+
+
+//
+// Delete object from submap
+//
+
+void nxSubmap::DeleteObject(DWORD dwObject)
+{
+	DWORD i;
+
+	// Delete all links to this object
+	for(i = 0; i < m_dwNumLinks; i++)
+	{
+		if ((m_pLinkList[i].dwId1 == dwObject) || (m_pLinkList[i].dwId2 == dwObject))
+		{
+			m_dwNumLinks--;
+			memmove(&m_pLinkList[i], &m_pLinkList[i + 1], sizeof(OBJLINK) * (m_dwNumLinks - i));
+			i--;
+		}
+	}
+
+	// Delete object itself
+	i = GetObjectIndex(dwObject);
+	if (i != INVALID_INDEX)
+	{
+		m_dwNumObjects--;
+		memmove(&m_pObjectList[i], &m_pObjectList[i + 1], sizeof(MAP_OBJECT) * (m_dwNumObjects - i));
+	}
+}
