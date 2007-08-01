@@ -1,4 +1,4 @@
-/* $Id: frame.h,v 1.2 2007-07-31 19:49:19 victor Exp $ */
+/* $Id: frame.h,v 1.3 2007-08-01 12:13:25 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -29,10 +29,11 @@ class nxFrame : public wxFrame
 {
 private:
 	nxView *m_child;
+	int m_area;
 	wxToolBar *m_toolBar;
 
 public:
-	nxFrame(const wxString& title, nxView *child);
+	nxFrame(const wxString& title, nxView *child, int area);
 
 	virtual bool ShouldPreventAppExit() const { return false; }
 

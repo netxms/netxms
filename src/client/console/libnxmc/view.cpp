@@ -50,6 +50,22 @@ bool LIBNXMC_EXPORTABLE NXMCCreateView(nxView *view, int area)
 			g_auiManager->AddPane(view, wxAuiPaneInfo().Name(view->GetName()).Caption(view->GetLabel()));
 			g_auiManager->Update();
 			break;
+		case VIEWAREA_DOCKED_LEFT:
+			g_auiManager->AddPane(view, wxAuiPaneInfo().Name(view->GetName()).Caption(view->GetLabel()).Left());
+			g_auiManager->Update();
+			break;
+		case VIEWAREA_DOCKED_RIGHT:
+			g_auiManager->AddPane(view, wxAuiPaneInfo().Name(view->GetName()).Caption(view->GetLabel()).Right());
+			g_auiManager->Update();
+			break;
+		case VIEWAREA_DOCKED_TOP:
+			g_auiManager->AddPane(view, wxAuiPaneInfo().Name(view->GetName()).Caption(view->GetLabel()).Top());
+			g_auiManager->Update();
+			break;
+		case VIEWAREA_DOCKED_BOTTOM:
+			g_auiManager->AddPane(view, wxAuiPaneInfo().Name(view->GetName()).Caption(view->GetLabel()).Bottom());
+			g_auiManager->Update();
+			break;
 		case VIEWAREA_FLOATING:
 			g_auiManager->AddPane(view, wxAuiPaneInfo().Name(view->GetName()).Caption(view->GetLabel()).Float());
 			g_auiManager->Update();

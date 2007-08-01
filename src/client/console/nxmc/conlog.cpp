@@ -58,6 +58,8 @@ void nxConsoleLogger::Shutdown()
 nxConsoleLogger::nxConsoleLogger(wxWindow *parent)
                 : nxView(parent)
 {
+	SetName(_T("conlog"));
+	SetLabel(_T("Console Log"));
 	RegisterUniqueView(_T("conlog"), this);
 	m_wndTextCtrl->Reparent(this);
 }

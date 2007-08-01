@@ -261,10 +261,14 @@ WX_DECLARE_OBJARRAY(nxmcItemRegistration, nxmcArrayOfRegItems);
 // View creation areas
 //
 
-#define VIEWAREA_MAIN			0
-#define VIEWAREA_DOCKED			1
-#define VIEWAREA_FLOATING		2
-#define VIEWAREA_DETACHED		3
+#define VIEWAREA_MAIN            0
+#define VIEWAREA_DOCKED          1
+#define VIEWAREA_FLOATING        2
+#define VIEWAREA_DETACHED        3
+#define VIEWAREA_DOCKED_LEFT     4
+#define VIEWAREA_DOCKED_RIGHT    5
+#define VIEWAREA_DOCKED_TOP      6
+#define VIEWAREA_DOCKED_BOTTOM   7
 
 
 //

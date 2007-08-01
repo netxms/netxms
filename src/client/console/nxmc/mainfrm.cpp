@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.11 2007-07-31 19:49:19 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.12 2007-08-01 12:13:25 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -248,7 +248,7 @@ void nxMainFrame::OnPaneDetach(wxCommandEvent &event)
 		wnd = m_currPane->window;
 		wxString caption = _T("NetXMS Console - ") + m_currPane->caption;
 		m_mgr.DetachPane(wnd);
-		frame = new nxFrame(caption, (nxView *)wnd);
+		frame = new nxFrame(caption, (nxView *)wnd, VIEWAREA_DOCKED);
 		m_mgr.Update();
 		frame->Show(true);
 	}
@@ -313,7 +313,7 @@ void nxMainFrame::OnTabDetach(wxCommandEvent &event)
 	{
 		wxString caption = _T("NetXMS Console - ") + m_currTab->GetLabel();
 		m_notebook->RemovePage(m_notebook->GetPageIndex(m_currTab));
-		frame = new nxFrame(caption, (nxView *)m_currTab);
+		frame = new nxFrame(caption, (nxView *)m_currTab, VIEWAREA_MAIN);
 		frame->Show(true);
 	}
 }
@@ -401,6 +401,31 @@ void nxMainFrame::AttachView(nxView *view, int area)
 		case VIEWAREA_MAIN:
 			view->Reparent(m_notebook);
 			m_notebook->AddPage(view, view->GetLabel(), true, view->GetIcon());
+			break;
+		case VIEWAREA_DOCKED:
+			view->Reparent(this);
+			m_mgr.AddPane(view, wxAuiPaneInfo().Name(view->GetName()).Caption(view->GetLabel()));
+			m_mgr.Update();
+			break;
+		case VIEWAREA_DOCKED_LEFT:
+			view->Reparent(this);
+			m_mgr.AddPane(view, wxAuiPaneInfo().Name(view->GetName()).Caption(view->GetLabel()).Left());
+			m_mgr.Update();
+			break;
+		case VIEWAREA_DOCKED_RIGHT:
+			view->Reparent(this);
+			m_mgr.AddPane(view, wxAuiPaneInfo().Name(view->GetName()).Caption(view->GetLabel()).Right());
+			m_mgr.Update();
+			break;
+		case VIEWAREA_DOCKED_TOP:
+			view->Reparent(this);
+			m_mgr.AddPane(view, wxAuiPaneInfo().Name(view->GetName()).Caption(view->GetLabel()).Top());
+			m_mgr.Update();
+			break;
+		case VIEWAREA_DOCKED_BOTTOM:
+			view->Reparent(this);
+			m_mgr.AddPane(view, wxAuiPaneInfo().Name(view->GetName()).Caption(view->GetLabel()).Bottom());
+			m_mgr.Update();
 			break;
 		default:
 			break;

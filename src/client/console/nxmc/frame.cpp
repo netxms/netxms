@@ -1,4 +1,4 @@
-/* $Id: frame.cpp,v 1.3 2007-07-31 19:49:19 victor Exp $ */
+/* $Id: frame.cpp,v 1.4 2007-08-01 12:13:25 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -40,7 +40,7 @@ END_EVENT_TABLE()
 // Constructor
 //
 
-nxFrame::nxFrame(const wxString& title, nxView *child)
+nxFrame::nxFrame(const wxString& title, nxView *child, int area)
         : wxFrame(NULL, wxID_ANY, title)
 {
 	SetIcon(child->GetIcon());
@@ -51,6 +51,7 @@ nxFrame::nxFrame(const wxString& title, nxView *child)
 	m_toolBar->AddTool(wxID_TOOL_CLOSE, _T("Close"), wxXmlResource::Get()->LoadIcon(_T("icoClose")));
 	m_toolBar->Realize();
 
+	m_area = area;
 	m_child = child;
 	m_child->Reparent(this);
 }
@@ -73,7 +74,7 @@ void nxFrame::OnSize(wxSizeEvent &event)
 
 void nxFrame::OnFrameAttach(wxCommandEvent &event)
 {
-	wxGetApp().GetMainFrame()->AttachView(m_child, VIEWAREA_MAIN);
+	wxGetApp().GetMainFrame()->AttachView(m_child, m_area);
 	Close();
 }
 
