@@ -89,6 +89,7 @@ EXTRA_DIST = \
 	MainFrm.cpp MainFrm.h \
 	MapControlBox.cpp MapControlBox.h \
 	MapFrame.cpp MapFrame.h \
+	MapLinkPropDlg.cpp MapLinkPropDlg.h \
 	MapToolbox.cpp MapToolbox.h \
 	MapView.cpp MapView.h \
 	MIBBrowserDlg.cpp MIBBrowserDlg.h \

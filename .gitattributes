@@ -912,6 +912,8 @@ src/console/win32/MapControlBox.cpp -text
 src/console/win32/MapControlBox.h -text
 src/console/win32/MapFrame.cpp -text
 src/console/win32/MapFrame.h -text
+src/console/win32/MapLinkPropDlg.cpp -text
+src/console/win32/MapLinkPropDlg.h -text
 src/console/win32/MapToolbox.cpp -text
 src/console/win32/MapToolbox.h -text
 src/console/win32/MapView.cpp -text
