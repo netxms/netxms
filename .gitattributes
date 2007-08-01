@@ -1165,6 +1165,7 @@ src/install/windows/files.txt -text
 src/install/windows/netxms.iss -text
 src/install/windows/nxav.exe.manifest -text
 src/install/windows/nxcon.exe.manifest -text
+src/install/windows/nxmc.exe.manifest -text
 src/install/windows/nxnotify.exe.manifest -text
 src/java/nxjclient/.classpath -text
 src/java/nxjclient/.project -text

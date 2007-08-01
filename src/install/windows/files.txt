@@ -18,3 +18,10 @@ ZLIB1.DLL
 OCI.DLL
 ORANNZSBB10.DLL
 ORAOCIICUS10.DLL
+wxbase28u_vc.dll
+wxbase28u_xml_vc.dll
+wxmsw28u_adv_vc.dll
+wxmsw28u_aui_vc.dll
+wxmsw28u_core_vc.dll
+wxmsw28u_html_vc.dll
+wxmsw28u_xrc_vc.dll 

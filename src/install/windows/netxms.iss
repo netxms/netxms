@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.2.18
-AppVersion=0.2.18
+AppVerName=NetXMS 0.2.19-rc3
+AppVersion=0.2.19-rc3
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.2.18
+OutputBaseFilename=netxms-0.2.19-rc3
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -119,9 +119,14 @@ Source: "..\..\console\nxav\Release_UNICODE\nxav.exe"; DestDir: "{app}\bin"; Fla
 Source: "..\..\console\nxav\Release_UNICODE\nxav.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
 Source: "..\..\console\nxnotify\Release\nxnotify.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\console\nxnotify\Release\nxnotify.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
+Source: "..\..\client\console\libnxmc\Release_UNICODE\libnxmc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "..\..\client\console\nxmc\Release_UNICODE\nxmc.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "..\..\client\console\plugins\AlarmBrowser\Release_UNICODE\AlarmBrowser.so"; DestDir: "{app}\lib\nxmc"; Flags: ignoreversion; Components: console
+Source: "..\..\client\console\plugins\ObjectBrowser\Release_UNICODE\ObjectBrowser.so"; DestDir: "{app}\lib\nxmc"; Flags: ignoreversion; Components: console
 Source: "nxcon.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "nxav.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "nxnotify.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "nxmc.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 ; Web server files
 Source: "..\..\nxhttpd\Release\nxhttpd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv
 Source: "..\..\nxhttpd\static\*.js"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv
@@ -151,6 +156,13 @@ Source: "Files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Compon
 Source: "Files\bgd.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv
 Source: "Files\zlib1.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "Files\dbghelp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
+Source: "Files\wxbase28u_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "Files\wxbase28u_xml_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "Files\wxmsw28u_adv_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "Files\wxmsw28u_aui_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "Files\wxmsw28u_core_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "Files\wxmsw28u_html_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "Files\wxmsw28u_xrc_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 
 [Icons]
 Name: "{group}\Alarm Notifier"; Filename: "{app}\bin\nxnotify.exe"; Components: console
