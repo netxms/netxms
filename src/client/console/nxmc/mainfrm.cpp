@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.12 2007-08-01 12:13:25 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.13 2007-08-02 08:00:50 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -37,6 +37,8 @@ BEGIN_EVENT_TABLE(nxMainFrame, wxFrame)
 	EVT_MENU(XRCID("menuFileExit"), nxMainFrame::OnFileExit)
 	EVT_MENU(XRCID("menuViewConsoleLog"), nxMainFrame::OnViewConsoleLog)
 	EVT_MENU(XRCID("menuViewRefresh"), nxMainFrame::OnViewRefresh)
+	EVT_MENU(XRCID("menuPerspectiveSave"), nxMainFrame::OnPerspectiveSave)
+	EVT_MENU(XRCID("menuPerspectiveDefault"), nxMainFrame::OnPerspectiveDefault)
 	EVT_MENU(XRCID("menuHelpAbout"), nxMainFrame::OnHelpAbout)
 	EVT_MENU(wxID_PANE_CLOSE, nxMainFrame::OnPaneClose)
 	EVT_MENU(wxID_PANE_DETACH, nxMainFrame::OnPaneDetach)
@@ -73,6 +75,8 @@ nxMainFrame::nxMainFrame(const wxPoint &pos, const wxSize &size)
 	CreateStatusBar();
 
 	m_mgr.Update();
+
+	UpdatePerspectivesMenu();
 }
 
 
@@ -160,6 +164,14 @@ void nxMainFrame::OnHelpAbout(wxCommandEvent &event)
 	versionTextCtrl->SetLabel(_T("Version ") NETXMS_VERSION_STRING);
 	dlg->ShowModal();
 	delete dlg;
+
+/*	wxAboutDialogInfo info;
+
+	info.SetName(_T("NetXMS Management Console"));
+	info.SetVersion(NETXMS_VERSION_STRING);
+	info.SetDescription(_T("This program does something great."));
+	info.SetCopyright(_T("Copyright (C) 2003 - 2007 Victor Kirhenshtein"));
+	wxAboutBox(info);*/
 }
 
 
@@ -430,4 +442,103 @@ void nxMainFrame::AttachView(nxView *view, int area)
 		default:
 			break;
 	}
+}
+
+
+//
+// Handler for Perspective -> Save menu
+//
+
+void nxMainFrame::OnPerspectiveSave(wxCommandEvent &event)
+{
+	wxString name, data, keyName, path;
+	BYTE hash[MD5_DIGEST_SIZE];
+	TCHAR hashText[MD5_DIGEST_SIZE * 2 + 1];
+	wxConfigBase *cfg;
+	wxTextEntryDialog dlg(this, _T("Please enter name for perspective:"), _T("Save Perspective"));
+
+	if (dlg.ShowModal() == wxID_OK)
+	{
+		name = dlg.GetValue();
+		data = m_mgr.SavePerspective();
+		CalculateMD5Hash((const BYTE *)name.c_str(), _tcslen(name.c_str()) * sizeof(TCHAR), hash);
+		BinToStr(hash, MD5_DIGEST_SIZE, hashText);
+		keyName = _T("/Perspectives/");
+		keyName += hashText;
+
+		cfg = wxConfig::Get();
+		path = cfg->GetPath();
+		cfg->SetPath(keyName);
+		cfg->Write(_T("Name"), name);
+		cfg->Write(_T("MgrData"), data);
+		cfg->SetPath(path);
+
+		UpdatePerspectivesMenu();
+	}
+}
+
+
+//
+// Handler for Perspective -> Default
+//
+
+void nxMainFrame::OnPerspectiveDefault(wxCommandEvent &event)
+{
+//	m_mgr.LoadPerspective(s);
+}
+
+
+//
+// Update perspectives menu
+//
+
+void nxMainFrame::UpdatePerspectivesMenu()
+{
+	wxMenu *menu;
+	size_t i, count;
+	int id;
+	long index;
+	wxString path, entry, name;
+	wxConfigBase *cfg;
+
+	menu = GetMenuBar()->GetMenu(2);
+
+	// Clear existing items
+	count = menu->GetMenuItemCount();
+	for(i = 0; i < count; i++)
+	{
+		id = menu->FindItemByPosition(i)->GetId();
+		if ((id >= wxID_PERSPECTIVE_START) && (id <= wxID_PERSPECTIVE_END))
+		{
+			safe_free(m_perspectives[id]);
+			menu->Delete(id);
+			count--;
+			i--;
+		}
+	}
+	m_perspectives.clear();
+
+	// Add new items
+	cfg = wxConfig::Get();
+	path = cfg->GetPath();
+	cfg->SetPath(_T("/Perspectives"));
+
+	if (cfg->GetFirstGroup(entry, index))
+	{
+		id = wxID_PERSPECTIVE_START;
+		do
+		{
+			cfg->SetPath(entry);
+
+			name = cfg->Read(_T("Name"), entry);
+			m_perspectives[id] = _tcsdup(entry.c_str());
+			menu->Append(id, name);
+			id++;
+			
+			cfg->SetPath(_T(".."));
+		}
+		while(cfg->GetNextGroup(entry, index));
+	}
+
+	cfg->SetPath(path);
 }

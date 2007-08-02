@@ -29,6 +29,7 @@
 #include <wx/listctrl.h>
 #include <wx/notebook.h>
 #include <wx/imaglist.h>
+#include <wx/aboutdlg.h>
 #endif
 
 

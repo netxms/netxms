@@ -1,4 +1,4 @@
-/* $Id: mainfrm.h,v 1.7 2007-07-31 19:49:19 victor Exp $ */
+/* $Id: mainfrm.h,v 1.8 2007-08-02 08:00:50 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -78,8 +78,10 @@ protected:
 	nxAuiNotebook *m_notebook;
 	wxAuiPaneInfo *m_currPane;	// Current pane for context menu operation
 	wxWindow *m_currTab;			// Current tab for context menu operation
+	nxIntToStringHash m_perspectives;
 
-	wxAuiNotebook *CreateNotebook(void);
+	wxAuiNotebook *CreateNotebook();
+	void UpdatePerspectivesMenu();
 
 public:
 	nxMainFrame(const wxPoint &pos, const wxSize &size);
@@ -94,6 +96,8 @@ protected:
 	void OnFileExit(wxCommandEvent &event);
 	void OnViewConsoleLog(wxCommandEvent &event);
 	void OnViewRefresh(wxCommandEvent &event);
+	void OnPerspectiveSave(wxCommandEvent &event);
+	void OnPerspectiveDefault(wxCommandEvent &event);
 	void OnHelpAbout(wxCommandEvent &event);
 	void OnPaneClose(wxCommandEvent &event);
 	void OnPaneDetach(wxCommandEvent &event);
