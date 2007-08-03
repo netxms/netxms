@@ -483,6 +483,7 @@ src/client/console/nxmc/rc/attach_view.xpm -text
 src/client/console/nxmc/rc/close.xpm -text
 src/client/console/nxmc/rc/icons/Makefile.am -text
 src/client/console/nxmc/rc/icons/normal/Makefile.am -text
+src/client/console/nxmc/rc/icons/normal/config.xpm -text
 src/client/console/nxmc/rc/icons/normal/unknown.xpm -text
 src/client/console/nxmc/rc/icons/small/Makefile.am -text
 src/client/console/nxmc/rc/icons/small/acknowledged.xpm -text
