@@ -1,4 +1,4 @@
-/* $Id: mainfrm.h,v 1.8 2007-08-02 08:00:50 victor Exp $ */
+/* $Id: mainfrm.h,v 1.9 2007-08-03 06:45:14 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -108,6 +108,7 @@ protected:
 	void OnTabFloat(wxCommandEvent &event);
 	void OnTabDock(wxCommandEvent &event);
 	void OnPluginCommand(wxCommandEvent &event);
+	void OnLoadPerspective(wxCommandEvent &event);
 	void OnContextMenu(wxContextMenuEvent &event);
 	void OnAlarmChange(wxCommandEvent &event);
 

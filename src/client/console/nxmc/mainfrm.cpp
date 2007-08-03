@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.13 2007-08-02 08:00:50 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.14 2007-08-03 06:45:14 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -49,6 +49,7 @@ BEGIN_EVENT_TABLE(nxMainFrame, wxFrame)
 	EVT_MENU(wxID_TAB_FLOAT, nxMainFrame::OnTabFloat)
 	EVT_MENU(wxID_TAB_DOCK, nxMainFrame::OnTabDock)
 	EVT_MENU_RANGE(wxID_PLUGIN_RANGE_START, wxID_PLUGIN_RANGE_END, nxMainFrame::OnPluginCommand)
+	EVT_MENU_RANGE(wxID_PERSPECTIVE_START, wxID_PERSPECTIVE_END, nxMainFrame::OnLoadPerspective)
 	EVT_NXC_ALARM_CHANGE(nxMainFrame::OnAlarmChange)
 END_EVENT_TABLE()
 
@@ -541,4 +542,29 @@ void nxMainFrame::UpdatePerspectivesMenu()
 	}
 
 	cfg->SetPath(path);
+}
+
+
+//
+// Handler for load perspective menus
+//
+
+void nxMainFrame::OnLoadPerspective(wxCommandEvent &event)
+{
+	nxIntToStringHash::iterator it;
+	wxString path;
+	wxConfigBase *cfg;
+
+	it = m_perspectives.find(event.GetId());
+	if (it != m_perspectives.end())
+	{
+		cfg = wxConfig::Get();
+		path = cfg->GetPath();
+		cfg->SetPath(_T("/Perspectives"));
+		cfg->SetPath(it->second);
+
+		m_mgr.LoadPerspective(cfg->Read(_T("MgrData"), _T("")));
+
+		cfg->SetPath(path);
+	}
 }

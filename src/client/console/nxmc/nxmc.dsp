@@ -171,6 +171,10 @@ SOURCE=.\conlog.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ctrlpanel.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\frame.cpp
 # End Source File
 # Begin Source File
@@ -200,6 +204,10 @@ SOURCE=.\busydlg.h
 # Begin Source File
 
 SOURCE=.\conlog.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ctrlpanel.h
 # End Source File
 # Begin Source File
 

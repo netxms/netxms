@@ -465,6 +465,8 @@ src/client/console/nxmc/busydlg.h -text
 src/client/console/nxmc/comm.cpp -text
 src/client/console/nxmc/conlog.cpp -text
 src/client/console/nxmc/conlog.h -text
+src/client/console/nxmc/ctrlpanel.cpp -text
+src/client/console/nxmc/ctrlpanel.h -text
 src/client/console/nxmc/frame.cpp -text
 src/client/console/nxmc/frame.h -text
 src/client/console/nxmc/logindlg.cpp -text
