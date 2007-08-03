@@ -7,6 +7,7 @@ nxmc_SOURCES = \
 	busydlg.cpp \
 	comm.cpp \
 	conlog.cpp \
+	ctrlpanel.cpp \
 	frame.cpp \
 	logindlg.cpp \
 	mainfrm.cpp \
@@ -19,6 +20,7 @@ EXTRA_DIST = \
 	nxmc.rc \
 	busydlg.h \
 	conlog.h \
+	ctrlpanel.h \
 	frame.h \
 	logindlg.h \
 	mainfrm.h \

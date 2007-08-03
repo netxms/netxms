@@ -1,4 +1,4 @@
-/* $Id: mainfrm.h,v 1.9 2007-08-03 06:45:14 victor Exp $ */
+/* $Id: mainfrm.h,v 1.10 2007-08-03 15:40:20 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -95,6 +95,7 @@ protected:
 	void OnClose(wxCloseEvent &event);
 	void OnFileExit(wxCommandEvent &event);
 	void OnViewConsoleLog(wxCommandEvent &event);
+	void OnViewControlPanel(wxCommandEvent &event);
 	void OnViewRefresh(wxCommandEvent &event);
 	void OnPerspectiveSave(wxCommandEvent &event);
 	void OnPerspectiveDefault(wxCommandEvent &event);

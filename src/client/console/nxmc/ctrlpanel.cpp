@@ -41,6 +41,63 @@ END_EVENT_TABLE()
 nxControlPanel::nxControlPanel(wxWindow *parent)
                : nxView(parent)
 {
+	size_t i;
+	wxImageList *imageList;
+	
+	SetName(_T("ctrlpanel"));
+	SetLabel(_T("Control Panel"));
+	RegisterUniqueView(_T("ctrlpanel"), this);
+
+	imageList = new wxImageList(32, 32);
+	imageList->Add(wxXmlResource::Get()->LoadIcon(_T("icoUnknown")));
+	
+	m_wndListCtrl = new wxListView(this, wxID_LIST_CTRL, wxDefaultPosition, wxDefaultSize, wxLC_ICON | wxLC_AUTOARRANGE | wxLC_SINGLE_SEL);
+	
+	// Add built-in items
+	AddItem(wxID_CTRLPANEL_SERVERCFG, _T("Server Settings"), wxXmlResource::Get()->LoadIcon(_T("icoUnknown")), imageList);
+
+	// Add items registered by plugins
+	nxmcArrayOfRegItems &regList = NXMCGetRegistrations();
+	for(i = 0; i < regList.GetCount(); i++)
+	{
+		if (regList[i].GetType() == REGITEM_CONTROL_PANEL)
+		{
+			AddItem(regList[i].GetId() + ((nxmcPlugin *)regList[i].GetPlugin())->GetBaseId(), regList[i].GetName(), wxNullIcon, imageList);
+		}
+	}
+	
+	m_wndListCtrl->AssignImageList(imageList, wxIMAGE_LIST_NORMAL);
+}
+
+
+//
+// Destructor
+//
+
+nxControlPanel::~nxControlPanel()
+{
+	UnregisterUniqueView(_T("ctrlpanel"));
+}
+
+
+//
+// Add new item to list
+//
+
+void nxControlPanel::AddItem(int cmd, const wxString &text, wxIcon &icon, wxImageList *imglist)
+{
+	long item;
+	
+	if (icon != wxNullIcon)
+	{
+		imglist->Add(icon);
+		item = m_wndListCtrl->InsertItem(0x7FFFFFFF, text, imglist->GetImageCount() - 1);
+	}
+	else
+	{
+		item = m_wndListCtrl->InsertItem(0x7FFFFFFF, text, 0);
+	}
+	m_wndListCtrl->SetItemData(item, cmd);
 }
 
 
@@ -51,5 +108,5 @@ nxControlPanel::nxControlPanel(wxWindow *parent)
 void nxControlPanel::OnSize(wxSizeEvent &event)
 {
 	wxSize size = GetClientSize();
-//	m_wndTextCtrl->SetSize(0, 0, size.x, size.y);
+	m_wndListCtrl->SetSize(0, 0, size.x, size.y);
 }

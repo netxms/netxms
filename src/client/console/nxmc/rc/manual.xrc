@@ -42,6 +42,10 @@
 	<object class="wxIcon" name="icoAttachView">attach_view.xpm</object>
 	<object class="wxIcon" name="icoClose">close.xpm</object>
 
+	<!-- Miscellanious normal size icons -->
+	<object class="wxIcon" name="icoConfig">icons/normal/config.xpm</object>
+	<object class="wxIcon" name="icoUnknown">icons/normal/unknown.xpm</object>
+
 	<!-- Busy dialog -->
 	<object class="wxDialog" name="nxBusyDialog">
 		<size>436,63</size>

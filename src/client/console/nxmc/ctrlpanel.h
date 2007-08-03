@@ -28,9 +28,12 @@ class nxControlPanel : public nxView
 {
 private:
 	wxListCtrl *m_wndListCtrl;
+	
+	void AddItem(int cmd, const wxString &text, wxIcon &icon, wxImageList *imgList);
 
 public:
 	nxControlPanel(wxWindow *parent);
+	virtual ~nxControlPanel();
 
 	// Event handlers
 protected:

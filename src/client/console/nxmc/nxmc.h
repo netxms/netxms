@@ -58,6 +58,7 @@ END_DECLARE_EVENT_TYPES()
 #define wxID_TAB_DOCK               (wxID_HIGHEST + 8)
 #define wxID_TOOL_ATTACH            (wxID_HIGHEST + 9)
 #define wxID_TOOL_CLOSE             (wxID_HIGHEST + 10)
+#define wxID_CTRLPANEL_SERVERCFG    (wxID_HIGHEST + 11)
 
 #define wxID_PERSPECTIVE_START      (wxID_HIGHEST + 100)
 #define wxID_PERSPECTIVE_END        (wxID_HIGHEST + 199)

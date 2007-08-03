@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.14 2007-08-03 06:45:14 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.15 2007-08-03 15:40:20 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -25,6 +25,7 @@
 #include "nxmc.h"
 #include "conlog.h"
 #include "logindlg.h"
+#include "ctrlpanel.h"
 
 
 //
@@ -36,6 +37,7 @@ BEGIN_EVENT_TABLE(nxMainFrame, wxFrame)
 	EVT_CONTEXT_MENU(nxMainFrame::OnContextMenu)
 	EVT_MENU(XRCID("menuFileExit"), nxMainFrame::OnFileExit)
 	EVT_MENU(XRCID("menuViewConsoleLog"), nxMainFrame::OnViewConsoleLog)
+	EVT_MENU(XRCID("menuViewControlPanel"), nxMainFrame::OnViewControlPanel)
 	EVT_MENU(XRCID("menuViewRefresh"), nxMainFrame::OnViewRefresh)
 	EVT_MENU(XRCID("menuPerspectiveSave"), nxMainFrame::OnPerspectiveSave)
 	EVT_MENU(XRCID("menuPerspectiveDefault"), nxMainFrame::OnPerspectiveDefault)
@@ -194,6 +196,27 @@ void nxMainFrame::OnViewConsoleLog(wxCommandEvent &event)
 		m_mgr.AddPane(new nxConsoleLogger(this), wxAuiPaneInfo().Name(_T("conlog")).Caption(_T("Console Log")).Bottom().BestSize(700, 150));
 	}
 	m_mgr.Update();
+}
+
+
+//
+// View->Control Panel menu handler
+//
+
+void nxMainFrame::OnViewControlPanel(wxCommandEvent &event)
+{
+	nxView *view;
+
+	view = FindUniqueView(_T("ctrlpanel"));
+	if (view != NULL)
+	{
+		ActivateView(view);
+	}
+	else
+	{
+		m_mgr.AddPane(new nxControlPanel(this), wxAuiPaneInfo().Name(_T("ctrlpanel")).Caption(_T("Control Panel")).Bottom().BestSize(700, 150));
+		m_mgr.Update();
+	}
 }
 
 
