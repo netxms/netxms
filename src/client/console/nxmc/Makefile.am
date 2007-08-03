@@ -12,7 +12,8 @@ nxmc_SOURCES = \
 	logindlg.cpp \
 	mainfrm.cpp \
 	nxmc.cpp \
-	plugins.cpp
+	plugins.cpp \
+	srvcfg.cpp
 nxmc_LDADD = ../../../libnetxms/libnetxms.la ../../../libnxcl/libnxcl.la ../../../libnxmap/libnxmap.la ../../../libnxsnmp/libnxsnmp.la ../libnxmc/libnxmc.la
 
 EXTRA_DIST = \
@@ -25,4 +26,5 @@ EXTRA_DIST = \
 	logindlg.h \
 	mainfrm.h \
 	nxmc.h \
-	resource.h
+	resource.h \
+	srvcfg.h

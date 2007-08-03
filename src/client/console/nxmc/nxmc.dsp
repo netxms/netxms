@@ -193,6 +193,10 @@ SOURCE=.\nxmc.cpp
 
 SOURCE=.\plugins.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\srvcfg.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -260,6 +264,10 @@ SOURCE=.\nxmc.h
 # Begin Source File
 
 SOURCE=..\include\nxmc_api.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\srvcfg.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

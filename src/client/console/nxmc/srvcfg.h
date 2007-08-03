@@ -17,28 +17,28 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: ctrlpanel.h
+** File: srvcfg.h
 **
 **/
 
-#ifndef _ctrlpanel_h_
-#define _ctrlpanel_h_
+#ifndef _srvcfg_h_
+#define _srvcfg_h_
 
-class nxControlPanel : public nxView
+#include <wx/grid.h>
+
+
+class nxServerConfigEditor : public nxView
 {
 private:
-	wxListCtrl *m_wndListCtrl;
+	wxGrid *m_grid;
 	
-	void AddItem(int cmd, const wxString &text, wxIcon &icon, wxImageList *imgList);
-
 public:
-	nxControlPanel(wxWindow *parent);
-	virtual ~nxControlPanel();
+	nxServerConfigEditor(wxWindow *parent);
+	virtual ~nxServerConfigEditor();
 
 	// Event handlers
 protected:
 	void OnSize(wxSizeEvent &event);
-	void OnListItemActivated(wxListEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };

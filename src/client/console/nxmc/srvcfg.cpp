@@ -17,30 +17,55 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: ctrlpanel.h
+** File: srvcfg.cpp
 **
 **/
 
-#ifndef _ctrlpanel_h_
-#define _ctrlpanel_h_
+#include "nxmc.h"
+#include "srvcfg.h"
 
-class nxControlPanel : public nxView
+
+//
+// Event table
+//
+
+BEGIN_EVENT_TABLE(nxServerConfigEditor, nxView)
+	EVT_SIZE(nxServerConfigEditor::OnSize)
+END_EVENT_TABLE()
+
+
+//
+// Constructor
+//
+
+nxServerConfigEditor::nxServerConfigEditor(wxWindow *parent)
+                     : nxView(parent)
 {
-private:
-	wxListCtrl *m_wndListCtrl;
-	
-	void AddItem(int cmd, const wxString &text, wxIcon &icon, wxImageList *imgList);
+	SetName(_T("srvcfgeditor"));
+	SetLabel(_T("Server Settings"));
+	RegisterUniqueView(_T("srvcfgeditor"), this);
 
-public:
-	nxControlPanel(wxWindow *parent);
-	virtual ~nxControlPanel();
+	m_grid = new wxGrid(this, wxID_ANY);
+	m_grid->CreateGrid(1, 3, wxGrid::wxGridSelectRows);
+}
 
-	// Event handlers
-protected:
-	void OnSize(wxSizeEvent &event);
-	void OnListItemActivated(wxListEvent &event);
 
-	DECLARE_EVENT_TABLE()
-};
+//
+// Destructor
+//
 
-#endif
+nxServerConfigEditor::~nxServerConfigEditor()
+{
+	UnregisterUniqueView(_T("srvcfgeditor"));
+}
+
+
+//
+// Resize handler
+//
+
+void nxServerConfigEditor::OnSize(wxSizeEvent &event)
+{
+	wxSize size = GetClientSize();
+	m_grid->SetSize(0, 0, size.x, size.y);
+}

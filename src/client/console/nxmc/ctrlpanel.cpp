@@ -23,6 +23,7 @@
 
 #include "nxmc.h"
 #include "ctrlpanel.h"
+#include "srvcfg.h"
 
 
 //
@@ -31,6 +32,7 @@
 
 BEGIN_EVENT_TABLE(nxControlPanel, nxView)
 	EVT_SIZE(nxControlPanel::OnSize)
+	EVT_LIST_ITEM_ACTIVATED(wxID_LIST_CTRL, nxControlPanel::OnListItemActivated)
 END_EVENT_TABLE()
 
 
@@ -54,7 +56,7 @@ nxControlPanel::nxControlPanel(wxWindow *parent)
 	m_wndListCtrl = new wxListView(this, wxID_LIST_CTRL, wxDefaultPosition, wxDefaultSize, wxLC_ICON | wxLC_AUTOARRANGE | wxLC_SINGLE_SEL);
 	
 	// Add built-in items
-	AddItem(wxID_CTRLPANEL_SERVERCFG, _T("Server Settings"), wxXmlResource::Get()->LoadIcon(_T("icoUnknown")), imageList);
+	AddItem(wxID_CTRLPANEL_SERVERCFG, _T("Server Settings"), wxXmlResource::Get()->LoadIcon(_T("icoConfig")), imageList);
 
 	// Add items registered by plugins
 	nxmcArrayOfRegItems &regList = NXMCGetRegistrations();
@@ -88,7 +90,7 @@ void nxControlPanel::AddItem(int cmd, const wxString &text, wxIcon &icon, wxImag
 {
 	long item;
 	
-	if (icon != wxNullIcon)
+	if (icon.IsOk())
 	{
 		imglist->Add(icon);
 		item = m_wndListCtrl->InsertItem(0x7FFFFFFF, text, imglist->GetImageCount() - 1);
@@ -109,4 +111,40 @@ void nxControlPanel::OnSize(wxSizeEvent &event)
 {
 	wxSize size = GetClientSize();
 	m_wndListCtrl->SetSize(0, 0, size.x, size.y);
+}
+
+
+//
+// Handler for item activation
+//
+
+void nxControlPanel::OnListItemActivated(wxListEvent &event)
+{
+	int cmd;
+	nxView *view;
+
+	cmd = event.GetData();
+	if ((cmd >= wxID_PLUGIN_RANGE_START) && (cmd <= wxID_PLUGIN_RANGE_END))
+	{
+		CallPluginCommandHandler(cmd);
+	}
+	else
+	{
+		switch(cmd)
+		{
+			case wxID_CTRLPANEL_SERVERCFG:
+				view = FindUniqueView(_T("srvcfgeditor"));
+				if (view != NULL)
+				{
+					ActivateView(view);
+				}
+				else
+				{
+					NXMCCreateView(new nxServerConfigEditor(this), VIEWAREA_MAIN);
+				}
+				break;
+			default:
+				break;
+		}
+	}
 }

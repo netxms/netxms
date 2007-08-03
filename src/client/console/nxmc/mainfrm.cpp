@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.15 2007-08-03 15:40:20 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.16 2007-08-03 18:58:52 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -194,8 +194,8 @@ void nxMainFrame::OnViewConsoleLog(wxCommandEvent &event)
 	else
 	{
 		m_mgr.AddPane(new nxConsoleLogger(this), wxAuiPaneInfo().Name(_T("conlog")).Caption(_T("Console Log")).Bottom().BestSize(700, 150));
+		m_mgr.Update();
 	}
-	m_mgr.Update();
 }
 
 
