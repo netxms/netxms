@@ -454,10 +454,11 @@ protected:
    DWORD m_dwIpNetMask;
    BYTE m_bMacAddr[MAC_ADDR_LENGTH];
    QWORD m_qwLastDownEventId;
+	BOOL m_bSyntheticMask;
 
 public:
    Interface();
-   Interface(DWORD dwAddr, DWORD dwNetMask);
+   Interface(DWORD dwAddr, DWORD dwNetMask, BOOL bSyntheticMask);
    Interface(char *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwNetMask, DWORD dwType);
    virtual ~Interface();
 
@@ -474,6 +475,7 @@ public:
    DWORD IfIndex(void) { return m_dwIfIndex; }
    DWORD IfType(void) { return m_dwIfType; }
    const BYTE *MacAddr(void) { return m_bMacAddr; }
+	BOOL IsSyntheticMask(void) { return m_bSyntheticMask; }
 
    QWORD GetLastDownEventId(void) { return m_qwLastDownEventId; }
    void SetLastDownEventId(QWORD qwId) { m_qwLastDownEventId = qwId; }
@@ -624,6 +626,7 @@ protected:
    DWORD GetInterfaceCount(Interface **ppInterface);
 
    void CheckInterfaceNames(INTERFACE_LIST *pIfList);
+	void CheckSubnetBinding(INTERFACE_LIST *pIfList);
 
    virtual void PrepareForDeletion(void);
    virtual void OnObjectDelete(DWORD dwObjectId);
@@ -828,10 +831,11 @@ class NXCORE_EXPORTABLE Subnet : public NetObj
 protected:
    DWORD m_dwIpNetMask;
    DWORD m_dwZoneGUID;
+	BOOL m_bSyntheticMask;
 
 public:
    Subnet();
-   Subnet(DWORD dwAddr, DWORD dwNetMask, DWORD dwZone);
+   Subnet(DWORD dwAddr, DWORD dwNetMask, DWORD dwZone, BOOL bSyntheticMask);
    virtual ~Subnet();
 
    virtual int Type(void) { return OBJECT_SUBNET; }
@@ -845,6 +849,7 @@ public:
 
    DWORD IpNetMask(void) { return m_dwIpNetMask; }
    DWORD ZoneGUID(void) { return m_dwZoneGUID; }
+	BOOL IsSyntheticMask(void) { return m_bSyntheticMask; }
 };
 
 

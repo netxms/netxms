@@ -26,24 +26,27 @@
 
 
 //
+// Request flags
+//
+
+#define DRF_DELETE_ARG1		0x0001
+#define DRF_DELETE_ARG2		0x0002
+#define DRF_DELETE_ARG3		0x0004
+#define DRF_DELETE_ARG4		0x0008
+#define DRF_DELETE_ARG5		0x0010
+#define DRF_DELETE_ARG6		0x0020
+#define DRF_DELETE_ARG7		0x0040
+
+
+//
 // Request data
 //
 
 class RqData
 {
 public:
-	RqData(int id, wxEvtHandler *owner, void *func, int numArgs, const TCHAR *errMsg)
-	{ 
-		m_id = id;
-		m_owner = owner;
-		m_func = (DWORD (*)(...))func;
-		m_numArgs = numArgs;
-		m_errMsg = (errMsg != NULL) ? _tcsdup(errMsg) : NULL;
-	}
-	~RqData()
-	{
-		safe_free(m_errMsg);
-	}
+	RqData(int id, wxEvtHandler *owner, void *func, int numArgs, const TCHAR *errMsg, DWORD flags);
+	~RqData();
 	
 	int m_id;
 	wxEvtHandler *m_owner;
@@ -51,6 +54,7 @@ public:
 	int m_numArgs;
 	wxUIntPtr m_arg[9];
 	DWORD m_rcc;
+	DWORD m_flags;
 	TCHAR *m_errMsg;
 };
 
@@ -74,9 +78,9 @@ private:
 	
 protected:
 	
-	int DoRequestArg1(void *func, wxUIntPtr arg1, const TCHAR *errMsg);
-	int DoRequestArg2(void *func, wxUIntPtr arg1, wxUIntPtr arg2, const TCHAR *errMsg);
-	int DoRequestArg3(void *func, wxUIntPtr arg1, wxUIntPtr arg2, wxUIntPtr arg3, const TCHAR *errMsg);
+	int DoRequestArg1(void *func, wxUIntPtr arg1, const TCHAR *errMsg, DWORD flags = 0);
+	int DoRequestArg2(void *func, wxUIntPtr arg1, wxUIntPtr arg2, const TCHAR *errMsg, DWORD flags = 0);
+	int DoRequestArg3(void *func, wxUIntPtr arg1, wxUIntPtr arg2, wxUIntPtr arg3, const TCHAR *errMsg, DWORD flags = 0);
 	
 	virtual void RequestCompletionHandler(int rqId, DWORD rcc, const TCHAR *errMsg);
 

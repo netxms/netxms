@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.181 2007-05-31 22:48:34 victor Exp $ */
+/* $Id: node.cpp,v 1.182 2007-08-14 05:46:28 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -501,7 +501,7 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
    Interface *pInterface;
    Subnet *pSubnet = NULL;
 	Cluster *pCluster;
-	BOOL bAddToSubnet;
+	BOOL bAddToSubnet, bSyntheticMask = FALSE;
 
    // Find subnet to place interface object to
    if (dwIpAddr != 0)
@@ -517,6 +517,7 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
 				// new subnet with class mask
 				if (dwNetMask == 0)
 				{
+					bSyntheticMask = TRUE;
 					if (dwIpAddr < 0xE0000000)
 					{
 						dwNetMask = 0xFFFFFF00;   // Class A, B or C
@@ -535,7 +536,7 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
 				// Create new subnet object
 				if (dwIpAddr < 0xE0000000)
 				{
-					pSubnet = new Subnet(dwIpAddr & dwNetMask, dwNetMask, m_dwZoneGUID);
+					pSubnet = new Subnet(dwIpAddr & dwNetMask, dwNetMask, m_dwZoneGUID, bSyntheticMask);
 					NetObjInsert(pSubnet, TRUE);
 					g_pEntireNet->AddSubnet(pSubnet);
 				}
@@ -546,6 +547,7 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
 				if (dwNetMask == 0)
 				{
 					dwNetMask = pSubnet->IpNetMask();
+					bSyntheticMask = pSubnet->IsSyntheticMask();
 				}
 			}
 		}
@@ -555,7 +557,7 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
    if (szName != NULL)
       pInterface = new Interface(szName, dwIndex, dwIpAddr, dwNetMask, dwType);
    else
-      pInterface = new Interface(dwIpAddr, dwNetMask);
+      pInterface = new Interface(dwIpAddr, dwNetMask, bSyntheticMask);
    if (pbMacAddr != NULL)
       pInterface->SetMacAddr(pbMacAddr);
 
@@ -1323,6 +1325,8 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
                bHasChanges = TRUE;
             }
          }
+
+			CheckSubnetBinding(pIfList);
 
          DestroyInterfaceList(pIfList);
       }
@@ -2824,4 +2828,13 @@ nxObjList *Node::BuildL2Topology(DWORD *pdwStatus)
 	}
 	MutexUnlock(m_mutexTopoAccess);
 	return pResult;
+}
+
+
+//
+// Check subnet bindings
+//
+
+void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
+{
 }

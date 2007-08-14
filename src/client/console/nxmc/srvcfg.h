@@ -30,7 +30,12 @@
 class nxServerConfigEditor : public nxView
 {
 private:
-	wxGrid *m_grid;
+	wxListView *m_listView;
+	DWORD m_numVars;
+	NXC_SERVER_VARIABLE *m_varList;
+
+protected:
+	virtual void RequestCompletionHandler(int rqId, DWORD rcc, const TCHAR *errMsg);
 	
 public:
 	nxServerConfigEditor(wxWindow *parent);
@@ -39,6 +44,13 @@ public:
 	// Event handlers
 protected:
 	void OnSize(wxSizeEvent &event);
+	void OnRefreshView(wxCommandEvent &event);
+	void OnListItemRightClick(wxListEvent &event);
+	void OnVarNew(wxCommandEvent &event);
+	void OnVarEdit(wxCommandEvent &event);
+	void OnUpdateUIVarEdit(wxUpdateUIEvent &event);
+	void OnVarDelete(wxCommandEvent &event);
+	void OnUpdateUIVarDelete(wxUpdateUIEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };

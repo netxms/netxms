@@ -1,4 +1,14 @@
 *************
+* 66 ==> 67 *
+*************
+
+- New column added to table "subnets":
+	ALTER TABLE subnets ADD synthetic_mask integer not null
+- New column added to table "interfaces":
+	ALTER TABLE interfaces ADD synthetic_mask integer not null
+
+
+*************
 * 65 ==> 66 *
 *************
 

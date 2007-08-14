@@ -12,6 +12,7 @@ EXTRA_DIST = \
 	acknowledged.xpm \
 	cluster.xpm \
 	condition.xpm \
+	config.png \
 	container.xpm \
 	critical.xpm \
 	disabled.xpm \

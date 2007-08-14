@@ -34,6 +34,7 @@
 	<object class="wxIcon" name="icoSmallTerminated">icons/small/terminated.xpm</object>
 
 	<!-- Miscellanious small icons -->
+	<object class="wxIcon" name="icoSmallConfig">icons/small/config.png</object>
 	<object class="wxIcon" name="icoSmallInformation">icons/small/information.xpm</object>
 	<object class="wxIcon" name="icoSortDown">icons/small/sort_down.xpm</object>
 	<object class="wxIcon" name="icoSortUp">icons/small/sort_up.xpm</object>
@@ -103,6 +104,23 @@
 		</object>
 		<object class="wxMenuItem" name="menuAttachDockBottom">
 			<label>Dock at &amp;bottom</label>
+			<help></help>
+		</object>
+	</object>
+
+	<!-- Popup menu for server configuration editor -->
+	<object class="wxMenu" name="menuCtxServerCfg">
+		<label>Variable</label>
+		<object class="wxMenuItem" name="menuVarNew">
+			<label>Add &amp;new variable...</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuVarEdit">
+			<label>&amp;Edit...</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuVarDelete">
+			<label>&amp;Delete</label>
 			<help></help>
 		</object>
 	</object>

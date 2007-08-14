@@ -197,6 +197,10 @@ SOURCE=.\plugins.cpp
 
 SOURCE=.\srvcfg.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\vareditdlg.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -268,6 +272,10 @@ SOURCE=..\include\nxmc_api.h
 # Begin Source File
 
 SOURCE=.\srvcfg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vareditdlg.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

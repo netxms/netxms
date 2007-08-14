@@ -247,6 +247,7 @@ CREATE TABLE subnets
 	ip_addr varchar(15) not null,
 	ip_netmask varchar(15) not null,
 	zone_guid integer not null,
+	synthetic_mask integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -264,6 +265,7 @@ CREATE TABLE interfaces
 	if_type integer not null,
 	if_index integer not null,
 	mac_addr varchar(15) not null,
+	synthetic_mask integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

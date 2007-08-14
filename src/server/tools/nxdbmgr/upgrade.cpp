@@ -78,6 +78,31 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V66 to V67
+//
+
+static BOOL H_UpgradeFromV66(void)
+{
+   static TCHAR m_szBatch[] =
+		_T("ALTER TABLE subnets ADD synthetic_mask integer\n")
+		_T("UPDATE subnets SET synthetic_mask=0\n")
+		_T("ALTER TABLE interfaces ADD synthetic_mask integer\n")
+		_T("UPDATE interfaces SET synthetic_mask=0\n")
+      _T("<END>");
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='66' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V65 to V66
 //
 
@@ -2979,6 +3004,7 @@ static struct
    { 63, H_UpgradeFromV63 },
    { 64, H_UpgradeFromV64 },
    { 65, H_UpgradeFromV65 },
+   { 66, H_UpgradeFromV66 },
    { 0, NULL }
 };
 

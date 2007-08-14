@@ -745,6 +745,7 @@ typedef struct
 #define VID_QSIZE_NODE_POLLER       ((DWORD)291)
 #define VID_QSIZE_ROUTE_POLLER      ((DWORD)292)
 #define VID_QSIZE_STATUS_POLLER     ((DWORD)293)
+#define VID_SYNTHETIC_MASK          ((DWORD)294)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

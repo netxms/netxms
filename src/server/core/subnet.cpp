@@ -32,6 +32,7 @@ Subnet::Subnet()
 {
    m_dwIpNetMask = 0;
    m_dwZoneGUID = 0;
+	m_bSyntheticMask = FALSE;
 }
 
 
@@ -39,7 +40,7 @@ Subnet::Subnet()
 // Subnet class constructor
 //
 
-Subnet::Subnet(DWORD dwAddr, DWORD dwNetMask, DWORD dwZone)
+Subnet::Subnet(DWORD dwAddr, DWORD dwNetMask, DWORD dwZone, BOOL bSyntheticMask)
 {
    char szBuffer[32];
 
@@ -47,6 +48,7 @@ Subnet::Subnet(DWORD dwAddr, DWORD dwNetMask, DWORD dwZone)
    m_dwIpNetMask = dwNetMask;
    sprintf(m_szName, "%s/%d", IpToStr(dwAddr, szBuffer), BitsInMask(dwNetMask));
    m_dwZoneGUID = dwZone;
+	m_bSyntheticMask = bSyntheticMask;
 }
 
 
@@ -73,7 +75,7 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
    if (!LoadCommonProperties())
       return FALSE;
 
-   sprintf(szQuery, "SELECT ip_addr,ip_netmask,zone_guid FROM subnets WHERE id=%d", dwId);
+   sprintf(szQuery, "SELECT ip_addr,ip_netmask,zone_guid,synthetic_mask FROM subnets WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -87,6 +89,7 @@ BOOL Subnet::CreateFromDB(DWORD dwId)
    m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 0);
    m_dwIpNetMask = DBGetFieldIPAddr(hResult, 0, 1);
    m_dwZoneGUID = DBGetFieldULong(hResult, 0, 2);
+   m_bSyntheticMask = DBGetFieldLong(hResult, 0, 3);
 
    DBFreeResult(hResult);
 
@@ -125,15 +128,16 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
 
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO subnets (id,ip_addr,ip_netmask,zone_guid) "
-                       "VALUES (%d,'%s','%s',%d)",
+      sprintf(szQuery, "INSERT INTO subnets (id,ip_addr,ip_netmask,zone_guid,synthetic_mask) "
+                       "VALUES (%d,'%s','%s',%d,%d)",
               m_dwId, IpToStr(m_dwIpAddr, szIpAddr),
-              IpToStr(m_dwIpNetMask, szNetMask), m_dwZoneGUID);
+              IpToStr(m_dwIpNetMask, szNetMask), m_dwZoneGUID, m_bSyntheticMask);
    else
       sprintf(szQuery, "UPDATE subnets SET ip_addr='%s',"
-                       "ip_netmask='%s',zone_guid=%d WHERE id=%d",
+                       "ip_netmask='%s',zone_guid=%d,"
+							  "synthetic_mask=%d WHERE id=%d",
               IpToStr(m_dwIpAddr, szIpAddr),
-              IpToStr(m_dwIpNetMask, szNetMask), m_dwZoneGUID, m_dwId);
+              IpToStr(m_dwIpNetMask, szNetMask), m_dwZoneGUID, m_bSyntheticMask, m_dwId);
    DBQuery(hdb, szQuery);
 
    // Update node to subnet mapping
@@ -188,4 +192,5 @@ void Subnet::CreateMessage(CSCPMessage *pMsg)
    NetObj::CreateMessage(pMsg);
    pMsg->SetVariable(VID_IP_NETMASK, m_dwIpNetMask);
    pMsg->SetVariable(VID_ZONE_GUID, m_dwZoneGUID);
+   pMsg->SetVariable(VID_SYNTHETIC_MASK, (WORD)m_bSyntheticMask);
 }

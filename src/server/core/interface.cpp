@@ -34,6 +34,7 @@ Interface::Interface()
    m_dwIfIndex = 0;
    m_dwIfType = IFTYPE_OTHER;
    m_qwLastDownEventId = 0;
+	m_bSyntheticMask = FALSE;
 }
 
 
@@ -41,7 +42,7 @@ Interface::Interface()
 // Constructor for "fake" interface object
 //
 
-Interface::Interface(DWORD dwAddr, DWORD dwNetMask)
+Interface::Interface(DWORD dwAddr, DWORD dwNetMask, BOOL bSyntheticMask)
           : NetObj()
 {
    strcpy(m_szName, "lan0");
@@ -51,6 +52,7 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask)
    m_dwIfType = IFTYPE_OTHER;
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
    m_qwLastDownEventId = 0;
+	m_bSyntheticMask = bSyntheticMask;
    m_bIsHidden = TRUE;
 }
 
@@ -69,6 +71,7 @@ Interface::Interface(char *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwNetMask,
    m_dwIpNetMask = dwNetMask;
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
    m_qwLastDownEventId = 0;
+	m_bSyntheticMask = FALSE;
    m_bIsHidden = TRUE;
 }
 
@@ -100,7 +103,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
       return FALSE;
 
    _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask,if_type,if_index,node_id,"
-                               "mac_addr FROM interfaces WHERE id=%d"), dwId);
+                               "mac_addr,synthetic_mask FROM interfaces WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -113,6 +116,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
       m_dwIfIndex = DBGetFieldULong(hResult, 0, 3);
       dwNodeId = DBGetFieldULong(hResult, 0, 4);
       StrToBin(DBGetField(hResult, 0, 5, szBuffer, MAX_DB_STRING), m_bMacAddr, MAC_ADDR_LENGTH);
+      m_bSyntheticMask = DBGetFieldLong(hResult, 0, 6);
 
       // Link interface to node
       if (!m_bIsDeleted)
@@ -186,18 +190,18 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
    BinToStr(m_bMacAddr, MAC_ADDR_LENGTH, szMacStr);
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO interfaces (id,ip_addr,"
-                       "ip_netmask,node_id,if_type,if_index,mac_addr) "
-                       "VALUES (%d,'%s','%s',%d,%d,%d,'%s')",
+                       "ip_netmask,node_id,if_type,if_index,mac_addr,synthetic_mask) "
+                       "VALUES (%d,'%s','%s',%d,%d,%d,'%s',%d)",
               m_dwId, IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), dwNodeId,
-              m_dwIfType, m_dwIfIndex, szMacStr);
+              m_dwIfType, m_dwIfIndex, szMacStr, m_bSyntheticMask);
    else
       sprintf(szQuery, "UPDATE interfaces SET ip_addr='%s',ip_netmask='%s',"
                        "node_id=%d,if_type=%d,if_index=%d,"
-                       "mac_addr='%s' WHERE id=%d",
+                       "mac_addr='%s',synthetic_mask=%d WHERE id=%d",
               IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), dwNodeId,
-              m_dwIfType, m_dwIfIndex, szMacStr, m_dwId);
+              m_dwIfType, m_dwIfIndex, szMacStr, m_bSyntheticMask, m_dwId);
    DBQuery(hdb, szQuery);
 
    // Save access list
@@ -344,6 +348,7 @@ void Interface::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_IF_TYPE, m_dwIfType);
    pMsg->SetVariable(VID_IP_NETMASK, m_dwIpNetMask);
    pMsg->SetVariable(VID_MAC_ADDR, m_bMacAddr, MAC_ADDR_LENGTH);
+   pMsg->SetVariable(VID_SYNTHETIC_MASK, (WORD)m_bSyntheticMask);
 }
 
 

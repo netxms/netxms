@@ -489,6 +489,7 @@ src/client/console/nxmc/rc/icons/small/Makefile.am -text
 src/client/console/nxmc/rc/icons/small/acknowledged.xpm -text
 src/client/console/nxmc/rc/icons/small/cluster.xpm -text
 src/client/console/nxmc/rc/icons/small/condition.xpm -text
+src/client/console/nxmc/rc/icons/small/config.png -text
 src/client/console/nxmc/rc/icons/small/container.xpm -text
 src/client/console/nxmc/rc/icons/small/critical.xpm -text
 src/client/console/nxmc/rc/icons/small/disabled.xpm -text

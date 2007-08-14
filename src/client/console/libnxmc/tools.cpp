@@ -163,3 +163,27 @@ void LIBNXMC_EXPORTABLE NXMCShowClientError(DWORD rcc, const TCHAR *msgTemplate)
 	wxLogMessage(msg);
 	wxMessageBox(msg, _T("NetXMS Console - Error"), wxOK | wxICON_ERROR, g_appMainFrame);
 }
+
+
+//
+// Adjust list view column
+//
+
+void LIBNXMC_EXPORTABLE NXMCAdjustListColumn(wxListCtrl *listCtrl, int col)
+{
+	int i, count, w, h, width;
+	wxListItem item;
+
+	count = listCtrl->GetItemCount();
+	for(i = 0, width = 0; i < count; i++)
+	{
+		item.SetId(i);
+		item.SetColumn(col);
+		item.SetMask(wxLIST_MASK_TEXT);
+		listCtrl->GetItem(item);
+		listCtrl->GetTextExtent(item.GetText(), &w, &h);
+		if (width < w)
+			width = w;
+	}
+	listCtrl->SetColumnWidth(col, width + 20);
+}

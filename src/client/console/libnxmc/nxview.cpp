@@ -32,6 +32,32 @@
 
 
 //
+// Implementation of RqData class
+//
+
+RqData::RqData(int id, wxEvtHandler *owner, void *func, int numArgs, const TCHAR *errMsg, DWORD flags)
+{ 
+	m_id = id;
+	m_owner = owner;
+	m_func = (DWORD (*)(...))func;
+	m_numArgs = numArgs;
+	m_errMsg = (errMsg != NULL) ? _tcsdup(errMsg) : NULL;
+	m_flags = flags;
+}
+
+RqData::~RqData()
+{
+	int i;
+	DWORD m;
+
+	safe_free(m_errMsg);
+	for(i = 0, m = 1; i < 9; i++, m <<= 1)
+		if (m_flags & m)
+			safe_free((void *)m_arg[i]);
+}
+
+
+//
 // Event table
 //
 
@@ -157,30 +183,30 @@ int nxView::DoRequest(RqData *data)
 	return data->m_id;
 }
 
-int nxView::DoRequestArg1(void *func, wxUIntPtr arg1, const TCHAR *errMsg)
+int nxView::DoRequestArg1(void *func, wxUIntPtr arg1, const TCHAR *errMsg, DWORD flags)
 {
    RqData *data;
 
-	data = new RqData(m_freeRqId++, this, func, 1, errMsg);
+	data = new RqData(m_freeRqId++, this, func, 1, errMsg, flags);
    data->m_arg[0] = arg1;
    return DoRequest(data);
 }
 
-int nxView::DoRequestArg2(void *func, wxUIntPtr arg1, wxUIntPtr arg2, const TCHAR *errMsg)
+int nxView::DoRequestArg2(void *func, wxUIntPtr arg1, wxUIntPtr arg2, const TCHAR *errMsg, DWORD flags)
 {
    RqData *data;
 
-	data = new RqData(m_freeRqId++, this, func, 2, errMsg);
+	data = new RqData(m_freeRqId++, this, func, 2, errMsg, flags);
    data->m_arg[0] = arg1;
    data->m_arg[1] = arg2;
    return DoRequest(data);
 }
 
-int nxView::DoRequestArg3(void *func, wxUIntPtr arg1, wxUIntPtr arg2, wxUIntPtr arg3, const TCHAR *errMsg)
+int nxView::DoRequestArg3(void *func, wxUIntPtr arg1, wxUIntPtr arg2, wxUIntPtr arg3, const TCHAR *errMsg, DWORD flags)
 {
    RqData *data;
 
-	data = new RqData(m_freeRqId++, this, func, 3, errMsg);
+	data = new RqData(m_freeRqId++, this, func, 3, errMsg, flags);
    data->m_arg[0] = arg1;
    data->m_arg[1] = arg2;
    data->m_arg[2] = arg3;

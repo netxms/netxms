@@ -73,7 +73,6 @@ private:
 
 	void InsertItem(const TCHAR *name, const TCHAR *value);
 	void InsertItem(const TCHAR *name, DWORD value);
-	void AdjustAttrList();
 
 public:
 	nxObjectOverview(wxWindow *parent, NXC_OBJECT *object);

@@ -176,7 +176,8 @@ void nxObjectOverview::SetObject(NXC_OBJECT *object)
 
 	m_comments->SetValue(CHECK_NULL_EX(object->pszComments));
 
-	AdjustAttrList();
+	NXMCAdjustListColumn(m_attrList, 0);
+	NXMCAdjustListColumn(m_attrList, 1);
 }
 
 
@@ -208,30 +209,6 @@ void nxObjectOverview::InsertItem(const TCHAR *name, DWORD value)
 void nxObjectOverview::OnSize(wxSizeEvent &event)
 {
 	Layout();
-}
-
-
-//
-// Adjust attribute list
-//
-
-void nxObjectOverview::AdjustAttrList()
-{
-	int i, count, w, h, width;
-	wxListItem item;
-
-	count = m_attrList->GetItemCount();
-	for(i = 0, width = 0; i < count; i++)
-	{
-		item.SetId(i);
-		item.SetColumn(1);
-		item.SetMask(wxLIST_MASK_TEXT);
-		m_attrList->GetItem(item);
-		m_attrList->GetTextExtent(item.GetText(), &w, &h);
-		if (width < w)
-			width = w;
-	}
-	m_attrList->SetColumnWidth(1, width + 20);
 }
 
 

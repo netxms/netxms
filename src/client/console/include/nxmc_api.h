@@ -373,6 +373,7 @@ TCHAR LIBNXMC_EXPORTABLE *NXMCFormatTimeStamp(time_t timeStamp, TCHAR *buffer, i
 
 void LIBNXMC_EXPORTABLE NXMCSaveListCtrlColumns(wxConfigBase *cfg, wxListCtrl &wndListCtrl, const TCHAR *prefix);
 void LIBNXMC_EXPORTABLE NXMCLoadListCtrlColumns(wxConfigBase *cfg, wxListCtrl &wndListCtrl, const TCHAR *prefix);
+void LIBNXMC_EXPORTABLE NXMCAdjustListColumn(wxListCtrl *listCtrl, int col);
 
 void LIBNXMC_EXPORTABLE NXMCSetMainEventHandler(wxEvtHandler *evtHandler);
 void LIBNXMC_EXPORTABLE NXMCEvtConnect(wxEventType eventType, wxObjectEventFunction func, wxEvtHandler *sink);
