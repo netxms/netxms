@@ -86,7 +86,7 @@ nxControlPanel::~nxControlPanel()
 // Add new item to list
 //
 
-void nxControlPanel::AddItem(int cmd, const wxString &text, wxIcon &icon, wxImageList *imglist)
+void nxControlPanel::AddItem(int cmd, const wxString &text, const wxIcon &icon, wxImageList *imglist)
 {
 	long item;
 	

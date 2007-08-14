@@ -100,7 +100,7 @@ void nxServerConfigEditor::OnRefreshView(wxCommandEvent &event)
 
 	m_listView->DeleteAllItems();
 	safe_free(m_varList);
-	DoRequestArg3(NXCGetServerVariables, CAST_FROM_POINTER(g_hSession, wxUIntPtr),
+	DoRequestArg3((void *)NXCGetServerVariables, CAST_FROM_POINTER(g_hSession, wxUIntPtr),
 	              CAST_FROM_POINTER(&m_varList, wxUIntPtr),
 	              CAST_FROM_POINTER(&m_numVars, wxUIntPtr),
 	              _T("Error loading server variables: %s"));
@@ -197,7 +197,7 @@ void nxServerConfigEditor::OnVarEdit(wxCommandEvent &event)
 		dlg.m_value = info.GetText();
 		if (dlg.ShowModal() == wxID_OK)
 		{
-         DoRequestArg3(NXCSetServerVariable, (wxUIntPtr)g_hSession,
+         DoRequestArg3((void *)NXCSetServerVariable, (wxUIntPtr)g_hSession,
                        (wxUIntPtr)_tcsdup(dlg.m_name.c_str()),
 							  (wxUIntPtr)_tcsdup(dlg.m_value.c_str()),
 							  _T("Cannot update variable: %s"),
