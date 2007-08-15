@@ -850,6 +850,8 @@ public:
    DWORD IpNetMask(void) { return m_dwIpNetMask; }
    DWORD ZoneGUID(void) { return m_dwZoneGUID; }
 	BOOL IsSyntheticMask(void) { return m_bSyntheticMask; }
+
+	void SetCorrectMask(DWORD dwMask);
 };
 
 

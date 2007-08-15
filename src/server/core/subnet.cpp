@@ -194,3 +194,12 @@ void Subnet::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_ZONE_GUID, m_dwZoneGUID);
    pMsg->SetVariable(VID_SYNTHETIC_MASK, (WORD)m_bSyntheticMask);
 }
+
+
+//
+// Set correct netmask for subnet
+//
+
+void Subnet::SetCorrectMask(DWORD dwMask)
+{
+}

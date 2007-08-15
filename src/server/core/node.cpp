@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.182 2007-08-14 05:46:28 victor Exp $ */
+/* $Id: node.cpp,v 1.183 2007-08-15 07:11:02 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -576,10 +576,13 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
       pSubnet->AddNode(this);
       
       // Check if subnet mask is correct on interface
-      if (pSubnet->IpNetMask() != dwNetMask)
+      if ((pSubnet->IpNetMask() != dwNetMask) &&
+			 (!pSubnet->IsSyntheticMask()))
+		{
          PostEvent(EVENT_INCORRECT_NETMASK, m_dwId, "idsaa", pInterface->Id(),
                    pInterface->IfIndex(), pInterface->Name(),
                    pInterface->IpNetMask(), pSubnet->IpNetMask());
+		}
    }
 }
 
@@ -2837,4 +2840,46 @@ nxObjList *Node::BuildL2Topology(DWORD *pdwStatus)
 
 void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 {
+	Subnet *pSubnet;
+	Interface *pInterface;
+	int i;
+
+	for(i = 0; i < pIfList->iNumEntries; i++)
+	{
+		if (pIfList->pInterfaces[i].dwIpAddr != 0)
+		{
+			pInterface = FindInterface(pIfList->pInterfaces[i].dwIndex, pIfList->pInterfaces[i].dwIpAddr);
+			if (pInterface == NULL)
+			{
+				WriteLog(MSG_INTERNAL_ERROR, EVENTLOG_WARNING_TYPE, "s", _T("Cannot find interface object in Node::CheckSubnetBinding()"));
+				break;	// Something goes really wrong
+			}
+
+			pSubnet = FindSubnetForNode(pIfList->pInterfaces[i].dwIpAddr);
+			if (pSubnet != NULL)
+			{
+				if (pSubnet->IsSyntheticMask())
+				{
+					pSubnet->SetCorrectMask(pInterface->IpNetMask());
+				}
+			}
+			else
+			{
+				// Create subnet
+				pSubnet = new Subnet(pIfList->pInterfaces[i].dwIpAddr & pIfList->pInterfaces[i].dwIpNetMask,
+				                     pIfList->pInterfaces[i].dwIpNetMask, m_dwZoneGUID, FALSE);
+				NetObjInsert(pSubnet, TRUE);
+				g_pEntireNet->AddSubnet(pSubnet);
+				pSubnet->AddNode(this);
+			}
+
+			// Check if subnet mask is correct on interface
+			if (pSubnet->IpNetMask() != pIfList->pInterfaces[i].dwIpNetMask)
+			{
+				PostEvent(EVENT_INCORRECT_NETMASK, m_dwId, "idsaa", pInterface->Id(),
+							 pInterface->IfIndex(), pInterface->Name(),
+							 pInterface->IpNetMask(), pSubnet->IpNetMask());
+			}
+		}
+	}
 }

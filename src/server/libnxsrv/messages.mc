@@ -644,4 +644,10 @@ Language=English
 Successfully loaded %1 trusted CA certificates
 .
 
+MessageId=
+SymbolicName=MSG_INTERNAL_ERROR
+Language=English
+Internal error: %1
+.
+
 ;#endif
