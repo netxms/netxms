@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.183 2007-08-15 07:11:02 victor Exp $ */
+/* $Id: node.cpp,v 1.184 2007-08-16 16:41:33 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -2842,8 +2842,10 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 {
 	Subnet *pSubnet;
 	Interface *pInterface;
-	int i;
+	NetObj **ppUnlinkList;
+	int i, count;
 
+	// Check if we have subnet bindings for all interfaces
 	for(i = 0; i < pIfList->iNumEntries; i++)
 	{
 		if (pIfList->pInterfaces[i].dwIpAddr != 0)
@@ -2860,7 +2862,9 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 			{
 				if (pSubnet->IsSyntheticMask())
 				{
-					pSubnet->SetCorrectMask(pInterface->IpNetMask());
+					DbgPrintf(AF_DEBUG_DISCOVERY, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
+					          pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
+					pSubnet->SetCorrectMask(pInterface->IpAddr(), pInterface->IpNetMask());
 				}
 			}
 			else
@@ -2871,6 +2875,8 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 				NetObjInsert(pSubnet, TRUE);
 				g_pEntireNet->AddSubnet(pSubnet);
 				pSubnet->AddNode(this);
+				DbgPrintf(AF_DEBUG_DISCOVERY, _T("Node::CheckSubnetBinding(): Creating new subnet %s [%d] for node %s [%d]"),
+				          pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
 			}
 
 			// Check if subnet mask is correct on interface
@@ -2882,4 +2888,30 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 			}
 		}
 	}
+	
+	// Check if we have incorrect subnets as parents
+	LockParentList(FALSE);
+	ppUnlinkList = (NetObj **)malloc(sizeof(NetObj *) * m_dwParentCount);
+	for(i = 0, count = 0; i < (int)m_dwParentCount; i++)
+	{
+		if (m_pParentList[i]->Type() == OBJECT_SUBNET)
+		{
+			pSubnet = (Subnet *)m_pParentList[i];
+			if (pSubnet->IpAddr() != (m_dwIpAddr & pSubnet->IpNetMask()))
+			{
+				DbgPrintf(AF_DEBUG_DISCOVERY, _T("Node::CheckSubnetBinding(): Subnet %s [%d] is incorrect for node %s [%d]"),
+				          pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
+				ppUnlinkList[count++] = pSubnet;	
+			}
+		}
+	}
+	UnlockParentList();
+	
+	// Unlink for incorrect subnet objects
+	for(i = 0; i < count; i++)
+	{
+		ppUnlinkList[i]->DeleteChild(this);
+		DeleteParent(ppUnlinkList[i]);
+	}
+	safe_free(ppUnlinkList);
 }

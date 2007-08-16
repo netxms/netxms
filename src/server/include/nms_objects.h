@@ -851,7 +851,7 @@ public:
    DWORD ZoneGUID(void) { return m_dwZoneGUID; }
 	BOOL IsSyntheticMask(void) { return m_bSyntheticMask; }
 
-	void SetCorrectMask(DWORD dwMask);
+	void SetCorrectMask(DWORD dwAddr, DWORD dwMask);
 };
 
 

@@ -46,7 +46,7 @@ Subnet::Subnet(DWORD dwAddr, DWORD dwNetMask, DWORD dwZone, BOOL bSyntheticMask)
 
    m_dwIpAddr = dwAddr;
    m_dwIpNetMask = dwNetMask;
-   sprintf(m_szName, "%s/%d", IpToStr(dwAddr, szBuffer), BitsInMask(dwNetMask));
+   _stprintf(m_szName, _T("%s/%d"), IpToStr(dwAddr, szBuffer), BitsInMask(dwNetMask));
    m_dwZoneGUID = dwZone;
 	m_bSyntheticMask = bSyntheticMask;
 }
@@ -200,6 +200,19 @@ void Subnet::CreateMessage(CSCPMessage *pMsg)
 // Set correct netmask for subnet
 //
 
-void Subnet::SetCorrectMask(DWORD dwMask)
+void Subnet::SetCorrectMask(DWORD dwAddr, DWORD dwMask)
 {
+	TCHAR szName[128], szBuffer[32];
+	
+	// Check if name is default
+	_stprintf(szName, _T("%s/%d"), IpToStr(m_dwIpAddr, szBuffer), BitsInMask(m_dwIpNetMask));
+	if (!_tcsicmp(szName, m_szName))
+	{
+		// Change name
+		_stprintf(m_szName, _T("%s/%d"), IpToStr(dwAddr, szBuffer), BitsInMask(dwMask));
+	}
+	
+	m_dwIpAddr = dwAddr;
+	m_dwIpNetMask = dwMask;
+	m_bSyntheticMask = FALSE;
 }
