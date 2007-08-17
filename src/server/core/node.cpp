@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.184 2007-08-16 16:41:33 victor Exp $ */
+/* $Id: node.cpp,v 1.185 2007-08-17 06:15:09 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -2843,7 +2843,7 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 	Subnet *pSubnet;
 	Interface *pInterface;
 	NetObj **ppUnlinkList;
-	int i, count;
+	int i, j, count;
 
 	// Check if we have subnet bindings for all interfaces
 	for(i = 0; i < pIfList->iNumEntries; i++)
@@ -2864,7 +2864,7 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 				{
 					DbgPrintf(AF_DEBUG_DISCOVERY, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
 					          pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
-					pSubnet->SetCorrectMask(pInterface->IpAddr(), pInterface->IpNetMask());
+					pSubnet->SetCorrectMask(pInterface->IpAddr() & pInterface->IpNetMask(), pInterface->IpNetMask());
 				}
 			}
 			else
@@ -2891,20 +2891,32 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 	
 	// Check if we have incorrect subnets as parents
 	LockParentList(FALSE);
+	LockChildList(FALSE);
 	ppUnlinkList = (NetObj **)malloc(sizeof(NetObj *) * m_dwParentCount);
 	for(i = 0, count = 0; i < (int)m_dwParentCount; i++)
 	{
 		if (m_pParentList[i]->Type() == OBJECT_SUBNET)
 		{
 			pSubnet = (Subnet *)m_pParentList[i];
-			if (pSubnet->IpAddr() != (m_dwIpAddr & pSubnet->IpNetMask()))
+			for(j = 0; j < (int)m_dwChildCount; j++)
+			{
+				if (m_pChildList[j]->Type() == OBJECT_INTERFACE)
+				{
+					if (pSubnet->IpAddr() == (m_pChildList[j]->IpAddr() & pSubnet->IpNetMask()))
+					{
+						break;
+					}
+				}
+			}
+			if (j == (int)m_dwChildCount)
 			{
 				DbgPrintf(AF_DEBUG_DISCOVERY, _T("Node::CheckSubnetBinding(): Subnet %s [%d] is incorrect for node %s [%d]"),
-				          pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
+							 pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
 				ppUnlinkList[count++] = pSubnet;	
 			}
 		}
 	}
+	UnlockChildList();
 	UnlockParentList();
 	
 	// Unlink for incorrect subnet objects

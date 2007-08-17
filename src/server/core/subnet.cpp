@@ -203,6 +203,8 @@ void Subnet::CreateMessage(CSCPMessage *pMsg)
 void Subnet::SetCorrectMask(DWORD dwAddr, DWORD dwMask)
 {
 	TCHAR szName[128], szBuffer[32];
+
+	LockData();
 	
 	// Check if name is default
 	_stprintf(szName, _T("%s/%d"), IpToStr(m_dwIpAddr, szBuffer), BitsInMask(m_dwIpNetMask));
@@ -215,4 +217,7 @@ void Subnet::SetCorrectMask(DWORD dwAddr, DWORD dwMask)
 	m_dwIpAddr = dwAddr;
 	m_dwIpNetMask = dwMask;
 	m_bSyntheticMask = FALSE;
+
+	Modify();
+	UnlockData();
 }
