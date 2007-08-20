@@ -10,6 +10,7 @@
 
 EXTRA_DIST = \
 	create_apkg.sh \
+	create_bin_apkg.sh \
 	create_ssa_list.sh \
 	mc.pl \
 	nwmkimp.pl \
