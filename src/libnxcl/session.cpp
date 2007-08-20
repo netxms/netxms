@@ -421,6 +421,7 @@ void NXCL_Session::ProcessDCI(CSCPMessage *pMsg)
                m_pItemList->pItems[i].pThresholdList[j].dwArg2 = ntohl(dct.dwArg2);
                m_pItemList->pItems[i].pThresholdList[j].wFunction = ntohs(dct.wFunction);
                m_pItemList->pItems[i].pThresholdList[j].wOperation = ntohs(dct.wOperation);
+               m_pItemList->pItems[i].pThresholdList[j].nRepeatInterval = ntohl(dct.nRepeatInterval);
                switch(m_pItemList->pItems[i].iDataType)
                {
                   case DCI_DT_INT:

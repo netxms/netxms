@@ -1,4 +1,13 @@
 *************
+* 67 ==> 68 *
+*************
+
+- New configuration parameter added: ThresholdRepeatInterval
+- New column added to table "thresholds":
+	ALTER TABLE thresholds ADD repeat_interval integer not null
+
+
+*************
 * 66 ==> 67 *
 *************
 

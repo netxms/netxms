@@ -679,6 +679,7 @@ CREATE TABLE thresholds
 	event_code integer not null,
 	rearm_event_code integer not null,
 	current_state integer not null,
+	repeat_interval integer not null,
 	PRIMARY KEY(threshold_id)
 ) TABLE_TYPE;
 

@@ -1,4 +1,4 @@
-/* $Id: dcithreshold.cpp,v 1.32 2007-04-06 10:44:13 victor Exp $ */
+/* $Id: dcithreshold.cpp,v 1.33 2007-08-20 05:46:20 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -40,6 +40,8 @@ Threshold::Threshold(DCItem *pRelatedItem)
    m_iParam1 = 0;
    m_iParam2 = 0;
    m_bIsReached = FALSE;
+	m_nRepeatInterval = -1;
+	m_tmLastEventTimestamp = 0;
 }
 
 
@@ -59,6 +61,8 @@ Threshold::Threshold()
    m_iParam1 = 0;
    m_iParam2 = 0;
    m_bIsReached = FALSE;
+	m_nRepeatInterval = -1;
+	m_tmLastEventTimestamp = 0;
 }
 
 
@@ -79,6 +83,8 @@ Threshold::Threshold(Threshold *pSrc)
    m_iParam1 = pSrc->m_iParam1;
    m_iParam2 = pSrc->m_iParam2;
    m_bIsReached = FALSE;
+	m_nRepeatInterval = pSrc->m_nRepeatInterval;
+	m_tmLastEventTimestamp = 0;
 }
 
 
@@ -87,7 +93,7 @@ Threshold::Threshold(Threshold *pSrc)
 // This constructor assumes that SELECT query look as following:
 // SELECT threshold_id,fire_value,rearm_value,check_function,check_operation,
 //        parameter_1,parameter_2,event_code,current_state,
-//        rearm_event_code FROM thresholds
+//        rearm_event_code,repeat_interval FROM thresholds
 //
 
 Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
@@ -107,6 +113,8 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
    m_iParam1 = DBGetFieldLong(hResult, iRow, 5);
    m_iParam2 = DBGetFieldLong(hResult, iRow, 6);
    m_bIsReached = DBGetFieldLong(hResult, iRow, 8);
+	m_nRepeatInterval = DBGetFieldLong(hResult, iRow, 9);
+	m_tmLastEventTimestamp = 0;
 }
 
 
@@ -154,18 +162,19 @@ BOOL Threshold::SaveToDB(DB_HANDLE hdb, DWORD dwIndex)
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO thresholds (threshold_id,item_id,fire_value,rearm_value,"
                        "check_function,check_operation,parameter_1,parameter_2,event_code,"
-                       "sequence_number,current_state,rearm_event_code) VALUES "
-                       "(%d,%d,'%s','#00',%d,%d,%d,%d,%d,%d,%d,%d)", 
+                       "sequence_number,current_state,rearm_event_code,repeat_interval) VALUES "
+                       "(%d,%d,'%s','#00',%d,%d,%d,%d,%d,%d,%d,%d,%d)", 
               m_dwId, m_dwItemId, pszEscValue, m_iFunction, m_iOperation, m_iParam1,
-              m_iParam2, m_dwEventCode, dwIndex, m_bIsReached, m_dwRearmEventCode);
+              m_iParam2, m_dwEventCode, dwIndex, m_bIsReached, m_dwRearmEventCode,
+				  m_nRepeatInterval);
    else
       sprintf(szQuery, "UPDATE thresholds SET item_id=%d,fire_value='%s',check_function=%d,"
                        "check_operation=%d,parameter_1=%d,parameter_2=%d,event_code=%d,"
                        "sequence_number=%d,current_state=%d,"
-                       "rearm_event_code=%d WHERE threshold_id=%d",
+                       "rearm_event_code=%d,repeat_interval=%d WHERE threshold_id=%d",
               m_dwItemId, pszEscValue, m_iFunction, m_iOperation, m_iParam1,
               m_iParam2, m_dwEventCode, dwIndex, m_bIsReached,
-              m_dwRearmEventCode, m_dwId);
+              m_dwRearmEventCode, m_nRepeatInterval, m_dwId);
    free(pszEscValue);
    return DBQuery(hdb, szQuery);
 }
@@ -421,6 +430,7 @@ void Threshold::CreateMessage(DCI_THRESHOLD *pData)
    pData->wOperation = htons((WORD)m_iOperation);
    pData->dwArg1 = htonl(m_iParam1);
    pData->dwArg2 = htonl(m_iParam2);
+	pData->nRepeatInterval = htonl(m_nRepeatInterval);
    switch(m_iDataType)
    {
       case DCI_DT_INT:
@@ -469,6 +479,7 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
    m_iOperation = (BYTE)ntohs(pData->wOperation);
    m_iParam1 = ntohl(pData->dwArg1);
    m_iParam2 = ntohl(pData->dwArg2);
+	m_nRepeatInterval = ntohl(pData->nRepeatInterval);
    switch(m_iDataType)
    {
       case DCI_DT_INT:
@@ -666,7 +677,8 @@ BOOL Threshold::Compare(Threshold *pThr)
           (pThr->m_iFunction == m_iFunction) &&
           (pThr->m_iOperation == m_iOperation) &&
           (pThr->m_iParam1 == m_iParam1) &&
-          (pThr->m_iParam2 == m_iParam2);
+          (pThr->m_iParam2 == m_iParam2) &&
+			 (pThr->m_nRepeatInterval == m_nRepeatInterval);
 }
 
 
@@ -690,9 +702,11 @@ void Threshold::CreateNXMPRecord(String &str)
                           _T("\t\t\t\t\t\tDEACTIVATION_EVENT=\"%s\";\n")
                           _T("\t\t\t\t\t\tPARAM1=%d;\n")
                           _T("\t\t\t\t\t\tPARAM2=%d;\n")
+                          _T("\t\t\t\t\t\tREPEAT_INTERVAL=%d;\n")
                           _T("\t\t\t\t\t}\n"),
                           m_iFunction, m_iOperation, (TCHAR *)strValue,
-                          szEvent1, szEvent2, m_iParam1, m_iParam2);
+                          szEvent1, szEvent2, m_iParam1, m_iParam2,
+								  m_nRepeatInterval);
 }
 
 

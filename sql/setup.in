@@ -162,6 +162,8 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('AuditLogRetentionTime','90',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('AuditFlags','15',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('ThresholdRepeatInterval','0',1,1);
 
 
 /*

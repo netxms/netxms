@@ -1,4 +1,4 @@
-/* $Id: dcitem.cpp,v 1.77 2007-04-06 10:44:13 victor Exp $ */
+/* $Id: dcitem.cpp,v 1.78 2007-08-20 05:46:20 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -310,7 +310,7 @@ BOOL DCItem::LoadThresholdsFromDB(void)
 
    sprintf(szQuery, "SELECT threshold_id,fire_value,rearm_value,check_function,"
                     "check_operation,parameter_1,parameter_2,event_code,current_state,"
-                    "rearm_event_code FROM thresholds WHERE item_id=%d "
+                    "rearm_event_code,repeat_interval FROM thresholds WHERE item_id=%d "
                     "ORDER BY sequence_number", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
@@ -468,8 +468,9 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
 
 void DCItem::CheckThresholds(ItemValue &value)
 {
-   DWORD i, iResult;
+   DWORD i, iResult, dwInterval;
    ItemValue checkValue;
+	time_t now = time(NULL);
 
    for(i = 0; i < m_dwNumThresholds; i++)
    {
@@ -477,9 +478,10 @@ void DCItem::CheckThresholds(ItemValue &value)
       switch(iResult)
       {
          case THRESHOLD_REACHED:
-            PostEvent(m_ppThresholdList[i]->EventCode(), m_pNode->Id(), "ssssis", m_szName,
+            PostEvent(m_ppThresholdList[i]->EventCode(), m_pNode->Id(), "ssssisd", m_szName,
                       m_szDescription, m_ppThresholdList[i]->StringValue(), 
-                      (const char *)checkValue, m_dwId, m_szInstance);
+                      (const char *)checkValue, m_dwId, m_szInstance, 0);
+				m_ppThresholdList[i]->SetLastEventTimestamp();
             if (!m_iProcessAllThresholds)
                i = m_dwNumThresholds;  // Stop processing
             break;
@@ -488,9 +490,26 @@ void DCItem::CheckThresholds(ItemValue &value)
                       m_szDescription, m_dwId, m_szInstance);
             break;
          case NO_ACTION:
-            if ((m_ppThresholdList[i]->IsReached()) &&
-                (!m_iProcessAllThresholds))
-               i = m_dwNumThresholds;  // Threshold condition still true, stop processing
+            if (m_ppThresholdList[i]->IsReached())
+				{
+					// Check if we need to re-sent threshold violation event
+					if (m_ppThresholdList[i]->RepeatInterval() == -1)
+						dwInterval = g_dwThresholdRepeatInterval;
+					else
+						dwInterval = (DWORD)m_ppThresholdList[i]->RepeatInterval();
+					if ((dwInterval != 0) && (m_ppThresholdList[i]->GetLastEventTimestamp() + (time_t)dwInterval < now))
+					{
+						PostEvent(m_ppThresholdList[i]->EventCode(), m_pNode->Id(), "ssssisd", m_szName,
+									 m_szDescription, m_ppThresholdList[i]->StringValue(), 
+									 (const char *)checkValue, m_dwId, m_szInstance, 1);
+						m_ppThresholdList[i]->SetLastEventTimestamp();
+					}
+
+               if (!m_iProcessAllThresholds)
+					{
+						i = m_dwNumThresholds;  // Threshold condition still true, stop processing
+					}
+				}
             break;
       }
    }

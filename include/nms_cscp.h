@@ -182,6 +182,7 @@ typedef struct
    DWORD dwRearmEvent;
    DWORD dwArg1;
    DWORD dwArg2;
+	LONG nRepeatInterval;
    union
    {
       DWORD dwInt32;

@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.271 2007-07-16 17:02:47 victor Exp $ */
+/* $Id: nxclapi.h,v 1.272 2007-08-20 05:46:20 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -1148,6 +1148,7 @@ typedef struct
    WORD wOperation;
    DWORD dwArg1;
    DWORD dwArg2;
+	LONG nRepeatInterval;
    union
    {
       DWORD dwInt32;

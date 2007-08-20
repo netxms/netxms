@@ -171,6 +171,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
       dct.dwArg2 = htonl(pItem->pThresholdList[i].dwArg2);
       dct.wFunction = htons(pItem->pThresholdList[i].wFunction);
       dct.wOperation = htons(pItem->pThresholdList[i].wOperation);
+		dct.nRepeatInterval = htonl(pItem->pThresholdList[i].nRepeatInterval);
       switch(pItem->iDataType)
       {
          case DCI_DT_INT:

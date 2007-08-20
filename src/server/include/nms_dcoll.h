@@ -1,4 +1,4 @@
-/* $Id: nms_dcoll.h,v 1.31 2007-04-06 10:44:13 victor Exp $ */
+/* $Id: nms_dcoll.h,v 1.32 2007-08-20 05:46:20 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -106,6 +106,8 @@ private:
    int m_iParam1;             // Function's parameter #1
    int m_iParam2;             // Function's parameter #2
    BOOL m_bIsReached;
+	int m_nRepeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
+	time_t m_tmLastEventTimestamp;
 
    const ItemValue& Value(void) { return m_value; }
    void CalculateAverageValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
@@ -121,11 +123,15 @@ public:
 
    void BindToItem(DWORD dwItemId) { m_dwItemId = dwItemId; }
 
-   DWORD Id(void) { return m_dwId; }
-   DWORD EventCode(void) { return m_dwEventCode; }
-   DWORD RearmEventCode(void) { return m_dwRearmEventCode; }
-   const char *StringValue(void) { return m_value.String(); }
-   BOOL IsReached(void) { return m_bIsReached; }
+   DWORD Id() { return m_dwId; }
+   DWORD EventCode() { return m_dwEventCode; }
+   DWORD RearmEventCode() { return m_dwRearmEventCode; }
+   const char *StringValue() { return m_value.String(); }
+   BOOL IsReached() { return m_bIsReached; }
+	
+	int RepeatInterval() { return m_nRepeatInterval; }
+	time_t GetLastEventTimestamp() { return m_tmLastEventTimestamp; }
+	void SetLastEventTimestamp() { m_tmLastEventTimestamp = time(NULL); }
 
    BOOL SaveToDB(DB_HANDLE hdb, DWORD dwIndex);
    int Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue);

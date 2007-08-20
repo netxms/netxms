@@ -1,4 +1,4 @@
-/* $Id: netxms-version.h,v 1.126 2007-08-14 05:46:28 victor Exp $ */
+/* $Id: netxms-version.h,v 1.127 2007-08-20 05:46:20 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -40,7 +40,7 @@
 // Current client-server protocol version
 //
 
-#define CLIENT_PROTOCOL_VERSION     14
+#define CLIENT_PROTOCOL_VERSION     15
 
 
 #endif
