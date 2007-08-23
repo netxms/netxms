@@ -185,6 +185,21 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
    dlg.m_dwArg1 = pThreshold->dwArg1;
    dlg.m_dwEventId = pThreshold->dwEvent;
    dlg.m_dwRearmEventId = pThreshold->dwRearmEvent;
+	switch(pThreshold->nRepeatInterval)
+	{
+		case -1:
+			dlg.m_nRepeat = 0;
+			dlg.m_nSeconds = 3600;
+			break;
+		case 0:
+			dlg.m_nRepeat = 1;
+			dlg.m_nSeconds = 3600;
+			break;
+		default:
+			dlg.m_nRepeat = 2;
+			dlg.m_nSeconds = pThreshold->nRepeatInterval;
+			break;
+	}
    switch(g_nCurrentDCIDataType)
    {
       case DCI_DT_INT:
@@ -218,6 +233,18 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
       pThreshold->wOperation = (WORD)dlg.m_iOperation;
       pThreshold->dwEvent = dlg.m_dwEventId;
       pThreshold->dwRearmEvent = dlg.m_dwRearmEventId;
+		switch(dlg.m_nRepeat)
+		{
+			case 0:
+				pThreshold->nRepeatInterval = -1;
+				break;
+			case 1:
+				pThreshold->nRepeatInterval = 0;
+				break;
+			case 2:
+				pThreshold->nRepeatInterval = dlg.m_nSeconds;
+				break;
+		}
       switch(g_nCurrentDCIDataType)
       {
          case DCI_DT_INT:
@@ -259,6 +286,7 @@ void CDCIThresholdsPage::OnButtonAdd()
    dct.dwArg1 = 1;
    dct.dwEvent = EVENT_THRESHOLD_REACHED;
    dct.dwRearmEvent = EVENT_THRESHOLD_REARMED;
+	dct.nRepeatInterval = -1;
 
    // Call threshold configuration dialog
    if (EditThreshold(&dct))

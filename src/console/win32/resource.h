@@ -644,10 +644,14 @@
 #define IDC_SELECT_OBJECT1              1498
 #define IDC_CHECK_DELTA_INE             1499
 #define IDC_SELECT_PORT1                1499
+#define IDC_RADIO_DEFAULT               1499
 #define IDC_CHECK_DELTA_OUTE            1500
 #define IDC_EDIT_OBJECT2                1500
+#define IDC_RADIO_NEVER                 1500
 #define IDC_EDIT_PORT2                  1501
+#define IDC_RADIO_REPEAT                1501
 #define IDC_SELECT_OBJECT2              1502
+#define IDC_EDIT_SECONDS                1502
 #define IDC_SELECT_PORT2                1503
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
@@ -933,7 +937,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        374
 #define _APS_NEXT_COMMAND_VALUE         33080
-#define _APS_NEXT_CONTROL_VALUE         1499
+#define _APS_NEXT_CONTROL_VALUE         1503
 #define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif

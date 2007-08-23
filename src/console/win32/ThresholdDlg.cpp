@@ -25,6 +25,8 @@ CThresholdDlg::CThresholdDlg(CWnd* pParent /*=NULL*/)
 	m_strValue = _T("");
 	m_dwArg1 = 0;
 	m_iOperation = -1;
+	m_nSeconds = 0;
+	m_nRepeat = -1;
 	//}}AFX_DATA_INIT
 }
 
@@ -45,6 +47,9 @@ void CThresholdDlg::DoDataExchange(CDataExchange* pDX)
 	DDV_MaxChars(pDX, m_strValue, 255);
 	DDX_Text(pDX, IDC_EDIT_ARG1, m_dwArg1);
 	DDX_CBIndex(pDX, IDC_COMBO_OPERATION, m_iOperation);
+	DDX_Text(pDX, IDC_EDIT_SECONDS, m_nSeconds);
+	DDV_MinMaxLong(pDX, m_nSeconds, 1, 1000000);
+	DDX_Radio(pDX, IDC_RADIO_DEFAULT, m_nRepeat);
 	//}}AFX_DATA_MAP
 }
 
@@ -54,6 +59,9 @@ BEGIN_MESSAGE_MAP(CThresholdDlg, CDialog)
 	ON_CBN_SELCHANGE(IDC_COMBO_FUNCTION, OnSelchangeComboFunction)
 	ON_BN_CLICKED(IDC_BUTTON_SELECT, OnButtonSelect)
 	ON_BN_CLICKED(IDC_BUTTON_SELECT_REARM_EVENT, OnButtonSelectRearmEvent)
+	ON_BN_CLICKED(IDC_RADIO_DEFAULT, OnRadioDefault)
+	ON_BN_CLICKED(IDC_RADIO_NEVER, OnRadioNever)
+	ON_BN_CLICKED(IDC_RADIO_REPEAT, OnRadioRepeat)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -102,6 +110,8 @@ BOOL CThresholdDlg::OnInitDialog()
 
    m_wndEventName.SetWindowText(NXCGetEventName(g_hSession, m_dwEventId));
    m_wndRearmEventName.SetWindowText(NXCGetEventName(g_hSession, m_dwRearmEventId));
+
+	EnableDlgItem(this, IDC_EDIT_SECONDS, m_nRepeat == 2);
 	
 	return TRUE;
 }
@@ -150,4 +160,24 @@ void CThresholdDlg::OnButtonSelectRearmEvent()
       m_dwRearmEventId = dlg.m_pdwEventList[0];
       m_wndRearmEventName.SetWindowText(NXCGetEventName(g_hSession, m_dwRearmEventId));
    }
+}
+
+
+//
+// Handlers for repeat interval radio buttons
+//
+
+void CThresholdDlg::OnRadioDefault() 
+{
+	EnableDlgItem(this, IDC_EDIT_SECONDS, FALSE);
+}
+
+void CThresholdDlg::OnRadioNever() 
+{
+	EnableDlgItem(this, IDC_EDIT_SECONDS, FALSE);
+}
+
+void CThresholdDlg::OnRadioRepeat() 
+{
+	EnableDlgItem(this, IDC_EDIT_SECONDS, TRUE);
 }

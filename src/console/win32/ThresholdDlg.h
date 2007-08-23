@@ -32,6 +32,8 @@ public:
 	CString	m_strValue;
 	long	m_dwArg1;
 	int		m_iOperation;
+	long	m_nSeconds;
+	int		m_nRepeat;
 	//}}AFX_DATA
 
 
@@ -51,6 +53,9 @@ protected:
 	afx_msg void OnSelchangeComboFunction();
 	afx_msg void OnButtonSelect();
 	afx_msg void OnButtonSelectRearmEvent();
+	afx_msg void OnRadioDefault();
+	afx_msg void OnRadioNever();
+	afx_msg void OnRadioRepeat();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

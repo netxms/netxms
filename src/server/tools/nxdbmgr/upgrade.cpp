@@ -78,6 +78,33 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V67 to V68
+//
+
+static BOOL H_UpgradeFromV67(void)
+{
+   static TCHAR m_szBatch[] =
+		_T("ALTER TABLE thresholds ADD repeat_interval integer\n")
+		_T("UPDATE thresholds SET repeat_interval=-1\n")
+      _T("<END>");
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("ThresholdRepeatInterval"), _T("0"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='68' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V66 to V67
 //
 
@@ -94,7 +121,7 @@ static BOOL H_UpgradeFromV66(void)
       if (!g_bIgnoreErrors)
          return FALSE;
 
-	if (!SQLQuery(_T("UPDATE config SET var_value='66' WHERE var_name='DBFormatVersion'")))
+	if (!SQLQuery(_T("UPDATE config SET var_value='67' WHERE var_name='DBFormatVersion'")))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -3005,6 +3032,7 @@ static struct
    { 64, H_UpgradeFromV64 },
    { 65, H_UpgradeFromV65 },
    { 66, H_UpgradeFromV66 },
+   { 67, H_UpgradeFromV67 },
    { 0, NULL }
 };
 
