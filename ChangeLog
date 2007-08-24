@@ -1,4 +1,11 @@
 *
+* 0.2.19
+*
+
+- Added SMS driver and subagent to send SMS via remote NetXMS agent
+
+
+*
 * 0.2.18
 *
 

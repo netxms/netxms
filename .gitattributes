@@ -1599,6 +1599,10 @@ src/server/smsdrv/generic/generic.dsw -text
 src/server/smsdrv/generic/generic.sln -text
 src/server/smsdrv/generic/main.cpp -text
 src/server/smsdrv/generic/main.h -text
+src/server/smsdrv/nxagent/Makefile.am -text
+src/server/smsdrv/nxagent/main.cpp -text
+src/server/smsdrv/nxagent/nxagent.dsp -text
+src/server/smsdrv/nxagent/nxagent.dsw -text
 src/server/tools/Makefile.am -text
 src/server/tools/nxaction/.cvsignore -text
 src/server/tools/nxaction/Makefile.am -text

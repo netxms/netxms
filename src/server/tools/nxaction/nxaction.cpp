@@ -1,3 +1,4 @@
+/* $Id: nxaction.cpp,v 1.7 2007-08-24 09:25:58 victor Exp $ */
 /* 
 ** nxaction - command line tool used to execute preconfigured actions 
 **            on NetXMS agent
@@ -17,7 +18,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxaction.cpp
+** File: nxaction.cpp
 **
 **/
 

@@ -303,6 +303,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "nxagent"=.\src\server\smsdrv\nxagent\nxagent.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "nxagentd"=.\src\agent\core\nxagentd.dsp - Package Owner=<4>
 
 Package=<5>
