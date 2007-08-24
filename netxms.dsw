@@ -798,6 +798,21 @@ Package=<4>
 
 ###############################################################################
 
+Project: "sms"=.\src\agent\subagents\sms\sms.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "sqlite"=.\src\server\dbdrv\sqlite\sqlite.dsp - Package Owner=<4>
 
 Package=<5>

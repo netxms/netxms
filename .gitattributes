@@ -396,6 +396,12 @@ src/agent/subagents/skeleton/Makefile.nw -text
 src/agent/subagents/skeleton/skeleton.cpp -text
 src/agent/subagents/skeleton/skeleton.dsp -text
 src/agent/subagents/skeleton/skeleton.dsw -text
+src/agent/subagents/sms/Makefile.am -text
+src/agent/subagents/sms/main.cpp -text
+src/agent/subagents/sms/sender.cpp -text
+src/agent/subagents/sms/sms.dsp -text
+src/agent/subagents/sms/sms.dsw -text
+src/agent/subagents/sms/sms.h -text
 src/agent/subagents/sunos/Makefile.am -text
 src/agent/subagents/sunos/cpu.cpp -text
 src/agent/subagents/sunos/disk.cpp -text

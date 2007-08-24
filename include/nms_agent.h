@@ -88,6 +88,7 @@
 #define ERR_CONNECT_FAILED          ((DWORD)910)
 #define ERR_MAILFORMED_COMMAND      ((DWORD)911)
 #define ERR_SOCKET_ERROR            ((DWORD)912)
+#define ERR_BAD_ARGUMENTS           ((DWORD)913)
 
 
 //

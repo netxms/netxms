@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.264 2007-08-03 15:40:20 victor Exp $
+# $Id: configure.ac,v 1.265 2007-08-24 07:48:02 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -1272,6 +1272,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/portCheck/Makefile
 	src/agent/subagents/logscan/Makefile
 	src/agent/subagents/ping/Makefile
+	src/agent/subagents/sms/Makefile
 	src/agent/subagents/ups/Makefile
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/odbcquery/Makefile
