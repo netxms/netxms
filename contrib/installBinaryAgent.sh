@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: installBinaryAgent.sh,v 1.2 2007-05-26 10:42:19 victor Exp $
+# $Id: installBinaryAgent.sh,v 1.3 2007-08-27 12:25:29 victor Exp $
 
 # Copyright (c) 2007, NetXMS Team
 #
@@ -33,6 +33,7 @@
 prefix=/opt/netxms
 config=/etc/nxagentd.conf
 log=/tmp/nxagentbinupdate.log
+platform=`uname -s`
 
 ###############################################################################
 #
@@ -40,7 +41,7 @@ log=/tmp/nxagentbinupdate.log
 #
 
 # process args
-while [ "x"$1 != "x" ]; do
+while test "x$1" != "x"; do
 	name=`echo $1|cut -d= -f1`
 	val=`echo $1|cut -d= -f2`
 	eval $name=$val
@@ -49,7 +50,7 @@ done
 
 cd `dirname $0`
 name=`ls nxagent-*.tar.gz 2>/dev/null|sed s',\.tar\.gz$,,'`
-if [ "x$name" = "x" ]; then
+if test "x$name" = "x"; then
 	echo invalid package >>$log
 	exit 1
 fi
@@ -58,14 +59,14 @@ rm -rf tmp
 mkdir tmp && cd tmp
 
 gzip -dc ../$name.tar.gz | tar xf - 2>/dev/null
-if [ $? != 0 ]; then
+if test $? != 0; then
 	echo Unable to unpack >>$log
 	exit 2
 fi
 
 pids=`ps -e | grep nxagentd | grep -v grep | awk '{ print $1; }'`
 
-if [ "x$pids" != "x" ]; then
+if test "x$pids" != "x"; then
 	# ask nxagentd gently
 	kill $pids >>$log 2>&1
 	# wait a few seconds and smash it down
@@ -74,8 +75,12 @@ fi
 
 # install new files
 mkdir $prefix 2>/dev/null
-cp -R * $prefix/ 2>>$log
-if [ $? != 0 ]; then
+if test "x$platform" = "xAIX"; then
+	cp -f -R * $prefix/ 2>>$log
+else
+	cp -R * $prefix/ 2>>$log
+fi
+if test $? != 0; then
 	echo unable to copy new files to $prefix >>$log
 	exit 3
 fi
@@ -89,7 +94,7 @@ echo "---------------" >>$log
 echo "Starting agent: $prefix/bin/nxagentd -d -c $config" >>$log
 $prefix/bin/nxagentd -d -c $config >>$log 2>&1
 ret=$?
-if [ $ret != 0 ]; then
+if test $ret != 0; then
 	echo nxagentd not started \($ret\) >>$log
 	exit 5
 fi
