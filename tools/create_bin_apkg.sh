@@ -2,9 +2,13 @@
 
 prefix=$1
 version=$2
+suffix=$3
 if [ -z "$prefix" ]; then
-	echo "Usage: tools/create_bin_apkg.sh <prefix> <version>"
+	echo "Usage: tools/create_bin_apkg.sh <prefix> <version> [<suffix>]"
 	exit 1
+fi
+if [ -z "$suffix" ]; then
+	suffix=`uname -s`
 fi
 
 if [ ! -r $prefix/bin/nxagentd ]; then
@@ -31,6 +35,6 @@ tar cvf inst.tar inst &&
 gzip inst.tar &&
 mv inst.tar.gz ../tools/ &&
 cd ../tools/ &&
-bash ./sharIt inst.tar.gz inst/installBinaryAgent.sh ../nxagent-$version.apkg &&
+bash ./sharIt inst.tar.gz inst/installBinaryAgent.sh ../nxagent-$version-$suffix.apkg &&
 cd .. &&
 rm -rf contrib/inst
