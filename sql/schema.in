@@ -1170,3 +1170,20 @@ CREATE TABLE lpp_rules
 	event_code integer not null,
 	PRIMARY KEY(lpp_id,rule_number)
 ) TABLE_TYPE;
+
+
+/*
+** Audit log
+*/
+
+CREATE TABLE audit_log
+(
+	record_id integer not null,
+	timestamp integer not null,
+	subsystem varchar(32) not null,
+	success integer not null,
+	user_id integer not null,	// 0x7FFFFFFF for system
+	object_id integer not null,
+	message SQL_TEXT not null,
+	PRIMARY KEY(record_id)
+) TABLE_TYPE;

@@ -24,21 +24,45 @@
 
 
 //
+// Static data
+//
+
+static DWORD m_dwRecordId = 1;
+
+
+//
+// Initalize audit log
+//
+
+void InitAuditLog(void)
+{
+	DB_RESULT hResult;
+
+   hResult = DBSelect(g_hCoreDB, "SELECT max(record_id) FROM audit_log");
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwRecordId = DBGetFieldULong(hResult, 0, 0) + 1;
+      DBFreeResult(hResult);
+   }
+}
+
+
+//
 // Write audit record
 //
 
-void WriteAuditLog(DWORD dwCategory, DWORD dwUserId, DWORD dwObjectId, TCHAR *pszText)
+void NXCORE_EXPORTABLE WriteAuditLog(TCHAR *pszSubsys, BOOL bSuccess, DWORD dwUserId,
+												 DWORD dwObjectId, TCHAR *pszText)
 {
 	TCHAR *pszQuery, *pszEscText;
 
-	if (dwCategory & g_dwAuditFlags)
-	{
-		pszEscText = EncodeSQLString(pszText);
-		pszQuery = (TCHAR *)malloc((_tcslen(pszText) + 256) * sizeof(TCHAR));
-		_stprintf(pszQuery, _T("INSERT INTO audit_log (timestamp,user_id,object_id,message) VALUES(%d,%d,%d,'%s')"),
-		          time(NULL), dwUserId, dwObjectId, pszEscText);
-		free(pszEscText);
-		QueueSQLRequest(pszQuery);
-		free(pszQuery);
-	}
+	pszEscText = EncodeSQLString(pszText);
+	pszQuery = (TCHAR *)malloc((_tcslen(pszText) + 256) * sizeof(TCHAR));
+	_stprintf(pszQuery, _T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,object_id,message) VALUES(%d,%d,'%s',%d,%d,%d,'%s')"),
+		       m_dwRecordId++, time(NULL), pszSubsys, bSuccess ? 1 : 0, 
+		       dwUserId, dwObjectId, pszEscText);
+	free(pszEscText);
+	QueueSQLRequest(pszQuery);
+	free(pszQuery);
 }

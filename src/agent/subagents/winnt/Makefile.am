@@ -10,6 +10,7 @@
 
 EXTRA_DIST = \
 	main.cpp \
+	net.cpp \
 	procinfo.cpp \
 	system.cpp \
 	winnt.dsp \

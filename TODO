@@ -4,6 +4,8 @@
 
 GENERAL:
 
+- Table DCI
+- Access to current node properties in NXSL scripts
 - Finish Linux subagent
 - Finish FreeBSD subagent
 - Finish Solaris subagent

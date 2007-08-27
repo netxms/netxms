@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: main.cpp
+** File: main.cpp
 **
 **/
 
@@ -29,6 +29,7 @@
 
 LONG H_ActiveUserSessions(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
 LONG H_ConnectedUsers(char *pszCmd, char *pArg, char *pValue);
+LONG H_RemoteShareStatus(char *pszCmd, char *pArg, char *pValue);
 LONG H_ProcessList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
 LONG H_ProcCount(char *cmd, char *arg, char *value);
 LONG H_ProcCountSpecific(char *cmd, char *arg, char *value);
@@ -116,6 +117,8 @@ static LONG H_ActionShutdown(char *pszAction, NETXMS_VALUES_LIST *pArgList, char
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
+	{ "Net.RemoteShareStatus(*)", H_RemoteShareStatus, "C", DCI_DT_INT, _T("Status of remote shared resource") },
+	{ "Net.RemoteShareStatusText(*)", H_RemoteShareStatus, "T", DCI_DT_STRING, _T("Status of remote shared resource as text") },
 	{ "Process.Count(*)", H_ProcCountSpecific, "N", DCI_DT_INT, DCIDESC_PROCESS_COUNT },
 	{ "Process.CountEx(*)", H_ProcCountSpecific, "E", DCI_DT_INT, DCIDESC_PROCESS_COUNTEX },
 	{ "Process.GdiObj(*)", H_ProcInfo, (char *)PROCINFO_GDI_OBJ, DCI_DT_UINT64, DCIDESC_PROCESS_GDIOBJ },
@@ -216,6 +219,11 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2007/06/08 00:02:37  alk
+DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
+
+NETXMS_SUBAGENT_INFO initialization fixed (actions)
+
 Revision 1.9  2007/06/07 22:07:11  alk
 descriptions changed to defines
 

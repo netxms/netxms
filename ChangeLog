@@ -3,6 +3,8 @@
 *
 
 - Added SMS driver and subagent to send SMS via remote NetXMS agent
+- Added parameters Net.RemoteShareStatus and Net.RemoteShareStatusText
+  to WINNT subagent
 
 
 *

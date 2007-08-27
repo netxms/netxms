@@ -433,6 +433,7 @@ src/agent/subagents/win9x/win9x.dsw -text
 src/agent/subagents/win9x/win9x_subagent.h -text
 src/agent/subagents/winnt/Makefile.am -text
 src/agent/subagents/winnt/main.cpp -text
+src/agent/subagents/winnt/net.cpp -text
 src/agent/subagents/winnt/procinfo.cpp -text
 src/agent/subagents/winnt/system.cpp -text
 src/agent/subagents/winnt/winnt.dsp -text
