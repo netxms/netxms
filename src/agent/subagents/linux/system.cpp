@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.17 2007-04-25 07:44:09 victor Exp $ */
+/* $Id: system.cpp,v 1.18 2007-08-28 22:24:14 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -345,8 +345,13 @@ static THREAD m_cpuUsageCollector = INVALID_THREAD_HANDLE;
 static MUTEX m_cpuUsageMutex = INVALID_MUTEX_HANDLE;
 static bool volatile m_stopCollectorThread = false;
 static uint64_t m_user = 0;
+static uint64_t m_nice = 0;
 static uint64_t m_system = 0;
 static uint64_t m_idle = 0;
+static uint64_t m_iowait = 0;
+static uint64_t m_irq = 0;
+static uint64_t m_softirq = 0;
+static uint64_t m_steal = 0;
 // 60 sec * 15 min => 900 sec
 #define CPU_USAGE_SLOTS 900
 static float m_cpuUsage[CPU_USAGE_SLOTS];
@@ -359,14 +364,36 @@ static void CpuUsageCollector()
 	if (hStat != NULL)
 	{
 		uint64_t user, nice, system, idle;
+		uint64_t iowait = 0, irq = 0, softirq = 0, steal = 0;
 		if (fscanf(hStat,
-					"cpu %llu %llu %llu %llu",
-					&user, &nice, &system, &idle) == 4)
+					"cpu %llu %llu %llu %llu %llu %llu %llu %llu",
+					&user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal) >= 4)
 		{
-			uint64_t total =
-				(user - m_user) +
-				(system - m_system) +
-				(idle - m_idle);
+			int64_t userDelta, niceDelta, systemDelta, idleDelta;
+			int64_t iowaitDelta, irqDelta, softirqDelta, stealDelta;
+
+			// inspired by top from procps-3.2.7
+			userDelta = user - m_user;
+			niceDelta = nice - m_nice;
+			systemDelta = system - m_system;
+			idleDelta = idle - m_idle;
+			if (idleDelta < 0)
+			{
+				idleDelta = 0;
+			}
+			iowaitDelta = iowait - m_iowait;
+			irqDelta = irq - m_irq;
+			softirqDelta = softirq - m_softirq;
+			stealDelta = steal - m_steal; // steal=time spent in virtualization stuff (xen).
+
+			int64_t total = userDelta + niceDelta + systemDelta + idleDelta +
+				iowaitDelta + irqDelta + softirqDelta + stealDelta;
+			if (total < 1)
+			{
+				total = 1;
+			}
+
+			float scale = 100.0 / (float)total; // 100 -> HZ (from asm/param.h)
 
 			MutexLock(m_cpuUsageMutex, INFINITE);
 
@@ -377,8 +404,7 @@ static void CpuUsageCollector()
 
 			if (total > 0)
 			{
-				m_cpuUsage[m_currentSlot++] =
-					100 - ((float)((idle - m_idle) * 100) / total);
+				m_cpuUsage[m_currentSlot++] = 100.0 - (float)idleDelta * scale;
 			}
 			else
 			{
@@ -398,6 +424,10 @@ static void CpuUsageCollector()
 			m_user = user;
 			m_system = system;
 			m_idle = idle;
+			m_iowait = iowait;
+			m_irq = irq;
+			m_softirq = softirq;
+			m_steal = steal;
 		}
 		fclose(hStat);
 	}
@@ -495,6 +525,10 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.17  2007/04/25 07:44:09  victor
+- Linux and HPUX subagents changed to new model
+- ODBCQUERY subagent code cleaned
+
 Revision 1.16  2007/04/24 12:04:10  alk
 code reformat
 
