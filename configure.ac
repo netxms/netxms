@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.265 2007-08-24 07:48:02 victor Exp $
+# $Id: configure.ac,v 1.266 2007-08-28 20:01:36 alk Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -1241,6 +1241,7 @@ AC_CONFIG_FILES([
 	src/server/dbdrv/oracle/Makefile
 	src/server/smsdrv/Makefile
 	src/server/smsdrv/generic/Makefile
+	src/server/smsdrv/nxagent/Makefile
 	src/server/tools/Makefile
 	src/server/tools/nxget/Makefile
 	src/server/tools/nxaction/Makefile
