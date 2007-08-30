@@ -531,6 +531,9 @@ retry_db_lock:
 	}
 	DbgPrintf(AF_DEBUG_MISC, "User accounts loaded");
 
+	// Initialize audit
+	InitAuditLog();
+
 	// Initialize objects infrastructure and load objects from database
 	ObjectsInit();
 	if (!LoadObjects())

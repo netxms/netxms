@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS Agent
-AppVerName=NetXMS Agent 0.2.18
-AppVersion=0.2.18
+AppVerName=NetXMS Agent 0.2.19-rc5
+AppVersion=0.2.19-rc5
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -12,7 +12,7 @@ AppUpdatesURL=http://www.netxms.org
 DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS Agent
 AllowNoIcons=yes
-OutputBaseFilename=nxagent-0.2.18
+OutputBaseFilename=nxagent-0.2.19-rc5
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -30,6 +30,7 @@ Source: "..\subagents\ecs\Release\ecs.nsm"; DestDir: "{app}\bin"; Flags: ignorev
 Source: "..\subagents\logscan\Release\logscan.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\odbcquery\Release\odbcquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 ;Source: "..\subagents\rtmonitor\Release\rtmonitor.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\subagents\sms\Release\sms.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\ups\Release\ups.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion
 Source: "..\..\install\windows\files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion

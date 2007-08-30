@@ -53,15 +53,15 @@ void InitAuditLog(void)
 //
 
 void NXCORE_EXPORTABLE WriteAuditLog(TCHAR *pszSubsys, BOOL bSuccess, DWORD dwUserId,
-												 DWORD dwObjectId, TCHAR *pszText)
+												 TCHAR *pszWorkstation, DWORD dwObjectId, TCHAR *pszText)
 {
 	TCHAR *pszQuery, *pszEscText;
 
 	pszEscText = EncodeSQLString(pszText);
 	pszQuery = (TCHAR *)malloc((_tcslen(pszText) + 256) * sizeof(TCHAR));
-	_stprintf(pszQuery, _T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,object_id,message) VALUES(%d,%d,'%s',%d,%d,%d,'%s')"),
+	_stprintf(pszQuery, _T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,object_id,message) VALUES(%d,%d,'%s',%d,%d,'%s',%d,'%s')"),
 		       m_dwRecordId++, time(NULL), pszSubsys, bSuccess ? 1 : 0, 
-		       dwUserId, dwObjectId, pszEscText);
+		       dwUserId, pszWorkstation, dwObjectId, pszEscText);
 	free(pszEscText);
 	QueueSQLRequest(pszQuery);
 	free(pszQuery);

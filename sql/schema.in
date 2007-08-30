@@ -1183,6 +1183,7 @@ CREATE TABLE audit_log
 	subsystem varchar(32) not null,
 	success integer not null,
 	user_id integer not null,	// 0x7FFFFFFF for system
+	workstation varchar(63) not null,
 	object_id integer not null,
 	message SQL_TEXT not null,
 	PRIMARY KEY(record_id)

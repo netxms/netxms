@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.279 2007-07-02 21:32:25 victor Exp $ */
+/* $Id: session.cpp,v 1.280 2007-08-30 06:55:10 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1318,7 +1318,7 @@ void ClientSession::Login(CSCPMessage *pRequest)
          msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)bChangePasswd);
          msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_dwFlags & AF_DB_CONNECTION_LOST) ? FALSE : TRUE));
          DebugPrintf("User %s authenticated", m_szUserName);
-//			WriteAuditLog(AUDIT_USERS, m_dwUserId, 0, _T("User logged in"));
+			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, IpToStr(m_dwHostAddr, szBuffer), 0, _T("User logged in"));
       }
       else
       {

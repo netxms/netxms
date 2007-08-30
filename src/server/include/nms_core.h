@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.134 2007-08-27 11:59:38 victor Exp $ */
+/* $Id: nms_core.h,v 1.135 2007-08-30 06:55:10 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -217,6 +217,14 @@ typedef void * HSNMPSESSION;
 
 #define CERT_TYPE_TRUSTED_CA		0
 #define CERT_TYPE_USER				1
+
+
+//
+// Audit subsystems
+//
+
+#define AUDIT_SECURITY     _T("SECURITY")
+#define AUDIT_OBJECTS      _T("OBJECTS")
 
 
 //
@@ -668,7 +676,7 @@ void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_LOG_RECORD *pRec);
 void EscapeString(String &str);
 
 void InitAuditLog(void);
-void NXCORE_EXPORTABLE WriteAuditLog(TCHAR *pszSubsys, BOOL bSuccess, DWORD dwUserId, DWORD dwObjectId, TCHAR *pszText);
+void NXCORE_EXPORTABLE WriteAuditLog(TCHAR *pszSubsys, BOOL bSuccess, DWORD dwUserId, TCHAR *pszWorkstation, DWORD dwObjectId, TCHAR *pszText);
 
 #ifdef _WITH_ENCRYPTION
 X509 *CertificateFromLoginMessage(CSCPMessage *pMsg);

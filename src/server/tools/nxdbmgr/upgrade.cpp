@@ -78,6 +78,33 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V68 to V69
+//
+
+static BOOL H_UpgradeFromV68(void)
+{
+	if (!CreateTable(_T("CREATE TABLE audit_log (")
+	                 _T("record_id integer not null,")
+	                 _T("timestamp integer not null,")
+	                 _T("subsystem varchar(32) not null,")
+	                 _T("success integer not null,")
+	                 _T("user_id integer not null,")
+	                 _T("workstation varchar(63) not null,")
+	                 _T("object_id integer not null,")
+	                 _T("message $SQL:TEXT not null,")
+	                 _T("PRIMARY KEY(record_id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='69' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V67 to V68
 //
 
@@ -3033,6 +3060,7 @@ static struct
    { 65, H_UpgradeFromV65 },
    { 66, H_UpgradeFromV66 },
    { 67, H_UpgradeFromV67 },
+   { 68, H_UpgradeFromV68 },
    { 0, NULL }
 };
 

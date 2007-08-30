@@ -1,4 +1,23 @@
 *************
+* 68 ==> 69 *
+*************
+       
+- New table "audit_log" added:
+	CREATE TABLE audit_log
+	(
+		record_id integer not null,
+		timestamp integer not null,
+		subsystem varchar(32) not null,
+		success integer not null,
+		user_id integer not null,
+		workstation varchar(63) not null,
+		object_id integer not null,
+		message SQL_TEXT not null,
+		PRIMARY KEY(record_id)
+	);
+
+
+*************
 * 67 ==> 68 *
 *************
 

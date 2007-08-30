@@ -86,7 +86,11 @@ void* OdbcCtxAlloc(void)
 	{
 		memset(pSqlCtx, 0, sizeof(SqlCtx));
 		pSqlCtx->szSqlStmt[0] = _T('\0');
-		pSqlCtx->hStmt = 0;
+		if (SQLRET_FAIL(SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &pSqlCtx->hEnv)))
+		{
+			free(pSqlCtx);
+			pSqlCtx = NULL;
+		}
 	}
 
 	return (void*)pSqlCtx;
@@ -100,7 +104,8 @@ void OdbcCtxFree(void* pvSqlCtx)
 	{
 		if (pSqlCtx->hStmt != NULL)
 			SQLFreeHandle(SQL_HANDLE_STMT, pSqlCtx->hStmt);
-		SQLFreeHandle(SQL_HANDLE_DBC, pSqlCtx->hDbc);
+		if (pSqlCtx->hDbc != NULL)
+			SQLFreeHandle(SQL_HANDLE_DBC, pSqlCtx->hDbc);
 		SQLFreeHandle(SQL_HANDLE_ENV, pSqlCtx->hEnv);
 		free(pvSqlCtx);
 	}
@@ -117,16 +122,6 @@ int OdbcConnect(void* pvSqlCtx, const TCHAR* pszSrc)
 	{
 		_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_ECTX));
 		nRet = FAIL;
-	}
-
-	if (nRet == SUCCESS)
-	{
-		nSqlRet = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &pSqlCtx->hEnv);
-		if (SQLRET_FAIL(nSqlRet))
-		{
-			_tcscpy(pSqlCtx->szOdbcMsg, _T(MSG_EHENV));
-			nRet = FAIL;
-		}
 	}
 
 	if (nRet == SUCCESS)
@@ -212,6 +207,8 @@ int OdbcDisconnect(void* pvSqlCtx)
 			pSqlCtx->hStmt = NULL;
 		}
 		nSqlRet = SQLDisconnect(pSqlCtx->hDbc);
+		SQLFreeHandle(SQL_HANDLE_DBC, pSqlCtx->hDbc);
+		pSqlCtx->hDbc = NULL;
 	}
 
 	if (SQLRET_FAIL(nSqlRet))

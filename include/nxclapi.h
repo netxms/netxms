@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.272 2007-08-20 05:46:20 victor Exp $ */
+/* $Id: nxclapi.h,v 1.273 2007-08-30 06:55:10 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -607,14 +607,6 @@ enum
 
 
 //
-// Audit flags
-//
-
-#define AUDIT_OBJECTS     0x0001
-#define AUDIT_USERS       0x0002
-
-
-//
 // Session subscription codes (data channels)
 //
 
@@ -623,6 +615,7 @@ enum
 #define NXC_CHANNEL_ALARMS       0x0004
 #define NXC_CHANNEL_OBJECTS      0x0008
 #define NXC_CHANNEL_SNMP_TRAPS   0x0010
+#define NXC_CHANNEL_AUDIT_LOG    0x0020
 
 
 //
