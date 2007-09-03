@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.135 2007-08-30 06:55:10 victor Exp $ */
+/* $Id: nms_core.h,v 1.136 2007-09-03 05:52:34 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -209,6 +209,7 @@ typedef void * HSNMPSESSION;
 #define INFO_CAT_ACTION          4
 #define INFO_CAT_SYSLOG_MSG      5
 #define INFO_CAT_SNMP_TRAP       6
+#define INFO_CAT_AUDIT_RECORD    7
 
 
 //
@@ -225,6 +226,8 @@ typedef void * HSNMPSESSION;
 
 #define AUDIT_SECURITY     _T("SECURITY")
 #define AUDIT_OBJECTS      _T("OBJECTS")
+#define AUDIT_SYSCFG       _T("SYSCFG")
+#define AUDIT_CONSOLE      _T("CONSOLE")
 
 
 //
@@ -339,8 +342,10 @@ private:
    MUTEX m_mutexSendObjects;
    MUTEX m_mutexSendAlarms;
    MUTEX m_mutexSendActions;
+	MUTEX m_mutexSendAuditLog;
    MUTEX m_mutexPollerInit;
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
+	TCHAR m_szWorkstation[16];	// IP address of conneced host in textual form
    TCHAR m_szUserName[MAX_SESSION_NAME];   // String in form login_name@host
    TCHAR m_szClientInfo[96];  // Client app info string
    DWORD m_dwOpenDCIListSize; // Number of open DCI lists
@@ -542,6 +547,7 @@ public:
    void Kill(void);
    void Notify(DWORD dwCode, DWORD dwData = 0);
 
+	void QueueUpdate(UPDATE_INFO *pUpdate) { m_pUpdateQueue->Put(pUpdate); }
    void OnNewEvent(Event *pEvent);
    void OnSyslogMessage(NX_LOG_RECORD *pRec);
    void OnNewSNMPTrap(CSCPMessage *pMsg);
@@ -676,7 +682,8 @@ void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_LOG_RECORD *pRec);
 void EscapeString(String &str);
 
 void InitAuditLog(void);
-void NXCORE_EXPORTABLE WriteAuditLog(TCHAR *pszSubsys, BOOL bSuccess, DWORD dwUserId, TCHAR *pszWorkstation, DWORD dwObjectId, TCHAR *pszText);
+void NXCORE_EXPORTABLE WriteAuditLog(TCHAR *pszSubsys, BOOL bSuccess, DWORD dwUserId,
+												 TCHAR *pszWorkstation, DWORD dwObjectId, TCHAR *pszFormat, ...);
 
 #ifdef _WITH_ENCRYPTION
 X509 *CertificateFromLoginMessage(CSCPMessage *pMsg);

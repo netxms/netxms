@@ -49,13 +49,41 @@ void InitAuditLog(void)
 
 
 //
+// Handler for EnumerateSessions()
+//
+
+static void SendNewRecord(ClientSession *pSession, void *pArg)
+{
+   UPDATE_INFO *pUpdate;
+
+   if (pSession->IsAuthenticated() && pSession->IsSubscribed(NXC_CHANNEL_AUDIT_LOG))
+	{
+      pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+      pUpdate->dwCategory = INFO_CAT_AUDIT_RECORD;
+      pUpdate->pData = new CSCPMessage((CSCPMessage *)pArg);
+      pSession->QueueUpdate(pUpdate);
+	}
+}
+
+
+//
 // Write audit record
 //
 
 void NXCORE_EXPORTABLE WriteAuditLog(TCHAR *pszSubsys, BOOL bSuccess, DWORD dwUserId,
-												 TCHAR *pszWorkstation, DWORD dwObjectId, TCHAR *pszText)
+												 TCHAR *pszWorkstation, DWORD dwObjectId,
+												 TCHAR *pszFormat, ...)
 {
-	TCHAR *pszQuery, *pszEscText;
+	TCHAR *pszQuery, *pszText, *pszEscText;
+	va_list args;
+	int nBufSize;
+	CSCPMessage msg;
+
+	nBufSize = _tcslen(pszFormat) + NumChars(pszFormat, _T('%')) * 256 + 1;
+	pszText = (TCHAR *)malloc(nBufSize * sizeof(TCHAR));
+	va_start(args, pszFormat);
+	_vsntprintf(pszText, nBufSize, pszFormat, args);
+	va_end(args);
 
 	pszEscText = EncodeSQLString(pszText);
 	pszQuery = (TCHAR *)malloc((_tcslen(pszText) + 256) * sizeof(TCHAR));
@@ -65,4 +93,15 @@ void NXCORE_EXPORTABLE WriteAuditLog(TCHAR *pszSubsys, BOOL bSuccess, DWORD dwUs
 	free(pszEscText);
 	QueueSQLRequest(pszQuery);
 	free(pszQuery);
+
+	msg.SetCode(CMD_AUDIT_RECORD);
+	msg.SetVariable(VID_SUBSYSTEM, pszSubsys);
+	msg.SetVariable(VID_SUCCESS_AUDIT, (WORD)bSuccess);
+	msg.SetVariable(VID_USER_ID, dwUserId);
+	msg.SetVariable(VID_WORKSTATION, pszWorkstation);
+	msg.SetVariable(VID_OBJECT_ID, dwObjectId);
+	msg.SetVariable(VID_MESSAGE, pszText);
+	EnumerateClientSessions(SendNewRecord, &msg);
+
+	free(pszText);
 }

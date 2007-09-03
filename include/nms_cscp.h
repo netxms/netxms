@@ -447,6 +447,8 @@ typedef struct
 #define CMD_GET_CERT_LIST				0x00CB
 #define CMD_UPDATE_CERT_COMMENTS		0x00CC
 #define CMD_QUERY_L2_TOPOLOGY			0x00CD
+#define CMD_AUDIT_RECORD            0x00CE
+#define CMD_GET_AUDIT_LOG           0x00CF
 
 
 //
@@ -747,6 +749,9 @@ typedef struct
 #define VID_QSIZE_ROUTE_POLLER      ((DWORD)292)
 #define VID_QSIZE_STATUS_POLLER     ((DWORD)293)
 #define VID_SYNTHETIC_MASK          ((DWORD)294)
+#define VID_SUBSYSTEM               ((DWORD)295)
+#define VID_SUCCESS_AUDIT           ((DWORD)296)
+#define VID_WORKSTATION             ((DWORD)297)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

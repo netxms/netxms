@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.280 2007-08-30 06:55:10 victor Exp $ */
+/* $Id: session.cpp,v 1.281 2007-09-03 05:52:34 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -278,9 +278,11 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_mutexSendObjects = MutexCreate();
    m_mutexSendAlarms = MutexCreate();
    m_mutexSendActions = MutexCreate();
+   m_mutexSendAuditLog = MutexCreate();
    m_mutexPollerInit = MutexCreate();
    m_dwFlags = 0;
    m_dwHostAddr = dwHostAddr;
+	IpToStr(dwHostAddr, m_szWorkstation);
    strcpy(m_szUserName, "<not logged in>");
    m_dwUserId = INVALID_INDEX;
    m_dwOpenDCIListSize = 0;
@@ -313,6 +315,7 @@ ClientSession::~ClientSession()
    MutexDestroy(m_mutexSendObjects);
    MutexDestroy(m_mutexSendAlarms);
    MutexDestroy(m_mutexSendActions);
+   MutexDestroy(m_mutexSendAuditLog);
    MutexDestroy(m_mutexPollerInit);
    safe_free(m_pOpenDCIList);
    if (m_ppEPPRuleList != NULL)
@@ -552,6 +555,7 @@ void ClientSession::ReadThread(void)
       } while(m_dwRefCount > 0);
    }
 
+	WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szWorkstation, 0, _T("User logged out (client: %s)"), m_szClientInfo);
    DebugPrintf("Session closed");
 }
 
@@ -638,6 +642,12 @@ void ClientSession::UpdateThread(void)
             MutexLock(m_mutexSendTrapLog, INFINITE);
             SendMessage((CSCPMessage *)pUpdate->pData);
             MutexUnlock(m_mutexSendTrapLog);
+            delete (CSCPMessage *)pUpdate->pData;
+            break;
+         case INFO_CAT_AUDIT_RECORD:
+            MutexLock(m_mutexSendAuditLog, INFINITE);
+            SendMessage((CSCPMessage *)pUpdate->pData);
+            MutexUnlock(m_mutexSendAuditLog);
             delete (CSCPMessage *)pUpdate->pData;
             break;
          case INFO_CAT_OBJECT_CHANGE:
@@ -1318,11 +1328,15 @@ void ClientSession::Login(CSCPMessage *pRequest)
          msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)bChangePasswd);
          msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_dwFlags & AF_DB_CONNECTION_LOST) ? FALSE : TRUE));
          DebugPrintf("User %s authenticated", m_szUserName);
-			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, IpToStr(m_dwHostAddr, szBuffer), 0, _T("User logged in"));
+			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szWorkstation, 0,
+			              _T("User \"%s\" logged in (client info: %s)"), szLogin, m_szClientInfo);
       }
       else
       {
          msg.SetVariable(VID_RCC, dwResult);
+			WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szWorkstation, 0,
+			              _T("User \"%s\" login failed with error code %d (client info: %s)"),
+							  szLogin, dwResult, m_szClientInfo);
       }
    }
    else
@@ -1427,6 +1441,8 @@ void ClientSession::LockEventDB(DWORD dwRqId)
    {
       m_dwFlags |= CSF_EVENT_DB_LOCKED;
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
+		WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_szWorkstation, 0,
+			           _T("Event configuration database locked"));
    }
    SendMessage(&msg);
 }
@@ -1448,6 +1464,8 @@ void ClientSession::UnlockEventDB(DWORD dwRqId)
       UnlockComponent(CID_EVENT_DB);
       m_dwFlags &= ~CSF_EVENT_DB_LOCKED;
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
+		WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_szWorkstation, 0,
+			           _T("Event configuration database unlocked"));
    }
    else
    {
@@ -1593,6 +1611,9 @@ void ClientSession::DeleteEventTemplate(CSCPMessage *pRequest)
             DeleteEventTemplateFromList(dwEventCode);
             NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
+
+				WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_szWorkstation, 0,
+								  _T("Event template %d deleted"), dwEventCode);
          }
          else
          {
@@ -1874,9 +1895,15 @@ void ClientSession::SetConfigVariable(CSCPMessage *pRequest)
       pRequest->GetVariableStr(VID_NAME, szName, MAX_OBJECT_NAME);
       pRequest->GetVariableStr(VID_VALUE, szValue, MAX_DB_STRING);
       if (ConfigWriteStr(szName, szValue, TRUE))
+		{
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
+			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_szWorkstation, 0,
+							  _T("Server configuration variable \"%s\" set to \"%s\""), szName, szValue);
+		}
       else
+		{
          msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+		}
    }
    else
    {
@@ -1907,9 +1934,15 @@ void ClientSession::DeleteConfigVariable(CSCPMessage *pRequest)
       pRequest->GetVariableStr(VID_NAME, szName, MAX_OBJECT_NAME);
       _sntprintf(szQuery, 1024, _T("DELETE FROM config WHERE var_name='%s'"), szName);
       if (DBQuery(g_hCoreDB, szQuery))
+		{
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
+			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_szWorkstation, 0,
+							  _T("Server configuration variable \"%s\" deleted"), szName);
+		}
       else
+		{
          msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+		}
    }
    else
    {
@@ -2017,10 +2050,23 @@ void ClientSession::ModifyObject(CSCPMessage *pRequest)
          if (dwResult != RCC_ACCESS_DENIED)
             dwResult = pObject->ModifyFromMessage(pRequest);
          msg.SetVariable(VID_RCC, dwResult);
+
+			if (dwResult == RCC_SUCCESS)
+			{
+				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_szWorkstation, dwObjectId,
+								  _T("Object modified from client"));
+			}
+			else
+			{
+				WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_szWorkstation, dwObjectId,
+								  _T("Failed to modify object from client - error %d"), dwResult);
+			}
       }
       else
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_szWorkstation, dwObjectId,
+							  _T("Failed to modify object from client - access denied"), dwResult);
       }
    }
    else
