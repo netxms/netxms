@@ -158,6 +158,15 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          DBQuery(m_hdb, szQuery);
       }
 
+      // Remove outdated audit log records
+      dwRetentionTime = ConfigReadULong("AuditLogRetentionTime", 90);
+      if (dwRetentionTime > 0)
+      {
+			dwRetentionTime *= 86400;	// Convert days to seconds
+         sprintf(szQuery, "DELETE FROM audit_log WHERE timestamp<%ld", currTime - dwRetentionTime);
+         DBQuery(m_hdb, szQuery);
+      }
+
       // Delete empty subnets if needed
       if (g_dwFlags & AF_DELETE_EMPTY_SUBNETS)
          DeleteEmptySubnets();

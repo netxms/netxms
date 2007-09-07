@@ -96,6 +96,14 @@ static BOOL H_UpgradeFromV68(void)
       if (!g_bIgnoreErrors)
          return FALSE;
 
+   if (!CreateConfigParam(_T("EnableAuditLog"), _T("1"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("AuditLogRetentionTime"), _T("90"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
 	if (!SQLQuery(_T("UPDATE config SET var_value='69' WHERE var_name='DBFormatVersion'")))
       if (!g_bIgnoreErrors)
          return FALSE;
