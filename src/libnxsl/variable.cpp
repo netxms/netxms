@@ -28,13 +28,13 @@
 // Variable constructors
 //
 
-NXSL_Variable::NXSL_Variable(TCHAR *pszName)
+NXSL_Variable::NXSL_Variable(const TCHAR *pszName)
 {
    m_pszName = _tcsdup(pszName);
    m_pValue = new NXSL_Value;    // Create NULL value
 }
 
-NXSL_Variable::NXSL_Variable(TCHAR *pszName, NXSL_Value *pValue)
+NXSL_Variable::NXSL_Variable(const TCHAR *pszName, NXSL_Value *pValue)
 {
    m_pszName = _tcsdup(pszName);
    m_pValue = pValue;
@@ -108,7 +108,7 @@ NXSL_VariableSystem::~NXSL_VariableSystem(void)
 // Find variable by name
 //
 
-NXSL_Variable *NXSL_VariableSystem::Find(TCHAR *pszName)
+NXSL_Variable *NXSL_VariableSystem::Find(const TCHAR *pszName)
 {
    DWORD i;
 
@@ -123,7 +123,7 @@ NXSL_Variable *NXSL_VariableSystem::Find(TCHAR *pszName)
 // Create variable
 //
 
-NXSL_Variable *NXSL_VariableSystem::Create(TCHAR *pszName, NXSL_Value *pValue)
+NXSL_Variable *NXSL_VariableSystem::Create(const TCHAR *pszName, NXSL_Value *pValue)
 {
    NXSL_Variable *pVar;
 

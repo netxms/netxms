@@ -94,7 +94,7 @@ NXSL_Value::NXSL_Value(void)
    m_bStringIsValid = FALSE;
 }
 
-NXSL_Value::NXSL_Value(NXSL_Value *pValue)
+NXSL_Value::NXSL_Value(const NXSL_Value *pValue)
 {
    if (pValue != NULL)
    {
@@ -173,7 +173,7 @@ NXSL_Value::NXSL_Value(double dValue)
    m_value.dReal = dValue;
 }
 
-NXSL_Value::NXSL_Value(TCHAR *pszValue)
+NXSL_Value::NXSL_Value(const TCHAR *pszValue)
 {
    m_nDataType = NXSL_DT_STRING;
    m_dwStrLen = (DWORD)_tcslen(pszValue);
@@ -182,7 +182,7 @@ NXSL_Value::NXSL_Value(TCHAR *pszValue)
    UpdateNumber();
 }
 
-NXSL_Value::NXSL_Value(TCHAR *pszValue, DWORD dwLen)
+NXSL_Value::NXSL_Value(const TCHAR *pszValue, DWORD dwLen)
 {
    m_nDataType = NXSL_DT_STRING;
    m_dwStrLen = dwLen;

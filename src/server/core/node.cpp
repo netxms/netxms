@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.185 2007-08-17 06:15:09 victor Exp $ */
+/* $Id: node.cpp,v 1.186 2007-09-14 06:04:44 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1767,8 +1767,9 @@ void Node::QueueItemsForPolling(Queue *pPollerQueue)
    DWORD i;
    time_t currTime;
 
-   if (m_iStatus == STATUS_UNMANAGED)
-      return;  // Do not collect data for unmanaged nodes
+   if ((m_iStatus == STATUS_UNMANAGED) ||
+	    (m_dwFlags & NF_DISABLE_DATA_COLLECT))
+      return;  // Do not collect data for unmanaged nodes or if data collection is disabled
 
    currTime = time(NULL);
 

@@ -1,4 +1,4 @@
-/* $Id: dcitem.cpp,v 1.78 2007-08-20 05:46:20 victor Exp $ */
+/* $Id: dcitem.cpp,v 1.79 2007-09-14 06:04:44 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -22,6 +22,108 @@
 **/
 
 #include "nxcore.h"
+
+
+//
+// "NetXMS node" class
+//
+
+class NXSL_NodeClass : public NXSL_Class
+{
+public:
+   NXSL_NodeClass();
+
+   virtual NXSL_Value *GetAttr(NXSL_Object *pObject, char *pszAttr);
+};
+
+
+//
+// Implementation of discovery class
+//
+
+NXSL_NodeClass::NXSL_NodeClass()
+               :NXSL_Class()
+{
+   strcpy(m_szName, "NetXMS_Node");
+}
+
+NXSL_Value *NXSL_NodeClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
+{
+   Node *pNode;
+   NXSL_Value *pValue = NULL;
+   char szBuffer[256];
+
+   pNode = (Node *)pObject->Data();
+   if (!strcmp(pszAttr, "name"))
+   {
+      pValue = new NXSL_Value(pNode->Name());
+   }
+   else if (!strcmp(pszAttr, "id"))
+   {
+      pValue = new NXSL_Value(pNode->Id());
+   }
+   else if (!strcmp(pszAttr, "ipAddr"))
+   {
+      IpToStr(pNode->IpAddr(), szBuffer);
+      pValue = new NXSL_Value(szBuffer);
+   }
+   else if (!strcmp(pszAttr, "isAgent"))
+   {
+      pValue = new NXSL_Value((LONG)((pNode->Flags() & NF_IS_NATIVE_AGENT) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isSNMP"))
+   {
+      pValue = new NXSL_Value((LONG)((pNode->Flags() & NF_IS_SNMP) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isBridge"))
+   {
+      pValue = new NXSL_Value((LONG)((pNode->Flags() & NF_IS_BRIDGE) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isRouter"))
+   {
+      pValue = new NXSL_Value((LONG)((pNode->Flags() & NF_IS_ROUTER) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isPrinter"))
+   {
+      pValue = new NXSL_Value((LONG)((pNode->Flags() & NF_IS_PRINTER) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isCDP"))
+   {
+      pValue = new NXSL_Value((LONG)((pNode->Flags() & NF_IS_CDP) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isSONMP"))
+   {
+      pValue = new NXSL_Value((LONG)((pNode->Flags() & NF_IS_SONMP) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "isLLDP"))
+   {
+      pValue = new NXSL_Value((LONG)((pNode->Flags() & NF_IS_LLDP) ? 1 : 0));
+   }
+   else if (!strcmp(pszAttr, "snmpVersion"))
+   {
+      pValue = new NXSL_Value((LONG)pNode->GetSNMPVersion());
+   }
+   else if (!strcmp(pszAttr, "snmpOID"))
+   {
+      pValue = new NXSL_Value(pNode->GetSNMPObjectId());
+   }
+   else if (!strcmp(pszAttr, "agentVersion"))
+   {
+      pValue = new NXSL_Value(pNode->GetAgentVersion());
+   }
+   else if (!strcmp(pszAttr, "platformName"))
+   {
+      pValue = new NXSL_Value(pNode->GetPlatformName());
+   }
+   return pValue;
+}
+
+
+//
+// "NetXMS node" class object
+//
+
+static NXSL_NodeClass m_nxslNodeClass;
 
 
 //
@@ -909,7 +1011,8 @@ void DCItem::Transform(ItemValue &value, time_t nElapsedTime)
 
       pEnv = new NXSL_Environment;
       pEnv->SetLibrary(g_pScriptLibrary);
-
+      m_pScript->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&m_nxslNodeClass, m_pNode)));
+	
       if (m_pScript->Run(pEnv, 1, &pValue) == 0)
       {
          pValue = m_pScript->GetResult();

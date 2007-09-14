@@ -1326,6 +1326,10 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
             wndNodePolling.m_bDisableAgent = (pObject->node.dwFlags & NF_DISABLE_NXCP) ? TRUE : FALSE;
             wndNodePolling.m_bDisableICMP = (pObject->node.dwFlags & NF_DISABLE_ICMP) ? TRUE : FALSE;
             wndNodePolling.m_bDisableSNMP = (pObject->node.dwFlags & NF_DISABLE_SNMP) ? TRUE : FALSE;
+            wndNodePolling.m_bDisableConfPolls = (pObject->node.dwFlags & NF_DISABLE_CONF_POLL) ? TRUE : FALSE;
+            wndNodePolling.m_bDisableDataCollection = (pObject->node.dwFlags & NF_DISABLE_DATA_COLLECT) ? TRUE : FALSE;
+            wndNodePolling.m_bDisableRoutePolls = (pObject->node.dwFlags & NF_DISABLE_ROUTE_POLL) ? TRUE : FALSE;
+            wndNodePolling.m_bDisableStatusPolls = (pObject->node.dwFlags & NF_DISABLE_STATUS_POLL) ? TRUE : FALSE;
             wndPropSheet.AddPage(&wndNodePolling);
 
             // Create "Capabilities" tab

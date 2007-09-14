@@ -2215,11 +2215,21 @@ BEGIN
     CONTROL         "Disable usage of &ICMP pings for status polling",
                     IDC_CHECK_DISABLE_ICMP,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,13,91,159,10
+    CONTROL         "Disable s&tatus polls",IDC_CHECK_DISABLE_STATUS_POLL,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,104,76,10
+    CONTROL         "Disable &configuration polls",
+                    IDC_CHECK_DISABLE_CONF_POLLS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,117,98,10
+    CONTROL         "Disable &routing table polls",
+                    IDC_CHECK_DISABLE_ROUTE_POLLS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,130,96,10
+    CONTROL         "Disable &data collection",IDC_CHECK_DISABLE_DATACOLL,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,143,87,10
     GROUPBOX        "Network Service Poller",IDC_STATIC,7,7,278,42
     LTEXT           "Poller node:",IDC_STATIC,13,17,38,8
     LTEXT           "All network services of this node will be polled from poller node specified here, if not overrided by network service settings.",
                     IDC_STATIC,126,17,153,25
-    GROUPBOX        "Options",IDC_STATIC,7,53,278,54
+    GROUPBOX        "Options",IDC_STATIC,7,53,278,106
 END
 
 IDD_OBJECT_RELATIONS DIALOGEX 0, 0, 292, 194

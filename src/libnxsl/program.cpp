@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: program.cpp
+** File: program.cpp
 **
 **/
 
@@ -481,6 +481,22 @@ int NXSL_Program::Run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
    m_dwNumFunctions = dwOrigNumFn;
 
    return (m_dwCurrPos == INVALID_ADDRESS) ? -1 : 0;
+}
+
+
+//
+// Set global variale
+//
+
+void NXSL_Program::SetGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue)
+{
+   NXSL_Variable *pVar;
+
+	pVar = m_pGlobals->Find(pszName);
+   if (pVar == NULL)
+		pVar = m_pGlobals->Create(pszName, pValue);
+	else
+		pVar->Set(pValue);
 }
 
 

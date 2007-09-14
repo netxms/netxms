@@ -653,6 +653,10 @@
 #define IDC_SELECT_OBJECT2              1502
 #define IDC_EDIT_SECONDS                1502
 #define IDC_SELECT_PORT2                1503
+#define IDC_CHECK_DISABLE_STATUS_POLL   1503
+#define IDC_CHECK_DISABLE_CONF_POLLS    1504
+#define IDC_CHECK_DISABLE_ROUTE_POLLS   1505
+#define IDC_CHECK_DISABLE_DATACOLL      1506
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -937,7 +941,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        374
 #define _APS_NEXT_COMMAND_VALUE         33080
-#define _APS_NEXT_CONTROL_VALUE         1503
+#define _APS_NEXT_CONTROL_VALUE         1507
 #define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif

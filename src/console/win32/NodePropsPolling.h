@@ -27,6 +27,10 @@ public:
 	BOOL	m_bDisableAgent;
 	BOOL	m_bDisableICMP;
 	BOOL	m_bDisableSNMP;
+	BOOL	m_bDisableConfPolls;
+	BOOL	m_bDisableDataCollection;
+	BOOL	m_bDisableRoutePolls;
+	BOOL	m_bDisableStatusPolls;
 	//}}AFX_DATA
 
 
@@ -48,6 +52,10 @@ protected:
 	afx_msg void OnCheckDisableAgent();
 	afx_msg void OnCheckDisableIcmp();
 	afx_msg void OnCheckDisableSnmp();
+	afx_msg void OnCheckDisableConfPolls();
+	afx_msg void OnCheckDisableDatacoll();
+	afx_msg void OnCheckDisableRoutePolls();
+	afx_msg void OnCheckDisableStatusPoll();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

@@ -24,6 +24,10 @@ CNodePropsPolling::CNodePropsPolling() : CPropertyPage(CNodePropsPolling::IDD)
 	m_bDisableAgent = FALSE;
 	m_bDisableICMP = FALSE;
 	m_bDisableSNMP = FALSE;
+	m_bDisableConfPolls = FALSE;
+	m_bDisableDataCollection = FALSE;
+	m_bDisableRoutePolls = FALSE;
+	m_bDisableStatusPolls = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -38,6 +42,10 @@ void CNodePropsPolling::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_DISABLE_AGENT, m_bDisableAgent);
 	DDX_Check(pDX, IDC_CHECK_DISABLE_ICMP, m_bDisableICMP);
 	DDX_Check(pDX, IDC_CHECK_DISABLE_SNMP, m_bDisableSNMP);
+	DDX_Check(pDX, IDC_CHECK_DISABLE_CONF_POLLS, m_bDisableConfPolls);
+	DDX_Check(pDX, IDC_CHECK_DISABLE_DATACOLL, m_bDisableDataCollection);
+	DDX_Check(pDX, IDC_CHECK_DISABLE_ROUTE_POLLS, m_bDisableRoutePolls);
+	DDX_Check(pDX, IDC_CHECK_DISABLE_STATUS_POLL, m_bDisableStatusPolls);
 	//}}AFX_DATA_MAP
 }
 
@@ -48,6 +56,10 @@ BEGIN_MESSAGE_MAP(CNodePropsPolling, CPropertyPage)
 	ON_BN_CLICKED(IDC_CHECK_DISABLE_AGENT, OnCheckDisableAgent)
 	ON_BN_CLICKED(IDC_CHECK_DISABLE_ICMP, OnCheckDisableIcmp)
 	ON_BN_CLICKED(IDC_CHECK_DISABLE_SNMP, OnCheckDisableSnmp)
+	ON_BN_CLICKED(IDC_CHECK_DISABLE_CONF_POLLS, OnCheckDisableConfPolls)
+	ON_BN_CLICKED(IDC_CHECK_DISABLE_DATACOLL, OnCheckDisableDatacoll)
+	ON_BN_CLICKED(IDC_CHECK_DISABLE_ROUTE_POLLS, OnCheckDisableRoutePolls)
+	ON_BN_CLICKED(IDC_CHECK_DISABLE_STATUS_POLL, OnCheckDisableStatusPoll)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -140,14 +152,36 @@ void CNodePropsPolling::OnOK()
       m_pUpdate->dwNodeFlags |= NF_DISABLE_NXCP;
    else
       m_pUpdate->dwNodeFlags &= ~NF_DISABLE_NXCP;
+
    if (m_bDisableSNMP)
       m_pUpdate->dwNodeFlags |= NF_DISABLE_SNMP;
    else
       m_pUpdate->dwNodeFlags &= ~NF_DISABLE_SNMP;
+
    if (m_bDisableICMP)
       m_pUpdate->dwNodeFlags |= NF_DISABLE_ICMP;
    else
       m_pUpdate->dwNodeFlags &= ~NF_DISABLE_ICMP;
+
+   if (m_bDisableStatusPolls)
+      m_pUpdate->dwNodeFlags |= NF_DISABLE_STATUS_POLL;
+   else
+      m_pUpdate->dwNodeFlags &= ~NF_DISABLE_STATUS_POLL;
+
+   if (m_bDisableConfPolls)
+      m_pUpdate->dwNodeFlags |= NF_DISABLE_CONF_POLL;
+   else
+      m_pUpdate->dwNodeFlags &= ~NF_DISABLE_CONF_POLL;
+
+   if (m_bDisableRoutePolls)
+      m_pUpdate->dwNodeFlags |= NF_DISABLE_ROUTE_POLL;
+   else
+      m_pUpdate->dwNodeFlags &= ~NF_DISABLE_ROUTE_POLL;
+
+   if (m_bDisableDataCollection)
+      m_pUpdate->dwNodeFlags |= NF_DISABLE_DATA_COLLECT;
+   else
+      m_pUpdate->dwNodeFlags &= ~NF_DISABLE_DATA_COLLECT;
 }
 
 
@@ -166,6 +200,26 @@ void CNodePropsPolling::OnCheckDisableIcmp()
 }
 
 void CNodePropsPolling::OnCheckDisableSnmp() 
+{
+   m_pUpdate->dwFlags |= OBJ_UPDATE_NODE_FLAGS;
+}
+
+void CNodePropsPolling::OnCheckDisableConfPolls() 
+{
+   m_pUpdate->dwFlags |= OBJ_UPDATE_NODE_FLAGS;
+}
+
+void CNodePropsPolling::OnCheckDisableDatacoll() 
+{
+   m_pUpdate->dwFlags |= OBJ_UPDATE_NODE_FLAGS;
+}
+
+void CNodePropsPolling::OnCheckDisableRoutePolls() 
+{
+   m_pUpdate->dwFlags |= OBJ_UPDATE_NODE_FLAGS;
+}
+
+void CNodePropsPolling::OnCheckDisableStatusPoll() 
 {
    m_pUpdate->dwFlags |= OBJ_UPDATE_NODE_FLAGS;
 }

@@ -149,15 +149,15 @@ protected:
 
 public:
    NXSL_Value(void);
-   NXSL_Value(NXSL_Value *);
+   NXSL_Value(const NXSL_Value *);
    NXSL_Value(NXSL_Object *pObject);
    NXSL_Value(LONG nValue);
    NXSL_Value(INT64 nValue);
    NXSL_Value(DWORD uValue);
    NXSL_Value(QWORD uValue);
    NXSL_Value(double dValue);
-   NXSL_Value(TCHAR *pszValue);
-   NXSL_Value(TCHAR *pszValue, DWORD dwLen);
+   NXSL_Value(const TCHAR *pszValue);
+   NXSL_Value(const TCHAR *pszValue, DWORD dwLen);
    ~NXSL_Value();
 
    void Set(LONG nValue);
@@ -279,12 +279,12 @@ protected:
    NXSL_Value *m_pValue;
 
 public:
-   NXSL_Variable(TCHAR *pszName);
-   NXSL_Variable(TCHAR *pszName, NXSL_Value *pValue);
+   NXSL_Variable(const TCHAR *pszName);
+   NXSL_Variable(const TCHAR *pszName, NXSL_Value *pValue);
    NXSL_Variable(NXSL_Variable *pSrc);
    ~NXSL_Variable();
 
-   TCHAR *Name(void) { return m_pszName; }
+   const TCHAR *Name(void) { return m_pszName; }
    NXSL_Value *Value(void) { return m_pValue; }
    void Set(NXSL_Value *pValue);
 };
@@ -305,8 +305,8 @@ public:
    NXSL_VariableSystem(NXSL_VariableSystem *pSrc);
    ~NXSL_VariableSystem();
 
-   NXSL_Variable *Find(TCHAR *pszName);
-   NXSL_Variable *Create(TCHAR *pszName, NXSL_Value *pValue = NULL);
+   NXSL_Variable *Find(const TCHAR *pszName);
+   NXSL_Variable *Create(const TCHAR *pszName, NXSL_Value *pValue = NULL);
 };
 
 
@@ -415,6 +415,8 @@ public:
    void AddPreload(char *pszName);
    void UseModule(NXSL_Program *pModule, char *pszName);
 	void Optimize(void);
+
+	void SetGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
 
    int Run(NXSL_Environment *pEnv = NULL, DWORD argc = 0,
            NXSL_Value **argv = NULL, NXSL_VariableSystem *pUserLocals = NULL);

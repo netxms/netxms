@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.273 2007-08-30 06:55:10 victor Exp $ */
+/* $Id: nxclapi.h,v 1.274 2007-09-14 06:04:43 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -194,26 +194,30 @@ typedef void * NXC_SESSION;
 // Node flags
 //
 
-#define NF_SYSTEM_FLAGS       0x0000FFFF
-#define NF_USER_FLAGS         0xFFFF0000
+#define NF_SYSTEM_FLAGS          0x0000FFFF
+#define NF_USER_FLAGS            0xFFFF0000
 
-#define NF_IS_SNMP            0x00000001
-#define NF_IS_NATIVE_AGENT    0x00000002
-#define NF_IS_BRIDGE          0x00000004
-#define NF_IS_ROUTER          0x00000008
-#define NF_IS_LOCAL_MGMT      0x00000010
-#define NF_IS_PRINTER         0x00000020
-#define NF_IS_OSPF            0x00000040
-#define NF_BEHIND_NAT         0x00000080
-#define NF_IS_CPSNMP          0x00000100  /* CheckPoint SNMP agent on port 260 */
-#define NF_IS_CDP             0x00000200
-#define NF_IS_SONMP           0x00000400  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */
-#define NF_IS_LLDP				0x00000800	/* Supports Link Layer Discovery Protocol */
+#define NF_IS_SNMP               0x00000001
+#define NF_IS_NATIVE_AGENT       0x00000002
+#define NF_IS_BRIDGE             0x00000004
+#define NF_IS_ROUTER             0x00000008
+#define NF_IS_LOCAL_MGMT         0x00000010
+#define NF_IS_PRINTER            0x00000020
+#define NF_IS_OSPF               0x00000040
+#define NF_BEHIND_NAT            0x00000080
+#define NF_IS_CPSNMP             0x00000100  /* CheckPoint SNMP agent on port 260 */
+#define NF_IS_CDP                0x00000200
+#define NF_IS_SONMP              0x00000400  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */
+#define NF_IS_LLDP				   0x00000800	/* Supports Link Layer Discovery Protocol */
 
-#define NF_DISABLE_SNMP       0x01000000
-#define NF_DISABLE_NXCP       0x02000000
-#define NF_DISABLE_ICMP       0x04000000
-#define NF_FORCE_ENCRYPTION   0x08000000
+#define NF_DISABLE_SNMP          0x01000000
+#define NF_DISABLE_NXCP          0x02000000
+#define NF_DISABLE_ICMP          0x04000000
+#define NF_FORCE_ENCRYPTION      0x08000000
+#define NF_DISABLE_STATUS_POLL   0x10000000
+#define NF_DISABLE_CONF_POLL     0x20000000
+#define NF_DISABLE_ROUTE_POLL    0x40000000
+#define NF_DISABLE_DATA_COLLECT  0x80000000
 
 
 //

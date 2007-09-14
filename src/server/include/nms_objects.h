@@ -655,6 +655,11 @@ public:
    BOOL IsRouter(void) { return m_dwFlags & NF_IS_ROUTER ? TRUE : FALSE; }
    BOOL IsLocalManagement(void) { return m_dwFlags & NF_IS_LOCAL_MGMT ? TRUE : FALSE; }
 
+	LONG GetSNMPVersion() { return m_iSNMPVersion; }
+	const TCHAR *GetSNMPObjectId() { return m_szObjectId; }
+	const TCHAR *GetAgentVersion() { return m_szAgentVersion; }
+	const TCHAR *GetPlatformName() { return m_szPlatformName; }
+
    BOOL IsDown(void) { return m_dwDynamicFlags & NDF_UNREACHABLE ? TRUE : FALSE; }
 
    const char *ObjectId(void) { return m_szObjectId; }
@@ -752,7 +757,8 @@ inline BOOL Node::ReadyForStatusPoll(void)
       m_dwDynamicFlags &= ~NDF_FORCE_STATUS_POLL;
       return TRUE;
    }
-   return ((m_iStatus != STATUS_UNMANAGED) && 
+   return ((m_iStatus != STATUS_UNMANAGED) &&
+	        (!(m_dwFlags & NF_DISABLE_STATUS_POLL)) &&
            (!(m_dwDynamicFlags & NDF_QUEUED_FOR_STATUS_POLL)) &&
            (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
 			  (GetMyCluster() == NULL) &&
@@ -768,6 +774,7 @@ inline BOOL Node::ReadyForConfigurationPoll(void)
       return TRUE;
    }
    return ((m_iStatus != STATUS_UNMANAGED) &&
+	        (!(m_dwFlags & NF_DISABLE_CONF_POLL)) &&
            (!(m_dwDynamicFlags & NDF_QUEUED_FOR_CONFIG_POLL)) &&
            (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
            ((DWORD)time(NULL) - (DWORD)m_tLastConfigurationPoll > g_dwConfigurationPollingInterval))
@@ -787,6 +794,7 @@ inline BOOL Node::ReadyForDiscoveryPoll(void)
 inline BOOL Node::ReadyForRoutePoll(void) 
 { 
    return ((m_iStatus != STATUS_UNMANAGED) &&
+	        (!(m_dwFlags & NF_DISABLE_ROUTE_POLL)) &&
            (!(m_dwDynamicFlags & NDF_QUEUED_FOR_ROUTE_POLL)) &&
            (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
            ((DWORD)time(NULL) - (DWORD)m_tLastRTUpdate > g_dwRoutingTableUpdateInterval))
