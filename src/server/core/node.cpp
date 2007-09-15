@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.186 2007-09-14 06:04:44 victor Exp $ */
+/* $Id: node.cpp,v 1.187 2007-09-15 18:22:21 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -2141,7 +2141,7 @@ DWORD Node::GetLastValues(CSCPMessage *pMsg)
 		if (_tcsnicmp(m_ppItems[i]->Description(), _T("@system."), 8))
 		{
 			m_ppItems[i]->GetLastValue(pMsg, dwId);
-			dwId += 7;
+			dwId += 10;
 			dwCount++;
 		}
 	}

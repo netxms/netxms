@@ -260,7 +260,7 @@ void CNodeLastValuesView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 	for(i = 0; i < m_dwNumItems; i++)
 	{
 		_stprintf(szBuffer, _T("%d"), m_pItemList[i].dwId);
-		nItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, 0);
+		nItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, m_pItemList[i].nStatus);
 		if (nItem != -1)
 		{
 			m_wndListCtrl.SetItemData(nItem, i);
@@ -354,8 +354,8 @@ void CNodeLastValuesView::OnItemGraph()
       ppItemList[i]->dwId = m_pItemList[dwIndex].dwId;
       _tcscpy(ppItemList[i]->szName, m_pItemList[dwIndex].szName);
       _tcscpy(ppItemList[i]->szDescription, m_pItemList[dwIndex].szDescription);
-      ppItemList[i]->iDataType = m_pItemList[dwIndex].iDataType;
-      ppItemList[i]->iSource = m_pItemList[dwIndex].iSource;
+      ppItemList[i]->iDataType = m_pItemList[dwIndex].nDataType;
+      ppItemList[i]->iSource = m_pItemList[dwIndex].nSource;
       iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
    }
 

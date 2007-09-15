@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.274 2007-09-14 06:04:43 victor Exp $ */
+/* $Id: nxclapi.h,v 1.275 2007-09-15 18:22:20 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -1362,8 +1362,9 @@ typedef struct
    TCHAR szName[MAX_ITEM_NAME];
    TCHAR szDescription[MAX_DB_STRING];
    TCHAR szValue[MAX_DB_STRING];
-   int iDataType;
-   int iSource;
+   BYTE nDataType;
+   BYTE nSource;
+	BYTE nStatus;
 } NXC_DCI_VALUE;
 
 

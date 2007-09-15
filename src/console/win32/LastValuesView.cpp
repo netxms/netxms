@@ -317,8 +317,8 @@ void CLastValuesView::OnItemGraph()
       {
          _tcscpy(ppItemList[i]->szName, m_pItemList[dwIndex].szName);
          _tcscpy(ppItemList[i]->szDescription, m_pItemList[dwIndex].szDescription);
-         ppItemList[i]->iDataType = m_pItemList[dwIndex].iDataType;
-         ppItemList[i]->iSource = m_pItemList[dwIndex].iSource;
+         ppItemList[i]->iDataType = m_pItemList[dwIndex].nDataType;
+         ppItemList[i]->iSource = m_pItemList[dwIndex].nSource;
       }
       iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
    }

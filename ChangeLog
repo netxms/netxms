@@ -5,6 +5,9 @@
 - Added SMS driver and subagent to send SMS via remote NetXMS agent
 - Added parameters Net.RemoteShareStatus and Net.RemoteShareStatusText
   to WINNT subagent
+- Added possibility to disable status, configuration, or routing table
+  polls for specific host
+- Fixed issues: #183, #186
 
 
 *

@@ -1,4 +1,4 @@
-/* $Id: nxagentd.cpp,v 1.89 2007-05-07 11:35:41 victor Exp $ */
+/* $Id: nxagentd.cpp,v 1.90 2007-09-15 18:22:20 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -139,6 +139,7 @@ static char *m_pszShExtParamList = NULL;
 static DWORD m_dwEnabledCiphers = 0xFFFF;
 static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
 static THREAD m_thListener = INVALID_THREAD_HANDLE;
+static char m_szConfigServer[MAX_DB_STRING] = "not_set";
 
 #if defined(_WIN32) || defined(_NETWARE)
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
@@ -330,10 +331,16 @@ static LONG H_RestartAgent(TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, TCHAR *p
 #endif
 
 #ifdef _WIN32
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s-X %u"), szExecName,
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s%s-X %u"), szExecName,
               g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
               (g_dwFlags & AF_HIDE_WINDOW) ? _T("-H ") : _T(""),
+				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
+				  (g_dwFlags & AF_CENTRAL_CONFIG) ? m_szConfigServer : _T(""),
+				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
+              (g_dwFlags & AF_DEBUG) ? _T("-D ") : _T(""),
               (g_dwFlags & AF_DAEMON) ? 0 : GetCurrentProcessId());
+	DebugPrintf(INVALID_INDEX, _T("Restarting agent with command line '%s'"), szCmdLine);
+
 
    // Fill in process startup info structure
    memset(&si, 0, sizeof(STARTUPINFO));
@@ -367,8 +374,12 @@ static LONG H_RestartAgent(TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, TCHAR *p
    }
    return dwResult;
 #else
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s-X %lu"), szExecName,
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s-X %lu"), szExecName,
               g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
+				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
+				  (g_dwFlags & AF_CENTRAL_CONFIG) ? m_szConfigServer : _T(""),
+				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
+              (g_dwFlags & AF_DEBUG) ? _T("-D ") : _T(""),
               (unsigned long)m_pid);
    return ExecuteCommand(szCmdLine, NULL);
 #endif
@@ -1002,7 +1013,6 @@ int main(int argc, char *argv[])
    int ch, iExitCode = 0, iAction = ACTION_RUN_AGENT;
    BOOL bRestart = FALSE;
    DWORD dwOldPID;
-   char szConfigServer[MAX_DB_STRING];
 #ifdef _WIN32
    char szModuleName[MAX_PATH];
 #endif
@@ -1059,7 +1069,7 @@ int main(int argc, char *argv[])
             break;
          case 'M':
             g_dwFlags |= AF_CENTRAL_CONFIG;
-            nx_strncpy(szConfigServer, optarg, MAX_DB_STRING);
+            nx_strncpy(m_szConfigServer, optarg, MAX_DB_STRING);
             break;
          case 'X':   // Agent is being restarted
             bRestart = TRUE;
@@ -1126,8 +1136,8 @@ int main(int argc, char *argv[])
          if (g_dwFlags & AF_CENTRAL_CONFIG)
          {
             if (g_dwFlags & AF_DEBUG)
-               printf("Downloading configuration from %s...\n", szConfigServer);
-            if (DownloadConfig(szConfigServer))
+               printf("Downloading configuration from %s...\n", m_szConfigServer);
+            if (DownloadConfig(m_szConfigServer))
             {
                if (g_dwFlags & AF_DEBUG)
                   printf("Configuration downloaded successfully\n");

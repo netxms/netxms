@@ -1,4 +1,4 @@
-/* $Id: dcitem.cpp,v 1.79 2007-09-14 06:04:44 victor Exp $ */
+/* $Id: dcitem.cpp,v 1.80 2007-09-15 18:22:21 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1244,6 +1244,7 @@ void DCItem::GetLastValue(CSCPMessage *pMsg, DWORD dwId)
       pMsg->SetVariable(dwId++, _T(""));
       pMsg->SetVariable(dwId++, (DWORD)0);
    }
+   pMsg->SetVariable(dwId++, (WORD)m_iStatus);
 }
 
 
