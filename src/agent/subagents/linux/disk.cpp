@@ -1,4 +1,4 @@
-/* $Id: disk.cpp,v 1.4 2007-04-24 12:04:10 alk Exp $ */
+/* $Id: disk.cpp,v 1.5 2007-09-17 18:55:04 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -44,13 +44,13 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 				ret_uint64(pValue, (QWORD)s.f_bfree * (QWORD)s.f_bsize);
 				break;
 			case DISK_FREE_PERC:
-				ret_double(pValue, 100.0 * s.f_bfree / s.f_blocks);
+				ret_double(pValue, 100.0 * (((double)s.f_bfree) / s.f_blocks));
 				break;
 			case DISK_AVAIL:
 				ret_uint64(pValue, (QWORD)s.f_bavail * (QWORD)s.f_bsize);
 				break;
 			case DISK_AVAIL_PERC:
-				ret_double(pValue, 100.0 * s.f_bavail / s.f_blocks);
+				ret_double(pValue, 100.0 * (((double)s.f_bavail) / s.f_blocks));
 				break;
 			case DISK_TOTAL:
 				ret_uint64(pValue, (QWORD)s.f_blocks * (QWORD)s.f_frsize);
@@ -59,7 +59,7 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 				ret_uint64(pValue, (QWORD)(s.f_blocks - s.f_bfree) * (QWORD)s.f_frsize);
 				break;
 			case DISK_USED_PERC:
-				ret_double(pValue, 100.0 * (s.f_blocks - s.f_bfree) / s.f_blocks);
+				ret_double(pValue, 100.0 * (((double)(s.f_blocks - s.f_bfree)) / s.f_blocks));
 				break;
 			default: // YIC
 				nRet = SYSINFO_RC_ERROR;
@@ -74,6 +74,9 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2007/04/24 12:04:10  alk
+code reformat
+
 Revision 1.3  2006/03/02 12:17:05  victor
 Removed various warnings related to 64bit platforms
 
