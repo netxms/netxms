@@ -38,6 +38,7 @@ public:
 
 	// Generated message map functions
 protected:
+	BOOL m_bUseMultipliers;
 	NXC_DCI_VALUE * m_pItemList;
 	DWORD m_dwNumItems;
 	Queue m_workerQueue;
@@ -59,6 +60,7 @@ protected:
 	afx_msg void OnItemExportdata();
 	afx_msg void OnItemShowdata();
 	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnLatstvaluesUsemultipliers();
 	//}}AFX_MSG
    afx_msg void OnSetObject(WPARAM wParam, NXC_OBJECT *pObject);
 	afx_msg void OnRequestCompleted(WPARAM wParam, LPARAM lParam);

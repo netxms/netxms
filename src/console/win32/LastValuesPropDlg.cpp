@@ -23,6 +23,7 @@ CLastValuesPropDlg::CLastValuesPropDlg(CWnd* pParent /*=NULL*/)
 	m_bRefresh = FALSE;
 	m_dwSeconds = 0;
 	m_bHideEmpty = FALSE;
+	m_bUseMultipliers = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -36,6 +37,7 @@ void CLastValuesPropDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_TIME, m_dwSeconds);
 	DDV_MinMaxDWord(pDX, m_dwSeconds, 5, 3600);
 	DDX_Check(pDX, IDC_CHECK_HIDE_EMPTY, m_bHideEmpty);
+	DDX_Check(pDX, IDC_CHECK_USE_MULTIPLIERS, m_bUseMultipliers);
 	//}}AFX_DATA_MAP
 }
 

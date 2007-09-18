@@ -31,6 +31,7 @@ CNodeLastValuesView::CNodeLastValuesView()
 	m_nTimer = 0;
    m_iSortMode = theApp.GetProfileInt(_T("NodeLastValuesView"), _T("SortMode"), 1);
    m_iSortDir = theApp.GetProfileInt(_T("NodeLastValuesView"), _T("SortDir"), 1);
+   m_bUseMultipliers = theApp.GetProfileInt(_T("NodeLastValuesView"), _T("UseMultipliers"), TRUE);
 	m_hWorkerThread = INVALID_THREAD_HANDLE;
 	m_pItemList = NULL;
 	m_dwNumItems = 0;
@@ -40,6 +41,7 @@ CNodeLastValuesView::~CNodeLastValuesView()
 {
    theApp.WriteProfileInt(_T("NodeLastValuesView"), _T("SortMode"), m_iSortMode);
    theApp.WriteProfileInt(_T("NodeLastValuesView"), _T("SortDir"), m_iSortDir);
+   theApp.WriteProfileInt(_T("NodeLastValuesView"), _T("UseMultipliers"), m_bUseMultipliers);
 	m_workerQueue.Clear();
 	m_workerQueue.Put((void *)INVALID_INDEX);
 	ThreadJoin(m_hWorkerThread);
@@ -58,6 +60,7 @@ BEGIN_MESSAGE_MAP(CNodeLastValuesView, CWnd)
 	ON_COMMAND(ID_ITEM_EXPORTDATA, OnItemExportdata)
 	ON_COMMAND(ID_ITEM_SHOWDATA, OnItemShowdata)
 	ON_WM_TIMER()
+	ON_COMMAND(ID_LATSTVALUES_USEMULTIPLIERS, OnLatstvaluesUsemultipliers)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_SET_OBJECT, OnSetObject)
    ON_MESSAGE(NXCM_REQUEST_COMPLETED, OnRequestCompleted)
@@ -265,7 +268,118 @@ void CNodeLastValuesView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 		{
 			m_wndListCtrl.SetItemData(nItem, i);
 			m_wndListCtrl.SetItemText(nItem, 1, m_pItemList[i].szDescription);
-			m_wndListCtrl.SetItemText(nItem, 2, m_pItemList[i].szValue);
+
+			if ((m_pItemList[i].nDataType != DCI_DT_STRING) &&
+				 (m_bUseMultipliers))
+			{
+				QWORD ui64;
+				INT64 i64;
+				double d;
+
+				switch(m_pItemList[i].nDataType)
+				{
+					case DCI_DT_INT:
+					case DCI_DT_INT64:
+						i64 = _tcstoll(m_pItemList[i].szValue, NULL, 10);
+						if (i64 >= 10000000000)
+						{
+							_stprintf(szBuffer, INT64_FMT _T(" G"), i64 / 1000000000);
+						}
+						else if (i64 >= 10000000)
+						{
+							_stprintf(szBuffer, INT64_FMT _T(" M"), i64 / 1000000);
+						}
+						else if (i64 >= 10000)
+						{
+							_stprintf(szBuffer, INT64_FMT _T(" K"), i64 / 1000);
+						}
+						else if (i64 >= 0)
+						{
+							_stprintf(szBuffer, INT64_FMT, i64);
+						}
+						else if (i64 <= -10000000000)
+						{
+							_stprintf(szBuffer, INT64_FMT _T(" G"), i64 / 1000000000);
+						}
+						else if (i64 <= -10000000)
+						{
+							_stprintf(szBuffer, INT64_FMT _T(" M"), i64 / 1000000);
+						}
+						else if (i64 <= 10000)
+						{
+							_stprintf(szBuffer, INT64_FMT _T(" K"), i64 / 1000);
+						}
+						else
+						{
+							_stprintf(szBuffer, INT64_FMT, i64);
+						}
+						break;
+					case DCI_DT_UINT:
+					case DCI_DT_UINT64:
+						ui64 = _tcstoull(m_pItemList[i].szValue, NULL, 10);
+						if (ui64 >= 10000000000)
+						{
+							_stprintf(szBuffer, UINT64_FMT _T(" G"), ui64 / 1000000000);
+						}
+						else if (ui64 >= 10000000)
+						{
+							_stprintf(szBuffer, UINT64_FMT _T(" M"), ui64 / 1000000);
+						}
+						else if (ui64 >= 10000)
+						{
+							_stprintf(szBuffer, UINT64_FMT _T(" K"), ui64 / 1000);
+						}
+						else
+						{
+							_stprintf(szBuffer, UINT64_FMT, ui64);
+						}
+						break;
+					case DCI_DT_FLOAT:
+						d = _tcstod(m_pItemList[i].szValue, NULL);
+						if (d >= 10000000000)
+						{
+							_stprintf(szBuffer, _T("%.2f G"), d / 1000000000);
+						}
+						else if (d >= 10000000)
+						{
+							_stprintf(szBuffer, _T("%.2f M"), d / 1000000);
+						}
+						else if (d >= 10000)
+						{
+							_stprintf(szBuffer, _T("%.2f K"), d / 1000);
+						}
+						else if (d >= 0)
+						{
+							_stprintf(szBuffer, _T("%f"), d);
+						}
+						else if (d <= -10000000000)
+						{
+							_stprintf(szBuffer, _T("%.2f G"), d / 1000000000);
+						}
+						else if (d <= -10000000)
+						{
+							_stprintf(szBuffer, _T("%.2f M"), d / 1000000);
+						}
+						else if (d <= 10000)
+						{
+							_stprintf(szBuffer, _T("%.2f K"), d / 1000);
+						}
+						else
+						{
+							_stprintf(szBuffer, _T("%f"), d);
+						}
+						break;
+					default:
+						nx_strncpy(szBuffer, m_pItemList[i].szValue, 64);
+						break;
+				}
+				m_wndListCtrl.SetItemText(nItem, 2, szBuffer);
+			}
+			else
+			{
+				m_wndListCtrl.SetItemText(nItem, 2, m_pItemList[i].szValue);
+			}
+
 			m_wndListCtrl.SetItemText(nItem, 3, FormatTimeStamp(m_pItemList[i].dwTimestamp, szBuffer, TS_LONG_DATE_TIME));
 		}
 	}
@@ -324,6 +438,7 @@ void CNodeLastValuesView::OnContextMenu(CWnd* pWnd, CPoint point)
 	pMenu->EnableMenuItem(ID_ITEM_SHOWDATA, MF_BYCOMMAND | ((nCount > 0) ? MF_ENABLED : MF_GRAYED));
 	pMenu->EnableMenuItem(ID_ITEM_GRAPH, MF_BYCOMMAND | ((nCount > 0) ? MF_ENABLED : MF_GRAYED));
 	pMenu->EnableMenuItem(ID_ITEM_EXPORTDATA, MF_BYCOMMAND | ((nCount == 1) ? MF_ENABLED : MF_GRAYED));
+	pMenu->CheckMenuItem(ID_LATSTVALUES_USEMULTIPLIERS, MF_BYCOMMAND | (m_bUseMultipliers ? MF_CHECKED : MF_UNCHECKED));
    pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
 }
 
@@ -440,4 +555,15 @@ void CNodeLastValuesView::OnItemShowdata()
 void CNodeLastValuesView::OnTimer(UINT nIDEvent) 
 {
 	m_workerQueue.Put((void *)m_pObject->dwId);
+}
+
+
+//
+// Control usage of multipliers for large values
+//
+
+void CNodeLastValuesView::OnLatstvaluesUsemultipliers() 
+{
+	m_bUseMultipliers = !m_bUseMultipliers;
+	m_workerQueue.Put((void *)m_pObject->dwId);	// Refresh view
 }

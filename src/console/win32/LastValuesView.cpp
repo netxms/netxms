@@ -271,7 +271,117 @@ void CLastValuesView::UpdateItem(int iItem, NXC_DCI_VALUE *pValue)
    m_wndListCtrl.SetItem(&item);
 
    m_wndListCtrl.SetItemText(iItem, 1, pValue->szDescription);
-   m_wndListCtrl.SetItemText(iItem, 2, pValue->szValue);
+	if ((pValue->nDataType != DCI_DT_STRING) &&
+	    (m_dwFlags & LVF_USE_MULTIPLIERS))
+	{
+		TCHAR szBuffer[64];
+		QWORD ui64;
+		INT64 i64;
+		double d;
+
+		switch(pValue->nDataType)
+		{
+			case DCI_DT_INT:
+			case DCI_DT_INT64:
+				i64 = _tcstoll(pValue->szValue, NULL, 10);
+				if (i64 >= 10000000000)
+				{
+					_stprintf(szBuffer, INT64_FMT _T(" G"), i64 / 1000000000);
+				}
+				else if (i64 >= 10000000)
+				{
+					_stprintf(szBuffer, INT64_FMT _T(" M"), i64 / 1000000);
+				}
+				else if (i64 >= 10000)
+				{
+					_stprintf(szBuffer, INT64_FMT _T(" K"), i64 / 1000);
+				}
+				else if (i64 >= 0)
+				{
+					_stprintf(szBuffer, INT64_FMT, i64);
+				}
+				else if (i64 <= -10000000000)
+				{
+					_stprintf(szBuffer, INT64_FMT _T(" G"), i64 / 1000000000);
+				}
+				else if (i64 <= -10000000)
+				{
+					_stprintf(szBuffer, INT64_FMT _T(" M"), i64 / 1000000);
+				}
+				else if (i64 <= 10000)
+				{
+					_stprintf(szBuffer, INT64_FMT _T(" K"), i64 / 1000);
+				}
+				else
+				{
+					_stprintf(szBuffer, INT64_FMT, i64);
+				}
+				break;
+			case DCI_DT_UINT:
+			case DCI_DT_UINT64:
+				ui64 = _tcstoull(pValue->szValue, NULL, 10);
+				if (ui64 >= 10000000000)
+				{
+					_stprintf(szBuffer, UINT64_FMT _T(" G"), ui64 / 1000000000);
+				}
+				else if (ui64 >= 10000000)
+				{
+					_stprintf(szBuffer, UINT64_FMT _T(" M"), ui64 / 1000000);
+				}
+				else if (ui64 >= 10000)
+				{
+					_stprintf(szBuffer, UINT64_FMT _T(" K"), ui64 / 1000);
+				}
+				else
+				{
+					_stprintf(szBuffer, UINT64_FMT, ui64);
+				}
+				break;
+			case DCI_DT_FLOAT:
+				d = _tcstod(pValue->szValue, NULL);
+				if (d >= 10000000000)
+				{
+					_stprintf(szBuffer, _T("%.2f G"), d / 1000000000);
+				}
+				else if (d >= 10000000)
+				{
+					_stprintf(szBuffer, _T("%.2f M"), d / 1000000);
+				}
+				else if (d >= 10000)
+				{
+					_stprintf(szBuffer, _T("%.2f K"), d / 1000);
+				}
+				else if (d >= 0)
+				{
+					_stprintf(szBuffer, _T("%f"), d);
+				}
+				else if (d <= -10000000000)
+				{
+					_stprintf(szBuffer, _T("%.2f G"), d / 1000000000);
+				}
+				else if (d <= -10000000)
+				{
+					_stprintf(szBuffer, _T("%.2f M"), d / 1000000);
+				}
+				else if (d <= 10000)
+				{
+					_stprintf(szBuffer, _T("%.2f K"), d / 1000);
+				}
+				else
+				{
+					_stprintf(szBuffer, _T("%f"), d);
+				}
+				break;
+			default:
+				nx_strncpy(szBuffer, pValue->szValue, 64);
+				break;
+		}
+		m_wndListCtrl.SetItemText(iItem, 2, szBuffer);
+	}
+	else
+	{
+		m_wndListCtrl.SetItemText(iItem, 2, pValue->szValue);
+	}
    m_wndListCtrl.SetItemText(iItem, 4, szTimeStamp);
 }
 
@@ -425,6 +535,7 @@ void CLastValuesView::OnLastvaluesProperties()
    dlg.m_bShowGrid = (m_dwFlags & LVF_SHOW_GRID) ? TRUE : FALSE;
    dlg.m_bRefresh = (m_dwFlags & LVF_AUTOREFRESH) ? TRUE : FALSE;
    dlg.m_bHideEmpty = (m_dwFlags & LVF_HIDE_EMPTY) ? TRUE : FALSE;
+   dlg.m_bUseMultipliers = (m_dwFlags & LVF_USE_MULTIPLIERS) ? TRUE : FALSE;
    if (dlg.DoModal() == IDOK)
    {
       if (m_nTimer != 0)
@@ -443,6 +554,10 @@ void CLastValuesView::OnLastvaluesProperties()
       if (dlg.m_bHideEmpty)
       {
          m_dwFlags |= LVF_HIDE_EMPTY;
+      }
+      if (dlg.m_bUseMultipliers)
+      {
+         m_dwFlags |= LVF_USE_MULTIPLIERS;
       }
       if (dlg.m_bShowGrid)
       {

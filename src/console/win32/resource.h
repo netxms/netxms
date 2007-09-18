@@ -657,6 +657,7 @@
 #define IDC_CHECK_DISABLE_CONF_POLLS    1504
 #define IDC_CHECK_DISABLE_ROUTE_POLLS   1505
 #define IDC_CHECK_DISABLE_DATACOLL      1506
+#define IDC_CHECK_USE_MULTIPLIERS       1507
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -929,6 +930,7 @@
 #define ID_MAP_LINK                     33077
 #define ID_MAP_UNLINK                   33078
 #define ID_MAP_AUTOLAYOUT               33079
+#define ID_LATSTVALUES_USEMULTIPLIERS   33080
 #define ID_ALWAYS_DISABLED              43210
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
@@ -940,8 +942,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        374
-#define _APS_NEXT_COMMAND_VALUE         33080
-#define _APS_NEXT_CONTROL_VALUE         1507
+#define _APS_NEXT_COMMAND_VALUE         33081
+#define _APS_NEXT_CONTROL_VALUE         1508
 #define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif

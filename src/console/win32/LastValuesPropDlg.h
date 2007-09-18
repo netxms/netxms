@@ -23,6 +23,7 @@ public:
 	BOOL	m_bRefresh;
 	DWORD	m_dwSeconds;
 	BOOL	m_bHideEmpty;
+	BOOL	m_bUseMultipliers;
 	//}}AFX_DATA
 
 
