@@ -54,6 +54,7 @@ static void TrapCfgFromMsg(CSCPMessage *pMsg, NXC_TRAP_CFG_ENTRY *pTrap)
 
    pTrap->dwEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
    pMsg->GetVariableStr(VID_DESCRIPTION, pTrap->szDescription, MAX_DB_STRING);
+   pMsg->GetVariableStr(VID_USER_TAG, pTrap->szUserTag, MAX_USERTAG_LENGTH);
    pTrap->dwOidLen = pMsg->GetVariableLong(VID_TRAP_OID_LEN);
    pTrap->pdwObjectId = (DWORD *)malloc(sizeof(DWORD) * pTrap->dwOidLen);
    pMsg->GetVariableInt32Array(VID_TRAP_OID, pTrap->dwOidLen, pTrap->pdwObjectId);
@@ -230,6 +231,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY 
    msg.SetVariableToInt32Array(VID_TRAP_OID, pTrap->dwOidLen, pTrap->pdwObjectId);
    msg.SetVariable(VID_EVENT_CODE, pTrap->dwEventCode);
    msg.SetVariable(VID_DESCRIPTION, pTrap->szDescription);
+   msg.SetVariable(VID_USER_TAG, pTrap->szUserTag);
    msg.SetVariable(VID_TRAP_NUM_MAPS, pTrap->dwNumMaps);
    for(i = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE; 
        i < pTrap->dwNumMaps; i++, dwId1++, dwId2++, dwId3++)

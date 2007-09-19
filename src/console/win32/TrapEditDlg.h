@@ -23,7 +23,6 @@ public:
 	//{{AFX_DATA(CTrapEditDlg)
 	enum { IDD = IDD_EDIT_TRAP };
 	CStatic	m_wndEventIcon;
-	CEdit	m_wndEditDescr;
 	CEdit	m_wndEditOID;
 	CListCtrl	m_wndArgList;
 	//}}AFX_DATA

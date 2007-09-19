@@ -45,7 +45,6 @@ void CTrapEditDlg::DoDataExchange(CDataExchange* pDX)
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CTrapEditDlg)
 	DDX_Control(pDX, IDC_EVENT_ICON, m_wndEventIcon);
-	DDX_Control(pDX, IDC_EDIT_DESCRIPTION, m_wndEditDescr);
 	DDX_Control(pDX, IDC_EDIT_TRAP, m_wndEditOID);
 	DDX_Control(pDX, IDC_LIST_ARGS, m_wndArgList);
 	//}}AFX_DATA_MAP
@@ -82,7 +81,8 @@ BOOL CTrapEditDlg::OnInitDialog()
 
 	CDialog::OnInitDialog();
 
-   m_wndEditDescr.SetWindowText(m_trap.szDescription);
+   SetDlgItemText(IDC_EDIT_DESCRIPTION, m_trap.szDescription);
+   SetDlgItemText(IDC_EDIT_TAG, m_trap.szUserTag);
    SNMPConvertOIDToText(m_trap.dwOidLen, m_trap.pdwObjectId, szBuffer, 1024);
    m_wndEditOID.SetWindowText(szBuffer);
 
@@ -148,7 +148,8 @@ void CTrapEditDlg::OnOK()
       m_trap.pdwObjectId = (DWORD *)realloc(m_trap.pdwObjectId, sizeof(DWORD) * m_trap.dwOidLen);
       memcpy(m_trap.pdwObjectId, pdwOid, sizeof(DWORD) * m_trap.dwOidLen);
 
-      m_wndEditDescr.GetWindowText(m_trap.szDescription, MAX_DB_STRING);
+      GetDlgItemText(IDC_EDIT_DESCRIPTION, m_trap.szDescription, MAX_DB_STRING);
+		GetDlgItemText(IDC_EDIT_TAG, m_trap.szUserTag, MAX_USERTAG_LENGTH);
 
    	CDialog::OnOK();
    }

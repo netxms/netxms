@@ -658,6 +658,7 @@
 #define IDC_CHECK_DISABLE_ROUTE_POLLS   1505
 #define IDC_CHECK_DISABLE_DATACOLL      1506
 #define IDC_CHECK_USE_MULTIPLIERS       1507
+#define IDC_EDIT_TAG                    1508
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -943,7 +944,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        374
 #define _APS_NEXT_COMMAND_VALUE         33081
-#define _APS_NEXT_CONTROL_VALUE         1508
+#define _APS_NEXT_CONTROL_VALUE         1509
 #define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif
