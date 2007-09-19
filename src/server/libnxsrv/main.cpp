@@ -38,7 +38,7 @@ DWORD LIBNXSRV_EXPORTABLE g_dwFlags = AF_USE_EVENT_LOG;
 static struct
 {
    int iCode;
-   TCHAR *pszText;
+   const TCHAR *pszText;
 } m_agentErrors[] =
 {
    { ERR_SUCCESS, _T("Success") },

@@ -60,7 +60,7 @@ private:
    CSCP_DF **m_ppVarList;   // List of variables
    int m_nVersion;      // Protocol version
 
-   void *Set(DWORD dwVarId, BYTE bType, void *pValue, DWORD dwSize = 0);
+   void *Set(DWORD dwVarId, BYTE bType, const void *pValue, DWORD dwSize = 0);
    void *Get(DWORD dwVarId, BYTE bType);
    DWORD FindVariable(DWORD dwVarId);
 
@@ -86,7 +86,7 @@ public:
    void SetVariable(DWORD dwVarId, DWORD dwValue) { Set(dwVarId, CSCP_DT_INTEGER, &dwValue); }
    void SetVariable(DWORD dwVarId, QWORD qwValue) { Set(dwVarId, CSCP_DT_INT64, &qwValue); }
    void SetVariable(DWORD dwVarId, double dValue) { Set(dwVarId, CSCP_DT_FLOAT, &dValue); }
-   void SetVariable(DWORD dwVarId, TCHAR *pszValue) { Set(dwVarId, CSCP_DT_STRING, pszValue); }
+   void SetVariable(DWORD dwVarId, const TCHAR *pszValue) { Set(dwVarId, CSCP_DT_STRING, pszValue); }
    void SetVariable(DWORD dwVarId, BYTE *pValue, DWORD dwSize) { Set(dwVarId, CSCP_DT_BINARY, pValue, dwSize); }
    void SetVariableToInt32Array(DWORD dwVarId, DWORD dwNumElements, DWORD *pdwData);
    BOOL SetVariableFromFile(DWORD dwVarId, const TCHAR *pszFileName);

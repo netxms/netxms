@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.187 2007-09-15 18:22:21 victor Exp $ */
+/* $Id: node.cpp,v 1.188 2007-09-19 16:57:41 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -888,7 +888,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    CalculateCompoundStatus();
    m_tLastStatusPoll = time(NULL);
    SendPollerMsg(dwRqId, "Finished status poll for node %s\r\n"
-                         "Node status after poll is %s\r\n", m_szName, g_pszStatusName[m_iStatus]);
+                         "Node status after poll is %s\r\n", m_szName, g_szStatusTextSmall[m_iStatus]);
    m_pPollRequestor = NULL;
    if (dwRqId == 0)
       m_dwDynamicFlags &= ~NDF_QUEUED_FOR_STATUS_POLL;
@@ -2471,7 +2471,7 @@ void Node::UpdateRoutingTable(void)
 // Call SNMP Enumerate with node's SNMP parameters
 //
 
-DWORD Node::CallSnmpEnumerate(char *pszRootOid, 
+DWORD Node::CallSnmpEnumerate(const char *pszRootOid, 
                               DWORD (* pHandler)(DWORD, const char *, SNMP_Variable *, SNMP_Transport *, void *),
                               void *pArg)
 {
@@ -2548,7 +2548,7 @@ void Node::PrepareForDeletion(void)
 // If variable doesn't exist at all, will return FALSE
 //
 
-BOOL Node::CheckSNMPIntegerValue(SNMP_Transport *pTransport, char *pszOID, int nValue)
+BOOL Node::CheckSNMPIntegerValue(SNMP_Transport *pTransport, const char *pszOID, int nValue)
 {
    DWORD dwTemp;
 

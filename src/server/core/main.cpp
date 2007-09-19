@@ -723,7 +723,7 @@ void NXCORE_EXPORTABLE FastShutdown(void)
 // Compare given string to command template with abbreviation possibility
 //
 
-static BOOL IsCommand(char *pszTemplate, char *pszString, int iMinChars)
+static BOOL IsCommand(const char *pszTemplate, char *pszString, int iMinChars)
 {
 	int i;
 

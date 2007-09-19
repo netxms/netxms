@@ -1,4 +1,4 @@
-/* $Id: net.h,v 1.5 2006-08-06 10:32:02 victor Exp $ */
+/* $Id: net.h,v 1.6 2007-09-19 16:57:40 victor Exp $ */
 
 #ifndef __NET__H__
 #define __NET__H__
@@ -9,10 +9,10 @@ enum
 	PROTOCOL_TCP
 };
 
-SOCKET NetConnectTCP(char *, DWORD, unsigned short);
+SOCKET NetConnectTCP(const char *, DWORD, unsigned short);
 bool NetCanRead(SOCKET, int);
 int NetRead(SOCKET, char *, int);
-int NetWrite(SOCKET, char *, int);
+int NetWrite(SOCKET, const char *, int);
 void NetClose(SOCKET);
 
 #endif // __NET__H__
@@ -21,6 +21,11 @@ void NetClose(SOCKET);
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2006/08/06 10:32:02  victor
+- Both 32 and 6 bit installers works correctly
+- All subagents ported to 64bit
+- Agent now reports platform windows-x64 instead of windows-amd64
+
 Revision 1.4  2006/03/15 13:28:18  victor
 - int changed to SOCKET
 - Telnet checker added to VC++ project

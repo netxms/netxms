@@ -1,4 +1,4 @@
-/* $Id: agent.cpp,v 1.51 2007-02-09 21:33:11 victor Exp $ */
+/* $Id: agent.cpp,v 1.52 2007-09-19 16:57:42 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Server Library
@@ -100,7 +100,7 @@ AgentConnection::AgentConnection()
 //
 
 AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort,
-                                 int iAuthMethod, TCHAR *pszSecret)
+                                 int iAuthMethod, const TCHAR *pszSecret)
 {
    m_dwAddr = dwAddr;
    m_wPort = wPort;
@@ -166,7 +166,7 @@ AgentConnection::~AgentConnection()
 // derived classes. Default implementation will print message to stdout.
 //
 
-void AgentConnection::PrintMsg(TCHAR *pszFormat, ...)
+void AgentConnection::PrintMsg(const TCHAR *pszFormat, ...)
 {
    va_list args;
 
@@ -506,6 +506,7 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
          if (pChar != NULL)
          {
             TCHAR *pSlash;
+            static TCHAR defaultMask[] = _T("24");
 
             *pChar = 0;
             pSlash = _tcschr(pBuf, _T('/'));
@@ -516,7 +517,7 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
             }
             else     // Just a paranoia protection, should'n happen if agent working correctly
             {
-               pSlash = _T("24");
+               pSlash = defaultMask;
             }
             pIfList->pInterfaces[i].dwIpAddr = ntohl(_t_inet_addr(pBuf));
             dwBits = _tcstoul(pSlash, NULL, 10);
@@ -559,7 +560,7 @@ INTERFACE_LIST *AgentConnection::GetInterfaceList(void)
 // Get parameter value
 //
 
-DWORD AgentConnection::GetParameter(TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer)
+DWORD AgentConnection::GetParameter(const TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer)
 {
    CSCPMessage msg(m_nProtocolVersion), *pResponse;
    DWORD dwRqId, dwRetCode;
@@ -748,7 +749,7 @@ void AgentConnection::OnTrap(CSCPMessage *pMsg)
 // Get list of values
 //
 
-DWORD AgentConnection::GetList(TCHAR *pszParam)
+DWORD AgentConnection::GetList(const TCHAR *pszParam)
 {
    CSCPMessage msg(m_nProtocolVersion), *pResponse;
    DWORD i, dwRqId, dwRetCode;
@@ -1250,6 +1251,7 @@ ROUTING_TABLE *AgentConnection::GetRoutingTable(void)
          if (pChar != NULL)
          {
             TCHAR *pSlash;
+            static TCHAR defaultMask[] = _T("24");
 
             *pChar = 0;
             pSlash = _tcschr(pBuf, _T('/'));
@@ -1260,7 +1262,7 @@ ROUTING_TABLE *AgentConnection::GetRoutingTable(void)
             }
             else     // Just a paranoia protection, should'n happen if agent working correctly
             {
-               pSlash = _T("24");
+               pSlash = defaultMask;
             }
             pRT->pRoutes[i].dwDestAddr = ntohl(_t_inet_addr(pBuf));
             dwBits = _tcstoul(pSlash, NULL, 10);

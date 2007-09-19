@@ -226,7 +226,7 @@ protected:
    BOOL LoadCommonProperties(void);
    BOOL SaveCommonProperties(DB_HANDLE hdb);
 
-   void SendPollerMsg(DWORD dwRqId, TCHAR *pszFormat, ...);
+   void SendPollerMsg(DWORD dwRqId, const TCHAR *pszFormat, ...);
 
    virtual void PrepareForDeletion(void);
    virtual void OnObjectDelete(DWORD dwObjectId);
@@ -618,7 +618,7 @@ protected:
    void RTLock(void) { MutexLock(m_mutexRTAccess, INFINITE); }
    void RTUnlock(void) { MutexUnlock(m_mutexRTAccess); }
 
-   BOOL CheckSNMPIntegerValue(SNMP_Transport *pTransport, char *pszOID, int nValue);
+   BOOL CheckSNMPIntegerValue(SNMP_Transport *pTransport, const char *pszOID, int nValue);
    void CheckOSPFSupport(SNMP_Transport *pTransport);
 	BOOL ResolveName(void);
    void SetAgentProxy(AgentConnection *pConn);
@@ -732,7 +732,7 @@ public:
    QWORD GetLastEventId(int nIndex) { return ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) ? m_qwLastEvents[nIndex] : 0; }
    void SetLastEventId(int nIndex, QWORD qwId) { if ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) m_qwLastEvents[nIndex] = qwId; }
 
-   DWORD CallSnmpEnumerate(char *pszRootOid, 
+   DWORD CallSnmpEnumerate(const char *pszRootOid, 
       DWORD (* pHandler)(DWORD, const char *, SNMP_Variable *, SNMP_Transport *, void *), void *pArg);
 
 	nxObjList *GetL2Topology(void);
@@ -1102,8 +1102,8 @@ void UpdateNodeIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject);
 void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject);
 
 NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId);
-NetObj NXCORE_EXPORTABLE *FindObjectByName(TCHAR *pszName);
-Template NXCORE_EXPORTABLE *FindTemplateByName(TCHAR *pszName);
+NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *pszName);
+Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);
 Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD dwAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetForNode(DWORD dwNodeAddr);
@@ -1151,7 +1151,7 @@ extern RWLOCK g_rwlockZoneIndex;
 extern RWLOCK g_rwlockConditionIndex;
 extern DWORD g_dwNumCategories;
 extern CONTAINER_CATEGORY *g_pContainerCatList;
-extern char *g_szClassName[];
+extern const char *g_szClassName[];
 extern BOOL g_bModificationsLocked;
 extern Queue *g_pTemplateUpdateQueue;
 

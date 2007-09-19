@@ -304,7 +304,7 @@ protected:
    DWORD SetupProxyConnection(void);
    DWORD GetIpAddr(void) { return ntohl(m_dwAddr); }
 
-   virtual void PrintMsg(TCHAR *pszFormat, ...);
+   virtual void PrintMsg(const TCHAR *pszFormat, ...);
    virtual void OnTrap(CSCPMessage *pMsg);
 
    void Lock(void) { MutexLock(m_mutexDataLock, INFINITE); }
@@ -313,7 +313,7 @@ protected:
 public:
    AgentConnection();
    AgentConnection(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,
-                   int iAuthMethod = AUTH_NONE, TCHAR *pszSecret = NULL);
+                   int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);
    virtual ~AgentConnection();
 
    BOOL Connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, DWORD *pdwError = NULL);
@@ -324,8 +324,8 @@ public:
    ARP_CACHE *GetArpCache(void);
    INTERFACE_LIST *GetInterfaceList(void);
    ROUTING_TABLE *GetRoutingTable(void);
-   DWORD GetParameter(TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer);
-   DWORD GetList(TCHAR *pszParam);
+   DWORD GetParameter(const TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer);
+   DWORD GetList(const TCHAR *pszParam);
    DWORD Nop(void);
    DWORD ExecAction(TCHAR *pszAction, int argc, TCHAR **argv);
    DWORD UploadFile(TCHAR *pszFile);
@@ -385,18 +385,18 @@ const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError);
 
 void LIBNXSRV_EXPORTABLE InitLog(BOOL bUseSystemLog, char *pszLogFile, BOOL bPrintToScreen);
 void LIBNXSRV_EXPORTABLE CloseLog(void);
-void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, char *format, ...);
-void LIBNXSRV_EXPORTABLE DbgPrintf(DWORD dwFlags, TCHAR *szFormat, ...);
+void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, const char *format, ...);
+void LIBNXSRV_EXPORTABLE DbgPrintf(DWORD dwFlags, const TCHAR *szFormat, ...);
 
 BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
                                 void (* fpEventHandler)(DWORD, TCHAR *));
 DB_HANDLE LIBNXSRV_EXPORTABLE DBConnect(void);
-DB_HANDLE LIBNXSRV_EXPORTABLE DBConnectEx(TCHAR *pszServer, TCHAR *pszDBName,
-                                          TCHAR *pszLogin, TCHAR *pszPassword);
+DB_HANDLE LIBNXSRV_EXPORTABLE DBConnectEx(const TCHAR *pszServer, const TCHAR *pszDBName,
+                                          const TCHAR *pszLogin, const TCHAR *pszPassword);
 void LIBNXSRV_EXPORTABLE DBDisconnect(DB_HANDLE hConn);
-BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, TCHAR *szQuery);
-DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, TCHAR *szQuery);
-DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, TCHAR *szQuery);
+BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *szQuery);
+DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, const TCHAR *szQuery);
+DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *szQuery);
 BOOL LIBNXSRV_EXPORTABLE DBFetch(DB_ASYNC_RESULT hResult);
 TCHAR LIBNXSRV_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
                                       TCHAR *pszBuffer, int nBufLen);

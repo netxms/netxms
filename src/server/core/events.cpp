@@ -29,8 +29,8 @@
 
 Queue *g_pEventQueue = NULL;
 EventPolicy *g_pEventPolicy = NULL;
-char *g_szStatusText[] = { "NORMAL", "MINOR", "WARNING", "MAJOR", "CRITICAL", "UNKNOWN", "UNMANAGED", "DISABLED", "TESTING" };
-char *g_szStatusTextSmall[] = { "Normal", "Minor", "Warning", "Major", "Critical", "Unknown", "Unmanaged", "Disabled", "Testing" };
+const char *g_szStatusText[] = { "NORMAL", "MINOR", "WARNING", "MAJOR", "CRITICAL", "UNKNOWN", "UNMANAGED", "DISABLED", "TESTING" };
+const char *g_szStatusTextSmall[] = { "Normal", "Minor", "Warning", "Major", "Critical", "Unknown", "Unmanaged", "Disabled", "Testing" };
 
 
 //
@@ -67,7 +67,7 @@ Event::Event()
 // Construct event from template
 //
 
-Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, TCHAR *pszUserTag, TCHAR *szFormat, va_list args)
+Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, const TCHAR *pszUserTag, const char *szFormat, va_list args)
 {
    m_tTimeStamp = time(NULL);
    m_qwId = CreateUniqueEventId();
@@ -84,7 +84,7 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, TCHAR *pszUserTag, TCH
    {
       DWORD i;
 
-      m_dwNumParameters = (DWORD)_tcslen(szFormat);
+      m_dwNumParameters = (DWORD)strlen(szFormat);
       m_ppszParameters = (char **)malloc(sizeof(char *) * m_dwNumParameters);
 
       for(i = 0; i < m_dwNumParameters; i++)
@@ -580,7 +580,7 @@ static EVENT_TEMPLATE *FindEventTemplate(DWORD dwCode)
 //
 
 static BOOL RealPostEvent(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId,
-                          TCHAR *pszUserTag, TCHAR *pszFormat, va_list args)
+                          const TCHAR *pszUserTag, const char *pszFormat, va_list args)
 {
    EVENT_TEMPLATE *pEventTemplate;
    Event *pEvent;
@@ -608,7 +608,7 @@ static BOOL RealPostEvent(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId,
    return bResult;
 }
 
-BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, TCHAR *pszFormat, ...)
+BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, const char *pszFormat, ...)
 {
    va_list args;
    BOOL bResult;
@@ -619,7 +619,7 @@ BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, TCHAR *pszFormat, ...)
    return bResult;
 }
 
-BOOL PostEventWithTag(DWORD dwEventCode, DWORD dwSourceId, TCHAR *pszUserTag, TCHAR *pszFormat, ...)
+BOOL PostEventWithTag(DWORD dwEventCode, DWORD dwSourceId, const TCHAR *pszUserTag, const char *pszFormat, ...)
 {
    va_list args;
    BOOL bResult;
@@ -631,7 +631,7 @@ BOOL PostEventWithTag(DWORD dwEventCode, DWORD dwSourceId, TCHAR *pszUserTag, TC
 }
 
 BOOL PostEventEx(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId, 
-                 TCHAR *pszFormat, ...)
+                 const char *pszFormat, ...)
 {
    va_list args;
    BOOL bResult;

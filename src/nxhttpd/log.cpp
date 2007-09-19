@@ -1,4 +1,4 @@
-/* $Id: log.cpp,v 1.2 2007-06-28 09:14:05 victor Exp $ */
+/* $Id: log.cpp,v 1.3 2007-09-19 16:57:40 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -203,7 +203,7 @@ static char *FormatMessageUX(DWORD dwMsgId, char **ppStrings)
 //             a - IP address in host byte order
 //
 
-void WriteLog(DWORD msg, WORD wType, char *format, ...)
+void WriteLog(DWORD msg, WORD wType, const char *format, ...)
 {
    va_list args;
    char *strings[16], *pMsg;

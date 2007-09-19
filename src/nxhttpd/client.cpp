@@ -65,7 +65,7 @@ static void DefaultRequestHandler(HttpRequest &request, HttpResponse &response)
 				ext = _tcsrchr(uri, _T('.'));
 				if (ext != NULL)
 				{
-					TCHAR *ct = NULL;
+					const TCHAR *ct = NULL;
 
 					ext++;
 					if (!_tcscmp(ext, _T("html"))) { ct = _T("text/html"); }

@@ -1,4 +1,4 @@
-/* $Id: libnxsl.h,v 1.25 2007-04-02 07:23:45 victor Exp $ */
+/* $Id: libnxsl.h,v 1.26 2007-09-19 16:57:40 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
@@ -133,7 +133,7 @@ public:
 	int LexerInput(char *pBuffer, int nMaxSize);
 
 	int GetCurrLine(void) { return m_nCurrLine; }
-	void Error(char *pszText);
+	void Error(const char *pszText);
 
    void SetErrorState(void) { m_bErrorState = TRUE; }
    BOOL IsErrorState(void) { return m_bErrorState; }
@@ -176,7 +176,7 @@ public:
 // Global variables
 //
 
-extern char *g_szTypeNames[];
+extern const char *g_szTypeNames[];
 
 
 #endif

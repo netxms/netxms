@@ -11,7 +11,7 @@
 #include "parser.tab.hpp"
 
 void yyerror(yyscan_t scanner, NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
-             NXSL_Program *pScript, char *pszText);
+             NXSL_Program *pScript, const char *pszText);
 int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 
 %}

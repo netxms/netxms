@@ -1,4 +1,4 @@
-/* $Id: id.cpp,v 1.23 2007-03-23 15:59:05 victor Exp $ */
+/* $Id: id.cpp,v 1.24 2007-09-19 16:57:41 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -48,7 +48,7 @@ static DWORD m_dwIdLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFF
                                                 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
                                               };
 static QWORD m_qwFreeEventId = 1;
-static char *m_pszGroupNames[NUMBER_OF_GROUPS] =
+static const char *m_pszGroupNames[NUMBER_OF_GROUPS] =
 {
    "Network Objects",
    "Container Categories",

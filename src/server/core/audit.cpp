@@ -38,7 +38,7 @@ void InitAuditLog(void)
 {
 	DB_RESULT hResult;
 
-   hResult = DBSelect(g_hCoreDB, "SELECT max(record_id) FROM audit_log");
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(record_id) FROM audit_log"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)

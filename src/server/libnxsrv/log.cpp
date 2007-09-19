@@ -223,7 +223,7 @@ static char *FormatMessageUX(DWORD dwMsgId, char **ppStrings)
 //             a - IP address in network byte order
 //
 
-void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, char *format, ...)
+void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, const char *format, ...)
 {
    va_list args;
    char *strings[16], *pMsg;
@@ -344,7 +344,7 @@ void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, char *format, ...)
 // and specific application flag(s) is set
 //
 
-void LIBNXSRV_EXPORTABLE DbgPrintf(DWORD dwFlags, TCHAR *szFormat, ...)
+void LIBNXSRV_EXPORTABLE DbgPrintf(DWORD dwFlags, const TCHAR *szFormat, ...)
 {
    va_list args;
    TCHAR szBuffer[4096];
@@ -355,5 +355,5 @@ void LIBNXSRV_EXPORTABLE DbgPrintf(DWORD dwFlags, TCHAR *szFormat, ...)
    va_start(args, szFormat);
    _vsntprintf(szBuffer, 4096, szFormat, args);
    va_end(args);
-   WriteLog(MSG_DEBUG, EVENTLOG_INFORMATION_TYPE, _T("s"), szBuffer);
+   WriteLog(MSG_DEBUG, EVENTLOG_INFORMATION_TYPE, "s", szBuffer);
 }

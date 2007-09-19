@@ -70,7 +70,7 @@ private:
 
 public:
    Event();
-   Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, TCHAR *pszUserTag, TCHAR *szFormat, va_list args);
+   Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, const TCHAR *pszUserTag, const char *szFormat, va_list args);
    ~Event();
 
    QWORD Id(void) { return m_qwId; }
@@ -182,10 +182,10 @@ public:
 
 BOOL InitEventSubsystem(void);
 void ShutdownEventSubsystem(void);
-BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, TCHAR *pszFormat, ...);
-BOOL PostEventWithTag(DWORD dwEventCode, DWORD dwSourceId, TCHAR *pszUserTag, TCHAR *pszFormat, ...);
+BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, const char *pszFormat, ...);
+BOOL PostEventWithTag(DWORD dwEventCode, DWORD dwSourceId, const TCHAR *pszUserTag, const char *pszFormat, ...);
 BOOL PostEventEx(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId, 
-                 TCHAR *pszFormat, ...);
+                 const char *pszFormat, ...);
 void ResendEvents(Queue *pQueue);
 void ReloadEvents(void);
 void DeleteEventTemplateFromList(DWORD dwEventCode);
@@ -202,7 +202,7 @@ EVENT_TEMPLATE *FindEventTemplateByName(TCHAR *pszName);
 
 extern Queue *g_pEventQueue;
 extern EventPolicy *g_pEventPolicy;
-extern char *g_szStatusText[];
-extern char *g_szStatusTextSmall[];
+extern const char *g_szStatusText[];
+extern const char *g_szStatusTextSmall[];
 
 #endif   /* _nms_events_h_ */

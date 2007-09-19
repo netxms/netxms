@@ -83,7 +83,7 @@ int NXSL_Lexer::LexerInput(char *pBuffer, int nMaxSize)
 // Report error
 //
 
-void NXSL_Lexer::Error(char *pszText)
+void NXSL_Lexer::Error(const char *pszText)
 {
 	m_pCompiler->Error(pszText);
 }

@@ -346,7 +346,7 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 {
    MAIL_ENVELOPE *pEnvelope;
    DWORD dwResult;
-   static char *m_szErrorText[] =
+   static const char *m_szErrorText[] =
    {
       "Sended successfully",
       "Unable to resolve SMTP server name",

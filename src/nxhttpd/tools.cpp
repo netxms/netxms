@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.4 2007-05-15 09:36:32 victor Exp $ */
+/* $Id: tools.cpp,v 1.5 2007-09-19 16:57:40 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -29,7 +29,7 @@
 // Print debug messages
 //
 
-void DebugPrintf(DWORD dwSessionId, char *pszFormat, ...)
+void DebugPrintf(DWORD dwSessionId, const char *pszFormat, ...)
 {
    if (g_dwFlags & AF_DEBUG)
    {
@@ -52,7 +52,7 @@ void DebugPrintf(DWORD dwSessionId, char *pszFormat, ...)
 // Translate given code to text
 //
 
-TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, TCHAR *pszDefaultText)
+const TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText)
 {
    int i;
 
@@ -70,7 +70,7 @@ TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, TCHAR *pszDefaultText)
 TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType)
 {
    struct tm *pTime;
-   static TCHAR *pFormat[] = { _T("%d-%b-%Y %H:%M:%S"), _T("%H:%M:%S"), _T("%b/%d"), _T("%b") };
+   static const TCHAR *pFormat[] = { _T("%d-%b-%Y %H:%M:%S"), _T("%H:%M:%S"), _T("%b/%d"), _T("%b") };
 
    pTime = localtime((const time_t *)&dwTimeStamp);
 	if (pTime != NULL)
@@ -85,7 +85,7 @@ TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType)
 // Create ID list from string of form (id1)(id2)..(idN)
 //
 
-DWORD *IdListFromString(TCHAR *pszStr, DWORD *pdwCount)
+DWORD *IdListFromString(const TCHAR *pszStr, DWORD *pdwCount)
 {
 	DWORD i, *pdwList;
 	TCHAR *curr, *start;
@@ -95,7 +95,7 @@ DWORD *IdListFromString(TCHAR *pszStr, DWORD *pdwCount)
 	{
 		pdwList = (DWORD *)malloc(sizeof(DWORD) * (*pdwCount));
 		memset(pdwList, 0, sizeof(DWORD) * (*pdwCount));
-		for(i = 0, start = pszStr; i < *pdwCount; i++)
+		for(i = 0, start = (TCHAR *)pszStr; i < *pdwCount; i++)
 		{
 			curr = _tcschr(start, _T('('));
 			if (curr == NULL)

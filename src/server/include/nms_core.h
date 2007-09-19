@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.136 2007-09-03 05:52:34 victor Exp $ */
+/* $Id: nms_core.h,v 1.137 2007-09-19 16:57:41 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -562,16 +562,16 @@ public:
 // Functions
 //
 
-BOOL NXCORE_EXPORTABLE ConfigReadStr(TCHAR *szVar, TCHAR *szBuffer, int iBufSize,
+BOOL NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize,
                                      const TCHAR *szDefault);
-int NXCORE_EXPORTABLE ConfigReadInt(TCHAR *szVar, int iDefault);
-DWORD NXCORE_EXPORTABLE ConfigReadULong(TCHAR *szVar, DWORD dwDefault);
-BOOL NXCORE_EXPORTABLE ConfigReadByteArray(TCHAR *pszVar, int *pnArray,
+int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *szVar, int iDefault);
+DWORD NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, DWORD dwDefault);
+BOOL NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *pszVar, int *pnArray,
                                            int nSize, int nDefault);
-BOOL NXCORE_EXPORTABLE ConfigWriteStr(TCHAR *szVar, TCHAR *szValue, BOOL bCreate);
-BOOL NXCORE_EXPORTABLE ConfigWriteInt(TCHAR *szVar, int iValue, BOOL bCreate);
-BOOL NXCORE_EXPORTABLE ConfigWriteULong(TCHAR *szVar, DWORD dwValue, BOOL bCreate);
-BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(TCHAR *pszVar, int *pnArray,
+BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, BOOL bCreate);
+BOOL NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, BOOL bCreate);
+BOOL NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, DWORD dwValue, BOOL bCreate);
+BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *pszVar, int *pnArray,
                                             int nSize, BOOL bCreate);
 
 BOOL NXCORE_EXPORTABLE LoadConfig(void);
@@ -585,7 +585,7 @@ void InitiateShutdown(void);
 
 BOOL NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds);
 
-void ConsolePrintf(CONSOLE_CTX pCtx, char *pszFormat, ...);
+void ConsolePrintf(CONSOLE_CTX pCtx, const char *pszFormat, ...);
 int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx);
 
 void SaveObjects(DB_HANDLE hdb);
@@ -622,7 +622,7 @@ int SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, char *ps
 ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, SNMP_Transport *pTransport, const char *szCommunity);
 
 void WatchdogInit(void);
-DWORD WatchdogAddThread(char *szName, time_t tNotifyInterval);
+DWORD WatchdogAddThread(const TCHAR *szName, time_t tNotifyInterval);
 void WatchdogNotify(DWORD dwId);
 void WatchdogPrintStatus(CONSOLE_CTX pCtx);
 
@@ -703,13 +703,13 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *);
 
 #endif   /* _WIN32 */
 
-void DbgTestMutex(MUTEX hMutex, TCHAR *szName, CONSOLE_CTX pCtx);
-void DbgTestRWLock(RWLOCK hLock, TCHAR *szName, CONSOLE_CTX pCtx);
+void DbgTestMutex(MUTEX hMutex, const TCHAR *szName, CONSOLE_CTX pCtx);
+void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX pCtx);
 void DumpSessions(CONSOLE_CTX pCtx);
 void ShowPollerState(CONSOLE_CTX pCtx);
-void SetPollerInfo(int nIdx, char *pszMsg);
+void SetPollerInfo(int nIdx, const char *pszMsg);
 void ShowServerStats(CONSOLE_CTX pCtx);
-void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, char *pszName);
+void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, const char *pszName);
 void DumpProcess(void);
 
 
@@ -735,8 +735,6 @@ extern DWORD g_dwThresholdRepeatInterval;
 
 extern DB_HANDLE g_hCoreDB;
 extern Queue *g_pLazyRequestQueue;
-
-extern char *g_pszStatusName[];
 
 extern DWORD g_dwDBSyntax;
 

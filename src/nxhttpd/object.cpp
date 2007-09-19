@@ -104,7 +104,7 @@ static int CompareObjects(const void *p1, const void *p2)
 void ClientSession::SendObjectTree(HttpRequest &request, HttpResponse &response)
 {
 	String parent, data, tmp;
-	TCHAR *ico;
+	const TCHAR *ico;
 	int parentId = 0;
 	NXC_OBJECT **ppRootObjects = NULL;
 	NXC_OBJECT_INDEX *pIndex = NULL;
@@ -248,7 +248,7 @@ static BOOL IsValidObjectView(int nClass, int nView)
 // Add object submenu item
 //
 
-static void AddObjectSubmenu(String &data, int nClass, int nViewId, TCHAR *pszViewName)
+static void AddObjectSubmenu(String &data, int nClass, int nViewId, const TCHAR *pszViewName)
 {
 	if (IsValidObjectView(nClass, nViewId))
 		data.AddFormattedString(_T("		<li><a href=\"\" onclick=\"javascript:showObjectInfo({$id},%d); return false;\">%s</a></li>\r\n"),
@@ -344,7 +344,7 @@ void ClientSession::ShowObjectView(HttpRequest &request, HttpResponse &response)
 // Show single object attribute
 //
 
-static void ShowObjectAttribute(HttpResponse &response, TCHAR *pszName, TCHAR *pszValue)
+static void ShowObjectAttribute(HttpResponse &response, const TCHAR *pszName, const TCHAR *pszValue)
 {
 	TCHAR szBuffer[1024];
 	String value;
@@ -355,7 +355,7 @@ static void ShowObjectAttribute(HttpResponse &response, TCHAR *pszName, TCHAR *p
 	response.AppendBody(szBuffer);
 }
 
-static void ShowObjectAttribute(HttpResponse &response, TCHAR *pszName, DWORD dwValue)
+static void ShowObjectAttribute(HttpResponse &response, const TCHAR *pszName, DWORD dwValue)
 {
 	TCHAR szBuffer[16];
 
@@ -476,8 +476,8 @@ void ClientSession::ShowObjectTools(HttpResponse &response, NXC_OBJECT *pObject)
 // Add object management link
 //
 
-static void AddObjectMgmtLink(HttpResponse &response, NXC_OBJECT *pObject, TCHAR *sid,
-										TCHAR *pszName, TCHAR *pszImage, int nAction)
+static void AddObjectMgmtLink(HttpResponse &response, NXC_OBJECT *pObject, const TCHAR *sid,
+                              const TCHAR *pszName, const TCHAR *pszImage, int nAction)
 {
 	TCHAR szTemp[256];
 

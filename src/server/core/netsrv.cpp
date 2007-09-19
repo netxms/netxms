@@ -356,7 +356,7 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 
    SendPollerMsg(dwRqId, "   Starting status poll on network service %s\r\n"
                          "      Current status is %s\r\n",
-                 m_szName, g_pszStatusName[m_iStatus]);
+                 m_szName, g_szStatusTextSmall[m_iStatus]);
 
    if (m_dwPollerNode != 0)
    {
@@ -403,7 +403,7 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 
    if (m_iStatus != iOldStatus)
    {
-      SendPollerMsg(dwRqId, "      Service status changed to %s\r\n", g_pszStatusName[m_iStatus]);
+      SendPollerMsg(dwRqId, "      Service status changed to %s\r\n", g_szStatusTextSmall[m_iStatus]);
       PostEventEx(pEventQueue, m_iStatus == STATUS_NORMAL ? EVENT_SERVICE_UP : 
                   (m_iStatus == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
                   m_pHostNode->Id(), "sdd", m_szName, m_dwId, m_iServiceType);

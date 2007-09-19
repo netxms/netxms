@@ -24,7 +24,7 @@ escape		\\[bnrt0\"]
 #include "libnxsl.h"
 #include "parser.tab.hpp"
 
-static void LexerError(char *pszMsg, yyscan_t scanner);
+static void LexerError(const char *pszMsg, yyscan_t scanner);
 
 %}
 
@@ -212,7 +212,7 @@ static void LexerError(char *pszMsg, yyscan_t scanner);
 
 %%
 
-static void LexerError(char *pszMsg, yyscan_t scanner)
+static void LexerError(const char *pszMsg, yyscan_t scanner)
 {
    yyget_extra(scanner)->Error(pszMsg);
 }

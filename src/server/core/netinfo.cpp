@@ -341,6 +341,7 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
             if (pChar != NULL)
             {
                TCHAR *pSlash;
+               static TCHAR defaultMask[] = _T("24");
 
                *pChar = 0;
                pSlash = _tcschr(pBuf, _T('/'));
@@ -351,7 +352,7 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
                }
                else     // Just a paranoia protection, should'n happen if subagent working correctly
                {
-                  pSlash = _T("24");
+                  pSlash = defaultMask;
                }
                pIfList->pInterfaces[i].dwIpAddr = ntohl(_t_inet_addr(pBuf));
                dwBits = _tcstoul(pSlash, NULL, 10);

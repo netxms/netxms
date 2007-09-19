@@ -329,7 +329,7 @@ BOOL HttpRequest::ParseParameter(TCHAR *pszParam)
 // Set query parameter
 //
 
-void HttpRequest::SetQueryParam(TCHAR *pszName, TCHAR *pszValue)
+void HttpRequest::SetQueryParam(const TCHAR *pszName, const TCHAR *pszValue)
 {
 	m_query.Set(pszName, pszValue);
 }
@@ -339,7 +339,7 @@ void HttpRequest::SetQueryParam(TCHAR *pszName, TCHAR *pszValue)
 // Get query parameter
 //
 
-BOOL HttpRequest::GetQueryParam(TCHAR *pszName, String &value)
+BOOL HttpRequest::GetQueryParam(const TCHAR *pszName, String &value)
 {
 	BOOL ret = FALSE;
 	TCHAR *pszValue;
@@ -358,7 +358,7 @@ BOOL HttpRequest::GetQueryParam(TCHAR *pszName, String &value)
 // Get method name
 //
 
-TCHAR *HttpRequest::GetMethodName(void)
+const TCHAR *HttpRequest::GetMethodName(void)
 {
 	return (m_method == METHOD_GET) ? _T("GET") : ((m_method == METHOD_POST) ? _T("POST") : _T("INVALID"));
 }

@@ -52,7 +52,7 @@ HttpResponse::~HttpResponse()
 // Set body
 //
 
-void HttpResponse::SetBody(TCHAR *data, int size, BOOL bAppend)
+void HttpResponse::SetBody(const TCHAR *data, int size, BOOL bAppend)
 {
 	// FIXME: add validation
 	if ((m_body != NULL) && !bAppend)
@@ -177,7 +177,7 @@ char *HttpResponse::BuildStream(int &size)
 // Start HTML page
 //
 
-void HttpResponse::BeginPage(TCHAR *pszTitle)
+void HttpResponse::BeginPage(const TCHAR *pszTitle)
 {
 	SetType(_T("text/html"));
 	SetBody(_T("<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n")	// Push IE6 and IE 5 into quirks mode
@@ -199,7 +199,7 @@ void HttpResponse::BeginPage(TCHAR *pszTitle)
 // Start box
 //
 
-void HttpResponse::StartBox(TCHAR *pszTitle, TCHAR *pszClass, TCHAR *pszId, TCHAR *pszTableClass, BOOL bContentOnly)
+void HttpResponse::StartBox(const TCHAR *pszTitle, const TCHAR *pszClass, const TCHAR *pszId, const TCHAR *pszTableClass, BOOL bContentOnly)
 {
 	String temp;
 
@@ -259,7 +259,7 @@ void HttpResponse::StartBox(TCHAR *pszTitle, TCHAR *pszClass, TCHAR *pszId, TCHA
 // Start table header
 //
 
-void HttpResponse::StartTableHeader(TCHAR *pszClass)
+void HttpResponse::StartTableHeader(const TCHAR *pszClass)
 {
 	if (pszClass == NULL)
 	{

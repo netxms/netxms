@@ -257,7 +257,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 
    SendPollerMsg(dwRqId, "   Starting status poll on interface %s\r\n"
                          "      Current interface status is %s\r\n",
-                 m_szName, g_pszStatusName[m_iStatus]);
+                 m_szName, g_szStatusTextSmall[m_iStatus]);
 
    // Poll interface using different methods
    if (m_dwIfType != IFTYPE_NETXMS_NAT_ADAPTER)
@@ -324,7 +324,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 			EVENT_INTERFACE_TESTING   // Testing
 		};
 
-      SendPollerMsg(dwRqId, "      Interface status changed to %s\r\n", g_pszStatusName[m_iStatus]);
+      SendPollerMsg(dwRqId, "      Interface status changed to %s\r\n", g_szStatusTextSmall[m_iStatus]);
       PostEventEx(pEventQueue, 
                   statusToEvent[m_iStatus],
                   pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask,

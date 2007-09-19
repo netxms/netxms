@@ -169,7 +169,7 @@ static void AddAlarmColumnHeader(HttpResponse &response, TCHAR *sid, int nCol, D
 										   int nSortDir, BOOL bSortBy)
 {
 	TCHAR szTemp[16384];
-	static TCHAR *colNames[] = 
+	static const TCHAR *colNames[] = 
 	{ 
 		_T("Severity"),
 		_T("State"),
@@ -193,7 +193,7 @@ static void AddAlarmColumnHeader(HttpResponse &response, TCHAR *sid, int nCol, D
 //
 
 void ClientSession::ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj,
-                                  BOOL bReload, TCHAR *pszSelection)
+                                  BOOL bReload, const TCHAR *pszSelection)
 {
 	DWORD i, dwSelCount, *pdwSelList;
 	String row, name, msg;

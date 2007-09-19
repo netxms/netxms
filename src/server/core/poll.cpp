@@ -142,7 +142,7 @@ static void SetPollerState(int nIdx, char *pszMsg)
 // Set poller's info
 //
 
-void SetPollerInfo(int nIdx, char *pszMsg)
+void SetPollerInfo(int nIdx, const char *pszMsg)
 {
    if (nIdx != -1)
    {

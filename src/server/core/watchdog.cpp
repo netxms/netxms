@@ -50,7 +50,7 @@ static MUTEX m_mutexWatchdogAccess;
 // Add thread to watch list
 //
 
-DWORD WatchdogAddThread(char *szName, time_t tNotifyInterval)
+DWORD WatchdogAddThread(const TCHAR *szName, time_t tNotifyInterval)
 {
    DWORD dwId;
 

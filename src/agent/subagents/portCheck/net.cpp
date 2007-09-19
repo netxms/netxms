@@ -1,11 +1,11 @@
-/* $Id: net.cpp,v 1.8 2006-08-13 22:59:00 victor Exp $ */
+/* $Id: net.cpp,v 1.9 2007-09-19 16:57:40 victor Exp $ */
 
 #include <nms_common.h>
 #include <nms_agent.h>
 
 #include "net.h"
 
-SOCKET NetConnectTCP(char *szHost, DWORD dwAddr, unsigned short nPort)
+SOCKET NetConnectTCP(const char *szHost, DWORD dwAddr, unsigned short nPort)
 {
 	SOCKET nSocket;
 
@@ -59,7 +59,7 @@ int NetRead(SOCKET nSocket, char *pBuff, int nSize)
 	return recv(nSocket, pBuff, nSize, 0);
 }
 
-int NetWrite(SOCKET nSocket, char *pBuff, int nSize)
+int NetWrite(SOCKET nSocket, const char *pBuff, int nSize)
 {
 	return send(nSocket, pBuff, nSize, 0);
 }
@@ -74,6 +74,10 @@ void NetClose(SOCKET nSocket)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/08/13 22:59:00  victor
+- Default session timeout changed to 120 seconds on non-Windows systems
+- Changed socket() error checking - on Windows, SOCKET is an unsigned integer, so conditions like (sock < 0) will not become true event if socket() fails - fixed
+
 Revision 1.7  2006/08/06 10:32:02  victor
 - Both 32 and 6 bit installers works correctly
 - All subagents ported to 64bit

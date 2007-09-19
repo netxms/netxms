@@ -41,7 +41,7 @@
 // Command mnemonics
 //
 
-static char *m_szCommandMnemonic[] =
+static const char *m_szCommandMnemonic[] =
 {
    "NOP", "RET", "JMP", "CALL", "CALL",
    "PUSH", "PUSH", "EXIT", "POP", "SET",
@@ -61,26 +61,26 @@ static char *m_szCommandMnemonic[] =
 // Error texts
 //
 
-static TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
+static const TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
 {
-   _T("Data stack underflow"),
-   _T("Control stack underflow"),
-   _T("Condition value is not a number"),
-   _T("Bad arithmetic conversion"),
-   _T("Invalid operation with NULL value"),
-   _T("Internal error"),
-   _T("main() function not presented"),
-   _T("Control stack overflow"),
-   _T("Divide by zero"),
-   _T("Invalid operation with real numbers"),
-   _T("Function not found"),
-   _T("Invalid number of function's arguments"),
-   _T("Cannot do automatic type cast"),
-   _T("Left argument of -> must be a reference to object"),
-   _T("Unknown object's attribute"),
-   _T("Requested module not found or cannot be loaded"),
-   _T("Argument is not of string type and cannot be converted to string"),
-   _T("Invalid regular expression"),
+	_T("Data stack underflow"),
+	_T("Control stack underflow"),
+	_T("Condition value is not a number"),
+	_T("Bad arithmetic conversion"),
+	_T("Invalid operation with NULL value"),
+	_T("Internal error"),
+	_T("main() function not presented"),
+	_T("Control stack overflow"),
+	_T("Divide by zero"),
+	_T("Invalid operation with real numbers"),
+	_T("Function not found"),
+	_T("Invalid number of function's arguments"),
+	_T("Cannot do automatic type cast"),
+	_T("Left argument of -> must be a reference to object"),
+	_T("Unknown object's attribute"),
+	_T("Requested module not found or cannot be loaded"),
+	_T("Argument is not of string type and cannot be converted to string"),
+	_T("Invalid regular expression"),
 	_T("Function or operation argument is not a whole number")
 };
 
@@ -246,7 +246,7 @@ void NXSL_Program::CreateJumpAt(DWORD dwOpAddr, DWORD dwJumpAddr)
 // Will use first free address if dwAddr == INVALID_ADDRESS
 //
 
-BOOL NXSL_Program::AddFunction(char *pszName, DWORD dwAddr, char *pszError)
+BOOL NXSL_Program::AddFunction(const char *pszName, DWORD dwAddr, char *pszError)
 {
    DWORD i;
 
@@ -1168,7 +1168,7 @@ void NXSL_Program::RelocateCode(DWORD dwStart, DWORD dwLen, DWORD dwShift)
 // Use external module
 //
 
-void NXSL_Program::UseModule(NXSL_Program *pModule, char *pszName)
+void NXSL_Program::UseModule(NXSL_Program *pModule, const char *pszName)
 {
    DWORD i, j, dwStart;
 

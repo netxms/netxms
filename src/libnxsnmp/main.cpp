@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.12 2006-12-26 22:53:59 victor Exp $ */
+/* $Id: main.cpp,v 1.13 2007-09-19 16:57:40 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
@@ -96,7 +96,7 @@ BOOL LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *pszText)
 
 const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(DWORD dwError)
 {
-   static TCHAR *pszErrorText[] =
+   static const TCHAR *pszErrorText[] =
    {
       _T("Operation completed successfully"),
       _T("Request timed out"),
@@ -123,11 +123,11 @@ const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(DWORD dwError)
 // Resolve text representation of data type to integer value
 //
 
-DWORD LIBNXSNMP_EXPORTABLE SNMPResolveDataType(TCHAR *pszType)
+DWORD LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *pszType)
 {
    static struct
    {
-      TCHAR *pszName;
+      const TCHAR *pszName;
       DWORD dwValue;
    } typeList[] =
    {

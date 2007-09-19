@@ -38,7 +38,7 @@
 struct LOCK_INFO
 {
    DWORD dwLockStatus;
-   TCHAR *pszName;
+   const TCHAR *pszName;
    TCHAR szOwnerInfo[MAX_OWNER_INFO];
 };
 

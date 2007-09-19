@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.64 2007-07-25 12:03:05 victor Exp $ */
+/* $Id: tools.cpp,v 1.65 2007-09-19 16:57:40 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
@@ -733,9 +733,9 @@ TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(TCHAR *pszFileName)
 
 int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText)
 {
-   static TCHAR *m_pszValidTypes[] = { _T("INT"), _T("UINT"), _T("INT64"),
-                                       _T("UINT64"), _T("STRING"),
-                                       _T("FLOAT"), NULL };
+   static const TCHAR *m_pszValidTypes[] = { _T("INT"), _T("UINT"), _T("INT64"),
+                                             _T("UINT64"), _T("STRING"),
+                                             _T("FLOAT"), NULL };
    int i;
 
    for(i = 0; m_pszValidTypes[i] != NULL; i++)

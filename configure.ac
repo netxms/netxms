@@ -1,10 +1,10 @@
-# $Id: configure.ac,v 1.266 2007-08-28 20:01:36 alk Exp $
+# $Id: configure.ac,v 1.267 2007-09-19 16:57:39 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
 #
 
-AC_INIT([NetXMS], [0.2.19-rc4], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.19-rc5], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -404,7 +404,7 @@ if test "x$CXX" = "xg++"; then
 fi
 AC_PROG_INSTALL
 AC_PROG_LEX
-AC_PROG_YACC
+AC_CHECK_PROGS(YACC,bison byacc,yacc)
 AC_PROG_LN_S
 
 AC_ARG_VAR(PERL,local path to the perl interpreter)

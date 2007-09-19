@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.11 2007-02-05 11:55:20 alk Exp $ */
+/* $Id: system.cpp,v 1.12 2007-09-19 16:57:39 victor Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -21,6 +21,7 @@
 **/
 
 #undef _XOPEN_SOURCE
+#define _SYS_LOCK_PROFILE_H_	/* prevent include of sys/lock_profile.h which can be C++ incompatible)
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -384,6 +385,9 @@ LONG H_SourcePkgSupport(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2007/02/05 11:55:20  alk
+same problem with CpuUsage as in linux subagent
+
 Revision 1.10  2006/10/05 12:41:32  alk
 generic: iconv - const detection added
 hpux: System.LoggedInCount renamed to System.ConnectedUsers

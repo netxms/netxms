@@ -31,7 +31,7 @@
 // Test mutex state and print to stdout
 //
 
-void DbgTestMutex(MUTEX hMutex, TCHAR *szName, CONSOLE_CTX pCtx)
+void DbgTestMutex(MUTEX hMutex, const TCHAR *szName, CONSOLE_CTX pCtx)
 {
    ConsolePrintf(pCtx, _T("  %s: "), szName);
    if (MutexLock(hMutex, 100))
@@ -50,7 +50,7 @@ void DbgTestMutex(MUTEX hMutex, TCHAR *szName, CONSOLE_CTX pCtx)
 // Test read/write lock state and print to stdout
 //
 
-void DbgTestRWLock(RWLOCK hLock, TCHAR *szName, CONSOLE_CTX pCtx)
+void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX pCtx)
 {
    ConsolePrintf(pCtx, _T("  %s: "), szName);
    if (RWLockWriteLock(hLock, 100))
@@ -77,7 +77,7 @@ void DbgTestRWLock(RWLOCK hLock, TCHAR *szName, CONSOLE_CTX pCtx)
 // Print message to console, either local or remote
 //
 
-void ConsolePrintf(CONSOLE_CTX pCtx, char *pszFormat, ...)
+void ConsolePrintf(CONSOLE_CTX pCtx, const char *pszFormat, ...)
 {
    va_list args;
 
@@ -126,7 +126,7 @@ void ShowServerStats(CONSOLE_CTX pCtx)
 // Show queue stats
 //
 
-void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, char *pszName)
+void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, const char *pszName)
 {
    if (pQueue != NULL)
       ConsolePrintf(pCtx, "%-32s : %d\n", pszName, pQueue->Size());

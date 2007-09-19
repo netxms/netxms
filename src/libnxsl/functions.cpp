@@ -29,8 +29,8 @@
 // Global data
 //
 
-char *g_szTypeNames[] = { "null", "object", "string", "real", "int32",
-                          "int64", "uint32", "uint64" };
+const char *g_szTypeNames[] = { "null", "object", "string", "real", "int32",
+                                "int64", "uint32", "uint64" };
 
 
 

@@ -1,4 +1,4 @@
-/* $Id: config.cpp,v 1.45 2007-02-09 17:31:57 victor Exp $ */
+/* $Id: config.cpp,v 1.46 2007-09-19 16:57:41 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -83,7 +83,7 @@ BOOL NXCORE_EXPORTABLE LoadConfig(void)
 // Read string value from configuration table
 //
 
-BOOL NXCORE_EXPORTABLE ConfigReadStr(TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault)
+BOOL NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault)
 {
    DB_RESULT hResult;
    TCHAR szQuery[256];
@@ -114,7 +114,7 @@ BOOL NXCORE_EXPORTABLE ConfigReadStr(TCHAR *szVar, TCHAR *szBuffer, int iBufSize
 // Read integer value from configuration table
 //
 
-int NXCORE_EXPORTABLE ConfigReadInt(TCHAR *szVar, int iDefault)
+int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *szVar, int iDefault)
 {
    TCHAR szBuffer[64];
 
@@ -129,7 +129,7 @@ int NXCORE_EXPORTABLE ConfigReadInt(TCHAR *szVar, int iDefault)
 // Read unsigned long value from configuration table
 //
 
-DWORD NXCORE_EXPORTABLE ConfigReadULong(TCHAR *szVar, DWORD dwDefault)
+DWORD NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, DWORD dwDefault)
 {
    TCHAR szBuffer[64];
 
@@ -144,7 +144,7 @@ DWORD NXCORE_EXPORTABLE ConfigReadULong(TCHAR *szVar, DWORD dwDefault)
 // Read byte array (in hex form) from configuration table into integer array
 //
 
-BOOL NXCORE_EXPORTABLE ConfigReadByteArray(TCHAR *pszVar, int *pnArray, int nSize, int nDefault)
+BOOL NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *pszVar, int *pnArray, int nSize, int nDefault)
 {
    TCHAR szBuffer[256];
    char pbBytes[128];
@@ -175,7 +175,7 @@ BOOL NXCORE_EXPORTABLE ConfigReadByteArray(TCHAR *pszVar, int *pnArray, int nSiz
 // Write string value to configuration table
 //
 
-BOOL NXCORE_EXPORTABLE ConfigWriteStr(TCHAR *szVar, TCHAR *szValue, BOOL bCreate)
+BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, BOOL bCreate)
 {
    DB_RESULT hResult;
    TCHAR *pszEscValue, szQuery[1024];
@@ -216,7 +216,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteStr(TCHAR *szVar, TCHAR *szValue, BOOL bCreate
 // Write integer value to configuration table
 //
 
-BOOL NXCORE_EXPORTABLE ConfigWriteInt(TCHAR *szVar, int iValue, BOOL bCreate)
+BOOL NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, BOOL bCreate)
 {
    TCHAR szBuffer[64];
 
@@ -229,7 +229,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteInt(TCHAR *szVar, int iValue, BOOL bCreate)
 // Write unsigned long value to configuration table
 //
 
-BOOL NXCORE_EXPORTABLE ConfigWriteULong(TCHAR *szVar, DWORD dwValue, BOOL bCreate)
+BOOL NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, DWORD dwValue, BOOL bCreate)
 {
    TCHAR szBuffer[64];
 
@@ -242,7 +242,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteULong(TCHAR *szVar, DWORD dwValue, BOOL bCreat
 // Write integer array to configuration table
 //
 
-BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(TCHAR *pszVar, int *pnArray, int nSize, BOOL bCreate)
+BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *pszVar, int *pnArray, int nSize, BOOL bCreate)
 {
    TCHAR szBuffer[256];
    int i, j;

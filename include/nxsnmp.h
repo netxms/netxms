@@ -484,7 +484,7 @@ const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(DWORD dwError);
 DWORD LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *pszFile, SNMP_MIBObject *pRoot, DWORD dwFlags);
 DWORD LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject **ppRoot);
 DWORD LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(const TCHAR *pszFile, DWORD *pdwTimestamp);
-DWORD LIBNXSNMP_EXPORTABLE SNMPResolveDataType(TCHAR *pszType);
+DWORD LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *pszType);
 
 #endif   /* __cplusplus */
 

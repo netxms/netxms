@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.18 2007-06-27 18:13:23 victor Exp $ */
+/* $Id: session.cpp,v 1.19 2007-09-19 16:57:40 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -290,7 +290,7 @@ void ClientSession::ShowMainMenu(HttpResponse &response)
 
 void ClientSession::ShowForm(HttpResponse &response, int nForm)
 {
-	static TCHAR *formName[] =
+	static const TCHAR *formName[] =
 	{
 		_T("NetXMS :: Overview"),
 		_T("NetXMS :: Object Browser"),

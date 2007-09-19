@@ -231,11 +231,11 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
 // Connect to server
 //
 
-DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, TCHAR *pszServer, TCHAR *pszLogin, 
-                                    TCHAR *pszPassword, DWORD dwCertLen,
-												BOOL (* pfSign)(BYTE *, DWORD, BYTE *, DWORD *, void *),
-												void *pSignArg, NXC_SESSION *phSession, TCHAR *pszClientInfo,
-												TCHAR **ppszUpgradeURL)
+DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, const TCHAR *pszServer, const TCHAR *pszLogin, 
+                                    const TCHAR *pszPassword, DWORD dwCertLen,
+                                    BOOL (* pfSign)(BYTE *, DWORD, BYTE *, DWORD *, void *),
+                                    void *pSignArg, NXC_SESSION *phSession, const TCHAR *pszClientInfo,
+                                    TCHAR **ppszUpgradeURL)
 {
    struct sockaddr_in servAddr;
    CSCPMessage msg, *pResp;

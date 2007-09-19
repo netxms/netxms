@@ -118,7 +118,7 @@ NXSL_Program *NXSL_Compiler::Compile(TCHAR *pszSourceCode)
 //
 
 void yyerror(yyscan_t scanner, NXSL_Lexer *pLexer, NXSL_Compiler *pCompiler,
-             NXSL_Program *pScript, char *pszText)
+             NXSL_Program *pScript, const char *pszText)
 {
    pCompiler->Error(pszText);
 }

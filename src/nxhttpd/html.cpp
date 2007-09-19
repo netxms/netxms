@@ -28,7 +28,7 @@
 // Generate login form
 //
 
-void ShowFormLogin(HttpResponse &response, TCHAR *pszErrorText)
+void ShowFormLogin(HttpResponse &response, const TCHAR *pszErrorText)
 {
 	response.BeginPage(_T("NetXMS :: Login"));
 
@@ -115,7 +115,7 @@ TCHAR *EscapeHTMLText(String &text)
 // Start table in a box
 //
 
-void AddTableHeader(HttpResponse &response, TCHAR *pszClass, ...)
+void AddTableHeader(HttpResponse &response, const TCHAR *pszClass, ...)
 {
    va_list args;
    TCHAR *pszTitle, *pszOptions;
@@ -157,7 +157,7 @@ void ShowErrorMessage(HttpResponse &response, DWORD dwError)
 // Show informational message
 //
 
-void ShowInfoMessage(HttpResponse &response, TCHAR *pszText)
+void ShowInfoMessage(HttpResponse &response, const TCHAR *pszText)
 {
 	String tmp;
 
@@ -172,7 +172,7 @@ void ShowInfoMessage(HttpResponse &response, TCHAR *pszText)
 // Show success message
 //
 
-void ShowSuccessMessage(HttpResponse &response, TCHAR *pszText)
+void ShowSuccessMessage(HttpResponse &response, const TCHAR *pszText)
 {
 	String tmp;
 
@@ -187,7 +187,7 @@ void ShowSuccessMessage(HttpResponse &response, TCHAR *pszText)
 // Add button control
 //
 
-void AddButton(HttpResponse &response, TCHAR *pszSID, TCHAR *pszName, TCHAR *pszDescription, TCHAR *pszHandler)
+void AddButton(HttpResponse &response, const TCHAR *pszSID, const TCHAR *pszName, const TCHAR *pszDescription, const TCHAR *pszHandler)
 {
 	TCHAR szTemp[4096];
 
@@ -209,7 +209,7 @@ void AddButton(HttpResponse &response, TCHAR *pszSID, TCHAR *pszName, TCHAR *psz
 // Add checkbox control
 //
 
-void AddCheckbox(HttpResponse &response, int nId, TCHAR *pszName,TCHAR *pszDescription, TCHAR *pszHandler, BOOL bChecked)
+void AddCheckbox(HttpResponse &response, int nId, const TCHAR *pszName, const TCHAR *pszDescription, const TCHAR *pszHandler, BOOL bChecked)
 {
 	TCHAR szTemp[4096];
 
@@ -229,8 +229,8 @@ void AddCheckbox(HttpResponse &response, int nId, TCHAR *pszName,TCHAR *pszDescr
 // Add action link
 //
 
-void AddActionLink(HttpResponse &response, TCHAR *pszSID, TCHAR *pszName, TCHAR *pszImage,
-						 TCHAR *pszFunction, TCHAR *pszArgs)
+void AddActionLink(HttpResponse &response, const TCHAR *pszSID, const TCHAR *pszName, const TCHAR *pszImage,
+						 const TCHAR *pszFunction, const TCHAR *pszArgs)
 {
 	TCHAR szTemp[8192];
 
@@ -246,7 +246,7 @@ void AddActionLink(HttpResponse &response, TCHAR *pszSID, TCHAR *pszName, TCHAR 
 // Add action menu
 //
 
-void AddActionMenu(HttpResponse &response, TCHAR *sid, ...)
+void AddActionMenu(HttpResponse &response, const TCHAR *sid, ...)
 {
 	va_list args;
 	TCHAR *pszName, *pszImage, *pszFunction, *pszArgs;

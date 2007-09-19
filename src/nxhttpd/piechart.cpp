@@ -1,4 +1,4 @@
-/* $Id: piechart.cpp,v 1.3 2007-07-03 16:09:16 alk Exp $ */
+/* $Id: piechart.cpp,v 1.4 2007-09-19 16:57:40 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -80,7 +80,7 @@ BOOL PieChart::SetValue(TCHAR *label, double value)
 // Set value
 //
 
-void PieChart::SetNoDataLabel(TCHAR *label)
+void PieChart::SetNoDataLabel(const TCHAR *label)
 {
 	if (label != NULL)
 	{

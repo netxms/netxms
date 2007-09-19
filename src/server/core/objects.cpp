@@ -59,13 +59,11 @@ CONTAINER_CATEGORY *g_pContainerCatList = NULL;
 
 Queue *g_pTemplateUpdateQueue = NULL;
 
-char *g_pszStatusName[] = { "Normal", "Warning", "Minor", "Major", "Critical",
-                            "Unknown", "Unmanaged", "Disabled", "Testing" };
-char *g_szClassName[]={ "Generic", "Subnet", "Node", "Interface",
-                        "Network", "Container", "Zone", "ServiceRoot",
-                        "Template", "TemplateGroup", "TemplateRoot",
-                        "NetworkService", "VPNConnector", "Condition",
-                        "Cluster" };
+const char *g_szClassName[]={ "Generic", "Subnet", "Node", "Interface",
+                              "Network", "Container", "Zone", "ServiceRoot",
+                              "Template", "TemplateGroup", "TemplateRoot",
+                              "NetworkService", "VPNConnector", "Condition",
+                              "Cluster" };
 
 
 //
@@ -551,7 +549,7 @@ NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId)
 // Find object by name
 //
 
-NetObj NXCORE_EXPORTABLE *FindObjectByName(TCHAR *pszName)
+NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *pszName)
 {
    DWORD i;
    NetObj *pObject = NULL;
@@ -577,7 +575,7 @@ NetObj NXCORE_EXPORTABLE *FindObjectByName(TCHAR *pszName)
 // Find template object by name
 //
 
-Template NXCORE_EXPORTABLE *FindTemplateByName(TCHAR *pszName)
+Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName)
 {
    DWORD i;
    Template *pObject = NULL;
@@ -1097,7 +1095,7 @@ void DumpObjects(CONSOLE_CTX pCtx)
                     g_pIndexById[i].pObject->Id(),g_pIndexById[i].pObject->Name(),
                     g_szClassName[g_pIndexById[i].pObject->Type()],
                     IpToStr(g_pIndexById[i].pObject->IpAddr(), pBuffer),
-                    g_pszStatusName[g_pIndexById[i].pObject->Status()],
+                    g_szStatusTextSmall[g_pIndexById[i].pObject->Status()],
                     g_pIndexById[i].pObject->IsModified(), g_pIndexById[i].pObject->IsDeleted());
       ConsolePrintf(pCtx, "   Parents: <%s>\n   Childs: <%s>\n", 
                     g_pIndexById[i].pObject->ParentList(pBuffer),

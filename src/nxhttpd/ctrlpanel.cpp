@@ -104,7 +104,7 @@ void ClientSession::ShowCtrlPanelView(HttpRequest &request, HttpResponse &respon
 {
 	int nView;
 	String data;
-	static TCHAR *viewName[] =
+	static const TCHAR *viewName[] =
 	{
 		_T("Server Configuration Variables"),
 		_T("Actions"),
@@ -119,7 +119,7 @@ void ClientSession::ShowCtrlPanelView(HttpRequest &request, HttpResponse &respon
 		_T("Modules"),
 		_T("Object Tools")
 	};
-	static TCHAR *viewImage[] =
+	static const TCHAR *viewImage[] =
 	{
 		_T("cfgvar"),
 		_T("actions"),

@@ -1,4 +1,4 @@
-/* $Id: message.cpp,v 1.4 2007-07-25 12:03:05 victor Exp $ */
+/* $Id: message.cpp,v 1.5 2007-09-19 16:57:40 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
@@ -207,7 +207,7 @@ DWORD CSCPMessage::FindVariable(DWORD dwVarId)
 // Argument dwSize (data size) is used only for DT_BINARY type
 //
 
-void *CSCPMessage::Set(DWORD dwVarId, BYTE bType, void *pValue, DWORD dwSize)
+void *CSCPMessage::Set(DWORD dwVarId, BYTE bType, const void *pValue, DWORD dwSize)
 {
    DWORD dwIndex, dwLength;
    CSCP_DF *pVar;
@@ -220,29 +220,29 @@ void *CSCPMessage::Set(DWORD dwVarId, BYTE bType, void *pValue, DWORD dwSize)
    {
       case CSCP_DT_INTEGER:
          pVar = (CSCP_DF *)malloc(12);
-         pVar->df_int32 = *((DWORD *)pValue);
+         pVar->df_int32 = *((const DWORD *)pValue);
          break;
       case CSCP_DT_INT16:
          pVar = (CSCP_DF *)malloc(8);
-         pVar->df_int16 = *((WORD *)pValue);
+         pVar->df_int16 = *((const WORD *)pValue);
          break;
       case CSCP_DT_INT64:
          pVar = (CSCP_DF *)malloc(16);
-         pVar->df_int64 = *((QWORD *)pValue);
+         pVar->df_int64 = *((const QWORD *)pValue);
          break;
       case CSCP_DT_FLOAT:
          pVar = (CSCP_DF *)malloc(16);
-         pVar->df_real = *((double *)pValue);
+         pVar->df_real = *((const double *)pValue);
          break;
       case CSCP_DT_STRING:
-         dwLength = (DWORD)_tcslen((TCHAR *)pValue);
+         dwLength = (DWORD)_tcslen((const TCHAR *)pValue);
          pVar = (CSCP_DF *)malloc(12 + dwLength * 2);
          pVar->df_string.dwLen = dwLength * 2;
 #ifdef UNICODE
          memcpy(pVar->df_string.szValue, pValue, pVar->df_string.dwLen);
 #else
          pBuffer = (WCHAR *)malloc(dwLength * 2 + 2);
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pValue, dwLength, pBuffer, dwLength + 1);
+         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (const char *)pValue, dwLength, pBuffer, dwLength + 1);
          memcpy(pVar->df_string.szValue, pBuffer, pVar->df_string.dwLen);
          free(pBuffer);
 #endif

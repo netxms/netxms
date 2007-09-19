@@ -72,7 +72,7 @@ static void AddLastValuesColumnHeader(HttpResponse &response, TCHAR *sid, int nC
 												  int nSortDir, BOOL bSortBy)
 {
 	TCHAR szTemp[1024];
-	static TCHAR *colNames[] = 
+	static const TCHAR *colNames[] = 
 	{ 
 		_T("ID"),
 		_T("Description"),

@@ -943,7 +943,7 @@ BOOL NetObj::IsChild(DWORD dwObjectId)
 // This method is used by Node and Interface class objects
 //
 
-void NetObj::SendPollerMsg(DWORD dwRqId, TCHAR *pszFormat, ...)
+void NetObj::SendPollerMsg(DWORD dwRqId, const TCHAR *pszFormat, ...)
 {
    if (m_pPollRequestor != NULL)
    {

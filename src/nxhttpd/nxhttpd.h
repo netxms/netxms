@@ -79,7 +79,7 @@ struct NXC_OBJECT_INDEX
 struct CODE_TO_TEXT
 {
    int iCode;
-   TCHAR *pszText;
+   const TCHAR *pszText;
 };
 
 
@@ -115,11 +115,11 @@ public:
 
 	BOOL Read(SOCKET);
 
-	BOOL GetQueryParam(TCHAR *pszName, String &value);
-	void SetQueryParam(TCHAR *pszName, TCHAR *pszValue);
+	BOOL GetQueryParam(const TCHAR *pszName, String &value);
+	void SetQueryParam(const TCHAR *pszName, const TCHAR *pszValue);
 	TCHAR *GetURI(void) { return m_uri; }
 	TCHAR *GetRawQuery(void) { return m_rawQuery; }
-	TCHAR *GetMethodName(void);
+	const TCHAR *GetMethodName(void);
 };
 
 
@@ -153,10 +153,10 @@ public:
 	HttpResponse();
 	~HttpResponse();
 
-	void SetHeader(TCHAR *pszHdr, TCHAR *pszValue) { m_headers.Set(pszHdr, pszValue); }
-	void SetType(TCHAR *pszType) { m_headers.Set(_T("Content-type"), pszType); }
-	void SetBody(TCHAR *data, int size = -1, BOOL bAppend = FALSE);
-	void AppendBody(TCHAR *data, int size = -1) { SetBody(data, size, TRUE); }
+	void SetHeader(const TCHAR *pszHdr, const TCHAR *pszValue) { m_headers.Set(pszHdr, pszValue); }
+	void SetType(const TCHAR *pszType) { m_headers.Set(_T("Content-type"), pszType); }
+	void SetBody(const TCHAR *data, int size = -1, BOOL bAppend = FALSE);
+	void AppendBody(const TCHAR *data, int size = -1) { SetBody(data, size, TRUE); }
 	void SetCode(int);
 
 	int GetCode(void) { return m_code; }
@@ -165,10 +165,10 @@ public:
 	char *BuildStream(int &);
 
 	// HTML helpers
-	void BeginPage(TCHAR *pszTitle);
+	void BeginPage(const TCHAR *pszTitle);
 	void EndPage(void) { SetBody(_T("</body>\r\n</html>\r\n"), -1, TRUE); }
-	void StartBox(TCHAR *pszTitle, TCHAR *pszClass = NULL, TCHAR *pszId = NULL, TCHAR *pszTableClass = NULL, BOOL bContentOnly = FALSE);
-	void StartTableHeader(TCHAR *pszClass);
+	void StartBox(const TCHAR *pszTitle, const TCHAR *pszClass = NULL, const TCHAR *pszId = NULL, const TCHAR *pszTableClass = NULL, BOOL bContentOnly = FALSE);
+	void StartTableHeader(const TCHAR *pszClass);
 	void StartBoxRow(void);
 	void EndBox(BOOL bContentOnly = FALSE) { AppendBody(bContentOnly ? _T("</table>") : _T("</table></div>\r\n")); }
 };
@@ -243,7 +243,7 @@ protected:
 	void ShowObjectTools(HttpResponse &response, NXC_OBJECT *pObject);
 	void ShowObjectMgmt(HttpRequest &request, HttpResponse &response, NXC_OBJECT *pObject);
 	void SendObjectTree(HttpRequest &request, HttpResponse &response);
-	void ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj, BOOL bReload, TCHAR *pszSelection);
+	void ShowAlarmList(HttpResponse &response, NXC_OBJECT *pRootObj, BOOL bReload, const TCHAR *pszSelection);
 	void SendAlarmList(HttpRequest &request, HttpResponse &response);
 	void AlarmCtrlHandler(HttpRequest &request, HttpResponse &response);
 	void ShowLastValues(HttpResponse &response, NXC_OBJECT *pObject, BOOL bReload);
@@ -302,7 +302,7 @@ public:
 	~PieChart();
 
 	BOOL SetValue(TCHAR *label, double value);
-	void SetNoDataLabel(TCHAR *label);
+	void SetNoDataLabel(const TCHAR *label);
 
 	BOOL Build(void);
 	void Clear(void);
@@ -312,7 +312,7 @@ public:
 private:
 	int m_valueCount;
 	TCHAR *m_labels[MAX_PIE_ELEMENTS];
-	TCHAR *m_noDataLabel;
+	const TCHAR *m_noDataLabel;
 	double m_values[MAX_PIE_ELEMENTS];
 	void *m_rawData;
 	int m_rawDataSize;
@@ -328,9 +328,9 @@ private:
 
 void InitLog(void);
 void CloseLog(void);
-void WriteLog(DWORD msg, WORD wType, TCHAR *format, ...);
+void WriteLog(DWORD msg, WORD wType, const char *format, ...);
 
-void DebugPrintf(DWORD dwSessionId, TCHAR *pszFormat, ...);
+void DebugPrintf(DWORD dwSessionId, const TCHAR *pszFormat, ...);
 
 BOOL Initialize(void);
 void Shutdown(void);
@@ -340,20 +340,20 @@ void InitSessions(void);
 BOOL SessionRequestHandler(HttpRequest &request, HttpResponse &response);
 
 TCHAR *EscapeHTMLText(String &text);
-void ShowFormLogin(HttpResponse &response, TCHAR *pszErrorText);
-void AddTableHeader(HttpResponse &response, TCHAR *pszClass, ...);
+void ShowFormLogin(HttpResponse &response, const TCHAR *pszErrorText);
+void AddTableHeader(HttpResponse &response, const TCHAR *pszClass, ...);
 void ShowErrorMessage(HttpResponse &response, DWORD dwError);
-void ShowInfoMessage(HttpResponse &response, TCHAR *pszText);
-void ShowSuccessMessage(HttpResponse &response, TCHAR *pszText = NULL);
-void AddButton(HttpResponse &response, TCHAR *pszSID, TCHAR *pszImage, TCHAR *pszDescription, TCHAR *pszHandler);
-void AddCheckbox(HttpResponse &response, int nId, TCHAR *pszName,TCHAR *pszDescription, TCHAR *pszHandler, BOOL bChecked);
-void AddActionLink(HttpResponse &response, TCHAR *pszSID, TCHAR *pszName, TCHAR *pszImage,
-						 TCHAR *pszFunction, TCHAR *pszArgs);
-void AddActionMenu(HttpResponse &response, TCHAR *sid, ...);
+void ShowInfoMessage(HttpResponse &response, const TCHAR *pszText);
+void ShowSuccessMessage(HttpResponse &response, const TCHAR *pszText = NULL);
+void AddButton(HttpResponse &response, const TCHAR *pszSID, const TCHAR *pszImage, const TCHAR *pszDescription, const TCHAR *pszHandler);
+void AddCheckbox(HttpResponse &response, int nId, const TCHAR *pszName, const TCHAR *pszDescription, const TCHAR *pszHandler, BOOL bChecked);
+void AddActionLink(HttpResponse &response, const TCHAR *pszSID, const TCHAR *pszName, const TCHAR *pszImage,
+						 const TCHAR *pszFunction, const TCHAR *pszArgs);
+void AddActionMenu(HttpResponse &response, const TCHAR *sid, ...);
 
-TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, TCHAR *pszDefaultText);
+const TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText);
 TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType);
-DWORD *IdListFromString(TCHAR *pszStr, DWORD *pdwCount);
+DWORD *IdListFromString(const TCHAR *pszStr, DWORD *pdwCount);
 BOOL IsListMember(DWORD dwId, DWORD dwCount, DWORD *pdwList);
 
 #ifdef _WIN32
@@ -380,12 +380,12 @@ extern TCHAR g_szLogFile[];
 extern TCHAR g_szMasterServer[];
 extern TCHAR g_szDocumentRoot[];
 extern WORD g_wListenPort;
-extern TCHAR *g_szStatusText[];
-extern TCHAR *g_szStatusTextSmall[];
-extern TCHAR *g_szStatusImageName[];
-extern TCHAR *g_szAlarmState[];
-extern TCHAR *g_szObjectClass[];
-extern TCHAR *g_szInterfaceTypes[];
+extern const TCHAR *g_szStatusText[];
+extern const TCHAR *g_szStatusTextSmall[];
+extern const TCHAR *g_szStatusImageName[];
+extern const TCHAR *g_szAlarmState[];
+extern const TCHAR *g_szObjectClass[];
+extern const TCHAR *g_szInterfaceTypes[];
 extern CODE_TO_TEXT g_ctNodeType[];
 
 

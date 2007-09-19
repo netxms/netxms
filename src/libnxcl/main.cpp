@@ -210,7 +210,7 @@ void LIBNXCL_EXPORTABLE NXCGetLastLockOwner(NXC_SESSION hSession, TCHAR *pszBuff
 
 const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 {
-   static TCHAR *pszErrorText[] =
+   static const TCHAR *pszErrorText[] =
    {
       _T("Request completed successfully"),
       _T("Component locked"),

@@ -407,13 +407,13 @@ public:
    NXSL_Program(void);
    ~NXSL_Program();
 
-   BOOL AddFunction(char *pszName, DWORD dwAddr, char *pszError);
+   BOOL AddFunction(const char *pszName, DWORD dwAddr, char *pszError);
    void ResolveFunctions(void);
    void AddInstruction(NXSL_Instruction *pInstruction);
    void ResolveLastJump(int nOpCode);
 	void CreateJumpAt(DWORD dwOpAddr, DWORD dwJumpAddr);
    void AddPreload(char *pszName);
-   void UseModule(NXSL_Program *pModule, char *pszName);
+   void UseModule(NXSL_Program *pModule, const char *pszName);
 	void Optimize(void);
 
 	void SetGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);

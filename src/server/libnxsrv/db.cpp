@@ -1,4 +1,4 @@
-/* $Id: db.cpp,v 1.21 2007-07-27 12:03:43 victor Exp $ */
+/* $Id: db.cpp,v 1.22 2007-09-19 16:57:42 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -46,7 +46,7 @@ static BOOL m_bDumpSQL = FALSE;
 static int m_nReconnect = 0;
 static MUTEX m_mutexReconnect = INVALID_MUTEX_HANDLE;
 static HMODULE m_hDriver = NULL;
-static DB_CONNECTION (* m_fpDrvConnect)(char *, char *, char *, char *) = NULL;
+static DB_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *) = NULL;
 static void (* m_fpDrvDisconnect)(DB_CONNECTION) = NULL;
 static DWORD (* m_fpDrvQuery)(DB_CONNECTION, WCHAR *) = NULL;
 static DB_RESULT (* m_fpDrvSelect)(DB_CONNECTION, WCHAR *, DWORD *) = NULL;
@@ -69,14 +69,14 @@ static void (* m_fpEventHandler)(DWORD, TCHAR *);
 // Get symbol address and log errors
 //
 
-static void *DLGetSymbolAddrEx(HMODULE hModule, TCHAR *pszSymbol)
+static void *DLGetSymbolAddrEx(HMODULE hModule, const TCHAR *pszSymbol)
 {
    void *pFunc;
    char szErrorText[256];
 
    pFunc = DLGetSymbolAddr(hModule, pszSymbol, szErrorText);
    if ((pFunc == NULL) && m_bWriteLog)
-      WriteLog(MSG_DLSYM_FAILED, EVENTLOG_WARNING_TYPE, _T("ss"), pszSymbol, szErrorText);
+      WriteLog(MSG_DLSYM_FAILED, EVENTLOG_WARNING_TYPE, "ss", pszSymbol, szErrorText);
    return pFunc;
 }
 
@@ -125,7 +125,7 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
 
    // Import symbols
    fpDrvInit = (BOOL (*)(char *))DLGetSymbolAddrEx(m_hDriver, "DrvInit");
-   m_fpDrvConnect = (DB_CONNECTION (*)(char *, char *, char *, char *))DLGetSymbolAddrEx(m_hDriver, "DrvConnect");
+   m_fpDrvConnect = (DB_CONNECTION (*)(const char *, const char *, const char *, const char *))DLGetSymbolAddrEx(m_hDriver, "DrvConnect");
    m_fpDrvDisconnect = (void (*)(DB_CONNECTION))DLGetSymbolAddrEx(m_hDriver, "DrvDisconnect");
    m_fpDrvQuery = (DWORD (*)(DB_CONNECTION, WCHAR *))DLGetSymbolAddrEx(m_hDriver, "DrvQuery");
    m_fpDrvSelect = (DB_RESULT (*)(DB_CONNECTION, WCHAR *, DWORD *))DLGetSymbolAddrEx(m_hDriver, "DrvSelect");
@@ -199,8 +199,8 @@ DB_HANDLE LIBNXSRV_EXPORTABLE DBConnect(void)
 // Connect to database using provided parameters
 //
 
-DB_HANDLE LIBNXSRV_EXPORTABLE DBConnectEx(TCHAR *pszServer, TCHAR *pszDBName,
-                                          TCHAR *pszLogin, TCHAR *pszPassword)
+DB_HANDLE LIBNXSRV_EXPORTABLE DBConnectEx(const TCHAR *pszServer, const TCHAR *pszDBName,
+                                          const TCHAR *pszLogin, const TCHAR *pszPassword)
 {
    DB_CONNECTION hDrvConn;
    DB_HANDLE hConn = NULL;
@@ -287,7 +287,7 @@ static void DBReconnect(DB_HANDLE hConn)
 // Perform a non-SELECT SQL query
 //
 
-BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, TCHAR *szQuery)
+BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *szQuery)
 {
    DWORD dwResult;
    INT64 ms;
@@ -330,7 +330,7 @@ BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, TCHAR *szQuery)
 // Perform SELECT query
 //
 
-DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, TCHAR *szQuery)
+DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, const TCHAR *szQuery)
 {
    DB_RESULT hResult;
    DWORD dwError;
@@ -631,7 +631,7 @@ void LIBNXSRV_EXPORTABLE DBFreeResult(DB_RESULT hResult)
 // Asyncronous SELECT query
 //
 
-DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, TCHAR *szQuery)
+DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *szQuery)
 {
    DB_RESULT hResult;
    DWORD dwError;
@@ -893,11 +893,11 @@ BOOL LIBNXSRV_EXPORTABLE DBRollback(DB_HANDLE hConn)
 // Characters to be escaped before writing to SQL
 //
 
-static char m_szSpecialChars[] = _T("\x01\x02\x03\x04\x05\x06\x07\x08")
-                                 _T("\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10")
-                                 _T("\x11\x12\x13\x14\x15\x16\x17\x18")
-                                 _T("\x19\x1A\x1B\x1C\x1D\x1E\x1F")
-                                 _T("#%\"\\'\x7F");
+static TCHAR m_szSpecialChars[] = _T("\x01\x02\x03\x04\x05\x06\x07\x08")
+                                  _T("\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10")
+                                  _T("\x11\x12\x13\x14\x15\x16\x17\x18")
+                                  _T("\x19\x1A\x1B\x1C\x1D\x1E\x1F")
+                                  _T("#%\"\\'\x7F");
 
 
 //
