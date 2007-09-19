@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: snmptrap.cpp
+** File: snmptrap.cpp
 **
 **/
 
@@ -53,7 +53,7 @@ static BOOL LoadTrapCfg(void)
    DWORD i, j, pdwBuffer[MAX_OID_LEN];
 
    // Load traps
-   hResult = DBSelect(g_hCoreDB, _T("SELECT trap_id,snmp_oid,event_code,description FROM snmp_trap_cfg"));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT trap_id,snmp_oid,event_code,description,user_tag FROM snmp_trap_cfg"));
    if (hResult != NULL)
    {
       m_dwNumTraps = DBGetNumRows(hResult);
@@ -77,6 +77,8 @@ static BOOL LoadTrapCfg(void)
          m_pTrapCfg[i].dwEventCode = DBGetFieldULong(hResult, i, 2);
          DBGetField(hResult, i, 3, m_pTrapCfg[i].szDescription, MAX_DB_STRING);
          DecodeSQLString(m_pTrapCfg[i].szDescription);
+         DBGetField(hResult, i, 4, m_pTrapCfg[i].szUserTag, MAX_USERTAG_LENGTH);
+         DecodeSQLString(m_pTrapCfg[i].szUserTag);
       }
       DBFreeResult(hResult);
 
@@ -200,16 +202,17 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
    }
 
    szFormat[m_pTrapCfg[dwIndex].dwNumMaps + 1] = 0;
-   PostEvent(m_pTrapCfg[dwIndex].dwEventCode, dwObjectId, szFormat,
-             pdu->GetTrapId()->GetValueAsText(),
-             pszArgList[0], pszArgList[1], pszArgList[2], pszArgList[3],
-             pszArgList[4], pszArgList[5], pszArgList[6], pszArgList[7],
-             pszArgList[8], pszArgList[9], pszArgList[10], pszArgList[11],
-             pszArgList[12], pszArgList[13], pszArgList[14], pszArgList[15],
-             pszArgList[16], pszArgList[17], pszArgList[18], pszArgList[19],
-             pszArgList[20], pszArgList[21], pszArgList[22], pszArgList[23],
-             pszArgList[24], pszArgList[25], pszArgList[26], pszArgList[27],
-             pszArgList[28], pszArgList[29], pszArgList[30], pszArgList[31]);
+   PostEventWithTag(m_pTrapCfg[dwIndex].dwEventCode, dwObjectId,
+	                 m_pTrapCfg[dwIndex].szUserTag,
+	                 szFormat, pdu->GetTrapId()->GetValueAsText(),
+                    pszArgList[0], pszArgList[1], pszArgList[2], pszArgList[3],
+                    pszArgList[4], pszArgList[5], pszArgList[6], pszArgList[7],
+                    pszArgList[8], pszArgList[9], pszArgList[10], pszArgList[11],
+                    pszArgList[12], pszArgList[13], pszArgList[14], pszArgList[15],
+                    pszArgList[16], pszArgList[17], pszArgList[18], pszArgList[19],
+                    pszArgList[20], pszArgList[21], pszArgList[22], pszArgList[23],
+                    pszArgList[24], pszArgList[25], pszArgList[26], pszArgList[27],
+                    pszArgList[28], pszArgList[29], pszArgList[30], pszArgList[31]);
 
    for(i = 0; i < m_pTrapCfg[dwIndex].dwNumMaps; i++)
       free(pszArgList[i]);
@@ -443,6 +446,7 @@ void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId)
       msg.SetVariableToInt32Array(VID_TRAP_OID, m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId);
       msg.SetVariable(VID_EVENT_CODE, m_pTrapCfg[i].dwEventCode);
       msg.SetVariable(VID_DESCRIPTION, m_pTrapCfg[i].szDescription);
+      msg.SetVariable(VID_USER_TAG, m_pTrapCfg[i].szUserTag);
       msg.SetVariable(VID_TRAP_NUM_MAPS, m_pTrapCfg[i].dwNumMaps);
       for(j = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE; 
           j < m_pTrapCfg[i].dwNumMaps; j++, dwId1++, dwId2++, dwId3++)
@@ -463,7 +467,7 @@ void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId)
 
 
 //
-// Prepare message with all trap configuration records
+// Prepare single message with all trap configuration records
 //
 
 void CreateTrapCfgMessage(CSCPMessage &msg)
@@ -584,8 +588,8 @@ DWORD CreateNewTrap(DWORD *pdwTrapId)
 
    MutexUnlock(m_mutexTrapCfgAccess);
 
-   _stprintf(szQuery, _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description) ")
-                      _T("VALUES (%d,'',%d,'')"), *pdwTrapId, (DWORD)EVENT_SNMP_UNMATCHED_TRAP);
+   _stprintf(szQuery, _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description,user_tag) ")
+                      _T("VALUES (%d,'',%d,'#00','#00')"), *pdwTrapId, (DWORD)EVENT_SNMP_UNMATCHED_TRAP);
    if (!DBQuery(g_hCoreDB, szQuery))
       dwResult = RCC_DB_FAILURE;
 
@@ -600,7 +604,7 @@ DWORD CreateNewTrap(DWORD *pdwTrapId)
 DWORD CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap)
 {
    DWORD i, dwResult;
-   TCHAR szQuery[4096], szOID[1024], *pszEscDescr;
+   TCHAR szQuery[4096], szOID[1024], *pszEscDescr, *pszEscTag;
 	BOOL bSuccess;
 
    MutexLock(m_mutexTrapCfgAccess, INFINITE);
@@ -619,10 +623,12 @@ DWORD CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap)
 	// Write new trap to database
    SNMPConvertOIDToText(m_pTrapCfg[m_dwNumTraps].dwOidLen, m_pTrapCfg[m_dwNumTraps].pdwObjectId, szOID, 1024);
 	pszEscDescr = EncodeSQLString(m_pTrapCfg[m_dwNumTraps].szDescription);
-   _stprintf(szQuery, _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description) ")
-                      _T("VALUES (%d,'%s',%d,'%s')"), m_pTrapCfg[m_dwNumTraps].dwId,
-	          szOID, m_pTrapCfg[m_dwNumTraps].dwEventCode, pszEscDescr);
+	pszEscTag = EncodeSQLString(m_pTrapCfg[m_dwNumTraps].szUserTag);
+   _stprintf(szQuery, _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description,user_tag) ")
+                      _T("VALUES (%d,'%s',%d,'%s','%s')"), m_pTrapCfg[m_dwNumTraps].dwId,
+	          szOID, m_pTrapCfg[m_dwNumTraps].dwEventCode, pszEscDescr, pszEscTag);
 	free(pszEscDescr);
+	free(pszEscTag);
 
 	if(DBBegin(g_hCoreDB))
    {
@@ -656,7 +662,7 @@ DWORD CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap)
 DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
 {
    DWORD i, j, dwId1, dwId2, dwId3, dwTrapId, dwResult = RCC_INVALID_TRAP_ID;
-   TCHAR szQuery[1024], szOID[1024], *pszEscDescr;
+   TCHAR szQuery[1024], szOID[1024], *pszEscDescr, *pszEscTag;
    BOOL bSuccess;
 
    dwTrapId = pMsg->GetVariableLong(VID_TRAP_ID);
@@ -672,6 +678,7 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
          m_pTrapCfg[i].pdwObjectId = (DWORD *)realloc(m_pTrapCfg[i].pdwObjectId, sizeof(DWORD) * m_pTrapCfg[i].dwOidLen);
          pMsg->GetVariableInt32Array(VID_TRAP_OID, m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId);
          pMsg->GetVariableStr(VID_DESCRIPTION, m_pTrapCfg[i].szDescription, MAX_DB_STRING);
+         pMsg->GetVariableStr(VID_USER_TAG, m_pTrapCfg[i].szUserTag, MAX_USERTAG_LENGTH);
 
          // Destroy current parameter mapping
          for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
@@ -701,10 +708,12 @@ DWORD UpdateTrapFromMsg(CSCPMessage *pMsg)
 
          // Update database
          pszEscDescr = EncodeSQLString(m_pTrapCfg[i].szDescription);
+         pszEscTag = EncodeSQLString(m_pTrapCfg[i].szUserTag);
          SNMPConvertOIDToText(m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId, szOID, 1024);
-         _sntprintf(szQuery, 1024, _T("UPDATE snmp_trap_cfg SET snmp_oid='%s',event_code=%d,description='%s' WHERE trap_id=%d"),
-                    szOID, m_pTrapCfg[i].dwEventCode, pszEscDescr, m_pTrapCfg[i].dwId);
+         _sntprintf(szQuery, 1024, _T("UPDATE snmp_trap_cfg SET snmp_oid='%s',event_code=%d,description='%s',user_tag='%s' WHERE trap_id=%d"),
+                    szOID, m_pTrapCfg[i].dwEventCode, pszEscDescr, pszEscTag, m_pTrapCfg[i].dwId);
          free(pszEscDescr);
+			free(pszEscTag);
          if(DBBegin(g_hCoreDB))
          {
             bSuccess = DBQuery(g_hCoreDB, szQuery);
@@ -739,7 +748,7 @@ void CreateNXMPTrapRecord(String &str, DWORD dwId)
 {
 	DWORD i, j;
 	TCHAR szBuffer[1024];
-	String strDescr;
+	String strTemp;
 
    MutexLock(m_mutexTrapCfgAccess, INFINITE);
    for(i = 0; i < m_dwNumTraps; i++)
@@ -750,12 +759,20 @@ void CreateNXMPTrapRecord(String &str, DWORD dwId)
 			                       SNMPConvertOIDToText(m_pTrapCfg[i].dwOidLen,
 			                                            m_pTrapCfg[i].pdwObjectId,
 																	  szBuffer, 1024));
-			strDescr = m_pTrapCfg[i].szDescription;
-			strDescr.EscapeCharacter(_T('\\'), _T('\\'));
-			strDescr.EscapeCharacter(_T('"'), _T('\\'));
-			strDescr.Translate(_T("\r"), _T("\\r"));
-			strDescr.Translate(_T("\n"), _T("\\n"));
-			str.AddFormattedString(_T("\t\tDESCRIPTION=\"%s\";\n"), (TCHAR *)strDescr);
+			strTemp = m_pTrapCfg[i].szDescription;
+			strTemp.EscapeCharacter(_T('\\'), _T('\\'));
+			strTemp.EscapeCharacter(_T('"'), _T('\\'));
+			strTemp.Translate(_T("\r"), _T("\\r"));
+			strTemp.Translate(_T("\n"), _T("\\n"));
+			str.AddFormattedString(_T("\t\tDESCRIPTION=\"%s\";\n"), (TCHAR *)strTemp);
+
+			strTemp = m_pTrapCfg[i].szUserTag;
+			strTemp.EscapeCharacter(_T('\\'), _T('\\'));
+			strTemp.EscapeCharacter(_T('"'), _T('\\'));
+			strTemp.Translate(_T("\r"), _T("\\r"));
+			strTemp.Translate(_T("\n"), _T("\\n"));
+			str.AddFormattedString(_T("\t\tUSERTAG=\"%s\";\n"), (TCHAR *)strTemp);
+
 		   ResolveEventName(m_pTrapCfg[i].dwEventCode, szBuffer);
 			str.AddFormattedString(_T("\t\tEVENT=%s;\n"), szBuffer);
 			if (m_pTrapCfg[i].dwNumMaps > 0)
@@ -763,24 +780,24 @@ void CreateNXMPTrapRecord(String &str, DWORD dwId)
 				str += _T("\t\t@PARAMETERS\n\t\t{\n");
 				for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
 				{
-					strDescr = m_pTrapCfg[i].pMaps[j].szDescription;
-					strDescr.EscapeCharacter(_T('\\'), _T('\\'));
-					strDescr.EscapeCharacter(_T('"'), _T('\\'));
-					strDescr.Translate(_T("\r"), _T("\\r"));
-					strDescr.Translate(_T("\n"), _T("\\n"));
+					strTemp = m_pTrapCfg[i].pMaps[j].szDescription;
+					strTemp.EscapeCharacter(_T('\\'), _T('\\'));
+					strTemp.EscapeCharacter(_T('"'), _T('\\'));
+					strTemp.Translate(_T("\r"), _T("\\r"));
+					strTemp.Translate(_T("\n"), _T("\\n"));
                if ((m_pTrapCfg[i].pMaps[j].dwOidLen & 0x80000000) == 0)
 					{
 						str.AddFormattedString(_T("\t\t\t%s=\"%s\";\n"),
 						                       SNMPConvertOIDToText(m_pTrapCfg[i].pMaps[j].dwOidLen,
 													                       m_pTrapCfg[i].pMaps[j].pdwObjectId,
 																				  szBuffer, 1024),
-						                       (TCHAR *)strDescr);
+						                       (TCHAR *)strTemp);
 					}
 					else
 					{
 						str.AddFormattedString(_T("\t\t\tPOS:%d=\"%s\";\n"),
 						                       m_pTrapCfg[i].pMaps[j].dwOidLen & 0x7FFFFFFF,
-						                       (TCHAR *)strDescr);
+						                       (TCHAR *)strTemp);
 					}
 				}
 				str += _T("\t\t}\n");

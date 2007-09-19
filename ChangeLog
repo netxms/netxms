@@ -7,7 +7,7 @@
   to WINNT subagent
 - Added possibility to disable status, configuration, or routing table
   polls for specific host
-- Fixed issues: #183, #186
+- Fixed issues: #77, #183, #186
 
 
 *

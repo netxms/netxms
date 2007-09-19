@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.281 2007-09-03 05:52:34 victor Exp $ */
+/* $Id: session.cpp,v 1.282 2007-09-19 07:14:16 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -4139,7 +4139,7 @@ void ClientSession::OnTrap(CSCPMessage *pRequest)
    DWORD dwObjectId, dwEventCode;
    int i, iNumArgs;
    NetObj *pObject;
-   TCHAR *pszArgList[32];
+   TCHAR *pszArgList[32], szUserTag[MAX_USERTAG_LENGTH] = _T("");
    TCHAR szFormat[] = "ssssssssssssssssssssssssssssssss";
    BOOL bSuccess;
 
@@ -4159,24 +4159,23 @@ void ClientSession::OnTrap(CSCPMessage *pRequest)
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_SEND_EVENTS))
       {
          dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
+			pRequest->GetVariableStr(VID_USER_TAG, szUserTag, MAX_USERTAG_LENGTH);
          iNumArgs = pRequest->GetVariableShort(VID_NUM_ARGS);
          if (iNumArgs > 32)
             iNumArgs = 32;
          for(i = 0; i < iNumArgs; i++)
             pszArgList[i] = pRequest->GetVariableStr(VID_EVENT_ARG_BASE + i);
 
-         // Following call is not very good, but I'm too lazy now
-         // to change PostEvent()
          szFormat[iNumArgs] = 0;
-         bSuccess = PostEvent(dwEventCode, pObject->Id(), (iNumArgs > 0) ? szFormat : NULL,
-                              pszArgList[0], pszArgList[1], pszArgList[2], pszArgList[3],
-                              pszArgList[4], pszArgList[5], pszArgList[6], pszArgList[7],
-                              pszArgList[8], pszArgList[9], pszArgList[10], pszArgList[11],
-                              pszArgList[12], pszArgList[13], pszArgList[14], pszArgList[15],
-                              pszArgList[16], pszArgList[17], pszArgList[18], pszArgList[19],
-                              pszArgList[20], pszArgList[21], pszArgList[22], pszArgList[23],
-                              pszArgList[24], pszArgList[25], pszArgList[26], pszArgList[27],
-                              pszArgList[28], pszArgList[29], pszArgList[30], pszArgList[31]);
+         bSuccess = PostEventWithTag(dwEventCode, pObject->Id(), szUserTag, (iNumArgs > 0) ? szFormat : NULL,
+                                     pszArgList[0], pszArgList[1], pszArgList[2], pszArgList[3],
+                                     pszArgList[4], pszArgList[5], pszArgList[6], pszArgList[7],
+                                     pszArgList[8], pszArgList[9], pszArgList[10], pszArgList[11],
+                                     pszArgList[12], pszArgList[13], pszArgList[14], pszArgList[15],
+                                     pszArgList[16], pszArgList[17], pszArgList[18], pszArgList[19],
+                                     pszArgList[20], pszArgList[21], pszArgList[22], pszArgList[23],
+                                     pszArgList[24], pszArgList[25], pszArgList[26], pszArgList[27],
+                                     pszArgList[28], pszArgList[29], pszArgList[30], pszArgList[31]);
          
          // Cleanup
          for(i = 0; i < iNumArgs; i++)

@@ -66,10 +66,11 @@ private:
    DWORD m_dwNumParameters;
    TCHAR **m_ppszParameters;
    time_t m_tTimeStamp;
+	TCHAR *m_pszUserTag;
 
 public:
    Event();
-   Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, TCHAR *szFormat, va_list args);
+   Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, TCHAR *pszUserTag, TCHAR *szFormat, va_list args);
    ~Event();
 
    QWORD Id(void) { return m_qwId; }
@@ -78,6 +79,7 @@ public:
    DWORD Flags(void) { return m_dwFlags; }
    DWORD SourceId(void) { return m_dwSource; }
    const char *Message(void) { return m_pszMessageText; }
+   const char *UserTag(void) { return m_pszUserTag; }
    time_t TimeStamp(void) { return m_tTimeStamp; }
    
    QWORD GetRootId(void) { return m_qwRootId; }
@@ -180,9 +182,10 @@ public:
 
 BOOL InitEventSubsystem(void);
 void ShutdownEventSubsystem(void);
-BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, char *pszFormat, ...);
+BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, TCHAR *pszFormat, ...);
+BOOL PostEventWithTag(DWORD dwEventCode, DWORD dwSourceId, TCHAR *pszUserTag, TCHAR *pszFormat, ...);
 BOOL PostEventEx(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId, 
-                 char *pszFormat, ...);
+                 TCHAR *pszFormat, ...);
 void ResendEvents(Queue *pQueue);
 void ReloadEvents(void);
 void DeleteEventTemplateFromList(DWORD dwEventCode);

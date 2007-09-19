@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.275 2007-09-15 18:22:20 victor Exp $ */
+/* $Id: nxclapi.h,v 1.276 2007-09-19 07:14:16 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -60,6 +60,7 @@ typedef void * NXC_SESSION;
 #define MAX_OID_LENGTH           1024
 #define MAX_EVENT_MSG_LENGTH     256
 #define MAX_EVENT_NAME           64
+#define MAX_USERTAG_LENGTH       64
 #define MAX_SESSION_NAME         256
 #define MAX_USER_NAME            64
 #define MAX_USER_FULLNAME        128
@@ -742,8 +743,10 @@ typedef struct
    DWORD dwSeverity;
 #ifdef UNICODE
    WCHAR szMessage[MAX_EVENT_MSG_LENGTH];
+	WCHAR szUserTag[MAX_USERTAG_LENGTH];
 #else
    char szMessage[MAX_EVENT_MSG_LENGTH * sizeof(WCHAR)];
+	char szUserTag[MAX_USERTAG_LENGTH];
 #endif
 } NXC_EVENT;
 
@@ -796,6 +799,7 @@ typedef struct
    DWORD dwNumMaps;        // Number of parameter mappings
    NXC_OID_MAP *pMaps;
    TCHAR szDescription[MAX_DB_STRING];
+	TCHAR szUserTag[MAX_USERTAG_LENGTH];
 } NXC_TRAP_CFG_ENTRY;
 
 
@@ -1810,7 +1814,8 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetEventName(NXC_SESSION hSession, DWORD dwId
 BOOL LIBNXCL_EXPORTABLE NXCGetEventNameEx(NXC_SESSION hSession, DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize);
 int LIBNXCL_EXPORTABLE NXCGetEventSeverity(NXC_SESSION hSession, DWORD dwId);
 BOOL LIBNXCL_EXPORTABLE NXCGetEventText(NXC_SESSION hSession, DWORD dwId, TCHAR *pszBuffer, DWORD dwBufSize);
-DWORD LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, DWORD dwEventCode, DWORD dwObjectId, int iNumArgs, TCHAR **pArgList);
+DWORD LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, DWORD dwEventCode, DWORD dwObjectId,
+												  int iNumArgs, TCHAR **pArgList, TCHAR *pszUserTag);
 
 DWORD LIBNXCL_EXPORTABLE NXCSyncSyslog(NXC_SESSION hSession, DWORD dwMaxRecords);
 

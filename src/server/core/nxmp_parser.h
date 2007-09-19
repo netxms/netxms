@@ -1,4 +1,4 @@
-/* $Id: nxmp_parser.h,v 1.9 2007-04-06 10:44:13 victor Exp $ */
+/* $Id: nxmp_parser.h,v 1.10 2007-09-19 07:14:16 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Server
@@ -104,6 +104,7 @@ public:
 
    void NewTrap(char *pszOID);
 	void SetTrapDescription(char *pszText);
+	void SetTrapUserTag(char *pszText);
 	void AddTrapParam(char *pszOID, int nPos, char *pszDescr);
    void CloseTrap(void) { m_pCurrTrap = NULL; m_nContext = CTX_NONE; }
 

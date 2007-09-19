@@ -59,20 +59,22 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       // Write event to log if required
       if (pEvent->Flags() & EF_LOG)
       {
-         char *pszMsg, szQuery[1024];
+         char *pszMsg, *pszTag, szQuery[2048];
 
          pszMsg = EncodeSQLString(pEvent->Message());
-         snprintf(szQuery, 1024, "INSERT INTO event_log (event_id,event_code,event_timestamp,"
-                                 "event_source,event_severity,event_message,root_event_id) "
+         pszTag = EncodeSQLString(pEvent->UserTag());
+         snprintf(szQuery, 2048, "INSERT INTO event_log (event_id,event_code,event_timestamp,"
+                                 "event_source,event_severity,event_message,root_event_id,user_tag) "
 #ifdef _WIN32
-                                 "VALUES (%I64d,%d,%d,%d,%d,'%s',%I64d)", 
+                                 "VALUES (%I64d,%d,%d,%d,%d,'%s',%I64d,'%s')", 
 #else
-                                 "VALUES (%lld,%d,%d,%d,%d,'%s',%lld)", 
+                                 "VALUES (%lld,%d,%d,%d,%d,'%s',%lld,'%s')", 
 #endif
                   pEvent->Id(), pEvent->Code(), pEvent->TimeStamp(),
                   pEvent->SourceId(), pEvent->Severity(), pszMsg,
-                  pEvent->GetRootId());
+                  pEvent->GetRootId(), pszTag);
          free(pszMsg);
+			free(pszTag);
          QueueSQLRequest(szQuery);
       }
 

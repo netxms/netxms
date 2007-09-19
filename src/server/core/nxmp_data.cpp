@@ -1,4 +1,4 @@
-/* $Id: nxmp_data.cpp,v 1.10 2007-04-06 10:44:13 victor Exp $ */
+/* $Id: nxmp_data.cpp,v 1.11 2007-09-19 07:14:16 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -194,6 +194,10 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
          else if (!stricmp(pszName, "DESCRIPTION"))
          {
             SetTrapDescription(pszValue);
+         }
+         else if (!stricmp(pszName, "USERTAG"))
+         {
+            SetTrapUserTag(pszValue);
          }
          else
          {
@@ -557,6 +561,24 @@ void NXMP_Data::SetTrapDescription(char *pszText)
 	m_pCurrTrap->szDescription[MAX_DB_STRING - 1] = 0;
 #else
    nx_strncpy(m_pCurrTrap->szDescription, pszText, MAX_DB_STRING);
+#endif
+}
+
+
+//
+// Set trap's user tag
+//
+
+void NXMP_Data::SetTrapUserTag(char *pszText)
+{
+   if (m_pCurrTrap == NULL)
+      return;
+
+#ifdef UNICODE
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszText, -1, m_pCurrTrap->szUserTag, MAX_USERTAG_LENGTH);
+	m_pCurrTrap->szUserTag[MAX_USERTAG_LENGTH - 1] = 0;
+#else
+   nx_strncpy(m_pCurrTrap->szUserTag, pszText, MAX_USERTAG_LENGTH);
 #endif
 }
 

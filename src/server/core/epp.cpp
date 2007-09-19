@@ -267,6 +267,7 @@ BOOL EPRule::MatchScript(Event *pEvent)
    pLocals->Create(_T("SEVERITY_TEXT"), new NXSL_Value(g_szStatusText[pEvent->Severity()]));
    pLocals->Create(_T("OBJECT_ID"), new NXSL_Value(pEvent->SourceId()));
    pLocals->Create(_T("EVENT_TEXT"), new NXSL_Value((TCHAR *)pEvent->Message()));
+   pLocals->Create(_T("USER_TAG"), new NXSL_Value((TCHAR *)pEvent->UserTag()));
 
    // Run script
    if (m_pScript->Run(pEnv, pEvent->GetParametersCount(), ppValueList, pLocals) == 0)

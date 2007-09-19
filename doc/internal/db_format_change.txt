@@ -1,4 +1,14 @@
 *************
+* 69 ==> 70 *
+*************
+
+- New column added to table "snmp_trap_cfg":
+	ALTER TABLE snmp_trap_cfg ADD user_tag varchar(63) not null
+- New column added to table "event_log":
+	ALTER TABLE event_log ADD user_tag varchar(63) not null
+
+
+*************
 * 68 ==> 69 *
 *************
        

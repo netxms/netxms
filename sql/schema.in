@@ -528,6 +528,7 @@ CREATE TABLE event_log
 	event_message varchar(255),
 	root_event_id SQL_INT64 default 0,	
 		/* Non-zero if current event correlates to some other event */
+	user_tag varchar(63) not null,
 	PRIMARY KEY(event_id)
 ) TABLE_TYPE;
 
@@ -825,6 +826,7 @@ CREATE TABLE snmp_trap_cfg
 	trap_id integer not null,
 	snmp_oid varchar(255) not null,
 	event_code integer not null,
+	user_tag varchar(63) not null,
 	description varchar(255),
 	PRIMARY KEY(trap_id)
 ) TABLE_TYPE;

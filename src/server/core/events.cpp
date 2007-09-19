@@ -59,6 +59,7 @@ Event::Event()
    m_pszMessageText = NULL;
    m_pszMessageTemplate = NULL;
    m_tTimeStamp = 0;
+	m_pszUserTag = NULL;
 }
 
 
@@ -66,7 +67,7 @@ Event::Event()
 // Construct event from template
 //
 
-Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_list args)
+Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, TCHAR *pszUserTag, TCHAR *szFormat, va_list args)
 {
    m_tTimeStamp = time(NULL);
    m_qwId = CreateUniqueEventId();
@@ -76,6 +77,7 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, char *szFormat, va_lis
    m_dwFlags = pTemplate->dwFlags;
    m_dwSource = dwSourceId;
    m_pszMessageText = NULL;
+	m_pszUserTag = (pszUserTag != NULL) ? _tcsdup(pszUserTag) : NULL;
 
    // Create parameters
    if (szFormat != NULL)
@@ -134,6 +136,7 @@ Event::~Event()
 {
    safe_free(m_pszMessageText);
    safe_free(m_pszMessageTemplate);
+	safe_free(m_pszUserTag);
    if (m_ppszParameters != NULL)
    {
       DWORD i;
@@ -273,6 +276,15 @@ TCHAR *Event::ExpandText(TCHAR *pszTemplate, TCHAR *pszAlarmMsg)
                      dwPos += (DWORD)_tcslen(pszAlarmMsg);
                   }
                   break;
+               case 'u':	// User tag
+                  if (m_pszUserTag != NULL)
+                  {
+                     dwSize += (DWORD)_tcslen(m_pszUserTag);
+                     pText = (char *)realloc(pText, dwSize);
+                     strcpy(&pText[dwPos], m_pszUserTag);
+                     dwPos += (DWORD)_tcslen(m_pszUserTag);
+                  }
+                  break;
                case '0':
                case '1':
                case '2':
@@ -354,12 +366,18 @@ void Event::PrepareMessage(NXC_EVENT *pEventData)
 #ifdef UNICODE
    wcsncpy(pEventData->szMessage, CHECK_NULL(m_pszMessageText), MAX_EVENT_MSG_LENGTH - 1);
    pEventData->szMessage[MAX_EVENT_MSG_LENGTH - 1] = 0;
+   wcsncpy(pEventData->szUserTag, CHECK_NULL_EX(m_pszUserTag), MAX_USERTAG_LENGTH - 1);
+   pEventData->szUserTag[MAX_USERTAG_LENGTH - 1] = 0;
 #else
    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, CHECK_NULL(m_pszMessageText), -1, 
                        (WCHAR *)pEventData->szMessage, MAX_EVENT_MSG_LENGTH);
    ((WCHAR *)pEventData->szMessage)[MAX_EVENT_MSG_LENGTH - 1] = 0;
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, CHECK_NULL_EX(m_pszUserTag), -1, 
+                       (WCHAR *)pEventData->szUserTag, MAX_USERTAG_LENGTH);
+   ((WCHAR *)pEventData->szUserTag)[MAX_USERTAG_LENGTH - 1] = 0;
 #endif
    SwapWideString((WCHAR *)pEventData->szMessage);
+   SwapWideString((WCHAR *)pEventData->szUserTag);
 }
 
 
@@ -562,7 +580,7 @@ static EVENT_TEMPLATE *FindEventTemplate(DWORD dwCode)
 //
 
 static BOOL RealPostEvent(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId,
-                          char *pszFormat, va_list args)
+                          TCHAR *pszUserTag, TCHAR *pszFormat, va_list args)
 {
    EVENT_TEMPLATE *pEventTemplate;
    Event *pEvent;
@@ -577,7 +595,7 @@ static BOOL RealPostEvent(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId,
       if (pEventTemplate != NULL)
       {
          // Template found, create new event
-         pEvent = new Event(pEventTemplate, dwSourceId, pszFormat, args);
+         pEvent = new Event(pEventTemplate, dwSourceId, pszUserTag, pszFormat, args);
 
          // Add new event to queue
          pQueue->Put(pEvent);
@@ -590,25 +608,36 @@ static BOOL RealPostEvent(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId,
    return bResult;
 }
 
-BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, char *pszFormat, ...)
+BOOL PostEvent(DWORD dwEventCode, DWORD dwSourceId, TCHAR *pszFormat, ...)
 {
    va_list args;
    BOOL bResult;
 
    va_start(args, pszFormat);
-   bResult = RealPostEvent(g_pEventQueue, dwEventCode, dwSourceId, pszFormat, args);
+   bResult = RealPostEvent(g_pEventQueue, dwEventCode, dwSourceId, NULL, pszFormat, args);
+   va_end(args);
+   return bResult;
+}
+
+BOOL PostEventWithTag(DWORD dwEventCode, DWORD dwSourceId, TCHAR *pszUserTag, TCHAR *pszFormat, ...)
+{
+   va_list args;
+   BOOL bResult;
+
+   va_start(args, pszFormat);
+   bResult = RealPostEvent(g_pEventQueue, dwEventCode, dwSourceId, pszUserTag, pszFormat, args);
    va_end(args);
    return bResult;
 }
 
 BOOL PostEventEx(Queue *pQueue, DWORD dwEventCode, DWORD dwSourceId, 
-                 char *pszFormat, ...)
+                 TCHAR *pszFormat, ...)
 {
    va_list args;
    BOOL bResult;
 
    va_start(args, pszFormat);
-   bResult = RealPostEvent(pQueue, dwEventCode, dwSourceId, pszFormat, args);
+   bResult = RealPostEvent(pQueue, dwEventCode, dwSourceId, NULL, pszFormat, args);
    va_end(args);
    return bResult;
 }

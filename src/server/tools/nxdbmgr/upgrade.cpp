@@ -45,10 +45,10 @@ static BOOL CreateTable(TCHAR *pszQuery)
 
 
 //
-// Create configuration parameter if it doesn't exist
+// Create configuration parameter if it doesn't exist (unless bForceUpdate set to true)
 //
 
-static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int iNeedRestart)
+static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int iNeedRestart, BOOL bForceUpdate = FALSE)
 {
    TCHAR szQuery[1024], *pszEscValue;
    DB_RESULT hResult;
@@ -67,13 +67,62 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
    if (!bVarExist)
    {
       pszEscValue = EncodeSQLString(pszValue);
-      _stprintf(szQuery, _T("INSERT INTO config (var_name,var_value,is_visible,"
-                            "need_server_restart) VALUES ('%s','%s',%d,%d)"), 
+      _stprintf(szQuery, _T("INSERT INTO config (var_name,var_value,is_visible,")
+                         _T("need_server_restart) VALUES ('%s','%s',%d,%d)"), 
                 pszName, pszEscValue, iVisible, iNeedRestart);
       free(pszEscValue);
       bResult = SQLQuery(szQuery);
    }
+	else if (bForceUpdate)
+	{
+      pszEscValue = EncodeSQLString(pszValue);
+      _stprintf(szQuery, _T("UPDATE config SET var_value='%s' WHERE var_name='%s'"),
+                pszEscValue, pszName);
+      free(pszEscValue);
+      bResult = SQLQuery(szQuery);
+	}
    return bResult;
+}
+
+
+//
+// Upgrade from V69 to V70
+//
+
+static BOOL H_UpgradeFromV69(void)
+{
+   static TCHAR m_szBatch[] =
+		_T("ALTER TABLE snmp_trap_cfg ADD user_tag varchar(63)\n")
+		_T("UPDATE snmp_trap_cfg SET user_tag='#00'\n")
+		_T("ALTER TABLE event_log ADD user_tag varchar(63)\n")
+		_T("UPDATE event_log SET user_tag='#00'\n")
+      _T("<END>");
+	int n;
+	TCHAR buffer[64];
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	// Convert event log retention time from seconds to days
+	n = ConfigReadInt(_T("EventLogRetentionTime"), 5184000) / 86400;
+	_stprintf(buffer, _T("%d"), max(n, 1));
+   if (!CreateConfigParam(_T("EventLogRetentionTime"), buffer, 1, 0, TRUE))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	// Convert event log retention time from seconds to days
+	n = ConfigReadInt(_T("SyslogRetentionTime"), 5184000) / 86400;
+	_stprintf(buffer, _T("%d"), max(n, 1));
+   if (!CreateConfigParam(_T("SyslogRetentionTime"), buffer, 1, 0, TRUE))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='70' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
 }
 
 
@@ -3069,6 +3118,7 @@ static struct
    { 66, H_UpgradeFromV66 },
    { 67, H_UpgradeFromV67 },
    { 68, H_UpgradeFromV68 },
+   { 69, H_UpgradeFromV69 },
    { 0, NULL }
 };
 

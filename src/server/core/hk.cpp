@@ -143,17 +143,19 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          break;      // Shutdown has arrived
 
       // Remove outdated event log records
-      dwRetentionTime = ConfigReadULong("EventLogRetentionTime", 5184000);
+      dwRetentionTime = ConfigReadULong("EventLogRetentionTime", 90);
       if (dwRetentionTime > 0)
       {
+			dwRetentionTime *= 86400;	// Convert days to seconds
          sprintf(szQuery, "DELETE FROM event_log WHERE event_timestamp<%ld", currTime - dwRetentionTime);
          DBQuery(m_hdb, szQuery);
       }
 
       // Remove outdated syslog records
-      dwRetentionTime = ConfigReadULong("SyslogRetentionTime", 5184000);
+      dwRetentionTime = ConfigReadULong("SyslogRetentionTime", 90);
       if (dwRetentionTime > 0)
       {
+			dwRetentionTime *= 86400;	// Convert days to seconds
          sprintf(szQuery, "DELETE FROM syslog WHERE msg_timestamp<%ld", currTime - dwRetentionTime);
          DBQuery(m_hdb, szQuery);
       }

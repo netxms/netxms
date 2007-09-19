@@ -120,7 +120,8 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(NXC_SESSION hSession, DWORD dwMaxRecords)
 //
 
 DWORD LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, DWORD dwEventCode, 
-                                      DWORD dwObjectId, int iNumArgs, TCHAR **pArgList)
+                                      DWORD dwObjectId, int iNumArgs, TCHAR **pArgList,
+												  TCHAR *pszUserTag)
 {
    CSCPMessage msg;
    DWORD dwRqId;
@@ -132,6 +133,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, DWORD dwEventCode,
    msg.SetId(dwRqId);
    msg.SetVariable(VID_EVENT_CODE, dwEventCode);
    msg.SetVariable(VID_OBJECT_ID, dwObjectId);
+	msg.SetVariable(VID_USER_TAG, CHECK_NULL_EX(pszUserTag));
    msg.SetVariable(VID_NUM_ARGS, (WORD)iNumArgs);
    for(i = 0; i < iNumArgs; i++)
       msg.SetVariable(VID_EVENT_ARG_BASE + i, pArgList[i]);

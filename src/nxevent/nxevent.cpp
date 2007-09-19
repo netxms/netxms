@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Command line event sender
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 206, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxevent.cpp
+** File: nxevent.cpp
 **
 **/
 
@@ -33,6 +33,7 @@ static BOOL m_bDebug = FALSE;
 static TCHAR m_szServer[MAX_DB_STRING] = _T("127.0.0.1");
 static TCHAR m_szLogin[MAX_DB_STRING] = _T("guest");
 static TCHAR m_szPassword[MAX_DB_STRING] = _T("");
+static TCHAR m_szUserTag[MAX_USERTAG_LENGTH] = _T("");
 static DWORD m_dwEventCode = 0;
 static DWORD m_dwObjectId = 0;
 static DWORD m_dwTimeOut = 3;
@@ -76,7 +77,7 @@ static void SendEvent(int iNumArgs, TCHAR **pArgList, BOOL bEncrypt)
       else
       {
          NXCSetCommandTimeout(hSession, m_dwTimeOut * 1000);
-         dwResult = NXCSendEvent(hSession, m_dwEventCode, m_dwObjectId, iNumArgs, pArgList);
+         dwResult = NXCSendEvent(hSession, m_dwEventCode, m_dwObjectId, iNumArgs, pArgList, m_szUserTag);
          if (dwResult != RCC_SUCCESS)
             _tprintf(_T("Unable to send event: %s\n"), NXCGetErrorText(dwResult));
          NXCDisconnect(hSession);
@@ -96,7 +97,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "deho:p:P:u:vw:")) != -1)
+   while((ch = getopt(argc, argv, "deho:p:P:T:u:vw:")) != -1)
    {
       switch(ch)
       {
@@ -109,6 +110,7 @@ int main(int argc, char *argv[])
                    "   -o <id>       : Specify source object ID.\n"
                    "   -p <port>     : Specify server's port number. Default is %d.\n"
                    "   -P <password> : Specify user's password. Default is empty password.\n"
+                   "   -T <tag>      : User tag to be associated with the message. Default is empty.\n"
                    "   -u <user>     : Login to server as <user>. Default is \"guest\".\n"
                    "   -v            : Display version and exit.\n"
                    "   -w <seconds>  : Specify command timeout (default is 3 seconds).\n"
@@ -129,6 +131,9 @@ int main(int argc, char *argv[])
             break;
          case 'P':
             nx_strncpy(m_szPassword, optarg, MAX_DB_STRING);
+            break;
+         case 'T':
+            nx_strncpy(m_szUserTag, optarg, MAX_USERTAG_LENGTH);
             break;
          case 'w':
             m_dwTimeOut = _tcstoul(optarg, NULL, 0);
