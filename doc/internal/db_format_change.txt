@@ -1,4 +1,17 @@
 *************
+* 70 ==> 71 *
+*************
+
+- New column added to table "nodes":
+	ALTER TABLE nodes ADD required_polls integer not null
+- New column added to table "interfaces":
+	ALTER TABLE interfaces ADD required_polls integer not null
+- New column added to table "network_services":
+	ALTER TABLE network_services ADD required_polls integer not null
+- New configuration parameter added: PollCountForStatusChange
+
+
+*************
 * 69 ==> 70 *
 *************
 

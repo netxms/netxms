@@ -86,6 +86,37 @@ static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int
 
 
 //
+// Upgrade from V70 to V71
+//
+
+static BOOL H_UpgradeFromV70(void)
+{
+   static TCHAR m_szBatch[] =
+		_T("ALTER TABLE nodes ADD required_polls integer\n")
+		_T("UPDATE nodes SET required_polls=0\n")
+		_T("ALTER TABLE interfaces ADD required_polls integer\n")
+		_T("UPDATE interfaces SET required_polls=0\n")
+		_T("ALTER TABLE network_services ADD required_polls integer\n")
+		_T("UPDATE network_services SET required_polls=0\n")
+      _T("<END>");
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("PollCountForStatusChange"), _T("1"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='71' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V69 to V70
 //
 
@@ -3119,6 +3150,7 @@ static struct
    { 67, H_UpgradeFromV67 },
    { 68, H_UpgradeFromV68 },
    { 69, H_UpgradeFromV69 },
+   { 70, H_UpgradeFromV70 },
    { 0, NULL }
 };
 

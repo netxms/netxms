@@ -2,23 +2,23 @@
 
 [General Info]
 Version=1
-LastClass=CTrapEditDlg
-LastTemplate=CDialog
+LastClass=CIfPropsGeneral
+LastTemplate=CPropertyPage
 NewFileInclude1=#include "stdafx.h"
 NewFileInclude2=#include "nxcon.h"
 LastPage=0
 
-ClassCount=166
+ClassCount=167
 Class1=CConsoleApp
 Class3=CMainFrame
 Class4=CChildFrame
 Class7=CEventBrowser
 Class9=CMapView
 
-ResourceCount=238
-Resource1=IDD_CHANGE_PASSWORD (English (U.S.))
+ResourceCount=239
+Resource1=IDD_SELECT_MP (English (U.S.))
 Resource2=IDA_EPP
-Resource3=IDD_OBJECT_NODE_POLL (English (U.S.))
+Resource3=IDD_ABOUTBOX (English (U.S.))
 Resource4=IDD_SELECT_EVENT
 Resource5=IDD_CP_GENERAL
 Class2=CChildView
@@ -32,9 +32,9 @@ Resource7=IDD_EDIT_VARIABLE
 Class12=CAddrEntryDlg
 Resource8=IDD_EDIT_TRAP_ARG
 Class13=CObjectPropDlg
-Resource9=IDD_OBJTOOL_GENERAL (English (U.S.))
-Resource10=IDD_COND_DCI_PROP (English (U.S.))
-Resource11=IDA_TRAP_EDITOR (English (U.S.))
+Resource9=IDD_COND_DCI_PROP (English (U.S.))
+Resource10=IDD_CLUSTER_RESOURCE (English (U.S.))
+Resource11=IDD_EDIT_EVENT (English (U.S.))
 Resource12=IDR_CTRLPANEL (English (U.S.))
 Resource13=IDR_EVENTS (English (U.S.))
 Resource14=IDR_MAPFRAME (English (U.S.))
@@ -42,13 +42,13 @@ Resource15=IDR_OBJECTS (English (U.S.))
 Resource16=IDD_DUMMY (English (U.S.))
 Class14=CEventEditor
 Class15=CEditEventDlg
-Resource17=IDD_OBJECT_NODE_GENERAL (English (U.S.))
+Resource17=IDD_NEW_OBJECT_TOOL (English (U.S.))
 Class16=CDebugFrame
-Resource18=IDD_EDIT_RULE_COMMENT (English (U.S.))
+Resource18=IDA_AGENT_CONFIG_MANAGER (English (U.S.))
 Resource19=IDD_OBJECT_PROPERTIES (English (U.S.))
 Resource20=IDD_DCI_TRANSFORM
 Class17=CObjectPreview
-Resource21=IDD_GRAPH_PROP_STYLES (English (U.S.))
+Resource21=IDA_GRAPH (English (U.S.))
 Class18=CToolBox
 Class19=CObjectInfoBox
 Class20=CObjectSearchBox
@@ -61,14 +61,14 @@ Class24=CObjectPropCaps
 Class25=CObjectPropSheet
 Resource24=IDD_SUBMAP_BKGND
 Class26=CRequestProcessingDlg
-Resource25=IDD_EDIT_EVENT (English (U.S.))
+Resource25=IDD_MIB_BROWSER (English (U.S.))
 Resource26=IDD_PROGRESS (English (U.S.))
 Resource27=IDD_INPUT_BOX
-Resource28=IDD_OBJECT_SECURITY (English (U.S.))
+Resource28=IDD_OBJECT_PRESENTATION (English (U.S.))
 Class27=CObjectPropsGeneral
-Resource29=IDD_DEFINE_GRAPH (English (U.S.))
+Resource29=IDA_ACTION_EDITOR (English (U.S.))
 Class28=CObjectPropsSecurity
-Resource30=IDD_LASTVAL_PROP (English (U.S.))
+Resource30=IDD_OBJTOOL_COLUMNS (English (U.S.))
 Resource31=IDD_SELECT_INTERNAL_ITEM
 Resource32=IDD_OBJECT_COND_SCRIPT
 Class29=CUserSelectDlg
@@ -79,36 +79,36 @@ Class31=CNewUserDlg
 Resource35=IDD_CHANGE_IP
 Resource36=IDD_UPGRADE
 Class32=CUserPropDlg
-Resource37=IDD_OBJECT_RELATIONS (English (U.S.))
+Resource37=IDD_OBJTOOL_GENERAL (English (U.S.))
 Resource38=IDR_MAINFRAME
 Class33=CGroupPropDlg
 Resource39=IDD_FATAL_ERROR
 Resource40=IDD_OBJECT_PRESENTATION
 Resource41=IDD_ABOUTBOX
-Resource42=IDD_DCI_DATA_EXPORT (English (U.S.))
+Resource42=IDD_SNMP_WALK (English (U.S.))
 Class34=CPasswordChangeDlg
 Class35=CNodeSummary
 Class36=CNetSummaryFrame
 Class37=CDataCollectionEditor
-Resource43=IDD_CREATE_NETSRV (English (U.S.))
+Resource43=IDD_DCI_SCHEDULE (English (U.S.))
 Class38=CDCIPropPage
-Resource44=IDD_SELECT_INTERNAL_ITEM (English (U.S.))
+Resource44=IDD_EDIT_VARIABLE (English (U.S.))
 Class39=CDCIDataView
-Resource45=IDR_MAINFRAME (English (U.S.))
+Resource45=IDA_DC_EDITOR (English (U.S.))
 Class40=CGraph
 Class41=CGraphFrame
 Class42=CDCIThresholdsPage
-Resource46=IDA_GRAPH (English (U.S.))
+Resource46=IDD_OBJECT_NODE_GENERAL (English (U.S.))
 Resource47=IDD_MAP_LINK
 Resource48=IDD_CLUSTER_RESOURCE
 Class43=CThresholdDlg
-Resource49=IDD_SELECT_AGENT_PARAM (English (U.S.))
+Resource49=IDD_CREATE_VPNC (English (U.S.))
 Resource50=IDD_REMOVE_TEMPLATE
 Class44=CMIBBrowserDlg
 Class45=CEventPolicyEditor
 Class46=CRuleList
 Class47=CRuleHeader
-Resource51=IDA_NETMAP (English (U.S.))
+Resource51=IDA_OBJECT_COMMENTS (English (U.S.))
 Resource52=IDD_SELECT_OBJECT
 Class48=CObjectSelDlg
 Resource53=IDD_OBJECT_CAPS
@@ -117,22 +117,22 @@ Class49=CRuleCommentDlg
 Resource55=IDD_NEW_OBJECT_TOOL
 Class50=CEventSelDlg
 Resource56=IDD_DCI_DATA_EXPORT
-Resource57=IDD_IMPORT_CA_CERT (English (U.S.))
+Resource57=IDA_PACKAGE_MGR (English (U.S.))
 Resource58=IDA_OBJECT_BROWSER
-Resource59=IDA_ALARM_BROWSER (English (U.S.))
-Resource60=IDD_CREATE_VPNC (English (U.S.))
+Resource59=IDD_CHANGE_IP (English (U.S.))
+Resource60=IDD_CHANGE_PASSWORD (English (U.S.))
 Class51=CObjectPropsPresentation
-Resource61=IDD_ACTION_PROPERTIES (English (U.S.))
+Resource61=IDD_INPUT_BOX (English (U.S.))
 Resource62=IDD_OBJTOOL_OPTIONS
 Class52=CRuleSeverityDlg
 Resource63=IDD_AGENT_CONFIG
 Class53=CRuleAlarmDlg
 Class54=CAlarmBrowser
-Resource64=IDD_OBJECT_PRESENTATION (English (U.S.))
+Resource64=IDD_EDIT_RULE_SEVERITY (English (U.S.))
 Resource65=IDD_SAVE_AGENT_CFG
-Resource66=IDD_GRAPH_PROP_DATA (English (U.S.))
-Resource67=IDD_DISCOVERY_TARGETS (English (U.S.))
-Resource68=IDD_SELECT_MP (English (U.S.))
+Resource66=IDD_REMOVE_TEMPLATE (English (U.S.))
+Resource67=IDD_GRAPH_PROP_STYLES (English (U.S.))
+Resource68=IDD_MAP_LINK (English (U.S.))
 Class55=CConsolePropsGeneral
 Class56=CActionEditor
 Resource69=IDD_CREATE_NODE
@@ -143,18 +143,18 @@ Class58=CEditActionDlg
 Resource72=IDD_OBJECT_VPNC_GENERAL
 Class59=CActionSelDlg
 Resource73=IDD_SET_PASSWORD
-Resource74=IDA_OBJECT_BROWSER (English (U.S.))
-Resource75=IDD_OBJECT_CAPS (English (U.S.))
+Resource74=IDA_SCRIPT_MANAGER (English (U.S.))
+Resource75=IDD_SELECT_TRAP (English (U.S.))
 Resource76=IDD_OBJECT_NODE_POLL
 Class60=CCreateObjectDlg
 Class61=CCreateContainerDlg
 Resource77=IDD_SELECT_TRAP
 Class62=CCreateNodeDlg
-Resource78=IDA_DATA_VIEW (English (U.S.))
+Resource78=IDD_GROUP_PROPERTIES (English (U.S.))
 Resource79=IDT_MAP (English (U.S.))
-Resource80=IDD_SAVE_AGENT_CFG (English (U.S.))
+Resource80=IDD_OBJECT_COND_SCRIPT (English (U.S.))
 Class63=CDCITransformPage
-Resource81=IDA_DC_EDITOR (English (U.S.))
+Resource81=IDD_SELECT_USER (English (U.S.))
 Class64=CPollNodeDlg
 Resource82=IDD_POLL_NODE (English (U.S.))
 Class65=CNodePoller
@@ -171,7 +171,7 @@ Resource89=IDD_EDIT_RULE_ALARM
 Class69=CDataQueryDlg
 Resource90=IDA_OBJECT_TOOLS_EDITOR
 Class70=CTrapEditDlg
-Resource91=IDD_CREATE_CONDITION (English (U.S.))
+Resource91=IDD_EDIT_RULE_COMMENT (English (U.S.))
 Class71=CTrapParamDlg
 Resource92=IDD_COND_DCI_PROP
 Resource93=IDD_OBJECT_NODE_GENERAL
@@ -179,66 +179,66 @@ Class72=CGraphPropDlg
 Class73=CColorSelector
 Class74=CPackageMgr
 Resource94=IDD_CREATE_TEMPLATE
-Resource95=IDA_PACKAGE_MGR (English (U.S.))
-Resource96=IDD_OBJECT_GENERAL (English (U.S.))
-Resource97=IDD_CP_GENERAL (English (U.S.))
+Resource95=IDD_OBJTOOL_OPTIONS (English (U.S.))
+Resource96=IDD_AGENT_CONFIG (English (U.S.))
+Resource97=IDD_SELECT_INTERNAL_ITEM (English (U.S.))
 Resource98=IDD_MANAGE_GRAPHS
-Resource99=IDD_EDIT_TRAP (English (U.S.))
-Resource100=IDD_EDIT_IP_SUBNET (English (U.S.))
-Resource101=IDD_CREATE_TG (English (U.S.))
-Resource102=IDD_DCI_COLLECTION (English (U.S.))
-Resource103=IDD_MIB_BROWSER (English (U.S.))
-Resource104=IDD_CREATE_CONTAINER (English (U.S.))
-Resource105=IDD_SET_PASSWORD (English (U.S.))
-Resource106=IDD_CREATE_TEMPLATE (English (U.S.))
-Resource107=IDD_MANAGE_GRAPHS (English (U.S.))
+Resource99=IDD_LASTVAL_PROP (English (U.S.))
+Resource100=IDD_REQUEST_PROCESSING (English (U.S.))
+Resource101=IDD_DESKTOP_SAVE_AS (English (U.S.))
+Resource102=IDD_CREATE_CONTAINER (English (U.S.))
+Resource103=IDD_CREATE_TG (English (U.S.))
+Resource104=IDD_OBJECT_NETSRV_GENERAL (English (U.S.))
+Resource105=IDD_UPGRADE (English (U.S.))
+Resource106=IDD_GRAPH_PROP_SETTINGS (English (U.S.))
+Resource107=IDA_TRAP_EDITOR (English (U.S.))
 Class75=CInternalItemSelDlg
-Resource108=IDD_SET_CHILD_MGMT_STATUS (English (U.S.))
+Resource108=IDA_LAST_VALUES (English (U.S.))
 Class76=CAgentParamSelDlg
-Resource109=IDD_REQUEST_PROCESSING (English (U.S.))
+Resource109=IDD_SELECT_EVENT (English (U.S.))
 Class77=CInputBox
-Resource110=IDD_OBJECT_COND_GENERAL (English (U.S.))
+Resource110=IDD_SELECT_ACTION (English (U.S.))
 Class78=CCreateNetSrvDlg
-Resource111=IDD_ABOUTBOX (English (U.S.))
+Resource111=IDD_ADDR_ENTRY (English (U.S.))
 Class79=CNetSrvPropsGeneral
 Resource112=IDD_LOGIN (English (U.S.))
 Class80=CNodePropsPolling
 Class81=CDeploymentView
 Class82=CLastValuesView
 Class83=CValueList
-Resource113=IDA_MDI_DEFAULT (English (U.S.))
+Resource113=IDA_OBJECT_TOOLS_EDITOR (English (U.S.))
 Class84=CObjectPropsRelations
-Resource114=IDA_EVENT_EDITOR (English (U.S.))
+Resource114=IDA_CERT_MANAGER (English (U.S.))
 Class85=CSaveDesktopDlg
-Resource115=IDA_EPP (English (U.S.))
+Resource115=IDA_DATA_VIEW (English (U.S.))
 Class86=CGraphSettingsPage
-Resource116=IDD_CREATE_IF_DCI (English (U.S.))
+Resource116=IDD_GRAPH_PROP_DATA (English (U.S.))
 Class87=CGraphDataPage
-Resource117=IDD_OBJECT_VPNC_GENERAL (English (U.S.))
+Resource117=IDD_CREATE_CONDITION (English (U.S.))
 Class88=CRemoveTemplateDlg
-Resource118=IDD_EDIT_RULE_SEVERITY (English (U.S.))
+Resource118=IDD_EDIT_TRAP (English (U.S.))
 Class89=CAddrChangeDlg
-Resource119=IDD_DATA_QUERY (English (U.S.))
+Resource119=IDA_SERVER_CFG_EDITOR (English (U.S.))
 Class90=CLastValuesPropDlg
 Class91=CAgentCfgEditor
-Resource120=IDD_DESKTOP_SAVE_AS (English (U.S.))
+Resource120=IDD_OBJECT_CAPS (English (U.S.))
 Class92=CDataExportDlg
 Class93=CServerCfgEditor
-Resource121=IDD_USER_PROPERTIES (English (U.S.))
-Resource122=IDD_EDIT_TRAP_ARG (English (U.S.))
+Resource121=IDD_NEW_ACTION (English (U.S.))
+Resource122=IDD_DCI_DATA_EXPORT (English (U.S.))
 Class94=CEditVariableDlg
-Resource123=IDD_EDIT_VARIABLE (English (U.S.))
+Resource123=IDD_SUBMAP_BKGND (English (U.S.))
 Class95=CCreateVPNConnDlg
-Resource124=IDD_CREATE_NODE (English (U.S.))
+Resource124=IDD_OBJECT_NODE_POLL (English (U.S.))
 Class96=CVPNCPropsGeneral
-Resource125=IDD_EDIT_RULE_ALARM (English (U.S.))
+Resource125=IDD_EDIT_TRAP_ARG (English (U.S.))
 Class97=CEditSubnetDlg
-Resource126=IDD_INPUT_BOX (English (U.S.))
-Resource127=IDD_NEW_ACTION (English (U.S.))
+Resource126=IDD_OBJECT_VPNC_GENERAL (English (U.S.))
+Resource127=IDD_SET_CHILD_MGMT_STATUS (English (U.S.))
 Class98=CModifiedAgentCfgDlg
 Class99=CSimpleSplitter
 Class100=CAdvSplitter
-Resource128=IDA_OBJECT_TOOLS_EDITOR (English (U.S.))
+Resource128=IDD_NEW_USER (English (U.S.))
 Class101=CTableView
 Class102=CWaitView
 Class103=CWebBrowser
@@ -246,30 +246,30 @@ Class104=CSyslogBrowser
 Class105=CLPPList
 Resource129=IDD_SNMP_WALK
 Class106=CDCISchedulePage
-Resource130=IDA_AGENT_CONFIG_MANAGER (English (U.S.))
+Resource130=IDD_SET_PASSWORD (English (U.S.))
 Class107=CObjectPropsStatus
 Class108=CObjectToolsEditor
-Resource131=IDD_SUBMAP_BKGND (English (U.S.))
-Resource132=IDD_SELECT_ACTION (English (U.S.))
+Resource131=IDD_CP_GENERAL (English (U.S.))
+Resource132=IDD_CREATE_NETSRV (English (U.S.))
 Class109=CObjToolPropGeneral
-Resource133=IDD_CREATE_CLUSTER (English (U.S.))
+Resource133=IDA_OBJECT_BROWSER (English (U.S.))
 Class110=CObjToolPropColumns
-Resource134=IDD_GRAPH_PROP_SETTINGS (English (U.S.))
+Resource134=IDD_EDIT_IP_SUBNET (English (U.S.))
 Class111=CNewObjectToolDlg
 Class112=CObjToolPropOptions
 Class113=CScriptManager
 Class114=CScriptView
-Resource135=IDD_DCI_TRANSFORM (English (U.S.))
+Resource135=IDD_OBJECT_RELATIONS (English (U.S.))
 Class115=CTrapLogBrowser
 Class116=CViewEditor
-Resource136=IDD_DCI_SCHEDULE (English (U.S.))
-Resource137=IDD_DISCOVERY_RANGES (English (U.S.))
+Resource136=IDD_OBJECT_COND_DATA (English (U.S.))
+Resource137=IDD_IMPORT_CA_CERT (English (U.S.))
 Class117=CSNMPWalkDlg
 Class118=CMapToolbox
 Class119=CMapControlBox
-Resource138=IDA_CERT_MANAGER (English (U.S.))
+Resource138=IDD_DCI_THRESHOLDS (English (U.S.))
 Class120=CSubmapBkgndDlg
-Resource139=IDD_NEW_OBJECT_TOOL (English (U.S.))
+Resource139=IDD_SELECT_OBJECT (English (U.S.))
 Resource140=IDD_ACTION_PROPERTIES
 Resource141=IDA_SERVER_CFG_EDITOR
 Resource142=IDD_DISCOVERY_GENERAL
@@ -378,43 +378,45 @@ Class164=CNodeLastValuesView
 Class165=CObjectSubordinateView
 Resource201=IDD_REQUEST_PROCESSING
 Class166=CMapLinkPropDlg
-Resource202=IDD_OBJECT_COND_DATA (English (U.S.))
-Resource203=IDA_LAST_VALUES (English (U.S.))
-Resource204=IDA_SERVER_CFG_EDITOR (English (U.S.))
-Resource205=IDA_AGENT_CFG_EDITOR (English (U.S.))
-Resource206=IDD_OBJECT_NETSRV_GENERAL (English (U.S.))
-Resource207=IDA_ACTION_EDITOR (English (U.S.))
-Resource208=IDD_OBJECT_STATUS (English (U.S.))
+Resource202=IDD_OBJECT_CLUSTER_GENERAL (English (U.S.))
+Resource203=IDD_OBJECT_COND_GENERAL (English (U.S.))
+Resource204=IDD_OBJECT_GENERAL (English (U.S.))
+Resource205=IDD_OBJECT_SECURITY (English (U.S.))
+Resource206=IDD_DATA_QUERY (English (U.S.))
+Resource207=IDD_OBJECT_STATUS (English (U.S.))
+Resource208=IDD_ADD_DCI (English (U.S.))
 Resource209=IDM_CONTEXT (English (U.S.))
-Resource210=IDD_OBJTOOL_OPTIONS (English (U.S.))
-Resource211=IDD_CHANGE_IP (English (U.S.))
-Resource212=IDD_REMOVE_TEMPLATE (English (U.S.))
-Resource213=IDD_OBJTOOL_COLUMNS (English (U.S.))
-Resource214=IDD_SNMP_WALK (English (U.S.))
-Resource215=IDA_SCRIPT_MANAGER (English (U.S.))
-Resource216=IDD_SELECT_OBJECT (English (U.S.))
+Resource210=IDD_EDIT_RULE_SCRIPT (English (U.S.))
+Resource211=IDD_DISCOVERY_GENERAL (English (U.S.))
+Resource212=IDD_DISCOVERY_TARGETS (English (U.S.))
+Resource213=IDD_DISCOVERY_RANGES (English (U.S.))
+Resource214=IDD_THRESHOLD (English (U.S.))
+Resource215=IDD_USER_PROPERTIES (English (U.S.))
+Resource216=IDD_CREATE_TEMPLATE (English (U.S.))
 Resource217=IDM_VIEW_SPECIFIC (English (U.S.))
-Resource218=IDA_OBJECT_COMMENTS (English (U.S.))
-Resource219=IDD_OBJECT_COND_SCRIPT (English (U.S.))
-Resource220=IDD_NEW_USER (English (U.S.))
-Resource221=IDD_ADD_DCI (English (U.S.))
-Resource222=IDD_GROUP_PROPERTIES (English (U.S.))
-Resource223=IDD_AGENT_CONFIG (English (U.S.))
-Resource224=IDD_EDIT_RULE_SCRIPT (English (U.S.))
-Resource225=IDD_DISCOVERY_GENERAL (English (U.S.))
-Resource226=IDD_THRESHOLD (English (U.S.))
-Resource227=IDD_SELECT_USER (English (U.S.))
-Resource228=IDD_ADDR_ENTRY (English (U.S.))
-Resource229=IDD_CREATE_MP (English (U.S.))
-Resource230=IDD_SELECT_EVENT (English (U.S.))
-Resource231=IDD_SELECT_TRAP (English (U.S.))
-Resource232=IDD_UPGRADE (English (U.S.))
-Resource233=IDD_DCI_THRESHOLDS (English (U.S.))
-Resource234=IDD_OBJECT_CLUSTER_GENERAL (English (U.S.))
-Resource235=IDD_OBJECT_CLUSTER_RESOURCES (English (U.S.))
-Resource236=IDD_CLUSTER_RESOURCE (English (U.S.))
-Resource237=IDD_FATAL_ERROR (English (U.S.))
-Resource238=IDD_MAP_LINK (English (U.S.))
+Resource218=IDD_DCI_COLLECTION (English (U.S.))
+Resource219=IDD_CREATE_CLUSTER (English (U.S.))
+Resource220=IDD_CREATE_MP (English (U.S.))
+Resource221=IDD_DCI_TRANSFORM (English (U.S.))
+Resource222=IDD_ACTION_PROPERTIES (English (U.S.))
+Resource223=IDD_FATAL_ERROR (English (U.S.))
+Resource224=IDD_DEFINE_GRAPH (English (U.S.))
+Resource225=IDD_MANAGE_GRAPHS (English (U.S.))
+Resource226=IDD_EDIT_RULE_ALARM (English (U.S.))
+Resource227=IDD_OBJECT_CLUSTER_RESOURCES (English (U.S.))
+Resource228=IDD_SELECT_AGENT_PARAM (English (U.S.))
+Resource229=IDD_CREATE_IF_DCI (English (U.S.))
+Resource230=IDD_SAVE_AGENT_CFG (English (U.S.))
+Resource231=IDR_MAINFRAME (English (U.S.))
+Resource232=IDA_MDI_DEFAULT (English (U.S.))
+Resource233=IDD_CREATE_NODE (English (U.S.))
+Resource234=IDA_EPP (English (U.S.))
+Resource235=IDA_ALARM_BROWSER (English (U.S.))
+Resource236=IDA_NETMAP (English (U.S.))
+Resource237=IDA_EVENT_EDITOR (English (U.S.))
+Resource238=IDA_AGENT_CFG_EDITOR (English (U.S.))
+Class167=CIfPropsGeneral
+Resource239=IDD_OBJECT_IF_GENERAL (English (U.S.))
 
 [CLS:CConsoleApp]
 Type=0
@@ -3647,7 +3649,7 @@ VirtualFilter=dWC
 [DLG:IDD_OBJECT_NETSRV_GENERAL (English (U.S.))]
 Type=1
 Class=CNetSrvPropsGeneral
-ControlCount=26
+ControlCount=30
 Control1=IDC_EDIT_NAME,edit,1350631552
 Control2=IDC_EDIT_ID,edit,1350633600
 Control3=IDC_COMBO_TYPE,combobox,1344340227
@@ -3659,21 +3661,25 @@ Control8=IDC_RADIO_UDP,button,1342177289
 Control9=IDC_RADIO_ICMP,button,1342177289
 Control10=IDC_RADIO_OTHER,button,1342177289
 Control11=IDC_EDIT_PROTO,edit,1350639744
-Control12=IDC_EDIT_POLLER,edit,1350633600
-Control13=IDC_SELECT_POLLER,button,1342242816
-Control14=IDC_EDIT_REQUEST,edit,1350631552
-Control15=IDC_EDIT_RESPONSE,edit,1350631552
-Control16=IDC_STATIC,static,1342308352
+Control12=IDC_EDIT_REQUEST,edit,1350631552
+Control13=IDC_EDIT_RESPONSE,edit,1350631552
+Control14=IDC_EDIT_POLLER,edit,1350633600
+Control15=IDC_SELECT_POLLER,button,1342242816
+Control16=IDC_EDIT_POLLS,edit,1350639744
 Control17=IDC_STATIC,static,1342308352
 Control18=IDC_STATIC,static,1342308352
-Control19=IDC_STATIC,button,1342177287
-Control20=IDC_STATIC,static,1342308352
+Control19=IDC_STATIC,static,1342308352
+Control20=IDC_STATIC,button,1342177287
 Control21=IDC_STATIC,static,1342308352
-Control22=IDC_STATIC,button,1342177287
+Control22=IDC_STATIC,static,1342308352
 Control23=IDC_STATIC,button,1342177287
-Control24=IDC_STATIC,static,1342308352
+Control24=IDC_STATIC,button,1342177287
 Control25=IDC_STATIC,static,1342308352
-Control26=IDC_STATIC,button,1342177287
+Control26=IDC_STATIC,static,1342308352
+Control27=IDC_STATIC,button,1342177287
+Control28=IDC_STATIC,static,1342308352
+Control29=IDC_STATIC,static,1342308352
+Control30=IDC_STATIC,static,1342308352
 
 [CLS:CNetSrvPropsGeneral]
 Type=0
@@ -5826,7 +5832,7 @@ CommandCount=2
 
 [DLG:IDD_REMOVE_TEMPLATE (English (U.S.))]
 Type=1
-Class=?
+Class=CRemoveTemplateDlg
 ControlCount=6
 Control1=IDC_RADIO_UNBIND,button,1342373897
 Control2=IDC_RADIO_REMOVE,button,1342177289
@@ -5837,7 +5843,7 @@ Control6=IDC_STATIC,static,1342177283
 
 [DLG:IDD_OBJTOOL_COLUMNS (English (U.S.))]
 Type=1
-Class=?
+Class=CObjToolPropColumns
 ControlCount=4
 Control1=IDC_LIST_COLUMNS,SysListView32,1342275593
 Control2=IDC_BUTTON_ADD,button,1342242816
@@ -5846,7 +5852,7 @@ Control4=IDC_BUTTON_DELETE,button,1342242816
 
 [DLG:IDD_SNMP_WALK (English (U.S.))]
 Type=1
-Class=?
+Class=CSNMPWalkDlg
 ControlCount=3
 Control1=IDCANCEL,button,1342242816
 Control2=IDC_STATIC_STATUS,static,1342308352
@@ -5867,7 +5873,7 @@ Control8=IDC_STATIC_INFO,static,1342308352
 
 [DLG:IDD_CREATE_CONDITION (English (U.S.))]
 Type=1
-Class=?
+Class=CCreateCondDlg
 ControlCount=10
 Control1=IDC_EDIT_NAME,edit,1350631552
 Control2=IDC_SELECT_PARENT,button,1342242816
@@ -5882,7 +5888,7 @@ Control10=IDC_STATIC_NAME,static,1342308352
 
 [DLG:IDD_OBJECT_COND_GENERAL (English (U.S.))]
 Type=1
-Class=?
+Class=CCondPropsGeneral
 ControlCount=20
 Control1=IDC_EDIT_NAME,edit,1350631552
 Control2=IDC_EDIT_ID,edit,1350633600
@@ -5907,13 +5913,13 @@ Control20=IDC_STATIC,static,1342308352
 
 [DLG:IDD_OBJECT_COND_SCRIPT (English (U.S.))]
 Type=1
-Class=?
+Class=CCondPropsScript
 ControlCount=1
 Control1=IDC_EDIT_SCRIPT,Scintilla,1342242816
 
 [DLG:IDD_OBJECT_COND_DATA (English (U.S.))]
 Type=1
-Class=?
+Class=CCondPropsData
 ControlCount=6
 Control1=IDC_LIST_DCI,SysListView32,1342275593
 Control2=IDC_BUTTON_ADD,button,1342242816
@@ -5924,7 +5930,7 @@ Control6=IDC_BUTTON_DOWN,button,1342242816
 
 [DLG:IDD_ADD_DCI (English (U.S.))]
 Type=1
-Class=?
+Class=CAddDCIDlg
 ControlCount=6
 Control1=IDC_LIST_NODES,SysListView32,1342291997
 Control2=IDC_LIST_DCI,SysListView32,1342291997
@@ -5935,7 +5941,7 @@ Control6=IDC_STATIC,static,1342308352
 
 [DLG:IDD_COND_DCI_PROP (English (U.S.))]
 Type=1
-Class=?
+Class=CCondDCIPropDlg
 ControlCount=10
 Control1=IDC_COMBO_FUNCTION,combobox,1344339971
 Control2=IDC_EDIT_POLLS,edit,1350639744
@@ -5950,7 +5956,7 @@ Control10=IDC_STATIC,static,1342308352
 
 [DLG:IDD_AGENT_CONFIG (English (U.S.))]
 Type=1
-Class=?
+Class=CAgentCfgDlg
 ControlCount=8
 Control1=IDC_EDIT_NAME,edit,1350631552
 Control2=IDC_EDIT_FILTER,Scintilla,1342242816
@@ -5963,7 +5969,7 @@ Control8=IDC_STATIC,static,1342308352
 
 [DLG:IDD_EDIT_RULE_SCRIPT (English (U.S.))]
 Type=1
-Class=?
+Class=CRuleScriptDlg
 ControlCount=7
 Control1=IDOK,button,1342242817
 Control2=IDCANCEL,button,1342242816
@@ -5975,7 +5981,7 @@ Control7=IDC_STATIC,static,1342308352
 
 [DLG:IDD_DISCOVERY_GENERAL (English (U.S.))]
 Type=1
-Class=?
+Class=CDiscoveryPropGeneral
 ControlCount=16
 Control1=IDC_STATIC,button,1342177287
 Control2=IDC_RADIO_DISABLED,button,1342373897
@@ -5996,7 +6002,7 @@ Control16=IDC_EDIT_COMMUNITY,edit,1350631552
 
 [DLG:IDD_DISCOVERY_TARGETS (English (U.S.))]
 Type=1
-Class=?
+Class=CDiscoveryPropTargets
 ControlCount=4
 Control1=IDC_LIST_TARGETS,SysListView32,1342291977
 Control2=IDC_BUTTON_ADD,button,1342242816
@@ -6005,7 +6011,7 @@ Control4=IDC_STATIC,static,1342308352
 
 [DLG:IDD_DISCOVERY_RANGES (English (U.S.))]
 Type=1
-Class=?
+Class=CDiscoveryPropAddrList
 ControlCount=4
 Control1=IDC_LIST_SUBNETS,SysListView32,1342291977
 Control2=IDC_BUTTON_ADD,button,1342242816
@@ -6014,7 +6020,7 @@ Control4=IDC_STATIC,static,1342308352
 
 [DLG:IDD_ADDR_ENTRY (English (U.S.))]
 Type=1
-Class=?
+Class=CAddrEntryDlg
 ControlCount=8
 Control1=IDC_RADIO_SUBNET,button,1342373897
 Control2=IDC_RADIO_RANGE,button,1342177289
@@ -6027,7 +6033,7 @@ Control8=IDC_STATIC_MASK,static,1342308352
 
 [DLG:IDD_CREATE_MP (English (U.S.))]
 Type=1
-Class=?
+Class=CCreateMPDlg
 ControlCount=14
 Control1=IDC_EDIT_FILE,edit,1350631552
 Control2=IDC_BUTTON_BROWSE,button,1342242816
@@ -6046,7 +6052,7 @@ Control14=IDC_STATIC,static,1342308352
 
 [DLG:IDD_SELECT_MP (English (U.S.))]
 Type=1
-Class=?
+Class=CSelectMPDlg
 ControlCount=8
 Control1=IDC_EDIT_FILE,edit,1350631552
 Control2=IDC_BUTTON_BROWSE,button,1342242816
@@ -6059,7 +6065,7 @@ Control8=IDC_STATIC,button,1342177287
 
 [DLG:IDD_SELECT_TRAP (English (U.S.))]
 Type=1
-Class=?
+Class=CTrapSelDlg
 ControlCount=3
 Control1=IDC_LIST_TRAPS,SysListView32,1342242889
 Control2=IDOK,button,1342242817
@@ -6067,7 +6073,7 @@ Control3=IDCANCEL,button,1342242816
 
 [DLG:IDD_UPGRADE (English (U.S.))]
 Type=1
-Class=?
+Class=CConsoleUpgradeDlg
 ControlCount=4
 Control1=IDOK,button,1342242817
 Control2=IDCANCEL,button,1342242816
@@ -6076,7 +6082,7 @@ Control4=IDC_EDIT_URL,edit,1350633600
 
 [DLG:IDD_CREATE_CLUSTER (English (U.S.))]
 Type=1
-Class=?
+Class=CCreateClusterDlg
 ControlCount=10
 Control1=IDC_EDIT_NAME,edit,1350631552
 Control2=IDC_SELECT_PARENT,button,1342242816
@@ -6091,7 +6097,7 @@ Control10=IDC_STATIC_NAME,static,1342308352
 
 [DLG:IDD_OBJECT_CLUSTER_GENERAL (English (U.S.))]
 Type=1
-Class=?
+Class=CClusterPropsGeneral
 ControlCount=9
 Control1=IDC_EDIT_NAME,edit,1350631552
 Control2=IDC_EDIT_ID,edit,1350633600
@@ -6105,7 +6111,7 @@ Control9=IDC_BUTTON_DELETE,button,1342242816
 
 [DLG:IDD_OBJECT_CLUSTER_RESOURCES (English (U.S.))]
 Type=1
-Class=?
+Class=CClusterPropsResources
 ControlCount=4
 Control1=IDC_LIST_RESOURCES,SysListView32,1342242825
 Control2=IDC_BUTTON_ADD,button,1342242816
@@ -6114,7 +6120,7 @@ Control4=IDC_BUTTON_DELETE,button,1342242816
 
 [DLG:IDD_CLUSTER_RESOURCE (English (U.S.))]
 Type=1
-Class=?
+Class=CClusterResDlg
 ControlCount=6
 Control1=IDC_EDIT_NAME,edit,1350631552
 Control2=IDC_IPADDR,SysIPAddress32,1342242816
@@ -6125,7 +6131,7 @@ Control6=IDC_STATIC,static,1342308352
 
 [DLG:IDD_FATAL_ERROR (English (U.S.))]
 Type=1
-Class=?
+Class=CFatalErrorDlg
 ControlCount=6
 Control1=IDC_EDIT_TEXT,edit,1352730756
 Control2=IDC_EDIT_FILE,edit,1350633600
@@ -6136,7 +6142,7 @@ Control6=IDC_STATIC,static,1342308352
 
 [DLG:IDD_DEFINE_GRAPH (English (U.S.))]
 Type=1
-Class=?
+Class=CDefineGraphDlg
 ControlCount=12
 Control1=IDC_EDIT_NAME,edit,1350631552
 Control2=IDC_LIST_USERS,SysListView32,1342275609
@@ -6153,7 +6159,7 @@ Control12=IDC_STATIC,button,1342177287
 
 [DLG:IDD_MANAGE_GRAPHS (English (U.S.))]
 Type=1
-Class=?
+Class=CGraphManagerDlg
 ControlCount=4
 Control1=IDC_TREE_GRAPHS,SysTreeView32,1342244919
 Control2=IDC_BUTTON_PROPERTIES,button,1342242816
@@ -6162,13 +6168,13 @@ Control4=IDCANCEL,button,1342242816
 
 [DLG:IDD_GRAPH_PROP_STYLES (English (U.S.))]
 Type=1
-Class=?
+Class=CGraphStylePage
 ControlCount=1
 Control1=IDC_LIST_ITEMS,SysListView32,1342277129
 
 [DLG:IDD_IMPORT_CA_CERT (English (U.S.))]
 Type=1
-Class=?
+Class=CImportCertDlg
 ControlCount=7
 Control1=IDC_EDIT_FILE,edit,1350631552
 Control2=IDC_BUTTON_BROWSE,button,1342242816
@@ -6180,7 +6186,7 @@ Control7=IDC_STATIC,static,1342308352
 
 [DLG:IDD_SET_CHILD_MGMT_STATUS (English (U.S.))]
 Type=1
-Class=?
+Class=CChildMgmtStatusDlg
 ControlCount=3
 Control1=IDC_LIST_OBJECTS,SysListView32,1342276105
 Control2=IDOK,button,1342242817
@@ -6188,7 +6194,7 @@ Control3=IDCANCEL,button,1342242816
 
 [DLG:IDD_CREATE_IF_DCI (English (U.S.))]
 Type=1
-Class=?
+Class=CCreateIfDCIDlg
 ControlCount=32
 Control1=IDC_CHECK_IN,button,1342242819
 Control2=IDC_CHECK_DELTA_IN,button,1342242819
@@ -6225,7 +6231,7 @@ Control32=IDC_STATIC,static,1342308352
 
 [DLG:IDD_MAP_LINK (English (U.S.))]
 Type=1
-Class=?
+Class=CMapLinkPropDlg
 ControlCount=16
 Control1=IDC_EDIT_OBJECT1,edit,1350633600
 Control2=IDC_SELECT_OBJECT1,button,1342242816
@@ -6243,4 +6249,27 @@ Control13=IDC_STATIC,static,1342308352
 Control14=IDC_STATIC,static,1342308352
 Control15=IDC_STATIC,static,1342308352
 Control16=IDC_STATIC,static,1342308352
+
+[DLG:IDD_OBJECT_IF_GENERAL (English (U.S.))]
+Type=1
+Class=CIfPropsGeneral
+ControlCount=9
+Control1=IDC_EDIT_NAME,edit,1350631552
+Control2=IDC_EDIT_ID,edit,1350633600
+Control3=IDC_EDIT_POLLS,edit,1350639744
+Control4=IDC_STATIC,static,1342308352
+Control5=IDC_STATIC,static,1342308352
+Control6=IDC_STATIC,button,1342177287
+Control7=IDC_STATIC,button,1342177287
+Control8=IDC_STATIC,static,1342308352
+Control9=IDC_STATIC,static,1342308352
+
+[CLS:CIfPropsGeneral]
+Type=0
+HeaderFile=IfPropsGeneral.h
+ImplementationFile=IfPropsGeneral.cpp
+BaseClass=CPropertyPage
+Filter=D
+VirtualFilter=idWC
+LastObject=CIfPropsGeneral
 

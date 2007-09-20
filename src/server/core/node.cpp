@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.188 2007-09-19 16:57:41 victor Exp $ */
+/* $Id: node.cpp,v 1.189 2007-09-20 09:39:03 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -66,6 +66,9 @@ Node::Node()
    m_tFailTimeAgent = 0;
 	m_pTopology = NULL;
 	m_tLastTopologyPoll = 0;
+	m_iPendingStatus = -1;
+	m_iPollCount = 0;
+	m_iRequiredPollCount = 0;	// Use system default
 }
 
 
@@ -114,6 +117,9 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
    m_tFailTimeAgent = 0;
 	m_pTopology = NULL;
 	m_tLastTopologyPoll = 0;
+	m_iPendingStatus = -1;
+	m_iPollCount = 0;
+	m_iRequiredPollCount = 0;	// Use system default
 }
 
 
@@ -160,7 +166,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
                             "agent_port,status_poll_type,community,snmp_oid,"
                             "node_type,agent_version,"
                             "platform_name,poller_node_id,zone_guid,"
-                            "proxy_node,snmp_proxy FROM nodes WHERE id=%d", dwId);
+                            "proxy_node,snmp_proxy,required_polls FROM nodes WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -192,6 +198,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    m_dwZoneGUID = DBGetFieldULong(hResult, 0, 13);
    m_dwProxyNode = DBGetFieldULong(hResult, 0, 14);
    m_dwSNMPProxy = DBGetFieldULong(hResult, 0, 15);
+   m_iRequiredPollCount = DBGetFieldLong(hResult, 0, 16);
 
    DBFreeResult(hResult);
 
@@ -293,13 +300,14 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                "node_flags,snmp_version,community,status_poll_type,"
                "agent_port,auth_method,secret,snmp_oid,proxy_node,"
                "node_type,agent_version,platform_name,"
-               "poller_node_id,zone_guid,snmp_proxy) VALUES "
-					"(%d,'%s',%d,%d,'%s',%d,%d,%d,'%s','%s',%d,%d,'%s','%s',%d,%d,%d)",
+               "poller_node_id,zone_guid,snmp_proxy,required_polls) VALUES "
+					"(%d,'%s',%d,%d,'%s',%d,%d,%d,'%s','%s',%d,%d,'%s','%s',%d,%d,%d,%d)",
                m_dwId, IpToStr(m_dwIpAddr, szIpAddr), m_dwFlags,
                m_iSNMPVersion, pszEscCommunity, m_iStatusPollType,
                m_wAgentPort, m_wAuthMethod, pszEscSecret, m_szObjectId,
                m_dwProxyNode, m_dwNodeType, pszEscVersion,
-               pszEscPlatform, m_dwPollerNode, m_dwZoneGUID, m_dwSNMPProxy);
+               pszEscPlatform, m_dwPollerNode, m_dwZoneGUID,
+					m_dwSNMPProxy, m_iRequiredPollCount);
    else
       snprintf(szQuery, 4096,
                "UPDATE nodes SET primary_ip='%s',"
@@ -307,13 +315,14 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                "status_poll_type=%d,agent_port=%d,auth_method=%d,secret='%s',"
                "snmp_oid='%s',node_type=%d,"
                "agent_version='%s',platform_name='%s',poller_node_id=%d,"
-               "zone_guid=%d,proxy_node=%d,snmp_proxy=%d WHERE id=%d",
+               "zone_guid=%d,proxy_node=%d,snmp_proxy=%d,"
+					"required_polls=%d WHERE id=%d",
                IpToStr(m_dwIpAddr, szIpAddr), 
                m_dwFlags, m_iSNMPVersion, pszEscCommunity,
                m_iStatusPollType, m_wAgentPort, m_wAuthMethod, pszEscSecret, 
                m_szObjectId, m_dwNodeType, 
                pszEscVersion, pszEscPlatform, m_dwPollerNode, m_dwZoneGUID,
-               m_dwProxyNode, m_dwSNMPProxy, m_dwId);
+               m_dwProxyNode, m_dwSNMPProxy, m_iRequiredPollCount, m_dwId);
    bResult = DBQuery(hdb, szQuery);
    free(pszEscVersion);
    free(pszEscPlatform);
@@ -1808,6 +1817,7 @@ void Node::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_ZONE_GUID, m_dwZoneGUID);
    pMsg->SetVariable(VID_PROXY_NODE, m_dwProxyNode);
    pMsg->SetVariable(VID_SNMP_PROXY, m_dwSNMPProxy);
+	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
 }
 
 
@@ -1895,6 +1905,10 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    // Change SNMP proxy node
    if (pRequest->IsVariableExist(VID_SNMP_PROXY))
       m_dwSNMPProxy = pRequest->GetVariableLong(VID_SNMP_PROXY);
+
+   // Number of required polls
+   if (pRequest->IsVariableExist(VID_REQUIRED_POLLS))
+      m_iRequiredPollCount = (int)pRequest->GetVariableShort(VID_REQUIRED_POLLS);
 
    // Change flags
    if (pRequest->IsVariableExist(VID_FLAGS))

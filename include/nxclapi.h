@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.277 2007-09-19 16:57:39 victor Exp $ */
+/* $Id: nxclapi.h,v 1.278 2007-09-20 09:39:02 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -451,6 +451,7 @@ enum
 #define OBJ_UPDATE_CLUSTER_TYPE		((DWORD)0x10000000)
 #define OBJ_UPDATE_RESOURCES			((DWORD)0x20000000)
 #define OBJ_UPDATE_SNMP_PROXY			((DWORD)0x40000000)
+#define OBJ_UPDATE_REQUIRED_POLLS   ((DWORD)0x80000000)
 
 
 //
@@ -934,6 +935,7 @@ struct __nxc_object_iface
    DWORD dwIfIndex;     // Interface index.
    DWORD dwIfType;      // Interface type
    BYTE bMacAddr[MAC_ADDR_LENGTH];
+	WORD wRequiredPollCount;
 };
 
 struct __nxc_object_node
@@ -952,6 +954,7 @@ struct __nxc_object_node
    TCHAR szAgentVersion[MAX_AGENT_VERSION_LEN];
    TCHAR szPlatformName[MAX_PLATFORM_NAME_LEN];
    WORD wSNMPVersion;
+	WORD wRequiredPollCount;
 };
 
 struct __nxc_object_subnet
@@ -978,6 +981,7 @@ struct __nxc_object_netsrv
    DWORD dwPollerNode;
    TCHAR *pszRequest;
    TCHAR *pszResponse;
+	WORD wRequiredPollCount;
 };
 
 struct __nxc_object_zone
@@ -1112,6 +1116,7 @@ typedef struct
 	IP_NETWORK *pSyncNetList;
 	DWORD dwNumResources;
 	CLUSTER_RESOURCE *pResourceList;
+	WORD wRequiredPollCount;
 } NXC_OBJECT_UPDATE;
 
 

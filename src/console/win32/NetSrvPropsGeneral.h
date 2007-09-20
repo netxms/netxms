@@ -34,6 +34,7 @@ public:
 	CString	m_strRequest;
 	CString	m_strResponse;
 	long	m_iProto;
+	int		m_iRequiredPolls;
 	//}}AFX_DATA
 
 
@@ -64,6 +65,7 @@ protected:
 	afx_msg void OnSelectPoller();
 	afx_msg void OnChangeEditPort();
 	afx_msg void OnChangeEditProto();
+	afx_msg void OnChangeEditPolls();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

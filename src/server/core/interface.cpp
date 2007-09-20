@@ -1,6 +1,6 @@
 /* 
-** Project X - Network Management System
-** Copyright (C) 2003 Victor Kirhenshtein
+** NetXMS - Network Management System
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: interface.cpp
+** File: interface.cpp
 **
 **/
 
@@ -35,6 +35,9 @@ Interface::Interface()
    m_dwIfType = IFTYPE_OTHER;
    m_qwLastDownEventId = 0;
 	m_bSyntheticMask = FALSE;
+	m_iPendingStatus = -1;
+	m_iPollCount = 0;
+	m_iRequiredPollCount = 0;	// Use system default
 }
 
 
@@ -53,6 +56,9 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask, BOOL bSyntheticMask)
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
    m_qwLastDownEventId = 0;
 	m_bSyntheticMask = bSyntheticMask;
+	m_iPendingStatus = -1;
+	m_iPollCount = 0;
+	m_iRequiredPollCount = 0;	// Use system default
    m_bIsHidden = TRUE;
 }
 
@@ -72,6 +78,9 @@ Interface::Interface(char *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwNetMask,
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
    m_qwLastDownEventId = 0;
 	m_bSyntheticMask = FALSE;
+	m_iPendingStatus = -1;
+	m_iPollCount = 0;
+	m_iRequiredPollCount = 0;	// Use system default
    m_bIsHidden = TRUE;
 }
 
@@ -103,7 +112,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
       return FALSE;
 
    _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask,if_type,if_index,node_id,"
-                               "mac_addr,synthetic_mask FROM interfaces WHERE id=%d"), dwId);
+                               "mac_addr,synthetic_mask,required_polls FROM interfaces WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -117,6 +126,7 @@ BOOL Interface::CreateFromDB(DWORD dwId)
       dwNodeId = DBGetFieldULong(hResult, 0, 4);
       StrToBin(DBGetField(hResult, 0, 5, szBuffer, MAX_DB_STRING), m_bMacAddr, MAC_ADDR_LENGTH);
       m_bSyntheticMask = DBGetFieldLong(hResult, 0, 6);
+      m_iRequiredPollCount = DBGetFieldLong(hResult, 0, 7);
 
       // Link interface to node
       if (!m_bIsDeleted)
@@ -190,18 +200,21 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
    BinToStr(m_bMacAddr, MAC_ADDR_LENGTH, szMacStr);
    if (bNewObject)
       sprintf(szQuery, "INSERT INTO interfaces (id,ip_addr,"
-                       "ip_netmask,node_id,if_type,if_index,mac_addr,synthetic_mask) "
-                       "VALUES (%d,'%s','%s',%d,%d,%d,'%s',%d)",
+                       "ip_netmask,node_id,if_type,if_index,mac_addr,synthetic_mask,required_polls) "
+                       "VALUES (%d,'%s','%s',%d,%d,%d,'%s',%d,%d)",
               m_dwId, IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), dwNodeId,
-              m_dwIfType, m_dwIfIndex, szMacStr, m_bSyntheticMask);
+              m_dwIfType, m_dwIfIndex, szMacStr, m_bSyntheticMask,
+				  m_iRequiredPollCount);
    else
       sprintf(szQuery, "UPDATE interfaces SET ip_addr='%s',ip_netmask='%s',"
                        "node_id=%d,if_type=%d,if_index=%d,"
-                       "mac_addr='%s',synthetic_mask=%d WHERE id=%d",
+                       "mac_addr='%s',synthetic_mask=%d,"
+							  "required_polls=%d WHERE id=%d",
               IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), dwNodeId,
-              m_dwIfType, m_dwIfIndex, szMacStr, m_bSyntheticMask, m_dwId);
+              m_dwIfType, m_dwIfIndex, szMacStr, m_bSyntheticMask,
+				  m_iRequiredPollCount, m_dwId);
    DBQuery(hdb, szQuery);
 
    // Save access list
@@ -242,7 +255,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 									Queue *pEventQueue, BOOL bClusterSync,
 									SNMP_Transport *pTransport)
 {
-   int iOldStatus = m_iStatus;
+   int oldStatus = m_iStatus, newStatus;
    DWORD dwPingStatus;
    BOOL bNeedPoll = TRUE;
    Node *pNode;
@@ -266,8 +279,8 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
           (!(pNode->Flags() & NF_DISABLE_NXCP)))
       {
          SendPollerMsg(dwRqId, "      Retrieving interface status from NetXMS agent\r\n");
-         m_iStatus = pNode->GetInterfaceStatusFromAgent(m_dwIfIndex);
-         if (m_iStatus != STATUS_UNKNOWN)
+         newStatus = pNode->GetInterfaceStatusFromAgent(m_dwIfIndex);
+         if (newStatus != STATUS_UNKNOWN)
             bNeedPoll = FALSE;
       }
    
@@ -275,8 +288,8 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
           (!(pNode->Flags() & NF_DISABLE_SNMP)))
       {
          SendPollerMsg(dwRqId, "      Retrieving interface status from SNMP agent\r\n");
-         m_iStatus = pNode->GetInterfaceStatusFromSNMP(pTransport, m_dwIfIndex);
-         if (m_iStatus != STATUS_UNKNOWN)
+         newStatus = pNode->GetInterfaceStatusFromSNMP(pTransport, m_dwIfIndex);
+         if (newStatus != STATUS_UNKNOWN)
             bNeedPoll = FALSE;
       }
    }
@@ -286,7 +299,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 		// Pings cannot be used for cluster sync interfaces
       if ((pNode->Flags() & NF_DISABLE_ICMP) || bClusterSync)
       {
-         m_iStatus = STATUS_UNKNOWN;
+         newStatus = STATUS_UNKNOWN;
       }
       else
       {
@@ -299,17 +312,17 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
             dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL, g_dwPingSize);
             if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
                WriteLog(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
-            m_iStatus = (dwPingStatus == ICMP_SUCCESS) ? STATUS_NORMAL : STATUS_CRITICAL;
+            newStatus = (dwPingStatus == ICMP_SUCCESS) ? STATUS_NORMAL : STATUS_CRITICAL;
          }
          else
          {
             // Interface doesn't have an IP address, so we can't ping it
-            m_iStatus = STATUS_UNKNOWN;
+            newStatus = STATUS_UNKNOWN;
          }
       }
    }
 
-   if (m_iStatus != iOldStatus)
+   if (newStatus != oldStatus)
    {
 		static DWORD statusToEvent[] =
 		{
@@ -324,14 +337,29 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 			EVENT_INTERFACE_TESTING   // Testing
 		};
 
-      SendPollerMsg(dwRqId, "      Interface status changed to %s\r\n", g_szStatusTextSmall[m_iStatus]);
-      PostEventEx(pEventQueue, 
-                  statusToEvent[m_iStatus],
-                  pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask,
-                  m_dwIfIndex);
-      LockData();
-      Modify();
-      UnlockData();
+		if (newStatus == m_iPendingStatus)
+		{
+			m_iPollCount++;
+		}
+		else
+		{
+			m_iPendingStatus = newStatus;
+			m_iPollCount = 1;
+		}
+
+		if (m_iPollCount >= ((m_iRequiredPollCount > 0) ? m_iRequiredPollCount : g_nRequiredPolls))
+		{
+			m_iStatus = newStatus;
+			m_iPendingStatus = -1;	// Invalidate pending status
+			SendPollerMsg(dwRqId, "      Interface status changed to %s\r\n", g_szStatusTextSmall[m_iStatus]);
+			PostEventEx(pEventQueue, 
+							statusToEvent[m_iStatus],
+							pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask,
+							m_dwIfIndex);
+			LockData();
+			Modify();
+			UnlockData();
+		}
    }
    SendPollerMsg(dwRqId, "   Finished status poll on interface %s\r\n", m_szName);
 }
@@ -349,6 +377,24 @@ void Interface::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_IP_NETMASK, m_dwIpNetMask);
    pMsg->SetVariable(VID_MAC_ADDR, m_bMacAddr, MAC_ADDR_LENGTH);
    pMsg->SetVariable(VID_SYNTHETIC_MASK, (WORD)m_bSyntheticMask);
+	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
+}
+
+
+//
+// Modify object from message
+//
+
+DWORD Interface::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+{
+   if (!bAlreadyLocked)
+      LockData();
+
+   // Number of required polls
+   if (pRequest->IsVariableExist(VID_REQUIRED_POLLS))
+      m_iRequiredPollCount = (int)pRequest->GetVariableShort(VID_REQUIRED_POLLS);
+
+   return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
 
 

@@ -182,6 +182,7 @@ CREATE TABLE nodes
 	zone_guid integer not null,
 	proxy_node integer not null,
 	snmp_proxy integer not null,
+	required_polls integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -266,6 +267,7 @@ CREATE TABLE interfaces
 	if_index integer not null,
 	mac_addr varchar(15) not null,
 	synthetic_mask integer not null,
+	required_polls integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -285,6 +287,7 @@ CREATE TABLE network_services
 	check_request SQL_TEXT not null,
 	check_responce SQL_TEXT not null,
 	poller_node_id integer not null,
+	required_polls integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

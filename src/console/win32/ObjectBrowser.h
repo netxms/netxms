@@ -73,7 +73,6 @@ protected:
 	NXC_OBJECT * m_pCurrentObject;
    void UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject);
 	DWORD FindObjectInTree(DWORD dwObjectId);
-	void CreateTreeItemText(NXC_OBJECT *pObject, TCHAR *pszBuffer);
 	void AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent);
    void AddObjectEntryToHash(NXC_OBJECT *pObject, HTREEITEM hItem);
    void SortTreeItems(HTREEITEM hItem);

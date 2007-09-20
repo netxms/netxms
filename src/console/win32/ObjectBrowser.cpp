@@ -273,7 +273,6 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
 {
    HTREEITEM hItem;
    TVITEM tvi;
-   TCHAR szBuffer[512];
    int nImage;
 
 	// Don't add unmanaged leaf objects if requested
@@ -291,9 +290,8 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
 	}
 
    // Add object record with class-dependent text
-   CreateTreeItemText(pObject, szBuffer);
    nImage = GetObjectImageIndex(pObject);
-   hItem = m_wndTreeCtrl.InsertItem(szBuffer, nImage, nImage, hParent);
+   hItem = m_wndTreeCtrl.InsertItem(pObject->szName, nImage, nImage, hParent);
    m_wndTreeCtrl.SetItemData(hItem, (LPARAM)pObject);
    m_wndTreeCtrl.SetItemState(hItem, INDEXTOOVERLAYMASK(pObject->iStatus), TVIS_OVERLAYMASK);
 
@@ -307,34 +305,6 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
    tvi.hItem = hItem;
    tvi.cChildren = I_CHILDRENCALLBACK;
    m_wndTreeCtrl.SetItem(&tvi);
-}
-
-
-//
-// Create class-depemdent text for tree item
-//
-
-void CObjectBrowser::CreateTreeItemText(NXC_OBJECT *pObject, TCHAR *pszBuffer)
-{
-   TCHAR szIpBuffer[32];
-
-   switch(pObject->iClass)
-   {
-      case OBJECT_SUBNET:
-         _stprintf(pszBuffer, _T("%s [Status: %s]"), pObject->szName, g_szStatusText[pObject->iStatus]);
-         break;
-      case OBJECT_INTERFACE:
-         if (pObject->dwIpAddr != 0)
-            _stprintf(pszBuffer, _T("%s [IP: %s/%d Status: %s]"), pObject->szName, 
-                    IpToStr(pObject->dwIpAddr, szIpBuffer), 
-                    BitsInMask(pObject->iface.dwIpNetMask), g_szStatusText[pObject->iStatus]);
-         else
-            _stprintf(pszBuffer, _T("%s [Status: %s]"), pObject->szName, g_szStatusText[pObject->iStatus]);
-         break;
-      default:
-         _tcscpy(pszBuffer, pObject->szName);
-         break;
-   }
 }
 
 
@@ -621,14 +591,12 @@ void CObjectBrowser::UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject)
 
       if (dwIndex != INVALID_INDEX)
       {
-         TCHAR szBuffer[256];
          DWORD j, *pdwParentList;
 
          // Create a copy of object's parent list
          pdwParentList = (DWORD *)nx_memdup(pObject->pdwParentList, 
                                             sizeof(DWORD) * pObject->dwNumParents);
 
-         CreateTreeItemText(pObject, szBuffer);
          for(i = 0; i < m_pTreeHash[dwIndex].dwNumEntries; i++)
          {
             // Check if this item's parent still in object's parents list
@@ -653,7 +621,7 @@ void CObjectBrowser::UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject)
                }
                else  // Current tree item is still valid
                {
-                  m_wndTreeCtrl.SetItemText(m_pTreeHash[dwIndex].phTreeItemList[i], szBuffer);
+                  m_wndTreeCtrl.SetItemText(m_pTreeHash[dwIndex].phTreeItemList[i], pObject->szName);
                   m_wndTreeCtrl.SetItemState(m_pTreeHash[dwIndex].phTreeItemList[i],
                                     INDEXTOOVERLAYMASK(pObject->iStatus), TVIS_OVERLAYMASK);
                   SortTreeItems(hItem);
@@ -661,7 +629,7 @@ void CObjectBrowser::UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject)
             }
             else  // Current tree item has no parent
             {
-               m_wndTreeCtrl.SetItemText(m_pTreeHash[dwIndex].phTreeItemList[i], szBuffer);
+               m_wndTreeCtrl.SetItemText(m_pTreeHash[dwIndex].phTreeItemList[i], pObject->szName);
                m_wndTreeCtrl.SetItemState(m_pTreeHash[dwIndex].phTreeItemList[i],
                                        INDEXTOOVERLAYMASK(pObject->iStatus), TVIS_OVERLAYMASK);
             }

@@ -76,6 +76,7 @@
 #include "GraphManagerDlg.h"
 #include "CertManager.h"
 #include "CreateIfDCIDlg.h"
+#include "IfPropsGeneral.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1286,6 +1287,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
 	CObjectPropSheet wndPropSheet(_T("Object Properties"), GetMainWnd(), 0);
    CNodePropsGeneral wndNodeGeneral;
    CNetSrvPropsGeneral wndNetSrvGeneral;
+	CIfPropsGeneral wndIfGeneral;
    CObjectPropsGeneral wndObjectGeneral;
    CObjectPropCaps wndObjectCaps;
    CObjectPropsSecurity wndObjectSecurity;
@@ -1347,7 +1349,15 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
             wndNetSrvGeneral.m_strResponse = pObject->netsrv.pszResponse;
             wndNetSrvGeneral.m_dwIpAddr = pObject->dwIpAddr;
             wndNetSrvGeneral.m_dwPollerNode = pObject->netsrv.dwPollerNode;
+				wndNetSrvGeneral.m_iRequiredPolls = pObject->netsrv.wRequiredPollCount;
             wndPropSheet.AddPage(&wndNetSrvGeneral);
+            break;
+         case OBJECT_INTERFACE:
+            wndIfGeneral.m_pObject = pObject;
+            wndIfGeneral.m_dwObjectId = dwObjectId;
+            wndIfGeneral.m_strName = pObject->szName;
+            wndIfGeneral.m_nRequiredPolls = pObject->iface.wRequiredPollCount;
+            wndPropSheet.AddPage(&wndIfGeneral);
             break;
          case OBJECT_VPNCONNECTOR:
             wndVPNCGeneral.m_pObject = pObject;

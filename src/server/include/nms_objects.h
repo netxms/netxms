@@ -455,6 +455,9 @@ protected:
    BYTE m_bMacAddr[MAC_ADDR_LENGTH];
    QWORD m_qwLastDownEventId;
 	BOOL m_bSyntheticMask;
+	int m_iPendingStatus;
+	int m_iPollCount;
+	int m_iRequiredPollCount;
 
 public:
    Interface();
@@ -488,7 +491,9 @@ public:
 
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, Queue *pEventQueue,
 	                BOOL bClusterSync, SNMP_Transport *pTransport);
-   virtual void CreateMessage(CSCPMessage *pMsg);
+   
+	virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    DWORD WakeUp(void);
 };
@@ -509,6 +514,9 @@ protected:
    WORD m_wPort;         // TCP or UDP port number
    TCHAR *m_pszRequest;  // Service-specific request
    TCHAR *m_pszResponse; // Service-specific expected response
+	int m_iPendingStatus;
+	int m_iPollCount;
+	int m_iRequiredPollCount;
 
    virtual void OnObjectDelete(DWORD dwObjectId);
 
@@ -576,6 +584,9 @@ class NXCORE_EXPORTABLE Node : public Template
 protected:
    DWORD m_dwFlags;
    DWORD m_dwDynamicFlags;       // Flags used at runtime by server
+	int m_iPendingStatus;
+	int m_iPollCount;
+	int m_iRequiredPollCount;
    DWORD m_dwZoneGUID;
    WORD m_wAgentPort;
    WORD m_wAuthMethod;

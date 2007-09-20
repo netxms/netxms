@@ -232,6 +232,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->iface.dwIfIndex = pMsg->GetVariableLong(VID_IF_INDEX);
          pObject->iface.dwIfType = pMsg->GetVariableLong(VID_IF_TYPE);
          pMsg->GetVariableBinary(VID_MAC_ADDR, pObject->iface.bMacAddr, MAC_ADDR_LENGTH);
+			pObject->iface.wRequiredPollCount = pMsg->GetVariableShort(VID_REQUIRED_POLLS);
          break;
       case OBJECT_NODE:
          pObject->node.dwFlags = pMsg->GetVariableLong(VID_FLAGS);
@@ -248,6 +249,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->node.wSNMPVersion = pMsg->GetVariableShort(VID_SNMP_VERSION);
          pMsg->GetVariableStr(VID_AGENT_VERSION, pObject->node.szAgentVersion, MAX_AGENT_VERSION_LEN);
          pMsg->GetVariableStr(VID_PLATFORM_NAME, pObject->node.szPlatformName, MAX_PLATFORM_NAME_LEN);
+			pObject->node.wRequiredPollCount = pMsg->GetVariableShort(VID_REQUIRED_POLLS);
          break;
       case OBJECT_SUBNET:
          pObject->subnet.dwIpNetMask = pMsg->GetVariableLong(VID_IP_NETMASK);
@@ -266,6 +268,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->netsrv.dwPollerNode = pMsg->GetVariableLong(VID_POLLER_NODE_ID);
          pObject->netsrv.pszRequest = pMsg->GetVariableStr(VID_SERVICE_REQUEST);
          pObject->netsrv.pszResponse = pMsg->GetVariableStr(VID_SERVICE_RESPONSE);
+			pObject->netsrv.wRequiredPollCount = pMsg->GetVariableShort(VID_REQUIRED_POLLS);
          break;
       case OBJECT_ZONE:
          pObject->zone.dwZoneGUID = pMsg->GetVariableLong(VID_ZONE_GUID);
@@ -714,6 +717,8 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_SCRIPT, pUpdate->pszScript);
    if (pUpdate->dwFlags & OBJ_UPDATE_CLUSTER_TYPE)
       msg.SetVariable(VID_CLUSTER_TYPE, pUpdate->dwClusterType);
+   if (pUpdate->dwFlags & OBJ_UPDATE_REQUIRED_POLLS)
+      msg.SetVariable(VID_REQUIRED_POLLS, pUpdate->wRequiredPollCount);
    if (pUpdate->dwFlags & OBJ_UPDATE_STATUS_ALG)
    {
       msg.SetVariable(VID_STATUS_CALCULATION_ALG, (WORD)pUpdate->iStatusCalcAlg);

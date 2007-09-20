@@ -753,6 +753,7 @@ typedef struct
 #define VID_SUCCESS_AUDIT           ((DWORD)296)
 #define VID_WORKSTATION             ((DWORD)297)
 #define VID_USER_TAG                ((DWORD)298)
+#define VID_REQUIRED_POLLS          ((DWORD)299)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,6 +37,9 @@ NetworkService::NetworkService()
    m_wPort = 80;
    m_pszRequest = NULL;
    m_pszResponse = NULL;
+	m_iPendingStatus = -1;
+	m_iPollCount = 0;
+	m_iRequiredPollCount = 0;	// Use system default
 }
 
 
@@ -57,6 +60,9 @@ NetworkService::NetworkService(int iServiceType, WORD wProto, WORD wPort,
    m_wPort = wPort;
    m_pszRequest = pszRequest;
    m_pszResponse = pszResponse;
+	m_iPendingStatus = -1;
+	m_iPollCount = 0;
+	m_iRequiredPollCount = 0;	// Use system default
    m_bIsHidden = TRUE;
 }
 
@@ -103,21 +109,23 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
    {
       _sntprintf(szQuery, 16384, _T("INSERT INTO network_services (id,node_id,"
                                     "service_type,ip_bind_addr,ip_proto,ip_port,"
-                                    "check_request,check_responce,poller_node_id) VALUES "
-                                    "(%d,%d,%d,'%s',%d,%d,'%s','%s',%d)"),
+                                    "check_request,check_responce,poller_node_id,"
+												"required_polls) VALUES "
+                                    "(%d,%d,%d,'%s',%d,%d,'%s','%s',%d,%d)"),
                  m_dwId, m_pHostNode->Id(), m_iServiceType,
                  IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
-                 pszEscResponse, m_dwPollerNode);
+                 pszEscResponse, m_dwPollerNode, m_iRequiredPollCount);
    }
    else
    {
       _sntprintf(szQuery, 16384, _T("UPDATE network_services SET node_id=%d,"
                                     "service_type=%d,ip_bind_addr='%s',"
                                     "ip_proto=%d,ip_port=%d,check_request='%s',"
-                                    "check_responce='%s',poller_node_id=%d WHERE id=%d"),
+                                    "check_responce='%s',poller_node_id=%d,"
+												"required_polls=%d WHERE id=%d"),
                  m_pHostNode->Id(), m_iServiceType,
                  IpToStr(m_dwIpAddr, szIpAddr), m_wProto, m_wPort, pszEscRequest,
-                 pszEscResponse, m_dwPollerNode, m_dwId);
+                 pszEscResponse, m_dwPollerNode, m_iRequiredPollCount, m_dwId);
    }
    free(pszEscRequest);
    free(pszEscResponse);
@@ -152,7 +160,7 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
 
    _sntprintf(szQuery, 256, _T("SELECT node_id,service_type,"
                                "ip_bind_addr,ip_proto,ip_port,check_request,check_responce,"
-                               "poller_node_id FROM network_services WHERE id=%d"), dwId);
+                               "poller_node_id,required_polls FROM network_services WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -169,6 +177,7 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
       m_pszResponse = DBGetField(hResult, 0, 6, NULL, 0);
       DecodeSQLString(m_pszResponse);
       m_dwPollerNode = DBGetFieldULong(hResult, 0, 7);
+      m_iRequiredPollCount = DBGetFieldLong(hResult, 0, 8);
 
       // Link service to node
       if (!m_bIsDeleted)
@@ -256,6 +265,7 @@ void NetworkService::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_POLLER_NODE_ID, m_dwPollerNode);
    pMsg->SetVariable(VID_SERVICE_REQUEST, CHECK_NULL_EX(m_pszRequest));
    pMsg->SetVariable(VID_SERVICE_RESPONSE, CHECK_NULL_EX(m_pszResponse));
+	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
 }
 
 
@@ -319,6 +329,10 @@ DWORD NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLock
    if (pRequest->IsVariableExist(VID_IP_PORT))
       m_wPort = pRequest->GetVariableShort(VID_IP_PORT);
 
+   // Number of required polls
+   if (pRequest->IsVariableExist(VID_REQUIRED_POLLS))
+      m_iRequiredPollCount = (int)pRequest->GetVariableShort(VID_REQUIRED_POLLS);
+
    // Check request
    if (pRequest->IsVariableExist(VID_SERVICE_REQUEST))
    {
@@ -344,7 +358,7 @@ DWORD NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLock
 void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
                                 Node *pPollerNode, Queue *pEventQueue)
 {
-   int iOldStatus = m_iStatus;
+   int oldStatus = m_iStatus, newStatus;
    Node *pNode;
 
    m_pPollRequestor = pSession;
@@ -383,13 +397,13 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
                                      m_iServiceType, m_wPort, m_wProto, 
                                      m_pszRequest, m_pszResponse) == ERR_SUCCESS)
       {
-         m_iStatus = (dwStatus == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
+         newStatus = (dwStatus == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
          SendPollerMsg(dwRqId, "      Agent reports service status [%d]\r\n", dwStatus);
       }
       else
       {
          SendPollerMsg(dwRqId, "      Unable to check service status due to agent or communication error\r\n");
-         m_iStatus = STATUS_UNKNOWN;
+         newStatus = STATUS_UNKNOWN;
       }
 
       if (pNode != pPollerNode)
@@ -398,16 +412,33 @@ void NetworkService::StatusPoll(ClientSession *pSession, DWORD dwRqId,
    else
    {
       SendPollerMsg(dwRqId, "      Unable to find node object for poll\r\n");
-      m_iStatus = STATUS_UNKNOWN;
+      newStatus = STATUS_UNKNOWN;
    }
 
-   if (m_iStatus != iOldStatus)
+   if (newStatus != oldStatus)
    {
-      SendPollerMsg(dwRqId, "      Service status changed to %s\r\n", g_szStatusTextSmall[m_iStatus]);
-      PostEventEx(pEventQueue, m_iStatus == STATUS_NORMAL ? EVENT_SERVICE_UP : 
-                  (m_iStatus == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
-                  m_pHostNode->Id(), "sdd", m_szName, m_dwId, m_iServiceType);
-      Modify();
+		if (newStatus == m_iPendingStatus)
+		{
+			m_iPollCount++;
+		}
+		else
+		{
+			m_iPendingStatus = newStatus;
+			m_iPollCount = 1;
+		}
+
+		if (m_iPollCount >= ((m_iRequiredPollCount > 0) ? m_iRequiredPollCount : g_nRequiredPolls))
+		{
+			m_iStatus = newStatus;
+			m_iPendingStatus = -1;	// Invalidate pending status
+			SendPollerMsg(dwRqId, "      Service status changed to %s\r\n", g_szStatusTextSmall[m_iStatus]);
+			PostEventEx(pEventQueue, m_iStatus == STATUS_NORMAL ? EVENT_SERVICE_UP : 
+							(m_iStatus == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
+							m_pHostNode->Id(), "sdd", m_szName, m_dwId, m_iServiceType);
+			LockData();
+			Modify();
+			UnlockData();
+		}
    }
    SendPollerMsg(dwRqId, "   Finished status poll on network service %s\r\n", m_szName);
 }

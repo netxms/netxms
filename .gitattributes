@@ -908,6 +908,8 @@ src/console/win32/GraphStylePage.cpp -text
 src/console/win32/GraphStylePage.h -text
 src/console/win32/GroupPropDlg.cpp -text
 src/console/win32/GroupPropDlg.h -text
+src/console/win32/IfPropsGeneral.cpp -text
+src/console/win32/IfPropsGeneral.h -text
 src/console/win32/ImportCertDlg.cpp -text
 src/console/win32/ImportCertDlg.h -text
 src/console/win32/InputBox.cpp -text

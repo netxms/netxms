@@ -27,6 +27,7 @@ CNetSrvPropsGeneral::CNetSrvPropsGeneral() : CPropertyPage(CNetSrvPropsGeneral::
 	m_strRequest = _T("");
 	m_strResponse = _T("");
 	m_iProto = 0;
+	m_iRequiredPolls = 0;
 	//}}AFX_DATA_INIT
 }
 
@@ -47,6 +48,8 @@ void CNetSrvPropsGeneral::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_RESPONSE, m_strResponse);
 	DDX_Text(pDX, IDC_EDIT_PROTO, m_iProto);
 	DDV_MinMaxLong(pDX, m_iProto, 0, 255);
+	DDX_Text(pDX, IDC_EDIT_POLLS, m_iRequiredPolls);
+	DDV_MinMaxInt(pDX, m_iRequiredPolls, 0, 100);
 	//}}AFX_DATA_MAP
 }
 
@@ -65,6 +68,7 @@ BEGIN_MESSAGE_MAP(CNetSrvPropsGeneral, CPropertyPage)
 	ON_BN_CLICKED(IDC_SELECT_POLLER, OnSelectPoller)
 	ON_EN_CHANGE(IDC_EDIT_PORT, OnChangeEditPort)
 	ON_EN_CHANGE(IDC_EDIT_PROTO, OnChangeEditProto)
+	ON_EN_CHANGE(IDC_EDIT_POLLS, OnChangeEditPolls)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -145,6 +149,7 @@ void CNetSrvPropsGeneral::OnOK()
    m_pUpdate->wProto = (WORD)m_iProto;
    m_pUpdate->dwPollerNode = m_dwPollerNode;
    m_pUpdate->dwIpAddr = m_dwIpAddr;
+	m_pUpdate->wRequiredPollCount = m_iRequiredPolls;
 }
 
 
@@ -179,6 +184,12 @@ void CNetSrvPropsGeneral::OnChangeEditPort()
 void CNetSrvPropsGeneral::OnChangeEditProto() 
 {
    m_pUpdate->dwFlags |= OBJ_UPDATE_IP_PROTO;
+   SetModified();
+}
+
+void CNetSrvPropsGeneral::OnChangeEditPolls() 
+{
+   m_pUpdate->dwFlags |= OBJ_UPDATE_REQUIRED_POLLS;
    SetModified();
 }
 
