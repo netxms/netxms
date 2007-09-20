@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.65 2007-09-19 16:57:40 victor Exp $ */
+/* $Id: tools.cpp,v 1.66 2007-09-20 13:04:00 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
@@ -59,7 +59,7 @@
 
 static void (* m_pLogFunction)(int, TCHAR *) = NULL;
 static void (* m_pTrapFunction1)(DWORD, int, TCHAR **) = NULL;
-static void (* m_pTrapFunction2)(DWORD, char *, va_list) = NULL;
+static void (* m_pTrapFunction2)(DWORD, const char *, va_list) = NULL;
 
 
 //
@@ -255,7 +255,7 @@ void LIBNETXMS_EXPORTABLE StrStrip(TCHAR *str)
 // Add string to enumeration result set
 //
 
-void LIBNETXMS_EXPORTABLE NxAddResultString(NETXMS_VALUES_LIST *pList, TCHAR *pszString)
+void LIBNETXMS_EXPORTABLE NxAddResultString(NETXMS_VALUES_LIST *pList, const TCHAR *pszString)
 {
 	// FIXME
    pList->ppStringList = (TCHAR **)realloc(pList->ppStringList, sizeof(TCHAR *) * (pList->dwNumStrings + 1));
@@ -287,7 +287,7 @@ void LIBNETXMS_EXPORTABLE NxDestroyValuesList(NETXMS_VALUES_LIST *pList)
 // Returns FALSE on processing error
 //
 
-BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(TCHAR *param, int index, TCHAR *arg, int maxSize)
+BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(const TCHAR *param, int index, TCHAR *arg, int maxSize)
 {
    TCHAR *ptr1, *ptr2;
    int state, currIndex, pos;
@@ -604,7 +604,7 @@ void LIBNETXMS_EXPORTABLE InitSubAgentsLogger(void (* pFunc)(int, TCHAR *))
 // Write message to agent's log
 //
 
-void LIBNETXMS_EXPORTABLE NxWriteAgentLog(int iLevel, TCHAR *pszFormat, ...)
+void LIBNETXMS_EXPORTABLE NxWriteAgentLog(int iLevel, const TCHAR *pszFormat, ...)
 {
    TCHAR szBuffer[4096];
    va_list args;
@@ -624,7 +624,7 @@ void LIBNETXMS_EXPORTABLE NxWriteAgentLog(int iLevel, TCHAR *pszFormat, ...)
 //
 
 void LIBNETXMS_EXPORTABLE InitSubAgentsTrapSender(void (* pFunc1)(DWORD, int, TCHAR **),
-                                                  void (* pFunc2)(DWORD, char *, va_list))
+                                                  void (* pFunc2)(DWORD, const char *, va_list))
 {
    m_pTrapFunction1 = pFunc1;
    m_pTrapFunction2 = pFunc2;
@@ -635,7 +635,7 @@ void LIBNETXMS_EXPORTABLE InitSubAgentsTrapSender(void (* pFunc1)(DWORD, int, TC
 // Send trap from agent to server
 //
 
-void LIBNETXMS_EXPORTABLE NxSendTrap(DWORD dwEvent, char *pszFormat, ...)
+void LIBNETXMS_EXPORTABLE NxSendTrap(DWORD dwEvent, const char *pszFormat, ...)
 {
    va_list args;
 

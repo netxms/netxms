@@ -1,4 +1,4 @@
-/* $Id: reindex.cpp,v 1.1 2007-01-05 16:04:14 victor Exp $ */
+/* $Id: reindex.cpp,v 1.2 2007-09-20 13:04:02 victor Exp $ */
 /* 
 ** nxdbmgr - NetXMS database manager
 ** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
@@ -28,7 +28,7 @@
 // Recreate index
 //
 
-static void RecreateIndex(TCHAR *pszIndex, TCHAR *pszTable, TCHAR *pszColumns)
+static void RecreateIndex(const TCHAR *pszIndex, const TCHAR *pszTable, const TCHAR *pszColumns)
 {
 	TCHAR szQuery[1024];
 

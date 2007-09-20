@@ -9,7 +9,7 @@
 #include "nxcore.h"
 #include "nxmp_parser.h"
 
-void yyerror(yyscan_t scanner, NXMP_Lexer *pLexer, NXMP_Parser *pParser, NXMP_Data *pData, char *pszText);
+void yyerror(yyscan_t scanner, NXMP_Lexer *pLexer, NXMP_Parser *pParser, NXMP_Data *pData, const char *pszText);
 int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 
 %}

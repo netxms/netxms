@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.138 2007-09-20 09:39:04 victor Exp $ */
+/* $Id: nms_core.h,v 1.139 2007-09-20 13:04:01 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -392,7 +392,7 @@ private:
    void SetupEncryption(DWORD dwRqId);
    void RespondToKeepalive(DWORD dwRqId);
    void OnFileUpload(BOOL bSuccess);
-   void DebugPrintf(TCHAR *pszFormat, ...);
+   void DebugPrintf(const TCHAR *pszFormat, ...);
    void SendServerInfo(DWORD dwRqId);
    void Login(CSCPMessage *pRequest);
    void SendAllObjects(CSCPMessage *pRequest);
@@ -531,7 +531,7 @@ public:
    void Run(void);
 
    void SendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
-   void SendPollerMsg(DWORD dwRqId, TCHAR *pszMsg);
+   void SendPollerMsg(DWORD dwRqId, const TCHAR *pszMsg);
 
    DWORD GetIndex(void) { return m_dwIndex; }
    void SetIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
@@ -682,8 +682,8 @@ void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_LOG_RECORD *pRec);
 void EscapeString(String &str);
 
 void InitAuditLog(void);
-void NXCORE_EXPORTABLE WriteAuditLog(TCHAR *pszSubsys, BOOL bSuccess, DWORD dwUserId,
-												 TCHAR *pszWorkstation, DWORD dwObjectId, TCHAR *pszFormat, ...);
+void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *pszSubsys, BOOL bSuccess, DWORD dwUserId,
+                                     const TCHAR *pszWorkstation, DWORD dwObjectId, const TCHAR *pszFormat, ...);
 
 #ifdef _WITH_ENCRYPTION
 X509 *CertificateFromLoginMessage(CSCPMessage *pMsg);

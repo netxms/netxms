@@ -67,7 +67,7 @@ Interface::Interface(DWORD dwAddr, DWORD dwNetMask, BOOL bSyntheticMask)
 // Constructor for normal interface object
 //
 
-Interface::Interface(char *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwNetMask, DWORD dwType)
+Interface::Interface(const char *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwNetMask, DWORD dwType)
           : NetObj()
 {
    nx_strncpy(m_szName, szName, MAX_OBJECT_NAME);

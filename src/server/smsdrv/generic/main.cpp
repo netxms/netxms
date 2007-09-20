@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.8 2006-11-21 21:09:09 alk Exp $ */
+/* $Id: main.cpp,v 1.9 2007-09-20 13:04:01 victor Exp $ */
 
 #include "main.h"
 
@@ -89,13 +89,13 @@ extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 	switch (parity)
 	{
 	case ODDPARITY:
-		p = "ODD";
+		p = (char *)"ODD";
 		break;
 	case EVENPARITY:
-		p = "EVEN";
+		p = (char *)"EVEN";
 		break;
 	default:
-		p = "NONE";
+		p = (char *)"NONE";
 		break;
 	}
 	DbgPrintf(AF_DEBUG_MISC, "SMS init: port={%s}, speed=%d, data=%d, parity=%s, stop=%d",
@@ -199,6 +199,9 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.8  2006/11/21 21:09:09  alk
+code reformatted (mix of space/tab replaced w/ tabs)
+
 Revision 1.7  2006/11/14 19:49:40  victor
 - Active discovery implemented
 - Discovery configuration implemented

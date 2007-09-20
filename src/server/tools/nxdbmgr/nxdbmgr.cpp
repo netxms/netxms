@@ -35,8 +35,8 @@ DB_HANDLE g_hCoreDB;
 BOOL g_bIgnoreErrors = FALSE;
 BOOL g_bTrace = FALSE;
 int g_iSyntax;
-TCHAR *g_pszTableSuffix = _T("");
-TCHAR *g_pszSqlType[5][2] = 
+const TCHAR *g_pszTableSuffix = _T("");
+const TCHAR *g_pszSqlType[5][2] = 
 {
    { _T("blob"), _T("bigint") },       // MySQL
    { _T("varchar"), _T("bigint") },    // PostgreSQL
@@ -73,7 +73,7 @@ static BOOL m_bForce = FALSE;
 // Show query if trace mode is ON
 //
 
-void ShowQuery(TCHAR *pszQuery)
+void ShowQuery(const TCHAR *pszQuery)
 {
 #ifdef _WIN32
       SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
@@ -133,7 +133,7 @@ BOOL GetYesNo(void)
 // Execute SQL SELECT query and print error message on screen if query failed
 //
 
-DB_RESULT SQLSelect(TCHAR *pszQuery)
+DB_RESULT SQLSelect(const TCHAR *pszQuery)
 {
    DB_RESULT hResult;
 
@@ -160,7 +160,7 @@ DB_RESULT SQLSelect(TCHAR *pszQuery)
 // Execute SQL query and print error message on screen if query failed
 //
 
-BOOL SQLQuery(TCHAR *pszQuery)
+BOOL SQLQuery(const TCHAR *pszQuery)
 {
    BOOL bResult;
 
@@ -187,7 +187,7 @@ BOOL SQLQuery(TCHAR *pszQuery)
 // Execute SQL batch
 //
 
-BOOL SQLBatch(TCHAR *pszBatch)
+BOOL SQLBatch(const TCHAR *pszBatch)
 {
    TCHAR *pszBuffer, *pszQuery, *ptr;
    BOOL bRet = TRUE;
@@ -236,7 +236,7 @@ BOOL SQLBatch(TCHAR *pszBatch)
 // Read string value from configuration table
 //
 
-BOOL ConfigReadStr(TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault)
+BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault)
 {
    DB_RESULT hResult;
    TCHAR szQuery[256];
@@ -267,7 +267,7 @@ BOOL ConfigReadStr(TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *p
 // Read integer value from configuration table
 //
 
-int ConfigReadInt(TCHAR *pszVar, int iDefault)
+int ConfigReadInt(const TCHAR *pszVar, int iDefault)
 {
    TCHAR szBuffer[64];
 
@@ -282,7 +282,7 @@ int ConfigReadInt(TCHAR *pszVar, int iDefault)
 // Read unsigned long value from configuration table
 //
 
-DWORD ConfigReadULong(TCHAR *pszVar, DWORD dwDefault)
+DWORD ConfigReadULong(const TCHAR *pszVar, DWORD dwDefault)
 {
    TCHAR szBuffer[64];
 

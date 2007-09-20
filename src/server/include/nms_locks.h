@@ -47,7 +47,7 @@
 #ifndef _NETXMS_DB_SCHEMA_
 
 BOOL InitLocks(DWORD *pdwIpAddr, char *pszInfo);
-BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo, DWORD *pdwCurrentOwner, char *pszCurrentOwnerInfo);
+BOOL LockComponent(DWORD dwId, DWORD dwLockBy, const char *pszOwnerInfo, DWORD *pdwCurrentOwner, char *pszCurrentOwnerInfo);
 void UnlockComponent(DWORD dwId);
 void RemoveAllSessionLocks(DWORD dwSessionId);
 BOOL LockLPP(DWORD dwPolicyId, DWORD dwSessionId);

@@ -131,7 +131,7 @@ static int ListParameters(AgentConnection *pConn)
 {
    DWORD i, dwNumParams, dwError;
    NXC_AGENT_PARAM *pParamList;
-   static char *pszDataType[] = { "INT", "UINT", "INT64", "UINT64", "STRING", "FLOAT", "UNKNOWN" };
+   static const char *pszDataType[] = { "INT", "UINT", "INT64", "UINT64", "STRING", "FLOAT", "UNKNOWN" };
 
    dwError = pConn->GetSupportedParameters(&dwNumParams, &pParamList);
    if (dwError == ERR_SUCCESS)

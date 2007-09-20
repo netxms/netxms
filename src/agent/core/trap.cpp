@@ -108,10 +108,11 @@ void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList)
 //        i - Object ID
 //
 
-void SendTrap(DWORD dwEventCode, char *pszFormat, va_list args)
+void SendTrap(DWORD dwEventCode, const char *pszFormat, va_list args)
 {
    int i, iNumArgs;
    TCHAR *ppArgList[64];
+   static TCHAR badFormat[] = _T("BAD FORMAT");
 
    iNumArgs = (pszFormat == NULL) ? 0 : (int)strlen(pszFormat);
    for(i = 0; i < iNumArgs; i++)
@@ -135,7 +136,7 @@ void SendTrap(DWORD dwEventCode, char *pszFormat, va_list args)
             IpToStr(va_arg(args, DWORD), ppArgList[i]);
             break;
          default:
-            ppArgList[i] = _T("BAD FORMAT");
+            ppArgList[i] = badFormat;
             break;
       }
    }
@@ -154,7 +155,7 @@ void SendTrap(DWORD dwEventCode, char *pszFormat, va_list args)
 // Same as variant 2, but uses argument list instead of va_list
 //
 
-void SendTrap(DWORD dwEventCode, char *pszFormat, ...)
+void SendTrap(DWORD dwEventCode, const char *pszFormat, ...)
 {
    va_list args;
 

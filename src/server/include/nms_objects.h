@@ -146,8 +146,8 @@ struct TEMPLATE_UPDATE_INFO
 
 typedef struct
 {
-	TCHAR *pszName;
-	TCHAR *pszParam;
+	const TCHAR *pszName;
+	const TCHAR *pszParam;
 	int nInterval;
 	int nRetention;
 	int nDataType;
@@ -276,7 +276,7 @@ public:
 
    void SetId(DWORD dwId) { m_dwId = dwId; Modify(); }
    void SetMgmtStatus(BOOL bIsManaged);
-   void SetName(TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME); Modify(); }
+   void SetName(const TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME); Modify(); }
    void ResetStatus(void) { m_iStatus = STATUS_UNKNOWN; Modify(); }
    void SetComments(TCHAR *pszText);
 
@@ -350,7 +350,7 @@ protected:
 
 public:
    Template();
-   Template(TCHAR *pszName);
+   Template(const TCHAR *pszName);
    virtual ~Template();
 
    virtual int Type(void) { return OBJECT_TEMPLATE; }
@@ -377,7 +377,7 @@ public:
    DCItem *GetItemById(DWORD dwItemId);
    DCItem *GetItemByIndex(DWORD dwIndex);
    DCItem *GetItemByName(TCHAR *pszName);
-   BOOL LockDCIList(DWORD dwSessionId, TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
+   BOOL LockDCIList(DWORD dwSessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
    BOOL UnlockDCIList(DWORD dwSessionId);
    void SetDCIModificationFlag(void) { m_bDCIListModified = TRUE; }
    void SendItemsToClient(ClientSession *pSession, DWORD dwRqId);
@@ -413,7 +413,7 @@ protected:
 
 public:
 	Cluster();
-   Cluster(TCHAR *pszName);
+   Cluster(const TCHAR *pszName);
 	virtual ~Cluster();
 
    virtual int Type(void) { return OBJECT_CLUSTER; }
@@ -462,7 +462,7 @@ protected:
 public:
    Interface();
    Interface(DWORD dwAddr, DWORD dwNetMask, BOOL bSyntheticMask);
-   Interface(char *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwNetMask, DWORD dwType);
+   Interface(const char *szName, DWORD dwIndex, DWORD dwAddr, DWORD dwNetMask, DWORD dwType);
    virtual ~Interface();
 
    virtual int Type(void) { return OBJECT_INTERFACE; }

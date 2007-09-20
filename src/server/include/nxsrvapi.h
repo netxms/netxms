@@ -327,14 +327,14 @@ public:
    DWORD GetParameter(const TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer);
    DWORD GetList(const TCHAR *pszParam);
    DWORD Nop(void);
-   DWORD ExecAction(TCHAR *pszAction, int argc, TCHAR **argv);
-   DWORD UploadFile(TCHAR *pszFile);
-   DWORD StartUpgrade(TCHAR *pszPkgName);
+   DWORD ExecAction(const TCHAR *pszAction, int argc, TCHAR **argv);
+   DWORD UploadFile(const TCHAR *pszFile);
+   DWORD StartUpgrade(const TCHAR *pszPkgName);
    DWORD CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, WORD wPort = 0, 
-                             WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponse = NULL);
+                             WORD wProto = 0, const TCHAR *pszRequest = NULL, const TCHAR *pszResponse = NULL);
    DWORD GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
    DWORD GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize);
-   DWORD UpdateConfigFile(TCHAR *pszConfig);
+   DWORD UpdateConfigFile(const TCHAR *pszConfig);
    DWORD EnableTraps(void);
 	CSCPMessage *CustomRequest(CSCPMessage *pRequest);
 
@@ -345,9 +345,9 @@ public:
    void SetRecvTimeout(DWORD dwTimeout) { if (dwTimeout > 10000) m_dwRecvTimeout = dwTimeout; }
    void SetEncryptionPolicy(int iPolicy) { m_iEncryptionPolicy = iPolicy; }
    void SetProxy(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,
-                 int iAuthMethod = AUTH_NONE, TCHAR *pszSecret = NULL);
+                 int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);
    void SetPort(WORD wPort) { m_wPort = wPort; }
-   void SetAuthData(int nMethod, char *pszSecret) { m_iAuthMethod = nMethod; strncpy(m_szSecret, pszSecret, MAX_SECRET_LENGTH); }
+   void SetAuthData(int nMethod, const char *pszSecret) { m_iAuthMethod = nMethod; strncpy(m_szSecret, pszSecret, MAX_SECRET_LENGTH); }
 };
 
 

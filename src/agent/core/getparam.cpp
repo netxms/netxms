@@ -272,8 +272,8 @@ BOOL InitParameterList(void)
 // Add parameter to list
 //
 
-void AddParameter(char *pszName, LONG (* fpHandler)(char *,char *,char *), char *pArg,
-                  int iDataType, char *pszDescription)
+void AddParameter(const char *pszName, LONG (* fpHandler)(char *,char *,char *), const char *pArg,
+                  int iDataType, const char *pszDescription)
 {
    int i;
 
@@ -317,7 +317,7 @@ void AddParameter(char *pszName, LONG (* fpHandler)(char *,char *,char *), char 
 // Add enum to list
 //
 
-void AddEnum(char *pszName, LONG (* fpHandler)(char *,char *,NETXMS_VALUES_LIST *), char *pArg)
+void AddEnum(const char *pszName, LONG (* fpHandler)(char *,char *,NETXMS_VALUES_LIST *), const char *pArg)
 {
    int i;
 
@@ -383,7 +383,7 @@ DWORD GetParameterValue(DWORD dwSessionId, char *pszParam, char *pszValue)
    for(i = 0; i < m_iNumParams; i++)
       if (MatchString(m_pParamList[i].szName, pszParam, FALSE))
       {
-         rc = m_pParamList[i].fpHandler(pszParam, m_pParamList[i].pArg, pszValue);
+         rc = m_pParamList[i].fpHandler(pszParam, (TCHAR *)m_pParamList[i].pArg, pszValue);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
@@ -428,7 +428,7 @@ DWORD GetEnumValue(DWORD dwSessionId, char *pszParam, NETXMS_VALUES_LIST *pValue
    for(i = 0; i < m_iNumEnums; i++)
       if (MatchString(m_pEnumList[i].szName, pszParam, FALSE))
       {
-         rc = m_pEnumList[i].fpHandler(pszParam, m_pEnumList[i].pArg, pValue);
+         rc = m_pEnumList[i].fpHandler(pszParam, (char *)m_pEnumList[i].pArg, pValue);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:

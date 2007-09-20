@@ -70,9 +70,9 @@ static void SendNewRecord(ClientSession *pSession, void *pArg)
 // Write audit record
 //
 
-void NXCORE_EXPORTABLE WriteAuditLog(TCHAR *pszSubsys, BOOL bSuccess, DWORD dwUserId,
-												 TCHAR *pszWorkstation, DWORD dwObjectId,
-												 TCHAR *pszFormat, ...)
+void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *pszSubsys, BOOL bSuccess, DWORD dwUserId,
+                                     const TCHAR *pszWorkstation, DWORD dwObjectId,
+                                     const TCHAR *pszFormat, ...)
 {
 	TCHAR *pszQuery, *pszText, *pszEscText;
 	va_list args;

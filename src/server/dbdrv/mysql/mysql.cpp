@@ -120,7 +120,7 @@ extern "C" void EXPORT DrvDisconnect(MYSQL_CONN *pConn)
 // Perform actual non-SELECT query
 //
 
-static DWORD DrvQueryInternal(MYSQL_CONN *pConn, char *pszQuery)
+static DWORD DrvQueryInternal(MYSQL_CONN *pConn, const char *pszQuery)
 {
 	DWORD dwRet = DBERR_INVALID_HANDLE;
 

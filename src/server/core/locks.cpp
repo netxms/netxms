@@ -130,7 +130,7 @@ void NXCORE_EXPORTABLE UnlockDB(void)
 // field, and pszCurrentOwnerInfo will be filled with the value of  owner_info field.
 //
 
-BOOL LockComponent(DWORD dwId, DWORD dwLockBy, char *pszOwnerInfo, 
+BOOL LockComponent(DWORD dwId, DWORD dwLockBy, const char *pszOwnerInfo, 
                    DWORD *pdwCurrentOwner, char *pszCurrentOwnerInfo)
 {
    char szBuffer[256];

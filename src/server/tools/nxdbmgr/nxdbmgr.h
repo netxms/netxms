@@ -54,19 +54,19 @@
 //
 
 void CheckDatabase(void);
-void InitDatabase(TCHAR *pszInitFile);
+void InitDatabase(const TCHAR *pszInitFile);
 void ReindexDatabase(void);
 void UpgradeDatabase(void);
 void UnlockDatabase(void);
-DB_RESULT SQLSelect(TCHAR *pszQuery);
-BOOL SQLQuery(TCHAR *pszQuery);
-BOOL SQLBatch(TCHAR *pszBatch);
+DB_RESULT SQLSelect(const TCHAR *pszQuery);
+BOOL SQLQuery(const TCHAR *pszQuery);
+BOOL SQLBatch(const TCHAR *pszBatch);
 BOOL GetYesNo(void);
-void ShowQuery(TCHAR *pszQuery);
+void ShowQuery(const TCHAR *pszQuery);
 
-BOOL ConfigReadStr(TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault);
-int ConfigReadInt(TCHAR *pszVar, int iDefault);
-DWORD ConfigReadULong(TCHAR *pszVar, DWORD dwDefault);
+BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault);
+int ConfigReadInt(const TCHAR *pszVar, int iDefault);
+DWORD ConfigReadULong(const TCHAR *pszVar, DWORD dwDefault);
 
 
 //
@@ -77,8 +77,8 @@ extern DB_HANDLE g_hCoreDB;
 extern BOOL g_bIgnoreErrors;
 extern BOOL g_bTrace;
 extern int g_iSyntax;
-extern TCHAR *g_pszTableSuffix;
-extern TCHAR *g_pszSqlType[][2];
+extern const TCHAR *g_pszTableSuffix;
+extern const TCHAR *g_pszSqlType[][2];
 
 
 #endif

@@ -27,9 +27,9 @@
 // Check if query is empty
 //
 
-static BOOL IsEmptyQuery(char *pszQuery)
+static BOOL IsEmptyQuery(const char *pszQuery)
 {
-   char *ptr;
+   const char *ptr;
 
    for(ptr = pszQuery; *ptr != 0; ptr++)
       if ((*ptr != ' ') && (*ptr != '\t') && (*ptr != '\r') && (*ptr != '\n'))
@@ -73,7 +73,7 @@ static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
 // Execute SQL batch file
 //
 
-static BOOL ExecSQLBatch(TCHAR *pszFile)
+static BOOL ExecSQLBatch(const TCHAR *pszFile)
 {
    BYTE *pBatch, *pQuery, *pNext;
    DWORD dwSize;
@@ -106,7 +106,7 @@ static BOOL ExecSQLBatch(TCHAR *pszFile)
 // Initialize database
 //
 
-void InitDatabase(TCHAR *pszInitFile)
+void InitDatabase(const TCHAR *pszInitFile)
 {
    uuid_t guid;
    TCHAR szQuery[256], szGUID[64];

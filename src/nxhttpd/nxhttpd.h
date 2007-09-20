@@ -301,7 +301,7 @@ public:
 	PieChart();
 	~PieChart();
 
-	BOOL SetValue(TCHAR *label, double value);
+	BOOL SetValue(const TCHAR *label, double value);
 	void SetNoDataLabel(const TCHAR *label);
 
 	BOOL Build(void);

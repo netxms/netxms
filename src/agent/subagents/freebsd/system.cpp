@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.12 2007-09-19 16:57:39 victor Exp $ */
+/* $Id: system.cpp,v 1.13 2007-09-20 13:04:00 victor Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -21,7 +21,7 @@
 **/
 
 #undef _XOPEN_SOURCE
-#define _SYS_LOCK_PROFILE_H_	/* prevent include of sys/lock_profile.h which can be C++ incompatible)
+#define _SYS_LOCK_PROFILE_H_	/* prevent include of sys/lock_profile.h which can be C++ incompatible) */
 
 #include <nms_common.h>
 #include <nms_agent.h>
@@ -379,65 +379,3 @@ LONG H_SourcePkgSupport(char *pszParam, char *pArg, char *pValue)
 	ret_int(pValue, 1);
 	return SYSINFO_RC_SUCCESS;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.11  2007/02/05 11:55:20  alk
-same problem with CpuUsage as in linux subagent
-
-Revision 1.10  2006/10/05 12:41:32  alk
-generic: iconv - const detection added
-hpux: System.LoggedInCount renamed to System.ConnectedUsers
-freebsd: _XOPEN_SOURCE fixed
-
-Revision 1.9  2006/03/05 20:50:18  alk
-Process.Count() fixed, thanks to Boris for report
-
-Revision 1.8  2005/05/30 14:39:32  alk
-* process list now works via kvm, compatible with freebsd 5+
-
-Revision 1.7  2005/05/29 22:44:59  alk
-* configure: pthreads & fbsd5+; detection code should be rewriten!
-* another ugly hack: agent's process info disabled for fbsd5+: struct kinfo_proc changed; m/b fix it tomorow
-* server/nxadm & fbsd5.1: a**holes, in 5.1 there no define with version in readline.h...
-
-Revision 1.6  2005/01/24 19:51:16  alk
-reurn types/comments added
-Process.Count(*)/System.ProcessCount fixed
-
-Revision 1.5  2005/01/23 05:36:11  alk
-+ System.Memory.Swap.*
-+ System.Memory.Virtual.*
-
-NB! r/o access to /dev/mem required! (e.g. chgrp kmem ; chmod g+s)
-
-Revision 1.4  2005/01/23 05:14:49  alk
-System's PageSize used instead of Hardware PageSize
-
-Revision 1.3  2005/01/23 05:08:06  alk
-+ System.CPU.Count
-+ System.Memory.Physical.*
-+ System.ProcessCount
-+ System.ProcessList
-
-Revision 1.2  2005/01/17 23:25:47  alk
-Agent.SourcePackageSupport added
-
-Revision 1.1  2005/01/17 17:14:32  alk
-freebsd agent, incomplete (but working)
-
-Revision 1.1  2004/10/22 22:08:35  alk
-source restructured;
-implemented:
-	Net.IP.Forwarding
-	Net.IP6.Forwarding
-	Process.Count(*)
-	Net.ArpCache
-	Net.InterfaceList (if-type not implemented yet)
-	System.ProcessList
-
-
-*/

@@ -38,7 +38,7 @@ static TCHAR *m_pszStageMsg = NULL;
 // Start stage
 //
 
-static void StartStage(TCHAR *pszMsg)
+static void StartStage(const TCHAR *pszMsg)
 {
    if (pszMsg != NULL)
    {
@@ -65,7 +65,7 @@ static void StartStage(TCHAR *pszMsg)
 
 static void EndStage(void)
 {
-   static TCHAR *pszStatus[] = { _T("PASSED"), _T("FIXED "), _T("ERROR ") };
+   static const TCHAR *pszStatus[] = { _T("PASSED"), _T("FIXED "), _T("ERROR ") };
    static int nColor[] = { 0x0A, 0x0E, 0x0C };
    int nCode, nErrors;
 
@@ -232,7 +232,7 @@ static BOOL IsNodeExist(DWORD dwId)
 // Check node component objects
 //
 
-static void CheckComponents(TCHAR *pszDisplayName, TCHAR *pszTable)
+static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
 {
    DB_RESULT hResult, hResult2;
    DWORD i, dwNumObjects, dwId;

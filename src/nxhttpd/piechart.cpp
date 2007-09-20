@@ -1,4 +1,4 @@
-/* $Id: piechart.cpp,v 1.4 2007-09-19 16:57:40 victor Exp $ */
+/* $Id: piechart.cpp,v 1.5 2007-09-20 13:04:00 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
@@ -63,7 +63,7 @@ PieChart::~PieChart()
 // Set value
 //
 
-BOOL PieChart::SetValue(TCHAR *label, double value)
+BOOL PieChart::SetValue(const TCHAR *label, double value)
 {
 	if (m_valueCount < MAX_PIE_ELEMENTS)
 	{

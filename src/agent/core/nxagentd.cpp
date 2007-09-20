@@ -1,4 +1,4 @@
-/* $Id: nxagentd.cpp,v 1.90 2007-09-15 18:22:20 victor Exp $ */
+/* $Id: nxagentd.cpp,v 1.91 2007-09-20 13:04:00 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -313,7 +313,7 @@ static THREAD_RESULT THREAD_CALL ShutdownThread(void *pArg)
 // Restart agent
 //
 
-static LONG H_RestartAgent(TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, TCHAR *pData)
+static LONG H_RestartAgent(const TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, const TCHAR *pData)
 {
 #ifdef _NETWARE
    return ERR_NOT_IMPLEMENTED;

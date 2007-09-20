@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: tools.cpp
+** File: tools.cpp
 **
 **/
 
@@ -28,7 +28,7 @@
 // Print message to the console if allowed to do so
 //
 
-void ConsolePrintf(char *pszFormat, ...)
+void ConsolePrintf(const char *pszFormat, ...)
 {
    if (!(g_dwFlags & AF_DAEMON))
    {
@@ -45,7 +45,7 @@ void ConsolePrintf(char *pszFormat, ...)
 // Print debug messages
 //
 
-void DebugPrintf(DWORD dwSessionId, char *pszFormat, ...)
+void DebugPrintf(DWORD dwSessionId, const char *pszFormat, ...)
 {
    if (g_dwFlags & AF_DEBUG)
    {

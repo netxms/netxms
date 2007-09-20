@@ -1,4 +1,4 @@
-/* $Id: nms_dcoll.h,v 1.32 2007-08-20 05:46:20 victor Exp $ */
+/* $Id: nms_dcoll.h,v 1.33 2007-09-20 13:04:01 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -215,9 +215,9 @@ public:
    DCItem();
    DCItem(const DCItem *pItem);
    DCItem(DB_RESULT hResult, int iRow, Template *pNode);
-   DCItem(DWORD dwId, char *szName, int iSource, int iDataType, 
+   DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType, 
           int iPollingInterval, int iRetentionTime, Template *pNode,
-          char *pszDescription = NULL);
+          const TCHAR *pszDescription = NULL);
    ~DCItem();
 
    void PrepareForDeletion(void);
@@ -247,7 +247,7 @@ public:
    void ChangeBinding(DWORD dwNewId, Template *pNode);
    void SetTemplateId(DWORD dwTemplateId, DWORD dwItemId) 
          { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
-	void SystemModify(TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType);
+	void SystemModify(const TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType);
 
    void NewValue(time_t nTimeStamp, const char *pszValue);
    void NewError(void);

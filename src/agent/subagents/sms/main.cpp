@@ -57,7 +57,7 @@ static LONG H_StringConst(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 // Handler for SMS.Send action
 //
 
-static LONG H_SendSMS(TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, TCHAR *pData)
+static LONG H_SendSMS(const TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, const TCHAR *pData)
 {
 	if (pArgs->dwNumStrings < 2)
 		return ERR_BAD_ARGUMENTS;

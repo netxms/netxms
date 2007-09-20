@@ -1,4 +1,4 @@
-/* $Id: cluster.cpp,v 1.6 2007-01-18 17:10:28 victor Exp $ */
+/* $Id: cluster.cpp,v 1.7 2007-09-20 13:04:00 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -45,7 +45,7 @@ Cluster::Cluster()
 // Cluster class new object constructor
 //
 
-Cluster::Cluster(TCHAR *pszName)
+Cluster::Cluster(const TCHAR *pszName)
         :Template(pszName)
 {
 	m_dwClusterType = 0;

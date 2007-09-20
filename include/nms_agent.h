@@ -165,7 +165,7 @@
 #define DCIDESC_SYSTEM_PLATFORMNAME		"Platform name"
 #define DCIDESC_PROCESS_COUNT			"Number of {instance} processes"
 #define DCIDESC_PROCESS_COUNTEX			"Number of {instance} processes (extended)"
-#define DCIDESC_PROCESS_GDIOBJ			""
+#define DCIDESC_PROCESS_GDIOBJ			"GDI objects used by process {instance}"
 #define DCIDESC_PROCESS_IO_OTHERB		""
 #define DCIDESC_PROCESS_IO_OTHEROP		""
 #define DCIDESC_PROCESS_IO_READB		""
@@ -173,18 +173,18 @@
 #define DCIDESC_PROCESS_IO_WRITEB		""
 #define DCIDESC_PROCESS_IO_WRITEOP		""
 #define DCIDESC_PROCESS_KERNELTIME		""
-#define DCIDESC_PROCESS_PAGEFAULTS		""
+#define DCIDESC_PROCESS_PAGEFAULTS		"Page faults for process {instance}"
 #define DCIDESC_PROCESS_THREADS			""
-#define DCIDESC_PROCESS_USEROBJ			""
+#define DCIDESC_PROCESS_USEROBJ			"USER objects used by process {instance}"
 #define DCIDESC_PROCESS_USERTIME		""
-#define DCIDESC_PROCESS_VMSIZE			""
-#define DCIDESC_PROCESS_WKSET			""
+#define DCIDESC_PROCESS_VMSIZE			"Virtual memory used by process {instance}"
+#define DCIDESC_PROCESS_WKSET			"Physical memory used by process {instance}"
 #define DCIDESC_SYSTEM_CONNECTEDUSERS		"Number of logged in users"
 #define DCIDESC_SYSTEM_PROCESSCOUNT		"Total number of processes"
 #define DCIDESC_SYSTEM_SERVICESTATE		"State of {instance} service"
 #define DCIDESC_SYSTEM_PROCESSCOUNT		"Total number of processes"
 #define DCIDESC_SYSTEM_THREADCOUNT		"Total number of threads"
-#define DCIDESC_PDH_COUNTERVALUE		""
+#define DCIDESC_PDH_COUNTERVALUE		"Value of PDH counter {instance}"
 #define DCIDESC_PDH_VERSION			"Version of PDH.DLL"
 #define DCIDESC_SYSTEM_UPTIME			"System uptime"
 #define DCIDESC_SYSTEM_CPU_LOADAVG		"Average CPU load for last minute"
@@ -225,7 +225,7 @@ typedef struct
 {
    TCHAR szName[MAX_PARAM_NAME];
    LONG (* fpHandler)(TCHAR *, TCHAR *, TCHAR *);
-   TCHAR *pArg;
+   const TCHAR *pArg;
    int iDataType;
    TCHAR szDescription[MAX_DB_STRING];
 } NETXMS_SUBAGENT_PARAM;
@@ -239,7 +239,7 @@ typedef struct
 {
    TCHAR szName[MAX_PARAM_NAME];
    LONG (* fpHandler)(TCHAR *, TCHAR *, NETXMS_VALUES_LIST *);
-   TCHAR *pArg;
+   const TCHAR *pArg;
 } NETXMS_SUBAGENT_ENUM;
 
 
@@ -250,8 +250,8 @@ typedef struct
 typedef struct
 {
    TCHAR szName[MAX_PARAM_NAME];
-   LONG (* fpHandler)(TCHAR *, NETXMS_VALUES_LIST *, TCHAR *);
-   TCHAR *pArg;
+   LONG (* fpHandler)(const TCHAR *, NETXMS_VALUES_LIST *, const TCHAR *);
+   const TCHAR *pArg;
    TCHAR szDescription[MAX_DB_STRING];
 } NETXMS_SUBAGENT_ACTION;
 
@@ -291,7 +291,7 @@ typedef struct
 
 #include <nms_agent.h>
 
-inline void ret_string(TCHAR *rbuf, TCHAR *value)
+inline void ret_string(TCHAR *rbuf, const TCHAR *value)
 {
    _tcsncpy(rbuf, value, MAX_RESULT_LENGTH - 1);
    rbuf[MAX_RESULT_LENGTH - 1] = 0;
@@ -333,7 +333,7 @@ inline void ret_uint64(TCHAR *rbuf, QWORD value)
 #endif   /* LIBNETXMS_INLINE */
 #else    /* __cplusplus */
 
-void LIBNETXMS_EXPORTABLE ret_string(TCHAR *rbuf, TCHAR *value);
+void LIBNETXMS_EXPORTABLE ret_string(TCHAR *rbuf, const TCHAR *value);
 void LIBNETXMS_EXPORTABLE ret_int(TCHAR *rbuf, long value);
 void LIBNETXMS_EXPORTABLE ret_uint(TCHAR *rbuf, unsigned long value);
 void LIBNETXMS_EXPORTABLE ret_double(TCHAR *rbuf, double value);
@@ -351,11 +351,11 @@ void LIBNETXMS_EXPORTABLE ret_uint64(TCHAR *rbuf, QWORD value);
 extern "C" {
 #endif
 
-BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(TCHAR *param, int index, TCHAR *arg, int maxSize);
-void LIBNETXMS_EXPORTABLE NxAddResultString(NETXMS_VALUES_LIST *pList, TCHAR *pszString);
+BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(const TCHAR *param, int index, TCHAR *arg, int maxSize);
+void LIBNETXMS_EXPORTABLE NxAddResultString(NETXMS_VALUES_LIST *pList, const TCHAR *pszString);
 void LIBNETXMS_EXPORTABLE NxDestroyValuesList(NETXMS_VALUES_LIST *pList);
-void LIBNETXMS_EXPORTABLE NxWriteAgentLog(int iLevel, TCHAR *pszFormat, ...);
-void LIBNETXMS_EXPORTABLE NxSendTrap(DWORD dwEvent, char *pszFormat, ...);
+void LIBNETXMS_EXPORTABLE NxWriteAgentLog(int iLevel, const TCHAR *pszFormat, ...);
+void LIBNETXMS_EXPORTABLE NxSendTrap(DWORD dwEvent, const char *pszFormat, ...);
 void LIBNETXMS_EXPORTABLE NxSendTrap2(DWORD dwEvent, int nCount, TCHAR **ppszArgList);
 
 #ifdef __cplusplus

@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.282 2007-09-19 07:14:16 victor Exp $ */
+/* $Id: session.cpp,v 1.283 2007-09-20 13:04:00 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -350,7 +350,7 @@ void ClientSession::Run(void)
 // Print debug information
 //
 
-void ClientSession::DebugPrintf(TCHAR *pszFormat, ...)
+void ClientSession::DebugPrintf(const TCHAR *pszFormat, ...)
 {
    if (g_dwFlags & AF_DEBUG_CSCP)
    {
@@ -4083,7 +4083,7 @@ void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
 // Send message fro poller to client
 //
 
-void ClientSession::SendPollerMsg(DWORD dwRqId, TCHAR *pszMsg)
+void ClientSession::SendPollerMsg(DWORD dwRqId, const TCHAR *pszMsg)
 {
    CSCPMessage msg;
 

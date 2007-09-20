@@ -148,7 +148,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
    CSCPMessage msg;
    BOOL bSuccess;
    AgentConnection *pAgentConn;
-   TCHAR *pszErrorMsg = _T("");
+   const TCHAR *pszErrorMsg = _T("");
    DWORD dwMaxWait;
 
    // Read configuration

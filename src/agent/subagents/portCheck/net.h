@@ -1,4 +1,25 @@
-/* $Id: net.h,v 1.6 2007-09-19 16:57:40 victor Exp $ */
+/* $Id: net.h,v 1.7 2007-09-20 13:04:00 victor Exp $ */
+/* 
+** NetXMS - Network Management System
+** Copyright (C) 2003, 2004, 2005, 2006,2007 Victor Kirhenshtein
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: net.h
+**
+**/
 
 #ifndef __NET__H__
 #define __NET__H__
@@ -16,35 +37,3 @@ int NetWrite(SOCKET, const char *, int);
 void NetClose(SOCKET);
 
 #endif // __NET__H__
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.5  2006/08/06 10:32:02  victor
-- Both 32 and 6 bit installers works correctly
-- All subagents ported to 64bit
-- Agent now reports platform windows-x64 instead of windows-amd64
-
-Revision 1.4  2006/03/15 13:28:18  victor
-- int changed to SOCKET
-- Telnet checker added to VC++ project
-
-Revision 1.3  2006/03/15 12:00:10  alk
-simple telnet service checker added: it connects, response WON'T/DON'T to
-all offers and disconnects (this prevents from "peer died" in logs)
-
-Revision 1.2  2005/01/28 02:50:32  alk
-added support for CMD_CHECK_NETWORK_SERVICE
-suported:
-	ssh: host/port req.
-	pop3: host/port/request string req. request string format: "login:password"
-
-Revision 1.1.1.1  2005/01/18 18:38:54  alk
-Initial import
-
-implemented:
-	ServiceCheck.POP3(host, user, password) - connect to host:110 and try to login
-
-
-*/

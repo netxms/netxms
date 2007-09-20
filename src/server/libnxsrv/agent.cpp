@@ -1,4 +1,4 @@
-/* $Id: agent.cpp,v 1.52 2007-09-19 16:57:42 victor Exp $ */
+/* $Id: agent.cpp,v 1.53 2007-09-20 13:04:01 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Server Library
@@ -849,7 +849,7 @@ DWORD AgentConnection::Authenticate(BOOL bProxyData)
 // Execute action on agent
 //
 
-DWORD AgentConnection::ExecAction(TCHAR *pszAction, int argc, TCHAR **argv)
+DWORD AgentConnection::ExecAction(const TCHAR *pszAction, int argc, TCHAR **argv)
 {
    CSCPMessage msg(m_nProtocolVersion);
    DWORD dwRqId;
@@ -877,7 +877,7 @@ DWORD AgentConnection::ExecAction(TCHAR *pszAction, int argc, TCHAR **argv)
 // Upload file to agent
 //
 
-DWORD AgentConnection::UploadFile(TCHAR *pszFile)
+DWORD AgentConnection::UploadFile(const TCHAR *pszFile)
 {
    DWORD dwRqId, dwResult;
    CSCPMessage msg(m_nProtocolVersion);
@@ -919,7 +919,7 @@ DWORD AgentConnection::UploadFile(TCHAR *pszFile)
 // Send upgrade command
 //
 
-DWORD AgentConnection::StartUpgrade(TCHAR *pszPkgName)
+DWORD AgentConnection::StartUpgrade(const TCHAR *pszPkgName)
 {
    DWORD dwRqId, dwResult;
    CSCPMessage msg(m_nProtocolVersion);
@@ -955,7 +955,7 @@ DWORD AgentConnection::StartUpgrade(TCHAR *pszPkgName)
 
 DWORD AgentConnection::CheckNetworkService(DWORD *pdwStatus, DWORD dwIpAddr, int iServiceType, 
                                            WORD wPort, WORD wProto, 
-                                           TCHAR *pszRequest, TCHAR *pszResponse)
+                                           const TCHAR *pszRequest, const TCHAR *pszResponse)
 {
    DWORD dwRqId, dwResult;
    CSCPMessage msg(m_nProtocolVersion), *pResponse;
@@ -1186,7 +1186,7 @@ DWORD AgentConnection::GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize)
 // Get configuration file from agent
 //
 
-DWORD AgentConnection::UpdateConfigFile(TCHAR *pszConfig)
+DWORD AgentConnection::UpdateConfigFile(const TCHAR *pszConfig)
 {
    DWORD dwRqId, dwResult;
    CSCPMessage msg(m_nProtocolVersion);
@@ -1305,7 +1305,7 @@ ROUTING_TABLE *AgentConnection::GetRoutingTable(void)
 // Set proxy information
 //
 
-void AgentConnection::SetProxy(DWORD dwAddr, WORD wPort, int iAuthMethod, TCHAR *pszSecret)
+void AgentConnection::SetProxy(DWORD dwAddr, WORD wPort, int iAuthMethod, const TCHAR *pszSecret)
 {
    m_dwProxyAddr = dwAddr;
    m_wProxyPort = wPort;

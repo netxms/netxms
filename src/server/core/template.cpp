@@ -1,4 +1,4 @@
-/* $Id: template.cpp,v 1.36 2007-04-06 10:44:13 victor Exp $ */
+/* $Id: template.cpp,v 1.37 2007-09-20 13:04:01 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -42,7 +42,7 @@ Template::Template()
 // Constructor for new template object
 //
 
-Template::Template(TCHAR *pszName)
+Template::Template(const TCHAR *pszName)
          :NetObj()
 {
    nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME);
@@ -409,7 +409,7 @@ BOOL Template::SetItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus)
 // Lock data collection items list
 //
 
-BOOL Template::LockDCIList(DWORD dwSessionId, TCHAR *pszNewOwner, TCHAR *pszCurrOwner)
+BOOL Template::LockDCIList(DWORD dwSessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner)
 {
    BOOL bSuccess;
 

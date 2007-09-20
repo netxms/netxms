@@ -1,4 +1,4 @@
-/* $Id: nxcp.cpp,v 1.18 2007-09-03 05:52:34 victor Exp $ */
+/* $Id: nxcp.cpp,v 1.19 2007-09-20 13:04:00 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
@@ -417,7 +417,7 @@ CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, DWORD dwId, 
 // Send file over CSCP
 //
 
-BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, TCHAR *pszFile,
+BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, const TCHAR *pszFile,
                                            CSCP_ENCRYPTION_CONTEXT *pCtx)
 {
 #ifndef UNDER_CE

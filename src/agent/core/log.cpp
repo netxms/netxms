@@ -1,4 +1,4 @@
-/* $Id: log.cpp,v 1.8 2007-09-15 18:22:20 victor Exp $ */
+/* $Id: log.cpp,v 1.9 2007-09-20 13:04:00 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004,2005,2006 Victor Kirhenshtein
@@ -203,7 +203,7 @@ static char *FormatMessageUX(DWORD dwMsgId, char **ppStrings)
 //             a - IP address in host byte order
 //
 
-void WriteLog(DWORD msg, WORD wType, char *format, ...)
+void WriteLog(DWORD msg, WORD wType, const char *format, ...)
 {
    va_list args;
    char *strings[16], *pMsg;

@@ -1,4 +1,4 @@
-/* $Id: radius.cpp,v 1.4 2006-12-14 23:27:33 victor Exp $ */
+/* $Id: radius.cpp,v 1.5 2007-09-20 13:04:00 victor Exp $ */
 
 /* 
  ** NetXMS - Network Management System
@@ -69,7 +69,7 @@ static void pairfree(VALUE_PAIR *pair)
 // Create a new pair.
 //
 
-VALUE_PAIR *paircreate(int attr, int type, char *pszName)
+static VALUE_PAIR *paircreate(int attr, int type, const char *pszName)
 {
 	VALUE_PAIR *vp;
 
@@ -734,6 +734,9 @@ int RadiusAuth(char *cLogin, char *cPasswd)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/12/14 23:27:33  victor
+fprintf(stderr, ...) changed to DbgPrintf(...)
+
 Revision 1.3  2006/07/21 18:18:43  alk
 code reformatted
 

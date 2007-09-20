@@ -35,9 +35,9 @@ static DWORD m_dwNumActions = 0;
 // Add action
 //
 
-BOOL AddAction(char *pszName, int iType, char *pArg, 
-               LONG (*fpHandler)(TCHAR *, NETXMS_VALUES_LIST *, TCHAR *),
-               char *pszSubAgent, char *pszDescription)
+BOOL AddAction(const char *pszName, int iType, const char *pArg, 
+               LONG (*fpHandler)(const TCHAR *, NETXMS_VALUES_LIST *, const TCHAR *),
+               const char *pszSubAgent, const char *pszDescription)
 {
    DWORD i;
 

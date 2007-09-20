@@ -130,7 +130,7 @@ void CheckForMgmtNode(void)
 // Set poller's state
 //
 
-static void SetPollerState(int nIdx, char *pszMsg)
+static void SetPollerState(int nIdx, const char *pszMsg)
 {
    nx_strncpy(m_pPollerState[nIdx].szMsg, pszMsg, 128);
    m_pPollerState[nIdx].szInfo[0] = 0;

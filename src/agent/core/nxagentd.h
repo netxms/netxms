@@ -186,19 +186,19 @@
 
 typedef struct
 {
-   char szName[MAX_PARAM_NAME];
+   TCHAR szName[MAX_PARAM_NAME];
    int iType;
    union
    {
       char *pszCmdLine;
       struct __subagentAction
       {
-         LONG (*fpHandler)(TCHAR *, NETXMS_VALUES_LIST *, TCHAR *);
-         char *pArg;
-         char szSubagentName[MAX_PATH];
+         LONG (*fpHandler)(const TCHAR *, NETXMS_VALUES_LIST *, const TCHAR *);
+         const TCHAR *pArg;
+         TCHAR szSubagentName[MAX_PATH];
       } sa;
    } handler;
-   char szDescription[MAX_DB_STRING];
+   TCHAR szDescription[MAX_DB_STRING];
 } ACTION;
 
 
@@ -305,21 +305,21 @@ BOOL Initialize(void);
 void Shutdown(void);
 void Main(void);
 
-void WriteLog(DWORD msg, WORD wType, char *format, ...);
+void WriteLog(DWORD msg, WORD wType, const char *format, ...);
 void InitLog(void);
 void CloseLog(void);
 
-void ConsolePrintf(char *pszFormat, ...);
-void DebugPrintf(DWORD dwSessionId, char *pszFormat, ...);
+void ConsolePrintf(const char *pszFormat, ...);
+void DebugPrintf(DWORD dwSessionId, const char *pszFormat, ...);
 
 void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
 
 BOOL DownloadConfig(TCHAR *pszServer);
 
 BOOL InitParameterList(void);
-void AddParameter(char *szName, LONG (* fpHandler)(char *,char *,char *), char *pArg,
-                  int iDataType, char *pszDescription);
-void AddEnum(char *szName, LONG (* fpHandler)(char *,char *,NETXMS_VALUES_LIST *), char *pArg);
+void AddParameter(const char *szName, LONG (* fpHandler)(char *,char *,char *), const char *pArg,
+                  int iDataType, const char *pszDescription);
+void AddEnum(const char *szName, LONG (* fpHandler)(char *,char *,NETXMS_VALUES_LIST *), const char *pArg);
 BOOL AddExternalParameter(char *pszCfgLine, BOOL bShellExec);
 DWORD GetParameterValue(DWORD dwSessionId, char *pszParam, char *pszValue);
 DWORD GetEnumValue(DWORD dwSessionId, char *pszParam, NETXMS_VALUES_LIST *pValue);
@@ -332,9 +332,9 @@ BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
                   TCHAR *pszEntryPoint);
 BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse);
 
-BOOL AddAction(char *pszName, int iType, char *pArg, 
-               LONG (*fpHandler)(TCHAR *, NETXMS_VALUES_LIST *, TCHAR *),
-               char *pszSubAgent, char *pszDescription);
+BOOL AddAction(const char *pszName, int iType, const char *pArg, 
+               LONG (*fpHandler)(const TCHAR *, NETXMS_VALUES_LIST *, const TCHAR *),
+               const char *pszSubAgent, const char *pszDescription);
 BOOL AddActionFromConfig(char *pszLine, BOOL bShellExec);
 DWORD ExecAction(char *pszAction, NETXMS_VALUES_LIST *pArgs);
 
@@ -346,8 +346,8 @@ DWORD UpgradeAgent(TCHAR *pszPkgFile);
 DWORD InstallLogPolicy(NX_LPP *pPolicy);
 
 void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList);
-void SendTrap(DWORD dwEventCode, char *pszFormat, ...);
-void SendTrap(DWORD dwEventCode, char *pszFormat, va_list args);
+void SendTrap(DWORD dwEventCode, const char *pszFormat, ...);
+void SendTrap(DWORD dwEventCode, const char *pszFormat, va_list args);
 
 #ifdef _WIN32
 

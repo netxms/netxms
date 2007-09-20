@@ -29,7 +29,7 @@
 // Functions defined as inline for C++ programs
 //
 
-extern "C" void LIBNETXMS_EXPORTABLE ret_string(TCHAR *rbuf, TCHAR *value)
+extern "C" void LIBNETXMS_EXPORTABLE ret_string(TCHAR *rbuf, const TCHAR *value)
 {
    _tcsncpy(rbuf, value, MAX_RESULT_LENGTH - 1);
    rbuf[MAX_RESULT_LENGTH - 1] = 0;

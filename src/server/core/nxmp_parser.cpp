@@ -1,4 +1,4 @@
-/* $Id: nxmp_parser.cpp,v 1.3 2007-04-06 10:44:13 victor Exp $ */
+/* $Id: nxmp_parser.cpp,v 1.4 2007-09-20 13:04:00 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -108,7 +108,7 @@ NXMP_Data *NXMP_Parser::Parse(TCHAR *pszSource)
 // yyerror() for parser
 //
 
-void yyerror(yyscan_t scanner, NXMP_Lexer *pLexer, NXMP_Parser *pParser, NXMP_Data *pData, char *pszText)
+void yyerror(yyscan_t scanner, NXMP_Lexer *pLexer, NXMP_Parser *pParser, NXMP_Data *pData, const char *pszText)
 {
    pParser->Error(pszText);
 }

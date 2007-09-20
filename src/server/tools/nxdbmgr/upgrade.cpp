@@ -27,7 +27,7 @@
 // Create table
 //
 
-static BOOL CreateTable(TCHAR *pszQuery)
+static BOOL CreateTable(const TCHAR *pszQuery)
 {
    TCHAR *pszBuffer;
    BOOL bResult;
@@ -48,7 +48,8 @@ static BOOL CreateTable(TCHAR *pszQuery)
 // Create configuration parameter if it doesn't exist (unless bForceUpdate set to true)
 //
 
-static BOOL CreateConfigParam(TCHAR *pszName, TCHAR *pszValue, int iVisible, int iNeedRestart, BOOL bForceUpdate = FALSE)
+static BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
+                              int iVisible, int iNeedRestart, BOOL bForceUpdate = FALSE)
 {
    TCHAR szQuery[1024], *pszEscValue;
    DB_RESULT hResult;
@@ -856,7 +857,7 @@ static BOOL H_UpgradeFromV52(void)
    int i, nCount;
    DWORD dwId;
    TCHAR szQuery[1024];
-   static TCHAR *pszNewIdx[] =
+   static const TCHAR *pszNewIdx[] =
    {
       _T("CREATE INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp)"),  // MySQL
       _T("CREATE INDEX idx_idata_%d_timestamp_id ON idata_%d(idata_timestamp,item_id)"),  // POstgreSQL
@@ -2131,9 +2132,9 @@ static BOOL MoveObjectData(DWORD dwId, BOOL bInheritRights)
    TCHAR szQuery[1024] ,szName[MAX_OBJECT_NAME];
    BOOL bRead = FALSE, bIsDeleted, bIsTemplate;
    DWORD i, dwStatus, dwImageId;
-   static TCHAR *m_pszTableNames[] = { _T("nodes"), _T("interfaces"), _T("subnets"),
-                                       _T("templates"), _T("network_services"),
-                                       _T("containers"), NULL };
+   static const TCHAR *m_pszTableNames[] = { _T("nodes"), _T("interfaces"), _T("subnets"),
+                                             _T("templates"), _T("network_services"),
+                                             _T("containers"), NULL };
 
    // Try to read information from nodes table
    for(i = 0; (!bRead) && (m_pszTableNames[i] != NULL); i++)

@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.110 2007-07-25 12:03:05 victor Exp $ */
+/* $Id: nms_util.h,v 1.111 2007-09-20 13:03:59 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -467,7 +467,7 @@ extern "C"
 
    void LIBNETXMS_EXPORTABLE InitSubAgentsLogger(void (* pFunc)(int, TCHAR *));
    void LIBNETXMS_EXPORTABLE InitSubAgentsTrapSender(void (* pFunc1)(DWORD, int, TCHAR **),
-                                                     void (* pFunc2)(DWORD, char *, va_list));
+                                                     void (* pFunc2)(DWORD, const char *, va_list));
 
 #ifdef _WIN32
    TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufSize);
@@ -549,6 +549,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.110  2007/07/25 12:03:05  victor
+More const char* fixes
+
 Revision 1.109  2007/07/25 11:27:36  victor
 Fixed some issues with char* -> const char* conversion
 

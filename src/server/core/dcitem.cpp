@@ -1,4 +1,4 @@
-/* $Id: dcitem.cpp,v 1.80 2007-09-15 18:22:21 victor Exp $ */
+/* $Id: dcitem.cpp,v 1.81 2007-09-20 13:04:00 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -319,9 +319,9 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
 // Constructor for creating new DCItem from scratch
 //
 
-DCItem::DCItem(DWORD dwId, char *szName, int iSource, int iDataType, 
+DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType, 
                int iPollingInterval, int iRetentionTime, Template *pNode,
-               char *pszDescription)
+               const TCHAR *pszDescription)
 {
    m_dwId = dwId;
    m_dwTemplateId = 0;
@@ -1706,7 +1706,7 @@ void DCItem::CreateNXMPRecord(String &str)
 // Modify item - intended for updating items in system templates
 //
 
-void DCItem::SystemModify(TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType)
+void DCItem::SystemModify(const TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType)
 {
    m_iDataType = nDataType;
    m_iPollingInterval = nInterval;
