@@ -97,7 +97,7 @@ static BOOL SetCurrentPrivilege(LPCTSTR pszPrivilege, BOOL bEnablePrivilege)
 // Shutdown system
 //
 
-static LONG H_ActionShutdown(char *pszAction, NETXMS_VALUES_LIST *pArgList, char *pData)
+static LONG H_ActionShutdown(const TCHAR *pszAction, NETXMS_VALUES_LIST *pArgList, const TCHAR *pData)
 {
 	LONG nRet = ERR_INTERNAL_ERROR;
 
@@ -219,6 +219,9 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.11  2007/08/27 11:59:38  victor
+Added parameters Net.RemoteShareStatus and Net.RemoteShareStatusText to WINNT subagent
+
 Revision 1.10  2007/06/08 00:02:37  alk
 DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
 

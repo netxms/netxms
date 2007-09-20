@@ -37,7 +37,7 @@ LONG H_ThreadCount(char *pszCmd, char *pArg, char *pValue);
 // Shutdown system
 //
 
-static LONG H_ActionShutdown(char *pszAction, NETXMS_VALUES_LIST *pArgList, char *pData)
+static LONG H_ActionShutdown(const char *pszAction, NETXMS_VALUES_LIST *pArgList, const char *pData)
 {
 	return ExitWindowsEx(EWX_POWEROFF | EWX_FORCE, 0) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 }
@@ -104,5 +104,8 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2007/06/07 22:07:11  alk
+descriptions changed to defines
+
 
 */
