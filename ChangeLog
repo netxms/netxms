@@ -9,7 +9,7 @@
   polls for specific host
 - Added possibility to define number of consecutive status polls with same
   result needed to change status of interface or network service object
-- Fixed issues: #77, #183, #186
+- Fixed issues: #77, #151, #183, #186
 
 
 *

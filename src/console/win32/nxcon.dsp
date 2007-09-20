@@ -464,6 +464,10 @@ SOURCE=.\GroupPropDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\IfPropsGeneral.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ImportCertDlg.cpp
 # End Source File
 # Begin Source File
@@ -1090,6 +1094,10 @@ SOURCE=.\GraphStylePage.h
 # Begin Source File
 
 SOURCE=.\GroupPropDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\IfPropsGeneral.h
 # End Source File
 # Begin Source File
 
