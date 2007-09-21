@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.111 2007-09-20 13:03:59 victor Exp $ */
+/* $Id: nms_util.h,v 1.112 2007-09-21 10:31:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -440,7 +440,9 @@ extern "C"
 	BOOL LIBNETXMS_EXPORTABLE RegexpMatch(TCHAR *pszStr, TCHAR *pszExpr, BOOL bMatchCase);
    TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(TCHAR *line, TCHAR *buffer);
    int LIBNETXMS_EXPORTABLE NumChars(const TCHAR *pszStr, int ch);
-   BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName);
+#ifdef __cplusplus
+   BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName, BOOL bExtendedChars = FALSE);
+#endif
    BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName);
    void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr, const TCHAR *pszReplace);
    TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(TCHAR *pszFileName);
@@ -549,6 +551,10 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.111  2007/09/20 13:03:59  victor
+- Most of GCC 4.2 warnings cleaned up
+- Other minor fixes
+
 Revision 1.110  2007/07/25 12:03:05  victor
 More const char* fixes
 

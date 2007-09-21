@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.66 2007-09-20 13:04:00 victor Exp $ */
+/* $Id: tools.cpp,v 1.67 2007-09-21 10:31:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
@@ -512,10 +512,16 @@ int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose)
 // Check if given name is a valid object name
 //
 
-BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName)
+BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName, BOOL bExtendedChars)
 {
    static TCHAR szValidCharacters[] = _T("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- @()./");
-   return (pszName[0] != 0) && (_tcsspn(pszName, szValidCharacters) == _tcslen(pszName));
+   static TCHAR szInvalidCharacters[] = _T("\x01\x02\x03\x04\x05\x06\x07")
+	                                     _T("\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F")
+													 _T("\x10\x11\x12\x13\x14\x15\x16\x17")
+	                                     _T("\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F")
+	                                     _T("|\"'*%#\\`;?<>=");
+
+   return (pszName[0] != 0) && (bExtendedChars ? (_tcscspn(pszName, szInvalidCharacters) == _tcslen(pszName)) : (_tcsspn(pszName, szValidCharacters) == _tcslen(pszName)));
 }
 
 

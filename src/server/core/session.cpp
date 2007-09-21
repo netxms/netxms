@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.283 2007-09-20 13:04:00 victor Exp $ */
+/* $Id: session.cpp,v 1.284 2007-09-21 10:31:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -3358,7 +3358,7 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
          if (bParentAlwaysValid || IsValidParentClass(iClass, (pParent != NULL) ? pParent->Type() : -1))
          {
             pRequest->GetVariableStr(VID_OBJECT_NAME, szObjectName, MAX_OBJECT_NAME);
-            if (IsValidObjectName(szObjectName))
+            if (IsValidObjectName(szObjectName, TRUE))
             {
                // Create new object
                switch(iClass)
