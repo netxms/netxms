@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: netxmsd.in,v 1.1 2007-09-21 06:46:15 victor Exp $
+# $Id: netxmsd.in,v 1.2 2007-09-21 07:37:49 victor Exp $
 #
 # netxmsd This script starts and stops the netxmsd daemon
 #
@@ -11,7 +11,14 @@ NETXMS_BINDIR="~BINDIR~"
 NETXMS_LIBDIR="~LIBDIR~"
 
 # Source function library.
-. /etc/rc.d/init.d/functions
+if [ -f /etc/init.d/functions ]; then
+	. /etc/init.d/functions
+elif [ -f /etc/rc.d/init.d/functions ]; then
+	. /etc/rc.d/init.d/functions
+else
+	echo "Could not find functions file, your system may be broken."
+	exit 1
+fi
 
 # Source networking configuration.
 . /etc/sysconfig/network
