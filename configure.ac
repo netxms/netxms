@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.268 2007-09-21 06:46:14 victor Exp $
+# $Id: configure.ac,v 1.269 2007-09-21 13:02:26 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -130,6 +130,18 @@ AC_ARG_WITH(odbc,
 		CPPFLAGS="$CPPFLAGS -I${withval}/include"
 	fi
 	COMPONENTS="$COMPONENTS odbc"
+	DBDRIVER_SELECTED="yes"
+fi ])
+
+AC_ARG_WITH(oracle,
+[AS_HELP_STRING(--with-oracle,build Oracle database driver)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+		LDFLAGS="$LDFLAGS -L${withval}/lib"
+		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+	fi
+	COMPONENTS="$COMPONENTS oracle"
 	DBDRIVER_SELECTED="yes"
 fi ])
 
@@ -383,6 +395,11 @@ fi
 check_substr "$COMPONENTS" "odbc"
 if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS odbc"
+fi
+
+check_substr "$COMPONENTS" "oracle"
+if test $? = 0; then
+	DB_DRIVERS="$DB_DRIVERS oracle"
 fi
 
 
@@ -1067,11 +1084,24 @@ fi
 
 
 #--------------------------------------------------------------------
+# Oracle
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "oracle"
+if test $? = 0; then
+	AC_CHECK_HEADER(oci.h,,AC_MSG_ERROR([*** Cannot find oci.h - check your Oracle client installation ***]))
+	AC_CHECK_LIB(clntsh, OCIHandleAlloc, [],
+		[AC_MSG_ERROR(libclntsh is required for Oracle support)])
+fi
+
+
+#--------------------------------------------------------------------
 # SQLite
 #--------------------------------------------------------------------
 
 check_substr "$COMPONENTS" "sqlite"
 if test $? = 0; then
+	AC_CHECK_HEADER(sqlite.h,,AC_MSG_ERROR([*** Cannot find sqlite.h - check your SQLite installation ***]))
 	AC_CHECK_LIB(rt, fdatasync)
 	AC_CHECK_LIB(sqlite3, sqlite3_open, [],
 		[AC_MSG_ERROR(libsqlite3 is required for SQLite support)])
