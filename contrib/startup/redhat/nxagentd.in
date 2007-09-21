@@ -1,10 +1,14 @@
 #!/bin/sh
+# $Id: nxagentd.in,v 1.1 2007-09-21 06:46:15 victor Exp $
 #
-# netxmsd This script starts and stops the nxagentd daemon
+# nxagentd This script starts and stops the nxagentd daemon
 #
 # chkconfig: 2345 90 10
 #
 # description: nxagentd is a NetXMS agent process
+
+NETXMS_BINDIR="~BINDIR~"
+NETXMS_LIBDIR="~LIBDIR~"
 
 # Source function library.
 . /etc/rc.d/init.d/functions
@@ -15,24 +19,25 @@
 # Check that networking is up.
 [ ${NETWORKING} = "no" ] && exit 0
 
-# Source netxmsdd configuration.
-if [ -f /etc/sysconfig/netxmsd ] ; then
+# Default config
+NXAGENTD_OPTIONS=""
+NXAGENTD_CONFIG="/etc/nxagentd.conf"
+NXAGENTD_PID_FILE="/var/run/nxagentd.pid"
+
+# Source nxagentd configuration.
+if [ -f /etc/sysconfig/nxagentd ] ; then
         . /etc/sysconfig/nxagentd
-else
-        NXAGENTD_OPTIONS="-d"
-        NXAGENTD_CONFIG="/etc/nxagentd.conf"
-        NXAGENTD_PID_FILE="/var/run/nxagentd.pid"
 fi
 
-[ -f /usr/bin/nxagentd -o -f /usr/local/bin/nxagentd ] || exit 0
-PATH=$PATH:/usr/bin:/usr/local/bin
+[ -f $NETXMS_BINDIR/nxagentd ] || exit 0
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NETXMS_LIBDIR
 
 # See how we were called.
 case "$1" in
   start)
 	# Start daemon.
 	echo -n "Starting NetXMS Agent: "
-	daemon nxagentd $NXAGENTD_OPTIONS -c $NXAGENTD_CONFIG -p $NXAGENTD_PID_FILE
+	daemon $NETXMS_BINDIR/nxagentd -d $NXAGENTD_OPTIONS -c $NXAGENTD_CONFIG -p $NXAGENTD_PID_FILE
 	RETVAL=$?
         echo
         [ $RETVAL = 0 ] && touch /var/lock/subsys/nxagentd

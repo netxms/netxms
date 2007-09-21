@@ -1,10 +1,14 @@
 #!/bin/sh
+# $Id: netxmsd.in,v 1.1 2007-09-21 06:46:15 victor Exp $
 #
 # netxmsd This script starts and stops the netxmsd daemon
 #
 # chkconfig: 2345 95 05
 #
 # description: netxmsd is a NetXMS server daemon process
+
+NETXMS_BINDIR="~BINDIR~"
+NETXMS_LIBDIR="~LIBDIR~"
 
 # Source function library.
 . /etc/rc.d/init.d/functions
@@ -15,24 +19,25 @@
 # Check that networking is up.
 [ ${NETWORKING} = "no" ] && exit 0
 
-# Source netxmsdd configuration.
+# Default config
+NETXMSD_OPTIONS=""
+NETXMSD_CONFIG="/etc/netxmsd.conf"
+NETXMSD_PID_FILE="/var/run/netxmsd.pid"
+
+# Source netxmsd configuration.
 if [ -f /etc/sysconfig/netxmsd ] ; then
         . /etc/sysconfig/netxmsd
-else
-        NETXMSD_OPTIONS=""
-        NETXMSD_CONFIG="/etc/netxmsd.conf"
-        NETXMSD_PID_FILE="/var/run/netxmsd.pid"
 fi
 
-[ -f /usr/bin/netxmsd -o -f /usr/local/bin/netxmsd ] || exit 0
-PATH=$PATH:/usr/bin:/usr/local/bin
+[ -f $NETXMS_BINDIR/netxmsd ] || exit 0
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NETXMS_LIBDIR
 
 # See how we were called.
 case "$1" in
   start)
 	# Start daemon.
 	echo -n "Starting netxmsd: "
-	daemon netxmsd $NETXMSD_OPTIONS --config $NETXMSD_CONFIG --pid-file $NETXMSD_PID_FILE
+	daemon $NETXMS_BINDIR/netxmsd $NETXMSD_OPTIONS --config $NETXMSD_CONFIG --pid-file $NETXMSD_PID_FILE
 	RETVAL=$?
         echo
         [ $RETVAL = 0 ] && touch /var/lock/subsys/netxmsd

@@ -141,8 +141,9 @@ contrib/startup/gentoo/netxmsd -text
 contrib/startup/gentoo/nxagentd -text
 contrib/startup/gentoo/nxhttpd -text
 contrib/startup/redhat/Makefile.am -text
-contrib/startup/redhat/netxmsd -text
-contrib/startup/redhat/nxagentd -text
+contrib/startup/redhat/netxmsd.in -text
+contrib/startup/redhat/nxagentd.in -text
+contrib/startup/redhat/nxhttpd.in -text
 contrib/startup/suse/Makefile.am -text
 contrib/startup/suse/nxagentd -text
 doc/Makefile.am -text
