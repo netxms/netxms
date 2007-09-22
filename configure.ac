@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.269 2007-09-21 13:02:26 victor Exp $
+# $Id: configure.ac,v 1.270 2007-09-22 11:18:45 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -1130,7 +1130,7 @@ if test "x$NEED_WXWIDGETS" = "xyes"; then
 	AC_CHECK_PROG([RC], [wx-config], [yes], [no])
 	if test "x$RC" = "xyes"; then
 		CXXFLAGS="$CXXFLAGS `wx-config --cxxflags --debug=$ENABLE_DEBUG`"
-		LDFLAGS="$CXXFLAGS `wx-config --libs --debug=$ENABLE_DEBUG`"
+		LDFLAGS="$LDFLAGS `wx-config --libs --debug=$ENABLE_DEBUG`"
 	else
 		AC_MSG_ERROR([*** wxWidgets not installed - unable to build GUI components ***])
 	fi
