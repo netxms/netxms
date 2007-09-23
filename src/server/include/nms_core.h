@@ -496,6 +496,7 @@ private:
    void SaveMap(CSCPMessage *pRequest);
    void ProcessSubmapData(CSCPMessage *pRequest);
    void CreateMap(CSCPMessage *pRequest);
+   void RenameMap(CSCPMessage *pRequest);
    void LoadMap(CSCPMessage *pRequest);
    void SendSubmapBkImage(CSCPMessage *pRequest);
    void RecvSubmapBkImage(CSCPMessage *pRequest);

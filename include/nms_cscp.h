@@ -468,6 +468,7 @@ typedef struct
 #define CMD_WEBMAP_GET_LIST         0x00E0
 #define CMD_CONFIG_SET_CLOB         0x00E1
 #define CMD_CONFIG_GET_CLOB         0x00E2
+#define CMD_RENAME_MAP              0x00E3
 
 
 //

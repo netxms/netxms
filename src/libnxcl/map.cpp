@@ -205,6 +205,27 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteMap(NXC_SESSION hSession, DWORD dwMapId)
 
 
 //
+// Rename map
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCRenameMap(NXC_SESSION hSession, DWORD dwMapId, const TCHAR *pszName)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_RENAME_MAP);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_MAP_ID, dwMapId);
+	msg.SetVariable(VID_NAME, pszName);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
 // Resolve map name to id
 //
 

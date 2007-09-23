@@ -2063,6 +2063,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDownloadSubmapBkImage(NXC_SESSION hSession, DWORD dw
 DWORD LIBNXCL_EXPORTABLE NXCCreateMap(NXC_SESSION hSession, DWORD dwRootObj,
 												  TCHAR *pszName, DWORD *pdwMapId);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteMap(NXC_SESSION hSession, DWORD dwMapId);
+DWORD LIBNXCL_EXPORTABLE NXCRenameMap(NXC_SESSION hSession, DWORD dwMapId, const TCHAR *pszName);
 
 DWORD LIBNXCL_EXPORTABLE NXCGetAddrList(NXC_SESSION hSession, DWORD dwListType,
                                         DWORD *pdwAddrCount, NXC_ADDR_ENTRY **ppAddrList);

@@ -330,6 +330,8 @@ public:
    void Lock(void) { MutexLock(m_mutex, INFINITE); }
    void Unlock(void) { MutexUnlock(m_mutex); }
 
+	void SetName(const TCHAR *name) { safe_free(m_pszName); m_pszName = _tcsdup(name); }
+
    DWORD MapId(void) { return m_dwMapId; }
    DWORD ObjectId(void) { return m_dwObjectId; }
    TCHAR *Name(void) { return CHECK_NULL(m_pszName); }

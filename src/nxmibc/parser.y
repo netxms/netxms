@@ -1131,6 +1131,7 @@ DefValList:
 
 DefValListElement:
 	LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
+|	LEFT_BRACE_SYM  RIGHT_BRACE_SYM
 ;
 
 BinaryString:

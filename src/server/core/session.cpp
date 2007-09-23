@@ -1072,6 +1072,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_CREATE_MAP:
             CreateMap(pMsg);
             break;
+         case CMD_RENAME_MAP:
+            RenameMap(pMsg);
+            break;
          case CMD_SAVE_MAP:
             SaveMap(pMsg);
             break;
@@ -7405,6 +7408,47 @@ void ClientSession::CreateMap(CSCPMessage *pRequest)
 	else
 	{
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+   SendMessage(&msg);
+}
+
+
+//
+// Rename map
+//
+
+void ClientSession::RenameMap(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwMapId;
+   nxMapSrv *pMap;
+	TCHAR szName[MAX_DB_STRING];
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_MAPS)
+	{
+		dwMapId = pRequest->GetVariableLong(VID_MAP_ID);
+		LockMaps();
+		pMap = FindMapByID(dwMapId);
+		if (pMap != NULL)
+		{
+			pRequest->GetVariableStr(VID_NAME, szName, MAX_DB_STRING);
+			pMap->SetName(szName);
+			pMap->SaveToDB();
+			msg.SetVariable(VID_RCC, RCC_SUCCESS);
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_INVALID_MAP_ID);
+		}
+		UnlockMaps();
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
    SendMessage(&msg);

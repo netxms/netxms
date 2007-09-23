@@ -40,6 +40,7 @@ BEGIN_MESSAGE_MAP(CMapManager, CMDIChildWnd)
 	ON_COMMAND(ID_MAP_RENAME, OnMapRename)
 	ON_UPDATE_COMMAND_UI(ID_MAP_RENAME, OnUpdateMapRename)
 	//}}AFX_MSG_MAP
+	ON_NOTIFY(LVN_ENDLABELEDIT, ID_LIST_VIEW, OnListViewEndLabelEdit)
 END_MESSAGE_MAP()
 
 
@@ -68,8 +69,8 @@ int CMapManager::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	GetClientRect(&rect);
 	m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_EDITLABELS, rect, this, ID_LIST_VIEW);
-	m_wndListCtrl.InsertColumn(0, _T("ID"), LVCFMT_LEFT, 60);
-	m_wndListCtrl.InsertColumn(1, _T("Name"), LVCFMT_LEFT, 150);
+	m_wndListCtrl.InsertColumn(0, _T("Name"), LVCFMT_LEFT, 150);
+	m_wndListCtrl.InsertColumn(1, _T("ID"), LVCFMT_LEFT, 60);
 	m_wndListCtrl.InsertColumn(2, _T("Root object"), LVCFMT_LEFT, 150);
 	m_wndListCtrl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 	LoadListCtrlColumns(m_wndListCtrl, _T("MapManager"), _T("ListCtrl"));
@@ -135,12 +136,12 @@ void CMapManager::OnViewRefresh()
 	{
 		for(i = 0; i < numMaps; i++)
 		{
-			_stprintf(buffer, _T("%d"), mapList[i].dwMapId);
-			item = m_wndListCtrl.InsertItem(i, buffer);
+			item = m_wndListCtrl.InsertItem(i, mapList[i].szName);
 			if (item != -1)
 			{
 				m_wndListCtrl.SetItemData(item, mapList[i].dwMapId);
-				m_wndListCtrl.SetItemText(item, 1, mapList[i].szName);
+				_stprintf(buffer, _T("%d"), mapList[i].dwMapId);
+				m_wndListCtrl.SetItemText(item, 1, buffer);
 				object = NXCFindObjectById(g_hSession, mapList[i].dwObjectId);
 				m_wndListCtrl.SetItemText(item, 2, (object != NULL) ? object->szName : _T("<unknown>"));
 			}
@@ -172,12 +173,12 @@ void CMapManager::OnMapCreate()
 		                    &mapId, _T("Creating new network map..."));
 		if (rcc == RCC_SUCCESS)
 		{
-			_stprintf(buffer, _T("%d"), mapId);
-			item = m_wndListCtrl.InsertItem(0x7FFFFFFF, buffer);
+			item = m_wndListCtrl.InsertItem(0x7FFFFFFF, dlg.m_strName);
 			if (item != -1)
 			{
 				m_wndListCtrl.SetItemData(item, mapId);
-				m_wndListCtrl.SetItemText(item, 1, dlg.m_strName);
+				_stprintf(buffer, _T("%d"), mapId);
+				m_wndListCtrl.SetItemText(item, 1, buffer);
 				object = NXCFindObjectById(g_hSession, dlg.m_dwRootObj);
 				m_wndListCtrl.SetItemText(item, 2, (object != NULL) ? object->szName : _T("<unknown>"));
 			}
@@ -241,10 +242,20 @@ void CMapManager::OnMapRename()
 	if (m_wndListCtrl.GetSelectedCount() != 1)
 		return;
 
-//	m_wndListCtrl.EditLabel(m_wndListCtrl.GetSelectionMark());
+	m_wndListCtrl.EditLabel(m_wndListCtrl.GetSelectionMark());
 }
 
 void CMapManager::OnUpdateMapRename(CCmdUI* pCmdUI) 
 {
 	pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
+}
+
+
+//
+// Handler for end label edit
+//
+
+void CMapManager::OnListViewEndLabelEdit(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+{
+	*pResult = 0;
 }
