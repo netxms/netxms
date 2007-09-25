@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.67 2007-09-21 10:31:05 victor Exp $ */
+/* $Id: tools.cpp,v 1.68 2007-09-25 16:53:01 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
@@ -289,7 +289,7 @@ void LIBNETXMS_EXPORTABLE NxDestroyValuesList(NETXMS_VALUES_LIST *pList)
 
 BOOL LIBNETXMS_EXPORTABLE NxGetParameterArg(const TCHAR *param, int index, TCHAR *arg, int maxSize)
 {
-   TCHAR *ptr1, *ptr2;
+   const TCHAR *ptr1, *ptr2;
    int state, currIndex, pos;
    BOOL bResult = TRUE;
 

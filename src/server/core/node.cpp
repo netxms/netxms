@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.189 2007-09-20 09:39:03 victor Exp $ */
+/* $Id: node.cpp,v 1.190 2007-09-25 16:53:03 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -2589,6 +2589,11 @@ void Node::CheckInterfaceNames(INTERFACE_LIST *pIfList)
       for(i = 0; i < pIfList->iNumEntries; i++)
       {
          if ((ptr = _tcsstr(pIfList->pInterfaces[i].szName, _T("- Port"))) != NULL)
+			{
+				ptr += 2;
+            memmove(pIfList->pInterfaces[i].szName, ptr, _tcslen(ptr) + 1);
+			}
+         else if ((ptr = _tcsstr(pIfList->pInterfaces[i].szName, _T("- Unit"))) != NULL)
 			{
 				ptr += 2;
             memmove(pIfList->pInterfaces[i].szName, ptr, _tcslen(ptr) + 1);
