@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS Agent
-AppVerName=NetXMS Agent 0.2.18
-AppVersion=0.2.18
+AppVerName=NetXMS Agent 0.2.19
+AppVersion=0.2.19
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -12,7 +12,7 @@ AppUpdatesURL=http://www.netxms.org
 DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS Agent
 AllowNoIcons=yes
-OutputBaseFilename=nxagent-0.2.18-x64
+OutputBaseFilename=nxagent-0.2.19-x64
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -28,6 +28,7 @@ Source: "..\subagents\winperf\Release64\winperf.nsm"; DestDir: "{app}\bin"; Flag
 Source: "..\subagents\ping\Release64\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\portCheck\Release64\portcheck.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\logscan\Release64\logscan.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\subagents\sms\Release64\sms.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\ups\Release64\ups.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\ecs\Release64\ecs.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\odbcquery\Release64\odbcquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
