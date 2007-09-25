@@ -125,6 +125,7 @@
 #define _tcsdup   strdup
 #define _tcsupr   strupr
 #define _tcsspn   strspn
+#define _tcscspn  strcspn
 #define _tcsstr   strstr
 #define _tcscat   strcat
 #define _topen    open
