@@ -1,4 +1,4 @@
-/* $Id: dcithreshold.cpp,v 1.33 2007-08-20 05:46:20 victor Exp $ */
+/* $Id: dcithreshold.cpp,v 1.34 2007-09-26 09:47:30 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -113,7 +113,7 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
    m_iParam1 = DBGetFieldLong(hResult, iRow, 5);
    m_iParam2 = DBGetFieldLong(hResult, iRow, 6);
    m_bIsReached = DBGetFieldLong(hResult, iRow, 8);
-	m_nRepeatInterval = DBGetFieldLong(hResult, iRow, 9);
+	m_nRepeatInterval = DBGetFieldLong(hResult, iRow, 10);
 	m_tmLastEventTimestamp = 0;
 }
 
