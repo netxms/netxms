@@ -10,9 +10,8 @@
 
 EXTRA_DIST = netxmsd.in nxagentd.in
 
-REPLACE_CMD = sed "s,~BINDIR~,$(bindir),g" < $< > .temp && \
-	sed "s,~LIBDIR~,$(libdir),g" < .temp > $@ && \
-	rm -f .temp
+REPLACE_CMD = sed "s,~BINDIR~,$(bindir),g" < $@.in | \
+	sed "s,~LIBDIR~,$(libdir),g" > $@
 
 all: netxmsd nxagentd nxhttpd
 
