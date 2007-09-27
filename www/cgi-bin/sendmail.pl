@@ -20,6 +20,10 @@ if (defined $q->param('contact') && defined $q->param('text'))
 	my $date = `date "+%a, %d %b %Y %d %R:%S %z"`;
 	$smtp->datasend("Content-Type: text/plain; charset=utf-8\n");
 	$smtp->datasend("Date: $date");
+	my $contact = $q->param('contact');
+	if ($contact =~ /^[a-z][\w\.-]*[a-z0-9]@[a-z0-9][\w\.-]*[a-z0-9]\.[a-z][a-z\.]*[a-z]$/i) {
+		$smtp->datasend("Reply-To: $contact\n");
+	}
 	$smtp->datasend("\n");
 	$smtp->datasend("IP: " . $ENV{REMOTE_ADDR} . "\n\n");
 	$smtp->datasend("Contact: " . $q->param('contact') . "\n\n");

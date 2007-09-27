@@ -1,3 +1,5 @@
+27-Sep-2007|0.2.19 released|Version 0.2.19 is out.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
+30-Jul-2007|0.2.18.2 released|Version 0.2.18.2 is out. It's a hotfix release which fixes serious bug in MySQL database driver. Only those who runs NetXMS server on UNIX platform with MySQL backend should upgrade to this version.
 07-Jul-2007|Forum engine changed|We have switched to the new forum engine. Everything <b>except passwords</b> is migrated. Use "Password reminder" to get a new one.
 03-Jul-2007|0.2.18 released|Version 0.2.18 is out.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
 10-Jun-2007|0.2.17 released|Version 0.2.17 is out.<br /><a href="http://netxms.org/download/changelog.shtml">CHANGELOG</a>
