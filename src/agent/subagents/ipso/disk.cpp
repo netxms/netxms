@@ -1,4 +1,4 @@
-/* $Id: disk.cpp,v 1.4 2007-09-27 09:20:41 alk Exp $ */
+/* $Id: disk.cpp,v 1.5 2007-09-27 10:33:46 alk Exp $ */
 
 /* 
 ** NetXMS subagent for IPSO
@@ -39,7 +39,7 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 		
 		QWORD usedBlocks = (QWORD)(s.f_blocks - s.f_bfree);
 		QWORD totalBlocks = (QWORD)s.f_blocks;
-		QWORD blockSize = (QWORD)s.f_frsize;
+		QWORD blockSize = (QWORD)s.f_bsize;
 		QWORD freeBlocks = (QWORD)s.f_bfree;
 		QWORD availableBlocks = (QWORD)s.f_bavail;
 		
@@ -79,6 +79,9 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2007/09/27 09:20:41  alk
+DISK_* params fixed in all subagents
+
 Revision 1.3  2006/08/16 22:26:09  victor
 - Most of Net.Interface.XXX functions implemented on IPSO
 - Added function MACToStr
