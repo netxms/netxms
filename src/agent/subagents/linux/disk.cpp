@@ -1,4 +1,4 @@
-/* $Id: disk.cpp,v 1.5 2007-09-17 18:55:04 alk Exp $ */
+/* $Id: disk.cpp,v 1.6 2007-09-27 09:16:41 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -38,30 +38,37 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 	if (szArg[0] != 0 && statvfs(szArg, &s) == 0)
 	{
 		nRet = SYSINFO_RC_SUCCESS;
+		
+		QWORD usedBlocks = (QWORD)(s.f_blocks - s.f_bfree);
+		QWORD totalBlocks = (QWORD)s.f_blocks;
+		QWORD blockSize = (QWORD)s.f_frsize;
+		QWORD freeBlocks = (QWORD)s.f_bfree;
+		QWORD availableBlocks = (QWORD)s.f_bavail;
+		
 		switch((long)pArg)
 		{
-			case DISK_FREE:
-				ret_uint64(pValue, (QWORD)s.f_bfree * (QWORD)s.f_bsize);
-				break;
-			case DISK_FREE_PERC:
-				ret_double(pValue, 100.0 * (((double)s.f_bfree) / s.f_blocks));
-				break;
-			case DISK_AVAIL:
-				ret_uint64(pValue, (QWORD)s.f_bavail * (QWORD)s.f_bsize);
-				break;
-			case DISK_AVAIL_PERC:
-				ret_double(pValue, 100.0 * (((double)s.f_bavail) / s.f_blocks));
-				break;
 			case DISK_TOTAL:
-				ret_uint64(pValue, (QWORD)s.f_blocks * (QWORD)s.f_frsize);
+				ret_uint64(pValue, totalBlocks * blockSize);
 				break;
 			case DISK_USED:
-				ret_uint64(pValue, (QWORD)(s.f_blocks - s.f_bfree) * (QWORD)s.f_frsize);
+				ret_uint64(pValue, usedBlocks * blockSize);
+				break;
+			case DISK_FREE:
+				ret_uint64(pValue, freeBlocks * blockSize);
+				break;
+			case DISK_AVAIL:
+				ret_uint64(pValue, availableBlocks * blockSize);
 				break;
 			case DISK_USED_PERC:
-				ret_double(pValue, 100.0 * (((double)(s.f_blocks - s.f_bfree)) / s.f_blocks));
+				ret_double(pValue, (usedBlocks * 100) / totalBlocks);
 				break;
-			default: // YIC
+			case DISK_AVAIL_PERC:
+				ret_double(pValue, (availableBlocks * 100) / totalBlocks);
+				break;
+			case DISK_FREE_PERC:
+				ret_double(pValue, (freeBlocks * 100) / totalBlocks);
+				break;
+			default:
 				nRet = SYSINFO_RC_ERROR;
 				break;
 		}
@@ -74,6 +81,9 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2007/09/17 18:55:04  alk
+freespace(%) fixed for large partitions
+
 Revision 1.4  2007/04/24 12:04:10  alk
 code reformat
 
