@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.270 2007-09-22 11:18:45 victor Exp $
+# $Id: configure.ac,v 1.271 2007-09-27 20:12:11 alk Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -414,8 +414,8 @@ AC_PROG_CC(aCC gcc cc cl)
 AC_PROG_CPP
 AC_PROG_CXX
 if test "x$CXX" = "xg++"; then
-	AC_CHECK_PROG([RC], [g++], [yes], [no])
-	if test "x$RC" = "xno"; then
+	AC_CHECK_PROG([GPLUSPLUS], [g++], [yes], [no])
+	if test "x$GPLUSPLUS" = "xno"; then
 		AC_MSG_ERROR([*** FATAL: Cannot find any usable C++ compiler])
 	fi
 fi
@@ -1127,8 +1127,8 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$NEED_WXWIDGETS" = "xyes"; then
-	AC_CHECK_PROG([RC], [wx-config], [yes], [no])
-	if test "x$RC" = "xyes"; then
+	AC_CHECK_PROG([WXWIDGETS], [wx-config], [yes], [no])
+	if test "x$WXWIDGETS" = "xyes"; then
 		CXXFLAGS="$CXXFLAGS `wx-config --cxxflags --debug=$ENABLE_DEBUG`"
 		LDFLAGS="$LDFLAGS `wx-config --libs --debug=$ENABLE_DEBUG`"
 	else
