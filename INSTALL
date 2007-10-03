@@ -51,7 +51,7 @@ The simplest way to install netxms server is:
   6. Copy default netxms daemon configuration file ('netxmsd.conf-dist') to /etc
      directory with name 'netxmsd.conf' and edit it to match actual settings.
      You can do it like this: 
-     cp ./netxmsd.conf-dist /etc/netxmsd.conf
+     cp ./contrib/netxmsd.conf-dist /etc/netxmsd.conf
      vi /etc/netxmsd.conf
   
   7. Use sql/dbinit_[dbname].sql script and Your database client
