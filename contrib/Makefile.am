@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 
-EXTRA_DIST =
+EXTRA_DIST = \
 	netxmsd.conf-dist nxagentd.conf-dist nxhttpd.conf-dist \
 	installAgent.sh installBinaryAgent.sh
 SUBDIRS= startup
