@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.271 2007-09-27 20:12:11 alk Exp $
+# $Id: configure.ac,v 1.272 2007-10-04 20:10:13 alk Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -1101,7 +1101,7 @@ fi
 
 check_substr "$COMPONENTS" "sqlite"
 if test $? = 0; then
-	AC_CHECK_HEADER(sqlite.h,,AC_MSG_ERROR([*** Cannot find sqlite.h - check your SQLite installation ***]))
+	AC_CHECK_HEADER(sqlite3.h,,AC_MSG_ERROR([*** Cannot find sqlite3.h - check your SQLite installation ***]))
 	AC_CHECK_LIB(rt, fdatasync)
 	AC_CHECK_LIB(sqlite3, sqlite3_open, [],
 		[AC_MSG_ERROR(libsqlite3 is required for SQLite support)])
