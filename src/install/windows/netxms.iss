@@ -57,6 +57,7 @@ Source: "..\..\libnxsl\Release\libnxsl.dll"; DestDir: "{app}\bin"; Flags: ignore
 Source: "..\..\libnxsl\Release\libnxsl.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (server or console) and pdb
 Source: "..\..\nxscript\Release\nxscript.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server console
 Source: "..\..\server\tools\nxconfig\Release\nxconfig.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server websrv
+Source: "nxconfig.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server websrv
 ; Server files
 Source: "..\..\server\libnxsrv\Release\libnxsrv.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\libnxsrv\Release\libnxsrv.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb

@@ -10,4 +10,5 @@
 
 EXTRA_DIST = netxms.iss files.txt \
 	     nxav.exe.manifest nxcon.exe.manifest \
-	     nxmc.exe.manifest nxnotify.exe.manifest 
+	     nxmc.exe.manifest nxnotify.exe.manifest \
+	     nxconfig.exe.manifest
