@@ -20,7 +20,8 @@ EXTRA_DIST = \
 	nxmc.fbp \
 	nxmc.xrs \
 	processing.png \
-	wxfb_code.xrc
+	wxfb_code.xrc \
+	manual.xrc
 
 nxmc.xrs: resource.xrc manual.xrc
 	wxrc resource.xrc manual.xrc -o nxmc.xrs
