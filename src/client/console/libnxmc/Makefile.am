@@ -6,4 +6,4 @@ libnxmc_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxmc_la_LIBADD = ../../../libnetxms/libnetxms.la ../../../libnxcl/libnxcl.la
 
 EXTRA_DIST = \
-	libnxmc.dsp libnxmc.h nxview.h objseldlg.h
+	libnxmc.dsp libnxmc.h nxview.h objseldlg.h heading.h
