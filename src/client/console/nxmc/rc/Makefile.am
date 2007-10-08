@@ -24,7 +24,7 @@ EXTRA_DIST = \
 	manual.xrc
 
 nxmc.xrs: resource.xrc manual.xrc
-	wxrc resource.xrc manual.xrc -o nxmc.xrs
+	$(WXRC) resource.xrc manual.xrc -o nxmc.xrs
 
 resource.xrc: wxfb_code.xrc
 	$(PERL) @top_builddir@/tools/update_xrc.pl < wxfb_code.xrc > $@

@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.273 2007-10-08 13:43:40 alk Exp $
+# $Id: configure.ac,v 1.274 2007-10-08 14:55:13 alk Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -1131,8 +1131,13 @@ if test "x$NEED_WXWIDGETS" = "xyes"; then
 	if test "x$WXCONF" = "xno"; then
 		AC_MSG_ERROR([*** wxWidgets not installed - unable to build GUI components ***])
 	else
-		CXXFLAGS="$CXXFLAGS `$WXCONF --cxxflags --debug=$ENABLE_DEBUG`"
-		LDFLAGS="$LDFLAGS `$WXCONF --libs --debug=$ENABLE_DEBUG`"
+		AC_PATH_PROGS([WXRC], [wxrc, wxrc-gtk2-2.8], [no], [$PATH:/usr/local/bin])
+		if test "x$WXRC" = "xno"; then
+			AC_MSG_ERROR([*** wxWidgets resource compiler not found - unable to build GUI components ***])
+		else
+			CXXFLAGS="$CXXFLAGS `$WXCONF --cxxflags --debug=$ENABLE_DEBUG`"
+			LDFLAGS="$LDFLAGS `$WXCONF --libs --debug=$ENABLE_DEBUG`"
+		fi
 	fi
 fi
 
@@ -1159,6 +1164,7 @@ AC_SUBST(STATIC_SUBAGENT_LIST)
 AC_SUBST(SUBAGENT_LIBS)
 AC_SUBST(BUILD_SERVER)
 AC_SUBST(UNSTABLE_SUBAGENT_DIRS)
+AC_SUBST(WXRC)
 
 #--------------------------------------------------------------------
 # Shared libs versions
