@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.272 2007-10-04 20:10:13 alk Exp $
+# $Id: configure.ac,v 1.273 2007-10-08 13:43:40 alk Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -1127,12 +1127,12 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$NEED_WXWIDGETS" = "xyes"; then
-	AC_CHECK_PROG([WXWIDGETS], [wx-config], [yes], [no])
-	if test "x$WXWIDGETS" = "xyes"; then
-		CXXFLAGS="$CXXFLAGS `wx-config --cxxflags --debug=$ENABLE_DEBUG`"
-		LDFLAGS="$LDFLAGS `wx-config --libs --debug=$ENABLE_DEBUG`"
-	else
+	AC_PATH_PROGS([WXCONF], [wx-config, wxgtk2-2.8-config], [no], [$PATH:/usr/local/bin])
+	if test "x$WXCONF" = "xno"; then
 		AC_MSG_ERROR([*** wxWidgets not installed - unable to build GUI components ***])
+	else
+		CXXFLAGS="$CXXFLAGS `$WXCONF --cxxflags --debug=$ENABLE_DEBUG`"
+		LDFLAGS="$LDFLAGS `$WXCONF --libs --debug=$ENABLE_DEBUG`"
 	fi
 fi
 
