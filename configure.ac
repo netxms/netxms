@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.274 2007-10-08 14:55:13 alk Exp $
+# $Id: configure.ac,v 1.275 2007-10-09 12:27:28 alk Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -1127,11 +1127,11 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$NEED_WXWIDGETS" = "xyes"; then
-	AC_PATH_PROGS([WXCONF], [wx-config, wxgtk2-2.8-config], [no], [$PATH:/usr/local/bin])
+	AC_PATH_PROGS([WXCONF], [wx-config wxgtk2-2.8-config], [no], [$PATH:/usr/local/bin])
 	if test "x$WXCONF" = "xno"; then
 		AC_MSG_ERROR([*** wxWidgets not installed - unable to build GUI components ***])
 	else
-		AC_PATH_PROGS([WXRC], [wxrc, wxrc-gtk2-2.8], [no], [$PATH:/usr/local/bin])
+		AC_PATH_PROGS([WXRC], [wxrc wxrc-gtk2-2.8], [no], [$PATH:/usr/local/bin])
 		if test "x$WXRC" = "xno"; then
 			AC_MSG_ERROR([*** wxWidgets resource compiler not found - unable to build GUI components ***])
 		else
