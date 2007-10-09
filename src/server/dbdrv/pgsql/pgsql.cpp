@@ -1,4 +1,4 @@
-/* $Id: pgsql.cpp,v 1.18 2006-11-23 20:54:38 victor Exp $ */
+/* $Id: pgsql.cpp,v 1.19 2007-10-09 13:32:40 alk Exp $ */
 /* 
 ** PostgreSQL Database Driver
 ** Copyright (C) 2003, 2005 Victor Kirhenshtein and Alex Kirhenshtein
@@ -380,7 +380,12 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(
 	}
 
 	// FIXME: correct processing of binary fields
+	// PQfformat not supported in 7.3
+#ifdef HAVE_PQFFORMAT
 	if (PQfformat(pConn->pFetchBuffer, nColumn) != 0)
+#else
+	if (PQbinaryTuples(pConn->pFetchBuffer) != 0)
+#endif
 	{
 		//fprintf(stderr, "db:postgres:binary fields not supported\n");
 		//fflush(stderr);
