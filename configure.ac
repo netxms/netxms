@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.275 2007-10-09 12:27:28 alk Exp $
+# $Id: configure.ac,v 1.276 2007-10-09 12:56:42 alk Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -1069,6 +1069,7 @@ if test $? = 0; then
 			AC_MSG_ERROR(Your PostgreSQL client libraries aren't properly installed)
 		],[])    
 	AC_MSG_RESULT(yes)
+	AC_CHECK_LIB(pq, PQfformat)
 fi
 
 
