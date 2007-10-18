@@ -87,16 +87,24 @@ static MP_MODULE *FindModuleByName(DynArray *pModuleList, char *pszName)
 // Find object in module
 //
 
-static MP_OBJECT *FindObjectByName(MP_MODULE *pModule, char *pszName)
+static MP_OBJECT *FindObjectByName(MP_MODULE *pModule, char *pszName, int *pnIndex)
 {
    int i, iNumObjects;
+	MP_OBJECT *pObject;
 
    iNumObjects = da_size(pModule->pObjectList);
-   for(i = 0; i < iNumObjects; i++)
+   for(i = (pnIndex != NULL) ? *pnIndex : 0; i < iNumObjects; i++)
    {
-      if (!strcmp(((MP_OBJECT *)da_get(pModule->pObjectList, i))->pszName, pszName))
-         return (MP_OBJECT *)da_get(pModule->pObjectList, i);
+		pObject = (MP_OBJECT *)da_get(pModule->pObjectList, i);
+      if (!strcmp(pObject->pszName, pszName))
+		{
+			if (pnIndex != NULL)
+				*pnIndex = i + 1;
+         return pObject;
+		}
    }
+	if (pnIndex != NULL)
+		*pnIndex = i;
    return NULL;
 }
 
@@ -177,7 +185,7 @@ static void ResolveImports(DynArray *pModuleList, MP_MODULE *pModule)
             pszSymbol = (char *)da_get(pImport->pSymbols, j);
             do
             {
-               pObject = FindObjectByName(pImportModule, pszSymbol);
+               pObject = FindObjectByName(pImportModule, pszSymbol, NULL);
                if (pObject != NULL)
                {
                   da_add(pImport->pObjects, pObject);
@@ -220,7 +228,7 @@ static void BuildFullOID(MP_MODULE *pModule, MP_OBJECT *pObject)
       pSubId = (MP_SUBID *)da_get(pObject->pOID, iLen - 1);
       if (!pSubId->bResolved)
       {
-         pParent = FindObjectByName(pModule, pSubId->pszName);
+         pParent = FindObjectByName(pModule, pSubId->pszName, NULL);
          if (pParent != NULL)
          {
             BuildFullOID(pModule, pParent);
@@ -273,6 +281,7 @@ static void ResolveSyntax(MP_MODULE *pModule, MP_OBJECT *pObject)
    MP_OBJECT *pType;
    MP_MODULE *pCurrModule = pModule;
    char *pszType;
+	int index;
 
    if ((pObject->iSyntax != -1) || (pObject->pszDataType == NULL))
       return;
@@ -280,7 +289,12 @@ static void ResolveSyntax(MP_MODULE *pModule, MP_OBJECT *pObject)
    pszType = pObject->pszDataType;
    do
    {
-      pType = FindObjectByName(pCurrModule, CHECK_NULL(pszType));
+		index = 0;
+		do
+		{
+			pType = FindObjectByName(pCurrModule, CHECK_NULL(pszType), &index);
+		}
+		while((pType != NULL) && (pType->iType == MIBC_OBJECT));
       if (pType == NULL)
          pType = FindImportedObjectByName(pCurrModule,
                                           CHECK_NULL(pszType),
