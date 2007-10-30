@@ -17,11 +17,11 @@
 #
 # ControlServers
 #
-# List of management servers which can execute actions on agent and change
-# agent's config. Hosts listed in this parameter also have read access to 
-# the agent. Both IP addresses and DNS names can be used. Multiple servers
-# can be specified in one line, separated by commas. If this parameter used
-# more than once, servers listed in all occurences will have access to agent.
+# List of management servers which can execute actions on agent. Hosts
+# listed in this parameter also have read access to the agent. Both
+# IP addresses and DNS names can be used. Multiple servers can be specified
+# in one line, separated by commas. If this parameter used more than
+# once, servers listed in all occurences will have access to agent.
 #
 # Examples:
 # ControlServers = 10.0.0.1
@@ -31,11 +31,12 @@
 # MasterServers
 #
 # List of management servers which have full access to agent. Hosts listed
-# in this group can  upload files to agent and initiate agent upgrade, as well
-# as perform any task allowed for hosts listed in Servers and ControlServers.
-# Both IP addresses and DNS names can be used. Multiple servers can be
-# specified in one line, separated by commas. If this parameter used more
-# than once, servers listed in all occurences will have access to agent.
+# in this group can change agent's config, upload files to agent and initiate
+# agent upgrade, as well as perform any task allowed for hosts listed in
+# Servers and ControlServers. Both IP addresses and DNS names can be used.
+# Multiple servers can be specified in one line, separated by commas.
+# If this parameter used more than once, servers listed in all occurences
+# will have access to agent.
 #
 # Examples:
 # MasterServers = 10.0.0.1
