@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.18 2007-08-28 22:24:14 alk Exp $ */
+/* $Id: system.cpp,v 1.19 2007-10-30 15:41:50 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -422,6 +422,7 @@ static void CpuUsageCollector()
 			MutexUnlock(m_cpuUsageMutex);
 
 			m_user = user;
+			m_nice = nice;
 			m_system = system;
 			m_idle = idle;
 			m_iowait = iowait;
@@ -525,6 +526,9 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.18  2007/08/28 22:24:14  alk
+CPU usage fixed
+
 Revision 1.17  2007/04/25 07:44:09  victor
 - Linux and HPUX subagents changed to new model
 - ODBCQUERY subagent code cleaned
