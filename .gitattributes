@@ -1111,6 +1111,7 @@ src/console/win32/icons/editor.ico -text
 src/console/win32/icons/empty.ico -text
 src/console/win32/icons/exec.ico -text
 src/console/win32/icons/exit.ico -text
+src/console/win32/icons/find.ico -text
 src/console/win32/icons/folder_c.ico -text
 src/console/win32/icons/folder_o.ico -text
 src/console/win32/icons/forward.ico -text
@@ -1122,6 +1123,7 @@ src/console/win32/icons/log.ico -text
 src/console/win32/icons/lpp.ico -text
 src/console/win32/icons/module.ico -text
 src/console/win32/icons/nack.ico -text
+src/console/win32/icons/next.ico -text
 src/console/win32/icons/objtools.ico -text
 src/console/win32/icons/ovl_status_critical.ico -text
 src/console/win32/icons/ovl_status_disabled.ico -text
