@@ -156,6 +156,7 @@ char m_szPidFile[MAX_PATH] = "/var/run/nxhttpd.pid";
 #endif
 static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
 static THREAD m_thListener = INVALID_THREAD_HANDLE;
+static TCHAR m_szCodePage[256] = ICONV_DEFAULT_CODEPAGE;
 
 
 //
@@ -164,6 +165,7 @@ static THREAD m_thListener = INVALID_THREAD_HANDLE;
 
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
+   { "CodePage", CT_STRING, 0, 0, 256, 0, m_szCodePage },
    { "DocumentRoot", CT_STRING, 0, 0, MAX_PATH, 0, g_szDocumentRoot },
    { "ListenPort", CT_WORD, 0, 0, 0, 0, &g_wListenPort },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
@@ -231,6 +233,10 @@ stop_handler:
 
 BOOL Initialize(void)
 {
+#ifndef _WIN32
+	SetDefaultCodepage(m_szCodePage);
+#endif
+	
 	InitLog();
 
 #ifdef _WIN32
