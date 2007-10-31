@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.35 2007-06-08 00:02:36 alk Exp $ */
+/* $Id: linux.cpp,v 1.36 2007-10-31 08:14:33 victor Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -136,6 +136,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "System.ConnectedUsers",        H_ConnectedUsers,  NULL,
 		DCI_DT_INT,    DCIDESC_SYSTEM_CONNECTEDUSERS },
 
+	{ "System.CPU.Count",             H_CpuCount,        NULL,
+		DCI_DT_UINT,	DCIDESC_SYSTEM_CPU_COUNT },
 	{ "System.CPU.LoadAvg",           H_CpuLoad,         (char *)0,
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG },
 	{ "System.CPU.LoadAvg5",          H_CpuLoad,         (char *)5,
@@ -148,6 +150,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5 },
 	{ "System.CPU.Usage15",           H_CpuUsage,        (char *)15,
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15 },
+	{ "System.CPU.Usage(*)",          H_CpuUsageEx,      (char *)0,
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_EX },
+	{ "System.CPU.Usage5(*)",         H_CpuUsageEx,      (char *)5,
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_EX },
+	{ "System.CPU.Usage15(*)",        H_CpuUsageEx,      (char *)15,
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_EX },
 	{ "System.Hostname",              H_Hostname,        NULL,
 		DCI_DT_STRING,	DCIDESC_SYSTEM_HOSTNAME },
 	{ "System.Memory.Physical.Free",  H_MemoryInfo,      (char *)PHYSICAL_FREE,
@@ -233,6 +241,11 @@ extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.35  2007/06/08 00:02:36  alk
+DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
+
+NETXMS_SUBAGENT_INFO initialization fixed (actions)
+
 Revision 1.34  2007/06/07 22:07:11  alk
 descriptions changed to defines
 
