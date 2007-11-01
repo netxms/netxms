@@ -592,33 +592,40 @@ inline void ThreadSleepMs(DWORD dwMilliseconds)
 #endif
 }
 
-inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
-{
-	THREAD id;
-
-	if (pthread_create(&id, NULL, start_address, args) == 0) 
-   {
-      pthread_detach(id);
-		return TRUE;
-	} 
-   else 
-   {
-		return FALSE;
-	}
-}
-
 inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
 {
    THREAD id;
 
-   if (pthread_create(&id, NULL, start_address, args) == 0)
+	if (stack_size <= 0)
+	{
+		// TODO: Find out minimal stack size
+		stack_size = 1024 * 1024; // 1MB
+		// set stack size to 1mb (it's windows default - and application works,
+		// we need to investigate more on this)
+	}
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setstacksize(&attr, stack_size);
+
+   if (pthread_create(&id, &attr, start_address, args) != 0)
    {
-      return id;
+		id = INVALID_THREAD_HANDLE;
    } 
-   else 
-   {
-      return INVALID_THREAD_HANDLE;
-   }
+
+	return id;
+}
+
+inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address )(void *), int stack_size, void *args)
+{
+	THREAD id = ThreadCreateEx(start_address, stack_size, args);
+
+	if (id != INVALID_THREAD_HANDLE)
+	{
+		pthread_detach(id);
+		return TRUE;
+	}
+
+	return FALSE;
 }
 
 inline void ThreadExit(void)
