@@ -67,7 +67,38 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
    while(!ShutdownInProgress())
    {
       pItem = (DCItem *)g_pItemQueue->GetOrBlock();
-      pNode = (Node *)pItem->RelatedNode();
+		pNode = (Node *)pItem->RelatedNode();
+		if (pItem->ProxyNode() != 0)
+		{
+			NetObj *object;
+
+			object = FindObjectById(pItem->ProxyNode());
+			if (object != NULL)
+			{
+				if (object->Type() == OBJECT_NODE)
+				{
+					pNode = (Node *)object;
+					pNode->IncRefCount();
+				}
+				else
+				{
+					if (pNode != NULL)
+					{
+						pNode->DecRefCount();
+						pNode = NULL;
+					}
+				}
+			}
+			else
+			{
+				if (pNode != NULL)
+				{
+					pNode->DecRefCount();
+					pNode = NULL;
+				}
+			}
+		}
+
       if (pNode != NULL)
       {
          switch(pItem->DataSource())
@@ -112,6 +143,10 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 
          // Decrement node's usage counter
          pNode->DecRefCount();
+			if ((pItem->ProxyNode() != 0) && (pItem->RelatedNode() != NULL))
+			{
+				pItem->RelatedNode()->DecRefCount();
+			}
       }
       else     /* pNode == NULL */
       {

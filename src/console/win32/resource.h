@@ -322,6 +322,7 @@
 #define IDC_EDIT_PASSWD2                1056
 #define IDC_BUTTON_SELECT               1062
 #define IDC_BUTTON_SELECT_REARM_EVENT   1063
+#define IDC_BUTTON_SELECT_PROXY         1063
 #define IDC_EDIT_INTERVAL               1064
 #define IDC_EDIT_RETENTION              1065
 #define IDC_RADIO_ACTIVE                1066
@@ -945,7 +946,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        375
 #define _APS_NEXT_COMMAND_VALUE         33081
-#define _APS_NEXT_CONTROL_VALUE         1511
+#define _APS_NEXT_CONTROL_VALUE         1512
 #define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif

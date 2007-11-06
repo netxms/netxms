@@ -469,6 +469,7 @@ CREATE TABLE items
 	instance varchar(255) not null,	  // Free form text which can be used in events
 	all_thresholds integer not null,  // 1 if all thresholds should be processed at every check
 	resource_id integer not null,  // associated cluster resource ID
+	proxy_node integer not null,   // ID of proxy node (for SNMP and agent items)
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 

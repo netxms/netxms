@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: session.cpp
+** File: session.cpp
 **
 **/
 
@@ -390,6 +390,7 @@ void NXCL_Session::ProcessDCI(CSCPMessage *pMsg)
             m_pItemList->pItems[i].dwId = pMsg->GetVariableLong(VID_DCI_ID);
             m_pItemList->pItems[i].dwTemplateId = pMsg->GetVariableLong(VID_TEMPLATE_ID);
             m_pItemList->pItems[i].dwResourceId = pMsg->GetVariableLong(VID_RESOURCE_ID);
+            m_pItemList->pItems[i].dwProxyNode = pMsg->GetVariableLong(VID_PROXY_NODE);
             m_pItemList->pItems[i].iDataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
             m_pItemList->pItems[i].iPollingInterval = (int)pMsg->GetVariableLong(VID_POLLING_INTERVAL);
             m_pItemList->pItems[i].iRetentionTime = (int)pMsg->GetVariableLong(VID_RETENTION_TIME);

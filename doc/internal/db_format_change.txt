@@ -1,4 +1,12 @@
 *************
+* 71 ==> 72 *
+*************
+
+- New column added to table "items":
+	ALTER TABLE items ADD proxy_node integer not null
+
+
+*************
 * 70 ==> 71 *
 *************
 

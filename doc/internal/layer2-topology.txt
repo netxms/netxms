@@ -1,4 +1,4 @@
-Nortel topology:
+Nortel topology (SONMP):
 
 .1.3.6.1.4.1.45.1.6.13.1.2.0 should be 1 if switch supports topology discovery
 

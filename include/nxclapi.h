@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.278 2007-09-20 09:39:02 victor Exp $ */
+/* $Id: nxclapi.h,v 1.279 2007-11-06 12:36:01 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -1190,6 +1190,7 @@ typedef struct
    TCHAR *pszFormula;
    DWORD dwNumSchedules;
    TCHAR **ppScheduleList;
+	DWORD dwProxyNode;
 } NXC_DCI;
 
 

@@ -1,4 +1,4 @@
-/* $Id: template.cpp,v 1.37 2007-09-20 13:04:01 victor Exp $ */
+/* $Id: template.cpp,v 1.38 2007-11-06 12:36:03 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -261,8 +261,8 @@ void Template::LoadItemsFromDB(void)
 
    sprintf(szQuery, "SELECT item_id,name,source,datatype,polling_interval,retention_time,"
                     "status,delta_calculation,transformation,template_id,description,"
-                    "instance,template_item_id,adv_schedule,all_thresholds,resource_id "
-                    "FROM items WHERE node_id=%d", m_dwId);
+                    "instance,template_item_id,adv_schedule,all_thresholds,resource_id,"
+                    "proxy_node FROM items WHERE node_id=%d", m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
 
    if (hResult != 0)

@@ -1,4 +1,4 @@
-/* $Id: nms_dcoll.h,v 1.33 2007-09-20 13:04:01 victor Exp $ */
+/* $Id: nms_dcoll.h,v 1.34 2007-11-06 12:36:03 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -199,6 +199,7 @@ private:
    time_t m_tLastCheck;       // Last schedule checking time
    DWORD m_dwErrorCount;      // Consequtive collection error count
 	DWORD m_dwResourceId;		// Associated cluster resource ID
+	DWORD m_dwProxyNode;       // Proxy node ID or 0 to disable
 
    void Lock(void) { MutexLock(m_hMutex, INFINITE); }
    void Unlock(void) { MutexUnlock(m_hMutex); }
@@ -239,6 +240,7 @@ public:
    DWORD TemplateId(void) { return m_dwTemplateId; }
    DWORD TemplateItemId(void) { return m_dwTemplateItemId; }
 	DWORD ResourceId(void) { return m_dwResourceId; }
+	DWORD ProxyNode(void) { return m_dwProxyNode; }
 
    BOOL ReadyForPolling(time_t currTime);
    void SetLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }

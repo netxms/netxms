@@ -87,6 +87,29 @@ static BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
 
 
 //
+// Upgrade from V71 to V72
+//
+
+static BOOL H_UpgradeFromV71(void)
+{
+   static TCHAR m_szBatch[] =
+		_T("ALTER TABLE items ADD proxy_node integer\n")
+		_T("UPDATE items SET proxy_node=0\n")
+      _T("<END>");
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='72' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V70 to V71
 //
 
@@ -3152,6 +3175,7 @@ static struct
    { 68, H_UpgradeFromV68 },
    { 69, H_UpgradeFromV69 },
    { 70, H_UpgradeFromV70 },
+   { 71, H_UpgradeFromV71 },
    { 0, NULL }
 };
 

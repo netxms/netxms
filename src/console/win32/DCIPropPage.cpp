@@ -7,6 +7,7 @@
 #include "MIBBrowserDlg.h"
 #include "InternalItemSelDlg.h"
 #include "AgentParamSelDlg.h"
+#include "ObjectSelDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -39,6 +40,7 @@ CDCIPropPage::CDCIPropPage()
    m_pParamList = NULL;
    m_dwNumParams = 0;
 	m_dwResourceId = 0;
+	m_dwProxyNode = 0;
 }
 
 CDCIPropPage::~CDCIPropPage()
@@ -78,6 +80,7 @@ BEGIN_MESSAGE_MAP(CDCIPropPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_CHECK_SCHEDULE, OnCheckSchedule)
 	ON_CBN_SELCHANGE(IDC_COMBO_DT, OnSelchangeComboDt)
 	ON_CBN_SELCHANGE(IDC_COMBO_RESOURCES, OnSelchangeComboResources)
+	ON_BN_CLICKED(IDC_BUTTON_SELECT_PROXY, OnButtonSelectProxy)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -153,8 +156,26 @@ BOOL CDCIPropPage::OnInitDialog()
 
    if (m_bAdvSchedule)
       EnablePollingInterval(FALSE);
+
+	if (m_dwProxyNode != 0)
+	{
+		pObject = NXCFindObjectById(g_hSession, m_dwProxyNode);
+		if (pObject != NULL)
+		{
+			SetDlgItemText(IDC_EDIT_PROXY, pObject->szName);
+		}
+		else
+		{
+			SetDlgItemText(IDC_EDIT_PROXY, _T("<invalid>"));
+		}
+	}
+	else
+	{
+		SetDlgItemText(IDC_EDIT_PROXY, _T("<none>"));
+	}
 	
    EnableDlgItem(this, IDC_BUTTON_SELECT, m_iOrigin != DS_PUSH_AGENT);
+   EnableDlgItem(this, IDC_BUTTON_SELECT_PROXY, m_iOrigin != DS_PUSH_AGENT);
 	return TRUE;
 }
 
@@ -418,4 +439,41 @@ void CDCIPropPage::OnSelchangeComboResources()
 				break;
 			}
 	}
+}
+
+
+//
+// Handler for "Select proxy" button
+//
+
+void CDCIPropPage::OnButtonSelectProxy() 
+{
+   CObjectSelDlg dlg;
+
+   dlg.m_dwAllowedClasses = SCL_NODE;
+   dlg.m_bSingleSelection = TRUE;
+   dlg.m_bAllowEmptySelection = TRUE;
+   if (dlg.DoModal() == IDOK)
+   {
+      if (dlg.m_dwNumObjects != 0)
+      {
+         NXC_OBJECT *pNode;
+
+         m_dwProxyNode = dlg.m_pdwObjectList[0];
+         pNode = NXCFindObjectById(g_hSession, m_dwProxyNode);
+         if (pNode != NULL)
+         {
+            SetDlgItemText(IDC_EDIT_PROXY, pNode->szName);
+         }
+         else
+         {
+            SetDlgItemText(IDC_EDIT_PROXY, _T("<invalid>"));
+         }
+      }
+      else
+      {
+         m_dwProxyNode = 0;
+         SetDlgItemText(IDC_EDIT_PROXY, _T("<none>"));
+      }
+   }
 }

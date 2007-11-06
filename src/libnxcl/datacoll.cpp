@@ -151,6 +151,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
    msg.SetVariable(VID_ALL_THRESHOLDS, (WORD)pItem->iProcessAllThresholds);
    msg.SetVariable(VID_ADV_SCHEDULE, (WORD)pItem->iAdvSchedule);
 	msg.SetVariable(VID_RESOURCE_ID, pItem->dwResourceId);
+	msg.SetVariable(VID_PROXY_NODE, pItem->dwProxyNode);
    if (pItem->iAdvSchedule)
    {
       msg.SetVariable(VID_NUM_SCHEDULES, pItem->dwNumSchedules);

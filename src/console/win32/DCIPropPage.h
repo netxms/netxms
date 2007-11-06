@@ -17,6 +17,7 @@ class CDCIPropPage : public CPropertyPage
 
 // Construction
 public:
+	DWORD m_dwProxyNode;
 	DWORD m_dwResourceId;
 	NXC_OBJECT *m_pNode;
 	CDCIPropPage();   // standard constructor
@@ -68,6 +69,7 @@ protected:
 	afx_msg void OnCheckSchedule();
 	afx_msg void OnSelchangeComboDt();
 	afx_msg void OnSelchangeComboResources();
+	afx_msg void OnButtonSelectProxy();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

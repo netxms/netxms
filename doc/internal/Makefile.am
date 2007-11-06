@@ -8,4 +8,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = db_format_change.txt netxms_architecture.vsd
+EXTRA_DIST = \
+	coding_style.txt \
+	db_format_change.txt \
+	event_code_ranges.txt \
+	ipso.txt \
+	netxms_architecture.vsd
