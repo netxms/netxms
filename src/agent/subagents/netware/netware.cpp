@@ -1,4 +1,4 @@
-/* $Id: netware.cpp,v 1.19 2007-06-08 21:23:18 victor Exp $ */
+/* $Id: netware.cpp,v 1.20 2007-11-06 07:32:57 victor Exp $ */
 
 /*
 ** NetXMS subagent for Novell NetWare
@@ -214,7 +214,7 @@ static LONG H_ArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 // Shutdown system
 //
 
-static LONG H_ActionShutdown(char *pszAction, NETXMS_VALUES_LIST *pArgList, char *pData)
+static LONG H_ActionShutdown(const char *pszAction, NETXMS_VALUES_LIST *pArgList, const char *pData)
 {
 	LONG nRet;
 
@@ -359,7 +359,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-extern "C" BOOL NxSubAgentInit_NETWARE(NETXMS_SUBAGENT_INFO **ppInfo)
+extern "C" BOOL NxSubAgentRegister_NETWARE(NETXMS_SUBAGENT_INFO **ppInfo)
 {
 	*ppInfo = &m_info;
 	return TRUE;
@@ -385,6 +385,9 @@ int main(int argc, char *argv[])
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2007/06/08 21:23:18  victor
+Typo fixed
+
 Revision 1.18  2007/06/07 22:07:11  alk
 descriptions changed to defines
 

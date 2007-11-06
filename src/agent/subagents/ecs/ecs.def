@@ -11,7 +11,7 @@ INPUT ecs.o
 
 # Import/Export
 IMPORT @../../../libnetxms/netxms.imp
-EXPORT NxSubAgentInit_ECS
+EXPORT NxSubAgentRegister_ECS
 
 # Entry points
 START _LibCPrelude

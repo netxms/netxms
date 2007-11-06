@@ -11,7 +11,7 @@ INPUT netware.o
 
 # Import/Export
 IMPORT @../../../libnetxms/netxms.imp
-EXPORT NxSubAgentInit_NETWARE
+EXPORT NxSubAgentRegister_NETWARE
 
 # Entry points
 START _LibCPrelude

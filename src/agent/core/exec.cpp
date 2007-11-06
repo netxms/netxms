@@ -1,4 +1,4 @@
-/* $Id: exec.cpp,v 1.20 2007-04-19 08:39:21 alk Exp $ */
+/* $Id: exec.cpp,v 1.21 2007-11-06 07:32:57 victor Exp $ */
 
 /* 
 ** NetXMS multiplatform core agent
@@ -35,7 +35,7 @@
 // Execute external command
 //
 
-#ifndef _WIN32 // unix-only hack
+#if !defined(_WIN32) && !defined(_NETWARE) /* unix-only hack */
 static THREAD_RESULT THREAD_CALL Waiter(void *arg)
 {
 	pid_t pid = *((pid_t *)arg);
@@ -460,6 +460,9 @@ DWORD ExecuteShellCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2007/04/19 08:39:21  alk
+popen()-ed hanlde was closed with fclose()...
+
 Revision 1.19  2007/04/19 05:46:53  victor
 Minor changes
 

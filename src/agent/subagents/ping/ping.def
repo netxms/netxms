@@ -11,7 +11,7 @@ INPUT ping.o
 
 # Import/Export
 IMPORT @../../../libnetxms/netxms.imp
-EXPORT NxSubAgentInit_PING
+EXPORT NxSubAgentRegister_PING
 
 # Entry points
 START _LibCPrelude

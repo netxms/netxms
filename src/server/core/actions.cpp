@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -312,7 +312,7 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
       }
       else
       {
-         char *pszExpandedData, *pszExpandedSubject, *pszExpandedRcpt;
+         char *pszExpandedData, *pszExpandedSubject, *pszExpandedRcpt, *curr, *next;
 
          pszExpandedData = pEvent->ExpandText(CHECK_NULL_EX(pAction->pszData), pszAlarmMsg);
          pszExpandedRcpt = pEvent->ExpandText(pAction->szRcptAddr, pszAlarmMsg);
@@ -328,14 +328,32 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
                DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending mail to %s: \"%s\"", 
                          pszExpandedRcpt, pszExpandedData);
                pszExpandedSubject = pEvent->ExpandText(pAction->szEmailSubject, pszAlarmMsg);
-               PostMail(pszExpandedRcpt, pszExpandedSubject, pszExpandedData);
+					curr = pszExpandedRcpt;
+					do
+					{
+						next = strchr(curr, ';');
+						if (next != NULL)
+							*next = 0;
+						StrStrip(curr);
+						PostMail(curr, pszExpandedSubject, pszExpandedData);
+						curr = next + 1;
+					} while(next != NULL);
                free(pszExpandedSubject);
                bSuccess = TRUE;
                break;
             case ACTION_SEND_SMS:
                DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending SMS to %s: \"%s\"", 
                          pszExpandedRcpt, pszExpandedData);
-               PostSMS(pszExpandedRcpt, pszExpandedData);
+					curr = pszExpandedRcpt;
+					do
+					{
+						next = strchr(curr, ';');
+						if (next != NULL)
+							*next = 0;
+						StrStrip(curr);
+	               PostSMS(curr, pszExpandedData);
+						curr = next + 1;
+					} while(next != NULL);
                bSuccess = TRUE;
                break;
             case ACTION_REMOTE:
