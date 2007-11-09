@@ -1,8 +1,8 @@
-/* $Id: disk.cpp,v 1.4 2007-09-27 10:33:46 alk Exp $ */
+/* $Id: disk.cpp,v 1.5 2007-11-09 10:51:03 victor Exp $ */
 
 /*
  ** NetXMS subagent for SunOS/Solaris
- ** Copyright (C) 2004 Victor Kirhenshtein
+ ** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  ** along with this program; if not, write to the Free Software
  ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  **
- ** $module: disk.cpp
+ ** File: disk.cpp
  **
  **/
 
@@ -42,11 +42,11 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 	{
 		nRet = SYSINFO_RC_SUCCESS;
 		
-		QWORD usedBlocks = (QWORD)(s.f_blocks - s.f_bfree);
-		QWORD totalBlocks = (QWORD)s.f_blocks;
-		QWORD blockSize = (QWORD)s.f_bsize;
-		QWORD freeBlocks = (QWORD)s.f_bfree;
-		QWORD availableBlocks = (QWORD)s.f_bavail;
+		QWORD usedBlocks = (QWORD)(sv.f_blocks - sv.f_bfree);
+		QWORD totalBlocks = (QWORD)sv.f_blocks;
+		QWORD blockSize = (QWORD)sv.f_bsize;
+		QWORD freeBlocks = (QWORD)sv.f_bfree;
+		QWORD availableBlocks = (QWORD)sv.f_bavail;
 		
 		switch((long)pArg)
 		{
@@ -84,6 +84,9 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2007/09/27 10:33:46  alk
+...
+
 Revision 1.3  2007/09/27 09:20:41  alk
 DISK_* params fixed in all subagents
 

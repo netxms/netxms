@@ -1,4 +1,4 @@
-/* $Id: sunos_subagent.h,v 1.12 2006-05-15 22:11:22 alk Exp $ */
+/* $Id: sunos_subagent.h,v 1.13 2007-11-09 10:51:03 victor Exp $ */
 
 /*
  ** NetXMS subagent for SunOS/Solaris
@@ -18,7 +18,7 @@
  ** along with this program; if not, write to the Free Software
  ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  **
- ** $module: sunos_subagent.h
+ ** File: sunos_subagent.h
  **
  **/
 
@@ -36,9 +36,13 @@
 // Disk info types
 //
 
-#define DISK_FREE		0
-#define DISK_USED		1
+#define DISK_FREE	0
+#define DISK_USED	1
 #define DISK_TOTAL	2
+#define DISK_AVAIL      3
+#define DISK_USED_PERC  4
+#define DISK_AVAIL_PERC 5
+#define DISK_FREE_PERC  6
 
 
 //
@@ -106,5 +110,10 @@ extern BOOL g_bShutdown;
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.12  2006/05/15 22:11:22  alk
++ Net.Interface.Link() workaround; trying kstat() first, then
+IFF_RUNNING it kstat's link_up failed.
+- code reformated
+
 
 */
