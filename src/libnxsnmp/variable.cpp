@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: variable.cpp
+** File: variable.cpp
 **
 **/
 
@@ -136,7 +136,13 @@ BOOL SNMP_Variable::Parse(BYTE *pData, DWORD dwVarLength)
             case ASN_GAUGE32:
             case ASN_TIMETICKS:
             case ASN_UINTEGER32:
+               m_dwValueLength = sizeof(DWORD);
                m_pValue = (BYTE *)malloc(8);
+               bResult = BER_DecodeContent(m_dwType, pbCurrPos, dwLength, m_pValue);
+               break;
+		      case ASN_COUNTER64:
+               m_dwValueLength = sizeof(QWORD);
+               m_pValue = (BYTE *)malloc(16);
                bResult = BER_DecodeContent(m_dwType, pbCurrPos, dwLength, m_pValue);
                break;
             default:
@@ -170,6 +176,9 @@ DWORD SNMP_Variable::GetValueAsUInt(void)
       case ASN_IP_ADDR:
          dwValue = *((DWORD *)m_pValue);
          break;
+      case ASN_COUNTER64:
+         dwValue = (DWORD)(*((QWORD *)m_pValue));
+         break;
       default:
          dwValue = 0;
          break;
@@ -196,6 +205,9 @@ LONG SNMP_Variable::GetValueAsInt(void)
       case ASN_UINTEGER32:
       case ASN_IP_ADDR:
          iValue = *((LONG *)m_pValue);
+         break;
+      case ASN_COUNTER64:
+         iValue = (LONG)(*((QWORD *)m_pValue));
          break;
       default:
          iValue = 0;
@@ -227,6 +239,9 @@ TCHAR *SNMP_Variable::GetValueAsString(TCHAR *pszBuffer, DWORD dwBufferSize)
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
          _sntprintf(pszBuffer, dwBufferSize, _T("%u"), *((DWORD *)m_pValue));
+         break;
+      case ASN_COUNTER64:
+         _sntprintf(pszBuffer, dwBufferSize, UINT64_FMT, *((QWORD *)m_pValue));
          break;
       case ASN_IP_ADDR:
          if (dwBufferSize >= 16)
@@ -362,6 +377,11 @@ void SNMP_Variable::SetValueFromString(DWORD dwType, TCHAR *pszValue)
          m_dwValueLength = sizeof(DWORD);
          m_pValue = (BYTE *)realloc(m_pValue, m_dwValueLength);
          *((DWORD *)m_pValue) = _tcstoul(pszValue, NULL, 0);
+         break;
+      case ASN_COUNTER64:
+         m_dwValueLength = sizeof(QWORD);
+         m_pValue = (BYTE *)realloc(m_pValue, m_dwValueLength);
+         *((QWORD *)m_pValue) = _tcstoull(pszValue, NULL, 0);
          break;
       case ASN_IP_ADDR:
          m_dwValueLength = sizeof(DWORD);
