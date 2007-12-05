@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: syslogd.cpp
+** File: syslogd.cpp
 **
 **/
 
@@ -115,6 +115,19 @@ static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, time_t *ptm
               &timestamp.tm_min, &timestamp.tm_sec) != 3)
       return FALSE;  // Invalid time format
    pCurr += 8;
+
+	// Check for Cisco variant - HH:MM:SS.nnn
+	if (*pCurr == '.')
+	{
+		pCurr++;
+		if (isdigit(*pCurr))
+			pCurr++;
+		if (isdigit(*pCurr))
+			pCurr++;
+		if (isdigit(*pCurr))
+			pCurr++;
+	}
+
    if (*pCurr != ' ')
       return FALSE;  // Space should follow timestamp
    pCurr++;
