@@ -1,4 +1,4 @@
-/* $Id: config.cpp,v 1.46 2007-09-19 16:57:41 victor Exp $ */
+/* $Id: config.cpp,v 1.47 2007-12-05 14:17:24 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -25,10 +25,10 @@
 
 
 //
-// Static data
+// Externals
 //
 
-static TCHAR m_szCodePage[256] = ICONV_DEFAULT_CODEPAGE;
+extern TCHAR g_szCodePage[];
 
 
 //
@@ -38,7 +38,7 @@ static TCHAR m_szCodePage[256] = ICONV_DEFAULT_CODEPAGE;
 
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { "CodePage", CT_STRING, 0, 0, 256, 0, m_szCodePage },
+   { "CodePage", CT_STRING, 0, 0, 256, 0, g_szCodePage },
    { "CreateCrashDumps", CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags },
    { "DBDriver", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver },
    { "DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams },
@@ -70,9 +70,6 @@ BOOL NXCORE_EXPORTABLE LoadConfig(void)
       {
          g_dwFlags &= ~AF_USE_EVENT_LOG;
       }
-#ifndef _WIN32
-		SetDefaultCodepage(m_szCodePage);
-#endif
       bSuccess = TRUE;
    }
    return bSuccess;

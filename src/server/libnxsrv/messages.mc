@@ -650,4 +650,10 @@ Language=English
 Internal error: %1
 .
 
+MessageId=
+SymbolicName=MSG_CODEPAGE_ERROR
+Language=English
+Unable to set codepage to %1
+.
+
 ;#endif

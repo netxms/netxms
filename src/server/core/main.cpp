@@ -83,9 +83,10 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg);
 // Global variables
 //
 
-char NXCORE_EXPORTABLE g_szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
-char NXCORE_EXPORTABLE g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
-char NXCORE_EXPORTABLE g_szDumpDir[MAX_PATH] = DEFAULT_DUMP_DIR;
+TCHAR NXCORE_EXPORTABLE g_szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
+TCHAR NXCORE_EXPORTABLE g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
+TCHAR NXCORE_EXPORTABLE g_szDumpDir[MAX_PATH] = DEFAULT_DUMP_DIR;
+TCHAR g_szCodePage[256] = ICONV_DEFAULT_CODEPAGE;
 #ifndef _WIN32
 char NXCORE_EXPORTABLE g_szPIDFile[MAX_PATH] = "/var/run/netxmsd.pid";
 #endif
@@ -377,6 +378,18 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
 	g_tServerStartTime = time(NULL);
 	srand((unsigned int)g_tServerStartTime);
 	InitLog(g_dwFlags & AF_USE_EVENT_LOG, g_szLogFile, g_dwFlags & AF_STANDALONE);
+
+	// Set code page
+#ifndef _WIN32
+	if (SetDefaultCodepage(g_szCodePage))
+	{
+		DbgPrintf(AF_DEBUG_MISC, "Code page set to %s", g_szCodePage);
+	}
+	else
+	{
+		WriteLog(MSG_CODEPAGE_ERROR, EVENTLOG_WARNING_TYPE, "s", g_szCodePage);
+	}
+#endif
 
 #ifdef _WIN32
 	WSADATA wsaData;

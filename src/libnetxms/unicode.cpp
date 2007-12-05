@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.24 2007-07-25 12:03:05 victor Exp $ */
+/* $Id: unicode.cpp,v 1.25 2007-12-05 14:17:24 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -64,10 +64,28 @@ static char m_cpDefault[MAX_CODEPAGE_LEN] = ICONV_DEFAULT_CODEPAGE;
 // Set application's default codepage
 //
 
-void LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp)
+BOOL LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp)
 {
-	strncpy(m_cpDefault, cp, MAX_CODEPAGE_LEN);
-	m_cpDefault[MAX_CODEPAGE_LEN - 1] = 0;
+	BOOL rc;
+	iconv_t cd;
+
+#if HAVE_ICONV && !defined(__DISABLE_ICONV)
+	cd = iconv_open(cp, "UTF-8");
+	if (cd != (iconv_t)(-1))
+	{
+		iconv_close(cd);
+#endif		
+		strncpy(m_cpDefault, cp, MAX_CODEPAGE_LEN);
+		m_cpDefault[MAX_CODEPAGE_LEN - 1] = 0;
+		rc = TRUE;
+#if HAVE_ICONV && !defined(__DISABLE_ICONV)
+	}
+	else
+	{
+		rc = FALSE;
+	}
+#endif
+	return rc;
 }
 
 

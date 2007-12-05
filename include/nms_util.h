@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.112 2007-09-21 10:31:05 victor Exp $ */
+/* $Id: nms_util.h,v 1.113 2007-12-05 14:17:23 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -482,7 +482,7 @@ extern "C"
    DWORD LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr);
 
 #ifndef _WIN32
-	void LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp);
+	BOOL LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp);
    int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr, 
                                                 int cchWideChar, char *pByteStr, int cchByteChar, 
                                                 char *pDefaultChar, BOOL *pbUsedDefChar);
@@ -551,6 +551,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.112  2007/09/21 10:31:05  victor
+Fixed issue 185 (creting object with russion characters in name)
+
 Revision 1.111  2007/09/20 13:03:59  victor
 - Most of GCC 4.2 warnings cleaned up
 - Other minor fixes
