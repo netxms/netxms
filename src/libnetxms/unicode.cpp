@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.25 2007-12-05 14:17:24 victor Exp $ */
+/* $Id: unicode.cpp,v 1.26 2007-12-05 15:29:58 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -43,6 +43,13 @@ static char m_cpDefault[MAX_CODEPAGE_LEN] = ICONV_DEFAULT_CODEPAGE;
 //
 
 #ifndef __DISABLE_ICONV
+
+// configure first test for libiconv, then for iconv
+// if libiconv was found, HAVE_ICONV will not be set correctly
+#if HAVE_LIBICONV
+#undef HAVE_ICONV
+#define HAVE_ICONV 1
+#endif
 
 #if HAVE_ICONV_UCS_2_INTERNAL
 #define UCS2_CODEPAGE_NAME	"UCS-2-INTERNAL"
