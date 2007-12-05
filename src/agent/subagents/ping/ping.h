@@ -46,6 +46,7 @@ struct PING_TARGET
    DWORD dwPacketSize;
    DWORD dwAvgRTT;
    DWORD dwLastRTT;
+	DWORD dwPacketLoss;
    DWORD pdwHistory[MAX_POLLS_PER_MINUTE];
    int iBufPos;
    THREAD hThread;

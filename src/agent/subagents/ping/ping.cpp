@@ -46,7 +46,7 @@ static DWORD m_dwPollsPerMinute = 4;
 static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 {
 	QWORD qwStartTime;
-	DWORD i, dwSum, dwCount, dwInterval, dwElapsedTime;
+	DWORD i, dwSum, dwLost, dwCount, dwInterval, dwElapsedTime;
 	BOOL bUnreachable;
 
 	while(!m_bShutdown)
@@ -64,23 +64,22 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 		((PING_TARGET *)pArg)->pdwHistory[((PING_TARGET *)pArg)->iBufPos++] = ((PING_TARGET *)pArg)->dwLastRTT;
 		if (((PING_TARGET *)pArg)->iBufPos == (int)m_dwPollsPerMinute)
 			((PING_TARGET *)pArg)->iBufPos = 0;
-		if (bUnreachable)
-		{
-			((PING_TARGET *)pArg)->dwAvgRTT = 10000;
-		}
-		else
-		{
-			for(i = 0, dwSum = 0, dwCount = 0; i < m_dwPollsPerMinute; i++)
-			{
-				if (((PING_TARGET *)pArg)->pdwHistory[i] < 10000)
-				{
-					dwSum += ((PING_TARGET *)pArg)->pdwHistory[i];
-					dwCount++;
-				}
-			}
-			((PING_TARGET *)pArg)->dwAvgRTT = dwSum / dwCount;
-		}
 
+		for(i = 0, dwSum = 0, dwLost = 0, dwCount = 0; i < m_dwPollsPerMinute; i++)
+		{
+			if (((PING_TARGET *)pArg)->pdwHistory[i] < 10000)
+			{
+				dwSum += ((PING_TARGET *)pArg)->pdwHistory[i];
+				dwCount++;
+			}
+			else
+			{
+				dwLost++;
+			}
+		}
+		((PING_TARGET *)pArg)->dwAvgRTT = bUnreachable ? 10000 : (dwSum / dwCount);
+		((PING_TARGET *)pArg)->dwPacketLoss = dwLost * 100 / m_dwPollsPerMinute;
+		
 		dwElapsedTime = (DWORD)(GetCurrentTimeMs() - qwStartTime);
 
 		dwInterval = 60000 / m_dwPollsPerMinute;
@@ -166,10 +165,20 @@ static LONG H_PollResult(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 	if (i == m_dwNumTargets)
 		return SYSINFO_RC_UNSUPPORTED;   // No such target
 
-	if (*pArg == _T('A'))
-		ret_uint(pValue, m_pTargetList[i].dwAvgRTT);
-	else
-		ret_uint(pValue, m_pTargetList[i].dwLastRTT);
+	switch(*pArg)
+	{
+		case _T('A'):
+			ret_uint(pValue, m_pTargetList[i].dwAvgRTT);
+			break;
+		case _T('L'):
+			ret_uint(pValue, m_pTargetList[i].dwLastRTT);
+			break;
+		case _T('P'):
+			ret_uint(pValue, m_pTargetList[i].dwPacketLoss);
+			break;
+		default:
+			return SYSINFO_RC_UNSUPPORTED;
+	}
 
 	return SYSINFO_RC_SUCCESS;
 }
@@ -186,8 +195,8 @@ static LONG H_TargetList(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValu
 
 	for(i = 0; i < m_dwNumTargets; i++)
 	{
-		_stprintf(szBuffer, _T("%s %u %u %u %s"), IpToStr(ntohl(m_pTargetList[i].dwIpAddr), szIpAddr),
-				m_pTargetList[i].dwLastRTT, m_pTargetList[i].dwAvgRTT, 
+		_stprintf(szBuffer, _T("%s %u %u %u %u %s"), IpToStr(ntohl(m_pTargetList[i].dwIpAddr), szIpAddr),
+				m_pTargetList[i].dwLastRTT, m_pTargetList[i].dwAvgRTT, m_pTargetList[i].dwPacketLoss, 
 				m_pTargetList[i].dwPacketSize, m_pTargetList[i].szName);
 		NxAddResultString(pValue, szBuffer);
 	}
@@ -221,8 +230,8 @@ static void SubagentShutdown(void)
 
 //
 // Add target from configuration file parameter
-// Parameter value should be <ip_address>:<name>
-// Name part is optional and can be missing
+// Parameter value should be <ip_address>:<name>:<packet_size>
+// Name and size parts are optional and can be missing
 //
 
 static BOOL AddTargetFromConfig(TCHAR *pszCfg)
@@ -346,6 +355,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("Icmp.AvgPingTime(*)"), H_PollResult, _T("A"), DCI_DT_UINT, _T("Average response time of ICMP ping to {instance} for last minute") },
 	{ _T("Icmp.LastPingTime(*)"), H_PollResult, _T("L"), DCI_DT_UINT, _T("Response time of last ICMP ping to {instance}") },
+	{ _T("Icmp.PacketLoss(*)"), H_PollResult, _T("P"), DCI_DT_UINT, _T("Packet loss for ICMP ping to {instance}") },
 	{ _T("Icmp.Ping(*)"), H_IcmpPing, NULL, DCI_DT_UINT, _T("ICMP ping response time for {instance}") }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
