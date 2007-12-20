@@ -163,6 +163,7 @@ doc/manuals/client_library.doc -text
 doc/manuals/netxms_install_guide.doc -text
 doc/manuals/netxms_solution_guide.doc -text
 doc/manuals/netxms_user_manual.doc -text
+doc/manuals/nxcp_reference.odt -text svneol=unset#unset
 doc/misc/Makefile.am -text
 doc/misc/ping_subagent.txt -text
 doc/misc/upgrade.txt -text
