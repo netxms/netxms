@@ -386,6 +386,10 @@ SOURCE=.\session.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\situation.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\sms.cpp
 # End Source File
 # Begin Source File
@@ -543,6 +547,10 @@ SOURCE=.\nxcore.h
 # Begin Source File
 
 SOURCE=..\include\nxcore_maps.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\nxcore_situations.h
 # End Source File
 # Begin Source File
 
