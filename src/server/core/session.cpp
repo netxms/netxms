@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.284 2007-09-21 10:31:05 victor Exp $ */
+/* $Id: session.cpp,v 1.285 2007-12-27 10:16:45 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -7911,7 +7911,7 @@ void ClientSession::SendObjectComments(CSCPMessage *pRequest)
 
 
 //
-// Update object comments to client
+// Update object comments from client
 //
 
 void ClientSession::UpdateObjectComments(CSCPMessage *pRequest)
