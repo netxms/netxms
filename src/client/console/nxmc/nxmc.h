@@ -24,7 +24,18 @@ extern "C" WXDLLIMPEXP_BASE HINSTANCE wxGetInstance();
 // Application flags
 //
 
-#define AF_SAVE_OBJECT_CACHE		0x0001
+#define AF_SAVE_OBJECT_CACHE		0x00000001
+#define AF_HIDE_MAIN_MENU        0x00000002
+#define AF_FULLSCREEN            0x00000004
+#define AF_START_MAXIMIZED       0x00000008
+#define AF_AUTOCONNECT           0x00000010
+#define AF_OVERRIDE_SERVER       0x00000020
+#define AF_OVERRIDE_USERNAME     0x00000040
+#define AF_OVERRIDE_PASSWORD     0x00000080
+#define AF_HIDE_TABS             0x00000100
+#define AF_OPEN_VIEW_ON_START    0x00000200
+#define AF_HIDE_STATUS_BAR       0x00000400
+#define AF_EMPTY_WORKAREA        0x00000800
 
 
 //
@@ -101,6 +112,10 @@ class nxApp : public wxApp
 {
 private:
 	nxMainFrame *m_mainFrame;
+	wxString m_acServer;
+	wxString m_acUsername;
+	wxString m_acPassword;
+	wxString m_autoView;
 
 	bool Connect();
 
@@ -108,6 +123,8 @@ public:
 	nxApp();
 
    virtual bool OnInit();
+	virtual void OnInitCmdLine(wxCmdLineParser& parser);
+	virtual bool OnCmdLineParsed(wxCmdLineParser& parser);
 	virtual int OnExit();
 
 	nxMainFrame *GetMainFrame(void) { return m_mainFrame; }

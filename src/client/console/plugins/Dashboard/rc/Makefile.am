@@ -8,4 +8,13 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = AlarmBrowser Dashboard ObjectBrowser
+resourcedir = $(datadir)/nxmc
+resource_DATA = Dashboard.xrs
+
+EXTRA_DIST = \
+	Dashboard.xrc \
+	Dashboard.xrs \
+	dashboard.xpm
+
+Dashboard.xrs: Dashboard.xrc
+	wxrc Dashboard.xrc -o Dashboard.xrs

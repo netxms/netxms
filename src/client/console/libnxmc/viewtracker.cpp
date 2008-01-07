@@ -93,6 +93,7 @@ void LIBNXMC_EXPORTABLE ActivateView(nxView *view)
 	if (pane.IsOk())
 	{
 		pane.Show();
+		s_mgr->Update();
 		view->SetFocus();
 	}
 	else

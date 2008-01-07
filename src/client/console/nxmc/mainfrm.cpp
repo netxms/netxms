@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.16 2007-08-03 18:58:52 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.17 2008-01-07 09:41:02 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -72,10 +72,15 @@ nxMainFrame::nxMainFrame(const wxPoint &pos, const wxSize &size)
 	InitViewTracker(&m_mgr, m_notebook);
 	NXMCInitAUI(&m_mgr, m_notebook, this);
 
-	m_mgr.AddPane(new nxConsoleLogger(this), wxAuiPaneInfo().Name(_T("conlog")).Caption(_T("Console Log")).Bottom().BestSize(700, 150));
+	if (g_appFlags & AF_HIDE_TABS)
+		m_notebook->SetTabCtrlHeight(0);
+
+	if (!(g_appFlags & AF_EMPTY_WORKAREA))
+		m_mgr.AddPane(new nxConsoleLogger(this), wxAuiPaneInfo().Name(_T("conlog")).Caption(_T("Console Log")).Bottom().BestSize(700, 150));
 
 	SetMenuBar(wxXmlResource::Get()->LoadMenuBar(_T("menubarMain")));
-	CreateStatusBar();
+	if (!(g_appFlags & AF_HIDE_STATUS_BAR))
+		CreateStatusBar();
 
 	m_mgr.Update();
 

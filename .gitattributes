@@ -546,6 +546,17 @@ src/client/console/plugins/AlarmBrowser/rc/Makefile.am -text
 src/client/console/plugins/AlarmBrowser/rc/alarmview.xpm -text
 src/client/console/plugins/AlarmBrowser/resource.h -text
 src/client/console/plugins/AlarmBrowser/view.cpp -text
+src/client/console/plugins/Dashboard/Dashboard.rc -text
+src/client/console/plugins/Dashboard/Makefile.am -text
+src/client/console/plugins/Dashboard/alarm_overview.cpp -text
+src/client/console/plugins/Dashboard/dashboard.cpp -text
+src/client/console/plugins/Dashboard/dashboard.h -text
+src/client/console/plugins/Dashboard/main.cpp -text
+src/client/console/plugins/Dashboard/mcpDashboard.dsp -text
+src/client/console/plugins/Dashboard/rc/Dashboard.xrc -text
+src/client/console/plugins/Dashboard/rc/Makefile.am -text
+src/client/console/plugins/Dashboard/rc/dashboard.xpm -text
+src/client/console/plugins/Dashboard/resource.h -text
 src/client/console/plugins/Makefile.am -text
 src/client/console/plugins/ObjectBrowser/Makefile.am -text
 src/client/console/plugins/ObjectBrowser/ObjectBrowser.rc -text

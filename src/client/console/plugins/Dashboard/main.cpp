@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** Portable management console - Object Browser plugin
-** Copyright (C) 2007 Victor Kirhenshtein
+** Portable management console - Dashboard plugin
+** Copyright (C) 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 **
 **/
 
-#include "object_browser.h"
+#include "dashboard.h"
 
 #ifdef _WIN32
 #include "resource.h"
@@ -45,9 +45,9 @@ extern "C" void NXMC_PLUGIN_EXPORT nxmcCommandHandler(int cmd)
 {
 	nxView *view;
 	
-	if ((view = FindUniqueView(_T("objectbrowser"))) == NULL)
+	if ((view = FindUniqueView(_T("dashboard"))) == NULL)
 	{
-		NXMCCreateView(new nxObjectBrowser, VIEWAREA_MAIN);
+		NXMCCreateView(new nxDashboard, VIEWAREA_MAIN);
 	}
 	else
 	{
@@ -57,12 +57,12 @@ extern "C" void NXMC_PLUGIN_EXPORT nxmcCommandHandler(int cmd)
 
 
 //
-// Object browser creator for creation by class name
+// Dashboard creator for creation by class name
 //
 
-static nxView *CreateObjectBrowser(wxWindow *parent, const TCHAR *context, NXC_OBJECT *object, void *userData)
+static nxView *CreateDashboard(wxWindow *parent, const TCHAR *context, NXC_OBJECT *object, void *userData)
 {
-	return new nxObjectBrowser(parent);
+	return new nxDashboard(parent);
 }
 
 
@@ -70,7 +70,7 @@ static nxView *CreateObjectBrowser(wxWindow *parent, const TCHAR *context, NXC_O
 // Registration function
 //
 
-NXMC_IMPLEMENT_PLUGIN_REGISTRATION(_T("ObjectBrowser"), NETXMS_VERSION_STRING, NXMC_IP_MAIN_MENU)
+NXMC_IMPLEMENT_PLUGIN_REGISTRATION(_T("Dashboard"), NETXMS_VERSION_STRING, NXMC_IP_MAIN_MENU)
 
 
 //
@@ -79,10 +79,10 @@ NXMC_IMPLEMENT_PLUGIN_REGISTRATION(_T("ObjectBrowser"), NETXMS_VERSION_STRING, N
 
 extern "C" bool NXMC_PLUGIN_EXPORT nxmcInitializePlugin(NXMC_PLUGIN_HANDLE handle)
 {
-	if (!NXMCLoadResources(_T("ObjectBrowser.xrs"), NXMC_LIB_INSTANCE_ARG(s_libInstance), wxMAKEINTRESOURCE(IDR_XRS)))
-		wxLogWarning(_T("ObjectBrowser: cannot load resource file"));
-	NXMCAddViewMenuItem(handle, _T("&Object Browser\tF3"), 0);
-	NXMCRegisterViewCreator(_T("ObjectBrowser"), CreateObjectBrowser);
+	if (!NXMCLoadResources(_T("Dashboard.xrs"), NXMC_LIB_INSTANCE_ARG(s_libInstance), wxMAKEINTRESOURCE(IDR_XRS)))
+		wxLogWarning(_T("Dashboard: cannot load resource file"));
+	NXMCAddViewMenuItem(handle, _T("&Dashboard\tF7"), 0);
+	NXMCRegisterViewCreator(_T("Dashboard"), CreateDashboard);
 	return true;
 }
 

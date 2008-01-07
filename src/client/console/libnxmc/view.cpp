@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Portable management console - plugin API library
-** Copyright (C) 2007 Victor Kirhenshtein
+** Copyright (C) 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -101,4 +101,3 @@ nxView LIBNXMC_EXPORTABLE *NXMCCreateViewByClass(const TCHAR *viewClass, wxWindo
 	it = s_viewCreators.find(viewClass);
 	return (it == s_viewCreators.end()) ? NULL : it->second(parent, context, object, userData);
 }
-

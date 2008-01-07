@@ -96,7 +96,7 @@ static bool LoadPlugin(wxString &file)
 					s_pluginList.Add(plugin);
 					s_freeBaseId += NXMC_PLUGIN_ID_LIMIT;
 					status = true;
-					wxLogMessage(_T("Plugin %s successfully loaded form %s"), info.name, file.c_str());
+					wxLogMessage(_T("Plugin %s successfully loaded from %s"), info.name, file.c_str());
 				}
 				else
 				{

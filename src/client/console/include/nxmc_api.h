@@ -30,6 +30,7 @@
 #include <wx/notebook.h>
 #include <wx/imaglist.h>
 #include <wx/aboutdlg.h>
+#include <wx/cmdline.h>
 #endif
 
 

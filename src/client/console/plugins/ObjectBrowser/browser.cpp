@@ -54,8 +54,8 @@ END_EVENT_TABLE()
 // Constructor
 //
 
-nxObjectBrowser::nxObjectBrowser()
-                : nxView(NXMCGetDefaultParent())
+nxObjectBrowser::nxObjectBrowser(wxWindow *parent)
+                : nxView((parent != NULL) ? parent : NXMCGetDefaultParent())
 {
 	SetName(_T("objectbrowser"));
 	SetLabel(_T("Object Browser"));

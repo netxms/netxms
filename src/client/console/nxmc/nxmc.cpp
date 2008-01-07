@@ -102,13 +102,87 @@ bool nxApp::OnInit()
 	NXMCSetMainEventHandler(m_mainFrame);
 	m_mainFrame->UpdateMenuFromPlugins();
 
+	// Hide main menu if requested
+	if (g_appFlags & AF_HIDE_MAIN_MENU)
+		m_mainFrame->SetMenuBar(NULL);
+
 	bool flag;
 	wxConfig::Get()->Read(_T("/MainFrame/IsMaximized"), &flag, true);
-	if (flag)
+	if (flag || (g_appFlags & AF_START_MAXIMIZED))
 		m_mainFrame->Maximize();
+
+	if (g_appFlags & AF_OPEN_VIEW_ON_START)
+	{
+		nxView *view = NXMCCreateViewByClass(m_autoView, NXMCGetDefaultParent(), _T(""), NULL, NULL);
+		if (view != NULL)
+		{
+			NXMCCreateView(view, VIEWAREA_MAIN);
+		}
+		else
+		{
+			wxLogWarning(_T("Unable to create view of class \"%s\" - probably class not registered"), m_autoView.c_str());
+		}
+	}
+
 	m_mainFrame->Show(true);
 
 	return true;
+}
+
+
+//
+// Initialize command line parsing
+//
+
+void nxApp::OnInitCmdLine(wxCmdLineParser& parser)
+{
+	wxApp::OnInitCmdLine(parser);
+	parser.AddSwitch(_T("A"), _T("autoconnect"), _T("Automatically connect to server"));
+	parser.AddSwitch(wxEmptyString, _T("empty"), _T("Start with empty workarea (don't open any predefined views)"));
+	parser.AddSwitch(_T("F"), _T("fullscreen"), _T("Start in fullscreen mode"));
+	parser.AddSwitch(_T("M"), _T("maximized"), _T("Start with maximized main window"));
+	parser.AddSwitch(wxEmptyString, _T("nomenu"), _T("Hide main application menu"));
+	parser.AddSwitch(wxEmptyString, _T("nostatusbar"), _T("Hide status bar"));
+	parser.AddSwitch(wxEmptyString, _T("notabs"), _T("Hide tabs in main working area"));
+	parser.AddOption(_T("o"), _T("open"), _T("Open view of given class at startup"));
+	parser.AddOption(wxEmptyString, _T("password"), _T("Password"));
+	parser.AddOption(wxEmptyString, _T("server"), _T("Server to connect to"));
+	parser.AddOption(wxEmptyString, _T("username"), _T("User name"));
+}
+
+
+//
+// Process command line options
+//
+
+bool nxApp::OnCmdLineParsed(wxCmdLineParser& parser)
+{
+	if (parser.Found(_T("autoconnect")))
+		g_appFlags |= AF_AUTOCONNECT;
+	if (parser.Found(_T("empty")))
+		g_appFlags |= AF_EMPTY_WORKAREA;
+	if (parser.Found(_T("fullscreen")))
+		g_appFlags |= AF_FULLSCREEN;
+	if (parser.Found(_T("maximized")))
+		g_appFlags |= AF_START_MAXIMIZED;
+	if (parser.Found(_T("nomenu")))
+		g_appFlags |= AF_HIDE_MAIN_MENU;
+	if (parser.Found(_T("nostatusbar")))
+		g_appFlags |= AF_HIDE_STATUS_BAR;
+	if (parser.Found(_T("notabs")))
+		g_appFlags |= AF_HIDE_TABS;
+
+	if (parser.Found(_T("open"), &m_autoView))
+		g_appFlags |= AF_OPEN_VIEW_ON_START;
+
+	if (parser.Found(_T("server"), &m_acServer))
+		g_appFlags |= AF_OVERRIDE_SERVER;
+	if (parser.Found(_T("username"), &m_acUsername))
+		g_appFlags |= AF_OVERRIDE_USERNAME;
+	if (parser.Found(_T("password"), &m_acPassword))
+		g_appFlags |= AF_OVERRIDE_PASSWORD;
+
+	return wxApp::OnCmdLineParsed(parser);
 }
 
 
@@ -152,19 +226,28 @@ bool nxApp::Connect()
 	wxConfigBase *cfg;
 
 	cfg = wxConfig::Get();
-	dlg.m_server = cfg->Read(_T("/Connect/Server"), _T("localhost"));
-	dlg.m_login = cfg->Read(_T("/Connect/Login"), _T(""));
+	dlg.m_server = (g_appFlags & AF_OVERRIDE_SERVER) ? m_acServer : cfg->Read(_T("/Connect/Server"), _T("localhost"));
+	dlg.m_login = (g_appFlags & AF_OVERRIDE_USERNAME) ? m_acUsername : cfg->Read(_T("/Connect/Login"), _T(""));
+	if (g_appFlags & AF_OVERRIDE_PASSWORD)
+		dlg.m_password = m_acPassword;
 	cfg->Read(_T("/Connect/Encrypt"), &dlg.m_isEncrypt, false);
 	cfg->Read(_T("/Connect/ClearCache"), &dlg.m_isClearCache, true);
 	cfg->Read(_T("/Connect/DisableCaching"), &dlg.m_isCacheDisabled, true);
 	cfg->Read(_T("/Connect/MatchVersion"), &dlg.m_isMatchVersion, false);
 	do
 	{
-		result = dlg.ShowModal();
-		if (result == wxID_CANCEL)
+		if (g_appFlags & AF_AUTOCONNECT)
 		{
-			//Close(true);
-			break;
+			g_appFlags &= ~AF_AUTOCONNECT;
+		}
+		else
+		{
+			result = dlg.ShowModal();
+			if (result == wxID_CANCEL)
+			{
+				//Close(true);
+				break;
+			}
 		}
 
 		rcc = DoLogin(dlg);

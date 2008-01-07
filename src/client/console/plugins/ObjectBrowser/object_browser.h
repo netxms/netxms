@@ -147,7 +147,7 @@ private:
 	void ClearObjectItemsHash();
 
 public:
-	nxObjectBrowser();
+	nxObjectBrowser(wxWindow *parent = NULL);
 	virtual ~nxObjectBrowser();
 
 	// Event handlers
