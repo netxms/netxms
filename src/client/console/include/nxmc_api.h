@@ -360,6 +360,7 @@ const TCHAR LIBNXMC_EXPORTABLE *NXMCGetAlarmStateName(int state);
 const TCHAR LIBNXMC_EXPORTABLE *NXMCGetClassName(int objClass);
 const TCHAR LIBNXMC_EXPORTABLE *NXMCGetIfTypeName(int type);
 const TCHAR LIBNXMC_EXPORTABLE *NXMCGetNodeTypeName(int type);
+const wxColour& LIBNXMC_EXPORTABLE NXMCGetStatusColor(int status);
 
 void LIBNXMC_EXPORTABLE NXMCInitImageLists();
 wxImageList LIBNXMC_EXPORTABLE *NXMCGetImageList(int list);

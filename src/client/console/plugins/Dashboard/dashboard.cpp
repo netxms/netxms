@@ -52,8 +52,8 @@ nxDashboard::nxDashboard(wxWindow *parent)
 	m_alarmView = NXMCCreateViewByClass(_T("AlarmView"), this, _T("/Dashboard"), NULL, NULL);
 
 	sizer = new wxBoxSizer(wxVERTICAL);
-	sizer->Add(m_alarmOverview, 0, wxEXPAND | wxALL, 10);
-	sizer->Add(m_alarmView, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
+	sizer->Add(m_alarmOverview, 0, wxEXPAND | wxALL, 0);
+	sizer->Add(m_alarmView, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 0);
 
 	SetSizer(sizer);
 

@@ -452,6 +452,7 @@ src/client/Makefile.am -text
 src/client/console/Makefile.am -text
 src/client/console/include/Makefile.am -text
 src/client/console/include/nxmc_api.h -text
+src/client/console/include/wxPieCtrl.h -text
 src/client/console/libnxmc/Makefile.am -text
 src/client/console/libnxmc/alarms.cpp -text
 src/client/console/libnxmc/events.cpp -text
@@ -468,6 +469,7 @@ src/client/console/libnxmc/objseldlg.h -text
 src/client/console/libnxmc/tools.cpp -text
 src/client/console/libnxmc/view.cpp -text
 src/client/console/libnxmc/viewtracker.cpp -text
+src/client/console/libnxmc/wxPieCtrl.cpp -text
 src/client/console/nxmc/Makefile.am -text
 src/client/console/nxmc/busydlg.cpp -text
 src/client/console/nxmc/busydlg.h -text

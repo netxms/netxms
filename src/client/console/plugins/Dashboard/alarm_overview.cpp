@@ -40,6 +40,10 @@ END_EVENT_TABLE()
 nxAlarmOverview::nxAlarmOverview(wxWindow *parent)
                 : nxView(parent)
 {
+	m_pie = new wxPieCtrl(this, -1, wxDefaultPosition, wxSize(150,150));
+	m_pie->SetHeight(15);
+//	m_pie->SetAngle(90);
+
 	NXMCEvtConnect(nxEVT_NXC_ALARM_CHANGE, wxCommandEventHandler(nxAlarmOverview::OnAlarmChange), this);
 }
 
@@ -60,6 +64,7 @@ nxAlarmOverview::~nxAlarmOverview()
 
 void nxAlarmOverview::OnAlarmChange(wxCommandEvent &event)
 {
+	RefreshView();
 }
 
 
@@ -69,4 +74,28 @@ void nxAlarmOverview::OnAlarmChange(wxCommandEvent &event)
 
 void nxAlarmOverview::RefreshView()
 {
+	wxPiePart part; 
+	nxAlarmList *list;
+	nxAlarmList::iterator it;
+	int i, count[5] = { 0, 0, 0, 0, 0 };
+
+	list = NXMCGetAlarmList();
+	for(it = list->begin(); it != list->end(); it++)
+	{
+		count[it->second->nCurrentSeverity]++;
+	}
+	NXMCUnlockAlarmList();
+
+	m_pie->m_Series.Clear();
+	
+	for(i = STATUS_NORMAL; i <= STATUS_CRITICAL; i++)
+	{
+		part.SetLabel(NXMCGetStatusTextSmall(i));
+		part.SetValue(count[i]);
+		part.SetColour(NXMCGetStatusColor(i));
+		m_pie->m_Series.Add(part);
+	}
+	
+	m_pie->Refresh(false);
 }
+

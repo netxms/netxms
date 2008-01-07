@@ -28,6 +28,7 @@
 #include <nms_util.h>
 #include <nxclapi.h>
 #include <nxmc_api.h>
+#include <wxPieCtrl.h>
 
 
 //
@@ -36,6 +37,9 @@
 
 class nxAlarmOverview : public nxView
 {
+private:
+	wxPieCtrl *m_pie;
+	
 public:
 	nxAlarmOverview(wxWindow *parent);
 	virtual ~nxAlarmOverview();

@@ -34,6 +34,8 @@ wxWindow *g_auiDefaultParent = NULL;
 wxFrame *g_appMainFrame = NULL;
 
 
+
+
 //
 // Custom events
 //
@@ -330,6 +332,28 @@ const TCHAR LIBNXMC_EXPORTABLE *NXMCGetNodeTypeName(int type)
 	};
 	
 	return NXMCCodeToText(type, types, _T("Unknown"));
+}
+
+
+//
+// Get status color
+//
+
+const wxColour& LIBNXMC_EXPORTABLE NXMCGetStatusColor(int status)
+{
+	static wxColour statusColorTable[9] =
+	{
+		wxColour(0, 127, 0),      // Normal
+		wxColour(0, 255, 255),    // Warning
+		wxColour(255, 255, 0),    // Minor
+		wxColour(255, 128, 0),    // Major
+		wxColour(255, 0, 0),      // Critical
+		wxColour(61, 12, 187),    // Unknown
+		wxColour(192, 192, 192),  // Unmanaged
+		wxColour(92, 0, 0),       // Disabled
+		wxColour(255, 128, 255)   // Testing
+	};
+	return ((status >= STATUS_NORMAL) && (status <= STATUS_TESTING)) ? statusColorTable[status] : *wxBLACK;
 }
 
 
