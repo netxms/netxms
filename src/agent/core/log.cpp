@@ -1,4 +1,4 @@
-/* $Id: log.cpp,v 1.9 2007-09-20 13:04:00 victor Exp $ */
+/* $Id: log.cpp,v 1.10 2008-01-07 13:51:46 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004,2005,2006 Victor Kirhenshtein
@@ -23,6 +23,9 @@
 
 #include "nxagentd.h"
 #include <stdarg.h>
+#if HAVE_SYSLOG_H
+#include <syslog.h>
+#endif
 
 
 //
@@ -57,6 +60,8 @@ void InitLog(void)
    {
 #ifdef _WIN32
       m_hEventLog = RegisterEventSource(NULL, AGENT_EVENT_SOURCE);
+#else
+      openlog("nxagentd", LOG_PID | ((g_dwFlags & AF_DAEMON) ? 0 : LOG_PERROR), LOG_DAEMON);
 #endif
    }
    else
@@ -92,6 +97,8 @@ void CloseLog(void)
       {
 #ifdef _WIN32
          DeregisterEventSource(m_hEventLog);
+#else
+         closelog();
 #endif
       }
       else
@@ -305,6 +312,27 @@ void WriteLog(DWORD msg, WORD wType, const char *format, ...)
    pMsg = FormatMessageUX(msg, strings);
    if (g_dwFlags & AF_USE_SYSLOG)
    {
+      int level;
+
+      switch(wType)
+      {
+         case EVENTLOG_ERROR_TYPE:
+            level = LOG_ERR;
+            break;
+         case EVENTLOG_WARNING_TYPE:
+            level = LOG_WARNING;
+            break;
+         case EVENTLOG_INFORMATION_TYPE:
+            level = LOG_NOTICE;
+            break;
+         case EVENTLOG_DEBUG_TYPE:
+            level = LOG_DEBUG;
+            break;
+         default:
+            level = LOG_INFO;
+            break;
+      }
+      syslog(level, "%s", pMsg);
    }
    else
    {

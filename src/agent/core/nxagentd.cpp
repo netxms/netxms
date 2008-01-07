@@ -1,4 +1,4 @@
-/* $Id: nxagentd.cpp,v 1.91 2007-09-20 13:04:00 victor Exp $ */
+/* $Id: nxagentd.cpp,v 1.92 2008-01-07 13:51:46 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -842,6 +842,7 @@ void Shutdown(void)
    ThreadJoin(m_thListener);
 
    UnloadAllSubAgents();
+   WriteLog(MSG_AGENT_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
    CloseLog();
 
    // Notify main thread about shutdown

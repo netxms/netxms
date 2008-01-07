@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.280 2008-01-07 10:52:56 victor Exp $
+# $Id: configure.ac,v 1.281 2008-01-07 13:51:46 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -711,7 +711,7 @@ AC_CHECK_HEADERS([sys/int_types.h sys/time.h sys/utsname.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h net/nh.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
 AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h])
-AC_CHECK_HEADERS([sys/sysctl.h vm/vm_param.h])
+AC_CHECK_HEADERS([sys/sysctl.h vm/vm_param.h syslog.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h],,,
 [[#ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>

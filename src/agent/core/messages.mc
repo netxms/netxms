@@ -15,7 +15,7 @@ NetXMS Agent started
 .
 
 MessageId=
-SymbolicName=MSG_AGENT_SHUTDOWN
+SymbolicName=MSG_AGENT_STOPPED
 Language=English
 NetXMS Agent stopped
 .
