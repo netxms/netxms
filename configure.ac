@@ -1,10 +1,10 @@
-# $Id: configure.ac,v 1.279 2007-11-06 12:36:00 victor Exp $
+# $Id: configure.ac,v 1.280 2008-01-07 10:52:56 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
 #
 
-AC_INIT([NetXMS], [0.2.20-dev2], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.20-dev4], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -1243,6 +1243,8 @@ AC_CONFIG_FILES([
 	src/client/console/plugins/Makefile
 	src/client/console/plugins/AlarmBrowser/Makefile
 	src/client/console/plugins/AlarmBrowser/rc/Makefile
+	src/client/console/plugins/Dashboard/Makefile
+	src/client/console/plugins/Dashboard/rc/Makefile
 	src/client/console/plugins/ObjectBrowser/Makefile
 	src/client/console/plugins/ObjectBrowser/rc/Makefile
 	src/console/Makefile
