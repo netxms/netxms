@@ -555,6 +555,7 @@ src/client/console/plugins/Dashboard/dashboard.cpp -text
 src/client/console/plugins/Dashboard/dashboard.h -text
 src/client/console/plugins/Dashboard/main.cpp -text
 src/client/console/plugins/Dashboard/mcpDashboard.dsp -text
+src/client/console/plugins/Dashboard/node_overview.cpp -text
 src/client/console/plugins/Dashboard/rc/Dashboard.xrc -text
 src/client/console/plugins/Dashboard/rc/Makefile.am -text
 src/client/console/plugins/Dashboard/rc/dashboard.xpm -text

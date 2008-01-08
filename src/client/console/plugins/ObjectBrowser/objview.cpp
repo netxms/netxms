@@ -140,3 +140,22 @@ void nxObjectView::SetObject(NXC_OBJECT *object)
 	Thaw();
 }
 
+
+//
+// Object updated
+//
+
+void nxObjectView::ObjectUpdated()
+{
+	size_t i, count;
+	wxWindow *page;
+	
+	RefreshRect(wxRect(0, 0, GetClientSize().x, m_headerOffset), false);
+	for(i = 0; i < m_notebook->GetPageCount(); i++)
+	{
+		page = m_notebook->GetPage(i);
+		if (page->GetId() == OBJECT_PAGE_OVERVIEW)
+			((nxObjectOverview *)page)->SetObject(m_object);	// Set same object again to cause view refresh
+	}
+}
+

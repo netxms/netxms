@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: alarm_overview.cpp
+** File: node_overview.cpp
 **
 **/
 
@@ -28,8 +28,8 @@
 // Event table
 //
 
-BEGIN_EVENT_TABLE(nxAlarmOverview, nxView)
-	EVT_PAINT(nxAlarmOverview::OnPaint)
+BEGIN_EVENT_TABLE(nxNodeOverview, nxView)
+	EVT_PAINT(nxNodeOverview::OnPaint)
 END_EVENT_TABLE()
 
 
@@ -37,12 +37,12 @@ END_EVENT_TABLE()
 // Constructor
 //
 
-nxAlarmOverview::nxAlarmOverview(wxWindow *parent)
-                : nxView(parent)
+nxNodeOverview::nxNodeOverview(wxWindow *parent)
+               : nxView(parent)
 {
-	memset(m_count, 0, sizeof(int) * 5);
+	memset(m_count, 0, sizeof(int) * 7);
 
-	nxHeading *heading = new nxHeading(this, _T("Alarm Distribution"), wxDefaultPosition, wxSize(PIE_CHART_SIZE + 150, 20));
+	nxHeading *heading = new nxHeading(this, _T("Node Status Distribution"), wxDefaultPosition, wxSize(PIE_CHART_SIZE + 150, 20));
 
 	m_pie = new wxPieCtrl(this, -1, wxPoint(0, heading->GetSize().y), wxSize(PIE_CHART_SIZE, PIE_CHART_SIZE));
 	m_pie->SetHeight(15);
@@ -51,7 +51,7 @@ nxAlarmOverview::nxAlarmOverview(wxWindow *parent)
 	SetMinSize(wxSize(PIE_CHART_SIZE + 150, PIE_CHART_SIZE));
 	SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
 
-	NXMCEvtConnect(nxEVT_NXC_ALARM_CHANGE, wxCommandEventHandler(nxAlarmOverview::OnAlarmChange), this);
+	NXMCEvtConnect(nxEVT_NXC_OBJECT_CHANGE, wxCommandEventHandler(nxNodeOverview::OnObjectChange), this);
 }
 
 
@@ -59,19 +59,9 @@ nxAlarmOverview::nxAlarmOverview(wxWindow *parent)
 // Destructor
 //
 
-nxAlarmOverview::~nxAlarmOverview()
+nxNodeOverview::~nxNodeOverview()
 {
-	NXMCEvtDisconnect(nxEVT_NXC_ALARM_CHANGE, wxCommandEventHandler(nxAlarmOverview::OnAlarmChange), this);
-}
-
-
-//
-// Handler for alarm change event
-//
-
-void nxAlarmOverview::OnAlarmChange(wxCommandEvent &event)
-{
-	RefreshView();
+	NXMCEvtDisconnect(nxEVT_NXC_OBJECT_CHANGE, wxCommandEventHandler(nxNodeOverview::OnObjectChange), this);
 }
 
 
@@ -79,24 +69,25 @@ void nxAlarmOverview::OnAlarmChange(wxCommandEvent &event)
 // Refresh view
 //
 
-void nxAlarmOverview::RefreshView()
+void nxNodeOverview::RefreshView()
 {
 	wxPiePart part; 
-	nxAlarmList *list;
-	nxAlarmList::iterator it;
-	int i;
+	DWORD i, numObjects;
+   NXC_OBJECT_INDEX *index;
 
-	list = NXMCGetAlarmList();
-	memset(m_count, 0, sizeof(int) * 5);
-	for(it = list->begin(); it != list->end(); it++)
-	{
-		m_count[it->second->nCurrentSeverity]++;
-	}
-	NXMCUnlockAlarmList();
+	memset(m_count, 0, sizeof(int) * 7);
+   NXCLockObjectIndex(NXMCGetSession());
+   index = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(NXMCGetSession(), &numObjects);
+   for(i = 0; i < numObjects; i++)
+      if ((!index[i].object->bIsDeleted) && (index[i].object->iClass == OBJECT_NODE))
+      {
+      	m_count[index[i].object->iStatus]++;
+      }
+   NXCUnlockObjectIndex(NXMCGetSession());
 
 	m_pie->m_Series.Clear();
 	
-	for(i = STATUS_NORMAL; i <= STATUS_CRITICAL; i++)
+	for(i = STATUS_NORMAL; i <= STATUS_UNMANAGED; i++)
 	{
 		part.SetLabel(NXMCGetStatusTextSmall(i));
 		part.SetValue(m_count[i]);
@@ -113,14 +104,14 @@ void nxAlarmOverview::RefreshView()
 // Paint event handler
 //
 
-void nxAlarmOverview::OnPaint(wxPaintEvent &event)
+void nxNodeOverview::OnPaint(wxPaintEvent &event)
 {
 	wxPaintDC dc(this);
 	wxSize size = GetClientSize();
 	int i, y;
 	TCHAR text[256];
 
-	for(i = STATUS_NORMAL, y = 25; i <= STATUS_CRITICAL; i++, y += 20)
+	for(i = STATUS_NORMAL, y = 25; i <= STATUS_UNMANAGED; i++, y += 20)
 	{
 		wxBrush *brush = new wxBrush(NXMCGetStatusColor(i));
 		dc.SetBrush(*brush);
@@ -132,3 +123,18 @@ void nxAlarmOverview::OnPaint(wxPaintEvent &event)
 		dc.DrawLabel(text, wxRect(PIE_CHART_SIZE + 35, y, size.x, 20), wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL);
 	}
 }
+
+
+//
+// Handler for object change events
+//
+
+void nxNodeOverview::OnObjectChange(wxCommandEvent &event)
+{
+	NXC_OBJECT *object = (NXC_OBJECT *)event.GetClientData();
+	
+	if (object->iClass == OBJECT_NODE)
+		RefreshView();
+	event.Skip();
+}
+

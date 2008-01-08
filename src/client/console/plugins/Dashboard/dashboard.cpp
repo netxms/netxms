@@ -51,11 +51,13 @@ nxDashboard::nxDashboard(wxWindow *parent)
 	RegisterUniqueView(_T("dashboard"), this);
 
 	m_alarmOverview = new nxAlarmOverview(this);
+	m_nodeOverview = new nxNodeOverview(this);
 	m_alarmView = NXMCCreateViewByClass(_T("AlarmView"), this, _T("/Dashboard"), NULL, NULL);
 
 	sizer = new wxBoxSizer(wxVERTICAL);
 	subSizer = new wxBoxSizer(wxHORIZONTAL);
 	subSizer->Add(m_alarmOverview, 0, wxEXPAND | wxALL, 5);
+	subSizer->Add(m_nodeOverview, 0, wxEXPAND | wxALL, 5);
 	sizer->Add(subSizer, 0, wxEXPAND | wxALL, 0);
 
 	sizer->Add(new nxHeading(this, _T("Current Alarms")), 0, wxEXPAND | wxALL, 5);
@@ -96,4 +98,6 @@ void nxDashboard::OnViewRefresh(wxCommandEvent &event)
 {
 	m_alarmView->RefreshView();
 	m_alarmOverview->RefreshView();
+	m_nodeOverview->RefreshView();
 }
+

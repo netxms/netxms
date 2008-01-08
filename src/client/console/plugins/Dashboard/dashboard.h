@@ -32,6 +32,13 @@
 
 
 //
+// Constants
+//
+
+#define PIE_CHART_SIZE		170
+
+
+//
 // Alarm summary view
 //
 
@@ -49,9 +56,33 @@ public:
 
 	// Event handlers
 protected:
-//	void OnSize(wxSizeEvent &event);
 	void OnPaint(wxPaintEvent &event);
 	void OnAlarmChange(wxCommandEvent &event);
+
+	DECLARE_EVENT_TABLE()
+};
+
+
+//
+// Node summary view
+//
+
+class nxNodeOverview : public nxView
+{
+private:
+	wxPieCtrl *m_pie;
+	int m_count[7];
+	
+public:
+	nxNodeOverview(wxWindow *parent);
+	virtual ~nxNodeOverview();
+
+	virtual void RefreshView();
+
+	// Event handlers
+protected:
+	void OnPaint(wxPaintEvent &event);
+	void OnObjectChange(wxCommandEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };
@@ -66,6 +97,7 @@ class nxDashboard : public nxView
 private:
 	nxView *m_alarmView;
 	nxAlarmOverview *m_alarmOverview;
+	nxNodeOverview *m_nodeOverview;
 
 public:
 	nxDashboard(wxWindow *parent = NULL);

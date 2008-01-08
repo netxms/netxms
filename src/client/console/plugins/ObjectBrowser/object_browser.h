@@ -103,6 +103,7 @@ public:
 	nxObjectView(wxWindow *parent);
 
 	void SetObject(NXC_OBJECT *object);
+	void ObjectUpdated();
 
 	// Event handlers
 protected:

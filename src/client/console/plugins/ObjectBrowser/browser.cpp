@@ -379,7 +379,25 @@ restart_check:
             }
          }
       }
+      
+      // Check if changed object is currently selected
+		it = m_objectItemsHash.find(object->dwId);
+		if (it != m_objectItemsHash.end())
+		{
+         list = it->second;
+			count = list->GetCount();
+			for(i = 0; i < count; i++)
+         {
+            if (m_wndTreeCtrl->IsSelected(list->Item(i)))
+            {
+            	m_wndObjectView->ObjectUpdated();
+            	break;
+				}
+         }
+		}
 	}
+	
+	event.Skip();	// Allow other subscribers to receive event
 }
 
 
