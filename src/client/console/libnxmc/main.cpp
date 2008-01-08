@@ -339,7 +339,7 @@ const TCHAR LIBNXMC_EXPORTABLE *NXMCGetNodeTypeName(int type)
 // Get status color
 //
 
-const wxColour& LIBNXMC_EXPORTABLE NXMCGetStatusColor(int status)
+const wxColour LIBNXMC_EXPORTABLE &NXMCGetStatusColor(int status)
 {
 	static wxColour statusColorTable[9] =
 	{

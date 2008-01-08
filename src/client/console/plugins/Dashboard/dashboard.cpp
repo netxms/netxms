@@ -41,7 +41,9 @@ END_EVENT_TABLE()
 nxDashboard::nxDashboard(wxWindow *parent)
             : nxView((parent != NULL) ? parent : NXMCGetDefaultParent())
 {
-	wxBoxSizer *sizer;
+	wxBoxSizer *sizer, *subSizer;
+
+	SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
 
 	SetName(_T("dashboard"));
 	SetLabel(_T("Dashboard"));
@@ -52,8 +54,12 @@ nxDashboard::nxDashboard(wxWindow *parent)
 	m_alarmView = NXMCCreateViewByClass(_T("AlarmView"), this, _T("/Dashboard"), NULL, NULL);
 
 	sizer = new wxBoxSizer(wxVERTICAL);
-	sizer->Add(m_alarmOverview, 0, wxEXPAND | wxALL, 0);
-	sizer->Add(m_alarmView, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 0);
+	subSizer = new wxBoxSizer(wxHORIZONTAL);
+	subSizer->Add(m_alarmOverview, 0, wxEXPAND | wxALL, 5);
+	sizer->Add(subSizer, 0, wxEXPAND | wxALL, 0);
+
+	sizer->Add(new nxHeading(this, _T("Current Alarms")), 0, wxEXPAND | wxALL, 5);
+	sizer->Add(m_alarmView, 1, wxEXPAND | wxALL, 5);
 
 	SetSizer(sizer);
 

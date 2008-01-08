@@ -85,7 +85,7 @@ protected:
 	virtual void RequestCompletionHandler(int rqId, DWORD rcc, const TCHAR *errMsg);
 
 public:
-	nxView(wxWindow *parent);
+	nxView(wxWindow *parent, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
 	virtual ~nxView();
 
 	virtual void SetLabel(const wxString& label);

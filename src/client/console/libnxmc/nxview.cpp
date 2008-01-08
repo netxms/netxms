@@ -71,8 +71,8 @@ END_EVENT_TABLE()
 // Constructor
 //
 
-nxView::nxView(wxWindow *parent)
-       : wxWindow(parent, wxID_ANY,  wxDefaultPosition, wxDefaultSize)
+nxView::nxView(wxWindow *parent, const wxPoint& pos, const wxSize& size)
+       : wxWindow(parent, wxID_ANY, pos, size)
 {
 	m_icon = wxNullIcon;
 	m_timer = new wxTimer(this, RQ_TIMER_ID);

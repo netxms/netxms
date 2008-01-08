@@ -25,11 +25,19 @@
 
 
 //
+// Constants
+//
+
+#define PIE_CHART_SIZE		150
+
+
+//
 // Event table
 //
 
 BEGIN_EVENT_TABLE(nxAlarmOverview, nxView)
 //	EVT_SIZE(nxAlarmView::OnSize)
+EVT_PAINT(nxAlarmOverview::OnPaint)
 END_EVENT_TABLE()
 
 
@@ -40,9 +48,16 @@ END_EVENT_TABLE()
 nxAlarmOverview::nxAlarmOverview(wxWindow *parent)
                 : nxView(parent)
 {
-	m_pie = new wxPieCtrl(this, -1, wxDefaultPosition, wxSize(150,150));
+	memset(m_count, 0, sizeof(int) * 5);
+
+	nxHeading *heading = new nxHeading(this, _T("Alarm Distribution"), wxDefaultPosition, wxSize(PIE_CHART_SIZE + 150, 20));
+
+	m_pie = new wxPieCtrl(this, -1, wxPoint(0, heading->GetSize().y), wxSize(PIE_CHART_SIZE, PIE_CHART_SIZE));
 	m_pie->SetHeight(15);
 //	m_pie->SetAngle(90);
+
+	SetMinSize(wxSize(PIE_CHART_SIZE + 150, PIE_CHART_SIZE));
+	SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
 
 	NXMCEvtConnect(nxEVT_NXC_ALARM_CHANGE, wxCommandEventHandler(nxAlarmOverview::OnAlarmChange), this);
 }
@@ -77,12 +92,13 @@ void nxAlarmOverview::RefreshView()
 	wxPiePart part; 
 	nxAlarmList *list;
 	nxAlarmList::iterator it;
-	int i, count[5] = { 0, 0, 0, 0, 0 };
+	int i;
 
 	list = NXMCGetAlarmList();
+	memset(m_count, 0, sizeof(int) * 5);
 	for(it = list->begin(); it != list->end(); it++)
 	{
-		count[it->second->nCurrentSeverity]++;
+		m_count[it->second->nCurrentSeverity]++;
 	}
 	NXMCUnlockAlarmList();
 
@@ -91,11 +107,36 @@ void nxAlarmOverview::RefreshView()
 	for(i = STATUS_NORMAL; i <= STATUS_CRITICAL; i++)
 	{
 		part.SetLabel(NXMCGetStatusTextSmall(i));
-		part.SetValue(count[i]);
+		part.SetValue(m_count[i]);
 		part.SetColour(NXMCGetStatusColor(i));
 		m_pie->m_Series.Add(part);
 	}
 	
-	m_pie->Refresh(false);
+	Refresh();
+	//m_pie->Refresh(false);
 }
 
+
+//
+// Paint event handler
+//
+
+void nxAlarmOverview::OnPaint(wxPaintEvent &event)
+{
+	wxPaintDC dc(this);
+	wxSize size = GetClientSize();
+	int i;
+	TCHAR text[256];
+
+	for(i = STATUS_NORMAL; i <= STATUS_CRITICAL; i++)
+	{
+		wxBrush *brush = new wxBrush(NXMCGetStatusColor(i));
+		dc.SetBrush(*brush);
+		dc.DrawRectangle(PIE_CHART_SIZE + 10, i * 20, 15, 15);
+		dc.SetBrush(wxNullBrush);
+		delete brush;
+
+		_stprintf(text, _T("%s (%d)"), NXMCGetStatusTextSmall(i), m_count[i]);
+		dc.DrawLabel(text, wxRect(PIE_CHART_SIZE + 35, i * 20, size.x, i * 20 + 15), wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL);
+	}
+}

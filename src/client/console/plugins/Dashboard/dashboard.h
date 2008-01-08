@@ -39,6 +39,7 @@ class nxAlarmOverview : public nxView
 {
 private:
 	wxPieCtrl *m_pie;
+	int m_count[5];
 	
 public:
 	nxAlarmOverview(wxWindow *parent);
@@ -49,6 +50,7 @@ public:
 	// Event handlers
 protected:
 //	void OnSize(wxSizeEvent &event);
+	void OnPaint(wxPaintEvent &event);
 	void OnAlarmChange(wxCommandEvent &event);
 
 	DECLARE_EVENT_TABLE()
