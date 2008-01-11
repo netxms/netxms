@@ -22,6 +22,9 @@
 
 #include "libnxsrv.h"
 #include <stdarg.h>
+#if HAVE_SYSLOG_H
+#include <syslog.h>
+#endif
 
 
 //
@@ -58,13 +61,17 @@ void LIBNXSRV_EXPORTABLE InitLog(BOOL bUseSystemLog, char *pszLogFile, BOOL bPri
    m_bPrintToScreen = bPrintToScreen;
 #ifdef _WIN32
    m_hLibraryHandle = GetModuleHandle(_T("LIBNXSRV.DLL"));
+#endif
    if (m_bUseSystemLog)
    {
+#ifdef _WIN32
       m_hEventLog = RegisterEventSource(NULL, CORE_EVENT_SOURCE);
+#else
+      openlog("netxmsd", LOG_PID | ((g_dwFlags & AF_STANDALONE) ? LOG_PERROR : 0), LOG_DAEMON);
+#endif
    }
    else
    {
-#endif
       char szTimeBuf[32];
       struct tm *loc;
       time_t t;
@@ -84,9 +91,7 @@ void LIBNXSRV_EXPORTABLE InitLog(BOOL bUseSystemLog, char *pszLogFile, BOOL bPri
 		}
 
       m_mutexLogAccess = MutexCreate();
-#ifdef _WIN32
    }
-#endif
 }
 
 
@@ -96,14 +101,16 @@ void LIBNXSRV_EXPORTABLE InitLog(BOOL bUseSystemLog, char *pszLogFile, BOOL bPri
 
 void LIBNXSRV_EXPORTABLE CloseLog(void)
 {
-#ifdef _WIN32
    if (m_bUseSystemLog)
    {
+#ifdef _WIN32
       DeregisterEventSource(m_hEventLog);
+#else
+		closelog();
+#endif
    }
    else
    {
-#endif
       if (m_hLogFile != NULL)
       {
          char szTimeBuf[32];
@@ -118,9 +125,7 @@ void LIBNXSRV_EXPORTABLE CloseLog(void)
       }
       if (m_mutexLogAccess != INVALID_MUTEX_HANDLE)
          MutexDestroy(m_mutexLogAccess);
-#ifdef _WIN32
    }
-#endif
 }
 
 
@@ -326,6 +331,27 @@ void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, const char *format, ...
    pMsg = FormatMessageUX(msg, strings);
    if (m_bUseSystemLog)
    {
+      int level;
+
+      switch(wType)
+      {
+         case EVENTLOG_ERROR_TYPE:
+            level = LOG_ERR;
+            break;
+         case EVENTLOG_WARNING_TYPE:
+            level = LOG_WARNING;
+            break;
+         case EVENTLOG_INFORMATION_TYPE:
+            level = LOG_NOTICE;
+            break;
+         case EVENTLOG_DEBUG_TYPE:
+            level = LOG_DEBUG;
+            break;
+         default:
+            level = LOG_INFO;
+            break;
+      }
+      syslog(level, "%s", pMsg);
    }
    else
    {

@@ -15,5 +15,14 @@
 			<label>&amp;Delete</label>
 			<help></help>
 		</object>
+		<object class="separator" />
+		<object class="wxMenuItem" name="menuAlarmIncreaseFont">
+			<label>&amp;Increase font size</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuAlarmDecreaseFont">
+			<label>D&amp;ecrease font size</label>
+			<help></help>
+		</object>
 	</object>
 </resource>

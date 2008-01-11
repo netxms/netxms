@@ -147,7 +147,7 @@ void nxObjectView::SetObject(NXC_OBJECT *object)
 
 void nxObjectView::ObjectUpdated()
 {
-	size_t i, count;
+	size_t i;
 	wxWindow *page;
 	
 	RefreshRect(wxRect(0, 0, GetClientSize().x, m_headerOffset), false);
