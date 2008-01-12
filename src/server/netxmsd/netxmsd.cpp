@@ -1,4 +1,4 @@
-/* $Id: netxmsd.cpp,v 1.22 2007-03-31 05:20:54 victor Exp $ */
+/* $Id: netxmsd.cpp,v 1.23 2008-01-12 15:24:59 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
@@ -41,50 +41,29 @@ BOOL g_bCheckDB = FALSE;
 //
 
 static char help_text[]="NetXMS Server Version " NETXMS_VERSION_STRING "\n"
-                        "Copyright (c) 2003, 2004, 2005 NetXMS Team\n\n"
-                        "Usage: netxmsd [<options>] <command>\n\n"
+                        "Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 NetXMS Team\n\n"
+                        "Usage: netxmsd [<options>]\n\n"
                         "Valid options are:\n"
-                        "   --check-db          : Run database check on startup\n"
-                        "   --config <file>     : Set non-default configuration file\n"
-                        "                       : Default is " DEFAULT_CONFIG_FILE "\n"
-                        "   --debug-all         : Turn on all possible debug output\n"
-                        "   --debug-actions     : Print debug information for event actions.\n"
-                        "   --debug-cscp        : Print client-server communication protocol debug\n"
-                        "                       : information to console.\n"
-                        "   --debug-dc          : Print data collection debug information to console.\n"
-                        "   --debug-discovery   : Print network discovery debug information to console.\n"
-                        "   --debug-events      : Print events to console.\n"
-                        "   --debug-housekeeper : Print debug information for housekeeping thread.\n"
-                        "   --debug-locks       : Print debug information about component locking.\n"
-                        "   --debug-misc        : Print miscellanious debug information.\n"
-                        "   --debug-objects     : Print object manager debug information.\n"
-                        "   --debug-snmp        : Print SNMP debug information.\n"
-                        "   --dump-sql          : Dump all SQL queries to log.\n"
+                        "   -e          : Run database check on startup\n"
+                        "   -c <file>   : Set non-default configuration file\n"
+                        "               : Default is " DEFAULT_CONFIG_FILE "\n"
+                        "   -d          : Run as daemon/service\n"
+                        "   -D <level>  : Set debug level (valid levels are 0..9)\n"
+                        "   -h          : Display help and exit\n"
 #ifdef _WIN32
-                        "   --login <user>      : Login name for service account.\n"
-                        "   --password <passwd> : Password for service account.\n"
+                        "   -I          : Install Windows service\n"
+                        "   -L <user>   : Login name for service account.\n"
+                        "   -P <passwd> : Password for service account.\n"
 #else
-                        "   --pid-file <file>   : Specify pid file.\n"
+                        "   -p <file>   : Specify pid file.\n"
 #endif
-                        "\n"
-                        "Valid commands are:\n"
-                        "   check-config        : Check configuration file syntax\n"
 #ifdef _WIN32
-                        "   install             : Install Win32 service\n"
-                        "   install-events      : Install Win32 event source\n"
+                        "   -R          : Remove Windows service\n"
+                        "   -s          : Start Windows service\n"
+                        "   -S          : Stop Windows service\n"
 #endif
-                        "   help                : Display help and exit\n"
-#ifdef _WIN32
-                        "   remove              : Remove Win32 service\n"
-                        "   remove-events       : Remove Win32 event source\n"
-#endif
-                        "   standalone          : Run in standalone mode (not as service)\n"
-#ifdef _WIN32
-                        "   start               : Start service\n"
-                        "   stop                : Stop service\n"
-#endif
-                        "   version             : Display version and exit\n"
-                        "\n\n";
+                        "   -v          : Display version and exit\n"
+                        "\n";
 
 
 //
@@ -304,45 +283,62 @@ static BOOL ExecAndWait(TCHAR *pszCommand)
 // Returns TRUE on success and FALSE on failure
 //
 
+#ifdef _WIN32
+#define VALID_OPTIONS   "c:CdD:ehIL:P:RsSv"
+#else
+#define VALID_OPTIONS   "c:CdD:ehp:v"
+#endif
+
 static BOOL ParseCommandLine(int argc, char *argv[])
 {
    int i;
    TCHAR *pszLogin = NULL, *pszPassword = NULL;
+   
+   while((ch = getopt_long(argc, argv, VALID_OPTIONS, longOptions, NULL)) != -1)
+   {
+   	switch(ch)
+   	{
+   		default:
+   			break;
+   	}
+   }
+   
+   
 
    for(i = 1; i < argc; i++)
    {
-      if (!strcmp(argv[i], "help"))    // Display help and exit
+      if (!strcmp(argv[i], "help"))    // Display help and exit -h
       {
          printf(help_text);
          return FALSE;
       }
-      else if (!strcmp(argv[i], "version"))    // Display version and exit
+      else if (!strcmp(argv[i], "version"))    // Display version and exit -v
       {
          printf("NetXMS Server Version " NETXMS_VERSION_STRING " Build of " __DATE__ "\n");
          return FALSE;
       }
-      else if (!strcmp(argv[i], "--config"))  // Config file
+      else if (!strcmp(argv[i], "--config"))  // Config file -c
       {
          i++;
          nx_strncpy(g_szConfigFile, argv[i], MAX_PATH);     // Next word should contain name of the config file
       }
-      else if (!strcmp(argv[i], "--check-db"))
+      else if (!strcmp(argv[i], "--check-db")) -e
       {
          g_bCheckDB = TRUE;
       }
 #ifdef _WIN32
-      else if (!strcmp(argv[i], "--login"))
+      else if (!strcmp(argv[i], "--login")) -L
       {
          i++;
          pszLogin = argv[i];
       }
-      else if (!strcmp(argv[i], "--password"))
+      else if (!strcmp(argv[i], "--password")) -P
       {
          i++;
          pszPassword = argv[i];
       }
 #else
-      else if (!strcmp(argv[i], "--pid-file"))  // PID file
+      else if (!strcmp(argv[i], "--pid-file"))  // PID file -p
       {
          i++;
          nx_strncpy(g_szPIDFile, argv[i], MAX_PATH);     // Next word should contain name of the PID file
@@ -396,7 +392,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
       {
          g_dwFlags |= AF_DEBUG_SQL;
       }
-      else if (!strcmp(argv[i], "check-config"))
+      else if (!strcmp(argv[i], "check-config")) -C
       {
          g_dwFlags |= AF_STANDALONE;
          printf("Checking configuration file (%s):\n\n", g_szConfigFile);
@@ -409,7 +405,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
          return TRUE;
       }
 #ifdef _WIN32
-      else if ((!strcmp(argv[i], "install"))||
+      else if ((!strcmp(argv[i], "install"))|| -I
                (!strcmp(argv[i], "install-events")))
       {
          char exePath[MAX_PATH], dllPath[MAX_PATH], *ptr;
@@ -446,7 +442,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
          }
          return FALSE;
       }
-      else if (!strcmp(argv[i], "remove"))
+      else if (!strcmp(argv[i], "remove")) -R
       {
          RemoveService();
          return FALSE;
@@ -456,12 +452,12 @@ static BOOL ParseCommandLine(int argc, char *argv[])
          RemoveEventSource();
          return FALSE;
       }
-      else if (!strcmp(argv[i], "start"))
+      else if (!strcmp(argv[i], "start")) -s
       {
          StartCoreService();
          return FALSE;
       }
-      else if (!strcmp(argv[i], "stop"))
+      else if (!strcmp(argv[i], "stop")) -S
       {
          StopCoreService();
          return FALSE;
