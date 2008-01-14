@@ -61,7 +61,7 @@ static void CleanDeletedObjects(void)
                // No records with that source ID, so we can purge this object
                sprintf(szQuery, "DELETE FROM deleted_objects WHERE object_id=%d", dwObjectId);
                QueueSQLRequest(szQuery);
-               DbgPrintf(AF_DEBUG_HOUSEKEEPER, "*HK* Deleted object with id %d was purged", dwObjectId);
+               DbgPrintf(4, "*HK* Deleted object with id %d was purged", dwObjectId);
             }
             DBFreeAsyncResult(m_hdb, hAsyncResult);
          }
@@ -192,6 +192,6 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
    {
       DBDisconnect(m_hdb);
    }
-   DbgPrintf(AF_DEBUG_HOUSEKEEPER, "Housekeeper thread terminated");
+   DbgPrintf(1, "Housekeeper thread terminated");
    return THREAD_OK;
 }

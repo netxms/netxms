@@ -242,7 +242,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
    int iResult;
 
    dwOriginAddr = ntohl(pOrigin->sin_addr.s_addr);
-   DbgPrintf(AF_DEBUG_SNMP, "Received SNMP trap %s from %s", 
+   DbgPrintf(4, "Received SNMP trap %s from %s", 
              pdu->GetTrapId()->GetValueAsText(), IpToStr(dwOriginAddr, szBuffer));
 
    // Match IP address to object
@@ -399,7 +399,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    }
 
    pTransport = new SNMP_UDPTransport(hSocket);
-   DbgPrintf(AF_DEBUG_SNMP, _T("SNMP Trap Receiver started"));
+   DbgPrintf(1, _T("SNMP Trap Receiver started"));
 
    // Wait for packets
    while(!ShutdownInProgress())
@@ -420,7 +420,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    }
 
    delete pTransport;
-   DbgPrintf(AF_DEBUG_SNMP, _T("SNMP Trap Receiver terminated"));
+   DbgPrintf(1, _T("SNMP Trap Receiver terminated"));
    return THREAD_OK;
 }
 

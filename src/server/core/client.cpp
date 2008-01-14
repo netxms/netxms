@@ -104,7 +104,7 @@ static THREAD_RESULT THREAD_CALL ClientKeepAliveThread(void *)
       RWLockUnlock(m_rwlockSessionListAccess);
    }
 
-   DbgPrintf(AF_DEBUG_MISC, _T("Client keep-alive thread terminated"));
+   DbgPrintf(1, _T("Client keep-alive thread terminated"));
    return THREAD_OK;
 }
 

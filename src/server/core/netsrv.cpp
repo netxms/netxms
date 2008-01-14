@@ -455,6 +455,6 @@ void NetworkService::OnObjectDelete(DWORD dwObjectId)
       // If deleted object is our poller node, change it to default
       m_dwPollerNode = 0;
       Modify();
-      DbgPrintf(AF_DEBUG_MISC, _T("Service \"%s\": poller node %d deleted"), m_szName, dwObjectId);
+      DbgPrintf(3, _T("Service \"%s\": poller node %d deleted"), m_szName, dwObjectId);
    }
 }

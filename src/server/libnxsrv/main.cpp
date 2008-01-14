@@ -28,7 +28,8 @@
 // Global variables
 //
 
-DWORD LIBNXSRV_EXPORTABLE g_dwFlags = AF_USE_EVENT_LOG;
+DWORD LIBNXSRV_EXPORTABLE g_dwFlags = AF_USE_SYSLOG;
+int LIBNXSRV_EXPORTABLE g_nDebugLevel = 0;
 
 
 //

@@ -1,4 +1,4 @@
-/* $Id: radius.cpp,v 1.5 2007-09-20 13:04:00 victor Exp $ */
+/* $Id: radius.cpp,v 1.6 2008-01-14 16:53:14 victor Exp $ */
 
 /* 
  ** NetXMS - Network Management System
@@ -582,7 +582,7 @@ static int result_recv(DWORD host, WORD udp_port, char *buffer, int length, BYTE
 
 	if(totallen != length)
 	{
-		DbgPrintf(AF_DEBUG_MISC, _T("RADIUS: Received invalid reply length from server (want %d - got %d)"), totallen, length);
+		DbgPrintf(3, _T("RADIUS: Received invalid reply length from server (want %d - got %d)"), totallen, length);
 		return 8;
 	}
 
@@ -595,11 +595,11 @@ static int result_recv(DWORD host, WORD udp_port, char *buffer, int length, BYTE
 
 	if(memcmp(reply_digest, calc_digest, AUTH_VECTOR_LEN) != 0)
 	{
-		DbgPrintf(AF_DEBUG_MISC, _T("RADIUS: Received invalid reply digest from server"));
+		DbgPrintf(3, _T("RADIUS: Received invalid reply digest from server"));
 	}
 
 	IpToStr(ntohl(host), szHostName);
-	DbgPrintf(AF_DEBUG_MISC, _T("RADIUS: Packet from host %s code=%d, id=%d, length=%d"),
+	DbgPrintf(3, _T("RADIUS: Packet from host %s code=%d, id=%d, length=%d"),
              szHostName, auth->code, auth->id, totallen);
 	return (auth->code == PW_AUTHENTICATION_REJECT) ? 1 : 0;
 }
@@ -658,7 +658,7 @@ int RadiusAuth(char *cLogin, char *cPasswd)
 	server_ip = ResolveHostName(szServer);
 	if ((server_ip == INADDR_NONE) || (server_ip == INADDR_ANY))
 	{
-		DbgPrintf(AF_DEBUG_MISC, "RADIUS: cannot resolve server name \"%s\"", szServer);
+		DbgPrintf(3, "RADIUS: cannot resolve server name \"%s\"", szServer);
 		pairfree(req);
 		return 3;
 	}
@@ -667,7 +667,7 @@ int RadiusAuth(char *cLogin, char *cPasswd)
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sockfd < 0)
 	{
-		DbgPrintf(AF_DEBUG_MISC, "RADIUS: Cannot create socket");
+		DbgPrintf(3, "RADIUS: Cannot create socket");
 		pairfree(req);
 		return 5;
 	}
@@ -689,7 +689,7 @@ int RadiusAuth(char *cLogin, char *cPasswd)
 	{
 		if (i > 0)
 		{
-			DbgPrintf(AF_DEBUG_MISC, "RADIUS: Re-sending request...");
+			DbgPrintf(3, "RADIUS: Re-sending request...");
 		}
 		sendto(sockfd, (char *)auth, length, 0, &saremote, sizeof(struct sockaddr_in));
 
@@ -734,6 +734,10 @@ int RadiusAuth(char *cLogin, char *cPasswd)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2007/09/20 13:04:00  victor
+- Most of GCC 4.2 warnings cleaned up
+- Other minor fixes
+
 Revision 1.4  2006/12/14 23:27:33  victor
 fprintf(stderr, ...) changed to DbgPrintf(...)
 

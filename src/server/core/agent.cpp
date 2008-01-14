@@ -44,7 +44,7 @@ void AgentConnectionEx::OnTrap(CSCPMessage *pMsg)
    TCHAR *pszArgList[32], szBuffer[32];
    TCHAR szFormat[] = "ssssssssssssssssssssssssssssssss";
 
-   DbgPrintf(AF_DEBUG_MISC, _T("Received trap message from agent at %s"), IpToStr(GetIpAddr(), szBuffer));
+   DbgPrintf(3, _T("Received trap message from agent at %s"), IpToStr(GetIpAddr(), szBuffer));
    pNode = FindNodeByIP(GetIpAddr());
    if (pNode != NULL)
    {
@@ -54,7 +54,7 @@ void AgentConnectionEx::OnTrap(CSCPMessage *pMsg)
          iNumArgs = 32;
       for(i = 0; i < iNumArgs; i++)
          pszArgList[i] = pMsg->GetVariableStr(VID_EVENT_ARG_BASE + i);
-      DbgPrintf(AF_DEBUG_MISC, _T("Event from trap: %d"), dwEventCode);
+      DbgPrintf(3, _T("Event from trap: %d"), dwEventCode);
 
       // Following call is not very good, but I'm too lazy now
       // to change PostEvent()
@@ -75,6 +75,6 @@ void AgentConnectionEx::OnTrap(CSCPMessage *pMsg)
    }
    else
    {
-      DbgPrintf(AF_DEBUG_MISC, _T("Cannot find node for IP address %s"), IpToStr(GetIpAddr(), szBuffer));
+      DbgPrintf(3, _T("Cannot find node for IP address %s"), IpToStr(GetIpAddr(), szBuffer));
    }
 }

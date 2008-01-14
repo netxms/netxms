@@ -402,7 +402,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    m_pSyslogQueue = new Queue(1000, 100);
    hProcessingThread = ThreadCreateEx(SyslogProcessingThread, 0, NULL);
 
-   DbgPrintf(AF_DEBUG_MISC, _T("Syslog Daemon started"));
+   DbgPrintf(1, _T("Syslog Daemon started"));
 
    // Wait for packets
    while(!ShutdownInProgress())
@@ -439,7 +439,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    ThreadJoin(hProcessingThread);
    delete m_pSyslogQueue;
 
-   DbgPrintf(AF_DEBUG_MISC, _T("Syslog Daemon stopped"));
+   DbgPrintf(1, _T("Syslog Daemon stopped"));
    return THREAD_OK;
 }
 

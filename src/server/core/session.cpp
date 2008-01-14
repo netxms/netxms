@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.285 2007-12-27 10:16:45 victor Exp $ */
+/* $Id: session.cpp,v 1.286 2008-01-14 16:53:14 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -350,17 +350,17 @@ void ClientSession::Run(void)
 // Print debug information
 //
 
-void ClientSession::DebugPrintf(const TCHAR *pszFormat, ...)
+void ClientSession::DebugPrintf(int level, const TCHAR *format, ...)
 {
-   if (g_dwFlags & AF_DEBUG_CSCP)
+   if (level <= g_nDebugLevel)
    {
       va_list args;
-		TCHAR szBuffer[4096];
+		TCHAR buffer[4096];
 
-      va_start(args, pszFormat);
-      _vsntprintf(szBuffer, 4096, pszFormat, args);
+      va_start(args, format);
+      _vsntprintf(buffer, 4096, format, args);
       va_end(args);
-		DbgPrintf(AF_DEBUG_CSCP, _T("[CLSN-%d] %s"), m_dwIndex, szBuffer);
+		DbgPrintf(level, _T("[CLSN-%d] %s"), m_dwIndex, buffer);
    }
 }
 
@@ -397,7 +397,7 @@ void ClientSession::ReadThread(void)
       // Check if message is too large
       if (iErr == 1)
       {
-         DebugPrintf("Received message %s is too large (%d bytes)",
+         DebugPrintf(4, "Received message %s is too large (%d bytes)",
                      NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                      ntohl(pRawMsg->dwSize));
          continue;
@@ -406,14 +406,14 @@ void ClientSession::ReadThread(void)
       // Check for decryption error
       if (iErr == 2)
       {
-         DebugPrintf("Unable to decrypt received message");
+         DebugPrintf(4, "Unable to decrypt received message");
          continue;
       }
 
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(pRawMsg->dwSize) != iErr)
       {
-         DebugPrintf("Actual message size doesn't match wSize value (%d,%d)", iErr, ntohl(pRawMsg->dwSize));
+         DebugPrintf(4, "Actual message size doesn't match wSize value (%d,%d)", iErr, ntohl(pRawMsg->dwSize));
          continue;   // Bad packet, wait for next
       }
 
@@ -425,7 +425,7 @@ void ClientSession::ReadThread(void)
          pRawMsg->dwId = ntohl(pRawMsg->dwId);
          pRawMsg->wCode = ntohs(pRawMsg->wCode);
          pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
-         DebugPrintf("Received raw message %s", NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
+         DebugPrintf(7, "Received raw message %s", NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
 
          if ((pRawMsg->wCode == CMD_FILE_DATA) || 
              (pRawMsg->wCode == CMD_ABORT_FILE_TRANSFER))
@@ -478,7 +478,7 @@ void ClientSession::ReadThread(void)
             }
             else
             {
-               DebugPrintf("Out of state message (ID: %d)", pRawMsg->dwId);
+               DebugPrintf(4, "Out of state message (ID: %d)", pRawMsg->dwId);
             }
          }
       }
@@ -495,7 +495,7 @@ void ClientSession::ReadThread(void)
          }
          else if (pMsg->GetCode() == CMD_KEEPALIVE)
 			{
-		      DebugPrintf("Received message %s", NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
+		      DebugPrintf(7, "Received message %s", NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
 				RespondToKeepalive(pMsg->GetId());
 				delete pMsg;
 			}
@@ -548,7 +548,7 @@ void ClientSession::ReadThread(void)
    // Waiting while reference count becomes 0
    if (m_dwRefCount > 0)
    {
-      DebugPrintf("Waiting for pending requests...");
+      DebugPrintf(3, "Waiting for pending requests...");
       do
       {
          ThreadSleep(1);
@@ -556,7 +556,7 @@ void ClientSession::ReadThread(void)
    }
 
 	WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szWorkstation, 0, _T("User logged out (client: %s)"), m_szClientInfo);
-   DebugPrintf("Session closed");
+   DebugPrintf(3, "Session closed");
 }
 
 
@@ -577,7 +577,7 @@ void ClientSession::WriteThread(void)
       if (pRawMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-      DebugPrintf("Sending message %s", NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer));
+      DebugPrintf(7, "Sending message %s", NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer));
       if (m_pCtx != NULL)
       {
          pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
@@ -709,7 +709,7 @@ void ClientSession::ProcessingThread(void)
          break;
 
       m_wCurrentCmd = pMsg->GetCode();
-      DebugPrintf("Received message %s", NXCPMessageCodeName(m_wCurrentCmd, szBuffer));
+      DebugPrintf(7, "Received message %s", NXCPMessageCodeName(m_wCurrentCmd, szBuffer));
       if (!(m_dwFlags & CSF_AUTHENTICATED) && 
           (m_wCurrentCmd != CMD_LOGIN) && 
           (m_wCurrentCmd != CMD_GET_SERVER_INFO) &&
@@ -1327,7 +1327,7 @@ void ClientSession::Login(CSCPMessage *pRequest)
          msg.SetVariable(VID_USER_ID, m_dwUserId);
          msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)bChangePasswd);
          msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_dwFlags & AF_DB_CONNECTION_LOST) ? FALSE : TRUE));
-         DebugPrintf("User %s authenticated", m_szUserName);
+         DebugPrintf(3, "User %s authenticated", m_szUserName);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szWorkstation, 0,
 			              _T("User \"%s\" logged in (client info: %s)"), szLogin, m_szClientInfo);
       }
@@ -3194,7 +3194,7 @@ void ClientSession::SaveEPP(CSCPMessage *pRequest)
             m_ppEPPRuleList = (EPRule **)malloc(sizeof(EPRule *) * m_dwNumRecordsToUpload);
             memset(m_ppEPPRuleList, 0, sizeof(EPRule *) * m_dwNumRecordsToUpload);
          }
-         DebugPrintf("Accepted EPP upload request for %d rules", m_dwNumRecordsToUpload);
+         DebugPrintf(5, "Accepted EPP upload request for %d rules", m_dwNumRecordsToUpload);
       }
       else
       {
@@ -3238,7 +3238,7 @@ void ClientSession::ProcessEPPRecord(CSCPMessage *pRequest)
             CSCPMessage msg;
 
             // All records received, replace event policy...
-            DebugPrintf("Replacing event processing policy with a new one at %p (%d rules)",
+            DebugPrintf(5, "Replacing event processing policy with a new one at %p (%d rules)",
                         m_ppEPPRuleList, m_dwNumRecordsToUpload);
             g_pEventPolicy->ReplacePolicy(m_dwNumRecordsToUpload, m_ppEPPRuleList);
             g_pEventPolicy->SaveToDB();
@@ -7795,7 +7795,7 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
    wMajor = pRequest->GetVariableShort(VID_VERSION_MAJOR);
    wMinor = pRequest->GetVariableShort(VID_VERSION_MINOR);
    wRelease = pRequest->GetVariableShort(VID_VERSION_RELEASE);
-   DbgPrintf(AF_DEBUG_MISC, "Finding config for agent at %s: platform=\"%s\", version=\"%d.%d.%d\"",
+   DbgPrintf(3, "Finding config for agent at %s: platform=\"%s\", version=\"%d.%d.%d\"",
              IpToStr(m_dwHostAddr, szBuffer), szPlatform, (int)wMajor, (int)wMinor, (int)wRelease);
 
    hResult = DBSelect(g_hCoreDB, "SELECT config_id,config_file,config_filter FROM agent_configs ORDER BY sequence_number");
@@ -7827,13 +7827,13 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
             ppArgList[4] = new NXSL_Value((LONG)wRelease);
 
             // Run script
-            DbgPrintf(AF_DEBUG_MISC, "Running configuration matching script %d", dwCfgId);
+            DbgPrintf(3, "Running configuration matching script %d", dwCfgId);
             if (pScript->Run(NULL, 5, ppArgList) == 0)
             {
                pValue = pScript->GetResult();
                if (pValue->GetValueAsInt32() != 0)
                {
-                  DbgPrintf(AF_DEBUG_MISC, "Configuration script %d matched for agent %s, sending config",
+                  DbgPrintf(3, "Configuration script %d matched for agent %s, sending config",
                             dwCfgId, IpToStr(m_dwHostAddr, szBuffer));
                   msg.SetVariable(VID_RCC, (WORD)0);
                   pszText = DBGetField(hResult, i, 1, NULL, 0);
@@ -7844,7 +7844,7 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
                }
                else
                {
-                  DbgPrintf(AF_DEBUG_MISC, "Configuration script %d not matched for agent %s",
+                  DbgPrintf(3, "Configuration script %d not matched for agent %s",
                             dwCfgId, IpToStr(m_dwHostAddr, szBuffer));
                }
             }
@@ -8740,7 +8740,7 @@ void ClientSession::DefineGraph(CSCPMessage *pRequest)
 	// Create/update graph
 	if (bSuccess)
 	{
-		DebugPrintf(_T("%s graph %d"), bNew ? _T("Creating") : _T("Updating"), dwGraphId);
+		DebugPrintf(5, _T("%s graph %d"), bNew ? _T("Creating") : _T("Updating"), dwGraphId);
 		bSuccess = FALSE;
 		if (DBBegin(g_hCoreDB))
 		{

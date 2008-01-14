@@ -78,12 +78,12 @@ BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pChallenge, BYT
 	BYTE hash[SHA1_DIGEST_SIZE];
 	BOOL bValid = FALSE;
 
-	DbgPrintf(AF_DEBUG_MISC, "Validating certificate \"%s\" for user %s", CHECK_NULL(pCert->name), pszLogin);
+	DbgPrintf(3, "Validating certificate \"%s\" for user %s", CHECK_NULL(pCert->name), pszLogin);
 	MutexLock(m_mutexStoreAccess, INFINITE);
 
 	if (m_pTrustedCertStore == NULL)
 	{
-		DbgPrintf(AF_DEBUG_MISC, "Cannot validate user certificate because certificate store is not initialized");
+		DbgPrintf(3, "Cannot validate user certificate because certificate store is not initialized");
 		MutexUnlock(m_mutexStoreAccess);
 		return FALSE;
 	}
@@ -99,7 +99,7 @@ BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pChallenge, BYT
 				bValid = RSA_verify(NID_sha1, hash, SHA1_DIGEST_SIZE, pSignature, dwSigLen, pKey->pkey.rsa);
 				break;
 			default:
-				DbgPrintf(AF_DEBUG_MISC, "Unknown key type %d in certificate \"%s\" for user %s", pKey->type, CHECK_NULL(pCert->name), pszLogin);
+				DbgPrintf(3, "Unknown key type %d in certificate \"%s\" for user %s", pKey->type, CHECK_NULL(pCert->name), pszLogin);
 				break;
 		}
 	}
@@ -115,14 +115,14 @@ BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pChallenge, BYT
 			X509_STORE_CTX_init(pStore, m_pTrustedCertStore, pCert, NULL);
 			bValid = X509_verify_cert(pStore);
 			X509_STORE_CTX_free(pStore);
-			DbgPrintf(AF_DEBUG_MISC, "Certificate \"%s\" for user %s - validation %s",
+			DbgPrintf(3, "Certificate \"%s\" for user %s - validation %s",
 			          CHECK_NULL(pCert->name), pszLogin, bValid ? "successful" : "failed");
 		}
 		else
 		{
 			char szBuffer[256];
 
-			DbgPrintf(AF_DEBUG_MISC, "X509_STORE_CTX_new() failed: %s", ERR_error_string(ERR_get_error(), szBuffer));
+			DbgPrintf(3, "X509_STORE_CTX_new() failed: %s", ERR_error_string(ERR_get_error(), szBuffer));
 			bValid = FALSE;
 		}
 	}
@@ -136,7 +136,7 @@ BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pChallenge, BYT
 				bValid = !_tcsicmp(CHECK_NULL(pCert->name), CHECK_NULL_EX(pszMappingData));
 				break;
 			default:
-				DbgPrintf(AF_DEBUG_MISC, "Invalid certificate mapping method %d for user %s", nMappingMethod, pszLogin);
+				DbgPrintf(3, "Invalid certificate mapping method %d for user %s", nMappingMethod, pszLogin);
 				bValid = FALSE;
 				break;
 		}

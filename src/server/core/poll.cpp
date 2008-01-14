@@ -77,7 +77,7 @@ void CheckForMgmtNode(void)
             if (!(pNode->Flags() & NF_IS_LOCAL_MGMT))
             {
                pNode->SetLocalMgmtFlag();
-               DbgPrintf(AF_DEBUG_OBJECTS, _T("Local management node %s [%d] was not have NF_IS_LOCAL_MGMT flag set"), pNode->Name(), pNode->Id());
+               DbgPrintf(1, _T("Local management node %s [%d] was not have NF_IS_LOCAL_MGMT flag set"), pNode->Name(), pNode->Id());
             }
             g_dwMgmtNode = pNode->Id();   // Set local management node ID
             break;
@@ -309,7 +309,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
                pNode->Name(), pNode->Id());
       SetPollerState((long)arg, szBuffer);
 
-      DbgPrintf(AF_DEBUG_DISCOVERY, _T("Starting discovery poll for node %s (%s)"),
+      DbgPrintf(4, _T("Starting discovery poll for node %s (%s)"),
                 pNode->Name(), IpToStr(pNode->IpAddr(), szIpAddr));
 
       // Retrieve and analize node's ARP cache
@@ -338,7 +338,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
          DestroyArpCache(pArpCache);
       }
 
-      DbgPrintf(AF_DEBUG_DISCOVERY, _T("Finished discovery poll for node %s (%s)"),
+      DbgPrintf(4, _T("Finished discovery poll for node %s (%s)"),
                 pNode->Name(), IpToStr(pNode->IpAddr(), szIpAddr));
       pNode->SetDiscoveryPollTimeStamp();
       pNode->DecRefCount();
@@ -401,15 +401,14 @@ static void CheckRange(int nType, DWORD dwAddr1, DWORD dwAddr2)
       dwFrom = dwAddr1;
       dwTo = dwAddr2;
    }
-   DbgPrintf(AF_DEBUG_DISCOVERY, _T("Starting active discovery check on range %s - %s"),
+   DbgPrintf(4, _T("Starting active discovery check on range %s - %s"),
              IpToStr(dwFrom, szIpAddr1), IpToStr(dwTo, szIpAddr2));
 
    for(dwAddr = dwFrom; dwAddr <= dwTo; dwAddr++)
    {
       if (IcmpPing(htonl(dwAddr), 3, 2000, NULL, g_dwPingSize) == ICMP_SUCCESS)
       {
-         DbgPrintf(AF_DEBUG_DISCOVERY,
-                   _T("Active discovery - node %s responds to ICMP ping"),
+         DbgPrintf(5, _T("Active discovery - node %s responds to ICMP ping"),
                    IpToStr(dwAddr, szIpAddr1));
          if (FindNodeByIP(dwAddr) == NULL)
          {
@@ -442,7 +441,7 @@ static void CheckRange(int nType, DWORD dwAddr1, DWORD dwAddr2)
       }
    }
 
-   DbgPrintf(AF_DEBUG_DISCOVERY, _T("Finished active discovery check on range %s - %s"),
+   DbgPrintf(4, _T("Finished active discovery check on range %s - %s"),
              IpToStr(dwFrom, szIpAddr1), IpToStr(dwTo, szIpAddr2));
 }
 
@@ -513,7 +512,7 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    iNumDiscoveryPollers = ConfigReadInt("NumberOfDiscoveryPollers", 1);
    m_iNumPollers = iNumStatusPollers + iNumConfigPollers + 
                    iNumDiscoveryPollers + iNumRoutePollers + iNumConditionPollers + 1;
-   DbgPrintf(AF_DEBUG_MISC, "PollManager: %d pollers to start", m_iNumPollers);
+   DbgPrintf(2, "PollManager: %d pollers to start", m_iNumPollers);
 
    // Prepare static data
    m_pPollerState = (__poller_state *)malloc(sizeof(__poller_state) * m_iNumPollers);
@@ -648,7 +647,7 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    for(i = 0; i < iNumConditionPollers; i++)
       g_conditionPollerQueue.Put(INVALID_POINTER_VALUE);
 
-   DbgPrintf(AF_DEBUG_MISC, "PollManager: main thread terminated");
+   DbgPrintf(1, "PollManager: main thread terminated");
    return THREAD_OK;
 }
 

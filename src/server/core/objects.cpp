@@ -154,15 +154,15 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
 {
    DWORD i;
 
-   DbgPrintf(AF_DEBUG_DC, _T("Started caching of DCI values"));
+   DbgPrintf(1, _T("Started caching of DCI values"));
    RWLockReadLock(g_rwlockNodeIndex, INFINITE);
    for(i = 0; i < g_dwNodeAddrIndexSize; i++)
    {
       ((Node *)g_pNodeIndexByAddr[i].pObject)->UpdateDCICache();
-      ThreadSleepMs(100);  // Give a chance to other threads to do something with database
+      ThreadSleepMs(50);  // Give a chance to other threads to do something with database
    }
    RWLockUnlock(g_rwlockNodeIndex);
-   DbgPrintf(AF_DEBUG_DC, _T("Finished caching of DCI values"));
+   DbgPrintf(1, _T("Finished caching of DCI values"));
    return THREAD_OK;
 }
 
@@ -202,7 +202,7 @@ void ObjectsInit(void)
    // Create "Template Root" object
    g_pTemplateRoot = new TemplateRoot;
    NetObjInsert(g_pTemplateRoot, FALSE);
-   DbgPrintf(AF_DEBUG_MISC, "Built-in objects created");
+   DbgPrintf(1, "Built-in objects created");
 
    // Start template update applying thread
    ThreadCreate(ApplyTemplateThread, 0, NULL);
@@ -657,7 +657,7 @@ BOOL LoadObjects(void)
    g_bModificationsLocked = TRUE;
 
    // Load container categories
-   DbgPrintf(AF_DEBUG_MISC, "Loading container categories...");
+   DbgPrintf(2, "Loading container categories...");
    hResult = DBSelect(g_hCoreDB, "SELECT category,name,image_id,description FROM container_categories");
    if (hResult != NULL)
    {
@@ -675,7 +675,7 @@ BOOL LoadObjects(void)
    }
 
    // Load built-in object properties
-   DbgPrintf(AF_DEBUG_MISC, "Loading built-in object properties...");
+   DbgPrintf(2, "Loading built-in object properties...");
    g_pEntireNet->LoadFromDB();
    g_pServiceRoot->LoadFromDB();
    g_pTemplateRoot->LoadFromDB();
@@ -685,7 +685,7 @@ BOOL LoadObjects(void)
    {
       Zone *pZone;
 
-      DbgPrintf(AF_DEBUG_MISC, "Loading zones...");
+      DbgPrintf(2, "Loading zones...");
 
       // Load (or create) default zone
       pZone = new Zone;
@@ -720,7 +720,7 @@ BOOL LoadObjects(void)
    // Load conditions
    // We should load conditions before nodes because
    // DCI cache size calculation uses information from condition objects
-   DbgPrintf(AF_DEBUG_MISC, "Loading conditions...");
+   DbgPrintf(2, "Loading conditions...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM conditions");
    if (hResult != NULL)
    {
@@ -745,7 +745,7 @@ BOOL LoadObjects(void)
    }
 
    // Load subnets
-   DbgPrintf(AF_DEBUG_MISC, "Loading subnets...");
+   DbgPrintf(2, "Loading subnets...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM subnets");
    if (hResult != 0)
    {
@@ -785,7 +785,7 @@ BOOL LoadObjects(void)
    }
 
    // Load nodes
-   DbgPrintf(AF_DEBUG_MISC, "Loading nodes...");
+   DbgPrintf(2, "Loading nodes...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM nodes");
    if (hResult != 0)
    {
@@ -813,7 +813,7 @@ BOOL LoadObjects(void)
    }
 
    // Load interfaces
-   DbgPrintf(AF_DEBUG_MISC, "Loading interfaces...");
+   DbgPrintf(2, "Loading interfaces...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM interfaces");
    if (hResult != 0)
    {
@@ -838,7 +838,7 @@ BOOL LoadObjects(void)
    }
 
    // Load network services
-   DbgPrintf(AF_DEBUG_MISC, "Loading network services...");
+   DbgPrintf(2, "Loading network services...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM network_services");
    if (hResult != 0)
    {
@@ -863,7 +863,7 @@ BOOL LoadObjects(void)
    }
 
    // Load VPN connectors
-   DbgPrintf(AF_DEBUG_MISC, "Loading VPN connectors...");
+   DbgPrintf(2, "Loading VPN connectors...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM vpn_connectors");
    if (hResult != NULL)
    {
@@ -888,7 +888,7 @@ BOOL LoadObjects(void)
    }
 
    // Load clusters
-   DbgPrintf(AF_DEBUG_MISC, "Loading clusters...");
+   DbgPrintf(2, "Loading clusters...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM clusters");
    if (hResult != NULL)
    {
@@ -913,7 +913,7 @@ BOOL LoadObjects(void)
    }
 
    // Load templates
-   DbgPrintf(AF_DEBUG_MISC, "Loading templates...");
+   DbgPrintf(2, "Loading templates...");
    hResult = DBSelect(g_hCoreDB, "SELECT id FROM templates");
    if (hResult != NULL)
    {
@@ -936,7 +936,7 @@ BOOL LoadObjects(void)
    }
 
    // Load container objects
-   DbgPrintf(AF_DEBUG_MISC, "Loading containers...");
+   DbgPrintf(2, "Loading containers...");
    sprintf(szQuery, "SELECT id FROM containers WHERE object_class=%d", OBJECT_CONTAINER);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != 0)
@@ -962,7 +962,7 @@ BOOL LoadObjects(void)
    }
 
    // Load template group objects
-   DbgPrintf(AF_DEBUG_MISC, "Loading template groups...");
+   DbgPrintf(2, "Loading template groups...");
    sprintf(szQuery, "SELECT id FROM containers WHERE object_class=%d", OBJECT_TEMPLATEGROUP);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != 0)
@@ -988,7 +988,7 @@ BOOL LoadObjects(void)
    }
 
    // Link childs to container and template group objects
-   DbgPrintf(AF_DEBUG_MISC, "Linking objects...");
+   DbgPrintf(2, "Linking objects...");
    for(i = 0; i < g_dwIdIndexSize; i++)
       if ((g_pIndexById[i].pObject->Type() == OBJECT_CONTAINER) ||
           (g_pIndexById[i].pObject->Type() == OBJECT_TEMPLATEGROUP))
@@ -1014,7 +1014,7 @@ BOOL LoadObjects(void)
    }
 
 	// Apply system templates
-   DbgPrintf(AF_DEBUG_MISC, "Applying system templates...");
+   DbgPrintf(2, "Applying system templates...");
 
 	pTemplate = FindTemplateByName(_T("@System.Agent"));
 	if (pTemplate == NULL)

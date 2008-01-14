@@ -45,7 +45,7 @@ delete_loop_start:;
       if (g_pIndexById[i].pObject->IsDeleted())
          if (g_pIndexById[i].pObject->RefCount() == 0)
          {
-            DbgPrintf(AF_DEBUG_HOUSEKEEPER, "* Syncer * Object %d \"%s\" deleted",
+            DbgPrintf(4, "* Syncer * Object %d \"%s\" deleted",
                       g_pIndexById[i].pObject->Id(), g_pIndexById[i].pObject->Name());
             g_pIndexById[i].pObject->DeleteFromDB();
             NetObjDelete(g_pIndexById[i].pObject);
@@ -53,7 +53,7 @@ delete_loop_start:;
          }
          else
          {
-            DbgPrintf(AF_DEBUG_HOUSEKEEPER, "* Syncer * Unable to delete object with id %d because it is being referenced %d time(s)",
+            DbgPrintf(3, "* Syncer * Unable to delete object with id %d because it is being referenced %d time(s)",
                       g_pIndexById[i].pObject->Id(), g_pIndexById[i].pObject->RefCount());
          }
    RWLockUnlock(g_rwlockIdIndex);
@@ -96,7 +96,7 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
 
    // Read configuration
    iSyncInterval = ConfigReadInt("SyncInterval", 60);
-   DbgPrintf(AF_DEBUG_HOUSEKEEPER, "Syncer thread started, sync_interval = %d", iSyncInterval);
+   DbgPrintf(1, "Syncer thread started, sync_interval = %d", iSyncInterval);
    dwWatchdogId = WatchdogAddThread("Syncer Thread", iSyncInterval * 2 + 10);
 
    // Main syncer loop
@@ -118,6 +118,6 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
       DBDisconnect(hdb);
    }
 
-   DbgPrintf(AF_DEBUG_HOUSEKEEPER, "Syncer thread terminated");
+   DbgPrintf(1, "Syncer thread terminated");
    return THREAD_OK;
 }

@@ -1,4 +1,4 @@
-/* $Id: netxmsd.cpp,v 1.23 2008-01-12 15:24:59 victor Exp $ */
+/* $Id: netxmsd.cpp,v 1.24 2008-01-14 16:53:16 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
@@ -291,185 +291,107 @@ static BOOL ExecAndWait(TCHAR *pszCommand)
 
 static BOOL ParseCommandLine(int argc, char *argv[])
 {
-   int i;
-   TCHAR *pszLogin = NULL, *pszPassword = NULL;
+   int ch;
+   TCHAR *eptr;
+#ifdef _WIN32
+	char login[256] = "", password[256] = "", exePath[MAX_PATH], dllPath[MAX_PATH], *ptr;
+	BOOL useLogin = FALSE;
+#endif
+	static struct option longOptions[] =
+	{
+		{ "check-db", 0, NULL, 'e' },
+		{ "config", 1, NULL, 'c' },
+		{ "daemon", 0, NULL, 'd' },
+		{ "debug", 1, NULL, 'D' },
+		{ "help", 0, NULL, 'h' },
+#ifdef _WIN32
+		{ "install", 0, NULL, 'I' },
+		{ "login", 1, NULL, 'L' },
+		{ "password", 1, NULL, 'P' },
+		{ "remove", 0, NULL, 'R' },
+		{ "start", 0, NULL, 's' },
+		{ "stop", 0, NULL, 'S' },
+#else
+		{ "pid-file", 1, NULL, 'p' },
+#endif
+		{ NULL, 0, 0, 0 }
+	};
    
    while((ch = getopt_long(argc, argv, VALID_OPTIONS, longOptions, NULL)) != -1)
    {
    	switch(ch)
    	{
+			case 'h':
+	         printf(help_text);
+	         return FALSE;
+			case 'v':
+				printf("NetXMS Server Version " NETXMS_VERSION_STRING " Build of " __DATE__ "\n");
+				return FALSE;
+			case 'c':
+				nx_strncpy(g_szConfigFile, optarg, MAX_PATH);
+				break;
+			case 'C':	// Check config
+				g_dwFlags &= ~AF_DAEMON;
+				printf("Checking configuration file (%s):\n\n", g_szConfigFile);
+				LoadConfig();
+				return FALSE;
+			case 'd':
+				g_dwFlags |= AF_DAEMON;
+				break;
+			case 'D':	// Debug level
+				g_nDebugLevel = strtol(optarg, &eptr, 0);
+				if ((*eptr != 0) || (g_nDebugLevel < 0) || (g_nDebugLevel > 9))
+				{
+					printf("Invalid debug level \"%s\" - should be in range 0..9\n", optarg);
+					g_nDebugLevel = 0;
+				}
+				break;
+			case 'e':
+				g_bCheckDB = TRUE;
+				break;
+#ifdef _WIN32
+			case 'L':
+				nx_strncpy(login, optarg, 256);
+				useLogin = TRUE;
+				break;
+			case 'P':
+				nx_strncpy(password, optarg, 256);
+				break;
+			case 'I':	// Install service
+				ptr = strrchr(argv[0], '\\');
+				if (ptr != NULL)
+					ptr++;
+				else
+					ptr = argv[0];
+
+				_fullpath(exePath, ptr, 255);
+
+				if (stricmp(&exePath[strlen(exePath)-4], ".exe"))
+					strcat(exePath, ".exe");
+				strcpy(dllPath, exePath);
+				ptr = strrchr(dllPath, '\\');
+				if (ptr != NULL)  // Shouldn't be NULL
+				{
+					ptr++;
+					strcpy(ptr, "libnxsrv.dll");
+				}
+
+				InstallService(exePath, dllPath, useLogin ? login : NULL, useLogin ? password : NULL);
+				return FALSE;
+			case 'R':	// Remove service
+				RemoveService();
+				return FALSE;
+			case 's':	// Start service
+				StartCoreService();
+				return FALSE;
+			case 'S':	// Stop service
+				StopCoreService();
+				return FALSE;
+#endif
    		default:
    			break;
    	}
    }
-   
-   
-
-   for(i = 1; i < argc; i++)
-   {
-      if (!strcmp(argv[i], "help"))    // Display help and exit -h
-      {
-         printf(help_text);
-         return FALSE;
-      }
-      else if (!strcmp(argv[i], "version"))    // Display version and exit -v
-      {
-         printf("NetXMS Server Version " NETXMS_VERSION_STRING " Build of " __DATE__ "\n");
-         return FALSE;
-      }
-      else if (!strcmp(argv[i], "--config"))  // Config file -c
-      {
-         i++;
-         nx_strncpy(g_szConfigFile, argv[i], MAX_PATH);     // Next word should contain name of the config file
-      }
-      else if (!strcmp(argv[i], "--check-db")) -e
-      {
-         g_bCheckDB = TRUE;
-      }
-#ifdef _WIN32
-      else if (!strcmp(argv[i], "--login")) -L
-      {
-         i++;
-         pszLogin = argv[i];
-      }
-      else if (!strcmp(argv[i], "--password")) -P
-      {
-         i++;
-         pszPassword = argv[i];
-      }
-#else
-      else if (!strcmp(argv[i], "--pid-file"))  // PID file -p
-      {
-         i++;
-         nx_strncpy(g_szPIDFile, argv[i], MAX_PATH);     // Next word should contain name of the PID file
-      }
-#endif
-      else if (!strcmp(argv[i], "--debug-all"))
-      {
-         g_dwFlags |= AF_DEBUG_ALL;
-      }
-      else if (!strcmp(argv[i], "--debug-events"))
-      {
-         g_dwFlags |= AF_DEBUG_EVENTS;
-      }
-      else if (!strcmp(argv[i], "--debug-cscp"))
-      {
-         g_dwFlags |= AF_DEBUG_CSCP;
-      }
-      else if (!strcmp(argv[i], "--debug-discovery"))
-      {
-         g_dwFlags |= AF_DEBUG_DISCOVERY;
-      }
-      else if (!strcmp(argv[i], "--debug-dc"))
-      {
-         g_dwFlags |= AF_DEBUG_DC;
-      }
-      else if (!strcmp(argv[i], "--debug-misc"))
-      {
-         g_dwFlags |= AF_DEBUG_MISC;
-      }
-      else if (!strcmp(argv[i], "--debug-locks"))
-      {
-         g_dwFlags |= AF_DEBUG_LOCKS;
-      }
-      else if (!strcmp(argv[i], "--debug-objects"))
-      {
-         g_dwFlags |= AF_DEBUG_OBJECTS;
-      }
-      else if (!strcmp(argv[i], "--debug-housekeeper"))
-      {
-         g_dwFlags |= AF_DEBUG_HOUSEKEEPER;
-      }
-      else if (!strcmp(argv[i], "--debug-actions"))
-      {
-         g_dwFlags |= AF_DEBUG_ACTIONS;
-      }
-      else if (!strcmp(argv[i], "--debug-snmp"))
-      {
-         g_dwFlags |= AF_DEBUG_SNMP;
-      }
-      else if (!strcmp(argv[i], "--dump-sql"))
-      {
-         g_dwFlags |= AF_DEBUG_SQL;
-      }
-      else if (!strcmp(argv[i], "check-config")) -C
-      {
-         g_dwFlags |= AF_STANDALONE;
-         printf("Checking configuration file (%s):\n\n", g_szConfigFile);
-         LoadConfig();
-         return FALSE;
-      }
-      else if (!strcmp(argv[i], "standalone"))  // Run in standalone mode
-      {
-         g_dwFlags |= AF_STANDALONE;
-         return TRUE;
-      }
-#ifdef _WIN32
-      else if ((!strcmp(argv[i], "install"))|| -I
-               (!strcmp(argv[i], "install-events")))
-      {
-         char exePath[MAX_PATH], dllPath[MAX_PATH], *ptr;
-
-         ptr = strrchr(argv[0], '\\');
-         if (ptr != NULL)
-            ptr++;
-         else
-            ptr = argv[0];
-
-         _fullpath(exePath, ptr, 255);
-
-         if (stricmp(&exePath[strlen(exePath)-4], ".exe"))
-            strcat(exePath, ".exe");
-         strcpy(dllPath, exePath);
-         ptr = strrchr(dllPath, '\\');
-         if (ptr != NULL)  // Shouldn't be NULL
-         {
-            ptr++;
-            strcpy(ptr, "libnxsrv.dll");
-         }
-
-         if (!strcmp(argv[i], "install"))
-         {
-            if ((pszLogin != NULL) && (pszPassword == NULL))
-               pszPassword = _T("");
-            if ((pszLogin == NULL) && (pszPassword != NULL))
-               pszPassword = NULL;
-            InstallService(exePath, dllPath, pszLogin, pszPassword);
-         }
-         else
-         {
-            InstallEventSource(dllPath);
-         }
-         return FALSE;
-      }
-      else if (!strcmp(argv[i], "remove")) -R
-      {
-         RemoveService();
-         return FALSE;
-      }
-      else if (!strcmp(argv[i], "remove-events"))
-      {
-         RemoveEventSource();
-         return FALSE;
-      }
-      else if (!strcmp(argv[i], "start")) -s
-      {
-         StartCoreService();
-         return FALSE;
-      }
-      else if (!strcmp(argv[i], "stop")) -S
-      {
-         StopCoreService();
-         return FALSE;
-      }
-#endif   /* _WIN32 */
-      else
-      {
-         printf("ERROR: Invalid command line argument\n\n");
-         return FALSE;
-      }
-   }
-
    return TRUE;
 }
 

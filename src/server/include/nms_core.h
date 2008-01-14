@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.139 2007-09-20 13:04:01 victor Exp $ */
+/* $Id: nms_core.h,v 1.140 2008-01-14 16:53:16 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -392,7 +392,7 @@ private:
    void SetupEncryption(DWORD dwRqId);
    void RespondToKeepalive(DWORD dwRqId);
    void OnFileUpload(BOOL bSuccess);
-   void DebugPrintf(const TCHAR *pszFormat, ...);
+   void DebugPrintf(int level, const TCHAR *format, ...);
    void SendServerInfo(DWORD dwRqId);
    void Login(CSCPMessage *pRequest);
    void SendAllObjects(CSCPMessage *pRequest);

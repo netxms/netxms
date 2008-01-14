@@ -353,14 +353,14 @@ void NetObj::Delete(BOOL bIndexLocked)
 {
    DWORD i;
 
-   DbgPrintf(AF_DEBUG_OBJECTS, "Deleting object %d [%s]", m_dwId, m_szName);
+   DbgPrintf(4, "Deleting object %d [%s]", m_dwId, m_szName);
 
    PrepareForDeletion();
 
    LockData();
 
    // Remove references to this object from parent objects
-   DbgPrintf(AF_DEBUG_OBJECTS, "NetObj::Delete(): clearing parent list for object %d", m_dwId);
+   DbgPrintf(5, "NetObj::Delete(): clearing parent list for object %d", m_dwId);
    LockParentList(TRUE);
    for(i = 0; i < m_dwParentCount; i++)
    {
@@ -373,7 +373,7 @@ void NetObj::Delete(BOOL bIndexLocked)
    UnlockParentList();
 
    // Delete references to this object from child objects
-   DbgPrintf(AF_DEBUG_OBJECTS, "NetObj::Delete(): clearing child list for object %d", m_dwId);
+   DbgPrintf(5, "NetObj::Delete(): clearing child list for object %d", m_dwId);
    LockChildList(TRUE);
    for(i = 0; i < m_dwChildCount; i++)
    {
@@ -390,11 +390,11 @@ void NetObj::Delete(BOOL bIndexLocked)
    Modify();
    UnlockData();
 
-   DbgPrintf(AF_DEBUG_OBJECTS, "NetObj::Delete(): deleting object %d from indexes", m_dwId);
+   DbgPrintf(5, "NetObj::Delete(): deleting object %d from indexes", m_dwId);
    NetObjDeleteFromIndexes(this);
 
    // Notify all other objects about object deletion
-   DbgPrintf(AF_DEBUG_OBJECTS, "NetObj::Delete(): calling OnObjectDelete(%d)", m_dwId);
+   DbgPrintf(5, "NetObj::Delete(): calling OnObjectDelete(%d)", m_dwId);
    if (!bIndexLocked)
       RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
@@ -405,7 +405,7 @@ void NetObj::Delete(BOOL bIndexLocked)
    if (!bIndexLocked)
       RWLockUnlock(g_rwlockIdIndex);
 
-   DbgPrintf(AF_DEBUG_OBJECTS, "Object %d successfully deleted", m_dwId);
+   DbgPrintf(4, "Object %d successfully deleted", m_dwId);
 }
 
 

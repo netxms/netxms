@@ -1,4 +1,4 @@
-/* $Id: dcitem.cpp,v 1.82 2007-11-06 12:36:03 victor Exp $ */
+/* $Id: dcitem.cpp,v 1.83 2008-01-14 16:53:14 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1100,7 +1100,7 @@ void DCItem::UpdateCacheSize(DWORD dwCondId)
    // Sanity check
    if (m_pNode == NULL)
    {
-      DbgPrintf(AF_DEBUG_DC, _T("DCItem::UpdateCacheSize() called for DCI %d when m_pNode == NULL"), m_dwId);
+      DbgPrintf(3, _T("DCItem::UpdateCacheSize() called for DCI %d when m_pNode == NULL"), m_dwId);
       return;
    }
 

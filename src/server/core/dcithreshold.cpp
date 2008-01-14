@@ -1,4 +1,4 @@
-/* $Id: dcithreshold.cpp,v 1.34 2007-09-26 09:47:30 victor Exp $ */
+/* $Id: dcithreshold.cpp,v 1.35 2008-01-14 16:53:14 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -509,7 +509,7 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
 #endif
          break;
       default:
-         DbgPrintf(AF_DEBUG_DC, "WARNING: Invalid datatype %d in threshold object %d", m_iDataType, m_dwId);
+         DbgPrintf(3, "WARNING: Invalid datatype %d in threshold object %d", m_iDataType, m_dwId);
          break;
    }
 }

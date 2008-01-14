@@ -262,7 +262,7 @@ static BOOL InitCryptografy(void)
 	g_pServerKey = LoadRSAKeys(szKeyFile);
 	if (g_pServerKey == NULL)
 	{
-		DbgPrintf(AF_DEBUG_MISC, "Generating RSA key pair...");
+		DbgPrintf(1, "Generating RSA key pair...");
 		g_pServerKey = RSA_generate_key(NETXMS_RSA_KEYLEN, 17, NULL, 0);
 		if (g_pServerKey != NULL)
 		{
@@ -377,7 +377,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
 
 	g_tServerStartTime = time(NULL);
 	srand((unsigned int)g_tServerStartTime);
-	InitLog(g_dwFlags & AF_USE_EVENT_LOG, g_szLogFile, g_dwFlags & AF_STANDALONE);
+	InitLog(g_dwFlags & AF_USE_SYSLOG, g_szLogFile, IsStandalone());
 
 	// Set code page
 #ifndef _WIN32
@@ -402,7 +402,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
 	g_pLazyRequestQueue = new Queue(64, 16);
 
 	// Initialize database driver and connect to database
-	if (!DBInit(TRUE, g_dwFlags & AF_LOG_SQL_ERRORS, g_dwFlags & AF_DEBUG_SQL, DBEventHandler))
+	if (!DBInit(TRUE, g_dwFlags & AF_LOG_SQL_ERRORS, (g_nDebugLevel >= 9), DBEventHandler))
 		return FALSE;
 
 	// Connect to database
@@ -418,7 +418,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
 		WriteLog(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
 		return FALSE;
 	}
-	DbgPrintf(AF_DEBUG_MISC, "Successfully connected to database %s@%s", g_szDbName, g_szDbServer);
+	DbgPrintf(1, "Successfully connected to database %s@%s", g_szDbName, g_szDbServer);
 
 	// Check database version
 	iDBVersion = ConfigReadInt("DBFormatVersion", 0);
@@ -501,7 +501,7 @@ retry_db_lock:
 
 	// Load global configuration parameters
 	LoadGlobalConfig();
-	DbgPrintf(AF_DEBUG_MISC, "Global configuration loaded");
+	DbgPrintf(1, "Global configuration loaded");
 
 	// Check data directory
 	if (!CheckDataDir())
@@ -529,7 +529,7 @@ retry_db_lock:
 	// Setup unique identifiers table
 	if (!InitIdTable())
 		return FALSE;
-	DbgPrintf(AF_DEBUG_MISC, "ID table created");
+	DbgPrintf(2, "ID table created");
 
 	// Load and compile scripts
 	LoadScripts();
@@ -544,7 +544,7 @@ retry_db_lock:
 		WriteLog(MSG_ERROR_LOADING_USERS, EVENTLOG_ERROR_TYPE, NULL);
 		return FALSE;
 	}
-	DbgPrintf(AF_DEBUG_MISC, "User accounts loaded");
+	DbgPrintf(2, "User accounts loaded");
 
 	// Initialize audit
 	InitAuditLog();
@@ -554,7 +554,7 @@ retry_db_lock:
 	if (!LoadObjects())
 		return FALSE;
 	LoadMaps();
-	DbgPrintf(AF_DEBUG_MISC, "Objects loaded and initialized");
+	DbgPrintf(1, "Objects loaded and initialized");
 
 	// Initialize and load event actions
 	if (!InitActions())
@@ -621,7 +621,7 @@ retry_db_lock:
 	ThreadCreate(ClientListener, 0, NULL);
 
 	g_dwFlags |= AF_SERVER_INITIALIZED;
-	DbgPrintf(AF_DEBUG_MISC, "Server initialization completed");
+	DbgPrintf(1, "Server initialization completed");
 	return TRUE;
 }
 
@@ -658,7 +658,7 @@ void NXCORE_EXPORTABLE Shutdown(void)
 	ShutdownSMSSender();
 
 	ThreadSleep(1);     // Give other threads a chance to terminate in a safe way
-	DbgPrintf(AF_DEBUG_MISC, "All threads was notified, continue with shutdown");
+	DbgPrintf(2, "All threads was notified, continue with shutdown");
 
 	// Wait for critical threads
 	ThreadJoin(m_thHouseKeeper);
@@ -667,11 +667,11 @@ void NXCORE_EXPORTABLE Shutdown(void)
 	ThreadJoin(m_thSyslogDaemon);
 
 	SaveObjects(g_hCoreDB);
-	DbgPrintf(AF_DEBUG_MISC, "All objects saved to database");
+	DbgPrintf(2, "All objects saved to database");
 	SaveUsers(g_hCoreDB);
-	DbgPrintf(AF_DEBUG_MISC, "All users saved to database");
+	DbgPrintf(2, "All users saved to database");
 	StopDBWriter();
-	DbgPrintf(AF_DEBUG_MISC, "Database writer stopped");
+	DbgPrintf(1, "Database writer stopped");
 
 	// Remove database lock
 	UnlockDB();
@@ -680,11 +680,11 @@ void NXCORE_EXPORTABLE Shutdown(void)
 	if (g_hCoreDB != NULL)
 		DBDisconnect(g_hCoreDB);
 	DBUnloadDriver();
-	DbgPrintf(AF_DEBUG_MISC, "Database driver unloaded");
+	DbgPrintf(1, "Database driver unloaded");
 
 	CleanupActions();
 	ShutdownEventSubsystem();
-	DbgPrintf(AF_DEBUG_MISC, "Event processing stopped");
+	DbgPrintf(1, "Event processing stopped");
 
 	// Delete all objects
 	//for(i = 0; i < g_dwIdIndexSize; i++)
@@ -701,7 +701,7 @@ void NXCORE_EXPORTABLE Shutdown(void)
 
 	// Terminate process
 #ifdef _WIN32
-	if (g_dwFlags & AF_STANDALONE)
+	if (!(g_dwFlags & AF_DAEMON))
 		ExitProcess(0);
 #else
 	exit(0);
@@ -719,16 +719,16 @@ void NXCORE_EXPORTABLE FastShutdown(void)
 	ConditionSet(m_condShutdown);
 
 	SaveObjects(g_hCoreDB);
-	DbgPrintf(AF_DEBUG_MISC, "All objects saved to database");
+	DbgPrintf(2, "All objects saved to database");
 	SaveUsers(g_hCoreDB);
-	DbgPrintf(AF_DEBUG_MISC, "All users saved to database");
+	DbgPrintf(2, "All users saved to database");
 
 	// Remove database lock first, because we have a chance to loose DB connection
 	UnlockDB();
 
 	// Stop database writers
 	StopDBWriter();
-	DbgPrintf(AF_DEBUG_MISC, "Database writer stopped");
+	DbgPrintf(1, "Database writer stopped");
 
 	CloseLog();
 }
@@ -810,12 +810,12 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 
 		if (IsCommand("ON", szBuffer, 2))
 		{
-			g_dwFlags |= AF_DEBUG_ALL;
+			g_nDebugLevel = 8;
 			ConsolePrintf(pCtx, "Debug mode turned on\n");
 		}
 		else if (IsCommand("OFF", szBuffer, 2))
 		{
-			g_dwFlags &= ~AF_DEBUG_ALL;
+			g_nDebugLevel = 0;
 			ConsolePrintf(pCtx, "Debug mode turned off\n");
 		}
 		else
@@ -882,8 +882,8 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 		if (IsCommand("FLAGS", szBuffer, 1))
 		{
 			ConsolePrintf(pCtx, "Flags: 0x%08X\n", g_dwFlags);
-			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_STANDALONE));
-			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_USE_EVENT_LOG));
+			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DAEMON));
+			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_USE_SYSLOG));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_NETWORK_DISCOVERY));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ACTIVE_NETWORK_DISCOVERY));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_LOG_SQL_ERRORS));
@@ -894,17 +894,6 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CATCH_EXCEPTIONS));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_MULTIPLE_DB_CONN));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_INTERNAL_CA));
-			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_EVENTS));
-			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_CSCP));
-			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_DISCOVERY));
-			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_DC));
-			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_HOUSEKEEPER));
-			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_LOCKS));
-			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_ACTIONS));
-			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_MISC));
-			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_SQL));
-			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_SNMP));
-			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_OBJECTS));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_LOCKED));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_CONNECTION_LOST));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));

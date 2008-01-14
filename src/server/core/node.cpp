@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.190 2007-09-25 16:53:03 victor Exp $ */
+/* $Id: node.cpp,v 1.191 2008-01-14 16:53:14 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -157,7 +157,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
    if (!LoadCommonProperties())
    {
-      DbgPrintf(AF_DEBUG_OBJECTS, "Cannot load common properties for node object %d", dwId);
+      DbgPrintf(2, "Cannot load common properties for node object %d", dwId);
       return FALSE;
    }
 
@@ -174,7 +174,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    if (DBGetNumRows(hResult) == 0)
    {
       DBFreeResult(hResult);
-      DbgPrintf(AF_DEBUG_OBJECTS, "Missing record in \"nodes\" table for node object %d", dwId);
+      DbgPrintf(2, "Missing record in \"nodes\" table for node object %d", dwId);
       return FALSE;
    }
 
@@ -214,7 +214,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
       if (iNumRows == 0)
       {
          DBFreeResult(hResult);
-         DbgPrintf(AF_DEBUG_OBJECTS, "Unbound node object %d (%s)", dwId, m_szName);
+         DbgPrintf(3, "Unbound node object %d (%s)", dwId, m_szName);
          return FALSE;     // No parents - it shouldn't happen if database isn't corrupted
       }
 
@@ -248,7 +248,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
       for(i = 0; i < (int)m_dwNumItems; i++)
          if (!m_ppItems[i]->LoadThresholdsFromDB())
          {
-            DbgPrintf(AF_DEBUG_OBJECTS, "Cannot load thresholds for DCI %d of node %d (%s)",
+            DbgPrintf(3, "Cannot load thresholds for DCI %d of node %d (%s)",
                       m_ppItems[i]->Id(), dwId, m_szName);
             bResult = FALSE;
          }
@@ -536,7 +536,7 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
 						TCHAR szBuffer[16];
 
 						// Multicast address??
-						DbgPrintf(AF_DEBUG_DISCOVERY, 
+						DbgPrintf(2, 
 									 "Attempt to create interface object with multicast address %s", 
 									 IpToStr(dwIpAddr, szBuffer));
 					}
@@ -927,7 +927,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
    PollerLock();
    m_pPollRequestor = pSession;
    SendPollerMsg(dwRqId, _T("Starting configuration poll for node %s\r\n"), m_szName);
-   DbgPrintf(AF_DEBUG_DISCOVERY, "Starting configuration poll for node %s (ID: %d)", m_szName, m_dwId);
+   DbgPrintf(4, "Starting configuration poll for node %s (ID: %d)", m_szName, m_dwId);
 
    // Check for forced capabilities recheck
    if (m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES)
@@ -943,7 +943,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
    if ((m_dwDynamicFlags & NDF_UNREACHABLE) && !(m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES))
    {
       SendPollerMsg(dwRqId, _T("Node is marked as unreachable, configuration poll aborted\r\n"));
-      DbgPrintf(AF_DEBUG_DISCOVERY, "Node is marked as unreachable, configuration poll aborted");
+      DbgPrintf(4, "Node is marked as unreachable, configuration poll aborted");
       m_tLastConfigurationPoll = time(NULL);
    }
    else
@@ -954,7 +954,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
       if ((!((m_dwFlags & NF_IS_SNMP) && (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE))) &&
           (!(m_dwFlags & NF_DISABLE_SNMP)))
       {
-         DbgPrintf(AF_DEBUG_DISCOVERY, "ConfPoll(%s): trying SNMP GET", m_szName);
+         DbgPrintf(5, "ConfPoll(%s): trying SNMP GET", m_szName);
 			pTransport = CreateSNMPTransport();
          if (SnmpGet(m_iSNMPVersion, pTransport, m_szCommunityString,
                      ".1.3.6.1.2.1.1.2.0", NULL, 0, szBuffer, 4096,
@@ -1038,7 +1038,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
          else
          {
             // Check for CheckPoint SNMP agent on port 161
-            DbgPrintf(AF_DEBUG_DISCOVERY, "ConfPoll(%s): checking for CheckPoint SNMP", m_szName);
+            DbgPrintf(5, "ConfPoll(%s): checking for CheckPoint SNMP", m_szName);
             if (SnmpGet(m_iSNMPVersion, pTransport, m_szCommunityString,
                         ".1.3.6.1.4.1.2620.1.1.10.0", NULL, 0,
                         szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
@@ -1060,7 +1060,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
       }
 
       // Check for CheckPoint SNMP agent on port 260
-      DbgPrintf(AF_DEBUG_DISCOVERY, "ConfPoll(%s): checking for CheckPoint SNMP on port 260", m_szName);
+      DbgPrintf(5, "ConfPoll(%s): checking for CheckPoint SNMP on port 260", m_szName);
       if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)))
       {
 			pTransport = new SNMP_UDPTransport;
@@ -1078,17 +1078,17 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 			delete pTransport;
       }
 
-      DbgPrintf(AF_DEBUG_DISCOVERY, "ConfPoll(%s): checking for NetXMS agent Flags={%08X} DynamicFlags={%08X}", m_szName, m_dwFlags, m_dwDynamicFlags);
+      DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent Flags={%08X} DynamicFlags={%08X}", m_szName, m_dwFlags, m_dwDynamicFlags);
       if ((!((m_dwFlags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE))) &&
           (!(m_dwFlags & NF_DISABLE_NXCP)))
       {
          pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort,
                                           m_wAuthMethod, m_szSharedSecret);
          SetAgentProxy(pAgentConn);
-         DbgPrintf(AF_DEBUG_DISCOVERY, "ConfPoll(%s): checking for NetXMS agent - connecting", m_szName);
+         DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent - connecting", m_szName);
          if (pAgentConn->Connect(g_pServerKey))
          {
-            DbgPrintf(AF_DEBUG_DISCOVERY, "ConfPoll(%s): checking for NetXMS agent - connected", m_szName);
+            DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent - connected", m_szName);
             LockData();
             m_dwFlags |= NF_IS_NATIVE_AGENT;
             if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
@@ -1140,7 +1140,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             SendPollerMsg(dwRqId, _T("   NetXMS native agent is active\r\n"));
          }
          delete pAgentConn;
-         DbgPrintf(AF_DEBUG_DISCOVERY, "ConfPoll(%s): checking for NetXMS agent - finished", m_szName);
+         DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent - finished", m_szName);
       }
 
       // Generate event if node flags has been changed
@@ -1474,7 +1474,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
       m_dwDynamicFlags &= ~NDF_QUEUED_FOR_CONFIG_POLL;
    m_dwDynamicFlags &= ~NDF_RECHECK_CAPABILITIES;
    PollerUnlock();
-   DbgPrintf(AF_DEBUG_DISCOVERY, "Finished configuration poll for node %s (ID: %d)", m_szName, m_dwId);
+   DbgPrintf(4, "Finished configuration poll for node %s (ID: %d)", m_szName, m_dwId);
 
    if (bHasChanges)
    {
@@ -1613,7 +1613,7 @@ DWORD Node::GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffe
 
 end_loop:
    AgentUnlock();
-   DbgPrintf(AF_DEBUG_DC, "Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d",
+   DbgPrintf(6, "Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d",
              m_szName, szParam, dwError, dwResult);
    return dwResult;
 }
@@ -2086,7 +2086,7 @@ void Node::OnObjectDelete(DWORD dwObjectId)
       /* LOCK? */
       m_dwPollerNode = 0;
       Modify();
-      DbgPrintf(AF_DEBUG_MISC, _T("Node \"%s\": poller node %d deleted"), m_szName, dwObjectId);
+      DbgPrintf(3, _T("Node \"%s\": poller node %d deleted"), m_szName, dwObjectId);
    }
 }
 
@@ -2194,7 +2194,7 @@ BOOL Node::ApplyTemplateItem(DWORD dwTemplateId, DCItem *pItem)
 
    LockData();
 
-   DbgPrintf(AF_DEBUG_DC, "Applying item \"%s\" to node \"%s\"", pItem->Name(), m_szName);
+   DbgPrintf(5, "Applying item \"%s\" to node \"%s\"", pItem->Name(), m_szName);
 
    // Check if that template item exists
    for(i = 0; i < m_dwNumItems; i++)
@@ -2692,7 +2692,7 @@ BOOL Node::ResolveName(void)
 	DWORD i, dwAddr;
 	TCHAR szBuffer[256];
 
-	DbgPrintf(AF_DEBUG_DISCOVERY, _T("Resolving name for node %d [%s]..."), m_dwId, m_szName);
+	DbgPrintf(4, _T("Resolving name for node %d [%s]..."), m_dwId, m_szName);
 
 	// Try to resolve primary IP
 	dwAddr = htonl(m_dwIpAddr);
@@ -2728,7 +2728,7 @@ BOOL Node::ResolveName(void)
 		// Try to get hostname from agent if address resolution fails
 		if (!bSuccess)
 		{
-			DbgPrintf(AF_DEBUG_DISCOVERY, _T("Resolving name for node %d [%s] via agent..."), m_dwId, m_szName);
+			DbgPrintf(4, _T("Resolving name for node %d [%s] via agent..."), m_dwId, m_szName);
 			if (GetItemFromAgent("System.Hostname", 256, szBuffer) == DCE_SUCCESS)
 			{
 				StrStrip(szBuffer);
@@ -2743,7 +2743,7 @@ BOOL Node::ResolveName(void)
 		// Try to get hostname from SNMP if other methods fails
 		if (!bSuccess)
 		{
-			DbgPrintf(AF_DEBUG_DISCOVERY, _T("Resolving name for node %d [%s] via SNMP..."), m_dwId, m_szName);
+			DbgPrintf(4, _T("Resolving name for node %d [%s] via SNMP..."), m_dwId, m_szName);
 			if (GetItemFromSNMP(".1.3.6.1.2.1.1.5.0", 256, szBuffer) == DCE_SUCCESS)
 			{
 				StrStrip(szBuffer);
@@ -2757,9 +2757,9 @@ BOOL Node::ResolveName(void)
 	}
 
 	if (bSuccess)
-		DbgPrintf(AF_DEBUG_DISCOVERY, _T("Name for node %d was resolved to %s"), m_dwId, m_szName);
+		DbgPrintf(4, _T("Name for node %d was resolved to %s"), m_dwId, m_szName);
 	else
-		DbgPrintf(AF_DEBUG_DISCOVERY, _T("Name for node %d was not resolved"), m_dwId, m_szName);
+		DbgPrintf(4, _T("Name for node %d was not resolved"), m_dwId, m_szName);
 	return bSuccess;
 }
 
@@ -2882,7 +2882,7 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 			{
 				if (pSubnet->IsSyntheticMask())
 				{
-					DbgPrintf(AF_DEBUG_DISCOVERY, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
+					DbgPrintf(4, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
 					          pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
 					pSubnet->SetCorrectMask(pInterface->IpAddr() & pInterface->IpNetMask(), pInterface->IpNetMask());
 				}
@@ -2895,7 +2895,7 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 				NetObjInsert(pSubnet, TRUE);
 				g_pEntireNet->AddSubnet(pSubnet);
 				pSubnet->AddNode(this);
-				DbgPrintf(AF_DEBUG_DISCOVERY, _T("Node::CheckSubnetBinding(): Creating new subnet %s [%d] for node %s [%d]"),
+				DbgPrintf(4, _T("Node::CheckSubnetBinding(): Creating new subnet %s [%d] for node %s [%d]"),
 				          pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
 			}
 
@@ -2930,7 +2930,7 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 			}
 			if (j == (int)m_dwChildCount)
 			{
-				DbgPrintf(AF_DEBUG_DISCOVERY, _T("Node::CheckSubnetBinding(): Subnet %s [%d] is incorrect for node %s [%d]"),
+				DbgPrintf(4, _T("Node::CheckSubnetBinding(): Subnet %s [%d] is incorrect for node %s [%d]"),
 							 pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
 				ppUnlinkList[count++] = pSubnet;	
 			}

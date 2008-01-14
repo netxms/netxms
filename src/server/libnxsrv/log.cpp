@@ -366,20 +366,19 @@ void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, const char *format, ...
 
 
 //
-// Debug printf - write text to stdout if in standalone mode
-// and specific application flag(s) is set
+// Debug printf - write debug record to log if level is less or equal current debug level
 //
 
-void LIBNXSRV_EXPORTABLE DbgPrintf(DWORD dwFlags, const TCHAR *szFormat, ...)
+void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...)
 {
    va_list args;
-   TCHAR szBuffer[4096];
+   TCHAR buffer[4096];
 
-   if (!(g_dwFlags & dwFlags))
+   if (level > g_nDebugLevel)
       return;     // Required application flag(s) not set
 
-   va_start(args, szFormat);
-   _vsntprintf(szBuffer, 4096, szFormat, args);
+   va_start(args, format);
+   _vsntprintf(buffer, 4096, format, args);
    va_end(args);
-   WriteLog(MSG_DEBUG, EVENTLOG_INFORMATION_TYPE, "s", szBuffer);
+   WriteLog(MSG_DEBUG, EVENTLOG_INFORMATION_TYPE, "s", buffer);
 }

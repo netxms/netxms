@@ -82,7 +82,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       EnumerateClientSessions(BroadcastEvent, pEvent);
 
       // Write event information to screen if event debugging is on
-      if (IsStandalone() && (g_dwFlags & AF_DEBUG_EVENTS))
+      if (IsStandalone() && (g_nDebugLevel >= 5))
       {
          NetObj *pObject = FindObjectById(pEvent->SourceId());
          if (pObject == NULL)
@@ -101,6 +101,6 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       delete pEvent;
    }
 
-   DbgPrintf(AF_DEBUG_EVENTS, "Event processing thread #%d stopped", arg);
+   DbgPrintf(1, "Event processing thread #%d stopped", arg);
    return THREAD_OK;
 }

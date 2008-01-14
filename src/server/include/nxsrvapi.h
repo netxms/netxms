@@ -93,26 +93,14 @@
 // Application flags
 //
 
-#define AF_STANDALONE                     0x00000001
-#define AF_USE_EVENT_LOG                  0x00000002
+#define AF_DAEMON                         0x00000001
+#define AF_USE_SYSLOG                     0x00000002
 #define AF_ENABLE_NETWORK_DISCOVERY       0x00000004
 #define AF_ACTIVE_NETWORK_DISCOVERY       0x00000008
 #define AF_LOG_SQL_ERRORS                 0x00000010
 #define AF_DELETE_EMPTY_SUBNETS           0x00000020
 #define AF_ENABLE_SNMP_TRAPD              0x00000040
 #define AF_ENABLE_ZONING                  0x00000080
-#define AF_DEBUG_EVENTS                   0x00000100
-#define AF_DEBUG_CSCP                     0x00000200
-#define AF_DEBUG_DISCOVERY                0x00000400
-#define AF_DEBUG_DC                       0x00000800
-#define AF_DEBUG_HOUSEKEEPER              0x00001000
-#define AF_DEBUG_LOCKS                    0x00002000
-#define AF_DEBUG_ACTIONS                  0x00004000
-#define AF_DEBUG_MISC                     0x00008000
-#define AF_DEBUG_SQL                      0x00010000
-#define AF_DEBUG_SNMP                     0x00020000
-#define AF_DEBUG_OBJECTS                  0x00040000
-#define AF_DEBUG_ALL                      0x0006FF00
 #define AF_RESOLVE_NODE_NAMES             0x00100000
 #define AF_CATCH_EXCEPTIONS					0x00200000
 #define AF_INTERNAL_CA                    0x00400000
@@ -122,8 +110,8 @@
 #define AF_SERVER_INITIALIZED             0x40000000
 #define AF_SHUTDOWN                       0x80000000
 
-#define IsStandalone() (g_dwFlags & AF_STANDALONE)
-#define ShutdownInProgress()  (g_dwFlags & AF_SHUTDOWN)
+#define IsStandalone()                    (!(g_dwFlags & AF_DAEMON))
+#define ShutdownInProgress()              (g_dwFlags & AF_SHUTDOWN)
 
 
 //
@@ -386,7 +374,7 @@ const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError);
 void LIBNXSRV_EXPORTABLE InitLog(BOOL bUseSystemLog, char *pszLogFile, BOOL bPrintToScreen);
 void LIBNXSRV_EXPORTABLE CloseLog(void);
 void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, const char *format, ...);
-void LIBNXSRV_EXPORTABLE DbgPrintf(DWORD dwFlags, const TCHAR *szFormat, ...);
+void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...);
 
 BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
                                 void (* fpEventHandler)(DWORD, TCHAR *));
@@ -436,6 +424,7 @@ void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
 //
 
 extern DWORD LIBNXSRV_EXPORTABLE g_dwFlags;
+extern int LIBNXSRV_EXPORTABLE g_nDebugLevel;
 extern TCHAR LIBNXSRV_EXPORTABLE g_szDbDriver[];
 extern TCHAR LIBNXSRV_EXPORTABLE g_szDbDrvParams[];
 extern TCHAR LIBNXSRV_EXPORTABLE g_szDbServer[];

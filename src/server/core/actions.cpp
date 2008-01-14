@@ -306,7 +306,7 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
    {
       if (pAction->bIsDisabled)
       {
-         DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Action %d (%s) is disabled and will not be executed",
+         DbgPrintf(3, "*actions* Action %d (%s) is disabled and will not be executed",
                    dwActionId, pAction->szName);
          bSuccess = TRUE;
       }
@@ -319,13 +319,13 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
          switch(pAction->iType)
          {
             case ACTION_EXEC:
-               DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Executing command \"%s\"", pszExpandedData);
+               DbgPrintf(3, "*actions* Executing command \"%s\"", pszExpandedData);
                //bSuccess = ExecCommand(pszExpandedData);
 					ThreadCreate(RunCommandThread, 0, strdup(pszExpandedData));
 					bSuccess = TRUE;
                break;
             case ACTION_SEND_EMAIL:
-               DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending mail to %s: \"%s\"", 
+               DbgPrintf(3, "*actions* Sending mail to %s: \"%s\"", 
                          pszExpandedRcpt, pszExpandedData);
                pszExpandedSubject = pEvent->ExpandText(pAction->szEmailSubject, pszAlarmMsg);
 					curr = pszExpandedRcpt;
@@ -342,7 +342,7 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
                bSuccess = TRUE;
                break;
             case ACTION_SEND_SMS:
-               DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Sending SMS to %s: \"%s\"", 
+               DbgPrintf(3, "*actions* Sending SMS to %s: \"%s\"", 
                          pszExpandedRcpt, pszExpandedData);
 					curr = pszExpandedRcpt;
 					do
@@ -357,7 +357,7 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
                bSuccess = TRUE;
                break;
             case ACTION_REMOTE:
-               DbgPrintf(AF_DEBUG_ACTIONS, "*actions* Executing on \"%s\": \"%s\"",
+               DbgPrintf(3, "*actions* Executing on \"%s\": \"%s\"",
                          pszExpandedRcpt, pszExpandedData);
                bSuccess = ExecuteRemoteAction(pszExpandedRcpt, pszExpandedData);
                break;

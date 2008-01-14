@@ -149,7 +149,7 @@ BOOL LockComponent(DWORD dwId, DWORD dwLockBy, const char *pszOwnerInfo,
       return FALSE;
    }
 
-   DbgPrintf(AF_DEBUG_LOCKS, "*Locks* Attempting to lock component \"%s\" by %d (%s)",
+   DbgPrintf(5, "*Locks* Attempting to lock component \"%s\" by %d (%s)",
              m_locks[dwId].pszName, dwLockBy, pszOwnerInfo != NULL ? pszOwnerInfo : "NULL");
    MutexLock(m_hMutexLockerAccess, INFINITE);
    if (m_locks[dwId].dwLockStatus == UNLOCKED)
@@ -178,7 +178,7 @@ void UnlockComponent(DWORD dwId)
    m_locks[dwId].dwLockStatus = UNLOCKED;
    m_locks[dwId].szOwnerInfo[0] = 0;
    MutexUnlock(m_hMutexLockerAccess);
-   DbgPrintf(AF_DEBUG_LOCKS, "*Locks* Component \"%s\" unlocked", m_locks[dwId].pszName);
+   DbgPrintf(5, "*Locks* Component \"%s\" unlocked", m_locks[dwId].pszName);
 }
 
 
@@ -206,7 +206,7 @@ void RemoveAllSessionLocks(DWORD dwSessionId)
          i--;
       }
    MutexUnlock(m_hMutexLockerAccess);
-   DbgPrintf(AF_DEBUG_LOCKS, "*Locks* All locks for session %d removed", dwSessionId);
+   DbgPrintf(5, "*Locks* All locks for session %d removed", dwSessionId);
 }
 
 
@@ -230,12 +230,12 @@ BOOL LockLPP(DWORD dwPolicyId, DWORD dwSessionId)
       m_pLockedLPP[m_dwNumLockedLPP].dwSessionId = dwSessionId;
       m_dwNumLockedLPP++;
       bRet = TRUE;
-      DbgPrintf(AF_DEBUG_LOCKS, "*Locks* LPP %d locked successfully for session %d", dwPolicyId, dwSessionId);
+      DbgPrintf(4, "*Locks* LPP %d locked successfully for session %d", dwPolicyId, dwSessionId);
    }
    else
    {
       bRet = FALSE;
-      DbgPrintf(AF_DEBUG_LOCKS, "*Locks* LPP %d already locked", dwPolicyId);
+      DbgPrintf(4, "*Locks* LPP %d already locked", dwPolicyId);
    }
    MutexUnlock(m_hMutexLockerAccess);
    return bRet;
@@ -258,7 +258,7 @@ void UnlockLPP(DWORD dwPolicyId, DWORD dwSessionId)
          m_dwNumLockedLPP--;
          memmove(&m_pLockedLPP[i], &m_pLockedLPP[i + 1],
                  sizeof(LPP_LOCK_INFO) * (m_dwNumLockedLPP - i));
-         DbgPrintf(AF_DEBUG_LOCKS, "*Locks* LPP %d unlocked", dwPolicyId);
+         DbgPrintf(4, "*Locks* LPP %d unlocked", dwPolicyId);
          break;
       }
    MutexUnlock(m_hMutexLockerAccess);

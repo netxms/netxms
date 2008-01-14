@@ -1,4 +1,4 @@
-/* $Id: cluster.cpp,v 1.7 2007-09-20 13:04:00 victor Exp $ */
+/* $Id: cluster.cpp,v 1.8 2008-01-14 16:53:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -86,7 +86,7 @@ BOOL Cluster::CreateFromDB(DWORD dwId)
 
    if (!LoadCommonProperties())
    {
-      DbgPrintf(AF_DEBUG_OBJECTS, "Cannot load common properties for cluster object %d", dwId);
+      DbgPrintf(2, "Cannot load common properties for cluster object %d", dwId);
       return FALSE;
    }
 
@@ -536,7 +536,7 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    UnlockChildList();
 
 	// Perform status poll on all member nodes
-	DbgPrintf(AF_DEBUG_OBJECTS, _T("CLUSTER STATUS POLL [%s]: Polling member nodes"), m_szName);
+	DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Polling member nodes"), m_szName);
 	for(i = 0, bAllDown = TRUE; i < dwPollListSize; i++)
 	{
 		((Node *)ppPollList[i])->StatusPoll(pSession, dwRqId, nPoller);
@@ -568,7 +568,7 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 		pbResourceFound = (BYTE *)malloc(m_dwNumResources);
 		memset(pbResourceFound, 0, m_dwNumResources);
 
-		DbgPrintf(AF_DEBUG_OBJECTS, _T("CLUSTER STATUS POLL [%s]: Polling resources"), m_szName);
+		DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Polling resources"), m_szName);
 		for(i = 0; i < dwPollListSize; i++)
 		{
 			pIfList = ((Node *)ppPollList[i])->GetInterfaceList();
@@ -582,7 +582,7 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 						{
 							if (m_pResourceList[k].dwCurrOwner != ppPollList[i]->Id())
 							{
-								DbgPrintf(AF_DEBUG_OBJECTS, _T("CLUSTER STATUS POLL [%s]: Resource %s owner changed"),
+								DbgPrintf(5, _T("CLUSTER STATUS POLL [%s]: Resource %s owner changed"),
 											 m_szName, m_pResourceList[k].szName);
 
 								// Resource moved or go up
@@ -616,7 +616,7 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 			}
 			else
 			{
-				DbgPrintf(AF_DEBUG_OBJECTS, _T("CLUSTER STATUS POLL [%s]: Cannot get interface list from %s"),
+				DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Cannot get interface list from %s"),
 							 m_szName, ppPollList[i]->Name());
 			}
 		}
@@ -655,7 +655,7 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 	m_dwFlags &= ~CLF_QUEUED_FOR_STATUS_POLL;
 	UnlockData();
 
-	DbgPrintf(AF_DEBUG_OBJECTS, _T("CLUSTER STATUS POLL [%s]: Finished"), m_szName);
+	DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Finished"), m_szName);
 }
 
 

@@ -430,7 +430,7 @@ void Condition::Check(void)
    dwNumValues = m_dwDCICount;
    UnlockData();
 
-   DbgPrintf(AF_DEBUG_OBJECTS, _T("Running evaluation script for condition %d \"%s\""),
+   DbgPrintf(6, _T("Running evaluation script for condition %d \"%s\""),
              m_dwId, m_szName);
    if (m_pCompiledScript->Run(pEnv, dwNumValues, ppValueList) == 0)
    {
@@ -450,12 +450,12 @@ void Condition::Check(void)
                       (m_dwSourceObject == 0) ? g_dwMgmtNode : m_dwSourceObject,
                       "dsdd", m_dwId, m_szName, iOldStatus, m_iStatus);
 
-            DbgPrintf(AF_DEBUG_OBJECTS, _T("Condition %d \"%s\" deactivated"),
+            DbgPrintf(6, _T("Condition %d \"%s\" deactivated"),
                       m_dwId, m_szName);
          }
          else
          {
-            DbgPrintf(AF_DEBUG_OBJECTS, _T("Condition %d \"%s\" still inactive"),
+            DbgPrintf(6, _T("Condition %d \"%s\" still inactive"),
                       m_dwId, m_szName);
             LockData();
             if (m_iStatus != m_nInactiveStatus)
@@ -481,12 +481,12 @@ void Condition::Check(void)
                       (m_dwSourceObject == 0) ? g_dwMgmtNode : m_dwSourceObject,
                       "dsdd", m_dwId, m_szName, iOldStatus, m_iStatus);
 
-            DbgPrintf(AF_DEBUG_OBJECTS, _T("Condition %d \"%s\" activated"),
+            DbgPrintf(6, _T("Condition %d \"%s\" activated"),
                       m_dwId, m_szName);
          }
          else
          {
-            DbgPrintf(AF_DEBUG_OBJECTS, _T("Condition %d \"%s\" still active"),
+            DbgPrintf(6, _T("Condition %d \"%s\" still active"),
                       m_dwId, m_szName);
             LockData();
             if (m_iStatus != m_nActiveStatus)

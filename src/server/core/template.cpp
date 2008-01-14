@@ -1,4 +1,4 @@
-/* $Id: template.cpp,v 1.38 2007-11-06 12:36:03 victor Exp $ */
+/* $Id: template.cpp,v 1.39 2008-01-14 16:53:15 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -634,7 +634,7 @@ BOOL Template::ApplyToNode(Node *pNode)
    }
 
    pdwItemList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumItems);
-   DbgPrintf(AF_DEBUG_DC, "Apply %d items from template \"%s\" to node \"%s\"",
+   DbgPrintf(2, "Apply %d items from template \"%s\" to node \"%s\"",
              m_dwNumItems, m_szName, pNode->Name());
 
    // Copy items

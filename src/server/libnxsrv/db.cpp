@@ -1,4 +1,4 @@
-/* $Id: db.cpp,v 1.22 2007-09-19 16:57:42 victor Exp $ */
+/* $Id: db.cpp,v 1.23 2008-01-14 16:53:16 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -315,7 +315,7 @@ BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *szQuery)
    if (m_bDumpSQL)
    {
       ms = GetCurrentTimeMs() - ms;
-      _tprintf(_T("%s sync query: \"%s\" [%d ms]\n"), (dwResult == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), szQuery, ms);
+      DbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]\n"), (dwResult == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), szQuery, ms);
    }
    
    MutexUnlock(hConn->mutexTransLock);
@@ -358,7 +358,7 @@ DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, const TCHAR *szQuery)
    if (m_bDumpSQL)
    {
       ms = GetCurrentTimeMs() - ms;
-      _tprintf(_T("%s sync query: \"%s\" [%d ms]\n"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
+      DbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]\n"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
    }
    MutexUnlock(hConn->mutexTransLock);
    if ((hResult == NULL) && m_bLogSQLErrors)
@@ -659,7 +659,7 @@ DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *
    if (m_bDumpSQL)
    {
       ms = GetCurrentTimeMs() - ms;
-      _tprintf(_T("%s async query: \"%s\" [%d ms]\n"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
+      DbgPrintf(9, _T("%s async query: \"%s\" [%d ms]\n"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
    }
    if (hResult == NULL)
    {

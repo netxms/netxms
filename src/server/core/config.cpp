@@ -1,4 +1,4 @@
-/* $Id: config.cpp,v 1.47 2007-12-05 14:17:24 victor Exp $ */
+/* $Id: config.cpp,v 1.48 2008-01-14 16:53:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -64,11 +64,11 @@ BOOL NXCORE_EXPORTABLE LoadConfig(void)
       if ((!stricmp(g_szLogFile,"{EventLog}")) ||
           (!stricmp(g_szLogFile,"{syslog}")))
       {
-         g_dwFlags |= AF_USE_EVENT_LOG;
+         g_dwFlags |= AF_USE_SYSLOG;
       }
       else
       {
-         g_dwFlags &= ~AF_USE_EVENT_LOG;
+         g_dwFlags &= ~AF_USE_SYSLOG;
       }
       bSuccess = TRUE;
    }
