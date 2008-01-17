@@ -205,6 +205,27 @@ void LIBNXCL_EXPORTABLE NXCGetLastLockOwner(NXC_SESSION hSession, TCHAR *pszBuff
 
 
 //
+// Send SMS via server
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSendSMS(NXC_SESSION hSession, TCHAR *phone, TCHAR *message)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_SEND_SMS);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_RCPT_ADDR, phone);
+   msg.SetVariable(VID_MESSAGE, message);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
 // Get text for error
 //
 

@@ -28,7 +28,6 @@
 // Static data
 //
 
-static WORD m_wServerPort = 4701;
 static BOOL m_bDebug = FALSE;
 static TCHAR m_szServer[MAX_DB_STRING] = _T("127.0.0.1");
 static TCHAR m_szLogin[MAX_DB_STRING] = _T("guest");
@@ -97,7 +96,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "deho:p:P:T:u:vw:")) != -1)
+   while((ch = getopt(argc, argv, "deho:P:T:u:vw:")) != -1)
    {
       switch(ch)
       {
@@ -108,13 +107,12 @@ int main(int argc, char *argv[])
                    "   -e            : Encrypt session.\n"
                    "   -h            : Display help and exit.\n"
                    "   -o <id>       : Specify source object ID.\n"
-                   "   -p <port>     : Specify server's port number. Default is %d.\n"
                    "   -P <password> : Specify user's password. Default is empty password.\n"
                    "   -T <tag>      : User tag to be associated with the message. Default is empty.\n"
                    "   -u <user>     : Login to server as <user>. Default is \"guest\".\n"
                    "   -v            : Display version and exit.\n"
                    "   -w <seconds>  : Specify command timeout (default is 3 seconds).\n"
-                   "\n", m_wServerPort);
+                   "\n");
             bStart = FALSE;
             break;
          case 'd':

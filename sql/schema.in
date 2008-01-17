@@ -604,6 +604,8 @@ CREATE TABLE event_policy
 	alarm_key varchar(255) not null,    // Alarm key (used for auto termination)
 	alarm_timeout integer not null,	// Timeout before sending event
 	alarm_timeout_event integer not null,  // Event to be sent on timeout
+	situation_id integter not null,  // Situation to update
+	situation_instance varchar(255) not null,
 	PRIMARY KEY(rule_id)
 ) TABLE_TYPE;
 
@@ -633,6 +635,15 @@ CREATE TABLE policy_time_range_list
 	rule_id integer not null,
 	time_range_id integer not null,
 	PRIMARY KEY(rule_id,time_range_id)
+) TABLE_TYPE;
+
+CREATE TABLE policy_situation_attr_list
+(
+	rule_id integer not null,
+	situation_id integer not null,
+	attr_name varchar(255) not null,
+	attr_value varchar(255) not null,
+	PRIMARY KEY(rule_id,situation_id,attr_name)
 ) TABLE_TYPE;
 
 

@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.279 2007-11-06 12:36:01 victor Exp $ */
+/* $Id: nxclapi.h,v 1.280 2008-01-17 09:07:12 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -1751,6 +1751,8 @@ DWORD LIBNXCL_EXPORTABLE NXCSubscribe(NXC_SESSION hSession, DWORD dwChannels);
 DWORD LIBNXCL_EXPORTABLE NXCUnsubscribe(NXC_SESSION hSession, DWORD dwChannels);
 void LIBNXCL_EXPORTABLE NXCGetLastLockOwner(NXC_SESSION hSession, TCHAR *pszBuffer,
                                             int nBufSize);
+
+DWORD LIBNXCL_EXPORTABLE NXCSendSMS(NXC_SESSION hSession, TCHAR *phone, TCHAR *message);
 
 void LIBNXCL_EXPORTABLE *NXCGetClientData(NXC_SESSION hSession);
 void LIBNXCL_EXPORTABLE NXCSetClientData(NXC_SESSION hSession, void *pData);

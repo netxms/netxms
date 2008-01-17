@@ -449,6 +449,7 @@ typedef struct
 #define CMD_QUERY_L2_TOPOLOGY			0x00CD
 #define CMD_AUDIT_RECORD            0x00CE
 #define CMD_GET_AUDIT_LOG           0x00CF
+#define CMD_SEND_SMS                0x00D0
 
 
 //

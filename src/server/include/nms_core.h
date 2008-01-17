@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.140 2008-01-14 16:53:16 victor Exp $ */
+/* $Id: nms_core.h,v 1.141 2008-01-17 09:07:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -153,6 +153,7 @@ typedef void * HSNMPSESSION;
 #define IDG_AGENT_CONFIG      17
 #define IDG_GRAPH					18
 #define IDG_CERTIFICATE			19
+#define IDG_SITUATION         20
 
 
 //
