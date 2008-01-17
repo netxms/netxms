@@ -23,6 +23,7 @@
 		comments SQL_TEXT not null,
 		PRIMARY KEY(id)
 	) TABLE_TYPE;
+- New configuration parameters added: RetainCustomInterfaceNames, AllowDirectSMS, EventStormThreshold
 
 
 *************
