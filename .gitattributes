@@ -573,6 +573,10 @@ src/client/console/plugins/ObjectBrowser/rc/Makefile.am -text
 src/client/console/plugins/ObjectBrowser/rc/ObjectBrowser.xrc -text
 src/client/console/plugins/ObjectBrowser/rc/objectbrowser.xpm -text
 src/client/console/plugins/ObjectBrowser/resource.h -text
+src/client/nxsms/Makefile.am -text
+src/client/nxsms/nxsms.cpp -text
+src/client/nxsms/nxsms.dsp -text
+src/client/nxsms/nxsms.h -text
 src/console/Makefile.am -text
 src/console/PocketPC/AlarmView.cpp -text
 src/console/PocketPC/AlarmView.h -text
