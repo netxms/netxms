@@ -1,4 +1,4 @@
-/* $Id: netxmsd.cpp,v 1.24 2008-01-14 16:53:16 victor Exp $ */
+/* $Id: netxmsd.cpp,v 1.25 2008-01-18 17:00:35 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
@@ -23,6 +23,10 @@
 **/
 
 #include "netxmsd.h"
+
+#if HAVE_GETOPT_H
+#include <getopt.h>
+#endif
 
 #ifdef _WIN32
 #include <dbghelp.h>
@@ -297,6 +301,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 	char login[256] = "", password[256] = "", exePath[MAX_PATH], dllPath[MAX_PATH], *ptr;
 	BOOL useLogin = FALSE;
 #endif
+#if defined(_WIN32) || HAVE_DECL_GETOPT_LONG
 	static struct option longOptions[] =
 	{
 		{ "check-db", 0, NULL, 'e' },
@@ -316,8 +321,13 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 #endif
 		{ NULL, 0, 0, 0 }
 	};
+#endif
    
+#if defined(_WIN32) || HAVE_DECL_GETOPT_LONG
    while((ch = getopt_long(argc, argv, VALID_OPTIONS, longOptions, NULL)) != -1)
+#else
+   while((ch = getopt(argc, argv, VALID_OPTIONS)) != -1)
+#endif
    {
    	switch(ch)
    	{

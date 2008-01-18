@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.281 2008-01-07 13:51:46 victor Exp $
+# $Id: configure.ac,v 1.282 2008-01-18 17:00:34 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -711,7 +711,7 @@ AC_CHECK_HEADERS([sys/int_types.h sys/time.h sys/utsname.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h net/nh.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
 AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h])
-AC_CHECK_HEADERS([sys/sysctl.h vm/vm_param.h syslog.h])
+AC_CHECK_HEADERS([sys/sysctl.h vm/vm_param.h syslog.h getopt.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h],,,
 [[#ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>
@@ -766,7 +766,11 @@ AC_CHECK_FUNCS([strrchr strtol strtoul strtoll strtoull])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
 AC_CHECK_FUNCS([nanosleep getopt_long gmtime_r])
 
-AC_CHECK_DECLS([getopt_long])
+AC_CHECK_DECLS([getopt_long],,,[
+#if HAVE_GETOPT_H
+#include <getopt.h>
+#endif
+])
 
 AC_CHECK_FUNCS([sysctlbyname sysctlnametomib])
 AC_CHECK_FUNCS([tcgetattr tcsetattr cfsetospeed cfsetispeed])
@@ -799,7 +803,7 @@ fi
 
 AC_CHECK_DECLS([__bswap_32, __bswap_64, htonll, ntohll],,,[
 #ifdef HAVE_SYS_TYPES_H
-# include <sys/types.h>
+#include <sys/types.h>
 #endif
 #if HAVE_BYTESWAP_H
 #include <byteswap.h>

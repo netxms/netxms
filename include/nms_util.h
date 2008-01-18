@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.113 2007-12-05 14:17:23 victor Exp $ */
+/* $Id: nms_util.h,v 1.114 2008-01-18 17:00:34 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -303,7 +303,7 @@ typedef struct
 //
 
 #ifdef _WIN32
-#include <getopt.h>
+#include <netxms_getopt.h>
 #endif
 
 
@@ -551,6 +551,10 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.113  2007/12/05 14:17:23  victor
+
+SetDefaultCodePage now will check if codepage supported by iconv
+
 Revision 1.112  2007/09/21 10:31:05  victor
 Fixed issue 185 (creting object with russion characters in name)
 
