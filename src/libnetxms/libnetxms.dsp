@@ -371,10 +371,6 @@ SOURCE=.\uuid.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=..\..\include\getopt.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\libnetxms.h
 # End Source File
 # Begin Source File
@@ -388,6 +384,10 @@ SOURCE="..\..\include\netxms-regex.h"
 # Begin Source File
 
 SOURCE="..\..\include\netxms-version.h"
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\netxms_getopt.h
 # End Source File
 # Begin Source File
 

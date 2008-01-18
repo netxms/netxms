@@ -25,7 +25,10 @@
 #define _nxevent_h_
 
 #include <nms_common.h>
-#include <getopt.h>
 #include <nxclapi.h>
+
+#if HAVE_GETOPT_H
+#include <getopt.h>
+#endif
 
 #endif

@@ -26,8 +26,11 @@
 
 #include <nms_common.h>
 #include <nms_util.h>
-#include <getopt.h>
 #include <nxsl.h>
+
+#if HAVE_GETOPT_H
+#include <getopt.h>
+#endif
 
 
 //
