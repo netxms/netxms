@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.282 2008-01-18 17:00:34 victor Exp $
+# $Id: configure.ac,v 1.283 2008-01-21 17:05:30 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -236,7 +236,7 @@ AC_ARG_WITH(dist,
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
 	CONTRIB_MODULES="mibs backgrounds"
-	CLIENT_COMPONENTS="console"
+	CLIENT_COMPONENTS="console nxsms"
 	UNSTABLE_SUBAGENT_DIRS="logscan odbcquery"
 	SERVER_TOOLS="nxconfig"
 )
@@ -336,6 +336,7 @@ if test $? = 0; then
 	BUILD_CLIENT="yes"
 	NEED_ZLIB="yes"
 	MODULES="$MODULES libnxmap libnxcl nxevent nxpush nxreport console client"
+	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxsms"
 fi
 
 check_substr "$COMPONENTS" "agent"
@@ -1251,6 +1252,7 @@ AC_CONFIG_FILES([
 	src/client/console/plugins/Dashboard/rc/Makefile
 	src/client/console/plugins/ObjectBrowser/Makefile
 	src/client/console/plugins/ObjectBrowser/rc/Makefile
+	src/client/nxsms/Makefile
 	src/console/Makefile
 	src/console/nxuilib/Makefile
 	src/console/nxuilib/res/Makefile

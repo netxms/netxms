@@ -1,4 +1,4 @@
-/* $Id: nxpush.cpp,v 1.14 2007-03-29 12:36:55 victor Exp $ */
+/* $Id: nxpush.cpp,v 1.15 2008-01-21 17:05:30 victor Exp $ */
 
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server
@@ -25,7 +25,7 @@
 #include <nms_util.h>
 #include <nxclapi.h>
 
-#if HAVE_GETOPT_LONG && !HAVE_DECL_GETOPT_LONG
+#if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
 
@@ -61,7 +61,7 @@ static char *optPassword = "";
 static BOOL optEncrypt = FALSE;
 static int optBatchSize = 0;
 
-#if HAVE_GETOPT_LONG
+#if HAVE_DECL_GETOPT_LONG
 static struct option longOptions[] =
 {
 	{"version",   no_argument,       NULL,        'V'},
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
 	InitThreadLibrary();
 
 	opterr = 0;
-#if HAVE_GETOPT_LONG
+#if HAVE_DECL_GETOPT_LONG
 	while ((c = getopt_long(argc, argv, SHORT_OPTIONS, longOptions, NULL)) != -1)
 #else
 	while ((c = getopt(argc, argv, SHORT_OPTIONS)) != -1)
@@ -265,16 +265,18 @@ int main(int argc, char *argv[])
 	return ret;
 }
 
+
 //
 // Values parser - clean string and split by '='
 //
+
 BOOL AddValue(char *pair)
 {
 	BOOL ret = FALSE;
 	char *p = pair;
 	char *value = NULL;
 
-	for (p = pair; *p != NULL; p++)
+	for (p = pair; *p != 0; p++)
 	{
 		if (*p == '=' && value == NULL)
 		{
@@ -299,9 +301,11 @@ BOOL AddValue(char *pair)
 	return ret;
 }
 
+
 //
 // Split IDs, cleanup and add to the send queue
 //
+
 BOOL AddValuePair(char *name, char *value)
 {
 	BOOL ret = TRUE;
@@ -541,6 +545,12 @@ BOOL Teardown(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.14  2007/03/29 12:36:55  victor
+- Topology view show port names
+- Fixed bug in node performance view which may cause console to crash (especially on slow machines)
+- Installation updated to 0.2.16-rc8
+- Fixed incorrect calls to NXCConnect() from various tools
+
 Revision 1.13  2006/12/29 20:26:38  alk
 updated to match new NXCConnect()
 
