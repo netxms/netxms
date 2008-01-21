@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.286 2008-01-14 16:53:14 victor Exp $ */
+/* $Id: session.cpp,v 1.287 2008-01-21 14:24:02 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1144,6 +1144,9 @@ void ClientSession::ProcessingThread(void)
 				break;
 			case CMD_QUERY_L2_TOPOLOGY:
 				CALL_IN_NEW_THREAD(QueryL2Topology, pMsg);
+				break;
+			case CMD_SEND_SMS:
+				SendSMS(pMsg);
 				break;
          default:
             // Pass message to loaded modules
@@ -9241,6 +9244,34 @@ void ClientSession::QueryL2Topology(CSCPMessage *pRequest)
 	else
 	{
 		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+	}
+
+	SendMessage(&msg);
+}
+
+
+//
+// Send SMS
+//
+
+void ClientSession::SendSMS(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+	TCHAR phone[256], message[256];
+
+	msg.SetId(pRequest->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	if (ConfigReadInt(_T("AllowDirectSMS"), 0))
+	{
+		pRequest->GetVariableStr(VID_RCPT_ADDR, phone, 256);
+		pRequest->GetVariableStr(VID_MESSAGE, message, 256);
+		PostSMS(phone, message);
+		msg.SetVariable(VID_RCC, RCC_SUCCESS);
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
 	SendMessage(&msg);

@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.141 2008-01-17 09:07:13 victor Exp $ */
+/* $Id: nms_core.h,v 1.142 2008-01-21 14:24:03 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -521,6 +521,7 @@ private:
 	void UpdateCertificateComments(CSCPMessage *pRequest);
 	void SendCertificateList(DWORD dwRqId);
 	void QueryL2Topology(CSCPMessage *pRequest);
+	void SendSMS(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
