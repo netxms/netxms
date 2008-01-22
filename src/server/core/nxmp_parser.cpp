@@ -1,7 +1,7 @@
-/* $Id: nxmp_parser.cpp,v 1.4 2007-09-20 13:04:00 victor Exp $ */
+/* $Id: nxmp_parser.cpp,v 1.5 2008-01-22 19:21:10 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by

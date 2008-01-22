@@ -1,4 +1,4 @@
-/* $Id: nxmp_parser.h,v 1.10 2007-09-19 07:14:16 victor Exp $ */
+/* $Id: nxmp_parser.h,v 1.11 2008-01-22 19:21:10 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Server
@@ -128,7 +128,7 @@ public:
 
 class NXMP_Lexer
 {
-	friend int yylex(YYSTYPE *, yyscan_t);
+	friend int yylex(YYSTYPE *, yyscan_t, NXMP_Parser *);
 
 protected:
    int m_nSourceSize;

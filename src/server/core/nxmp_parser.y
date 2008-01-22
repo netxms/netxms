@@ -10,12 +10,13 @@
 #include "nxmp_parser.h"
 
 void yyerror(yyscan_t scanner, NXMP_Lexer *pLexer, NXMP_Parser *pParser, NXMP_Data *pData, const char *pszText);
-int yylex(YYSTYPE *lvalp, yyscan_t scanner);
+int yylex(YYSTYPE *lvalp, yyscan_t scanner, NXMP_Parser *dummy);
 
 %}
 
 %pure-parser
 %lex-param		{yyscan_t scanner}
+%lex-param		{NXMP_Parser *pParser}
 %parse-param	{yyscan_t scanner}
 %parse-param	{NXMP_Lexer *pLexer}
 %parse-param	{NXMP_Parser *pParser}

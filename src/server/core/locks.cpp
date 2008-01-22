@@ -157,11 +157,16 @@ BOOL LockComponent(DWORD dwId, DWORD dwLockBy, const char *pszOwnerInfo,
       m_locks[dwId].dwLockStatus = dwLockBy;
       nx_strncpy(m_locks[dwId].szOwnerInfo, pszOwnerInfo, MAX_OWNER_INFO);
       bSuccess = TRUE;
+      DbgPrintf(5, "*Locks* Component \"%s\" successfully locked by %d (%s)",
+                m_locks[dwId].pszName, dwLockBy, pszOwnerInfo != NULL ? pszOwnerInfo : "NULL");
    }
    else
    {
       *pdwCurrentOwner = m_locks[dwId].dwLockStatus;
       strcpy(pszCurrentOwnerInfo, m_locks[dwId].szOwnerInfo);
+      DbgPrintf(5, "*Locks* Component \"%s\" cannot be locked by %d (%s) - already locked by \"%s\"",
+                m_locks[dwId].pszName, dwLockBy, pszOwnerInfo != NULL ? pszOwnerInfo : "NULL",
+                m_locks[dwId].szOwnerInfo);
    }
    MutexUnlock(m_hMutexLockerAccess);
    return bSuccess;

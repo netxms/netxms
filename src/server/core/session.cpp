@@ -1,7 +1,7 @@
-/* $Id: session.cpp,v 1.287 2008-01-21 14:24:02 victor Exp $ */
+/* $Id: session.cpp,v 1.288 2008-01-22 19:21:10 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by

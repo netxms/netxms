@@ -1,7 +1,7 @@
-/* $Id: nxmp_lexer.cpp,v 1.3 2007-04-06 10:44:13 victor Exp $ */
+/* $Id: nxmp_lexer.cpp,v 1.4 2008-01-22 19:21:10 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ int NXMP_Lexer::LexerInput(char *pBuffer, int nMaxSize)
    else
    {
       nBytes = 0;   // EOF
-   }
+   }   
    return nBytes;
 }
 

@@ -19,6 +19,7 @@ escape		\\[bnrt0\"]
 
 #define YY_EXTRA_TYPE	NXMP_Lexer*
 #define YY_INPUT(buf, result, maxSize) { result = yyextra->LexerInput(buf, maxSize); }
+#define YY_DECL int yylex(YYSTYPE *yylval_param, yyscan_t yyscanner, NXMP_Parser *dummy)
 
 #include "nxcore.h"
 #include "nxmp_parser.h"

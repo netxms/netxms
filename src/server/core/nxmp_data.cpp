@@ -1,7 +1,7 @@
-/* $Id: nxmp_data.cpp,v 1.11 2007-09-19 07:14:16 victor Exp $ */
+/* $Id: nxmp_data.cpp,v 1.12 2008-01-22 19:21:10 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -137,6 +137,8 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
 	static TCHAR szNotNumberDCI[] = _T("DCI attribute %s must have numeric value");
 	static TCHAR szNotNumberThreshold[] = _T("Threshold attribute %s must have numeric value");
 
+   DbgPrintf(6, _T("NXMP_Parse: ParseVariable(\"%s\",\"%s\") - CONTEXT=%d"), pszName, pszValue, m_nContext);
+   
    switch(m_nContext)
    {
       case CTX_EVENT:
@@ -458,6 +460,7 @@ void NXMP_Data::NewEvent(char *pszName)
    nx_strncpy(m_pCurrEvent->szName, pszName, MAX_EVENT_NAME);
 #endif
    m_nContext = CTX_EVENT;
+   DbgPrintf(6, _T("NXMP_Parse: NewEvent(\"%s\")"), pszName);
 }
 
 
@@ -870,10 +873,14 @@ DWORD NXMP_Data::Install(DWORD dwFlags)
    DWORD i, dwResult = RCC_SUCCESS;
    BOOL bRet = FALSE;
    EVENT_TEMPLATE *pEvent;
+   
+   DbgPrintf(4, _T("NXMP: Installing management pack"));
 
    // Install events
+   DbgPrintf(4, _T("NXMP: %d events to install"), m_dwNumEvents);
    for(i = 0; i < m_dwNumEvents; i++)
    {
+	   DbgPrintf(5, _T("NXMP: Installing event %d (%s)"), m_pEventList[i].dwCode, m_pEventList[i].szName);
       if ((m_pEventList[i].dwCode >= FIRST_USER_EVENT_ID) ||
           (m_pEventList[i].dwCode == 0))
       {
@@ -912,8 +919,10 @@ DWORD NXMP_Data::Install(DWORD dwFlags)
       ReloadEvents();
       NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
    }
+   DbgPrintf(4, _T("NXMP: Events installed"), m_dwNumEvents);
 
 	// Install traps
+   DbgPrintf(4, _T("NXMP: %d traps to install"), m_dwNumTraps);
 	for(i = 0; i < m_dwNumTraps; i++)
 	{
 		// Resolve event name if needed
@@ -926,8 +935,10 @@ DWORD NXMP_Data::Install(DWORD dwFlags)
 		if (dwResult != RCC_SUCCESS)
 			goto stop_processing;
 	}
+   DbgPrintf(4, _T("NXMP: Traps installed"), m_dwNumEvents);
 
 	// Install templates
+   DbgPrintf(4, _T("NXMP: %d templates to install"), m_dwNumTemplates);
 	for(i = 0; i < m_dwNumTemplates; i++)
 	{
 		m_ppTemplateList[i]->AssociateItems();
@@ -937,7 +948,9 @@ DWORD NXMP_Data::Install(DWORD dwFlags)
 		m_ppTemplateList[i]->Unhide();
 		m_ppTemplateList[i] = NULL;	// Prevent object deletion by NXMP_Data destructor
 	}
+   DbgPrintf(4, _T("NXMP: Templates installed"), m_dwNumEvents);
 
 stop_processing:
+   DbgPrintf(4, _T("NXMP: management pack installation finished, RCC=%d"), dwResult);
    return dwResult;
 }
