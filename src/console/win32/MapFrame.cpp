@@ -169,7 +169,7 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
    // Create and initialize map view
    m_wndMapView.CreateEx(WS_EX_CLIENTEDGE, NULL, _T("MapView"), WS_CHILD | WS_VISIBLE, rect, this, 0);
-	m_wndMapView.m_bShowConnectorNames = TRUE;
+	m_wndMapView.m_bShowConnectorNames = FALSE;
    
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 
