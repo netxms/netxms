@@ -5,7 +5,6 @@
 - New columns added to table "event_policy":
 	ALTER TABLE event_policy ADD situation_id integer not null
 	ALTER TABLE event_policy ADD situation_instance varchar(255) not null
-
 - New table added:
 	CREATE TABLE policy_situation_attr_list
 	(
@@ -23,7 +22,8 @@
 		comments SQL_TEXT not null,
 		PRIMARY KEY(id)
 	) TABLE_TYPE;
-- New configuration parameters added: RetainCustomInterfaceNames, AllowDirectSMS, EventStormThreshold
+- New configuration parameters added: RetainCustomInterfaceNames,
+  AllowDirectSMS, EventStormThreshold
 
 
 *************

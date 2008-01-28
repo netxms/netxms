@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.17 2008-01-07 09:41:02 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.18 2008-01-28 06:59:17 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -63,6 +63,11 @@ END_EVENT_TABLE()
 nxMainFrame::nxMainFrame(const wxPoint &pos, const wxSize &size)
             :wxFrame((wxWindow *)NULL, wxID_ANY, _T("NetXMS Management Console"), pos, size)
 {
+#ifdef _WIN32
+	wxIcon icon(_T("NXMC_ICON"), wxBITMAP_TYPE_ICO_RESOURCE);
+	SetIcon(icon);
+#endif
+
 	m_currPane = NULL;
 	m_currTab = NULL;
 

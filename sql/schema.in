@@ -1224,6 +1224,7 @@ CREATE TABLE situations
 ** Situations' data
 */
 
+/*
 CREATE TABLE situation_data
 (
 	situation_id integer not null,
@@ -1232,3 +1233,4 @@ CREATE TABLE situation_data
 	attr_data varchar(255) not null,
 	PRIMARY KEY(situation_id,instance,attr_name)
 ) TABLE_TYPE;
+*/

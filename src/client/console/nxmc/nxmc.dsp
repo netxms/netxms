@@ -283,6 +283,10 @@ SOURCE=.\vareditdlg.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
+SOURCE=.\rc\nxmc.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\nxmc.rc
 # End Source File
 # Begin Source File

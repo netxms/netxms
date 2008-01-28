@@ -99,6 +99,15 @@ END
 
 #endif    // !_MAC
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+NXMC_ICON            ICON    DISCARDABLE     "rc\\nxmc.ico"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

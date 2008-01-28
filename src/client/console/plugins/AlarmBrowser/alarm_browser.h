@@ -59,10 +59,16 @@ protected:
 	void OnSize(wxSizeEvent &event);
 	void OnListItemRightClick(wxListEvent &event);
 	void OnListColumnClick(wxListEvent &event);
+	void OnContextMenu(wxContextMenuEvent &event);
 	void OnAlarmChange(wxCommandEvent &event);
 	void OnAlarmAck(wxCommandEvent &event);
+	void OnUpdateAlarmAck(wxUpdateUIEvent &event);
 	void OnAlarmTerminate(wxCommandEvent &event);
+	void OnUpdateAlarmTerminate(wxUpdateUIEvent &event);
 	void OnAlarmDelete(wxCommandEvent &event);
+	void OnUpdateAlarmDelete(wxUpdateUIEvent &event);
+	void OnAlarmIncreaseFont(wxCommandEvent &event);
+	void OnAlarmDecreaseFont(wxCommandEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };

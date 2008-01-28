@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -87,13 +87,61 @@ static BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
 
 
 //
+// Upgrade from V72 to V73
+//
+
+static BOOL H_UpgradeFromV72(void)
+{
+   static TCHAR m_szBatch[] =
+		_T("ALTER TABLE event_policy ADD situation_id integer\n")
+		_T("ALTER TABLE event_policy ADD situation_instance varchar(255)\n")
+      _T("<END>");
+
+	if (!CreateTable(_T("CREATE TABLE policy_situation_attr_list (")
+	                 _T("rule_id integer not null,")
+	                 _T("situation_id integer not null,")
+	                 _T("attr_name varchar(255) not null,")
+	                 _T("attr_value varchar(255) not null,")
+	                 _T("PRIMARY KEY(rule_id,situation_id,attr_name))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!CreateTable(_T("CREATE TABLE situations (")
+	                 _T("id integer not null,")
+	                 _T("name varchar(127) not null,")
+	                 _T("comments $SQL:TEXT not null,")
+	                 _T("PRIMARY KEY(id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("RetainCustomInterfaceNames"), _T("0"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("AllowDirectSMS"), _T("0"), 1, 0))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("EventStormThreshold"), _T("0"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='73' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V71 to V72
 //
 
 static BOOL H_UpgradeFromV71(void)
 {
    static TCHAR m_szBatch[] =
-		_T("ALTER TABLE items ADD proxy_node integer\n")
+		_T("ALTER TABLE items ADD proxy_node integer not null\n")
 		_T("UPDATE items SET proxy_node=0\n")
       _T("<END>");
 
@@ -3176,6 +3224,7 @@ static struct
    { 69, H_UpgradeFromV69 },
    { 70, H_UpgradeFromV70 },
    { 71, H_UpgradeFromV71 },
+   { 72, H_UpgradeFromV72 },
    { 0, NULL }
 };
 

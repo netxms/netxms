@@ -30,11 +30,17 @@
 
 BEGIN_EVENT_TABLE(nxAlarmView, nxView)
 	EVT_SIZE(nxAlarmView::OnSize)
-	EVT_LIST_ITEM_RIGHT_CLICK(wxID_LIST_CTRL, nxAlarmView::OnListItemRightClick)
+//	EVT_LIST_ITEM_RIGHT_CLICK(wxID_LIST_CTRL, nxAlarmView::OnListItemRightClick)
 	EVT_LIST_COL_CLICK(wxID_LIST_CTRL, nxAlarmView::OnListColumnClick)
+	EVT_CONTEXT_MENU(nxAlarmView::OnContextMenu)
 	EVT_MENU(XRCID("menuAlarmAck"), nxAlarmView::OnAlarmAck)
+	EVT_UPDATE_UI(XRCID("menuAlarmAck"), nxAlarmView::OnUpdateAlarmAck)
 	EVT_MENU(XRCID("menuAlarmTerminate"), nxAlarmView::OnAlarmTerminate)
+	EVT_UPDATE_UI(XRCID("menuAlarmTerminate"), nxAlarmView::OnUpdateAlarmTerminate)
 	EVT_MENU(XRCID("menuAlarmDelete"), nxAlarmView::OnAlarmDelete)
+	EVT_UPDATE_UI(XRCID("menuAlarmDelete"), nxAlarmView::OnUpdateAlarmDelete)
+	EVT_MENU(XRCID("menuAlarmIncreaseFont"), nxAlarmView::OnAlarmIncreaseFont)
+	EVT_MENU(XRCID("menuAlarmDecreaseFont"), nxAlarmView::OnAlarmDecreaseFont)
 END_EVENT_TABLE()
 
 
@@ -45,6 +51,8 @@ END_EVENT_TABLE()
 nxAlarmView::nxAlarmView(wxWindow *parent, const TCHAR *context, NXC_OBJECT *object)
             : nxView(parent)
 {
+	int fontSize;
+
 	wxConfigBase *cfg = wxConfig::Get();
 	wxString path = cfg->GetPath();
 
@@ -54,6 +62,7 @@ nxAlarmView::nxAlarmView(wxWindow *parent, const TCHAR *context, NXC_OBJECT *obj
 	cfg->SetPath(m_context);
 	cfg->Read(_T("AlarmView/SortMode"), &m_sortMode, 0);
 	cfg->Read(_T("AlarmView/SortDir"), &m_sortDir, -1);
+	cfg->Read(_T("AlarmView/FontSize"), &fontSize, -1);
 
 	m_wndListCtrl = new wxListView(this, wxID_LIST_CTRL, wxDefaultPosition, wxDefaultSize,
 	                               wxLC_REPORT | wxLC_HRULES | wxLC_VRULES);
@@ -72,6 +81,15 @@ nxAlarmView::nxAlarmView(wxWindow *parent, const TCHAR *context, NXC_OBJECT *obj
 	imgList->Add(wxXmlResource::Get()->LoadIcon(_T("icoSortDown")));
 	m_wndListCtrl->AssignImageList(imgList, wxIMAGE_LIST_SMALL);
 	NXMCLoadListCtrlColumns(cfg, *m_wndListCtrl, _T("AlarmView"));
+
+	if (fontSize != -1)
+	{
+		wxFont font;
+
+		font = m_wndListCtrl->GetFont();
+		font.SetPointSize(fontSize);
+		m_wndListCtrl->SetFont(font);
+	}
 
 	cfg->SetPath(path);
 	
@@ -94,6 +112,7 @@ nxAlarmView::~nxAlarmView()
 	cfg->SetPath(m_context);
 	cfg->Write(_T("AlarmView/SortMode"), m_sortMode);
 	cfg->Write(_T("AlarmView/SortDir"), m_sortDir);
+	cfg->Write(_T("AlarmView/FontSize"), m_wndListCtrl->GetFont().GetPointSize());
 	NXMCSaveListCtrlColumns(cfg, *m_wndListCtrl, _T("AlarmView"));
 	cfg->SetPath(path);
 }
@@ -380,7 +399,13 @@ void nxAlarmView::OnAlarmAck(wxCommandEvent &event)
 			break;
 		idList[i] = m_wndListCtrl->GetItemData(item);
 	}
-	DoRequestArg2((void *)AckAlarms, count, CAST_FROM_POINTER(idList, wxUIntPtr), _T("Cannot acknowledge alarm: %s"));
+	if (count > 0)
+		DoRequestArg2((void *)AckAlarms, count, CAST_FROM_POINTER(idList, wxUIntPtr), _T("Cannot acknowledge alarm: %s"));
+}
+
+void nxAlarmView::OnUpdateAlarmAck(wxUpdateUIEvent &event)
+{
+	event.Enable(m_wndListCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED) != -1);
 }
 
 
@@ -417,7 +442,13 @@ void nxAlarmView::OnAlarmTerminate(wxCommandEvent &event)
 			break;
 		idList[i] = m_wndListCtrl->GetItemData(item);
 	}
-	DoRequestArg2((void *)TerminateAlarms, count, CAST_FROM_POINTER(idList, wxUIntPtr), _T("Cannot terminate alarm: %s"));
+	if (count > 0)
+		DoRequestArg2((void *)TerminateAlarms, count, CAST_FROM_POINTER(idList, wxUIntPtr), _T("Cannot terminate alarm: %s"));
+}
+
+void nxAlarmView::OnUpdateAlarmTerminate(wxUpdateUIEvent &event)
+{
+	event.Enable(m_wndListCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED) != -1);
 }
 
 
@@ -454,5 +485,65 @@ void nxAlarmView::OnAlarmDelete(wxCommandEvent &event)
 			break;
 		idList[i] = m_wndListCtrl->GetItemData(item);
 	}
-	DoRequestArg2((void *)DeleteAlarms, count, CAST_FROM_POINTER(idList, wxUIntPtr), _T("Cannot delete alarm: %s"));
+	if (count > 0)
+		DoRequestArg2((void *)DeleteAlarms, count, CAST_FROM_POINTER(idList, wxUIntPtr), _T("Cannot delete alarm: %s"));
+}
+
+void nxAlarmView::OnUpdateAlarmDelete(wxUpdateUIEvent &event)
+{
+	event.Enable(m_wndListCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED) != -1);
+}
+
+
+//
+// Increase font
+//
+
+void nxAlarmView::OnAlarmIncreaseFont(wxCommandEvent &event)
+{
+	wxFont font;
+
+	font = m_wndListCtrl->GetFont();
+	if (font.GetPointSize() < 100)
+	{
+		font.SetPointSize(font.GetPointSize() + 1);
+		m_wndListCtrl->SetFont(font);
+	}
+}
+
+
+//
+// Decrease font
+//
+
+void nxAlarmView::OnAlarmDecreaseFont(wxCommandEvent &event)
+{
+	wxFont font;
+
+	font = m_wndListCtrl->GetFont();
+	if (font.GetPointSize() > 4)
+	{
+		font.SetPointSize(font.GetPointSize() - 1);
+		m_wndListCtrl->SetFont(font);
+	}
+}
+
+
+//
+// Context menu handler
+//
+
+void nxAlarmView::OnContextMenu(wxContextMenuEvent &event)
+{
+	wxMenu *menu;
+
+	if (!IsBusy())
+	{
+		menu = wxXmlResource::Get()->LoadMenu(_T("menuCtxAlarm"));
+		if (menu != NULL)
+		{
+			PopupMenu(menu);
+			delete menu;
+		}
+	}
 }

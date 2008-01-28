@@ -169,7 +169,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('RetainCustomInterfaceNames','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('AllowDirectSMS','1',1,0);
+	VALUES ('AllowDirectSMS','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('EventStormThreshold','0',1,1);
 
