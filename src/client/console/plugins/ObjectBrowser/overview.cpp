@@ -197,7 +197,7 @@ void nxObjectOverview::InsertItem(const TCHAR *name, DWORD value)
 {
 	TCHAR buffer[32];
 
-	_stprintf(buffer, _T("%d"), value);
+	_sntprintf(buffer, 32, _T("%d"), value);
 	InsertItem(name, buffer);
 }
 

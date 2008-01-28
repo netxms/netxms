@@ -54,7 +54,11 @@ bool nxApp::OnInit()
 	SetAppName(_T("nxmc"));
 	SetVendorName(_T("NetXMS"));
 #ifndef _WIN32
+#ifdef UNICODE
+	((wxStandardPaths &)wxStandardPaths::Get()).SetInstallPrefix(PREFIXW);
+#else
 	((wxStandardPaths &)wxStandardPaths::Get()).SetInstallPrefix(PREFIX);
+#endif
 #endif
 
    InitThreadLibrary();

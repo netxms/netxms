@@ -1183,8 +1183,8 @@ static BOOL ObjectHasDefaultName(NXC_OBJECT *pObject)
    if (pObject->iClass == OBJECT_SUBNET)
    {
       TCHAR szBuffer[64], szIpAddr[32];
-      _stprintf(szBuffer, _T("%s/%d"), IpToStr(pObject->dwIpAddr, szIpAddr),
-                BitsInMask(pObject->subnet.dwIpNetMask));
+      _sntprintf(szBuffer, 64, _T("%s/%d"), IpToStr(pObject->dwIpAddr, szIpAddr),
+                 BitsInMask(pObject->subnet.dwIpNetMask));
       return !_tcscmp(szBuffer, pObject->szName);
    }
    else

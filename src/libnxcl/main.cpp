@@ -44,7 +44,7 @@ void DebugPrintf(TCHAR *szFormat, ...)
       return;
 
    va_start(args, szFormat);
-   _vstprintf(szBuffer, szFormat, args);
+   _vsntprintf(szBuffer, 4096, szFormat, args);
    va_end(args);
    g_pDebugCallBack(szBuffer);
 }

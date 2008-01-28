@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.284 2008-01-28 18:09:37 victor Exp $
+# $Id: configure.ac,v 1.285 2008-01-28 20:23:44 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -56,6 +56,7 @@ TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
 CLIENT_COMPONENTS=""
 BUILD_UNICODE="no"
+WX_UNICODE="no"
 
 
 #--------------------------------------------------------------------
@@ -850,6 +851,7 @@ if test "x$NEED_WXWIDGETS" = "xyes"; then
 			NEED_UNICODE=`$WXCONF --selected-config | grep unicode | wc -l`
 			if test $NEED_UNICODE -eq 1; then
 				BUILD_UNICODE="yes"
+				WX_UNICODE="yes"
 			fi
 			CXXFLAGS="$CXXFLAGS `$WXCONF --cxxflags --debug=$ENABLE_DEBUG`"
 			LDFLAGS="$LDFLAGS `$WXCONF --libs --debug=$ENABLE_DEBUG`"
@@ -864,7 +866,7 @@ fi
 
 AC_CHECK_HEADERS([wchar.h wctype.h iconv.h])
 AC_CHECK_SIZEOF(wchar_t)
-AC_CHECK_FUNCS([wcstoll wcstoull wfopen wopen wstat])
+AC_CHECK_FUNCS([wcstoll wcstoull wfopen wopen wstat wgetenv])
 
 if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,
@@ -1124,12 +1126,6 @@ if test $ac_cv_sizeof_wchar_t -eq 4; then
 	AC_DEFINE(UNICODE_UCS4, 1, Define to 1 if you have 4-byte wchar_t)
 fi
 
-if test "x$BUILD_UNICODE" = "xyes"; then
-	UNICODE_LIBNETXMS="libnetxmsw.la"
-	UNICODE_LIBNXMAP="libnxmapw.la"
-	UNICODE_LIBNXCL="libnxclw.la"
-fi
-
 
 #--------------------------------------------------------------------
 # MySQL
@@ -1238,9 +1234,10 @@ fi
 # Other settings
 #--------------------------------------------------------------------
 
-CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DPREFIX=\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
+CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DPREFIX=\\\"\${prefix}\\\" -DPREFIXW=L\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
 
 AM_CONDITIONAL([BUILD_UNICODE_LIBS], [test "x$BUILD_UNICODE" = "xyes"])
+AM_CONDITIONAL([BUILD_UNICODE_CONSOLE], [test "x$WX_UNICODE" = "xyes"])
 
 
 #--------------------------------------------------------------------

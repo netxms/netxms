@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -188,11 +188,13 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
             break;
          case DCI_DT_STRING:
 #ifdef UNICODE
-            wcscpy(dct.value.szString, pItem->pThresholdList[i].value.szString);
+#ifdef UNICODE_UCS4
+				ucs4_to_ucs2(pItem->pThresholdList[i].value.szString, -1, dct.value.szString, MAX_DCI_STRING_VALUE);
 #else
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
-                                pItem->pThresholdList[i].value.szString, -1,
-                                dct.value.szString, MAX_DCI_STRING_VALUE);
+            wcscpy(dct.value.szString, pItem->pThresholdList[i].value.szString);
+#endif            
+#else
+				mb_to_ucs2(pItem->pThresholdList[i].value.szString, -1, dct.value.szString, MAX_DCI_STRING_VALUE);
 #endif
             SwapWideString(dct.value.szString);
             break;
@@ -398,12 +400,13 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIData(NXC_SESSION hSession, DWORD dwNodeId, DWO
                   case DCI_DT_STRING:
                      SwapWideString(pSrc->value.szString);
 #ifdef UNICODE
-                     wcscpy(pDst->value.szString, pSrc->value.szString);
+#ifdef UNICODE_UCS4
+                     ucs2_to_ucs4(pSrc->value.szString, -1, pDst->value.szString, MAX_STRING_VALUE);
 #else
-                     WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                                         pSrc->value.szString, -1,
-                                         pDst->value.szString, MAX_STRING_VALUE,
-                                         NULL, NULL);
+                     wcscpy(pDst->value.szString, pSrc->value.szString);
+#endif                     
+#else
+                     ucs2_to_mb(pSrc->value.szString, -1, pDst->value.szString, MAX_STRING_VALUE);
 #endif
                      break;
                }

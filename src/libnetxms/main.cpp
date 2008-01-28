@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.13 2008-01-28 18:09:38 victor Exp $ */
+/* $Id: main.cpp,v 1.14 2008-01-28 20:23:45 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
@@ -66,12 +66,12 @@ double LIBNETXMS_EXPORTABLE __bswap_double(double dVal)
 
 
 //
-// Swap bytes in wide string
+// Swap bytes in wide string (UCS-2)
 //
 
-void LIBNETXMS_EXPORTABLE __bswap_wstr(WCHAR *pStr)
+void LIBNETXMS_EXPORTABLE __bswap_wstr(UCS2CHAR *pStr)
 {
-   WCHAR *pch;
+   UCS2CHAR *pch;
 
    for(pch = pStr; *pch != 0; pch++)
       *pch = htons(*pch);

@@ -4,7 +4,12 @@ SUBDIRS = rc
 
 lib_LTLIBRARIES = libnxmcp_ObjectBrowser.la
 libnxmcp_ObjectBrowser_la_SOURCES = browser.cpp main.cpp objview.cpp overview.cpp
+if BUILD_UNICODE_CONSOLE
+libnxmcp_ObjectBrowser_la_CPPFLAGS = -DUNICODE
+libnxmcp_ObjectBrowser_la_LDFLAGS = ../../../../libnetxms/libnetxmsw.la ../../../../libnxcl/libnxclw.la ../../libnxmc/libnxmc.la
+else
 libnxmcp_ObjectBrowser_la_LDFLAGS = ../../../../libnetxms/libnetxms.la ../../../../libnxcl/libnxcl.la ../../libnxmc/libnxmc.la
+endif
 
 EXTRA_DIST = object_browser.h mcpObjectBrowser.dsp ObjectBrowser.rc resource.h
 

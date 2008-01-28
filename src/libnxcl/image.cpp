@@ -58,9 +58,9 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(NXC_SESSION hSession, DWORD dwImageId,
          {
             pResponse->GetVariableBinary(VID_IMAGE_FILE, pBuffer, dwFileSize);
             cLastChar = pszCacheDir[_tcslen(pszCacheDir) - 1];
-            _stprintf(szFileName, _T("%s%s%08x.%s"), pszCacheDir, 
-                    (cLastChar == _T('\\')) || (cLastChar == _T('/')) ? _T("") : FS_PATH_SEPARATOR, 
-                    dwImageId, (wFormat == IMAGE_FORMAT_PNG) ? _T("png") : _T("ico"));
+            _sntprintf(szFileName, MAX_PATH, _T("%s%s%08x.%s"), pszCacheDir, 
+                       (cLastChar == _T('\\')) || (cLastChar == _T('/')) ? _T("") : FS_PATH_SEPARATOR, 
+                       dwImageId, (wFormat == IMAGE_FORMAT_PNG) ? _T("png") : _T("ico"));
 #ifndef _WIN32
 			//umask(0потом_посчитаю);
 #endif
@@ -107,8 +107,8 @@ static DWORD SyncImageFile(NXC_SESSION hSession, TCHAR *pszCacheDir,
    BYTE hash[MD5_DIGEST_SIZE];
    DWORD dwRetCode = RCC_SUCCESS;
 
-   _stprintf(szFileName, _T("%s") FS_PATH_SEPARATOR _T("%08x.%s"), pszCacheDir, dwImageId,
-           (wFormat == IMAGE_FORMAT_PNG) ? _T("png") : _T("ico"));
+   _sntprintf(szFileName, MAX_PATH, _T("%s") FS_PATH_SEPARATOR _T("%08x.%s"), pszCacheDir, dwImageId,
+              (wFormat == IMAGE_FORMAT_PNG) ? _T("png") : _T("ico"));
    memset(hash, 0, MD5_DIGEST_SIZE);
    CalculateFileMD5Hash(szFileName, hash);
    if (memcmp(hash, pServerHash, MD5_DIGEST_SIZE))

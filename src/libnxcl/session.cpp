@@ -439,12 +439,13 @@ void NXCL_Session::ProcessDCI(CSCPMessage *pMsg)
                   case DCI_DT_STRING:
                      SwapWideString(dct.value.szString);
 #ifdef UNICODE
-                     wcscpy(m_pItemList->pItems[i].pThresholdList[j].value.szString, dct.value.szString);
+#ifdef UNICODE_UCS4
+                     ucs2_to_ucs4(dct.value.szString, -1, m_pItemList->pItems[i].pThresholdList[j].value.szString, MAX_STRING_VALUE);
 #else
-                     WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                                         dct.value.szString, -1,
-                                         m_pItemList->pItems[i].pThresholdList[j].value.szString,
-                                         MAX_STRING_VALUE, NULL, NULL);
+                     wcscpy(m_pItemList->pItems[i].pThresholdList[j].value.szString, dct.value.szString);
+#endif                     
+#else
+                     ucs2_to_mb(dct.value.szString, -1, m_pItemList->pItems[i].pThresholdList[j].value.szString, MAX_STRING_VALUE);
 #endif
                      break;
                   default:

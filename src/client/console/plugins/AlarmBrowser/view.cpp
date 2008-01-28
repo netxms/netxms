@@ -208,7 +208,7 @@ void nxAlarmView::UpdateAlarm(long item, NXC_ALARM *alarm)
 
 	m_wndListCtrl->SetItem(item, 3, alarm->szMessage);
 
-	_stprintf(temp, _T("%d"), alarm->dwRepeatCount);
+	_sntprintf(temp, 64, _T("%d"), alarm->dwRepeatCount);
 	m_wndListCtrl->SetItem(item, 4, temp);
 
 	m_wndListCtrl->SetItem(item, 5, NXMCFormatTimeStamp(alarm->dwCreationTime, temp, TS_LONG_DATE_TIME));

@@ -241,6 +241,7 @@ typedef int SOCKET;
 
 #ifndef PREFIX
 #define PREFIX		"/usr/local"
+#define PREFIXW		L"/usr/local"
 #warning Installation prefix not defined, defaulting to /usr/local
 #endif
 

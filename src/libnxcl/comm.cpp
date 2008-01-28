@@ -270,7 +270,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, const TCHAR *pszServer, const
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
    servAddr.sin_port = htons(wPort);
-   servAddr.sin_addr.s_addr = ResolveHostName(szHostName);;
+   servAddr.sin_addr.s_addr = ResolveHostName(szHostName);
 
    if (servAddr.sin_addr.s_addr != INADDR_NONE)
    {

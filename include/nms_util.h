@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.115 2008-01-28 18:09:38 victor Exp $ */
+/* $Id: nms_util.h,v 1.116 2008-01-28 20:23:44 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -412,7 +412,7 @@ extern "C"
    QWORD LIBNETXMS_EXPORTABLE __bswap_64(QWORD qwVal);
 #endif
    double LIBNETXMS_EXPORTABLE __bswap_double(double dVal);
-   void LIBNETXMS_EXPORTABLE __bswap_wstr(WCHAR *pStr);
+   void LIBNETXMS_EXPORTABLE __bswap_wstr(UCS2CHAR *pStr);
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 #if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)
@@ -535,6 +535,9 @@ extern "C"
 #if !HAVE_WSTAT
 	int wstat(const WCHAR *_path, struct stat *_sbuf);
 #endif
+#if !HAVE_WGETENV
+	WCHAR *wgetenv(const WCHAR *_string);
+#endif
 #else		/* UNICODE */
 #if !HAVE_STRTOLL
 	INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base);
@@ -580,6 +583,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.115  2008/01/28 18:09:38  victor
+Preparation for UNICODE support on UNIX
+
 Revision 1.114  2008/01/18 17:00:34  victor
 Correct checking for getopt_long()
 

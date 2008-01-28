@@ -120,7 +120,7 @@ void LIBNXMC_EXPORTABLE NXMCSaveListCtrlColumns(wxConfigBase *cfg, wxListCtrl &w
 	cfg->Write(_T("ColumnCount"), count);
 	for(i = 0; i < count; i++)
    {
-      _stprintf(item, _T("Column%d"), i);
+      _sntprintf(item, 64, _T("Column%d"), i);
 		cfg->Write(item, wndListCtrl.GetColumnWidth(i));
    }
 	cfg->SetPath(path);
@@ -142,7 +142,7 @@ void LIBNXMC_EXPORTABLE NXMCLoadListCtrlColumns(wxConfigBase *cfg, wxListCtrl &w
 
    for(i = 0; i < count; i++)
    {
-      _stprintf(item, _T("Column%d"), i);
+      _sntprintf(item, 64, _T("Column%d"), i);
 		cfg->Read(item, &width, 50);
       wndListCtrl.SetColumnWidth(i, width);
    }

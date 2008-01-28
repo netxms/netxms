@@ -119,7 +119,7 @@ void nxNodeOverview::OnPaint(wxPaintEvent &event)
 		dc.SetBrush(wxNullBrush);
 		delete brush;
 
-		_stprintf(text, _T("%s (%d)"), NXMCGetStatusTextSmall(i), m_count[i]);
+		_sntprintf(text, 256, _T("%s (%d)"), NXMCGetStatusTextSmall(i), m_count[i]);
 		dc.DrawLabel(text, wxRect(PIE_CHART_SIZE + 35, y, size.x, 20), wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL);
 	}
 }

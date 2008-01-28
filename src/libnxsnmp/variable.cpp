@@ -300,7 +300,7 @@ TCHAR *SNMP_Variable::GetValueAsMACAddr(TCHAR *pszBuffer)
    if ((m_dwType == ASN_OCTET_STRING) && (m_dwValueLength >= 6))
    {
       for(i = 0, pszPos = pszBuffer; i < 6; i++, pszPos += 3)
-         _stprintf(pszPos, _T("%02X:"), m_pValue[i]);
+         _sntprintf(pszPos, 4, _T("%02X:"), m_pValue[i]);
       *(pszPos - 1) = 0;
    }
    else

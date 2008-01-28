@@ -1,8 +1,8 @@
-/* $Id: nxclapi.h,v 1.280 2008-01-17 09:07:12 victor Exp $ */
+/* $Id: nxclapi.h,v 1.281 2008-01-28 20:23:44 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
-** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -746,8 +746,8 @@ typedef struct
    WCHAR szMessage[MAX_EVENT_MSG_LENGTH];
 	WCHAR szUserTag[MAX_USERTAG_LENGTH];
 #else
-   char szMessage[MAX_EVENT_MSG_LENGTH * sizeof(WCHAR)];
-	char szUserTag[MAX_USERTAG_LENGTH];
+   char szMessage[MAX_EVENT_MSG_LENGTH * sizeof(UCS2CHAR)];
+	char szUserTag[MAX_USERTAG_LENGTH * sizeof(UCS2CHAR)];
 #endif
 } NXC_EVENT;
 

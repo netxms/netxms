@@ -4,7 +4,12 @@ SUBDIRS = rc
 
 lib_LTLIBRARIES = libnxmcp_AlarmBrowser.la
 libnxmcp_AlarmBrowser_la_SOURCES = browser.cpp main.cpp view.cpp
+if BUILD_UNICODE_CONSOLE
+libnxmcp_AlarmBrowser_la_CPPFLAGS = -DUNICODE
+libnxmcp_AlarmBrowser_la_LDFLAGS = ../../../../libnetxms/libnetxmsw.la ../../../../libnxcl/libnxclw.la ../../libnxmc/libnxmc.la
+else
 libnxmcp_AlarmBrowser_la_LDFLAGS = ../../../../libnetxms/libnetxms.la ../../../../libnxcl/libnxcl.la ../../libnxmc/libnxmc.la
+endif
 
 EXTRA_DIST = alarm_browser.h mcpAlarmBrowser.dsp AlarmBrowser.rc resource.h
 

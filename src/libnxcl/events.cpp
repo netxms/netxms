@@ -1,7 +1,8 @@
+/* $Id: events.cpp,v 1.22 2008-01-28 20:23:46 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -57,7 +58,7 @@ void ProcessEvent(NXCL_Session *pSession, CSCPMessage *pMsg, CSCP_MESSAGE *pRawM
             // Convert bytes in message characters to host byte order
             // and than to single-byte if we building non-unicode library
 #ifdef UNICODE
-#if WORDS_BIGENDIAN
+/*#if WORDS_BIGENDIAN
             memcpy(event.szMessage, ((NXC_EVENT *)pRawMsg->df)->szMessage,
                    MAX_EVENT_MSG_LENGTH * sizeof(WCHAR));
 #else
@@ -65,12 +66,12 @@ void ProcessEvent(NXCL_Session *pSession, CSCPMessage *pMsg, CSCP_MESSAGE *pRawM
                 pDst = event.szMessage; *pSrc != 0; pSrc++, pDst++)
                *pDst = ntohs(*pSrc);
             *pDst = ntohs(*pSrc);
-#endif
+#endif*/
+event.szMessage[0] = 0;
 #else
-            SwapWideString((WCHAR *)((NXC_EVENT *)pRawMsg->df)->szMessage);
-            WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                                (WCHAR *)((NXC_EVENT *)pRawMsg->df)->szMessage, -1,
-                                event.szMessage, MAX_EVENT_MSG_LENGTH, NULL, NULL);
+            SwapWideString((UCS2CHAR *)((NXC_EVENT *)pRawMsg->df)->szMessage);
+            ucs2_to_mb((UCS2CHAR *)((NXC_EVENT *)pRawMsg->df)->szMessage, -1,
+                       event.szMessage, MAX_EVENT_MSG_LENGTH);
             event.szMessage[MAX_EVENT_MSG_LENGTH - 1] = 0;
 #endif
 

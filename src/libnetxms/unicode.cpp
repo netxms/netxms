@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.27 2008-01-28 18:09:38 victor Exp $ */
+/* $Id: unicode.cpp,v 1.28 2008-01-28 20:23:45 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -718,6 +718,24 @@ int wstat(const WCHAR *_path, struct stat *_sbuf)
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
                        _path, -1, path, MAX_PATH, NULL, NULL);
 	return stat(path, _sbuf);
+}
+
+#endif
+
+#if !HAVE_WGETENV
+
+WCHAR *wgetenv(const WCHAR *_string)
+{
+	char name[256], *p;
+	static WCHAR value[8192];
+	
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, _string, -1, name, 256, NULL, NULL);
+	p = getenv(name);
+	if (p == NULL)
+		return NULL;
+
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, p, -1, value, 8192);
+	return value;
 }
 
 #endif

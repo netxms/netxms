@@ -4,7 +4,12 @@ SUBDIRS = rc
 
 lib_LTLIBRARIES = libnxmcp_Dashboard.la
 libnxmcp_Dashboard_la_SOURCES = alarm_overview.cpp dashboard.cpp main.cpp node_overview.cpp
+if BUILD_UNICODE_CONSOLE
+libnxmcp_Dashboard_la_CPPFLAGS = -DUNICODE
+libnxmcp_Dashboard_la_LDFLAGS = ../../../../libnetxms/libnetxmsw.la ../../../../libnxcl/libnxclw.la ../../libnxmc/libnxmc.la
+else
 libnxmcp_Dashboard_la_LDFLAGS = ../../../../libnetxms/libnetxms.la ../../../../libnxcl/libnxcl.la ../../libnxmc/libnxmc.la
+endif
 
 EXTRA_DIST = dashboard.h mcpDashboard.dsp Dashboard.rc resource.h
 
