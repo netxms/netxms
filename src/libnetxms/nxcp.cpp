@@ -1,4 +1,4 @@
-/* $Id: nxcp.cpp,v 1.20 2008-01-17 09:07:12 victor Exp $ */
+/* $Id: nxcp.cpp,v 1.21 2008-01-28 18:09:38 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
@@ -253,7 +253,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
    if ((wCode >= CMD_LOGIN) && (wCode <= CMD_SEND_SMS))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
-      _stprintf(pszBuffer, _T("CMD_UNKNOWN(%d)"), wCode);
+      _sntprintf(pszBuffer, 64, _T("CMD_UNKNOWN(%d)"), wCode);
    return pszBuffer;
 }
 

@@ -158,6 +158,7 @@ doc/internal/ipso.txt -text
 doc/internal/layer2-topology.txt -text
 doc/internal/netxms_architecture.vsd -text
 doc/internal/snmp.txt -text
+doc/internal/unicode.txt -text
 doc/manuals/Makefile.am -text
 doc/manuals/client_library.doc -text
 doc/manuals/netxms_install_guide.odt -text svneol=unset#unset

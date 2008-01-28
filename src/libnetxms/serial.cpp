@@ -1,4 +1,4 @@
-/* $Id: serial.cpp,v 1.19 2007-01-24 21:34:55 victor Exp $ */
+/* $Id: serial.cpp,v 1.20 2008-01-28 18:09:38 victor Exp $ */
 
 /* 
 ** NetXMS - Network Management System
@@ -91,7 +91,7 @@ bool Serial::Open(TCHAR *pszPort)
 	if (m_hPort != INVALID_HANDLE_VALUE)
 	{
 #else // UNIX
-		m_hPort = open(pszPort, O_RDWR | O_NOCTTY | O_NDELAY); 
+		m_hPort = _topen(pszPort, O_RDWR | O_NOCTTY | O_NDELAY); 
 		if (m_hPort != -1)
 		{
 			tcgetattr(m_hPort, &m_originalSettings);
@@ -505,6 +505,10 @@ void Serial::Flush(void)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.19  2007/01/24 21:34:55  victor
+- Fixed Serial::ReadAll() under Windows
+- Added isSystem object's attribute
+
 Revision 1.18  2007/01/24 00:54:17  alk
 Serial::ReadAll() implementation
 

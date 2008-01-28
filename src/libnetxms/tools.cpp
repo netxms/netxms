@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.68 2007-09-25 16:53:01 victor Exp $ */
+/* $Id: tools.cpp,v 1.69 2008-01-28 18:09:38 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
@@ -86,7 +86,7 @@ TCHAR LIBNETXMS_EXPORTABLE *IpToStr(DWORD dwAddr, TCHAR *szBuffer)
    TCHAR *szBufPtr;
 
    szBufPtr = szBuffer == NULL ? szInternalBuffer : szBuffer;
-   _stprintf(szBufPtr, _T("%d.%d.%d.%d"), dwAddr >> 24, (dwAddr >> 16) & 255,
+   _sntprintf(szBufPtr, 32, _T("%d.%d.%d.%d"), dwAddr >> 24, (dwAddr >> 16) & 255,
              (dwAddr >> 8) & 255, dwAddr & 255);
    return szBufPtr;
 }
@@ -710,7 +710,7 @@ QWORD LIBNETXMS_EXPORTABLE FileSize(const TCHAR *pszFileName)
 
    return (unsigned __int64)fd.nFileSizeLow + ((unsigned __int64)fd.nFileSizeHigh << 32);
 #else
-   if (stat(pszFileName, &fileInfo) == -1)
+   if (_tstat(pszFileName, &fileInfo) == -1)
       return 0;
 
    return (QWORD)fileInfo.st_size;

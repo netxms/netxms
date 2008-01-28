@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: dload.cpp
+** File: dload.cpp
 **
 **/
 
@@ -97,10 +97,22 @@ HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText
 		if (pszErrorText != NULL)
       	nx_strncpy(pszErrorText, (nError <= 19) ? m_pszErrorText[nError] : "Unknown error code", 255);
    }
-#else    /* _WIN32 */
+#else    /* not _WIN32 and not _NETWARE */
+#ifdef UNICODE
+	char *mbbuffer = MBStringFromWideString(pszLibName);
+   hModule = dlopen(mbbuffer, RTLD_NOW | RTLD_GLOBAL);
+   if ((hModule == NULL) && (pszErrorText != NULL))
+   {
+   	WCHAR *wbuffer = WideStringFromMBString(dlerror());
+      nx_strncpy(pszErrorText, wbuffer, 255);
+      free(wbuffer);
+   }
+   free(mbbuffer);
+#else
    hModule = dlopen(pszLibName, RTLD_NOW | RTLD_GLOBAL);
    if ((hModule == NULL) && (pszErrorText != NULL))
       nx_strncpy(pszErrorText, dlerror(), 255);
+#endif
 #endif
    return hModule;
 }
@@ -156,9 +168,23 @@ void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule,
    if (pszErrorText != NULL)
       *pszErrorText = 0;
 #else    /* _WIN32 */
+#ifdef UNICODE
+   char mbbuffer[256];
+
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                       pszSymbol, -1, mbbuffer, 256, NULL, NULL);
+   pAddr = dlsym(hModule, mbbuffer);
+   if ((pAddr == NULL) && (pszErrorText != NULL))
+   {
+   	WCHAR *wbuffer = WideStringFromMBString(dlerror());
+      nx_strncpy(pszErrorText, wbuffer, 255);
+      free(wbuffer);
+   }
+#else
    pAddr = dlsym(hModule, pszSymbol);
    if ((pAddr == NULL) && (pszErrorText != NULL))
       nx_strncpy(pszErrorText, dlerror(), 255);
+#endif
 #endif
    return pAddr;
 }

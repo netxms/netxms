@@ -13,4 +13,5 @@ EXTRA_DIST = \
 	db_format_change.txt \
 	event_code_ranges.txt \
 	ipso.txt \
-	netxms_architecture.vsd
+	netxms_architecture.vsd \
+	unicode.txt

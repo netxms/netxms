@@ -7,7 +7,7 @@
 #define HAVE_STRTOULL 1
 
 /* Define to 1 if you have sizeof(wchar_t) == 2. */
-#define HAVE_USEABLE_WCHAR 1
+#define UNICODE_UCS2 1
 
 /* Define to 1 if you have the `iconv' function. */
 //#define HAVE_ICONV 1

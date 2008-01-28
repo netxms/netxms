@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.114 2008-01-18 17:00:34 victor Exp $ */
+/* $Id: nms_util.h,v 1.115 2008-01-28 18:09:38 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -415,7 +415,10 @@ extern "C"
    void LIBNETXMS_EXPORTABLE __bswap_wstr(WCHAR *pStr);
 
 #if !defined(_WIN32) && !defined(_NETWARE)
-   void LIBNETXMS_EXPORTABLE strupr(TCHAR *in);
+#if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)
+   void LIBNETXMS_EXPORTABLE wcsupr(WCHAR *in);
+#endif   
+   void LIBNETXMS_EXPORTABLE strupr(char *in);
 #endif
    
 	void LIBNETXMS_EXPORTABLE QSortEx(void *base, size_t nmemb, size_t size, void *arg,
@@ -489,31 +492,57 @@ extern "C"
    int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, const char *pByteStr, 
                                                 int cchByteChar, WCHAR *pWideCharStr, 
                                                 int cchWideChar);
-#if !HAVE_USEABLE_WCHAR
-	int LIBNETXMS_EXPORTABLE nx_wcslen(const WCHAR *pStr);
-	WCHAR LIBNETXMS_EXPORTABLE *nx_wcsncpy(WCHAR *pDst, const WCHAR *pSrc, int nDstLen);
-	WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *pStr);
+#ifndef UNICODE_UCS2
+	int LIBNETXMS_EXPORTABLE ucs2_strlen(const UCS2CHAR *pStr);
+	UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strncpy(UCS2CHAR *pDst, const UCS2CHAR *pSrc, int nDstLen);
+	UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strdup(const UCS2CHAR *pStr);
 #endif
+
+#ifndef UNICODE
+	size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, size_t srcLen, char *dst, size_t dstLen);
+	size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, size_t srcLen, UCS2CHAR *dst, size_t dstLen);
+#endif
+
 #endif	/* _WIN32 */
+
    WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString);
    char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString);
    char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString);
-
+   
 #ifdef _WITH_ENCRYPTION
 	WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer);
 #endif
 
 #ifdef UNICODE
-INT64 LIBNETXMS_EXPORTABLE wcstoll(const WCHAR *nptr, WCHAR **endptr, int base);
-QWORD LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base);
-#else
-#if !(HAVE_STRTOLL)
-   INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base);
+
+#ifdef UNICODE_UCS4
+	size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, size_t srcLen, WCHAR *dst, size_t dstLen);
+	size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, size_t srcLen, UCS2CHAR *dst, size_t dstLen);
 #endif
-#if !(HAVE_STRTOULL)
-   QWORD LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base);
+
+#if !HAVE_WCSTOLL
+	INT64 LIBNETXMS_EXPORTABLE wcstoll(const WCHAR *nptr, WCHAR **endptr, int base);
 #endif
+#if !HAVE_WCSTOULL
+	QWORD LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base);
 #endif
+#if !HAVE_WFOPEN
+	FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type);
+#endif
+#if !HAVE_WOPEN
+	int LIBNETXMS_EXPORTABLE wopen(const WCHAR *, int, ...);
+#endif
+#if !HAVE_WSTAT
+	int wstat(const WCHAR *_path, struct stat *_sbuf);
+#endif
+#else		/* UNICODE */
+#if !HAVE_STRTOLL
+	INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base);
+#endif
+#if !HAVE_STRTOULL
+	QWORD LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base);
+#endif
+#endif	/* UNICODE */
 
 #ifdef _WIN32
 #ifndef SWIGPERL
@@ -551,6 +580,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.114  2008/01/18 17:00:34  victor
+Correct checking for getopt_long()
+
 Revision 1.113  2007/12/05 14:17:23  victor
 
 SetDefaultCodePage now will check if codepage supported by iconv

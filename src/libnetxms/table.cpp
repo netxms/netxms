@@ -1,4 +1,4 @@
-/* $Id: table.cpp,v 1.1 2006-11-03 08:58:58 victor Exp $ */
+/* $Id: table.cpp,v 1.2 2008-01-28 18:09:38 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -118,7 +118,7 @@ void Table::SetAt(int nRow, int nCol, LONG nData)
 {
    TCHAR szBuffer[32];
 
-   _stprintf(szBuffer, _T("%d"), nData);
+   _sntprintf(szBuffer, 32, _T("%d"), nData);
    SetAt(nRow, nCol, szBuffer);
 }
 
@@ -126,7 +126,7 @@ void Table::SetAt(int nRow, int nCol, DWORD dwData)
 {
    TCHAR szBuffer[32];
 
-   _stprintf(szBuffer, _T("%u"), dwData);
+   _sntprintf(szBuffer, 32, _T("%u"), dwData);
    SetAt(nRow, nCol, szBuffer);
 }
 
@@ -134,7 +134,7 @@ void Table::SetAt(int nRow, int nCol, INT64 nData)
 {
    TCHAR szBuffer[32];
 
-   _stprintf(szBuffer, INT64_FMT, nData);
+   _sntprintf(szBuffer, 32, INT64_FMT, nData);
    SetAt(nRow, nCol, szBuffer);
 }
 
@@ -142,7 +142,7 @@ void Table::SetAt(int nRow, int nCol, QWORD qwData)
 {
    TCHAR szBuffer[32];
 
-   _stprintf(szBuffer, UINT64_FMT, qwData);
+   _sntprintf(szBuffer, 32, UINT64_FMT, qwData);
    SetAt(nRow, nCol, szBuffer);
 }
 
@@ -150,7 +150,7 @@ void Table::SetAt(int nRow, int nCol, double dData)
 {
    TCHAR szBuffer[32];
 
-   _stprintf(szBuffer, _T("%f"), dData);
+   _sntprintf(szBuffer, 32, _T("%f"), dData);
    SetAt(nRow, nCol, szBuffer);
 }
 

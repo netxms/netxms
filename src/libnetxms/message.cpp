@@ -1,4 +1,4 @@
-/* $Id: message.cpp,v 1.5 2007-09-19 16:57:40 victor Exp $ */
+/* $Id: message.cpp,v 1.6 2008-01-28 18:09:38 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
@@ -211,8 +211,8 @@ void *CSCPMessage::Set(DWORD dwVarId, BYTE bType, const void *pValue, DWORD dwSi
 {
    DWORD dwIndex, dwLength;
    CSCP_DF *pVar;
-#ifndef UNICODE
-   WCHAR *pBuffer;
+#ifndef UNICODE_UCS2
+   UCS2CHAR *pBuffer;
 #endif
 
    // Create CSCP_DF structure
@@ -238,11 +238,18 @@ void *CSCPMessage::Set(DWORD dwVarId, BYTE bType, const void *pValue, DWORD dwSi
          dwLength = (DWORD)_tcslen((const TCHAR *)pValue);
          pVar = (CSCP_DF *)malloc(12 + dwLength * 2);
          pVar->df_string.dwLen = dwLength * 2;
-#ifdef UNICODE
+#ifdef UNICODE         
+#ifdef UNICODE_UCS2
          memcpy(pVar->df_string.szValue, pValue, pVar->df_string.dwLen);
-#else
-         pBuffer = (WCHAR *)malloc(dwLength * 2 + 2);
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (const char *)pValue, dwLength, pBuffer, dwLength + 1);
+#else		/* assume UNICODE_UCS4 */
+         pBuffer = (UCS2CHAR *)malloc(dwLength * 2 + 2);
+         ucs4_to_ucs2((WCHAR *)pValue, dwLength, pBuffer, dwLength + 1);
+         memcpy(pVar->df_string.szValue, pBuffer, pVar->df_string.dwLen);
+         free(pBuffer);
+#endif         
+#else		/* not UNICODE */
+         pBuffer = (UCS2CHAR *)malloc(dwLength * 2 + 2);
+         mb_to_ucs2((const char *)pValue, dwLength, pBuffer, dwLength + 1);
          memcpy(pVar->df_string.szValue, pBuffer, pVar->df_string.dwLen);
          free(pBuffer);
 #endif
@@ -387,7 +394,9 @@ TCHAR *CSCPMessage::GetVariableStr(DWORD dwVarId, TCHAR *pszBuffer, DWORD dwBufS
    {
       if (pszBuffer == NULL)
       {
-#ifdef UNICODE
+#if defined(UNICODE) && defined(UNICODE_UCS4)
+         pStr = (TCHAR *)malloc(*((DWORD *)pValue) * 2 + 4);
+#elif defined(UNICODE) && defined(UNICODE_UCS2)
          pStr = (TCHAR *)malloc(*((DWORD *)pValue) + 2);
 #else
          pStr = (TCHAR *)malloc(*((DWORD *)pValue) / 2 + 1);
@@ -399,11 +408,12 @@ TCHAR *CSCPMessage::GetVariableStr(DWORD dwVarId, TCHAR *pszBuffer, DWORD dwBufS
       }
 
       dwLen = (pszBuffer == NULL) ? (*((DWORD *)pValue) / 2) : min(*((DWORD *)pValue) / 2, dwBufSize - 1);
-#ifdef UNICODE
+#if defined(UNICODE) && defined(UNICODE_UCS4)
+		ucs2_to_ucs4((UCS2CHAR *)pValue + 4, dwLen, pStr, dwLen + 1);
+#elif defined(UNICODE) && defined(UNICODE_UCS2)
       memcpy(pStr, (BYTE *)pValue + 4, dwLen * 2);
 #else
-      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
-                          (WCHAR *)((BYTE *)pValue + 4), dwLen, pStr, dwLen + 1, NULL, NULL);
+		ucs2_to_mb((UCS2CHAR *)((BYTE *)pValue + 4), dwLen, pStr, dwLen + 1);
 #endif
       pStr[dwLen] = 0;
    }

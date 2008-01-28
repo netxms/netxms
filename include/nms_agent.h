@@ -299,34 +299,34 @@ inline void ret_string(TCHAR *rbuf, const TCHAR *value)
 
 inline void ret_int(TCHAR *rbuf, LONG value)
 {
-   _stprintf(rbuf, _T("%d"), value);
+   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%d"), value);
 }
 
 inline void ret_uint(TCHAR *rbuf, DWORD value)
 {
-   _stprintf(rbuf, _T("%u"), value);
+   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%u"), value);
 }
 
 inline void ret_double(TCHAR *rbuf, double value)
 {
-   _stprintf(rbuf, _T("%f"), value);
+   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%f"), value);
 }
 
 inline void ret_int64(TCHAR *rbuf, INT64 value)
 {
 #ifdef _WIN32
-   _stprintf(rbuf, _T("%I64d"), value);
+   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%I64d"), value);
 #else    /* _WIN32 */
-   _stprintf(rbuf, _T("%lld"), value);
+   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%lld"), value);
 #endif   /* _WIN32 */
 }
 
 inline void ret_uint64(TCHAR *rbuf, QWORD value)
 {
 #ifdef _WIN32
-   _stprintf(rbuf, _T("%I64u"), value);
+   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%I64u"), value);
 #else    /* _WIN32 */
-   _stprintf(rbuf, _T("%llu"), value);
+   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%llu"), value);
 #endif   /* _WIN32 */
 }
 

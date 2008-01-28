@@ -1,10 +1,10 @@
-# $Id: configure.ac,v 1.283 2008-01-21 17:05:30 victor Exp $
+# $Id: configure.ac,v 1.284 2008-01-28 18:09:37 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
 #
 
-AC_INIT([NetXMS], [0.2.20-dev4], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.20-rc1], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -55,6 +55,7 @@ SERVER_TOOLS=""
 TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
 CLIENT_COMPONENTS=""
+BUILD_UNICODE="no"
 
 
 #--------------------------------------------------------------------
@@ -740,7 +741,7 @@ AC_TYPE_SIGNAL
 AC_TYPE_SIZE_T
 AC_STRUCT_TIMEZONE
 
-AC_CHECK_TYPES([int64_t, uint64_t, u_int64_t])
+AC_CHECK_TYPES([int64_t, uint64_t, u_int64_t, mode_t])
 AC_CHECK_TYPES([off_t, socklen_t],,,[
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -834,11 +835,36 @@ fi
 
 
 #--------------------------------------------------------------------
+# Check for wxWidgets
+#--------------------------------------------------------------------
+
+if test "x$NEED_WXWIDGETS" = "xyes"; then
+	AC_PATH_PROGS([WXCONF], [wx-config wxgtk2-2.8-config], [no], [$PATH:/usr/local/bin])
+	if test "x$WXCONF" = "xno"; then
+		AC_MSG_ERROR([*** wxWidgets not installed - unable to build GUI components ***])
+	else
+		AC_PATH_PROGS([WXRC], [wxrc wxrc-gtk2-2.8], [no], [$PATH:/usr/local/bin])
+		if test "x$WXRC" = "xno"; then
+			AC_MSG_ERROR([*** wxWidgets resource compiler not found - unable to build GUI components ***])
+		else
+			NEED_UNICODE=`$WXCONF --selected-config | grep unicode | wc -l`
+			if test $NEED_UNICODE -eq 1; then
+				BUILD_UNICODE="yes"
+			fi
+			CXXFLAGS="$CXXFLAGS `$WXCONF --cxxflags --debug=$ENABLE_DEBUG`"
+			LDFLAGS="$LDFLAGS `$WXCONF --libs --debug=$ENABLE_DEBUG`"
+		fi
+	fi
+fi
+
+
+#--------------------------------------------------------------------
 # Check for UNICODE stuff
 #--------------------------------------------------------------------
 
-AC_CHECK_HEADERS([wchar.h iconv.h])
+AC_CHECK_HEADERS([wchar.h wctype.h iconv.h])
 AC_CHECK_SIZEOF(wchar_t)
+AC_CHECK_FUNCS([wcstoll wcstoull wfopen wopen wstat])
 
 if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,
@@ -891,9 +917,7 @@ AC_RUN_IFELSE(
     valid_ucs2_code="UCS-2"
   ],
   [ AC_MSG_RESULT(no) ],
-  [ AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_ICONV_UCS_2, 1, Define to 1 if iconv supports UCS-2)
-  ]
+  [ AC_MSG_RESULT(no) ]
 )
 
 AC_MSG_CHECKING(whether iconv supports UCS2)
@@ -927,6 +951,78 @@ AC_RUN_IFELSE(
   [ AC_MSG_RESULT(yes)
     AC_DEFINE(HAVE_ICONV_UCS_2BE, 1, Define to 1 if iconv supports UCS-2BE)
     valid_ucs2_code="UCS-2BE"
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
+
+AC_MSG_CHECKING(whether iconv supports UCS-4-INTERNAL)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+#if HAVE_ICONV_H
+#include <iconv.h>
+#endif
+     ], [
+     return iconv_open("UTF-8","UCS-4-INTERNAL")==(iconv_t)(-1);
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_ICONV_UCS_4_INTERNAL, 1, Define to 1 if iconv supports UCS-4-INTERNAL)
+    valid_ucs4_code="UCS-4-INTERNAL"
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
+
+AC_MSG_CHECKING(whether iconv supports UCS-4)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+#if HAVE_ICONV_H
+#include <iconv.h>
+#endif
+     ], [
+     return iconv_open("UTF-8","UCS-4")==(iconv_t)(-1);
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_ICONV_UCS_4, 1, Define to 1 if iconv supports UCS-4)
+    valid_ucs4_code="UCS-4"
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
+
+AC_MSG_CHECKING(whether iconv supports UCS4)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+#if HAVE_ICONV_H
+#include <iconv.h>
+#endif
+     ], [
+     return iconv_open("UTF-8","UCS4")==(iconv_t)(-1);
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_ICONV_UCS4, 1, Define to 1 if iconv supports UCS4)
+    valid_ucs4_code="UCS4"
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
+
+AC_MSG_CHECKING(whether iconv supports UCS-4BE)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+#if HAVE_ICONV_H
+#include <iconv.h>
+#endif
+     ], [
+     return iconv_open("UTF-8","UCS-4BE")==(iconv_t)(-1);
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_ICONV_UCS_4BE, 1, Define to 1 if iconv supports UCS-4BE)
+    valid_ucs4_code="UCS-4BE"
   ],
   [ AC_MSG_RESULT(no) ],
   [ AC_MSG_RESULT(no) ]
@@ -1021,7 +1117,17 @@ if test "x$ac_found_iconv" = "xyes"; then
 fi
 
 if test $ac_cv_sizeof_wchar_t -eq 2; then
-	AC_DEFINE(HAVE_USEABLE_WCHAR_T, 1, Define to 1 if you have useable wchar_t)
+	AC_DEFINE(UNICODE_UCS2, 1, Define to 1 if you have 2-byte wchar_t)
+fi
+
+if test $ac_cv_sizeof_wchar_t -eq 4; then
+	AC_DEFINE(UNICODE_UCS4, 1, Define to 1 if you have 4-byte wchar_t)
+fi
+
+if test "x$BUILD_UNICODE" = "xyes"; then
+	UNICODE_LIBNETXMS="libnetxmsw.la"
+	UNICODE_LIBNXMAP="libnxmapw.la"
+	UNICODE_LIBNXCL="libnxclw.la"
 fi
 
 
@@ -1129,30 +1235,12 @@ fi
 
 
 #--------------------------------------------------------------------
-# Check for wxWidgets
-#--------------------------------------------------------------------
-
-if test "x$NEED_WXWIDGETS" = "xyes"; then
-	AC_PATH_PROGS([WXCONF], [wx-config wxgtk2-2.8-config], [no], [$PATH:/usr/local/bin])
-	if test "x$WXCONF" = "xno"; then
-		AC_MSG_ERROR([*** wxWidgets not installed - unable to build GUI components ***])
-	else
-		AC_PATH_PROGS([WXRC], [wxrc wxrc-gtk2-2.8], [no], [$PATH:/usr/local/bin])
-		if test "x$WXRC" = "xno"; then
-			AC_MSG_ERROR([*** wxWidgets resource compiler not found - unable to build GUI components ***])
-		else
-			CXXFLAGS="$CXXFLAGS `$WXCONF --cxxflags --debug=$ENABLE_DEBUG`"
-			LDFLAGS="$LDFLAGS `$WXCONF --libs --debug=$ENABLE_DEBUG`"
-		fi
-	fi
-fi
-
-
-#--------------------------------------------------------------------
 # Other settings
 #--------------------------------------------------------------------
 
 CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DPREFIX=\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
+
+AM_CONDITIONAL([BUILD_UNICODE_LIBS], [test "x$BUILD_UNICODE" = "xyes"])
 
 
 #--------------------------------------------------------------------
@@ -1356,46 +1444,53 @@ echo '---------------------------------------------------------------------'
 echo '                         Configure results'
 echo '---------------------------------------------------------------------'
 echo
-	echo "Prefix              : ${prefix}"
+	echo "Prefix                  : ${prefix}"
 if test "x${BUILD_SERVER}" = "xyes"; then
-	echo "Build Server        : YES"
+	echo "Build Server            : YES"
 else
-	echo "Build Server        : NO"
+	echo "Build Server            : NO"
 fi
 if test "x${ac_cv_lib_crypto_RSA_new}" = "xyes"; then
-	echo "Encryption enabled  : YES"
+	echo "Encryption enabled      : YES"
 else
-	echo "Encryption enabled  : NO"
+	echo "Encryption enabled      : NO"
 fi
 if test "x${DB_DRIVERS}" != "x"; then
-	echo "Build DB-Drivers    :${DB_DRIVERS}"
+	echo "Build DB-Drivers        :${DB_DRIVERS}"
 else
-	echo "Build DB-Drivers    : NO"
+	echo "Build DB-Drivers        : NO"
 fi
 if test "x${BUILD_CLIENT}" = "xyes"; then
-	echo "Build Clients       : YES"
+	echo "Build Clients           : YES"
 else
-	echo "Build Clients       : NO"
+	echo "Build Clients           : NO"
 fi
 if test "x${BUILD_CONSOLE}" = "xyes"; then
-	echo "Build Console       : YES"
+	echo "Build Console           : YES"
+	echo "wxWidgets config        :" `$WXCONF --selected-config`
 else
-	echo "Build Console       : NO"
+	echo "Build Console           : NO"
 fi
 if test "x${BUILD_NXHTTPD}" = "xyes"; then
-	echo "Build Web Interface : YES"
+	echo "Build Web Interface     : YES"
 else
-	echo "Build Web Interface : NO"
+	echo "Build Web Interface     : NO"
 fi
 if test "x${BUILD_AGENT}" = "xyes"; then
-	echo "Build Agent         : YES"
-	echo "Subagents list      : ${SUBAGENT_DIRS}"
+	echo "Build Agent             : YES"
+	echo "Subagents list          : ${SUBAGENT_DIRS}"
 else
-	echo "Build Agent         : NO"
+	echo "Build Agent             : NO"
 fi
 if test "x${BUILD_STATIC_AGENT}" = "xyes"; then
-	echo "Build Static Agent  : YES"
-	echo "Subagents list      : ${STATIC_SUBAGENT_LIST}"
+	echo "Build Static Agent      : YES"
+	echo "Subagents list          : ${STATIC_SUBAGENT_LIST}"
 else
-	echo "Build Static Agent  : NO"
+	echo "Build Static Agent      : NO"
 fi
+if test "x${BUILD_UNICODE}" = "xyes"; then
+	echo "Build UNICODE libraries : YES"
+else
+	echo "Build UNICODE libraries : NO"
+fi
+

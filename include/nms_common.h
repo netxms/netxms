@@ -248,6 +248,10 @@ typedef int SOCKET;
 #include <wchar.h>
 #endif
 
+#if HAVE_WCTYPE_H
+#include <wctype.h>
+#endif
+
 #include <errno.h>
 
 #define FS_PATH_SEPARATOR       _T("/")
@@ -323,6 +327,10 @@ typedef unsigned short WORD;
 typedef unsigned char BYTE;
 typedef void * HANDLE;
 typedef void * HMODULE;
+
+#if !HAVE_MODE_T
+typedef int mode_t;
+#endif
 
 #if HAVE_INT64_T
 typedef int64_t INT64;
@@ -663,6 +671,8 @@ typedef struct tagICMPHDR
 #ifndef _WIN32
 #define stricmp   strcasecmp
 #define strnicmp  strncasecmp
+#define wcsicmp   wcscasecmp
+#define wcsnicmp  wcsncasecmp
 #endif
 
 

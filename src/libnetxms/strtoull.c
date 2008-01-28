@@ -29,7 +29,7 @@
 
 #include "libnetxms.h"
 
-#if !(HAVE_STRTOULL)
+#if (!defined(UNICODE) && !(HAVE_STRTOULL)) || (defined(UNICODE) && !(HAVE_WCSTOULL))
 
 #ifndef UNDER_CE
 #include <sys/types.h>

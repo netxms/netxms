@@ -1,0 +1,8 @@
+Data types:
+
+WCHAR		platform-dependent wide char (can be UCS-2 or UCS-4)
+UCS2CHAR	2-byte wide char (UCS-2)
+TCHAR		char for ANSI build or WCHAR for UNICODE build
+
+* All wcs... functions works with WCHAR
+* For working with UCS-2 strings use appropriate ucs2_str... functions.

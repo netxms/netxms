@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.12 2007-02-09 17:31:57 victor Exp $ */
+/* $Id: main.cpp,v 1.13 2008-01-28 18:09:38 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
@@ -99,6 +99,26 @@ void LIBNETXMS_EXPORTABLE strupr(char *in)
 		*p = toupper(*p);
 	}
 }
+
+#if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)
+
+void LIBNETXMS_EXPORTABLE wcsupr(WCHAR *in)
+{
+	WCHAR *p = in;
+
+	if (in == NULL) 
+   { 
+		return;
+	}
+	
+	for (; *p != 0; p++) 
+   {
+		// TODO: check/set locale
+		*p = towupper(*p);
+	}
+}
+
+#endif
 
 #endif
 
