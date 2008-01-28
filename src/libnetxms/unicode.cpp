@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.28 2008-01-28 20:23:45 victor Exp $ */
+/* $Id: unicode.cpp,v 1.29 2008-01-28 21:56:53 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -660,11 +660,17 @@ size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, size_t srcLen, UCS2CHAR 
 #endif	/* !defined(_WIN32) && !defined(UNICODE) */
 
 
+
 //
-// Wide character version of some functions
+// UNIX UNICODE specific wrapper functions
 //
 
 #if !defined(_WIN32) && defined(UNICODE)
+
+
+//
+// Wide character version of some libc functions
+//
 
 #if !HAVE_WFOPEN
 
@@ -740,5 +746,93 @@ WCHAR *wgetenv(const WCHAR *_string)
 
 #endif
 
-#endif
 
+//
+// Wrappers for wprintf family
+//
+// All these wrappers replaces %s with %S and %c with %C
+// because in POSIX version of wprintf functions %s and %c
+// means "multibyte string/char" instead of expected "UNICODE string/char"
+//
+
+int LIBNETXMS_EXPORTABLE nx_wprintf(WCHAR *format, ...)
+{
+	va_list args;
+
+	va_start(args, format);
+	rc = nx_vwprintf(format, args);
+	va_end(args);
+	return rc;
+}
+
+int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, WCHAR *format, ...)
+{
+	va_list args;
+
+	va_start(args, format);
+	rc = nx_vfwprintf(fp, format, args);
+	va_end(args);
+	return rc;
+}
+
+int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, WCHAR *format, ...)
+{
+	va_list args;
+
+	va_start(args, format);
+	rc = nx_vswprintf(buffer, size, format, args);
+	va_end(args);
+	return rc;
+}
+
+static WCHAR *ReplaceFormatSpecs(WCHAR *oldFormat)
+{
+	WCHAR *fmt, *p;
+
+	fmt = wcsdup(oldFormat);
+	for(in = fmt; *p != 0; p++)
+		if ((*p == _T('%')) && (*(p + 1) != 0))
+		{
+			p++;
+			if (*p == _T('s'))
+				*p = _T('S');
+			else if (*p == _T('c'))
+				*p = _T('C');
+		}
+	return fmt;
+}
+
+int LIBNETXMS_EXPORTABLE nx_vwprintf(WCHAR *format, va_list args)
+{
+	WCHAR *fmt;
+	int rc;
+
+	fmt = ReplaceFormatSpec(format);
+	rc = vwprintf(fmt, args);
+	free(fmt);
+	return rc;
+}
+
+int LIBNETXMS_EXPORTABLE nx_vfwprintf(FILE *fp, WCHAR *format, va_list args)
+{
+	WCHAR *fmt;
+	int rc;
+
+	fmt = ReplaceFormatSpec(format);
+	rc = vfwprintf(fp, fmt, args);
+	free(fmt);
+	return rc;
+}
+
+int LIBNETXMS_EXPORTABLE nx_vswprintf(WCHAR *buffer, size_t size, WCHAR *format, va_list args)
+{
+	WCHAR *fmt;
+	int rc;
+
+	fmt = ReplaceFormatSpec(format);
+	rc = vswprintf(buffer, size, fmt, args);
+	free(fmt);
+	return rc;
+}
+
+#endif

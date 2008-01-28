@@ -76,8 +76,7 @@
 #define ucs2_to_mb(wstr, wlen, mstr, mlen)	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wstr, wlen, mstr, mlen, NULL, NULL)
 #define mb_to_ucs2(mstr, mlen, wstr, wlen)	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mstr, mlen, wstr, wlen)
 
-#define HAVE_WFOPEN	1
-#define HAVE_WOPEN	1
+#define UCS2CHAR	WCHAR
 
 #else    /* not _WIN32 */
 
@@ -88,12 +87,6 @@
 #if HAVE_STRING_H
 #include <string.h>
 #endif
-
-/*#ifdef _NETWARE
-#define WCHAR     wchar_t
-#else
-#define WCHAR     unsigned short
-#endif*/
 
 #define WCHAR     wchar_t
 #if UNICODE_UCS2
@@ -119,7 +112,7 @@
 #ifdef UNICODE
 
 #define _T(x)     L##x
-#define TCHAR wchar_t
+#define TCHAR     wchar_t
 #define _TINT     int
 
 #define _tcscpy   wcscpy
@@ -131,13 +124,12 @@
 #define _tcsicmp  wcsicmp
 #define _tcsncmp  wcsncmp
 #define _tcsnicmp wcsnicmp
-#define _tprintf  wprintf
-//#define _stprintf swprintf
-#define _ftprintf fwprintf
-#define _sntprintf swprintf
-#define _vtprintf vwprintf
-//#define _vstprintf vswprintf
-#define _vsntprintf vswprintf
+#define _tprintf  nx_wprintf
+#define _ftprintf nx_fwprintf
+#define _sntprintf nx_swprintf
+#define _vtprintf nx_vwprintf
+#define _vftprintf nx_vfwprintf
+#define _vsntprintf nx_vswprintf
 #define _tfopen   wfopen
 #define _fgetts   fgetws
 #define _fputts   fputws

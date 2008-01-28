@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.116 2008-01-28 20:23:44 victor Exp $ */
+/* $Id: nms_util.h,v 1.117 2008-01-28 21:56:53 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -492,6 +492,7 @@ extern "C"
    int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, DWORD dwFlags, const char *pByteStr, 
                                                 int cchByteChar, WCHAR *pWideCharStr, 
                                                 int cchWideChar);
+
 #ifndef UNICODE_UCS2
 	int LIBNETXMS_EXPORTABLE ucs2_strlen(const UCS2CHAR *pStr);
 	UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strncpy(UCS2CHAR *pDst, const UCS2CHAR *pSrc, int nDstLen);
@@ -501,6 +502,15 @@ extern "C"
 #ifndef UNICODE
 	size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, size_t srcLen, char *dst, size_t dstLen);
 	size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, size_t srcLen, UCS2CHAR *dst, size_t dstLen);
+#endif
+
+#ifdef UNICODE
+	int LIBNETXMS_EXPORTABLE nx_wprintf(WCHAR *format, ...);
+	int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, WCHAR *format, ...);
+	int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, WCHAR *format, ...);
+	int LIBNETXMS_EXPORTABLE nx_vwprintf(WCHAR *format, va_list args);
+	int LIBNETXMS_EXPORTABLE nx_vfwprintf(FILE *fp, WCHAR *format, va_list args);
+	int LIBNETXMS_EXPORTABLE nx_vswprintf(WCHAR *buffer, size_t size, WCHAR *format, va_list args);
 #endif
 
 #endif	/* _WIN32 */
@@ -583,6 +593,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.116  2008/01/28 20:23:44  victor
+Console compiles on UNIX with UNICODE
+
 Revision 1.115  2008/01/28 18:09:38  victor
 Preparation for UNICODE support on UNIX
 
