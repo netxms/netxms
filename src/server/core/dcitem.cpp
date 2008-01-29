@@ -1,4 +1,4 @@
-/* $Id: dcitem.cpp,v 1.83 2008-01-14 16:53:14 victor Exp $ */
+/* $Id: dcitem.cpp,v 1.84 2008-01-29 21:12:50 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -185,10 +185,10 @@ DCItem::DCItem(const DCItem *pSrc)
    m_iDeltaCalculation = pSrc->m_iDeltaCalculation;
    m_iSource = pSrc->m_iSource;
    m_iStatus = pSrc->m_iStatus;
-   _tcscpy(m_szName, pSrc->m_szName);
-   _tcscpy(m_szDescription, pSrc->m_szDescription);
-   _tcscpy(m_szInstance, pSrc->m_szInstance);
    m_tLastPoll = 0;
+	_tcscpy(m_szName, pSrc->m_szName);
+	_tcscpy(m_szDescription, pSrc->m_szDescription);
+	_tcscpy(m_szInstance, pSrc->m_szInstance);
    m_pszFormula = NULL;
    m_pScript = NULL;
    NewFormula(pSrc->m_pszFormula);
@@ -1068,7 +1068,7 @@ void DCItem::Transform(ItemValue &value, time_t nElapsedTime)
 // Set new ID and node/template association
 //
 
-void DCItem::ChangeBinding(DWORD dwNewId, Template *pNewNode)
+void DCItem::ChangeBinding(DWORD dwNewId, Template *pNewNode, BOOL doMacroExpansion)
 {
    DWORD i;
 
@@ -1080,6 +1080,14 @@ void DCItem::ChangeBinding(DWORD dwNewId, Template *pNewNode)
 		for(i = 0; i < m_dwNumThresholds; i++)
 			m_ppThresholdList[i]->BindToItem(m_dwId);
 	}
+
+	if (doMacroExpansion)
+	{
+		ExpandMacros(m_szName, m_szName, MAX_ITEM_NAME);
+		ExpandMacros(m_szDescription, m_szDescription, MAX_DB_STRING);
+		ExpandMacros(m_szInstance, m_szInstance, MAX_DB_STRING);
+	}
+
    ClearCache();
    UpdateCacheSize();
    Unlock();
@@ -1552,9 +1560,6 @@ void DCItem::UpdateFromTemplate(DCItem *pItem)
    m_iSource = pItem->m_iSource;
    m_iStatus = pItem->m_iStatus;
    m_iProcessAllThresholds = pItem->m_iProcessAllThresholds;
-   _tcscpy(m_szName, pItem->m_szName);
-   _tcscpy(m_szDescription, pItem->m_szDescription);
-   _tcscpy(m_szInstance, pItem->m_szInstance);
 	m_dwProxyNode = pItem->m_dwProxyNode;
    NewFormula(pItem->m_pszFormula);
    m_iAdvSchedule = pItem->m_iAdvSchedule;
@@ -1590,6 +1595,10 @@ void DCItem::UpdateFromTemplate(DCItem *pItem)
       m_ppThresholdList[i]->CreateId();
       m_ppThresholdList[i]->BindToItem(m_dwId);
    }
+
+   ExpandMacros(pItem->m_szName, m_szName, MAX_ITEM_NAME);
+   ExpandMacros(pItem->m_szDescription, m_szDescription, MAX_DB_STRING);
+   ExpandMacros(pItem->m_szInstance, m_szInstance, MAX_DB_STRING);
 
    UpdateCacheSize();
    
@@ -1789,4 +1798,74 @@ BOOL DCItem::EnumThresholds(BOOL (* pfCallback)(Threshold *, DWORD, void *), voi
 	}
 	Unlock();
 	return bRet;
+}
+
+
+//
+// Expand macros in text
+//
+
+void DCItem::ExpandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
+{
+	String temp;
+	TCHAR *head, *rest, *macro;
+	int index = 0, index2;
+
+	temp = src;
+	while((index = temp.Find(_T("%{"), index)) != String::npos)
+	{
+		head = temp.SubStr(0, index);
+		index2 = temp.Find(_T("}"), index);
+		if (index2 == String::npos)
+		{
+			free(head);
+			break;	// Missing closing }
+		}
+		rest = temp.SubStr(index2 + 1, -1);
+		macro = temp.SubStr(index + 2, index2 - index - 2);
+		StrStrip(macro);
+
+		temp = head;
+		if (!_tcscmp(macro, _T("node_id")))
+		{
+			if (m_pNode != NULL)
+			{
+				temp.AddFormattedString(_T("%d"), m_pNode->Id());
+			}
+			else
+			{
+				temp += _T("(error)");
+			}
+		}
+		else if (!_tcscmp(macro, _T("node_name")))
+		{
+			if (m_pNode != NULL)
+			{
+				temp += m_pNode->Name();
+			}
+			else
+			{
+				temp += _T("(error)");
+			}
+		}
+		else if (!_tcscmp(macro, _T("node_primary_ip")))
+		{
+			if (m_pNode != NULL)
+			{
+				TCHAR ipAddr[32];
+
+				temp += IpToStr(m_pNode->IpAddr(), ipAddr);
+			}
+			else
+			{
+				temp += _T("(error)");
+			}
+		}
+		temp += rest;
+		
+		free(head);
+		free(rest);
+		free(macro);
+	}
+	nx_strncpy(dst, (TCHAR *)temp, dstLen);
 }

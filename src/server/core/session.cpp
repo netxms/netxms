@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.289 2008-01-29 16:32:40 victor Exp $ */
+/* $Id: session.cpp,v 1.290 2008-01-29 21:12:50 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -2824,7 +2824,7 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
                      {
                         pDstItem = new DCItem(pSrcItem);
                         pDstItem->ChangeBinding(CreateUniqueId(IDG_ITEM),
-                                                (Template *)pDestination);
+                                                (Template *)pDestination, FALSE);
                         if (((Template *)pDestination)->AddItem(pDstItem))
                         {
                            if (bMove)

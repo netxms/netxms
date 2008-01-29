@@ -1,4 +1,4 @@
-/* $Id: nms_dcoll.h,v 1.34 2007-11-06 12:36:03 victor Exp $ */
+/* $Id: nms_dcoll.h,v 1.35 2008-01-29 21:12:51 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -211,6 +211,7 @@ private:
 	BOOL MatchClusterResource(void);
 
    void NewFormula(TCHAR *pszFormula);
+	void ExpandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen);
 
 public:
    DCItem();
@@ -246,7 +247,7 @@ public:
    void SetLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
    void SetStatus(int iStatus) { m_iStatus = (BYTE)iStatus; }
    void SetBusyFlag(BOOL bIsBusy) { m_iBusy = (BYTE)bIsBusy; }
-   void ChangeBinding(DWORD dwNewId, Template *pNode);
+   void ChangeBinding(DWORD dwNewId, Template *pNode, BOOL doMacroExpansion);
    void SetTemplateId(DWORD dwTemplateId, DWORD dwItemId) 
          { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
 	void SystemModify(const TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType);

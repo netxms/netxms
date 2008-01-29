@@ -1,4 +1,4 @@
-/* $Id: template.cpp,v 1.39 2008-01-14 16:53:15 victor Exp $ */
+/* $Id: template.cpp,v 1.40 2008-01-29 21:12:51 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -889,6 +889,6 @@ void Template::AssociateItems(void)
 
 	LockData();
 	for(i = 0; i < m_dwNumItems; i++)
-		m_ppItems[i]->ChangeBinding(0, this);
+		m_ppItems[i]->ChangeBinding(0, this, FALSE);
 	UnlockData();
 }

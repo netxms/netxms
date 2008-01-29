@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.191 2008-01-14 16:53:14 victor Exp $ */
+/* $Id: node.cpp,v 1.192 2008-01-29 21:12:50 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -2207,7 +2207,7 @@ BOOL Node::ApplyTemplateItem(DWORD dwTemplateId, DCItem *pItem)
       // New item from template, just add it
       pNewItem = new DCItem(pItem);
       pNewItem->SetTemplateId(dwTemplateId, pItem->Id());
-      pNewItem->ChangeBinding(CreateUniqueId(IDG_ITEM), this);
+      pNewItem->ChangeBinding(CreateUniqueId(IDG_ITEM), this, TRUE);
       bResult = AddItem(pNewItem, TRUE);
    }
    else
