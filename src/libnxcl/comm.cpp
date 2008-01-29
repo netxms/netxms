@@ -95,9 +95,6 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
          // Process message
          switch(pRawMsg->wCode)
          {
-            case CMD_EVENT:
-               ProcessEvent(pSession, NULL, pRawMsg);
-               break;
             case CMD_FILE_DATA:
                MutexLock(pSession->m_mutexFileRq, INFINITE);
                if ((pSession->m_hCurrFile != -1) && (pSession->m_dwFileRqId == pRawMsg->dwId))
@@ -163,8 +160,8 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
             case CMD_OBJECT_LIST_END:
                pSession->ProcessObjectUpdate(pMsg);
                break;
-            case CMD_EVENT_LIST_END:
-               ProcessEvent(pSession, pMsg, NULL);
+            case CMD_EVENTLOG_RECORDS:
+               ProcessEventLogRecords(pSession, pMsg);
                break;
             case CMD_SYSLOG_RECORDS:
                ProcessSyslogRecords(pSession, pMsg);

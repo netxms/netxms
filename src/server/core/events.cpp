@@ -352,32 +352,22 @@ TCHAR *Event::ExpandText(TCHAR *pszTemplate, TCHAR *pszAlarmMsg)
 
 
 //
-// Fill NXC_EVENT structure with event data
+// Fill message with event data
 //
 
-void Event::PrepareMessage(NXC_EVENT *pEventData)
+void Event::PrepareMessage(CSCPMessage *pMsg)
 {
-   pEventData->qwEventId = htonq(m_qwId);
-   pEventData->dwTimeStamp = htonl((DWORD)m_tTimeStamp);
-   pEventData->dwEventCode = htonl(m_dwCode);
-   pEventData->dwSeverity = htonl(m_dwSeverity);
-   pEventData->dwSourceId = htonl(m_dwSource);
+	DWORD dwId = VID_EVENTLOG_MSG_BASE;
 
-#ifdef UNICODE
-   wcsncpy(pEventData->szMessage, CHECK_NULL(m_pszMessageText), MAX_EVENT_MSG_LENGTH - 1);
-   pEventData->szMessage[MAX_EVENT_MSG_LENGTH - 1] = 0;
-   wcsncpy(pEventData->szUserTag, CHECK_NULL_EX(m_pszUserTag), MAX_USERTAG_LENGTH - 1);
-   pEventData->szUserTag[MAX_USERTAG_LENGTH - 1] = 0;
-#else
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, CHECK_NULL(m_pszMessageText), -1, 
-                       (WCHAR *)pEventData->szMessage, MAX_EVENT_MSG_LENGTH);
-   ((WCHAR *)pEventData->szMessage)[MAX_EVENT_MSG_LENGTH - 1] = 0;
-   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, CHECK_NULL_EX(m_pszUserTag), -1, 
-                       (WCHAR *)pEventData->szUserTag, MAX_USERTAG_LENGTH);
-   ((WCHAR *)pEventData->szUserTag)[MAX_USERTAG_LENGTH - 1] = 0;
-#endif
-   SwapWideString((WCHAR *)pEventData->szMessage);
-   SwapWideString((WCHAR *)pEventData->szUserTag);
+	pMsg->SetVariable(VID_NUM_RECORDS, (DWORD)1);
+	pMsg->SetVariable(VID_RECORDS_ORDER, (WORD)RECORD_ORDER_NORMAL);
+	pMsg->SetVariable(dwId++, m_qwId);
+	pMsg->SetVariable(dwId++, m_dwCode);
+	pMsg->SetVariable(dwId++, (DWORD)m_tTimeStamp);
+	pMsg->SetVariable(dwId++, m_dwSource);
+	pMsg->SetVariable(dwId++, (WORD)m_dwSeverity);
+	pMsg->SetVariable(dwId++, CHECK_NULL(m_pszMessageText));
+	pMsg->SetVariable(dwId++, CHECK_NULL(m_pszUserTag));
 }
 
 

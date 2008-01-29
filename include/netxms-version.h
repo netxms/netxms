@@ -1,4 +1,4 @@
-/* $Id: netxms-version.h,v 1.133 2008-01-07 10:52:56 victor Exp $ */
+/* $Id: netxms-version.h,v 1.134 2008-01-29 16:32:39 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -33,14 +33,14 @@
 #define NETXMS_VERSION_MINOR        2
 #define NETXMS_VERSION_BUILD        20
 #define NETXMS_VERSION_HOTFIX       0
-#define NETXMS_VERSION_STRING       _T("0.2.20-dev4")
+#define NETXMS_VERSION_STRING       _T("0.2.20-rc1")
 
 
 //
 // Current client-server protocol version
 //
 
-#define CLIENT_PROTOCOL_VERSION     17
+#define CLIENT_PROTOCOL_VERSION     18
 
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: dcithreshold.cpp,v 1.35 2008-01-14 16:53:14 victor Exp $ */
+/* $Id: dcithreshold.cpp,v 1.36 2008-01-29 16:32:40 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -450,10 +450,13 @@ void Threshold::CreateMessage(DCI_THRESHOLD *pData)
          break;
       case DCI_DT_STRING:
 #ifdef UNICODE
-         wcscpy(pData->value.szString,  m_value.String());
+#ifdef UNICODE_UCS4
+         ucs4_to_ucs2(m_value.String(), -1, pData->value.szString, MAX_DCI_STRING_VALUE);
 #else
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_value.String(), -1,
-                             pData->value.szString, MAX_DCI_STRING_VALUE);
+         wcscpy(pData->value.szString,  m_value.String());
+#endif
+#else
+         mb_to_ucs2(m_value.String(), -1, pData->value.szString, MAX_DCI_STRING_VALUE);
 #endif
          SwapWideString(pData->value.szString);
          break;
@@ -469,8 +472,8 @@ void Threshold::CreateMessage(DCI_THRESHOLD *pData)
 
 void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
 {
-#ifndef UNICODE
-   char szBuffer[MAX_DCI_STRING_VALUE];
+#ifndef UNICODE_UCS2
+   TCHAR szBuffer[MAX_DCI_STRING_VALUE];
 #endif
 
    m_dwEventCode = ntohl(pData->dwEvent);
@@ -500,11 +503,14 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
       case DCI_DT_STRING:
          SwapWideString(pData->value.szString);
 #ifdef UNICODE
-         m_value = pData->value.szString;
+#ifdef UNICODE_UCS4
+         ucs2_to_ucs4(pData->value.szString, -1, szBuffer, MAX_DCI_STRING_VALUE);
+         m_value = szBuffer;
 #else
-         WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                             pData->value.szString, -1, szBuffer,
-                             MAX_DCI_STRING_VALUE, NULL, NULL);
+         m_value = pData->value.szString;
+#endif         
+#else
+         ucs2_to_mb(pData->value.szString, -1, szBuffer, MAX_DCI_STRING_VALUE);
          m_value = szBuffer;
 #endif
          break;

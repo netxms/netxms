@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.70 2008-01-29 00:13:27 victor Exp $ */
+/* $Id: tools.cpp,v 1.71 2008-01-29 16:32:40 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
@@ -876,7 +876,6 @@ DWORD LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName)
 
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
                        pszName, -1, szBuffer, 256, NULL, NULL);
-printf("TRANSFORM: %s\n",szBuffer);
    dwAddr = inet_addr(szBuffer);
 #else
    dwAddr = inet_addr(pszName);

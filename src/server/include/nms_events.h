@@ -85,7 +85,7 @@ public:
    QWORD GetRootId(void) { return m_qwRootId; }
    void SetRootId(QWORD qwId) { m_qwRootId = qwId; }
 
-   void PrepareMessage(NXC_EVENT *pEventData);
+   void PrepareMessage(CSCPMessage *pMsg);
 
    void ExpandMessageText(void);
    TCHAR *ExpandText(TCHAR *szTemplate, TCHAR *pszAlarmMsg = NULL);

@@ -245,7 +245,7 @@ typedef struct
 #define CMD_LOGIN                   0x0001
 #define CMD_LOGIN_RESP              0x0002
 #define CMD_KEEPALIVE               0x0003
-#define CMD_EVENT                   0x0004
+//#define CMD_EVENT                   0x0004
 #define CMD_GET_OBJECTS             0x0005
 #define CMD_OBJECT                  0x0006
 #define CMD_DELETE_OBJECT           0x0007
@@ -253,7 +253,7 @@ typedef struct
 #define CMD_OBJECT_LIST_END         0x0009
 #define CMD_OBJECT_UPDATE           0x000A
 #define CMD_GET_EVENTS              0x000B
-#define CMD_EVENT_LIST_END          0x000C
+#define CMD_EVENTLOG_RECORDS        0x000C
 #define CMD_GET_CONFIG_VARLIST      0x000D
 #define CMD_SET_CONFIG_VARIABLE     0x000E
 #define CMD_GET_OBJECT_TOOLS        0x000F
@@ -829,6 +829,9 @@ typedef struct
 #define VID_LPP_LIST_BASE           ((DWORD)0x10000000)
 #define VID_LPPGROUP_LIST_BASE      ((DWORD)0x20000000)
 #define VID_LPP_NODE_LIST_BASE      ((DWORD)0x01000000)
+
+// Base value for event log records
+#define VID_EVENTLOG_MSG_BASE       ((DWORD)0x10000000)
 
 // Base value for syslog records
 #define VID_SYSLOG_MSG_BASE         ((DWORD)0x10000000)

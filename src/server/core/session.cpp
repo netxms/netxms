@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.288 2008-01-22 19:21:10 victor Exp $ */
+/* $Id: session.cpp,v 1.289 2008-01-29 16:32:40 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -146,7 +146,7 @@ THREAD_RESULT THREAD_CALL ClientSession::ThreadStarter_##func(void *pArg) \
 
 DEFINE_THREAD_STARTER(GetCollectedData)
 DEFINE_THREAD_STARTER(QueryL2Topology)
-DEFINE_THREAD_STARTER(SendAllEvents)
+DEFINE_THREAD_STARTER(SendEventLog)
 DEFINE_THREAD_STARTER(SendSyslog)
 
 
@@ -626,9 +626,9 @@ void ClientSession::UpdateThread(void)
       {
          case INFO_CAT_EVENT:
             MutexLock(m_mutexSendEvents, INFINITE);
-            m_pSendQueue->Put(CreateRawNXCPMessage(CMD_EVENT, 0, 0, sizeof(NXC_EVENT), pUpdate->pData, NULL));
+            SendMessage((CSCPMessage *)pUpdate->pData);
             MutexUnlock(m_mutexSendEvents);
-            free(pUpdate->pData);
+            delete (CSCPMessage *)pUpdate->pData;
             break;
          case INFO_CAT_SYSLOG_MSG:
             MutexLock(m_mutexSendSyslog, INFINITE);
@@ -739,7 +739,7 @@ void ClientSession::ProcessingThread(void)
             SendAllObjects(pMsg);
             break;
          case CMD_GET_EVENTS:
-            CALL_IN_NEW_THREAD(SendAllEvents, pMsg);
+            CALL_IN_NEW_THREAD(SendEventLog, pMsg);
             break;
          case CMD_GET_CONFIG_VARLIST:
             SendAllConfigVars(pMsg->GetId());
@@ -1723,31 +1723,25 @@ void ClientSession::SendAllObjects(CSCPMessage *pRequest)
 
 
 //
-// Send all events to client
+// Send event log records to client
 //
 
-void ClientSession::SendAllEvents(CSCPMessage *pRequest)
+void ClientSession::SendEventLog(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    DB_ASYNC_RESULT hResult = NULL;
    DB_RESULT hTempResult;
-   NXC_EVENT event;
-   DWORD dwRqId, dwMaxRecords, dwNumRows;
-   TCHAR szQuery[1024];
-   WORD wFlags;
-#ifndef UNICODE
-   char szBuffer[MAX_EVENT_MSG_LENGTH];
-#endif
+   DWORD dwRqId, dwMaxRecords, dwNumRows, dwId;
+   TCHAR szQuery[1024], szBuffer[1024];
+   WORD wRecOrder;
 
    dwRqId = pRequest->GetId();
    dwMaxRecords = pRequest->GetVariableLong(VID_MAX_RECORDS);
+   wRecOrder = ((g_dwDBSyntax == DB_SYNTAX_MSSQL) || (g_dwDBSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
 
-   // Send confirmation message
+   // Prepare confirmation message
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
-   msg.SetVariable(VID_RCC, RCC_SUCCESS);
-   SendMessage(&msg);
-   msg.DeleteAllVariables();
 
    MutexLock(m_mutexSendEvents, INFINITE);
 
@@ -1772,61 +1766,70 @@ void ClientSession::SendAllEvents(CSCPMessage *pRequest)
          }
          _sntprintf(szQuery, 1024,
                     _T("SELECT event_id,event_code,event_timestamp,event_source,")
-                    _T("event_severity,event_message FROM event_log ")
+                    _T("event_severity,event_message,user_tag FROM event_log ")
                     _T("ORDER BY event_id LIMIT %u OFFSET %u"),
                     dwMaxRecords, dwNumRows - min(dwNumRows, dwMaxRecords));
-         wFlags = 0;
          break;
       case DB_SYNTAX_MSSQL:
          _sntprintf(szQuery, 1024,
                     _T("SELECT TOP %u event_id,event_code,event_timestamp,event_source,")
-                    _T("event_severity,event_message FROM event_log ")
+                    _T("event_severity,event_message,user_tag FROM event_log ")
                     _T("ORDER BY event_id DESC"), dwMaxRecords);
-         wFlags = MF_REVERSE_ORDER;
          break;
       case DB_SYNTAX_ORACLE:
          _sntprintf(szQuery, 1024,
                     _T("SELECT event_id,event_code,event_timestamp,event_source,")
-                    _T("event_severity,event_message FROM event_log ")
+                    _T("event_severity,event_message,user_tag FROM event_log ")
                     _T("WHERE ROWNUM <= %u ORDER BY event_id DESC"), dwMaxRecords);
-         wFlags = MF_REVERSE_ORDER;
          break;
       default:
          szQuery[0] = 0;
-         wFlags = 0;
          break;
    }
    hResult = DBAsyncSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
-      // Send events, one per message
-      while(DBFetch(hResult))
+      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   	SendMessage(&msg);
+   	msg.DeleteAllVariables();
+	   msg.SetCode(CMD_EVENTLOG_RECORDS);
+	   
+      for(dwId = VID_EVENTLOG_MSG_BASE, dwNumRows = 0; DBFetch(hResult); dwNumRows++)
       {
-         event.qwEventId = htonq(DBGetFieldAsyncUInt64(hResult, 0));
-         event.dwEventCode = htonl(DBGetFieldAsyncULong(hResult, 1));
-         event.dwTimeStamp = htonl(DBGetFieldAsyncULong(hResult, 2));
-         event.dwSourceId = htonl(DBGetFieldAsyncULong(hResult, 3));
-         event.dwSeverity = htonl(DBGetFieldAsyncULong(hResult, 4));
-#ifdef UNICODE
-         DBGetFieldAsync(hResult, 5, event.szMessage, MAX_EVENT_MSG_LENGTH);
-         DecodeSQLString(event.szMessage);
-#else
-         DBGetFieldAsync(hResult, 5, szBuffer, MAX_EVENT_MSG_LENGTH);
+         if (dwNumRows == 10)
+         {
+            msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
+            msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
+            SendMessage(&msg);
+            msg.DeleteAllVariables();
+            dwNumRows = 0;
+            dwId = VID_EVENTLOG_MSG_BASE;
+         }
+         msg.SetVariable(dwId++, DBGetFieldAsyncUInt64(hResult, 0));
+         msg.SetVariable(dwId++, DBGetFieldAsyncULong(hResult, 1));
+         msg.SetVariable(dwId++, DBGetFieldAsyncULong(hResult, 2));
+         msg.SetVariable(dwId++, DBGetFieldAsyncULong(hResult, 3));
+         msg.SetVariable(dwId++, (WORD)DBGetFieldAsyncLong(hResult, 4));
+         DBGetFieldAsync(hResult, 5, szBuffer, 1024);
          DecodeSQLString(szBuffer);
-         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szBuffer, -1, 
-                             (WCHAR *)event.szMessage, MAX_EVENT_MSG_LENGTH);
-         ((WCHAR *)event.szMessage)[MAX_EVENT_MSG_LENGTH - 1] = 0;
-#endif
-         SwapWideString((WCHAR *)event.szMessage);
-         m_pSendQueue->Put(CreateRawNXCPMessage(CMD_EVENT, dwRqId, wFlags,
-                                                sizeof(NXC_EVENT), &event, NULL));
+         msg.SetVariable(dwId++, szBuffer);
+         DBGetFieldAsync(hResult, 6, szBuffer, 1024);
+         DecodeSQLString(szBuffer);
+         msg.SetVariable(dwId++, szBuffer);
       }
       DBFreeAsyncResult(g_hCoreDB, hResult);
-   }
 
-   // Send end of list notification
-   msg.SetCode(CMD_EVENT_LIST_END);
-   SendMessage(&msg);
+      // Send remaining records with End-Of-Sequence notification
+      msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
+      msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
+      msg.SetEndOfSequence();
+      SendMessage(&msg);
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+   	SendMessage(&msg);
+	}
 
    MutexUnlock(m_mutexSendEvents);
 }
@@ -1976,13 +1979,16 @@ void ClientSession::Kill(void)
 void ClientSession::OnNewEvent(Event *pEvent)
 {
    UPDATE_INFO *pUpdate;
+   CSCPMessage *msg;
 
    if (IsAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_EVENTS))
    {
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
       pUpdate->dwCategory = INFO_CAT_EVENT;
-      pUpdate->pData = malloc(sizeof(NXC_EVENT));
-      pEvent->PrepareMessage((NXC_EVENT *)pUpdate->pData);
+      msg = new CSCPMessage;
+      msg->SetCode(CMD_EVENTLOG_RECORDS);
+      pEvent->PrepareMessage(msg);
+      pUpdate->pData = msg;
       m_pUpdateQueue->Put(pUpdate);
    }
 }
@@ -2894,8 +2900,8 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
    NetObj *pObject;
    BOOL bSuccess = FALSE;
    static DWORD m_dwRowSize[] = { 8, 8, 12, 12, 260, 12 };
-#ifndef UNICODE
-   char szBuffer[MAX_DCI_STRING_VALUE];
+#ifndef UNICODE_UCS2
+   TCHAR szBuffer[MAX_DCI_STRING_VALUE];
 #endif
 
    // Prepare response message
@@ -2999,11 +3005,15 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
                         break;
                      case DCI_DT_STRING:
 #ifdef UNICODE
+#ifdef UNICODE_UCS4
+                        DBGetField(hResult, i, 1, szBuffer, MAX_DCI_STRING_VALUE);
+                        ucs4_to_ucs2(szBuffer, -1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
+#else
                         DBGetField(hResult, i, 1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
+#endif                        
 #else
                         DBGetField(hResult, i, 1, szBuffer, MAX_DCI_STRING_VALUE);
-                        MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szBuffer, -1,
-                                            pCurr->value.szString, MAX_DCI_STRING_VALUE);
+                        mb_to_ucs2(szBuffer, -1, pCurr->value.szString, MAX_DCI_STRING_VALUE);
 #endif
                         SwapWideString(pCurr->value.szString);
                         break;
@@ -6676,13 +6686,9 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
    wRecOrder = ((g_dwDBSyntax == DB_SYNTAX_MSSQL) || (g_dwDBSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
    dwMaxRecords = pRequest->GetVariableLong(VID_MAX_RECORDS);
 
-   // Send confirmation message
+   // Prepare confirmation message
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
-   msg.SetVariable(VID_RCC, RCC_SUCCESS);
-   SendMessage(&msg);
-   msg.DeleteAllVariables();
-   msg.SetCode(CMD_SYSLOG_RECORDS);
 
    MutexLock(m_mutexSendSyslog, INFINITE);
 
@@ -6730,7 +6736,12 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
    hResult = DBAsyncSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
-      // Send events, one per message
+		msg.SetVariable(VID_RCC, RCC_SUCCESS);
+		SendMessage(&msg);
+		msg.DeleteAllVariables();
+		msg.SetCode(CMD_SYSLOG_RECORDS);
+		
+      // Send records, up to 10 per message
       for(dwId = VID_SYSLOG_MSG_BASE, dwNumRows = 0; DBFetch(hResult); dwNumRows++)
       {
          if (dwNumRows == 10)
@@ -6760,8 +6771,12 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
       msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
       msg.SetEndOfSequence();
       SendMessage(&msg);
-      msg.DeleteAllVariables();
    }
+   else
+   {
+		msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+		SendMessage(&msg);
+	}
 
    MutexUnlock(m_mutexSendSyslog);
 }

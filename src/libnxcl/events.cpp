@@ -1,4 +1,4 @@
-/* $Id: events.cpp,v 1.22 2008-01-28 20:23:46 victor Exp $ */
+/* $Id: events.cpp,v 1.23 2008-01-29 16:32:40 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library
@@ -26,65 +26,36 @@
 
 
 //
-// Process events coming from server
+// Process event log records coming from server
 //
 
-void ProcessEvent(NXCL_Session *pSession, CSCPMessage *pMsg, CSCP_MESSAGE *pRawMsg)
+void ProcessEventLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
-   WORD wCode;
-#ifdef UNICODE
-   WCHAR *pSrc, *pDst;
-#endif
+   DWORD i, dwNumRecords, dwId;
+   NXC_EVENT event;
+   int nOrder;
 
-   wCode = (pMsg != NULL) ? pMsg->GetCode() : pRawMsg->wCode;
-
-   switch(wCode)
+   dwNumRecords = pMsg->GetVariableLong(VID_NUM_RECORDS);
+   nOrder = (int)pMsg->GetVariableShort(VID_RECORDS_ORDER);
+   DebugPrintf(_T("ProcessEventLogRecords(): %d records in message, in %s order"),
+               dwNumRecords, (nOrder == RECORD_ORDER_NORMAL) ? _T("normal") : _T("reversed"));
+   for(i = 0, dwId = VID_EVENTLOG_MSG_BASE; i < dwNumRecords; i++)
    {
-      case CMD_EVENT_LIST_END:
-         pSession->CompleteSync(SYNC_EVENTS, RCC_SUCCESS);
-         break;
-      case CMD_EVENT:
-         if (pRawMsg != NULL)    // We should receive events as raw data
-         {
-            NXC_EVENT event;
+      event.qwEventId = pMsg->GetVariableInt64(dwId++);
+      event.dwEventCode = pMsg->GetVariableLong(dwId++);
+      event.dwTimeStamp = pMsg->GetVariableLong(dwId++);
+      event.dwSourceId = pMsg->GetVariableLong(dwId++);
+      event.dwSeverity = pMsg->GetVariableShort(dwId++);
+      pMsg->GetVariableStr(dwId++, event.szMessage, MAX_EVENT_MSG_LENGTH);
+      pMsg->GetVariableStr(dwId++, event.szUserTag, MAX_USERTAG_LENGTH);
 
-            // Fill event structure with values from message
-            event.dwEventCode = ntohl(((NXC_EVENT *)pRawMsg->df)->dwEventCode);
-            event.qwEventId = ntohq(((NXC_EVENT *)pRawMsg->df)->qwEventId);
-            event.dwSeverity = ntohl(((NXC_EVENT *)pRawMsg->df)->dwSeverity);
-            event.dwSourceId = ntohl(((NXC_EVENT *)pRawMsg->df)->dwSourceId);
-            event.dwTimeStamp = ntohl(((NXC_EVENT *)pRawMsg->df)->dwTimeStamp);
-
-            // Convert bytes in message characters to host byte order
-            // and than to single-byte if we building non-unicode library
-#ifdef UNICODE
-/*#if WORDS_BIGENDIAN
-            memcpy(event.szMessage, ((NXC_EVENT *)pRawMsg->df)->szMessage,
-                   MAX_EVENT_MSG_LENGTH * sizeof(WCHAR));
-#else
-            for(pSrc = ((NXC_EVENT *)pRawMsg->df)->szMessage, 
-                pDst = event.szMessage; *pSrc != 0; pSrc++, pDst++)
-               *pDst = ntohs(*pSrc);
-            *pDst = ntohs(*pSrc);
-#endif*/
-event.szMessage[0] = 0;
-#else
-            SwapWideString((UCS2CHAR *)((NXC_EVENT *)pRawMsg->df)->szMessage);
-            ucs2_to_mb((UCS2CHAR *)((NXC_EVENT *)pRawMsg->df)->szMessage, -1,
-                       event.szMessage, MAX_EVENT_MSG_LENGTH);
-            event.szMessage[MAX_EVENT_MSG_LENGTH - 1] = 0;
-#endif
-
-            // Call client's callback to handle new record
-            pSession->CallEventHandler(NXC_EVENT_NEW_ELOG_RECORD, 
-                                       (pRawMsg->wFlags & MF_REVERSE_ORDER) ? 
-                                               RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL,
-                                       &event);
-         }
-         break;
-      default:
-         break;
+      // Call client's callback to handle new record
+      pSession->CallEventHandler(NXC_EVENT_NEW_ELOG_RECORD, nOrder, &event);
    }
+
+   // Notify requestor thread if all messages was received
+   if (pMsg->IsEndOfSequence())
+      pSession->CompleteSync(SYNC_EVENTS, RCC_SUCCESS);
 }
 
 

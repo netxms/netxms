@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.281 2008-01-28 20:23:44 victor Exp $ */
+/* $Id: nxclapi.h,v 1.282 2008-01-29 16:32:39 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -732,27 +732,6 @@ typedef struct
 
 
 //
-// Event log record structure
-//
-
-typedef struct
-{
-   QWORD qwEventId;
-   DWORD dwTimeStamp;
-   DWORD dwEventCode;
-   DWORD dwSourceId;
-   DWORD dwSeverity;
-#ifdef UNICODE
-   WCHAR szMessage[MAX_EVENT_MSG_LENGTH];
-	WCHAR szUserTag[MAX_USERTAG_LENGTH];
-#else
-   char szMessage[MAX_EVENT_MSG_LENGTH * sizeof(UCS2CHAR)];
-	char szUserTag[MAX_USERTAG_LENGTH * sizeof(UCS2CHAR)];
-#endif
-} NXC_EVENT;
-
-
-//
 // Image information
 //
 
@@ -853,6 +832,22 @@ typedef struct
 
 typedef void (* NXC_EVENT_HANDLER)(NXC_SESSION hSession, DWORD dwEvent, DWORD dwCode, void *pArg);
 typedef void (* NXC_DEBUG_CALLBACK)(TCHAR *pMsg);
+
+
+//
+// Event log record structure
+//
+
+typedef struct
+{
+   QWORD qwEventId;
+   DWORD dwTimeStamp;
+   DWORD dwEventCode;
+   DWORD dwSourceId;
+   DWORD dwSeverity;
+   TCHAR szMessage[MAX_EVENT_MSG_LENGTH];
+	TCHAR szUserTag[MAX_USERTAG_LENGTH];
+} NXC_EVENT;
 
 
 //

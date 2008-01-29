@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.142 2008-01-21 14:24:03 victor Exp $ */
+/* $Id: nms_core.h,v 1.143 2008-01-29 16:32:40 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -375,7 +375,7 @@ private:
 
 	DECLARE_THREAD_STARTER(GetCollectedData)
 	DECLARE_THREAD_STARTER(QueryL2Topology)
-	DECLARE_THREAD_STARTER(SendAllEvents)
+	DECLARE_THREAD_STARTER(SendEventLog)
 	DECLARE_THREAD_STARTER(SendSyslog)
 
    void ReadThread(void);
@@ -397,7 +397,7 @@ private:
    void SendServerInfo(DWORD dwRqId);
    void Login(CSCPMessage *pRequest);
    void SendAllObjects(CSCPMessage *pRequest);
-   void SendAllEvents(CSCPMessage *pRequest);
+   void SendEventLog(CSCPMessage *pRequest);
    void SendAllConfigVars(DWORD dwRqId);
    void SetConfigVariable(CSCPMessage *pRequest);
    void DeleteConfigVariable(CSCPMessage *pRequest);
