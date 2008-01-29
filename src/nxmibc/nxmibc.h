@@ -28,9 +28,12 @@
 
 #include <nms_common.h>
 #include <nms_util.h>
-#include <getopt.h>
 #include <nxsnmp.h>
 #include <stdarg.h>
+
+#if HAVE_GETOPT_H
+#include <getopt.h>
+#endif
 
 #endif
 
