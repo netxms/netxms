@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.29 2008-01-28 21:56:53 victor Exp $ */
+/* $Id: unicode.cpp,v 1.30 2008-01-29 00:13:27 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -53,12 +53,14 @@ static char m_cpDefault[MAX_CODEPAGE_LEN] = ICONV_DEFAULT_CODEPAGE;
 
 #if HAVE_ICONV_UCS_2_INTERNAL
 #define UCS2_CODEPAGE_NAME	"UCS-2-INTERNAL"
+#elif HAVE_ICONV_UCS_2BE && WORDS_BIGENDIAN
+#define UCS2_CODEPAGE_NAME	"UCS-2BE"
+#elif HAVE_ICONV_UCS_2LE && !WORDS_BIGENDIAN
+#define UCS2_CODEPAGE_NAME	"UCS-2LE"
 #elif HAVE_ICONV_UCS_2
 #define UCS2_CODEPAGE_NAME	"UCS-2"
 #elif HAVE_ICONV_UCS2
 #define UCS2_CODEPAGE_NAME	"UCS2"
-#elif HAVE_ICONV_UCS_2BE && WORDS_BIGENDIAN
-#define UCS2_CODEPAGE_NAME	"UCS-2BE"
 #else
 #ifdef UNICODE
 #error Cannot determine valid UCS-2 codepage name
@@ -70,12 +72,14 @@ static char m_cpDefault[MAX_CODEPAGE_LEN] = ICONV_DEFAULT_CODEPAGE;
 
 #if HAVE_ICONV_UCS_4_INTERNAL
 #define UCS4_CODEPAGE_NAME	"UCS-4-INTERNAL"
+#elif HAVE_ICONV_UCS_4BE && WORDS_BIGENDIAN
+#define UCS4_CODEPAGE_NAME	"UCS-4BE"
+#elif HAVE_ICONV_UCS_4LE && !WORDS_BIGENDIAN
+#define UCS4_CODEPAGE_NAME	"UCS-4LE"
 #elif HAVE_ICONV_UCS_4
 #define UCS4_CODEPAGE_NAME	"UCS-4"
 #elif HAVE_ICONV_UCS4
 #define UCS4_CODEPAGE_NAME	"UCS4"
-#elif HAVE_ICONV_UCS_4BE && WORDS_BIGENDIAN
-#define UCS4_CODEPAGE_NAME	"UCS-4BE"
 #else
 #if defined(UNICODE) && defined(UNICODE_UCS4)
 #error Cannot determine valid UCS-4 codepage name
@@ -444,7 +448,7 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, size_t srcLen, WCH
 	if (cd != (iconv_t)(-1))
 	{
 		inbuf = (const char *)src;
-		inbytes = (srcLen == -1) ? ucs2_strlen(src) + 1 : srcLen;
+		inbytes = ((srcLen == -1) ? ucs2_strlen(src) + 1 : srcLen) * sizeof(UCS2CHAR);
 		outbuf = (char *)dst;
 		outbytes = dstLen * sizeof(WCHAR);
 		count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
@@ -489,7 +493,7 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, size_t srcLen, UCS2CH
 	if (cd != (iconv_t)(-1))
 	{
 		inbuf = (const char *)src;
-		inbytes = (srcLen == -1) ? wcslen(src) + 1 : srcLen;
+		inbytes = ((srcLen == -1) ? wcslen(src) + 1 : srcLen) * sizeof(WCHAR);
 		outbuf = (char *)dst;
 		outbytes = dstLen * sizeof(UCS2CHAR);
 		count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
@@ -755,9 +759,10 @@ WCHAR *wgetenv(const WCHAR *_string)
 // means "multibyte string/char" instead of expected "UNICODE string/char"
 //
 
-int LIBNETXMS_EXPORTABLE nx_wprintf(WCHAR *format, ...)
+int LIBNETXMS_EXPORTABLE nx_wprintf(const WCHAR *format, ...)
 {
 	va_list args;
+	int rc;
 
 	va_start(args, format);
 	rc = nx_vwprintf(format, args);
@@ -765,9 +770,10 @@ int LIBNETXMS_EXPORTABLE nx_wprintf(WCHAR *format, ...)
 	return rc;
 }
 
-int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, WCHAR *format, ...)
+int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, const WCHAR *format, ...)
 {
 	va_list args;
+	int rc;
 
 	va_start(args, format);
 	rc = nx_vfwprintf(fp, format, args);
@@ -775,9 +781,10 @@ int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, WCHAR *format, ...)
 	return rc;
 }
 
-int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, WCHAR *format, ...)
+int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, const WCHAR *format, ...)
 {
 	va_list args;
+	int rc;
 
 	va_start(args, format);
 	rc = nx_vswprintf(buffer, size, format, args);
@@ -785,12 +792,12 @@ int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, WCHAR *format, 
 	return rc;
 }
 
-static WCHAR *ReplaceFormatSpecs(WCHAR *oldFormat)
+static WCHAR *ReplaceFormatSpecs(const WCHAR *oldFormat)
 {
 	WCHAR *fmt, *p;
 
 	fmt = wcsdup(oldFormat);
-	for(in = fmt; *p != 0; p++)
+	for(p = fmt; *p != 0; p++)
 		if ((*p == _T('%')) && (*(p + 1) != 0))
 		{
 			p++;
@@ -802,34 +809,34 @@ static WCHAR *ReplaceFormatSpecs(WCHAR *oldFormat)
 	return fmt;
 }
 
-int LIBNETXMS_EXPORTABLE nx_vwprintf(WCHAR *format, va_list args)
+int LIBNETXMS_EXPORTABLE nx_vwprintf(const WCHAR *format, va_list args)
 {
 	WCHAR *fmt;
 	int rc;
 
-	fmt = ReplaceFormatSpec(format);
+	fmt = ReplaceFormatSpecs(format);
 	rc = vwprintf(fmt, args);
 	free(fmt);
 	return rc;
 }
 
-int LIBNETXMS_EXPORTABLE nx_vfwprintf(FILE *fp, WCHAR *format, va_list args)
+int LIBNETXMS_EXPORTABLE nx_vfwprintf(FILE *fp, const WCHAR *format, va_list args)
 {
 	WCHAR *fmt;
 	int rc;
 
-	fmt = ReplaceFormatSpec(format);
+	fmt = ReplaceFormatSpecs(format);
 	rc = vfwprintf(fp, fmt, args);
 	free(fmt);
 	return rc;
 }
 
-int LIBNETXMS_EXPORTABLE nx_vswprintf(WCHAR *buffer, size_t size, WCHAR *format, va_list args)
+int LIBNETXMS_EXPORTABLE nx_vswprintf(WCHAR *buffer, size_t size, const WCHAR *format, va_list args)
 {
 	WCHAR *fmt;
 	int rc;
 
-	fmt = ReplaceFormatSpec(format);
+	fmt = ReplaceFormatSpecs(format);
 	rc = vswprintf(buffer, size, fmt, args);
 	free(fmt);
 	return rc;

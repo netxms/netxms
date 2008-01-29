@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.285 2008-01-28 20:23:44 victor Exp $
+# $Id: configure.ac,v 1.286 2008-01-29 00:13:26 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -958,6 +958,24 @@ AC_RUN_IFELSE(
   [ AC_MSG_RESULT(no) ]
 )
 
+AC_MSG_CHECKING(whether iconv supports UCS-2LE)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+#if HAVE_ICONV_H
+#include <iconv.h>
+#endif
+     ], [
+     return iconv_open("UTF-8","UCS-2LE")==(iconv_t)(-1);
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_ICONV_UCS_2LE, 1, Define to 1 if iconv supports UCS-2LE)
+    valid_ucs2_code="UCS-2LE"
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
+
 AC_MSG_CHECKING(whether iconv supports UCS-4-INTERNAL)
 AC_RUN_IFELSE(
   [AC_LANG_PROGRAM([
@@ -1025,6 +1043,24 @@ AC_RUN_IFELSE(
   [ AC_MSG_RESULT(yes)
     AC_DEFINE(HAVE_ICONV_UCS_4BE, 1, Define to 1 if iconv supports UCS-4BE)
     valid_ucs4_code="UCS-4BE"
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
+
+AC_MSG_CHECKING(whether iconv supports UCS-4LE)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+#if HAVE_ICONV_H
+#include <iconv.h>
+#endif
+     ], [
+     return iconv_open("UTF-8","UCS-4LE")==(iconv_t)(-1);
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_ICONV_UCS_4LE, 1, Define to 1 if iconv supports UCS-4LE)
+    valid_ucs4_code="UCS-4LE"
   ],
   [ AC_MSG_RESULT(no) ],
   [ AC_MSG_RESULT(no) ]

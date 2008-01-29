@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.117 2008-01-28 21:56:53 victor Exp $ */
+/* $Id: nms_util.h,v 1.118 2008-01-29 00:13:27 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -505,12 +505,12 @@ extern "C"
 #endif
 
 #ifdef UNICODE
-	int LIBNETXMS_EXPORTABLE nx_wprintf(WCHAR *format, ...);
-	int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, WCHAR *format, ...);
-	int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, WCHAR *format, ...);
-	int LIBNETXMS_EXPORTABLE nx_vwprintf(WCHAR *format, va_list args);
-	int LIBNETXMS_EXPORTABLE nx_vfwprintf(FILE *fp, WCHAR *format, va_list args);
-	int LIBNETXMS_EXPORTABLE nx_vswprintf(WCHAR *buffer, size_t size, WCHAR *format, va_list args);
+	int LIBNETXMS_EXPORTABLE nx_wprintf(const WCHAR *format, ...);
+	int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, const WCHAR *format, ...);
+	int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, const WCHAR *format, ...);
+	int LIBNETXMS_EXPORTABLE nx_vwprintf(const WCHAR *format, va_list args);
+	int LIBNETXMS_EXPORTABLE nx_vfwprintf(FILE *fp, const WCHAR *format, va_list args);
+	int LIBNETXMS_EXPORTABLE nx_vswprintf(WCHAR *buffer, size_t size, const WCHAR *format, va_list args);
 #endif
 
 #endif	/* _WIN32 */
@@ -593,6 +593,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.117  2008/01/28 21:56:53  victor
+Added wrappers for UNIX versions of wprintf functions
+
 Revision 1.116  2008/01/28 20:23:44  victor
 Console compiles on UNIX with UNICODE
 

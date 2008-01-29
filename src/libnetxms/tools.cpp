@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.69 2008-01-28 18:09:38 victor Exp $ */
+/* $Id: tools.cpp,v 1.70 2008-01-29 00:13:27 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
@@ -876,6 +876,7 @@ DWORD LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName)
 
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
                        pszName, -1, szBuffer, 256, NULL, NULL);
+printf("TRANSFORM: %s\n",szBuffer);
    dwAddr = inet_addr(szBuffer);
 #else
    dwAddr = inet_addr(pszName);
@@ -916,7 +917,7 @@ void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize)
 {
    int nSize = nBufSize - 1;
 
-   memset(pszBuffer, 0, nBufSize);
+   memset(pszBuffer, 0, nBufSize * sizeof(TCHAR));
 
 #if defined(_WIN32)
    OSVERSIONINFO ver;
@@ -958,7 +959,13 @@ void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize)
    struct utsname un;
 
    uname(&un);
-   _sntprintf(pszBuffer, nSize, _T("%s %s"), un.sysname, un.release);
+#ifdef UNICODE
+   char buf[1024];
+   snprintf(buf, 1024, "%s %s", un.sysname, un.release);
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, buf, -1, pszBuffer, nSize);
+#else
+   snprintf(pszBuffer, nSize, "%s %s", un.sysname, un.release);
+#endif
 #endif
 }
 
