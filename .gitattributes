@@ -2,7 +2,7 @@
 /.cvsignore -text
 /AUTHORS -text
 /COPYING -text
-/ChangeLog -text svneol=unset#unset
+/ChangeLog -text
 /INSTALL -text
 /Makefile.am -text
 /Makefile.nw -text
