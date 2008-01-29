@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.30 2008-01-29 00:13:27 victor Exp $ */
+/* $Id: unicode.cpp,v 1.31 2008-01-29 18:11:40 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -464,6 +464,10 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, size_t srcLen, WCH
 				count = 0;
 			}
 		}
+		else
+		{
+			count = (dstLen * sizeof(WCHAR) - outbytes) / sizeof(WCHAR);
+		}
 		if ((srcLen == -1) && (outbytes >= sizeof(WCHAR)))
 		{
 			*((WCHAR *)outbuf) = 0;
@@ -508,6 +512,10 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, size_t srcLen, UCS2CH
 			{
 				count = 0;
 			}
+		}
+		else
+		{
+			count = (dstLen * sizeof(UCS2CHAR) - outbytes) / sizeof(UCS2CHAR);
 		}
 		if (((char *)outbuf - (char *)dst > sizeof(UCS2CHAR)) && (*dst == 0xFEFF))
 		{

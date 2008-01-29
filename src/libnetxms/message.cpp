@@ -1,4 +1,4 @@
-/* $Id: message.cpp,v 1.6 2008-01-28 18:09:38 victor Exp $ */
+/* $Id: message.cpp,v 1.7 2008-01-29 18:11:40 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
@@ -409,7 +409,7 @@ TCHAR *CSCPMessage::GetVariableStr(DWORD dwVarId, TCHAR *pszBuffer, DWORD dwBufS
 
       dwLen = (pszBuffer == NULL) ? (*((DWORD *)pValue) / 2) : min(*((DWORD *)pValue) / 2, dwBufSize - 1);
 #if defined(UNICODE) && defined(UNICODE_UCS4)
-		ucs2_to_ucs4((UCS2CHAR *)pValue + 4, dwLen, pStr, dwLen + 1);
+		ucs2_to_ucs4((UCS2CHAR *)((BYTE *)pValue + 4), dwLen, pStr, dwLen + 1);
 #elif defined(UNICODE) && defined(UNICODE_UCS2)
       memcpy(pStr, (BYTE *)pValue + 4, dwLen * 2);
 #else
