@@ -141,7 +141,7 @@ static BOOL H_UpgradeFromV72(void)
 static BOOL H_UpgradeFromV71(void)
 {
    static TCHAR m_szBatch[] =
-		_T("ALTER TABLE items ADD proxy_node integer not null\n")
+		_T("ALTER TABLE items ADD proxy_node integer\n")
 		_T("UPDATE items SET proxy_node=0\n")
       _T("<END>");
 
