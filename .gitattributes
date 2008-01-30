@@ -1538,6 +1538,7 @@ src/server/core/radius.h -text
 src/server/core/rootobj.cpp -text
 src/server/core/script.cpp -text
 src/server/core/session.cpp -text
+src/server/core/situation.cpp -text
 src/server/core/sms.cpp -text
 src/server/core/snmp.cpp -text
 src/server/core/snmptrap.cpp -text
@@ -1598,6 +1599,7 @@ src/server/include/nms_script.h -text
 src/server/include/nms_topo.h -text
 src/server/include/nms_users.h -text
 src/server/include/nxcore_maps.h -text
+src/server/include/nxcore_situations.h -text
 src/server/include/nxmodule.h -text
 src/server/include/nxsrvapi.h -text
 src/server/libnxsrv/.cvsignore -text

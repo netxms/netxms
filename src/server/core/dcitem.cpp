@@ -1,4 +1,4 @@
-/* $Id: dcitem.cpp,v 1.84 2008-01-29 21:12:50 victor Exp $ */
+/* $Id: dcitem.cpp,v 1.85 2008-01-30 11:00:28 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1860,6 +1860,40 @@ void DCItem::ExpandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 			{
 				temp += _T("(error)");
 			}
+		}
+		else if (!_tcsncmp(macro, _T("script:"), 7))
+		{
+			NXSL_Program *script;
+			NXSL_Value *pValue;
+			NXSL_Environment *pEnv;
+
+	      g_pScriptLibrary->Lock();
+			script = g_pScriptLibrary->FindScript(&macro[7]);
+			if (script != NULL)
+			{
+				pEnv = new NXSL_Environment;
+				pEnv->SetLibrary(g_pScriptLibrary);
+				if (m_pNode != NULL)
+					script->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&m_nxslNodeClass, m_pNode)));
+
+				if (script->Run(pEnv) == 0)
+				{
+					temp += script->GetResult()->GetValueAsCString();
+		         DbgPrintf(4, "DCItem::ExpandMacros(%d,\"%s\"): Script %s executed successfully", m_dwId, src, &macro[7]);
+				}
+				else
+				{
+		         DbgPrintf(4, "DCItem::ExpandMacros(%d,\"%s\"): Script %s execution error: %s",
+					          m_dwId, src, &macro[7], script->GetErrorText());
+					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), &macro[7],
+								 script->GetErrorText(), m_dwId);
+				}
+			}
+			else
+			{
+	         DbgPrintf(4, "DCItem::ExpandMacros(%d,\"%s\"): Cannot find script %s", m_dwId, src, &macro[7]);
+			}
+	      g_pScriptLibrary->Unlock();
 		}
 		temp += rest;
 		
