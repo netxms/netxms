@@ -1,4 +1,11 @@
 *************
+* 73 ==> 74 *
+*************
+
+- Removed configuration parameter NumberOfEventProcessors
+
+
+*************
 * 72 ==> 73 *
 *************
 

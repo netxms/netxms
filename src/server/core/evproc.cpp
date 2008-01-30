@@ -24,6 +24,20 @@
 
 
 //
+// Global variables
+//
+
+INT64 g_totalEventsProcessed = 0;
+
+
+//
+// Static data
+//
+
+static THREAD m_threadStormDetector = INVALID_THREAD_HANDLE;
+
+
+//
 // Handler for EnumerateSessions()
 //
 
@@ -35,6 +49,44 @@ static void BroadcastEvent(ClientSession *pSession, void *pArg)
 
 
 //
+// Event storm detector thread
+//
+
+static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
+{
+	INT64 numEvents, prevEvents, threshold;
+	
+	threshold = ConfigReadInt(_T("EventStormThreshold"), 0);
+	if (threshold <= 0)
+	{
+		// Event storm detection is off
+	   DbgPrintf(1, "Event storm detector thread stopped because event storm detection is off");
+		return THREAD_OK;
+	}
+
+	prevEvents = g_totalEventsProcessed;	
+	while(!(g_dwFlags & AF_SHUTDOWN))
+	{
+		ThreadSleepMs(1000);
+		numEvents = g_totalEventsProcessed - prevEvents;
+		prevEvents = g_totalEventsProcessed;
+		if ((numEvents >= threshold) && (!(g_dwFlags & AF_EVENT_STORM_DETECTED)))
+		{
+			g_dwFlags |= AF_EVENT_STORM_DETECTED;
+		   DbgPrintf(2, "Event storm detected: threshold=" INT64_FMT " eventsPerSecond=" INT64_FMT, threshold, numEvents);
+		}
+		else if ((numEvents < threshold) && (g_dwFlags & AF_EVENT_STORM_DETECTED))
+		{
+			g_dwFlags &= ~AF_EVENT_STORM_DETECTED;
+		   DbgPrintf(2, "Event storm condition cleared");
+		}
+	}
+   DbgPrintf(1, "Event storm detector thread stopped");
+	return THREAD_OK;
+}
+
+
+//
 // Event processing thread
 //
 
@@ -42,6 +94,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 {
    Event *pEvent;
 
+	m_threadStormDetector = ThreadCreateEx(EventStormDetector, 0, NULL);
    while(!ShutdownInProgress())
    {
       pEvent = (Event *)g_pEventQueue->GetOrBlock();
@@ -99,8 +152,11 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 
       // Destroy event
       delete pEvent;
+      
+      g_totalEventsProcessed++;
    }
 
-   DbgPrintf(1, "Event processing thread #%d stopped", arg);
+	ThreadJoin(m_threadStormDetector);
+   DbgPrintf(1, "Event processing thread stopped");
    return THREAD_OK;
 }

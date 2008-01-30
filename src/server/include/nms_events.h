@@ -204,5 +204,6 @@ extern Queue *g_pEventQueue;
 extern EventPolicy *g_pEventPolicy;
 extern const char *g_szStatusText[];
 extern const char *g_szStatusTextSmall[];
+extern INT64 g_totalEventsProcessed;
 
 #endif   /* _nms_events_h_ */

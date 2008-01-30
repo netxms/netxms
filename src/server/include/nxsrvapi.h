@@ -107,6 +107,7 @@
 #define AF_DB_LOCKED                      0x01000000
 #define AF_ENABLE_MULTIPLE_DB_CONN        0x02000000
 #define AF_DB_CONNECTION_LOST             0x04000000
+#define AF_EVENT_STORM_DETECTED           0x08000000
 #define AF_SERVER_INITIALIZED             0x40000000
 #define AF_SHUTDOWN                       0x80000000
 

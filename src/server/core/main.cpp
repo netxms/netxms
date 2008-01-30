@@ -593,10 +593,8 @@ retry_db_lock:
 	m_thHouseKeeper = ThreadCreateEx(HouseKeeper, 0, NULL);
 	m_thPollManager = ThreadCreateEx(PollManager, 0, NULL);
 
-	// Start event processors
-	iNumThreads = ConfigReadInt("NumberOfEventProcessors", 1);
-	for(i = 0; i < iNumThreads; i++)
-		ThreadCreate(EventProcessor, 0, CAST_TO_POINTER((i + 1), void *));
+	// Start event processor
+	ThreadCreate(EventProcessor, 0, NULL);
 
 	// Start SNMP trapper
 	InitTraps();
@@ -896,6 +894,7 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_INTERNAL_CA));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_LOCKED));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_CONNECTION_LOST));
+			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_EVENT_STORM_DETECTED));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
 			ConsolePrintf(pCtx, "\n");

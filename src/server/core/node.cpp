@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.192 2008-01-29 21:12:50 victor Exp $ */
+/* $Id: node.cpp,v 1.193 2008-01-30 17:01:09 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1700,6 +1700,10 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
       else if (!stricmp(szParam, "Server.AverageDCIQueuingTime"))
       {
          sprintf(szBuffer, "%u", g_dwAvgDCIQueuingTime);
+      }
+      else if (!stricmp(szParam, "Server.TotalEventsProcessed"))
+      {
+         sprintf(szBuffer, INT64_FMT, g_totalEventsProcessed);
       }
       else
       {
