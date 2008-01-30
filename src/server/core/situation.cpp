@@ -48,7 +48,7 @@ SituationInstance::~SituationInstance()
 // Update atribute
 //
 
-SituationInstance::UpdateAttribute(const TCHAR *attribute, const TCHAR *value)
+void SituationInstance::UpdateAttribute(const TCHAR *attribute, const TCHAR *value)
 {
 }
 
@@ -100,6 +100,6 @@ Situation::~Situation()
 // Update situation
 //
 
-void Situation::UpdateSituation((const TCHAR *instance, const TCHAR *attribute, const TCHAR *value)
+void Situation::UpdateSituation(const TCHAR *instance, const TCHAR *attribute, const TCHAR *value)
 {
 }
