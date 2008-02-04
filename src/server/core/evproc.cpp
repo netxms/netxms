@@ -54,15 +54,18 @@ static void BroadcastEvent(ClientSession *pSession, void *pArg)
 
 static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 {
-	INT64 numEvents, prevEvents, threshold;
+	INT64 numEvents, prevEvents, eventsPerSecond;
+	int duration, actualDuration = 0;
 	
-	threshold = ConfigReadInt(_T("EventStormThreshold"), 0);
-	if (threshold <= 0)
+	if (!ConfigReadInt(_T("EnableEventStormDetection"), 0))
 	{
 		// Event storm detection is off
 	   DbgPrintf(1, "Event storm detector thread stopped because event storm detection is off");
 		return THREAD_OK;
 	}
+
+	eventsPerSecond = ConfigReadInt(_T("EventStormEventsPerSecond"), 100);
+	duration = ConfigReadInt(_T("EventStormDuraction"), 15);
 
 	prevEvents = g_totalEventsProcessed;	
 	while(!(g_dwFlags & AF_SHUTDOWN))
@@ -70,15 +73,22 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 		ThreadSleepMs(1000);
 		numEvents = g_totalEventsProcessed - prevEvents;
 		prevEvents = g_totalEventsProcessed;
-		if ((numEvents >= threshold) && (!(g_dwFlags & AF_EVENT_STORM_DETECTED)))
+		if ((numEvents >= eventsPerSecond) && (!(g_dwFlags & AF_EVENT_STORM_DETECTED)))
 		{
-			g_dwFlags |= AF_EVENT_STORM_DETECTED;
-		   DbgPrintf(2, "Event storm detected: threshold=" INT64_FMT " eventsPerSecond=" INT64_FMT, threshold, numEvents);
+			actualDuration++;
+			if (actualDuration >= duration)
+			{
+				g_dwFlags |= AF_EVENT_STORM_DETECTED;
+				DbgPrintf(2, "Event storm detected: threshold=" INT64_FMT " eventsPerSecond=" INT64_FMT, eventsPerSecond, numEvents);
+				PostEvent(EVENT_EVENT_STORM_DETECTED, g_dwMgmtNode, "DdD", numEvents, duration, eventsPerSecond);
+			}
 		}
-		else if ((numEvents < threshold) && (g_dwFlags & AF_EVENT_STORM_DETECTED))
+		else if ((numEvents < eventsPerSecond) && (g_dwFlags & AF_EVENT_STORM_DETECTED))
 		{
+			actualDuration = 0;
 			g_dwFlags &= ~AF_EVENT_STORM_DETECTED;
 		   DbgPrintf(2, "Event storm condition cleared");
+			PostEvent(EVENT_EVENT_STORM_ENDED, g_dwMgmtNode, "DdD", numEvents, duration, eventsPerSecond);
 		}
 	}
    DbgPrintf(1, "Event storm detector thread stopped");

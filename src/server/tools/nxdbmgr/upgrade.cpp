@@ -87,6 +87,49 @@ static BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
 
 
 //
+// Upgrade from V73 to V74
+//
+
+static BOOL H_UpgradeFromV73(void)
+{
+   static TCHAR m_szBatch[] =
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) ")
+			_T("VALUES (48,'SYS_EVENT_STORM_DETECTED',3,1,'Event storm detected (Events per second: %1)',")
+			_T("'Generated when system detects an event storm.#0D#0AParameters:#0D#0A")
+			_T("   1) Events per second#0D#0A   2) Duration#0D#0A   3) Threshold')\n")
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) ")
+			_T("VALUES (49,'SYS_EVENT_STORM_ENDED',0,1,'Event storm ended',")
+			_T("'Generated when system clears event storm condition.#0D#0AParameters:#0D#0A")
+			_T("   1) Events per second#0D#0A   2) Duration#0D#0A   3) Threshold')\n")
+		_T("DELETE FROM config WHERE var_name='NumberOfEventProcessors'\n")
+		_T("DELETE FROM config WHERE var_name='EventStormThreshold'\n")
+      _T("<END>");
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   if (!CreateConfigParam(_T("EnableEventStormDetection"), _T("0"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!CreateConfigParam(_T("EventStormEventsPerSecond"), _T("100"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!CreateConfigParam(_T("EventStormDuration"), _T("15"), 1, 1))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='74' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V72 to V73
 //
 
@@ -95,7 +138,12 @@ static BOOL H_UpgradeFromV72(void)
    static TCHAR m_szBatch[] =
 		_T("ALTER TABLE event_policy ADD situation_id integer\n")
 		_T("ALTER TABLE event_policy ADD situation_instance varchar(255)\n")
+		_T("UPDATE event_policy SET situation_id=0,situation_instance='#00'\n")
       _T("<END>");
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE policy_situation_attr_list (")
 	                 _T("rule_id integer not null,")
@@ -3225,6 +3273,7 @@ static struct
    { 70, H_UpgradeFromV70 },
    { 71, H_UpgradeFromV71 },
    { 72, H_UpgradeFromV72 },
+   { 73, H_UpgradeFromV73 },
    { 0, NULL }
 };
 

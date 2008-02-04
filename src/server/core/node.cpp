@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.193 2008-01-30 17:01:09 victor Exp $ */
+/* $Id: node.cpp,v 1.194 2008-02-04 07:37:14 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -585,7 +585,7 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
       pSubnet->AddNode(this);
       
       // Check if subnet mask is correct on interface
-      if ((pSubnet->IpNetMask() != dwNetMask) &&
+      if ((pSubnet->IpNetMask() != pInterface->IpNetMask()) &&
 			 (!pSubnet->IsSyntheticMask()))
 		{
          PostEvent(EVENT_INCORRECT_NETMASK, m_dwId, "idsaa", pInterface->Id(),

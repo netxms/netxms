@@ -9,6 +9,8 @@
 - Command line options for the server changed to use common style
 - Added UNICODE support in client part on Linux/UNIX
 - Implemented macros in template DCIs (expanded when template applies to node)
+- Added event storm detection
+- Fixed issues: #189, #199
 
 
 *

@@ -517,6 +517,28 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'   5 .. 9) Reserved#0D#0A' CONCAT
 		'   10 .. 99) Substrings extracted by regular expression'
 	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_EVENT_STORM_DETECTED, 'SYS_EVENT_STORM_DETECTED',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Event storm detected (Events per second: %1)',
+		'Generated when system detects an event storm.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Events per second#0D#0A' CONCAT
+		'   2) Duration#0D#0A' CONCAT
+		'   3) Threshold'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_EVENT_STORM_ENDED, 'SYS_EVENT_STORM_ENDED',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Event storm ended',
+		'Generated when system clears event storm condition.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Events per second#0D#0A' CONCAT
+		'   2) Duration#0D#0A' CONCAT
+		'   3) Threshold'
+	);
 
 
 /*

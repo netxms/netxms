@@ -371,7 +371,7 @@ static void DBEventHandler(DWORD dwEvent, TCHAR *pszData)
 
 BOOL NXCORE_EXPORTABLE Initialize(void)
 {
-	int i, iNumThreads, iDBVersion;
+	int i, iDBVersion;
 	DWORD dwAddr;
 	char szInfo[256];
 
