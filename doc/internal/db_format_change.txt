@@ -1,4 +1,19 @@
 *************
+* 74 ==> 75 *
+*************
+
+- New table added:
+	CREATE TABLE snmp_communities
+	(
+		id integer not null,
+		community varchar(255) not null,
+		PRIMARY KEY(id)
+	) TABLE_TYPE;
+- New columns added to table "address_lists":
+	ALTER TABLE address_lists ADD community_id integer not null
+
+
+*************
 * 73 ==> 74 *
 *************
 

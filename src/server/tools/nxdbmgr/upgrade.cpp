@@ -87,6 +87,36 @@ static BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
 
 
 //
+// Upgrade from V74 to V75
+//
+
+static BOOL H_UpgradeFromV74(void)
+{
+   static TCHAR m_szBatch[] =
+		_T("ALTER TABLE address_lists ADD community_id integer\n")
+		_T("UPDATE address_lists SET community_id=0\n")
+      _T("<END>");
+
+   if (!SQLBatch(m_szBatch))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!CreateTable(_T("CREATE TABLE snmp_communities (")
+	                 _T("id integer not null,")
+	                 _T("community varchar(255) not null,")
+	                 _T("PRIMARY KEY(id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='75' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V73 to V74
 //
 
@@ -3274,6 +3304,7 @@ static struct
    { 71, H_UpgradeFromV71 },
    { 72, H_UpgradeFromV72 },
    { 73, H_UpgradeFromV73 },
+   { 74, H_UpgradeFromV74 },
    { 0, NULL }
 };
 

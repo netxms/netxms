@@ -10,7 +10,7 @@
 - Added UNICODE support in client part on Linux/UNIX
 - Implemented macros in template DCIs (expanded when template applies to node)
 - Added event storm detection
-- Fixed issues: #189, #199
+- Fixed issues: #189, #190, #199
 
 
 *
