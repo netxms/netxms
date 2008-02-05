@@ -894,6 +894,8 @@ src/console/win32/DetailsView.cpp -text
 src/console/win32/DetailsView.h -text
 src/console/win32/DiscoveryPropAddrList.cpp -text
 src/console/win32/DiscoveryPropAddrList.h -text
+src/console/win32/DiscoveryPropCommunities.cpp -text
+src/console/win32/DiscoveryPropCommunities.h -text
 src/console/win32/DiscoveryPropGeneral.cpp -text
 src/console/win32/DiscoveryPropGeneral.h -text
 src/console/win32/DiscoveryPropTargets.cpp -text

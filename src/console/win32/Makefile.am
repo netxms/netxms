@@ -61,6 +61,7 @@ EXTRA_DIST = \
 	DesktopManager.cpp DesktopManager.h \
 	DetailsView.cpp DetailsView.h \
 	DiscoveryPropAddrList.cpp DiscoveryPropAddrList.h \
+	DiscoveryPropCommunities.cpp DiscoveryPropCommunities.h \
 	DiscoveryPropGeneral.cpp DiscoveryPropGeneral.h \
 	DiscoveryPropTargets.cpp DiscoveryPropTargets.h \
 	draw.cpp \
