@@ -83,6 +83,7 @@ mibs_DATA = \
 	RFC-1212.txt \
 	RFC1213-MIB.txt \
 	RMON-MIB.txt \
+	RMON2-MIB.txt \
 	RS-232-MIB.txt \
 	S5-CHASSIS-MIB.txt \
 	S5-CHASSIS-TRAP-MIB.txt \
@@ -110,6 +111,7 @@ mibs_DATA = \
 	SYNOPTICS-COMMON-MIB.txt \
 	SYNOPTICS-ROOT-MIB.txt \
 	TCP-MIB.txt \
+	TOKEN-RING-RMON-MIB.txt \
 	TUNNEL-MIB.txt \
 	UCD-DISKIO-MIB.txt \
 	UCD-DLMOD-MIB.txt \
