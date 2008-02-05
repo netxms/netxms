@@ -72,9 +72,11 @@ mibs_DATA = \
 	NOKIA-IPSO-SYSTEM-MIB.txt \
 	OPTIMUX-MIB.txt \
 	OSPF-MIB.txt \
+	P-BRIDGE-MIB.txt \
 	PerfHist-TC-MIB.txt \
 	PowerNet-MIB.txt \
 	Printer-MIB.txt \
+	Q-BRIDGE-MIB.txt \
 	RAPID-CITY.txt \
 	RFC-1215.txt \
 	RFC1155-SMI.txt \
