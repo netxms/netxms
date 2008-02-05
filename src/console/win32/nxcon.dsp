@@ -376,6 +376,10 @@ SOURCE=.\DiscoveryPropAddrList.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\DiscoveryPropCommunities.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\DiscoveryPropGeneral.cpp
 # End Source File
 # Begin Source File
@@ -1006,6 +1010,10 @@ SOURCE=.\DetailsView.h
 # Begin Source File
 
 SOURCE=.\DiscoveryPropAddrList.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DiscoveryPropCommunities.h
 # End Source File
 # Begin Source File
 

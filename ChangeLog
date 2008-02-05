@@ -10,6 +10,8 @@
 - Added UNICODE support in client part on Linux/UNIX
 - Implemented macros in template DCIs (expanded when template applies to node)
 - Added event storm detection
+- Added possibility to specify multiple SNMP community strings for discovery
+  and configuration polls
 - Fixed issues: #189, #190, #199
 
 

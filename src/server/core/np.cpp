@@ -217,7 +217,6 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 	}
 
    // Read configuration
-   ConfigReadStr("DefaultCommunityString", szCommunityString, MAX_DB_STRING, "public");
    ConfigReadStr("DiscoveryFilter", szFilter, MAX_DB_STRING, "");
    StrStrip(szFilter);
 
@@ -238,23 +237,10 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 	DbgPrintf(4, "AcceptNewNode(%s): checking SNMP support", szIpAddr);
 	pTransport = new SNMP_UDPTransport;
 	pTransport->CreateUDPTransport(NULL, htonl(dwIpAddr), 161);
-   if (SnmpGet(SNMP_VERSION_2C, pTransport, szCommunityString,
-               ".1.3.6.1.2.1.1.2.0", NULL, 0, data.szObjectId, MAX_OID_LEN * 4,
-               FALSE, FALSE) == SNMP_ERR_SUCCESS)
-   {
+	if (SnmpCheckCommSettings(pTransport, NULL, &data.nSNMPVersion, szCommunityString))
+	{
       data.dwFlags |= NNF_IS_SNMP;
-      data.nSNMPVersion = SNMP_VERSION_2C;
-   }
-   else
-   {
-      if (SnmpGet(SNMP_VERSION_1, pTransport, szCommunityString,
-                  ".1.3.6.1.2.1.1.2.0", NULL, 0, data.szObjectId, MAX_OID_LEN * 4,
-                  FALSE, FALSE) == SNMP_ERR_SUCCESS)
-      {
-         data.dwFlags |= NNF_IS_SNMP;
-         data.nSNMPVersion = SNMP_VERSION_1;
-      }
-   }
+	}
 
    // Check NetXMS agent support
 	DbgPrintf(4, "AcceptNewNode(%s): checking NetXMS agent", szIpAddr);
@@ -291,6 +277,11 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    // Check various SNMP device capabilities
    if (data.dwFlags & NNF_IS_SNMP)
    {
+		// Get SNMP OID
+		SnmpGet(data.nSNMPVersion, pTransport, szCommunityString,
+		        ".1.3.6.1.2.1.1.2.0", NULL, 0, data.szObjectId, MAX_OID_LEN * 4,
+		        FALSE, FALSE);
+
       // Check if node is a bridge
       if (SnmpGet(data.nSNMPVersion, pTransport, szCommunityString,
                   ".1.3.6.1.2.1.17.1.1.0", NULL, 0, szBuffer, 256,
@@ -319,11 +310,10 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
 
       // Check for LLDP (Link Layer Discovery Protocol) support
       if (SnmpGet(data.nSNMPVersion, pTransport, szCommunityString,
-                  ".1.3.6.1.4.1.45.1.6.13.1.2.0", NULL, 0, &dwTemp, sizeof(DWORD),
+                  ".1.0.8802.1.1.2.1.3.2.0", NULL, 0, szBuffer, 256,
                   FALSE, FALSE) == SNMP_ERR_SUCCESS)
       {
-         if (dwTemp == 1)
-            data.dwFlags |= NNF_IS_LLDP;
+         data.dwFlags |= NNF_IS_LLDP;
       }
    }
 

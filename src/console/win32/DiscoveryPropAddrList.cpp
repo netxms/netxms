@@ -29,7 +29,6 @@ CDiscoveryPropAddrList::CDiscoveryPropAddrList() : CPropertyPage(CDiscoveryPropA
 
 CDiscoveryPropAddrList::~CDiscoveryPropAddrList()
 {
-   safe_free(m_pAddrList);
 }
 
 void CDiscoveryPropAddrList::DoDataExchange(CDataExchange* pDX)
@@ -67,6 +66,7 @@ BOOL CDiscoveryPropAddrList::OnInitDialog()
    m_wndListCtrl.GetClientRect(&rect);
    m_wndListCtrl.InsertColumn(0, _T("Address"), LVCFMT_LEFT,
                               rect.right - GetSystemMetrics(SM_CXVSCROLL));
+	m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
    for(i = 0; i < m_dwAddrCount; i++)
    {

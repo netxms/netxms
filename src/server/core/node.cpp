@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.194 2008-02-04 07:37:14 victor Exp $ */
+/* $Id: node.cpp,v 1.195 2008-02-05 21:50:58 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -55,6 +55,7 @@ Node::Node()
    m_pAgentConnection = NULL;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
+	m_szSysDescription[0] = 0;
    m_dwNumParams = 0;
    m_pParamList = NULL;
    m_dwPollerNode = 0;
@@ -105,6 +106,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
    m_pAgentConnection = NULL;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
+	m_szSysDescription[0] = 0;
    m_dwNumParams = 0;
    m_pParamList = NULL;
    m_dwPollerNode = 0;
@@ -937,6 +939,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
       m_szObjectId[0] = 0;
       m_szPlatformName[0] = 0;
       m_szAgentVersion[0] = 0;
+		m_szSysDescription[0] = 0;
    }
 
    // Check if node is marked as unreachable
@@ -956,19 +959,13 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
       {
          DbgPrintf(5, "ConfPoll(%s): trying SNMP GET", m_szName);
 			pTransport = CreateSNMPTransport();
-         if (SnmpGet(m_iSNMPVersion, pTransport, m_szCommunityString,
-                     ".1.3.6.1.2.1.1.2.0", NULL, 0, szBuffer, 4096,
-                     FALSE, FALSE) == SNMP_ERR_SUCCESS)
+
+			strcpy(szBuffer, m_szCommunityString);
+			if (SnmpCheckCommSettings(pTransport, szBuffer, &m_iSNMPVersion, m_szCommunityString))
          {
             DWORD dwNodeFlags, dwNodeType;
 
             LockData();
-
-            if (strcmp(m_szObjectId, szBuffer))
-            {
-               nx_strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
-               bHasChanges = TRUE;
-            }
 
             m_dwFlags |= NF_IS_SNMP;
             if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
@@ -977,7 +974,18 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
                PostEvent(EVENT_SNMP_OK, m_dwId, NULL);
                SendPollerMsg(dwRqId, "   Connectivity with SNMP agent restored\r\n");
             }
-            SendPollerMsg(dwRqId, _T("   SNMP agent is active\r\n"));
+            SendPollerMsg(dwRqId, _T("   SNMP agent is active (version %s)\r\n"), (m_iSNMPVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1"));
+
+				if (SnmpGet(m_iSNMPVersion, pTransport, m_szCommunityString,
+								".1.3.6.1.2.1.1.2.0", NULL, 0, szBuffer, 4096,
+								FALSE, FALSE) == SNMP_ERR_SUCCESS)
+				{
+					if (strcmp(m_szObjectId, szBuffer))
+					{
+						nx_strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
+						bHasChanges = TRUE;
+					}
+				}
 
             // Check node type
             dwNodeType = OidToType(m_szObjectId, &dwNodeFlags);
@@ -1030,6 +1038,18 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             {
                m_dwFlags &= ~NF_IS_SONMP;
             }
+
+		      // Check for LLDP (Link Layer Discovery Protocol) support
+				if (SnmpGet(m_iSNMPVersion, pTransport, m_szCommunityString,
+								".1.0.8802.1.1.2.1.3.2.0", NULL, 0, szBuffer, 4096,
+								FALSE, FALSE) == SNMP_ERR_SUCCESS)
+				{
+					m_dwFlags |= NF_IS_LLDP;
+				}
+				else
+				{
+					m_dwFlags &= ~NF_IS_LLDP;
+				}
 
             UnlockData();
 
@@ -1822,6 +1842,7 @@ void Node::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_PROXY_NODE, m_dwProxyNode);
    pMsg->SetVariable(VID_SNMP_PROXY, m_dwSNMPProxy);
 	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
+	pMsg->SetVariable(VID_SYS_DESCRIPTION, m_szSysDescription);
 }
 
 

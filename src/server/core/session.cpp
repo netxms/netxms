@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.290 2008-01-29 21:12:50 victor Exp $ */
+/* $Id: session.cpp,v 1.291 2008-02-05 21:50:58 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -1147,6 +1147,12 @@ void ClientSession::ProcessingThread(void)
 				break;
 			case CMD_SEND_SMS:
 				SendSMS(pMsg);
+				break;
+			case CMD_GET_COMMUNITY_LIST:
+				SendCommunityList(pMsg->GetId());
+				break;
+			case CMD_UPDATE_COMMUNITY_LIST:
+				UpdateCommunityList(pMsg);
 				break;
          default:
             // Pass message to loaded modules
@@ -9289,5 +9295,105 @@ void ClientSession::SendSMS(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
+	SendMessage(&msg);
+}
+
+
+//
+// Send SNMP community list
+//
+
+void ClientSession::SendCommunityList(DWORD dwRqId)
+{
+   CSCPMessage msg;
+	int i, count;
+	DWORD id;
+	TCHAR buffer[256];
+	DB_RESULT hResult;
+
+	msg.SetId(dwRqId);
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+	{
+		hResult = DBSelect(g_hCoreDB, _T("SELECT community FROM snmp_communities"));
+		if (hResult != NULL)
+		{
+			count = DBGetNumRows(hResult);
+			msg.SetVariable(VID_NUM_STRINGS, (DWORD)count);
+			for(i = 0, id = VID_STRING_LIST_BASE; i < count; i++)
+			{
+				DBGetField(hResult, i, 0, buffer, 256);
+				DecodeSQLString(buffer);
+				msg.SetVariable(id++, buffer);
+			}
+			DBFreeResult(hResult);
+			msg.SetVariable(VID_RCC, RCC_SUCCESS);
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+	
+	SendMessage(&msg);
+}
+
+
+//
+// Update SNMP community list
+//
+
+void ClientSession::UpdateCommunityList(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+	TCHAR value[256], *escValue, query[1024];
+	int i, count;
+	DWORD id;
+
+	msg.SetId(pRequest->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+	{
+		if (DBBegin(g_hCoreDB))
+		{
+			DBQuery(g_hCoreDB, _T("DELETE FROM snmp_communities"));
+			count = pRequest->GetVariableLong(VID_NUM_STRINGS);
+			for(i = 0, id = VID_STRING_LIST_BASE; i < count; i++)
+			{
+				pRequest->GetVariableStr(id++, value, 256);
+				escValue = EncodeSQLString(value);
+				_sntprintf(query, 1024, _T("INSERT INTO snmp_communities (id,community) VALUES(%d,'%s')"), i + 1, escValue);
+				free(escValue);
+				if (!DBQuery(g_hCoreDB, query))
+					break;
+			}
+
+			if (i == count)
+			{
+				DBCommit(g_hCoreDB);
+				msg.SetVariable(VID_RCC, RCC_SUCCESS);
+			}
+			else
+			{
+				DBRollback(g_hCoreDB);
+				msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+			}
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+	
 	SendMessage(&msg);
 }

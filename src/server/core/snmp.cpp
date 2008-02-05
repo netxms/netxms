@@ -646,3 +646,78 @@ ROUTING_TABLE *SnmpGetRoutingTable(DWORD dwVersion, SNMP_Transport *pTransport,
    }
    return pRT;
 }
+
+
+//
+// Determine SNMP parameters for node
+//
+
+BOOL SnmpCheckCommSettings(SNMP_Transport *pTransport, const char *currCommunity,
+									int *version, char *community)
+{
+	int i, count, snmpVer = SNMP_VERSION_2C;
+	char defCommunity[MAX_COMMUNITY_LENGTH], buffer[1024], temp[256];
+	DB_RESULT hResult;
+
+	ConfigReadStr(_T("DefaultCommunityString"), defCommunity, MAX_COMMUNITY_LENGTH, _T("public"));
+
+restart_check:
+	// Check current community first
+	if (currCommunity != NULL)
+	{
+		DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%s'"), snmpVer, currCommunity);
+		if (SnmpGet(snmpVer, pTransport, currCommunity, ".1.3.6.1.2.1.1.2.0", NULL,
+		            0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+		{
+			strcpy(community, currCommunity);
+			*version = snmpVer;
+			return TRUE;
+		}
+	}
+
+	// Check default community
+	DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%s'"), snmpVer, defCommunity);
+	if (SnmpGet(snmpVer, pTransport, defCommunity, ".1.3.6.1.2.1.1.2.0", NULL,
+		         0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+	{
+		strcpy(community, defCommunity);
+		*version = snmpVer;
+		return TRUE;
+	}
+
+	// Check community from list
+	hResult = DBSelect(g_hCoreDB, _T("SELECT community FROM snmp_communities"));
+	if (hResult != NULL)
+	{
+		count = DBGetNumRows(hResult);
+		for(i = 0; i < count; i++)
+		{
+			DBGetField(hResult, i, 0, temp, 256);
+			DecodeSQLString(temp);
+			DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%s'"), snmpVer, temp);
+			if (SnmpGet(snmpVer, pTransport, temp, ".1.3.6.1.2.1.1.2.0", NULL,
+							0, buffer, 1024, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+			{
+				nx_strncpy(community, temp, MAX_COMMUNITY_LENGTH);
+				*version = snmpVer;
+				break;
+			}
+		}
+		DBFreeResult(hResult);
+		if (i < count)
+			return TRUE;
+	}
+	else
+	{
+		DbgPrintf(3, _T("SnmpCheckCommSettings: DBSelect() failed!!!"));
+	}
+
+	if (snmpVer == SNMP_VERSION_2C)
+	{
+		snmpVer = SNMP_VERSION_1;
+		goto restart_check;
+	}
+
+	DbgPrintf(5, _T("SnmpCheckCommSettings: failed"));
+	return FALSE;
+}

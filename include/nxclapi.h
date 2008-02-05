@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.282 2008-01-29 16:32:39 victor Exp $ */
+/* $Id: nxclapi.h,v 1.283 2008-02-05 21:50:56 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -950,6 +950,7 @@ struct __nxc_object_node
    TCHAR szPlatformName[MAX_PLATFORM_NAME_LEN];
    WORD wSNMPVersion;
 	WORD wRequiredPollCount;
+	TCHAR szSysDescription[MAX_DB_STRING];
 };
 
 struct __nxc_object_subnet
@@ -1973,6 +1974,10 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteScript(NXC_SESSION hSession, DWORD dwId);
 DWORD LIBNXCL_EXPORTABLE NXCSnmpWalk(NXC_SESSION hSession, DWORD dwNode,
                                      TCHAR *pszRootOID, void *pUserData,
                                      void (* pfCallback)(TCHAR *, DWORD, TCHAR *, void *));
+DWORD LIBNXCL_EXPORTABLE NXCGetSnmpCommunityList(NXC_SESSION hSession, DWORD *pdwNumStrings,
+																 TCHAR ***pppszStringList);
+DWORD LIBNXCL_EXPORTABLE NXCUpdateSnmpCommunityList(NXC_SESSION hSession, DWORD dwNumStrings,
+											    					 TCHAR **ppszStringList);
 
 DWORD LIBNXCL_EXPORTABLE NXCGetMapList(NXC_SESSION hSession, DWORD *pdwNumMaps,
                                        NXC_MAP_INFO **ppMapList);

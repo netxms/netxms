@@ -66,6 +66,7 @@
 #include "DiscoveryPropAddrList.h"
 #include "DiscoveryPropGeneral.h"
 #include "DiscoveryPropTargets.h"
+#include "DiscoveryPropCommunities.h"
 #include "AlarmBrowser.h"
 #include "ObjectBrowser.h"
 #include "DataCollectionEditor.h"
@@ -1806,8 +1807,9 @@ void CConsoleApp::OnControlpanelActions()
 // Network discovery config
 //
 
-struct ND_CONFIG
+class ND_CONFIG
 {
+public:
    CString strScript;
    DWORD dwFlags;
    BOOL bEnable;
@@ -1817,6 +1819,31 @@ struct ND_CONFIG
    DWORD dwNumFilters;
    NXC_ADDR_ENTRY *pFilterList;
    CString strCommunity;
+	DWORD dwNumStrings;
+	TCHAR **ppStringList;
+
+	ND_CONFIG()
+	{
+		bActive = FALSE;
+		bEnable = FALSE;
+		dwFlags = 0;
+		dwNumFilters = 0;
+		pFilterList = NULL;
+		dwNumTargets = 0;
+		pTargetList = NULL;
+		strScript = _T("");
+		strCommunity = _T("public");
+		dwNumStrings = 0;
+		ppStringList = NULL;
+	}
+	~ND_CONFIG()
+	{
+		safe_free(pTargetList);
+		safe_free(pFilterList);
+		for(DWORD i = 0; i < dwNumStrings; i++)
+			safe_free(ppStringList[i]);
+		safe_free(ppStringList);
+	}
 };
 
 
@@ -1829,57 +1856,50 @@ static DWORD GetDiscoveryConf(ND_CONFIG *pConf)
    DWORD i, dwNumVars, dwResult;
    NXC_SERVER_VARIABLE *pVarList;
 
-   // Defaults
-   pConf->bActive = FALSE;
-   pConf->bEnable = FALSE;
-   pConf->dwFlags = 0;
-   pConf->dwNumFilters = 0;
-   pConf->pFilterList = NULL;
-   pConf->dwNumTargets = 0;
-   pConf->pTargetList = NULL;
-   pConf->strScript = _T("");
-   pConf->strCommunity = _T("public");
-
    dwResult = NXCGetServerVariables(g_hSession, &pVarList, &dwNumVars);
-   if (dwResult == RCC_SUCCESS)
-   {
-      for(i = 0; i < dwNumVars; i++)
-      {
-         if (!_tcsicmp(pVarList[i].szName, _T("RunNetworkDiscovery")))
-         {
-            pConf->bEnable = _tcstol(pVarList[i].szValue, NULL, 0) ? TRUE : FALSE;
-         }
-         else if (!_tcsicmp(pVarList[i].szName, _T("ActiveNetworkDiscovery")))
-         {
-            pConf->bActive = _tcstol(pVarList[i].szValue, NULL, 0) ? TRUE : FALSE;
-         }
-         else if (!_tcsicmp(pVarList[i].szName, _T("DiscoveryFilterFlags")))
-         {
-            pConf->dwFlags = _tcstoul(pVarList[i].szValue, NULL, 0);
-         }
-         else if (!_tcsicmp(pVarList[i].szName, _T("DiscoveryFilter")))
-         {
-            pConf->strScript = pVarList[i].szValue;
-         }
-         else if (!_tcsicmp(pVarList[i].szName, _T("DefaultCommunityString")))
-         {
-            pConf->strCommunity = pVarList[i].szValue;
-         }
-      }
-      free(pVarList);
+   if (dwResult != RCC_SUCCESS)
+		goto failure;
 
-      dwResult = NXCGetAddrList(g_hSession, ADDR_LIST_DISCOVERY_TARGETS,
-                                &pConf->dwNumTargets, &pConf->pTargetList);
-      if (dwResult == RCC_SUCCESS)
+   for(i = 0; i < dwNumVars; i++)
+   {
+      if (!_tcsicmp(pVarList[i].szName, _T("RunNetworkDiscovery")))
       {
-         dwResult = NXCGetAddrList(g_hSession, ADDR_LIST_DISCOVERY_FILTER,
-                                   &pConf->dwNumFilters, &pConf->pFilterList);
-         if (dwResult != RCC_SUCCESS)
-         {
-            safe_free(pConf->pTargetList);
-         }
+         pConf->bEnable = _tcstol(pVarList[i].szValue, NULL, 0) ? TRUE : FALSE;
+      }
+      else if (!_tcsicmp(pVarList[i].szName, _T("ActiveNetworkDiscovery")))
+      {
+         pConf->bActive = _tcstol(pVarList[i].szValue, NULL, 0) ? TRUE : FALSE;
+      }
+      else if (!_tcsicmp(pVarList[i].szName, _T("DiscoveryFilterFlags")))
+      {
+         pConf->dwFlags = _tcstoul(pVarList[i].szValue, NULL, 0);
+      }
+      else if (!_tcsicmp(pVarList[i].szName, _T("DiscoveryFilter")))
+      {
+         pConf->strScript = pVarList[i].szValue;
+      }
+      else if (!_tcsicmp(pVarList[i].szName, _T("DefaultCommunityString")))
+      {
+         pConf->strCommunity = pVarList[i].szValue;
       }
    }
+   free(pVarList);
+
+   dwResult = NXCGetAddrList(g_hSession, ADDR_LIST_DISCOVERY_TARGETS,
+                             &pConf->dwNumTargets, &pConf->pTargetList);
+   if (dwResult != RCC_SUCCESS)
+		goto failure;
+
+   dwResult = NXCGetAddrList(g_hSession, ADDR_LIST_DISCOVERY_FILTER,
+                             &pConf->dwNumFilters, &pConf->pFilterList);
+   if (dwResult != RCC_SUCCESS)
+		goto failure;
+
+	dwResult = NXCGetSnmpCommunityList(g_hSession, &pConf->dwNumStrings, &pConf->ppStringList);
+   if (dwResult != RCC_SUCCESS)
+		goto failure;
+
+failure:
    return dwResult;
 }
 
@@ -1924,6 +1944,10 @@ static DWORD SetDiscoveryConf(ND_CONFIG *pConf)
    if (dwResult != RCC_SUCCESS)
       goto cleanup;
 
+	dwResult = NXCUpdateSnmpCommunityList(g_hSession, pConf->dwNumStrings, pConf->ppStringList);
+   if (dwResult != RCC_SUCCESS)
+      goto cleanup;
+
    dwResult = NXCResetServerComponent(g_hSession, SRV_COMPONENT_DISCOVERY_MGR);
 
 cleanup:
@@ -1941,6 +1965,7 @@ void CConsoleApp::OnControlpanelNetworkdiscovery()
    CDiscoveryPropGeneral pgGeneral;
    CDiscoveryPropAddrList pgAddrList;
    CDiscoveryPropTargets pgTargets;
+   CDiscoveryPropCommunities pgCommunities;
    ND_CONFIG config;
    DWORD dwResult;
 
@@ -1977,6 +2002,11 @@ void CConsoleApp::OnControlpanelNetworkdiscovery()
       pgTargets.m_dwAddrCount = config.dwNumTargets;
       pgTargets.m_pAddrList = config.pTargetList;
       psh.AddPage(&pgTargets);
+
+		// "SNMP Communities"
+		pgCommunities.m_dwNumStrings = config.dwNumStrings;
+		pgCommunities.m_ppStringList = config.ppStringList;
+      psh.AddPage(&pgCommunities);
 
       if (psh.DoModal() == IDOK)
       {
@@ -2026,6 +2056,9 @@ void CConsoleApp::OnControlpanelNetworkdiscovery()
 
          config.dwNumTargets = pgTargets.m_dwAddrCount;
          config.pTargetList = pgTargets.m_pAddrList;
+
+			config.dwNumStrings = pgCommunities.m_dwNumStrings;
+			config.ppStringList = pgCommunities.m_ppStringList;
 
          dwResult = DoRequestArg1(SetDiscoveryConf, &config, _T("Updating network discovery configuration..."));
          if (dwResult != RCC_SUCCESS)

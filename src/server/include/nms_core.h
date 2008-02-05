@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.143 2008-01-29 16:32:40 victor Exp $ */
+/* $Id: nms_core.h,v 1.144 2008-02-05 21:50:59 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -522,6 +522,8 @@ private:
 	void SendCertificateList(DWORD dwRqId);
 	void QueryL2Topology(CSCPMessage *pRequest);
 	void SendSMS(CSCPMessage *pRequest);
+	void SendCommunityList(DWORD dwRqId);
+	void UpdateCommunityList(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -607,6 +609,8 @@ DWORD SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const char *szC
                     const char *szRootOid,
 						  DWORD (* pHandler)(DWORD, const char *, SNMP_Variable *, SNMP_Transport *, void *),
                     void *pUserArg, BOOL bVerbose);
+BOOL SnmpCheckCommSettings(SNMP_Transport *pTransport, const char *currCommunity,
+									int *version, char *community);
 void StrToMac(char *pszStr, BYTE *pBuffer);
 DWORD OidToType(TCHAR *pszOid, DWORD *pdwFlags);
 

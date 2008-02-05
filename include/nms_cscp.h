@@ -450,6 +450,8 @@ typedef struct
 #define CMD_AUDIT_RECORD            0x00CE
 #define CMD_GET_AUDIT_LOG           0x00CF
 #define CMD_SEND_SMS                0x00D0
+#define CMD_GET_COMMUNITY_LIST      0x00D1
+#define CMD_UPDATE_COMMUNITY_LIST   0x00D2
 
 
 //
@@ -755,6 +757,7 @@ typedef struct
 #define VID_WORKSTATION             ((DWORD)297)
 #define VID_USER_TAG                ((DWORD)298)
 #define VID_REQUIRED_POLLS          ((DWORD)299)
+#define VID_SYS_DESCRIPTION         ((DWORD)300)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -882,6 +885,9 @@ typedef struct
 
 // Base value for certificate list
 #define VID_CERT_LIST_BASE 			((DWORD)0x10000000)
+
+// Base value for various string lists
+#define VID_STRING_LIST_BASE 			((DWORD)0x10000000)
 
 // Base value for object links list
 #define VID_OBJECT_LINKS_BASE			((DWORD)0x10000000)

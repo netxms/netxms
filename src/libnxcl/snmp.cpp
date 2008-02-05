@@ -84,3 +84,77 @@ DWORD LIBNXCL_EXPORTABLE NXCSnmpSet(NXC_SESSION hSession, DWORD dwNode,
 {
    return 0;
 }
+
+
+//
+// Get list of community strings
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetSnmpCommunityList(NXC_SESSION hSession, DWORD *pdwNumStrings,
+																 TCHAR ***pppszStringList)
+{
+   CSCPMessage msg, *pResponse;
+   DWORD i, count, dwRetCode, dwRqId, id;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_GET_COMMUNITY_LIST);
+   msg.SetId(dwRqId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+		dwRetCode = pResponse->GetVariableLong(VID_RCC);
+		if (dwRetCode == RCC_SUCCESS)
+		{
+			count = pResponse->GetVariableLong(VID_NUM_STRINGS);
+			*pdwNumStrings = count;
+			if (count > 0)
+			{
+				*pppszStringList = (TCHAR **)malloc(sizeof(TCHAR *) * count);
+				for(i = 0, id = VID_STRING_LIST_BASE; i < count; i++)
+				{
+					(*pppszStringList)[i] = pResponse->GetVariableStr(id++);
+				}
+			}
+			else
+			{
+				*pppszStringList = NULL;
+			}
+		}
+		delete pResponse;
+   }
+	else
+	{
+		dwRetCode = RCC_TIMEOUT;
+	}
+   return dwRetCode;
+}
+
+
+//
+// Update list of community strings
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCUpdateSnmpCommunityList(NXC_SESSION hSession, DWORD dwNumStrings,
+											    					 TCHAR **ppszStringList)
+{
+   CSCPMessage msg;
+   DWORD i, id, dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_UPDATE_COMMUNITY_LIST);
+   msg.SetId(dwRqId);
+
+	msg.SetVariable(VID_NUM_STRINGS, dwNumStrings);
+	for(i = 0, id = VID_STRING_LIST_BASE; i < dwNumStrings; i++)
+	{
+		msg.SetVariable(id++, ppszStringList[i]);
+	}
+
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+	return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}

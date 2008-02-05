@@ -87,7 +87,7 @@ void CDiscoveryPropGeneral::OnModeSelection()
 {
    UpdateData(TRUE);
 
-   EnableDlgItem(this, IDC_EDIT_COMMUNITY, m_nMode > 0);
+//   EnableDlgItem(this, IDC_EDIT_COMMUNITY, m_nMode > 0);
    EnableDlgItem(this, IDC_RADIO_NONE, m_nMode > 0);
    EnableDlgItem(this, IDC_RADIO_AUTO, m_nMode > 0);
    EnableDlgItem(this, IDC_RADIO_CUSTOM, m_nMode > 0);
