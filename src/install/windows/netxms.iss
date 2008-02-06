@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.2.20-dev2
-AppVersion=0.2.20-dev2
+AppVerName=NetXMS 0.2.20-rc1
+AppVersion=0.2.20-rc1
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.2.20-dev2
+OutputBaseFilename=netxms-0.2.20-rc1
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -123,6 +123,7 @@ Source: "..\..\console\nxnotify\Release\nxnotify.pdb"; DestDir: "{app}\bin"; Fla
 Source: "..\..\client\console\libnxmc\Release_UNICODE\libnxmc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\client\console\nxmc\Release_UNICODE\nxmc.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "..\..\client\console\plugins\AlarmBrowser\Release_UNICODE\AlarmBrowser.so"; DestDir: "{app}\lib\nxmc"; Flags: ignoreversion; Components: console
+Source: "..\..\client\console\plugins\Dashboard\Release_UNICODE\Dashboard.so"; DestDir: "{app}\lib\nxmc"; Flags: ignoreversion; Components: console
 Source: "..\..\client\console\plugins\ObjectBrowser\Release_UNICODE\ObjectBrowser.so"; DestDir: "{app}\lib\nxmc"; Flags: ignoreversion; Components: console
 Source: "nxcon.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "nxav.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
@@ -194,7 +195,7 @@ Filename: "{app}\bin\nxagentd.exe"; Parameters: "-c ""{app}\etc\nxagentd.conf"" 
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting agent service..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxconfig.exe"; Parameters: "--configure-if-needed"; WorkingDir: "{app}\bin"; StatusMsg: "Running server configuration wizard..."; Components: server
 Filename: "{app}\bin\nxdbmgr.exe"; Parameters: "-c ""{app}\etc\netxmsd.conf"" upgrade"; WorkingDir: "{app}\bin"; StatusMsg: "Upgrading database..."; Flags: runhidden; Components: server
-Filename: "{app}\bin\netxmsd.exe"; Parameters: "start"; WorkingDir: "{app}\bin"; StatusMsg: "Starting core service..."; Flags: runhidden; Components: server
+Filename: "{app}\bin\netxmsd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting core service..."; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxconfig.exe"; Parameters: "--create-nxhttpd-config {code:GetMasterServer}"; WorkingDir: "{app}\bin"; StatusMsg: "Creating web server's configuration file..."; Components: websrv
 Filename: "{app}\bin\nxhttpd.exe"; Parameters: "-c ""{app}\etc\nxhttpd.conf"" -I"; WorkingDir: "{app}\bin"; StatusMsg: "Installing web server service..."; Flags: runhidden; Components: websrv
 Filename: "{app}\bin\nxhttpd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; StatusMsg: "Starting web server service..."; Flags: runhidden; Components: websrv
@@ -202,8 +203,8 @@ Filename: "{app}\bin\nxhttpd.exe"; Parameters: "-s"; WorkingDir: "{app}\bin"; St
 [UninstallRun]
 Filename: "{app}\bin\nxhttpd.exe"; Parameters: "-S"; StatusMsg: "Stopping web server service..."; RunOnceId: "StopWebService"; Flags: runhidden; Components: websrv
 Filename: "{app}\bin\nxhttpd.exe"; Parameters: "-R"; StatusMsg: "Uninstalling web server service..."; RunOnceId: "DelWebService"; Flags: runhidden; Components: websrv
-Filename: "{app}\bin\netxmsd.exe"; Parameters: "stop"; StatusMsg: "Stopping core service..."; RunOnceId: "StopCoreService"; Flags: runhidden; Components: server
-Filename: "{app}\bin\netxmsd.exe"; Parameters: "remove"; StatusMsg: "Uninstalling core service..."; RunOnceId: "DelCoreService"; Flags: runhidden; Components: server
+Filename: "{app}\bin\netxmsd.exe"; Parameters: "-S"; StatusMsg: "Stopping core service..."; RunOnceId: "StopCoreService"; Flags: runhidden; Components: server
+Filename: "{app}\bin\netxmsd.exe"; Parameters: "-R"; StatusMsg: "Uninstalling core service..."; RunOnceId: "DelCoreService"; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-S"; StatusMsg: "Stopping agent service..."; RunOnceId: "StopAgentService"; Flags: runhidden; Components: server
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-R"; StatusMsg: "Uninstalling agent service..."; RunOnceId: "DelAgentService"; Flags: runhidden; Components: server
 
@@ -255,7 +256,7 @@ Begin
   strExecName := ExpandConstant('{app}\bin\netxmsd.exe');
   If FileExists(strExecName) Then
   Begin
-    Exec(strExecName, 'stop', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
+    Exec(strExecName, '-S', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
   End;
 
   strExecName := ExpandConstant('{app}\bin\nxhttpd.exe');
