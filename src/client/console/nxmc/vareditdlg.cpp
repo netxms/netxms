@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** Portable management console - plugin API library
-** Copyright (C) 2007 Victor Kirhenshtein
+** Portable management console
+** Copyright (C) 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -71,12 +71,18 @@ bool nxVarEditDlg::TransferDataToWindow(void)
 
 void nxVarEditDlg::OnInitDialog(wxInitDialogEvent &event)
 {
-/*	wxWindow *wnd;
+	wxWindow *wnd;
 
 	wnd = FindWindowById(wxID_OK, this);
 	if (wnd != NULL)
 		((wxButton *)wnd)->SetDefault();
+
+	if (m_name.IsEmpty())
+		wnd = FindWindowById(XRCID("textName"), this);
 	else
-		wxLogDebug(_T("nxVarEditDlg::OnInitDialog(): cannot find child with id wxID_OK"));*/
+		wnd = FindWindowById(XRCID("textValue"), this);
+	if (wnd != NULL)
+		((wxButton *)wnd)->SetFocus();
+	
 	event.Skip();
 }

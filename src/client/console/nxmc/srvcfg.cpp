@@ -33,7 +33,8 @@
 BEGIN_EVENT_TABLE(nxServerConfigEditor, nxView)
 	EVT_SIZE(nxServerConfigEditor::OnSize)
 	EVT_NX_REFRESH_VIEW(nxServerConfigEditor::OnRefreshView)
-	EVT_LIST_ITEM_RIGHT_CLICK(wxID_LIST_CTRL, nxServerConfigEditor::OnListItemRightClick)
+	EVT_LIST_ITEM_ACTIVATED(wxID_LIST_CTRL, nxServerConfigEditor::OnListItemActivated)
+	EVT_CONTEXT_MENU(nxServerConfigEditor::OnContextMenu)
 	EVT_MENU(XRCID("menuVarNew"), nxServerConfigEditor::OnVarNew)
 	EVT_MENU(XRCID("menuVarEdit"), nxServerConfigEditor::OnVarEdit)
 	EVT_UPDATE_UI(XRCID("menuVarEdit"), nxServerConfigEditor::OnUpdateUIVarEdit)
@@ -148,10 +149,10 @@ void nxServerConfigEditor::RequestCompletionHandler(int rqId, DWORD rcc, const T
 
 
 //
-// Handler for right click on item
+// Context menu handler
 //
 
-void nxServerConfigEditor::OnListItemRightClick(wxListEvent &event)
+void nxServerConfigEditor::OnContextMenu(wxContextMenuEvent &event)
 {
 	wxMenu *menu;
 
@@ -173,6 +174,16 @@ void nxServerConfigEditor::OnListItemRightClick(wxListEvent &event)
 
 void nxServerConfigEditor::OnVarNew(wxCommandEvent &event)
 {
+	nxVarEditDlg dlg(this);
+
+	if (dlg.ShowModal() == wxID_OK)
+	{
+      DoRequestArg3((void *)NXCSetServerVariable, (wxUIntPtr)g_hSession,
+                    (wxUIntPtr)_tcsdup(dlg.m_name.c_str()),
+						  (wxUIntPtr)_tcsdup(dlg.m_value.c_str()),
+						  _T("Cannot update variable: %s"),
+						  DRF_DELETE_ARG2 | DRF_DELETE_ARG3);
+	}
 }
 
 
@@ -193,6 +204,7 @@ void nxServerConfigEditor::OnVarEdit(wxCommandEvent &event)
 		dlg.m_name = m_listView->GetItemText(item);
 		info.SetId(item);
 		info.SetColumn(1);
+		info.SetMask(wxLIST_MASK_TEXT);
 		m_listView->GetItem(info);
 		dlg.m_value = info.GetText();
 		if (dlg.ShowModal() == wxID_OK)
@@ -223,4 +235,15 @@ void nxServerConfigEditor::OnVarDelete(wxCommandEvent &event)
 void nxServerConfigEditor::OnUpdateUIVarDelete(wxUpdateUIEvent &event)
 {
 	event.Enable(m_listView->GetSelectedItemCount() > 0);
+}
+
+
+//
+// Handler for list item activation
+//
+
+void nxServerConfigEditor::OnListItemActivated(wxListEvent &event)
+{
+	wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, XRCID("menuVarEdit"));
+	wxPostEvent(this, evt);
 }

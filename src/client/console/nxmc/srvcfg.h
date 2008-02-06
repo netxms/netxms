@@ -45,7 +45,8 @@ public:
 protected:
 	void OnSize(wxSizeEvent &event);
 	void OnRefreshView(wxCommandEvent &event);
-	void OnListItemRightClick(wxListEvent &event);
+	void OnContextMenu(wxContextMenuEvent &event);
+	void OnListItemActivated(wxListEvent &event);
 	void OnVarNew(wxCommandEvent &event);
 	void OnVarEdit(wxCommandEvent &event);
 	void OnUpdateUIVarEdit(wxUpdateUIEvent &event);

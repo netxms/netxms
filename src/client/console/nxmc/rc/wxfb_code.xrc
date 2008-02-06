@@ -55,12 +55,10 @@
 		<style>wxDEFAULT_DIALOG_STYLE</style>
 		<size>460,103</size>
 		<font>
-			<size>8</size>
-			<family>swiss</family>
+			<family>default</family>
 			<style>normal</style>
 			<weight>normal</weight>
 			<underlined>0</underlined>
-			<face>MS Sans Serif</face>
 		</font>
 		<title>About</title>
 		<centered>1</centered>
@@ -76,7 +74,7 @@
 				<flag>wxALL</flag>
 				<border>5</border>
 				<object class="wxStaticBitmap" name="m_bitmap2">
-					<bitmap></bitmap>
+					<bitmap />
 				</object>
 			</object>
 			<object class="sizeritem">
@@ -126,12 +124,10 @@
 		<style>wxDEFAULT_DIALOG_STYLE</style>
 		<size>501,344</size>
 		<font>
-			<size>9</size>
-			<family>swiss</family>
+			<family>default</family>
 			<style>normal</style>
 			<weight>normal</weight>
 			<underlined>0</underlined>
-			<face>Arial</face>
 		</font>
 		<title>NetXMS Console - Connect to Server</title>
 		<centered>1</centered>
@@ -144,7 +140,7 @@
 				<object class="wxStaticBitmap" name="m_bitmap2">
 					<font>
 						<size>8</size>
-						<family>swiss</family>
+						<family>default</family>
 						<style>normal</style>
 						<weight>normal</weight>
 						<underlined>0</underlined>
@@ -195,7 +191,7 @@
 												<object class="wxStaticText" name="m_staticText5">
 													<font>
 														<size>9</size>
-														<family>swiss</family>
+														<family>default</family>
 														<style>normal</style>
 														<weight>normal</weight>
 														<underlined>0</underlined>
@@ -212,7 +208,7 @@
 													<style>wxCB_DROPDOWN|wxCB_SORT</style>
 													<font>
 														<size>9</size>
-														<family>swiss</family>
+														<family>default</family>
 														<style>normal</style>
 														<weight>normal</weight>
 														<underlined>0</underlined>
@@ -229,7 +225,7 @@
 												<object class="wxStaticText" name="m_staticText6">
 													<font>
 														<size>9</size>
-														<family>swiss</family>
+														<family>default</family>
 														<style>normal</style>
 														<weight>normal</weight>
 														<underlined>0</underlined>
@@ -245,7 +241,7 @@
 												<object class="wxTextCtrl" name="textUserName">
 													<font>
 														<size>9</size>
-														<family>swiss</family>
+														<family>default</family>
 														<style>normal</style>
 														<weight>normal</weight>
 														<underlined>0</underlined>
@@ -262,7 +258,7 @@
 												<object class="wxStaticText" name="m_staticText7">
 													<font>
 														<size>9</size>
-														<family>swiss</family>
+														<family>default</family>
 														<style>normal</style>
 														<weight>normal</weight>
 														<underlined>0</underlined>
@@ -279,7 +275,7 @@
 													<style>wxTE_PASSWORD</style>
 													<font>
 														<size>9</size>
-														<family>swiss</family>
+														<family>default</family>
 														<style>normal</style>
 														<weight>normal</weight>
 														<underlined>0</underlined>
@@ -315,7 +311,7 @@
 										<object class="wxCheckBox" name="cbEncrypt">
 											<font>
 												<size>9</size>
-												<family>swiss</family>
+												<family>default</family>
 												<style>normal</style>
 												<weight>normal</weight>
 												<underlined>0</underlined>
@@ -332,7 +328,7 @@
 										<object class="wxCheckBox" name="cbClearCache">
 											<font>
 												<size>9</size>
-												<family>swiss</family>
+												<family>default</family>
 												<style>normal</style>
 												<weight>normal</weight>
 												<underlined>0</underlined>
@@ -349,7 +345,7 @@
 										<object class="wxCheckBox" name="cbNoCache">
 											<font>
 												<size>9</size>
-												<family>swiss</family>
+												<family>default</family>
 												<style>normal</style>
 												<weight>normal</weight>
 												<underlined>0</underlined>
@@ -366,7 +362,7 @@
 										<object class="wxCheckBox" name="cbMatchVersion">
 											<font>
 												<size>9</size>
-												<family>swiss</family>
+												<family>default</family>
 												<style>normal</style>
 												<weight>normal</weight>
 												<underlined>0</underlined>
@@ -494,7 +490,7 @@
 				<flag>wxALL|wxEXPAND</flag>
 				<border>5</border>
 				<object class="wxTextCtrl" name="textName">
-					<size>200,-1</size>
+					<size>250,-1</size>
 					<value></value>
 					<maxlength>0</maxlength>
 				</object>
@@ -512,7 +508,7 @@
 				<flag>wxALL|wxEXPAND</flag>
 				<border>5</border>
 				<object class="wxTextCtrl" name="textValue">
-					<size>200,-1</size>
+					<size>250,-1</size>
 					<value></value>
 					<maxlength>0</maxlength>
 				</object>
