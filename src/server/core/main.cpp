@@ -229,6 +229,8 @@ static void LoadGlobalConfig()
 		g_dwFlags |= AF_ACTIVE_NETWORK_DISCOVERY;
 	if (ConfigReadInt("ResolveNodeNames", 1))
 		g_dwFlags |= AF_RESOLVE_NODE_NAMES;
+	if (ConfigReadInt("SyncNodeNamesWithDNS", 0))
+		g_dwFlags |= AF_SYNC_NODE_NAMES_WITH_DNS;
 	if (ConfigReadInt("InternalCA", 0))
 		g_dwFlags |= AF_INTERNAL_CA;
 	ConfigReadStr("DataDirectory", g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
@@ -889,6 +891,7 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_SNMP_TRAPD));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_ZONING));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_RESOLVE_NODE_NAMES));
+			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SYNC_NODE_NAMES_WITH_DNS));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CATCH_EXCEPTIONS));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_MULTIPLE_DB_CONN));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_INTERNAL_CA));

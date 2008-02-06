@@ -632,7 +632,7 @@ protected:
 
    BOOL CheckSNMPIntegerValue(SNMP_Transport *pTransport, const char *pszOID, int nValue);
    void CheckOSPFSupport(SNMP_Transport *pTransport);
-	BOOL ResolveName(void);
+	BOOL ResolveName(BOOL useOnlyDNS);
    void SetAgentProxy(AgentConnection *pConn);
 
    DWORD GetInterfaceCount(Interface **ppInterface);

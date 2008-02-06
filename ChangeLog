@@ -13,6 +13,7 @@
 - Added possibility to specify multiple SNMP community strings for discovery
   and configuration polls
 - NetXMS server now can understand interface aliases (description in Cisco terms)
+- Added optional synchronization of node names with DNS
 - Fixed issues: #189, #190, #199
 
 

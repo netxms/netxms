@@ -101,8 +101,9 @@
 #define AF_DELETE_EMPTY_SUBNETS           0x00000020
 #define AF_ENABLE_SNMP_TRAPD              0x00000040
 #define AF_ENABLE_ZONING                  0x00000080
+#define AF_SYNC_NODE_NAMES_WITH_DNS       0x00000100
 #define AF_RESOLVE_NODE_NAMES             0x00100000
-#define AF_CATCH_EXCEPTIONS					0x00200000
+#define AF_CATCH_EXCEPTIONS               0x00200000
 #define AF_INTERNAL_CA                    0x00400000
 #define AF_DB_LOCKED                      0x01000000
 #define AF_ENABLE_MULTIPLE_DB_CONN        0x02000000

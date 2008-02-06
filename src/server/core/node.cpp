@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.195 2008-02-05 21:50:58 victor Exp $ */
+/* $Id: node.cpp,v 1.196 2008-02-06 17:28:05 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1425,7 +1425,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 		{
 			SendPollerMsg(dwRqId, _T("Node name is an IP address and need to be resolved\r\n"));
 	      SetPollerInfo(nPoller, "resolving name");
-			if (ResolveName())
+			if (ResolveName(FALSE))
 			{
 				SendPollerMsg(dwRqId, _T("Node name resolved to %s\r\n"), m_szName);
 				bHasChanges = TRUE;
@@ -1437,7 +1437,20 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 		}
 		else
 		{
-			SendPollerMsg(dwRqId, _T("Node name is OK\r\n"));
+			if (g_dwFlags & AF_SYNC_NODE_NAMES_WITH_DNS)
+			{
+				SendPollerMsg(dwRqId, _T("Syncing node name with DNS\r\n"));
+		      SetPollerInfo(nPoller, "resolving name");
+				if (ResolveName(TRUE))
+				{
+					SendPollerMsg(dwRqId, _T("Node name resolved to %s\r\n"), m_szName);
+					bHasChanges = TRUE;
+				}
+			}
+			else
+			{
+				SendPollerMsg(dwRqId, _T("Node name is OK\r\n"));
+			}
 		}
 
 		// Apply system templates
@@ -2710,7 +2723,7 @@ SNMP_Transport *Node::CreateSNMPTransport(void)
 // Resolve node's name
 //
 
-BOOL Node::ResolveName(void)
+BOOL Node::ResolveName(BOOL useOnlyDNS)
 {
 	BOOL bSuccess = FALSE;
 	HOSTENT *hs;
@@ -2751,7 +2764,7 @@ BOOL Node::ResolveName(void)
 		UnlockChildList();
 
 		// Try to get hostname from agent if address resolution fails
-		if (!bSuccess)
+		if (!(bSuccess || useOnlyDNS))
 		{
 			DbgPrintf(4, _T("Resolving name for node %d [%s] via agent..."), m_dwId, m_szName);
 			if (GetItemFromAgent("System.Hostname", 256, szBuffer) == DCE_SUCCESS)
@@ -2766,7 +2779,7 @@ BOOL Node::ResolveName(void)
 		}
 
 		// Try to get hostname from SNMP if other methods fails
-		if (!bSuccess)
+		if (!(bSuccess || useOnlyDNS))
 		{
 			DbgPrintf(4, _T("Resolving name for node %d [%s] via SNMP..."), m_dwId, m_szName);
 			if (GetItemFromSNMP(".1.3.6.1.2.1.1.5.0", 256, szBuffer) == DCE_SUCCESS)
