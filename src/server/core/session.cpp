@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.291 2008-02-05 21:50:58 victor Exp $ */
+/* $Id: session.cpp,v 1.292 2008-02-06 12:20:32 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -8164,7 +8164,7 @@ void ClientSession::SetAddrList(CSCPMessage *pRequest)
          dwNumRec = pRequest->GetVariableLong(VID_NUM_RECORDS);
          for(i = 0, dwId = VID_ADDR_LIST_BASE; i < dwNumRec; i++, dwId += 10)
          {
-            _stprintf(szQuery, _T("INSERT INTO address_lists (list_type,addr_type,addr1,addr2) VALUES (%d,%d,'%s','%s')"),
+            _stprintf(szQuery, _T("INSERT INTO address_lists (list_type,addr_type,addr1,addr2,community_id) VALUES (%d,%d,'%s','%s',0)"),
                       dwListType, pRequest->GetVariableLong(dwId),
                       IpToStr(pRequest->GetVariableLong(dwId + 1), szIpAddr1),
                       IpToStr(pRequest->GetVariableLong(dwId + 2), szIpAddr2));

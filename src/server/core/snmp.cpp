@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -383,12 +383,16 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
    LONG i, iNumIf;
    char szOid[128], szBuffer[256];
    INTERFACE_LIST *pIfList = NULL;
+   int useAliases;
    BOOL bSuccess = FALSE;
 
    // Get number of interfaces
    if (SnmpGet(dwVersion, pTransport, szCommunity, ".1.3.6.1.2.1.2.1.0", NULL, 0,
                 &iNumIf, sizeof(LONG), FALSE, FALSE) != SNMP_ERR_SUCCESS)
       return NULL;
+      
+	// Using aliases
+	useAliases = ConfigReadInt(_T("UseInterfaceAliases"), 0);
 
    // Create empty list
    pIfList = (INTERFACE_LIST *)malloc(sizeof(INTERFACE_LIST));
@@ -413,11 +417,48 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
       for(i = 0; i < iNumIf; i++)
       {
          // Interface name
+         if (useAliases > 0)
+         {
+		      sprintf(szOid, ".1.3.6.1.2.1.31.1.1.1.18.%d", pIfList->pInterfaces[i].dwIndex);
+		      if (SnmpGet(dwVersion, pTransport, szCommunity, szOid, NULL, 0,
+		                   pIfList->pInterfaces[i].szName, MAX_DB_STRING,
+		                   FALSE, FALSE) != SNMP_ERR_SUCCESS)
+				{
+					pIfList->pInterfaces[i].szName[0] = 0;		// It's not an error if we cannot get interface alias
+				}
+				else
+				{
+					StrStrip(pIfList->pInterfaces[i].szName);
+				}
+         }
          sprintf(szOid, ".1.3.6.1.2.1.2.2.1.2.%d", pIfList->pInterfaces[i].dwIndex);
          if (SnmpGet(dwVersion, pTransport, szCommunity, szOid, NULL, 0,
-                      pIfList->pInterfaces[i].szName, MAX_DB_STRING,
-                      FALSE, FALSE) != SNMP_ERR_SUCCESS)
+                     szBuffer, 256, FALSE, FALSE) != SNMP_ERR_SUCCESS)
             break;
+         switch(useAliases)
+         {
+         	case 1:	// Use only alias if available, otherwise name
+         		if (pIfList->pInterfaces[i].szName[0] == 0)
+	         		nx_strncpy(pIfList->pInterfaces[i].szName, szBuffer, MAX_DB_STRING);	// Alias is empty or not available
+         		break;
+         	case 2:	// Concatenate alias with name
+         		if (pIfList->pInterfaces[i].szName[0] != 0)
+         		{
+         			if  (_tcslen(pIfList->pInterfaces[i].szName) < (MAX_DB_STRING - 3))
+         			{
+		      			_sntprintf(&pIfList->pInterfaces[i].szName[_tcslen(pIfList->pInterfaces[i].szName)], MAX_DB_STRING - _tcslen(pIfList->pInterfaces[i].szName), _T(" (%s)"), szBuffer);
+		      			pIfList->pInterfaces[i].szName[MAX_DB_STRING - 1] = 0;
+		      		}
+         		}
+         		else
+         		{
+	         		nx_strncpy(pIfList->pInterfaces[i].szName, szBuffer, MAX_DB_STRING);	// Alias is empty or not available
+					}
+         		break;
+         	default:	// Use only name
+         		nx_strncpy(pIfList->pInterfaces[i].szName, szBuffer, MAX_DB_STRING);
+         		break;
+         }
 
          // Interface type
          sprintf(szOid, ".1.3.6.1.2.1.2.2.1.3.%d", pIfList->pInterfaces[i].dwIndex);

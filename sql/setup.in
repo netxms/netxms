@@ -176,6 +176,8 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('EventStormEventsPerSecond','100',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('EventStormDuration','15',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('UseInterfaceAliases','0',1,0);
 
 
 /*

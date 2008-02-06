@@ -11,6 +11,7 @@
 	) TABLE_TYPE;
 - New columns added to table "address_lists":
 	ALTER TABLE address_lists ADD community_id integer not null
+- New configuration parameter added: UseInterfaceAliases
 
 
 *************

@@ -97,16 +97,20 @@ static BOOL H_UpgradeFromV74(void)
 		_T("UPDATE address_lists SET community_id=0\n")
       _T("<END>");
 
-   if (!SQLBatch(m_szBatch))
-      if (!g_bIgnoreErrors)
-         return FALSE;
+	if (!SQLBatch(m_szBatch))
+		if (!g_bIgnoreErrors)
+			return FALSE;
 
 	if (!CreateTable(_T("CREATE TABLE snmp_communities (")
 	                 _T("id integer not null,")
 	                 _T("community varchar(255) not null,")
 	                 _T("PRIMARY KEY(id))")))
-      if (!g_bIgnoreErrors)
-         return FALSE;
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("UseInterfaceAliases"), _T("0"), 1, 0))
+		if (!g_bIgnoreErrors)
+			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='75' WHERE var_name='DBFormatVersion'")))
       if (!g_bIgnoreErrors)
@@ -148,12 +152,12 @@ static BOOL H_UpgradeFromV73(void)
          return FALSE;
 
 	if (!CreateConfigParam(_T("EventStormDuration"), _T("15"), 1, 1))
-      if (!g_bIgnoreErrors)
-         return FALSE;
+		if (!g_bIgnoreErrors)
+			return FALSE;
 
 	if (!SQLQuery(_T("UPDATE config SET var_value='74' WHERE var_name='DBFormatVersion'")))
-      if (!g_bIgnoreErrors)
-         return FALSE;
+		if (!g_bIgnoreErrors)
+			return FALSE;
 
    return TRUE;
 }
