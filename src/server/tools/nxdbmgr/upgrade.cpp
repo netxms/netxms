@@ -112,6 +112,10 @@ static BOOL H_UpgradeFromV74(void)
 		if (!g_bIgnoreErrors)
 			return FALSE;
 
+	if (!CreateConfigParam(_T("SyncNodeNamesWithDNS"), _T("0"), 1, 0))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
 	if (!SQLQuery(_T("UPDATE config SET var_value='75' WHERE var_name='DBFormatVersion'")))
       if (!g_bIgnoreErrors)
          return FALSE;
