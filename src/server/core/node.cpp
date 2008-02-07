@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.196 2008-02-06 17:28:05 victor Exp $ */
+/* $Id: node.cpp,v 1.197 2008-02-07 21:27:03 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1541,7 +1541,10 @@ BOOL Node::ConnectToAgent(void)
    SetAgentProxy(m_pAgentConnection);
    bRet = m_pAgentConnection->Connect(g_pServerKey);
    if (bRet)
+	{
+		m_pAgentConnection->SetCommandTimeout(g_dwAgentCommandTimeout);
       m_pAgentConnection->EnableTraps();
+	}
    return bRet;
 }
 
@@ -1609,7 +1612,7 @@ DWORD Node::GetItemFromCheckPointSNMP(const char *szParam, DWORD dwBufSize, char
 DWORD Node::GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffer)
 {
    DWORD dwError, dwResult = DCE_COMM_ERROR;
-   DWORD dwTries = 5;
+   DWORD dwTries = 3;
 
    if ((m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ||
        (m_dwDynamicFlags & NDF_UNREACHABLE))
@@ -1640,6 +1643,12 @@ DWORD Node::GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffe
                goto end_loop;
             break;
          case ERR_REQUEST_TIMEOUT:
+				// Reset connection to agent after timeout
+				DbgPrintf(6, _T("Node(%s)->GetItemFromAgent(%s): timeout; resetting connection to agent..."), m_szName, szParam);
+				delete_and_null(m_pAgentConnection);
+            if (!ConnectToAgent())
+               goto end_loop;
+				DbgPrintf(6, _T("Node(%s)->GetItemFromAgent(%s): connection to agent restored successfully"), m_szName, szParam);
             break;
       }
    }

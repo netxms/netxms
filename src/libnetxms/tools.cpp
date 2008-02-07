@@ -1,7 +1,7 @@
-/* $Id: tools.cpp,v 1.71 2008-01-29 16:32:40 victor Exp $ */
+/* $Id: tools.cpp,v 1.72 2008-02-07 21:27:03 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by

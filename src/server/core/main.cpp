@@ -105,6 +105,7 @@ RSA *g_pServerKey = NULL;
 time_t g_tServerStartTime = 0;
 DWORD g_dwLockTimeout = 60000;   // Default timeout for acquiring mutex
 DWORD g_dwSNMPTimeout = 2000;		// Default timeout for SNMP requests
+DWORD g_dwAgentCommandTimeout = 2000;  // Default timeout for requests to agent
 DWORD g_dwThresholdRepeatInterval = 0;	// Disabled by default
 int g_nRequiredPolls = 1;
 
@@ -237,6 +238,7 @@ static void LoadGlobalConfig()
 	g_dwPingSize = ConfigReadInt("IcmpPingSize", 46);
 	g_dwLockTimeout = ConfigReadInt("LockTimeout", 60000);
 	g_dwSNMPTimeout = ConfigReadInt("SNMPRequestTimeout", 2000);
+	g_dwAgentCommandTimeout = ConfigReadInt("AgentCommandTimeout", 2000);
 	g_dwThresholdRepeatInterval = ConfigReadInt("ThresholdRepeatInterval", 0);
 	g_nRequiredPolls = ConfigReadInt("PollCountForStatusChange", 1);
 }

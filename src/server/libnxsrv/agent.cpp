@@ -1,4 +1,4 @@
-/* $Id: agent.cpp,v 1.53 2007-09-20 13:04:01 victor Exp $ */
+/* $Id: agent.cpp,v 1.54 2008-02-07 21:27:04 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Server Library
@@ -145,10 +145,17 @@ AgentConnection::~AgentConnection()
    // Disconnect from peer
    Disconnect();
 
+	// Close socket if active
+	Lock();
+   if (m_hSocket != -1)
+	{
+      closesocket(m_hSocket);
+		m_hSocket = -1;
+	}
+	Unlock();
+
    // Wait for receiver thread termination
    ThreadJoin(m_hReceiverThread);
-   if (m_hSocket != -1)
-      closesocket(m_hSocket);
 
    Lock();
    DestroyResultData();
@@ -206,7 +213,9 @@ void AgentConnection::ReceiverThread(void)
       // Receive raw message
       if ((iErr = RecvNXCPMessage(m_hSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
                                   &m_pCtx, pDecryptionBuffer, m_dwRecvTimeout)) <= 0)
+		{
          break;
+		}
 
       // Check if we get too large message
       if (iErr == 1)

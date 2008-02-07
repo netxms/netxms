@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.145 2008-02-07 14:21:48 victor Exp $ */
+/* $Id: nms_core.h,v 1.146 2008-02-07 21:27:04 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -738,6 +738,7 @@ extern DWORD g_dwAuditFlags;
 extern time_t g_tServerStartTime;
 extern DWORD g_dwLockTimeout;
 extern DWORD g_dwSNMPTimeout;
+extern DWORD g_dwAgentCommandTimeout;
 extern DWORD g_dwThresholdRepeatInterval;
 extern int g_nRequiredPolls;
 

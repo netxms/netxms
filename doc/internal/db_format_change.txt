@@ -1,4 +1,11 @@
 *************
+* 75 ==> 76 *
+*************
+
+- New configuration parameters added: AgentCommandTimeout
+
+
+*************
 * 74 ==> 75 *
 *************
 
