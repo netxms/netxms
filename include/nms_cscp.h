@@ -758,6 +758,9 @@ typedef struct
 #define VID_USER_TAG                ((DWORD)298)
 #define VID_REQUIRED_POLLS          ((DWORD)299)
 #define VID_SYS_DESCRIPTION         ((DWORD)300)
+#define VID_SITUATION_ID            ((DWORD)301)
+#define VID_SITUATION_INSTANCE      ((DWORD)302)
+#define VID_SITUATION_NUM_ATTRS     ((DWORD)303)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -888,6 +891,9 @@ typedef struct
 
 // Base value for various string lists
 #define VID_STRING_LIST_BASE 			((DWORD)0x10000000)
+
+// Situation attribute list base
+#define VID_SITUATION_ATTR_LIST_BASE ((DWORD)0x10000000)
 
 // Base value for object links list
 #define VID_OBJECT_LINKS_BASE			((DWORD)0x10000000)

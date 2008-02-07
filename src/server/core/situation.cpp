@@ -21,7 +21,6 @@
 **/
 
 #include "nxcore.h"
-#include <nxcore_situations.h>
 
 
 //
@@ -102,4 +101,14 @@ Situation::~Situation()
 
 void Situation::UpdateSituation(const TCHAR *instance, const TCHAR *attribute, const TCHAR *value)
 {
+}
+
+
+//
+// Find situation by ID
+//
+
+Situation *FindSituationById(DWORD dwId)
+{
+	return NULL;
 }

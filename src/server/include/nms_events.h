@@ -121,6 +121,10 @@ private:
 	DWORD m_dwAlarmTimeout;
 	DWORD m_dwAlarmTimeoutEvent;
 
+	DWORD m_dwSituationId;
+	TCHAR m_szSituationInstance[MAX_DB_STRING];
+	StringMap m_situationAttrList;
+
    BOOL MatchSource(DWORD dwObjectId);
    BOOL MatchEvent(DWORD dwEventCode);
    BOOL MatchSeverity(DWORD dwSeverity);

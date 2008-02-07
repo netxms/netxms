@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.144 2008-02-05 21:50:59 victor Exp $ */
+/* $Id: nms_core.h,v 1.145 2008-02-07 14:21:48 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -102,6 +102,7 @@ typedef __console_ctx * CONSOLE_CTX;
 #include "nms_topo.h"
 #include "nms_script.h"
 #include "nxcore_maps.h"
+#include "nxcore_situations.h"
 
 
 //

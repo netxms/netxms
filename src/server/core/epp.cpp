@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,13 +43,16 @@ EPRule::EPRule(DWORD dwId)
    m_pScript = NULL;
 	m_dwAlarmTimeout = 0;
 	m_dwAlarmTimeoutEvent = EVENT_ALARM_TIMEOUT;
+	m_dwSituationId = 0;
+	m_szSituationInstance[0] = 0;
 }
 
 
 //
 // Construct event policy rule from database record
 // Assuming the following field order:
-// rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event
+// rule_id,flags,comments,alarm_message,alarm_severity,alarm_key,script,
+// alarm_timeout,alarm_timeout_event,situation_id,situation_instance
 //
 
 EPRule::EPRule(DB_RESULT hResult, int iRow)
@@ -82,6 +85,9 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
    }
 	m_dwAlarmTimeout = DBGetFieldULong(hResult, iRow, 7);
 	m_dwAlarmTimeoutEvent = DBGetFieldULong(hResult, iRow, 8);
+	m_dwSituationId = DBGetFieldULong(hResult, iRow, 9);
+   DBGetField(hResult, iRow, 10, m_szSituationInstance, MAX_DB_STRING);
+	DecodeSQLString(m_szSituationInstance);
 }
 
 
@@ -112,6 +118,9 @@ EPRule::EPRule(CSCPMessage *pMsg)
    m_iAlarmSeverity = pMsg->GetVariableShort(VID_ALARM_SEVERITY);
 	m_dwAlarmTimeout = pMsg->GetVariableLong(VID_ALARM_TIMEOUT);
 	m_dwAlarmTimeoutEvent = pMsg->GetVariableLong(VID_ALARM_TIMEOUT_EVENT);
+
+	m_dwSituationId = pMsg->GetVariableLong(VID_SITUATION_ID);
+   pMsg->GetVariableStr(VID_SITUATION_INSTANCE, m_szSituationInstance, MAX_DB_STRING);
 
    m_pszScript = pMsg->GetVariableStr(VID_SCRIPT);
    if ((m_pszScript != NULL) && (*m_pszScript != 0))
@@ -296,7 +305,7 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
 {
    BOOL bStopProcessing = FALSE;
    DWORD i;
-   TCHAR *pszAlarmMsg;
+   TCHAR *pszText;
 
    // Check disable flag
    if (!(m_dwFlags & RF_DISABLED))
@@ -312,11 +321,37 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
          // Event matched, perform actions
          if (m_dwNumActions > 0)
          {
-            pszAlarmMsg = pEvent->ExpandText(m_szAlarmMessage);
+            pszText = pEvent->ExpandText(m_szAlarmMessage);
             for(i = 0; i < m_dwNumActions; i++)
-               ExecuteAction(m_pdwActionList[i], pEvent, pszAlarmMsg);
-            free(pszAlarmMsg);
+               ExecuteAction(m_pdwActionList[i], pEvent, pszText);
+            free(pszText);
          }
+
+			// Update situation of needed
+			if (m_dwSituationId != 0)
+			{
+				Situation *pSituation;
+				TCHAR *pszAttr, *pszValue;
+
+				pSituation = FindSituationById(m_dwSituationId);
+				if (pSituation != NULL)
+				{
+					pszText = pEvent->ExpandText(m_szSituationInstance);
+					for(i = 0; i < m_situationAttrList.Size(); i++)
+					{
+						pszAttr = pEvent->ExpandText(m_situationAttrList.GetKeyByIndex(i));
+						pszValue = pEvent->ExpandText(m_situationAttrList.GetValueByIndex(i));
+						pSituation->UpdateSituation(pszText, pszAttr, pszValue);
+						free(pszAttr);
+						free(pszValue);
+					}
+					free(pszText);
+				}
+				else
+				{
+					DbgPrintf(3, _T("Event Policy: unable to find situation with ID=%d"), m_dwSituationId);
+				}
+			}
 
          bStopProcessing = m_dwFlags & RF_STOP_PROCESSING;
       }
@@ -420,7 +455,9 @@ BOOL EPRule::LoadFromDB(void)
 
 void EPRule::SaveToDB(void)
 {
-   TCHAR *pszComment, *pszEscKey, *pszEscMessage, *pszEscScript, *pszQuery;
+   TCHAR *pszComment, *pszEscKey, *pszEscMessage,
+	      *pszEscScript, *pszQuery, *pszEscSituationInstance,
+			*pszEscName, *pszEscValue;
    DWORD i;
 
    pszQuery = (TCHAR *)malloc((_tcslen(CHECK_NULL(m_pszComment)) +
@@ -431,15 +468,19 @@ void EPRule::SaveToDB(void)
    pszEscKey = EncodeSQLString(m_szAlarmKey);
    pszEscMessage = EncodeSQLString(m_szAlarmMessage);
    pszEscScript = EncodeSQLString(m_pszScript);
+	pszEscSituationInstance = EncodeSQLString(m_szSituationInstance);
    _stprintf(pszQuery, _T("INSERT INTO event_policy (rule_id,flags,comments,alarm_message,")
-                       _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event) ")
-                       _T("VALUES (%d,%d,'%s','%s',%d,'%s','%s',%d,%d)"),
+                       _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,")
+							  _T("situation_id,situation_instance) ")
+                       _T("VALUES (%d,%d,'%s','%s',%d,'%s','%s',%d,%d,%d,'%s')"),
              m_dwId, m_dwFlags, pszComment, pszEscMessage, m_iAlarmSeverity,
-             pszEscKey, pszEscScript, m_dwAlarmTimeout, m_dwAlarmTimeoutEvent);
+             pszEscKey, pszEscScript, m_dwAlarmTimeout, m_dwAlarmTimeoutEvent,
+				 m_dwSituationId, pszEscSituationInstance);
    free(pszComment);
    free(pszEscMessage);
    free(pszEscKey);
    free(pszEscScript);
+	free(pszEscSituationInstance);
    DBQuery(g_hCoreDB, pszQuery);
 
    // Actions
@@ -466,6 +507,18 @@ void EPRule::SaveToDB(void)
       DBQuery(g_hCoreDB, pszQuery);
    }
 
+	// Situation attributes
+	for(i = 0; i < m_situationAttrList.Size(); i++)
+	{
+		pszEscName = EncodeSQLString(m_situationAttrList.GetKeyByIndex(i));
+		pszEscValue = EncodeSQLString(m_situationAttrList.GetValueByIndex(i));
+      _stprintf(pszQuery, _T("INSERT INTO policy_situation_attr_list (rule_id,situation_id,attr_name,attr_value) VALUES (%d,%d,'%s','%s')"),
+                m_dwId, m_dwSituationId, pszEscName, pszEscValue);
+		free(pszEscName);
+		free(pszEscValue);
+      DBQuery(g_hCoreDB, pszQuery);
+	}
+
    free(pszQuery);
 }
 
@@ -476,6 +529,8 @@ void EPRule::SaveToDB(void)
 
 void EPRule::CreateMessage(CSCPMessage *pMsg)
 {
+	DWORD i, id;
+
    pMsg->SetVariable(VID_FLAGS, m_dwFlags);
    pMsg->SetVariable(VID_RULE_ID, m_dwId);
    pMsg->SetVariable(VID_ALARM_SEVERITY, (WORD)m_iAlarmSeverity);
@@ -491,6 +546,14 @@ void EPRule::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_NUM_SOURCES, m_dwNumSources);
    pMsg->SetVariableToInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
    pMsg->SetVariable(VID_SCRIPT, CHECK_NULL_EX(m_pszScript));
+	pMsg->SetVariable(VID_SITUATION_ID, m_dwSituationId);
+	pMsg->SetVariable(VID_SITUATION_INSTANCE, m_szSituationInstance);
+	pMsg->SetVariable(VID_SITUATION_NUM_ATTRS, m_situationAttrList.Size());
+	for(i = 0, id = VID_SITUATION_ATTR_LIST_BASE; i < m_situationAttrList.Size(); i++)
+	{
+		pMsg->SetVariable(id++, m_situationAttrList.GetKeyByIndex(i));
+		pMsg->SetVariable(id++, m_situationAttrList.GetValueByIndex(i));
+	}
 }
 
 
@@ -557,7 +620,8 @@ BOOL EventPolicy::LoadFromDB(void)
    BOOL bSuccess = FALSE;
 
    hResult = DBSelect(g_hCoreDB, _T("SELECT rule_id,flags,comments,alarm_message,")
-                                 _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event ")
+                                 _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,")
+											_T("situation_id,situation_instance ")
                                  _T("FROM event_policy ORDER BY rule_id"));
    if (hResult != NULL)
    {
@@ -592,6 +656,7 @@ void EventPolicy::SaveToDB(void)
    DBQuery(g_hCoreDB, _T("DELETE FROM policy_action_list"));
    DBQuery(g_hCoreDB, _T("DELETE FROM policy_event_list"));
    DBQuery(g_hCoreDB, _T("DELETE FROM policy_source_list"));
+   DBQuery(g_hCoreDB, _T("DELETE FROM policy_situation_attr_list"));
    for(i = 0; i < m_dwNumRules; i++)
       m_ppRuleList[i]->SaveToDB();
    DBCommit(g_hCoreDB);

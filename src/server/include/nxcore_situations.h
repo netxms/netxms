@@ -65,4 +65,12 @@ public:
 	void UpdateSituation(const TCHAR *instance, const TCHAR *attribute, const TCHAR *value);
 };
 
+
+//
+// Functions
+//
+
+Situation *FindSituationById(DWORD dwId);
+
+
 #endif
