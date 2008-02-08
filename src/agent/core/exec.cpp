@@ -1,4 +1,4 @@
-/* $Id: exec.cpp,v 1.21 2007-11-06 07:32:57 victor Exp $ */
+/* $Id: exec.cpp,v 1.22 2008-02-08 11:00:12 victor Exp $ */
 
 /* 
 ** NetXMS multiplatform core agent
@@ -221,6 +221,68 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
 }
 
 
+//
+// Structure for passing data to popen() worker
+//
+
+struct POPEN_WORKER_DATA
+{
+	int status;
+	char *cmdLine;
+	char value[MAX_RESULT_LENGTH];
+	CONDITION finished;
+	CONDITION released;
+};
+
+
+//
+// Worker thread for executing external parameter handler
+//
+
+static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
+{
+	FILE *hPipe;
+	POPEN_WORKER_DATA *data = (POPEN_WORKER_DATA *)arg;
+
+	if ((hPipe = popen(data->cmdLine, "r")) != NULL)
+	{
+		char *pTmp;
+		int nRet;
+
+		nRet = (int)fread(data->value, 1, MAX_RESULT_LENGTH - 1, hPipe);
+		pclose(hPipe);
+		if (nRet > 0)
+		{
+			data->value[MAX_RESULT_LENGTH - 1] = 0;
+			if ((pTmp = strchr(data->value, '\n')) != NULL)
+			{
+				*pTmp = 0;
+			}
+			data->status = SYSINFO_RC_SUCCESS;
+		}
+		else
+		{
+			data->status = SYSINFO_RC_ERROR;
+		}
+	}
+	else
+	{
+		WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se",
+				   data->cmdLine, errno);
+		data->status = SYSINFO_RC_ERROR;
+	}
+
+	// Notify caller that data is available and wait while caller
+	// retrieves the data, then destroy object
+	ConditionSet(data->finished);
+	ConditionWait(data->released, INFINITE);
+	ConditionDestroy(data->finished);
+	ConditionDestroy(data->released);
+	free(data);
+
+	return THREAD_OK;
+}
+
 
 //
 // Handler function for external (user-defined) parameters
@@ -342,40 +404,29 @@ LONG H_ExternalParameter(char *pszCmd, char *pszArg, char *pValue)
 #endif
 
 #ifdef _NETWARE
-   /* TODO: add NetWare code here */
+	/* TODO: add NetWare code here */
 	iStatus = SYSINFO_RC_UNSUPPORTED;
 #else // UNIX or Windows
-		iStatus = SYSINFO_RC_ERROR;
 		{
-			FILE *hPipe;
+			POPEN_WORKER_DATA *data;
 
-			if ((hPipe = popen(pszCmdLine, "r")) != NULL)
+			data = (POPEN_WORKER_DATA *)malloc(sizeof(POPEN_WORKER_DATA));
+			data->cmdLine = pszCmdLine;
+			data->finished = ConditionCreate(TRUE);
+			data->released = ConditionCreate(TRUE);
+			ThreadCreate(POpenWorker, 0, data);
+			if (ConditionWait(data->finished, g_dwExecTimeout))
 			{
-				char *pTmp;
-				int nRet;
-
-				nRet = (int)fread(pValue, 1, MAX_RESULT_LENGTH - 1, hPipe);
-				pclose(hPipe);
-				if (nRet > 0)
-				{
-					pValue[MAX_RESULT_LENGTH - 1] = 0;
-					if ((pTmp = strchr(pValue, '\n')) != NULL)
-					{
-						*pTmp = 0;
-					}
-					iStatus = SYSINFO_RC_SUCCESS;
-				}
-				else
-				{
-					iStatus = SYSINFO_RC_ERROR;
-				}
+				iStatus = data->status;
+				if (iStatus == SYSINFO_RC_SUCCESS)
+					strcpy(pValue, data->value);
 			}
 			else
 			{
-				WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se",
-				         pszCmdLine, errno);
+				// Timeout
 				iStatus = SYSINFO_RC_ERROR;
 			}
+			ConditionSet(data->released);	// Allow worker to destroy data
 		}
 #endif
 
@@ -460,6 +511,12 @@ DWORD ExecuteShellCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.21  2007/11/06 07:32:57  victor
+- Added possibility to specify multiple recipients in e-mail or SMS action
+- Fixed NetWare 6.0 compatibility issues
+- Manual updated
+- Added default "Admins" group
+
 Revision 1.20  2007/04/19 08:39:21  alk
 popen()-ed hanlde was closed with fclose()...
 
