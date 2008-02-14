@@ -183,3 +183,108 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteAlarm(NXC_SESSION hSession, DWORD dwAlarmId)
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
+
+
+//
+// Set helpdesk state to "Open"
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCOpenAlarm(NXC_SESSION hSession, DWORD dwAlarmId, TCHAR *pszHelpdeskRef)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_SET_ALARM_HD_STATE);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_ALARM_ID, dwAlarmId);
+   msg.SetVariable(VID_HELPDESK_STATE, (WORD)ALARM_HELPDESK_OPEN);
+	msg.SetVariable(VID_HELPDESK_REF, CHECK_NULL_EX(pszHelpdeskRef));
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
+// Set helpdesk state to "Closed"
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCCloseAlarm(NXC_SESSION hSession, DWORD dwAlarmId)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_SET_ALARM_HD_STATE);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_ALARM_ID, dwAlarmId);
+   msg.SetVariable(VID_HELPDESK_STATE, (WORD)ALARM_HELPDESK_CLOSED);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
+// Format text from alarm data
+//
+
+TCHAR LIBNXCL_EXPORTABLE *NXCFormatAlarmText(NXC_SESSION session, NXC_ALARM *alarm, TCHAR *format)
+{
+	String out;
+	TCHAR *prev, *curr;
+	static TCHAR *helpdeskState[] = { _T("IGNORED"), _T("OPEN"), _T("CLOSED") };
+	static TCHAR *severityText[] = { _T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"), _T("CRITICAL") };
+
+	for(prev = format; *prev != 0; prev = curr)
+	{
+		curr = _tcschr(prev, _T('%'));
+		if (curr == NULL)
+		{
+			out += prev;
+			break;
+		}
+		out.AddString(prev, curr - prev);
+		curr++;
+		switch(*curr)
+		{
+			case '%':
+				out += _T("%");
+				break;
+			case 'e':
+				out.AddFormattedString(_T("%u"), alarm->dwSourceEventCode);
+				break;
+			case 'E':
+				out += NXCGetEventName(session, alarm->dwSourceEventCode);
+				break;
+			case 'h':
+				out.AddFormattedString(_T("%d"), alarm->nHelpDeskState);
+				break;
+			case 'H':
+				out += helpdeskState[alarm->nHelpDeskState];
+				break;
+			case 'I':
+				out.AddFormattedString(_T("%u"), alarm->dwAlarmId);
+				break;
+			case 'm':
+				out += alarm->szMessage;
+				break;
+			case 's':
+				out.AddFormattedString(_T("%d"), alarm->nCurrentSeverity);
+				break;
+			case 'S':
+				out += severityText[alarm->nCurrentSeverity];
+				break;
+			case 0:
+				curr--;
+				break;
+			default:
+				break;
+		}
+		curr++;
+	}
+	return _tcsdup((const TCHAR *)out);
+}

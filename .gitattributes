@@ -579,6 +579,10 @@ src/client/console/plugins/ObjectBrowser/rc/Makefile.am -text
 src/client/console/plugins/ObjectBrowser/rc/ObjectBrowser.xrc -text
 src/client/console/plugins/ObjectBrowser/rc/objectbrowser.xpm -text
 src/client/console/plugins/ObjectBrowser/resource.h -text
+src/client/nxalarm/Makefile.am -text
+src/client/nxalarm/nxalarm.cpp -text
+src/client/nxalarm/nxalarm.dsp -text
+src/client/nxalarm/nxalarm.h -text
 src/client/nxsms/Makefile.am -text
 src/client/nxsms/nxsms.cpp -text
 src/client/nxsms/nxsms.dsp -text

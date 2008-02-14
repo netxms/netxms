@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.283 2008-02-05 21:50:56 victor Exp $ */
+/* $Id: nxclapi.h,v 1.284 2008-02-14 19:38:55 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -1899,6 +1899,9 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, BOOL bIncludeAck
 DWORD LIBNXCL_EXPORTABLE NXCAcknowledgeAlarm(NXC_SESSION hSession, DWORD dwAlarmId);
 DWORD LIBNXCL_EXPORTABLE NXCTerminateAlarm(NXC_SESSION hSession, DWORD dwAlarmId);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteAlarm(NXC_SESSION hSession, DWORD dwAlarmId);
+DWORD LIBNXCL_EXPORTABLE NXCOpenAlarm(NXC_SESSION hSession, DWORD dwAlarmId, TCHAR *pszHelpdeskRef);
+DWORD LIBNXCL_EXPORTABLE NXCCloseAlarm(NXC_SESSION hSession, DWORD dwAlarmId);
+TCHAR LIBNXCL_EXPORTABLE *NXCFormatAlarmText(NXC_SESSION session, NXC_ALARM *alarm, TCHAR *format);
 
 DWORD LIBNXCL_EXPORTABLE NXCLoadActions(NXC_SESSION hSession, DWORD *pdwNumActions, NXC_ACTION **ppActionList);
 DWORD LIBNXCL_EXPORTABLE NXCLockActionDB(NXC_SESSION hSession);

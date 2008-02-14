@@ -1,4 +1,4 @@
-/* $Id: nxcp.cpp,v 1.23 2008-02-05 21:50:58 victor Exp $ */
+/* $Id: nxcp.cpp,v 1.24 2008-02-14 19:38:56 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
@@ -43,7 +43,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_LOGIN"),
       _T("CMD_LOGIN_RESP"),
       _T("CMD_KEEPALIVE"),
-      _T("CMD_EVENT"),	// UNUSED
+      _T("CMD_SET_ALARM_HD_STATE"),
       _T("CMD_GET_OBJECTS"),
       _T("CMD_OBJECT"),
       _T("CMD_DELETE_OBJECT"),
