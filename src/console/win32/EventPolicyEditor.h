@@ -38,6 +38,7 @@ public:
 
 // Implementation
 protected:
+	int m_iImageOptionsBase;
 	void EditScript(int iRow);
 	void ModifyTitle(void);
 	BOOL m_bIsModified;

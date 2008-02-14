@@ -1181,6 +1181,7 @@ src/console/win32/icons/setup.ico -text
 src/console/win32/icons/sms.ico -text
 src/console/win32/icons/sort_up.ico -text
 src/console/win32/icons/sortdown.ico -text
+src/console/win32/icons/stop.ico -text
 src/console/win32/icons/subordinates.ico -text
 src/console/win32/icons/template_root.ico -text
 src/console/win32/icons/topology.ico -text

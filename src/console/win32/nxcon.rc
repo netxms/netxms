@@ -149,6 +149,7 @@ IDI_TOPOLOGY            ICON    DISCARDABLE     "icons\\topology.ico"
 IDI_EMPTY               ICON    DISCARDABLE     "icons\\empty.ico"
 IDI_SUBORDINATES        ICON    DISCARDABLE     "icons\\subordinates.ico"
 IDI_REDO_LAYOUT         ICON    DISCARDABLE     "icons\\redo_layout.ico"
+IDI_STOP                ICON    DISCARDABLE     "icons\\stop.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

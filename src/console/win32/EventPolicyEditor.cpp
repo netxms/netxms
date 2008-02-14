@@ -34,8 +34,10 @@ static char THIS_FILE[] = __FILE__;
 #define COL_SEVERITY  3
 #define COL_SCRIPT    4
 #define COL_ALARM     5
-#define COL_ACTION    6
-#define COL_COMMENT   7
+#define COL_SITUATION 6
+#define COL_ACTION    7
+#define COL_OPTIONS   8
+#define COL_COMMENT   9
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -138,6 +140,8 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Add(theApp.LoadIcon(IDI_REXEC));
    m_pImageList->Add(theApp.LoadIcon(IDI_EMAIL));
    m_pImageList->Add(theApp.LoadIcon(IDI_SMS));
+   m_iImageOptionsBase = m_pImageList->GetImageCount();
+   m_pImageList->Add(theApp.LoadIcon(IDI_STOP));
 	
    // Create rule list control
    GetClientRect(&rect);
@@ -151,8 +155,10 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndRuleList.InsertColumn(3, _T("Severity"), 90, CF_NON_SELECTABLE);
    m_wndRuleList.InsertColumn(4, _T("Script"), 150, CF_TEXTBOX | CF_NON_SELECTABLE);
    m_wndRuleList.InsertColumn(5, _T("Alarm"), 150, CF_NON_SELECTABLE);
-   m_wndRuleList.InsertColumn(6, _T("Action"), 150);
-   m_wndRuleList.InsertColumn(7, _T("Comments"), 200, CF_TEXTBOX | CF_NON_SELECTABLE);
+   m_wndRuleList.InsertColumn(6, _T("Situation"), 150, CF_NON_SELECTABLE);
+   m_wndRuleList.InsertColumn(7, _T("Action"), 150);
+   m_wndRuleList.InsertColumn(8, _T("Options"), 150, CF_NON_SELECTABLE);
+   m_wndRuleList.InsertColumn(9, _T("Comments"), 200, CF_TEXTBOX | CF_NON_SELECTABLE);
    m_wndRuleList.RestoreColumns(_T("EventPolicyEditor"), _T("RuleList"));
 
    // Fill rule list with existing rules
@@ -425,6 +431,17 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    else
    {
       m_wndRuleList.AddItem(iRow, COL_ACTION, _T("None"), m_iImageAny + 1);
+   }
+
+   // Options
+   m_wndRuleList.ClearCell(iRow, COL_OPTIONS);
+   if (m_pEventPolicy->pRuleList[iRow].dwFlags & RF_STOP_PROCESSING)
+   {
+      m_wndRuleList.AddItem(iRow, COL_OPTIONS, _T("Stop processing"), m_iImageOptionsBase);
+   }
+   if (m_wndRuleList.GetNumItems(iRow, COL_OPTIONS) == 0)
+   {
+      m_wndRuleList.AddItem(iRow, COL_OPTIONS, _T("None"), m_iImageAny + 1);
    }
 
    // Comment

@@ -1833,6 +1833,10 @@ SOURCE=.\icons\sortdown.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\stop.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\subordinates.ico
 # End Source File
 # Begin Source File
