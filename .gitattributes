@@ -1051,6 +1051,8 @@ src/console/win32/RuleHeader.cpp -text
 src/console/win32/RuleHeader.h -text
 src/console/win32/RuleList.cpp -text
 src/console/win32/RuleList.h -text
+src/console/win32/RuleOptionsDlg.cpp -text
+src/console/win32/RuleOptionsDlg.h -text
 src/console/win32/RuleScriptDlg.cpp -text
 src/console/win32/RuleScriptDlg.h -text
 src/console/win32/RuleSeverityDlg.cpp -text

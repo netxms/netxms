@@ -112,6 +112,8 @@ BEGIN_MESSAGE_MAP(CObjectBrowser, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_VIEW_FOLLOWOBJECTUPDATES, OnUpdateObjectViewFollowobjectupdates)
 	ON_COMMAND(ID_OBJECT_CREATE_IF_DCI, OnObjectCreateIfDci)
 	ON_UPDATE_COMMAND_UI(ID_OBJECT_CREATE_IF_DCI, OnUpdateObjectCreateIfDci)
+	ON_COMMAND(ID_OBJECT_POLL_INTERFACE_NAMES, OnObjectPollInterfaceNames)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_POLL_INTERFACE_NAMES, OnUpdateObjectPollInterfaceNames)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(TVN_SELCHANGED, ID_TREE_CTRL, OnTreeViewSelChange)
    ON_NOTIFY(TVN_GETDISPINFO, ID_TREE_CTRL, OnTreeViewGetDispInfo)
@@ -1544,4 +1546,20 @@ void CObjectBrowser::OnUpdateObjectSetchildmgmt(CCmdUI* pCmdUI)
 	{
 		pCmdUI->Enable(FALSE);
 	}
+}
+
+
+//
+// Handler for "Poll->Interface names" menu
+//
+
+void CObjectBrowser::OnObjectPollInterfaceNames() 
+{
+   if (m_pCurrentObject != NULL)
+      theApp.PollNode(m_pCurrentObject->dwId, POLL_INTERFACE_NAMES);
+}
+
+void CObjectBrowser::OnUpdateObjectPollInterfaceNames(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(CurrObjectIsNode(FALSE));
 }

@@ -477,7 +477,7 @@ void CRuleList::OnPaint()
 
                   if (m_ppRowList[i]->m_ppCellList[j]->m_piImageList[iLine] != -1)
                      m_pImageList->Draw(&dc, m_ppRowList[i]->m_ppCellList[j]->m_piImageList[iLine],
-                                        CPoint(rcText.left - ITEM_IMAGE_SIZE, rcText.top), ILD_TRANSPARENT);
+                                        CPoint(rcText.left - ITEM_IMAGE_SIZE - 3, rcText.top), ILD_TRANSPARENT);
                   if (m_ppRowList[i]->m_ppCellList[j]->m_bNegate)
                      m_imgListInternal.Draw(&dc, 0, CPoint(rcText.left - ITEM_IMAGE_SIZE, rcText.top), ILD_TRANSPARENT);
                      

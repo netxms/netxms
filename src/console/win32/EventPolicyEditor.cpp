@@ -7,6 +7,7 @@
 #include "RuleSeverityDlg.h"
 #include "RuleAlarmDlg.h"
 #include "RuleScriptDlg.h"
+#include "RuleOptionsDlg.h"
 #include "ActionSelDlg.h"
 
 #ifdef _DEBUG
@@ -257,6 +258,8 @@ void CEventPolicyEditor::OnContextMenu(CWnd* pWnd, CPoint point)
       case COL_SEVERITY:
       case COL_SCRIPT:
       case COL_ALARM:
+		case COL_SITUATION:
+		case COL_OPTIONS:
       case COL_COMMENT:
          iMenu = 5;
          break;
@@ -840,6 +843,9 @@ void CEventPolicyEditor::OnPolicyEdit()
          case COL_ALARM:
             EditAlarm(iRow);
             break;
+			case COL_OPTIONS:
+				EditOptions(iRow);
+				break;
          case COL_COMMENT:
             EditComment(iRow);
             break;
@@ -971,6 +977,27 @@ void CEventPolicyEditor::EditScript(int iRow)
       m_pEventPolicy->pRuleList[iRow].pszScript = _tcsdup((LPCTSTR)dlg.m_strText);
       Modify();
       UpdateRow(iRow);
+   }
+}
+
+
+//
+// Edit options cell
+//
+
+void CEventPolicyEditor::EditOptions(int row)
+{
+   CRuleOptionsDlg dlg;
+
+   dlg.m_bStopProcessing = (m_pEventPolicy->pRuleList[row].dwFlags & RF_STOP_PROCESSING) ? TRUE : FALSE;
+   if (dlg.DoModal() == IDOK)
+   {
+		if (dlg.m_bStopProcessing)
+			m_pEventPolicy->pRuleList[row].dwFlags |= RF_STOP_PROCESSING;
+		else
+			m_pEventPolicy->pRuleList[row].dwFlags &= ~RF_STOP_PROCESSING;
+      Modify();
+      UpdateRow(row);
    }
 }
 

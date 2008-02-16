@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.284 2008-02-14 19:38:55 victor Exp $ */
+/* $Id: nxclapi.h,v 1.285 2008-02-16 17:05:18 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -122,6 +122,7 @@ typedef void * NXC_SESSION;
 
 #define POLL_STATUS           1
 #define POLL_CONFIGURATION    2
+#define POLL_INTERFACE_NAMES  3
 
 
 //

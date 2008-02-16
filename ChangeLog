@@ -15,6 +15,7 @@
 - NetXMS server now can understand interface aliases (description in Cisco terms)
 - Added optional synchronization of node names with DNS
 - New command line tool for managing alarms - nxalarm
+- Implemented "stop processing" option for event processing policy rule
 - Fixed issues: #189, #190, #199
 
 

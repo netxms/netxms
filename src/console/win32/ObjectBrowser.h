@@ -144,6 +144,8 @@ protected:
 	afx_msg void OnUpdateObjectViewFollowobjectupdates(CCmdUI* pCmdUI);
 	afx_msg void OnObjectCreateIfDci();
 	afx_msg void OnUpdateObjectCreateIfDci(CCmdUI* pCmdUI);
+	afx_msg void OnObjectPollInterfaceNames();
+	afx_msg void OnUpdateObjectPollInterfaceNames(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
    afx_msg void OnTreeViewGetDispInfo(LPNMTVDISPINFO lpdi, LRESULT *pResult);
