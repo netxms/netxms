@@ -61,6 +61,9 @@ public:
 	Situation(const TCHAR *name);
 	Situation(DB_RESULT handle, int row);
 	~Situation();
+	
+	DWORD GetId() { return m_id; }
+	const TCHAR *GetName() { return m_name; }
 
 	void UpdateSituation(const TCHAR *instance, const TCHAR *attribute, const TCHAR *value);
 };
@@ -70,7 +73,9 @@ public:
 // Functions
 //
 
+BOOL SituationsInit(void);
 Situation *FindSituationById(DWORD dwId);
+Situation *CreateSituation(const TCHAR *name);
 
 
 #endif

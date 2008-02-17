@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.146 2008-02-07 21:27:04 victor Exp $ */
+/* $Id: nms_core.h,v 1.147 2008-02-17 12:22:07 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -691,6 +691,10 @@ void EscapeString(String &str);
 void InitAuditLog(void);
 void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *pszSubsys, BOOL bSuccess, DWORD dwUserId,
                                      const TCHAR *pszWorkstation, DWORD dwObjectId, const TCHAR *pszFormat, ...);
+                                     
+void AddObjectToIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dwKey, void *pObject);
+void DeleteObjectFromIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dwKey);
+DWORD SearchIndex(INDEX *pIndex, DWORD dwIndexSize, DWORD dwKey);                                     
 
 #ifdef _WITH_ENCRYPTION
 X509 *CertificateFromLoginMessage(CSCPMessage *pMsg);

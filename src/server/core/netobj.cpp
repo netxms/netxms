@@ -400,7 +400,7 @@ void NetObj::Delete(BOOL bIndexLocked)
    for(i = 0; i < g_dwIdIndexSize; i++)
    {
       if (g_pIndexById[i].dwKey != m_dwId)
-         g_pIndexById[i].pObject->OnObjectDelete(m_dwId);
+         ((NetObj *)g_pIndexById[i].pObject)->OnObjectDelete(m_dwId);
    }
    if (!bIndexLocked)
       RWLockUnlock(g_rwlockIdIndex);

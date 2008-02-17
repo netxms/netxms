@@ -37,33 +37,38 @@ void NetObjDelete(NetObj *pObject);
 void SaveObjects(DB_HANDLE hdb)
 {
    DWORD i;
+   NetObj *pObject;
 
    // Delete objects marked for deletion
    RWLockWriteLock(g_rwlockIdIndex, INFINITE);
 delete_loop_start:;
    for(i = 0; i < g_dwIdIndexSize; i++)
-      if (g_pIndexById[i].pObject->IsDeleted())
-         if (g_pIndexById[i].pObject->RefCount() == 0)
+   {
+   	pObject = (NetObj *)g_pIndexById[i].pObject;
+      if (pObject->IsDeleted())
+      {
+         if (pObject->RefCount() == 0)
          {
-            DbgPrintf(4, "* Syncer * Object %d \"%s\" deleted",
-                      g_pIndexById[i].pObject->Id(), g_pIndexById[i].pObject->Name());
-            g_pIndexById[i].pObject->DeleteFromDB();
-            NetObjDelete(g_pIndexById[i].pObject);
+            DbgPrintf(4, _T("* Syncer * Object %d \"%s\" deleted"), pObject->Id(), pObject->Name());
+            pObject->DeleteFromDB();
+            NetObjDelete(pObject);
             goto delete_loop_start;   // Restart loop
          }
          else
          {
             DbgPrintf(3, "* Syncer * Unable to delete object with id %d because it is being referenced %d time(s)",
-                      g_pIndexById[i].pObject->Id(), g_pIndexById[i].pObject->RefCount());
+                      pObject->Id(), pObject->RefCount());
          }
+      }
+   }
    RWLockUnlock(g_rwlockIdIndex);
 
    // Save objects
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
    DBBegin(hdb);
    for(i = 0; i < g_dwIdIndexSize; i++)
-      if (g_pIndexById[i].pObject->IsModified())
-         g_pIndexById[i].pObject->SaveToDB(hdb);
+      if (((NetObj *)g_pIndexById[i].pObject)->IsModified())
+         ((NetObj *)g_pIndexById[i].pObject)->SaveToDB(hdb);
    DBCommit(hdb);
    RWLockUnlock(g_rwlockIdIndex);
 }

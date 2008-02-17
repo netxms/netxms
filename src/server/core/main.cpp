@@ -559,6 +559,11 @@ retry_db_lock:
 		return FALSE;
 	LoadMaps();
 	DbgPrintf(1, "Objects loaded and initialized");
+	
+	// Initialize situations
+	if (!SituationsInit())
+		return FALSE;
+	DbgPrintf(1, "Situations loaded and initialized");
 
 	// Initialize and load event actions
 	if (!InitActions())
@@ -778,12 +783,12 @@ static void DumpIndex(CONSOLE_CTX pCtx, RWLOCK hLock, INDEX *pIndex, DWORD dwSiz
 		{
 			ConsolePrintf(pCtx, "%08X [%-15s] %p %s\n", pIndex[i].dwKey,
 					IpToStr(pIndex[i].dwKey, szIpAddr),
-					pIndex[i].pObject, pIndex[i].pObject->Name());
+					pIndex[i].pObject, ((NetObj *)pIndex[i].pObject)->Name());
 		}
 		else
 		{
 			ConsolePrintf(pCtx, "%08X %p %s\n", pIndex[i].dwKey, pIndex[i].pObject,
-					pIndex[i].pObject->Name());
+					((NetObj *)pIndex[i].pObject)->Name());
 		}
 	}
 

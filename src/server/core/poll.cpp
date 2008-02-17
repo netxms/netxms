@@ -562,7 +562,7 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
       RWLockReadLock(g_rwlockIdIndex, INFINITE);
       for(j = 0; j < g_dwIdIndexSize; j++)
       {
-			switch(g_pIndexById[j].pObject->Type())
+			switch(((NetObj *)g_pIndexById[j].pObject)->Type())
 			{
 				case OBJECT_NODE:
 					pNode = (Node *)g_pIndexById[j].pObject;

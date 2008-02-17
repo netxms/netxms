@@ -1084,7 +1084,7 @@ public:
 struct INDEX
 {
    DWORD dwKey;
-   NetObj *pObject;
+   void *pObject;
 };
 
 

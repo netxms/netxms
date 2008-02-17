@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.293 2008-02-17 09:02:06 victor Exp $ */
+/* $Id: session.cpp,v 1.294 2008-02-17 12:22:06 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -1708,13 +1708,13 @@ void ClientSession::SendAllObjects(CSCPMessage *pRequest)
    // Send objects, one per message
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
-      if ((g_pIndexById[i].pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
-          (g_pIndexById[i].pObject->TimeStamp() >= dwTimeStamp) &&
-          (!g_pIndexById[i].pObject->IsHidden()))
+      if ((((NetObj *)g_pIndexById[i].pObject)->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ)) &&
+          (((NetObj *)g_pIndexById[i].pObject)->TimeStamp() >= dwTimeStamp) &&
+          (!(((NetObj *)g_pIndexById[i].pObject)->IsHidden())))
       {
-         g_pIndexById[i].pObject->CreateMessage(&msg);
+         ((NetObj *)g_pIndexById[i].pObject)->CreateMessage(&msg);
          if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
-            g_pIndexById[i].pObject->CommentsToMessage(&msg);
+            ((NetObj *)g_pIndexById[i].pObject)->CommentsToMessage(&msg);
          SendMessage(&msg);
          msg.DeleteAllVariables();
       }

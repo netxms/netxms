@@ -224,7 +224,7 @@ static int IndexCompare(const void *pArg1, const void *pArg2)
 // Add new object to index
 //
 
-static void AddObjectToIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dwKey, NetObj *pObject)
+void AddObjectToIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dwKey, void *pObject)
 {
    *ppIndex = (INDEX *)realloc(*ppIndex, sizeof(INDEX) * ((*pdwIndexSize) + 1));
    (*ppIndex)[*pdwIndexSize].dwKey = dwKey;
@@ -240,7 +240,7 @@ static void AddObjectToIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dwKey, 
 // We assume that pIndex == NULL will not be passed
 //
 
-static DWORD SearchIndex(INDEX *pIndex, DWORD dwIndexSize, DWORD dwKey)
+DWORD SearchIndex(INDEX *pIndex, DWORD dwIndexSize, DWORD dwKey)
 {
    DWORD dwFirst, dwLast, dwMid;
 
@@ -272,7 +272,7 @@ static DWORD SearchIndex(INDEX *pIndex, DWORD dwIndexSize, DWORD dwKey)
 // Delete object from index
 //
 
-static void DeleteObjectFromIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dwKey)
+void DeleteObjectFromIndex(INDEX **ppIndex, DWORD *pdwIndexSize, DWORD dwKey)
 {
    DWORD dwPos;
    INDEX *pIndex = *ppIndex;
@@ -539,7 +539,7 @@ NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId)
 
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
    dwPos = SearchIndex(g_pIndexById, g_dwIdIndexSize, dwId);
-   pObject = (dwPos == INVALID_INDEX) ? NULL : g_pIndexById[dwPos].pObject;
+   pObject = (dwPos == INVALID_INDEX) ? NULL : (NetObj *)g_pIndexById[dwPos].pObject;
    RWLockUnlock(g_rwlockIdIndex);
    return pObject;
 }
@@ -560,9 +560,9 @@ NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *pszName)
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
    {
-      if (!_tcsicmp(g_pIndexById[i].pObject->Name(), pszName))
+      if (!_tcsicmp(((NetObj *)g_pIndexById[i].pObject)->Name(), pszName))
       {
-         pObject = g_pIndexById[i].pObject;
+         pObject = (NetObj *)g_pIndexById[i].pObject;
          break;
       }
    }
@@ -586,8 +586,8 @@ Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName)
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
    {
-      if ((g_pIndexById[i].pObject->Type() == OBJECT_TEMPLATE) &&
-			 (!_tcsicmp(g_pIndexById[i].pObject->Name(), pszName)))
+      if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_TEMPLATE) &&
+			 (!_tcsicmp(((NetObj *)g_pIndexById[i].pObject)->Name(), pszName)))
       {
          pObject = (Template *)g_pIndexById[i].pObject;
          break;
@@ -612,7 +612,7 @@ Zone NXCORE_EXPORTABLE *FindZoneByGUID(DWORD dwZoneGUID)
 
    RWLockReadLock(g_rwlockZoneIndex, INFINITE);
    dwPos = SearchIndex(g_pZoneIndexByGUID, g_dwZoneGUIDIndexSize, dwZoneGUID);
-   pObject = (dwPos == INVALID_INDEX) ? NULL : g_pZoneIndexByGUID[dwPos].pObject;
+   pObject = (dwPos == INVALID_INDEX) ? NULL : (NetObj *)g_pZoneIndexByGUID[dwPos].pObject;
    RWLockUnlock(g_rwlockZoneIndex);
    return (pObject->Type() == OBJECT_ZONE) ? (Zone *)pObject : NULL;
 }
@@ -633,7 +633,7 @@ DWORD FindLocalMgmtNode(void)
    for(i = 0; i < g_dwNodeAddrIndexSize; i++)
       if (((Node *)g_pNodeIndexByAddr[i].pObject)->Flags() & NF_IS_LOCAL_MGMT)
       {
-         dwId = g_pNodeIndexByAddr[i].pObject->Id();
+         dwId = ((Node *)g_pNodeIndexByAddr[i].pObject)->Id();
          break;
       }
    RWLockUnlock(g_rwlockNodeIndex);
@@ -990,8 +990,8 @@ BOOL LoadObjects(void)
    // Link childs to container and template group objects
    DbgPrintf(2, "Linking objects...");
    for(i = 0; i < g_dwIdIndexSize; i++)
-      if ((g_pIndexById[i].pObject->Type() == OBJECT_CONTAINER) ||
-          (g_pIndexById[i].pObject->Type() == OBJECT_TEMPLATEGROUP))
+      if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_CONTAINER) ||
+          (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_TEMPLATEGROUP))
          ((Container *)g_pIndexById[i].pObject)->LinkChildObjects();
 
    // Link childs to "Service Root" and "Template Root" objects
@@ -1010,7 +1010,7 @@ BOOL LoadObjects(void)
    if (g_dwFlags & AF_ENABLE_ZONING)
    {
       for(i = 0; i < g_dwZoneGUIDIndexSize; i++)
-         g_pZoneIndexByGUID[i].pObject->CalculateCompoundStatus();
+         ((NetObj *)g_pZoneIndexByGUID[i].pObject)->CalculateCompoundStatus();
    }
 
 	// Apply system templates
@@ -1029,7 +1029,7 @@ BOOL LoadObjects(void)
 	pTemplate->ValidateSystemTemplate();
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
 	for(j = 0; j < g_dwIdIndexSize; j++)
-		if (g_pIndexById[j].pObject->Type() == OBJECT_NODE)
+		if (((NetObj *)g_pIndexById[j].pObject)->Type() == OBJECT_NODE)
 		{
 			if (((Node *)g_pIndexById[j].pObject)->IsNativeAgent())
 				pTemplate->ApplyToNode((Node *)g_pIndexById[j].pObject);
@@ -1049,7 +1049,7 @@ BOOL LoadObjects(void)
 	pTemplate->ValidateSystemTemplate();
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
 	for(j = 0; j < g_dwIdIndexSize; j++)
-		if (g_pIndexById[j].pObject->Type() == OBJECT_NODE)
+		if (((NetObj *)g_pIndexById[j].pObject)->Type() == OBJECT_NODE)
 		{
 			if (((Node *)g_pIndexById[j].pObject)->IsSNMPSupported())
 				pTemplate->ApplyToNode((Node *)g_pIndexById[j].pObject);
@@ -1071,7 +1071,7 @@ void DeleteUserFromAllObjects(DWORD dwUserId)
    // Walk through all objects
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
-      g_pIndexById[i].pObject->DropUserAccess(dwUserId);
+      ((NetObj *)g_pIndexById[i].pObject)->DropUserAccess(dwUserId);
    RWLockUnlock(g_rwlockIdIndex);
 }
 
@@ -1085,43 +1085,43 @@ void DumpObjects(CONSOLE_CTX pCtx)
    DWORD i;
    char *pBuffer;
    CONTAINER_CATEGORY *pCat;
+   NetObj *pObject;
 
    pBuffer = (char *)malloc(128000);
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
    {
+   	pObject = (NetObj *)g_pIndexById[i].pObject;
       ConsolePrintf(pCtx, "Object ID %d \"%s\"\n"
                           "   Class: %s  Primary IP: %s  Status: %s  IsModified: %d  IsDeleted: %d\n",
-                    g_pIndexById[i].pObject->Id(),g_pIndexById[i].pObject->Name(),
-                    g_szClassName[g_pIndexById[i].pObject->Type()],
-                    IpToStr(g_pIndexById[i].pObject->IpAddr(), pBuffer),
-                    g_szStatusTextSmall[g_pIndexById[i].pObject->Status()],
-                    g_pIndexById[i].pObject->IsModified(), g_pIndexById[i].pObject->IsDeleted());
+                    pObject->Id(), pObject->Name(), g_szClassName[pObject->Type()],
+                    IpToStr(pObject->IpAddr(), pBuffer),
+                    g_szStatusTextSmall[pObject->Status()],
+                    pObject->IsModified(), pObject->IsDeleted());
       ConsolePrintf(pCtx, "   Parents: <%s>\n   Childs: <%s>\n", 
-                    g_pIndexById[i].pObject->ParentList(pBuffer),
-                    g_pIndexById[i].pObject->ChildList(&pBuffer[4096]));
-      ConsolePrintf(pCtx, "   Last change: %s", g_pIndexById[i].pObject->TimeStampAsText());
-      switch(g_pIndexById[i].pObject->Type())
+                    pObject->ParentList(pBuffer), pObject->ChildList(&pBuffer[4096]));
+      ConsolePrintf(pCtx, "   Last change: %s", pObject->TimeStampAsText());
+      switch(pObject->Type())
       {
          case OBJECT_NODE:
             ConsolePrintf(pCtx, "   IsSNMP: %d IsAgent: %d IsLocal: %d OID: %s\n",
-                          ((Node *)(g_pIndexById[i].pObject))->IsSNMPSupported(),
-                          ((Node *)(g_pIndexById[i].pObject))->IsNativeAgent(),
-                          ((Node *)(g_pIndexById[i].pObject))->IsLocalManagement(),
-                          ((Node *)(g_pIndexById[i].pObject))->ObjectId());
+                          ((Node *)pObject)->IsSNMPSupported(),
+                          ((Node *)pObject)->IsNativeAgent(),
+                          ((Node *)pObject)->IsLocalManagement(),
+                          ((Node *)pObject)->ObjectId());
             break;
          case OBJECT_SUBNET:
             ConsolePrintf(pCtx, "   Network mask: %s\n", 
-                          IpToStr(((Subnet *)g_pIndexById[i].pObject)->IpNetMask(), pBuffer));
+                          IpToStr(((Subnet *)pObject)->IpNetMask(), pBuffer));
             break;
          case OBJECT_CONTAINER:
-            pCat = FindContainerCategory(((Container *)g_pIndexById[i].pObject)->Category());
+            pCat = FindContainerCategory(((Container *)pObject)->Category());
             ConsolePrintf(pCtx, "   Category: %s\n", pCat ? pCat->szName : "<unknown>");
             break;
          case OBJECT_TEMPLATE:
             ConsolePrintf(pCtx, "   Version: %d.%d\n", 
-                          ((Template *)(g_pIndexById[i].pObject))->VersionMajor(),
-                          ((Template *)(g_pIndexById[i].pObject))->VersionMinor());
+                          ((Template *)(pObject))->VersionMajor(),
+                          ((Template *)(pObject))->VersionMinor());
             break;
       }
    }

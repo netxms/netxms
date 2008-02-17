@@ -24,6 +24,15 @@
 
 
 //
+// Static data
+//
+
+static INDEX *m_pSituationIndex = NULL;
+static DWORD m_dwSituationIndexSize = 0;
+static RWLOCK m_rwlockSituationIndex;
+
+
+//
 // SituationInstance constructor
 //
 
@@ -105,10 +114,70 @@ void Situation::UpdateSituation(const TCHAR *instance, const TCHAR *attribute, c
 
 
 //
+// Initialize situations
+//
+
+BOOL SituationsInit(void)
+{
+	DWORD i;
+	DB_RESULT result;
+	BOOL success = TRUE;
+	
+   m_rwlockSituationIndex = RWLockCreate();
+   
+   // Load situations from database
+   result = DBSelect(g_hCoreDB, _T("SELECT id,name,comments FROM situations ORDER BY id"));
+   if (result != NULL)
+   {
+   	m_dwSituationIndexSize = DBGetNumRows(result);
+   	m_pSituationIndex = (INDEX *)realloc(m_pSituationIndex, sizeof(INDEX) * m_dwSituationIndexSize);
+   	for(i = 0; i < m_dwSituationIndexSize; i++)
+   	{
+   		m_pSituationIndex[i].dwKey = DBGetFieldULong(result, i, 0);
+   		m_pSituationIndex[i].pObject = (NetObj *)(new Situation(result, i));
+		}
+   	DBFreeResult(result);
+	}
+	else
+	{
+		DbgPrintf(3, _T("Cannot load situations from database due to DBSelect() failure"));
+		success = FALSE;
+	}
+	return success;
+}
+
+
+//
 // Find situation by ID
 //
 
 Situation *FindSituationById(DWORD dwId)
 {
-	return NULL;
+   DWORD dwPos;
+   Situation *st;
+
+   if (m_pSituationIndex == NULL)
+      return NULL;
+
+   RWLockReadLock(m_rwlockSituationIndex, INFINITE);
+   dwPos = SearchIndex(m_pSituationIndex, m_dwSituationIndexSize, dwId);
+   st = (dwPos == INVALID_INDEX) ? NULL : (Situation *)m_pSituationIndex[dwPos].pObject;
+   RWLockUnlock(m_rwlockSituationIndex);
+   return st;
 }
+
+
+//
+// Create new situation
+//
+
+Situation *CreateSituation(const TCHAR *name)
+{
+	Situation *st;
+	
+	st = new Situation(name);
+   RWLockWriteLock(m_rwlockSituationIndex, INFINITE);
+   AddObjectToIndex(&m_pSituationIndex, &m_dwSituationIndexSize, st->GetId(), st);
+   RWLockUnlock(m_rwlockSituationIndex);
+}
+

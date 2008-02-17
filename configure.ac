@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.289 2008-02-17 11:13:51 victor Exp $
+# $Id: configure.ac,v 1.290 2008-02-17 12:22:05 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -1323,7 +1323,7 @@ AC_SUBST(WXRC)
 #	only the first ever interface is implemented, so age can only be `0'. 
 #--------------------------------------------------------------------
 
-NETXMS_LIBRARY_VERSION=0:2:20
+NETXMS_LIBRARY_VERSION=0:2:0
 AC_SUBST(NETXMS_LIBRARY_VERSION)
 
 

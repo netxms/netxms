@@ -83,12 +83,12 @@ static void DeleteEmptySubnets(void)
 
    // Walk through subnets and delete empty ones
    for(i = 0; i < g_dwIdIndexSize; i++)
-      if (g_pIndexById[i].pObject->Type() == OBJECT_SUBNET)
+      if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_SUBNET)
       {
-         if (g_pIndexById[i].pObject->IsEmpty())
+         if (((NetObj *)g_pIndexById[i].pObject)->IsEmpty())
          {
-            PostEvent(EVENT_SUBNET_DELETED, g_pIndexById[i].pObject->Id(), NULL);
-            g_pIndexById[i].pObject->Delete(TRUE);
+            PostEvent(EVENT_SUBNET_DELETED, ((NetObj *)g_pIndexById[i].pObject)->Id(), NULL);
+            ((NetObj *)g_pIndexById[i].pObject)->Delete(TRUE);
          }
       }
 

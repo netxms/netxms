@@ -187,7 +187,7 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
       for(i = 0; i < g_dwNodeAddrIndexSize; i++)
 		{
 			DbgPrintf(7, _T("ItemPoller: (%d) calling QueueItemsForPolling for node %s [%d]"),
-			          i, g_pNodeIndexByAddr[i].pObject->Name(), g_pNodeIndexByAddr[i].pObject->Id());
+			          i, ((Node *)g_pNodeIndexByAddr[i].pObject)->Name(), ((Node *)g_pNodeIndexByAddr[i].pObject)->Id());
          ((Node *)g_pNodeIndexByAddr[i].pObject)->QueueItemsForPolling(g_pItemQueue);
 		}
       RWLockUnlock(g_rwlockNodeIndex);
