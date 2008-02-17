@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.288 2008-02-14 19:38:55 victor Exp $
+# $Id: configure.ac,v 1.289 2008-02-17 11:13:51 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -241,6 +241,7 @@ AC_ARG_WITH(dist,
 	CLIENT_COMPONENTS="console nxalarm nxsms"
 	UNSTABLE_SUBAGENT_DIRS="logscan odbcquery"
 	SERVER_TOOLS="nxconfig"
+	NEED_WXWIDGETS="yes"
 )
 
 
@@ -1322,7 +1323,7 @@ AC_SUBST(WXRC)
 #	only the first ever interface is implemented, so age can only be `0'. 
 #--------------------------------------------------------------------
 
-NETXMS_LIBRARY_VERSION=0:2:0
+NETXMS_LIBRARY_VERSION=0:2:20
 AC_SUBST(NETXMS_LIBRARY_VERSION)
 
 
