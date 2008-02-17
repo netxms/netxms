@@ -38,6 +38,11 @@
 #define NX_STYLE_SYMBOL       6
 #define NX_STYLE_SECTION      7
 #define NX_STYLE_ML_COMMENT   8
+#define NX_STYLE_TIMESTAMP    9
+#define NX_STYLE_POLL_INFO    10
+#define NX_STYLE_POLL_WARNING 11
+#define NX_STYLE_POLL_ERROR   12
+#define NX_STYLE_HIDDEN       13
 
 
 #endif

@@ -36,6 +36,7 @@ public:
 	void EmptyUndoBuffer(void);
 	void SetSavePoint(void);
 	void SetKeywords(int nSet, char *pszKeywordList);
+	void SetReadOnly(BOOL readOnly);
 	BOOL GetModify(void);
 	void Refresh(void);
 	BOOL SetLexer(char *pszLexerName);
@@ -53,6 +54,7 @@ public:
 	void Cut(void);
 	void GetText(CString &strText);
 	void SetText(LPCTSTR lpszText);
+	void AppendText(LPCTSTR text, BOOL scrollDown);
 	BOOL Create(LPCTSTR lpszWindowName, DWORD dwStyle, const RECT &rect,
                CWnd *pParentWnd, UINT nID, DWORD dwExStyle = 0);
 	virtual ~CScintillaCtrl();

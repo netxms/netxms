@@ -249,6 +249,7 @@
 #define IDD_DISCOVERY_COMMUNITIES       375
 #define IDI_STOP                        376
 #define IDD_EDIT_RULE_OPTIONS           377
+#define IDA_NODE_POLLER                 378
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -940,6 +941,7 @@
 #define ID_MAP_AUTOLAYOUT               33079
 #define ID_LATSTVALUES_USEMULTIPLIERS   33080
 #define ID_OBJECT_POLL_INTERFACE_NAMES  33081
+#define ID_POLLER_COPYTOCLIPBOARD       33082
 #define ID_ALWAYS_DISABLED              43210
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
@@ -950,8 +952,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        378
-#define _APS_NEXT_COMMAND_VALUE         33082
+#define _APS_NEXT_RESOURCE_VALUE        379
+#define _APS_NEXT_COMMAND_VALUE         33084
 #define _APS_NEXT_CONTROL_VALUE         1515
 #define _APS_NEXT_SYMED_VALUE           135
 #endif

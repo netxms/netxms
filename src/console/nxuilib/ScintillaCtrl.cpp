@@ -77,6 +77,34 @@ void CScintillaCtrl::SetText(LPCTSTR lpszText)
 
 
 //
+// Append text and scroll to it if requested
+//
+
+void CScintillaCtrl::AppendText(LPCTSTR text, BOOL scrollDown)
+{
+   if (text != NULL)
+   {
+#ifdef _UNICODE
+      char *buffer;
+      int size;
+
+      size = wcslen(text) * 4 + 1;
+      buffer = (char *)malloc(size);
+      WideCharToMultiByte(CP_UTF8, 0, text, -1, buffer, size, NULL, NULL);
+      SendMessage(SCI_APPENDTEXT, strlen(buffer), (LPARAM)buffer);
+      free(buffer);
+#else
+      SendMessage(SCI_APPENDTEXT, strlen(text), (LPARAM)text);
+#endif
+   }
+	if (scrollDown)
+	{
+		GotoPosition(SendMessage(SCI_GETTEXTLENGTH, 0, 0));
+	}
+}
+
+
+//
 // Get text from control
 //
 
@@ -287,6 +315,16 @@ void CScintillaCtrl::SetSavePoint()
 
 
 //
+// Mark document as read-only
+//
+
+void CScintillaCtrl::SetReadOnly(BOOL readOnly)
+{
+	SendMessage(SCI_SETREADONLY, readOnly, 0);
+}
+
+
+//
 // Empty undo/redo buffer
 //
 
@@ -313,6 +351,7 @@ void CScintillaCtrl::SetDefaults(void)
    SendMessage(SCI_STYLESETFONT, STYLE_DEFAULT, (LPARAM)"Courier New");
    SendMessage(SCI_STYLESETSIZE, STYLE_DEFAULT, 10);
    SendMessage(SCI_STYLECLEARALL, 0, 0);
+   //SendMessage(SCI_SETCONTROLCHARSYMBOL, 32, 0);
 
    // Set tab width and indentation to 3 characters
    SendMessage(SCI_SETTABWIDTH, 3, 0);
@@ -325,6 +364,8 @@ void CScintillaCtrl::SetDefaults(void)
 
    // Set default styles
    SendMessage(SCI_STYLESETFORE, NX_STYLE_DEFAULT, RGB(0, 0, 0));
+
+   SendMessage(SCI_STYLESETVISIBLE, NX_STYLE_HIDDEN, FALSE);
 
    SendMessage(SCI_STYLESETFORE, NX_STYLE_COMMENT, RGB(128, 128, 128));
    //SendMessage(SCI_STYLESETITALIC, NX_STYLE_COMMENT, TRUE);
@@ -350,6 +391,17 @@ void CScintillaCtrl::SetDefaults(void)
    SendMessage(SCI_STYLESETBACK, NX_STYLE_SECTION, RGB(128, 128, 255));
    SendMessage(SCI_STYLESETBOLD, NX_STYLE_SECTION, TRUE);
    SendMessage(SCI_STYLESETEOLFILLED, NX_STYLE_SECTION, TRUE);
+
+   SendMessage(SCI_STYLESETFORE, NX_STYLE_TIMESTAMP, RGB(0, 0, 192));
+
+   SendMessage(SCI_STYLESETFORE, NX_STYLE_POLL_INFO, RGB(0, 128, 0));
+   SendMessage(SCI_STYLESETBOLD, NX_STYLE_POLL_INFO, TRUE);
+
+   SendMessage(SCI_STYLESETFORE, NX_STYLE_POLL_WARNING, RGB(255, 128, 0));
+   SendMessage(SCI_STYLESETBOLD, NX_STYLE_POLL_WARNING, TRUE);
+
+   SendMessage(SCI_STYLESETFORE, NX_STYLE_POLL_ERROR, RGB(192, 0, 0));
+   SendMessage(SCI_STYLESETBOLD, NX_STYLE_POLL_ERROR, TRUE);
 
    // Selection colors
    SendMessage(SCI_SETSELFORE, TRUE, RGB(255, 255, 255));

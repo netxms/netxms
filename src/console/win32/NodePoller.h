@@ -35,7 +35,7 @@ protected:
 	void PrintMsg(TCHAR *pszMsg);
 	BOOL m_bPollingStopped;
 	CFont m_font;
-	CListCtrl m_wndMsgArea;
+	CScintillaCtrl m_wndMsgArea;
 	DWORD m_dwResult;
 	virtual ~CNodePoller();
 
@@ -45,6 +45,9 @@ protected:
 	afx_msg void OnPollRestart();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	afx_msg void OnPollerCopytoclipboard();
+	afx_msg void OnUpdatePollerCopytoclipboard(CCmdUI* pCmdUI);
+	afx_msg void OnEditSelectAll();
 	//}}AFX_MSG
    afx_msg void OnRequestCompleted(WPARAM wParam, LPARAM lParam);
    afx_msg void OnPollerMessage(WPARAM wParam, LPARAM lParam);

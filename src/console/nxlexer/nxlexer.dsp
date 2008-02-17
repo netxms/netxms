@@ -116,6 +116,10 @@ SOURCE=.\nxlexer.def
 
 SOURCE=.\nxsl.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\poll.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 

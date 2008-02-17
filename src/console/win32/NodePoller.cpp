@@ -32,6 +32,9 @@ BEGIN_MESSAGE_MAP(CNodePoller, CMDIChildWnd)
 	ON_COMMAND(ID_POLL_RESTART, OnPollRestart)
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
+	ON_COMMAND(ID_POLLER_COPYTOCLIPBOARD, OnPollerCopytoclipboard)
+	ON_UPDATE_COMMAND_UI(ID_POLLER_COPYTOCLIPBOARD, OnUpdatePollerCopytoclipboard)
+	ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_REQUEST_COMPLETED, OnRequestCompleted)
    ON_MESSAGE(NXCM_POLLER_MESSAGE, OnPollerMessage)
@@ -54,16 +57,10 @@ int CNodePoller::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
    // Create and setup message area
    GetClientRect(&rect);
-   m_wndMsgArea.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_NOCOLUMNHEADER,
-                       rect, this, ID_LIST_VIEW);
-   m_font.CreateFont(-MulDiv(8, GetDeviceCaps(GetDC()->m_hDC, LOGPIXELSY), 72),
-                     0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-                     OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-                     FIXED_PITCH | FF_DONTCARE, _T("Courier New"));
-   m_wndMsgArea.SetFont(&m_font);
-
-   m_wndMsgArea.InsertColumn(0, _T("Message"));
-   m_wndMsgArea.SetColumnWidth(0, LVSCW_AUTOSIZE);
+   m_wndMsgArea.Create(_T("Edit"), WS_CHILD | WS_VISIBLE, rect, this, ID_EDIT_CTRL);
+   m_wndMsgArea.LoadLexer("nxlexer.dll");
+   m_wndMsgArea.SetLexer("nxpoll");
+	//m_wndMsgArea.SetReadOnly(TRUE);
 
    return 0;
 }
@@ -77,8 +74,9 @@ void CNodePoller::OnPollRestart()
 {
    if (m_bPollingStopped)
    {
-      m_wndMsgArea.DeleteAllItems();
-      PrintMsg(_T("Sending poll request to server..."));
+      //m_wndMsgArea.DeleteAllItems();
+		m_wndMsgArea.Clear();
+      PrintMsg(_T("Sending poll request to server...\r\n"));
       m_bPollingStopped = FALSE;
       m_data.pArg1 = (void *)m_dwObjectId;
       m_data.pArg2 = (void *)m_iPollType;
@@ -98,13 +96,13 @@ void CNodePoller::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
    m_bPollingStopped = TRUE;
    if (m_dwResult == RCC_SUCCESS)
    {
-      PrintMsg(_T("Poll completed successfully"));
+      PrintMsg(_T("Poll completed successfully\r\n"));
    }
    else
    {
       TCHAR szBuffer[1024];
 
-      _sntprintf(szBuffer, 1024, _T("Poll failed (%s)"), NXCGetErrorText(m_dwResult));
+      _sntprintf(szBuffer, 1024, _T("\x7F") _T("ePoll failed (%s)\r\n"), NXCGetErrorText(m_dwResult));
       PrintMsg(szBuffer);
    }
 }
@@ -130,27 +128,13 @@ void CNodePoller::OnPollerMessage(WPARAM wParam, LPARAM lParam)
 
 void CNodePoller::PrintMsg(TCHAR *pszMsg)
 {
-   TCHAR *pszCurr, *pszNext, szBuffer[1024];
-   int iItem;
+	TCHAR buffer[256];
 
-   for(pszCurr = pszMsg; pszCurr != NULL; pszCurr = pszNext)
-   {
-      pszNext = _tcsstr(pszCurr, _T("\r\n"));
-      if (pszNext != NULL)
-      {
-         nx_strncpy(szBuffer, pszCurr, min(pszNext - pszCurr + 1, 1024));
-         iItem = m_wndMsgArea.InsertItem(0x7FFFFFFF, szBuffer);
-         pszNext += 2;
-         if (*pszNext == 0)
-            break;
-      }
-      else
-      {
-         iItem = m_wndMsgArea.InsertItem(0x7FFFFFFF, pszCurr);
-      }
-   }
-   m_wndMsgArea.SetColumnWidth(0, LVSCW_AUTOSIZE);
-   m_wndMsgArea.EnsureVisible(iItem, FALSE);
+	buffer[0] = _T('[');
+	FormatTimeStamp(time(NULL), &buffer[1], TS_LONG_DATE_TIME);
+	_tcscat(buffer, _T("] "));
+	m_wndMsgArea.AppendText(buffer, FALSE);
+	m_wndMsgArea.AppendText(pszMsg, TRUE);
 }
 
 
@@ -173,4 +157,29 @@ void CNodePoller::OnSetFocus(CWnd* pOldWnd)
 {
 	CMDIChildWnd::OnSetFocus(pOldWnd);
    m_wndMsgArea.SetFocus();
+}
+
+
+//
+// Copy text to clipboard
+//
+
+void CNodePoller::OnPollerCopytoclipboard() 
+{
+	m_wndMsgArea.Copy();
+}
+
+void CNodePoller::OnUpdatePollerCopytoclipboard(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(TRUE);
+}
+
+
+//
+// Handler for "Select all"
+//
+
+void CNodePoller::OnEditSelectAll() 
+{
+	m_wndMsgArea.SelectAll();
 }

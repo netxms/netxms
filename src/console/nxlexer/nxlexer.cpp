@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Lexer for Scintilla
-** Copyright (C) 2006 Victor Kirhenshtein
+** Copyright (C) 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxlexer.cpp
+** File: nxlexer.cpp
 **
 **/
 
@@ -38,6 +38,8 @@
 void ConfigLexer(UINT nStartPos, int nLen, int nInitStyle,
                  char **ppszWords, WindowAccessor &acc);
 void NXSLLexer(UINT nStartPos, int nLen, int nInitStyle,
+               char **ppszWords, WindowAccessor &acc);
+void PollLexer(UINT nStartPos, int nLen, int nInitStyle,
                char **ppszWords, WindowAccessor &acc);
 
 
@@ -66,7 +68,7 @@ BOOL IsKeyword(char *pszList, char *pszWord)
 
 extern "C" int LEXER_CALL GetLexerCount(void)
 {
-   return 2;
+   return 3;
 }
 
 
@@ -83,6 +85,9 @@ extern "C" void LEXER_CALL GetLexerName(UINT nIndex, char *pszBuffer, int nBufLe
          break;
       case 1:
          nx_strncpy(pszBuffer, "nxsl", nBufLen);
+         break;
+      case 2:
+         nx_strncpy(pszBuffer, "nxpoll", nBufLen);
          break;
       default:
          break;
@@ -110,6 +115,9 @@ extern "C" void LEXER_CALL Lex(UINT nIndex, UINT nStartPos, int nLen,
          break;
       case 1:
          NXSLLexer(nStartPos, nLen, nStyle, ppszWords, acc);
+         break;
+      case 2:
+         PollLexer(nStartPos, nLen, nStyle, ppszWords, acc);
          break;
       default:
          break;

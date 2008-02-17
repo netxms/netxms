@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Lexer for Scintilla
-** Copyright (C) 2006 Victor Kirhenshtein
+** Copyright (C) 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: config.cpp
+** File: config.cpp
 **
 **/
 
@@ -28,7 +28,7 @@
 // Check if we are at line start
 //
 
-static BOOL IsLineStart(WindowAccessor &acc, int nPos)
+BOOL IsLineStart(WindowAccessor &acc, int nPos)
 {
    int i;
    char ch;

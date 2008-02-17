@@ -450,6 +450,10 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hCertManagerMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
    InsertMenu(m_hCertManagerMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 25), _T("&Certificate"));
 
+   m_hNodePollerMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hNodePollerMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hNodePollerMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 26), _T("&Poller"));
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -473,6 +477,7 @@ BOOL CConsoleApp::InitInstance()
 	m_hAgentCfgMgrAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_AGENT_CONFIG_MANAGER));
 	m_hObjectCommentsAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_OBJECT_COMMENTS));
 	m_hCertManagerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_CERT_MANAGER));
+	m_hNodePollerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_NODE_POLLER));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)
@@ -561,6 +566,8 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hObjectCommentsAccel);
    SafeFreeResource(m_hCertManagerMenu);
    SafeFreeResource(m_hCertManagerAccel);
+   SafeFreeResource(m_hNodePollerMenu);
+   SafeFreeResource(m_hNodePollerAccel);
 
    CloseHandle(g_mutexActionListAccess);
    CloseHandle(g_mutexGraphListAccess);
@@ -2422,7 +2429,7 @@ void CConsoleApp::PollNode(DWORD dwObjectId, int iPollType)
    CNodePoller *pWnd;
 
 	pWnd = (CNodePoller *)pFrame->CreateNewChild(
-		RUNTIME_CLASS(CNodePoller), IDR_NODE_POLLER, m_hMDIMenu, m_hMDIAccel);
+		RUNTIME_CLASS(CNodePoller), IDR_NODE_POLLER, m_hNodePollerMenu, m_hNodePollerAccel);
    if (pWnd != NULL)
    {
       pWnd->m_dwObjectId = dwObjectId;

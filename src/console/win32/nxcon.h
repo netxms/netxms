@@ -227,6 +227,8 @@ protected:
 	HACCEL m_hObjectCommentsAccel;// Accelerator for object comments editor
 	HMENU m_hCertManagerMenu;     // Menu for certificate manager
 	HACCEL m_hCertManagerAccel;   // Accelerator for certificate manager
+	HMENU m_hNodePollerMenu;      // Menu for node poller
+	HACCEL m_hNodePollerAccel;    // Accelerator for node poller
 	
 public:
 	CMDIChildWnd *FindObjectView(DWORD dwClass, DWORD dwId);
