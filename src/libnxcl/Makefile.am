@@ -4,7 +4,8 @@ SOURCES = actions.cpp agentcfg.cpp alarms.cpp cert.cpp comm.cpp \
           datacoll.cpp epp.cpp eventdb.cpp events.cpp graph.cpp \
           image.cpp layer2.cpp lpp.cpp main.cpp map.cpp mib.cpp \
           mp.cpp objects.cpp objtools.cpp package.cpp script.cpp \
-          server.cpp session.cpp snmptrap.cpp snmp.cpp users.cpp
+          server.cpp session.cpp situation.cpp snmptrap.cpp \
+	  snmp.cpp users.cpp
 
 if BUILD_UNICODE_LIBS
 lib_LTLIBRARIES = libnxcl.la libnxclw.la

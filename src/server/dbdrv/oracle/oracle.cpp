@@ -1,7 +1,7 @@
-/* $Id: oracle.cpp,v 1.4 2007-07-27 12:03:42 victor Exp $ */
+/* $Id: oracle.cpp,v 1.5 2008-02-17 18:44:50 victor Exp $ */
 /* 
 ** Oracle Database Driver
-** Copyright (C) 2007 Victor Kirhenshtein
+** Copyright (C) 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,8 @@
 // API version
 //
 
-extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
+extern "C" int EXPORT drvAPIVersion;
+int EXPORT drvAPIVersion = DBDRV_API_VERSION;
 
 
 //

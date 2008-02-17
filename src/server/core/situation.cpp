@@ -58,6 +58,26 @@ SituationInstance::~SituationInstance()
 
 void SituationInstance::UpdateAttribute(const TCHAR *attribute, const TCHAR *value)
 {
+	m_attributes.Set(attribute, value);
+}
+
+
+//
+// Create NXCP message
+//
+
+DWORD SituationInstance::CreateMessage(CSCPMessage *msg, DWORD baseId)
+{
+	DWORD i, id = baseId;
+	
+	msg->SetVariable(id++, m_name);
+	msg->SetVariable(id++, m_attributes.Size());
+	for(i = 0; i < m_attributes.Size(); i++)
+	{
+		msg->SetVariable(id++, m_attributes.GetKeyByIndex(i));
+		msg->SetVariable(id++, m_attributes.GetValueByIndex(i));
+	}
+	return id;
 }
 
 
@@ -72,6 +92,7 @@ Situation::Situation(const TCHAR *name)
 	m_comments = NULL;
 	m_numInstances = 0;
 	m_instanceList = NULL;
+	m_accessMutex = MutexCreate();
 }
 
 
@@ -85,6 +106,7 @@ Situation::Situation(DB_RESULT handle, int row)
 	m_id = DBGetFieldULong(handle, row, 0);
 	m_name = DBGetField(handle, row, 1, NULL, 0);
 	m_comments = DBGetField(handle, row, 2, NULL, 0);
+	m_accessMutex = MutexCreate();
 }
 
 
@@ -101,6 +123,7 @@ Situation::~Situation()
 	for(i = 0; i < m_numInstances; i++)
 		delete m_instanceList[i];
 	safe_free(m_instanceList);
+	MutexDestroy(m_accessMutex);
 }
 
 
@@ -110,6 +133,103 @@ Situation::~Situation()
 
 void Situation::UpdateSituation(const TCHAR *instance, const TCHAR *attribute, const TCHAR *value)
 {
+	int i;
+
+	Lock();
+	
+	for(i = 0; i < m_numInstances; i++)
+	{
+		if (!_tcsicmp(m_instanceList[i]->GetName(), instance))
+		{
+			m_instanceList[i]->UpdateAttribute(attribute, value);
+			break;
+		}
+	}
+	
+	// Create new instance if needed
+	if (i == m_numInstances)
+	{
+		m_numInstances++;
+		m_instanceList = (SituationInstance **)realloc(m_instanceList, sizeof(SituationInstance *) * m_numInstances);
+		m_instanceList[i] = new SituationInstance(instance);
+		m_instanceList[i]->UpdateAttribute(attribute, value);
+	}
+	
+	Unlock();
+}
+
+
+//
+// Delete instance
+//
+
+BOOL Situation::DeleteInstance(const TCHAR *instance)
+{
+	int i;
+	BOOL success = FALSE;
+
+	Lock();
+	
+	for(i = 0; i < m_numInstances; i++)
+	{
+		if (!_tcsicmp(m_instanceList[i]->GetName(), instance))
+		{
+			delete m_instanceList[i];
+			m_numInstances--;
+			memmove(&m_instanceList[i], &m_instanceList[i + 1], sizeof(SituationInstance *) * (m_numInstances - i));
+			success = TRUE;
+			break;
+		}
+	}
+	
+	Unlock();
+	return success;
+}
+
+
+//
+// Create NXCP message
+//
+
+void Situation::CreateMessage(CSCPMessage *msg)
+{
+	int i;
+	DWORD id;
+	
+	Lock();
+	
+	msg->SetVariable(VID_SITUATION_ID, m_id);
+	msg->SetVariable(VID_NAME, m_name);
+	msg->SetVariable(VID_COMMENTS, m_comments);
+	msg->SetVariable(VID_INSTANCE_COUNT, (DWORD)m_numInstances);
+	
+	for(i = 0, id = VID_INSTANCE_LIST_BASE; i < m_numInstances; i++)
+	{
+		id = m_instanceList[i]->CreateMessage(msg, id);
+	}
+	
+	Unlock();
+}
+
+
+//
+// Update situation configuration from NXCP message
+//
+
+void Situation::UpdateFromMessage(CSCPMessage *msg)
+{
+	Lock();
+	if (msg->IsVariableExist(VID_NAME))
+	{
+		safe_free(m_name);
+		m_name = msg->GetVariableStr(VID_NAME);
+	}
+	if (msg->IsVariableExist(VID_COMMENTS))
+	{
+		safe_free(m_comments);
+		m_comments = msg->GetVariableStr(VID_COMMENTS);
+	}
+	Unlock();
 }
 
 
@@ -151,7 +271,7 @@ BOOL SituationsInit(void)
 // Find situation by ID
 //
 
-Situation *FindSituationById(DWORD dwId)
+Situation *FindSituationById(DWORD id)
 {
    DWORD dwPos;
    Situation *st;
@@ -160,7 +280,7 @@ Situation *FindSituationById(DWORD dwId)
       return NULL;
 
    RWLockReadLock(m_rwlockSituationIndex, INFINITE);
-   dwPos = SearchIndex(m_pSituationIndex, m_dwSituationIndexSize, dwId);
+   dwPos = SearchIndex(m_pSituationIndex, m_dwSituationIndexSize, id);
    st = (dwPos == INVALID_INDEX) ? NULL : (Situation *)m_pSituationIndex[dwPos].pObject;
    RWLockUnlock(m_rwlockSituationIndex);
    return st;
@@ -178,6 +298,60 @@ Situation *CreateSituation(const TCHAR *name)
 	st = new Situation(name);
    RWLockWriteLock(m_rwlockSituationIndex, INFINITE);
    AddObjectToIndex(&m_pSituationIndex, &m_dwSituationIndexSize, st->GetId(), st);
+   RWLockUnlock(m_rwlockSituationIndex);
+}
+
+
+//
+// Delete situation
+//
+
+DWORD DeleteSituation(DWORD id)
+{
+   DWORD dwPos, rcc;
+   Situation *st;
+
+   if (m_pSituationIndex == NULL)
+      return RCC_INVALID_SITUATION_ID;
+
+   RWLockReadLock(m_rwlockSituationIndex, INFINITE);
+   dwPos = SearchIndex(m_pSituationIndex, m_dwSituationIndexSize, id);
+   if (dwPos != INVALID_INDEX)
+   {
+   	delete (Situation *)m_pSituationIndex[dwPos].pObject;
+   	DeleteObjectFromIndex(&m_pSituationIndex, &m_dwSituationIndexSize, id);
+   	rcc = RCC_SUCCESS;
+   }
+   else
+   {
+   	rcc = RCC_INVALID_SITUATION_ID;
+   }
+   RWLockUnlock(m_rwlockSituationIndex);
+   return rcc;
+}
+
+
+//
+// Send all situations to client
+//
+
+void SendSituationListToClient(ClientSession *session, CSCPMessage *msg)
+{
+	DWORD i;
+	
+   RWLockReadLock(m_rwlockSituationIndex, INFINITE);
+   
+	msg->SetVariable(VID_SITUATION_COUNT, m_dwSituationIndexSize);
+	session->SendMessage(msg);
+	
+	msg->SetCode(CMD_SITUATION_DATA);
+	for(i = 0; i < m_dwSituationIndexSize; i++)
+	{
+		msg->DeleteAllVariables();
+		((Situation *)m_pSituationIndex[i].pObject)->CreateMessage(msg);
+		session->SendMessage(msg);
+	}
+	
    RWLockUnlock(m_rwlockSituationIndex);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.118 2008-01-29 00:13:27 victor Exp $ */
+/* $Id: nms_util.h,v 1.119 2008-02-17 18:44:48 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -272,6 +272,7 @@ public:
 
 	void Set(const TCHAR *pszKey, const TCHAR *pszValue);
 	TCHAR *Get(const TCHAR *pszKey);
+	void Delete(const TCHAR *pszKey);
 	void Clear(void);
 
 	DWORD Size(void) { return m_dwSize; }
@@ -593,6 +594,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.118  2008/01/29 00:13:27  victor
+Console is worling on Linux/UNICODE
+
 Revision 1.117  2008/01/28 21:56:53  victor
 Added wrappers for UNIX versions of wprintf functions
 

@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.294 2008-02-17 12:22:06 victor Exp $ */
+/* $Id: session.cpp,v 1.295 2008-02-17 18:44:49 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -159,7 +159,7 @@ static void FillUserInfoMessage(CSCPMessage *pMsg, NETXMS_USER *pUser)
    pMsg->SetVariable(VID_USER_ID, pUser->dwId);
    pMsg->SetVariable(VID_USER_NAME, pUser->szName);
    pMsg->SetVariable(VID_USER_FLAGS, pUser->wFlags);
-   pMsg->SetVariable(VID_USER_SYS_RIGHTS, pUser->wSystemRights);
+   pMsg->SetVariable(VID_USER_SYS_RIGHTS, pUser->dwSystemRights);
    pMsg->SetVariable(VID_USER_FULL_NAME, pUser->szFullName);
    pMsg->SetVariable(VID_USER_DESCRIPTION, pUser->szDescription);
    pMsg->SetVariable(VID_GUID, pUser->guid, UUID_LENGTH);
@@ -180,7 +180,7 @@ static void FillGroupInfoMessage(CSCPMessage *pMsg, NETXMS_USER_GROUP *pGroup)
    pMsg->SetVariable(VID_USER_ID, pGroup->dwId);
    pMsg->SetVariable(VID_USER_NAME, pGroup->szName);
    pMsg->SetVariable(VID_USER_FLAGS, pGroup->wFlags);
-   pMsg->SetVariable(VID_USER_SYS_RIGHTS, pGroup->wSystemRights);
+   pMsg->SetVariable(VID_USER_SYS_RIGHTS, pGroup->dwSystemRights);
    pMsg->SetVariable(VID_USER_DESCRIPTION, pGroup->szDescription);
    pMsg->SetVariable(VID_NUM_MEMBERS, pGroup->dwNumMembers);
    pMsg->SetVariable(VID_GUID, pGroup->guid, UUID_LENGTH);
@@ -1153,6 +1153,21 @@ void ClientSession::ProcessingThread(void)
 				break;
 			case CMD_UPDATE_COMMUNITY_LIST:
 				UpdateCommunityList(pMsg);
+				break;
+			case CMD_GET_SITUATION_LIST:
+				SendSituationList(pMsg->GetId());
+				break;
+			case CMD_CREATE_SITUATION:
+				CreateSituation(pMsg);
+				break;
+			case CMD_UPDATE_SITUATION:
+				UpdateSituation(pMsg);
+				break;
+			case CMD_DELETE_SITUATION:
+				DeleteSituation(pMsg);
+				break;
+			case CMD_DEL_SITUATION_INSTANCE:
+				DeleteSituationInstance(pMsg);
 				break;
          default:
             // Pass message to loaded modules
@@ -2219,7 +2234,7 @@ void ClientSession::UpdateUser(CSCPMessage *pRequest)
          pRequest->GetVariableStr(VID_USER_DESCRIPTION, group.szDescription, MAX_USER_DESCR);
          pRequest->GetVariableStr(VID_USER_NAME, group.szName, MAX_USER_NAME);
          group.wFlags = pRequest->GetVariableShort(VID_USER_FLAGS);
-         group.wSystemRights = pRequest->GetVariableShort(VID_USER_SYS_RIGHTS);
+         group.dwSystemRights = pRequest->GetVariableLong(VID_USER_SYS_RIGHTS);
          group.dwNumMembers = pRequest->GetVariableLong(VID_NUM_MEMBERS);
          group.pMembers = (DWORD *)malloc(sizeof(DWORD) * group.dwNumMembers);
          for(i = 0, dwId = VID_GROUP_MEMBER_BASE; i < group.dwNumMembers; i++, dwId++)
@@ -2236,7 +2251,7 @@ void ClientSession::UpdateUser(CSCPMessage *pRequest)
          pRequest->GetVariableStr(VID_USER_FULL_NAME, user.szFullName, MAX_USER_FULLNAME);
          pRequest->GetVariableStr(VID_USER_NAME, user.szName, MAX_USER_NAME);
          user.wFlags = pRequest->GetVariableShort(VID_USER_FLAGS);
-         user.wSystemRights = pRequest->GetVariableShort(VID_USER_SYS_RIGHTS);
+         user.dwSystemRights = pRequest->GetVariableLong(VID_USER_SYS_RIGHTS);
          user.nAuthMethod = pRequest->GetVariableShort(VID_AUTH_METHOD);
 			user.nCertMappingMethod = pRequest->GetVariableShort(VID_CERT_MAPPING_METHOD);
 			user.pszCertMappingData = pRequest->GetVariableStr(VID_CERT_MAPPING_DATA);
@@ -9290,7 +9305,7 @@ void ClientSession::SendSMS(CSCPMessage *pRequest)
 	msg.SetId(pRequest->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
-	if (ConfigReadInt(_T("AllowDirectSMS"), 0))
+	if ((m_dwSystemAccess & SYSTEM_ACCESS_SEND_SMS) && ConfigReadInt(_T("AllowDirectSMS"), 0))
 	{
 		pRequest->GetVariableStr(VID_RCPT_ADDR, phone, 256);
 		pRequest->GetVariableStr(VID_MESSAGE, message, 256);
@@ -9404,3 +9419,158 @@ void ClientSession::UpdateCommunityList(CSCPMessage *pRequest)
 	
 	SendMessage(&msg);
 }
+
+
+//
+// Send situation list to client
+//
+
+void ClientSession::SendSituationList(DWORD dwRqId)
+{
+   CSCPMessage msg;
+
+	msg.SetId(dwRqId);
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SITUATIONS)
+	{
+		SendSituationListToClient(this, &msg);
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+		SendMessage(&msg);
+	}
+}
+
+
+//
+// Create new situation
+//
+
+void ClientSession::CreateSituation(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   Situation *st;
+   TCHAR name[MAX_DB_STRING];
+
+	msg.SetId(pRequest->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SITUATIONS)
+	{
+		pRequest->GetVariableStr(VID_NAME, name, MAX_DB_STRING);
+		st = ::CreateSituation(name);
+		if (st != NULL)
+		{
+			msg.SetVariable(VID_RCC, RCC_SUCCESS);
+			msg.SetVariable(VID_SITUATION_ID, st->GetId());
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+	
+	SendMessage(&msg);
+}
+
+
+//
+// Update situation
+//
+
+void ClientSession::UpdateSituation(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   Situation *st;
+   
+	msg.SetId(pRequest->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SITUATIONS)
+	{
+		st = FindSituationById(pRequest->GetVariableLong(VID_SITUATION_ID));
+		if (st != NULL)
+		{
+			st->UpdateFromMessage(pRequest);
+			msg.SetVariable(VID_RCC, RCC_SUCCESS);
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_INVALID_SITUATION_ID);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+	
+	SendMessage(&msg);
+}
+
+
+//
+// Delete situation
+//
+
+void ClientSession::DeleteSituation(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   Situation *st;
+   
+	msg.SetId(pRequest->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SITUATIONS)
+	{
+		msg.SetVariable(VID_RCC, ::DeleteSituation(pRequest->GetVariableLong(VID_SITUATION_ID)));
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+	
+	SendMessage(&msg);
+}
+
+
+//
+// Delete situation instance
+//
+
+void ClientSession::DeleteSituationInstance(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   Situation *st;
+   
+	msg.SetId(pRequest->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SITUATIONS)
+	{
+		st = FindSituationById(pRequest->GetVariableLong(VID_SITUATION_ID));
+		if (st != NULL)
+		{
+			TCHAR instance[MAX_DB_STRING];
+			
+			pRequest->GetVariableStr(VID_SITUATION_INSTANCE, instance, MAX_DB_STRING);
+			msg.SetVariable(VID_RCC, st->DeleteInstance(instance) ? RCC_SUCCESS : RCC_INSTANCE_NOT_FOUND);
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_INVALID_SITUATION_ID);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+	
+	SendMessage(&msg);
+}
+

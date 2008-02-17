@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.147 2008-02-17 12:22:07 victor Exp $ */
+/* $Id: nms_core.h,v 1.148 2008-02-17 18:44:50 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -525,6 +525,11 @@ private:
 	void SendSMS(CSCPMessage *pRequest);
 	void SendCommunityList(DWORD dwRqId);
 	void UpdateCommunityList(CSCPMessage *pRequest);
+	void SendSituationList(DWORD dwRqId);
+	void CreateSituation(CSCPMessage *pRequest);
+	void UpdateSituation(CSCPMessage *pRequest);
+	void DeleteSituation(CSCPMessage *pRequest);
+	void DeleteSituationInstance(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

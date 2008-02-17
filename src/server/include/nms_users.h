@@ -49,7 +49,7 @@ typedef struct
    DWORD dwId;
    TCHAR szName[MAX_USER_NAME];
    BYTE passwordHash[SHA1_DIGEST_SIZE];
-   WORD wSystemRights;      // System-wide user's rights
+   DWORD dwSystemRights;      // System-wide user's rights
    WORD wFlags;
    TCHAR szFullName[MAX_USER_FULLNAME];
    TCHAR szDescription[MAX_USER_DESCR];
@@ -69,7 +69,7 @@ typedef struct
 {
    DWORD dwId;
    TCHAR szName[MAX_USER_NAME];
-   WORD wSystemRights;
+   DWORD dwSystemRights;
    WORD wFlags;
    DWORD dwNumMembers;
    DWORD *pMembers;

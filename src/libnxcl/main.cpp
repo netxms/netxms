@@ -309,9 +309,11 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 		_T("Bad certificate"),
 		_T("Invalid certificate ID"),
 		_T("SNMP failure"),
-		_T("Node has no support for layer 2 topology discovery")
+		_T("Node has no support for layer 2 topology discovery"),
+		_T("Invalid situation ID"),
+		_T("Named instance not found")
    };
-   return ((dwError >= 0) && (dwError <= RCC_NO_L2_TOPOLOGY_SUPPORT)) ? pszErrorText[dwError] : _T("No text message for this error");
+   return ((dwError >= 0) && (dwError <= RCC_INSTANCE_NOT_FOUND)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

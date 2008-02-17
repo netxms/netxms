@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.285 2008-02-16 17:05:18 victor Exp $ */
+/* $Id: nxclapi.h,v 1.286 2008-02-17 18:44:48 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -403,6 +403,8 @@ enum
 #define RCC_INVALID_CERT_ID         ((DWORD)74)
 #define RCC_SNMP_FAILURE				((DWORD)75)
 #define RCC_NO_L2_TOPOLOGY_SUPPORT	((DWORD)76)
+#define RCC_INVALID_SITUATION_ID    ((DWORD)77)
+#define RCC_INSTANCE_NOT_FOUND      ((DWORD)78)
 
 
 //
@@ -475,8 +477,10 @@ enum
 #define SYSTEM_ACCESS_VIEW_TRAP_LOG       0x00002000
 #define SYSTEM_ACCESS_MANAGE_MODULES      0x00004000
 #define SYSTEM_ACCESS_MANAGE_AGENT_CFG    0x00008000
+#define SYSTEM_ACCESS_MANAGE_SITUATIONS   0x00010000
+#define SYSTEM_ACCESS_SEND_SMS            0x00020000
 
-#define SYSTEM_ACCESS_FULL                0x0000FFFF
+#define SYSTEM_ACCESS_FULL                0x0003FFFF
 
 
 //
@@ -1126,9 +1130,9 @@ typedef struct
    TCHAR szName[MAX_USER_NAME];
    uuid_t guid;
    DWORD dwId;
+   DWORD dwSystemRights;
    WORD wFlags;
-   WORD wSystemRights;
-   int nAuthMethod;        // Only for users
+   WORD nAuthMethod;        // Only for users
    DWORD dwNumMembers;     // Only for groups
    DWORD *pdwMemberList;   // Only for groups
    TCHAR szFullName[MAX_USER_FULLNAME];    // Only for users
@@ -1718,6 +1722,49 @@ typedef struct
 } NXC_CERT_LIST;
 
 
+
+// All situation stuff will be available only in C++
+#ifdef __cplusplus
+
+//
+// Situation instance
+//
+
+typedef struct
+{
+	TCHAR *m_name;
+	int m_attrCount;
+	StringMap *m_attrList;
+} NXC_SITUATION_INSTANCE;
+
+
+//
+// Situation
+//
+
+typedef struct
+{
+	DWORD m_id;
+	TCHAR *m_name;
+	TCHAR *m_comments;
+	int m_instanceCount;
+	NXC_SITUATION_INSTANCE *m_instanceList;
+} NXC_SITUATION;
+
+
+//
+// Situation list
+//
+
+typedef struct
+{
+	int m_count;
+	NXC_SITUATION *m_situations;
+} NXC_SITUATION_LIST;
+
+#endif	/* __cplusplus */
+
+
 //
 // Functions
 //
@@ -2034,6 +2081,17 @@ DWORD LIBNXCL_EXPORTABLE NXCGetCertificateList(NXC_SESSION hSession, NXC_CERT_LI
 void LIBNXCL_EXPORTABLE NXCDestroyCertificateList(NXC_CERT_LIST *pList);
 
 DWORD LIBNXCL_EXPORTABLE NXCQueryL2Topology(NXC_SESSION hSession, DWORD dwNodeId, void **ppTopology);
+
+DWORD LIBNXCL_EXPORTABLE NXCCreateSituation(NXC_SESSION hSession, const TCHAR *name, const TCHAR *comments, DWORD *pdwId);
+DWORD LIBNXCL_EXPORTABLE NXCModifySituation(NXC_SESSION hSession, DWORD id,
+                                            const TCHAR *name, const TCHAR *comments);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteSituation(NXC_SESSION hSession, DWORD id);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteSituationInstance(NXC_SESSION hSession, DWORD id, const TCHAR *instance);
+
+#ifdef __cplusplus
+DWORD LIBNXCL_EXPORTABLE NXCGetSituationList(NXC_SESSION hSession, NXC_SITUATION_LIST **list);
+void LIBNXCL_EXPORTABLE NXCDestroySituationList(NXC_SITUATION_LIST *list);
+#endif
 
 #ifdef __cplusplus
 }

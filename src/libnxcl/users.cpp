@@ -1,4 +1,4 @@
-/* $Id: users.cpp,v 1.28 2007-03-23 15:59:05 victor Exp $ */
+/* $Id: users.cpp,v 1.29 2008-02-17 18:44:49 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library
@@ -35,7 +35,7 @@ void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser)
    pUser->dwId = pMsg->GetVariableLong(VID_USER_ID);
    pMsg->GetVariableStr(VID_USER_NAME, pUser->szName, MAX_USER_NAME);
    pUser->wFlags = pMsg->GetVariableShort(VID_USER_FLAGS);
-   pUser->wSystemRights = pMsg->GetVariableShort(VID_USER_SYS_RIGHTS);
+   pUser->dwSystemRights = pMsg->GetVariableLong(VID_USER_SYS_RIGHTS);
    pMsg->GetVariableStr(VID_USER_DESCRIPTION, pUser->szDescription, MAX_USER_DESCR);
    pMsg->GetVariableBinary(VID_GUID, pUser->guid, UUID_LENGTH);
 
@@ -185,7 +185,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_SESSION hSession, NXC_USER *pUserInfo
    msg.SetVariable(VID_USER_NAME, pUserInfo->szName);
    msg.SetVariable(VID_USER_DESCRIPTION, pUserInfo->szDescription);
    msg.SetVariable(VID_USER_FLAGS, pUserInfo->wFlags);
-   msg.SetVariable(VID_USER_SYS_RIGHTS, pUserInfo->wSystemRights);
+   msg.SetVariable(VID_USER_SYS_RIGHTS, pUserInfo->dwSystemRights);
 
    // Group-specific fields
    if (pUserInfo->dwId & GROUP_FLAG)

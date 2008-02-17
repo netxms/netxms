@@ -1,7 +1,7 @@
-/* $Id: users.cpp,v 1.46 2007-06-26 15:26:03 victor Exp $ */
+/* $Id: users.cpp,v 1.47 2008-02-17 18:44:50 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -90,9 +90,9 @@ BOOL LoadUsers(void)
          CalculateSHA1Hash((BYTE *)"netxms", 6, g_pUserList[i].passwordHash);
       }
       if (g_pUserList[i].dwId == 0)
-         g_pUserList[i].wSystemRights = SYSTEM_ACCESS_FULL;    // Ignore database value for superuser
+         g_pUserList[i].dwSystemRights = SYSTEM_ACCESS_FULL;    // Ignore database value for superuser
       else
-         g_pUserList[i].wSystemRights = (WORD)DBGetFieldLong(hResult, i, 3);
+         g_pUserList[i].dwSystemRights = DBGetFieldULong(hResult, i, 3);
       g_pUserList[i].wFlags = (WORD)DBGetFieldLong(hResult, i, 4);
       DBGetField(hResult, i, 5, g_pUserList[i].szFullName, MAX_USER_FULLNAME);
       DecodeSQLString(g_pUserList[i].szFullName);
@@ -112,6 +112,7 @@ BOOL LoadUsers(void)
    for(i = 0; i < g_dwNumUsers; i++)
       if (g_pUserList[i].dwId == 0)
          break;
+         
    // Create superuser account if it doesn't exist
    if (i == g_dwNumUsers)
    {
@@ -120,7 +121,7 @@ BOOL LoadUsers(void)
       g_pUserList[i].dwId = 0;
       strcpy(g_pUserList[i].szName, "admin");
       g_pUserList[i].wFlags = UF_MODIFIED | UF_CHANGE_PASSWORD;
-      g_pUserList[i].wSystemRights = SYSTEM_ACCESS_FULL;
+      g_pUserList[i].dwSystemRights = SYSTEM_ACCESS_FULL;
       g_pUserList[i].szFullName[0] = 0;
       strcpy(g_pUserList[i].szDescription, "Built-in system administrator account");
       CalculateSHA1Hash((BYTE *)"netxms", 6, g_pUserList[i].passwordHash);
@@ -143,7 +144,7 @@ BOOL LoadUsers(void)
    {
       g_pGroupList[i].dwId = DBGetFieldULong(hResult, i, 0);
       DBGetField(hResult, i, 1, g_pGroupList[i].szName, MAX_USER_NAME);
-      g_pGroupList[i].wSystemRights = (WORD)DBGetFieldLong(hResult, i, 2);
+      g_pGroupList[i].dwSystemRights = DBGetFieldULong(hResult, i, 2);
       g_pGroupList[i].wFlags = (WORD)DBGetFieldLong(hResult, i, 3);
       DBGetField(hResult, i, 4, g_pGroupList[i].szDescription, MAX_USER_DESCR);
       DecodeSQLString(g_pGroupList[i].szDescription);
@@ -168,7 +169,7 @@ BOOL LoadUsers(void)
       g_pGroupList[i].pMembers = NULL;
       strcpy(g_pGroupList[i].szName, "Everyone");
       g_pGroupList[i].wFlags = UF_MODIFIED;
-      g_pGroupList[i].wSystemRights = 0;
+      g_pGroupList[i].dwSystemRights = 0;
       strcpy(g_pGroupList[i].szDescription, "Built-in everyone group");
       WriteLog(MSG_EVERYONE_GROUP_CREATED, EVENTLOG_WARNING_TYPE, NULL);
    }
@@ -241,7 +242,7 @@ void SaveUsers(DB_HANDLE hdb)
             sprintf(szQuery, "UPDATE users SET name='%s',password='%s',system_access=%d,flags=%d,"
                              "full_name='%s',description='%s',grace_logins=%d,guid='%s',"
 									  "auth_method=%d,cert_mapping_method=%d,cert_mapping_data='%s' WHERE id=%d",
-                    g_pUserList[i].szName, szPassword, g_pUserList[i].wSystemRights,
+                    g_pUserList[i].szName, szPassword, g_pUserList[i].dwSystemRights,
                     g_pUserList[i].wFlags, pszEscFullName,
                     pszEscDescr, g_pUserList[i].nGraceLogins,
                     uuid_to_string(g_pUserList[i].guid, szGUID),
@@ -252,7 +253,7 @@ void SaveUsers(DB_HANDLE hdb)
 				                 "description,grace_logins,guid,auth_method,cert_mapping_method,"
                              "cert_mapping_data) VALUES (%d,'%s','%s',%d,%d,'%s','%s',%d,'%s',%d,%d,'%s')",
                     g_pUserList[i].dwId, g_pUserList[i].szName, szPassword,
-                    g_pUserList[i].wSystemRights, g_pUserList[i].wFlags,
+                    g_pUserList[i].dwSystemRights, g_pUserList[i].wFlags,
                     pszEscFullName, pszEscDescr,
                     g_pUserList[i].nGraceLogins, uuid_to_string(g_pUserList[i].guid, szGUID),
                     g_pUserList[i].nAuthMethod, g_pUserList[i].nCertMappingMethod, pszEscData);
@@ -306,13 +307,13 @@ void SaveUsers(DB_HANDLE hdb)
          if (bGroupExists)
             sprintf(szQuery, "UPDATE user_groups SET name='%s',system_access=%d,flags=%d,"
                              "description='%s',guid='%s' WHERE id=%d",
-                    g_pGroupList[i].szName, g_pGroupList[i].wSystemRights,
+                    g_pGroupList[i].szName, g_pGroupList[i].dwSystemRights,
                     g_pGroupList[i].wFlags, pszEscDescr,
                     uuid_to_string(g_pGroupList[i].guid, szGUID), g_pGroupList[i].dwId);
          else
             sprintf(szQuery, "INSERT INTO user_groups (id,name,system_access,flags,description,guid) "
                              "VALUES (%d,'%s',%d,%d,'%s','%s')",
-                    g_pGroupList[i].dwId, g_pGroupList[i].szName, g_pGroupList[i].wSystemRights,
+                    g_pGroupList[i].dwId, g_pGroupList[i].szName, g_pGroupList[i].dwSystemRights,
                     g_pGroupList[i].wFlags, pszEscDescr,
                     uuid_to_string(g_pGroupList[i].guid, szGUID));
          free(pszEscDescr);
@@ -430,14 +431,14 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
                   *pbChangePasswd = FALSE;
                }
                *pdwId = g_pUserList[i].dwId;
-               *pdwSystemRights = (DWORD)g_pUserList[i].wSystemRights;
+               *pdwSystemRights = g_pUserList[i].dwSystemRights;
                dwResult = RCC_SUCCESS;
          
                // Collect system rights from groups this user belongs to
                MutexLock(m_hMutexGroupAccess, INFINITE);
                for(j = 0; j < g_dwNumGroups; j++)
                   if (CheckUserMembership(g_pUserList[i].dwId, g_pGroupList[j].dwId))
-                     *pdwSystemRights |= (DWORD)g_pGroupList[j].wSystemRights;
+                     *pdwSystemRights |= g_pGroupList[j].dwSystemRights;
                MutexUnlock(m_hMutexGroupAccess);
             }
             else
@@ -557,7 +558,7 @@ void DumpUsers(CONSOLE_CTX pCtx)
                        "-----------------------------------------------------------------------\n");
    for(i = 0; i < g_dwNumUsers; i++)
       ConsolePrintf(pCtx, "%-20s %-36s 0x%08X\n", g_pUserList[i].szName,
-                    uuid_to_string(g_pUserList[i].guid, szGUID), g_pUserList[i].wSystemRights);
+                    uuid_to_string(g_pUserList[i].guid, szGUID), g_pUserList[i].dwSystemRights);
    ConsolePrintf(pCtx, "\n");
 }
 
@@ -648,7 +649,7 @@ DWORD CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwId)
          g_pGroupList[i].pMembers = NULL;
          nx_strncpy(g_pGroupList[i].szName, pszName, MAX_USER_NAME);
          g_pGroupList[i].wFlags = UF_MODIFIED;
-         g_pGroupList[i].wSystemRights = 0;
+         g_pGroupList[i].dwSystemRights = 0;
          g_pGroupList[i].szDescription[0] = 0;
          uuid_generate(g_pGroupList[i].guid);
       }
@@ -678,7 +679,7 @@ DWORD CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwId)
          g_pUserList[i].dwId = dwNewId = CreateUniqueId(IDG_USER);
          nx_strncpy(g_pUserList[i].szName, pszName, MAX_USER_NAME);
          g_pUserList[i].wFlags = UF_MODIFIED;
-         g_pUserList[i].wSystemRights = 0;
+         g_pUserList[i].dwSystemRights = 0;
          g_pUserList[i].szFullName[0] = 0;
          g_pUserList[i].szDescription[0] = 0;
          g_pUserList[i].nGraceLogins = MAX_GRACE_LOGINS;
@@ -731,7 +732,7 @@ DWORD ModifyUser(NETXMS_USER *pUserInfo)
          
          // We will not replace system access rights for UID 0
          if (g_pUserList[i].dwId != 0)
-            g_pUserList[i].wSystemRights = pUserInfo->wSystemRights;
+            g_pUserList[i].dwSystemRights = pUserInfo->dwSystemRights;
 
          // Modify UF_DISABLED and UF_CHANGE_PASSWORD flags from pUserInfo
          // Ignore DISABLED flag for UID 0
@@ -775,7 +776,7 @@ DWORD ModifyGroup(NETXMS_USER_GROUP *pGroupInfo)
 
          strcpy(g_pGroupList[i].szName, pGroupInfo->szName);
          strcpy(g_pGroupList[i].szDescription, pGroupInfo->szDescription);
-         g_pGroupList[i].wSystemRights = pGroupInfo->wSystemRights;
+         g_pGroupList[i].dwSystemRights = pGroupInfo->dwSystemRights;
 
          // Ignore DISABLED flag for EVERYONE group
          if (g_pGroupList[i].dwId != 0)

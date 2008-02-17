@@ -452,6 +452,13 @@ typedef struct
 #define CMD_SEND_SMS                0x00D0
 #define CMD_GET_COMMUNITY_LIST      0x00D1
 #define CMD_UPDATE_COMMUNITY_LIST   0x00D2
+#define CMD_GET_SITUATION_LIST      0x00D3
+#define CMD_DELETE_SITUATION        0x00D4
+#define CMD_CREATE_SITUATION        0x00D5
+#define CMD_DEL_SITUATION_INSTANCE  0x00D6
+#define CMD_UPDATE_SITUATION        0x00D7
+#define CMD_SITUATION_DATA          0x00D8
+#define CMD_SITUATION_CHANGED       0x00D9
 
 
 //
@@ -761,6 +768,8 @@ typedef struct
 #define VID_SITUATION_ID            ((DWORD)301)
 #define VID_SITUATION_INSTANCE      ((DWORD)302)
 #define VID_SITUATION_NUM_ATTRS     ((DWORD)303)
+#define VID_INSTANCE_COUNT          ((DWORD)304)
+#define VID_SITUATION_COUNT         ((DWORD)305)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -892,8 +901,9 @@ typedef struct
 // Base value for various string lists
 #define VID_STRING_LIST_BASE 			((DWORD)0x10000000)
 
-// Situation attribute list base
+// Base values for situation lists
 #define VID_SITUATION_ATTR_LIST_BASE ((DWORD)0x10000000)
+#define VID_INSTANCE_LIST_BASE      ((DWORD)0x20000000)
 
 // Base value for object links list
 #define VID_OBJECT_LINKS_BASE			((DWORD)0x10000000)

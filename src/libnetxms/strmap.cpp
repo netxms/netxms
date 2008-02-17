@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -118,3 +118,24 @@ TCHAR *StringMap::Get(const TCHAR *pszKey)
 	dwIndex = Find(pszKey);
 	return (dwIndex != INVALID_INDEX) ? m_ppszValues[dwIndex] : NULL;
 }
+
+
+//
+// Delete value
+//
+
+void StringMap::Delete(const TCHAR *pszKey)
+{
+	DWORD dwIndex;
+
+	dwIndex = Find(pszKey);
+	if (dwIndex != INVALID_INDEX)
+	{
+		safe_free(m_ppszKeys[dwIndex]);
+		safe_free(m_ppszValues[dwIndex]);
+		m_dwSize--;
+		memmove(&m_ppszKeys[dwIndex], &m_ppszKeys[dwIndex + 1], sizeof(TCHAR *) * (m_dwSize - dwIndex));
+		memmove(&m_ppszValues[dwIndex], &m_ppszValues[dwIndex + 1], sizeof(TCHAR *) * (m_dwSize - dwIndex));
+	}
+}
+

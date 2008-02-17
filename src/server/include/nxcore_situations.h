@@ -39,6 +39,8 @@ public:
 	~SituationInstance();
 
 	const TCHAR *GetName() { return m_name; }
+	
+	DWORD CreateMessage(CSCPMessage *msg, DWORD baseId);
 
 	void UpdateAttribute(const TCHAR *attribute, const TCHAR *value);
 };
@@ -56,6 +58,10 @@ private:
 	TCHAR *m_comments;
 	int m_numInstances;
 	SituationInstance **m_instanceList;
+	MUTEX m_accessMutex;
+	
+	void Lock() { MutexLock(m_accessMutex, INFINITE); }
+	void Unlock() { MutexUnlock(m_accessMutex); }
 
 public:
 	Situation(const TCHAR *name);
@@ -64,8 +70,12 @@ public:
 	
 	DWORD GetId() { return m_id; }
 	const TCHAR *GetName() { return m_name; }
+	
+	void CreateMessage(CSCPMessage *msg);
+	void UpdateFromMessage(CSCPMessage *msg);
 
 	void UpdateSituation(const TCHAR *instance, const TCHAR *attribute, const TCHAR *value);
+	BOOL DeleteInstance(const TCHAR *instance);
 };
 
 
@@ -74,8 +84,10 @@ public:
 //
 
 BOOL SituationsInit(void);
-Situation *FindSituationById(DWORD dwId);
+Situation *FindSituationById(DWORD id);
 Situation *CreateSituation(const TCHAR *name);
+DWORD DeleteSituation(DWORD id);
+void SendSituationListToClient(ClientSession *session, CSCPMessage *msg);
 
 
 #endif
