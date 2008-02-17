@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.197 2008-02-07 21:27:03 victor Exp $ */
+/* $Id: node.cpp,v 1.198 2008-02-17 09:02:06 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -2993,4 +2993,73 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 		DeleteParent(ppUnlinkList[i]);
 	}
 	safe_free(ppUnlinkList);
+}
+
+
+//
+// Update interface names
+//
+
+void Node::UpdateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
+{
+   PollerLock();
+   m_pPollRequestor = pSession;
+   SendPollerMsg(dwRqId, _T("Starting interface names poll for node %s\r\n"), m_szName);
+   DbgPrintf(4, "Starting interface names poll for node %s (ID: %d)", m_szName, m_dwId);
+
+   // Retrieve interface list
+   pIfList = GetInterfaceList();
+   if (pIfList != NULL)
+   {
+		// Remove cluster virtual interfaces from list
+		if (pCluster != NULL)
+		{
+			for(i = 0; i < (DWORD)pIfList->iNumEntries; i++)
+			{
+				if (pCluster->IsVirtualAddr(pIfList->pInterfaces[i].dwIpAddr))
+				{
+					pIfList->iNumEntries--;
+					memmove(&pIfList->pInterfaces[i], &pIfList->pInterfaces[i + 1],
+						     sizeof(INTERFACE_INFO) * (pIfList->iNumEntries - i));
+					i--;
+				}
+			}
+		}
+
+      // Check names of existing interfaces
+      for(j = 0; j < pIfList->iNumEntries; j++)
+      {
+         LockChildList(FALSE);
+         for(i = 0; i < m_dwChildCount; i++)
+         {
+            if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+            {
+               Interface *pInterface = (Interface *)m_pChildList[i];
+
+               if (pIfList->pInterfaces[j].dwIndex == pInterface->IfIndex())
+               {
+						SendPollerMsg(dwRqId, _T("   Checking interface %d (%s)\r\n"), pInterface->IfIndex(), pInterface->Name());
+                  if (strcmp(pIfList->pInterfaces[j].szName, pInterface->Name()))
+                  {
+                     pInterface->SetName(pIfList->pInterfaces[j].szName);
+							SendPollerMsg(dwRqId, _T("   Name of interface %d changed to %s\r\n"), pInterface->IfIndex(), pIfList->pInterfaces[j].szName);
+                  }
+                  break;
+               }
+            }
+         }
+         UnlockChildList();
+      }
+
+      DestroyInterfaceList(pIfList);
+   }
+   else     /* pIfList == NULL */
+   {
+      SendPollerMsg(dwRqId, _T("   Unable to get interface list from node\r\n"));
+   }
+
+   // Finish poll
+	SendPollerMsg(dwRqId, _T("Finished interface names poll for node %s\r\n"), m_szName);
+   PollerUnlock();
+   DbgPrintf(4, "Finished interface names poll for node %s (ID: %d)", m_szName, m_dwId);
 }

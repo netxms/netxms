@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.292 2008-02-06 12:20:32 victor Exp $ */
+/* $Id: session.cpp,v 1.293 2008-02-17 09:02:06 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -4058,13 +4058,15 @@ void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
    // Get polling type
    pData->iPollType = pRequest->GetVariableShort(VID_POLL_TYPE);
 
-   // Find object to be deleted
+   // Find object to be polled
    pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
    if (pObject != NULL)
    {
       // We can do polls only for node objects
       if ((pObject->Type() == OBJECT_NODE) &&
-          ((pData->iPollType == POLL_STATUS) || (pData->iPollType == POLL_CONFIGURATION)))
+          ((pData->iPollType == POLL_STATUS) ||
+			  (pData->iPollType == POLL_CONFIGURATION) ||
+			  (pData->iPollType == POLL_INTERFACE_NAMES)))
       {
          // Check access rights
          if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
@@ -4076,6 +4078,7 @@ void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
             ThreadCreate(PollerThreadStarter, 0, pData);
             msg.SetVariable(VID_RCC, RCC_OPERATION_IN_PROGRESS);
             msg.SetVariable(VID_POLLER_MESSAGE, _T("Poll request accepted\r\n"));
+				pData = NULL;
          }
          else
          {
@@ -4095,6 +4098,7 @@ void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
    // Send response
    SendMessage(&msg);
    MutexUnlock(m_mutexPollerInit);
+	safe_free(pData);
 }
 
 
@@ -4134,6 +4138,9 @@ void ClientSession::PollerThread(Node *pNode, int iPollType, DWORD dwRqId)
       case POLL_CONFIGURATION:
 			pNode->SetRecheckCapsFlag();
          pNode->ConfigurationPoll(this, dwRqId, -1, 0);
+         break;
+      case POLL_INTERFACE_NAMES:
+         pNode->UpdateInterfaceNames(this, dwRqId);
          break;
       default:
          SendPollerMsg(dwRqId, _T("Invalid poll type requested\r\n"));

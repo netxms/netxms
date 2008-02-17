@@ -698,6 +698,7 @@ public:
    void SetDiscoveryPollTimeStamp(void);
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
    void ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller, DWORD dwNetMask);
+	void UpdateInterfaceNames(ClientSession *pSession, DWORD dwRqId);
    void UpdateRoutingTable(void);
    BOOL ReadyForStatusPoll(void);
    BOOL ReadyForConfigurationPoll(void);
