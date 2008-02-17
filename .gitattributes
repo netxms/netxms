@@ -1301,6 +1301,7 @@ src/libnxcl/package.cpp -text
 src/libnxcl/script.cpp -text
 src/libnxcl/server.cpp -text
 src/libnxcl/session.cpp -text
+src/libnxcl/situation.cpp -text
 src/libnxcl/snmp.cpp -text
 src/libnxcl/snmptrap.cpp -text
 src/libnxcl/users.cpp -text
