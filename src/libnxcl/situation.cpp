@@ -132,7 +132,9 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteSituationInstance(NXC_SESSION hSession, DWORD 
 DWORD LIBNXCL_EXPORTABLE NXCGetSituationList(NXC_SESSION hSession, NXC_SITUATION_LIST **list)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, rcc;
+   DWORD dwRqId, rcc, id;
+	TCHAR *attr, *value;
+	int i, j, k;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -156,6 +158,25 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSituationList(NXC_SESSION hSession, NXC_SITUATION
 				pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_SITUATION_DATA, dwRqId);
 				if (pResponse != NULL)
 				{
+					(*list)->m_situations[i].m_id = pResponse->GetVariableLong(VID_SITUATION_ID);
+					(*list)->m_situations[i].m_name = pResponse->GetVariableStr(VID_NAME);
+					(*list)->m_situations[i].m_comments = pResponse->GetVariableStr(VID_COMMENTS);
+					(*list)->m_situations[i].m_instanceCount = pResponse->GetVariableLong(VID_INSTANCE_COUNT);
+					(*list)->m_situations[i].m_instanceList = (NXC_SITUATION_INSTANCE *)malloc(sizeof(NXC_SITUATION_INSTANCE) * (*list)->m_situations[i].m_instanceCount);
+					for(j = 0, id = VID_INSTANCE_LIST_BASE; j < (*list)->m_situations[i].m_instanceCount; j++)
+					{
+						(*list)->m_situations[i].m_instanceList[j].m_name = pResponse->GetVariableStr(id++);
+						(*list)->m_situations[i].m_instanceList[j].m_attrCount = pResponse->GetVariableLong(id++);
+						(*list)->m_situations[i].m_instanceList[j].m_attrList = new StringMap;
+						for(k = 0; k < (*list)->m_situations[i].m_instanceList[j].m_attrCount; k++)
+						{
+							attr = pResponse->GetVariableStr(id++);
+							value = pResponse->GetVariableStr(id++);
+							(*list)->m_situations[i].m_instanceList[j].m_attrList->Set(attr, value);
+							free(attr);
+							free(value);
+						}
+					}
 					delete pResponse;
 				}
 				else
@@ -186,5 +207,20 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSituationList(NXC_SESSION hSession, NXC_SITUATION
 
 void LIBNXCL_EXPORTABLE NXCDestroySituationList(NXC_SITUATION_LIST *list)
 {
+	int i;
+
+	if (list != NULL)
+	{
+		if (list->m_situations != NULL)
+		{
+			for(i = 0; i < list->m_count; i++)
+			{
+				safe_free(list->m_situations[i].m_name);
+				safe_free(list->m_situations[i].m_comments);
+			}
+			free(list->m_situations);
+		}
+		free(list);
+	}
 }
 

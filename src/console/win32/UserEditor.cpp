@@ -358,42 +358,42 @@ void CUserEditor::OnUserProperties()
             dlg.m_strName = pUser->szName;
             dlg.m_strDescription = pUser->szDescription;
             dlg.m_bDisabled = (pUser->wFlags & UF_DISABLED) ? TRUE : FALSE;
-            dlg.m_bDropConn = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_SESSIONS) ? TRUE : FALSE;
-            dlg.m_bManageConfig = (pUser->wSystemRights & SYSTEM_ACCESS_SERVER_CONFIG) ? TRUE : FALSE;
-            dlg.m_bConfigureTraps = (pUser->wSystemRights & SYSTEM_ACCESS_CONFIGURE_TRAPS) ? TRUE : FALSE;
-            dlg.m_bEditEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_EDIT_EVENT_DB) ? TRUE : FALSE;
-            dlg.m_bViewEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_VIEW_EVENT_DB) ? TRUE : FALSE;
-            dlg.m_bManageUsers = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_USERS) ? TRUE : FALSE;
-            dlg.m_bManageActions = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_ACTIONS) ? TRUE : FALSE;
-            dlg.m_bManageEPP = (pUser->wSystemRights & SYSTEM_ACCESS_EPP) ? TRUE : FALSE;
-            dlg.m_bDeleteAlarms = (pUser->wSystemRights & SYSTEM_ACCESS_DELETE_ALARMS) ? TRUE : FALSE;
-            dlg.m_bManagePkg = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_PACKAGES) ? TRUE : FALSE;
-            dlg.m_bManageTools = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_TOOLS) ? TRUE : FALSE;
-            dlg.m_bManageScripts = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_SCRIPTS) ? TRUE : FALSE;
-            dlg.m_bViewTrapLog = (pUser->wSystemRights & SYSTEM_ACCESS_VIEW_TRAP_LOG) ? TRUE : FALSE;
-            dlg.m_bManageAgentCfg = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG) ? TRUE : FALSE;
-            dlg.m_bManageModules = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_MODULES) ? TRUE : FALSE;
+            dlg.m_bDropConn = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_SESSIONS) ? TRUE : FALSE;
+            dlg.m_bManageConfig = (pUser->dwSystemRights & SYSTEM_ACCESS_SERVER_CONFIG) ? TRUE : FALSE;
+            dlg.m_bConfigureTraps = (pUser->dwSystemRights & SYSTEM_ACCESS_CONFIGURE_TRAPS) ? TRUE : FALSE;
+            dlg.m_bEditEventDB = (pUser->dwSystemRights & SYSTEM_ACCESS_EDIT_EVENT_DB) ? TRUE : FALSE;
+            dlg.m_bViewEventDB = (pUser->dwSystemRights & SYSTEM_ACCESS_VIEW_EVENT_DB) ? TRUE : FALSE;
+            dlg.m_bManageUsers = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_USERS) ? TRUE : FALSE;
+            dlg.m_bManageActions = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_ACTIONS) ? TRUE : FALSE;
+            dlg.m_bManageEPP = (pUser->dwSystemRights & SYSTEM_ACCESS_EPP) ? TRUE : FALSE;
+            dlg.m_bDeleteAlarms = (pUser->dwSystemRights & SYSTEM_ACCESS_DELETE_ALARMS) ? TRUE : FALSE;
+            dlg.m_bManagePkg = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_PACKAGES) ? TRUE : FALSE;
+            dlg.m_bManageTools = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_TOOLS) ? TRUE : FALSE;
+            dlg.m_bManageScripts = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_SCRIPTS) ? TRUE : FALSE;
+            dlg.m_bViewTrapLog = (pUser->dwSystemRights & SYSTEM_ACCESS_VIEW_TRAP_LOG) ? TRUE : FALSE;
+            dlg.m_bManageAgentCfg = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG) ? TRUE : FALSE;
+            dlg.m_bManageModules = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_MODULES) ? TRUE : FALSE;
             if (dlg.DoModal() == IDOK)
             {
                userInfo.dwId = pUser->dwId;
                nx_strncpy(userInfo.szName, (LPCTSTR)dlg.m_strName, MAX_USER_NAME);
                nx_strncpy(userInfo.szDescription, (LPCTSTR)dlg.m_strDescription, MAX_USER_DESCR);
                userInfo.wFlags = dlg.m_bDisabled ? UF_DISABLED : 0;
-               userInfo.wSystemRights = (dlg.m_bDropConn ? SYSTEM_ACCESS_MANAGE_SESSIONS : 0) |
-                                        (dlg.m_bManageUsers ? SYSTEM_ACCESS_MANAGE_USERS : 0) |
-                                        (dlg.m_bManageActions ? SYSTEM_ACCESS_MANAGE_ACTIONS : 0) |
-                                        (dlg.m_bManageEPP ? SYSTEM_ACCESS_EPP : 0) |
-                                        (dlg.m_bManageConfig ? SYSTEM_ACCESS_SERVER_CONFIG : 0) |
-                                        (dlg.m_bConfigureTraps ? SYSTEM_ACCESS_CONFIGURE_TRAPS : 0) |
-                                        (dlg.m_bEditEventDB ? SYSTEM_ACCESS_EDIT_EVENT_DB : 0) |
-                                        (dlg.m_bViewEventDB ? SYSTEM_ACCESS_VIEW_EVENT_DB : 0) |
-                                        (dlg.m_bDeleteAlarms ? SYSTEM_ACCESS_DELETE_ALARMS : 0) |
-                                        (dlg.m_bManagePkg ? SYSTEM_ACCESS_MANAGE_PACKAGES : 0) |
-                                        (dlg.m_bManageTools ? SYSTEM_ACCESS_MANAGE_TOOLS : 0) |
-                                        (dlg.m_bManageScripts ? SYSTEM_ACCESS_MANAGE_SCRIPTS : 0) |
-                                        (dlg.m_bViewTrapLog ? SYSTEM_ACCESS_VIEW_TRAP_LOG : 0) |
-                                        (dlg.m_bManageAgentCfg ? SYSTEM_ACCESS_MANAGE_AGENT_CFG : 0) |
-                                        (dlg.m_bManageModules ? SYSTEM_ACCESS_MANAGE_MODULES : 0);
+               userInfo.dwSystemRights = (dlg.m_bDropConn ? SYSTEM_ACCESS_MANAGE_SESSIONS : 0) |
+                                         (dlg.m_bManageUsers ? SYSTEM_ACCESS_MANAGE_USERS : 0) |
+                                         (dlg.m_bManageActions ? SYSTEM_ACCESS_MANAGE_ACTIONS : 0) |
+                                         (dlg.m_bManageEPP ? SYSTEM_ACCESS_EPP : 0) |
+                                         (dlg.m_bManageConfig ? SYSTEM_ACCESS_SERVER_CONFIG : 0) |
+                                         (dlg.m_bConfigureTraps ? SYSTEM_ACCESS_CONFIGURE_TRAPS : 0) |
+                                         (dlg.m_bEditEventDB ? SYSTEM_ACCESS_EDIT_EVENT_DB : 0) |
+                                         (dlg.m_bViewEventDB ? SYSTEM_ACCESS_VIEW_EVENT_DB : 0) |
+                                         (dlg.m_bDeleteAlarms ? SYSTEM_ACCESS_DELETE_ALARMS : 0) |
+                                         (dlg.m_bManagePkg ? SYSTEM_ACCESS_MANAGE_PACKAGES : 0) |
+                                         (dlg.m_bManageTools ? SYSTEM_ACCESS_MANAGE_TOOLS : 0) |
+                                         (dlg.m_bManageScripts ? SYSTEM_ACCESS_MANAGE_SCRIPTS : 0) |
+                                         (dlg.m_bViewTrapLog ? SYSTEM_ACCESS_VIEW_TRAP_LOG : 0) |
+                                         (dlg.m_bManageAgentCfg ? SYSTEM_ACCESS_MANAGE_AGENT_CFG : 0) |
+                                         (dlg.m_bManageModules ? SYSTEM_ACCESS_MANAGE_MODULES : 0);
                userInfo.dwNumMembers = dlg.m_dwNumMembers;
                if (userInfo.dwNumMembers > 0)
                {
@@ -416,21 +416,21 @@ void CUserEditor::OnUserProperties()
 				dlg.m_strMappingData = CHECK_NULL_EX(pUser->pszCertMappingData);
             dlg.m_bAccountDisabled = (pUser->wFlags & UF_DISABLED) ? TRUE : FALSE;
             dlg.m_bChangePassword = (pUser->wFlags & UF_CHANGE_PASSWORD) ? TRUE : FALSE;
-            dlg.m_bDropConn = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_SESSIONS) ? TRUE : FALSE;
-            dlg.m_bManageConfig = (pUser->wSystemRights & SYSTEM_ACCESS_SERVER_CONFIG) ? TRUE : FALSE;
-            dlg.m_bConfigureTraps = (pUser->wSystemRights & SYSTEM_ACCESS_CONFIGURE_TRAPS) ? TRUE : FALSE;
-            dlg.m_bEditEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_EDIT_EVENT_DB) ? TRUE : FALSE;
-            dlg.m_bViewEventDB = (pUser->wSystemRights & SYSTEM_ACCESS_VIEW_EVENT_DB) ? TRUE : FALSE;
-            dlg.m_bManageUsers = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_USERS) ? TRUE : FALSE;
-            dlg.m_bManageActions = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_ACTIONS) ? TRUE : FALSE;
-            dlg.m_bManageEPP = (pUser->wSystemRights & SYSTEM_ACCESS_EPP) ? TRUE : FALSE;
-            dlg.m_bDeleteAlarms = (pUser->wSystemRights & SYSTEM_ACCESS_DELETE_ALARMS) ? TRUE : FALSE;
-            dlg.m_bManagePkg = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_PACKAGES) ? TRUE : FALSE;
-            dlg.m_bManageTools = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_TOOLS) ? TRUE : FALSE;
-            dlg.m_bManageScripts = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_SCRIPTS) ? TRUE : FALSE;
-            dlg.m_bViewTrapLog = (pUser->wSystemRights & SYSTEM_ACCESS_VIEW_TRAP_LOG) ? TRUE : FALSE;
-            dlg.m_bManageAgentCfg = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG) ? TRUE : FALSE;
-            dlg.m_bManageModules = (pUser->wSystemRights & SYSTEM_ACCESS_MANAGE_MODULES) ? TRUE : FALSE;
+            dlg.m_bDropConn = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_SESSIONS) ? TRUE : FALSE;
+            dlg.m_bManageConfig = (pUser->dwSystemRights & SYSTEM_ACCESS_SERVER_CONFIG) ? TRUE : FALSE;
+            dlg.m_bConfigureTraps = (pUser->dwSystemRights & SYSTEM_ACCESS_CONFIGURE_TRAPS) ? TRUE : FALSE;
+            dlg.m_bEditEventDB = (pUser->dwSystemRights & SYSTEM_ACCESS_EDIT_EVENT_DB) ? TRUE : FALSE;
+            dlg.m_bViewEventDB = (pUser->dwSystemRights & SYSTEM_ACCESS_VIEW_EVENT_DB) ? TRUE : FALSE;
+            dlg.m_bManageUsers = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_USERS) ? TRUE : FALSE;
+            dlg.m_bManageActions = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_ACTIONS) ? TRUE : FALSE;
+            dlg.m_bManageEPP = (pUser->dwSystemRights & SYSTEM_ACCESS_EPP) ? TRUE : FALSE;
+            dlg.m_bDeleteAlarms = (pUser->dwSystemRights & SYSTEM_ACCESS_DELETE_ALARMS) ? TRUE : FALSE;
+            dlg.m_bManagePkg = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_PACKAGES) ? TRUE : FALSE;
+            dlg.m_bManageTools = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_TOOLS) ? TRUE : FALSE;
+            dlg.m_bManageScripts = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_SCRIPTS) ? TRUE : FALSE;
+            dlg.m_bViewTrapLog = (pUser->dwSystemRights & SYSTEM_ACCESS_VIEW_TRAP_LOG) ? TRUE : FALSE;
+            dlg.m_bManageAgentCfg = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG) ? TRUE : FALSE;
+            dlg.m_bManageModules = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_MODULES) ? TRUE : FALSE;
             if (dlg.DoModal() == IDOK)
             {
                userInfo.dwId = pUser->dwId;
@@ -442,21 +442,21 @@ void CUserEditor::OnUserProperties()
 					userInfo.pszCertMappingData = _tcsdup((LPCTSTR)dlg.m_strMappingData);
                userInfo.wFlags = (dlg.m_bAccountDisabled ? UF_DISABLED : 0) |
                                  (dlg.m_bChangePassword ? UF_CHANGE_PASSWORD : 0);
-               userInfo.wSystemRights = (dlg.m_bDropConn ? SYSTEM_ACCESS_MANAGE_SESSIONS : 0) |
-                                        (dlg.m_bManageUsers ? SYSTEM_ACCESS_MANAGE_USERS : 0) |
-                                        (dlg.m_bManageActions ? SYSTEM_ACCESS_MANAGE_ACTIONS : 0) |
-                                        (dlg.m_bManageEPP ? SYSTEM_ACCESS_EPP : 0) |
-                                        (dlg.m_bManageConfig ? SYSTEM_ACCESS_SERVER_CONFIG : 0) |
-                                        (dlg.m_bConfigureTraps ? SYSTEM_ACCESS_CONFIGURE_TRAPS : 0) |
-                                        (dlg.m_bEditEventDB ? SYSTEM_ACCESS_EDIT_EVENT_DB : 0) |
-                                        (dlg.m_bViewEventDB ? SYSTEM_ACCESS_VIEW_EVENT_DB : 0) |
-                                        (dlg.m_bDeleteAlarms ? SYSTEM_ACCESS_DELETE_ALARMS : 0) |
-                                        (dlg.m_bManagePkg ? SYSTEM_ACCESS_MANAGE_PACKAGES : 0) |
-                                        (dlg.m_bManageTools ? SYSTEM_ACCESS_MANAGE_TOOLS : 0) |
-                                        (dlg.m_bManageScripts ? SYSTEM_ACCESS_MANAGE_SCRIPTS : 0) |
-                                        (dlg.m_bViewTrapLog ? SYSTEM_ACCESS_VIEW_TRAP_LOG : 0) |
-                                        (dlg.m_bManageAgentCfg ? SYSTEM_ACCESS_MANAGE_AGENT_CFG : 0) |
-                                        (dlg.m_bManageModules ? SYSTEM_ACCESS_MANAGE_MODULES : 0);
+               userInfo.dwSystemRights = (dlg.m_bDropConn ? SYSTEM_ACCESS_MANAGE_SESSIONS : 0) |
+                                         (dlg.m_bManageUsers ? SYSTEM_ACCESS_MANAGE_USERS : 0) |
+                                         (dlg.m_bManageActions ? SYSTEM_ACCESS_MANAGE_ACTIONS : 0) |
+                                         (dlg.m_bManageEPP ? SYSTEM_ACCESS_EPP : 0) |
+                                         (dlg.m_bManageConfig ? SYSTEM_ACCESS_SERVER_CONFIG : 0) |
+                                         (dlg.m_bConfigureTraps ? SYSTEM_ACCESS_CONFIGURE_TRAPS : 0) |
+                                         (dlg.m_bEditEventDB ? SYSTEM_ACCESS_EDIT_EVENT_DB : 0) |
+                                         (dlg.m_bViewEventDB ? SYSTEM_ACCESS_VIEW_EVENT_DB : 0) |
+                                         (dlg.m_bDeleteAlarms ? SYSTEM_ACCESS_DELETE_ALARMS : 0) |
+                                         (dlg.m_bManagePkg ? SYSTEM_ACCESS_MANAGE_PACKAGES : 0) |
+                                         (dlg.m_bManageTools ? SYSTEM_ACCESS_MANAGE_TOOLS : 0) |
+                                         (dlg.m_bManageScripts ? SYSTEM_ACCESS_MANAGE_SCRIPTS : 0) |
+                                         (dlg.m_bViewTrapLog ? SYSTEM_ACCESS_VIEW_TRAP_LOG : 0) |
+                                         (dlg.m_bManageAgentCfg ? SYSTEM_ACCESS_MANAGE_AGENT_CFG : 0) |
+                                         (dlg.m_bManageModules ? SYSTEM_ACCESS_MANAGE_MODULES : 0);
                bModify = TRUE;
             }
          }

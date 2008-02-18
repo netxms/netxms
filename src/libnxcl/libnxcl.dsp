@@ -260,6 +260,10 @@ SOURCE=.\session.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\situation.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\snmp.cpp
 # End Source File
 # Begin Source File
