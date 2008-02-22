@@ -156,6 +156,8 @@ CConsoleApp::CConsoleApp()
    m_dwNumAlarms = 0;
    m_pAlarmList = NULL;
    m_mutexAlarmList = MutexCreate();
+	m_pSituationList = NULL;
+   m_mutexSituationList = MutexCreate();
    m_hDevMode = NULL;
    m_hDevNames = NULL;
 	m_dwMainThreadId = GetCurrentThreadId();
@@ -170,6 +172,8 @@ CConsoleApp::~CConsoleApp()
 {
    safe_free(m_pAlarmList);
    MutexDestroy(m_mutexAlarmList);
+	NXCDestroySituationList(m_pSituationList);
+   MutexDestroy(m_mutexSituationList);
    SafeGlobalFree(m_hDevMode);
    SafeGlobalFree(m_hDevNames);
 }
@@ -4334,4 +4338,36 @@ void CConsoleApp::CreateIfDCI(NXC_OBJECT *pObject)
 			m_pMainWnd->MessageBox(_T("Internal error"), _T("Error"), MB_OK | MB_ICONSTOP);
 		}
 	}
+}
+
+
+//
+// Load situations
+//
+
+DWORD CConsoleApp::LoadSituations()
+{
+	NXCDestroySituationList(m_pSituationList);
+	return NXCGetSituationList(g_hSession, &m_pSituationList);
+}
+
+
+//
+// Get (and lock) situation list
+//
+
+NXC_SITUATION_LIST *CConsoleApp::GetSituationList()
+{
+	MutexLock(m_mutexSituationList, INFINITE);
+	return m_pSituationList;
+}
+
+
+//
+// Unlock situation list
+//
+
+void CConsoleApp::UnlockSituationList()
+{
+	MutexUnlock(m_mutexSituationList);
 }

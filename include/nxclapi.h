@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.286 2008-02-17 18:44:48 victor Exp $ */
+/* $Id: nxclapi.h,v 1.287 2008-02-22 08:34:41 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -292,6 +292,7 @@ enum
 #define NXC_EVENT_DEPLOYMENT_STATUS    6
 #define NXC_EVENT_NEW_SYSLOG_RECORD    7
 #define NXC_EVENT_NEW_SNMP_TRAP        8
+#define NXC_EVENT_SITUATION_UPDATE     9
 
 
 //
@@ -529,6 +530,17 @@ enum
 
 
 //
+// Situation change notification types
+//
+
+#define SITUATION_CREATE            1
+#define SITUATION_DELETE            2
+#define SITUATION_UPDATE            3
+#define SITUATION_INSTANCE_UPDATE   4
+#define SITUATION_INSTANCE_DELETE   5
+
+
+//
 // Data sources
 //
 
@@ -627,6 +639,7 @@ enum
 #define NXC_CHANNEL_OBJECTS      0x0008
 #define NXC_CHANNEL_SNMP_TRAPS   0x0010
 #define NXC_CHANNEL_AUDIT_LOG    0x0020
+#define NXC_CHANNEL_SITUATIONS   0x0040
 
 
 //
@@ -1733,7 +1746,6 @@ typedef struct
 typedef struct
 {
 	TCHAR *m_name;
-	int m_attrCount;
 	StringMap *m_attrList;
 } NXC_SITUATION_INSTANCE;
 
@@ -2091,6 +2103,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteSituationInstance(NXC_SESSION hSession, DWORD 
 #ifdef __cplusplus
 DWORD LIBNXCL_EXPORTABLE NXCGetSituationList(NXC_SESSION hSession, NXC_SITUATION_LIST **list);
 void LIBNXCL_EXPORTABLE NXCDestroySituationList(NXC_SITUATION_LIST *list);
+void LIBNXCL_EXPORTABLE NXCUpdateSituationList(NXC_SITUATION_LIST *list, int code, NXC_SITUATION *update);
 #endif
 
 #ifdef __cplusplus

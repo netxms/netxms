@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.295 2008-02-17 18:44:49 victor Exp $ */
+/* $Id: session.cpp,v 1.296 2008-02-22 08:34:42 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -9521,7 +9521,6 @@ void ClientSession::UpdateSituation(CSCPMessage *pRequest)
 void ClientSession::DeleteSituation(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   Situation *st;
    
 	msg.SetId(pRequest->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);

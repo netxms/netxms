@@ -134,7 +134,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSituationList(NXC_SESSION hSession, NXC_SITUATION
    CSCPMessage msg, *pResponse;
    DWORD dwRqId, rcc, id;
 	TCHAR *attr, *value;
-	int i, j, k;
+	int i, j, k, attrCount;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -166,9 +166,9 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSituationList(NXC_SESSION hSession, NXC_SITUATION
 					for(j = 0, id = VID_INSTANCE_LIST_BASE; j < (*list)->m_situations[i].m_instanceCount; j++)
 					{
 						(*list)->m_situations[i].m_instanceList[j].m_name = pResponse->GetVariableStr(id++);
-						(*list)->m_situations[i].m_instanceList[j].m_attrCount = pResponse->GetVariableLong(id++);
+						attrCount = pResponse->GetVariableLong(id++);
 						(*list)->m_situations[i].m_instanceList[j].m_attrList = new StringMap;
-						for(k = 0; k < (*list)->m_situations[i].m_instanceList[j].m_attrCount; k++)
+						for(k = 0; k < attrCount; k++)
 						{
 							attr = pResponse->GetVariableStr(id++);
 							value = pResponse->GetVariableStr(id++);
@@ -202,6 +202,98 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSituationList(NXC_SESSION hSession, NXC_SITUATION
 
 
 //
+// Copy NXC_SITUATION structure
+//
+
+static void CopySituation(NXC_SITUATION *dst, NXC_SITUATION *src)
+{
+	int i;
+
+	dst->m_id = src->m_id;
+	dst->m_name = _tcsdup(CHECK_NULL_EX(src->m_name));
+	dst->m_comments = _tcsdup(CHECK_NULL_EX(src->m_comments));
+	dst->m_instanceCount = src->m_instanceCount;
+	dst->m_instanceList = (NXC_SITUATION_INSTANCE *)malloc(sizeof(NXC_SITUATION_INSTANCE) * dst->m_instanceCount);
+	for(i = 0; i < src->m_instanceCount; i++)
+	{
+		dst->m_instanceList[i].m_name = _tcsdup(CHECK_NULL_EX(src->m_instanceList[i].m_name));
+		dst->m_instanceList[i].m_attrList = new StringMap(src->m_instanceList[i].m_attrList);
+	}
+}
+
+
+//
+// Find situation in list
+//
+
+static int FindSituationInList(NXC_SITUATION_LIST *list, DWORD id)
+{
+	int i;
+
+	for(i = 0; i < list->m_count; i++)
+		if (list->m_situations[i].m_id == id)
+			return i;
+	return INVALID_INDEX;
+}
+
+
+//
+// Destroy situation
+//
+
+static void DestroySituation(NXC_SITUATION *s)
+{
+	int i;
+
+	safe_free(s->m_name);
+	safe_free(s->m_comments);
+	for(i = 0; i < s->m_instanceCount; i++)
+	{
+		safe_free(s->m_instanceList[i].m_name);
+		delete s->m_instanceList[i].m_attrList;
+	}
+}
+
+
+//
+// Update existing situation list with new data
+//
+
+void LIBNXCL_EXPORTABLE NXCUpdateSituationList(NXC_SITUATION_LIST *list, int code, NXC_SITUATION *update)
+{
+	int index;
+
+	switch(code)
+	{
+		case SITUATION_UPDATE:
+			index = FindSituationInList(list, update->m_id);
+			if (index != INVALID_INDEX)
+			{
+				DestroySituation(&list->m_situations[index]);
+				CopySituation(&list->m_situations[index], update);
+				break;
+			}
+		case SITUATION_CREATE:
+			list->m_count++;
+			list->m_situations = (NXC_SITUATION *)realloc(list->m_situations, sizeof(NXC_SITUATION) * list->m_count);
+			CopySituation(&list->m_situations[list->m_count - 1], update);
+			break;
+		case SITUATION_DELETE:
+			index = FindSituationInList(list, update->m_id);
+			if (index != INVALID_INDEX)
+			{
+				DestroySituation(&list->m_situations[index]);
+				list->m_count--;
+				memmove(&list->m_situations[index], &list->m_situations[index + 1], sizeof(NXC_SITUATION) * (list->m_count - index));
+			}
+			break;
+		default:
+			break;
+	}
+}
+
+
+//
 // Destroy situation list
 //
 
@@ -215,12 +307,10 @@ void LIBNXCL_EXPORTABLE NXCDestroySituationList(NXC_SITUATION_LIST *list)
 		{
 			for(i = 0; i < list->m_count; i++)
 			{
-				safe_free(list->m_situations[i].m_name);
-				safe_free(list->m_situations[i].m_comments);
+				DestroySituation(&list->m_situations[i]);
 			}
 			free(list->m_situations);
 		}
 		free(list);
 	}
 }
-

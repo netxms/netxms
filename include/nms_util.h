@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.119 2008-02-17 18:44:48 victor Exp $ */
+/* $Id: nms_util.h,v 1.120 2008-02-22 08:34:41 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -268,6 +268,7 @@ protected:
 
 public:
 	StringMap();
+	StringMap(StringMap *src);
 	~StringMap();
 
 	void Set(const TCHAR *pszKey, const TCHAR *pszValue);
@@ -594,6 +595,12 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.119  2008/02/17 18:44:48  victor
+- Situation management complete on server side and almost complete in client library
+- User system rights changed to DWORD value from WORD value
+- Cosmetic fixes in DB drivers
+- Minor changes in libnetxms utility functions
+
 Revision 1.118  2008/01/29 00:13:27  victor
 Console is worling on Linux/UNICODE
 

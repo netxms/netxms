@@ -632,6 +632,14 @@ BEGIN
     BEGIN
         MENUITEM "&Copy to clipboard\tCtrl+C",  ID_POLLER_COPYTOCLIPBOARD
     END
+    POPUP "Situation"
+    BEGIN
+        MENUITEM "&Create...\tIns",             ID_SITUATION_CREATE
+        MENUITEM "&Edit...\tAlt+Enter",         ID_SITUATION_EDIT
+        MENUITEM "&Delete\tDel",                ID_SITUATION_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Create &instance...\tCtrl+I", ID_SITUATION_CREATEINSTANCE
+    END
 END
 
 IDM_CONTEXT MENU DISCARDABLE 
@@ -1041,6 +1049,14 @@ BEGIN
     POPUP "Poller"
     BEGIN
         MENUITEM "&Copy to clipboard",          ID_POLLER_COPYTOCLIPBOARD
+    END
+    POPUP "Situation"
+    BEGIN
+        MENUITEM "&Create...",                  ID_SITUATION_CREATE
+        MENUITEM "&Edit...",                    ID_SITUATION_EDIT
+        MENUITEM "&Delete",                     ID_SITUATION_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Create &instance...",         ID_SITUATION_CREATEINSTANCE
     END
 END
 

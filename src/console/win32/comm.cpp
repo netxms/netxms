@@ -1,8 +1,8 @@
-/* $Id: comm.cpp,v 1.56 2007-07-26 17:16:04 victor Exp $ */
+/* $Id: comm.cpp,v 1.57 2008-02-22 08:34:41 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Windows Console
-** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -366,6 +366,15 @@ static DWORD WINAPI LoginThread(void *pArg)
       dwResult = theApp.LoadAlarms();
       if (dwResult == RCC_SUCCESS)
          dwResult = NXCSubscribe(g_hSession, NXC_CHANNEL_ALARMS);
+   }
+
+   // Synchronizing situations
+   if (dwResult == RCC_SUCCESS)
+   {
+      SetInfoText(hWnd, _T("Synchronizing situations..."));
+      dwResult = theApp.LoadSituations();
+      if (dwResult == RCC_SUCCESS)
+         dwResult = NXCSubscribe(g_hSession, NXC_CHANNEL_SITUATIONS);
    }
 
    // Disconnect if some of post-login operations was failed

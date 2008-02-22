@@ -728,6 +728,10 @@ SOURCE=.\ServerCfgEditor.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\SituationManager.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\SNMPWalkDlg.cpp
 # End Source File
 # Begin Source File
@@ -1406,6 +1410,10 @@ SOURCE=.\ServerCfgEditor.h
 # Begin Source File
 
 SOURCE=..\nxuilib\SimpleListCtrl.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\SituationManager.h
 # End Source File
 # Begin Source File
 

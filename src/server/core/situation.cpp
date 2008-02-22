@@ -299,6 +299,7 @@ Situation *CreateSituation(const TCHAR *name)
    RWLockWriteLock(m_rwlockSituationIndex, INFINITE);
    AddObjectToIndex(&m_pSituationIndex, &m_dwSituationIndexSize, st->GetId(), st);
    RWLockUnlock(m_rwlockSituationIndex);
+	return st;
 }
 
 
@@ -309,7 +310,6 @@ Situation *CreateSituation(const TCHAR *name)
 DWORD DeleteSituation(DWORD id)
 {
    DWORD dwPos, rcc;
-   Situation *st;
 
    if (m_pSituationIndex == NULL)
       return RCC_INVALID_SITUATION_ID;

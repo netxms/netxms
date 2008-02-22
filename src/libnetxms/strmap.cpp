@@ -25,7 +25,7 @@
 
 
 //
-// Constructor
+// Constructors
 //
 
 StringMap::StringMap()
@@ -33,6 +33,20 @@ StringMap::StringMap()
 	m_dwSize = 0;
 	m_ppszKeys = NULL;
 	m_ppszValues = NULL;
+}
+
+StringMap::StringMap(StringMap *src)
+{
+	DWORD i;
+
+	m_dwSize = src->m_dwSize;
+	m_ppszKeys = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwSize);
+	m_ppszValues = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwSize);
+	for(i = 0; i < m_dwSize; i++)
+	{
+		m_ppszKeys[i] = _tcsdup(src->m_ppszKeys[i]);
+		m_ppszValues[i] = _tcsdup(src->m_ppszValues[i]);
+	}
 }
 
 

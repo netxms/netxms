@@ -102,6 +102,7 @@ enum
    VIEW_AGENT_CONFIG_MANAGER,
    VIEW_ALARM_DETAILS,
 	VIEW_CERTIFICATE_MANAGER,
+	VIEW_SITUATION_MANAGER,
    MAX_VIEW_ID
 };
 
@@ -163,6 +164,7 @@ protected:
 	HGLOBAL m_hDevNames;
 	HGLOBAL m_hDevMode;
 	MUTEX m_mutexAlarmList;
+	MUTEX m_mutexSituationList;
    void AddAlarmToList(NXC_ALARM *pAlarm);
    NXC_ALARM *FindAlarmInList(DWORD dwAlarmId);
    void DeleteAlarmFromList(DWORD dwAlarmId);
@@ -180,6 +182,8 @@ protected:
 
    NXC_ALARM *m_pAlarmList;
 	DWORD m_dwNumAlarms;
+
+	NXC_SITUATION_LIST *m_pSituationList;
 
    HMENU m_hMDIMenu;             // Default menu for MDI
 	HACCEL m_hMDIAccel;           // Default accelerator for MDI
@@ -280,6 +284,9 @@ private:
    OBJECT_VIEW m_openObjectViews[MAX_OBJECT_VIEWS];
 
 public:
+	void UnlockSituationList(void);
+	NXC_SITUATION_LIST * GetSituationList(void);
+	DWORD LoadSituations(void);
 	void CreateIfDCI(NXC_OBJECT *pObject);
 	DWORD m_dwMainThreadId;
 	void CreateCluster(DWORD dwParent);
