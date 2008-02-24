@@ -68,6 +68,9 @@ public:
 	Situation(DB_RESULT handle, int row);
 	~Situation();
 	
+	void SaveToDatabase();
+	void DeleteFromDatabase();
+	
 	DWORD GetId() { return m_id; }
 	const TCHAR *GetName() { return m_name; }
 	

@@ -105,7 +105,11 @@ Situation::Situation(DB_RESULT handle, int row)
 {
 	m_id = DBGetFieldULong(handle, row, 0);
 	m_name = DBGetField(handle, row, 1, NULL, 0);
+	DecodeSQLString(m_name);
 	m_comments = DBGetField(handle, row, 2, NULL, 0);
+	DecodeSQLString(m_comments);
+	m_numInstances = 0;
+	m_instanceList = NULL;
 	m_accessMutex = MutexCreate();
 }
 
@@ -124,6 +128,56 @@ Situation::~Situation()
 		delete m_instanceList[i];
 	safe_free(m_instanceList);
 	MutexDestroy(m_accessMutex);
+}
+
+
+//
+// Save to database
+//
+
+void Situation::SaveToDatabase()
+{
+	DB_RESULT result;
+	TCHAR *query, *escName, *escComments;
+	BOOL isUpdate;
+	
+	escName = EncodeSQLString(CHECK_NULL_EX(m_name));
+	escComments = EncodeSQLString(CHECK_NULL_EX(m_comments));
+	query = (TCHAR *)malloc((_tcslen(escName) + _tcslen(escComments) + 256) * sizeof(TCHAR));
+	_stprintf(query, _T("SELECT id FROM situations WHERE id=%d"), m_id);
+	result = DBSelect(g_hCoreDB, query);
+	if (result != NULL)
+	{
+		isUpdate = DBGetNumRows(result) > 0;
+		DBFreeResult(result);
+	}
+	else
+	{
+		isUpdate = FALSE;
+	}
+	if (isUpdate)
+		_stprintf(query, _T("UPDATE situations SET name='%s',comments='%s' WHERE id=%d"),
+		          escName, escComments, m_id);
+	else
+		_stprintf(query, _T("INSERT INTO situations (id,name,comments) VALUES (%d,'%s','%s')"),
+		          m_id, escName, escComments);
+	free(escName);
+	free(escComments);
+	DBQuery(g_hCoreDB, query);
+	free(query);
+}
+
+
+//
+// Delete from database
+//
+
+void Situation::DeleteFromDatabase()
+{
+	TCHAR query[256];
+	
+	_sntprintf(query, 256, _T("DELETE FROM situations WHERE id=%d"), m_id);
+	DBQuery(g_hCoreDB, query);
 }
 
 
@@ -229,6 +283,7 @@ void Situation::UpdateFromMessage(CSCPMessage *msg)
 		safe_free(m_comments);
 		m_comments = msg->GetVariableStr(VID_COMMENTS);
 	}
+	SaveToDatabase();
 	Unlock();
 }
 
@@ -299,6 +354,7 @@ Situation *CreateSituation(const TCHAR *name)
    RWLockWriteLock(m_rwlockSituationIndex, INFINITE);
    AddObjectToIndex(&m_pSituationIndex, &m_dwSituationIndexSize, st->GetId(), st);
    RWLockUnlock(m_rwlockSituationIndex);
+   st->SaveToDatabase();
 	return st;
 }
 
@@ -314,10 +370,11 @@ DWORD DeleteSituation(DWORD id)
    if (m_pSituationIndex == NULL)
       return RCC_INVALID_SITUATION_ID;
 
-   RWLockReadLock(m_rwlockSituationIndex, INFINITE);
+   RWLockWriteLock(m_rwlockSituationIndex, INFINITE);
    dwPos = SearchIndex(m_pSituationIndex, m_dwSituationIndexSize, id);
    if (dwPos != INVALID_INDEX)
    {
+   	((Situation *)m_pSituationIndex[dwPos].pObject)->DeleteFromDatabase();
    	delete (Situation *)m_pSituationIndex[dwPos].pObject;
    	DeleteObjectFromIndex(&m_pSituationIndex, &m_dwSituationIndexSize, id);
    	rcc = RCC_SUCCESS;
