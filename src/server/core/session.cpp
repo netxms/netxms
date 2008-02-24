@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.296 2008-02-22 08:34:42 victor Exp $ */
+/* $Id: session.cpp,v 1.297 2008-02-24 18:27:16 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -3535,11 +3535,14 @@ void ClientSession::ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
       if ((pParent->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)) &&
           (pChild->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
       {
-         // Parent object should be container or service root
+         // Parent object should be container or service root,
+			// or template group/root for templates
          // For unbind, it can also be template
          if ((pParent->Type() == OBJECT_CONTAINER) ||
              (pParent->Type() == OBJECT_SERVICEROOT) ||
-             ((pParent->Type() == OBJECT_TEMPLATE) && (!bBind)))
+             ((pParent->Type() == OBJECT_TEMPLATE) && (!bBind)) ||
+				 ((pParent->Type() == OBJECT_TEMPLATEGROUP) && (pChild->Type() == OBJECT_TEMPLATE)) ||
+				 ((pParent->Type() == OBJECT_TEMPLATEROOT) && (pChild->Type() == OBJECT_TEMPLATE)))
          {
             if (bBind)
             {

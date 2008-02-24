@@ -1186,7 +1186,9 @@ void CObjectBrowser::OnUpdateObjectMove(CCmdUI* pCmdUI)
          if (pObject != NULL)
          {
             if ((pObject->iClass == OBJECT_CONTAINER) ||
-                (pObject->iClass == OBJECT_SERVICEROOT))
+                (pObject->iClass == OBJECT_SERVICEROOT) ||
+                (pObject->iClass == OBJECT_TEMPLATEGROUP) ||
+                (pObject->iClass == OBJECT_TEMPLATEROOT))
                bEnable = TRUE;
          }
       }

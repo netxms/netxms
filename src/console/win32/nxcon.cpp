@@ -3140,8 +3140,10 @@ void CConsoleApp::MoveObject(DWORD dwObjectId, DWORD dwParentId)
 {
    CObjectSelDlg dlg;
    DWORD dwResult;
+	NXC_OBJECT *object;
 
-   dlg.m_dwAllowedClasses = SCL_CONTAINER | SCL_SERVICEROOT;
+	object = NXCFindObjectById(g_hSession, dwObjectId);
+   dlg.m_dwAllowedClasses = (object->iClass == OBJECT_TEMPLATE) ? (SCL_TEMPLATEGROUP | SCL_TEMPLATEROOT) : (SCL_CONTAINER | SCL_SERVICEROOT);
    dlg.m_bSingleSelection = TRUE;
    if (dlg.DoModal() == IDOK)
    {

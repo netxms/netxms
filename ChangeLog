@@ -16,6 +16,7 @@
 - Added optional synchronization of node names with DNS
 - New command line tool for managing alarms - nxalarm
 - Implemented "stop processing" option for event processing policy rule
+- Implemented "move" operation for templates (move between template groups)
 - Fixed issues: #188, #189, #190, #199
 
 
