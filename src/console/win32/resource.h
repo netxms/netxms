@@ -253,6 +253,7 @@
 #define IDD_SELECT_SITUATION            379
 #define IDI_SITUATION                   380
 #define IDA_SITUATION_MANAGER           381
+#define IDD_EDIT_RULE_SITUATION         382
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -301,6 +302,7 @@
 #define IDC_LIST_ITEMS                  1024
 #define IDC_LIST_STRINGS                1024
 #define IDC_LIST_SITUATIONS             1024
+#define IDC_LIST_ATTRIBUTES             1024
 #define IDC_INFO_TEXT                   1025
 #define IDC_LIST_CHILDS                 1025
 #define IDC_LIST_REMOTE                 1025
@@ -671,6 +673,7 @@
 #define IDC_CHECK_USE_MULTIPLIERS       1507
 #define IDC_EDIT_TAG                    1508
 #define IDC_CHECK_STOP                  1514
+#define IDC_CHECK_ENABLE                1516
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -962,9 +965,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        382
+#define _APS_NEXT_RESOURCE_VALUE        383
 #define _APS_NEXT_COMMAND_VALUE         33093
-#define _APS_NEXT_CONTROL_VALUE         1515
+#define _APS_NEXT_CONTROL_VALUE         1520
 #define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif

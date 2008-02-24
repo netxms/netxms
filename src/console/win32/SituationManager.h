@@ -41,6 +41,8 @@ protected:
 	afx_msg void OnDestroy();
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnSituationCreate();
+	afx_msg void OnSituationDelete();
+	afx_msg void OnUpdateSituationDelete(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

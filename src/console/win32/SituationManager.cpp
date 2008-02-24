@@ -33,6 +33,8 @@ BEGIN_MESSAGE_MAP(CSituationManager, CMDIChildWnd)
 	ON_WM_DESTROY()
 	ON_WM_CONTEXTMENU()
 	ON_COMMAND(ID_SITUATION_CREATE, OnSituationCreate)
+	ON_COMMAND(ID_SITUATION_DELETE, OnSituationDelete)
+	ON_UPDATE_COMMAND_UI(ID_SITUATION_DELETE, OnUpdateSituationDelete)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -146,7 +148,7 @@ void CSituationManager::OnSituationCreate()
 	dlg.m_strHeader = _T("Situation name");
 	if (dlg.DoModal() == IDOK)
 	{
-		rcc = NXCCreateSituation(g_hSession, dlg.m_strText, _T(""), &id);
+		rcc = DoRequestArg4(NXCCreateSituation, g_hSession, (void *)((LPCTSTR)dlg.m_strText), _T(""), &id, _T("Creating situation..."));
 		if (rcc == RCC_SUCCESS)
 		{
 			item = m_wndTreeCtrl.InsertItem(dlg.m_strText, m_root);
@@ -157,5 +159,46 @@ void CSituationManager::OnSituationCreate()
 		{
 			theApp.ErrorBox(rcc, _T("Cannot create situation: %s"));
 		}
+	}
+}
+
+
+//
+// Delete situation
+//
+
+void CSituationManager::OnSituationDelete() 
+{
+	HTREEITEM item;
+	DWORD rcc;
+
+	item = m_wndTreeCtrl.GetSelectedItem();
+	if (item != NULL)
+	{
+		rcc = DoRequestArg2(NXCDeleteSituation, g_hSession, CAST_TO_POINTER(m_wndTreeCtrl.GetItemData(item), void *), _T("Deleting situation..."));
+		if (rcc == RCC_SUCCESS)
+		{
+			m_wndTreeCtrl.DeleteItem(item);
+		}
+		else
+		{
+			theApp.ErrorBox(rcc, _T("Cannot delete situation: %s"));
+		}
+	}
+}
+
+void CSituationManager::OnUpdateSituationDelete(CCmdUI* pCmdUI) 
+{
+	HTREEITEM item;
+
+	item = m_wndTreeCtrl.GetSelectedItem();
+	if (item != NULL)
+	{
+		DWORD id = m_wndTreeCtrl.GetItemData(item);
+		pCmdUI->Enable((id != 0) && (id != 0xFFFFFFFF));
+	}
+	else
+	{
+		pCmdUI->Enable(FALSE);
 	}
 }

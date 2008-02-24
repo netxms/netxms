@@ -9,6 +9,7 @@
 #include "RuleScriptDlg.h"
 #include "RuleOptionsDlg.h"
 #include "ActionSelDlg.h"
+#include "RuleSituationDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -843,6 +844,9 @@ void CEventPolicyEditor::OnPolicyEdit()
          case COL_ALARM:
             EditAlarm(iRow);
             break;
+         case COL_SITUATION:
+            EditSituation(iRow);
+            break;
 			case COL_OPTIONS:
 				EditOptions(iRow);
 				break;
@@ -937,6 +941,23 @@ void CEventPolicyEditor::EditAlarm(int iRow)
       }
       Modify();
       UpdateRow(iRow);
+   }
+}
+
+
+//
+// Edit situation cell
+//
+
+void CEventPolicyEditor::EditSituation(int row)
+{
+   CRuleSituationDlg dlg;
+
+//   dlg.m_dwSituation = m_pEventPolicy->pRuleList[row].
+   if (dlg.DoModal() == IDOK)
+   {
+      Modify();
+      UpdateRow(row);
    }
 }
 

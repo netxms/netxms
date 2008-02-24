@@ -1058,6 +1058,8 @@ src/console/win32/RuleScriptDlg.cpp -text
 src/console/win32/RuleScriptDlg.h -text
 src/console/win32/RuleSeverityDlg.cpp -text
 src/console/win32/RuleSeverityDlg.h -text
+src/console/win32/RuleSituationDlg.cpp -text
+src/console/win32/RuleSituationDlg.h -text
 src/console/win32/SNMPWalkDlg.cpp -text
 src/console/win32/SNMPWalkDlg.h -text
 src/console/win32/SaveDesktopDlg.cpp -text

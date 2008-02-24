@@ -708,6 +708,10 @@ SOURCE=.\RuleSeverityDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\RuleSituationDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\SaveDesktopDlg.cpp
 # End Source File
 # Begin Source File
@@ -1386,6 +1390,10 @@ SOURCE=.\RuleScriptDlg.h
 # Begin Source File
 
 SOURCE=.\RuleSeverityDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\RuleSituationDlg.h
 # End Source File
 # Begin Source File
 
