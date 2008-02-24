@@ -78,6 +78,7 @@
 #include "CertManager.h"
 #include "CreateIfDCIDlg.h"
 #include "IfPropsGeneral.h"
+#include "SituationManager.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -137,6 +138,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_TOOLS_IMPORTMP, OnToolsImportmp)
 	ON_COMMAND(ID_TOOLS_GRAPHS_MANAGE, OnToolsGraphsManage)
 	ON_COMMAND(ID_CONTROLPANEL_CERTIFICATES, OnControlpanelCertificates)
+	ON_COMMAND(ID_VIEW_SITUATIONS, OnViewSituations)
 	//}}AFX_MSG_MAP
 	ON_THREAD_MESSAGE(NXCM_GRAPH_LIST_UPDATED, OnGraphListUpdate)
 	ON_COMMAND_RANGE(GRAPH_MENU_FIRST_ID, GRAPH_MENU_LAST_ID, OnPredefinedGraph)
@@ -458,6 +460,10 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hNodePollerMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
    InsertMenu(m_hNodePollerMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 26), _T("&Poller"));
 
+   m_hSituationManagerMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hSituationManagerMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hSituationManagerMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 27), _T("&Situation"));
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -482,6 +488,7 @@ BOOL CConsoleApp::InitInstance()
 	m_hObjectCommentsAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_OBJECT_COMMENTS));
 	m_hCertManagerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_CERT_MANAGER));
 	m_hNodePollerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_NODE_POLLER));
+	m_hSituationManagerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_SITUATION_MANAGER));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)
@@ -572,6 +579,8 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hCertManagerAccel);
    SafeFreeResource(m_hNodePollerMenu);
    SafeFreeResource(m_hNodePollerAccel);
+   SafeFreeResource(m_hSituationManagerMenu);
+   SafeFreeResource(m_hSituationManagerAccel);
 
    CloseHandle(g_mutexActionListAccess);
    CloseHandle(g_mutexGraphListAccess);
@@ -4350,6 +4359,7 @@ void CConsoleApp::CreateIfDCI(NXC_OBJECT *pObject)
 DWORD CConsoleApp::LoadSituations()
 {
 	NXCDestroySituationList(m_pSituationList);
+	m_pSituationList = NULL;
 	return NXCGetSituationList(g_hSession, &m_pSituationList);
 }
 
@@ -4360,7 +4370,8 @@ DWORD CConsoleApp::LoadSituations()
 
 NXC_SITUATION_LIST *CConsoleApp::GetSituationList()
 {
-	MutexLock(m_mutexSituationList, INFINITE);
+	if (m_pSituationList != NULL)
+		MutexLock(m_mutexSituationList, INFINITE);
 	return m_pSituationList;
 }
 
@@ -4372,4 +4383,25 @@ NXC_SITUATION_LIST *CConsoleApp::GetSituationList()
 void CConsoleApp::UnlockSituationList()
 {
 	MutexUnlock(m_mutexSituationList);
+}
+
+
+//
+// Open situations manager
+//
+
+void CConsoleApp::OnViewSituations() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_viewState[VIEW_SITUATION_MANAGER].bActive)
+   {
+      m_viewState[VIEW_SITUATION_MANAGER].pWnd->BringWindowToTop();
+   }
+   else
+   {
+      pFrame->CreateNewChild(RUNTIME_CLASS(CSituationManager), IDR_SITUATION_MANAGER,
+                             m_hSituationManagerMenu, m_hSituationManagerAccel);
+   }
 }

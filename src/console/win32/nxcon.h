@@ -233,6 +233,8 @@ protected:
 	HACCEL m_hCertManagerAccel;   // Accelerator for certificate manager
 	HMENU m_hNodePollerMenu;      // Menu for node poller
 	HACCEL m_hNodePollerAccel;    // Accelerator for node poller
+	HMENU m_hSituationManagerMenu;     // Menu for situation manager
+	HACCEL m_hSituationManagerAccel;   // Accelerator for situation manager
 	
 public:
 	CMDIChildWnd *FindObjectView(DWORD dwClass, DWORD dwId);
@@ -275,6 +277,7 @@ public:
 	afx_msg void OnToolsImportmp();
 	afx_msg void OnToolsGraphsManage();
 	afx_msg void OnControlpanelCertificates();
+	afx_msg void OnViewSituations();
 	//}}AFX_MSG
 	afx_msg void OnGraphListUpdate(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnPredefinedGraph(UINT nCmd);

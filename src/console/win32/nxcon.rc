@@ -150,6 +150,7 @@ IDI_EMPTY               ICON    DISCARDABLE     "icons\\empty.ico"
 IDI_SUBORDINATES        ICON    DISCARDABLE     "icons\\subordinates.ico"
 IDI_REDO_LAYOUT         ICON    DISCARDABLE     "icons\\redo_layout.ico"
 IDI_STOP                ICON    DISCARDABLE     "icons\\stop.ico"
+IDI_SITUATION           ICON    DISCARDABLE     "icons\\situation.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -198,6 +199,7 @@ BEGIN
         MENUITEM "&Event Log\tCtrl+F8",         ID_VIEW_EVENTS
         MENUITEM "S&yslog\tAlt+F8",             ID_VIEW_SYSLOG
         MENUITEM "SNM&P Trap Log\tCtrl+Shift+F8", ID_VIEW_SNMPTRAPLOG
+        MENUITEM "S&ituations",                 ID_VIEW_SITUATIONS
         MENUITEM "&Control Panel\tF9",          ID_VIEW_CONTROLPANEL
         MENUITEM "&Debug\tCtrl+Shift+F12",      ID_VIEW_DEBUG
         MENUITEM SEPARATOR
@@ -1300,6 +1302,13 @@ BEGIN
     "A",            ID_EDIT_SELECT_ALL,     VIRTKEY, CONTROL, NOINVERT
     "C",            ID_POLLER_COPYTOCLIPBOARD, VIRTKEY, CONTROL, NOINVERT
     VK_INSERT,      ID_POLLER_COPYTOCLIPBOARD, VIRTKEY, CONTROL, NOINVERT
+END
+
+IDA_SITUATION_MANAGER ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_DELETE,      ID_SITUATION_DELETE,    VIRTKEY, NOINVERT
+    VK_INSERT,      ID_SITUATION_CREATE,    VIRTKEY, NOINVERT
+    VK_RETURN,      ID_SITUATION_EDIT,      VIRTKEY, ALT, NOINVERT
 END
 
 
@@ -3355,6 +3364,19 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,152,24,50,14
 END
 
+IDD_SELECT_SITUATION DIALOGEX 0, 0, 250, 234
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Select Situation"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,139,213,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,193,213,50,14
+    LTEXT           "Configured situations",IDC_STATIC,7,7,166,8
+    CONTROL         "List1",IDC_LIST_SITUATIONS,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | 
+                    WS_TABSTOP,7,17,236,190,WS_EX_CLIENTEDGE
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -4150,6 +4172,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 46
     END
+
+    IDD_SELECT_SITUATION, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 243
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 227
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -4305,6 +4335,7 @@ BEGIN
     IDR_OBJECT_COMMENTS_EDITOR "\nComments\nComments"
     IDR_ALARM_DETAILS       "\nAlarm Details\nAlarm Details"
     IDR_CERT_MANAGER        "\nCertificates\nCertificates"
+    IDR_SITUATION_MANAGER   "\nSituations Manager\nSituations Manager"
 END
 
 STRINGTABLE DISCARDABLE 

@@ -1070,6 +1070,10 @@ src/console/win32/SelectMPDlg.cpp -text
 src/console/win32/SelectMPDlg.h -text
 src/console/win32/ServerCfgEditor.cpp -text
 src/console/win32/ServerCfgEditor.h -text
+src/console/win32/SituationManager.cpp -text
+src/console/win32/SituationManager.h -text
+src/console/win32/SituationSelDlg.cpp -text
+src/console/win32/SituationSelDlg.h -text
 src/console/win32/StdAfx.cpp -text
 src/console/win32/StdAfx.h -text
 src/console/win32/SubmapBkgndDlg.cpp -text
@@ -1181,6 +1185,7 @@ src/console/win32/icons/script.ico -text
 src/console/win32/icons/script_library.ico -text
 src/console/win32/icons/server.ico -text
 src/console/win32/icons/setup.ico -text
+src/console/win32/icons/situation.ico -text
 src/console/win32/icons/sms.ico -text
 src/console/win32/icons/sort_up.ico -text
 src/console/win32/icons/sortdown.ico -text

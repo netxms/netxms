@@ -250,6 +250,9 @@
 #define IDI_STOP                        376
 #define IDD_EDIT_RULE_OPTIONS           377
 #define IDA_NODE_POLLER                 378
+#define IDD_SELECT_SITUATION            379
+#define IDI_SITUATION                   380
+#define IDA_SITUATION_MANAGER           381
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -297,6 +300,7 @@
 #define IDC_LIST_RESOURCES              1024
 #define IDC_LIST_ITEMS                  1024
 #define IDC_LIST_STRINGS                1024
+#define IDC_LIST_SITUATIONS             1024
 #define IDC_INFO_TEXT                   1025
 #define IDC_LIST_CHILDS                 1025
 #define IDC_LIST_REMOTE                 1025
@@ -687,6 +691,7 @@
 #define IDR_OBJECT_COMMENTS_EDITOR      8117
 #define IDR_ALARM_DETAILS               8118
 #define IDR_CERT_MANAGER                8119
+#define IDR_SITUATION_MANAGER           8120
 #define IDR_CTRLPANEL                   8133
 #define IDR_EVENTS                      8137
 #define IDR_MAPFRAME                    8138
@@ -946,6 +951,7 @@
 #define ID_SITUATION_EDIT               33085
 #define ID_SITUATION_DELETE             33086
 #define ID_SITUATION_CREATEINSTANCE     33087
+#define ID_VIEW_SITUATIONS              33092
 #define ID_ALWAYS_DISABLED              43210
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
@@ -956,8 +962,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        379
-#define _APS_NEXT_COMMAND_VALUE         33088
+#define _APS_NEXT_RESOURCE_VALUE        382
+#define _APS_NEXT_COMMAND_VALUE         33093
 #define _APS_NEXT_CONTROL_VALUE         1515
 #define _APS_NEXT_SYMED_VALUE           135
 #endif

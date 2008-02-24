@@ -199,8 +199,8 @@ void Situation::CreateMessage(CSCPMessage *msg)
 	Lock();
 	
 	msg->SetVariable(VID_SITUATION_ID, m_id);
-	msg->SetVariable(VID_NAME, m_name);
-	msg->SetVariable(VID_COMMENTS, m_comments);
+	msg->SetVariable(VID_NAME, CHECK_NULL_EX(m_name));
+	msg->SetVariable(VID_COMMENTS, CHECK_NULL_EX(m_comments));
 	msg->SetVariable(VID_INSTANCE_COUNT, (DWORD)m_numInstances);
 	
 	for(i = 0, id = VID_INSTANCE_LIST_BASE; i < m_numInstances; i++)

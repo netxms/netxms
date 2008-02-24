@@ -147,6 +147,8 @@ EXTRA_DIST = \
 	ScriptView.cpp ScriptView.h \
 	SelectMPDlg.cpp SelectMPDlg.h \
 	ServerCfgEditor.cpp ServerCfgEditor.h \
+	SituationManager.cpp SituationManager.h \
+	SituationSelDlg.cpp SituationSelDlg.h \
 	StdAfx.cpp StdAfx.h \
 	SubmapBkgndDlg.cpp SubmapBkgndDlg.h \
 	SyslogBrowser.cpp SyslogBrowser.h \

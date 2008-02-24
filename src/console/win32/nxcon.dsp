@@ -732,6 +732,10 @@ SOURCE=.\SituationManager.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\SituationSelDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\SNMPWalkDlg.cpp
 # End Source File
 # Begin Source File
@@ -1417,6 +1421,10 @@ SOURCE=.\SituationManager.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\SituationSelDlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\SNMPWalkDlg.h
 # End Source File
 # Begin Source File
@@ -1830,6 +1838,10 @@ SOURCE=.\icons\SeverityNormal.ico
 # Begin Source File
 
 SOURCE=.\icons\SeverityWarning.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\icons\situation.ico
 # End Source File
 # Begin Source File
 
