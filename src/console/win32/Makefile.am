@@ -142,6 +142,7 @@ EXTRA_DIST = \
 	RuleOptionsDlg.cpp RuleOptionsDlg.h \
 	RuleScriptDlg.cpp RuleScriptDlg.h \
 	RuleSeverityDlg.cpp RuleSeverityDlg.h \
+	RuleSituationDlg.cpp RuleSituationDlg.h \
 	SNMPWalkDlg.cpp SNMPWalkDlg.h \
 	ScriptManager.cpp ScriptManager.h \
 	ScriptView.cpp ScriptView.h \
