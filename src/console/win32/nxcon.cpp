@@ -4387,6 +4387,46 @@ void CConsoleApp::UnlockSituationList()
 
 
 //
+// Get situation's name
+//
+
+TCHAR *CConsoleApp::GetSituationName(DWORD id, TCHAR *buffer)
+{
+	int i;
+
+	if (id == 0)
+	{
+		_tcscpy(buffer, _T("<none>"));
+	}
+	else
+	{
+		MutexLock(m_mutexSituationList, INFINITE);
+		if (m_pSituationList != NULL)
+		{
+			for(i = 0; i < m_pSituationList->m_count; i++)
+			{
+				if (m_pSituationList->m_situations[i].m_id == id)
+				{
+					nx_strncpy(buffer, m_pSituationList->m_situations[i].m_name, MAX_DB_STRING);
+					break;
+				}
+			}
+			if (i == m_pSituationList->m_count)
+			{
+				_tcscpy(buffer, _T("<unknown>"));
+			}
+		}
+		else
+		{
+			_tcscpy(buffer, _T("<unknown>"));
+		}
+		MutexUnlock(m_mutexSituationList);
+	}
+	return buffer;
+}
+
+
+//
 // Open situations manager
 //
 

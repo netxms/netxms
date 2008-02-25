@@ -182,6 +182,10 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('UseInterfaceAliases','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('SyncNodeNamesWithDNS','0',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('AgentCommandTimeout','2000',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('AnchorHosts','#00',1,1);
 
 
 /*

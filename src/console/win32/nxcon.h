@@ -287,6 +287,7 @@ private:
    OBJECT_VIEW m_openObjectViews[MAX_OBJECT_VIEWS];
 
 public:
+	TCHAR *GetSituationName(DWORD id, TCHAR *buffer);
 	void UnlockSituationList(void);
 	NXC_SITUATION_LIST * GetSituationList(void);
 	DWORD LoadSituations(void);

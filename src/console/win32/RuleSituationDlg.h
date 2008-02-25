@@ -36,10 +36,16 @@ public:
 
 // Implementation
 protected:
+	void EnableControls(BOOL enable);
 
 	// Generated message map functions
 	//{{AFX_MSG(CRuleSituationDlg)
 	virtual BOOL OnInitDialog();
+	virtual void OnOK();
+	afx_msg void OnCheckEnable();
+	afx_msg void OnButtonSelect();
+	afx_msg void OnButtonAdd();
+	afx_msg void OnButtonDelete();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.287 2008-02-22 08:34:41 victor Exp $ */
+/* $Id: nxclapi.h,v 1.288 2008-02-25 21:30:25 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -1289,6 +1289,13 @@ typedef struct
    WORD wAlarmSeverity;
 	DWORD dwAlarmTimeout;
 	DWORD dwAlarmTimeoutEvent;
+	DWORD dwSituationId;
+	TCHAR szSituationInstance[MAX_DB_STRING];
+#ifdef __cplusplus
+	StringMap *pSituationAttrList;
+#else
+	void *pSituationAttrList;
+#endif
 } NXC_EPP_RULE;
 
 

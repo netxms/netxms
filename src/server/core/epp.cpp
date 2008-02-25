@@ -98,7 +98,7 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
 EPRule::EPRule(CSCPMessage *pMsg)
 {
 	DWORD i, id, count;
-	TCHAR name[MAX_DB_STRING], value[MAX_DB_STRING];
+	TCHAR *name, *value;
 	
    m_dwFlags = pMsg->GetVariableLong(VID_FLAGS);
    m_dwId = pMsg->GetVariableLong(VID_RULE_ID);
@@ -127,9 +127,9 @@ EPRule::EPRule(CSCPMessage *pMsg)
    count = pMsg->GetVariableLong(VID_SITUATION_NUM_ATTRS);
    for(i = 0, id = VID_SITUATION_ATTR_LIST_BASE; i < count; i++)
    {
-   	pMsg->GetVariableStr(id++, name, MAX_DB_STRING);
-   	pMsg->GetVariableStr(id++, value, MAX_DB_STRING);
-   	m_situationAttrList.Set(name, value);
+   	name = pMsg->GetVariableStr(id++);
+   	value = pMsg->GetVariableStr(id++);
+   	m_situationAttrList.SetPreallocated(name, value);
    }
 
    m_pszScript = pMsg->GetVariableStr(VID_SCRIPT);

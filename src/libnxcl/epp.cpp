@@ -52,7 +52,8 @@ void LIBNXCL_EXPORTABLE NXCDestroyEventPolicy(NXC_EPP *pEventPolicy)
 DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEventPolicy)
 {
    CSCPMessage msg, *pResponse;
-   DWORD i, dwRqId, dwRetCode;
+   DWORD i, j, dwRqId, dwRetCode, count, id;
+	TCHAR *attr, *value;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -121,6 +122,18 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEv
 					(*ppEventPolicy)->pRuleList[i].dwAlarmTimeout = pResponse->GetVariableLong(VID_ALARM_TIMEOUT);
 					(*ppEventPolicy)->pRuleList[i].dwAlarmTimeoutEvent = pResponse->GetVariableLong(VID_ALARM_TIMEOUT_EVENT);
 
+					(*ppEventPolicy)->pRuleList[i].dwSituationId = pResponse->GetVariableLong(VID_SITUATION_ID);
+               pResponse->GetVariableStr(VID_SITUATION_INSTANCE,
+                                         (*ppEventPolicy)->pRuleList[i].szSituationInstance,
+                                         MAX_DB_STRING);
+					(*ppEventPolicy)->pRuleList[i].pSituationAttrList = new StringMap;
+					count = pResponse->GetVariableLong(VID_SITUATION_NUM_ATTRS);
+					for(j = 0, id = VID_SITUATION_ATTR_LIST_BASE; j < count; j++)
+					{
+						attr = pResponse->GetVariableStr(id++);
+						value = pResponse->GetVariableStr(id++);
+						(*ppEventPolicy)->pRuleList[i].pSituationAttrList->SetPreallocated(attr, value);
+					}
                delete pResponse;
             }
             else
@@ -178,7 +191,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseEventPolicy(NXC_SESSION hSession)
 DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEventPolicy)
 {
    CSCPMessage msg;
-   DWORD i, dwRqId, dwRetCode;
+   DWORD i, j, id, count, dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -219,6 +232,15 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEven
          msg.SetVariable(VID_ALARM_SEVERITY, pEventPolicy->pRuleList[i].wAlarmSeverity);
 			msg.SetVariable(VID_ALARM_TIMEOUT, pEventPolicy->pRuleList[i].dwAlarmTimeout);
 			msg.SetVariable(VID_ALARM_TIMEOUT_EVENT, pEventPolicy->pRuleList[i].dwAlarmTimeoutEvent);
+			msg.SetVariable(VID_SITUATION_ID, pEventPolicy->pRuleList[i].dwSituationId);
+			msg.SetVariable(VID_SITUATION_INSTANCE, pEventPolicy->pRuleList[i].szSituationInstance);
+			count = pEventPolicy->pRuleList[i].pSituationAttrList->Size();
+			msg.SetVariable(VID_SITUATION_NUM_ATTRS, count);
+			for(j = 0, id = VID_SITUATION_ATTR_LIST_BASE; j < count; j++)
+			{
+				msg.SetVariable(id++, pEventPolicy->pRuleList[i].pSituationAttrList->GetKeyByIndex(j));
+				msg.SetVariable(id++, pEventPolicy->pRuleList[i].pSituationAttrList->GetValueByIndex(j));
+			}
 
          ((NXCL_Session *)hSession)->SendMsg(&msg);
       }

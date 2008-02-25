@@ -254,6 +254,7 @@
 #define IDI_SITUATION                   380
 #define IDA_SITUATION_MANAGER           381
 #define IDD_EDIT_RULE_SITUATION         382
+#define IDI_INSTANCE                    383
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -965,7 +966,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        383
+#define _APS_NEXT_RESOURCE_VALUE        384
 #define _APS_NEXT_COMMAND_VALUE         33093
 #define _APS_NEXT_CONTROL_VALUE         1520
 #define _APS_NEXT_SYMED_VALUE           135

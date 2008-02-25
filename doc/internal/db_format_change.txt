@@ -2,7 +2,7 @@
 * 75 ==> 76 *
 *************
 
-- New configuration parameters added: AgentCommandTimeout
+- New configuration parameters added: AgentCommandTimeout, AnchorHosts
 
 
 *************

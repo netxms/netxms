@@ -151,6 +151,7 @@ IDI_SUBORDINATES        ICON    DISCARDABLE     "icons\\subordinates.ico"
 IDI_REDO_LAYOUT         ICON    DISCARDABLE     "icons\\redo_layout.ico"
 IDI_STOP                ICON    DISCARDABLE     "icons\\stop.ico"
 IDI_SITUATION           ICON    DISCARDABLE     "icons\\situation.ico"
+IDI_INSTANCE            ICON    DISCARDABLE     "icons\\instance.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -61,6 +61,27 @@ StringMap::~StringMap()
 
 
 //
+// Assignment
+//
+
+StringMap& StringMap::operator =(StringMap &src)
+{
+	DWORD i;
+
+	Clear();
+	m_dwSize = src.m_dwSize;
+	m_ppszKeys = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwSize);
+	m_ppszValues = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwSize);
+	for(i = 0; i < m_dwSize; i++)
+	{
+		m_ppszKeys[i] = _tcsdup(src.m_ppszKeys[i]);
+		m_ppszValues[i] = _tcsdup(src.m_ppszValues[i]);
+	}
+	return *this;
+}
+
+
+//
 // Clear map
 //
 
@@ -93,6 +114,32 @@ DWORD StringMap::Find(const TCHAR *pszKey)
 			return i;
 	}
 	return INVALID_INDEX;
+}
+
+
+//
+// Set value - arguments are preallocated dynamic strings
+//
+
+void StringMap::SetPreallocated(TCHAR *pszKey, TCHAR *pszValue)
+{
+	DWORD dwIndex;
+
+	dwIndex = Find(pszKey);
+	if (dwIndex != INVALID_INDEX)
+	{
+		free(pszKey);	// Not needed
+		safe_free(m_ppszValues[dwIndex]);
+		m_ppszValues[dwIndex] = pszValue;
+	}
+	else
+	{
+		m_ppszKeys = (TCHAR **)realloc(m_ppszKeys, (m_dwSize + 1) * sizeof(TCHAR *));
+		m_ppszValues = (TCHAR **)realloc(m_ppszValues, (m_dwSize + 1) * sizeof(TCHAR *));
+		m_ppszKeys[m_dwSize] = pszKey;
+		m_ppszValues[m_dwSize] = pszValue;
+		m_dwSize++;
+	}
 }
 
 

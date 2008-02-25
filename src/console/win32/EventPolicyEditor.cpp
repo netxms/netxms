@@ -129,6 +129,8 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_iImageAny = m_pImageList->GetImageCount();
    LoadBitmapIntoList(m_pImageList, IDB_ANY, PSYM_MASK_COLOR);
    LoadBitmapIntoList(m_pImageList, IDB_NONE, PSYM_MASK_COLOR);
+   m_pImageList->Add(theApp.LoadIcon(IDI_SITUATION));
+   m_pImageList->Add(theApp.LoadIcon(IDI_INSTANCE));
    m_iImageSeverityBase = m_pImageList->GetImageCount();
    m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_NORMAL));
    m_pImageList->Add(theApp.LoadIcon(IDI_SEVERITY_WARNING));
@@ -332,7 +334,7 @@ void CEventPolicyEditor::InsertNewRule(int iInsertBefore)
 
 void CEventPolicyEditor::UpdateRow(int iRow)
 {
-   TCHAR szBuffer[256];
+   TCHAR szBuffer[MAX_DB_STRING];
    DWORD i;
 
    // Rule number
@@ -446,6 +448,22 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    if (m_wndRuleList.GetNumItems(iRow, COL_OPTIONS) == 0)
    {
       m_wndRuleList.AddItem(iRow, COL_OPTIONS, _T("None"), m_iImageAny + 1);
+   }
+
+   // Situation
+   m_wndRuleList.ClearCell(iRow, COL_SITUATION);
+   if (m_pEventPolicy->pRuleList[iRow].dwSituationId != 0)
+   {
+      m_wndRuleList.AddItem(iRow, COL_SITUATION,
+		                      theApp.GetSituationName(m_pEventPolicy->pRuleList[iRow].dwSituationId, szBuffer),
+									 m_iImageAny + 2);
+      m_wndRuleList.AddItem(iRow, COL_SITUATION,
+		                      m_pEventPolicy->pRuleList[iRow].szSituationInstance,
+									 m_iImageAny + 3);
+   }
+	else
+   {
+      m_wndRuleList.AddItem(iRow, COL_SITUATION, _T("None"), m_iImageAny + 1);
    }
 
    // Comment
@@ -953,9 +971,14 @@ void CEventPolicyEditor::EditSituation(int row)
 {
    CRuleSituationDlg dlg;
 
-//   dlg.m_dwSituation = m_pEventPolicy->pRuleList[row].
+	dlg.m_dwSituation = m_pEventPolicy->pRuleList[row].dwSituationId;
+	dlg.m_strInstance = m_pEventPolicy->pRuleList[row].szSituationInstance;
+	dlg.m_attrList = *m_pEventPolicy->pRuleList[row].pSituationAttrList;
    if (dlg.DoModal() == IDOK)
    {
+		m_pEventPolicy->pRuleList[row].dwSituationId = dlg.m_dwSituation;
+		nx_strncpy(m_pEventPolicy->pRuleList[row].szSituationInstance, (LPCTSTR)dlg.m_strInstance, MAX_DB_STRING);
+		*m_pEventPolicy->pRuleList[row].pSituationAttrList = dlg.m_attrList;
       Modify();
       UpdateRow(row);
    }
