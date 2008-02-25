@@ -97,6 +97,9 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
 
 EPRule::EPRule(CSCPMessage *pMsg)
 {
+	DWORD i, id, count;
+	TCHAR name[MAX_DB_STRING], value[MAX_DB_STRING];
+	
    m_dwFlags = pMsg->GetVariableLong(VID_FLAGS);
    m_dwId = pMsg->GetVariableLong(VID_RULE_ID);
    m_pszComment = pMsg->GetVariableStr(VID_COMMENT);
@@ -121,6 +124,13 @@ EPRule::EPRule(CSCPMessage *pMsg)
 
 	m_dwSituationId = pMsg->GetVariableLong(VID_SITUATION_ID);
    pMsg->GetVariableStr(VID_SITUATION_INSTANCE, m_szSituationInstance, MAX_DB_STRING);
+   count = pMsg->GetVariableLong(VID_SITUATION_NUM_ATTRS);
+   for(i = 0, id = VID_SITUATION_ATTR_LIST_BASE; i < count; i++)
+   {
+   	pMsg->GetVariableStr(id++, name, MAX_DB_STRING);
+   	pMsg->GetVariableStr(id++, value, MAX_DB_STRING);
+   	m_situationAttrList.Set(name, value);
+   }
 
    m_pszScript = pMsg->GetVariableStr(VID_SCRIPT);
    if ((m_pszScript != NULL) && (*m_pszScript != 0))
@@ -393,9 +403,9 @@ void EPRule::GenerateAlarm(Event *pEvent)
 BOOL EPRule::LoadFromDB(void)
 {
    DB_RESULT hResult;
-   char szQuery[256];
+   char szQuery[256], name[MAX_DB_STRING], value[MAX_DB_STRING];
    BOOL bSuccess = TRUE;
-   DWORD i;
+   DWORD i, count;
    
    // Load rule's sources
    sprintf(szQuery, "SELECT object_id FROM policy_source_list WHERE rule_id=%d", m_dwId);
@@ -438,6 +448,27 @@ BOOL EPRule::LoadFromDB(void)
       m_pdwActionList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumActions);
       for(i = 0; i < m_dwNumActions; i++)
          m_pdwActionList[i] = DBGetFieldULong(hResult, i, 0);
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      bSuccess = FALSE;
+   }
+   
+   // Load situation attributes
+   sprintf(szQuery, "SELECT attr_name,attr_value FROM policy_situation_attr_list WHERE rule_id=%d", m_dwId);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != NULL)
+   {
+      count = DBGetNumRows(hResult);
+      for(i = 0; i < count; i++)
+      {
+         DBGetField(hResult, i, 0, name, MAX_DB_STRING);
+         DecodeSQLString(name);
+         DBGetField(hResult, i, 1, value, MAX_DB_STRING);
+         DecodeSQLString(value);
+         m_situationAttrList.Set(name, value);
+      }
       DBFreeResult(hResult);
    }
    else
