@@ -33,6 +33,31 @@ static RWLOCK m_rwlockSituationIndex;
 
 
 //
+// Callback for client session enumeration
+//
+
+static void SendSituationNotification(ClientSession *pSession, void *pArg)
+{
+   pSession->OnSituationChange((CSCPMessage *)pArg);
+}
+
+
+//
+// Notify clients about change in situations
+//
+
+static void NotifyClientsOnSituationChange(int code, Situation *st)
+{
+	CSCPMessage msg;
+
+	msg.SetCode(CMD_SITUATION_CHANGE);
+	msg.SetVariable(VID_NOTIFICATION_CODE, (WORD)code);
+	st->CreateMessage(&msg);
+   EnumerateClientSessions(SendSituationNotification, &msg);
+}
+
+	
+//
 // SituationInstance constructor
 //
 
@@ -210,6 +235,8 @@ void Situation::UpdateSituation(const TCHAR *instance, const TCHAR *attribute, c
 	}
 	
 	Unlock();
+
+	NotifyClientsOnSituationChange(SITUATION_UPDATE, this);
 }
 
 
@@ -237,6 +264,9 @@ BOOL Situation::DeleteInstance(const TCHAR *instance)
 	}
 	
 	Unlock();
+
+	if (success)
+		NotifyClientsOnSituationChange(SITUATION_UPDATE, this);
 	return success;
 }
 
@@ -285,6 +315,7 @@ void Situation::UpdateFromMessage(CSCPMessage *msg)
 	}
 	SaveToDatabase();
 	Unlock();
+	NotifyClientsOnSituationChange(SITUATION_UPDATE, this);
 }
 
 
@@ -355,6 +386,7 @@ Situation *CreateSituation(const TCHAR *name)
    AddObjectToIndex(&m_pSituationIndex, &m_dwSituationIndexSize, st->GetId(), st);
    RWLockUnlock(m_rwlockSituationIndex);
    st->SaveToDatabase();
+	NotifyClientsOnSituationChange(SITUATION_CREATE, st);
 	return st;
 }
 
@@ -374,6 +406,7 @@ DWORD DeleteSituation(DWORD id)
    dwPos = SearchIndex(m_pSituationIndex, m_dwSituationIndexSize, id);
    if (dwPos != INVALID_INDEX)
    {
+		NotifyClientsOnSituationChange(SITUATION_DELETE, (Situation *)m_pSituationIndex[dwPos].pObject);
    	((Situation *)m_pSituationIndex[dwPos].pObject)->DeleteFromDatabase();
    	delete (Situation *)m_pSituationIndex[dwPos].pObject;
    	DeleteObjectFromIndex(&m_pSituationIndex, &m_dwSituationIndexSize, id);

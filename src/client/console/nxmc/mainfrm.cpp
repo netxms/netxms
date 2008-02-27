@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.19 2008-02-27 08:08:02 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.20 2008-02-27 20:48:25 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -190,14 +190,6 @@ void nxMainFrame::OnHelpAbout(wxCommandEvent &event)
 	versionTextCtrl->SetLabel(_T("Version ") NETXMS_VERSION_STRING);
 	dlg->ShowModal();
 	delete dlg;
-
-/*	wxAboutDialogInfo info;
-
-	info.SetName(_T("NetXMS Management Console"));
-	info.SetVersion(NETXMS_VERSION_STRING);
-	info.SetDescription(_T("This program does something great."));
-	info.SetCopyright(_T("Copyright (C) 2003 - 2007 Victor Kirhenshtein"));
-	wxAboutBox(info);*/
 }
 
 

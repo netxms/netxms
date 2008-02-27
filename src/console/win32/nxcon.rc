@@ -152,6 +152,7 @@ IDI_REDO_LAYOUT         ICON    DISCARDABLE     "icons\\redo_layout.ico"
 IDI_STOP                ICON    DISCARDABLE     "icons\\stop.ico"
 IDI_SITUATION           ICON    DISCARDABLE     "icons\\situation.ico"
 IDI_INSTANCE            ICON    DISCARDABLE     "icons\\instance.ico"
+IDI_EVENT_CORRELATION   ICON    DISCARDABLE     "icons\\event_corr.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -389,6 +390,8 @@ BEGIN
         MENUITEM "Agent Pac&kages",             ID_CONTROLPANEL_AGENTPKG
         MENUITEM "Ce&rtificates",               ID_CONTROLPANEL_CERTIFICATES
         MENUITEM "&Events",                     ID_CONTROLPANEL_EVENTS
+        MENUITEM "E&vent correlation",          ID_CONTROLPANEL_EVENTCORRELATION
+
         MENUITEM "Event &Policy\tF4",           ID_CONTROLPANEL_EVENTPOLICY
         MENUITEM "&Log processing",             ID_CONTROLPANEL_LOGPROCESSING
 

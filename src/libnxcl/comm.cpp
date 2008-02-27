@@ -193,6 +193,9 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
             case CMD_NOTIFY:
                pSession->OnNotify(pMsg);
                break;
+				case CMD_SITUATION_CHANGE:
+					ProcessSituationChange(pSession, pMsg);
+					break;
             default:
                pSession->m_msgWaitQueue.Put(pMsg);
                bMsgNotNeeded = FALSE;

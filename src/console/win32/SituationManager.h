@@ -44,6 +44,7 @@ protected:
 	afx_msg void OnSituationDelete();
 	afx_msg void OnUpdateSituationDelete(CCmdUI* pCmdUI);
 	//}}AFX_MSG
+	afx_msg void OnSituationChange(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

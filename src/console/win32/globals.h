@@ -134,6 +134,7 @@ extern CConsoleApp theApp;
 #define NXCM_UPDATE_FINISHED       (WM_USER + 129)
 #define NXCM_GRAPH_DATA            (WM_USER + 130)
 #define NXCM_PROCESSING_REQUEST    (WM_USER + 131)
+#define NXCM_SITUATION_CHANGE      (WM_USER + 132)
 
 
 //

@@ -458,7 +458,7 @@ typedef struct
 #define CMD_DEL_SITUATION_INSTANCE  0x00D6
 #define CMD_UPDATE_SITUATION        0x00D7
 #define CMD_SITUATION_DATA          0x00D8
-#define CMD_SITUATION_CHANGED       0x00D9
+#define CMD_SITUATION_CHANGE        0x00D9
 
 
 //

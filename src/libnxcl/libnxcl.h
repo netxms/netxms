@@ -265,6 +265,7 @@ void ProcessTrapLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessActionUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessEventDBRecord(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessUserDBUpdate(CSCPMessage *pMsg);
+void ProcessSituationChange(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessDCI(NXCL_Session *pSession, CSCPMessage *pMsg);
 
 void DebugPrintf(TCHAR *szFormat, ...);

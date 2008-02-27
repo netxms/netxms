@@ -36,6 +36,7 @@ BEGIN_MESSAGE_MAP(CSituationManager, CMDIChildWnd)
 	ON_COMMAND(ID_SITUATION_DELETE, OnSituationDelete)
 	ON_UPDATE_COMMAND_UI(ID_SITUATION_DELETE, OnUpdateSituationDelete)
 	//}}AFX_MSG_MAP
+   ON_MESSAGE(NXCM_SITUATION_CHANGE, OnSituationChange)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -201,4 +202,14 @@ void CSituationManager::OnUpdateSituationDelete(CCmdUI* pCmdUI)
 	{
 		pCmdUI->Enable(FALSE);
 	}
+}
+
+
+//
+// NXCM_SITUATION_CHANGE message handler
+//
+
+void CSituationManager::OnSituationChange(WPARAM wParam, LPARAM lParam)
+{
+	// TODO: implement view update
 }

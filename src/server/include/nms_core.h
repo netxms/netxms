@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.148 2008-02-17 18:44:50 victor Exp $ */
+/* $Id: nms_core.h,v 1.149 2008-02-27 20:48:30 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -212,6 +212,7 @@ typedef void * HSNMPSESSION;
 #define INFO_CAT_SYSLOG_MSG      5
 #define INFO_CAT_SNMP_TRAP       6
 #define INFO_CAT_AUDIT_RECORD    7
+#define INFO_CAT_SITUATION       8
 
 
 //
@@ -345,6 +346,7 @@ private:
    MUTEX m_mutexSendAlarms;
    MUTEX m_mutexSendActions;
 	MUTEX m_mutexSendAuditLog;
+	MUTEX m_mutexSendSituations;
    MUTEX m_mutexPollerInit;
    DWORD m_dwHostAddr;        // IP address of connected host (network byte order)
 	TCHAR m_szWorkstation[16];	// IP address of conneced host in textual form
@@ -565,6 +567,7 @@ public:
    void OnUserDBUpdate(int iCode, DWORD dwUserId, NETXMS_USER *pUser, NETXMS_USER_GROUP *pGroup);
    void OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
    void OnActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction);
+	void OnSituationChange(CSCPMessage *msg);
 };
 
 

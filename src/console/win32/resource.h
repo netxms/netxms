@@ -255,6 +255,7 @@
 #define IDA_SITUATION_MANAGER           381
 #define IDD_EDIT_RULE_SITUATION         382
 #define IDI_INSTANCE                    383
+#define IDI_EVENT_CORRELATION           384
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -956,6 +957,7 @@
 #define ID_SITUATION_DELETE             33086
 #define ID_SITUATION_CREATEINSTANCE     33087
 #define ID_VIEW_SITUATIONS              33092
+#define ID_CONTROLPANEL_EVENTCORRELATION 33093
 #define ID_ALWAYS_DISABLED              43210
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
@@ -966,8 +968,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        384
-#define _APS_NEXT_COMMAND_VALUE         33093
+#define _APS_NEXT_RESOURCE_VALUE        385
+#define _APS_NEXT_COMMAND_VALUE         33094
 #define _APS_NEXT_CONTROL_VALUE         1520
 #define _APS_NEXT_SYMED_VALUE           135
 #endif

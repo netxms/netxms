@@ -1152,6 +1152,7 @@ src/console/win32/icons/document.ico -text
 src/console/win32/icons/e-mail.ico -text
 src/console/win32/icons/editor.ico -text
 src/console/win32/icons/empty.ico -text
+src/console/win32/icons/event_corr.ico -text
 src/console/win32/icons/exec.ico -text
 src/console/win32/icons/exit.ico -text
 src/console/win32/icons/find.ico -text

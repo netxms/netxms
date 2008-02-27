@@ -104,6 +104,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_CONFIGS));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_DISCOVERY));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_CERTMGR));
+   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_EVENT_CORRELATION));
    m_wndListCtrl.SetImageList(m_pImageList, LVSIL_NORMAL);
 
    // Populate list with items
@@ -121,6 +122,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    AddItem(_T("Agent Configurations"), 11, ID_CONTROLPANEL_AGENTCONFIGS);
    AddItem(_T("Network Discovery"), 12, ID_CONTROLPANEL_NETWORKDISCOVERY);
    AddItem(_T("Certificates"), 13, ID_CONTROLPANEL_CERTIFICATES);
+   AddItem(_T("Event Correlation"), 14, ID_CONTROLPANEL_EVENTCORRELATION);
 
    m_wndListCtrl.SortItems(CompareItems, (DWORD)&m_wndListCtrl);
 

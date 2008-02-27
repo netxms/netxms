@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.297 2008-02-24 18:27:16 victor Exp $ */
+/* $Id: session.cpp,v 1.298 2008-02-27 20:48:29 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -279,6 +279,7 @@ ClientSession::ClientSession(SOCKET hSocket, DWORD dwHostAddr)
    m_mutexSendAlarms = MutexCreate();
    m_mutexSendActions = MutexCreate();
    m_mutexSendAuditLog = MutexCreate();
+   m_mutexSendSituations = MutexCreate();
    m_mutexPollerInit = MutexCreate();
    m_dwFlags = 0;
    m_dwHostAddr = dwHostAddr;
@@ -316,6 +317,7 @@ ClientSession::~ClientSession()
    MutexDestroy(m_mutexSendAlarms);
    MutexDestroy(m_mutexSendActions);
    MutexDestroy(m_mutexSendAuditLog);
+   MutexDestroy(m_mutexSendSituations);
    MutexDestroy(m_mutexPollerInit);
    safe_free(m_pOpenDCIList);
    if (m_ppEPPRuleList != NULL)
@@ -682,6 +684,12 @@ void ClientSession::UpdateThread(void)
             MutexUnlock(m_mutexSendActions);
             msg.DeleteAllVariables();
             free(pUpdate->pData);
+            break;
+         case INFO_CAT_SITUATION:
+            MutexLock(m_mutexSendSituations, INFINITE);
+            SendMessage((CSCPMessage *)pUpdate->pData);
+            MutexUnlock(m_mutexSendSituations);
+            delete (CSCPMessage *)pUpdate->pData;
             break;
          default:
             break;
@@ -9437,7 +9445,9 @@ void ClientSession::SendSituationList(DWORD dwRqId)
 
 	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SITUATIONS)
 	{
+		MutexLock(m_mutexSendSituations, INFINITE);
 		SendSituationListToClient(this, &msg);
+		MutexUnlock(m_mutexSendSituations);
 	}
 	else
 	{
@@ -9576,3 +9586,20 @@ void ClientSession::DeleteSituationInstance(CSCPMessage *pRequest)
 	SendMessage(&msg);
 }
 
+
+//
+// Handler for situation chage
+//
+
+void ClientSession::OnSituationChange(CSCPMessage *msg)
+{
+   UPDATE_INFO *pUpdate;
+
+   if (IsAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_SITUATIONS))
+   {
+      pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+      pUpdate->dwCategory = INFO_CAT_SITUATION;
+      pUpdate->pData = new CSCPMessage(msg);
+      m_pUpdateQueue->Put(pUpdate);
+   }
+}

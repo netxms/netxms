@@ -25,6 +25,51 @@
 
 
 //
+// Create NXC_SITUATION from message
+//
+
+static void SituationFromMessage(CSCPMessage *msg, NXC_SITUATION *situation)
+{
+	int i, j, attrCount;
+	TCHAR *attr, *value;
+	DWORD id;
+
+	situation->m_id = msg->GetVariableLong(VID_SITUATION_ID);
+	situation->m_name = msg->GetVariableStr(VID_NAME);
+	situation->m_comments = msg->GetVariableStr(VID_COMMENTS);
+	situation->m_instanceCount = msg->GetVariableLong(VID_INSTANCE_COUNT);
+	situation->m_instanceList = (NXC_SITUATION_INSTANCE *)malloc(sizeof(NXC_SITUATION_INSTANCE) * situation->m_instanceCount);
+	for(i = 0, id = VID_INSTANCE_LIST_BASE; i < situation->m_instanceCount; i++)
+	{
+		situation->m_instanceList[i].m_name = msg->GetVariableStr(id++);
+		attrCount = msg->GetVariableLong(id++);
+		situation->m_instanceList[i].m_attrList = new StringMap;
+		for(j = 0; j < attrCount; j++)
+		{
+			attr = msg->GetVariableStr(id++);
+			value = msg->GetVariableStr(id++);
+			situation->m_instanceList[i].m_attrList->SetPreallocated(attr, value);
+		}
+	}
+}
+
+
+//
+// Process CMD_SITUATION_CHANGE message
+//
+
+void ProcessSituationChange(NXCL_Session *pSession, CSCPMessage *pMsg)
+{
+   NXC_SITUATION st;
+   DWORD dwCode;
+
+   dwCode = pMsg->GetVariableShort(VID_NOTIFICATION_CODE);
+	SituationFromMessage(pMsg, &st);
+   pSession->CallEventHandler(NXC_EVENT_SITUATION_UPDATE, dwCode, &st);
+}
+
+
+//
 // Create situation
 //
 
@@ -132,9 +177,8 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteSituationInstance(NXC_SESSION hSession, DWORD 
 DWORD LIBNXCL_EXPORTABLE NXCGetSituationList(NXC_SESSION hSession, NXC_SITUATION_LIST **list)
 {
    CSCPMessage msg, *pResponse;
-   DWORD dwRqId, rcc, id;
-	TCHAR *attr, *value;
-	int i, j, k, attrCount;
+   DWORD dwRqId, rcc;
+	int i;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -158,25 +202,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSituationList(NXC_SESSION hSession, NXC_SITUATION
 				pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_SITUATION_DATA, dwRqId);
 				if (pResponse != NULL)
 				{
-					(*list)->m_situations[i].m_id = pResponse->GetVariableLong(VID_SITUATION_ID);
-					(*list)->m_situations[i].m_name = pResponse->GetVariableStr(VID_NAME);
-					(*list)->m_situations[i].m_comments = pResponse->GetVariableStr(VID_COMMENTS);
-					(*list)->m_situations[i].m_instanceCount = pResponse->GetVariableLong(VID_INSTANCE_COUNT);
-					(*list)->m_situations[i].m_instanceList = (NXC_SITUATION_INSTANCE *)malloc(sizeof(NXC_SITUATION_INSTANCE) * (*list)->m_situations[i].m_instanceCount);
-					for(j = 0, id = VID_INSTANCE_LIST_BASE; j < (*list)->m_situations[i].m_instanceCount; j++)
-					{
-						(*list)->m_situations[i].m_instanceList[j].m_name = pResponse->GetVariableStr(id++);
-						attrCount = pResponse->GetVariableLong(id++);
-						(*list)->m_situations[i].m_instanceList[j].m_attrList = new StringMap;
-						for(k = 0; k < attrCount; k++)
-						{
-							attr = pResponse->GetVariableStr(id++);
-							value = pResponse->GetVariableStr(id++);
-							(*list)->m_situations[i].m_instanceList[j].m_attrList->Set(attr, value);
-							free(attr);
-							free(value);
-						}
-					}
+					SituationFromMessage(pResponse, &((*list)->m_situations[i]));
 					delete pResponse;
 				}
 				else

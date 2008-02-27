@@ -1065,6 +1065,15 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
          pStatus->pszErrorMessage = _tcsdup(pStatus->pszErrorMessage);
          ((CMainFrame *)m_pMainWnd)->PostMessage(NXCM_DEPLOYMENT_INFO, dwCode, (LPARAM)pStatus);
          break;
+		case NXC_EVENT_SITUATION_UPDATE:
+			MutexLock(m_mutexSituationList, INFINITE);
+			if (m_pSituationList != NULL)
+			{
+				NXCUpdateSituationList(m_pSituationList, dwCode, (NXC_SITUATION *)pArg);
+	         ((CMainFrame *)m_pMainWnd)->PostMessage(NXCM_SITUATION_CHANGE, dwCode, ((NXC_SITUATION *)pArg)->m_id);
+			}
+			MutexUnlock(m_mutexSituationList);
+			break;
       case NXC_EVENT_NOTIFICATION:
          switch(dwCode)
          {

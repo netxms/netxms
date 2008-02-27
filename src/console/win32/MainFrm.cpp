@@ -37,6 +37,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 //   ON_UPDATE_COMMAND_UI(ID_INDICATOR_CONNECT, OnUpdateConnState)
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(NXCM_USERDB_CHANGE, OnUserDBChange)
+   ON_MESSAGE(NXCM_SITUATION_CHANGE, OnSituationChange)
    ON_MESSAGE(NXCM_STATE_CHANGE, OnStateChange)
    ON_MESSAGE(NXCM_ALARM_UPDATE, OnAlarmUpdate)
    ON_MESSAGE(NXCM_DEPLOYMENT_INFO, OnDeploymentInfo)
@@ -202,7 +203,7 @@ void CMainFrame::BroadcastMessage(UINT msg, WPARAM wParam, LPARAM lParam, BOOL b
 
 
 //
-// Handler for WM_OBJECT_CHANGE message
+// Handler for NXCM_OBJECT_CHANGE message
 //
 
 void CMainFrame::OnObjectChange(WPARAM wParam, LPARAM lParam)
@@ -212,7 +213,7 @@ void CMainFrame::OnObjectChange(WPARAM wParam, LPARAM lParam)
 
 
 //
-// Handler for WM_USERDB_CHANGE message
+// Handler for NXCM_USERDB_CHANGE message
 //
 
 void CMainFrame::OnUserDBChange(WPARAM wParam, LPARAM lParam)
@@ -222,7 +223,17 @@ void CMainFrame::OnUserDBChange(WPARAM wParam, LPARAM lParam)
 
 
 //
-// Handler for WM_DEPLOYMENT_INFO message
+// Handler for NXCM_SITUATION_CHANGE message
+//
+
+void CMainFrame::OnSituationChange(WPARAM wParam, LPARAM lParam)
+{
+   BroadcastMessage(NXCM_SITUATION_CHANGE, wParam, lParam, TRUE);
+}
+
+
+//
+// Handler for NXCM_DEPLOYMENT_INFO message
 //
 
 void CMainFrame::OnDeploymentInfo(WPARAM wParam, LPARAM lParam)

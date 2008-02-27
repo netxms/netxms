@@ -1633,6 +1633,10 @@ SOURCE=.\icons\event.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\event_corr.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\exec.ico
 # End Source File
 # Begin Source File
