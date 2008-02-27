@@ -48,6 +48,7 @@ protected:
 	afx_msg void OnPollerCopytoclipboard();
 	afx_msg void OnUpdatePollerCopytoclipboard(CCmdUI* pCmdUI);
 	afx_msg void OnEditSelectAll();
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	//}}AFX_MSG
    afx_msg void OnRequestCompleted(WPARAM wParam, LPARAM lParam);
    afx_msg void OnPollerMessage(WPARAM wParam, LPARAM lParam);

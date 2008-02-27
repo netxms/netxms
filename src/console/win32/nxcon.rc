@@ -633,6 +633,7 @@ BEGIN
     END
     POPUP "Poller"
     BEGIN
+        MENUITEM "Select &all\tCtrl+A",         ID_EDIT_SELECT_ALL
         MENUITEM "&Copy to clipboard\tCtrl+C",  ID_POLLER_COPYTOCLIPBOARD
     END
     POPUP "Situation"
@@ -1051,6 +1052,7 @@ BEGIN
     END
     POPUP "Poller"
     BEGIN
+        MENUITEM "Select &all",                 ID_EDIT_SELECT_ALL
         MENUITEM "&Copy to clipboard",          ID_POLLER_COPYTOCLIPBOARD
     END
     POPUP "Situation"

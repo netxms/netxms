@@ -199,6 +199,10 @@ SOURCE=.\srvcfg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\tbicon.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\vareditdlg.cpp
 # End Source File
 # End Group
@@ -275,12 +279,20 @@ SOURCE=.\srvcfg.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\tbicon.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\vareditdlg.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# Begin Source File
+
+SOURCE=.\rc\manual.xrc
+# End Source File
 # Begin Source File
 
 SOURCE=.\rc\nxmc.ico
@@ -299,6 +311,7 @@ SOURCE=.\rc\wxfb_code.xrc
 
 !IF  "$(CFG)" == "nxmc - Win32 Release"
 
+USERDEP__WXFB_="rc\manual.xrc"	
 # Begin Custom Build - Processing $(InputPath)
 ProjDir=.
 InputPath=.\rc\wxfb_code.xrc
@@ -311,6 +324,7 @@ InputPath=.\rc\wxfb_code.xrc
 
 !ELSEIF  "$(CFG)" == "nxmc - Win32 Debug"
 
+USERDEP__WXFB_="rc\manual.xrc"	
 # Begin Custom Build - Processing $(InputPath)
 ProjDir=.
 InputPath=.\rc\wxfb_code.xrc
@@ -323,6 +337,7 @@ InputPath=.\rc\wxfb_code.xrc
 
 !ELSEIF  "$(CFG)" == "nxmc - Win32 Release UNICODE"
 
+USERDEP__WXFB_="rc\manual.xrc"	
 # Begin Custom Build - Processing $(InputPath)
 ProjDir=.
 InputPath=.\rc\wxfb_code.xrc
@@ -335,6 +350,7 @@ InputPath=.\rc\wxfb_code.xrc
 
 !ELSEIF  "$(CFG)" == "nxmc - Win32 Debug UNICODE"
 
+USERDEP__WXFB_="rc\manual.xrc"	
 # Begin Custom Build - Processing $(InputPath)
 ProjDir=.
 InputPath=.\rc\wxfb_code.xrc

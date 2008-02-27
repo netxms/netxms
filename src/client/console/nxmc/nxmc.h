@@ -18,6 +18,7 @@ extern "C" WXDLLIMPEXP_BASE HINSTANCE wxGetInstance();
 #include "mainfrm.h"
 #include "busydlg.h"
 #include "frame.h"
+#include "tbicon.h"
 
 
 //
@@ -36,6 +37,8 @@ extern "C" WXDLLIMPEXP_BASE HINSTANCE wxGetInstance();
 #define AF_OPEN_VIEW_ON_START    0x00000200
 #define AF_HIDE_STATUS_BAR       0x00000400
 #define AF_EMPTY_WORKAREA        0x00000800
+#define AF_HIDDEN                0x00001000
+#define AF_TASKBAR_ICON          0x00002000
 
 
 //
@@ -70,6 +73,8 @@ END_DECLARE_EVENT_TYPES()
 #define wxID_TOOL_ATTACH            (wxID_HIGHEST + 9)
 #define wxID_TOOL_CLOSE             (wxID_HIGHEST + 10)
 #define wxID_CTRLPANEL_SERVERCFG    (wxID_HIGHEST + 11)
+#define wxID_TBICON_SHOW_CONSOLE    (wxID_HIGHEST + 12)
+#define wxID_TBICON_EXIT            (wxID_HIGHEST + 13)
 
 #define wxID_PERSPECTIVE_START      (wxID_HIGHEST + 100)
 #define wxID_PERSPECTIVE_END        (wxID_HIGHEST + 199)
@@ -112,6 +117,7 @@ class nxApp : public wxApp
 {
 private:
 	nxMainFrame *m_mainFrame;
+	nxTaskBarIcon *m_tbIcon;
 	wxString m_acServer;
 	wxString m_acUsername;
 	wxString m_acPassword;
@@ -127,7 +133,9 @@ public:
 	virtual bool OnCmdLineParsed(wxCmdLineParser& parser);
 	virtual int OnExit();
 
-	nxMainFrame *GetMainFrame(void) { return m_mainFrame; }
+	nxMainFrame *GetMainFrame() { return m_mainFrame; }
+
+	void DestroyTaskBarIcon() { delete_and_null(m_tbIcon); }
 };
 
 DECLARE_APP(nxApp)

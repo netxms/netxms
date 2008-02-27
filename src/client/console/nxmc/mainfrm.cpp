@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.18 2008-01-28 06:59:17 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.19 2008-02-27 08:08:02 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -35,6 +35,7 @@
 BEGIN_EVENT_TABLE(nxMainFrame, wxFrame)
 	EVT_CLOSE(nxMainFrame::OnClose)
 	EVT_CONTEXT_MENU(nxMainFrame::OnContextMenu)
+	EVT_ICONIZE(nxMainFrame::OnMinimize)
 	EVT_MENU(XRCID("menuFileExit"), nxMainFrame::OnFileExit)
 	EVT_MENU(XRCID("menuViewConsoleLog"), nxMainFrame::OnViewConsoleLog)
 	EVT_MENU(XRCID("menuViewControlPanel"), nxMainFrame::OnViewControlPanel)
@@ -147,7 +148,19 @@ void nxMainFrame::UpdateMenuFromPlugins()
 void nxMainFrame::OnClose(wxCloseEvent &event)
 {
 	wxConfig::Get()->Write(_T("/MainFrame/IsMaximized"), IsMaximized());
+	wxGetApp().DestroyTaskBarIcon();
 	event.Skip();
+}
+
+
+//
+// Minimize (iconize) event handler
+//
+
+void nxMainFrame::OnMinimize(wxIconizeEvent &event)
+{
+	if ((g_appFlags & AF_HIDDEN) && event.Iconized())
+		Show(false);
 }
 
 

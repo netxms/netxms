@@ -96,9 +96,10 @@ void PollLexer(UINT nStartPos, int nLen, int nInitStyle,
          case NX_STYLE_TIMESTAMP:
             switch(ch)
             {
+					case ']':
+						nShift = 0;
                case '\r':
                case '\n':
-					case ']':
                   nNewState = NX_STYLE_DEFAULT;
                   break;
                default:

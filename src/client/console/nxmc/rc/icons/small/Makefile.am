@@ -29,6 +29,7 @@ EXTRA_DIST = \
 	sort_down.xpm \
 	sort_up.xpm \
 	subnet.xpm \
+	taskbar.png \
 	template.xpm \
 	template_group.xpm \
 	template_root.xpm \

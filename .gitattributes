@@ -523,6 +523,7 @@ src/client/console/nxmc/rc/icons/small/service_root.xpm -text
 src/client/console/nxmc/rc/icons/small/sort_down.xpm -text
 src/client/console/nxmc/rc/icons/small/sort_up.xpm -text
 src/client/console/nxmc/rc/icons/small/subnet.xpm -text
+src/client/console/nxmc/rc/icons/small/taskbar.png -text
 src/client/console/nxmc/rc/icons/small/template.xpm -text
 src/client/console/nxmc/rc/icons/small/template_group.xpm -text
 src/client/console/nxmc/rc/icons/small/template_root.xpm -text
@@ -541,6 +542,8 @@ src/client/console/nxmc/rc/wxfb_code.xrc -text
 src/client/console/nxmc/resource.h -text
 src/client/console/nxmc/srvcfg.cpp -text
 src/client/console/nxmc/srvcfg.h -text
+src/client/console/nxmc/tbicon.cpp -text
+src/client/console/nxmc/tbicon.h -text
 src/client/console/nxmc/vareditdlg.cpp -text
 src/client/console/nxmc/vareditdlg.h -text
 src/client/console/plugins/AlarmBrowser/AlarmBrowser.rc -text

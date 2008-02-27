@@ -31,6 +31,7 @@
 #include <wx/imaglist.h>
 #include <wx/aboutdlg.h>
 #include <wx/cmdline.h>
+#include <wx/taskbar.h>
 #endif
 
 

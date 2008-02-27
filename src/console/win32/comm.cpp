@@ -1,4 +1,4 @@
-/* $Id: comm.cpp,v 1.57 2008-02-22 08:34:41 victor Exp $ */
+/* $Id: comm.cpp,v 1.58 2008-02-27 08:08:02 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Windows Console
@@ -374,7 +374,14 @@ static DWORD WINAPI LoginThread(void *pArg)
       SetInfoText(hWnd, _T("Synchronizing situations..."));
       dwResult = theApp.LoadSituations();
       if (dwResult == RCC_SUCCESS)
+		{
          dwResult = NXCSubscribe(g_hSession, NXC_CHANNEL_SITUATIONS);
+		}
+		else
+		{
+			if (dwResult == RCC_ACCESS_DENIED)
+				dwResult = RCC_SUCCESS;    // User may not have rights to see situations, it's ok here
+		}
    }
 
    // Disconnect if some of post-login operations was failed

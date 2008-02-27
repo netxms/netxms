@@ -35,6 +35,7 @@ BEGIN_MESSAGE_MAP(CNodePoller, CMDIChildWnd)
 	ON_COMMAND(ID_POLLER_COPYTOCLIPBOARD, OnPollerCopytoclipboard)
 	ON_UPDATE_COMMAND_UI(ID_POLLER_COPYTOCLIPBOARD, OnUpdatePollerCopytoclipboard)
 	ON_COMMAND(ID_EDIT_SELECT_ALL, OnEditSelectAll)
+	ON_WM_CONTEXTMENU()
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_REQUEST_COMPLETED, OnRequestCompleted)
    ON_MESSAGE(NXCM_POLLER_MESSAGE, OnPollerMessage)
@@ -182,4 +183,17 @@ void CNodePoller::OnUpdatePollerCopytoclipboard(CCmdUI* pCmdUI)
 void CNodePoller::OnEditSelectAll() 
 {
 	m_wndMsgArea.SelectAll();
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CNodePoller::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+
+   pMenu = theApp.GetContextMenu(28);
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
 }

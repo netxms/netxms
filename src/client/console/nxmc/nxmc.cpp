@@ -65,6 +65,7 @@ IMPLEMENT_APP(nxApp)
 nxApp::nxApp() : wxApp()
 {
 	m_mainFrame = NULL;
+	m_tbIcon = NULL;
 }
 
 
@@ -151,7 +152,14 @@ bool nxApp::OnInit()
 		}
 	}
 
-	m_mainFrame->Show(true);
+	if (g_appFlags & AF_TASKBAR_ICON)
+	{
+		m_tbIcon = new nxTaskBarIcon;
+		m_tbIcon->SetIcon(wxXmlResource::Get()->LoadIcon(_T("icoTaskBar")), _T("NetXMS Alarm Notifier"));
+	}
+
+	if (!(g_appFlags & AF_HIDDEN))
+		m_mainFrame->Show(true);
 
 	return true;
 }
@@ -167,6 +175,7 @@ void nxApp::OnInitCmdLine(wxCmdLineParser& parser)
 	parser.AddSwitch(_T("A"), _T("autoconnect"), _T("Automatically connect to server"));
 	parser.AddSwitch(wxEmptyString, _T("empty"), _T("Start with empty workarea (don't open any predefined views)"));
 	parser.AddSwitch(_T("F"), _T("fullscreen"), _T("Start in fullscreen mode"));
+	parser.AddSwitch(_T("H"), _T("hidden"), _T("Start with main window hidden; also hide main window when minimize"));
 	parser.AddSwitch(_T("M"), _T("maximized"), _T("Start with maximized main window"));
 	parser.AddSwitch(wxEmptyString, _T("nomenu"), _T("Hide main application menu"));
 	parser.AddSwitch(wxEmptyString, _T("nostatusbar"), _T("Hide status bar"));
@@ -174,6 +183,7 @@ void nxApp::OnInitCmdLine(wxCmdLineParser& parser)
 	parser.AddOption(_T("o"), _T("open"), _T("Open view of given class at startup"));
 	parser.AddOption(wxEmptyString, _T("password"), _T("Password"));
 	parser.AddOption(wxEmptyString, _T("server"), _T("Server to connect to"));
+	parser.AddSwitch(_T("T"), _T("taskbaricon"), _T("Add icon to task bar (system tray)"));
 	parser.AddOption(wxEmptyString, _T("username"), _T("User name"));
 }
 
@@ -190,6 +200,8 @@ bool nxApp::OnCmdLineParsed(wxCmdLineParser& parser)
 		g_appFlags |= AF_EMPTY_WORKAREA;
 	if (parser.Found(_T("fullscreen")))
 		g_appFlags |= AF_FULLSCREEN;
+	if (parser.Found(_T("hidden")))
+		g_appFlags |= AF_HIDDEN;
 	if (parser.Found(_T("maximized")))
 		g_appFlags |= AF_START_MAXIMIZED;
 	if (parser.Found(_T("nomenu")))
@@ -198,6 +210,8 @@ bool nxApp::OnCmdLineParsed(wxCmdLineParser& parser)
 		g_appFlags |= AF_HIDE_STATUS_BAR;
 	if (parser.Found(_T("notabs")))
 		g_appFlags |= AF_HIDE_TABS;
+	if (parser.Found(_T("taskbaricon")))
+		g_appFlags |= AF_TASKBAR_ICON;
 
 	if (parser.Found(_T("open"), &m_autoView))
 		g_appFlags |= AF_OPEN_VIEW_ON_START;
@@ -237,6 +251,7 @@ int nxApp::OnExit()
 	}
 	NXCDisconnect(g_hSession);
 	nxConsoleLogger::Shutdown();
+	delete m_tbIcon;
 	return wxApp::OnExit();
 }
 

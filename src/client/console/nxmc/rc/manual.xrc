@@ -38,6 +38,7 @@
 	<object class="wxIcon" name="icoSmallInformation">icons/small/information.xpm</object>
 	<object class="wxIcon" name="icoSortDown">icons/small/sort_down.xpm</object>
 	<object class="wxIcon" name="icoSortUp">icons/small/sort_up.xpm</object>
+	<object class="wxIcon" name="icoTaskBar">icons/small/taskbar.png</object>
 
 	<!-- Icons for detached window toolar -->
 	<object class="wxIcon" name="icoAttachView">attach_view.xpm</object>

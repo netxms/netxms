@@ -4441,7 +4441,14 @@ void CConsoleApp::OnViewSituations()
    }
    else
    {
-      pFrame->CreateNewChild(RUNTIME_CLASS(CSituationManager), IDR_SITUATION_MANAGER,
-                             m_hSituationManagerMenu, m_hSituationManagerAccel);
+		if (m_pSituationList != NULL)
+		{
+			pFrame->CreateNewChild(RUNTIME_CLASS(CSituationManager), IDR_SITUATION_MANAGER,
+										  m_hSituationManagerMenu, m_hSituationManagerAccel);
+		}
+		else
+		{
+			ErrorBox(RCC_ACCESS_DENIED, _T("Cannot open situation manager: %s"));
+		}
    }
 }

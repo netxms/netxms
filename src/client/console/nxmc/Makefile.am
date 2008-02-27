@@ -14,6 +14,7 @@ nxmc_SOURCES = \
 	nxmc.cpp \
 	plugins.cpp \
 	srvcfg.cpp \
+	tbicon.cpp \
 	vareditdlg.cpp
 if BUILD_UNICODE_CONSOLE
 nxmc_CPPFLAGS = -DUNICODE
@@ -34,4 +35,5 @@ EXTRA_DIST = \
 	nxmc.h \
 	resource.h \
 	srvcfg.h \
+	tbicon.h \
 	vareditdlg.h
