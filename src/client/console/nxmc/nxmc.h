@@ -135,6 +135,7 @@ public:
 
 	nxMainFrame *GetMainFrame() { return m_mainFrame; }
 
+	nxTaskBarIcon& GetTaskBarIcon() { return *m_tbIcon; }
 	void DestroyTaskBarIcon() { delete_and_null(m_tbIcon); }
 };
 

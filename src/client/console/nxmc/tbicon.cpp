@@ -21,8 +21,14 @@
 **
 **/
 
+#define _WIN32_IE 0x0600
+
 #include "nxmc.h"
 #include "tbicon.h"
+
+//#ifdef _WIN32
+//#include <shellapi.h>
+//#endif
 
 
 //
@@ -72,4 +78,48 @@ void nxTaskBarIcon::OnExit(wxCommandEvent &event)
 {
 	wxCommandEvent eventClose(wxEVT_COMMAND_MENU_SELECTED, XRCID("menuFileExit"));
 	wxGetApp().GetMainFrame()->AddPendingEvent(eventClose);
+}
+
+
+//
+// Show "balloon" popup
+//
+
+bool nxTaskBarIcon::ShowBalloon(wxString title, wxString message, unsigned int timeout, int severity)
+{
+	if (!IsOk())
+		return false;
+
+#ifdef _WIN32
+	NOTIFYICONDATA notifyData;
+	
+	memset(&notifyData, 0, sizeof(NOTIFYICONDATA));
+	notifyData.cbSize = sizeof(NOTIFYICONDATA);
+	notifyData.hWnd = (HWND)((wxWindow *)m_win)->GetHWND();
+	notifyData.uID = 99;		// wxWidget's hardcoded icon ID
+	notifyData.uFlags = NIF_INFO;
+
+	wxStrncpy(notifyData.szInfo, message.c_str(), WXSIZEOF(notifyData.szInfo));
+	wxStrncpy(notifyData.szInfoTitle, title.c_str(), WXSIZEOF(notifyData.szInfoTitle));
+	notifyData.uTimeout = timeout;
+
+	switch(severity)
+	{
+		case STATUS_MINOR:
+		case STATUS_MAJOR:
+			notifyData.dwInfoFlags = NIIF_WARNING;
+			break;
+		case STATUS_CRITICAL:
+			notifyData.dwInfoFlags = NIIF_ERROR;
+			break;
+		default:
+			notifyData.dwInfoFlags = NIIF_INFO;
+			break;
+	}
+
+	if (m_iconAdded)
+		return Shell_NotifyIcon(NIM_MODIFY, &notifyData) ? true : false;
+	else
+#endif
+	return false;
 }

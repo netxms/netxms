@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.20 2008-02-27 20:48:25 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.21 2008-02-27 22:30:27 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -435,9 +435,30 @@ void nxMainFrame::OnViewRefresh(wxCommandEvent &event)
 
 void nxMainFrame::OnAlarmChange(wxCommandEvent &event)
 {
+	NXC_ALARM *alarm;
+	
+	alarm = (NXC_ALARM *)event.GetClientData();
+	if (g_appFlags & AF_TASKBAR_ICON)	// Show balloon popup
+	{
+		if (event.GetInt() == NX_NOTIFY_NEW_ALARM)
+		{
+			NXC_OBJECT *object;
+
+			object = NXCFindObjectById(g_hSession, alarm->dwSourceObject);
+			if (object != NULL)
+			{
+				wxString msg = _T("Severity: ");
+
+				msg += NXMCGetStatusText(alarm->nCurrentSeverity);
+				msg += _T("\r\n");
+				msg += alarm->szMessage;
+				wxGetApp().GetTaskBarIcon().ShowBalloon(object->szName, msg.c_str(), 15000, alarm->nCurrentSeverity);
+			}
+		}
+	}	
 	// nxMainFrame is a final destination for client library events,
 	// so it should destroy dynamic data associated with event
-	safe_free(event.GetClientData());
+	safe_free(alarm);
 }
 
 

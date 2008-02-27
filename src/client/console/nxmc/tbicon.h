@@ -29,6 +29,8 @@ class nxTaskBarIcon : public wxTaskBarIcon
 public:
 	virtual wxMenu *CreatePopupMenu();
 
+	bool ShowBalloon(wxString title, wxString message, unsigned int timeout, int severity);
+
 	// Event handlers
 protected:
 	void OnShowConsole(wxCommandEvent &event);
