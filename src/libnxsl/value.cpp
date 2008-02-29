@@ -176,8 +176,16 @@ NXSL_Value::NXSL_Value(double dValue)
 NXSL_Value::NXSL_Value(const TCHAR *pszValue)
 {
    m_nDataType = NXSL_DT_STRING;
-   m_dwStrLen = (DWORD)_tcslen(pszValue);
-   m_pszValStr = strdup(pszValue);
+	if (pszValue != NULL)
+	{
+		m_dwStrLen = (DWORD)_tcslen(pszValue);
+		m_pszValStr = _tcsdup(pszValue);
+	}
+	else
+	{
+		m_dwStrLen = 0;
+		m_pszValStr = _tcsdup(_T(""));
+	}
    m_bStringIsValid = TRUE;
    UpdateNumber();
 }
@@ -186,7 +194,7 @@ NXSL_Value::NXSL_Value(const TCHAR *pszValue, DWORD dwLen)
 {
    m_nDataType = NXSL_DT_STRING;
    m_dwStrLen = dwLen;
-   m_pszValStr = (TCHAR *)nx_memdup(pszValue, (dwLen + 1) * sizeof(TCHAR));
+   m_pszValStr = (TCHAR *)nx_memdup(CHECK_NULL_EX(pszValue), (dwLen + 1) * sizeof(TCHAR));
    m_pszValStr[dwLen] = 0;
    m_bStringIsValid = TRUE;
    UpdateNumber();
@@ -373,7 +381,10 @@ char *NXSL_Value::GetValueAsCString(void)
 char *NXSL_Value::GetValueAsString(DWORD *pdwLen)
 {
    if (IsNull() || IsObject())
+	{
+		*pdwLen = 0;
       return NULL;
+	}
 
    if (!m_bStringIsValid)
       UpdateString();

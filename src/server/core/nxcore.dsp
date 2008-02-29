@@ -198,6 +198,10 @@ SOURCE=.\audit.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\beacon.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\cert.cpp
 # End Source File
 # Begin Source File

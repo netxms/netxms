@@ -1238,26 +1238,6 @@ CREATE TABLE situation_data
 
 
 /*
-** Event correlation policy
-*/
-
-/*CREATE TABLE event_correlation_policy
-(
-	rule_id integer not null,
-	script SQL_TEXT not null,
-	comments SQL_TEXT not null,
-	PRIMARY KEY(rule_id)
-) TABLE_TYPE;
-
-CREATE TABLE ecp_events
-(
-	rule_id integer not null,
-	event_code integer not null,
-	PRIMARY KEY(rule_id,event_code)
-);*/
-
-
-/*
 ** List of possible community strings
 */
 

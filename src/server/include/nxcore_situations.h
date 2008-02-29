@@ -28,20 +28,25 @@
 // Situation instance object
 //
 
+class Situation;
+
 class SituationInstance
 {
 private:
+	Situation *m_parent;
 	TCHAR *m_name;
 	StringMap m_attributes;
 
 public:
-	SituationInstance(const TCHAR *name);
+	SituationInstance(const TCHAR *name, Situation *parent);
 	~SituationInstance();
 
 	const TCHAR *GetName() { return m_name; }
+	Situation *GetParent() { return m_parent; }
 	
 	DWORD CreateMessage(CSCPMessage *msg, DWORD baseId);
 
+	const TCHAR *GetAttribute(const TCHAR *attribute);
 	void UpdateAttribute(const TCHAR *attribute, const TCHAR *value);
 };
 
@@ -79,6 +84,7 @@ public:
 
 	void UpdateSituation(const TCHAR *instance, const TCHAR *attribute, const TCHAR *value);
 	BOOL DeleteInstance(const TCHAR *instance);
+	SituationInstance *FindInstance(const TCHAR *name);
 };
 
 
@@ -88,6 +94,7 @@ public:
 
 BOOL SituationsInit(void);
 Situation *FindSituationById(DWORD id);
+Situation *FindSituationByName(const TCHAR *name);
 Situation *CreateSituation(const TCHAR *name);
 DWORD DeleteSituation(DWORD id);
 void SendSituationListToClient(ClientSession *session, CSCPMessage *msg);

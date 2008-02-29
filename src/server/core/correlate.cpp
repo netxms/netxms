@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,11 +16,18 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: correlate.cpp
+** File: correlate.cpp
 **
 **/
 
 #include "nxcore.h"
+
+
+//
+// Static data
+//
+
+static QWORD m_networkLostEventId = 0;
 
 
 //
@@ -34,6 +41,13 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
    Interface *pInterface;
    NetObj *pObject;
    int i;
+
+	// Check for NetXMS server netwok connectivity
+	if (g_dwFlags & AF_NO_NETWORK_CONNECTIVITY)
+	{
+		pEvent->SetRootId(m_networkLostEventId);
+		return;
+	}
 
    // Trace route from management station to failed node and
    // check for failed intermediate nodes or interfaces
@@ -125,6 +139,9 @@ void CorrelateEvent(Event *pEvent)
          case EVENT_NODE_UP:
             ((Node *)pObject)->SetLastEventId(LAST_EVENT_NODE_DOWN, 0);
             break;
+			case EVENT_NETWORK_CONNECTION_LOST:
+				m_networkLostEventId = pEvent->Id();
+				break;
          default:
             break;
       }

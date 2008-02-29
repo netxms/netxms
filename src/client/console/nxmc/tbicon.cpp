@@ -105,6 +105,7 @@ bool nxTaskBarIcon::ShowBalloon(wxString title, wxString message, unsigned int t
 
 	switch(severity)
 	{
+		case STATUS_WARNING:
 		case STATUS_MINOR:
 		case STATUS_MAJOR:
 			notifyData.dwInfoFlags = NIIF_WARNING;

@@ -33,7 +33,7 @@
 // Constants
 //
 
-#define MAX_ERROR_NUMBER         19
+#define MAX_ERROR_NUMBER         21
 #define CONTROL_STACK_LIMIT      32768
 
 
@@ -81,7 +81,9 @@ static const TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
 	_T("Requested module not found or cannot be loaded"),
 	_T("Argument is not of string type and cannot be converted to string"),
 	_T("Invalid regular expression"),
-	_T("Function or operation argument is not a whole number")
+	_T("Function or operation argument is not a whole number"),
+	_T("Invalid operation on object"),
+	_T("Bad (or incompatible) object class")
 };
 
 
@@ -1013,6 +1015,10 @@ void NXSL_Program::DoBinaryOperation(int nOpCode)
                   if (pVal1->IsNull() || pVal2->IsNull())
                   {
                      Error(NXSL_ERR_NULL_VALUE);
+                  }
+                  else if (pVal1->IsObject() || pVal2->IsObject())
+                  {
+                     Error(NXSL_ERR_INVALID_OBJECT_OPERATION);
                   }
                   else
                   {

@@ -656,4 +656,10 @@ Language=English
 Unable to set codepage to %1
 .
 
+MessageId=
+SymbolicName=MSG_INVALID_BEACON
+Language=English
+Invalid beacon host name or address %1 - host will be excluded from beacon list
+.
+
 ;#endif

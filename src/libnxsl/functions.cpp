@@ -436,3 +436,36 @@ int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 
 	return 0;
 }
+
+
+//
+// Convert decimal value to hexadecimal string
+//   d2x(value)          -> hex value
+//   d2x(value, padding) -> hex value padded vith zeros
+//
+
+int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	TCHAR buffer[128], format[32];
+
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->IsInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   if ((argc == 2) && (!argv[1]->IsInteger()))
+      return NXSL_ERR_NOT_INTEGER;
+
+	if (argc == 1)
+	{
+		_tcscpy(format, _T("%X"));
+	}
+	else
+	{
+		_sntprintf(format, 32, _T("%%0%dX"), argv[1]->GetValueAsInt32());
+	}
+	_sntprintf(buffer, 128, format, argv[0]->GetValueAsUInt32());
+	*ppResult = new NXSL_Value(buffer);
+	return 0;
+}

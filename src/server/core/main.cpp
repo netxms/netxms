@@ -77,6 +77,7 @@ THREAD_RESULT THREAD_CALL ClientListener(void *pArg);
 THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg);
 THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg);
 THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg);
+THREAD_RESULT THREAD_CALL BeaconPoller(void *pArg);
 
 
 //
@@ -623,6 +624,9 @@ retry_db_lock:
 
 	// Load modules
 	LoadNetXMSModules();
+
+	// Start beacon host poller
+	ThreadCreate(BeaconPoller, 0, NULL);
 
 	// Allow clients to connect
 	ThreadCreate(ClientListener, 0, NULL);

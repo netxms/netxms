@@ -2,7 +2,27 @@
 * 75 ==> 76 *
 *************
 
-- New configuration parameters added: AgentCommandTimeout, AnchorHosts
+- New events added:
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_NETWORK_CONNECTION_LOST, 'SYS_NETWORK_CONN_LOST',
+		EVENT_SEVERITY_CRITICAL, 1,
+		'NetXMS server network connectivity lost',
+		'Generated when system detects loss of network connectivity based on beacon probing.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Number of beacons'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_NETWORK_CONNECTION_RESTORED, 'SYS_NETWORK_CONN_RESTORED',
+		EVENT_SEVERITY_NORMAL, 1,
+		'NetXMS server network connectivity restored',
+		'Generated when system detects restoration of network connectivity based on beacon probing.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Number of beacons'
+	);
+- New configuration parameters added: AgentCommandTimeout, BeaconHosts,
+  BeaconTimeout, BeaconPollingInterval
 
 
 *************

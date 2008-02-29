@@ -87,6 +87,51 @@ static BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
 
 
 //
+// Upgrade from V75 to V76
+//
+
+static BOOL H_UpgradeFromV75(void)
+{
+   static TCHAR m_szBatch[] =
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES (")
+			_T("50,'SYS_NETWORK_CONN_LOST',4,1,'NetXMS server network connectivity lost',")
+			_T("'Generated when system detects loss of network connectivity based on beacon ")
+			_T("probing.#0D#0AParameters:#0D#0A   1) Number of beacons')\n")
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES (")
+			_T("51,'SYS_NETWORK_CONN_RESTORED',0,1,'NetXMS server network connectivity restored',")
+			_T("'Generated when system detects restoration of network connectivity based on ")
+			_T("beacon probing.#0D#0AParameters:#0D#0A   1) Number of beacons')\n")
+      _T("<END>");
+
+	if (!SQLBatch(m_szBatch))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("AgentCommandTimeout"), _T("2000"), 1, 1))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("BeaconHosts"), _T(""), 1, 1))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("BeaconTimeout"), _T("1000"), 1, 1))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("BeaconPollingInterval"), _T("1000"), 1, 1))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='76' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V74 to V75
 //
 
@@ -3313,6 +3358,7 @@ static struct
    { 72, H_UpgradeFromV72 },
    { 73, H_UpgradeFromV73 },
    { 74, H_UpgradeFromV74 },
+   { 75, H_UpgradeFromV75 },
    { 0, NULL }
 };
 

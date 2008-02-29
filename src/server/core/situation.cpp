@@ -61,9 +61,10 @@ static void NotifyClientsOnSituationChange(int code, Situation *st)
 // SituationInstance constructor
 //
 
-SituationInstance::SituationInstance(const TCHAR *name)
+SituationInstance::SituationInstance(const TCHAR *name, Situation *parent)
 {
 	m_name = _tcsdup(name);
+	m_parent = parent;
 }
 
 
@@ -84,6 +85,16 @@ SituationInstance::~SituationInstance()
 void SituationInstance::UpdateAttribute(const TCHAR *attribute, const TCHAR *value)
 {
 	m_attributes.Set(attribute, value);
+}
+
+
+//
+// Get atribute's value
+//
+
+const TCHAR *SituationInstance::GetAttribute(const TCHAR *attribute)
+{
+	return m_attributes.Get(attribute);
 }
 
 
@@ -230,7 +241,7 @@ void Situation::UpdateSituation(const TCHAR *instance, const TCHAR *attribute, c
 	{
 		m_numInstances++;
 		m_instanceList = (SituationInstance **)realloc(m_instanceList, sizeof(SituationInstance *) * m_numInstances);
-		m_instanceList[i] = new SituationInstance(instance);
+		m_instanceList[i] = new SituationInstance(instance, this);
 		m_instanceList[i]->UpdateAttribute(attribute, value);
 	}
 	
@@ -268,6 +279,31 @@ BOOL Situation::DeleteInstance(const TCHAR *instance)
 	if (success)
 		NotifyClientsOnSituationChange(SITUATION_UPDATE, this);
 	return success;
+}
+
+
+//
+// Find situation instance by name
+//
+
+SituationInstance *Situation::FindInstance(const TCHAR *name)
+{
+	int i;
+	SituationInstance *instance = NULL;
+
+	Lock();
+	
+	for(i = 0; i < m_numInstances; i++)
+	{
+		if (!_tcsicmp(m_instanceList[i]->GetName(), name))
+		{
+			instance = m_instanceList[i];
+			break;
+		}
+	}
+	
+	Unlock();
+	return instance;
 }
 
 
@@ -374,6 +410,32 @@ Situation *FindSituationById(DWORD id)
 
 
 //
+// Find situation by name
+//
+
+Situation *FindSituationByName(const TCHAR *name)
+{
+   DWORD i;
+   Situation *st = NULL;
+
+   if (m_pSituationIndex == NULL)
+      return NULL;
+
+   RWLockReadLock(m_rwlockSituationIndex, INFINITE);
+	for(i = 0; i < m_dwSituationIndexSize; i++)
+	{
+		if (!_tcsicmp(name, ((Situation *)m_pSituationIndex[i].pObject)->GetName()))
+		{
+			st = (Situation *)m_pSituationIndex[i].pObject;
+			break;
+		}
+	}
+   RWLockUnlock(m_rwlockSituationIndex);
+   return st;
+}
+
+
+//
 // Create new situation
 //
 
@@ -445,3 +507,143 @@ void SendSituationListToClient(ClientSession *session, CSCPMessage *msg)
    RWLockUnlock(m_rwlockSituationIndex);
 }
 
+
+//
+// NXSL "Situation" class
+//
+
+class NXSL_SituationClass : public NXSL_Class
+{
+public:
+   NXSL_SituationClass();
+
+   virtual NXSL_Value *GetAttr(NXSL_Object *pObject, char *pszAttr);
+};
+
+
+//
+// Implementation of "Situation" class
+//
+
+NXSL_SituationClass::NXSL_SituationClass()
+                    :NXSL_Class()
+{
+   strcpy(m_szName, "Situation");
+}
+
+NXSL_Value *NXSL_SituationClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
+{
+   SituationInstance *instance;
+   NXSL_Value *value = NULL;
+	const TCHAR *attrValue;
+
+   instance = (SituationInstance *)pObject->Data();
+   if (!strcmp(pszAttr, "name"))
+   {
+      value = new NXSL_Value(instance->GetParent()->GetName());
+   }
+   else if (!strcmp(pszAttr, "id"))
+   {
+      value = new NXSL_Value(instance->GetParent()->GetId());
+   }
+   else if (!strcmp(pszAttr, "instance"))
+   {
+      value = new NXSL_Value(instance->GetName());
+   }
+	else
+	{
+		attrValue = instance->GetAttribute(pszAttr);
+		if (attrValue != NULL)
+		{
+			value = new NXSL_Value(attrValue);
+		}
+		else
+		{
+			value = new NXSL_Value;	// return NULL
+		}
+	}
+   return value;
+}
+
+
+//
+// NXSL "Situation" class object
+//
+
+static NXSL_SituationClass m_nxslSituationClass;
+
+
+//
+// NXSL function for finding situation
+//
+
+static int F_FindSituation(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	Situation *situation;
+	SituationInstance *instance;
+
+   if (argv[0]->IsInteger())
+   {
+		situation = FindSituationById(argv[0]->GetValueAsUInt32());
+   }
+   else	// First parameter is not a number, assume that it's a name
+   {
+		situation = FindSituationByName(argv[0]->GetValueAsCString());
+   }
+
+	if (situation != NULL)
+	{
+		instance = situation->FindInstance(argv[1]->GetValueAsCString());
+		if (instance != NULL)
+		{
+			*ppResult = new NXSL_Value(new NXSL_Object(&m_nxslSituationClass, instance));
+		}
+		else
+		{
+			*ppResult = new NXSL_Value;	// Instance not found, return NULL
+		}
+	}
+	else
+	{
+		*ppResult = new NXSL_Value;	// Situation not found, return NULL
+	}
+
+   return 0;
+}
+
+
+//
+// NXSL function: get situation instance attribute
+//
+
+static int F_GetSituationAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	NXSL_Object *object;
+	const TCHAR *attrValue;
+
+	if (!argv[0]->IsObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->IsString())
+		return NXSL_ERR_NOT_STRING;
+
+	object = argv[0]->GetValueAsObject();
+	if (_tcscmp(object->Class()->Name(), "Situation"))
+		return NXSL_ERR_BAD_CLASS;
+
+	attrValue = ((SituationInstance *)object->Data())->GetAttribute(argv[1]->GetValueAsCString());
+	*ppResult = (attrValue != NULL) ? new NXSL_Value(attrValue) : new NXSL_Value;
+	return 0;
+}
+
+
+//
+// NXSL function set
+//
+
+NXSL_ExtFunction g_nxslSituationFunctions[] =
+{
+   { "FindSituation", F_FindSituation, 2 },
+   { "GetSituationAttribute", F_GetSituationAttribute, 2 }
+};
+DWORD g_nxslNumSituationFunctions = sizeof(g_nxslSituationFunctions) / sizeof(NXSL_ExtFunction);

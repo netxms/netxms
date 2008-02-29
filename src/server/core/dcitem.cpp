@@ -1,4 +1,4 @@
-/* $Id: dcitem.cpp,v 1.86 2008-01-30 17:02:46 victor Exp $ */
+/* $Id: dcitem.cpp,v 1.87 2008-02-29 21:17:28 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -38,7 +38,7 @@ public:
 
 
 //
-// Implementation of discovery class
+// Implementation of "NetXMS node" class
 //
 
 NXSL_NodeClass::NXSL_NodeClass()

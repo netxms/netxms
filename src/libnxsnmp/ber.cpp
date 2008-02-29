@@ -311,6 +311,11 @@ static LONG EncodeContent(DWORD dwType, BYTE *pData, DWORD dwDataLength, BYTE *p
                nBytes += dwSize;
             }
          }
+			else if (iOidLength == 1)
+			{
+				*pResult = (BYTE)(*((DWORD *)pData)) * 40;
+				nBytes++;
+			}
          break;
       default:
          memcpy(pResult, pData, dwDataLength);

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2005 Victor Kirhenshtein
+** Copyright (C) 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: env.cpp
+** File: env.cpp
 **
 **/
 
@@ -29,6 +29,7 @@
 //
 
 int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
+int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
@@ -51,6 +52,7 @@ int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 static NXSL_ExtFunction m_builtinFunctions[] =
 {
    { "abs", F_abs, 1 },
+	{ "d2x", F_d2x, -1 },
    { "length", F_length, 1 },
    { "lower", F_lower, 1 },
    { "max", F_max, -1 },

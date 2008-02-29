@@ -1,4 +1,4 @@
-/* $Id: nxsl.h,v 1.12 2007-05-02 12:40:33 victor Exp $ */
+/* $Id: nxsl.h,v 1.13 2008-02-29 21:17:27 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2005, 2006 Victor Kirhenshtein
@@ -65,6 +65,8 @@
 #define NXSL_ERR_NOT_STRING               17
 #define NXSL_ERR_REGEXP_ERROR             18
 #define NXSL_ERR_NOT_INTEGER					19
+#define NXSL_ERR_INVALID_OBJECT_OPERATION 20
+#define NXSL_ERR_BAD_CLASS                21
 
 
 //
