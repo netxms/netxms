@@ -3406,6 +3406,18 @@ BEGIN
     GROUPBOX        "Attribute list",IDC_STATIC,7,85,236,96
 END
 
+IDD_OBJECT_TRUSTED_NODES DIALOGEX 0, 0, 292, 194
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Trusted Nodes"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List1",IDC_LIST_NODES,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | WS_TABSTOP,7,7,278,161,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&Add...",IDC_BUTTON_ADD,180,173,50,14
+    PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,235,173,50,14
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -4216,6 +4228,14 @@ BEGIN
         RIGHTMARGIN, 302
         TOPMARGIN, 7
         BOTTOMMARGIN, 181
+    END
+
+    IDD_OBJECT_TRUSTED_NODES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 285
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 187
     END
 END
 #endif    // APSTUDIO_INVOKED

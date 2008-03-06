@@ -235,6 +235,8 @@ static void LoadGlobalConfig()
 		g_dwFlags |= AF_SYNC_NODE_NAMES_WITH_DNS;
 	if (ConfigReadInt("InternalCA", 0))
 		g_dwFlags |= AF_INTERNAL_CA;
+	if (ConfigReadInt("CheckTrustedNodes", 1))
+		g_dwFlags |= AF_CHECK_TRUSTED_NODES;
 	ConfigReadStr("DataDirectory", g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
 	g_dwPingSize = ConfigReadInt("IcmpPingSize", 46);
 	g_dwLockTimeout = ConfigReadInt("LockTimeout", 60000);

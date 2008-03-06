@@ -67,7 +67,7 @@ BOOL CObjectPropsGeneral::OnInitDialog()
 
 void CObjectPropsGeneral::OnChangeEditName() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_NAME;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_NAME;
    SetModified();
 }
 

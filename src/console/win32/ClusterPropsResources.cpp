@@ -259,7 +259,7 @@ void CClusterPropsResources::OnButtonAdd()
 		AddListItem(&m_pResourceList[i]);
 	   m_wndListCtrl.SortItems(SortListItemsCB, (LPARAM)this);
 
-		m_pUpdate->dwFlags |= OBJ_UPDATE_RESOURCES;
+		m_pUpdate->qwFlags |= OBJ_UPDATE_RESOURCES;
 		SetModified();
 	}
 }
@@ -295,7 +295,7 @@ void CClusterPropsResources::OnButtonEdit()
 		m_wndListCtrl.SetItemText(nItem, 1, IpToStr(m_pResourceList[dwIndex].dwIpAddr, szIpAddr));
 	   m_wndListCtrl.SortItems(SortListItemsCB, (LPARAM)this);
 
-		m_pUpdate->dwFlags |= OBJ_UPDATE_RESOURCES;
+		m_pUpdate->qwFlags |= OBJ_UPDATE_RESOURCES;
 		SetModified();
 	}
 }
@@ -332,7 +332,7 @@ void CClusterPropsResources::OnButtonDelete()
 		m_wndListCtrl.DeleteItem(nItem);
 	}
 
-	m_pUpdate->dwFlags |= OBJ_UPDATE_RESOURCES;
+	m_pUpdate->qwFlags |= OBJ_UPDATE_RESOURCES;
 	SetModified();
 }
 

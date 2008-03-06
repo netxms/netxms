@@ -159,43 +159,43 @@ BOOL CNodePropsGeneral::OnInitDialog()
 
 void CNodePropsGeneral::OnChangeEditName() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_NAME;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_NAME;
    SetModified();
 }
 
 void CNodePropsGeneral::OnChangeEditSecret() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_AGENT_SECRET;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_AGENT_SECRET;
    SetModified();
 }
 
 void CNodePropsGeneral::OnChangeEditPort() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_AGENT_PORT;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_AGENT_PORT;
    SetModified();
 }
 
 void CNodePropsGeneral::OnChangeEditCommunity() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_SNMP_COMMUNITY;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_SNMP_COMMUNITY;
    SetModified();
 }
 
 void CNodePropsGeneral::OnSelchangeComboAuth() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_AGENT_AUTH;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_AGENT_AUTH;
    SetModified();
 }
 
 void CNodePropsGeneral::OnRadioVersion2c() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_SNMP_VERSION;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_SNMP_VERSION;
    SetModified();
 }
 
 void CNodePropsGeneral::OnRadioVersion1() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_SNMP_VERSION;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_SNMP_VERSION;
    SetModified();
 }
 
@@ -259,7 +259,7 @@ void CNodePropsGeneral::OnSelectIp()
          m_dwIpAddr = pObject->dwIpAddr;
          SetDlgItemText(IDC_EDIT_PRIMARY_IP, IpToStr(m_dwIpAddr, szBuffer));
       }
-      m_pUpdate->dwFlags |= OBJ_UPDATE_IP_ADDR;
+      m_pUpdate->qwFlags |= OBJ_UPDATE_IP_ADDR;
       SetModified();
    }
 }
@@ -298,7 +298,7 @@ void CNodePropsGeneral::OnSelectProxy()
          m_dwProxyNode = 0;
          SetDlgItemText(IDC_EDIT_PROXY, _T("<none>"));
       }
-      m_pUpdate->dwFlags |= OBJ_UPDATE_PROXY_NODE;
+      m_pUpdate->qwFlags |= OBJ_UPDATE_PROXY_NODE;
       SetModified();
    }
 }
@@ -337,7 +337,7 @@ void CNodePropsGeneral::OnSelectSnmpproxy()
          m_dwSNMPProxy = 0;
          SetDlgItemText(IDC_EDIT_SNMPPROXY, _T("<none>"));
       }
-      m_pUpdate->dwFlags |= OBJ_UPDATE_SNMP_PROXY;
+      m_pUpdate->qwFlags |= OBJ_UPDATE_SNMP_PROXY;
       SetModified();
    }
 }

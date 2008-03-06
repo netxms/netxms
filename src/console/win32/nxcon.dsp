@@ -632,6 +632,10 @@ SOURCE=.\ObjectPropsStatus.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectPropsTrustedNodes.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ObjectSelDlg.cpp
 # End Source File
 # Begin Source File
@@ -1310,6 +1314,10 @@ SOURCE=.\ObjectPropsSecurity.h
 # Begin Source File
 
 SOURCE=.\ObjectPropsStatus.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ObjectPropsTrustedNodes.h
 # End Source File
 # Begin Source File
 

@@ -550,7 +550,7 @@ NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId)
 // Find object by name
 //
 
-NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *pszName)
+NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass)
 {
    DWORD i;
    NetObj *pObject = NULL;
@@ -561,7 +561,8 @@ NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *pszName)
    RWLockReadLock(g_rwlockIdIndex, INFINITE);
    for(i = 0; i < g_dwIdIndexSize; i++)
    {
-      if (!_tcsicmp(((NetObj *)g_pIndexById[i].pObject)->Name(), pszName))
+      if ((!_tcsicmp(((NetObj *)g_pIndexById[i].pObject)->Name(), name)) &&
+			 ((objClass == -1) || (objClass == ((NetObj *)g_pIndexById[i].pObject)->Type())))
       {
          pObject = (NetObj *)g_pIndexById[i].pObject;
          break;

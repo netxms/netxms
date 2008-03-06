@@ -1,4 +1,18 @@
 *************
+* 77 ==> 78 *
+*************
+
+- New table added:
+	CREATE TABLE trusted_nodes
+	(
+		source_object_id integer not null,
+		target_node_id integer not null,
+		PRIMARY KEY(source_object_id,target_node_id)
+	) TABLE_TYPE;
+- New configuration parameter added: CheckTrustedNodes
+
+
+*************
 * 76 ==> 77 *
 *************
 

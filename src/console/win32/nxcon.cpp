@@ -79,6 +79,7 @@
 #include "CreateIfDCIDlg.h"
 #include "IfPropsGeneral.h"
 #include "SituationManager.h"
+#include "ObjectPropsTrustedNodes.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1323,6 +1324,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
    CObjectPropsSecurity wndObjectSecurity;
    CObjectPropsPresentation wndObjectPresentation;
    CObjectPropsRelations wndObjectRelations;
+	CObjectPropsTrustedNodes wndObjectTrustedNodes;
    CNodePropsPolling wndNodePolling;
    CVPNCPropsGeneral wndVPNCGeneral;
    CObjectPropsStatus wndStatus;
@@ -1455,10 +1457,15 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
       wndObjectSecurity.m_bInheritRights = pObject->bInheritRights;
       wndPropSheet.AddPage(&wndObjectSecurity);
 
+      // Create "Trusted Nodes" tab
+      wndObjectTrustedNodes.m_dwNumNodes = pObject->dwNumTrustedNodes;
+      wndObjectTrustedNodes.m_pdwNodeList = pObject->pdwTrustedNodes;
+      wndPropSheet.AddPage(&wndObjectTrustedNodes);
+
       // Create "Presentation" tab
-      wndObjectPresentation.m_dwImageId = pObject->dwImage;
+/*      wndObjectPresentation.m_dwImageId = pObject->dwImage;
       wndObjectPresentation.m_bUseDefaultImage = (pObject->dwImage == IMG_DEFAULT);
-      wndPropSheet.AddPage(&wndObjectPresentation);
+      wndPropSheet.AddPage(&wndObjectPresentation);*/
 
       wndPropSheet.SetObject(pObject);
       if (wndPropSheet.DoModal() == IDOK)

@@ -123,6 +123,7 @@ EXTRA_DIST = \
 	ObjectPropsRelations.cpp ObjectPropsRelations.h \
 	ObjectPropsSecurity.cpp ObjectPropsSecurity.h \
 	ObjectPropsStatus.cpp ObjectPropsStatus.h \
+	ObjectPropsTrustedNodes.cpp ObjectPropsTrustedNodes.h \
 	ObjectSelDlg.cpp ObjectSelDlg.h \
 	ObjectSubordinateView.cpp ObjectSubordinateView.h \
 	ObjectToolsEditor.cpp ObjectToolsEditor.h \

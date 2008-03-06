@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.298 2008-02-27 20:48:29 victor Exp $ */
+/* $Id: session.cpp,v 1.299 2008-03-06 22:55:55 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -8038,7 +8038,7 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
          else
          {
             pRequest->GetVariableStr(dwId++, szName, 256);
-            pObject = FindObjectByName(szName);
+            pObject = FindObjectByName(szName, OBJECT_NODE);
          }
 
          // Validate object

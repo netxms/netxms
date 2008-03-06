@@ -1029,6 +1029,8 @@ src/console/win32/ObjectPropsSecurity.cpp -text
 src/console/win32/ObjectPropsSecurity.h -text
 src/console/win32/ObjectPropsStatus.cpp -text
 src/console/win32/ObjectPropsStatus.h -text
+src/console/win32/ObjectPropsTrustedNodes.cpp -text
+src/console/win32/ObjectPropsTrustedNodes.h -text
 src/console/win32/ObjectSelDlg.cpp -text
 src/console/win32/ObjectSelDlg.h -text
 src/console/win32/ObjectSubordinateView.cpp -text

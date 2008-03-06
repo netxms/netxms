@@ -56,7 +56,7 @@ private:
 	INPUT_DCI *m_pDCIList;
 	DWORD m_dwNumDCI;
 
-   void Modify(void) { m_pUpdate->dwFlags |= OBJ_UPDATE_DCI_LIST; }
+   void Modify(void) { m_pUpdate->qwFlags |= OBJ_UPDATE_DCI_LIST; }
 };
 
 //{{AFX_INSERT_LOCATION}}

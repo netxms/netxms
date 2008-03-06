@@ -133,7 +133,7 @@ void CNodePropsPolling::OnSelectPoller()
          m_dwPollerNode = 0;
          SetDlgItemText(IDC_EDIT_POLLER, _T("<server>"));
       }
-      m_pUpdate->dwFlags |= OBJ_UPDATE_POLLER_NODE;
+      m_pUpdate->qwFlags |= OBJ_UPDATE_POLLER_NODE;
       SetModified();
    }
 }
@@ -191,35 +191,35 @@ void CNodePropsPolling::OnOK()
 
 void CNodePropsPolling::OnCheckDisableAgent() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_NODE_FLAGS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_NODE_FLAGS;
 }
 
 void CNodePropsPolling::OnCheckDisableIcmp() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_NODE_FLAGS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_NODE_FLAGS;
 }
 
 void CNodePropsPolling::OnCheckDisableSnmp() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_NODE_FLAGS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_NODE_FLAGS;
 }
 
 void CNodePropsPolling::OnCheckDisableConfPolls() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_NODE_FLAGS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_NODE_FLAGS;
 }
 
 void CNodePropsPolling::OnCheckDisableDatacoll() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_NODE_FLAGS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_NODE_FLAGS;
 }
 
 void CNodePropsPolling::OnCheckDisableRoutePolls() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_NODE_FLAGS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_NODE_FLAGS;
 }
 
 void CNodePropsPolling::OnCheckDisableStatusPoll() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_NODE_FLAGS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_NODE_FLAGS;
 }

@@ -145,7 +145,7 @@ void CVPNCPropsGeneral::OnOK()
 
 void CVPNCPropsGeneral::OnChangeEditName() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_NAME;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_NAME;
    SetModified();
 }
 
@@ -183,7 +183,7 @@ void CVPNCPropsGeneral::OnSelectGateway()
          m_dwPeerGateway = 0;
          SetDlgItemText(IDC_EDIT_GATEWAY, _T("<none>"));
       }
-      m_pUpdate->dwFlags |= OBJ_UPDATE_PEER_GATEWAY;
+      m_pUpdate->qwFlags |= OBJ_UPDATE_PEER_GATEWAY;
       SetModified();
    }
 }
@@ -234,7 +234,7 @@ void CVPNCPropsGeneral::AddNetwork(DWORD *pdwNumNets, IP_NETWORK **ppNetList, CL
 
       AddSubnetToList(pListCtrl, &dlg.m_subnet);
 
-      m_pUpdate->dwFlags |= OBJ_UPDATE_NETWORK_LIST;
+      m_pUpdate->qwFlags |= OBJ_UPDATE_NETWORK_LIST;
       SetModified();
    }
 }
@@ -309,7 +309,7 @@ void CVPNCPropsGeneral::RemoveNetworks(DWORD *pdwNumNets, IP_NETWORK **ppNetList
 
    if (nDeleted > 0)
    {
-      m_pUpdate->dwFlags |= OBJ_UPDATE_NETWORK_LIST;
+      m_pUpdate->qwFlags |= OBJ_UPDATE_NETWORK_LIST;
       SetModified();
    }
 }

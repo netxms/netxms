@@ -73,7 +73,7 @@ void CCondPropsScript::OnOK()
    if (m_wndEditor.GetModify())
    {
       pUpdate = ((CObjectPropSheet *)GetParent())->GetUpdateStruct();
-      pUpdate->dwFlags |= OBJ_UPDATE_SCRIPT;
+      pUpdate->qwFlags |= OBJ_UPDATE_SCRIPT;
       m_wndEditor.GetText(m_strScript);
       pUpdate->pszScript = (TCHAR *)((LPCTSTR)m_strScript);
    }

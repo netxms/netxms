@@ -441,6 +441,20 @@ CREATE TABLE acl
 
 
 /*
+** Trusted nodes - used for cross-node data collection
+** Source object is an object providing data (it can be node or condition),
+** and target node is a node owning DCI
+*/
+
+CREATE TABLE trusted_nodes
+(
+	source_object_id integer not null,
+	target_node_id integer not null,
+	PRIMARY KEY(source_object_id,target_node_id)
+) TABLE_TYPE;
+
+
+/*
 ** Data collection items
 **
 ** If node_id != 0, it's an item bound to node,	and template_id points to 

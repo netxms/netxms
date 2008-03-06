@@ -51,6 +51,8 @@ NetObj::NetObj()
    m_pParentList = NULL;
    m_pAccessList = new AccessList;
    m_bInheritAccessRights = TRUE;
+	m_dwNumTrustedNodes = 0;
+	m_pdwTrustedNodes = NULL;
    m_dwImageId = IMG_DEFAULT;    // Default image
    m_pPollRequestor = NULL;
    m_iStatusCalcAlg = SA_CALCULATE_DEFAULT;
@@ -83,6 +85,7 @@ NetObj::~NetObj()
    if (m_pParentList != NULL)
       free(m_pParentList);
    delete m_pAccessList;
+	safe_free(m_pdwTrustedNodes);
    safe_free(m_pszComments);
 }
 
@@ -167,6 +170,10 @@ BOOL NetObj::LoadCommonProperties(void)
       }
       DBFreeResult(hResult);
    }
+
+	if (bResult)
+		bResult = LoadTrustedNodes();
+
    return bResult;
 }
 
@@ -228,6 +235,10 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
       DBFreeResult(hResult);
       bResult = DBQuery(hdb, szQuery);
    }
+
+	if (bResult)
+		bResult = SaveTrustedNodes(hdb);
+
    return bResult;
 }
 
@@ -694,6 +705,9 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_STATUS_THRESHOLD_3, (WORD)m_iStatusThresholds[2]);
    pMsg->SetVariable(VID_STATUS_THRESHOLD_4, (WORD)m_iStatusThresholds[3]);
    pMsg->SetVariable(VID_COMMENTS, CHECK_NULL_EX(m_pszComments));
+	pMsg->SetVariable(VID_NUM_TRUSTED_NODES, m_dwNumTrustedNodes);
+	if (m_dwNumTrustedNodes > 0)
+		pMsg->SetVariableToInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
    m_pAccessList->CreateMessage(pMsg);
 }
 
@@ -779,6 +793,14 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
          m_pAccessList->AddElement(pRequest->GetVariableLong(VID_ACL_USER_BASE + i),
                                    pRequest->GetVariableLong(VID_ACL_RIGHTS_BASE +i));
       UnlockACL();
+   }
+
+	// Change trusted nodes list
+   if (pRequest->IsVariableExist(VID_NUM_TRUSTED_NODES))
+   {
+      m_dwNumTrustedNodes = pRequest->GetVariableLong(VID_NUM_TRUSTED_NODES);
+		m_pdwTrustedNodes = (DWORD *)realloc(m_pdwTrustedNodes, sizeof(DWORD) * m_dwNumTrustedNodes);
+		pRequest->GetVariableInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
    }
 
    Modify();
@@ -1127,4 +1149,93 @@ void NetObj::CommentsToMessage(CSCPMessage *pMsg)
    LockData();
    pMsg->SetVariable(VID_COMMENT, CHECK_NULL_EX(m_pszComments));
    UnlockData();
+}
+
+
+//
+// Load trusted nodes list from database
+//
+
+BOOL NetObj::LoadTrustedNodes(void)
+{
+	DB_RESULT hResult;
+	TCHAR query[256];
+	int i, count;
+
+	_sntprintf(query, 256, _T("SELECT target_node_id FROM trusted_nodes WHERE source_object_id=%d"), m_dwId);
+	hResult = DBSelect(g_hCoreDB, query);
+	if (hResult != NULL)
+	{
+		count = DBGetNumRows(hResult);
+		if (count > 0)
+		{
+			m_dwNumTrustedNodes = count;
+			m_pdwTrustedNodes = (DWORD *)malloc(sizeof(DWORD) * count);
+			for(i = 0; i < count; i++)
+			{
+				m_pdwTrustedNodes[i] = DBGetFieldULong(hResult, i, 0);
+			}
+		}
+		DBFreeResult(hResult);
+	}
+	return (hResult != NULL);
+}
+
+
+//
+// Save list of trusted nodes to database
+//
+
+BOOL NetObj::SaveTrustedNodes(DB_HANDLE hdb)
+{
+	TCHAR query[256];
+	DWORD i;
+	BOOL rc = FALSE;
+
+	_sntprintf(query, 256, _T("DELETE FROM trusted_nodes WHERE source_object_id=%d"), m_dwId);
+	if (DBQuery(hdb, query))
+	{
+		for(i = 0; i < m_dwNumTrustedNodes; i++)
+		{
+			_sntprintf(query, 256, _T("INSERT INTO trusted_nodes (source_object_id,target_node_id) VALUES (%d,%d)"),
+			           m_dwId, m_pdwTrustedNodes[i]);
+			if (!DBQuery(hdb, query))
+				break;
+		}
+		if (i == m_dwNumTrustedNodes)
+			rc = TRUE;
+	}
+	return rc;
+}
+
+
+//
+// Check if given node is in trust list
+// Will always return TRUE if system parameter CheckTrustedNodes set to 0
+//
+
+BOOL NetObj::IsTrustedNode(DWORD id)
+{
+	BOOL rc;
+
+	if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
+	{
+		DWORD i;
+
+		LockData();
+		for(i = 0, rc = FALSE; i < m_dwNumTrustedNodes; i++)
+		{
+			if (m_pdwTrustedNodes[i] == id)
+			{
+				rc = TRUE;
+				break;
+			}
+		}
+		UnlockData();
+	}
+	else
+	{
+		rc = TRUE;
+	}
+	return rc;
 }

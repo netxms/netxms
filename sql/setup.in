@@ -190,6 +190,8 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('BeaconTimeout','1000',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('BeaconPollingInterval','1000',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('CheckTrustedNodes','1',1,1);
 
 
 /*

@@ -138,19 +138,19 @@ void CCondPropsGeneral::OnOK()
 
 void CCondPropsGeneral::OnChangeEditName() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_NAME;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_NAME;
    SetModified();
 }
 
 void CCondPropsGeneral::OnSelchangeComboActive() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_ACTIVE_STATUS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_ACTIVE_STATUS;
    SetModified();
 }
 
 void CCondPropsGeneral::OnSelchangeComboInactive() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_INACTIVE_STATUS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_INACTIVE_STATUS;
    SetModified();
 }
 
@@ -188,7 +188,7 @@ void CCondPropsGeneral::OnBrowseObject()
          m_pUpdate->dwSourceObject = 0;
          SetDlgItemText(IDC_EDIT_OBJECT, _T("<server>"));
       }
-      m_pUpdate->dwFlags |= OBJ_UPDATE_SOURCE_OBJECT;
+      m_pUpdate->qwFlags |= OBJ_UPDATE_SOURCE_OBJECT;
       SetModified();
    }
 }
@@ -207,7 +207,7 @@ void CCondPropsGeneral::OnBrowseActivationEvent()
    {
       m_pUpdate->dwActivationEvent = dlg.m_pdwEventList[0];
       SetDlgItemText(IDC_EDIT_ACTIVATION_EVENT, NXCGetEventName(g_hSession, dlg.m_pdwEventList[0]));
-      m_pUpdate->dwFlags |= OBJ_UPDATE_ACT_EVENT;
+      m_pUpdate->qwFlags |= OBJ_UPDATE_ACT_EVENT;
    }
 }
 
@@ -225,6 +225,6 @@ void CCondPropsGeneral::OnBrowseDeactivationEvent()
    {
       m_pUpdate->dwDeactivationEvent = dlg.m_pdwEventList[0];
       SetDlgItemText(IDC_EDIT_DEACTIVATION_EVENT, NXCGetEventName(g_hSession, dlg.m_pdwEventList[0]));
-      m_pUpdate->dwFlags |= OBJ_UPDATE_DEACT_EVENT;
+      m_pUpdate->qwFlags |= OBJ_UPDATE_DEACT_EVENT;
    }
 }

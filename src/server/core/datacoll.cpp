@@ -75,13 +75,17 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 			object = FindObjectById(pItem->ProxyNode());
 			if (object != NULL)
 			{
-				if (object->Type() == OBJECT_NODE)
+				if ((object->Type() == OBJECT_NODE) &&
+					(object->IsTrustedNode((pNode != NULL) ? pNode->Id() : 0)))
 				{
 					pNode = (Node *)object;
 					pNode->IncRefCount();
 				}
 				else
 				{
+               // Change item's status to "not supported"
+               pItem->SetStatus(ITEM_STATUS_NOT_SUPPORTED);
+
 					if (pNode != NULL)
 					{
 						pNode->DecRefCount();

@@ -87,6 +87,31 @@ static BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
 
 
 //
+// Upgrade from V77 to V78
+//
+
+static BOOL H_UpgradeFromV77(void)
+{
+	if (!CreateTable(_T("CREATE TABLE trusted_nodes (")
+	                 _T("source_object_id integer not null,")
+	                 _T("target_node_id integer not null,")
+	                 _T("PRIMARY KEY(source_object_id,target_node_id))")))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("CheckTrustedNodes"), _T("1"), 1, 1))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='78' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V76 to V77
 //
 
@@ -3422,6 +3447,7 @@ static struct
    { 74, H_UpgradeFromV74 },
    { 75, H_UpgradeFromV75 },
    { 76, H_UpgradeFromV76 },
+   { 77, H_UpgradeFromV77 },
    { 0, NULL }
 };
 

@@ -111,7 +111,7 @@ BOOL CClusterPropsGeneral::OnInitDialog()
 
 void CClusterPropsGeneral::OnChangeEditName() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_NAME;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_NAME;
    SetModified();
 }
 
@@ -127,7 +127,7 @@ void CClusterPropsGeneral::OnOK()
 
 	CPropertyPage::OnOK();
    m_pUpdate->pszName = (TCHAR *)((LPCTSTR)m_strName);
-	if (m_pUpdate->dwFlags & OBJ_UPDATE_SYNC_NETS)
+	if (m_pUpdate->qwFlags & OBJ_UPDATE_SYNC_NETS)
 	{
 		m_pUpdate->dwNumSyncNets = m_wndListCtrl.GetItemCount();
 		if (m_pUpdate->dwNumSyncNets > 0)
@@ -165,7 +165,7 @@ void CClusterPropsGeneral::OnButtonAdd()
 		}
 		m_wndListCtrl.SortItems(CompareItems, 0);
 
-      m_pUpdate->dwFlags |= OBJ_UPDATE_SYNC_NETS;
+      m_pUpdate->qwFlags |= OBJ_UPDATE_SYNC_NETS;
       SetModified();
    }
 }
@@ -185,7 +185,7 @@ void CClusterPropsGeneral::OnButtonDelete()
 		{
 			m_wndListCtrl.DeleteItem(nItem);
 		}
-		m_pUpdate->dwFlags |= OBJ_UPDATE_SYNC_NETS;
+		m_pUpdate->qwFlags |= OBJ_UPDATE_SYNC_NETS;
 		SetModified();
 	}
 }

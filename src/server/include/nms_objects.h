@@ -198,6 +198,9 @@ protected:
    BOOL m_bInheritAccessRights;
    MUTEX m_mutexACL;
 
+	DWORD m_dwNumTrustedNodes;	// Trusted nodes
+	DWORD *m_pdwTrustedNodes;
+
    void LockData(void) { MutexLock(m_mutexData, INFINITE); }
    void UnlockData(void) { MutexUnlock(m_mutexData); }
    void LockACL(void) { MutexLock(m_mutexACL, INFINITE); }
@@ -225,6 +228,8 @@ protected:
    BOOL SaveACLToDB(DB_HANDLE hdb);
    BOOL LoadCommonProperties(void);
    BOOL SaveCommonProperties(DB_HANDLE hdb);
+	BOOL LoadTrustedNodes(void);
+	BOOL SaveTrustedNodes(DB_HANDLE hdb);
 
    void SendPollerMsg(DWORD dwRqId, const TCHAR *pszFormat, ...);
 
@@ -257,6 +262,7 @@ public:
    void DecRefCount(void);
 
    BOOL IsChild(DWORD dwObjectId);
+	BOOL IsTrustedNode(DWORD id);
 
    void AddChild(NetObj *pObject);     // Add reference to child object
    void AddParent(NetObj *pObject);    // Add reference to parent object
@@ -1117,7 +1123,7 @@ void UpdateNodeIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject);
 void UpdateInterfaceIndex(DWORD dwOldIpAddr, DWORD dwNewIpAddr, NetObj *pObject);
 
 NetObj NXCORE_EXPORTABLE *FindObjectById(DWORD dwId);
-NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *pszName);
+NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass);
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);
 Node NXCORE_EXPORTABLE *FindNodeByIP(DWORD dwAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetByIP(DWORD dwAddr);

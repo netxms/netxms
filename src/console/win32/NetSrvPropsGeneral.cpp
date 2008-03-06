@@ -159,37 +159,37 @@ void CNetSrvPropsGeneral::OnOK()
 
 void CNetSrvPropsGeneral::OnChangeEditName() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_NAME;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_NAME;
    SetModified();
 }
 
 void CNetSrvPropsGeneral::OnChangeEditRequest() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_CHECK_REQUEST;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_CHECK_REQUEST;
    SetModified();
 }
 
 void CNetSrvPropsGeneral::OnChangeEditResponse() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_CHECK_RESPONSE;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_CHECK_RESPONSE;
    SetModified();
 }
 
 void CNetSrvPropsGeneral::OnChangeEditPort() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_IP_PORT;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_IP_PORT;
    SetModified();
 }
 
 void CNetSrvPropsGeneral::OnChangeEditProto() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_IP_PROTO;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_IP_PROTO;
    SetModified();
 }
 
 void CNetSrvPropsGeneral::OnChangeEditPolls() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_REQUIRED_POLLS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_REQUIRED_POLLS;
    SetModified();
 }
 
@@ -204,7 +204,7 @@ void CNetSrvPropsGeneral::OnSelchangeComboType()
          break;
    SetProtocolCtrls();
 
-   m_pUpdate->dwFlags |= OBJ_UPDATE_SERVICE_TYPE;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_SERVICE_TYPE;
    SetModified();
 }
 
@@ -212,7 +212,7 @@ void CNetSrvPropsGeneral::OnRadioTcp()
 {
    SetDlgItemText(IDC_EDIT_PROTO, _T("6"));
    EnableDlgItem(this, IDC_EDIT_PROTO, FALSE);
-   m_pUpdate->dwFlags |= OBJ_UPDATE_IP_PROTO;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_IP_PROTO;
    SetModified();
 }
 
@@ -220,7 +220,7 @@ void CNetSrvPropsGeneral::OnRadioUdp()
 {
    SetDlgItemText(IDC_EDIT_PROTO, _T("17"));
    EnableDlgItem(this, IDC_EDIT_PROTO, FALSE);
-   m_pUpdate->dwFlags |= OBJ_UPDATE_IP_PROTO;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_IP_PROTO;
    SetModified();
 }
 
@@ -228,14 +228,14 @@ void CNetSrvPropsGeneral::OnRadioIcmp()
 {
    SetDlgItemText(IDC_EDIT_PROTO, _T("1"));
    EnableDlgItem(this, IDC_EDIT_PROTO, FALSE);
-   m_pUpdate->dwFlags |= OBJ_UPDATE_IP_PROTO;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_IP_PROTO;
    SetModified();
 }
 
 void CNetSrvPropsGeneral::OnRadioOther() 
 {
    EnableDlgItem(this, IDC_EDIT_PROTO, TRUE);
-   m_pUpdate->dwFlags |= OBJ_UPDATE_IP_PROTO;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_IP_PROTO;
    SetModified();
 }
 
@@ -351,7 +351,7 @@ void CNetSrvPropsGeneral::OnSelectIp()
             m_dwIpAddr = 0;
             SetDlgItemText(IDC_EDIT_IPADDR, _T("<any>"));
          }
-         m_pUpdate->dwFlags |= OBJ_UPDATE_IP_ADDR;
+         m_pUpdate->qwFlags |= OBJ_UPDATE_IP_ADDR;
          SetModified();
       }
    }
@@ -396,7 +396,7 @@ void CNetSrvPropsGeneral::OnSelectPoller()
          m_dwPollerNode = 0;
          SetDlgItemText(IDC_EDIT_POLLER, _T("<default>"));
       }
-      m_pUpdate->dwFlags |= OBJ_UPDATE_POLLER_NODE;
+      m_pUpdate->qwFlags |= OBJ_UPDATE_POLLER_NODE;
       SetModified();
    }
 }

@@ -86,12 +86,12 @@ void CIfPropsGeneral::OnOK()
 
 void CIfPropsGeneral::OnChangeEditName() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_NAME;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_NAME;
    SetModified();
 }
 
 void CIfPropsGeneral::OnChangeEditPolls() 
 {
-   m_pUpdate->dwFlags |= OBJ_UPDATE_REQUIRED_POLLS;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_REQUIRED_POLLS;
    SetModified();
 }

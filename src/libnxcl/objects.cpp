@@ -57,6 +57,7 @@ void DestroyObject(NXC_OBJECT *pObject)
    safe_free(pObject->pdwParentList);
    safe_free(pObject->pAccessList);
    safe_free(pObject->pszComments);
+	safe_free(pObject->pdwTrustedNodes);
    free(pObject);
 }
 
@@ -160,6 +161,7 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
    safe_free(pObject->pdwParentList);
    safe_free(pObject->pAccessList);
    safe_free(pObject->pszComments);
+	safe_free(pObject->pdwTrustedNodes);
    memcpy(pObject, pNewObject, sizeof(NXC_OBJECT));
    free(pNewObject);
 }
@@ -200,6 +202,12 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    pObject->iStatusThresholds[2] = (int)pMsg->GetVariableShort(VID_STATUS_THRESHOLD_3);
    pObject->iStatusThresholds[3] = (int)pMsg->GetVariableShort(VID_STATUS_THRESHOLD_4);
    pObject->pszComments = pMsg->GetVariableStr(VID_COMMENTS);
+	pObject->dwNumTrustedNodes = pMsg->GetVariableLong(VID_NUM_TRUSTED_NODES);
+	if (pObject->dwNumTrustedNodes > 0)
+	{
+		pObject->pdwTrustedNodes = (DWORD *)malloc(sizeof(DWORD) * pObject->dwNumTrustedNodes);
+		pMsg->GetVariableInt32Array(VID_TRUSTED_NODES, pObject->dwNumTrustedNodes, pObject->pdwTrustedNodes);
+	}
 
    // Parents
    pObject->dwNumParents = pMsg->GetVariableLong(VID_PARENT_CNT);
@@ -667,59 +675,59 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
    msg.SetCode(CMD_MODIFY_OBJECT);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_OBJECT_ID, pUpdate->dwObjectId);
-   if (pUpdate->dwFlags & OBJ_UPDATE_NAME)
+   if (pUpdate->qwFlags & OBJ_UPDATE_NAME)
       msg.SetVariable(VID_OBJECT_NAME, pUpdate->pszName);
-   if (pUpdate->dwFlags & OBJ_UPDATE_AGENT_PORT)
+   if (pUpdate->qwFlags & OBJ_UPDATE_AGENT_PORT)
       msg.SetVariable(VID_AGENT_PORT, (WORD)pUpdate->iAgentPort);
-   if (pUpdate->dwFlags & OBJ_UPDATE_AGENT_AUTH)
+   if (pUpdate->qwFlags & OBJ_UPDATE_AGENT_AUTH)
       msg.SetVariable(VID_AUTH_METHOD, (WORD)pUpdate->iAuthType);
-   if (pUpdate->dwFlags & OBJ_UPDATE_AGENT_SECRET)
+   if (pUpdate->qwFlags & OBJ_UPDATE_AGENT_SECRET)
       msg.SetVariable(VID_SHARED_SECRET, pUpdate->pszSecret);
-   if (pUpdate->dwFlags & OBJ_UPDATE_SNMP_COMMUNITY)
+   if (pUpdate->qwFlags & OBJ_UPDATE_SNMP_COMMUNITY)
       msg.SetVariable(VID_COMMUNITY_STRING, pUpdate->pszCommunity);
-   if (pUpdate->dwFlags & OBJ_UPDATE_IMAGE)
+   if (pUpdate->qwFlags & OBJ_UPDATE_IMAGE)
       msg.SetVariable(VID_IMAGE_ID, pUpdate->dwImage);
-   if (pUpdate->dwFlags & OBJ_UPDATE_SNMP_VERSION)
+   if (pUpdate->qwFlags & OBJ_UPDATE_SNMP_VERSION)
       msg.SetVariable(VID_SNMP_VERSION, pUpdate->wSNMPVersion);
-   if (pUpdate->dwFlags & OBJ_UPDATE_CHECK_REQUEST)
+   if (pUpdate->qwFlags & OBJ_UPDATE_CHECK_REQUEST)
       msg.SetVariable(VID_SERVICE_REQUEST, pUpdate->pszRequest);
-   if (pUpdate->dwFlags & OBJ_UPDATE_CHECK_RESPONSE)
+   if (pUpdate->qwFlags & OBJ_UPDATE_CHECK_RESPONSE)
       msg.SetVariable(VID_SERVICE_RESPONSE, pUpdate->pszResponse);
-   if (pUpdate->dwFlags & OBJ_UPDATE_IP_PROTO)
+   if (pUpdate->qwFlags & OBJ_UPDATE_IP_PROTO)
       msg.SetVariable(VID_IP_PROTO, pUpdate->wProto);
-   if (pUpdate->dwFlags & OBJ_UPDATE_IP_PORT)
+   if (pUpdate->qwFlags & OBJ_UPDATE_IP_PORT)
       msg.SetVariable(VID_IP_PORT, pUpdate->wPort);
-   if (pUpdate->dwFlags & OBJ_UPDATE_SERVICE_TYPE)
+   if (pUpdate->qwFlags & OBJ_UPDATE_SERVICE_TYPE)
       msg.SetVariable(VID_SERVICE_TYPE, (WORD)pUpdate->iServiceType);
-   if (pUpdate->dwFlags & OBJ_UPDATE_POLLER_NODE)
+   if (pUpdate->qwFlags & OBJ_UPDATE_POLLER_NODE)
       msg.SetVariable(VID_POLLER_NODE_ID, pUpdate->dwPollerNode);
-   if (pUpdate->dwFlags & OBJ_UPDATE_PROXY_NODE)
+   if (pUpdate->qwFlags & OBJ_UPDATE_PROXY_NODE)
       msg.SetVariable(VID_PROXY_NODE, pUpdate->dwProxyNode);
-   if (pUpdate->dwFlags & OBJ_UPDATE_SNMP_PROXY)
+   if (pUpdate->qwFlags & OBJ_UPDATE_SNMP_PROXY)
       msg.SetVariable(VID_SNMP_PROXY, pUpdate->dwSNMPProxy);
-   if (pUpdate->dwFlags & OBJ_UPDATE_IP_ADDR)
+   if (pUpdate->qwFlags & OBJ_UPDATE_IP_ADDR)
       msg.SetVariable(VID_IP_ADDRESS, pUpdate->dwIpAddr);
-   if (pUpdate->dwFlags & OBJ_UPDATE_PEER_GATEWAY)
+   if (pUpdate->qwFlags & OBJ_UPDATE_PEER_GATEWAY)
       msg.SetVariable(VID_PEER_GATEWAY, pUpdate->dwPeerGateway);
-   if (pUpdate->dwFlags & OBJ_UPDATE_NODE_FLAGS)
+   if (pUpdate->qwFlags & OBJ_UPDATE_NODE_FLAGS)
       msg.SetVariable(VID_FLAGS, pUpdate->dwNodeFlags);
-   if (pUpdate->dwFlags & OBJ_UPDATE_ACT_EVENT)
+   if (pUpdate->qwFlags & OBJ_UPDATE_ACT_EVENT)
       msg.SetVariable(VID_ACTIVATION_EVENT, pUpdate->dwActivationEvent);
-   if (pUpdate->dwFlags & OBJ_UPDATE_DEACT_EVENT)
+   if (pUpdate->qwFlags & OBJ_UPDATE_DEACT_EVENT)
       msg.SetVariable(VID_DEACTIVATION_EVENT, pUpdate->dwDeactivationEvent);
-   if (pUpdate->dwFlags & OBJ_UPDATE_SOURCE_OBJECT)
+   if (pUpdate->qwFlags & OBJ_UPDATE_SOURCE_OBJECT)
       msg.SetVariable(VID_SOURCE_OBJECT, pUpdate->dwSourceObject);
-   if (pUpdate->dwFlags & OBJ_UPDATE_ACTIVE_STATUS)
+   if (pUpdate->qwFlags & OBJ_UPDATE_ACTIVE_STATUS)
       msg.SetVariable(VID_ACTIVE_STATUS, (WORD)pUpdate->nActiveStatus);
-   if (pUpdate->dwFlags & OBJ_UPDATE_INACTIVE_STATUS)
+   if (pUpdate->qwFlags & OBJ_UPDATE_INACTIVE_STATUS)
       msg.SetVariable(VID_INACTIVE_STATUS, (WORD)pUpdate->nInactiveStatus);
-   if (pUpdate->dwFlags & OBJ_UPDATE_SCRIPT)
+   if (pUpdate->qwFlags & OBJ_UPDATE_SCRIPT)
       msg.SetVariable(VID_SCRIPT, pUpdate->pszScript);
-   if (pUpdate->dwFlags & OBJ_UPDATE_CLUSTER_TYPE)
+   if (pUpdate->qwFlags & OBJ_UPDATE_CLUSTER_TYPE)
       msg.SetVariable(VID_CLUSTER_TYPE, pUpdate->dwClusterType);
-   if (pUpdate->dwFlags & OBJ_UPDATE_REQUIRED_POLLS)
+   if (pUpdate->qwFlags & OBJ_UPDATE_REQUIRED_POLLS)
       msg.SetVariable(VID_REQUIRED_POLLS, pUpdate->wRequiredPollCount);
-   if (pUpdate->dwFlags & OBJ_UPDATE_STATUS_ALG)
+   if (pUpdate->qwFlags & OBJ_UPDATE_STATUS_ALG)
    {
       msg.SetVariable(VID_STATUS_CALCULATION_ALG, (WORD)pUpdate->iStatusCalcAlg);
       msg.SetVariable(VID_STATUS_PROPAGATION_ALG, (WORD)pUpdate->iStatusPropAlg);
@@ -735,7 +743,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_STATUS_THRESHOLD_3, (WORD)pUpdate->iStatusThresholds[2]);
       msg.SetVariable(VID_STATUS_THRESHOLD_4, (WORD)pUpdate->iStatusThresholds[3]);
    }
-   if (pUpdate->dwFlags & OBJ_UPDATE_NETWORK_LIST)
+   if (pUpdate->qwFlags & OBJ_UPDATE_NETWORK_LIST)
    {
       msg.SetVariable(VID_NUM_LOCAL_NETS, pUpdate->dwNumLocalNets);
       msg.SetVariable(VID_NUM_REMOTE_NETS, pUpdate->dwNumRemoteNets);
@@ -750,7 +758,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
          msg.SetVariable(dwId1++, pUpdate->pRemoteNetList[i].dwMask);
       }
    }
-   if (pUpdate->dwFlags & OBJ_UPDATE_ACL)
+   if (pUpdate->qwFlags & OBJ_UPDATE_ACL)
    {
       msg.SetVariable(VID_ACL_SIZE, pUpdate->dwAclSize);
       msg.SetVariable(VID_INHERIT_RIGHTS, (WORD)pUpdate->bInheritRights);
@@ -761,7 +769,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
          msg.SetVariable(dwId2, pUpdate->pAccessList[i].dwAccessRights);
       }
    }
-   if (pUpdate->dwFlags & OBJ_UPDATE_DCI_LIST)
+   if (pUpdate->qwFlags & OBJ_UPDATE_DCI_LIST)
    {
       msg.SetVariable(VID_NUM_ITEMS, pUpdate->dwNumDCI);
       for(i = 0, dwId1 = VID_DCI_LIST_BASE; i < pUpdate->dwNumDCI; i++)
@@ -773,12 +781,12 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
          dwId1 += 6;
       }
    }
-   if (pUpdate->dwFlags & OBJ_UPDATE_SYNC_NETS)
+   if (pUpdate->qwFlags & OBJ_UPDATE_SYNC_NETS)
    {
       msg.SetVariable(VID_NUM_SYNC_SUBNETS, pUpdate->dwNumSyncNets);
 		msg.SetVariableToInt32Array(VID_SYNC_SUBNETS, pUpdate->dwNumSyncNets * 2, (DWORD *)pUpdate->pSyncNetList);
    }
-   if (pUpdate->dwFlags & OBJ_UPDATE_RESOURCES)
+   if (pUpdate->qwFlags & OBJ_UPDATE_RESOURCES)
    {
       msg.SetVariable(VID_NUM_RESOURCES, pUpdate->dwNumResources);
       for(i = 0, dwId1 = VID_RESOURCE_LIST_BASE; i < pUpdate->dwNumResources; i++, dwId1 += 7)
@@ -787,6 +795,11 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
          msg.SetVariable(dwId1++, pUpdate->pResourceList[i].szName);
          msg.SetVariable(dwId1++, pUpdate->pResourceList[i].dwIpAddr);
       }
+   }
+   if (pUpdate->qwFlags & OBJ_UPDATE_TRUSTED_NODES)
+   {
+      msg.SetVariable(VID_NUM_TRUSTED_NODES, pUpdate->dwNumTrustedNodes);
+		msg.SetVariableToInt32Array(VID_TRUSTED_NODES, pUpdate->dwNumTrustedNodes, pUpdate->pdwTrustedNodes);
    }
 
    // Send request
@@ -1273,6 +1286,9 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
          fwrite(&dwSize, 1, sizeof(DWORD), hFile);
          fwrite(pList[i].pObject->pszComments, 1, dwSize, hFile);
 
+			if (pList[i].pObject->dwNumTrustedNodes > 0)
+				fwrite(pList[i].pObject->pdwTrustedNodes, pList[i].pObject->dwNumTrustedNodes, sizeof(DWORD), hFile);
+
          switch(pList[i].pObject->iClass)
          {
             case OBJECT_NETWORKSERVICE:
@@ -1368,6 +1384,16 @@ void NXCL_Session::LoadObjectsFromCache(const TCHAR *pszFile)
                   object.pszComments = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
                   fread(object.pszComments, 1, dwSize, hFile);
                   object.pszComments[dwSize / sizeof(TCHAR)] = 0;
+
+						if (object.dwNumTrustedNodes > 0)
+						{
+							object.pdwTrustedNodes = (DWORD *)malloc(sizeof(DWORD) * object.dwNumTrustedNodes);
+							fread(object.pdwTrustedNodes, sizeof(DWORD), object.dwNumTrustedNodes, hFile);
+						}
+						else
+						{
+							object.pdwTrustedNodes = NULL;
+						}
 
                   switch(object.iClass)
                   {

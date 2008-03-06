@@ -60,10 +60,10 @@ void CObjectPropSheet::SaveObjectChanges()
 {
    DWORD dwResult;
 
-   if (m_update.dwFlags != 0)
+   if (m_update.qwFlags != 0)
    {
-      theApp.DebugPrintf(_T("Saving changes for object %d (Flags: 0x%04X)"),
-                         m_update.dwObjectId, m_update.dwFlags);
+      theApp.DebugPrintf(_T("Saving changes for object %d (Flags: 0x%08X%08X)"),
+                         m_update.dwObjectId, (DWORD)(m_update.qwFlags >> 32), (DWORD)(m_update.qwFlags & 0xFFFFFFFF));
       dwResult = DoRequestArg2(NXCModifyObject, g_hSession, &m_update, _T("Updating object..."));
       if (dwResult != RCC_SUCCESS)
          theApp.ErrorBox(dwResult, _T("Error updating object: %s"));

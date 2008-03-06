@@ -155,7 +155,7 @@ void CObjectPropsSecurity::OnOK()
    
    if (m_bIsModified)
    {
-      m_pUpdate->dwFlags |= OBJ_UPDATE_ACL;
+      m_pUpdate->qwFlags |= OBJ_UPDATE_ACL;
       m_pUpdate->bInheritRights = m_bInheritRights;
       m_pUpdate->dwAclSize = m_dwAclSize;
       m_pUpdate->pAccessList = (NXC_ACL_ENTRY *)nx_memdup(m_pAccessList,

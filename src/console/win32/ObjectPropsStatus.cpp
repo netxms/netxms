@@ -131,7 +131,7 @@ void CObjectPropsStatus::OnOK()
    
    if (m_bIsModified)
    {
-      m_pUpdate->dwFlags |= OBJ_UPDATE_STATUS_ALG;
+      m_pUpdate->qwFlags |= OBJ_UPDATE_STATUS_ALG;
       m_pUpdate->iStatusCalcAlg = m_iCalcAlg;
       m_pUpdate->iStatusPropAlg = m_iPropAlg;
       m_pUpdate->iFixedStatus = m_iFixedStatus;

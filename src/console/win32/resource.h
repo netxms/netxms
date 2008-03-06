@@ -256,6 +256,7 @@
 #define IDD_EDIT_RULE_SITUATION         382
 #define IDI_INSTANCE                    383
 #define IDI_EVENT_CORRELATION           384
+#define IDD_OBJECT_TRUSTED_NODES        385
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -968,7 +969,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        385
+#define _APS_NEXT_RESOURCE_VALUE        386
 #define _APS_NEXT_COMMAND_VALUE         33094
 #define _APS_NEXT_CONTROL_VALUE         1520
 #define _APS_NEXT_SYMED_VALUE           135

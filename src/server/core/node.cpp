@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.200 2008-03-06 00:04:19 victor Exp $ */
+/* $Id: node.cpp,v 1.201 2008-03-06 22:55:55 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -1669,7 +1669,7 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
 {
    DWORD dwError = DCE_SUCCESS;
 
-   if (!stricmp(szParam, "status"))
+   if (!stricmp(szParam, "Status"))
    {
       sprintf(szBuffer, "%d", m_iStatus);
    }
@@ -1715,6 +1715,43 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
       if (pObject != NULL)
       {
          sprintf(szBuffer, "%d", pObject->Status());
+      }
+      else
+      {
+         dwError = DCE_NOT_SUPPORTED;
+      }
+   }
+   else if (MatchString("ConditionStatus(*)", szParam, FALSE))
+   {
+      char *pEnd, szArg[256];
+      DWORD dwId;
+      NetObj *pObject = NULL;
+
+      NxGetParameterArg((char *)szParam, 1, szArg, 256);
+      dwId = strtoul(szArg, &pEnd, 0);
+      if (*pEnd == 0)
+		{
+			pObject = FindObjectById(dwId);
+			if (pObject != NULL)
+				if (pObject->Type() != OBJECT_CONDITION)
+					pObject = NULL;
+		}
+		else
+      {
+         // Argument is object's name
+			pObject = FindObjectByName(szArg, OBJECT_CONDITION);
+      }
+
+      if (pObject != NULL)
+      {
+			if (pObject->IsTrustedNode(m_dwId))
+			{
+				sprintf(szBuffer, "%d", pObject->Status());
+			}
+			else
+			{
+	         dwError = DCE_NOT_SUPPORTED;
+			}
       }
       else
       {
