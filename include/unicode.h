@@ -152,6 +152,7 @@
 #define _tctime   wctime
 #define _istspace iswspace
 #define _istdigit iswdigit
+#define _istxdigit iswxdigit
 #define _istalpha iswalpha
 #define _istupper iswupper
 #define _tgetenv  wgetenv
@@ -200,6 +201,7 @@
 #define _tctime   ctime
 #define _istspace isspace
 #define _istdigit isdigit
+#define _istxdigit isxdigit
 #define _istalpha isalpha
 #define _istupper isupper
 #define _tgetenv  getenv
