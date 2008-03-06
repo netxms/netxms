@@ -87,6 +87,68 @@ static BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
 
 
 //
+// Upgrade from V76 to V77
+//
+
+static BOOL H_UpgradeFromV76(void)
+{
+	DB_RESULT hResult;
+	int i, count, seq;
+	DWORD id, lastId;
+	TCHAR query[1024];
+
+	hResult = SQLSelect(_T("SELECT condition_id,dci_id,node_id,dci_func,num_polls FROM cond_dci_map ORDER BY condition_id"));
+	if (hResult == NULL)
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("DROP TABLE cond_dci_map")))
+		if (!g_bIgnoreErrors)
+			goto error;
+
+	if (!CreateTable(_T("CREATE TABLE cond_dci_map (")
+	                 _T("condition_id integer not null,")
+	                 _T("sequence_number integer not null,")
+	                 _T("dci_id integer not null,")
+	                 _T("node_id integer not null,")
+	                 _T("dci_func integer not null,")
+	                 _T("num_polls integer not null,")
+	                 _T("PRIMARY KEY(condition_id,sequence_number))")))
+		if (!g_bIgnoreErrors)
+			goto error;
+
+	count = DBGetNumRows(hResult);
+	for(i = 0, seq = 0, lastId = 0; i < count; i++, seq++)
+	{
+		id = DBGetFieldULong(hResult, i, 0);
+		if (id != lastId)
+		{
+			seq = 0;
+			lastId = id;
+		}
+		_sntprintf(query, 1024, _T("INSERT INTO cond_dci_map (condition_id,sequence_number,dci_id,node_id,dci_func,num_polls) VALUES (%d,%d,%d,%d,%d,%d)"),
+		           id, seq, DBGetFieldULong(hResult, i, 1), DBGetFieldULong(hResult, i, 2),
+					  DBGetFieldULong(hResult, i, 3), DBGetFieldULong(hResult, i, 4));
+		if (!SQLQuery(query))
+			if (!g_bIgnoreErrors)
+				goto error;
+	}
+
+	DBFreeResult(hResult);
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='77' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+
+error:
+	DBFreeResult(hResult);
+	return FALSE;
+}
+
+
+//
 // Upgrade from V75 to V76
 //
 
@@ -3359,6 +3421,7 @@ static struct
    { 73, H_UpgradeFromV73 },
    { 74, H_UpgradeFromV74 },
    { 75, H_UpgradeFromV75 },
+   { 76, H_UpgradeFromV76 },
    { 0, NULL }
 };
 

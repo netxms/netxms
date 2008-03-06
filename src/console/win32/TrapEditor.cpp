@@ -106,6 +106,8 @@ int CTrapEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(2, _T("Event"), LVCFMT_LEFT, 200);
    m_wndListCtrl.InsertColumn(3, _T("Description"), LVCFMT_LEFT, 250);
 
+	LoadListCtrlColumns(m_wndListCtrl, _T("TrapEditor"), _T("ListCtrl"));
+
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 
 	return 0;
@@ -118,6 +120,7 @@ int CTrapEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CTrapEditor::OnDestroy() 
 {
+	SaveListCtrlColumns(m_wndListCtrl, _T("TrapEditor"), _T("ListCtrl"));
    theApp.OnViewDestroy(VIEW_TRAP_EDITOR, this);
 	CMDIChildWnd::OnDestroy();
 }

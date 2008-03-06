@@ -38,6 +38,11 @@ public:
 
 // Implementation
 protected:
+	void SortList();
+	int m_iSortDir;
+	int m_iSortMode;
+	int m_iSortImageBase;
+	CImageList m_imageList;
 	DWORD m_dwCurrentUser;
 	CListCtrl m_wndListCtrl;
 	virtual ~CUserEditor();
@@ -63,9 +68,14 @@ protected:
    afx_msg void OnUserDBChange(int iCode, NXC_USER *pUserInfo);
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
    afx_msg void OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
 	int AddListItem(NXC_USER *pUser);
+
+public:
+   int GetSortMode(void) { return m_iSortMode; }
+   int GetSortDir(void) { return m_iSortDir; }
 };
 
 /////////////////////////////////////////////////////////////////////////////

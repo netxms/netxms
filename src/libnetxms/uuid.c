@@ -147,36 +147,36 @@ void uuid_unpack(uuid_t in, struct uuid *uu)
 // Parse UUID
 //
 
-int LIBNETXMS_EXPORTABLE uuid_parse(char *in, uuid_t uu)
+int LIBNETXMS_EXPORTABLE uuid_parse(TCHAR *in, uuid_t uu)
 {
 	struct uuid uuid;
 	int i;
-	char *cp, buf[3];
+	TCHAR *cp, buf[3];
 
-	if (strlen(in) != 36)
+	if (_tcslen(in) != 36)
 		return -1;
 	for (i=0, cp = in; i <= 36; i++,cp++) {
 		if ((i == 8) || (i == 13) || (i == 18) ||
 		    (i == 23))
-			if (*cp == '-')
+			if (*cp == _T('-'))
 				continue;
-		if (i== 36)
+		if (i == 36)
 			if (*cp == 0)
 				continue;
-		if (!isxdigit((int) *cp))
+		if (!_istxdigit(*cp))
 			return -1;
 	}
-	uuid.time_low = strtoul(in, NULL, 16);
-	uuid.time_mid = (WORD)strtoul(in + 9, NULL, 16);
-	uuid.time_hi_and_version = (WORD)strtoul(in + 14, NULL, 16);
-	uuid.clock_seq = (WORD)strtoul(in + 19, NULL, 16);
+	uuid.time_low = _tcstoul(in, NULL, 16);
+	uuid.time_mid = (WORD)_tcstoul(in + 9, NULL, 16);
+	uuid.time_hi_and_version = (WORD)_tcstoul(in + 14, NULL, 16);
+	uuid.clock_seq = (WORD)_tcstoul(in + 19, NULL, 16);
 	cp = in + 24;
 	buf[2] = 0;
 	for(i = 0; i < 6; i++)
    {
 		buf[0] = *cp++;
 		buf[1] = *cp++;
-		uuid.node[i] = (BYTE)strtoul(buf, NULL, 16);
+		uuid.node[i] = (BYTE)_tcstoul(buf, NULL, 16);
 	}
 	
 	uuid_pack(&uuid, uu);
@@ -188,13 +188,13 @@ int LIBNETXMS_EXPORTABLE uuid_parse(char *in, uuid_t uu)
 // Convert packed UUID to string
 //
 
-char LIBNETXMS_EXPORTABLE *uuid_to_string(uuid_t uu, char *out)
+TCHAR LIBNETXMS_EXPORTABLE *uuid_to_string(uuid_t uu, TCHAR *out)
 {
 	struct uuid uuid;
 
 	uuid_unpack(uu, &uuid);
-	sprintf(out,
-		"%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+	_sntprintf(out, 64,
+		_T("%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x"),
 		uuid.time_low, uuid.time_mid, uuid.time_hi_and_version,
 		uuid.clock_seq >> 8, uuid.clock_seq & 0xFF,
 		uuid.node[0], uuid.node[1], uuid.node[2],

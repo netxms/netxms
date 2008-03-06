@@ -356,11 +356,12 @@ CREATE TABLE conditions
 CREATE TABLE cond_dci_map
 (
 	condition_id integer not null,
+	sequence_number integer not null,
 	dci_id integer not null,
 	node_id integer not null,
 	dci_func integer not null,
 	num_polls integer not null,
-	PRIMARY KEY(condition_id,dci_id)
+	PRIMARY KEY(condition_id,sequence_number)
 ) TABLE_TYPE;
 
 

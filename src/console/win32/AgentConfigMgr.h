@@ -60,6 +60,11 @@ protected:
    afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
    afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
+
+public:
+	void GetItemText(int item, int col, TCHAR *buffer);
+   int GetSortMode(void) { return m_iSortMode; }
+   int GetSortDir(void) { return m_iSortDir; }
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -20,7 +20,7 @@ IMPLEMENT_DYNCREATE(CAgentConfigMgr, CMDIChildWnd)
 CAgentConfigMgr::CAgentConfigMgr()
 {
    m_iSortMode = theApp.GetProfileInt(_T("AgentConfigMgr"), _T("SortMode"), 1);
-   m_iSortDir = theApp.GetProfileInt(_T("AgentConfigMgr"), _T("SortDir"), 0);
+   m_iSortDir = theApp.GetProfileInt(_T("AgentConfigMgr"), _T("SortDir"), 1);
 }
 
 CAgentConfigMgr::~CAgentConfigMgr()
@@ -157,43 +157,6 @@ void CAgentConfigMgr::OnContextMenu(CWnd* pWnd, CPoint point)
 
 
 //
-// WM_COMMAND::ID_VIEW_REFRESH message handler
-//
-
-void CAgentConfigMgr::OnViewRefresh() 
-{
-   DWORD i, dwResult, dwNumCfg;
-   NXC_AGENT_CONFIG_INFO *pList;
-   TCHAR szBuffer[32];
-   int iItem;
-
-   m_wndListCtrl.DeleteAllItems();
-   dwResult = DoRequestArg3(NXCGetAgentConfigList, g_hSession, &dwNumCfg, &pList,
-                            _T("Loading list of agent configurations..."));
-   if (dwResult == RCC_SUCCESS)
-   {
-      for(i = 0; i < dwNumCfg; i++)
-      {
-         _stprintf(szBuffer, _T("%d"), pList[i].dwId);
-         iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, -1);
-         if (iItem != -1)
-         {
-            m_wndListCtrl.SetItemData(iItem, pList[i].dwId);
-            _stprintf(szBuffer, _T("%d"), pList[i].dwSequence);
-            m_wndListCtrl.SetItemText(iItem, 1, szBuffer);
-            m_wndListCtrl.SetItemText(iItem, 2, pList[i].szName);
-         }
-      }
-      safe_free(pList);
-   }
-   else
-   {
-      theApp.ErrorBox(dwResult, _T("Cannot load list of agent configurations: %s"));
-   }
-}
-
-
-//
 // UI update handlers
 //
 
@@ -209,12 +172,12 @@ void CAgentConfigMgr::OnUpdateConfigDelete(CCmdUI* pCmdUI)
 
 void CAgentConfigMgr::OnUpdateConfigMoveup(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
+   pCmdUI->Enable((m_wndListCtrl.GetSelectedCount() == 1) && (m_iSortMode == 1));
 }
 
 void CAgentConfigMgr::OnUpdateConfigMovedown(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
+   pCmdUI->Enable((m_wndListCtrl.GetSelectedCount() == 1) && (m_iSortMode == 1));
 }
 
 
@@ -374,6 +337,39 @@ void CAgentConfigMgr::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult
 
 
 //
+// Item comparision procedure for sorting
+//
+
+static int CALLBACK ItemCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+	CAgentConfigMgr *pWnd = (CAgentConfigMgr *)lParamSort;
+	TCHAR item1[256], item2[256];
+   int iResult;
+
+	pWnd->GetItemText(lParam1, pWnd->GetSortMode(), item1);
+	pWnd->GetItemText(lParam2, pWnd->GetSortMode(), item2);
+
+	switch(pWnd->GetSortMode())
+	{
+		case 0:	// ID
+         iResult = COMPARE_NUMBERS(_tcstol(item1, NULL, 10), _tcstol(item2, NULL, 10));
+			break;
+		case 1:	// Sequence
+         iResult = COMPARE_NUMBERS(_tcstol(item1, NULL, 10), _tcstol(item2, NULL, 10));
+			break;
+		case 2:	// Name
+         iResult = _tcsicmp(item1, item2);
+			break;
+      default:
+         iResult = 0;
+         break;
+	}
+
+   return iResult * pWnd->GetSortDir();
+}
+
+
+//
 // WM_NOTIFY::LVN_COLUMNCLICK message handler
 //
 
@@ -390,19 +386,19 @@ void CAgentConfigMgr::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResul
    if (m_iSortMode == pNMHDR->iSubItem)
    {
       // Same column, change sort direction
-      m_iSortDir = 1 - m_iSortDir;
+      m_iSortDir = -m_iSortDir;
    }
    else
    {
       // Another sorting column
       m_iSortMode = pNMHDR->iSubItem;
    }
-   //m_wndListCtrl.SortItems(ItemCompareProc, (LPARAM)this);
+   m_wndListCtrl.SortItems(ItemCompareProc, (LPARAM)this);
 
    // Mark new sorting column
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
    lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
-   lvCol.iImage = m_iSortDir;
+   lvCol.iImage = (m_iSortDir == 1) ? 0 : 1;
    m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
    
    *pResult = 0;
@@ -458,7 +454,7 @@ void CAgentConfigMgr::SwapItems(int nItem1, int nItem2)
       m_wndListCtrl.SetItemText(nItem1, 1, szBuf2);
       if (m_iSortMode == 1)
       {
-         m_wndListCtrl.GetItemText(nItem1, 2, szBuf2, 256);
+         m_wndListCtrl.GetItemText(nItem2, 2, szBuf2, 256);
          m_wndListCtrl.DeleteItem(nItem2);
 
          _stprintf(szBuffer, _T("%d"), dwId2);
@@ -475,5 +471,66 @@ void CAgentConfigMgr::SwapItems(int nItem1, int nItem2)
    else
    {
       theApp.ErrorBox(dwResult, _T("Cannot change sequence number of agent config: %s"));
+   }
+}
+
+
+//
+// Get list item text
+//
+
+void CAgentConfigMgr::GetItemText(int item, int col, TCHAR *buffer)
+{
+	int index;
+	LVFINDINFO lvfi;
+
+	lvfi.flags = LVFI_PARAM;
+	lvfi.lParam = item;
+	index = m_wndListCtrl.FindItem(&lvfi);
+	if (index != -1)
+	{
+		m_wndListCtrl.GetItemText(index, col, buffer, 256);
+	}
+	else
+	{
+		*buffer = 0;
+	}
+}
+
+
+//
+// WM_COMMAND::ID_VIEW_REFRESH message handler
+//
+
+void CAgentConfigMgr::OnViewRefresh() 
+{
+   DWORD i, dwResult, dwNumCfg;
+   NXC_AGENT_CONFIG_INFO *pList;
+   TCHAR szBuffer[32];
+   int iItem;
+
+   m_wndListCtrl.DeleteAllItems();
+   dwResult = DoRequestArg3(NXCGetAgentConfigList, g_hSession, &dwNumCfg, &pList,
+                            _T("Loading list of agent configurations..."));
+   if (dwResult == RCC_SUCCESS)
+   {
+      for(i = 0; i < dwNumCfg; i++)
+      {
+         _stprintf(szBuffer, _T("%d"), pList[i].dwId);
+         iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, -1);
+         if (iItem != -1)
+         {
+            m_wndListCtrl.SetItemData(iItem, pList[i].dwId);
+            _stprintf(szBuffer, _T("%d"), pList[i].dwSequence);
+            m_wndListCtrl.SetItemText(iItem, 1, szBuffer);
+            m_wndListCtrl.SetItemText(iItem, 2, pList[i].szName);
+         }
+      }
+      safe_free(pList);
+	   m_wndListCtrl.SortItems(ItemCompareProc, (LPARAM)this);
+   }
+   else
+   {
+      theApp.ErrorBox(dwResult, _T("Cannot load list of agent configurations: %s"));
    }
 }

@@ -164,6 +164,9 @@ BOOL SQLQuery(const TCHAR *pszQuery)
 {
    BOOL bResult;
 
+	if (*pszQuery == 0)
+		return TRUE;
+
    if (g_bTrace)
       ShowQuery(pszQuery);
 

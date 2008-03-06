@@ -344,6 +344,8 @@ protected:
    BOOL m_bDCIListModified;
    TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
 
+   virtual void PrepareForDeletion(void);
+
    void LoadItemsFromDB(void);
    void DestroyItems(void);
 	void ValidateDCIList(DCI_CFG *cfg);

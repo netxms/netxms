@@ -31,6 +31,10 @@ public:
 
 // Implementation
 protected:
+	void SortList();
+	int m_iSortDir;
+	int m_iSortMode;
+	int m_iSortImageBase;
 	void ReplaceItem(int iItem, NXC_ACTION *pAction);
 	int AddItem(NXC_ACTION *pAction);
 	virtual ~CActionEditor();
@@ -52,10 +56,15 @@ protected:
 	afx_msg void OnActionDelete();
 	//}}AFX_MSG
 	afx_msg void OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult);
+   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
 	CImageList m_imageList;
 	CListCtrl m_wndListCtrl;
+
+public:
+   int GetSortMode(void) { return m_iSortMode; }
+   int GetSortDir(void) { return m_iSortDir; }
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -20,10 +20,14 @@ IMPLEMENT_DYNCREATE(CActionEditor, CMDIChildWnd)
 
 CActionEditor::CActionEditor()
 {
+   m_iSortMode = theApp.GetProfileInt(_T("ActionEditor"), _T("SortMode"), 0);
+   m_iSortDir = theApp.GetProfileInt(_T("ActionEditor"), _T("SortDir"), 1);
 }
 
 CActionEditor::~CActionEditor()
 {
+   theApp.WriteProfileInt(_T("ActionEditor"), _T("SortMode"), m_iSortMode);
+   theApp.WriteProfileInt(_T("ActionEditor"), _T("SortDir"), m_iSortDir);
 }
 
 
@@ -44,6 +48,7 @@ BEGIN_MESSAGE_MAP(CActionEditor, CMDIChildWnd)
 	ON_COMMAND(ID_ACTION_DELETE, OnActionDelete)
 	//}}AFX_MSG_MAP
    ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDoubleClick)
+	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -75,7 +80,7 @@ int CActionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	
    // Create list view control
    GetClientRect(&rect);
-   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS, rect, this, IDC_LIST_VIEW);
+   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, rect, this, IDC_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_TRACKSELECT | LVS_EX_UNDERLINEHOT |
                                   LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
@@ -86,6 +91,9 @@ int CActionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(AfxGetApp()->LoadIcon(IDI_REXEC));
    m_imageList.Add(AfxGetApp()->LoadIcon(IDI_EMAIL));
    m_imageList.Add(AfxGetApp()->LoadIcon(IDI_SMS));
+   m_iSortImageBase = m_imageList.GetImageCount();
+   m_imageList.Add(theApp.LoadIcon(IDI_SORT_UP));
+   m_imageList.Add(theApp.LoadIcon(IDI_SORT_DOWN));
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
 
    // Setup columns
@@ -93,6 +101,8 @@ int CActionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndListCtrl.InsertColumn(1, _T("Type"), LVCFMT_LEFT, 70);
    m_wndListCtrl.InsertColumn(2, _T("Recipient"), LVCFMT_LEFT, 150);
    m_wndListCtrl.InsertColumn(3, _T("Data"), LVCFMT_LEFT, 350);
+
+	LoadListCtrlColumns(m_wndListCtrl, _T("ActionEditor"), _T("ListCtrl"));
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 
@@ -106,6 +116,7 @@ int CActionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CActionEditor::OnDestroy() 
 {
+	SaveListCtrlColumns(m_wndListCtrl, _T("ActionEditor"), _T("ListCtrl"));
    theApp.OnViewDestroy(VIEW_ACTION_EDITOR, this);
 	CMDIChildWnd::OnDestroy();
 }
@@ -168,6 +179,7 @@ void CActionEditor::OnViewRefresh()
    LockActions();
    for(i = 0; i < g_dwNumActions; i++)
       AddItem(&g_pActionList[i]);
+	SortList();
    UnlockActions();
 }
 
@@ -279,6 +291,7 @@ void CActionEditor::OnActionNew()
 
          iItem = AddItem(&g_pActionList[i]);
          SelectListViewItem(&m_wndListCtrl, iItem);
+			SortList();
          PostMessage(WM_COMMAND, ID_ACTION_PROPERTIES, 0);
 
          UnlockActions();
@@ -338,6 +351,9 @@ void CActionEditor::OnActionProperties()
                if (dwResult == RCC_SUCCESS)
                {
                   ReplaceItem(iItem, &action);
+						LockActions();
+						SortList();
+						UnlockActions();
                }
                else
                {
@@ -412,4 +428,95 @@ void CActionEditor::OnActionDelete()
          theApp.ErrorBox(dwResult, _T("Error deleting action: %s"));
       free(pdwDeleteList);
    }
+}
+
+
+//
+// Action comparision procedure for sorting
+//
+
+static int CALLBACK ActionCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+   CActionEditor *pWnd = (CActionEditor *)lParamSort;
+   NXC_ACTION *pAction1, *pAction2;
+   int iResult;
+   
+   pAction1 = FindActionById(lParam1);
+   pAction2 = FindActionById(lParam2);
+
+	if ((pAction1 == NULL) || (pAction2 == NULL))
+	{
+		theApp.DebugPrintf(_T("WARNING: pAction == NULL in ActionCompareProc() !!!"));
+		return 0;
+	}
+   
+   switch(pWnd->GetSortMode())
+   {
+      case 0:     // Name
+         iResult = _tcsicmp(pAction1->szName, pAction2->szName);
+         break;
+      case 1:     // Type
+         iResult = _tcsicmp(g_szActionType[pAction1->iType], g_szActionType[pAction2->iType]);
+         break;
+      case 2:     // Recipient
+         iResult = _tcsicmp(pAction1->szRcptAddr, pAction2->szRcptAddr);
+         break;
+      case 3:     // Data
+         iResult = _tcsicmp(pAction1->pszData, pAction2->pszData);
+         break;
+      default:
+         iResult = 0;
+         break;
+   }
+
+   return iResult * pWnd->GetSortDir();
+}
+
+
+//
+// Sort action list
+//
+
+void CActionEditor::SortList()
+{
+   LVCOLUMN lvc;
+
+   m_wndListCtrl.SortItems(ActionCompareProc, (LPARAM)this);
+   lvc.mask = LVCF_IMAGE | LVCF_FMT;
+   lvc.fmt = LVCFMT_LEFT | LVCFMT_IMAGE | LVCFMT_BITMAP_ON_RIGHT;
+   lvc.iImage = (m_iSortDir == 1) ? m_iSortImageBase : m_iSortImageBase + 1;
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvc);
+}
+
+
+//
+// WM_NOTIFY::LVN_COLUMNCLICK message handler
+//
+
+void CActionEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+{
+   LVCOLUMN lvCol;
+
+   // Unmark old sorting column
+   lvCol.mask = LVCF_FMT;
+   lvCol.fmt = LVCFMT_LEFT;
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
+
+   // Change current sort mode and resort list
+   if (m_iSortMode == pNMHDR->iSubItem)
+   {
+      // Same column, change sort direction
+      m_iSortDir = -m_iSortDir;
+   }
+   else
+   {
+      // Another sorting column
+      m_iSortMode = pNMHDR->iSubItem;
+   }
+
+	LockActions();
+   SortList();
+	UnlockActions();
+   
+   *pResult = 0;
 }

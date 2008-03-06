@@ -1,4 +1,4 @@
-/* $Id: template.cpp,v 1.40 2008-01-29 21:12:51 victor Exp $ */
+/* $Id: template.cpp,v 1.41 2008-03-06 00:04:19 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -585,7 +585,7 @@ DCItem *Template::GetItemByIndex(DWORD dwIndex)
 
 void Template::CalculateCompoundStatus(BOOL bForcedRecalc)
 {
-   m_iStatus = STATUS_UNMANAGED;
+   m_iStatus = STATUS_NORMAL;
 }
 
 
@@ -891,4 +891,26 @@ void Template::AssociateItems(void)
 	for(i = 0; i < m_dwNumItems; i++)
 		m_ppItems[i]->ChangeBinding(0, this, FALSE);
 	UnlockData();
+}
+
+
+//
+// Prepare template for deletion
+//
+
+void Template::PrepareForDeletion(void)
+{
+	if (Type() == OBJECT_TEMPLATE)
+	{
+		DWORD i;
+	
+		LockChildList(FALSE);
+		for(i = 0; i < m_dwChildCount; i++)
+		{
+			if (m_pChildList[i]->Type() == OBJECT_NODE)
+				QueueRemoveFromNode(m_pChildList[i]->Id(), TRUE);
+		}
+		UnlockChildList();
+	}
+	NetObj::PrepareForDeletion();
 }

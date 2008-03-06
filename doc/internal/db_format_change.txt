@@ -1,4 +1,13 @@
 *************
+* 76 ==> 77 *
+*************
+
+- Table "cond_dci_map" altered:
+	- Added new column sequence_number (type "integer not null")
+	- Primary key changed to "condition_id,sequence_number"
+
+
+*************
 * 75 ==> 76 *
 *************
 

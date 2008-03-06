@@ -130,7 +130,7 @@ BOOL Condition::CreateFromDB(DWORD dwId)
 
    // Load DCI map
    _sntprintf(szQuery, 512, _T("SELECT dci_id,node_id,dci_func,num_polls ")
-                            _T("FROM cond_dci_map WHERE condition_id=%d"), dwId);
+                            _T("FROM cond_dci_map WHERE condition_id=%d ORDER BY sequence_number"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -206,9 +206,9 @@ BOOL Condition::SaveToDB(DB_HANDLE hdb)
    DBQuery(hdb, pszQuery);
    for(i = 0; i < m_dwDCICount; i++)
    {
-      _stprintf(pszQuery, _T("INSERT INTO cond_dci_map (condition_id,dci_id,node_id,")
-                          _T("dci_func,num_polls) VALUES (%d,%d,%d,%d,%d)"),
-                m_dwId, m_pDCIList[i].dwId, m_pDCIList[i].dwNodeId,
+      _stprintf(pszQuery, _T("INSERT INTO cond_dci_map (condition_id,sequence_number,dci_id,node_id,")
+                          _T("dci_func,num_polls) VALUES (%d,%d,%d,%d,%d,%d)"),
+                m_dwId, i, m_pDCIList[i].dwId, m_pDCIList[i].dwNodeId,
                 m_pDCIList[i].nFunction, m_pDCIList[i].nPolls);
       DBQuery(hdb, pszQuery);
    }

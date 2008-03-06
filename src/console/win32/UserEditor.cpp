@@ -19,10 +19,14 @@ IMPLEMENT_DYNCREATE(CUserEditor, CMDIChildWnd)
 CUserEditor::CUserEditor()
 {
    m_dwCurrentUser = INVALID_UID;
+   m_iSortMode = theApp.GetProfileInt(_T("UserEditor"), _T("SortMode"), 0);
+   m_iSortDir = theApp.GetProfileInt(_T("UserEditor"), _T("SortDir"), 1);
 }
 
 CUserEditor::~CUserEditor()
 {
+   theApp.WriteProfileInt(_T("UserEditor"), _T("SortMode"), m_iSortMode);
+   theApp.WriteProfileInt(_T("UserEditor"), _T("SortDir"), m_iSortDir);
 }
 
 
@@ -47,6 +51,7 @@ BEGIN_MESSAGE_MAP(CUserEditor, CMDIChildWnd)
    ON_MESSAGE(NXCM_USERDB_CHANGE, OnUserDBChange)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST_VIEW, OnListViewDblClk)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_VIEW, OnListViewItemChange)
+	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_VIEW, OnListViewColumnClick)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -80,6 +85,7 @@ void CUserEditor::OnClose()
 
 void CUserEditor::OnDestroy() 
 {
+	SaveListCtrlColumns(m_wndListCtrl, _T("UserEditor"), _T("ListCtrl"));
    theApp.OnViewDestroy(VIEW_USER_MANAGER, this);
 	CMDIChildWnd::OnDestroy();
 }
@@ -92,7 +98,6 @@ void CUserEditor::OnDestroy()
 int CUserEditor::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
    RECT rect;
-   CImageList *pImageList;
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
@@ -101,24 +106,31 @@ int CUserEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	
    // Create list view control
    GetClientRect(&rect);
-   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL, rect, this, IDC_LIST_VIEW);
+   m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, rect, this, IDC_LIST_VIEW);
    m_wndListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
    m_wndListCtrl.SetHoverTime(0x7FFFFFFF);
 
    // Create image list
-   pImageList = new CImageList;
-   pImageList->Create(16, 16, ILC_COLOR8 | ILC_MASK, 8, 8);
-   pImageList->Add(AfxGetApp()->LoadIcon(IDI_USER));
-   pImageList->Add(AfxGetApp()->LoadIcon(IDI_USER_GROUP));
-   pImageList->Add(AfxGetApp()->LoadIcon(IDI_EVERYONE));
-   pImageList->Add(AfxGetApp()->LoadIcon(IDI_OVL_STATUS_CRITICAL));
-   pImageList->SetOverlayImage(3, 1);
-   m_wndListCtrl.SetImageList(pImageList, LVSIL_SMALL);
+   m_imageList.Create(16, 16, ILC_COLOR8 | ILC_MASK, 8, 8);
+   m_imageList.Add(AfxGetApp()->LoadIcon(IDI_USER));
+   m_imageList.Add(AfxGetApp()->LoadIcon(IDI_USER_GROUP));
+   m_imageList.Add(AfxGetApp()->LoadIcon(IDI_EVERYONE));
+   m_imageList.Add(AfxGetApp()->LoadIcon(IDI_OVL_STATUS_CRITICAL));
+   m_iSortImageBase = m_imageList.GetImageCount();
+   m_imageList.Add(theApp.LoadIcon(IDI_SORT_UP));
+   m_imageList.Add(theApp.LoadIcon(IDI_SORT_DOWN));
+   m_imageList.SetOverlayImage(3, 1);
+   m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);
 
    // Setup columns
-   m_wndListCtrl.InsertColumn(0, _T("Name"), LVCFMT_LEFT, 100);
-   m_wndListCtrl.InsertColumn(1, _T("Full Name"), LVCFMT_LEFT, 170);
-   m_wndListCtrl.InsertColumn(2, _T("Description"), LVCFMT_LEFT, 300);
+   m_wndListCtrl.InsertColumn(0, _T("ID"), LVCFMT_LEFT, 85);
+   m_wndListCtrl.InsertColumn(1, _T("Name"), LVCFMT_LEFT, 100);
+   m_wndListCtrl.InsertColumn(2, _T("Type"), LVCFMT_LEFT, 65);
+   m_wndListCtrl.InsertColumn(3, _T("Full Name"), LVCFMT_LEFT, 170);
+   m_wndListCtrl.InsertColumn(4, _T("Description"), LVCFMT_LEFT, 300);
+   m_wndListCtrl.InsertColumn(5, _T("GUID"), LVCFMT_LEFT, 230);
+
+	LoadListCtrlColumns(m_wndListCtrl, _T("UserEditor"), _T("ListCtrl"));
 
    PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 
@@ -155,14 +167,19 @@ void CUserEditor::OnSize(UINT nType, int cx, int cy)
 int CUserEditor::AddListItem(NXC_USER *pUser)
 {
    int iItem;
+	TCHAR buffer[256];
 
-   iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pUser->szName,
+	_sntprintf(buffer, 256, _T("%08X"), pUser->dwId);
+   iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, buffer,
                  (pUser->dwId == GROUP_EVERYONE) ? 2 : ((pUser->dwId & GROUP_FLAG) ? 1 : 0));
    if (iItem != -1)
    {
       m_wndListCtrl.SetItemData(iItem, pUser->dwId);
-      m_wndListCtrl.SetItemText(iItem, 1, pUser->szFullName);
-      m_wndListCtrl.SetItemText(iItem, 2, pUser->szDescription);
+      m_wndListCtrl.SetItemText(iItem, 1, pUser->szName);
+      m_wndListCtrl.SetItemText(iItem, 2, (pUser->dwId & GROUP_FLAG) ? _T("Group") : _T("User"));
+      m_wndListCtrl.SetItemText(iItem, 3, pUser->szFullName);
+      m_wndListCtrl.SetItemText(iItem, 4, pUser->szDescription);
+      m_wndListCtrl.SetItemText(iItem, 5, uuid_to_string(pUser->guid, buffer));
       m_wndListCtrl.SetItemState(iItem, INDEXTOOVERLAYMASK(pUser->wFlags & UF_DISABLED ? 1 : 0), LVIS_OVERLAYMASK);
    }
    return iItem;
@@ -186,6 +203,7 @@ void CUserEditor::OnViewRefresh()
       for(i = 0; i < dwNumUsers; i++)
          if (!(pUserList[i].wFlags & UF_DELETED))
             AddListItem(&pUserList[i]);
+		SortList();
    }
 }
 
@@ -261,6 +279,8 @@ void CUserEditor::CreateUserObject(const TCHAR *pszName, BOOL bIsGroup, BOOL bSh
       m_wndListCtrl.SetItemState(iItem, LVIS_SELECTED | LVIS_FOCUSED, 
                                  LVIS_SELECTED | LVIS_FOCUSED);
 
+		SortList();
+
       if (bShowProp)
          PostMessage(WM_COMMAND, ID_USER_PROPERTIES, 0);
    }
@@ -303,10 +323,14 @@ void CUserEditor::OnUserDBChange(int iCode, NXC_USER *pUserInfo)
          }
          else
          {
-            m_wndListCtrl.SetItemText(iItem, 0, pUserInfo->szName);
-            m_wndListCtrl.SetItemText(iItem, 1, pUserInfo->szFullName);
-            m_wndListCtrl.SetItemText(iItem, 2, pUserInfo->szDescription);
-            m_wndListCtrl.SetItemState(iItem, INDEXTOOVERLAYMASK(pUserInfo->wFlags & UF_DISABLED ? 1 : 0), LVIS_OVERLAYMASK);
+				TCHAR buffer[64];
+
+				m_wndListCtrl.SetItemText(iItem, 1, pUserInfo->szName);
+				m_wndListCtrl.SetItemText(iItem, 2, (pUserInfo->dwId & GROUP_FLAG) ? _T("Group") : _T("User"));
+				m_wndListCtrl.SetItemText(iItem, 3, pUserInfo->szFullName);
+				m_wndListCtrl.SetItemText(iItem, 4, pUserInfo->szDescription);
+				m_wndListCtrl.SetItemText(iItem, 5, uuid_to_string(pUserInfo->guid, buffer));
+				m_wndListCtrl.SetItemState(iItem, INDEXTOOVERLAYMASK(pUserInfo->wFlags & UF_DISABLED ? 1 : 0), LVIS_OVERLAYMASK);
          }
          break;
       case USER_DB_DELETE:
@@ -630,4 +654,99 @@ void CUserEditor::OnUpdateUserDelete(CCmdUI* pCmdUI)
 void CUserEditor::OnUpdateUserSetpassword(CCmdUI* pCmdUI) 
 {
    pCmdUI->Enable((m_dwCurrentUser != INVALID_UID) && (!(m_dwCurrentUser & GROUP_FLAG)));
+}
+
+
+//
+// User comparision procedure for sorting
+//
+
+static int CALLBACK UserCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+   CUserEditor *pWnd = (CUserEditor *)lParamSort;
+   NXC_USER *pUser1, *pUser2;
+	TCHAR guid1[64], guid2[64];
+   int iResult;
+   
+   pUser1 = NXCFindUserById(g_hSession, lParam1);
+   pUser2 = NXCFindUserById(g_hSession, lParam2);
+
+	if ((pUser1 == NULL) || (pUser2 == NULL))
+	{
+		theApp.DebugPrintf(_T("WARNING: pUser == NULL in UserCompareProc() !!!"));
+		return 0;
+	}
+   
+   switch(pWnd->GetSortMode())
+   {
+      case 0:     // ID
+         iResult = COMPARE_NUMBERS(pUser1->dwId, pUser2->dwId);
+         break;
+      case 1:     // Name
+         iResult = _tcsicmp(pUser1->szName, pUser2->szName);
+         break;
+      case 2:     // Type
+         iResult = COMPARE_NUMBERS(pUser1->dwId & GROUP_FLAG, pUser2->dwId & GROUP_FLAG);
+         break;
+      case 3:     // Full name
+         iResult = _tcsicmp(pUser1->szFullName, pUser2->szFullName);
+         break;
+      case 4:     // Description
+         iResult = _tcsicmp(pUser1->szDescription, pUser2->szDescription);
+         break;
+      case 5:     // GUID
+         iResult = _tcsicmp(uuid_to_string(pUser1->guid, guid1), uuid_to_string(pUser2->guid, guid2));
+         break;
+      default:
+         iResult = 0;
+         break;
+   }
+
+   return iResult * pWnd->GetSortDir();
+}
+
+
+//
+// Sort user list
+//
+
+void CUserEditor::SortList()
+{
+   LVCOLUMN lvc;
+
+   m_wndListCtrl.SortItems(UserCompareProc, (LPARAM)this);
+   lvc.mask = LVCF_IMAGE | LVCF_FMT;
+   lvc.fmt = LVCFMT_LEFT | LVCFMT_IMAGE | LVCFMT_BITMAP_ON_RIGHT;
+   lvc.iImage = (m_iSortDir == 1) ? m_iSortImageBase : m_iSortImageBase + 1;
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvc);
+}
+
+
+//
+// WM_NOTIFY::LVN_COLUMNCLICK message handler
+//
+
+void CUserEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+{
+   LVCOLUMN lvCol;
+
+   // Unmark old sorting column
+   lvCol.mask = LVCF_FMT;
+   lvCol.fmt = LVCFMT_LEFT;
+   m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
+
+   // Change current sort mode and resort list
+   if (m_iSortMode == pNMHDR->iSubItem)
+   {
+      // Same column, change sort direction
+      m_iSortDir = -m_iSortDir;
+   }
+   else
+   {
+      // Another sorting column
+      m_iSortMode = pNMHDR->iSubItem;
+   }
+   SortList();
+   
+   *pResult = 0;
 }

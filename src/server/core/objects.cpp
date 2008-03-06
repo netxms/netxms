@@ -133,6 +133,7 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
 
       if (bSuccess)
       {
+			pInfo->pTemplate->DecRefCount();
          free(pInfo);
       }
       else

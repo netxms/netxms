@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.199 2008-02-17 11:07:57 victor Exp $ */
+/* $Id: node.cpp,v 1.200 2008-03-06 00:04:19 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -2601,6 +2601,7 @@ void Node::PrepareForDeletion(void)
       UnlockData();
       ThreadSleepMs(100);
    }
+	Template::PrepareForDeletion();
 }
 
 

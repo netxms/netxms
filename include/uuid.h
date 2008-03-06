@@ -32,8 +32,8 @@ int LIBNETXMS_EXPORTABLE uuid_compare(uuid_t uu1, uuid_t uu2);
 void LIBNETXMS_EXPORTABLE uuid_copy(uuid_t uu1, uuid_t uu2);
 void LIBNETXMS_EXPORTABLE uuid_generate(uuid_t out);
 int LIBNETXMS_EXPORTABLE uuid_is_null(uuid_t uu);
-int LIBNETXMS_EXPORTABLE uuid_parse(char *in, uuid_t uu);
-char LIBNETXMS_EXPORTABLE *uuid_to_string(uuid_t uu, char *out);
+int LIBNETXMS_EXPORTABLE uuid_parse(TCHAR *in, uuid_t uu);
+TCHAR LIBNETXMS_EXPORTABLE *uuid_to_string(uuid_t uu, TCHAR *out);
 
 #ifdef __cplusplus
 }

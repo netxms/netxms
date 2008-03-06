@@ -312,6 +312,7 @@ void CEventPolicyEditor::InsertNewRule(int iInsertBefore)
    memset(&m_pEventPolicy->pRuleList[iPos], 0, sizeof(NXC_EPP_RULE));
    m_pEventPolicy->pRuleList[iPos].dwId = (DWORD)iPos;
    m_pEventPolicy->pRuleList[iPos].dwFlags = ANY_SEVERITY;
+	m_pEventPolicy->pRuleList[iPos].pSituationAttrList = new StringMap;
 
    // Insert new row into rule list view
    m_wndRuleList.InsertRow(iPos);
