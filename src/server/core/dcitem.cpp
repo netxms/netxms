@@ -1,4 +1,4 @@
-/* $Id: dcitem.cpp,v 1.87 2008-02-29 21:17:28 victor Exp $ */
+/* $Id: dcitem.cpp,v 1.88 2008-03-07 08:03:10 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -124,6 +124,53 @@ NXSL_Value *NXSL_NodeClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
 //
 
 static NXSL_NodeClass m_nxslNodeClass;
+
+
+//
+// Get DCI value from within transformation script
+// First argument is a node object (passed to script via $node variable),
+// and second is DCI ID
+//
+
+static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	NXSL_Object *object;
+	Node *node;
+	DCItem *dci;
+
+	if (!argv[0]->IsObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->IsInteger())
+		return NXSL_ERR_NOT_INTEGER;
+
+	object = argv[0]->GetValueAsObject();
+	if (_tcscmp(object->Class()->Name(), "NetXMS_Node"))
+		return NXSL_ERR_BAD_CLASS;
+
+	node = (Node *)object->Data();
+	dci = node->GetItemById(argv[1]->GetValueAsUInt32());
+	if (dci != NULL)
+	{
+		*ppResult = dci->GetValueForNXSL(F_LAST, 1);
+	}
+	else
+	{
+		*ppResult = new NXSL_Value;	// Return NULL if DCI not found
+	}
+
+	return 0;
+}
+
+
+//
+// Additional functions or use within transformation scripts
+//
+
+static NXSL_ExtFunction m_nxslDCIFunctions[] =
+{
+   { "GetDCIValue", F_GetDCIValue, 2 }
+};
 
 
 //
@@ -1019,6 +1066,7 @@ void DCItem::Transform(ItemValue &value, time_t nElapsedTime)
 
       pEnv = new NXSL_Environment;
       pEnv->SetLibrary(g_pScriptLibrary);
+		pEnv->RegisterFunctionSet(sizeof(m_nxslDCIFunctions) / sizeof(NXSL_ExtFunction), m_nxslDCIFunctions);
       m_pScript->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&m_nxslNodeClass, m_pNode)));
 	
       if (m_pScript->Run(pEnv, 1, &pValue) == 0)

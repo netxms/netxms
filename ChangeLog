@@ -5,6 +5,7 @@
 - Implemented advanced event processing using situations
 - Added checking of NetXMS server own network connectivity via beacon hosts
 - Implemented "proxy node" functionality for DCIs
+- Added possibility to use values of other DCIs in transformation scripts
 - Added possibility to specify multiple recipients in e-mail or SMS action
 - Implemented System.CPU.Usage for individual processors on Linux
 - PING subagent: added parameter ICMP.PacketLoss(*)
