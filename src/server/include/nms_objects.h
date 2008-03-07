@@ -384,7 +384,8 @@ public:
    int GetItemType(DWORD dwItemId);
    DCItem *GetItemById(DWORD dwItemId);
    DCItem *GetItemByIndex(DWORD dwIndex);
-   DCItem *GetItemByName(TCHAR *pszName);
+   DCItem *GetItemByName(const TCHAR *pszName);
+   DCItem *GetItemByDescription(const TCHAR *pszDescription);
    BOOL LockDCIList(DWORD dwSessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
    BOOL UnlockDCIList(DWORD dwSessionId);
    void SetDCIModificationFlag(void) { m_bDCIListModified = TRUE; }

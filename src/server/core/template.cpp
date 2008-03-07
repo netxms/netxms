@@ -1,4 +1,4 @@
-/* $Id: template.cpp,v 1.41 2008-03-06 00:04:19 victor Exp $ */
+/* $Id: template.cpp,v 1.42 2008-03-07 10:03:53 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -542,7 +542,7 @@ DCItem *Template::GetItemById(DWORD dwItemId)
 // Get item by it's name (case-insensetive)
 //
 
-DCItem *Template::GetItemByName(TCHAR *pszName)
+DCItem *Template::GetItemByName(const TCHAR *pszName)
 {
    DWORD i;
    DCItem *pItem = NULL;
@@ -551,6 +551,29 @@ DCItem *Template::GetItemByName(TCHAR *pszName)
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
       if (!_tcsicmp(m_ppItems[i]->Name(), pszName))
+      {
+         pItem = m_ppItems[i];
+         break;
+      }
+
+   UnlockData();
+   return pItem;
+}
+
+
+//
+// Get item by it's description (case-insensetive)
+//
+
+DCItem *Template::GetItemByDescription(const TCHAR *pszDescription)
+{
+   DWORD i;
+   DCItem *pItem = NULL;
+
+   LockData();
+   // Check if that item exists
+   for(i = 0; i < m_dwNumItems; i++)
+      if (!_tcsicmp(m_ppItems[i]->Description(), pszDescription))
       {
          pItem = m_ppItems[i];
          break;

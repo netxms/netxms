@@ -1,8 +1,8 @@
-/* $Id: agent.cpp,v 1.54 2008-02-07 21:27:04 victor Exp $ */
+/* $Id: agent.cpp,v 1.55 2008-03-07 10:03:54 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -196,6 +196,7 @@ void AgentConnection::ReceiverThread(void)
    BYTE *pDecryptionBuffer = NULL;
    int iErr;
    TCHAR szBuffer[128];
+	SOCKET nSocket;
 
    // Initialize raw message receiving function
    pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
@@ -211,7 +212,10 @@ void AgentConnection::ReceiverThread(void)
    while(1)
    {
       // Receive raw message
-      if ((iErr = RecvNXCPMessage(m_hSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
+      Lock();
+		nSocket = m_hSocket;
+		Unlock();
+      if ((iErr = RecvNXCPMessage(nSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
                                   &m_pCtx, pDecryptionBuffer, m_dwRecvTimeout)) <= 0)
 		{
          break;

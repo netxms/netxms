@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.72 2008-02-07 21:27:03 victor Exp $ */
+/* $Id: tools.cpp,v 1.73 2008-03-07 10:03:53 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -794,6 +794,11 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET nSocket, const void *pBuff,
    QWORD qwStartTime;
    DWORD dwElapsed;
 #endif
+
+	// I've seen on Linux that poll() may hang if fds.fd == -1,
+	// so we check this ourselves
+	if (nSocket == -1)
+		return -1;
 
    if (dwTimeout != INFINITE)
    {

@@ -1,4 +1,4 @@
-/* $Id: dcitem.cpp,v 1.88 2008-03-07 08:03:10 victor Exp $ */
+/* $Id: dcitem.cpp,v 1.89 2008-03-07 10:03:53 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -164,11 +164,67 @@ static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 
 
 //
+// Find DCI by name
+//
+
+static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	NXSL_Object *object;
+	Node *node;
+	DCItem *dci;
+
+	if (!argv[0]->IsObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->IsString())
+		return NXSL_ERR_NOT_STRING;
+
+	object = argv[0]->GetValueAsObject();
+	if (_tcscmp(object->Class()->Name(), "NetXMS_Node"))
+		return NXSL_ERR_BAD_CLASS;
+
+	node = (Node *)object->Data();
+	dci = node->GetItemByName(argv[1]->GetValueAsCString());
+	*ppResult = (dci != NULL) ? new NXSL_Value(dci->Id()) : new NXSL_Value((DWORD)0);
+	return 0;
+}
+
+
+//
+// Find DCI by description
+//
+
+static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	NXSL_Object *object;
+	Node *node;
+	DCItem *dci;
+
+	if (!argv[0]->IsObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->IsString())
+		return NXSL_ERR_NOT_STRING;
+
+	object = argv[0]->GetValueAsObject();
+	if (_tcscmp(object->Class()->Name(), "NetXMS_Node"))
+		return NXSL_ERR_BAD_CLASS;
+
+	node = (Node *)object->Data();
+	dci = node->GetItemByDescription(argv[1]->GetValueAsCString());
+	*ppResult = (dci != NULL) ? new NXSL_Value(dci->Id()) : new NXSL_Value((DWORD)0);
+	return 0;
+}
+
+
+//
 // Additional functions or use within transformation scripts
 //
 
 static NXSL_ExtFunction m_nxslDCIFunctions[] =
 {
+   { "FindDCIByName", F_FindDCIByName, 2 },
+   { "FindDCIByDescription", F_FindDCIByDescription, 2 },
    { "GetDCIValue", F_GetDCIValue, 2 }
 };
 
