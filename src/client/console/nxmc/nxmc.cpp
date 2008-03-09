@@ -139,6 +139,9 @@ bool nxApp::OnInit()
 	if (flag || (g_appFlags & AF_START_MAXIMIZED))
 		m_mainFrame->Maximize();
 
+	if (g_appFlags & AF_FULLSCREEN)
+		m_mainFrame->ShowFullScreen(true);
+
 	if (g_appFlags & AF_OPEN_VIEW_ON_START)
 	{
 		nxView *view = NXMCCreateViewByClass(m_autoView, NXMCGetDefaultParent(), _T(""), NULL, NULL);
