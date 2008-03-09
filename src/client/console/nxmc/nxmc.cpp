@@ -140,7 +140,7 @@ bool nxApp::OnInit()
 		m_mainFrame->Maximize();
 
 	if (g_appFlags & AF_FULLSCREEN)
-		m_mainFrame->ShowFullScreen(true);
+		m_mainFrame->ShowFullScreen(true, wxFULLSCREEN_NOTOOLBAR | wxFULLSCREEN_NOSTATUSBAR | wxFULLSCREEN_NOBORDER | wxFULLSCREEN_NOCAPTION);
 
 	if (g_appFlags & AF_OPEN_VIEW_ON_START)
 	{

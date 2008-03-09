@@ -1,8 +1,8 @@
-/* $Id: mainfrm.h,v 1.11 2008-02-27 08:08:02 victor Exp $ */
+/* $Id: mainfrm.h,v 1.12 2008-03-09 19:56:37 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
-** Copyright (C) 2007 Victor Kirhenshtein
+** Copyright (C) 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -98,6 +98,8 @@ protected:
 	void OnViewConsoleLog(wxCommandEvent &event);
 	void OnViewControlPanel(wxCommandEvent &event);
 	void OnViewRefresh(wxCommandEvent &event);
+	void OnViewFullScreen(wxCommandEvent &event);
+	void OnUpdateViewFullScreen(wxUpdateUIEvent &event);
 	void OnPerspectiveSave(wxCommandEvent &event);
 	void OnPerspectiveDefault(wxCommandEvent &event);
 	void OnHelpAbout(wxCommandEvent &event);

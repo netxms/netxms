@@ -29,6 +29,11 @@
 					<label>&amp;Refresh\tF5</label>
 					<help></help>
 				</object>
+				<object class="wxMenuItem" name="menuViewFullScreen">
+					<label>&amp;Full Screen\tF11</label>
+					<help></help>
+					<checkable>1</checkable>
+				</object>
 			</object>
 			<object class="wxMenu" name="menuPerspective">
 				<label>_Perspective</label>

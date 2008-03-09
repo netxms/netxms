@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.21 2008-02-27 22:30:27 victor Exp $ */
+/* $Id: mainfrm.cpp,v 1.22 2008-03-09 19:56:37 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console
@@ -40,6 +40,8 @@ BEGIN_EVENT_TABLE(nxMainFrame, wxFrame)
 	EVT_MENU(XRCID("menuViewConsoleLog"), nxMainFrame::OnViewConsoleLog)
 	EVT_MENU(XRCID("menuViewControlPanel"), nxMainFrame::OnViewControlPanel)
 	EVT_MENU(XRCID("menuViewRefresh"), nxMainFrame::OnViewRefresh)
+	EVT_MENU(XRCID("menuViewFullScreen"), nxMainFrame::OnViewFullScreen)
+	EVT_UPDATE_UI(XRCID("menuViewFullScreen"), nxMainFrame::OnUpdateViewFullScreen)
 	EVT_MENU(XRCID("menuPerspectiveSave"), nxMainFrame::OnPerspectiveSave)
 	EVT_MENU(XRCID("menuPerspectiveDefault"), nxMainFrame::OnPerspectiveDefault)
 	EVT_MENU(XRCID("menuHelpAbout"), nxMainFrame::OnHelpAbout)
@@ -190,6 +192,28 @@ void nxMainFrame::OnHelpAbout(wxCommandEvent &event)
 	versionTextCtrl->SetLabel(_T("Version ") NETXMS_VERSION_STRING);
 	dlg->ShowModal();
 	delete dlg;
+}
+
+
+//
+// View->Full Screen menu handler
+//
+
+void nxMainFrame::OnViewFullScreen(wxCommandEvent &event)
+{
+	if (IsFullScreen())
+	{
+		ShowFullScreen(false);
+	}
+	else
+	{
+		ShowFullScreen(true, wxFULLSCREEN_NOTOOLBAR | wxFULLSCREEN_NOSTATUSBAR | wxFULLSCREEN_NOBORDER | wxFULLSCREEN_NOCAPTION);
+	}
+}
+
+void nxMainFrame::OnUpdateViewFullScreen(wxUpdateUIEvent &event)
+{
+	event.Check(IsFullScreen());
 }
 
 
