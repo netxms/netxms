@@ -105,6 +105,8 @@ void AlarmSoundPolicy::HandleAlarm(NXC_ALARM *alarm)
 
 AlarmSoundRule::AlarmSoundRule()
 {
+	m_sourceObjects = new DWORD_Array(CompareDwords);
+	m_events = new DWORD_Array(CompareDwords);
 	m_messagePattern = NULL;
 	m_alarmState = -1;
 	m_sound = NULL;
@@ -119,10 +121,41 @@ AlarmSoundRule::AlarmSoundRule()
 
 AlarmSoundRule::AlarmSoundRule(wxXmlNode *root)
 {
+	wxXmlNode *child, *data;
+	
+	m_sourceObjects = new DWORD_Array(CompareDwords);
+	m_events = new DWORD_Array(CompareDwords);
 	m_messagePattern = NULL;
 	m_alarmState = -1;
 	m_sound = NULL;
-	m_isOk = false;
+	m_isOk = true;
+
+	child = root->GetChildren();
+	while(child)
+	{
+		if (child->GetName() == _T("objects"))
+		{
+		}
+		else if (child->GetName() == _T("events"))
+		{
+		}
+		else if (child->GetName() == _T("message"))
+		{
+		}
+		else if (child->GetName() == _T("state"))
+		{
+			data = child->GetChildren();
+		}
+		else if (child->GetName() == _T("sound"))
+		{
+		}
+		else	// Invalid tag
+		{
+			m_isOk = false;
+			break;
+		}
+		child = child->GetNext();
+	}
 }
 
 
@@ -134,6 +167,8 @@ AlarmSoundRule::~AlarmSoundRule()
 {
 	safe_free(m_messagePattern);
 	delete m_sound;
+	delete m_sourceObjects;
+	delete m_events;
 }
 
 

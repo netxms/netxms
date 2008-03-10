@@ -1,4 +1,11 @@
 *************
+* 78 ==> 79 *
+*************
+
+- Configuration parameter RetainCustomInterfaceNames deleted
+
+
+*************
 * 77 ==> 78 *
 *************
 

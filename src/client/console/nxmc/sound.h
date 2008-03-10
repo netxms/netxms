@@ -27,8 +27,6 @@
 #include <wx/sound.h>
 
 
-WX_DEFINE_SORTED_ARRAY_INT(DWORD, DWORD_Array);
-
 //
 // Rule of alarm sound policy
 //
@@ -36,8 +34,8 @@ WX_DEFINE_SORTED_ARRAY_INT(DWORD, DWORD_Array);
 class AlarmSoundRule
 {
 protected:
-	DWORD_Array m_sourceObjects;
-	DWORD_Array m_events;
+	DWORD_Array *m_sourceObjects;
+	DWORD_Array *m_events;
 	TCHAR *m_messagePattern;
 	int m_alarmState;
 	wxSound *m_sound;

@@ -306,6 +306,23 @@ WX_DECLARE_HASH_MAP_WITH_DECL(int, TCHAR*, wxIntegerHash, wxIntegerEqual, nxIntT
 
 
 //
+// Sorted array of DWORDs
+//
+
+int LIBNXMC_EXPORTABLE CompareDwords(DWORD, DWORD);
+
+#ifdef _WIN32
+WX_DEFINE_SORTED_ARRAY_LONG(DWORD, DWORD_Array);
+#else
+#if (SIZEOF_LONG == 4)
+WX_DEFINE_SORTED_ARRAY_LONG(DWORD, DWORD_Array);
+#else
+WX_DEFINE_SORTED_ARRAY_INT(DWORD, DWORD_Array);
+#endif
+#endif
+
+
+//
 // Classes
 //
 

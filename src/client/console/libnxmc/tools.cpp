@@ -187,3 +187,14 @@ void LIBNXMC_EXPORTABLE NXMCAdjustListColumn(wxListCtrl *listCtrl, int col)
 	}
 	listCtrl->SetColumnWidth(col, width + 20);
 }
+
+
+//
+// Compare two DWORDs
+//
+
+int LIBNXMC_EXPORTABLE CompareDwords(DWORD dw1, DWORD dw2)
+{
+	return COMPARE_NUMBERS(dw1, dw2);
+}
+
