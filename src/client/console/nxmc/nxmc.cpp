@@ -139,9 +139,6 @@ bool nxApp::OnInit()
 	if (flag || (g_appFlags & AF_START_MAXIMIZED))
 		m_mainFrame->Maximize();
 
-	if (g_appFlags & AF_FULLSCREEN)
-		m_mainFrame->ShowFullScreen(true, wxFULLSCREEN_NOTOOLBAR | wxFULLSCREEN_NOSTATUSBAR | wxFULLSCREEN_NOBORDER | wxFULLSCREEN_NOCAPTION);
-
 	if (g_appFlags & AF_OPEN_VIEW_ON_START)
 	{
 		nxView *view = NXMCCreateViewByClass(m_autoView, NXMCGetDefaultParent(), _T(""), NULL, NULL);
@@ -162,7 +159,11 @@ bool nxApp::OnInit()
 	}
 
 	if (!(g_appFlags & AF_HIDDEN))
+	{
 		m_mainFrame->Show(true);
+		if (g_appFlags & AF_FULLSCREEN)
+			m_mainFrame->ShowFullScreen(true, wxFULLSCREEN_NOTOOLBAR | wxFULLSCREEN_NOSTATUSBAR | wxFULLSCREEN_NOBORDER | wxFULLSCREEN_NOCAPTION);
+	}
 
 	return true;
 }

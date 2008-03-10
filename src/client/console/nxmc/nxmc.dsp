@@ -195,6 +195,10 @@ SOURCE=.\plugins.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\sound.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\srvcfg.cpp
 # End Source File
 # Begin Source File
@@ -272,6 +276,10 @@ SOURCE=.\nxmc.h
 # Begin Source File
 
 SOURCE=..\include\nxmc_api.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\sound.h
 # End Source File
 # Begin Source File
 

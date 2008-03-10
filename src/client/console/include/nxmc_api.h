@@ -32,6 +32,7 @@
 #include <wx/aboutdlg.h>
 #include <wx/cmdline.h>
 #include <wx/taskbar.h>
+#include <wx/xml/xml.h>
 #endif
 
 

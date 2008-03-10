@@ -13,6 +13,7 @@ nxmc_SOURCES = \
 	mainfrm.cpp \
 	nxmc.cpp \
 	plugins.cpp \
+	sound.cpp \
 	srvcfg.cpp \
 	tbicon.cpp \
 	vareditdlg.cpp
@@ -34,6 +35,7 @@ EXTRA_DIST = \
 	mainfrm.h \
 	nxmc.h \
 	resource.h \
+	sound.h \
 	srvcfg.h \
 	tbicon.h \
 	vareditdlg.h

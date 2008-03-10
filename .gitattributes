@@ -540,6 +540,8 @@ src/client/console/nxmc/rc/nxmc.fbp -text
 src/client/console/nxmc/rc/processing.png -text
 src/client/console/nxmc/rc/wxfb_code.xrc -text
 src/client/console/nxmc/resource.h -text
+src/client/console/nxmc/sound.cpp -text
+src/client/console/nxmc/sound.h -text
 src/client/console/nxmc/srvcfg.cpp -text
 src/client/console/nxmc/srvcfg.h -text
 src/client/console/nxmc/tbicon.cpp -text
