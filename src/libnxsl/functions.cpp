@@ -46,6 +46,20 @@ int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 
 
 //
+// Class of an object
+//
+
+int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	if (!argv[0]->IsObject())
+		return NXSL_ERR_NOT_OBJECT;
+		
+   *ppResult = new NXSL_Value(argv[0]->GetValueAsObject()->Class()->Name());
+   return 0;
+}
+
+
+//
 // Absolute value
 //
 
