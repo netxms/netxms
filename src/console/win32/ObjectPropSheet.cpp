@@ -39,6 +39,10 @@ CObjectPropSheet::~CObjectPropSheet()
    // Access list can be allocated if we have changed it in "Security" tab
    // Otherwise it will be NULL because of memset() in constructor
    safe_free(m_update.pAccessList);
+
+   // Trusted nodes list can be allocated if we have changed it in "Trusted Nodes" tab
+   // Otherwise it will be NULL because of memset() in constructor
+	safe_free(m_update.pdwTrustedNodes);
 }
 
 

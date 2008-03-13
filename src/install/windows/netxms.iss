@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.2.20-rc3
-AppVersion=0.2.20-rc3
+AppVerName=NetXMS 0.2.20-rc4
+AppVersion=0.2.20-rc4
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.2.20-rc3
+OutputBaseFilename=netxms-0.2.20-rc4
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -21,6 +21,7 @@ LanguageDetectionMethod=none
 [Components]
 Name: "base"; Description: "Base Files"; Types: full compact custom; Flags: fixed
 Name: "console"; Description: "Administrator's Console"; Types: full
+Name: "tools"; Description: "Command Line Tools"; Types: full
 Name: "server"; Description: "NetXMS Server"; Types: full compact
 Name: "server\mssql"; Description: "Microsoft SQL DB-Library"; Types: full
 Name: "server\mysql"; Description: "MySQL Client Library"; Types: full
@@ -41,10 +42,10 @@ Source: "..\..\libnetxms\Release\libnetxms.pdb"; DestDir: "{app}\bin"; Flags: ig
 Source: "..\..\libnetxms\Release_UNICODE\libnetxmsw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "..\..\libnetxms\Release_UNICODE\libnetxmsw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
 ; Executables and DLLs shared between different components (server, console, etc.)
-Source: "..\..\libnxcl\Release\libnxcl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console websrv
-Source: "..\..\libnxcl\Release\libnxcl.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (console or websrv) and pdb
-Source: "..\..\libnxcl\Release_UNICODE\libnxclw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
-Source: "..\..\libnxcl\Release_UNICODE\libnxclw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and pdb
+Source: "..\..\libnxcl\Release\libnxcl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console tools websrv
+Source: "..\..\libnxcl\Release\libnxcl.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (console or tools or websrv) and pdb
+Source: "..\..\libnxcl\Release_UNICODE\libnxclw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and tools
+Source: "..\..\libnxcl\Release_UNICODE\libnxclw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (console or tools) and pdb
 Source: "..\..\libnxmap\Release\libnxmap.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console server websrv
 Source: "..\..\libnxmap\Release\libnxmap.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (console or server or websrv) and pdb
 Source: "..\..\libnxmap\Release_UNICODE\libnxmapw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
@@ -129,6 +130,11 @@ Source: "nxcon.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Compon
 Source: "nxav.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "nxnotify.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "nxmc.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+; Command-line tools files
+Source: "..\..\client\nxalarm\Release\nxalarm.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
+Source: "..\..\client\nxsms\Release\nxsms.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
+Source: "..\..\nxevent\Release\nxevent.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
+Source: "..\..\nxpush\Release\nxpush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: tools
 ; Web server files
 Source: "..\..\nxhttpd\Release\nxhttpd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv
 Source: "..\..\nxhttpd\static\*.js"; DestDir: "{app}\var\www"; Flags: ignoreversion; Components: websrv

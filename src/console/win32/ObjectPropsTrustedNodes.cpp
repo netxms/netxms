@@ -27,7 +27,6 @@ CObjectPropsTrustedNodes::CObjectPropsTrustedNodes() : CPropertyPage(CObjectProp
 
 CObjectPropsTrustedNodes::~CObjectPropsTrustedNodes()
 {
-	safe_free(m_pUpdate->pdwTrustedNodes);
 }
 
 void CObjectPropsTrustedNodes::DoDataExchange(CDataExchange* pDX)

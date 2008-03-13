@@ -122,7 +122,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    AddItem(_T("Agent Configurations"), 11, ID_CONTROLPANEL_AGENTCONFIGS);
    AddItem(_T("Network Discovery"), 12, ID_CONTROLPANEL_NETWORKDISCOVERY);
    AddItem(_T("Certificates"), 13, ID_CONTROLPANEL_CERTIFICATES);
-   AddItem(_T("Event Correlation"), 14, ID_CONTROLPANEL_EVENTCORRELATION);
+   //AddItem(_T("Event Correlation"), 14, ID_CONTROLPANEL_EVENTCORRELATION);
 
    m_wndListCtrl.SortItems(CompareItems, (DWORD)&m_wndListCtrl);
 
