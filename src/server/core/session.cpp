@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.299 2008-03-06 22:55:55 victor Exp $ */
+/* $Id: session.cpp,v 1.300 2008-03-14 15:47:54 alk Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -8110,7 +8110,7 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
       }
       else
       {
-         msg.SetVariable(VID_FAILED_DCI_INDEX, i);
+         msg.SetVariable(VID_FAILED_DCI_INDEX, i - 1);
       }
 
       // Cleanup
