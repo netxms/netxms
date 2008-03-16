@@ -262,7 +262,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Find...\tCtrl+F",            ID_OBJECT_FIND
         MENUITEM SEPARATOR
-        POPUP "&Create..."
+        POPUP "&Create"
         BEGIN
             MENUITEM "C&luster...",                 ID_OBJECT_CREATE_CLUSTER
             MENUITEM "C&ondition...",               ID_OBJECT_CREATE_CONDITION
@@ -412,7 +412,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Find...\tCtrl+F",            ID_OBJECT_FIND
         MENUITEM SEPARATOR
-        POPUP "&Create..."
+        POPUP "&Create"
         BEGIN
             MENUITEM "C&luster...",                 ID_OBJECT_CREATE_CLUSTER
             MENUITEM "C&ondition...",               ID_OBJECT_CREATE_CONDITION
@@ -597,6 +597,7 @@ BEGIN
         MENUITEM "&Redo layout",                ID_MAP_REDOLAYOUT
         MENUITEM "S&et background...",          ID_MAP_SETBACKGROUND
         MENUITEM "Enable auto&matic layout",    ID_MAP_AUTOLAYOUT
+        MENUITEM "Show co&nnector names",       ID_MAP_SHOWCONNECTORNAMES
     END
     POPUP "Data"
     BEGIN

@@ -529,7 +529,12 @@ void CMapView::DoSubmapLayout()
                                 ((pLinkList[k].dwId1 == pIndex[i].dwKey) &&
                                  (pLinkList[k].dwId2 == pSibling->vpnc.dwPeerGateway))) &&
                                  (pLinkList[k].nType == LINK_TYPE_VPN))
+									{
+										if ((pLinkList[k].dwId1 == pSibling->vpnc.dwPeerGateway) &&
+											 (pLinkList[k].szPort1[0] == 0))
+											nx_strncpy(pLinkList[k].szPort1, pSibling->szName, MAX_CONNECTOR_NAME);
                               break;
+									}
 
                         if (k == dwNumLinks)
                         {
@@ -538,6 +543,8 @@ void CMapView::DoSubmapLayout()
                            pLinkList = (OBJLINK *)realloc(pLinkList, sizeof(OBJLINK) * dwNumLinks);
                            pLinkList[k].dwId1 = pIndex[i].dwKey;
                            pLinkList[k].dwId2 = pSibling->vpnc.dwPeerGateway;
+									pLinkList[k].szPort1[0] = 0;
+									nx_strncpy(pLinkList[k].szPort2, pSibling->szName, MAX_CONNECTOR_NAME);
                            pLinkList[k].nType = LINK_TYPE_VPN;
                         }
                      }
@@ -557,6 +564,8 @@ void CMapView::DoSubmapLayout()
                      {
                         pLinkList[j].dwId1 = pIndex[i].dwKey;
                         pLinkList[j].dwId2 = pdwSubnetList[k];
+								pLinkList[j].szPort1[0] = 0;
+								pLinkList[j].szPort2[0] = 0;
                         pLinkList[j].nType = LINK_TYPE_NORMAL;
                      }
                   }
