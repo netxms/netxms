@@ -69,6 +69,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token <valReal> T_REAL
 
 %right '='
+%left '?' ':'
 %left '.'
 %left T_OR
 %left T_AND
@@ -325,6 +326,19 @@ Expression:
 |	Expression '.' Expression
 {
 	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_CONCAT));
+}
+|	Expression '?'
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_JZ, INVALID_ADDRESS));
+}
+	Expression ':'
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_JMP, INVALID_ADDRESS));
+	pScript->ResolveLastJump(OPCODE_JZ);
+}	 
+	Expression
+{
+	pScript->ResolveLastJump(OPCODE_JMP);
 }
 |	Operand
 ;

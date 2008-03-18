@@ -92,6 +92,8 @@ public:
    virtual NXSL_Value *GetAttr(NXSL_Object *pObject, char *pszAttr);
    virtual BOOL SetAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue);
 
+	virtual void OnObjectDelete(NXSL_Object *object);
+
    char *Name(void) { return m_szName; }
 };
 
@@ -111,8 +113,8 @@ public:
    NXSL_Object(NXSL_Class *pClass, void *pData);
    ~NXSL_Object();
 
-   NXSL_Class *Class(void) { return m_pClass; }
-   void *Data(void) { return m_pData; }
+   NXSL_Class *Class() { return m_pClass; }
+   void *Data() { return m_pData; }
 };
 
 

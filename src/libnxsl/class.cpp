@@ -66,6 +66,15 @@ BOOL NXSL_Class::SetAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue
 
 
 //
+// Object deletion handler
+//
+
+void NXSL_Class::OnObjectDelete(NXSL_Object *object)
+{
+}
+
+
+//
 // Object constructors
 //
 

@@ -21,6 +21,9 @@
 - Implemented "stop processing" option for event processing policy rule
 - Implemented "move" operation for templates (move between template groups)
 - New internal parameter: ConditionStatus(*)
+- NXSL:
+	- Implemented condition operator (?:)
+	- New built-in functions: gmtime(), localtime()
 - Fixed issues: #188, #189, #190, #191, #195, #199, #203
 
 

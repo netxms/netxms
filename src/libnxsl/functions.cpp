@@ -383,6 +383,126 @@ int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 
 
 //
+// NXSL "TIME" class
+//
+
+class NXSL_TimeClass : public NXSL_Class
+{
+public:
+   NXSL_TimeClass();
+
+   virtual NXSL_Value *GetAttr(NXSL_Object *pObject, char *pszAttr);
+	virtual void OnObjectDelete(NXSL_Object *object);
+};
+
+
+//
+// Implementation of "TIME" class
+//
+
+NXSL_TimeClass::NXSL_TimeClass()
+               :NXSL_Class()
+{
+   strcpy(m_szName, "TIME");
+}
+
+NXSL_Value *NXSL_TimeClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
+{
+   struct tm *st;
+   NXSL_Value *value;
+
+   st = (struct tm *)pObject->Data();
+   if (!strcmp(pszAttr, "sec") || !strcmp(pszAttr, "tm_sec"))
+   {
+      value = new NXSL_Value((LONG)st->tm_sec);
+   }
+   else if (!strcmp(pszAttr, "min") || !strcmp(pszAttr, "tm_min"))
+   {
+      value = new NXSL_Value((LONG)st->tm_min);
+   }
+   else if (!strcmp(pszAttr, "hour") || !strcmp(pszAttr, "tm_hour"))
+   {
+      value = new NXSL_Value((LONG)st->tm_hour);
+   }
+   else if (!strcmp(pszAttr, "mday") || !strcmp(pszAttr, "tm_mday"))
+   {
+      value = new NXSL_Value((LONG)st->tm_mday);
+   }
+   else if (!strcmp(pszAttr, "mon") || !strcmp(pszAttr, "tm_mon"))
+   {
+      value = new NXSL_Value((LONG)st->tm_mon);
+   }
+   else if (!strcmp(pszAttr, "year") || !strcmp(pszAttr, "tm_year"))
+   {
+      value = new NXSL_Value((LONG)(st->tm_year + 1900));
+   }
+   else if (!strcmp(pszAttr, "yday") || !strcmp(pszAttr, "tm_yday"))
+   {
+      value = new NXSL_Value((LONG)st->tm_yday);
+   }
+   else if (!strcmp(pszAttr, "isdst") || !strcmp(pszAttr, "tm_isdst"))
+   {
+      value = new NXSL_Value((LONG)st->tm_isdst);
+   }
+	else
+	{
+		value = NULL;	// Error
+	}
+   return value;
+}
+
+void NXSL_TimeClass::OnObjectDelete(NXSL_Object *object)
+{
+	safe_free(object->Data());
+}
+
+
+//
+// NXSL "TIME" class object
+//
+
+static NXSL_TimeClass m_nxslTimeClass;
+
+
+//
+// Return parsed local time
+//
+
+int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	struct tm *p;
+	time_t t;
+
+   if (!argv[0]->IsInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+	t = argv[0]->GetValueAsUInt32();
+	p = localtime(&t);
+	*ppResult = new NXSL_Value(new NXSL_Object(&m_nxslTimeClass, nx_memdup(p, sizeof(struct tm))));
+	return 0;
+}
+
+
+//
+// Return parsed UTC time
+//
+
+int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	struct tm *p;
+	time_t t;
+
+   if (!argv[0]->IsInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+	t = argv[0]->GetValueAsUInt32();
+	p = gmtime(&t);
+	*ppResult = new NXSL_Value(new NXSL_Object(&m_nxslTimeClass, nx_memdup(p, sizeof(struct tm))));
+	return 0;
+}
+
+
+//
 // Get substring of a string
 // Possible usage:
 //    substr(string, start) - all characters from position 'start'
