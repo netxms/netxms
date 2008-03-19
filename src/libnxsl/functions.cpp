@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -473,10 +473,22 @@ int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 	struct tm *p;
 	time_t t;
 
-   if (!argv[0]->IsInteger())
-      return NXSL_ERR_NOT_INTEGER;
+   if (argc == 0)
+	{
+		t = time(NULL);
+	}
+	else if (argc == 1)
+	{
+		if (!argv[0]->IsInteger())
+			return NXSL_ERR_NOT_INTEGER;
 
-	t = argv[0]->GetValueAsUInt32();
+		t = argv[0]->GetValueAsUInt32();
+	}
+	else
+	{
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+	}
+
 	p = localtime(&t);
 	*ppResult = new NXSL_Value(new NXSL_Object(&m_nxslTimeClass, nx_memdup(p, sizeof(struct tm))));
 	return 0;
@@ -492,10 +504,22 @@ int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 	struct tm *p;
 	time_t t;
 
-   if (!argv[0]->IsInteger())
-      return NXSL_ERR_NOT_INTEGER;
+   if (argc == 0)
+	{
+		t = time(NULL);
+	}
+	else if (argc == 1)
+	{
+		if (!argv[0]->IsInteger())
+			return NXSL_ERR_NOT_INTEGER;
 
-	t = argv[0]->GetValueAsUInt32();
+		t = argv[0]->GetValueAsUInt32();
+	}
+	else
+	{
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+	}
+
 	p = gmtime(&t);
 	*ppResult = new NXSL_Value(new NXSL_Object(&m_nxslTimeClass, nx_memdup(p, sizeof(struct tm))));
 	return 0;

@@ -69,7 +69,8 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token <valReal> T_REAL
 
 %right '='
-%left '?' ':'
+%right ':'
+%left '?'
 %left '.'
 %left T_OR
 %left T_AND
