@@ -32,12 +32,14 @@ int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
+int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
+int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
@@ -58,12 +60,14 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { "classof", F_classof, 1 },
 	{ "d2x", F_d2x, -1 },
    { "gmtime", F_gmtime, -1 },
+   { "left", F_left, -1 },
    { "length", F_length, 1 },
    { "localtime", F_localtime, -1 },
    { "lower", F_lower, 1 },
    { "max", F_max, -1 },
    { "min", F_min, -1 },
    { "pow", F_pow, 2 },
+   { "right", F_right, -1 },
 	{ "strftime", F_strftime, -1 },
 	{ "substr", F_substr, -1 },
 	{ "time", F_time, 0 },

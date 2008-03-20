@@ -1,4 +1,4 @@
-/* $Id: log.cpp,v 1.10 2008-01-07 13:51:46 victor Exp $ */
+/* $Id: log.cpp,v 1.11 2008-03-20 17:56:02 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004,2005,2006 Victor Kirhenshtein
@@ -25,6 +25,9 @@
 #include <stdarg.h>
 #if HAVE_SYSLOG_H
 #include <syslog.h>
+#ifndef LOG_PERROR
+#define LOG_PERROR 0
+#endif
 #endif
 
 

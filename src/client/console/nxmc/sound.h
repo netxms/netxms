@@ -68,7 +68,7 @@ public:
 	AlarmSoundPolicy(wxXmlNode *root);
 	~AlarmSoundPolicy();
 
-	void HandleAlarm(NXC_ALARM *alarm);
+	void HandleAlarm(int action, NXC_ALARM *alarm);
 };
 
 #endif

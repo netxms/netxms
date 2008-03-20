@@ -66,6 +66,7 @@ nxApp::nxApp() : wxApp()
 {
 	m_mainFrame = NULL;
 	m_tbIcon = NULL;
+	m_soundPolicy = NULL;
 }
 
 
@@ -124,6 +125,8 @@ bool nxApp::OnInit()
 		return false;
 	NXMCSetSession(g_hSession);
 	NXMCInitImageLists();
+
+	LoadSoundPolicy();
 
 	m_mainFrame = new nxMainFrame(wxDefaultPosition, wxSize(700, 500));
 	SetTopWindow(m_mainFrame);
@@ -187,6 +190,7 @@ void nxApp::OnInitCmdLine(wxCmdLineParser& parser)
 	parser.AddOption(_T("o"), _T("open"), _T("Open view of given class at startup"));
 	parser.AddOption(wxEmptyString, _T("password"), _T("Password"));
 	parser.AddOption(wxEmptyString, _T("server"), _T("Server to connect to"));
+	parser.AddOption(_T("S"), _T("soundpolicy"), _T("Alarm sound policy file"));
 	parser.AddSwitch(_T("T"), _T("taskbaricon"), _T("Add icon to task bar (system tray)"));
 	parser.AddOption(wxEmptyString, _T("username"), _T("User name"));
 }
@@ -227,6 +231,9 @@ bool nxApp::OnCmdLineParsed(wxCmdLineParser& parser)
 	if (parser.Found(_T("password"), &m_acPassword))
 		g_appFlags |= AF_OVERRIDE_PASSWORD;
 
+	if (!parser.Found(_T("soundpolicy"), &m_soundPolicyFile))
+		m_soundPolicyFile = _T("default.spl");
+
 	return wxApp::OnCmdLineParsed(parser);
 }
 
@@ -256,6 +263,7 @@ int nxApp::OnExit()
 	NXCDisconnect(g_hSession);
 	nxConsoleLogger::Shutdown();
 	delete m_tbIcon;
+	delete m_soundPolicy;
 	return wxApp::OnExit();
 }
 
@@ -319,4 +327,44 @@ bool nxApp::Connect()
 	} while(rcc != RCC_SUCCESS);
 
 	return (rcc == RCC_SUCCESS);
+}
+
+
+//
+// Load sound policy
+//
+
+void nxApp::LoadSoundPolicy()
+{
+	wxXmlDocument doc;
+	wxXmlNode *root;
+
+	if (doc.Load(m_soundPolicyFile))
+	{
+		root = doc.GetRoot();
+		if (root->GetName() == _T("soundpolicy"))
+		{
+			m_soundPolicy = new AlarmSoundPolicy(root);
+			wxLogInfo(_T("Alarm sound policy successfully loaded from %s"), m_soundPolicyFile.c_str());
+		}
+		else
+		{
+			wxLogWarning(_T("Invalid format of alarm sound policy file %s"), m_soundPolicyFile.c_str());
+		}
+	}
+	else
+	{
+		wxLogWarning(_T("Unable to load alarm sound policy from %s"), m_soundPolicyFile.c_str());
+	}
+}
+
+
+//
+// Play alarm sound
+//
+
+void nxApp::PlayAlarmSound(int action, NXC_ALARM *alarm)
+{
+	if (m_soundPolicy != NULL)
+		m_soundPolicy->HandleAlarm(action, alarm);
 }

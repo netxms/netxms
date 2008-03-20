@@ -42,6 +42,7 @@ extern "C" WXDLLIMPEXP_BASE HINSTANCE wxGetInstance();
 #include "busydlg.h"
 #include "frame.h"
 #include "tbicon.h"
+#include "sound.h"
 
 
 //
@@ -145,8 +146,11 @@ private:
 	wxString m_acUsername;
 	wxString m_acPassword;
 	wxString m_autoView;
+	wxString m_soundPolicyFile;
+	AlarmSoundPolicy *m_soundPolicy;
 
 	bool Connect();
+	void LoadSoundPolicy();
 
 public:
 	nxApp();
@@ -160,6 +164,8 @@ public:
 
 	nxTaskBarIcon& GetTaskBarIcon() { return *m_tbIcon; }
 	void DestroyTaskBarIcon() { delete_and_null(m_tbIcon); }
+
+	void PlayAlarmSound(int action, NXC_ALARM *alarm);
 };
 
 DECLARE_APP(nxApp)

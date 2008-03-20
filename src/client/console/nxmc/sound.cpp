@@ -22,7 +22,6 @@
 **/
 
 #include "nxmc.h"
-#include "sound.h"
 
 
 //
@@ -89,9 +88,12 @@ AlarmSoundPolicy::~AlarmSoundPolicy()
 // Handle alarm
 //
 
-void AlarmSoundPolicy::HandleAlarm(NXC_ALARM *alarm)
+void AlarmSoundPolicy::HandleAlarm(int action, NXC_ALARM *alarm)
 {
 	int i;
+
+	if (action == NX_NOTIFY_ALARM_DELETED)
+		return;
 
 	for(i = 0; i < m_numRules; i++)
 		if (m_rules[i]->HandleAlarm(alarm))
@@ -121,7 +123,8 @@ AlarmSoundRule::AlarmSoundRule()
 
 AlarmSoundRule::AlarmSoundRule(wxXmlNode *root)
 {
-	wxXmlNode *child, *data;
+	wxXmlNode *child;
+	wxString data;
 	
 	m_sourceObjects = new DWORD_Array(CompareDwords);
 	m_events = new DWORD_Array(CompareDwords);
@@ -144,7 +147,9 @@ AlarmSoundRule::AlarmSoundRule(wxXmlNode *root)
 		}
 		else if (child->GetName() == _T("state"))
 		{
-			data = child->GetChildren();
+			data = child->GetNodeContent();
+wxLogDebug(_T("CONTENT: %s"), data.c_str());
+			m_alarmState = _tcstol(data.c_str(), NULL, 0);
 		}
 		else if (child->GetName() == _T("sound"))
 		{

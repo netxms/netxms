@@ -72,6 +72,7 @@ static void ClientEventHandler(NXC_SESSION session, DWORD nxcEvent, DWORD code, 
 				case NX_NOTIFY_ALARM_CHANGED:
 				case NX_NOTIFY_ALARM_TERMINATED:
 					NXMCUpdateAlarms(code, (NXC_ALARM *)arg);
+					wxGetApp().PlayAlarmSound(code, (NXC_ALARM *)arg);
 					PostNetXMSEvent(nxEVT_NXC_ALARM_CHANGE, code, nx_memdup(arg, sizeof(NXC_ALARM)));
 					break;
 				default:

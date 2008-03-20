@@ -10,16 +10,19 @@
 #define UNICODE_UCS2 1
 
 /* Define to 1 if you have the `iconv' function. */
-//#define HAVE_ICONV 1
+#define HAVE_ICONV 1
 
 /* Define to 1 if you have the <iconv.h> header file. */
-//#define HAVE_ICONV_H 1
+#define HAVE_ICONV_H 1
 
 /* Define to 1 if iconv supports //IGNORE option */
 #define HAVE_ICONV_IGNORE 1
 
 /* Define to 1 if iconv supports UCS-2 */
 #define HAVE_ICONV_UCS_2 1
+
+/* Define to 1 if iconv supports UCS-4 */
+#define HAVE_ICONV_UCS_4 1
 
 /* Define as const if the declaration of iconv() needs const. */
 #define ICONV_CONST
@@ -29,6 +32,9 @@
 
 /* Define to 1 if you have the <termios.h> header file. */
 #define HAVE_TERMIOS_H 1
+
+/* Define to 1 if you have the <syslog.h> header file. */
+#define HAVE_SYSLOG_H 1
 
 /* The size of a `long', as computed by sizeof. */
 #define SIZEOF_LONG 4

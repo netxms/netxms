@@ -627,3 +627,108 @@ int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 	*ppResult = new NXSL_Value(buffer);
 	return 0;
 }
+
+
+//
+// left() - take leftmost part of a string and pad or truncate it as necessary
+// Format: left(string, len, [pad])
+//
+
+int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	TCHAR *str, *newStr, pad;
+	LONG newLen;
+	DWORD i, len;
+
+   if ((argc < 2) || (argc > 3))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[1]->IsInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   if ((!argv[0]->IsString()) ||
+		 ((argc == 3) && (!argv[2]->IsString())))
+		return NXSL_ERR_NOT_STRING;
+
+	if (argc == 3)
+	{
+		pad = *(argv[2]->GetValueAsCString());
+		if (pad == 0)
+			pad = _T(' ');
+	}
+	else
+	{
+		pad = _T(' ');
+	}
+
+	newLen = argv[1]->GetValueAsInt32();
+	if (newLen < 0)
+		newLen = 0;
+
+   str = argv[0]->GetValueAsString(&len);
+	if (len > (DWORD)newLen)
+		len = (DWORD)newLen;
+	newStr = (TCHAR *)malloc(newLen * sizeof(TCHAR));
+	memcpy(newStr, str, len * sizeof(TCHAR));
+   for(i = len; i < (DWORD)newLen; i++)
+      newStr[i] = pad;
+   *ppResult = new NXSL_Value(newStr, newLen);
+	free(newStr);
+	return 0;
+}
+
+
+//
+// right() - take rightmost part of a string and pad or truncate it as necessary
+// Format: right(string, len, [pad])
+//
+
+int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	TCHAR *str, *newStr, pad;
+	LONG newLen;
+	DWORD i, len, shift;
+
+   if ((argc < 2) || (argc > 3))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[1]->IsInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   if ((!argv[0]->IsString()) ||
+		 ((argc == 3) && (!argv[2]->IsString())))
+		return NXSL_ERR_NOT_STRING;
+
+	if (argc == 3)
+	{
+		pad = *(argv[2]->GetValueAsCString());
+		if (pad == 0)
+			pad = _T(' ');
+	}
+	else
+	{
+		pad = _T(' ');
+	}
+
+	newLen = argv[1]->GetValueAsInt32();
+	if (newLen < 0)
+		newLen = 0;
+
+   str = argv[0]->GetValueAsString(&len);
+	if (len > (DWORD)newLen)
+	{
+		shift = len - (DWORD)newLen;
+		len = (DWORD)newLen;
+	}
+	else
+	{
+		shift = 0;
+	}
+	newStr = (TCHAR *)malloc(newLen * sizeof(TCHAR));
+	memcpy(&newStr[(DWORD)newLen - len], &str[shift], len * sizeof(TCHAR));
+   for(i = 0; i < (DWORD)newLen - len; i++)
+      newStr[i] = pad;
+   *ppResult = new NXSL_Value(newStr, newLen);
+	free(newStr);
+	return 0;
+}

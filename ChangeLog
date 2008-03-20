@@ -23,7 +23,7 @@
 - New internal parameter: ConditionStatus(*)
 - NXSL:
 	- Implemented condition operator (?:)
-	- New built-in functions: gmtime(), localtime()
+	- New built-in functions: gmtime(), localtime(), left(), right()
 - Fixed issues: #188, #189, #190, #191, #195, #199, #203
 
 

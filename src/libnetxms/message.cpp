@@ -1,4 +1,4 @@
-/* $Id: message.cpp,v 1.7 2008-01-29 18:11:40 victor Exp $ */
+/* $Id: message.cpp,v 1.8 2008-03-20 17:56:04 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
@@ -211,7 +211,7 @@ void *CSCPMessage::Set(DWORD dwVarId, BYTE bType, const void *pValue, DWORD dwSi
 {
    DWORD dwIndex, dwLength;
    CSCP_DF *pVar;
-#ifndef UNICODE_UCS2
+#if !defined(UNICODE_UCS2) || !defined(UNICODE)
    UCS2CHAR *pBuffer;
 #endif
 

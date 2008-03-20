@@ -1,4 +1,4 @@
-/* $Id: nxscript.cpp,v 1.9 2007-01-02 09:56:17 victor Exp $ */
+/* $Id: nxscript.cpp,v 1.10 2008-03-20 17:56:04 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Host
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
    m_pTestClass = new NXSL_TestClass;
 
    printf("NetXMS Scripting Host  Version " NETXMS_VERSION_STRING "\n"
-          "Copyright (c) 2005, 2006 Victor Kirhenshtein\n\n");
+          "Copyright (c) 2005, 2006, 2007, 2008 Victor Kirhenshtein\n\n");
 
    // Parse command line
    opterr = 1;
