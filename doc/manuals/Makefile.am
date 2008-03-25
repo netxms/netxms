@@ -9,5 +9,5 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = client_library.doc netxms_install_guide.odt \
-	netxms_user_manual.doc netxms_solution_guide.doc \
+	netxms_user_manual.odt netxms_solution_guide.doc \
 	nxcp_reference.odt
