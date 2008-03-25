@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.292 2008-03-20 17:56:01 victor Exp $
+# $Id: configure.ac,v 1.293 2008-03-25 23:13:44 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -694,6 +694,7 @@ AC_CHECK_LIB(xnet, accept)
 AC_CHECK_LIB(socket, if_nameindex)
 AC_CHECK_LIB(dl, dlopen)
 AC_CHECK_LIB(kstat, kstat_open)
+AC_CHECK_LIB(gnugetopt, getopt_long)
 
 if test "x$BUILD_SERVER" = "xyes" ; then
    AC_CHECK_LIB(termcap, tgetstr, [], [AC_CHECK_LIB(ncurses, tgetstr, [], AC_CHECK_LIB(curses, tgetstr))])
@@ -867,7 +868,7 @@ fi
 
 AC_CHECK_HEADERS([wchar.h wctype.h iconv.h])
 AC_CHECK_SIZEOF(wchar_t)
-AC_CHECK_FUNCS([wcstoll wcstoull wfopen wopen wstat wgetenv])
+AC_CHECK_FUNCS([wcstoll wcstoull wfopen wopen wstat wgetenv towupper])
 
 if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,
