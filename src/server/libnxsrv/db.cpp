@@ -1,4 +1,4 @@
-/* $Id: db.cpp,v 1.23 2008-01-14 16:53:16 victor Exp $ */
+/* $Id: db.cpp,v 1.24 2008-03-25 10:35:12 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -218,6 +218,7 @@ DB_HANDLE LIBNXSRV_EXPORTABLE DBConnectEx(const TCHAR *pszServer, const TCHAR *p
          hConn->pszLogin = (pszLogin == NULL) ? NULL : _tcsdup(pszLogin);
          hConn->pszPassword = (pszPassword == NULL) ? NULL : _tcsdup(pszPassword);
          hConn->pszServer = (pszServer == NULL) ? NULL : _tcsdup(pszServer);
+		   DbgPrintf(4, _T("New DB connection opened: handle=%p"), hConn);
       }
       else
       {
@@ -237,6 +238,8 @@ void LIBNXSRV_EXPORTABLE DBDisconnect(DB_HANDLE hConn)
    if (hConn == NULL)
       return;
 
+   DbgPrintf(4, _T("DB connection %p closed"), hConn);
+   
    m_fpDrvDisconnect(hConn->hConn);
    MutexDestroy(hConn->mutexTransLock);
    safe_free(hConn->pszDBName);
@@ -315,7 +318,7 @@ BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *szQuery)
    if (m_bDumpSQL)
    {
       ms = GetCurrentTimeMs() - ms;
-      DbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]\n"), (dwResult == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), szQuery, ms);
+      DbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]"), (dwResult == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), szQuery, ms);
    }
    
    MutexUnlock(hConn->mutexTransLock);
@@ -358,7 +361,7 @@ DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, const TCHAR *szQuery)
    if (m_bDumpSQL)
    {
       ms = GetCurrentTimeMs() - ms;
-      DbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]\n"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
+      DbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
    }
    MutexUnlock(hConn->mutexTransLock);
    if ((hResult == NULL) && m_bLogSQLErrors)
@@ -659,7 +662,7 @@ DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *
    if (m_bDumpSQL)
    {
       ms = GetCurrentTimeMs() - ms;
-      DbgPrintf(9, _T("%s async query: \"%s\" [%d ms]\n"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
+      DbgPrintf(9, _T("%s async query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
    }
    if (hResult == NULL)
    {
