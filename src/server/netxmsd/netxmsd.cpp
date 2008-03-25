@@ -1,4 +1,4 @@
-/* $Id: netxmsd.cpp,v 1.25 2008-01-18 17:00:35 victor Exp $ */
+/* $Id: netxmsd.cpp,v 1.26 2008-03-25 17:59:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
@@ -310,6 +310,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 		{ "debug", 1, NULL, 'D' },
 		{ "help", 0, NULL, 'h' },
 #ifdef _WIN32
+		{ "check-service", 0, NULL, '!' },
 		{ "install", 0, NULL, 'I' },
 		{ "login", 1, NULL, 'L' },
 		{ "password", 1, NULL, 'P' },
@@ -396,6 +397,9 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 				return FALSE;
 			case 'S':	// Stop service
 				StopCoreService();
+				return FALSE;
+			case '!':	// Check service configuration (for migration from pre-0.2.20)
+				CheckServiceConfig();
 				return FALSE;
 #endif
    		default:

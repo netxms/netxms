@@ -185,7 +185,7 @@ void RemoveService(void)
 {
    SC_HANDLE mgr, service;
 
-   mgr=OpenSCManager(NULL, NULL, GENERIC_WRITE);
+   mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
    {
       printf("ERROR: Cannot connect to Service Manager (%s)\n", GetSystemErrorText(GetLastError()));
@@ -212,6 +212,131 @@ void RemoveService(void)
    CloseServiceHandle(mgr);
 
    RemoveEventSource();
+}
+
+
+//
+// Check if -d switch is given on command line
+//
+
+static BOOL IsDSwitchPresent(TCHAR *cmdLine)
+{
+	int state;
+	TCHAR *ptr;
+
+	for(ptr = cmdLine, state = 0; *ptr != 0; ptr++)
+	{
+		switch(state)
+		{
+			case 0:
+			case 4:
+				if (*ptr == ' ')
+					state = 2;
+				else if (*ptr == '"')
+					state++;
+				break;
+			case 2:
+				switch(*ptr)
+				{
+					case ' ':
+						break;
+					case '"':
+						state++;
+						break;
+					case '-':
+						if (*(ptr + 1) == 'd')
+							return TRUE;
+					default:
+						state = 4;
+						break;
+				}
+				break;
+			case 1:
+			case 3:
+			case 5:
+				if (*ptr == '"')
+					state--;
+				break;
+		}
+	}
+	return FALSE;
+}
+
+
+//
+// Check service configuration
+// Things to check:
+//   1. Versions 0.2.20 and above requires -d switch
+//
+
+void CheckServiceConfig(void)
+{
+   SC_HANDLE mgr, service;
+	QUERY_SERVICE_CONFIG *cfg;
+	TCHAR *cmdLine;
+	DWORD bytes, error;
+
+   mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
+   if (mgr == NULL)
+   {
+      printf("ERROR: Cannot connect to Service Manager (%s)\n", GetSystemErrorText(GetLastError()));
+      return;
+   }
+
+   service = OpenService(mgr, CORE_SERVICE_NAME, SERVICE_QUERY_CONFIG | SERVICE_CHANGE_CONFIG);
+   if (service != NULL)
+	{
+		QueryServiceConfig(service, NULL, 0, &bytes);
+		error = GetLastError();
+		if (error == ERROR_INSUFFICIENT_BUFFER)
+		{
+			cfg = (QUERY_SERVICE_CONFIG *)malloc(bytes);
+			if (QueryServiceConfig(service, cfg, bytes, &bytes))
+			{
+				if (!IsDSwitchPresent(cfg->lpBinaryPathName))
+				{
+					cmdLine = (TCHAR *)malloc(sizeof(TCHAR) * _tcslen(cfg->lpBinaryPathName) + 8);
+					_tcscpy(cmdLine, cfg->lpBinaryPathName);
+					_tcscat(cmdLine, _T(" -d"));
+					if (ChangeServiceConfig(service, cfg->dwServiceType, cfg->dwStartType,
+													cfg->dwErrorControl, cmdLine, NULL, NULL,
+													NULL, NULL, NULL, NULL))
+					{
+						printf("INFO: Service configuration successfully updated\n");
+					}
+					else
+					{
+						printf("ERROR: Cannot update configuration for service '" CORE_SERVICE_NAME "' (%s)\n",
+								 GetSystemErrorText(GetLastError()));
+					}
+					free(cmdLine);
+				}
+				else
+				{
+					printf("INFO: Service configuration is valid\n");
+				}
+			}
+			else
+			{
+				printf("ERROR: Cannot query configuration for service '" CORE_SERVICE_NAME "' (%s)\n",
+						 GetSystemErrorText(GetLastError()));
+			}
+			free(cfg);
+		}
+		else
+		{
+			printf("ERROR: Cannot query configuration for service '" CORE_SERVICE_NAME "' (%s)\n",
+					 GetSystemErrorText(error));
+		}
+      CloseServiceHandle(service);
+	}
+	else
+   {
+      printf("ERROR: Cannot open service named '" CORE_SERVICE_NAME "' (%s)\n",
+             GetSystemErrorText(GetLastError()));
+   }
+
+   CloseServiceHandle(mgr);
 }
 
 
@@ -333,3 +458,4 @@ void RemoveEventSource(void)
 }
 
 #endif   /* _WIN32 */
+

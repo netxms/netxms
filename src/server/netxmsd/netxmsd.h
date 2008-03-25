@@ -32,6 +32,7 @@ void InitService(void);
 void InstallService(TCHAR *pszExecName, TCHAR *pszDllName,
                     TCHAR *pszLogin, TCHAR *pszPassword);
 void RemoveService(void);
+void CheckServiceConfig(void);
 void StartCoreService(void);
 void StopCoreService(void);
 void InstallEventSource(TCHAR *pszPath);
