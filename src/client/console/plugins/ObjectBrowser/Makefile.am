@@ -3,7 +3,7 @@ INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/client/console/include
 SUBDIRS = rc
 
 lib_LTLIBRARIES = libnxmcp_ObjectBrowser.la
-libnxmcp_ObjectBrowser_la_SOURCES = browser.cpp main.cpp objview.cpp overview.cpp
+libnxmcp_ObjectBrowser_la_SOURCES = browser.cpp lastval.cpp main.cpp objview.cpp overview.cpp
 if BUILD_UNICODE_CONSOLE
 libnxmcp_ObjectBrowser_la_CPPFLAGS = -DUNICODE
 libnxmcp_ObjectBrowser_la_LDFLAGS = ../../../../libnetxms/libnetxmsw.la ../../../../libnxcl/libnxclw.la ../../libnxmc/libnxmc.la

@@ -12,6 +12,7 @@ resourcedir = $(datadir)/nxmc
 resource_DATA = ObjectBrowser.xrs
 
 EXTRA_DIST = \
+	lastval.xpm \
 	ObjectBrowser.xrc \
 	ObjectBrowser.xrs \
 	objectbrowser.xpm

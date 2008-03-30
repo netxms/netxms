@@ -198,3 +198,48 @@ int LIBNXMC_EXPORTABLE CompareDwords(DWORD dw1, DWORD dw2)
 	return COMPARE_NUMBERS(dw1, dw2);
 }
 
+
+//
+// Constructors for DCIInfo class
+//
+
+DCIInfo::DCIInfo()
+{
+   m_dwNodeId = 0;
+   m_dwItemId = 0;
+   m_iSource = 0;
+   m_iDataType = 0;
+   m_pszParameter = NULL;
+   m_pszDescription = NULL;
+}
+
+DCIInfo::DCIInfo(DCIInfo *pSrc)
+{
+   m_dwNodeId = pSrc->m_dwNodeId;
+   m_dwItemId = pSrc->m_dwItemId;
+   m_iSource = pSrc->m_iSource;
+   m_iDataType = pSrc->m_iDataType;
+   m_pszParameter = _tcsdup(pSrc->m_pszParameter);
+   m_pszDescription = _tcsdup(pSrc->m_pszDescription);
+}
+
+DCIInfo::DCIInfo(DWORD dwNodeId, NXC_DCI *pItem)
+{
+   m_dwNodeId = dwNodeId;
+   m_dwItemId = pItem->dwId;
+   m_iSource = pItem->iSource;
+   m_iDataType = pItem->iDataType;
+   m_pszParameter = _tcsdup(pItem->szName);
+   m_pszDescription = _tcsdup(pItem->szDescription);
+}
+
+
+//
+// Destructor for class DCIInfo
+//
+
+DCIInfo::~DCIInfo()
+{
+   safe_free(m_pszParameter);
+   safe_free(m_pszDescription);
+}

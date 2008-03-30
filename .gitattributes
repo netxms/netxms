@@ -462,6 +462,8 @@ src/client/console/include/wxPieCtrl.h -text
 src/client/console/libnxmc/Makefile.am -text
 src/client/console/libnxmc/alarms.cpp -text
 src/client/console/libnxmc/events.cpp -text
+src/client/console/libnxmc/graph.cpp -text
+src/client/console/libnxmc/graph.h -text
 src/client/console/libnxmc/heading.cpp -text
 src/client/console/libnxmc/heading.h -text
 src/client/console/libnxmc/image.cpp -text
@@ -575,6 +577,7 @@ src/client/console/plugins/Makefile.am -text
 src/client/console/plugins/ObjectBrowser/Makefile.am -text
 src/client/console/plugins/ObjectBrowser/ObjectBrowser.rc -text
 src/client/console/plugins/ObjectBrowser/browser.cpp -text
+src/client/console/plugins/ObjectBrowser/lastval.cpp -text
 src/client/console/plugins/ObjectBrowser/main.cpp -text
 src/client/console/plugins/ObjectBrowser/mcpObjectBrowser.dsp -text
 src/client/console/plugins/ObjectBrowser/object_browser.h -text
@@ -582,6 +585,7 @@ src/client/console/plugins/ObjectBrowser/objview.cpp -text
 src/client/console/plugins/ObjectBrowser/overview.cpp -text
 src/client/console/plugins/ObjectBrowser/rc/Makefile.am -text
 src/client/console/plugins/ObjectBrowser/rc/ObjectBrowser.xrc -text
+src/client/console/plugins/ObjectBrowser/rc/lastval.xpm -text
 src/client/console/plugins/ObjectBrowser/rc/objectbrowser.xpm -text
 src/client/console/plugins/ObjectBrowser/resource.h -text
 src/client/nxalarm/Makefile.am -text

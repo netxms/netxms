@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
 	<object class="wxIcon" name="icoObjectBrowser">objectbrowser.xpm</object>
+	<object class="wxIcon" name="icoLastValues">lastval.xpm</object>
 	<object class="wxMenu" name="menuCtxObject">
 		<label>Object</label>
 		<object class="wxMenu" name="menuObjectView">

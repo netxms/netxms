@@ -30,6 +30,7 @@
 
 #define OBJECT_PAGE_OVERVIEW		0
 #define OBJECT_PAGE_ALARMS			1
+#define OBJECT_PAGE_LAST_VALUES  2
 
 
 //
@@ -135,6 +136,14 @@ void nxObjectView::SetObject(NXC_OBJECT *object)
 			m_notebook->AddPage(view, _T("Alarms"), page == OBJECT_PAGE_ALARMS, view->GetIcon());
 			view->RefreshView();
 		}
+	}
+
+	if (object->iClass == OBJECT_NODE)
+	{
+		wnd = new nxNodeLastValues(m_notebook, object);
+		wnd->SetId(OBJECT_PAGE_LAST_VALUES);
+		m_notebook->AddPage(wnd, _T("Last Values"), page == OBJECT_PAGE_LAST_VALUES,
+								  wxXmlResource::Get()->LoadIcon(_T("icoLastValues")));
 	}
 
 	Thaw();

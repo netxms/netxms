@@ -89,6 +89,29 @@ protected:
 
 
 //
+// Last values view
+//
+
+class nxNodeLastValues : public wxWindow
+{
+private:
+	wxListCtrl *m_dciList;
+	NXC_OBJECT *m_object;
+
+public:
+	nxNodeLastValues(wxWindow *parent, NXC_OBJECT *object);
+
+	void SetObject(NXC_OBJECT *object);
+	
+	// Event handlers
+protected:
+	void OnSize(wxSizeEvent &event);
+
+	DECLARE_EVENT_TABLE()
+};
+
+
+//
 // Object view class
 //
 

@@ -112,7 +112,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy           Release_UNICODE\libnxmc.dll           C:\NetXMS\bin\ 
+PostBuild_Cmds=copy            Release_UNICODE\libnxmc.dll            C:\NetXMS\bin\ 
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "libnxmc - Win32 Debug UNICODE"
@@ -168,6 +168,10 @@ SOURCE=.\events.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\graph.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\heading.cpp
 # End Source File
 # Begin Source File
@@ -206,6 +210,10 @@ SOURCE=.\wxPieCtrl.cpp
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=.\graph.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\heading.h

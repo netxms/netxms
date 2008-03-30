@@ -44,7 +44,7 @@ Source: "..\..\libnetxms\Release_UNICODE\libnetxmsw.pdb"; DestDir: "{app}\bin"; 
 ; Executables and DLLs shared between different components (server, console, etc.)
 Source: "..\..\libnxcl\Release\libnxcl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console tools websrv
 Source: "..\..\libnxcl\Release\libnxcl.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (console or tools or websrv) and pdb
-Source: "..\..\libnxcl\Release_UNICODE\libnxclw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console and tools
+Source: "..\..\libnxcl\Release_UNICODE\libnxclw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console tools
 Source: "..\..\libnxcl\Release_UNICODE\libnxclw.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (console or tools) and pdb
 Source: "..\..\libnxmap\Release\libnxmap.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console server websrv
 Source: "..\..\libnxmap\Release\libnxmap.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: (console or server or websrv) and pdb
