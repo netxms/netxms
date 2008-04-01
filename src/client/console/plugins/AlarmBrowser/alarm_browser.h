@@ -57,7 +57,6 @@ public:
 	// Event handlers
 protected:
 	void OnSize(wxSizeEvent &event);
-	void OnListItemRightClick(wxListEvent &event);
 	void OnListColumnClick(wxListEvent &event);
 	void OnContextMenu(wxContextMenuEvent &event);
 	void OnAlarmChange(wxCommandEvent &event);

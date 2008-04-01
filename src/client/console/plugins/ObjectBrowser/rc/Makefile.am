@@ -12,10 +12,13 @@ resourcedir = $(datadir)/nxmc
 resource_DATA = ObjectBrowser.xrs
 
 EXTRA_DIST = \
+	active.xpm \
+	disabled.xpm \
 	lastval.xpm \
 	ObjectBrowser.xrc \
 	ObjectBrowser.xrs \
-	objectbrowser.xpm
+	objectbrowser.xpm \
+	unsupported.xpm
 
 ObjectBrowser.xrs: ObjectBrowser.xrc
 	wxrc ObjectBrowser.xrc -o ObjectBrowser.xrs

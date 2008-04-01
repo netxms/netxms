@@ -28,6 +28,7 @@
 #include <nms_util.h>
 #include <nxclapi.h>
 #include <nxmc_api.h>
+#include <nxqueue.h>
 
 
 //
@@ -89,25 +90,120 @@ protected:
 
 
 //
+// DCI last values control
+//
+
+class nxLastValuesCtrl : public wxWindow
+{
+private:
+	wxListView *m_wndListCtrl;
+	DWORD m_dciCount;
+	NXC_DCI_VALUE *m_data;
+	int m_sortMode;
+	int m_sortDir;
+	bool m_useMultipliers;
+	wxString m_context;
+
+public:
+	nxLastValuesCtrl(wxWindow *parent, const TCHAR *context);
+	virtual ~nxLastValuesCtrl();
+
+	int CompareListItems(long item1, long item2);
+
+	void SetData(DWORD dciCount, NXC_DCI_VALUE *valueList);
+	void Clear() { m_wndListCtrl->DeleteAllItems(); }
+
+	void SetUseMultipliers(bool flag) { m_useMultipliers = flag; }
+	bool IsMultipliersUsed() { return m_useMultipliers; }
+
+	// Event handlers
+protected:
+	void OnSize(wxSizeEvent &event);
+	void OnListColumnClick(wxListEvent &event);
+	void OnContextMenu(wxContextMenuEvent &event);
+	void OnDCIGraph(wxCommandEvent &event);
+	void OnUpdateDCIGraph(wxUpdateUIEvent &event);
+	void OnDCIExport(wxCommandEvent &event);
+	void OnUpdateDCIExport(wxUpdateUIEvent &event);
+	void OnDCIHistory(wxCommandEvent &event);
+	void OnUpdateDCIHistory(wxUpdateUIEvent &event);
+	void OnDCIUseMultipliers(wxCommandEvent &event);
+	void OnUpdateDCIUseMultipliers(wxUpdateUIEvent &event);
+
+	DECLARE_EVENT_TABLE()
+};
+
+
+//
 // Last values view
 //
 
 class nxNodeLastValues : public wxWindow
 {
 private:
-	wxListCtrl *m_dciList;
+	nxLastValuesCtrl *m_dciList;
 	NXC_OBJECT *m_object;
+	Queue m_workerQueue;
+	THREAD m_workerThread;
+	MUTEX m_mutexObject;
+	wxTimer *m_timer;
 
 public:
 	nxNodeLastValues(wxWindow *parent, NXC_OBJECT *object);
+	virtual ~nxNodeLastValues();
 
 	void SetObject(NXC_OBJECT *object);
 	
+	DWORD GetNextRequest() { return (DWORD)m_workerQueue.GetOrBlock(); }
+	void RequestCompleted(bool success, DWORD nodeId, DWORD numItems, NXC_DCI_VALUE *valueList);
+
 	// Event handlers
 protected:
 	void OnSize(wxSizeEvent &event);
+	void OnRequestCompleted(wxCommandEvent &event);
+	void OnTimer(wxTimerEvent &event);
 
 	DECLARE_EVENT_TABLE()
+};
+
+
+//
+// Last values view
+//
+
+class nxLastValuesView : public nxView
+{
+private:
+	NXC_OBJECT *m_node;
+	nxLastValuesCtrl *m_dciList;
+	DWORD m_dciCount;
+	NXC_DCI_VALUE *m_dciValues;
+	int m_rqId;
+
+protected:
+	virtual void RequestCompletionHandler(int rqId, DWORD rcc, const TCHAR *errMsg);
+
+public:
+	nxLastValuesView(NXC_OBJECT *node, wxWindow *parent = NULL);
+	virtual ~nxLastValuesView();
+
+	// Event handlers
+protected:
+	void OnSize(wxSizeEvent &event);
+	void OnViewRefresh(wxCommandEvent &event);
+
+	DECLARE_EVENT_TABLE()
+};
+
+
+//
+// Graph view
+//
+
+class nxGraphView : public nxView
+{
+public:
+	nxGraphView(wxWindow *parent = NULL);
 };
 
 
@@ -187,6 +283,8 @@ protected:
 	void OnUpdateUIObjectBind(wxUpdateUIEvent &event);
 	void OnObjectUnbind(wxCommandEvent &event);
 	void OnUpdateUIObjectUnbind(wxUpdateUIEvent &event);
+	void OnObjectLastValues(wxCommandEvent &event);
+	void OnUpdateUIObjectLastValues(wxUpdateUIEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };

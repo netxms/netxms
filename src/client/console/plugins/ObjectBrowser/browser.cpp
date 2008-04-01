@@ -47,6 +47,8 @@ BEGIN_EVENT_TABLE(nxObjectBrowser, nxView)
 	EVT_UPDATE_UI(XRCID("menuObjectBind"), nxObjectBrowser::OnUpdateUIObjectBind)
 	EVT_MENU(XRCID("menuObjectUnbind"), nxObjectBrowser::OnObjectUnbind)
 	EVT_UPDATE_UI(XRCID("menuObjectUnbind"), nxObjectBrowser::OnUpdateUIObjectUnbind)
+	EVT_MENU(XRCID("menuObjectLastValues"), nxObjectBrowser::OnObjectLastValues)
+	EVT_UPDATE_UI(XRCID("menuObjectLastValues"), nxObjectBrowser::OnUpdateUIObjectLastValues)
 END_EVENT_TABLE()
 
 
@@ -543,5 +545,42 @@ void nxObjectBrowser::OnUpdateUIObjectUnbind(wxUpdateUIEvent &event)
 		event.Enable((m_currentObject->iClass == OBJECT_SERVICEROOT) ||
 		             (m_currentObject->iClass == OBJECT_CONTAINER) ||
 		             (m_currentObject->iClass == OBJECT_TEMPLATE));
+	}
+}
+
+
+//
+// Handlers for Object->Unbind menu
+//
+
+void nxObjectBrowser::OnObjectLastValues(wxCommandEvent &event)
+{
+	TCHAR buffer[64];
+	nxView *view;
+
+	if ((m_currentObject != NULL) &&
+		 (m_currentObject->iClass == OBJECT_NODE))
+	{
+		_sntprintf(buffer, 64, _T("lastvalues_%d"), m_currentObject->dwId);
+		if ((view = FindUniqueView(buffer)) == NULL)
+		{
+			NXMCCreateView(new nxLastValuesView(m_currentObject), VIEWAREA_MAIN);
+		}
+		else
+		{
+			ActivateView(view);
+		}
+	}
+}
+
+void nxObjectBrowser::OnUpdateUIObjectLastValues(wxUpdateUIEvent &event)
+{
+	if (m_currentObject == NULL)
+	{
+		event.Enable(false);
+	}
+	else
+	{
+		event.Enable(m_currentObject->iClass == OBJECT_NODE);
 	}
 }

@@ -2,6 +2,9 @@
 <resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
 	<object class="wxIcon" name="icoObjectBrowser">objectbrowser.xpm</object>
 	<object class="wxIcon" name="icoLastValues">lastval.xpm</object>
+	<object class="wxIcon" name="icoItemActive">active.xpm</object>
+	<object class="wxIcon" name="icoItemDisabled">disabled.xpm</object>
+	<object class="wxIcon" name="icoItemUnsupported">unsupported.xpm</object>
 	<object class="wxMenu" name="menuCtxObject">
 		<label>Object</label>
 		<object class="wxMenu" name="menuObjectView">
@@ -84,6 +87,27 @@
 		<object class="separator" />
 		<object class="wxMenuItem" name="menuObjectProperties">
 			<label>&amp;Properties...</label>
+			<help></help>
+		</object>
+	</object>
+	<object class="wxMenu" name="menuCtxLastValues">
+		<label>DCI</label>
+		<object class="wxMenuItem" name="menuDCIHistory">
+			<label>&amp;Show history</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuDCIGraph">
+			<label>&amp;Graph</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuDCIExport">
+			<label>&amp;Export data...</label>
+			<help></help>
+		</object>
+		<object class="separator" />
+		<object class="wxMenuItem" name="menuDCIUseMultipliers">
+			<label>&amp;Use multipliers</label>
+			<checkable>1</checkable>
 			<help></help>
 		</object>
 	</object>

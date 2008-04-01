@@ -30,7 +30,6 @@
 
 BEGIN_EVENT_TABLE(nxAlarmView, nxView)
 	EVT_SIZE(nxAlarmView::OnSize)
-//	EVT_LIST_ITEM_RIGHT_CLICK(wxID_LIST_CTRL, nxAlarmView::OnListItemRightClick)
 	EVT_LIST_COL_CLICK(wxID_LIST_CTRL, nxAlarmView::OnListColumnClick)
 	EVT_CONTEXT_MENU(nxAlarmView::OnContextMenu)
 	EVT_MENU(XRCID("menuAlarmAck"), nxAlarmView::OnAlarmAck)
@@ -213,26 +212,6 @@ void nxAlarmView::UpdateAlarm(long item, NXC_ALARM *alarm)
 
 	m_wndListCtrl->SetItem(item, 5, NXMCFormatTimeStamp(alarm->dwCreationTime, temp, TS_LONG_DATE_TIME));
 	m_wndListCtrl->SetItem(item, 6, NXMCFormatTimeStamp(alarm->dwLastChangeTime, temp, TS_LONG_DATE_TIME));
-}
-
-
-//
-// Handler for right click on item
-//
-
-void nxAlarmView::OnListItemRightClick(wxListEvent &event)
-{
-	wxMenu *menu;
-
-	if (!IsBusy())
-	{
-		menu = wxXmlResource::Get()->LoadMenu(_T("menuCtxAlarm"));
-		if (menu != NULL)
-		{
-			PopupMenu(menu);
-			delete menu;
-		}
-	}
 }
 
 
