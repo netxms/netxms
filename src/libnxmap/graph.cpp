@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Network Maps Library
-** Copyright (C) 2006 Victor Kirhenshtein
+** Copyright (C) 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 // Default constructor
 //
 
-nxGraph::nxGraph()
+nxmap_Graph::nxmap_Graph()
 {
    m_dwVertexCount = 0;
    m_ppVertexList = NULL;
@@ -42,17 +42,17 @@ nxGraph::nxGraph()
 // Create graph from list of objects and links
 //
 
-nxGraph::nxGraph(DWORD dwNumObjects, DWORD *pdwObjectList,
+nxmap_Graph::nxmap_Graph(DWORD dwNumObjects, DWORD *pdwObjectList,
                  DWORD dwNumLinks, OBJLINK *pLinkList)
 {
    DWORD i;
-   nxVertex *pVtx1, *pVtx2;
+   nxmap_Vertex *pVtx1, *pVtx2;
 
    m_dwVertexCount = dwNumObjects;
-   m_ppVertexList = (nxVertex **)malloc(sizeof(nxVertex *) * dwNumObjects);
+   m_ppVertexList = (nxmap_Vertex **)malloc(sizeof(nxmap_Vertex *) * dwNumObjects);
    for(i = 0; i < dwNumObjects; i++)
    {
-      m_ppVertexList[i] = new nxVertex(pdwObjectList[i]);
+      m_ppVertexList[i] = new nxmap_Vertex(pdwObjectList[i]);
    }
 
    // Create links between vertexes
@@ -72,7 +72,7 @@ nxGraph::nxGraph(DWORD dwNumObjects, DWORD *pdwObjectList,
 // Destructor
 //
 
-nxGraph::~nxGraph()
+nxmap_Graph::~nxmap_Graph()
 {
    DWORD i;
 
@@ -86,7 +86,7 @@ nxGraph::~nxGraph()
 // Set all vertexes as unprocessed
 //
 
-void nxGraph::SetAsUnprocessed(void)
+void nxmap_Graph::SetAsUnprocessed(void)
 {
    DWORD i;
 
@@ -99,7 +99,7 @@ void nxGraph::SetAsUnprocessed(void)
 // Find vertex by ID
 //
 
-nxVertex *nxGraph::FindVertex(DWORD dwId)
+nxmap_Vertex *nxmap_Graph::FindVertex(DWORD dwId)
 {
    DWORD i;
 
@@ -114,7 +114,7 @@ nxVertex *nxGraph::FindVertex(DWORD dwId)
 // Get internal index of given vertex
 //
 
-DWORD nxGraph::GetVertexIndex(nxVertex *pVertex)
+DWORD nxmap_Graph::GetVertexIndex(nxmap_Vertex *pVertex)
 {
    DWORD i;
 
@@ -129,7 +129,7 @@ DWORD nxGraph::GetVertexIndex(nxVertex *pVertex)
 // Normalize vertex positions
 //
 
-void nxGraph::NormalizeVertexPositions(void)
+void nxmap_Graph::NormalizeVertexPositions(void)
 {
    DWORD i;
    int x, y, dx, dy;
@@ -161,7 +161,7 @@ void nxGraph::NormalizeVertexPositions(void)
 // Set root vertex
 //
 
-void nxGraph::SetRootVertex(DWORD dwId)
+void nxmap_Graph::SetRootVertex(DWORD dwId)
 {
    DWORD i;
 
@@ -179,7 +179,7 @@ void nxGraph::SetRootVertex(DWORD dwId)
 // Normalize links for given vertex
 //
 
-void nxGraph::NormalizeVertexLinks(nxVertex *pRoot)
+void nxmap_Graph::NormalizeVertexLinks(nxmap_Vertex *pRoot)
 {
    DWORD i;
 
@@ -207,7 +207,7 @@ void nxGraph::NormalizeVertexLinks(nxVertex *pRoot)
 // Normalize links - make all links to go from root when possible
 //
 
-void nxGraph::NormalizeLinks(void)
+void nxmap_Graph::NormalizeLinks(void)
 {
    if (m_pRoot != NULL)
    {

@@ -163,13 +163,14 @@ int nxLastValuesCtrl::CompareListItems(long item1, long item2)
 // Set new data
 //
 
-void nxLastValuesCtrl::SetData(DWORD dciCount, NXC_DCI_VALUE *valueList)
+void nxLastValuesCtrl::SetData(DWORD nodeId, DWORD dciCount, NXC_DCI_VALUE *valueList)
 {
 	DWORD i;
 	long item;
 	TCHAR buffer[64];
 
 	safe_free(m_data);
+	m_nodeId = nodeId;
 	m_dciCount = dciCount;
 	m_data = valueList;
 
@@ -348,11 +349,33 @@ void nxLastValuesCtrl::OnContextMenu(wxContextMenuEvent &event)
 
 void nxLastValuesCtrl::OnDCIGraph(wxCommandEvent &event)
 {
+	int i, count;
+	long item, index;
+	DCIInfo *list[MAX_GRAPH_ITEMS];
+	NXC_DCI dci;
+
+	count = m_wndListCtrl->GetSelectedItemCount();
+	if ((count < 1) || (count > MAX_GRAPH_ITEMS))
+		return;
+
+	for(i = 0, item = m_wndListCtrl->GetFirstSelected(); i < count; i++)
+	{
+		index = m_wndListCtrl->GetItemData(item);
+		dci.dwId = m_data[index].dwId;
+		dci.iDataType = m_data[index].nDataType;
+		dci.iSource = m_data[index].nSource;
+		_tcscpy(dci.szName, m_data[index].szName);
+		_tcscpy(dci.szDescription, m_data[index].szDescription);
+		list[i] = new DCIInfo(m_nodeId, &dci);
+		item = m_wndListCtrl->GetNextSelected(item);
+	}
+
+	NXMCCreateView(new nxGraphView(count, list), VIEWAREA_MAIN);
 }
 
 void nxLastValuesCtrl::OnUpdateDCIGraph(wxUpdateUIEvent &event)
 {
-	event.Enable(m_wndListCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED) != -1);
+	event.Enable((m_wndListCtrl->GetSelectedItemCount() > 0) && (m_wndListCtrl->GetSelectedItemCount() <= MAX_GRAPH_ITEMS));
 }
 
 

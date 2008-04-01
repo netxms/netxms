@@ -47,6 +47,7 @@ BEGIN_EVENT_TABLE(nxGraph, wxWindow)
 	EVT_PAINT(nxGraph::OnPaint)
 	EVT_SET_FOCUS(nxGraph::OnSetFocus)
 	EVT_KILL_FOCUS(nxGraph::OnKillFocus)
+	EVT_SIZE(nxGraph::OnSize)
 END_EVENT_TABLE()
 
 
@@ -101,6 +102,18 @@ nxGraph::~nxGraph()
 	for(i = 0; i < MAX_GRAPH_ITEMS; i++)
       if (m_data[i] != NULL)
          NXCDestroyDCIData(m_data[i]);
+}
+
+
+//
+// Repaint graph entirely
+//
+
+void nxGraph::Redraw()
+{
+	delete m_bitmap;
+   m_bitmap = DrawGraphOnBitmap(GetClientSize());
+	Refresh(false);
 }
 
 
@@ -489,7 +502,7 @@ void nxGraph::DrawAreaGraph(wxMemoryDC &dc, NXC_DCI_DATA *data, wxColour rgbColo
 			} \
    }
 
-wxBitmap *nxGraph::DrawGraphOnBitmap(wxSize &size)
+wxBitmap *nxGraph::DrawGraphOnBitmap(wxSize &graphSize)
 {
    wxMemoryDC dc;           // Window dc and in-memory dc
 	wxBitmap *bitmap;
@@ -511,7 +524,7 @@ wxBitmap *nxGraph::DrawGraphOnBitmap(wxSize &size)
                                       2592000, 2678400, 2592000, 2678400 };
 
    // Create bitmap for painting
-	bitmap = new wxBitmap(size.x, size.y);
+	bitmap = new wxBitmap(graphSize.x, graphSize.y);
 
    // Initial DC setup
    dc.SelectObject(*bitmap);
@@ -521,7 +534,7 @@ wxBitmap *nxGraph::DrawGraphOnBitmap(wxSize &size)
 
    // Fill background
 	dc.SetBrush(brushBkgnd);
-	dc.DrawRectangle(-1, -1, size.x + 2, size.y + 2);
+	dc.DrawRectangle(-1, -1, graphSize.x + 2, graphSize.y + 2);
 
    // Calculate text size and left margin
    textSize = dc.GetTextExtent(_T("0000.000"));
@@ -541,7 +554,7 @@ wxBitmap *nxGraph::DrawGraphOnBitmap(wxSize &size)
             }
       }
       nColSize += textSize.y + 20;
-      nCols = (size.x - iLeftMargin - iRightMargin) / nColSize;
+      nCols = (graphSize.x - iLeftMargin - iRightMargin) / nColSize;
       if (nCols == 0)
          nCols = 1;
 
@@ -568,7 +581,7 @@ wxBitmap *nxGraph::DrawGraphOnBitmap(wxSize &size)
 
 		rcTitle.x = iLeftMargin;
 		rcTitle.y = iTopMargin;
-		rcTitle.width = size.x - iRightMargin;
+		rcTitle.width = graphSize.x - iRightMargin;
 		rcTitle.height = rcTitle.y + textSize.y;
 		dc.DrawLabel(m_title, rcTitle, DT_CENTER);
 		iTopMargin += textSize.y + 7;
@@ -577,10 +590,10 @@ wxBitmap *nxGraph::DrawGraphOnBitmap(wxSize &size)
    // Calculate data rectangle
    m_rectGraph.x = iLeftMargin;
    m_rectGraph.y = iTopMargin;
-   m_rectGraph.width = size.x - iRightMargin;
-   m_rectGraph.height = size.y - iBottomMargin;
+   m_rectGraph.width = graphSize.x - iRightMargin;
+   m_rectGraph.height = graphSize.y - iBottomMargin;
    iGraphLen = m_rectGraph.width + 1;   // Actual data area length in pixels
-   nDataAreaHeight = size.y - iBottomMargin - textSize.y / 2 - iTopMargin - textSize.y / 2;
+   nDataAreaHeight = graphSize.y - iBottomMargin - textSize.y / 2 - iTopMargin - textSize.y / 2;
 
    // Calculate how many seconds represent each pixel
    // and select time stamp label's style
@@ -692,9 +705,9 @@ wxBitmap *nxGraph::DrawGraphOnBitmap(wxSize &size)
       {
          x = iLeftMargin + nGridSizeX;
       }
-      while(x < size.x - iRightMargin)
+      while(x < graphSize.x - iRightMargin)
       {
-         dc.DrawLine(x, size.y - iBottomMargin, x, iTopMargin);
+         dc.DrawLine(x, graphSize.y - iBottomMargin, x, iTopMargin);
          if (nTimeLabel == TS_MONTH)
          {
             timeStamp = m_timeFrom + (DWORD)((double)(x - iLeftMargin) * m_secondsPerPixel);
@@ -706,9 +719,9 @@ wxBitmap *nxGraph::DrawGraphOnBitmap(wxSize &size)
             x += nGridSizeX;
          }
       }
-      for(y = size.y - iBottomMargin - nGridSizeY; y > iTopMargin; y -= nGridSizeY)
+      for(y = graphSize.y - iBottomMargin - nGridSizeY; y > iTopMargin; y -= nGridSizeY)
       {
-         dc.DrawLine(iLeftMargin, y, size.x - iRightMargin, y);
+         dc.DrawLine(iLeftMargin, y, graphSize.x - iRightMargin, y);
       }
 		dc.SetPen(wxNullPen);
    }
@@ -737,12 +750,12 @@ wxBitmap *nxGraph::DrawGraphOnBitmap(wxSize &size)
    // Paint ordinates
    wxPen penAxis(m_rgbAxisColor, 3);
    dc.SetPen(penAxis);
-   dc.DrawLine(iLeftMargin, size.y - iBottomMargin, iLeftMargin, iTopMargin);
-   dc.DrawLine(iLeftMargin, size.y - iBottomMargin, size.x - iRightMargin, size.y - iBottomMargin);
+   dc.DrawLine(iLeftMargin, graphSize.y - iBottomMargin, iLeftMargin, iTopMargin);
+   dc.DrawLine(iLeftMargin, graphSize.y - iBottomMargin, graphSize.x - iRightMargin, graphSize.y - iBottomMargin);
 
    // Display ordinate marks
-   dStep = m_currMaxValue / ((size.y - iBottomMargin - iTopMargin) / nGridSizeY);
-   for(y = size.y - iBottomMargin - textSize.y / 2, dMark = 0; y > iTopMargin; y -= nGridSizeY, dMark += dStep)
+   dStep = m_currMaxValue / ((graphSize.y - iBottomMargin - iTopMargin) / nGridSizeY);
+   for(y = graphSize.y - iBottomMargin - textSize.y / 2, dMark = 0; y > iTopMargin; y -= nGridSizeY, dMark += dStep)
    {
       if (bIntMarks)
          _stprintf(szBuffer, INT64_FMT _T("%s"), (INT64)dMark / nDivider, szModifier);
@@ -753,9 +766,9 @@ wxBitmap *nxGraph::DrawGraphOnBitmap(wxSize &size)
    }
 
    // Display absciss marks
-   y = size.y - iBottomMargin + 3;
+   y = graphSize.y - iBottomMargin + 3;
    iStep = iTimeLen / nGridSizeX + 1;    // How many grid lines we should skip
-   for(x = iLeftMargin; x < size.x - iRightMargin;)
+   for(x = iLeftMargin; x < graphSize.x - iRightMargin;)
    {
       timeStamp = m_timeFrom + (time_t)((double)(x - iLeftMargin) * m_secondsPerPixel);
       NXMCFormatTimeStamp(timeStamp, szBuffer, nTimeLabel);
@@ -783,7 +796,7 @@ wxBitmap *nxGraph::DrawGraphOnBitmap(wxSize &size)
          {
             wxBrush brushLegend(m_graphItemStyles[i].rgbColor);
             dc.SetBrush(brushLegend);
-            dc.DrawRectangle(x, y, x + textSize.y, y + textSize.y);
+            dc.DrawRectangle(x, y, textSize.y, textSize.y);
             dc.SetBrush(wxNullBrush);
 
             if (m_dciInfo != NULL)
@@ -834,4 +847,106 @@ int nxGraph::NextMonthOffset(time_t timeStamp)
       return (int)ceil(2505600.0 / m_secondsPerPixel) + 1;
    else
       return (int)ceil(secondsPerMonth[plt->tm_mon] / m_secondsPerPixel) + 1;
+}
+
+
+//
+// Set time frame this graph covers
+//
+
+void nxGraph::SetTimeFrame(time_t timeFrom, time_t timeTo)
+{
+   struct tm lt;
+
+	if (timeFrom > timeTo)
+		return;
+
+   m_timeTo = timeTo;
+
+   // Round boundaries
+   memcpy(&lt, localtime(&timeFrom), sizeof(struct tm));
+   if (timeTo - timeFrom >= 5184000)   // 60 days
+   {
+      // Align to month boundary
+      lt.tm_mday = 1;
+      lt.tm_hour = 0;
+      lt.tm_min = 0;
+      lt.tm_sec = 0;
+   }
+   else if (timeTo - timeFrom >= 432000)   // 5 days
+   {
+      // Align to day boundary
+      lt.tm_hour = 0;
+      lt.tm_min = 0;
+      lt.tm_sec = 0;
+   }
+   else if (timeTo - timeFrom >= 86400)
+   {
+      lt.tm_min = 0;
+      lt.tm_sec = 0;
+   }
+   else
+   {
+      lt.tm_sec = 0;
+   }
+   m_timeFrom = mktime(&lt);
+}
+
+
+//
+// Set data for specific item
+//
+
+void nxGraph::SetData(DWORD index, NXC_DCI_DATA *data)
+{
+   if (index < MAX_GRAPH_ITEMS)
+   {
+      if (m_data[index] != NULL)
+         NXCDestroyDCIData(m_data[index]);
+      m_data[index] = data;
+   }
+}
+
+
+//
+// Update data (add new items to top and remove old from bottom)
+//
+
+void nxGraph::UpdateData(DWORD index, NXC_DCI_DATA *data)
+{
+   NXC_DCI_ROW *curr;
+   DWORD size;
+
+   if (index >= MAX_GRAPH_ITEMS)
+      return;
+
+   // Delete records older than m_dwTimeFrom
+   if (m_data[index]->dwNumRows > 0)
+   {
+      curr = (NXC_DCI_ROW *)((char *)m_data[index]->pRows + (m_data[index]->dwNumRows - 1) * m_data[index]->wRowSize);
+      while(((time_t)curr->dwTimeStamp < m_timeFrom) && (m_data[index]->dwNumRows > 0))
+      {
+         m_data[index]->dwNumRows--;
+         curr = (NXC_DCI_ROW *)((char *)curr - m_data[index]->wRowSize);
+      }
+   }
+
+   // Insert new records
+   size = m_data[index]->dwNumRows * m_data[index]->wRowSize;
+   m_data[index]->dwNumRows += data->dwNumRows;
+   m_data[index]->pRows = (NXC_DCI_ROW *)realloc(m_data[index]->pRows, m_data[index]->dwNumRows * m_data[index]->wRowSize);
+   memmove((char *)m_data[index]->pRows + data->dwNumRows * m_data[index]->wRowSize, m_data[index]->pRows, size);
+   memcpy(m_data[index]->pRows, data->pRows, data->dwNumRows * m_data[index]->wRowSize);
+
+   NXCDestroyDCIData(data);
+}
+
+
+//
+// Resize handler
+//
+
+void nxGraph::OnSize(wxSizeEvent &event)
+{
+	Redraw();
 }

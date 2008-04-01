@@ -146,7 +146,7 @@ void nxNodeLastValues::OnRequestCompleted(wxCommandEvent &event)
 	wxLogDebug(_T("nxNodeLastValues::OnRequestCompleted() called"));
 	if (event.GetInt())
 	{
-		m_dciList->SetData(event.GetExtraLong(), (NXC_DCI_VALUE *)event.GetClientData());
+		m_dciList->SetData(m_object->dwId, event.GetExtraLong(), (NXC_DCI_VALUE *)event.GetClientData());
 	}
 	else
 	{

@@ -112,7 +112,7 @@ void nxLastValuesView::RequestCompletionHandler(int rqId, DWORD rcc, const TCHAR
 
 	if (rcc == RCC_SUCCESS)
 	{
-		m_dciList->SetData(m_dciCount, m_dciValues);
+		m_dciList->SetData(m_node->dwId, m_dciCount, m_dciValues);
 	}
 	m_rqId = -1;
 }

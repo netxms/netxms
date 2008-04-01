@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Network Maps Library
-** Copyright (C) 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 // Constructors
 //
 
-nxObjList::nxObjList()
+nxmap_ObjList::nxmap_ObjList()
 {
    m_dwNumObjects = 0;
    m_pdwObjectList = NULL;
@@ -36,7 +36,7 @@ nxObjList::nxObjList()
    m_pLinkList = NULL;
 }
 
-nxObjList::nxObjList(CSCPMessage *pMsg)
+nxmap_ObjList::nxmap_ObjList(CSCPMessage *pMsg)
 {
 	DWORD i, dwId;
 
@@ -55,7 +55,7 @@ nxObjList::nxObjList(CSCPMessage *pMsg)
 	}
 }
 
-nxObjList::nxObjList(nxObjList *pSrc)
+nxmap_ObjList::nxmap_ObjList(nxmap_ObjList *pSrc)
 {
    m_dwNumObjects = pSrc->m_dwNumObjects;
    m_pdwObjectList = (DWORD *)nx_memdup(pSrc->m_pdwObjectList, sizeof(DWORD) * m_dwNumObjects);
@@ -68,7 +68,7 @@ nxObjList::nxObjList(nxObjList *pSrc)
 // Destructor
 //
 
-nxObjList::~nxObjList()
+nxmap_ObjList::~nxmap_ObjList()
 {
    safe_free(m_pdwObjectList);
    safe_free(m_pLinkList);
@@ -79,7 +79,7 @@ nxObjList::~nxObjList()
 // Clear list
 //
 
-void nxObjList::Clear(void)
+void nxmap_ObjList::Clear(void)
 {
    safe_free_and_null(m_pdwObjectList);
    safe_free_and_null(m_pLinkList);
@@ -92,7 +92,7 @@ void nxObjList::Clear(void)
 // Add object to list
 //
 
-void nxObjList::AddObject(DWORD dwId)
+void nxmap_ObjList::AddObject(DWORD dwId)
 {
    DWORD i;
 
@@ -115,7 +115,7 @@ void nxObjList::AddObject(DWORD dwId)
 // Link two objects
 //
 
-void nxObjList::LinkObjects(DWORD dwId1, DWORD dwId2)
+void nxmap_ObjList::LinkObjects(DWORD dwId1, DWORD dwId2)
 {
    DWORD i;
    int nCount;
@@ -155,7 +155,7 @@ void nxObjList::LinkObjects(DWORD dwId1, DWORD dwId2)
 // Link two objects with named links
 //
 
-void nxObjList::LinkObjectsEx(DWORD dwId1, DWORD dwId2, TCHAR *pszPort1, TCHAR *pszPort2)
+void nxmap_ObjList::LinkObjectsEx(DWORD dwId1, DWORD dwId2, TCHAR *pszPort1, TCHAR *pszPort2)
 {
    DWORD i;
    int nCount;
@@ -197,7 +197,7 @@ void nxObjList::LinkObjectsEx(DWORD dwId1, DWORD dwId2, TCHAR *pszPort1, TCHAR *
 // Create NXCP message
 //
 
-void nxObjList::CreateMessage(CSCPMessage *pMsg)
+void nxmap_ObjList::CreateMessage(CSCPMessage *pMsg)
 {
 	DWORD i, dwId;
 

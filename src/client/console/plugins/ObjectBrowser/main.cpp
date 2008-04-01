@@ -38,6 +38,13 @@ static HINSTANCE s_libInstance;
 
 
 //
+// Custom events
+//
+
+DEFINE_LOCAL_EVENT_TYPE(nxEVT_DCI_DATA_RECEIVED)
+
+
+//
 // Create object browser
 //
 

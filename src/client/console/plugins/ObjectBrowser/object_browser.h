@@ -40,6 +40,17 @@ WX_DECLARE_HASH_MAP(DWORD, nxTreeItemList*, wxIntegerHash, wxIntegerEqual, nxObj
 
 
 //
+// Custom events
+//
+
+BEGIN_DECLARE_EVENT_TYPES()
+    DECLARE_LOCAL_EVENT_TYPE(nxEVT_DCI_DATA_RECEIVED, 0)
+END_DECLARE_EVENT_TYPES()
+
+#define EVT_NX_DCI_DATA_RECEIVED(fn)	EVT_LIBNXMC_EVENT(nxEVT_DCI_DATA_RECEIVED, fn)
+
+
+//
 // Header for object overview
 //
 
@@ -97,6 +108,7 @@ class nxLastValuesCtrl : public wxWindow
 {
 private:
 	wxListView *m_wndListCtrl;
+	DWORD m_nodeId;
 	DWORD m_dciCount;
 	NXC_DCI_VALUE *m_data;
 	int m_sortMode;
@@ -110,7 +122,7 @@ public:
 
 	int CompareListItems(long item1, long item2);
 
-	void SetData(DWORD dciCount, NXC_DCI_VALUE *valueList);
+	void SetData(DWORD nodeId, DWORD dciCount, NXC_DCI_VALUE *valueList);
 	void Clear() { m_wndListCtrl->DeleteAllItems(); }
 
 	void SetUseMultipliers(bool flag) { m_useMultipliers = flag; }
@@ -202,8 +214,32 @@ protected:
 
 class nxGraphView : public nxView
 {
+private:
+	nxGraph *m_graph;
+	int m_dciCount;
+	DCIInfo *m_dciInfo[MAX_GRAPH_ITEMS];
+	int m_rqId;
+	int m_timeFrameType;
+	time_t m_timeFrom;
+	time_t m_timeTo;
+	time_t m_timeFrame;
+	wxTimer *m_processingTimer;
+
+protected:
+	virtual void RequestCompletionHandler(int rqId, DWORD rcc, const TCHAR *errMsg);
+
 public:
-	nxGraphView(wxWindow *parent = NULL);
+	nxGraphView(int dciCount, DCIInfo **dciList, wxWindow *parent = NULL);
+	virtual ~nxGraphView();
+
+	// Event handlers
+protected:
+	void OnSize(wxSizeEvent &event);
+	void OnViewRefresh(wxCommandEvent &event);
+	void OnDataReceived(wxCommandEvent &event);
+	void OnProcessingTimer(wxTimerEvent &event);
+
+	DECLARE_EVENT_TABLE()
 };
 
 

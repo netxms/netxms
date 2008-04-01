@@ -16,6 +16,7 @@ EXTRA_DIST = \
 	container.xpm \
 	critical.xpm \
 	disabled.xpm \
+	graph.xpm \
 	information.xpm \
 	interface.xpm \
 	major.xpm \

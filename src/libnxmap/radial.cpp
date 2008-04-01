@@ -34,7 +34,7 @@
 // Constructor
 //
 
-nxleRadial::nxleRadial(nxGraph *pGraph)
+nxleRadial::nxleRadial(nxmap_Graph *pGraph)
            :nxleGeneric(pGraph)
 {
    m_bConvexity = FALSE;
@@ -71,7 +71,7 @@ nxleRadial::~nxleRadial()
 // of this (sub)-tree.
 //
 
-double nxleRadial::SetWidth(nxVertex *root)
+double nxleRadial::SetWidth(nxmap_Vertex *root)
 {
 	double width;
    DWORD i;
@@ -99,14 +99,14 @@ double nxleRadial::SetWidth(nxVertex *root)
 // the tree, and the (final) position of its parent.
 //
 
-void nxleRadial::SetPlacement(nxVertex *root, double ro,
+void nxleRadial::SetPlacement(nxmap_Vertex *root, double ro,
                               double alpha1, double alpha2,	int layer)
 {
    double s, tau, alpha, rootFullWidth, childWidth;
    double myDelta = m_delta + m_increase;
    double fi = (alpha1 + alpha2)/2.0;
    DWORD i, index;
-   nxVertex *child;
+   nxmap_Vertex *child;
 
 	root->SetPosition((int)(ro * sin(fi)), (int)(ro * cos(fi)));
 

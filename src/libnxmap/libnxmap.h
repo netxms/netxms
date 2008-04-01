@@ -38,10 +38,10 @@
 class nxleGeneric
 {
 protected:
-   nxGraph *m_graph;
+   nxmap_Graph *m_graph;
 
 public:
-   nxleGeneric(nxGraph *pGraph) { m_graph = pGraph; }
+   nxleGeneric(nxmap_Graph *pGraph) { m_graph = pGraph; }
    virtual ~nxleGeneric() { }
 
    virtual void Execute(void) { }
@@ -63,12 +63,12 @@ protected:
    double m_increase;
    BOOL m_bConvexity;
 
-   double SetWidth(nxVertex *root);
-   void SetPlacement(nxVertex *root, double ro,
+   double SetWidth(nxmap_Vertex *root);
+   void SetPlacement(nxmap_Vertex *root, double ro,
                      double alpha1, double alpha2,	int layer);
 
 public:
-   nxleRadial(nxGraph *pGraph);
+   nxleRadial(nxmap_Graph *pGraph);
    virtual ~nxleRadial();
 
    virtual void Execute(void);
@@ -86,18 +86,18 @@ protected:
    double *m_xModifier;
    double *m_xParentModifier;
    int *m_passCount;
-   nxVertex **m_leftBrother;
+   nxmap_Vertex **m_leftBrother;
    DWORD *m_layer;
-   nxVertex **m_contour;
+   nxmap_Vertex **m_contour;
    double m_spacing;
 
-   void Initialize(nxVertex *root, DWORD layer);
-   double TrueX(nxVertex *root);
-   void FirstPass(nxVertex *root);
-   void SecondPass(nxVertex *root, double modifier);
+   void Initialize(nxmap_Vertex *root, DWORD layer);
+   double TrueX(nxmap_Vertex *root);
+   void FirstPass(nxmap_Vertex *root);
+   void SecondPass(nxmap_Vertex *root, double modifier);
 
 public:
-   nxleReingoldTilford(nxGraph *pGraph);
+   nxleReingoldTilford(nxmap_Graph *pGraph);
    virtual ~nxleReingoldTilford();
 
    virtual void Execute(void);

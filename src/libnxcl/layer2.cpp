@@ -48,7 +48,7 @@ DWORD LIBNXCL_EXPORTABLE NXCQueryL2Topology(NXC_SESSION hSession, DWORD dwNodeId
       dwRetCode = pResponse->GetVariableLong(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
 		{
-			*ppTopology = new nxObjList(pResponse);
+			*ppTopology = new nxmap_ObjList(pResponse);
 		}
       delete pResponse;
    }

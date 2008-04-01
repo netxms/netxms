@@ -24,7 +24,7 @@ static THREAD_RESULT THREAD_CALL QueryThread(void *pArg)
 {
 	HWND hWnd = ((CNodeTopologyView *)pArg)->m_hWnd;
 	DWORD dwResult, dwNodeId = ((CNodeTopologyView *)pArg)->GetObjectId();
-	nxObjList *pTopo;
+	nxmap_ObjList *pTopo;
 
 	dwResult = NXCQueryL2Topology(g_hSession, dwNodeId, (void **)&pTopo);
 	if (!PostMessage(hWnd, NXCM_REQUEST_COMPLETED, dwNodeId, (LPARAM)(dwResult == RCC_SUCCESS ? pTopo : 0)))
@@ -133,7 +133,7 @@ void CNodeTopologyView::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
 
 void CNodeTopologyView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 {
-	nxObjList *pList = (nxObjList *)lParam;
+	nxmap_ObjList *pList = (nxmap_ObjList *)lParam;
    nxMap *pMap;
    nxSubmap *pSubmap;
 	RECT rect;

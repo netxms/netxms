@@ -512,6 +512,7 @@ src/client/console/nxmc/rc/icons/small/config.png -text
 src/client/console/nxmc/rc/icons/small/container.xpm -text
 src/client/console/nxmc/rc/icons/small/critical.xpm -text
 src/client/console/nxmc/rc/icons/small/disabled.xpm -text
+src/client/console/nxmc/rc/icons/small/graph.xpm -text
 src/client/console/nxmc/rc/icons/small/information.xpm -text
 src/client/console/nxmc/rc/icons/small/interface.xpm -text
 src/client/console/nxmc/rc/icons/small/major.xpm -text

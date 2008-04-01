@@ -31,16 +31,16 @@
 // Constructor
 //
 
-nxleReingoldTilford::nxleReingoldTilford(nxGraph *pGraph)
+nxleReingoldTilford::nxleReingoldTilford(nxmap_Graph *pGraph)
                     :nxleGeneric(pGraph)
 {
    m_xPreliminary = (double *)malloc(pGraph->GetVertexCount() * sizeof(double));
    m_xModifier = (double *)malloc(pGraph->GetVertexCount() * sizeof(double));
    m_xParentModifier = (double *)malloc(pGraph->GetVertexCount() * sizeof(double));
    m_passCount = (int *)malloc(pGraph->GetVertexCount() * sizeof(int));
-   m_leftBrother = (nxVertex **)malloc(pGraph->GetVertexCount() * sizeof(nxVertex *));
+   m_leftBrother = (nxmap_Vertex **)malloc(pGraph->GetVertexCount() * sizeof(nxmap_Vertex *));
    m_layer = (DWORD *)malloc(pGraph->GetVertexCount() * sizeof(DWORD));
-   m_contour = (nxVertex **)malloc(pGraph->GetVertexCount() * sizeof(nxVertex *));
+   m_contour = (nxmap_Vertex **)malloc(pGraph->GetVertexCount() * sizeof(nxmap_Vertex *));
    m_spacing = MAP_OBJECT_SIZE_Y + MAP_TEXT_BOX_HEIGHT + MAP_OBJECT_INTERVAL_Y;
 }
 
@@ -72,7 +72,7 @@ nxleReingoldTilford::~nxleReingoldTilford()
 // of the tree currently being considered.
 //
 
-void nxleReingoldTilford::Initialize(nxVertex *root, DWORD layer)
+void nxleReingoldTilford::Initialize(nxmap_Vertex *root, DWORD layer)
 {
    DWORD i, index;
 
@@ -97,11 +97,11 @@ void nxleReingoldTilford::Initialize(nxVertex *root, DWORD layer)
 // the position modifiers of its ancestors up to the root. 
 //
 
-double nxleReingoldTilford::TrueX(nxVertex *root)
+double nxleReingoldTilford::TrueX(nxmap_Vertex *root)
 {
    double x;
    DWORD index;
-   nxVertex *node;
+   nxmap_Vertex *node;
 	
    index = m_graph->GetVertexIndex(root);
 	node = root;
@@ -121,11 +121,11 @@ double nxleReingoldTilford::TrueX(nxVertex *root)
 // First pass
 //
 
-void nxleReingoldTilford::FirstPass(nxVertex *root) 
+void nxleReingoldTilford::FirstPass(nxmap_Vertex *root) 
 {
    double modifier, xRoot, xBrother;
    DWORD i, index, leftIndex, rightIndex;
-   nxVertex *brother;
+   nxmap_Vertex *brother;
 
    index = m_graph->GetVertexIndex(root);
 
@@ -178,7 +178,7 @@ void nxleReingoldTilford::FirstPass(nxVertex *root)
 // Second pass
 //
 
-void nxleReingoldTilford::SecondPass(nxVertex *root, double modifier)
+void nxleReingoldTilford::SecondPass(nxmap_Vertex *root, double modifier)
 {
    double childModif;
    DWORD i, index;
@@ -210,8 +210,8 @@ void nxleReingoldTilford::Execute(void)
    memset(m_xModifier, 0, sizeof(double) * m_graph->GetVertexCount());
    memset(m_xParentModifier, 0, sizeof(double) * m_graph->GetVertexCount());
    memset(m_passCount, 0, sizeof(int) * m_graph->GetVertexCount());
-   memset(m_contour, 0, sizeof(nxVertex *) * m_graph->GetVertexCount());
-   memset(m_leftBrother, 0, sizeof(nxVertex *) * m_graph->GetVertexCount());
+   memset(m_contour, 0, sizeof(nxmap_Vertex *) * m_graph->GetVertexCount());
+   memset(m_leftBrother, 0, sizeof(nxmap_Vertex *) * m_graph->GetVertexCount());
    memset(m_layer, 0, sizeof(DWORD) * m_graph->GetVertexCount());
 
    Initialize(m_graph->GetRootVertex(), 0);

@@ -35,7 +35,7 @@ public:
 
 	// Generated message map functions
 protected:
-	void AddParentsToMap(NXC_OBJECT *pChild, nxObjList &list);
+	void AddParentsToMap(NXC_OBJECT *pChild, nxmap_ObjList &list);
 	NXC_OBJECT * m_pObject;
 	CMapView m_wndMap;
 	//{{AFX_MSG(CObjectDepView)

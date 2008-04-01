@@ -89,7 +89,7 @@ void CObjectDepView::Refresh()
 {
    nxMap *pMap;
    nxSubmap *pSubmap;
-   nxObjList list;
+   nxmap_ObjList list;
    RECT rect;
 
    if (m_pObject == NULL)
@@ -115,7 +115,7 @@ void CObjectDepView::Refresh()
 // Add object's parents to map
 //
 
-void CObjectDepView::AddParentsToMap(NXC_OBJECT *pChild, nxObjList &list)
+void CObjectDepView::AddParentsToMap(NXC_OBJECT *pChild, nxmap_ObjList &list)
 {
    DWORD i;
    NXC_OBJECT *pObject;

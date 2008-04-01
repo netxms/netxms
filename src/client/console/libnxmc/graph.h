@@ -139,10 +139,14 @@ public:
 	nxGraph(wxWindow *parent, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
 	virtual ~nxGraph();
 
+	void Redraw();
+
 	void SetData(DWORD index, NXC_DCI_DATA *data);
+	void UpdateData(DWORD index, NXC_DCI_DATA *data);
 	void SetTimeFrame(time_t timeFrom, time_t timeTo);
 	void SetDCIInfo(DCIInfo **info) { m_dciInfo = info; }
 	void SetColorScheme(int scheme);
+	void SetUpdating(bool isUpdating) { if (isUpdating) m_flags |= NXGF_IS_UPDATING; else m_flags &= ~NXGF_IS_UPDATING; }
 
 	bool IsRulerVisible() { return m_flags & NXGF_SHOW_RULER ? true : false; }
 	bool IsGridVisible() { return m_flags & NXGF_SHOW_GRID ? true : false; }
@@ -150,12 +154,13 @@ public:
 	bool IsTitleVisible() { return m_flags & NXGF_SHOW_TITLE ? true : false; }
 	bool IsAutoscale() { return m_flags & NXGF_AUTOSCALE ? true : false; }
 
-	wxBitmap *DrawGraphOnBitmap(wxSize &size);
+	wxBitmap *DrawGraphOnBitmap(wxSize &graphSize);
 
 protected:
 	void OnPaint(wxPaintEvent &event);
 	void OnSetFocus(wxFocusEvent &event);
 	void OnKillFocus(wxFocusEvent &event);
+	void OnSize(wxSizeEvent &event);
 
 	DECLARE_EVENT_TABLE();
 };

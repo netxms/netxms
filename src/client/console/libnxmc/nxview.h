@@ -83,6 +83,8 @@ protected:
 	int DoRequestArg3(void *func, wxUIntPtr arg1, wxUIntPtr arg2, wxUIntPtr arg3, const TCHAR *errMsg, DWORD flags = 0);
 	int DoRequestArg4(void *func, wxUIntPtr arg1, wxUIntPtr arg2, wxUIntPtr arg3,
                      wxUIntPtr arg4, const TCHAR *errMsg, DWORD flags = 0);
+	int DoRequestArg5(void *func, wxUIntPtr arg1, wxUIntPtr arg2, wxUIntPtr arg3,
+                     wxUIntPtr arg4, wxUIntPtr arg5, const TCHAR *errMsg, DWORD flags = 0);
 	
 	virtual void RequestCompletionHandler(int rqId, DWORD rcc, const TCHAR *errMsg);
 

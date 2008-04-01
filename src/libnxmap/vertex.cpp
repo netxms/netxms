@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Network Maps Library
-** Copyright (C) 2006 Victor Kirhenshtein
+** Copyright (C) 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 // Constructor
 //
 
-nxVertex::nxVertex(DWORD dwId)
+nxmap_Vertex::nxmap_Vertex(DWORD dwId)
 {
    m_dwId = dwId;
    m_posX = 0;
@@ -44,7 +44,7 @@ nxVertex::nxVertex(DWORD dwId)
 // Destructor
 //
 
-nxVertex::~nxVertex()
+nxmap_Vertex::~nxmap_Vertex()
 {
    safe_free(m_ppChildList);
    safe_free(m_ppParentList);
@@ -55,7 +55,7 @@ nxVertex::~nxVertex()
 // Link another vertex as child
 //
 
-void nxVertex::LinkChild(nxVertex *pVtx)
+void nxmap_Vertex::LinkChild(nxmap_Vertex *pVtx)
 {
    DWORD i;
 
@@ -65,7 +65,7 @@ void nxVertex::LinkChild(nxVertex *pVtx)
    if (i == m_dwNumChilds)
    {
       m_dwNumChilds++;
-      m_ppChildList = (nxVertex **)realloc(m_ppChildList, sizeof(nxVertex *) * m_dwNumChilds);
+      m_ppChildList = (nxmap_Vertex **)realloc(m_ppChildList, sizeof(nxmap_Vertex *) * m_dwNumChilds);
       m_ppChildList[i] = pVtx;
       pVtx->LinkParent(this);
    }
@@ -76,7 +76,7 @@ void nxVertex::LinkChild(nxVertex *pVtx)
 // Unlink child vertex
 //
 
-void nxVertex::UnlinkChild(nxVertex *pVtx)
+void nxmap_Vertex::UnlinkChild(nxmap_Vertex *pVtx)
 {
    DWORD i;
 
@@ -84,7 +84,7 @@ void nxVertex::UnlinkChild(nxVertex *pVtx)
       if (m_ppChildList[i] == pVtx)
       {
          m_dwNumChilds--;
-         memmove(&m_ppChildList[i], &m_ppChildList[i + 1], (m_dwNumChilds - i) * sizeof(nxVertex *));
+         memmove(&m_ppChildList[i], &m_ppChildList[i + 1], (m_dwNumChilds - i) * sizeof(nxmap_Vertex *));
          pVtx->UnlinkParent(this);
          break;
       }
@@ -95,7 +95,7 @@ void nxVertex::UnlinkChild(nxVertex *pVtx)
 // Link another vertex as parent
 //
 
-void nxVertex::LinkParent(nxVertex *pVtx)
+void nxmap_Vertex::LinkParent(nxmap_Vertex *pVtx)
 {
    DWORD i;
 
@@ -105,7 +105,7 @@ void nxVertex::LinkParent(nxVertex *pVtx)
    if (i == m_dwNumParents)
    {
       m_dwNumParents++;
-      m_ppParentList = (nxVertex **)realloc(m_ppParentList, sizeof(nxVertex *) * m_dwNumParents);
+      m_ppParentList = (nxmap_Vertex **)realloc(m_ppParentList, sizeof(nxmap_Vertex *) * m_dwNumParents);
       m_ppParentList[i] = pVtx;
    }
 }
@@ -115,7 +115,7 @@ void nxVertex::LinkParent(nxVertex *pVtx)
 // Unlink parent vertex
 //
 
-void nxVertex::UnlinkParent(nxVertex *pVtx)
+void nxmap_Vertex::UnlinkParent(nxmap_Vertex *pVtx)
 {
    DWORD i;
 
@@ -123,7 +123,7 @@ void nxVertex::UnlinkParent(nxVertex *pVtx)
       if (m_ppParentList[i] == pVtx)
       {
          m_dwNumParents--;
-         memmove(&m_ppParentList[i], &m_ppParentList[i + 1], (m_dwNumParents - i) * sizeof(nxVertex *));
+         memmove(&m_ppParentList[i], &m_ppParentList[i + 1], (m_dwNumParents - i) * sizeof(nxmap_Vertex *));
          break;
       }
 }
@@ -133,7 +133,7 @@ void nxVertex::UnlinkParent(nxVertex *pVtx)
 // Check if link to given vertex exist
 //
 
-BOOL nxVertex::IsParentOf(nxVertex *pVtx)
+BOOL nxmap_Vertex::IsParentOf(nxmap_Vertex *pVtx)
 {
    DWORD i;
    BOOL bRet = FALSE;

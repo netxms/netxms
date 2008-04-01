@@ -380,10 +380,10 @@ void nxSubmap::DoLayout(DWORD dwNumObjects, DWORD *pdwObjectList,
    else
    {
       nxleGeneric *engine;
-      nxGraph *graph;
-      nxVertex *vertex;
+      nxmap_Graph *graph;
+      nxmap_Vertex *vertex;
 
-      graph = new nxGraph(dwNumObjects, pdwObjectList, dwNumLinks, pLinkList);
+      graph = new nxmap_Graph(dwNumObjects, pdwObjectList, dwNumLinks, pLinkList);
       if (dwNumObjects > 0)
       {
          graph->SetRootVertex(pdwObjectList[0]);

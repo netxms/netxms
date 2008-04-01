@@ -34,6 +34,7 @@
 	<object class="wxIcon" name="icoSmallTerminated">icons/small/terminated.xpm</object>
 
 	<!-- Miscellanious small icons -->
+	<object class="wxIcon" name="icoGraph">icons/small/graph.xpm</object>
 	<object class="wxIcon" name="icoSmallConfig">icons/small/config.png</object>
 	<object class="wxIcon" name="icoSmallInformation">icons/small/information.xpm</object>
 	<object class="wxIcon" name="icoSortDown">icons/small/sort_down.xpm</object>

@@ -226,6 +226,20 @@ int nxView::DoRequestArg4(void *func, wxUIntPtr arg1, wxUIntPtr arg2, wxUIntPtr 
    return DoRequest(data);
 }
 
+int nxView::DoRequestArg5(void *func, wxUIntPtr arg1, wxUIntPtr arg2, wxUIntPtr arg3,
+                          wxUIntPtr arg4, wxUIntPtr arg5, const TCHAR *errMsg, DWORD flags)
+{
+   RqData *data;
+
+	data = new RqData(m_freeRqId++, this, func, 5, errMsg, flags);
+   data->m_arg[0] = arg1;
+   data->m_arg[1] = arg2;
+   data->m_arg[2] = arg3;
+   data->m_arg[3] = arg4;
+   data->m_arg[4] = arg5;
+   return DoRequest(data);
+}
+
 
 //
 // Timer event handler

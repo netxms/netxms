@@ -128,7 +128,7 @@ struct MAP_ACL_ENTRY
 // Connected object list - used as source for nxSubmap::DoLayout
 //
 
-class LIBNXMAP_EXPORTABLE nxObjList
+class LIBNXMAP_EXPORTABLE nxmap_ObjList
 {
 protected:
    DWORD m_dwNumObjects;
@@ -137,10 +137,10 @@ protected:
    OBJLINK *m_pLinkList;
 
 public:
-   nxObjList();
-   nxObjList(nxObjList *pSrc);
-   nxObjList(CSCPMessage *pMsg);
-   ~nxObjList();
+   nxmap_ObjList();
+   nxmap_ObjList(nxmap_ObjList *pSrc);
+   nxmap_ObjList(CSCPMessage *pMsg);
+   ~nxmap_ObjList();
 
    void AddObject(DWORD dwId);
    void LinkObjects(DWORD dwId1, DWORD dwId2);
@@ -160,37 +160,37 @@ public:
 // Graph's vertex
 //
 
-class LIBNXMAP_EXPORTABLE nxVertex
+class LIBNXMAP_EXPORTABLE nxmap_Vertex
 {
 protected:
    DWORD m_dwId;
    DWORD m_dwNumChilds;
-   nxVertex **m_ppChildList;
+   nxmap_Vertex **m_ppChildList;
    DWORD m_dwNumParents;
-   nxVertex **m_ppParentList;
+   nxmap_Vertex **m_ppParentList;
    int m_posX;
    int m_posY;
    BOOL m_isProcessed;  // Processed flag for various recursive operations
 
-   void LinkParent(nxVertex *pVtx);
-   void UnlinkParent(nxVertex *pVtx);
+   void LinkParent(nxmap_Vertex *pVtx);
+   void UnlinkParent(nxmap_Vertex *pVtx);
 
 public:
-   nxVertex(DWORD dwId);
-   ~nxVertex();
+   nxmap_Vertex(DWORD dwId);
+   ~nxmap_Vertex();
 
    DWORD GetId(void) { return m_dwId; }
    int GetPosX(void) { return m_posX; }
    int GetPosY(void) { return m_posY; }
    DWORD GetNumChilds(void) { return m_dwNumChilds; }
-   nxVertex *GetChild(DWORD dwIndex) { return (dwIndex < m_dwNumChilds) ? m_ppChildList[dwIndex] : NULL; }
+   nxmap_Vertex *GetChild(DWORD dwIndex) { return (dwIndex < m_dwNumChilds) ? m_ppChildList[dwIndex] : NULL; }
    DWORD GetNumParents(void) { return m_dwNumParents; }
-   nxVertex *GetParent(DWORD dwIndex) { return (dwIndex < m_dwNumParents) ? m_ppParentList[dwIndex] : NULL; }
-   BOOL IsParentOf(nxVertex *pVertex);
+   nxmap_Vertex *GetParent(DWORD dwIndex) { return (dwIndex < m_dwNumParents) ? m_ppParentList[dwIndex] : NULL; }
+   BOOL IsParentOf(nxmap_Vertex *pVertex);
    BOOL IsProcessed(void) { return m_isProcessed; }
 
-   void LinkChild(nxVertex *pVtx);
-   void UnlinkChild(nxVertex *pVtx);
+   void LinkChild(nxmap_Vertex *pVtx);
+   void UnlinkChild(nxmap_Vertex *pVtx);
    void SetPosition(int x, int y) { m_posX = x; m_posY = y; }
    void SetAsProcessed(void) { m_isProcessed = TRUE; }
    void SetAsUnprocessed(void) { m_isProcessed = FALSE; }
@@ -201,26 +201,26 @@ public:
 // Connected graph
 //
 
-class LIBNXMAP_EXPORTABLE nxGraph
+class LIBNXMAP_EXPORTABLE nxmap_Graph
 {
 protected:
    DWORD m_dwVertexCount;
-   nxVertex **m_ppVertexList;
-   nxVertex *m_pRoot;
+   nxmap_Vertex **m_ppVertexList;
+   nxmap_Vertex *m_pRoot;
 
    void SetAsUnprocessed(void);
-   void NormalizeVertexLinks(nxVertex *pRoot);
+   void NormalizeVertexLinks(nxmap_Vertex *pRoot);
 
 public:
-   nxGraph();
-   nxGraph(DWORD dwNumObjects, DWORD *pdwObjectList, DWORD dwNumLinks, OBJLINK *pLinkList);
-   ~nxGraph();
+   nxmap_Graph();
+   nxmap_Graph(DWORD dwNumObjects, DWORD *pdwObjectList, DWORD dwNumLinks, OBJLINK *pLinkList);
+   ~nxmap_Graph();
 
    DWORD GetVertexCount(void) { return m_dwVertexCount; }
-   nxVertex *FindVertex(DWORD dwId);
-   DWORD GetVertexIndex(nxVertex *pVertex);
-   nxVertex *GetRootVertex(void) { return (m_pRoot != NULL) ? m_pRoot : (m_dwVertexCount > 0 ? m_ppVertexList[0] : NULL); }
-   nxVertex *GetVertexByIndex(DWORD dwIndex) { return dwIndex < m_dwVertexCount ? m_ppVertexList[dwIndex] : NULL; }
+   nxmap_Vertex *FindVertex(DWORD dwId);
+   DWORD GetVertexIndex(nxmap_Vertex *pVertex);
+   nxmap_Vertex *GetRootVertex(void) { return (m_pRoot != NULL) ? m_pRoot : (m_dwVertexCount > 0 ? m_ppVertexList[0] : NULL); }
+   nxmap_Vertex *GetVertexByIndex(DWORD dwIndex) { return dwIndex < m_dwVertexCount ? m_ppVertexList[dwIndex] : NULL; }
 
    void SetRootVertex(DWORD dwId);
    void NormalizeLinks(void);
