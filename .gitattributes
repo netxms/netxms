@@ -579,7 +579,6 @@ src/client/console/plugins/ObjectBrowser/Makefile.am -text
 src/client/console/plugins/ObjectBrowser/ObjectBrowser.rc -text
 src/client/console/plugins/ObjectBrowser/browser.cpp -text
 src/client/console/plugins/ObjectBrowser/graphview.cpp -text
-src/client/console/plugins/ObjectBrowser/lastval.cpp -text
 src/client/console/plugins/ObjectBrowser/lastvalues.cpp -text
 src/client/console/plugins/ObjectBrowser/lastvalview.cpp -text
 src/client/console/plugins/ObjectBrowser/main.cpp -text
