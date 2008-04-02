@@ -96,7 +96,7 @@ void nxLastValuesView::OnViewRefresh(wxCommandEvent &event)
 		return;	// Refresh already in progress
 
 	m_dciList->Clear();
-	m_rqId = DoRequestArg4(NXCGetLastValues, (wxUIntPtr)NXMCGetSession(), m_node->dwId,
+	m_rqId = DoRequestArg4((void *)NXCGetLastValues, (wxUIntPtr)NXMCGetSession(), m_node->dwId,
 	                       (wxUIntPtr)&m_dciCount, (wxUIntPtr)&m_dciValues, _T("Cannot get DCI values: %s"));
 }
 

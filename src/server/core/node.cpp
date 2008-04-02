@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.201 2008-03-06 22:55:55 victor Exp $ */
+/* $Id: node.cpp,v 1.202 2008-04-02 16:48:20 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -2882,9 +2882,9 @@ DWORD Node::GetSystemDCIList(CSCPMessage *pMsg)
 // Will return NULL if there are no topology information or it is expired
 //
 
-nxObjList *Node::GetL2Topology(void)
+nxmap_ObjList *Node::GetL2Topology(void)
 {
-	nxObjList *pResult;
+	nxmap_ObjList *pResult;
 	DWORD dwExpTime;
 
 	dwExpTime = ConfigReadULong(_T("TopologyExpirationTime"), 900);
@@ -2895,7 +2895,7 @@ nxObjList *Node::GetL2Topology(void)
 	}
 	else
 	{
-		pResult = new nxObjList(m_pTopology);
+		pResult = new nxmap_ObjList(m_pTopology);
 	}
 	MutexUnlock(m_mutexTopoAccess);
 	return pResult;
@@ -2906,9 +2906,9 @@ nxObjList *Node::GetL2Topology(void)
 // Rebuild layer 2 topology and return it as dynamically reated list which should be destroyed by caller
 //
 
-nxObjList *Node::BuildL2Topology(DWORD *pdwStatus)
+nxmap_ObjList *Node::BuildL2Topology(DWORD *pdwStatus)
 {
-	nxObjList *pResult;
+	nxmap_ObjList *pResult;
 	int nDepth;
 
 	nDepth = ConfigReadInt(_T("TopologyDiscoveryRadius"), 5);
@@ -2916,11 +2916,11 @@ nxObjList *Node::BuildL2Topology(DWORD *pdwStatus)
 	delete m_pTopology;
 	if ((m_dwFlags & NF_IS_CDP) || (m_dwFlags & NF_IS_SONMP) || (m_dwFlags & NF_IS_LLDP))
 	{
-		m_pTopology = new nxObjList;
+		m_pTopology = new nxmap_ObjList;
 		if ((*pdwStatus = ::BuildL2Topology(*m_pTopology, this, NULL, nDepth, NULL)) == RCC_SUCCESS)
 		{
 			m_tLastTopologyPoll = time(NULL);
-			pResult = new nxObjList(m_pTopology);
+			pResult = new nxmap_ObjList(m_pTopology);
 		}
 		else
 		{

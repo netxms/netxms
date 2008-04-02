@@ -196,7 +196,7 @@ void nxLastValuesCtrl::SetData(DWORD nodeId, DWORD dciCount, NXC_DCI_VALUE *valu
 					case DCI_DT_INT:
 					case DCI_DT_INT64:
 						i64 = _tcstoll(m_data[i].szValue, NULL, 10);
-						if (i64 >= 10000000000)
+						if (i64 >= _LL(10000000000))
 						{
 							_sntprintf(buffer, 64, INT64_FMT _T(" G"), i64 / 1000000000);
 						}
@@ -212,7 +212,7 @@ void nxLastValuesCtrl::SetData(DWORD nodeId, DWORD dciCount, NXC_DCI_VALUE *valu
 						{
 							_sntprintf(buffer, 64, INT64_FMT, i64);
 						}
-						else if (i64 <= -10000000000)
+						else if (i64 <= _LL(-10000000000))
 						{
 							_sntprintf(buffer, 64, INT64_FMT _T(" G"), i64 / 1000000000);
 						}
@@ -232,7 +232,7 @@ void nxLastValuesCtrl::SetData(DWORD nodeId, DWORD dciCount, NXC_DCI_VALUE *valu
 					case DCI_DT_UINT:
 					case DCI_DT_UINT64:
 						ui64 = _tcstoull(m_data[i].szValue, NULL, 10);
-						if (ui64 >= 10000000000)
+						if (ui64 >= _ULL(10000000000))
 						{
 							_sntprintf(buffer, 64, UINT64_FMT _T(" G"), ui64 / 1000000000);
 						}
@@ -251,9 +251,9 @@ void nxLastValuesCtrl::SetData(DWORD nodeId, DWORD dciCount, NXC_DCI_VALUE *valu
 						break;
 					case DCI_DT_FLOAT:
 						d = _tcstod(m_data[i].szValue, NULL);
-						if (d >= 10000000000)
+						if (d >= 10000000000.0)
 						{
-							_sntprintf(buffer, 64, _T("%.2f G"), d / 1000000000);
+							_sntprintf(buffer, 64, _T("%.2f G"), d / 1000000000.0);
 						}
 						else if (d >= 10000000)
 						{
@@ -267,9 +267,9 @@ void nxLastValuesCtrl::SetData(DWORD nodeId, DWORD dciCount, NXC_DCI_VALUE *valu
 						{
 							_sntprintf(buffer, 64, _T("%f"), d);
 						}
-						else if (d <= -10000000000)
+						else if (d <= -10000000000.0)
 						{
-							_sntprintf(buffer, 64, _T("%.2f G"), d / 1000000000);
+							_sntprintf(buffer, 64, _T("%.2f G"), d / 1000000000.0);
 						}
 						else if (d <= -10000000)
 						{

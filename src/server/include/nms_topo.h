@@ -56,7 +56,7 @@ struct NETWORK_PATH_TRACE
 
 NETWORK_PATH_TRACE *TraceRoute(Node *pSrc, Node *pDest);
 void DestroyTraceData(NETWORK_PATH_TRACE *pTrace);
-DWORD BuildL2Topology(nxObjList &topology, Node *pRoot, Node *pParent,
+DWORD BuildL2Topology(nxmap_ObjList &topology, Node *pRoot, Node *pParent,
 							 int nDepth, TCHAR *pszParentIfName);
 
 

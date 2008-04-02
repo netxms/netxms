@@ -627,7 +627,7 @@ protected:
 	DWORD m_dwSNMPProxy;			// Node used as proxy for SNMP requests
    QWORD m_qwLastEvents[MAX_LAST_EVENTS];
    ROUTING_TABLE *m_pRoutingTable;
-	nxObjList *m_pTopology;		// Layer 2 topology
+	nxmap_ObjList *m_pTopology;		// Layer 2 topology
 	time_t m_tLastTopologyPoll;
 
    void PollerLock(void) { MutexLock(m_hPollerMutex, INFINITE); }
@@ -757,8 +757,8 @@ public:
    DWORD CallSnmpEnumerate(const char *pszRootOid, 
       DWORD (* pHandler)(DWORD, const char *, SNMP_Variable *, SNMP_Transport *, void *), void *pArg);
 
-	nxObjList *GetL2Topology(void);
-	nxObjList *BuildL2Topology(DWORD *pdwStatus);
+	nxmap_ObjList *GetL2Topology(void);
+	nxmap_ObjList *BuildL2Topology(DWORD *pdwStatus);
 };
 
 

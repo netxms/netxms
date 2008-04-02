@@ -111,8 +111,9 @@ nxGraph::~nxGraph()
 
 void nxGraph::Redraw()
 {
+	wxSize size = GetClientSize();
 	delete m_bitmap;
-   m_bitmap = DrawGraphOnBitmap(GetClientSize());
+   m_bitmap = DrawGraphOnBitmap(size);
 	Refresh(false);
 }
 
@@ -126,52 +127,52 @@ void nxGraph::SetColorScheme(int scheme)
 	switch(scheme)
 	{
 		case GCS_CLASSIC:
-			m_rgbBkColor = RGB(0, 0, 0);
-			m_rgbGridColor = RGB(64, 64, 64);
-			m_rgbAxisColor = RGB(127, 127, 127);
-			m_rgbRulerColor = RGB(127, 127, 127);
-			m_rgbTextColor = RGB(255, 255, 255);
-			m_rgbSelRectColor = RGB(0, 255, 255);
-			m_graphItemStyles[0].rgbColor = RGB(0, 255, 0);
-			m_graphItemStyles[1].rgbColor = RGB(255, 255, 0);
-			m_graphItemStyles[2].rgbColor = RGB(0, 255, 255);
-			m_graphItemStyles[3].rgbColor = RGB(0, 0, 255);
-			m_graphItemStyles[4].rgbColor = RGB(255, 0, 255);
-			m_graphItemStyles[5].rgbColor = RGB(255, 0, 0);
-			m_graphItemStyles[6].rgbColor = RGB(0, 128, 128);
-			m_graphItemStyles[7].rgbColor = RGB(0, 128, 0);
-			m_graphItemStyles[8].rgbColor = RGB(128, 128, 255);
-			m_graphItemStyles[9].rgbColor = RGB(255, 128, 0);
-			m_graphItemStyles[10].rgbColor = RGB(128, 128, 0);
-			m_graphItemStyles[11].rgbColor = RGB(128, 0, 255);
-			m_graphItemStyles[12].rgbColor = RGB(255, 255, 128);
-			m_graphItemStyles[13].rgbColor = RGB(0, 128, 64);
-			m_graphItemStyles[14].rgbColor = RGB(0, 128, 255);
-			m_graphItemStyles[15].rgbColor = RGB(192, 192, 192);
+			m_rgbBkColor = wxColour(0, 0, 0);
+			m_rgbGridColor = wxColour(64, 64, 64);
+			m_rgbAxisColor = wxColour(127, 127, 127);
+			m_rgbRulerColor = wxColour(127, 127, 127);
+			m_rgbTextColor = wxColour(255, 255, 255);
+			m_rgbSelRectColor = wxColour(0, 255, 255);
+			m_graphItemStyles[0].rgbColor = wxColour(0, 255, 0);
+			m_graphItemStyles[1].rgbColor = wxColour(255, 255, 0);
+			m_graphItemStyles[2].rgbColor = wxColour(0, 255, 255);
+			m_graphItemStyles[3].rgbColor = wxColour(0, 0, 255);
+			m_graphItemStyles[4].rgbColor = wxColour(255, 0, 255);
+			m_graphItemStyles[5].rgbColor = wxColour(255, 0, 0);
+			m_graphItemStyles[6].rgbColor = wxColour(0, 128, 128);
+			m_graphItemStyles[7].rgbColor = wxColour(0, 128, 0);
+			m_graphItemStyles[8].rgbColor = wxColour(128, 128, 255);
+			m_graphItemStyles[9].rgbColor = wxColour(255, 128, 0);
+			m_graphItemStyles[10].rgbColor = wxColour(128, 128, 0);
+			m_graphItemStyles[11].rgbColor = wxColour(128, 0, 255);
+			m_graphItemStyles[12].rgbColor = wxColour(255, 255, 128);
+			m_graphItemStyles[13].rgbColor = wxColour(0, 128, 64);
+			m_graphItemStyles[14].rgbColor = wxColour(0, 128, 255);
+			m_graphItemStyles[15].rgbColor = wxColour(192, 192, 192);
 			break;
 		case GCS_LIGHT:
-			m_rgbBkColor = RGB(255, 255, 255);
-			m_rgbGridColor = RGB(56, 142, 142);
-			m_rgbAxisColor = RGB(56, 142, 142);
-			m_rgbRulerColor = RGB(0, 0, 0);
-			m_rgbTextColor = RGB(0, 0, 0);
-			m_rgbSelRectColor = RGB(0, 0, 94);
-			m_graphItemStyles[0].rgbColor = RGB(0, 147, 0);
-			m_graphItemStyles[1].rgbColor = RGB(165, 42, 0);
-			m_graphItemStyles[2].rgbColor = RGB(0, 64, 64);
-			m_graphItemStyles[3].rgbColor = RGB(0, 0, 255);
-			m_graphItemStyles[4].rgbColor = RGB(255, 0, 255);
-			m_graphItemStyles[5].rgbColor = RGB(255, 0, 0);
-			m_graphItemStyles[6].rgbColor = RGB(0, 128, 128);
-			m_graphItemStyles[7].rgbColor = RGB(0, 128, 0);
-			m_graphItemStyles[8].rgbColor = RGB(128, 128, 255);
-			m_graphItemStyles[9].rgbColor = RGB(255, 128, 0);
-			m_graphItemStyles[10].rgbColor = RGB(128, 128, 0);
-			m_graphItemStyles[11].rgbColor = RGB(128, 0, 255);
-			m_graphItemStyles[12].rgbColor = RGB(0, 0, 0);
-			m_graphItemStyles[13].rgbColor = RGB(0, 128, 64);
-			m_graphItemStyles[14].rgbColor = RGB(0, 128, 255);
-			m_graphItemStyles[15].rgbColor = RGB(192, 192, 192);
+			m_rgbBkColor = wxColour(255, 255, 255);
+			m_rgbGridColor = wxColour(56, 142, 142);
+			m_rgbAxisColor = wxColour(56, 142, 142);
+			m_rgbRulerColor = wxColour(0, 0, 0);
+			m_rgbTextColor = wxColour(0, 0, 0);
+			m_rgbSelRectColor = wxColour(0, 0, 94);
+			m_graphItemStyles[0].rgbColor = wxColour(0, 147, 0);
+			m_graphItemStyles[1].rgbColor = wxColour(165, 42, 0);
+			m_graphItemStyles[2].rgbColor = wxColour(0, 64, 64);
+			m_graphItemStyles[3].rgbColor = wxColour(0, 0, 255);
+			m_graphItemStyles[4].rgbColor = wxColour(255, 0, 255);
+			m_graphItemStyles[5].rgbColor = wxColour(255, 0, 0);
+			m_graphItemStyles[6].rgbColor = wxColour(0, 128, 128);
+			m_graphItemStyles[7].rgbColor = wxColour(0, 128, 0);
+			m_graphItemStyles[8].rgbColor = wxColour(128, 128, 255);
+			m_graphItemStyles[9].rgbColor = wxColour(255, 128, 0);
+			m_graphItemStyles[10].rgbColor = wxColour(128, 128, 0);
+			m_graphItemStyles[11].rgbColor = wxColour(128, 0, 255);
+			m_graphItemStyles[12].rgbColor = wxColour(0, 0, 0);
+			m_graphItemStyles[13].rgbColor = wxColour(0, 128, 64);
+			m_graphItemStyles[14].rgbColor = wxColour(0, 128, 255);
+			m_graphItemStyles[15].rgbColor = wxColour(192, 192, 192);
 			break;
 		default:
 			break;
@@ -302,8 +303,8 @@ void nxGraph::OnPaint(wxPaintEvent &event)
 		rcText.y = 10;
 		rcText.width = size.x + 10;
 		rcText.height = size.y + 8;
-		sdc.SetTextBackground(RGB(64, 0, 0));
-		sdc.SetTextForeground(RGB(255, 0, 0));
+		sdc.SetTextBackground(wxColour(64, 0, 0));
+		sdc.SetTextForeground(wxColour(255, 0, 0));
 		sdc.SetPen(pen);
 		sdc.SetBrush(brush);
 		sdc.DrawRectangle(rcText.x, rcText.y, rcText.width, rcText.height);
@@ -445,21 +446,21 @@ void nxGraph::DrawAreaGraph(wxMemoryDC &dc, NXC_DCI_DATA *data, wxColour rgbColo
 
 /* Select appropriate style for ordinate marks */
 #define SELECT_ORDINATE_MARKS \
-   if (m_currMaxValue > 100000000000) \
+   if (m_currMaxValue > 100000000000.0) \
    { \
       szModifier[0] = 'G'; \
       szModifier[1] = 0; \
       nDivider = 1000000000; \
       bIntMarks = TRUE; \
    } \
-   else if (m_currMaxValue > 100000000) \
+   else if (m_currMaxValue > 100000000.0) \
    { \
       szModifier[0] = 'M'; \
       szModifier[1] = 0; \
       nDivider = 1000000; \
       bIntMarks = TRUE; \
    } \
-   else if (m_currMaxValue > 100000) \
+   else if (m_currMaxValue > 100000.0) \
    { \
       szModifier[0] = 'K'; \
       szModifier[1] = 0; \
@@ -583,7 +584,7 @@ wxBitmap *nxGraph::DrawGraphOnBitmap(wxSize &graphSize)
 		rcTitle.y = iTopMargin;
 		rcTitle.width = graphSize.x - iRightMargin;
 		rcTitle.height = rcTitle.y + textSize.y;
-		dc.DrawLabel(m_title, rcTitle, DT_CENTER);
+		dc.DrawLabel(m_title, rcTitle, wxALIGN_CENTER);
 		iTopMargin += textSize.y + 7;
 	}
 
@@ -645,7 +646,7 @@ wxBitmap *nxGraph::DrawGraphOnBitmap(wxSize &graphSize)
          m_currMaxValue = 1;
 
       // Round max value
-      for(double d = 0.00001; d < 10000000000000000000; d *= 10)
+      for(double d = 0.00001; d < 10000000000000000000.0; d *= 10)
          if ((m_currMaxValue >= d) && (m_currMaxValue <= d * 10))
          {
             m_currMaxValue -= fmod(m_currMaxValue, d);
@@ -758,9 +759,9 @@ wxBitmap *nxGraph::DrawGraphOnBitmap(wxSize &graphSize)
    for(y = graphSize.y - iBottomMargin - textSize.y / 2, dMark = 0; y > iTopMargin; y -= nGridSizeY, dMark += dStep)
    {
       if (bIntMarks)
-         _stprintf(szBuffer, INT64_FMT _T("%s"), (INT64)dMark / nDivider, szModifier);
+         _sntprintf(szBuffer, 64, INT64_FMT _T("%s"), (INT64)dMark / nDivider, szModifier);
       else
-         _stprintf(szBuffer, _T("%5.3f%s"), dMark, szModifier);
+         _sntprintf(szBuffer, 64, _T("%5.3f%s"), dMark, szModifier);
       wxSize cz = dc.GetTextExtent(szBuffer);
       dc.DrawText(szBuffer, iLeftMargin - cz.x - 5, y);
    }

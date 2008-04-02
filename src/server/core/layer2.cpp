@@ -131,7 +131,7 @@ static DWORD CDPTopoHandler(DWORD dwVersion, const char *pszCommunity,
 // Build layer 2 topology for switch
 //
 
-DWORD BuildL2Topology(nxObjList &topology, Node *pRoot, Node *pParent, int nDepth, TCHAR *pszParentIfName)
+DWORD BuildL2Topology(nxmap_ObjList &topology, Node *pRoot, Node *pParent, int nDepth, TCHAR *pszParentIfName)
 {
 	PeerList *pList;
 	DWORD i, dwResult = RCC_SNMP_FAILURE;

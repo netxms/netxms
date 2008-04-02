@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.300 2008-03-14 15:47:54 alk Exp $ */
+/* $Id: session.cpp,v 1.301 2008-04-02 16:48:20 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -9258,7 +9258,7 @@ void ClientSession::QueryL2Topology(CSCPMessage *pRequest)
 			{
 				if (((Node *)pObject)->IsBridge())
 				{
-					nxObjList *pTopology;
+					nxmap_ObjList *pTopology;
 
 					pTopology = ((Node *)pObject)->GetL2Topology();
 					if (pTopology == NULL)

@@ -187,7 +187,7 @@ void nxGraphView::OnViewRefresh(wxCommandEvent &event)
    }
    m_graph->SetTimeFrame(m_timeFrom, m_timeTo);
 
-	m_rqId = DoRequestArg5(GetData, (wxUIntPtr)this, m_dciCount, (wxUIntPtr)m_dciInfo,
+	m_rqId = DoRequestArg5((void *)GetData, (wxUIntPtr)this, m_dciCount, (wxUIntPtr)m_dciInfo,
 	                       m_timeFrom, m_timeTo, _T("Cannot retrieve collected data: %s"));
 	m_graph->SetUpdating(true);
 	m_processingTimer->Start(300, wxTIMER_ONE_SHOT);
