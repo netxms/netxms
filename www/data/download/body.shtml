@@ -1,4 +1,4 @@
-<!-- $Id: body.shtml,v 1.34 2007-09-27 23:51:22 alk Exp $ -->
+<!-- $Id: body.shtml,v 1.35 2008-04-03 06:57:54 alk Exp $ -->
 <div class="twoThirds noBorderOnLeft">
 	<h1>Download Area</h1>
 
@@ -7,7 +7,56 @@
 	<a href="changelog.shtml">Current Changelog</a>
 	</p>
 
-	<h2>Current Release version 0.2.19 &ndash; Sep 27, 2007</h2>
+	<h2>Current Release version 0.2.20 &ndash; Mar 26, 2008</h2>
+	<p>
+	<a href="netxms-0.2.20.tar.gz">Source code</a>
+	<a href="netxms-0.2.20.tar.gz.md5">(MD5)</a>
+	<a href="netxms-0.2.20.tar.gz.asc">(PGP sign)</a>
+	</p>
+	<p>
+	<a href="agent_packages/nxagent-0.2.20.apkg">Agent upgrade package for UNIX systems</a>
+	<a href="agent_packages/nxagent-0.2.20.npi">NPI file</a>
+	<a href="agent_packages/nxagent-0.2.20.apkg.md5">(MD5)</a>
+	<a href="agent_packages/nxagent-0.2.20.apkg.asc">(PGP sign)</a><br />
+	</p>
+	<p>
+	<a href="netxms-0.2.20.exe">WIN32 Installer</a>
+	<a href="netxms-0.2.20.exe.md5">(MD5)</a>
+	<a href="netxms-0.2.20.exe.asc">(PGP sign)</a>
+	</p>
+	NB! We strongly recommended to use agent installer (next two packages) if you are planning on using centralised upgrade feature.
+	<p>
+	<a href="agent_packages/nxagent-0.2.20.exe">WIN32 Agent Installer (32bit)</a>
+	<a href="agent_packages/nxagent-0.2.20-win32.npi">NPI file</a>
+	<a href="agent_packages/nxagent-0.2.20.exe.md5">(MD5)</a>
+	<a href="agent_packages/nxagent-0.2.20.exe.asc">(PGP sign)</a><br />
+	</p>
+	<p>
+	<a href="agent_packages/nxagent-0.2.20-x64.exe">WIN32 Agent Installer (64bit)</a>
+	<a href="agent_packages/nxagent-0.2.20-x64.npi">NPI file</a>
+	<a href="agent_packages/nxagent-0.2.20-x64.exe.md5">(MD5)</a>
+	<a href="agent_packages/nxagent-0.2.20-x64.exe.asc">(PGP sign)</a>
+	</p>
+	<p>
+	<a href="netxms-0.2.20-win32-binary.tar.gz">WIN32 Precompiled Binaries without installer</a>
+	<a href="netxms-0.2.20-win32-binary.tar.gz.md5">(MD5)</a>
+	<a href="netxms-0.2.20-win32-binary.tar.gz.asc">(PGP sign)</a>
+	</p>
+	<!--
+	<p>
+	<a href="netxms-0.2.20-wce-binary.tar.gz">PocketPC Precompiled Binaries</a>
+	<a href="netxms-0.2.20-wce-binary.tar.gz.md5">(MD5)</a>
+	<a href="netxms-0.2.20-wce-binary.tar.gz.asc">(PGP sign)</a>
+	</p>
+	-->
+	<p>
+	<a href="netxms-0.2.20-netware-binary.tar.gz">Precompiled agent for Netware (5.1-SP3 or higher)</a>
+	<a href="netxms-0.2.20-netware-binary.tar.gz.md5">(MD5)</a>
+	<a href="netxms-0.2.20-netware-binary.tar.gz.asc">(PGP sign)</a><br />
+	</p>
+
+	<!-- ---- -->
+	<h2>Previous Release version 0.2.19 &ndash; Sep 27, 2007</h2>
 	<p>
 	<a href="netxms-0.2.19.tar.gz">Source code</a>
 	<a href="netxms-0.2.19.tar.gz.md5">(MD5)</a>
@@ -51,53 +100,6 @@
 	<a href="agent_packages/nxagent-0.2.19-netware.tar.gz">Precompiled agent for Netware (5.1-SP3 or higher)</a>
 	<a href="agent_packages/nxagent-0.2.19-netware.tar.gz.md5">(MD5)</a>
 	<a href="agent_packages/nxagent-0.2.19-netware.tar.gz.asc">(PGP sign)</a><br />
-	</p>
-
-	<!-- ---- -->
-	<h2>Previous Release version 0.2.18 (hotfix 2) &ndash; Jul 03, 2007</h2>
-	<p>
-	<a href="netxms-0.2.18.2.tar.gz">Source code</a>
-	<a href="netxms-0.2.18.2.tar.gz.md5">(MD5)</a>
-	<a href="netxms-0.2.18.2.tar.gz.asc">(PGP sign)</a>
-	</p>
-	<p>
-	<a href="agent_packages/nxagent-0.2.18.apkg">Agent upgrade package for UNIX systems</a>
-	<a href="agent_packages/nxagent-0.2.18.npi">NPI file</a>
-	<a href="agent_packages/nxagent-0.2.18.apkg.md5">(MD5)</a>
-	<a href="agent_packages/nxagent-0.2.18.apkg.asc">(PGP sign)</a><br />
-	</p>
-	<p>
-	<a href="netxms-0.2.18.exe">WIN32 Installer</a>
-	<a href="netxms-0.2.18.exe.md5">(MD5)</a>
-	<a href="netxms-0.2.18.exe.asc">(PGP sign)</a>
-	</p>
-	NB! We strongly recommended to use agent installer (next two packages) if you are planning on using centralised upgrade feature.
-	<p>
-	<a href="agent_packages/nxagent-0.2.18.exe">WIN32 Agent Installer (32bit)</a>
-	<a href="agent_packages/nxagent-0.2.18-win32.npi">NPI file</a>
-	<a href="agent_packages/nxagent-0.2.18.exe.md5">(MD5)</a>
-	<a href="agent_packages/nxagent-0.2.18.exe.asc">(PGP sign)</a><br />
-	</p>
-	<p>
-	<a href="agent_packages/nxagent-0.2.18-x64.exe">WIN32 Agent Installer (64bit)</a>
-	<a href="agent_packages/nxagent-0.2.18-x64.npi">NPI file</a>
-	<a href="agent_packages/nxagent-0.2.18-x64.exe.md5">(MD5)</a>
-	<a href="agent_packages/nxagent-0.2.18-x64.exe.asc">(PGP sign)</a>
-	</p>
-	<p>
-	<a href="netxms-0.2.18-win32-binary.tar.gz">WIN32 Precompiled Binaries w/o installer</a>
-	<a href="netxms-0.2.18-win32-binary.tar.gz.md5">(MD5)</a>
-	<a href="netxms-0.2.18-win32-binary.tar.gz.asc">(PGP sign)</a>
-	</p>
-	<p>
-	<a href="netxms-0.2.18-wce-binary.tar.gz">PocketPC Precompiled Binaries</a>
-	<a href="netxms-0.2.18-wce-binary.tar.gz.md5">(MD5)</a>
-	<a href="netxms-0.2.18-wce-binary.tar.gz.asc">(PGP sign)</a>
-	</p>
-	<p>
-	<a href="agent_packages/nxagent-0.2.18-netware.tar.gz">Precompiled agent for Netware (5.1-SP3 or higher)</a>
-	<a href="agent_packages/nxagent-0.2.18-netware.tar.gz.md5">(MD5)</a>
-	<a href="agent_packages/nxagent-0.2.18-netware.tar.gz.asc">(PGP sign)</a><br />
 	</p>
 
 
