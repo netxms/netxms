@@ -1,4 +1,4 @@
-<!-- $Id: body.shtml,v 1.35 2008-04-03 06:57:54 alk Exp $ -->
+<!-- $Id: body.shtml,v 1.36 2008-04-03 07:00:20 alk Exp $ -->
 <div class="twoThirds noBorderOnLeft">
 	<h1>Download Area</h1>
 
@@ -42,13 +42,11 @@
 	<a href="netxms-0.2.20-win32-binary.tar.gz.md5">(MD5)</a>
 	<a href="netxms-0.2.20-win32-binary.tar.gz.asc">(PGP sign)</a>
 	</p>
-	<!--
 	<p>
 	<a href="netxms-0.2.20-wce-binary.tar.gz">PocketPC Precompiled Binaries</a>
 	<a href="netxms-0.2.20-wce-binary.tar.gz.md5">(MD5)</a>
 	<a href="netxms-0.2.20-wce-binary.tar.gz.asc">(PGP sign)</a>
 	</p>
-	-->
 	<p>
 	<a href="netxms-0.2.20-netware-binary.tar.gz">Precompiled agent for Netware (5.1-SP3 or higher)</a>
 	<a href="netxms-0.2.20-netware-binary.tar.gz.md5">(MD5)</a>
