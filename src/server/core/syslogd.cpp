@@ -387,7 +387,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    // Fill in local address structure
    memset(&addr, 0, sizeof(struct sockaddr_in));
    addr.sin_family = AF_INET;
-   addr.sin_addr.s_addr = htonl(INADDR_ANY);
+   addr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
    addr.sin_port = htons((WORD)nPort);
 
    // Bind socket
@@ -397,6 +397,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
       closesocket(hSocket);
       return THREAD_OK;
    }
+	WriteLog(MSG_LISTENING_FOR_SYSLOG, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(addr.sin_addr.s_addr), nPort);
 
    // Start processing thread
    m_pSyslogQueue = new Queue(1000, 100);

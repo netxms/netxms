@@ -662,4 +662,22 @@ Language=English
 Invalid beacon host name or address %1 - host will be excluded from beacon list
 .
 
+MessageId=
+SymbolicName=MSG_LISTENING_FOR_CLIENTS
+Language=English
+Listening for client connections on TCP socket %1:%2
+.
+
+MessageId=
+SymbolicName=MSG_LISTENING_FOR_SNMP
+Language=English
+Listening for SNMP traps on UDP socket %1:%2
+.
+
+MessageId=
+SymbolicName=MSG_LISTENING_FOR_SYSLOG
+Language=English
+Listening for syslog messages on UDP socket %1:%2
+.
+
 ;#endif

@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.149 2008-02-27 20:48:30 victor Exp $ */
+/* $Id: nms_core.h,v 1.150 2008-04-08 16:40:09 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -736,13 +736,14 @@ void DumpProcess(void);
 // Global variables
 //
 
-extern char NXCORE_EXPORTABLE g_szConfigFile[];
-extern char NXCORE_EXPORTABLE g_szLogFile[];
-extern char NXCORE_EXPORTABLE g_szDumpDir[];
+extern TCHAR NXCORE_EXPORTABLE g_szConfigFile[];
+extern TCHAR NXCORE_EXPORTABLE g_szLogFile[];
+extern TCHAR NXCORE_EXPORTABLE g_szDumpDir[];
+extern TCHAR NXCORE_EXPORTABLE g_szListenAddress[];
 #ifndef _WIN32
-extern char NXCORE_EXPORTABLE g_szPIDFile[];
+extern TCHAR NXCORE_EXPORTABLE g_szPIDFile[];
 #endif
-extern char g_szDataDir[];
+extern TCHAR g_szDataDir[];
 extern QWORD g_qwServerId;
 extern RSA *g_pServerKey;
 extern DWORD g_dwPingSize;

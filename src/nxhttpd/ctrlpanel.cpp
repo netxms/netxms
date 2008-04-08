@@ -341,7 +341,7 @@ static int CompareUsers(const void *p1, const void *p2)
 void ClientSession::CtrlPanelUsers(HttpRequest &request, HttpResponse &response, BOOL bUsers)
 {
 	String id, row;
-	DWORD dwResult, dwNumUsers, i;
+	DWORD dwNumUsers, i;
 	NXC_USER *pUserList;
 	TCHAR szTemp[256];
 	BOOL bReload = FALSE;

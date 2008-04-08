@@ -379,6 +379,7 @@ extern TCHAR g_szConfigFile[];
 extern TCHAR g_szLogFile[];
 extern TCHAR g_szMasterServer[];
 extern TCHAR g_szDocumentRoot[];
+extern TCHAR g_szListenAddress[];
 extern WORD g_wListenPort;
 extern const TCHAR *g_szStatusText[];
 extern const TCHAR *g_szStatusTextSmall[];

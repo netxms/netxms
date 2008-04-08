@@ -1,4 +1,4 @@
-/* $Id: config.cpp,v 1.48 2008-01-14 16:53:13 victor Exp $ */
+/* $Id: config.cpp,v 1.49 2008-04-08 16:40:09 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -47,6 +47,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "DBPassword", CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, g_szDbPassword },
    { "DBServer", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer },
    { "DumpDirectory", CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir },
+   { "ListenAddress", CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress },
    { "LogFailedSQLQueries", CT_BOOLEAN, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_dwFlags },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }

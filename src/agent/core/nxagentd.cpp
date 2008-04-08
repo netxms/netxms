@@ -1,4 +1,4 @@
-/* $Id: nxagentd.cpp,v 1.92 2008-01-07 13:51:46 victor Exp $ */
+/* $Id: nxagentd.cpp,v 1.93 2008-04-08 16:40:08 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -96,6 +96,7 @@ char g_szSharedSecret[MAX_SECRET_LENGTH] = "admin";
 char g_szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
 char g_szFileStore[MAX_PATH] = AGENT_DEFAULT_FILE_STORE;
 char g_szPlatformSuffix[MAX_PSUFFIX_LENGTH] = "";
+char g_szListenAddress[MAX_PATH] = "0.0.0.0";
 WORD g_wListenPort = AGENT_LISTEN_PORT;
 SERVER_INFO g_pServerList[MAX_SERVERS];
 DWORD g_dwServerCount = 0;
@@ -169,6 +170,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "ExternalParameterShellExec", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShExtParamList },
    { "FileStore", CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore },
    { "InstallationServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList }, // Old name for MasterServers, deprecated
+   { "ListenAddress", CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress },
    { "ListenPort", CT_WORD, 0, 0, 0, 0, &g_wListenPort },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
    { "LogUnresolvedSymbols", CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags },

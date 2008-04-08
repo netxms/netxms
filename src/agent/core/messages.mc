@@ -218,4 +218,10 @@ Language=English
 Registration of subagent "%1" failed
 .
 
+MessageId=
+SymbolicName=MSG_LISTENING
+Language=English
+Listening on socket %1:%2
+.
+
 ;#endif

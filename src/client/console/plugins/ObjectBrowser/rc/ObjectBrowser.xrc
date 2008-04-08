@@ -85,7 +85,7 @@
 			<help></help>
 		</object>
 		<object class="separator" />
-		<object class="wxMenuItem" name="menuObjectProperties">
+		<object class="wxMenuItem" name="menuProperties">
 			<label>&amp;Properties...</label>
 			<help></help>
 		</object>
@@ -108,6 +108,84 @@
 		<object class="wxMenuItem" name="menuDCIUseMultipliers">
 			<label>&amp;Use multipliers</label>
 			<checkable>1</checkable>
+			<help></help>
+		</object>
+	</object>
+	<object class="wxMenu" name="menuCtxGraph">
+		<label>Graph</label>
+		<object class="wxMenu" name="menuGraphPresets">
+			<label>&amp;Presets</label>
+			<help></help>
+			<object class="wxMenuItem" name="menuGraphPreset10min">
+				<label>Last &amp;10 minutes</label>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="menuGraphPreset30min">
+				<label>Last &amp;30 minutes</label>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="menuGraphPreset1hour">
+				<label>Last &amp;hour</label>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="menuGraphPreset2hours">
+				<label>Last &amp;2 hours</label>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="menuGraphPreset4hours">
+				<label>Last &amp;4 hours</label>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="menuGraphPreset1day">
+				<label>Last &amp;day</label>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="menuGraphPreset1week">
+				<label>Last &amp;week</label>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="menuGraphPreset1month">
+				<label>Last &amp;month</label>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="menuGraphPreset1year">
+				<label>Last &amp;year</label>
+				<help></help>
+			</object>
+		</object>
+		<object class="separator" />
+		<object class="wxMenuItem" name="menuGraphLegend">
+			<label>&amp;Legend</label>
+			<checkable>1</checkable>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuGraphGrid">
+			<label>&amp;Grid</label>
+			<checkable>1</checkable>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuGraphRuler">
+			<label>&amp;Ruler</label>
+			<checkable>1</checkable>
+			<help></help>
+		</object>
+		<object class="separator" />
+		<object class="wxMenuItem" name="menuPrint">
+			<label>Pr&amp;int...</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuCopyToClipboard">
+			<label>&amp;Copy to clipboard</label>
+			<help></help>
+		</object>
+		<object class="separator" />
+		<object class="wxMenuItem" name="menuGraphZoomOut">
+			<label>&amp;Zoom out</label>
+			<help></help>
+		</object>
+		<object class="separator" />
+		<object class="wxMenuItem" name="menuProperties">
+			<label>&amp;Properties...</label>
 			<help></help>
 		</object>
 	</object>

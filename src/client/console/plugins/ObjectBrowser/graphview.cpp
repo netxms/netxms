@@ -25,6 +25,13 @@
 
 
 //
+// Static data
+//
+
+static time_t m_timeUnitSize[MAX_TIME_UNITS] = { 60, 3600, 86400 };
+
+
+//
 // Event table
 //
 
@@ -33,6 +40,7 @@ BEGIN_EVENT_TABLE(nxGraphView, nxView)
 	EVT_NX_REFRESH_VIEW(nxGraphView::OnViewRefresh)
 	EVT_NX_DCI_DATA_RECEIVED(nxGraphView::OnDataReceived)
 	EVT_TIMER(1, nxGraphView::OnProcessingTimer)
+	EVT_CONTEXT_MENU(nxGraphView::OnContextMenu)
 END_EVENT_TABLE()
 
 
@@ -217,4 +225,38 @@ void nxGraphView::OnProcessingTimer(wxTimerEvent &event)
 {
 	if (m_rqId != -1)	// Still processing request, show "Update" mark on graph
 		m_graph->Refresh(false);
+}
+
+
+//
+// Context menu handler
+//
+
+void nxGraphView::OnContextMenu(wxContextMenuEvent &event)
+{
+	wxMenu *menu;
+
+	menu = wxXmlResource::Get()->LoadMenu(_T("menuCtxGraph"));
+	if (menu != NULL)
+	{
+		PopupMenu(menu);
+		delete menu;
+	}
+}
+
+
+//
+// Set time frame to given preset
+//
+
+void nxGraphView::Preset(int timeUnit, int numUnits)
+{
+   m_timeFrameType = 1;   // Back from now
+   m_timeUnit = timeUnit;
+   m_numTimeUnits = numUnits;
+   m_timeFrame = m_numTimeUnits * m_timeUnitSize[m_timeUnit];
+//   m_bFullRefresh = TRUE;
+
+	wxCommandEvent event(nxEVT_REFRESH_VIEW);
+	AddPendingEvent(event);
 }

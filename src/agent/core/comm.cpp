@@ -127,7 +127,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
-   servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+   servAddr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
    servAddr.sin_port = htons(g_wListenPort);
 
    // Bind socket
@@ -139,6 +139,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 
    // Set up queue
    listen(hSocket, SOMAXCONN);
+	WriteLog(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), g_wListenPort);
 
    // Create session list and it's access mutex
    g_dwMaxSessions = min(max(g_dwMaxSessions, 2), 1024);

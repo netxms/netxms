@@ -209,6 +209,17 @@ protected:
 
 
 //
+// Time units for graphs
+//
+
+#define TIME_UNIT_MINUTE   0
+#define TIME_UNIT_HOUR     1
+#define TIME_UNIT_DAY      2
+
+#define MAX_TIME_UNITS     3
+
+
+//
 // Graph view
 //
 
@@ -220,10 +231,14 @@ private:
 	DCIInfo *m_dciInfo[MAX_GRAPH_ITEMS];
 	int m_rqId;
 	int m_timeFrameType;
+	int m_timeUnit;
+	int m_numTimeUnits;
 	time_t m_timeFrom;
 	time_t m_timeTo;
 	time_t m_timeFrame;
 	wxTimer *m_processingTimer;
+
+	void Preset(int timeUnit, int numUnits);
 
 protected:
 	virtual void RequestCompletionHandler(int rqId, DWORD rcc, const TCHAR *errMsg);
@@ -238,6 +253,7 @@ protected:
 	void OnViewRefresh(wxCommandEvent &event);
 	void OnDataReceived(wxCommandEvent &event);
 	void OnProcessingTimer(wxTimerEvent &event);
+	void OnContextMenu(wxContextMenuEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };

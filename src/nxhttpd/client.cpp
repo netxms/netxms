@@ -196,7 +196,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *pArg)
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
-   servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+   servAddr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
    servAddr.sin_port = htons(g_wListenPort);
 
    // Bind socket
@@ -208,6 +208,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *pArg)
 
    // Set up queue
    listen(hSocket, SOMAXCONN);
+	WriteLog(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), g_wListenPort);
 
    // Wait for connection requests
    while(!(g_dwFlags & AF_SHUTDOWN))

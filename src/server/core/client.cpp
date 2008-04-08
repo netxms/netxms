@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: client.cpp
+** File: client.cpp
 **
 **/
 
@@ -140,7 +140,7 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
-   servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+   servAddr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
    servAddr.sin_port = htons(wListenPort);
 
    // Bind socket
@@ -154,6 +154,7 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
 
    // Set up queue
    listen(sock, SOMAXCONN);
+	WriteLog(MSG_LISTENING_FOR_CLIENTS, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), wListenPort);
 
    // Start client keep-alive thread
    ThreadCreate(ClientKeepAliveThread, 0, NULL);

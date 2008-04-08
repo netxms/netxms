@@ -374,6 +374,7 @@ extern char g_szLogFile[];
 extern char g_szSharedSecret[];
 extern char g_szConfigFile[];
 extern char g_szFileStore[];
+extern char g_szListenAddress[];
 extern WORD g_wListenPort;
 extern SERVER_INFO g_pServerList[];
 extern DWORD g_dwServerCount;

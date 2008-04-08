@@ -387,7 +387,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    // Fill in local address structure
    memset(&addr, 0, sizeof(struct sockaddr_in));
    addr.sin_family = AF_INET;
-   addr.sin_addr.s_addr = htonl(INADDR_ANY);
+   addr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
    addr.sin_port = htons(162);
 
    // Bind socket
@@ -397,6 +397,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
       closesocket(hSocket);
       return THREAD_OK;
    }
+	WriteLog(MSG_LISTENING_FOR_SNMP, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(addr.sin_addr.s_addr), 162);
 
    pTransport = new SNMP_UDPTransport(hSocket);
    DbgPrintf(1, _T("SNMP Trap Receiver started"));

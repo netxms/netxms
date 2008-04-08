@@ -54,6 +54,7 @@ TCHAR g_szLogFile[MAX_PATH] = _T("/var/log/nxhttpd");
 TCHAR g_szDocumentRoot[MAX_PATH] = DATADIR _T("/nxhttpd");
 TCHAR g_szPidFile[MAX_PATH] = _T("/var/run/nxhttpd.pid");
 #endif
+TCHAR g_szListenAddress[MAX_PATH] = _T("0.0.0.0");
 WORD g_wListenPort = 8080;
 DWORD g_dwSessionTimeout = 300;		// 5 minutes
 
@@ -167,6 +168,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { "CodePage", CT_STRING, 0, 0, 256, 0, m_szCodePage },
    { "DocumentRoot", CT_STRING, 0, 0, MAX_PATH, 0, g_szDocumentRoot },
+   { "ListenAddress", CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress },
    { "ListenPort", CT_WORD, 0, 0, 0, 0, &g_wListenPort },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
    { "MasterServer", CT_STRING, 0, 0, MAX_PATH, 0, g_szMasterServer },

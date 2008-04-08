@@ -68,4 +68,10 @@ Language=English
 NetXMS Client Library initialization failed
 .
 
+MessageId=
+SymbolicName=MSG_LISTENING
+Language=English
+Listening on socket %1:%2
+.
+
 ;#endif
