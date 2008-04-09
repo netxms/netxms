@@ -166,7 +166,7 @@ public:
 
 	void SetObject(NXC_OBJECT *object);
 	
-	DWORD GetNextRequest() { return (DWORD)m_workerQueue.GetOrBlock(); }
+	DWORD GetNextRequest() { return CAST_FROM_POINTER(m_workerQueue.GetOrBlock(), DWORD); }
 	void RequestCompleted(bool success, DWORD nodeId, DWORD numItems, NXC_DCI_VALUE *valueList);
 
 	// Event handlers
