@@ -442,13 +442,29 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
 	         		nx_strncpy(pIfList->pInterfaces[i].szName, szBuffer, MAX_DB_STRING);	// Alias is empty or not available
          		break;
          	case 2:	// Concatenate alias with name
+         	case 3:	// Concatenate name with alias
          		if (pIfList->pInterfaces[i].szName[0] != 0)
          		{
-         			if  (_tcslen(pIfList->pInterfaces[i].szName) < (MAX_DB_STRING - 3))
-         			{
-		      			_sntprintf(&pIfList->pInterfaces[i].szName[_tcslen(pIfList->pInterfaces[i].szName)], MAX_DB_STRING - _tcslen(pIfList->pInterfaces[i].szName), _T(" (%s)"), szBuffer);
-		      			pIfList->pInterfaces[i].szName[MAX_DB_STRING - 1] = 0;
-		      		}
+						if (useAliases == 2)
+						{
+         				if  (_tcslen(pIfList->pInterfaces[i].szName) < (MAX_DB_STRING - 3))
+         				{
+		      				_sntprintf(&pIfList->pInterfaces[i].szName[_tcslen(pIfList->pInterfaces[i].szName)], MAX_DB_STRING - _tcslen(pIfList->pInterfaces[i].szName), _T(" (%s)"), szBuffer);
+		      				pIfList->pInterfaces[i].szName[MAX_DB_STRING - 1] = 0;
+		      			}
+						}
+						else
+						{
+							TCHAR temp[MAX_DB_STRING];
+
+							_tcscpy(temp, pIfList->pInterfaces[i].szName);
+		         		nx_strncpy(pIfList->pInterfaces[i].szName, szBuffer, MAX_DB_STRING);
+         				if  (_tcslen(pIfList->pInterfaces[i].szName) < (MAX_DB_STRING - 3))
+         				{
+		      				_sntprintf(&pIfList->pInterfaces[i].szName[_tcslen(pIfList->pInterfaces[i].szName)], MAX_DB_STRING - _tcslen(pIfList->pInterfaces[i].szName), _T(" (%s)"), temp);
+		      				pIfList->pInterfaces[i].szName[MAX_DB_STRING - 1] = 0;
+		      			}
+						}
          		}
          		else
          		{

@@ -1,4 +1,4 @@
-/* $Id: netxms-version.h,v 1.139 2008-03-30 07:38:57 victor Exp $ */
+/* $Id: netxms-version.h,v 1.140 2008-04-09 10:44:47 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -29,11 +29,11 @@
 // Version constants 
 //
 
-#define NETXMS_VERSION_MAJOR        1
-#define NETXMS_VERSION_MINOR        0
-#define NETXMS_VERSION_BUILD        0
+#define NETXMS_VERSION_MAJOR        0
+#define NETXMS_VERSION_MINOR        2
+#define NETXMS_VERSION_BUILD        21
 #define NETXMS_VERSION_HOTFIX       0
-#define NETXMS_VERSION_STRING       _T("1.0.0-rc1")
+#define NETXMS_VERSION_STRING       _T("0.2.21")
 
 
 //
