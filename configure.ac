@@ -1,10 +1,10 @@
-# $Id: configure.ac,v 1.293 2008-03-25 23:13:44 victor Exp $
+# $Id: configure.ac,v 1.294 2008-04-09 15:41:49 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
 #
 
-AC_INIT([NetXMS], [0.2.20], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.21], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -858,6 +858,14 @@ if test "x$NEED_WXWIDGETS" = "xyes"; then
 			CXXFLAGS="$CXXFLAGS `$WXCONF --cxxflags --debug=$ENABLE_DEBUG`"
 			LDFLAGS="$LDFLAGS `$WXCONF --libs --debug=$ENABLE_DEBUG`"
 		fi
+	fi
+	$WXCONF --cxxflags | grep error >/dev/null
+	if test $? = 0; then
+		echo "wx-config output:"
+		echo "*** BEGIN ***"
+		$WXCONF --cxxflags
+		echo "*** END ***"
+		AC_MSG_ERROR([*** wxWidgets is not configured properly - see wx-config output above ***])
 	fi
 fi
 

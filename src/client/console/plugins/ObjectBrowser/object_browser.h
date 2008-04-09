@@ -254,7 +254,22 @@ protected:
 	void OnDataReceived(wxCommandEvent &event);
 	void OnProcessingTimer(wxTimerEvent &event);
 	void OnContextMenu(wxContextMenuEvent &event);
-
+	void OnGraphPreset10min(wxCommandEvent &event);
+	void OnGraphPreset30min(wxCommandEvent &event);
+	void OnGraphPreset1hour(wxCommandEvent &event);
+	void OnGraphPreset2hours(wxCommandEvent &event);
+	void OnGraphPreset4hours(wxCommandEvent &event);
+	void OnGraphPreset1day(wxCommandEvent &event);
+	void OnGraphPreset1week(wxCommandEvent &event);
+	void OnGraphPreset1month(wxCommandEvent &event);
+	void OnGraphPreset1year(wxCommandEvent &event);
+	void OnGraphLegend(wxCommandEvent &event);
+	void OnUpdateUIGraphLegend(wxUpdateUIEvent &event);
+	void OnGraphRuler(wxCommandEvent &event);
+	void OnUpdateUIGraphRuler(wxUpdateUIEvent &event);
+	void OnGraphGrid(wxCommandEvent &event);
+	void OnUpdateUIGraphGrid(wxUpdateUIEvent &event);
+	
 	DECLARE_EVENT_TABLE()
 };
 

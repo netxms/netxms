@@ -153,6 +153,11 @@ public:
 	bool IsLegendVisible() { return m_flags & NXGF_SHOW_LEGEND ? true : false; }
 	bool IsTitleVisible() { return m_flags & NXGF_SHOW_TITLE ? true : false; }
 	bool IsAutoscale() { return m_flags & NXGF_AUTOSCALE ? true : false; }
+	
+	void SetRulerVisible(bool visible) { if (visible) m_flags |= NXGF_SHOW_RULER; else m_flags &= ~NXGF_SHOW_RULER; }
+	void SetGridVisible(bool visible) { if (visible) m_flags |= NXGF_SHOW_GRID; else m_flags &= ~NXGF_SHOW_GRID; }
+	void SetLegendVisible(bool visible) { if (visible) m_flags |= NXGF_SHOW_LEGEND; else m_flags &= ~NXGF_SHOW_LEGEND; }
+	void SetTitleVisible(bool visible) { if (visible) m_flags |= NXGF_SHOW_TITLE; else m_flags &= ~NXGF_SHOW_TITLE; }
 
 	wxBitmap *DrawGraphOnBitmap(wxSize &graphSize);
 

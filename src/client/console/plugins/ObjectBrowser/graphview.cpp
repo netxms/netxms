@@ -41,6 +41,21 @@ BEGIN_EVENT_TABLE(nxGraphView, nxView)
 	EVT_NX_DCI_DATA_RECEIVED(nxGraphView::OnDataReceived)
 	EVT_TIMER(1, nxGraphView::OnProcessingTimer)
 	EVT_CONTEXT_MENU(nxGraphView::OnContextMenu)
+	EVT_MENU(XRCID("menuGraphPreset10min"), nxGraphView::OnGraphPreset10min)
+	EVT_MENU(XRCID("menuGraphPreset30min"), nxGraphView::OnGraphPreset30min)
+	EVT_MENU(XRCID("menuGraphPreset1hour"), nxGraphView::OnGraphPreset1hour)
+	EVT_MENU(XRCID("menuGraphPreset2hours"), nxGraphView::OnGraphPreset2hours)
+	EVT_MENU(XRCID("menuGraphPreset4hours"), nxGraphView::OnGraphPreset4hours)
+	EVT_MENU(XRCID("menuGraphPreset1day"), nxGraphView::OnGraphPreset1day)
+	EVT_MENU(XRCID("menuGraphPreset1week"), nxGraphView::OnGraphPreset1week)
+	EVT_MENU(XRCID("menuGraphPreset1month"), nxGraphView::OnGraphPreset1month)
+	EVT_MENU(XRCID("menuGraphPreset1year"), nxGraphView::OnGraphPreset1year)
+	EVT_MENU(XRCID("menuGraphLegend"), nxGraphView::OnGraphLegend)
+	EVT_UPDATE_UI(XRCID("menuGraphLegend"), nxGraphView::OnUpdateUIGraphLegend)
+	EVT_MENU(XRCID("menuGraphRuler"), nxGraphView::OnGraphRuler)
+	EVT_UPDATE_UI(XRCID("menuGraphRuler"), nxGraphView::OnUpdateUIGraphRuler)
+	EVT_MENU(XRCID("menuGraphGrid"), nxGraphView::OnGraphGrid)
+	EVT_UPDATE_UI(XRCID("menuGraphGrid"), nxGraphView::OnUpdateUIGraphGrid)
 END_EVENT_TABLE()
 
 
@@ -260,3 +275,101 @@ void nxGraphView::Preset(int timeUnit, int numUnits)
 	wxCommandEvent event(nxEVT_REFRESH_VIEW);
 	AddPendingEvent(event);
 }
+
+
+//
+// Handlers for preset selection from menu
+//
+
+void nxGraphView::OnGraphPreset10min(wxCommandEvent &event)
+{
+	Preset(TIME_UNIT_MINUTE, 10);
+}
+
+void nxGraphView::OnGraphPreset30min(wxCommandEvent &event)
+{
+	Preset(TIME_UNIT_MINUTE, 30);
+}
+
+void nxGraphView::OnGraphPreset1hour(wxCommandEvent &event)
+{
+	Preset(TIME_UNIT_HOUR, 1);
+}
+
+void nxGraphView::OnGraphPreset2hours(wxCommandEvent &event)
+{
+	Preset(TIME_UNIT_HOUR, 2);
+}
+
+void nxGraphView::OnGraphPreset4hours(wxCommandEvent &event)
+{
+	Preset(TIME_UNIT_HOUR, 4);
+}
+
+void nxGraphView::OnGraphPreset1day(wxCommandEvent &event)
+{
+	Preset(TIME_UNIT_DAY, 1);
+}
+
+void nxGraphView::OnGraphPreset1week(wxCommandEvent &event)
+{
+	Preset(TIME_UNIT_DAY, 7);
+}
+
+void nxGraphView::OnGraphPreset1month(wxCommandEvent &event)
+{
+	Preset(TIME_UNIT_DAY, 31);
+}
+
+void nxGraphView::OnGraphPreset1year(wxCommandEvent &event)
+{
+	Preset(TIME_UNIT_DAY, 365);
+}
+
+
+//
+// Legend menu handlers
+//
+
+void nxGraphView::OnGraphLegend(wxCommandEvent &event)
+{
+	m_graph->SetLegendVisible(!m_graph->IsLegendVisible());
+	m_graph->Redraw();
+}
+
+void nxGraphView::OnUpdateUIGraphLegend(wxUpdateUIEvent &event)
+{
+	event.Check(m_graph->IsLegendVisible());
+}
+
+
+//
+// Ruler menu handlers
+//
+
+void nxGraphView::OnGraphRuler(wxCommandEvent &event)
+{
+	m_graph->SetRulerVisible(!m_graph->IsRulerVisible());
+}
+
+void nxGraphView::OnUpdateUIGraphRuler(wxUpdateUIEvent &event)
+{
+	event.Check(m_graph->IsRulerVisible());
+}
+
+
+//
+// Grid menu handlers
+//
+
+void nxGraphView::OnGraphGrid(wxCommandEvent &event)
+{
+	m_graph->SetGridVisible(!m_graph->IsGridVisible());
+	m_graph->Redraw();
+}
+
+void nxGraphView::OnUpdateUIGraphGrid(wxUpdateUIEvent &event)
+{
+	event.Check(m_graph->IsGridVisible());
+}
+
