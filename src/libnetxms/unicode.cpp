@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.31 2008-01-29 18:11:40 victor Exp $ */
+/* $Id: unicode.cpp,v 1.32 2008-04-12 10:44:45 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -431,7 +431,7 @@ WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer)
 #endif
 
 
-#if defined(UNICODE) && defined(UNICODE_UCS4)
+#if defined(UNICODE_UCS4)
 
 //
 // Convert UCS-2 to UCS-4
@@ -536,7 +536,39 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, size_t srcLen, UCS2CH
 	return count;
 }
 
-#endif	/* UNICODE && UNICODE_UCS4 */
+
+//
+// Convert UCS-4 string to UCS-2 string allocating UCS-2 string dynamically
+//
+
+UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const WCHAR *pwszString)
+{
+   UCS2CHAR *pszOut;
+   int nLen;
+
+   nLen = (int)wcslen(pwszString) + 1;
+   pszOut = (UCS2CHAR *)malloc(nLen * sizeof(UCS2CHAR));
+   ucs4_to_ucs2(pwszString, -1, pszOut, nLen);
+   return pszOut;
+}
+
+
+//
+// Convert UCS-2 string to UCS-4 string allocating UCS-4 string dynamically
+//
+
+WCHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *pszString)
+{
+   WCHAR *pwszOut;
+   int nLen;
+
+   nLen = (int)ucs2_strlen(pszString) + 1;
+   pwszOut = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+   ucs2_to_ucs4(pszString, -1, pwszOut, nLen);
+   return pwszOut;
+}
+
+#endif	/* UNICODE_UCS4 */
 
 
 #if !defined(_WIN32) && !defined(UNICODE)

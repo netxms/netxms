@@ -1,6 +1,6 @@
 /* 
 ** ODBC Database Driver
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: odbcdrv.h
+** File: odbcdrv.h
 **
 **/
 
@@ -37,8 +37,32 @@
 #include <nms_util.h>
 
 #ifndef _WIN32
+
+#if HAVE_WCHAR_H
+
+#define NETXMS_WCHAR		wchar_t
+
+#ifdef UNICODE
+#define NETXMS_TCHAR		wchar_t
+#else
+#define NETXMS_TCHAR		char
+#endif
+
+#else		/* HAVE_WCHAR_T */
+
+#define NETXMS_WCHAR		WCHAR
+#define NETXMS_TCHAR		TCHAR
+
+#endif	/* HAVE_WCHAR_T */
+
 #undef TCHAR
 #undef WCHAR
+
+#else		/* _WIN32 */
+
+#define NETXMS_WCHAR		WCHAR
+#define NETXMS_TCHAR		TCHAR
+
 #endif
 
 #include <sql.h>
@@ -67,7 +91,7 @@ typedef struct
 {
    long iNumRows;
    long iNumCols;
-   WCHAR **pValues;
+   NETXMS_WCHAR **pValues;
 } ODBCDRV_QUERY_RESULT;
 
 

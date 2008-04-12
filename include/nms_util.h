@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.121 2008-02-25 21:30:25 victor Exp $ */
+/* $Id: nms_util.h,v 1.122 2008-04-12 10:44:45 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -528,12 +528,14 @@ extern "C"
 	WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer);
 #endif
 
-#ifdef UNICODE
-
 #ifdef UNICODE_UCS4
 	size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, size_t srcLen, WCHAR *dst, size_t dstLen);
 	size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, size_t srcLen, UCS2CHAR *dst, size_t dstLen);
+	UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const WCHAR *pwszString);
+	WCHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *pszString);
 #endif
+
+#ifdef UNICODE
 
 #if !HAVE_WCSTOLL
 	INT64 LIBNETXMS_EXPORTABLE wcstoll(const WCHAR *nptr, WCHAR **endptr, int base);
@@ -598,6 +600,10 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.121  2008/02/25 21:30:25  victor
+- Situation update in EPP fully implemented
+- Version set to 0.2.20-rc2
+
 Revision 1.120  2008/02/22 08:34:41  victor
 Various changes related mostly to situations
 

@@ -4,6 +4,7 @@
 
 - Added parameter ListenAddress to all services (server, web server, agent)
 - New possible value for UseInterfaceAliases - concatenate name with alias
+- Fixed issues: #211
 
 
 *

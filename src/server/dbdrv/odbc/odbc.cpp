@@ -1,6 +1,6 @@
 /* 
 ** ODBC Database Driver
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: odbc.cpp
+** File: odbc.cpp
 **
 **/
 
@@ -167,7 +167,7 @@ extern "C" void EXPORT DrvDisconnect(ODBCDRV_CONN *pConn)
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, WCHAR *pwszQuery)
+extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery)
 {
    long iResult;
    DWORD dwResult;
@@ -179,7 +179,13 @@ extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, WCHAR *pwszQuery)
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
    {
       // Execute statement
+#if defined(_WIN32) || defined(UNICODE_UCS2)
       iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+#else
+		SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
+      iResult = SQLExecDirectW(pConn->sqlStatement, temp, SQL_NTS);
+      free(temp);
+#endif      
 	   if ((iResult == SQL_SUCCESS) || 
           (iResult == SQL_SUCCESS_WITH_INFO) || 
           (iResult == SQL_NO_DATA))
@@ -206,7 +212,7 @@ extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, WCHAR *pwszQuery)
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError)
+extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError)
 {
    long i, iResult, iCurrValue;
    ODBCDRV_QUERY_RESULT *pResult = NULL;
@@ -223,7 +229,13 @@ extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, WCHAR *pwszQuery, DWO
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
    {
       // Execute statement
+#if defined(_WIN32) || defined(UNICODE_UCS2)
       iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+#else
+		SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
+      iResult = SQLExecDirectW(pConn->sqlStatement, temp, SQL_NTS);
+      free(temp);
+#endif
 	   if ((iResult == SQL_SUCCESS) || 
           (iResult == SQL_SUCCESS_WITH_INFO))
       {
@@ -240,14 +252,18 @@ extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, WCHAR *pwszQuery, DWO
                (iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
          {
             pResult->iNumRows++;
-            pResult->pValues = (WCHAR **)realloc(pResult->pValues, 
-                        sizeof(WCHAR *) * (pResult->iNumRows * pResult->iNumCols));
+            pResult->pValues = (NETXMS_WCHAR **)realloc(pResult->pValues, 
+                        sizeof(NETXMS_WCHAR *) * (pResult->iNumRows * pResult->iNumCols));
             for(i = 1; i <= pResult->iNumCols; i++)
             {
                pDataBuffer[0] = 0;
-               SQLGetData(pConn->sqlStatement, (short)i, SQL_C_WCHAR, pDataBuffer, 
+               iResult = SQLGetData(pConn->sqlStatement, (short)i, SQL_C_WCHAR, pDataBuffer, 
                           DATA_BUFFER_SIZE, &iDataSize);
+#if defined(_WIN32) || defined(UNICODE_UCS2)
                pResult->pValues[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
+#else
+               pResult->pValues[iCurrValue++] = UCS4StringFromUCS2String((const UCS2CHAR *)pDataBuffer);
+#endif
             }
          }
          *pdwError = DBERR_SUCCESS;
@@ -291,10 +307,10 @@ extern "C" LONG EXPORT DrvGetFieldLength(ODBCDRV_QUERY_RESULT *pResult, int iRow
 // Get field value from result
 //
 
-extern "C" WCHAR EXPORT *DrvGetField(ODBCDRV_QUERY_RESULT *pResult, int iRow, int iColumn,
-                                     WCHAR *pBuffer, int nBufSize)
+extern "C" NETXMS_WCHAR EXPORT *DrvGetField(ODBCDRV_QUERY_RESULT *pResult, int iRow, int iColumn,
+                                            NETXMS_WCHAR *pBuffer, int nBufSize)
 {
-   WCHAR *pValue = NULL;
+   NETXMS_WCHAR *pValue = NULL;
 
    if (pResult != NULL)
    {
@@ -343,7 +359,7 @@ extern "C" void EXPORT DrvFreeResult(ODBCDRV_QUERY_RESULT *pResult)
 // Perform asynchronous SELECT query
 //
 
-extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, WCHAR *pwszQuery,
+extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery,
                                                  DWORD *pdwError)
 {
    ODBCDRV_ASYNC_QUERY_RESULT *pResult = NULL;
@@ -357,7 +373,13 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, WCHAR *pws
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
    {
       // Execute statement
+#if defined(_WIN32) || defined(UNICODE_UCS2)
       iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+#else
+		SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
+      iResult = SQLExecDirectW(pConn->sqlStatement, temp, SQL_NTS);
+      free(temp);
+#endif
 	   if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
       {
          // Allocate result buffer and determine column info
@@ -411,8 +433,8 @@ extern "C" BOOL EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
 // Get field from current row in async query result
 //
 
-extern "C" WCHAR EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult,
-                                          int iColumn, WCHAR *pBuffer, int iBufSize)
+extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult,
+                                                 int iColumn, NETXMS_WCHAR *pBuffer, int iBufSize)
 {
    SQLLEN iDataSize;
    long iResult;
@@ -427,8 +449,17 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult,
 
    if ((iColumn >= 0) && (iColumn < pResult->iNumCols))
    {
+#if defined(_WIN32) || defined(UNICODE_UCS2)
       iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR,
                            pBuffer, iBufSize * sizeof(WCHAR), &iDataSize);
+#else
+		SQLWCHAR *tempBuff = (SQLWCHAR *)malloc(iBufSize * sizeof(SQLWCHAR));
+      iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR,
+                           tempBuff, iBufSize * sizeof(SQLWCHAR), &iDataSize);
+      ucs2_to_ucs4(tempBuff, -1, pBuffer, iBufSize);
+      pBuffer[iBufSize - 1] = 0;
+      free(tempBuff);
+#endif
       if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
          pBuffer[0] = 0;
    }
