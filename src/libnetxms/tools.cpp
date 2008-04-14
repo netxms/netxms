@@ -1,7 +1,7 @@
-/* $Id: tools.cpp,v 1.73 2008-03-07 10:03:53 victor Exp $ */
+/* $Id: tools.cpp,v 1.74 2008-04-14 15:33:33 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1026,6 +1026,91 @@ BOOL LIBNETXMS_EXPORTABLE RegexpMatch(TCHAR *pszStr, TCHAR *pszExpr, BOOL bMatch
 
    return bResult;
 #endif
+}
+
+
+//
+// Extract option value from string of form option=value;option=value;...
+//
+
+BOOL LIBNETXMS_EXPORTABLE ExtractNamedOptionValue(const TCHAR *optString, const TCHAR *option, TCHAR *buffer, int bufSize)
+{
+	int state, pos;
+	const TCHAR *curr, *start;
+	TCHAR temp[256];
+
+	for(curr = start = optString, pos = 0, state = 0; *curr != 0; curr++)
+	{
+		switch(*curr)
+		{
+			case _T(';'):		// Next option
+				if (state == 1)
+				{
+					buffer[pos] = 0;
+					StrStrip(buffer);
+					return TRUE;
+				}
+				state = 0;
+				start = curr + 1;
+				break;
+			case _T('='):
+				if (state == 0)
+				{
+					_tcsncpy(temp, start, curr - start);
+					temp[curr - start] = 0;
+					StrStrip(temp);
+					if (!_tcsicmp(option, temp))
+						state = 1;
+					else
+						state = 2;
+				}
+				else if ((state == 1) && (pos < bufSize - 1))
+				{
+					buffer[pos++] = _T('=');
+				}
+				break;
+			default:
+				if ((state == 1) && (pos < bufSize - 1))
+					buffer[pos++] = *curr;
+				break;
+		}
+	}
+	
+	if (state == 1)
+	{
+		buffer[pos] = 0;
+		StrStrip(buffer);
+		return TRUE;
+	}
+	
+	return FALSE;
+}
+
+BOOL LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBool(const TCHAR *optString, const TCHAR *option, BOOL defVal)
+{
+	TCHAR buffer[256];
+	
+	if (ExtractNamedOptionValue(optString, option, buffer, 256))
+	{
+		if (!_tcsicmp(buffer, _T("yes")) || !_tcsicmp(buffer, _T("true")))
+			return TRUE;
+		return FALSE;
+	}
+	return defVal;
+}
+
+long LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsInt(const TCHAR *optString, const TCHAR *option, long defVal)
+{
+	TCHAR buffer[256], *eptr;
+	long val;
+
+	if (ExtractNamedOptionValue(optString, option, buffer, 256))
+	{
+		val = _tcstol(buffer, &eptr, 0);
+		if (*eptr == 0)
+			return val;
+	}
+	return defVal;
 }
 
 

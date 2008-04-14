@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.122 2008-04-12 10:44:45 victor Exp $ */
+/* $Id: nms_util.h,v 1.123 2008-04-14 15:33:33 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -477,7 +477,11 @@ extern "C"
 
    void LIBNETXMS_EXPORTABLE InitSubAgentsLogger(void (* pFunc)(int, TCHAR *));
    void LIBNETXMS_EXPORTABLE InitSubAgentsTrapSender(void (* pFunc1)(DWORD, int, TCHAR **),
+
                                                      void (* pFunc2)(DWORD, const char *, va_list));
+	BOOL LIBNETXMS_EXPORTABLE ExtractNamedOptionValue(const TCHAR *optString, const TCHAR *option, TCHAR *buffer, int bufSize);
+	BOOL LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBool(const TCHAR *optString, const TCHAR *option, BOOL defVal);
+	long LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsInt(const TCHAR *optString, const TCHAR *option, long defVal);
 
 #ifdef _WIN32
    TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufSize);
@@ -600,6 +604,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.122  2008/04/12 10:44:45  victor
+ODBC driver now compiles on systems with 4-byte wchar_t
+
 Revision 1.121  2008/02/25 21:30:25  victor
 - Situation update in EPP fully implemented
 - Version set to 0.2.20-rc2

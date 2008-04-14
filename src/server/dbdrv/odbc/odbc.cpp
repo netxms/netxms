@@ -39,6 +39,13 @@ int EXPORT drvAPIVersion = DBDRV_API_VERSION;
 
 
 //
+// Static data
+//
+
+static BOOL m_useUnicode = TRUE;
+
+
+//
 // Convert ODBC state to NetXMS database error code
 //
 
@@ -76,8 +83,9 @@ static DWORD StateToErrorCode(SQLSMALLINT nHandleType, SQLHANDLE hHandle)
 // Initialize driver
 //
 
-extern "C" BOOL EXPORT DrvInit(char *szCmdLine)
+extern "C" BOOL EXPORT DrvInit(char *cmdLine)
 {
+	m_useUnicode = ExtractNamedOptionValueAsBool(cmdLine, _T("unicode"), TRUE);
    return TRUE;
 }
 
@@ -179,13 +187,22 @@ extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery)
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
    {
       // Execute statement
+      if (m_useUnicode)
+      {
 #if defined(_WIN32) || defined(UNICODE_UCS2)
-      iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+		   iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
 #else
-		SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
-      iResult = SQLExecDirectW(pConn->sqlStatement, temp, SQL_NTS);
-      free(temp);
+			SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
+		   iResult = SQLExecDirectW(pConn->sqlStatement, temp, SQL_NTS);
+		   free(temp);
 #endif      
+		}
+		else
+		{
+			char *temp = MBStringFromWideString(pwszQuery);
+		   iResult = SQLExecDirect(pConn->sqlStatement, (SQLCHAR *)temp, SQL_NTS);
+		   free(temp);
+		}
 	   if ((iResult == SQL_SUCCESS) || 
           (iResult == SQL_SUCCESS_WITH_INFO) || 
           (iResult == SQL_NO_DATA))
@@ -229,13 +246,22 @@ extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQue
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
    {
       // Execute statement
+      if (m_useUnicode)
+      {
 #if defined(_WIN32) || defined(UNICODE_UCS2)
-      iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+	      iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
 #else
-		SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
-      iResult = SQLExecDirectW(pConn->sqlStatement, temp, SQL_NTS);
-      free(temp);
+			SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
+		   iResult = SQLExecDirectW(pConn->sqlStatement, temp, SQL_NTS);
+		   free(temp);
 #endif
+		}
+		else
+		{
+			char *temp = MBStringFromWideString(pwszQuery);
+		   iResult = SQLExecDirect(pConn->sqlStatement, (SQLCHAR *)temp, SQL_NTS);
+		   free(temp);
+		}
 	   if ((iResult == SQL_SUCCESS) || 
           (iResult == SQL_SUCCESS_WITH_INFO))
       {
@@ -257,13 +283,21 @@ extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQue
             for(i = 1; i <= pResult->iNumCols; i++)
             {
                pDataBuffer[0] = 0;
-               iResult = SQLGetData(pConn->sqlStatement, (short)i, SQL_C_WCHAR, pDataBuffer, 
-                          DATA_BUFFER_SIZE, &iDataSize);
+               iResult = SQLGetData(pConn->sqlStatement, (short)i,
+                                    m_useUnicode ? SQL_C_WCHAR : SQL_C_CHAR,
+                                    pDataBuffer, DATA_BUFFER_SIZE, &iDataSize);
+               if (m_useUnicode)
+               {
 #if defined(_WIN32) || defined(UNICODE_UCS2)
-               pResult->pValues[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
+               	pResult->pValues[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
 #else
-               pResult->pValues[iCurrValue++] = UCS4StringFromUCS2String((const UCS2CHAR *)pDataBuffer);
+               	pResult->pValues[iCurrValue++] = UCS4StringFromUCS2String((const UCS2CHAR *)pDataBuffer);
 #endif
+					}
+					else
+					{
+               	pResult->pValues[iCurrValue++] = WideStringFromMBString((const char *)pDataBuffer);
+					}
             }
          }
          *pdwError = DBERR_SUCCESS;
@@ -373,13 +407,22 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_WCH
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
    {
       // Execute statement
+      if (m_useUnicode)
+      {
 #if defined(_WIN32) || defined(UNICODE_UCS2)
-      iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+	      iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
 #else
-		SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
-      iResult = SQLExecDirectW(pConn->sqlStatement, temp, SQL_NTS);
-      free(temp);
+			SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
+		   iResult = SQLExecDirectW(pConn->sqlStatement, temp, SQL_NTS);
+		   free(temp);
 #endif
+		}
+		else
+		{
+			char *temp = MBStringFromWideString(pwszQuery);
+		   iResult = SQLExecDirect(pConn->sqlStatement, (SQLCHAR *)temp, SQL_NTS);
+		   free(temp);
+		}
 	   if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
       {
          // Allocate result buffer and determine column info
@@ -449,17 +492,29 @@ extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pRe
 
    if ((iColumn >= 0) && (iColumn < pResult->iNumCols))
    {
+   	if (m_useUnicode)
+   	{
 #if defined(_WIN32) || defined(UNICODE_UCS2)
-      iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR,
-                           pBuffer, iBufSize * sizeof(WCHAR), &iDataSize);
+		   iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR,
+		                        pBuffer, iBufSize * sizeof(WCHAR), &iDataSize);
 #else
-		SQLWCHAR *tempBuff = (SQLWCHAR *)malloc(iBufSize * sizeof(SQLWCHAR));
-      iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR,
-                           tempBuff, iBufSize * sizeof(SQLWCHAR), &iDataSize);
-      ucs2_to_ucs4(tempBuff, -1, pBuffer, iBufSize);
-      pBuffer[iBufSize - 1] = 0;
-      free(tempBuff);
+			SQLWCHAR *tempBuff = (SQLWCHAR *)malloc(iBufSize * sizeof(SQLWCHAR));
+		   iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR,
+		                        tempBuff, iBufSize * sizeof(SQLWCHAR), &iDataSize);
+		   ucs2_to_ucs4(tempBuff, -1, pBuffer, iBufSize);
+		   pBuffer[iBufSize - 1] = 0;
+		   free(tempBuff);
 #endif
+		}
+		else
+		{
+			SQLCHAR *tempBuff = (SQLCHAR *)malloc(iBufSize * sizeof(SQLCHAR));
+		   iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_CHAR,
+		                        tempBuff, iBufSize * sizeof(SQLCHAR), &iDataSize);
+		   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)tempBuff, -1, pBuffer, iBufSize);
+		   pBuffer[iBufSize - 1] = 0;
+		   free(tempBuff);
+		}
       if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
          pBuffer[0] = 0;
    }
