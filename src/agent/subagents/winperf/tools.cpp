@@ -122,9 +122,10 @@ static BOOL TranslateElement(TCHAR *pszText)
 // Translate counter name from English to localized
 //
 
-BOOL TranslateCounterName(TCHAR *pszName, TCHAR *pszOut)
+BOOL TranslateCounterName(const TCHAR *pszName, TCHAR *pszOut)
 {
-	TCHAR *pCurr = pszName, *pSlash, *pBrace, *pNext, szTemp[MAX_ELEMENT_LENGTH];
+	const TCHAR *pCurr = pszName;
+	TCHAR *pSlash, *pBrace, *pNext, szTemp[MAX_ELEMENT_LENGTH];
 	BOOL bs1, bs2;
 	int nLen;
 

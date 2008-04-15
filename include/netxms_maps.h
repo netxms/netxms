@@ -323,7 +323,7 @@ protected:
 
 public:
    nxMap();
-   nxMap(DWORD dwMapId, DWORD dwObjectId, TCHAR *pszName, TCHAR *pszDescription);
+   nxMap(DWORD dwMapId, DWORD dwObjectId, const TCHAR *pszName, const TCHAR *pszDescription);
    nxMap(CSCPMessage *pMsg);
    virtual ~nxMap();
 

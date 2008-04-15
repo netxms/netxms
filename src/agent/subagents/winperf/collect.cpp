@@ -39,7 +39,7 @@ WINPERF_COUNTER_SET m_cntSet[3] =
 // Check that counter's name is valid and determine counter's type
 //
 
-static int CheckCounter(TCHAR *pszName, TCHAR **ppszNewName)
+int CheckCounter(const TCHAR *pszName, TCHAR **ppszNewName)
 {
    HQUERY hQuery;
    HCOUNTER hCounter;

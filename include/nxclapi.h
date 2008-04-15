@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.290 2008-03-07 10:03:52 victor Exp $ */
+/* $Id: nxclapi.h,v 1.291 2008-04-15 15:47:12 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -481,8 +481,9 @@ enum
 #define SYSTEM_ACCESS_MANAGE_AGENT_CFG    0x00008000
 #define SYSTEM_ACCESS_MANAGE_SITUATIONS   0x00010000
 #define SYSTEM_ACCESS_SEND_SMS            0x00020000
+#define SYSTEM_ACCESS_MANAGE_MAPS         0x00040000
 
-#define SYSTEM_ACCESS_FULL                0x0003FFFF
+#define SYSTEM_ACCESS_FULL                0x0007FFFF
 
 
 //
@@ -2058,13 +2059,15 @@ DWORD LIBNXCL_EXPORTABLE NXCGetMapList(NXC_SESSION hSession, DWORD *pdwNumMaps,
                                        NXC_MAP_INFO **ppMapList);
 DWORD LIBNXCL_EXPORTABLE NXCSaveMap(NXC_SESSION hSession, void *pMap);
 DWORD LIBNXCL_EXPORTABLE NXCLoadMap(NXC_SESSION hSession, DWORD dwMapId, void **ppMap);
-DWORD LIBNXCL_EXPORTABLE NXCDeleteMap(NXC_SESSION hSession, DWORD dwMapId);
 DWORD LIBNXCL_EXPORTABLE NXCResolveMapName(NXC_SESSION hSession, TCHAR *pszMapName,
                                            DWORD *pdwMapId);
 DWORD LIBNXCL_EXPORTABLE NXCUploadSubmapBkImage(NXC_SESSION hSession, DWORD dwMapId,
                                                 DWORD dwSubmapId, TCHAR *pszFile);
 DWORD LIBNXCL_EXPORTABLE NXCDownloadSubmapBkImage(NXC_SESSION hSession, DWORD dwMapId,
                                                   DWORD dwSubmapId, TCHAR *pszFile);
+DWORD LIBNXCL_EXPORTABLE NXCCreateMap(NXC_SESSION hSession, DWORD dwRootObj,
+												  TCHAR *pszName, DWORD *pdwMapId);
+DWORD LIBNXCL_EXPORTABLE NXCDeleteMap(NXC_SESSION hSession, DWORD dwMapId);
 
 DWORD LIBNXCL_EXPORTABLE NXCGetServerModuleList(NXC_SESSION hSession,
                                                 NXC_SERVER_MODULE_LIST **ppModuleList);

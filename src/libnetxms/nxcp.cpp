@@ -1,4 +1,4 @@
-/* $Id: nxcp.cpp,v 1.26 2008-02-27 20:48:28 victor Exp $ */
+/* $Id: nxcp.cpp,v 1.27 2008-04-15 15:47:12 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
@@ -256,10 +256,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_DEL_SITUATION_INSTANCE"),
 		_T("CMD_UPDATE_SITUATION"),
 		_T("CMD_SITUATION_DATA"),
-		_T("CMD_SITUATION_CHANGE")
+		_T("CMD_SITUATION_CHANGE"),
+		_T("CMD_CREATE_MAP")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_SITUATION_CHANGE))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_CREATE_MAP))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_UNKNOWN(%d)"), wCode);

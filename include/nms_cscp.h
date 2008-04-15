@@ -459,6 +459,7 @@ typedef struct
 #define CMD_UPDATE_SITUATION        0x00D7
 #define CMD_SITUATION_DATA          0x00D8
 #define CMD_SITUATION_CHANGE        0x00D9
+#define CMD_CREATE_MAP              0x00DA
 
 
 //

@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.301 2008-04-02 16:48:20 victor Exp $ */
+/* $Id: session.cpp,v 1.302 2008-04-15 15:47:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -1059,6 +1059,9 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_RESOLVE_MAP_NAME:
             ResolveMapName(pMsg);
+            break;
+         case CMD_CREATE_MAP:
+            CreateMap(pMsg);
             break;
          case CMD_SAVE_MAP:
             SaveMap(pMsg);
@@ -7193,6 +7196,44 @@ void ClientSession::ProcessSubmapData(CSCPMessage *pRequest)
 
    if (bSend)
       SendMessage(&msg);
+}
+
+
+//
+// Create map
+//
+
+void ClientSession::CreateMap(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR szName[MAX_DB_STRING];
+   DWORD dwMapId, dwResult, dwRootObj;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_MAPS)
+	{
+		pRequest->GetVariableStr(VID_NAME, szName, MAX_DB_STRING);
+		if (IsValidObjectName(szName, TRUE))
+		{
+			dwRootObj = pRequest->GetVariableLong(VID_OBJECT_ID);
+			dwResult = CreateNewMap(dwRootObj, szName, &dwMapId);
+			msg.SetVariable(VID_RCC, dwResult);
+			if (dwResult == RCC_SUCCESS)
+				msg.SetVariable(VID_MAP_ID, dwMapId);
+		}
+		else
+		{
+	      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
+		}
+	}
+	else
+	{
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+   SendMessage(&msg);
 }
 
 

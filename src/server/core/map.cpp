@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -484,3 +484,32 @@ nxMapSrv *FindMapByID(DWORD dwMapId)
    return NULL;
 }
 
+
+//
+// Create new map
+//
+
+DWORD CreateNewMap(DWORD rootObj, const TCHAR *name, DWORD *newId)
+{
+	DWORD id, rcc;
+	nxMapSrv *map;
+
+	id = CreateUniqueId(IDG_MAP);
+
+	map = new nxMapSrv(id, rootObj, name, _T(""));
+	rcc = map->SaveToDB();
+	if (rcc == RCC_SUCCESS)
+	{
+		LockMaps();
+		m_dwNumMaps++;
+      m_ppMapList = (nxMapSrv **)realloc(m_ppMapList, sizeof(nxMapSrv *) * m_dwNumMaps);
+		m_ppMapList[m_dwNumMaps - 1] = map;
+		UnlockMaps();
+		*newId = id;
+	}
+	else
+	{
+		delete map;
+	}
+	return rcc;
+}

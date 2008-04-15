@@ -56,6 +56,7 @@ protected:
 
 public:
    nxMapSrv(DB_RESULT hResult, int nRow);
+   nxMapSrv(DWORD dwMapId, DWORD dwObjectId, const TCHAR *pszName, const TCHAR *pszDescription) : nxMap(dwMapId, dwObjectId, pszName, pszDescription) { }
 
    DWORD SaveToDB(void);
    BOOL CheckUserRights(DWORD dwUserId, DWORD dwDesiredAccess);
@@ -70,6 +71,7 @@ public:
 // Functions
 //
 
+DWORD CreateNewMap(DWORD rootObj, const TCHAR *name, DWORD *newId);
 void LoadMaps(void);
 DWORD GetMapIdFromName(TCHAR *pszName, DWORD *pdwMapId);
 BOOL LockMaps(void);

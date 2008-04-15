@@ -48,7 +48,7 @@ nxMap::nxMap()
 // Constructor for new map object
 //
 
-nxMap::nxMap(DWORD dwMapId, DWORD dwObjectId, TCHAR *pszName, TCHAR *pszDescription)
+nxMap::nxMap(DWORD dwMapId, DWORD dwObjectId, const TCHAR *pszName, const TCHAR *pszDescription)
 {
    CommonInit();
    m_dwMapId = dwMapId;

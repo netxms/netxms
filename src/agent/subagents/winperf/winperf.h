@@ -99,7 +99,8 @@ struct COUNTER_INDEX
 //
 
 void CreateCounterIndex(TCHAR *pData);
-BOOL TranslateCounterName(TCHAR *pszName, TCHAR *pszOut);
+BOOL TranslateCounterName(const TCHAR *pszName, TCHAR *pszOut);
+int CheckCounter(const TCHAR *pszName, TCHAR **ppszNewName);
 void StartCollectorThreads(void);
 TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufferSize);
 void ReportPdhError(TCHAR *pszFunction, TCHAR *pszPdhCall, PDH_STATUS dwError);

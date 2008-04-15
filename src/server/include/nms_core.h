@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.150 2008-04-08 16:40:09 victor Exp $ */
+/* $Id: nms_core.h,v 1.151 2008-04-15 15:47:13 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -155,6 +155,7 @@ typedef void * HSNMPSESSION;
 #define IDG_GRAPH					18
 #define IDG_CERTIFICATE			19
 #define IDG_SITUATION         20
+#define IDG_MAP               21
 
 
 //
@@ -493,6 +494,7 @@ private:
    void ResolveMapName(CSCPMessage *pRequest);
    void SaveMap(CSCPMessage *pRequest);
    void ProcessSubmapData(CSCPMessage *pRequest);
+   void CreateMap(CSCPMessage *pRequest);
    void LoadMap(CSCPMessage *pRequest);
    void SendSubmapBkImage(CSCPMessage *pRequest);
    void RecvSubmapBkImage(CSCPMessage *pRequest);

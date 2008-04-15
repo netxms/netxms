@@ -182,11 +182,18 @@ static LONG H_PdhCounterValue(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
    BOOL bUseTwoSamples = FALSE;
    static TCHAR szFName[] = _T("H_PdhCounterValue");
 
-   if ((!NxGetParameterArg(pszParam, 1, szCounter, MAX_PATH)) ||
-       (!NxGetParameterArg(pszParam, 2, szBuffer, 16)))
-      return SYSINFO_RC_UNSUPPORTED;
+	if (pArg == NULL)		// Normal call
+	{
+		if ((!NxGetParameterArg(pszParam, 1, szCounter, MAX_PATH)) ||
+			 (!NxGetParameterArg(pszParam, 2, szBuffer, 16)))
+			return SYSINFO_RC_UNSUPPORTED;
 
-   bUseTwoSamples = _tcstol(szBuffer, NULL, 0) ? TRUE : FALSE;
+		bUseTwoSamples = _tcstol(szBuffer, NULL, 0) ? TRUE : FALSE;
+	}
+	else	// Call from H_CounterAlias
+	{
+		nx_strncpy(szCounter, pArg, MAX_PATH);
+	}
 
    if ((rc = PdhOpenQuery(NULL, 0, &hQuery)) != ERROR_SUCCESS)
    {
@@ -334,7 +341,7 @@ static LONG H_PdhObjectItems(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *p
 
 static LONG H_CounterAlias(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 {
-   return H_PdhCounterValue(pArg, NULL, pValue);
+   return H_PdhCounterValue(NULL, pArg, pValue);
 }
 
 
@@ -374,8 +381,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.CPU.Usage(*)"), H_CPUUsage, "1", DCI_DT_INT, "Average CPU {instance} utilization for last minute" },
    { _T("System.CPU.Usage5(*)"), H_CPUUsage, "2", DCI_DT_INT, "Average CPU {instance} utilization for last 5 minutes" },
    { _T("System.CPU.Usage15(*)"), H_CPUUsage, "3", DCI_DT_INT, "Average CPU {instance} utilization for last 15 minutes" },
-   { _T("System.ThreadCount"), H_CounterAlias, _T("(\\System\\Threads)"), DCI_DT_INT, _T("Total number of threads") },
-   { _T("System.Uptime"), H_CounterAlias, _T("(\\System\\System Up Time)"), DCI_DT_UINT, _T("System uptime") }
+   { _T("System.ThreadCount"), H_CounterAlias, _T("\\System\\Threads"), DCI_DT_INT, _T("Total number of threads") },
+   { _T("System.Uptime"), H_CounterAlias, _T("\\System\\System Up Time"), DCI_DT_UINT, _T("System uptime") }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
@@ -482,8 +489,8 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
 extern "C" BOOL __declspec(dllexport) __cdecl 
    NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
 {
-   DWORD dwResult, dwBufferSize, dwBytes, dwType, dwStatus;
-	TCHAR *pBuffer;
+   DWORD i, dwResult, dwBufferSize, dwBytes, dwType, dwStatus;
+	TCHAR *pBuffer, *newName;
 
 	if (m_info.pParamList != NULL)
 		return FALSE;	// Most likely another instance of WINPERF subagent already loaded
@@ -507,6 +514,17 @@ extern "C" BOOL __declspec(dllexport) __cdecl
    // Init parameters list
    m_info.dwNumParameters = sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM);
    m_info.pParamList = (NETXMS_SUBAGENT_PARAM *)nx_memdup(m_parameters, sizeof(m_parameters));
+
+	// Check counter names for H_CounterAlias
+	for(i = 0; i < m_info.dwNumParameters; i++)
+	{
+		if (m_info.pParamList[i].fpHandler == H_CounterAlias)
+		{
+			CheckCounter(m_info.pParamList[i].pArg, &newName);
+			if (newName != NULL)
+				m_info.pParamList[i].pArg = newName;
+		}
+	}
 
    // Load configuration
    dwResult = NxLoadConfig(pszConfigFile, _T("WinPerf"), cfgTemplate, FALSE);

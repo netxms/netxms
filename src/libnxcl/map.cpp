@@ -296,3 +296,39 @@ DWORD LIBNXCL_EXPORTABLE NXCDownloadSubmapBkImage(NXC_SESSION hSession, DWORD dw
    }
    return dwResult;
 }
+
+
+//
+// Create new map
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCCreateMap(NXC_SESSION hSession, DWORD dwRootObj,
+												  TCHAR *pszName, DWORD *pdwMapId)
+{
+   CSCPMessage msg, *pResponse;
+   DWORD dwRqId, dwResult;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_CREATE_MAP);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwRootObj);
+   msg.SetVariable(VID_NAME, pszName);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwResult = pResponse->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+      {
+         *pdwMapId = pResponse->GetVariableLong(VID_MAP_ID);
+      }
+      delete pResponse;
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+   }
+   return dwResult;
+}
