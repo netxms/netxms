@@ -1,4 +1,4 @@
-/* $Id: db.cpp,v 1.24 2008-03-25 10:35:12 victor Exp $ */
+/* $Id: db.cpp,v 1.25 2008-04-18 16:59:21 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -48,9 +48,9 @@ static MUTEX m_mutexReconnect = INVALID_MUTEX_HANDLE;
 static HMODULE m_hDriver = NULL;
 static DB_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *) = NULL;
 static void (* m_fpDrvDisconnect)(DB_CONNECTION) = NULL;
-static DWORD (* m_fpDrvQuery)(DB_CONNECTION, WCHAR *) = NULL;
-static DB_RESULT (* m_fpDrvSelect)(DB_CONNECTION, WCHAR *, DWORD *) = NULL;
-static DB_ASYNC_RESULT (* m_fpDrvAsyncSelect)(DB_CONNECTION, WCHAR *, DWORD *) = NULL;
+static DWORD (* m_fpDrvQuery)(DB_CONNECTION, WCHAR *, TCHAR *) = NULL;
+static DB_RESULT (* m_fpDrvSelect)(DB_CONNECTION, WCHAR *, DWORD *, TCHAR *) = NULL;
+static DB_ASYNC_RESULT (* m_fpDrvAsyncSelect)(DB_CONNECTION, WCHAR *, DWORD *, TCHAR *) = NULL;
 static BOOL (* m_fpDrvFetch)(DB_ASYNC_RESULT) = NULL;
 static LONG (* m_fpDrvGetFieldLength)(DB_RESULT, int, int) = NULL;
 static WCHAR* (* m_fpDrvGetField)(DB_RESULT, int, int, WCHAR *, int) = NULL;
@@ -127,9 +127,9 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
    fpDrvInit = (BOOL (*)(char *))DLGetSymbolAddrEx(m_hDriver, "DrvInit");
    m_fpDrvConnect = (DB_CONNECTION (*)(const char *, const char *, const char *, const char *))DLGetSymbolAddrEx(m_hDriver, "DrvConnect");
    m_fpDrvDisconnect = (void (*)(DB_CONNECTION))DLGetSymbolAddrEx(m_hDriver, "DrvDisconnect");
-   m_fpDrvQuery = (DWORD (*)(DB_CONNECTION, WCHAR *))DLGetSymbolAddrEx(m_hDriver, "DrvQuery");
-   m_fpDrvSelect = (DB_RESULT (*)(DB_CONNECTION, WCHAR *, DWORD *))DLGetSymbolAddrEx(m_hDriver, "DrvSelect");
-   m_fpDrvAsyncSelect = (DB_ASYNC_RESULT (*)(DB_CONNECTION, WCHAR *, DWORD *))DLGetSymbolAddrEx(m_hDriver, "DrvAsyncSelect");
+   m_fpDrvQuery = (DWORD (*)(DB_CONNECTION, WCHAR *, TCHAR *))DLGetSymbolAddrEx(m_hDriver, "DrvQuery");
+   m_fpDrvSelect = (DB_RESULT (*)(DB_CONNECTION, WCHAR *, DWORD *, TCHAR *))DLGetSymbolAddrEx(m_hDriver, "DrvSelect");
+   m_fpDrvAsyncSelect = (DB_ASYNC_RESULT (*)(DB_CONNECTION, WCHAR *, DWORD *, TCHAR *))DLGetSymbolAddrEx(m_hDriver, "DrvAsyncSelect");
    m_fpDrvFetch = (BOOL (*)(DB_ASYNC_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvFetch");
    m_fpDrvGetFieldLength = (LONG (*)(DB_RESULT, int, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetFieldLength");
    m_fpDrvGetField = (WCHAR* (*)(DB_RESULT, int, int, WCHAR *, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetField");
@@ -294,6 +294,7 @@ BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *szQuery)
 {
    DWORD dwResult;
    INT64 ms;
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 #ifdef UNICODE
 #define pwszQuery szQuery
 #else
@@ -304,11 +305,11 @@ BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *szQuery)
    if (m_bDumpSQL)
       ms = GetCurrentTimeMs();
 
-   dwResult = m_fpDrvQuery(hConn->hConn, pwszQuery);
+   dwResult = m_fpDrvQuery(hConn->hConn, pwszQuery, errorText);
    if (dwResult == DBERR_CONNECTION_LOST)
    {
       DBReconnect(hConn);
-      dwResult = m_fpDrvQuery(hConn->hConn, pwszQuery);
+      dwResult = m_fpDrvQuery(hConn->hConn, pwszQuery, errorText);
    }
 
 #ifndef UNICODE
@@ -323,7 +324,7 @@ BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *szQuery)
    
    MutexUnlock(hConn->mutexTransLock);
    if ((dwResult != DBERR_SUCCESS) && m_bLogSQLErrors)
-      WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
+      WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
    return dwResult == DBERR_SUCCESS;
 #undef pwszQuery
 }
@@ -338,6 +339,7 @@ DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, const TCHAR *szQuery)
    DB_RESULT hResult;
    DWORD dwError;
    INT64 ms;
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 #ifdef UNICODE
 #define pwszQuery szQuery
 #else
@@ -347,11 +349,11 @@ DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, const TCHAR *szQuery)
    MutexLock(hConn->mutexTransLock, INFINITE);
    if (m_bDumpSQL)
       ms = GetCurrentTimeMs();
-   hResult = m_fpDrvSelect(hConn->hConn, pwszQuery, &dwError);
+   hResult = m_fpDrvSelect(hConn->hConn, pwszQuery, &dwError, errorText);
    if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST))
    {
       DBReconnect(hConn);
-      hResult = m_fpDrvSelect(hConn->hConn, pwszQuery, &dwError);
+      hResult = m_fpDrvSelect(hConn->hConn, pwszQuery, &dwError, errorText);
    }
 
 #ifndef UNICODE
@@ -365,7 +367,7 @@ DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, const TCHAR *szQuery)
    }
    MutexUnlock(hConn->mutexTransLock);
    if ((hResult == NULL) && m_bLogSQLErrors)
-      WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "s", szQuery);
+      WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
    return hResult;
 }
 
@@ -639,6 +641,7 @@ DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *
    DB_RESULT hResult;
    DWORD dwError;
    INT64 ms;
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 #ifdef UNICODE
 #define pwszQuery szQuery
 #else
@@ -648,11 +651,11 @@ DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *
    MutexLock(hConn->mutexTransLock, INFINITE);
    if (m_bDumpSQL)
       ms = GetCurrentTimeMs();
-   hResult = m_fpDrvAsyncSelect(hConn->hConn, pwszQuery, &dwError);
+   hResult = m_fpDrvAsyncSelect(hConn->hConn, pwszQuery, &dwError, errorText);
    if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST))
    {
       DBReconnect(hConn);
-      hResult = m_fpDrvAsyncSelect(hConn->hConn, pwszQuery, &dwError);
+      hResult = m_fpDrvAsyncSelect(hConn->hConn, pwszQuery, &dwError, errorText);
    }
 
 #ifndef UNICODE
@@ -668,7 +671,7 @@ DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *
    {
       MutexUnlock(hConn->mutexTransLock);
       if (m_bLogSQLErrors)
-        WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, _T("s"), szQuery);
+        WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, _T("ss"), szQuery, errorText);
    }
    return hResult;
 }

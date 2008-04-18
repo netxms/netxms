@@ -1,6 +1,6 @@
 /* 
 ** MySQL Database Driver
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -120,7 +120,7 @@ extern "C" void EXPORT DrvDisconnect(MYSQL_CONN *pConn)
 // Perform actual non-SELECT query
 //
 
-static DWORD DrvQueryInternal(MYSQL_CONN *pConn, const char *pszQuery)
+static DWORD DrvQueryInternal(MYSQL_CONN *pConn, const char *pszQuery, TCHAR *errorText)
 {
 	DWORD dwRet = DBERR_INVALID_HANDLE;
 
@@ -128,6 +128,8 @@ static DWORD DrvQueryInternal(MYSQL_CONN *pConn, const char *pszQuery)
 	if (mysql_query(pConn->pMySQL, pszQuery) == 0)
 	{
 		dwRet = DBERR_SUCCESS;
+		if (errorText != NULL)
+			*errorText = 0;
 	}
 	else
 	{
@@ -140,6 +142,9 @@ static DWORD DrvQueryInternal(MYSQL_CONN *pConn, const char *pszQuery)
 		{
 			dwRet = DBERR_OTHER_ERROR;
 		}
+		
+		if (errorText != NULL)
+			nx_strncpy(errorText, mysql_error(pConn->pMySQL), DBDRV_MAX_ERROR_TEXT);
 	}
 
 	MutexUnlock(pConn->mutexQueryLock);
@@ -151,13 +156,13 @@ static DWORD DrvQueryInternal(MYSQL_CONN *pConn, const char *pszQuery)
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(MYSQL_CONN *pConn, WCHAR *pwszQuery)
+extern "C" DWORD EXPORT DrvQuery(MYSQL_CONN *pConn, WCHAR *pwszQuery, TCHAR *errorText)
 {
 	DWORD dwRet;
    char *pszQueryUTF8;
 
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-   dwRet = DrvQueryInternal(pConn, pszQueryUTF8);
+   dwRet = DrvQueryInternal(pConn, pszQueryUTF8, errorText);
    free(pszQueryUTF8);
 	return dwRet;
 }
@@ -167,7 +172,7 @@ extern "C" DWORD EXPORT DrvQuery(MYSQL_CONN *pConn, WCHAR *pwszQuery)
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError)
+extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
 {
 	DB_RESULT pResult = NULL;
 	char *pszQueryUTF8;
@@ -184,6 +189,8 @@ extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD
 	{
 		pResult = (DB_RESULT)mysql_store_result(pConn->pMySQL);
 		*pdwError = DBERR_SUCCESS;
+		if (errorText != NULL)
+			*errorText = 0;
 	}
 	else
 	{
@@ -196,6 +203,9 @@ extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD
 		{
 			*pdwError = DBERR_OTHER_ERROR;
 		}
+		
+		if (errorText != NULL)
+			nx_strncpy(errorText, mysql_error(pConn->pMySQL), DBDRV_MAX_ERROR_TEXT);
 	}
 
 	MutexUnlock(pConn->mutexQueryLock);
@@ -271,7 +281,7 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 //
 
 extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery,
-                                                 DWORD *pdwError)
+                                                 DWORD *pdwError, TCHAR *errorText)
 {
 	MYSQL_ASYNC_RESULT *pResult = NULL;
 	char *pszQueryUTF8;
@@ -303,6 +313,8 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pwszQ
 		}
 
 		*pdwError = DBERR_SUCCESS;
+		if (errorText != NULL)
+			*errorText = 0;
 	}
 	else
 	{
@@ -315,6 +327,9 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pwszQ
 		{
 			*pdwError = DBERR_OTHER_ERROR;
 		}
+		
+		if (errorText != NULL)
+			nx_strncpy(errorText, mysql_error(pConn->pMySQL), DBDRV_MAX_ERROR_TEXT);
 	}
 
 	if (pResult == NULL)
@@ -438,7 +453,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
 
 extern "C" DWORD EXPORT DrvBegin(MYSQL_CONN *pConn)
 {
-	return DrvQueryInternal(pConn, "BEGIN");
+	return DrvQueryInternal(pConn, "BEGIN", NULL);
 }
 
 
@@ -448,7 +463,7 @@ extern "C" DWORD EXPORT DrvBegin(MYSQL_CONN *pConn)
 
 extern "C" DWORD EXPORT DrvCommit(MYSQL_CONN *pConn)
 {
-	return DrvQueryInternal(pConn, "COMMIT");
+	return DrvQueryInternal(pConn, "COMMIT", NULL);
 }
 
 
@@ -458,7 +473,7 @@ extern "C" DWORD EXPORT DrvCommit(MYSQL_CONN *pConn)
 
 extern "C" DWORD EXPORT DrvRollback(MYSQL_CONN *pConn)
 {
-	return DrvQueryInternal(pConn, "ROLLBACK");
+	return DrvQueryInternal(pConn, "ROLLBACK", NULL);
 }
 
 

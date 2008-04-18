@@ -46,16 +46,17 @@ static BOOL m_useUnicode = TRUE;
 
 
 //
-// Convert ODBC state to NetXMS database error code
+// Convert ODBC state to NetXMS database error code and get error text
 //
 
-static DWORD StateToErrorCode(SQLSMALLINT nHandleType, SQLHANDLE hHandle)
+static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, TCHAR *errorText)
 {
    SQLRETURN nRet;
    SQLSMALLINT nChars;
    DWORD dwError;
    char szState[16];
 
+	// Get state information and convert it to NetXMS database error code
    nRet = SQLGetDiagField(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, szState, 16, &nChars);
    if (nRet == SQL_SUCCESS)
    {
@@ -75,6 +76,17 @@ static DWORD StateToErrorCode(SQLSMALLINT nHandleType, SQLHANDLE hHandle)
    {
       dwError = DBERR_OTHER_ERROR;
    }
+
+	// Get error message
+	if (errorText != NULL)
+	{
+		nRet = SQLGetDiagField(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, errorText, DBDRV_MAX_ERROR_TEXT, &nChars);
+		if (nRet == SQL_SUCCESS)
+			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+		else
+			_tcscpy(errorText, _T("Unable to obtain description for this error"));
+   }
+   
    return dwError;
 }
 
@@ -175,7 +187,7 @@ extern "C" void EXPORT DrvDisconnect(ODBCDRV_CONN *pConn)
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery)
+extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, TCHAR *errorText)
 {
    long iResult;
    DWORD dwResult;
@@ -211,13 +223,13 @@ extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery)
       }
       else
       {
-         dwResult = StateToErrorCode(SQL_HANDLE_STMT, pConn->sqlStatement);
+         dwResult = GetSQLErrorInfo(SQL_HANDLE_STMT, pConn->sqlStatement, errorText);
       }
       SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
    }
    else
    {
-      dwResult = StateToErrorCode(SQL_HANDLE_DBC, pConn->sqlConn);
+      dwResult = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
    }
 
    MutexUnlock(pConn->mutexQuery);
@@ -229,7 +241,7 @@ extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery)
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError)
+extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
 {
    long i, iResult, iCurrValue;
    ODBCDRV_QUERY_RESULT *pResult = NULL;
@@ -304,13 +316,13 @@ extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQue
       }
       else
       {
-         *pdwError = StateToErrorCode(SQL_HANDLE_STMT, pConn->sqlStatement);
+         *pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, pConn->sqlStatement, errorText);
       }
       SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
    }
    else
    {
-      *pdwError = StateToErrorCode(SQL_HANDLE_DBC, pConn->sqlConn);
+      *pdwError = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
    }
 
    MutexUnlock(pConn->mutexQuery);
@@ -394,7 +406,7 @@ extern "C" void EXPORT DrvFreeResult(ODBCDRV_QUERY_RESULT *pResult)
 //
 
 extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery,
-                                                 DWORD *pdwError)
+                                                 DWORD *pdwError, TCHAR *errorText)
 {
    ODBCDRV_ASYNC_QUERY_RESULT *pResult = NULL;
    long iResult;
@@ -435,14 +447,14 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_WCH
       }
       else
       {
-         *pdwError = StateToErrorCode(SQL_HANDLE_STMT, pConn->sqlStatement);
+         *pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, pConn->sqlStatement, errorText);
          // Free statement handle if query failed
          SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
       }
    }
    else
    {
-      *pdwError = StateToErrorCode(SQL_HANDLE_DBC, pConn->sqlConn);
+      *pdwError = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
    }
 
    if (pResult == NULL) // Unlock mutex if query has failed
@@ -561,7 +573,7 @@ extern "C" DWORD EXPORT DrvBegin(ODBCDRV_CONN *pConn)
    }
    else
    {
-      dwResult = StateToErrorCode(SQL_HANDLE_DBC, pConn->sqlConn);
+      dwResult = GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, NULL);
    }
 	MutexUnlock(pConn->mutexQuery);
    return dwResult;

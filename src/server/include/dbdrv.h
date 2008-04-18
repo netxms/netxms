@@ -30,7 +30,14 @@
 // API version
 //
 
-#define DBDRV_API_VERSION           3
+#define DBDRV_API_VERSION           4
+
+
+//
+// Constants
+//
+
+#define DBDRV_MAX_ERROR_TEXT        1024
 
 
 //

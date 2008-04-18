@@ -263,7 +263,7 @@ Unable to load users and user groups from database (probably database is corrupt
 MessageId=
 SymbolicName=MSG_SQL_ERROR
 Language=English
-SQL query failed (Query = "%1")
+SQL query failed (Query = "%1"): %2
 .
 
 MessageId=
