@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.291 2008-04-15 15:47:12 victor Exp $ */
+/* $Id: nxclapi.h,v 1.292 2008-04-18 22:41:25 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
@@ -1609,32 +1609,6 @@ typedef struct
 
 
 //
-// Module information
-//
-
-typedef struct
-{
-   DWORD dwModuleId;
-   DWORD dwFlags;
-   TCHAR *pszName;
-   TCHAR *pszExecutable;
-   TCHAR *pszLicenseKey;
-   TCHAR *pszDescription;
-} NXC_SERVER_MODULE_INFO;
-
-
-//
-// Module list
-//
-
-typedef struct
-{
-   DWORD dwNumModules;
-   NXC_SERVER_MODULE_INFO *pModules;
-} NXC_SERVER_MODULE_LIST;
-
-
-//
 // Agent configuration info
 //
 
@@ -2068,10 +2042,6 @@ DWORD LIBNXCL_EXPORTABLE NXCDownloadSubmapBkImage(NXC_SESSION hSession, DWORD dw
 DWORD LIBNXCL_EXPORTABLE NXCCreateMap(NXC_SESSION hSession, DWORD dwRootObj,
 												  TCHAR *pszName, DWORD *pdwMapId);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteMap(NXC_SESSION hSession, DWORD dwMapId);
-
-DWORD LIBNXCL_EXPORTABLE NXCGetServerModuleList(NXC_SESSION hSession,
-                                                NXC_SERVER_MODULE_LIST **ppModuleList);
-void LIBNXCL_EXPORTABLE NXCDestroyModuleList(NXC_SERVER_MODULE_LIST *pModuleList);
 
 DWORD LIBNXCL_EXPORTABLE NXCGetAddrList(NXC_SESSION hSession, DWORD dwListType,
                                         DWORD *pdwAddrCount, NXC_ADDR_ENTRY **ppAddrList);

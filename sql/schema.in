@@ -25,26 +25,6 @@ CREATE TABLE config
 
 
 /*
-** Loadable modules
-*/
-
-CREATE TABLE modules
-(
-	module_id integer not null,
-	module_name varchar(63) not null,
-	exec_name varchar(255) not null,
-#ifdef DB_ORACLE
-	module_flags integer default 0 not null,
-#else
-	module_flags integer not null default 0,
-#endif
-	description SQL_TEXT not null,
-	license_key varchar(255) not null,
-	PRIMARY KEY(module_id)
-) TABLE_TYPE;
-
-
-/*
 ** Users
 */
 
@@ -480,7 +460,7 @@ CREATE TABLE items
 	adv_schedule integer not null,	// 1 if item has advanced schedule
 	status integer not null,	// ACTIVE, DISABLED or NOT_SUPPORTED
 	delta_calculation integer not null,
-	transformation SQL_TEXT not null, // Transformation formula
+	transformation SQL_TEXT not null, // Transformation script
 	instance varchar(255) not null,	  // Free form text which can be used in events
 	all_thresholds integer not null,  // 1 if all thresholds should be processed at every check
 	resource_id integer not null,  // associated cluster resource ID

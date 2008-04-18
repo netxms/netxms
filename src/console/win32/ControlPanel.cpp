@@ -100,7 +100,6 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_LPP));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_OBJTOOLS));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_SCRIPT_LIBRARY));
-   m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_MODULE));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_CONFIGS));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_DISCOVERY));
    m_pImageList->Add(AfxGetApp()->LoadIcon(IDI_CERTMGR));
@@ -118,11 +117,10 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    //AddItem(_T("Log Processing"), 7, ID_CONTROLPANEL_LOGPROCESSING);
    AddItem(_T("Object Tools"), 8, ID_CONTROLPANEL_OBJECTTOOLS);
    AddItem(_T("Script Library"), 9, ID_CONTROLPANEL_SCRIPTLIBRARY);
-   AddItem(_T("Modules"), 10, ID_CONTROLPANEL_MODULES);
-   AddItem(_T("Agent Configurations"), 11, ID_CONTROLPANEL_AGENTCONFIGS);
-   AddItem(_T("Network Discovery"), 12, ID_CONTROLPANEL_NETWORKDISCOVERY);
-   AddItem(_T("Certificates"), 13, ID_CONTROLPANEL_CERTIFICATES);
-   //AddItem(_T("Event Correlation"), 14, ID_CONTROLPANEL_EVENTCORRELATION);
+   AddItem(_T("Agent Configurations"), 10, ID_CONTROLPANEL_AGENTCONFIGS);
+   AddItem(_T("Network Discovery"), 11, ID_CONTROLPANEL_NETWORKDISCOVERY);
+   AddItem(_T("Certificates"), 12, ID_CONTROLPANEL_CERTIFICATES);
+   //AddItem(_T("Event Correlation"), 13, ID_CONTROLPANEL_EVENTCORRELATION);
 
    m_wndListCtrl.SortItems(CompareItems, (DWORD)&m_wndListCtrl);
 

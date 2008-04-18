@@ -2,6 +2,8 @@
 * 78 ==> 79 *
 *************
 
+- Table "modules" deleted
+- MySQL only: column type blob changed to text in schema
 - Configuration parameter RetainCustomInterfaceNames deleted
 
 

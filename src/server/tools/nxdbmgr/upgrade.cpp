@@ -87,6 +87,65 @@ static BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
 
 
 //
+// Upgrade from V78 to V79
+//
+
+static BOOL H_UpgradeFromV78(void)
+{
+	static TCHAR m_szBatch[] =
+		_T("DELETE FROM config WHERE var_name='RetainCustomInterfaceNames'\n")
+		_T("DROP TABLE modules\n")
+		_T("<END>");
+	static TCHAR m_szMySQLBatch[] =
+		_T("ALTER TABLE users MODIFY COLUMN cert_mapping_data text not null\n")
+		_T("ALTER TABLE user_profiles MODIFY COLUMN var_value text not null\n")
+		_T("ALTER TABLE object_properties MODIFY COLUMN comments text not null\n")
+		_T("ALTER TABLE network_services MODIFY COLUMN check_request text not null\n")
+		_T("ALTER TABLE network_services MODIFY COLUMN check_responce text not null\n")
+		_T("ALTER TABLE conditions MODIFY COLUMN script text not null\n")
+		_T("ALTER TABLE container_categories MODIFY COLUMN description text not null\n")
+		_T("ALTER TABLE items MODIFY COLUMN transformation text not null\n")
+		_T("ALTER TABLE event_cfg MODIFY COLUMN description text not null\n")
+		_T("ALTER TABLE actions MODIFY COLUMN action_data text not null\n")
+		_T("ALTER TABLE event_policy MODIFY COLUMN comments text not null\n")
+		_T("ALTER TABLE event_policy MODIFY COLUMN script text not null\n")
+		_T("ALTER TABLE alarm_change_log MODIFY COLUMN info_text text not null\n")
+		_T("ALTER TABLE alarm_notes MODIFY COLUMN note_text text not null\n")
+		_T("ALTER TABLE object_tools MODIFY COLUMN tool_data text not null\n")
+		_T("ALTER TABLE syslog MODIFY COLUMN msg_text text not null\n")
+		_T("ALTER TABLE script_library MODIFY COLUMN script_code text not null\n")
+		_T("ALTER TABLE snmp_trap_log MODIFY COLUMN trap_varlist text not null\n")
+		_T("ALTER TABLE maps MODIFY COLUMN description text not null\n")
+		_T("ALTER TABLE agent_configs MODIFY COLUMN config_file text not null\n")
+		_T("ALTER TABLE agent_configs MODIFY COLUMN config_filter text not null\n")
+		_T("ALTER TABLE graphs MODIFY COLUMN config text not null\n")
+		_T("ALTER TABLE certificates MODIFY COLUMN cert_data text not null\n")
+		_T("ALTER TABLE certificates MODIFY COLUMN subject text not null\n")
+		_T("ALTER TABLE certificates MODIFY COLUMN comments text not null\n")
+		_T("ALTER TABLE audit_log MODIFY COLUMN message text not null\n")
+		_T("ALTER TABLE situations MODIFY COLUMN comments text not null\n")
+		_T("<END>");
+
+	if (!SQLBatch(m_szBatch))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (g_iSyntax == DB_SYNTAX_MYSQL)
+	{
+		if (!SQLBatch(m_szMySQLBatch))
+			if (!g_bIgnoreErrors)
+				return FALSE;
+	}
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='79' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V77 to V78
 //
 
@@ -3448,6 +3507,7 @@ static struct
    { 75, H_UpgradeFromV75 },
    { 76, H_UpgradeFromV76 },
    { 77, H_UpgradeFromV77 },
+   { 78, H_UpgradeFromV78 },
    { 0, NULL }
 };
 

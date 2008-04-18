@@ -988,8 +988,6 @@ src/console/win32/MapView.cpp -text
 src/console/win32/MapView.h -text
 src/console/win32/ModifiedAgentCfgDlg.cpp -text
 src/console/win32/ModifiedAgentCfgDlg.h -text
-src/console/win32/ModuleManager.cpp -text
-src/console/win32/ModuleManager.h -text
 src/console/win32/NetSrvPropsGeneral.cpp -text
 src/console/win32/NetSrvPropsGeneral.h -text
 src/console/win32/NetSummaryFrame.cpp -text
@@ -1181,7 +1179,6 @@ src/console/win32/icons/iexplore.ico -text
 src/console/win32/icons/instance.ico -text
 src/console/win32/icons/log.ico -text
 src/console/win32/icons/lpp.ico -text
-src/console/win32/icons/module.ico -text
 src/console/win32/icons/nack.ico -text
 src/console/win32/icons/next.ico -text
 src/console/win32/icons/objtools.ico -text

@@ -38,7 +38,7 @@ int g_iSyntax;
 const TCHAR *g_pszTableSuffix = _T("");
 const TCHAR *g_pszSqlType[5][2] = 
 {
-   { _T("blob"), _T("bigint") },       // MySQL
+   { _T("text"), _T("bigint") },       // MySQL
    { _T("varchar"), _T("bigint") },    // PostgreSQL
    { _T("text"), _T("bigint") },       // Microsoft SQL
    { _T("clob"), _T("number(20)") },   // Oracle
@@ -163,6 +163,7 @@ DB_RESULT SQLSelect(const TCHAR *pszQuery)
 BOOL SQLQuery(const TCHAR *pszQuery)
 {
    BOOL bResult;
+	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 
 	if (*pszQuery == 0)
 		return TRUE;
@@ -170,16 +171,16 @@ BOOL SQLQuery(const TCHAR *pszQuery)
    if (g_bTrace)
       ShowQuery(pszQuery);
 
-   bResult = DBQuery(g_hCoreDB, pszQuery);
+   bResult = DBQueryEx(g_hCoreDB, pszQuery, errorText);
    if (!bResult)
    {
 #ifdef _WIN32
-      _tprintf(_T("SQL query failed:\n"));
+      _tprintf(_T("SQL query failed (%s):\n"), errorText);
       SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0E);
       _tprintf(_T("%s\n"), pszQuery);
       SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
 #else
-      _tprintf(_T("SQL query failed:\n%s\n"), pszQuery);
+      _tprintf(_T("SQL query failed (%s):\n%s\n"), errorText, pszQuery);
 #endif
    }
    return bResult;
@@ -193,6 +194,7 @@ BOOL SQLQuery(const TCHAR *pszQuery)
 BOOL SQLBatch(const TCHAR *pszBatch)
 {
    TCHAR *pszBuffer, *pszQuery, *ptr;
+	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    BOOL bRet = TRUE;
 
    pszBuffer = _tcsdup(pszBatch);
@@ -211,15 +213,15 @@ BOOL SQLBatch(const TCHAR *pszBatch)
       if (g_bTrace)
          ShowQuery(pszQuery);
 
-      if (!DBQuery(g_hCoreDB, pszQuery))
+      if (!DBQueryEx(g_hCoreDB, pszQuery, errorText))
       {
 #ifdef _WIN32
-         _tprintf(_T("SQL query failed:\n"));
+         _tprintf(_T("SQL query failed (%s):\n"), errorText);
          SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0E);
          _tprintf(_T("%s\n"), pszQuery);
          SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
 #else
-         _tprintf(_T("SQL query failed:\n%s\n"), pszQuery);
+         _tprintf(_T("SQL query failed (%s):\n%s\n"), errorText, pszQuery);
 #endif
          if (!g_bIgnoreErrors)
          {

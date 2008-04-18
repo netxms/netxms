@@ -1,4 +1,4 @@
-/* $Id: db.cpp,v 1.25 2008-04-18 16:59:21 victor Exp $ */
+/* $Id: db.cpp,v 1.26 2008-04-18 22:41:28 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -290,11 +290,10 @@ static void DBReconnect(DB_HANDLE hConn)
 // Perform a non-SELECT SQL query
 //
 
-BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *szQuery)
+BOOL LIBNXSRV_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText)
 {
    DWORD dwResult;
    INT64 ms;
-   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 #ifdef UNICODE
 #define pwszQuery szQuery
 #else
@@ -329,17 +328,23 @@ BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *szQuery)
 #undef pwszQuery
 }
 
+BOOL LIBNXSRV_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *query)
+{
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+
+	return DBQueryEx(hConn, query, errorText);
+}
+
 
 //
 // Perform SELECT query
 //
 
-DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, const TCHAR *szQuery)
+DB_RESULT LIBNXSRV_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText)
 {
    DB_RESULT hResult;
    DWORD dwError;
    INT64 ms;
-   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 #ifdef UNICODE
 #define pwszQuery szQuery
 #else
@@ -369,6 +374,13 @@ DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, const TCHAR *szQuery)
    if ((hResult == NULL) && m_bLogSQLErrors)
       WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
    return hResult;
+}
+
+DB_RESULT LIBNXSRV_EXPORTABLE DBSelect(DB_HANDLE hConn, const TCHAR *query)
+{
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+
+	return DBSelectEx(hConn, query, errorText);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: oracledrv.h,v 1.3 2007-02-17 15:32:48 victor Exp $ */
+/* $Id: oracledrv.h,v 1.4 2008-04-18 22:41:27 victor Exp $ */
 /** Oracle Database Driver
 ** Copyright (C) 2007 Victor Kirhenshtein
 **
@@ -36,8 +36,6 @@
 #include <dbdrv.h>
 #include <oci.h>
 
-#define MAX_ORACLE_ERROR_TEXT		512
-
 typedef struct
 {
 	WCHAR *pData;
@@ -56,7 +54,7 @@ typedef struct
 	OCIError *handleError;
 	MUTEX mutexQueryLock;
 	int nTransLevel;
-	WCHAR szLastError[MAX_ORACLE_ERROR_TEXT];
+	TCHAR szLastError[DBDRV_MAX_ERROR_TEXT];
 	ORACLE_FETCH_BUFFER *pBuffers;
 	int nCols;
 } ORACLE_CONN;

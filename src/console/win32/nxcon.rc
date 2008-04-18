@@ -131,7 +131,6 @@ IDI_PRINT               ICON    DISCARDABLE     "icons\\print.ico"
 IDI_REFRESH             ICON    DISCARDABLE     "icons\\refresh.ico"
 IDI_BACK                ICON    DISCARDABLE     "icons\\back.ico"
 IDI_FORWARD             ICON    DISCARDABLE     "icons\\forward.ico"
-IDI_MODULE              ICON    DISCARDABLE     "icons\\module.ico"
 IDI_GO_PARENT           ICON    DISCARDABLE     "icons\\go_parent.ico"
 IDI_HOME                ICON    DISCARDABLE     "icons\\home.ico"
 IDI_CONFIGS             ICON    DISCARDABLE     "icons\\configs.ico"
@@ -395,7 +394,6 @@ BEGIN
         MENUITEM "Event &Policy\tF4",           ID_CONTROLPANEL_EVENTPOLICY
         MENUITEM "&Log processing",             ID_CONTROLPANEL_LOGPROCESSING
 
-        MENUITEM "&Modules",                    ID_CONTROLPANEL_MODULES
         MENUITEM "&Network Discovery",          ID_CONTROLPANEL_NETWORKDISCOVERY
 
         MENUITEM "&Object Tools",               ID_CONTROLPANEL_OBJECTTOOLS

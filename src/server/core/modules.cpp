@@ -49,7 +49,9 @@ static THREAD_RESULT THREAD_CALL ModuleThreadStarter(void *pArg)
 
 void LoadNetXMSModules(void)
 {
-   DB_RESULT hResult;
+	// TODO: should be redesigned
+
+/*   DB_RESULT hResult;
    DWORD i, dwNumRows, dwFlags;
    TCHAR szBuffer[MAX_DB_STRING];
    NXMODULE module;
@@ -124,5 +126,5 @@ void LoadNetXMSModules(void)
          }
       }
       DBFreeResult(hResult);
-   }
+   }*/
 }

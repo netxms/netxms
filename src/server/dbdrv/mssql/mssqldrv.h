@@ -54,6 +54,7 @@ typedef struct
    char szLogin[MAX_CONN_STRING];
    char szPassword[MAX_CONN_STRING];
    char szDatabase[MAX_CONN_STRING];
+	TCHAR szErrorText[DBDRV_MAX_ERROR_TEXT];
 } MSDB_CONN;
 
 

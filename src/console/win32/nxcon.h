@@ -267,7 +267,6 @@ public:
 	afx_msg void OnControlpanelObjecttools();
 	afx_msg void OnControlpanelScriptlibrary();
 	afx_msg void OnViewSnmptraplog();
-	afx_msg void OnControlpanelModules();
 	afx_msg void OnDesktopManage();
 	afx_msg void OnToolsChangepassword();
 	afx_msg void OnControlpanelAgentconfigs();

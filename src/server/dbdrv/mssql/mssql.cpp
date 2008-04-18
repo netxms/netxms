@@ -44,6 +44,7 @@ static int ErrorHandler(PDBPROCESS hProcess, int severity, int dberr,
       pConn = (MSDB_CONN *)dbgetuserdata(hProcess);
       if (pConn != NULL)
       {
+			nx_strncpy(pConn->szErrorText, dberrstr, DBDRV_MAX_ERROR_TEXT);
          if (dbdead(hProcess))
             pConn->bProcessDead = TRUE;
       }
@@ -181,6 +182,7 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin,
          nx_strncpy(pConn->szLogin, szLogin, MAX_CONN_STRING);
          nx_strncpy(pConn->szPassword, szPassword, MAX_CONN_STRING);
          nx_strncpy(pConn->szDatabase, CHECK_NULL_EX(szDatabase), MAX_CONN_STRING);
+			pConn->szErrorText[0] = 0;
 
          dbsetuserdata(hProcess, pConn);
       }
@@ -209,7 +211,7 @@ extern "C" void EXPORT DrvDisconnect(MSDB_CONN *pConn)
 // Execute query
 //
 
-static BOOL ExecuteQuery(MSDB_CONN *pConn, char *pszQuery)
+static BOOL ExecuteQuery(MSDB_CONN *pConn, char *pszQuery, TCHAR *errorText)
 {
    BOOL bResult;
 
@@ -236,6 +238,19 @@ static BOOL ExecuteQuery(MSDB_CONN *pConn, char *pszQuery)
          bResult = FALSE;
       }
    }
+
+	if (errorText != NULL)
+	{
+		if (bResult)
+		{
+			*errorText = 0;
+		}
+		else
+		{
+			_tcscpy(errorText, pConn->szErrorText);
+		}
+	}
+
    return bResult;
 }
 
@@ -244,7 +259,7 @@ static BOOL ExecuteQuery(MSDB_CONN *pConn, char *pszQuery)
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(MSDB_CONN *pConn, WCHAR *pwszQuery)
+extern "C" DWORD EXPORT DrvQuery(MSDB_CONN *pConn, WCHAR *pwszQuery, TCHAR *errorText)
 {
    DWORD dwError;
    char *pszQueryUTF8;
@@ -252,7 +267,7 @@ extern "C" DWORD EXPORT DrvQuery(MSDB_CONN *pConn, WCHAR *pwszQuery)
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
    MutexLock(pConn->mutexQueryLock, INFINITE);
    
-   if (ExecuteQuery(pConn, pszQueryUTF8))
+   if (ExecuteQuery(pConn, pszQueryUTF8, errorText))
    {
       if (dbresults(pConn->hProcess) == SUCCEED)
          while(dbnextrow(pConn->hProcess) != NO_MORE_ROWS);
@@ -272,7 +287,7 @@ extern "C" DWORD EXPORT DrvQuery(MSDB_CONN *pConn, WCHAR *pwszQuery)
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError)
+extern "C" DB_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
 {
    MSDB_QUERY_RESULT *pResult = NULL;
    int i, iCurrPos, iLen, *piColTypes;
@@ -282,7 +297,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, WCHAR *pwszQuery, DWORD 
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
    MutexLock(pConn->mutexQueryLock, INFINITE);
 
-   if (ExecuteQuery(pConn, pszQueryUTF8))
+   if (ExecuteQuery(pConn, pszQueryUTF8, errorText))
    {
       // Process query results
       if (dbresults(pConn->hProcess) == SUCCEED)
@@ -437,7 +452,7 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 //
 
 extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MSDB_CONN *pConn, WCHAR *pwszQuery,
-                                                 DWORD *pdwError)
+                                                 DWORD *pdwError, TCHAR *errorText)
 {
    MSDB_ASYNC_QUERY_RESULT *pResult = NULL;
    char *pszQueryUTF8;
@@ -446,7 +461,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MSDB_CONN *pConn, WCHAR *pwszQu
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
    MutexLock(pConn->mutexQueryLock, INFINITE);
    
-   if (ExecuteQuery(pConn, pszQueryUTF8))
+   if (ExecuteQuery(pConn, pszQueryUTF8, errorText))
    {
       // Prepare query results for processing
       if (dbresults(pConn->hProcess) == SUCCEED)
@@ -597,7 +612,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
 
 extern "C" DWORD EXPORT DrvBegin(MSDB_CONN *pConn)
 {
-   return DrvQuery(pConn, L"BEGIN TRANSACTION");
+   return DrvQuery(pConn, L"BEGIN TRANSACTION", NULL);
 }
 
 
@@ -607,7 +622,7 @@ extern "C" DWORD EXPORT DrvBegin(MSDB_CONN *pConn)
 
 extern "C" DWORD EXPORT DrvCommit(MSDB_CONN *pConn)
 {
-   return DrvQuery(pConn, L"COMMIT");
+   return DrvQuery(pConn, L"COMMIT", NULL);
 }
 
 
@@ -617,7 +632,7 @@ extern "C" DWORD EXPORT DrvCommit(MSDB_CONN *pConn)
 
 extern "C" DWORD EXPORT DrvRollback(MSDB_CONN *pConn)
 {
-   return DrvQuery(pConn, L"ROLLBACK");
+   return DrvQuery(pConn, L"ROLLBACK", NULL);
 }
 
 

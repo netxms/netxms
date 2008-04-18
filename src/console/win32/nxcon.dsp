@@ -528,10 +528,6 @@ SOURCE=.\ModifiedAgentCfgDlg.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\ModuleManager.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\NetSrvPropsGeneral.cpp
 # End Source File
 # Begin Source File
@@ -1189,10 +1185,6 @@ SOURCE=.\ModifiedAgentCfgDlg.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\ModuleManager.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\NetSrvPropsGeneral.h
 # End Source File
 # Begin Source File
@@ -1702,10 +1694,6 @@ SOURCE=.\res\login.bmp
 # Begin Source File
 
 SOURCE=.\icons\lpp.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\icons\module.ico
 # End Source File
 # Begin Source File
 

@@ -1,7 +1,7 @@
-/* $Id: pgsql.cpp,v 1.20 2008-02-17 18:44:50 victor Exp $ */
+/* $Id: pgsql.cpp,v 1.21 2008-04-18 22:41:27 victor Exp $ */
 /* 
 ** PostgreSQL Database Driver
-** Copyright (C) 2003, 2005 Victor Kirhenshtein and Alex Kirhenshtein
+** Copyright (C) 2003 - 2008 Victor Kirhenshtein and Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: pgsql.cpp
+** File: pgsql.cpp
 **
 **/
 
@@ -109,7 +109,7 @@ extern "C" void EXPORT DrvDisconnect(DB_CONNECTION pConn)
 // Perform non-SELECT query
 //
 
-static BOOL UnsafeDrvQuery(PG_CONN *pConn, char *szQuery)
+static BOOL UnsafeDrvQuery(PG_CONN *pConn, char *szQuery, TCHAR *errorText)
 {
 	PGresult	*pResult;
 
@@ -117,20 +117,26 @@ static BOOL UnsafeDrvQuery(PG_CONN *pConn, char *szQuery)
 
 	if (pResult == NULL)
 	{
+		if (errorText != NULL)
+			_tcscpy(errorText, _T("Internal error (pResult is NULL in UnsafeDrvQuery)"));
 		return FALSE;
 	}
 
 	if (PQresultStatus(pResult) != PGRES_COMMAND_OK)
 	{
+		if (errorText != NULL)
+			nx_strncpy(errorText, PQerrorMessage(pConn->pHandle), DBDRV_MAX_ERROR_TEXT);
 		PQclear(pResult);
 		return FALSE;
 	}
 
 	PQclear(pResult);
+	if (errorText != NULL)
+		*errorText = 0;
    return TRUE;
 }
 
-extern "C" DWORD EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery)
+extern "C" DWORD EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery, TCHAR *errorText)
 {
 	DWORD dwRet = DBERR_INVALID_HANDLE;
    char *pszQueryUTF8;
@@ -139,7 +145,7 @@ extern "C" DWORD EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery)
 	{
       pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
 		MutexLock(pConn->mutexQueryLock, INFINITE);
-		if (UnsafeDrvQuery(pConn, pszQueryUTF8))
+		if (UnsafeDrvQuery(pConn, pszQueryUTF8, errorText))
       {
          dwRet = DBERR_SUCCESS;
       }
@@ -159,7 +165,7 @@ extern "C" DWORD EXPORT DrvQuery(PG_CONN *pConn, WCHAR *pwszQuery)
 // Perform SELECT query
 //
 
-static DB_RESULT UnsafeDrvSelect(PG_CONN *pConn, char *szQuery)
+static DB_RESULT UnsafeDrvSelect(PG_CONN *pConn, char *szQuery, TCHAR *errorText)
 {
 	PGresult	*pResult;
 
@@ -167,20 +173,26 @@ static DB_RESULT UnsafeDrvSelect(PG_CONN *pConn, char *szQuery)
 
 	if (pResult == NULL)
 	{
+		if (errorText != NULL)
+			_tcscpy(errorText, _T("Internal error (pResult is NULL in UnsafeDrvSelect)"));
 		return NULL;
 	}
 
 	if ((PQresultStatus(pResult) != PGRES_COMMAND_OK) &&
 	    (PQresultStatus(pResult) != PGRES_TUPLES_OK))
 	{
+		if (errorText != NULL)
+			nx_strncpy(errorText, PQerrorMessage(pConn->pHandle), DBDRV_MAX_ERROR_TEXT);
 		PQclear(pResult);
 		return NULL;
 	}
 
+	if (errorText != NULL)
+		*errorText = 0;
    return (DB_RESULT)pResult;
 }
 
-extern "C" DB_RESULT EXPORT DrvSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError)
+extern "C" DB_RESULT EXPORT DrvSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
 {
 	DB_RESULT pResult;
    char *pszQueryUTF8;
@@ -193,7 +205,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *p
 
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
 	MutexLock(pConn->mutexQueryLock, INFINITE);
-	pResult = UnsafeDrvSelect(pConn, pszQueryUTF8);
+	pResult = UnsafeDrvSelect(pConn, pszQueryUTF8, errorText);
    if (pResult != NULL)
    {
       *pdwError = DBERR_SUCCESS;
@@ -275,7 +287,7 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT pResult)
 //
 
 extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(PG_CONN *pConn, WCHAR *pwszQuery,
-                                                 DWORD *pdwError)
+                                                 DWORD *pdwError, TCHAR *errorText)
 {
 	BOOL bSuccess = FALSE;
    char *pszReq, *pszQueryUTF8;
@@ -286,7 +298,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(PG_CONN *pConn, WCHAR *pwszQuer
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 
-	if (UnsafeDrvQuery(pConn, "BEGIN"))
+	if (UnsafeDrvQuery(pConn, "BEGIN", errorText))
    {
       pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
    	pszReq = (char *)malloc(strlen(pszQueryUTF8) + sizeof(szDeclareCursor));
@@ -294,7 +306,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(PG_CONN *pConn, WCHAR *pwszQuer
 	   {
 		   strcpy(pszReq, szDeclareCursor);
 		   strcat(pszReq, pszQueryUTF8);
-		   if (UnsafeDrvQuery(pConn, pszReq))
+		   if (UnsafeDrvQuery(pConn, pszReq, errorText))
 		   {
 			   bSuccess = TRUE;
 		   }
@@ -303,7 +315,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(PG_CONN *pConn, WCHAR *pwszQuer
       free(pszQueryUTF8);
 
       if (!bSuccess)
-         UnsafeDrvQuery(pConn, "ROLLBACK");
+         UnsafeDrvQuery(pConn, "ROLLBACK", NULL);
    }
 
 	if (bSuccess)
@@ -338,7 +350,7 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT pConn)
       if (((PG_CONN *)pConn)->pFetchBuffer != NULL)
          PQclear(((PG_CONN *)pConn)->pFetchBuffer);
 		((PG_CONN *)pConn)->pFetchBuffer =
-			(PGresult *)UnsafeDrvSelect((PG_CONN *)pConn, "FETCH cur1");
+			(PGresult *)UnsafeDrvSelect((PG_CONN *)pConn, "FETCH cur1", NULL);
 		if (((PG_CONN *)pConn)->pFetchBuffer != NULL)
       {
          if (DrvGetNumRows(((PG_CONN *)pConn)->pFetchBuffer) <= 0)
@@ -421,8 +433,8 @@ extern "C" void EXPORT DrvFreeAsyncResult(PG_CONN *pConn)
 		   PQclear(pConn->pFetchBuffer);
          pConn->pFetchBuffer = NULL;
       }
-		UnsafeDrvQuery(pConn, "CLOSE cur1");
-		UnsafeDrvQuery(pConn, "COMMIT");
+		UnsafeDrvQuery(pConn, "CLOSE cur1", NULL);
+		UnsafeDrvQuery(pConn, "COMMIT", NULL);
    }
 	MutexUnlock(pConn->mutexQueryLock);
 }
@@ -440,7 +452,7 @@ extern "C" DWORD EXPORT DrvBegin(PG_CONN *pConn)
       return DBERR_INVALID_HANDLE;
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
-	if (UnsafeDrvQuery(pConn, "BEGIN"))
+	if (UnsafeDrvQuery(pConn, "BEGIN", NULL))
    {
       dwResult = DBERR_SUCCESS;
    }
@@ -465,7 +477,7 @@ extern "C" DWORD EXPORT DrvCommit(PG_CONN *pConn)
       return DBERR_INVALID_HANDLE;
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
-	bRet = UnsafeDrvQuery(pConn, "COMMIT");
+	bRet = UnsafeDrvQuery(pConn, "COMMIT", NULL);
 	MutexUnlock(pConn->mutexQueryLock);
    return bRet ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
@@ -483,7 +495,7 @@ extern "C" DWORD EXPORT DrvRollback(PG_CONN *pConn)
       return DBERR_INVALID_HANDLE;
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
-	bRet = UnsafeDrvQuery(pConn, "ROLLBACK");
+	bRet = UnsafeDrvQuery(pConn, "ROLLBACK", NULL);
 	MutexUnlock(pConn->mutexQueryLock);
    return bRet ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }

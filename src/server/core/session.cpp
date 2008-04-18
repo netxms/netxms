@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.302 2008-04-15 15:47:13 victor Exp $ */
+/* $Id: session.cpp,v 1.303 2008-04-18 22:41:27 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -1077,9 +1077,6 @@ void ClientSession::ProcessingThread(void)
             break;
          case CMD_GET_SUBMAP_BK_IMAGE:
             SendSubmapBkImage(pMsg);
-            break;
-         case CMD_GET_MODULE_LIST:
-            SendModuleList(pMsg->GetId());
             break;
          case CMD_RESOLVE_DCI_NAMES:
             ResolveDCINames(pMsg);
@@ -7408,58 +7405,6 @@ void ClientSession::RecvSubmapBkImage(CSCPMessage *pRequest)
    UnlockMaps();
 
    // Send response message
-   SendMessage(&msg);
-}
-
-
-//
-// Send list of configured modules
-//
-
-void ClientSession::SendModuleList(DWORD dwRqId)
-{
-   CSCPMessage msg;
-   DB_RESULT hResult;
-   DWORD i, dwId, dwNumModules;
-   TCHAR *pszDescr, szBuffer[MAX_DB_STRING];
-
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(dwRqId);
-
-   if (CheckSysAccessRights(SYSTEM_ACCESS_MANAGE_MODULES))
-   {
-      hResult = DBSelect(g_hCoreDB, "SELECT module_id,module_name,exec_name,module_flags,description,license_key FROM modules");
-      if (hResult != NULL)
-      {
-         dwNumModules = DBGetNumRows(hResult);
-         msg.SetVariable(VID_NUM_MODULES, dwNumModules);
-         
-         for(i = 0, dwId = VID_MODULE_LIST_BASE; i < dwNumModules; i++, dwId += 4)
-         {
-            msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 0));
-            msg.SetVariable(dwId++, DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING));
-            msg.SetVariable(dwId++, DBGetField(hResult, i, 2, szBuffer, MAX_DB_STRING));
-            msg.SetVariable(dwId++, DBGetFieldULong(hResult, i, 3));
-            pszDescr = DBGetField(hResult, i, 4, NULL, 0);
-            DecodeSQLString(pszDescr);
-            msg.SetVariable(dwId++, pszDescr);
-            free(pszDescr);
-            msg.SetVariable(dwId++, DBGetField(hResult, i, 5, szBuffer, MAX_DB_STRING));
-         }
-
-         msg.SetVariable(VID_RCC, RCC_SUCCESS);
-         DBFreeResult(hResult);
-      }
-      else
-      {
-         msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
-      }
-   }
-   else
-   {
-      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-   }
-
    SendMessage(&msg);
 }
 

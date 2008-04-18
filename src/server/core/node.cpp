@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.202 2008-04-02 16:48:20 victor Exp $ */
+/* $Id: node.cpp,v 1.203 2008-04-18 22:41:27 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -22,6 +22,15 @@
 **/
 
 #include "nxcore.h"
+
+
+//
+// Prefixes for poller messages
+//
+
+#define POLLER_ERROR    "\x7F" "e"
+#define POLLER_WARNING  "\x7Fw"
+#define POLLER_INFO     "\x7Fi"
 
 
 //
@@ -697,12 +706,12 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          {
             m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
             PostEventEx(pQueue, EVENT_SNMP_OK, m_dwId, NULL);
-            SendPollerMsg(dwRqId, "\x7FiConnectivity with SNMP agent restored\r\n");
+            SendPollerMsg(dwRqId, POLLER_INFO "Connectivity with SNMP agent restored\r\n");
          }
       }
       else
       {
-         SendPollerMsg(dwRqId, "\x7F" "eSNMP agent unreachable\r\n");
+         SendPollerMsg(dwRqId, POLLER_ERROR "SNMP agent unreachable\r\n");
          if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
          {
             if ((tNow > m_tFailTimeSNMP + tExpire) &&
@@ -711,7 +720,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                m_dwFlags &= ~NF_IS_SNMP;
                m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
                m_szObjectId[0] = 0;
-               SendPollerMsg(dwRqId, "\x7FwAttribute isSNMP set to FALSE\r\n");
+               SendPollerMsg(dwRqId, POLLER_WARNING "Attribute isSNMP set to FALSE\r\n");
             }
          }
          else
@@ -740,13 +749,13 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          {
             m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
             PostEventEx(pQueue, EVENT_AGENT_OK, m_dwId, NULL);
-            SendPollerMsg(dwRqId, "\x7FiConnectivity with NetXMS agent restored\r\n");
+            SendPollerMsg(dwRqId, POLLER_INFO "Connectivity with NetXMS agent restored\r\n");
          }
          pAgentConn->Disconnect();
       }
       else
       {
-         SendPollerMsg(dwRqId, "\x7F" "eNetXMS agent unreachable\r\n");
+         SendPollerMsg(dwRqId, POLLER_ERROR "NetXMS agent unreachable\r\n");
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
          {
             if ((tNow > m_tFailTimeAgent + tExpire) &&
@@ -756,7 +765,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
                m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
                m_szPlatformName[0] = 0;
                m_szAgentVersion[0] = 0;
-               SendPollerMsg(dwRqId, "\x7FwAttribute isNetXMSAgent set to FALSE\r\n");
+               SendPollerMsg(dwRqId, POLLER_WARNING "Attribute isNetXMSAgent set to FALSE\r\n");
             }
          }
          else
@@ -859,11 +868,11 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       {
          m_dwDynamicFlags |= NDF_UNREACHABLE;
          PostEvent(EVENT_NODE_DOWN, m_dwId, NULL);
-         SendPollerMsg(dwRqId, "\x7F" "eNode is unreachable\r\n");
+         SendPollerMsg(dwRqId, POLLER_ERROR "Node is unreachable\r\n");
       }
       else
       {
-         SendPollerMsg(dwRqId, "\x7FwNode is still unreachable\r\n");
+         SendPollerMsg(dwRqId, POLLER_WARNING "Node is still unreachable\r\n");
       }
    }
    else
@@ -872,11 +881,11 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       {
          m_dwDynamicFlags &= ~NDF_UNREACHABLE;
          PostEvent(EVENT_NODE_UP, m_dwId, NULL);
-         SendPollerMsg(dwRqId, "\x7FiNode recovered from unreachable state\r\n");
+         SendPollerMsg(dwRqId, POLLER_INFO "Node recovered from unreachable state\r\n");
       }
       else
       {
-         SendPollerMsg(dwRqId, "\x7FiNode is connected\r\n");
+         SendPollerMsg(dwRqId, POLLER_INFO "Node is connected\r\n");
       }
    }
 
@@ -945,7 +954,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
    // Check if node is marked as unreachable
    if ((m_dwDynamicFlags & NDF_UNREACHABLE) && !(m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES))
    {
-      SendPollerMsg(dwRqId, _T("\x7FwNode is marked as unreachable, configuration poll aborted\r\n"));
+      SendPollerMsg(dwRqId, POLLER_WARNING _T("Node is marked as unreachable, configuration poll aborted\r\n"));
       DbgPrintf(4, "Node is marked as unreachable, configuration poll aborted");
       m_tLastConfigurationPoll = time(NULL);
    }
@@ -972,7 +981,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             {
                m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
                PostEvent(EVENT_SNMP_OK, m_dwId, NULL);
-               SendPollerMsg(dwRqId, "   \x7FiConnectivity with SNMP agent restored\r\n");
+               SendPollerMsg(dwRqId, POLLER_WARNING "   Connectivity with SNMP agent restored\r\n");
             }
             SendPollerMsg(dwRqId, _T("   SNMP agent is active (version %s)\r\n"), (m_iSNMPVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1"));
 
@@ -993,7 +1002,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             {
                m_dwFlags |= dwNodeFlags;
                m_dwNodeType = dwNodeType;
-               SendPollerMsg(dwRqId, _T("   \x7FwNode type has been changed to %d\r\n"), m_dwNodeType);
+               SendPollerMsg(dwRqId, POLLER_WARNING _T("   Node type has been changed to %d\r\n"), m_dwNodeType);
                bHasChanges = TRUE;
             }
 
@@ -1073,7 +1082,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
                m_dwFlags |= NF_IS_SNMP | NF_IS_ROUTER;
                m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
                UnlockData();
-               SendPollerMsg(dwRqId, _T("   \x7FiCheckPoint SNMP agent on port 161 is active\r\n"));
+               SendPollerMsg(dwRqId, POLLER_INFO _T("   CheckPoint SNMP agent on port 161 is active\r\n"));
             }
          }
 			delete pTransport;
@@ -1093,7 +1102,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             m_dwFlags |= NF_IS_CPSNMP | NF_IS_ROUTER;
             m_dwDynamicFlags &= ~NDF_CPSNMP_UNREACHABLE;
             UnlockData();
-            SendPollerMsg(dwRqId, _T("   \x7FiCheckPoint SNMP agent on port 260 is active\r\n"));
+            SendPollerMsg(dwRqId, POLLER_INFO _T("   CheckPoint SNMP agent on port 260 is active\r\n"));
          }
 			delete pTransport;
       }
@@ -1115,7 +1124,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             {
                m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
                PostEvent(EVENT_AGENT_OK, m_dwId, NULL);
-               SendPollerMsg(dwRqId, _T("   \x7FiConnectivity with NetXMS agent restored\r\n"));
+               SendPollerMsg(dwRqId, POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
             }
             UnlockData();
       
@@ -1157,7 +1166,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             pAgentConn->GetSupportedParameters(&m_dwNumParams, &m_pParamList);
 
             pAgentConn->Disconnect();
-            SendPollerMsg(dwRqId, _T("   \x7FiNetXMS native agent is active\r\n"));
+            SendPollerMsg(dwRqId, POLLER_INFO _T("   NetXMS native agent is active\r\n"));
          }
          delete pAgentConn;
          DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent - finished", m_szName);
@@ -1229,7 +1238,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
          {
             for(j = 0; j < iDelCount; j++)
             {
-               SendPollerMsg(dwRqId, _T("   \x7FwInterface \"%s\" is no longer exist\r\n"), 
+               SendPollerMsg(dwRqId, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), 
                              ppDeleteList[j]->Name());
                PostEvent(EVENT_INTERFACE_DELETED, m_dwId, "dsaa", ppDeleteList[j]->IfIndex(),
                          ppDeleteList[j]->Name(), ppDeleteList[j]->IpAddr(), ppDeleteList[j]->IpNetMask());
@@ -1281,7 +1290,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             if (bNewInterface)
             {
                // New interface
-               SendPollerMsg(dwRqId, _T("   \x7FiFound new interface \"%s\"\r\n"), 
+               SendPollerMsg(dwRqId, POLLER_INFO _T("   Found new interface \"%s\"\r\n"), 
                              pIfList->pInterfaces[j].szName);
                CreateNewInterface(pIfList->pInterfaces[j].dwIpAddr, 
                                   pIfList->pInterfaces[j].dwIpNetMask,
@@ -1367,7 +1376,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
          Interface *pInterface;
          DWORD dwCount;
 
-         SendPollerMsg(dwRqId, _T("   \x7F") _T("eUnable to get interface list from node\r\n"));
+         SendPollerMsg(dwRqId, POLLER_ERROR _T("Unable to get interface list from node\r\n"));
 
          // Delete all existing interfaces in case of forced capability recheck
          if (m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES)
@@ -1382,7 +1391,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             UnlockChildList();
             for(j = 0; j < iDelCount; j++)
             {
-               SendPollerMsg(dwRqId, _T("   \x7FwInterface \"%s\" is no longer exist\r\n"), 
+               SendPollerMsg(dwRqId, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), 
                              ppDeleteList[j]->Name());
                PostEvent(EVENT_INTERFACE_DELETED, m_dwId, "dsaa", ppDeleteList[j]->IfIndex(),
                          ppDeleteList[j]->Name(), ppDeleteList[j]->IpAddr(), ppDeleteList[j]->IpNetMask());
@@ -1427,12 +1436,12 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 	      SetPollerInfo(nPoller, "resolving name");
 			if (ResolveName(FALSE))
 			{
-				SendPollerMsg(dwRqId, _T("\x7FiNode name resolved to %s\r\n"), m_szName);
+				SendPollerMsg(dwRqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_szName);
 				bHasChanges = TRUE;
 			}
 			else
 			{
-				SendPollerMsg(dwRqId, _T("\x7FwNode name cannot be resolved\r\n"));
+				SendPollerMsg(dwRqId, POLLER_WARNING _T("Node name cannot be resolved\r\n"));
 			}
 		}
 		else
@@ -1443,7 +1452,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 		      SetPollerInfo(nPoller, "resolving name");
 				if (ResolveName(TRUE))
 				{
-					SendPollerMsg(dwRqId, _T("\x7FiNode name resolved to %s\r\n"), m_szName);
+					SendPollerMsg(dwRqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_szName);
 					bHasChanges = TRUE;
 				}
 			}
@@ -3069,7 +3078,7 @@ void Node::UpdateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
                   if (strcmp(pIfList->pInterfaces[j].szName, pInterface->Name()))
                   {
                      pInterface->SetName(pIfList->pInterfaces[j].szName);
-							SendPollerMsg(dwRqId, _T("   \x7FwName of interface %d changed to %s\r\n"), pInterface->IfIndex(), pIfList->pInterfaces[j].szName);
+							SendPollerMsg(dwRqId, POLLER_WARNING _T("   Name of interface %d changed to %s\r\n"), pInterface->IfIndex(), pIfList->pInterfaces[j].szName);
                   }
                   break;
                }
@@ -3082,7 +3091,7 @@ void Node::UpdateInterfaceNames(ClientSession *pSession, DWORD dwRqId)
    }
    else     /* pIfList == NULL */
    {
-      SendPollerMsg(dwRqId, _T("   \x7F") _T("eUnable to get interface list from node\r\n"));
+      SendPollerMsg(dwRqId, POLLER_ERROR _T("   Unable to get interface list from node\r\n"));
    }
 
    // Finish poll

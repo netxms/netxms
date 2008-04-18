@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.151 2008-04-15 15:47:13 victor Exp $ */
+/* $Id: nms_core.h,v 1.152 2008-04-18 22:41:28 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -498,7 +498,6 @@ private:
    void LoadMap(CSCPMessage *pRequest);
    void SendSubmapBkImage(CSCPMessage *pRequest);
    void RecvSubmapBkImage(CSCPMessage *pRequest);
-   void SendModuleList(DWORD dwRqId);
    void ResolveDCINames(CSCPMessage *pRequest);
    DWORD ResolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName);
    void SendConfigForAgent(CSCPMessage *pRequest);

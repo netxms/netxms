@@ -1,4 +1,4 @@
-/* $Id: netxmsdb.h,v 1.80 2008-03-06 22:55:53 victor Exp $ */
+/* $Id: netxmsdb.h,v 1.81 2008-04-18 22:41:25 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -24,6 +24,6 @@
 #ifndef _netxmsdb_h
 #define _netxmsdb_h
 
-#define DB_FORMAT_VERSION	78
+#define DB_FORMAT_VERSION	79
 
 #endif

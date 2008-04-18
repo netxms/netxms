@@ -1,4 +1,4 @@
-/* $Id: oracle.cpp,v 1.5 2008-02-17 18:44:50 victor Exp $ */
+/* $Id: oracle.cpp,v 1.6 2008-04-18 22:41:27 victor Exp $ */
 /* 
 ** Oracle Database Driver
 ** Copyright (C) 2007, 2008 Victor Kirhenshtein
@@ -59,8 +59,19 @@ static void SetLastErrorText(ORACLE_CONN *pConn)
 {
 	sb4 nCode;
 
+#ifdef UNICODE
 	OCIErrorGet(pConn->handleError, 1, NULL, &nCode, (text *)pConn->szLastError,
-	            MAX_ORACLE_ERROR_TEXT, OCI_HTYPE_ERROR);
+	            DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
+	pConn->szLastError[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+#else
+	WCHAR buffer[DBDRV_MAX_ERROR_TEXT];
+
+	OCIErrorGet(pConn->handleError, 1, NULL, &nCode, (text *)buffer,
+	            DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
+	buffer[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, buffer, -1,
+	                    pConn->szLastError, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
+#endif
 }
 
 
@@ -194,7 +205,7 @@ extern "C" void EXPORT DrvDisconnect(ORACLE_CONN *pConn)
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery)
+extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, TCHAR *errorText)
 {
 	OCIStmt *handleStmt;
 	DWORD dwResult;
@@ -220,6 +231,8 @@ extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery)
 		dwResult = IsConnectionError(pConn);
 	}
 	OCIHandleFree(handleStmt, OCI_HTYPE_STMT);
+	if (errorText != NULL)
+		_tcscpy(errorText, pConn->szLastError);
 	MutexUnlock(pConn->mutexQueryLock);
 	return dwResult;
 }
@@ -229,7 +242,7 @@ extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery)
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError)
+extern "C" DB_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
 {
 	ORACLE_RESULT *pResult = NULL;
 	OCIStmt *handleStmt;
@@ -347,6 +360,8 @@ extern "C" DB_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWOR
 		*pdwError = IsConnectionError(pConn);
 	}
 	OCIHandleFree(handleStmt, OCI_HTYPE_STMT);
+	if (errorText != NULL)
+		_tcscpy(errorText, pConn->szLastError);
 	MutexUnlock(pConn->mutexQueryLock);
 	return pResult;
 }
@@ -418,7 +433,7 @@ extern "C" void EXPORT DrvFreeResult(ORACLE_RESULT *pResult)
 //
 
 extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery,
-                                                 DWORD *pdwError)
+                                                 DWORD *pdwError, TCHAR *errorText)
 {
 	OCIParam *handleParam;
 	OCIDefine *handleDefine;
@@ -494,6 +509,8 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwsz
 	for(i = 0; i < pConn->nCols; i++)
 		safe_free(pConn->pBuffers[i].pData);
 	safe_free(pConn->pBuffers);
+	if (errorText != NULL)
+		_tcscpy(errorText, pConn->szLastError);
 	MutexUnlock(pConn->mutexQueryLock);
 	return NULL;
 }
@@ -652,18 +669,6 @@ extern "C" DWORD EXPORT DrvRollback(ORACLE_CONN *pConn)
 	}
 	MutexUnlock(pConn->mutexQueryLock);
    return dwResult;
-}
-
-
-//
-// Get last error message
-//
-
-extern "C" void EXPORT DrvGetErrorText(ORACLE_CONN *pConn, char *pszBuffer, int nBufSize)
-{
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pConn->szLastError,
-	                    -1, pszBuffer, nBufSize, NULL, NULL);
-	pszBuffer[nBufSize - 1] = 0;
 }
 
 

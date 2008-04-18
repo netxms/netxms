@@ -22,7 +22,7 @@ EXTRA_DIST = \
 	nack.ico running.ico pending.ico Tips.ico objtools.ico \
 	command.ico script_library.ico script.ico folder_c.ico \
 	folder_o.ico ZoomIn.ico ZoomOut.ico print.ico refresh.ico save.ico \
-	back.ico forward.ico go_parent.ico module.ico home.ico \
+	back.ico forward.ico go_parent.ico home.ico \
 	discovery.ico exit.ico template_root.ico cluster.ico server.ico \
 	cert.ico certmgr.ico topology.ico empty.ico subordinates.ico \
 	redo_layout.ico find.ico next.ico stop.ico situation.ico \

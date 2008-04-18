@@ -47,7 +47,7 @@
 #elif defined(DB_MYSQL)
 
 #define DB_SYNTAX	'MYSQL'
-#define SQL_TEXT	blob
+#define SQL_TEXT	text
 #define SQL_INT64	bigint
 #define TABLE_TYPE
 //#define TABLE_TYPE	TYPE=InnoDB
