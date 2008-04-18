@@ -127,6 +127,28 @@ static THREAD_RESULT THREAD_CALL SQLiteWorkerThread(void *pArg)
             pConn->nResult = SQLITE_ERROR;
             break;
       }
+      
+      if (pConn->pszErrorText != NULL)
+      {
+      	if (pConn->nResult == SQLITE_OK)
+      	{
+      		*pConn->pszErrorText = 0;
+      	}
+      	else
+      	{
+#ifdef UNICODE
+				MultiByteToWideChar(CP_UTF8, 0, sqlite3_errmsg(pConn->pdb), -1, pConn->pszErrorText, DBDRV_MAX_ERROR_TEXT);
+#else      	
+				WCHAR *wtemp;
+		   	
+				wtemp = WideStringFromUTF8String(sqlite3_errmsg(pConn->pdb));
+				WideCharToMultiByte(CP_ACP,  WC_COMPOSITECHECK | WC_DEFAULTCHAR, wtemp, -1, pConn->pszErrorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
+				free(wtemp);
+#endif
+				pConn->pszErrorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+			}
+      }
+      	
       ConditionSet(pConn->condResult);
    } while(bRun);
    return THREAD_OK;
@@ -137,10 +159,11 @@ static THREAD_RESULT THREAD_CALL SQLiteWorkerThread(void *pArg)
 // Execute command by worker thread
 //
 
-static int ExecCommand(SQLITE_CONN *pConn, int nCmd, char *pszQuery)
+static int ExecCommand(SQLITE_CONN *pConn, int nCmd, char *pszQuery, TCHAR *errorText)
 {
    pConn->pszQuery = pszQuery;
    pConn->nCommand = nCmd;
+   pConn->pszErrorText = errorText;
    ConditionSet(pConn->condCommand);
    ConditionWait(pConn->condResult, INFINITE);
    return pConn->nResult;
@@ -174,7 +197,7 @@ extern "C" void EXPORT DrvDisconnect(SQLITE_CONN *hConn)
 {
    if (hConn != NULL)
    {
-      ExecCommand(hConn, SQLITE_DRV_CLOSE, NULL);
+      ExecCommand(hConn, SQLITE_DRV_CLOSE, NULL, NULL);
       ThreadJoin(hConn->hThread);
       ConditionDestroy(hConn->condCommand);
       ConditionDestroy(hConn->condResult);
@@ -201,7 +224,7 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
    pConn->condResult = ConditionCreate(FALSE);
    pConn->hThread = ThreadCreateEx(SQLiteWorkerThread, 0, pConn);
 
-   if (ExecCommand(pConn, SQLITE_DRV_OPEN, pszDatabase) != SQLITE_OK)
+   if (ExecCommand(pConn, SQLITE_DRV_OPEN, pszDatabase, NULL) != SQLITE_OK)
    {
       DrvDisconnect(pConn);
       pConn = NULL;
@@ -214,12 +237,12 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 // Internal query
 //
 
-static DWORD DrvQueryInternal(SQLITE_CONN *pConn, char *pszQuery)
+static DWORD DrvQueryInternal(SQLITE_CONN *pConn, char *pszQuery, TCHAR *errorText)
 {
    BOOL bResult;
 
    MutexLock(pConn->mutexQueryLock, INFINITE);
-   bResult = (ExecCommand(pConn, SQLITE_DRV_QUERY, pszQuery) == SQLITE_OK);
+   bResult = (ExecCommand(pConn, SQLITE_DRV_QUERY, pszQuery, errorText) == SQLITE_OK);
    MutexUnlock(pConn->mutexQueryLock);
    return bResult ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
@@ -229,13 +252,13 @@ static DWORD DrvQueryInternal(SQLITE_CONN *pConn, char *pszQuery)
 // Perform non-SELECT query
 //
 
-extern "C" DWORD EXPORT DrvQuery(SQLITE_CONN *pConn, WCHAR *pwszQuery)
+extern "C" DWORD EXPORT DrvQuery(SQLITE_CONN *pConn, WCHAR *pwszQuery, TCHAR *errorText)
 {
    DWORD dwResult;
    char *pszQueryUTF8;
 
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
-   dwResult = DrvQueryInternal(pConn, pszQueryUTF8);
+   dwResult = DrvQueryInternal(pConn, pszQueryUTF8, errorText);
    free(pszQueryUTF8);
    return dwResult;
 }
@@ -245,14 +268,14 @@ extern "C" DWORD EXPORT DrvQuery(SQLITE_CONN *pConn, WCHAR *pwszQuery)
 // Perform SELECT query
 //
 
-extern "C" DB_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError)
+extern "C" DB_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, TCHAR *errorText)
 {
    DB_RESULT pResult = NULL;
    char *pszQueryUTF8;
 
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
    MutexLock(hConn->mutexQueryLock, INFINITE);
-   if (ExecCommand(hConn, SQLITE_DRV_SELECT, pszQueryUTF8) == SQLITE_OK)
+   if (ExecCommand(hConn, SQLITE_DRV_SELECT, pszQueryUTF8, errorText) == SQLITE_OK)
    {
       pResult = hConn->pResult;
    }
@@ -334,14 +357,14 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
 //
 
 extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery,
-                                                 DWORD *pdwError)
+                                                 DWORD *pdwError, TCHAR *errorText)
 {
    DB_ASYNC_RESULT hResult;
    char *pszQueryUTF8;
 
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
    MutexLock(hConn->mutexQueryLock, INFINITE);
-   if (ExecCommand(hConn, SQLITE_DRV_PREPARE, pszQueryUTF8) == SQLITE_OK)
+   if (ExecCommand(hConn, SQLITE_DRV_PREPARE, pszQueryUTF8, errorText) == SQLITE_OK)
    {
       hResult = hConn;
    }
@@ -362,7 +385,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, WCHAR *pwsz
 
 extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
 {
-   return hResult ? (ExecCommand((SQLITE_CONN *)hResult, SQLITE_DRV_STEP, NULL) == SQLITE_ROW) : FALSE;
+   return hResult ? (ExecCommand((SQLITE_CONN *)hResult, SQLITE_DRV_STEP, NULL, NULL) == SQLITE_ROW) : FALSE;
 }
 
 
@@ -398,7 +421,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
 {
    if (hResult != NULL)
    {
-      ExecCommand((SQLITE_CONN *)hResult, SQLITE_DRV_FINALIZE, NULL);
+      ExecCommand((SQLITE_CONN *)hResult, SQLITE_DRV_FINALIZE, NULL, NULL);
       MutexUnlock(((SQLITE_CONN *)hResult)->mutexQueryLock);
    }
 }
@@ -410,7 +433,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
 
 extern "C" DWORD EXPORT DrvBegin(SQLITE_CONN *pConn)
 {
-   return DrvQueryInternal(pConn, "BEGIN");
+   return DrvQueryInternal(pConn, "BEGIN", NULL);
 }
 
 
@@ -420,7 +443,7 @@ extern "C" DWORD EXPORT DrvBegin(SQLITE_CONN *pConn)
 
 extern "C" DWORD EXPORT DrvCommit(SQLITE_CONN *pConn)
 {
-   return DrvQueryInternal(pConn, "COMMIT");
+   return DrvQueryInternal(pConn, "COMMIT", NULL);
 }
 
 
@@ -430,7 +453,7 @@ extern "C" DWORD EXPORT DrvCommit(SQLITE_CONN *pConn)
 
 extern "C" DWORD EXPORT DrvRollback(SQLITE_CONN *pConn)
 {
-   return DrvQueryInternal(pConn, "ROLLBACK");
+   return DrvQueryInternal(pConn, "ROLLBACK", NULL);
 }
 
 

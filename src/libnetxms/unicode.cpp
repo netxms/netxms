@@ -1,7 +1,7 @@
-/* $Id: unicode.cpp,v 1.32 2008-04-12 10:44:45 victor Exp $ */
+/* $Id: unicode.cpp,v 1.33 2008-04-18 17:54:06 victor Exp $ */
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -373,6 +373,22 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString)
    nLen = (int)strlen(pszString) + 1;
    pwszOut = (WCHAR *)malloc(nLen * sizeof(WCHAR));
    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszString, -1, pwszOut, nLen);
+   return pwszOut;
+}
+
+
+//
+// Convert UTF8 string to wide string allocating wide string dynamically
+//
+
+WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString)
+{
+   WCHAR *pwszOut;
+   int nLen;
+
+   nLen = (int)strlen(pszString) + 1;
+   pwszOut = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+   MultiByteToWideChar(CP_UTF8, 0, pszString, -1, pwszOut, nLen);
    return pwszOut;
 }
 

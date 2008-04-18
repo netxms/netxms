@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.123 2008-04-14 15:33:33 victor Exp $ */
+/* $Id: nms_util.h,v 1.124 2008-04-18 17:54:06 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -525,6 +525,7 @@ extern "C"
 #endif	/* _WIN32 */
 
    WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString);
+	WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString);
    char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString);
    char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString);
    
@@ -604,6 +605,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.123  2008/04/14 15:33:33  victor
+Added possibility to use non-UNICODE bindings in ODBC calls
+
 Revision 1.122  2008/04/12 10:44:45  victor
 ODBC driver now compiles on systems with 4-byte wchar_t
 
