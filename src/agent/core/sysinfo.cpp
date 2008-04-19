@@ -1,4 +1,4 @@
-/* $Id: sysinfo.cpp,v 1.23 2007-05-26 10:42:19 victor Exp $ */
+/* $Id: sysinfo.cpp,v 1.24 2008-04-19 16:34:32 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004 Victor Kirhenshtein
@@ -88,8 +88,14 @@ LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
          strcat(szFileName, pFile->d_name);
 
          // skip unaccessible entries
-         if (stat( szFileName, &fileInfo ) == -1)
+         if (lstat(szFileName, &fileInfo) == -1)
             continue;
+         
+         // skip symlinks
+#ifndef _WIN32         
+         if (S_ISLNK(fileInfo.st_mode))
+         	continue;
+#endif         	
 
          if (S_ISDIR(fileInfo.st_mode) && bRecursive)
          {
