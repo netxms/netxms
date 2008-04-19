@@ -67,6 +67,7 @@ private:
    TCHAR **m_ppszParameters;
    time_t m_tTimeStamp;
 	TCHAR *m_pszUserTag;
+	TCHAR *m_pszCustomMessage;
 
 public:
    Event();
@@ -93,6 +94,8 @@ public:
    DWORD GetParametersCount(void) { return m_dwNumParameters; }
    char *GetParameter(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? m_ppszParameters[dwIndex] : NULL; }
    DWORD GetParameterAsULong(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? strtoul(m_ppszParameters[dwIndex], NULL, 0) : 0; }
+   
+   void SetCustomMessage(const TCHAR *pszMessage) { safe_free(m_pszCustomMessage); m_pszCustomMessage = (pszMessage != NULL) ? _tcsdup(pszMessage) : NULL; }
 };
 
 

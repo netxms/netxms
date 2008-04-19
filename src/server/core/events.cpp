@@ -60,6 +60,7 @@ Event::Event()
    m_pszMessageTemplate = NULL;
    m_tTimeStamp = 0;
 	m_pszUserTag = NULL;
+	m_pszCustomMessage = NULL;
 }
 
 
@@ -78,6 +79,7 @@ Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, const TCHAR *pszUserTa
    m_dwSource = dwSourceId;
    m_pszMessageText = NULL;
 	m_pszUserTag = (pszUserTag != NULL) ? _tcsdup(pszUserTag) : NULL;
+	m_pszCustomMessage = NULL;
 
    // Create parameters
    if (szFormat != NULL)
@@ -137,6 +139,7 @@ Event::~Event()
    safe_free(m_pszMessageText);
    safe_free(m_pszMessageTemplate);
 	safe_free(m_pszUserTag);
+	safe_free(m_pszCustomMessage);
    if (m_ppszParameters != NULL)
    {
       DWORD i;
@@ -265,6 +268,15 @@ TCHAR *Event::ExpandText(TCHAR *pszTemplate, TCHAR *pszAlarmMsg)
                      pText = (char *)realloc(pText, dwSize);
                      strcpy(&pText[dwPos], m_pszMessageText);
                      dwPos += (DWORD)_tcslen(m_pszMessageText);
+                  }
+                  break;
+               case 'M':	// Custom message (usually set by matching script in EPP)
+                  if (m_pszCustomMessage != NULL)
+                  {
+                     dwSize += (DWORD)_tcslen(m_pszCustomMessage);
+                     pText = (char *)realloc(pText, dwSize);
+                     strcpy(&pText[dwPos], m_pszCustomMessage);
+                     dwPos += (DWORD)_tcslen(m_pszCustomMessage);
                   }
                   break;
                case 'A':   // Associated alarm message

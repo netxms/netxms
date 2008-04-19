@@ -419,9 +419,11 @@ public:
 	void Optimize(void);
 
 	void SetGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
+	NXSL_Variable *FindGlobalVariable(const TCHAR *pszName) { return m_pGlobals->Find(pszName); }
 
    int Run(NXSL_Environment *pEnv = NULL, DWORD argc = 0,
-           NXSL_Value **argv = NULL, NXSL_VariableSystem *pUserLocals = NULL);
+           NXSL_Value **argv = NULL, NXSL_VariableSystem *pUserLocals = NULL,
+           NXSL_VariableSystem **ppGlobals = NULL);
 
    DWORD CodeSize(void) { return m_dwCodeSize; }
 

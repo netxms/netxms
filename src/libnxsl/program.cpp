@@ -389,7 +389,7 @@ void NXSL_Program::Error(int nError)
 //
 
 int NXSL_Program::Run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
-                      NXSL_VariableSystem *pUserLocals)
+                      NXSL_VariableSystem *pUserLocals, NXSL_VariableSystem **ppGlobals)
 {
    DWORD i, dwOrigCodeSize, dwOrigNumFn;
    NXSL_VariableSystem *pSavedGlobals;
@@ -456,7 +456,10 @@ int NXSL_Program::Run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
    }
 
    // Restore global variables
-   delete m_pGlobals;
+   if (ppGlobals == NULL)
+	   delete m_pGlobals;
+	else
+		*ppGlobals = m_pGlobals;
    m_pGlobals = pSavedGlobals;
 
    // Cleanup

@@ -81,7 +81,11 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
       TCHAR szError[256];
 
       m_pScript = (NXSL_Program *)NXSLCompile(m_pszScript, szError, 256);
-      if (m_pScript == NULL)
+      if (m_pScript != NULL)
+      {
+      	m_pScript->SetGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value(_T("")));
+      }
+      else
       {
          WriteLog(MSG_EPRULE_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
                   "ds", m_dwId, szError);
@@ -146,7 +150,11 @@ EPRule::EPRule(CSCPMessage *pMsg)
       TCHAR szError[256];
 
       m_pScript = (NXSL_Program *)NXSLCompile(m_pszScript, szError, 256);
-      if (m_pScript == NULL)
+      if (m_pScript != NULL)
+      {
+      	m_pScript->SetGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value(_T("")));
+      }
+      else
       {
          WriteLog(MSG_EPRULE_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
                   "ds", m_dwId, szError);
@@ -271,7 +279,7 @@ BOOL EPRule::MatchScript(Event *pEvent)
 {
    NXSL_Environment *pEnv;
    NXSL_Value **ppValueList, *pValue;
-   NXSL_VariableSystem *pLocals;
+   NXSL_VariableSystem *pLocals, *pGlobals = NULL;
    BOOL bRet = TRUE;
    DWORD i;
 
@@ -298,11 +306,24 @@ BOOL EPRule::MatchScript(Event *pEvent)
    pLocals->Create(_T("USER_TAG"), new NXSL_Value((TCHAR *)pEvent->UserTag()));
 
    // Run script
-   if (m_pScript->Run(pEnv, pEvent->GetParametersCount(), ppValueList, pLocals) == 0)
+   if (m_pScript->Run(pEnv, pEvent->GetParametersCount(), ppValueList, pLocals, &pGlobals) == 0)
    {
       pValue = m_pScript->GetResult();
       if (pValue != NULL)
+      {
          bRet = pValue->GetValueAsInt32() ? TRUE : FALSE;
+         if (bRet)
+         {
+         	NXSL_Variable *var;
+         	
+         	var = pGlobals->Find(_T("CUSTOM_MESSAGE"));
+         	if (var != NULL)
+         	{
+         		// Update custom message in event
+         		pEvent->SetCustomMessage(var->Value()->GetValueAsCString());
+         	}
+         }
+      }
    }
    else
    {
@@ -310,6 +331,7 @@ BOOL EPRule::MatchScript(Event *pEvent)
                "ds", m_dwId, m_pScript->GetErrorText());
    }
    free(ppValueList);
+   delete pGlobals;
 
    return bRet;
 }
