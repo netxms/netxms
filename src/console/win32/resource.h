@@ -257,6 +257,7 @@
 #define IDI_INSTANCE                    383
 #define IDI_EVENT_CORRELATION           384
 #define IDD_OBJECT_TRUSTED_NODES        385
+#define IDD_SELECT_MAP                  386
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -306,6 +307,7 @@
 #define IDC_LIST_STRINGS                1024
 #define IDC_LIST_SITUATIONS             1024
 #define IDC_LIST_ATTRIBUTES             1024
+#define IDC_LIST_MAPS                   1024
 #define IDC_INFO_TEXT                   1025
 #define IDC_LIST_CHILDS                 1025
 #define IDC_LIST_REMOTE                 1025
@@ -960,6 +962,7 @@
 #define ID_VIEW_SITUATIONS              33092
 #define ID_CONTROLPANEL_EVENTCORRELATION 33093
 #define ID_MAP_SHOWCONNECTORNAMES       33094
+#define ID_CONTROLPANEL_NETWORKMAPS     33095
 #define ID_ALWAYS_DISABLED              43210
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
@@ -970,8 +973,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        386
-#define _APS_NEXT_COMMAND_VALUE         33095
+#define _APS_NEXT_RESOURCE_VALUE        387
+#define _APS_NEXT_COMMAND_VALUE         33096
 #define _APS_NEXT_CONTROL_VALUE         1520
 #define _APS_NEXT_SYMED_VALUE           135
 #endif

@@ -162,6 +162,7 @@ CConsoleApp::CConsoleApp()
    m_hDevMode = NULL;
    m_hDevNames = NULL;
 	m_dwMainThreadId = GetCurrentThreadId();
+	m_bReconnect = FALSE;
 }
 
 
@@ -898,6 +899,8 @@ void CConsoleApp::OnConnectToServer()
 	CLoginDialog dlgLogin;
    DWORD dwResult;
 
+	m_bIgnoreErrors = FALSE;
+
    dlgLogin.m_strServer = g_szServer;
    dlgLogin.m_strLogin = g_szLogin;
    dlgLogin.m_bEncrypt = (g_dwOptions & OPT_ENCRYPT_CONNECTION) ? TRUE : FALSE;
@@ -916,14 +919,21 @@ void CConsoleApp::OnConnectToServer()
    do
    {
 		dlgLogin.m_strLastCertName = g_szLastCertName;
-      if (dlgLogin.DoModal() != IDOK)
-      {
-         PostQuitMessage(1);
-         break;
-      }
+		if (m_bReconnect)
+		{
+			m_bReconnect = FALSE;
+		}
+		else
+		{
+			if (dlgLogin.DoModal() != IDOK)
+			{
+				PostQuitMessage(1);
+				break;
+			}
+	      _tcscpy(g_szPassword, (LPCTSTR)dlgLogin.m_strPassword);
+		}
       _tcscpy(g_szServer, (LPCTSTR)dlgLogin.m_strServer);
       _tcscpy(g_szLogin, (LPCTSTR)dlgLogin.m_strLogin);
-      _tcscpy(g_szPassword, (LPCTSTR)dlgLogin.m_strPassword);
 		g_nAuthType = dlgLogin.m_nAuthType;
 		if (g_nAuthType == NETXMS_AUTH_TYPE_CERTIFICATE)
 			nx_strncpy(g_szLastCertName, dlgLogin.m_pCertList[dlgLogin.m_nCertificateIndex].szName, MAX_DB_STRING);
@@ -1010,8 +1020,15 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
             m_bIgnoreErrors = TRUE;
             if (IsWindow(m_pMainWnd->m_hWnd))
             {
-               m_pMainWnd->MessageBox(_T("Connection with the management server terminated unexpectedly"), _T("Error"), MB_OK | MB_ICONSTOP);
-               m_pMainWnd->PostMessage(WM_CLOSE, 0, 0);
+               if (m_pMainWnd->MessageBox(_T("Connection with the management server terminated unexpectedly.\nDo you wish to reconnect?"), _T("Error"), MB_YESNO | MB_ICONSTOP) == IDYES)
+					{
+						m_bReconnect = TRUE;
+					   m_pMainWnd->PostMessage(WM_COMMAND, ID_CONNECT_TO_SERVER, 0);
+					}
+					else
+					{
+						m_pMainWnd->PostMessage(WM_CLOSE, 0, 0);
+					}
             }
          }
          break;
@@ -1080,8 +1097,15 @@ void CConsoleApp::EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)
                if (!m_bIgnoreErrors)
                {
                   m_bIgnoreErrors = TRUE;
-                  m_pMainWnd->MessageBox(_T("Server was shutdown"), _T("Warning"), MB_OK | MB_ICONSTOP);
-                  m_pMainWnd->PostMessage(WM_CLOSE, 0, 0);
+                  if (m_pMainWnd->MessageBox(_T("Server was shutdown. Do you wish to reconnect?"), _T("Warning"), MB_YESNO | MB_ICONSTOP) == IDYES)
+						{
+							m_bReconnect = TRUE;
+						   m_pMainWnd->PostMessage(WM_COMMAND, ID_CONNECT_TO_SERVER, 0);
+						}
+						else
+						{
+							m_pMainWnd->PostMessage(WM_CLOSE, 0, 0);
+						}
                }
                break;
             case NX_NOTIFY_DBCONN_STATUS:

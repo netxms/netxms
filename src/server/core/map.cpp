@@ -486,6 +486,39 @@ nxMapSrv *FindMapByID(DWORD dwMapId)
 
 
 //
+// Create NXCP message with map list
+//
+
+void CreateMapListMessage(CSCPMessage &msg, DWORD dwUserId)
+{
+	DWORD i, id, count;
+
+	if (!LockMaps())
+	{
+		msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+		return;
+	}
+
+   for(i = 0, id = VID_MAP_LIST_BASE, count = 0; i < m_dwNumMaps; i++)
+	{
+		if (m_ppMapList[i]->CheckUserRights(dwUserId, MAP_ACCESS_READ))
+		{
+			msg.SetVariable(id++, m_ppMapList[i]->MapId());
+			msg.SetVariable(id++, m_ppMapList[i]->ObjectId());
+			msg.SetVariable(id++, (DWORD)MAP_ACCESS_READ);
+			msg.SetVariable(id++, m_ppMapList[i]->Name());
+         id += 6;  // Reserved ids for future use
+			count++;
+		}
+	}
+
+	UnlockMaps();
+	msg.SetVariable(VID_NUM_MAPS, count);
+	msg.SetVariable(VID_RCC, RCC_SUCCESS);
+}
+
+
+//
 // Create new map
 //
 
@@ -502,7 +535,7 @@ DWORD CreateNewMap(DWORD rootObj, const TCHAR *name, DWORD *newId)
 	{
 		LockMaps();
 		m_dwNumMaps++;
-      m_ppMapList = (nxMapSrv **)realloc(m_ppMapList, sizeof(nxMapSrv *) * m_dwNumMaps);
+		m_ppMapList = (nxMapSrv **)realloc(m_ppMapList, sizeof(nxMapSrv *) * m_dwNumMaps);
 		m_ppMapList[m_dwNumMaps - 1] = map;
 		UnlockMaps();
 		*newId = id;

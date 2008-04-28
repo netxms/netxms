@@ -139,24 +139,37 @@ void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, const char *pszName)
 
 #ifdef _WIN32
 
-void DumpProcess(void)
+void DumpProcess(CONSOLE_CTX pCtx)
 {
-   HANDLE hFile;
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+	char cmdLine[64], buffer[256];
 
-   hFile = CreateFile(_T("C:\\netxmsd.mdmp"), GENERIC_WRITE, 0, NULL,
-                      CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-   if (hFile != INVALID_HANDLE_VALUE)
-   {
-      MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile,
-                        MiniDumpNormal, NULL, NULL, NULL);
-      CloseHandle(hFile);
-   }
+	ConsolePrintf(pCtx, "Dumping process to disk...\n");
+
+	sprintf(cmdLine, "netxmsd.exe --dump %d", GetCurrentProcessId());
+	memset(&si, 0, sizeof(STARTUPINFO));
+	si.cb = sizeof(STARTUPINFO);
+	if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE,
+	                  (g_dwFlags & AF_DAEMON) ? CREATE_NO_WINDOW : 0, NULL, NULL, &si, &pi))
+	{
+		WaitForSingleObject(pi.hProcess, INFINITE);
+		CloseHandle(pi.hThread);
+		CloseHandle(pi.hProcess);
+		
+		ConsolePrintf(pCtx, "Done.\n");
+	}
+	else
+	{
+		ConsolePrintf(pCtx, "Dump error: CreateProcess() failed (%s)\n", GetSystemErrorText(GetLastError(), buffer, 256));
+	}
 }
 
 #else
 
-void DumpProcess(void)
+void DumpProcess(CONSOLE_CTX pCtx)
 {
+	ConsolePrintf(pCtx, "DUMP command is not supported for current operating system\n");
 }
 
 #endif

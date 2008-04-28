@@ -512,6 +512,14 @@ SOURCE=.\MapLinkPropDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\MapManager.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\MapSelDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\MapToolbox.cpp
 # End Source File
 # Begin Source File
@@ -1166,6 +1174,14 @@ SOURCE=.\MapFrame.h
 # Begin Source File
 
 SOURCE=.\MapLinkPropDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\MapManager.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\MapSelDlg.h
 # End Source File
 # Begin Source File
 

@@ -294,7 +294,7 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
    // Add object record with class-dependent text
    nImage = GetObjectImageIndex(pObject);
    hItem = m_wndTreeCtrl.InsertItem(pObject->szName, nImage, nImage, hParent);
-   m_wndTreeCtrl.SetItemData(hItem, (LPARAM)pObject);
+   m_wndTreeCtrl.SetItemData(hItem, pObject->dwId);
    m_wndTreeCtrl.SetItemState(hItem, INDEXTOOVERLAYMASK(pObject->iStatus), TVIS_OVERLAYMASK);
 
    // Add to hash
@@ -316,7 +316,7 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
 
 void CObjectBrowser::OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult)
 {
-   m_pCurrentObject = (NXC_OBJECT *)lpnmt->itemNew.lParam;
+   m_pCurrentObject = NXCFindObjectById(g_hSession, lpnmt->itemNew.lParam);
    m_wndObjectView.SetCurrentObject(m_pCurrentObject);
    *pResult = 0;
 }
@@ -332,7 +332,7 @@ void CObjectBrowser::OnTreeViewGetDispInfo(LPNMTVDISPINFO lpdi, LRESULT *pResult
 
    if (lpdi->item.mask == TVIF_CHILDREN)
    {
-      pObject = (NXC_OBJECT *)lpdi->item.lParam;
+      pObject = NXCFindObjectById(g_hSession, lpdi->item.lParam);
       if (pObject != NULL)
       {
          lpdi->item.cChildren = (pObject->dwNumChilds > 0) ? 1 : 0;
@@ -359,7 +359,7 @@ void CObjectBrowser::OnTreeViewItemExpanding(LPNMTREEVIEW lpnmt, LRESULT *pResul
       NXC_OBJECT *pObject, *pChildObject;
       DWORD i;
 
-      pObject = (NXC_OBJECT *)lpnmt->itemNew.lParam;
+      pObject = NXCFindObjectById(g_hSession, lpnmt->itemNew.lParam);
       if ((pObject != NULL) && ((m_wndTreeCtrl.GetItemState(lpnmt->itemNew.hItem, TVIS_EXPANDEDONCE) & TVIS_EXPANDEDONCE) == 0))
       {
          for(i = 0; i < pObject->dwNumChilds; i++)
@@ -443,21 +443,24 @@ DWORD CObjectBrowser::AdjustIndex(DWORD dwIndex, DWORD dwObjectId)
 static int CALLBACK CompareTreeItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
    TCHAR szName1[MAX_OBJECT_NAME], szName2[MAX_OBJECT_NAME];
+	NXC_OBJECT *obj1, *obj2;
 
+	obj1 = NXCFindObjectById(g_hSession, lParam1);
+	obj2 = NXCFindObjectById(g_hSession, lParam2);
 	if (lParamSort & PLACE_CONTAINERS_FIRST)
 	{
 		int notContainer1, notContainer2, nResult;
 
-		notContainer1 = ((((NXC_OBJECT *)lParam1)->iClass == OBJECT_CONTAINER) || 
-		                 (((NXC_OBJECT *)lParam1)->iClass == OBJECT_TEMPLATEGROUP)) ? 0 : 1;
-		notContainer2 = ((((NXC_OBJECT *)lParam2)->iClass == OBJECT_CONTAINER) || 
-		                 (((NXC_OBJECT *)lParam2)->iClass == OBJECT_TEMPLATEGROUP)) ? 0 : 1;
+		notContainer1 = ((obj1->iClass == OBJECT_CONTAINER) || 
+		                 (obj1->iClass == OBJECT_TEMPLATEGROUP)) ? 0 : 1;
+		notContainer2 = ((obj2->iClass == OBJECT_CONTAINER) || 
+		                 (obj2->iClass == OBJECT_TEMPLATEGROUP)) ? 0 : 1;
 		nResult = COMPARE_NUMBERS(notContainer1, notContainer2);
 		if (nResult != 0)
 			return nResult;
 	}
-   NXCGetComparableObjectNameEx((NXC_OBJECT *)lParam1, szName1);
-   NXCGetComparableObjectNameEx((NXC_OBJECT *)lParam2, szName2);
+   NXCGetComparableObjectNameEx(obj1, szName1);
+   NXCGetComparableObjectNameEx(obj2, szName2);
    return _tcsicmp(szName1, szName2);
 }
 
@@ -605,7 +608,7 @@ void CObjectBrowser::UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject)
             hItem = m_wndTreeCtrl.GetParentItem(m_pTreeHash[dwIndex].phTreeItemList[i]);
             if (hItem != NULL)
             {
-               pParent = (NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem);
+               pParent = NXCFindObjectById(g_hSession, m_wndTreeCtrl.GetItemData(hItem));
                for(j = 0; j < pObject->dwNumParents; j++)
                   if (pObject->pdwParentList[j] == pParent->dwId)
                   {
@@ -695,7 +698,7 @@ void CObjectBrowser::UpdateObjectTree(DWORD dwObjectId, NXC_OBJECT *pObject)
          hItem = m_wndTreeCtrl.GetSelectedItem();
          if (hItem != NULL)
          {
-            if (((NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem))->dwId == dwObjectId)
+            if (m_wndTreeCtrl.GetItemData(hItem) == dwObjectId)
                m_wndObjectView.Refresh();
          }
       }
@@ -711,7 +714,6 @@ void CObjectBrowser::DeleteObjectTreeItem(HTREEITEM hRootItem)
 {
    HTREEITEM hItem;
    DWORD i, dwIndex;
-   NXC_OBJECT *pObject;
 
    // Delete all child items
    hItem = m_wndTreeCtrl.GetNextItem(hRootItem, TVGN_CHILD);
@@ -722,8 +724,7 @@ void CObjectBrowser::DeleteObjectTreeItem(HTREEITEM hRootItem)
    }
 
    // Find hash record for current item
-   pObject = (NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hRootItem);
-   dwIndex = FindObjectInTree(pObject->dwId);
+   dwIndex = FindObjectInTree(m_wndTreeCtrl.GetItemData(hRootItem));
    if (dwIndex != INVALID_INDEX)
    {
       for(i = 0; i < m_pTreeHash[dwIndex].dwNumEntries; i++)
@@ -834,7 +835,7 @@ DWORD CObjectBrowser::GetSelectedObject(void)
    HTREEITEM hItem;
 
    hItem = m_wndTreeCtrl.GetSelectedItem();
-   return (hItem != NULL) ? ((NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem))->dwId : 0;
+   return (hItem != NULL) ? m_wndTreeCtrl.GetItemData(hItem) : 0;
 }
 
 
@@ -1163,8 +1164,7 @@ void CObjectBrowser::OnObjectMove()
       hItem = m_wndTreeCtrl.GetParentItem(m_wndTreeCtrl.GetSelectedItem());
       if (hItem != NULL)
       {
-         theApp.MoveObject(m_pCurrentObject->dwId, 
-                           ((NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem))->dwId);
+         theApp.MoveObject(m_pCurrentObject->dwId, m_wndTreeCtrl.GetItemData(hItem));
       }
    }
 }
@@ -1182,7 +1182,7 @@ void CObjectBrowser::OnUpdateObjectMove(CCmdUI* pCmdUI)
       {
          NXC_OBJECT *pObject;
 
-         pObject = (NXC_OBJECT *)m_wndTreeCtrl.GetItemData(hItem);
+         pObject = NXCFindObjectById(g_hSession, m_wndTreeCtrl.GetItemData(hItem));
          if (pObject != NULL)
          {
             if ((pObject->iClass == OBJECT_CONTAINER) ||

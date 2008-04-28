@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.152 2008-04-18 22:41:28 victor Exp $ */
+/* $Id: nms_core.h,v 1.153 2008-04-28 16:59:20 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -491,6 +491,7 @@ private:
    void KillSession(CSCPMessage *pRequest);
    void SendTrapLog(CSCPMessage *pRequest);
    void StartSnmpWalk(CSCPMessage *pRequest);
+   void SendMapList(DWORD dwRqId);
    void ResolveMapName(CSCPMessage *pRequest);
    void SaveMap(CSCPMessage *pRequest);
    void ProcessSubmapData(CSCPMessage *pRequest);
@@ -730,7 +731,7 @@ void ShowPollerState(CONSOLE_CTX pCtx);
 void SetPollerInfo(int nIdx, const char *pszMsg);
 void ShowServerStats(CONSOLE_CTX pCtx);
 void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, const char *pszName);
-void DumpProcess(void);
+void DumpProcess(CONSOLE_CTX pCtx);
 
 
 //

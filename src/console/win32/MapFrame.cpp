@@ -6,6 +6,7 @@
 #include "MapFrame.h"
 #include "SubmapBkgndDlg.h"
 #include "MapLinkPropDlg.h"
+#include "MapSelDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -26,6 +27,7 @@ IMPLEMENT_DYNCREATE(CMapFrame, CMDIChildWnd)
 
 CMapFrame::CMapFrame()
 {
+	m_dwMapId = 0;
    m_bShowToolBar = theApp.GetProfileInt(MAP_SECTION, _T("ShowToolBar"), TRUE);
    m_bShowToolBox = theApp.GetProfileInt(MAP_SECTION, _T("ShowToolBox"), FALSE);
    m_bShowStatusBar = theApp.GetProfileInt(MAP_SECTION, _T("ShowStatusBar"), TRUE);
@@ -173,8 +175,19 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Create and initialize map view
    m_wndMapView.CreateEx(WS_EX_CLIENTEDGE, NULL, _T("MapView"), WS_CHILD | WS_VISIBLE, rect, this, 0);
 	m_wndMapView.m_bShowConnectorNames = theApp.GetProfileInt(MAP_SECTION, _T("ShowConnectorNames"), FALSE);
-   
-   PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
+
+	// Select map to open
+	CMapSelDlg dlg;
+
+	if (dlg.DoModal() == IDOK)
+	{
+		m_dwMapId = dlg.m_dwMapId;
+	   PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
+	}
+	else
+	{
+	   PostMessage(WM_CLOSE, 0, 0);
+	}
 
    return 0;
 }
@@ -236,7 +249,7 @@ void CMapFrame::OnSetFocus(CWnd* pOldWnd)
 // Map (re)loading function
 //
 
-static DWORD LoadMap(TCHAR *pszName, nxMap **ppMap)
+/*static DWORD LoadMap(TCHAR *pszName, nxMap **ppMap)
 {
    DWORD dwResult, dwMapId;
 
@@ -246,7 +259,7 @@ static DWORD LoadMap(TCHAR *pszName, nxMap **ppMap)
       dwResult = NXCLoadMap(g_hSession, dwMapId, (void **)ppMap);
    }
    return dwResult;
-}
+}*/
 
 
 //
@@ -258,7 +271,7 @@ void CMapFrame::OnViewRefresh()
    DWORD dwResult;
    nxMap *pMap;
 
-   dwResult = DoRequestArg2(LoadMap, _T("Default"), &pMap, _T("Loading map..."));
+   dwResult = DoRequestArg3(NXCLoadMap, g_hSession, (void *)m_dwMapId, &pMap, _T("Loading map..."));
    if (dwResult == RCC_SUCCESS)
    {
       m_wndMapView.SetMap(pMap);

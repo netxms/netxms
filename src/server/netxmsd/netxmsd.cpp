@@ -1,4 +1,4 @@
-/* $Id: netxmsd.cpp,v 1.26 2008-03-25 17:59:13 victor Exp $ */
+/* $Id: netxmsd.cpp,v 1.27 2008-04-28 16:59:20 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
@@ -283,6 +283,43 @@ static BOOL ExecAndWait(TCHAR *pszCommand)
 
 
 //
+// Create minidump of given process
+//
+
+#ifdef _WIN32
+
+static void CreateMiniDump(DWORD pid)
+{
+   HANDLE hFile, hProcess;
+	TCHAR error[256];
+
+	printf("INFO: Starting minidump for process %d\n", pid);
+	hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+	if (hProcess != NULL)
+	{
+		hFile = CreateFile(_T("C:\\netxmsd.mdmp"), GENERIC_WRITE, 0, NULL,
+								 CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (hFile != INVALID_HANDLE_VALUE)
+		{
+			MiniDumpWriteDump(hProcess, pid, hFile, MiniDumpNormal, NULL, NULL, NULL);
+			CloseHandle(hFile);
+			printf("INFO: Minidump created successfully\n");
+		}
+		else
+		{
+			printf("ERROR: cannot create file for minidump (%s)\n", GetSystemErrorText(GetLastError(), error, 256));
+		}
+	}
+	else
+	{
+		printf("ERROR: cannot open process %d (%s)\n", pid, GetSystemErrorText(GetLastError(), error, 256));
+	}
+}
+
+#endif
+
+
+//
 // Parse command line
 // Returns TRUE on success and FALSE on failure
 //
@@ -311,6 +348,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 		{ "help", 0, NULL, 'h' },
 #ifdef _WIN32
 		{ "check-service", 0, NULL, '!' },
+		{ "dump", 1, NULL, '~' },
 		{ "install", 0, NULL, 'I' },
 		{ "login", 1, NULL, 'L' },
 		{ "password", 1, NULL, 'P' },
@@ -400,6 +438,9 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 				return FALSE;
 			case '!':	// Check service configuration (for migration from pre-0.2.20)
 				CheckServiceConfig();
+				return FALSE;
+			case '~':
+				CreateMiniDump(_tcstoul(optarg, NULL, 0));
 				return FALSE;
 #endif
    		default:

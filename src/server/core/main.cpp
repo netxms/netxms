@@ -847,9 +847,7 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 	}
 	else if (IsCommand("DUMP", szBuffer, 4))
 	{
-		ConsolePrintf(pCtx, "Dumping process to disk...\n");
-		DumpProcess();
-		ConsolePrintf(pCtx, "Done.\n");
+		DumpProcess(pCtx);
 	}
 	else if (IsCommand("RAISE", szBuffer, 5))
 	{

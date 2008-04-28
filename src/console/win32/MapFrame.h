@@ -38,6 +38,7 @@ public:
 
 // Implementation
 protected:
+	DWORD m_dwMapId;
 	NXC_OBJECT * GetFirstSelectedObject(void);
 	CStatusBarCtrl m_wndStatusBar;
 	BOOL CurrObjectIsNode(void);

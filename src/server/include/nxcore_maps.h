@@ -71,6 +71,7 @@ public:
 // Functions
 //
 
+void CreateMapListMessage(CSCPMessage &msg, DWORD dwUserId);
 DWORD CreateNewMap(DWORD rootObj, const TCHAR *name, DWORD *newId);
 void LoadMaps(void);
 DWORD GetMapIdFromName(TCHAR *pszName, DWORD *pdwMapId);

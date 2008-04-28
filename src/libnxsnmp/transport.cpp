@@ -1,4 +1,4 @@
-/* $Id: transport.cpp,v 1.15 2007-03-28 13:42:16 victor Exp $ */
+/* $Id: transport.cpp,v 1.16 2008-04-28 16:59:19 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
@@ -225,10 +225,11 @@ void SNMP_UDPTransport::ClearBuffer(void)
 
 int SNMP_UDPTransport::RecvData(DWORD dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize)
 {
+   fd_set rdfs;
+   struct timeval tv;
+
    if (dwTimeout != INFINITE)
    {
-      fd_set rdfs;
-      struct timeval tv;
 #ifndef _WIN32
       int iErr;
       QWORD qwTime;

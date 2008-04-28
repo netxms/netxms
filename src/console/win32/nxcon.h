@@ -159,6 +159,7 @@ public:
 
 // Implementation
 protected:
+	BOOL m_bReconnect;
 	HMENU m_hMainMenu;
 	BOOL StartConsoleUpgrade(void);
 	HGLOBAL m_hDevNames;

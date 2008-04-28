@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.303 2008-04-18 22:41:27 victor Exp $ */
+/* $Id: session.cpp,v 1.304 2008-04-28 16:59:19 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -1057,6 +1057,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_START_SNMP_WALK:
             StartSnmpWalk(pMsg);
             break;
+			case CMD_GET_MAP_LIST:
+				SendMapList(pMsg->GetId());
+				break;
          case CMD_RESOLVE_MAP_NAME:
             ResolveMapName(pMsg);
             break;
@@ -7079,6 +7082,23 @@ void ClientSession::StartSnmpWalk(CSCPMessage *pRequest)
    {
       msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
+   SendMessage(&msg);
+}
+
+
+//
+// Send map list
+//
+
+void ClientSession::SendMapList(DWORD dwRqId)
+{
+   CSCPMessage msg;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+	CreateMapListMessage(msg, m_dwUserId);
+
    SendMessage(&msg);
 }
 

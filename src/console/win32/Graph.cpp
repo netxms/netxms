@@ -575,6 +575,9 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
 
    // Create compatible DC and bitmap for painting
    pdc = GetDC();
+	if (pdc == NULL)
+		return;	// Abort drawing if GetDC() failed
+
    dc.CreateCompatibleDC(pdc);
    bmpGraph.DeleteObject();
    bmpGraph.CreateCompatibleBitmap(pdc, rect.right, rect.bottom);
