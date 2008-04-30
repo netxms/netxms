@@ -78,6 +78,7 @@
 #include "CreateIfDCIDlg.h"
 #include "IfPropsGeneral.h"
 #include "SituationManager.h"
+#include "MapManager.h"
 #include "ObjectPropsTrustedNodes.h"
 
 #ifdef _DEBUG
@@ -138,6 +139,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_TOOLS_GRAPHS_MANAGE, OnToolsGraphsManage)
 	ON_COMMAND(ID_CONTROLPANEL_CERTIFICATES, OnControlpanelCertificates)
 	ON_COMMAND(ID_VIEW_SITUATIONS, OnViewSituations)
+	ON_COMMAND(ID_CONTROLPANEL_NETWORKMAPS, OnControlpanelNetworkmaps)
 	//}}AFX_MSG_MAP
 	ON_THREAD_MESSAGE(NXCM_GRAPH_LIST_UPDATED, OnGraphListUpdate)
 	ON_COMMAND_RANGE(GRAPH_MENU_FIRST_ID, GRAPH_MENU_LAST_ID, OnPredefinedGraph)
@@ -464,6 +466,10 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hSituationManagerMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
    InsertMenu(m_hSituationManagerMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 27), _T("&Situation"));
 
+   m_hMapManagerMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hMapManagerMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hMapManagerMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 28), _T("&Map"));
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -489,6 +495,7 @@ BOOL CConsoleApp::InitInstance()
 	m_hCertManagerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_CERT_MANAGER));
 	m_hNodePollerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_NODE_POLLER));
 	m_hSituationManagerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_SITUATION_MANAGER));
+	m_hMapManagerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MAP_MANAGER));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)
@@ -581,6 +588,8 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hNodePollerAccel);
    SafeFreeResource(m_hSituationManagerMenu);
    SafeFreeResource(m_hSituationManagerAccel);
+   SafeFreeResource(m_hMapManagerMenu);
+   SafeFreeResource(m_hMapManagerAccel);
 
    CloseHandle(g_mutexActionListAccess);
    CloseHandle(g_mutexGraphListAccess);
@@ -4467,5 +4476,26 @@ void CConsoleApp::OnViewSituations()
 		{
 			ErrorBox(RCC_ACCESS_DENIED, _T("Cannot open situation manager: %s"));
 		}
+   }
+}
+
+
+//
+// Open map manager
+//
+
+void CConsoleApp::OnControlpanelNetworkmaps() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_viewState[VIEW_MAP_MANAGER].bActive)
+   {
+      m_viewState[VIEW_MAP_MANAGER].pWnd->BringWindowToTop();
+   }
+   else
+   {
+		pFrame->CreateNewChild(RUNTIME_CLASS(CMapManager), IDR_MAP_MANAGER,
+									  m_hMapManagerMenu, m_hMapManagerAccel);
    }
 }

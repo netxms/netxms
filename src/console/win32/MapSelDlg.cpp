@@ -34,6 +34,7 @@ void CMapSelDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CMapSelDlg, CDialog)
 	//{{AFX_MSG_MAP(CMapSelDlg)
+	ON_NOTIFY(NM_DBLCLK, IDC_LIST_MAPS, OnDblclkListMaps)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -91,4 +92,16 @@ void CMapSelDlg::OnOK()
 	
 	m_dwMapId = m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
 	CDialog::OnOK();
+}
+
+
+//
+// Double click in list
+//
+
+void CMapSelDlg::OnDblclkListMaps(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+	if (m_wndListCtrl.GetSelectedCount() != 0)
+		PostMessage(WM_COMMAND, IDOK, 0);
+	*pResult = 0;
 }

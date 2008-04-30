@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "MapManager.h"
+#include "CreateNetMapDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -31,8 +32,22 @@ BEGIN_MESSAGE_MAP(CMapManager, CMDIChildWnd)
 	ON_WM_SIZE()
 	ON_WM_SETFOCUS()
 	ON_WM_DESTROY()
+	ON_COMMAND(ID_VIEW_REFRESH, OnViewRefresh)
+	ON_COMMAND(ID_MAP_CREATE, OnMapCreate)
+	ON_COMMAND(ID_MAP_DELETE, OnMapDelete)
+	ON_UPDATE_COMMAND_UI(ID_MAP_DELETE, OnUpdateMapDelete)
+	ON_WM_CONTEXTMENU()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
+
+
+BOOL CMapManager::PreCreateWindow(CREATESTRUCT& cs) 
+{
+   if (cs.lpszClass == NULL)
+      cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, NULL, NULL, 
+                                         AfxGetApp()->LoadIcon(IDI_NETMAP));
+	return CMDIChildWnd::PreCreateWindow(cs);
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // CMapManager message handlers
@@ -48,7 +63,7 @@ int CMapManager::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	if (CMDIChildWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
-	
+
 	GetClientRect(&rect);
 	m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT, rect, this, ID_LIST_VIEW);
 	m_wndListCtrl.InsertColumn(0, _T("ID"), LVCFMT_LEFT, 60);
@@ -56,6 +71,8 @@ int CMapManager::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndListCtrl.InsertColumn(2, _T("Root object"), LVCFMT_LEFT, 150);
 	m_wndListCtrl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 	LoadListCtrlColumns(m_wndListCtrl, _T("MapManager"), _T("ListCtrl"));
+
+   theApp.OnViewCreate(VIEW_MAP_MANAGER, this);
 
 	PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
 
@@ -90,5 +107,122 @@ void CMapManager::OnSetFocus(CWnd* pOldWnd)
 void CMapManager::OnDestroy() 
 {
 	SaveListCtrlColumns(m_wndListCtrl, _T("MapManager"), _T("ListCtrl"));
+   theApp.OnViewDestroy(VIEW_MAP_MANAGER, this);
 	CMDIChildWnd::OnDestroy();
+}
+
+
+//
+// Refresh view
+//
+
+void CMapManager::OnViewRefresh() 
+{
+	DWORD rcc, numMaps, i;
+	NXC_MAP_INFO *mapList;
+	TCHAR buffer[64];
+	int item;
+	NXC_OBJECT *object;
+
+	m_wndListCtrl.DeleteAllItems();
+
+	rcc = DoRequestArg3(NXCGetMapList, g_hSession, &numMaps, &mapList, _T("Retrieving map list..."));
+	if (rcc == RCC_SUCCESS)
+	{
+		for(i = 0; i < numMaps; i++)
+		{
+			_stprintf(buffer, _T("%d"), mapList[i].dwMapId);
+			item = m_wndListCtrl.InsertItem(i, buffer);
+			if (item != -1)
+			{
+				m_wndListCtrl.SetItemData(item, mapList[i].dwMapId);
+				m_wndListCtrl.SetItemText(item, 1, mapList[i].szName);
+				object = NXCFindObjectById(g_hSession, mapList[i].dwObjectId);
+				m_wndListCtrl.SetItemText(item, 2, (object != NULL) ? object->szName : _T("<unknown>"));
+			}
+		}
+		safe_free(mapList);
+	}
+	else
+	{
+		theApp.ErrorBox(rcc, _T("Cannot retrieve map list from server: %s"));
+	}
+}
+
+
+//
+// Map -> Create menu handler
+//
+
+void CMapManager::OnMapCreate() 
+{
+	CCreateNetMapDlg dlg;
+	DWORD rcc, mapId;
+	TCHAR buffer[64];
+	NXC_OBJECT *object;
+	int item;
+
+	if (dlg.DoModal() == IDOK)
+	{
+		rcc = DoRequestArg4(NXCCreateMap, g_hSession, (void *)dlg.m_dwRootObj, (void *)((LPCTSTR)dlg.m_strName),
+		                    &mapId, _T("Creating new network map..."));
+		if (rcc == RCC_SUCCESS)
+		{
+			_stprintf(buffer, _T("%d"), mapId);
+			item = m_wndListCtrl.InsertItem(0x7FFFFFFF, buffer);
+			if (item != -1)
+			{
+				m_wndListCtrl.SetItemData(item, mapId);
+				m_wndListCtrl.SetItemText(item, 1, dlg.m_strName);
+				object = NXCFindObjectById(g_hSession, dlg.m_dwRootObj);
+				m_wndListCtrl.SetItemText(item, 2, (object != NULL) ? object->szName : _T("<unknown>"));
+			}
+		}
+		else
+		{
+			theApp.ErrorBox(rcc, _T("Cannot create network map: %s"));
+		}
+	}
+}
+
+
+//
+// Map -> Delete menu handler
+//
+
+void CMapManager::OnMapDelete() 
+{
+	int item;
+	DWORD rcc;
+
+	if (m_wndListCtrl.GetSelectedCount() == 0)
+		return;
+
+	while((item = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED)) != -1)
+	{
+		rcc = DoRequestArg2(NXCDeleteMap, g_hSession, (void *)m_wndListCtrl.GetItemData(item), _T("Deleting map..."));
+		if (rcc != RCC_SUCCESS)
+		{
+			theApp.ErrorBox(rcc, _T("Cannot delete map: %s"));
+			break;
+		}
+	}
+}
+
+void CMapManager::OnUpdateMapDelete(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);	
+}
+
+
+//
+// WM_CONTEXTMENU message handler
+//
+
+void CMapManager::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+   CMenu *pMenu;
+
+   pMenu = theApp.GetContextMenu(30);
+   pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
 }

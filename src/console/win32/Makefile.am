@@ -41,6 +41,7 @@ EXTRA_DIST = \
 	CreateContainerDlg.cpp CreateContainerDlg.h \
 	CreateIfDCIDlg.cpp CreateIfDCIDlg.h \
 	CreateMPDlg.cpp CreateMPDlg.h \
+	CreateNetMapDlg.cpp CreateNetMapDlg.h \
 	CreateNetSrvDlg.cpp CreateNetSrvDlg.h \
 	CreateNodeDlg.cpp CreateNodeDlg.h \
 	CreateObjectDlg.cpp CreateObjectDlg.h \

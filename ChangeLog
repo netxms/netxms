@@ -2,6 +2,7 @@
 * 0.2.21
 *
 
+- Multiple network maps
 - Added parameter ListenAddress to all services (server, web server, agent)
 - New possible value for UseInterfaceAliases - concatenate name with alias
 - Added possibility to create custom message in event matching script and

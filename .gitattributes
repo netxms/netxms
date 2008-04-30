@@ -875,6 +875,8 @@ src/console/win32/CreateIfDCIDlg.cpp -text
 src/console/win32/CreateIfDCIDlg.h -text
 src/console/win32/CreateMPDlg.cpp -text
 src/console/win32/CreateMPDlg.h -text
+src/console/win32/CreateNetMapDlg.cpp -text
+src/console/win32/CreateNetMapDlg.h -text
 src/console/win32/CreateNetSrvDlg.cpp -text
 src/console/win32/CreateNetSrvDlg.h -text
 src/console/win32/CreateNodeDlg.cpp -text

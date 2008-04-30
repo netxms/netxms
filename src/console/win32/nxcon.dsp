@@ -296,6 +296,10 @@ SOURCE=.\CreateMPDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\CreateNetMapDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\CreateNetSrvDlg.cpp
 # End Source File
 # Begin Source File
@@ -954,6 +958,10 @@ SOURCE=.\CreateIfDCIDlg.h
 # Begin Source File
 
 SOURCE=.\CreateMPDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\CreateNetMapDlg.h
 # End Source File
 # Begin Source File
 

@@ -647,6 +647,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Create &instance...\tCtrl+I", ID_SITUATION_CREATEINSTANCE
     END
+    POPUP "Map"
+    BEGIN
+        MENUITEM "&Create...\tIns",             ID_MAP_CREATE
+        MENUITEM "&Delete\tDel",                ID_MAP_DELETE
+    END
 END
 
 IDM_CONTEXT MENU DISCARDABLE 
@@ -1066,6 +1071,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Create &instance...",         ID_SITUATION_CREATEINSTANCE
     END
+    POPUP "Map"
+    BEGIN
+        MENUITEM "&Create...",                  ID_MAP_CREATE
+        MENUITEM "&Delete",                     ID_MAP_DELETE
+    END
 END
 
 
@@ -1315,6 +1325,12 @@ BEGIN
     VK_DELETE,      ID_SITUATION_DELETE,    VIRTKEY, NOINVERT
     VK_INSERT,      ID_SITUATION_CREATE,    VIRTKEY, NOINVERT
     VK_RETURN,      ID_SITUATION_EDIT,      VIRTKEY, ALT, NOINVERT
+END
+
+IDA_MAP_MANAGER ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_DELETE,      ID_MAP_DELETE,          VIRTKEY, NOINVERT
+    VK_INSERT,      ID_MAP_CREATE,          VIRTKEY, NOINVERT
 END
 
 
@@ -3431,6 +3447,20 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,215,24,50,14
 END
 
+IDD_CREATE_NETMAP DIALOG DISCARDABLE  0, 0, 273, 70
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create Network Map"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_NAME,7,17,198,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_OBJECT,7,49,178,14,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "...",IDC_BUTTON_SELECT,189,48,16,14
+    DEFPUSHBUTTON   "OK",IDOK,216,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,216,24,50,14
+    LTEXT           "Map name",IDC_STATIC,7,7,34,8
+    LTEXT           "Root object",IDC_STATIC,7,39,38,8
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -4258,6 +4288,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 144
     END
+
+    IDD_CREATE_NETMAP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 266
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 63
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -4414,6 +4452,7 @@ BEGIN
     IDR_ALARM_DETAILS       "\nAlarm Details\nAlarm Details"
     IDR_CERT_MANAGER        "\nCertificates\nCertificates"
     IDR_SITUATION_MANAGER   "\nSituations Manager\nSituations Manager"
+    IDR_MAP_MANAGER         "\nNetwork Map Manager\nNetwork Map Manager"
 END
 
 STRINGTABLE DISCARDABLE 

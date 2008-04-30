@@ -103,6 +103,7 @@ enum
    VIEW_ALARM_DETAILS,
 	VIEW_CERTIFICATE_MANAGER,
 	VIEW_SITUATION_MANAGER,
+	VIEW_MAP_MANAGER,
    MAX_VIEW_ID
 };
 
@@ -236,6 +237,8 @@ protected:
 	HACCEL m_hNodePollerAccel;    // Accelerator for node poller
 	HMENU m_hSituationManagerMenu;     // Menu for situation manager
 	HACCEL m_hSituationManagerAccel;   // Accelerator for situation manager
+	HMENU m_hMapManagerMenu;     // Menu for map manager
+	HACCEL m_hMapManagerAccel;   // Accelerator for map manager
 	
 public:
 	CMDIChildWnd *FindObjectView(DWORD dwClass, DWORD dwId);
@@ -278,6 +281,7 @@ public:
 	afx_msg void OnToolsGraphsManage();
 	afx_msg void OnControlpanelCertificates();
 	afx_msg void OnViewSituations();
+	afx_msg void OnControlpanelNetworkmaps();
 	//}}AFX_MSG
 	afx_msg void OnGraphListUpdate(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnPredefinedGraph(UINT nCmd);

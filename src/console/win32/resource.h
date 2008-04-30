@@ -258,6 +258,8 @@
 #define IDI_EVENT_CORRELATION           384
 #define IDD_OBJECT_TRUSTED_NODES        385
 #define IDD_SELECT_MAP                  386
+#define IDA_MAP_MANAGER                 387
+#define IDD_CREATE_NETMAP               388
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -700,6 +702,7 @@
 #define IDR_ALARM_DETAILS               8118
 #define IDR_CERT_MANAGER                8119
 #define IDR_SITUATION_MANAGER           8120
+#define IDR_MAP_MANAGER                 8121
 #define IDR_CTRLPANEL                   8133
 #define IDR_EVENTS                      8137
 #define IDR_MAPFRAME                    8138
@@ -963,6 +966,8 @@
 #define ID_CONTROLPANEL_EVENTCORRELATION 33093
 #define ID_MAP_SHOWCONNECTORNAMES       33094
 #define ID_CONTROLPANEL_NETWORKMAPS     33095
+#define ID_MAP_CREATE                   33096
+#define ID_MAP_DELETE                   33097
 #define ID_ALWAYS_DISABLED              43210
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
@@ -973,9 +978,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        387
-#define _APS_NEXT_COMMAND_VALUE         33096
-#define _APS_NEXT_CONTROL_VALUE         1520
+#define _APS_NEXT_RESOURCE_VALUE        389
+#define _APS_NEXT_COMMAND_VALUE         33100
+#define _APS_NEXT_CONTROL_VALUE         1523
 #define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif
