@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.4 2006-08-16 22:26:09 victor Exp $ */
+/* $Id: system.cpp,v 1.5 2008-05-01 15:31:49 victor Exp $ */
 
 /* 
 ** NetXMS subagent for FreeBSD
@@ -236,6 +236,7 @@ LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 	mib[1] = VM_METER;
 	if (sysctl(mib, 2, &vmStat, &nSize, NULL, 0) != -1)
 	{
+/*
 #define XX(a) a,a*dwPageSize,(a*dwPageSize)/1024
 printf("t_avm    = %d %d %dK\n",XX(vmStat.t_avm));
 printf("t_rm     = %d %d %dK\n",XX(vmStat.t_rm));
@@ -246,6 +247,7 @@ printf("t_rmshr  = %d %d %dK\n",XX(vmStat.t_rmshr));
 printf("t_armshr = %d %d %dK\n",XX(vmStat.t_armshr));
 printf("t_free   = %d %d %dK\n",XX(vmStat.t_free));
 printf("PageSize = %d\n",dwPageSize);
+*/
 		switch((int)pArg)
 		{
 			case PHYSICAL_FREE:
@@ -311,6 +313,10 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.4  2006/08/16 22:26:09  victor
+- Most of Net.Interface.XXX functions implemented on IPSO
+- Added function MACToStr
+
 Revision 1.3  2006/07/24 06:49:48  victor
 - Process and physical memory parameters are working
 - Various other changes
