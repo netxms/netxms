@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.296 2008-05-01 14:09:50 victor Exp $
+# $Id: configure.ac,v 1.297 2008-05-01 14:33:03 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -792,7 +792,14 @@ AC_MSG_RESULT(yes)
 AC_DEFINE(HAVE_TIMEZONE,1,Define to 1 if timezone function is available)
 ],[
 AC_MSG_RESULT(no)
-AC_CHECK_DECLS([timezone])
+AC_CHECK_DECLS([timezone],,,[
+#if HAVE_TIME_H
+#include <time.h>
+#endif
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+])
 ])
 
 # Check if struct tm has tm_gmtoff member
