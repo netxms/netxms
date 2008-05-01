@@ -871,7 +871,7 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx)
 		}
 		else
 		{
-			ConsolePrintf(pCtx, "Invalid exception name\n");
+			ConsolePrintf(pCtx, "Invalid exception name; possible names are:\nACCESS BREAKPOINT\n");
 		}
 	}
 	else if (IsCommand("EXIT", szBuffer, 4))

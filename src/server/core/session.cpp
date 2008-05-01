@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.306 2008-05-01 13:51:18 victor Exp $ */
+/* $Id: session.cpp,v 1.307 2008-05-01 21:49:34 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -1274,7 +1274,37 @@ void ClientSession::SendServerInfo(DWORD dwRqId)
    msg.SetVariable(VID_PROTOCOL_VERSION, (DWORD)CLIENT_PROTOCOL_VERSION);
 	msg.SetVariable(VID_CHALLENGE, m_challenge, CLIENT_CHALLENGE_SIZE);
 
-#if defined(_WIN32) || HAVE_DECL_TIMEZONE
+#if defined(_WIN32)
+	TIME_ZONE_INFORMATION tz;
+	WCHAR wst[4], wdt[8], *curr;
+	int i;
+
+	GetTimeZoneInformation(&tz);
+
+	// Create 3 letter abbreviation for standard name
+	for(i = 0, curr = tz.StandardName; (*curr != 0) && (i < 3); curr++)
+		if (iswupper(*curr))
+			wst[i++] = *curr;
+	while(i < 3)
+		wst[i++] = L'X';
+	wst[i] = 0;
+
+	// Create abbreviation for DST name
+	for(i = 0, curr = tz.DaylightName; (*curr != 0) && (i < 7); curr++)
+		if (iswupper(*curr))
+			wdt[i++] = *curr;
+	while(i < 3)
+		wdt[i++] = L'X';
+	wdt[i] = 0;
+
+#ifdef UNICODE
+	swprintf(szBuffer, L"%s%c%02d%s", wst, (tz.Bias >= 0) ? '+' : '-',
+	         abs(tz.Bias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
+#else
+	sprintf(szBuffer, "%S%c%02d%S", wst, (tz.Bias >= 0) ? '+' : '-',
+	        abs(tz.Bias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
+#endif
+#elif HAVE_DECL_TIMEZONE
 	sprintf(szBuffer, "%s%c%02d%s", tzname[0], (timezone >= 0) ? '+' : '-',
 	        abs(timezone) / 3600, (tzname[1] != NULL) ? tzname[1] : "");
 #elif HAVE_TM_GMTOFF

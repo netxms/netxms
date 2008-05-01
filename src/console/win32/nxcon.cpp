@@ -1897,6 +1897,9 @@ void CConsoleApp::OnFileSettings()
 				break;
 		}
 		tzset();
+
+		WriteProfileInt(_T("General"), _T("TimeZoneType"), m_nTimeZoneType);
+		WriteProfileString(_T("General"), _T("TimeZone"), m_strCustomTimeZone);
    }
 }
 
