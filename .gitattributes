@@ -149,7 +149,6 @@ contrib/startup/redhat/netxmsd.in -text
 contrib/startup/redhat/nxagentd.in -text
 contrib/startup/redhat/nxhttpd.in -text
 contrib/startup/suse/Makefile.am -text
-contrib/startup/suse/Makefile.in -text
 contrib/startup/suse/netxmsd.in -text
 contrib/startup/suse/nxagentd.in -text
 contrib/startup/suse/nxhttpd.in -text
