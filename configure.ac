@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.294 2008-04-09 15:41:49 victor Exp $
+# $Id: configure.ac,v 1.295 2008-05-01 13:51:17 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -712,7 +712,7 @@ fi
 #--------------------------------------------------------------------
 
 AC_CHECK_HEADERS([sys/types.h sys/stat.h unistd.h stdarg.h fcntl.h])
-AC_CHECK_HEADERS([sys/int_types.h sys/time.h sys/utsname.h])
+AC_CHECK_HEADERS([sys/int_types.h time.h sys/time.h sys/utsname.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h net/nh.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
 AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h])
@@ -769,7 +769,54 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror])
 AC_CHECK_FUNCS([strrchr strtol strtoul strtoll strtoull])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
-AC_CHECK_FUNCS([nanosleep getopt_long gmtime_r])
+AC_CHECK_FUNCS([nanosleep getopt_long gmtime_r localtime_r])
+
+# Check if timezone is a function
+AC_MSG_CHECKING(for timezone function)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if HAVE_TIME_H
+#include <time.h>
+#endif
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+]],[[
+int main()
+{
+   timezone(0, 0);
+   return 0;
+}
+]])
+],[
+AC_MSG_RESULT(yes)
+AC_DEFINE(HAVE_TIMEZONE,1,Define to 1 if timezone function is available)
+],[
+AC_MSG_RESULT(no)
+AC_CHECK_DECLS([timezone])
+])
+
+# Check if struct tm has tm_gmtoff member
+AC_MSG_CHECKING(for struct tm.tm_gmtoff)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if HAVE_TIME_H
+#include <time.h>
+#endif
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+]],[[
+int main()
+{
+   struct tm t;
+   return t.tm_gmtoff;
+}
+]])
+],[
+AC_MSG_RESULT(yes)
+AC_DEFINE(HAVE_TM_GMTOFF,1,Define to 1 if struct tm has tm_gmtoff member)
+],[
+AC_MSG_RESULT(no)
+])
 
 AC_CHECK_DECLS([getopt_long],,,[
 #if HAVE_GETOPT_H

@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.305 2008-05-01 09:41:27 victor Exp $ */
+/* $Id: session.cpp,v 1.306 2008-05-01 13:51:18 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -1274,9 +1274,33 @@ void ClientSession::SendServerInfo(DWORD dwRqId)
    msg.SetVariable(VID_PROTOCOL_VERSION, (DWORD)CLIENT_PROTOCOL_VERSION);
 	msg.SetVariable(VID_CHALLENGE, m_challenge, CLIENT_CHALLENGE_SIZE);
 
+#if defined(_WIN32) || HAVE_DECL_TIMEZONE
 	sprintf(szBuffer, "%s%c%02d%s", tzname[0], (timezone >= 0) ? '+' : '-',
 	        abs(timezone) / 3600, (tzname[1] != NULL) ? tzname[1] : "");
+#elif HAVE_TM_GMTOFF
+	time_t t;
+	struct tm *loc;
+	int gmtOffset;
+#if HAVE_LOCALTIME_R
+	struct tm tmbuff;
+#endif
+
+	t = time(NULL);
+#if HAVE_LOCALTIME_R
+	loc = localtime_r(&t, &tmbuff);
+#else
+	loc = localtime(&t);
+#endif
+	gmtOffset = -loc->tm_gmtoff / 3600;
+	if (loc->tm_isdst)
+		gmtOffset++;
+	sprintf(szBuffer, "%s%c%02d%s", tzname[0], (gmtOffset >= 0) ? '+' : '-',
+	        abs(gmtOffset), (tzname[1] != NULL) ? tzname[1] : "");
+#else
+	szBuffer[0] = 0;
+#endif
 	msg.SetVariable(VID_TIMEZONE, szBuffer);
+	DebugPrintf(2, "Server time zone: %s", szBuffer);
 
 	ConfigReadStr(_T("WindowsConsoleUpgradeURL"), szBuffer, 1024,
 	              _T("http://www.netxms.org/download/netxms-%version%.exe"));
