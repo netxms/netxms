@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.295 2008-05-01 13:51:17 victor Exp $
+# $Id: configure.ac,v 1.296 2008-05-01 14:09:50 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -299,7 +299,7 @@ fi
 
 check_substr "$COMPONENTS" "ipso-agent"
 if test $? = 0; then
-	if test "x$COMPONENTS" != "x static-agent"; then
+	if test "x$COMPONENTS" != "x ipso-agent"; then
 		AC_MSG_ERROR(IPSO agent and other components are mutally exclusive.)
 	fi
 	STATIC_BUILD="yes"
