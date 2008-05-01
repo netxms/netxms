@@ -8,5 +8,21 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
+EXTRA_DIST = netxmsd.in nxagentd.in nxhttpd.in
 
-EXTRA_DIST = nxagentd
+REPLACE_CMD = sed "s,~BINDIR~,$(bindir),g" < $@.in | \
+	sed "s,~LIBDIR~,$(libdir),g" > $@
+
+all: netxmsd nxagentd nxhttpd
+
+netxmsd: netxmsd.in
+	$(REPLACE_CMD)
+
+nxagentd: nxagentd.in
+	$(REPLACE_CMD)
+
+nxhttpd: nxhttpd.in
+	$(REPLACE_CMD)
+
+clean:
+	rm -f netxmsd nxagentd nxhttpd

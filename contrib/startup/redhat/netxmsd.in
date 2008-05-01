@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: netxmsd.in,v 1.2 2007-09-21 07:37:49 victor Exp $
+# $Id: netxmsd.in,v 1.3 2008-05-01 14:04:19 victor Exp $
 #
 # netxmsd This script starts and stops the netxmsd daemon
 #
@@ -44,7 +44,7 @@ case "$1" in
   start)
 	# Start daemon.
 	echo -n "Starting netxmsd: "
-	daemon $NETXMS_BINDIR/netxmsd $NETXMSD_OPTIONS --config $NETXMSD_CONFIG --pid-file $NETXMSD_PID_FILE
+	daemon $NETXMS_BINDIR/netxmsd -d $NETXMSD_OPTIONS --config $NETXMSD_CONFIG --pid-file $NETXMSD_PID_FILE
 	RETVAL=$?
         echo
         [ $RETVAL = 0 ] && touch /var/lock/subsys/netxmsd

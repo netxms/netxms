@@ -29,15 +29,15 @@
 # See skeleton.compat for a template that works with other distros as well.
 #
 ### BEGIN INIT INFO
-# Provides:          nxagentd
+# Provides:          netxmsd
 # Required-Start:    $syslog $remote_fs
 # Should-Start: $time
 # Required-Stop:     $syslog $remote_fs
 # Should-Stop: $time
 # Default-Start:     3 5
 # Default-Stop:      0 1 2 6
-# Short-Description: NetXMS Agent
-# Description:       Start NetXMS Agent
+# Short-Description: NetXMS Server
+# Description:       Start NetXMS Server
 ### END INIT INFO
 # 
 # Any extensions to the keywords given above should be preceeded by 
@@ -106,21 +106,24 @@
 # Please use the names already registered or register one or use a
 # vendor prefix.
 
+NETXMS_BINDIR="~BINDIR~"
+NETXMS_LIBDIR="~LIBDIR~"
+
 # Default command line options
-NXAGENTD_OPTIONS="-d"
+NETXMSD_OPTIONS="-d"
 
 # Check for missing binaries (stale symlinks should not happen)
 # Note: Special treatment of stop for LSB conformance
-NXAGENTD_BIN=/usr/local/bin/nxagentd
-test -x $NXAGENTD_BIN || { echo "$NXAGENTD_BIN not installed"; 
+NETXMSD_BIN=$NETXMS_BINDIR/netxmsd
+test -x $NETXMSD_BIN || { echo "$NETXMSD_BIN not installed"; 
 	if [ "$1" = "stop" ]; then exit 0;
 	else exit 5; fi; }
 
 # Check for existence of needed config file and read it
-NXAGENTD_CONFIG=/etc/sysconfig/nxagentd
-test -r $NXAGENTD_CONFIG
+NETXMSD_CONFIG=/etc/sysconfig/netxmsd
+test -r $NETXMSD_CONFIG
 if [ $? == 0 ]; then
-	. $NXAGENTD_CONFIG
+	. $NETXMSD_CONFIG
 fi
 
 # Source LSB init functions
@@ -166,20 +169,20 @@ rc_reset
 
 case "$1" in
     start)
-	echo -n "Starting NetXMS agent "
+	echo -n "Starting NetXMS server "
 	## Start daemon with startproc(8). If this fails
 	## the return value is set appropriately by startproc.
-	/sbin/startproc $NXAGENTD_BIN $NXAGENTD_OPTIONS
+	/sbin/startproc $NETXMSD_BIN $NETXMSD_OPTIONS
 
 	# Remember status and be verbose
 	rc_status -v
 	;;
     stop)
-	echo -n "Shutting down NetXMS agent "
+	echo -n "Shutting down NetXMS server "
 	## Stop daemon with killproc(8) and if this fails
 	## killproc sets the return value according to LSB.
 
-	/sbin/killproc -TERM $NXAGENTD_BIN
+	/sbin/killproc -TERM $NETXMSD_BIN
 
 	# Remember status and be verbose
 	rc_status -v
@@ -227,7 +230,7 @@ case "$1" in
 	rc_status -v
 	;;
     status)
-	echo -n "Checking for service NetXMS agent "
+	echo -n "Checking for service NetXMS server "
 	## Check status with checkproc(8), if process is running
 	## checkproc will return with exit status 0.
 
@@ -240,7 +243,7 @@ case "$1" in
 	# 5--199 reserved (5--99 LSB, 100--149 distro, 150--199 appl.)
 	
 	# NOTE: checkproc returns LSB compliant status values.
-	/sbin/checkproc $NXAGENTD_BIN
+	/sbin/checkproc $NETXMSD_BIN
 	# NOTE: rc_status knows that we called this init script with
 	# "status" option and adapts its messages accordingly.
 	rc_status -v
@@ -250,7 +253,7 @@ case "$1" in
 	## argument to this init script which is required for a reload.
 	## Note: probe is not (yet) part of LSB (as of 1.9)
 
-	test /etc/nxagentd.conf -nt /var/run/nxagentd.pid && echo reload
+	test /etc/netxmsd.conf -nt /var/run/netxmsd.pid && echo reload
 	;;
     *)
 	echo "Usage: $0 {start|stop|status|try-restart|restart|force-reload|reload|probe}"
