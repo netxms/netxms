@@ -1,4 +1,4 @@
-/* $Id: nms_util.h,v 1.124 2008-04-18 17:54:06 victor Exp $ */
+/* $Id: nms_util.h,v 1.125 2008-05-01 15:30:12 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -502,9 +502,13 @@ extern "C"
                                                 int cchByteChar, WCHAR *pWideCharStr, 
                                                 int cchWideChar);
 
-#ifndef UNICODE_UCS2
+#if !defined(UNICODE_UCS2) || !HAVE_WCSLEN
 	int LIBNETXMS_EXPORTABLE ucs2_strlen(const UCS2CHAR *pStr);
+#endif
+#if !defined(UNICODE_UCS2) || !HAVE_WCSNCPY
 	UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strncpy(UCS2CHAR *pDst, const UCS2CHAR *pSrc, int nDstLen);
+#endif
+#if !defined(UNICODE_UCS2) || !HAVE_WCSDUP
 	UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strdup(const UCS2CHAR *pStr);
 #endif
 
@@ -605,6 +609,9 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.124  2008/04/18 17:54:06  victor
+SQLite driver changed to new API spec
+
 Revision 1.123  2008/04/14 15:33:33  victor
 Added possibility to use non-UNICODE bindings in ODBC calls
 

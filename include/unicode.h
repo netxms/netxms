@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -88,6 +88,8 @@
 #include <string.h>
 #endif
 
+#if HAVE_WCHAR_T
+
 #define WCHAR     wchar_t
 #if UNICODE_UCS2
 #define UCS2CHAR  wchar_t
@@ -95,12 +97,36 @@
 #define UCS2CHAR  unsigned short
 #endif
 
+#else	/* wchar_t not presented */
+
+#define WCHAR     unsigned short
+#define UCS2CHAR  unsigned short
+#undef UNICODE_UCS2
+#undef UNICODE_UCS4
+#define UNICODE_UCS2 1
+
+#endif
+
 // Use system wide character functions if system's wchar_t is 2 bytes long
 #if UNICODE_UCS2
 
+#if HAVE_WCSLEN
 #define ucs2_strlen	wcslen
+#else
+#define wcslen          ucs2_strlen
+#endif
+
+#if HAVE_WCSDUP
 #define ucs2_strdup	wcsdup
+#else
+#define wcsdup          ucs2_strdup
+#endif
+
+#if HAVE_WCSNCPY
 #define ucs2_strncpy	wcsncpy
+#else
+#define wcsncpy         ucs2_strncpy
+#endif
 
 #endif
 

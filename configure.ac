@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.297 2008-05-01 14:33:03 victor Exp $
+# $Id: configure.ac,v 1.298 2008-05-01 15:30:11 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -929,8 +929,13 @@ fi
 #--------------------------------------------------------------------
 
 AC_CHECK_HEADERS([wchar.h wctype.h iconv.h])
+AC_CHECK_TYPES([wchar_t],,,[
+#if HAVE_WCHAR_H
+#include <wchar.h>
+#endif
+])
 AC_CHECK_SIZEOF(wchar_t)
-AC_CHECK_FUNCS([wcstoll wcstoull wfopen wopen wstat wgetenv towupper])
+AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull wfopen wopen wstat wgetenv towupper])
 
 if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,

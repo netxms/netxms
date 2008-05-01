@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.33 2008-04-18 17:54:06 victor Exp $ */
+/* $Id: unicode.cpp,v 1.34 2008-05-01 15:30:12 victor Exp $ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -105,9 +105,9 @@ static char m_cpDefault[MAX_CODEPAGE_LEN] = ICONV_DEFAULT_CODEPAGE;
 BOOL LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp)
 {
 	BOOL rc;
+#if HAVE_ICONV && !defined(__DISABLE_ICONV)
 	iconv_t cd;
 
-#if HAVE_ICONV && !defined(__DISABLE_ICONV)
 	cd = iconv_open(cp, "UTF-8");
 	if (cd != (iconv_t)(-1))
 	{
@@ -131,7 +131,7 @@ BOOL LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp)
 // Calculate length of wide character string
 //
 
-#if !UNICODE_UCS2
+#if !UNICODE_UCS2 || !HAVE_WCSLEN
 
 int LIBNETXMS_EXPORTABLE ucs2_strlen(const UCS2CHAR *pStr)
 {
@@ -150,7 +150,7 @@ int LIBNETXMS_EXPORTABLE ucs2_strlen(const UCS2CHAR *pStr)
 // Duplicate wide character string
 //
 
-#if !UNICODE_UCS2
+#if !UNICODE_UCS2 || !HAVE_WCSDUP
 
 UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strdup(const UCS2CHAR *pStr)
 {
@@ -164,7 +164,7 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strdup(const UCS2CHAR *pStr)
 // Copy wide character string with length limitation
 //
 
-#if !UNICODE_UCS2
+#if !UNICODE_UCS2 || !HAVE_WCSNCPY
 
 UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strncpy(UCS2CHAR *pDst, const UCS2CHAR *pSrc, int nDstLen)
 {
@@ -447,7 +447,7 @@ WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer)
 #endif
 
 
-#if defined(UNICODE_UCS4)
+#if defined(UNICODE_UCS4) && !defined(__DISABLE_ICONV)
 
 //
 // Convert UCS-2 to UCS-4
