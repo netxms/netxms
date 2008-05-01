@@ -46,6 +46,7 @@ NXCL_Session::NXCL_Session()
    m_pItemList = NULL;
    m_szLastLock[0] = 0;
    m_pClientData = NULL;
+	m_szServerTimeZone[0] = 0;
 
    m_ppEventTemplates = NULL;
    m_dwNumTemplates = 0;

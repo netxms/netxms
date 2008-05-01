@@ -1916,18 +1916,28 @@ BEGIN
     LTEXT           "Event",IDC_STATIC_EVENT,62,153,20,8
 END
 
-IDD_CP_GENERAL DIALOG DISCARDABLE  0, 0, 230, 117
+IDD_CP_GENERAL DIALOG DISCARDABLE  0, 0, 230, 143
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Interface options",IDC_STATIC,7,7,216,47
     CONTROL         "&Expand Control Panel",IDC_CHECK_EXPAND,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,17,84,10
     CONTROL         "Show &grid in list views",IDC_CHECK_GRID,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,28,85,10
     CONTROL         "&Save desktop at exit",IDC_CHECK_SAVE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,39,83,10
+    CONTROL         "&Local system time zone",IDC_RADIO_TZLOCAL,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,13,83,89,11
+    CONTROL         "&Server time zone",IDC_RADIO_TZSERVER,"Button",
+                    BS_AUTORADIOBUTTON,13,95,69,10
+    CONTROL         "Custom:",IDC_RADIO_TZCUSTOM,"Button",BS_AUTORADIOBUTTON,
+                    13,106,41,10
+    EDITTEXT        IDC_EDIT_TIMEZONE,24,116,191,14,ES_AUTOHSCROLL
+    GROUPBOX        "Interface options",IDC_STATIC,7,7,216,47
+    GROUPBOX        "Time Zone",IDC_STATIC,7,61,216,75
+    LTEXT           "Use the following time zone for displaying time stamps:",
+                    IDC_STATIC,13,72,170,8
 END
 
 IDD_NEW_ACTION DIALOG DISCARDABLE  0, 0, 174, 60
@@ -3694,7 +3704,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 223
         TOPMARGIN, 7
-        BOTTOMMARGIN, 110
+        BOTTOMMARGIN, 136
     END
 
     IDD_NEW_ACTION, DIALOG

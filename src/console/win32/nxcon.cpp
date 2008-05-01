@@ -333,6 +333,18 @@ BOOL CConsoleApp::InitInstance()
       WriteProfileInt(_T("General"), _T("CfgVersion"), NXCON_CONFIG_VERSION);
    }
 
+	// Time zone information
+	m_nTimeZoneType = GetProfileInt(_T("General"), _T("TimeZoneType"), 0);
+	m_strCustomTimeZone = GetProfileString(_T("General"), _T("TimeZone"), _T("UTC"));
+	if (m_nTimeZoneType == TZ_TYPE_CUSTOM)
+	{
+		TCHAR buffer[256];
+
+		_sntprintf(buffer, 256, _T("TZ=%s"), (LPCTSTR)m_strCustomTimeZone);
+		_tputenv(buffer);
+		tzset();
+	}
+
    // Create mutexes for action and graph lists access
    g_mutexActionListAccess = CreateMutex(NULL, FALSE, NULL);
    g_mutexGraphListAccess = CreateMutex(NULL, FALSE, NULL);
@@ -980,6 +992,22 @@ void CConsoleApp::OnConnectToServer()
          if (NXCIsDBConnLost(g_hSession))
             m_pMainWnd->MessageBox(_T("NetXMS server currently has no connection with backend database. You will not be able to access historical data, and many other functions may be disabled or not work as expected."),
                                    _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
+			if (m_nTimeZoneType == TZ_TYPE_SERVER)
+			{
+				const TCHAR *tz = NXCGetServerTimeZone(g_hSession);
+				if (tz != NULL)
+				{
+					TCHAR buffer[256];
+
+					_stprintf(buffer, _T("TZ=%s"), tz);
+					_tputenv(buffer);
+					tzset();
+				}
+				else
+				{
+					m_pMainWnd->MessageBox(_T("Unable to switch to server's time zone because server does not provide time zone information"), _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
+				}
+			}
       }
       else
       {
@@ -1816,12 +1844,17 @@ void CConsoleApp::OnViewAlarms()
 
 void CConsoleApp::OnFileSettings() 
 {
+	const TCHAR *tz;
+	TCHAR buffer[256];
+
 	CPropertySheet wndPropSheet(_T("Settings"), GetMainWnd(), 0);
    CConsolePropsGeneral wndGeneral;
 
    // "General" page
    wndGeneral.m_bExpandCtrlPanel = (g_dwOptions & UI_OPT_EXPAND_CTRLPANEL) ? TRUE : FALSE;
    wndGeneral.m_bShowGrid = (g_dwOptions & UI_OPT_SHOW_GRID) ? TRUE : FALSE;
+	wndGeneral.m_strTimeZone = m_strCustomTimeZone;
+	wndGeneral.m_nTimeZoneType = m_nTimeZoneType;
    wndPropSheet.AddPage(&wndGeneral);
 
    if (wndPropSheet.DoModal() == IDOK)
@@ -1835,6 +1868,35 @@ void CConsoleApp::OnFileSettings()
          g_dwOptions |= UI_OPT_SHOW_GRID;
       else
          g_dwOptions &= ~UI_OPT_SHOW_GRID;
+
+		m_strCustomTimeZone = wndGeneral.m_strTimeZone;
+		m_nTimeZoneType = wndGeneral.m_nTimeZoneType;
+
+		switch(m_nTimeZoneType)
+		{
+			case TZ_TYPE_LOCAL:
+				_tputenv(_T("TZ="));
+				break;
+			case TZ_TYPE_SERVER:
+				tz = NXCGetServerTimeZone(g_hSession);
+				if (tz != NULL)
+				{
+					_sntprintf(buffer, 256, _T("TZ=%s"), tz);
+					_tputenv(buffer);
+				}
+				else
+				{
+					m_pMainWnd->MessageBox(_T("Unable to switch to server's time zone because server does not provide time zone information"), _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
+				}
+				break;
+			case TZ_TYPE_CUSTOM:
+				_sntprintf(buffer, 256, _T("TZ=%s"), (LPCTSTR)m_strCustomTimeZone);
+				_tputenv(buffer);
+				break;
+			default:
+				break;
+		}
+		tzset();
    }
 }
 

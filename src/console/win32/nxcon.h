@@ -52,6 +52,10 @@ class CTrapEditor;
 #define MAX_OBJECT_VIEWS   1024
 #define LAST_APP_MENU      4
 
+#define TZ_TYPE_LOCAL      0
+#define TZ_TYPE_SERVER     1
+#define TZ_TYPE_CUSTOM     2
+
 
 //
 // Object view classes
@@ -181,6 +185,8 @@ protected:
 	BOOL SetupWorkDir(void);
 	CMenu m_ctxMenu;
 	DWORD m_dwClientState;
+	int m_nTimeZoneType;
+	CString m_strCustomTimeZone;
 
    NXC_ALARM *m_pAlarmList;
 	DWORD m_dwNumAlarms;

@@ -226,6 +226,19 @@ DWORD LIBNXCL_EXPORTABLE NXCSendSMS(NXC_SESSION hSession, TCHAR *phone, TCHAR *m
 
 
 //
+// Get server's time zone
+//
+
+const TCHAR LIBNXCL_EXPORTABLE *NXCGetServerTimeZone(NXC_SESSION hSession)
+{
+	TCHAR *ptr;
+
+	ptr = ((NXCL_Session *)hSession)->GetServerTimeZone();
+	return (*ptr == 0) ? NULL : ptr;
+}
+
+
+//
 // Get text for error
 //
 

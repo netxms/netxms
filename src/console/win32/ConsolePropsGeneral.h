@@ -24,6 +24,8 @@ public:
 	enum { IDD = IDD_CP_GENERAL };
 	BOOL	m_bExpandCtrlPanel;
 	BOOL	m_bShowGrid;
+	CString	m_strTimeZone;
+	int		m_nTimeZoneType;
 	//}}AFX_DATA
 
 

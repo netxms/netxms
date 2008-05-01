@@ -44,6 +44,7 @@
 #define MAX_LOGIN_NAME     64
 #define MAX_PASSWORD_LEN   64
 #define MAX_LOCKINFO_LEN   256
+#define MAX_TZ_LEN         32
 
 
 //
@@ -124,6 +125,7 @@ private:
    CONDITION m_condStopThreads;
    TCHAR m_szLastLock[MAX_LOCKINFO_LEN];
    void *m_pClientData;       // Client-defined data
+	TCHAR m_szServerTimeZone[MAX_TZ_LEN];
 
    DWORD m_dwUserId;          // Id of logged-in user
    DWORD m_dwSystemAccess;    // System access rights for current user
@@ -242,6 +244,8 @@ public:
 
    void SetLastLock(TCHAR *pszLock) { nx_strncpy(m_szLastLock, pszLock, MAX_LOCKINFO_LEN); }
    TCHAR *GetLastLock(void) { return m_szLastLock; }
+
+	TCHAR *GetServerTimeZone(void) { return m_szServerTimeZone; }
 };
 
 inline void NXCL_Session::CallEventHandler(DWORD dwEvent, DWORD dwCode, void *pArg)

@@ -21,6 +21,8 @@ CConsolePropsGeneral::CConsolePropsGeneral() : CPropertyPage(CConsolePropsGenera
 	//{{AFX_DATA_INIT(CConsolePropsGeneral)
 	m_bExpandCtrlPanel = FALSE;
 	m_bShowGrid = FALSE;
+	m_strTimeZone = _T("");
+	m_nTimeZoneType = -1;
 	//}}AFX_DATA_INIT
 }
 
@@ -34,6 +36,9 @@ void CConsolePropsGeneral::DoDataExchange(CDataExchange* pDX)
 	//{{AFX_DATA_MAP(CConsolePropsGeneral)
 	DDX_Check(pDX, IDC_CHECK_EXPAND, m_bExpandCtrlPanel);
 	DDX_Check(pDX, IDC_CHECK_GRID, m_bShowGrid);
+	DDX_Text(pDX, IDC_EDIT_TIMEZONE, m_strTimeZone);
+	DDV_MaxChars(pDX, m_strTimeZone, 31);
+	DDX_Radio(pDX, IDC_RADIO_TZLOCAL, m_nTimeZoneType);
 	//}}AFX_DATA_MAP
 }
 

@@ -773,6 +773,7 @@ typedef struct
 #define VID_SITUATION_COUNT         ((DWORD)305)
 #define VID_NUM_TRUSTED_NODES       ((DWORD)306)
 #define VID_TRUSTED_NODES           ((DWORD)307)
+#define VID_TIMEZONE                ((DWORD)308)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

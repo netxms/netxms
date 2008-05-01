@@ -681,6 +681,10 @@
 #define IDC_EDIT_TAG                    1508
 #define IDC_CHECK_STOP                  1514
 #define IDC_CHECK_ENABLE                1516
+#define IDC_RADIO_TZLOCAL               1523
+#define IDC_RADIO_TZSERVER              1524
+#define IDC_RADIO_TZCUSTOM              1525
+#define IDC_EDIT_TIMEZONE               1526
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -980,7 +984,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        389
 #define _APS_NEXT_COMMAND_VALUE         33100
-#define _APS_NEXT_CONTROL_VALUE         1523
+#define _APS_NEXT_CONTROL_VALUE         1527
 #define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif

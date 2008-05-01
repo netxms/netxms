@@ -319,6 +319,7 @@ DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, const TCHAR *pszServer, const
 							if (ppszUpgradeURL != NULL)
 								*ppszUpgradeURL = pResp->GetVariableStr(VID_CONSOLE_UPGRADE_URL);
 							pResp->GetVariableBinary(VID_CHALLENGE, challenge, CLIENT_CHALLENGE_SIZE);
+							pResp->GetVariableStr(VID_TIMEZONE, pSession->GetServerTimeZone(), MAX_TZ_LEN);
                   }
                   delete pResp;
 
