@@ -1,4 +1,4 @@
-/* $Id: dcitem.cpp,v 1.89 2008-03-07 10:03:53 victor Exp $ */
+/* $Id: dcitem.cpp,v 1.90 2008-05-06 06:24:01 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -547,15 +547,21 @@ BOOL DCItem::LoadThresholdsFromDB(void)
 
 BOOL DCItem::SaveToDB(DB_HANDLE hdb)
 {
-   TCHAR *pszEscName, *pszEscFormula, *pszEscDescr, *pszEscInstance, szQuery[2048];
+   TCHAR *pszEscName, *pszEscFormula, *pszEscDescr, *pszEscInstance, *pszQuery;
    DB_RESULT hResult;
    BOOL bNewObject = TRUE, bResult;
 
    Lock();
 
+   pszEscName = EncodeSQLString(m_szName);
+   pszEscFormula = EncodeSQLString(CHECK_NULL_EX(m_pszFormula));
+   pszEscDescr = EncodeSQLString(m_szDescription);
+   pszEscInstance = EncodeSQLString(m_szInstance);
+   pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * (_tcslen(pszEscFormula) + 2048));
+
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT item_id FROM items WHERE item_id=%d", m_dwId);
-   hResult = DBSelect(hdb, szQuery);
+   sprintf(pszQuery, "SELECT item_id FROM items WHERE item_id=%d", m_dwId);
+   hResult = DBSelect(hdb, pszQuery);
    if (hResult != 0)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -564,35 +570,31 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
    }
 
    // Prepare and execute query
-   pszEscName = EncodeSQLString(m_szName);
-   pszEscFormula = EncodeSQLString(CHECK_NULL_EX(m_pszFormula));
-   pszEscDescr = EncodeSQLString(m_szDescription);
-   pszEscInstance = EncodeSQLString(m_szInstance);
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO items (item_id,node_id,template_id,name,description,source,"
-                       "datatype,polling_interval,retention_time,status,delta_calculation,"
-                       "transformation,instance,template_item_id,adv_schedule,"
-                       "all_thresholds,resource_id,proxy_node) VALUES "
-							  "(%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d)",
-                       m_dwId, (m_pNode == NULL) ? (DWORD)0 : m_pNode->Id(), m_dwTemplateId,
-                       pszEscName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
-                       m_iRetentionTime, m_iStatus, m_iDeltaCalculation,
-                       pszEscFormula, pszEscInstance, m_dwTemplateItemId,
-                       m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId,
-							  m_dwProxyNode);
+      sprintf(pszQuery, "INSERT INTO items (item_id,node_id,template_id,name,description,source,"
+                        "datatype,polling_interval,retention_time,status,delta_calculation,"
+                        "transformation,instance,template_item_id,adv_schedule,"
+                        "all_thresholds,resource_id,proxy_node) VALUES "
+						 	   "(%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d)",
+                        m_dwId, (m_pNode == NULL) ? (DWORD)0 : m_pNode->Id(), m_dwTemplateId,
+                        pszEscName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
+                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation,
+                        pszEscFormula, pszEscInstance, m_dwTemplateItemId,
+                        m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId,
+							   m_dwProxyNode);
    else
-      sprintf(szQuery, "UPDATE items SET node_id=%d,template_id=%d,name='%s',source=%d,"
-                       "datatype=%d,polling_interval=%d,retention_time=%d,status=%d,"
-                       "delta_calculation=%d,transformation='%s',description='%s',"
-                       "instance='%s',template_item_id=%d,adv_schedule=%d,"
-                       "all_thresholds=%d,resource_id=%d,proxy_node=%d WHERE item_id=%d",
-                       (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
-                       pszEscName, m_iSource, m_iDataType, m_iPollingInterval,
-                       m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula,
-                       pszEscDescr, pszEscInstance, m_dwTemplateItemId,
-                       m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId,
-							  m_dwProxyNode, m_dwId);
-   bResult = DBQuery(hdb, szQuery);
+      sprintf(pszQuery, "UPDATE items SET node_id=%d,template_id=%d,name='%s',source=%d,"
+                        "datatype=%d,polling_interval=%d,retention_time=%d,status=%d,"
+                        "delta_calculation=%d,transformation='%s',description='%s',"
+                        "instance='%s',template_item_id=%d,adv_schedule=%d,"
+                        "all_thresholds=%d,resource_id=%d,proxy_node=%d WHERE item_id=%d",
+                        (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
+                        pszEscName, m_iSource, m_iDataType, m_iPollingInterval,
+                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula,
+                        pszEscDescr, pszEscInstance, m_dwTemplateItemId,
+                        m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId,
+							   m_dwProxyNode, m_dwId);
+   bResult = DBQuery(hdb, pszQuery);
    free(pszEscName);
    free(pszEscFormula);
    free(pszEscDescr);
@@ -608,8 +610,8 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
    }
 
    // Delete non-existing thresholds
-   sprintf(szQuery, "SELECT threshold_id FROM thresholds WHERE item_id=%d", m_dwId);
-   hResult = DBSelect(hdb, szQuery);
+   sprintf(pszQuery, "SELECT threshold_id FROM thresholds WHERE item_id=%d", m_dwId);
+   hResult = DBSelect(hdb, pszQuery);
    if (hResult != NULL)
    {
       int i, iNumRows;
@@ -624,16 +626,16 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
                break;
          if (j == m_dwNumThresholds)
          {
-            sprintf(szQuery, "DELETE FROM thresholds WHERE threshold_id=%d", dwId);
-            DBQuery(hdb, szQuery);
+            sprintf(pszQuery, "DELETE FROM thresholds WHERE threshold_id=%d", dwId);
+            DBQuery(hdb, pszQuery);
          }
       }
       DBFreeResult(hResult);
    }
 
    // Create record in raw_dci_values if needed
-   sprintf(szQuery, "SELECT item_id FROM raw_dci_values WHERE item_id=%d", m_dwId);
-   hResult = DBSelect(hdb, szQuery);
+   sprintf(pszQuery, "SELECT item_id FROM raw_dci_values WHERE item_id=%d", m_dwId);
+   hResult = DBSelect(hdb, pszQuery);
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) == 0)
@@ -641,18 +643,18 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
          char *pszEscValue;
 
          pszEscValue = EncodeSQLString(m_prevRawValue.String());
-         sprintf(szQuery, "INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time)"
-                          " VALUES (%d,'%s',%ld)",
+         sprintf(pszQuery, "INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time)"
+                           " VALUES (%d,'%s',%ld)",
                  m_dwId, pszEscValue, m_tPrevValueTimeStamp);
          free(pszEscValue);
-         DBQuery(hdb, szQuery);
+         DBQuery(hdb, pszQuery);
       }
       DBFreeResult(hResult);
    }
 
    // Save schedules
-   sprintf(szQuery, "DELETE FROM dci_schedules WHERE item_id=%d", m_dwId);
-   DBQuery(hdb, szQuery);
+   sprintf(pszQuery, "DELETE FROM dci_schedules WHERE item_id=%d", m_dwId);
+   DBQuery(hdb, pszQuery);
    if (m_iAdvSchedule)
    {
       TCHAR *pszEscSchedule;
@@ -661,14 +663,15 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
       for(i = 0; i < m_dwNumSchedules; i++)
       {
          pszEscSchedule = EncodeSQLString(m_ppScheduleList[i]);
-         sprintf(szQuery, "INSERT INTO dci_schedules (item_id,schedule) VALUES (%d,'%s')",
+         sprintf(pszQuery, "INSERT INTO dci_schedules (item_id,schedule) VALUES (%d,'%s')",
                  m_dwId, pszEscSchedule);
          free(pszEscSchedule);
-         DBQuery(hdb, szQuery);
+         DBQuery(hdb, pszQuery);
       }
    }
 
    Unlock();
+   free(pszQuery);
    return bResult;
 }
 
