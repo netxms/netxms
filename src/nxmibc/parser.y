@@ -1116,12 +1116,21 @@ SnmpIndexPart:
 ;
 
 SnmpDefValPart:
-    DEFVAL_SYM LEFT_BRACE_SYM NumericValueItem RIGHT_BRACE_SYM
-|   DEFVAL_SYM LEFT_BRACE_SYM BinaryString RIGHT_BRACE_SYM
+    DEFVAL_SYM LEFT_BRACE_SYM BinaryString RIGHT_BRACE_SYM
 |   DEFVAL_SYM LEFT_BRACE_SYM HexString RIGHT_BRACE_SYM
 |   DEFVAL_SYM LEFT_BRACE_SYM CharString RIGHT_BRACE_SYM
+|   DEFVAL_SYM LEFT_BRACE_SYM DefValList RIGHT_BRACE_SYM
 |   DEFVAL_SYM AssignedIdentifierList
 |
+;
+
+DefValList:
+	DefValListElement COMMA_SYM DefValList
+|	DefValListElement
+;
+
+DefValListElement:
+	LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
 ;
 
 BinaryString:
@@ -1248,10 +1257,6 @@ Value:
 {
    safe_free($1);
 }
-;
-
-NumericValueItem:
-    LEFT_BRACE_SYM NumericValue RIGHT_BRACE_SYM
 ;
 
 Identifier:
