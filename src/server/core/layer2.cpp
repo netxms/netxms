@@ -135,7 +135,7 @@ DWORD BuildL2Topology(nxmap_ObjList &topology, Node *pRoot, Node *pParent, int n
 {
 	PeerList *pList;
 	DWORD i, dwResult = RCC_SNMP_FAILURE;
-	TCHAR szPeerIfName[MAX_CONNECTOR_NAME];
+	TCHAR szPeerIfName[MAX_CONNECTOR_NAME] = _T("<N/A>");
 	Node *pNode;
 
 	pList = new PeerList;
@@ -169,10 +169,10 @@ DWORD BuildL2Topology(nxmap_ObjList &topology, Node *pRoot, Node *pParent, int n
 					break;
 				topology.AddObject(pNode->Id());
 
-				// If we use CDP, szIfname member contains remote port name, not a local port name
+				// If we use CDP, szIfName member contains remote port name, not a local port name
 				if (pRoot->Flags() & NF_IS_CDP)
 				{
-					topology.LinkObjectsEx(pRoot->Id(), pNode->Id(), szPeerIfName , pList->m_pPeerList[i].szIfName);
+					topology.LinkObjectsEx(pRoot->Id(), pNode->Id(), szPeerIfName, pList->m_pPeerList[i].szIfName);
 				}
 				else
 				{

@@ -1,4 +1,4 @@
-/* $Id: sysinfo.cpp,v 1.26 2008-05-06 08:01:13 victor Exp $ */
+/* $Id: sysinfo.cpp,v 1.27 2008-05-06 12:12:09 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004 Victor Kirhenshtein
@@ -53,7 +53,7 @@ LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
    struct dirent *pFile = NULL;
 #if defined(_WIN32)
 #define STAT _stati64
-   struct stat fileInfo;
+   struct _stati64 fileInfo;
 #elif HAVE_LSTAT64 && HAVE_STRUCT_STAT64
 #define STAT lstat64
    struct stat64 fileInfo;

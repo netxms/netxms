@@ -1,4 +1,4 @@
-/* $Id: transport.cpp,v 1.16 2008-04-28 16:59:19 victor Exp $ */
+/* $Id: transport.cpp,v 1.17 2008-05-06 12:12:09 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
@@ -171,6 +171,11 @@ DWORD SNMP_UDPTransport::CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr
          // Pseudo-connect socket
          if (connect(m_hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) == 0)
          {
+				// Set non-blocking mode
+#ifdef _WIN32
+				u_long one = 1;
+				ioctlsocket(m_hSocket, FIONBIO, &one);
+#endif
             dwResult = SNMP_ERR_SUCCESS;
          }
          else
