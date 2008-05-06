@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.298 2008-05-01 15:30:11 victor Exp $
+# $Id: configure.ac,v 1.299 2008-05-06 08:01:12 victor Exp $
 #
 # NetXMS - Network Management System
 # Configure script
@@ -753,6 +753,11 @@ AC_CHECK_TYPES([off_t, socklen_t],,,[
 #include <sys/socket.h>
 #endif
 ])
+AC_CHECK_TYPES([struct stat64],,,[
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
+])
 
 
 #--------------------------------------------------------------------
@@ -769,7 +774,7 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror])
 AC_CHECK_FUNCS([strrchr strtol strtoul strtoll strtoull])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
-AC_CHECK_FUNCS([nanosleep getopt_long gmtime_r localtime_r])
+AC_CHECK_FUNCS([nanosleep getopt_long gmtime_r localtime_r lstat64])
 
 # Check if timezone is a function
 AC_MSG_CHECKING(for timezone function)

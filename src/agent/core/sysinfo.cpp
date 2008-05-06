@@ -1,4 +1,4 @@
-/* $Id: sysinfo.cpp,v 1.25 2008-04-19 19:12:41 victor Exp $ */
+/* $Id: sysinfo.cpp,v 1.26 2008-05-06 08:01:13 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004 Victor Kirhenshtein
@@ -51,11 +51,20 @@ LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
 {
    DIR *pDir = NULL;
    struct dirent *pFile = NULL;
+#if defined(_WIN32)
+#define STAT _stati64
    struct stat fileInfo;
+#elif HAVE_LSTAT64 && HAVE_STRUCT_STAT64
+#define STAT lstat64
+   struct stat64 fileInfo;
+#else
+#define STAT lstat
+   struct stat fileInfo;
+#endif
    char szFileName[MAX_PATH];
    LONG nRet = SYSINFO_RC_SUCCESS;
 
-   if (stat(szPath, &fileInfo) == -1) 
+   if (STAT(szPath, &fileInfo) == -1) 
        return SYSINFO_RC_ERROR;
 
    // if this is just a file than simply return statistics
@@ -88,11 +97,7 @@ LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
          strcat(szFileName, pFile->d_name);
 
          // skip unaccessible entries
-#ifdef _WIN32
-         if (stat(szFileName, &fileInfo) == -1)
-#else
-         if (lstat(szFileName, &fileInfo) == -1)
-#endif
+         if (STAT(szFileName, &fileInfo) == -1)
             continue;
          
          // skip symlinks
@@ -120,6 +125,8 @@ LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
    
    return nRet;
 }
+
+#undef STAT
 
 
 //
