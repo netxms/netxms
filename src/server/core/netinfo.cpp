@@ -80,7 +80,7 @@ void InitLocalNetInfo(void)
          strcpy(un.sysname, "hpux");
       snprintf(szName, MAX_PATH, LIBDIR "/libnsm_%s" SHL_SUFFIX, un.sysname);
 
-      m_hSubAgent = DLOpen(szName, NULL);
+      m_hSubAgent = DLOpen(szName, szErrorText);
       if (m_hSubAgent != NULL)
       {
          imp_NxSubAgentGetIfList = (BOOL (*)(NETXMS_VALUES_LIST *))DLGetSymbolAddr(m_hSubAgent, "__NxSubAgentGetIfList", NULL);
