@@ -300,15 +300,14 @@ static LONG H_WMIClasses(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValu
 		return SYSINFO_RC_UNSUPPORTED;
 	pwszNamespace = WideStringFromMBString(ns);
 
-	pEnumObject = DoWMIQuery(pwszNamespace, L"SELECT * FROM __CLASSES", &ctx);
+	pEnumObject = DoWMIQuery(pwszNamespace, L"SELECT * FROM meta_class", &ctx);
 	if (pEnumObject != NULL)
 	{
 		while(pEnumObject->Next(WBEM_INFINITE, 1, &pClassObject, &uRet) == S_OK)
 		{
 			VARIANT v;
 
-printf("class found !!!\n");
-			if (pClassObject->Get(L"NAME", 0, &v, 0, 0) == S_OK)
+			if (pClassObject->Get(L"__CLASS", 0, &v, 0, 0) == S_OK)
 			{
 				char *str;
 
