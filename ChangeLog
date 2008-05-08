@@ -8,7 +8,8 @@
 - New possible value for UseInterfaceAliases - concatenate name with alias
 - Added possibility to create custom message in event matching script and
   use it in alarms and actions
-- Fixed issues: #193, #198, #211, #212, #215
+- WMI subagent added
+- Fixed issues: #193, #198, #209, #211, #212, #215
 
 
 *

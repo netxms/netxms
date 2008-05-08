@@ -456,6 +456,11 @@ src/agent/subagents/winperf/winperf.cpp -text
 src/agent/subagents/winperf/winperf.dsp -text
 src/agent/subagents/winperf/winperf.dsw -text
 src/agent/subagents/winperf/winperf.h -text
+src/agent/subagents/wmi/acpi.cpp -text
+src/agent/subagents/wmi/wmi.cpp -text
+src/agent/subagents/wmi/wmi.dsp -text
+src/agent/subagents/wmi/wmi.dsw -text
+src/agent/subagents/wmi/wmi.h -text
 src/client/Makefile.am -text
 src/client/console/Makefile.am -text
 src/client/console/include/Makefile.am -text
