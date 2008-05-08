@@ -575,7 +575,7 @@ Platform subagent "%1" successfully loaded
 MessageId=
 SymbolicName=MSG_PLATFORM_SUBAGENT_NOT_LOADED
 Language=English
-Cannot loads platform subagent "%1": %2
+Cannot load platform subagent "%1": %2
 .
 
 MessageId=
