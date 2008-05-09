@@ -1,4 +1,4 @@
-/* $Id: config.cpp,v 1.49 2008-04-08 16:40:09 victor Exp $ */
+/* $Id: config.cpp,v 1.50 2008-05-09 20:04:15 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -56,6 +56,24 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 BOOL NXCORE_EXPORTABLE LoadConfig(void)
 {
    BOOL bSuccess = FALSE;
+
+#if !defined(_WIN32) && !defined(_NETWARE)
+	if (!_tcscmp(g_szConfigFile, _T("{search}")))
+	{
+		if (access(PREFIX "/etc/netxmsd.conf", 4) == 0)
+		{
+			_tcscpy(g_szConfigFile, PREFIX "/etc/netxmsd.conf");
+		}
+		else if (access("/usr/etc/netxmsd.conf", 4) == 0)
+		{
+			_tcscpy(g_szConfigFile, "/usr/etc/netxmsd.conf");
+		}
+		else
+		{
+			_tcscpy(g_szConfigFile, "/etc/netxmsd.conf");
+		}
+	}
+#endif
 
    if (IsStandalone())
       printf("Using configuration file \"%s\"\n", g_szConfigFile);

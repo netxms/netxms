@@ -67,7 +67,7 @@
 
 #else    /* _WIN32 */
 
-# define DEFAULT_CONFIG_FILE   _T("/etc/netxmsd.conf")
+# define DEFAULT_CONFIG_FILE   _T("{search}")
 
 # define DEFAULT_SHELL         "/bin/sh"
 

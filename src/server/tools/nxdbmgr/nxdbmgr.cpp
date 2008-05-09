@@ -414,6 +414,24 @@ int main(int argc, char *argv[])
    }
 
    // Read configuration file
+#if !defined(_WIN32) && !defined(_NETWARE)
+	if (!_tcscmp(szConfigFile, _T("{search}")))
+	{
+		if (access(PREFIX "/etc/netxmsd.conf", 4) == 0)
+		{
+			_tcscpy(szConfigFile, PREFIX "/etc/netxmsd.conf");
+		}
+		else if (access("/usr/etc/netxmsd.conf", 4) == 0)
+		{
+			_tcscpy(szConfigFile, "/usr/etc/netxmsd.conf");
+		}
+		else
+		{
+			_tcscpy(szConfigFile, "/etc/netxmsd.conf");
+		}
+	}
+#endif
+
    if (NxLoadConfig(szConfigFile, _T(""), m_cfgTemplate, TRUE) != NXCFG_ERR_OK)
    {
       _tprintf(_T("Error loading configuration file\n"));

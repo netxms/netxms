@@ -49,7 +49,7 @@ TCHAR g_szConfigFile[MAX_PATH] = _T("C:\\nxhttpd.conf");
 TCHAR g_szLogFile[MAX_PATH] = _T("C:\\nxhttpd.log");
 TCHAR g_szDocumentRoot[MAX_PATH] = _T("C:\\NetXMS\\var\\www");
 #else
-TCHAR g_szConfigFile[MAX_PATH] = _T("/etc/nxhttpd.conf");
+TCHAR g_szConfigFile[MAX_PATH] = _T("{search}");
 TCHAR g_szLogFile[MAX_PATH] = _T("/var/log/nxhttpd");
 TCHAR g_szDocumentRoot[MAX_PATH] = DATADIR _T("/nxhttpd");
 TCHAR g_szPidFile[MAX_PATH] = _T("/var/run/nxhttpd.pid");
@@ -415,6 +415,24 @@ int main(int argc, char *argv[])
 				break;
 		}
 	}
+
+#if !defined(_WIN32) && !defined(_NETWARE)
+	if (!_tcscmp(g_szConfigFile, _T("{search}")))
+	{
+		if (access(PREFIX "/etc/nxhttpd.conf", 4) == 0)
+		{
+			_tcscpy(g_szConfigFile, PREFIX "/etc/nxhttpd.conf");
+		}
+		else if (access("/usr/etc/nxhttpd.conf", 4) == 0)
+		{
+			_tcscpy(g_szConfigFile, "/usr/etc/nxhttpd.conf");
+		}
+		else
+		{
+			_tcscpy(g_szConfigFile, "/etc/nxhttpd.conf");
+		}
+	}
+#endif
 
 	switch(nAction)
 	{

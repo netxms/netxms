@@ -1,4 +1,4 @@
-/* $Id: nxagentd.cpp,v 1.93 2008-04-08 16:40:08 victor Exp $ */
+/* $Id: nxagentd.cpp,v 1.94 2008-05-09 20:04:15 victor Exp $ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
@@ -1113,6 +1113,24 @@ int main(int argc, char *argv[])
             break;
       }
    }
+
+#if !defined(_WIN32) && !defined(_NETWARE)
+	if (!_tcscmp(g_szConfigFile, _T("{search}")))
+	{
+		if (access(PREFIX "/etc/nxagentd.conf", 4) == 0)
+		{
+			_tcscpy(g_szConfigFile, PREFIX "/etc/nxagentd.conf");
+		}
+		else if (access("/usr/etc/nxagentd.conf", 4) == 0)
+		{
+			_tcscpy(g_szConfigFile, "/usr/etc/nxagentd.conf");
+		}
+		else
+		{
+			_tcscpy(g_szConfigFile, "/etc/nxagentd.conf");
+		}
+	}
+#endif
 
    if (bRestart)
       DoRestartActions(dwOldPID);
