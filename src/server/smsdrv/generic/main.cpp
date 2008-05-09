@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.10 2008-01-15 15:09:16 victor Exp $ */
+/* $Id: main.cpp,v 1.11 2008-05-09 00:20:42 alk Exp $ */
 
 #include "main.h"
 
@@ -101,7 +101,7 @@ extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 	DbgPrintf(2, "SMS init: port={%s}, speed=%d, data=%d, parity=%s, stop=%d",
 		portName, portSpeed, dataBits, p, stopBits == TWOSTOPBITS ? 2 : 1);
 	
-	bRet = m_serial.Open(pszInitArgs);
+	bRet = m_serial.Open(portName);
 	if (bRet)
 	{
 		DbgPrintf(4, "SMS: port opened");
@@ -134,7 +134,7 @@ extern "C" BOOL EXPORT SMSDriverInit(TCHAR *pszInitArgs)
 	}
 	else
 	{
-		DbgPrintf(1, "SMS: Unable to open serial port (%s)", pszInitArgs);
+		DbgPrintf(1, "SMS: Unable to open serial port (%s)", portName);
 	}
 	
 	if (portName != NULL)
@@ -199,6 +199,9 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.10  2008/01/15 15:09:16  victor
+Minor fixes
+
 Revision 1.9  2007/09/20 13:04:01  victor
 - Most of GCC 4.2 warnings cleaned up
 - Other minor fixes
