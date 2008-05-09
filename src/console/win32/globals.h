@@ -135,6 +135,7 @@ extern CConsoleApp theApp;
 #define NXCM_GRAPH_DATA            (WM_USER + 130)
 #define NXCM_PROCESSING_REQUEST    (WM_USER + 131)
 #define NXCM_SITUATION_CHANGE      (WM_USER + 132)
+#define NXCM_CHILD_VSCROLL         (WM_USER + 133)
 
 
 //

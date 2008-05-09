@@ -4,6 +4,7 @@
 #include "AdvSplitter.h"	// Added by ClassView
 #include "ObjectView.h"	// Added by ClassView
 #include "ObjectTree.h"	// Added by ClassView
+#include "ObjectTreeCtrl.h"
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -82,7 +83,7 @@ protected:
 	int m_nStatusImageBase;
 	int m_nLastObjectImage;
 	CImageList * m_pImageList;
-	CTreeCtrl m_wndTreeCtrl;
+	CObjectTreeCtrl m_wndTreeCtrl;
 	CAdvSplitter m_wndSplitter;
 	virtual ~CObjectBrowser();
 

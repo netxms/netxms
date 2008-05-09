@@ -130,6 +130,7 @@ EXTRA_DIST = \
 	ObjectSubordinateView.cpp ObjectSubordinateView.h \
 	ObjectToolsEditor.cpp ObjectToolsEditor.h \
 	ObjectTree.cpp ObjectTree.h \
+	ObjectTreeCtrl.cpp ObjectTreeCtrl.h \
 	ObjectView.cpp ObjectView.h \
 	ObjToolPropColumns.cpp ObjToolPropColumns.h \
 	ObjToolPropGeneral.cpp ObjToolPropGeneral.h \

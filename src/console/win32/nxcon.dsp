@@ -660,6 +660,10 @@ SOURCE=.\ObjectTree.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectTreeCtrl.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ObjectView.cpp
 # End Source File
 # Begin Source File
@@ -1350,6 +1354,10 @@ SOURCE=.\ObjectToolsEditor.h
 # Begin Source File
 
 SOURCE=.\ObjectTree.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ObjectTreeCtrl.h
 # End Source File
 # Begin Source File
 

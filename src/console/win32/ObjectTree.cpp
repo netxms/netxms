@@ -51,6 +51,7 @@ BEGIN_MESSAGE_MAP(CObjectTree, CWnd)
 	ON_COMMAND(ID_STATUS_HIDEUNMANAGED, OnStatusHideunmanaged)
 	ON_COMMAND(ID_STATUS_ICONS, OnStatusIcons)
 	//}}AFX_MSG_MAP
+	ON_MESSAGE(NXCM_CHILD_VSCROLL, OnTreeViewVScroll)
 END_MESSAGE_MAP()
 
 
@@ -62,7 +63,7 @@ BOOL CObjectTree::PreCreateWindow(CREATESTRUCT& cs)
    if (cs.lpszClass == NULL)
       cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW, 
                                          LoadCursor(NULL, IDC_ARROW),
-                                         (HBRUSH)(COLOR_WINDOW + 1), NULL);
+                                         NULL, NULL);
 	return CWnd::PreCreateWindow(cs);
 }
 
@@ -163,6 +164,8 @@ BOOL CObjectTree::IsStatusVisible(int nStatus)
 void CObjectTree::OnPaint() 
 {
 	CPaintDC dc(this); // device context for painting
+	CDC mdc;
+	CBitmap bitmap, *oldBitmap;
 	RECT rcClient, rcItem;
 	CPen pen, *pOldPen;
 	CBrush brush, *pOldBrush;
@@ -177,6 +180,11 @@ void CObjectTree::OnPaint()
 	dc.LineTo(STATUS_BAR_WIDTH - 1, rcClient.bottom);
 	dc.SelectObject(pOldPen);
 
+	mdc.CreateCompatibleDC(&dc);
+	bitmap.CreateCompatibleBitmap(&dc, STATUS_BAR_WIDTH - 1, rcClient.bottom);
+	oldBitmap = mdc.SelectObject(&bitmap);
+	mdc.FillSolidRect(0, 0, STATUS_BAR_WIDTH - 1, rcClient.bottom, GetSysColor(COLOR_WINDOW));
+
 	hItem = m_pwndTreeCtrl->GetNextItem(NULL, TVGN_FIRSTVISIBLE);
 	while(hItem != NULL)
 	{
@@ -186,7 +194,7 @@ void CObjectTree::OnPaint()
 		{
 			if (m_bUseIcons)
 			{
-				m_imageList.Draw(&dc, nStatus, CPoint(2, rcItem.top), ILD_TRANSPARENT);
+				m_imageList.Draw(&mdc, nStatus, CPoint(2, rcItem.top), ILD_TRANSPARENT);
 			}
 			else
 			{
@@ -199,15 +207,19 @@ void CObjectTree::OnPaint()
 				rcItem.bottom = rcItem.top + nSize;
 
 				brush.CreateSolidBrush(g_statusColorTable[nStatus]);
-				pOldBrush = dc.SelectObject(&brush);
-				dc.Ellipse(&rcItem);
+				pOldBrush = mdc.SelectObject(&brush);
+				mdc.Ellipse(&rcItem);
 				//dc.FillSolidRect(&rcItem, g_statusColorTable[nStatus]);
-				dc.SelectObject(pOldBrush);
+				mdc.SelectObject(pOldBrush);
 				brush.DeleteObject();
 			}
 		}
 		hItem = m_pwndTreeCtrl->GetNextItem(hItem, TVGN_NEXTVISIBLE);
 	}
+
+	dc.BitBlt(0, 0, STATUS_BAR_WIDTH - 1, rcClient.bottom, &mdc, 0, 0, SRCCOPY);
+	mdc.SelectObject(oldBitmap);
+	mdc.DeleteDC();
 }
 
 
@@ -285,5 +297,15 @@ void CObjectTree::UpdateStatusBar()
 
 	GetClientRect(&rect);
 	rect.right = STATUS_BAR_WIDTH;
-	InvalidateRect(&rect, TRUE);
+	InvalidateRect(&rect, FALSE);
+}
+
+
+//
+// NXCM_CHILD_VSCROLL message handler
+//
+
+void CObjectTree::OnTreeViewVScroll(WPARAM wParam, LPARAM lParam)
+{
+	UpdateStatusBar();
 }
