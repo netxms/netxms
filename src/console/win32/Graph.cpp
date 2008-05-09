@@ -53,6 +53,7 @@ CGraph::CGraph()
    m_bEnableZoom = TRUE;
 	m_bSet3DEdge = TRUE;
 	m_bShowTitle = FALSE;
+	m_bShowHostNames = FALSE;
 	m_bUpdating = FALSE;
    m_dwNumItems = 0;
 	m_szTitle[0] = 0;
@@ -612,8 +613,21 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
          if (m_ppItems != NULL)
             if (m_ppItems[i] != NULL)
             {
-               size = dc.GetTextExtent(m_ppItems[i]->m_pszDescription,
-                                       _tcslen(m_ppItems[i]->m_pszDescription));
+					if (m_bShowHostNames)
+					{
+						NXC_OBJECT *object;
+						TCHAR temp[1024];
+
+						object = NXCFindObjectById(g_hSession, m_ppItems[i]->m_dwNodeId);
+						_sntprintf(temp, 1024, _T("%s - %s"), (object != NULL) ? object->szName : _T("(null)"),
+						           m_ppItems[i]->m_pszDescription);
+						size = dc.GetTextExtent(temp, _tcslen(temp));
+					}
+					else
+					{
+						size = dc.GetTextExtent(m_ppItems[i]->m_pszDescription,
+														_tcslen(m_ppItems[i]->m_pszDescription));
+					}
                if (size.cx > nColSize)
                   nColSize = size.cx;
             }
@@ -880,8 +894,21 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
             if (m_ppItems != NULL)
                if (m_ppItems[i] != NULL)
                {
-                  dc.TextOut(x + 14, y, m_ppItems[i]->m_pszDescription,
-                             _tcslen(m_ppItems[i]->m_pszDescription));
+						if (m_bShowHostNames)
+						{
+							NXC_OBJECT *object;
+							TCHAR temp[1024];
+
+							object = NXCFindObjectById(g_hSession, m_ppItems[i]->m_dwNodeId);
+							_sntprintf(temp, 1024, _T("%s - %s"), (object != NULL) ? object->szName : _T("(null)"),
+										  m_ppItems[i]->m_pszDescription);
+							dc.TextOut(x + 14, y, temp, _tcslen(temp));
+						}
+						else
+						{
+							dc.TextOut(x + 14, y, m_ppItems[i]->m_pszDescription,
+										  _tcslen(m_ppItems[i]->m_pszDescription));
+						}
                   nCurrCol++;
                   if (nCurrCol == nCols)
                   {

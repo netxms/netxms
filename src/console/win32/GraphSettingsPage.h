@@ -50,6 +50,7 @@ public:
 	BOOL	m_bRuler;
 	BOOL	m_bShowLegend;
 	BOOL	m_bEnableZoom;
+	BOOL	m_bShowHostNames;
 	//}}AFX_DATA
 
 

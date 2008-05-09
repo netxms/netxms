@@ -26,6 +26,7 @@ public:
 	BOOL	m_bShowGrid;
 	CString	m_strTimeZone;
 	int		m_nTimeZoneType;
+	BOOL	m_bSaveGraphSettings;
 	//}}AFX_DATA
 
 

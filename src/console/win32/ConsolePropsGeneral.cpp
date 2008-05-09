@@ -23,6 +23,7 @@ CConsolePropsGeneral::CConsolePropsGeneral() : CPropertyPage(CConsolePropsGenera
 	m_bShowGrid = FALSE;
 	m_strTimeZone = _T("");
 	m_nTimeZoneType = -1;
+	m_bSaveGraphSettings = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -39,6 +40,7 @@ void CConsolePropsGeneral::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_TIMEZONE, m_strTimeZone);
 	DDV_MaxChars(pDX, m_strTimeZone, 31);
 	DDX_Radio(pDX, IDC_RADIO_TZLOCAL, m_nTimeZoneType);
+	DDX_Check(pDX, IDC_CHECK_SAVE_GS, m_bSaveGraphSettings);
 	//}}AFX_DATA_MAP
 }
 

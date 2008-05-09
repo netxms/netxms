@@ -115,6 +115,7 @@ private:
    int m_nLastGridSizeY;
 
 public:
+	BOOL m_bShowHostNames;
 	BOOL m_bUpdating;
 	BOOL m_bShowTitle;
 	BOOL m_bSet3DEdge;

@@ -298,6 +298,7 @@ void CGraphFrame::OnGraphProperties()
    pgSettings.m_bRuler = m_wndGraph.m_bShowRuler;
    pgSettings.m_bShowLegend = m_wndGraph.m_bShowLegend;
    pgSettings.m_bEnableZoom = m_wndGraph.m_bEnableZoom;
+   pgSettings.m_bShowHostNames = m_wndGraph.m_bShowHostNames;
    pgSettings.m_bAutoUpdate = (m_dwFlags & GF_AUTOUPDATE) ? TRUE : FALSE;
    pgSettings.m_dwRefreshInterval = m_dwRefreshInterval;
    pgSettings.m_rgbAxisLines = m_wndGraph.m_rgbAxisColor;
@@ -351,6 +352,7 @@ void CGraphFrame::OnGraphProperties()
       m_wndGraph.m_bShowLegend = pgSettings.m_bShowLegend;
       m_wndGraph.m_bShowRuler = pgSettings.m_bRuler;
       m_wndGraph.m_bEnableZoom = pgSettings.m_bEnableZoom;
+      m_wndGraph.m_bShowHostNames = pgSettings.m_bShowHostNames;
 
       m_wndGraph.m_rgbAxisColor = pgSettings.m_rgbAxisLines;
       m_wndGraph.m_rgbBkColor = pgSettings.m_rgbBackground;
