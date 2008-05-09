@@ -1,4 +1,4 @@
-/* $Id: linux.cpp,v 1.36 2007-10-31 08:14:33 victor Exp $ */
+/* $Id: linux.cpp,v 1.37 2008-05-09 22:42:12 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -28,7 +28,7 @@
 #include "net.h"
 #include "system.h"
 #include "disk.h"
-
+#include "iostat.h"
 
 //
 // Initalization callback
@@ -138,24 +138,144 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
 	{ "System.CPU.Count",             H_CpuCount,        NULL,
 		DCI_DT_UINT,	DCIDESC_SYSTEM_CPU_COUNT },
-	{ "System.CPU.LoadAvg",           H_CpuLoad,         (char *)0,
+	{ "System.CPU.LoadAvg",           H_CpuLoad,         (char *)INTERVAL_1MIN,
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG },
-	{ "System.CPU.LoadAvg5",          H_CpuLoad,         (char *)5,
+	{ "System.CPU.LoadAvg5",          H_CpuLoad,         (char *)INTERVAL_5MIN,
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG5 },
-	{ "System.CPU.LoadAvg15",         H_CpuLoad,         (char *)15,
+	{ "System.CPU.LoadAvg15",         H_CpuLoad,         (char *)INTERVAL_15MIN,
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG15 },
-	{ "System.CPU.Usage",             H_CpuUsage,        (char *)0,
+
+	/**************************************************************/
+#define P(q, w) (char *)&((struct CpuUsageParam){q, w})
+	/* usage */
+	{ "System.CPU.Usage",             H_CpuUsage,        P(INTERVAL_1MIN, CPU_USAGE_OVERAL),
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE },
-	{ "System.CPU.Usage5",            H_CpuUsage,        (char *)5,
+	{ "System.CPU.Usage5",            H_CpuUsage,        P(INTERVAL_5MIN, CPU_USAGE_OVERAL),
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5 },
-	{ "System.CPU.Usage15",           H_CpuUsage,        (char *)15,
+	{ "System.CPU.Usage15",           H_CpuUsage,        P(INTERVAL_15MIN, CPU_USAGE_OVERAL),
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15 },
-	{ "System.CPU.Usage(*)",          H_CpuUsageEx,      (char *)0,
+	{ "System.CPU.Usage(*)",          H_CpuUsageEx,      P(INTERVAL_1MIN, CPU_USAGE_OVERAL),
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_EX },
-	{ "System.CPU.Usage5(*)",         H_CpuUsageEx,      (char *)5,
+	{ "System.CPU.Usage5(*)",         H_CpuUsageEx,      P(INTERVAL_5MIN, CPU_USAGE_OVERAL),
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_EX },
-	{ "System.CPU.Usage15(*)",        H_CpuUsageEx,      (char *)15,
+	{ "System.CPU.Usage15(*)",        H_CpuUsageEx,      P(INTERVAL_15MIN, CPU_USAGE_OVERAL),
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_EX },
+
+	/* user */
+	{ "System.CPU.Usage.User",             H_CpuUsage,        P(INTERVAL_1MIN, CPU_USAGE_USER),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_USER },
+	{ "System.CPU.Usage5.User",            H_CpuUsage,        P(INTERVAL_5MIN, CPU_USAGE_USER),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_USER },
+	{ "System.CPU.Usage15.User",           H_CpuUsage,        P(INTERVAL_15MIN, CPU_USAGE_USER),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_USER },
+	{ "System.CPU.Usage.User(*)",          H_CpuUsageEx,      P(INTERVAL_1MIN, CPU_USAGE_USER),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_USER_EX },
+	{ "System.CPU.Usage5.User(*)",         H_CpuUsageEx,      P(INTERVAL_5MIN, CPU_USAGE_USER),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_USER_EX },
+	{ "System.CPU.Usage15.User(*)",        H_CpuUsageEx,      P(INTERVAL_15MIN, CPU_USAGE_USER),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_USER_EX },
+
+	/* nice */
+	{ "System.CPU.Usage.Nice",             H_CpuUsage,        P(INTERVAL_1MIN, CPU_USAGE_NICE),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_NICE },
+	{ "System.CPU.Usage5.Nice",            H_CpuUsage,        P(INTERVAL_5MIN, CPU_USAGE_NICE),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_NICE },
+	{ "System.CPU.Usage15.Nice",           H_CpuUsage,        P(INTERVAL_15MIN, CPU_USAGE_NICE),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_NICE },
+	{ "System.CPU.Usage.Nice(*)",          H_CpuUsageEx,      P(INTERVAL_1MIN, CPU_USAGE_NICE),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_NICE_EX },
+	{ "System.CPU.Usage5.Nice(*)",         H_CpuUsageEx,      P(INTERVAL_5MIN, CPU_USAGE_NICE),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_NICE_EX },
+	{ "System.CPU.Usage15.Nice(*)",        H_CpuUsageEx,      P(INTERVAL_15MIN, CPU_USAGE_NICE),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_NICE_EX },
+
+	/* system */
+	{ "System.CPU.Usage.System",             H_CpuUsage,        P(INTERVAL_1MIN, CPU_USAGE_SYSTEM),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_SYSTEM },
+	{ "System.CPU.Usage5.System",            H_CpuUsage,        P(INTERVAL_5MIN, CPU_USAGE_SYSTEM),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_SYSTEM },
+	{ "System.CPU.Usage15.System",           H_CpuUsage,        P(INTERVAL_15MIN, CPU_USAGE_SYSTEM),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_SYSTEM },
+	{ "System.CPU.Usage.System(*)",          H_CpuUsageEx,      P(INTERVAL_1MIN, CPU_USAGE_SYSTEM),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_SYSTEM_EX },
+	{ "System.CPU.Usage5.System(*)",         H_CpuUsageEx,      P(INTERVAL_5MIN, CPU_USAGE_SYSTEM),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_SYSTEM_EX },
+	{ "System.CPU.Usage15.System(*)",        H_CpuUsageEx,      P(INTERVAL_15MIN, CPU_USAGE_SYSTEM),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_SYSTEM_EX },
+
+	/* idle */
+	{ "System.CPU.Usage.Idle",             H_CpuUsage,        P(INTERVAL_1MIN, CPU_USAGE_IDLE),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_IDLE },
+	{ "System.CPU.Usage5.Idle",            H_CpuUsage,        P(INTERVAL_5MIN, CPU_USAGE_IDLE),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_IDLE },
+	{ "System.CPU.Usage15.Idle",           H_CpuUsage,        P(INTERVAL_15MIN, CPU_USAGE_IDLE),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_IDLE },
+	{ "System.CPU.Usage.Idle(*)",          H_CpuUsageEx,      P(INTERVAL_1MIN, CPU_USAGE_IDLE),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_IDLE_EX },
+	{ "System.CPU.Usage5.Idle5(*)",         H_CpuUsageEx,      P(INTERVAL_5MIN, CPU_USAGE_IDLE),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_IDLE_EX },
+	{ "System.CPU.Usage15.Idle(*)",        H_CpuUsageEx,      P(INTERVAL_15MIN, CPU_USAGE_IDLE),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_IDLE_EX },
+
+	/* iowait */
+	{ "System.CPU.Usage.IoWait",             H_CpuUsage,        P(INTERVAL_1MIN, CPU_USAGE_IOWAIT),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_IOWAIT },
+	{ "System.CPU.Usage5.IoWait",            H_CpuUsage,        P(INTERVAL_5MIN, CPU_USAGE_IOWAIT),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_IOWAIT },
+	{ "System.CPU.Usage15.IoWait",           H_CpuUsage,        P(INTERVAL_15MIN, CPU_USAGE_IOWAIT),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_IOWAIT },
+	{ "System.CPU.Usage.IoWait(*)",          H_CpuUsageEx,      P(INTERVAL_1MIN, CPU_USAGE_IOWAIT),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_IOWAIT_EX },
+	{ "System.CPU.Usage5.IoWait(*)",         H_CpuUsageEx,      P(INTERVAL_5MIN, CPU_USAGE_IOWAIT),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_IOWAIT_EX },
+	{ "System.CPU.Usage15.IoWait(*)",        H_CpuUsageEx,      P(INTERVAL_15MIN, CPU_USAGE_IOWAIT),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_IOWAIT_EX },
+
+	/* irq */
+	{ "System.CPU.Usage.Irq",             H_CpuUsage,        P(INTERVAL_1MIN, CPU_USAGE_IRQ),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_IRQ },
+	{ "System.CPU.Usage5.Irq",            H_CpuUsage,        P(INTERVAL_5MIN, CPU_USAGE_IRQ),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_IRQ },
+	{ "System.CPU.Usage15.Irq",           H_CpuUsage,        P(INTERVAL_15MIN, CPU_USAGE_IRQ),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_IRQ },
+	{ "System.CPU.Usage.Irq(*)",          H_CpuUsageEx,      P(INTERVAL_1MIN, CPU_USAGE_IRQ),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_IRQ_EX },
+	{ "System.CPU.Usage5.Irq(*)",         H_CpuUsageEx,      P(INTERVAL_5MIN, CPU_USAGE_IRQ),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_IRQ_EX },
+	{ "System.CPU.Usage15.Irq(*)",        H_CpuUsageEx,      P(INTERVAL_15MIN, CPU_USAGE_IRQ),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_IRQ_EX },
+
+	/* softirq */
+	{ "System.CPU.Usage.SoftIrq",             H_CpuUsage,        P(INTERVAL_1MIN, CPU_USAGE_SOFTIRQ),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_SOFTIRQ },
+	{ "System.CPU.Usage5.SoftIrq",            H_CpuUsage,        P(INTERVAL_5MIN, CPU_USAGE_SOFTIRQ),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_SOFTIRQ },
+	{ "System.CPU.Usage15.SoftIrq",           H_CpuUsage,        P(INTERVAL_15MIN, CPU_USAGE_SOFTIRQ),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_SOFTIRQ },
+	{ "System.CPU.Usage.SoftIrq(*)",          H_CpuUsageEx,      P(INTERVAL_1MIN, CPU_USAGE_SOFTIRQ),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_SOFTIRQ_EX },
+	{ "System.CPU.Usage5.SoftIrq(*)",         H_CpuUsageEx,      P(INTERVAL_5MIN, CPU_USAGE_SOFTIRQ),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_SOFTIRQ_EX },
+	{ "System.CPU.Usage15.SoftIrq(*)",        H_CpuUsageEx,      P(INTERVAL_15MIN, CPU_USAGE_SOFTIRQ),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_SOFTIRQ_EX },
+
+	/* steal */
+	{ "System.CPU.Usage.Steal",             H_CpuUsage,        P(INTERVAL_1MIN, CPU_USAGE_STEAL),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_STEAL },
+	{ "System.CPU.Usage5.Steal",            H_CpuUsage,        P(INTERVAL_5MIN, CPU_USAGE_STEAL),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_STEAL },
+	{ "System.CPU.Usage15.Steal",           H_CpuUsage,        P(INTERVAL_15MIN, CPU_USAGE_STEAL),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_STEAL },
+	{ "System.CPU.Usage.Steal(*)",          H_CpuUsageEx,      P(INTERVAL_1MIN, CPU_USAGE_STEAL),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE_STEAL_EX },
+	{ "System.CPU.Usage5.Steal(*)",         H_CpuUsageEx,      P(INTERVAL_5MIN, CPU_USAGE_STEAL),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE5_STEAL_EX },
+	{ "System.CPU.Usage15.Steal(*)",        H_CpuUsageEx,      P(INTERVAL_15MIN, CPU_USAGE_STEAL),
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_USAGE15_STEAL_EX },
+
+#undef P
+
+	/**************************************************************/
 	{ "System.Hostname",              H_Hostname,        NULL,
 		DCI_DT_STRING,	DCIDESC_SYSTEM_HOSTNAME },
 	{ "System.Memory.Physical.Free",  H_MemoryInfo,      (char *)PHYSICAL_FREE,
@@ -183,6 +303,24 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
 	{ "Agent.SourcePackageSupport",   H_SourcePkgSupport,NULL,
 		DCI_DT_INT,		DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
+
+	/* iostat */
+	{ "System.IO.TransferRate(*)",    H_TransferRate,    NULL,
+		DCI_DT_UINT64,	"" },
+	{ "System.IO.BlockReadRate(*)",   H_BlockReadRate, NULL,
+		DCI_DT_UINT64,	"" },
+	{ "System.IO.BlockWriteRate(*)",  H_BlockWriteRate,  NULL,
+		DCI_DT_UINT64,	"" },
+	{ "System.IO.BytesReadRate(*)",   H_BytesReadRate,   NULL,
+		DCI_DT_UINT64,	"" },
+	{ "System.IO.BytesWriteRate(*)",  H_BytesWriteRate,  NULL,
+		DCI_DT_UINT64,	"" },
+	{ "System.IO.DiskQueue(*)",       H_DiskQueue,       NULL,
+		DCI_DT_UINT64,	"" },
+	{ "System.IO.DiskQueue",          H_DiskInfo,        NULL,
+		DCI_DT_UINT64,	"" },
+	{ "System.IO.DiskTime",           H_DiskTime,        NULL,
+		DCI_DT_UINT,	"" },
 };
 
 static NETXMS_SUBAGENT_ENUM m_enums[] =
@@ -241,6 +379,9 @@ extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.36  2007/10/31 08:14:33  victor
+Added per-CPU usage statistics and System.CPU.Count parameter
+
 Revision 1.35  2007/06/08 00:02:36  alk
 DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
 

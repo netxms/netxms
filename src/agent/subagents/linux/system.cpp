@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.20 2007-10-31 08:14:33 victor Exp $ */
+/* $Id: system.cpp,v 1.21 2008-05-09 22:42:12 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -187,13 +187,13 @@ LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
 			setlocale(LC_NUMERIC, "C");
 			if (sscanf(szTmp, "%lf %lf %lf", &dLoad1, &dLoad5, &dLoad15) == 3)
 			{
-				switch (pszParam[18])
+				switch (CAST_FROM_POINTER(pArg, int))
 				{
-					case '1': // 15 min
-						ret_double(pValue, dLoad15);
-						break;
-					case '5': // 5 min
+					case INTERVAL_5MIN:
 						ret_double(pValue, dLoad5);
+						break;
+					case INTERVAL_15MIN:
+						ret_double(pValue, dLoad15);
 						break;
 					default: // 1 min
 						ret_double(pValue, dLoad1);
@@ -342,21 +342,30 @@ LONG H_SourcePkgSupport(char *pszParam, char *pArg, char *pValue)
 //
 
 #define CPU_USAGE_SLOTS			900
-#define MAX_CPU					64
+// 64 + 1 for overal
+#define MAX_CPU					(64 + 1)
 
 static THREAD m_cpuUsageCollector = INVALID_THREAD_HANDLE;
 static MUTEX m_cpuUsageMutex = INVALID_MUTEX_HANDLE;
 static bool volatile m_stopCollectorThread = false;
-static uint64_t m_user[MAX_CPU + 1];
-static uint64_t m_nice[MAX_CPU + 1];
-static uint64_t m_system[MAX_CPU + 1];
-static uint64_t m_idle[MAX_CPU + 1];
-static uint64_t m_iowait[MAX_CPU + 1];
-static uint64_t m_irq[MAX_CPU + 1];
-static uint64_t m_softirq[MAX_CPU + 1];
-static uint64_t m_steal[MAX_CPU + 1];
+static uint64_t m_user[MAX_CPU];
+static uint64_t m_nice[MAX_CPU];
+static uint64_t m_system[MAX_CPU];
+static uint64_t m_idle[MAX_CPU];
+static uint64_t m_iowait[MAX_CPU];
+static uint64_t m_irq[MAX_CPU];
+static uint64_t m_softirq[MAX_CPU];
+static uint64_t m_steal[MAX_CPU];
 // 60 sec * 15 min => 900 sec
-static float m_cpuUsage[MAX_CPU + 1][CPU_USAGE_SLOTS];
+static float *m_cpuUsage;
+static float *m_cpuUsageUser;
+static float *m_cpuUsageNice;
+static float *m_cpuUsageSystem;
+static float *m_cpuUsageIdle;
+static float *m_cpuUsageIoWait;
+static float *m_cpuUsageIrq;
+static float *m_cpuUsageSoftIrq;
+static float *m_cpuUsageSteal;
 static int m_currentSlot = 0;
 static int m_maxCPU = 0;
 
@@ -373,7 +382,7 @@ static void CpuUsageCollector()
 		
 		strcpy(pattern, "cpu %llu %llu %llu %llu %llu %llu %llu %llu\n");
 		for(cpu = 0; fscanf(hStat, pattern,
-					           &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal) >= 4; cpu++)
+					           &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal) >= 4 && cpu < MAX_CPU; cpu++)
 		{
 			int64_t userDelta, niceDelta, systemDelta, idleDelta;
 			int64_t iowaitDelta, irqDelta, softirqDelta, stealDelta;
@@ -407,23 +416,43 @@ static void CpuUsageCollector()
 			{
 				m_currentSlot = 0;
 			}
+			
+			/* update detailed stats */
+#define UPDATE(d, t) { \
+			if (d > 0) { *(t + (cpu * MAX_CPU) + m_currentSlot) = (float)d * scale; } \
+			else { \
+				if (m_currentSlot == 0) { *(t + (cpu * MAX_CPU) + m_currentSlot) = *(t + (cpu * MAX_CPU) + (CPU_USAGE_SLOTS - 1)); } \
+				else { *(t + (cpu * MAX_CPU) + m_currentSlot) = *(t + (cpu * MAX_CPU) + (m_currentSlot - 1)); } \
+			} }
 
+			UPDATE(userDelta, m_cpuUsageUser)
+			UPDATE(niceDelta, m_cpuUsageNice)
+			UPDATE(systemDelta, m_cpuUsageSystem)
+			UPDATE(idleDelta, m_cpuUsageIdle)
+			UPDATE(iowaitDelta, m_cpuUsageIoWait)
+			UPDATE(irqDelta, m_cpuUsageIrq)
+			UPDATE(softirqDelta, m_cpuUsageSoftIrq)
+			UPDATE(stealDelta, m_cpuUsageSteal)
+
+			/* update overal cpu usage */
 			if (total > 0)
 			{
-				m_cpuUsage[cpu][m_currentSlot++] = 100.0 - (float)idleDelta * scale;
+				*(m_cpuUsage + (cpu * MAX_CPU) + m_currentSlot) = 100.0 - (float)idleDelta * scale;
 			}
 			else
 			{
 				if (m_currentSlot == 0)
 				{
-					m_cpuUsage[cpu][m_currentSlot++] = m_cpuUsage[cpu][CPU_USAGE_SLOTS - 1];
+					*(m_cpuUsage + (cpu * MAX_CPU) + m_currentSlot) = *(m_cpuUsage + (cpu * MAX_CPU) + (CPU_USAGE_SLOTS - 1));
 				}
 				else
 				{
-					m_cpuUsage[cpu][m_currentSlot] = m_cpuUsage[cpu][m_currentSlot - 1];
-					m_currentSlot++;
+					*(m_cpuUsage + (cpu * MAX_CPU) + m_currentSlot) = *(m_cpuUsage + (cpu * MAX_CPU) + (m_currentSlot - 1));
 				}
 			}
+
+			/* go to the next slot */
+			m_currentSlot++;
 
 			MutexUnlock(m_cpuUsageMutex);
 
@@ -460,16 +489,31 @@ void StartCpuUsageCollector(void)
 	int i, j;
 
 	m_cpuUsageMutex = MutexCreate();
-	memset(m_cpuUsage, 0, sizeof(float) * CPU_USAGE_SLOTS * (MAX_CPU + 1));
 
-	memset(m_user, 0, sizeof(uint64_t) * (MAX_CPU + 1));
-	memset(m_nice, 0, sizeof(uint64_t) * (MAX_CPU + 1));
-	memset(m_system, 0, sizeof(uint64_t) * (MAX_CPU + 1));
-	memset(m_idle, 0, sizeof(uint64_t) * (MAX_CPU + 1));
-	memset(m_iowait, 0, sizeof(uint64_t) * (MAX_CPU + 1));
-	memset(m_irq, 0, sizeof(uint64_t) * (MAX_CPU + 1));
-	memset(m_softirq, 0, sizeof(uint64_t) * (MAX_CPU + 1));
-	memset(m_steal, 0, sizeof(uint64_t) * (MAX_CPU + 1));
+#define SIZE sizeof(float) * CPU_USAGE_SLOTS * MAX_CPU
+#define AC(x) x = (float *)malloc(SIZE); memset(x, 0, SIZE);
+	AC(m_cpuUsage);
+	AC(m_cpuUsageUser);
+	AC(m_cpuUsageNice);
+	AC(m_cpuUsageSystem);
+	AC(m_cpuUsageIdle);
+	AC(m_cpuUsageIoWait);
+	AC(m_cpuUsageIrq);
+	AC(m_cpuUsageSoftIrq);
+	AC(m_cpuUsageSteal);
+#undef AC
+#undef SIZE
+
+#define C(x) memset(x, 0, sizeof(uint64_t) * MAX_CPU);
+	C(m_user)
+	C(m_nice)
+	C(m_system)
+	C(m_idle)
+	C(m_iowait)
+	C(m_irq)
+	C(m_softirq)
+	C(m_steal)
+#undef C
 
 	// get initial count of user/system/idle time
 	m_currentSlot = 0;
@@ -482,13 +526,19 @@ void StartCpuUsageCollector(void)
 	CpuUsageCollector();
 
 	// fill all slots with current cpu usage
-	for (i = 1; i < CPU_USAGE_SLOTS; i++)
+#define FILL(x) memcpy(x + i, x, sizeof(float));
+	for (i = 1; i < CPU_USAGE_SLOTS * MAX_CPU; i++)
 	{
-		for(j = 0; j < MAX_CPU + 1; j++)
-		{
-			m_cpuUsage[j][i] = m_cpuUsage[j][0];
-		}
+			FILL(m_cpuUsage);
+			FILL(m_cpuUsageUser);
+			FILL(m_cpuUsageNice);
+			FILL(m_cpuUsageIdle);
+			FILL(m_cpuUsageIoWait);
+			FILL(m_cpuUsageIrq);
+			FILL(m_cpuUsageSoftIrq);
+			FILL(m_cpuUsageSteal);
 	}
+#undef FILL
 
 	// start collector
 	m_cpuUsageCollector = ThreadCreateEx(CpuUsageCollectorThread, 0, NULL);
@@ -499,12 +549,56 @@ void ShutdownCpuUsageCollector(void)
 	m_stopCollectorThread = true;
 	ThreadJoin(m_cpuUsageCollector);
 	MutexDestroy(m_cpuUsageMutex);
+
+	free(m_cpuUsage);
+	free(m_cpuUsageUser);
+	free(m_cpuUsageNice);
+	free(m_cpuUsageSystem);
+	free(m_cpuUsageIdle);
+	free(m_cpuUsageIoWait);
+	free(m_cpuUsageIrq);
+	free(m_cpuUsageSoftIrq);
+	free(m_cpuUsageSteal);
 }
 
-static void GetUsage(int slot, int count, char *value)
+static void GetUsage(int source, int slot, int count, char *value)
 {
 	float usage = 0;
 	int i;
+
+	float *table;
+	switch (source)
+	{
+		case CPU_USAGE_OVERAL:
+			table = (float *)m_cpuUsage;
+			break;
+		case CPU_USAGE_USER:
+			table = (float *)m_cpuUsageUser;
+			break;
+		case CPU_USAGE_NICE:
+			table = (float *)m_cpuUsageNice;
+			break;
+		case CPU_USAGE_SYSTEM:
+			table = (float *)m_cpuUsageSystem;
+			break;
+		case CPU_USAGE_IDLE:
+			table = (float *)m_cpuUsageIdle;
+			break;
+		case CPU_USAGE_IOWAIT:
+			table = (float *)m_cpuUsageIoWait;
+			break;
+		case CPU_USAGE_IRQ:
+			table = (float *)m_cpuUsageIrq;
+			break;
+		case CPU_USAGE_SOFTIRQ:
+			table = (float *)m_cpuUsageSoftIrq;
+			break;
+		case CPU_USAGE_STEAL:
+			table = (float *)m_cpuUsageSteal;
+			break;
+		default:
+			table = (float *)m_cpuUsage;
+	}
 
 	MutexLock(m_cpuUsageMutex, INFINITE);
 
@@ -517,7 +611,7 @@ static void GetUsage(int slot, int count, char *value)
 			position += CPU_USAGE_SLOTS;
 		}
 
-		usage += m_cpuUsage[slot][position];
+		usage += *(table + (slot * MAX_CPU) + position);
 	}
 
 	MutexUnlock(m_cpuUsageMutex);
@@ -528,23 +622,23 @@ static void GetUsage(int slot, int count, char *value)
 
 LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 {
+	struct CpuUsageParam *p = (struct CpuUsageParam *)pArg;
 	int count;
 
-	switch (CAST_FROM_POINTER(pArg, int))
+	switch (p->timeInterval)
 	{
-		case 5: // last 5 min
+		case INTERVAL_5MIN:
 			count = 5 * 60;
 			break;
-		case 15: // last 15 min
+		case INTERVAL_15MIN:
 			count = 15 * 60;
 			break;
-		default: // should be 0, but jic
+		default:
 			count = 60;
 			break;
 	}
 
-	GetUsage(0, count, pValue);
-
+	GetUsage(p->source, 0, count, pValue);
 	return SYSINFO_RC_SUCCESS;
 }
 
@@ -552,20 +646,8 @@ LONG H_CpuUsageEx(char *pszParam, char *pArg, char *pValue)
 {
 	int count, cpu;
 	char buffer[256], *eptr;
+	struct CpuUsageParam *p = (struct CpuUsageParam *)pValue;
 
-	switch (CAST_FROM_POINTER(pArg, int))
-	{
-		case 5: // last 5 min
-			count = 5 * 60;
-			break;
-		case 15: // last 15 min
-			count = 15 * 60;
-			break;
-		default: // should be 0, but jic
-			count = 60;
-			break;
-	}
-	
 	if (!NxGetParameterArg(pszParam, 1, buffer, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 		
@@ -573,7 +655,20 @@ LONG H_CpuUsageEx(char *pszParam, char *pArg, char *pValue)
 	if ((*eptr != 0) || (cpu < 0) || (cpu >= m_maxCPU))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	GetUsage(cpu + 1, count, pValue);
+	switch (p->timeInterval)
+	{
+		case INTERVAL_5MIN:
+			count = 5 * 60;
+			break;
+		case INTERVAL_15MIN:
+			count = 15 * 60;
+			break;
+		default:
+			count = 60;
+			break;
+	}
+
+	GetUsage(p->source, cpu + 1, count, pValue);
 
 	return SYSINFO_RC_SUCCESS;
 }
@@ -589,6 +684,9 @@ LONG H_CpuCount(char *pszParam, char *pArg, char *pValue)
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.20  2007/10/31 08:14:33  victor
+Added per-CPU usage statistics and System.CPU.Count parameter
+
 Revision 1.19  2007/10/30 15:41:50  victor
 Fixed bug with CPU usage computation
 

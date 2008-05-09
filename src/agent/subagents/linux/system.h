@@ -1,4 +1,4 @@
-/* $Id: system.h,v 1.5 2007-10-31 08:14:33 victor Exp $ */
+/* $Id: system.h,v 1.6 2008-05-09 22:42:12 alk Exp $ */
 
 /* 
 ** NetXMS subagent for GNU/Linux
@@ -36,6 +36,31 @@ enum
 	VIRTUAL_TOTAL,
 };
 
+enum
+{
+	INTERVAL_1MIN,
+	INTERVAL_5MIN,
+	INTERVAL_15MIN,
+};
+
+enum {
+	CPU_USAGE_OVERAL,
+	CPU_USAGE_USER,
+	CPU_USAGE_NICE,
+	CPU_USAGE_SYSTEM,
+	CPU_USAGE_IDLE,
+	CPU_USAGE_IOWAIT,
+	CPU_USAGE_IRQ,
+	CPU_USAGE_SOFTIRQ,
+	CPU_USAGE_STEAL,
+};
+
+struct CpuUsageParam
+{
+	int timeInterval;
+	int source;
+};
+
 LONG H_ProcessList(char *, char *, NETXMS_VALUES_LIST *);
 LONG H_Uptime(char *, char *, char *);
 LONG H_Uname(char *, char *, char *);
@@ -60,6 +85,9 @@ void ShutdownCpuUsageCollector(void);
 /*
 
 $Log: not supported by cvs2svn $
+Revision 1.5  2007/10/31 08:14:33  victor
+Added per-CPU usage statistics and System.CPU.Count parameter
+
 Revision 1.4  2006/10/30 17:25:10  victor
 Implemented System.ConnectedUsers and System.ActiveUserSessions
 
