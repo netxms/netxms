@@ -36,13 +36,15 @@ LONG H_ACPITZCurrTemp(char *cmd, char *arg, char *value)
 	ULONG uRet;
 	LONG rc = SYSINFO_RC_ERROR;
 
-	if (!NxGetParameterArg(cmd, 1, instance, 256))
-		return SYSINFO_RC_UNSUPPORTED;
+	if (*arg != '*')
+		if (!NxGetParameterArg(cmd, 1, instance, 256))
+			return SYSINFO_RC_UNSUPPORTED;
 
 	pEnumObject = DoWMIQuery(L"root\\WMI", L"SELECT InstanceName,CurrentTemperature FROM MSAcpi_ThermalZoneTemperature", &ctx);
 	if (pEnumObject != NULL)
 	{
-		while(pEnumObject->Next(WBEM_INFINITE, 1, &pClassObject, &uRet) == S_OK)
+		while((pEnumObject->Next(WBEM_INFINITE, 1, &pClassObject, &uRet) == S_OK) &&
+			   (rc != SYSINFO_RC_SUCCESS))
 		{
 			VARIANT v;
 
@@ -54,7 +56,7 @@ LONG H_ACPITZCurrTemp(char *cmd, char *arg, char *value)
 				VariantClear(&v);
 				if (str != NULL)
 				{
-					if (!stricmp(str, instance))
+					if (!stricmp(str, instance) || (*arg == '*'))
 					{
 						if (pClassObject->Get(L"CurrentTemperature", 0, &v, 0, 0) == S_OK)
 						{

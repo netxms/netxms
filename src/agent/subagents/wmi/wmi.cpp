@@ -353,7 +353,8 @@ static void SubAgentShutdown(void)
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("ACPI.ThermalZone.CurrentTemp(*)"), H_ACPITZCurrTemp, NULL, DCI_DT_INT, _T("Current temperature in ACPI thermal zone {instance}") },
+   { _T("ACPI.ThermalZone.CurrentTemp"), H_ACPITZCurrTemp, "*", DCI_DT_INT, _T("Current temperature in ACPI thermal zone") },
+   { _T("ACPI.ThermalZone.CurrentTemp(*)"), H_ACPITZCurrTemp, "%", DCI_DT_INT, _T("Current temperature in ACPI thermal zone {instance}") },
    { _T("WMI.Query(*)"), H_WMIQuery, NULL, DCI_DT_STRING, _T("Generic WMI query") }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
