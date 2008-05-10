@@ -10,7 +10,7 @@
 - WMI subagent added
 - SNMP sysDescr and agent's uname now polled and displayed
 - New features in Windows console:
-	- Oossibility to use non-local timezone in Windows console
+	- Possibility to use non-local timezone in Windows console
 	- Default graph settings can be changed
 - Fixed issues: #193, #194, #198, #204, #209, #211, #212, #213, #214, #215
 
