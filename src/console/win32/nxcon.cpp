@@ -1853,6 +1853,7 @@ void CConsoleApp::OnFileSettings()
    // "General" page
    wndGeneral.m_bExpandCtrlPanel = (g_dwOptions & UI_OPT_EXPAND_CTRLPANEL) ? TRUE : FALSE;
    wndGeneral.m_bShowGrid = (g_dwOptions & UI_OPT_SHOW_GRID) ? TRUE : FALSE;
+   wndGeneral.m_bSaveGraphSettings = (g_dwOptions & UI_OPT_SAVE_GRAPH_SETTINGS) ? TRUE : FALSE;
 	wndGeneral.m_strTimeZone = m_strCustomTimeZone;
 	wndGeneral.m_nTimeZoneType = m_nTimeZoneType;
    wndPropSheet.AddPage(&wndGeneral);
@@ -1868,6 +1869,11 @@ void CConsoleApp::OnFileSettings()
          g_dwOptions |= UI_OPT_SHOW_GRID;
       else
          g_dwOptions &= ~UI_OPT_SHOW_GRID;
+
+      if (wndGeneral.m_bSaveGraphSettings)
+         g_dwOptions |= UI_OPT_SAVE_GRAPH_SETTINGS;
+      else
+         g_dwOptions &= ~UI_OPT_SAVE_GRAPH_SETTINGS;
 
 		m_strCustomTimeZone = wndGeneral.m_strTimeZone;
 		m_nTimeZoneType = wndGeneral.m_nTimeZoneType;

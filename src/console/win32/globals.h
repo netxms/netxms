@@ -80,6 +80,7 @@ extern CConsoleApp theApp;
 #define UI_OPT_EXPAND_CTRLPANEL     0x0001
 #define UI_OPT_SHOW_GRID            0x0002
 #define UI_OPT_CONFIRM_OBJ_DELETE   0x0004
+#define UI_OPT_SAVE_GRAPH_SETTINGS  0x0008
 
 
 //

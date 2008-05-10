@@ -63,6 +63,8 @@ public:
 
 // Implementation
 protected:
+	void LoadSettings(const TCHAR *pszName);
+	void SaveCurrentSettings(const TCHAR *pszName);
 	NXC_DCI_DATA * m_pDCIData[MAX_GRAPH_ITEMS];
 	int m_nPendingUpdates;
 	BOOL m_bFullRefresh;

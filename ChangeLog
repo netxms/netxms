@@ -3,13 +3,15 @@
 *
 
 - Multiple network maps implemented
-- Added possibility to use non-local timezone in Windows console
 - Added parameter ListenAddress to all services (server, web server, agent)
 - New possible value for UseInterfaceAliases - concatenate name with alias
 - Added possibility to create custom message in event matching script and
   use it in alarms and actions
 - WMI subagent added
-- Fixed issues: #193, #194, #198, #204, #209, #211, #212, #214, #215
+- New features in Windows console:
+	- Oossibility to use non-local timezone in Windows console
+	- Default graph settings can be changed
+- Fixed issues: #193, #194, #198, #204, #209, #211, #212, #213, #214, #215
 
 
 *

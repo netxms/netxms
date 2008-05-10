@@ -64,6 +64,8 @@ CGraphFrame::CGraphFrame()
    m_dwTimeFrame = 3600;   // By default, graph covers 3600 seconds
    m_bFullRefresh = TRUE;
 	m_nPendingUpdates = 0;
+
+	LoadSettings(_T("Default"));
 }
 
 CGraphFrame::~CGraphFrame()
@@ -409,6 +411,11 @@ void CGraphFrame::OnGraphProperties()
 
 void CGraphFrame::OnDestroy() 
 {
+	if (g_dwOptions & UI_OPT_SAVE_GRAPH_SETTINGS)
+	{
+		SaveCurrentSettings(_T("Default"));
+	}
+
    if (m_hTimer != 0)
       KillTimer(m_hTimer);
 
@@ -988,4 +995,106 @@ void CGraphFrame::OnProcessingRequest(WPARAM wParam, LPARAM lParam)
 {
 	m_wndGraph.m_bUpdating = TRUE;
 	m_wndGraph.Invalidate(FALSE);
+}
+
+
+//
+// Save current graph settings
+//
+
+void CGraphFrame::SaveCurrentSettings(const TCHAR *pszName)
+{
+	TCHAR section[256], option[64];
+	int i;
+
+	_sntprintf(section, 256, _T("GraphCfg_%s"), pszName);
+	theApp.WriteProfileInt(section, _T("Flags"), m_dwFlags);
+	theApp.WriteProfileInt(section, _T("TimeTo"), m_dwTimeTo);
+	theApp.WriteProfileInt(section, _T("TimeFrom"), m_dwTimeFrom);
+	theApp.WriteProfileInt(section, _T("TimeFrameType"), m_iTimeFrameType);
+	theApp.WriteProfileInt(section, _T("TimeUnit"), m_iTimeUnit);
+	theApp.WriteProfileInt(section, _T("NumTimeUnits"), m_dwNumTimeUnits);
+	theApp.WriteProfileInt(section, _T("AutoScale"), m_wndGraph.m_bAutoScale);
+	theApp.WriteProfileInt(section, _T("EnableZoom"), m_wndGraph.m_bEnableZoom);
+	theApp.WriteProfileInt(section, _T("ShowGrid"), m_wndGraph.m_bShowGrid);
+	theApp.WriteProfileInt(section, _T("ShowHostNames"), m_wndGraph.m_bShowHostNames);
+	theApp.WriteProfileInt(section, _T("ShowLegend"), m_wndGraph.m_bShowLegend);
+	theApp.WriteProfileInt(section, _T("ShowRuler"), m_wndGraph.m_bShowRuler);
+	theApp.WriteProfileInt(section, _T("ShowTitle"), m_wndGraph.m_bShowTitle);
+	theApp.WriteProfileInt(section, _T("AxisColor"), m_wndGraph.m_rgbAxisColor);
+	theApp.WriteProfileInt(section, _T("BkColor"), m_wndGraph.m_rgbBkColor);
+	theApp.WriteProfileInt(section, _T("GridColor"), m_wndGraph.m_rgbGridColor);
+	theApp.WriteProfileInt(section, _T("RulerColor"), m_wndGraph.m_rgbRulerColor);
+	theApp.WriteProfileInt(section, _T("SelRectColor"), m_wndGraph.m_rgbSelRectColor);
+	theApp.WriteProfileInt(section, _T("TextColor"), m_wndGraph.m_rgbTextColor);
+
+	for(i = 0; i < MAX_GRAPH_ITEMS; i++)
+	{
+		_stprintf(option, _T("ItemColor_%d"), i);
+		theApp.WriteProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].rgbColor);
+
+		_stprintf(option, _T("ItemType_%d"), i);
+		theApp.WriteProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].nType);
+
+		_stprintf(option, _T("ItemLineWidth_%d"), i);
+		theApp.WriteProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].nLineWidth);
+	}
+}
+
+
+//
+// Load graph settings
+//
+
+void CGraphFrame::LoadSettings(const TCHAR *pszName)
+{
+	TCHAR section[256], option[64];
+	int i;
+
+	_sntprintf(section, 256, _T("GraphCfg_%s"), pszName);
+	m_dwFlags = theApp.GetProfileInt(section, _T("Flags"), m_dwFlags);
+	m_dwTimeTo = theApp.GetProfileInt(section, _T("TimeTo"), m_dwTimeTo);
+	m_dwTimeFrom = theApp.GetProfileInt(section, _T("TimeFrom"), m_dwTimeFrom);
+	m_iTimeFrameType = theApp.GetProfileInt(section, _T("TimeFrameType"), m_iTimeFrameType);
+	m_iTimeUnit = theApp.GetProfileInt(section, _T("TimeUnit"), m_iTimeUnit);
+	m_dwNumTimeUnits = theApp.GetProfileInt(section, _T("NumTimeUnits"), m_dwNumTimeUnits);
+	m_wndGraph.m_bAutoScale = theApp.GetProfileInt(section, _T("AutoScale"), m_wndGraph.m_bAutoScale);
+	m_wndGraph.m_bEnableZoom = theApp.GetProfileInt(section, _T("EnableZoom"), m_wndGraph.m_bEnableZoom);
+	m_wndGraph.m_bShowGrid = theApp.GetProfileInt(section, _T("ShowGrid"), m_wndGraph.m_bShowGrid);
+	m_wndGraph.m_bShowHostNames = theApp.GetProfileInt(section, _T("ShowHostNames"), m_wndGraph.m_bShowHostNames);
+	m_wndGraph.m_bShowLegend = theApp.GetProfileInt(section, _T("ShowLegend"), m_wndGraph.m_bShowLegend);
+	m_wndGraph.m_bShowRuler = theApp.GetProfileInt(section, _T("ShowRuler"), m_wndGraph.m_bShowRuler);
+	m_wndGraph.m_bShowTitle = theApp.GetProfileInt(section, _T("ShowTitle"), m_wndGraph.m_bShowTitle);
+	m_wndGraph.m_rgbAxisColor = theApp.GetProfileInt(section, _T("AxisColor"), m_wndGraph.m_rgbAxisColor);
+	m_wndGraph.m_rgbBkColor = theApp.GetProfileInt(section, _T("BkColor"), m_wndGraph.m_rgbBkColor);
+	m_wndGraph.m_rgbGridColor = theApp.GetProfileInt(section, _T("GridColor"), m_wndGraph.m_rgbGridColor);
+	m_wndGraph.m_rgbRulerColor = theApp.GetProfileInt(section, _T("RulerColor"), m_wndGraph.m_rgbRulerColor);
+	m_wndGraph.m_rgbSelRectColor = theApp.GetProfileInt(section, _T("SelRectColor"), m_wndGraph.m_rgbSelRectColor);
+	m_wndGraph.m_rgbTextColor = theApp.GetProfileInt(section, _T("TextColor"), m_wndGraph.m_rgbTextColor);
+
+	for(i = 0; i < MAX_GRAPH_ITEMS; i++)
+	{
+		_stprintf(option, _T("ItemColor_%d"), i);
+		m_wndGraph.m_graphItemStyles[i].rgbColor = theApp.GetProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].rgbColor);
+
+		_stprintf(option, _T("ItemType_%d"), i);
+		m_wndGraph.m_graphItemStyles[i].nType = theApp.GetProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].nType);
+
+		_stprintf(option, _T("ItemLineWidth_%d"), i);
+		m_wndGraph.m_graphItemStyles[i].nLineWidth = theApp.GetProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].nLineWidth);
+	}
+
+   if (m_iTimeFrameType == 0)
+   {
+      if (m_dwTimeTo < m_dwTimeFrom)
+      {
+         m_dwTimeTo = m_dwTimeFrom;
+      }
+      m_dwTimeFrame = m_dwTimeTo - m_dwTimeFrom;
+   }
+   else
+   {
+      // Back from now
+      m_dwTimeFrame = m_dwNumTimeUnits * m_dwTimeUnitSize[m_iTimeUnit];
+   }
 }
