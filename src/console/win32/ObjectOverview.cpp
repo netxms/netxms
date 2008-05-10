@@ -197,6 +197,7 @@ void CObjectOverview::Refresh()
 				InsertItem(_T("Network Mask"), IpToStr(m_pObject->subnet.dwIpNetMask, szTemp));
 				break;
 			case OBJECT_NODE:
+				InsertItem(_T("System Description"), m_pObject->node.szSysDescription);
 				if (m_pObject->node.dwFlags & NF_IS_NATIVE_AGENT)
 				{
 					InsertItem(_T("NetXMS Agent"), _T("Active"));

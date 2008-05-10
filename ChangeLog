@@ -8,6 +8,7 @@
 - Added possibility to create custom message in event matching script and
   use it in alarms and actions
 - WMI subagent added
+- SNMP sysDescr and agent's uname now polled and displayed
 - New features in Windows console:
 	- Oossibility to use non-local timezone in Windows console
 	- Default graph settings can be changed
