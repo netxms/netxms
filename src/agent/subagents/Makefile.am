@@ -14,4 +14,4 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-SUBDIRS = skeleton winnt win9x winperf netware portCheck ping sms ups ecs ${SUBAGENT_DIRS} ${UNSTABLE_SUBAGENT_DIRS}
+SUBDIRS = skeleton winnt win9x winperf wmi netware portCheck ping sms ups ecs ${SUBAGENT_DIRS} ${UNSTABLE_SUBAGENT_DIRS}
