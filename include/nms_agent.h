@@ -190,12 +190,72 @@
 #define DCIDESC_SYSTEM_CPU_LOADAVG		"Average CPU load for last minute"
 #define DCIDESC_SYSTEM_CPU_LOADAVG5		"Average CPU load for last 5 minutes"
 #define DCIDESC_SYSTEM_CPU_LOADAVG15		"Average CPU load for last 15 minutes"
+
+
 #define DCIDESC_SYSTEM_CPU_USAGE_EX		"Average CPU {instance} utilization for last minute"
 #define DCIDESC_SYSTEM_CPU_USAGE5_EX		"Average CPU {instance} utilization for last 5 minutes"
 #define DCIDESC_SYSTEM_CPU_USAGE15_EX		"Average CPU {instance} utilization for last 15 minutes"
 #define DCIDESC_SYSTEM_CPU_USAGE		"Average CPU utilization for last minute"
 #define DCIDESC_SYSTEM_CPU_USAGE5		"Average CPU utilization for last 5 minutes"
 #define DCIDESC_SYSTEM_CPU_USAGE15		"Average CPU utilization for last 15 minutes"
+
+#define DCIDESC_SYSTEM_CPU_USAGE_USER_EX		"Average CPU {instance} utilization (user) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_USER_EX		"Average CPU {instance} utilization (user) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_USER_EX		"Average CPU {instance} utilization (user) for last 15 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE_USER		"Average CPU utilization (user) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_USER		"Average CPU utilization (user) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_USER		"Average CPU utilization (user) for last 15 minutes"
+
+#define DCIDESC_SYSTEM_CPU_USAGE_NICE_EX		"Average CPU {instance} utilization (nice) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_NICE_EX		"Average CPU {instance} utilization (nice) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_NICE_EX		"Average CPU {instance} utilization (nice) for last 15 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE_NICE		"Average CPU utilization (nice) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_NICE		"Average CPU utilization (nice) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_NICE		"Average CPU utilization (nice) for last 15 minutes"
+
+#define DCIDESC_SYSTEM_CPU_USAGE_SYSTEM_EX		"Average CPU {instance} utilization (system) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_SYSTEM_EX		"Average CPU {instance} utilization (system) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_SYSTEM_EX		"Average CPU {instance} utilization (system) for last 15 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE_SYSTEM		"Average CPU utilization (system) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_SYSTEM		"Average CPU utilization (system) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_SYSTEM		"Average CPU utilization (system) for last 15 minutes"
+
+#define DCIDESC_SYSTEM_CPU_USAGE_IDLE_EX		"Average CPU {instance} utilization (idle) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_IDLE_EX		"Average CPU {instance} utilization (idle) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_IDLE_EX		"Average CPU {instance} utilization (idle) for last 15 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE_IDLE		"Average CPU utilization (idle) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_IDLE		"Average CPU utilization (idle) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_IDLE		"Average CPU utilization (idle) for last 15 minutes"
+
+#define DCIDESC_SYSTEM_CPU_USAGE_IOWAIT_EX		"Average CPU {instance} utilization (iowait) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_IOWAIT_EX		"Average CPU {instance} utilization (iowait) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_IOWAIT_EX		"Average CPU {instance} utilization (iowait) for last 15 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE_IOWAIT		"Average CPU utilization (iowait) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_IOWAIT		"Average CPU utilization (iowait) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_IOWAIT		"Average CPU utilization (iowait) for last 15 minutes"
+
+#define DCIDESC_SYSTEM_CPU_USAGE_IRQ_EX		"Average CPU {instance} utilization (irq) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_IRQ_EX		"Average CPU {instance} utilization (irq) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_IRQ_EX		"Average CPU {instance} utilization (irq) for last 15 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE_IRQ		"Average CPU utilization (irq) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_IRQ		"Average CPU utilization (irq) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_IRQ		"Average CPU utilization (irq) for last 15 minutes"
+
+#define DCIDESC_SYSTEM_CPU_USAGE_SOFTIRQ_EX		"Average CPU {instance} utilization (softirq) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_SOFTIRQ_EX		"Average CPU {instance} utilization (softirq) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_SOFTIRQ_EX		"Average CPU {instance} utilization (softirq) for last 15 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE_SOFTIRQ		"Average CPU utilization (softirq) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_SOFTIRQ		"Average CPU utilization (softirq) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_SOFTIRQ		"Average CPU utilization (softirq) for last 15 minutes"
+
+#define DCIDESC_SYSTEM_CPU_USAGE_STEAL_EX		"Average CPU {instance} utilization (steal) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_STEAL_EX		"Average CPU {instance} utilization (steal) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_STEAL_EX		"Average CPU {instance} utilization (steal) for last 15 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE_STEAL		"Average CPU utilization (steal) for last minute"
+#define DCIDESC_SYSTEM_CPU_USAGE5_STEAL		"Average CPU utilization (steal) for last 5 minutes"
+#define DCIDESC_SYSTEM_CPU_USAGE15_STEAL		"Average CPU utilization (steal) for last 15 minutes"
+
+
 #define DCIDESC_SYSTEM_IO_DISKQUEUE		"Average disk queue length for last minute"
 
 
