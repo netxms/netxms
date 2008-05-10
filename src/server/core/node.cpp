@@ -1,4 +1,4 @@
-/* $Id: node.cpp,v 1.203 2008-04-18 22:41:27 victor Exp $ */
+/* $Id: node.cpp,v 1.204 2008-05-10 14:49:37 victor Exp $ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
@@ -177,7 +177,8 @@ BOOL Node::CreateFromDB(DWORD dwId)
                             "agent_port,status_poll_type,community,snmp_oid,"
                             "node_type,agent_version,"
                             "platform_name,poller_node_id,zone_guid,"
-                            "proxy_node,snmp_proxy,required_polls FROM nodes WHERE id=%d", dwId);
+                            "proxy_node,snmp_proxy,required_polls,uname"
+	                         " FROM nodes WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
       return FALSE;     // Query failed
@@ -210,6 +211,8 @@ BOOL Node::CreateFromDB(DWORD dwId)
    m_dwProxyNode = DBGetFieldULong(hResult, 0, 14);
    m_dwSNMPProxy = DBGetFieldULong(hResult, 0, 15);
    m_iRequiredPollCount = DBGetFieldLong(hResult, 0, 16);
+   DBGetField(hResult, 0, 17, m_szSysDescription, MAX_DB_STRING);
+   DecodeSQLString(m_szSysDescription);
 
    DBFreeResult(hResult);
 
@@ -281,6 +284,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR *pszEscVersion, *pszEscPlatform, *pszEscSecret;
    TCHAR *pszEscCommunity, szQuery[4096], szIpAddr[16];
+	TCHAR *pszEscDescr;
    DB_RESULT hResult;
    BOOL bNewObject = TRUE;
    BOOL bResult;
@@ -305,33 +309,34 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    pszEscPlatform = EncodeSQLString(m_szPlatformName);
    pszEscSecret = EncodeSQLString(m_szSharedSecret);
    pszEscCommunity = EncodeSQLString(m_szCommunityString);
+   pszEscDescr = EncodeSQLString(m_szSysDescription);
    if (bNewObject)
       snprintf(szQuery, 4096,
                "INSERT INTO nodes (id,primary_ip,"
                "node_flags,snmp_version,community,status_poll_type,"
                "agent_port,auth_method,secret,snmp_oid,proxy_node,"
-               "node_type,agent_version,platform_name,"
+               "node_type,agent_version,platform_name,uname,"
                "poller_node_id,zone_guid,snmp_proxy,required_polls) VALUES "
-					"(%d,'%s',%d,%d,'%s',%d,%d,%d,'%s','%s',%d,%d,'%s','%s',%d,%d,%d,%d)",
+					"(%d,'%s',%d,%d,'%s',%d,%d,%d,'%s','%s',%d,%d,'%s','%s','%s',%d,%d,%d,%d)",
                m_dwId, IpToStr(m_dwIpAddr, szIpAddr), m_dwFlags,
                m_iSNMPVersion, pszEscCommunity, m_iStatusPollType,
                m_wAgentPort, m_wAuthMethod, pszEscSecret, m_szObjectId,
                m_dwProxyNode, m_dwNodeType, pszEscVersion,
-               pszEscPlatform, m_dwPollerNode, m_dwZoneGUID,
+               pszEscPlatform, pszEscDescr, m_dwPollerNode, m_dwZoneGUID,
 					m_dwSNMPProxy, m_iRequiredPollCount);
    else
       snprintf(szQuery, 4096,
                "UPDATE nodes SET primary_ip='%s',"
                "node_flags=%d,snmp_version=%d,community='%s',"
                "status_poll_type=%d,agent_port=%d,auth_method=%d,secret='%s',"
-               "snmp_oid='%s',node_type=%d,"
+               "snmp_oid='%s',node_type=%d,uname='%s',"
                "agent_version='%s',platform_name='%s',poller_node_id=%d,"
                "zone_guid=%d,proxy_node=%d,snmp_proxy=%d,"
 					"required_polls=%d WHERE id=%d",
                IpToStr(m_dwIpAddr, szIpAddr), 
                m_dwFlags, m_iSNMPVersion, pszEscCommunity,
                m_iStatusPollType, m_wAgentPort, m_wAuthMethod, pszEscSecret, 
-               m_szObjectId, m_dwNodeType, 
+               m_szObjectId, m_dwNodeType, pszEscDescr,
                pszEscVersion, pszEscPlatform, m_dwPollerNode, m_dwZoneGUID,
                m_dwProxyNode, m_dwSNMPProxy, m_iRequiredPollCount, m_dwId);
    bResult = DBQuery(hdb, szQuery);
@@ -339,6 +344,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    free(pszEscPlatform);
    free(pszEscSecret);
    free(pszEscCommunity);
+	free(pszEscDescr);
 
    // Save data collection items
    if (bResult)
@@ -1060,6 +1066,22 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 					m_dwFlags &= ~NF_IS_LLDP;
 				}
 
+				// Get system description
+				if (SnmpGet(m_iSNMPVersion, pTransport, m_szCommunityString,
+				            ".1.3.6.1.2.1.1.1.0", NULL, 0, szBuffer,
+				            MAX_DB_STRING, FALSE, FALSE) == SNMP_ERR_SUCCESS)
+				{
+					TranslateStr(szBuffer, "\r\n", " ");
+					TranslateStr(szBuffer, "\n", " ");
+					TranslateStr(szBuffer, "\r", " ");
+               if (strcmp(m_szSysDescription, szBuffer))
+               {
+                  strcpy(m_szSysDescription, szBuffer);
+                  bHasChanges = TRUE;
+                  SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_szSysDescription);
+               }
+				}
+
             UnlockData();
 
             CheckOSPFSupport(pTransport);
@@ -1160,6 +1182,22 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
                else
                   m_dwFlags &= ~NF_IS_ROUTER;
             }
+
+				// Get uname
+				if (pAgentConn->GetParameter("System.Uname", MAX_DB_STRING, szBuffer) == ERR_SUCCESS)
+				{
+					TranslateStr(szBuffer, "\r\n", " ");
+					TranslateStr(szBuffer, "\n", " ");
+					TranslateStr(szBuffer, "\r", " ");
+               LockData();
+               if (strcmp(m_szSysDescription, szBuffer))
+               {
+                  strcpy(m_szSysDescription, szBuffer);
+                  bHasChanges = TRUE;
+                  SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_szSysDescription);
+               }
+               UnlockData();
+				}
 
             /* LOCK? */
             safe_free(m_pParamList);

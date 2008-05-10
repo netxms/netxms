@@ -87,6 +87,29 @@ static BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
 
 
 //
+// Upgrade from V79 to V80
+//
+
+static BOOL H_UpgradeFromV79(void)
+{
+	static TCHAR m_szBatch[] =
+		_T("ALTER TABLE nodes ADD uname varchar(255)\n")
+		_T("UPDATE nodes SET uname='#00'\n")
+		_T("<END>");
+		
+	if (!SQLBatch(m_szBatch))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='80' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V78 to V79
 //
 
@@ -3508,6 +3531,7 @@ static struct
    { 76, H_UpgradeFromV76 },
    { 77, H_UpgradeFromV77 },
    { 78, H_UpgradeFromV78 },
+   { 79, H_UpgradeFromV79 },
    { 0, NULL }
 };
 

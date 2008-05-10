@@ -258,6 +258,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pMsg->GetVariableStr(VID_AGENT_VERSION, pObject->node.szAgentVersion, MAX_AGENT_VERSION_LEN);
          pMsg->GetVariableStr(VID_PLATFORM_NAME, pObject->node.szPlatformName, MAX_PLATFORM_NAME_LEN);
 			pObject->node.wRequiredPollCount = pMsg->GetVariableShort(VID_REQUIRED_POLLS);
+         pMsg->GetVariableStr(VID_SYS_DESCRIPTION, pObject->node.szSysDescription, MAX_DB_STRING);
          break;
       case OBJECT_SUBNET:
          pObject->subnet.dwIpNetMask = pMsg->GetVariableLong(VID_IP_NETMASK);

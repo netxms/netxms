@@ -1,4 +1,12 @@
 *************
+* 79 ==> 80 *
+*************
+
+- New columns added to table "nodes":
+	ALTER TABLE nodes ADD uname varchar(255) not null
+
+
+*************
 * 78 ==> 79 *
 *************
 

@@ -163,6 +163,7 @@ CREATE TABLE nodes
 	proxy_node integer not null,
 	snmp_proxy integer not null,
 	required_polls integer not null,
+	uname varchar(255) not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

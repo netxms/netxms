@@ -141,6 +141,7 @@ void nxObjectOverview::SetObject(NXC_OBJECT *object)
 			InsertItem(_T("Network Mask"), IpToStr(m_object->subnet.dwIpNetMask, temp));
 			break;
 		case OBJECT_NODE:
+			InsertItem(_T("System Description"), m_object->node.szSysDescription);
 			if (m_object->node.dwFlags & NF_IS_NATIVE_AGENT)
 			{
 				InsertItem(_T("NetXMS Agent"), _T("Active"));

@@ -608,7 +608,7 @@ protected:
    char m_szObjectId[MAX_OID_LEN * 4];
    char m_szAgentVersion[MAX_AGENT_VERSION_LEN];
    char m_szPlatformName[MAX_PLATFORM_NAME_LEN];
-	char m_szSysDescription[MAX_DB_STRING];
+	char m_szSysDescription[MAX_DB_STRING];  // Agent's System.Uname or SNMP sysDescr
    DWORD m_dwNumParams;           // Number of elements in supported parameters list
    NXC_AGENT_PARAM *m_pParamList; // List of supported parameters
    time_t m_tLastDiscoveryPoll;
