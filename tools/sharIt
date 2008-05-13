@@ -48,8 +48,8 @@ fi
 sed "s,__SKIP__,$skip,g" < $stub |
 	sed "s,__SKIP1__,$skip1,g" |
 	sed "s,__COMMAND__,$2,g" > tmp
-hash1=`tail -n +5 tmp | $md5 | cut -b1-32 | tr A-Z a-z`
-hash2=`cat $1 | $md5 | cut -b1-32 | tr A-Z a-z`
+hash1=`tail -n +5 tmp | $md5 | cut -c1-32 | tr A-Z a-z`
+hash2=`cat $1 | $md5 | cut -c1-32 | tr A-Z a-z`
 sed "s,__HASH1__,$hash1,g" < tmp | sed "s,__HASH2__,$hash2,g" > $3
 
 cat $1 >> $3
