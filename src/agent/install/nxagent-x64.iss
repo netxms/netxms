@@ -25,7 +25,7 @@ Source: "..\..\libnetxms\Release64\libnetxms.dll"; DestDir: "{app}\bin"; BeforeI
 Source: "..\core\Release64\nxagentd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\winnt\Release64\winnt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\winperf\Release64\winperf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\subagents\winperf\Release64\wmi.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\subagents\wmi\Release64\wmi.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\ping\Release64\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\portCheck\Release64\portcheck.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\logscan\Release64\logscan.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion

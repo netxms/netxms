@@ -9,6 +9,18 @@
 /* Define to 1 if you have sizeof(wchar_t) == 2. */
 #define UNICODE_UCS2 1
 
+/* Define to 1 if you have the `wcslen' function. */
+#define HAVE_WCSLEN 1
+
+/* Define to 1 if you have the `wcsdup' function. */
+#define HAVE_WCSDUP 1
+
+/* Define to 1 if you have the `wcsncpy' function. */
+#define HAVE_WCSNCPY 1
+
+/* Define to 1 if you have the `wchar_t' type. */
+#define HAVE_WCHAR_T 1
+
 /* Define to 1 if you have the `iconv' function. */
 #define HAVE_ICONV 1
 
