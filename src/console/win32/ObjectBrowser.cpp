@@ -775,12 +775,16 @@ void CObjectBrowser::OnContextMenu(CWnd* pWnd, CPoint point)
 		pt = point;
 		pWnd->ScreenToClient(&pt);
 		pWndPane = pWnd->ChildWindowFromPoint(pt, CWP_SKIPINVISIBLE);
+		if (pWndPane == NULL)
+			return;
 		if (pWndPane->GetDlgCtrlID() != AFX_IDW_PANE_FIRST)
 			return;
 
 		pt = point;
 		pWndPane->ScreenToClient(&pt);
 		pWndChild = pWndPane->ChildWindowFromPoint(pt, CWP_SKIPINVISIBLE);
+		if (pWndChild == NULL)
+			return;
 		if (pWndChild->GetDlgCtrlID() != ID_TREE_CTRL)
 			return;
 
