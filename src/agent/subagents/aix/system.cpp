@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.4 2008-05-13 09:25:22 victor Exp $ */
+/* $Id: system.cpp,v 1.5 2008-05-13 09:43:36 victor Exp $ */
 /*
 ** NetXMS subagent for AIX
 ** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
@@ -25,6 +25,7 @@
 #include <sys/utsname.h>
 #include <sys/vminfo.h>
 #include <nlist.h>
+#include <utmp.h>
 
 
 //
@@ -79,6 +80,25 @@ LONG H_Uname(char *pszParam, char *pArg, char *pValue)
 LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
+	int fd;
+	struct utmp ut;
+
+	fd = open(UTMP_FILE, O_RDONLY);
+	if (fd != -1)
+	{
+		while(1)
+		{
+			if (read(fd, &ut, sizeof(struct utmp)) != sizeof(struct utmp))
+				break;	// Read error
+			if (ut.ut_type == BOOT_TIME)
+			{
+				ret_uint(pValue, time(NULL) - ut.ut_time);
+				nRet = SYSINFO_RC_SUCCESS;
+				break;
+			}
+		}
+		close(fd);
+	}
 	return nRet;
 }
 

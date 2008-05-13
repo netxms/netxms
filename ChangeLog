@@ -12,7 +12,7 @@
 - New features in Windows console:
 	- Possibility to use non-local timezone in Windows console
 	- Default graph settings can be changed
-- AIX subagent: implemented System.CPU.LoadAvg* parameters
+- AIX subagent: implemented System.CPU.LoadAvg* and System.Uptime parameters
 - Fixed issues: #193, #194, #198, #204, #209, #211, #212, #213, #214, #215
 
 
