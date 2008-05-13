@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.3 2006-09-28 20:00:03 victor Exp $ */
+/* $Id: system.cpp,v 1.4 2008-05-13 09:25:22 victor Exp $ */
 /*
 ** NetXMS subagent for AIX
 ** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
@@ -24,6 +24,7 @@
 #include "aix_subagent.h"
 #include <sys/utsname.h>
 #include <sys/vminfo.h>
+#include <nlist.h>
 
 
 //
@@ -134,4 +135,50 @@ LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 		nRet = SYSINFO_RC_ERROR;
 	}
 	return nRet;
+}
+
+
+//
+// Read from /dev/kmem
+//
+
+static BOOL kread(int kmem, off_t offset, void *buffer, size_t buflen)
+{
+	if (lseek(kmem, offset, SEEK_SET) != -1)
+	{
+		return (read(kmem, buffer, buflen) == buflen);
+	}
+	return FALSE;
+}
+
+
+//
+// Handler for System.LoadAvg parameters
+//
+
+LONG H_LoadAvg(char *param, char *arg, char *value)
+{
+	int kmem;
+	LONG rc = SYSINFO_RC_ERROR;
+	struct nlist nl[] = { "avenrun" }; 
+	long avenrun[3];
+
+	kmem = open("/dev/kmem", O_RDONLY);
+	if (kmem == -1)
+		return SYSINFO_RC_ERROR;
+
+	if (knlist(nl, 1, sizeof(struct nlist)) == 0)
+	{
+		if (nl[0].n_value != NULL)
+		{
+			if (kread(kmem, nl[0].n_value, avenrun, sizeof(avenrun)))
+			{
+				ret_double(value, (double)avenrun[*arg - '0'] / 65536.0);
+				rc = SYSINFO_RC_SUCCESS;
+			}
+		}
+	}	
+
+	close(kmem);
+	return rc;
 }

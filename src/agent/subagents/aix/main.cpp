@@ -129,10 +129,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { "Process.UserTime(*)", H_ProcessInfo, (char *)PROCINFO_UTIME, DCI_DT_UINT64, DCIDESC_PROCESS_USERTIME },
    { "Process.VMSize(*)", H_ProcessInfo, (char *)PROCINFO_VMSIZE, DCI_DT_UINT64, DCIDESC_PROCESS_VMSIZE },
    { "System.CPU.Count", H_CPUCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
+   { "System.CPU.LoadAvg", H_LoadAvg, "0", DCI_DT_FLOAT, "Average CPU load for last minute" },
+   { "System.CPU.LoadAvg5", H_LoadAvg, "1", DCI_DT_FLOAT, "Average CPU load for last 5 minutes" },
+   { "System.CPU.LoadAvg15", H_LoadAvg, "2", DCI_DT_FLOAT, "Average CPU load for last 15 minutes" },
 /*
-   { "System.CPU.LoadAvg", H_LoadAvg, (char *)0, DCI_DT_FLOAT, "Average CPU load for last minute" },
-   { "System.CPU.LoadAvg5", H_LoadAvg, (char *)1, DCI_DT_FLOAT, "Average CPU load for last 5 minutes" },
-   { "System.CPU.LoadAvg15", H_LoadAvg, (char *)2, DCI_DT_FLOAT, "Average CPU load for last 15 minutes" },
    { "System.CPU.Usage", H_CPUUsage, "T0", DCI_DT_FLOAT, "Average CPU(s) utilization for last minute" },
    { "System.CPU.Usage5", H_CPUUsage, "T1", DCI_DT_FLOAT, "Average CPU(s) utilization for last 5 minutes" },
    { "System.CPU.Usage15", H_CPUUsage, "T2", DCI_DT_FLOAT, "Average CPU(s) utilization for last 15 minutes" },
