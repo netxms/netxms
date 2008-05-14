@@ -81,5 +81,6 @@ POCKET PC CONSOLE:
 SUBAGENTS:
 
 - libperl-driven subagent, allow to run perl scripts w/o forking/executing
+- python-driven subagent, allow to run python scripts w/o forking/executing
 - bandwidth meter; data in/out for last N seconds
 - syslog proxy
