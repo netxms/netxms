@@ -174,7 +174,6 @@ doc/manuals/nxcp_reference.odt -text svneol=unset#unset
 doc/misc/Makefile.am -text
 doc/misc/ping_subagent.txt -text
 doc/misc/upgrade.txt -text
-doc/template.odt -text svneol=unset#unset
 images/Makefile.am -text
 images/cluster.ico -text
 images/cluster.png -text
