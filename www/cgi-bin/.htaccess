@@ -1,0 +1,7 @@
+AuthDigestFile /var/www/netxms.org/.htpasswd.digest
+AuthName "Twilight Zone"
+AuthType Digest
+
+<Files matrixEdit>
+	Require valid-user
+</Files>

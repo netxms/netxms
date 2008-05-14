@@ -1,0 +1,30 @@
+<div class="twoThirds noBorderOnLeft">
+	<h1>Service and support</h1>
+	<h2>Best-effort support</h2>
+	<p>
+	We provide free technical support through the mailing lists or via our <a href="http://www.netxms.org/forum/">forum</a>.
+	There is no guaranteed responce time, but we will try to do our best. Please check <a href="http://www.netxms.org/contacts/">Contacts section</a> for more information.
+	</p>
+	<p>
+	</p>
+
+	<h2>Priority Support</h2>
+	<p>
+	We also offer priority support, which includes:
+	<ul>
+		<li>Guaranteed response times</li>
+		<li>System implementation/integration services</li>
+		<li>Training services in Riga (one day workshop, can be extended upon demand). The training can be expanded to Baltic/Europe, if necessary</li>
+		<li>A wide rage of custom development services</li>
+	</ul>
+	</p>
+	<p>
+		<script language=javascript>
+		if(!addresses) var addresses = new Array();
+		addresses.push("11899 2333 11518 10442 7720 2901 3817 3085 7928 7720 5783 11587 1705 7720 5055 8199 11761 5783 11276 3817 11200 11518 2033 3185 3085 5055 9104");
+		</script>
+		<script language="javascript" src="/ep.js"></script>
+
+		If you have any questions regarding support options, please do not hesitate to <a href=javascript:decrypt_and_email(0)>contact us by email</script></a>.
+	</p>
+</div>
