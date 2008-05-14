@@ -377,6 +377,12 @@ www/data/documentation/confexample/image012.png -text
 www/data/documentation/confexample/image013.png -text
 www/data/documentation/netxms-ppt.zip -text
 www/data/documentation/netxms.ppt -text
+www/data/documentation/netxms_install_guide.odt -text
+www/data/documentation/netxms_install_guide.pdf -text
+www/data/documentation/netxms_user_manual.odt -text
+www/data/documentation/netxms_user_manual.pdf -text
+www/data/documentation/nxcp_reference.odt -text
+www/data/documentation/nxcp_reference.pdf -text
 www/data/rss.gif -text
 www/data/screenshots/netxms_console_01.png -text
 www/data/screenshots/netxms_console_02.png -text
