@@ -22,6 +22,7 @@ GENERAL:
 - Add libgd check to configure
 - Remove build-time-dependency: perl
 - Add named aliases for event parameters
+- Hardware monitoring (temperature, voltage, etc)
 
 
 SERVER:
