@@ -1,5 +1,4 @@
 * text=auto !eol
-/.cvsignore -text
 contrib/backgrounds/.keep -text
 contrib/logo.jpg -text
 contrib/startup/redhat/netxmsd.in -text
@@ -47,7 +46,6 @@ netware/bin/.keep -text
 packages/freebsd/files/netxmsd.in -text
 packages/freebsd/files/nxagentd.in -text
 packages/freebsd/files/nxhttpd.in -text
-sql/.cvsignore -text
 sql/Makefile.msvc.w32 -text
 sql/Makefile.w32 -text
 sql/dbinit.in -text
@@ -61,7 +59,6 @@ sql/scripts.in -text
 sql/setup.in -text
 sql/traps.in -text
 src/README.libs -text
-src/agent/core/.cvsignore -text
 src/agent/core/nxagentd.dsw -text
 src/agent/subagents/ecs/ecs.dsw -text
 src/agent/subagents/logscan/logscan.dsw -text
@@ -327,14 +324,12 @@ src/nxhttpd/static/images/status/unknown.png -text
 src/nxhttpd/static/images/status/unmanaged.png -text
 src/nxhttpd/static/images/status/warning.png -text
 src/nxhttpd/static/images/terminate.png -text
-src/nxmibc/.cvsignore -text
 src/nxmibc/nxmibc.dsw -text
 src/nxmibc/parser.l -text
 src/nxmibc/parser.y -text
 src/nxpush/nxpush.dsw -text
 src/nxreport/nxreport.dsw -text
 src/nxscript/nxscript.dsw -text
-src/server/core/.cvsignore -text
 src/server/core/nxcore.dsw -text
 src/server/core/nxmp_parser.l -text
 src/server/core/nxmp_parser.y -text
@@ -344,16 +339,11 @@ src/server/dbdrv/odbc/odbc.dsw -text
 src/server/dbdrv/oracle/oracle.dsw -text
 src/server/dbdrv/pgsql/pgsql.dsw -text
 src/server/dbdrv/sqlite/sqlite.dsw -text
-src/server/include/.cvsignore -text
-src/server/libnxsrv/.cvsignore -text
 src/server/libnxsrv/libnxsrv.dsw -text
-src/server/netxmsd/.cvsignore -text
 src/server/netxmsd/netxmsd.dsw -text
 src/server/smsdrv/generic/generic.dsw -text
 src/server/smsdrv/nxagent/nxagent.dsw -text
-src/server/tools/nxaction/.cvsignore -text
 src/server/tools/nxaction/nxaction.dsw -text
-src/server/tools/nxadm/.cvsignore -text
 src/server/tools/nxadm/nxadm.dsw -text
 src/server/tools/nxconfig/nxconfig.dsw -text
 src/server/tools/nxconfig/res/failed.ico -text
@@ -362,20 +352,12 @@ src/server/tools/nxconfig/res/ok.ico -text
 src/server/tools/nxconfig/res/running.ico -text
 src/server/tools/nxconfig/res/warning.ico -text
 src/server/tools/nxconfig/res/wizard.bmp -text
-src/server/tools/nxdbmgr/.cvsignore -text
 src/server/tools/nxdbmgr/nxdbmgr.dsw -text
-src/server/tools/nxget/.cvsignore -text
 src/server/tools/nxget/nxget.dsw -text
-src/server/tools/nxsnmpget/.cvsignore -text
 src/server/tools/nxsnmpget/nxsnmpget.dsw -text
 src/server/tools/nxsnmpset/nxsnmpset.dsw -text
-src/server/tools/nxsnmpwalk/.cvsignore -text
 src/server/tools/nxsnmpwalk/nxsnmpwalk.dsw -text
-src/server/tools/nxupload/.cvsignore -text
 src/server/tools/nxupload/nxupload.dsw -text
-www/.cvsignore -text
-www/data/.cvsignore -text
-www/data/bugtrack/.cvsignore -text
 www/data/documentation/body.shtml -text
 www/data/documentation/confexample/image001.png -text
 www/data/documentation/confexample/image002.png -text
@@ -392,7 +374,6 @@ www/data/documentation/confexample/image012.png -text
 www/data/documentation/confexample/image013.png -text
 www/data/documentation/netxms-ppt.zip -text
 www/data/documentation/netxms.ppt -text
-www/data/download/.cvsignore -text
 www/data/rss.gif -text
 www/data/screenshots/netxms_console_01.png -text
 www/data/screenshots/netxms_console_02.png -text
