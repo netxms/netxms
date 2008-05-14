@@ -1150,7 +1150,6 @@ src/console/win32/comm.cpp -text
 src/console/win32/draw.cpp -text
 src/console/win32/globals.cpp -text
 src/console/win32/globals.h -text
-src/console/win32/icons/EARTH.ICO -text
 src/console/win32/icons/Makefile.am -text
 src/console/win32/icons/RuleManager.ico -text
 src/console/win32/icons/SeverityCritical.ico -text
@@ -1181,6 +1180,7 @@ src/console/win32/icons/disabled.ico -text
 src/console/win32/icons/discovery.ico -text
 src/console/win32/icons/document.ico -text
 src/console/win32/icons/e-mail.ico -text
+src/console/win32/icons/earth.ico -text
 src/console/win32/icons/editor.ico -text
 src/console/win32/icons/empty.ico -text
 src/console/win32/icons/event_corr.ico -text
