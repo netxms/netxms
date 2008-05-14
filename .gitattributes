@@ -361,6 +361,7 @@ src/server/tools/nxsnmpget/nxsnmpget.dsw -text
 src/server/tools/nxsnmpset/nxsnmpset.dsw -text
 src/server/tools/nxsnmpwalk/nxsnmpwalk.dsw -text
 src/server/tools/nxupload/nxupload.dsw -text
+/test -text
 www/data/documentation/body.shtml -text
 www/data/documentation/confexample/image001.png -text
 www/data/documentation/confexample/image002.png -text
