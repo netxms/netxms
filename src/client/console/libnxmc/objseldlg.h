@@ -1,4 +1,4 @@
-/* $Id: objseldlg.h,v 1.1 2007-07-30 10:00:06 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console

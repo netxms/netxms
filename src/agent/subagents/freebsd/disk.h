@@ -1,4 +1,4 @@
-/* $Id: disk.h,v 1.2 2007-04-18 20:26:29 victor Exp $ */
+/* $Id$ */
 
 /* 
 ** NetXMS subagent for FreeBSD

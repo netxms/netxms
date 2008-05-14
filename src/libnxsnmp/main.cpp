@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.13 2007-09-19 16:57:40 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library

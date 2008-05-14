@@ -1,4 +1,4 @@
-/* $Id: users.cpp,v 1.29 2008-02-17 18:44:49 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library

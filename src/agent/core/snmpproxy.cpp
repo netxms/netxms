@@ -1,4 +1,4 @@
-/* $Id: snmpproxy.cpp,v 1.4 2007-01-18 17:10:24 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein

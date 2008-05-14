@@ -1,4 +1,4 @@
-/* $Id: proc.h,v 1.2 2007-01-15 00:16:07 victor Exp $ */
+/* $Id$ */
 
 /* 
 ** NetXMS subagent for GNU/Linux

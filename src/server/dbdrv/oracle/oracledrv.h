@@ -1,4 +1,4 @@
-/* $Id: oracledrv.h,v 1.4 2008-04-18 22:41:27 victor Exp $ */
+/* $Id$ */
 /** Oracle Database Driver
 ** Copyright (C) 2007 Victor Kirhenshtein
 **

@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.3 2006-10-20 10:15:54 victor Exp $
+# $Id$
 
 INCLUDES=-I@top_srcdir@/include
 

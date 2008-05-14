@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.16 2007-06-07 22:07:11 alk Exp $ */
+/* $Id$ */
 
 #define LIBNXCL_NO_DECLARATIONS
 

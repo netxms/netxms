@@ -1,4 +1,4 @@
-/* $Id: nxmp_parser.h,v 1.11 2008-01-22 19:21:10 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Server

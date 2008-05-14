@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.15 2008-03-25 23:13:45 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Utility Library

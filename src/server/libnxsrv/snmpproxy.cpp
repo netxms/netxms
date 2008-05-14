@@ -1,4 +1,4 @@
-/* $Id: snmpproxy.cpp,v 1.1 2007-01-14 14:17:57 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Server Library

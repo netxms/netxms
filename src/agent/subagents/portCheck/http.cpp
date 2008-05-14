@@ -1,4 +1,4 @@
-/* $Id: http.cpp,v 1.11 2006-09-06 09:09:20 alk Exp $ */
+/* $Id$ */
 
 #include <nms_common.h>
 #include <nms_agent.h>

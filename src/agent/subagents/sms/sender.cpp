@@ -1,4 +1,4 @@
-/* $Id: sender.cpp,v 1.2 2007-09-25 16:59:24 victor Exp $ */
+/* $Id$ */
 /*
 ** NetXMS SMS sender subagent
 ** Copyright (C) 2007 Victor Kirhenshtein

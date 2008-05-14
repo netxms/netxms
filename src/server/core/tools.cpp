@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.54 2007-02-09 21:33:11 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein

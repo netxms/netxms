@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.2 2006-03-12 22:16:44 alk Exp $ */
+/* $Id$ */
 
 /* 
 ** NetXMS subagent for OpenBSD

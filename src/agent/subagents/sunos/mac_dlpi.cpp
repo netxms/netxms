@@ -1,4 +1,4 @@
-/* $Id: mac_dlpi.cpp,v 1.2 2006-05-15 22:11:22 alk Exp $ */
+/* $Id$ */
 
 /*
  * mac_dlpi.c

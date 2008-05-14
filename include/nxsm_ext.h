@@ -1,4 +1,4 @@
-/* $Id: nxsm_ext.h,v 1.5 2006-01-19 03:25:16 alk Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Session Manager

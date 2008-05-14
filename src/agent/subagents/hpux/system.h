@@ -1,4 +1,4 @@
-/* $Id: system.h,v 1.5 2006-10-26 15:19:39 victor Exp $ */
+/* $Id$ */
 
 /* 
 ** NetXMS subagent for HP-UX

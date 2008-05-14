@@ -1,4 +1,4 @@
-/* $Id: sunos_subagent.h,v 1.13 2007-11-09 10:51:03 victor Exp $ */
+/* $Id$ */
 
 /*
  ** NetXMS subagent for SunOS/Solaris

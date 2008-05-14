@@ -1,4 +1,4 @@
-/* $Id: system.cpp,v 1.13 2007-09-20 13:04:00 victor Exp $ */
+/* $Id$ */
 
 /* 
 ** NetXMS subagent for FreeBSD

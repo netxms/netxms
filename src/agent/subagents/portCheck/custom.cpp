@@ -1,4 +1,4 @@
-/* $Id: custom.cpp,v 1.6 2006-08-13 22:58:59 victor Exp $ */
+/* $Id$ */
 
 #include <nms_common.h>
 #include <nms_agent.h>

@@ -1,4 +1,4 @@
-/* $Id: frame.h,v 1.3 2007-08-01 12:13:25 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console

@@ -1,4 +1,4 @@
-/* $Id: nxclapi.h,v 1.293 2008-05-01 09:41:26 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library API

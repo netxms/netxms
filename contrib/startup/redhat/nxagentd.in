@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: nxagentd.in,v 1.2 2007-09-21 07:37:49 victor Exp $
+# $Id$
 #
 # nxagentd This script starts and stops the nxagentd daemon
 #

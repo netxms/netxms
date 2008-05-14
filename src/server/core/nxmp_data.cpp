@@ -1,4 +1,4 @@
-/* $Id: nxmp_data.cpp,v 1.12 2008-01-22 19:21:10 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein

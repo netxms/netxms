@@ -1,4 +1,4 @@
-/* $Id: nxscript.cpp,v 1.10 2008-03-20 17:56:04 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Host

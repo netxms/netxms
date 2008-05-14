@@ -1,4 +1,4 @@
-/* $Id: vareditdlg.h,v 1.1 2007-08-14 11:26:44 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console

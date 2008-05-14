@@ -1,4 +1,4 @@
-/* $Id: libnetxms.h,v 1.8 2007-02-09 17:31:57 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Utility Library

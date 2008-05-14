@@ -1,4 +1,4 @@
-/* $Id: nms_core.h,v 1.153 2008-04-28 16:59:20 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein

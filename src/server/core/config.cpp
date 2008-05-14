@@ -1,4 +1,4 @@
-/* $Id: config.cpp,v 1.50 2008-05-09 20:04:15 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein

@@ -1,4 +1,4 @@
-/* $Id: telnet.cpp,v 1.4 2006-08-13 22:59:00 victor Exp $ */
+/* $Id$ */
 
 #include <nms_common.h>
 #include <nms_agent.h>

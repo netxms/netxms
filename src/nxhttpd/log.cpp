@@ -1,4 +1,4 @@
-/* $Id: log.cpp,v 1.3 2007-09-19 16:57:40 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server

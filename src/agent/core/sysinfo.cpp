@@ -1,4 +1,4 @@
-/* $Id: sysinfo.cpp,v 1.27 2008-05-06 12:12:09 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004 Victor Kirhenshtein

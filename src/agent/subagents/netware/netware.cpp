@@ -1,4 +1,4 @@
-/* $Id: netware.cpp,v 1.20 2007-11-06 07:32:57 victor Exp $ */
+/* $Id$ */
 
 /*
 ** NetXMS subagent for Novell NetWare

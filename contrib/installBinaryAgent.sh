@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: installBinaryAgent.sh,v 1.3 2007-08-27 12:25:29 victor Exp $
+# $Id$
 
 # Copyright (c) 2007, NetXMS Team
 #

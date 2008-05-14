@@ -1,4 +1,4 @@
-/* $Id: template.cpp,v 1.42 2008-03-07 10:03:53 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein

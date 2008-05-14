@@ -1,4 +1,4 @@
-/* $Id: netxms-version.h,v 1.143 2008-05-10 14:49:37 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein

@@ -1,4 +1,4 @@
-/* $Id: dcitem.cpp,v 1.90 2008-05-06 06:24:01 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein

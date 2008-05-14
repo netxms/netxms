@@ -1,4 +1,4 @@
-/* $Id: mainfrm.cpp,v 1.22 2008-03-09 19:56:37 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console

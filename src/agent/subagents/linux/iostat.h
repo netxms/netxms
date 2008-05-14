@@ -1,4 +1,4 @@
-/* $Id: iostat.h,v 1.1 2008-05-09 22:42:12 alk Exp $ */
+/* $Id$ */
 
 /* 
 ** NetXMS subagent for GNU/Linux

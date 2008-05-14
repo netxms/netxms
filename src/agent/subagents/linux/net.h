@@ -1,4 +1,4 @@
-/* $Id: net.h,v 1.4 2005-08-22 00:11:47 alk Exp $ */
+/* $Id$ */
 
 /* 
 ** NetXMS subagent for GNU/Linux

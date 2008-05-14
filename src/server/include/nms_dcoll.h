@@ -1,4 +1,4 @@
-/* $Id: nms_dcoll.h,v 1.35 2008-01-29 21:12:51 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein

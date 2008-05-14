@@ -1,4 +1,4 @@
-/* $Id: logscan.cpp,v 1.6 2007-06-08 00:02:36 alk Exp $ */
+/* $Id$ */
 /*
 ** NetXMS LogScan subagent
 ** Copyright (C) 2006 Alex Kirhenshtein

@@ -1,4 +1,4 @@
-/* $Id: db.cpp,v 1.26 2008-04-18 22:41:28 victor Exp $ */
+/* $Id$ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein

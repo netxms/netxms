@@ -1,4 +1,4 @@
-/* $Id: main.h,v 1.4 2006-01-20 13:00:47 victor Exp $ */
+/* $Id$ */
 
 #ifndef __MAIN_H__
 #define __MAIN_H__

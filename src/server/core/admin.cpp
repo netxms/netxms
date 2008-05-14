@@ -1,4 +1,4 @@
-/* $Id: admin.cpp,v 1.18 2006-09-18 21:25:33 victor Exp $ */
+/* $Id$ */
 
 /* 
 ** NetXMS - Network Management System

@@ -1,4 +1,4 @@
-/* $Id: disk.cpp,v 1.5 2007-11-09 10:51:03 victor Exp $ */
+/* $Id$ */
 
 /*
  ** NetXMS subagent for SunOS/Solaris

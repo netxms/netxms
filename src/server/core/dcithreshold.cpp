@@ -1,4 +1,4 @@
-/* $Id: dcithreshold.cpp,v 1.36 2008-01-29 16:32:40 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein

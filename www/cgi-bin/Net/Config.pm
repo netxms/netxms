@@ -13,7 +13,7 @@ use strict;
 
 @EXPORT  = qw(%NetConfig);
 @ISA     = qw(Net::LocalCfg Exporter);
-$VERSION = "1.10"; # $Id: Config.pm,v 1.1 2005-09-11 22:54:29 alk Exp $
+$VERSION = "1.10"; # $Id$
 
 eval { local $SIG{__DIE__}; require Net::LocalCfg };
 
@@ -309,6 +309,6 @@ If true then C<Configure> will check each hostname given that it exists
 
 =for html <hr>
 
-I<$Id: Config.pm,v 1.1 2005-09-11 22:54:29 alk Exp $>
+I<$Id$>
 
 =cut

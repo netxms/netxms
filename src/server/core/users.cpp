@@ -1,4 +1,4 @@
-/* $Id: users.cpp,v 1.47 2008-02-17 18:44:50 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein

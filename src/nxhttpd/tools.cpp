@@ -1,4 +1,4 @@
-/* $Id: tools.cpp,v 1.5 2007-09-19 16:57:40 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server

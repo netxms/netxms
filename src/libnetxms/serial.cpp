@@ -1,4 +1,4 @@
-/* $Id: serial.cpp,v 1.20 2008-01-28 18:09:38 victor Exp $ */
+/* $Id$ */
 
 /* 
 ** NetXMS - Network Management System

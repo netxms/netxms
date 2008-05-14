@@ -1,4 +1,4 @@
-/* $Id: exec.cpp,v 1.22 2008-02-08 11:00:12 victor Exp $ */
+/* $Id$ */
 
 /* 
 ** NetXMS multiplatform core agent

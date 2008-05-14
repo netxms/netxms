@@ -1,4 +1,4 @@
-/* $Id: netxmsd.cpp,v 1.27 2008-04-28 16:59:20 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Server startup module

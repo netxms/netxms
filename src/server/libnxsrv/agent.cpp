@@ -1,4 +1,4 @@
-/* $Id: agent.cpp,v 1.55 2008-03-07 10:03:54 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Server Library

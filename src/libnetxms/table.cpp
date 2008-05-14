@@ -1,4 +1,4 @@
-/* $Id: table.cpp,v 1.2 2008-01-28 18:09:38 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein

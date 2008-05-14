@@ -1,4 +1,4 @@
-/* $Id: nxpush.cpp,v 1.15 2008-01-21 17:05:30 victor Exp $ */
+/* $Id$ */
 
 /* 
 ** nxpush - command line tool used to push DCI values to NetXMS server

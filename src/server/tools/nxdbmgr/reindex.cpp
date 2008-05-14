@@ -1,4 +1,4 @@
-/* $Id: reindex.cpp,v 1.2 2007-09-20 13:04:02 victor Exp $ */
+/* $Id$ */
 /* 
 ** nxdbmgr - NetXMS database manager
 ** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein

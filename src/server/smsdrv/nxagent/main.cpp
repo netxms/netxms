@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.1 2007-08-24 09:25:57 victor Exp $ */
+/* $Id$ */
 /* 
 ** SMS Driver for sending SMS via NetXMS agent
 ** Copyright (C) 2007 Victor Kirhenshtein

@@ -1,4 +1,4 @@
-/* $Id: net.h,v 1.1 2006-03-07 09:42:48 alk Exp $ */
+/* $Id$ */
 
 /* 
 ** NetXMS subagent for FreeBSD

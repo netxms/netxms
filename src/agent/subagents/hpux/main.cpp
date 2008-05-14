@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.12 2007-06-28 09:14:05 victor Exp $ */
+/* $Id$ */
 
 /*
 ** NetXMS subagent for HP-UX

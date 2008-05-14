@@ -1,4 +1,4 @@
-/* $Id: comm.cpp,v 1.58 2008-02-27 08:08:02 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Windows Console

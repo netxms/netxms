@@ -1,4 +1,4 @@
-/* $Id: smgr.cpp,v 1.3 2007-06-14 20:42:48 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server

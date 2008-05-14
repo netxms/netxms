@@ -1,4 +1,4 @@
-/* $Id: ipso.cpp,v 1.10 2007-06-08 00:02:36 alk Exp $ */
+/* $Id$ */
 
 /* 
 ** NetXMS subagent for IPSO

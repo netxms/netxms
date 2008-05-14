@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.300 2008-05-10 07:36:40 victor Exp $
+# $Id$
 #
 # NetXMS - Network Management System
 # Configure script

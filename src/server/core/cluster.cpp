@@ -1,4 +1,4 @@
-/* $Id: cluster.cpp,v 1.8 2008-01-14 16:53:13 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein

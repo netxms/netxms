@@ -1,4 +1,4 @@
-/* $Id: container.cpp,v 1.18 2007-01-04 16:35:38 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein

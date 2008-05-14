@@ -1,4 +1,4 @@
-/* $Id: nxaction.cpp,v 1.7 2007-08-24 09:25:58 victor Exp $ */
+/* $Id$ */
 /* 
 ** nxaction - command line tool used to execute preconfigured actions 
 **            on NetXMS agent

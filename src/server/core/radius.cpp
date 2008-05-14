@@ -1,4 +1,4 @@
-/* $Id: radius.cpp,v 1.6 2008-01-14 16:53:14 victor Exp $ */
+/* $Id$ */
 
 /* 
  ** NetXMS - Network Management System

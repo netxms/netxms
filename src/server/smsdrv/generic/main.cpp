@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.11 2008-05-09 00:20:42 alk Exp $ */
+/* $Id$ */
 
 #include "main.h"
 

@@ -1,4 +1,4 @@
-/* $Id: unicode.cpp,v 1.34 2008-05-01 15:30:12 victor Exp $ */
+/* $Id$ */
 /*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein

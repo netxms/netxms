@@ -1,4 +1,4 @@
-/* $Id: hddinfo.cpp,v 1.2 2007-04-24 12:04:10 alk Exp $ */
+/* $Id$ */
 
 /* 
 ** NetXMS Linux subagent

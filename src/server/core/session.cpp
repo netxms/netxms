@@ -1,4 +1,4 @@
-/* $Id: session.cpp,v 1.307 2008-05-01 21:49:34 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein

@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.23 2007-11-09 10:51:03 victor Exp $ */
+/* $Id$ */
 
 /*
  ** NetXMS subagent for SunOS/Solaris

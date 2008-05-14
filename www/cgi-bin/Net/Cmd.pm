@@ -1,4 +1,4 @@
-# Net::Cmd.pm $Id: Cmd.pm,v 1.1 2005-09-11 22:54:29 alk Exp $
+# Net::Cmd.pm $Id$
 #
 # Copyright (c) 1995-1997 Graham Barr <gbarr@pobox.com>. All rights reserved.
 # This program is free software; you can redistribute it and/or
@@ -772,6 +772,6 @@ it under the same terms as Perl itself.
 
 =for html <hr>
 
-I<$Id: Cmd.pm,v 1.1 2005-09-11 22:54:29 alk Exp $>
+I<$Id$>
 
 =cut

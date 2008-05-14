@@ -1,4 +1,4 @@
-/* $Id: cpu.cpp,v 1.5 2006-05-15 22:11:22 alk Exp $ */
+/* $Id$ */
 
 /*
  ** NetXMS subagent for SunOS/Solaris

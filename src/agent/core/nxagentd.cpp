@@ -1,4 +1,4 @@
-/* $Id: nxagentd.cpp,v 1.94 2008-05-09 20:04:15 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein

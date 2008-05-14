@@ -1,4 +1,4 @@
-/* $Id: events.cpp,v 1.23 2008-01-29 16:32:40 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library

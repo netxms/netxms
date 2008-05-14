@@ -1,4 +1,4 @@
-/* $Id: openbsd.cpp,v 1.6 2007-06-08 14:06:39 alk Exp $ */
+/* $Id$ */
 
 /* 
 ** NetXMS subagent for FreeBSD

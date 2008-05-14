@@ -1,4 +1,4 @@
-/* $Id: transport.cpp,v 1.17 2008-05-06 12:12:09 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library

@@ -1,4 +1,4 @@
-/* $Id: frame.cpp,v 1.4 2007-08-01 12:13:25 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console

@@ -1,4 +1,4 @@
-/* $Id: cert.cpp,v 1.2 2007-03-26 16:01:51 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Client Library

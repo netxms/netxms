@@ -1,4 +1,4 @@
-/* $Id: disk.h,v 1.1 2006-10-04 14:59:14 alk Exp $ */
+/* $Id$ */
 
 /* 
 ** NetXMS subagent for HP-UX

@@ -1,4 +1,4 @@
-/* $Id: pgsql.cpp,v 1.21 2008-04-18 22:41:27 victor Exp $ */
+/* $Id$ */
 /* 
 ** PostgreSQL Database Driver
 ** Copyright (C) 2003 - 2008 Victor Kirhenshtein and Alex Kirhenshtein

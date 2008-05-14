@@ -1,4 +1,4 @@
-/* $Id: nxsl.h,v 1.13 2008-02-29 21:17:27 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2005, 2006 Victor Kirhenshtein

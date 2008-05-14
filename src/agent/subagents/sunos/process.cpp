@@ -1,4 +1,4 @@
-/* $Id: process.cpp,v 1.10 2006-09-28 20:00:35 victor Exp $ */
+/* $Id$ */
 
 /*
  ** NetXMS subagent for SunOS/Solaris

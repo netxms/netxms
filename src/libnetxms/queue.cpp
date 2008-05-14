@@ -1,4 +1,4 @@
-/* $Id: queue.cpp,v 1.7 2007-03-01 23:29:05 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein

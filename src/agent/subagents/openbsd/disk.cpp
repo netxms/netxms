@@ -1,4 +1,4 @@
-/* $Id: disk.cpp,v 1.3 2007-09-27 10:33:46 alk Exp $ */
+/* $Id$ */
 
 /* 
 ** NetXMS subagent for FreeBSD

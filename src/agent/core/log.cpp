@@ -1,4 +1,4 @@
-/* $Id: log.cpp,v 1.11 2008-03-20 17:56:02 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004,2005,2006 Victor Kirhenshtein

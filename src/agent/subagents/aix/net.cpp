@@ -1,4 +1,4 @@
-/* $Id: net.cpp,v 1.1 2006-09-27 04:15:25 victor Exp $ */
+/* $Id$ */
 /*
 ** NetXMS subagent for AIX
 ** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein

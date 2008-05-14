@@ -1,4 +1,4 @@
-/* $Id: mainfrm.h,v 1.12 2008-03-09 19:56:37 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Portable management console

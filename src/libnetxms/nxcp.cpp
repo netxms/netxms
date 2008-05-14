@@ -1,4 +1,4 @@
-/* $Id: nxcp.cpp,v 1.27 2008-04-15 15:47:12 victor Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library

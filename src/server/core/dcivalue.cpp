@@ -1,4 +1,4 @@
-/* $Id: dcivalue.cpp,v 1.14 2007-04-10 12:29:38 alk Exp $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein

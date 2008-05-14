@@ -1,4 +1,4 @@
-/* $Id: microdowell.cpp,v 1.4 2007-04-18 20:55:08 victor Exp $ */
+/* $Id$ */
 
 /*
 ** NetXMS UPS management subagent

@@ -1,4 +1,4 @@
-/* $Id: main.cpp,v 1.4 2007-06-08 13:49:50 alk Exp $ */
+/* $Id$ */
 
 //#include <windows.h>
 #include <Python.h>
