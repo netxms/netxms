@@ -28,7 +28,7 @@
 // Handler for System.ProcessCount
 //
 
-LONG H_ProcCount(char *pszCmd, char *pArg, char *pValue)
+LONG H_ProcCount(const char *pszCmd, const char *pArg, char *pValue)
 {
    HANDLE hSnapshot;
    PROCESSENTRY32 pe;
@@ -61,7 +61,7 @@ LONG H_ProcCount(char *pszCmd, char *pArg, char *pValue)
 // Handler for Process.Count(*)
 //
 
-LONG H_ProcCountSpecific(char *pszCmd, char *pArg, char *pValue)
+LONG H_ProcCountSpecific(const char *pszCmd, const char *pArg, char *pValue)
 {
    HANDLE hSnapshot;
    PROCESSENTRY32 pe;
@@ -104,7 +104,7 @@ LONG H_ProcCountSpecific(char *pszCmd, char *pArg, char *pValue)
 // Handler for System.ProcessList enum
 //
 
-LONG H_ProcessList(char *pszCmd, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_ProcessList(const char *pszCmd, const char *pArg, NETXMS_VALUES_LIST *pValue)
 {
    HANDLE hSnapshot;
    PROCESSENTRY32 pe;
@@ -143,7 +143,7 @@ LONG H_ProcessList(char *pszCmd, char *pArg, NETXMS_VALUES_LIST *pValue)
 // Handler for System.ThreadCount
 //
 
-LONG H_ThreadCount(char *pszCmd, char *pArg, char *pValue)
+LONG H_ThreadCount(const char *pszCmd, const char *pArg, char *pValue)
 {
    HANDLE hSnapshot;
    PROCESSENTRY32 pe;

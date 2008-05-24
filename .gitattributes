@@ -45,6 +45,7 @@ images/vpnc.ico -text
 images/vpnc.png -text
 images/zone.ico -text
 images/zone.png -text
+/netware.cmd -text
 netware/bin/.keep -text
 packages/freebsd/files/netxmsd.in -text
 packages/freebsd/files/nxagentd.in -text

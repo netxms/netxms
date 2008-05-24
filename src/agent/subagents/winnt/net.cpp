@@ -30,7 +30,7 @@
 //    or: Net.RemoteShareStatusText(share,domain,login,password)
 //
 
-LONG H_RemoteShareStatus(char *cmd, char *arg, char *value)
+LONG H_RemoteShareStatus(const char *cmd, const char *arg, char *value)
 {
 	TCHAR share[MAX_PATH], domain[64], login[64], password[256];
 #ifndef UNICODE

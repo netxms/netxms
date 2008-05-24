@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: hddinfo.cpp
+** File: hddinfo.cpp
 **
 **/
 
@@ -70,7 +70,7 @@ static BOOL GetAttributeValue(ATA_SMART_VALUES *pSmartValues, BYTE bAttr,
 // Handler for PhysicalDisk.*
 //
 
-LONG H_PhysicalDiskInfo(char *pszParam, char *pszArg, char *pValue)
+LONG H_PhysicalDiskInfo(const char *pszParam, const char *pszArg, char *pValue)
 {
    LONG nRet = SYSINFO_RC_ERROR, nDisk, nCmd;
    char szBuffer[128], *eptr;

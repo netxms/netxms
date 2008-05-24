@@ -27,8 +27,8 @@
 // Externals
 //
 
-LONG H_ACPIThermalZones(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValue);
-LONG H_ACPITZCurrTemp(char *cmd, char *arg, char *value);
+LONG H_ACPIThermalZones(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES_LIST *pValue);
+LONG H_ACPITZCurrTemp(const char *cmd, const char *arg, char *value);
 
 
 //
@@ -182,7 +182,7 @@ void CloseWMIQuery(WMI_QUERY_CONTEXT *ctx)
 // Handler for generic WMI query
 //
 
-static LONG H_WMIQuery(char *cmd, char *arg, char *value)
+static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 {
 	WMI_QUERY_CONTEXT ctx;
 	IEnumWbemClassObject *pEnumObject = NULL;
@@ -248,7 +248,7 @@ static LONG H_WMIQuery(char *cmd, char *arg, char *value)
 // Handler for WMI.NameSpaces enum
 //
 
-static LONG H_WMINameSpaces(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_WMINameSpaces(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	WMI_QUERY_CONTEXT ctx;
 	IEnumWbemClassObject *pEnumObject = NULL;
@@ -286,7 +286,7 @@ static LONG H_WMINameSpaces(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pV
 // Handler for WMI.Classes enum
 //
 
-static LONG H_WMIClasses(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_WMIClasses(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	WMI_QUERY_CONTEXT ctx;
 	IEnumWbemClassObject *pEnumObject = NULL;

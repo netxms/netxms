@@ -27,10 +27,10 @@
 // Externlals
 //
 
-LONG H_ProcessList(char *pszCmd, char *pArg, NETXMS_VALUES_LIST *value);
-LONG H_ProcCount(char *pszCmd, char *pArg, char *pValue);
-LONG H_ProcCountSpecific(char *pszCmd, char *pArg, char *pValue);
-LONG H_ThreadCount(char *pszCmd, char *pArg, char *pValue);
+LONG H_ProcessList(const char *pszCmd, const char *pArg, NETXMS_VALUES_LIST *value);
+LONG H_ProcCount(const char *pszCmd, const char *pArg, char *pValue);
+LONG H_ProcCountSpecific(const char *pszCmd, const char *pArg, char *pValue);
+LONG H_ThreadCount(const char *pszCmd, const char *pArg, char *pValue);
 
 
 //

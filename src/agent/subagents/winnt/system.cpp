@@ -28,7 +28,7 @@
 // Handler for System.ServiceState parameter
 //
 
-LONG H_ServiceState(char *cmd, char *arg, char *value)
+LONG H_ServiceState(const char *cmd, const char *arg, char *value)
 {
    SC_HANDLE hManager, hService;
    TCHAR szServiceName[MAX_PATH];
@@ -80,7 +80,7 @@ LONG H_ServiceState(char *cmd, char *arg, char *value)
 // Handler for System.ThreadCount
 //
 
-LONG H_ThreadCount(char *cmd, char *arg, char *value)
+LONG H_ThreadCount(const char *cmd, const char *arg, char *value)
 {
    PERFORMANCE_INFORMATION pi;
 
@@ -103,7 +103,7 @@ LONG H_ThreadCount(char *cmd, char *arg, char *value)
 // Handler for System.ConnectedUsers parameter
 //
 
-LONG H_ConnectedUsers(char *pszCmd, char *pArg, char *pValue)
+LONG H_ConnectedUsers(const char *pszCmd, const char *pArg, char *pValue)
 {
    LONG nRet;
    WTS_SESSION_INFO *pSessionList;
@@ -136,7 +136,7 @@ LONG H_ConnectedUsers(char *pszCmd, char *pArg, char *pValue)
 // Handler for System.ActiveUserSessions enum
 //
 
-LONG H_ActiveUserSessions(char *pszCmd, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_ActiveUserSessions(const char *pszCmd, const char *pArg, NETXMS_VALUES_LIST *pValue)
 {
    LONG nRet;
    WTS_SESSION_INFO *pSessionList;

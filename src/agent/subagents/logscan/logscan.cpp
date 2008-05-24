@@ -42,7 +42,7 @@ static MUTEX m_locationsMutex;
 // Forward declarations
 //
 
-LONG H_GetString(char *, char *, char *);
+LONG H_GetString(const char *, const char *, char *);
 
 
 //
@@ -102,7 +102,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(LOGSCAN)
 // main code
 //
 
-LONG H_GetString(char *pszParam, char *pArg, char *pValue)
+LONG H_GetString(const char *pszParam, const char *pArg, char *pValue)
 {
 	int ret = SYSINFO_RC_ERROR;
 	char fileName[1024];

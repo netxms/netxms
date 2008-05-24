@@ -43,7 +43,7 @@ LONG H_PlatformName(const char *cmd, const char *arg, char *value);
 #ifdef _WIN32
 LONG H_ArpCache(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value);
 LONG H_InterfaceList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value);
-LONG H_IPRoutingTable(char *pszCmd, char *pArg, NETXMS_VALUES_LIST *pValue);
+LONG H_IPRoutingTable(const char *cmd, const char *arg, NETXMS_VALUES_LIST *pValue);
 LONG H_DiskInfo(const char *cmd, const char *arg, char *value);
 LONG H_MemoryInfo(const char *cmd, const char *arg, char *value);
 LONG H_HostName(const char *cmd, const char *arg, char *value);

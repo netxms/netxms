@@ -27,15 +27,15 @@
 // Externlals
 //
 
-LONG H_ActiveUserSessions(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
-LONG H_ConnectedUsers(char *pszCmd, char *pArg, char *pValue);
-LONG H_RemoteShareStatus(char *pszCmd, char *pArg, char *pValue);
-LONG H_ProcessList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
-LONG H_ProcCount(char *cmd, char *arg, char *value);
-LONG H_ProcCountSpecific(char *cmd, char *arg, char *value);
-LONG H_ProcInfo(char *cmd, char *arg, char *value);
-LONG H_ServiceState(char *cmd, char *arg, char *value);
-LONG H_ThreadCount(char *cmd, char *arg, char *value);
+LONG H_ActiveUserSessions(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value);
+LONG H_ConnectedUsers(const char *pszCmd, const char *pArg, char *pValue);
+LONG H_RemoteShareStatus(const char *pszCmd, const char *pArg, char *pValue);
+LONG H_ProcessList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value);
+LONG H_ProcCount(const char *cmd, const char *arg, char *value);
+LONG H_ProcCountSpecific(const char *cmd, const char *arg, char *value);
+LONG H_ProcInfo(const char *cmd, const char *arg, char *value);
+LONG H_ServiceState(const char *cmd, const char *arg, char *value);
+LONG H_ThreadCount(const char *cmd, const char *arg, char *value);
 
 
 //

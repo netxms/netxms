@@ -310,7 +310,7 @@ static BOOL MatchProcess(DWORD dwPID, HANDLE hProcess, HMODULE hModule, BOOL bEx
 //    <window>   - window title
 //
 
-LONG H_ProcInfo(char *cmd, char *arg, char *value)
+LONG H_ProcInfo(const char *cmd, const char *arg, char *value)
 {
    char buffer[256], procName[MAX_PATH], cmdLine[MAX_PATH], windowTitle[MAX_PATH];
    int attr, type, i, procCount, counter;
@@ -390,7 +390,7 @@ LONG H_ProcInfo(char *cmd, char *arg, char *value)
 // Handler for System.ProcessCount
 //
 
-LONG H_ProcCount(char *cmd, char *arg, char *value)
+LONG H_ProcCount(const char *cmd, const char *arg, char *value)
 {
    DWORD dwSize, *pdwProcList;
    PERFORMANCE_INFORMATION pi;
@@ -418,7 +418,7 @@ LONG H_ProcCount(char *cmd, char *arg, char *value)
 // Handler for Process.Count(*) and Process.CountEx(*)
 //
 
-LONG H_ProcCountSpecific(char *cmd, char *arg, char *value)
+LONG H_ProcCountSpecific(const char *cmd, const char *arg, char *value)
 {
    DWORD dwSize = 0, *pdwProcList;
    int i, counter, procCount;
@@ -467,7 +467,7 @@ LONG H_ProcCountSpecific(char *cmd, char *arg, char *value)
 // Handler for System.ProcessList enum
 //
 
-LONG H_ProcessList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
+LONG H_ProcessList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
 {
    DWORD i, dwSize, dwNumProc, *pdwProcList;
    LONG iResult = SYSINFO_RC_SUCCESS;

@@ -336,6 +336,7 @@ LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
 		SECURITY_ATTRIBUTES sa;
 		HANDLE hOutput;
 		DWORD dwBytes;
+		char *eptr;
 
 		// Create temporary file to hold process output
 		GetTempPath(MAX_PATH - 1, szBuffer);
@@ -368,9 +369,12 @@ LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
 					// Read process output
 					ReadFile(hOutput, pValue, MAX_RESULT_LENGTH - 1, &dwBytes, NULL);
 					pValue[dwBytes] = 0;
-					sptr = strchr(pValue, '\n');
-					if (sptr != NULL)
-						*sptr = 0;
+					eptr = strchr(pValue, '\r');
+					if (eptr != NULL)
+						*eptr = 0;
+					eptr = strchr(pValue, '\n');
+					if (eptr != NULL)
+						*eptr = 0;
 					iStatus = SYSINFO_RC_SUCCESS;
 				}
 				else

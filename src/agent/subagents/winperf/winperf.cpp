@@ -88,7 +88,7 @@ static struct
 // Value of given performance counter
 //
 
-static LONG H_PdhVersion(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+static LONG H_PdhVersion(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
    DWORD dwVersion;
 
@@ -103,7 +103,7 @@ static LONG H_PdhVersion(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 // Value of CPU utilization counter
 //
 
-static LONG H_CPUUsage(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+static LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
    LONG nProcessor, nRet = SYSINFO_RC_SUCCESS;
    TCHAR *pEnd, szBuffer[16];
@@ -148,7 +148,7 @@ static LONG H_CPUUsage(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 // Value of given counter collected by one of the collector threads
 //
 
-LONG H_CollectedCounterData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+LONG H_CollectedCounterData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
    switch(((WINPERF_COUNTER *)pArg)->wType)
    {
@@ -170,7 +170,7 @@ LONG H_CollectedCounterData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 // Value of given performance counter
 //
 
-static LONG H_PdhCounterValue(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
    HQUERY hQuery;
    HCOUNTER hCounter;
@@ -259,7 +259,7 @@ static LONG H_PdhCounterValue(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 // List of available performance objects
 //
 
-static LONG H_PdhObjects(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_PdhObjects(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
 {
    TCHAR *pszObject, *pszObjList, szHostName[256];
    LONG iResult = SYSINFO_RC_ERROR;
@@ -292,7 +292,7 @@ static LONG H_PdhObjects(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValu
 // List of available performance items for given object
 //
 
-static LONG H_PdhObjectItems(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_PdhObjectItems(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
 {
    TCHAR *pszElement, *pszCounterList, *pszInstanceList, szHostName[256], szObject[256];
    LONG iResult = SYSINFO_RC_ERROR;
@@ -339,7 +339,7 @@ static LONG H_PdhObjectItems(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *p
 // performance counter. Actually, it's an alias for PDH.CounterValue(xxx) parameter.
 //
 
-static LONG H_CounterAlias(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+static LONG H_CounterAlias(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
    return H_PdhCounterValue(NULL, pArg, pValue);
 }
@@ -407,7 +407,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Add new parameter to list
 //
 
-BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(TCHAR *, TCHAR *, TCHAR *),
+BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *),
                   TCHAR *pArg, int iDataType, TCHAR *pszDescription)
 {
    DWORD i;
