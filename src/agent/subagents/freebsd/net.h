@@ -23,12 +23,12 @@
 #ifndef __NET_H__
 #define __NET_H__
 
-LONG H_NetIpForwarding(char *, char *, char *);
-LONG H_NetIfAdmStatus(char *, char *, char *);
-LONG H_NetIfLink(char *, char *, char *);
-LONG H_NetArpCache(char *, char *, NETXMS_VALUES_LIST *);
-LONG H_NetIfList(char *, char *, NETXMS_VALUES_LIST *);
-LONG H_NetRoutingTable(char *, char *, NETXMS_VALUES_LIST *);
+LONG H_NetIpForwarding(const char *, const char *, char *);
+LONG H_NetIfAdmStatus(const char *, const char *, char *);
+LONG H_NetIfLink(const char *, const char *, char *);
+LONG H_NetArpCache(const char *, const char *, NETXMS_VALUES_LIST *);
+LONG H_NetIfList(const char *, const char *, NETXMS_VALUES_LIST *);
+LONG H_NetRoutingTable(const char *, const char *, NETXMS_VALUES_LIST *);
 
 #endif // __NET_H__
 

@@ -317,9 +317,9 @@ void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
 BOOL DownloadConfig(TCHAR *pszServer);
 
 BOOL InitParameterList(void);
-void AddParameter(const char *szName, LONG (* fpHandler)(char *,char *,char *), const char *pArg,
+void AddParameter(const char *szName, LONG (* fpHandler)(const char *, const char *, char *), const char *pArg,
                   int iDataType, const char *pszDescription);
-void AddEnum(const char *szName, LONG (* fpHandler)(char *,char *,NETXMS_VALUES_LIST *), const char *pArg);
+void AddEnum(const char *szName, LONG (* fpHandler)(const char *, const char *, NETXMS_VALUES_LIST *), const char *pArg);
 BOOL AddExternalParameter(char *pszCfgLine, BOOL bShellExec);
 DWORD GetParameterValue(DWORD dwSessionId, char *pszParam, char *pszValue);
 DWORD GetEnumValue(DWORD dwSessionId, char *pszParam, NETXMS_VALUES_LIST *pValue);

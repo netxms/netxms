@@ -288,10 +288,11 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 // Handler function for external (user-defined) parameters
 //
 
-LONG H_ExternalParameter(char *pszCmd, char *pszArg, char *pValue)
+LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
 {
-   char *pszCmdLine, szBuffer[1024], szTempFile[MAX_PATH], *sptr;
-   int i, iSize, iStatus;
+	char *pszCmdLine, szBuffer[1024], szTempFile[MAX_PATH];
+	const char *sptr;
+	int i, iSize, iStatus;
 
    // Substitute $1 .. $9 with actual arguments
    iSize = (int)strlen(pszArg);

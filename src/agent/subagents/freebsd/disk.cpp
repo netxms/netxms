@@ -28,7 +28,7 @@
 
 #include "disk.h"
 
-LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
+LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szArg[512] = {0};

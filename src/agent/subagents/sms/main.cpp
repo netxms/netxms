@@ -46,7 +46,7 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
 // Handler for SMS.SerialConfig and SMS.DeviceModel
 //
 
-static LONG H_StringConst(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+static LONG H_StringConst(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	ret_string(pValue, pArg);
 	return SYSINFO_RC_SUCCESS;

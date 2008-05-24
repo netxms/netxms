@@ -232,7 +232,7 @@ void UnloadAllSubAgents(void)
 // Enumerate loaded subagents
 //
 
-LONG H_SubAgentList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
+LONG H_SubAgentList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
 {
    DWORD i;
    char szBuffer[MAX_PATH + 32];

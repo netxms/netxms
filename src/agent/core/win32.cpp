@@ -28,7 +28,7 @@
 // Handler for System.Memory.XXX parameters
 //
 
-LONG H_MemoryInfo(char *cmd, char *arg, char *value)
+LONG H_MemoryInfo(const char *cmd, const char *arg, char *value)
 {
    if (imp_GlobalMemoryStatusEx != NULL)
    {
@@ -100,7 +100,7 @@ LONG H_MemoryInfo(char *cmd, char *arg, char *value)
 // Handler for System.Hostname parameter
 //
 
-LONG H_HostName(char *pszCmd, char *pArg, char *pValue)
+LONG H_HostName(const char *pszCmd, const char *pArg, char *pValue)
 {
    DWORD dwSize;
    char szBuffer[MAX_COMPUTERNAME_LENGTH + 1];
@@ -116,7 +116,7 @@ LONG H_HostName(char *pszCmd, char *pArg, char *pValue)
 // Handler for disk space information parameters
 //
 
-LONG H_DiskInfo(char *pszCmd, char *pArg, char *pValue)
+LONG H_DiskInfo(const char *pszCmd, const char *pArg, char *pValue)
 {
    char szPath[MAX_PATH];
    ULARGE_INTEGER availBytes, freeBytes, totalBytes;
@@ -161,7 +161,7 @@ LONG H_DiskInfo(char *pszCmd, char *pArg, char *pValue)
 // Handler for System.Uname parameter
 //
 
-LONG H_SystemUname(char *cmd, char *arg, char *value)
+LONG H_SystemUname(const char *cmd, const char *arg, char *value)
 {
    DWORD dwSize;
    char *cpuType, computerName[MAX_COMPUTERNAME_LENGTH + 1], osVersion[256];
@@ -234,7 +234,7 @@ LONG H_SystemUname(char *cmd, char *arg, char *value)
 // Handler for System.CPU.Count parameter
 //
 
-LONG H_CPUCount(char *pszCmd, char *pArg, char *pValue)
+LONG H_CPUCount(const char *pszCmd, const char *pArg, char *pValue)
 {
    SYSTEM_INFO sysInfo;
 

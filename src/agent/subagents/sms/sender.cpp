@@ -57,6 +57,7 @@ BOOL InitSender(TCHAR *pszInitArgs)
 	NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, "SMS Sender: initializing GSM modem at %s", pszInitArgs);
 	
 	char *p;
+	const char *parityAsText;
 	int portSpeed = 9600;
 	int dataBits = 8;
 	int parity = NOPARITY;
@@ -114,17 +115,17 @@ BOOL InitSender(TCHAR *pszInitArgs)
 	switch (parity)
 	{
 	case ODDPARITY:
-		p = "ODD";
+		parityAsText = "ODD";
 		break;
 	case EVENPARITY:
-		p = "EVEN";
+		parityAsText = "EVEN";
 		break;
 	default:
-		p = "NONE";
+		parityAsText = "NONE";
 		break;
 	}
 	NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, "SMS init: port={%s}, speed=%d, data=%d, parity=%s, stop=%d",
-	                portName, portSpeed, dataBits, p, stopBits == TWOSTOPBITS ? 2 : 1);
+	                portName, portSpeed, dataBits, parityAsText, stopBits == TWOSTOPBITS ? 2 : 1);
 	
 	bRet = m_serial.Open(pszInitArgs);
 	if (bRet)

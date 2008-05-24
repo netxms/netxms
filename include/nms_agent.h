@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -284,7 +284,7 @@ typedef struct
 typedef struct
 {
    TCHAR szName[MAX_PARAM_NAME];
-   LONG (* fpHandler)(TCHAR *, TCHAR *, TCHAR *);
+   LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *);
    const TCHAR *pArg;
    int iDataType;
    TCHAR szDescription[MAX_DB_STRING];
@@ -298,7 +298,7 @@ typedef struct
 typedef struct
 {
    TCHAR szName[MAX_PARAM_NAME];
-   LONG (* fpHandler)(TCHAR *, TCHAR *, NETXMS_VALUES_LIST *);
+   LONG (* fpHandler)(const TCHAR *, const TCHAR *, NETXMS_VALUES_LIST *);
    const TCHAR *pArg;
 } NETXMS_SUBAGENT_ENUM;
 

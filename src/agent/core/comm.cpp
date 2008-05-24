@@ -285,7 +285,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
 // Handler for Agent.ActiveConnections parameter
 //
 
-LONG H_ActiveConnections(char *pszCmd, char *pArg, char *pValue)
+LONG H_ActiveConnections(const char *pszCmd, const char *pArg, char *pValue)
 {
    int nCounter;
    DWORD i;

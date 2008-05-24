@@ -27,31 +27,31 @@
 // Externals
 //
 
-LONG H_ActiveConnections(char *pszCmd, char *pArg, char *pValue);
-LONG H_AgentStats(char *cmd, char *arg, char *value);
-LONG H_AgentUptime(char *cmd, char *arg, char *value);
-LONG H_CRC32(char *cmd, char *arg, char *value);
-LONG H_DirInfo(char *cmd, char *arg, char *value);
-LONG H_FileTime(char *cmd, char *arg, char *value);
-LONG H_MD5Hash(char *cmd, char *arg, char *value);
-LONG H_SHA1Hash(char *cmd, char *arg, char *value);
-LONG H_SubAgentList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
-LONG H_ActionList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
-LONG H_ExternalParameter(char *pszCmd, char *pszArg, char *pValue);
-LONG H_PlatformName(char *cmd, char *arg, char *value);
+LONG H_ActiveConnections(const char *cmd, const char *arg, char *pValue);
+LONG H_AgentStats(const char *cmd, const char *arg, char *value);
+LONG H_AgentUptime(const char *cmd, const char *arg, char *value);
+LONG H_CRC32(const char *cmd, const char *arg, char *value);
+LONG H_DirInfo(const char *cmd, const char *arg, char *value);
+LONG H_FileTime(const char *cmd, const char *arg, char *value);
+LONG H_MD5Hash(const char *cmd, const char *arg, char *value);
+LONG H_SHA1Hash(const char *cmd, const char *arg, char *value);
+LONG H_SubAgentList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value);
+LONG H_ActionList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value);
+LONG H_ExternalParameter(const char *cmd, const char *arg, char *value);
+LONG H_PlatformName(const char *cmd, const char *arg, char *value);
 
 #ifdef _WIN32
-LONG H_ArpCache(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
-LONG H_InterfaceList(char *cmd, char *arg, NETXMS_VALUES_LIST *value);
+LONG H_ArpCache(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value);
+LONG H_InterfaceList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value);
 LONG H_IPRoutingTable(char *pszCmd, char *pArg, NETXMS_VALUES_LIST *pValue);
-LONG H_DiskInfo(char *cmd, char *arg, char *value);
-LONG H_MemoryInfo(char *cmd, char *arg, char *value);
-LONG H_HostName(char *cmd, char *arg, char *value);
-LONG H_SystemUname(char *cmd, char *arg, char *value);
-LONG H_NetIPStats(char *cmd, char *arg, char *value);
-LONG H_NetInterfaceStats(char *cmd, char *arg, char *value);
-LONG H_CPUCount(char *cmd, char *arg, char *value);
-LONG H_PhysicalDiskInfo(char *pszParam, char *pszArg, char *pValue);
+LONG H_DiskInfo(const char *cmd, const char *arg, char *value);
+LONG H_MemoryInfo(const char *cmd, const char *arg, char *value);
+LONG H_HostName(const char *cmd, const char *arg, char *value);
+LONG H_SystemUname(const char *cmd, const char *arg, char *value);
+LONG H_NetIPStats(const char *cmd, const char *arg, char *value);
+LONG H_NetInterfaceStats(const char *cmd, const char *arg, char *value);
+LONG H_CPUCount(const char *cmd, const char *arg, char *value);
+LONG H_PhysicalDiskInfo(const char *cmd, const char *arg, char *pValue);
 #endif
 
 
@@ -74,7 +74,7 @@ static DWORD m_dwUnsupportedRequests = 0;
 // Handler for parameters which always returns string constant
 //
 
-static LONG H_StringConstant(char *cmd, char *arg, char *value)
+static LONG H_StringConstant(const char *cmd, const char *arg, char *value)
 {
    ret_string(value, arg);
    return SYSINFO_RC_SUCCESS;
@@ -85,7 +85,7 @@ static LONG H_StringConstant(char *cmd, char *arg, char *value)
 // Handler for parameters which returns floating point value from specific variable
 //
 
-static LONG H_FloatPtr(char *cmd, char *arg, char *value)
+static LONG H_FloatPtr(const char *cmd, const char *arg, char *value)
 {
    ret_double(value, *((double *)arg));
    return SYSINFO_RC_SUCCESS;
@@ -96,7 +96,7 @@ static LONG H_FloatPtr(char *cmd, char *arg, char *value)
 // Handler for parameters which returns DWORD value from specific variable
 //
 
-static LONG H_UIntPtr(char *cmd, char *arg, char *value)
+static LONG H_UIntPtr(const char *cmd, const char *arg, char *value)
 {
    ret_uint(value, *((DWORD *)arg));
    return SYSINFO_RC_SUCCESS;
@@ -107,7 +107,7 @@ static LONG H_UIntPtr(char *cmd, char *arg, char *value)
 // Handler for Agent.SupportedCiphers
 //
 
-static LONG H_SupportedCiphers(char *pszCmd, char *pArg, char *pValue)
+static LONG H_SupportedCiphers(const char *pszCmd, const char *pArg, char *pValue)
 {
    DWORD dwCiphers;
 
@@ -137,7 +137,7 @@ static LONG H_SupportedCiphers(char *pszCmd, char *pArg, char *pValue)
 // Handler for parameters list
 //
 
-static LONG H_ParamList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
+static LONG H_ParamList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
 {
    int i;
 
@@ -151,7 +151,7 @@ static LONG H_ParamList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 // Handler for enums list
 //
 
-static LONG H_EnumList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
+static LONG H_EnumList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
 {
    int i;
 
@@ -272,7 +272,7 @@ BOOL InitParameterList(void)
 // Add parameter to list
 //
 
-void AddParameter(const char *pszName, LONG (* fpHandler)(char *,char *,char *), const char *pArg,
+void AddParameter(const char *pszName, LONG (* fpHandler)(const char *, const char *, char *), const char *pArg,
                   int iDataType, const char *pszDescription)
 {
    int i;
@@ -317,7 +317,7 @@ void AddParameter(const char *pszName, LONG (* fpHandler)(char *,char *,char *),
 // Add enum to list
 //
 
-void AddEnum(const char *pszName, LONG (* fpHandler)(char *,char *,NETXMS_VALUES_LIST *), const char *pArg)
+void AddEnum(const char *pszName, LONG (* fpHandler)(const char *, const char *, NETXMS_VALUES_LIST *), const char *pArg)
 {
    int i;
 
@@ -383,7 +383,7 @@ DWORD GetParameterValue(DWORD dwSessionId, char *pszParam, char *pszValue)
    for(i = 0; i < m_iNumParams; i++)
       if (MatchString(m_pParamList[i].szName, pszParam, FALSE))
       {
-         rc = m_pParamList[i].fpHandler(pszParam, (TCHAR *)m_pParamList[i].pArg, pszValue);
+         rc = m_pParamList[i].fpHandler(pszParam, m_pParamList[i].pArg, pszValue);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
@@ -428,7 +428,7 @@ DWORD GetEnumValue(DWORD dwSessionId, char *pszParam, NETXMS_VALUES_LIST *pValue
    for(i = 0; i < m_iNumEnums; i++)
       if (MatchString(m_pEnumList[i].szName, pszParam, FALSE))
       {
-         rc = m_pEnumList[i].fpHandler(pszParam, (char *)m_pEnumList[i].pArg, pValue);
+         rc = m_pEnumList[i].fpHandler(pszParam, m_pEnumList[i].pArg, pValue);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:

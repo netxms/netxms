@@ -6,7 +6,7 @@
 #include "main.h"
 #include "net.h"
 
-LONG H_CheckCustom(char *pszParam, char *pArg, char *pValue)
+LONG H_CheckCustom(const char *pszParam, const char *pArg, char *pValue)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 

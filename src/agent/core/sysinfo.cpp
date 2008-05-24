@@ -35,7 +35,7 @@
 // Handler for Agent.Uptime parameter
 //
 
-LONG H_AgentUptime(char *cmd, char *arg, char *value)
+LONG H_AgentUptime(const char *cmd, const char *arg, char *value)
 {
    ret_uint(value, (DWORD)(time(NULL) - g_tmAgentStartTime));
    return SYSINFO_RC_SUCCESS;
@@ -133,7 +133,7 @@ LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
 // Handler for File.Size(*) and File.Count(*)
 //
 
-LONG H_DirInfo(char *cmd, char *arg, char *value)
+LONG H_DirInfo(const char *cmd, const char *arg, char *value)
 {
    char szPath[MAX_PATH], szPattern[MAX_PATH], szRecursive[10];
    bool bRecursive = false;
@@ -179,7 +179,7 @@ LONG H_DirInfo(char *cmd, char *arg, char *value)
 // Calculate MD5 hash for file
 //
 
-LONG H_MD5Hash(char *cmd, char *arg, char *value)
+LONG H_MD5Hash(const char *cmd, const char *arg, char *value)
 {
    char szFileName[MAX_PATH], szHashText[MD5_DIGEST_SIZE * 2 + 1];
    BYTE hash[MD5_DIGEST_SIZE];
@@ -204,7 +204,7 @@ LONG H_MD5Hash(char *cmd, char *arg, char *value)
 // Calculate SHA1 hash for file
 //
 
-LONG H_SHA1Hash(char *cmd, char *arg, char *value)
+LONG H_SHA1Hash(const char *cmd, const char *arg, char *value)
 {
    char szFileName[MAX_PATH], szHashText[SHA1_DIGEST_SIZE * 2 + 1];
    BYTE hash[SHA1_DIGEST_SIZE];
@@ -229,7 +229,7 @@ LONG H_SHA1Hash(char *cmd, char *arg, char *value)
 // Calculate CRC32 for file
 //
 
-LONG H_CRC32(char *cmd, char *arg, char *value)
+LONG H_CRC32(const char *cmd, const char *arg, char *value)
 {
    char szFileName[MAX_PATH];
    DWORD dwCRC32;
@@ -249,7 +249,7 @@ LONG H_CRC32(char *cmd, char *arg, char *value)
 // Handler for System.PlatformName
 //
 
-LONG H_PlatformName(char *cmd, char *arg, char *value)
+LONG H_PlatformName(const char *cmd, const char *arg, char *value)
 {
    LONG nResult = SYSINFO_RC_SUCCESS;
 
@@ -334,7 +334,7 @@ LONG H_PlatformName(char *cmd, char *arg, char *value)
 // Handler for File.Time.* parameters
 //
 
-LONG H_FileTime(char *cmd, char *arg, char *value)
+LONG H_FileTime(const char *cmd, const char *arg, char *value)
 {
 	char szFilePath[MAX_PATH];
 	LONG nRet = SYSINFO_RC_SUCCESS;

@@ -39,7 +39,7 @@ static unsigned char *GetHttpUrl(char *url, int *size)
 	char *uri = strchr(host, '/');
 	if (uri == NULL)
 	{
-		uri = "";
+		uri = (char *)"";
 	}
 	else
 	{
@@ -160,7 +160,7 @@ static unsigned char *GetHttpUrl(char *url, int *size)
 // Hanlder functions
 //
 
-static LONG H_DoHttp(char *pszParam, char *pArg, char *pValue)
+static LONG H_DoHttp(const char *pszParam, const char *pArg, char *pValue)
 {
 	LONG ret = SYSINFO_RC_ERROR;
 	char szArg[256];

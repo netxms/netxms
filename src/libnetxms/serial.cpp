@@ -77,7 +77,7 @@ Serial::~Serial(void)
 // Open serial device
 //
 
-bool Serial::Open(TCHAR *pszPort)
+bool Serial::Open(const TCHAR *pszPort)
 {
 	bool bRet = false;
 	
@@ -91,82 +91,82 @@ bool Serial::Open(TCHAR *pszPort)
 	if (m_hPort != INVALID_HANDLE_VALUE)
 	{
 #else // UNIX
-		m_hPort = _topen(pszPort, O_RDWR | O_NOCTTY | O_NDELAY); 
-		if (m_hPort != -1)
-		{
-			tcgetattr(m_hPort, &m_originalSettings);
+	m_hPort = _topen(pszPort, O_RDWR | O_NOCTTY | O_NDELAY); 
+	if (m_hPort != -1)
+	{
+		tcgetattr(m_hPort, &m_originalSettings);
 #endif
-			Set(38400, 8, NOPARITY, ONESTOPBIT, FLOW_NONE);
+		Set(38400, 8, NOPARITY, ONESTOPBIT, FLOW_NONE);
+		bRet = true;
+	}
+	return bRet;
+}
+	
+	
+//
+// Set communication parameters
+//
+bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
+{
+	return Set(nSpeed, nDataBits, nParity, nStopBits, FLOW_NONE);
+}
+	
+bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlowControl)
+{
+	bool bRet = false;
+		
+	m_nDataBits = nDataBits;
+	m_nSpeed = nSpeed;
+	m_nParity = nParity;
+	m_nStopBits = nStopBits;
+	m_nFlowControl = nFlowControl;
+	
+#ifdef _WIN32
+	DCB dcb;
+		
+	dcb.DCBlength = sizeof(DCB);
+	if (GetCommState(m_hPort, &dcb))
+	{
+		dcb.BaudRate = nSpeed;
+		dcb.ByteSize = nDataBits;
+		dcb.Parity = nParity;
+		dcb.StopBits = nStopBits;
+		dcb.fDtrControl = DTR_CONTROL_ENABLE;
+		dcb.fBinary = TRUE;
+		dcb.fParity = FALSE;
+		dcb.fOutxCtsFlow = FALSE;
+		dcb.fOutxDsrFlow = FALSE;
+		dcb.fDsrSensitivity = FALSE;
+		dcb.fOutX = FALSE;
+		dcb.fInX = FALSE;
+		dcb.fRtsControl = RTS_CONTROL_ENABLE;
+		dcb.fAbortOnError = FALSE;
+			
+		if (SetCommState(m_hPort, &dcb))
+		{
+			COMMTIMEOUTS ct;
+				
+			memset(&ct, 0, sizeof(COMMTIMEOUTS));
+			ct.ReadTotalTimeoutConstant = m_nTimeout;
+			ct.WriteTotalTimeoutConstant = m_nTimeout;
+			SetCommTimeouts(m_hPort, &ct);
 			bRet = true;
 		}
-		return bRet;
 	}
-	
-	
-	//
-	// Set communication parameters
-	//
-	bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits)
+		
+#else /* UNIX */
+	struct termios newTio;
+		
+	tcgetattr(m_hPort, &newTio);
+		
+	newTio.c_cc[VMIN] = 1;
+	newTio.c_cc[VTIME] = m_nTimeout;
+		
+	newTio.c_cflag |= CLOCAL | CREAD;
+		
+	int baud;
+	switch(nSpeed)
 	{
-		return Set(nSpeed, nDataBits, nParity, nStopBits, FLOW_NONE);
-	}
-	
-	bool Serial::Set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlowControl)
-	{
-		bool bRet = false;
-		
-		m_nDataBits = nDataBits;
-		m_nSpeed = nSpeed;
-		m_nParity = nParity;
-		m_nStopBits = nStopBits;
-		m_nFlowControl = nFlowControl;
-		
-#ifdef _WIN32
-		DCB dcb;
-		
-		dcb.DCBlength = sizeof(DCB);
-		if (GetCommState(m_hPort, &dcb))
-		{
-			dcb.BaudRate = nSpeed;
-			dcb.ByteSize = nDataBits;
-			dcb.Parity = nParity;
-			dcb.StopBits = nStopBits;
-			dcb.fDtrControl = DTR_CONTROL_ENABLE;
-			dcb.fBinary = TRUE;
-			dcb.fParity = FALSE;
-			dcb.fOutxCtsFlow = FALSE;
-			dcb.fOutxDsrFlow = FALSE;
-			dcb.fDsrSensitivity = FALSE;
-			dcb.fOutX = FALSE;
-			dcb.fInX = FALSE;
-			dcb.fRtsControl = RTS_CONTROL_ENABLE;
-			dcb.fAbortOnError = FALSE;
-			
-			if (SetCommState(m_hPort, &dcb))
-			{
-				COMMTIMEOUTS ct;
-				
-				memset(&ct, 0, sizeof(COMMTIMEOUTS));
-				ct.ReadTotalTimeoutConstant = m_nTimeout;
-				ct.WriteTotalTimeoutConstant = m_nTimeout;
-				SetCommTimeouts(m_hPort, &ct);
-				bRet = true;
-			}
-		}
-		
-#else // UNIX
-		struct termios newTio;
-		
-		tcgetattr(m_hPort, &newTio);
-		
-		newTio.c_cc[VMIN] = 1;
-		newTio.c_cc[VTIME] = m_nTimeout;
-		
-		newTio.c_cflag |= CLOCAL | CREAD;
-		
-		int baud;
-		switch(nSpeed)
-		{
 		case 50:     baud = B50;     break;
 		case 75:     baud = B75;     break;
 		case 110:    baud = B110;    break;
@@ -183,18 +183,18 @@ bool Serial::Open(TCHAR *pszPort)
 		case 19200:  baud = B19200;  break;
 		case 38400:  baud = B38400;  break;
 		default:     baud = B38400;  break;
-		}
+	}
 #ifdef _NETWARE
-		cfsetispeed(&newTio, (speed_t)baud);
-		cfsetospeed(&newTio, (speed_t)baud);
+	cfsetispeed(&newTio, (speed_t)baud);
+	cfsetospeed(&newTio, (speed_t)baud);
 #else
-		cfsetispeed(&newTio, baud);
-		cfsetospeed(&newTio, baud);
+	cfsetispeed(&newTio, baud);
+	cfsetospeed(&newTio, baud);
 #endif
 		
-		newTio.c_cflag &= ~(CSIZE);
-		switch(nDataBits)
-		{
+	newTio.c_cflag &= ~(CSIZE);
+	switch(nDataBits)
+	{
 		case 5:
 			newTio.c_cflag |= CS5;
 			break;
@@ -208,11 +208,11 @@ bool Serial::Open(TCHAR *pszPort)
 		default:
 			newTio.c_cflag |= CS8;
 			break;
-		}
+	}
 		
-		newTio.c_cflag &= ~(PARODD | PARENB);
-		switch(nParity)
-		{
+	newTio.c_cflag &= ~(PARODD | PARENB);
+	switch(nParity)
+	{
 		case ODDPARITY:
 			newTio.c_cflag |= PARODD | PARENB;
 			break;
@@ -221,22 +221,22 @@ bool Serial::Open(TCHAR *pszPort)
 			break;
 		default:
 			break;
-		}
+	}
 		
-		newTio.c_cflag &= ~(CSTOPB);
-		if (nStopBits != ONESTOPBIT)
-		{
-			newTio.c_cflag |= CSTOPB;
-		}
+	newTio.c_cflag &= ~(CSTOPB);
+	if (nStopBits != ONESTOPBIT)
+	{
+		newTio.c_cflag |= CSTOPB;
+	}
 		
-		//newTio.c_cflag &= ~(CRTSCTS | IXON | IXOFF);
-		newTio.c_lflag &= ~(ICANON | ECHO | ECHOE | ECHOK | ECHOKE | ECHOCTL | ISIG | IEXTEN);
-		newTio.c_iflag &= ~(IXON | IXOFF | IXANY | ICRNL);
-		newTio.c_iflag |= IGNBRK;
-		newTio.c_oflag &= ~(OPOST | ONLCR);
+	//newTio.c_cflag &= ~(CRTSCTS | IXON | IXOFF);
+	newTio.c_lflag &= ~(ICANON | ECHO | ECHOE | ECHOK | ECHOKE | ECHOCTL | ISIG | IEXTEN);
+	newTio.c_iflag &= ~(IXON | IXOFF | IXANY | ICRNL);
+	newTio.c_iflag |= IGNBRK;
+	newTio.c_oflag &= ~(OPOST | ONLCR);
 		
-		switch(nFlowControl)
-		{
+	switch(nFlowControl)
+	{
 		case FLOW_HARDWARE:
 			newTio.c_cflag |= CRTSCTS;
 			break;
@@ -245,13 +245,12 @@ bool Serial::Open(TCHAR *pszPort)
 			break;
 		default:
 			break;
-		}
+	}
 		
-		tcsetattr(m_hPort, TCSANOW, &newTio);
+	tcsetattr(m_hPort, TCSANOW, &newTio);
 		
 #endif // _WIN32
-		
-		return bRet;
+	return bRet;
 }
 
 
@@ -440,7 +439,7 @@ int Serial::ReadAll(char *pBuff, int nSize)
 // Write character(s) to port
 //
 
-bool Serial::Write(char *pBuff, int nSize)
+bool Serial::Write(const char *pBuff, int nSize)
 {
 	bool bRet = false;
 	
@@ -467,7 +466,7 @@ bool Serial::Write(char *pBuff, int nSize)
 #else // UNIX
 	usleep(100);
 	
-	if (write(m_hPort, pBuff, nSize) == nSize)
+	if (write(m_hPort, (char *)pBuff, nSize) == nSize)
 	{
 		bRet = true;
 	}

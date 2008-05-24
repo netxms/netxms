@@ -6,7 +6,7 @@
 #include "main.h"
 #include "net.h"
 
-LONG H_CheckPOP3(char *pszParam, char *pArg, char *pValue)
+LONG H_CheckPOP3(const char *pszParam, const char *pArg, char *pValue)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	char szHost[256];

@@ -28,7 +28,7 @@
 //
 // Prepare and send data packet
 //
-BOOL MicrodowellInterface::SendCmd(char *cmd, int cmdLen, char *ret, int *retLen)
+BOOL MicrodowellInterface::SendCmd(const char *cmd, int cmdLen, char *ret, int *retLen)
 {
 	char buff[512];
 	int i, crc;

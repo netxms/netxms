@@ -94,7 +94,7 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *pArg)
 // Hanlder for immediate ping request
 //
 
-static LONG H_IcmpPing(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	TCHAR szHostName[256], szTimeOut[32], szPacketSize[32];
 	DWORD dwAddr, dwTimeOut = m_dwTimeout, dwRTT, dwPacketSize = m_dwDefPacketSize;
@@ -134,7 +134,7 @@ static LONG H_IcmpPing(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 // Handler for poller information
 //
 
-static LONG H_PollResult(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	TCHAR szTarget[MAX_DB_STRING];
 	DWORD i, dwIpAddr;
@@ -188,7 +188,7 @@ static LONG H_PollResult(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 // Handler for configured target list
 //
 
-static LONG H_TargetList(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_TargetList(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	DWORD i;
 	TCHAR szBuffer[MAX_DB_STRING + 64], szIpAddr[16];

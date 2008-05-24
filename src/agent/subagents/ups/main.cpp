@@ -34,7 +34,7 @@ static UPSInterface *m_deviceInfo[MAX_UPS_DEVICES];
 // Universal handler
 //
 
-static LONG H_UPSData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+static LONG H_UPSData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	LONG nDev;
 	TCHAR *pErr, szArg[256];
@@ -60,7 +60,7 @@ static LONG H_UPSData(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 // UPS connection status
 //
 
-static LONG H_UPSConnStatus(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
+static LONG H_UPSConnStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	LONG nDev;
 	TCHAR *pErr, szArg[256];
@@ -84,7 +84,7 @@ static LONG H_UPSConnStatus(TCHAR *pszParam, TCHAR *pArg, TCHAR *pValue)
 // List configured devices
 //
 
-static LONG H_DeviceList(TCHAR *pszParam, TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_DeviceList(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	TCHAR szBuffer[256];
 	int i;

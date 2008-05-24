@@ -142,12 +142,12 @@ public:
 	Serial(void);
 	~Serial(void);
 
-	bool Open(TCHAR *pszPort);
+	bool Open(const TCHAR *pszPort);
 	void Close(void);
 	void SetTimeout(int nTimeout);
 	int Read(char *pBuff, int nSize); /* waits up to timeout and do single read */
 	int ReadAll(char *pBuff, int nSize); /* read until timeout or out of space */
-	bool Write(char *pBuff, int nSize);
+	bool Write(const char *pBuff, int nSize);
 	void Flush(void);
 	bool Set(int nSpeed, int nDataBits, int nParity, int nStopBits);
 	bool Set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlowControl);

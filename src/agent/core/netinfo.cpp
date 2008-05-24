@@ -30,7 +30,7 @@
 // Get local ARP cache
 //
 
-LONG H_ArpCache(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
+LONG H_ArpCache(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
 {
    MIB_IPNETTABLE *arpCache;
    DWORD i, j, dwError, dwSize;
@@ -70,7 +70,7 @@ LONG H_ArpCache(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 // Send IP interface list to server (Win2K+ version)
 //
 
-static LONG H_InterfaceListW2K(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
+static LONG H_InterfaceListW2K(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
 {
    DWORD dwSize;
    IP_ADAPTER_INFO *pBuffer, *pInfo;
@@ -138,7 +138,7 @@ static LONG H_InterfaceListW2K(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
 // Send IP interface list to server (NT4 version)
 //
 
-static LONG H_InterfaceListNT4(char *cmd, char *arg, NETXMS_VALUES_LIST *pValue)
+static LONG H_InterfaceListNT4(const char *cmd, const char *arg, NETXMS_VALUES_LIST *pValue)
 {
    LONG nRet = SYSINFO_RC_SUCCESS;
    MIB_IPADDRTABLE *ifTable;
@@ -182,7 +182,7 @@ static LONG H_InterfaceListNT4(char *cmd, char *arg, NETXMS_VALUES_LIST *pValue)
 // (selects appropriate method for different Windows versions)
 //
 
-LONG H_InterfaceList(char *cmd, char *arg, NETXMS_VALUES_LIST *pValue)
+LONG H_InterfaceList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *pValue)
 {
    if (g_dwFlags & AF_RUNNING_ON_NT4)
       return H_InterfaceListNT4(cmd, arg, pValue);
@@ -195,7 +195,7 @@ LONG H_InterfaceList(char *cmd, char *arg, NETXMS_VALUES_LIST *pValue)
 // Get IP statistics
 //
 
-LONG H_NetIPStats(char *cmd, char *arg, char *value)
+LONG H_NetIPStats(const char *cmd, const char *arg, char *value)
 {
    MIB_IPSTATS ips;
    LONG iResult = SYSINFO_RC_SUCCESS;
@@ -280,7 +280,7 @@ static DWORD AdapterNameToIndex(char *pszName)
 // Get interface statistics
 //
 
-LONG H_NetInterfaceStats(char *cmd, char *arg, char *value)
+LONG H_NetInterfaceStats(const char *cmd, const char *arg, char *value)
 {
    LONG iResult = SYSINFO_RC_SUCCESS;
    char *eptr, szBuffer[256];
@@ -364,7 +364,7 @@ LONG H_NetInterfaceStats(char *cmd, char *arg, char *value)
 // Get IP routing table
 //
 
-LONG H_IPRoutingTable(char *pszCmd, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_IPRoutingTable(const char *pszCmd, const char *pArg, NETXMS_VALUES_LIST *pValue)
 {
    MIB_IPFORWARDTABLE *pRoutingTable;
    DWORD i, dwError, dwSize;

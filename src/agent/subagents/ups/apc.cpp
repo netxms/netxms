@@ -85,7 +85,7 @@ static void CheckNA(UPS_PARAMETER *p, int nType)
 // Query parameter from device
 //
 
-void APCInterface::QueryParameter(char *pszRq, UPS_PARAMETER *p, int nType, int chSep)
+void APCInterface::QueryParameter(const char *pszRq, UPS_PARAMETER *p, int nType, int chSep)
 {
    char *pch;
 

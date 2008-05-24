@@ -127,7 +127,7 @@ DWORD ExecAction(char *pszAction, NETXMS_VALUES_LIST *pArgs)
 // Enumerate available actions
 //
 
-LONG H_ActionList(char *cmd, char *arg, NETXMS_VALUES_LIST *value)
+LONG H_ActionList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
 {
    DWORD i;
    char szBuffer[1024];

@@ -133,7 +133,7 @@ public:
 
    const TCHAR *Device(void) { return m_pszDevice; }
    const TCHAR *Name(void) { return CHECK_NULL(m_pszName); }
-   virtual TCHAR *Type(void) { return _T("GENERIC"); }
+   virtual const TCHAR *Type(void) { return _T("GENERIC"); }
    BOOL IsConnected(void) { return m_bIsConnected; }
 
    void SetName(TCHAR *pszName);
@@ -189,12 +189,12 @@ protected:
    virtual BOOL Open(void);
    virtual BOOL ValidateConnection(void);
 
-   void QueryParameter(char *pszRq, UPS_PARAMETER *p, int nType, int chSep);
+   void QueryParameter(const char *pszRq, UPS_PARAMETER *p, int nType, int chSep);
 
 public:
    APCInterface(TCHAR *pszDevice) : SerialInterface(pszDevice) { }
 
-   virtual TCHAR *Type(void) { return _T("APC"); }
+   virtual const TCHAR *Type(void) { return _T("APC"); }
 
    virtual void QueryModel(void);
    virtual void QueryFirmwareVersion(void);
@@ -239,7 +239,7 @@ protected:
 public:
    BCMXCPInterface(TCHAR *pszDevice) : SerialInterface(pszDevice) { }
 
-   virtual TCHAR *Type(void) { return _T("BCMXCP"); }
+   virtual const TCHAR *Type(void) { return _T("BCMXCP"); }
 
    virtual void QueryTemperature(void);
    virtual void QueryLineFrequency(void);
@@ -262,18 +262,17 @@ public:
 class MicrodowellInterface : public SerialInterface
 {
 protected:
-   virtual BOOL Open(void);
-   virtual BOOL ValidateConnection(void);
+	virtual BOOL Open(void);
+	virtual BOOL ValidateConnection(void);
 
-   void QueryParameter(char *req, int reqLen, UPS_PARAMETER *p, int nType);
-	BOOL SendCmd(char *cmd, int cmdLen, char *ret, int *retLen);
+	BOOL SendCmd(const char *cmd, int cmdLen, char *ret, int *retLen);
 
 	int ge2kva;
 
 public:
    MicrodowellInterface(TCHAR *pszDevice) : SerialInterface(pszDevice) { }
 
-   virtual TCHAR *Type(void) { return _T("MICRODOWELL"); }
+   virtual const TCHAR *Type(void) { return _T("MICRODOWELL"); }
 
    virtual void QueryModel(void);
    virtual void QueryFirmwareVersion(void);
@@ -320,7 +319,7 @@ public:
    USBInterface(TCHAR *pszDevice);
    virtual ~USBInterface();
 
-   virtual TCHAR *Type(void) { return _T("USB"); }
+   virtual const TCHAR *Type(void) { return _T("USB"); }
 
    virtual void QueryModel(void);
    virtual void QuerySerialNumber(void);

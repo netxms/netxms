@@ -35,13 +35,13 @@
 // Hanlder functions
 //
 
-static LONG H_Version(char *pszParam, char *pArg, char *pValue)
+static LONG H_Version(const char *pszParam, const char *pArg, char *pValue)
 {
 	ret_uint(pValue, 0x01000000);
 	return SYSINFO_RC_SUCCESS;
 }
 
-static LONG H_Echo(char *pszParam, char *pArg, char *pValue)
+static LONG H_Echo(const char *pszParam, const char *pArg, char *pValue)
 {
 	char szArg[256];
 
@@ -50,7 +50,7 @@ static LONG H_Echo(char *pszParam, char *pArg, char *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
-static LONG H_Enum(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_Enum(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	int i;
 	char szValue[256];

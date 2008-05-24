@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 // Externals
 //
 
-LONG H_PlatformName(char *cmd, char *arg, char *value);
+LONG H_PlatformName(const char *cmd, const char *arg, char *value);
 
 
 //

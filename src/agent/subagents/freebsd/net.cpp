@@ -56,7 +56,7 @@ typedef struct t_IfList
 	int index;
 } IFLIST;
 
-LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue)
+LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nVer = (int)pArg;
 	int nRet = SYSINFO_RC_ERROR;
@@ -87,7 +87,7 @@ LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_NetIfAdmStatus(char *pszParam, char *pArg, char *pValue)
+LONG H_NetIfAdmStatus(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szArg[512];
@@ -143,7 +143,7 @@ LONG H_NetIfAdmStatus(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_NetIfLink(char *pszParam, char *pArg, char *pValue)
+LONG H_NetIfLink(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szArg[512];
@@ -197,7 +197,7 @@ LONG H_NetIfLink(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_NetArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetArpCache(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
@@ -266,7 +266,7 @@ LONG H_NetArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 	return nRet;
 }
 
-LONG H_NetRoutingTable(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetRoutingTable(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 #define sa2sin(x) ((struct sockaddr_in *)x)
 #define ROUNDUP(a) \
@@ -382,7 +382,7 @@ LONG H_NetRoutingTable(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 	return nRet;
 }
 
-LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetIfList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct ifaddrs *pIfAddr, *pNext;
@@ -460,17 +460,17 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 
 		if (nRet == SYSINFO_RC_SUCCESS)
 		{
+			int j;
+			char szOut[1024], macAddr[32];
+
 			for (i = 0; i < nIfCount; i++)
 			{
-				int j;
-				char szOut[1024];
-
 				if (pList[i].addrCount == 0)
 				{
 					snprintf(szOut, sizeof(szOut), "%d 0.0.0.0/0 %d %s %s",
 							pList[i].index,
 							IFTYPE_OTHER,
-							ether_ntoa(pList[i].mac),
+							BinToStr((BYTE *)pList[i].mac, 6, macAddr),
 							pList[i].name);
 					NxAddResultString(pValue, szOut);
 				}
@@ -485,7 +485,7 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 									inet_ntoa(pList[i].addr[j].ip),
 									pList[i].addr[j].mask,
 									IFTYPE_OTHER,
-									ether_ntoa(pList[i].mac),
+							                BinToStr((BYTE *)pList[i].mac, 6, macAddr),
 									pList[i].name,
 									j - 1);
 						}
@@ -496,7 +496,7 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 									inet_ntoa(pList[i].addr[j].ip),
 									pList[i].addr[j].mask,
 									IFTYPE_OTHER,
-									ether_ntoa(pList[i].mac),
+							                BinToStr((BYTE *)pList[i].mac, 6, macAddr),
 									pList[i].name);
 						}
 						NxAddResultString(pValue, szOut);

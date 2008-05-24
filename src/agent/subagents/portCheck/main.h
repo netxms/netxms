@@ -9,17 +9,17 @@ enum
 	PC_ERR_HANDSHAKE
 };
 
-LONG H_CheckPOP3(char *, char *, char *);
+LONG H_CheckPOP3(const char *, const char *, char *);
 int CheckPOP3(char *, DWORD, short, char *, char *);
-LONG H_CheckSSH(char *, char *, char *);
+LONG H_CheckSSH(const char *, const char *, char *);
 int CheckSSH(char *, DWORD, short, char *, char *);
-LONG H_CheckSMTP(char *, char *, char *);
+LONG H_CheckSMTP(const char *, const char *, char *);
 int CheckSMTP(char *, DWORD, short, char *);
-LONG H_CheckHTTP(char *, char *, char *);
+LONG H_CheckHTTP(const char *, const char *, char *);
 int CheckHTTP(char *, DWORD, short, char *, char *, char *);
-LONG H_CheckCustom(char *, char *, char *);
+LONG H_CheckCustom(const char *, const char *, char *);
 int CheckCustom(char *, DWORD, short, char *, char *);
-LONG H_CheckTelnet(char *, char *, char *);
+LONG H_CheckTelnet(const char *, const char *, char *);
 int CheckTelnet(char *, DWORD, short, char *, char *);
 
 #endif // __MAIN__H__
