@@ -239,6 +239,36 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetServerTimeZone(NXC_SESSION hSession)
 
 
 //
+// Send prepared NXCP message
+//
+
+BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, CSCPMessage *msg)
+{
+   return ((NXCL_Session *)hSession)->SendMsg(msg);
+}
+
+
+//
+// Wait for message
+//
+
+CSCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCode, DWORD dwRqId)
+{
+   return ((NXCL_Session *)hSession)->WaitForMessage(wCode, dwRqId);
+}
+
+
+//
+// Wait for CMD_REQUEST_COMPLETED message and return value of VID_RCC
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCWaitForRCC(NXC_SESSION hSession, DWORD dwRqId)
+{
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
 // Get text for error
 //
 
