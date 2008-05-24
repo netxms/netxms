@@ -35,12 +35,12 @@
 #define IF_INFO_SPEED            9
 
 
-LONG H_NetIfInfoFromIOCTL(char *, char *, char *);
-LONG H_NetIfInfoFromProc(char *, char *, char *);
-LONG H_NetIpForwarding(char *, char *, char *);
-LONG H_NetArpCache(char *, char *, NETXMS_VALUES_LIST *);
-LONG H_NetRoutingTable(char *, char *, NETXMS_VALUES_LIST *);
-LONG H_NetIfList(char *, char *, NETXMS_VALUES_LIST *);
+LONG H_NetIfInfoFromIOCTL(const char *, const char *, char *);
+LONG H_NetIfInfoFromProc(const char *, const char *, char *);
+LONG H_NetIpForwarding(const char *, const char *, char *);
+LONG H_NetArpCache(const char *, const char *, NETXMS_VALUES_LIST *);
+LONG H_NetRoutingTable(const char *, const char *, NETXMS_VALUES_LIST *);
+LONG H_NetIfList(const char *, const char *, NETXMS_VALUES_LIST *);
 
 #endif // __NET_H__
 

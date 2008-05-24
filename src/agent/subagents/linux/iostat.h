@@ -23,13 +23,13 @@
 #ifndef __IOSTAT_H__
 #define __IOSTAT_H__
 
-LONG H_TransferRate(char *, char *, char *);
-LONG H_BlockReadRate(char *, char *, char *);
-LONG H_BlockWriteRate(char *, char *, char *);
-LONG H_BytesReadRate(char *, char *, char *);
-LONG H_BytesWriteRate(char *, char *, char *);
-LONG H_DiskQueue(char *, char *, char *);
-LONG H_DiskTime(char *, char *, char *);
+LONG H_TransferRate(const char *, const char *, char *);
+LONG H_BlockReadRate(const char *, const char *, char *);
+LONG H_BlockWriteRate(const char *, const char *, char *);
+LONG H_BytesReadRate(const char *, const char *, char *);
+LONG H_BytesWriteRate(const char *, const char *, char *);
+LONG H_DiskQueue(const char *, const char *, char *);
+LONG H_DiskTime(const char *, const char *, char *);
 
 #endif // __DISK_H__
 

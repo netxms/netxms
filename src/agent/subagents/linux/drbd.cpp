@@ -107,7 +107,7 @@ static const char *StateText(int nCode)
 // Get list of configured DRBD devices
 //
 
-LONG H_DRBDDeviceList(TCHAR *pszCmd, TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	int nDev, nFd;
 	struct ioctl_get_config drbdConfig;
@@ -138,7 +138,7 @@ LONG H_DRBDDeviceList(TCHAR *pszCmd, TCHAR *pArg, NETXMS_VALUES_LIST *pValue)
 // Get information for specific DRBD device
 //
 
-LONG H_DRBDDeviceInfo(TCHAR *pszCmd, TCHAR *pArg, TCHAR *pValue)
+LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nDev, nFd;
 	struct ioctl_get_config drbdConfig;

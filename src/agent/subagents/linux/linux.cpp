@@ -55,9 +55,9 @@ static void SubAgentShutdown(void)
 // Externals
 //
 
-LONG H_DRBDDeviceList(char *pszParam, char *pszArg, NETXMS_VALUES_LIST *pValue);
-LONG H_DRBDDeviceInfo(TCHAR *pszCmd, TCHAR *pArg, TCHAR *pValue);
-LONG H_PhysicalDiskInfo(char *pszParam, char *pszArg, char *pValue);
+LONG H_DRBDDeviceList(const char *pszParam, const char *pszArg, NETXMS_VALUES_LIST *pValue);
+LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
+LONG H_PhysicalDiskInfo(const char *pszParam, const char *pszArg, char *pValue);
 
 
 //

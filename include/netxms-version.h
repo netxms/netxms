@@ -29,11 +29,11 @@
 // Version constants 
 //
 
-#define NETXMS_VERSION_MAJOR        0
-#define NETXMS_VERSION_MINOR        2
-#define NETXMS_VERSION_BUILD        21
+#define NETXMS_VERSION_MAJOR        1
+#define NETXMS_VERSION_MINOR        0
+#define NETXMS_VERSION_BUILD        0
 #define NETXMS_VERSION_HOTFIX       0
-#define NETXMS_VERSION_STRING       _T("0.2.21")
+#define NETXMS_VERSION_STRING       _T("1.0.0-rc1")
 
 
 //

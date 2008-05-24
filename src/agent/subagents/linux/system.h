@@ -61,20 +61,20 @@ struct CpuUsageParam
 	int source;
 };
 
-LONG H_ProcessList(char *, char *, NETXMS_VALUES_LIST *);
-LONG H_Uptime(char *, char *, char *);
-LONG H_Uname(char *, char *, char *);
-LONG H_Hostname(char *, char *, char *);
-LONG H_Hostname(char *, char *, char *);
-LONG H_CpuCount(char *, char *, char *);
-LONG H_CpuLoad(char *, char *, char *);
-LONG H_CpuUsage(char *, char *, char *);
-LONG H_CpuUsageEx(char *, char *, char *);
-LONG H_ProcessCount(char *, char *, char *);
-LONG H_MemoryInfo(char *, char *, char *);
-LONG H_SourcePkgSupport(char *, char *, char *);
-LONG H_ConnectedUsers(char *, char *, char *);
-LONG H_ActiveUserSessions(char *, char *, NETXMS_VALUES_LIST *);
+LONG H_ProcessList(const char *, const char *, NETXMS_VALUES_LIST *);
+LONG H_Uptime(const char *, const char *, char *);
+LONG H_Uname(const char *, const char *, char *);
+LONG H_Hostname(const char *, const char *, char *);
+LONG H_Hostname(const char *, const char *, char *);
+LONG H_CpuCount(const char *, const char *, char *);
+LONG H_CpuLoad(const char *, const char *, char *);
+LONG H_CpuUsage(const char *, const char *, char *);
+LONG H_CpuUsageEx(const char *, const char *, char *);
+LONG H_ProcessCount(const char *, const char *, char *);
+LONG H_MemoryInfo(const char *, const char *, char *);
+LONG H_SourcePkgSupport(const char *, const char *, char *);
+LONG H_ConnectedUsers(const char *, const char *, char *);
+LONG H_ActiveUserSessions(const char *, const char *, NETXMS_VALUES_LIST *);
 
 void StartCpuUsageCollector(void);
 void ShutdownCpuUsageCollector(void);

@@ -32,7 +32,7 @@
 
 #define IF_PARAM1 char szParam1[512] = {0}; NxGetParameterArg(pszParam, 1, szParam1, sizeof(szParam1)); if (szParam1[0] != 0)
 
-LONG H_TransferRate(char *pszParam, char *pArg, char *pValue)
+LONG H_TransferRate(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 
@@ -43,7 +43,7 @@ LONG H_TransferRate(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_BlockReadRate(char *pszParam, char *pArg, char *pValue)
+LONG H_BlockReadRate(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 
@@ -54,7 +54,7 @@ LONG H_BlockReadRate(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_BlockWriteRate(char *pszParam, char *pArg, char *pValue)
+LONG H_BlockWriteRate(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 
@@ -65,7 +65,7 @@ LONG H_BlockWriteRate(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_BytesReadRate(char *pszParam, char *pArg, char *pValue)
+LONG H_BytesReadRate(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 
@@ -76,7 +76,7 @@ LONG H_BytesReadRate(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_BytesWriteRate(char *pszParam, char *pArg, char *pValue)
+LONG H_BytesWriteRate(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 
@@ -87,7 +87,7 @@ LONG H_BytesWriteRate(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_DiskQueue(char *pszParam, char *pArg, char *pValue)
+LONG H_DiskQueue(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 
@@ -102,7 +102,7 @@ LONG H_DiskQueue(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_DiskTime(char *pszParam, char *pArg, char *pValue)
+LONG H_DiskTime(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 

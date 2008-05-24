@@ -36,7 +36,7 @@
 // Handler for System.ConnectedUsers parameter
 //
 
-LONG H_ConnectedUsers(char *pszParam, char *pArg, char *pValue)
+LONG H_ConnectedUsers(const char *pszParam, const char *pArg, char *pValue)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
 	FILE *f;
@@ -66,7 +66,7 @@ LONG H_ConnectedUsers(char *pszParam, char *pArg, char *pValue)
 // Handler for System.ActiveUserSessions enum
 //
 
-LONG H_ActiveUserSessions(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_ActiveUserSessions(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
 	FILE *f;
@@ -97,7 +97,7 @@ LONG H_ActiveUserSessions(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue
 // Handler for System.Uptime parameter
 //
 
-LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
+LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
 {
 	FILE *hFile;
 	unsigned int uUptime = 0;
@@ -129,7 +129,7 @@ LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 	return uUptime > 0 ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
-LONG H_Uname(char *pszParam, char *pArg, char *pValue)
+LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
 {
 	struct utsname utsName;
 	int nRet = SYSINFO_RC_ERROR;
@@ -151,7 +151,7 @@ LONG H_Uname(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
+LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szBuff[128];
@@ -165,7 +165,7 @@ LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
+LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct statvfs s;
@@ -210,7 +210,7 @@ LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
+LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct statvfs s;
@@ -237,7 +237,7 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
+LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
@@ -303,7 +303,7 @@ LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	PROC_ENT *pEnt;
@@ -331,7 +331,7 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 //
 // stub
 //
-LONG H_SourcePkgSupport(char *pszParam, char *pArg, char *pValue)
+LONG H_SourcePkgSupport(const char *pszParam, const char *pArg, char *pValue)
 {
 	ret_int(pValue, 1);
 	return SYSINFO_RC_SUCCESS;
@@ -620,7 +620,7 @@ static void GetUsage(int source, int slot, int count, char *value)
 	ret_double(value, usage);
 }
 
-LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
+LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue)
 {
 	struct CpuUsageParam *p = (struct CpuUsageParam *)pArg;
 	int count;
@@ -642,7 +642,7 @@ LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
-LONG H_CpuUsageEx(char *pszParam, char *pArg, char *pValue)
+LONG H_CpuUsageEx(const char *pszParam, const char *pArg, char *pValue)
 {
 	int count, cpu;
 	char buffer[256], *eptr;
@@ -673,7 +673,7 @@ LONG H_CpuUsageEx(char *pszParam, char *pArg, char *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
-LONG H_CpuCount(char *pszParam, char *pArg, char *pValue)
+LONG H_CpuCount(const char *pszParam, const char *pArg, char *pValue)
 {
 	ret_uint(pValue, (m_maxCPU > 0) ? m_maxCPU : 1);
 	return SYSINFO_RC_SUCCESS;
