@@ -29,6 +29,7 @@
 //
 
 extern TCHAR g_szCodePage[];
+extern TCHAR *g_pszModLoadList;
 
 
 //
@@ -50,6 +51,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "ListenAddress", CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress },
    { "LogFailedSQLQueries", CT_BOOLEAN, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_dwFlags },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
+   { "Module", CT_STRING_LIST, '\n', 0, 0, 0, &g_pszModLoadList },
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 

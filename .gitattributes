@@ -344,6 +344,11 @@ src/server/dbdrv/oracle/oracle.dsw -text
 src/server/dbdrv/pgsql/pgsql.dsw -text
 src/server/dbdrv/sqlite/sqlite.dsw -text
 src/server/libnxsrv/libnxsrv.dsw -text
+src/server/modules/hpdp/Makefile.am -text
+src/server/modules/hpdp/hpdp.cpp -text
+src/server/modules/hpdp/hpdp.dsp -text
+src/server/modules/hpdp/hpdp.dsw -text
+src/server/modules/hpdp/hpdp.h -text
 src/server/netxmsd/netxmsd.dsw -text
 src/server/smsdrv/generic/generic.dsw -text
 src/server/smsdrv/nxagent/nxagent.dsw -text

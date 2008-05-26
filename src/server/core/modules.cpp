@@ -27,6 +27,7 @@
 // List of loaded modules
 //
 
+TCHAR *g_pszModLoadList = NULL;
 DWORD g_dwNumModules = 0;
 NXMODULE *g_pModuleList = NULL;
 
@@ -49,82 +50,72 @@ static THREAD_RESULT THREAD_CALL ModuleThreadStarter(void *pArg)
 
 void LoadNetXMSModules(void)
 {
-	// TODO: should be redesigned
-
-/*   DB_RESULT hResult;
-   DWORD i, dwNumRows, dwFlags;
-   TCHAR szBuffer[MAX_DB_STRING];
+   TCHAR szErrorText[256], *curr, *next;
    NXMODULE module;
+   HMODULE hModule;
 
-   hResult = DBSelect(g_hCoreDB, _T("SELECT module_name,exec_name,module_flags FROM modules"));
-   if (hResult != NULL)
+	for(curr = g_pszModLoadList; curr != NULL; curr = next)
    {
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+		next = _tcschr(curr, _T('\n'));
+		if (next != NULL)
+		{
+			*next = 0;
+			next++;
+		}
+		StrStrip(curr);
+		if (*curr == 0)
+			continue;
+
+      memset(&module, 0, sizeof(NXMODULE));
+
+      hModule = DLOpen(curr, szErrorText);
+      if (hModule != NULL)
       {
-         memset(&module, 0, sizeof(NXMODULE));
-         dwFlags = DBGetFieldULong(hResult, i, 2);
-         if (!(dwFlags & MODFLAG_DISABLED))
+         BOOL (* ModuleInit)(NXMODULE *);
+
+         ModuleInit = (BOOL (*)(NXMODULE *))DLGetSymbolAddr(hModule, _T("NetXMSModuleInit"), szErrorText);
+         if (ModuleInit != NULL)
          {
-            char szErrorText[256];
-            HMODULE hModule;
-
-            hModule = DLOpen(DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING), szErrorText);
-            if (hModule != NULL)
+            memset(&module, 0, sizeof(NXMODULE));
+            if (ModuleInit(&module))
             {
-               BOOL (* ModuleInit)(NXMODULE *);
-
-               ModuleInit = (BOOL (*)(NXMODULE *))DLGetSymbolAddr(hModule, _T("NetXMSModuleInit"), szErrorText);
-               if (ModuleInit != NULL)
+               if (module.dwSize == sizeof(NXMODULE))
                {
-                  memset(&module, 0, sizeof(NXMODULE));
-                  if (ModuleInit(&module))
-                  {
-                     if (module.dwSize == sizeof(NXMODULE))
-                     {
-                        // Add module to module's list
-                        g_pModuleList = (NXMODULE *)realloc(g_pModuleList, 
-                                                            sizeof(NXMODULE) * (g_dwNumModules + 1));
-                        memcpy(&g_pModuleList[g_dwNumModules], &module, sizeof(NXMODULE));
-                        g_pModuleList[g_dwNumModules].hModule = hModule;
-                        g_pModuleList[g_dwNumModules].dwFlags = dwFlags;
-                        DBGetField(hResult, i, 0, g_pModuleList[g_dwNumModules].szName, MAX_OBJECT_NAME);
+                  // Add module to module's list
+                  g_pModuleList = (NXMODULE *)realloc(g_pModuleList, 
+                                                      sizeof(NXMODULE) * (g_dwNumModules + 1));
+                  memcpy(&g_pModuleList[g_dwNumModules], &module, sizeof(NXMODULE));
+                  g_pModuleList[g_dwNumModules].hModule = hModule;
 
-                        // Start module's main thread
-                        ThreadCreate(ModuleThreadStarter, 0, &g_pModuleList[g_dwNumModules]);
+                  // Start module's main thread
+						if (module.pfMain != NULL)
+							ThreadCreate(ModuleThreadStarter, 0, &g_pModuleList[g_dwNumModules]);
 
-                        WriteLog(MSG_MODULE_LOADED, EVENTLOG_INFORMATION_TYPE,
-                                 "s", g_pModuleList[g_dwNumModules].szName);
-                        g_dwNumModules++;
-                     }
-                     else
-                     {
-                        WriteLog(MSG_MODULE_BAD_MAGIC, EVENTLOG_ERROR_TYPE,
-                                 _T("s"), DBGetField(hResult, i, 0, szBuffer, MAX_DB_STRING));
-                        DLClose(hModule);
-                     }
-                  }
-                  else
-                  {
-                     WriteLog(MSG_MODULE_INIT_FAILED, EVENTLOG_ERROR_TYPE,
-                              _T("s"), DBGetField(hResult, i, 0, szBuffer, MAX_DB_STRING));
-                     DLClose(hModule);
-                  }
+                  WriteLog(MSG_MODULE_LOADED, EVENTLOG_INFORMATION_TYPE,
+                           "s", g_pModuleList[g_dwNumModules].szName);
+                  g_dwNumModules++;
                }
                else
                {
-                  WriteLog(MSG_NO_MODULE_ENTRY_POINT, EVENTLOG_ERROR_TYPE,
-                           _T("s"), DBGetField(hResult, i, 0, szBuffer, MAX_DB_STRING));
+                  WriteLog(MSG_MODULE_BAD_MAGIC, EVENTLOG_ERROR_TYPE, "s", curr);
                   DLClose(hModule);
                }
             }
             else
             {
-               WriteLog(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, 
-                        _T("ss"), DBGetField(hResult, i, 0, szBuffer, MAX_DB_STRING), szErrorText);
+               WriteLog(MSG_MODULE_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", curr);
+               DLClose(hModule);
             }
          }
+         else
+         {
+            WriteLog(MSG_NO_MODULE_ENTRY_POINT, EVENTLOG_ERROR_TYPE, "s", curr);
+            DLClose(hModule);
+         }
       }
-      DBFreeResult(hResult);
-   }*/
+      else
+      {
+         WriteLog(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", curr, szErrorText);
+      }
+   }
 }

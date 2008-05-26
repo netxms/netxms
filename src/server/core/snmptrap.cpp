@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -239,6 +239,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
    TCHAR *pszTrapArgs, szBuffer[4096];
    SNMP_Variable *pVar;
    Node *pNode;
+	BOOL processed = FALSE;
    int iResult;
 
    dwOriginAddr = ntohl(pOrigin->sin_addr.s_addr);
@@ -297,6 +298,15 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
    // Process trap if it is coming from host registered in database
    if (pNode != NULL)
    {
+      // Pass trap to loaded modules
+      for(i = 0; i < g_dwNumModules; i++)
+         if (g_pModuleList[i].pfTrapHandler != NULL)
+            if (g_pModuleList[i].pfTrapHandler(pdu, pNode))
+				{
+					processed = TRUE;
+               break;   // Trap was processed by the module
+				}
+
       // Find if we have this trap in our list
       MutexLock(m_mutexTrapCfgAccess, INFINITE);
 
@@ -329,14 +339,8 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
       }
       else     // Process unmatched traps
       {
-         // Pass trap to loaded modules
-         for(i = 0; i < g_dwNumModules; i++)
-            if (g_pModuleList[i].pfTrapHandler != NULL)
-               if (g_pModuleList[i].pfTrapHandler(pdu, pNode))
-                  break;   // Message was processed by the module
-
          // Handle unprocessed traps
-         if (i == g_dwNumModules)
+         if (!processed)
          {
             // Build trap's parameters string
             dwBufSize = pdu->GetNumVariables() * 4096 + 16;
