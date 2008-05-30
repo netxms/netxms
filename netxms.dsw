@@ -483,6 +483,21 @@ Package=<4>
 
 ###############################################################################
 
+Project: "nxcptest"=.\src\nxcptest\nxcptest.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libnetxms
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "nxdbmgr"=.\src\server\tools\nxdbmgr\nxdbmgr.dsp - Package Owner=<4>
 
 Package=<5>

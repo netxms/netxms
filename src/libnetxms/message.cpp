@@ -2,7 +2,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,30 @@
 **/
 
 #include "libnetxms.h"
+#include <expat.h>
+
+
+//
+// Parser state for creating CSCPMessage object from XML
+//
+
+#define XML_STATE_INIT		-1
+#define XML_STATE_END		-2
+#define XML_STATE_ERROR    -255
+#define XML_STATE_NXCP		0
+#define XML_STATE_MESSAGE	1
+#define XML_STATE_VARIABLE	2
+#define XML_STATE_VALUE		3
+
+typedef struct
+{
+	CSCPMessage *msg;
+	int state;
+	int valueLen;
+	char *value;
+	int varType;
+	DWORD varId;
+} XML_PARSER_STATE;
 
 
 //
@@ -173,6 +197,214 @@ CSCPMessage::CSCPMessage(CSCP_MESSAGE *pMsg, int nVersion)
 
    // Cut unfilled variables, if any
    m_dwNumVar = dwVar;
+}
+
+
+//
+// Create CSCPMessage object from XML document
+//
+
+static void StartElement(void *userData, const char *name, const char **attrs)
+{
+	if (!strcmp(name, "nxcp"))
+	{
+		((XML_PARSER_STATE *)userData)->state = XML_STATE_NXCP;
+	}
+	else if (!strcmp(name, "message"))
+	{
+		((XML_PARSER_STATE *)userData)->state = XML_STATE_MESSAGE;
+	}
+	else if (!strcmp(name, "variable"))
+	{
+		((XML_PARSER_STATE *)userData)->state = XML_STATE_VARIABLE;
+	}
+	else if (!strcmp(name, "value"))
+	{
+		((XML_PARSER_STATE *)userData)->valueLen = 1;
+		((XML_PARSER_STATE *)userData)->value = NULL;
+		((XML_PARSER_STATE *)userData)->state = XML_STATE_VALUE;
+	}
+	else
+	{
+		((XML_PARSER_STATE *)userData)->state = XML_STATE_ERROR;
+	}
+	if (((XML_PARSER_STATE *)userData)->state != XML_STATE_ERROR)
+		((XML_PARSER_STATE *)userData)->msg->ProcessXMLToken(userData, attrs);
+}
+
+static void EndElement(void *userData, const char *name)
+{
+	if (!strcmp(name, "nxcp"))
+	{
+		((XML_PARSER_STATE *)userData)->state = XML_STATE_END;
+	}
+	else if (!strcmp(name, "message"))
+	{
+		((XML_PARSER_STATE *)userData)->state = XML_STATE_NXCP;
+	}
+	else if (!strcmp(name, "variable"))
+	{
+		((XML_PARSER_STATE *)userData)->state = XML_STATE_MESSAGE;
+	}
+	else if (!strcmp(name, "value"))
+	{
+		((XML_PARSER_STATE *)userData)->msg->ProcessXMLData(userData);
+		safe_free(((XML_PARSER_STATE *)userData)->value);
+		((XML_PARSER_STATE *)userData)->state = XML_STATE_VARIABLE;
+	}
+}
+
+static void CharData(void *userData, const XML_Char *s, int len)
+{
+	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
+
+	if (ps->state != XML_STATE_VALUE)
+		return;
+
+	ps->value = (char *)realloc(ps->value, ps->valueLen + len);
+	memcpy(&ps->value[ps->valueLen - 1], s, len);
+	ps->valueLen += len;
+	ps->value[ps->valueLen - 1] = 0;
+}
+
+CSCPMessage::CSCPMessage(char *xml)
+{
+	XML_Parser parser = XML_ParserCreate(NULL);
+	XML_PARSER_STATE state;
+
+	// Default values
+   m_wCode = 0;
+   m_dwId = 0;
+   m_dwNumVar = 0;
+   m_ppVarList = NULL;
+   m_wFlags = 0;
+   m_nVersion = NXCP_VERSION;
+
+	// Parse XML
+	state.msg = this;
+	state.state = -1;
+	XML_SetUserData(parser, &state);
+	XML_SetElementHandler(parser, StartElement, EndElement);
+	XML_SetCharacterDataHandler(parser, CharData);
+	if (XML_Parse(parser, xml, strlen(xml), TRUE) == XML_STATUS_ERROR)
+	{
+fprintf(stderr,
+        "%s at line %d\n",
+        XML_ErrorString(XML_GetErrorCode(parser)),
+        XML_GetCurrentLineNumber(parser));
+	}
+	XML_ParserFree(parser);
+}
+
+static const char *GetAttr(const char **attrs, const char *name)
+{
+	int i;
+
+	for(i = 0; attrs[i] != NULL; i += 2)
+	{
+		if (!stricmp(attrs[i], name))
+			return attrs[i + 1];
+	}
+	return NULL;
+}
+
+static int GetAttrInt(const char **attrs, const char *name, int defVal)
+{
+	const char *value;
+
+	value = GetAttr(attrs, name);
+	return (value != NULL) ? strtol(value, NULL, 0) : defVal;
+}
+
+static int GetAttrDWORD(const char **attrs, const char *name, DWORD defVal)
+{
+	const char *value;
+
+	value = GetAttr(attrs, name);
+	return (value != NULL) ? strtoul(value, NULL, 0) : defVal;
+}
+
+void CSCPMessage::ProcessXMLToken(void *state, const char **attrs)
+{
+	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)state;
+	const char *type;
+	static const char *types[] = { "int32", "string", "int64", "int16", "binary", "float", NULL };
+
+	switch(ps->state)
+	{
+		case XML_STATE_NXCP:
+			m_nVersion = GetAttrInt(attrs, "version", m_nVersion);
+			break;
+		case XML_STATE_MESSAGE:
+			m_dwId = GetAttrDWORD(attrs, "id", m_dwId);
+			m_wCode = (WORD)GetAttrDWORD(attrs, "code", m_wCode);
+			break;
+		case XML_STATE_VARIABLE:
+			ps->varId = GetAttrDWORD(attrs, "id", 0);
+			type = GetAttr(attrs, "type");
+			if (type != NULL)
+			{
+				int i;
+
+				for(i = 0; types[i] != NULL; i++)
+					if (!stricmp(types[i], type))
+					{
+						ps->varType = i;
+						break;
+					}
+			}
+			break;
+		default:
+			break;
+	}
+}
+
+void CSCPMessage::ProcessXMLData(void *state)
+{
+	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)state;
+	char *binData;
+	size_t binLen;
+#ifdef UNICODE
+	WCHAR *temp;
+#endif
+
+	if (ps->value == NULL)
+		return;
+
+	switch(ps->varType)
+	{
+		case CSCP_DT_INTEGER:
+			SetVariable(ps->varId, strtoul(ps->value, NULL, 0));
+			break;
+		case CSCP_DT_INT16:
+			SetVariable(ps->varId, (WORD)strtoul(ps->value, NULL, 0));
+			break;
+		case CSCP_DT_INT64:
+			SetVariable(ps->varId, strtoull(ps->value, NULL, 0));
+			break;
+		case CSCP_DT_FLOAT:
+			SetVariable(ps->varId, strtod(ps->value, NULL));
+			break;
+		case CSCP_DT_STRING:
+#ifdef UNICODE
+			temp = WideStringFromUTF8String(ps->value);
+			SetVariable(ps->varId, temp);
+			free(temp);
+#else
+			SetVariable(ps->varId, ps->value);
+#endif
+			break;
+		case CSCP_DT_BINARY:
+			if (base64_decode_alloc(ps->value, ps->valueLen, &binData, &binLen))
+			{
+				if (binData != NULL)
+				{
+					SetVariable(ps->varId, (BYTE *)binData, binLen);
+					free(binData);
+				}
+			}
+			break;
+	}
 }
 
 
@@ -614,4 +846,83 @@ BOOL CSCPMessage::SetVariableFromFile(DWORD dwVarId, const TCHAR *pszFileName)
       fclose(pFile);
    }
    return bResult;
+}
+
+
+//
+// Create XML document
+//
+
+char *CSCPMessage::CreateXML(void)
+{
+	String xml;
+	DWORD i;
+	char *out, *bdata;
+	size_t blen;
+#ifdef UNICODE
+	WCHAR *tempStr;
+#else
+	int bytes;
+	char *tempStr;
+#endif
+	static const TCHAR *dtString[] = { _T("int32"), _T("string"), _T("int64"), _T("int16"), _T("binary"), _T("float") };
+
+	xml.AddFormattedString(_T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<nxcp version=\"%d\">\r\n   <message code=\"%s\" id=\"%d\">\r\n"), m_nVersion, m_wCode, m_dwId);
+	for(i = 0; i < m_dwNumVar; i++)
+	{
+		xml.AddFormattedString(_T("      <variable id=\"%d\" type=\"%s\">\r\n         <value>"),
+		                       m_ppVarList[i]->dwVarId, dtString[m_ppVarList[i]->bType]);
+		switch(m_ppVarList[i]->bType)
+		{
+			case CSCP_DT_INTEGER:
+				xml.AddFormattedString(_T("%d"), m_ppVarList[i]->data.dwInteger);
+				break;
+			case CSCP_DT_INT16:
+				xml.AddFormattedString(_T("%d"), m_ppVarList[i]->wInt16);
+				break;
+			case CSCP_DT_INT64:
+				xml.AddFormattedString(INT64_FMT, m_ppVarList[i]->data.qwInt64);
+				break;
+			case CSCP_DT_STRING:
+#ifdef UNICODE
+				xml.AddDynamicString(EscapeStringForXML(m_ppVarList[i]->data.string.szValue, m_ppVarList[i]->data.string.dwLen));
+#else
+				bytes = WideCharToMultiByte(CP_UTF8, 0, m_ppVarList[i]->data.string.szValue,
+				                            m_ppVarList[i]->data.string.dwLen, NULL, 0, NULL, NULL);
+				tempStr = (char *)malloc(bytes + 1);
+				bytes = WideCharToMultiByte(CP_UTF8, 0, m_ppVarList[i]->data.string.szValue,
+				                            m_ppVarList[i]->data.string.dwLen, tempStr, bytes + 1, NULL, NULL);
+				xml.AddDynamicString(EscapeStringForXML(tempStr, bytes));
+				free(tempStr);
+#endif
+				break;
+			case CSCP_DT_BINARY:
+				blen = base64_encode_alloc((char *)m_ppVarList[i]->data.string.szValue,
+				                           m_ppVarList[i]->data.string.dwLen, &bdata);
+				if ((blen != 0) && (bdata != NULL))
+				{
+#ifdef UNICODE
+					tempStr = (WCHAR *)malloc((blen + 1) * sizeof(WCHAR));
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, bdata, blen, tempStr, blen);
+					tempStr[blen] = 0;
+					xml.AddDynamicString(tempStr);
+#else
+					xml.AddString(bdata, blen);
+#endif
+				}
+				safe_free(bdata);
+				break;
+			default:
+				break;
+		}
+		xml += _T("         </value>\r\n      </variable>\r\n");
+	}
+	xml += _T("   </message>\r\n</nxcp>\r\n");
+
+#ifdef UNICODE
+	out = UTF8StringFromWideString(xml);
+#else
+	out = strdup(xml);
+#endif
+	return out;
 }

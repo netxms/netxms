@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NXCP API
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -68,9 +68,13 @@ public:
    CSCPMessage(int nVersion = NXCP_VERSION);
    CSCPMessage(CSCPMessage *pMsg);
    CSCPMessage(CSCP_MESSAGE *pMsg, int nVersion = NXCP_VERSION);
+   CSCPMessage(char *xml);
    ~CSCPMessage();
 
    CSCP_MESSAGE *CreateMessage(void);
+	char *CreateXML(void);
+	void ProcessXMLToken(void *state, const char **attrs);
+	void ProcessXMLData(void *state);
 
    WORD GetCode(void) { return m_wCode; }
    void SetCode(WORD wCode) { m_wCode = wCode; }
