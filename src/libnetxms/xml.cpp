@@ -38,7 +38,8 @@ TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length)
 	inLen = (length == -1) ? _tcslen(string) : length;
 	for(in = string, outLen = 0; (inLen > 0) && (*in != 0); in++, outLen++, inLen--)
 		if ((*in == _T('&')) || (*in == _T('<')) ||
-		    (*in == _T('>')) || (*in == _T('"')))
+		    (*in == _T('>')) || (*in == _T('"')) ||
+			 (*in < 32))
 			outLen += 5;
 	outLen++;
 	
@@ -50,23 +51,35 @@ TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length)
 		switch(*in)
 		{
 			case _T('&'):
-				_tcscat(&out[pos], _T("&amp;"));
+				_tcscpy(&out[pos], _T("&amp;"));
 				pos += 5;
 				break;
 			case _T('<'):
-				_tcscat(&out[pos], _T("&lt;"));
+				_tcscpy(&out[pos], _T("&lt;"));
 				pos += 4;
 				break;
 			case _T('>'):
-				_tcscat(&out[pos], _T("&gt;"));
+				_tcscpy(&out[pos], _T("&gt;"));
 				pos += 4;
 				break;
 			case _T('"'):
-				_tcscat(&out[pos], _T("&quot;"));
+				_tcscpy(&out[pos], _T("&quot;"));
+				pos += 6;
+				break;
+			case _T('\''):
+				_tcscpy(&out[pos], _T("&apos;"));
 				pos += 6;
 				break;
 			default:
-				out[pos++] = *in;
+				if (*in < 32)
+				{
+					_stprintf(&out[pos], _T("&#x%02d;"), *in);
+					pos += 6;
+				}
+				else
+				{
+					out[pos++] = *in;
+				}
 				break;
 		}
 	}

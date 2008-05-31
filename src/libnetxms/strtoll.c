@@ -29,7 +29,7 @@
 
 #include "libnetxms.h"
 
-#if (!defined(UNICODE) && !(HAVE_STRTOLL)) || (defined(UNICODE) && !(HAVE_WCSTOLL))
+#if !(HAVE_STRTOLL)
 
 #ifndef UNDER_CE
 #include <sys/types.h>
@@ -46,19 +46,11 @@
  * alphabets and digits are each contiguous.
  */
 
-#ifdef UNICODE
-INT64 LIBNETXMS_EXPORTABLE wcstoll(const WCHAR *nptr, WCHAR **endptr, int base)
-#else
 INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base)
-#endif
 {
-	const TCHAR *s;
+	const char *s;
 	INT64 acc, cutoff;
-#ifdef UNICODE
-	_TINT c;
-#else
    int c;
-#endif
 	int neg, any, cutlim;
 
 	/*
@@ -69,23 +61,23 @@ INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base)
 	s = nptr;
 	do {
 		c = *s++;
-	} while (_istspace(c));
-	if (c == _T('-')) {
+	} while (isspace(c));
+	if (c == '-') {
 		neg = 1;
 		c = *s++;
 	} else {
 		neg = 0;
-		if (c == _T('+'))
+		if (c == '+')
 			c = *s++;
 	}
 	if ((base == 0 || base == 16) &&
-	    c == _T('0') && (*s == _T('x') || *s == 'X')) {
+	    c == '0' && (*s == 'x' || *s == 'X')) {
 		c = s[1];
 		s += 2;
 		base = 16;
 	}
 	if (base == 0)
-		base = c == _T('0') ? 8 : 10;
+		base = c == '0' ? 8 : 10;
 
 	/*
 	 * Compute the cutoff value between legal numbers and illegal
@@ -116,10 +108,10 @@ INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base)
 		cutlim = -cutlim;
 	}
 	for (acc = 0, any = 0;; c = *s++) {
-		if (_istdigit(c))
-			c -= _T('0');
-		else if (_istalpha(c))
-			c -= _istupper(c) ? _T('A') - 10 : _T('a') - 10;
+		if (isdigit(c))
+			c -= '0';
+		else if (isalpha(c))
+			c -= isupper(c) ? 'A' - 10 : 'a' - 10;
 		else
 			break;
 		if (c >= base)
@@ -153,7 +145,7 @@ INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base)
 		}
 	}
 	if (endptr != 0)
-		*endptr = (TCHAR *) (any ? s - 1 : nptr);
+		*endptr = (char *) (any ? s - 1 : nptr);
 	return (acc);
 }
 

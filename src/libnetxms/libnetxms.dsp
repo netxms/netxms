@@ -371,6 +371,14 @@ SOURCE=.\uuid.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\wcstoll.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wcstoull.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\xml.cpp
 # End Source File
 # End Group

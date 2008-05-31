@@ -867,7 +867,7 @@ char *CSCPMessage::CreateXML(void)
 #endif
 	static const TCHAR *dtString[] = { _T("int32"), _T("string"), _T("int64"), _T("int16"), _T("binary"), _T("float") };
 
-	xml.AddFormattedString(_T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<nxcp version=\"%d\">\r\n   <message code=\"%s\" id=\"%d\">\r\n"), m_nVersion, m_wCode, m_dwId);
+	xml.AddFormattedString(_T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<nxcp version=\"%d\">\r\n   <message code=\"%d\" id=\"%d\">\r\n"), m_nVersion, m_wCode, m_dwId);
 	for(i = 0; i < m_dwNumVar; i++)
 	{
 		xml.AddFormattedString(_T("      <variable id=\"%d\" type=\"%s\">\r\n         <value>"),
@@ -888,10 +888,10 @@ char *CSCPMessage::CreateXML(void)
 				xml.AddDynamicString(EscapeStringForXML(m_ppVarList[i]->data.string.szValue, m_ppVarList[i]->data.string.dwLen));
 #else
 				bytes = WideCharToMultiByte(CP_UTF8, 0, m_ppVarList[i]->data.string.szValue,
-				                            m_ppVarList[i]->data.string.dwLen, NULL, 0, NULL, NULL);
+				                            m_ppVarList[i]->data.string.dwLen / 2, NULL, 0, NULL, NULL);
 				tempStr = (char *)malloc(bytes + 1);
 				bytes = WideCharToMultiByte(CP_UTF8, 0, m_ppVarList[i]->data.string.szValue,
-				                            m_ppVarList[i]->data.string.dwLen, tempStr, bytes + 1, NULL, NULL);
+				                            m_ppVarList[i]->data.string.dwLen / 2, tempStr, bytes + 1, NULL, NULL);
 				xml.AddDynamicString(EscapeStringForXML(tempStr, bytes));
 				free(tempStr);
 #endif
@@ -915,7 +915,7 @@ char *CSCPMessage::CreateXML(void)
 			default:
 				break;
 		}
-		xml += _T("         </value>\r\n      </variable>\r\n");
+		xml += _T("</value>\r\n      </variable>\r\n");
 	}
 	xml += _T("   </message>\r\n</nxcp>\r\n");
 

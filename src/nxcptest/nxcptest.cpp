@@ -26,6 +26,13 @@
 
 
 //
+// Constants
+//
+
+#define RAW_MSG_SIZE    262144
+
+
+//
 // Help text
 //
 
@@ -39,6 +46,87 @@ static char m_szHelpText[] =
 	"   -p port    : Port to connect (default 4700)\n"
    "   -v         : Show version and exit\n"
    "\n";
+
+
+//
+// Receiver thread
+//
+
+static THREAD_RESULT THREAD_CALL RecvThread(void *arg)
+{
+   CSCP_MESSAGE *pRawMsg;
+   CSCPMessage *pMsg;
+	CSCP_BUFFER *pMsgBuffer;
+	CSCP_ENCRYPTION_CONTEXT *pCtx = NULL;
+   BYTE *pDecryptionBuffer = NULL;
+   int iErr;
+   char *xml;
+   WORD wFlags;
+
+   // Initialize raw message receiving function
+	pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
+   RecvNXCPMessage(0, NULL, pMsgBuffer, 0, NULL, NULL, 0);
+
+   pRawMsg = (CSCP_MESSAGE *)malloc(RAW_MSG_SIZE);
+#ifdef _WITH_ENCRYPTION
+   pDecryptionBuffer = (BYTE *)malloc(RAW_MSG_SIZE);
+#endif
+   while(1)
+   {
+      if ((iErr = RecvNXCPMessage((SOCKET)arg, pRawMsg, pMsgBuffer, RAW_MSG_SIZE,
+                                  &pCtx, pDecryptionBuffer, INFINITE)) <= 0)
+      {
+         break;
+      }
+
+      // Check if message is too large
+      if (iErr == 1)
+		{
+         printf("RECV ERROR: message is too large\n");
+         continue;
+		}
+
+      // Check for decryption failure
+      if (iErr == 2)
+      {
+         printf("RECV ERROR: decryption failure\n");
+         continue;
+      }
+
+      // Check that actual received packet size is equal to encoded in packet
+      if ((int)ntohl(pRawMsg->dwSize) != iErr)
+      {
+         printf("RECV ERROR: Actual message size doesn't match wSize value (%d,%d)\n", iErr, ntohl(pRawMsg->dwSize));
+         continue;   // Bad packet, wait for next
+      }
+
+      wFlags = ntohs(pRawMsg->wFlags);
+      if (wFlags & MF_BINARY)
+      {
+			printf("WARNING: Binary message received\n");
+      }
+      else
+      {
+         // Create message object from raw message
+         pMsg = new CSCPMessage(pRawMsg);
+			xml = pMsg->CreateXML();
+			if (xml != NULL)
+			{
+				puts(xml);
+				free(xml);
+			}
+      }
+   }
+   if (iErr < 0)
+      printf("Session terminated (socket error %d)\n", WSAGetLastError());
+	free(pMsgBuffer);
+	free(pRawMsg);
+#ifdef _WITH_ENCRYPTION
+   free(pDecryptionBuffer);
+#endif
+
+	return THREAD_OK;
+}
 
 
 //
@@ -73,6 +161,7 @@ static void Exchange(SOCKET hSocket)
 	CSCPMessage *msg;
 	CSCP_MESSAGE *rawMsg;
 
+	ThreadCreate(RecvThread, 0, (void *)hSocket);
 	printf("Enter XML messages separated by %%%% string\n");
 	while(1)
 	{
@@ -84,6 +173,7 @@ static void Exchange(SOCKET hSocket)
 		SendEx(hSocket, rawMsg, ntohl(rawMsg->dwSize), 0);
 		free(rawMsg);
 	}
+	shutdown(hSocket, 2);
 }
 
 

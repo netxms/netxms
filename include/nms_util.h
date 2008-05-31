@@ -550,12 +550,6 @@ extern "C"
 
 #ifdef UNICODE
 
-#if !HAVE_WCSTOLL
-	INT64 LIBNETXMS_EXPORTABLE wcstoll(const WCHAR *nptr, WCHAR **endptr, int base);
-#endif
-#if !HAVE_WCSTOULL
-	QWORD LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base);
-#endif
 #if !HAVE_WFOPEN
 	FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type);
 #endif
@@ -568,14 +562,22 @@ extern "C"
 #if !HAVE_WGETENV
 	WCHAR *wgetenv(const WCHAR *_string);
 #endif
-#else		/* UNICODE */
+
+#endif	/* UNICODE */
+
 #if !HAVE_STRTOLL
 	INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base);
 #endif
 #if !HAVE_STRTOULL
 	QWORD LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base);
 #endif
-#endif	/* UNICODE */
+
+#if !HAVE_WCSTOLL
+	INT64 LIBNETXMS_EXPORTABLE wcstoll(const WCHAR *nptr, WCHAR **endptr, int base);
+#endif
+#if !HAVE_WCSTOULL
+	QWORD LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base);
+#endif
 
 #ifdef _WIN32
 #ifndef SWIGPERL

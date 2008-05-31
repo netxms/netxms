@@ -224,7 +224,7 @@ LONG H_SystemUname(const char *cmd, const char *arg, char *value)
          break;
    }
 
-   sprintf(value, "Windows %s %d.%d.%d %s %s\r\n", computerName, versionInfo.dwMajorVersion,
+   sprintf(value, "Windows %s %d.%d.%d %s %s", computerName, versionInfo.dwMajorVersion,
            versionInfo.dwMinorVersion, versionInfo.dwBuildNumber, osVersion, cpuType);
    return SYSINFO_RC_SUCCESS;
 }
