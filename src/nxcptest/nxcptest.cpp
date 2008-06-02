@@ -119,6 +119,8 @@ static THREAD_RESULT THREAD_CALL RecvThread(void *arg)
    }
    if (iErr < 0)
       printf("Session terminated (socket error %d)\n", WSAGetLastError());
+	else
+		printf("Session closed\n");
 	free(pMsgBuffer);
 	free(pRawMsg);
 #ifdef _WITH_ENCRYPTION
@@ -170,7 +172,12 @@ static void Exchange(SOCKET hSocket)
 		msg = new CSCPMessage(xml);
 		rawMsg = msg->CreateMessage();
 		delete msg;
-		SendEx(hSocket, rawMsg, ntohl(rawMsg->dwSize), 0);
+		if (SendEx(hSocket, rawMsg, ntohl(rawMsg->dwSize), 0) != ntohl(rawMsg->dwSize))
+		{
+			printf("Error sending message\n");
+			free(rawMsg);
+			break;
+		}
 		free(rawMsg);
 	}
 	shutdown(hSocket, 2);

@@ -859,12 +859,8 @@ char *CSCPMessage::CreateXML(void)
 	DWORD i;
 	char *out, *bdata;
 	size_t blen;
-#ifdef UNICODE
-	WCHAR *tempStr;
-#else
+	TCHAR *tempStr;
 	int bytes;
-	char *tempStr;
-#endif
 	static const TCHAR *dtString[] = { _T("int32"), _T("string"), _T("int64"), _T("int16"), _T("binary"), _T("float") };
 
 	xml.AddFormattedString(_T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<nxcp version=\"%d\">\r\n   <message code=\"%d\" id=\"%d\">\r\n"), m_nVersion, m_wCode, m_dwId);
@@ -885,8 +881,16 @@ char *CSCPMessage::CreateXML(void)
 				break;
 			case CSCP_DT_STRING:
 #ifdef UNICODE
-				xml.AddDynamicString(EscapeStringForXML(m_ppVarList[i]->data.string.szValue, m_ppVarList[i]->data.string.dwLen));
+#ifdef UNICODE_UCS2
+				xml.AddDynamicString(EscapeStringForXML(m_ppVarList[i]->data.string.szValue, m_ppVarList[i]->data.string.dwLen / 2));
 #else
+				tempStr = (WCHAR *)malloc(m_ppVarList[i]->data.string.dwLen * 2);
+				bytes = ucs2_to_ucs4(m_ppVarList[i]->data.string.szValue, m_ppVarList[i]->data.string.dwLen / 2, tempStr, m_ppVarList[i]->data.string.dwLen / 2);
+				xml.AddDynamicString(EscapeStringForXML(tempStr, bytes));
+				free(tempStr);
+#endif
+#else		/* not UNICODE */
+#ifdef UNICODE_UCS2
 				bytes = WideCharToMultiByte(CP_UTF8, 0, m_ppVarList[i]->data.string.szValue,
 				                            m_ppVarList[i]->data.string.dwLen / 2, NULL, 0, NULL, NULL);
 				tempStr = (char *)malloc(bytes + 1);
@@ -894,7 +898,13 @@ char *CSCPMessage::CreateXML(void)
 				                            m_ppVarList[i]->data.string.dwLen / 2, tempStr, bytes + 1, NULL, NULL);
 				xml.AddDynamicString(EscapeStringForXML(tempStr, bytes));
 				free(tempStr);
+#else
+				tempStr = (char *)malloc(m_ppVarList[i]->data.string.dwLen);
+				bytes = ucs2_to_utf8(m_ppVarList[i]->data.string.szValue, m_ppVarList[i]->data.string.dwLen / 2, tempStr, m_ppVarList[i]->data.string.dwLen);
+				xml.AddDynamicString(EscapeStringForXML(tempStr, bytes));
+				free(tempStr);
 #endif
+#endif	/* UNICODE */
 				break;
 			case CSCP_DT_BINARY:
 				blen = base64_encode_alloc((char *)m_ppVarList[i]->data.string.szValue,

@@ -73,7 +73,7 @@ TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length)
 			default:
 				if (*in < 32)
 				{
-					_stprintf(&out[pos], _T("&#x%02d;"), *in);
+					_sntprintf(&out[pos], 8, _T("&#x%02d;"), *in);
 					pos += 6;
 				}
 				else

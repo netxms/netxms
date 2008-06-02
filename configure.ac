@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.0.0-rc1], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.22], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -1465,6 +1465,7 @@ AC_CONFIG_FILES([
 	src/console/cmdline/Makefile
 	src/console/PocketPC/Makefile
 	src/console/PocketPC/res/Makefile
+	src/nxcptest/Makefile
 	src/nxevent/Makefile
 	src/nxpush/Makefile
 	src/nxreport/Makefile
