@@ -9,27 +9,11 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-ACLOCAL=aclocal-1.7
-AUTOCONF=autoconf-2.60
-AUTOHEADER=autoheader-2.60
-AUTOMAKE=automake-1.7
+ACLOCAL=aclocal
+AUTOCONF=autoconf
+AUTOHEADER=autoheader
+AUTOMAKE=automake
 LIBTOOLIZE=libtoolize
-
-if [ `uname -s` = "FreeBSD" ]; then
-	ACLOCAL=aclocal19
-	AUTOCONF=autoconf259
-	AUTOHEADER=autoheader259
-	AUTOMAKE=automake19
-	LIBTOOLIZE=libtoolize15
-fi
-
-if [ "$1" = "-n" ]; then
-	ACLOCAL=aclocal
-	AUTOCONF=autoconf
-	AUTOHEADER=autoheader
-	AUTOMAKE=automake
-	LIBTOOLIZE=libtoolize
-fi
 
 mkdir -p config
 touch README
