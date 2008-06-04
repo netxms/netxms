@@ -136,6 +136,7 @@ src/console/nxnotify/res/sort_up.ico -text
 src/console/nxnotify/res/sortdown.ico -text
 src/console/nxnotify/res/warning.ico -text
 src/console/nxuilib/nxuilib.dsw -text
+src/console/nxuilib/nxuilibw.def -text
 src/console/nxuilib/res/SeverityCritical.ico -text
 src/console/nxuilib/res/SeverityMajor.ico -text
 src/console/nxuilib/res/SeverityMinor.ico -text

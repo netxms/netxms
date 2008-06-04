@@ -472,7 +472,7 @@ void Threshold::CreateMessage(DCI_THRESHOLD *pData)
 
 void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
 {
-#ifndef UNICODE_UCS2
+#if !defined(UNICODE) || defined(UNICODE_UCS4)
    TCHAR szBuffer[MAX_DCI_STRING_VALUE];
 #endif
 
@@ -509,7 +509,7 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
 #else
          m_value = pData->value.szString;
 #endif         
-#else
+#else		/* UNICODE */
          ucs2_to_mb(pData->value.szString, -1, szBuffer, MAX_DCI_STRING_VALUE);
          m_value = szBuffer;
 #endif

@@ -181,7 +181,8 @@ TCHAR *Event::ExpandText(TCHAR *pszTemplate, TCHAR *pszAlarmMsg)
    DWORD dwPos, dwSize, dwParam;
    NetObj *pObject;
    struct tm *lt;
-   char *pText, szBuffer[4];
+   char *pText, szBuffer[4], scriptName[256];
+	int i;
 
    pObject = FindObjectById(m_dwSource);
    if (pObject == NULL)    // Normally shouldn't happen
@@ -328,6 +329,57 @@ TCHAR *Event::ExpandText(TCHAR *pszTemplate, TCHAR *pszAlarmMsg)
                      dwPos += (DWORD)_tcslen(m_ppszParameters[dwParam]);
                   }
                   break;
+					case '[':	// Script
+						for(i = 0, pCurr++; (*pCurr != ']') && (*pCurr != 0) && (i < 255); pCurr++)
+						{
+							scriptName[i++] = *pCurr;
+						}
+						if (*pCurr == 0)	// no terminating ]
+						{
+							pCurr--;
+						}
+						else
+						{
+							NXSL_Program *script;
+							NXSL_Environment *pEnv;
+
+							scriptName[i] = 0;
+							StrStrip(scriptName);
+
+							g_pScriptLibrary->Lock();
+							script = g_pScriptLibrary->FindScript(scriptName);
+							if (script != NULL)
+							{
+								pEnv = new NXSL_Environment;
+								pEnv->SetLibrary(g_pScriptLibrary);
+//								if (m_pNode != NULL)
+//									script->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&m_nxslNodeClass, m_pNode)));
+
+								if (script->Run(pEnv) == 0)
+								{
+									TCHAR *temp = script->GetResult()->GetValueAsCString();
+									dwSize += (DWORD)_tcslen(temp);
+									pText = (char *)realloc(pText, dwSize);
+									_tcscpy(&pText[dwPos], temp);
+									dwPos += (DWORD)_tcslen(temp);
+									DbgPrintf(4, "Event::ExpandText(%d, \"%s\"): Script %s executed successfully",
+									          m_dwCode, pszTemplate, scriptName);
+								}
+								else
+								{
+									DbgPrintf(4, "Event::ExpandText(%d, \"%s\"): Script %s execution error: %s",
+												 m_dwCode, pszTemplate, scriptName, script->GetErrorText());
+									PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), scriptName,
+												 script->GetErrorText(), 0);
+								}
+							}
+							else
+							{
+								DbgPrintf(4, "Event::ExpandText(%d, \"%s\"): Cannot find script %s", m_dwCode, pszTemplate, scriptName);
+							}
+							g_pScriptLibrary->Unlock();
+						}
+						break;
                default:    // All other characters are invalid, ignore
                   break;
             }

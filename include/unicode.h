@@ -48,10 +48,10 @@
 
 #include <tchar.h>
 
-#ifdef UNICODE
-
 // Windows always use UCS-2
 #define UNICODE_UCS2				1
+
+#ifdef UNICODE
 
 #define _tcstoll  wcstoll
 #define _tcstoull wcstoull
@@ -264,10 +264,8 @@
 
 
 // Check that either UNICODE_UCS2 or UNICODE_UCS4 are defined
-#ifdef UNICODE
 #if !defined(UNICODE_UCS2) && !defined(UNICODE_UCS4)
 #error Neither UNICODE_UCS2 nor UNICODE_UCS4 are defined
-#endif
 #endif
 
 #endif   /* _unicode_h_ */

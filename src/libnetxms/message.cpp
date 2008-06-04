@@ -860,7 +860,9 @@ char *CSCPMessage::CreateXML(void)
 	char *out, *bdata;
 	size_t blen;
 	TCHAR *tempStr;
+#if !defined(UNICODE) || defined(UNICODE_UCS4)
 	int bytes;
+#endif
 	static const TCHAR *dtString[] = { _T("int32"), _T("string"), _T("int64"), _T("int16"), _T("binary"), _T("float") };
 
 	xml.AddFormattedString(_T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<nxcp version=\"%d\">\r\n   <message code=\"%d\" id=\"%d\">\r\n"), m_nVersion, m_wCode, m_dwId);

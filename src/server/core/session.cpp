@@ -2990,7 +2990,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
    NetObj *pObject;
    BOOL bSuccess = FALSE;
    static DWORD m_dwRowSize[] = { 8, 8, 12, 12, 260, 12 };
-#ifndef UNICODE_UCS2
+#if !defined(UNICODE) || defined(UNICODE_UCS4)
    TCHAR szBuffer[MAX_DCI_STRING_VALUE];
 #endif
 

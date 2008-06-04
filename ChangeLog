@@ -2,6 +2,7 @@
 * 0.2.22
 *
 
+- Scripts now can be used to form event's message (via %[..] macro)
 - Implemented XML encoding for NXCP messages
 - Fixed issues: #201
 

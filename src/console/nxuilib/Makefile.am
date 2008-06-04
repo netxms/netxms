@@ -20,7 +20,7 @@ EXTRA_DIST = \
 	MemDC.h \
 	nxuilib.clw \
 	nxuilib.cpp \
-	nxuilib.def \
+	nxuilib.def nxuilibw.def \
 	nxuilib.dsp nxuilib.dsw \
 	nxuilib.h \
 	nxuilib.rc resource.h \
