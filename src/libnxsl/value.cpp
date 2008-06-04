@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -103,6 +103,11 @@ NXSL_Value::NXSL_Value(const NXSL_Value *pValue)
       {
          m_value.pObject = new NXSL_Object(pValue->m_value.pObject);
       }
+      else if (m_nDataType == NXSL_DT_ARRAY)
+      {
+         m_value.pArray = pValue->m_value.pArray;
+			m_value.pArray->IncRefCount();
+      }
       else
       {
          memcpy(&m_value, &pValue->m_value, sizeof(m_value));
@@ -129,6 +134,15 @@ NXSL_Value::NXSL_Value(NXSL_Object *pObject)
 {
    m_nDataType = NXSL_DT_OBJECT;
    m_value.pObject = pObject;
+   m_pszValStr = NULL;
+   m_bStringIsValid = FALSE;
+}
+
+NXSL_Value::NXSL_Value(NXSL_Array *pArray)
+{
+   m_nDataType = NXSL_DT_ARRAY;
+   m_value.pArray = pArray;
+	pArray->IncRefCount();
    m_pszValStr = NULL;
    m_bStringIsValid = FALSE;
 }
@@ -209,7 +223,15 @@ NXSL_Value::~NXSL_Value()
 {
    safe_free(m_pszValStr);
    if (m_nDataType == NXSL_DT_OBJECT)
-      delete m_value.pObject;
+   {
+		delete m_value.pObject;
+	}
+   else if (m_nDataType == NXSL_DT_ARRAY)
+	{
+		m_value.pArray->DecRefCount();
+		if (m_value.pArray->IsUnused())
+			delete m_value.pArray;
+	}
 }
 
 
@@ -365,7 +387,7 @@ BOOL NXSL_Value::Convert(int nDataType)
 
 char *NXSL_Value::GetValueAsCString(void)
 {
-   if (IsNull() || IsObject())
+   if (IsNull() || IsObject() || IsArray())
       return NULL;
 
    if (!m_bStringIsValid)
@@ -380,7 +402,7 @@ char *NXSL_Value::GetValueAsCString(void)
 
 char *NXSL_Value::GetValueAsString(DWORD *pdwLen)
 {
-   if (IsNull() || IsObject())
+   if (IsNull() || IsObject() || IsArray())
 	{
 		*pdwLen = 0;
       return NULL;

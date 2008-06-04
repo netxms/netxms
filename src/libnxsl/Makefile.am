@@ -1,7 +1,7 @@
 INCLUDES=-I@top_srcdir@/include
 
 lib_LTLIBRARIES = libnxsl.la
-libnxsl_la_SOURCES = lex.yy.cpp parser.tab.cpp class.cpp compiler.cpp \
+libnxsl_la_SOURCES = lex.yy.cpp parser.tab.cpp array.cpp class.cpp compiler.cpp \
 		     env.cpp functions.cpp instruction.cpp lexer.cpp \
 		     library.cpp main.cpp program.cpp stack.cpp value.cpp \
 		     variable.cpp

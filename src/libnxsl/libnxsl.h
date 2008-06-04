@@ -101,8 +101,10 @@ typedef void *yyscan_t;
 #define OPCODE_ILIKE          44
 #define OPCODE_MATCH          45
 #define OPCODE_IMATCH         46
-#define OPCODE_CASE				47
-#define OPCODE_ARRAY				48
+#define OPCODE_CASE           47
+#define OPCODE_ARRAY          48
+#define OPCODE_GET_ELEMENT    49
+#define OPCODE_SET_ELEMENT    50
 
 
 //

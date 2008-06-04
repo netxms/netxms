@@ -84,6 +84,7 @@ src/client/console/nxmc/rc/icons/normal/unknown.png -text
 src/client/console/nxmc/rc/icons/small/config.png -text
 src/client/console/nxmc/rc/icons/small/taskbar.png -text
 src/client/console/nxmc/rc/login.png -text
+src/client/console/nxmc/rc/nxmc.ico -text
 src/client/console/nxmc/rc/processing.png -text
 src/console/PocketPC/res/Cmdbar.bmp -text
 src/console/PocketPC/res/SeverityCritical.ico -text
@@ -257,6 +258,7 @@ src/libnetxms/wcstoull.c -text
 src/libnetxms/xml.cpp -text
 src/libnxcl/libnxcl.dsw -text
 src/libnxmap/libnxmap.dsw -text
+src/libnxsl/array.cpp -text
 src/libnxsl/libnxsl.dsw -text
 src/libnxsl/parser.l -text
 src/libnxsl/parser.y -text

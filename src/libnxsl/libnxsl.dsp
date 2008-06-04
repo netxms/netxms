@@ -174,6 +174,10 @@ PostBuild_Cmds=copy Debug64\libnxsl.dll ..\..\bin64
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\array.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\class.cpp
 # End Source File
 # Begin Source File

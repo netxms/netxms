@@ -41,12 +41,13 @@
 
 #define NXSL_DT_NULL       0
 #define NXSL_DT_OBJECT     1
-#define NXSL_DT_STRING     2
-#define NXSL_DT_REAL       3
-#define NXSL_DT_INT32      4
-#define NXSL_DT_INT64      5
-#define NXSL_DT_UINT32     6
-#define NXSL_DT_UINT64     7
+#define NXSL_DT_ARRAY      2
+#define NXSL_DT_STRING     3
+#define NXSL_DT_REAL       4
+#define NXSL_DT_INT32      5
+#define NXSL_DT_INT64      6
+#define NXSL_DT_UINT32     7
+#define NXSL_DT_UINT64     8
 
 
 //
@@ -119,6 +120,30 @@ public:
 
 
 //
+// Array
+//
+
+class LIBNXSL_EXPORTABLE NXSL_Array
+{
+private:
+	int m_refCount;
+	NXSL_Value **m_data;
+
+public:
+	NXSL_Array();
+	NXSL_Array(NXSL_Array *src);
+	~NXSL_Array();
+
+	void IncRefCount() { m_refCount++; }
+	void DecRefCount() { m_refCount--; }
+	BOOL IsUnused() { return m_refCount < 1; }
+
+	void Set(int index, NXSL_Value *value);
+	NXSL_Value *Get(int index);
+};
+
+
+//
 // Variable or constant value
 //
 
@@ -137,6 +162,7 @@ protected:
       QWORD uInt64;
       double dReal;
       NXSL_Object *pObject;
+		NXSL_Array *pArray;
    } m_value;
 
    void UpdateNumber(void);
@@ -153,6 +179,7 @@ public:
    NXSL_Value(void);
    NXSL_Value(const NXSL_Value *);
    NXSL_Value(NXSL_Object *pObject);
+   NXSL_Value(NXSL_Array *pArray);
    NXSL_Value(LONG nValue);
    NXSL_Value(INT64 nValue);
    NXSL_Value(DWORD uValue);
@@ -169,6 +196,7 @@ public:
 
    BOOL IsNull(void) { return (m_nDataType == NXSL_DT_NULL); }
    BOOL IsObject(void) { return (m_nDataType == NXSL_DT_OBJECT); }
+   BOOL IsArray(void) { return (m_nDataType == NXSL_DT_ARRAY); }
    BOOL IsString(void) { return (m_nDataType >= NXSL_DT_STRING); }
    BOOL IsNumeric(void) { return (m_nDataType > NXSL_DT_STRING); }
    BOOL IsReal(void) { return (m_nDataType == NXSL_DT_REAL); }
@@ -185,6 +213,7 @@ public:
    QWORD GetValueAsUInt64(void);
    double GetValueAsReal(void);
    NXSL_Object *GetValueAsObject(void) { return (m_nDataType == NXSL_DT_OBJECT) ? m_value.pObject : NULL; }
+   NXSL_Array *GetValueAsArray(void) { return (m_nDataType == NXSL_DT_ARRAY) ? m_value.pArray : NULL; }
 
    void Concatenate(char *pszString, DWORD dwLen);
    
@@ -400,6 +429,7 @@ protected:
    NXSL_Value *MatchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL bIgnoreCase);
 
    NXSL_Variable *FindOrCreateVariable(TCHAR *pszName);
+	NXSL_Variable *CreateVariable(TCHAR *pszName);
 
    DWORD GetFunctionAddress(char *pszName);
    void RelocateCode(DWORD dwStartOffset, DWORD dwLen, DWORD dwShift);

@@ -48,6 +48,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_IF
 %token T_NULL
 %token T_PRINT
+%token T_PRINTLN
 %token T_RETURN
 %token T_SUB
 %token T_SWITCH
@@ -84,7 +85,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %left '+' '-'
 %left '*' '/' '%'
 %right T_INC T_DEC '!' '~' NEGATE
-%left T_POST_INC T_POST_DEC T_REF
+%left T_POST_INC T_POST_DEC T_REF '[' ']'
 
 %type <pConstant> Constant
 %type <valStr> AnyIdentifier
@@ -205,6 +206,14 @@ Expression:
 |	T_IDENTIFIER '=' Expression
 {
 	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_SET, $1));
+}
+|	Expression '[' Expression ']' '=' Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_SET_ELEMENT));
+}
+|	Expression '[' Expression ']'
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_GET_ELEMENT));
 }
 |	Expression T_REF T_IDENTIFIER
 {
@@ -396,6 +405,7 @@ BuiltinType:
 
 BuiltinStatement:
 	SimpleStatement ';'
+|	PrintlnStatement
 |	IfStatement
 |	DoStatement
 |	WhileStatement
@@ -453,6 +463,20 @@ SimpleStatementKeyword:
 |	T_PRINT
 {
 	$$ = new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_PRINT);
+}
+;
+
+PrintlnStatement:
+	T_PRINTLN Expression ';'
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value(_T("\n"))));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_CONCAT));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_PRINT));
+}
+|	T_PRINTLN ';'
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value(_T("\n"))));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_PRINT));
 }
 ;
 

@@ -33,7 +33,7 @@
 // Constants
 //
 
-#define MAX_ERROR_NUMBER         21
+#define MAX_ERROR_NUMBER         22
 #define CONTROL_STACK_LIMIT      32768
 
 
@@ -53,7 +53,7 @@ static const char *m_szCommandMnemonic[] =
    "BIND", "INC", "DEC", "NEG", "NOT",
    "BITNOT", "CAST", "REF", "INCP", "DECP",
    "JNZ", "LIKE", "ILIKE", "MATCH",
-   "IMATCH", "CASE", "ARRAY"
+   "IMATCH", "CASE", "ARRAY", "EGET", "ESET"
 };
 
 
@@ -83,7 +83,8 @@ static const TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
 	_T("Invalid regular expression"),
 	_T("Function or operation argument is not a whole number"),
 	_T("Invalid operation on object"),
-	_T("Bad (or incompatible) object class")
+	_T("Bad (or incompatible) object class"),
+	_T("Variable already exist")
 };
 
 
@@ -532,6 +533,28 @@ NXSL_Variable *NXSL_Program::FindOrCreateVariable(TCHAR *pszName)
 
 
 //
+// Create variable if it does not exist, otherwise return NULL
+//
+
+NXSL_Variable *NXSL_Program::CreateVariable(TCHAR *pszName)
+{
+   NXSL_Variable *pVar = NULL;
+
+   if (m_pConstants->Find(pszName) == NULL)
+   {
+      if (m_pGlobals->Find(pszName) == NULL)
+      {
+         if (m_pLocals->Find(pszName) == NULL)
+         {
+            pVar = m_pLocals->Create(pszName);
+         }
+      }
+   }
+   return pVar;
+}
+
+
+//
 // Execute single instruction
 //
 
@@ -560,13 +583,31 @@ void NXSL_Program::Execute(void)
          pValue = (NXSL_Value *)m_pDataStack->Peek();
          if (pValue != NULL)
          {
-            pVar->Set(new NXSL_Value(pValue));
+				if (pValue->IsArray())
+				{
+					pVar->Set(new NXSL_Value(new NXSL_Array(pValue->GetValueAsArray())));
+				}
+				else
+				{
+					pVar->Set(new NXSL_Value(pValue));
+				}
          }
          else
          {
             Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
          break;
+		case OPCODE_ARRAY:
+         pVar = CreateVariable(cp->m_operand.m_pszString);
+			if (pVar != NULL)
+			{
+				pVar->Set(new NXSL_Value(new NXSL_Array));
+			}
+			else
+			{
+				Error(NXSL_ERR_VARIABLE_ALREADY_EXIST);
+			}
+			break;
       case OPCODE_CAST:
          pValue = (NXSL_Value *)m_pDataStack->Peek();
          if (pValue != NULL)
