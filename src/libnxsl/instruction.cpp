@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2005 Victor Kirhenshtein
+** Copyright (C) 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: instruction.cpp
+** File: instruction.cpp
 **
 **/
 
@@ -87,6 +87,7 @@ NXSL_Instruction::NXSL_Instruction(NXSL_Instruction *pSrc)
       case OPCODE_SET:
       case OPCODE_CALL_EXTERNAL:
       case OPCODE_BIND:
+      case OPCODE_ARRAY:
       case OPCODE_INC:
       case OPCODE_DEC:
       case OPCODE_INCP:
@@ -113,6 +114,7 @@ NXSL_Instruction::~NXSL_Instruction()
       case OPCODE_CALL_EXTERNAL:
       case OPCODE_SET:
       case OPCODE_BIND:
+      case OPCODE_ARRAY:
       case OPCODE_INC:
       case OPCODE_DEC:
       case OPCODE_INCP:

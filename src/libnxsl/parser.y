@@ -36,6 +36,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 	NXSL_Instruction *pInstruction;
 }
 
+%token T_ARRAY
 %token T_BREAK
 %token T_CASE
 %token T_CONTINUE
@@ -148,11 +149,12 @@ Function:
 			pLexer->SetErrorState();
 		}
 		free($2);
+		pCompiler->SetIdentifierOperation(OPCODE_BIND);
 	}
 	ParameterDeclaration Block
-{
-	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_RET_NULL));
-}
+	{
+		pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_RET_NULL));
+	}
 ;
 
 ParameterDeclaration:
@@ -163,13 +165,13 @@ ParameterDeclaration:
 IdentifierList:
 	T_IDENTIFIER 
 	{
-		pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_BIND, $1));
+		pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), pCompiler->GetIdentifierOperation(), $1));
 	}
 	',' IdentifierList
 |	T_IDENTIFIER
-{
-	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_BIND, $1));
-}
+	{
+		pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), pCompiler->GetIdentifierOperation(), $1));
+	}
 ;
 
 Block:
@@ -398,6 +400,7 @@ BuiltinStatement:
 |	DoStatement
 |	WhileStatement
 |	SwitchStatement
+|	ArrayStatement
 |	T_BREAK ';'
 {
 	if (pCompiler->CanUseBreak())
@@ -551,6 +554,10 @@ Case:
 Default:
 	T_DEFAULT ':' StatementList
 |
+;
+
+ArrayStatement:
+	T_ARRAY { pCompiler->SetIdentifierOperation(OPCODE_ARRAY); } IdentifierList ';'
 ;
 
 FunctionCall:

@@ -352,8 +352,9 @@ TCHAR *Event::ExpandText(TCHAR *pszTemplate, TCHAR *pszAlarmMsg)
 							{
 								pEnv = new NXSL_Environment;
 								pEnv->SetLibrary(g_pScriptLibrary);
-//								if (m_pNode != NULL)
-//									script->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&m_nxslNodeClass, m_pNode)));
+								if (pObject->Type() == OBJECT_NODE)
+									script->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, pObject)));
+								script->SetGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, this)));
 
 								if (script->Run(pEnv) == 0)
 								{

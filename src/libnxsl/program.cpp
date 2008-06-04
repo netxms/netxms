@@ -53,7 +53,7 @@ static const char *m_szCommandMnemonic[] =
    "BIND", "INC", "DEC", "NEG", "NOT",
    "BITNOT", "CAST", "REF", "INCP", "DECP",
    "JNZ", "LIKE", "ILIKE", "MATCH",
-   "IMATCH", "CASE"
+   "IMATCH", "CASE", "ARRAY"
 };
 
 
@@ -337,6 +337,7 @@ void NXSL_Program::Dump(FILE *pFile)
          case OPCODE_PUSH_VARIABLE:
          case OPCODE_SET:
          case OPCODE_BIND:
+         case OPCODE_ARRAY:
          case OPCODE_INC:
          case OPCODE_DEC:
          case OPCODE_INCP:

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nms_script.h
+** File: nms_script.h
 **
 **/
 
@@ -39,6 +39,32 @@ public:
 
 
 //
+// "NetXMS node" class
+//
+
+class NXSL_NodeClass : public NXSL_Class
+{
+public:
+   NXSL_NodeClass();
+
+   virtual NXSL_Value *GetAttr(NXSL_Object *pObject, char *pszAttr);
+};
+
+
+//
+// "NetXMS event" class
+//
+
+class NXSL_EventClass : public NXSL_Class
+{
+public:
+   NXSL_EventClass();
+
+   virtual NXSL_Value *GetAttr(NXSL_Object *pObject, char *pszAttr);
+};
+
+
+//
 // Functions
 //
 
@@ -52,6 +78,8 @@ BOOL IsValidScriptId(DWORD dwId);
 //
 
 extern NXSL_Library *g_pScriptLibrary;
+extern NXSL_NodeClass g_nxslNodeClass;
+extern NXSL_EventClass g_nxslEventClass;
 
 
 #endif

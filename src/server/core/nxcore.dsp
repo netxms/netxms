@@ -358,6 +358,10 @@ SOURCE=.\nxmp_parser.tab.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\nxsl_classes.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\objects.cpp
 # End Source File
 # Begin Source File

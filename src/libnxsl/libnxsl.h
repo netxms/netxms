@@ -102,6 +102,7 @@ typedef void *yyscan_t;
 #define OPCODE_MATCH          45
 #define OPCODE_IMATCH         46
 #define OPCODE_CASE				47
+#define OPCODE_ARRAY				48
 
 
 //
@@ -151,6 +152,7 @@ protected:
    NXSL_Lexer *m_pLexer;
    NXSL_Stack *m_pAddrStack;
 	NXSL_Stack *m_pBreakStack;
+	int m_idOpCode;
 
 public:
    NXSL_Compiler(void);
@@ -169,6 +171,9 @@ public:
 	void CloseBreakLevel(NXSL_Program *pScript);
 	BOOL CanUseBreak(void) { return m_pBreakStack->Size() > 0; }
 	void NewBreakLevel(void) { m_pBreakStack->Push(new Queue); }
+
+	void SetIdentifierOperation(int opcode) { m_idOpCode = opcode; }
+	int GetIdentifierOperation(void) { return m_idOpCode; }
 };
 
 
