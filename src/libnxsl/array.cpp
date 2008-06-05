@@ -31,11 +31,31 @@
 NXSL_Array::NXSL_Array()
 {
 	m_refCount = 0;
+	m_size = 0;
+	m_allocated = 0;
+	m_data = NULL;
 }
 
 NXSL_Array::NXSL_Array(NXSL_Array *src)
 {
+	int i;
+
 	m_refCount = 0;
+	m_size = src->m_size;
+	m_allocated = src->m_size;
+	if (m_size > 0)
+	{
+		m_data = (NXSL_ArrayElement *)malloc(sizeof(NXSL_ArrayElement) * m_size);
+		for(i = 0; i < m_size; i++)
+		{
+			m_data[i].index = src->m_data[i].index;
+			m_data[i].value = new NXSL_Value(src->m_data[i].value);
+		}
+	}
+	else
+	{
+		m_data = NULL;
+	}
 }
 
 
@@ -45,4 +65,63 @@ NXSL_Array::NXSL_Array(NXSL_Array *src)
 
 NXSL_Array::~NXSL_Array()
 {
+	int i;
+
+	for(i = 0; i < m_size; i++)
+		delete m_data[i].value;
+	safe_free(m_data);
+}
+
+
+//
+// Compare two ints
+//
+
+static int CompareElements(const void *p1, const void *p2)
+{
+	return COMPARE_NUMBERS(((NXSL_ArrayElement *)p1)->index, ((NXSL_ArrayElement *)p2)->index);
+}
+
+
+//
+// Get element
+//
+
+NXSL_Value *NXSL_Array::Get(int index)
+{
+	NXSL_ArrayElement *element, key;
+
+	key.index = index;
+	element = (NXSL_ArrayElement *)bsearch(&key, m_data, m_size, sizeof(NXSL_ArrayElement), CompareElements);
+	return (element != NULL) ? element->value : NULL;
+}
+
+
+//
+// Set element
+//
+
+void NXSL_Array::Set(int index, NXSL_Value *value)
+{
+	NXSL_ArrayElement *element, key;
+
+	key.index = index;
+	element = (NXSL_ArrayElement *)bsearch(&key, m_data, m_size, sizeof(NXSL_ArrayElement), CompareElements);
+	if (element != NULL)
+	{
+		delete element->value;
+		element->value = value;
+	}
+	else
+	{
+		if (m_size == m_allocated)
+		{
+			m_allocated += 32;
+			m_data = (NXSL_ArrayElement *)realloc(m_data, sizeof(NXSL_ArrayElement) * m_allocated);
+		}
+		m_data[m_size].index = index;
+		m_data[m_size].value = value;
+		m_size++;
+		qsort(m_data, m_size, sizeof(NXSL_ArrayElement), CompareElements);
+	}
 }

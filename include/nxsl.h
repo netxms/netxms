@@ -68,6 +68,8 @@
 #define NXSL_ERR_INVALID_OBJECT_OPERATION 20
 #define NXSL_ERR_BAD_CLASS                21
 #define NXSL_ERR_VARIABLE_ALREADY_EXIST   22
+#define NXSL_ERR_INDEX_NOT_INTEGER        23
+#define NXSL_ERR_NOT_ARRAY                24
 
 
 //

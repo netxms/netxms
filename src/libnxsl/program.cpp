@@ -33,7 +33,7 @@
 // Constants
 //
 
-#define MAX_ERROR_NUMBER         22
+#define MAX_ERROR_NUMBER         24
 #define CONTROL_STACK_LIMIT      32768
 
 
@@ -84,7 +84,9 @@ static const TCHAR *m_szErrorMessage[MAX_ERROR_NUMBER] =
 	_T("Function or operation argument is not a whole number"),
 	_T("Invalid operation on object"),
 	_T("Bad (or incompatible) object class"),
-	_T("Variable already exist")
+	_T("Variable already exist"),
+	_T("Array index is not an integer"),
+	_T("Attempt to use array element access operation on non-array")
 };
 
 
@@ -607,6 +609,84 @@ void NXSL_Program::Execute(void)
 			{
 				Error(NXSL_ERR_VARIABLE_ALREADY_EXIST);
 			}
+			break;
+		case OPCODE_SET_ELEMENT:	// Set array element; stack should contain: array index value (top)
+			pValue = (NXSL_Value *)m_pDataStack->Pop();
+			if (pValue != NULL)
+			{
+				NXSL_Value *array, *index;
+
+				index = (NXSL_Value *)m_pDataStack->Pop();
+				array = (NXSL_Value *)m_pDataStack->Pop();
+				if ((index != NULL) && (array != NULL))
+				{
+					if (!index->IsInteger())
+					{
+						Error(NXSL_ERR_INDEX_NOT_INTEGER);
+						delete pValue;
+					}
+					else if (!array->IsArray())
+					{
+						Error(NXSL_ERR_NOT_ARRAY);
+						delete pValue;
+					}
+					else
+					{
+						array->GetValueAsArray()->Set(index->GetValueAsInt32(), pValue);
+					}
+				}
+				else
+				{
+					Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+					delete pValue;
+				}
+				delete index;
+				delete array;
+			}
+         else
+         {
+            Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
+			break;
+		case OPCODE_GET_ELEMENT:	// Get array element; stack should contain: array index (top)
+			pValue = (NXSL_Value *)m_pDataStack->Pop();
+			if (pValue != NULL)
+			{
+				NXSL_Value *array;
+
+				array = (NXSL_Value *)m_pDataStack->Pop();
+				if (array != NULL)
+				{
+					if (array->IsArray())
+					{
+						if (pValue->IsInteger())
+						{
+							NXSL_Value *element;
+
+							element = array->GetValueAsArray()->Get(pValue->GetValueAsInt32());
+							m_pDataStack->Push((element != NULL) ? new NXSL_Value(element) : new NXSL_Value);
+						}
+						else
+						{
+							Error(NXSL_ERR_INDEX_NOT_INTEGER);
+						}
+					}
+					else
+					{
+						Error(NXSL_ERR_NOT_ARRAY);
+					}
+					delete array;
+				}
+				else
+				{
+					Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+				}
+				delete pValue;
+			}
+         else
+         {
+            Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
 			break;
       case OPCODE_CAST:
          pValue = (NXSL_Value *)m_pDataStack->Peek();

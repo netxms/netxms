@@ -123,11 +123,19 @@ public:
 // Array
 //
 
+struct NXSL_ArrayElement
+{
+	int index;
+	NXSL_Value *value;
+};
+
 class LIBNXSL_EXPORTABLE NXSL_Array
 {
 private:
 	int m_refCount;
-	NXSL_Value **m_data;
+	int m_size;
+	int m_allocated;
+	NXSL_ArrayElement *m_data;
 
 public:
 	NXSL_Array();
