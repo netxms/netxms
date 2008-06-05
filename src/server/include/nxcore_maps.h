@@ -52,11 +52,9 @@ class nxMapSrv : public nxMap
 protected:
    int m_nRefCount;
 
-   virtual void CommonInit(void);
-
 public:
    nxMapSrv(DB_RESULT hResult, int nRow);
-   nxMapSrv(DWORD dwMapId, DWORD dwObjectId, const TCHAR *pszName, const TCHAR *pszDescription) : nxMap(dwMapId, dwObjectId, pszName, pszDescription) { }
+   nxMapSrv(DWORD dwMapId, DWORD dwObjectId, const TCHAR *pszName, const TCHAR *pszDescription);
 
    DWORD SaveToDB(void);
    BOOL CheckUserRights(DWORD dwUserId, DWORD dwDesiredAccess);

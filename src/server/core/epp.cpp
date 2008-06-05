@@ -282,6 +282,7 @@ BOOL EPRule::MatchScript(Event *pEvent)
    NXSL_VariableSystem *pLocals, *pGlobals = NULL;
    BOOL bRet = TRUE;
    DWORD i;
+	NetObj *pObject;
 
    if (m_pScript == NULL)
       return TRUE;
@@ -304,6 +305,14 @@ BOOL EPRule::MatchScript(Event *pEvent)
    pLocals->Create(_T("OBJECT_ID"), new NXSL_Value(pEvent->SourceId()));
    pLocals->Create(_T("EVENT_TEXT"), new NXSL_Value((TCHAR *)pEvent->Message()));
    pLocals->Create(_T("USER_TAG"), new NXSL_Value((TCHAR *)pEvent->UserTag()));
+	pObject = FindObjectById(pEvent->SourceId());
+	if (pObject != NULL)
+	{
+		if (pObject->Type() == OBJECT_NODE)
+			m_pScript->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, pObject)));
+	}
+	m_pScript->SetGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, pEvent)));
+	m_pScript->SetGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value);
 
    // Run script
    if (m_pScript->Run(pEnv, pEvent->GetParametersCount(), ppValueList, pLocals, &pGlobals) == 0)

@@ -187,18 +187,33 @@ exit_save:
 
 
 //
+// Constructor for creating map object from scratch
+//
+
+nxMapSrv::nxMapSrv(DWORD dwMapId, DWORD dwObjectId, const TCHAR *pszName, const TCHAR *pszDescription)
+         : nxMap(dwMapId, dwObjectId, pszName, pszDescription)
+{
+	m_nRefCount = 0;
+	m_pfCreateSubmap = CreateSubmapSrv;
+}
+
+
+//
 // Constructor for creaing map object from database
 // Expected field order:
 //     map_id,map_name,description,root_object_id
 //
 
 nxMapSrv::nxMapSrv(DB_RESULT hData, int nRow)
+         : nxMap()
 {
    DB_RESULT hResult;
    DWORD i;
    TCHAR szQuery[1024];
 
-   CommonInit();
+	m_nRefCount = 0;
+	m_pfCreateSubmap = CreateSubmapSrv;
+
    m_dwMapId = DBGetFieldULong(hData, nRow, 0);
    m_pszName = DBGetField(hData, nRow, 1, NULL, 0);
    DecodeSQLString(m_pszName);
@@ -333,18 +348,6 @@ exit_save:
 		DBRollback(g_hCoreDB);
 
    return dwResult;
-}
-
-
-//
-// Common initialization for nxMapSrv constructors
-//
-
-void nxMapSrv::CommonInit(void)
-{
-   nxMap::CommonInit();
-   m_nRefCount = 0;
-   m_pfCreateSubmap = CreateSubmapSrv;
 }
 
 

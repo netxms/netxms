@@ -242,7 +242,7 @@ protected:
    DWORD m_dwNumLinks;
    OBJLINK *m_pLinkList;
 
-   virtual void CommonInit(void);
+   void CommonInit(void);
 
 public:
    nxSubmap();
@@ -319,7 +319,7 @@ protected:
    MUTEX m_mutex;
    SUBMAP_CREATION_CALLBACK m_pfCreateSubmap;
 
-   virtual void CommonInit(void);
+   void CommonInit(void);
 
 public:
    nxMap();

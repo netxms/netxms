@@ -144,7 +144,12 @@ NXSL_Value *NXSL_EventClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
    }
    else if (!strcmp(pszAttr, "parameters"))
    {
-      value = new NXSL_Value(event->GetParameter(0));
+		NXSL_Array *array = new NXSL_Array;
+		DWORD i;
+
+		for(i = 0; i < event->GetParametersCount(); i++)
+			array->Set((int)(i + 1), new NXSL_Value(event->GetParameter(i)));
+      value = new NXSL_Value(array);
    }
    return value;
 }
