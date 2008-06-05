@@ -3,6 +3,8 @@
 *
 
 - Scripts now can be used to form event's message (via %[..] macro)
+- Scripts in event processing policy now has access to node properties
+  via $node variable and to event properties via $event variable
 - Implemented XML encoding for NXCP messages
 - Fixed issues: #201
 
