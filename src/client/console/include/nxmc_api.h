@@ -276,17 +276,6 @@ WX_DECLARE_OBJARRAY(nxmcItemRegistration, nxmcArrayOfRegItems);
 
 
 //
-// Code translation structure
-//
-
-struct CODE_TO_TEXT
-{
-   int code;
-   TCHAR *text;
-};
-
-
-//
 // libnxcl object index structure
 //
 

@@ -1030,6 +1030,21 @@ BOOL LIBNETXMS_EXPORTABLE RegexpMatch(TCHAR *pszStr, TCHAR *pszExpr, BOOL bMatch
 
 
 //
+// Translate given code to text
+//
+
+const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText)
+{
+   int i;
+
+   for(i = 0; pTranslator[i].text != NULL; i++)
+      if (pTranslator[i].code == iCode)
+         return pTranslator[i].text;
+   return pszDefaultText;
+}
+
+
+//
 // Extract option value from string of form option=value;option=value;...
 //
 

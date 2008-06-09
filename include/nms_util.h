@@ -306,6 +306,17 @@ typedef struct
 
 
 //
+// Code translation structure
+//
+
+typedef struct  __CODE_TO_TEXT
+{
+   int code;
+   const TCHAR *text;
+} CODE_TO_TEXT;
+
+
+//
 // getopt() prototype if needed
 //
 
@@ -486,6 +497,12 @@ extern "C"
 	long LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsInt(const TCHAR *optString, const TCHAR *option, long defVal);
 
 	TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length);
+
+#ifdef __cplusplus
+	const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText = _T("Unknown"));
+#else
+	const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText);
+#endif
 
 #ifdef _WIN32
    TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufSize);

@@ -73,17 +73,6 @@ struct NXC_OBJECT_INDEX
 
 
 //
-// Code translation structure
-//
-
-struct CODE_TO_TEXT
-{
-   int iCode;
-   const TCHAR *pszText;
-};
-
-
-//
 // HTTP request
 //
 
@@ -351,7 +340,6 @@ void AddActionLink(HttpResponse &response, const TCHAR *pszSID, const TCHAR *psz
 						 const TCHAR *pszFunction, const TCHAR *pszArgs);
 void AddActionMenu(HttpResponse &response, const TCHAR *sid, ...);
 
-const TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText);
 TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType);
 DWORD *IdListFromString(const TCHAR *pszStr, DWORD *pdwCount);
 BOOL IsListMember(DWORD dwId, DWORD dwCount, DWORD *pdwList);

@@ -158,21 +158,6 @@ TCHAR *BuildSymbolicOIDString(SNMP_MIBObject *pNode, DWORD dwInstance)
 
 
 //
-// Translate given code to text
-//
-
-const TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText)
-{
-   int i;
-
-   for(i = 0; pTranslator[i].pszText != NULL; i++)
-      if (pTranslator[i].iCode == iCode)
-         return pTranslator[i].pszText;
-   return pszDefaultText;
-}
-
-
-//
 // Translate UNIX text to MSDOS (i.e. convert LF to CR/LF)
 //
 

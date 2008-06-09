@@ -66,8 +66,8 @@ BOOL CCondDCIPropDlg::OnInitDialog()
 
 	CDialog::OnInitDialog();
 	
-   for(i = 0; m_ctFunctions[i].pszText != NULL; i++)
-      m_wndComboFunc.AddString(m_ctFunctions[i].pszText);
+   for(i = 0; m_ctFunctions[i].text != NULL; i++)
+      m_wndComboFunc.AddString(m_ctFunctions[i].text);
    m_wndComboFunc.SelectString(-1, CodeToText(m_nFunction, m_ctFunctions, _T("error")));
    EnableDlgItem(this, IDC_EDIT_POLLS, m_nFunction == F_AVERAGE);
 	
@@ -85,10 +85,10 @@ void CCondDCIPropDlg::OnOK()
    int i;
 
    m_wndComboFunc.GetWindowText(szText, 256);
-   for(i = 0; m_ctFunctions[i].pszText != NULL; i++)
-      if (!_tcscmp(szText, m_ctFunctions[i].pszText))
+   for(i = 0; m_ctFunctions[i].text != NULL; i++)
+      if (!_tcscmp(szText, m_ctFunctions[i].text))
       {
-         m_nFunction = m_ctFunctions[i].iCode;
+         m_nFunction = m_ctFunctions[i].code;
          break;
       }
 	CDialog::OnOK();

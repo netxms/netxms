@@ -110,21 +110,6 @@ void SelectListViewItem(CListCtrl *pListCtrl, int iItem)
 
 
 //
-// Translate given code to text
-//
-
-const TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText)
-{
-   int i;
-
-   for(i = 0; pTranslator[i].pszText != NULL; i++)
-      if (pTranslator[i].iCode == iCode)
-         return pTranslator[i].pszText;
-   return pszDefaultText;
-}
-
-
-//
 //
 // Create image list with event severity icons
 //

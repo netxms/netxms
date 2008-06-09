@@ -117,17 +117,6 @@ struct RqData
 
 
 //
-// Code translation structure
-//
-
-struct CODE_TO_TEXT
-{
-   int iCode;
-   TCHAR *pszText;
-};
-
-
-//
 // Default image table
 //
 
@@ -182,7 +171,6 @@ void SelectListViewItem(CListCtrl *pListCtrl, int iItem);
 TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType);
 CSize GetScreenSize(void);
 /*CSize GetWindowSize(CWnd *pWnd);
-const TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText = "Unknown");
 TCHAR *TranslateUNIXText(const TCHAR *pszText);
 void RestoreMDIChildPlacement(CMDIChildWnd *pWnd, WINDOWPLACEMENT *pwp);
 void EnableDlgItem(CDialog *pWnd, int nCtrl, BOOL bEnable);*/

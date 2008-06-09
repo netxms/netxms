@@ -194,17 +194,6 @@ struct RqData
 
 
 //
-// Code translation structure
-//
-
-struct CODE_TO_TEXT
-{
-   int iCode;
-   TCHAR *pszText;
-};
-
-
-//
 // Default image table
 //
 
@@ -337,7 +326,6 @@ TCHAR *BuildSymbolicOIDString(SNMP_MIBObject *pNode, DWORD dwInstance);
 TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType);
 CSize GetWindowSize(CWnd *pWnd);
 void SelectListViewItem(CListCtrl *pListCtrl, int iItem);
-const TCHAR *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText = _T("Unknown"));
 TCHAR *TranslateUNIXText(const TCHAR *pszText);
 void RestoreMDIChildPlacement(CMDIChildWnd *pWnd, WINDOWPLACEMENT *pwp);
 BOOL IsButtonChecked(CDialog *pWnd, int nCtrl);
