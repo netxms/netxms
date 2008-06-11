@@ -1,7 +1,7 @@
 /* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -529,11 +529,17 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
 	Cluster *pCluster;
 	BOOL bAddToSubnet, bSyntheticMask = FALSE;
 
+	DbgPrintf(5, _T("Node::CreateNewInterface(%08X, %08X, %s, %d, %d) called for node %s [%d]"),
+	          dwIpAddr, dwNetMask, szName, dwIndex, dwType, m_szName, m_dwId);
+
    // Find subnet to place interface object to
    if (dwIpAddr != 0)
    {
 		pCluster = GetMyCluster();
 		bAddToSubnet = (pCluster != NULL) ? !pCluster->IsSyncAddr(dwIpAddr) : TRUE;
+		DbgPrintf(5, _T("Node::CreateNewInterface: node=%s [%d] cluster=%s [%d] add=%d"),
+		          m_szName, m_dwId, (pCluster != NULL) ? pCluster->Name() : _T("(null)"),
+					 (pCluster != NULL) ? pCluster->Id() : 0, bAddToSubnet);
 		if (bAddToSubnet)
 		{
 			pSubnet = FindSubnetForNode(dwIpAddr);
@@ -553,8 +559,7 @@ void Node::CreateNewInterface(DWORD dwIpAddr, DWORD dwNetMask, char *szName,
 						TCHAR szBuffer[16];
 
 						// Multicast address??
-						DbgPrintf(2, 
-									 "Attempt to create interface object with multicast address %s", 
+						DbgPrintf(2, _T("Attempt to create interface object with multicast address %s"), 
 									 IpToStr(dwIpAddr, szBuffer));
 					}
 				}
@@ -2994,8 +2999,12 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 {
 	Subnet *pSubnet;
 	Interface *pInterface;
+	Cluster *pCluster;
 	NetObj **ppUnlinkList;
 	int i, j, count;
+	BOOL isSync;
+
+	pCluster = GetMyCluster();
 
 	// Check if we have subnet bindings for all interfaces
 	for(i = 0; i < pIfList->iNumEntries; i++)
@@ -3009,17 +3018,27 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 				break;	// Something goes really wrong
 			}
 
+			// Is cluster interconnect interface?
+			isSync = (pCluster != NULL) ? pCluster->IsSyncAddr(pInterface->IpAddr()) : FALSE;
+
 			pSubnet = FindSubnetForNode(pIfList->pInterfaces[i].dwIpAddr);
 			if (pSubnet != NULL)
 			{
-				if (pSubnet->IsSyntheticMask())
+				if (isSync)
 				{
-					DbgPrintf(4, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
-					          pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
-					pSubnet->SetCorrectMask(pInterface->IpAddr() & pInterface->IpNetMask(), pInterface->IpNetMask());
+					pSubnet = NULL;	// No further checks on this subnet
+				}
+				else
+				{
+					if (pSubnet->IsSyntheticMask())
+					{
+						DbgPrintf(4, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
+									 pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
+						pSubnet->SetCorrectMask(pInterface->IpAddr() & pInterface->IpNetMask(), pInterface->IpNetMask());
+					}
 				}
 			}
-			else
+			else if (!isSync)
 			{
 				// Create subnet
 				pSubnet = new Subnet(pIfList->pInterfaces[i].dwIpAddr & pIfList->pInterfaces[i].dwIpNetMask,
@@ -3056,6 +3075,13 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 				{
 					if (pSubnet->IpAddr() == (m_pChildList[j]->IpAddr() & pSubnet->IpNetMask()))
 					{
+						if (pCluster != NULL)
+						{
+							if (pCluster->IsSyncAddr(m_pChildList[j]->IpAddr()))
+							{
+								j = (int)m_dwChildCount;	// Cause to unbind from this subnet
+							}
+						}
 						break;
 					}
 				}

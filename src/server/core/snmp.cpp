@@ -481,15 +481,23 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
          if (SnmpGet(dwVersion, pTransport, szCommunity, szOid, NULL, 0,
                       &pIfList->pInterfaces[i].dwType, sizeof(DWORD),
                       FALSE, FALSE) != SNMP_ERR_SUCCESS)
-            break;
+			{
+				pIfList->pInterfaces[i].dwType = IFTYPE_OTHER;
+			}
 
          // MAC address
          sprintf(szOid, ".1.3.6.1.2.1.2.2.1.6.%d", pIfList->pInterfaces[i].dwIndex);
          memset(szBuffer, 0, MAC_ADDR_LENGTH);
          if (SnmpGet(dwVersion, pTransport, szCommunity, szOid, NULL, 0,
-                      szBuffer, 256, FALSE, TRUE) != SNMP_ERR_SUCCESS)
-            break;
-         memcpy(pIfList->pInterfaces[i].bMacAddr, szBuffer, MAC_ADDR_LENGTH);
+                      szBuffer, 256, FALSE, TRUE) == SNMP_ERR_SUCCESS)
+			{
+	         memcpy(pIfList->pInterfaces[i].bMacAddr, szBuffer, MAC_ADDR_LENGTH);
+			}
+			else
+			{
+				// Unable to get MAC address
+	         memset(pIfList->pInterfaces[i].bMacAddr, 0, MAC_ADDR_LENGTH);
+			}
       }
 
       if (i == iNumIf)
