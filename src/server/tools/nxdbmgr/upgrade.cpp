@@ -87,6 +87,99 @@ static BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
 
 
 //
+// Set primary key constraint
+//
+
+static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
+{
+	TCHAR query[4096];
+
+	if (g_iSyntax == DB_SYNTAX_SQLITE)
+		return TRUE;	// SQLite does not support adding constraints
+			
+	_sntprintf(query, 4096, _T("ALTER TABLE %s ADD PRIMARY KEY (%s)"), table, key);
+	return SQLQuery(query);
+}
+
+
+//
+// Upgrade from V80 to V81
+//
+
+static BOOL H_UpgradeFromV80(void)
+{
+	DB_RESULT hResult;
+	TCHAR query[1024], buffer[1024];
+	int i;
+		
+	// Update dci_schedules table			
+	hResult = SQLSelect(_T("SELECT item_id,schedule FROM dci_schedules"));
+	if (hResult != NULL)
+	{
+		if (!SQLQuery(_T("DELETE FROM dci_schedules")))
+		   if (!g_bIgnoreErrors)
+		      return FALSE;
+		      
+		if (!SQLQuery(_T("ALTER TABLE dci_schedules ADD schedule_id integer not null")))
+		   if (!g_bIgnoreErrors)
+		      return FALSE;
+		      
+		for(i = 0; i < DBGetNumRows(hResult); i++)
+		{
+			_sntprintf(query, 1024, _T("INSERT INTO dci_schedules (item_id,schedule_id,schedule) VALUES(%d,%d,'%s')"),
+			           DBGetFieldULong(hResult, i, 0), i + 1, DBGetField(hResult, i, 1, buffer, 1024));
+			if (!SQLQuery(query))
+				if (!g_bIgnoreErrors)
+				   return FALSE;
+		}
+		DBFreeResult(hResult);
+	}
+	else
+	{
+      if (!g_bIgnoreErrors)
+         return FALSE;
+	}
+	
+	// Set primary key constraints
+	if (!SetPrimaryKey(_T("dci_schedules"), _T("item_id,schedule_id")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+         
+	if (!SetPrimaryKey(_T("address_lists"), _T("list_type,community_id,addr_type,addr1,addr2")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+         
+	if (!SetPrimaryKey(_T("lpp_associations"), _T("lpp_id,node_id,log_file")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+	
+	// Create new tables
+	if (!CreateTable(_T("CREATE TABLE object_custom_attributes (")
+	                 _T("object_id integer not null,")
+	                 _T("attr_name varchar(127) not null,")
+	                 _T("attr_value $SQL:TEXT not null,")
+	                 _T("PRIMARY KEY(object_id,attr_name))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!CreateTable(_T("CREATE TABLE web_maps (")
+	                 _T("id integer not null,")
+	                 _T("title varchar(63) not null,")
+	                 _T("properties $SQL:TEXT not null,")
+	                 _T("data $SQL:TEXT not null,")
+	                 _T("PRIMARY KEY(id))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='81' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V79 to V80
 //
 
@@ -3532,6 +3625,7 @@ static struct
    { 77, H_UpgradeFromV77 },
    { 78, H_UpgradeFromV78 },
    { 79, H_UpgradeFromV79 },
+   { 80, H_UpgradeFromV80 },
    { 0, NULL }
 };
 

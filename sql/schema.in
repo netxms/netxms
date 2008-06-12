@@ -114,6 +114,19 @@ CREATE TABLE object_properties
 
 
 /*
+** Object custom attributes
+*/
+
+CREATE TABLE object_custom_attributes
+(
+	object_id integer not null,
+	attr_name varchar(127) not null,
+	attr_value SQL_TEXT not null,
+	PRIMARY KEY(object_id,attr_name)
+) TABLE_TYPE;
+
+
+/*
 ** Zone object
 */
 
@@ -476,8 +489,10 @@ CREATE TABLE items
 
 CREATE TABLE dci_schedules
 (
+	schedule_id integer not null,
 	item_id integer not null,
-	schedule varchar(255) not null
+	schedule varchar(255) not null,
+	PRIMARY KEY(item_id,schedule_id)
 ) TABLE_TYPE;
 
 
@@ -1067,7 +1082,8 @@ CREATE TABLE address_lists
 	community_id integer not null, // community id for snmp community addr list, otherwise 0
 	addr_type integer not null, // 0 - addr/mask, 1 - address range
 	addr1 varchar(15) not null,
-	addr2 varchar(15) not null
+	addr2 varchar(15) not null,
+	PRIMARY KEY(list_type,community_id,addr_type,addr1,addr2)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_address_lists_list_type ON address_lists(list_type);
@@ -1151,7 +1167,8 @@ CREATE TABLE lpp_associations
 (
 	lpp_id integer not null,
 	node_id integer not null,
-	log_file varchar(255) not null
+	log_file varchar(255) not null,
+	PRIMARY KEY(lpp_id,node_id,log_file)
 ) TABLE_TYPE;
 
 
@@ -1243,3 +1260,18 @@ CREATE TABLE snmp_communities
 	community varchar(255) not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+
+/*
+** Maps for XULRunner client and web clients
+*/
+
+CREATE TABLE web_maps
+(
+	id integer not null,
+	title varchar(63) not null,
+	properties SQL_TEXT not null,
+	data SQL_TEXT not null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;
+

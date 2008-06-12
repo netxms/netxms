@@ -561,8 +561,8 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
       for(i = 0; i < m_dwNumSchedules; i++)
       {
          pszEscSchedule = EncodeSQLString(m_ppScheduleList[i]);
-         sprintf(pszQuery, "INSERT INTO dci_schedules (item_id,schedule) VALUES (%d,'%s')",
-                 m_dwId, pszEscSchedule);
+         sprintf(pszQuery, "INSERT INTO dci_schedules (item_id,schedule_id,schedule) VALUES (%d,%d,'%s')",
+                 m_dwId, i + 1, pszEscSchedule);
          free(pszEscSchedule);
          DBQuery(hdb, pszQuery);
       }
@@ -683,6 +683,8 @@ void DCItem::DeleteFromDB(void)
    sprintf(szQuery, "DELETE FROM idata_%d WHERE item_id=%d", m_pNode->Id(), m_dwId);
    QueueSQLRequest(szQuery);
    sprintf(szQuery, "DELETE FROM thresholds WHERE item_id=%d", m_dwId);
+   QueueSQLRequest(szQuery);
+   sprintf(szQuery, "DELETE FROM dci_schedules WHERE item_id=%d", m_dwId);
    QueueSQLRequest(szQuery);
 }
 

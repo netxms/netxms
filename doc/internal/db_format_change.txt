@@ -1,4 +1,32 @@
 *************
+* 80 ==> 81 *
+*************
+
+- New column added to table "dci_schedules":
+	ALTER TABLE dci_schedules ADD schedule_id integer not null
+- Set primary key constraints:
+	dci_schedules    ---> item_id,schedule_id
+	address_lists    ---> list_type,community_id,addr_type,addr1,addr2
+	lpp_associations ---> lpp_id,node_id,log_file
+- New tables added:
+	CREATE TABLE object_custom_attributes
+	(
+   	object_id integer not null,
+   	attr_name varchar(127) not null,
+   	attr_value SQL_TEXT not null,
+   	PRIMARY KEY(object_id,attr_name)
+	) TABLE_TYPE;
+	CREATE TABLE web_maps
+	(
+	   id integer not null,
+	   title varchar(63) not null,
+	   properties SQL_TEXT not null,
+	   data SQL_TEXT not null,
+	   PRIMARY KEY(id)
+	) TABLE_TYPE;
+
+
+*************
 * 79 ==> 80 *
 *************
 
