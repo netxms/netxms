@@ -180,6 +180,7 @@ void CloseWMIQuery(WMI_QUERY_CONTEXT *ctx)
 
 //
 // Handler for generic WMI query
+// Format: WMI.Query(namespace, query, property)
 //
 
 static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
@@ -227,6 +228,10 @@ static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 
 					rc = SYSINFO_RC_SUCCESS;
 				}
+				else
+				{
+					NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("WMI: cannot get property \"%s\" from query \"%s\" in namespace \"%s\""), prop, query, ns);
+				}
 				free(pwstrProperty);
 			}
 			else
@@ -235,8 +240,16 @@ static LONG H_WMIQuery(const char *cmd, const char *arg, char *value)
 			}
 			pClassObject->Release();
 		}
+		else
+		{
+			NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("WMI: no objects returned from query \"%s\" in namespace \"%s\""), query, ns);
+		}
 		pEnumObject->Release();
 		CloseWMIQuery(&ctx);
+	}
+	else
+	{
+		NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("WMI: query \"%s\" in namespace \"%s\" failed"), query, ns);
 	}
 	free(pwszNamespace);
 	free(pwszQuery);
