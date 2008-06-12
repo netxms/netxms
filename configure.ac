@@ -233,7 +233,7 @@ AC_ARG_ENABLE(debug,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle"
-	MODULES="libnxsnmp libnxsl server agent libnxmap libnxcl nxevent nxpush nxreport nxmibc client console nxhttpd nxscript"
+	MODULES="libnxsnmp libnxsl server agent libnxmap libnxcl nxevent nxpush nxreport nxmibc client console nxhttpd nxscript nxcptest"
 	SUBAGENT_DIRS="linux freebsd openbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
@@ -706,6 +706,13 @@ if test "x$NEED_ZLIB" = "xyes"; then
 	AC_CHECK_LIB(z, deflate)
 fi
 
+HAVE_LIBEXPAT=yes
+AC_CHECK_HEADER(expat.h,,HAVE_LIBEXPAT=no)
+AC_CHECK_LIB(expat, XML_Parse, [], [ HAVE_LIBEXPAT=no ])
+if test "x$HAVE_LIBEXPAT" = "xyes"; then
+	AC_DEFINE(HAVE_LIBEXPAT,1,Define to 1 if you have working libexpat)
+	MODULES="$MODULES nxcptest"
+fi
 
 #--------------------------------------------------------------------
 # Checks for header files
@@ -1603,4 +1610,8 @@ if test "x${BUILD_UNICODE}" = "xyes"; then
 else
 	echo "Build UNICODE libraries : NO"
 fi
-
+if test "x${HAVE_LIBEXPAT}" = "xyes"; then
+	echo "XML support in NXCP     : YES"
+else
+	echo "XML support in NXCP     : NO"
+fi

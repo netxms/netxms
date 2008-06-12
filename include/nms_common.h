@@ -159,6 +159,10 @@ typedef int socklen_t;
 #define O_TRUNC      0x0800
 #endif
 
+#ifndef UNDER_CE
+#define HAVE_LIBEXPAT 1
+#endif
+
 #elif defined(_NETWARE)
 
 /********** NETWARE ********************/
