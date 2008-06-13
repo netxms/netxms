@@ -14,4 +14,5 @@ EXTRA_DIST = \
 	event_code_ranges.txt \
 	ipso.txt \
 	netxms_architecture.vsd \
+	nxcp_command_ranges.txt \
 	unicode.txt
