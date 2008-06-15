@@ -89,6 +89,7 @@
 #define ERR_MAILFORMED_COMMAND      ((DWORD)911)
 #define ERR_SOCKET_ERROR            ((DWORD)912)
 #define ERR_BAD_ARGUMENTS           ((DWORD)913)
+#define ERR_SUBAGENT_LOAD_FAILED    ((DWORD)914)
 
 
 //

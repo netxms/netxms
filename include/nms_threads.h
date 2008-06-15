@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003 Victor Kirhenshtein
+** Copyright (C) 2003-2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nms_threads.h
+** File: nms_threads.h
 **
 **/
 
@@ -37,10 +37,6 @@
 // Related datatypes and constants
 //
 
-typedef HANDLE MUTEX;
-typedef HANDLE THREAD;
-typedef HANDLE CONDITION;
-
 #define INVALID_MUTEX_HANDLE        INVALID_HANDLE_VALUE
 #define INVALID_CONDITION_HANDLE    INVALID_HANDLE_VALUE
 #define INVALID_THREAD_HANDLE       (NULL)
@@ -59,6 +55,15 @@ typedef unsigned int THREAD_ID;
 #define THREAD_CALL
 #else
 #define THREAD_CALL     __stdcall
+
+typedef HANDLE MUTEX;
+typedef HANDLE CONDITION;
+struct netxms_thread_t
+{
+	HANDLE handle;
+	THREAD_ID id;
+};
+typedef struct netxms_thread_t *THREAD;
 
 typedef struct
 {
@@ -119,16 +124,26 @@ inline BOOL ThreadCreate(THREAD_RESULT (THREAD_CALL *start_address)(void *), int
 
 inline THREAD ThreadCreateEx(THREAD_RESULT (THREAD_CALL *start_address)(void *), int stack_size, void *args)
 {
-   THREAD_ID dwThreadId;
+   THREAD thread;
 
+	thread = (THREAD)malloc(sizeof(struct netxms_thread_t));
 #ifdef UNDER_CE
-	return CreateThread(NULL, (DWORD)stack_size, start_address, args, 0, &dwThreadId);
+	thread->handle = CreateThread(NULL, (DWORD)stack_size, start_address, args, 0, &thread->id);
+	if (thread->handle == NULL)
+	{
 #else
 	THREAD_START_DATA *data = (THREAD_START_DATA *)malloc(sizeof(THREAD_START_DATA));
 	data->start_address = start_address;
 	data->args = args;
-   return (HANDLE)_beginthreadex(NULL, stack_size, SEHThreadStarter, data, 0, &dwThreadId);
+   thread->handle = (HANDLE)_beginthreadex(NULL, stack_size, SEHThreadStarter, data, 0, &thread->id);
+	if ((thread->handle == (HANDLE)-1) || (thread->handle == 0))
+	{
+		free(data);
 #endif
+		free(thread);
+		thread = INVALID_THREAD_HANDLE;
+	}
+	return thread;
 }
 
 inline void ThreadExit(void)
@@ -140,13 +155,19 @@ inline void ThreadExit(void)
 #endif
 }
 
-inline void ThreadJoin(THREAD hThread)
+inline void ThreadJoin(THREAD thread)
 {
-   if (hThread != INVALID_THREAD_HANDLE)
+   if (thread != INVALID_THREAD_HANDLE)
    {
-      WaitForSingleObject(hThread, INFINITE);
-      CloseHandle(hThread);
+      WaitForSingleObject(thread->handle, INFINITE);
+      CloseHandle(thread->handle);
+		free(thread);
    }
+}
+
+inline THREAD_ID ThreadId(THREAD thread)
+{
+   return (thread != INVALID_THREAD_HANDLE) ? thread->id : 0;
 }
 
 inline MUTEX MutexCreate(void)
