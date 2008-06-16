@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: trap.cpp
+** File: trap.cpp
 **
 **/
 
@@ -106,6 +106,8 @@ void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList)
 //        x - Hex integer
 //        a - IP address
 //        i - Object ID
+//        D - 64-bit decimal integer
+//        X - 64-bit hex integer
 //
 
 void SendTrap(DWORD dwEventCode, const char *pszFormat, va_list args)
@@ -126,10 +128,22 @@ void SendTrap(DWORD dwEventCode, const char *pszFormat, va_list args)
             ppArgList[i] = (char *)malloc(16);
             sprintf(ppArgList[i], "%d", va_arg(args, LONG));
             break;
+         case 'D':
+            ppArgList[i] = (char *)malloc(24);
+            sprintf(ppArgList[i], INT64_FMT, va_arg(args, INT64));
+            break;
          case 'x':
          case 'i':
             ppArgList[i] = (char *)malloc(16);
             sprintf(ppArgList[i], "0x%08X", va_arg(args, DWORD));
+            break;
+         case 'X':
+            ppArgList[i] = (char *)malloc(16);
+#ifdef _WIN32
+            sprintf(ppArgList[i], "0x%016I64X", va_arg(args, QWORD));
+#else
+            sprintf(ppArgList[i], "0x%016llX", va_arg(args, QWORD));
+#endif
             break;
          case 'a':
             ppArgList[i] = (char *)malloc(16);
