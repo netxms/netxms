@@ -159,6 +159,8 @@ src/console/nxuilib/sounds/ring1.wav -text svneol=unset#unset
 src/console/nxuilib/sounds/ring2.wav -text svneol=unset#unset
 src/console/nxuilib/sounds/siren1.wav -text svneol=unset#unset
 src/console/nxuilib/sounds/siren2.wav -text svneol=unset#unset
+src/console/win32/ObjectPropsCustomAttrs.cpp -text
+src/console/win32/ObjectPropsCustomAttrs.h -text
 src/console/win32/icons/RuleManager.ico -text
 src/console/win32/icons/SeverityCritical.ico -text
 src/console/win32/icons/SeverityMajor.ico -text

@@ -14,6 +14,7 @@ class CEditVariableDlg : public CDialog
 {
 // Construction
 public:
+	const TCHAR * m_pszTitle;
 	BOOL m_bNewVariable;
 	CEditVariableDlg(CWnd* pParent = NULL);   // standard constructor
 

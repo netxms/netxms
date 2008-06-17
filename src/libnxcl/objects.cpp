@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -58,6 +58,7 @@ void DestroyObject(NXC_OBJECT *pObject)
    safe_free(pObject->pAccessList);
    safe_free(pObject->pszComments);
 	safe_free(pObject->pdwTrustedNodes);
+	delete pObject->pCustomAttrs;
    free(pObject);
 }
 
@@ -162,6 +163,7 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
    safe_free(pObject->pAccessList);
    safe_free(pObject->pszComments);
 	safe_free(pObject->pdwTrustedNodes);
+	delete pObject->pCustomAttrs;
    memcpy(pObject, pNewObject, sizeof(NXC_OBJECT));
    free(pNewObject);
 }
@@ -174,7 +176,7 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
 static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 {
    NXC_OBJECT *pObject;
-   DWORD i, dwId1, dwId2;
+   DWORD i, dwId1, dwId2, dwCount;
 
    // Allocate memory for new object structure
    pObject = (NXC_OBJECT *)malloc(sizeof(NXC_OBJECT));
@@ -207,6 +209,14 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 	{
 		pObject->pdwTrustedNodes = (DWORD *)malloc(sizeof(DWORD) * pObject->dwNumTrustedNodes);
 		pMsg->GetVariableInt32Array(VID_TRUSTED_NODES, pObject->dwNumTrustedNodes, pObject->pdwTrustedNodes);
+	}
+
+	// Custom attributes
+	pObject->pCustomAttrs = new StringMap;
+	dwCount = pMsg->GetVariableLong(VID_NUM_CUSTOM_ATTRIBUTES);
+	for(i = 0, dwId1 = VID_CUSTOM_ATTRIBUTES_BASE; i < dwCount; i++, dwId1 += 2)
+	{
+		pObject->pCustomAttrs->SetPreallocated(pMsg->GetVariableStr(dwId1), pMsg->GetVariableStr(dwId1 + 1));
 	}
 
    // Parents
@@ -802,6 +812,15 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_NUM_TRUSTED_NODES, pUpdate->dwNumTrustedNodes);
 		msg.SetVariableToInt32Array(VID_TRUSTED_NODES, pUpdate->dwNumTrustedNodes, pUpdate->pdwTrustedNodes);
    }
+   if (pUpdate->qwFlags & OBJ_UPDATE_CUSTOM_ATTRS)
+   {
+      msg.SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, pUpdate->pCustomAttrs->Size());
+      for(i = 0, dwId1 = VID_CUSTOM_ATTRIBUTES_BASE; i < pUpdate->pCustomAttrs->Size(); i++)
+      {
+         msg.SetVariable(dwId1++, pUpdate->pCustomAttrs->GetKeyByIndex(i));
+         msg.SetVariable(dwId1++, pUpdate->pCustomAttrs->GetValueByIndex(i));
+      }
+   }
 
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);
@@ -1255,7 +1274,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
 {
    FILE *hFile;
    OBJECT_CACHE_HEADER hdr;
-   DWORD i, dwResult, dwNumObjects, dwSize;
+   DWORD i, j, dwResult, dwNumObjects, dwSize;
    INDEX *pList;
 
    hFile = _tfopen(pszFile, _T("wb"));
@@ -1289,6 +1308,20 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
 
 			if (pList[i].pObject->dwNumTrustedNodes > 0)
 				fwrite(pList[i].pObject->pdwTrustedNodes, pList[i].pObject->dwNumTrustedNodes, sizeof(DWORD), hFile);
+
+			// Custom attributes
+			dwSize = pList[i].pObject->pCustomAttrs->Size();
+         fwrite(&dwSize, 1, sizeof(DWORD), hFile);
+			for(j = 0; j < pList[i].pObject->pCustomAttrs->Size(); j++)
+			{
+            dwSize = _tcslen(pList[i].pObject->pCustomAttrs->GetKeyByIndex(j)) * sizeof(TCHAR);
+            fwrite(&dwSize, 1, sizeof(DWORD), hFile);
+            fwrite(pList[i].pObject->pCustomAttrs->GetKeyByIndex(j), 1, dwSize, hFile);
+
+            dwSize = _tcslen(pList[i].pObject->pCustomAttrs->GetValueByIndex(j)) * sizeof(TCHAR);
+            fwrite(&dwSize, 1, sizeof(DWORD), hFile);
+            fwrite(pList[i].pObject->pCustomAttrs->GetValueByIndex(j), 1, dwSize, hFile);
+			}
 
          switch(pList[i].pObject->iClass)
          {
@@ -1353,7 +1386,8 @@ void NXCL_Session::LoadObjectsFromCache(const TCHAR *pszFile)
    FILE *hFile;
    OBJECT_CACHE_HEADER hdr;
    NXC_OBJECT object;
-   DWORD i, dwSize;
+   DWORD i, j, dwSize, dwCount;
+	TCHAR *key, *value;
 
    hFile = _tfopen(pszFile, _T("rb"));
    if (hFile != NULL)
@@ -1394,6 +1428,24 @@ void NXCL_Session::LoadObjectsFromCache(const TCHAR *pszFile)
 						else
 						{
 							object.pdwTrustedNodes = NULL;
+						}
+
+						// Custom attributes
+						object.pCustomAttrs = new StringMap;
+                  fread(&dwCount, 1, sizeof(DWORD), hFile);
+						for(j = 0; j < dwCount; j++)
+						{
+                     fread(&dwSize, 1, sizeof(DWORD), hFile);
+                     key = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
+                     fread(key, 1, dwSize, hFile);
+                     key[dwSize / sizeof(TCHAR)] = 0;
+
+                     fread(&dwSize, 1, sizeof(DWORD), hFile);
+                     value = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
+                     fread(value, 1, dwSize, hFile);
+                     value[dwSize / sizeof(TCHAR)] = 0;
+
+							object.pCustomAttrs->SetPreallocated(key, value);
 						}
 
                   switch(object.iClass)

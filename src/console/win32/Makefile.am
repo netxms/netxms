@@ -119,6 +119,7 @@ EXTRA_DIST = \
 	ObjectDepView.cpp ObjectDepView.h \
 	ObjectOverview.cpp ObjectOverview.h \
 	ObjectPropCaps.cpp ObjectPropCaps.h \
+	ObjectPropsCustomAttrs.cpp ObjectPropsCustomAttrs.h \
 	ObjectPropsGeneral.cpp ObjectPropsGeneral.h \
 	ObjectPropSheet.cpp ObjectPropSheet.h \
 	ObjectPropsPresentation.cpp ObjectPropsPresentation.h \

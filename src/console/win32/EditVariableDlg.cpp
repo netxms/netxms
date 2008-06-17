@@ -23,6 +23,7 @@ CEditVariableDlg::CEditVariableDlg(CWnd* pParent /*=NULL*/)
 	m_strValue = _T("");
 	//}}AFX_DATA_INIT
    m_bNewVariable = FALSE;
+	m_pszTitle = NULL;
 }
 
 
@@ -59,6 +60,8 @@ BOOL CEditVariableDlg::OnInitDialog()
       SendDlgItemMessage(IDC_EDIT_NAME, EM_SETREADONLY, TRUE, 0);
       ::SetFocus(::GetDlgItem(m_hWnd, IDC_EDIT_VALUE));
    }
+	if (m_pszTitle != NULL)
+		SetWindowText(m_pszTitle);
 	return m_bNewVariable;
 }
 

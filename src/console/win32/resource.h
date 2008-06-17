@@ -260,6 +260,7 @@
 #define IDD_SELECT_MAP                  386
 #define IDA_MAP_MANAGER                 387
 #define IDD_CREATE_NETMAP               388
+#define IDD_OBJECT_CUSTOM_ATTRS         389
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -984,9 +985,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        389
+#define _APS_NEXT_RESOURCE_VALUE        390
 #define _APS_NEXT_COMMAND_VALUE         33100
-#define _APS_NEXT_CONTROL_VALUE         1529
+#define _APS_NEXT_CONTROL_VALUE         1532
 #define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif

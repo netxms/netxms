@@ -616,6 +616,10 @@ SOURCE=.\ObjectPropCaps.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjectPropsCustomAttrs.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ObjectPropsGeneral.cpp
 # End Source File
 # Begin Source File
@@ -1310,6 +1314,10 @@ SOURCE=.\ObjectOverview.h
 # Begin Source File
 
 SOURCE=.\ObjectPropCaps.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ObjectPropsCustomAttrs.h
 # End Source File
 # Begin Source File
 

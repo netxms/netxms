@@ -80,6 +80,7 @@
 #include "SituationManager.h"
 #include "MapManager.h"
 #include "ObjectPropsTrustedNodes.h"
+#include "ObjectPropsCustomAttrs.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1392,6 +1393,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
    CCondPropsScript wndCondScript;
 	CClusterPropsGeneral wndClusterGeneral;
 	CClusterPropsResources wndClusterResources;
+	CObjectPropsCustomAttrs wndCustomAttrs;
    NXC_OBJECT *pObject;
 
    pObject = NXCFindObjectById(g_hSession, dwObjectId);
@@ -1520,6 +1522,10 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
       wndObjectTrustedNodes.m_dwNumNodes = pObject->dwNumTrustedNodes;
       wndObjectTrustedNodes.m_pdwNodeList = pObject->pdwTrustedNodes;
       wndPropSheet.AddPage(&wndObjectTrustedNodes);
+
+      // Create "Custom Attributes" tab
+      wndCustomAttrs.m_pObject = pObject;
+      wndPropSheet.AddPage(&wndCustomAttrs);
 
       // Create "Presentation" tab
 /*      wndObjectPresentation.m_dwImageId = pObject->dwImage;
