@@ -111,6 +111,12 @@ AC_ARG_WITH(mdebug,
 	CPPFLAGS="$CPPFLAGS -DNETXMS_MEMORY_DEBUG"
 ])
 
+AC_ARG_WITH(private,
+[AS_HELP_STRING(--with-private,include private sources into build)],
+[
+	COMPONENTS="$COMPONENTS private"
+])
+
 AC_ARG_WITH(sqlite,
 [AS_HELP_STRING(--with-sqlite,build SQLite database driver)],
 [ if test "x$withval" != "xno" ; then
@@ -404,6 +410,11 @@ fi
 check_substr "$COMPONENTS" "oracle"
 if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS oracle"
+fi
+
+check_substr "$COMPONENTS" "private"
+if test $? = 0; then
+	MODULES="$MODULES private"
 fi
 
 
@@ -1539,6 +1550,11 @@ AC_CONFIG_FILES([
 	tools/Makefile
 ])
 
+if test -d src/private; then
+	PRIVATE=`cat src/private/configure.files`
+	AC_CONFIG_FILES([$PRIVATE])
+fi
+
 AC_OUTPUT
 
 echo "Updating libtool"
@@ -1549,6 +1565,11 @@ if test "x$CC" = "xgcc" && test "x$PLATFORM" = "xHP-UX"; then
 	sed "s,hardcode_libdir_flag_spec_ld=,#hardcode_libdir_flag_spec_ld=,g" < ./libtool > libtool.new && mv libtool.new libtool && chmod +x ./libtool
 fi
 
+# Patch config.status
+if test -d src/private; then
+	PRIVATE=`cat src/private/configure.files`
+	$PERL tools/patch_config.status.pl $PRIVATE < config.status > config.status.temp && mv config.status.temp config.status && chmod +x ./config.status
+fi
 
 #--------------------------------------------------------------------
 # Print summary

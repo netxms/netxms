@@ -14,6 +14,7 @@ EXTRA_DIST = \
 	create_ssa_list.sh \
 	mc.pl \
 	nwmkimp.pl \
+	patch_config.status.pl \
 	sharIt \
 	stub.sh \
 	update_xrc.pl

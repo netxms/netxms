@@ -34,5 +34,14 @@ echo "- autoheader." &&
 $AUTOHEADER &&
 echo "- automake." &&
 $AUTOMAKE -a &&
-chmod 755 configure &&
+chmod 755 configure
+
+if test -d src/private; then
+	FILES=`cat src/private/configure.files`
+	for file in $FILES; do
+		echo "Processing $file"
+		$AUTOMAKE $file
+	done
+fi
+
 exit $?
