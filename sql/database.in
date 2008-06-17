@@ -1,0 +1,59 @@
+/*
+** DB-specific settings for database initialization script.
+**
+** ex: syntax=c
+*/
+
+// Define common macros for uncommon data types
+// and database syntax type
+#if defined(DB_MSSQL)
+
+#define DB_SYNTAX	'MSSQL'
+#define SQL_TEXT	text
+#define SQL_INT64	bigint
+#define TABLE_TYPE
+
+#elif defined(DB_POSTGRESQL)
+
+#define DB_SYNTAX	'PGSQL'
+#define SQL_TEXT	varchar // change it to oid?
+#define SQL_INT64	bigint
+#define TABLE_TYPE
+
+#elif defined(DB_ORACLE)
+
+#define DB_SYNTAX	'ORACLE'
+#define SQL_TEXT	clob
+#define SQL_INT64	number(20)
+#define TABLE_TYPE
+
+#elif defined(DB_SQLITE)
+
+#define DB_SYNTAX	'SQLITE'
+#define SQL_TEXT	varchar
+#define SQL_INT64	number(20)
+#define TABLE_TYPE
+
+#elif defined(DB_MYSQL)
+
+#define DB_SYNTAX	'MYSQL'
+#define SQL_TEXT	text
+#define SQL_INT64	bigint
+#define TABLE_TYPE
+//#define TABLE_TYPE	TYPE=InnoDB
+
+#else
+
+#error Database type should be defined
+
+#endif
+
+// String concatenation for multi-line texts
+#if defined(DB_MSSQL)
+#define CONCAT +
+#elif defined(DB_ORACLE) || defined(DB_SQLITE)
+#define CONCAT ||
+#else
+#define CONCAT
+#endif
+

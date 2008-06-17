@@ -54,6 +54,7 @@ packages/freebsd/files/nxagentd.in -text
 packages/freebsd/files/nxhttpd.in -text
 sql/Makefile.msvc.w32 -text
 sql/Makefile.w32 -text
+sql/database.in -text
 sql/dbinit.in -text
 sql/events.in -text
 sql/images.in -text
