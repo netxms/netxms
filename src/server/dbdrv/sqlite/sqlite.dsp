@@ -55,7 +55,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 sqlite.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib libnetxms.lib /nologo /dll /machine:I386 /out:"Release/sqlite.ddr" /libpath:"..\..\..\libnetxms\Release"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib libnetxms.lib /nologo /dll /machine:I386 /out:"Release/sqlite.ddr" /libpath:"..\..\..\libnetxms\Release"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -86,7 +86,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 sqlite_dbg.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib libnetxms.lib /nologo /dll /debug /machine:I386 /out:"Debug/sqlite.ddr" /pdbtype:sept /libpath:"..\..\..\libnetxms\Debug"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib libnetxms.lib /nologo /dll /debug /machine:I386 /out:"Debug/sqlite.ddr" /pdbtype:sept /libpath:"..\..\..\libnetxms\Debug"
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -119,7 +119,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib sqlite.lib /nologo /dll /debug /machine:I386 /out:"Debug/sqlite.ddr" /pdbtype:sept /libpath:"C:\SQLite\Debug"
-# ADD LINK32 sqlite_dbg.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib libnetxms.lib /nologo /dll /debug /machine:I386 /out:"Debug64/sqlite.ddr" /pdbtype:sept /machine:AMD64
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib libnetxms.lib /nologo /dll /debug /machine:I386 /out:"Debug64/sqlite.ddr" /pdbtype:sept /machine:AMD64
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
@@ -153,7 +153,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib sqlite.lib /nologo /dll /machine:I386 /out:"Release/sqlite.ddr" /libpath:"C:\SQLite\Release"
-# ADD LINK32 bufferoverflowU.lib sqlite.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib libnetxms.lib /nologo /dll /machine:I386 /out:"Release64/sqlite.ddr" /machine:AMD64
+# ADD LINK32 bufferoverflowU.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib libnetxms.lib /nologo /dll /machine:I386 /out:"Release64/sqlite.ddr" /machine:AMD64
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
@@ -176,6 +176,10 @@ PostBuild_Cmds=copy Release64\sqlite.ddr C:\NetXMS\bin64
 
 SOURCE=.\sqlite.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\sqlite3.c
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -187,6 +191,14 @@ SOURCE=..\..\include\dbdrv.h
 # Begin Source File
 
 SOURCE=..\..\..\..\include\nms_threads.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\sqlite3.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\sqlite3ext.h
 # End Source File
 # Begin Source File
 

@@ -34,7 +34,7 @@
 
 #include <dbdrv.h>
 #include <nms_util.h>
-#include <sqlite3.h>
+#include "sqlite3.h"
 
 
 //
