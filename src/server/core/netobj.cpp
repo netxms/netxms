@@ -123,6 +123,8 @@ BOOL NetObj::DeleteFromDB(void)
    QueueSQLRequest(szQuery);
    sprintf(szQuery, "DELETE FROM object_properties WHERE object_id=%d", m_dwId);
    QueueSQLRequest(szQuery);
+   sprintf(szQuery, "DELETE FROM object_custom_attributes WHERE object_id=%d", m_dwId);
+   QueueSQLRequest(szQuery);
    return TRUE;
 }
 
@@ -171,9 +173,42 @@ BOOL NetObj::LoadCommonProperties(void)
       DBFreeResult(hResult);
    }
 
+	// Load custom attributes
+	if (bResult)
+	{
+		_sntprintf(szQuery, 1024, _T("SELECT attr_name,attr_value FROM object_custom_attributes WHERE object_id=%d"), m_dwId);
+		hResult = DBSelect(g_hCoreDB, szQuery);
+		if (hResult != NULL)
+		{
+			int i, count;
+			TCHAR *name, *value;
+			
+		   count = DBGetNumRows(hResult);
+		   for(i = 0; i < count; i++)
+		   {
+		   	name = DBGetField(hResult, i, 0, NULL, 0);
+		   	if (name != NULL)
+		   	{
+					DecodeSQLString(name);
+					value = DBGetField(hResult, i, 1, NULL, 0);
+					if (value != NULL)
+					{
+						DecodeSQLString(value);
+						m_customAttributes.SetPreallocated(name, value);
+					}
+				}
+			}
+		   DBFreeResult(hResult);
+		}
+		else
+		{
+			bResult = FALSE;
+		}
+	}
+	
 	if (bResult)
 		bResult = LoadTrustedNodes();
-
+		
    return bResult;
 }
 
@@ -234,6 +269,30 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
       free(pszEscComments);
       DBFreeResult(hResult);
       bResult = DBQuery(hdb, szQuery);
+   }
+   
+   // Save custom attributes
+   if (bResult)
+   {
+		_sntprintf(szQuery, 512, _T("DELETE FROM object_custom_attributes WHERE object_id=%d"), m_dwId);
+		bResult = DBQuery(hdb, szQuery);
+		if (bResult)
+		{
+			TCHAR *escName, *escValue;
+		
+			for(i = 0; i < m_customAttributes.Size(); i++)
+			{
+				escName = EncodeSQLString(m_customAttributes.GetKeyByIndex(i));
+				escValue = EncodeSQLString(m_customAttributes.GetValueByIndex(i));
+				_sntprintf(szQuery, 16384, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (%d,'%s','%s')"),
+				           m_dwId, escName, escValue);
+				free(escName);
+				free(escValue);
+				bResult = DBQuery(hdb, szQuery);
+				if (!bResult)
+					break;
+			}
+		}
    }
 
 	if (bResult)
@@ -708,6 +767,14 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_NUM_TRUSTED_NODES, m_dwNumTrustedNodes);
 	if (m_dwNumTrustedNodes > 0)
 		pMsg->SetVariableToInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
+
+	pMsg->SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, m_customAttributes.Size());
+	for(i = 0, dwId = VID_CUSTOM_ATTRIBUTES_BASE; i < m_customAttributes.Size(); i++)
+	{
+		pMsg->SetVariable(dwId++, m_customAttributes.GetKeyByIndex(i));
+		pMsg->SetVariable(dwId++, m_customAttributes.GetValueByIndex(i));
+	}
+
    m_pAccessList->CreateMessage(pMsg);
 }
 
@@ -801,6 +868,23 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       m_dwNumTrustedNodes = pRequest->GetVariableLong(VID_NUM_TRUSTED_NODES);
 		m_pdwTrustedNodes = (DWORD *)realloc(m_pdwTrustedNodes, sizeof(DWORD) * m_dwNumTrustedNodes);
 		pRequest->GetVariableInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
+   }
+   
+   // Change custom attributes
+   if (pRequest->IsVariableExist(VID_NUM_CUSTOM_ATTRIBUTES))
+   {
+      DWORD i, dwId, dwNumElements;
+      TCHAR *name, *value;
+
+      dwNumElements = pRequest->GetVariableLong(VID_NUM_CUSTOM_ATTRIBUTES);
+      m_customAttributes.Clear();
+      for(i = 0, dwId = VID_CUSTOM_ATTRIBUTES_BASE; i < dwNumElements; i++)
+      {
+      	name = pRequest->GetVariableStr(dwId++);
+      	value = pRequest->GetVariableStr(dwId++);
+      	if ((name != NULL) && (value != NULL))
+	      	m_customAttributes.SetPreallocated(name, value);
+      }
    }
 
    Modify();

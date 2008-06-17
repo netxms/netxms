@@ -457,6 +457,7 @@ enum
 #define OBJ_UPDATE_SNMP_PROXY			((QWORD)_ULL(0x0040000000))
 #define OBJ_UPDATE_REQUIRED_POLLS   ((QWORD)_ULL(0x0080000000))
 #define OBJ_UPDATE_TRUSTED_NODES    ((QWORD)_ULL(0x0100000000))
+#define OBJ_UPDATE_CUSTOM_ATTRS     ((QWORD)_ULL(0x0200000000))
 
 
 //
@@ -1065,6 +1066,11 @@ typedef struct
    TCHAR *pszComments;
 	DWORD dwNumTrustedNodes;
 	DWORD *pdwTrustedNodes;
+#ifdef __cplusplus
+	StringMap *pCustomAttrs;
+#else
+	void *pCustomAttrs;
+#endif
    union
    {
       struct __nxc_object_iface iface;
@@ -1137,6 +1143,11 @@ typedef struct
 	WORD wRequiredPollCount;
 	DWORD dwNumTrustedNodes;
 	DWORD *pdwTrustedNodes;
+#ifdef __cplusplus
+	StringMap *pCustomAttrs;
+#else
+	void *pCustomAttrs;
+#endif
 } NXC_OBJECT_UPDATE;
 
 

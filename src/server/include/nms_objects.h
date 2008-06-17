@@ -54,6 +54,7 @@ extern DWORD g_dwConditionPollingInterval;
 //
 
 #define MAX_INTERFACES        4096
+#define MAX_ATTR_NAME_LEN     128
 #define INVALID_INDEX         0xFFFFFFFF
 
 
@@ -200,6 +201,8 @@ protected:
 
 	DWORD m_dwNumTrustedNodes;	// Trusted nodes
 	DWORD *m_pdwTrustedNodes;
+	
+	StringMap m_customAttributes;
 
    void LockData(void) { MutexLock(m_mutexData, INFINITE); }
    void UnlockData(void) { MutexUnlock(m_mutexData); }
@@ -298,6 +301,11 @@ public:
    void DropUserAccess(DWORD dwUserId);
 
    void AddChildNodesToList(DWORD *pdwNumNodes, Node ***pppNodeList, DWORD dwUserId);
+   
+   const TCHAR *GetCustomAttribute(const TCHAR *name) { return m_customAttributes.Get(name); }
+   void SetCustomAttribute(const TCHAR *name, const TCHAR *value) { m_customAttributes.Set(name, value); }
+   void SetCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.SetPreallocated(_tcsdup(name), value); }
+   void DeleteCustomAttribute(const TCHAR *name) { m_customAttributes.Delete(name); }
 
    // Debug methods
    const char *ParentList(char *szBuffer);

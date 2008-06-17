@@ -774,6 +774,7 @@ typedef struct
 #define VID_NUM_TRUSTED_NODES       ((DWORD)306)
 #define VID_TRUSTED_NODES           ((DWORD)307)
 #define VID_TIMEZONE                ((DWORD)308)
+#define VID_NUM_CUSTOM_ATTRIBUTES   ((DWORD)309)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -812,6 +813,9 @@ typedef struct
 // Reservation of 0x7FFFFFFF ids for child object's list
 #define VID_CHILD_ID_BASE           ((DWORD)0x80000000)
 #define VID_CHILD_ID_LAST           ((DWORD)0xFFFFFFFE)
+
+// Base value for custom attributes
+#define VID_CUSTOM_ATTRIBUTES_BASE  ((DWORD)0x70000000)
 
 // Base value for cluster resource list
 #define VID_RESOURCE_LIST_BASE      ((DWORD)0x20000000)
