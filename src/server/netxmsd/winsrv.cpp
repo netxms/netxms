@@ -28,7 +28,7 @@
 // Static data
 //
 
-static SERVICE_STATUS_HANDLE serviceHandle;
+static SERVICE_STATUS_HANDLE m_serviceHandle;
 
 
 //
@@ -53,7 +53,7 @@ static VOID WINAPI ServiceCtrlHandler(DWORD ctrlCode)
       case SERVICE_CONTROL_SHUTDOWN:
          status.dwCurrentState = SERVICE_STOP_PENDING;
          status.dwWaitHint = 60000;
-         SetServiceStatus(serviceHandle, &status);
+         SetServiceStatus(m_serviceHandle, &status);
 
          if (ctrlCode == SERVICE_CONTROL_SHUTDOWN)
             FastShutdown();
@@ -67,7 +67,7 @@ static VOID WINAPI ServiceCtrlHandler(DWORD ctrlCode)
          break;
    }
 
-   SetServiceStatus(serviceHandle, &status);
+   SetServiceStatus(m_serviceHandle, &status);
 }
 
 
@@ -79,7 +79,7 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
 {
    SERVICE_STATUS status;
 
-   serviceHandle = RegisterServiceCtrlHandler(CORE_SERVICE_NAME, ServiceCtrlHandler);
+   m_serviceHandle = RegisterServiceCtrlHandler(CORE_SERVICE_NAME, ServiceCtrlHandler);
 
    // Now we start service initialization
    status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
@@ -89,7 +89,7 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
    status.dwServiceSpecificExitCode = 0;
    status.dwCheckPoint = 0;
    status.dwWaitHint = 300000;   // Assume that startup can take up to 5 minutes
-   SetServiceStatus(serviceHandle, &status);
+   SetServiceStatus(m_serviceHandle, &status);
 
    // Actual initialization
    if (!Initialize())
@@ -104,14 +104,14 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
       // Now service is stopped
       status.dwCurrentState = SERVICE_STOPPED;
       status.dwWaitHint = 0;
-      SetServiceStatus(serviceHandle, &status);
+      SetServiceStatus(m_serviceHandle, &status);
       return;
    }
 
    // Now service is running
    status.dwCurrentState = SERVICE_RUNNING;
    status.dwWaitHint = 0;
-   SetServiceStatus(serviceHandle, &status);
+   SetServiceStatus(m_serviceHandle, &status);
 
    SetProcessShutdownParameters(0x3FF, 0);
 
@@ -126,9 +126,10 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
 void InitService(void)
 {
    static SERVICE_TABLE_ENTRY serviceTable[2] = { { CORE_SERVICE_NAME, CoreServiceMain }, { NULL, NULL } };
+	TCHAR errorText[1024];
 
    if (!StartServiceCtrlDispatcher(serviceTable))
-      printf("StartServiceCtrlDispatcher() failed: %s\n", GetSystemErrorText(GetLastError()));
+      printf("StartServiceCtrlDispatcher() failed: %s\n", GetSystemErrorText(GetLastError(), errorText, 1024));
 }
 
 
@@ -140,13 +141,13 @@ void InstallService(TCHAR *pszExecName, TCHAR *pszDllName,
                     TCHAR *pszLogin, TCHAR *pszPassword)
 {
    SC_HANDLE hMgr, hService;
-   TCHAR szCmdLine[MAX_PATH * 2];
+   TCHAR szCmdLine[MAX_PATH * 2], errorText[1024];
 
    hMgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (hMgr == NULL)
    {
       printf("ERROR: Cannot connect to Service Manager (%s)\n",
-             GetSystemErrorText(GetLastError()));
+             GetSystemErrorText(GetLastError(), errorText, 1024));
       return;
    }
 
@@ -163,7 +164,7 @@ void InstallService(TCHAR *pszExecName, TCHAR *pszDllName,
       if (code == ERROR_SERVICE_EXISTS)
          printf("ERROR: Service named '" CORE_SERVICE_NAME "' already exist\n");
       else
-         printf("ERROR: Cannot create service (%s)\n", GetSystemErrorText(code));
+         printf("ERROR: Cannot create service (%s)\n", GetSystemErrorText(code, errorText, 1024));
    }
    else
    {
@@ -184,11 +185,12 @@ void InstallService(TCHAR *pszExecName, TCHAR *pszDllName,
 void RemoveService(void)
 {
    SC_HANDLE mgr, service;
+	TCHAR errorText[1024];
 
    mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
    {
-      printf("ERROR: Cannot connect to Service Manager (%s)\n", GetSystemErrorText(GetLastError()));
+      printf("ERROR: Cannot connect to Service Manager (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
       return;
    }
 
@@ -196,7 +198,7 @@ void RemoveService(void)
    if (service == NULL)
    {
       printf("ERROR: Cannot open service named '" CORE_SERVICE_NAME "' (%s)\n",
-             GetSystemErrorText(GetLastError()));
+             GetSystemErrorText(GetLastError(), errorText, 1024));
    }
    else
    {
@@ -204,7 +206,7 @@ void RemoveService(void)
          printf("NetXMS Core service deleted successfully\n");
       else
          printf("ERROR: Cannot remove service named '" CORE_SERVICE_NAME "' (%s)\n",
-                GetSystemErrorText(GetLastError()));
+                GetSystemErrorText(GetLastError(), errorText, 1024));
 
       CloseServiceHandle(service);
    }
@@ -273,13 +275,13 @@ void CheckServiceConfig(void)
 {
    SC_HANDLE mgr, service;
 	QUERY_SERVICE_CONFIG *cfg;
-	TCHAR *cmdLine;
+	TCHAR *cmdLine, errorText[1024];
 	DWORD bytes, error;
 
    mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
    {
-      printf("ERROR: Cannot connect to Service Manager (%s)\n", GetSystemErrorText(GetLastError()));
+      printf("ERROR: Cannot connect to Service Manager (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
       return;
    }
 
@@ -307,7 +309,7 @@ void CheckServiceConfig(void)
 					else
 					{
 						printf("ERROR: Cannot update configuration for service '" CORE_SERVICE_NAME "' (%s)\n",
-								 GetSystemErrorText(GetLastError()));
+								 GetSystemErrorText(GetLastError(), errorText, 1024));
 					}
 					free(cmdLine);
 				}
@@ -319,21 +321,21 @@ void CheckServiceConfig(void)
 			else
 			{
 				printf("ERROR: Cannot query configuration for service '" CORE_SERVICE_NAME "' (%s)\n",
-						 GetSystemErrorText(GetLastError()));
+						 GetSystemErrorText(GetLastError(), errorText, 1024));
 			}
 			free(cfg);
 		}
 		else
 		{
 			printf("ERROR: Cannot query configuration for service '" CORE_SERVICE_NAME "' (%s)\n",
-					 GetSystemErrorText(error));
+					 GetSystemErrorText(error, errorText, 1024));
 		}
       CloseServiceHandle(service);
 	}
 	else
    {
       printf("ERROR: Cannot open service named '" CORE_SERVICE_NAME "' (%s)\n",
-             GetSystemErrorText(GetLastError()));
+             GetSystemErrorText(GetLastError(), errorText, 1024));
    }
 
    CloseServiceHandle(mgr);
@@ -347,11 +349,12 @@ void CheckServiceConfig(void)
 void StartCoreService(void)
 {
    SC_HANDLE mgr,service;
+	TCHAR errorText[1024];
 
    mgr = OpenSCManager(NULL,NULL,GENERIC_WRITE);
    if (mgr == NULL)
    {
-      printf("ERROR: Cannot connect to Service Manager (%s)\n", GetSystemErrorText(GetLastError()));
+      printf("ERROR: Cannot connect to Service Manager (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
       return;
    }
 
@@ -359,7 +362,7 @@ void StartCoreService(void)
    if (service == NULL)
    {
       printf("ERROR: Cannot open service named '" CORE_SERVICE_NAME "' (%s)\n",
-             GetSystemErrorText(GetLastError()));
+             GetSystemErrorText(GetLastError(), errorText, 1024));
    }
    else
    {
@@ -367,7 +370,7 @@ void StartCoreService(void)
          printf("NetXMS Core service started successfully\n");
       else
          printf("ERROR: Cannot start service named '" CORE_SERVICE_NAME "' (%s)\n",
-                GetSystemErrorText(GetLastError()));
+                GetSystemErrorText(GetLastError(), errorText, 1024));
 
       CloseServiceHandle(service);
    }
@@ -383,11 +386,12 @@ void StartCoreService(void)
 void StopCoreService(void)
 {
    SC_HANDLE mgr,service;
+	TCHAR errorText[1024];
 
    mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
    {
-      printf("ERROR: Cannot connect to Service Manager (%s)\n", GetSystemErrorText(GetLastError()));
+      printf("ERROR: Cannot connect to Service Manager (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
       return;
    }
 
@@ -395,7 +399,7 @@ void StopCoreService(void)
    if (service == NULL)
    {
       printf("ERROR: Cannot open service named '" CORE_SERVICE_NAME "' (%s)\n",
-             GetSystemErrorText(GetLastError()));
+             GetSystemErrorText(GetLastError(), errorText, 1024));
    }
    else
    {
@@ -405,7 +409,7 @@ void StopCoreService(void)
          printf("NetXMS Core service stopped successfully\n");
       else
          printf("ERROR: Cannot stop service named '" CORE_SERVICE_NAME "' (%s)\n",
-                GetSystemErrorText(GetLastError()));
+                GetSystemErrorText(GetLastError(), errorText, 1024));
 
       CloseServiceHandle(service);
    }
@@ -422,12 +426,13 @@ void InstallEventSource(char *path)
 {
    HKEY hKey;
    DWORD dwTypes = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
+	TCHAR errorText[1024];
 
    if (ERROR_SUCCESS != RegCreateKeyEx(HKEY_LOCAL_MACHINE,
          "System\\CurrentControlSet\\Services\\EventLog\\System\\" CORE_EVENT_SOURCE,
          0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL))
    {
-      printf("Unable to create registry key: %s\n", GetSystemErrorText(GetLastError()));
+      printf("Unable to create registry key: %s\n", GetSystemErrorText(GetLastError(), errorText, 1024));
       return;
    }
 
@@ -445,6 +450,8 @@ void InstallEventSource(char *path)
 
 void RemoveEventSource(void)
 {
+	TCHAR errorText[1024];
+
    if (ERROR_SUCCESS == RegDeleteKey(HKEY_LOCAL_MACHINE,
          "System\\CurrentControlSet\\Services\\EventLog\\System\\" CORE_EVENT_SOURCE))
    {
@@ -453,7 +460,7 @@ void RemoveEventSource(void)
    else
    {
       printf("Unable to uninstall event source \"" CORE_EVENT_SOURCE "\": %s\n",
-             GetSystemErrorText(GetLastError()));
+             GetSystemErrorText(GetLastError(), errorText, 1024));
    }
 }
 
