@@ -343,6 +343,7 @@ int main(int argc, char *argv[])
          case 'h':   // Display help and exit
             _tprintf(_T("Usage: nxdbmgr [<options>] <command>\n"
                         "Valid commands are:\n"
+								"   batch <file> : Run SQL batch file\n"
                         "   check        : Check database for errors\n"
                         "   init <file>  : Initialize database\n"
 								"   reindex      : Reindex database\n"
@@ -398,7 +399,8 @@ int main(int argc, char *argv[])
       _tprintf(_T("Command missing. Type nxdbmgr -h for command line syntax.\n"));
       return 1;
    }
-   if (strcmp(argv[optind], "check") && 
+   if (strcmp(argv[optind], "batch") && 
+       strcmp(argv[optind], "check") && 
        strcmp(argv[optind], "reindex") &&
        strcmp(argv[optind], "upgrade") &&
        strcmp(argv[optind], "unlock") &&
@@ -407,7 +409,7 @@ int main(int argc, char *argv[])
       _tprintf(_T("Invalid command \"%s\". Type nxdbmgr -h for command line syntax.\n"), argv[optind]);
       return 1;
    }
-   if ((!strcmp(argv[optind], "init")) && (argc - optind < 2))
+   if ((!strcmp(argv[optind], "init") || !strcmp(argv[optind], "batch")) && (argc - optind < 2))
    {
       _tprintf("Required command argument missing\n");
       return 1;
@@ -515,7 +517,9 @@ int main(int argc, char *argv[])
       }
 
       // Do requested operation
-      if (!strcmp(argv[optind], "check"))
+      if (!strcmp(argv[optind], "batch"))
+         ExecSQLBatch(argv[optind + 1]);
+      else if (!strcmp(argv[optind], "check"))
          CheckDatabase();
       else if (!strcmp(argv[optind], "upgrade"))
          UpgradeDatabase();

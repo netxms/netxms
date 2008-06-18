@@ -73,7 +73,7 @@ static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
 // Execute SQL batch file
 //
 
-static BOOL ExecSQLBatch(const TCHAR *pszFile)
+BOOL ExecSQLBatch(const TCHAR *pszFile)
 {
    BYTE *pBatch, *pQuery, *pNext;
    DWORD dwSize;

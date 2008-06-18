@@ -63,6 +63,7 @@ BOOL SQLQuery(const TCHAR *pszQuery);
 BOOL SQLBatch(const TCHAR *pszBatch);
 BOOL GetYesNo(void);
 void ShowQuery(const TCHAR *pszQuery);
+BOOL ExecSQLBatch(const TCHAR *pszFile);
 
 BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault);
 int ConfigReadInt(const TCHAR *pszVar, int iDefault);
