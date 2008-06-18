@@ -120,11 +120,6 @@ AC_ARG_WITH(private,
 AC_ARG_WITH(sqlite,
 [AS_HELP_STRING(--with-sqlite,build SQLite database driver)],
 [ if test "x$withval" != "xno" ; then
-	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-		LDFLAGS="$LDFLAGS -L${withval}/lib"
-		CPPFLAGS="$CPPFLAGS -I${withval}/include"
-	fi
 	COMPONENTS="$COMPONENTS sqlite"
 	DBDRIVER_SELECTED="yes"
 fi ])
@@ -1328,19 +1323,6 @@ if test $? = 0; then
 	AC_CHECK_HEADER(oci.h,,AC_MSG_ERROR([*** Cannot find oci.h - check your Oracle client installation ***]))
 	AC_CHECK_LIB(clntsh, OCIHandleAlloc, [],
 		[AC_MSG_ERROR(libclntsh is required for Oracle support)])
-fi
-
-
-#--------------------------------------------------------------------
-# SQLite
-#--------------------------------------------------------------------
-
-check_substr "$COMPONENTS" "sqlite"
-if test $? = 0; then
-	AC_CHECK_HEADER(sqlite3.h,,AC_MSG_ERROR([*** Cannot find sqlite3.h - check your SQLite installation ***]))
-	AC_CHECK_LIB(rt, fdatasync)
-	AC_CHECK_LIB(sqlite3, sqlite3_open, [],
-		[AC_MSG_ERROR(libsqlite3 is required for SQLite support)])
 fi
 
 
