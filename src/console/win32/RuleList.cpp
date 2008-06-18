@@ -230,7 +230,7 @@ int RL_Cell::CalculateHeight(int iTextHeight, int iWidth, BOOL bIsTextBox, CFont
 
       pDC = theApp.m_pMainWnd->GetDC();
       pOldFont = pDC->SelectObject(pFont);
-      pDC->DrawText(m_pszText, _tcslen(m_pszText), &rect, DT_WORDBREAK | DT_CALCRECT);
+      pDC->DrawText(m_pszText, _tcslen(m_pszText), &rect, DT_WORDBREAK | DT_NOPREFIX | DT_CALCRECT);
       pDC->SelectObject(pOldFont);
       theApp.m_pMainWnd->ReleaseDC(pDC);
       iHeight = rect.bottom;
@@ -448,7 +448,7 @@ void CRuleList::OnPaint()
 
                dc.DrawText(m_ppRowList[i]->m_ppCellList[j]->m_pszText,
                            _tcslen(m_ppRowList[i]->m_ppCellList[j]->m_pszText),
-                           &rcText, DT_WORDBREAK | (m_pColList[j].m_dwFlags & CF_CENTER ? DT_CENTER : DT_LEFT));
+                           &rcText, DT_WORDBREAK | DT_NOPREFIX | (m_pColList[j].m_dwFlags & CF_CENTER ? DT_CENTER : DT_LEFT));
             }
             else  // Multiline cell
             {
@@ -483,7 +483,7 @@ void CRuleList::OnPaint()
                      
                   dc.DrawText(m_ppRowList[i]->m_ppCellList[j]->m_pszTextList[iLine],
                               _tcslen(m_ppRowList[i]->m_ppCellList[j]->m_pszTextList[iLine]),
-                              &rcText, DT_SINGLELINE | DT_VCENTER | 
+                              &rcText, DT_SINGLELINE | DT_NOPREFIX | DT_VCENTER | 
                                           (m_pColList[j].m_dwFlags & CF_CENTER ? DT_CENTER : DT_LEFT));
                
                   // Restore colors
