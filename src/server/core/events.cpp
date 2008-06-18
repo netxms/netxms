@@ -29,8 +29,8 @@
 
 Queue *g_pEventQueue = NULL;
 EventPolicy *g_pEventPolicy = NULL;
-const char *g_szStatusText[] = { "NORMAL", "MINOR", "WARNING", "MAJOR", "CRITICAL", "UNKNOWN", "UNMANAGED", "DISABLED", "TESTING" };
-const char *g_szStatusTextSmall[] = { "Normal", "Minor", "Warning", "Major", "Critical", "Unknown", "Unmanaged", "Disabled", "Testing" };
+const char *g_szStatusText[] = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL", "UNKNOWN", "UNMANAGED", "DISABLED", "TESTING" };
+const char *g_szStatusTextSmall[] = { "Normal", "Warning", "Minor", "Major", "Critical", "Unknown", "Unmanaged", "Disabled", "Testing" };
 
 
 //
