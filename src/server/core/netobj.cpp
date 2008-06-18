@@ -280,7 +280,7 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
 		{
 			TCHAR *escName, *escValue;
 		
-			for(i = 0; i < m_customAttributes.Size(); i++)
+			for(i = 0; i < (int)m_customAttributes.Size(); i++)
 			{
 				escName = EncodeSQLString(m_customAttributes.GetKeyByIndex(i));
 				escValue = EncodeSQLString(m_customAttributes.GetValueByIndex(i));

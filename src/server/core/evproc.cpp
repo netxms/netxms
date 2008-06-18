@@ -103,6 +103,7 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 {
    Event *pEvent;
+	DWORD i;
 
 	m_threadStormDetector = ThreadCreateEx(EventStormDetector, 0, NULL);
    while(!ShutdownInProgress())
@@ -118,6 +119,13 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 
       // Attempt to correlate event to some of previous events
       CorrelateEvent(pEvent);
+
+		// Pass event to modules
+      for(i = 0; i < g_dwNumModules; i++)
+		{
+			if (g_pModuleList[i].pfEventHandler != NULL)
+				g_pModuleList[i].pfEventHandler(pEvent);
+		}
 
       // Write event to log if required
       if (pEvent->Flags() & EF_LOG)

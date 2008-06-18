@@ -1183,8 +1183,11 @@ void ClientSession::ProcessingThread(void)
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
-               if (g_pModuleList[i].pfCommandHandler(m_wCurrentCmd, pMsg, this))
-                  break;   // Message was processed by the module
+				{
+					if (g_pModuleList[i].pfCommandHandler != NULL)
+						if (g_pModuleList[i].pfCommandHandler(m_wCurrentCmd, pMsg, this))
+							break;   // Message was processed by the module
+				}
             if (i == g_dwNumModules)
             {
                CSCPMessage response;
