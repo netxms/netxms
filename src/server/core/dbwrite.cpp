@@ -49,7 +49,7 @@ static THREAD m_hWriteThreadList[MAX_DB_WRITERS];
 // Put SQL request into queue for later execution
 //
 
-void QueueSQLRequest(char *szQuery)
+void NXCORE_EXPORTABLE QueueSQLRequest(char *szQuery)
 {
    g_pLazyRequestQueue->Put(strdup(szQuery));
 }

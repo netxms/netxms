@@ -605,7 +605,7 @@ int ProcessConsoleCommand(char *pszCmdLine, CONSOLE_CTX pCtx);
 
 void SaveObjects(DB_HANDLE hdb);
 
-void QueueSQLRequest(char *szQuery);
+void NXCORE_EXPORTABLE QueueSQLRequest(char *szQuery);
 void StartDBWriter(void);
 void StopDBWriter(void);
 
@@ -714,15 +714,9 @@ BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pChallenge,
 void ReloadCertificates(void);
 #endif
 
-#ifdef _WIN32
-
-char NXCORE_EXPORTABLE *GetSystemErrorText(DWORD error);
-
-#else
-
+#ifndef _WIN32
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *);
-
-#endif   /* _WIN32 */
+#endif   /* not _WIN32 */
 
 void DbgTestMutex(MUTEX hMutex, const TCHAR *szName, CONSOLE_CTX pCtx);
 void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX pCtx);
@@ -757,9 +751,9 @@ extern DWORD g_dwAgentCommandTimeout;
 extern DWORD g_dwThresholdRepeatInterval;
 extern int g_nRequiredPolls;
 
-extern DB_HANDLE g_hCoreDB;
+extern DB_HANDLE NXCORE_EXPORTABLE g_hCoreDB;
 extern Queue *g_pLazyRequestQueue;
 
-extern DWORD g_dwDBSyntax;
+extern DWORD NXCORE_EXPORTABLE g_dwDBSyntax;
 
 #endif   /* _nms_core_h_ */

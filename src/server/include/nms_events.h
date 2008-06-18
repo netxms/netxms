@@ -93,7 +93,8 @@ public:
 
    DWORD GetParametersCount(void) { return m_dwNumParameters; }
    char *GetParameter(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? m_ppszParameters[dwIndex] : NULL; }
-   DWORD GetParameterAsULong(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? strtoul(m_ppszParameters[dwIndex], NULL, 0) : 0; }
+   DWORD GetParameterAsULong(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? _tcstoul(m_ppszParameters[dwIndex], NULL, 0) : 0; }
+   QWORD GetParameterAsUInt64(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? _tcstoull(m_ppszParameters[dwIndex], NULL, 0) : 0; }
    
    void SetCustomMessage(const TCHAR *pszMessage) { safe_free(m_pszCustomMessage); m_pszCustomMessage = (pszMessage != NULL) ? _tcsdup(pszMessage) : NULL; }
 };

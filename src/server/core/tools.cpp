@@ -33,39 +33,6 @@
 
 
 //
-// Get system error string by call to FormatMessage
-//
-
-#ifdef _WIN32
-
-char NXCORE_EXPORTABLE *GetSystemErrorText(DWORD error)
-{
-   char *msgBuf;
-   static char staticBuffer[1024];
-
-   if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-                     FORMAT_MESSAGE_FROM_SYSTEM | 
-                     FORMAT_MESSAGE_IGNORE_INSERTS,
-                     NULL,error,
-                     MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT), // Default language
-                     (LPSTR)&msgBuf,0,NULL)>0)
-   {
-      msgBuf[strcspn(msgBuf,"\r\n")]=0;
-      nx_strncpy(staticBuffer,msgBuf,1023);
-      LocalFree(msgBuf);
-   }
-   else
-   {
-      sprintf(staticBuffer,"MSG 0x%08X - Unable to find message text",error);
-   }
-
-   return staticBuffer;
-}
-
-#endif   /* _WIN32 */
-
-
-//
 // Clean interface list from unneeded entries
 //
 
