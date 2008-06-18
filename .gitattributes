@@ -16,7 +16,6 @@ doc/manuals/netxms_install_guide.odt -text
 doc/manuals/netxms_solution_guide.doc -text
 doc/manuals/netxms_user_manual.odt -text
 doc/manuals/nxcp_reference.odt -text
-doc/svn.config -text
 images/cluster.ico -text
 images/cluster.png -text
 images/condition.ico -text
