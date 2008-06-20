@@ -271,7 +271,6 @@ src/libnxmap/libnxmap.dsw eol=crlf
 src/libnxsl/libnxsl.dsp eol=crlf
 src/libnxsl/libnxsl.dsw eol=crlf
 src/libnxsl/parser.l -text
-src/libnxsl/parser.y -text
 src/libnxsnmp/libnxsnmp.dsp eol=crlf
 src/libnxsnmp/libnxsnmp.dsw eol=crlf
 src/nxcptest/nxcptest.dsp eol=crlf
