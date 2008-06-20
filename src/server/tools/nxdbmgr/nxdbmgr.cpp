@@ -64,6 +64,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "DumpDirectory", CT_IGNORE, 0, 0, 0, 0, NULL },
    { "LogFailedSQLQueries", CT_IGNORE, 0, 0, 0, 0, NULL },
    { "LogFile", CT_IGNORE, 0, 0, 0, 0, NULL },
+   { "Module", CT_IGNORE, 0, 0, 0, 0, NULL },
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 static BOOL m_bForce = FALSE;
