@@ -1,6 +1,7 @@
+/* $Id$ */
 /* 
 ** Windows NT/2000/XP/2003 NetXMS subagent
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by

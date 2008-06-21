@@ -51,6 +51,8 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *);
 THREAD_RESULT THREAD_CALL SessionWatchdog(void *);
 THREAD_RESULT THREAD_CALL TrapSender(void *);
 
+void ShutdownTrapSender();
+
 #if !defined(_WIN32) && !defined(_NETWARE)
 void InitStaticSubagents(void);
 #endif
@@ -140,6 +142,7 @@ static char *m_pszShExtParamList = NULL;
 static DWORD m_dwEnabledCiphers = 0xFFFF;
 static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
 static THREAD m_thListener = INVALID_THREAD_HANDLE;
+static THREAD m_thTrapSender = INVALID_THREAD_HANDLE;
 static char m_szConfigServer[MAX_DB_STRING] = "not_set";
 
 #if defined(_WIN32) || defined(_NETWARE)
@@ -821,7 +824,7 @@ BOOL Initialize(void)
    // Start network listener and session watchdog
    m_thListener = ThreadCreateEx(ListenerThread, 0, NULL);
    m_thSessionWatchdog = ThreadCreateEx(SessionWatchdog, 0, NULL);
-   ThreadCreate(TrapSender, 0, NULL);
+   m_thTrapSender = ThreadCreateEx(TrapSender, 0, NULL);
 
 #if defined(_WIN32) || defined(_NETWARE)
    m_hCondShutdown = ConditionCreate(TRUE);
@@ -840,8 +843,10 @@ void Shutdown(void)
 {
    // Set shutdowm flag
    g_dwFlags |= AF_SHUTDOWN;
+	ShutdownTrapSender();
    ThreadJoin(m_thSessionWatchdog);
    ThreadJoin(m_thListener);
+	ThreadJoin(m_thTrapSender);
 
    UnloadAllSubAgents();
    WriteLog(MSG_AGENT_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);

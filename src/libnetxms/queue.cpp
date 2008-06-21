@@ -53,7 +53,7 @@ Queue::Queue()
 // Common initialization (used by all constructors)
 //
 
-void Queue::CommonInit(void)
+void Queue::CommonInit()
 {
    m_mutexQueueAccess = MutexCreate();
    m_condWakeup = ConditionCreate(FALSE);
@@ -61,6 +61,7 @@ void Queue::CommonInit(void)
    m_dwFirst = 0;
    m_dwLast = 0;
    m_pElements = (void **)malloc(sizeof(void *) * m_dwBufferSize);
+	m_bShutdownFlag = FALSE;
 }
 
 
@@ -104,15 +105,46 @@ void Queue::Put(void *pElement)
 
 
 //
+// Insert new element into the beginning of a queue
+//
+
+void Queue::Insert(void *pElement)
+{
+   Lock();
+   if (m_dwNumElements == m_dwBufferSize)
+   {
+      // Extend buffer
+      m_dwBufferSize += m_dwBufferIncrement;
+      m_pElements = (void **)realloc(m_pElements, sizeof(void *) * m_dwBufferSize);
+      
+      // Move free space
+      memmove(&m_pElements[m_dwFirst + m_dwBufferIncrement], &m_pElements[m_dwFirst],
+              sizeof(void *) * (m_dwBufferSize - m_dwFirst - m_dwBufferIncrement));
+      m_dwFirst += m_dwBufferIncrement;
+   }
+   if (m_dwFirst == 0)
+      m_dwFirst = m_dwBufferSize - 1;
+   m_pElements[--m_dwFirst] = pElement;
+   m_dwNumElements++;
+   ConditionSet(m_condWakeup);
+   Unlock();
+}
+
+
+//
 // Get object from queue. Return NULL if queue is empty
 //
 
-void *Queue::Get(void)
+void *Queue::Get()
 {
    void *pElement = NULL;
 
    Lock();
-   if (m_dwNumElements != 0)
+	if (m_bShutdownFlag)
+	{
+		pElement = INVALID_POINTER_VALUE;
+	}
+	else if (m_dwNumElements != 0)
    {
       pElement = m_pElements[m_dwFirst++];
       if (m_dwFirst == m_dwBufferSize)
@@ -128,7 +160,7 @@ void *Queue::Get(void)
 // Get object from queue or block if queue if empty
 //
 
-void *Queue::GetOrBlock(void)
+void *Queue::GetOrBlock()
 {
    void *pElement;
 
@@ -151,11 +183,25 @@ void *Queue::GetOrBlock(void)
 // Clear queue
 //
 
-void Queue::Clear(void)
+void Queue::Clear()
 {
    Lock();
    m_dwNumElements = 0;
    m_dwFirst = 0;
    m_dwLast = 0;
    Unlock();
+}
+
+
+//
+// Set shutdown flag
+// When this flag is set, Get() always return INVALID_POINTER_VALUE
+//
+
+void Queue::SetShutdownMode()
+{
+	Lock();
+	m_bShutdownFlag = TRUE;
+	ConditionSet(m_condWakeup);
+	Unlock();
 }

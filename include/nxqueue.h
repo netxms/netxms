@@ -41,10 +41,11 @@ private:
    DWORD m_dwFirst;
    DWORD m_dwLast;
    DWORD m_dwBufferIncrement;
+	BOOL m_bShutdownFlag;
 
 	void CommonInit(void);
-   void Lock(void) { MutexLock(m_mutexQueueAccess, INFINITE); }
-   void Unlock(void) { MutexUnlock(m_mutexQueueAccess); }
+   void Lock() { MutexLock(m_mutexQueueAccess, INFINITE); }
+   void Unlock() { MutexUnlock(m_mutexQueueAccess); }
 
 public:
    Queue();
@@ -52,10 +53,12 @@ public:
    ~Queue();
 
    void Put(void *pObject);
-   void *Get(void);
-   void *GetOrBlock(void);
-   DWORD Size(void) { return m_dwNumElements; }
-   void Clear(void);
+	void Insert(void *pObject);
+	void SetShutdownMode();
+   void *Get();
+   void *GetOrBlock();
+   DWORD Size() { return m_dwNumElements; }
+   void Clear();
 };
 
 #endif    /* _nxqueue_h_ */

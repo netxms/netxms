@@ -49,29 +49,41 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
          break;
 
       bTrapSent = FALSE;
-      while(1)
-      {
-         MutexLock(g_hSessionListAccess, INFINITE);
-         for(i = 0; i < g_dwMaxSessions; i++)
-            if (g_pSessionList[i] != NULL)
-               if (g_pSessionList[i]->AcceptTraps())
-               {
-                  g_pSessionList[i]->SendRawMessage(pMsg);
-                  bTrapSent = TRUE;
-               }
-         MutexUnlock(g_hSessionListAccess);
 
-         if (bTrapSent)
-            break;
+      MutexLock(g_hSessionListAccess, INFINITE);
+      for(i = 0; i < g_dwMaxSessions; i++)
+         if (g_pSessionList[i] != NULL)
+            if (g_pSessionList[i]->AcceptTraps())
+            {
+               g_pSessionList[i]->SendRawMessage(pMsg);
+               bTrapSent = TRUE;
+            }
+      MutexUnlock(g_hSessionListAccess);
 
-         ThreadSleep(1);
-      }
-
-      free(pMsg);
+      if (bTrapSent)
+		{
+	      free(pMsg);
+		}
+		else
+		{
+         m_pTrapQueue->Insert(pMsg);	// Re-queue trap
+			ThreadSleep(1);
+		}
    }
    delete m_pTrapQueue;
    m_pTrapQueue = NULL;
+	DebugPrintf(INVALID_INDEX, _T("Trap sender thread terminated"));
    return THREAD_OK;
+}
+
+
+//
+// Shutdown trap sender
+//
+
+void ShutdownTrapSender()
+{
+	m_pTrapQueue->SetShutdownMode();
 }
 
 
@@ -129,7 +141,7 @@ void SendTrap(DWORD dwEventCode, const char *pszFormat, va_list args)
             sprintf(ppArgList[i], "%d", va_arg(args, LONG));
             break;
          case 'D':
-            ppArgList[i] = (char *)malloc(24);
+            ppArgList[i] = (char *)malloc(32);
             sprintf(ppArgList[i], INT64_FMT, va_arg(args, INT64));
             break;
          case 'x':
@@ -138,7 +150,7 @@ void SendTrap(DWORD dwEventCode, const char *pszFormat, va_list args)
             sprintf(ppArgList[i], "0x%08X", va_arg(args, DWORD));
             break;
          case 'X':
-            ppArgList[i] = (char *)malloc(16);
+            ppArgList[i] = (char *)malloc(32);
 #ifdef _WIN32
             sprintf(ppArgList[i], "0x%016I64X", va_arg(args, QWORD));
 #else
