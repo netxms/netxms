@@ -134,8 +134,9 @@ typedef unsigned __int64 QWORD;
 typedef __int64 INT64;
 typedef int socklen_t;
 
-#define INT64_FMT    _T("%I64d")
-#define UINT64_FMT   _T("%I64u")
+#define INT64_FMT			_T("%I64d")
+#define UINT64_FMT		_T("%I64u")
+#define UINT64X_FMT(m)  _T("%") m _T("I64X")
 #ifdef __64BIT__
 #define TIME_T_FMT   _T("%I64u")
 #else
@@ -213,9 +214,10 @@ typedef X_UINT64_X QWORD;
 #error Target system does not have unsigned 64bit integer type
 #endif
 
-#define INT64_FMT    _T("%lld")
-#define UINT64_FMT   _T("%llu")
-#define TIME_T_FMT   _T("%u")
+#define INT64_FMT			_T("%lld")
+#define UINT64_FMT		_T("%llu")
+#define UINT64X_FMT(m)  _T("%") m _T("llX")
+#define TIME_T_FMT		_T("%u")
 
 #ifndef MAX_PATH
 #define MAX_PATH 256
@@ -351,12 +353,13 @@ typedef u_int64_t QWORD;
 #error Target system does not have unsigned 64bit integer type
 #endif
 
-#define INT64_FMT    _T("%lld")
-#define UINT64_FMT   _T("%llu")
+#define INT64_FMT			_T("%lld")
+#define UINT64_FMT		_T("%llu")
+#define UINT64X_FMT(m)  _T("%") m _T("llX")
 #ifdef __64BIT__
-#define TIME_T_FMT   _T("%llu")
+#define TIME_T_FMT		_T("%llu")
 #else
-#define TIME_T_FMT   _T("%u")
+#define TIME_T_FMT		_T("%u")
 #endif
 
 #ifndef TRUE
