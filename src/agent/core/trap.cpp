@@ -135,6 +135,8 @@ void SendTrap(DWORD dwEventCode, const char *pszFormat, va_list args)
       {
          case 's':
             ppArgList[i] = va_arg(args, TCHAR *);
+				if (ppArgList[i] == NULL)
+					ppArgList[i] = (TCHAR *)_T("");
             break;
          case 'd':
             ppArgList[i] = (char *)malloc(16);
@@ -171,6 +173,7 @@ void SendTrap(DWORD dwEventCode, const char *pszFormat, va_list args)
 
    for(i = 0; i < iNumArgs; i++)
       if ((pszFormat[i] == 'd') || (pszFormat[i] == 'x') ||
+          (pszFormat[i] == 'D') || (pszFormat[i] == 'X') ||
           (pszFormat[i] == 'i') || (pszFormat[i] == 'a'))
          free(ppArgList[i]);
 }
