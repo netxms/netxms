@@ -1469,7 +1469,7 @@
                 </object>
                 <object class="sizeritem" expanded="1">
                     <property name="border">5</property>
-                    <property name="flag">wxALIGN_RIGHT|wxBOTTOM</property>
+                    <property name="flag">wxALIGN_RIGHT|wxBOTTOM|wxRIGHT</property>
                     <property name="proportion">0</property>
                     <object class="wxBoxSizer" expanded="1">
                         <property name="minimum_size"></property>
