@@ -239,6 +239,16 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetServerTimeZone(NXC_SESSION hSession)
 
 
 //
+// Generate Message ID
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGenerateMessageId(NXC_SESSION hSession)
+{
+   return ((NXCL_Session *)hSession)->CreateRqId();
+}
+
+
+//
 // Send prepared NXCP message
 //
 

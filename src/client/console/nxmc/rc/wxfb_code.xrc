@@ -424,13 +424,13 @@
 			</object>
 			<object class="sizeritem">
 				<option>0</option>
-				<flag>wxALIGN_RIGHT|wxBOTTOM|wxRIGHT</flag>
+				<flag>wxALIGN_RIGHT|wxALL</flag>
 				<border>5</border>
 				<object class="wxBoxSizer">
 					<orient>wxHORIZONTAL</orient>
 					<object class="sizeritem">
 						<option>0</option>
-						<flag>wxALL</flag>
+						<flag>wxTOP|wxBOTTOM|wxLEFT</flag>
 						<border>5</border>
 						<object class="wxButton" name="btnNone">
 							<label>_None</label>
@@ -439,7 +439,7 @@
 					</object>
 					<object class="sizeritem">
 						<option>0</option>
-						<flag>wxEXPAND</flag>
+						<flag>wxEXPAND|wxALL</flag>
 						<border>5</border>
 						<object class="wxStdDialogButtonSizer">
 							<object class="button">
