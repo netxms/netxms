@@ -1,8 +1,8 @@
-/* $Id: nxscript.cpp 3272 2008-05-14 01:40:18Z alk $ */
+/* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** NetXMS Scripting Host
-** Copyright (C) 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** NXCP testing tool
+** Copyright (C) 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
