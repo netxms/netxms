@@ -64,7 +64,7 @@ nxControlPanel::nxControlPanel(wxWindow *parent)
 	{
 		if (regList[i].GetType() == REGITEM_CONTROL_PANEL)
 		{
-			AddItem(regList[i].GetId() + ((nxmcPlugin *)regList[i].GetPlugin())->GetBaseId(), regList[i].GetName(), wxNullIcon, imageList);
+			AddItem(regList[i].GetId() + ((nxmcPlugin *)regList[i].GetPlugin())->GetBaseId(), regList[i].GetName(), regList[i].GetIcon(), imageList);
 		}
 	}
 	

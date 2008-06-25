@@ -237,14 +237,17 @@ private:
 	int m_id;
 	int m_type;
 	void (*m_fpHandler)(int);
+	const wxIcon *m_icon;
 
 public:
-	nxmcItemRegistration(NXMC_PLUGIN_HANDLE plugin, const TCHAR *name, int id, int type, void (*fpHandler)(int));
+	nxmcItemRegistration(NXMC_PLUGIN_HANDLE plugin, const TCHAR *name, int id,
+	                     int type, const wxIcon &icon, void (*fpHandler)(int));
 	~nxmcItemRegistration();
 
 	const TCHAR *GetName() { return m_name; }
 	int GetType() { return m_type; }
 	int GetId() { return m_id; }
+	const wxIcon GetIcon() { return *m_icon; }
 	NXMC_PLUGIN_HANDLE GetPlugin() { return m_plugin; }
 
 	void CallHandler(int param) { m_fpHandler(param); }
@@ -342,7 +345,7 @@ void LIBNXMC_EXPORTABLE NXMCShowClientError(DWORD rcc, const TCHAR *msgTemplate)
 
 bool LIBNXMC_EXPORTABLE NXMCLoadResources(const TCHAR *name, NXMC_LIB_INSTANCE instance, TCHAR *resName);
 
-bool LIBNXMC_EXPORTABLE NXMCAddControlPanelItem(NXMC_PLUGIN_HANDLE handle, const TCHAR *name, int id);
+bool LIBNXMC_EXPORTABLE NXMCAddControlPanelItem(NXMC_PLUGIN_HANDLE handle, const TCHAR *name, int id, const wxIcon &icon = wxNullIcon);
 bool LIBNXMC_EXPORTABLE NXMCAddViewMenuItem(NXMC_PLUGIN_HANDLE handle, const TCHAR *name, int id);
 
 wxWindow LIBNXMC_EXPORTABLE *NXMCGetDefaultParent();

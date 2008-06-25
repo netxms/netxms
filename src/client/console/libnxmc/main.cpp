@@ -59,12 +59,14 @@ static NXC_SESSION s_session = NULL;
 // Registration item class implementation
 //
 
-nxmcItemRegistration::nxmcItemRegistration(NXMC_PLUGIN_HANDLE plugin, const TCHAR *name, int id, int type, void (*fpHandler)(int))
+nxmcItemRegistration::nxmcItemRegistration(NXMC_PLUGIN_HANDLE plugin, const TCHAR *name, int id,
+														 int type, const wxIcon &icon, void (*fpHandler)(int))
 {
 	m_plugin = plugin;
 	m_name = _tcsdup(name);
 	m_id = id;
 	m_type = type;
+	m_icon = &icon;
 	m_fpHandler = fpHandler;
 }
 
@@ -81,7 +83,7 @@ WX_DEFINE_OBJARRAY(nxmcArrayOfRegItems);
 // Add Control Panel item
 //
 
-bool LIBNXMC_EXPORTABLE NXMCAddControlPanelItem(NXMC_PLUGIN_HANDLE handle, const TCHAR *name, int id)
+bool LIBNXMC_EXPORTABLE NXMCAddControlPanelItem(NXMC_PLUGIN_HANDLE handle, const TCHAR *name, int id, const wxIcon &icon)
 {
 	if (s_isUiInitialized)
 		return false;	// Currently this registration is not allowed after initialization
@@ -89,7 +91,7 @@ bool LIBNXMC_EXPORTABLE NXMCAddControlPanelItem(NXMC_PLUGIN_HANDLE handle, const
 	if ((id < 0) || (id >= NXMC_PLUGIN_ID_LIMIT))
 		return false;	// ID is out of allowed range
 
-	s_regItemList.Add(new nxmcItemRegistration(handle, name, id, REGITEM_CONTROL_PANEL, NULL));
+	s_regItemList.Add(new nxmcItemRegistration(handle, name, id, REGITEM_CONTROL_PANEL, icon, NULL));
 	return true;
 }
 
@@ -106,7 +108,7 @@ bool LIBNXMC_EXPORTABLE NXMCAddViewMenuItem(NXMC_PLUGIN_HANDLE handle, const TCH
 	if ((id < 0) || (id >= NXMC_PLUGIN_ID_LIMIT))
 		return false;	// ID is out of allowed range
 
-	s_regItemList.Add(new nxmcItemRegistration(handle, name, id, REGITEM_VIEW_MENU, NULL));
+	s_regItemList.Add(new nxmcItemRegistration(handle, name, id, REGITEM_VIEW_MENU, wxNullIcon, NULL));
 	return true;
 }
 
