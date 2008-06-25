@@ -32,6 +32,7 @@
 BEGIN_EVENT_TABLE(nxObjectSelDlg, wxDialog)
 	EVT_INIT_DIALOG(nxObjectSelDlg::OnInitDialog)
 	EVT_LIST_COL_CLICK(XRCID("wndListCtrl"), nxObjectSelDlg::OnListColumnClick)
+	EVT_LIST_ITEM_ACTIVATED(XRCID("wndListCtrl"), nxObjectSelDlg::OnListItemActivate)
 END_EVENT_TABLE()
 
 
@@ -305,4 +306,17 @@ void nxObjectSelDlg::OnListColumnClick(wxListEvent &event)
 		m_sortMode = event.GetColumn();
 	}
 	SortObjects();
+}
+
+
+//
+// Handler for item activate (Enter or Double click)
+//
+
+void nxObjectSelDlg::OnListItemActivate(wxListEvent &event)
+{
+	if (Validate() && TransferDataFromWindow())
+	{
+		EndDialog(wxID_OK);
+	}
 }

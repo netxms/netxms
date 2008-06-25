@@ -78,6 +78,7 @@ public:
 protected:
 	void OnInitDialog(wxInitDialogEvent &event);
 	void OnListColumnClick(wxListEvent &event);
+	void OnListItemActivate(wxListEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };
