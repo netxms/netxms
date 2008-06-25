@@ -497,7 +497,7 @@ void ClientSession::ReadThread(void)
          }
          else if (pMsg->GetCode() == CMD_KEEPALIVE)
 			{
-		      DebugPrintf(7, "Received message %s", NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
+		      DebugPrintf(6, "Received message %s", NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
 				RespondToKeepalive(pMsg->GetId());
 				delete pMsg;
 			}
@@ -579,7 +579,7 @@ void ClientSession::WriteThread(void)
       if (pRawMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-      DebugPrintf(7, "Sending message %s", NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer));
+      DebugPrintf(6, "Sending message %s", NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer));
       if (m_pCtx != NULL)
       {
          pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);

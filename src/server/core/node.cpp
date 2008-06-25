@@ -1696,18 +1696,18 @@ DWORD Node::GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffe
             break;
          case ERR_REQUEST_TIMEOUT:
 				// Reset connection to agent after timeout
-				DbgPrintf(6, _T("Node(%s)->GetItemFromAgent(%s): timeout; resetting connection to agent..."), m_szName, szParam);
+				DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): timeout; resetting connection to agent..."), m_szName, szParam);
 				delete_and_null(m_pAgentConnection);
             if (!ConnectToAgent())
                goto end_loop;
-				DbgPrintf(6, _T("Node(%s)->GetItemFromAgent(%s): connection to agent restored successfully"), m_szName, szParam);
+				DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): connection to agent restored successfully"), m_szName, szParam);
             break;
       }
    }
 
 end_loop:
    AgentUnlock();
-   DbgPrintf(6, "Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d",
+   DbgPrintf(7, "Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d",
              m_szName, szParam, dwError, dwResult);
    return dwResult;
 }

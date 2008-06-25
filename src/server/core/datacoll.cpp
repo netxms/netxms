@@ -183,19 +183,19 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
       if (SleepAndCheckForShutdown(ITEM_POLLING_INTERVAL))
          break;      // Shutdown has arrived
       WatchdogNotify(dwWatchdogId);
-		DbgPrintf(7, _T("ItemPoller: wakeup"));
+		DbgPrintf(8, _T("ItemPoller: wakeup"));
 
       RWLockReadLock(g_rwlockNodeIndex, INFINITE);
-		DbgPrintf(7, _T("ItemPoller: node index lock acquired (index size %d)"), g_dwNodeAddrIndexSize);
+		DbgPrintf(8, _T("ItemPoller: node index lock acquired (index size %d)"), g_dwNodeAddrIndexSize);
       qwStart = GetCurrentTimeMs();
       for(i = 0; i < g_dwNodeAddrIndexSize; i++)
 		{
-			DbgPrintf(7, _T("ItemPoller: (%d) calling QueueItemsForPolling for node %s [%d]"),
+			DbgPrintf(8, _T("ItemPoller: (%d) calling QueueItemsForPolling for node %s [%d]"),
 			          i, ((Node *)g_pNodeIndexByAddr[i].pObject)->Name(), ((Node *)g_pNodeIndexByAddr[i].pObject)->Id());
          ((Node *)g_pNodeIndexByAddr[i].pObject)->QueueItemsForPolling(g_pItemQueue);
 		}
       RWLockUnlock(g_rwlockNodeIndex);
-		DbgPrintf(7, _T("ItemPoller: node index lock released"));
+		DbgPrintf(8, _T("ItemPoller: node index lock released"));
 
       // Save last poll time
       dwTimingHistory[dwCurrPos] = (DWORD)(GetCurrentTimeMs() - qwStart);
