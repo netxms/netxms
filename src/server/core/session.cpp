@@ -427,7 +427,7 @@ void ClientSession::ReadThread(void)
          pRawMsg->dwId = ntohl(pRawMsg->dwId);
          pRawMsg->wCode = ntohs(pRawMsg->wCode);
          pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
-         DebugPrintf(7, "Received raw message %s", NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
+         DebugPrintf(6, "Received raw message %s", NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
 
          if ((pRawMsg->wCode == CMD_FILE_DATA) || 
              (pRawMsg->wCode == CMD_ABORT_FILE_TRANSFER))
@@ -717,7 +717,7 @@ void ClientSession::ProcessingThread(void)
          break;
 
       m_wCurrentCmd = pMsg->GetCode();
-      DebugPrintf(7, "Received message %s", NXCPMessageCodeName(m_wCurrentCmd, szBuffer));
+      DebugPrintf(6, "Received message %s", NXCPMessageCodeName(m_wCurrentCmd, szBuffer));
       if (!(m_dwFlags & CSF_AUTHENTICATED) && 
           (m_wCurrentCmd != CMD_LOGIN) && 
           (m_wCurrentCmd != CMD_GET_SERVER_INFO) &&
