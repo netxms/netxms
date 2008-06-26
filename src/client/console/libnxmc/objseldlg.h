@@ -30,18 +30,18 @@
 // Allowed classes
 //
 
-#define SCL_NODE              0x0001
-#define SCL_INTERFACE         0x0002
-#define SCL_CONTAINER         0x0004
-#define SCL_SUBNET            0x0008
-#define SCL_NETWORK           0x0010
-#define SCL_SERVICEROOT       0x0020
-#define SCL_ZONE              0x0040
-#define SCL_NETWORKSERVICE    0x0080
-#define SCL_TEMPLATE          0x0100
-#define SCL_TEMPLATEGROUP     0x0200
-#define SCL_TEMPLATEROOT      0x0400
-#define SCL_VPNCONNECTOR      0x0800
+#define SCL_NODE				0x0001
+#define SCL_INTERFACE			0x0002
+#define SCL_CONTAINER			0x0004
+#define SCL_SUBNET				0x0008
+#define SCL_NETWORK				0x0010
+#define SCL_SERVICEROOT			0x0020
+#define SCL_ZONE				0x0040
+#define SCL_NETWORKSERVICE		0x0080
+#define SCL_TEMPLATE			0x0100
+#define SCL_TEMPLATEGROUP		0x0200
+#define SCL_TEMPLATEROOT		0x0400
+#define SCL_VPNCONNECTOR		0x0800
 #define SCL_CONDITION			0x1000
 #define SCL_CLUSTER				0x2000
 
@@ -55,17 +55,17 @@ class LIBNXMC_EXPORTABLE nxObjectSelDlg : public wxDialog
 private:
 	int m_sortMode;
 	int m_sortDir;
-
+	
 	void SortObjects();
-
+	
 protected:
 	virtual bool TransferDataFromWindow(void);
 	virtual bool TransferDataToWindow(void);
-
+	
 public:
 	nxObjectSelDlg(wxWindow *parent);
 	virtual ~nxObjectSelDlg();
-
+	
 	DWORD m_parentObjectId;
 	DWORD m_allowedClasses;
 	bool m_isSelectAddress;
@@ -74,13 +74,13 @@ public:
 	bool m_isEmptySelectionAllowed;
 	TCHAR *m_customAttributeFilter;
 	wxArrayLong m_objectList;
-
+	
 // Event handlers
 protected:
 	void OnInitDialog(wxInitDialogEvent &event);
 	void OnListColumnClick(wxListEvent &event);
 	void OnListItemActivate(wxListEvent &event);
-
+	
 	DECLARE_EVENT_TABLE()
 };
 
