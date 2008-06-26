@@ -72,6 +72,7 @@ public:
 	bool m_isShowLoopback;
 	bool m_isSingleSelection;
 	bool m_isEmptySelectionAllowed;
+	TCHAR *m_customAttributeFilter;
 	wxArrayLong m_objectList;
 
 // Event handlers

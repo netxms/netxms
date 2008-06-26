@@ -52,6 +52,7 @@ nxObjectSelDlg::nxObjectSelDlg(wxWindow *parent)
 	m_isShowLoopback = false;
 	m_isSingleSelection = true;
 	m_isEmptySelectionAllowed = false;
+	m_customAttributeFilter = NULL;
 
 	wxXmlResource::Get()->LoadDialog(this, parent, _T("nxObjectSelDlg"));
 	GetSizer()->Fit(this);
