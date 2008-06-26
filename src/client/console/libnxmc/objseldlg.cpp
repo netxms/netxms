@@ -141,15 +141,24 @@ bool nxObjectSelDlg::TransferDataToWindow(void)
 		NXCLockObjectIndex(NXMCGetSession());
 		index = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(NXMCGetSession(), &numObjects);
 		for(i = 0; i < numObjects; i++)
+		{
 			if ((classMask[index[i].object->iClass] & m_allowedClasses) &&
 				(!index[i].object->bIsDeleted))
 			{
+				if (m_customAttributeFilter != NULL)
+				{
+					if (index[i].object->pCustomAttrs->Get(m_customAttributeFilter) == NULL)
+					{
+						continue;
+					}
+				}
 				item = wndListCtrl->InsertItem(0x7FFFFFFF, index[i].object->szName,
 					index[i].object->iClass);
 				wndListCtrl->SetItem(item, 1, NXMCGetClassName(index[i].object->iClass));
 				wndListCtrl->SetItemData(item, index[i].object->dwId);
 			}
-			NXCUnlockObjectIndex(NXMCGetSession());
+		}
+		NXCUnlockObjectIndex(NXMCGetSession());
 	}
 	else
 	{
