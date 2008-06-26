@@ -406,6 +406,8 @@ enum
 #define RCC_NO_L2_TOPOLOGY_SUPPORT	((DWORD)76)
 #define RCC_INVALID_SITUATION_ID    ((DWORD)77)
 #define RCC_INSTANCE_NOT_FOUND      ((DWORD)78)
+#define RCC_INVALID_EVENT_ID        ((DWORD)79)
+#define RCC_AGENT_ERROR             ((DWORD)80)
 
 
 //
