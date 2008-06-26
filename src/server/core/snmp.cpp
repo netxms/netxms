@@ -416,7 +416,7 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
       // Enumerate interfaces
       for(i = 0; i < iNumIf; i++)
       {
-         // Interface name
+         // Get interface alias if needed
          if (useAliases > 0)
          {
 		      sprintf(szOid, ".1.3.6.1.2.1.31.1.1.1.18.%d", pIfList->pInterfaces[i].dwIndex);
@@ -431,10 +431,19 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
 					StrStrip(pIfList->pInterfaces[i].szName);
 				}
          }
-         sprintf(szOid, ".1.3.6.1.2.1.2.2.1.2.%d", pIfList->pInterfaces[i].dwIndex);
+
+			// Try to get interface name from ifXTable, if unsuccessful, use ifTable
+         sprintf(szOid, ".1.3.6.1.2.1.31.1.1.1.1.%d", pIfList->pInterfaces[i].dwIndex);
          if (SnmpGet(dwVersion, pTransport, szCommunity, szOid, NULL, 0,
                      szBuffer, 256, FALSE, FALSE) != SNMP_ERR_SUCCESS)
-            break;
+         {
+		      sprintf(szOid, ".1.3.6.1.2.1.2.2.1.2.%d", pIfList->pInterfaces[i].dwIndex);
+		      if (SnmpGet(dwVersion, pTransport, szCommunity, szOid, NULL, 0,
+		                  szBuffer, 256, FALSE, FALSE) != SNMP_ERR_SUCCESS)
+		         break;
+		   }
+
+			// Build full interface object name
          switch(useAliases)
          {
          	case 1:	// Use only alias if available, otherwise name
