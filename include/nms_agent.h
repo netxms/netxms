@@ -90,6 +90,10 @@
 #define ERR_SOCKET_ERROR            ((DWORD)912)
 #define ERR_BAD_ARGUMENTS           ((DWORD)913)
 #define ERR_SUBAGENT_LOAD_FAILED    ((DWORD)914)
+#define ERR_FILE_OPEN_ERROR         ((DWORD)915)
+#define ERR_FILE_STAT_FAILED        ((DWORD)916)
+#define ERR_MEM_ALLOC_FAILED        ((DWORD)917)
+#define ERR_FILE_DELETE_FAILED      ((DWORD)918)
 
 
 //
