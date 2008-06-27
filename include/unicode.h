@@ -182,6 +182,7 @@
 #define _istalpha iswalpha
 #define _istupper iswupper
 #define _tgetenv  wgetenv
+#define _tmkdir   wmkdir
 
 #else
 
@@ -231,6 +232,7 @@
 #define _istalpha isalpha
 #define _istupper isupper
 #define _tgetenv  getenv
+#define _tmkdir   mkdir
 
 #define _ERR_error_tstring		ERR_error_string
 
