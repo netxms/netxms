@@ -106,6 +106,7 @@ bool nxApp::OnInit()
 	wxFileSystem::AddHandler(new wxMemoryFSHandler);
 #endif
 	wxImage::AddHandler(new wxPNGHandler);
+	wxImage::AddHandler(new wxJPEGHandler);
 	wxImage::AddHandler(new wxXPMHandler);
 
 	wxXmlResource::Get()->InitAllHandlers();
