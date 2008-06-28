@@ -394,7 +394,7 @@ void Condition::EndPoll(void)
 
 void Condition::Check(void)
 {
-   NXSL_Environment *pEnv;
+   NXSL_ServerEnv *pEnv;
    NXSL_Value **ppValueList, *pValue;
    NetObj *pObject;
    DCItem *pItem;
@@ -404,8 +404,7 @@ void Condition::Check(void)
    if ((m_pCompiledScript == NULL) || (m_iStatus == STATUS_UNMANAGED))
       return;
 
-   pEnv = new NXSL_Environment;
-   pEnv->SetLibrary(g_pScriptLibrary);
+   pEnv = new NXSL_ServerEnv;
 
    LockData();
    ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * m_dwDCICount);

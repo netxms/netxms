@@ -65,6 +65,17 @@ public:
 
 
 //
+// Server's default script environment
+//
+
+class NXSL_ServerEnv : public NXSL_Environment
+{
+public:
+	NXSL_ServerEnv();
+};
+
+
+//
 // Functions
 //
 

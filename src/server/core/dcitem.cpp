@@ -126,6 +126,11 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
    { "GetDCIValue", F_GetDCIValue, 2 }
 };
 
+void RegisterDCIFunctions(NXSL_Environment *pEnv)
+{
+	pEnv->RegisterFunctionSet(sizeof(m_nxslDCIFunctions) / sizeof(NXSL_ExtFunction), m_nxslDCIFunctions);
+}
+
 
 //
 // Default constructor for DCItem
@@ -996,7 +1001,7 @@ void DCItem::Transform(ItemValue &value, time_t nElapsedTime)
    if (m_pScript != NULL)
    {
       NXSL_Value *pValue;
-      NXSL_Environment *pEnv;
+      NXSL_ServerEnv *pEnv;
 
       switch(m_iDataType)
       {
@@ -1023,9 +1028,7 @@ void DCItem::Transform(ItemValue &value, time_t nElapsedTime)
             break;
       }
 
-      pEnv = new NXSL_Environment;
-      pEnv->SetLibrary(g_pScriptLibrary);
-		pEnv->RegisterFunctionSet(sizeof(m_nxslDCIFunctions) / sizeof(NXSL_ExtFunction), m_nxslDCIFunctions);
+      pEnv = new NXSL_ServerEnv;
       m_pScript->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
 	
       if (m_pScript->Run(pEnv, 1, &pValue) == 0)
@@ -1871,14 +1874,13 @@ void DCItem::ExpandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 		else if (!_tcsncmp(macro, _T("script:"), 7))
 		{
 			NXSL_Program *script;
-			NXSL_Environment *pEnv;
+			NXSL_ServerEnv *pEnv;
 
 	      g_pScriptLibrary->Lock();
 			script = g_pScriptLibrary->FindScript(&macro[7]);
 			if (script != NULL)
 			{
-				pEnv = new NXSL_Environment;
-				pEnv->SetLibrary(g_pScriptLibrary);
+				pEnv = new NXSL_ServerEnv;
 				if (m_pNode != NULL)
 					script->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
 

@@ -15,7 +15,7 @@ libnxcore_la_SOURCES = acl.cpp agent.cpp actions.cpp admin.cpp alarm.cpp \
 			node.cpp nortel.cpp np.cpp nxmp_data.cpp \
 			nxmp_lex.yy.cpp nxmp_lexer.cpp \
 			nxmp_parser.cpp nxmp_parser.tab.cpp \
-			nxsl_classes.cpp objects.cpp \
+			nxsl_classes.cpp nxslext.cpp objects.cpp \
 			objtools.cpp package.cpp poll.cpp radius.cpp \
 			rootobj.cpp script.cpp session.cpp situation.cpp \
 			sms.cpp snmp.cpp snmptrap.cpp subnet.cpp syncer.cpp \

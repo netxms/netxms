@@ -362,6 +362,10 @@ SOURCE=.\nxsl_classes.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\nxslext.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\objects.cpp
 # End Source File
 # Begin Source File

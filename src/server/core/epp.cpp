@@ -277,7 +277,7 @@ BOOL EPRule::MatchSeverity(DWORD dwSeverity)
 
 BOOL EPRule::MatchScript(Event *pEvent)
 {
-   NXSL_Environment *pEnv;
+   NXSL_ServerEnv *pEnv;
    NXSL_Value **ppValueList, *pValue;
    NXSL_VariableSystem *pLocals, *pGlobals = NULL;
    BOOL bRet = TRUE;
@@ -287,8 +287,7 @@ BOOL EPRule::MatchScript(Event *pEvent)
    if (m_pScript == NULL)
       return TRUE;
 
-   pEnv = new NXSL_Environment;
-   pEnv->SetLibrary(g_pScriptLibrary);
+   pEnv = new NXSL_ServerEnv;
 	pEnv->RegisterFunctionSet(g_nxslNumSituationFunctions, g_nxslSituationFunctions);
 
    // Pass event's parameters as arguments and

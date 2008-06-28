@@ -341,7 +341,7 @@ TCHAR *Event::ExpandText(TCHAR *pszTemplate, TCHAR *pszAlarmMsg)
 						else
 						{
 							NXSL_Program *script;
-							NXSL_Environment *pEnv;
+							NXSL_ServerEnv *pEnv;
 
 							scriptName[i] = 0;
 							StrStrip(scriptName);
@@ -350,8 +350,7 @@ TCHAR *Event::ExpandText(TCHAR *pszTemplate, TCHAR *pszAlarmMsg)
 							script = g_pScriptLibrary->FindScript(scriptName);
 							if (script != NULL)
 							{
-								pEnv = new NXSL_Environment;
-								pEnv->SetLibrary(g_pScriptLibrary);
+								pEnv = new NXSL_ServerEnv;
 								if (pObject->Type() == OBJECT_NODE)
 									script->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, pObject)));
 								script->SetGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, this)));
