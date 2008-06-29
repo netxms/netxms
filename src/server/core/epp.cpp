@@ -114,7 +114,7 @@ EPRule::EPRule(CSCPMessage *pMsg)
 	
    m_dwFlags = pMsg->GetVariableLong(VID_FLAGS);
    m_dwId = pMsg->GetVariableLong(VID_RULE_ID);
-   m_pszComment = pMsg->GetVariableStr(VID_COMMENT);
+   m_pszComment = pMsg->GetVariableStr(VID_COMMENTS);
 
    m_dwNumActions = pMsg->GetVariableLong(VID_NUM_ACTIONS);
    m_pdwActionList = (DWORD *)malloc(sizeof(DWORD) * m_dwNumActions);
@@ -608,7 +608,7 @@ void EPRule::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_ALARM_MESSAGE, m_szAlarmMessage);
    pMsg->SetVariable(VID_ALARM_TIMEOUT, m_dwAlarmTimeout);
    pMsg->SetVariable(VID_ALARM_TIMEOUT_EVENT, m_dwAlarmTimeoutEvent);
-   pMsg->SetVariable(VID_COMMENT, CHECK_NULL_EX(m_pszComment));
+   pMsg->SetVariable(VID_COMMENTS, CHECK_NULL_EX(m_pszComment));
    pMsg->SetVariable(VID_NUM_ACTIONS, m_dwNumActions);
    pMsg->SetVariableToInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
    pMsg->SetVariable(VID_NUM_EVENTS, m_dwNumEvents);

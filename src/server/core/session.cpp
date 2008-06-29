@@ -8051,7 +8051,7 @@ void ClientSession::UpdateObjectComments(CSCPMessage *pRequest)
    {
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
-         pObject->SetComments(pRequest->GetVariableStr(VID_COMMENT));
+         pObject->SetComments(pRequest->GetVariableStr(VID_COMMENTS));
       }
       else
       {

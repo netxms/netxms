@@ -85,7 +85,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEv
             {
                (*ppEventPolicy)->pRuleList[i].dwFlags = pResponse->GetVariableLong(VID_FLAGS);
                (*ppEventPolicy)->pRuleList[i].dwId = pResponse->GetVariableLong(VID_RULE_ID);
-               (*ppEventPolicy)->pRuleList[i].pszComment = pResponse->GetVariableStr(VID_COMMENT);
+               (*ppEventPolicy)->pRuleList[i].pszComment = pResponse->GetVariableStr(VID_COMMENTS);
                (*ppEventPolicy)->pRuleList[i].pszScript = pResponse->GetVariableStr(VID_SCRIPT);
 
                (*ppEventPolicy)->pRuleList[i].dwNumActions = 
@@ -213,7 +213,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEven
 
          msg.SetVariable(VID_FLAGS, pEventPolicy->pRuleList[i].dwFlags);
          msg.SetVariable(VID_RULE_ID, pEventPolicy->pRuleList[i].dwId);
-         msg.SetVariable(VID_COMMENT, (TCHAR *)CHECK_NULL_EX(pEventPolicy->pRuleList[i].pszComment));
+         msg.SetVariable(VID_COMMENTS, (TCHAR *)CHECK_NULL_EX(pEventPolicy->pRuleList[i].pszComment));
          msg.SetVariable(VID_SCRIPT, (TCHAR *)CHECK_NULL_EX(pEventPolicy->pRuleList[i].pszScript));
          msg.SetVariable(VID_NUM_ACTIONS, pEventPolicy->pRuleList[i].dwNumActions);
          msg.SetVariableToInt32Array(VID_RULE_ACTIONS,

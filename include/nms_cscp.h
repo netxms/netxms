@@ -527,7 +527,7 @@ typedef struct
 #define VID_MIB_NAME                ((DWORD)59)
 #define VID_MIB_FILE_SIZE           ((DWORD)60)
 #define VID_MIB_FILE                ((DWORD)61)
-#define VID_COMMENT                 ((DWORD)62)
+//#define VID_COMMENT                 ((DWORD)62)
 #define VID_ALARM_SEVERITY          ((DWORD)63)
 #define VID_ALARM_KEY               ((DWORD)64)
 #define VID_ALARM_TIMEOUT           ((DWORD)65)

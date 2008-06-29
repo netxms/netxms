@@ -1661,7 +1661,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetObjectComments(NXC_SESSION hSession,
    {
       dwResult = pResponse->GetVariableLong(VID_RCC);
       if (dwResult == RCC_SUCCESS)
-         *ppszText = pResponse->GetVariableStr(VID_COMMENT);
+         *ppszText = pResponse->GetVariableStr(VID_COMMENTS);
    }
    else
    {
@@ -1686,7 +1686,7 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateObjectComments(NXC_SESSION hSession,
    msg.SetCode(CMD_UPDATE_OBJECT_COMMENTS);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_OBJECT_ID, dwObjectId);
-   msg.SetVariable(VID_COMMENT, pszText);
+   msg.SetVariable(VID_COMMENTS, pszText);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }

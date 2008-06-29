@@ -1231,7 +1231,7 @@ void NetObj::SetComments(TCHAR *pszText)
 void NetObj::CommentsToMessage(CSCPMessage *pMsg)
 {
    LockData();
-   pMsg->SetVariable(VID_COMMENT, CHECK_NULL_EX(m_pszComments));
+   pMsg->SetVariable(VID_COMMENTS, CHECK_NULL_EX(m_pszComments));
    UnlockData();
 }
 
