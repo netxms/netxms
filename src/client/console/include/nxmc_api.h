@@ -237,7 +237,7 @@ private:
 	int m_id;
 	int m_type;
 	void (*m_fpHandler)(int);
-	const wxIcon *m_icon;
+	wxIcon m_icon;
 
 public:
 	nxmcItemRegistration(NXMC_PLUGIN_HANDLE plugin, const TCHAR *name, int id,
@@ -247,7 +247,7 @@ public:
 	const TCHAR *GetName() { return m_name; }
 	int GetType() { return m_type; }
 	int GetId() { return m_id; }
-	const wxIcon GetIcon() { return *m_icon; }
+	const wxIcon& GetIcon() { return m_icon; }
 	NXMC_PLUGIN_HANDLE GetPlugin() { return m_plugin; }
 
 	void CallHandler(int param) { m_fpHandler(param); }

@@ -66,7 +66,7 @@ nxmcItemRegistration::nxmcItemRegistration(NXMC_PLUGIN_HANDLE plugin, const TCHA
 	m_name = _tcsdup(name);
 	m_id = id;
 	m_type = type;
-	m_icon = &icon;
+	m_icon = icon;
 	m_fpHandler = fpHandler;
 }
 
