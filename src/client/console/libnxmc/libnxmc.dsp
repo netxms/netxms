@@ -112,7 +112,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy            Release_UNICODE\libnxmc.dll            C:\NetXMS\bin\ 
+PostBuild_Cmds=copy             Release_UNICODE\libnxmc.dll             C:\NetXMS\bin\ 
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "libnxmc - Win32 Debug UNICODE"
@@ -196,6 +196,10 @@ SOURCE=.\tools.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\userSelectionDialog.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\view.cpp
 # End Source File
 # Begin Source File
@@ -261,6 +265,10 @@ SOURCE=.\nxview.h
 # Begin Source File
 
 SOURCE=.\objseldlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\userSelectionDialog.h
 # End Source File
 # Begin Source File
 
