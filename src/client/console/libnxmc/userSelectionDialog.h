@@ -29,6 +29,13 @@ public:
 	nxUserSelectionDialog(wxWindow *parent);
 	virtual ~nxUserSelectionDialog();
 
+	void SetShowGroups(bool flag);
+	void SetShowPublic(bool flag);
+	void SetSingleSelection(bool flag);
+
+	DWORD GetSelectedUsersCount();
+	DWORD *GetSelectedUsers();
+
 protected:
 	virtual bool TransferDataFromWindow(void);
 	virtual bool TransferDataToWindow(void);
@@ -36,6 +43,12 @@ protected:
 private:
 	int m_sortMode;
 	int m_sortDir;
+	bool m_showGroups;
+	bool m_showPublic;
+	bool m_singleSelection;
+
+	DWORD m_selectedUsersCount;
+	DWORD *m_selectedUsers;
 
 	void OnInitDialog(wxInitDialogEvent &event);
 	void OnListColumnClick(wxListEvent &event);

@@ -73,9 +73,15 @@ src/agent/subagents/wmi/wmi.dsw eol=crlf
 src/client/console/libnxmc/libnxmc.dsp eol=crlf
 src/client/console/nxmc/nxmc.dsp eol=crlf
 src/client/console/nxmc/rc/icons/normal/config.png -text
+src/client/console/nxmc/rc/icons/normal/everyone.png -text
 src/client/console/nxmc/rc/icons/normal/unknown.png -text
+src/client/console/nxmc/rc/icons/normal/user.png -text
+src/client/console/nxmc/rc/icons/normal/userGroup.png -text
 src/client/console/nxmc/rc/icons/small/config.png -text
+src/client/console/nxmc/rc/icons/small/everyone.png -text
 src/client/console/nxmc/rc/icons/small/taskbar.png -text
+src/client/console/nxmc/rc/icons/small/user.png -text
+src/client/console/nxmc/rc/icons/small/userGroup.png -text
 src/client/console/nxmc/rc/login.png -text
 src/client/console/nxmc/rc/nxmc.ico -text
 src/client/console/nxmc/rc/processing.png -text
