@@ -19,6 +19,10 @@ src/agent/core/messages.c
 src/agent/core/messages.h
 src/agent/core/nxagentd
 src/agent/core/static_subagents.cpp
+src/libnxsl/lex.yy.cpp
+src/libnxsl/parser.output
+src/libnxsl/parser.tab.cpp
+src/libnxsl/parser.tab.hpp
 src/nxmibc/Makefile
 src/nxmibc/Makefile.in
 src/nxmibc/lex.mp.c
