@@ -73,6 +73,7 @@ public:
 	bool m_isSingleSelection;
 	bool m_isEmptySelectionAllowed;
 	TCHAR *m_customAttributeFilter;
+	bool m_customAttributeFilterInverted;
 	wxArrayLong m_objectList;
 	
 // Event handlers

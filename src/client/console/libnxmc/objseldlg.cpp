@@ -53,6 +53,7 @@ nxObjectSelDlg::nxObjectSelDlg(wxWindow *parent)
 	m_isSingleSelection = true;
 	m_isEmptySelectionAllowed = false;
 	m_customAttributeFilter = NULL;
+	m_customAttributeFilterInverted = false;
 	
 	wxXmlResource::Get()->LoadDialog(this, parent, _T("nxObjectSelDlg"));
 	GetSizer()->Fit(this);
@@ -147,9 +148,21 @@ bool nxObjectSelDlg::TransferDataToWindow(void)
 			{
 				if (m_customAttributeFilter != NULL)
 				{
-					if (index[i].object->pCustomAttrs->Get(m_customAttributeFilter) == NULL)
+					// TODO: Clean this code later; I can't think right now.
+					TCHAR *customAttribute = index[i].object->pCustomAttrs->Get(m_customAttributeFilter);
+					if (!m_customAttributeFilterInverted)
 					{
-						continue;
+						if (customAttribute == NULL)
+						{
+							continue;
+						}
+					}
+					else
+					{
+						if (customAttribute != NULL)
+						{
+							continue;
+						}
 					}
 				}
 				item = wndListCtrl->InsertItem(0x7FFFFFFF, index[i].object->szName,
