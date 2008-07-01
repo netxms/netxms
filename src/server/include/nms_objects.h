@@ -303,9 +303,9 @@ public:
    void AddChildNodesToList(DWORD *pdwNumNodes, Node ***pppNodeList, DWORD dwUserId);
    
    const TCHAR *GetCustomAttribute(const TCHAR *name) { return m_customAttributes.Get(name); }
-   void SetCustomAttribute(const TCHAR *name, const TCHAR *value) { m_customAttributes.Set(name, value); }
-   void SetCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.SetPreallocated(_tcsdup(name), value); }
-   void DeleteCustomAttribute(const TCHAR *name) { m_customAttributes.Delete(name); }
+   void SetCustomAttribute(const TCHAR *name, const TCHAR *value) { m_customAttributes.Set(name, value); Modify(); }
+   void SetCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.SetPreallocated(_tcsdup(name), value); Modify(); }
+   void DeleteCustomAttribute(const TCHAR *name) { m_customAttributes.Delete(name); Modify(); }
 
    // Debug methods
    const char *ParentList(char *szBuffer);
