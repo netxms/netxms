@@ -2,11 +2,13 @@
 /Makefile.in
 /aclocal.m4
 /autom4te.cache
+/bin
 /config.h
 /config.h.in
 /config.log
 /config.status
 /configure
+/lib
 /libtool
 sql/dbinit_mssql.sql
 sql/dbinit_mysql.sql
