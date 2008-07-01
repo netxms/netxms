@@ -26,6 +26,10 @@ src/nxmibc/parser.output
 src/nxmibc/parser.tab.c
 src/nxmibc/parser.tab.h
 src/server/core/netxmsd
+src/server/core/nxmp_lex.yy.cpp
+src/server/core/nxmp_parser.output
+src/server/core/nxmp_parser.tab.cpp
+src/server/core/nxmp_parser.tab.hpp
 src/server/include/messages.h
 src/server/libnxsrv/*.bin
 src/server/libnxsrv/messages.c
