@@ -257,10 +257,18 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_UPDATE_SITUATION"),
 		_T("CMD_SITUATION_DATA"),
 		_T("CMD_SITUATION_CHANGE"),
-		_T("CMD_CREATE_MAP")
+		_T("CMD_CREATE_MAP"),
+		_T("CMD_WEBMAP_ADD"),
+		_T("CMD_WEBMAP_UPDATE_PROPS"),
+		_T("CMD_WEBMAP_UPDATE_DATA"),
+		_T("CMD_WEBMAP_DELETE"),
+		_T("CMD_WEBMAP_GET_DATA"),
+		_T("CMD_WEBMAP_GET_LIST"),
+		_T("CMD_CONFIG_SET_CLOB"),
+		_T("CMD_CONFIG_GET_CLOB")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_CREATE_MAP))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_CONFIG_GET_CLOB))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_UNKNOWN(%d)"), wCode);

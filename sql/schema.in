@@ -25,6 +25,18 @@ CREATE TABLE config
 
 
 /*
+** System configuration data (for large data)
+*/
+
+CREATE TABLE config_clob
+(
+	var_name varchar(63) not null,
+	var_value SQL_TEXT not null,
+	PRIMARY KEY(var_name)
+) TABLE_TYPE;
+
+
+/*
 ** Users
 */
 

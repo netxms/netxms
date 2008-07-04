@@ -103,6 +103,27 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 
 
 //
+// Upgrade from V81 to V82
+//
+
+static BOOL H_UpgradeFromV81(void)
+{
+	if (!CreateTable(_T("CREATE TABLE config_clob (")
+	                 _T("var_name varchar(63) not null,")
+	                 _T("var_value $SQL:TEXT not null,")
+	                 _T("PRIMARY KEY(var_name))")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='82' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V80 to V81
 //
 
@@ -3626,6 +3647,7 @@ static struct
    { 78, H_UpgradeFromV78 },
    { 79, H_UpgradeFromV79 },
    { 80, H_UpgradeFromV80 },
+   { 81, H_UpgradeFromV81 },
    { 0, NULL }
 };
 

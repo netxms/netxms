@@ -1,4 +1,17 @@
 *************
+* 81 ==> 82 *
+*************
+
+- New table added:
+	CREATE TABLE config_clob
+	(
+		var_name varchar(63) not null,
+		var_value SQL_TEXT not null,
+		PRIMARY KEY(var_name)
+	) TABLE_TYPE;
+
+
+*************
 * 80 ==> 81 *
 *************
 
@@ -11,10 +24,10 @@
 - New tables added:
 	CREATE TABLE object_custom_attributes
 	(
-   	object_id integer not null,
-   	attr_name varchar(127) not null,
-   	attr_value SQL_TEXT not null,
-   	PRIMARY KEY(object_id,attr_name)
+   		object_id integer not null,
+   		attr_name varchar(127) not null,
+   		attr_value SQL_TEXT not null,
+   		PRIMARY KEY(object_id,attr_name)
 	) TABLE_TYPE;
 	CREATE TABLE web_maps
 	(
