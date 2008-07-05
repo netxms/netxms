@@ -22,10 +22,10 @@
 #define HAVE_WCHAR_T 1
 
 /* Define to 1 if you have the `iconv' function. */
-#define HAVE_ICONV 1
+//#define HAVE_ICONV 1
 
 /* Define to 1 if you have the <iconv.h> header file. */
-#define HAVE_ICONV_H 1
+//#define HAVE_ICONV_H 1
 
 /* Define to 1 if iconv supports //IGNORE option */
 #define HAVE_ICONV_IGNORE 1

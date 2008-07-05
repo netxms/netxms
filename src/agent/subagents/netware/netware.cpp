@@ -34,13 +34,15 @@ static CONDITION m_hCondTerminate = INVALID_CONDITION_HANDLE;
 static THREAD m_hCollectorThread = INVALID_THREAD_HANDLE;
 static int m_iCpuUtilHistory[MAX_CPU][CPU_HISTORY_SIZE];
 static int m_iCpuHPos = 0;
+static int m_iDiskQueuePos = 0;
+static int m_iDiskQueue[60];
 
 
 //
 // Memory information
 //
 
-static LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
+static LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 {
 	struct memory_info info;
 	size64_t nTotalMem;
@@ -80,7 +82,7 @@ static LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
 // Disk information
 //
 
-static LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
+static LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue)
 {
 	struct volume_info vi;
 	char szVolumeName[MAX_VOLUME_NAME_LEN + 1];
@@ -123,7 +125,7 @@ static LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 // Host name
 //
 
-static LONG H_HostName(char *pszParam, char *pArg, char *pValue)
+static LONG H_HostName(const char *pszParam, const char *pArg, char *pValue)
 {
 	char szName[256];
 	int iErr;
@@ -139,7 +141,7 @@ static LONG H_HostName(char *pszParam, char *pArg, char *pValue)
 // CPU usage
 //
 
-static LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
+static LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue)
 {
 	int i, j, iSteps, iValue, iCpu, iCpuCount;
 	char szBuffer[256];
@@ -182,7 +184,7 @@ static LONG H_CpuUsage(char *pszParam, char *pArg, char *pValue)
 // CPU count
 //
 
-static LONG H_CpuCount(char *pszParam, char *pArg, char *pValue)
+static LONG H_CpuCount(const char *pszParam, const char *pArg, char *pValue)
 {
 	ret_uint(pValue, NXGetCpuCount());
 	return SYSINFO_RC_SUCCESS;
@@ -193,9 +195,45 @@ static LONG H_CpuCount(char *pszParam, char *pArg, char *pValue)
 // Platform name
 //
 
-static LONG H_PlatformName(char *pszParam, char *pArg, char *pValue)
+static LONG H_PlatformName(const char *pszParam, const char *pArg, char *pValue)
 {
 	ret_string(pValue, "netware-i386");
+	return SYSINFO_RC_SUCCESS;
+}
+
+
+//
+// Open files
+//
+
+static LONG H_OpenFiles(const char *pszParam, const char *pArg, char *pValue)
+{
+	struct filesystem_info fsi;
+
+	if (netware_fs_info(&fsi) != 0)
+		return SYSINFO_RC_ERROR;
+	ret_int(pValue, fsi.OpenFileCount);
+	return SYSINFO_RC_SUCCESS;
+}
+
+
+//
+// Average disk queue
+//
+
+static LONG H_DiskQueue(const char *pszParam, const char *pArg, char *pValue)
+{
+	int i, iSteps, iValue;
+	char szBuffer[256];
+
+	for(i = m_iDiskQueuePos - 1, iValue = 0, iSteps = 60; iSteps > 0; iSteps--, i--)
+	{
+		if (i < 0)
+			i = 59;
+		iValue += m_iDiskQueue[i];
+	}
+
+	ret_double(pValue, ((double)iValue / 60.0));
 	return SYSINFO_RC_SUCCESS;
 }
 
@@ -204,7 +242,7 @@ static LONG H_PlatformName(char *pszParam, char *pArg, char *pValue)
 // ARP cache
 //
 
-static LONG H_ArpCache(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+static LONG H_ArpCache(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	return SYSINFO_RC_UNSUPPORTED;
 }
@@ -244,6 +282,7 @@ static THREAD_RESULT THREAD_CALL CollectorThread(void *pArg)
 {
 	struct cpu_info ci;
 	int iSeq, iCpu, iNumCpu;
+	struct filesystem_info fsi;
 
 	while(1)
 	{
@@ -268,6 +307,15 @@ static THREAD_RESULT THREAD_CALL CollectorThread(void *pArg)
 		m_iCpuHPos++;
 		if (m_iCpuHPos == CPU_HISTORY_SIZE)
 			m_iCpuHPos = 0;
+
+		// Disk queue
+		if (netware_fs_info(&fsi) == 0)
+		{
+			m_iDiskQueue[m_iDiskQueuePos] = fsi.CurrentDiskRequests; 
+			m_iDiskQueuePos++;
+			if (m_iDiskQueuePos == 60)
+				m_iDiskQueuePos = 0;
+		}
 	}
 	return THREAD_OK;
 }
@@ -281,6 +329,7 @@ static BOOL SubAgentInit(TCHAR *pszConfigFile)
 {
 	// Setup internal variables
 	memset(m_iCpuUtilHistory, 0, sizeof(int) * CPU_HISTORY_SIZE * MAX_CPU);
+	memset(m_iDiskQueue, 0, sizeof(int) * 60);
 
 	// Start collector thread
 	m_hCondShutdown = ConditionCreate(TRUE);
@@ -324,6 +373,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "System.CPU.Usage(*)", H_CpuUsage, (char *)60, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_EX },
 	{ "System.CPU.Usage5(*)", H_CpuUsage, (char *)300, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_EX },
 	{ "System.CPU.Usage15(*)", H_CpuUsage, (char *)900, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_EX },
+	{ "System.IO.DiskQueue", H_DiskQueue, NULL, DCI_DT_FLOAT, _T("Average disk queue length for last minute") },
+	{ "System.IO.OpenFiles", H_OpenFiles, NULL, DCI_DT_INT, _T("Number of open files") },
 	{ "System.Hostname", H_HostName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_HOSTNAME },
 	{ "System.Memory.Physical.Free", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_FREE, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
 	{ "System.Memory.Physical.Total", H_MemoryInfo, (char *)MEMINFO_PHYSICAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },

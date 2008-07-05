@@ -80,6 +80,13 @@
 
 #else    /* not _WIN32 */
 
+#if defined(_NETWARE) && defined(__GNUC__) && defined(__cplusplus)
+#define _WCHAR_T
+#define _WCHAR_T_DEFINED
+#define wchar_t unsigned short
+#endif
+
+
 #if HAVE_WCHAR_H
 #include <wchar.h>
 #endif
