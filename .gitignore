@@ -29,6 +29,7 @@ src/nxmibc/lex.mp.c
 src/nxmibc/parser.output
 src/nxmibc/parser.tab.c
 src/nxmibc/parser.tab.h
+src/private
 src/server/core/netxmsd
 src/server/core/nxmp_lex.yy.cpp
 src/server/core/nxmp_parser.output
