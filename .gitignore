@@ -19,6 +19,7 @@ src/agent/core/messages.c
 src/agent/core/messages.h
 src/agent/core/nxagentd
 src/agent/core/static_subagents.cpp
+src/client/console/nxmc/rc/nxmc.xrs
 src/client/console/plugins/AlarmBrowser/rc/AlarmBrowser.xrs
 src/client/console/plugins/Dashboard/rc/Dashboard.xrs
 src/client/console/plugins/ObjectBrowser/rc/ObjectBrowser.xrs
