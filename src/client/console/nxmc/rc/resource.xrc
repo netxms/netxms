@@ -1,0 +1,463 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
+		<object class="wxMenuBar" name="menubarMain">
+			<label>MainMenu</label>
+			<object class="wxMenu" name="menuFile">
+				<label>_File</label>
+				<object class="separator" />
+				<object class="wxMenuItem" name="menuFileExit">
+					<label>E&amp;xit\tAlt+X</label>
+					<help></help>
+				</object>
+			</object>
+			<object class="wxMenu" name="menuView">
+				<label>_View</label>
+				<object class="wxMenuItem" name="menuViewConsoleLog">
+					<label>Console &amp;Log\tCtrl+Shift+F12</label>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="menuViewControlPanel">
+					<label>&amp;Control Panel\tF9</label>
+					<help></help>
+				</object>
+				<object class="separator" />
+				<object class="wxMenuItem" name="menuViewRefresh">
+					<label>&amp;Refresh\tF5</label>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="menuViewFullScreen">
+					<label>&amp;Full Screen\tF11</label>
+					<help></help>
+					<checkable>1</checkable>
+				</object>
+			</object>
+			<object class="wxMenu" name="menuPerspective">
+				<label>_Perspective</label>
+				<object class="wxMenuItem" name="menuPerspectiveSave">
+					<label>Save current perspective...\tCtrl+Alt+S</label>
+					<help></help>
+				</object>
+				<object class="separator" />
+				<object class="wxMenuItem" name="menuPerspectiveDefault">
+					<label>&amp;Default perspective</label>
+					<help></help>
+				</object>
+			</object>
+			<object class="wxMenu" name="menuHelp">
+				<label>_Help</label>
+				<object class="wxMenuItem" name="menuHelpAbout">
+					<label>&amp;About...</label>
+					<help></help>
+				</object>
+			</object>
+		</object>
+	<object class="wxDialog" name="nxDlgAbout">
+		<style>wxDEFAULT_DIALOG_STYLE</style>
+		<size>460,103</size>
+		<title>About</title>
+		<centered>1</centered>
+		<object class="wxFlexGridSizer">
+			<rows>1</rows>
+			<cols>3</cols>
+			<vgap>0</vgap>
+			<hgap>0</hgap>
+			<growablecols>1</growablecols>
+			<growablerows></growablerows>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL</flag>
+				<border>5</border>
+				<object class="wxStaticBitmap" name="m_bitmap2">
+					<bitmap />
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>1</option>
+				<flag>wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxBoxSizer">
+					<orient>wxVERTICAL</orient>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxStaticText" name="m_staticText5">
+							<label>NetXMS Management Console</label>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxStaticText" name="staticTextVersion">
+							<label>Version x.y.z</label>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxStaticText" name="m_staticText7">
+							<label>Copyright (c) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein</label>
+						</object>
+					</object>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALIGN_RIGHT|wxALL</flag>
+				<border>5</border>
+				<object class="wxButton" name="buttonOK">
+					<label>OK</label>
+					<default>0</default>
+				</object>
+			</object>
+		</object>
+	</object>
+	<object class="wxDialog" name="nxLoginDialog">
+		<style>wxDEFAULT_DIALOG_STYLE</style>
+		<size>501,344</size>
+		<title>NetXMS Console - Connect to Server</title>
+		<centered>1</centered>
+		<object class="wxBoxSizer">
+			<orient>wxVERTICAL</orient>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL|wxALL</flag>
+				<border>5</border>
+				<object class="wxStaticBitmap" name="m_bitmap2">
+					<bitmap>login.png</bitmap>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>1</option>
+				<flag>wxALL|wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxFlexGridSizer">
+					<rows>2</rows>
+					<cols>2</cols>
+					<vgap>0</vgap>
+					<hgap>5</hgap>
+					<growablecols>0</growablecols>
+					<growablerows></growablerows>
+					<object class="sizeritem">
+						<option>1</option>
+						<flag>wxEXPAND</flag>
+						<border>5</border>
+						<object class="wxStaticBoxSizer">
+							<orient>wxVERTICAL</orient>
+							<label>Connection</label>
+							<object class="sizeritem">
+								<option>1</option>
+								<flag>wxEXPAND</flag>
+								<border>5</border>
+								<object class="wxBoxSizer">
+									<orient>wxVERTICAL</orient>
+									<object class="sizeritem">
+										<option>1</option>
+										<flag>wxEXPAND</flag>
+										<border>5</border>
+										<object class="wxFlexGridSizer">
+											<rows>3</rows>
+											<cols>2</cols>
+											<vgap>0</vgap>
+											<hgap>0</hgap>
+											<growablecols>1</growablecols>
+											<growablerows></growablerows>
+											<object class="sizeritem">
+												<option>0</option>
+												<flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+												<border>5</border>
+												<object class="wxStaticText" name="m_staticText5">
+													<label>Server:</label>
+												</object>
+											</object>
+											<object class="sizeritem">
+												<option>0</option>
+												<flag>wxALIGN_CENTER_VERTICAL|wxALL|wxEXPAND</flag>
+												<border>5</border>
+												<object class="wxComboBox" name="comboServer">
+													<style>wxCB_DROPDOWN|wxCB_SORT</style>
+													<value>Combo!</value>
+													<content />
+												</object>
+											</object>
+											<object class="sizeritem">
+												<option>0</option>
+												<flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+												<border>5</border>
+												<object class="wxStaticText" name="m_staticText6">
+													<label>User name:</label>
+												</object>
+											</object>
+											<object class="sizeritem">
+												<option>0</option>
+												<flag>wxALIGN_CENTER_VERTICAL|wxALL|wxEXPAND</flag>
+												<border>5</border>
+												<object class="wxTextCtrl" name="textUserName">
+													<value></value>
+													<maxlength>0</maxlength>
+												</object>
+											</object>
+											<object class="sizeritem">
+												<option>0</option>
+												<flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+												<border>5</border>
+												<object class="wxStaticText" name="m_staticText7">
+													<label>Password:</label>
+												</object>
+											</object>
+											<object class="sizeritem">
+												<option>0</option>
+												<flag>wxALIGN_CENTER_VERTICAL|wxALL|wxEXPAND</flag>
+												<border>5</border>
+												<object class="wxTextCtrl" name="textPassword">
+													<style>wxTE_PASSWORD</style>
+													<value></value>
+													<maxlength>0</maxlength>
+												</object>
+											</object>
+										</object>
+									</object>
+								</object>
+							</object>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>1</option>
+						<flag>wxEXPAND</flag>
+						<border>5</border>
+						<object class="wxStaticBoxSizer">
+							<orient>wxVERTICAL</orient>
+							<label>Options</label>
+							<object class="sizeritem">
+								<option>1</option>
+								<flag>wxEXPAND</flag>
+								<border>5</border>
+								<object class="wxBoxSizer">
+									<orient>wxVERTICAL</orient>
+									<object class="sizeritem">
+										<option>0</option>
+										<flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+										<border>5</border>
+										<object class="wxCheckBox" name="cbEncrypt">
+											<label>_Encrypt connection</label>
+											<checked>0</checked>
+										</object>
+									</object>
+									<object class="sizeritem">
+										<option>0</option>
+										<flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+										<border>5</border>
+										<object class="wxCheckBox" name="cbClearCache">
+											<label>_Clear object cache on connect</label>
+											<checked>0</checked>
+										</object>
+									</object>
+									<object class="sizeritem">
+										<option>0</option>
+										<flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+										<border>5</border>
+										<object class="wxCheckBox" name="cbNoCache">
+											<label>_Do not cache this session</label>
+											<checked>0</checked>
+										</object>
+									</object>
+									<object class="sizeritem">
+										<option>0</option>
+										<flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+										<border>5</border>
+										<object class="wxCheckBox" name="cbMatchVersion">
+											<label>_Server version should match client version</label>
+											<checked>0</checked>
+										</object>
+									</object>
+								</object>
+							</object>
+						</object>
+					</object>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL|wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxStdDialogButtonSizer">
+					<object class="button">
+						<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="wxID_OK">
+							<label>&amp;OK</label>
+						</object>
+					</object>
+					<object class="button">
+						<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="wxID_CANCEL">
+							<label>&amp;Cancel</label>
+						</object>
+					</object>
+				</object>
+			</object>
+		</object>
+	</object>
+	<object class="wxDialog" name="nxObjectSelDlg">
+		<style>wxDEFAULT_DIALOG_STYLE</style>
+		<size>508,387</size>
+		<title>Select Object</title>
+		<centered>1</centered>
+		<object class="wxBoxSizer">
+			<orient>wxVERTICAL</orient>
+			<object class="sizeritem">
+				<option>1</option>
+				<flag>wxEXPAND|wxALL</flag>
+				<border>7</border>
+				<object class="wxListCtrl" name="wndListCtrl">
+					<style>wxLC_REPORT</style>
+					<size>400,320</size>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALIGN_RIGHT|wxBOTTOM|wxRIGHT</flag>
+				<border>5</border>
+				<object class="wxBoxSizer">
+					<orient>wxHORIZONTAL</orient>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="btnNone">
+							<label>_None</label>
+							<default>0</default>
+						</object>
+					</object>
+					<object class="sizeritem">
+						<option>0</option>
+						<flag>wxEXPAND</flag>
+						<border>5</border>
+						<object class="wxStdDialogButtonSizer">
+							<object class="button">
+								<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+								<border>5</border>
+								<object class="wxButton" name="wxID_OK">
+									<label>&amp;OK</label>
+								</object>
+							</object>
+							<object class="button">
+								<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+								<border>5</border>
+								<object class="wxButton" name="wxID_CANCEL">
+									<label>&amp;Cancel</label>
+								</object>
+							</object>
+						</object>
+					</object>
+				</object>
+			</object>
+		</object>
+	</object>
+	<object class="wxDialog" name="nxVarEditDlg">
+		<style>wxDEFAULT_DIALOG_STYLE</style>
+		<size>393,183</size>
+		<title>Edit Server Variable</title>
+		<centered>1</centered>
+		<object class="wxBoxSizer">
+			<orient>wxVERTICAL</orient>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxLEFT|wxRIGHT|wxTOP</flag>
+				<border>5</border>
+				<object class="wxStaticText" name="wxID_ANY">
+					<label>Name</label>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL|wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxTextCtrl" name="textName">
+					<size>250,-1</size>
+					<value></value>
+					<maxlength>0</maxlength>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxLEFT|wxRIGHT|wxTOP</flag>
+				<border>5</border>
+				<object class="wxStaticText" name="wxID_ANY">
+					<label>Value</label>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL|wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxTextCtrl" name="textValue">
+					<size>250,-1</size>
+					<value></value>
+					<maxlength>0</maxlength>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALL|wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxStdDialogButtonSizer">
+					<object class="button">
+						<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="wxID_OK">
+							<label>&amp;OK</label>
+						</object>
+					</object>
+					<object class="button">
+						<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="wxID_CANCEL">
+							<label>&amp;Cancel</label>
+						</object>
+					</object>
+				</object>
+			</object>
+		</object>
+	</object>
+	<object class="wxDialog" name="nxUserSelDlg">
+		<style>wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER</style>
+		<size>438,292</size>
+		<title>Select User</title>
+		<object class="wxBoxSizer">
+			<orient>wxVERTICAL</orient>
+			<object class="sizeritem">
+				<option>1</option>
+				<flag>wxALL|wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxListCtrl" name="wndListCtrl">
+					<style>wxLC_REPORT</style>
+				</object>
+			</object>
+			<object class="sizeritem">
+				<option>0</option>
+				<flag>wxALIGN_RIGHT|wxBOTTOM</flag>
+				<border>5</border>
+				<object class="wxStdDialogButtonSizer">
+					<object class="button">
+						<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="wxID_OK">
+							<label>&amp;OK</label>
+						</object>
+					</object>
+					<object class="button">
+						<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+						<border>5</border>
+						<object class="wxButton" name="wxID_CANCEL">
+							<label>&amp;Cancel</label>
+						</object>
+					</object>
+				</object>
+			</object>
+		</object>
+	</object>
+</resource>
