@@ -758,6 +758,12 @@ void ClientSession::ProcessingThread(void)
          case CMD_DELETE_CONFIG_VARIABLE:
             DeleteConfigVariable(pMsg);
             break;
+			case CMD_CONFIG_GET_CLOB:
+				GetConfigCLOB(pMsg);
+				break;
+			case CMD_CONFIG_SET_CLOB:
+				SetConfigCLOB(pMsg);
+				break;
          case CMD_LOAD_EVENT_DB:
             SendEventDB(pMsg->GetId());
             break;
@@ -1179,6 +1185,24 @@ void ClientSession::ProcessingThread(void)
 				break;
 			case CMD_DEL_SITUATION_INSTANCE:
 				DeleteSituationInstance(pMsg);
+				break;
+			case CMD_WEBMAP_ADD:
+				WebMapAdd(pMsg);
+				break;
+			case CMD_WEBMAP_UPDATE_PROPS:
+				WebMapUpdateProps(pMsg);
+				break;
+			case CMD_WEBMAP_UPDATE_DATA:
+				WebMapUpdateData(pMsg);
+				break;
+			case CMD_WEBMAP_DELETE:
+				WebMapDelete(pMsg);
+				break;
+			case CMD_WEBMAP_GET_DATA:
+				WebMapGetData(pMsg);
+				break;
+			case CMD_WEBMAP_GET_LIST:
+				WebMapGetList(pMsg->GetId());
 				break;
          default:
             // Pass message to loaded modules
@@ -2050,6 +2074,77 @@ void ClientSession::DeleteConfigVariable(CSCPMessage *pRequest)
 
    // Send response
    SendMessage(&msg);
+}
+
+
+//
+// Set configuration clob
+//
+
+void ClientSession::SetConfigCLOB(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR name[MAX_OBJECT_NAME], *value;
+   
+	msg.SetId(pRequest->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	
+	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+	{
+      pRequest->GetVariableStr(VID_NAME, name, MAX_OBJECT_NAME);
+		value = pRequest->GetVariableStr(VID_VALUE);
+		if (value != NULL)
+		{
+			msg.SetVariable(VID_RCC, ConfigWriteCLOB(name, value, TRUE) ? RCC_SUCCESS : RCC_DB_FAILURE);
+			free(value);
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_INVALID_REQUEST);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+	
+	SendMessage(&msg);
+}
+
+
+//
+// Get value of configuration clob
+//
+
+void ClientSession::GetConfigCLOB(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR name[MAX_OBJECT_NAME], *value;
+   
+	msg.SetId(pRequest->GetId());
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	
+	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
+	{
+      pRequest->GetVariableStr(VID_NAME, name, MAX_OBJECT_NAME);
+		value = ConfigReadCLOB(name, NULL);
+		if (value != NULL)
+		{
+			msg.SetVariable(VID_VALUE, value);
+			msg.SetVariable(VID_RCC, RCC_SUCCESS);
+			free(value);
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_UNKNOWN_VARIABLE);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+	
+	SendMessage(&msg);
 }
 
 
@@ -9669,4 +9764,206 @@ void ClientSession::OnSituationChange(CSCPMessage *msg)
       pUpdate->pData = new CSCPMessage(msg);
       m_pUpdateQueue->Put(pUpdate);
    }
+}
+
+
+//
+// Add new webmap
+//
+
+void ClientSession::WebMapAdd(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR name[64], *props;
+   DWORD mapId, rcc;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_MAPS)
+	{
+		pRequest->GetVariableStr(VID_NAME, name, 64);
+		if (IsValidObjectName(name, TRUE))
+		{
+			props = pRequest->GetVariableStr(VID_PROPERTIES);
+			rcc = CreateWebMap(name, props, &mapId);
+			msg.SetVariable(VID_RCC, rcc);
+			if (rcc == RCC_SUCCESS)
+				msg.SetVariable(VID_MAP_ID, mapId);
+			safe_free(props);
+		}
+		else
+		{
+	      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_NAME);
+		}
+	}
+	else
+	{
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+   SendMessage(&msg);
+}
+
+
+//
+// Update webmap data
+//
+
+void ClientSession::WebMapUpdateData(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR *data;
+   DWORD mapId;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_MAPS)
+	{
+		mapId = pRequest->GetVariableLong(VID_MAP_ID);
+		data = pRequest->GetVariableStr(VID_MAP_DATA);
+	   msg.SetVariable(VID_RCC, UpdateWebMapData(mapId, data));
+		free(data);
+	}
+	else
+	{
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+   SendMessage(&msg);
+}
+
+
+//
+// Update webmap properties
+//
+
+void ClientSession::WebMapUpdateProps(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   TCHAR *props, name[64];
+   DWORD mapId;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_MAPS)
+	{
+		mapId = pRequest->GetVariableLong(VID_MAP_ID);
+		props = pRequest->GetVariableStr(VID_PROPERTIES);
+		pRequest->GetVariableStr(VID_NAME, name, 64);
+	   msg.SetVariable(VID_RCC, UpdateWebMapProperties(mapId, name, props));
+		free(props);
+	}
+	else
+	{
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+   SendMessage(&msg);
+}
+
+
+//
+// Delete webmap
+//
+
+void ClientSession::WebMapDelete(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_MAPS)
+	{
+		msg.SetVariable(VID_RCC, DeleteWebMap(pRequest->GetVariableLong(VID_MAP_ID)));
+	}
+	else
+	{
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+   SendMessage(&msg);
+}
+
+
+//
+// Get webmap's data
+//
+
+void ClientSession::WebMapGetData(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD mapId;
+	TCHAR *data, query[256];
+	DB_RESULT hResult;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+	mapId = pRequest->GetVariableLong(VID_MAP_ID);
+	_sntprintf(query, 256, _T("SELECT data FROM web_maps WHERE id=%d"), mapId);
+	hResult = DBSelect(g_hCoreDB, query);
+	if (hResult != NULL)
+	{
+		if (DBGetNumRows(hResult) > 0)
+		{
+			data = DBGetField(hResult, 0, 0, NULL, 0);
+			if (data != NULL)
+				DecodeSQLString(data);
+			msg.SetVariable(VID_RCC, RCC_SUCCESS);
+			msg.SetVariable(VID_MAP_DATA, CHECK_NULL_EX(data));
+			safe_free(data);
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_INVALID_MAP_ID);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+	}
+
+   SendMessage(&msg);
+}
+
+
+//
+// Get list of webmaps
+//
+
+void ClientSession::WebMapGetList(DWORD dwRqId)
+{
+   CSCPMessage msg;
+	DB_RESULT hResult;
+	DWORD i, id, count;
+	TCHAR name[256];
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(dwRqId);
+
+	hResult = DBSelect(g_hCoreDB, _T("SELECT id,title FROM web_maps"));
+	if (hResult != NULL)
+	{
+		count = DBGetNumRows(hResult);
+		msg.SetVariable(VID_NUM_MAPS, count);
+		for(i = 0, id = VID_WEBMAP_LIST_BASE; i < count; i++)
+		{
+			msg.SetVariable(id++, DBGetFieldULong(hResult, i, 0));
+			DBGetField(hResult, i, 1, name, 256);
+			msg.SetVariable(id++, name);
+			id += 8;
+		}
+		msg.SetVariable(VID_RCC, RCC_SUCCESS);
+		DBFreeResult(hResult);
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+	}
+
+   SendMessage(&msg);
 }

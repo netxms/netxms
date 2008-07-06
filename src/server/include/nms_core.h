@@ -1,7 +1,7 @@
 /* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -534,6 +534,14 @@ private:
 	void UpdateSituation(CSCPMessage *pRequest);
 	void DeleteSituation(CSCPMessage *pRequest);
 	void DeleteSituationInstance(CSCPMessage *pRequest);
+	void SetConfigCLOB(CSCPMessage *pRequest);
+	void GetConfigCLOB(CSCPMessage *pRequest);
+	void WebMapAdd(CSCPMessage *pRequest);
+	void WebMapUpdateData(CSCPMessage *pRequest);
+	void WebMapUpdateProps(CSCPMessage *pRequest);
+	void WebMapDelete(CSCPMessage *pRequest);
+	void WebMapGetData(CSCPMessage *pRequest);
+	void WebMapGetList(DWORD dwRqId);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -588,6 +596,8 @@ BOOL NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, BOOL bCrea
 BOOL NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, DWORD dwValue, BOOL bCreate);
 BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *pszVar, int *pnArray,
                                             int nSize, BOOL bCreate);
+TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *var, const TCHAR *defValue);
+BOOL NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *var, const TCHAR *value, BOOL bCreate);
 
 BOOL NXCORE_EXPORTABLE LoadConfig(void);
 

@@ -374,6 +374,15 @@ BOOL InitIdTable(void)
                                         DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
+   hResult = DBSelect(g_hCoreDB, "SELECT max(id) FROM web_maps");
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         m_dwFreeIdTable[IDG_MAP] = max(m_dwFreeIdTable[IDG_MAP],
+                                        DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
    return TRUE;
 }
 

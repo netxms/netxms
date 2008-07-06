@@ -199,7 +199,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, 
    TCHAR *pszEscValue, szQuery[1024];
    BOOL bVarExist = FALSE;
 
-   if (strlen(szVar) > 127)
+   if (_tcslen(szVar) > 127)
       return FALSE;
 
    // Check for variable existence
@@ -268,4 +268,85 @@ BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *pszVar, int *pnArray, i
    for(i = 0, j = 0; (i < nSize) && (i < 127); i++, j += 2)
       _stprintf(&szBuffer[j], _T("%02X"), (char)((pnArray[i] > 127) ? 127 : ((pnArray[i] < -127) ? -127 : pnArray[i])));
    return ConfigWriteStr(pszVar, szBuffer, bCreate);
+}
+
+
+//
+// Read large string (clob) value from configuration table
+//
+
+TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *var, const TCHAR *defValue)
+{
+   DB_RESULT hResult;
+   TCHAR query[256], *result = NULL;
+   BOOL bSuccess = FALSE;
+
+   if (_tcslen(var) <= 127)
+	{
+		_sntprintf(query, 256, _T("SELECT var_value FROM config_clob WHERE var_name='%s'"), var);
+		hResult = DBSelect(g_hCoreDB, query);
+		if (hResult != NULL)
+		{
+			if (DBGetNumRows(hResult) > 0)
+			{
+				result = DBGetField(hResult, 0, 0, NULL, 0);
+				if (result != NULL)
+					DecodeSQLString(result);
+			}
+			DBFreeResult(hResult);
+		}
+	}
+
+	// Return default value in case of error
+	if ((result == NULL) && (defValue != NULL))
+		result = _tcsdup(defValue);
+
+	return result;
+}
+
+
+//
+// Write large string (clob) value to configuration table
+//
+
+BOOL NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *var, const TCHAR *value, BOOL bCreate)
+{
+   DB_RESULT hResult;
+   TCHAR *escValue, *query;
+	int len;
+   BOOL bVarExist = FALSE, success = FALSE;
+
+   if (_tcslen(var) > 127)
+      return FALSE;
+
+   escValue = EncodeSQLString(CHECK_NULL_EX(value));
+	len = _tcslen(escValue) + 256;
+	query = (TCHAR *)malloc(len * sizeof(TCHAR));
+
+   // Check for variable existence
+   _sntprintf(query, len, _T("SELECT var_value FROM config_clob WHERE var_name='%s'"), var);
+   hResult = DBSelect(g_hCoreDB, query);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         bVarExist = TRUE;
+      DBFreeResult(hResult);
+   }
+
+   // Don't create non-existing variable if creation flag not set
+   if (bCreate || bVarExist)
+	{
+		// Create or update variable value
+		if (bVarExist)
+			_sntprintf(query, len, _T("UPDATE config_clob SET var_value='%s' WHERE var_name='%s'"),
+					     escValue, var);
+		else
+			_sntprintf(query, len, _T("INSERT INTO config_clob (var_name,var_value) VALUES ('%s','%s')"),
+						  var, escValue);
+		success = DBQuery(g_hCoreDB, query);
+	}
+
+	free(query);
+	free(escValue);
+	return success;
 }

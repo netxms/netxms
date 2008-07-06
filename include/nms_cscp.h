@@ -535,7 +535,7 @@ typedef struct
 #define VID_MIB_NAME                ((DWORD)59)
 #define VID_MIB_FILE_SIZE           ((DWORD)60)
 #define VID_MIB_FILE                ((DWORD)61)
-//#define VID_COMMENT                 ((DWORD)62)
+#define VID_PROPERTIES              ((DWORD)62)
 #define VID_ALARM_SEVERITY          ((DWORD)63)
 #define VID_ALARM_KEY               ((DWORD)64)
 #define VID_ALARM_TIMEOUT           ((DWORD)65)
@@ -783,6 +783,7 @@ typedef struct
 #define VID_TRUSTED_NODES           ((DWORD)307)
 #define VID_TIMEZONE                ((DWORD)308)
 #define VID_NUM_CUSTOM_ATTRIBUTES   ((DWORD)309)
+#define VID_MAP_DATA                ((DWORD)310)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -924,6 +925,8 @@ typedef struct
 // Base value for object links list
 #define VID_OBJECT_LINKS_BASE			((DWORD)0x10000000)
 #define VID_SUBMAP_LINK_NAMES_BASE  ((DWORD)0x20000000)
+
+#define VID_WEBMAP_LIST_BASE        ((DWORD)0x30000000)
 
 
 //

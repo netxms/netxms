@@ -366,9 +366,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 		_T("Invalid situation ID"),
 		_T("Named instance not found"),
 		_T("Invalid event ID"),
-		_T("Operation cannot be completed due to agent error")
+		_T("Operation cannot be completed due to agent error"),
+		_T("Unknown variable")
    };
-   return ((dwError >= 0) && (dwError <= RCC_AGENT_ERROR)) ? pszErrorText[dwError] : _T("No text message for this error");
+   return ((dwError >= 0) && (dwError <= RCC_UNKNOWN_VARIABLE)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

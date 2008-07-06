@@ -454,6 +454,10 @@ SOURCE=.\watchdog.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\webmaps.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\zone.cpp
 # End Source File
 # End Group

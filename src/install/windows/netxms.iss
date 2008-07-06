@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.2.21
-AppVersion=0.2.21
+AppVerName=NetXMS 0.2.22-rc1
+AppVersion=0.2.22-rc1
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.2.21
+OutputBaseFilename=netxms-0.2.22-rc1
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -172,6 +172,8 @@ Source: "Files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Compon
 Source: "Files\bgd.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: websrv
 Source: "Files\zlib1.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "Files\dbghelp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
+Source: "Files\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
+Source: "Files\libexpatw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "Files\wxbase28u_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\wxbase28u_xml_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\wxmsw28u_adv_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console

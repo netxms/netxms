@@ -78,4 +78,14 @@ void UnlockMaps(void);
 nxMapSrv *FindMapByID(DWORD dwMapId);
 
 
+//
+// Webmaps functions
+//
+
+DWORD CreateWebMap(const TCHAR *name, const TCHAR *props, DWORD *id);
+DWORD DeleteWebMap(DWORD id);
+DWORD UpdateWebMapData(DWORD mapId, const TCHAR *data);
+DWORD UpdateWebMapProperties(DWORD mapId, const TCHAR *name, const TCHAR *props);
+
+
 #endif   /* _nxcore_maps_h_ */

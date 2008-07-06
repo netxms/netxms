@@ -408,6 +408,7 @@ enum
 #define RCC_INSTANCE_NOT_FOUND      ((DWORD)78)
 #define RCC_INVALID_EVENT_ID        ((DWORD)79)
 #define RCC_AGENT_ERROR             ((DWORD)80)
+#define RCC_UNKNOWN_VARIABLE        ((DWORD)81)
 
 
 //
