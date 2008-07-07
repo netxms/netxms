@@ -132,7 +132,7 @@ NXSL_Value *NXSL_EventClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
    }
    else if (!strcmp(pszAttr, "timestamp"))
    {
-      value = new NXSL_Value(event->TimeStamp());
+      value = new NXSL_Value((INT64)event->TimeStamp());
    }
    else if (!strcmp(pszAttr, "message"))
    {
