@@ -9940,12 +9940,12 @@ void ClientSession::WebMapGetList(DWORD dwRqId)
    CSCPMessage msg;
 	DB_RESULT hResult;
 	DWORD i, id, count;
-	TCHAR name[256];
+	TCHAR name[256], *props;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
-	hResult = DBSelect(g_hCoreDB, _T("SELECT id,title FROM web_maps"));
+	hResult = DBSelect(g_hCoreDB, _T("SELECT id,title,properties FROM web_maps"));
 	if (hResult != NULL)
 	{
 		count = DBGetNumRows(hResult);
@@ -9955,7 +9955,18 @@ void ClientSession::WebMapGetList(DWORD dwRqId)
 			msg.SetVariable(id++, DBGetFieldULong(hResult, i, 0));
 			DBGetField(hResult, i, 1, name, 256);
 			msg.SetVariable(id++, name);
-			id += 8;
+			props = DBGetField(hResult, i, 2, NULL, 0);
+			if (props != NULL)
+			{
+				DecodeSQLString(props);
+				msg.SetVariable(id++, props);
+				free(props);
+			}
+			else
+			{
+				msg.SetVariable(id++, _T(""));
+			}
+			id += 7;
 		}
 		msg.SetVariable(VID_RCC, RCC_SUCCESS);
 		DBFreeResult(hResult);
