@@ -95,7 +95,7 @@ Source: "..\..\agent\subagents\win9x\Release\win9x.nsm"; DestDir: "{app}\bin"; F
 Source: "..\..\agent\subagents\winperf\Release\winperf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\agent\subagents\winperf\Release\winperf.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\agent\subagents\wmi\Release\wmi.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
-Source: "..\..\agent\subagents\wmi\Release\wmi.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+;Source: "..\..\agent\subagents\wmi\Release\wmi.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\agent\subagents\ping\Release\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\agent\subagents\ping\Release\ping.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\agent\subagents\portCheck\Release\portcheck.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server

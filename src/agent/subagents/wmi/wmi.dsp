@@ -60,7 +60,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Release\wmi.nsm C:\NetXMS\bin	copy Release\wmi.pdb C:\NetXMS\bin
+PostBuild_Cmds=copy Release\wmi.nsm C:\NetXMS\bin
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "wmi - Win32 Debug"
@@ -92,7 +92,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy Debug\wmi.nsm ..\..\..\..\bin	copy Debug\wmi.pdb ..\..\..\..\bin
+PostBuild_Cmds=copy Debug\wmi.nsm ..\..\..\..\bin
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "wmi - Win32 Release AMD64"
