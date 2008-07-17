@@ -552,6 +552,7 @@ BOOL Initialize(void)
           (ver.dwMajorVersion <= 4))
       {
          g_dwFlags |= AF_RUNNING_ON_NT4;
+		   DebugPrintf(INVALID_INDEX, "Running on Windows NT 4.0");
       }
    }
 #endif
