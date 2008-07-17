@@ -629,8 +629,12 @@ void AlarmManager::WatchdogThread(void)
 		{
 			if ((m_pAlarmList[i].dwTimeout > 0) &&
 				 (m_pAlarmList[i].nState == ALARM_STATE_OUTSTANDING) &&
-				 ((time_t)m_pAlarmList[i].dwLastChangeTime + (time_t)m_pAlarmList[i].dwTimeout > now))
+				 (((time_t)m_pAlarmList[i].dwLastChangeTime + (time_t)m_pAlarmList[i].dwTimeout) < now))
 			{
+				DbgPrintf(5, _T("Alarm timeout: alarm_id=%d, last_change=%d, timeout=%d, now=%d"),
+				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].dwLastChangeTime,
+							 m_pAlarmList[i].dwTimeout, now);
+
 				PostEvent(m_pAlarmList[i].dwTimeoutEvent, m_pAlarmList[i].dwSourceObject, "dssd",
 				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage,
 							 m_pAlarmList[i].szKey, m_pAlarmList[i].dwSourceEventCode);
