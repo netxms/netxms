@@ -3011,6 +3011,7 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
                      if (pSrcItem != NULL)
                      {
                         pDstItem = new DCItem(pSrcItem);
+								pDstItem->SetTemplateId(0, 0);
                         pDstItem->ChangeBinding(CreateUniqueId(IDG_ITEM),
                                                 (Template *)pDestination, FALSE);
                         if (((Template *)pDestination)->AddItem(pDstItem))
