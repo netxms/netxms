@@ -30,7 +30,8 @@
 // Constants
 //
 
-#define RECEIVER_BUFFER_SIZE        262144
+//#define RECEIVER_BUFFER_SIZE        262144
+#define RECEIVER_BUFFER_SIZE        4194304
 
 
 //

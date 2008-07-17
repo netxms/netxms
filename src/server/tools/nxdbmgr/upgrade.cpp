@@ -103,6 +103,25 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 
 
 //
+// Upgrade from V82 to V83
+//
+
+static BOOL H_UpgradeFromV82(void)
+{
+	// Fix incorrect alarm timeouts
+	if (!SQLQuery(_T("UPDATE alarms SET timeout=0,timeout_event=43")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='83' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V81 to V82
 //
 
@@ -3648,6 +3667,7 @@ static struct
    { 79, H_UpgradeFromV79 },
    { 80, H_UpgradeFromV80 },
    { 81, H_UpgradeFromV81 },
+   { 82, H_UpgradeFromV82 },
    { 0, NULL }
 };
 

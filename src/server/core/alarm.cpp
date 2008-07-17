@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -110,7 +110,8 @@ BOOL AlarmManager::Init(void)
                                  "original_severity,current_severity,"
                                  "alarm_key,creation_time,last_change_time,"
                                  "hd_state,hd_ref,ack_by,repeat_count,"
-                                 "alarm_state FROM alarms WHERE alarm_state<2");
+                                 "alarm_state,timeout,timeout_event "
+                                 "FROM alarms WHERE alarm_state<2");
    if (hResult == NULL)
       return FALSE;
 
@@ -118,6 +119,7 @@ BOOL AlarmManager::Init(void)
    if (m_dwNumAlarms > 0)
    {
       m_pAlarmList = (NXC_ALARM *)malloc(sizeof(NXC_ALARM) * m_dwNumAlarms);
+      memset(m_pAlarmList, 0, sizeof(NXC_ALARM) * m_dwNumAlarms);
       for(i = 0; i < m_dwNumAlarms; i++)
       {
          m_pAlarmList[i].dwAlarmId = DBGetFieldULong(hResult, i, 0);
@@ -138,6 +140,8 @@ BOOL AlarmManager::Init(void)
          m_pAlarmList[i].dwAckByUser = DBGetFieldULong(hResult, i, 12);
          m_pAlarmList[i].dwRepeatCount = DBGetFieldULong(hResult, i, 13);
          m_pAlarmList[i].nState = (BYTE)DBGetFieldLong(hResult, i, 14);
+         m_pAlarmList[i].dwTimeout = DBGetFieldULong(hResult, i, 15);
+         m_pAlarmList[i].dwTimeoutEvent = DBGetFieldULong(hResult, i, 16);
       }
    }
 
@@ -627,7 +631,7 @@ void AlarmManager::WatchdogThread(void)
 				 (m_pAlarmList[i].nState == ALARM_STATE_OUTSTANDING) &&
 				 ((time_t)m_pAlarmList[i].dwLastChangeTime + (time_t)m_pAlarmList[i].dwTimeout > now))
 			{
-				PostEvent(EVENT_ALARM_TIMEOUT, m_pAlarmList[i].dwSourceObject, "dssd",
+				PostEvent(m_pAlarmList[i].dwTimeoutEvent, m_pAlarmList[i].dwSourceObject, "dssd",
 				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage,
 							 m_pAlarmList[i].szKey, m_pAlarmList[i].dwSourceEventCode);
 				m_pAlarmList[i].dwTimeout = 0;	// Disable repeated timeout events
