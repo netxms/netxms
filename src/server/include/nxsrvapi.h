@@ -262,7 +262,7 @@ private:
    DWORD m_dwAddr;
    int m_nProtocolVersion;
    int m_iAuthMethod;
-   char m_szSecret[MAX_SECRET_LENGTH];
+   TCHAR m_szSecret[MAX_SECRET_LENGTH];
    time_t m_tLastCommandTime;
    SOCKET m_hSocket;
    DWORD m_dwNumDataLines;
@@ -281,7 +281,11 @@ private:
    WORD m_wPort;
    WORD m_wProxyPort;
    int m_iProxyAuth;
-   char m_szProxySecret[MAX_SECRET_LENGTH];
+   TCHAR m_szProxySecret[MAX_SECRET_LENGTH];
+	int m_hCurrFile;
+	DWORD m_dwUploadRequestId;
+	CONDITION m_condFileUpload;
+	BOOL m_fileUploadSucceeded;
 
    void ReceiverThread(void);
    static THREAD_RESULT THREAD_CALL ReceiverThreadStarter(void *);
@@ -295,9 +299,11 @@ protected:
    DWORD Authenticate(BOOL bProxyData);
    DWORD SetupProxyConnection(void);
    DWORD GetIpAddr(void) { return ntohl(m_dwAddr); }
+	DWORD PrepareFileUpload(const TCHAR *fileName, DWORD rqId);
 
    virtual void PrintMsg(const TCHAR *pszFormat, ...);
    virtual void OnTrap(CSCPMessage *pMsg);
+	virtual void OnFileUpload(BOOL success);
 
    void Lock(void) { MutexLock(m_mutexDataLock, INFINITE); }
    void Unlock(void) { MutexUnlock(m_mutexDataLock); }
@@ -328,7 +334,7 @@ public:
    DWORD GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize);
    DWORD UpdateConfigFile(const TCHAR *pszConfig);
    DWORD EnableTraps(void);
-	CSCPMessage *CustomRequest(CSCPMessage *pRequest);
+	CSCPMessage *CustomRequest(CSCPMessage *pRequest, const TCHAR *recvFile = NULL);
 
    DWORD GetNumDataLines(void) { return m_dwNumDataLines; }
    const TCHAR *GetDataLine(DWORD dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }

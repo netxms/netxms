@@ -30,8 +30,8 @@
 // Constants
 //
 
-//#define RECEIVER_BUFFER_SIZE        262144
-#define RECEIVER_BUFFER_SIZE        4194304
+#define RECEIVER_BUFFER_SIZE        262144
+//#define RECEIVER_BUFFER_SIZE        4194304
 
 
 //
@@ -93,6 +93,8 @@ AgentConnection::AgentConnection()
    m_bUseProxy = FALSE;
    m_dwRecvTimeout = 420000;  // 7 minutes
    m_nProtocolVersion = NXCP_VERSION;
+	m_hCurrFile = -1;
+	m_condFileUpload = ConditionCreate(TRUE);
 }
 
 
@@ -134,6 +136,8 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort,
    m_bUseProxy = FALSE;
    m_dwRecvTimeout = 420000;  // 7 minutes
    m_nProtocolVersion = NXCP_VERSION;
+	m_hCurrFile = -1;
+	m_condFileUpload = ConditionCreate(TRUE);
 }
 
 
@@ -165,7 +169,11 @@ AgentConnection::~AgentConnection()
    delete m_pMsgWaitQueue;
    DestroyEncryptionContext(m_pCtx);
 
+	if (m_hCurrFile != -1)
+		close(m_hCurrFile);
+
    MutexDestroy(m_mutexDataLock);
+	ConditionDestroy(m_condFileUpload);
 }
 
 
@@ -252,17 +260,52 @@ void AgentConnection::ReceiverThread(void)
          continue;   // Bad packet, wait for next
       }
 
-      // Create message object from raw message
-      pMsg = new CSCPMessage(pRawMsg, m_nProtocolVersion);
-      if (pMsg->GetCode() == CMD_TRAP)
-      {
-         OnTrap(pMsg);
-         delete pMsg;
-      }
-      else
-      {
-         m_pMsgWaitQueue->Put(pMsg);
-      }
+		if (ntohs(pRawMsg->wFlags) & MF_BINARY)
+		{
+         // Convert message header to host format
+         pRawMsg->dwId = ntohl(pRawMsg->dwId);
+         pRawMsg->wCode = ntohs(pRawMsg->wCode);
+         pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
+         DbgPrintf(6, "Received raw message %s from agent at %s",
+			          NXCPMessageCodeName(pRawMsg->wCode, szBuffer), IpToStr(GetIpAddr(), szBuffer));
+
+			if ((pRawMsg->wCode == CMD_FILE_DATA) &&
+				 (m_hCurrFile != -1) && (pRawMsg->dwId == m_dwUploadRequestId))
+			{
+            if (write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
+            {
+               if (ntohs(pRawMsg->wFlags) & MF_END_OF_FILE)
+               {
+                  close(m_hCurrFile);
+                  m_hCurrFile = -1;
+            
+                  OnFileUpload(TRUE);
+               }
+            }
+            else
+            {
+               // I/O error
+               close(m_hCurrFile);
+               m_hCurrFile = -1;
+         
+               OnFileUpload(FALSE);
+            }
+			}
+		}
+		else
+		{
+			// Create message object from raw message
+			pMsg = new CSCPMessage(pRawMsg, m_nProtocolVersion);
+			if (pMsg->GetCode() == CMD_TRAP)
+			{
+				OnTrap(pMsg);
+				delete pMsg;
+			}
+			else
+			{
+				m_pMsgWaitQueue->Put(pMsg);
+			}
+		}
    }
 
    // Close socket and mark connection as disconnected
@@ -1385,14 +1428,83 @@ DWORD AgentConnection::EnableTraps(void)
 // Send custom request to agent
 //
 
-CSCPMessage *AgentConnection::CustomRequest(CSCPMessage *pRequest)
+CSCPMessage *AgentConnection::CustomRequest(CSCPMessage *pRequest, const TCHAR *recvFile)
 {
-   DWORD dwRqId;
+   DWORD dwRqId, rcc;
+	CSCPMessage *msg = NULL;
 
    dwRqId = m_dwRequestId++;
    pRequest->SetId(dwRqId);
-   if (SendMessage(pRequest))
-      return WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-   else
-      return NULL;
+	if (recvFile != NULL)
+	{
+		rcc = PrepareFileUpload(recvFile, dwRqId);
+		if (rcc != ERR_SUCCESS)
+		{
+			// Create fake response message
+			msg = new CSCPMessage;
+			msg->SetCode(CMD_REQUEST_COMPLETED);
+			msg->SetId(dwRqId);
+			msg->SetVariable(VID_RCC, rcc);
+		}
+	}
+
+	if (msg == NULL)
+	{
+		if (SendMessage(pRequest))
+		{
+			msg = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+			if ((msg != NULL) && (recvFile != NULL))
+			{
+				if (msg->GetVariableLong(VID_RCC) == ERR_SUCCESS)
+				{
+					if (ConditionWait(m_condFileUpload, 1800000))	 // 30 min timeout
+					{
+						if (!m_fileUploadSucceeded)
+						{
+							msg->SetVariable(VID_RCC, ERR_IO_FAILURE);
+							remove(recvFile);
+						}
+					}
+					else
+					{
+						msg->SetVariable(VID_RCC, ERR_REQUEST_TIMEOUT);
+					}
+				}
+				else
+				{
+					close(m_hCurrFile);
+					m_hCurrFile = -1;
+					remove(recvFile);
+				}
+			}
+		}
+	}
+
+	return msg;
+}
+
+
+//
+// Prepare for file upload
+//
+
+DWORD AgentConnection::PrepareFileUpload(const TCHAR *fileName, DWORD rqId)
+{
+	if (m_hCurrFile != -1)
+		return ERR_RESOURCE_BUSY;
+
+	ConditionReset(m_condFileUpload);
+	m_hCurrFile = open(fileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, O_RDWR);
+	return (m_hCurrFile != -1) ? ERR_SUCCESS : ERR_FILE_OPEN_ERROR;
+}
+
+
+//
+// File upload completion handler
+//
+
+void AgentConnection::OnFileUpload(BOOL success)
+{
+	m_fileUploadSucceeded = success;
+	ConditionSet(m_condFileUpload);
 }
