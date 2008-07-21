@@ -150,6 +150,10 @@ typedef int socklen_t;
 
 #define SetSocketReuseFlag(sd)
 #define SELECT_NFDS(x)  ((int)(x))
+#define SetSocketNonBlocking(s) { \
+	u_long one = 1; \
+	ioctlsocket(s, FIONBIO, &one); \
+}
 
 #ifdef UNDER_CE
 #define O_RDONLY     0x0004
@@ -232,11 +236,15 @@ typedef int SOCKET;
 #define WSAEINTR        EINTR
 #define INVALID_SOCKET  (-1)
 
-//#define SetSocketReuseFlag(sd)
 #define SetSocketReuseFlag(sd) { \
 	int nVal = 1; \
 	setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const void *)&nVal,  \
 			(socklen_t)sizeof(nVal)); \
+}
+
+#define SetSocketNonBlocking(s) { \
+   int f = fcntl(s, F_GETFL); \
+   if (f != -1) fcntl(s, F_SETFL, f | O_NONBLOCK); \
 }
 
 #define SELECT_NFDS(x)  (x)
@@ -386,6 +394,11 @@ typedef int SOCKET;
 	int nVal = 1; \
 	setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const void *)&nVal,  \
 			(socklen_t)sizeof(nVal)); \
+}
+
+#define SetSocketNonBlocking(s) { \
+   int f = fcntl(s, F_GETFL); \
+   if (f != -1) fcntl(s, F_SETFL, f | O_NONBLOCK); \
 }
 
 #define SELECT_NFDS(x)  (x)

@@ -33,7 +33,7 @@
 #define NETXMS_VERSION_MINOR        2
 #define NETXMS_VERSION_BUILD        22
 #define NETXMS_VERSION_HOTFIX       0
-#define NETXMS_VERSION_STRING       _T("0.2.22-rc1")
+#define NETXMS_VERSION_STRING       _T("0.2.22-rc3")
 
 
 //

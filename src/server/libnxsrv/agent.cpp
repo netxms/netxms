@@ -385,6 +385,9 @@ BOOL AgentConnection::Connect(RSA *pServerKey, BOOL bVerbose, DWORD *pdwError)
       goto connect_cleanup;
    }
 
+	// Set non-blocking mode
+	SetSocketNonBlocking(m_hSocket);
+	
    if (!NXCPGetPeerProtocolVersion(m_hSocket, &m_nProtocolVersion))
    {
       dwError = ERR_INTERNAL_ERROR;
