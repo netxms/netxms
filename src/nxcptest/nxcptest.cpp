@@ -73,7 +73,7 @@ static THREAD_RESULT THREAD_CALL RecvThread(void *arg)
 #endif
    while(1)
    {
-      if ((iErr = RecvNXCPMessage((SOCKET)arg, pRawMsg, pMsgBuffer, RAW_MSG_SIZE,
+      if ((iErr = RecvNXCPMessage(CAST_FROM_POINTER(arg, SOCKET), pRawMsg, pMsgBuffer, RAW_MSG_SIZE,
                                   &pCtx, pDecryptionBuffer, INFINITE)) <= 0)
       {
          break;
