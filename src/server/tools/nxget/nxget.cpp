@@ -73,6 +73,7 @@ static int Get(AgentConnection *pConn, char *pszParam, BOOL bShowName)
    {
       printf("%d: %s\n", dwError, AgentErrorCodeToText(dwError));
    }
+   fflush(stdout);
    return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
 
