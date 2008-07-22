@@ -400,7 +400,7 @@ void CSCPMessage::ProcessXMLData(void *state)
 			SetVariable(ps->varId, (WORD)strtoul(ps->value, NULL, 0));
 			break;
 		case CSCP_DT_INT64:
-			SetVariable(ps->varId, strtoull(ps->value, NULL, 0));
+			SetVariable(ps->varId, (QWORD)strtoull(ps->value, NULL, 0));
 			break;
 		case CSCP_DT_FLOAT:
 			SetVariable(ps->varId, strtod(ps->value, NULL));
