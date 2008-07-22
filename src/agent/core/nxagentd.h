@@ -330,7 +330,8 @@ void UnloadAllSubAgents(void);
 BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
                   BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, TCHAR *),
                   TCHAR *pszEntryPoint);
-BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse);
+BOOL ProcessCmdBySubAgent(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse,
+                          SOCKET sock, CSCP_ENCRYPTION_CONTEXT *ctx);
 
 BOOL AddAction(const char *pszName, int iType, const char *pArg, 
                LONG (*fpHandler)(const TCHAR *, NETXMS_VALUES_LIST *, const TCHAR *),

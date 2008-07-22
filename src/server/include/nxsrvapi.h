@@ -339,8 +339,8 @@ public:
    DWORD GetNumDataLines(void) { return m_dwNumDataLines; }
    const TCHAR *GetDataLine(DWORD dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }
 
-   void SetCommandTimeout(DWORD dwTimeout) { if (dwTimeout > 500) m_dwCommandTimeout = dwTimeout; }
-   void SetRecvTimeout(DWORD dwTimeout) { if (dwTimeout > 10000) m_dwRecvTimeout = dwTimeout; }
+   void SetCommandTimeout(DWORD dwTimeout) { m_dwCommandTimeout = max(dwTimeout, 500); }
+   void SetRecvTimeout(DWORD dwTimeout) { m_dwRecvTimeout = max(dwTimeout, 10000); }
    void SetEncryptionPolicy(int iPolicy) { m_iEncryptionPolicy = iPolicy; }
    void SetProxy(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,
                  int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);

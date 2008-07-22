@@ -486,7 +486,7 @@ void CommSession::ProcessingThread(void)
 					break;
             default:
                // Attempt to process unknown command by subagents
-               if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg))
+               if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg, m_hSocket, m_pCtx))
                   msg.SetVariable(VID_RCC, ERR_UNKNOWN_COMMAND);
                break;
          }
