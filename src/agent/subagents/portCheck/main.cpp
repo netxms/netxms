@@ -18,7 +18,8 @@
 //
 // Command handler
 //
-BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse)
+BOOL CommandHandler(DWORD dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse,
+                    SOCKET hSocket, CSCP_ENCRYPTION_CONTEXT *pCtx)
 {
 	BOOL bHandled = TRUE;
 	WORD wType, wPort;

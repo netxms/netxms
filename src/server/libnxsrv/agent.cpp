@@ -204,7 +204,7 @@ void AgentConnection::ReceiverThread(void)
    CSCP_BUFFER *pMsgBuffer;
    BYTE *pDecryptionBuffer = NULL;
    int iErr;
-   TCHAR szBuffer[128];
+   TCHAR szBuffer[128], szIpAddr[16];
 	SOCKET nSocket;
 
    // Initialize raw message receiving function
@@ -267,7 +267,7 @@ void AgentConnection::ReceiverThread(void)
          pRawMsg->wCode = ntohs(pRawMsg->wCode);
          pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
          DbgPrintf(6, "Received raw message %s from agent at %s",
-			          NXCPMessageCodeName(pRawMsg->wCode, szBuffer), IpToStr(GetIpAddr(), szBuffer));
+			          NXCPMessageCodeName(pRawMsg->wCode, szBuffer), IpToStr(GetIpAddr(), szIpAddr));
 
 			if ((pRawMsg->wCode == CMD_FILE_DATA) &&
 				 (m_hCurrFile != -1) && (pRawMsg->dwId == m_dwUploadRequestId))
@@ -1498,6 +1498,7 @@ DWORD AgentConnection::PrepareFileUpload(const TCHAR *fileName, DWORD rqId)
 
 	ConditionReset(m_condFileUpload);
 	m_hCurrFile = open(fileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, O_RDWR);
+	m_dwUploadRequestId = rqId;
 	return (m_hCurrFile != -1) ? ERR_SUCCESS : ERR_FILE_OPEN_ERROR;
 }
 
