@@ -380,6 +380,29 @@ TCHAR *Event::ExpandText(TCHAR *pszTemplate, TCHAR *pszAlarmMsg)
 							g_pScriptLibrary->Unlock();
 						}
 						break;
+					case '{':	// Custom attribute
+						for(i = 0, pCurr++; (*pCurr != '}') && (*pCurr != 0) && (i < 255); pCurr++)
+						{
+							scriptName[i++] = *pCurr;
+						}
+						if (*pCurr == 0)	// no terminating }
+						{
+							pCurr--;
+						}
+						else
+						{
+							scriptName[i] = 0;
+							StrStrip(scriptName);
+							const TCHAR *temp = pObject->GetCustomAttribute(scriptName);
+							if (temp != NULL)
+							{
+								dwSize += (DWORD)_tcslen(temp);
+								pText = (char *)realloc(pText, dwSize);
+								_tcscpy(&pText[dwPos], temp);
+								dwPos += (DWORD)_tcslen(temp);
+							}
+						}
+						break;
                default:    // All other characters are invalid, ignore
                   break;
             }
