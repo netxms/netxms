@@ -164,7 +164,7 @@ void InitTraps(void)
 static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
 {
    TCHAR *pszArgList[32], szBuffer[256];
-   TCHAR szFormat[] = "sssssssssssssssssssssssssssssssss";
+   char szFormat[] = "sssssssssssssssssssssssssssssssss";
    DWORD i, j;
    SNMP_Variable *pVar;
    int iResult;
@@ -180,7 +180,7 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
          }
          else
          {
-            pszArgList[i] = _tcsdup(_T("<null>"));
+            pszArgList[i] = _tcsdup(_T(""));
          }
       }
       else
@@ -197,7 +197,7 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
             }
          }
          if (j == pdu->GetNumVariables())
-            pszArgList[i] = _tcsdup(_T("<null>"));
+            pszArgList[i] = _tcsdup(_T(""));
       }
    }
 
