@@ -206,8 +206,10 @@ void nxUserSelectionDialog::OnInitDialog(wxInitDialogEvent &event)
 	
 	// add columns
 	int width = list->GetClientSize().GetX();
-	list->InsertColumn(0, _T("Name"), wxLIST_FORMAT_LEFT, 200);
-	list->InsertColumn(1, _T("Full Name"), wxLIST_FORMAT_LEFT, width - 200 - wxSystemSettings::GetMetric(wxSYS_VSCROLL_X));
+	long rc = list->InsertColumn(0, _T("Name"), wxLIST_FORMAT_LEFT, 200);
+printf("user: rc1=%d\n",rc);	
+	rc = list->InsertColumn(1, _T("Full Name"), wxLIST_FORMAT_LEFT, width - 200 - wxSystemSettings::GetMetric(wxSYS_VSCROLL_X));
+printf("user: rc2=%d\n",rc);	
 
 	NXMCLoadListCtrlColumns(wxConfig::Get(), *list, _T("/UserSelDlg/UserList"));
 	

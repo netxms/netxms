@@ -559,6 +559,9 @@ if test "x$CC" = "xgcc" ; then
 			])
 	fi
 
+	if test "x$ENABLE_DEBUG" = "xyes"; then
+		CPPFLAGS="$CPPFLAGS -ggdb3"
+	fi
 fi
 
 
@@ -1587,7 +1590,7 @@ else
 fi
 if test "x${BUILD_CONSOLE}" = "xyes"; then
 	echo "Build Console           : YES"
-	echo "wxWidgets config        :" `$WXCONF --selected-config`
+	echo "wxWidgets config        :" `$WXCONF --selected-config --debug=$ENABLE_DEBUG`
 else
 	echo "Build Console           : NO"
 fi

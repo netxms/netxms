@@ -113,34 +113,12 @@ bool nxObjectSelDlg::TransferDataToWindow(void)
 		return false;
 	}
 	
-	wxImageList *imgList = NXMCGetImageListCopy(IMAGE_LIST_OBJECTS_SMALL);
-	imgList->Add(wxXmlResource::Get()->LoadIcon(_T("icoSortUp")));
-	imgList->Add(wxXmlResource::Get()->LoadIcon(_T("icoSortDown")));
-	wndListCtrl->AssignImageList(imgList, wxIMAGE_LIST_SMALL);
-	
-	width = wndListCtrl->GetClientSize().x;
-	if (m_isSelectAddress)
-	{
-		wndListCtrl->InsertColumn(0, _T("Interface"), wxLIST_FORMAT_LEFT,
-			width - 150 - wxSystemSettings::GetMetric(wxSYS_VSCROLL_X));
-		wndListCtrl->InsertColumn(1, _T("IP Address"), wxLIST_FORMAT_LEFT, 150);
-	}
-	else
-	{
-		wndListCtrl->InsertColumn(0, _T("Name"), wxLIST_FORMAT_LEFT,
-			width - 100 - wxSystemSettings::GetMetric(wxSYS_VSCROLL_X));
-		wndListCtrl->InsertColumn(1, _T("Class"), wxLIST_FORMAT_LEFT, 100);
-	}
-	if (m_isSingleSelection)
-	{
-		wndListCtrl->SetSingleStyle(wxLC_SINGLE_SEL);
-	}
-	
 	// Fill in object list
 	if (m_parentObjectId == 0)
 	{
 		NXCLockObjectIndex(NXMCGetSession());
 		index = (NXC_OBJECT_INDEX *)NXCGetObjectIndex(NXMCGetSession(), &numObjects);
+		int __counter = 0;
 		for(i = 0; i < numObjects; i++)
 		{
 			if ((classMask[index[i].object->iClass] & m_allowedClasses) &&
@@ -164,11 +142,13 @@ bool nxObjectSelDlg::TransferDataToWindow(void)
 							continue;
 						}
 					}
-				}
+				}/*
+printf("list=%p %d insert %p name=%p (%S) class=%d\n",wndListCtrl, i,index[i].object,index[i].object->szName,index[i].object->szName,index[i].object->iClass);
 				item = wndListCtrl->InsertItem(0x7FFFFFFF, index[i].object->szName,
 					index[i].object->iClass);
+printf("%d item=%d\n",i,item);
 				wndListCtrl->SetItem(item, 1, NXMCGetClassName(index[i].object->iClass));
-				wndListCtrl->SetItemData(item, index[i].object->dwId);
+				wndListCtrl->SetItemData(item, index[i].object->dwId);*/
 			}
 		}
 		NXCUnlockObjectIndex(NXMCGetSession());
@@ -239,12 +219,50 @@ bool nxObjectSelDlg::TransferDataToWindow(void)
 void nxObjectSelDlg::OnInitDialog(wxInitDialogEvent &event)
 {
 	wxWindow *wnd;
+	wxListCtrl *wndListCtrl;
+	int width;
 	
 	wnd = FindWindowById(wxID_OK, this);
 	if (wnd != NULL)
 		((wxButton *)wnd)->SetDefault();
 	else
 		wxLogDebug(_T("nxObjectSelDlg::OnInitDialog(): cannot find child with id wxID_OK"));
+
+	wndListCtrl = XRCCTRL(*this, "wndListCtrl", wxListCtrl);
+	if (wndListCtrl == NULL)
+	{
+		wxLogError(_T("INTERNAL ERROR: wndListCtrl is NULL in nxObjectSelDlg::OnInitDialog"));
+		return;
+	}
+	
+	wxImageList *imgList = NXMCGetImageListCopy(IMAGE_LIST_OBJECTS_SMALL);
+	imgList->Add(wxXmlResource::Get()->LoadIcon(_T("icoSortUp")));
+	imgList->Add(wxXmlResource::Get()->LoadIcon(_T("icoSortDown")));
+	wndListCtrl->AssignImageList(imgList, wxIMAGE_LIST_SMALL);
+	
+	width = wndListCtrl->GetClientSize().GetX();
+printf("width=%d\n",width);
+	if (m_isSelectAddress)
+	{
+		wndListCtrl->InsertColumn(0, _T("Interface"), wxLIST_FORMAT_LEFT,
+			width - 150 - wxSystemSettings::GetMetric(wxSYS_VSCROLL_X));
+		wndListCtrl->InsertColumn(1, _T("IP Address"), wxLIST_FORMAT_LEFT, 150);
+	}
+	else
+	{
+long rc;
+		rc = wndListCtrl->InsertColumn(0, _T("Name"), wxLIST_FORMAT_LEFT,
+			width - 100 - wxSystemSettings::GetMetric(wxSYS_VSCROLL_X));
+printf("rc1=%d, cols=%d\n",rc,wndListCtrl->GetColumnCount());		
+		rc = wndListCtrl->InsertColumn(1, _T("Class"), wxLIST_FORMAT_LEFT, 100);
+printf("rc2=%d col=%d\n",rc,wndListCtrl->GetColumnCount());		
+	}
+	if (m_isSingleSelection)
+	{
+		wndListCtrl->SetSingleStyle(wxLC_SINGLE_SEL);
+	}
+
+
 	event.Skip();
 }
 
