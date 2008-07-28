@@ -694,6 +694,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    PollerLock();
    m_pPollRequestor = pSession;
    SendPollerMsg(dwRqId, "Starting status poll for node %s\r\n", m_szName);
+   DbgPrintf(5, "Starting status poll for node %s (ID: %d)", m_szName, m_dwId);
 
    // Read capability expiration time and current time
    tExpire = (time_t)ConfigReadULong(_T("CapabilityExpirationTime"), 604800);
@@ -705,6 +706,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       TCHAR szBuffer[256];
       DWORD dwResult;
 
+      DbgPrintf(6, "StatusPoll(%s): check SNMP", m_szName);
 		pTransport = CreateSNMPTransport();
       SetPollerInfo(nPoller, "check SNMP");
       SendPollerMsg(dwRqId, "Checking SNMP agent connectivity\r\n");
@@ -742,6 +744,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
          }
       }
 		delete pTransport;
+      DbgPrintf(6, "StatusPoll(%s): SNMP check finished", m_szName);
    }
 
    // Check native agent connectivity
@@ -749,6 +752,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    {
       AgentConnection *pAgentConn;
 
+      DbgPrintf(6, "StatusPoll(%s): checking agent", m_szName);
       SetPollerInfo(nPoller, "check agent");
       SendPollerMsg(dwRqId, "Checking NetXMS agent connectivity\r\n");
       pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort,
@@ -756,6 +760,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
       SetAgentProxy(pAgentConn);
       if (pAgentConn->Connect(g_pServerKey))
       {
+         DbgPrintf(7, "StatusPoll(%s): connected to agent", m_szName);
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
          {
             m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
@@ -763,9 +768,11 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
             SendPollerMsg(dwRqId, POLLER_INFO "Connectivity with NetXMS agent restored\r\n");
          }
          pAgentConn->Disconnect();
+         DbgPrintf(7, "StatusPoll(%s): disconnected from agent", m_szName);
       }
       else
       {
+         DbgPrintf(7, "StatusPoll(%s): agent unreachable", m_szName);
          SendPollerMsg(dwRqId, POLLER_ERROR "NetXMS agent unreachable\r\n");
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
          {
@@ -786,7 +793,9 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
             m_tFailTimeAgent = tNow;
          }
       }
+      DbgPrintf(7, "StatusPoll(%s): deleting agent connection", m_szName);
       delete pAgentConn;
+      DbgPrintf(7, "StatusPoll(%s): agent connection deleted", m_szName);
    }
 
    SetPollerInfo(nPoller, "prepare polling list");
@@ -924,6 +933,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    if (dwRqId == 0)
       m_dwDynamicFlags &= ~NDF_QUEUED_FOR_STATUS_POLL;
    PollerUnlock();
+   DbgPrintf(5, "Finished status poll for node %s (ID: %d)", m_szName, m_dwId);
 }
 
 

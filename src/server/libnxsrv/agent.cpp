@@ -150,6 +150,9 @@ AgentConnection::~AgentConnection()
    // Disconnect from peer
    Disconnect();
 
+   // Wait for receiver thread termination
+   ThreadJoin(m_hReceiverThread);
+   
 	// Close socket if active
 	Lock();
    if (m_hSocket != -1)
@@ -158,9 +161,6 @@ AgentConnection::~AgentConnection()
 		m_hSocket = -1;
 	}
 	Unlock();
-
-   // Wait for receiver thread termination
-   ThreadJoin(m_hReceiverThread);
 
    Lock();
    DestroyResultData();
