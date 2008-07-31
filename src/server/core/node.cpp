@@ -701,6 +701,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    tNow = time(NULL);
 
    // Check SNMP agent connectivity
+restart_agent_check:
    if ((m_dwFlags & NF_IS_SNMP) && (!(m_dwFlags & NF_DISABLE_SNMP)))
    {
       TCHAR szBuffer[256];
@@ -863,16 +864,23 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 
    // Check if entire node is down
    LockChildList(FALSE);
-   for(i = 0, bAllDown = TRUE; i < m_dwChildCount; i++)
-      if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
-          (m_pChildList[i]->Status() != STATUS_CRITICAL) &&
-          (m_pChildList[i]->Status() != STATUS_UNKNOWN) &&
-          (m_pChildList[i]->Status() != STATUS_UNMANAGED) &&
-          (m_pChildList[i]->Status() != STATUS_DISABLED))
-      {
-         bAllDown = FALSE;
-         break;
-      }
+	if (m_dwChildCount > 0)
+	{
+		for(i = 0, bAllDown = TRUE; i < m_dwChildCount; i++)
+			if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
+				 (m_pChildList[i]->Status() != STATUS_CRITICAL) &&
+				 (m_pChildList[i]->Status() != STATUS_UNKNOWN) &&
+				 (m_pChildList[i]->Status() != STATUS_UNMANAGED) &&
+				 (m_pChildList[i]->Status() != STATUS_DISABLED))
+			{
+				bAllDown = FALSE;
+				break;
+			}
+	}
+	else
+	{
+		bAllDown = FALSE;
+	}
    UnlockChildList();
    if (bAllDown && (m_dwFlags & NF_IS_NATIVE_AGENT) &&
        (!(m_dwFlags & NF_DISABLE_NXCP)))
@@ -899,9 +907,10 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
    {
       if (m_dwDynamicFlags & NDF_UNREACHABLE)
       {
-         m_dwDynamicFlags &= ~NDF_UNREACHABLE;
+         m_dwDynamicFlags &= ~(NDF_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_AGENT_UNREACHABLE);
          PostEvent(EVENT_NODE_UP, m_dwId, NULL);
          SendPollerMsg(dwRqId, POLLER_INFO "Node recovered from unreachable state\r\n");
+			goto restart_agent_check;
       }
       else
       {
