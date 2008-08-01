@@ -91,7 +91,7 @@ int CheckSMTP(char *szAddr, DWORD dwAddr, short nPort, char *szTo)
 											snprintf(szBuff, sizeof(szBuff), "From: <noreply@%s>\r\nTo: <%s>\r\nSubject: NetXMS test mail\r\nDate: %s\r\n\r\nNetXMS test mail\r\n.\r\n",
 											         szHostname, szTo, szTime);
 											
-											if (NetWrite(nSd, szBuff, strlen(szBuff)) > 0)
+											if (NetWrite(nSd, szBuff, (int)strlen(szBuff)) > 0)
 											{
 												CHECK_OK("250")
 												{

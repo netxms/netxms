@@ -941,7 +941,7 @@ char *CSCPMessage::CreateXML(void)
 					tempStr[blen] = 0;
 					xml.AddDynamicString(tempStr);
 #else
-					xml.AddString(bdata, blen);
+					xml.AddString(bdata, (DWORD)blen);
 #endif
 				}
 				safe_free(bdata);

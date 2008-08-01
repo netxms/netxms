@@ -164,7 +164,7 @@ typedef int socklen_t;
 #define O_TRUNC      0x0800
 #endif
 
-#ifndef UNDER_CE
+#if !defined(UNDER_CE) && !defined(__64BIT__)
 #define HAVE_LIBEXPAT 1
 #endif
 

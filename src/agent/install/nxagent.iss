@@ -35,6 +35,7 @@ Source: "..\subagents\sms\Release\sms.nsm"; DestDir: "{app}\bin"; Flags: ignorev
 Source: "..\subagents\ups\Release\ups.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion
 Source: "..\..\install\windows\files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\install\windows\files\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 
 [Dirs]
 Name: "{app}\etc"
