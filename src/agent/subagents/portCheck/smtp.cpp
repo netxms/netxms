@@ -32,7 +32,7 @@ int CheckSMTP(char *szAddr, DWORD dwAddr, short nPort, char *szTo)
 	nSd = NetConnectTCP(szAddr, dwAddr, nPort);
 	if (nSd != INVALID_SOCKET)
 	{
-		char szBuff[512];
+		char szBuff[2048];
 		char szTmp[128];
 		char szHostname[128];
 
@@ -73,8 +73,25 @@ int CheckSMTP(char *szAddr, DWORD dwAddr, short nPort, char *szTo)
 									{
 										CHECK_OK("354")
 										{
-											if (NetWrite(nSd, "NetXMS test mail\r\n.\r\n",
-														21) > 0)
+											// date
+											time_t currentTime;
+											struct tm *pCurrentTM;
+											char szTime[64];
+
+											time(&currentTime);
+#ifdef HAVE_GMTIME_R
+											struct tm currentTM;
+											gmtime_r(&currentTime, &currentTM);
+											pCurrentTM = &currentTM;
+#else
+											pCurrentTM = gmtime(&currentTime);
+#endif
+											strftime(szTime, sizeof(szTime), "%a, %d %b %Y %H:%M:%S %z\r\n", pCurrentTM);
+
+											snprintf(szBuff, sizeof(szBuff), "From: <noreply@%s>\r\nTo: <%s>\r\nSubject: NetXMS test mail\r\nDate: %s\r\n\r\nNetXMS test mail\r\n.\r\n",
+											         szHostname, szTo, szTime);
+											
+											if (NetWrite(nSd, szBuff, strlen(szBuff)) > 0)
 											{
 												CHECK_OK("250")
 												{
