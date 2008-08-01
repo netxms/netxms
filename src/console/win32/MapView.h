@@ -158,6 +158,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 public:
+	BOOL m_bPositionOnChangedObject;
+	void EnsureVisible(DWORD dwObjectId);
 	BOOL m_bShowConnectorNames;
 	BOOL m_bCanOpenObjects;
 	BOOL m_bIsModified;

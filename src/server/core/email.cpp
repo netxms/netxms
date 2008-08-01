@@ -266,12 +266,12 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                      time_t currentTime;
 							struct tm *pCurrentTM;
                      time(&currentTime);
-#ifdef HAVE_GMTIME_R
+#ifdef HAVE_LOCALTIME_R
                      struct tm currentTM;
-                     gmtime_r(&currentTime, &currentTM);
+                     localtime_r(&currentTime, &currentTM);
                      pCurrentTM = &currentTM;
 #else
-                     pCurrentTM = gmtime(&currentTime);
+                     pCurrentTM = localtime(&currentTime);
 #endif
                      strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S %z\r\n", pCurrentTM);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);

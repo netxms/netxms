@@ -79,12 +79,12 @@ int CheckSMTP(char *szAddr, DWORD dwAddr, short nPort, char *szTo)
 											char szTime[64];
 
 											time(&currentTime);
-#ifdef HAVE_GMTIME_R
+#ifdef HAVE_LOCALTIME_R
 											struct tm currentTM;
-											gmtime_r(&currentTime, &currentTM);
+											localtime_r(&currentTime, &currentTM);
 											pCurrentTM = &currentTM;
 #else
-											pCurrentTM = gmtime(&currentTime);
+											pCurrentTM = localtime(&currentTime);
 #endif
 											strftime(szTime, sizeof(szTime), "%a, %d %b %Y %H:%M:%S %z\r\n", pCurrentTM);
 

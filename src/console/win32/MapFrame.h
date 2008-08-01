@@ -104,6 +104,8 @@ protected:
 	afx_msg void OnUpdateMapUnlink(CCmdUI* pCmdUI);
 	afx_msg void OnMapShowconnectornames();
 	afx_msg void OnUpdateMapShowconnectornames(CCmdUI* pCmdUI);
+	afx_msg void OnMapEnsurevisible();
+	afx_msg void OnUpdateMapEnsurevisible(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnObjectChange(WPARAM wParam, NXC_OBJECT *pObject);
    afx_msg void OnSubmapChange(WPARAM wParam, nxSubmap *pSubmap);

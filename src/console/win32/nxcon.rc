@@ -596,6 +596,8 @@ BEGIN
         MENUITEM "&Redo layout",                ID_MAP_REDOLAYOUT
         MENUITEM "S&et background...",          ID_MAP_SETBACKGROUND
         MENUITEM "Enable auto&matic layout",    ID_MAP_AUTOLAYOUT
+        MENUITEM "Ensure &visibility of changed objects", 
+                                                ID_MAP_ENSUREVISIBLE
         MENUITEM "Show co&nnector names",       ID_MAP_SHOWCONNECTORNAMES
     END
     POPUP "Data"

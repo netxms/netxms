@@ -39,6 +39,7 @@ CMapFrame::~CMapFrame()
    theApp.WriteProfileInt(MAP_SECTION, _T("ShowToolBox"), m_bShowToolBox);
    theApp.WriteProfileInt(MAP_SECTION, _T("ShowStatusBar"), m_bShowStatusBar);
    theApp.WriteProfileInt(MAP_SECTION, _T("ShowConnectorNames"), m_wndMapView.m_bShowConnectorNames);
+   theApp.WriteProfileInt(MAP_SECTION, _T("EnsureChangeVisibility"), m_wndMapView.m_bPositionOnChangedObject);
 }
 
 
@@ -94,6 +95,8 @@ BEGIN_MESSAGE_MAP(CMapFrame, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_MAP_UNLINK, OnUpdateMapUnlink)
 	ON_COMMAND(ID_MAP_SHOWCONNECTORNAMES, OnMapShowconnectornames)
 	ON_UPDATE_COMMAND_UI(ID_MAP_SHOWCONNECTORNAMES, OnUpdateMapShowconnectornames)
+	ON_COMMAND(ID_MAP_ENSUREVISIBLE, OnMapEnsurevisible)
+	ON_UPDATE_COMMAND_UI(ID_MAP_ENSUREVISIBLE, OnUpdateMapEnsurevisible)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(NXCM_SUBMAP_CHANGE, OnSubmapChange)
@@ -175,6 +178,7 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    // Create and initialize map view
    m_wndMapView.CreateEx(WS_EX_CLIENTEDGE, NULL, _T("MapView"), WS_CHILD | WS_VISIBLE, rect, this, 0);
 	m_wndMapView.m_bShowConnectorNames = theApp.GetProfileInt(MAP_SECTION, _T("ShowConnectorNames"), FALSE);
+	m_wndMapView.m_bPositionOnChangedObject = theApp.GetProfileInt(MAP_SECTION, _T("EnsureChangeVisibility"), FALSE);
 
 	// Select map to open
 	CMapSelDlg dlg;
@@ -1030,4 +1034,19 @@ void CMapFrame::OnMapShowconnectornames()
 void CMapFrame::OnUpdateMapShowconnectornames(CCmdUI* pCmdUI) 
 {
 	pCmdUI->SetCheck(m_wndMapView.m_bShowConnectorNames);
+}
+
+
+//
+// Enable/disable map positioning on changed objects
+//
+
+void CMapFrame::OnMapEnsurevisible() 
+{
+	m_wndMapView.m_bPositionOnChangedObject = !m_wndMapView.m_bPositionOnChangedObject;
+}
+
+void CMapFrame::OnUpdateMapEnsurevisible(CCmdUI* pCmdUI) 
+{
+	pCmdUI->SetCheck(m_wndMapView.m_bPositionOnChangedObject);
 }

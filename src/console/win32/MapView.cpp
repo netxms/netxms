@@ -64,6 +64,7 @@ CMapView::CMapView()
    m_bIsModified = FALSE;
 	m_bCanOpenObjects = TRUE;
 	m_bShowConnectorNames = FALSE;
+	m_bPositionOnChangedObject = FALSE;
 }
 
 CMapView::~CMapView()
@@ -1475,6 +1476,8 @@ void CMapView::OnObjectChange(DWORD dwObjectId, NXC_OBJECT *pObject)
 				m_bIsModified = TRUE;
          }
       }
+		if (m_bPositionOnChangedObject)
+			EnsureVisible(dwObjectId);
       Update();
    }
 	else
@@ -1587,4 +1590,43 @@ HBITMAP CMapView::GetBkImage(DWORD dwMapId, DWORD dwSubmapId, int nScaleFactor)
 int CMapView::GetScaleFactor(void)
 {
    return m_scaleInfo[m_nScale].nFactor;
+}
+
+
+//
+// Ensure object visibility
+//
+
+void CMapView::EnsureVisible(DWORD dwObjectId)
+{
+	RECT rcClient;
+	POINT pos;
+
+	GetClientRect(&rcClient);
+	pos = m_pSubmap->GetObjectPosition(dwObjectId);
+   ScalePosMapToScreen(&pos);
+
+	if (pos.x < m_ptOrg.x)
+	{
+		SetScrollPos(SB_HORZ, pos.x);
+		m_ptOrg.x = pos.x;
+	}
+
+	if (pos.y < m_ptOrg.y)
+	{
+		SetScrollPos(SB_VERT, pos.y);
+		m_ptOrg.y = pos.y;
+	}
+
+	if (pos.x > m_ptOrg.x + rcClient.right - m_scaleInfo[m_nScale].ptObjectSize.x)
+	{
+		SetScrollPos(SB_HORZ, m_ptOrg.x + rcClient.right - m_scaleInfo[m_nScale].ptObjectSize.x);
+		m_ptOrg.x += rcClient.right - m_scaleInfo[m_nScale].ptObjectSize.x;
+	}
+
+	if (pos.y > m_ptOrg.y + rcClient.bottom - m_scaleInfo[m_nScale].ptObjectSize.y)
+	{
+		SetScrollPos(SB_VERT, m_ptOrg.y + rcClient.right - m_scaleInfo[m_nScale].ptObjectSize.y);
+		m_ptOrg.y += rcClient.right - m_scaleInfo[m_nScale].ptObjectSize.y;
+	}
 }
