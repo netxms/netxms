@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [0.2.22-rc3], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.22], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
