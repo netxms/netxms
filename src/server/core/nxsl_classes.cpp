@@ -130,6 +130,10 @@ NXSL_Value *NXSL_EventClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
    {
       value = new NXSL_Value(event->Id());
    }
+   else if (!strcmp(pszAttr, "severity"))
+   {
+      value = new NXSL_Value(event->Severity());
+   }
    else if (!strcmp(pszAttr, "timestamp"))
    {
       value = new NXSL_Value((INT64)event->TimeStamp());
