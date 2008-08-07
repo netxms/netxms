@@ -652,6 +652,7 @@ BEGIN
     POPUP "Map"
     BEGIN
         MENUITEM "&Create...\tIns",             ID_MAP_CREATE
+        MENUITEM "&Rename",                     ID_MAP_RENAME
         MENUITEM "&Delete\tDel",                ID_MAP_DELETE
     END
 END
@@ -1076,6 +1077,7 @@ BEGIN
     POPUP "Map"
     BEGIN
         MENUITEM "&Create...",                  ID_MAP_CREATE
+        MENUITEM "&Rename",                     ID_MAP_RENAME
         MENUITEM "&Delete",                     ID_MAP_DELETE
     END
 END

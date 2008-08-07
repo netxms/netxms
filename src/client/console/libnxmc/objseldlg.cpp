@@ -96,7 +96,7 @@ bool nxObjectSelDlg::TransferDataFromWindow(void)
 bool nxObjectSelDlg::TransferDataToWindow(void)
 {
 	wxListCtrl *wndListCtrl;
-	int width;
+//	int width;
 	DWORD i, numObjects;
 	NXC_OBJECT_INDEX *index;
 	long item;

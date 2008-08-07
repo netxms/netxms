@@ -3070,7 +3070,7 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 			}
 
 			// Check if subnet mask is correct on interface
-			if (pSubnet->IpNetMask() != pIfList->pInterfaces[i].dwIpNetMask)
+			if ((pSubnet != NULL) && (pSubnet->IpNetMask() != pIfList->pInterfaces[i].dwIpNetMask))
 			{
 				PostEvent(EVENT_INCORRECT_NETMASK, m_dwId, "idsaa", pInterface->Id(),
 							 pInterface->IfIndex(), pInterface->Name(),

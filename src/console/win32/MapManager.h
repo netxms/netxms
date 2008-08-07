@@ -45,6 +45,8 @@ protected:
 	afx_msg void OnMapDelete();
 	afx_msg void OnUpdateMapDelete(CCmdUI* pCmdUI);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnMapRename();
+	afx_msg void OnUpdateMapRename(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

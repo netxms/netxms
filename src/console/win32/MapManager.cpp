@@ -37,6 +37,8 @@ BEGIN_MESSAGE_MAP(CMapManager, CMDIChildWnd)
 	ON_COMMAND(ID_MAP_DELETE, OnMapDelete)
 	ON_UPDATE_COMMAND_UI(ID_MAP_DELETE, OnUpdateMapDelete)
 	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_MAP_RENAME, OnMapRename)
+	ON_UPDATE_COMMAND_UI(ID_MAP_RENAME, OnUpdateMapRename)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -65,7 +67,7 @@ int CMapManager::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 
 	GetClientRect(&rect);
-	m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT, rect, this, ID_LIST_VIEW);
+	m_wndListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_EDITLABELS, rect, this, ID_LIST_VIEW);
 	m_wndListCtrl.InsertColumn(0, _T("ID"), LVCFMT_LEFT, 60);
 	m_wndListCtrl.InsertColumn(1, _T("Name"), LVCFMT_LEFT, 150);
 	m_wndListCtrl.InsertColumn(2, _T("Root object"), LVCFMT_LEFT, 150);
@@ -227,4 +229,22 @@ void CMapManager::OnContextMenu(CWnd* pWnd, CPoint point)
 
    pMenu = theApp.GetContextMenu(30);
    pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
+}
+
+
+//
+// Map -> Rename menu handler
+//
+
+void CMapManager::OnMapRename() 
+{
+	if (m_wndListCtrl.GetSelectedCount() != 1)
+		return;
+
+//	m_wndListCtrl.EditLabel(m_wndListCtrl.GetSelectionMark());
+}
+
+void CMapManager::OnUpdateMapRename(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() == 1);
 }
