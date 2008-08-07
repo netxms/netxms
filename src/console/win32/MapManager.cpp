@@ -86,6 +86,7 @@ int CMapManager::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CMapManager::OnSize(UINT nType, int cx, int cy) 
 {
+	CMDIChildWnd::OnSize(nType, cx, cy);
 	m_wndListCtrl.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOZORDER);
 }
 
@@ -96,6 +97,7 @@ void CMapManager::OnSize(UINT nType, int cx, int cy)
 
 void CMapManager::OnSetFocus(CWnd* pOldWnd) 
 {
+	CMDIChildWnd::OnSetFocus(pOldWnd);
 	m_wndListCtrl.SetFocus();
 }
 
