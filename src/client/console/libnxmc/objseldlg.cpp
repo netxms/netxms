@@ -142,13 +142,14 @@ bool nxObjectSelDlg::TransferDataToWindow(void)
 							continue;
 						}
 					}
-				}/*
+				}
+/*
 printf("list=%p %d insert %p name=%p (%S) class=%d\n",wndListCtrl, i,index[i].object,index[i].object->szName,index[i].object->szName,index[i].object->iClass);
-				item = wndListCtrl->InsertItem(0x7FFFFFFF, index[i].object->szName,
-					index[i].object->iClass);
-printf("%d item=%d\n",i,item);
+*/
+				item = wndListCtrl->InsertItem(0x7FFFFFFF, index[i].object->szName, index[i].object->iClass);
+//printf("%d item=%d\n",i,item);
 				wndListCtrl->SetItem(item, 1, NXMCGetClassName(index[i].object->iClass));
-				wndListCtrl->SetItemData(item, index[i].object->dwId);*/
+				wndListCtrl->SetItemData(item, index[i].object->dwId);
 			}
 		}
 		NXCUnlockObjectIndex(NXMCGetSession());
