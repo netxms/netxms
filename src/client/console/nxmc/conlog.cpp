@@ -31,7 +31,7 @@ void nxConsoleLogger::Init()
 	m_wndDummy->Hide();
 	m_wndTextCtrl = new wxTextCtrl(m_wndDummy, wxID_ANY, wxEmptyString,
 	                               wxDefaultPosition, wxDefaultSize,
-	                               wxTE_MULTILINE | wxSUNKEN_BORDER);
+	                               wxTE_MULTILINE | wxSUNKEN_BORDER | wxTE_READONLY);
 	m_logOld = wxLog::SetActiveTarget(new wxLogTextCtrl(m_wndTextCtrl));
 //	wxLogChain *chain = new wxLogChain(new wxLogTextCtrl(m_wndTextCtrl));
 #if defined(__WXDEBUG__) && !defined(_WIN32)
