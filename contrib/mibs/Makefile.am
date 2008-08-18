@@ -41,12 +41,14 @@ mibs_DATA = \
 	HOST-RESOURCES-TYPES.txt \
 	IANA-ADDRESS-FAMILY-NUMBERS-MIB.txt \
 	IANA-LANGUAGE-MIB.txt \
+	IANA-RTPROTO-MIB.txt \
 	IANAifType-MIB.txt \
 	IEEE8021-PAE-MIB.txt \
 	IEEE802dot11-MIB.txt \
 	IF-MIB.txt \
 	INET-ADDRESS-MIB.txt \
 	IP-MIB.txt \
+	IPMROUTE-STD-MIB.txt \
 	LLDP-MIB.txt \
 	MAU-MIB.txt \
 	MTA-MIB.txt \
@@ -74,6 +76,7 @@ mibs_DATA = \
 	OSPF-MIB.txt \
 	P-BRIDGE-MIB.txt \
 	PerfHist-TC-MIB.txt \
+	PIM-MIB.txt \
 	PowerNet-MIB.txt \
 	Printer-MIB.txt \
 	Q-BRIDGE-MIB.txt \
