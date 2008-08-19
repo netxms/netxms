@@ -48,7 +48,6 @@ protected:
 	afx_msg void OnMapRename();
 	afx_msg void OnUpdateMapRename(CCmdUI* pCmdUI);
 	//}}AFX_MSG
-   afx_msg void OnListViewEndLabelEdit(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 
