@@ -839,6 +839,7 @@ restart_agent_check:
 
    // Poll interfaces and services
    SetPollerInfo(nPoller, "child poll");
+   DbgPrintf(7, "StatusPoll(%s): starting child object poll", m_szName);
 	pCluster = GetMyCluster();
 	pTransport = CreateSNMPTransport();
    for(i = 0; i < dwPollListSize; i++)
@@ -846,11 +847,13 @@ restart_agent_check:
       switch(ppPollList[i]->Type())
       {
          case OBJECT_INTERFACE:
+			   DbgPrintf(7, "StatusPoll(%s): polling interface %d [%s]", m_szName, ppPollList[i]->Id(), ppPollList[i]->Name());
             ((Interface *)ppPollList[i])->StatusPoll(pSession, dwRqId, pQueue,
 					(pCluster != NULL) ? pCluster->IsSyncAddr(((Interface *)ppPollList[i])->IpAddr()) : FALSE,
 					pTransport);
             break;
          case OBJECT_NETWORKSERVICE:
+			   DbgPrintf(7, "StatusPoll(%s): polling network service %d [%s]", m_szName, ppPollList[i]->Id(), ppPollList[i]->Name());
             ((NetworkService *)ppPollList[i])->StatusPoll(pSession, dwRqId,
                                                           (Node *)pPollerNode, pQueue);
             break;
@@ -861,6 +864,7 @@ restart_agent_check:
    }
 	delete pTransport;
    safe_free(ppPollList);
+   DbgPrintf(7, "StatusPoll(%s): finished child object poll", m_szName);
 
    // Check if entire node is down
    LockChildList(FALSE);

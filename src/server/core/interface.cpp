@@ -280,6 +280,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
       {
          SendPollerMsg(dwRqId, "      Retrieving interface status from NetXMS agent\r\n");
          newStatus = pNode->GetInterfaceStatusFromAgent(m_dwIfIndex);
+			DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new status from NetXMS agent %d"), m_dwId, m_szName, newStatus);
          if (newStatus != STATUS_UNKNOWN)
             bNeedPoll = FALSE;
       }
@@ -289,6 +290,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
       {
          SendPollerMsg(dwRqId, "      Retrieving interface status from SNMP agent\r\n");
          newStatus = pNode->GetInterfaceStatusFromSNMP(pTransport, m_dwIfIndex);
+			DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new status from SNMP %d"), m_dwId, m_szName, newStatus);
          if (newStatus != STATUS_UNKNOWN)
             bNeedPoll = FALSE;
       }
@@ -309,14 +311,17 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
                (m_dwIfType == IFTYPE_NETXMS_NAT_ADAPTER)))
          {
             SendPollerMsg(dwRqId, "      Starting ICMP ping\r\n");
+				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(0x%08X,3,1500,NULL,%d)"), m_dwId, m_szName, htonl(m_dwIpAddr), g_dwPingSize);
             dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, 1500, NULL, g_dwPingSize);
             if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
                WriteLog(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
             newStatus = (dwPingStatus == ICMP_SUCCESS) ? STATUS_NORMAL : STATUS_CRITICAL;
+				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): ping result %d, new status %d"), m_dwId, m_szName, dwPingStatus, newStatus);
          }
          else
          {
             // Interface doesn't have an IP address, so we can't ping it
+				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): no IP address, will not ping"), m_dwId, m_szName);
             newStatus = STATUS_UNKNOWN;
          }
       }
@@ -349,6 +354,7 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 
 		if (m_iPollCount >= ((m_iRequiredPollCount > 0) ? m_iRequiredPollCount : g_nRequiredPolls))
 		{
+			DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): status changed from %d to %d"), m_dwId, m_szName, m_iStatus, newStatus);
 			m_iStatus = newStatus;
 			m_iPendingStatus = -1;	// Invalidate pending status
 			SendPollerMsg(dwRqId, "      Interface status changed to %s\r\n", g_szStatusTextSmall[m_iStatus]);
