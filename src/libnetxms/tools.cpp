@@ -764,9 +764,15 @@ int LIBNETXMS_EXPORTABLE SendEx(SOCKET nSocket, const void *pBuff,
 
 	do
 	{
+retry:
 		nRet = send(nSocket, ((char *)pBuff) + (nSize - nLeft), nLeft, nFlags);
 		if (nRet <= 0)
 		{
+			if (WSAGetLastError() == WSAEWOULDBLOCK)
+			{
+				// retry operation
+				goto retry;
+			}
 			break;
 		}
 		nLeft -= nRet;

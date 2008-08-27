@@ -496,7 +496,9 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, const TCH
          else
          {
             if (SendEx(hSocket, (char *)pMsg, (DWORD)iBytes + CSCP_HEADER_SIZE + dwPadding, 0) <= 0)
+				{
 					break;	// Send error
+				}
          }
 
          if (iBytes < FILE_BUFFER_SIZE)
