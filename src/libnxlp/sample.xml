@@ -1,4 +1,5 @@
 <parser>
+	<file>C:\my_log.txt</file>
 	<rules>
 		<rule>
 			<match>.*([A-Za-z]+) failed.*</match>

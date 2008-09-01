@@ -37,10 +37,10 @@
 
 LogParserRule::LogParserRule(const char *regexp, DWORD event, int numParams)
 {
-	m_isValid = (regcomp(&m_preg, regexp, REG_ICASE) == 0);
+	m_isValid = (regcomp(&m_preg, regexp, REG_EXTENDED | REG_ICASE) == 0);
 	m_event = event;
 	m_numParams = numParams;
-	m_pmatch = (numParams > 0) ? (regmatch_t *)malloc(sizeof(regmatch_t) * numParams) : NULL;
+	m_pmatch = (numParams > 0) ? (regmatch_t *)malloc(sizeof(regmatch_t) * (numParams + 1)) : NULL;
 }
 
 
@@ -65,7 +65,7 @@ BOOL LogParserRule::Match(const char *line, LOG_PARSER_CALLBACK cb, void *userAr
 	if (!m_isValid)
 		return FALSE;
 
-	if (regexec(&m_preg, line, m_numParams, m_pmatch, 0) == 0)
+	if (regexec(&m_preg, line, (m_numParams > 0) ? m_numParams + 1 : 0, m_pmatch, 0) == 0)
 	{
 		if (cb != NULL)
 		{
@@ -77,11 +77,11 @@ BOOL LogParserRule::Match(const char *line, LOG_PARSER_CALLBACK cb, void *userAr
 				params = (char **)alloca(sizeof(char *) * m_numParams);
 				for(i = 0; i < m_numParams; i++)
 				{
-					if (m_pmatch[i].rm_so != -1)
+					if (m_pmatch[i + 1].rm_so != -1)
 					{
-						len = m_pmatch[i].rm_eo - m_pmatch[i].rm_so;
+						len = m_pmatch[i + 1].rm_eo - m_pmatch[i + 1].rm_so;
 						params[i] = (char *)malloc(len + 1);
-						memcpy(params[i], &line[m_pmatch[i].rm_so], len);
+						memcpy(params[i], &line[m_pmatch[i + 1].rm_so], len);
 						params[i][len] = 0;
 					}
 					else

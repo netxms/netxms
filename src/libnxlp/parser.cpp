@@ -41,6 +41,7 @@
 #define XML_STATE_RULE		2
 #define XML_STATE_MATCH		3
 #define XML_STATE_EVENT		4
+#define XML_STATE_FILE     5
 
 typedef struct
 {
@@ -48,6 +49,7 @@ typedef struct
 	int state;
 	String regexp;
 	String event;
+	String file;
 	int numEventParams;
 } XML_PARSER_STATE;
 
@@ -62,6 +64,7 @@ LogParser::LogParser()
 	m_rules = NULL;
 	m_cb = NULL;
 	m_userArg = NULL;
+	m_fileName = NULL;
 }
 
 
@@ -76,6 +79,7 @@ LogParser::~LogParser()
 	for(i = 0; i < m_numRules; i++)
 		delete m_rules[i];
 	safe_free(m_rules);
+	safe_free(m_fileName);
 }
 
 
@@ -119,6 +123,17 @@ BOOL LogParser::MatchLine(const char *line)
 
 
 //
+// Set associated file name
+//
+
+void LogParser::SetFileName(const TCHAR *name)
+{
+	safe_free(m_fileName);
+	m_fileName = (name != NULL) ? _tcsdup(name) : NULL;
+}
+
+
+//
 // Create parser configuration from XML
 //
 
@@ -129,6 +144,10 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	if (!strcmp(name, "parser"))
 	{
 		((XML_PARSER_STATE *)userData)->state = XML_STATE_PARSER;
+	}
+	else if (!strcmp(name, "file"))
+	{
+		((XML_PARSER_STATE *)userData)->state = XML_STATE_FILE;
 	}
 	else if (!strcmp(name, "rules"))
 	{
@@ -162,6 +181,11 @@ static void EndElement(void *userData, const char *name)
 	if (!strcmp(name, "parser"))
 	{
 		ps->state = XML_STATE_END;
+	}
+	else if (!strcmp(name, "file"))
+	{
+		ps->parser->SetFileName(ps->file);
+		ps->state = XML_STATE_PARSER;
 	}
 	else if (!strcmp(name, "rules"))
 	{
@@ -198,6 +222,9 @@ static void CharData(void *userData, const XML_Char *s, int len)
 		case XML_STATE_EVENT:
 			ps->event.AddString(s, len);
 			break;
+		case XML_STATE_FILE:
+			ps->file.AddString(s, len);
+			break;
 		default:
 			break;
 	}
@@ -205,7 +232,7 @@ static void CharData(void *userData, const XML_Char *s, int len)
 
 #endif
 
-BOOL LogParser::CreateFromXML(const char *xml, char *errorText, int errBufSize)
+BOOL LogParser::CreateFromXML(const char *xml, int xmlLen, char *errorText, int errBufSize)
 {
 #if HAVE_LIBEXPAT
 	XML_Parser parser = XML_ParserCreate(NULL);
@@ -218,7 +245,7 @@ BOOL LogParser::CreateFromXML(const char *xml, char *errorText, int errBufSize)
 	XML_SetUserData(parser, &state);
 	XML_SetElementHandler(parser, StartElement, EndElement);
 	XML_SetCharacterDataHandler(parser, CharData);
-	success = (XML_Parse(parser, xml, strlen(xml), TRUE) != XML_STATUS_ERROR);
+	success = (XML_Parse(parser, xml, (xmlLen == -1) ? strlen(xml) : xmlLen, TRUE) != XML_STATUS_ERROR);
 
 	if (!success && (errorText != NULL))
 	{

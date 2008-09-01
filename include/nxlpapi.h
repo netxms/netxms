@@ -83,12 +83,16 @@ private:
 	LogParserRule **m_rules;
 	LOG_PARSER_CALLBACK m_cb;
 	void *m_userArg;
+	TCHAR *m_fileName;
 
 public:
 	LogParser();
 	~LogParser();
 	
-	BOOL CreateFromXML(const char *xml, char *errorText = NULL, int errBufSize = 0);
+	BOOL CreateFromXML(const char *xml, int xmlLen = -1, char *errorText = NULL, int errBufSize = 0);
+
+	void SetFileName(const TCHAR *name);
+	const TCHAR *GetFileName() { return m_fileName; }
 
 	BOOL AddRule(const char *regexp, DWORD event = 0, int numParams = 0);
 	void SetCallback(LOG_PARSER_CALLBACK cb) { m_cb = cb; }
