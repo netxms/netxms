@@ -234,6 +234,7 @@ typedef int SOCKET;
 #define WSAGetLastError() (errno)
 
 #define WSAEINTR        EINTR
+#define WSAEWOULDBLOCK  EWOULDBLOCK
 #define INVALID_SOCKET  (-1)
 
 #define SetSocketReuseFlag(sd) { \
@@ -388,6 +389,7 @@ typedef int SOCKET;
 #define WSAGetLastError() (errno)
 
 #define WSAEINTR        EINTR
+#define WSAEWOULDBLOCK  EWOULDBLOCK
 #define INVALID_SOCKET  (-1)
 
 #define SetSocketReuseFlag(sd) { \
