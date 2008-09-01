@@ -87,3 +87,36 @@ TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length)
 
 	return out;
 }
+
+
+//
+// Get attribute for XML tag
+//
+
+const char LIBNETXMS_EXPORTABLE *XMLGetAttr(const char **attrs, const char *name)
+{
+	int i;
+
+	for(i = 0; attrs[i] != NULL; i += 2)
+	{
+		if (!stricmp(attrs[i], name))
+			return attrs[i + 1];
+	}
+	return NULL;
+}
+
+int LIBNETXMS_EXPORTABLE XMLGetAttrInt(const char **attrs, const char *name, int defVal)
+{
+	const char *value;
+
+	value = XMLGetAttr(attrs, name);
+	return (value != NULL) ? strtol(value, NULL, 0) : defVal;
+}
+
+int LIBNETXMS_EXPORTABLE XMLGetAttrDWORD(const char **attrs, const char *name, DWORD defVal)
+{
+	const char *value;
+
+	value = XMLGetAttr(attrs, name);
+	return (value != NULL) ? strtoul(value, NULL, 0) : defVal;
+}

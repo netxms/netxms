@@ -36,18 +36,65 @@
 #endif
 
 
+#ifdef _WIN32
+#include <netxms-regex.h>
+#else
+#include <regex.h>
+#endif
+
+
+//
+// Callback
+//
+
+typedef void (* LOG_PARSER_CALLBACK)(DWORD, const char *, int, char **, void *);
+
+
+//
+// Log parser rule
+//
+
+class LIBNXLP_EXPORTABLE LogParserRule
+{
+private:
+	regex_t m_preg;
+	DWORD m_event;
+	BOOL m_isValid;
+	int m_numParams;
+	regmatch_t *m_pmatch;
+
+public:
+	LogParserRule(const char *regexp, DWORD event = 0, int numParams = 0);
+	~LogParserRule();
+
+	BOOL IsValid() { return m_isValid; }
+	BOOL Match(const char *line, LOG_PARSER_CALLBACK cb, void *userArg);
+};
+
+
 //
 // Log parser class
 //
 
 class LIBNXLP_EXPORTABLE LogParser
 {
+private:
+	int m_numRules;
+	LogParserRule **m_rules;
+	LOG_PARSER_CALLBACK m_cb;
+	void *m_userArg;
+
 public:
 	LogParser();
-	LogParser(const char *xml);
 	~LogParser();
 	
-	BOOL AddRule(const char *regexp);
+	BOOL CreateFromXML(const char *xml, char *errorText = NULL, int errBufSize = 0);
+
+	BOOL AddRule(const char *regexp, DWORD event = 0, int numParams = 0);
+	void SetCallback(LOG_PARSER_CALLBACK cb) { m_cb = cb; }
+	void SetUserArg(void *arg) { m_userArg = arg; }
+
+	BOOL MatchLine(const char *line);
 };
 
 #endif

@@ -1,0 +1,12 @@
+<parser>
+	<rules>
+		<rule>
+			<match>.*([A-Za-z]+) failed.*</match>
+			<event params="1">14</event>
+		</rule>
+		<rule>
+			<match>.*warning.*</match>
+			<event>WARNING_EVENT</event>
+		</rule>
+	</rules>
+</parser>

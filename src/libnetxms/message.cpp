@@ -316,33 +316,6 @@ CSCPMessage::CSCPMessage(char *xml)
 }
 
 #if HAVE_LIBEXPAT
-static const char *GetAttr(const char **attrs, const char *name)
-{
-	int i;
-
-	for(i = 0; attrs[i] != NULL; i += 2)
-	{
-		if (!stricmp(attrs[i], name))
-			return attrs[i + 1];
-	}
-	return NULL;
-}
-
-static int GetAttrInt(const char **attrs, const char *name, int defVal)
-{
-	const char *value;
-
-	value = GetAttr(attrs, name);
-	return (value != NULL) ? strtol(value, NULL, 0) : defVal;
-}
-
-static int GetAttrDWORD(const char **attrs, const char *name, DWORD defVal)
-{
-	const char *value;
-
-	value = GetAttr(attrs, name);
-	return (value != NULL) ? strtoul(value, NULL, 0) : defVal;
-}
 
 void CSCPMessage::ProcessXMLToken(void *state, const char **attrs)
 {
@@ -353,15 +326,15 @@ void CSCPMessage::ProcessXMLToken(void *state, const char **attrs)
 	switch(ps->state)
 	{
 		case XML_STATE_NXCP:
-			m_nVersion = GetAttrInt(attrs, "version", m_nVersion);
+			m_nVersion = XMLGetAttrInt(attrs, "version", m_nVersion);
 			break;
 		case XML_STATE_MESSAGE:
-			m_dwId = GetAttrDWORD(attrs, "id", m_dwId);
-			m_wCode = (WORD)GetAttrDWORD(attrs, "code", m_wCode);
+			m_dwId = XMLGetAttrDWORD(attrs, "id", m_dwId);
+			m_wCode = (WORD)XMLGetAttrDWORD(attrs, "code", m_wCode);
 			break;
 		case XML_STATE_VARIABLE:
-			ps->varId = GetAttrDWORD(attrs, "id", 0);
-			type = GetAttr(attrs, "type");
+			ps->varId = XMLGetAttrDWORD(attrs, "id", 0);
+			type = XMLGetAttr(attrs, "type");
 			if (type != NULL)
 			{
 				int i;

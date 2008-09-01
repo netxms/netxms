@@ -273,8 +273,11 @@ src/libnxcl/libnxcl.dsp eol=crlf
 src/libnxcl/libnxcl.dsw eol=crlf
 src/libnxcl/libnxcl.vcp eol=crlf
 src/libnxcl/libnxcl.vcw eol=crlf
+src/libnxlp/libnxlp.dsp eol=crlf
+src/libnxlp/libnxlp.dsw eol=crlf
 src/libnxlp/libnxlp.h -text
 src/libnxlp/main.cpp -text
+src/libnxlp/sample.xml -text
 src/libnxmap/libnxmap.dsp eol=crlf
 src/libnxmap/libnxmap.dsw eol=crlf
 src/libnxsl/libnxsl.dsp eol=crlf
