@@ -1,7 +1,8 @@
 /* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Log Parsing Library
+** Copyright (C) 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,30 +18,16 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: netxms-version.h
+** File: libnxlp.h
 **
 **/
 
-#ifndef _netxms_version_h_
-#define _netxms_version_h_
+#ifndef _libnxlp_h_
+#define _libnxlp_h_
 
-
-//
-// Version constants 
-//
-
-#define NETXMS_VERSION_MAJOR        0
-#define NETXMS_VERSION_MINOR        2
-#define NETXMS_VERSION_BUILD        23
-#define NETXMS_VERSION_HOTFIX       0
-#define NETXMS_VERSION_STRING       _T("0.2.23-rc1")
-
-
-//
-// Current client-server protocol version
-//
-
-#define CLIENT_PROTOCOL_VERSION     19
-
+#include <nms_common.h>
+#include <nms_util.h>
+#include <nxlpapi.h>
 
 #endif
+

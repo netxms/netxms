@@ -1,7 +1,8 @@
 /* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Log Parsing Library
+** Copyright (C) 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,30 +18,46 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: netxms-version.h
+** File: main.cpp
 **
 **/
 
-#ifndef _netxms_version_h_
-#define _netxms_version_h_
+#include "libnxlp.h"
+
+
 
 
 //
-// Version constants 
+// DLL entry point
 //
 
-#define NETXMS_VERSION_MAJOR        0
-#define NETXMS_VERSION_MINOR        2
-#define NETXMS_VERSION_BUILD        23
-#define NETXMS_VERSION_HOTFIX       0
-#define NETXMS_VERSION_STRING       _T("0.2.23-rc1")
+#ifdef _WIN32
+
+BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+{
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
+   return TRUE;
+}
+
+#endif   /* _WIN32 */
 
 
 //
-// Current client-server protocol version
+// NetWare library entry point
 //
 
-#define CLIENT_PROTOCOL_VERSION     19
+#ifdef _NETWARE
 
+int _init(void)
+{
+   return 0;
+}
+
+int _fini(void)
+{
+   return 0;
+}
 
 #endif
+
