@@ -234,7 +234,7 @@ AC_ARG_ENABLE(debug,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle"
-	MODULES="libnxsnmp libnxsl server agent libnxmap libnxcl nxevent nxpush nxreport nxmibc client console nxhttpd nxscript nxcptest"
+	MODULES="libnxsnmp libnxsl libnxlp server agent libnxmap libnxcl nxevent nxpush nxreport nxmibc client console nxhttpd nxscript nxcptest"
 	SUBAGENT_DIRS="linux freebsd openbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
@@ -257,7 +257,7 @@ if test $? = 0; then
 	fi
 	STATIC_BUILD="yes"
 	BUILD_STATIC_AGENT="yes"
-	MODULES="$MODULES agent"
+	MODULES="$MODULES libnxlp agent"
 	DISABLE_ICONV="yes"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT"
 
@@ -307,7 +307,7 @@ if test $? = 0; then
 	BUILD_STATIC_AGENT="yes"
 	DISABLE_ICONV="yes"
 	USE_PTH="yes"
-	MODULES="$MODULES agent"
+	MODULES="$MODULES libnxlp agent"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO -D_USE_GNU_PTH -I/usr/local/include"
 	LDFLAGS="$LDFLAGS -all-static"
 	STATIC_SUBAGENT_LIST="ipso ping portcheck ups"
@@ -322,7 +322,7 @@ if test $? = 0; then
 	fi
 	BUILD_SERVER="yes"
 	NEED_ZLIB="yes"
-	MODULES="$MODULES libnxmap libnxsnmp libnxsl server nxmibc nxscript"
+	MODULES="$MODULES libnxmap libnxsnmp libnxsl libnxlp server nxmibc nxscript"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds"
 fi
@@ -346,7 +346,7 @@ fi
 check_substr "$COMPONENTS" "agent"
 if test $? = 0; then
 	BUILD_AGENT="yes"
-	MODULES="$MODULES agent"
+	MODULES="$MODULES libnxlp agent"
 	if test "x$ENABLE_UNSTABLE" = "xyes"; then
 		UNSTABLE_SUBAGENT_DIRS="logscan odbcquery"
 	fi
@@ -1430,6 +1430,7 @@ AC_CONFIG_FILES([
 	src/libnetxms/Makefile
 	src/libnxsnmp/Makefile
 	src/libnxcl/Makefile
+	src/libnxlp/Makefile
 	src/libnxsl/Makefile
 	src/libnxmap/Makefile
 	src/install/Makefile

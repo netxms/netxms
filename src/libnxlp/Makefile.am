@@ -1,6 +1,6 @@
 INCLUDES=-I@top_srcdir@/include
 
-SOURCES = main.cpp
+SOURCES = main.cpp parser.cpp rule.cpp
 
 lib_LTLIBRARIES = libnxlp.la
 
