@@ -247,11 +247,13 @@ public:
    void EscapeCharacter(int ch, int esc);
    void Translate(const TCHAR *pszSrc, const TCHAR *pszDst);
 
-	DWORD Size(void) { return m_dwBufSize > 0 ? m_dwBufSize - 1 : 0; }
+	DWORD Size() { return m_dwBufSize > 0 ? m_dwBufSize - 1 : 0; }
 
 	TCHAR *SubStr(int nStart, int nLen, TCHAR *pszBuffer);
 	TCHAR *SubStr(int nStart, int nLen) { return SubStr(nStart, nLen, NULL); }
 	int Find(const TCHAR *pszStr, int nStart = 0);
+
+	void Strip();
 };
 
 

@@ -65,6 +65,7 @@ LogParser::LogParser()
 	m_cb = NULL;
 	m_userArg = NULL;
 	m_fileName = NULL;
+	m_eventTran = NULL;
 }
 
 
@@ -196,7 +197,10 @@ static void EndElement(void *userData, const char *name)
 		DWORD event;
 		char *eptr;
 
+		ps->event.Strip();
 		event = strtoul(ps->event, &eptr, 0);
+		if (*eptr != 0)
+			event = TranslateEventName(ps->event);
 		ps->parser->AddRule((const char *)ps->regexp, event, ps->numEventParams);
 		ps->state = XML_STATE_RULES;
 	}
@@ -262,4 +266,22 @@ BOOL LogParser::CreateFromXML(const char *xml, int xmlLen, char *errorText, int 
 		strncpy(errorText, "Compiled without XML support", errBufSize);
 	return FALSE;
 #endif
+}
+
+
+//
+// Translate event name
+//
+
+DWORD LogParser::TranslateEventName(const TCHAR *name, DWORD defVal)
+{
+	int i;
+
+	if (m_eventTran == NULL)
+		return defVal;
+
+	for(i = 0; m_eventTran[i].text != NULL; i++)
+		if (!_tcsicmp(name, m_eventTran[i].text))
+			return m_eventTran[i].code;
+	return defVal;
 }

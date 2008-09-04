@@ -251,3 +251,17 @@ int String::Find(const TCHAR *pszStr, int nStart)
 	p = _tcsstr(&m_pszBuffer[nStart], pszStr);
 	return (p != NULL) ? (int)(((char *)p - (char *)m_pszBuffer) / sizeof(TCHAR)) : npos;
 }
+
+
+//
+// Strip leading and trailing spaces
+//
+
+void String::Strip()
+{
+	if (m_pszBuffer != NULL)
+	{
+		StrStrip(m_pszBuffer);
+		m_dwBufSize = _tcslen(m_pszBuffer) + 1;
+	}
+}

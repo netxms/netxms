@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <nxlog.h>
+#include <nxlpapi.h>
 
 
 //
@@ -49,6 +50,7 @@ struct QUEUED_SYSLOG_MESSAGE
 
 static QWORD m_qwMsgId = 1;
 static Queue *m_pSyslogQueue = NULL;
+static LogParser *m_parser = NULL;
 
 
 //
@@ -301,6 +303,11 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
 
       // Send message to all connected clients
       EnumerateClientSessions(BroadcastSyslogMessage, &record);
+
+		if ((record.dwSourceObject != 0) && (m_parser != NULL))
+		{
+			m_parser->MatchLine(record.szMessage);
+		}
    }
 }
 
