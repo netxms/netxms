@@ -10,4 +10,5 @@
 
 EXTRA_DIST = \
 	config.png \
+	epp.xpm \
 	unknown.png

@@ -175,6 +175,10 @@ SOURCE=.\ctrlpanel.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\eppEditor.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\frame.cpp
 # End Source File
 # Begin Source File
@@ -224,6 +228,10 @@ SOURCE=.\conlog.h
 # Begin Source File
 
 SOURCE=.\ctrlpanel.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\eppEditor.h
 # End Source File
 # Begin Source File
 

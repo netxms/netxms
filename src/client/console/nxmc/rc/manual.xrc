@@ -53,9 +53,10 @@
 	<object class="wxIcon" name="icoSmallUser">icons/small/user.png</object>
 	<object class="wxIcon" name="icoSmallUserGroup">icons/small/userGroup.png</object>
 	<object class="wxIcon" name="icoSmallEveryone">icons/small/everyone.png</object>
-	<object class="wxIcon" name="icoUser">icons/normal/user.png</object>
-	<object class="wxIcon" name="icoUserGroup">icons/normal/userGroup.png</object>
-	<object class="wxIcon" name="icoEveryone">icons/normal/everyone.png</object>
+
+	<!-- Icons for event processing policy editor -->
+	<object class="wxIcon" name="icoEPP">icons/normal/epp.xpm</object>
+	<object class="wxIcon" name="icoSmallEPP">icons/small/epp.xpm</object>
 
 	<!-- Busy dialog -->
 	<object class="wxDialog" name="nxBusyDialog">

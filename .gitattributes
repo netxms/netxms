@@ -72,13 +72,14 @@ src/agent/subagents/winperf/winperf.dsw eol=crlf
 src/agent/subagents/wmi/wmi.dsp eol=crlf
 src/agent/subagents/wmi/wmi.dsw eol=crlf
 src/client/console/libnxmc/libnxmc.dsp eol=crlf
+src/client/console/nxmc/eppEditor.cpp -text
+src/client/console/nxmc/eppEditor.h -text
 src/client/console/nxmc/nxmc.dsp eol=crlf
 src/client/console/nxmc/rc/icons/normal/config.png -text
-src/client/console/nxmc/rc/icons/normal/everyone.png -text
+src/client/console/nxmc/rc/icons/normal/epp.xpm -text
 src/client/console/nxmc/rc/icons/normal/unknown.png -text
-src/client/console/nxmc/rc/icons/normal/user.png -text
-src/client/console/nxmc/rc/icons/normal/userGroup.png -text
 src/client/console/nxmc/rc/icons/small/config.png -text
+src/client/console/nxmc/rc/icons/small/epp.xpm -text
 src/client/console/nxmc/rc/icons/small/everyone.png -text
 src/client/console/nxmc/rc/icons/small/taskbar.png -text
 src/client/console/nxmc/rc/icons/small/user.png -text

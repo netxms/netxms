@@ -494,6 +494,9 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name libnxmap
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libnxlp
+    End Project Dependency
 }}}
 
 ###############################################################################

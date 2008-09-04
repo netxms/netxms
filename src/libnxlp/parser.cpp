@@ -200,7 +200,7 @@ static void EndElement(void *userData, const char *name)
 		ps->event.Strip();
 		event = strtoul(ps->event, &eptr, 0);
 		if (*eptr != 0)
-			event = TranslateEventName(ps->event);
+			event = ps->parser->TranslateEventName(ps->event);
 		ps->parser->AddRule((const char *)ps->regexp, event, ps->numEventParams);
 		ps->state = XML_STATE_RULES;
 	}

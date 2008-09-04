@@ -8,6 +8,7 @@ nxmc_SOURCES = \
 	comm.cpp \
 	conlog.cpp \
 	ctrlpanel.cpp \
+	eppEditor.cpp \
 	frame.cpp \
 	logindlg.cpp \
 	mainfrm.cpp \
@@ -30,6 +31,7 @@ EXTRA_DIST = \
 	busydlg.h \
 	conlog.h \
 	ctrlpanel.h \
+	eppEditor.h \
 	frame.h \
 	logindlg.h \
 	mainfrm.h \

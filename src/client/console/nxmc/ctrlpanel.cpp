@@ -24,6 +24,7 @@
 #include "nxmc.h"
 #include "ctrlpanel.h"
 #include "srvcfg.h"
+#include "eppEditor.h"
 
 
 //
@@ -56,6 +57,7 @@ nxControlPanel::nxControlPanel(wxWindow *parent)
 	m_wndListCtrl = new wxListView(this, wxID_LIST_CTRL, wxDefaultPosition, wxDefaultSize, wxLC_ICON | wxLC_AUTOARRANGE | wxLC_SINGLE_SEL);
 	
 	// Add built-in items
+	AddItem(wxID_CTRLPANEL_EPP, _T("Event Processing Policy"), wxXmlResource::Get()->LoadIcon(_T("icoEPP")), imageList);
 	AddItem(wxID_CTRLPANEL_SERVERCFG, _T("Server Settings"), wxXmlResource::Get()->LoadIcon(_T("icoConfig")), imageList);
 
 	// Add items registered by plugins
@@ -141,6 +143,17 @@ void nxControlPanel::OnListItemActivated(wxListEvent &event)
 				else
 				{
 					NXMCCreateView(new nxServerConfigEditor(this), VIEWAREA_MAIN);
+				}
+				break;
+			case wxID_CTRLPANEL_EPP:
+				view = FindUniqueView(_T("eppeditor"));
+				if (view != NULL)
+				{
+					ActivateView(view);
+				}
+				else
+				{
+					NXMCCreateView(new nxEventPolicyEditor(this), VIEWAREA_MAIN);
 				}
 				break;
 			default:

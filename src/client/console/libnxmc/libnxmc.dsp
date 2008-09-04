@@ -112,7 +112,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
-PostBuild_Cmds=copy             Release_UNICODE\libnxmc.dll             C:\NetXMS\bin\ 
+PostBuild_Cmds=copy              Release_UNICODE\libnxmc.dll              C:\NetXMS\bin\ 
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "libnxmc - Win32 Debug UNICODE"
@@ -192,6 +192,10 @@ SOURCE=.\objseldlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\policyEditor.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\tools.cpp
 # End Source File
 # Begin Source File
@@ -265,6 +269,10 @@ SOURCE=.\nxview.h
 # Begin Source File
 
 SOURCE=.\objseldlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\policyEditor.h
 # End Source File
 # Begin Source File
 

@@ -99,6 +99,7 @@ END_DECLARE_EVENT_TYPES()
 #define wxID_CTRLPANEL_SERVERCFG    (wxID_HIGHEST + 11)
 #define wxID_TBICON_SHOW_CONSOLE    (wxID_HIGHEST + 12)
 #define wxID_TBICON_EXIT            (wxID_HIGHEST + 13)
+#define wxID_CTRLPANEL_EPP          (wxID_HIGHEST + 14)
 
 #define wxID_PERSPECTIVE_START      (wxID_HIGHEST + 100)
 #define wxID_PERSPECTIVE_END        (wxID_HIGHEST + 199)

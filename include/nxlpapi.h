@@ -86,8 +86,6 @@ private:
 	TCHAR *m_fileName;
 	CODE_TO_TEXT *m_eventTran;
 
-	DWORD TranslateEventName(const TCHAR *name, DWORD defVal = 0);
-
 public:
 	LogParser();
 	~LogParser();
@@ -101,6 +99,7 @@ public:
 	void SetCallback(LOG_PARSER_CALLBACK cb) { m_cb = cb; }
 	void SetUserArg(void *arg) { m_userArg = arg; }
 	void SetEventNameTranslator(CODE_TO_TEXT *ctt) { m_eventTran = ctt; }
+	DWORD TranslateEventName(const TCHAR *name, DWORD defVal = 0);
 
 	BOOL MatchLine(const char *line);
 };

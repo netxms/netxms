@@ -33,6 +33,7 @@
 #include <wx/cmdline.h>
 #include <wx/taskbar.h>
 #include <wx/xml/xml.h>
+#include <wx/grid.h>
 #endif
 
 
@@ -322,6 +323,7 @@ WX_DEFINE_SORTED_ARRAY_INT(DWORD, DWORD_Array);
 #include "../libnxmc/heading.h"
 #include "../libnxmc/graph.h"
 #include "../libnxmc/objseldlg.h"
+#include "../libnxmc/policyEditor.h"
 #include "../libnxmc/userSelectionDialog.h"
 
 

@@ -16,6 +16,8 @@ EXTRA_DIST = \
 	container.xpm \
 	critical.xpm \
 	disabled.xpm \
+	epp.xpm \
+	everyone.png \
 	graph.xpm \
 	information.xpm \
 	interface.xpm \
@@ -38,6 +40,8 @@ EXTRA_DIST = \
 	testing.xpm \
 	unknown.xpm \
 	unmanaged.xpm \
+	user.png \
+	userGroup.png \
 	vpn_connector.xpm \
 	warning.xpm \
 	zone.xpm
