@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxlog.h
+** File: nxlog.h
 **
 **/
 
@@ -71,38 +71,6 @@ typedef struct
    TCHAR szTag[MAX_SYSLOG_TAG_LEN];
    TCHAR szMessage[MAX_LOG_MSG_LENGTH];
 } NX_LOG_RECORD;
-
-
-//
-// Rule of log processing policy
-//
-
-typedef struct
-{
-   DWORD dwMsgIdFrom;
-   DWORD dwMsgIdTo;
-   int nFacility;
-   int nSeverity;
-   TCHAR szSource[MAX_DB_STRING];
-   TCHAR szRegExp[MAX_DB_STRING];
-   DWORD dwEvent;
-} NX_LPP_RULE;
-
-
-//
-// Log processing policy
-//
-
-typedef struct
-{
-   DWORD dwId;
-   TCHAR szName[MAX_OBJECT_NAME];
-   DWORD dwVersion;
-   DWORD dwFlags;
-   TCHAR szLogName[MAX_DB_STRING];
-   DWORD dwNumRules;
-   NX_LPP_RULE *pRuleList;
-} NX_LPP;
 
 
 #endif
