@@ -156,14 +156,26 @@ static BOOL H_UpgradeFromV80(void)
 	hResult = SQLSelect(_T("SELECT item_id,schedule FROM dci_schedules"));
 	if (hResult != NULL)
 	{
-		if (!SQLQuery(_T("DELETE FROM dci_schedules")))
+/*		if (!SQLQuery(_T("DELETE FROM dci_schedules")))
 		   if (!g_bIgnoreErrors)
 		      return FALSE;
 		      
 		if (!SQLQuery(_T("ALTER TABLE dci_schedules ADD schedule_id integer not null")))
 		   if (!g_bIgnoreErrors)
-		      return FALSE;
+		      return FALSE;*/
 		      
+		if (!SQLQuery(_T("DROP TABLE dci_schedules")))
+		   if (!g_bIgnoreErrors)
+		      return FALSE;
+
+		if (!CreateTable(_T("CREATE TABLE dci_schedules (")
+							  _T("schedule_id integer not null,")
+							  _T("item_id integer not null,")
+							  _T("schedule varchar(255) not null,")
+							  _T("PRIMARY KEY(item_id,schedule_id))")))
+			if (!g_bIgnoreErrors)
+				return FALSE;
+
 		for(i = 0; i < DBGetNumRows(hResult); i++)
 		{
 			_sntprintf(query, 1024, _T("INSERT INTO dci_schedules (item_id,schedule_id,schedule) VALUES(%d,%d,'%s')"),
@@ -181,9 +193,9 @@ static BOOL H_UpgradeFromV80(void)
 	}
 	
 	// Set primary key constraints
-	if (!SetPrimaryKey(_T("dci_schedules"), _T("item_id,schedule_id")))
+/*	if (!SetPrimaryKey(_T("dci_schedules"), _T("item_id,schedule_id")))
       if (!g_bIgnoreErrors)
-         return FALSE;
+         return FALSE;*/
          
 	if (!SetPrimaryKey(_T("address_lists"), _T("list_type,community_id,addr_type,addr1,addr2")))
       if (!g_bIgnoreErrors)
