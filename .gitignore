@@ -9,6 +9,7 @@
 /config.log
 /config.status
 /configure
+contrib/mibs/netxms.mib
 /lib
 /libtool
 sql/dbinit_mssql.sql
