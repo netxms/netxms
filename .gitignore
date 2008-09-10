@@ -24,6 +24,7 @@ src/client/console/nxmc/rc/nxmc.xrs
 src/client/console/plugins/AlarmBrowser/rc/AlarmBrowser.xrs
 src/client/console/plugins/Dashboard/rc/Dashboard.xrs
 src/client/console/plugins/ObjectBrowser/rc/ObjectBrowser.xrs
+src/install/windows/files/*
 src/libnxsl/lex.yy.cpp
 src/libnxsl/parser.output
 src/libnxsl/parser.tab.cpp
