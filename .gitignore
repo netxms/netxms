@@ -13,6 +13,7 @@
 contrib/mibs/netxms.mib
 /lib
 /libtool
+netware/bin/*
 sql/dbinit_mssql.sql
 sql/dbinit_mysql.sql
 sql/dbinit_oracle.sql
