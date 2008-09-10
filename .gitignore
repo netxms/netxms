@@ -3,6 +3,7 @@
 /aclocal.m4
 /autom4te.cache
 /bin
+/bin64
 /config
 /config.h
 /config.h.in

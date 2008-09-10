@@ -323,7 +323,7 @@ WX_DEFINE_SORTED_ARRAY_INT(DWORD, DWORD_Array);
 #include "../libnxmc/heading.h"
 #include "../libnxmc/graph.h"
 #include "../libnxmc/objseldlg.h"
-#include "../libnxmc/policyEditor.h"
+//#include "../libnxmc/policyEditor.h"
 #include "../libnxmc/userSelectionDialog.h"
 
 
