@@ -23,6 +23,7 @@ src/agent/core/messages.c
 src/agent/core/messages.h
 src/agent/core/nxagentd
 src/agent/core/static_subagents.cpp
+src/agent/install/Output
 src/client/console/nxmc/rc/nxmc.xrs
 src/client/console/plugins/AlarmBrowser/rc/AlarmBrowser.xrs
 src/client/console/plugins/Dashboard/rc/Dashboard.xrs
@@ -32,6 +33,8 @@ src/libnxsl/lex.yy.cpp
 src/libnxsl/parser.output
 src/libnxsl/parser.tab.cpp
 src/libnxsl/parser.tab.hpp
+src/nxhttpd/MSG00001.bin
+src/nxhttpd/messages.h
 src/nxmibc/Makefile
 src/nxmibc/Makefile.in
 src/nxmibc/lex.mp.c
