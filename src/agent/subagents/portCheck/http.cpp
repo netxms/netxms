@@ -67,14 +67,9 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 		char szHostHeader[4096];
 
 		nRet = PC_ERR_HANDSHAKE;
-		
-		szHostHeader[0] = 0;
-		if (szHost[0] != 0)
-		{
-			snprintf(szHostHeader, sizeof(szHostHeader),
-				"Host: %s:%d\r\n",
-				szHost, nPort);
-		}
+
+		snprintf(szHostHeader, sizeof(szHostHeader), "Host: %s:%d\r\n",
+			szHost[0] != 0 ? szHost : szAddr, nPort);
 
 		snprintf(szTmp, sizeof(szTmp),
 				"GET %s HTTP/1.1\r\nConnection: close\r\n%s\r\n",
@@ -82,13 +77,43 @@ int CheckHTTP(char *szAddr, DWORD dwAddr, short nPort, char *szURI,
 
 		if (NetWrite(nSd, szTmp, (int)strlen(szTmp)) > 0)
 		{
-			if ((nBytes = NetRead(nSd, szTmp, sizeof(szTmp))) >= 8)
+#define CHUNK_SIZE 10240
+#define READ_TIMEOUT 5000
+			char *buff = (char *)malloc(CHUNK_SIZE);
+			int offset = 0;
+			int buffSize = CHUNK_SIZE;
+
+			while (NetCanRead(nSd, READ_TIMEOUT))
 			{
-				szTmp[nBytes] = 0;
-				if (regexec(&preg, szTmp, 0, NULL, 0) == 0)
+				nBytes = NetRead(nSd, buff + offset, buffSize - offset);
+				if (nBytes > 0) {
+					offset += nBytes;
+					if (buffSize - offset < (CHUNK_SIZE / 2)) {
+						char *tmp = (char *)realloc(buff, buffSize + CHUNK_SIZE);
+						if (tmp != NULL) {
+							buffSize += CHUNK_SIZE;
+							buff = tmp;
+						}
+						else {
+							safe_free(buff);
+							buffSize = 0;
+						}
+					}
+				}
+				else {
+					break;
+				}
+			}
+
+			if (buff != NULL && offset > 0) {
+				buff[offset] = 0;
+
+				if (regexec(&preg, buff, 0, NULL, 0) == 0)
 				{
 					nRet = PC_ERR_NONE;
 				}
+
+				safe_free(buff);
 			}
 		}
 		NetClose(nSd);
