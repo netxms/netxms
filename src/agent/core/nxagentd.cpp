@@ -144,6 +144,7 @@ static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
 static THREAD m_thListener = INVALID_THREAD_HANDLE;
 static THREAD m_thTrapSender = INVALID_THREAD_HANDLE;
 static char m_szConfigServer[MAX_DB_STRING] = "not_set";
+static char m_szProcessToWait[MAX_PATH] = "";
 
 #if defined(_WIN32) || defined(_NETWARE)
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
@@ -188,6 +189,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "StartupDelay", CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay },
    { "SubAgent", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList },
    { "TimeOut", CT_IGNORE, 0, 0, 0, 0, NULL },
+   { "WaitForProcess", CT_STRING, 0, 0, MAX_PATH, 0, m_szProcessToWait },
    { "", CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
@@ -713,7 +715,7 @@ BOOL Initialize(void)
    // Add built-in actions
    AddAction("Agent.Restart", AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, "CORE", "Restart agent");
 
-   // Load subagents
+   // Load platform subagents
 #if !defined(_WIN32) && !defined(_NETWARE)
    InitStaticSubagents();
 #endif
@@ -725,6 +727,16 @@ BOOL Initialize(void)
       LoadPlatformSubagent();
 #endif
    }
+
+	// Wait for external process if requested
+	if (m_szProcessToWait[0] != 0)
+	{
+	   DebugPrintf(INVALID_INDEX, "Waiting for process %s", m_szProcessToWait);
+		if (!WaitForProcess(m_szProcessToWait))
+	      WriteLog(MSG_WAITFORPROCESS_FAILED, EVENTLOG_ERROR_TYPE, "s", m_szProcessToWait);
+	}
+
+	// Load other subagents
    if (m_pszSubagentList != NULL)
    {
       for(pItem = m_pszSubagentList; *pItem != 0; pItem = pEnd + 1)

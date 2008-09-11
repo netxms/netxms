@@ -89,6 +89,42 @@ void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath)
 }
 
 
+//
+// Wait for specific process
+//
+
+BOOL WaitForProcess(const TCHAR *name)
+{
+	TCHAR param[MAX_PATH], value[MAX_RESULT_LENGTH];
+	BOOL success = FALSE;
+	DWORD rc;
+
+	_sntprintf(param, MAX_PATH, _T("Process.Count(%s)"), name);
+	while(1)
+	{
+		rc = GetParameterValue(INVALID_INDEX, param, value);
+		switch(rc)
+		{
+			case ERR_SUCCESS:
+				if (_tcstol(value, NULL, 0) > 0)
+				{
+					success = TRUE;
+					goto done;
+				}
+				break;
+			case ERR_UNKNOWN_PARAMETER:
+				goto done;
+			default:
+				break;
+		}
+		ThreadSleep(1);
+	}
+
+done:
+	return success;
+}
+
+
 /**********************************************************
  Following functions are Windows specific
 **********************************************************/

@@ -342,9 +342,9 @@ DWORD ExecAction(char *pszAction, NETXMS_VALUES_LIST *pArgs);
 DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs);
 DWORD ExecuteShellCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs);
 
-DWORD UpgradeAgent(TCHAR *pszPkgFile);
+BOOL WaitForProcess(const TCHAR *name);
 
-DWORD InstallLogPolicy(NX_LPP *pPolicy);
+DWORD UpgradeAgent(TCHAR *pszPkgFile);
 
 void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList);
 void SendTrap(DWORD dwEventCode, const char *pszFormat, ...);

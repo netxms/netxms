@@ -798,11 +798,11 @@ void CommSession::UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
 DWORD CommSession::ApplyLogPolicy(CSCPMessage *pRequest)
 {
    DWORD i, dwResult, dwId;
-   NX_LPP *pPolicy;
 
    if (m_bMasterServer)
    {
-      pPolicy = (NX_LPP *)malloc(sizeof(NX_LPP));
+		dwResult = ERR_NOT_IMPLEMENTED;
+/*      pPolicy = (NX_LPP *)malloc(sizeof(NX_LPP));
       memset(pPolicy, 0, sizeof(NX_LPP));
 
       pPolicy->dwFlags = pRequest->GetVariableLong(VID_FLAGS);
@@ -829,7 +829,7 @@ DWORD CommSession::ApplyLogPolicy(CSCPMessage *pRequest)
       {
          safe_free(pPolicy->pRuleList);
          free(pPolicy);
-      }
+      }*/
    }
    else
    {

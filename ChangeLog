@@ -1,4 +1,11 @@
 *
+* 0.2.23
+*
+
+- New agent configuration parameter: WaitForProcess
+
+
+*
 * 0.2.22
 *
 

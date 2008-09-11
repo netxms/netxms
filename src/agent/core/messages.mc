@@ -224,4 +224,10 @@ Language=English
 Listening on socket %1:%2
 .
 
+MessageId=
+SymbolicName=MSG_WAITFORPROCESS_FAILED
+Language=English
+Call to WaitForProcess failed for process %1
+.
+
 ;#endif
