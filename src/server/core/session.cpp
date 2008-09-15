@@ -709,6 +709,7 @@ void ClientSession::ProcessingThread(void)
    CSCPMessage *pMsg;
    char szBuffer[128];
    DWORD i;
+	int status;
 
    while(1)
    {
@@ -1212,8 +1213,18 @@ void ClientSession::ProcessingThread(void)
             for(i = 0; i < g_dwNumModules; i++)
 				{
 					if (g_pModuleList[i].pfCommandHandler != NULL)
-						if (g_pModuleList[i].pfCommandHandler(m_wCurrentCmd, pMsg, this))
+					{
+						status = g_pModuleList[i].pfCommandHandler(m_wCurrentCmd, pMsg, this);
+						if (status != NXMOD_COMMAND_IGNORED)
+						{
+							if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
+							{
+								pMsg = NULL;	// Prevent deletion
+								m_dwRefCount++;
+							}
 							break;   // Message was processed by the module
+						}
+					}
 				}
             if (i == g_dwNumModules)
             {

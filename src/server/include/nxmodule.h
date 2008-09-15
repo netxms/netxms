@@ -34,6 +34,15 @@ class Event;
 
 
 //
+// Command handler return codes
+//
+
+#define NXMOD_COMMAND_IGNORED          -1
+#define NXMOD_COMMAND_PROCESSED        0
+#define NXMOD_COMMAND_ACCEPTED_ASYNC   1
+
+
+//
 // Module registration structure
 //
 
@@ -42,7 +51,7 @@ typedef struct
    DWORD dwSize;           // Size of structure in bytes
    TCHAR szName[MAX_OBJECT_NAME];
    void (* pfMain)(void);  // Pointer to module's main()
-   BOOL (* pfCommandHandler)(DWORD dwCommand, CSCPMessage *pMsg, ClientSession *pSession);
+   int (* pfCommandHandler)(DWORD dwCommand, CSCPMessage *pMsg, ClientSession *pSession);
    BOOL (* pfTrapHandler)(SNMP_PDU *pdu, Node *pNode);
    BOOL (* pfEventHandler)(Event *event);
    HMODULE hModule;
