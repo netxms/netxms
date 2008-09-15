@@ -26,6 +26,7 @@ libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxcore_la_LIBADD = ../../libnetxms/libnetxms.la \
 		      ../../libnxsnmp/libnxsnmp.la \
 		      ../../libnxmap/libnxmap.la \
+		      ../../libnxlp/libnxlp.la \
 		      ../libnxsrv/libnxsrv.la ../../libnxsl/libnxsl.la
 
 EXTRA_DIST = \

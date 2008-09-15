@@ -126,7 +126,7 @@ void nxEventPolicyEditor::OnRefreshView(wxCommandEvent &event)
 	if (IsBusy())
 		return;	// Already reloading
 
-   DoRequestArg2(NXCOpenEventPolicy, (wxUIntPtr)g_hSession, (wxUIntPtr)&m_epp, 
+   DoRequestArg2((void *)NXCOpenEventPolicy, (wxUIntPtr)g_hSession, (wxUIntPtr)&m_epp, 
                  _T("Cannot load event processing policy: %s"));
 }
 
