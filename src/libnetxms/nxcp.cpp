@@ -474,7 +474,9 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, const TCH
 #else
          iBytes = fread(pMsg->df, 1, FILE_BUFFER_SIZE, hFile);
          if (ferror(hFile))
-            break;
+			{
+            break;	// Read error
+			}
 #endif
 
          // Message should be aligned to 8 bytes boundary
