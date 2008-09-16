@@ -592,11 +592,15 @@ int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *szVar, int iDefault);
 DWORD NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, DWORD dwDefault);
 BOOL NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *pszVar, int *pnArray,
                                            int nSize, int nDefault);
-BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, BOOL bCreate);
-BOOL NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, BOOL bCreate);
-BOOL NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, DWORD dwValue, BOOL bCreate);
+BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, BOOL bCreate,
+												  BOOL isVisible = TRUE, BOOL needRestart = FALSE);
+BOOL NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, BOOL bCreate,
+												  BOOL isVisible = TRUE, BOOL needRestart = FALSE);
+BOOL NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, DWORD dwValue, BOOL bCreate,
+													 BOOL isVisible = TRUE, BOOL needRestart = FALSE);
 BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *pszVar, int *pnArray,
-                                            int nSize, BOOL bCreate);
+                                            int nSize, BOOL bCreate,
+														  BOOL isVisible = TRUE, BOOL needRestart = FALSE);
 TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *var, const TCHAR *defValue);
 BOOL NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *var, const TCHAR *value, BOOL bCreate);
 

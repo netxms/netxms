@@ -383,7 +383,8 @@ const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError);
 
 void LIBNXSRV_EXPORTABLE InitLog(BOOL bUseSystemLog, char *pszLogFile, BOOL bPrintToScreen);
 void LIBNXSRV_EXPORTABLE CloseLog(void);
-void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, const char *format, ...);
+void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, const TCHAR *format, ...);
+void LIBNXSRV_EXPORTABLE WriteLogOther(WORD wType, const TCHAR *format, ...);
 void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...);
 
 BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,

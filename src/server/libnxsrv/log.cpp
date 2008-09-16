@@ -228,12 +228,14 @@ static char *FormatMessageUX(DWORD dwMsgId, char **ppStrings)
 //             a - IP address in network byte order
 //
 
-void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, const char *format, ...)
+void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, const TCHAR *format, ...)
 {
    va_list args;
-   char *strings[16], *pMsg;
+   char *strings[16], *pMsg, szBuffer[64];
    int numStrings = 0;
    DWORD error;
+	time_t t;
+	struct tm *loc;
 
    memset(strings, 0, sizeof(char *) * 16);
 
@@ -294,11 +296,7 @@ void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, const char *format, ...
    }
 
 #ifdef _WIN32
-   if (m_bUseSystemLog)
-   {
-      ReportEvent(m_hEventLog, wType, 0, msg, NULL, numStrings, 0, (const char **)strings, NULL);
-   }
-   else
+   if (!m_bUseSystemLog || m_bPrintToScreen)
    {
       LPVOID lpMsgBuf;
 
@@ -316,7 +314,17 @@ void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, const char *format, ...
             pCR++;
             *pCR = 0;
          }
-         WriteLogToFile((char *)lpMsgBuf);
+			if (m_bUseSystemLog)
+			{
+				t = time(NULL);
+				loc = localtime(&t);
+				strftime(szBuffer, 32, "[%d-%b-%Y %H:%M:%S]", loc);
+				printf("%s %s", szBuffer, (char *)lpMsgBuf);
+			}
+			else
+			{
+				WriteLogToFile((char *)lpMsgBuf);
+			}
          LocalFree(lpMsgBuf);
       }
       else
@@ -324,9 +332,22 @@ void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, const char *format, ...
          char message[64];
 
          sprintf(message,"MSG 0x%08X - Unable to find message text\n",msg);
-         WriteLogToFile(message);
+			if (m_bUseSystemLog)
+			{
+				t = time(NULL);
+				loc = localtime(&t);
+				strftime(szBuffer, 32, "[%d-%b-%Y %H:%M:%S]", loc);
+				printf("%s %s", szBuffer, message);
+			}
+			else
+			{
+	         WriteLogToFile(message);
+			}
       }
    }
+
+   if (m_bUseSystemLog)
+      ReportEvent(m_hEventLog, wType, 0, msg, NULL, numStrings, 0, (const char **)strings, NULL);
 #else  /* _WIN32 */
    pMsg = FormatMessageUX(msg, strings);
    if (m_bUseSystemLog)
@@ -352,6 +373,14 @@ void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, const char *format, ...
             break;
       }
       syslog(level, "%s", pMsg);
+
+		if (m_bPrintToScreen)
+		{
+			t = time(NULL);
+			loc = localtime(&t);
+			strftime(szBuffer, 32, "[%d-%b-%Y %H:%M:%S]", loc);
+			printf("%s %s", szBuffer, szMessage);
+		}
    }
    else
    {
@@ -381,4 +410,20 @@ void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...)
    _vsntprintf(buffer, 4096, format, args);
    va_end(args);
    WriteLog(MSG_DEBUG, EVENTLOG_INFORMATION_TYPE, "s", buffer);
+}
+
+
+//
+// Log custom message (mostly used by modules)
+//
+
+void LIBNXSRV_EXPORTABLE WriteLogOther(WORD wType, const TCHAR *format, ...)
+{
+   va_list args;
+   TCHAR buffer[4096];
+
+   va_start(args, format);
+   _vsntprintf(buffer, 4096, format, args);
+   va_end(args);
+   WriteLog(MSG_OTHER, wType, "s", buffer);
 }

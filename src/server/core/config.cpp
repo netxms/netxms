@@ -193,7 +193,8 @@ BOOL NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *pszVar, int *pnArray, in
 // Write string value to configuration table
 //
 
-BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, BOOL bCreate)
+BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, BOOL bCreate,
+												  BOOL isVisible, BOOL needRestart)
 {
    DB_RESULT hResult;
    TCHAR *pszEscValue, szQuery[1024];
@@ -223,8 +224,8 @@ BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, 
               pszEscValue, szVar);
    else
       _sntprintf(szQuery, 1024, _T("INSERT INTO config (var_name,var_value,is_visible,")
-                                _T("need_server_restart) VALUES ('%s','%s',1,1)"),
-                 szVar, pszEscValue);
+                                _T("need_server_restart) VALUES ('%s','%s',%d,%d)"),
+                 szVar, pszEscValue, isVisible, needRestart);
    free(pszEscValue);
    return DBQuery(g_hCoreDB, szQuery);
 }
@@ -234,12 +235,12 @@ BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, 
 // Write integer value to configuration table
 //
 
-BOOL NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, BOOL bCreate)
+BOOL NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, BOOL bCreate, BOOL isVisible, BOOL needRestart)
 {
    TCHAR szBuffer[64];
 
    _stprintf(szBuffer, _T("%d"), iValue);
-   return ConfigWriteStr(szVar, szBuffer, bCreate);
+   return ConfigWriteStr(szVar, szBuffer, bCreate, isVisible, needRestart);
 }
 
 
@@ -247,12 +248,12 @@ BOOL NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, BOOL bCrea
 // Write unsigned long value to configuration table
 //
 
-BOOL NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, DWORD dwValue, BOOL bCreate)
+BOOL NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, DWORD dwValue, BOOL bCreate, BOOL isVisible, BOOL needRestart)
 {
    TCHAR szBuffer[64];
 
    _stprintf(szBuffer, _T("%u"), dwValue);
-   return ConfigWriteStr(szVar, szBuffer, bCreate);
+   return ConfigWriteStr(szVar, szBuffer, bCreate, isVisible, needRestart);
 }
 
 
@@ -260,14 +261,14 @@ BOOL NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, DWORD dwValue, BOOL 
 // Write integer array to configuration table
 //
 
-BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *pszVar, int *pnArray, int nSize, BOOL bCreate)
+BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *pszVar, int *pnArray, int nSize, BOOL bCreate, BOOL isVisible, BOOL needRestart)
 {
    TCHAR szBuffer[256];
    int i, j;
 
    for(i = 0, j = 0; (i < nSize) && (i < 127); i++, j += 2)
       _stprintf(&szBuffer[j], _T("%02X"), (char)((pnArray[i] > 127) ? 127 : ((pnArray[i] < -127) ? -127 : pnArray[i])));
-   return ConfigWriteStr(pszVar, szBuffer, bCreate);
+   return ConfigWriteStr(pszVar, szBuffer, bCreate, isVisible, needRestart);
 }
 
 
