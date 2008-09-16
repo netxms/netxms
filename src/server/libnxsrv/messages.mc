@@ -680,4 +680,10 @@ Language=English
 Listening for syslog messages on UDP socket %1:%2
 .
 
+MessageId=
+SymbolicName=MSG_OTHER
+Language=English
+%1
+.
+
 ;#endif
