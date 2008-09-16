@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 0.2.22
-AppVersion=0.2.22
+AppVerName=NetXMS 0.2.23-rc1
+AppVersion=0.2.23-rc1
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -13,7 +13,7 @@ DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS
 AllowNoIcons=yes
 LicenseFile=..\..\..\copying
-OutputBaseFilename=netxms-0.2.22
+OutputBaseFilename=netxms-0.2.23-rc1
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -60,6 +60,8 @@ Source: "..\..\nxscript\Release\nxscript.exe"; DestDir: "{app}\bin"; Flags: igno
 Source: "..\..\server\tools\nxconfig\Release\nxconfig.exe"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server websrv
 Source: "nxconfig.exe.manifest"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server websrv
 ; Server files
+Source: "..\..\libnxlp\Release\libnxlp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\libnxlp\Release\libnxlp.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\server\libnxsrv\Release\libnxsrv.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\server\libnxsrv\Release\libnxsrv.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\server\core\Release\nxcore.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
