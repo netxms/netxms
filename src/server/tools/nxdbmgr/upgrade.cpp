@@ -156,14 +156,6 @@ static BOOL H_UpgradeFromV80(void)
 	hResult = SQLSelect(_T("SELECT item_id,schedule FROM dci_schedules"));
 	if (hResult != NULL)
 	{
-/*		if (!SQLQuery(_T("DELETE FROM dci_schedules")))
-		   if (!g_bIgnoreErrors)
-		      return FALSE;
-		      
-		if (!SQLQuery(_T("ALTER TABLE dci_schedules ADD schedule_id integer not null")))
-		   if (!g_bIgnoreErrors)
-		      return FALSE;*/
-		      
 		if (!SQLQuery(_T("DROP TABLE dci_schedules")))
 		   if (!g_bIgnoreErrors)
 		      return FALSE;
@@ -192,19 +184,43 @@ static BOOL H_UpgradeFromV80(void)
          return FALSE;
 	}
 	
-	// Set primary key constraints
-/*	if (!SetPrimaryKey(_T("dci_schedules"), _T("item_id,schedule_id")))
-      if (!g_bIgnoreErrors)
-         return FALSE;*/
-         
-	if (!SetPrimaryKey(_T("address_lists"), _T("list_type,community_id,addr_type,addr1,addr2")))
+	// Update address_lists table			
+	hResult = SQLSelect(_T("SELECT list_type,community_id,addr_type,addr1,addr2 FROM address_lists"));
+	if (hResult != NULL)
+	{
+		if (!SQLQuery(_T("DROP TABLE address_lists")))
+		   if (!g_bIgnoreErrors)
+		      return FALSE;
+
+		if (!CreateTable(_T("CREATE TABLE address_lists (")
+							  _T("list_type integer not null,")
+							  _T("community_id integer not null,")
+							  _T("addr_type integer not null,")
+							  _T("addr1 varchar(15) not null,")
+							  _T("addr2 varchar(15) not null,")
+							  _T("PRIMARY KEY(list_type,community_id,addr_type,addr1,addr2))")))
+			if (!g_bIgnoreErrors)
+				return FALSE;
+
+		for(i = 0; i < DBGetNumRows(hResult); i++)
+		{
+			_sntprintf(query, 1024, _T("INSERT INTO address_lists (list_type,community_id,addr_type,addr1,addr2) VALUES(%d,%d,%d,'%s','%s')"),
+			           DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1), 
+						  DBGetFieldULong(hResult, i, 2), DBGetField(hResult, i, 3, buffer, 64),
+						  DBGetField(hResult, i, 4, &buffer[128], 64));
+			if (!SQLQuery(query))
+				if (!g_bIgnoreErrors)
+				   return FALSE;
+		}
+
+		DBFreeResult(hResult);
+	}
+	else
+	{
       if (!g_bIgnoreErrors)
          return FALSE;
+	}
          
-	if (!SetPrimaryKey(_T("lpp_associations"), _T("lpp_id,node_id,log_file")))
-      if (!g_bIgnoreErrors)
-         return FALSE;
-	
 	// Create new tables
 	if (!CreateTable(_T("CREATE TABLE object_custom_attributes (")
 	                 _T("object_id integer not null,")
