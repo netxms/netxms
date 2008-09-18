@@ -137,20 +137,21 @@ BOOL GetYesNo(void)
 DB_RESULT SQLSelect(const TCHAR *pszQuery)
 {
    DB_RESULT hResult;
+	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 
    if (g_bTrace)
       ShowQuery(pszQuery);
 
-   hResult = DBSelect(g_hCoreDB, pszQuery);
+   hResult = DBSelectEx(g_hCoreDB, pszQuery, errorText);
    if (hResult == NULL)
    {
 #ifdef _WIN32
-      _tprintf(_T("SQL query failed:\n"));
+      _tprintf(_T("SQL query failed (%s):\n"), errorText);
       SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0E);
       _tprintf(_T("%s\n"), pszQuery);
       SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x07);
 #else
-      _tprintf(_T("SQL query failed:\n%s\n"), pszQuery);
+      _tprintf(_T("SQL query failed (%s):\n%s\n"), errorText, pszQuery);
 #endif
    }
    return hResult;

@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: check.cpp
+** File: check.cpp
 **
 **/
 
@@ -513,6 +513,94 @@ static void CheckEPP(void)
 
 
 //
+// Create idata_xx table
+//
+
+static BOOL CreateIDataTable(DWORD nodeId)
+{
+   char szQuery[256], szQueryTemplate[256];
+   DWORD i;
+
+   ConfigReadStr("IDataTableCreationCommand", szQueryTemplate, 255, "");
+   sprintf(szQuery, szQueryTemplate, nodeId);
+   if (!SQLQuery(szQuery))
+		return FALSE;
+
+   for(i = 0; i < 10; i++)
+   {
+      sprintf(szQuery, "IDataIndexCreationCommand_%d", i);
+      ConfigReadStr(szQuery, szQueryTemplate, 255, "");
+      if (szQueryTemplate[0] != 0)
+      {
+         sprintf(szQuery, szQueryTemplate, nodeId, nodeId);
+         if (!SQLQuery(szQuery))
+				return FALSE;
+      }
+   }
+
+	return TRUE;
+}
+
+
+//
+// Check collected data
+//
+
+static void CheckIData(void)
+{
+	int i, nodeCount;
+	time_t now;
+	DWORD nodeId;
+	TCHAR query[1024];
+	DB_RESULT hResultNodes, hResult;
+
+   StartStage(_T("Checking collected data..."));
+   
+	now = time(NULL);
+   hResultNodes = SQLSelect(_T("SELECT id FROM nodes"));
+   if (hResultNodes != NULL)
+   {
+		nodeCount = DBGetNumRows(hResultNodes);
+		for(i = 0; i < nodeCount; i++)
+		{
+			nodeId = DBGetFieldULong(hResultNodes, i, 0);
+			_sntprintf(query, 1024, _T("SELECT count(*) FROM idata_%d WHERE idata_timestamp>%d"), nodeId, now);
+//			hResult = DBSelect(g_hCoreDB, query);
+			hResult = SQLSelect(query);
+			if (hResult != NULL)
+			{
+				if (DBGetFieldLong(hResult, 0, 0) > 0)
+				{
+					m_iNumErrors++;
+					_tprintf(_T("\rFound collected data for node [%d] with timestamp in the future. Correct? (Y/N) "), nodeId);
+					if (GetYesNo())
+					{
+						_sntprintf(query, 1024, _T("DELETE FROM idata_%d WHERE idata_timestamp>%d"), nodeId, now);
+						if (SQLQuery(query))
+							m_iNumFixes++;
+					}
+				}
+				DBFreeResult(hResult);
+			}
+			else
+			{
+/*				m_iNumErrors++;
+				_tprintf(_T("\rData collection table for node [%d] not found. Correct? (Y/N) "), nodeId);
+				if (GetYesNo())
+				{
+					if (CreateIDataTable(nodeId))
+						m_iNumFixes++;
+				}*/
+			}
+		}
+		DBFreeResult(hResultNodes);
+	}
+
+   EndStage();
+}
+
+
+//
 // Check database for errors
 //
 
@@ -601,6 +689,7 @@ void CheckDatabase(void)
 			CheckClusters();
          CheckObjectProperties();
          CheckEPP();
+         CheckIData();
 
          if (m_iNumErrors == 0)
          {
