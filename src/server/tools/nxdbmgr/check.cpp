@@ -596,7 +596,25 @@ static void CheckIData(void)
 		DBFreeResult(hResultNodes);
 	}
 
-   EndStage();
+	_sntprintf(query, 1024, _T("SELECT count(*) FROM raw_dci_values WHERE last_poll_time>%d"), now);
+	hResult = SQLSelect(query);
+	if (hResult != NULL)
+	{
+		if (DBGetFieldLong(hResult, 0, 0) > 0)
+		{
+			m_iNumErrors++;
+			_tprintf(_T("\rFound DCIs with last poll timestamp in the future. Correct? (Y/N) "));
+			if (GetYesNo())
+			{
+				_sntprintf(query, 1024, _T("UPDATE raw_dci_values SET last_poll_time=%d WHERE last_poll_time>%d"), now, now);
+				if (SQLQuery(query))
+					m_iNumFixes++;
+			}
+		}
+		DBFreeResult(hResult);
+	}
+
+	EndStage();
 }
 
 
