@@ -176,12 +176,14 @@ Source: "Files\zlib1.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Component
 Source: "Files\dbghelp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "Files\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "Files\libexpatw.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
+Source: "Files\wxbase28u_net_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\wxbase28u_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\wxbase28u_xml_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\wxmsw28u_adv_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\wxmsw28u_aui_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\wxmsw28u_core_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\wxmsw28u_html_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
+Source: "Files\wxmsw28u_media_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 Source: "Files\wxmsw28u_xrc_vc.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: console
 
 [Icons]
