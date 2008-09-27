@@ -25,12 +25,16 @@
 
 enum
 {
+	DISK_AVAIL,
+	DISK_AVAIL_PERC,
 	DISK_FREE,
+	DISK_FREE_PERC,
 	DISK_USED,
+	DISK_USED_PERC,
 	DISK_TOTAL,
 };
 
-LONG H_DiskInfo(char *, char *, char *);
+LONG H_DiskInfo(const char *, const char *, char *);
 
 #endif // __DISK_H__
 

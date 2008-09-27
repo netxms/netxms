@@ -23,12 +23,24 @@
 #ifndef __NET_H__
 #define __NET_H__
 
+#define IF_INFO_ADMIN_STATUS     0
+#define IF_INFO_OPER_STATUS      1
+#define IF_INFO_BYTES_IN         2
+#define IF_INFO_BYTES_OUT        3
+#define IF_INFO_DESCRIPTION      4
+#define IF_INFO_IN_ERRORS        5
+#define IF_INFO_OUT_ERRORS       6
+#define IF_INFO_PACKETS_IN       7
+#define IF_INFO_PACKETS_OUT      8
+#define IF_INFO_SPEED            9
+
 LONG H_NetIpForwarding(const char *, const char *, char *);
 LONG H_NetIfAdmStatus(const char *, const char *, char *);
 LONG H_NetIfLink(const char *, const char *, char *);
 LONG H_NetArpCache(const char *, const char *, NETXMS_VALUES_LIST *);
 LONG H_NetIfList(const char *, const char *, NETXMS_VALUES_LIST *);
 LONG H_NetRoutingTable(const char *, const char *, NETXMS_VALUES_LIST *);
+LONG H_NetIfInfoFromKVM(const char *, const char *, char *);
 
 #endif // __NET_H__
 

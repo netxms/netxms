@@ -1,8 +1,7 @@
-/* $Id$ */
-
 /* 
-** NetXMS subagent for FreeBSD
+** NetXMS subagent for NetBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
+** Copyright (C) 2008 Mark Ibell
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -131,7 +130,7 @@ static NETXMS_SUBAGENT_ENUM m_enums[] =
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	"OpenBSD",
+	"NetBSD",
 	NETXMS_VERSION_STRING,
 	NULL, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
@@ -146,7 +145,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 // Entry point for NetXMS agent
 //
 
-DECLARE_SUBAGENT_ENTRY_POINT(OPENBSD)
+DECLARE_SUBAGENT_ENTRY_POINT(NETBSD)
 {
 	*ppInfo = &m_info;
 	return TRUE;

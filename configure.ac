@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [0.2.23-rc1], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.2.23-rc2], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -235,7 +235,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle"
 	MODULES="libnxsnmp libnxsl libnxlp server agent libnxmap libnxcl nxevent nxpush nxreport nxmibc client console nxhttpd nxscript nxcptest"
-	SUBAGENT_DIRS="linux freebsd openbsd sunos aix ipso hpux"
+	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
 	CONTRIB_MODULES="mibs backgrounds"
@@ -276,6 +276,11 @@ if test $? = 0; then
 			SUBAGENT_DIRS="openbsd"
 			SUBAGENT_LIBS="../subagents/openbsd/libnsm_openbsd.la"
 			STATIC_SUBAGENT_LIST="openbsd $STATIC_SUBAGENT_LIST"
+			;;
+		NetBSD)
+			SUBAGENT_DIRS="netbsd"
+			SUBAGENT_LIBS="../subagents/netbsd/libnsm_netbsd.la"
+			STATIC_SUBAGENT_LIST="netbsd $STATIC_SUBAGENT_LIST"
 			;;
 		SunOS)
 			SUBAGENT_DIRS="sunos"
@@ -360,6 +365,9 @@ if test $? = 0; then
 			;;
 		OpenBSD)
 			SUBAGENT_DIRS="openbsd"
+			;;
+		NetBSD)
+			SUBAGENT_DIRS="netbsd"
 			;;
 		SunOS)
 			SUBAGENT_DIRS="sunos"
@@ -1511,6 +1519,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/skeleton/Makefile
 	src/agent/subagents/freebsd/Makefile
 	src/agent/subagents/openbsd/Makefile
+	src/agent/subagents/netbsd/Makefile
 	src/agent/subagents/ipso/Makefile
 	src/agent/subagents/netware/Makefile
 	src/agent/subagents/winnt/Makefile

@@ -45,6 +45,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "Net.IP6.Forwarding",           H_NetIpForwarding, (char *)6,			DCI_DT_INT,	DCIDESC_NET_IP6_FORWARDING },
 	{ "Net.Interface.AdminStatus(*)", H_NetIfAdmStatus,  NULL,				DCI_DT_INT,	DCIDESC_NET_INTERFACE_ADMINSTATUS },
 	{ "Net.Interface.Link(*)",        H_NetIfLink,       NULL,				DCI_DT_INT,	DCIDESC_NET_INTERFACE_LINK },
+	{ "Net.Interface.BytesIn(*)",     H_NetIfInfoFromKVM, (char *)IF_INFO_BYTES_IN,    DCI_DT_UINT64, DCIDESC_NET_INTERFACE_BYTESIN },
+	{ "Net.Interface.BytesOut(*)",    H_NetIfInfoFromKVM, (char *)IF_INFO_BYTES_OUT,   DCI_DT_UINT64, DCIDESC_NET_INTERFACE_BYTESOUT },
+	{ "Net.Interface.InErrors(*)",    H_NetIfInfoFromKVM, (char *)IF_INFO_IN_ERRORS,   DCI_DT_UINT64, DCIDESC_NET_INTERFACE_INERRORS },
+	{ "Net.Interface.OutErrors(*)",   H_NetIfInfoFromKVM, (char *)IF_INFO_OUT_ERRORS,  DCI_DT_UINT64, DCIDESC_NET_INTERFACE_OUTERRORS },
+	{ "Net.Interface.PacketsIn(*)",   H_NetIfInfoFromKVM, (char *)IF_INFO_PACKETS_IN,  DCI_DT_UINT64, DCIDESC_NET_INTERFACE_PACKETSIN },
+	{ "Net.Interface.PacketsOut(*)",  H_NetIfInfoFromKVM, (char *)IF_INFO_PACKETS_OUT, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_PACKETSOUT },
 
 	{ "Process.Count(*)",             H_ProcessCount,    (char *)0,			DCI_DT_UINT,	DCIDESC_PROCESS_COUNT },
 	{ "System.ProcessCount",          H_ProcessCount,    (char *)1,			DCI_DT_UINT,	DCIDESC_SYSTEM_PROCESSCOUNT },

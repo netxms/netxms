@@ -40,6 +40,13 @@
 #include <limits.h>
 #include <stdlib.h>
 
+#if defined(__FreeBSD__) && __FreeBSD__ < 5
+#define iswalpha(c) isalpha(c)
+#define iswdigit(c) isdigit(c)
+#define iswspace(c) isspace(c)
+#define iswupper(c) isupper(c)
+#endif
+
 /*
  * Convert a string to an 64 bit unsigned integer.
  *

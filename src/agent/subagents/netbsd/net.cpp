@@ -1,8 +1,7 @@
-/* $Id$ */
-
 /* 
-** NetXMS subagent for FreeBSD
+** NetXMS subagent for NetBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
+** Copyright (C) 2008 Mark Ibell
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -188,7 +187,7 @@ LONG H_NetIfLink(const char *pszParam, const char *pArg, char *pValue)
 				nx_strncpy(ifmr.ifm_name, szArg, sizeof(ifmr.ifm_name));
 				if (ioctl(nSocket, SIOCGIFMEDIA, (caddr_t)&ifmr) >= 0)
 				{
-					if ((ifmr.ifm_status & IFM_AVALID) == IFM_AVALID &&
+					if ((ifmr.ifm_status & IFM_AVALID) == 0 ||
 							(ifmr.ifm_status & IFM_ACTIVE) == IFM_ACTIVE)
 					{
 						ret_int(pValue, 1);

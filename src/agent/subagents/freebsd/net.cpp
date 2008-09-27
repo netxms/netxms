@@ -33,6 +33,7 @@
 #include <net/if_media.h>
 #include <net/if_dl.h>
 #include <net/if_types.h>
+#include <net/if_var.h>
 #include <net/route.h>
 #include <net/iso88025.h>
 #include <netinet/if_ether.h>
@@ -40,6 +41,10 @@
 #include <ifaddrs.h>
 #include <arpa/inet.h>
 #include <net/ethernet.h>
+#include <kvm.h>
+#include <nlist.h>
+
+#include "net.h"
 
 typedef struct t_Addr
 {
@@ -55,6 +60,14 @@ typedef struct t_IfList
 	int addrCount;
 	int index;
 } IFLIST;
+
+struct nlist nl[] = {
+#define N_IFNET 0
+	{ "_ifnet" },
+	{ NULL },
+};
+
+kvm_t *kvmd = NULL;
 
 LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue)
 {
@@ -526,6 +539,98 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pVa
 	{
 		perror("getifaddrs()");
 	}
+	return nRet;
+}
+
+LONG H_NetIfInfoFromKVM(const char *pszParam, const char *pArg, char *pValue)
+{
+	int nRet = SYSINFO_RC_SUCCESS;
+	char szArg[512];
+	u_long ifnetaddr;
+	struct ifnet ifnet;
+	struct ifnethead ifnethead;
+#if __FreeBSD__ < 5
+	char szTName[IFNAMSIZ];
+#endif
+	char szName[IFNAMSIZ];
+
+   NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+
+	if (szArg[0] != 0)
+	{
+		if (szArg[0] >= '0' && szArg[0] <= '9')
+		{
+			// index
+			if (if_indextoname(atoi(szArg), szArg) != szArg)
+			{
+				// not found
+				nRet = SYSINFO_RC_ERROR;
+			}
+		}
+
+		if (nRet == SYSINFO_RC_SUCCESS)
+		{
+			nRet = SYSINFO_RC_ERROR;
+
+			if (kvmd == NULL) {
+				kvmd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
+				if (kvmd == NULL)
+					return SYSINFO_RC_ERROR;
+				if (kvm_nlist(kvmd, nl) < 0)
+					return SYSINFO_RC_ERROR;
+				if (nl[0].n_type == 0)
+					return SYSINFO_RC_ERROR;
+			}
+			ifnetaddr = nl[N_IFNET].n_value;
+			if (kvm_read(kvmd, ifnetaddr, &ifnethead, sizeof(ifnethead)) != sizeof(ifnethead))
+				return SYSINFO_RC_ERROR;
+			ifnetaddr = (u_long)TAILQ_FIRST(&ifnethead);
+			while (ifnetaddr) {
+				if (kvm_read(kvmd, ifnetaddr, &ifnet, sizeof(ifnet)) != sizeof(ifnet))
+					return SYSINFO_RC_ERROR;
+				ifnetaddr = (u_long)TAILQ_NEXT(&ifnet, if_link);
+#if __FreeBSD__ >= 5
+				strlcpy(szName, ifnet.if_xname, sizeof(szName));
+#else
+				if (kvm_read(kvmd, ifnet.if_name, szTName, sizeof(szTName)) != sizeof(szTName))
+					return SYSINFO_RC_ERROR;
+				szTName[sizeof(szTName) - 1] = '\0';
+				snprintf(szName, sizeof(szName), "%s%d", szTName, ifnet.if_unit);
+#endif
+				if (strcmp(szName, szArg) == 0) {
+					nRet = SYSINFO_RC_SUCCESS;
+					switch((long)pArg)
+					{
+						case IF_INFO_BYTES_IN:
+							ret_uint(pValue, ifnet.if_ibytes);
+							break;
+						case IF_INFO_BYTES_OUT:
+							ret_uint(pValue, ifnet.if_obytes);
+							break;
+						case IF_INFO_IN_ERRORS:
+							ret_uint(pValue, ifnet.if_ierrors);
+							break;
+						case IF_INFO_OUT_ERRORS:
+							ret_uint(pValue, ifnet.if_oerrors);
+							break;
+						case IF_INFO_PACKETS_IN:
+							ret_uint(pValue, ifnet.if_ipackets);
+							break;
+						case IF_INFO_PACKETS_OUT:
+							ret_uint(pValue, ifnet.if_opackets);
+							break;
+						default:
+							nRet = SYSINFO_RC_UNSUPPORTED;
+							break;
+					}
+					break;
+				}
+				else
+					continue;
+			}
+		}
+	}
+
 	return nRet;
 }
 

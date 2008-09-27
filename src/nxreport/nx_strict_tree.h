@@ -25,7 +25,9 @@
 #define _nx_strict_tree_h_
 
 #include <nms_common.h>
+#if !defined (__FreeBSD__) || __FreeBSD__ >= 5
 #include <getopt.h>
+#endif
 #include <nxclapi.h>
 
 

@@ -1,8 +1,7 @@
-/* $Id$ */
-
 /* 
-** NetXMS subagent for OpenBSD
+** NetXMS subagent for NetBSD
 ** Copyright (C) 2006 C.T.Co 
+** Copyright (C) 2008 Mark Ibell
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by

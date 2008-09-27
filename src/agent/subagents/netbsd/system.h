@@ -1,8 +1,7 @@
-/* $Id$ */
-
 /* 
-** NetXMS subagent for FreeBSD
+** NetXMS subagent for NetBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
+** Copyright (C) 2008 Mark Ibell
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,46 +19,53 @@
 **
 **/
 
-#ifndef __NET_H__
-#define __NET_H__
+#ifndef __SYSTEM_H__
+#define __SYSTEM_H__
 
-#define IF_INFO_ADMIN_STATUS     0
-#define IF_INFO_OPER_STATUS      1
-#define IF_INFO_BYTES_IN         2
-#define IF_INFO_BYTES_OUT        3
-#define IF_INFO_DESCRIPTION      4
-#define IF_INFO_IN_ERRORS        5
-#define IF_INFO_OUT_ERRORS       6
-#define IF_INFO_PACKETS_IN       7
-#define IF_INFO_PACKETS_OUT      8
-#define IF_INFO_SPEED            9
+enum
+{
+	PHYSICAL_FREE,
+	PHYSICAL_USED,
+	PHYSICAL_TOTAL,
+	SWAP_FREE,
+	SWAP_USED,
+	SWAP_TOTAL,
+	VIRTUAL_FREE,
+	VIRTUAL_USED,
+	VIRTUAL_TOTAL,
+};
 
-LONG H_NetIpForwarding(const char *, const char *, char *);
-LONG H_NetIfAdmStatus(const char *, const char *, char *);
-LONG H_NetIfLink(const char *, const char *, char *);
-LONG H_NetArpCache(const char *, const char *, NETXMS_VALUES_LIST *);
-LONG H_NetIfList(const char *, const char *, NETXMS_VALUES_LIST *);
-LONG H_NetRoutingTable(const char *, const char *, NETXMS_VALUES_LIST *);
-LONG H_NetIfInfoFromKVM(const char *, const char *, char *);
+LONG H_ProcessList(const char *, const char *, NETXMS_VALUES_LIST *);
+LONG H_Uptime(const char *, const char *, char *);
+LONG H_Uname(const char *, const char *, char *);
+LONG H_Hostname(const char *, const char *, char *);
+LONG H_Hostname(const char *, const char *, char *);
+LONG H_CpuCount(const char *, const char *, char *);
+LONG H_CpuLoad(const char *, const char *, char *);
+LONG H_CpuUsage(const char *, const char *, char *);
+LONG H_ProcessCount(const char *, const char *, char *);
+LONG H_MemoryInfo(const char *, const char *, char *);
+LONG H_SourcePkgSupport(const char *, const char *, char *);
 
-#endif // __NET_H__
+#endif // __SYSTEM_H__
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
 
 $Log: not supported by cvs2svn $
-Revision 1.3  2005/08/22 23:00:05  alk
-Net.IP.RoutingTable added
+Revision 1.3  2005/01/23 05:08:06  alk
++ System.CPU.Count
++ System.Memory.Physical.*
++ System.ProcessCount
++ System.ProcessList
 
-Revision 1.2  2005/03/10 19:04:07  alk
-implemented:
-	Net.Interface.AdminStatus(*)
-	Net.Interface.Link(*)
+Revision 1.2  2005/01/17 23:25:48  alk
+Agent.SourcePackageSupport added
 
 Revision 1.1  2005/01/17 17:14:32  alk
 freebsd agent, incomplete (but working)
 
-Revision 1.1  2004/10/22 22:08:34  alk
+Revision 1.1  2004/10/22 22:08:35  alk
 source restructured;
 implemented:
 	Net.IP.Forwarding

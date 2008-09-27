@@ -1,8 +1,7 @@
-/* $Id$ */
-
 /* 
-** NetXMS subagent for FreeBSD
+** NetXMS subagent for NetBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
+** Copyright (C) 2008 Mark Ibell
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,11 +31,11 @@ LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szArg[512] = {0};
-	struct statfs s;
+	struct statvfs s;
 
 	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
-	if (szArg[0] != 0 && statfs(szArg, &s) == 0)
+	if (szArg[0] != 0 && statvfs(szArg, &s) == 0)
 	{
 		nRet = SYSINFO_RC_SUCCESS;
 		
