@@ -112,12 +112,12 @@ BOOL LogParser::AddRule(const char *regexp, DWORD event, int numParams)
 // Match log line
 //
 
-BOOL LogParser::MatchLine(const char *line)
+BOOL LogParser::MatchLine(const char *line, DWORD objectId)
 {
 	int i;
 
 	for(i = 0; i < m_numRules; i++)
-		if (m_rules[i]->Match(line, m_cb, m_userArg))
+		if (m_rules[i]->Match(line, m_cb, objectId, m_userArg))
 			return TRUE;
 	return FALSE;
 }

@@ -81,6 +81,7 @@
 #include "MapManager.h"
 #include "ObjectPropsTrustedNodes.h"
 #include "ObjectPropsCustomAttrs.h"
+#include "SyslogParserCfg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -141,6 +142,7 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_CONTROLPANEL_CERTIFICATES, OnControlpanelCertificates)
 	ON_COMMAND(ID_VIEW_SITUATIONS, OnViewSituations)
 	ON_COMMAND(ID_CONTROLPANEL_NETWORKMAPS, OnControlpanelNetworkmaps)
+	ON_COMMAND(ID_CONTROLPANEL_SYSLOGPARSER, OnControlpanelSyslogparser)
 	//}}AFX_MSG_MAP
 	ON_THREAD_MESSAGE(NXCM_GRAPH_LIST_UPDATED, OnGraphListUpdate)
 	ON_COMMAND_RANGE(GRAPH_MENU_FIRST_ID, GRAPH_MENU_LAST_ID, OnPredefinedGraph)
@@ -483,6 +485,11 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hMapManagerMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
    InsertMenu(m_hMapManagerMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 28), _T("&Map"));
 
+   m_hSyslogParserCfgMenu = LoadAppMenu(hMenu);
+   InsertMenu(m_hSyslogParserCfgMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
+   InsertMenu(m_hSyslogParserCfgMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 17), _T("&Edit"));
+   InsertMenu(m_hSyslogParserCfgMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 29), _T("&Parser"));
+
 	m_hMDIAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hAlarmBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_ALARM_BROWSER));
 	m_hEventBrowserAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
@@ -509,6 +516,7 @@ BOOL CConsoleApp::InitInstance()
 	m_hNodePollerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_NODE_POLLER));
 	m_hSituationManagerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_SITUATION_MANAGER));
 	m_hMapManagerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MAP_MANAGER));
+/* FIXME */	m_hSyslogParserCfgAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_AGENT_CFG_EDITOR));
 
 	// The main window has been initialized, so show and update it.
    if (bSetWindowPos)
@@ -4574,5 +4582,26 @@ void CConsoleApp::OnControlpanelNetworkmaps()
    {
 		pFrame->CreateNewChild(RUNTIME_CLASS(CMapManager), IDR_MAP_MANAGER,
 									  m_hMapManagerMenu, m_hMapManagerAccel);
+   }
+}
+
+
+//
+// Open syslog parser configurator
+//
+
+void CConsoleApp::OnControlpanelSyslogparser() 
+{
+	CMainFrame* pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
+
+	// create a new MDI child window or open existing
+   if (m_viewState[VIEW_SYSLOG_PARSER_CFG].bActive)
+   {
+      m_viewState[VIEW_SYSLOG_PARSER_CFG].pWnd->BringWindowToTop();
+   }
+   else
+   {
+		pFrame->CreateNewChild(RUNTIME_CLASS(CSyslogParserCfg), IDR_SYSLOG_PARSER_CFG,
+									  m_hSyslogParserCfgMenu, m_hSyslogParserCfgAccel);
    }
 }

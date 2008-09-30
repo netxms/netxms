@@ -351,6 +351,28 @@ static void QueueSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
 
 
 //
+// Callback for syslog parser
+//
+
+static void SyslogParserCallback(DWORD event, const char *line, int paramCount,
+										   char **params, DWORD objectId, void *userArg)
+{
+	char format[] = "ssssssssssssssssssssssssssssssss";
+
+	format[max(paramCount, 32)] = 0;
+	PostEvent(event, objectId, format,
+	          params[0], params[1], params[2], params[3],
+	          params[4], params[5], params[6], params[7],
+	          params[8], params[9], params[10], params[11],
+	          params[12], params[13], params[14], params[15],
+	          params[16], params[17], params[18], params[19],
+	          params[20], params[21], params[22], params[23],
+	          params[24], params[25], params[26], params[27],
+	          params[28], params[29], params[30], params[31]);
+}
+
+
+//
 // Syslog messages receiver thread
 //
 
@@ -365,6 +387,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    THREAD hProcessingThread;
    fd_set rdfs;
    struct timeval tv;
+	TCHAR *xml;
 
    // Determine first available message id
    hResult = DBSelect(g_hCoreDB, _T("SELECT max(msg_id) FROM syslog"));
@@ -406,6 +429,25 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    }
 	WriteLog(MSG_LISTENING_FOR_SYSLOG, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(addr.sin_addr.s_addr), nPort);
 
+	// Create message parser
+	xml = ConfigReadCLOB(_T("SyslogParser"), _T("<parser></parser>"));
+	if (xml != NULL)
+	{
+		TCHAR parseError[256];
+
+		m_parser = new LogParser;
+		if (m_parser->CreateFromXML(xml, -1, parseError, 256))
+		{
+			m_parser->SetCallback(SyslogParserCallback);
+		}
+		else
+		{
+			delete_and_null(m_parser);
+			WriteLog(MSG_SYSLOG_PARSER_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", parseError);
+		}
+		free(xml);
+	}
+
    // Start processing thread
    m_pSyslogQueue = new Queue(1000, 100);
    hProcessingThread = ThreadCreateEx(SyslogProcessingThread, 0, NULL);
@@ -446,6 +488,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    m_pSyslogQueue->Put(INVALID_POINTER_VALUE);
    ThreadJoin(hProcessingThread);
    delete m_pSyslogQueue;
+	delete m_parser;
 
    DbgPrintf(1, _T("Syslog Daemon stopped"));
    return THREAD_OK;

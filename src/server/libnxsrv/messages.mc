@@ -686,4 +686,10 @@ Language=English
 %1
 .
 
+MessageId=
+SymbolicName=MSG_SYSLOG_PARSER_INIT_FAILED
+Language=English
+Cannot initialize syslog parser: %1
+.
+
 ;#endif

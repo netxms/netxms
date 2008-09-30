@@ -417,6 +417,7 @@ extern SNMP_MIBObject *g_pMIBRoot;
 extern ALARM_SOUND_CFG g_soundCfg;
 extern char g_szConfigKeywords[];
 extern char g_szScriptKeywords[];
+extern char g_szLogParserKeywords[];
 extern DWORD g_dwNumGraphs;
 extern NXC_GRAPH *g_pGraphList;
 extern HANDLE g_mutexGraphListAccess;

@@ -158,6 +158,7 @@ EXTRA_DIST = \
 	StdAfx.cpp StdAfx.h \
 	SubmapBkgndDlg.cpp SubmapBkgndDlg.h \
 	SyslogBrowser.cpp SyslogBrowser.h \
+	SyslogParserCfg.cpp SyslogParserCfg.h \
 	TableView.cpp TableView.h \
 	ThresholdDlg.cpp ThresholdDlg.h \
 	ToolBox.cpp ToolBox.h \

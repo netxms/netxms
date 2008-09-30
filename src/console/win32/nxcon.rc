@@ -402,6 +402,7 @@ BEGIN
 
         MENUITEM "Server &configuration",       ID_CONTROLPANEL_SERVERCFG
         MENUITEM "&SNMP Traps",                 ID_CONTROLPANEL_SNMPTRAPS
+        MENUITEM "S&yslog Parser",              ID_CONTROLPANEL_SYSLOGPARSER
         MENUITEM "&Users",                      ID_CONTROLPANEL_USERS
     END
     POPUP "&Object (map)"
@@ -654,6 +655,10 @@ BEGIN
         MENUITEM "&Create...\tIns",             ID_MAP_CREATE
         MENUITEM "&Rename",                     ID_MAP_RENAME
         MENUITEM "&Delete\tDel",                ID_MAP_DELETE
+    END
+    POPUP "Parser"
+    BEGIN
+        MENUITEM "&Save\tCtrl+S",               ID_PARSER_SAVE
     END
 END
 
@@ -4492,6 +4497,7 @@ BEGIN
     IDR_CERT_MANAGER        "\nCertificates\nCertificates"
     IDR_SITUATION_MANAGER   "\nSituations Manager\nSituations Manager"
     IDR_MAP_MANAGER         "\nNetwork Map Manager\nNetwork Map Manager"
+    IDR_SYSLOG_PARSER_CFG   "\nSyslog Parser Configuration\nSyslog Parser Configuration"
 END
 
 STRINGTABLE DISCARDABLE 

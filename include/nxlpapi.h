@@ -45,9 +45,12 @@
 
 //
 // Callback
+// Parameters:
+//    event id, original text, number of parameters, list of parameters,
+//    object id, user arg
 //
 
-typedef void (* LOG_PARSER_CALLBACK)(DWORD, const char *, int, char **, void *);
+typedef void (* LOG_PARSER_CALLBACK)(DWORD, const char *, int, char **, DWORD, void *);
 
 
 //
@@ -68,7 +71,7 @@ public:
 	~LogParserRule();
 
 	BOOL IsValid() { return m_isValid; }
-	BOOL Match(const char *line, LOG_PARSER_CALLBACK cb, void *userArg);
+	BOOL Match(const char *line, LOG_PARSER_CALLBACK cb, DWORD objectId, void *userArg);
 };
 
 
@@ -101,7 +104,7 @@ public:
 	void SetEventNameTranslator(CODE_TO_TEXT *ctt) { m_eventTran = ctt; }
 	DWORD TranslateEventName(const TCHAR *name, DWORD defVal = 0);
 
-	BOOL MatchLine(const char *line);
+	BOOL MatchLine(const char *line, DWORD objectId = 0);
 };
 
 #endif

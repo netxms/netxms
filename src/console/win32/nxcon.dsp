@@ -777,6 +777,10 @@ SOURCE=.\SyslogBrowser.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\SyslogParserCfg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\TableView.cpp
 # End Source File
 # Begin Source File
@@ -1486,6 +1490,10 @@ SOURCE=.\SubmapBkgndDlg.h
 # Begin Source File
 
 SOURCE=.\SyslogBrowser.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\SyslogParserCfg.h
 # End Source File
 # Begin Source File
 

@@ -367,3 +367,10 @@ char g_szConfigKeywords[] = "Action ControlServers EnableActions EnabledCiphers 
 char g_szScriptKeywords[] = "break continue do else exit for if ilike "
                             "int32 int64 like NULL print real return "
                             "string sub typeof uint32 uint64 use while";
+
+
+//
+// Log parser configuration keywords
+//
+
+char g_szLogParserKeywords[] = "parser file rules rule match event params";

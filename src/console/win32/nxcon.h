@@ -108,6 +108,7 @@ enum
 	VIEW_CERTIFICATE_MANAGER,
 	VIEW_SITUATION_MANAGER,
 	VIEW_MAP_MANAGER,
+	VIEW_SYSLOG_PARSER_CFG,
    MAX_VIEW_ID
 };
 
@@ -245,6 +246,8 @@ protected:
 	HACCEL m_hSituationManagerAccel;   // Accelerator for situation manager
 	HMENU m_hMapManagerMenu;     // Menu for map manager
 	HACCEL m_hMapManagerAccel;   // Accelerator for map manager
+	HMENU m_hSyslogParserCfgMenu;     // Menu for syslog parser configurator
+	HACCEL m_hSyslogParserCfgAccel;   // Accelerator for syslog parser configurator
 	
 public:
 	CMDIChildWnd *FindObjectView(DWORD dwClass, DWORD dwId);
@@ -288,6 +291,7 @@ public:
 	afx_msg void OnControlpanelCertificates();
 	afx_msg void OnViewSituations();
 	afx_msg void OnControlpanelNetworkmaps();
+	afx_msg void OnControlpanelSyslogparser();
 	//}}AFX_MSG
 	afx_msg void OnGraphListUpdate(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnPredefinedGraph(UINT nCmd);

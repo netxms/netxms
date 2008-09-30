@@ -257,3 +257,67 @@ DWORD LIBNXCL_EXPORTABLE NXCResetServerComponent(NXC_SESSION hSession, DWORD dwC
    
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
+
+
+//
+// Get value of CLOB config variable
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCGetServerConfigCLOB(NXC_SESSION hSession, const TCHAR *name, TCHAR **value)
+{
+   CSCPMessage msg, *pResponse;
+   DWORD dwRqId, dwRetCode;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+	*value = NULL;
+
+   // Build request message
+   msg.SetCode(CMD_CONFIG_GET_CLOB);
+   msg.SetId(dwRqId);
+	msg.SetVariable(VID_NAME, name);
+
+   // Send request
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   // Wait for response
+   pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      if (dwRetCode == RCC_SUCCESS)
+      {
+			*value = pResponse->GetVariableStr(VID_VALUE);
+      }
+      delete pResponse;
+   }
+   else
+   {
+      dwRetCode = RCC_TIMEOUT;
+   }
+
+   return dwRetCode;
+}
+
+
+//
+// Set value of CLOB config variable
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCSetServerConfigCLOB(NXC_SESSION hSession, const TCHAR *name, const TCHAR *value)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   // Build request message
+   msg.SetCode(CMD_CONFIG_SET_CLOB);
+   msg.SetId(dwRqId);
+	msg.SetVariable(VID_NAME, name);
+	msg.SetVariable(VID_VALUE, value);
+
+   // Send request
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+   
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}

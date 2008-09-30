@@ -60,7 +60,7 @@ LogParserRule::~LogParserRule()
 // Match line
 //
 
-BOOL LogParserRule::Match(const char *line, LOG_PARSER_CALLBACK cb, void *userArg)
+BOOL LogParserRule::Match(const char *line, LOG_PARSER_CALLBACK cb, DWORD objectId, void *userArg)
 {
 	if (!m_isValid)
 		return FALSE;
@@ -91,7 +91,8 @@ BOOL LogParserRule::Match(const char *line, LOG_PARSER_CALLBACK cb, void *userAr
 				}
 			}
 
-			cb(m_event, line, m_numParams, params, userArg);
+			if (cb != NULL)
+				cb(m_event, line, m_numParams, params, objectId, userArg);
 			
 			for(i = 0; i < m_numParams; i++)
 				safe_free(params[i]);

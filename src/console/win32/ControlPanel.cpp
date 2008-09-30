@@ -115,7 +115,7 @@ int CControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
    AddItem(_T("SNMP Traps"), 4, ID_CONTROLPANEL_SNMPTRAPS);
    AddItem(_T("Agent Packages"), 5, ID_CONTROLPANEL_AGENTPKG);
    AddItem(_T("Server Configuration"), 6, ID_CONTROLPANEL_SERVERCFG);
-   //AddItem(_T("Log Processing"), 7, ID_CONTROLPANEL_LOGPROCESSING);
+   AddItem(_T("Syslog Parser"), 7, ID_CONTROLPANEL_SYSLOGPARSER);
    AddItem(_T("Object Tools"), 8, ID_CONTROLPANEL_OBJECTTOOLS);
    AddItem(_T("Script Library"), 9, ID_CONTROLPANEL_SCRIPTLIBRARY);
    AddItem(_T("Agent Configurations"), 10, ID_CONTROLPANEL_AGENTCONFIGS);

@@ -1787,6 +1787,7 @@ typedef struct
 extern "C" {
 #endif
 
+/** Library info/management **/
 DWORD LIBNXCL_EXPORTABLE NXCGetVersion(void);
 const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError);
 
@@ -1794,11 +1795,13 @@ BOOL LIBNXCL_EXPORTABLE NXCInitialize(void);
 void LIBNXCL_EXPORTABLE NXCShutdown(void);
 void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
 
+/** Low-level messaging **/
 DWORD LIBNXCL_EXPORTABLE NXCGenerateMessageId(NXC_SESSION hSession);
 BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, CSCPMessage *msg);
 CSCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCode, DWORD dwRqId);
 DWORD LIBNXCL_EXPORTABLE NXCWaitForRCC(NXC_SESSION hSession, DWORD dwRqId);
 
+/** Session management **/
 DWORD LIBNXCL_EXPORTABLE NXCConnect(DWORD dwFlags, const TCHAR *pszServer, const TCHAR *pszLogin, 
                                     const TCHAR *pszPassword, DWORD dwCertLen,
                                     BOOL (* pfSign)(BYTE *, DWORD, BYTE *, DWORD *, void *),
@@ -1816,11 +1819,14 @@ void LIBNXCL_EXPORTABLE NXCGetLastLockOwner(NXC_SESSION hSession, TCHAR *pszBuff
                                             int nBufSize);
 const TCHAR LIBNXCL_EXPORTABLE *NXCGetServerTimeZone(NXC_SESSION hSession);
 
+/** SMS **/
 DWORD LIBNXCL_EXPORTABLE NXCSendSMS(NXC_SESSION hSession, TCHAR *phone, TCHAR *message);
 
+/** Get/set client data associated with session **/
 void LIBNXCL_EXPORTABLE *NXCGetClientData(NXC_SESSION hSession);
 void LIBNXCL_EXPORTABLE NXCSetClientData(NXC_SESSION hSession, void *pData);
 
+/** Objects **/
 DWORD LIBNXCL_EXPORTABLE NXCSyncObjects(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCSyncObjectsEx(NXC_SESSION hSession, const TCHAR *pszCacheFile,
                                           BOOL bSyncComments);
@@ -1869,9 +1875,11 @@ DWORD LIBNXCL_EXPORTABLE NXCGetDCIEventsList(NXC_SESSION hSession, DWORD dwObjec
 DWORD LIBNXCL_EXPORTABLE NXCGetDCIInfo(NXC_SESSION hSession, DWORD dwNodeId,
 													DWORD dwItemId, NXC_DCI *pInfo);
 
+/** Container categories **/
 DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_SESSION hSession, NXC_CC_LIST **ppList);
 void LIBNXCL_EXPORTABLE NXCDestroyCCList(NXC_CC_LIST *pList);
 
+/** Events **/
 DWORD LIBNXCL_EXPORTABLE NXCSyncEvents(NXC_SESSION hSession, DWORD dwMaxRecords);
 DWORD LIBNXCL_EXPORTABLE NXCLoadEventDB(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCSetEventInfo(NXC_SESSION hSession, NXC_EVENT_TEMPLATE *pArg);
@@ -1889,8 +1897,10 @@ BOOL LIBNXCL_EXPORTABLE NXCGetEventText(NXC_SESSION hSession, DWORD dwId, TCHAR 
 DWORD LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, DWORD dwEventCode, DWORD dwObjectId,
 												  int iNumArgs, TCHAR **pArgList, TCHAR *pszUserTag);
 
+/** Syslog **/
 DWORD LIBNXCL_EXPORTABLE NXCSyncSyslog(NXC_SESSION hSession, DWORD dwMaxRecords);
 
+/** User management **/
 DWORD LIBNXCL_EXPORTABLE NXCLoadUserDB(NXC_SESSION hSession);
 NXC_USER LIBNXCL_EXPORTABLE *NXCFindUserById(NXC_SESSION hSession, DWORD dwId);
 BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_SESSION hSession, NXC_USER **ppUserList, DWORD *pdwNumUsers);
@@ -1919,6 +1929,7 @@ DWORD LIBNXCL_EXPORTABLE NXCKillSession(NXC_SESSION hSession, DWORD dwSessionId)
 DWORD LIBNXCL_EXPORTABLE NXCGetCurrentUserId(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCGetCurrentSystemAccess(NXC_SESSION hSession);
 
+/** Data collection **/
 DWORD LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(NXC_SESSION hSession, DWORD dwNodeId, NXC_DCI_LIST **ppItemList);
 DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_SESSION hSession, NXC_DCI_LIST *pItemList);
 DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItemList, DWORD *pdwItemId);
@@ -1948,21 +1959,25 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSystemDCIList(NXC_SESSION hSession, DWORD dwNodeI
 DWORD LIBNXCL_EXPORTABLE NXCPushDCIData(NXC_SESSION hSession, DWORD dwNumItems,
                                         NXC_DCI_PUSH_DATA *pItems, DWORD *pdwIndex);
 
+/** MIB files **/
 DWORD LIBNXCL_EXPORTABLE NXCGetMIBFileTimeStamp(NXC_SESSION hSession, DWORD *pdwTimeStamp);
 DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, const TCHAR *pszName);
 
+/** Event processing policy **/
 DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEventPolicy);
 DWORD LIBNXCL_EXPORTABLE NXCCloseEventPolicy(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEventPolicy);
 void LIBNXCL_EXPORTABLE NXCDestroyEventPolicy(NXC_EPP *pEventPolicy);
 void LIBNXCL_EXPORTABLE NXCDeletePolicyRule(NXC_EPP *pEventPolicy, DWORD dwRule);
 
+/** Images **/
 DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_SESSION hSession, NXC_IMAGE_LIST **ppImageList, TCHAR *pszCacheDir, WORD wFormat);
 DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(NXC_SESSION hSession, DWORD dwImageId, TCHAR *pszCacheDir, WORD wFormat);
 void LIBNXCL_EXPORTABLE NXCDestroyImageList(NXC_IMAGE_LIST *pImageList);
 DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(NXC_SESSION hSession, DWORD *pdwListSize,
                                                  DWORD **ppdwClassId, DWORD **ppdwImageId);
 
+/** Alarms **/
 DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, BOOL bIncludeAck, DWORD *pdwNumAlarms, NXC_ALARM **ppAlarmList);
 DWORD LIBNXCL_EXPORTABLE NXCAcknowledgeAlarm(NXC_SESSION hSession, DWORD dwAlarmId);
 DWORD LIBNXCL_EXPORTABLE NXCTerminateAlarm(NXC_SESSION hSession, DWORD dwAlarmId);
@@ -1971,6 +1986,7 @@ DWORD LIBNXCL_EXPORTABLE NXCOpenAlarm(NXC_SESSION hSession, DWORD dwAlarmId, TCH
 DWORD LIBNXCL_EXPORTABLE NXCCloseAlarm(NXC_SESSION hSession, DWORD dwAlarmId);
 TCHAR LIBNXCL_EXPORTABLE *NXCFormatAlarmText(NXC_SESSION session, NXC_ALARM *alarm, TCHAR *format);
 
+/** Actions **/
 DWORD LIBNXCL_EXPORTABLE NXCLoadActions(NXC_SESSION hSession, DWORD *pdwNumActions, NXC_ACTION **ppActionList);
 DWORD LIBNXCL_EXPORTABLE NXCLockActionDB(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCUnlockActionDB(NXC_SESSION hSession);
@@ -1978,6 +1994,7 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateAction(NXC_SESSION hSession, TCHAR *pszName, D
 DWORD LIBNXCL_EXPORTABLE NXCModifyAction(NXC_SESSION hSession, NXC_ACTION *pAction);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteAction(NXC_SESSION hSession, DWORD dwActionId);
 
+/** SNMP trap configuration **/
 DWORD LIBNXCL_EXPORTABLE NXCLockTrapCfg(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCUnlockTrapCfg(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCLoadTrapCfg(NXC_SESSION hSession, DWORD *pdwNumTraps, NXC_TRAP_CFG_ENTRY **ppTrapList);
@@ -1989,6 +2006,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSyncSNMPTrapLog(NXC_SESSION hSession, DWORD dwMaxRec
 DWORD LIBNXCL_EXPORTABLE NXCGetTrapCfgRO(NXC_SESSION hSession, DWORD *pdwNumTraps,
                                          NXC_TRAP_CFG_ENTRY **ppTrapList);
 
+/** Packages **/
 DWORD LIBNXCL_EXPORTABLE NXCLockPackageDB(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCUnlockPackageDB(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, DWORD *pdwNumPackages, 
@@ -2001,6 +2019,7 @@ DWORD LIBNXCL_EXPORTABLE NXCDeployPackage(NXC_SESSION hSession, DWORD dwPkgId,
                                           DWORD dwNumObjects, DWORD *pdwObjectList,
                                           DWORD *pdwRqId);
 
+/** Server management **/
 DWORD LIBNXCL_EXPORTABLE NXCResetServerComponent(NXC_SESSION hSession, DWORD dwComponent);
 DWORD LIBNXCL_EXPORTABLE NXCGetServerStats(NXC_SESSION hSession, NXC_SERVER_STATS *pStats);
 DWORD LIBNXCL_EXPORTABLE NXCGetServerVariables(NXC_SESSION hSession, 
@@ -2009,7 +2028,10 @@ DWORD LIBNXCL_EXPORTABLE NXCGetServerVariables(NXC_SESSION hSession,
 DWORD LIBNXCL_EXPORTABLE NXCSetServerVariable(NXC_SESSION hSession, TCHAR *pszVarName,
                                               TCHAR *pszValue);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteServerVariable(NXC_SESSION hSession, TCHAR *pszVarName);
+DWORD LIBNXCL_EXPORTABLE NXCGetServerConfigCLOB(NXC_SESSION hSession, const TCHAR *name, TCHAR **value);
+DWORD LIBNXCL_EXPORTABLE NXCSetServerConfigCLOB(NXC_SESSION hSession, const TCHAR *name, const TCHAR *value);
 
+/** Object tools **/
 DWORD LIBNXCL_EXPORTABLE NXCGetObjectTools(NXC_SESSION hSession, DWORD *pdwNumTools,
                                            NXC_OBJECT_TOOL **ppToolList);
 void LIBNXCL_EXPORTABLE NXCDestroyObjectToolList(DWORD dwNumTools, NXC_OBJECT_TOOL *pList);
@@ -2033,6 +2055,7 @@ DWORD LIBNXCL_EXPORTABLE NXCRequestNewLPPID(NXC_SESSION hSession, DWORD *pdwId);
 DWORD LIBNXCL_EXPORTABLE NXCOpenLPP(NXC_SESSION hSession, NXC_LPP **ppPolicy);
 void LIBNXCL_EXPORTABLE NXCDestroyLPP(NXC_LPP *pPolicy);
 
+/** Script library **/
 DWORD LIBNXCL_EXPORTABLE NXCGetScriptList(NXC_SESSION hSession, DWORD *pdwNumScrpts,
                                           NXC_SCRIPT_INFO **ppList);
 DWORD LIBNXCL_EXPORTABLE NXCGetScript(NXC_SESSION hSession, DWORD dwId, TCHAR **ppszCode);
@@ -2042,6 +2065,7 @@ DWORD LIBNXCL_EXPORTABLE NXCRenameScript(NXC_SESSION hSession, DWORD dwId,
                                          TCHAR *pszName);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteScript(NXC_SESSION hSession, DWORD dwId);
 
+/** SNMP **/
 DWORD LIBNXCL_EXPORTABLE NXCSnmpWalk(NXC_SESSION hSession, DWORD dwNode,
                                      TCHAR *pszRootOID, void *pUserData,
                                      void (* pfCallback)(TCHAR *, DWORD, TCHAR *, void *));
@@ -2050,6 +2074,7 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSnmpCommunityList(NXC_SESSION hSession, DWORD *pd
 DWORD LIBNXCL_EXPORTABLE NXCUpdateSnmpCommunityList(NXC_SESSION hSession, DWORD dwNumStrings,
 											    					 TCHAR **ppszStringList);
 
+/** Maps **/
 DWORD LIBNXCL_EXPORTABLE NXCGetMapList(NXC_SESSION hSession, DWORD *pdwNumMaps,
                                        NXC_MAP_INFO **ppMapList);
 DWORD LIBNXCL_EXPORTABLE NXCSaveMap(NXC_SESSION hSession, void *pMap);
@@ -2065,11 +2090,13 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateMap(NXC_SESSION hSession, DWORD dwRootObj,
 DWORD LIBNXCL_EXPORTABLE NXCDeleteMap(NXC_SESSION hSession, DWORD dwMapId);
 DWORD LIBNXCL_EXPORTABLE NXCRenameMap(NXC_SESSION hSession, DWORD dwMapId, const TCHAR *pszName);
 
+/** Address lists **/
 DWORD LIBNXCL_EXPORTABLE NXCGetAddrList(NXC_SESSION hSession, DWORD dwListType,
                                         DWORD *pdwAddrCount, NXC_ADDR_ENTRY **ppAddrList);
 DWORD LIBNXCL_EXPORTABLE NXCSetAddrList(NXC_SESSION hSession, DWORD dwListType,
                                         DWORD dwAddrCount, NXC_ADDR_ENTRY *pAddrList);
 
+/** Agent configurations **/
 DWORD LIBNXCL_EXPORTABLE NXCGetAgentConfigList(NXC_SESSION hSession, DWORD *pdwNumRecs,
                                                NXC_AGENT_CONFIG_INFO **ppList);
 DWORD LIBNXCL_EXPORTABLE NXCOpenAgentConfig(NXC_SESSION hSession, DWORD dwCfgId,
@@ -2078,6 +2105,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveAgentConfig(NXC_SESSION hSession, NXC_AGENT_CONF
 DWORD LIBNXCL_EXPORTABLE NXCDeleteAgentConfig(NXC_SESSION hSession, DWORD dwCfgId);
 DWORD LIBNXCL_EXPORTABLE NXCSwapAgentConfigs(NXC_SESSION hSession, DWORD dwCfgId1, DWORD dwCfgId2);
 
+/** MAnagement packs **/
 DWORD LIBNXCL_EXPORTABLE NXCCreateMPFile(NXC_SESSION hSession, TCHAR *pszDescr,
                                          DWORD dwNumEvents, DWORD *pdwEventList,
                                          DWORD dwNumTemplates, DWORD *pdwTemplateList,
@@ -2086,11 +2114,13 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateMPFile(NXC_SESSION hSession, TCHAR *pszDescr,
 DWORD LIBNXCL_EXPORTABLE NXCInstallMP(NXC_SESSION hSession, TCHAR *pszContent,
                                       DWORD dwFlags, TCHAR *pszErrorText, int nErrorLen);
 
+/** Predefined graphs **/
 DWORD LIBNXCL_EXPORTABLE NXCGetGraphList(NXC_SESSION hSession, DWORD *pdwNumGraphs, NXC_GRAPH **ppGraphList);
 void LIBNXCL_EXPORTABLE NXCDestroyGraphList(DWORD dwNumGraphs, NXC_GRAPH *pList);
 DWORD LIBNXCL_EXPORTABLE NXCDefineGraph(NXC_SESSION hSession, NXC_GRAPH *pGraph);
 DWORD LIBNXCL_EXPORTABLE NXCDeleteGraph(NXC_SESSION hSession, DWORD dwGraphId);
 
+/** Certificates **/
 DWORD LIBNXCL_EXPORTABLE NXCAddCACertificate(NXC_SESSION hSession, DWORD dwCertLen,
                                              BYTE *pCert, TCHAR *pszComments);
 DWORD LIBNXCL_EXPORTABLE NXCUpdateCertificateComments(NXC_SESSION hSession, DWORD dwCertId,
@@ -2099,8 +2129,10 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteCertificate(NXC_SESSION hSession, DWORD dwCert
 DWORD LIBNXCL_EXPORTABLE NXCGetCertificateList(NXC_SESSION hSession, NXC_CERT_LIST **ppList);
 void LIBNXCL_EXPORTABLE NXCDestroyCertificateList(NXC_CERT_LIST *pList);
 
+/** Layer 2 topology **/
 DWORD LIBNXCL_EXPORTABLE NXCQueryL2Topology(NXC_SESSION hSession, DWORD dwNodeId, void **ppTopology);
 
+/** Situations **/
 DWORD LIBNXCL_EXPORTABLE NXCCreateSituation(NXC_SESSION hSession, const TCHAR *name, const TCHAR *comments, DWORD *pdwId);
 DWORD LIBNXCL_EXPORTABLE NXCModifySituation(NXC_SESSION hSession, DWORD id,
                                             const TCHAR *name, const TCHAR *comments);
