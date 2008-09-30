@@ -65,7 +65,8 @@ LogParser::LogParser()
 	m_cb = NULL;
 	m_userArg = NULL;
 	m_fileName = NULL;
-	m_eventTran = NULL;
+	m_eventNameList = NULL;
+	m_eventResolver = NULL;
 }
 
 
@@ -200,7 +201,7 @@ static void EndElement(void *userData, const char *name)
 		ps->event.Strip();
 		event = strtoul(ps->event, &eptr, 0);
 		if (*eptr != 0)
-			event = ps->parser->TranslateEventName(ps->event);
+			event = ps->parser->ResolveEventName(ps->event);
 		ps->parser->AddRule((const char *)ps->regexp, event, ps->numEventParams);
 		ps->state = XML_STATE_RULES;
 	}
@@ -270,18 +271,27 @@ BOOL LogParser::CreateFromXML(const char *xml, int xmlLen, char *errorText, int 
 
 
 //
-// Translate event name
+// Resolve event name
 //
 
-DWORD LogParser::TranslateEventName(const TCHAR *name, DWORD defVal)
+DWORD LogParser::ResolveEventName(const TCHAR *name, DWORD defVal)
 {
-	int i;
+	if (m_eventNameList != NULL)
+	{
+		int i;
 
-	if (m_eventTran == NULL)
-		return defVal;
+		for(i = 0; m_eventNameList[i].text != NULL; i++)
+			if (!_tcsicmp(name, m_eventNameList[i].text))
+				return m_eventNameList[i].code;
+	}
 
-	for(i = 0; m_eventTran[i].text != NULL; i++)
-		if (!_tcsicmp(name, m_eventTran[i].text))
-			return m_eventTran[i].code;
+	if (m_eventResolver != NULL)
+	{
+		DWORD val;
+
+		if (m_eventResolver(name, &val))
+			return val;
+	}
+
 	return defVal;
 }

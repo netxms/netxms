@@ -1,4 +1,3 @@
-/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Log Parsing Library
@@ -87,7 +86,8 @@ private:
 	LOG_PARSER_CALLBACK m_cb;
 	void *m_userArg;
 	TCHAR *m_fileName;
-	CODE_TO_TEXT *m_eventTran;
+	CODE_TO_TEXT *m_eventNameList;
+	BOOL (*m_eventResolver)(const TCHAR *, DWORD *);
 
 public:
 	LogParser();
@@ -101,8 +101,9 @@ public:
 	BOOL AddRule(const char *regexp, DWORD event = 0, int numParams = 0);
 	void SetCallback(LOG_PARSER_CALLBACK cb) { m_cb = cb; }
 	void SetUserArg(void *arg) { m_userArg = arg; }
-	void SetEventNameTranslator(CODE_TO_TEXT *ctt) { m_eventTran = ctt; }
-	DWORD TranslateEventName(const TCHAR *name, DWORD defVal = 0);
+	void SetEventNameList(CODE_TO_TEXT *ctt) { m_eventNameList = ctt; }
+	void SetEventNameResolver(BOOL (*cb)(const TCHAR *, DWORD *)) { m_eventResolver = cb; }
+	DWORD ResolveEventName(const TCHAR *name, DWORD defVal = 0);
 
 	BOOL MatchLine(const char *line, DWORD objectId = 0);
 };

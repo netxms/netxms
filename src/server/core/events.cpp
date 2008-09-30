@@ -831,7 +831,7 @@ EVENT_TEMPLATE *FindEventTemplateByCode(DWORD dwCode)
 // Find event template by name - suitable for external call
 //
 
-EVENT_TEMPLATE *FindEventTemplateByName(TCHAR *pszName)
+EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName)
 {
    EVENT_TEMPLATE *p = NULL;
    DWORD i;

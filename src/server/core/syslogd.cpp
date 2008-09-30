@@ -373,6 +373,25 @@ static void SyslogParserCallback(DWORD event, const char *line, int paramCount,
 
 
 //
+// Event name resolver
+//
+
+static BOOL EventNameResolver(const TCHAR *name, DWORD *code)
+{
+	EVENT_TEMPLATE *event;
+	BOOL success = FALSE;
+
+	event = FindEventTemplateByName(name);
+	if (event != NULL)
+	{
+		*code = event->dwCode;
+		success = TRUE;
+	}
+	return success;
+}
+
+
+//
 // Syslog messages receiver thread
 //
 
@@ -436,6 +455,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
 		TCHAR parseError[256];
 
 		m_parser = new LogParser;
+		m_parser->SetEventNameResolver(EventNameResolver);
 		if (m_parser->CreateFromXML(xml, -1, parseError, 256))
 		{
 			m_parser->SetCallback(SyslogParserCallback);

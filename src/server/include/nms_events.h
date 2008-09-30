@@ -201,7 +201,7 @@ void CorrelateEvent(Event *pEvent);
 void CreateNXMPEventRecord(String &str, DWORD dwCode);
 BOOL ResolveEventName(DWORD dwCode, TCHAR *pszBuffer);
 EVENT_TEMPLATE *FindEventTemplateByCode(DWORD dwCode);
-EVENT_TEMPLATE *FindEventTemplateByName(TCHAR *pszName);
+EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName);
 
 
 //
