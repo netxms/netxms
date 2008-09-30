@@ -60,6 +60,7 @@ BEGIN_MESSAGE_MAP(CSyslogParserCfg, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, OnUpdateEditUndo)
 	ON_COMMAND(ID_PARSER_SAVE, OnParserSave)
 	ON_UPDATE_COMMAND_UI(ID_PARSER_SAVE, OnUpdateParserSave)
+	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
 	ON_EN_CHANGE(ID_EDIT_CTRL, OnEditCtrlChange)
 END_MESSAGE_MAP()
@@ -343,4 +344,36 @@ void CSyslogParserCfg::OnParserSave()
 void CSyslogParserCfg::OnUpdateParserSave(CCmdUI* pCmdUI) 
 {
    pCmdUI->Enable(m_wndEditor.GetModify());
+}
+
+
+//
+// WM_CLOSE message handler
+//
+
+void CSyslogParserCfg::OnClose() 
+{
+   BOOL bAllowClose = TRUE;
+
+   if (m_wndEditor.GetModify())
+   {
+      int action;
+
+      action = MessageBox(_T("Configuration not saved. Do you wish to save it before exit?"),
+		                    _T("Warning"), MB_YESNOCANCEL | MB_ICONEXCLAMATION);
+      switch(action)
+      {
+         case IDYES:
+            bAllowClose = SaveConfig();
+            break;
+         case IDCANCEL:
+            bAllowClose = FALSE;
+            break;
+         default:
+            break;
+      }
+   }
+	
+   if (bAllowClose)
+	   CMDIChildWnd::OnClose();
 }

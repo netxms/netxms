@@ -306,7 +306,7 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
 
 		if ((record.dwSourceObject != 0) && (m_parser != NULL))
 		{
-			m_parser->MatchLine(record.szMessage);
+			m_parser->MatchLine(record.szMessage, record.dwSourceObject);
 		}
    }
 }
@@ -359,7 +359,7 @@ static void SyslogParserCallback(DWORD event, const char *line, int paramCount,
 {
 	char format[] = "ssssssssssssssssssssssssssssssss";
 
-	format[max(paramCount, 32)] = 0;
+	format[min(paramCount, 32)] = 0;
 	PostEvent(event, objectId, format,
 	          params[0], params[1], params[2], params[3],
 	          params[4], params[5], params[6], params[7],

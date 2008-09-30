@@ -64,6 +64,7 @@ protected:
 	afx_msg void OnUpdateEditUndo(CCmdUI* pCmdUI);
 	afx_msg void OnParserSave();
 	afx_msg void OnUpdateParserSave(CCmdUI* pCmdUI);
+	afx_msg void OnClose();
 	//}}AFX_MSG
 	afx_msg void OnEditCtrlChange();
 	DECLARE_MESSAGE_MAP()
