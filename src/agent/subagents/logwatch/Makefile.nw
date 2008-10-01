@@ -1,0 +1,24 @@
+#
+# Makefile for building NetXMS LogWatch Subagent for Novell NetWare platform
+# Copyright (c) 2008 Victor Kirhenshtein
+#
+
+include ../../../../netware/Makefile.inc
+
+OBJECTS  = main.o
+EXEC     = logwatch.nsm
+DEF      = logwatch.def
+
+all: $(EXEC)
+
+$(OBJECTS): Makefile.nw logwatch.h
+
+.cpp.o:
+	$(CC) $(CFLAGS) -o $*.o $<
+
+$(EXEC): $(OBJECTS) $(DEF)
+	$(LINK) $(LDFLAGS) -T $(DEF)
+	cp logwatch.nsm ../../../../netware/bin
+
+clean:
+	rm -f *.o $(EXEC)

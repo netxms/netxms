@@ -67,6 +67,9 @@ LogParser::LogParser()
 	m_fileName = NULL;
 	m_eventNameList = NULL;
 	m_eventResolver = NULL;
+	m_thread = INVALID_THREAD_HANDLE;
+	m_recordsProcessed = 0;
+	m_recordsMatched = 0;
 }
 
 
@@ -117,9 +120,13 @@ BOOL LogParser::MatchLine(const char *line, DWORD objectId)
 {
 	int i;
 
+	m_recordsProcessed++;
 	for(i = 0; i < m_numRules; i++)
 		if (m_rules[i]->Match(line, m_cb, objectId, m_userArg))
+		{
+			m_recordsMatched++;
 			return TRUE;
+		}
 	return FALSE;
 }
 

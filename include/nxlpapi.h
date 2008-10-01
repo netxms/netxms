@@ -88,6 +88,9 @@ private:
 	TCHAR *m_fileName;
 	CODE_TO_TEXT *m_eventNameList;
 	BOOL (*m_eventResolver)(const TCHAR *, DWORD *);
+	THREAD m_thread;	// Associated thread
+	int m_recordsProcessed;
+	int m_recordsMatched;
 
 public:
 	LogParser();
@@ -98,6 +101,9 @@ public:
 	void SetFileName(const TCHAR *name);
 	const TCHAR *GetFileName() { return m_fileName; }
 
+	void SetThread(THREAD th) { m_thread = th; }
+	THREAD GetThread() { return m_thread; }
+
 	BOOL AddRule(const char *regexp, DWORD event = 0, int numParams = 0);
 	void SetCallback(LOG_PARSER_CALLBACK cb) { m_cb = cb; }
 	void SetUserArg(void *arg) { m_userArg = arg; }
@@ -106,6 +112,9 @@ public:
 	DWORD ResolveEventName(const TCHAR *name, DWORD defVal = 0);
 
 	BOOL MatchLine(const char *line, DWORD objectId = 0);
+
+	int GetProcessedRecordsCount() { return m_recordsProcessed; }
+	int GetMatchedRecordsCount() { return m_recordsMatched; }
 };
 
 #endif
