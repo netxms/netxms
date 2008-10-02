@@ -1533,6 +1533,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ups/Makefile
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/odbcquery/Makefile
+	src/agent/subagents/logwatch/Makefile
 	src/nxhttpd/Makefile
 	src/nxhttpd/static/Makefile
 	src/nxhttpd/static/images/Makefile

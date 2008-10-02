@@ -379,7 +379,7 @@ void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, const TCHAR *format, ..
 			t = time(NULL);
 			loc = localtime(&t);
 			strftime(szBuffer, 32, "[%d-%b-%Y %H:%M:%S]", loc);
-			printf("%s %s", szBuffer, szMessage);
+			printf("%s %s", szBuffer, pMsg);
 		}
    }
    else
