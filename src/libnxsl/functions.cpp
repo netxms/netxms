@@ -440,6 +440,10 @@ NXSL_Value *NXSL_TimeClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
    {
       value = new NXSL_Value((LONG)st->tm_yday);
    }
+   else if (!strcmp(pszAttr, "wday") || !strcmp(pszAttr, "tm_wday"))
+   {
+      value = new NXSL_Value((LONG)st->tm_wday);
+   }
    else if (!strcmp(pszAttr, "isdst") || !strcmp(pszAttr, "tm_isdst"))
    {
       value = new NXSL_Value((LONG)st->tm_isdst);
