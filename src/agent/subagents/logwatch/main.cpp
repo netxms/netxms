@@ -101,6 +101,17 @@ static void SubagentShutdown(void)
 
 
 //
+// Callback for matched log records
+//
+
+static void LogParserCallback(DWORD event, const TCHAR *text, int paramCount,
+                              TCHAR **paramList, DWORD objectId, void *userArg)
+{
+	NxSendTrap2(event, paramCount, paramList);
+}
+
+
+//
 // Add parser from config parameter
 //
 
@@ -119,6 +130,7 @@ static void AddParserFromConfig(const TCHAR *file)
 		{
 			if (parser->GetFileName() != NULL)
 			{
+				parser->SetCallback(LogParserCallback);
 				m_numParsers++;
 				m_parserList = (LogParser **)realloc(m_parserList, sizeof(LogParser *) * m_numParsers);
 				m_parserList[m_numParsers - 1] = parser;

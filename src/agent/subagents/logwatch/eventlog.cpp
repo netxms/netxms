@@ -267,17 +267,6 @@ static void ParseEvent(LogParser *parser, EVENTLOGRECORD *rec)
 
 
 //
-// Callback for matched event log records
-//
-
-static void EventLogParserCallback(DWORD event, const TCHAR *text, int paramCount,
-											  TCHAR **paramList, DWORD objectId, void *userArg)
-{
-	NxSendTrap2(event, paramCount, paramList);
-}
-
-
-//
 // Event log parser thread
 //
 
@@ -292,7 +281,6 @@ THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *arg)
 	NOTIFICATION_THREAD_DATA nd;
 
    buffer = (BYTE *)malloc(BUFFER_SIZE);
-	parser->SetCallback(EventLogParserCallback);
 
    hLog = OpenEventLog(NULL, &(parser->GetFileName()[1]));
    if (hLog != NULL)

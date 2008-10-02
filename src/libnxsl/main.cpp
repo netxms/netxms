@@ -64,7 +64,7 @@ TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(TCHAR *pszFileName, DWORD *pdwFileSize)
    TCHAR *pBuffer = NULL;
    struct stat fs;
 
-   fd = open(pszFileName, O_RDONLY | O_BINARY);
+   fd = _topen(pszFileName, O_RDONLY | O_BINARY);
    if (fd != -1)
    {
       if (fstat(fd, &fs) != -1)
@@ -83,6 +83,13 @@ TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(TCHAR *pszFileName, DWORD *pdwFileSize)
                   break;
                }
             }
+				if (pBuffer != NULL)
+				{
+					for(iBufPos = 0; iBufPos < fs.st_size; iBufPos++)
+						if (pBuffer[iBufPos] == 0)
+							pBuffer[iBufPos] = ' ';
+					pBuffer[fs.st_size] = 0;
+				}
          }
       }
       close(fd);
