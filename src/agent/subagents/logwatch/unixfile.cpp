@@ -31,5 +31,9 @@ THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
 {
 	LogParser *parser = (LogParser *)arg;
 
+	t = time(NULL);
+	ltm = localtime(&t);
+	_tcsftime(fname, MAX_PATH, parser->GetFileName(), ltm);
+
 	return THREAD_OK;
 }
