@@ -24,6 +24,13 @@
 
 
 //
+// Constants
+//
+
+#define READ_BUFFER_SIZE      4096
+
+
+//
 // Generate current file name
 // 
 
@@ -31,14 +38,52 @@ static void GenerateCurrentFileName(LogParser *parser, char *fname)
 {
 	time_t t;
 	struct tm *ltm;
+#if HAVE_LOCALTIME_R
+	struct tm buffer;
+#endif
 
 	t = time(NULL);
 #if HAVE_LOCALTIME_R
-	ltm = localtime_r(&t);
+	ltm = localtime_r(&t, &buffer);
 #else
 	ltm = localtime(&t);
 #endif
 	_tcsftime(fname, MAX_PATH, parser->GetFileName(), ltm);
+}
+
+
+//
+// Parse new log records
+//
+
+static void ParseNewRecords(LogParser *parser, int fh)
+{
+   char *ptr, *eptr, buffer[READ_BUFFER_SIZE];
+   int bytes, bufPos = 0;
+
+   do
+   {
+      if ((bytes = read(fh, &buffer[bufPos], READ_BUFFER_SIZE - bufPos)) > 0)
+      {
+         bytes += bufPos;
+         for(ptr = buffer;; ptr = eptr + 1)
+         {
+            bufPos = ptr - buffer;
+            eptr = (char *)memchr(ptr, '\n', bytes - bufPos);
+            if (eptr == NULL)
+            {
+               memmove(buffer, ptr, bytes - bufPos);
+               break;
+            }
+            *eptr = 0;
+				parser->MatchLine(ptr);
+         }
+      }
+      else
+      {
+         bytes = 0;
+      }
+   } while(bytes == READ_BUFFER_SIZE);
 }
 
 
@@ -49,13 +94,13 @@ static void GenerateCurrentFileName(LogParser *parser, char *fname)
 THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
 {
 	LogParser *parser = (LogParser *)arg;
-	char fname[MAX_PATH];
+	char fname[MAX_PATH], temp[MAX_PATH];
 	struct stat st;
+	size_t size;
 	int err, fh;
-	fd_set rdfs;
-	struct timeval tv;
 
-	while(1)
+	NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: parser thread for file \"%s\" started"), parser->GetFileName());
+	while(!g_shutdownFlag)
 	{
 		GenerateCurrentFileName(parser, fname);
 		if (stat(fname, &st) == 0)
@@ -63,22 +108,49 @@ THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
 			fh = open(fname, O_RDONLY);
 			if (fh != -1)
 			{
-				FD_ZERO(&rdfs);
-				FD_SET(fh, &rdfs);
-				while(1)
+				size = st.st_size;
+				lseek(fh, 0, SEEK_END);
+				
+				NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: file \"%s\" successfully opened"), parser->GetFileName());
+				while(!g_shutdownFlag)
 				{
-					err = select(fh + 1, &rdfs, NULL, NULL, &tv);
-					if (err < 0)
+					ThreadSleep(1);
+
+					// Check if file name was changed
+					GenerateCurrentFileName(parser, temp);
+					if (_tcscmp(temp, fname))
+					{
+						NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: file name change for \"%s\" (\"%s\" -> \"%s\")"),
+						                parser->GetFileName(), fname, temp);
 						break;
+					}
+					
+					if (fstat(fh, &st) < 0)
+						break;
+						
+					if (st.st_size != size)
+					{
+						if (st.st_size < size)
+						{
+							// File was cleared, start from the beginning
+							lseek(fh, 0, SEEK_SET);
+							NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: file \"%s\" st_size != size"), parser->GetFileName());
+						}
+						size = st.st_size;
+						NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: new data avialable in file \"%s\""), parser->GetFileName());
+						ParseNewRecords(parser, fh);
+					}
 				}
 				close(fh);
 			}
 		}
 		else
 		{
-			ThreadSleep(10);
+			if (ConditionWait(g_hCondShutdown, 10000))
+				break;
 		}
 	}
 
+	NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: parser thread for file \"%s\" stopped"), parser->GetFileName());
 	return THREAD_OK;
 }

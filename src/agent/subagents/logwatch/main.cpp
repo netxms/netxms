@@ -38,6 +38,7 @@ THREAD_RESULT THREAD_CALL ParserThreadFile(void *);
 //
 
 CONDITION g_hCondShutdown = INVALID_CONDITION_HANDLE;
+BOOL g_shutdownFlag = FALSE;
 
 
 //
@@ -79,6 +80,7 @@ static void SubagentShutdown(void)
 {
 	DWORD i;
 
+	g_shutdownFlag = TRUE;
 	if (g_hCondShutdown != INVALID_CONDITION_HANDLE)
 		ConditionSet(g_hCondShutdown);
 
