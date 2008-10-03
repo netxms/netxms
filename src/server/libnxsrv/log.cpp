@@ -67,7 +67,7 @@ void LIBNXSRV_EXPORTABLE InitLog(BOOL bUseSystemLog, char *pszLogFile, BOOL bPri
 #ifdef _WIN32
       m_hEventLog = RegisterEventSource(NULL, CORE_EVENT_SOURCE);
 #else
-      openlog("netxmsd", LOG_PID | ((g_dwFlags & AF_DAEMON) ? 0 : LOG_PERROR), LOG_DAEMON);
+      openlog("netxmsd", LOG_PID, LOG_DAEMON);
 #endif
    }
    else
