@@ -44,16 +44,19 @@ static void ParseNewRecords(LogParser *parser, HANDLE hFile)
       if (ReadFile(hFile, buffer, READ_BUFFER_SIZE - bufPos, &bytes, NULL))
       {
          bytes += bufPos;
-         for(ptr = buffer;; ptr = eptr + 2)
+         for(ptr = buffer;; ptr = eptr + 1)
          {
-            eptr = strstr(ptr, "\r\n");
+            bufPos = ptr - buffer;
+            eptr = (char *)memchr(ptr, '\n', bytes - bufPos);
             if (eptr == NULL)
             {
-               bufPos = ptr - buffer;
                memmove(buffer, ptr, bytes - bufPos);
                break;
             }
-            *eptr = 0;
+				if (*(eptr - 1) == '\r')
+					*(eptr - 1) = 0;
+				else
+					*eptr = 0;
 				parser->MatchLine(ptr);
          }
       }

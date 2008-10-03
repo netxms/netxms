@@ -451,7 +451,7 @@ public:
    void LockForStatusPoll(void) { m_dwFlags |= CLF_QUEUED_FOR_STATUS_POLL; }
    BOOL ReadyForStatusPoll(void) 
    {
-      return ((m_iStatus != STATUS_UNMANAGED) && 
+      return ((m_iStatus != STATUS_UNMANAGED) && (!m_bIsDeleted) &&
               (!(m_dwFlags & CLF_QUEUED_FOR_STATUS_POLL)) &&
               ((DWORD)time(NULL) - (DWORD)m_tmLastPoll > g_dwStatusPollingInterval))
                   ? TRUE : FALSE;
@@ -782,6 +782,8 @@ inline void Node::SetDiscoveryPollTimeStamp(void)
 
 inline BOOL Node::ReadyForStatusPoll(void) 
 {
+	if (m_bIsDeleted)
+		return FALSE;
    if (m_dwDynamicFlags & NDF_FORCE_STATUS_POLL)
    {
       m_dwDynamicFlags &= ~NDF_FORCE_STATUS_POLL;
@@ -798,6 +800,8 @@ inline BOOL Node::ReadyForStatusPoll(void)
 
 inline BOOL Node::ReadyForConfigurationPoll(void) 
 { 
+	if (m_bIsDeleted)
+		return FALSE;
    if (m_dwDynamicFlags & NDF_FORCE_CONFIGURATION_POLL)
    {
       m_dwDynamicFlags &= ~NDF_FORCE_CONFIGURATION_POLL;
@@ -813,6 +817,8 @@ inline BOOL Node::ReadyForConfigurationPoll(void)
 
 inline BOOL Node::ReadyForDiscoveryPoll(void) 
 { 
+	if (m_bIsDeleted)
+		return FALSE;
    return ((g_dwFlags & AF_ENABLE_NETWORK_DISCOVERY) &&
            (m_iStatus != STATUS_UNMANAGED) &&
            (!(m_dwDynamicFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
@@ -823,6 +829,8 @@ inline BOOL Node::ReadyForDiscoveryPoll(void)
 
 inline BOOL Node::ReadyForRoutePoll(void) 
 { 
+	if (m_bIsDeleted)
+		return FALSE;
    return ((m_iStatus != STATUS_UNMANAGED) &&
 	        (!(m_dwFlags & NF_DISABLE_ROUTE_POLL)) &&
            (!(m_dwDynamicFlags & NDF_QUEUED_FOR_ROUTE_POLL)) &&
@@ -1085,7 +1093,7 @@ public:
    BOOL ReadyForPoll(void) 
    {
       return ((m_iStatus != STATUS_UNMANAGED) && 
-              (!m_bQueuedForPolling) &&
+              (!m_bQueuedForPolling) && (!m_bIsDeleted) &&
               ((DWORD)time(NULL) - (DWORD)m_tmLastPoll > g_dwConditionPollingInterval))
                   ? TRUE : FALSE;
    }

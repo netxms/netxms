@@ -613,21 +613,6 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 			}
       }
       RWLockUnlock(g_rwlockIdIndex);
-
-		/*
-      // Walk through condition objects and queue them for poll
-      RWLockReadLock(g_rwlockConditionIndex, INFINITE);
-      for(j = 0; j < g_dwConditionIndexSize; j++)
-      {
-         pCond = (Condition *)g_pConditionIndex[j].pObject;
-         if (pCond->ReadyForPoll())
-         {
-            pCond->LockForPoll();
-            g_conditionPollerQueue.Put(pCond);
-         }
-      }
-      RWLockUnlock(g_rwlockConditionIndex);
-		*/
    }
 
    // Send stop signal to all pollers

@@ -75,7 +75,10 @@ static void ParseNewRecords(LogParser *parser, int fh)
                memmove(buffer, ptr, bytes - bufPos);
                break;
             }
-            *eptr = 0;
+				if (*(eptr - 1) == '\r')
+					*(eptr - 1) = 0;
+				else
+					*eptr = 0;
 				parser->MatchLine(ptr);
          }
       }

@@ -1009,7 +1009,6 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             DWORD dwNodeFlags, dwNodeType;
 
             LockData();
-
             m_dwFlags |= NF_IS_SNMP;
             if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
             {
@@ -1017,20 +1016,24 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
                PostEvent(EVENT_SNMP_OK, m_dwId, NULL);
                SendPollerMsg(dwRqId, POLLER_WARNING "   Connectivity with SNMP agent restored\r\n");
             }
+				UnlockData();
             SendPollerMsg(dwRqId, _T("   SNMP agent is active (version %s)\r\n"), (m_iSNMPVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1"));
 
 				if (SnmpGet(m_iSNMPVersion, pTransport, m_szCommunityString,
 								".1.3.6.1.2.1.1.2.0", NULL, 0, szBuffer, 4096,
 								FALSE, FALSE) == SNMP_ERR_SUCCESS)
 				{
+					LockData();
 					if (strcmp(m_szObjectId, szBuffer))
 					{
 						nx_strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
 						bHasChanges = TRUE;
 					}
+					UnlockData();
 				}
 
             // Check node type
+				LockData();
             dwNodeType = OidToType(m_szObjectId, &dwNodeFlags);
             if (m_dwNodeType != dwNodeType)
             {
@@ -1039,15 +1042,20 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
                SendPollerMsg(dwRqId, POLLER_WARNING _T("   Node type has been changed to %d\r\n"), m_dwNodeType);
                bHasChanges = TRUE;
             }
+				UnlockData();
 
             // Check IP forwarding
             if (CheckSNMPIntegerValue(pTransport, ".1.3.6.1.2.1.4.1.0", 1))
             {
+					LockData();
                m_dwFlags |= NF_IS_ROUTER;
+					UnlockData();
             }
             else
             {
+					LockData();
                m_dwFlags &= ~NF_IS_ROUTER;
+					UnlockData();
             }
 
             // Check for bridge MIB support
@@ -1055,31 +1063,43 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
                         ".1.3.6.1.2.1.17.1.1.0", NULL, 0, szBuffer, 4096,
                         FALSE, FALSE) == SNMP_ERR_SUCCESS)
             {
+					LockData();
                m_dwFlags |= NF_IS_BRIDGE;
+					UnlockData();
             }
             else
             {
+					LockData();
                m_dwFlags &= ~NF_IS_BRIDGE;
+					UnlockData();
             }
 
             // Check for CDP (Cisco Discovery Protocol) support
             if (CheckSNMPIntegerValue(pTransport, ".1.3.6.1.4.1.9.9.23.1.3.1.0", 1))
             {
+					LockData();
                m_dwFlags |= NF_IS_CDP;
+					UnlockData();
             }
             else
             {
+					LockData();
                m_dwFlags &= ~NF_IS_CDP;
+					UnlockData();
             }
 
             // Check for SONMP (Nortel topology discovery discovery protocol) support
             if (CheckSNMPIntegerValue(pTransport, ".1.3.6.1.4.1.45.1.6.13.1.2.0", 1))
             {
+					LockData();
                m_dwFlags |= NF_IS_SONMP;
+					UnlockData();
             }
             else
             {
+					LockData();
                m_dwFlags &= ~NF_IS_SONMP;
+					UnlockData();
             }
 
 		      // Check for LLDP (Link Layer Discovery Protocol) support
@@ -1087,11 +1107,15 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 								".1.0.8802.1.1.2.1.3.2.0", NULL, 0, szBuffer, 4096,
 								FALSE, FALSE) == SNMP_ERR_SUCCESS)
 				{
+					LockData();
 					m_dwFlags |= NF_IS_LLDP;
+					UnlockData();
 				}
 				else
 				{
+					LockData();
 					m_dwFlags &= ~NF_IS_LLDP;
+					UnlockData();
 				}
 
 				// Get system description
@@ -1102,15 +1126,15 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 					TranslateStr(szBuffer, "\r\n", " ");
 					TranslateStr(szBuffer, "\n", " ");
 					TranslateStr(szBuffer, "\r", " ");
+					LockData();
                if (strcmp(m_szSysDescription, szBuffer))
                {
                   strcpy(m_szSysDescription, szBuffer);
                   bHasChanges = TRUE;
                   SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_szSysDescription);
                }
+					UnlockData();
 				}
-
-            UnlockData();
 
             CheckOSPFSupport(pTransport);
          }
@@ -1935,7 +1959,8 @@ void Node::QueueItemsForPolling(Queue *pPollerQueue)
    time_t currTime;
 
    if ((m_iStatus == STATUS_UNMANAGED) ||
-	    (m_dwFlags & NF_DISABLE_DATA_COLLECT))
+	    (m_dwFlags & NF_DISABLE_DATA_COLLECT) ||
+		 (m_bIsDeleted))
       return;  // Do not collect data for unmanaged nodes or if data collection is disabled
 
    currTime = time(NULL);
@@ -2262,6 +2287,7 @@ void Node::CheckOSPFSupport(SNMP_Transport *pTransport)
                ".1.3.6.1.2.1.14.1.2.0", NULL, 0, &nAdminStatus, sizeof(LONG),
                FALSE, FALSE) == SNMP_ERR_SUCCESS)
    {
+		LockData();
       if (nAdminStatus)
       {
          m_dwFlags |= NF_IS_OSPF;
@@ -2270,6 +2296,7 @@ void Node::CheckOSPFSupport(SNMP_Transport *pTransport)
       {
          m_dwFlags &= ~NF_IS_OSPF;
       }
+		UnlockData();
    }
 }
 
