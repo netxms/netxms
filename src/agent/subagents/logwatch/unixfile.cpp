@@ -24,16 +24,61 @@
 
 
 //
+// Generate current file name
+// 
+
+static void GenerateCurrentFileName(LogParser *parser, char *fname)
+{
+	time_t t;
+	struct tm *ltm;
+
+	t = time(NULL);
+#if HAVE_LOCALTIME_R
+	ltm = localtime_r(&t);
+#else
+	ltm = localtime(&t);
+#endif
+	_tcsftime(fname, MAX_PATH, parser->GetFileName(), ltm);
+}
+
+
+//
 // File parser thread
 //
 
 THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
 {
 	LogParser *parser = (LogParser *)arg;
+	char fname[MAX_PATH];
+	struct stat st;
+	int err, fh;
+	fd_set rdfs;
+	struct timeval tv;
 
-	t = time(NULL);
-	ltm = localtime(&t);
-	_tcsftime(fname, MAX_PATH, parser->GetFileName(), ltm);
+	while(1)
+	{
+		GenerateCurrentFileName(parser, fname);
+		if (stat(fname, &st) == 0)
+		{
+			fh = open(fname, O_RDONLY);
+			if (fh != -1)
+			{
+				FD_ZERO(&rdfs);
+				FD_SET(fh, &rdfs);
+				while(1)
+				{
+					err = select(fh + 1, &rdfs, NULL, NULL, &tv);
+					if (err < 0)
+						break;
+				}
+				close(fh);
+			}
+		}
+		else
+		{
+			ThreadSleep(10);
+		}
+	}
 
 	return THREAD_OK;
 }
