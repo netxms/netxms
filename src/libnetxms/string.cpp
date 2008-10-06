@@ -262,6 +262,6 @@ void String::Strip()
 	if (m_pszBuffer != NULL)
 	{
 		StrStrip(m_pszBuffer);
-		m_dwBufSize = _tcslen(m_pszBuffer) + 1;
+		m_dwBufSize = (DWORD)_tcslen(m_pszBuffer) + 1;
 	}
 }

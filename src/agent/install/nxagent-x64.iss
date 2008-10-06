@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS Agent
-AppVerName=NetXMS Agent 0.2.22
-AppVersion=0.2.22
+AppVerName=NetXMS Agent 0.2.23-rc3
+AppVersion=0.2.23-rc3
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -12,7 +12,7 @@ AppUpdatesURL=http://www.netxms.org
 DefaultDirName=C:\NetXMS
 DefaultGroupName=NetXMS Agent
 AllowNoIcons=yes
-OutputBaseFilename=nxagent-0.2.22-x64
+OutputBaseFilename=nxagent-0.2.23-rc3-x64
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -22,6 +22,7 @@ ArchitecturesAllowed=x64
 
 [Files]
 Source: "..\..\libnetxms\Release64\libnetxms.dll"; DestDir: "{app}\bin"; BeforeInstall: StopService; Flags: ignoreversion
+Source: "..\..\libnxlp\Release64\libnxlp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\core\Release64\nxagentd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\winnt\Release64\winnt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\winperf\Release64\winperf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
@@ -29,6 +30,7 @@ Source: "..\subagents\wmi\Release64\wmi.nsm"; DestDir: "{app}\bin"; Flags: ignor
 Source: "..\subagents\ping\Release64\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\portCheck\Release64\portcheck.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\logscan\Release64\logscan.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\subagents\logwatch\Release64\logwatch.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\sms\Release64\sms.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\ups\Release64\ups.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\subagents\ecs\Release64\ecs.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
@@ -53,7 +55,7 @@ Filename: "{app}\bin\nxagentd.exe"; Parameters: "-R"; StatusMsg: "Uninstalling s
 Var
   ServerSelectionPage: TInputQueryWizardPage;
   SubagentSelectionPage: TInputOptionWizardPage;
-  serverName, sbECS, sbPing, sbPortCheck, sbWinPerf, sbWMI, sbUPS: String;
+  serverName, sbECS, sbLogWatch, sbPing, sbPortCheck, sbWinPerf, sbWMI, sbUPS: String;
 
 Procedure StopService;
 Var
@@ -91,6 +93,7 @@ Begin
   // Empty values for installation data
   serverName := '';
   sbECS := 'FALSE';
+  sbLogWatch := 'FALSE';
   sbPing := 'FALSE';
   sbPortCheck := 'FALSE';
   sbWinPerf := 'TRUE';
@@ -112,6 +115,8 @@ Begin
       param := Uppercase(param);
       If param = 'ECS' Then
         sbECS := 'TRUE';
+      If param = 'LOGWATCH' Then
+        sbLogWatch := 'TRUE';
       If param = 'PING' Then
         sbPing := 'TRUE';
       If param = 'PORTCHECK' Then
@@ -129,6 +134,8 @@ Begin
       param := Uppercase(param);
       If param = 'ECS' Then
         sbECS := 'FALSE';
+      If param = 'LOGWATCH' Then
+        sbLogWatch := 'FALSE';
       If param = 'PING' Then
         sbPing := 'FALSE';
       If param = 'PORTCHECK' Then
@@ -157,16 +164,18 @@ Begin
     'Please select additional subagents you wish to load.', False, False);
   SubagentSelectionPage.Add('Extended Checksum Subagent - ecs.nsm');
   SubagentSelectionPage.Add('ICMP Pinger Subagent - ping.nsm');
+  SubagentSelectionPage.Add('Log Monitoring Subagent - logwatch.nsm');
   SubagentSelectionPage.Add('Port Checker Subagent - portcheck.nsm');
   SubagentSelectionPage.Add('Windows Performance Subagent - winperf.nsm');
   SubagentSelectionPage.Add('WMI Subagent - wmi.nsm');
   SubagentSelectionPage.Add('UPS Monitoring Subagent - ups.nsm');
   SubagentSelectionPage.Values[0] := StrToBool(GetPreviousData('Subagent_ECS', sbECS));
   SubagentSelectionPage.Values[1] := StrToBool(GetPreviousData('Subagent_PING', sbPing));
-  SubagentSelectionPage.Values[2] := StrToBool(GetPreviousData('Subagent_PORTCHECK', sbPortCheck));
-  SubagentSelectionPage.Values[3] := StrToBool(GetPreviousData('Subagent_WINPERF', sbWinPerf));
-  SubagentSelectionPage.Values[4] := StrToBool(GetPreviousData('Subagent_WMI', sbWMI));
-  SubagentSelectionPage.Values[5] := StrToBool(GetPreviousData('Subagent_UPS', sbUPS));
+  SubagentSelectionPage.Values[2] := StrToBool(GetPreviousData('Subagent_LOGWATCH', sbLogWatch));
+  SubagentSelectionPage.Values[3] := StrToBool(GetPreviousData('Subagent_PORTCHECK', sbPortCheck));
+  SubagentSelectionPage.Values[4] := StrToBool(GetPreviousData('Subagent_WINPERF', sbWinPerf));
+  SubagentSelectionPage.Values[5] := StrToBool(GetPreviousData('Subagent_WMI', sbWMI));
+  SubagentSelectionPage.Values[6] := StrToBool(GetPreviousData('Subagent_UPS', sbUPS));
 End;
 
 Procedure RegisterPreviousData(PreviousDataKey: Integer);
@@ -174,10 +183,11 @@ Begin
   SetPreviousData(PreviousDataKey, 'MasterServer', ServerSelectionPage.Values[0]);
   SetPreviousData(PreviousDataKey, 'Subagent_ECS', BoolToStr(SubagentSelectionPage.Values[0]));
   SetPreviousData(PreviousDataKey, 'Subagent_PING', BoolToStr(SubagentSelectionPage.Values[1]));
-  SetPreviousData(PreviousDataKey, 'Subagent_PORTCHECK', BoolToStr(SubagentSelectionPage.Values[2]));
-  SetPreviousData(PreviousDataKey, 'Subagent_WINPERF', BoolToStr(SubagentSelectionPage.Values[3]));
-  SetPreviousData(PreviousDataKey, 'Subagent_WMI', BoolToStr(SubagentSelectionPage.Values[4]));
-  SetPreviousData(PreviousDataKey, 'Subagent_UPS', BoolToStr(SubagentSelectionPage.Values[5]));
+  SetPreviousData(PreviousDataKey, 'Subagent_LOGWATCH', BoolToStr(SubagentSelectionPage.Values[2]));
+  SetPreviousData(PreviousDataKey, 'Subagent_PORTCHECK', BoolToStr(SubagentSelectionPage.Values[3]));
+  SetPreviousData(PreviousDataKey, 'Subagent_WINPERF', BoolToStr(SubagentSelectionPage.Values[4]));
+  SetPreviousData(PreviousDataKey, 'Subagent_WMI', BoolToStr(SubagentSelectionPage.Values[5]));
+  SetPreviousData(PreviousDataKey, 'Subagent_UPS', BoolToStr(SubagentSelectionPage.Values[6]));
 End;
 
 Function GetMasterServer(Param: String): String;
@@ -193,12 +203,14 @@ Begin
   If SubagentSelectionPage.Values[1] Then
     Result := Result + 'ping.nsm ';
   If SubagentSelectionPage.Values[2] Then
-    Result := Result + 'portcheck.nsm ';
+    Result := Result + 'logwatch.nsm ';
   If SubagentSelectionPage.Values[3] Then
-    Result := Result + 'winperf.nsm ';
+    Result := Result + 'portcheck.nsm ';
   If SubagentSelectionPage.Values[4] Then
-    Result := Result + 'wmi.nsm ';
+    Result := Result + 'winperf.nsm ';
   If SubagentSelectionPage.Values[5] Then
+    Result := Result + 'wmi.nsm ';
+  If SubagentSelectionPage.Values[6] Then
     Result := Result + 'ups.nsm ';
 End;
 

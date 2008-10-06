@@ -35,7 +35,7 @@ TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length)
 	int inLen, outLen, pos;
 
 	// Calculate length
-	inLen = (length == -1) ? _tcslen(string) : length;
+	inLen = (length == -1) ? (int)_tcslen(string) : length;
 	for(in = string, outLen = 0; (inLen > 0) && (*in != 0); in++, outLen++, inLen--)
 		if ((*in == _T('&')) || (*in == _T('<')) ||
 		    (*in == _T('>')) || (*in == _T('"')) ||
@@ -45,7 +45,7 @@ TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length)
 	
 	// Convert string
 	out = (TCHAR *)malloc(outLen * sizeof(TCHAR));
-	inLen = (length == -1) ? _tcslen(string) : length;
+	inLen = (length == -1) ? (int)_tcslen(string) : length;
 	for(in = string, pos = 0; inLen > 0; in++, inLen--)
 	{
 		switch(*in)
