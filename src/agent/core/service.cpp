@@ -140,9 +140,25 @@ void InstallService(char *execName, char *confFile)
       return;
    }
 
-   sprintf(cmdLine,"\"%s\" -d -c \"%s\"", execName, confFile);
-   service=CreateService(mgr, AGENT_SERVICE_NAME, "NetXMS Agent", GENERIC_READ,SERVICE_WIN32_OWN_PROCESS,
-                         SERVICE_AUTO_START,SERVICE_ERROR_NORMAL,cmdLine,NULL,NULL,NULL,NULL,NULL);
+   sprintf(cmdLine, "\"%s\" -d -c \"%s\"", execName, confFile);
+	if (g_szPlatformSuffix[0] != 0)
+	{
+		strcat(cmdLine, " -P \"");
+		strcat(cmdLine, g_szPlatformSuffix);
+		strcat(cmdLine, "\"");
+	}
+	if (g_dwFlags & AF_DEBUG)
+	{
+		strcat(cmdLine, " -D");
+	}
+	if (g_dwFlags & AF_CENTRAL_CONFIG)
+	{
+		strcat(cmdLine, " -M \"");
+		strcat(cmdLine, g_szConfigServer);
+		strcat(cmdLine, "\"");
+	}
+   service = CreateService(mgr, AGENT_SERVICE_NAME, "NetXMS Agent", GENERIC_READ,SERVICE_WIN32_OWN_PROCESS,
+                           SERVICE_AUTO_START,SERVICE_ERROR_NORMAL,cmdLine,NULL,NULL,NULL,NULL,NULL);
    if (service == NULL)
    {
       DWORD code = GetLastError();

@@ -63,11 +63,11 @@ void InitStaticSubagents(void);
 //
 
 #if defined(_WIN32)
-#define VALID_OPTIONS   "c:CdDEfhHIM:RsSUvX:Z:"
+#define VALID_OPTIONS   "c:CdDEfhHIM:P:RsSUvX:Z:"
 #elif defined(_NETWARE)
-#define VALID_OPTIONS   "c:CDfhM:vX:Z:"
+#define VALID_OPTIONS   "c:CDfhM:P:vX:Z:"
 #else
-#define VALID_OPTIONS   "c:CdDfhM:p:vX:Z:"
+#define VALID_OPTIONS   "c:CdDfhM:p:P:vX:Z:"
 #endif
 
 
@@ -98,6 +98,7 @@ char g_szSharedSecret[MAX_SECRET_LENGTH] = "admin";
 char g_szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
 char g_szFileStore[MAX_PATH] = AGENT_DEFAULT_FILE_STORE;
 char g_szPlatformSuffix[MAX_PSUFFIX_LENGTH] = "";
+char g_szConfigServer[MAX_DB_STRING] = "not_set";
 char g_szListenAddress[MAX_PATH] = "0.0.0.0";
 WORD g_wListenPort = AGENT_LISTEN_PORT;
 SERVER_INFO g_pServerList[MAX_SERVERS];
@@ -143,7 +144,6 @@ static DWORD m_dwEnabledCiphers = 0xFFFF;
 static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
 static THREAD m_thListener = INVALID_THREAD_HANDLE;
 static THREAD m_thTrapSender = INVALID_THREAD_HANDLE;
-static char m_szConfigServer[MAX_DB_STRING] = "not_set";
 static char m_szProcessToWait[MAX_PATH] = "";
 
 #if defined(_WIN32) || defined(_NETWARE)
@@ -217,6 +217,7 @@ static char m_szHelpText[] =
 #if !defined(_WIN32) && !defined(_NETWARE)
    "   -p         : Path to pid file (default: /var/run/nxagentd.pid)\n"
 #endif
+   "   -P <text>  : Set platform suffix to <text>\n"
 #ifdef _WIN32
    "   -R         : Remove Windows service\n"
    "   -s         : Start Windows servive\n"
@@ -327,7 +328,7 @@ static LONG H_RestartAgent(const TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, co
 #else
    TCHAR szCmdLine[4096];
 #ifdef _WIN32
-   TCHAR szExecName[MAX_PATH];
+   TCHAR szExecName[MAX_PATH], szPlatformSuffixOption[MAX_PSUFFIX_LENGTH + 16];
    DWORD dwResult;
    STARTUPINFO si;
    PROCESS_INFORMATION pi;
@@ -337,14 +338,24 @@ static LONG H_RestartAgent(const TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, co
    TCHAR szExecName[MAX_PATH] = PREFIX _T("/bin/nxagentd");
 #endif
 
+	if (g_szPlatformSuffix[0] != 0)
+	{
+		_sntprintf(szPlatformSuffixOption, MAX_PSUFFIX_LENGTH + 16, _T("-P \"%s\" "), g_szPlatformSuffix);
+	}
+	else
+	{
+		szPlatformSuffixOption[0] = 0;
+	}
+
 #ifdef _WIN32
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s%s-X %u"), szExecName,
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s%s%s-X %u"), szExecName,
               g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
               (g_dwFlags & AF_HIDE_WINDOW) ? _T("-H ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
-				  (g_dwFlags & AF_CENTRAL_CONFIG) ? m_szConfigServer : _T(""),
+				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
               (g_dwFlags & AF_DEBUG) ? _T("-D ") : _T(""),
+				  szPlatformSuffixOption,
               (g_dwFlags & AF_DAEMON) ? 0 : GetCurrentProcessId());
 	DebugPrintf(INVALID_INDEX, _T("Restarting agent with command line '%s'"), szCmdLine);
 
@@ -381,12 +392,13 @@ static LONG H_RestartAgent(const TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, co
    }
    return dwResult;
 #else
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s-X %lu"), szExecName,
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s%s-X %lu"), szExecName,
               g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
-				  (g_dwFlags & AF_CENTRAL_CONFIG) ? m_szConfigServer : _T(""),
+				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
               (g_dwFlags & AF_DEBUG) ? _T("-D ") : _T(""),
+				  szPlatformSuffixOption,
               (unsigned long)m_pid);
    return ExecuteCommand(szCmdLine, NULL);
 #endif
@@ -1090,7 +1102,10 @@ int main(int argc, char *argv[])
             break;
          case 'M':
             g_dwFlags |= AF_CENTRAL_CONFIG;
-            nx_strncpy(m_szConfigServer, optarg, MAX_DB_STRING);
+            nx_strncpy(g_szConfigServer, optarg, MAX_DB_STRING);
+            break;
+         case 'P':   // Platform suffix
+            nx_strncpy(g_szPlatformSuffix, optarg, MAX_PSUFFIX_LENGTH);
             break;
          case 'X':   // Agent is being restarted
             bRestart = TRUE;
@@ -1175,8 +1190,8 @@ int main(int argc, char *argv[])
          if (g_dwFlags & AF_CENTRAL_CONFIG)
          {
             if (g_dwFlags & AF_DEBUG)
-               printf("Downloading configuration from %s...\n", m_szConfigServer);
-            if (DownloadConfig(m_szConfigServer))
+               printf("Downloading configuration from %s...\n", g_szConfigServer);
+            if (DownloadConfig(g_szConfigServer))
             {
                if (g_dwFlags & AF_DEBUG)
                   printf("Configuration downloaded successfully\n");
