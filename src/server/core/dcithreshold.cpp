@@ -37,7 +37,7 @@ Threshold::Threshold(DCItem *pRelatedItem)
    m_iFunction = F_LAST;
    m_iOperation = OP_EQ;
    m_iDataType = pRelatedItem->DataType();
-   m_iParam1 = 0;
+   m_iParam1 = 1;
    m_iParam2 = 0;
    m_bIsReached = FALSE;
 	m_nRepeatInterval = -1;
@@ -58,7 +58,7 @@ Threshold::Threshold()
    m_iFunction = F_LAST;
    m_iOperation = OP_EQ;
    m_iDataType = 0;
-   m_iParam1 = 0;
+   m_iParam1 = 1;
    m_iParam2 = 0;
    m_bIsReached = FALSE;
 	m_nRepeatInterval = -1;
@@ -111,6 +111,8 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
    m_iOperation = (BYTE)DBGetFieldLong(hResult, iRow, 4);
    m_iDataType = pRelatedItem->DataType();
    m_iParam1 = DBGetFieldLong(hResult, iRow, 5);
+	if ((m_iFunction == F_LAST) && (m_iParam1 < 1))
+		m_iParam1 = 1;
    m_iParam2 = DBGetFieldLong(hResult, iRow, 6);
    m_bIsReached = DBGetFieldLong(hResult, iRow, 8);
 	m_nRepeatInterval = DBGetFieldLong(hResult, iRow, 10);
@@ -368,6 +370,21 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
             break;
       }
    }
+
+	// Check for number of consecutive matches
+	if (m_iFunction == F_LAST)
+	{
+		if (bMatch)
+		{
+			m_iNumMatches++;
+			if (m_iNumMatches < m_iParam1)
+				bMatch = FALSE;
+		}
+		else
+		{
+			m_iNumMatches = 0;
+		}
+	}
 
    iResult = (bMatch & !m_bIsReached) ? THRESHOLD_REACHED :
                 ((!bMatch & m_bIsReached) ? THRESHOLD_REARMED : NO_ACTION);

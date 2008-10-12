@@ -106,6 +106,7 @@ private:
    int m_iParam1;             // Function's parameter #1
    int m_iParam2;             // Function's parameter #2
    BOOL m_bIsReached;
+	int m_iNumMatches;			// Number of consecutive matches
 	int m_nRepeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
 	time_t m_tmLastEventTimestamp;
 
