@@ -142,7 +142,7 @@ public:
    void UpdateFromMessage(DCI_THRESHOLD *pData);
 
    void CreateId(void);
-   DWORD RequiredCacheSize(void) { return (m_iFunction == F_LAST) ? 0 : m_iParam1; }
+   DWORD RequiredCacheSize(void) { return ((m_iFunction == F_LAST) || (m_iFunction == F_ERROR)) ? 0 : m_iParam1; }
 
    BOOL Compare(Threshold *pThr);
 

@@ -94,7 +94,6 @@ BOOL CThresholdDlg::OnInitDialog()
 
    switch(m_iFunction)
    {
-      case F_LAST:
       case F_DIFF:
          m_wndStaticFor.EnableWindow(FALSE);
          m_wndStaticSamples.EnableWindow(FALSE);
@@ -124,9 +123,9 @@ BOOL CThresholdDlg::OnInitDialog()
 void CThresholdDlg::OnSelchangeComboFunction() 
 {
    m_iFunction = m_wndComboFunction.GetCurSel();
-   m_wndStaticFor.EnableWindow((m_iFunction != F_LAST) && (m_iFunction != F_DIFF));
-   m_wndStaticSamples.EnableWindow((m_iFunction != F_LAST) && (m_iFunction != F_DIFF));
-   m_wndEditArg1.EnableWindow((m_iFunction != F_LAST) && (m_iFunction != F_DIFF));
+   m_wndStaticFor.EnableWindow(m_iFunction != F_DIFF);
+   m_wndStaticSamples.EnableWindow(m_iFunction != F_DIFF);
+   m_wndEditArg1.EnableWindow(m_iFunction != F_DIFF);
    m_wndComboOperation.EnableWindow(m_iFunction != F_ERROR);
    EnableDlgItem(this, IDC_EDIT_VALUE, m_iFunction != F_ERROR);
    EnableDlgItem(this, IDC_STATIC_WILLBE, m_iFunction != F_ERROR);

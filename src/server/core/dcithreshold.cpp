@@ -42,6 +42,7 @@ Threshold::Threshold(DCItem *pRelatedItem)
    m_bIsReached = FALSE;
 	m_nRepeatInterval = -1;
 	m_tmLastEventTimestamp = 0;
+	m_iNumMatches = 0;
 }
 
 
@@ -63,6 +64,7 @@ Threshold::Threshold()
    m_bIsReached = FALSE;
 	m_nRepeatInterval = -1;
 	m_tmLastEventTimestamp = 0;
+	m_iNumMatches = 0;
 }
 
 
@@ -85,6 +87,7 @@ Threshold::Threshold(Threshold *pSrc)
    m_bIsReached = FALSE;
 	m_nRepeatInterval = pSrc->m_nRepeatInterval;
 	m_tmLastEventTimestamp = 0;
+	m_iNumMatches = 0;
 }
 
 
@@ -117,6 +120,7 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
    m_bIsReached = DBGetFieldLong(hResult, iRow, 8);
 	m_nRepeatInterval = DBGetFieldLong(hResult, iRow, 10);
 	m_tmLastEventTimestamp = 0;
+	m_iNumMatches = 0;
 }
 
 

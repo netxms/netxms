@@ -227,6 +227,7 @@ void AgentConnection::ReceiverThread(void)
       if ((iErr = RecvNXCPMessage(nSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
                                   &m_pCtx, pDecryptionBuffer, m_dwRecvTimeout)) <= 0)
 		{
+			DbgPrintf(6, _T("AgentConnection::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), iErr, WSAGetLastError());
          break;
 		}
 
@@ -1091,16 +1092,18 @@ DWORD AgentConnection::GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PAR
       if (pResponse != NULL)
       {
          dwResult = pResponse->GetVariableLong(VID_RCC);
+			DbgPrintf(6, _T("AgentConnection::GetSupportedParameters(): RCC=%d"), dwResult);
          if (dwResult == ERR_SUCCESS)
          {
             *pdwNumParams = pResponse->GetVariableLong(VID_NUM_PARAMETERS);
-            *ppParamList = (NXC_AGENT_PARAM *)malloc(sizeof(NXC_AGENT_PARAM) * *pdwNumParams);
+            *ppParamList = (NXC_AGENT_PARAM *)malloc(sizeof(NXC_AGENT_PARAM) * (*pdwNumParams));
             for(i = 0, dwId = VID_PARAM_LIST_BASE; i < *pdwNumParams; i++)
             {
                pResponse->GetVariableStr(dwId++, (*ppParamList)[i].szName, MAX_PARAM_NAME);
                pResponse->GetVariableStr(dwId++, (*ppParamList)[i].szDescription, MAX_DB_STRING);
                (*ppParamList)[i].iDataType = (int)pResponse->GetVariableShort(dwId++);
             }
+				DbgPrintf(6, _T("AgentConnection::GetSupportedParameters(): %d parameters received from agent"), *pdwNumParams);
          }
          delete pResponse;
       }

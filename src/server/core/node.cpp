@@ -957,7 +957,8 @@ restart_agent_check:
 void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
                              int nPoller, DWORD dwNetMask)
 {
-   DWORD i, dwOldFlags = m_dwFlags, dwAddr;
+   DWORD i, dwOldFlags = m_dwFlags, dwAddr, rcc, dwNumParams;
+	NXC_AGENT_PARAM *pParamList;
    Interface **ppDeleteList;
    int j, iDelCount;
    AgentConnection *pAgentConn;
@@ -1251,9 +1252,19 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
                UnlockData();
 				}
 
-            /* LOCK? */
-            safe_free(m_pParamList);
-            pAgentConn->GetSupportedParameters(&m_dwNumParams, &m_pParamList);
+            rcc = pAgentConn->GetSupportedParameters(&dwNumParams, &pParamList);
+				if (rcc == ERR_SUCCESS)
+				{
+					LockData();
+					safe_free(m_pParamList);
+					m_dwNumParams = dwNumParams;
+					m_pParamList = pParamList;
+					UnlockData();
+				}
+				else
+				{
+				   DbgPrintf(5, _T("ConfPoll(%s): AgentConnection::GetSupportedParameters() failed: rcc=%d"), m_szName, rcc);
+				}
 
             pAgentConn->Disconnect();
             SendPollerMsg(dwRqId, POLLER_INFO _T("   NetXMS native agent is active\r\n"));
@@ -2208,9 +2219,11 @@ void Node::WriteParamListToMessage(CSCPMessage *pMsg)
          pMsg->SetVariable(dwId++, m_pParamList[i].szDescription);
          pMsg->SetVariable(dwId++, (WORD)m_pParamList[i].iDataType);
       }
+		DbgPrintf(6, _T("Node[%s]::WriteParamListToMessage(): sending %d parameters"), m_szName, m_dwNumParams);
    }
    else
    {
+		DbgPrintf(6, _T("Node[%s]::WriteParamListToMessage(): m_pParamList == NULL"), m_szName);
       pMsg->SetVariable(VID_NUM_PARAMETERS, (DWORD)0);
    }
    UnlockData();

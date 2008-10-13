@@ -5,6 +5,7 @@
 - Added new subagent LOGWATCH for log monitoring
 - Implemented syslog message monitoring on built-in syslog server
 - New agent configuration parameter: WaitForProcess
+- Number of consecutive polls can be specified for "last value" threshold
 
 
 *

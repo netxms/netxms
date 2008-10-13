@@ -335,7 +335,7 @@ BOOL CommSession::SendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pC
    BOOL bResult = TRUE;
    char szBuffer[128];
 
-   DebugPrintf(m_dwIndex, "Sending message %s", NXCPMessageCodeName(ntohs(pMsg->wCode), szBuffer));
+   DebugPrintf(m_dwIndex, "Sending message %s (size %d)", NXCPMessageCodeName(ntohs(pMsg->wCode), szBuffer), ntohl(pMsg->dwSize));
    if ((pCtx != NULL) && (pCtx != PROXY_ENCRYPTION_CTX))
    {
       CSCP_ENCRYPTED_MESSAGE *pEnMsg;
@@ -359,6 +359,8 @@ BOOL CommSession::SendRawMessage(CSCP_MESSAGE *pMsg, CSCP_ENCRYPTION_CONTEXT *pC
       }
       free(pMsg);
    }
+	if (!bResult)
+	   DebugPrintf(m_dwIndex, "CommSession::SendRawMessage() for %s (size %d) failed", NXCPMessageCodeName(ntohs(pMsg->wCode), szBuffer), ntohl(pMsg->dwSize));
    return bResult;
 }
 
