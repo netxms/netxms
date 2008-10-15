@@ -571,6 +571,62 @@ NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByName(NXC_SESSION hSession, TCHAR *
 
 
 //
+// Find object by IP address
+//
+
+NXC_OBJECT *NXCL_Session::FindObjectByIPAddress(DWORD dwIpAddr, DWORD dwCurrObject)
+{
+   NXC_OBJECT *pObject = NULL;
+   DWORD i;
+
+   LockObjectIndex();
+
+	if (dwCurrObject != 0)
+	{
+		pObject = FindObjectById(dwCurrObject, FALSE);
+		if (pObject != NULL)
+		{
+	      if (pObject->dwIpAddr != dwIpAddr)
+			{
+				// Current object doesn't match, start search from the beginning
+				dwCurrObject = 0;
+			}
+		}
+		else
+		{
+			dwCurrObject = 0;
+		}
+		pObject = NULL;
+	}
+
+   for(i = 0; i < m_dwNumObjects; i++)
+      if (m_pIndexById[i].pObject->dwIpAddr == dwIpAddr)
+      {
+			if (dwCurrObject == 0)
+			{
+				pObject = m_pIndexById[i].pObject;
+				break;
+			}
+			else
+			{
+				if (m_pIndexById[i].dwKey == dwCurrObject)
+				{
+					dwCurrObject = 0;	// Next match will stop the loop
+				}
+			}
+      }
+
+   UnlockObjectIndex();
+   return pObject;
+}
+
+NXC_OBJECT LIBNXCL_EXPORTABLE *NXCFindObjectByIPAddress(NXC_SESSION hSession, DWORD dwIpAddr, DWORD dwCurrObject)
+{
+   return ((NXCL_Session *)hSession)->FindObjectByIPAddress(dwIpAddr, dwCurrObject);
+}
+
+
+//
 // Enumerate all objects
 //
 

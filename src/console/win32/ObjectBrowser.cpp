@@ -1392,8 +1392,17 @@ void CObjectBrowser::OnFindObject(WPARAM wParam, TCHAR *pszSearchStr)
 		return;
 	}
 
-   pObject = NXCFindObjectByName(g_hSession, pszSearchStr,
-		                           ((m_pCurrentObject != NULL) && (wParam == OBJECT_FIND_NEXT))? m_pCurrentObject->dwId : 0);
+	if (!_tcsnicmp(pszSearchStr, _T("ip:"), 3))
+	{
+		DWORD dwIpAddr = ntohl(_t_inet_addr(&pszSearchStr[3]));
+		pObject = NXCFindObjectByIPAddress(g_hSession, dwIpAddr,
+												     ((m_pCurrentObject != NULL) && (wParam == OBJECT_FIND_NEXT))? m_pCurrentObject->dwId : 0);
+	}
+	else
+	{
+		pObject = NXCFindObjectByName(g_hSession, pszSearchStr,
+												((m_pCurrentObject != NULL) && (wParam == OBJECT_FIND_NEXT))? m_pCurrentObject->dwId : 0);
+	}
    if (pObject != NULL)
    {
       // Object found, select it in the tree
