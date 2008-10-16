@@ -337,6 +337,7 @@ BEGIN
         MENUITEM "&Show data\tCtrl+S",          ID_ITEM_SHOWDATA
         MENUITEM "&Graph\tCtrl+G",              ID_ITEM_GRAPH
         MENUITEM "E&xport data...",             ID_ITEM_EXPORTDATA
+        MENUITEM "C&lear data",                 ID_ITEM_CLEARDATA
     END
     POPUP "&Policy"
     BEGIN
@@ -527,6 +528,7 @@ BEGIN
         MENUITEM "&Show history\tCtrl+S",       ID_ITEM_SHOWDATA
         MENUITEM "&Graph\tCtrl+G",              ID_ITEM_GRAPH
         MENUITEM "&Export data...",             ID_ITEM_EXPORTDATA
+        MENUITEM "C&lear data",                 ID_ITEM_CLEARDATA
         MENUITEM SEPARATOR
         MENUITEM "&Properties...\tAlt+P",       ID_LASTVALUES_PROPERTIES
     END
@@ -755,6 +757,7 @@ BEGIN
         MENUITEM "&Show data",                  ID_ITEM_SHOWDATA
         MENUITEM "&Graph",                      ID_ITEM_GRAPH
         MENUITEM "E&xport data...",             ID_ITEM_EXPORTDATA
+        MENUITEM "C&lear data",                 ID_ITEM_CLEARDATA
     END
     POPUP "Policy (rule)"
     BEGIN
@@ -949,6 +952,7 @@ BEGIN
         MENUITEM "&Show history",               ID_ITEM_SHOWDATA
         MENUITEM "&Graph",                      ID_ITEM_GRAPH
         MENUITEM "&Export data...",             ID_ITEM_EXPORTDATA
+        MENUITEM "C&lear data",                 ID_ITEM_CLEARDATA
         MENUITEM SEPARATOR
         MENUITEM "&Properties...",              ID_LASTVALUES_PROPERTIES
     END
@@ -1052,6 +1056,7 @@ BEGIN
         MENUITEM "&Show history",               ID_ITEM_SHOWDATA
         MENUITEM "&Graph",                      ID_ITEM_GRAPH
         MENUITEM "&Export data...",             ID_ITEM_EXPORTDATA
+        MENUITEM "C&lear data",                 ID_ITEM_CLEARDATA
         MENUITEM SEPARATOR
         MENUITEM "Use &multipliers",            ID_LATSTVALUES_USEMULTIPLIERS
         , CHECKED
@@ -3487,7 +3492,7 @@ END
 IDD_OBJECT_CUSTOM_ATTRS DIALOGEX 0, 0, 292, 194
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Custom Attributes"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "List1",IDC_LIST_ATTRIBUTES,"SysListView32",LVS_REPORT | 
                     LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER | 

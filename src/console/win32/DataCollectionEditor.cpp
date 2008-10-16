@@ -143,6 +143,8 @@ BEGIN_MESSAGE_MAP(CDataCollectionEditor, CMDIChildWnd)
 	ON_COMMAND(ID_ITEM_MOVETOTEMPLATE, OnItemMovetotemplate)
 	ON_COMMAND(ID_ITEM_MOVE, OnItemMove)
 	ON_UPDATE_COMMAND_UI(ID_ITEM_MOVE, OnUpdateItemMove)
+	ON_COMMAND(ID_ITEM_CLEARDATA, OnItemCleardata)
+	ON_UPDATE_COMMAND_UI(ID_ITEM_CLEARDATA, OnUpdateItemCleardata)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NM_DBLCLK, ID_LIST_VIEW, OnListViewDblClk)
 	ON_NOTIFY(LVN_COLUMNCLICK, ID_LIST_VIEW, OnListViewColumnClick)
@@ -1223,4 +1225,54 @@ void CDataCollectionEditor::CopyOrMoveItems(BOOL bMove)
       if (bMove)
          free(pnIdxList);
    }
+}
+
+
+//
+// Handler for "Clear data" menu item
+//
+
+static DWORD ClearDCIData(DWORD dwNodeId, DWORD dwItemCount, DWORD *pdwItemList)
+{
+	DWORD i, dwResult;
+
+	for(i = 0; i < dwResult; i++)
+	{
+		dwResult = NXCClearDCIData(g_hSession, dwNodeId, pdwItemList[i]);
+		if (dwResult != RCC_SUCCESS)
+			break;
+	}
+	return dwResult;
+}
+
+void CDataCollectionEditor::OnItemCleardata() 
+{
+   int iItem;
+   DWORD i, dwItemCount, *pdwItemList, dwResult;
+
+	if (MessageBox(_T("All collected data for selected items will be deleted. Are you sure?"), _T("Warning"), MB_YESNO | MB_ICONEXCLAMATION) != IDYES)
+		return;	// Action cancelled by user
+
+	dwItemCount = m_wndListCtrl.GetSelectedCount();
+	pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwItemCount);
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+   for(i = 0; (iItem != -1) && (i < dwItemCount); i++)
+   {
+      pdwItemList[i] = m_wndListCtrl.GetItemData(iItem);
+      iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+   }
+
+   dwResult = DoRequestArg3(ClearDCIData, (void *)m_pItemList->dwNodeId, (void *)dwItemCount, pdwItemList,
+                            _T("Clearing DCI data..."));
+   if (dwResult != RCC_SUCCESS)
+   {
+      theApp.ErrorBox(dwResult, _T("Unable to delete data collection item: %s"));
+   }
+	safe_free(pdwItemList);
+}
+
+void CDataCollectionEditor::OnUpdateItemCleardata(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndListCtrl.GetSelectedCount() > 0);
 }

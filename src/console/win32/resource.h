@@ -980,6 +980,7 @@
 #define ID_MAP_RENAME                   33101
 #define ID_CONTROLPANEL_SYSLOGPARSER    33103
 #define ID_PARSER_SAVE                  33104
+#define ID_ITEM_CLEARDATA               33105
 #define ID_ALWAYS_DISABLED              43210
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
@@ -991,7 +992,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        390
-#define _APS_NEXT_COMMAND_VALUE         33105
+#define _APS_NEXT_COMMAND_VALUE         33106
 #define _APS_NEXT_CONTROL_VALUE         1532
 #define _APS_NEXT_SYMED_VALUE           135
 #endif

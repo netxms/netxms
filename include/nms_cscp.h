@@ -469,6 +469,7 @@ typedef struct
 #define CMD_CONFIG_SET_CLOB         0x00E1
 #define CMD_CONFIG_GET_CLOB         0x00E2
 #define CMD_RENAME_MAP              0x00E3
+#define CMD_CLEAR_DCI_DATA          0x00E4
 
 
 //

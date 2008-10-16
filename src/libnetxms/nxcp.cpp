@@ -266,10 +266,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_WEBMAP_GET_LIST"),
 		_T("CMD_CONFIG_SET_CLOB"),
 		_T("CMD_CONFIG_GET_CLOB"),
-		_T("CMD_RENAME_MAP")
+		_T("CMD_RENAME_MAP"),
+		_T("CMD_CLEAR_DCI_DATA")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_RENAME_MAP))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_CLEAR_DCI_DATA))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_UNKNOWN(%d)"), wCode);
