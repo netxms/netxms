@@ -193,7 +193,7 @@ void CommSession::ReadThread(void)
       // Check for decryption failure
       if (iErr == 2)
       {
-         WriteLog(MSG_DECRYPTION_FAILURE, EVENTLOG_WARNING_TYPE, NULL);
+         nxlog_write(MSG_DECRYPTION_FAILURE, EVENTLOG_WARNING_TYPE, NULL);
          continue;
       }
 
@@ -304,7 +304,7 @@ void CommSession::ReadThread(void)
       }
    }
    if (iErr < 0)
-      WriteLog(MSG_SESSION_BROKEN, EVENTLOG_WARNING_TYPE, "e", WSAGetLastError());
+      nxlog_write(MSG_SESSION_BROKEN, EVENTLOG_WARNING_TYPE, "e", WSAGetLastError());
    free(pRawMsg);
 #ifdef _WITH_ENCRYPTION
    free(pDecryptionBuffer);
@@ -534,7 +534,7 @@ void CommSession::Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
             }
             else
             {
-               WriteLog(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "as", m_dwHostAddr, "PLAIN");
+               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "as", m_dwHostAddr, "PLAIN");
                pMsg->SetVariable(VID_RCC, ERR_AUTH_FAILED);
             }
             break;
@@ -548,7 +548,7 @@ void CommSession::Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
             }
             else
             {
-               WriteLog(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "as", m_dwHostAddr, "MD5");
+               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "as", m_dwHostAddr, "MD5");
                pMsg->SetVariable(VID_RCC, ERR_AUTH_FAILED);
             }
             break;
@@ -562,7 +562,7 @@ void CommSession::Authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
             }
             else
             {
-               WriteLog(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "as", m_dwHostAddr, "SHA1");
+               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "as", m_dwHostAddr, "SHA1");
                pMsg->SetVariable(VID_RCC, ERR_AUTH_FAILED);
             }
             break;
@@ -799,7 +799,7 @@ void CommSession::UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
 
 DWORD CommSession::ApplyLogPolicy(CSCPMessage *pRequest)
 {
-   DWORD i, dwResult, dwId;
+   DWORD dwResult;
 
    if (m_bMasterServer)
    {

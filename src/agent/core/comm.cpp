@@ -79,7 +79,7 @@ static BOOL RegisterSession(CommSession *pSession)
       }
 
    MutexUnlock(g_hSessionListAccess);
-   WriteLog(MSG_TOO_MANY_SESSIONS, EVENTLOG_WARNING_TYPE, NULL);
+   nxlog_write(MSG_TOO_MANY_SESSIONS, EVENTLOG_WARNING_TYPE, NULL);
    return FALSE;
 }
 
@@ -115,7 +115,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    // Create socket
    if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
    {
-      WriteLog(MSG_SOCKET_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+      nxlog_write(MSG_SOCKET_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       exit(1);
    }
 
@@ -133,13 +133,13 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    // Bind socket
    if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
-      WriteLog(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       exit(1);
    }
 
    // Set up queue
    listen(hSocket, SOMAXCONN);
-	WriteLog(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), g_wListenPort);
+	nxlog_write(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), g_wListenPort);
 
    // Create session list and it's access mutex
    g_dwMaxSessions = min(max(g_dwMaxSessions, 2), 1024);
@@ -163,12 +163,12 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
             int error = WSAGetLastError();
 
             if (error != WSAEINTR)
-               WriteLog(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+               nxlog_write(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
             iNumErrors++;
             g_dwAcceptErrors++;
             if (iNumErrors > 1000)
             {
-               WriteLog(MSG_TOO_MANY_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
+               nxlog_write(MSG_TOO_MANY_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
                iNumErrors = 0;
             }
             ThreadSleepMs(500);
@@ -219,7 +219,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
          if ((error != EINTR) && (error != ENOENT))
 #endif
          {
-            WriteLog(MSG_SELECT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+            nxlog_write(MSG_SELECT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
             ThreadSleepMs(100);
          }
       }

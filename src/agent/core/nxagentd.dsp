@@ -189,10 +189,6 @@ SOURCE=.\hddinfo.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\log.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\netinfo.cpp
 # End Source File
 # Begin Source File

@@ -99,21 +99,21 @@ BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
 									 pInfo->szName,
 									 pInfo->pActionList[i].szDescription);
 
-					WriteLog(MSG_SUBAGENT_LOADED, EVENTLOG_INFORMATION_TYPE,
-								"s", pszModuleName);
+					nxlog_write(MSG_SUBAGENT_LOADED, EVENTLOG_INFORMATION_TYPE,
+								   "s", pszModuleName);
 					bSuccess = TRUE;
 				}
 				else
 				{
-					WriteLog(MSG_SUBAGENT_INIT_FAILED, EVENTLOG_ERROR_TYPE,
-								"s", pszModuleName);
+					nxlog_write(MSG_SUBAGENT_INIT_FAILED, EVENTLOG_ERROR_TYPE,
+								   "s", pszModuleName);
 					DLClose(hModule);
 				}
          }
          else
          {
-            WriteLog(MSG_SUBAGENT_ALREADY_LOADED, EVENTLOG_WARNING_TYPE,
-                     "ss", pInfo->szName, m_pSubAgentList[i].szName);
+            nxlog_write(MSG_SUBAGENT_ALREADY_LOADED, EVENTLOG_WARNING_TYPE,
+                        "ss", pInfo->szName, m_pSubAgentList[i].szName);
             // On NetWare, DLClose will unload module, and if first instance
             // was loaded from the same module, it will be killed, so
             // we don't call DLClose on NetWare
@@ -124,15 +124,15 @@ BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
       }
       else
       {
-         WriteLog(MSG_SUBAGENT_BAD_MAGIC, EVENTLOG_ERROR_TYPE,
-                  "s", pszModuleName);
+         nxlog_write(MSG_SUBAGENT_BAD_MAGIC, EVENTLOG_ERROR_TYPE,
+                     "s", pszModuleName);
          DLClose(hModule);
       }
    }
    else
    {
-      WriteLog(MSG_SUBAGENT_REGISTRATION_FAILED, EVENTLOG_ERROR_TYPE,
-               "s", pszModuleName);
+      nxlog_write(MSG_SUBAGENT_REGISTRATION_FAILED, EVENTLOG_ERROR_TYPE,
+                  "s", pszModuleName);
       DLClose(hModule);
    }
 
@@ -189,14 +189,14 @@ BOOL LoadSubAgent(char *szModuleName)
       }
       else
       {
-         WriteLog(MSG_NO_SUBAGENT_ENTRY_POINT, EVENTLOG_ERROR_TYPE,
-                  "s", szModuleName);
+         nxlog_write(MSG_NO_SUBAGENT_ENTRY_POINT, EVENTLOG_ERROR_TYPE,
+                     "s", szModuleName);
          DLClose(hModule);
       }
    }
    else
    {
-      WriteLog(MSG_SUBAGENT_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "ss", szModuleName, szErrorText);
+      nxlog_write(MSG_SUBAGENT_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "ss", szModuleName, szErrorText);
    }
 
    return bSuccess;

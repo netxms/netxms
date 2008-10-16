@@ -399,7 +399,7 @@ DWORD GetParameterValue(DWORD dwSessionId, char *pszParam, char *pszValue)
                m_dwUnsupportedRequests++;
                break;
             default:
-               WriteLog(MSG_UNEXPECTED_IRC, EVENTLOG_ERROR_TYPE, "ds", rc, pszParam);
+               nxlog_write(MSG_UNEXPECTED_IRC, EVENTLOG_ERROR_TYPE, "ds", rc, pszParam);
                dwErrorCode = ERR_INTERNAL_ERROR;
                m_dwFailedRequests++;
                break;
@@ -444,7 +444,7 @@ DWORD GetEnumValue(DWORD dwSessionId, char *pszParam, NETXMS_VALUES_LIST *pValue
                m_dwUnsupportedRequests++;
                break;
             default:
-               WriteLog(MSG_UNEXPECTED_IRC, EVENTLOG_ERROR_TYPE, "ds", rc, pszParam);
+               nxlog_write(MSG_UNEXPECTED_IRC, EVENTLOG_ERROR_TYPE, "ds", rc, pszParam);
                dwErrorCode = ERR_INTERNAL_ERROR;
                m_dwFailedRequests++;
                break;

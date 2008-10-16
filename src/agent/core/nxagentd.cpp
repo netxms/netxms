@@ -274,7 +274,7 @@ static FARPROC GetProcAddressAndLog(HMODULE hModule, LPCSTR procName)
 
    ptr = GetProcAddress(hModule, procName);
    if ((ptr == NULL) && (g_dwFlags & AF_LOG_UNRESOLVED_SYMBOLS))
-      WriteLog(MSG_NO_FUNCTION, EVENTLOG_WARNING_TYPE, "s", procName);
+      nxlog_write(MSG_NO_FUNCTION, EVENTLOG_WARNING_TYPE, "s", procName);
    return ptr;
 }
 
@@ -295,7 +295,7 @@ static void ImportSymbols(void)
    }
    else
    {
-      WriteLog(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", "KERNEL32.DLL");
+      nxlog_write(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", "KERNEL32.DLL");
    }
 
    // NETMAN.DLL
@@ -308,7 +308,7 @@ static void ImportSymbols(void)
    }
    else
    {
-      WriteLog(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", "NETMAN.DLL");
+      nxlog_write(MSG_NO_DLL, EVENTLOG_WARNING_TYPE, "s", "NETMAN.DLL");
    }
 }
 
@@ -379,7 +379,7 @@ static LONG H_RestartAgent(const TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, co
                       (g_dwFlags & AF_DAEMON) ? (CREATE_NO_WINDOW | DETACHED_PROCESS) : (CREATE_NEW_CONSOLE),
                       NULL, NULL, &si, &pi))
    {
-      WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", szCmdLine, GetLastError());
+      nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", szCmdLine, GetLastError());
       dwResult = ERR_EXEC_FAILED;
    }
    else
@@ -424,11 +424,11 @@ static void WriteSubAgentMsg(int iLevel, TCHAR *pszMsg)
 {
 	if (iLevel == EVENTLOG_DEBUG_TYPE)
 	{
-		DebugPrintf(INVALID_INDEX, "%s", pszMsg);
+		DebugPrintf(INVALID_INDEX, _T("%s"), pszMsg);
 	}
 	else
 	{
-		WriteLog(MSG_SUBAGENT_MSG, iLevel, "s", pszMsg);
+		nxlog_write(MSG_SUBAGENT_MSG, iLevel, "s", pszMsg);
 	}
 }
 
@@ -512,7 +512,7 @@ void LoadWindowsSubagent(void)
    }
    else
    {
-      WriteLog(MSG_GETVERSION_FAILED, EVENTLOG_WARNING_TYPE, "e", GetLastError());
+      nxlog_write(MSG_GETVERSION_FAILED, EVENTLOG_WARNING_TYPE, "e", GetLastError());
    }
 }
 
@@ -572,7 +572,7 @@ BOOL Initialize(void)
 
    if (WSAStartup(2, &wsaData) != 0)
    {
-      WriteLog(MSG_WSASTARTUP_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+      nxlog_write(MSG_WSASTARTUP_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       return FALSE;
    }
 
@@ -620,7 +620,7 @@ BOOL Initialize(void)
    // Initialize cryptografy
    if (!InitCryptoLib(m_dwEnabledCiphers))
    {
-      WriteLog(MSG_INIT_CRYPTO_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+      nxlog_write(MSG_INIT_CRYPTO_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       return FALSE;
    }
 
@@ -763,7 +763,7 @@ BOOL Initialize(void)
 	{
 	   DebugPrintf(INVALID_INDEX, "Waiting for process %s", m_szProcessToWait);
 		if (!WaitForProcess(m_szProcessToWait))
-	      WriteLog(MSG_WAITFORPROCESS_FAILED, EVENTLOG_ERROR_TYPE, "s", m_szProcessToWait);
+	      nxlog_write(MSG_WAITFORPROCESS_FAILED, EVENTLOG_ERROR_TYPE, "s", m_szProcessToWait);
 	}
 
 	// Load other subagents
@@ -790,7 +790,7 @@ BOOL Initialize(void)
             *pEnd = 0;
          StrStrip(pItem);
          if (!AddActionFromConfig(pItem, FALSE))
-            WriteLog(MSG_ADD_ACTION_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
+            nxlog_write(MSG_ADD_ACTION_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
       free(m_pszActionList);
    }
@@ -804,7 +804,7 @@ BOOL Initialize(void)
             *pEnd = 0;
          StrStrip(pItem);
          if (!AddActionFromConfig(pItem, TRUE))
-            WriteLog(MSG_ADD_ACTION_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
+            nxlog_write(MSG_ADD_ACTION_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
       free(m_pszShellActionList);
    }
@@ -819,7 +819,7 @@ BOOL Initialize(void)
             *pEnd = 0;
          StrStrip(pItem);
          if (!AddExternalParameter(pItem, FALSE))
-            WriteLog(MSG_ADD_EXT_PARAM_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
+            nxlog_write(MSG_ADD_EXT_PARAM_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
       free(m_pszExtParamList);
    }
@@ -832,7 +832,7 @@ BOOL Initialize(void)
             *pEnd = 0;
          StrStrip(pItem);
          if (!AddExternalParameter(pItem, TRUE))
-            WriteLog(MSG_ADD_EXT_PARAM_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
+            nxlog_write(MSG_ADD_EXT_PARAM_FAILED, EVENTLOG_WARNING_TYPE, "s", pItem);
       }
       free(m_pszShExtParamList);
    }
@@ -893,8 +893,8 @@ void Shutdown(void)
 	ThreadJoin(m_thTrapSender);
 
    UnloadAllSubAgents();
-   WriteLog(MSG_AGENT_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
-   CloseLog();
+   nxlog_write(MSG_AGENT_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
+   nxlog_close();
 
    // Notify main thread about shutdown
 #ifdef _WIN32
@@ -914,7 +914,7 @@ void Shutdown(void)
 
 void Main(void)
 {
-   WriteLog(MSG_AGENT_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
+   nxlog_write(MSG_AGENT_STARTED, EVENTLOG_INFORMATION_TYPE, NULL);
 
    if (g_dwFlags & AF_DAEMON)
    {
@@ -1242,7 +1242,7 @@ int main(int argc, char *argv[])
                else
                {
                   ConsolePrintf("Agent initialization failed\n");
-                  CloseLog();
+                  nxlog_close();
                   iExitCode = 3;
                }
             }
@@ -1281,7 +1281,7 @@ int main(int argc, char *argv[])
                else
                {
                   ConsolePrintf("Agent initialization failed\n");
-                  CloseLog();
+                  nxlog_close();
                   iExitCode = 3;
                }
             }

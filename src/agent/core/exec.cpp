@@ -192,7 +192,7 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
    if (!CreateProcess(NULL, pszCmdLine, NULL, NULL, FALSE, 
                       CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
    {
-      WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCmdLine, GetLastError());
+      nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCmdLine, GetLastError());
       dwRetCode = ERR_EXEC_FAILED;
    }
    else
@@ -267,7 +267,7 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 	}
 	else
 	{
-		WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se",
+		nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se",
 				   data->cmdLine, errno);
 		data->status = SYSINFO_RC_ERROR;
 	}
@@ -381,7 +381,7 @@ LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
 				{
 					// Timeout waiting for external process to complete, kill it
 					TerminateProcess(pi.hProcess, 127);
-					WriteLog(MSG_PROCESS_KILLED, EVENTLOG_WARNING_TYPE, "s", pszCmdLine);
+					nxlog_write(MSG_PROCESS_KILLED, EVENTLOG_WARNING_TYPE, "s", pszCmdLine);
 					iStatus = SYSINFO_RC_ERROR;
 				}
 
@@ -390,7 +390,7 @@ LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
 			}
 			else
 			{
-				WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCmdLine, GetLastError());
+				nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCmdLine, GetLastError());
 				iStatus = SYSINFO_RC_ERROR;
 			}
 
@@ -400,7 +400,7 @@ LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
 		}
 		else
 		{
-			WriteLog(MSG_CREATE_TMP_FILE_FAILED, EVENTLOG_ERROR_TYPE, "e", GetLastError());
+			nxlog_write(MSG_CREATE_TMP_FILE_FAILED, EVENTLOG_ERROR_TYPE, "e", GetLastError());
 			iStatus = SYSINFO_RC_ERROR;
 		}
 	}
