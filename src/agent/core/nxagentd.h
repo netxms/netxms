@@ -82,8 +82,11 @@
 //
 
 #ifdef _WIN32
-#define AGENT_SERVICE_NAME    "NetXMSAgentdW32"
-#define AGENT_EVENT_SOURCE    "NetXMS Win32 Agent"
+#define AGENT_SERVICE_NAME    _T("NetXMSAgentdW32")
+#define AGENT_EVENT_SOURCE    _T("NetXMS Win32 Agent")
+#define NXAGENTD_SYSLOG_NAME  AGENT_EVENT_SOURCE
+#else
+#define NXAGENTD_SYSLOG_NAME  _T("nxagentd")
 #endif
 
 #define MAX_PSUFFIX_LENGTH 32
@@ -304,10 +307,6 @@ public:
 BOOL Initialize(void);
 void Shutdown(void);
 void Main(void);
-
-void WriteLog(DWORD msg, WORD wType, const char *format, ...);
-void InitLog(void);
-void CloseLog(void);
 
 void ConsolePrintf(const char *pszFormat, ...);
 void DebugPrintf(DWORD dwSessionId, const char *pszFormat, ...);

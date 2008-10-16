@@ -111,6 +111,15 @@
 
 
 //
+// nxlog_open() flags
+//
+
+#define NXLOG_USE_SYSLOG		((DWORD)0x00000001)
+#define NXLOG_PRINT_TO_STDOUT	((DWORD)0x00000002)
+#define NXLOG_IS_OPEN         ((DWORD)0x80000000)
+
+
+//
 // Class for serial communications
 //
 
@@ -627,6 +636,11 @@ extern "C"
 void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHandler)(void *),
                                         THREAD_RESULT (THREAD_CALL * pfMain)(void *));
 #endif
+
+BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, DWORD flags, const TCHAR *msgModule,
+												 int msgCount, const TCHAR *messages);
+void LIBNETXMS_EXPORTABLE nxlog_close(void);
+void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format, ...);
 
 #ifdef __cplusplus
 }
