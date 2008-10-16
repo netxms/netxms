@@ -100,20 +100,20 @@ void InitSMSSender(void)
             }
             else
             {
-               WriteLog(MSG_SMSDRV_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", szDriver);
+               nxlog_write(MSG_SMSDRV_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", szDriver);
                DLClose(hModule);
             }
          }
          else
          {
-            WriteLog(MSG_SMSDRV_NO_ENTRY_POINTS, EVENTLOG_ERROR_TYPE, "s", szDriver);
+            nxlog_write(MSG_SMSDRV_NO_ENTRY_POINTS, EVENTLOG_ERROR_TYPE, "s", szDriver);
             DLClose(hModule);
          }
       }
       else
       {
-         WriteLog(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, 
-                  _T("ss"), szDriver, szErrorText);
+         nxlog_write(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, 
+                     "ss", szDriver, szErrorText);
       }
    }
 }

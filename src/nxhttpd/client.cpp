@@ -187,7 +187,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *pArg)
    // Create socket
    if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
    {
-      WriteLog(MSG_SOCKET_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+      nxlog_write(MSG_SOCKET_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       exit(1);
    }
 
@@ -202,13 +202,13 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *pArg)
    // Bind socket
    if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
-      WriteLog(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       exit(1);
    }
 
    // Set up queue
    listen(hSocket, SOMAXCONN);
-	WriteLog(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), g_wListenPort);
+	nxlog_write(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), g_wListenPort);
 
    // Wait for connection requests
    while(!(g_dwFlags & AF_SHUTDOWN))
@@ -226,11 +226,11 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *pArg)
             int error = WSAGetLastError();
 
             if (error != WSAEINTR)
-               WriteLog(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+               nxlog_write(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
             iNumErrors++;
             if (iNumErrors > 1000)
             {
-               WriteLog(MSG_TOO_MANY_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
+               nxlog_write(MSG_TOO_MANY_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
                iNumErrors = 0;
             }
             ThreadSleepMs(500);
@@ -251,7 +251,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *pArg)
          if ((error != EINTR) && (error != ENOENT))
 #endif
          {
-            WriteLog(MSG_SELECT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+            nxlog_write(MSG_SELECT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
             ThreadSleepMs(100);
          }
       }

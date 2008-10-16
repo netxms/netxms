@@ -95,6 +95,10 @@
 #define ULLONG_MAX   _ULL(18446744073709551615)
 #endif
 
+#ifndef EVENTLOG_DEBUG_TYPE
+#define EVENTLOG_DEBUG_TYPE		255
+#endif
+
 
 //
 // Platform dependent includes and defines

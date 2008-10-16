@@ -112,7 +112,7 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
    // Create socket
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
    {
-      WriteLog(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "LocalAdminListener");
+      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "LocalAdminListener");
       return THREAD_OK;
    }
 
@@ -127,7 +127,7 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
    // Bind socket
    if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
-      WriteLog(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", LOCAL_ADMIN_PORT, "LocalAdminListener", WSAGetLastError());
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", LOCAL_ADMIN_PORT, "LocalAdminListener", WSAGetLastError());
       closesocket(sock);
       /* TODO: we should initiate shutdown from here */
       return THREAD_OK;
@@ -151,11 +151,11 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
          error = errno;
          if (error != EINTR)
 #endif
-            WriteLog(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+            nxlog_write(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
          errorCount++;
          if (errorCount > 1000)
          {
-            WriteLog(MSG_TOO_MANY_ACCEPT_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
+            nxlog_write(MSG_TOO_MANY_ACCEPT_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
             errorCount = 0;
          }
          ThreadSleepMs(500);

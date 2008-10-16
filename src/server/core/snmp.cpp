@@ -124,7 +124,7 @@ DWORD SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport, const char *szCommuni
       dwNameLen = SNMPParseOID(szOidStr, pdwVarName, MAX_OID_LEN);
       if (dwNameLen == 0)
       {
-         WriteLog(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "s", szOidStr);
+         nxlog_write(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "s", szOidStr);
          dwResult = SNMP_ERR_BAD_OID;
       }
    }
@@ -175,7 +175,7 @@ DWORD SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport, const char *szCommuni
                         pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize);
                         break;
                      default:
-                        WriteLog(MSG_SNMP_UNKNOWN_TYPE, EVENTLOG_ERROR_TYPE, "x", pVar->GetType());
+                        nxlog_write(MSG_SNMP_UNKNOWN_TYPE, EVENTLOG_ERROR_TYPE, "x", pVar->GetType());
                         dwResult = SNMP_ERR_BAD_TYPE;
                         break;
                   }
@@ -198,7 +198,7 @@ DWORD SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport, const char *szCommuni
       else
       {
          if (bVerbose)
-            WriteLog(MSG_SNMP_GET_ERROR, EVENTLOG_ERROR_TYPE, "d", dwResult);
+            nxlog_write(MSG_SNMP_GET_ERROR, EVENTLOG_ERROR_TYPE, "d", dwResult);
       }
    }
 
@@ -227,7 +227,7 @@ DWORD SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const char *szC
    dwRootLen = SNMPParseOID(szRootOid, pdwRootName, MAX_OID_LEN);
    if (dwRootLen == 0)
    {
-      WriteLog(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "s", szRootOid);
+      nxlog_write(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "s", szRootOid);
       dwResult = SNMP_ERR_BAD_OID;
    }
    else
@@ -294,7 +294,7 @@ DWORD SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const char *szC
          else
          {
             if (bVerbose)
-               WriteLog(MSG_SNMP_GET_ERROR, EVENTLOG_ERROR_TYPE, "d", dwResult);
+               nxlog_write(MSG_SNMP_GET_ERROR, EVENTLOG_ERROR_TYPE, "d", dwResult);
             bRunning = FALSE;
          }
          delete pRqPDU;

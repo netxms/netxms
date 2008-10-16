@@ -349,7 +349,9 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
    }
 
    if (m_flags & NXLOG_USE_SYSLOG)
-      ReportEvent(m_eventLogHandle, wType, 0, msg, NULL, numStrings, 0, (const TCHAR **)strings, NULL);
+	{
+      ReportEvent(m_eventLogHandle, (wType == EVENTLOG_DEBUG_TYPE) ? EVENTLOG_INFORMATION_TYPE : wType, 0, msg, NULL, numStrings, 0, (const TCHAR **)strings, NULL);
+	}
 #else  /* _WIN32 */
    pMsg = FormatMessageUX(msg, strings);
    if (m_flags & NXLOG_USE_SYSLOG)

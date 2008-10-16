@@ -1,8 +1,6 @@
-/* $Id$ */
-
 /* 
  ** NetXMS - Network Management System
- ** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+ ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
  **
  ** RADIUS client
  ** This code is based on uRadiusLib (C) Gary Wallis, 2006.
@@ -355,7 +353,7 @@ static void encrypt_attr(char *secret, char *vector, VALUE_PAIR *vp)
 			/* Unknown style - don't send the cleartext! */
 			vp->length = 19;
 			memcpy(vp->strvalue, "UNKNOWN_ENCR_METHOD", vp->length);
-			WriteLog(MSG_RADIUS_UNKNOWN_ENCR_METHOD, EVENTLOG_ERROR_TYPE,
+			nxlog_write(MSG_RADIUS_UNKNOWN_ENCR_METHOD, EVENTLOG_ERROR_TYPE,
 					"dd", vp->flags.encrypt, vp->attribute);
 	}
 }
@@ -724,7 +722,7 @@ int RadiusAuth(char *cLogin, char *cPasswd)
 	}
 
 	closesocket(sockfd);
-	WriteLog((result == 0) ? MSG_RADIUS_AUTH_SUCCESS : MSG_RADIUS_AUTH_FAILED,
+	nxlog_write((result == 0) ? MSG_RADIUS_AUTH_SUCCESS : MSG_RADIUS_AUTH_FAILED,
 			EVENTLOG_INFORMATION_TYPE, "ss", cLogin, szServer);
 
 	return result;

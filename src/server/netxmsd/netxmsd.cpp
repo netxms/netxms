@@ -220,11 +220,11 @@ static BOOL ExceptionHandler(EXCEPTION_POINTERS *pInfo)
    }
 
 	// Write event log
-	WriteLog(MSG_EXCEPTION, EVENTLOG_ERROR_TYPE, "xsxss",
-            pInfo->ExceptionRecord->ExceptionCode,
-            SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
-            pInfo->ExceptionRecord->ExceptionAddress,
-				szInfoFile, szDumpFile);
+	nxlog_write(MSG_EXCEPTION, EVENTLOG_ERROR_TYPE, "xsxss",
+               pInfo->ExceptionRecord->ExceptionCode,
+               SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
+	            pInfo->ExceptionRecord->ExceptionAddress,
+	            szInfoFile, szDumpFile);
 
 	if (IsStandalone())
 	{

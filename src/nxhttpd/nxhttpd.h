@@ -31,8 +31,11 @@
 #include "messages.h"
 
 #ifdef _WIN32
-#define NXHTTPD_SERVICE_NAME     "nxhttpd"
-#define NXHTTPD_EVENT_SOURCE     "NetXMS Web Server"
+#define NXHTTPD_SERVICE_NAME     _T("nxhttpd")
+#define NXHTTPD_EVENT_SOURCE     _T("NetXMS Web Server")
+#define NXHTTPD_SYSLOG_NAME      NXHTTPD_EVENT_SOURCE
+#else
+#define NXHTTPD_SYSLOG_NAME      _T("nxhttpd")
 #endif
 
 #define MAX_MODULE_NAME				128
@@ -314,10 +317,6 @@ private:
 //
 // Functions
 //
-
-void InitLog(void);
-void CloseLog(void);
-void WriteLog(DWORD msg, WORD wType, const char *format, ...);
 
 void DebugPrintf(DWORD dwSessionId, const TCHAR *pszFormat, ...);
 

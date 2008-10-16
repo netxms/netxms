@@ -118,13 +118,13 @@ BOOL Cluster::CreateFromDB(DWORD dwId)
 					}
 					else
 					{
-                  WriteLog(MSG_CLUSTER_MEMBER_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", m_dwId, dwNodeId);
+                  nxlog_write(MSG_CLUSTER_MEMBER_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", m_dwId, dwNodeId);
 						break;
 					}
 				}
 				else
 				{
-               WriteLog(MSG_INVALID_CLUSTER_MEMBER, EVENTLOG_ERROR_TYPE, "dd", m_dwId, dwNodeId);
+               nxlog_write(MSG_INVALID_CLUSTER_MEMBER, EVENTLOG_ERROR_TYPE, "dd", m_dwId, dwNodeId);
 					break;
 				}
 			}

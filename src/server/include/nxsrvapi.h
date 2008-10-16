@@ -164,13 +164,18 @@ typedef db_handle_t * DB_HANDLE;
 
 
 //
-// Win32 service constants
+// Win32 service and syslog constants
 //
 
 #ifdef _WIN32
 
-#define CORE_SERVICE_NAME  _T("NetXMSCore")
-#define CORE_EVENT_SOURCE  _T("NetXMSCore")
+#define CORE_SERVICE_NAME     _T("NetXMSCore")
+#define CORE_EVENT_SOURCE     _T("NetXMSCore")
+#define NETXMSD_SYSLOG_NAME   CORE_EVENT_SOURCE
+
+#else
+
+#define NETXMSD_SYSLOG_NAME   _T("netxmsd")
 
 #endif   /* _WIN32 */
 
@@ -381,9 +386,6 @@ void LIBNXSRV_EXPORTABLE DestroyRoutingTable(ROUTING_TABLE *pRT);
 void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT);
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError);
 
-void LIBNXSRV_EXPORTABLE InitLog(BOOL bUseSystemLog, char *pszLogFile, BOOL bPrintToScreen);
-void LIBNXSRV_EXPORTABLE CloseLog(void);
-void LIBNXSRV_EXPORTABLE WriteLog(DWORD msg, WORD wType, const TCHAR *format, ...);
 void LIBNXSRV_EXPORTABLE WriteLogOther(WORD wType, const TCHAR *format, ...);
 void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...);
 

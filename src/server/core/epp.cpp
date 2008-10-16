@@ -87,7 +87,7 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
       }
       else
       {
-         WriteLog(MSG_EPRULE_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
+         nxlog_write(MSG_EPRULE_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
                   "ds", m_dwId, szError);
       }
    }
@@ -156,7 +156,7 @@ EPRule::EPRule(CSCPMessage *pMsg)
       }
       else
       {
-         WriteLog(MSG_EPRULE_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
+         nxlog_write(MSG_EPRULE_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
                   "ds", m_dwId, szError);
       }
    }
@@ -217,7 +217,7 @@ BOOL EPRule::MatchSource(DWORD dwObjectId)
             }
             else
             {
-               WriteLog(MSG_INVALID_EPP_OBJECT, EVENTLOG_ERROR_TYPE, "d", m_pdwSourceList[i]);
+               nxlog_write(MSG_INVALID_EPP_OBJECT, EVENTLOG_ERROR_TYPE, "d", m_pdwSourceList[i]);
             }
          }
    }
@@ -335,7 +335,7 @@ BOOL EPRule::MatchScript(Event *pEvent)
    }
    else
    {
-      WriteLog(MSG_EPRULE_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE,
+      nxlog_write(MSG_EPRULE_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE,
                "ds", m_dwId, m_pScript->GetErrorText());
    }
    free(ppValueList);

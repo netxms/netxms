@@ -57,9 +57,9 @@ void DebugPrintf(DWORD dwSessionId, const char *pszFormat, ...)
       va_end(args);
       
       if (dwSessionId != INVALID_INDEX)
-         nxlog_write(MSG_DEBUG_SESSION, EVENTLOG_INFORMATION_TYPE, "ds", dwSessionId, szBuffer);
+         nxlog_write(MSG_DEBUG_SESSION, EVENTLOG_DEBUG_TYPE, "ds", dwSessionId, szBuffer);
       else
-         nxlog_write(MSG_DEBUG, EVENTLOG_INFORMATION_TYPE, "s", szBuffer);
+         nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", szBuffer);
    }
 }
 

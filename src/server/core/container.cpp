@@ -229,7 +229,7 @@ void Container::LinkChildObjects(void)
          if (pObject != NULL)
             LinkObject(pObject);
          else
-            WriteLog(MSG_INVALID_CONTAINER_MEMBER, EVENTLOG_ERROR_TYPE, "dd", m_dwId, m_pdwChildIdList[i]);
+            nxlog_write(MSG_INVALID_CONTAINER_MEMBER, EVENTLOG_ERROR_TYPE, "dd", m_dwId, m_pdwChildIdList[i]);
       }
 
       // Cleanup

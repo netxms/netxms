@@ -186,12 +186,12 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
          pObject = FindObjectById(dwHostNodeId);
          if (pObject == NULL)
          {
-            WriteLog(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE, "dds",
-                     dwId, dwHostNodeId, "network service");
+            nxlog_write(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE, "dds",
+                        dwId, dwHostNodeId, "network service");
          }
          else if (pObject->Type() != OBJECT_NODE)
          {
-            WriteLog(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, dwHostNodeId);
+            nxlog_write(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, dwHostNodeId);
          }
          else
          {
@@ -207,13 +207,13 @@ BOOL NetworkService::CreateFromDB(DWORD dwId)
             pObject = FindObjectById(m_dwPollerNode);
             if (pObject == NULL)
             {
-               WriteLog(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE,
+               nxlog_write(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE,
                         "dds", dwId, m_dwPollerNode, "network service");
                bResult = FALSE;
             }
             else if (pObject->Type() != OBJECT_NODE)
             {
-               WriteLog(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, m_dwPollerNode);
+               nxlog_write(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, m_dwPollerNode);
                bResult = FALSE;
             }
          }

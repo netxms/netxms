@@ -90,7 +90,7 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
       hdb = DBConnect();
       if (hdb == NULL)
       {
-         WriteLog(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
+         nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
          hdb = g_hCoreDB;   // Switch to main DB connection
       }
    }

@@ -136,7 +136,7 @@ THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
              (!m_threadInfo[i].bNotResponding))
          {
             PostEvent(EVENT_THREAD_HANGS, g_dwMgmtNode, "s", m_threadInfo[i].szName);
-            WriteLog(MSG_THREAD_HANGS, EVENTLOG_ERROR_TYPE, "s", m_threadInfo[i].szName);
+            nxlog_write(MSG_THREAD_HANGS, EVENTLOG_ERROR_TYPE, "s", m_threadInfo[i].szName);
             m_threadInfo[i].bNotResponding = TRUE;
          }
       MutexUnlock(m_mutexWatchdogAccess);

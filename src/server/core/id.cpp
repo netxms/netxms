@@ -399,7 +399,7 @@ DWORD CreateUniqueId(int iGroup)
    if (m_dwFreeIdTable[iGroup] == m_dwIdLimits[iGroup])
    {
       dwId = 0;   // ID zero means "no unique ID available"
-      WriteLog(MSG_NO_UNIQUE_ID, EVENTLOG_ERROR_TYPE, "s", m_pszGroupNames[iGroup]);
+      nxlog_write(MSG_NO_UNIQUE_ID, EVENTLOG_ERROR_TYPE, "s", m_pszGroupNames[iGroup]);
    }
    else
    {

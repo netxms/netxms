@@ -90,18 +90,18 @@ void InitLocalNetInfo(void)
          {
             DLClose(m_hSubAgent);
             m_hSubAgent = NULL;
-            WriteLog(MSG_PLATFORM_SUBAGENT_NOT_LOADED, EVENTLOG_ERROR_TYPE,
+            nxlog_write(MSG_PLATFORM_SUBAGENT_NOT_LOADED, EVENTLOG_ERROR_TYPE,
                      "ss", szName, _T("Subagent doesn't provide any usable parameters"));
          }
          else
          {
-            WriteLog(MSG_PLATFORM_SUBAGENT_LOADED,
+            nxlog_write(MSG_PLATFORM_SUBAGENT_LOADED,
                      EVENTLOG_INFORMATION_TYPE, "s", szName);
          }
       }
       else
       {
-         WriteLog(MSG_PLATFORM_SUBAGENT_NOT_LOADED, EVENTLOG_ERROR_TYPE,
+         nxlog_write(MSG_PLATFORM_SUBAGENT_NOT_LOADED, EVENTLOG_ERROR_TYPE,
                   "ss", szName, szErrorText);
       }
    }
@@ -151,7 +151,7 @@ static ARP_CACHE *SysGetLocalArpCache(void)
    dwError = GetIpNetTable(sysArpCache, &dwSize, FALSE);
    if (dwError != NO_ERROR)
    {
-      WriteLog(MSG_GETIPNETTABLE_FAILED, EVENTLOG_ERROR_TYPE, "e", NULL);
+      nxlog_write(MSG_GETIPNETTABLE_FAILED, EVENTLOG_ERROR_TYPE, "e", NULL);
       free(sysArpCache);
       return NULL;
    }

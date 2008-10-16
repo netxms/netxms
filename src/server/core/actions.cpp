@@ -104,7 +104,7 @@ static BOOL LoadActions(void)
    }
    else
    {
-      WriteLog(MSG_ACTIONS_LOAD_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+      nxlog_write(MSG_ACTIONS_LOAD_FAILED, EVENTLOG_ERROR_TYPE, NULL);
    }
    return bResult;
 }

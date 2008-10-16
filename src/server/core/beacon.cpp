@@ -63,7 +63,7 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *arg)
 		hostList[hostCount] = ResolveHostName(curr);
 		if ((hostList[hostCount] == INADDR_NONE) || (hostList[hostCount] == INADDR_ANY))
 		{
-			WriteLog(MSG_INVALID_BEACON, EVENTLOG_WARNING_TYPE, "s", curr);
+			nxlog_write(MSG_INVALID_BEACON, EVENTLOG_WARNING_TYPE, "s", curr);
 		}
 		else
 		{

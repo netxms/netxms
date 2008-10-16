@@ -490,7 +490,7 @@ static BOOL LoadEvents(void)
    }
    else
    {
-      WriteLog(MSG_EVENT_LOAD_ERROR, EVENTLOG_ERROR_TYPE, NULL);
+      nxlog_write(MSG_EVENT_LOAD_ERROR, EVENTLOG_ERROR_TYPE, NULL);
    }
 
    return bSuccess;
@@ -521,7 +521,7 @@ BOOL InitEventSubsystem(void)
       if (!g_pEventPolicy->LoadFromDB())
       {
          bSuccess = FALSE;
-         WriteLog(MSG_EPP_LOAD_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+         nxlog_write(MSG_EPP_LOAD_FAILED, EVENTLOG_ERROR_TYPE, NULL);
          delete g_pEventPolicy;
       }
    }

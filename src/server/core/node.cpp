@@ -238,12 +238,12 @@ BOOL Node::CreateFromDB(DWORD dwId)
          pObject = FindObjectById(dwSubnetId);
          if (pObject == NULL)
          {
-            WriteLog(MSG_INVALID_SUBNET_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
+            nxlog_write(MSG_INVALID_SUBNET_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
             break;
          }
          else if (pObject->Type() != OBJECT_SUBNET)
          {
-            WriteLog(MSG_SUBNET_NOT_SUBNET, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
+            nxlog_write(MSG_SUBNET_NOT_SUBNET, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
             break;
          }
          else
@@ -3077,7 +3077,7 @@ void Node::CheckSubnetBinding(INTERFACE_LIST *pIfList)
 			pInterface = FindInterface(pIfList->pInterfaces[i].dwIndex, pIfList->pInterfaces[i].dwIpAddr);
 			if (pInterface == NULL)
 			{
-				WriteLog(MSG_INTERNAL_ERROR, EVENTLOG_WARNING_TYPE, "s", _T("Cannot find interface object in Node::CheckSubnetBinding()"));
+				nxlog_write(MSG_INTERNAL_ERROR, EVENTLOG_WARNING_TYPE, "s", _T("Cannot find interface object in Node::CheckSubnetBinding()"));
 				break;	// Something goes really wrong
 			}
 

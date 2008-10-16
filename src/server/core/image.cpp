@@ -61,7 +61,7 @@ void UpdateImageHashes(void)
             }
             else
             {
-               WriteLog(MSG_IMAGE_FILE_IO_ERROR, EVENTLOG_ERROR_TYPE, "ds", dwImageId, szPath);
+               nxlog_write(MSG_IMAGE_FILE_IO_ERROR, EVENTLOG_ERROR_TYPE, "ds", dwImageId, szPath);
             }
          }
       }
@@ -69,7 +69,7 @@ void UpdateImageHashes(void)
    }
    else
    {
-      WriteLog(MSG_ERROR_READ_IMAGE_CATALOG, EVENTLOG_ERROR_TYPE, NULL);
+      nxlog_write(MSG_ERROR_READ_IMAGE_CATALOG, EVENTLOG_ERROR_TYPE, NULL);
    }
 }
 

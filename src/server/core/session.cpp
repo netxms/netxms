@@ -508,7 +508,7 @@ void ClientSession::ReadThread(void)
       }
    }
    if (iErr < 0)
-      WriteLog(MSG_SESSION_CLOSED, EVENTLOG_WARNING_TYPE, "e", WSAGetLastError());
+      nxlog_write(MSG_SESSION_CLOSED, EVENTLOG_WARNING_TYPE, "e", WSAGetLastError());
    free(pRawMsg);
 #ifdef _WITH_ENCRYPTION
    free(pDecryptionBuffer);

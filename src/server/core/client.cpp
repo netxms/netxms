@@ -57,7 +57,7 @@ static BOOL RegisterSession(ClientSession *pSession)
       }
 
    RWLockUnlock(m_rwlockSessionListAccess);
-   WriteLog(MSG_TOO_MANY_SESSIONS, EVENTLOG_WARNING_TYPE, NULL);
+   nxlog_write(MSG_TOO_MANY_SESSIONS, EVENTLOG_WARNING_TYPE, NULL);
    return FALSE;
 }
 
@@ -128,7 +128,7 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
    // Create socket
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
    {
-      WriteLog(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "ClientListener");
+      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "ClientListener");
       return THREAD_OK;
    }
 
@@ -146,7 +146,7 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
    // Bind socket
    if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
-      WriteLog(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", wListenPort, "ClientListener", WSAGetLastError());
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", wListenPort, "ClientListener", WSAGetLastError());
       closesocket(sock);
       /* TODO: we should initiate shutdown procedure here */
       return THREAD_OK;
@@ -154,7 +154,7 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
 
    // Set up queue
    listen(sock, SOMAXCONN);
-	WriteLog(MSG_LISTENING_FOR_CLIENTS, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), wListenPort);
+	nxlog_write(MSG_LISTENING_FOR_CLIENTS, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), wListenPort);
 
    // Start client keep-alive thread
    ThreadCreate(ClientKeepAliveThread, 0, NULL);
@@ -174,11 +174,11 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
          error = errno;
          if (error != EINTR)
 #endif
-            WriteLog(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+            nxlog_write(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
          errorCount++;
          if (errorCount > 1000)
          {
-            WriteLog(MSG_TOO_MANY_ACCEPT_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
+            nxlog_write(MSG_TOO_MANY_ACCEPT_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
             errorCount = 0;
          }
          ThreadSleepMs(500);

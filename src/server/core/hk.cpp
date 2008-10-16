@@ -123,7 +123,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       m_hdb = DBConnect();
       if (m_hdb == NULL)
       {
-         WriteLog(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
+         nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
          m_hdb = g_hCoreDB;   // Switch to main DB connection
       }
    }

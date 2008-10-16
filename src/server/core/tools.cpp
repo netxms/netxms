@@ -168,7 +168,7 @@ BOOL ExecCommand(char *pszCommand)
    // Create new process
    if (!CreateProcess(NULL, pszCommand, NULL, NULL, FALSE, CREATE_NO_WINDOW | DETACHED_PROCESS, NULL, NULL, &si, &pi))
    {
-      WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCommand, GetLastError());
+      nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCommand, GetLastError());
       bSuccess = FALSE;
    }
    else
@@ -230,7 +230,7 @@ BOOL ExecCommand(char *pszCommand)
 				switch ((nPid = fork()))
 				{
 					case -1:
-                  WriteLog(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCommand, errno);
+                  nxlog_write(MSG_CREATE_PROCESS_FAILED, EVENTLOG_ERROR_TYPE, "se", pszCommand, errno);
 						break;
 					case 0: // child
 						{

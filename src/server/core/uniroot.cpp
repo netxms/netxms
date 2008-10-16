@@ -67,8 +67,8 @@ void UniversalRoot::LinkChildObjects(void)
          if (pObject != NULL)
             LinkObject(pObject);
          else
-            WriteLog(MSG_ROOT_INVALID_CHILD_ID, EVENTLOG_WARNING_TYPE, "ds", 
-                     dwObjectId, g_szClassName[Type()]);
+            nxlog_write(MSG_ROOT_INVALID_CHILD_ID, EVENTLOG_WARNING_TYPE, "ds", 
+                        dwObjectId, g_szClassName[Type()]);
       }
       DBFreeResult(hResult);
    }

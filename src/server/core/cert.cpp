@@ -194,14 +194,14 @@ void ReloadCertificates(void)
 						}
 						else
 						{
-							WriteLog(MSG_CANNOT_ADD_CERT, EVENTLOG_ERROR_TYPE,
+							nxlog_write(MSG_CANNOT_ADD_CERT, EVENTLOG_ERROR_TYPE,
 										"ss", DBGetField(hResult, i, 1, szSubject, 256),
 										_ERR_error_tstring(ERR_get_error(), szBuffer));
 						}
 					}
 					else
 					{
-						WriteLog(MSG_CANNOT_LOAD_CERT, EVENTLOG_ERROR_TYPE,
+						nxlog_write(MSG_CANNOT_LOAD_CERT, EVENTLOG_ERROR_TYPE,
 									"ss", DBGetField(hResult, i, 1, szSubject, 256),
 									_ERR_error_tstring(ERR_get_error(), szBuffer));
 					}
@@ -210,12 +210,12 @@ void ReloadCertificates(void)
 			DBFreeResult(hResult);
 
 			if (nLoaded > 0)
-				WriteLog(MSG_CA_CERTIFICATES_LOADED, EVENTLOG_INFORMATION_TYPE, "d", nLoaded);
+				nxlog_write(MSG_CA_CERTIFICATES_LOADED, EVENTLOG_INFORMATION_TYPE, "d", nLoaded);
 		}
 	}
 	else
 	{
-		WriteLog(MSG_CANNOT_INIT_CERT_STORE, EVENTLOG_ERROR_TYPE,
+		nxlog_write(MSG_CANNOT_INIT_CERT_STORE, EVENTLOG_ERROR_TYPE,
 		         "s", _ERR_error_tstring(ERR_get_error(), szBuffer));
 	}
 

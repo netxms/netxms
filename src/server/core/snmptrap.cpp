@@ -70,8 +70,8 @@ static BOOL LoadTrapCfg(void)
          }
          else
          {
-            WriteLog(MSG_INVALID_TRAP_OID, EVENTLOG_ERROR_TYPE, _T("s"),
-                     DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING));
+            nxlog_write(MSG_INVALID_TRAP_OID, EVENTLOG_ERROR_TYPE, _T("s"),
+                        DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING));
             bResult = FALSE;
          }
          m_pTrapCfg[i].dwEventCode = DBGetFieldULong(hResult, i, 2);
@@ -111,7 +111,7 @@ static BOOL LoadTrapCfg(void)
                   }
                   else
                   {
-                     WriteLog(MSG_INVALID_TRAP_ARG_OID, EVENTLOG_ERROR_TYPE, _T("sd"), 
+                     nxlog_write(MSG_INVALID_TRAP_ARG_OID, EVENTLOG_ERROR_TYPE, _T("sd"), 
                               DBGetField(hResult, j, 0, szBuffer, MAX_DB_STRING), m_pTrapCfg[i].dwId);
                      bResult = FALSE;
                   }
@@ -382,7 +382,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    hSocket = socket(AF_INET, SOCK_DGRAM, 0);
    if (hSocket == -1)
    {
-      WriteLog(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "SNMPTrapReceiver");
+      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "SNMPTrapReceiver");
       return THREAD_OK;
    }
 
@@ -397,11 +397,11 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    // Bind socket
    if (bind(hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != 0)
    {
-      WriteLog(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", 162, "SNMPTrapReceiver", WSAGetLastError());
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", 162, "SNMPTrapReceiver", WSAGetLastError());
       closesocket(hSocket);
       return THREAD_OK;
    }
-	WriteLog(MSG_LISTENING_FOR_SNMP, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(addr.sin_addr.s_addr), 162);
+	nxlog_write(MSG_LISTENING_FOR_SNMP, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(addr.sin_addr.s_addr), 162);
 
    pTransport = new SNMP_UDPTransport(hSocket);
    DbgPrintf(1, _T("SNMP Trap Receiver started"));

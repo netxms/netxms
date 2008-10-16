@@ -422,7 +422,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    hSocket = socket(AF_INET, SOCK_DGRAM, 0);
    if (hSocket == -1)
    {
-      WriteLog(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "SyslogDaemon");
+      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "SyslogDaemon");
       return THREAD_OK;
    }
 
@@ -442,11 +442,11 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    // Bind socket
    if (bind(hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != 0)
    {
-      WriteLog(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", nPort, "SyslogDaemon", WSAGetLastError());
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", nPort, "SyslogDaemon", WSAGetLastError());
       closesocket(hSocket);
       return THREAD_OK;
    }
-	WriteLog(MSG_LISTENING_FOR_SYSLOG, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(addr.sin_addr.s_addr), nPort);
+	nxlog_write(MSG_LISTENING_FOR_SYSLOG, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(addr.sin_addr.s_addr), nPort);
 
 	// Create message parser
 	xml = ConfigReadCLOB(_T("SyslogParser"), _T("<parser></parser>"));
@@ -463,7 +463,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
 		else
 		{
 			delete_and_null(m_parser);
-			WriteLog(MSG_SYSLOG_PARSER_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", parseError);
+			nxlog_write(MSG_SYSLOG_PARSER_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", parseError);
 		}
 		free(xml);
 	}

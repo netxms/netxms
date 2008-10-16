@@ -69,7 +69,7 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *pArg)
       hdb = DBConnect();
       if (hdb == NULL)
       {
-         WriteLog(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
+         nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, NULL);
          return THREAD_OK;
       }
    }

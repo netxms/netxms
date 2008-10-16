@@ -126,12 +126,12 @@ BOOL VPNConnector::CreateFromDB(DWORD dwId)
          pObject = FindObjectById(dwNodeId);
          if (pObject == NULL)
          {
-            WriteLog(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE,
-                     "dds", dwId, dwNodeId, "VPN connector");
+            nxlog_write(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE,
+                        "dds", dwId, dwNodeId, "VPN connector");
          }
          else if (pObject->Type() != OBJECT_NODE)
          {
-            WriteLog(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, dwNodeId);
+            nxlog_write(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, dwNodeId);
          }
          else
          {

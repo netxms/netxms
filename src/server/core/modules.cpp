@@ -91,31 +91,31 @@ void LoadNetXMSModules(void)
 						if (module.pfMain != NULL)
 							ThreadCreate(ModuleThreadStarter, 0, &g_pModuleList[g_dwNumModules]);
 
-                  WriteLog(MSG_MODULE_LOADED, EVENTLOG_INFORMATION_TYPE,
-                           "s", g_pModuleList[g_dwNumModules].szName);
+                  nxlog_write(MSG_MODULE_LOADED, EVENTLOG_INFORMATION_TYPE,
+                              "s", g_pModuleList[g_dwNumModules].szName);
                   g_dwNumModules++;
                }
                else
                {
-                  WriteLog(MSG_MODULE_BAD_MAGIC, EVENTLOG_ERROR_TYPE, "s", curr);
+                  nxlog_write(MSG_MODULE_BAD_MAGIC, EVENTLOG_ERROR_TYPE, "s", curr);
                   DLClose(hModule);
                }
             }
             else
             {
-               WriteLog(MSG_MODULE_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", curr);
+               nxlog_write(MSG_MODULE_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", curr);
                DLClose(hModule);
             }
          }
          else
          {
-            WriteLog(MSG_NO_MODULE_ENTRY_POINT, EVENTLOG_ERROR_TYPE, "s", curr);
+            nxlog_write(MSG_NO_MODULE_ENTRY_POINT, EVENTLOG_ERROR_TYPE, "s", curr);
             DLClose(hModule);
          }
       }
       else
       {
-         WriteLog(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", curr, szErrorText);
+         nxlog_write(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", curr, szErrorText);
       }
    }
 }

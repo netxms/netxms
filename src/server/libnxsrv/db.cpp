@@ -40,7 +40,7 @@ TCHAR LIBNXSRV_EXPORTABLE g_szDbName[MAX_DB_NAME] = _T("netxms_db");
 // Static data
 //
 
-static BOOL m_bWriteLog = FALSE;
+static BOOL m_bnxlog_write = FALSE;
 static BOOL m_bLogSQLErrors = FALSE;
 static BOOL m_bDumpSQL = FALSE;
 static int m_nReconnect = 0;
@@ -75,8 +75,8 @@ static void *DLGetSymbolAddrEx(HMODULE hModule, const TCHAR *pszSymbol)
    char szErrorText[256];
 
    pFunc = DLGetSymbolAddr(hModule, pszSymbol, szErrorText);
-   if ((pFunc == NULL) && m_bWriteLog)
-      WriteLog(MSG_DLSYM_FAILED, EVENTLOG_WARNING_TYPE, "ss", pszSymbol, szErrorText);
+   if ((pFunc == NULL) && m_bnxlog_write)
+      nxlog_write(MSG_DLSYM_FAILED, EVENTLOG_WARNING_TYPE, "ss", pszSymbol, szErrorText);
    return pFunc;
 }
 
@@ -85,7 +85,7 @@ static void *DLGetSymbolAddrEx(HMODULE hModule, const TCHAR *pszSymbol)
 // Load and initialize database driver
 //
 
-BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
+BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bnxlog_write, BOOL bLogErrors, BOOL bDumpSQL,
                                 void (* fpEventHandler)(DWORD, TCHAR *))
 {
    BOOL (* fpDrvInit)(char *);
@@ -93,8 +93,8 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
    char szErrorText[256];
    static DWORD dwVersionZero = 0;
 
-   m_bWriteLog = bWriteLog;
-   m_bLogSQLErrors = bLogErrors && bWriteLog;
+   m_bnxlog_write = bnxlog_write;
+   m_bLogSQLErrors = bLogErrors && bnxlog_write;
    m_bDumpSQL = bDumpSQL;
    m_fpEventHandler = fpEventHandler;
    m_nReconnect = 0;
@@ -104,8 +104,8 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
    m_hDriver = DLOpen(g_szDbDriver, szErrorText);
    if (m_hDriver == NULL)
    {
-      if (m_bWriteLog)
-         WriteLog(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", g_szDbDriver, szErrorText);
+      if (m_bnxlog_write)
+         nxlog_write(MSG_DLOPEN_FAILED, EVENTLOG_ERROR_TYPE, "ss", g_szDbDriver, szErrorText);
       return FALSE;
    }
 
@@ -115,8 +115,8 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
       pdwAPIVersion = &dwVersionZero;
    if (*pdwAPIVersion != DBDRV_API_VERSION)
    {
-      if (m_bWriteLog)
-         WriteLog(MSG_DBDRV_API_VERSION_MISMATCH, EVENTLOG_ERROR_TYPE, "sdd",
+      if (m_bnxlog_write)
+         nxlog_write(MSG_DBDRV_API_VERSION_MISMATCH, EVENTLOG_ERROR_TYPE, "sdd",
                   g_szDbDriver, DBDRV_API_VERSION, *pdwAPIVersion);
       DLClose(m_hDriver);
       m_hDriver = NULL;
@@ -149,8 +149,8 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
        (m_fpDrvBegin == NULL) || (m_fpDrvCommit == NULL) || (m_fpDrvRollback == NULL) ||
        (m_fpDrvGetFieldLength == NULL))
    {
-      if (m_bWriteLog)
-         WriteLog(MSG_DBDRV_NO_ENTRY_POINTS, EVENTLOG_ERROR_TYPE, "s", g_szDbDriver);
+      if (m_bnxlog_write)
+         nxlog_write(MSG_DBDRV_NO_ENTRY_POINTS, EVENTLOG_ERROR_TYPE, "s", g_szDbDriver);
       DLClose(m_hDriver);
       m_hDriver = NULL;
       return FALSE;
@@ -159,16 +159,16 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
    // Initialize driver
    if (!fpDrvInit(g_szDbDrvParams))
    {
-      if (m_bWriteLog)
-         WriteLog(MSG_DBDRV_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", g_szDbDriver);
+      if (m_bnxlog_write)
+         nxlog_write(MSG_DBDRV_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", g_szDbDriver);
       DLClose(m_hDriver);
       m_hDriver = NULL;
       return FALSE;
    }
 
    // Success
-   if (m_bWriteLog)
-      WriteLog(MSG_DBDRV_LOADED, EVENTLOG_INFORMATION_TYPE, "s", g_szDbDriver);
+   if (m_bnxlog_write)
+      nxlog_write(MSG_DBDRV_LOADED, EVENTLOG_INFORMATION_TYPE, "s", g_szDbDriver);
    return TRUE;
 }
 
@@ -323,7 +323,7 @@ BOOL LIBNXSRV_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR 
    
    MutexUnlock(hConn->mutexTransLock);
    if ((dwResult != DBERR_SUCCESS) && m_bLogSQLErrors)
-      WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
+      nxlog_write(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
    return dwResult == DBERR_SUCCESS;
 #undef pwszQuery
 }
@@ -372,7 +372,7 @@ DB_RESULT LIBNXSRV_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, 
    }
    MutexUnlock(hConn->mutexTransLock);
    if ((hResult == NULL) && m_bLogSQLErrors)
-      WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
+      nxlog_write(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
    return hResult;
 }
 
@@ -683,7 +683,7 @@ DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *
    {
       MutexUnlock(hConn->mutexTransLock);
       if (m_bLogSQLErrors)
-        WriteLog(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, _T("ss"), szQuery, errorText);
+        nxlog_write(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, _T("ss"), szQuery, errorText);
    }
    return hResult;
 }

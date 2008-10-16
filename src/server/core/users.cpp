@@ -86,7 +86,7 @@ BOOL LoadUsers(void)
       DBGetField(hResult, i, 1, g_pUserList[i].szName, MAX_USER_NAME);
       if (StrToBin(DBGetField(hResult, i, 2, szBuffer, 256), g_pUserList[i].passwordHash, SHA1_DIGEST_SIZE) != SHA1_DIGEST_SIZE)
       {
-         WriteLog(MSG_INVALID_SHA1_HASH, EVENTLOG_WARNING_TYPE, "s", g_pUserList[i].szName);
+         nxlog_write(MSG_INVALID_SHA1_HASH, EVENTLOG_WARNING_TYPE, "s", g_pUserList[i].szName);
          CalculateSHA1Hash((BYTE *)"netxms", 6, g_pUserList[i].passwordHash);
       }
       if (g_pUserList[i].dwId == 0)
@@ -130,7 +130,7 @@ BOOL LoadUsers(void)
       uuid_generate(g_pUserList[i].guid);
 		g_pUserList[i].nCertMappingMethod = 0;
 		g_pUserList[i].pszCertMappingData = NULL;
-      WriteLog(MSG_SUPERUSER_CREATED, EVENTLOG_WARNING_TYPE, NULL);
+      nxlog_write(MSG_SUPERUSER_CREATED, EVENTLOG_WARNING_TYPE, NULL);
    }
 
    // Load groups
@@ -171,7 +171,7 @@ BOOL LoadUsers(void)
       g_pGroupList[i].wFlags = UF_MODIFIED;
       g_pGroupList[i].dwSystemRights = 0;
       strcpy(g_pGroupList[i].szDescription, "Built-in everyone group");
-      WriteLog(MSG_EVERYONE_GROUP_CREATED, EVENTLOG_WARNING_TYPE, NULL);
+      nxlog_write(MSG_EVERYONE_GROUP_CREATED, EVENTLOG_WARNING_TYPE, NULL);
    }
 
    // Add users to groups
@@ -406,7 +406,7 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
 					}
 					break;
             default:
-               WriteLog(MSG_UNKNOWN_AUTH_METHOD, EVENTLOG_WARNING_TYPE, "ds",
+               nxlog_write(MSG_UNKNOWN_AUTH_METHOD, EVENTLOG_WARNING_TYPE, "ds",
                         g_pUserList[i].nAuthMethod, pszName);
                bPasswordValid = FALSE;
                break;

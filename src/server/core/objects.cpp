@@ -374,7 +374,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             RWLockUnlock(g_rwlockConditionIndex);
             break;
          default:
-            WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
+            nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
             break;
       }
    }
@@ -437,7 +437,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          RWLockUnlock(g_rwlockConditionIndex);
          break;
       default:
-         WriteLog(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
+         nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
          break;
    }
 }
@@ -712,7 +712,7 @@ BOOL LoadObjects(void)
             else     // Object load failed
             {
                delete pZone;
-               WriteLog(MSG_ZONE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+               nxlog_write(MSG_ZONE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
             }
          }
          DBFreeResult(hResult);
@@ -740,7 +740,7 @@ BOOL LoadObjects(void)
          else     // Object load failed
          {
             delete pCondition;
-            WriteLog(MSG_CONDITION_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            nxlog_write(MSG_CONDITION_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
          }
       }
       DBFreeResult(hResult);
@@ -780,7 +780,7 @@ BOOL LoadObjects(void)
          else     // Object load failed
          {
             delete pSubnet;
-            WriteLog(MSG_SUBNET_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            nxlog_write(MSG_SUBNET_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
          }
       }
       DBFreeResult(hResult);
@@ -805,7 +805,7 @@ BOOL LoadObjects(void)
          else     // Object load failed
          {
             delete pNode;
-            WriteLog(MSG_NODE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            nxlog_write(MSG_NODE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
          }
       }
       DBFreeResult(hResult);
@@ -833,7 +833,7 @@ BOOL LoadObjects(void)
          else     // Object load failed
          {
             delete pInterface;
-            WriteLog(MSG_INTERFACE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            nxlog_write(MSG_INTERFACE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
          }
       }
       DBFreeResult(hResult);
@@ -858,7 +858,7 @@ BOOL LoadObjects(void)
          else     // Object load failed
          {
             delete pService;
-            WriteLog(MSG_NETSRV_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            nxlog_write(MSG_NETSRV_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
          }
       }
       DBFreeResult(hResult);
@@ -883,7 +883,7 @@ BOOL LoadObjects(void)
          else     // Object load failed
          {
             delete pConnector;
-            WriteLog(MSG_VPNC_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            nxlog_write(MSG_VPNC_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
          }
       }
       DBFreeResult(hResult);
@@ -908,7 +908,7 @@ BOOL LoadObjects(void)
          else     // Object load failed
          {
             delete pCluster;
-            WriteLog(MSG_CLUSTER_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            nxlog_write(MSG_CLUSTER_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
          }
       }
       DBFreeResult(hResult);
@@ -931,7 +931,7 @@ BOOL LoadObjects(void)
          else     // Object load failed
          {
             delete pTemplate;
-            WriteLog(MSG_TEMPLATE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            nxlog_write(MSG_TEMPLATE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
          }
       }
       DBFreeResult(hResult);
@@ -957,7 +957,7 @@ BOOL LoadObjects(void)
          else     // Object load failed
          {
             delete pContainer;
-            WriteLog(MSG_CONTAINER_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            nxlog_write(MSG_CONTAINER_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
          }
       }
       DBFreeResult(hResult);
@@ -983,7 +983,7 @@ BOOL LoadObjects(void)
          else     // Object load failed
          {
             delete pGroup;
-            WriteLog(MSG_TG_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            nxlog_write(MSG_TG_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
          }
       }
       DBFreeResult(hResult);

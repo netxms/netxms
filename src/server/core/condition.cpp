@@ -125,7 +125,7 @@ BOOL Condition::CreateFromDB(DWORD dwId)
    // Compile script
    m_pCompiledScript = (NXSL_Program *)NXSLCompile(m_pszScript, szQuery, 512);
    if (m_pCompiledScript == NULL)
-      WriteLog(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
+      nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
                "dss", m_dwId, m_szName, szQuery);
 
    // Load DCI map
@@ -295,7 +295,7 @@ DWORD Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       m_pszScript = pRequest->GetVariableStr(VID_SCRIPT);
       m_pCompiledScript = (NXSL_Program *)NXSLCompile(m_pszScript, szError, 1024);
       if (m_pCompiledScript == NULL)
-         WriteLog(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
+         nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
                   "dss", m_dwId, m_szName, szError);
    }
 
@@ -499,7 +499,7 @@ void Condition::Check(void)
    }
    else
    {
-      WriteLog(MSG_COND_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE,
+      nxlog_write(MSG_COND_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE,
                "dss", m_dwId, m_szName, m_pCompiledScript->GetErrorText());
 
       LockData();

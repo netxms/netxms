@@ -99,9 +99,9 @@ void LoadScripts(void)
          }
          else
          {
-            WriteLog(MSG_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, _T("dss"),
-                     DBGetFieldULong(hResult, i, 0),
-                     DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING), szError);
+            nxlog_write(MSG_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, _T("dss"),
+                        DBGetFieldULong(hResult, i, 0),
+                        DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING), szError);
          }
       }
       DBFreeResult(hResult);
@@ -138,7 +138,7 @@ void ReloadScript(DWORD dwScriptId)
          }
          else
          {
-            WriteLog(MSG_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, _T("dss"),
+            nxlog_write(MSG_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, _T("dss"),
                      dwScriptId, DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING), szError);
          }
       }
