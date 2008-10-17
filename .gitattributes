@@ -269,8 +269,6 @@ src/console/win32/res/nxcon.ico -text
 src/console/win32/res/up_arrow.bmp -text
 src/console/win32starter/nxcstart.dsp eol=crlf
 src/console/win32starter/nxcstart.dsw eol=crlf
-src/java/netxms-base/.classpath -text
-src/java/netxms-base/.project -text
 src/java/netxms-base/src/org/netxms/base/NXCPMessage.java -text
 src/java/netxms-base/src/org/netxms/base/NXCPVariable.java -text
 src/libnetxms/libnetxms.dsp eol=crlf
