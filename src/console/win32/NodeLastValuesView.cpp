@@ -61,6 +61,7 @@ BEGIN_MESSAGE_MAP(CNodeLastValuesView, CWnd)
 	ON_COMMAND(ID_ITEM_SHOWDATA, OnItemShowdata)
 	ON_WM_TIMER()
 	ON_COMMAND(ID_LATSTVALUES_USEMULTIPLIERS, OnLatstvaluesUsemultipliers)
+	ON_COMMAND(ID_ITEM_CLEARDATA, OnItemCleardata)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_SET_OBJECT, OnSetObject)
    ON_MESSAGE(NXCM_REQUEST_COMPLETED, OnRequestCompleted)
@@ -438,6 +439,7 @@ void CNodeLastValuesView::OnContextMenu(CWnd* pWnd, CPoint point)
 	pMenu->EnableMenuItem(ID_ITEM_SHOWDATA, MF_BYCOMMAND | ((nCount > 0) ? MF_ENABLED : MF_GRAYED));
 	pMenu->EnableMenuItem(ID_ITEM_GRAPH, MF_BYCOMMAND | ((nCount > 0) ? MF_ENABLED : MF_GRAYED));
 	pMenu->EnableMenuItem(ID_ITEM_EXPORTDATA, MF_BYCOMMAND | ((nCount == 1) ? MF_ENABLED : MF_GRAYED));
+	pMenu->EnableMenuItem(ID_ITEM_CLEARDATA, MF_BYCOMMAND | ((nCount > 0) ? MF_ENABLED : MF_GRAYED));
 	pMenu->CheckMenuItem(ID_LATSTVALUES_USEMULTIPLIERS, MF_BYCOMMAND | (m_bUseMultipliers ? MF_CHECKED : MF_UNCHECKED));
    pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this, NULL);
 }
@@ -567,3 +569,49 @@ void CNodeLastValuesView::OnLatstvaluesUsemultipliers()
 	m_bUseMultipliers = !m_bUseMultipliers;
 	m_workerQueue.Put((void *)m_pObject->dwId);	// Refresh view
 }
+
+
+//
+// Handler for "Clear data" menu item
+//
+
+static DWORD ClearDCIData(DWORD dwNodeId, DWORD dwItemCount, DWORD *pdwItemList)
+{
+	DWORD i, dwResult;
+
+	for(i = 0; i < dwResult; i++)
+	{
+		dwResult = NXCClearDCIData(g_hSession, dwNodeId, pdwItemList[i]);
+		if (dwResult != RCC_SUCCESS)
+			break;
+	}
+	return dwResult;
+}
+
+void CNodeLastValuesView::OnItemCleardata() 
+{
+   int iItem;
+   DWORD i, dwItemCount, *pdwItemList, dwResult;
+
+	if (MessageBox(_T("All collected data for selected items will be deleted. Are you sure?"), _T("Warning"), MB_YESNO | MB_ICONEXCLAMATION) != IDYES)
+		return;	// Action cancelled by user
+
+	dwItemCount = m_wndListCtrl.GetSelectedCount();
+	pdwItemList = (DWORD *)malloc(sizeof(DWORD) * dwItemCount);
+
+   iItem = m_wndListCtrl.GetNextItem(-1, LVNI_SELECTED);
+   for(i = 0; (iItem != -1) && (i < dwItemCount); i++)
+   {
+      pdwItemList[i] = m_pItemList[m_wndListCtrl.GetItemData(iItem)].dwId;
+      iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
+   }
+
+   dwResult = DoRequestArg3(ClearDCIData, (void *)m_pObject->dwId, (void *)dwItemCount, pdwItemList,
+                            _T("Clearing DCI data..."));
+   if (dwResult != RCC_SUCCESS)
+   {
+      theApp.ErrorBox(dwResult, _T("Unable to clear DCI data: %s"));
+   }
+	safe_free(pdwItemList);
+}
+

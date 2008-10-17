@@ -1267,7 +1267,7 @@ void CDataCollectionEditor::OnItemCleardata()
                             _T("Clearing DCI data..."));
    if (dwResult != RCC_SUCCESS)
    {
-      theApp.ErrorBox(dwResult, _T("Unable to delete data collection item: %s"));
+      theApp.ErrorBox(dwResult, _T("Unable to clear DCI data: %s"));
    }
 	safe_free(pdwItemList);
 }

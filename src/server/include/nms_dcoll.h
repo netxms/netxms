@@ -202,14 +202,14 @@ private:
 	DWORD m_dwResourceId;		// Associated cluster resource ID
 	DWORD m_dwProxyNode;       // Proxy node ID or 0 to disable
 
-   void Lock(void) { MutexLock(m_hMutex, INFINITE); }
-   void Unlock(void) { MutexUnlock(m_hMutex); }
+   void Lock() { MutexLock(m_hMutex, INFINITE); }
+   void Unlock() { MutexUnlock(m_hMutex); }
 
    void Transform(ItemValue &value, time_t nElapsedTime);
    void CheckThresholds(ItemValue &value);
-   void ClearCache(void);
+   void ClearCache();
 
-	BOOL MatchClusterResource(void);
+	BOOL MatchClusterResource();
 
    void NewFormula(TCHAR *pszFormula);
 	void ExpandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen);
@@ -223,26 +223,26 @@ public:
           const TCHAR *pszDescription = NULL);
    ~DCItem();
 
-   void PrepareForDeletion(void);
+   void PrepareForDeletion();
    void UpdateFromTemplate(DCItem *pItem);
 
    BOOL SaveToDB(DB_HANDLE hdb);
-   BOOL LoadThresholdsFromDB(void);
-   void DeleteFromDB(void);
+   BOOL LoadThresholdsFromDB();
+   void DeleteFromDB();
 
    void UpdateCacheSize(DWORD dwCondId = 0);
 
-   DWORD Id(void) { return m_dwId; }
-   int DataSource(void) { return m_iSource; }
-   int DataType(void) { return m_iDataType; }
-   int Status(void) { return m_iStatus; }
-   const char *Name(void) { return m_szName; }
-   const char *Description(void) { return m_szDescription; }
-   Template *RelatedNode(void) { return m_pNode; }
-   DWORD TemplateId(void) { return m_dwTemplateId; }
-   DWORD TemplateItemId(void) { return m_dwTemplateItemId; }
-	DWORD ResourceId(void) { return m_dwResourceId; }
-	DWORD ProxyNode(void) { return m_dwProxyNode; }
+   DWORD Id() { return m_dwId; }
+   int DataSource() { return m_iSource; }
+   int DataType() { return m_iDataType; }
+   int Status() { return m_iStatus; }
+   const char *Name() { return m_szName; }
+   const char *Description() { return m_szDescription; }
+   Template *RelatedNode() { return m_pNode; }
+   DWORD TemplateId() { return m_dwTemplateId; }
+   DWORD TemplateItemId() { return m_dwTemplateItemId; }
+	DWORD ResourceId() { return m_dwResourceId; }
+	DWORD ProxyNode() { return m_dwProxyNode; }
 
    BOOL ReadyForPolling(time_t currTime);
    void SetLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
@@ -254,7 +254,7 @@ public:
 	void SystemModify(const TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType);
 
    void NewValue(time_t nTimeStamp, const char *pszValue);
-   void NewError(void);
+   void NewError();
 
    void GetLastValue(CSCPMessage *pMsg, DWORD dwId);
    NXSL_Value *GetValueForNXSL(int nFunction, int nPolls);
@@ -262,14 +262,15 @@ public:
    void CreateMessage(CSCPMessage *pMsg);
    void UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId);
 
-   void CleanData(void);
+   void DeleteExpiredData();
+	BOOL DeleteAllData();
 
    void GetEventList(DWORD **ppdwList, DWORD *pdwSize);
    void CreateNXMPRecord(String &str);
 
 	BOOL EnumThresholds(BOOL (* pfCallback)(Threshold *, DWORD, void *), void *pArg);
 
-	void FinishMPParsing(void);
+	void FinishMPParsing();
 	void SetName(TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_ITEM_NAME); }
 	void SetDescription(TCHAR *pszDescr) { nx_strncpy(m_szDescription, pszDescr, MAX_DB_STRING); }
 	void SetInstance(TCHAR *pszInstance) { nx_strncpy(m_szInstance, pszInstance, MAX_DB_STRING); }

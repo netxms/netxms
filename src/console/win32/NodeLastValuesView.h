@@ -61,6 +61,7 @@ protected:
 	afx_msg void OnItemShowdata();
 	afx_msg void OnTimer(UINT nIDEvent);
 	afx_msg void OnLatstvaluesUsemultipliers();
+	afx_msg void OnItemCleardata();
 	//}}AFX_MSG
    afx_msg void OnSetObject(WPARAM wParam, NXC_OBJECT *pObject);
 	afx_msg void OnRequestCompleted(WPARAM wParam, LPARAM lParam);

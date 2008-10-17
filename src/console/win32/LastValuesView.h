@@ -80,6 +80,8 @@ protected:
 	afx_msg void OnDestroy();
 	afx_msg void OnUpdateItemExportdata(CCmdUI* pCmdUI);
 	afx_msg void OnItemExportdata();
+	afx_msg void OnItemCleardata();
+	afx_msg void OnUpdateItemCleardata(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
    afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);

@@ -378,9 +378,11 @@ private:
    static THREAD_RESULT THREAD_CALL PollerThreadStarter(void *);
 
 	DECLARE_THREAD_STARTER(GetCollectedData)
+	DECLARE_THREAD_STARTER(ClearDCIData)
 	DECLARE_THREAD_STARTER(QueryL2Topology)
 	DECLARE_THREAD_STARTER(SendEventLog)
 	DECLARE_THREAD_STARTER(SendSyslog)
+	DECLARE_THREAD_STARTER(CreateObject)
 
    void ReadThread(void);
    void WriteThread(void);
@@ -426,6 +428,7 @@ private:
    void CopyDCI(CSCPMessage *pRequest);
    void ApplyTemplate(CSCPMessage *pRequest);
    void GetCollectedData(CSCPMessage *pRequest);
+	void ClearDCIData(CSCPMessage *pRequest);
    void ChangeDCIStatus(CSCPMessage *pRequest);
    void SendLastValues(CSCPMessage *pRequest);
    void OpenEPP(DWORD dwRqId);

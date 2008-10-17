@@ -1343,7 +1343,7 @@ NXSL_Value *DCItem::GetValueForNXSL(int nFunction, int nPolls)
 // Clean expired data
 //
 
-void DCItem::CleanData(void)
+void DCItem::DeleteExpiredData(void)
 {
    TCHAR szQuery[256];
    time_t now;
@@ -1354,6 +1354,25 @@ void DCItem::CleanData(void)
               m_pNode->Id(), m_dwId, now - (time_t)m_iRetentionTime * 86400);
    Unlock();
    QueueSQLRequest(szQuery);
+}
+
+
+//
+// Delete all collected data
+//
+
+BOOL DCItem::DeleteAllData(void)
+{
+   TCHAR szQuery[256];
+	BOOL success;
+
+   Lock();
+   _sntprintf(szQuery, 256, _T("DELETE FROM idata_%d WHERE item_id=%d"), m_pNode->Id(), m_dwId);
+   success = DBQuery(g_hCoreDB, szQuery);
+	ClearCache();
+	UpdateCacheSize();
+   Unlock();
+	return success;
 }
 
 

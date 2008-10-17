@@ -2375,7 +2375,7 @@ void Node::CleanDCIData(void)
 
    LockData();
    for(i = 0; i < m_dwNumItems; i++)
-      m_ppItems[i]->CleanData();
+      m_ppItems[i]->DeleteExpiredData();
    UnlockData();
 }
 

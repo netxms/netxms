@@ -145,9 +145,11 @@ THREAD_RESULT THREAD_CALL ClientSession::ThreadStarter_##func(void *pArg) \
 }
 
 DEFINE_THREAD_STARTER(GetCollectedData)
+DEFINE_THREAD_STARTER(ClearDCIData)
 DEFINE_THREAD_STARTER(QueryL2Topology)
 DEFINE_THREAD_STARTER(SendEventLog)
 DEFINE_THREAD_STARTER(SendSyslog)
+DEFINE_THREAD_STARTER(CreateObject)
 
 
 //
@@ -831,8 +833,11 @@ void ClientSession::ProcessingThread(void)
             ApplyTemplate(pMsg);
             break;
          case CMD_GET_DCI_DATA:
-            GetCollectedData(pMsg);
+            CALL_IN_NEW_THREAD(GetCollectedData, pMsg);
             break;
+			case CMD_CLEAR_DCI_DATA:
+				CALL_IN_NEW_THREAD(ClearDCIData, pMsg);
+				break;
          case CMD_OPEN_EPP:
             OpenEPP(pMsg->GetId());
             break;
@@ -852,7 +857,7 @@ void ClientSession::ProcessingThread(void)
             SendMIB(pMsg->GetId());
             break;
          case CMD_CREATE_OBJECT:
-            CreateObject(pMsg);
+            CALL_IN_NEW_THREAD(CreateObject, pMsg);
             break;
          case CMD_BIND_OBJECT:
             ChangeObjectBinding(pMsg, TRUE);
@@ -2960,7 +2965,64 @@ void ClientSession::ChangeDCIStatus(CSCPMessage *pRequest)
       }
       else     // Object is not a node
       {
-         msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   SendMessage(&msg);
+}
+
+
+//
+// Clear all collected data for DCI
+//
+
+void ClientSession::ClearDCIData(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+	DWORD dwItemId;
+	DCItem *dci;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get node id and check object class and access rights
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      if (pObject->Type() == OBJECT_NODE)
+      {
+         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
+         {
+				dwItemId = pRequest->GetVariableLong(VID_DCI_ID);
+				DebugPrintf(4, _T("ClearDCIData: request for DCI %d at node %d"), dwItemId, pObject->Id()); 
+            dci = ((Template *)pObject)->GetItemById(dwItemId);
+				if (dci != NULL)
+				{
+					msg.SetVariable(VID_RCC, dci->DeleteAllData() ? RCC_SUCCESS : RCC_DB_FAILURE);
+					DebugPrintf(4, _T("ClearDCIData: DCI %d at node %d"), dwItemId, pObject->Id()); 
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
+					DebugPrintf(4, _T("ClearDCIData: DCI %d at node %d not found"), dwItemId, pObject->Id()); 
+				}
+         }
+         else  // User doesn't have DELETE rights on object
+         {
+            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else     // Object is not a node
+      {
+         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
       }
    }
    else  // No object with given ID
