@@ -8,28 +8,28 @@ import java.io.*;
  */
 public class NXCPVariable
 {
-	public final static int TYPE_INTEGER = 0;
-	public final static int TYPE_STRING = 1;
-	public final static int TYPE_INT64 = 2;
-	public final static int TYPE_INT16 = 3;
-	public final static int TYPE_BINARY = 4;
-	public final static int TYPE_FLOAT = 5;
-	
+	public static final int TYPE_INTEGER = 0;
+	public static final int TYPE_STRING = 1;
+	public static final int TYPE_INT64 = 2;
+	public static final int TYPE_INT16 = 3;
+	public static final int TYPE_BINARY = 4;
+	public static final int TYPE_FLOAT = 5;
+
 	private long variableId;
 	private int variableType;
-	
+
 	private Long integerValue;
 	private Double realValue;
 	private String stringValue;
 	private byte[] binaryValue;
-	
-	
+
+
 	/**
 	 * @param varId
 	 * @param varType
 	 * @param value
 	 */
-	public NXCPVariable(long varId, int varType, Long value)
+	public NXCPVariable(final long varId, final int varType, final Long value)
 	{
 		variableId = varId;
 		variableType = varType;
@@ -37,12 +37,12 @@ public class NXCPVariable
 		stringValue = integerValue.toString();
 		realValue = integerValue.doubleValue();
 	}
-		
+
 	/**
 	 * @param varId
 	 * @param value
 	 */
-	public NXCPVariable(long varId, String value)
+	public NXCPVariable(final long varId, final String value)
 	{
 		variableId = varId;
 		variableType = TYPE_STRING;
@@ -55,7 +55,7 @@ public class NXCPVariable
 	 * @param varId
 	 * @param value
 	 */
-	public NXCPVariable(long varId, Double value)
+	public NXCPVariable(final long varId, final Double value)
 	{
 		variableId = varId;
 		variableType = TYPE_FLOAT;
@@ -68,7 +68,7 @@ public class NXCPVariable
 	 * @param varId
 	 * @param value
 	 */
-	public NXCPVariable(long varId, byte[] value)
+	public NXCPVariable(final long varId, final byte[] value)
 	{
 		variableId = varId;
 		variableType = TYPE_BINARY;
@@ -77,19 +77,20 @@ public class NXCPVariable
 
 	/**
 	 * Create NXCPVariable from NXCP message data field
-	 * 
+	 *
 	 * @param nxcpDataField
+         * @throws java.io.IOException
 	 */
-	public NXCPVariable(byte[] nxcpDataField) throws IOException
+	public NXCPVariable(final byte[] nxcpDataField) throws IOException
 	{
 		DataInputStream in = new DataInputStream(new ByteArrayInputStream(nxcpDataField));
-		
-		variableId = in.readInt();
+
+		variableId = (long)in.readInt();
 		variableType = in.readUnsignedByte();
 		in.skipBytes(1);	// Skip padding
 		if (variableType == TYPE_INT16)
 		{
-			integerValue = Long.valueOf(in.readUnsignedShort());
+			integerValue = (long)in.readUnsignedShort();
 			realValue = integerValue.doubleValue();
 			stringValue = integerValue.toString();
 		}
@@ -99,7 +100,7 @@ public class NXCPVariable
 			switch(variableType)
 			{
 				case TYPE_INTEGER:
-					integerValue = Long.valueOf(in.readInt());
+					integerValue = (long)in.readInt();
 					realValue = integerValue.doubleValue();
 					stringValue = integerValue.toString();
 					break;
@@ -131,7 +132,7 @@ public class NXCPVariable
 		}
 	}
 
-	
+
 	public Long getAsInteger()
 	{
 		return integerValue;
@@ -141,12 +142,12 @@ public class NXCPVariable
 	{
 		return realValue;
 	}
-	
+
 	public String getAsString()
 	{
 		return stringValue;
 	}
-	
+
 	public byte[] getAsBinary()
 	{
 		return binaryValue;
@@ -163,7 +164,7 @@ public class NXCPVariable
 	/**
 	 * @param variableId the variableId to set
 	 */
-	public void setVariableId(long variableId)
+	public void setVariableId(final long variableId)
 	{
 		this.variableId = variableId;
 	}
@@ -175,15 +176,15 @@ public class NXCPVariable
 	{
 		return variableType;
 	}
-	
-	
+
+
 	/**
 	 * Create NXCP DF structure
-	 */
-	
+         * @return
+         */
 	private int calculateBinarySize()
 	{
-	   int size;
+	   final int size;
 
 	   switch(variableType)
 	   {
@@ -209,12 +210,12 @@ public class NXCPVariable
 	   }
 		return size;
 	}
-	
+
 	public byte[] createNXCPDataField() throws IOException
 	{
-		ByteArrayOutputStream byteStream = new ByteArrayOutputStream(calculateBinarySize());
-		DataOutputStream out = new DataOutputStream(byteStream);
-		
+		final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(calculateBinarySize());
+		final DataOutputStream out = new DataOutputStream(byteStream);
+
 		out.writeInt(Long.valueOf(variableId).intValue());
 		out.writeByte(Long.valueOf(variableType).byteValue());
 		out.writeByte(0);		// Padding
@@ -246,13 +247,14 @@ public class NXCPVariable
 					break;
 			}
 		}
-		
+
 		// Align to 8-bytes boundary
-		if ((byteStream.size() % 8) != 0)
+            final int i = byteStream.size() % 8;
+            if ( i != 0 )
 		{
-			out.write(new byte[8 - (byteStream.size() % 8)]);
+			out.write(new byte[8 - i]);
 		}
-		
+
 		return byteStream.toByteArray();
 	}
 }
