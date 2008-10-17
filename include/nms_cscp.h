@@ -470,6 +470,10 @@ typedef struct
 #define CMD_CONFIG_GET_CLOB         0x00E2
 #define CMD_RENAME_MAP              0x00E3
 #define CMD_CLEAR_DCI_DATA          0x00E4
+#define CMD_GET_LICENSE             0x00E5
+#define CMD_CHECK_LICENSE           0x00E6
+#define CMD_RELEASE_LICENSE         0x00E7
+#define CMD_ISC_CONNECT_TO_SERVICE  0x00E8
 
 
 //
@@ -786,6 +790,9 @@ typedef struct
 #define VID_TIMEZONE                ((DWORD)308)
 #define VID_NUM_CUSTOM_ATTRIBUTES   ((DWORD)309)
 #define VID_MAP_DATA                ((DWORD)310)
+#define VID_PRODUCT_ID              ((DWORD)311)
+#define VID_CLIENT_ID               ((DWORD)312)
+#define VID_LICENSE_DATA            ((DWORD)313)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

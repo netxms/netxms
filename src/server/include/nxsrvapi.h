@@ -46,6 +46,16 @@
 
 
 //
+// ISC constants
+//
+
+#define NETXMS_ISC_PORT        4702
+
+#define ISC_SERVICE_LICENSING  ((DWORD)1)
+#define ISC_SERVICE_SYNC       ((DWORD)2)
+
+
+//
 // Default files
 //
 
@@ -377,6 +387,80 @@ public:
 
 
 //
+// ISC flags
+//
+
+#define ISCF_IS_CONNECTED        ((DWORD)0x00000001)
+#define ISCF_REQUIRE_ENCRYPTION  ((DWORD)0x00000002)
+
+
+//
+// ISC error codes (RCC)
+//
+
+#define ISCERR_SUCCESS                 0
+#define ISCERR_ENCRYPTION_REQUIRED     1
+#define ISCERR_CONNECTION_BROKEN       2
+#define ISCERR_ALREADY_CONNECTED       3
+#define ISCERR_SOCKET_ERROR            4
+#define ISCERR_CONNECT_FAILED          5
+#define ISCERR_INVALID_NXCP_VERSION    6
+#define ISCERR_REQUEST_TIMEOUT         7
+#define ISCERR_NOT_IMPLEMENTED         8
+#define ISCERR_NO_CIPHERS              9
+#define ISCERR_INVALID_PUBLIC_KEY      10
+#define ISCERR_INVALID_SESSION_KEY     11
+#define ISCERR_INTERNAL_ERROR          12
+
+
+//
+// Inter-server connection (ISC)
+//
+
+class LIBNXSRV_EXPORTABLE ISC
+{
+private:
+	DWORD m_flags;
+   DWORD m_addr;
+	WORD m_port;
+   SOCKET m_socket;
+   int m_protocolVersion;
+	DWORD m_requestId;
+	DWORD m_recvTimeout;
+   MsgWaitQueue *m_msgWaitQueue;
+   MUTEX m_mutexDataLock;
+   THREAD m_hReceiverThread;
+   CSCP_ENCRYPTION_CONTEXT *m_ctx;
+	DWORD m_commandTimeout;
+
+   void ReceiverThread(void);
+   static THREAD_RESULT THREAD_CALL ReceiverThreadStarter(void *);
+
+protected:
+   void DestroyResultData(void);
+   BOOL SendMessage(CSCPMessage *msg);
+   CSCPMessage *WaitForMessage(WORD code, DWORD id, DWORD timeOut) { return m_msgWaitQueue->WaitForMessage(code, id, timeOut); }
+   DWORD WaitForRCC(DWORD rqId, DWORD timeOut);
+   DWORD SetupEncryption(RSA *pServerKey);
+
+   void Lock(void) { MutexLock(m_mutexDataLock, INFINITE); }
+   void Unlock(void) { MutexUnlock(m_mutexDataLock); }
+
+   virtual void PrintMsg(const TCHAR *format, ...);
+
+public:
+   ISC();
+   ISC(DWORD addr, WORD port = NETXMS_ISC_PORT);
+   virtual ~ISC();
+
+   DWORD Connect(DWORD service, RSA *serverKey = NULL, BOOL requireEncryption = FALSE);
+	void Disconnect();
+
+   DWORD Nop(void);
+};
+
+
+//
 // Functions
 //
 
@@ -432,6 +516,8 @@ TCHAR LIBNXSRV_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn);
 void LIBNXSRV_EXPORTABLE DecodeSQLString(TCHAR *pszStr);
 
 void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
+
+const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(DWORD code);
 
 
 //

@@ -183,6 +183,14 @@ SOURCE=.\db.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\isc.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\license.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
