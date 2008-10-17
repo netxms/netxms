@@ -1,2 +1,0 @@
-/home/victor/netxms/src/java/.metadata/.plugins/org.eclipse.jdt.core/1616198483.index
-/home/victor/netxms/src/java/.metadata/.plugins/org.eclipse.jdt.core/2143325160.index
