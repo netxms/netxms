@@ -594,6 +594,12 @@ extern "C"
 #if !HAVE_WGETENV
 	WCHAR *wgetenv(const WCHAR *_string);
 #endif
+#if !HAVE_WCSERROR && HAVE_STRERROR
+	WCHAR *wcserror(int errnum);
+#endif
+#if !HAVE_WCSERROR_R && HAVE_STRERROR_R
+	WCHAR *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen);
+#endif
 
 #endif	/* UNICODE */
 
@@ -638,7 +644,7 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(THREAD_RESULT (THREAD_CALL * pfSignalHan
 #endif
 
 BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, DWORD flags, const TCHAR *msgModule,
-												 unsigned int msgCount, const TCHAR *messages);
+                                     unsigned int msgCount, const TCHAR **messages);
 void LIBNETXMS_EXPORTABLE nxlog_close(void);
 void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format, ...);
 

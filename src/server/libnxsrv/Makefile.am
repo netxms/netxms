@@ -1,7 +1,7 @@
 INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 
 lib_LTLIBRARIES = libnxsrv.la
-libnxsrv_la_SOURCES = messages.c agent.cpp db.cpp log.cpp main.cpp snmpproxy.cpp
+libnxsrv_la_SOURCES = messages.c agent.cpp db.cpp main.cpp snmpproxy.cpp
 libnxsrv_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxsrv_la_LIBADD = ../../libnetxms/libnetxms.la ../../libnxsnmp/libnxsnmp.la
 

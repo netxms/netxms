@@ -964,7 +964,7 @@ AC_CHECK_TYPES([wchar_t],,,[
 #endif
 ])
 AC_CHECK_SIZEOF(wchar_t)
-AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull wfopen wopen wstat wgetenv towupper])
+AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull wfopen wopen wstat wgetenv towupper wcserror wcserror_r])
 
 if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,

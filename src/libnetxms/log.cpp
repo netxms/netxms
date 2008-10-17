@@ -23,6 +23,10 @@
 
 #include "libnetxms.h"
 
+#if HAVE_SYSLOG_H
+#include <syslog.h>
+#endif
+
 
 //
 // Static data
@@ -33,7 +37,7 @@ static HANDLE m_eventLogHandle = NULL;
 static HMODULE m_msgModuleHandle = NULL;
 #else
 static unsigned int m_numMessages;
-static const TCHAR *m_messages[];
+static const TCHAR **m_messages;
 #endif
 static FILE *m_logFileHandle = NULL;
 static MUTEX m_mutexLogAccess = INVALID_MUTEX_HANDLE;
@@ -45,7 +49,7 @@ static DWORD m_flags = 0;
 //
 
 BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, DWORD flags,
-                                     const TCHAR *msgModule, unsigned int msgCount, const TCHAR *messages)
+                                     const TCHAR *msgModule, unsigned int msgCount, const TCHAR **messages)
 {
 	m_flags = flags & 0x7FFFFFFF;
 #ifdef _WIN32
@@ -62,7 +66,15 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, DWORD flags,
 		if (m_eventLogHandle != NULL)
 			m_flags |= NXLOG_IS_OPEN;
 #else
+#ifdef UNICODE
+		char *mbBuffer;
+
+		mbBuffer = MBStringFromWideString(logName);
+      openlog(mbBuffer, LOG_PID, LOG_DAEMON);
+		free(mbBuffer);
+#else
       openlog(logName, LOG_PID, LOG_DAEMON);
+#endif
 		m_flags |= NXLOG_IS_OPEN;
 #endif
    }
@@ -166,14 +178,15 @@ static void WriteLogToFile(TCHAR *message)
 
 static TCHAR *FormatMessageUX(DWORD dwMsgId, TCHAR **ppStrings)
 {
-   TCHAR *p, *pMsg;
+   const TCHAR *p;
+   TCHAR *pMsg;
    int i, iSize, iLen;
 
    if (dwMsgId >= m_numMessages)
    {
       // No message with this ID
-      pMsg = (TCHAR *)malloc(128);
-      _stprintf(pMsg, _T("MSG 0x%08X - Unable to find message text\n"), dwMsgId);
+      pMsg = (TCHAR *)malloc(64 * sizeof(TCHAR));
+      _sntprintf(pMsg, 64, _T("MSG 0x%08X - Unable to find message text\n"), dwMsgId);
    }
    else
    {
@@ -235,6 +248,9 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
    DWORD error;
 	time_t t;
 	struct tm *loc;
+#if HAVE_LOCALTIME_R
+	struct tm ltmBuffer;
+#endif
 #if defined(UNICODE) && !defined(_WIN32)
 	char *mbMsg;
 #endif
@@ -285,7 +301,12 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
                   _sntprintf(strings[numStrings], 64, _T("MSG 0x%08X - Unable to find message text"), error);
                }
 #else   /* _WIN32 */
+#if HAVE_STRERROR_R
+               strings[numStrings] = (TCHAR *)malloc(256 * sizeof(TCHAR));
+			   _tcserror_r(error, strings[numStrings], 256);
+#else
                strings[numStrings] = _tcsdup(_tcserror(error));
+#endif
 #endif
                break;
             default:
@@ -390,7 +411,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 #if HAVE_LOCALTIME_R
 			loc = localtime_r(&t, &ltmBuffer);
 #else
-		   loc = localtime(&t);
+			loc = localtime(&t);
 #endif
 			_tcsftime(szBuffer, 32, _T("[%d-%b-%Y %H:%M:%S]"), loc);
 			_tprintf(_T("%s %s"), szBuffer, pMsg);

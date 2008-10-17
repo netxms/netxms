@@ -875,6 +875,39 @@ WCHAR *wgetenv(const WCHAR *_string)
 
 #endif
 
+#if !HAVE_WCSERROR && HAVE_STRERROR
+
+WCHAR *wcserror(int errnum)
+{
+	static WCHAR value[8192];
+
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, strerror(errnum), -1, value, 8192);
+	return value;
+}
+
+#endif
+
+#if !HAVE_WCSERROR_R && HAVE_STRERROR_R
+
+WCHAR *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
+{
+	char *mbbuf;
+
+	mbbuf = (char *)malloc(buflen);
+	if (mbbuf != NULL)
+	{
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, strerror_r(errnum, mbbuf, buflen), -1, strerrbuf, buflen);
+		free(mbbuf);
+	}
+	else
+	{
+		*strerrbuf = 0;
+	}
+	return strerrbuf;
+}
+
+#endif
+
 
 //
 // Wrappers for wprintf family

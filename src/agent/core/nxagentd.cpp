@@ -64,7 +64,7 @@ void InitStaticSubagents(void);
 
 #ifndef _WIN32
 extern unsigned int g_dwNumMessages;
-extern TCHAR *g_szMessages[];
+extern const TCHAR *g_szMessages[];
 #endif
 
 
@@ -336,9 +336,9 @@ static LONG H_RestartAgent(const TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, co
 #ifdef _NETWARE
    return ERR_NOT_IMPLEMENTED;
 #else
-   TCHAR szCmdLine[4096];
+   TCHAR szCmdLine[4096], szPlatformSuffixOption[MAX_PSUFFIX_LENGTH + 16];
 #ifdef _WIN32
-   TCHAR szExecName[MAX_PATH], szPlatformSuffixOption[MAX_PSUFFIX_LENGTH + 16];
+   TCHAR szExecName[MAX_PATH];
    DWORD dwResult;
    STARTUPINFO si;
    PROCESS_INFORMATION pi;

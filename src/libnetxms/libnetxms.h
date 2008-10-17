@@ -1,4 +1,3 @@
-/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
