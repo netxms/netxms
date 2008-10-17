@@ -62,7 +62,7 @@ public class NXCPMessage
 			}
 			else
 			{
-				byte[] df;
+				byte[] df = null;
 				
 				switch(dfTmp[4])
 				{
