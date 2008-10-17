@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<libraryInfos>
+  <libraryInfo version="1.5.0" home="/usr/lib/jvm/java-1.5.0-gcj-4.2-1.5.0.0/jre">
+    <bootpath>
+      <entry path="/usr/lib/jvm/java-1.5.0-gcj-4.2-1.5.0.0/jre/lib/rt.jar"/>
+    </bootpath>
+    <extensionDirs>
+      <entry path="/usr/share/java/ext"/>
+    </extensionDirs>
+  </libraryInfo>
+  <libraryInfo version="1.5.0" home="/usr/lib/jvm/java-1.5.0-gcj-4.2-1.5.0.0">
+    <bootpath>
+      <entry path="/usr/lib/jvm/java-1.5.0-gcj-4.2-1.5.0.0/jre/lib/rt.jar"/>
+    </bootpath>
+    <extensionDirs>
+      <entry path="/usr/share/java/ext"/>
+    </extensionDirs>
+  </libraryInfo>
+</libraryInfos>
