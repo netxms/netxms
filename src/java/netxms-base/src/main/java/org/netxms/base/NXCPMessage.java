@@ -51,7 +51,7 @@ public class NXCPMessage
 
 		for (int i = 0; i < numVars; i++)
 		{
-			// Read first 8 bytes - any DF is at least 8 bytes long
+			// Read first 8 bytes - any DF (data field) is at least 8 bytes long
 			final byte[] df = new byte[16];
 			inputStream.readFully(df, 0, 8);
 
