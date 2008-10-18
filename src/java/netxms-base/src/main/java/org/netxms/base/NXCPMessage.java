@@ -36,48 +36,57 @@ public class NXCPMessage
 	 * Create NXCPMessage from binary NXCP message
 	 *
 	 * @param nxcpMessage binary NXCP message
+	 * @throws java.io.IOException
 	 */
 	public NXCPMessage(final byte[] nxcpMessage) throws IOException
 	{
-		DataInputStream in = new DataInputStream(new ByteArrayInputStream(nxcpMessage));
+		final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(nxcpMessage);
+		DataInputStream inputStream = null;
+		try
+		{
+			inputStream = new DataInputStream(byteArrayInputStream);
+			parseInputStream(inputStream);
+		}
+		finally
+		{
+			if (inputStream != null)
+			{
+				inputStream.close();
+			}
+		}
+	}
 
-		msgCode = in.readUnsignedShort();
-		in.skipBytes(6);	// Message flags and size
-		msgId = (long)in.readInt();
-		final int numVars = in.readInt();
+	private void parseInputStream(final DataInputStream inputStream) throws IOException
+	{
+		msgCode = inputStream.readUnsignedShort();
+		inputStream.skipBytes(6);	// Message flags and size
+		msgId = (long)inputStream.readInt();
+		final int numVars = inputStream.readInt();
 
 		for (int i = 0; i < numVars; i++)
 		{
 			// Read first 8 bytes - any DF is at least 8 bytes long
-			final byte[] dfTmp = new byte[8];
-			in.readFully(dfTmp);
-			final NXCPVariable var;
-			if (dfTmp[4] == (byte)NXCPVariable.TYPE_INT16)
-			{
-				// DF of type INT16 is 8 bytes long, no additional data needed
-				var = new NXCPVariable(dfTmp);
-			}
-			else
-			{
-				byte[] df = null;
+			final byte[] df = new byte[16];
+			inputStream.readFully(df, 0, 8);
 
-				switch(dfTmp[4])
-				{
-					case NXCPVariable.TYPE_FLOAT:		// all these types requires additional 8 bytes
-					case NXCPVariable.TYPE_INTEGER:
-					case NXCPVariable.TYPE_INT64:
-						df = new byte[16];
-						System.arraycopy(dfTmp, 0, df, 0, 8);
-						in.readFully(dfTmp);
-						System.arraycopy(dfTmp, 0, df, 8, 8);
-						break;
-					case NXCPVariable.TYPE_STRING:		// all these types has 4-byte length field followed by actual content
-					case NXCPVariable.TYPE_BINARY:
-						break;
-				}
-				var = new NXCPVariable(df);
+			switch(df[4])
+			{
+				case NXCPVariable.TYPE_INT16:
+					break;
+				case NXCPVariable.TYPE_FLOAT:		// all these types requires additional 8 bytes
+				case NXCPVariable.TYPE_INTEGER:
+				case NXCPVariable.TYPE_INT64:
+					inputStream.readFully(df, 8, 8);
+					break;
+				case NXCPVariable.TYPE_STRING:		// all these types has 4-byte length field followed by actual content
+				case NXCPVariable.TYPE_BINARY:
+					break;
 			}
-			variableMap.put(var.getVariableId(), var);
+
+			final NXCPVariable variable = new NXCPVariable(df);
+
+			final long variableId = variable.getVariableId();
+			variableMap.put(variableId, variable);
 		}
 	}
 
@@ -115,26 +124,21 @@ public class NXCPMessage
 	}
 
 
-	/*
-		 * @param varId variable Id to find
-		 */
+	/**
+	 * @param varId variable Id to find
+	 */
 	public NXCPVariable findVariable(final Long varId)
 	{
 		return variableMap.get(varId);
 	}
 
-
-	/**
-	 * ************************************
-	 * Variable setters
-	 */
-
-	/*
-		 * @param var variable to add/replace
-		 */
-	public void setVariable(final NXCPVariable var)
+	//
+	// Getters/Setters
+	//
+	public void setVariable(final NXCPVariable variable)
 	{
-		variableMap.put(var.getVariableId(), var);
+		final long id = variable.getVariableId();
+		variableMap.put(id, variable);
 	}
 
 	public void setVariable(final long varId, final byte[] value)
@@ -168,30 +172,43 @@ public class NXCPMessage
 	}
 
 
-	/*
-		 * Create binary NXCP message
-		 */
+	//
+	//	Create binary NXCP message
+	//
 	public byte[] createNXCPMessage() throws IOException
 	{
 		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-		DataOutputStream out = new DataOutputStream(byteStream);
-
-		// Create byte array with all messages
-		for (NXCPVariable nxcpVariable : variableMap.values())
+		DataOutputStream outputStream = null;
+		try
 		{
-			out.write(nxcpVariable.createNXCPDataField());
-		}
-		final byte[] payload = byteStream.toByteArray();
+			// Create byte array with all messages
+			for (final NXCPVariable nxcpVariable : variableMap.values())
+			{
+				final byte[] field = nxcpVariable.createNXCPDataField();
+				// TODO: check for nulls
+				outputStream.write(field);
+			}
+			final byte[] payload = byteStream.toByteArray();
 
-		// Create message header in new byte stream and add payload
-		byteStream = new ByteArrayOutputStream();
-		out = new DataOutputStream(byteStream);
-		out.writeShort(msgCode);
-		out.writeShort(0);	// Message flags
-		out.writeInt(payload.length);	   // Size
-		out.writeInt(msgId.intValue());
-		out.writeInt(variableMap.size());
-		out.write(payload);
+			// Create message header in new byte stream and add payload
+			byteStream = new ByteArrayOutputStream();
+			outputStream = new DataOutputStream(byteStream);
+			outputStream.writeShort(msgCode);
+			outputStream.writeShort(0);	// Message flags
+			outputStream.writeInt(payload.length);	   // Size
+			outputStream.writeInt(msgId.intValue());
+			outputStream.writeInt(variableMap.size());
+			outputStream.write(payload);
+
+			outputStream = new DataOutputStream(byteStream);
+		}
+		finally
+		{
+			if (outputStream != null)
+			{
+				outputStream.close();
+			}
+		}
 
 		return byteStream.toByteArray();
 	}
