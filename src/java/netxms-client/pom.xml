@@ -33,6 +33,7 @@
 			<groupId>org.netxms</groupId>
 			<artifactId>netxms-base</artifactId>
 			<version>${projectversion}</version>
+			<scope>compile,runtime,test</scope>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
