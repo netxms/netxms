@@ -4,7 +4,6 @@ import java.io.*;
 
 /**
  * @author victor
- *
  */
 public class NXCPVariable
 {
@@ -51,7 +50,7 @@ public class NXCPVariable
 		{
 			integerValue = Long.parseLong(stringValue);
 		}
-		catch(NumberFormatException e)
+		catch (NumberFormatException e)
 		{
 			integerValue = (long)0;
 		}
@@ -59,7 +58,7 @@ public class NXCPVariable
 		{
 			realValue = Double.parseDouble(stringValue);
 		}
-		catch(NumberFormatException e)
+		catch (NumberFormatException e)
 		{
 			realValue = (double)0;
 		}
@@ -96,7 +95,7 @@ public class NXCPVariable
 	 * Create NXCPVariable from NXCP message data field
 	 *
 	 * @param nxcpDataField
-         * @throws java.io.IOException
+	 * @throws java.io.IOException
 	 */
 	public NXCPVariable(final byte[] nxcpDataField) throws IOException
 	{
@@ -133,7 +132,7 @@ public class NXCPVariable
 					break;
 				case TYPE_STRING:
 					int len = in.readInt();
-					while(len > 0)
+					while (len > 0)
 					{
 						stringValue += in.readChar();
 						len--;
@@ -197,34 +196,35 @@ public class NXCPVariable
 
 	/**
 	 * Create NXCP DF structure
-         * @return
-         */
+	 *
+	 * @return
+	 */
 	private int calculateBinarySize()
 	{
-	   final int size;
+		final int size;
 
-	   switch(variableType)
-	   {
-	      case TYPE_INTEGER:
-	         size = 12;
-	         break;
-	      case TYPE_INT64:
-	      case TYPE_FLOAT:
-	         size = 16;
-	         break;
-	      case TYPE_INT16:
-	         size = 8;
-	         break;
-	      case TYPE_STRING:
-            size = stringValue.length() + 12;
-	         break;
-	      case TYPE_BINARY:
-	         size = binaryValue.length + 12;
-	         break;
-	      default:
-	         size = 8;
-	         break;
-	   }
+		switch(variableType)
+		{
+			case TYPE_INTEGER:
+				size = 12;
+				break;
+			case TYPE_INT64:
+			case TYPE_FLOAT:
+				size = 16;
+				break;
+			case TYPE_INT16:
+				size = 8;
+				break;
+			case TYPE_STRING:
+				size = stringValue.length() + 12;
+				break;
+			case TYPE_BINARY:
+				size = binaryValue.length + 12;
+				break;
+			default:
+				size = 8;
+				break;
+		}
 		return size;
 	}
 

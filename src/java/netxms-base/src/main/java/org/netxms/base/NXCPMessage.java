@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.netxms.base;
 
@@ -12,8 +12,7 @@ public class NXCPMessage
 	private Integer msgCode;
 	private Long msgId;
 	private Map<Long, NXCPVariable> variableMap = new HashMap<Long, NXCPVariable>(0);
-	
-	
+
 	/**
 	 * @param msgCode
 	 */
@@ -35,7 +34,7 @@ public class NXCPMessage
 
 	/**
 	 * Create NXCPMessage from binary NXCP message
-	 * 
+	 *
 	 * @param nxcpMessage binary NXCP message
 	 */
 	public NXCPMessage(final byte[] nxcpMessage) throws IOException
@@ -47,7 +46,7 @@ public class NXCPMessage
 		msgId = (long)in.readInt();
 		final int numVars = in.readInt();
 
-		for(int i = 0; i < numVars; i++)
+		for (int i = 0; i < numVars; i++)
 		{
 			// Read first 8 bytes - any DF is at least 8 bytes long
 			final byte[] dfTmp = new byte[8];
@@ -61,7 +60,7 @@ public class NXCPMessage
 			else
 			{
 				byte[] df = null;
-				
+
 				switch(dfTmp[4])
 				{
 					case NXCPVariable.TYPE_FLOAT:		// all these types requires additional 8 bytes
@@ -114,24 +113,25 @@ public class NXCPMessage
 	{
 		this.msgId = msgId;
 	}
-	
-	
+
+
 	/*
-	 * @param varId variable Id to find 
-	 */
+		 * @param varId variable Id to find
+		 */
 	public NXCPVariable findVariable(final Long varId)
 	{
 		return variableMap.get(varId);
 	}
 
-	
-	/***************************************
+
+	/**
+	 * ************************************
 	 * Variable setters
 	 */
-	
+
 	/*
-	 * @param var variable to add/replace 
-	 */
+		 * @param var variable to add/replace
+		 */
 	public void setVariable(final NXCPVariable var)
 	{
 		variableMap.put(var.getVariableId(), var);
@@ -141,7 +141,7 @@ public class NXCPMessage
 	{
 		setVariable(new NXCPVariable(varId, value));
 	}
-	
+
 	public void setVariable(final long varId, final String value)
 	{
 		setVariable(new NXCPVariable(varId, value));
@@ -166,23 +166,23 @@ public class NXCPMessage
 	{
 		setVariable(new NXCPVariable(varId, NXCPVariable.TYPE_INT16, value));
 	}
-	
-	
+
+
 	/*
-	 * Create binary NXCP message
-	 */
+		 * Create binary NXCP message
+		 */
 	public byte[] createNXCPMessage() throws IOException
 	{
 		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
 		DataOutputStream out = new DataOutputStream(byteStream);
-		
+
 		// Create byte array with all messages
-		for(NXCPVariable nxcpVariable: variableMap.values())
+		for (NXCPVariable nxcpVariable : variableMap.values())
 		{
-		    out.write(nxcpVariable.createNXCPDataField());
+			out.write(nxcpVariable.createNXCPDataField());
 		}
 		final byte[] payload = byteStream.toByteArray();
-		
+
 		// Create message header in new byte stream and add payload
 		byteStream = new ByteArrayOutputStream();
 		out = new DataOutputStream(byteStream);
@@ -192,7 +192,7 @@ public class NXCPMessage
 		out.writeInt(msgId.intValue());
 		out.writeInt(variableMap.size());
 		out.write(payload);
-		
+
 		return byteStream.toByteArray();
 	}
 }
