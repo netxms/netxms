@@ -47,8 +47,22 @@ public class NXCPVariable
 		variableId = varId;
 		variableType = TYPE_STRING;
 		stringValue = value;
-		integerValue = Long.parseLong(stringValue);
-		realValue = Double.parseDouble(stringValue);
+		try
+		{
+			integerValue = Long.parseLong(stringValue);
+		}
+		catch(NumberFormatException e)
+		{
+			integerValue = (long)0;
+		}
+		try
+		{
+			realValue = Double.parseDouble(stringValue);
+		}
+		catch(NumberFormatException e)
+		{
+			realValue = (double)0;
+		}
 	}
 
 	/**
@@ -73,6 +87,9 @@ public class NXCPVariable
 		variableId = varId;
 		variableType = TYPE_BINARY;
 		binaryValue = value;
+		stringValue = "";
+		integerValue = (long)0;
+		realValue = (double)0;
 	}
 
 	/**
