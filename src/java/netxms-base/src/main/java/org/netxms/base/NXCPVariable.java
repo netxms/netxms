@@ -249,10 +249,10 @@ public class NXCPVariable
 		}
 
 		// Align to 8-bytes boundary
-            final int i = byteStream.size() % 8;
-            if ( i != 0 )
+		final int rem = byteStream.size() % 8;
+		if (rem != 0)
 		{
-			out.write(new byte[8 - i]);
+			out.write(new byte[8 - rem]);
 		}
 
 		return byteStream.toByteArray();

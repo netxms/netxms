@@ -6,7 +6,6 @@ package org.netxms.base;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Iterator;
 
 public class NXCPMessage
 {
@@ -43,18 +42,18 @@ public class NXCPMessage
 	{
 		DataInputStream in = new DataInputStream(new ByteArrayInputStream(nxcpMessage));
 
-            msgCode = in.readUnsignedShort();
+		msgCode = in.readUnsignedShort();
 		in.skipBytes(6);	// Message flags and size
 		msgId = (long)in.readInt();
-            final int numVars = in.readInt();
+		final int numVars = in.readInt();
 
-            for( int i = 0; i < numVars; i++)
+		for(int i = 0; i < numVars; i++)
 		{
 			// Read first 8 bytes - any DF is at least 8 bytes long
 			final byte[] dfTmp = new byte[8];
 			in.readFully(dfTmp);
-                    final NXCPVariable var;
-                    if (dfTmp[4] == (byte)NXCPVariable.TYPE_INT16 )
+			final NXCPVariable var;
+			if (dfTmp[4] == (byte)NXCPVariable.TYPE_INT16)
 			{
 				// DF of type INT16 is 8 bytes long, no additional data needed
 				var = new NXCPVariable(dfTmp);
@@ -178,9 +177,10 @@ public class NXCPMessage
 		DataOutputStream out = new DataOutputStream(byteStream);
 		
 		// Create byte array with all messages
-            for( NXCPVariable nxcpVariable : variableMap.values() ) {
-                out.write(nxcpVariable.createNXCPDataField());
-            }
+		for(NXCPVariable nxcpVariable: variableMap.values())
+		{
+		    out.write(nxcpVariable.createNXCPDataField());
+		}
 		final byte[] payload = byteStream.toByteArray();
 		
 		// Create message header in new byte stream and add payload
