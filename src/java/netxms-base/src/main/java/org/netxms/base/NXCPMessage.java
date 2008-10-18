@@ -41,23 +41,9 @@ public class NXCPMessage
 	public NXCPMessage(final byte[] nxcpMessage) throws IOException
 	{
 		final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(nxcpMessage);
-		DataInputStream inputStream = null;
-		try
-		{
-			inputStream = new DataInputStream(byteArrayInputStream);
-			parseInputStream(inputStream);
-		}
-		finally
-		{
-			if (inputStream != null)
-			{
-				inputStream.close();
-			}
-		}
-	}
+		//noinspection IOResourceOpenedButNotSafelyClosed
+		final DataInputStream inputStream = new DataInputStream(byteArrayInputStream);
 
-	private void parseInputStream(final DataInputStream inputStream) throws IOException
-	{
 		msgCode = inputStream.readUnsignedShort();
 		inputStream.skipBytes(6);	// Message flags and size
 		msgId = (long)inputStream.readInt();
@@ -85,11 +71,9 @@ public class NXCPMessage
 
 			final NXCPVariable variable = new NXCPVariable(df);
 
-			final long variableId = variable.getVariableId();
-			variableMap.put(variableId, variable);
+			variableMap.put(variable.getVariableId(), variable);
 		}
 	}
-
 
 	/**
 	 * @return the msgCode
@@ -178,37 +162,28 @@ public class NXCPMessage
 	public byte[] createNXCPMessage() throws IOException
 	{
 		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-		DataOutputStream outputStream = null;
-		try
-		{
-			// Create byte array with all messages
-			for (final NXCPVariable nxcpVariable : variableMap.values())
-			{
-				final byte[] field = nxcpVariable.createNXCPDataField();
-				// TODO: check for nulls
-				outputStream.write(field);
-			}
-			final byte[] payload = byteStream.toByteArray();
+		//noinspection IOResourceOpenedButNotSafelyClosed
+		DataOutputStream outputStream = new DataOutputStream(byteStream);
 
-			// Create message header in new byte stream and add payload
-			byteStream = new ByteArrayOutputStream();
-			outputStream = new DataOutputStream(byteStream);
-			outputStream.writeShort(msgCode);
-			outputStream.writeShort(0);	// Message flags
-			outputStream.writeInt(payload.length);	   // Size
-			outputStream.writeInt(msgId.intValue());
-			outputStream.writeInt(variableMap.size());
-			outputStream.write(payload);
-
-			outputStream = new DataOutputStream(byteStream);
-		}
-		finally
+		// Create byte array with all messages
+		for (final NXCPVariable nxcpVariable : variableMap.values())
 		{
-			if (outputStream != null)
-			{
-				outputStream.close();
-			}
+			final byte[] field = nxcpVariable.createNXCPDataField();
+			// TODO: check for nulls
+			outputStream.write(field);
 		}
+		final byte[] payload = byteStream.toByteArray();
+
+		// Create message header in new byte stream and add payload
+		byteStream = new ByteArrayOutputStream();
+		//noinspection IOResourceOpenedButNotSafelyClosed
+		outputStream = new DataOutputStream(byteStream);
+		outputStream.writeShort(msgCode);
+		outputStream.writeShort(0);	// Message flags
+		outputStream.writeInt(payload.length);	   // Size
+		outputStream.writeInt(msgId.intValue());
+		outputStream.writeInt(variableMap.size());
+		outputStream.write(payload);
 
 		return byteStream.toByteArray();
 	}
