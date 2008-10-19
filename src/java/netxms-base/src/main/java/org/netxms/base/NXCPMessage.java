@@ -12,6 +12,7 @@ public class NXCPMessage
 	private int messageCode;
 	private long messageId;
 	private Map<Long, NXCPVariable> variableMap = new HashMap<Long, NXCPVariable>(0);
+	private long timestamp;
 
 	/**
 	 * @param msgCode
@@ -120,6 +121,22 @@ public class NXCPMessage
 		this.messageId = msgId;
 	}
 
+	/**
+	 * @return the timestamp
+	 */
+	public long getTimestamp()
+	{
+		return timestamp;
+	}
+
+	/**
+	 * @param timestamp the timestamp to set
+	 */
+	public void setTimestamp(long timestamp)
+	{
+		this.timestamp = timestamp;
+	}
+
 
 	/**
 	 * @param varId variable Id to find
@@ -181,7 +198,7 @@ public class NXCPMessage
 		DataOutputStream outputStream = new DataOutputStream(byteStream);
 
 		// Create byte array with all messages
-		for (final NXCPVariable nxcpVariable : variableMap.values())
+		for(final NXCPVariable nxcpVariable: variableMap.values())
 		{
 			final byte[] field = nxcpVariable.createNXCPDataField();
 			outputStream.write(field);
