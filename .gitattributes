@@ -272,6 +272,7 @@ src/console/win32starter/nxcstart.dsw eol=crlf
 src/java/netxms-base/pom.xml -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPMessage.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPVariable.java -text
+src/java/netxms-base/src/test/java/org/netxms/base/NXCPMessageTest.java -text
 src/java/netxms-base/src/test/java/org/netxms/base/NXCPVariableTest.java -text
 src/java/netxms-client/pom.xml -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCSession.java -text
