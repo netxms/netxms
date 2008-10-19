@@ -1,6 +1,7 @@
 package org.netxms.base;
 
 import java.io.*;
+import java.util.Arrays;
 
 /**
  * @author victor
@@ -22,12 +23,62 @@ public class NXCPVariable
 	private String stringValue;
 	private byte[] binaryValue;
 
+	
+	//
+	// Overriden toString()
+	//
+	
+	@Override
+	public String toString()
+	{
+		StringBuilder result = new StringBuilder();
+		String NEW_LINE = System.getProperty("line.separator");
+
+		result.append(this.getClass().getName() + " Object {" + NEW_LINE);
+		result.append(" variableId = " + Long.toString(variableId) + NEW_LINE);
+		result.append(" variableType = " + variableType + NEW_LINE);
+		result.append(" integerValue = " + integerValue + NEW_LINE);
+		result.append(" realValue = " + realValue + NEW_LINE);
+		result.append(" stringValue = " + stringValue + NEW_LINE);
+		result.append(" binaryValue = " + Arrays.toString(binaryValue) + NEW_LINE);
+		result.append("}");
+
+		return result.toString();
+	}
+	
+	
+	//
+	// Set string value and numeric values if possible
+	//
+	
+	private void setStringValue(String value)
+	{
+		stringValue = value;
+		try
+		{
+			integerValue = Long.parseLong(stringValue);
+		}
+		catch (NumberFormatException e)
+		{
+			integerValue = 0L;
+		}
+		try
+		{
+			realValue = Double.parseDouble(stringValue);
+		}
+		catch (NumberFormatException e)
+		{
+			realValue = (double)0;
+		}
+	}
+
 
 	/**
 	 * @param varId
 	 * @param varType
 	 * @param value
 	 */
+	
 	public NXCPVariable(final long varId, final int varType, final Long value)
 	{
 		variableId = varId;
@@ -45,23 +96,7 @@ public class NXCPVariable
 	{
 		variableId = varId;
 		variableType = TYPE_STRING;
-		stringValue = value;
-		try
-		{
-			integerValue = Long.parseLong(stringValue);
-		}
-		catch (NumberFormatException e)
-		{
-			integerValue = (long)0;
-		}
-		try
-		{
-			realValue = Double.parseDouble(stringValue);
-		}
-		catch (NumberFormatException e)
-		{
-			realValue = (double)0;
-		}
+		setStringValue(value);
 	}
 
 	/**
@@ -131,14 +166,14 @@ public class NXCPVariable
 					stringValue = realValue.toString();
 					break;
 				case TYPE_STRING:
-					int len = in.readInt();
+					int len = in.readInt() / 2;
+					String str = "";
 					while (len > 0)
 					{
-						stringValue += in.readChar();
+						str += in.readChar();
 						len--;
 					}
-					integerValue = Long.parseLong(stringValue);
-					realValue = Double.parseDouble(stringValue);
+					setStringValue(str);
 					break;
 				case TYPE_BINARY:
 					binaryValue = new byte[in.readInt()];
@@ -216,7 +251,7 @@ public class NXCPVariable
 				size = 8;
 				break;
 			case TYPE_STRING:
-				size = stringValue.length() + 12;
+				size = stringValue.length() * 2 + 12;
 				break;
 			case TYPE_BINARY:
 				size = binaryValue.length + 12;

@@ -49,7 +49,7 @@ public class NXCPMessage
 		messageId = (long)inputStream.readInt();
 		final int numVars = inputStream.readInt();
 
-		for (int i = 0; i < numVars; i++)
+		for(int i = 0; i < numVars; i++)
 		{
 			byteArrayInputStream.mark(byteArrayInputStream.available());
 			
@@ -72,6 +72,13 @@ public class NXCPMessage
 					byteArrayInputStream.reset();
 					df = new byte[size + 12];
 					inputStream.readFully(df);
+					
+					// Each df aligned to 8-bytes boundary
+					final int rem = (size + 12) % 8;
+					if (rem != 0)
+					{
+						inputStream.skipBytes(8 - rem);
+					}
 					break;
 			}
 
@@ -80,6 +87,7 @@ public class NXCPMessage
 		}
 	}
 
+	
 	/**
 	 * @return the msgCode
 	 */
@@ -128,8 +136,7 @@ public class NXCPMessage
 	
 	public void setVariable(final NXCPVariable variable)
 	{
-		final long id = variable.getVariableId();
-		variableMap.put(id, variable);
+		variableMap.put(variable.getVariableId(), variable);
 	}
 
 	public void setVariable(final long varId, final byte[] value)
