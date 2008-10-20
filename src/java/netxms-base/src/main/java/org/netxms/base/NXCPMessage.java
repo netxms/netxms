@@ -9,6 +9,8 @@ import java.util.Map;
 
 public class NXCPMessage
 {
+	public static final int HEADER_SIZE = 16;
+	
 	private int messageCode;
 	private long messageId;
 	private Map<Long, NXCPVariable> variableMap = new HashMap<Long, NXCPVariable>(0);
@@ -132,7 +134,7 @@ public class NXCPMessage
 	/**
 	 * @param timestamp the timestamp to set
 	 */
-	public void setTimestamp(long timestamp)
+	public void setTimestamp(final long timestamp)
 	{
 		this.timestamp = timestamp;
 	}
@@ -185,6 +187,36 @@ public class NXCPMessage
 	{
 		setVariable(new NXCPVariable(varId, NXCPVariable.TYPE_INT16, (long)value));
 	}
+	
+	public byte[] getVariableAsBinary(final long varId)
+	{
+		final NXCPVariable var = findVariable(varId);
+		return (var != null) ? var.getAsBinary() : null;
+	}
+	
+	public String getVariableAsString(final long varId)
+	{
+		final NXCPVariable var = findVariable(varId);
+		return (var != null) ? var.getAsString() : "";
+	}
+	
+	public Double getVariableAsReal(final long varId)
+	{
+		final NXCPVariable var = findVariable(varId);
+		return (var != null) ? var.getAsReal() : 0;
+	}
+	
+	public int getVariableAsInteger(final long varId)
+	{
+		final NXCPVariable var = findVariable(varId);
+		return (var != null) ? var.getAsInteger().intValue() : 0;
+	}
+	
+	public long getVariableAsInt64(final long varId)
+	{
+		final NXCPVariable var = findVariable(varId);
+		return (var != null) ? var.getAsInteger() : 0;
+	}
 
 
 	//
@@ -211,7 +243,7 @@ public class NXCPMessage
 		outputStream = new DataOutputStream(byteStream);
 		outputStream.writeShort(messageCode);
 		outputStream.writeShort(0);	// Message flags
-		outputStream.writeInt(payload.length + 16);	   // Size
+		outputStream.writeInt(payload.length + HEADER_SIZE);	   // Size
 		outputStream.writeInt((int)messageId);
 		outputStream.writeInt(variableMap.size());
 		outputStream.write(payload);

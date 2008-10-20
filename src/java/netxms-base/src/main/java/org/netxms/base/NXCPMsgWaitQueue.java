@@ -4,6 +4,7 @@
 package org.netxms.base;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 
@@ -18,6 +19,7 @@ public class NXCPMsgWaitQueue
 	private int defaultTimeout;
 	private int messageLifeTime;
 	private boolean isActive = true;
+	private HousekeeperThread housekeeperThread = null;
 	
 	
 	//
@@ -28,6 +30,7 @@ public class NXCPMsgWaitQueue
 	{
 		HousekeeperThread()
 		{
+			super("NXCPMsgWaitQueue::HousekeeperThread");
 			setDaemon(true);
 			start();
 		}
@@ -38,20 +41,22 @@ public class NXCPMsgWaitQueue
 			{
 				try
 				{
-					Thread.sleep(10000);
+					Thread.sleep(2000);
 				}
 				catch(InterruptedException e)
 				{
 				}
 				synchronized(messageList)
 				{
-					long currTime = System.currentTimeMillis();
-					for(NXCPMessage msg: messageList.values())
+					final long currTime = System.currentTimeMillis();
+					Iterator<NXCPMessage> it = messageList.values().iterator();
+					while(it.hasNext())
 					{
+						final NXCPMessage msg = it.next();
 						if (msg.getTimestamp() + messageLifeTime < currTime)
 						{
 							// Message expired, remove it
-							messageList.remove(calculateMessageHash(msg));
+							it.remove();
 						}
 					}
 				}
@@ -64,21 +69,32 @@ public class NXCPMsgWaitQueue
 	 * @param defaultTimeout
 	 * @param messageLifeTime
 	 */
-	public NXCPMsgWaitQueue(int defaultTimeout, int messageLifeTime)
+	public NXCPMsgWaitQueue(final int defaultTimeout, final int messageLifeTime)
 	{
 		this.defaultTimeout = defaultTimeout;
 		this.messageLifeTime = messageLifeTime;
-		new HousekeeperThread();
+		housekeeperThread = new HousekeeperThread();
 	}
 
 	/**
 	 * @param defaultTimeout
 	 */
-	public NXCPMsgWaitQueue(int defaultTimeout)
+	public NXCPMsgWaitQueue(final int defaultTimeout)
 	{
 		this.defaultTimeout = defaultTimeout;
 		this.messageLifeTime = 60000;		// Default lifetime 60 seconds
-		new HousekeeperThread();
+		housekeeperThread = new HousekeeperThread();
+	}
+	
+	
+	//
+	// Finalize
+	//
+	
+	@Override
+	protected void finalize()
+	{
+		shutdown();
 	}
 	
 	
@@ -86,7 +102,7 @@ public class NXCPMsgWaitQueue
 	// Calculate hash for message
 	//
 	
-	private Long calculateMessageHash(NXCPMessage msg)
+	private Long calculateMessageHash(final NXCPMessage msg)
 	{
 		return (long)msg.getMessageCode() << 32 + msg.getMessageId();
 	}
@@ -96,7 +112,7 @@ public class NXCPMsgWaitQueue
 	// Put message into queue
 	//
 	
-	public void putMessage(NXCPMessage msg)
+	public void putMessage(final NXCPMessage msg)
 	{
 		synchronized(messageList)
 		{
@@ -113,7 +129,7 @@ public class NXCPMsgWaitQueue
 	 * @param timeout Wait timeout in milliseconds
 	 */
 	
-	public NXCPMessage waitForMessage(int code, long id, int timeout)
+	public NXCPMessage waitForMessage(final int code, final long id, final int timeout)
 	{
 		final Long hash = (long)code << 32 + id;
 		NXCPMessage msg = null;
@@ -148,7 +164,7 @@ public class NXCPMsgWaitQueue
 	 * @param id Message id
 	 */
 
-	public NXCPMessage waitForMessage(int code, long id)
+	public NXCPMessage waitForMessage(final int code, final long id)
 	{
 		return waitForMessage(code, id, defaultTimeout);
 	}
@@ -161,5 +177,19 @@ public class NXCPMsgWaitQueue
 	public void shutdown()
 	{
 		isActive = false;
+		if (housekeeperThread != null)
+		{
+			while(housekeeperThread.isAlive())
+			{
+				try
+				{
+					housekeeperThread.join();
+				}
+				catch(InterruptedException e)
+				{
+				}
+			}
+			housekeeperThread = null;
+		}
 	}
 }
