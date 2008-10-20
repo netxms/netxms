@@ -1,6 +1,7 @@
 package org.netxms.base;
 
 import java.io.*;
+import java.net.*;
 import java.util.Arrays;
 
 /**
@@ -202,6 +203,28 @@ public class NXCPVariable
 	public byte[] getAsBinary()
 	{
 		return binaryValue;
+	}
+
+	public InetAddress getAsInetAddress()
+	{
+		final byte[] addr = new byte[4];
+		final long intVal = integerValue.longValue();
+		InetAddress inetAddr;
+		
+		addr[0] =  (byte)((intVal & 0xFF000000) >> 24);
+		addr[1] =  (byte)((intVal & 0x00FF0000) >> 16);
+		addr[2] =  (byte)((intVal & 0x0000FF00) >> 8);
+		addr[3] =  (byte)(intVal & 0x000000FF);
+		
+		try
+		{
+			inetAddr = InetAddress.getByAddress(addr);
+		}
+		catch(UnknownHostException e)
+		{
+			inetAddr = null;
+		}
+		return inetAddr;
 	}
 
 	/**

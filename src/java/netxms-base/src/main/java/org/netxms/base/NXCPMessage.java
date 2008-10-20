@@ -4,6 +4,7 @@
 package org.netxms.base;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -217,7 +218,13 @@ public class NXCPMessage
 		final NXCPVariable var = findVariable(varId);
 		return (var != null) ? var.getAsInteger() : 0;
 	}
-
+	
+	public InetAddress getVariableAsInetAddress(final long varId)
+	{
+		final NXCPVariable var = findVariable(varId);
+		return (var != null) ? var.getAsInetAddress() : null;
+	}
+	
 
 	//
 	//	Create binary NXCP message

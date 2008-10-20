@@ -5,6 +5,8 @@ package org.netxms.client;
 
 import java.io.*;
 import java.net.*;
+import java.util.Map;
+import java.util.HashMap;
 import org.netxms.base.*;
 
 /**
@@ -19,7 +21,7 @@ public class NXCSession
 	// Authentication types
 	public static final int AUTH_TYPE_PASSWORD = 0;
 	public static final int AUTH_TYPE_CERTIFICATE = 1;
-	
+
 	// Request completion codes (RCC)
 	public static final int RCC_SUCCESS                 = 0;
 	public static final int RCC_COMPONENT_LOCKED        = 1;
@@ -125,6 +127,7 @@ public class NXCSession
 	private NXCPMsgWaitQueue msgWaitQueue = null;
 	private ReceiverThread recvThread = null;
 	private long requestId = 0;
+	private boolean isConnected = false;
 	
 	// Communication parameters
 	private int recvBufferSize = 4194304;	// Default is 4MB
@@ -134,6 +137,33 @@ public class NXCSession
 	private byte[] serverId = new byte[8];
 	private String serverTimeZone;
 	private byte[] serverChallenge = new byte[CLIENT_CHALLENGE_SIZE];
+	
+	// Objects
+	private Map<Long, NXCObject> objectList = new HashMap<Long, NXCObject>();
+	
+	
+	//
+	// Create object from message
+	//
+	
+	private static NXCObject createObjectFromMessage(NXCPMessage msg)
+	{
+		final int objectClass = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_CLASS);
+		NXCObject object;
+		
+		switch(objectClass)
+		{
+			case NXCObject.OBJECT_SUBNET:
+				object = new NXCSubnet(msg);
+				break;
+			default:
+				object = new NXCObject(msg);
+				break;
+		}
+		
+		return object;
+	}
+	
 	
 	//
 	// Receiver thread
@@ -170,6 +200,11 @@ public class NXCSession
 					switch(msg.getMessageCode())
 					{
 						case NXCPCodes.CMD_OBJECT_UPDATE:
+							final NXCObject obj = createObjectFromMessage(msg);
+							synchronized(objectList)
+							{
+								objectList.put(obj.getObjectId(), obj);
+							}
 							break;
 						default:
 							msgWaitQueue.putMessage(msg);
@@ -278,38 +313,48 @@ public class NXCSession
 	
 	public void connect() throws IOException, UnknownHostException, NXCException
 	{
-		connSocket = new Socket(connAddress, connPort);
-		msgWaitQueue = new NXCPMsgWaitQueue(10000);
-		recvThread = new ReceiverThread();
-		
-		// get server information
-		NXCPMessage request = new NXCPMessage(NXCPCodes.CMD_GET_SERVER_INFO, requestId++);
-		sendMessage(request);
-		NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
-		
-		if (response.getVariableAsInteger(NXCPCodes.VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION)
-			throw new NXCException(RCC_BAD_PROTOCOL);
-		
-		serverVersion = response.getVariableAsString(NXCPCodes.VID_SERVER_VERSION);
-		serverId = response.getVariableAsBinary(NXCPCodes.VID_SERVER_ID);
-		serverTimeZone = response.getVariableAsString(NXCPCodes.VID_TIMEZONE);
-		serverChallenge = response.getVariableAsBinary(NXCPCodes.VID_CHALLENGE);
-		
-		// Login to server
-		request = new NXCPMessage(NXCPCodes.CMD_LOGIN, requestId++);
-		request.setVariable(NXCPCodes.VID_LOGIN_NAME, connLoginName);
-		request.setVariable(NXCPCodes.VID_PASSWORD, connPassword);
-		request.setVariableInt16(NXCPCodes.VID_AUTH_TYPE, AUTH_TYPE_PASSWORD);
-		request.setVariable(NXCPCodes.VID_LIBNXCL_VERSION, NetXMSConst.VERSION);
-		request.setVariable(NXCPCodes.VID_CLIENT_INFO, connClientInfo);
-		request.setVariable(NXCPCodes.VID_OS_INFO, System.getProperty("os.name") + " " + System.getProperty("os.version"));
-		sendMessage(request);
-		response = waitForMessage(NXCPCodes.CMD_LOGIN_RESP, request.getMessageId());
-		int rcc = response.getVariableAsInteger(NXCPCodes.VID_RCC);
-		if (rcc != RCC_SUCCESS)
-			throw new NXCException(rcc);
-		userId = response.getVariableAsInteger(NXCPCodes.VID_USER_ID);
-		userSystemRights = response.getVariableAsInteger(NXCPCodes.VID_USER_SYS_RIGHTS);
+		try
+		{
+			connSocket = new Socket(connAddress, connPort);
+			msgWaitQueue = new NXCPMsgWaitQueue(10000);
+			recvThread = new ReceiverThread();
+			
+			// get server information
+			NXCPMessage request = new NXCPMessage(NXCPCodes.CMD_GET_SERVER_INFO, requestId++);
+			sendMessage(request);
+			NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
+			
+			if (response.getVariableAsInteger(NXCPCodes.VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION)
+				throw new NXCException(RCC_BAD_PROTOCOL);
+			
+			serverVersion = response.getVariableAsString(NXCPCodes.VID_SERVER_VERSION);
+			serverId = response.getVariableAsBinary(NXCPCodes.VID_SERVER_ID);
+			serverTimeZone = response.getVariableAsString(NXCPCodes.VID_TIMEZONE);
+			serverChallenge = response.getVariableAsBinary(NXCPCodes.VID_CHALLENGE);
+			
+			// Login to server
+			request = new NXCPMessage(NXCPCodes.CMD_LOGIN, requestId++);
+			request.setVariable(NXCPCodes.VID_LOGIN_NAME, connLoginName);
+			request.setVariable(NXCPCodes.VID_PASSWORD, connPassword);
+			request.setVariableInt16(NXCPCodes.VID_AUTH_TYPE, AUTH_TYPE_PASSWORD);
+			request.setVariable(NXCPCodes.VID_LIBNXCL_VERSION, NetXMSConst.VERSION);
+			request.setVariable(NXCPCodes.VID_CLIENT_INFO, connClientInfo);
+			request.setVariable(NXCPCodes.VID_OS_INFO, System.getProperty("os.name") + " " + System.getProperty("os.version"));
+			sendMessage(request);
+			response = waitForMessage(NXCPCodes.CMD_LOGIN_RESP, request.getMessageId());
+			int rcc = response.getVariableAsInteger(NXCPCodes.VID_RCC);
+			if (rcc != RCC_SUCCESS)
+				throw new NXCException(rcc);
+			userId = response.getVariableAsInteger(NXCPCodes.VID_USER_ID);
+			userSystemRights = response.getVariableAsInteger(NXCPCodes.VID_USER_SYS_RIGHTS);
+			
+			isConnected = true;
+		}
+		finally
+		{
+			if (!isConnected)
+				disconnect();
+		}
 	}
 	
 	
@@ -352,6 +397,8 @@ public class NXCSession
 			msgWaitQueue.shutdown();
 			msgWaitQueue = null;
 		}
+		
+		isConnected = false;
 	}
 
 	
