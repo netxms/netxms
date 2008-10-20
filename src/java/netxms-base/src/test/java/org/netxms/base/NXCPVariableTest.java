@@ -1,5 +1,6 @@
 package org.netxms.base;
 
+import java.net.InetAddress;
 import java.util.Arrays;
 import junit.framework.TestCase;
 
@@ -110,5 +111,19 @@ public class NXCPVariableTest extends TestCase
 		assertEquals(1, var2.getVariableId());
 		assertEquals(NXCPVariable.TYPE_BINARY, var2.getVariableType());
 		assertEquals(true, Arrays.equals(byteArray, var2.getAsBinary()));
+	}
+
+	
+	//
+	// Test getAsInetAddress()
+	//
+	
+	public void testGetAsInetAddress() throws Exception
+	{
+		final NXCPVariable variable = new NXCPVariable(1, NXCPVariable.TYPE_INTEGER, 0x0A000102L);
+
+		assertEquals(1, variable.getVariableId());
+		assertEquals(NXCPVariable.TYPE_INTEGER, variable.getVariableType());
+		assertEquals(InetAddress.getByName("10.0.1.2"), variable.getAsInetAddress());
 	}
 }

@@ -110,6 +110,9 @@ public class NXCSession
 	// Private constants
 	private static final int CLIENT_CHALLENGE_SIZE = 256;
 	
+	// Internal synchronization objects
+	private static final Object SYNC_OBJECTS = new Object();
+	
 	// Connection-related attributes
 	private String connAddress;
 	private int connPort;
@@ -199,12 +202,16 @@ public class NXCSession
 					final NXCPMessage msg = receiver.receiveMessage(in);
 					switch(msg.getMessageCode())
 					{
+						case NXCPCodes.CMD_OBJECT:
 						case NXCPCodes.CMD_OBJECT_UPDATE:
 							final NXCObject obj = createObjectFromMessage(msg);
 							synchronized(objectList)
 							{
 								objectList.put(obj.getObjectId(), obj);
 							}
+							break;
+						case NXCPCodes.CMD_OBJECT_LIST_END:
+							completeSync(SYNC_OBJECTS);
 							break;
 						default:
 							msgWaitQueue.putMessage(msg);
@@ -285,6 +292,47 @@ public class NXCSession
 	
 	
 	//
+	// Wait for synchronization
+	//
+	
+	private boolean waitForSync(final Object syncObject, final int timeout)
+	{
+		long actualTimeout = timeout;
+		
+		while((timeout == 0) || (actualTimeout > 0))
+		{
+			synchronized(syncObject)
+			{
+				long startTime = System.currentTimeMillis();
+				try
+				{
+					syncObject.wait(actualTimeout);
+				}
+				catch(InterruptedException e)
+				{
+				}
+				actualTimeout -= System.currentTimeMillis() - startTime;
+			}
+		}
+		
+		return (timeout == 0) || (actualTimeout > 0);
+	}
+	
+	
+	//
+	// Report synchronization completion
+	//
+	
+	private void completeSync(final Object syncObject)
+	{
+		synchronized(syncObject)
+		{
+			syncObject.notifyAll();
+		}
+	}
+	
+	
+	//
 	// Send message to server
 	//
 	
@@ -305,6 +353,16 @@ public class NXCSession
 			throw new NXCException(RCC_TIMEOUT);
 		return msg;
 	}
+	
+	
+	//
+	// Create new message with unique id
+	//
+	
+	private final NXCPMessage newMessage(int code)
+	{
+		return new NXCPMessage(code, requestId++);
+	}
 
 	
 	//
@@ -320,7 +378,7 @@ public class NXCSession
 			recvThread = new ReceiverThread();
 			
 			// get server information
-			NXCPMessage request = new NXCPMessage(NXCPCodes.CMD_GET_SERVER_INFO, requestId++);
+			NXCPMessage request = newMessage(NXCPCodes.CMD_GET_SERVER_INFO);
 			sendMessage(request);
 			NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
 			
@@ -333,7 +391,7 @@ public class NXCSession
 			serverChallenge = response.getVariableAsBinary(NXCPCodes.VID_CHALLENGE);
 			
 			// Login to server
-			request = new NXCPMessage(NXCPCodes.CMD_LOGIN, requestId++);
+			request = newMessage(NXCPCodes.CMD_LOGIN);
 			request.setVariable(NXCPCodes.VID_LOGIN_NAME, connLoginName);
 			request.setVariable(NXCPCodes.VID_PASSWORD, connPassword);
 			request.setVariableInt16(NXCPCodes.VID_AUTH_TYPE, AUTH_TYPE_PASSWORD);
@@ -480,5 +538,18 @@ public class NXCSession
 	public int getUserSystemRights()
 	{
 		return userSystemRights;
+	}
+	
+	
+	//
+	// Synchronize objects
+	//
+	
+	public void syncObjects() throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_OBJECTS);
+		msg.setVariableInt16(NXCPCodes.VID_SYNC_COMMENTS, 1);
+		sendMessage(msg);
+		
 	}
 }
