@@ -225,6 +225,12 @@ public class NXCPMessage
 		return (var != null) ? var.getAsInetAddress() : null;
 	}
 	
+	public boolean getVariableAsBoolean(final long varId)
+	{
+		final NXCPVariable var = findVariable(varId);
+		return (var != null) ? (var.getAsInteger() != 0) : false;
+	}
+	
 
 	//
 	//	Create binary NXCP message

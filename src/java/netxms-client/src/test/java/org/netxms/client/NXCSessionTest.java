@@ -27,4 +27,18 @@ public class NXCSessionTest extends TestCase
 		Thread.sleep(2000);
 		session.disconnect();
 	}
+
+	public void testObjectSync() throws Exception
+	{
+		NXCSession session = new NXCSession(serverAddress, loginName, password);
+		session.connect();
+		
+		session.syncObjects();
+		final NXCObject obj = session.findObjectById(1);
+		assertEquals(true, obj != null);
+		assertEquals(1, obj.getObjectId());
+		assertEquals("Entire Network", obj.getObjectName());
+		
+		session.disconnect();
+	}
 }

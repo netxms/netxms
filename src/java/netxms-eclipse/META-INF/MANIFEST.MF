@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: NetXMS Management Console
+Bundle-SymbolicName: netxms_eclipse
+Bundle-Version: 0.2.23
+Bundle-Vendor: NetXMS Team

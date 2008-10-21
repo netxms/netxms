@@ -5,6 +5,7 @@ package org.netxms.client;
 
 import java.io.*;
 import java.net.*;
+import java.util.concurrent.*;
 import java.util.Map;
 import java.util.HashMap;
 import org.netxms.base.*;
@@ -111,7 +112,7 @@ public class NXCSession
 	private static final int CLIENT_CHALLENGE_SIZE = 256;
 	
 	// Internal synchronization objects
-	private static final Object SYNC_OBJECTS = new Object();
+	private final Semaphore syncObjects = new Semaphore(1);
 	
 	// Connection-related attributes
 	private String connAddress;
@@ -134,6 +135,7 @@ public class NXCSession
 	
 	// Communication parameters
 	private int recvBufferSize = 4194304;	// Default is 4MB
+	private int commandTimeout = 30000;		// Default is 30 sec
 	
 	// Server information
 	private String serverVersion = "(unknown)";
@@ -156,8 +158,17 @@ public class NXCSession
 		
 		switch(objectClass)
 		{
+			case NXCObject.OBJECT_INTERFACE:
+				object = new NXCInterface(msg);
+				break;
 			case NXCObject.OBJECT_SUBNET:
 				object = new NXCSubnet(msg);
+				break;
+			case NXCObject.OBJECT_CONTAINER:
+				object = new NXCContainer(msg);
+				break;
+			case NXCObject.OBJECT_NODE:
+				object = new NXCNode(msg);
 				break;
 			default:
 				object = new NXCObject(msg);
@@ -211,7 +222,7 @@ public class NXCSession
 							}
 							break;
 						case NXCPCodes.CMD_OBJECT_LIST_END:
-							completeSync(SYNC_OBJECTS);
+							completeSync(syncObjects);
 							break;
 						default:
 							msgWaitQueue.putMessage(msg);
@@ -295,27 +306,36 @@ public class NXCSession
 	// Wait for synchronization
 	//
 	
-	private boolean waitForSync(final Object syncObject, final int timeout)
+	private void waitForSync(final Semaphore syncObject, final int timeout) throws NXCException
 	{
-		long actualTimeout = timeout;
-		
-		while((timeout == 0) || (actualTimeout > 0))
+		if (timeout == 0)
 		{
-			synchronized(syncObject)
+			syncObject.acquireUninterruptibly();
+		}
+		else
+		{
+			long actualTimeout = timeout;
+			boolean success = false;
+			
+			while(actualTimeout > 0)
 			{
 				long startTime = System.currentTimeMillis();
 				try
 				{
-					syncObject.wait(actualTimeout);
+					if (syncObjects.tryAcquire(actualTimeout, TimeUnit.MILLISECONDS))
+					{
+						success = true;
+						break;
+					}
 				}
 				catch(InterruptedException e)
 				{
 				}
 				actualTimeout -= System.currentTimeMillis() - startTime;
 			}
+			if (!success)
+				throw new NXCException(RCC_TIMEOUT);
 		}
-		
-		return (timeout == 0) || (actualTimeout > 0);
 	}
 	
 	
@@ -323,12 +343,9 @@ public class NXCSession
 	// Report synchronization completion
 	//
 	
-	private void completeSync(final Object syncObject)
+	private void completeSync(final Semaphore syncObject)
 	{
-		synchronized(syncObject)
-		{
-			syncObject.notifyAll();
-		}
+		syncObject.release();
 	}
 	
 	
@@ -356,6 +373,19 @@ public class NXCSession
 	
 	
 	//
+	// Wait for CMD_REQUEST_COMPLETED
+	//
+	
+	private void waitForRCC(final long id) throws NXCException
+	{
+		final NXCPMessage msg = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, id);
+		final int rcc = msg.getVariableAsInteger(NXCPCodes.VID_RCC);
+		if (rcc != RCC_SUCCESS)
+			throw new NXCException(rcc);
+	}
+	
+	
+	//
 	// Create new message with unique id
 	//
 	
@@ -374,7 +404,7 @@ public class NXCSession
 		try
 		{
 			connSocket = new Socket(connAddress, connPort);
-			msgWaitQueue = new NXCPMsgWaitQueue(10000);
+			msgWaitQueue = new NXCPMsgWaitQueue(commandTimeout);
 			recvThread = new ReceiverThread();
 			
 			// get server information
@@ -519,9 +549,17 @@ public class NXCSession
 	/**
 	 * @param connClientInfo the connClientInfo to set
 	 */
-	public void setConnClientInfo(String connClientInfo)
+	public void setConnClientInfo(final String connClientInfo)
 	{
 		this.connClientInfo = connClientInfo;
+	}
+
+	/**
+	 * @param commandTimeout New command timeout
+	 */
+	public void setCommandTimeout(final int commandTimeout)
+	{
+		this.commandTimeout = commandTimeout;
 	}
 
 	/**
@@ -545,11 +583,29 @@ public class NXCSession
 	// Synchronize objects
 	//
 	
-	public void syncObjects() throws IOException, NXCException
+	public synchronized void syncObjects() throws IOException, NXCException
 	{
+		syncObjects.acquireUninterruptibly();
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_OBJECTS);
 		msg.setVariableInt16(NXCPCodes.VID_SYNC_COMMENTS, 1);
 		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+		waitForSync(syncObjects, commandTimeout * 10);
+	}
+	
+	
+	//
+	// Find object by ID
+	//
+	
+	public NXCObject findObjectById(final long id)
+	{
+		NXCObject obj;
 		
+		synchronized(objectList)
+		{
+			obj = objectList.get(id);
+		}
+		return obj;
 	}
 }
