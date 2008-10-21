@@ -175,6 +175,7 @@ void CloseWMIQuery(WMI_QUERY_CONTEXT *ctx)
 	if (ctx->m_locator != NULL)
 		ctx->m_locator->Release();
 	memset(ctx, 0, sizeof(WMI_QUERY_CONTEXT));
+	CoUninitialize();
 }
 
 
