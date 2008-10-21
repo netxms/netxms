@@ -325,6 +325,7 @@ public class NXCSession
 					if (syncObjects.tryAcquire(actualTimeout, TimeUnit.MILLISECONDS))
 					{
 						success = true;
+						syncObjects.release();
 						break;
 					}
 				}
@@ -395,9 +396,15 @@ public class NXCSession
 	}
 
 	
-	//
-	// Connect to server
-	//
+	/**
+	 * Connect to server using previously set credentials.
+	 * 
+	 * @throws IOException to indicate socket I/O error
+	 * @throws UnknownHostException if given host name cannot be resolved
+	 * @throws NXCException if NetXMS server returns an error, protocol
+	 *                      negotiation with the server was failed, or operation 
+	 *                      was timed out
+	 */
 	
 	public void connect() throws IOException, UnknownHostException, NXCException
 	{
@@ -446,9 +453,10 @@ public class NXCSession
 	}
 	
 	
-	//
-	// Disconnect
-	//
+	/**
+	 * Disconnect from server.
+	 * 
+	 */
 	
 	public void disconnect()
 	{
@@ -491,7 +499,9 @@ public class NXCSession
 
 	
 	/**
-	 * @return the recvBufferSize
+	 * Get receiver buffer size.
+	 * 
+	 * @return Current receiver buffer size in bytes.
 	 */
 	public int getRecvBufferSize()
 	{
@@ -499,7 +509,10 @@ public class NXCSession
 	}
 
 	/**
-	 * @param recvBufferSize the recvBufferSize to set
+	 * Set receiver buffer size. This method should be called before connect().
+	 * It will not have any effect after connect(). 
+	 * 
+	 * @param recvBufferSize Size of receiver buffer in bytes.
 	 */
 	public void setRecvBufferSize(int recvBufferSize)
 	{
@@ -555,6 +568,8 @@ public class NXCSession
 	}
 
 	/**
+	 * Set command execution timeout.
+	 * 
 	 * @param commandTimeout New command timeout
 	 */
 	public void setCommandTimeout(final int commandTimeout)
@@ -563,7 +578,9 @@ public class NXCSession
 	}
 
 	/**
-	 * @return the userId
+	 * Get identifier of logged in user.
+	 * 
+	 * @return Identifier of logged in user
 	 */
 	public int getUserId()
 	{
@@ -573,15 +590,19 @@ public class NXCSession
 	/**
 	 * @return the userSystemRights
 	 */
+
 	public int getUserSystemRights()
 	{
 		return userSystemRights;
 	}
 	
 	
-	//
-	// Synchronize objects
-	//
+	/**
+	 * Synchronizes NetXMS objects between server and client.
+	 * 
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
 	
 	public synchronized void syncObjects() throws IOException, NXCException
 	{
@@ -594,9 +615,12 @@ public class NXCSession
 	}
 	
 	
-	//
-	// Find object by ID
-	//
+	/**
+	 * Find NetXMS object by it's identifier.
+	 * 
+	 * @param id Object identifier
+	 * @return Object with given ID or null if object cannot be found
+	 */
 	
 	public NXCObject findObjectById(final long id)
 	{
@@ -607,5 +631,194 @@ public class NXCSession
 			obj = objectList.get(id);
 		}
 		return obj;
+	}
+
+	
+	/**
+	 * Get alarm list.
+	 * 
+	 * @param getTerminated if set to true, all alarms will be retrieved from database,
+	 *                      otherwise only active alarms
+	 * @return Hash map containing alarms
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	
+	public HashMap<Long, NXCAlarm> getAlarms(final boolean getTerminated) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ALL_ALARMS);
+		final long rqId = msg.getMessageId();
+		
+		msg.setVariableInt16(NXCPCodes.VID_IS_ACK, getTerminated ? 1 : 0);
+		sendMessage(msg);
+		
+		final HashMap<Long, NXCAlarm> alarmList = new HashMap<Long, NXCAlarm>(0);
+		while(true)
+		{
+			msg = waitForMessage(NXCPCodes.CMD_ALARM_DATA, rqId);
+			long alarmId = msg.getVariableAsInteger(NXCPCodes.VID_ALARM_ID);
+			if (alarmId == 0)
+				break;	// ALARM_ID == 0 indicates end of list
+			alarmList.put(alarmId, new NXCAlarm(msg));
+		}
+		
+		return alarmList;
+	}
+
+	
+	/**
+	 * Acknowledge alarm.
+	 * 
+	 * @param alarmId Identifier of alarm to be acknowledged.
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	
+	public void acknowledgeAlarm(final long alarmId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_ACK_ALARM);
+		msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+
+	
+	/**
+	 * Terminate alarm.
+	 * 
+	 * @param alarmId Identifier of alarm to be terminated.
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	
+	public void terminateAlarm(final long alarmId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_TERMINATE_ALARM);
+		msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+
+	
+	/**
+	 * Delete alarm.
+	 * 
+	 * @param alarmId Identifier of alarm to be deleted.
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	
+	public void deleteAlarm(final long alarmId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ALARM);
+		msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+
+	
+	/**
+	 * Set alarm's helpdesk state to "Open".
+	 * 
+	 * @param alarmId Identifier of alarm to be changed.
+	 * @param reference Helpdesk reference string.
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	
+	public void openAlarm(final long alarmId, final String reference) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_ALARM_HD_STATE);
+		msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+		msg.setVariableInt16(NXCPCodes.VID_HELPDESK_STATE, NXCAlarm.HELPDESK_STATE_OPEN);
+		msg.setVariable(NXCPCodes.VID_HELPDESK_REF, reference);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+
+	
+	/**
+	 * Set alarm's helpdesk state to "Closed".
+	 * 
+	 * @param alarmId Identifier of alarm to be changed.
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	
+	public void closeAlarm(final long alarmId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_ALARM_HD_STATE);
+		msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, (int)alarmId);
+		msg.setVariableInt16(NXCPCodes.VID_HELPDESK_STATE, NXCAlarm.HELPDESK_STATE_CLOSED);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	
+	/**
+	 * Get server configuration variables.
+	 * 
+	 * @return Hash map containing server configuration variables
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	
+	public HashMap<String, NXCServerVariable> getServerVariables() throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_CONFIG_VARLIST);
+		sendMessage(msg);
+
+		msg = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId());
+		int rcc = msg.getVariableAsInteger(NXCPCodes.VID_RCC);
+		if (rcc != RCC_SUCCESS)
+			throw new NXCException(rcc);
+		
+		long id;
+		int i, count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_VARIABLES);
+		final HashMap<String, NXCServerVariable> varList = new HashMap<String, NXCServerVariable>(count);
+		for(i = 0, id = NXCPCodes.VID_VARLIST_BASE; i < count; i++, id += 3)
+		{
+			String name = msg.getVariableAsString(id);
+			varList.put(name, new NXCServerVariable(name, msg.getVariableAsString(id + 1),
+			                                        msg.getVariableAsBoolean(id + 2)));
+		}
+		
+		return varList;
+	}
+
+
+	/**
+	 * Set server configuration variable.
+	 * 
+	 * @param name variable's name
+	 * @param value new variable's value
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	
+	public void setServerVariable(final String name, final String value) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_CONFIG_VARIABLE);
+		msg.setVariable(NXCPCodes.VID_NAME, name);
+		msg.setVariable(NXCPCodes.VID_VALUE, value);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+
+
+	/**
+	 * Delete server configuration variable.
+	 * 
+	 * @param name variable's name
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	
+	public void deleteServerVariable(final String name) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_CONFIG_VARIABLE);
+		msg.setVariable(NXCPCodes.VID_NAME, name);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
 	}
 }

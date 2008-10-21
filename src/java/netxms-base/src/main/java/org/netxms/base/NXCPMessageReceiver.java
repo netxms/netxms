@@ -53,10 +53,10 @@ public class NXCPMessageReceiver
 			{
 				// Entire message in buffer, create new message object
 				msg = new NXCPMessage(recvBuffer);
-				System.arraycopy(recvBuffer, size, recvBuffer, 0, size);
+				System.arraycopy(recvBuffer, size, recvBuffer, 0, bufferPos - size);
 				bufferPos -= size;
 			}
-			if (size > recvBuffer.length)
+			else if (size > recvBuffer.length)
 			{
 				throw new NXCPException(NXCPCodes.ERR_MESSAGE_TOO_LARGE);
 			}

@@ -1,5 +1,6 @@
 package org.netxms.client;
 
+import java.util.HashMap;
 import junit.framework.TestCase;
 
 
@@ -39,6 +40,44 @@ public class NXCSessionTest extends TestCase
 		assertEquals(1, obj.getObjectId());
 		assertEquals("Entire Network", obj.getObjectName());
 		
+		session.disconnect();
+	}
+
+	public void testGetAlarms() throws Exception
+	{
+		NXCSession session = new NXCSession(serverAddress, loginName, password);
+		session.connect();
+		
+		session.getAlarms(false);
+		
+		session.disconnect();
+	}
+
+	public void testServerVariables() throws Exception
+	{
+		NXCSession session = new NXCSession(serverAddress, loginName, password);
+		session.connect();
+
+		// Create test variable
+		session.setServerVariable("TestVariable", "TestValue");
+		
+		// Get full list
+		HashMap<String, NXCServerVariable> varList = session.getServerVariables();
+		assertEquals(true, varList.size() > 0);	// Normally server should have at least one variable
+		
+		// Get variable TestVariable
+		NXCServerVariable var = varList.get("TestVariable");
+		assertEquals(true, var != null);
+		assertEquals("TestValue", var.getValue());
+
+		// Delete test variable
+		session.deleteServerVariable("TestVariable");
+		
+		// Get variable list again and check that test variable was deleted
+		varList = session.getServerVariables();
+		var = varList.get("TestVariable");
+		assertEquals(true, var == null);
+
 		session.disconnect();
 	}
 }

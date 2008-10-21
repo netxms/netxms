@@ -282,11 +282,13 @@ src/java/netxms-base/src/test/java/org/netxms/base/NXCPMsgWaitQueueTest.java -te
 src/java/netxms-base/src/test/java/org/netxms/base/NXCPVariableTest.java -text
 src/java/netxms-client/pom.xml -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCAccessListElement.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/NXCAlarm.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCContainer.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCInterface.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCNode.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCObject.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/NXCServerVariable.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCSession.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCSubnet.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/NXCSessionTest.java -text
