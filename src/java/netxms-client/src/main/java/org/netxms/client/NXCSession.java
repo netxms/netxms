@@ -520,7 +520,9 @@ public class NXCSession
 	}
 
 	/**
-	 * @return the serverVersion
+	 * Get NetXMS server version.
+	 * 
+	 * @return Server version
 	 */
 	public String getServerVersion()
 	{
@@ -528,7 +530,9 @@ public class NXCSession
 	}
 
 	/**
-	 * @return the serverId
+	 * Get NetXMS server UID.
+	 * 
+	 * @return Server UID
 	 */
 	public byte[] getServerId()
 	{
@@ -588,7 +592,9 @@ public class NXCSession
 	}
 
 	/**
-	 * @return the userSystemRights
+	 * Get system-wide rights of currently logged in user.
+	 * 
+	 * @return System-wide rights of currently logged in user
 	 */
 
 	public int getUserSystemRights()
