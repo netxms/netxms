@@ -13,6 +13,5 @@
   <modules>
     <module>netxms-base</module>
     <module>netxms-client</module>
-    <module>netxms-eclipse</module>
   </modules>
 </project>

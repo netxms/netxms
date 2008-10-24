@@ -292,8 +292,6 @@ src/java/netxms-client/src/main/java/org/netxms/client/NXCServerVariable.java -t
 src/java/netxms-client/src/main/java/org/netxms/client/NXCSession.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCSubnet.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/NXCSessionTest.java -text
-src/java/netxms-eclipse/META-INF/MANIFEST.MF -text
-src/java/netxms-eclipse/pom.xml -text
 src/java/pom.xml -text
 src/libnetxms/libnetxms.dsp eol=crlf
 src/libnetxms/libnetxms.dsw eol=crlf
