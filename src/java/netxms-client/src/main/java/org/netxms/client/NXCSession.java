@@ -6,6 +6,7 @@ package org.netxms.client;
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.*;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
 import org.netxms.base.*;
@@ -637,6 +638,24 @@ public class NXCSession
 			obj = objectList.get(id);
 		}
 		return obj;
+	}
+
+	
+	/**
+	 * Get list of top-level objects.
+	 * 
+	 * @param name variable's name
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	
+	public NXCObject[] getTopLevelObjects()
+	{
+		HashSet<NXCObject> list = new HashSet<NXCObject>();
+		list.add(findObjectById(1));
+		list.add(findObjectById(2));
+		list.add(findObjectById(3));
+		return list.toArray(new NXCObject[list.size()]);
 	}
 
 	

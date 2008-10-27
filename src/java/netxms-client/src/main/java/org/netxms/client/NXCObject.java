@@ -44,6 +44,7 @@ public class NXCObject
 	// Generic object attributes
 	private long objectId = 0;
 	private String objectName;
+	private int objectClass;	// NetXMS object class
 	private int status = STATUS_UNKNOWN;
 	private boolean isDeleted = false;
 	private InetAddress primaryIP;
@@ -68,6 +69,7 @@ public class NXCObject
 		
 		objectId = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_ID);
 		objectName = msg.getVariableAsString(NXCPCodes.VID_OBJECT_NAME);
+		objectClass = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_CLASS);
 		primaryIP = msg.getVariableAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
 		isDeleted = msg.getVariableAsBoolean(NXCPCodes.VID_IS_DELETED);
 		
@@ -189,5 +191,70 @@ public class NXCObject
 	public boolean isInheritAccessRights()
 	{
 		return inheritAccessRights;
+	}
+
+	
+	/**
+	 * @return List of parent objects
+	 */
+	public NXCObject[] getParentsAsArray(final NXCSession session)
+	{
+		final NXCObject[] list;
+		synchronized(parents)
+		{
+			list = new NXCObject[parents.size()];
+			final Iterator<Long> it = parents.iterator();
+			for(int i = 0; it.hasNext(); i++)
+			{
+				list[i] = session.findObjectById(it.next());
+			}
+		}
+		return list;
+	}
+
+
+	/**
+	 * @return List of child objects
+	 */
+	public NXCObject[] getChildsAsArray(final NXCSession session)
+	{
+		final NXCObject[] list;
+		synchronized(childs)
+		{
+			list = new NXCObject[childs.size()];
+			final Iterator<Long> it = childs.iterator();
+			for(int i = 0; it.hasNext(); i++)
+			{
+				list[i] = session.findObjectById(it.next());
+			}
+		}
+		return list;
+	}
+
+	
+	/**
+	 * @return Number of parent objects
+	 */
+	public int getNumberOfParents()
+	{
+		return parents.size();
+	}
+
+
+	/**
+	 * @return Number of child objects
+	 */
+	public int getNumberOfChilds()
+	{
+		return childs.size();
+	}
+
+
+	/**
+	 * @return the objectClass
+	 */
+	public int getObjectClass()
+	{
+		return objectClass;
 	}
 }
