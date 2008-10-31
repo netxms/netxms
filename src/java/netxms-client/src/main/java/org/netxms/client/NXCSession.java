@@ -7,6 +7,7 @@ import java.io.*;
 import java.net.*;
 import java.util.concurrent.*;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
 import org.netxms.base.*;
@@ -137,6 +138,9 @@ public class NXCSession
 	// Communication parameters
 	private int recvBufferSize = 4194304;	// Default is 4MB
 	private int commandTimeout = 30000;		// Default is 30 sec
+	
+	// Notification listeners
+	private HashSet<NXCListener> listeners = new HashSet<NXCListener>(0);
 	
 	// Server information
 	private String serverVersion = "(unknown)";
@@ -351,10 +355,25 @@ public class NXCSession
 	}
 	
 	
-	//
-	// Send message to server
-	//
+	/**
+	 * Call notification handlers on all registered listeners
+	 * @param n Notification object
+	 */
+	protected synchronized void sendNotification(NXCNotification n)
+	{
+		Iterator<NXCListener> it = listeners.iterator();
+		while(it.hasNext())
+		{
+			it.next().notificationHandler(n);
+		}
+	}
 	
+	
+	/**
+	 * Send message to server
+	 * @param msg Message to sent
+	 * @throws IOException if case of socket communication failure
+	 */
 	private synchronized void sendMessage(final NXCPMessage msg) throws IOException
 	{
 		connSocket.getOutputStream().write(msg.createNXCPMessage());

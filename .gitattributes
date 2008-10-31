@@ -286,7 +286,9 @@ src/java/netxms-client/src/main/java/org/netxms/client/NXCAlarm.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCContainer.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCInterface.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/NXCListener.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCNode.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/NXCNotification.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCObject.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCServerVariable.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCSession.java -text
