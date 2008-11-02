@@ -183,11 +183,11 @@ public class NXCSession
 		return object;
 	}
 	
-	
-	//
-	// Receiver thread
-	//
-	
+
+	/**
+	 * Receiver thread for NXCSession
+	 * @author victor
+	 */
 	private class ReceiverThread extends Thread
 	{
 		ReceiverThread()
@@ -225,9 +225,15 @@ public class NXCSession
 							{
 								objectList.put(obj.getObjectId(), obj);
 							}
+							if (msg.getMessageCode() == NXCPCodes.CMD_OBJECT_UPDATE)
+								sendNotification(new NXCNotification(NXCNotification.OBJECT_CHANGED, obj));
 							break;
 						case NXCPCodes.CMD_OBJECT_LIST_END:
 							completeSync(syncObjects);
+							break;
+						case NXCPCodes.CMD_ALARM_UPDATE:
+							sendNotification(new NXCNotification(msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE,
+							                                     new NXCAlarm(msg)));
 							break;
 						default:
 							msgWaitQueue.putMessage(msg);
@@ -356,6 +362,28 @@ public class NXCSession
 	
 	
 	/**
+	 * Add notification listener
+	 * 
+	 * @param lst Listener to add
+	 */
+	public void addListener(NXCListener lst)
+	{
+		listeners.add(lst);
+	}
+	
+	
+	/**
+	 * Remove notification listener
+	 * 
+	 * @param lst Listener to remove
+	 */
+	public void removeListener(NXCListener lst)
+	{
+		listeners.remove(lst);
+	}
+	
+	
+	/**
 	 * Call notification handlers on all registered listeners
 	 * @param n Notification object
 	 */
@@ -379,11 +407,15 @@ public class NXCSession
 		connSocket.getOutputStream().write(msg.createNXCPMessage());
 	}
 	
-	
-	//
-	// Wait for message
-	//
-	
+
+	/**
+	 * Wait for message with specific code and id.
+	 *  
+	 * @param code Message code
+	 * @param id Message id
+	 * @return Message object 
+	 * @throws NXCException if message was not arrived within timeout interval
+	 */
 	private NXCPMessage waitForMessage(final int code, final long id) throws NXCException
 	{
 		final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id);
@@ -392,11 +424,14 @@ public class NXCSession
 		return msg;
 	}
 	
-	
-	//
-	// Wait for CMD_REQUEST_COMPLETED
-	//
-	
+
+	/**
+	 * Wait for CMD_REQUEST_COMPLETED message with given id
+	 * 
+	 * @param id Message id
+	 * @throws NXCException if message was not arrived within timeout interval or contains
+	 *         RCC other than RCC_SUCCESS
+	 */
 	private void waitForRCC(final long id) throws NXCException
 	{
 		final NXCPMessage msg = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, id);
@@ -405,11 +440,13 @@ public class NXCSession
 			throw new NXCException(rcc);
 	}
 	
-	
-	//
-	// Create new message with unique id
-	//
-	
+
+	/**
+	 * Create new NXCP message with unique id
+	 * 
+	 * @param code Message code
+	 * @return New message object
+	 */
 	private final NXCPMessage newMessage(int code)
 	{
 		return new NXCPMessage(code, requestId++);

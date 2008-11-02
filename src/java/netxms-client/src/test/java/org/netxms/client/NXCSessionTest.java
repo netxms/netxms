@@ -53,6 +53,30 @@ public class NXCSessionTest extends TestCase
 		session.disconnect();
 	}
 
+	// NOTE: server must have at least 1 active alarm for this test.
+	//       This alarm  will be terminated during test.
+	public void testAlarmUpdate() throws Exception
+	{
+		NXCSession session = new NXCSession(serverAddress, loginName, password);
+		session.connect();
+		
+		HashMap<Long, NXCAlarm> list = session.getAlarms(false);
+		if (list.size() > 0)
+		{
+			final Boolean success = new Boolean(false);
+			session.addListener(new NXCListener() {
+				public void notificationHandler(NXCNotification n)
+				{
+//					if (n.getCode() == NXCNotification.ALARM_TERMINATED)
+//						success.;
+				}
+			});
+			session.acknowledgeAlarm(list.keySet().iterator().next());
+		}
+		
+		session.disconnect();
+	}
+
 	public void testServerVariables() throws Exception
 	{
 		NXCSession session = new NXCSession(serverAddress, loginName, password);
