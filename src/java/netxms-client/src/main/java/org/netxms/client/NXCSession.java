@@ -24,7 +24,16 @@ public class NXCSession
 	// Authentication types
 	public static final int AUTH_TYPE_PASSWORD = 0;
 	public static final int AUTH_TYPE_CERTIFICATE = 1;
-
+	
+	// Notification channels
+	public static final int CHANNEL_EVENTS = 0x0001;
+	public static final int CHANNEL_SYSLOG = 0x0002;
+	public static final int CHANNEL_ALARMS = 0x0004;
+	public static final int CHANNEL_OBJECTS = 0x0008;
+	public static final int CHANNEL_SNMP_TRAPS = 0x0010;
+	public static final int CHANNEL_AUDIT_LOG = 0x0020;
+	public static final int CHANNEL_SITUATIONS = 0x0040;
+	
 	// Request completion codes (RCC)
 	public static final int RCC_SUCCESS                 = 0;
 	public static final int RCC_COMPONENT_LOCKED        = 1;
@@ -876,7 +885,6 @@ public class NXCSession
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	
 	public void setServerVariable(final String name, final String value) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_CONFIG_VARIABLE);
@@ -894,11 +902,44 @@ public class NXCSession
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	
 	public void deleteServerVariable(final String name) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_CONFIG_VARIABLE);
 		msg.setVariable(NXCPCodes.VID_NAME, name);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+
+	/**
+	 * Subscribe to notification channel(s)
+	 * 
+	 * @param channels Notification channels to subscribe to. Multiple channels can be specified by combining them with OR operation.
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void subscribe(int channels) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_SUBSCRIPTION);
+		msg.setVariableInt32(NXCPCodes.VID_FLAGS, channels);
+		msg.setVariableInt16(NXCPCodes.VID_OPERATION, 1);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+
+	/**
+	 * Unsubscribe from notification channel(s)
+	 * 
+	 * @param channels Notification channels to unsubscribe from. Multiple channels can be specified by combining them with OR operation.
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void unsubscribe(int channels) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_SUBSCRIPTION);
+		msg.setVariableInt32(NXCPCodes.VID_FLAGS, channels);
+		msg.setVariableInt16(NXCPCodes.VID_OPERATION, 0);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}

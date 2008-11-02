@@ -1,6 +1,9 @@
 package org.netxms.client;
 
 import java.util.HashMap;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+
 import junit.framework.TestCase;
 
 
@@ -63,15 +66,23 @@ public class NXCSessionTest extends TestCase
 		HashMap<Long, NXCAlarm> list = session.getAlarms(false);
 		if (list.size() > 0)
 		{
-			final Boolean success = new Boolean(false);
+			final Semaphore s = new Semaphore(0);
+			final Long alarmId = list.keySet().iterator().next();
+			final boolean[] success = new boolean[1];
+			success[0] = false;
 			session.addListener(new NXCListener() {
 				public void notificationHandler(NXCNotification n)
 				{
-//					if (n.getCode() == NXCNotification.ALARM_TERMINATED)
-//						success.;
+					assertEquals(n.getCode(), NXCNotification.ALARM_TERMINATED);
+					assertEquals(((NXCAlarm)n.getObject()).getId(), alarmId.longValue());
+					success[0] = true;
+					s.release();
 				}
 			});
-			session.acknowledgeAlarm(list.keySet().iterator().next());
+			session.subscribe(NXCSession.CHANNEL_ALARMS);
+			session.terminateAlarm(alarmId);
+			s.tryAcquire(3, TimeUnit.SECONDS);
+			assertEquals(true, success[0]);
 		}
 		
 		session.disconnect();
