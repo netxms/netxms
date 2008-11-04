@@ -115,6 +115,12 @@ public:
 
 	int GetProcessedRecordsCount() { return m_recordsProcessed; }
 	int GetMatchedRecordsCount() { return m_recordsMatched; }
+
+#ifdef _WIN32
+	BOOL MonitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *, ...));
+#else
+	BOOL MonitorFile(CONDITION stopCondition, BOOL *stopFlag, void (*logger)(int, const TCHAR *, ...));
+#endif
 };
 
 #endif

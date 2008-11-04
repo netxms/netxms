@@ -178,6 +178,10 @@ SOURCE=.\parser.cpp
 
 SOURCE=.\rule.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\winfile.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 

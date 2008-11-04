@@ -308,6 +308,7 @@ src/libnxlp/libnxlp.dsw eol=crlf
 src/libnxlp/libnxlp.h -text
 src/libnxlp/main.cpp -text
 src/libnxlp/sample.xml -text
+src/libnxlp/unixfile.cpp -text
 src/libnxmap/libnxmap.dsp eol=crlf
 src/libnxmap/libnxmap.dsw eol=crlf
 src/libnxsl/libnxsl.dsp eol=crlf
