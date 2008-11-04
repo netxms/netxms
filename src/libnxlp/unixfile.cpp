@@ -108,10 +108,10 @@ BOOL LogParser::MonitorFile(CONDITION stopCondition, BOOL *stopFlag, void (*logg
 
 	if (logger != NULL)
 		logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: parser thread for file \"%s\" started"), m_fileName);
-	
+
 	while(!(*stopFlag))
 	{
-		GenerateCurrentFileName(parser, fname);
+		GenerateCurrentFileName(this, fname);
 		if (stat(fname, &st) == 0)
 		{
 			fh = open(fname, O_RDONLY);
@@ -119,16 +119,16 @@ BOOL LogParser::MonitorFile(CONDITION stopCondition, BOOL *stopFlag, void (*logg
 			{
 				size = st.st_size;
 				lseek(fh, 0, SEEK_END);
-				
-				if (logger != NULL)
-					logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file \"%s\" successfully opened"), m_fileName));
 
-				while(!g_shutdownFlag)
+				if (logger != NULL)
+					logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file \"%s\" successfully opened"), m_fileName);
+
+				while(!(*stopFlag))
 				{
 					ThreadSleep(1);
 
 					// Check if file name was changed
-					GenerateCurrentFileName(parser, temp);
+					GenerateCurrentFileName(this, temp);
 					if (_tcscmp(temp, fname))
 					{
 						if (logger != NULL)
@@ -152,7 +152,7 @@ BOOL LogParser::MonitorFile(CONDITION stopCondition, BOOL *stopFlag, void (*logg
 						size = st.st_size;
 						if (logger != NULL)
 							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: new data avialable in file \"%s\""), m_fileName);
-						ParseNewRecords(parser, fh);
+						ParseNewRecords(this, fh);
 					}
 				}
 				close(fh);
@@ -167,5 +167,5 @@ BOOL LogParser::MonitorFile(CONDITION stopCondition, BOOL *stopFlag, void (*logg
 
 	if (logger != NULL)
 		logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: parser thread for file \"%s\" stopped"), m_fileName);
-	return THREAD_OK;
+	return TRUE;
 }
