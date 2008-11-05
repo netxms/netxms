@@ -30,7 +30,6 @@
 #ifdef _WIN32
 THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *);
 #endif
-THREAD_RESULT THREAD_CALL ParserThreadFile(void *);
 
 
 //
@@ -50,6 +49,21 @@ static CONDITION m_hCondTerminate = INVALID_CONDITION_HANDLE;
 #endif
 static DWORD m_numParsers = 0;
 static LogParser **m_parserList = NULL;
+
+
+//
+// File parsing thread
+//
+
+THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
+{
+#ifdef _WIN32
+	((LogParser *)arg)->MonitorFile(g_hCondShutdown, NxWriteAgentLog);
+#else
+	((LogParser *)arg)->MonitorFile(g_hCondShutdown, &g_shutdownFlag, NxWriteAgentLog);
+#endif
+	return THREAD_OK;
+}
 
 
 //
