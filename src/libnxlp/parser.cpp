@@ -42,6 +42,9 @@
 #define XML_STATE_MATCH		3
 #define XML_STATE_EVENT		4
 #define XML_STATE_FILE     5
+#define XML_STATE_ID       6
+#define XML_STATE_LEVEL    7
+#define XML_STATE_SOURCE   8
 
 typedef struct
 {
@@ -50,6 +53,9 @@ typedef struct
 	String regexp;
 	String event;
 	String file;
+	String id;
+	String level;
+	String source;
 	int numEventParams;
 } XML_PARSER_STATE;
 
@@ -172,6 +178,18 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	{
 		((XML_PARSER_STATE *)userData)->state = XML_STATE_MATCH;
 	}
+	else if (!strcmp(name, "id"))
+	{
+		((XML_PARSER_STATE *)userData)->state = XML_STATE_ID;
+	}
+	else if (!strcmp(name, "level"))
+	{
+		((XML_PARSER_STATE *)userData)->state = XML_STATE_LEVEL;
+	}
+	else if (!strcmp(name, "source"))
+	{
+		((XML_PARSER_STATE *)userData)->state = XML_STATE_SOURCE;
+	}
 	else if (!strcmp(name, "event"))
 	{
 		((XML_PARSER_STATE *)userData)->numEventParams = XMLGetAttrDWORD(attrs, "params", 0);
@@ -216,6 +234,18 @@ static void EndElement(void *userData, const char *name)
 	{
 		ps->state = XML_STATE_RULE;
 	}
+	else if (!strcmp(name, "id"))
+	{
+		ps->state = XML_STATE_RULE;
+	}
+	else if (!strcmp(name, "level"))
+	{
+		ps->state = XML_STATE_RULE;
+	}
+	else if (!strcmp(name, "source"))
+	{
+		ps->state = XML_STATE_RULE;
+	}
 	else if (!strcmp(name, "event"))
 	{
 		ps->state = XML_STATE_RULE;
@@ -230,6 +260,15 @@ static void CharData(void *userData, const XML_Char *s, int len)
 	{
 		case XML_STATE_MATCH:
 			ps->regexp.AddString(s, len);
+			break;
+		case XML_STATE_ID:
+			ps->id.AddString(s, len);
+			break;
+		case XML_STATE_LEVEL:
+			ps->level.AddString(s, len);
+			break;
+		case XML_STATE_SOURCE:
+			ps->source.AddString(s, len);
 			break;
 		case XML_STATE_EVENT:
 			ps->event.AddString(s, len);

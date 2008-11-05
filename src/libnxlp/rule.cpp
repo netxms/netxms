@@ -35,12 +35,18 @@
 // Constructor
 //
 
-LogParserRule::LogParserRule(const char *regexp, DWORD event, int numParams)
+LogParserRule::LogParserRule(const char *regexp, DWORD event, int numParams,
+									  const TCHAR *source, DWORD level, 
+									  DWORD idStart, DWORD idEnd)
 {
 	m_isValid = (regcomp(&m_preg, regexp, REG_EXTENDED | REG_ICASE) == 0);
 	m_event = event;
 	m_numParams = numParams;
 	m_pmatch = (numParams > 0) ? (regmatch_t *)malloc(sizeof(regmatch_t) * (numParams + 1)) : NULL;
+	m_source = (source != NULL) ? _tcsdup(source) : NULL;
+	m_level = level;
+	m_idStart = idStart;
+	m_idEnd = idEnd;
 }
 
 

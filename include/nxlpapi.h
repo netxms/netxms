@@ -64,9 +64,15 @@ private:
 	BOOL m_isValid;
 	int m_numParams;
 	regmatch_t *m_pmatch;
+	TCHAR *m_source;
+	DWORD m_level;
+	DWORD m_idStart;
+	DWORD m_idEnd;
 
 public:
-	LogParserRule(const char *regexp, DWORD event = 0, int numParams = 0);
+	LogParserRule(const char *regexp, DWORD event = 0, int numParams = 0,
+	              const TCHAR *source = NULL, DWORD level = 0xFFFFFFFF,
+					  DWORD idStart = 0xFFFFFFFF, DWORD idEnd = 0xFFFFFFFF);
 	~LogParserRule();
 
 	BOOL IsValid() { return m_isValid; }

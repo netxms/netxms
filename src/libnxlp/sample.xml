@@ -9,5 +9,11 @@
 			<match>.*warning.*</match>
 			<event>WARNING_EVENT</event>
 		</rule>
+		<rule>
+			<id>8-10</id>
+			<level>0</level>
+			<source>.*system.*</source>
+			<event>WARNING_EVENT</event>
+		</rule>
 	</rules>
 </parser>
