@@ -187,6 +187,8 @@ inline void MutexDestroy(MUTEX mutex)
 
 inline BOOL MutexLock(MUTEX mutex, DWORD dwTimeOut)
 {
+	if (mutex == INVALID_MUTEX_HANDLE)
+		return FALSE;
    return WaitForSingleObject(mutex, dwTimeOut) == WAIT_OBJECT_0;
 }
 
@@ -222,6 +224,8 @@ inline void ConditionPulse(CONDITION hCond)
 
 inline BOOL ConditionWait(CONDITION hCond, DWORD dwTimeOut)
 {
+	if (hCond == INVALID_CONDITION_HANDLE)
+		return FALSE;
    return WaitForSingleObject(hCond, dwTimeOut) == WAIT_OBJECT_0;
 }
 
