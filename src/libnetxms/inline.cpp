@@ -68,7 +68,7 @@ extern "C" void LIBNETXMS_EXPORTABLE ret_uint64(TCHAR *rbuf, QWORD value)
 #endif   /* _WIN32 */
 }
 
-extern "C" TCHAR LIBNETXMS_EXPORTABLE *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, int nLen)
+extern "C" TCHAR LIBNETXMS_EXPORTABLE *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, size_t nLen)
 {
    _tcsncpy(pszDest, pszSrc, nLen - 1);
    pszDest[nLen - 1] = 0;

@@ -150,7 +150,7 @@ BOOL EventSource::FormatMessage(EVENTLOGRECORD *rec, TCHAR *msg, size_t msgSize)
       if (::FormatMessage(FORMAT_MESSAGE_FROM_HMODULE | 
                           FORMAT_MESSAGE_ARGUMENT_ARRAY | 
                           FORMAT_MESSAGE_MAX_WIDTH_MASK,
-                          m_modules[i], rec->EventID, 0, msg, msgSize,
+                          m_modules[i], rec->EventID, 0, msg, (DWORD)msgSize,
                           (va_list *)strings) > 0)
 		{
 			success = TRUE;

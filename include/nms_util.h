@@ -415,7 +415,7 @@ typedef struct _dir_struc
 
 #ifdef __cplusplus
 #ifndef LIBNETXMS_INLINE
-   inline TCHAR *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, int nLen)
+   inline TCHAR *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, size_t nLen)
    {
       _tcsncpy(pszDest, pszSrc, nLen - 1);
       pszDest[nLen - 1] = 0;
@@ -423,7 +423,7 @@ typedef struct _dir_struc
    }
 #endif
 #else
-   TCHAR LIBNETXMS_EXPORTABLE *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, int nLen);
+   TCHAR LIBNETXMS_EXPORTABLE *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, size_t nLen);
 #endif
 
 #ifdef __cplusplus
@@ -519,7 +519,7 @@ extern "C"
 #endif
 
 #ifdef _WIN32
-   TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufSize);
+   TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, TCHAR *pszBuffer, size_t iBufSize);
 #endif
 
 #if !(HAVE_DAEMON)

@@ -47,7 +47,7 @@ static void ParseNewRecords(LogParser *parser, HANDLE hFile)
          bytes += bufPos;
          for(ptr = buffer;; ptr = eptr + 1)
          {
-            bufPos = ptr - buffer;
+            bufPos = (DWORD)(ptr - buffer);
             eptr = (char *)memchr(ptr, '\n', bytes - bufPos);
             if (eptr == NULL)
             {

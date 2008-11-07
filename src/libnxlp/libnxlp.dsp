@@ -19,6 +19,8 @@ CFG=libnxlp - Win32 Debug UNICODE
 !MESSAGE 
 !MESSAGE "libnxlp - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE "libnxlp - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "libnxlp - Win32 Debug AMD64" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "libnxlp - Win32 Release AMD64" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE "libnxlp - Win32 Debug UNICODE" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE "libnxlp - Win32 Release UNICODE" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE 
@@ -45,17 +47,17 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /I "..\..\include" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /I "..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
-# ADD BASE RSC /l 0x409 /d "NDEBUG"
-# ADD RSC /l 0x409 /d "NDEBUG"
+# ADD BASE RSC /l 0x809 /d "NDEBUG"
+# ADD RSC /l 0x809 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib libexpat.lib /nologo /version:0.1 /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\libnetxms\Release"
+# ADD LINK32 gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libeay32.lib dbghelp.lib crypt32.lib libexpat.lib /nologo /version:0.2 /dll /debug /machine:I386 /pdbtype:sept
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -76,20 +78,88 @@ PostBuild_Cmds=copy Release\libnxlp.dll C:\NetXMS\bin	copy Release\libnxlp.pdb C
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /ZI /Od /I "..\..\include" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /ZI /Od /I "..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
-# ADD BASE RSC /l 0x409 /d "_DEBUG"
-# ADD RSC /l 0x409 /d "_DEBUG"
+# ADD BASE RSC /l 0x809 /d "_DEBUG"
+# ADD RSC /l 0x809 /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib libexpat.lib /nologo /version:0.1 /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\libnetxms\Debug"
+# ADD LINK32 gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libeay32.lib dbghelp.lib crypt32.lib libexpat.lib /nologo /version:0.1 /dll /debug /machine:I386 /pdbtype:sept
+# SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
+PostBuild_Desc=Copy files
 PostBuild_Cmds=copy Debug\libnxlp.dll ..\..\bin	copy Debug\libnxlp.pdb ..\..\bin
+# End Special Build Tool
+
+!ELSEIF  "$(CFG)" == "libnxlp - Win32 Debug AMD64"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "libnxlp___Win32_Debug_AMD64"
+# PROP BASE Intermediate_Dir "libnxlp___Win32_Debug_AMD64"
+# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "Debug64"
+# PROP Intermediate_Dir "Debug64"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /Zi /Od /I "..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /D "__64BIT__" /D "_M_X64" /FD /Wp64 /c
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
+# ADD BASE RSC /l 0x809 /d "_DEBUG"
+# ADD RSC /l 0x809 /d "_DEBUG"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib /nologo /version:0.1 /dll /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 bufferoverflowU.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libeay32.lib dbghelp.lib crypt32.lib /nologo /version:0.1 /dll /debug /machine:IX86 /pdbtype:sept /machine:AMD64
+# SUBTRACT LINK32 /pdb:none
+# Begin Special Build Tool
+SOURCE="$(InputPath)"
+PostBuild_Desc=Copy files
+PostBuild_Cmds=copy Debug64\libnxlp.dll ..\..\bin64	copy Debug64\libnxlp.pdb ..\..\bin64
+# End Special Build Tool
+
+!ELSEIF  "$(CFG)" == "libnxlp - Win32 Release AMD64"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "libnxlp___Win32_Release_AMD64"
+# PROP BASE Intermediate_Dir "libnxlp___Win32_Release_AMD64"
+# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "Release64"
+# PROP Intermediate_Dir "Release64"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /MD /W3 /GX /O2 /I "..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /I "..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /D "__64BIT__" /D "_M_X64" /FD /c
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+# ADD BASE RSC /l 0x809 /d "NDEBUG"
+# ADD RSC /l 0x809 /d "NDEBUG"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib /nologo /version:0.1 /dll /machine:I386
+# ADD LINK32 bufferoverflowU.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libeay32.lib dbghelp.lib crypt32.lib /nologo /version:0.1 /dll /debug /machine:IX86 /pdbtype:sept /machine:AMD64
+# SUBTRACT LINK32 /pdb:none
+# Begin Special Build Tool
+SOURCE="$(InputPath)"
+PostBuild_Desc=Copy files
+PostBuild_Cmds=copy Release64\libnxlp.dll C:\NetXMS\bin64	copy Release64\libnxlp.pdb C:\NetXMS\bin64
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "libnxlp - Win32 Debug UNICODE"
@@ -106,20 +176,23 @@ PostBuild_Cmds=copy Debug\libnxlp.dll ..\..\bin	copy Debug\libnxlp.pdb ..\..\bin
 # PROP Intermediate_Dir "Debug_UNICODE"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /MDd /W3 /Gm /ZI /Od /I "..\..\include" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /ZI /Od /I "..\..\include" /D "UNICODE" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /YX /FD /GZ /c
+# ADD BASE CPP /nologo /MDd /W3 /Gm /ZI /Od /I "..\..\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /ZI /Od /I "..\..\include" /D "UNICODE" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
-# ADD BASE RSC /l 0x409 /d "_DEBUG"
-# ADD RSC /l 0x409 /d "_DEBUG"
+# ADD BASE RSC /l 0x809 /d "_DEBUG"
+# ADD RSC /l 0x809 /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib libnxcscp.lib /nologo /version:0.1 /dll /debug /machine:I386 /pdbtype:sept /libpath:"..\libnetxms\Debug" /libpath:"..\libnxcscp\Debug"
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxmsw.lib ws2_32.lib /nologo /version:0.1 /dll /debug /machine:I386 /out:"Debug_UNICODE/libnxlpw.dll" /pdbtype:sept /libpath:"..\libnetxms\Debug_UNICODE"
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib /nologo /version:0.1 /dll /debug /machine:I386 /pdbtype:sept
+# SUBTRACT BASE LINK32 /pdb:none
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libeay32.lib dbghelp.lib crypt32.lib libexpatw.lib /nologo /version:0.1 /dll /debug /machine:I386 /out:"Debug_UNICODE/libnxlpw.dll" /pdbtype:sept
+# SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
+PostBuild_Desc=Copy files
 PostBuild_Cmds=copy Debug_UNICODE\libnxlpw.dll ..\..\bin	copy Debug_UNICODE\libnxlpw.pdb ..\..\bin
 # End Special Build Tool
 
@@ -137,18 +210,18 @@ PostBuild_Cmds=copy Debug_UNICODE\libnxlpw.dll ..\..\bin	copy Debug_UNICODE\libn
 # PROP Intermediate_Dir "Release_UNICODE"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /MD /W3 /O2 /I "..\..\include" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /I "..\..\include" /D "UNICODE" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /YX /FD /c
+# ADD BASE CPP /nologo /MD /W3 /O2 /I "..\..\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /I "..\..\include" /D "UNICODE" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBNXLP_EXPORTS" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
-# ADD BASE RSC /l 0x409 /d "NDEBUG"
-# ADD RSC /l 0x409 /d "NDEBUG"
+# ADD BASE RSC /l 0x809 /d "NDEBUG"
+# ADD RSC /l 0x809 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxms.lib ws2_32.lib libnxcscp.lib /nologo /version:0.1 /dll /machine:I386 /libpath:"..\libnetxms\Release" /libpath:"..\libnxcscp\Release"
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libnetxmsw.lib ws2_32.lib /nologo /version:0.1 /dll /debug /machine:I386 /out:"Release_UNICODE/libnxlpw.dll" /pdbtype:sept /libpath:"..\libnetxms\Release_UNICODE"
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib ntdll.lib /nologo /version:0.1 /dll /machine:I386
+# ADD LINK32 gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libeay32.lib dbghelp.lib crypt32.lib libexpatw.lib /nologo /version:0.1 /dll /debug /machine:I386 /out:"Release_UNICODE/libnxlpw.dll" /pdbtype:sept
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Desc=Copy files
@@ -161,6 +234,8 @@ PostBuild_Cmds=copy Release_UNICODE\libnxlpw.dll C:\NetXMS\bin	copy Release_UNIC
 
 # Name "libnxlp - Win32 Release"
 # Name "libnxlp - Win32 Debug"
+# Name "libnxlp - Win32 Debug AMD64"
+# Name "libnxlp - Win32 Release AMD64"
 # Name "libnxlp - Win32 Debug UNICODE"
 # Name "libnxlp - Win32 Release UNICODE"
 # Begin Group "Source Files"
@@ -192,19 +267,15 @@ SOURCE=.\libnxlp.h
 # End Source File
 # Begin Source File
 
+SOURCE="..\..\include\netxms-regex.h"
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\include\netxms-version.h"
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\include\netxms_maps.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\include\nms_common.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\include\nms_cscp.h
 # End Source File
 # Begin Source File
 
@@ -216,23 +287,7 @@ SOURCE=..\..\include\nms_util.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\include\nxclapi.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\include\nxcscpapi.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\include\nxevent.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\include\nxlpapi.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\include\nxtools.h
 # End Source File
 # Begin Source File
 
