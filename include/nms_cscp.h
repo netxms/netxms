@@ -793,6 +793,7 @@ typedef struct
 #define VID_PRODUCT_ID              ((DWORD)311)
 #define VID_CLIENT_ID               ((DWORD)312)
 #define VID_LICENSE_DATA            ((DWORD)313)
+#define VID_TOKEN                   ((DWORD)314)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
