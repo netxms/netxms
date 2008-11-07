@@ -27,3 +27,8 @@ Source: "..\..\install\windows-x64\files\libeay32.dll"; DestDir: "{app}\bin"; Fl
 
 #include "common.iss"
 
+Function GetCustomCmdLine(Param: String): String;
+Begin
+  Result := '';
+End;
+

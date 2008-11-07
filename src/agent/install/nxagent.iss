@@ -27,3 +27,8 @@ Source: "..\..\install\windows\files\libexpat.dll"; DestDir: "{app}\bin"; Flags:
 
 #include "common.iss"
 
+Function GetCustomCmdLine(Param: String): String;
+Begin
+  Result := '';
+End;
+
