@@ -998,9 +998,105 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
       // Check node's capabilities
       SetPollerInfo(nPoller, "capability check");
       SendPollerMsg(dwRqId, _T("Checking node's capabilities...\r\n"));
-      if ((!((m_dwFlags & NF_IS_SNMP) && (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE))) &&
+      
+		// ***** NetXMS agent check *****
+      DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent Flags={%08X} DynamicFlags={%08X}", m_szName, m_dwFlags, m_dwDynamicFlags);
+      if ((!((m_dwFlags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE))) &&
+          (!(m_dwFlags & NF_DISABLE_NXCP)))
+      {
+	      SendPollerMsg(dwRqId, _T("   Checking NetXMS agent...\r\n"));
+         pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort,
+                                          m_wAuthMethod, m_szSharedSecret);
+         SetAgentProxy(pAgentConn);
+         DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent - connecting", m_szName);
+         if (pAgentConn->Connect(g_pServerKey))
+         {
+            DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent - connected", m_szName);
+            LockData();
+            m_dwFlags |= NF_IS_NATIVE_AGENT;
+            if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
+            {
+               m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
+               PostEvent(EVENT_AGENT_OK, m_dwId, NULL);
+               SendPollerMsg(dwRqId, POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
+            }
+            UnlockData();
+      
+            if (pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
+            {
+               LockData();
+               if (strcmp(m_szAgentVersion, szBuffer))
+               {
+                  strcpy(m_szAgentVersion, szBuffer);
+                  bHasChanges = TRUE;
+                  SendPollerMsg(dwRqId, _T("   NetXMS agent version changed to %s\r\n"), m_szAgentVersion);
+               }
+               UnlockData();
+            }
+
+            if (pAgentConn->GetParameter("System.PlatformName", MAX_PLATFORM_NAME_LEN, szBuffer) == ERR_SUCCESS)
+            {
+               LockData();
+               if (strcmp(m_szPlatformName, szBuffer))
+               {
+                  strcpy(m_szPlatformName, szBuffer);
+                  bHasChanges = TRUE;
+                  SendPollerMsg(dwRqId, _T("   Platform name changed to %s\r\n"), m_szPlatformName);
+               }
+               UnlockData();
+            }
+
+            // Check IP forwarding status
+            if (pAgentConn->GetParameter("Net.IP.Forwarding", 16, szBuffer) == ERR_SUCCESS)
+            {
+               if (_tcstoul(szBuffer, NULL, 10) != 0)
+                  m_dwFlags |= NF_IS_ROUTER;
+               else
+                  m_dwFlags &= ~NF_IS_ROUTER;
+            }
+
+				// Get uname
+				if (pAgentConn->GetParameter("System.Uname", MAX_DB_STRING, szBuffer) == ERR_SUCCESS)
+				{
+					TranslateStr(szBuffer, "\r\n", " ");
+					TranslateStr(szBuffer, "\n", " ");
+					TranslateStr(szBuffer, "\r", " ");
+               LockData();
+               if (strcmp(m_szSysDescription, szBuffer))
+               {
+                  strcpy(m_szSysDescription, szBuffer);
+                  bHasChanges = TRUE;
+                  SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_szSysDescription);
+               }
+               UnlockData();
+				}
+
+            rcc = pAgentConn->GetSupportedParameters(&dwNumParams, &pParamList);
+				if (rcc == ERR_SUCCESS)
+				{
+					LockData();
+					safe_free(m_pParamList);
+					m_dwNumParams = dwNumParams;
+					m_pParamList = pParamList;
+					UnlockData();
+				}
+				else
+				{
+				   DbgPrintf(5, _T("ConfPoll(%s): AgentConnection::GetSupportedParameters() failed: rcc=%d"), m_szName, rcc);
+				}
+
+            pAgentConn->Disconnect();
+            SendPollerMsg(dwRqId, POLLER_INFO _T("   NetXMS native agent is active\r\n"));
+         }
+         delete pAgentConn;
+         DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent - finished", m_szName);
+      }
+
+		// ***** SNMP check *****
+		if ((!((m_dwFlags & NF_IS_SNMP) && (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE))) &&
           (!(m_dwFlags & NF_DISABLE_SNMP)))
       {
+	      SendPollerMsg(dwRqId, _T("   Checking SNMP...\r\n"));
          DbgPrintf(5, "ConfPoll(%s): trying SNMP GET", m_szName);
 			pTransport = CreateSNMPTransport();
 
@@ -1180,97 +1276,6 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
             SendPollerMsg(dwRqId, POLLER_INFO _T("   CheckPoint SNMP agent on port 260 is active\r\n"));
          }
 			delete pTransport;
-      }
-
-      DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent Flags={%08X} DynamicFlags={%08X}", m_szName, m_dwFlags, m_dwDynamicFlags);
-      if ((!((m_dwFlags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE))) &&
-          (!(m_dwFlags & NF_DISABLE_NXCP)))
-      {
-         pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort,
-                                          m_wAuthMethod, m_szSharedSecret);
-         SetAgentProxy(pAgentConn);
-         DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent - connecting", m_szName);
-         if (pAgentConn->Connect(g_pServerKey))
-         {
-            DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent - connected", m_szName);
-            LockData();
-            m_dwFlags |= NF_IS_NATIVE_AGENT;
-            if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
-            {
-               m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
-               PostEvent(EVENT_AGENT_OK, m_dwId, NULL);
-               SendPollerMsg(dwRqId, POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
-            }
-            UnlockData();
-      
-            if (pAgentConn->GetParameter("Agent.Version", MAX_AGENT_VERSION_LEN, szBuffer) == ERR_SUCCESS)
-            {
-               LockData();
-               if (strcmp(m_szAgentVersion, szBuffer))
-               {
-                  strcpy(m_szAgentVersion, szBuffer);
-                  bHasChanges = TRUE;
-                  SendPollerMsg(dwRqId, _T("   NetXMS agent version changed to %s\r\n"), m_szAgentVersion);
-               }
-               UnlockData();
-            }
-
-            if (pAgentConn->GetParameter("System.PlatformName", MAX_PLATFORM_NAME_LEN, szBuffer) == ERR_SUCCESS)
-            {
-               LockData();
-               if (strcmp(m_szPlatformName, szBuffer))
-               {
-                  strcpy(m_szPlatformName, szBuffer);
-                  bHasChanges = TRUE;
-                  SendPollerMsg(dwRqId, _T("   Platform name changed to %s\r\n"), m_szPlatformName);
-               }
-               UnlockData();
-            }
-
-            // Check IP forwarding status
-            if (pAgentConn->GetParameter("Net.IP.Forwarding", 16, szBuffer) == ERR_SUCCESS)
-            {
-               if (_tcstoul(szBuffer, NULL, 10) != 0)
-                  m_dwFlags |= NF_IS_ROUTER;
-               else
-                  m_dwFlags &= ~NF_IS_ROUTER;
-            }
-
-				// Get uname
-				if (pAgentConn->GetParameter("System.Uname", MAX_DB_STRING, szBuffer) == ERR_SUCCESS)
-				{
-					TranslateStr(szBuffer, "\r\n", " ");
-					TranslateStr(szBuffer, "\n", " ");
-					TranslateStr(szBuffer, "\r", " ");
-               LockData();
-               if (strcmp(m_szSysDescription, szBuffer))
-               {
-                  strcpy(m_szSysDescription, szBuffer);
-                  bHasChanges = TRUE;
-                  SendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_szSysDescription);
-               }
-               UnlockData();
-				}
-
-            rcc = pAgentConn->GetSupportedParameters(&dwNumParams, &pParamList);
-				if (rcc == ERR_SUCCESS)
-				{
-					LockData();
-					safe_free(m_pParamList);
-					m_dwNumParams = dwNumParams;
-					m_pParamList = pParamList;
-					UnlockData();
-				}
-				else
-				{
-				   DbgPrintf(5, _T("ConfPoll(%s): AgentConnection::GetSupportedParameters() failed: rcc=%d"), m_szName, rcc);
-				}
-
-            pAgentConn->Disconnect();
-            SendPollerMsg(dwRqId, POLLER_INFO _T("   NetXMS native agent is active\r\n"));
-         }
-         delete pAgentConn;
-         DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent - finished", m_szName);
       }
 
       // Generate event if node flags has been changed

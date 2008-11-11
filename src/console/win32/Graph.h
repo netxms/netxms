@@ -103,7 +103,6 @@ protected:
 private:
 	DCIInfo **m_ppItems;
 	RECT m_rectGraph;
-	double m_dCurrMaxValue;
 	double m_dSecondsPerPixel;
 	void DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int nGridSize);
 	void DrawAreaGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int nGridSize);
@@ -111,6 +110,9 @@ private:
 	DWORD m_dwTimeFrom;
 	DWORD m_dwNumItems;
 	double m_dMaxValue;
+	double m_dCurrMaxValue;
+	double m_dMinValue;
+	double m_dCurrMinValue;
 	NXC_DCI_DATA *m_pData[MAX_GRAPH_ITEMS];
    int m_nLastGridSizeY;
 

@@ -46,6 +46,7 @@ static int MonthFromTS(DWORD dwTimeStamp)
 CGraph::CGraph()
 {
    m_dMaxValue = 100;
+   m_dMinValue = 0;
    m_bAutoScale = TRUE;
    m_bShowGrid = TRUE;
    m_bShowRuler = TRUE;
