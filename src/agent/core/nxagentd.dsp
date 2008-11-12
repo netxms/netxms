@@ -197,6 +197,10 @@ SOURCE=.\nxagentd.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\register.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\service.cpp
 # End Source File
 # Begin Source File
