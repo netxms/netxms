@@ -1,4 +1,3 @@
-/* $Id$ */
 /* 
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
@@ -73,11 +72,11 @@ extern const TCHAR *g_szMessages[];
 //
 
 #if defined(_WIN32)
-#define VALID_OPTIONS   "c:CdDEfhHIM:P:RsSUvX:Z:"
+#define VALID_OPTIONS   "c:CdDEfhHIM:P:r:RsSUvX:Z:"
 #elif defined(_NETWARE)
-#define VALID_OPTIONS   "c:CDfhM:P:vX:Z:"
+#define VALID_OPTIONS   "c:CDfhM:P:r:vX:Z:"
 #else
-#define VALID_OPTIONS   "c:CdDfhM:p:P:vX:Z:"
+#define VALID_OPTIONS   "c:CdDfhM:p:P:r:vX:Z:"
 #endif
 
 
@@ -109,6 +108,7 @@ char g_szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
 char g_szFileStore[MAX_PATH] = AGENT_DEFAULT_FILE_STORE;
 char g_szPlatformSuffix[MAX_PSUFFIX_LENGTH] = "";
 char g_szConfigServer[MAX_DB_STRING] = "not_set";
+char g_szRegistrar[MAX_DB_STRING] = "not_set";
 char g_szListenAddress[MAX_PATH] = "0.0.0.0";
 WORD g_wListenPort = AGENT_LISTEN_PORT;
 SERVER_INFO g_pServerList[MAX_SERVERS];
@@ -228,6 +228,7 @@ static char m_szHelpText[] =
    "   -p         : Path to pid file (default: /var/run/nxagentd.pid)\n"
 #endif
    "   -P <text>  : Set platform suffix to <text>\n"
+   "   -r <addr>  : Register agent on management server <addr>\n"
 #ifdef _WIN32
    "   -R         : Remove Windows service\n"
    "   -s         : Start Windows servive\n"
@@ -1122,6 +1123,10 @@ int main(int argc, char *argv[])
          case 'M':
             g_dwFlags |= AF_CENTRAL_CONFIG;
             nx_strncpy(g_szConfigServer, optarg, MAX_DB_STRING);
+            break;
+         case 'r':
+            g_dwFlags |= AF_REGISTER;
+            nx_strncpy(g_szRegistrar, optarg, MAX_DB_STRING);
             break;
          case 'P':   // Platform suffix
             nx_strncpy(g_szPlatformSuffix, optarg, MAX_PSUFFIX_LENGTH);

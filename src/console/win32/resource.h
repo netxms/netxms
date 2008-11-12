@@ -688,6 +688,8 @@
 #define IDC_EDIT_TIMEZONE               1526
 #define IDC_CHECK_HOSTNAMES             1527
 #define IDC_CHECK_SAVE_GS               1528
+#define IDC_CHECK_REGISTER_AGENTS       1532
+#define IDC_CHECK_ACCESS_FILES          1533
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -993,7 +995,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        390
 #define _APS_NEXT_COMMAND_VALUE         33106
-#define _APS_NEXT_CONTROL_VALUE         1532
+#define _APS_NEXT_CONTROL_VALUE         1536
 #define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif

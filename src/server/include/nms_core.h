@@ -251,6 +251,7 @@ typedef struct
 {
    DWORD dwIpAddr;
    DWORD dwNetMask;
+	BOOL ignoreFilter;
 } NEW_NODE;
 
 
@@ -383,6 +384,7 @@ private:
 	DECLARE_THREAD_STARTER(SendEventLog)
 	DECLARE_THREAD_STARTER(SendSyslog)
 	DECLARE_THREAD_STARTER(CreateObject)
+	DECLARE_THREAD_STARTER(GetServerFile)
 
    void ReadThread(void);
    void WriteThread(void);
@@ -546,6 +548,8 @@ private:
 	void WebMapDelete(CSCPMessage *pRequest);
 	void WebMapGetData(CSCPMessage *pRequest);
 	void WebMapGetList(DWORD dwRqId);
+	void RegisterAgent(CSCPMessage *pRequest);
+	void GetServerFile(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

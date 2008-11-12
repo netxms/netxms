@@ -230,4 +230,16 @@ Language=English
 Call to WaitForProcess failed for process %1
 .
 
+MessageId=
+SymbolicName=MSG_REGISTRATION_FAILED
+Language=English
+Registration on management server failed: %1
+.
+
+MessageId=
+SymbolicName=MSG_REGISTRATION_SUCCESSFULL
+Language=English
+Successfully registered on management server %1
+.
+
 ;#endif

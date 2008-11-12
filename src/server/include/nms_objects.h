@@ -711,20 +711,21 @@ public:
    BOOL GetNextHop(DWORD dwSrcAddr, DWORD dwDestAddr, DWORD *pdwNextHop,
                    DWORD *pdwIfIndex, BOOL *pbIsVPN);
 
-	void SetRecheckCapsFlag(void) { m_dwDynamicFlags |= NDF_RECHECK_CAPABILITIES; }
-   void SetDiscoveryPollTimeStamp(void);
+	void SetRecheckCapsFlag() { m_dwDynamicFlags |= NDF_RECHECK_CAPABILITIES; }
+   void SetDiscoveryPollTimeStamp();
    void StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller);
    void ConfigurationPoll(ClientSession *pSession, DWORD dwRqId, int nPoller, DWORD dwNetMask);
 	void UpdateInterfaceNames(ClientSession *pSession, DWORD dwRqId);
-   void UpdateRoutingTable(void);
-   BOOL ReadyForStatusPoll(void);
-   BOOL ReadyForConfigurationPoll(void);
-   BOOL ReadyForDiscoveryPoll(void);
-   BOOL ReadyForRoutePoll(void);
-   void LockForStatusPoll(void);
-   void LockForConfigurationPoll(void);
-   void LockForDiscoveryPoll(void);
-   void LockForRoutePoll(void);
+   void UpdateRoutingTable();
+   BOOL ReadyForStatusPoll();
+   BOOL ReadyForConfigurationPoll();
+   BOOL ReadyForDiscoveryPoll();
+   BOOL ReadyForRoutePoll();
+   void LockForStatusPoll();
+   void LockForConfigurationPoll();
+   void LockForDiscoveryPoll();
+   void LockForRoutePoll();
+	void ForceConfigurationPoll() { m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL; }
 
    virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 

@@ -106,6 +106,7 @@
 #define AF_ENABLE_SNMP_PROXY			0x0800
 #define AF_SHUTDOWN                 0x1000
 #define AF_RUNNING_ON_NT4           0x2000
+#define AF_REGISTER                 0x4000
 
 
 #ifdef _WIN32
@@ -375,6 +376,7 @@ extern char g_szSharedSecret[];
 extern char g_szConfigFile[];
 extern char g_szFileStore[];
 extern char g_szConfigServer[];
+extern char g_szRegistrar[];
 extern char g_szListenAddress[];
 extern WORD g_wListenPort;
 extern SERVER_INFO g_pServerList[];

@@ -331,6 +331,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
                      pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
                      pInfo->dwIpAddr = pArpCache->pEntries[j].dwIpAddr;
                      pInfo->dwNetMask = pInterface->IpNetMask();
+							pInfo->ignoreFilter = FALSE;
                      g_nodePollerQueue.Put(pInfo);
                   }
             }
@@ -425,6 +426,7 @@ static void CheckRange(int nType, DWORD dwAddr1, DWORD dwAddr2)
                   pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
                   pInfo->dwIpAddr = dwAddr;
                   pInfo->dwNetMask = pSubnet->IpNetMask();
+						pInfo->ignoreFilter = FALSE;
                   g_nodePollerQueue.Put(pInfo);
                }
             }
@@ -435,6 +437,7 @@ static void CheckRange(int nType, DWORD dwAddr1, DWORD dwAddr2)
                pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
                pInfo->dwIpAddr = dwAddr;
                pInfo->dwNetMask = 0;
+					pInfo->ignoreFilter = FALSE;
                g_nodePollerQueue.Put(pInfo);
             }
          }

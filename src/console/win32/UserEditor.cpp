@@ -396,7 +396,8 @@ void CUserEditor::OnUserProperties()
             dlg.m_bManageScripts = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_SCRIPTS) ? TRUE : FALSE;
             dlg.m_bViewTrapLog = (pUser->dwSystemRights & SYSTEM_ACCESS_VIEW_TRAP_LOG) ? TRUE : FALSE;
             dlg.m_bManageAgentCfg = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG) ? TRUE : FALSE;
-            dlg.m_bManageModules = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_MODULES) ? TRUE : FALSE;
+            dlg.m_bAccessFiles = (pUser->dwSystemRights & SYSTEM_ACCESS_READ_FILES) ? TRUE : FALSE;
+            dlg.m_bRegisterAgents = (pUser->dwSystemRights & SYSTEM_ACCESS_REGISTER_AGENTS) ? TRUE : FALSE;
             if (dlg.DoModal() == IDOK)
             {
                userInfo.dwId = pUser->dwId;
@@ -417,7 +418,8 @@ void CUserEditor::OnUserProperties()
                                          (dlg.m_bManageScripts ? SYSTEM_ACCESS_MANAGE_SCRIPTS : 0) |
                                          (dlg.m_bViewTrapLog ? SYSTEM_ACCESS_VIEW_TRAP_LOG : 0) |
                                          (dlg.m_bManageAgentCfg ? SYSTEM_ACCESS_MANAGE_AGENT_CFG : 0) |
-                                         (dlg.m_bManageModules ? SYSTEM_ACCESS_MANAGE_MODULES : 0);
+                                         (dlg.m_bAccessFiles ? SYSTEM_ACCESS_READ_FILES : 0) |
+                                         (dlg.m_bRegisterAgents ? SYSTEM_ACCESS_REGISTER_AGENTS : 0);
                userInfo.dwNumMembers = dlg.m_dwNumMembers;
                if (userInfo.dwNumMembers > 0)
                {
@@ -454,7 +456,8 @@ void CUserEditor::OnUserProperties()
             dlg.m_bManageScripts = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_SCRIPTS) ? TRUE : FALSE;
             dlg.m_bViewTrapLog = (pUser->dwSystemRights & SYSTEM_ACCESS_VIEW_TRAP_LOG) ? TRUE : FALSE;
             dlg.m_bManageAgentCfg = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG) ? TRUE : FALSE;
-            dlg.m_bManageModules = (pUser->dwSystemRights & SYSTEM_ACCESS_MANAGE_MODULES) ? TRUE : FALSE;
+            dlg.m_bAccessFiles = (pUser->dwSystemRights & SYSTEM_ACCESS_READ_FILES) ? TRUE : FALSE;
+            dlg.m_bRegisterAgents = (pUser->dwSystemRights & SYSTEM_ACCESS_REGISTER_AGENTS) ? TRUE : FALSE;
             if (dlg.DoModal() == IDOK)
             {
                userInfo.dwId = pUser->dwId;
@@ -480,7 +483,8 @@ void CUserEditor::OnUserProperties()
                                          (dlg.m_bManageScripts ? SYSTEM_ACCESS_MANAGE_SCRIPTS : 0) |
                                          (dlg.m_bViewTrapLog ? SYSTEM_ACCESS_VIEW_TRAP_LOG : 0) |
                                          (dlg.m_bManageAgentCfg ? SYSTEM_ACCESS_MANAGE_AGENT_CFG : 0) |
-                                         (dlg.m_bManageModules ? SYSTEM_ACCESS_MANAGE_MODULES : 0);
+                                         (dlg.m_bAccessFiles ? SYSTEM_ACCESS_READ_FILES : 0) |
+                                         (dlg.m_bRegisterAgents ? SYSTEM_ACCESS_REGISTER_AGENTS : 0);
                bModify = TRUE;
             }
          }

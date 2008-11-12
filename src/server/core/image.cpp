@@ -191,13 +191,9 @@ void SendImageFile(ClientSession *pSession, DWORD dwRqId, DWORD dwImageId, WORD 
       if (DBGetNumRows(hResult) > 0)
       {
          // Load file into memory
-         strcpy(szFileName, g_szDataDir);
-         strcat(szFileName, DDIR_IMAGES);
-#ifdef _WIN32
-         strcat(szFileName, "\\");
-#else
-         strcat(szFileName, "/");
-#endif
+         _tcscpy(szFileName, g_szDataDir);
+         _tcscat(szFileName, DDIR_IMAGES);
+         _tcscat(szFileName, FS_PATH_SEPARATOR);
          DBGetField(hResult, 0, 0, &szFileName[_tcslen(szFileName)], MAX_PATH - _tcslen(szFileName));
          pFile = LoadFile(szFileName, &dwFileSize);
          if (pFile != NULL)

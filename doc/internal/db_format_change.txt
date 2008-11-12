@@ -1,4 +1,11 @@
 *************
+* 82 ==> 83 *
+*************
+
+- New configuration parameters: EnableAgentRegistration, AnonymousFileAccess
+
+
+*************
 * 81 ==> 82 *
 *************
 

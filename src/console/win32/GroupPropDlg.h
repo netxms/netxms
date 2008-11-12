@@ -38,10 +38,11 @@ public:
 	BOOL	m_bManagePkg;
 	BOOL	m_bDeleteAlarms;
 	BOOL	m_bManageAgentCfg;
-	BOOL	m_bManageModules;
 	BOOL	m_bManageScripts;
 	BOOL	m_bManageTools;
 	BOOL	m_bViewTrapLog;
+	BOOL	m_bAccessFiles;
+	BOOL	m_bRegisterAgents;
 	//}}AFX_DATA
 
 

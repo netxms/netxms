@@ -201,6 +201,7 @@ Name: "{app}\etc"
 Name: "{app}\database"
 Name: "{app}\var\backgrounds"
 Name: "{app}\var\packages"
+Name: "{app}\var\shared"
 
 [Registry]
 Root: HKLM; Subkey: "Software\NetXMS"; Flags: uninsdeletekeyifempty; Components: server websrv

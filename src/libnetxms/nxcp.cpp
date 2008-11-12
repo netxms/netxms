@@ -271,10 +271,12 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_GET_LICENSE"),
 		_T("CMD_CHECK_LICENSE"),
 		_T("CMD_RELEASE_LICENSE"),
-		_T("CMD_ISC_CONNECT_TO_SERVICE")
+		_T("CMD_ISC_CONNECT_TO_SERVICE"),
+		_T("CMD_REGISTER_AGENT"),
+		_T("CMD_GET_SERVER_FILE")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_ISC_CONNECT_TO_SERVICE))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_SERVER_FILE))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_UNKNOWN(%d)"), wCode);

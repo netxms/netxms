@@ -35,11 +35,12 @@ CUserPropDlg::CUserPropDlg(CWnd* pParent /*=NULL*/)
 	m_bDeleteAlarms = FALSE;
 	m_bManagePkg = FALSE;
 	m_bManageAgentCfg = FALSE;
-	m_bManageModules = FALSE;
 	m_bManageScripts = FALSE;
 	m_bManageTools = FALSE;
 	m_bViewTrapLog = FALSE;
 	m_strMappingData = _T("");
+	m_bRegisterAgents = FALSE;
+	m_bAccessFiles = FALSE;
 	//}}AFX_DATA_INIT
    m_nAuthMethod = 0;
 }
@@ -70,11 +71,12 @@ void CUserPropDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_DELETE_ALARMS, m_bDeleteAlarms);
 	DDX_Check(pDX, IDC_CHECK_MANAGE_PKG, m_bManagePkg);
 	DDX_Check(pDX, IDC_CHECK_MANAGE_AGENT_CFG, m_bManageAgentCfg);
-	DDX_Check(pDX, IDC_CHECK_MANAGE_MODULES, m_bManageModules);
 	DDX_Check(pDX, IDC_CHECK_MANAGE_SCRIPTS, m_bManageScripts);
 	DDX_Check(pDX, IDC_CHECK_MANAGE_TOOLS, m_bManageTools);
 	DDX_Check(pDX, IDC_CHECK_VIEW_TRAP_LOG, m_bViewTrapLog);
 	DDX_Text(pDX, IDC_EDIT_MAPPING_DATA, m_strMappingData);
+	DDX_Check(pDX, IDC_CHECK_REGISTER_AGENTS, m_bRegisterAgents);
+	DDX_Check(pDX, IDC_CHECK_ACCESS_FILES, m_bAccessFiles);
 	//}}AFX_DATA_MAP
 }
 

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -474,6 +474,8 @@ typedef struct
 #define CMD_CHECK_LICENSE           0x00E6
 #define CMD_RELEASE_LICENSE         0x00E7
 #define CMD_ISC_CONNECT_TO_SERVICE  0x00E8
+#define CMD_REGISTER_AGENT          0x00E9
+#define CMD_GET_SERVER_FILE         0x00EA
 
 
 //

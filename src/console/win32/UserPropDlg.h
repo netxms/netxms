@@ -40,11 +40,12 @@ public:
 	BOOL	m_bDeleteAlarms;
 	BOOL	m_bManagePkg;
 	BOOL	m_bManageAgentCfg;
-	BOOL	m_bManageModules;
 	BOOL	m_bManageScripts;
 	BOOL	m_bManageTools;
 	BOOL	m_bViewTrapLog;
 	CString	m_strMappingData;
+	BOOL	m_bRegisterAgents;
+	BOOL	m_bAccessFiles;
 	//}}AFX_DATA
 
 

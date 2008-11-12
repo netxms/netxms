@@ -150,6 +150,7 @@ DEFINE_THREAD_STARTER(QueryL2Topology)
 DEFINE_THREAD_STARTER(SendEventLog)
 DEFINE_THREAD_STARTER(SendSyslog)
 DEFINE_THREAD_STARTER(CreateObject)
+DEFINE_THREAD_STARTER(GetServerFile)
 
 
 //
@@ -1212,6 +1213,12 @@ void ClientSession::ProcessingThread(void)
 				break;
 			case CMD_WEBMAP_GET_LIST:
 				WebMapGetList(pMsg->GetId());
+				break;
+			case CMD_REGISTER_AGENT:
+				RegisterAgent(pMsg);
+				break;
+			case CMD_GET_SERVER_FILE:
+				CALL_IN_NEW_THREAD(GetServerFile, pMsg);
 				break;
          default:
             // Pass message to loaded modules
@@ -10092,6 +10099,109 @@ void ClientSession::WebMapGetList(DWORD dwRqId)
 	else
 	{
 		msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+	}
+
+   SendMessage(&msg);
+}
+
+
+//
+// Register agent
+//
+
+void ClientSession::RegisterAgent(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+	Node *node;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_REGISTER_AGENTS)
+	{
+		if (ConfigReadInt(_T("EnableAgentRegistration"), 0))
+		{
+			node = FindNodeByIP(ntohl(m_dwHostAddr));
+			if (node != NULL)
+			{
+				// Node already exist, force configuration poll
+				node->SetRecheckCapsFlag();
+				node->ForceConfigurationPoll();
+			}
+			else
+			{
+				NEW_NODE *info;
+
+				info = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+				info->dwIpAddr = ntohl(m_dwHostAddr);
+				info->dwNetMask = 0;
+				info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway
+				g_nodePollerQueue.Put(info);
+			}
+			msg.SetVariable(VID_RCC, RCC_SUCCESS);
+		}
+		else
+		{
+	      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+		}
+	}
+	else
+	{
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+   SendMessage(&msg);
+}
+
+
+//
+// Get file from server
+//
+
+void ClientSession::GetServerFile(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+	TCHAR name[MAX_PATH], fname[MAX_PATH];
+	int i;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES)
+	{
+		pRequest->GetVariableStr(VID_FILE_NAME, name, MAX_PATH);
+		for(i = _tcslen(name) - 1; i >= 0; i--)
+			if ((name[i] == _T('\\')) || (name[i] == '/'))
+				break;
+		i++;
+      _tcscpy(fname, g_szDataDir);
+      _tcscat(fname, DDIR_SHARED_FILES);
+      _tcscat(fname, FS_PATH_SEPARATOR);
+      _tcscat(fname, name);
+		DebugPrintf(4, _T("Requested file %s"), name);
+		if (_taccess(fname, 0) == 0)
+		{
+			DebugPrintf(5, _T("Sending file %s"), name);
+			if (SendFileOverNXCP(m_hSocket, pRequest->GetId(), fname, m_pCtx))
+			{
+				DebugPrintf(5, _T("File %s was succesfully sent"), name);
+		      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+			}
+			else
+			{
+				DebugPrintf(5, _T("Unable to send file %s: SendFileOverNXCP() failed"), name);
+		      msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+			}
+		}
+		else
+		{
+			DebugPrintf(5, _T("Unable to send file %s: access() failed"), name);
+	      msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+		}
+	}
+	else
+	{
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
    SendMessage(&msg);

@@ -11,9 +11,9 @@ INCLUDES=-I@top_srcdir@/include
 
 bin_PROGRAMS = nxagentd
 nxagentd_SOURCES = messages.c actions.cpp comm.cpp config.cpp exec.cpp \
-                   getparam.cpp nxagentd.cpp session.cpp snmpproxy.cpp \
-                   static_subagents.cpp subagent.cpp sysinfo.cpp tools.cpp \
-                   trap.cpp upgrade.cpp
+                   getparam.cpp nxagentd.cpp register.cpp session.cpp \
+                   snmpproxy.cpp static_subagents.cpp subagent.cpp \
+                   sysinfo.cpp tools.cpp trap.cpp upgrade.cpp
 nxagentd_LDADD = ../../libnetxms/libnetxms.la @SUBAGENT_LIBS@
 AM_CPPFLAGS = $(all_includes) -DPREFIX=\"@prefix@\"
 CLEANFILES = messages.c messages.h static_subagents.cpp
