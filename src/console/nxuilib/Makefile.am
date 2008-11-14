@@ -28,5 +28,6 @@ EXTRA_DIST = \
 	SimpleListCtrl.cpp SimpleListCtrl.h \
 	speaker.cpp \
 	StdAfx.cpp StdAfx.h \
+	TaskBarPopupWnd.cpp TaskBarPopupWnd.h \
 	tools.cpp \
 	XPTheme.cpp XPTheme.h
