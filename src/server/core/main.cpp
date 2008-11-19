@@ -84,6 +84,7 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg);
 THREAD_RESULT THREAD_CALL EventProcessor(void *pArg);
 THREAD_RESULT THREAD_CALL WatchdogThread(void *pArg);
 THREAD_RESULT THREAD_CALL ClientListener(void *pArg);
+THREAD_RESULT THREAD_CALL ISCListener(void *pArg);
 THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg);
 THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg);
 THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg);
@@ -648,6 +649,9 @@ retry_db_lock:
 
 	// Start beacon host poller
 	ThreadCreate(BeaconPoller, 0, NULL);
+
+	// Start inter-server communication listener
+	ThreadCreate(ISCListener, 0, NULL);
 
 	// Allow clients to connect
 	ThreadCreate(ClientListener, 0, NULL);

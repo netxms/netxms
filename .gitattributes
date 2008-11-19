@@ -39,6 +39,7 @@ images/vpnc.ico -text
 images/vpnc.png -text
 images/zone.ico -text
 images/zone.png -text
+include/netxms_isc.h -text
 include/nxlpapi.h -text
 netware/bin/.keep -text
 /netxms.dsw eol=crlf
@@ -400,6 +401,7 @@ src/nxreport/nxreport.dsp eol=crlf
 src/nxreport/nxreport.dsw eol=crlf
 src/nxscript/nxscript.dsp eol=crlf
 src/nxscript/nxscript.dsw eol=crlf
+src/server/core/isc.cpp -text
 src/server/core/nxcore.dsp eol=crlf
 src/server/core/nxcore.dsw eol=crlf
 src/server/dbdrv/mssql/mssql.dsp eol=crlf
