@@ -30,6 +30,13 @@
 
 
 //
+// Context state texts
+//
+
+static const TCHAR *m_states[] = { _T("MANUAL"), _T("AUTO"), _T("INACTIVE") };
+
+
+//
 // XML parser state for creating LogParser object from XML
 //
 
@@ -45,6 +52,7 @@
 #define XML_STATE_ID       6
 #define XML_STATE_LEVEL    7
 #define XML_STATE_SOURCE   8
+#define XML_STATE_CONTEXT  9
 
 typedef struct
 {
@@ -56,7 +64,11 @@ typedef struct
 	String id;
 	String level;
 	String source;
+	String context;
+	int contextAction;
+	String ruleContext;
 	int numEventParams;
+	String errorText;
 } XML_PARSER_STATE;
 
 
@@ -98,12 +110,10 @@ LogParser::~LogParser()
 // Add rule
 //
 
-BOOL LogParser::AddRule(const char *regexp, DWORD event, int numParams)
+BOOL LogParser::AddRule(LogParserRule *rule)
 {
-	LogParserRule *rule;
 	BOOL isOK;
 
-	rule = new LogParserRule(regexp, event, numParams);
 	isOK = rule->IsValid();
 	if (isOK)
 	{
@@ -117,6 +127,30 @@ BOOL LogParser::AddRule(const char *regexp, DWORD event, int numParams)
 	return isOK;
 }
 
+BOOL LogParser::AddRule(const char *regexp, DWORD event, int numParams)
+{
+	return AddRule(new LogParserRule(regexp, event, numParams));
+}
+
+
+//
+// Check context
+//
+
+const TCHAR *LogParser::CheckContext(LogParserRule *rule)
+{
+	const TCHAR *state;
+	
+	if (rule->GetContext() == NULL)
+		return m_states[CONTEXT_SET_MANUAL];
+		
+	state = m_contexts.Get(rule->GetContext());
+	if (state == NULL)
+		return NULL;	// Context inactive, don't use this rule		
+	
+	return !_tcscmp(state, m_states[CONTEXT_CLEAR]) ? NULL : state;
+}
+
 
 //
 // Match log line
@@ -125,14 +159,29 @@ BOOL LogParser::AddRule(const char *regexp, DWORD event, int numParams)
 BOOL LogParser::MatchLine(const char *line, DWORD objectId)
 {
 	int i;
+	const TCHAR *state;
 
 	m_recordsProcessed++;
 	for(i = 0; i < m_numRules; i++)
-		if (m_rules[i]->Match(line, m_cb, objectId, m_userArg))
+	{
+		if (((state = CheckContext(m_rules[i])) != NULL) && m_rules[i]->Match(line, m_cb, objectId, m_userArg))
 		{
 			m_recordsMatched++;
+			
+			// Update context
+			if (m_rules[i]->GetContextToChange() != NULL)
+			{
+				m_contexts.Set(m_rules[i]->GetContextToChange(), m_states[m_rules[i]->GetContextAction()]);
+			}
+			
+			// Set context of this rule to inactive if rule context mode is "automatic reset"
+			if (!_tcscmp(state, m_states[CONTEXT_SET_AUTOMATIC]))
+			{
+				m_contexts.Set(m_rules[i]->GetContext(), m_states[CONTEXT_CLEAR]);
+			}
 			return TRUE;
 		}
+	}
 	return FALSE;
 }
 
@@ -170,8 +219,11 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	}
 	else if (!strcmp(name, "rule"))
 	{
-		((XML_PARSER_STATE *)userData)->regexp = _T("");
-		((XML_PARSER_STATE *)userData)->event = _T("");
+		((XML_PARSER_STATE *)userData)->regexp = NULL;
+		((XML_PARSER_STATE *)userData)->event = NULL;
+		((XML_PARSER_STATE *)userData)->context = NULL;
+		((XML_PARSER_STATE *)userData)->contextAction = CONTEXT_SET_AUTOMATIC;
+		((XML_PARSER_STATE *)userData)->ruleContext = XMLGetAttr(attrs, "context");
 		((XML_PARSER_STATE *)userData)->state = XML_STATE_RULE;
 	}
 	else if (!strcmp(name, "match"))
@@ -194,6 +246,48 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	{
 		((XML_PARSER_STATE *)userData)->numEventParams = XMLGetAttrDWORD(attrs, "params", 0);
 		((XML_PARSER_STATE *)userData)->state = XML_STATE_EVENT;
+	}
+	else if (!strcmp(name, "context"))
+	{
+		const char *action;
+		
+		((XML_PARSER_STATE *)userData)->state = XML_STATE_CONTEXT;
+		
+		action = XMLGetAttr(attrs, "action");
+		if (action == NULL)
+			action = "set";
+			
+		if (!strcmp(action, "set"))
+		{
+			const char *mode;
+
+			mode = XMLGetAttr(attrs, "reset");
+			if (mode == NULL)
+				mode = "auto";
+
+			if (!strcmp(mode, "auto"))
+			{
+				((XML_PARSER_STATE *)userData)->contextAction = CONTEXT_SET_AUTOMATIC;
+			}			
+			else if (!strcmp(mode, "manual"))
+			{
+				((XML_PARSER_STATE *)userData)->contextAction = CONTEXT_SET_MANUAL;
+			}			
+			else
+			{
+				((XML_PARSER_STATE *)userData)->errorText = _T("Invalid context reset mode");
+				((XML_PARSER_STATE *)userData)->state = XML_STATE_ERROR;
+			}
+		}
+		else if (!strcmp(action, "clear"))
+		{
+			((XML_PARSER_STATE *)userData)->contextAction = CONTEXT_CLEAR;
+		}
+		else
+		{
+			((XML_PARSER_STATE *)userData)->errorText = _T("Invalid context action");
+			((XML_PARSER_STATE *)userData)->state = XML_STATE_ERROR;
+		}
 	}
 	else
 	{
@@ -222,12 +316,21 @@ static void EndElement(void *userData, const char *name)
 	{
 		DWORD event;
 		char *eptr;
+		LogParserRule *rule;
 
 		ps->event.Strip();
 		event = strtoul(ps->event, &eptr, 0);
 		if (*eptr != 0)
 			event = ps->parser->ResolveEventName(ps->event);
-		ps->parser->AddRule((const char *)ps->regexp, event, ps->numEventParams);
+		rule = new LogParserRule((const char *)ps->regexp, event, ps->numEventParams);
+		if (!ps->ruleContext.IsEmpty())
+			rule->SetContext(ps->ruleContext);
+		if (!ps->context.IsEmpty())
+		{
+			rule->SetContextToChange(ps->context);
+			rule->SetContextAction(ps->contextAction);
+		}
+		ps->parser->AddRule(rule);
 		ps->state = XML_STATE_RULES;
 	}
 	else if (!strcmp(name, "match"))
@@ -247,6 +350,10 @@ static void EndElement(void *userData, const char *name)
 		ps->state = XML_STATE_RULE;
 	}
 	else if (!strcmp(name, "event"))
+	{
+		ps->state = XML_STATE_RULE;
+	}
+	else if (!strcmp(name, "context"))
 	{
 		ps->state = XML_STATE_RULE;
 	}
@@ -275,6 +382,9 @@ static void CharData(void *userData, const XML_Char *s, int len)
 			break;
 		case XML_STATE_FILE:
 			ps->file.AddString(s, len);
+			break;
+		case XML_STATE_CONTEXT:
+			ps->context.AddString(s, len);
 			break;
 		default:
 			break;
@@ -306,6 +416,13 @@ BOOL LogParser::CreateFromXML(const char *xml, int xmlLen, char *errorText, int 
 	}
 	XML_ParserFree(parser);
 
+	if (success && (state.state == XML_STATE_ERROR))
+	{
+		success = FALSE;
+		if (errorText != NULL)
+			strncpy(errorText, state.errorText, errBufSize);
+	}
+	
 	return success;
 #else
 

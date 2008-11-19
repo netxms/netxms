@@ -59,8 +59,8 @@ String::~String()
 const String& String::operator =(const TCHAR *pszStr)
 {
    safe_free(m_pszBuffer);
-   m_pszBuffer = _tcsdup(pszStr);
-   m_dwBufSize = (DWORD)_tcslen(pszStr) + 1;
+   m_pszBuffer = _tcsdup(CHECK_NULL_EX(pszStr));
+   m_dwBufSize = (DWORD)_tcslen(CHECK_NULL_EX(pszStr)) + 1;
    return *this;
 }
 
@@ -73,10 +73,13 @@ const String&  String::operator +=(const TCHAR *pszStr)
 {
    DWORD dwLen;
 
-   dwLen = (DWORD)_tcslen(pszStr);
-   m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwLen) * sizeof(TCHAR));
-   _tcscpy(&m_pszBuffer[m_dwBufSize - 1], pszStr);
-   m_dwBufSize += dwLen;
+	if (pszStr != NULL)
+	{
+   	dwLen = (DWORD)_tcslen(pszStr);
+   	m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwLen) * sizeof(TCHAR));
+   	_tcscpy(&m_pszBuffer[m_dwBufSize - 1], pszStr);
+   	m_dwBufSize += dwLen;
+	}
    return *this;
 }
 

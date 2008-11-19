@@ -257,6 +257,7 @@ public:
    void Translate(const TCHAR *pszSrc, const TCHAR *pszDst);
 
 	DWORD Size() { return m_dwBufSize > 0 ? m_dwBufSize - 1 : 0; }
+	BOOL IsEmpty() { return m_dwBufSize <= 1; }
 
 	TCHAR *SubStr(int nStart, int nLen, TCHAR *pszBuffer);
 	TCHAR *SubStr(int nStart, int nLen) { return SubStr(nStart, nLen, NULL); }

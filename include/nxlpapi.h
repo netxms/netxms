@@ -43,6 +43,15 @@
 
 
 //
+// Context actions
+//
+
+#define CONTEXT_SET_MANUAL    0
+#define CONTEXT_SET_AUTOMATIC 1
+#define CONTEXT_CLEAR         2
+
+
+//
 // Callback
 // Parameters:
 //    event id, original text, number of parameters, list of parameters,
@@ -68,6 +77,9 @@ private:
 	DWORD m_level;
 	DWORD m_idStart;
 	DWORD m_idEnd;
+	TCHAR *m_context;
+	int m_contextAction;
+	TCHAR *m_contextToChange;
 
 public:
 	LogParserRule(const char *regexp, DWORD event = 0, int numParams = 0,
@@ -77,6 +89,14 @@ public:
 
 	BOOL IsValid() { return m_isValid; }
 	BOOL Match(const char *line, LOG_PARSER_CALLBACK cb, DWORD objectId, void *userArg);
+	
+	void SetContext(const TCHAR *context) { safe_free(m_context); m_context = (context != NULL) ? _tcsdup(context) : NULL; }
+	void SetContextToChange(const TCHAR *context) { safe_free(m_contextToChange); m_contextToChange = (context != NULL) ? _tcsdup(context) : NULL; }
+	void SetContextAction(int action) { m_contextAction = action; }
+	
+	const TCHAR *GetContext() { return m_context; }
+	const TCHAR *GetContextToChange() { return m_contextToChange; }
+	int GetContextAction() { return m_contextAction; }
 };
 
 
@@ -89,6 +109,7 @@ class LIBNXLP_EXPORTABLE LogParser
 private:
 	int m_numRules;
 	LogParserRule **m_rules;
+	StringMap m_contexts;
 	LOG_PARSER_CALLBACK m_cb;
 	void *m_userArg;
 	TCHAR *m_fileName;
@@ -97,6 +118,8 @@ private:
 	THREAD m_thread;	// Associated thread
 	int m_recordsProcessed;
 	int m_recordsMatched;
+	
+	const TCHAR *CheckContext(LogParserRule *rule);
 
 public:
 	LogParser();
@@ -111,6 +134,7 @@ public:
 	THREAD GetThread() { return m_thread; }
 
 	BOOL AddRule(const char *regexp, DWORD event = 0, int numParams = 0);
+	BOOL AddRule(LogParserRule *rule);
 	void SetCallback(LOG_PARSER_CALLBACK cb) { m_cb = cb; }
 	void SetUserArg(void *arg) { m_userArg = arg; }
 	void SetEventNameList(CODE_TO_TEXT *ctt) { m_eventNameList = ctt; }

@@ -1,5 +1,5 @@
 <parser>
-	<file>C:\my_log.txt</file>
+	<file>*System</file>
 	<rules>
 		<rule>
 			<match>.*([A-Za-z]+) failed.*</match>
@@ -14,6 +14,29 @@
 			<level>0</level>
 			<source>.*system.*</source>
 			<event>WARNING_EVENT</event>
+		</rule>
+	</rules>
+</parser>
+
+<parser>
+	<file>C:\my_log.txt</file>
+	<rules>
+		<rule>
+			<match>.*([A-Za-z]+) failed.*</match>
+			<context action="set" reset="auto">DEMO</context>
+		</rule>
+		<rule context="DEMO">
+			<match>.*warning.*</match>
+			<event>WARNING_EVENT</event>
+			<context>DEMO</context>
+		</rule>
+		<rule>
+			<match>.*([A-Za-z]+) not found.*</match>
+			<context action="set" reset="manual">NOT_FOUND</context>
+		</rule>
+		<rule>
+			<match>.*</match>
+			<context action="clear">NOT_FOUND</context>
 		</rule>
 	</rules>
 </parser>

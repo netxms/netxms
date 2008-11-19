@@ -11,14 +11,12 @@ GENERAL:
 - Finish AIX subagent
 - Finish HP-UX subagent
 - Write README for NetWare
-- Add ability to clear collected DCI data
 - Add possibility to set different polling timeouts for different nodes
 - Planned outages (maintenance schedule)
 - Maintenance mode for nodes
 - SMART (HDD diagnostics) subagent
 - Add SNMP SET functionality
 - ThreadSleep(1) sleeps less then second (Linux specific?)
-- Add libgd check to configure
 - Remove build-time-dependency: perl
 - Add named aliases for event parameters
 - Hardware monitoring (temperature, voltage, etc)
@@ -32,7 +30,6 @@ SERVER:
 - Add special handling for HP iLO boards
 - Add logging API for database drivers
 - Network service autodiscovery
-- New attribute: disable status/configuration poll
 - NxDbMgr -- backup before db recover
 - OSPF discovery
 
@@ -69,7 +66,6 @@ WINDOWS CONSOLE:
 - Add "previous value" and "delta" fields to last values view
 - Add option to split exported DCI data into several files or limit export
   file size
-- Add possibility to define custom graph presets
 
 
 POCKET PC CONSOLE:

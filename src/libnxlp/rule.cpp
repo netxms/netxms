@@ -1,4 +1,3 @@
-/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Log Parsing Library
@@ -47,6 +46,9 @@ LogParserRule::LogParserRule(const char *regexp, DWORD event, int numParams,
 	m_level = level;
 	m_idStart = idStart;
 	m_idEnd = idEnd;
+	m_context = NULL;
+	m_contextAction = 0;
+	m_contextToChange = NULL;
 }
 
 
