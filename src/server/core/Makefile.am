@@ -10,7 +10,7 @@ libnxcore_la_SOURCES = acl.cpp agent.cpp actions.cpp admin.cpp alarm.cpp \
 			dbwrite.cpp dcitem.cpp dcithreshold.cpp dcivalue.cpp \
 			debug.cpp email.cpp entirenet.cpp epp.cpp events.cpp \
 			evproc.cpp hk.cpp id.cpp image.cpp interface.cpp \
-			layer2.cpp locks.cpp lpp.cpp main.cpp map.cpp \
+			isc.cpp layer2.cpp locks.cpp lpp.cpp main.cpp map.cpp \
 		        modules.cpp netinfo.cpp netobj.cpp netsrv.cpp \
 			node.cpp nortel.cpp np.cpp nxmp_data.cpp \
 			nxmp_lex.yy.cpp nxmp_lexer.cpp \

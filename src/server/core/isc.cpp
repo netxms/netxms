@@ -68,7 +68,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 		}
 		else
 		{
-			response.SetVariable(VID_RCC, RCC_OUT_OF_STATE);
+			//response.SetVariable(VID_RCC, RCC_OUT_OF_STATE);
 		}
 		
       response.SetCode(CMD_REQUEST_COMPLETED);
@@ -117,7 +117,7 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
    // Bind socket
    if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", NEXMS_ISC_PORT, "ISCListener", WSAGetLastError());
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", NETXMS_ISC_PORT, "ISCListener", WSAGetLastError());
       closesocket(sock);
       /* TODO: we should initiate shutdown from here */
       return THREAD_OK;

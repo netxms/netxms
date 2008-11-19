@@ -19,6 +19,7 @@ EXTRA_DIST = \
 	AgentCfgDlg.cpp AgentCfgDlg.h \
 	AgentCfgEditor.cpp AgentCfgEditor.h \
 	AgentConfigMgr.cpp AgentConfigMgr.h \
+	 AgentParamSelDlg.cpp AgentParamSelDlg.h \
 	AlarmBrowser.cpp AlarmBrowser.h \
 	AlarmView.cpp AlarmView.h \
 	CertManager.cpp CertManager.h \
@@ -84,9 +85,12 @@ EXTRA_DIST = \
 	GraphManagerDlg.cpp GraphManagerDlg.h \
 	GraphSettingsPage.cpp GraphSettingsPage.h \
 	GraphStylePage.cpp GraphStylePage.h \
+	GroupPropDlg.cpp GroupPropDlg.h \
 	IfPropsGeneral.cpp IfPropsGeneral.h \
 	ImportCertDlg.cpp ImportCertDlg.h \
 	InputBox.cpp InputBox.h \
+	InternalItemSelDlg.cpp InternalItemSelDlg.h \
+	LastValuesPropDlg.cpp LastValuesPropDlg.h \
 	LastValuesView.cpp LastValuesView.h \
 	LPPList.cpp LPPList.h \
 	MainFrm.cpp MainFrm.h \
@@ -138,6 +142,7 @@ EXTRA_DIST = \
 	ObjToolPropOptions.cpp ObjToolPropOptions.h \
 	PackageMgr.cpp PackageMgr.h \
 	PasswordChangeDlg.cpp PasswordChangeDlg.h \
+	RemoveTemplateDlg.cpp RemoveTemplateDlg.h \
 	RequestProcessingDlg.cpp RequestProcessingDlg.h \
 	resource.h \
 	RuleAlarmDlg.cpp RuleAlarmDlg.h \
@@ -149,6 +154,7 @@ EXTRA_DIST = \
 	RuleSeverityDlg.cpp RuleSeverityDlg.h \
 	RuleSituationDlg.cpp RuleSituationDlg.h \
 	SNMPWalkDlg.cpp SNMPWalkDlg.h \
+	SaveDesktopDlg.cpp SaveDesktopDlg.h \
 	ScriptManager.cpp ScriptManager.h \
 	ScriptView.cpp ScriptView.h \
 	SelectMPDlg.cpp SelectMPDlg.h \
