@@ -7,9 +7,11 @@
 #include <math.h>
 
 #define ROW_DATA(row, dt)  ((dt == DCI_DT_STRING) ? _tcstod(row->value.szString, NULL) : \
-                            (((dt == DCI_DT_INT) || (dt == DCI_DT_UINT)) ? row->value.dwInt32 : \
-                             (((dt == DCI_DT_INT64) || (dt == DCI_DT_UINT64)) ? (INT64)row->value.qwInt64 : \
-                              ((dt == DCI_DT_FLOAT) ? row->value.dFloat : 0) \
+                            ((dt == DCI_DT_INT) ? *((LONG *)(&row->value.dwInt32)) : \
+                             ((dt == DCI_DT_UINT) ? row->value.dwInt32 : \
+                              (((dt == DCI_DT_INT64) || (dt == DCI_DT_UINT64)) ? (INT64)row->value.qwInt64 : \
+                               ((dt == DCI_DT_FLOAT) ? row->value.dFloat : 0) \
+                              ) \
                              ) \
                             ) \
                            )
@@ -699,10 +701,12 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
       nGridSizeX = 40;
    }
 
-   // Calculate max graph value
+   // Calculate min and max graph value
    if (m_bAutoScale)
    {
-      for(i = 0, m_dCurrMaxValue = 0; i < MAX_GRAPH_ITEMS; i++)
+		double dMaxAbsValue;
+
+      for(i = 0, m_dCurrMaxValue = 0, m_dCurrMinValue = 0, dMaxAbsValue = 0; i < MAX_GRAPH_ITEMS; i++)
          if (m_pData[i] != NULL)
          {
             NXC_DCI_ROW *pRow;
@@ -717,8 +721,20 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
             for(; (j < m_pData[i]->dwNumRows) && (pRow->dwTimeStamp >= m_dwTimeFrom); j++)
             {
                dCurrValue = (double)ROW_DATA(pRow, m_pData[i]->wDataType);
-               if (dCurrValue > m_dCurrMaxValue)
-                  m_dCurrMaxValue = dCurrValue;
+					if (dCurrValue > 0)
+					{
+						if (dCurrValue > m_dCurrMaxValue)
+							m_dCurrMaxValue = dCurrValue;
+						if (dCurrValue > dMaxAbsValue)
+							dMaxAbsValue = dCurrValue;
+					}
+					else
+					{
+						if (dCurrValue < m_dCurrMinValue)
+							m_dCurrMinValue = dCurrValue;
+						if (-dCurrValue > dMaxAbsValue)
+							dMaxAbsValue = -dCurrValue;
+					}
                inc_ptr(pRow, m_pData[i]->wRowSize, NXC_DCI_ROW);
             }
          }
@@ -726,12 +742,23 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
       if (m_dCurrMaxValue == 0)
          m_dCurrMaxValue = 1;
 
+		if (dMaxAbsValue == 0)
+			dMaxAbsValue = 1;
+
+		theApp.DebugPrintf(_T("DrawGraph: currMinValue=%f currMaxValue=%f maxAbsValue=%f"),
+		                   m_dCurrMinValue, m_dCurrMaxValue, dMaxAbsValue);
+
       // Round max value
       for(double d = 0.00001; d < 10000000000000000000; d *= 10)
-         if ((m_dCurrMaxValue >= d) && (m_dCurrMaxValue <= d * 10))
+		{
+//         if ((m_dCurrMaxValue >= d) && (m_dCurrMaxValue <= d * 10))
+         if ((dMaxAbsValue >= d) && (dMaxAbsValue <= d * 10))
          {
             m_dCurrMaxValue -= fmod(m_dCurrMaxValue, d);
             m_dCurrMaxValue += d;
+
+            m_dCurrMinValue += fmod(m_dCurrMinValue, d);
+            m_dCurrMinValue -= d;
 
             SELECT_ORDINATE_MARKS;
    
@@ -740,13 +767,13 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
                d = 1;
 
             // Calculate grid size for Y axis
-            nGridSizeY = (int)(nDataAreaHeight / (m_dCurrMaxValue / d));
+            nGridSizeY = (int)(nDataAreaHeight / ((m_dCurrMaxValue - m_dCurrMinValue) / d));
             if (nGridSizeY > 2)
             {
                if (bIntMarks)
                {
                   nGrids = nDataAreaHeight / (nGridSizeY / 2);
-                  while((nGridSizeY >= 50) && ((INT64)m_dCurrMaxValue % nGrids == 0))
+                  while((nGridSizeY >= 50) && ((INT64)(m_dCurrMaxValue - m_dCurrMinValue) % nGrids == 0))
                   {
                      nGridSizeY /= 2;
                      nGrids = nDataAreaHeight / (nGridSizeY / 2);
@@ -764,10 +791,13 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
             }
             break;
          }
+		}
+		theApp.DebugPrintf(_T("DrawGraph: gridSize=%d; rounded currMinValue=%f currMaxValue=%f"), nGridSizeY, m_dCurrMinValue, m_dCurrMaxValue);
    }
    else
    {
       m_dCurrMaxValue = m_dMaxValue;
+		m_dCurrMinValue = m_dMinValue;
 
       SELECT_ORDINATE_MARKS;
       
@@ -846,8 +876,8 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
    pen.DeleteObject();
 
    // Display ordinate marks
-   dStep = m_dCurrMaxValue / ((rect.bottom - iBottomMargin - iTopMargin) / nGridSizeY);
-   for(y = rect.bottom - iBottomMargin - textSize.cy / 2, dMark = 0; y > iTopMargin; y -= nGridSizeY, dMark += dStep)
+   dStep = (m_dCurrMaxValue - m_dCurrMinValue) / ((rect.bottom - iBottomMargin - iTopMargin) / nGridSizeY);
+   for(y = rect.bottom - iBottomMargin - textSize.cy / 2, dMark = m_dCurrMinValue; y > iTopMargin; y -= nGridSizeY, dMark += dStep)
    {
       if (bIntMarks)
          _stprintf(szBuffer, INT64_FMT _T("%s"), (INT64)dMark / nDivider, szModifier);

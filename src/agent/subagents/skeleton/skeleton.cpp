@@ -50,6 +50,13 @@ static LONG H_Echo(const char *pszParam, const char *pArg, char *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
+static LONG H_Random(const char *pszParam, const char *pArg, char *pValue)
+{
+	srand(time(NULL));
+	ret_int(pValue, rand() % 21 - 10);
+	return SYSINFO_RC_SUCCESS;
+}
+
 static LONG H_Enum(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	int i;
@@ -94,7 +101,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "Skeleton.Version",				H_Version,				NULL,
 		DCI_DT_STRING, "Skeleton version" },
 	{ "Skeleton.Echo(*)",				H_Echo,					NULL,
-		DCI_DT_STRING, "Echoes string back" }
+		DCI_DT_STRING, "Echoes string back" },
+	{ "Skeleton.Random",					H_Random,				NULL,
+		DCI_DT_INT,    "Generates random number in range -10 .. 10" }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {
