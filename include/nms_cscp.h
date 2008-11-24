@@ -797,6 +797,8 @@ typedef struct
 #define VID_LICENSE_DATA            ((DWORD)313)
 #define VID_TOKEN                   ((DWORD)314)
 #define VID_SERVICE_ID              ((DWORD)315)
+#define VID_TOKEN_SOFTLIMIT         ((DWORD)316)
+#define VID_TOKEN_HARDLIMIT         ((DWORD)317)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
