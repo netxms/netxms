@@ -73,7 +73,8 @@ static void ParseNewRecords(LogParser *parser, int fh)
             eptr = (char *)memchr(ptr, '\n', bytes - bufPos);
             if (eptr == NULL)
             {
-               memmove(buffer, ptr, bytes - bufPos);
+					bufPos = bytes - bufPos;
+               memmove(buffer, ptr, bufPos);
                break;
             }
 				if (*(eptr - 1) == '\r')

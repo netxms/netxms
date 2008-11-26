@@ -23,6 +23,8 @@
 
 #include "libnxlp.h"
 
+#define LOG if (logger != NULL) logger
+
 
 //
 // Constants
@@ -35,14 +37,14 @@
 // Parse new log records
 //
 
-static void ParseNewRecords(LogParser *parser, HANDLE hFile)
+static void ParseNewRecords(LogParser *parser, HANDLE hFile, void (*logger)(int, const TCHAR *, ...))
 {
    char *ptr, *eptr, buffer[READ_BUFFER_SIZE];
    DWORD bytes, bufPos = 0;
 
    do
    {
-      if (ReadFile(hFile, buffer, READ_BUFFER_SIZE - bufPos, &bytes, NULL))
+      if (ReadFile(hFile, &buffer[bufPos], READ_BUFFER_SIZE - bufPos, &bytes, NULL))
       {
          bytes += bufPos;
          for(ptr = buffer;; ptr = eptr + 1)
@@ -51,13 +53,16 @@ static void ParseNewRecords(LogParser *parser, HANDLE hFile)
             eptr = (char *)memchr(ptr, '\n', bytes - bufPos);
             if (eptr == NULL)
             {
-               memmove(buffer, ptr, bytes - bufPos);
+					bufPos = bytes - bufPos;
+               memmove(buffer, ptr, bufPos);
                break;
             }
 				if (*(eptr - 1) == '\r')
 					*(eptr - 1) = 0;
 				else
 					*eptr = 0;
+
+				//LOG(EVENTLOG_DEBUG_TYPE, _T("LogParser: calling MatchLine(\"%s\")"), ptr);
 				parser->MatchLine(ptr);
          }
       }
@@ -103,8 +108,7 @@ BOOL LogParser::MonitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *,
       hChange = FindFirstChangeNotification(path, FALSE, FILE_NOTIFY_CHANGE_SIZE);
       if (hChange != INVALID_HANDLE_VALUE)
       {
-			if (logger != NULL)
-			   logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: start tracking log file %s"), m_fileName);
+			LOG(EVENTLOG_DEBUG_TYPE, _T("LogParser: start tracking log file %s"), m_fileName);
 			handles[0] = hChange;
 			handles[1] = stopEvent;
          while(1)
@@ -116,11 +120,13 @@ BOOL LogParser::MonitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *,
 				ltm = localtime(&t);
 				_tcsftime(fname, MAX_PATH, m_fileName, ltm);
 
+				LOG(EVENTLOG_DEBUG_TYPE, _T("LogParser: new data in file %s"), fname);
             hFile = CreateFile(fname, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
                                NULL, OPEN_EXISTING, 0, NULL);
             if (hFile != INVALID_HANDLE_VALUE)
             {
                GetFileSizeEx(hFile, &fsnew);
+					LOG(EVENTLOG_DEBUG_TYPE, _T("LogParser: file %s oldSize = %I64d newSize = %I64d"), fname, fp.QuadPart, fsnew.QuadPart);
                if (fsnew.QuadPart != fp.QuadPart)
 					{
 						if (fsnew.QuadPart > fp.QuadPart)
@@ -132,9 +138,11 @@ BOOL LogParser::MonitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *,
 							// Assume that file was rewritten
 							fp.QuadPart = 0;
 							SetFilePointerEx(hFile, fp, NULL, FILE_BEGIN);
+							LOG(EVENTLOG_DEBUG_TYPE, _T("LogParser: file %s - assume overwrite"), fname);
 						}
-						ParseNewRecords(this, hFile);
+						ParseNewRecords(this, hFile, logger);
 						GetFileSizeEx(hFile, &fp);
+						LOG(EVENTLOG_DEBUG_TYPE, _T("LogParser: file %s size after parse is %I64d"), fname, fp.QuadPart);
 					}
                CloseHandle(hFile);
             }
