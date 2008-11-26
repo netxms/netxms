@@ -80,6 +80,7 @@ public:
 
 	// Generated message map functions
 protected:
+	int m_nZeroLine;
 	TCHAR m_szTitle[MAX_DB_STRING];
    ZOOM_INFO m_zoomInfo[ZOOM_HISTORY_SIZE];
    int m_nZoomLevel;

@@ -386,7 +386,7 @@ void CGraph::DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int 
 
    // Calculate scale factor for values
    dScale = (double)(m_rectGraph.bottom - m_rectGraph.top - 
-               (m_rectGraph.bottom - m_rectGraph.top) % nGridSize) / m_dCurrMaxValue;
+               (m_rectGraph.bottom - m_rectGraph.top) % nGridSize) / (m_dCurrMaxValue - m_dCurrMinValue);
 
    // Move to first position
    pRow = pData->pRows;
@@ -395,14 +395,14 @@ void CGraph::DrawLineGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int 
    if (i < pData->dwNumRows)
    {
       dc.MoveTo(m_rectGraph.right - (int)((double)(m_dwTimeTo - pRow->dwTimeStamp) / m_dSecondsPerPixel),
-                (int)(m_rectGraph.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1));
+                (int)(m_nZeroLine - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1));
       inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
 
       for(i++; (i < pData->dwNumRows) && (pRow->dwTimeStamp >= m_dwTimeFrom); i++)
       {
          // Calculate timestamp position on graph
          x = m_rectGraph.right - (int)((double)(m_dwTimeTo - pRow->dwTimeStamp) / m_dSecondsPerPixel);
-         dc.LineTo(x, (int)(m_rectGraph.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1));
+         dc.LineTo(x, (int)(m_nZeroLine - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1));
          inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
       }
    }
@@ -434,7 +434,7 @@ void CGraph::DrawAreaGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int 
 
    // Calculate scale factor for values
    dScale = (double)(m_rectGraph.bottom - m_rectGraph.top - 
-               (m_rectGraph.bottom - m_rectGraph.top) % nGridSize) / m_dCurrMaxValue;
+               (m_rectGraph.bottom - m_rectGraph.top) % nGridSize) / (m_dCurrMaxValue - m_dCurrMinValue);
 
    // Move to first position
    pRow = pData->pRows;
@@ -443,18 +443,18 @@ void CGraph::DrawAreaGraph(CDC &dc, NXC_DCI_DATA *pData, COLORREF rgbColor, int 
    if (i < pData->dwNumRows)
    {
 		pts[0].x = m_rectGraph.right - (int)((double)(m_dwTimeTo - pRow->dwTimeStamp) / m_dSecondsPerPixel);
-		pts[0].y = m_rectGraph.bottom;
+		pts[0].y = m_nZeroLine;
 		pts[1].x = pts[0].x;
-		pts[1].y = (int)(m_rectGraph.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1);
+		pts[1].y = (int)(m_nZeroLine - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1);
       inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
 
       for(i++; (i < pData->dwNumRows) && (pRow->dwTimeStamp >= m_dwTimeFrom); i++)
       {
          // Calculate timestamp position on graph
          pts[2].x = m_rectGraph.right - (int)((double)(m_dwTimeTo - pRow->dwTimeStamp) / m_dSecondsPerPixel);
-			pts[2].y = (int)(m_rectGraph.bottom - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1);
+			pts[2].y = (int)(m_nZeroLine - (double)ROW_DATA(pRow, pData->wDataType) * dScale - 1);
 			pts[3].x = pts[2].x;
-			pts[3].y = m_rectGraph.bottom;
+			pts[3].y = m_nZeroLine;
 			dc.Polygon(pts, 4);
 			memcpy(&pts[0], &pts[3], sizeof(POINT));
 			memcpy(&pts[1], &pts[2], sizeof(POINT));
@@ -500,21 +500,21 @@ void CGraph::OnKillFocus(CWnd* pNewWnd)
 
 /* Select appropriate style for ordinate marks */
 #define SELECT_ORDINATE_MARKS \
-   if (m_dCurrMaxValue > 100000000000) \
+   if (dMaxAbsValue > 100000000000) \
    { \
       szModifier[0] = 'G'; \
       szModifier[1] = 0; \
       nDivider = 1000000000; \
       bIntMarks = TRUE; \
    } \
-   else if (m_dCurrMaxValue > 100000000) \
+   else if (dMaxAbsValue > 100000000) \
    { \
       szModifier[0] = 'M'; \
       szModifier[1] = 0; \
       nDivider = 1000000; \
       bIntMarks = TRUE; \
    } \
-   else if (m_dCurrMaxValue > 100000) \
+   else if (dMaxAbsValue > 100000) \
    { \
       szModifier[0] = 'K'; \
       szModifier[1] = 0; \
@@ -570,7 +570,7 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
    int x, y, iTimeLen, iStep, iGraphLen, nDivider;
    int nGridSizeX, nGridSizeY, nGrids, nDataAreaHeight;
    int nColSize, nCols, nCurrCol, nTimeLabel;
-   double dStep, dMark;
+   double dStep, dMark, dMaxAbsValue;
    TCHAR szBuffer[256], szModifier[4];
    BOOL bIntMarks;
    static double nSecPerMonth[12] = { 2678400, 2419200, 2678400, 2592000,
@@ -704,8 +704,6 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
    // Calculate min and max graph value
    if (m_bAutoScale)
    {
-		double dMaxAbsValue;
-
       for(i = 0, m_dCurrMaxValue = 0, m_dCurrMinValue = 0, dMaxAbsValue = 0; i < MAX_GRAPH_ITEMS; i++)
          if (m_pData[i] != NULL)
          {
@@ -757,8 +755,11 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
             m_dCurrMaxValue -= fmod(m_dCurrMaxValue, d);
             m_dCurrMaxValue += d;
 
-            m_dCurrMinValue += fmod(m_dCurrMinValue, d);
-            m_dCurrMinValue -= d;
+				if (m_dCurrMinValue < 0)
+				{
+					m_dCurrMinValue += fmod(m_dCurrMinValue, d);
+					m_dCurrMinValue -= d;
+				}
 
             SELECT_ORDINATE_MARKS;
    
@@ -798,11 +799,16 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
    {
       m_dCurrMaxValue = m_dMaxValue;
 		m_dCurrMinValue = m_dMinValue;
+		dMaxAbsValue = max(m_dCurrMaxValue, fabs(m_dCurrMinValue));
 
       SELECT_ORDINATE_MARKS;
       
       nGridSizeY = 40;
    }
+
+	// Determine zero line
+	m_nZeroLine = m_rectGraph.bottom + (int)((double)(m_rectGraph.bottom - m_rectGraph.top) * (m_dCurrMinValue / (m_dCurrMaxValue - m_dCurrMinValue)));
+	theApp.DebugPrintf(_T("DrawGraph: zeroLine=%d top=%d bottom=%d"), m_nZeroLine, m_rectGraph.top, m_rectGraph.bottom);
 
    // Draw grid
    if (m_bShowGrid)
@@ -832,7 +838,12 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
             x += nGridSizeX;
          }
       }
-      for(y = rect.bottom - iBottomMargin - nGridSizeY; y > iTopMargin; y -= nGridSizeY)
+      for(y = m_nZeroLine; y >= iTopMargin; y -= nGridSizeY)
+      {
+         dc.MoveTo(iLeftMargin, y);
+         dc.LineTo(rect.right - iRightMargin, y);
+      }
+      for(y = m_nZeroLine; y <= rect.bottom - iBottomMargin; y += nGridSizeY)
       {
          dc.MoveTo(iLeftMargin, y);
          dc.LineTo(rect.right - iRightMargin, y);
@@ -870,14 +881,23 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
    pOldPen = dc.SelectObject(&pen);
    dc.MoveTo(iLeftMargin, rect.bottom - iBottomMargin);
    dc.LineTo(iLeftMargin, iTopMargin);
-   dc.MoveTo(iLeftMargin, rect.bottom - iBottomMargin);
-   dc.LineTo(rect.right - iRightMargin, rect.bottom - iBottomMargin);
+   dc.MoveTo(iLeftMargin, m_nZeroLine);
+   dc.LineTo(rect.right - iRightMargin, m_nZeroLine);
    dc.SelectObject(pOldPen);
    pen.DeleteObject();
 
    // Display ordinate marks
    dStep = (m_dCurrMaxValue - m_dCurrMinValue) / ((rect.bottom - iBottomMargin - iTopMargin) / nGridSizeY);
-   for(y = rect.bottom - iBottomMargin - textSize.cy / 2, dMark = m_dCurrMinValue; y > iTopMargin; y -= nGridSizeY, dMark += dStep)
+   for(y = m_nZeroLine - textSize.cy / 2, dMark = 0; y > iTopMargin; y -= nGridSizeY, dMark += dStep)
+   {
+      if (bIntMarks)
+         _stprintf(szBuffer, INT64_FMT _T("%s"), (INT64)dMark / nDivider, szModifier);
+      else
+         _stprintf(szBuffer, _T("%5.3f%s"), dMark, szModifier);
+      CSize cz = dc.GetTextExtent(szBuffer);
+      dc.TextOut(iLeftMargin - cz.cx - 5, y, szBuffer);
+   }
+   for(y = m_nZeroLine + nGridSizeY - textSize.cy / 2, dMark = -dStep; y < rect.bottom - iBottomMargin; y += nGridSizeY, dMark -= dStep)
    {
       if (bIntMarks)
          _stprintf(szBuffer, INT64_FMT _T("%s"), (INT64)dMark / nDivider, szModifier);
@@ -1034,9 +1054,9 @@ void CGraph::OnMouseMove(UINT nFlags, CPoint point)
       double dValue;
 
       dwTimeStamp = m_dwTimeFrom + (DWORD)((point.x - m_rectGraph.left) * m_dSecondsPerPixel);
-      dValue = m_dCurrMaxValue / (m_rectGraph.bottom - m_rectGraph.top - 
+      dValue = (m_dCurrMaxValue - m_dCurrMinValue) / (m_rectGraph.bottom - m_rectGraph.top - 
                   (m_rectGraph.bottom - m_rectGraph.top) % m_nLastGridSizeY) * 
-                  (m_rectGraph.bottom - point.y);
+                  (m_nZeroLine - point.y);
       GetParent()->SendMessage(NXCM_UPDATE_GRAPH_POINT, dwTimeStamp, (LPARAM)&dValue);
       bChanged = TRUE;
    }
