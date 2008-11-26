@@ -18,6 +18,7 @@ EXTRA_DIST = \
 	close.xpm \
 	login.png \
 	nxmc.fbp \
+	nxmc.ico \
 	nxmc.xrs \
 	processing.png \
 	resource.xrc \

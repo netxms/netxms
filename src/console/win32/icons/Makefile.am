@@ -19,11 +19,11 @@ EXTRA_DIST = \
 	setup.ico SeverityCritical.ico SeverityMajor.ico SeverityMinor.ico \
 	SeverityNormal.ico SeverityWarning.ico sms.ico sortdown.ico \
 	sort_up.ico tree.ico unsupported.ico user.ico users.ico \
-	nack.ico running.ico pending.ico Tips.ico objtools.ico \
+	nack.ico running.ico pending.ico Tips.ico trap.ico objtools.ico \
 	command.ico script_library.ico script.ico folder_c.ico \
 	folder_o.ico ZoomIn.ico ZoomOut.ico print.ico refresh.ico save.ico \
 	back.ico forward.ico go_parent.ico home.ico \
 	discovery.ico exit.ico template_root.ico cluster.ico server.ico \
 	cert.ico certmgr.ico topology.ico empty.ico subordinates.ico \
 	redo_layout.ico find.ico next.ico stop.ico situation.ico \
-	instance.ico event_corr.ico
+	instance.ico event_corr.ico package.ico database.ico desktop.ico
