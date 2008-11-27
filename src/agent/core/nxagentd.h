@@ -134,15 +134,16 @@
 // Request types for H_MemoryInfo
 //
 
-#define MEMINFO_PHYSICAL_FREE    1
-#define MEMINFO_PHYSICAL_TOTAL   2
-#define MEMINFO_PHYSICAL_USED    3
-#define MEMINFO_SWAP_FREE        4
-#define MEMINFO_SWAP_TOTAL       5
-#define MEMINFO_SWAP_USED        6
-#define MEMINFO_VIRTUAL_FREE     7
-#define MEMINFO_VIRTUAL_TOTAL    8
-#define MEMINFO_VIRTUAL_USED     9
+#define MEMINFO_PHYSICAL_FREE       1
+#define MEMINFO_PHYSICAL_FREE_PCT   2
+#define MEMINFO_PHYSICAL_TOTAL      3
+#define MEMINFO_PHYSICAL_USED       4
+#define MEMINFO_PHYSICAL_USED_PCT   5
+#define MEMINFO_VIRTUAL_FREE        6
+#define MEMINFO_VIRTUAL_FREE_PCT    7
+#define MEMINFO_VIRTUAL_TOTAL       8
+#define MEMINFO_VIRTUAL_USED        9
+#define MEMINFO_VIRTUAL_USED_PCT    10
 
 
 //

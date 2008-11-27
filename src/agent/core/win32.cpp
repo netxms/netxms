@@ -43,20 +43,32 @@ LONG H_MemoryInfo(const char *cmd, const char *arg, char *value)
          case MEMINFO_PHYSICAL_FREE:
             ret_uint64(value, mse.ullAvailPhys);
             break;
+         case MEMINFO_PHYSICAL_FREE_PCT:
+            ret_uint(value, (DWORD)(mse.ullAvailPhys * 100 / mse.ullTotalPhys));
+            break;
          case MEMINFO_PHYSICAL_TOTAL:
             ret_uint64(value, mse.ullTotalPhys);
             break;
          case MEMINFO_PHYSICAL_USED:
             ret_uint64(value, mse.ullTotalPhys - mse.ullAvailPhys);
             break;
+         case MEMINFO_PHYSICAL_USED_PCT:
+            ret_uint(value, (DWORD)((mse.ullTotalPhys - mse.ullAvailPhys) * 100 / mse.ullTotalPhys));
+            break;
          case MEMINFO_VIRTUAL_FREE:
             ret_uint64(value, mse.ullAvailPageFile);
+            break;
+         case MEMINFO_VIRTUAL_FREE_PCT:
+            ret_uint(value, (DWORD)(mse.ullAvailPageFile * 100 / mse.ullTotalPageFile));
             break;
          case MEMINFO_VIRTUAL_TOTAL:
             ret_uint64(value, mse.ullTotalPageFile);
             break;
          case MEMINFO_VIRTUAL_USED:
             ret_uint64(value, mse.ullTotalPageFile - mse.ullAvailPageFile);
+            break;
+         case MEMINFO_VIRTUAL_USED_PCT:
+            ret_uint(value, (DWORD)((mse.ullTotalPageFile - mse.ullAvailPageFile) * 100 / mse.ullTotalPageFile));
             break;
          default:
             return SYSINFO_RC_UNSUPPORTED;
@@ -72,20 +84,32 @@ LONG H_MemoryInfo(const char *cmd, const char *arg, char *value)
          case MEMINFO_PHYSICAL_FREE:
             ret_uint64(value, ms.dwAvailPhys);
             break;
+         case MEMINFO_PHYSICAL_FREE_PCT:
+            ret_uint(value, (DWORD)((QWORD)ms.dwAvailPhys * 100 / (QWORD)ms.dwTotalPhys));
+            break;
          case MEMINFO_PHYSICAL_TOTAL:
             ret_uint64(value, ms.dwTotalPhys);
             break;
          case MEMINFO_PHYSICAL_USED:
             ret_uint64(value, ms.dwTotalPhys - ms.dwAvailPhys);
             break;
+         case MEMINFO_PHYSICAL_USED_PCT:
+            ret_uint(value, (DWORD)((QWORD)(ms.dwTotalPhys - ms.dwAvailPhys) * 100 / (QWORD)ms.dwTotalPhys));
+            break;
          case MEMINFO_VIRTUAL_FREE:
             ret_uint64(value, ms.dwAvailPageFile);
+            break;
+         case MEMINFO_VIRTUAL_FREE_PCT:
+            ret_uint(value, (DWORD)((QWORD)ms.dwAvailPageFile * 100 / (QWORD)ms.dwTotalPageFile));
             break;
          case MEMINFO_VIRTUAL_TOTAL:
             ret_uint64(value, ms.dwTotalPageFile);
             break;
          case MEMINFO_VIRTUAL_USED:
             ret_uint64(value, ms.dwTotalPageFile - ms.dwAvailPageFile);
+            break;
+         case MEMINFO_VIRTUAL_USED_PCT:
+            ret_uint(value, (DWORD)((QWORD)(ms.dwTotalPageFile - ms.dwAvailPageFile) * 100 / (QWORD)ms.dwTotalPageFile));
             break;
          default:
             return SYSINFO_RC_UNSUPPORTED;

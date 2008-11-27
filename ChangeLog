@@ -9,7 +9,7 @@
 - Implemented "Clear DCI data" function
 - Windows console: added support for negative values on graphs
 - Java API introduced
-- Fixed issues: #238
+- Fixed issues: #235, #238
 
 
 *
