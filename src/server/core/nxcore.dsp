@@ -290,6 +290,10 @@ SOURCE=.\interface.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\isc.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\layer2.cpp
 # End Source File
 # Begin Source File
@@ -479,6 +483,10 @@ SOURCE=..\include\messages.h
 # Begin Source File
 
 SOURCE="..\..\..\include\netxms-version.h"
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\netxms_isc.h
 # End Source File
 # Begin Source File
 

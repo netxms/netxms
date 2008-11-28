@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <netxms_isc.h>
 
 
 //
@@ -28,6 +29,28 @@
 //
 
 #define MAX_MSG_SIZE       32768
+
+#define ISC_STATE_INIT        0
+#define ISC_STATE_CONNECTED   1
+
+
+//
+// Externals
+//
+
+void *EF_
+
+
+//
+// Well-known service list
+//
+
+static ISC_SERVICE m_serviceList[] = 
+{
+	{ ISC_SERVICE_EVENT_FORWARDER, _T("EventForwarder"),
+	  _T("EnableEventForwarder"), EF_SetupSession, EF_CloseSession, EF_ProcessMessage },
+	{ 0, NULL, NULL }
+};
 
 
 //
@@ -37,49 +60,95 @@
 static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 {
    SOCKET sock = CAST_FROM_POINTER(pArg, SOCKET);
-   int iError, nExitCode;
+   int i, err, state = ISC_STATE_INIT;
    CSCP_MESSAGE *pRawMsg, *pRawMsgOut;
    CSCP_BUFFER *pRecvBuffer;
    CSCPMessage *pRequest, response;
-   TCHAR szCmd[256];
    DWORD serviceId;
-   struct __console_ctx ctx;
+	void *serviceData = NULL;
    static CSCP_ENCRYPTION_CONTEXT *pDummyCtx = NULL;
 
    pRawMsg = (CSCP_MESSAGE *)malloc(MAX_MSG_SIZE);
    pRecvBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
    RecvNXCPMessage(0, NULL, pRecvBuffer, 0, NULL, NULL, 0);
-   ctx.hSocket = sock;
-   ctx.pMsg = &response;
 
    while(1)
    {
-      iError = RecvNXCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL, INFINITE);
-      if (iError <= 0)
+      err = RecvNXCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL, INFINITE);
+      if (err <= 0)
          break;   // Communication error or closed connection
 
-      if (iError == 1)
+      if (err == 1)
          continue;   // Too big message
 
       pRequest = new CSCPMessage(pRawMsg);
-      if (pRequest->GetCode() == CMD_ISC_CONNECT_TO_SERVICE)
-      {
-      	serviceId = pRequest->GetVariableLong(VID_SERVICE_ID);
+		if (pRequest->GetCode() == CMD_KEEPALIVE)
+		{
+			response.SetVariable(VID_RCC, ISC_ERR_SUCCESS);
 		}
 		else
 		{
-			//response.SetVariable(VID_RCC, RCC_OUT_OF_STATE);
+			if (state == ISC_STATE_INIT)
+			{
+				if (pRequest->GetCode() == CMD_ISC_CONNECT_TO_SERVICE)
+				{
+					// Find requested service
+      			serviceId = pRequest->GetVariableLong(VID_SERVICE_ID);
+					for(i = 0; m_serviceList[i].id != 0; i++)
+						if (m_serviceList[i].id == serviceId)
+							break;
+					if (m_serviceList[i].id != 0)
+					{
+						// Check if service is enabled
+						if (ConfigReadInt(m_serviceList[i].enableParameter, 0) != 0)
+						{
+							serviceData = m_serviceList[i].setupSession(pRequest);
+							if (serviceData != NULL)
+							{
+								response.SetVariable(VID_RCC, ISC_ERR_SUCCESS);
+								state = ISC_STATE_CONNECTED;
+							}
+							else
+							{
+								response.SetVariable(VID_RCC, ISC_ERR_SESSION_SETUP_FAILED);
+							}
+						}
+						else
+						{
+							response.SetVariable(VID_RCC, ISC_ERR_SERVICE_DISABLED);
+						}
+					}
+					else
+					{
+						response.SetVariable(VID_RCC, ISC_ERR_UNKNOWN_SERVICE);
+					}
+				}
+				else
+				{
+					response.SetVariable(VID_RCC, ISC_ERR_REQUEST_OUT_OF_STATE);
+				}
+			}
+			else	// Established session
+			{
+				if (m_serviceList[serviceId].processMsg(serviceData, pRequest, &response))
+					break;	// Service asks to close session
+			}
 		}
 		
+		response.SetId(pRequest->GetId());
       response.SetCode(CMD_REQUEST_COMPLETED);
       pRawMsgOut = response.CreateMessage();
       SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0);
       
+		response.DeleteAllVariables();
       free(pRawMsgOut);
       delete pRequest;
    }
 
-close_session:
+	// Close_session
+	if (serviceData != NULL)
+		m_serviceList[serviceId].closeSession(serviceData);
+
    shutdown(sock, 2);
    closesocket(sock);
    free(pRawMsg);

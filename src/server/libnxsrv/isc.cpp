@@ -39,6 +39,9 @@ const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(DWORD code)
    static const TCHAR *errorText[] =
 	{
 		_T("Success"),
+		_T("Unknown service"),
+		_T("Request out of state"),
+		_T("Service disabled"),
 		_T("Encryption required"),
 		_T("Connection broken"),
 		_T("Already connected"),
@@ -53,7 +56,7 @@ const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(DWORD code)
 		_T("Internal error")
 	};
 
-	if (code <= ISCERR_INTERNAL_ERROR)
+	if (code <= ISC_ERR_INTERNAL_ERROR)
 		return errorText[code];
    return _T("Unknown error code");
 }
@@ -271,7 +274,7 @@ DWORD ISC::Connect(DWORD service, RSA *pServerKey, BOOL requireEncryption)
 
    // Check if already connected
    if (m_flags & ISCF_IS_CONNECTED)
-      return ISCERR_ALREADY_CONNECTED;
+      return ISC_ERR_ALREADY_CONNECTED;
 
 	if (requireEncryption)
 		m_flags |= ISCF_REQUIRE_ENCRYPTION;
@@ -290,7 +293,7 @@ DWORD ISC::Connect(DWORD service, RSA *pServerKey, BOOL requireEncryption)
    m_socket = socket(AF_INET, SOCK_STREAM, 0);
    if (m_socket == -1)
    {
-		rcc = ISCERR_SOCKET_ERROR;
+		rcc = ISC_ERR_SOCKET_ERROR;
       PrintMsg(_T("ISC: Call to socket() failed"));
       goto connect_cleanup;
    }
@@ -304,7 +307,7 @@ DWORD ISC::Connect(DWORD service, RSA *pServerKey, BOOL requireEncryption)
    // Connect to server
    if (connect(m_socket, (struct sockaddr *)&sa, sizeof(sa)) == -1)
    {
-		rcc = ISCERR_CONNECT_FAILED;
+		rcc = ISC_ERR_CONNECT_FAILED;
       PrintMsg(_T("Cannot establish connection with ISC peer %s"),
                IpToStr(ntohl(m_addr), szBuffer));
       goto connect_cleanup;
@@ -315,7 +318,7 @@ DWORD ISC::Connect(DWORD service, RSA *pServerKey, BOOL requireEncryption)
 	
    if (!NXCPGetPeerProtocolVersion(m_socket, &m_protocolVersion))
    {
-		rcc = ISCERR_INVALID_NXCP_VERSION;
+		rcc = ISC_ERR_INVALID_NXCP_VERSION;
       PrintMsg(_T("Cannot detect NXCP version for ISC peer %s"),
                IpToStr(ntohl(m_addr), szBuffer));
       goto connect_cleanup;
@@ -323,7 +326,7 @@ DWORD ISC::Connect(DWORD service, RSA *pServerKey, BOOL requireEncryption)
 
    if (m_protocolVersion > NXCP_VERSION)
    {
-		rcc = ISCERR_INVALID_NXCP_VERSION;
+		rcc = ISC_ERR_INVALID_NXCP_VERSION;
       PrintMsg(_T("ISC peer %s uses incompatible NXCP version %d"),
                IpToStr(ntohl(m_addr), szBuffer), m_protocolVersion);
       goto connect_cleanup;
@@ -349,7 +352,7 @@ setup_encryption:
    {
       if (m_flags & ISCF_REQUIRE_ENCRYPTION)
       {
-			rcc = ISCERR_ENCRYPTION_REQUIRED;
+			rcc = ISC_ERR_ENCRYPTION_REQUIRED;
 			PrintMsg(_T("Cannot setup encrypted channel with ISC peer %s"),
 						IpToStr(ntohl(m_addr), szBuffer));
          goto connect_cleanup;
@@ -359,7 +362,7 @@ setup_encryption:
    // Test connectivity
    if ((rcc = Nop()) != ERR_SUCCESS)
    {
-      if (rcc == ISCERR_ENCRYPTION_REQUIRED)
+      if (rcc == ISC_ERR_ENCRYPTION_REQUIRED)
       {
 			m_flags |= ISCF_REQUIRE_ENCRYPTION;
          goto setup_encryption;
@@ -369,7 +372,7 @@ setup_encryption:
       goto connect_cleanup;
    }
 
-   rcc = ISCERR_SUCCESS;
+   rcc = ISC_ERR_SUCCESS;
 
 connect_cleanup:
    if (!bSuccess)
@@ -467,7 +470,7 @@ DWORD ISC::WaitForRCC(DWORD rqId, DWORD timeOut)
    }
    else
    {
-      dwRetCode = ISCERR_REQUEST_TIMEOUT;
+      dwRetCode = ISC_ERR_REQUEST_TIMEOUT;
    }
    return dwRetCode;
 }
@@ -496,36 +499,36 @@ DWORD ISC::SetupEncryption(RSA *pServerKey)
          switch(dwResult)
          {
             case RCC_SUCCESS:
-               dwError = ISCERR_SUCCESS;
+               dwError = ISC_ERR_SUCCESS;
                break;
             case RCC_NO_CIPHERS:
-               dwError = ISCERR_NO_CIPHERS;
+               dwError = ISC_ERR_NO_CIPHERS;
                break;
             case RCC_INVALID_PUBLIC_KEY:
-               dwError = ISCERR_INVALID_PUBLIC_KEY;
+               dwError = ISC_ERR_INVALID_PUBLIC_KEY;
                break;
             case RCC_INVALID_SESSION_KEY:
-               dwError = ISCERR_INVALID_SESSION_KEY;
+               dwError = ISC_ERR_INVALID_SESSION_KEY;
                break;
             default:
-               dwError = ISCERR_INTERNAL_ERROR;
+               dwError = ISC_ERR_INTERNAL_ERROR;
                break;
          }
 			delete pResp;
       }
       else
       {
-         dwError = ISCERR_REQUEST_TIMEOUT;
+         dwError = ISC_ERR_REQUEST_TIMEOUT;
       }
    }
    else
    {
-      dwError = ISCERR_CONNECTION_BROKEN;
+      dwError = ISC_ERR_CONNECTION_BROKEN;
    }
 
    return dwError;
 #else
-   return ISCERR_NOT_IMPLEMENTED;
+   return ISC_ERR_NOT_IMPLEMENTED;
 #endif
 }
 
@@ -545,5 +548,5 @@ DWORD ISC::Nop(void)
    if (SendMessage(&msg))
       return WaitForRCC(dwRqId, m_commandTimeout);
    else
-      return ISCERR_CONNECTION_BROKEN;
+      return ISC_ERR_CONNECTION_BROKEN;
 }
