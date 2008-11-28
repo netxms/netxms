@@ -31,7 +31,7 @@
 TCHAR LIBNXMC_EXPORTABLE *NXMCFormatTimeStamp(time_t timeStamp, TCHAR *buffer, int type)
 {
    struct tm *pt;
-   static TCHAR *format[] = { _T("%d-%b-%Y %H:%M:%S"), _T("%H:%M:%S"), _T("%b/%d"), _T("%b") };
+   static const TCHAR *format[] = { _T("%d-%b-%Y %H:%M:%S"), _T("%H:%M:%S"), _T("%b/%d"), _T("%b") };
 
    pt = localtime(&timeStamp);
 	if (pt != NULL)

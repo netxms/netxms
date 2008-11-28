@@ -40,7 +40,7 @@ LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue)
 	int nVer = CAST_FROM_POINTER(pArg, int);
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
-	char *pFileName = NULL;
+	const char *pFileName = NULL;
 
 	switch (nVer)
 	{

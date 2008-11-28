@@ -45,14 +45,14 @@ SNMP_MIBObject::SNMP_MIBObject(void)
 // Construct object with all data
 //
 
-SNMP_MIBObject::SNMP_MIBObject(DWORD dwOID, TCHAR *pszName, int iType, 
-                               int iStatus, int iAccess, TCHAR *pszDescription)
+SNMP_MIBObject::SNMP_MIBObject(DWORD dwOID, const TCHAR *pszName, int iType, 
+                               int iStatus, int iAccess, const TCHAR *pszDescription)
 {
    Initialize();
 
    m_dwOID = dwOID;
    m_pszName = (pszName != NULL) ? _tcsdup(pszName) : NULL;
-   m_pszDescription = (pszDescription != NULL) ? _tcsdup(pszDescription) : pszDescription;
+   m_pszDescription = (pszDescription != NULL) ? _tcsdup(pszDescription) : NULL;
    m_iStatus = iStatus;
    m_iAccess = iAccess;
    m_iType = iType;
@@ -63,7 +63,7 @@ SNMP_MIBObject::SNMP_MIBObject(DWORD dwOID, TCHAR *pszName, int iType,
 // Construct object with only ID and name
 //
 
-SNMP_MIBObject::SNMP_MIBObject(DWORD dwOID, TCHAR *pszName)
+SNMP_MIBObject::SNMP_MIBObject(DWORD dwOID, const TCHAR *pszName)
 {
    Initialize();
 
@@ -148,7 +148,7 @@ SNMP_MIBObject *SNMP_MIBObject::FindChildByID(DWORD dwOID)
 // Set information
 //
 
-void SNMP_MIBObject::SetInfo(int iType, int iStatus, int iAccess, TCHAR *pszDescription)
+void SNMP_MIBObject::SetInfo(int iType, int iStatus, int iAccess, const TCHAR *pszDescription)
 {
    safe_free(m_pszDescription);
    m_iType = iType;

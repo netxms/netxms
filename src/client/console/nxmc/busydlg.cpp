@@ -39,7 +39,7 @@ END_EVENT_TABLE()
 // Constructor
 //
 
-nxBusyDialog::nxBusyDialog(wxWindow *parent, TCHAR *initialText)
+nxBusyDialog::nxBusyDialog(wxWindow *parent, const TCHAR *initialText)
              : wxDialog()
 {
 	m_rcc = RCC_INTERNAL_ERROR;
@@ -81,7 +81,7 @@ void nxBusyDialog::OnSetStatusText(wxCommandEvent &event)
 // Set status text (thread-safe)
 //
 
-void nxBusyDialog::SetStatusText(TCHAR *newText)
+void nxBusyDialog::SetStatusText(const TCHAR *newText)
 {
 	wxCommandEvent event(nxEVT_SET_STATUS_TEXT);
 	event.SetClientData(_tcsdup(CHECK_NULL(newText)));

@@ -999,7 +999,7 @@ int LIBNETXMS_EXPORTABLE NumChars(const TCHAR *pszStr, int ch)
 // Match string against regexp
 //
 
-BOOL LIBNETXMS_EXPORTABLE RegexpMatch(TCHAR *pszStr, TCHAR *pszExpr, BOOL bMatchCase)
+BOOL LIBNETXMS_EXPORTABLE RegexpMatch(const TCHAR *pszStr, const TCHAR *pszExpr, BOOL bMatchCase)
 {
 #ifdef UNICODE
    regex_t preg;

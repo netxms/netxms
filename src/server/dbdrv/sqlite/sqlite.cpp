@@ -159,7 +159,7 @@ static THREAD_RESULT THREAD_CALL SQLiteWorkerThread(void *pArg)
 // Execute command by worker thread
 //
 
-static int ExecCommand(SQLITE_CONN *pConn, int nCmd, char *pszQuery, TCHAR *errorText)
+static int ExecCommand(SQLITE_CONN *pConn, int nCmd, const char *pszQuery, TCHAR *errorText)
 {
    pConn->pszQuery = pszQuery;
    pConn->nCommand = nCmd;
@@ -237,7 +237,7 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 // Internal query
 //
 
-static DWORD DrvQueryInternal(SQLITE_CONN *pConn, char *pszQuery, TCHAR *errorText)
+static DWORD DrvQueryInternal(SQLITE_CONN *pConn, const char *pszQuery, TCHAR *errorText)
 {
    BOOL bResult;
 

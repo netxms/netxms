@@ -270,14 +270,23 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 			case PHYSICAL_FREE: // ph-free
 				ret_uint64(pValue, ((QWORD)nMemFree) * 1024);
 				break;
+			case PHYSICAL_FREE_PCT: // ph-free percentage
+				ret_uint(pValue, (DWORD)((QWORD)nMemFree * 100 / (QWORD)nMemTotal));
+				break;
 			case PHYSICAL_TOTAL: // ph-total
 				ret_uint64(pValue, ((QWORD)nMemTotal) * 1024);
 				break;
 			case PHYSICAL_USED: // ph-used
 				ret_uint64(pValue, ((QWORD)(nMemTotal - nMemFree)) * 1024);
 				break;
+			case PHYSICAL_USED_PCT: // ph-used percentage
+				ret_uint(pValue, (DWORD)((QWORD)(nMemTotal - nMemFree) * 100 / (QWORD)nMemTotal));
+				break;
 			case SWAP_FREE: // sw-free
 				ret_uint64(pValue, ((QWORD)nSwapFree) * 1024);
+				break;
+			case SWAP_FREE_PCT: // sw-free percentage
+				ret_uint(pValue, (DWORD)((QWORD)nSwapFree * 100 / (QWORD)nSwapTotal));
 				break;
 			case SWAP_TOTAL: // sw-total
 				ret_uint64(pValue, ((QWORD)nSwapTotal) * 1024);
@@ -285,14 +294,23 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 			case SWAP_USED: // sw-used
 				ret_uint64(pValue, ((QWORD)(nSwapTotal - nSwapFree)) * 1024);
 				break;
+			case SWAP_USED_PCT: // sw-used percentage
+				ret_uint(pValue, (DWORD)((QWORD)(nSwapTotal - nSwapFree) * 100 / (QWORD)nSwapTotal));
+				break;
 			case VIRTUAL_FREE: // vi-free
 				ret_uint64(pValue, ((QWORD)nMemFree + (QWORD)nSwapFree) * 1024);
+				break;
+			case VIRTUAL_FREE_PCT: // vi-free percentage
+				ret_uint(pValue, (DWORD)(((QWORD)nMemFree + (QWORD)nSwapFree) * 100 / ((QWORD)nMemTotal + (QWORD)nSwapTotal)));
 				break;
 			case VIRTUAL_TOTAL: // vi-total
 				ret_uint64(pValue, ((QWORD)nMemTotal + (QWORD)nSwapTotal) * 1024);
 				break;
 			case VIRTUAL_USED: // vi-used
 				ret_uint64(pValue, ((QWORD)(nMemTotal - nMemFree) + (QWORD)(nSwapTotal - nSwapFree)) * 1024);
+				break;
+			case VIRTUAL_USED_PCT: // vi-used percentage
+				ret_uint(pValue, (DWORD)(((QWORD)(nMemTotal - nMemFree) + (QWORD)(nSwapTotal - nSwapFree)) * 100 / ((QWORD)nMemTotal + (QWORD)nSwapTotal)));
 				break;
 			default: // error
 				nRet = SYSINFO_RC_ERROR;

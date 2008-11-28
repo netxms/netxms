@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxsnmp.h
+** File: nxsnmp.h
 **
 **/
 
@@ -267,15 +267,15 @@ private:
 
 public:
    SNMP_MIBObject(void);
-   SNMP_MIBObject(DWORD dwOID, TCHAR *pszName);
-   SNMP_MIBObject(DWORD dwOID, TCHAR *pszName, int iType, 
-                  int iStatus, int iAccess, TCHAR *pszDescription);
+   SNMP_MIBObject(DWORD dwOID, const TCHAR *pszName);
+   SNMP_MIBObject(DWORD dwOID, const TCHAR *pszName, int iType, 
+                  int iStatus, int iAccess, const TCHAR *pszDescription);
    ~SNMP_MIBObject();
 
    void SetParent(SNMP_MIBObject *pObject) { m_pParent = pObject; }
    void AddChild(SNMP_MIBObject *pObject);
-   void SetInfo(int iType, int iStatus, int iAccess, TCHAR *pszDescription);
-   void SetName(TCHAR *pszName) { safe_free(m_pszName); m_pszName = _tcsdup(pszName); }
+   void SetInfo(int iType, int iStatus, int iAccess, const TCHAR *pszDescription);
+   void SetName(const TCHAR *pszName) { safe_free(m_pszName); m_pszName = _tcsdup(pszName); }
 
    SNMP_MIBObject *Parent(void) { return m_pParent; }
    SNMP_MIBObject *Next(void) { return m_pNext; }

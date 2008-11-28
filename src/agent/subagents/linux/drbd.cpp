@@ -63,7 +63,7 @@ static int OpenDRBDDevice(int nDev)
 
 static const char *CStateText(int nCode)
 {
-	static char *pszCStateText[] =
+	static const char *pszCStateText[] =
 	{
 		"Unconfigured",
 		"StandAlone",
@@ -93,7 +93,7 @@ static const char *CStateText(int nCode)
 
 static const char *StateText(int nCode)
 {
-	static char *pszStateText[] =
+	static const char *pszStateText[] =
 	{
 		"Unknown",
 		"Primary",

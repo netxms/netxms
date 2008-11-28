@@ -470,7 +470,7 @@ extern "C"
 
    void LIBNETXMS_EXPORTABLE StrStrip(TCHAR *pszStr);
    BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *string, BOOL matchCase);
-	BOOL LIBNETXMS_EXPORTABLE RegexpMatch(TCHAR *pszStr, TCHAR *pszExpr, BOOL bMatchCase);
+	BOOL LIBNETXMS_EXPORTABLE RegexpMatch(const TCHAR *pszStr, const TCHAR *pszExpr, BOOL bMatchCase);
    TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(TCHAR *line, TCHAR *buffer);
    int LIBNETXMS_EXPORTABLE NumChars(const TCHAR *pszStr, int ch);
 #ifdef __cplusplus

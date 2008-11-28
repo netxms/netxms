@@ -29,10 +29,10 @@ class nxBusyDialog : public wxDialog
 public:
 	DWORD m_rcc;
 
-	nxBusyDialog(wxWindow *parent, TCHAR *initialText);
+	nxBusyDialog(wxWindow *parent, const TCHAR *initialText);
 
 	void ReportCompletion(DWORD rcc);
-	void SetStatusText(TCHAR *newText);
+	void SetStatusText(const TCHAR *newText);
 
 	// Event handlers
 protected:
