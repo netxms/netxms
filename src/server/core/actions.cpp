@@ -297,7 +297,7 @@ static THREAD_RESULT THREAD_CALL RunCommandThread(void *pArg)
 static BOOL ForwardEvent(const TCHAR *server, Event *event)
 {
 	ISC *isc;
-	DWORD addr;
+	DWORD addr, rcc;
 
 	addr = ResolveHostName(server);
 	if (addr == INADDR_NONE)
@@ -322,7 +322,9 @@ static BOOL ForwardEvent(const TCHAR *server, Event *event)
 		{
 			rcc = ISC_ERR_CONNECTION_BROKEN;
 		}
+		isc->Disconnect();
 	}
+	delete isc;
 	if (rcc != ISC_ERR_SUCCESS)
 		nxlog_write(MSG_EVENT_FORWARD_FAILED, EVENTLOG_WARNING_TYPE, "ss", server, ISCErrorCodeToText(rcc));
 	return rcc == ISC_ERR_SUCCESS;

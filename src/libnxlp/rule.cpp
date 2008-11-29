@@ -55,6 +55,7 @@ LogParserRule::LogParserRule(LogParser *parser,
 	m_contextAction = 0;
 	m_contextToChange = NULL;
 	m_isInverted = FALSE;
+	m_breakOnMatch = FALSE;
 }
 
 

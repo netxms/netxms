@@ -84,6 +84,7 @@ private:
 	int m_contextAction;
 	TCHAR *m_contextToChange;
 	BOOL m_isInverted;
+	BOOL m_breakOnMatch;
 
 	void ExpandMacros(const char *regexp, String &out);
 
@@ -103,6 +104,9 @@ public:
 
 	void SetInverted(BOOL flag) { m_isInverted = flag; }
 	BOOL IsInverted() { return m_isInverted; }
+
+	void SetBreakFlag(BOOL flag) { m_breakOnMatch = flag; }
+	BOOL GetBreakFlag() { return m_breakOnMatch; }
 	
 	const TCHAR *GetContext() { return m_context; }
 	const TCHAR *GetContextToChange() { return m_contextToChange; }

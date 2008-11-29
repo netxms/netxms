@@ -74,6 +74,7 @@ typedef struct
 	String macroName;
 	String macro;
 	BOOL invertedRule;
+	BOOL breakFlag;
 } XML_PARSER_STATE;
 
 
@@ -188,7 +189,7 @@ BOOL LogParser::MatchLine(const char *line, DWORD objectId)
 				m_contexts.Set(m_rules[i]->GetContext(), m_states[CONTEXT_CLEAR]);
 			}
 			matched = TRUE;
-			if (!m_processAllRules)
+			if (!m_processAllRules || m_rules[i]->GetBreakFlag())
 				break;
 		}
 	}
@@ -272,6 +273,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->context = NULL;
 		ps->contextAction = CONTEXT_SET_AUTOMATIC;
 		ps->ruleContext = XMLGetAttr(attrs, "context");
+		ps->breakFlag = XMLGetAttrBoolean(attrs, "break", FALSE);
 		ps->state = XML_STATE_RULE;
 	}
 	else if (!strcmp(name, "match"))
@@ -389,6 +391,7 @@ static void EndElement(void *userData, const char *name)
 			rule->SetContextAction(ps->contextAction);
 		}
 		rule->SetInverted(ps->invertedRule);
+		rule->SetBreakFlag(ps->breakFlag);
 		ps->parser->AddRule(rule);
 		ps->state = XML_STATE_RULES;
 	}
