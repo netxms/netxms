@@ -457,6 +457,11 @@ DWORD ModifyActionFromMessage(CSCPMessage *pMsg)
 {
    DWORD i, dwResult = RCC_INVALID_ACTION_ID;
    DWORD dwActionId;
+	TCHAR name[MAX_OBJECT_NAME];
+
+   pMsg->GetVariableStr(VID_ACTION_NAME, name, MAX_OBJECT_NAME);
+	if (!IsValidObjectName(name, TRUE))
+		return RCC_INVALID_OBJECT_NAME;
 
    dwActionId = pMsg->GetVariableLong(VID_ACTION_ID);
    RWLockWriteLock(m_rwlockActionListAccess, INFINITE);
@@ -470,8 +475,8 @@ DWORD ModifyActionFromMessage(CSCPMessage *pMsg)
          safe_free(m_pActionList[i].pszData);
          m_pActionList[i].pszData = pMsg->GetVariableStr(VID_ACTION_DATA);
          pMsg->GetVariableStr(VID_EMAIL_SUBJECT, m_pActionList[i].szEmailSubject, MAX_EMAIL_SUBJECT_LEN);
-         pMsg->GetVariableStr(VID_ACTION_NAME, m_pActionList[i].szName, MAX_OBJECT_NAME);
          pMsg->GetVariableStr(VID_RCPT_ADDR, m_pActionList[i].szRcptAddr, MAX_RCPT_ADDR_LEN);
+			_tcscpy(m_pActionList[i].szName, name);
 
          SaveActionToDB(&m_pActionList[i]);
 

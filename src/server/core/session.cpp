@@ -4130,7 +4130,7 @@ void ClientSession::CreateAction(CSCPMessage *pRequest)
       char szActionName[MAX_USER_NAME];
 
       pRequest->GetVariableStr(VID_ACTION_NAME, szActionName, MAX_OBJECT_NAME);
-      if (IsValidObjectName(szActionName))
+      if (IsValidObjectName(szActionName, TRUE))
       {
          dwResult = CreateNewAction(szActionName, &dwActionId);
          msg.SetVariable(VID_RCC, dwResult);
