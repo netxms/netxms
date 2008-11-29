@@ -25,12 +25,62 @@
 
 
 //
+// Create copy of event policy rule
+//
+
+NXC_EPP_RULE LIBNXCL_EXPORTABLE *NXCCopyEventPolicyRule(NXC_EPP_RULE *src)
+{
+	NXC_EPP_RULE *dst;
+
+	dst = (NXC_EPP_RULE *)nx_memdup(src, sizeof(NXC_EPP_RULE));
+	dst->pszComment = (src->pszComment != NULL) ? _tcsdup(src->pszComment) : NULL;
+	dst->pdwActionList = (DWORD *)nx_memdup(src->pdwActionList, src->dwNumActions * sizeof(DWORD));
+	dst->pdwSourceList = (DWORD *)nx_memdup(src->pdwSourceList, src->dwNumSources * sizeof(DWORD));
+	dst->pdwEventList = (DWORD *)nx_memdup(src->pdwEventList, src->dwNumEvents * sizeof(DWORD));
+	dst->pszScript = (src->pszScript != NULL) ? _tcsdup(src->pszScript) : NULL;
+	return dst;
+}
+
+
+//
+// Create copy of event policy rule in given buffer
+//
+
+void LIBNXCL_EXPORTABLE NXCCopyEventPolicyRuleToBuffer(NXC_EPP_RULE *dst, NXC_EPP_RULE *src)
+{
+	memcpy(dst, src, sizeof(NXC_EPP_RULE));
+	dst->pszComment = (src->pszComment != NULL) ? _tcsdup(src->pszComment) : NULL;
+	dst->pdwActionList = (DWORD *)nx_memdup(src->pdwActionList, src->dwNumActions * sizeof(DWORD));
+	dst->pdwSourceList = (DWORD *)nx_memdup(src->pdwSourceList, src->dwNumSources * sizeof(DWORD));
+	dst->pdwEventList = (DWORD *)nx_memdup(src->pdwEventList, src->dwNumEvents * sizeof(DWORD));
+	dst->pszScript = (src->pszScript != NULL) ? _tcsdup(src->pszScript) : NULL;
+}
+
+
+//
+// Create empty event policy
+//
+
+NXC_EPP LIBNXCL_EXPORTABLE *NXCCreateEmptyEventPolicy()
+{
+	NXC_EPP *epp;
+
+	epp = (NXC_EPP *)malloc(sizeof(NXC_EPP));
+	memset(epp, 0, sizeof(NXC_EPP));
+	return epp;
+}
+
+
+//
 // Delete event policy structure
 //
 
 void LIBNXCL_EXPORTABLE NXCDestroyEventPolicy(NXC_EPP *pEventPolicy)
 {
    DWORD i;
+
+	if (pEventPolicy == NULL)
+		return;
 
    for(i = 0; i < pEventPolicy->dwNumRules; i++)
    {
@@ -250,6 +300,20 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEven
          dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
    }
    return dwRetCode;
+}
+
+
+//
+// Add rule to policy
+//
+
+void LIBNXCL_EXPORTABLE NXCAddPolicyRule(NXC_EPP *policy, NXC_EPP_RULE *rule, BOOL dynAllocated)
+{
+	policy->dwNumRules++;
+	policy->pRuleList = (NXC_EPP_RULE *)realloc(policy->pRuleList, sizeof(NXC_EPP_RULE) * policy->dwNumRules);
+	memcpy(&policy->pRuleList[policy->dwNumRules - 1], rule, sizeof(NXC_EPP_RULE));
+	if (dynAllocated)
+		free(rule);
 }
 
 

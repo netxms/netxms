@@ -1968,11 +1968,15 @@ DWORD LIBNXCL_EXPORTABLE NXCGetMIBFileTimeStamp(NXC_SESSION hSession, DWORD *pdw
 DWORD LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, const TCHAR *pszName);
 
 /** Event processing policy **/
+NXC_EPP LIBNXCL_EXPORTABLE *NXCCreateEmptyEventPolicy();
 DWORD LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEventPolicy);
 DWORD LIBNXCL_EXPORTABLE NXCCloseEventPolicy(NXC_SESSION hSession);
 DWORD LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEventPolicy);
 void LIBNXCL_EXPORTABLE NXCDestroyEventPolicy(NXC_EPP *pEventPolicy);
+void LIBNXCL_EXPORTABLE NXCAddPolicyRule(NXC_EPP *policy, NXC_EPP_RULE *rule, BOOL dynAllocated);
 void LIBNXCL_EXPORTABLE NXCDeletePolicyRule(NXC_EPP *pEventPolicy, DWORD dwRule);
+NXC_EPP_RULE LIBNXCL_EXPORTABLE *NXCCopyEventPolicyRule(NXC_EPP_RULE *src);
+void LIBNXCL_EXPORTABLE NXCCopyEventPolicyRuleToBuffer(NXC_EPP_RULE *dst, NXC_EPP_RULE *src);
 
 /** Images **/
 DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_SESSION hSession, NXC_IMAGE_LIST **ppImageList, TCHAR *pszCacheDir, WORD wFormat);

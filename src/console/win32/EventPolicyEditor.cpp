@@ -52,11 +52,13 @@ CEventPolicyEditor::CEventPolicyEditor()
    m_pEventPolicy = theApp.m_pEventPolicy;
    m_pImageList = NULL;
    m_bIsModified = FALSE;
+	m_clipboard = NULL;
 }
 
 CEventPolicyEditor::~CEventPolicyEditor()
 {
    delete m_pImageList;
+	NXCDestroyEventPolicy(m_clipboard);
 }
 
 
@@ -89,6 +91,12 @@ BEGIN_MESSAGE_MAP(CEventPolicyEditor, CMDIChildWnd)
 	ON_COMMAND(ID_POLICY_SAVE, OnPolicySave)
 	ON_UPDATE_COMMAND_UI(ID_POLICY_SAVE, OnUpdatePolicySave)
 	ON_COMMAND(ID_POLICY_NEGATECELL, OnPolicyNegatecell)
+	ON_COMMAND(ID_POLICY_COPY, OnPolicyCopy)
+	ON_UPDATE_COMMAND_UI(ID_POLICY_COPY, OnUpdatePolicyCopy)
+	ON_COMMAND(ID_POLICY_PASTE, OnPolicyPaste)
+	ON_UPDATE_COMMAND_UI(ID_POLICY_PASTE, OnUpdatePolicyPaste)
+	ON_COMMAND(ID_POLICY_CUT, OnPolicyCut)
+	ON_UPDATE_COMMAND_UI(ID_POLICY_CUT, OnUpdatePolicyCut)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY(NM_DBLCLK, ID_RULE_LIST, OnRuleListDblClk)
 END_MESSAGE_MAP()
@@ -811,10 +819,10 @@ void CEventPolicyEditor::OnPolicyDelete(void)
 
 
 //
-// Delete selected rule(s)
+// Delete selected rules
 //
 
-void CEventPolicyEditor::OnPolicyDeleterule(void) 
+void CEventPolicyEditor::DeleteSelectedRules()
 {
    int i, iRow;
    TCHAR szBuffer[32];
@@ -835,6 +843,16 @@ void CEventPolicyEditor::OnPolicyDeleterule(void)
       }
       Modify();
    }
+}
+
+
+//
+// Delete selected rule(s)
+//
+
+void CEventPolicyEditor::OnPolicyDeleterule(void) 
+{
+	DeleteSelectedRules();
 }
 
 
@@ -1172,4 +1190,105 @@ void CEventPolicyEditor::OnPolicyNegatecell()
       default:
          break;
    }
+}
+
+
+//
+// Copy selected rules
+//
+
+void CEventPolicyEditor::CopySelectedRules()
+{
+   int row;
+
+	NXCDestroyEventPolicy(m_clipboard);
+	m_clipboard = NXCCreateEmptyEventPolicy();
+
+   row = m_wndRuleList.GetNextRow(-1, RLF_SELECTED);
+   while(row != -1)
+   {
+		NXCAddPolicyRule(m_clipboard, NXCCopyEventPolicyRule(&m_pEventPolicy->pRuleList[row]), TRUE);
+      row = m_wndRuleList.GetNextRow(row, RLF_SELECTED);
+   }
+}
+
+//
+// WM_COMMAND::ID_POLICY_COPY message handlers
+//
+
+void CEventPolicyEditor::OnPolicyCopy() 
+{
+	CopySelectedRules();
+}
+
+void CEventPolicyEditor::OnUpdatePolicyCopy(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(m_wndRuleList.GetSelectionCount() > 0);
+}
+
+
+//
+// WM_COMMAND::ID_POLICY_CUT message handlers
+//
+
+void CEventPolicyEditor::OnPolicyCut() 
+{
+	CopySelectedRules();
+	DeleteSelectedRules();
+}
+
+void CEventPolicyEditor::OnUpdatePolicyCut(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(m_wndRuleList.GetSelectionCount() > 0);
+}
+
+
+//
+// WM_COMMAND::ID_POLICY_PASTE message handlers
+//
+
+void CEventPolicyEditor::OnPolicyPaste() 
+{
+	int i, base;
+	TCHAR buffer[32];
+
+	if (m_clipboard == NULL)
+		return;
+
+	base = m_wndRuleList.GetCurrentRow();
+	if (base == -1)
+		base = (int)m_pEventPolicy->dwNumRules;
+
+   // Extend rule list
+   m_pEventPolicy->dwNumRules += m_clipboard->dwNumRules;
+   m_pEventPolicy->pRuleList = (NXC_EPP_RULE *)realloc(m_pEventPolicy->pRuleList,
+         sizeof(NXC_EPP_RULE) * m_pEventPolicy->dwNumRules);
+   if (base < (int)(m_pEventPolicy->dwNumRules - m_clipboard->dwNumRules))
+      memmove(&m_pEventPolicy->pRuleList[base + (int)m_clipboard->dwNumRules],
+		        &m_pEventPolicy->pRuleList[base],
+              sizeof(NXC_EPP_RULE) * ((int)(m_pEventPolicy->dwNumRules - m_clipboard->dwNumRules) - base));
+
+   // Copy data to new rows, renumber them, and insert into rule list view
+	for(i = 0; i < (int)m_clipboard->dwNumRules; i++)
+	{
+		NXCCopyEventPolicyRuleToBuffer(&m_pEventPolicy->pRuleList[i + base], &m_clipboard->pRuleList[i]);
+		m_pEventPolicy->pRuleList[i + base].dwId = i + base;
+	   m_wndRuleList.InsertRow(i + base);
+		UpdateRow(i + base);
+	}
+
+   // Renumber all rows after new
+   for(i = base + (int)m_clipboard->dwNumRules; i < (int)m_pEventPolicy->dwNumRules; i++)
+   {
+		m_pEventPolicy->pRuleList[i].dwId = i;
+      _stprintf(buffer, _T("%d"), i + 1);
+      m_wndRuleList.ReplaceItem(i, 0, 0, buffer);
+   }
+
+   Modify();
+}
+
+void CEventPolicyEditor::OnUpdatePolicyPaste(CCmdUI* pCmdUI) 
+{
+	pCmdUI->Enable(m_clipboard != NULL); 
 }

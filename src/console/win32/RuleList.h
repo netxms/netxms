@@ -116,6 +116,7 @@ public:
 
 	// Generated message map functions
 protected:
+	int m_nLastSelectedRow;
 	void InvalidateRow(int iRow);
 	void InvalidateList(void);
 	void OnMouseButtonDown(UINT nFlags, CPoint point);

@@ -268,6 +268,7 @@ CRuleList::CRuleList()
    m_iCurrRow = -1;
    m_iCurrColumn = -1;
    m_iCurrItem = -1;
+	m_nLastSelectedRow = -1;
 
    // Default colors
    m_rgbEmptyBkColor = RGB(255, 255, 255);
@@ -1203,6 +1204,20 @@ void CRuleList::OnLButtonDown(UINT nFlags, CPoint point)
       }
       else if (nFlags & MK_SHIFT)
       {
+			int i;
+
+			if (m_nLastSelectedRow == -1)
+				m_nLastSelectedRow = m_iCurrRow;
+
+			ClearSelection(FALSE);
+			for(i = min(m_iCurrRow, m_nLastSelectedRow); i <= max(m_iCurrRow, m_nLastSelectedRow); i++)
+	         m_ppRowList[i]->m_dwFlags |= RLF_SELECTED;
+
+         // Select item
+         if (m_iCurrColumn != -1)
+            if ((m_iCurrItem != -1) &&
+                (m_ppRowList[m_iCurrRow]->m_ppCellList[m_iCurrColumn]->m_bSelectable))
+               m_ppRowList[m_iCurrRow]->m_ppCellList[m_iCurrColumn]->m_pSelectFlags[m_iCurrItem] = 1;
       }
       else
       {
@@ -1219,6 +1234,7 @@ void CRuleList::OnLButtonDown(UINT nFlags, CPoint point)
                m_ppRowList[m_iCurrRow]->m_ppCellList[m_iCurrColumn]->m_pSelectFlags[m_iCurrItem] = 1;
          }
       }
+		m_nLastSelectedRow = m_iCurrRow;
       InvalidateList();
    }
    else

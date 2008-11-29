@@ -360,7 +360,11 @@ BEGIN
         END
         MENUITEM "&Delete rule",                ID_POLICY_DELETERULE
         MENUITEM SEPARATOR
-        MENUITEM "&Enable rule(s)",             ID_POLICY_ENABLERULE
+        MENUITEM "&Copy\tCtrl+C",               ID_POLICY_COPY
+        MENUITEM "C&ut\tCtrl+X",                ID_POLICY_CUT
+        MENUITEM "&Paste\tCtrl+V",              ID_POLICY_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "E&nable rule(s)",             ID_POLICY_ENABLERULE
         MENUITEM "D&isable rule(s)",            ID_POLICY_DISABLERULE
         MENUITEM SEPARATOR
         MENUITEM "&Save policy\tCtrl+S",        ID_POLICY_SAVE
@@ -774,7 +778,11 @@ BEGIN
         END
         MENUITEM "&Delete rule",                ID_POLICY_DELETERULE
         MENUITEM SEPARATOR
-        MENUITEM "&Enable rule(s)",             ID_POLICY_ENABLERULE
+        MENUITEM "&Copy",                       ID_POLICY_COPY
+        MENUITEM "C&ut",                        ID_POLICY_CUT
+        MENUITEM "&Paste",                      ID_POLICY_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "E&nable rule(s)",             ID_POLICY_ENABLERULE
         MENUITEM "D&isable rule(s)",            ID_POLICY_DISABLERULE
     END
     POPUP "Policy (cell type 1)"
@@ -1602,7 +1610,7 @@ END
 IDD_GROUP_PROPERTIES DIALOGEX 0, 0, 230, 301
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Group Properties"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_EDIT_NAME,57,7,165,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_DESCRIPTION,57,27,165,14,ES_AUTOHSCROLL

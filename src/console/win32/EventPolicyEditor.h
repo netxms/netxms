@@ -38,6 +38,9 @@ public:
 
 // Implementation
 protected:
+	void DeleteSelectedRules();
+	void CopySelectedRules();
+	NXC_EPP* m_clipboard;
 	void EditSituation(int row);
 	void EditOptions(int row);
 	int m_iImageOptionsBase;
@@ -87,6 +90,12 @@ protected:
 	afx_msg void OnPolicySave();
 	afx_msg void OnUpdatePolicySave(CCmdUI* pCmdUI);
 	afx_msg void OnPolicyNegatecell();
+	afx_msg void OnPolicyCopy();
+	afx_msg void OnUpdatePolicyCopy(CCmdUI* pCmdUI);
+	afx_msg void OnPolicyPaste();
+	afx_msg void OnUpdatePolicyPaste(CCmdUI* pCmdUI);
+	afx_msg void OnPolicyCut();
+	afx_msg void OnUpdatePolicyCut(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg void OnRuleListDblClk(LPNMHDR pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
