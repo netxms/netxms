@@ -261,6 +261,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->state = XML_STATE_MACRO;
 		name = XMLGetAttr(attrs, "name");
 		ps->macroName = CHECK_NULL_A(name);
+		ps->macro = NULL;
 	}
 	else if (!strcmp(name, "rules"))
 	{
