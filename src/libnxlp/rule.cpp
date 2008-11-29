@@ -142,6 +142,8 @@ void LogParserRule::ExpandMacros(const char *regexp, String &out)
 				{
 					int i;
 
+					out.AddString(prev, curr - prev);
+					curr += 2;
 					for(i = 0; (*curr != 0) && (*curr != '}'); i++)
 						name[i] = *curr++;
 					name[i] = 0;
