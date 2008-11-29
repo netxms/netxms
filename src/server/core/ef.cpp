@@ -48,5 +48,15 @@ void EF_CloseSession(void *sd)
 
 BOOL EF_ProcessMessage(void *sd, CSCPMessage *request, CSCPMessage *response)
 {
+	DWORD code, objectIp;
+
+	if (request->GetCode() == CMD_FORWARD_EVENT)
+	{
+		code = request->GetVariableLong(VID_EVENT_CODE);
+	}
+	else
+	{
+		response->SetVariable(VID_RCC, ISC_ERR_NOT_IMPLEMENTED);
+	}
 	return FALSE;	// Don't close session
 }

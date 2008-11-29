@@ -476,6 +476,7 @@ typedef struct
 #define CMD_ISC_CONNECT_TO_SERVICE  0x00E8
 #define CMD_REGISTER_AGENT          0x00E9
 #define CMD_GET_SERVER_FILE         0x00EA
+#define CMD_FORWARD_EVENT           0x00EB
 
 
 //
