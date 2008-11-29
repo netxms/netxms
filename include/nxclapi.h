@@ -623,6 +623,7 @@ enum
 #define ACTION_REMOTE         1
 #define ACTION_SEND_EMAIL     2
 #define ACTION_SEND_SMS       3
+#define ACTION_FORWARD_EVENT  4
 
 
 //

@@ -412,9 +412,6 @@ private:
 
 protected:
    void DestroyResultData(void);
-   BOOL SendMessage(CSCPMessage *msg);
-   CSCPMessage *WaitForMessage(WORD code, DWORD id, DWORD timeOut) { return m_msgWaitQueue->WaitForMessage(code, id, timeOut); }
-   DWORD WaitForRCC(DWORD rqId, DWORD timeOut);
    DWORD SetupEncryption(RSA *pServerKey);
 
    void Lock(void) { MutexLock(m_mutexDataLock, INFINITE); }
@@ -429,6 +426,10 @@ public:
 
    DWORD Connect(DWORD service, RSA *serverKey = NULL, BOOL requireEncryption = FALSE);
 	void Disconnect();
+
+   BOOL SendMessage(CSCPMessage *msg);
+   CSCPMessage *WaitForMessage(WORD code, DWORD id, DWORD timeOut) { return m_msgWaitQueue->WaitForMessage(code, id, timeOut); }
+   DWORD WaitForRCC(DWORD rqId, DWORD timeOut);
 
    DWORD Nop(void);
 };

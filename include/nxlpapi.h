@@ -83,6 +83,7 @@ private:
 	TCHAR *m_context;
 	int m_contextAction;
 	TCHAR *m_contextToChange;
+	BOOL m_isInverted;
 
 	void ExpandMacros(const char *regexp, String &out);
 
@@ -99,6 +100,9 @@ public:
 	void SetContext(const TCHAR *context) { safe_free(m_context); m_context = (context != NULL) ? _tcsdup(context) : NULL; }
 	void SetContextToChange(const TCHAR *context) { safe_free(m_contextToChange); m_contextToChange = (context != NULL) ? _tcsdup(context) : NULL; }
 	void SetContextAction(int action) { m_contextAction = action; }
+
+	void SetInverted(BOOL flag) { m_isInverted = flag; }
+	BOOL IsInverted() { return m_isInverted; }
 	
 	const TCHAR *GetContext() { return m_context; }
 	const TCHAR *GetContextToChange() { return m_contextToChange; }

@@ -291,6 +291,45 @@ static THREAD_RESULT THREAD_CALL RunCommandThread(void *pArg)
 
 
 //
+// Forward event to other server
+//
+
+static BOOL ForwardEvent(const TCHAR *server, Event *event)
+{
+	ISC *isc;
+	DWORD addr;
+
+	addr = ResolveHostName(server);
+	if (addr == INADDR_NONE)
+	{
+		DbgPrintf(2, _T("ForwardEvent: unable to resolve host name %s"), server);
+		return FALSE;
+	}
+
+	isc = new ISC(addr);
+	rcc = isc->Connect(ISC_SERVICE_EVENT_FORWARDER);
+	if (rcc == ISC_ERR_SUCCESS)
+	{
+		CSCPMessage msg;
+
+		msg.SetId(1);
+		msg.SetCode(CMD_FORWARD_EVENT);
+		if (isc->SendMessage(&msg))
+		{
+			rcc = isc->WaitForRCC(1, 10000);
+		}
+		else
+		{
+			rcc = ISC_ERR_CONNECTION_BROKEN;
+		}
+	}
+	if (rcc != ISC_ERR_SUCCESS)
+		nxlog_write(MSG_EVENT_FORWARD_FAILED, EVENTLOG_WARNING_TYPE, "ss", server, ISCErrorCodeToText(rcc));
+	return rcc == ISC_ERR_SUCCESS;
+}
+
+
+//
 // Execute action on specific event
 //
 
@@ -361,6 +400,10 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
                          pszExpandedRcpt, pszExpandedData);
                bSuccess = ExecuteRemoteAction(pszExpandedRcpt, pszExpandedData);
                break;
+				case ACTION_FORWARD_EVENT:
+               DbgPrintf(3, "*actions* Forwarding event to \"%s\"", pszExpandedRcpt);
+               bSuccess = ForwardEvent(pszExpandedRcpt, pEvent);
+					break;
             default:
                break;
          }

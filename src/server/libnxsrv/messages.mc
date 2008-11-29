@@ -692,4 +692,22 @@ Language=English
 Cannot initialize syslog parser: %1
 .
 
+MessageId=
+SymbolicName=MSG_ISC_SESSION_ESTABLISHED
+Language=English
+Established ISC session from %1 to service %2
+.
+
+MessageId=
+SymbolicName=MSG_ISC_SESSION_SETUP_FAILED
+Language=English
+Failed to establish ISC session from %1 to service %2: %3
+.
+
+MessageId=
+SymbolicName=MSG_EVENT_FORWARD_FAILED
+Language=English
+Failed to forward event to server %1: %2
+.
+
 ;#endif

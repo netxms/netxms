@@ -54,6 +54,7 @@ LogParserRule::LogParserRule(LogParser *parser,
 	m_context = NULL;
 	m_contextAction = 0;
 	m_contextToChange = NULL;
+	m_isInverted = FALSE;
 }
 
 
@@ -78,38 +79,45 @@ BOOL LogParserRule::Match(const char *line, LOG_PARSER_CALLBACK cb, DWORD object
 	if (!m_isValid)
 		return FALSE;
 
-	if (regexec(&m_preg, line, (m_numParams > 0) ? m_numParams + 1 : 0, m_pmatch, 0) == 0)
+	if (m_isInverted)
 	{
-		if ((cb != NULL) && (m_event != 0))
+		return regexec(&m_preg, line, 0, NULL, 0) != 0;
+	}
+	else
+	{
+		if (regexec(&m_preg, line, (m_numParams > 0) ? m_numParams + 1 : 0, m_pmatch, 0) == 0)
 		{
-			char **params;
-			int i, len;
-
-			if (m_numParams > 0)
+			if ((cb != NULL) && (m_event != 0))
 			{
-				params = (char **)alloca(sizeof(char *) * m_numParams);
-				for(i = 0; i < m_numParams; i++)
+				char **params;
+				int i, len;
+
+				if (m_numParams > 0)
 				{
-					if (m_pmatch[i + 1].rm_so != -1)
+					params = (char **)alloca(sizeof(char *) * m_numParams);
+					for(i = 0; i < m_numParams; i++)
 					{
-						len = m_pmatch[i + 1].rm_eo - m_pmatch[i + 1].rm_so;
-						params[i] = (char *)malloc(len + 1);
-						memcpy(params[i], &line[m_pmatch[i + 1].rm_so], len);
-						params[i][len] = 0;
-					}
-					else
-					{
-						params[i] = strdup("");
+						if (m_pmatch[i + 1].rm_so != -1)
+						{
+							len = m_pmatch[i + 1].rm_eo - m_pmatch[i + 1].rm_so;
+							params[i] = (char *)malloc(len + 1);
+							memcpy(params[i], &line[m_pmatch[i + 1].rm_so], len);
+							params[i][len] = 0;
+						}
+						else
+						{
+							params[i] = strdup("");
+						}
 					}
 				}
-			}
 
-			cb(m_event, line, m_numParams, params, objectId, userArg);
-			
-			for(i = 0; i < m_numParams; i++)
-				safe_free(params[i]);
-		}		
-		return TRUE;
+				cb(m_event, line, m_numParams, params, objectId, userArg);
+				
+				for(i = 0; i < m_numParams; i++)
+					safe_free(params[i]);
+			}		
+			return TRUE;
+		}
 	}
 
 	return FALSE;	// no match

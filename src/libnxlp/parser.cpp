@@ -73,6 +73,7 @@ typedef struct
 	String errorText;
 	String macroName;
 	String macro;
+	BOOL invertedRule;
 } XML_PARSER_STATE;
 
 
@@ -237,66 +238,69 @@ const TCHAR *LogParser::GetMacro(const TCHAR *name)
 
 static void StartElement(void *userData, const char *name, const char **attrs)
 {
+	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
+
 	if (!strcmp(name, "parser"))
 	{
-		((XML_PARSER_STATE *)userData)->state = XML_STATE_PARSER;
-		((XML_PARSER_STATE *)userData)->parser->SetProcessAllFlag(XMLGetAttrBoolean(attrs, "processAll", FALSE));
+		ps->state = XML_STATE_PARSER;
+		ps->parser->SetProcessAllFlag(XMLGetAttrBoolean(attrs, "processAll", FALSE));
 	}
 	else if (!strcmp(name, "file"))
 	{
-		((XML_PARSER_STATE *)userData)->state = XML_STATE_FILE;
+		ps->state = XML_STATE_FILE;
 	}
 	else if (!strcmp(name, "macros"))
 	{
-		((XML_PARSER_STATE *)userData)->state = XML_STATE_MACROS;
+		ps->state = XML_STATE_MACROS;
 	}
 	else if (!strcmp(name, "macro"))
 	{
 		const char *name;
 
-		((XML_PARSER_STATE *)userData)->state = XML_STATE_MACRO;
+		ps->state = XML_STATE_MACRO;
 		name = XMLGetAttr(attrs, "name");
-		((XML_PARSER_STATE *)userData)->macroName = CHECK_NULL_A(name);
+		ps->macroName = CHECK_NULL_A(name);
 	}
 	else if (!strcmp(name, "rules"))
 	{
-		((XML_PARSER_STATE *)userData)->state = XML_STATE_RULES;
+		ps->state = XML_STATE_RULES;
 	}
 	else if (!strcmp(name, "rule"))
 	{
-		((XML_PARSER_STATE *)userData)->regexp = NULL;
-		((XML_PARSER_STATE *)userData)->event = NULL;
-		((XML_PARSER_STATE *)userData)->context = NULL;
-		((XML_PARSER_STATE *)userData)->contextAction = CONTEXT_SET_AUTOMATIC;
-		((XML_PARSER_STATE *)userData)->ruleContext = XMLGetAttr(attrs, "context");
-		((XML_PARSER_STATE *)userData)->state = XML_STATE_RULE;
+		ps->regexp = NULL;
+		ps->event = NULL;
+		ps->context = NULL;
+		ps->contextAction = CONTEXT_SET_AUTOMATIC;
+		ps->ruleContext = XMLGetAttr(attrs, "context");
+		ps->state = XML_STATE_RULE;
 	}
 	else if (!strcmp(name, "match"))
 	{
-		((XML_PARSER_STATE *)userData)->state = XML_STATE_MATCH;
+		ps->state = XML_STATE_MATCH;
+		ps->invertedRule = XMLGetAttrBoolean(attrs, "invert", FALSE);
 	}
 	else if (!strcmp(name, "id"))
 	{
-		((XML_PARSER_STATE *)userData)->state = XML_STATE_ID;
+		ps->state = XML_STATE_ID;
 	}
 	else if (!strcmp(name, "level"))
 	{
-		((XML_PARSER_STATE *)userData)->state = XML_STATE_LEVEL;
+		ps->state = XML_STATE_LEVEL;
 	}
 	else if (!strcmp(name, "source"))
 	{
-		((XML_PARSER_STATE *)userData)->state = XML_STATE_SOURCE;
+		ps->state = XML_STATE_SOURCE;
 	}
 	else if (!strcmp(name, "event"))
 	{
-		((XML_PARSER_STATE *)userData)->numEventParams = XMLGetAttrDWORD(attrs, "params", 0);
-		((XML_PARSER_STATE *)userData)->state = XML_STATE_EVENT;
+		ps->numEventParams = XMLGetAttrDWORD(attrs, "params", 0);
+		ps->state = XML_STATE_EVENT;
 	}
 	else if (!strcmp(name, "context"))
 	{
 		const char *action;
 		
-		((XML_PARSER_STATE *)userData)->state = XML_STATE_CONTEXT;
+		ps->state = XML_STATE_CONTEXT;
 		
 		action = XMLGetAttr(attrs, "action");
 		if (action == NULL)
@@ -312,31 +316,31 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 
 			if (!strcmp(mode, "auto"))
 			{
-				((XML_PARSER_STATE *)userData)->contextAction = CONTEXT_SET_AUTOMATIC;
+				ps->contextAction = CONTEXT_SET_AUTOMATIC;
 			}			
 			else if (!strcmp(mode, "manual"))
 			{
-				((XML_PARSER_STATE *)userData)->contextAction = CONTEXT_SET_MANUAL;
+				ps->contextAction = CONTEXT_SET_MANUAL;
 			}			
 			else
 			{
-				((XML_PARSER_STATE *)userData)->errorText = _T("Invalid context reset mode");
-				((XML_PARSER_STATE *)userData)->state = XML_STATE_ERROR;
+				ps->errorText = _T("Invalid context reset mode");
+				ps->state = XML_STATE_ERROR;
 			}
 		}
 		else if (!strcmp(action, "clear"))
 		{
-			((XML_PARSER_STATE *)userData)->contextAction = CONTEXT_CLEAR;
+			ps->contextAction = CONTEXT_CLEAR;
 		}
 		else
 		{
-			((XML_PARSER_STATE *)userData)->errorText = _T("Invalid context action");
-			((XML_PARSER_STATE *)userData)->state = XML_STATE_ERROR;
+			ps->errorText = _T("Invalid context action");
+			ps->state = XML_STATE_ERROR;
 		}
 	}
 	else
 	{
-		((XML_PARSER_STATE *)userData)->state = XML_STATE_ERROR;
+		ps->state = XML_STATE_ERROR;
 	}
 }
 
@@ -384,6 +388,7 @@ static void EndElement(void *userData, const char *name)
 			rule->SetContextToChange(ps->context);
 			rule->SetContextAction(ps->contextAction);
 		}
+		rule->SetInverted(ps->invertedRule);
 		ps->parser->AddRule(rule);
 		ps->state = XML_STATE_RULES;
 	}
