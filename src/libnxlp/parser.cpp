@@ -1,4 +1,3 @@
-/* $Id$ */
 /* 
 ** NetXMS - Network Management System
 ** Log Parsing Library
@@ -53,6 +52,9 @@ static const TCHAR *m_states[] = { _T("MANUAL"), _T("AUTO"), _T("INACTIVE") };
 #define XML_STATE_LEVEL    7
 #define XML_STATE_SOURCE   8
 #define XML_STATE_CONTEXT  9
+#define XML_STATE_MACROS   10
+#define XML_STATE_MACRO    11
+
 
 typedef struct
 {
@@ -69,6 +71,8 @@ typedef struct
 	String ruleContext;
 	int numEventParams;
 	String errorText;
+	String macroName;
+	String macro;
 } XML_PARSER_STATE;
 
 
@@ -88,6 +92,7 @@ LogParser::LogParser()
 	m_thread = INVALID_THREAD_HANDLE;
 	m_recordsProcessed = 0;
 	m_recordsMatched = 0;
+	m_processAllRules = FALSE;
 }
 
 
@@ -129,7 +134,7 @@ BOOL LogParser::AddRule(LogParserRule *rule)
 
 BOOL LogParser::AddRule(const char *regexp, DWORD event, int numParams)
 {
-	return AddRule(new LogParserRule(regexp, event, numParams));
+	return AddRule(new LogParserRule(this, regexp, event, numParams));
 }
 
 
@@ -160,13 +165,15 @@ BOOL LogParser::MatchLine(const char *line, DWORD objectId)
 {
 	int i;
 	const TCHAR *state;
+	BOOL matched = FALSE;
 
 	m_recordsProcessed++;
 	for(i = 0; i < m_numRules; i++)
 	{
 		if (((state = CheckContext(m_rules[i])) != NULL) && m_rules[i]->Match(line, m_cb, objectId, m_userArg))
 		{
-			m_recordsMatched++;
+			if (!matched)
+				m_recordsMatched++;
 			
 			// Update context
 			if (m_rules[i]->GetContextToChange() != NULL)
@@ -179,10 +186,12 @@ BOOL LogParser::MatchLine(const char *line, DWORD objectId)
 			{
 				m_contexts.Set(m_rules[i]->GetContext(), m_states[CONTEXT_CLEAR]);
 			}
-			return TRUE;
+			matched = TRUE;
+			if (!m_processAllRules)
+				break;
 		}
 	}
-	return FALSE;
+	return matched;
 }
 
 
@@ -198,6 +207,29 @@ void LogParser::SetFileName(const TCHAR *name)
 
 
 //
+// Add macro
+//
+
+void LogParser::AddMacro(const TCHAR *name, const TCHAR *value)
+{
+	m_macros.Set(name, value);
+}
+
+
+//
+// Get macro
+//
+
+const TCHAR *LogParser::GetMacro(const TCHAR *name)
+{
+	const TCHAR *value;
+
+	value = m_macros.Get(name);
+	return CHECK_NULL_EX(value);
+}
+
+
+//
 // Create parser configuration from XML
 //
 
@@ -208,10 +240,23 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	if (!strcmp(name, "parser"))
 	{
 		((XML_PARSER_STATE *)userData)->state = XML_STATE_PARSER;
+		((XML_PARSER_STATE *)userData)->parser->SetProcessAllFlag(XMLGetAttrBoolean(attrs, "processAll", FALSE));
 	}
 	else if (!strcmp(name, "file"))
 	{
 		((XML_PARSER_STATE *)userData)->state = XML_STATE_FILE;
+	}
+	else if (!strcmp(name, "macros"))
+	{
+		((XML_PARSER_STATE *)userData)->state = XML_STATE_MACROS;
+	}
+	else if (!strcmp(name, "macro"))
+	{
+		const char *name;
+
+		((XML_PARSER_STATE *)userData)->state = XML_STATE_MACRO;
+		name = XMLGetAttr(attrs, "name");
+		((XML_PARSER_STATE *)userData)->macroName = CHECK_NULL_A(name);
 	}
 	else if (!strcmp(name, "rules"))
 	{
@@ -308,6 +353,15 @@ static void EndElement(void *userData, const char *name)
 		ps->parser->SetFileName(ps->file);
 		ps->state = XML_STATE_PARSER;
 	}
+	else if (!strcmp(name, "macros"))
+	{
+		ps->state = XML_STATE_PARSER;
+	}
+	else if (!strcmp(name, "macro"))
+	{
+		ps->parser->AddMacro(ps->macroName, ps->macro);
+		ps->state = XML_STATE_MACROS;
+	}
 	else if (!strcmp(name, "rules"))
 	{
 		ps->state = XML_STATE_PARSER;
@@ -322,7 +376,7 @@ static void EndElement(void *userData, const char *name)
 		event = strtoul(ps->event, &eptr, 0);
 		if (*eptr != 0)
 			event = ps->parser->ResolveEventName(ps->event);
-		rule = new LogParserRule((const char *)ps->regexp, event, ps->numEventParams);
+		rule = new LogParserRule(ps->parser, (const char *)ps->regexp, event, ps->numEventParams);
 		if (!ps->ruleContext.IsEmpty())
 			rule->SetContext(ps->ruleContext);
 		if (!ps->context.IsEmpty())
@@ -385,6 +439,9 @@ static void CharData(void *userData, const XML_Char *s, int len)
 			break;
 		case XML_STATE_CONTEXT:
 			ps->context.AddString(s, len);
+			break;
+		case XML_STATE_MACRO:
+			ps->macro.AddString(s, len);
 			break;
 		default:
 			break;

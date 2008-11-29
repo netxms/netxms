@@ -512,6 +512,7 @@ extern "C"
 	const char LIBNETXMS_EXPORTABLE *XMLGetAttr(const char **attrs, const char *name);
 	int LIBNETXMS_EXPORTABLE XMLGetAttrInt(const char **attrs, const char *name, int defVal);
 	int LIBNETXMS_EXPORTABLE XMLGetAttrDWORD(const char **attrs, const char *name, DWORD defVal);
+	BOOL LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name, BOOL defVal);
 
 #ifdef __cplusplus
 	const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText = _T("Unknown"));

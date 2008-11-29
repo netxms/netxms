@@ -34,11 +34,16 @@
 // Constructor
 //
 
-LogParserRule::LogParserRule(const char *regexp, DWORD event, int numParams,
+LogParserRule::LogParserRule(LogParser *parser,
+									  const char *regexp, DWORD event, int numParams,
 									  const TCHAR *source, DWORD level, 
 									  DWORD idStart, DWORD idEnd)
 {
-	m_isValid = (regcomp(&m_preg, regexp, REG_EXTENDED | REG_ICASE) == 0);
+	String expandedRegexp;
+
+	m_parser = parser;
+	ExpandMacros(regexp, expandedRegexp);
+	m_isValid = (regcomp(&m_preg, expandedRegexp, REG_EXTENDED | REG_ICASE) == 0);
 	m_event = event;
 	m_numParams = numParams;
 	m_pmatch = (numParams > 0) ? (regmatch_t *)malloc(sizeof(regmatch_t) * (numParams + 1)) : NULL;
@@ -108,4 +113,47 @@ BOOL LogParserRule::Match(const char *line, LOG_PARSER_CALLBACK cb, DWORD object
 	}
 
 	return FALSE;	// no match
+}
+
+
+//
+// Expand macros in regexp
+//
+
+void LogParserRule::ExpandMacros(const char *regexp, String &out)
+{
+	const char *curr, *prev;
+	char name[256];
+
+	for(curr = prev = regexp; *curr != 0; curr++)
+	{
+		if (*curr == '@')
+		{
+			// Check for escape
+			if ((curr != regexp) && (*(curr - 1) == '\\'))
+			{
+				out.AddString(prev, curr - prev - 1);
+				out += _T("@");
+			}
+			else
+			{
+				// { should follow @
+				if (*(curr + 1) == '{')
+				{
+					int i;
+
+					for(i = 0; (*curr != 0) && (*curr != '}'); i++)
+						name[i] = *curr++;
+					name[i] = 0;
+					out += m_parser->GetMacro(name);
+				}
+				else
+				{
+					out.AddString(prev, curr - prev + 1);
+				}
+			}
+			prev = curr + 1;
+		}
+	}
+	out.AddString(prev, curr - prev);
 }

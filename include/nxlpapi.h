@@ -65,9 +65,12 @@ typedef void (* LOG_PARSER_CALLBACK)(DWORD, const char *, int, char **, DWORD, v
 // Log parser rule
 //
 
+class LIBNXLP_EXPORTABLE LogParser;
+
 class LIBNXLP_EXPORTABLE LogParserRule
 {
 private:
+	LogParser *m_parser;
 	regex_t m_preg;
 	DWORD m_event;
 	BOOL m_isValid;
@@ -81,8 +84,11 @@ private:
 	int m_contextAction;
 	TCHAR *m_contextToChange;
 
+	void ExpandMacros(const char *regexp, String &out);
+
 public:
-	LogParserRule(const char *regexp, DWORD event = 0, int numParams = 0,
+	LogParserRule(LogParser *parser,
+	              const char *regexp, DWORD event = 0, int numParams = 0,
 	              const TCHAR *source = NULL, DWORD level = 0xFFFFFFFF,
 					  DWORD idStart = 0xFFFFFFFF, DWORD idEnd = 0xFFFFFFFF);
 	~LogParserRule();
@@ -110,6 +116,7 @@ private:
 	int m_numRules;
 	LogParserRule **m_rules;
 	StringMap m_contexts;
+	StringMap m_macros;
 	LOG_PARSER_CALLBACK m_cb;
 	void *m_userArg;
 	TCHAR *m_fileName;
@@ -118,6 +125,7 @@ private:
 	THREAD m_thread;	// Associated thread
 	int m_recordsProcessed;
 	int m_recordsMatched;
+	BOOL m_processAllRules;
 	
 	const TCHAR *CheckContext(LogParserRule *rule);
 
@@ -133,6 +141,9 @@ public:
 	void SetThread(THREAD th) { m_thread = th; }
 	THREAD GetThread() { return m_thread; }
 
+	void SetProcessAllFlag(BOOL flag) { m_processAllRules = flag; }
+	BOOL GetProcessAllFlag() { return m_processAllRules; }
+
 	BOOL AddRule(const char *regexp, DWORD event = 0, int numParams = 0);
 	BOOL AddRule(LogParserRule *rule);
 	void SetCallback(LOG_PARSER_CALLBACK cb) { m_cb = cb; }
@@ -140,6 +151,9 @@ public:
 	void SetEventNameList(CODE_TO_TEXT *ctt) { m_eventNameList = ctt; }
 	void SetEventNameResolver(BOOL (*cb)(const TCHAR *, DWORD *)) { m_eventResolver = cb; }
 	DWORD ResolveEventName(const TCHAR *name, DWORD defVal = 0);
+
+	void AddMacro(const TCHAR *name, const TCHAR *value);
+	const TCHAR *GetMacro(const TCHAR *name);
 
 	BOOL MatchLine(const char *line, DWORD objectId = 0);
 
