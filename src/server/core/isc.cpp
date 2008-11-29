@@ -21,7 +21,6 @@
 **/
 
 #include "nxcore.h"
-#include <netxms_isc.h>
 
 
 //
@@ -38,7 +37,9 @@
 // Externals
 //
 
-void *EF_
+void *EF_SetupSession(CSCPMessage *);
+void EF_CloseSession(void *);
+BOOL EF_ProcessMessage(void *, CSCPMessage *, CSCPMessage *);
 
 
 //

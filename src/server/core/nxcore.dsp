@@ -254,6 +254,10 @@ SOURCE=.\debug.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ef.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\email.cpp
 # End Source File
 # Begin Source File

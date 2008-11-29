@@ -8,11 +8,11 @@ libnxcore_la_SOURCES = acl.cpp agent.cpp actions.cpp admin.cpp alarm.cpp \
 			cluster.cpp condition.cpp config.cpp \
 			container.cpp correlate.cpp datacoll.cpp \
 			dbwrite.cpp dcitem.cpp dcithreshold.cpp dcivalue.cpp \
-			debug.cpp email.cpp entirenet.cpp epp.cpp events.cpp \
-			evproc.cpp hk.cpp id.cpp image.cpp interface.cpp \
-			isc.cpp layer2.cpp locks.cpp lpp.cpp main.cpp map.cpp \
-		        modules.cpp netinfo.cpp netobj.cpp netsrv.cpp \
-			node.cpp nortel.cpp np.cpp nxmp_data.cpp \
+			debug.cpp ef.cpp email.cpp entirenet.cpp epp.cpp \
+			events.cpp evproc.cpp hk.cpp id.cpp image.cpp \
+			interface.cpp isc.cpp layer2.cpp locks.cpp lpp.cpp \
+			main.cpp map.cpp modules.cpp netinfo.cpp netobj.cpp \
+			netsrv.cpp node.cpp nortel.cpp np.cpp nxmp_data.cpp \
 			nxmp_lex.yy.cpp nxmp_lexer.cpp \
 			nxmp_parser.cpp nxmp_parser.tab.cpp \
 			nxsl_classes.cpp nxslext.cpp objects.cpp \
