@@ -39,21 +39,22 @@ static const TCHAR *m_states[] = { _T("MANUAL"), _T("AUTO"), _T("INACTIVE") };
 // XML parser state for creating LogParser object from XML
 //
 
-#define XML_STATE_INIT		-1
-#define XML_STATE_END		-2
-#define XML_STATE_ERROR    -255
-#define XML_STATE_PARSER	0
-#define XML_STATE_RULES		1
-#define XML_STATE_RULE		2
-#define XML_STATE_MATCH		3
-#define XML_STATE_EVENT		4
-#define XML_STATE_FILE     5
-#define XML_STATE_ID       6
-#define XML_STATE_LEVEL    7
-#define XML_STATE_SOURCE   8
-#define XML_STATE_CONTEXT  9
-#define XML_STATE_MACROS   10
-#define XML_STATE_MACRO    11
+#define XML_STATE_INIT        -1
+#define XML_STATE_END         -2
+#define XML_STATE_ERROR       -255
+#define XML_STATE_PARSER      0
+#define XML_STATE_RULES       1
+#define XML_STATE_RULE        2
+#define XML_STATE_MATCH       3
+#define XML_STATE_EVENT       4
+#define XML_STATE_FILE        5
+#define XML_STATE_ID          6
+#define XML_STATE_LEVEL       7
+#define XML_STATE_SOURCE      8
+#define XML_STATE_CONTEXT     9
+#define XML_STATE_MACROS      10
+#define XML_STATE_MACRO       11
+#define XML_STATE_DESCRIPTION 12
 
 
 typedef struct
@@ -67,6 +68,7 @@ typedef struct
 	String level;
 	String source;
 	String context;
+	String description;
 	int contextAction;
 	String ruleContext;
 	int numEventParams;
@@ -95,6 +97,8 @@ LogParser::LogParser()
 	m_recordsProcessed = 0;
 	m_recordsMatched = 0;
 	m_processAllRules = FALSE;
+	m_traceLevel = 0;
+	m_traceCallback = NULL;
 }
 
 
@@ -110,6 +114,23 @@ LogParser::~LogParser()
 		delete m_rules[i];
 	safe_free(m_rules);
 	safe_free(m_fileName);
+}
+
+
+//
+// Trace
+//
+
+void LogParser::Trace(int level, const TCHAR *format, ...)
+{
+	va_list args;
+
+	if ((m_traceCallback == NULL) || (level > m_traceLevel))
+		return;
+
+	va_start(args, format);
+	m_traceCallback(format, args);
+	va_end(args);
 }
 
 
@@ -169,11 +190,14 @@ BOOL LogParser::MatchLine(const char *line, DWORD objectId)
 	const TCHAR *state;
 	BOOL matched = FALSE;
 
+	Trace(2, _T("Match line: \"%s\""), line);
 	m_recordsProcessed++;
 	for(i = 0; i < m_numRules; i++)
 	{
+		Trace(4, _T("checking rule %d \"%s\""), i + 1, m_rules[i]->GetDescription());
 		if (((state = CheckContext(m_rules[i])) != NULL) && m_rules[i]->Match(line, m_cb, objectId, m_userArg))
 		{
+			Trace(1, _T("rule %d \"%s\" matched"), i + 1, m_rules[i]->GetDescription());
 			if (!matched)
 				m_recordsMatched++;
 			
@@ -181,18 +205,26 @@ BOOL LogParser::MatchLine(const char *line, DWORD objectId)
 			if (m_rules[i]->GetContextToChange() != NULL)
 			{
 				m_contexts.Set(m_rules[i]->GetContextToChange(), m_states[m_rules[i]->GetContextAction()]);
+				Trace(2, _T("rule %d \"%s\": context %s set to %s"), i + 1, m_rules[i]->GetDescription(), m_rules[i]->GetContextToChange(), m_states[m_rules[i]->GetContextAction()]);
 			}
 			
 			// Set context of this rule to inactive if rule context mode is "automatic reset"
 			if (!_tcscmp(state, m_states[CONTEXT_SET_AUTOMATIC]))
 			{
 				m_contexts.Set(m_rules[i]->GetContext(), m_states[CONTEXT_CLEAR]);
+				Trace(2, _T("rule %d \"%s\": context %s cleared because it was set to automatic reset mode"),
+				      i + 1, m_rules[i]->GetDescription(), m_rules[i]->GetContext());
 			}
 			matched = TRUE;
 			if (!m_processAllRules || m_rules[i]->GetBreakFlag())
 				break;
 		}
 	}
+	if (i < m_numRules)
+		Trace(2, _T("processing stopped at rule %d \"%s\"; result = %s"), i + 1,
+				m_rules[i]->GetDescription(), matched ? _T("true") : _T("false"));
+	else
+		Trace(2, _T("Processing stopped at end of rules list; result = %s"), matched ? _T("true") : _T("false"));
 	return matched;
 }
 
@@ -245,6 +277,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	{
 		ps->state = XML_STATE_PARSER;
 		ps->parser->SetProcessAllFlag(XMLGetAttrBoolean(attrs, "processAll", FALSE));
+		ps->parser->SetTraceLevel(XMLGetAttrInt(attrs, "trace", 0));
 	}
 	else if (!strcmp(name, "file"))
 	{
@@ -273,6 +306,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->event = NULL;
 		ps->context = NULL;
 		ps->contextAction = CONTEXT_SET_AUTOMATIC;
+		ps->description = NULL;
 		ps->ruleContext = XMLGetAttr(attrs, "context");
 		ps->breakFlag = XMLGetAttrBoolean(attrs, "break", FALSE);
 		ps->state = XML_STATE_RULE;
@@ -341,6 +375,10 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 			ps->state = XML_STATE_ERROR;
 		}
 	}
+	else if (!strcmp(name, "description"))
+	{
+		ps->state = XML_STATE_DESCRIPTION;
+	}
 	else
 	{
 		ps->state = XML_STATE_ERROR;
@@ -391,6 +429,8 @@ static void EndElement(void *userData, const char *name)
 			rule->SetContextToChange(ps->context);
 			rule->SetContextAction(ps->contextAction);
 		}
+		if (!ps->description.IsEmpty())
+			rule->SetDescription(ps->description);
 		rule->SetInverted(ps->invertedRule);
 		rule->SetBreakFlag(ps->breakFlag);
 		ps->parser->AddRule(rule);
@@ -417,6 +457,10 @@ static void EndElement(void *userData, const char *name)
 		ps->state = XML_STATE_RULE;
 	}
 	else if (!strcmp(name, "context"))
+	{
+		ps->state = XML_STATE_RULE;
+	}
+	else if (!strcmp(name, "description"))
 	{
 		ps->state = XML_STATE_RULE;
 	}
@@ -448,6 +492,9 @@ static void CharData(void *userData, const XML_Char *s, int len)
 			break;
 		case XML_STATE_CONTEXT:
 			ps->context.AddString(s, len);
+			break;
+		case XML_STATE_DESCRIPTION:
+			ps->description.AddString(s, len);
 			break;
 		case XML_STATE_MACRO:
 			ps->macro.AddString(s, len);

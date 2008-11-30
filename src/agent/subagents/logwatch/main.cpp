@@ -128,6 +128,16 @@ static void LogParserCallback(DWORD event, const TCHAR *text, int paramCount,
 
 
 //
+// Trace callback
+//
+
+static void LogParserTrace(const TCHAR *format, va_list args)
+{
+	NxWriteAgentLog2(EVENTLOG_DEBUG_TYPE, format, args);
+}
+
+
+//
 // Add parser from config parameter
 //
 
@@ -147,6 +157,7 @@ static void AddParserFromConfig(const TCHAR *file)
 			if (parser->GetFileName() != NULL)
 			{
 				parser->SetCallback(LogParserCallback);
+				parser->SetTraceCallback(LogParserTrace);
 				m_numParsers++;
 				m_parserList = (LogParser **)realloc(m_parserList, sizeof(LogParser *) * m_numParsers);
 				m_parserList[m_numParsers - 1] = parser;

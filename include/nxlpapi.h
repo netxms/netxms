@@ -85,6 +85,7 @@ private:
 	TCHAR *m_contextToChange;
 	BOOL m_isInverted;
 	BOOL m_breakOnMatch;
+	TCHAR *m_description;
 
 	void ExpandMacros(const char *regexp, String &out);
 
@@ -111,6 +112,9 @@ public:
 	const TCHAR *GetContext() { return m_context; }
 	const TCHAR *GetContextToChange() { return m_contextToChange; }
 	int GetContextAction() { return m_contextAction; }
+
+	void SetDescription(const TCHAR *descr) { safe_free(m_description); m_description = (descr != NULL) ? _tcsdup(descr) : NULL; }
+	const TCHAR *GetDescription() { return CHECK_NULL_EX(m_description); }
 };
 
 
@@ -134,8 +138,11 @@ private:
 	int m_recordsProcessed;
 	int m_recordsMatched;
 	BOOL m_processAllRules;
+	int m_traceLevel;
+	void (*m_traceCallback)(const TCHAR *, va_list);
 	
 	const TCHAR *CheckContext(LogParserRule *rule);
+	void Trace(int level, const TCHAR *format, ...);
 
 public:
 	LogParser();
@@ -167,6 +174,9 @@ public:
 
 	int GetProcessedRecordsCount() { return m_recordsProcessed; }
 	int GetMatchedRecordsCount() { return m_recordsMatched; }
+
+	void SetTraceLevel(int level) { m_traceLevel = level; }
+	void SetTraceCallback(void (*cb)(const TCHAR *, va_list)) { m_traceCallback = cb; }
 
 #ifdef _WIN32
 	BOOL MonitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *, ...));

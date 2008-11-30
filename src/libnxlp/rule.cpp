@@ -56,6 +56,7 @@ LogParserRule::LogParserRule(LogParser *parser,
 	m_contextToChange = NULL;
 	m_isInverted = FALSE;
 	m_breakOnMatch = FALSE;
+	m_description = NULL;
 }
 
 
@@ -68,6 +69,7 @@ LogParserRule::~LogParserRule()
 	if (m_isValid)
 		regfree(&m_preg);
 	safe_free(m_pmatch);
+	safe_free(m_description);
 }
 
 

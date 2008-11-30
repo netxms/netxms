@@ -623,6 +623,17 @@ void LIBNETXMS_EXPORTABLE NxWriteAgentLog(int iLevel, const TCHAR *pszFormat, ..
    }
 }
 
+void LIBNETXMS_EXPORTABLE NxWriteAgentLog2(int iLevel, const TCHAR *pszFormat, va_list args)
+{
+   TCHAR szBuffer[4096];
+
+   if (m_pLogFunction != NULL)
+   {
+      _vsntprintf(szBuffer, 4096, pszFormat, args);
+      m_pLogFunction(iLevel, szBuffer);
+   }
+}
+
 
 //
 // Initialize trap sending functions for subagent
