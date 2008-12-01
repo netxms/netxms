@@ -261,6 +261,7 @@
 #define IDA_MAP_MANAGER                 387
 #define IDD_CREATE_NETMAP               388
 #define IDD_OBJECT_CUSTOM_ATTRS         389
+#define IDI_FORWARD_EVENT               390
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -690,6 +691,7 @@
 #define IDC_CHECK_SAVE_GS               1528
 #define IDC_CHECK_REGISTER_AGENTS       1532
 #define IDC_CHECK_ACCESS_FILES          1533
+#define IDC_RADIO_FORWARD               1536
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -996,9 +998,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        390
+#define _APS_NEXT_RESOURCE_VALUE        391
 #define _APS_NEXT_COMMAND_VALUE         33109
-#define _APS_NEXT_CONTROL_VALUE         1536
+#define _APS_NEXT_CONTROL_VALUE         1537
 #define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif

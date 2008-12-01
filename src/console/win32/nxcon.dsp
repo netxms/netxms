@@ -1709,6 +1709,10 @@ SOURCE=.\icons\forward.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icons\fwd_event.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\icons\go_parent.ico
 # End Source File
 # Begin Source File

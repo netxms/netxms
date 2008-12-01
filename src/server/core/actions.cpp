@@ -297,7 +297,7 @@ static THREAD_RESULT THREAD_CALL RunCommandThread(void *pArg)
 static BOOL ForwardEvent(const TCHAR *server, Event *event)
 {
 	ISC *isc;
-	DWORD addr, rcc;
+	DWORD i, addr, rcc;
 
 	addr = ResolveHostName(server);
 	if (addr == INADDR_NONE)
@@ -311,16 +311,32 @@ static BOOL ForwardEvent(const TCHAR *server, Event *event)
 	if (rcc == ISC_ERR_SUCCESS)
 	{
 		CSCPMessage msg;
+		NetObj *object;
 
 		msg.SetId(1);
 		msg.SetCode(CMD_FORWARD_EVENT);
-		if (isc->SendMessage(&msg))
+		object = FindObjectById(event->SourceId());
+		if (object != NULL)
 		{
-			rcc = isc->WaitForRCC(1, 10000);
+			msg.SetVariable(VID_IP_ADDRESS, object->IpAddr());
+			msg.SetVariable(VID_EVENT_CODE, event->Code());
+			msg.SetVariable(VID_USER_TAG, event->UserTag());
+			msg.SetVariable(VID_NUM_ARGS, (WORD)event->GetParametersCount());
+			for(i = 0; i < event->GetParametersCount(); i++)
+				msg.SetVariable(VID_EVENT_ARG_BASE + i, event->GetParameter(i));
+
+			if (isc->SendMessage(&msg))
+			{
+				rcc = isc->WaitForRCC(1, 10000);
+			}
+			else
+			{
+				rcc = ISC_ERR_CONNECTION_BROKEN;
+			}
 		}
 		else
 		{
-			rcc = ISC_ERR_CONNECTION_BROKEN;
+			rcc = ISC_ERR_INTERNAL_ERROR;
 		}
 		isc->Disconnect();
 	}

@@ -37,9 +37,9 @@
 // Externals
 //
 
-void *EF_SetupSession(CSCPMessage *);
-void EF_CloseSession(void *);
-BOOL EF_ProcessMessage(void *, CSCPMessage *, CSCPMessage *);
+BOOL EF_SetupSession(ISCSession *, CSCPMessage *);
+void EF_CloseSession(ISCSession *);
+BOOL EF_ProcessMessage(ISCSession *, CSCPMessage *, CSCPMessage *);
 
 
 //
@@ -49,7 +49,7 @@ BOOL EF_ProcessMessage(void *, CSCPMessage *, CSCPMessage *);
 static ISC_SERVICE m_serviceList[] = 
 {
 	{ ISC_SERVICE_EVENT_FORWARDER, _T("EventForwarder"),
-	  _T("EnableEventForwarder"), EF_SetupSession, EF_CloseSession, EF_ProcessMessage },
+	  _T("ReceiveForwardedEvents"), EF_SetupSession, EF_CloseSession, EF_ProcessMessage },
 	{ 0, NULL, NULL }
 };
 
@@ -58,9 +58,10 @@ static ISC_SERVICE m_serviceList[] =
 // Request processing thread
 //
 
-static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
+static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 {
-   SOCKET sock = CAST_FROM_POINTER(pArg, SOCKET);
+	ISCSession *session = (ISCSession *)arg;
+   SOCKET sock = session->GetSocket();
    int i, err, state = ISC_STATE_INIT;
    CSCP_MESSAGE *pRawMsg, *pRawMsgOut;
    CSCP_BUFFER *pRecvBuffer;
@@ -103,8 +104,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 						// Check if service is enabled
 						if (ConfigReadInt(m_serviceList[i].enableParameter, 0) != 0)
 						{
-							serviceData = m_serviceList[i].setupSession(pRequest);
-							if (serviceData != NULL)
+							if (m_serviceList[i].setupSession(session, pRequest))
 							{
 								response.SetVariable(VID_RCC, ISC_ERR_SUCCESS);
 								state = ISC_STATE_CONNECTED;
@@ -131,7 +131,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 			}
 			else	// Established session
 			{
-				if (m_serviceList[serviceId].processMsg(serviceData, pRequest, &response))
+				if (m_serviceList[serviceId].processMsg(session, pRequest, &response))
 					break;	// Service asks to close session
 			}
 		}
@@ -147,13 +147,14 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
    }
 
 	// Close_session
-	if (serviceData != NULL)
-		m_serviceList[serviceId].closeSession(serviceData);
+	if (state == ISC_STATE_CONNECTED)
+		m_serviceList[serviceId].closeSession(session);
 
    shutdown(sock, 2);
    closesocket(sock);
    free(pRawMsg);
    free(pRecvBuffer);
+	delete (ISCSession *)arg;
    return THREAD_OK;
 }
 
@@ -168,6 +169,7 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
    struct sockaddr_in servAddr;
    int errorCount = 0;
    socklen_t iSize;
+	ISCSession *session;
 
    // Create socket
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -224,7 +226,8 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
       errorCount = 0;     // Reset consecutive errors counter
 
       // Create new session structure and threads
-      ThreadCreate(ProcessingThread, 0, CAST_TO_POINTER(sockClient, void *));
+		session = new ISCSession(sockClient, &servAddr);
+      ThreadCreate(ProcessingThread, 0, session);
    }
 
    closesocket(sock);

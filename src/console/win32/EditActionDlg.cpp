@@ -53,6 +53,7 @@ BEGIN_MESSAGE_MAP(CEditActionDlg, CDialog)
 	ON_BN_CLICKED(IDC_RADIO_EXEC, OnRadioExec)
 	ON_BN_CLICKED(IDC_RADIO_REXEC, OnRadioRexec)
 	ON_BN_CLICKED(IDC_RADIO_SMS, OnRadioSms)
+	ON_BN_CLICKED(IDC_RADIO_FORWARD, OnRadioForward)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -87,19 +88,22 @@ void CEditActionDlg::OnTypeChange()
       { FALSE, FALSE, FALSE, FALSE, TRUE, TRUE },
       { TRUE, TRUE, FALSE, FALSE, TRUE, TRUE },
       { TRUE, TRUE, TRUE, TRUE, TRUE, TRUE },
-      { TRUE, TRUE, FALSE, FALSE, TRUE, TRUE }
+      { TRUE, TRUE, FALSE, FALSE, TRUE, TRUE },
+      { TRUE, TRUE, FALSE, FALSE, FALSE, FALSE }
    };
    static TCHAR *pszRcptTitles[] = 
    { 
       _T("Recipient address"),
       _T("Remote host"),
       _T("Recipient address"),
-      _T("Recipient phone number")
+      _T("Recipient phone number"),
+      _T("Remote NetXMS server")
    };
    static TCHAR *pszDataTitles[] = 
    { 
       _T("Command"),
       _T("Action"),
+      _T("Message text"),
       _T("Message text"),
       _T("Message text")
    };
@@ -118,24 +122,30 @@ void CEditActionDlg::OnTypeChange()
 
 void CEditActionDlg::OnRadioEmail() 
 {
-   m_iType = 2;
+   m_iType = ACTION_SEND_EMAIL;
    OnTypeChange();
 }
 
 void CEditActionDlg::OnRadioExec() 
 {
-   m_iType = 0;
+   m_iType = ACTION_EXEC;
    OnTypeChange();
 }
 
 void CEditActionDlg::OnRadioRexec() 
 {
-   m_iType = 1;
+   m_iType = ACTION_REMOTE;
    OnTypeChange();
 }
 
 void CEditActionDlg::OnRadioSms() 
 {
-   m_iType = 3;
+   m_iType = ACTION_SEND_SMS;
+   OnTypeChange();
+}
+
+void CEditActionDlg::OnRadioForward() 
+{
+   m_iType = ACTION_FORWARD_EVENT;
    OnTypeChange();
 }

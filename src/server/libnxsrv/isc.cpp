@@ -53,10 +53,12 @@ const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(DWORD code)
 		_T("No suitable ciphers found"),
 		_T("Invalid public key"),
 		_T("Invalid session key"),
-		_T("Internal error")
+		_T("Internal error"),
+		_T("Object not found"),
+		_T("Failed to post event")
 	};
 
-	if (code <= ISC_ERR_INTERNAL_ERROR)
+	if (code <= ISC_ERR_POST_EVENT_FAILED)
 		return errorText[code];
    return _T("Unknown error code");
 }

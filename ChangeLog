@@ -2,6 +2,7 @@
 * 0.2.23
 *
 
+- Implemented event forwarding between NetXMS servers
 - Added new subagent LOGWATCH for log monitoring
 - Implemented syslog message monitoring on built-in syslog server
 - New agent configuration parameter: WaitForProcess

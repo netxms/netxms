@@ -26,4 +26,5 @@ EXTRA_DIST = \
 	discovery.ico exit.ico template_root.ico cluster.ico server.ico \
 	cert.ico certmgr.ico topology.ico empty.ico subordinates.ico \
 	redo_layout.ico find.ico next.ico stop.ico situation.ico \
-	instance.ico event_corr.ico package.ico database.ico desktop.ico
+	instance.ico event_corr.ico package.ico database.ico desktop.ico \
+	fwd_event.ico

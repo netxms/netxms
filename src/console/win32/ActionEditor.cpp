@@ -91,6 +91,7 @@ int CActionEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_imageList.Add(AfxGetApp()->LoadIcon(IDI_REXEC));
    m_imageList.Add(AfxGetApp()->LoadIcon(IDI_EMAIL));
    m_imageList.Add(AfxGetApp()->LoadIcon(IDI_SMS));
+   m_imageList.Add(AfxGetApp()->LoadIcon(IDI_FORWARD_EVENT));
    m_iSortImageBase = m_imageList.GetImageCount();
    m_imageList.Add(theApp.LoadIcon(IDI_SORT_UP));
    m_imageList.Add(theApp.LoadIcon(IDI_SORT_DOWN));

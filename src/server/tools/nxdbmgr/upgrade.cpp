@@ -103,6 +103,36 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 
 
 //
+// Upgrade from V83 to V84
+//
+
+static BOOL H_UpgradeFromV83(void)
+{
+	if (!CreateConfigParam(_T("EnableAgentRegistration"), _T("1"), 1, 0))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("AnonymousFileAccess"), _T("0"), 1, 0))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("EnableISCListener"), _T("0"), 1, 1))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("ReceiveForwardedEvents"), _T("0"), 1, 0))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='84' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V82 to V83
 //
 
@@ -3696,6 +3726,7 @@ static struct
    { 80, H_UpgradeFromV80 },
    { 81, H_UpgradeFromV81 },
    { 82, H_UpgradeFromV82 },
+   { 83, H_UpgradeFromV83 },
    { 0, NULL }
 };
 

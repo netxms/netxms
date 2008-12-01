@@ -152,6 +152,7 @@ int CEventPolicyEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_pImageList->Add(theApp.LoadIcon(IDI_REXEC));
    m_pImageList->Add(theApp.LoadIcon(IDI_EMAIL));
    m_pImageList->Add(theApp.LoadIcon(IDI_SMS));
+   m_pImageList->Add(theApp.LoadIcon(IDI_FORWARD_EVENT));
    m_iImageOptionsBase = m_pImageList->GetImageCount();
    m_pImageList->Add(theApp.LoadIcon(IDI_STOP));
 	

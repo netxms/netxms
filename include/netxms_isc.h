@@ -64,6 +64,35 @@
 #define ISC_ERR_INVALID_SESSION_KEY    ((DWORD)14)
 #define ISC_ERR_INTERNAL_ERROR         ((DWORD)15)
 #define ISC_ERR_SESSION_SETUP_FAILED   ((DWORD)16)
+#define ISC_ERR_OBJECT_NOT_FOUND       ((DWORD)17)
+#define ISC_ERR_POST_EVENT_FAILED      ((DWORD)18)
+
+
+//
+// ISC session
+//
+
+class ISCSession
+{
+private:
+	SOCKET m_socket;
+	DWORD m_peerAddress;	// Peer address in host byte order
+	void *m_userData;
+
+public:
+	ISCSession(SOCKET sock, struct sockaddr_in *addr)
+	{
+		m_socket = sock;
+		m_peerAddress = ntohl(addr->sin_addr.s_addr);
+		m_userData = NULL;
+	}
+
+	SOCKET GetSocket() { return m_socket; }
+	DWORD GetPeerAddress() { return m_peerAddress; }
+
+	void SetUserData(void *data) { m_userData = data; }
+	void *GetUserData() { return m_userData; }
+};
 
 
 //
@@ -75,9 +104,9 @@ typedef struct
 	DWORD id;								// Service ID
 	const TCHAR *name;					// Name
 	const TCHAR *enableParameter;		// Server parameter to be set to enable service
-	void *(*setupSession)(CSCPMessage *);  // Session setup handler
-	void (*closeSession)(void *);          // Session close handler
-	BOOL (*processMsg)(void *, CSCPMessage *, CSCPMessage *);
+	BOOL (*setupSession)(ISCSession *, CSCPMessage *);  // Session setup handler
+	void (*closeSession)(ISCSession *);          // Session close handler
+	BOOL (*processMsg)(ISCSession *, CSCPMessage *, CSCPMessage *);
 } ISC_SERVICE;
 
 

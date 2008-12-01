@@ -101,7 +101,7 @@ TCHAR *g_szObjectClass[] = { _T("Generic"), _T("Subnet"), _T("Node"), _T("Interf
                              _T("Container"), _T("Zone"), _T("ServiceRoot"), _T("Template"), 
                              _T("TemplateGroup"), _T("TemplateRoot"), _T("NetworkService"),
                              _T("VPNConnector"), _T("Condition"), _T("Cluster") };
-TCHAR *g_szActionType[] = { _T("Execute"), _T("Remote"), _T("E-Mail"), _T("SMS") };
+TCHAR *g_szActionType[] = { _T("Execute"), _T("Remote"), _T("E-Mail"), _T("SMS"), _T("Forward") };
 TCHAR *g_szServiceType[] = { _T("User-defined"), _T("SSH"), _T("POP3"), _T("SMTP"),
                              _T("FTP"), _T("HTTP"), NULL };
 TCHAR *g_szDeploymentStatus[] = { _T("Pending"), _T("Uploading package"),

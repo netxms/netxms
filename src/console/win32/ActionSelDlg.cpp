@@ -68,6 +68,7 @@ BOOL CActionSelDlg::OnInitDialog()
    m_imageList.Add(AfxGetApp()->LoadIcon(IDI_REXEC));
    m_imageList.Add(AfxGetApp()->LoadIcon(IDI_EMAIL));
    m_imageList.Add(AfxGetApp()->LoadIcon(IDI_SMS));
+   m_imageList.Add(AfxGetApp()->LoadIcon(IDI_FORWARD_EVENT));
 
    // Setup list control
    m_wndListCtrl.SetImageList(&m_imageList, LVSIL_SMALL);

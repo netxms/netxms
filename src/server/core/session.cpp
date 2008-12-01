@@ -4435,7 +4435,7 @@ void ClientSession::OnTrap(CSCPMessage *pRequest)
    int i, iNumArgs;
    NetObj *pObject;
    TCHAR *pszArgList[32], szUserTag[MAX_USERTAG_LENGTH] = _T("");
-   TCHAR szFormat[] = "ssssssssssssssssssssssssssssssss";
+   char szFormat[] = "ssssssssssssssssssssssssssssssss";
    BOOL bSuccess;
 
    // Prepare response message
@@ -4474,7 +4474,7 @@ void ClientSession::OnTrap(CSCPMessage *pRequest)
          
          // Cleanup
          for(i = 0; i < iNumArgs; i++)
-            free(pszArgList[i]);
+            safe_free(pszArgList[i]);
 
          msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_INVALID_EVENT_CODE);
       }

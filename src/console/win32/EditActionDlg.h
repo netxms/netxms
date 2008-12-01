@@ -45,6 +45,7 @@ protected:
 	afx_msg void OnRadioExec();
 	afx_msg void OnRadioRexec();
 	afx_msg void OnRadioSms();
+	afx_msg void OnRadioForward();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

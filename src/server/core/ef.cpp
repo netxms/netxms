@@ -27,9 +27,9 @@
 // Setup event forwarding session
 //
 
-void *EF_SetupSession(CSCPMessage *request)
+BOOL EF_SetupSession(ISCSession *, CSCPMessage *request)
 {
-	return NULL;
+	return TRUE;
 }
 
 
@@ -37,7 +37,7 @@ void *EF_SetupSession(CSCPMessage *request)
 // Close event forwarding session
 //
 
-void EF_CloseSession(void *sd)
+void EF_CloseSession(ISCSession *)
 {
 }
 
@@ -46,13 +46,60 @@ void EF_CloseSession(void *sd)
 // Process event forwarding session message
 //
 
-BOOL EF_ProcessMessage(void *sd, CSCPMessage *request, CSCPMessage *response)
+BOOL EF_ProcessMessage(ISCSession *session, CSCPMessage *request, CSCPMessage *response)
 {
-	DWORD code, objectIp;
+	int i, numArgs;
+	DWORD code, id;
+	TCHAR userTag[MAX_USERTAG_LENGTH], *argList[32];
+   char format[] = "ssssssssssssssssssssssssssssssss";
+	NetObj *object;
 
 	if (request->GetCode() == CMD_FORWARD_EVENT)
 	{
-		code = request->GetVariableLong(VID_EVENT_CODE);
+		DbgPrintf(4, _T("Event forwarding request from %s"), IpToStr(session->GetPeerAddress(), userTag));
+		
+		id = request->GetVariableLong(VID_OBJECT_ID);
+		if (id != 0)
+			object = FindObjectById(id);  // Object is specified explicitely
+		else
+			object = FindNodeByIP(request->GetVariableLong(VID_IP_ADDRESS));	// Object is specified by IP address
+		
+		if (object != NULL)
+		{
+			code = request->GetVariableLong(VID_EVENT_CODE);
+			request->GetVariableStr(VID_USER_TAG, userTag, MAX_USERTAG_LENGTH);
+			numArgs = request->GetVariableShort(VID_NUM_ARGS);
+			if (numArgs > 32)
+				numArgs = 32;
+			for(i = 0; i < numArgs; i++)
+				argList[i] = request->GetVariableStr(VID_EVENT_ARG_BASE + i);
+
+			format[numArgs] = 0;
+			if (PostEventWithTag(code, object->Id(), userTag, (numArgs > 0) ? format : NULL,
+			                     argList[0], argList[1], argList[2], argList[3],
+										argList[4], argList[5], argList[6], argList[7],
+										argList[8], argList[9], argList[10], argList[11],
+										argList[12], argList[13], argList[14], argList[15],
+										argList[16], argList[17], argList[18], argList[19],
+										argList[20], argList[21], argList[22], argList[23],
+										argList[24], argList[25], argList[26], argList[27],
+										argList[28], argList[29], argList[30], argList[31]))
+			{
+				response->SetVariable(VID_RCC, ISC_ERR_SUCCESS);
+			}
+			else
+			{
+				response->SetVariable(VID_RCC, ISC_ERR_OBJECT_NOT_FOUND);
+			}
+      
+			// Cleanup
+			for(i = 0; i < numArgs; i++)
+				safe_free(argList[i]);
+		}
+		else
+		{
+			response->SetVariable(VID_RCC, ISC_ERR_OBJECT_NOT_FOUND);
+		}
 	}
 	else
 	{

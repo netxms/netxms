@@ -651,7 +651,8 @@ retry_db_lock:
 	ThreadCreate(BeaconPoller, 0, NULL);
 
 	// Start inter-server communication listener
-	ThreadCreate(ISCListener, 0, NULL);
+	if (ConfigReadInt("EnableISCListener", 0))
+		ThreadCreate(ISCListener, 0, NULL);
 
 	// Allow clients to connect
 	ThreadCreate(ClientListener, 0, NULL);
