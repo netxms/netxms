@@ -82,7 +82,10 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
    {
       err = RecvNXCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL, INFINITE);
       if (err <= 0)
+		{
+         DbgPrintf(5, _T("%s RecvNXCPMessage() failed"), dbgPrefix);
          break;   // Communication error or closed connection
+		}
 
       if (err == 1)
          continue;   // Too big message
