@@ -84,7 +84,12 @@ BOOL LogParserRule::Match(const char *line, LOG_PARSER_CALLBACK cb, DWORD object
 
 	if (m_isInverted)
 	{
-		return regexec(&m_preg, line, 0, NULL, 0) != 0;
+		if (regexec(&m_preg, line, 0, NULL, 0) != 0)
+		{
+			if ((cb != NULL) && (m_event != 0))
+				cb(m_event, line, 0, NULL, objectId, userArg);
+			return TRUE;
+		}
 	}
 	else
 	{
