@@ -68,8 +68,11 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
    CSCPMessage *pRequest, response;
    DWORD serviceId;
 	void *serviceData = NULL;
-	TCHAR buffer[256], ipAddr[32];
+	TCHAR buffer[256], dbgPrefix[128];
+	WORD wFlags;
    static CSCP_ENCRYPTION_CONTEXT *pDummyCtx = NULL;
+
+	_sntprintf(dbgPrefix, 128, _T("ISC<%s>:"), IpToStr(session->GetPeerAddress(), buffer));
 
    pRawMsg = (CSCP_MESSAGE *)malloc(MAX_MSG_SIZE);
    pRecvBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
@@ -84,76 +87,99 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
       if (err == 1)
          continue;   // Too big message
 
-      pRequest = new CSCPMessage(pRawMsg);
-		DbgPrintf(5, _T("ISC(%s): message %s received"), IpToStr(session->GetPeerAddress(), ipAddr), NXCPMessageCodeName(pRequest->GetCode(), buffer));
-		if (pRequest->GetCode() == CMD_KEEPALIVE)
-		{
-			response.SetVariable(VID_RCC, ISC_ERR_SUCCESS);
-		}
+      wFlags = ntohs(pRawMsg->wFlags);
+      if (wFlags & MF_CONTROL)
+      {
+         // Convert message header to host format
+         pRawMsg->dwId = ntohl(pRawMsg->dwId);
+         pRawMsg->wCode = ntohs(pRawMsg->wCode);
+         pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
+         DbgPrintf(5, _T("%s received control message %s"), dbgPrefix, NXCPMessageCodeName(pRawMsg->wCode, buffer));
+
+         if (pRawMsg->wCode == CMD_GET_NXCP_CAPS)
+         {
+            pRawMsgOut = (CSCP_MESSAGE *)malloc(CSCP_HEADER_SIZE);
+            pRawMsgOut->dwId = htonl(pRawMsg->dwId);
+            pRawMsgOut->wCode = htons((WORD)CMD_NXCP_CAPS);
+            pRawMsgOut->wFlags = htons(MF_CONTROL);
+            pRawMsgOut->dwNumVars = htonl(NXCP_VERSION << 24);
+            pRawMsgOut->dwSize = htonl(CSCP_HEADER_SIZE);
+				SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0);
+         }
+      }
 		else
 		{
-			if (state == ISC_STATE_INIT)
+			pRequest = new CSCPMessage(pRawMsg);
+			DbgPrintf(5, _T("%s message %s received"), dbgPrefix, NXCPMessageCodeName(pRequest->GetCode(), buffer));
+			if (pRequest->GetCode() == CMD_KEEPALIVE)
 			{
-				if (pRequest->GetCode() == CMD_ISC_CONNECT_TO_SERVICE)
+				response.SetVariable(VID_RCC, ISC_ERR_SUCCESS);
+			}
+			else
+			{
+				if (state == ISC_STATE_INIT)
 				{
-					// Find requested service
-      			serviceId = pRequest->GetVariableLong(VID_SERVICE_ID);
-					DbgPrintf(4, _T("ISC(%s): attempt to connect to service %d"), IpToStr(session->GetPeerAddress(), ipAddr), serviceId);
-					for(i = 0; m_serviceList[i].id != 0; i++)
-						if (m_serviceList[i].id == serviceId)
-							break;
-					if (m_serviceList[i].id != 0)
+					if (pRequest->GetCode() == CMD_ISC_CONNECT_TO_SERVICE)
 					{
-						// Check if service is enabled
-						if (ConfigReadInt(m_serviceList[i].enableParameter, 0) != 0)
+						// Find requested service
+      				serviceId = pRequest->GetVariableLong(VID_SERVICE_ID);
+						DbgPrintf(4, _T("%s attempt to connect to service %d"), dbgPrefix, serviceId);
+						for(i = 0; m_serviceList[i].id != 0; i++)
+							if (m_serviceList[i].id == serviceId)
+								break;
+						if (m_serviceList[i].id != 0)
 						{
-							if (m_serviceList[i].setupSession(session, pRequest))
+							// Check if service is enabled
+							if (ConfigReadInt(m_serviceList[i].enableParameter, 0) != 0)
 							{
-								response.SetVariable(VID_RCC, ISC_ERR_SUCCESS);
-								state = ISC_STATE_CONNECTED;
-								DbgPrintf(4, _T("ISC(%s): connected to service %d"), IpToStr(session->GetPeerAddress(), ipAddr), serviceId);
+								if (m_serviceList[i].setupSession(session, pRequest))
+								{
+									response.SetVariable(VID_RCC, ISC_ERR_SUCCESS);
+									state = ISC_STATE_CONNECTED;
+									DbgPrintf(4, _T("%s connected to service %d"), dbgPrefix, serviceId);
+								}
+								else
+								{
+									response.SetVariable(VID_RCC, ISC_ERR_SESSION_SETUP_FAILED);
+								}
 							}
 							else
 							{
-								response.SetVariable(VID_RCC, ISC_ERR_SESSION_SETUP_FAILED);
+								response.SetVariable(VID_RCC, ISC_ERR_SERVICE_DISABLED);
 							}
 						}
 						else
 						{
-							response.SetVariable(VID_RCC, ISC_ERR_SERVICE_DISABLED);
+							response.SetVariable(VID_RCC, ISC_ERR_UNKNOWN_SERVICE);
 						}
 					}
 					else
 					{
-						response.SetVariable(VID_RCC, ISC_ERR_UNKNOWN_SERVICE);
+						response.SetVariable(VID_RCC, ISC_ERR_REQUEST_OUT_OF_STATE);
 					}
 				}
-				else
+				else	// Established session
 				{
-					response.SetVariable(VID_RCC, ISC_ERR_REQUEST_OUT_OF_STATE);
+					if (m_serviceList[serviceId].processMsg(session, pRequest, &response))
+						break;	// Service asks to close session
 				}
 			}
-			else	// Established session
-			{
-				if (m_serviceList[serviceId].processMsg(session, pRequest, &response))
-					break;	// Service asks to close session
-			}
-		}
-		
-		response.SetId(pRequest->GetId());
-      response.SetCode(CMD_REQUEST_COMPLETED);
-      pRawMsgOut = response.CreateMessage();
-      SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0);
+			
+			response.SetId(pRequest->GetId());
+			response.SetCode(CMD_REQUEST_COMPLETED);
+			pRawMsgOut = response.CreateMessage();
+			SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0);
       
-		response.DeleteAllVariables();
-      free(pRawMsgOut);
-      delete pRequest;
+			response.DeleteAllVariables();
+			free(pRawMsgOut);
+			delete pRequest;
+		}
    }
 
 	// Close_session
 	if (state == ISC_STATE_CONNECTED)
 		m_serviceList[serviceId].closeSession(session);
-	DbgPrintf(3, _T("ISC(%s): session closed"), IpToStr(session->GetPeerAddress(), ipAddr));
+	DbgPrintf(3, _T("%s session closed"), dbgPrefix);
 
    shutdown(sock, 2);
    closesocket(sock);
