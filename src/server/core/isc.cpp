@@ -68,6 +68,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
    CSCPMessage *pRequest, response;
    DWORD serviceId;
 	void *serviceData = NULL;
+	TCHAR buffer[256], ipAddr[32];
    static CSCP_ENCRYPTION_CONTEXT *pDummyCtx = NULL;
 
    pRawMsg = (CSCP_MESSAGE *)malloc(MAX_MSG_SIZE);
@@ -84,6 +85,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
          continue;   // Too big message
 
       pRequest = new CSCPMessage(pRawMsg);
+		DbgPrintf(5, _T("ISC(%s): message %s received"), IpToStr(session->GetPeerAddress(), ipAddr), NXCPMessageCodeName(pRequest->GetCode(), buffer));
 		if (pRequest->GetCode() == CMD_KEEPALIVE)
 		{
 			response.SetVariable(VID_RCC, ISC_ERR_SUCCESS);
@@ -96,6 +98,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 				{
 					// Find requested service
       			serviceId = pRequest->GetVariableLong(VID_SERVICE_ID);
+					DbgPrintf(4, _T("ISC(%s): attempt to connect to service %d"), IpToStr(session->GetPeerAddress(), ipAddr), serviceId);
 					for(i = 0; m_serviceList[i].id != 0; i++)
 						if (m_serviceList[i].id == serviceId)
 							break;
@@ -108,6 +111,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 							{
 								response.SetVariable(VID_RCC, ISC_ERR_SUCCESS);
 								state = ISC_STATE_CONNECTED;
+								DbgPrintf(4, _T("ISC(%s): connected to service %d"), IpToStr(session->GetPeerAddress(), ipAddr), serviceId);
 							}
 							else
 							{
@@ -149,6 +153,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 	// Close_session
 	if (state == ISC_STATE_CONNECTED)
 		m_serviceList[serviceId].closeSession(session);
+	DbgPrintf(3, _T("ISC(%s): session closed"), IpToStr(session->GetPeerAddress(), ipAddr));
 
    shutdown(sock, 2);
    closesocket(sock);
@@ -170,6 +175,7 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
    int errorCount = 0;
    socklen_t iSize;
 	ISCSession *session;
+	TCHAR buffer[32];
 
    // Create socket
    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -197,6 +203,7 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
 
    // Set up queue
    listen(sock, SOMAXCONN);
+	DbgPrintf(1, _T("ISC listener started"));
 
    // Wait for connection requests
    while(!ShutdownInProgress())
@@ -226,11 +233,13 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
       errorCount = 0;     // Reset consecutive errors counter
 
       // Create new session structure and threads
+		DbgPrintf(3, _T("New ISC connection from %s"), IpToStr(ntohl(servAddr.sin_addr.s_addr), buffer));
 		session = new ISCSession(sockClient, &servAddr);
       ThreadCreate(ProcessingThread, 0, session);
    }
 
    closesocket(sock);
+	DbgPrintf(1, _T("ISC listener stopped"));
    return THREAD_OK;
 }
 
