@@ -642,7 +642,7 @@ SOURCE=.\radius.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\rwlock.h
+SOURCE=..\..\..\include\rwlock.h
 # End Source File
 # Begin Source File
 

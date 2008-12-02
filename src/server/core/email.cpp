@@ -262,7 +262,8 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                      // subject
                      sprintf(szBuffer, "Subject: %s\r\n", pszSubject);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
-                     // date
+                     
+							// date
                      time_t currentTime;
 							struct tm *pCurrentTM;
                      time(&currentTime);
@@ -273,7 +274,18 @@ static DWORD SendMail(char *pszRcpt, char *pszSubject, char *pszText)
 #else
                      pCurrentTM = localtime(&currentTime);
 #endif
+#ifdef _WIN32
+                     strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S ", pCurrentTM);
+
+							TIME_ZONE_INFORMATION tzi;
+							GetTimeZoneInformation(&tzi);
+							int offset = abs(tzi.Bias);
+							sprintf(&szBuffer[strlen(szBuffer)], "%c%02d%02d\r\n", tzi.Bias < 0 ? '+' : '-',
+							        offset / 60, offset % 60);
+#else
                      strftime(szBuffer, sizeof(szBuffer), "Date: %a, %d %b %Y %H:%M:%S %z\r\n", pCurrentTM);
+#endif
+
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0);
                      // content-type
                      sprintf(szBuffer, "Content-Type: text/plain; charset=%s\r\n"

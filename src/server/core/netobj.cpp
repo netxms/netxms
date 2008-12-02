@@ -80,10 +80,8 @@ NetObj::~NetObj()
    MutexDestroy(m_mutexACL);
    RWLockDestroy(m_rwlockParentList);
    RWLockDestroy(m_rwlockChildList);
-   if (m_pChildList != NULL)
-      free(m_pChildList);
-   if (m_pParentList != NULL)
-      free(m_pParentList);
+   safe_free(m_pChildList);
+   safe_free(m_pParentList);
    delete m_pAccessList;
 	safe_free(m_pdwTrustedNodes);
    safe_free(m_pszComments);
@@ -231,8 +229,8 @@ BOOL NetObj::SaveCommonProperties(DB_HANDLE hdb)
    {
       for(i = 0, j = 0; i < 4; i++, j += 2)
       {
-         _stprintf(&szTranslation[j], _T("%02X"), (char)m_iStatusTranslation[i]);
-         _stprintf(&szThresholds[j], _T("%02X"), (char)m_iStatusThresholds[i]);
+         _sntprintf(&szTranslation[j], 16 - j, _T("%02X"), (BYTE)m_iStatusTranslation[i]);
+         _sntprintf(&szThresholds[j], 16 - j, _T("%02X"), (BYTE)m_iStatusThresholds[i]);
       }
       pszEscComments = EncodeSQLString(CHECK_NULL_EX(m_pszComments));
       if (_tcslen(pszEscComments) > 15500)

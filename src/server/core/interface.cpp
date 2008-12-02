@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -180,7 +180,7 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
 
    // Check for object's existence in database
-   sprintf(szQuery, "SELECT id FROM interfaces WHERE id=%d", m_dwId);
+   _sntprintf(szQuery, 1024, _T("SELECT id FROM interfaces WHERE id=%d"), m_dwId);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -199,18 +199,18 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
    // Form and execute INSERT or UPDATE query
    BinToStr(m_bMacAddr, MAC_ADDR_LENGTH, szMacStr);
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO interfaces (id,ip_addr,"
-                       "ip_netmask,node_id,if_type,if_index,mac_addr,synthetic_mask,required_polls) "
-                       "VALUES (%d,'%s','%s',%d,%d,%d,'%s',%d,%d)",
+      _sntprintf(szQuery, 1024, _T("INSERT INTO interfaces (id,ip_addr,")
+                       _T("ip_netmask,node_id,if_type,if_index,mac_addr,synthetic_mask,required_polls) ")
+                       _T("VALUES (%d,'%s','%s',%d,%d,%d,'%s',%d,%d)"),
               m_dwId, IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), dwNodeId,
               m_dwIfType, m_dwIfIndex, szMacStr, m_bSyntheticMask,
 				  m_iRequiredPollCount);
    else
-      sprintf(szQuery, "UPDATE interfaces SET ip_addr='%s',ip_netmask='%s',"
-                       "node_id=%d,if_type=%d,if_index=%d,"
-                       "mac_addr='%s',synthetic_mask=%d,"
-							  "required_polls=%d WHERE id=%d",
+      _sntprintf(szQuery, 1024, _T("UPDATE interfaces SET ip_addr='%s',ip_netmask='%s',")
+                       _T("node_id=%d,if_type=%d,if_index=%d,")
+                       _T("mac_addr='%s',synthetic_mask=%d,")
+							  _T("required_polls=%d WHERE id=%d"),
               IpToStr(m_dwIpAddr, szIpAddr),
               IpToStr(m_dwIpNetMask, szNetMask), dwNodeId,
               m_dwIfType, m_dwIfIndex, szMacStr, m_bSyntheticMask,
@@ -240,7 +240,7 @@ BOOL Interface::DeleteFromDB(void)
    bSuccess = NetObj::DeleteFromDB();
    if (bSuccess)
    {
-      sprintf(szQuery, "DELETE FROM interfaces WHERE id=%d", m_dwId);
+      _sntprintf(szQuery, 128, _T("DELETE FROM interfaces WHERE id=%d"), m_dwId);
       QueueSQLRequest(szQuery);
    }
    return bSuccess;
