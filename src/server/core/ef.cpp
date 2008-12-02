@@ -53,6 +53,7 @@ BOOL EF_ProcessMessage(ISCSession *session, CSCPMessage *request, CSCPMessage *r
 	TCHAR userTag[MAX_USERTAG_LENGTH], *argList[32];
    char format[] = "ssssssssssssssssssssssssssssssss";
 	NetObj *object;
+	BOOL tagExist;
 
 	if (request->GetCode() == CMD_FORWARD_EVENT)
 	{
@@ -67,15 +68,18 @@ BOOL EF_ProcessMessage(ISCSession *session, CSCPMessage *request, CSCPMessage *r
 		if (object != NULL)
 		{
 			code = request->GetVariableLong(VID_EVENT_CODE);
-			request->GetVariableStr(VID_USER_TAG, userTag, MAX_USERTAG_LENGTH);
 			numArgs = request->GetVariableShort(VID_NUM_ARGS);
 			if (numArgs > 32)
 				numArgs = 32;
 			for(i = 0; i < numArgs; i++)
 				argList[i] = request->GetVariableStr(VID_EVENT_ARG_BASE + i);
+			tagExist = request->IsVariableExist(VID_USER_TAG);
+			if (tagExist)
+				request->GetVariableStr(VID_USER_TAG, userTag, MAX_USERTAG_LENGTH);
 
 			format[numArgs] = 0;
-			if (PostEventWithTag(code, object->Id(), userTag, (numArgs > 0) ? format : NULL,
+			if (PostEventWithTag(code, object->Id(), tagExist ? userTag : NULL,
+			                     (numArgs > 0) ? format : NULL,
 			                     argList[0], argList[1], argList[2], argList[3],
 										argList[4], argList[5], argList[6], argList[7],
 										argList[8], argList[9], argList[10], argList[11],
