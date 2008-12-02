@@ -83,7 +83,10 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
       err = RecvNXCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL, INFINITE);
       if (err <= 0)
 		{
-         DbgPrintf(5, _T("%s RecvNXCPMessage() failed: %s"), dbgPrefix, strerror(WSAGetLastError()));
+			if (err == -1)
+         	DbgPrintf(5, _T("%s RecvNXCPMessage() failed: syserr=%s"), dbgPrefix, strerror(WSAGetLastError()));
+			else
+         	DbgPrintf(5, _T("%s connection closed"), dbgPrefix);
          break;   // Communication error or closed connection
 		}
 
