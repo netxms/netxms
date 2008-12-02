@@ -6,4 +6,5 @@ netxmsd_LDADD = ../../libnetxms/libnetxms.la ../../libnxsnmp/libnxsnmp.la ../../
 
 EXTRA_DIST = \
 	netxmsd.dsp netxmsd.dsw \
-   netxmsd.h
+	netxmsd.h \
+	winsrv.cpp
