@@ -62,7 +62,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 {
 	ISCSession *session = (ISCSession *)arg;
    SOCKET sock = session->GetSocket();
-   int i, err, state = ISC_STATE_INIT;
+   int i, err, serviceIndex, state = ISC_STATE_INIT;
    CSCP_MESSAGE *pRawMsg, *pRawMsgOut;
    CSCP_BUFFER *pRecvBuffer;
    CSCPMessage *pRequest, response;
@@ -144,6 +144,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 								{
 									response.SetVariable(VID_RCC, ISC_ERR_SUCCESS);
 									state = ISC_STATE_CONNECTED;
+									serviceIndex = i;
 									DbgPrintf(4, _T("%s connected to service %d"), dbgPrefix, serviceId);
 								}
 								else
@@ -169,7 +170,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 				}
 				else	// Established session
 				{
-					if (m_serviceList[serviceId].processMsg(session, pRequest, &response))
+					if (m_serviceList[serviceIndex].processMsg(session, pRequest, &response))
 						break;	// Service asks to close session
 				}
 			}
@@ -189,7 +190,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 
 	// Close_session
 	if (state == ISC_STATE_CONNECTED)
-		m_serviceList[serviceId].closeSession(session);
+		m_serviceList[serviceIndex].closeSession(session);
 	DbgPrintf(3, _T("%s session closed"), dbgPrefix);
 
    shutdown(sock, 2);

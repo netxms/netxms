@@ -327,7 +327,6 @@ DWORD ISC::Connect(DWORD service, RSA *pServerKey, BOOL requireEncryption)
                IpToStr(ntohl(m_addr), szBuffer));
       goto connect_cleanup;
    }
-printf("protocol version %d\n", m_protocolVersion);
 
    if (m_protocolVersion > NXCP_VERSION)
    {
@@ -339,7 +338,6 @@ printf("protocol version %d\n", m_protocolVersion);
 
    // Start receiver thread
    m_hReceiverThread = ThreadCreateEx(ReceiverThreadStarter, 0, this);
-printf("receiver thread started\n");
 
    // Setup encryption
 setup_encryption:
@@ -405,7 +403,7 @@ connect_cleanup:
       Unlock();
    }
 
-   return rcc == ISC_ERR_SUCCESS;
+   return rcc;
 }
 
 
@@ -418,7 +416,6 @@ void ISC::Disconnect()
    Lock();
    if (m_socket != -1)
    {
-printf("disconnect\n");
       shutdown(m_socket, SHUT_RDWR);
 	   m_flags &= ~ISCF_IS_CONNECTED;;
    }
@@ -474,7 +471,6 @@ DWORD ISC::WaitForRCC(DWORD rqId, DWORD timeOut)
    pMsg = m_msgWaitQueue->WaitForMessage(CMD_REQUEST_COMPLETED, rqId, timeOut);
    if (pMsg != NULL)
    {
-printf("WaitForMessage OK\n");
       dwRetCode = pMsg->GetVariableLong(VID_RCC);
       delete pMsg;
    }
