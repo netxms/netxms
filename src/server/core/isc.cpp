@@ -107,7 +107,9 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
             pRawMsgOut->wFlags = htons(MF_CONTROL);
             pRawMsgOut->dwNumVars = htonl(NXCP_VERSION << 24);
             pRawMsgOut->dwSize = htonl(CSCP_HEADER_SIZE);
-				SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0);
+				if (SendEx(sock, pRawMsgOut, CSCP_HEADER_SIZE, 0) != CSCP_HEADER_SIZE)
+					DbgPrintf(5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, strerror(WSAGetLastError()));
+				free(pRawMsgOut);
          }
       }
 		else
@@ -171,7 +173,8 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 			response.SetId(pRequest->GetId());
 			response.SetCode(CMD_REQUEST_COMPLETED);
 			pRawMsgOut = response.CreateMessage();
-			SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0);
+			if (SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0) != (int)ntohl(pRawMsgOut->dwSize))
+				DbgPrintf(5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, strerror(WSAGetLastError()));
       
 			response.DeleteAllVariables();
 			free(pRawMsgOut);
@@ -249,7 +252,7 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
          error = errno;
          if (error != EINTR)
 #endif
-            nxlog_write(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
+				nxlog_write(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
          errorCount++;
          if (errorCount > 1000)
          {
@@ -258,13 +261,15 @@ THREAD_RESULT THREAD_CALL ISCListener(void *pArg)
          }
          ThreadSleepMs(500);
       }
+		else
+		{
+			errorCount = 0;     // Reset consecutive errors counter
 
-      errorCount = 0;     // Reset consecutive errors counter
-
-      // Create new session structure and threads
-		DbgPrintf(3, _T("New ISC connection from %s"), IpToStr(ntohl(servAddr.sin_addr.s_addr), buffer));
-		session = new ISCSession(sockClient, &servAddr);
-      ThreadCreate(ProcessingThread, 0, session);
+			// Create new session structure and threads
+			DbgPrintf(3, _T("New ISC connection from %s"), IpToStr(ntohl(servAddr.sin_addr.s_addr), buffer));
+			session = new ISCSession(sockClient, &servAddr);
+			ThreadCreate(ProcessingThread, 0, session);
+		}
    }
 
    closesocket(sock);
