@@ -89,7 +89,7 @@ BOOL EF_ProcessMessage(ISCSession *session, CSCPMessage *request, CSCPMessage *r
 			}
 			else
 			{
-				response->SetVariable(VID_RCC, ISC_ERR_OBJECT_NOT_FOUND);
+				response->SetVariable(VID_RCC, ISC_ERR_POST_EVENT_FAILED);
 			}
       
 			// Cleanup

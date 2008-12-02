@@ -54,6 +54,7 @@ const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(DWORD code)
 		_T("Invalid public key"),
 		_T("Invalid session key"),
 		_T("Internal error"),
+		_T("Session setup failed"),
 		_T("Object not found"),
 		_T("Failed to post event")
 	};
