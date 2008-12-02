@@ -190,12 +190,14 @@ void ISC::ReceiverThread(void)
       Lock();
 		nSocket = m_socket;
 		Unlock();
+printf("receiving on %d\n",nSocket);
       if ((err = RecvNXCPMessage(nSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
                                  &m_ctx, pDecryptionBuffer, m_recvTimeout)) <= 0)
 		{
 			PrintMsg(_T("ISC::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), err, WSAGetLastError());
          break;
 		}
+printf("err=%d\n",err);
 
       // Check if we get too large message
       if (err == 1)
@@ -271,8 +273,8 @@ DWORD ISC::Connect(DWORD service, RSA *pServerKey, BOOL requireEncryption)
 {
    struct sockaddr_in sa;
    TCHAR szBuffer[256];
-   BOOL bSuccess = FALSE, bForceEncryption = FALSE, bSecondPass = FALSE;
-   DWORD rcc;
+   BOOL bForceEncryption = FALSE, bSecondPass = FALSE;
+   DWORD rcc = ISC_ERR_INTERNAL_ERROR;
 
    // Check if already connected
    if (m_flags & ISCF_IS_CONNECTED)
@@ -325,6 +327,7 @@ DWORD ISC::Connect(DWORD service, RSA *pServerKey, BOOL requireEncryption)
                IpToStr(ntohl(m_addr), szBuffer));
       goto connect_cleanup;
    }
+printf("protocol version %d\n", m_protocolVersion);
 
    if (m_protocolVersion > NXCP_VERSION)
    {
@@ -336,6 +339,7 @@ DWORD ISC::Connect(DWORD service, RSA *pServerKey, BOOL requireEncryption)
 
    // Start receiver thread
    m_hReceiverThread = ThreadCreateEx(ReceiverThreadStarter, 0, this);
+printf("receiver thread started\n");
 
    // Setup encryption
 setup_encryption:
@@ -362,6 +366,7 @@ setup_encryption:
    }
 
    // Test connectivity
+	m_flags |= ISCF_IS_CONNECTED;
    if ((rcc = Nop()) != ERR_SUCCESS)
    {
       if (rcc == ISC_ERR_ENCRYPTION_REQUIRED)
@@ -374,12 +379,13 @@ setup_encryption:
       goto connect_cleanup;
    }
 
-   rcc = ISC_ERR_SUCCESS;
+   rcc = ConnectToService(service);
 
 connect_cleanup:
-   if (!bSuccess)
+   if (rcc != ISC_ERR_SUCCESS)
    {
       Lock();
+		m_flags &= ~ISCF_IS_CONNECTED;
       if (m_socket != -1)
          shutdown(m_socket, SHUT_RDWR);
       Unlock();
@@ -399,7 +405,7 @@ connect_cleanup:
       Unlock();
    }
 
-   return rcc;
+   return rcc == ISC_ERR_SUCCESS;
 }
 
 
@@ -412,6 +418,7 @@ void ISC::Disconnect()
    Lock();
    if (m_socket != -1)
    {
+printf("disconnect\n");
       shutdown(m_socket, SHUT_RDWR);
 	   m_flags &= ~ISCF_IS_CONNECTED;;
    }
@@ -467,6 +474,7 @@ DWORD ISC::WaitForRCC(DWORD rqId, DWORD timeOut)
    pMsg = m_msgWaitQueue->WaitForMessage(CMD_REQUEST_COMPLETED, rqId, timeOut);
    if (pMsg != NULL)
    {
+printf("WaitForMessage OK\n");
       dwRetCode = pMsg->GetVariableLong(VID_RCC);
       delete pMsg;
    }
@@ -547,6 +555,26 @@ DWORD ISC::Nop(void)
    dwRqId = m_requestId++;
    msg.SetCode(CMD_KEEPALIVE);
    msg.SetId(dwRqId);
+   if (SendMessage(&msg))
+      return WaitForRCC(dwRqId, m_commandTimeout);
+   else
+      return ISC_ERR_CONNECTION_BROKEN;
+}
+
+
+//
+// Connect to requested service
+//
+
+DWORD ISC::ConnectToService(DWORD service)
+{
+   CSCPMessage msg(m_protocolVersion);
+   DWORD dwRqId;
+
+   dwRqId = m_requestId++;
+   msg.SetCode(CMD_ISC_CONNECT_TO_SERVICE);
+   msg.SetId(dwRqId);
+	msg.SetVariable(VID_SERVICE_ID, service);
    if (SendMessage(&msg))
       return WaitForRCC(dwRqId, m_commandTimeout);
    else

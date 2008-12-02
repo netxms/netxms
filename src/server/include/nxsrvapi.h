@@ -413,6 +413,7 @@ private:
 protected:
    void DestroyResultData(void);
    DWORD SetupEncryption(RSA *pServerKey);
+	DWORD ConnectToService(DWORD service);
 
    void Lock(void) { MutexLock(m_mutexDataLock, INFINITE); }
    void Unlock(void) { MutexUnlock(m_mutexDataLock); }

@@ -83,7 +83,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
       err = RecvNXCPMessage(sock, pRawMsg, pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL, INFINITE);
       if (err <= 0)
 		{
-         DbgPrintf(5, _T("%s RecvNXCPMessage() failed"), dbgPrefix);
+         DbgPrintf(5, _T("%s RecvNXCPMessage() failed: %s"), dbgPrefix, strerror(WSAGetLastError()));
          break;   // Communication error or closed connection
 		}
 
@@ -160,6 +160,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 					}
 					else
 					{
+						DbgPrintf(4, _T("%s out of state request"), dbgPrefix);
 						response.SetVariable(VID_RCC, ISC_ERR_REQUEST_OUT_OF_STATE);
 					}
 				}
@@ -173,6 +174,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 			response.SetId(pRequest->GetId());
 			response.SetCode(CMD_REQUEST_COMPLETED);
 			pRawMsgOut = response.CreateMessage();
+			DbgPrintf(5, _T("%s sending message %s"), dbgPrefix, NXCPMessageCodeName(response.GetCode(), buffer));
 			if (SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0) != (int)ntohl(pRawMsgOut->dwSize))
 				DbgPrintf(5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, strerror(WSAGetLastError()));
       
