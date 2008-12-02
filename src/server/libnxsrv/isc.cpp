@@ -190,14 +190,12 @@ void ISC::ReceiverThread(void)
       Lock();
 		nSocket = m_socket;
 		Unlock();
-printf("receiving on %d\n",nSocket);
       if ((err = RecvNXCPMessage(nSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
                                  &m_ctx, pDecryptionBuffer, m_recvTimeout)) <= 0)
 		{
 			PrintMsg(_T("ISC::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), err, WSAGetLastError());
          break;
 		}
-printf("err=%d\n",err);
 
       // Check if we get too large message
       if (err == 1)

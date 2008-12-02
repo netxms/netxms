@@ -313,7 +313,6 @@ static BOOL ForwardEvent(const TCHAR *server, Event *event)
 		CSCPMessage msg;
 		NetObj *object;
 
-printf("connected!!!\n");
 		msg.SetId(1);
 		msg.SetCode(CMD_FORWARD_EVENT);
 		object = FindObjectById(event->SourceId());
@@ -328,12 +327,10 @@ printf("connected!!!\n");
 
 			if (isc->SendMessage(&msg))
 			{
-printf("sent!!!\n");
 				rcc = isc->WaitForRCC(1, 10000);
 			}
 			else
 			{
-printf(">>>>not sent\n");
 				rcc = ISC_ERR_CONNECTION_BROKEN;
 			}
 		}
