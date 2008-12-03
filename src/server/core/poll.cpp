@@ -289,7 +289,8 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
 
 static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex)
 {
-   if (FindNodeByIP(ipAddr) == NULL)
+	if ((ipAddr != 0) && (ipAddr != 0xFFFFFFFF) &&
+       (FindNodeByIP(ipAddr) != NULL))
    {
       Interface *pInterface = node->FindInterface(ifIndex, ipAddr);
       if (pInterface != NULL)
