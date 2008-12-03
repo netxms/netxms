@@ -5,7 +5,9 @@ EXTRA_DIST = \
     nxagentd.rc \
     win32.cpp resource.h \
     nxagentd.h \
-    hddinfo.cpp
+    hddinfo.cpp \
+    netinfo.cpp \
+    service.cpp
 
 INCLUDES=-I@top_srcdir@/include
 
