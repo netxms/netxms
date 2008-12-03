@@ -284,6 +284,32 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
 
 
 //
+// Check potential new node from ARP cache or routing table
+//
+
+static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex)
+{
+   if (FindNodeByIP(ipAddr) == NULL)
+   {
+      Interface *pInterface = node->FindInterface(ifIndex, ipAddr);
+      if (pInterface != NULL)
+		{
+         if (!IsBroadcastAddress(ipAddr, pInterface->IpNetMask()))
+         {
+            NEW_NODE *pInfo;
+
+            pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+            pInfo->dwIpAddr = ipAddr;
+            pInfo->dwNetMask = pInterface->IpNetMask();
+				pInfo->ignoreFilter = FALSE;
+            g_nodePollerQueue.Put(pInfo);
+         }
+		}
+   }
+}
+
+
+//
 // Discovery poll thread
 //
 
@@ -292,6 +318,8 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
    Node *pNode;
    TCHAR szBuffer[MAX_OBJECT_NAME + 64], szIpAddr[16];
    ARP_CACHE *pArpCache;
+	ROUTING_TABLE *rt;
+	DWORD i;
 
    // Initialize state info
    m_pPollerState[(long)arg].iType = 'D';
@@ -316,28 +344,19 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
       pArpCache = pNode->GetArpCache();
       if (pArpCache != NULL)
       {
-         for(DWORD j = 0; j < pArpCache->dwNumEntries; j++)
-         {
-            if (FindNodeByIP(pArpCache->pEntries[j].dwIpAddr) == NULL)
-            {
-               Interface *pInterface = pNode->FindInterface(pArpCache->pEntries[j].dwIndex,
-                                                            pArpCache->pEntries[j].dwIpAddr);
-               if (pInterface != NULL)
-                  if (!IsBroadcastAddress(pArpCache->pEntries[j].dwIpAddr,
-                                          pInterface->IpNetMask()))
-                  {
-                     NEW_NODE *pInfo;
-
-                     pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-                     pInfo->dwIpAddr = pArpCache->pEntries[j].dwIpAddr;
-                     pInfo->dwNetMask = pInterface->IpNetMask();
-							pInfo->ignoreFilter = FALSE;
-                     g_nodePollerQueue.Put(pInfo);
-                  }
-            }
-         }
+         for(i = 0; i < pArpCache->dwNumEntries; i++)
+				CheckPotentialNode(pNode, pArpCache->pEntries[i].dwIpAddr, pArpCache->pEntries[i].dwIndex);
          DestroyArpCache(pArpCache);
       }
+
+		// Retrieve and analize node's routing table
+		rt = pNode->GetRoutingTable();
+		if (rt != NULL)
+		{
+			for(i = 0; i < (DWORD)rt->iNumEntries; i++)
+				CheckPotentialNode(pNode, rt->pRoutes[i].dwNextHop, rt->pRoutes[i].dwIfIndex);
+			DestroyRoutingTable(rt);
+		}
 
       DbgPrintf(4, _T("Finished discovery poll for node %s (%s)"),
                 pNode->Name(), IpToStr(pNode->IpAddr(), szIpAddr));
