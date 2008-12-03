@@ -55,9 +55,9 @@ BOOL Teardown(void);
 //
 
 static int optVerbose = 1;
-static char *optHost = NULL;
-static char *optUser = "guest";
-static char *optPassword = "";
+static const char *optHost = NULL;
+static const char *optUser = "guest";
+static const char *optPassword = "";
 static BOOL optEncrypt = FALSE;
 static int optBatchSize = 0;
 

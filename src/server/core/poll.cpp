@@ -264,6 +264,9 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
    m_pPollerState[(long)arg].iType = 'R';
    SetPollerState((long)arg, "init");
 
+   // Wait two minutes to give status and configuration pollers chance to run first
+   ThreadSleep(120);
+
    // Main loop
    while(!ShutdownInProgress())
    {
@@ -290,20 +293,25 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
 static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex)
 {
 	if ((ipAddr != 0) && (ipAddr != 0xFFFFFFFF) &&
-       (FindNodeByIP(ipAddr) != NULL))
+       (FindNodeByIP(ipAddr) == NULL))
    {
+		char b[32];
       Interface *pInterface = node->FindInterface(ifIndex, ipAddr);
       if (pInterface != NULL)
 		{
          if (!IsBroadcastAddress(ipAddr, pInterface->IpNetMask()))
          {
             NEW_NODE *pInfo;
+				TCHAR buf1[16], buf2[16];
 
             pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
             pInfo->dwIpAddr = ipAddr;
             pInfo->dwNetMask = pInterface->IpNetMask();
 				pInfo->ignoreFilter = FALSE;
             g_nodePollerQueue.Put(pInfo);
+				DbgPrintf(5, _T("DiscoveryPoller(): new node queued: %s/%s"),
+				          IpToStr(pInfo->dwIpAddr, buf1), 
+				          IpToStr(pInfo->dwNetMask, buf2));
          }
 		}
    }
@@ -325,6 +333,9 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
    // Initialize state info
    m_pPollerState[(long)arg].iType = 'D';
    SetPollerState((long)arg, "init");
+
+   // Wait two minutes to give status and configuration pollers chance to run first
+   ThreadSleep(120);
 
    // Main loop
    while(!ShutdownInProgress())
@@ -351,6 +362,8 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
       }
 
 		// Retrieve and analize node's routing table
+      DbgPrintf(5, _T("Discovery poll for node %s (%s) - reading routing table"),
+                pNode->Name(), IpToStr(pNode->IpAddr(), szIpAddr));
 		rt = pNode->GetRoutingTable();
 		if (rt != NULL)
 		{
