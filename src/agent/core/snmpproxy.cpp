@@ -58,11 +58,11 @@ static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, DWORD *pdwSize)
       tv.tv_usec = (dwTimeout % 1000) * 1000;
 #endif
 #ifdef _WIN32
-      if (select((int)(hSocket + 1), &rdfs, NULL, NULL, &tv) <= 0)
+      if (select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv) <= 0)
          return FALSE;
 #else
       qwTime = GetCurrentTimeMs();
-      if ((iErr = select(hSocket + 1, &rdfs, NULL, NULL, &tv)) <= 0)
+      if ((iErr = select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv)) <= 0)
       {
          if (((iErr == -1) && (errno != EINTR)) ||
              (iErr == 0))
@@ -92,53 +92,67 @@ static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, DWORD *pdwSize)
 void ProxySNMPRequest(CSCPMessage *pRequest, CSCPMessage *pResponse)
 {
 	BYTE *pduIn, *pduOut;
-	DWORD dwSize;
+	DWORD dwSizeIn, dwSizeOut;
 	SOCKET hSocket;
 	int nRetries;
 	struct sockaddr_in addr;
 
-	dwSize = pRequest->GetVariableLong(VID_PDU_SIZE);
-	if (dwSize > 0)
+	dwSizeIn = pRequest->GetVariableLong(VID_PDU_SIZE);
+	if (dwSizeIn > 0)
 	{
-		pduIn = (BYTE *)malloc(dwSize);
-		pRequest->GetVariableBinary(VID_PDU, pduIn, dwSize);
-
-		hSocket = socket(AF_INET, SOCK_DGRAM, 0);
-		if (hSocket != -1)
+		pduIn = (BYTE *)malloc(dwSizeIn);
+		if (pduIn != NULL)
 		{
-			memset(&addr, 0, sizeof(struct sockaddr_in));
-			addr.sin_family = AF_INET;
-			addr.sin_addr.s_addr = htonl(pRequest->GetVariableLong(VID_IP_ADDRESS));
-			addr.sin_port = htons(pRequest->GetVariableShort(VID_PORT));
-			if (connect(hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != -1)
+			pRequest->GetVariableBinary(VID_PDU, pduIn, dwSizeIn);
+
+			hSocket = socket(AF_INET, SOCK_DGRAM, 0);
+			if (hSocket != -1)
 			{
-				pduOut = (BYTE *)malloc(SNMP_BUFFER_SIZE);
-				for(nRetries = 0; nRetries < 3; nRetries++)
+				memset(&addr, 0, sizeof(struct sockaddr_in));
+				addr.sin_family = AF_INET;
+				addr.sin_addr.s_addr = htonl(pRequest->GetVariableLong(VID_IP_ADDRESS));
+				addr.sin_port = htons(pRequest->GetVariableShort(VID_PORT));
+				if (connect(hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != -1)
 				{
-					if (send(hSocket, (char *)pduIn, dwSize, 0) == (int)dwSize)
+					pduOut = (BYTE *)malloc(SNMP_BUFFER_SIZE);
+					if (pduOut != NULL)
 					{
-						if (ReadPDU(hSocket, pduOut, &dwSize))
+						for(nRetries = 0; nRetries < 3; nRetries++)
 						{
-							pResponse->SetVariable(VID_PDU_SIZE, dwSize);
-							pResponse->SetVariable(VID_PDU, pduOut, dwSize);
-							break;
+							if (send(hSocket, (char *)pduIn, dwSizeIn, 0) == (int)dwSizeIn)
+							{
+								if (ReadPDU(hSocket, pduOut, &dwSizeOut))
+								{
+									pResponse->SetVariable(VID_PDU_SIZE, dwSizeOut);
+									pResponse->SetVariable(VID_PDU, pduOut, dwSizeOut);
+									break;
+								}
+							}
 						}
+						free(pduOut);
+						pResponse->SetVariable(VID_RCC, (nRetries == 3) ? ERR_REQUEST_TIMEOUT : ERR_SUCCESS);
+					}
+					else
+					{
+						pResponse->SetVariable(VID_RCC, ERR_OUT_OF_RESOURCES);
 					}
 				}
-				free(pduOut);
-				pResponse->SetVariable(VID_RCC, (nRetries == 3) ? ERR_REQUEST_TIMEOUT : ERR_SUCCESS);
+				else
+				{
+					pResponse->SetVariable(VID_RCC, ERR_SOCKET_ERROR);
+				}
+				closesocket(hSocket);
 			}
 			else
 			{
 				pResponse->SetVariable(VID_RCC, ERR_SOCKET_ERROR);
 			}
-			closesocket(hSocket);
+			free(pduIn);
 		}
 		else
 		{
-			pResponse->SetVariable(VID_RCC, ERR_SOCKET_ERROR);
+			pResponse->SetVariable(VID_RCC, ERR_OUT_OF_RESOURCES);
 		}
-		free(pduIn);
 	}
 	else
 	{

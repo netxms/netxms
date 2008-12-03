@@ -12,7 +12,7 @@
 	- Added support for negative values on graphs
 	- Implemented cut/copy/paste in event policy editor
 - Java API introduced
-- Fixed issues: #235, #236, #237, #238
+- Fixed issues: #31, #74, #146, #235, #236, #237, #238
 
 
 *

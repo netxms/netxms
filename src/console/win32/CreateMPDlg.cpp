@@ -65,6 +65,7 @@ BEGIN_MESSAGE_MAP(CCreateMPDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_ADD_TEMPLATE, OnButtonAddTemplate)
 	ON_BN_CLICKED(IDC_BUTTON_DELETE, OnButtonDelete)
 	ON_BN_CLICKED(IDC_BUTTON_ADD_TRAP, OnButtonAddTrap)
+	ON_BN_CLICKED(IDC_BUTTON_BROWSE, OnButtonBrowse)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -316,5 +317,23 @@ void CCreateMPDlg::CreateList(HTREEITEM hRoot, DWORD *pdwCount, DWORD **ppdwList
          (*ppdwList)[i] = m_wndTreeCtrl.GetItemData(hItem);
          hItem = m_wndTreeCtrl.GetNextItem(hItem, TVGN_NEXT);
       }
+   }
+}
+
+
+//
+// "Browse..." button handler
+//
+
+void CCreateMPDlg::OnButtonBrowse() 
+{
+   TCHAR szBuffer[1024];
+
+   GetDlgItemText(IDC_EDIT_FILE, szBuffer, 1024);
+   CFileDialog dlg(FALSE, _T("nxmp"), szBuffer, OFN_PATHMUSTEXIST,
+                   _T("NetXMS Management Packs (*.nxmp)|*.nxmp|All Files (*.*)|*.*||"));
+   if (dlg.DoModal() == IDOK)
+   {
+      SetDlgItemText(IDC_EDIT_FILE, dlg.m_ofn.lpstrFile);
    }
 }

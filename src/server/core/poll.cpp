@@ -295,7 +295,6 @@ static void CheckPotentialNode(Node *node, DWORD ipAddr, DWORD ifIndex)
 	if ((ipAddr != 0) && (ipAddr != 0xFFFFFFFF) &&
        (FindNodeByIP(ipAddr) == NULL))
    {
-		char b[32];
       Interface *pInterface = node->FindInterface(ifIndex, ipAddr);
       if (pInterface != NULL)
 		{

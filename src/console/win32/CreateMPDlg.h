@@ -60,6 +60,7 @@ protected:
 	afx_msg void OnButtonDelete();
 	virtual void OnOK();
 	afx_msg void OnButtonAddTrap();
+	afx_msg void OnButtonBrowse();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
