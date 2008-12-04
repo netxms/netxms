@@ -30,7 +30,7 @@
 
 DWORD LIBNXCL_EXPORTABLE NXCGetGraphList(NXC_SESSION hSession, DWORD *pdwNumGraphs, NXC_GRAPH **ppGraphList)
 {
-   DWORD i, dwId, dwRqId, dwResult;
+   DWORD i, j, dwId, dwRqId, dwResult;
    CSCPMessage msg, *pResponse;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -59,7 +59,27 @@ DWORD LIBNXCL_EXPORTABLE NXCGetGraphList(NXC_SESSION hSession, DWORD *pdwNumGrap
 					(*ppGraphList)[i].dwOwner = pResponse->GetVariableLong(dwId++);
 					(*ppGraphList)[i].pszName = pResponse->GetVariableStr(dwId++);
 					(*ppGraphList)[i].pszConfig = pResponse->GetVariableStr(dwId++);
-					dwId += 6;
+					(*ppGraphList)[i].dwAclSize = pResponse->GetVariableLong(dwId++);
+					if ((*ppGraphList)[i].dwAclSize > 0)
+					{
+						DWORD *pdwData;
+
+						(*ppGraphList)[i].pACL = (NXC_GRAPH_ACL_ENTRY *)malloc(sizeof(NXC_GRAPH_ACL_ENTRY) * (*ppGraphList)[i].dwAclSize);
+						pdwData = (DWORD *)malloc(sizeof(DWORD) * (*ppGraphList)[i].dwAclSize * 2);
+						pResponse->GetVariableInt32Array(dwId++, (*ppGraphList)[i].dwAclSize, pdwData);
+						pResponse->GetVariableInt32Array(dwId++, (*ppGraphList)[i].dwAclSize, pdwData + (*ppGraphList)[i].dwAclSize);
+						for(j = 0; j < (*ppGraphList)[i].dwAclSize; j++)
+						{
+							(*ppGraphList)[i].pACL[j].dwUserId = pdwData[j];
+							(*ppGraphList)[i].pACL[j].dwAccess = pdwData[j + (*ppGraphList)[i].dwAclSize];
+						}
+						free(pdwData);
+					}
+					else
+					{
+						dwId += 2;
+					}
+					dwId += 3;
 				}
 			}
 		}

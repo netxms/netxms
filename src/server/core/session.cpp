@@ -8952,8 +8952,9 @@ void ClientSession::SendGraphList(DWORD dwRqId)
    CSCPMessage msg;
 	DB_RESULT hResult;
 	GRAPH_ACL_ENTRY *pACL = NULL;
-	int i, nRows, nACLSize;
+	int i, j, nRows, nACLSize;
 	DWORD dwId, dwNumGraphs, dwGraphId, dwOwner;
+	DWORD *pdwUsers, *pdwRights, dwGraphACLSize;
 	TCHAR *pszStr;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -8965,6 +8966,8 @@ void ClientSession::SendGraphList(DWORD dwRqId)
 		hResult = DBSelect(g_hCoreDB, _T("SELECT graph_id,owner_id,name,config FROM graphs"));
 		if (hResult != NULL)
 		{
+			pdwUsers = (DWORD *)malloc(sizeof(DWORD) * nACLSize);
+			pdwRights = (DWORD *)malloc(sizeof(DWORD) * nACLSize);
 			nRows = DBGetNumRows(hResult);
 			for(i = 0, dwNumGraphs = 0, dwId = VID_GRAPH_LIST_BASE; i < nRows; i++)
 			{
@@ -8988,11 +8991,28 @@ void ClientSession::SendGraphList(DWORD dwRqId)
 						DecodeSQLStringAndSetVariable(&msg, dwId++, pszStr);
 						free(pszStr);
 					}
-					dwId += 6;
+
+					// ACL for graph
+					for(j = 0, dwGraphACLSize = 0; j < nACLSize; j++)
+					{
+						if (pACL[j].dwGraphId == dwGraphId)
+						{
+							pdwUsers[dwGraphACLSize] = pACL[j].dwUserId;
+							pdwRights[dwGraphACLSize] = pACL[j].dwAccess;
+							dwGraphACLSize++;
+						}
+					}
+					msg.SetVariable(dwId++, dwGraphACLSize);
+					msg.SetVariableToInt32Array(dwId++, dwGraphACLSize, pdwUsers);
+					msg.SetVariableToInt32Array(dwId++, dwGraphACLSize, pdwRights);
+
+					dwId += 3;
 					dwNumGraphs++;
 				}
 			}
 			DBFreeResult(hResult);
+			free(pdwUsers);
+			free(pdwRights);
 			msg.SetVariable(VID_NUM_GRAPHS, dwNumGraphs);
 			msg.SetVariable(VID_RCC, RCC_SUCCESS);
 		}

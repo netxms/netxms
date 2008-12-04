@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "GraphManagerDlg.h"
+#include "DefineGraphDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -39,6 +40,7 @@ BEGIN_MESSAGE_MAP(CGraphManagerDlg, CDialog)
 	ON_WM_CONTEXTMENU()
 	ON_BN_CLICKED(IDC_BUTTON_DELETE, OnButtonDelete)
 	ON_COMMAND(ID_GRAPHMANAGER_DELETE, OnGraphmanagerDelete)
+	ON_BN_CLICKED(IDC_BUTTON_PROPERTIES, OnButtonProperties)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -273,5 +275,55 @@ void CGraphManagerDlg::OnGraphmanagerDelete()
 			hParent = m_wndTreeCtrl.GetParentItem(hItem);
 			m_wndTreeCtrl.DeleteItem(hItem);
 		}
+	}
+}
+
+
+//
+// "Edit..." button handler
+//
+
+void CGraphManagerDlg::OnButtonProperties() 
+{
+	HTREEITEM hItem;
+	DWORD i, dwGraphId, dwResult;
+	NXC_GRAPH graph;
+	CDefineGraphDlg dlg;
+
+	hItem = m_wndTreeCtrl.GetSelectedItem();
+	if (hItem == NULL)
+		return;
+
+	dwGraphId = m_wndTreeCtrl.GetItemData(hItem);
+	if (dwGraphId == 0)
+		return;
+
+	// Find graph info
+	for(i = 0; i < g_dwNumGraphs; i++)
+		if (g_pGraphList[i].dwId == dwGraphId)
+			break;
+
+	if (i == g_dwNumGraphs)
+	{
+		MessageBox(_T("Internal error: unable to find graph data with corresponding ID"), _T("Error"), MB_OK | MB_ICONSTOP);
+		return;
+	}
+
+	dlg.m_strName = g_pGraphList[i].pszName;
+	dlg.m_dwACLSize = g_pGraphList[i].dwAclSize;
+	dlg.m_pACL = (NXC_GRAPH_ACL_ENTRY *)nx_memdup(g_pGraphList[i].pACL, sizeof(NXC_GRAPH_ACL_ENTRY) * g_pGraphList[i].dwAclSize);
+	if (dlg.DoModal() == IDOK)
+	{
+		graph.dwId = dwGraphId;
+		graph.dwOwner = g_pGraphList[i].dwOwner;
+		graph.dwAclSize = dlg.m_dwACLSize;
+		graph.pACL = dlg.m_pACL;
+		graph.pszName = _tcsdup(g_pGraphList[i].pszName);
+		graph.pszConfig = _tcsdup(g_pGraphList[i].pszConfig);
+		dwResult = DoRequestArg2(NXCDefineGraph, g_hSession, &graph, _T("Updating predefined graph settings..."));
+		if (dwResult != RCC_SUCCESS)
+			theApp.ErrorBox(dwResult, _T("Cannot update predefined graph settings: %s"));
+		free(graph.pszName);
+		free(graph.pszConfig);
 	}
 }
