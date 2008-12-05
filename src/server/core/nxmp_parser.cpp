@@ -98,6 +98,7 @@ NXMP_Data *NXMP_Parser::Parse(TCHAR *pszSource)
    {
       delete pData;
       pData = NULL;
+		DbgPrintf(4, _T("NXMP_Parser::Parse(): yyparse failed"));
    }
 	yylex_destroy(scanner);
    return pData;

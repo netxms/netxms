@@ -54,6 +54,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner, NXMP_Parser *dummy);
 %token <valStr> T_REAL
 
 %type <valStr> Value
+%type <valStr> ObjectName
 
 %start ManagementPack
 
@@ -91,6 +92,11 @@ Defaults:
 	T_DEFAULTS '{' VariableList '}'
 ;
 
+ObjectName:
+	T_IDENTIFIER
+|	T_STRING
+;
+
 EventList:
 	Event EventList
 |
@@ -106,7 +112,7 @@ TemplateList:
 ;
 
 Template:
-	T_TEMPLATE T_IDENTIFIER { pData->NewTemplate($2); free($2); } '{' TemplateBody '}' { pData->CloseTemplate(); }
+	T_TEMPLATE ObjectName { pData->NewTemplate($2); free($2); } '{' TemplateBody '}' { pData->CloseTemplate(); }
 ;
 
 TemplateBody:

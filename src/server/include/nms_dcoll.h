@@ -187,7 +187,7 @@ private:
    DWORD m_dwNumThresholds;
    Threshold **m_ppThresholdList;
    Template *m_pNode;             // Pointer to node or template object this item related to
-   char *m_pszFormula;        // Transformation formula
+   TCHAR *m_pszScript;        // Transformation script
    NXSL_Program *m_pScript;   // Compiled transformation script
    MUTEX m_hMutex;
    DWORD m_dwCacheSize;       // Number of items in cache
@@ -211,7 +211,6 @@ private:
 
 	BOOL MatchClusterResource();
 
-   void NewFormula(TCHAR *pszFormula);
 	void ExpandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen);
 
 public:
@@ -283,6 +282,7 @@ public:
 	void SetAdvScheduleFlag(BOOL bFlag) { m_iAdvSchedule = bFlag ? 1 : 0; }
 	void AddThreshold(Threshold *pThreshold);
 	void AddSchedule(TCHAR *pszSchedule);
+   void SetTransformationScript(TCHAR *pszScript);
 };
 
 

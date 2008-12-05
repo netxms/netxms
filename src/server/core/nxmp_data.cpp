@@ -219,6 +219,10 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
          {
             m_pCurrDCI->SetInstance(pszValue);
          }
+         else if (!stricmp(pszName, "SCRIPT"))
+         {
+            m_pCurrDCI->SetTransformationScript(pszValue);
+         }
          else if (!stricmp(pszName, "DATATYPE"))
          {
 				nVal = strtol(pszValue, &eptr, 0);
@@ -638,6 +642,7 @@ void NXMP_Data::NewTemplate(char *pszName)
    m_dwNumTemplates++;
    m_ppTemplateList = (Template **)realloc(m_ppTemplateList, sizeof(Template *) * m_dwNumTemplates);
    m_pCurrTemplate = new Template;
+	m_pCurrTemplate->Hide();
 	m_ppTemplateList[m_dwNumTemplates - 1] = m_pCurrTemplate;
 #ifdef UNICODE
 	WCHAR wszName[MAX_OBJECT_NAME];
@@ -648,6 +653,7 @@ void NXMP_Data::NewTemplate(char *pszName)
 	m_pCurrTemplate->SetName(pszName);
 #endif
    m_nContext = CTX_TEMPLATE;
+	DbgPrintf(6, _T("NXMP_Data::NewTemplate(): new template \"%s\" created"), m_pCurrTemplate->Name());
 }
 
 

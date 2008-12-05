@@ -154,7 +154,7 @@ DCItem::DCItem()
    m_szDescription[0] = 0;
    m_szInstance[0] = 0;
    m_tLastPoll = 0;
-   m_pszFormula = NULL;
+   m_pszScript = NULL;
    m_pScript = NULL;
    m_pNode = NULL;
    m_hMutex = MutexCreate();
@@ -195,9 +195,9 @@ DCItem::DCItem(const DCItem *pSrc)
 	_tcscpy(m_szName, pSrc->m_szName);
 	_tcscpy(m_szDescription, pSrc->m_szDescription);
 	_tcscpy(m_szInstance, pSrc->m_szInstance);
-   m_pszFormula = NULL;
+   m_pszScript = NULL;
    m_pScript = NULL;
-   NewFormula(pSrc->m_pszFormula);
+   SetTransformationScript(pSrc->m_pszScript);
    m_pNode = NULL;
    m_hMutex = MutexCreate();
    m_dwCacheSize = 0;
@@ -252,11 +252,11 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_iRetentionTime = DBGetFieldLong(hResult, iRow, 5);
    m_iStatus = (BYTE)DBGetFieldLong(hResult, iRow, 6);
    m_iDeltaCalculation = (BYTE)DBGetFieldLong(hResult, iRow, 7);
-   m_pszFormula = NULL;
+   m_pszScript = NULL;
    m_pScript = NULL;
    pszTmp = DBGetField(hResult, iRow, 8, NULL, 0);
    DecodeSQLString(pszTmp);
-   NewFormula(pszTmp);
+   SetTransformationScript(pszTmp);
    free(pszTmp);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 9);
    DBGetField(hResult, iRow, 10, m_szDescription, MAX_DB_STRING);
@@ -350,7 +350,7 @@ DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType,
    m_iBusy = 0;
    m_iProcessAllThresholds = 0;
    m_tLastPoll = 0;
-   m_pszFormula = NULL;
+   m_pszScript = NULL;
    m_pScript = NULL;
    m_dwNumThresholds = 0;
    m_ppThresholdList = NULL;
@@ -386,7 +386,7 @@ DCItem::~DCItem()
    for(i = 0; i < m_dwNumSchedules; i++)
       free(m_ppScheduleList[i]);
    safe_free(m_ppScheduleList);
-   safe_free(m_pszFormula);
+   safe_free(m_pszScript);
    delete m_pScript;
    ClearCache();
    MutexDestroy(m_hMutex);
@@ -450,17 +450,17 @@ BOOL DCItem::LoadThresholdsFromDB(void)
 
 BOOL DCItem::SaveToDB(DB_HANDLE hdb)
 {
-   TCHAR *pszEscName, *pszEscFormula, *pszEscDescr, *pszEscInstance, *pszQuery;
+   TCHAR *pszEscName, *pszEscScript, *pszEscDescr, *pszEscInstance, *pszQuery;
    DB_RESULT hResult;
    BOOL bNewObject = TRUE, bResult;
 
    Lock();
 
    pszEscName = EncodeSQLString(m_szName);
-   pszEscFormula = EncodeSQLString(CHECK_NULL_EX(m_pszFormula));
+   pszEscScript = EncodeSQLString(CHECK_NULL_EX(m_pszScript));
    pszEscDescr = EncodeSQLString(m_szDescription);
    pszEscInstance = EncodeSQLString(m_szInstance);
-   pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * (_tcslen(pszEscFormula) + 2048));
+   pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * (_tcslen(pszEscScript) + 2048));
 
    // Check for object's existence in database
    sprintf(pszQuery, "SELECT item_id FROM items WHERE item_id=%d", m_dwId);
@@ -482,7 +482,7 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
                         m_dwId, (m_pNode == NULL) ? (DWORD)0 : m_pNode->Id(), m_dwTemplateId,
                         pszEscName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
                         m_iRetentionTime, m_iStatus, m_iDeltaCalculation,
-                        pszEscFormula, pszEscInstance, m_dwTemplateItemId,
+                        pszEscScript, pszEscInstance, m_dwTemplateItemId,
                         m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId,
 							   m_dwProxyNode);
    else
@@ -493,13 +493,13 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
                         "all_thresholds=%d,resource_id=%d,proxy_node=%d WHERE item_id=%d",
                         (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
                         pszEscName, m_iSource, m_iDataType, m_iPollingInterval,
-                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscFormula,
+                        m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscScript,
                         pszEscDescr, pszEscInstance, m_dwTemplateItemId,
                         m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId,
 							   m_dwProxyNode, m_dwId);
    bResult = DBQuery(hdb, pszQuery);
    free(pszEscName);
-   free(pszEscFormula);
+   free(pszEscScript);
    free(pszEscDescr);
    free(pszEscInstance);
 
@@ -654,7 +654,7 @@ void DCItem::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_DCI_DATA_TYPE, (WORD)m_iDataType);
    pMsg->SetVariable(VID_DCI_STATUS, (WORD)m_iStatus);
    pMsg->SetVariable(VID_DCI_DELTA_CALCULATION, (WORD)m_iDeltaCalculation);
-   pMsg->SetVariable(VID_DCI_FORMULA, CHECK_NULL_EX(m_pszFormula));
+   pMsg->SetVariable(VID_DCI_FORMULA, CHECK_NULL_EX(m_pszScript));
    pMsg->SetVariable(VID_ALL_THRESHOLDS, (WORD)m_iProcessAllThresholds);
 	pMsg->SetVariable(VID_RESOURCE_ID, m_dwResourceId);
 	pMsg->SetVariable(VID_PROXY_NODE, m_dwProxyNode);
@@ -721,7 +721,7 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
 	m_dwResourceId = pMsg->GetVariableLong(VID_RESOURCE_ID);
 	m_dwProxyNode = pMsg->GetVariableLong(VID_PROXY_NODE);
    pszStr = pMsg->GetVariableStr(VID_DCI_FORMULA);
-   NewFormula(pszStr);
+   SetTransformationScript(pszStr);
    free(pszStr);
 
    // Update schedules
@@ -1590,7 +1590,7 @@ void DCItem::UpdateFromTemplate(DCItem *pItem)
    m_iStatus = pItem->m_iStatus;
    m_iProcessAllThresholds = pItem->m_iProcessAllThresholds;
 	m_dwProxyNode = pItem->m_dwProxyNode;
-   NewFormula(pItem->m_pszFormula);
+   SetTransformationScript(pItem->m_pszScript);
    m_iAdvSchedule = pItem->m_iAdvSchedule;
 
    // Copy schedules
@@ -1639,17 +1639,18 @@ void DCItem::UpdateFromTemplate(DCItem *pItem)
 // Set new formula
 //
 
-void DCItem::NewFormula(TCHAR *pszFormula)
+void DCItem::SetTransformationScript(TCHAR *pszScript)
 {
-   safe_free(m_pszFormula);
+   safe_free(m_pszScript);
    delete m_pScript;
-   if (pszFormula != NULL)
+   if (pszScript != NULL)
    {
-      m_pszFormula = _tcsdup(pszFormula);
-      StrStrip(m_pszFormula);
-      if (m_pszFormula[0] != 0)
+      m_pszScript = _tcsdup(pszScript);
+      StrStrip(m_pszScript);
+      if (m_pszScript[0] != 0)
       {
-         m_pScript = (NXSL_Program *)NXSLCompile(m_pszFormula, NULL, 0);
+			/* TODO: add compilation error handling */
+         m_pScript = (NXSL_Program *)NXSLCompile(m_pszScript, NULL, 0);
       }
       else
       {
@@ -1658,7 +1659,7 @@ void DCItem::NewFormula(TCHAR *pszFormula)
    }
    else
    {
-      m_pszFormula = NULL;
+      m_pszScript = NULL;
       m_pScript = NULL;
    }
 }
@@ -1726,6 +1727,16 @@ void DCItem::CreateNXMPRecord(String &str)
                           m_iRetentionTime, (TCHAR *)strInstance,
 								  m_iDeltaCalculation, m_iAdvSchedule, 
                           m_iProcessAllThresholds);
+
+	if (m_pszScript != NULL)
+	{
+		strTemp = m_pszScript;
+		EscapeString(strTemp);
+		str += _T("\t\t\t\tSCRIPT=\"");
+		str += strTemp;
+		str += _T("\";\n");
+	}
+
    if (m_iAdvSchedule)
    {
       str += _T("\t\t\t\t@SCHEDULE\n\t\t\t\t{\n");
