@@ -73,7 +73,7 @@ protected:
 	DWORD m_dwNumTimeUnits;
 	int m_iTimeUnit;
 	int m_iTimeFrameType;
-	TCHAR m_szSubTitle[256];
+	TCHAR m_szSubTitle[MAX_DB_STRING];
 	DWORD m_dwSeconds;
 	CGraphStatusBar m_wndStatusBar;
 	UINT m_hTimer;

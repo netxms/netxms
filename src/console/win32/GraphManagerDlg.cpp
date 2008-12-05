@@ -312,18 +312,17 @@ void CGraphManagerDlg::OnButtonProperties()
 	dlg.m_strName = g_pGraphList[i].pszName;
 	dlg.m_dwACLSize = g_pGraphList[i].dwAclSize;
 	dlg.m_pACL = (NXC_GRAPH_ACL_ENTRY *)nx_memdup(g_pGraphList[i].pACL, sizeof(NXC_GRAPH_ACL_ENTRY) * g_pGraphList[i].dwAclSize);
+	dlg.m_strConfig = g_pGraphList[i].pszConfig;
 	if (dlg.DoModal() == IDOK)
 	{
 		graph.dwId = dwGraphId;
 		graph.dwOwner = g_pGraphList[i].dwOwner;
 		graph.dwAclSize = dlg.m_dwACLSize;
 		graph.pACL = dlg.m_pACL;
-		graph.pszName = _tcsdup(g_pGraphList[i].pszName);
-		graph.pszConfig = _tcsdup(g_pGraphList[i].pszConfig);
+		graph.pszName = (TCHAR *)dlg.m_strName.operator LPCTSTR();
+		graph.pszConfig = (TCHAR *)dlg.m_strConfig.operator LPCTSTR();
 		dwResult = DoRequestArg2(NXCDefineGraph, g_hSession, &graph, _T("Updating predefined graph settings..."));
 		if (dwResult != RCC_SUCCESS)
 			theApp.ErrorBox(dwResult, _T("Cannot update predefined graph settings: %s"));
-		free(graph.pszName);
-		free(graph.pszConfig);
 	}
 }

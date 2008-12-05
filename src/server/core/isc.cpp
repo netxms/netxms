@@ -27,7 +27,7 @@
 // Constants
 //
 
-#define MAX_MSG_SIZE       32768
+#define MAX_MSG_SIZE       262144
 
 #define ISC_STATE_INIT        0
 #define ISC_STATE_CONNECTED   1

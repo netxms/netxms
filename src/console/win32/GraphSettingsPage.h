@@ -51,6 +51,7 @@ public:
 	BOOL	m_bShowLegend;
 	BOOL	m_bEnableZoom;
 	BOOL	m_bShowHostNames;
+	CString	m_strTitle;
 	//}}AFX_DATA
 
 

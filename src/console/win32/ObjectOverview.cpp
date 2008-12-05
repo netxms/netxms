@@ -187,6 +187,7 @@ void CObjectOverview::Refresh()
 	{
 		InsertItem(_T("ID"), m_pObject->dwId);
 		InsertItem(_T("Class"), g_szObjectClass[m_pObject->iClass]);
+		InsertItem(_T("Status"), g_szStatusText[m_pObject->iStatus]);
 		if (m_pObject->dwIpAddr != 0)
 			InsertItem(_T("IP Address"), IpToStr(m_pObject->dwIpAddr, szTemp));
 

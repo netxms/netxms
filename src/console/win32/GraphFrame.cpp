@@ -295,6 +295,7 @@ void CGraphFrame::OnGraphProperties()
    CGraphDataPage pgData;
 
    // Create "Settings" page
+	pgSettings.m_strTitle = m_szSubTitle;
    pgSettings.m_bAutoscale = m_wndGraph.m_bAutoScale;
    pgSettings.m_bShowGrid = m_wndGraph.m_bShowGrid;
    pgSettings.m_bRuler = m_wndGraph.m_bShowRuler;
@@ -331,6 +332,19 @@ void CGraphFrame::OnGraphProperties()
    dlg.m_psh.dwFlags |= PSH_NOAPPLYNOW;
    if (dlg.DoModal() == IDOK)
    {
+		nx_strncpy(m_szSubTitle, pgSettings.m_strTitle, MAX_DB_STRING);
+
+		CString strFullString, strTitle;
+
+	   if (strFullString.LoadString(IDR_DCI_HISTORY_GRAPH))
+		   AfxExtractSubString(strTitle, strFullString, CDocTemplate::docName);
+
+      strTitle += " - [";
+      strTitle += m_szSubTitle;
+      strTitle += "]";
+	   SetTitle(strTitle);
+		OnUpdateFrameTitle(TRUE);
+
       m_dwNumItems = pgData.m_dwNumItems;
       memcpy(m_ppItems, pgData.m_ppItems, sizeof(DCIInfo *) * MAX_GRAPH_ITEMS);
 

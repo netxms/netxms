@@ -4,9 +4,9 @@
 For 0.2.23:
 
 - hide HP-UX unused autoport aggregation interfaces
-- show status in object overview
 - edit predefined graphs
 - nxdbmgr: fix errors like template has reference to non-existing node object
+- make template status always normal + issue 228
 
 
 GENERAL:

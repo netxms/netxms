@@ -14,6 +14,7 @@ class CDefineGraphDlg : public CDialog
 {
 // Construction
 public:
+	CString m_strConfig;
 	NXC_GRAPH_ACL_ENTRY * m_pACL;
 	DWORD m_dwACLSize;
 	CDefineGraphDlg(CWnd* pParent = NULL);   // standard constructor
