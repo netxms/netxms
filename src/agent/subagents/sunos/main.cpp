@@ -29,24 +29,24 @@
 // Hanlder functions
 //
 
-LONG H_CPUCount(char *pszParam, char *pArg, char *pValue);
-LONG H_CPUUsage(char *pszParam, char *pArg, char *pValue);
-LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue);
-LONG H_Hostname(char *pszParam, char *pArg, char *pValue);
-LONG H_KStat(char *pszParam, char *pArg, char *pValue);
-LONG H_LoadAvg(char *pszParam, char *pArg, char *pValue);
-LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue);
-LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue);
-LONG H_NetIfAdminStatus(char *pszParam, char *pArg, char *pValue);
-LONG H_NetInterfaceLink(char *pszParam, char *pArg, char *pValue);
-LONG H_NetIfDescription(char *pszParam, char *pArg, char *pValue);
-LONG H_NetInterfaceStats(char *pszParam, char *pArg, char *pValue);
-LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue);
-LONG H_ProcessInfo(char *pszParam, char *pArg, char *pValue);
-LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue);
-LONG H_SysProcCount(char *pszParam, char *pArg, char *pValue);
-LONG H_Uname(char *pszParam, char *pArg, char *pValue);
-LONG H_Uptime(char *pszParam, char *pArg, char *pValue);
+LONG H_CPUCount(const char *pszParam, const char *pArg, char *pValue);
+LONG H_CPUUsage(const char *pszParam, const char *pArg, char *pValue);
+LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue);
+LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue);
+LONG H_KStat(const char *pszParam, const char *pArg, char *pValue);
+LONG H_LoadAvg(const char *pszParam, const char *pArg, char *pValue);
+LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue);
+LONG H_NetIfList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue);
+LONG H_NetIfAdminStatus(const char *pszParam, const char *pArg, char *pValue);
+LONG H_NetInterfaceLink(const char *pszParam, const char *pArg, char *pValue);
+LONG H_NetIfDescription(const char *pszParam, const char *pArg, char *pValue);
+LONG H_NetInterfaceStats(const char *pszParam, const char *pArg, char *pValue);
+LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue);
+LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue);
+LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue);
+LONG H_SysProcCount(const char *pszParam, const char *pArg, char *pValue);
+LONG H_Uname(const char *pszParam, const char *pArg, char *pValue);
+LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue);
 
 
 //
@@ -67,7 +67,7 @@ static THREAD m_hCPUStatThread = INVALID_THREAD_HANDLE;
 // Detect support for source packages
 //
 
-static LONG H_SourcePkg(char *pszParam, char *pArg, char *pValue)
+static LONG H_SourcePkg(const char *pszParam, const char *pArg, char *pValue)
 {
 	ret_int(pValue, 1);
 	return SYSINFO_RC_SUCCESS;
