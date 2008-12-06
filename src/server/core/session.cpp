@@ -8664,7 +8664,7 @@ void ClientSession::CreateManagementPack(CSCPMessage *pRequest)
       {
          String str, temp;
 
-         str = _T("@NXMP\n{\n\tVERSION=1;\n\tDESCRIPTION=\"");
+         str = _T("@NXMP\n{\n\tVERSION=2;\n\tDESCRIPTION=\"");
          temp.SetBuffer(pRequest->GetVariableStr(VID_DESCRIPTION));
          EscapeString(temp);
          str += (TCHAR *)temp;
