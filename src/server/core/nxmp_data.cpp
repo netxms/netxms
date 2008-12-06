@@ -871,6 +871,47 @@ static BOOL UpdateEvent(EVENT_TEMPLATE *pEvent)
 
 
 //
+// Validate threshold
+//
+
+BOOL NXMP_Data::ResolveEventsForThreshold(Threshold *pThreshold, DWORD dwIndex)
+{
+	if (pThreshold->EventCode() & GROUP_FLAG)
+	{
+		// Correct event code should be set already at event installation phase
+		pThreshold->SetEvent(m_pEventList[pThreshold->EventCode() & ~GROUP_FLAG].dwCode);
+	}
+	if (pThreshold->RearmEventCode() & GROUP_FLAG)
+	{
+		// Correct event code should be set already at event installation phase
+		pThreshold->SetRearmEvent(m_pEventList[pThreshold->RearmEventCode() & ~GROUP_FLAG].dwCode);
+	}
+	return TRUE;
+}
+
+
+//
+// Threshold event resolve callback
+//
+
+static BOOL ThresholdEventResolveCallback(Threshold *pThreshold, DWORD dwIndex, void *pArg)
+{
+	return ((NXMP_Data *)pArg)->ResolveEventsForThreshold(pThreshold, dwIndex);
+}
+
+
+//
+// DCI event resolve callback
+//
+
+static BOOL DCIEventResolveCallback(DCItem *pItem, DWORD dwIndex, void *pArg)
+{
+	((NXMP_Data *)pArg)->SetCurrDCIIndex(dwIndex);
+	return pItem->EnumThresholds(ThresholdEventResolveCallback, pArg);
+}
+
+
+//
 // Install management pack
 //
 
@@ -947,6 +988,10 @@ DWORD NXMP_Data::Install(DWORD dwFlags)
    DbgPrintf(4, _T("NXMP: %d templates to install"), m_dwNumTemplates);
 	for(i = 0; i < m_dwNumTemplates; i++)
 	{
+		// Resolve events
+		m_pCurrTemplate = m_ppTemplateList[i];
+		m_ppTemplateList[i]->EnumDCI(DCIEventResolveCallback, this);
+
 		m_ppTemplateList[i]->AssociateItems();
 		NetObjInsert(m_ppTemplateList[i], TRUE);
 		m_ppTemplateList[i]->AddParent(g_pTemplateRoot);

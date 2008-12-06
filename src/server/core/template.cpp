@@ -775,8 +775,11 @@ DWORD *Template::GetDCIEventsList(DWORD *pdwCount)
 void Template::CreateNXMPRecord(String &str)
 {
    DWORD i;
+	String name;
 
-   str.AddFormattedString(_T("\t@TEMPLATE %s\n\t{\n\t\t@DCI_LIST\n\t\t{\n"), m_szName);
+	name = m_szName;
+	EscapeString(name);
+   str.AddFormattedString(_T("\t@TEMPLATE \"%s\"\n\t{\n\t\t@DCI_LIST\n\t\t{\n"), (const TCHAR *)name);
 
    LockData();
    for(i = 0; i < m_dwNumItems; i++)

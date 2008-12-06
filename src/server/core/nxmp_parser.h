@@ -89,6 +89,7 @@ public:
 	void SetCurrDCIIndex(DWORD dwIndex) { m_dwCurrDCIIndex = dwIndex; }
    BOOL Validate(DWORD dwFlags, TCHAR *pszErrorText, int nLen);
 	BOOL ValidateThreshold(Threshold *pThreshold, DWORD dwIndex);
+	BOOL ResolveEventsForThreshold(Threshold *pThreshold, DWORD dwIndex);
    DWORD Install(DWORD dwFlags);
 
 	void SetEvent(char *pszEvent, int nTarget);

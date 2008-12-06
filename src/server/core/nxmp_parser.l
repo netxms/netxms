@@ -13,7 +13,7 @@ uint		{int}U
 real		\-?[0-9]+\.[0-9]+
 oid			(\.[0-9]+)+
 pos			POS\:[0-9]+
-escape		\\[bnrt0\"]
+escape		\\[A-Za-z0-9\'\"\\]
 
 %{
 
@@ -83,9 +83,6 @@ escape		\\[bnrt0\"]
 			{
 				switch(yytext[1])
 				{
-					case '"':
-						yyextra->m_szStr[yyextra->m_nStrSize++] = '"';
-						break;
 					case 'n':
 						yyextra->m_szStr[yyextra->m_nStrSize++] = '\n';
 						break;

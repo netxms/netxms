@@ -324,6 +324,7 @@ void EscapeString(String &str)
 {
    str.EscapeCharacter(_T('\\'), _T('\\'));
    str.EscapeCharacter(_T('"'), _T('\\'));
+   str.Translate(_T("\b"), _T("\\b"));
    str.Translate(_T("\r"), _T("\\r"));
    str.Translate(_T("\n"), _T("\\n"));
    str.Translate(_T("\t"), _T("\\t"));
