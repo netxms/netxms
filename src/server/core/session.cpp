@@ -2616,11 +2616,20 @@ void ClientSession::ChangeObjectMgmtStatus(CSCPMessage *pRequest)
    {
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
-         BOOL bIsManaged;
+			if ((pObject->Type() != OBJECT_TEMPLATE) &&
+				 (pObject->Type() != OBJECT_TEMPLATEGROUP) &&
+				 (pObject->Type() != OBJECT_TEMPLATEROOT))
+			{
+				BOOL bIsManaged;
 
-         bIsManaged = (BOOL)pRequest->GetVariableShort(VID_MGMT_STATUS);
-         pObject->SetMgmtStatus(bIsManaged);
-         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				bIsManaged = (BOOL)pRequest->GetVariableShort(VID_MGMT_STATUS);
+				pObject->SetMgmtStatus(bIsManaged);
+				msg.SetVariable(VID_RCC, RCC_SUCCESS);
+			}
+			else
+			{
+	         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			}
       }
       else
       {
@@ -3665,10 +3674,12 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                   case OBJECT_TEMPLATEGROUP:
                      pObject = new TemplateGroup(szObjectName);
                      NetObjInsert(pObject, TRUE);
+							pObject->CalculateCompoundStatus();	// Force status change to NORMAL
                      break;
                   case OBJECT_TEMPLATE:
                      pObject = new Template(szObjectName);
                      NetObjInsert(pObject, TRUE);
+							pObject->CalculateCompoundStatus();	// Force status change to NORMAL
                      break;
                   case OBJECT_CLUSTER:
                      pObject = new Cluster(szObjectName);

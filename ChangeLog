@@ -8,11 +8,12 @@
 - New agent configuration parameter: WaitForProcess
 - Number of consecutive polls can be specified for "last value" threshold
 - Implemented "Clear DCI data" function
+- Management packs improved
 - Windows console:
 	- Added support for negative values on graphs
 	- Implemented cut/copy/paste in event policy editor
 - Java API introduced
-- Fixed issues: #31, #74, #146, #218, #235, #236, #237, #238
+- Fixed issues: #31, #74, #146, #218, #228, #235, #236, #237, #238
 
 
 *

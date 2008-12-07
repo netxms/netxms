@@ -1151,7 +1151,10 @@ void CObjectBrowser::OnObjectManage()
 
 void CObjectBrowser::OnUpdateObjectManage(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable(m_pCurrentObject != NULL);
+   pCmdUI->Enable((m_pCurrentObject != NULL) && 
+	               (m_pCurrentObject->iClass != OBJECT_TEMPLATE) && 
+						(m_pCurrentObject->iClass != OBJECT_TEMPLATEGROUP) && 
+						(m_pCurrentObject->iClass != OBJECT_TEMPLATEROOT));
 }
 
 
@@ -1270,7 +1273,10 @@ void CObjectBrowser::OnObjectUnmanage()
 
 void CObjectBrowser::OnUpdateObjectUnmanage(CCmdUI* pCmdUI) 
 {
-   pCmdUI->Enable(m_pCurrentObject != NULL);
+   pCmdUI->Enable((m_pCurrentObject != NULL) && 
+	               (m_pCurrentObject->iClass != OBJECT_TEMPLATE) && 
+						(m_pCurrentObject->iClass != OBJECT_TEMPLATEGROUP) && 
+						(m_pCurrentObject->iClass != OBJECT_TEMPLATEROOT));
 }
 
 

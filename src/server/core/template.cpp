@@ -25,6 +25,16 @@
 
 
 //
+// Redefined status calculation for template group
+//
+
+void TemplateGroup::CalculateCompoundStatus(BOOL bForcedRecalc)
+{
+   m_iStatus = STATUS_NORMAL;
+}
+
+
+//
 // Template object constructor
 //
 

@@ -997,6 +997,7 @@ public:
    virtual ~TemplateGroup() { }
 
    virtual int Type(void) { return OBJECT_TEMPLATEGROUP; }
+   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
 

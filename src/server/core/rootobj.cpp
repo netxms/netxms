@@ -71,5 +71,5 @@ TemplateRoot::~TemplateRoot()
 
 void TemplateRoot::CalculateCompoundStatus(BOOL bForcedRecalc)
 {
-   m_iStatus = STATUS_UNMANAGED;
+   m_iStatus = STATUS_NORMAL;
 }

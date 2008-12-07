@@ -927,6 +927,7 @@ BOOL LoadObjects(void)
          if (pTemplate->CreateFromDB(dwId))
          {
             NetObjInsert(pTemplate, FALSE);  // Insert into indexes
+				pTemplate->CalculateCompoundStatus();	// Force status change to NORMAL
          }
          else     // Object load failed
          {
@@ -1026,6 +1027,7 @@ BOOL LoadObjects(void)
       NetObjInsert(pTemplate, TRUE);
 		g_pTemplateRoot->AddChild(pTemplate);
 		pTemplate->AddParent(g_pTemplateRoot);
+		pTemplate->CalculateCompoundStatus();
 		pTemplate->Unhide();
 	}
 	pTemplate->ValidateSystemTemplate();
@@ -1046,6 +1048,7 @@ BOOL LoadObjects(void)
       NetObjInsert(pTemplate, TRUE);
 		g_pTemplateRoot->AddChild(pTemplate);
 		pTemplate->AddParent(g_pTemplateRoot);
+		pTemplate->CalculateCompoundStatus();
 		pTemplate->Unhide();
 	}
 	pTemplate->ValidateSystemTemplate();
