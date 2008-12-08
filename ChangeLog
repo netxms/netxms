@@ -9,6 +9,8 @@
 - Number of consecutive polls can be specified for "last value" threshold
 - Implemented "Clear DCI data" function
 - Management packs improved
+- Usage of ifXTable for interface naming made configurable
+- NXSL: added new attribute "status" for node objects
 - Windows console:
 	- Added support for negative values on graphs
 	- Implemented cut/copy/paste in event policy editor

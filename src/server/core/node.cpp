@@ -79,6 +79,7 @@ Node::Node()
 	m_iPendingStatus = -1;
 	m_iPollCount = 0;
 	m_iRequiredPollCount = 0;	// Use system default
+	m_nUseIfXTable = IFXTABLE_DEFAULT;	// Use system default
 }
 
 
@@ -131,6 +132,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
 	m_iPendingStatus = -1;
 	m_iPollCount = 0;
 	m_iRequiredPollCount = 0;	// Use system default
+	m_nUseIfXTable = IFXTABLE_DEFAULT;	// Use system default
 }
 
 
@@ -177,7 +179,8 @@ BOOL Node::CreateFromDB(DWORD dwId)
                             "agent_port,status_poll_type,community,snmp_oid,"
                             "node_type,agent_version,"
                             "platform_name,poller_node_id,zone_guid,"
-                            "proxy_node,snmp_proxy,required_polls,uname"
+                            "proxy_node,snmp_proxy,required_polls,uname,"
+									 "use_ifxtable"
 	                         " FROM nodes WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == 0)
@@ -212,6 +215,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    m_dwSNMPProxy = DBGetFieldULong(hResult, 0, 15);
    m_iRequiredPollCount = DBGetFieldLong(hResult, 0, 16);
    DBGetField(hResult, 0, 17, m_szSysDescription, MAX_DB_STRING);
+   m_nUseIfXTable = (BYTE)DBGetFieldLong(hResult, 0, 18);
    DecodeSQLString(m_szSysDescription);
 
    DBFreeResult(hResult);
@@ -316,14 +320,15 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                "node_flags,snmp_version,community,status_poll_type,"
                "agent_port,auth_method,secret,snmp_oid,proxy_node,"
                "node_type,agent_version,platform_name,uname,"
-               "poller_node_id,zone_guid,snmp_proxy,required_polls) VALUES "
-					"(%d,'%s',%d,%d,'%s',%d,%d,%d,'%s','%s',%d,%d,'%s','%s','%s',%d,%d,%d,%d)",
+               "poller_node_id,zone_guid,snmp_proxy,required_polls,"
+					"use_ifxtable) VALUES "
+					"(%d,'%s',%d,%d,'%s',%d,%d,%d,'%s','%s',%d,%d,'%s','%s','%s',%d,%d,%d,%d,%d)",
                m_dwId, IpToStr(m_dwIpAddr, szIpAddr), m_dwFlags,
                m_iSNMPVersion, pszEscCommunity, m_iStatusPollType,
                m_wAgentPort, m_wAuthMethod, pszEscSecret, m_szObjectId,
                m_dwProxyNode, m_dwNodeType, pszEscVersion,
                pszEscPlatform, pszEscDescr, m_dwPollerNode, m_dwZoneGUID,
-					m_dwSNMPProxy, m_iRequiredPollCount);
+					m_dwSNMPProxy, m_iRequiredPollCount,m_nUseIfXTable);
    else
       snprintf(szQuery, 4096,
                "UPDATE nodes SET primary_ip='%s',"
@@ -332,13 +337,14 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                "snmp_oid='%s',node_type=%d,uname='%s',"
                "agent_version='%s',platform_name='%s',poller_node_id=%d,"
                "zone_guid=%d,proxy_node=%d,snmp_proxy=%d,"
-					"required_polls=%d WHERE id=%d",
+					"required_polls=%d,use_ifxtable=%d WHERE id=%d",
                IpToStr(m_dwIpAddr, szIpAddr), 
                m_dwFlags, m_iSNMPVersion, pszEscCommunity,
                m_iStatusPollType, m_wAgentPort, m_wAuthMethod, pszEscSecret, 
                m_szObjectId, m_dwNodeType, pszEscDescr,
                pszEscVersion, pszEscPlatform, m_dwPollerNode, m_dwZoneGUID,
-               m_dwProxyNode, m_dwSNMPProxy, m_iRequiredPollCount, m_dwId);
+               m_dwProxyNode, m_dwSNMPProxy, m_iRequiredPollCount,
+					m_nUseIfXTable, m_dwId);
    bResult = DBQuery(hdb, szQuery);
    free(pszEscVersion);
    free(pszEscPlatform);
@@ -449,10 +455,20 @@ INTERFACE_LIST *Node::GetInterfaceList(void)
        (!(m_dwFlags & NF_DISABLE_SNMP)))
    {
 		SNMP_Transport *pTransport;
+		BOOL useIfXTable;
 
 		pTransport = CreateSNMPTransport();
+		if (m_nUseIfXTable == IFXTABLE_DEFAULT)
+		{
+			useIfXTable = (ConfigReadInt(_T("UseIfXTable"), 1) != 0);
+		}
+		else
+		{
+			useIfXTable = (m_nUseIfXTable == IFXTABLE_ENABLED);
+		}
       pIfList = SnmpGetInterfaceList(m_iSNMPVersion, pTransport,
-                                     m_szCommunityString, m_dwNodeType);
+                                     m_szCommunityString, m_dwNodeType,
+												 useIfXTable);
 		delete pTransport;
    }
 
@@ -2018,6 +2034,7 @@ void Node::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_SNMP_PROXY, m_dwSNMPProxy);
 	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
 	pMsg->SetVariable(VID_SYS_DESCRIPTION, m_szSysDescription);
+	pMsg->SetVariable(VID_USE_IFXTABLE, (WORD)m_nUseIfXTable);
 }
 
 
@@ -2109,6 +2126,10 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    // Number of required polls
    if (pRequest->IsVariableExist(VID_REQUIRED_POLLS))
       m_iRequiredPollCount = (int)pRequest->GetVariableShort(VID_REQUIRED_POLLS);
+
+   // Enable/disable usage of ifXTable
+   if (pRequest->IsVariableExist(VID_USE_IFXTABLE))
+      m_nUseIfXTable = (BYTE)pRequest->GetVariableShort(VID_USE_IFXTABLE);
 
    // Change flags
    if (pRequest->IsVariableExist(VID_FLAGS))

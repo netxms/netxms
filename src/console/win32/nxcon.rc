@@ -2356,11 +2356,19 @@ BEGIN
                     WS_TABSTOP,13,130,96,10
     CONTROL         "Disable &data collection",IDC_CHECK_DISABLE_DATACOLL,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,143,87,10
+    CONTROL         "De&fault",IDC_RADIO_DEFAULT,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,13,173,39,10
+    CONTROL         "&Enable",IDC_RADIO_ENABLE,"Button",BS_AUTORADIOBUTTON,
+                    76,173,38,10
+    CONTROL         "&Disable",IDC_RADIO_DISABLE,"Button",BS_AUTORADIOBUTTON,
+                    138,173,39,10
     GROUPBOX        "Network Service Poller",IDC_STATIC,7,7,278,42
     LTEXT           "Poller node:",IDC_STATIC,13,17,38,8
     LTEXT           "All network services of this node will be polled from poller node specified here, if not overrided by network service settings.",
                     IDC_STATIC,126,17,153,25
     GROUPBOX        "Options",IDC_STATIC,7,53,278,106
+    GROUPBOX        "Use ifXTable for polling interfaces",IDC_STATIC,7,161,
+                    278,26
 END
 
 IDD_OBJECT_RELATIONS DIALOGEX 0, 0, 292, 194
@@ -2461,7 +2469,7 @@ END
 IDD_GRAPH_PROP_DATA DIALOGEX 0, 0, 297, 187
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Data Sources"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "List1",IDC_LIST_DCI,"SysListView32",LVS_REPORT | 
                     LVS_SHOWSELALWAYS | WS_TABSTOP,7,7,226,173,
@@ -3238,7 +3246,7 @@ END
 IDD_DEFINE_GRAPH DIALOGEX 0, 0, 279, 196
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Define Graph"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_EDIT_NAME,7,17,265,14,ES_AUTOHSCROLL
     CONTROL         "List1",IDC_LIST_USERS,"SysListView32",LVS_REPORT | 
@@ -3277,7 +3285,7 @@ END
 IDD_GRAPH_PROP_STYLES DIALOGEX 0, 0, 297, 187
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Item Style"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "List1",IDC_LIST_ITEMS,"SysListView32",LVS_REPORT | 
                     LVS_SHOWSELALWAYS | LVS_EDITLABELS | LVS_OWNERDRAWFIXED | 

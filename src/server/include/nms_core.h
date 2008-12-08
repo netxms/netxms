@@ -653,7 +653,8 @@ ARP_CACHE *GetLocalArpCache(void);
 ARP_CACHE *SnmpGetArpCache(DWORD dwVersion, SNMP_Transport *pTransport, const char *szCommunity);
 
 INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport,
-                                     const char *szCommunity, DWORD dwNodeType);
+                                     const char *szCommunity, DWORD dwNodeType,
+												 BOOL useIfXTable);
 INTERFACE_LIST *GetLocalInterfaceList(void);
 void CleanInterfaceList(INTERFACE_LIST *pIfList);
 int SnmpGetInterfaceStatus(DWORD dwVersion, SNMP_Transport *pTransport, char *pszCommunity, DWORD dwIfIndex);

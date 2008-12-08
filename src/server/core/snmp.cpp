@@ -378,7 +378,8 @@ static DWORD HandlerIpAddr(DWORD dwVersion, const char *szCommunity, SNMP_Variab
 //
 
 INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport,
-                                     const char *szCommunity, DWORD dwNodeType)
+                                     const char *szCommunity, DWORD dwNodeType,
+												 BOOL useIfXTable)
 {
    LONG i, iNumIf;
    char szOid[128], szBuffer[256];
@@ -432,10 +433,11 @@ INTERFACE_LIST *SnmpGetInterfaceList(DWORD dwVersion, SNMP_Transport *pTransport
 				}
          }
 
-			// Try to get interface name from ifXTable, if unsuccessful, use ifTable
+			// Try to get interface name from ifXTable, if unsuccessful or disabled, use ifTable
          sprintf(szOid, ".1.3.6.1.2.1.31.1.1.1.1.%d", pIfList->pInterfaces[i].dwIndex);
-         if (SnmpGet(dwVersion, pTransport, szCommunity, szOid, NULL, 0,
-                     szBuffer, 256, FALSE, FALSE) != SNMP_ERR_SUCCESS)
+         if (!useIfXTable ||
+				 (SnmpGet(dwVersion, pTransport, szCommunity, szOid, NULL, 0,
+                      szBuffer, 256, FALSE, FALSE) != SNMP_ERR_SUCCESS))
          {
 		      sprintf(szOid, ".1.3.6.1.2.1.2.2.1.2.%d", pIfList->pInterfaces[i].dwIndex);
 		      if (SnmpGet(dwVersion, pTransport, szCommunity, szOid, NULL, 0,

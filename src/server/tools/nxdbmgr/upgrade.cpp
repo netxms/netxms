@@ -103,6 +103,33 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 
 
 //
+// Upgrade from V84 to V85
+//
+
+static BOOL H_UpgradeFromV84(void)
+{
+	static TCHAR m_szBatch[] =
+		_T("ALTER TABLE nodes ADD use_ifxtable integer\n")
+		_T("UPDATE nodes SET use_ifxtable=0\n")
+		_T("<END>");
+		
+	if (!SQLBatch(m_szBatch))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateConfigParam(_T("UseIfXTable"), _T("1"), 1, 0))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='85' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V83 to V84
 //
 
@@ -3727,6 +3754,7 @@ static struct
    { 81, H_UpgradeFromV81 },
    { 82, H_UpgradeFromV82 },
    { 83, H_UpgradeFromV83 },
+   { 84, H_UpgradeFromV84 },
    { 0, NULL }
 };
 

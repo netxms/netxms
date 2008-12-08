@@ -31,6 +31,7 @@ public:
 	BOOL	m_bDisableDataCollection;
 	BOOL	m_bDisableRoutePolls;
 	BOOL	m_bDisableStatusPolls;
+	int		m_nUseIfXTable;
 	//}}AFX_DATA
 
 
@@ -56,6 +57,9 @@ protected:
 	afx_msg void OnCheckDisableDatacoll();
 	afx_msg void OnCheckDisableRoutePolls();
 	afx_msg void OnCheckDisableStatusPoll();
+	afx_msg void OnRadioDefault();
+	afx_msg void OnRadioDisable();
+	afx_msg void OnRadioEnable();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

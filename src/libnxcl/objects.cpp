@@ -264,11 +264,12 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pMsg->GetVariableStr(VID_SHARED_SECRET, pObject->node.szSharedSecret, MAX_SECRET_LENGTH);
          pMsg->GetVariableStr(VID_COMMUNITY_STRING, pObject->node.szCommunityString, MAX_COMMUNITY_LENGTH);
          pMsg->GetVariableStr(VID_SNMP_OID, pObject->node.szObjectId, MAX_OID_LENGTH);
-         pObject->node.wSNMPVersion = pMsg->GetVariableShort(VID_SNMP_VERSION);
+         pObject->node.nSNMPVersion = (BYTE)pMsg->GetVariableShort(VID_SNMP_VERSION);
          pMsg->GetVariableStr(VID_AGENT_VERSION, pObject->node.szAgentVersion, MAX_AGENT_VERSION_LEN);
          pMsg->GetVariableStr(VID_PLATFORM_NAME, pObject->node.szPlatformName, MAX_PLATFORM_NAME_LEN);
 			pObject->node.wRequiredPollCount = pMsg->GetVariableShort(VID_REQUIRED_POLLS);
          pMsg->GetVariableStr(VID_SYS_DESCRIPTION, pObject->node.szSysDescription, MAX_DB_STRING);
+			pObject->node.nUseIfXTable = (BYTE)pMsg->GetVariableShort(VID_USE_IFXTABLE);
          break;
       case OBJECT_SUBNET:
          pObject->subnet.dwIpNetMask = pMsg->GetVariableLong(VID_IP_NETMASK);
@@ -794,6 +795,8 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_CLUSTER_TYPE, pUpdate->dwClusterType);
    if (pUpdate->qwFlags & OBJ_UPDATE_REQUIRED_POLLS)
       msg.SetVariable(VID_REQUIRED_POLLS, pUpdate->wRequiredPollCount);
+   if (pUpdate->qwFlags & OBJ_UPDATE_USE_IFXTABLE)
+      msg.SetVariable(VID_USE_IFXTABLE, (WORD)pUpdate->nUseIfXTable);
    if (pUpdate->qwFlags & OBJ_UPDATE_STATUS_ALG)
    {
       msg.SetVariable(VID_STATUS_CALCULATION_ALG, (WORD)pUpdate->iStatusCalcAlg);

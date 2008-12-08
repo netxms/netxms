@@ -800,6 +800,7 @@ typedef struct
 #define VID_SERVICE_ID              ((DWORD)315)
 #define VID_TOKEN_SOFTLIMIT         ((DWORD)316)
 #define VID_TOKEN_HARDLIMIT         ((DWORD)317)
+#define VID_USE_IFXTABLE            ((DWORD)318)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

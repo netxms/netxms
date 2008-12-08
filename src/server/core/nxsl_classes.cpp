@@ -49,6 +49,10 @@ NXSL_Value *NXSL_NodeClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
    {
       pValue = new NXSL_Value(pNode->Id());
    }
+   else if (!strcmp(pszAttr, "status"))
+   {
+      pValue = new NXSL_Value((LONG)pNode->Status());
+   }
    else if (!strcmp(pszAttr, "ipAddr"))
    {
       IpToStr(pNode->IpAddr(), szBuffer);

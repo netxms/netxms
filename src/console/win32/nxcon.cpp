@@ -1419,7 +1419,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
             wndNodeGeneral.m_strCommunity = pObject->node.szCommunityString;
             wndNodeGeneral.m_iAuthType = pObject->node.wAuthMethod;
             wndNodeGeneral.m_strSecret = pObject->node.szSharedSecret;
-            wndNodeGeneral.m_iSNMPVersion = (pObject->node.wSNMPVersion == SNMP_VERSION_1) ? 0 : 1;
+            wndNodeGeneral.m_iSNMPVersion = (pObject->node.nSNMPVersion == SNMP_VERSION_1) ? 0 : 1;
             wndNodeGeneral.m_dwProxyNode = pObject->node.dwProxyNode;
 				wndNodeGeneral.m_dwSNMPProxy = pObject->node.dwSNMPProxy;
             wndPropSheet.AddPage(&wndNodeGeneral);
@@ -1433,6 +1433,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
             wndNodePolling.m_bDisableDataCollection = (pObject->node.dwFlags & NF_DISABLE_DATA_COLLECT) ? TRUE : FALSE;
             wndNodePolling.m_bDisableRoutePolls = (pObject->node.dwFlags & NF_DISABLE_ROUTE_POLL) ? TRUE : FALSE;
             wndNodePolling.m_bDisableStatusPolls = (pObject->node.dwFlags & NF_DISABLE_STATUS_POLL) ? TRUE : FALSE;
+				wndNodePolling.m_nUseIfXTable = pObject->node.nUseIfXTable;
             wndPropSheet.AddPage(&wndNodePolling);
 
             // Create "Capabilities" tab

@@ -28,6 +28,7 @@ CNodePropsPolling::CNodePropsPolling() : CPropertyPage(CNodePropsPolling::IDD)
 	m_bDisableDataCollection = FALSE;
 	m_bDisableRoutePolls = FALSE;
 	m_bDisableStatusPolls = FALSE;
+	m_nUseIfXTable = -1;
 	//}}AFX_DATA_INIT
 }
 
@@ -46,6 +47,7 @@ void CNodePropsPolling::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_DISABLE_DATACOLL, m_bDisableDataCollection);
 	DDX_Check(pDX, IDC_CHECK_DISABLE_ROUTE_POLLS, m_bDisableRoutePolls);
 	DDX_Check(pDX, IDC_CHECK_DISABLE_STATUS_POLL, m_bDisableStatusPolls);
+	DDX_Radio(pDX, IDC_RADIO_DEFAULT, m_nUseIfXTable);
 	//}}AFX_DATA_MAP
 }
 
@@ -60,6 +62,9 @@ BEGIN_MESSAGE_MAP(CNodePropsPolling, CPropertyPage)
 	ON_BN_CLICKED(IDC_CHECK_DISABLE_DATACOLL, OnCheckDisableDatacoll)
 	ON_BN_CLICKED(IDC_CHECK_DISABLE_ROUTE_POLLS, OnCheckDisableRoutePolls)
 	ON_BN_CLICKED(IDC_CHECK_DISABLE_STATUS_POLL, OnCheckDisableStatusPoll)
+	ON_BN_CLICKED(IDC_RADIO_DEFAULT, OnRadioDefault)
+	ON_BN_CLICKED(IDC_RADIO_DISABLE, OnRadioDisable)
+	ON_BN_CLICKED(IDC_RADIO_ENABLE, OnRadioEnable)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -148,6 +153,7 @@ void CNodePropsPolling::OnOK()
 	CPropertyPage::OnOK();
 
    m_pUpdate->dwPollerNode = m_dwPollerNode;
+	m_pUpdate->nUseIfXTable = m_nUseIfXTable;
    if (m_bDisableAgent)
       m_pUpdate->dwNodeFlags |= NF_DISABLE_NXCP;
    else
@@ -222,4 +228,19 @@ void CNodePropsPolling::OnCheckDisableRoutePolls()
 void CNodePropsPolling::OnCheckDisableStatusPoll() 
 {
    m_pUpdate->qwFlags |= OBJ_UPDATE_NODE_FLAGS;
+}
+
+void CNodePropsPolling::OnRadioDefault() 
+{
+   m_pUpdate->qwFlags |= OBJ_UPDATE_USE_IFXTABLE;
+}
+
+void CNodePropsPolling::OnRadioDisable() 
+{
+   m_pUpdate->qwFlags |= OBJ_UPDATE_USE_IFXTABLE;
+}
+
+void CNodePropsPolling::OnRadioEnable() 
+{
+   m_pUpdate->qwFlags |= OBJ_UPDATE_USE_IFXTABLE;
 }

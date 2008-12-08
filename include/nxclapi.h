@@ -223,6 +223,15 @@ typedef void * NXC_SESSION;
 
 
 //
+// Node ifXTable usage mode
+//
+
+#define IFXTABLE_DEFAULT			0
+#define IFXTABLE_ENABLED			1
+#define IFXTABLE_DISABLED			2
+
+
+//
 // Status calculation and propagation algorithms
 //
 
@@ -462,6 +471,7 @@ enum
 #define OBJ_UPDATE_REQUIRED_POLLS   ((QWORD)_ULL(0x0080000000))
 #define OBJ_UPDATE_TRUSTED_NODES    ((QWORD)_ULL(0x0100000000))
 #define OBJ_UPDATE_CUSTOM_ATTRS     ((QWORD)_ULL(0x0200000000))
+#define OBJ_UPDATE_USE_IFXTABLE     ((QWORD)_ULL(0x0400000000))
 
 
 //
@@ -976,7 +986,8 @@ struct __nxc_object_node
    WORD wAuthMethod;    // Native agent's authentication method
    TCHAR szAgentVersion[MAX_AGENT_VERSION_LEN];
    TCHAR szPlatformName[MAX_PLATFORM_NAME_LEN];
-   WORD wSNMPVersion;
+	BYTE nUseIfXTable;
+   BYTE nSNMPVersion;
 	WORD wRequiredPollCount;
 	TCHAR szSysDescription[MAX_DB_STRING];
 };
@@ -1150,6 +1161,7 @@ typedef struct
 	WORD wRequiredPollCount;
 	DWORD dwNumTrustedNodes;
 	DWORD *pdwTrustedNodes;
+	int nUseIfXTable;
 #ifdef __cplusplus
 	StringMap *pCustomAttrs;
 #else
