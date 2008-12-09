@@ -44,6 +44,7 @@ protected:
 	afx_msg void OnButtonDelete();
 	afx_msg void OnGraphmanagerDelete();
 	afx_msg void OnButtonProperties();
+	afx_msg void OnButtonSettings();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

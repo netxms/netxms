@@ -13,6 +13,7 @@
 - NXSL: added new attribute "status" for node objects
 - Windows console:
 	- Added support for negative values on graphs
+	- Implemented editing of predefned graphs
 	- Implemented cut/copy/paste in event policy editor
 - Java API introduced
 - Fixed issues: #31, #74, #146, #218, #228, #235, #236, #237, #238

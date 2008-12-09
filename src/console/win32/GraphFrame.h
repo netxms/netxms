@@ -136,6 +136,8 @@ private:
 	CGraph m_wndGraph;
 
 public:
+	void GetConfiguration(TCHAR *config);
+	BOOL EditProperties(BOOL frameIsValid);
    void SetSubTitle(TCHAR *pszText) { nx_strncpy(m_szSubTitle, pszText, 256); }
    TCHAR *GetSubTitle(void) { return m_szSubTitle; }
 };

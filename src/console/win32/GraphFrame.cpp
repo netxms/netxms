@@ -289,133 +289,12 @@ BOOL CGraphFrame::PreCreateWindow(CREATESTRUCT& cs)
 
 void CGraphFrame::OnGraphProperties() 
 {
-   CPropertySheet dlg(_T("Graph Properties"), theApp.GetMainWnd(), 0);
-   CGraphSettingsPage pgSettings;
-	CGraphStylePage pgStyle;
-   CGraphDataPage pgData;
-
-   // Create "Settings" page
-	pgSettings.m_strTitle = m_szSubTitle;
-   pgSettings.m_bAutoscale = m_wndGraph.m_bAutoScale;
-   pgSettings.m_bShowGrid = m_wndGraph.m_bShowGrid;
-   pgSettings.m_bRuler = m_wndGraph.m_bShowRuler;
-   pgSettings.m_bShowLegend = m_wndGraph.m_bShowLegend;
-   pgSettings.m_bEnableZoom = m_wndGraph.m_bEnableZoom;
-   pgSettings.m_bShowHostNames = m_wndGraph.m_bShowHostNames;
-   pgSettings.m_bAutoUpdate = (m_dwFlags & GF_AUTOUPDATE) ? TRUE : FALSE;
-   pgSettings.m_dwRefreshInterval = m_dwRefreshInterval;
-   pgSettings.m_rgbAxisLines = m_wndGraph.m_rgbAxisColor;
-   pgSettings.m_rgbBackground = m_wndGraph.m_rgbBkColor;
-   pgSettings.m_rgbGridLines = m_wndGraph.m_rgbGridColor;
-   pgSettings.m_rgbSelection = m_wndGraph.m_rgbSelRectColor;
-	pgSettings.m_rgbRuler = m_wndGraph.m_rgbRulerColor;
-   pgSettings.m_rgbText = m_wndGraph.m_rgbTextColor;
-   pgSettings.m_iTimeFrame = m_iTimeFrameType;
-   pgSettings.m_iTimeUnit = m_iTimeUnit;
-   pgSettings.m_dwNumUnits = m_dwNumTimeUnits;
-   pgSettings.m_dateFrom = (time_t)m_dwTimeFrom;
-   pgSettings.m_timeFrom = (time_t)m_dwTimeFrom;
-   pgSettings.m_dateTo = (time_t)m_dwTimeTo;
-   pgSettings.m_timeTo = (time_t)m_dwTimeTo;
-   dlg.AddPage(&pgSettings);
-
-	// Create "Style" page
-	memcpy(pgStyle.m_styles, m_wndGraph.m_graphItemStyles, sizeof(GRAPH_ITEM_STYLE) * MAX_GRAPH_ITEMS);
-	dlg.AddPage(&pgStyle);
-
-   // Create "Data Sources" page
-   pgData.m_dwNumItems = m_dwNumItems;
-   memcpy(pgData.m_ppItems, m_ppItems, sizeof(DCIInfo *) * MAX_GRAPH_ITEMS);
-   dlg.AddPage(&pgData);
-
-   // Open property sheet
-   dlg.m_psh.dwFlags |= PSH_NOAPPLYNOW;
-   if (dlg.DoModal() == IDOK)
-   {
-		nx_strncpy(m_szSubTitle, pgSettings.m_strTitle, MAX_DB_STRING);
-
-		CString strFullString, strTitle;
-
-	   if (strFullString.LoadString(IDR_DCI_HISTORY_GRAPH))
-		   AfxExtractSubString(strTitle, strFullString, CDocTemplate::docName);
-
-      strTitle += " - [";
-      strTitle += m_szSubTitle;
-      strTitle += "]";
-	   SetTitle(strTitle);
-		OnUpdateFrameTitle(TRUE);
-
-      m_dwNumItems = pgData.m_dwNumItems;
-      memcpy(m_ppItems, pgData.m_ppItems, sizeof(DCIInfo *) * MAX_GRAPH_ITEMS);
-
-      if (m_hTimer != 0)
-         KillTimer(m_hTimer);
-      m_dwRefreshInterval = pgSettings.m_dwRefreshInterval;
-      m_wndStatusBar.m_dwMaxValue = m_dwRefreshInterval;
-      if (pgSettings.m_bAutoUpdate)
-      {
-         m_dwFlags |= GF_AUTOUPDATE;
-         m_hTimer = SetTimer(1, 1000, NULL);
-         m_dwSeconds = 0;
-      }
-      else
-      {
-         m_dwFlags &= ~GF_AUTOUPDATE;
-      }
-
-      m_wndGraph.m_bAutoScale = pgSettings.m_bAutoscale;
-      m_wndGraph.m_bShowGrid = pgSettings.m_bShowGrid;
-      m_wndGraph.m_bShowLegend = pgSettings.m_bShowLegend;
-      m_wndGraph.m_bShowRuler = pgSettings.m_bRuler;
-      m_wndGraph.m_bEnableZoom = pgSettings.m_bEnableZoom;
-      m_wndGraph.m_bShowHostNames = pgSettings.m_bShowHostNames;
-
-      m_wndGraph.m_rgbAxisColor = pgSettings.m_rgbAxisLines;
-      m_wndGraph.m_rgbBkColor = pgSettings.m_rgbBackground;
-      m_wndGraph.m_rgbGridColor = pgSettings.m_rgbGridLines;
-      m_wndGraph.m_rgbSelRectColor = pgSettings.m_rgbSelection;
-      m_wndGraph.m_rgbTextColor = pgSettings.m_rgbText;
-		m_wndGraph.m_rgbRulerColor = pgSettings.m_rgbRuler;
-
-		memcpy(m_wndGraph.m_graphItemStyles, pgStyle.m_styles, sizeof(GRAPH_ITEM_STYLE) * MAX_GRAPH_ITEMS);
-
-      m_wndStatusBar.SetText(m_wndGraph.m_bAutoScale ? _T("Autoscale") : _T(""), 0, 0);
-      m_wndStatusBar.SetText(m_dwFlags & GF_AUTOUPDATE ? _T("Autoupdate") : _T(""), 1, 0);
-//      m_wndStatusBar.SetText((m_dwFlags & GF_AUTOUPDATE) ? (LPCTSTR)m_dwSeconds : _T(""), 1,
-//                             (m_dwFlags & GF_AUTOUPDATE) ? SBT_OWNERDRAW : 0);
-
-      m_iTimeFrameType = pgSettings.m_iTimeFrame;
-      m_iTimeUnit = pgSettings.m_iTimeUnit;
-      m_dwNumTimeUnits = pgSettings.m_dwNumUnits;
-      if (m_iTimeFrameType == 0)
-      {
-         m_dwTimeFrom = CTime(pgSettings.m_dateFrom.GetYear(), pgSettings.m_dateFrom.GetMonth(),
-                              pgSettings.m_dateFrom.GetDay(), pgSettings.m_timeFrom.GetHour(),
-                              pgSettings.m_timeFrom.GetMinute(),
-                              pgSettings.m_timeFrom.GetSecond(), -1).GetTime();
-         m_dwTimeTo = CTime(pgSettings.m_dateTo.GetYear(), pgSettings.m_dateTo.GetMonth(),
-                            pgSettings.m_dateTo.GetDay(), pgSettings.m_timeTo.GetHour(),
-                            pgSettings.m_timeTo.GetMinute(),
-                            pgSettings.m_timeTo.GetSecond(), -1).GetTime();
-         if (m_dwTimeTo < m_dwTimeFrom)
-         {
-            m_dwTimeTo = m_dwTimeFrom;
-         }
-         m_dwTimeFrame = m_dwTimeTo - m_dwTimeFrom;
-      }
-      else
-      {
-         // Back from now
-         m_dwTimeFrame = m_dwNumTimeUnits * m_dwTimeUnitSize[m_iTimeUnit];
-      }
-
-		m_dwNumItems = pgData.m_dwNumItems;
-		memcpy(m_ppItems, pgData.m_ppItems, sizeof(DCIInfo *) * MAX_GRAPH_ITEMS);
-
+	if (EditProperties(TRUE))
+	{
       /* TODO: send refresh only if time frame or DCI list was changed */
       m_bFullRefresh = TRUE;
       PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
-   }
+	}
 }
 
 
@@ -455,17 +334,15 @@ void CGraphFrame::OnTimer(UINT nIDEvent)
 
 
 //
-// Get save info for desktop saving
+// Get graph configuration
 //
 
-LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+void CGraphFrame::GetConfiguration(TCHAR *config)
 {
    TCHAR szBuffer[512];
    DWORD i;
 
-   pInfo->iWndClass = WNDC_GRAPH;
-   GetWindowPlacement(&pInfo->placement);
-   _sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN,
+   _sntprintf(config, MAX_WND_PARAM_LEN,
               _T("F:%d\x7FN:%d\x7FTS:%d\x7FTF:%d\x7F") _T("A:%d\x7F")
               _T("TFT:%d\x7FTU:%d\x7FNTU:%d\x7FS:%d\x7F")
               _T("CA:%u\x7F") _T("CB:%u\x7F") _T("CG:%u\x7F") _T("CS:%u\x7F")
@@ -481,8 +358,8 @@ LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
    {
       _sntprintf(szBuffer, 512, _T("\x7F") _T("C%d:%lu"), i, m_wndGraph.m_graphItemStyles[i].rgbColor);
-      if (_tcslen(pInfo->szParameters) + _tcslen(szBuffer) < MAX_WND_PARAM_LEN)
-         _tcscat(pInfo->szParameters, szBuffer);
+      if (_tcslen(config) + _tcslen(szBuffer) < MAX_WND_PARAM_LEN)
+         _tcscat(config, szBuffer);
    }
    
    for(i = 0; i < m_dwNumItems; i++)
@@ -491,13 +368,26 @@ LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
                  i, m_ppItems[i]->m_dwNodeId, i, m_ppItems[i]->m_dwItemId,
                  i, m_ppItems[i]->m_iSource, i, m_ppItems[i]->m_iDataType,
                  i, m_ppItems[i]->m_pszParameter, i, m_ppItems[i]->m_pszDescription);
-      if (_tcslen(pInfo->szParameters) + _tcslen(szBuffer) < MAX_WND_PARAM_LEN)
-         _tcscat(pInfo->szParameters, szBuffer);
+      if (_tcslen(config) + _tcslen(szBuffer) < MAX_WND_PARAM_LEN)
+         _tcscat(config, szBuffer);
    }
 
-   _sntprintf(&pInfo->szParameters[_tcslen(pInfo->szParameters)],
-              MAX_WND_PARAM_LEN - _tcslen(pInfo->szParameters),
+   _sntprintf(&config[_tcslen(config)],
+              MAX_WND_PARAM_LEN - _tcslen(config),
               _T("\x7FT:%s"), m_szSubTitle);
+
+}
+
+
+//
+// Get save info for desktop saving
+//
+
+LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+{
+   pInfo->iWndClass = WNDC_GRAPH;
+   GetWindowPlacement(&pInfo->placement);
+	GetConfiguration(pInfo->szParameters);
    return 1;
 }
 
@@ -1111,4 +1001,144 @@ void CGraphFrame::LoadSettings(const TCHAR *pszName)
       // Back from now
       m_dwTimeFrame = m_dwNumTimeUnits * m_dwTimeUnitSize[m_iTimeUnit];
    }
+}
+
+
+//
+// Edit graph properties. Return TRUE if properties was changed.
+//
+
+BOOL CGraphFrame::EditProperties(BOOL frameIsValid)
+{
+   CPropertySheet dlg(_T("Graph Properties"), theApp.GetMainWnd(), 0);
+   CGraphSettingsPage pgSettings;
+	CGraphStylePage pgStyle;
+   CGraphDataPage pgData;
+	BOOL ok = FALSE;
+
+   // Create "Settings" page
+	pgSettings.m_strTitle = m_szSubTitle;
+   pgSettings.m_bAutoscale = m_wndGraph.m_bAutoScale;
+   pgSettings.m_bShowGrid = m_wndGraph.m_bShowGrid;
+   pgSettings.m_bRuler = m_wndGraph.m_bShowRuler;
+   pgSettings.m_bShowLegend = m_wndGraph.m_bShowLegend;
+   pgSettings.m_bEnableZoom = m_wndGraph.m_bEnableZoom;
+   pgSettings.m_bShowHostNames = m_wndGraph.m_bShowHostNames;
+   pgSettings.m_bAutoUpdate = (m_dwFlags & GF_AUTOUPDATE) ? TRUE : FALSE;
+   pgSettings.m_dwRefreshInterval = m_dwRefreshInterval;
+   pgSettings.m_rgbAxisLines = m_wndGraph.m_rgbAxisColor;
+   pgSettings.m_rgbBackground = m_wndGraph.m_rgbBkColor;
+   pgSettings.m_rgbGridLines = m_wndGraph.m_rgbGridColor;
+   pgSettings.m_rgbSelection = m_wndGraph.m_rgbSelRectColor;
+	pgSettings.m_rgbRuler = m_wndGraph.m_rgbRulerColor;
+   pgSettings.m_rgbText = m_wndGraph.m_rgbTextColor;
+   pgSettings.m_iTimeFrame = m_iTimeFrameType;
+   pgSettings.m_iTimeUnit = m_iTimeUnit;
+   pgSettings.m_dwNumUnits = m_dwNumTimeUnits;
+   pgSettings.m_dateFrom = (time_t)m_dwTimeFrom;
+   pgSettings.m_timeFrom = (time_t)m_dwTimeFrom;
+   pgSettings.m_dateTo = (time_t)m_dwTimeTo;
+   pgSettings.m_timeTo = (time_t)m_dwTimeTo;
+   dlg.AddPage(&pgSettings);
+
+	// Create "Style" page
+	memcpy(pgStyle.m_styles, m_wndGraph.m_graphItemStyles, sizeof(GRAPH_ITEM_STYLE) * MAX_GRAPH_ITEMS);
+	dlg.AddPage(&pgStyle);
+
+   // Create "Data Sources" page
+   pgData.m_dwNumItems = m_dwNumItems;
+   memcpy(pgData.m_ppItems, m_ppItems, sizeof(DCIInfo *) * MAX_GRAPH_ITEMS);
+   dlg.AddPage(&pgData);
+
+   // Open property sheet
+   dlg.m_psh.dwFlags |= PSH_NOAPPLYNOW;
+   if (dlg.DoModal() == IDOK)
+   {
+		nx_strncpy(m_szSubTitle, pgSettings.m_strTitle, MAX_DB_STRING);
+
+		if (frameIsValid)
+		{
+			CString strFullString, strTitle;
+
+			if (strFullString.LoadString(IDR_DCI_HISTORY_GRAPH))
+				AfxExtractSubString(strTitle, strFullString, CDocTemplate::docName);
+
+			strTitle += " - [";
+			strTitle += m_szSubTitle;
+			strTitle += "]";
+			SetTitle(strTitle);
+			OnUpdateFrameTitle(TRUE);
+		}
+
+      m_dwNumItems = pgData.m_dwNumItems;
+      memcpy(m_ppItems, pgData.m_ppItems, sizeof(DCIInfo *) * MAX_GRAPH_ITEMS);
+
+      if (m_hTimer != 0)
+         KillTimer(m_hTimer);
+      m_dwRefreshInterval = pgSettings.m_dwRefreshInterval;
+      m_wndStatusBar.m_dwMaxValue = m_dwRefreshInterval;
+      if (pgSettings.m_bAutoUpdate)
+      {
+         m_dwFlags |= GF_AUTOUPDATE;
+			if (frameIsValid)
+				m_hTimer = SetTimer(1, 1000, NULL);
+         m_dwSeconds = 0;
+      }
+      else
+      {
+         m_dwFlags &= ~GF_AUTOUPDATE;
+      }
+
+      m_wndGraph.m_bAutoScale = pgSettings.m_bAutoscale;
+      m_wndGraph.m_bShowGrid = pgSettings.m_bShowGrid;
+      m_wndGraph.m_bShowLegend = pgSettings.m_bShowLegend;
+      m_wndGraph.m_bShowRuler = pgSettings.m_bRuler;
+      m_wndGraph.m_bEnableZoom = pgSettings.m_bEnableZoom;
+      m_wndGraph.m_bShowHostNames = pgSettings.m_bShowHostNames;
+
+      m_wndGraph.m_rgbAxisColor = pgSettings.m_rgbAxisLines;
+      m_wndGraph.m_rgbBkColor = pgSettings.m_rgbBackground;
+      m_wndGraph.m_rgbGridColor = pgSettings.m_rgbGridLines;
+      m_wndGraph.m_rgbSelRectColor = pgSettings.m_rgbSelection;
+      m_wndGraph.m_rgbTextColor = pgSettings.m_rgbText;
+		m_wndGraph.m_rgbRulerColor = pgSettings.m_rgbRuler;
+
+		memcpy(m_wndGraph.m_graphItemStyles, pgStyle.m_styles, sizeof(GRAPH_ITEM_STYLE) * MAX_GRAPH_ITEMS);
+
+		if (frameIsValid)
+		{
+			m_wndStatusBar.SetText(m_wndGraph.m_bAutoScale ? _T("Autoscale") : _T(""), 0, 0);
+			m_wndStatusBar.SetText(m_dwFlags & GF_AUTOUPDATE ? _T("Autoupdate") : _T(""), 1, 0);
+		}
+
+      m_iTimeFrameType = pgSettings.m_iTimeFrame;
+      m_iTimeUnit = pgSettings.m_iTimeUnit;
+      m_dwNumTimeUnits = pgSettings.m_dwNumUnits;
+      if (m_iTimeFrameType == 0)
+      {
+         m_dwTimeFrom = CTime(pgSettings.m_dateFrom.GetYear(), pgSettings.m_dateFrom.GetMonth(),
+                              pgSettings.m_dateFrom.GetDay(), pgSettings.m_timeFrom.GetHour(),
+                              pgSettings.m_timeFrom.GetMinute(),
+                              pgSettings.m_timeFrom.GetSecond(), -1).GetTime();
+         m_dwTimeTo = CTime(pgSettings.m_dateTo.GetYear(), pgSettings.m_dateTo.GetMonth(),
+                            pgSettings.m_dateTo.GetDay(), pgSettings.m_timeTo.GetHour(),
+                            pgSettings.m_timeTo.GetMinute(),
+                            pgSettings.m_timeTo.GetSecond(), -1).GetTime();
+         if (m_dwTimeTo < m_dwTimeFrom)
+         {
+            m_dwTimeTo = m_dwTimeFrom;
+         }
+         m_dwTimeFrame = m_dwTimeTo - m_dwTimeFrom;
+      }
+      else
+      {
+         // Back from now
+         m_dwTimeFrame = m_dwNumTimeUnits * m_dwTimeUnitSize[m_iTimeUnit];
+      }
+
+		m_dwNumItems = pgData.m_dwNumItems;
+		memcpy(m_ppItems, pgData.m_ppItems, sizeof(DCIInfo *) * MAX_GRAPH_ITEMS);
+		ok = TRUE;
+   }
+	return ok;
 }

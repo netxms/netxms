@@ -5,6 +5,7 @@
 #include "nxcon.h"
 #include "GraphManagerDlg.h"
 #include "DefineGraphDlg.h"
+#include "GraphFrame.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -41,6 +42,7 @@ BEGIN_MESSAGE_MAP(CGraphManagerDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_DELETE, OnButtonDelete)
 	ON_COMMAND(ID_GRAPHMANAGER_DELETE, OnGraphmanagerDelete)
 	ON_BN_CLICKED(IDC_BUTTON_PROPERTIES, OnButtonProperties)
+	ON_BN_CLICKED(IDC_BUTTON_SETTINGS, OnButtonSettings)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -280,7 +282,7 @@ void CGraphManagerDlg::OnGraphmanagerDelete()
 
 
 //
-// "Edit..." button handler
+// "Properties..." button handler
 //
 
 void CGraphManagerDlg::OnButtonProperties() 
@@ -324,5 +326,53 @@ void CGraphManagerDlg::OnButtonProperties()
 		dwResult = DoRequestArg2(NXCDefineGraph, g_hSession, &graph, _T("Updating predefined graph settings..."));
 		if (dwResult != RCC_SUCCESS)
 			theApp.ErrorBox(dwResult, _T("Cannot update predefined graph settings: %s"));
+	}
+}
+
+
+//
+// "Settings..." button handler
+//
+
+void CGraphManagerDlg::OnButtonSettings() 
+{
+	HTREEITEM hItem;
+	DWORD i, dwGraphId, dwResult;
+	NXC_GRAPH graph;
+	CGraphFrame frm;
+
+	hItem = m_wndTreeCtrl.GetSelectedItem();
+	if (hItem == NULL)
+		return;
+
+	dwGraphId = m_wndTreeCtrl.GetItemData(hItem);
+	if (dwGraphId == 0)
+		return;
+
+	// Find graph info
+	for(i = 0; i < g_dwNumGraphs; i++)
+		if (g_pGraphList[i].dwId == dwGraphId)
+			break;
+
+	if (i == g_dwNumGraphs)
+	{
+		MessageBox(_T("Internal error: unable to find graph data with corresponding ID"), _T("Error"), MB_OK | MB_ICONSTOP);
+		return;
+	}
+
+	frm.RestoreFromServer(g_pGraphList[i].pszConfig);
+	if (frm.EditProperties(FALSE))
+	{
+		graph.dwId = dwGraphId;
+		graph.dwOwner = g_pGraphList[i].dwOwner;
+		graph.dwAclSize = g_pGraphList[i].dwAclSize;
+		graph.pACL = g_pGraphList[i].pACL;
+		graph.pszName = g_pGraphList[i].pszName;
+		graph.pszConfig = (TCHAR *)malloc(sizeof(TCHAR) * MAX_WND_PARAM_LEN);
+		frm.GetConfiguration(graph.pszConfig);
+		dwResult = DoRequestArg2(NXCDefineGraph, g_hSession, &graph, _T("Updating predefined graph settings..."));
+		if (dwResult != RCC_SUCCESS)
+			theApp.ErrorBox(dwResult, _T("Cannot update predefined graph settings: %s"));
+		free(graph.pszConfig);
 	}
 }
