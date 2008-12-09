@@ -1,10 +1,6 @@
  Current NetXMS ToDo List
 **************************
 
-For 0.2.23:
-
-- hide HP-UX unused autoport aggregation interfaces
-
 
 GENERAL:
 
@@ -36,6 +32,7 @@ SERVER:
 - Network service autodiscovery
 - NxDbMgr -- backup before db recover
 - OSPF discovery
+- hide HP-UX unused autoport aggregation interfaces
 
 
 ALL AGENTS:
