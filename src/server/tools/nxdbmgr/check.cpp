@@ -619,6 +619,48 @@ static void CheckIData(void)
 
 
 //
+// Check template to node mapping
+//
+
+static void CheckTemplateNodeMapping(void)
+{
+   DB_RESULT hResult;
+   TCHAR name[256], query[256];
+   DWORD i, dwNumRows, dwTemplateId, dwNodeId;
+
+   StartStage(_T("Checking template to node mapping..."));
+   hResult = SQLSelect(_T("SELECT template_id,node_id FROM dct_node_map ORDER BY template_id"));
+   if (hResult != NULL)
+   {
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwTemplateId = DBGetFieldULong(hResult, i, 0);
+         dwNodeId = DBGetFieldULong(hResult, i, 1);
+
+         // Check node existence
+         if (!IsNodeExist(dwNodeId))
+         {
+            m_iNumErrors++;
+				GetObjectName(dwTemplateId, name);
+            _tprintf(_T("\rTemplate %d [%s] mapped to non-existent node %d. Correct? (Y/N) "),
+                     dwTemplateId, name, dwNodeId);
+            if (GetYesNo())
+            {
+               _sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%d AND node_id=%d"),
+                          dwTemplateId, dwNodeId);
+               if (SQLQuery(query))
+                  m_iNumFixes++;
+            }
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   EndStage();
+}
+
+
+//
 // Check database for errors
 //
 
@@ -705,6 +747,7 @@ void CheckDatabase(void)
          CheckComponents(_T("interface"), _T("interfaces"));
          CheckComponents(_T("network service"), _T("network_services"));
 			CheckClusters();
+         CheckTemplateNodeMapping();
          CheckObjectProperties();
          CheckEPP();
          CheckIData();

@@ -64,6 +64,7 @@ typedef struct
    char szRcptAddr[MAX_RCPT_ADDR_LEN];
    char szSubject[MAX_EMAIL_SUBJECT_LEN];
    char *pszText;
+	int nRetryCount;
 } MAIL_ENVELOPE;
 
 
@@ -378,11 +379,26 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 
       dwResult = SendMail(pEnvelope->szRcptAddr, pEnvelope->szSubject, pEnvelope->pszText);
       if (dwResult != SMTP_ERR_SUCCESS)
-         PostEvent(EVENT_SMTP_FAILURE, g_dwMgmtNode, "dsss", dwResult, 
-                   m_szErrorText[dwResult], pEnvelope->szRcptAddr, pEnvelope->szSubject);
-
-      free(pEnvelope->pszText);
-      free(pEnvelope);
+		{
+			pEnvelope->nRetryCount--;
+			if (pEnvelope->nRetryCount > 0)
+			{
+				// Try posting again
+				m_pMailerQueue->Put(pEnvelope);
+			}
+			else
+			{
+				PostEvent(EVENT_SMTP_FAILURE, g_dwMgmtNode, "dsss", dwResult, 
+							 m_szErrorText[dwResult], pEnvelope->szRcptAddr, pEnvelope->szSubject);
+				free(pEnvelope->pszText);
+				free(pEnvelope);
+			}
+		}
+		else
+		{
+			free(pEnvelope->pszText);
+			free(pEnvelope);
+		}
    }
    return THREAD_OK;
 }
@@ -425,5 +441,6 @@ void NXCORE_EXPORTABLE PostMail(char *pszRcpt, char *pszSubject, char *pszText)
    nx_strncpy(pEnvelope->szRcptAddr, pszRcpt, MAX_RCPT_ADDR_LEN);
    nx_strncpy(pEnvelope->szSubject, pszSubject, MAX_EMAIL_SUBJECT_LEN);
    pEnvelope->pszText = strdup(pszText);
+	pEnvelope->nRetryCount = ConfigReadInt(_T("SMTPRetryCount"), 1);
    m_pMailerQueue->Put(pEnvelope);
 }

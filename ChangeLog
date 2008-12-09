@@ -11,6 +11,8 @@
 - Management packs improved
 - Usage of ifXTable for interface naming made configurable
 - NXSL: added new attribute "status" for node objects
+- Implemented resending of failed e-mails
+- Database checking procedure improved
 - Windows console:
 	- Added support for negative values on graphs
 	- Implemented editing of predefned graphs

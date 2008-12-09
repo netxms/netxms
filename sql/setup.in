@@ -198,6 +198,8 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('ReceiveForwardedEvents','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
 	VALUES ('UseIfXTable','1',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
+	VALUES ('SMTPRetryCount','1',1,0);
 
 
 /*
