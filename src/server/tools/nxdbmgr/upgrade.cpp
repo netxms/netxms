@@ -121,6 +121,10 @@ static BOOL H_UpgradeFromV84(void)
 		if (!g_bIgnoreErrors)
 			return FALSE;
 
+	if (!CreateConfigParam(_T("SMTPRetryCount"), _T("1"), 1, 0))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
 	if (!SQLQuery(_T("UPDATE config SET var_value='85' WHERE var_name='DBFormatVersion'")))
       if (!g_bIgnoreErrors)
          return FALSE;
