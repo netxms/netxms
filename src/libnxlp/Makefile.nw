@@ -5,18 +5,15 @@
 
 include ../../netware/Makefile.inc
 
-OBJECTS  = base64.o c_lgcc3.o config.o crypto.o gen_uuid.o dload.o hash.o \
-	   icmp.o inline.o log.o main.o md5.o message.o msgwq.o nxcp.o \
-	   qsort.o queue.o sha1.o string.o strmap.o table.o \
-	   tools.o unicode.o uuid.o xml.o
-EXEC     = netxms.nlm
-DEF      = netxms.def
-OBJTMP   = netxms_r.o
-IMP      = netxms.imp
+OBJECTS  = main.o parser.o rule.o unixfile.o
+EXEC     = libnxlp.nlm
+DEF      = libnxlp.def
+OBJTMP   = libnxlp_r.o
+IMP      = libnxlp.imp
 
 all: $(EXEC)
 
-$(OBJECTS): libnetxms.h Makefile.nw
+$(OBJECTS): libnxlp.h Makefile.nw
 
 .cpp.o:
 	$(CC) $(CFLAGS) -o $*.o $<
@@ -29,7 +26,7 @@ $(EXEC): $(OBJECTS) $(DEF)
 	$(PERL) ../../tools/nwmkimp.pl $(OBJTMP) $(IMP)
 	$(LINK) $(LDFLAGS) -T $(DEF)
 	rm -f $(OBJTMP)
-	cp netxms.nlm ../../netware/bin
+	cp libnxlp.nlm ../../netware/bin
 
 clean:
 	rm -f *.o $(EXEC)

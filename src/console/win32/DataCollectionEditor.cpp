@@ -1236,7 +1236,7 @@ static DWORD ClearDCIData(DWORD dwNodeId, DWORD dwItemCount, DWORD *pdwItemList)
 {
 	DWORD i, dwResult;
 
-	for(i = 0; i < dwResult; i++)
+	for(i = 0; i < dwItemCount; i++)
 	{
 		dwResult = NXCClearDCIData(g_hSession, dwNodeId, pdwItemList[i]);
 		if (dwResult != RCC_SUCCESS)
