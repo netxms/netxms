@@ -11,4 +11,5 @@ libnxlp_la_LIBADD = ../libnetxms/libnetxms.la
 EXTRA_DIST = \
 	libnxlp.dsp libnxlp.dsw \
 	libnxlp.h \
-	winfile.cpp
+	winfile.cpp \
+	libnxlp.def Makefile.nw
