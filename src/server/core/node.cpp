@@ -1804,6 +1804,10 @@ DWORD Node::GetInternalItem(const char *szParam, DWORD dwBufSize, char *szBuffer
    {
       sprintf(szBuffer, "%d", m_iStatus);
    }
+   else if (!stricmp(szParam, "Dummy"))
+   {
+      _tcscpy(szBuffer, _T("0"));
+   }
    else if (!stricmp(szParam, "AgentStatus"))
    {
       if (m_dwFlags & NF_IS_NATIVE_AGENT)
