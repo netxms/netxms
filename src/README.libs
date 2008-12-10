@@ -1,6 +1,5 @@
 build order:
 	libnetxms
-	libnxcscp
 	libnxcl
 
 PPC_libs.vcw (eVC4) can be used for Pocket Windows builds
