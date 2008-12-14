@@ -13,4 +13,5 @@ libnxmc_la_LIBADD = ../../../libnetxms/libnetxms.la ../../../libnxcl/libnxcl.la
 endif
 
 EXTRA_DIST = \
-	libnxmc.dsp libnxmc.h nxview.h objseldlg.h heading.h graph.h userSelectionDialog.h
+	libnxmc.dsp libnxmc.h nxview.h objseldlg.h heading.h graph.h \
+	policyEditor.h userSelectionDialog.h
