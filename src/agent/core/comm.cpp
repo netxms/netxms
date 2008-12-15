@@ -128,6 +128,8 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
    servAddr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
+	if (servAddr.sin_addr.s_addr == htonl(INADDR_NONE))
+		servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
    servAddr.sin_port = htons(g_wListenPort);
 
    // Bind socket

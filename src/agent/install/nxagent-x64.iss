@@ -3,7 +3,7 @@
 
 [Setup]
 #include "setup.iss"
-OutputBaseFilename=nxagent-0.2.23-x64
+OutputBaseFilename=nxagent-0.2.24-x64
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 

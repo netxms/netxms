@@ -1,4 +1,13 @@
 *
+* 0.2.24
+*
+
+- Critical bugfixes:
+	- Compilation errors on FreeBSD
+	- Errors in database schema if doing fresh install 
+
+
+*
 * 0.2.23
 *
 
