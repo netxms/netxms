@@ -358,17 +358,22 @@ static void SyslogParserCallback(DWORD event, const char *line, int paramCount,
 										   char **params, DWORD objectId, void *userArg)
 {
 	char format[] = "ssssssssssssssssssssssssssssssss";
+	char *plist[32];
+	int i, count;
 
-	format[min(paramCount, 32)] = 0;
+	count = min(paramCount, 32);
+	format[count] = 0;
+	for(i = 0; i < count; i++)
+		plist[i] = params[i];
 	PostEvent(event, objectId, format,
-	          params[0], params[1], params[2], params[3],
-	          params[4], params[5], params[6], params[7],
-	          params[8], params[9], params[10], params[11],
-	          params[12], params[13], params[14], params[15],
-	          params[16], params[17], params[18], params[19],
-	          params[20], params[21], params[22], params[23],
-	          params[24], params[25], params[26], params[27],
-	          params[28], params[29], params[30], params[31]);
+	          plist[0], plist[1], plist[2], plist[3],
+	          plist[4], plist[5], plist[6], plist[7],
+	          plist[8], plist[9], plist[10], plist[11],
+	          plist[12], plist[13], plist[14], plist[15],
+	          plist[16], plist[17], plist[18], plist[19],
+	          plist[20], plist[21], plist[22], plist[23],
+	          plist[24], plist[25], plist[26], plist[27],
+	          plist[28], plist[29], plist[30], plist[31]);
 }
 
 
