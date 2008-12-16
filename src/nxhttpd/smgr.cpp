@@ -195,6 +195,48 @@ BOOL SessionRequestHandler(HttpRequest &request, HttpResponse &response)
 				}
 				response.SetCode(HTTP_OK);
 			}
+			else if (!_tcscmp(szModule, _T("jsonlogin")))
+			{
+				String user, passwd;
+				ClientSession *pSession;
+				DWORD dwResult;
+
+				if (request.GetQueryParam(_T("user"), user) &&
+					 request.GetQueryParam(_T("pwd"), passwd))
+				{
+					response.SetBody(_T("{\r\n"));
+					pSession = new ClientSession;
+					dwResult = pSession->DoLogin(user, passwd);
+					if (dwResult == RCC_SUCCESS)
+					{
+						if (RegisterNewSession(pSession))
+						{
+							pSession->GenerateSID();
+							json_set_dword(response, 2, _T("rcc"), RCC_SUCCESS, FALSE);
+							json_set_string(response, 2, _T("sid"), pSession->GetSID(), TRUE);
+						}
+						else
+						{
+							delete pSession;
+							json_set_dword(response, 2, _T("rcc"), RCC_INTERNAL_ERROR, FALSE);
+							json_set_string(response, 2, _T("errorText"), NXCGetErrorText(RCC_INTERNAL_ERROR), TRUE);
+						}
+					}
+					else
+					{
+						delete pSession;
+						json_set_dword(response, 2, _T("rcc"), dwResult, FALSE);
+						json_set_string(response, 2, _T("errorText"), NXCGetErrorText(dwResult), TRUE);
+					}
+					response.AppendBody(_T("}\r\n"));
+					response.SetCode(HTTP_OK);
+				}
+				else
+				{
+					response.SetCode(HTTP_BADREQUEST);
+					response.SetBody("ERROR 400: Bad request");
+				}
+			}
 			else if (!_tcscmp(szModule, _T("main")))
 			{
 				String sid;

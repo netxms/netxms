@@ -165,7 +165,51 @@ SOURCE=.\messages.h
 # End Source File
 # Begin Source File
 
+SOURCE="..\..\include\netxms-version.h"
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\netxms_getopt.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\netxms_maps.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\nms_common.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\nms_cscp.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\nms_threads.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\nms_util.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\nxclapi.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\nxcpapi.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\nxevent.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\nxhttpd.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\nxlog.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

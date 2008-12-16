@@ -254,10 +254,11 @@ public:
 
 	void EventHandler(DWORD dwEvent, DWORD dwCode, void *pArg);
 
-	void GenerateSID(void);
+	void GenerateSID();
 	void SetIndex(DWORD idx) { m_dwIndex = idx; }
 
 	BOOL IsMySID(TCHAR *sid) { return !_tcsicmp(sid, m_sid); }
+	const TCHAR *GetSID() { return m_sid; }
 	DWORD GetIndex(void) { return m_dwIndex; }
 	time_t GetLastAccessTime(void) { return m_tmLastAccess; }
 	void SetLastAccessTime(void) { m_tmLastAccess = time(NULL); }
@@ -346,6 +347,10 @@ void AddActionMenu(HttpResponse &response, const TCHAR *sid, ...);
 TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType);
 DWORD *IdListFromString(const TCHAR *pszStr, DWORD *pdwCount);
 BOOL IsListMember(DWORD dwId, DWORD dwCount, DWORD *pdwList);
+
+void json_set_dword(HttpResponse &response, int offset, const TCHAR *name, DWORD val, BOOL last);
+void json_set_qword(HttpResponse &response, int offset, const TCHAR *name, QWORD val, BOOL last);
+void json_set_string(HttpResponse &response, int offset, const TCHAR *name, const TCHAR *val, BOOL last);
 
 #ifdef _WIN32
 
