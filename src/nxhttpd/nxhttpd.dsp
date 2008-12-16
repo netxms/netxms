@@ -125,6 +125,10 @@ SOURCE=.\httpresponse.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\json.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\nxhttpd.cpp
 # End Source File
 # Begin Source File

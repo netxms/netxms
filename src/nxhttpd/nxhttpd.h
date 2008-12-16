@@ -246,6 +246,8 @@ protected:
 	void CtrlPanelServerVariables(HttpRequest &request, HttpResponse &response);
 	void CtrlPanelUsers(HttpRequest &request, HttpResponse &response, BOOL bUsers);
 
+	void JSON_SendAlarmList(HttpResponse &response);
+
 public:
 	ClientSession();
 	~ClientSession();
@@ -267,6 +269,8 @@ public:
 
 	int CompareAlarms(NXC_ALARM *p1, NXC_ALARM *p2);
 	int CompareDCIValues(NXC_DCI_VALUE *p1, NXC_DCI_VALUE *p2);
+
+	BOOL ProcessJSONRequest(HttpRequest &request, HttpResponse &response);
 };
 
 

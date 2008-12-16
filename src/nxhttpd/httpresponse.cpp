@@ -164,6 +164,7 @@ char *HttpResponse::BuildStream(int &size)
 #ifdef UNICODE
 #error NOT IMPLEMENTED YET
 #else
+	// TODO: convert to UTF-8 ????
 	memcpy(out, (TCHAR *)tmp, tmp.Size());
 	if ((m_bodyLen > 0) && (m_body != NULL))
 		memcpy(out + tmp.Size(), m_body, m_bodyLen);

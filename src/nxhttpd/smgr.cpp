@@ -227,6 +227,35 @@ BOOL SessionRequestHandler(HttpRequest &request, HttpResponse &response)
 					response.SetBody("ERROR 403: Forbidden");
 				}
 			}
+			else if (!_tcscmp(szModule, _T("json")))
+			{
+				String sid;
+
+				if (request.GetQueryParam(_T("sid"), sid))
+				{
+					ClientSession *pSession;
+
+					pSession = FindSessionBySID(sid);
+					if (pSession != NULL)
+					{
+						pSession->SetLastAccessTime();
+						if (!pSession->ProcessJSONRequest(request, response))
+						{
+							DeleteSession(pSession);
+						}
+					}
+					else
+					{
+						response.SetCode(HTTP_FORBIDDEN);
+						response.SetBody("ERROR 403: Forbidden");
+					}
+				}
+				else
+				{
+					response.SetCode(HTTP_FORBIDDEN);
+					response.SetBody("ERROR 403: Forbidden");
+				}
+			}
 			else
 			{
 				response.SetCode(HTTP_NOTFOUND);
