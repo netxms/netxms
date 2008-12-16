@@ -127,12 +127,20 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
-   servAddr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
-	if (servAddr.sin_addr.s_addr == htonl(INADDR_NONE))
+	if (!strcmp(g_szListenAddress, "*"))
+	{
 		servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	}
+	else
+	{
+		servAddr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
+		if (servAddr.sin_addr.s_addr == htonl(INADDR_NONE))
+			servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	}
    servAddr.sin_port = htons(g_wListenPort);
 
    // Bind socket
+	DebugPrintf(INVALID_INDEX, "Trying to bind on %s:%d", IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer), ntohs(servAddr.sin_port));
    if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
       nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());

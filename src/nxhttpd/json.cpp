@@ -25,6 +25,30 @@
 
 
 //
+// JSON helpers
+//
+
+static void jsonSetDWORD(HttpResponse &response, int offset, const TCHAR *name, DWORD val, BOOL last)
+{
+	TCHAR buffer[128];
+
+	_sntprintf(buffer, 128, _T("%*s%s: %d%s\r\n"), offset, _T(""), name, val, last ? _T("") : _T(","));
+	response.AppendBody(buffer);
+}
+
+static void jsonSetString(HttpResponse &response, int offset, const TCHAR *name, const TCHAR *val, BOOL last)
+{
+	TCHAR buffer[128];
+
+	_sntprintf(buffer, 128, _T("%*s%s: \""), offset, _T(""), name);
+	response.AppendBody(buffer);
+	response.AppendBody(val);
+	_sntprintf(buffer, 128, _T("\"%s\r\n"), last ? _T("") : _T(","));
+	response.AppendBody(buffer);
+}
+
+
+//
 // Send alarm list
 //
 
@@ -35,8 +59,8 @@ void ClientSession::JSON_SendAlarmList(HttpResponse &response)
 	DWORD i;
 
 	response.AppendBody(_T("{\r\n"));
-	response.AppendBody(_T("  \"rcc\": 0,\r\n"));
-	response.AppendBody(_T("  \"alarmList\": [,\r\n"));
+	jsonSetDWORD(response, 2, _T("rcc"), 0, FALSE);
+	response.AppendBody(_T("  \"alarmList\": [\r\n"));
 
 	MutexLock(m_mutexAlarmList, INFINITE);
 	for(i = 0; i < m_dwNumAlarms; i++)
@@ -50,7 +74,13 @@ void ClientSession::JSON_SendAlarmList(HttpResponse &response)
 		object = NXCFindObjectById(m_hSession, m_pAlarmList[i].dwSourceObject);
 		name = (object != NULL) ? object->szName : _T("<unknown>");
 
-//		response.AppendBody(_T("    { "id": 
+		response.AppendBody(_T("    {\r\n"));
+		
+		jsonSetDWORD(response, 6, _T("id"), m_pAlarmList[i].dwAlarmId, FALSE);
+		jsonSetDWORD(response, 6, _T("sourceId"), m_pAlarmList[i].dwSourceObject, FALSE);
+		jsonSetString(response, 6, _T("sourceName"), name, FALSE);
+
+		response.AppendBody(_T("    }")); 
 	}
    MutexUnlock(m_mutexAlarmList);
 

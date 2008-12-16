@@ -109,7 +109,7 @@ char g_szFileStore[MAX_PATH] = AGENT_DEFAULT_FILE_STORE;
 char g_szPlatformSuffix[MAX_PSUFFIX_LENGTH] = "";
 char g_szConfigServer[MAX_DB_STRING] = "not_set";
 char g_szRegistrar[MAX_DB_STRING] = "not_set";
-char g_szListenAddress[MAX_PATH] = "0.0.0.0";
+char g_szListenAddress[MAX_PATH] = "*";
 WORD g_wListenPort = AGENT_LISTEN_PORT;
 SERVER_INFO g_pServerList[MAX_SERVERS];
 DWORD g_dwServerCount = 0;
