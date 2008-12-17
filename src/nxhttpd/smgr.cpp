@@ -2,7 +2,7 @@
 /* 
 ** NetXMS - Network Management System
 ** HTTP Server
-** Copyright (C) 2006, 2007 Alex Kirhenshtein and Victor Kirhenshtein
+** Copyright (C) 2006, 2007, 2008 Alex Kirhenshtein and Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -202,7 +202,7 @@ BOOL SessionRequestHandler(HttpRequest &request, HttpResponse &response)
 				DWORD dwResult;
 
 				if (request.GetQueryParam(_T("user"), user) &&
-					 request.GetQueryParam(_T("pwd"), passwd))
+					 request.GetQueryParam(_T("passwd"), passwd))
 				{
 					response.SetBody(_T("{\r\n"));
 					pSession = new ClientSession;

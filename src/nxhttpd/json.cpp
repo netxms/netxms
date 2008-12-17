@@ -84,6 +84,13 @@ void json_set_string(HttpResponse &response, int offset, const TCHAR *name, cons
 	response.AppendBody(buffer);
 }
 
+void json_set_rcc(HttpResponse &response, int offset, DWORD rcc, BOOL last)
+{
+	json_set_dword(response, 2, _T("rcc"), rcc, (rcc == RCC_SUCCESS) ? last : FALSE);
+	if (rcc != RCC_SUCCESS)
+		json_set_string(response, 2, _T("errorText"), NXCGetErrorText(rcc), last);
+}
+
 
 //
 // Send alarm list
@@ -97,7 +104,7 @@ void ClientSession::JSON_SendAlarmList(HttpResponse &response)
 	BOOL needSep;
 
 	response.AppendBody(_T("{\r\n"));
-	json_set_dword(response, 2, _T("rcc"), RCC_SUCCESS, FALSE);
+	json_set_rcc(response, 2, RCC_SUCCESS, FALSE);
 	response.AppendBody(_T("  \"alarmList\": [\r\n"));
 
 	MutexLock(m_mutexAlarmList, INFINITE);
@@ -151,6 +158,51 @@ void ClientSession::JSON_SendAlarmList(HttpResponse &response)
 
 
 //
+// Send user list to client
+//
+
+void ClientSession::JSON_SendUserList(HttpResponse &response)
+{
+	DWORD dwNumUsers, i;
+	NXC_USER *pUserList;
+	BOOL needSep;
+
+	response.AppendBody(_T("{\r\n"));
+	if (NXCGetUserDB(m_hSession, &pUserList, &dwNumUsers))
+	{
+		json_set_rcc(response, 2, RCC_SUCCESS, FALSE);
+		response.AppendBody(_T("  \"userList\": [\r\n"));
+		for(i = 0, needSep = FALSE; i < dwNumUsers; i++)
+		{
+			if (needSep)
+			{
+				response.AppendBody(_T(",\r\n"));
+			}
+			else
+			{
+				needSep = TRUE;
+			}
+			response.AppendBody(_T("    {\r\n"));
+
+			json_set_dword(response, 6, _T("id"), pUserList[i].dwId, FALSE);
+			json_set_dword(response, 6, _T("systemRights"), pUserList[i].dwSystemRights, FALSE);
+			json_set_string(response, 6, _T("name"), pUserList[i].szName, FALSE);
+			json_set_string(response, 6, _T("fullName"), pUserList[i].szFullName, FALSE);
+			json_set_string(response, 6, _T("description"), pUserList[i].szDescription, TRUE);
+
+			response.AppendBody(_T("    }")); 
+		}
+		response.AppendBody(_T("\r\n  ]"));
+	}
+	else
+	{
+		json_set_rcc(response, 2, RCC_ACCESS_DENIED, TRUE);
+	}
+	response.AppendBody(_T("\r\n}\r\n"));
+}
+
+
+//
 // Process requests to json module
 //
 
@@ -165,9 +217,13 @@ BOOL ClientSession::ProcessJSONRequest(HttpRequest &request, HttpResponse &respo
 		response.SetBody(_T(""));
 		//response.SetType("application/json");
 
-		if (!_tcscmp(cmd, _T("getAlarms")))
+		if (!_tcscmp(cmd, _T("getAlarmList")))
 		{
 			JSON_SendAlarmList(response);
+		}
+		else if (!_tcscmp(cmd, _T("getUserList")))
+		{
+			JSON_SendUserList(response);
 		}
 		else
 		{

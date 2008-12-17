@@ -247,6 +247,7 @@ protected:
 	void CtrlPanelUsers(HttpRequest &request, HttpResponse &response, BOOL bUsers);
 
 	void JSON_SendAlarmList(HttpResponse &response);
+	void JSON_SendUserList(HttpResponse &response);
 
 public:
 	ClientSession();
