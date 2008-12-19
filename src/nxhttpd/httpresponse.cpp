@@ -131,6 +131,31 @@ void HttpResponse::SetCode(int code)
 
 
 //
+// Set body and code from JSON object
+// Code will be set to OK, except if JSON builder fails - 
+// then it will be set to 500
+//
+
+void HttpResponse::SetJSONBody(JSONObjectBuilder &json)
+{
+	const TCHAR *data;
+
+	data = json.CreateOutput();
+	if (data != NULL)
+	{
+		SetCode(HTTP_OK);
+		SetBody(data);
+		//SetType("application/json");
+	}
+	else
+	{
+		SetCode(HTTP_INTERNALSERVERERROR);
+		SetBody(m_codeString);
+	}
+}
+
+
+//
 // Build output stream
 //
 

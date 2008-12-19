@@ -15,7 +15,7 @@ SUBDIRS = static
 bin_PROGRAMS = nxhttpd
 nxhttpd_SOURCES = \
 	messages.c alarm.cpp ctrlpanel.cpp client.cpp dataview.cpp html.cpp \
-	httprequest.cpp httpresponse.cpp nxhttpd.cpp \
+	httprequest.cpp httpresponse.cpp nxhttpd.cpp json.cpp jsonutil.cpp \
 	object.cpp piechart.cpp session.cpp smgr.cpp tools.cpp
 nxhttpd_LDADD = ../libnetxms/libnetxms.la ../libnxmap/libnxmap.la ../libnxcl/libnxcl.la
 

@@ -25,90 +25,28 @@
 
 
 //
-// Escape string
+// Alarm update actions
 //
 
-static void EscapeStringForJSON(String &str)
-{
-	int i;
-	TCHAR chr[2], buffer[16];
-   
-	str.EscapeCharacter(_T('\\'), _T('\\'));
-   str.EscapeCharacter(_T('"'), _T('\\'));
-	
-   str.Translate(_T("\r"), _T("\\r"));
-   str.Translate(_T("\n"), _T("\\n"));
-   str.Translate(_T("\t"), _T("\\t"));
-
-	chr[1] = 0;
-	for(i = 1; i < ' '; i++)
-	{
-		_sntprintf(buffer, 16, _T("\\u%04X"), i);
-		chr[0] = i;
-		str.Translate(chr, buffer);
-	}
-}
-
-
-//
-// JSON helpers
-//
-
-void json_set_dword(HttpResponse &response, int offset, const TCHAR *name, DWORD val, BOOL last)
-{
-	TCHAR buffer[128];
-
-	_sntprintf(buffer, 128, _T("%*s\"%s\": %u%s\r\n"), offset, _T(""), name, val, last ? _T("") : _T(","));
-	response.AppendBody(buffer);
-}
-
-void json_set_qword(HttpResponse &response, int offset, const TCHAR *name, QWORD val, BOOL last)
-{
-	TCHAR buffer[128];
-
-	_sntprintf(buffer, 128, _T("%*s\"%s\": ") UINT64_FMT _T("%s\r\n"), offset, _T(""), name, val, last ? _T("") : _T(","));
-	response.AppendBody(buffer);
-}
-
-void json_set_string(HttpResponse &response, int offset, const TCHAR *name, const TCHAR *val, BOOL last)
-{
-	TCHAR buffer[128];
-	String temp;
-
-	_sntprintf(buffer, 128, _T("%*s\"%s\": \""), offset, _T(""), name);
-	response.AppendBody(buffer);
-	temp = val;
-	EscapeStringForJSON(temp);
-	response.AppendBody(temp);
-	_sntprintf(buffer, 128, _T("\"%s\r\n"), last ? _T("") : _T(","));
-	response.AppendBody(buffer);
-}
-
-void json_set_rcc(HttpResponse &response, int offset, DWORD rcc, BOOL last)
-{
-	json_set_dword(response, 2, _T("rcc"), rcc, (rcc == RCC_SUCCESS) ? last : FALSE);
-	if (rcc != RCC_SUCCESS)
-		json_set_string(response, 2, _T("errorText"), NXCGetErrorText(rcc), last);
-}
+#define AU_ACK          0
+#define AU_TERMINATE    1
 
 
 //
 // Send alarm list
 //
 
-void ClientSession::JSON_SendAlarmList(HttpResponse &response)
+void ClientSession::JSON_SendAlarmList(JSONObjectBuilder &json)
 {
 	NXC_OBJECT *object, *rootObj = NULL;
 	const TCHAR *name;
 	DWORD i;
-	BOOL needSep;
 
-	response.AppendBody(_T("{\r\n"));
-	json_set_rcc(response, 2, RCC_SUCCESS, FALSE);
-	response.AppendBody(_T("  \"alarmList\": [\r\n"));
+	json.AddRCC(RCC_SUCCESS);
+	json.StartArray(_T("alarmList"));
 
 	MutexLock(m_mutexAlarmList, INFINITE);
-	for(i = 0, needSep = FALSE; i < m_dwNumAlarms; i++)
+	for(i = 0; i < m_dwNumAlarms; i++)
 	{
 		if (rootObj != NULL)
 		{
@@ -119,41 +57,30 @@ void ClientSession::JSON_SendAlarmList(HttpResponse &response)
 		object = NXCFindObjectById(m_hSession, m_pAlarmList[i].dwSourceObject);
 		name = (object != NULL) ? object->szName : _T("<unknown>");
 
-		if (needSep)
-		{
-			response.AppendBody(_T(",\r\n"));
-		}
-		else
-		{
-			needSep = TRUE;
-		}
-		response.AppendBody(_T("    {\r\n"));
-		
-		json_set_dword(response, 6, _T("id"), m_pAlarmList[i].dwAlarmId, FALSE);
-		json_set_dword(response, 6, _T("sourceId"), m_pAlarmList[i].dwSourceObject, FALSE);
-		json_set_string(response, 6, _T("sourceName"), name, FALSE);
-		json_set_dword(response, 6, _T("creationTime"), m_pAlarmList[i].dwCreationTime, FALSE);
-		json_set_dword(response, 6, _T("lastChangeTime"), m_pAlarmList[i].dwLastChangeTime, FALSE);
-		json_set_dword(response, 6, _T("sourceEventCode"), m_pAlarmList[i].dwSourceEventCode, FALSE);
-		json_set_qword(response, 6, _T("sourceEventId"), m_pAlarmList[i].qwSourceEventId, FALSE);
-		json_set_dword(response, 6, _T("currentSeverity"), m_pAlarmList[i].nCurrentSeverity, FALSE);
-		json_set_dword(response, 6, _T("originalSeverity"), m_pAlarmList[i].nOriginalSeverity, FALSE);
-		json_set_dword(response, 6, _T("state"), m_pAlarmList[i].nState, FALSE);
-		json_set_dword(response, 6, _T("helpdeskState"), m_pAlarmList[i].nHelpDeskState, FALSE);
-		json_set_dword(response, 6, _T("ackByUser"), m_pAlarmList[i].dwAckByUser, FALSE);
-		json_set_dword(response, 6, _T("terminateByUser"), m_pAlarmList[i].dwTermByUser, FALSE);
-		json_set_dword(response, 6, _T("repeatCount"), m_pAlarmList[i].dwRepeatCount, FALSE);
-		json_set_dword(response, 6, _T("timeout"), m_pAlarmList[i].dwTimeout, FALSE);
-		json_set_dword(response, 6, _T("timeoutEvent"), m_pAlarmList[i].dwTimeoutEvent, FALSE);
-		json_set_string(response, 6, _T("message"), m_pAlarmList[i].szMessage, FALSE);
-		json_set_string(response, 6, _T("key"), m_pAlarmList[i].szKey, FALSE);
-		json_set_string(response, 6, _T("helpdeskReference"), m_pAlarmList[i].szHelpDeskRef, TRUE);
-
-		response.AppendBody(_T("    }")); 
+		json.StartObject(NULL);
+		json.AddUInt32(_T("id"), m_pAlarmList[i].dwAlarmId);
+		json.AddUInt32(_T("sourceId"), m_pAlarmList[i].dwSourceObject);
+		json.AddString(_T("sourceName"), name);
+		json.AddUInt32(_T("creationTime"), m_pAlarmList[i].dwCreationTime);
+		json.AddUInt32(_T("lastChangeTime"), m_pAlarmList[i].dwLastChangeTime);
+		json.AddUInt32(_T("sourceEventCode"), m_pAlarmList[i].dwSourceEventCode);
+		json.AddUInt64(_T("sourceEventId"), m_pAlarmList[i].qwSourceEventId);
+		json.AddInt32(_T("currentSeverity"), m_pAlarmList[i].nCurrentSeverity);
+		json.AddInt32(_T("originalSeverity"), m_pAlarmList[i].nOriginalSeverity);
+		json.AddInt32(_T("state"), m_pAlarmList[i].nState);
+		json.AddInt32(_T("helpdeskState"), m_pAlarmList[i].nHelpDeskState);
+		json.AddUInt32(_T("ackByUser"), m_pAlarmList[i].dwAckByUser);
+		json.AddUInt32(_T("terminateByUser"), m_pAlarmList[i].dwTermByUser);
+		json.AddUInt32(_T("repeatCount"), m_pAlarmList[i].dwRepeatCount);
+		json.AddUInt32(_T("timeout"), m_pAlarmList[i].dwTimeout);
+		json.AddUInt32(_T("timeoutEvent"), m_pAlarmList[i].dwTimeoutEvent);
+		json.AddString(_T("message"), m_pAlarmList[i].szMessage);
+		json.AddString(_T("key"), m_pAlarmList[i].szKey);
+		json.AddString(_T("helpdeskReference"), m_pAlarmList[i].szHelpDeskRef);
+		json.EndObject();
 	}
    MutexUnlock(m_mutexAlarmList);
-
-	response.AppendBody(_T("\r\n  ]\r\n}\r\n"));
+	json.EndArray();
 }
 
 
@@ -161,44 +88,74 @@ void ClientSession::JSON_SendAlarmList(HttpResponse &response)
 // Send user list to client
 //
 
-void ClientSession::JSON_SendUserList(HttpResponse &response)
+void ClientSession::JSON_SendUserList(JSONObjectBuilder &json)
 {
-	DWORD dwNumUsers, i;
+	DWORD dwNumUsers, i, j;
 	NXC_USER *pUserList;
-	BOOL needSep;
 
-	response.AppendBody(_T("{\r\n"));
 	if (NXCGetUserDB(m_hSession, &pUserList, &dwNumUsers))
 	{
-		json_set_rcc(response, 2, RCC_SUCCESS, FALSE);
-		response.AppendBody(_T("  \"userList\": [\r\n"));
-		for(i = 0, needSep = FALSE; i < dwNumUsers; i++)
+		json.AddRCC(RCC_SUCCESS);
+
+		// Users
+		json.StartArray(_T("userList"));
+		for(i = 0; i < dwNumUsers; i++)
 		{
-			if (needSep)
+			if (!(pUserList[i].dwId & GROUP_FLAG))
 			{
-				response.AppendBody(_T(",\r\n"));
+				json.StartObject(NULL);
+				json.AddUInt32(_T("id"), pUserList[i].dwId);
+				json.AddGUID(_T("guid"), pUserList[i].guid);
+				json.AddUInt32(_T("flags"), pUserList[i].wFlags);
+				json.AddUInt32(_T("systemRights"), pUserList[i].dwSystemRights);
+				json.AddString(_T("name"), pUserList[i].szName);
+				json.AddString(_T("fullName"), pUserList[i].szFullName);
+				json.AddString(_T("description"), pUserList[i].szDescription);
+				json.AddInt32(_T("authMethod"), pUserList[i].nAuthMethod);
+				json.AddString(_T("certMappingData"), CHECK_NULL_EX(pUserList[i].pszCertMappingData));
+				json.AddInt32(_T("certMappingMethod"), pUserList[i].nCertMappingMethod);
+				json.EndObject();
 			}
-			else
-			{
-				needSep = TRUE;
-			}
-			response.AppendBody(_T("    {\r\n"));
-
-			json_set_dword(response, 6, _T("id"), pUserList[i].dwId, FALSE);
-			json_set_dword(response, 6, _T("systemRights"), pUserList[i].dwSystemRights, FALSE);
-			json_set_string(response, 6, _T("name"), pUserList[i].szName, FALSE);
-			json_set_string(response, 6, _T("fullName"), pUserList[i].szFullName, FALSE);
-			json_set_string(response, 6, _T("description"), pUserList[i].szDescription, TRUE);
-
-			response.AppendBody(_T("    }")); 
 		}
-		response.AppendBody(_T("\r\n  ]"));
+		json.EndArray();
+
+		// Groups
+		json.StartArray(_T("groupList"));
+		for(i = 0; i < dwNumUsers; i++)
+		{
+			if (pUserList[i].dwId & GROUP_FLAG)
+			{
+				json.StartObject(NULL);
+				json.AddUInt32(_T("id"), pUserList[i].dwId);
+				json.AddGUID(_T("guid"), pUserList[i].guid);
+				json.AddUInt32(_T("flags"), pUserList[i].wFlags);
+				json.AddUInt32(_T("systemRights"), pUserList[i].dwSystemRights);
+				json.AddString(_T("name"), pUserList[i].szName);
+				json.AddString(_T("fullName"), pUserList[i].szFullName);
+				json.AddString(_T("description"), pUserList[i].szDescription);
+				json.StartArray(_T("members"));
+				for(j = 0; j < pUserList[i].dwNumMembers; j++)
+					json.AddUInt32(NULL, pUserList[i].pdwMemberList[j]);
+				json.EndArray();
+				json.EndObject();
+			}
+		}
+		json.EndArray();
 	}
 	else
 	{
-		json_set_rcc(response, 2, RCC_ACCESS_DENIED, TRUE);
+		json.AddRCC(RCC_ACCESS_DENIED);
 	}
-	response.AppendBody(_T("\r\n}\r\n"));
+}
+
+
+//
+// Update alarms (acknowledge, terminate, etc.)
+//
+
+void ClientSession::JSON_UpdateAlarms(HttpRequest &request, int action, JSONObjectBuilder &json)
+{
+	
 }
 
 
@@ -208,28 +165,48 @@ void ClientSession::JSON_SendUserList(HttpResponse &response)
 
 BOOL ClientSession::ProcessJSONRequest(HttpRequest &request, HttpResponse &response)
 {
-	BOOL doLogout = FALSE;
+	BOOL keepSession = TRUE;
 	String cmd;
 
 	if (request.GetQueryParam(_T("cmd"), cmd))
 	{
-		response.SetCode(HTTP_OK);
-		response.SetBody(_T(""));
-		//response.SetType("application/json");
+		JSONObjectBuilder json;
+		int code = HTTP_OK;
 
-		if (!_tcscmp(cmd, _T("getAlarmList")))
+		if (!_tcscmp(cmd, _T("acknowledgeAlarms")))
 		{
-			JSON_SendAlarmList(response);
+			JSON_UpdateAlarms(request, AU_ACK, json);
+		}
+		else if (!_tcscmp(cmd, _T("getAlarmList")))
+		{
+			JSON_SendAlarmList(json);
 		}
 		else if (!_tcscmp(cmd, _T("getUserList")))
 		{
-			JSON_SendUserList(response);
+			JSON_SendUserList(json);
+		}
+		else if (!_tcscmp(cmd, _T("logout")))
+		{
+			json.AddRCC(RCC_SUCCESS);
+			keepSession = FALSE;
+		}
+		else if (!_tcscmp(cmd, _T("terminateAlarms")))
+		{
+			JSON_UpdateAlarms(request, AU_TERMINATE, json);
 		}
 		else
 		{
-			response.SetCode(HTTP_BADREQUEST);
-			response.SetBody(_T("ERROR 400: Bad request"));
-			response.SetType("text/plain");
+			code = HTTP_BADREQUEST;
+		}
+
+		if (code == HTTP_OK)
+		{
+			response.SetJSONBody(json);
+		}
+		else
+		{
+			response.SetCode(code);
+			response.SetBody(response.GetCodeString());
 		}
 	}
 	else
@@ -238,5 +215,5 @@ BOOL ClientSession::ProcessJSONRequest(HttpRequest &request, HttpResponse &respo
 		response.SetBody(_T("ERROR 400: Bad request"));
 	}
 
-	return doLogout;
+	return keepSession;
 }

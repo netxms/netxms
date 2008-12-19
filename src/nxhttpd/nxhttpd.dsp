@@ -129,6 +129,10 @@ SOURCE=.\json.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\jsonutil.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\nxhttpd.cpp
 # End Source File
 # Begin Source File

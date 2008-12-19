@@ -76,6 +76,44 @@ struct NXC_OBJECT_INDEX
 
 
 //
+// JSON object builder class
+//
+
+class JSONObjectBuilder
+{
+private:
+	String m_data;
+	int m_level;
+	int m_tabSize;
+	BOOL m_isFirst;
+
+	void StartElement();
+	void NextLevel() { m_level++; m_isFirst = TRUE; }
+	void PrevLevel() { m_level--; m_isFirst = FALSE; }
+
+public:
+	JSONObjectBuilder();
+	~JSONObjectBuilder();
+
+	void SetTabSize(int size) { m_tabSize = size; }
+
+	void AddString(const TCHAR *name, const TCHAR *value);
+	void AddInt32(const TCHAR *name, int value);
+	void AddUInt32(const TCHAR *name, DWORD value);
+	void AddUInt64(const TCHAR *name, QWORD value);
+	void AddGUID(const TCHAR *name, uuid_t guid);
+	void AddRCC(DWORD rcc);
+
+	void StartArray(const TCHAR *name);
+	void EndArray();
+	void StartObject(const TCHAR *name);
+	void EndObject();
+
+	const TCHAR *CreateOutput();
+};
+
+
+//
 // HTTP request
 //
 
@@ -149,6 +187,7 @@ public:
 	void SetType(const TCHAR *pszType) { m_headers.Set(_T("Content-type"), pszType); }
 	void SetBody(const TCHAR *data, int size = -1, BOOL bAppend = FALSE);
 	void AppendBody(const TCHAR *data, int size = -1) { SetBody(data, size, TRUE); }
+	void SetJSONBody(JSONObjectBuilder &json);
 	void SetCode(int);
 
 	int GetCode(void) { return m_code; }
@@ -246,8 +285,9 @@ protected:
 	void CtrlPanelServerVariables(HttpRequest &request, HttpResponse &response);
 	void CtrlPanelUsers(HttpRequest &request, HttpResponse &response, BOOL bUsers);
 
-	void JSON_SendAlarmList(HttpResponse &response);
-	void JSON_SendUserList(HttpResponse &response);
+	void JSON_SendAlarmList(JSONObjectBuilder &json);
+	void JSON_SendUserList(JSONObjectBuilder &json);
+	void JSON_UpdateAlarms(HttpRequest &request, int action, JSONObjectBuilder &json);
 
 public:
 	ClientSession();
@@ -348,10 +388,6 @@ void AddActionMenu(HttpResponse &response, const TCHAR *sid, ...);
 TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType);
 DWORD *IdListFromString(const TCHAR *pszStr, DWORD *pdwCount);
 BOOL IsListMember(DWORD dwId, DWORD dwCount, DWORD *pdwList);
-
-void json_set_dword(HttpResponse &response, int offset, const TCHAR *name, DWORD val, BOOL last);
-void json_set_qword(HttpResponse &response, int offset, const TCHAR *name, QWORD val, BOOL last);
-void json_set_string(HttpResponse &response, int offset, const TCHAR *name, const TCHAR *val, BOOL last);
 
 #ifdef _WIN32
 

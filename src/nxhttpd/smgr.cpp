@@ -204,7 +204,8 @@ BOOL SessionRequestHandler(HttpRequest &request, HttpResponse &response)
 				if (request.GetQueryParam(_T("user"), user) &&
 					 request.GetQueryParam(_T("passwd"), passwd))
 				{
-					response.SetBody(_T("{\r\n"));
+					JSONObjectBuilder json;
+
 					pSession = new ClientSession;
 					dwResult = pSession->DoLogin(user, passwd);
 					if (dwResult == RCC_SUCCESS)
@@ -212,24 +213,21 @@ BOOL SessionRequestHandler(HttpRequest &request, HttpResponse &response)
 						if (RegisterNewSession(pSession))
 						{
 							pSession->GenerateSID();
-							json_set_dword(response, 2, _T("rcc"), RCC_SUCCESS, FALSE);
-							json_set_string(response, 2, _T("sid"), pSession->GetSID(), TRUE);
+							json.AddRCC(RCC_SUCCESS);
+							json.AddString(_T("sid"), pSession->GetSID());
 						}
 						else
 						{
 							delete pSession;
-							json_set_dword(response, 2, _T("rcc"), RCC_INTERNAL_ERROR, FALSE);
-							json_set_string(response, 2, _T("errorText"), NXCGetErrorText(RCC_INTERNAL_ERROR), TRUE);
+							json.AddRCC(RCC_INTERNAL_ERROR);
 						}
 					}
 					else
 					{
 						delete pSession;
-						json_set_dword(response, 2, _T("rcc"), dwResult, FALSE);
-						json_set_string(response, 2, _T("errorText"), NXCGetErrorText(dwResult), TRUE);
+						json.AddRCC(dwResult);
 					}
-					response.AppendBody(_T("}\r\n"));
-					response.SetCode(HTTP_OK);
+					response.SetJSONBody(json);
 				}
 				else
 				{
