@@ -1,5 +1,0 @@
-EXPORTS
-  GetLexerCount=_GetLexerCount@0
-  GetLexerName=_GetLexerName@12
-  Lex=_Lex@28
-  Fold=_Fold@28
