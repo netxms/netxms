@@ -888,10 +888,10 @@ char *CSCPMessage::CreateXML(void)
 #endif
 #else		/* not UNICODE */
 #ifdef UNICODE_UCS2
-				bytes = WideCharToMultiByte(CP_UTF8, 0, m_ppVarList[i]->data.string.szValue,
+				bytes = WideCharToMultiByte(CP_UTF8, 0, (UCS2CHAR *)m_ppVarList[i]->data.string.szValue,
 				                            m_ppVarList[i]->data.string.dwLen / 2, NULL, 0, NULL, NULL);
 				tempStr = (char *)malloc(bytes + 1);
-				bytes = WideCharToMultiByte(CP_UTF8, 0, m_ppVarList[i]->data.string.szValue,
+				bytes = WideCharToMultiByte(CP_UTF8, 0, (UCS2CHAR *)m_ppVarList[i]->data.string.szValue,
 				                            m_ppVarList[i]->data.string.dwLen / 2, tempStr, bytes + 1, NULL, NULL);
 				xml.AddDynamicString(EscapeStringForXML(tempStr, bytes));
 				free(tempStr);
