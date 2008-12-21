@@ -453,6 +453,17 @@ src/server/tools/nxsnmpwalk/nxsnmpwalk.dsp eol=crlf
 src/server/tools/nxsnmpwalk/nxsnmpwalk.dsw eol=crlf
 src/server/tools/nxupload/nxupload.dsp eol=crlf
 src/server/tools/nxupload/nxupload.dsw eol=crlf
+src/webui/src/main/java/org/netxms/client/AlarmBrowser.java -text
+src/webui/src/main/java/org/netxms/client/LoginDialog.java -text
+src/webui/src/main/java/org/netxms/client/PushButtonEx.java -text
+src/webui/src/main/java/org/netxms/client/PushButtonsImageBundle.java -text
+src/webui/src/main/java/org/netxms/client/PushButtonsImageBundle_en.java -text
+src/webui/src/main/java/org/netxms/client/ToolPanel.java -text
+src/webui/src/main/java/org/netxms/client/WaitingPopup.java -text
+src/webui/src/main/java/org/netxms/client/webui.java -text
+src/webui/src/main/java/org/netxms/public/buttons/en/normal/login.png -text
+src/webui/src/main/java/org/netxms/public/buttons/en/pressed/login.png -text
+src/webui/src/main/java/org/netxms/public/cancel.html -text
 tools/patch_config.status.pl -text
 www/data/documentation/body.shtml -text
 www/data/documentation/confexample/image001.png -text
