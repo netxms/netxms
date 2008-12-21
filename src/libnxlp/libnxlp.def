@@ -1,0 +1,27 @@
+#
+# libnxlp.def - NLM Header definition file for nlmconv
+# Copyright (c) 2004 Victor Kirhenshtein
+#
+
+# common definitions
+@../../netware/nlmconv.inc
+
+# define startup object files
+INPUT libnxlp_r.o
+
+# Imports/Exports
+IMPORT @../libnetxms/netxms.imp
+EXPORT @libnxlp.imp
+
+# Entry points
+START _LibCPrelude
+EXIT _LibCPostlude
+
+# NLM header
+OUTPUT libnxlp.nlm
+TYPE 0
+DESCRIPTION "NetXMS Log Parsing Library"
+SCREENNAME "System Console"
+FLAG_ON 64
+
+MODULE LIBC, NETXMS

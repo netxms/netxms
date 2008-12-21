@@ -1,0 +1,29 @@
+/* XPM */
+static char *template_root[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 7 1",
+"  c black",
+". c red",
+"X c blue",
+"o c magenta",
+"O c #808080",
+"+ c #C0C0C0",
+"@ c None",
+/* pixels */
+"@@@@@@@@@@@@    ",
+"@@@@@@@@@@@ ++  ",
+"@@@@@@   @ ++ X ",
+"@@@@@ +  @   XX ",
+"@@@@ + O   X XX ",
+"@@@   OO   X XX ",
+"@@@ + O .O X XX ",
+"@@@ + O .O X XX ",
+"@@@ + O .O X XX ",
+"@@  + O .O X XX ",
+"@@  + O .O X XX ",
+"@ o + O .O X XX ",
+"@ o + O .O X XX ",
+" o  + O .O   X @",
+" o  +   .  X  @@",
+" o@   @  @   @@@"
+};

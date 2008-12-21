@@ -1,0 +1,45 @@
+<parser>
+	<file>*System</file>
+	<rules>
+		<rule>
+			<match>.*([A-Za-z]+) failed.*</match>
+			<event params="1">14</event>
+		</rule>
+		<rule>
+			<match>.*warning.*</match>
+			<event>WARNING_EVENT</event>
+		</rule>
+		<rule>
+			<id>8-10</id>
+			<level>0</level>
+			<source>.*system.*</source>
+			<event>WARNING_EVENT</event>
+		</rule>
+	</rules>
+</parser>
+
+<parser processAll="1">
+	<file>C:\my_log.txt</file>
+	<macros>
+		<macro name="date">[0-9]{2}/[0-9]{2}/[0-9]{2}</macro>
+	</macros>
+	<rules>
+		<rule>
+			<match>@{date}.*([A-Za-z]+) failed.*</match>
+			<context action="set" reset="auto">DEMO</context>
+		</rule>
+		<rule context="DEMO">
+			<match>\@.*warning.*</match>
+			<event>WARNING_EVENT</event>
+			<context>DEMO</context>
+		</rule>
+		<rule>
+			<match>.*([A-Za-z]+) not found.*</match>
+			<context action="set" reset="manual">NOT_FOUND</context>
+		</rule>
+		<rule>
+			<match>.*</match>
+			<context action="clear">NOT_FOUND</context>
+		</rule>
+	</rules>
+</parser>

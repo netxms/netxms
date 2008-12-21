@@ -1,0 +1,26 @@
+#
+# ecs.def - NLM Header definition file for nlmconv
+# Copyright (c) 2006 Victor Kirhenshtein
+#
+
+# common definitions
+@../../../../netware/nlmconv.inc
+
+# define input object files
+INPUT ecs.o
+
+# Import/Export
+IMPORT @../../../libnetxms/netxms.imp
+EXPORT NxSubAgentRegister_ECS
+
+# Entry points
+START _LibCPrelude
+EXIT _LibCPostlude
+
+# NLM header
+OUTPUT ecs.nsm
+TYPE 0
+DESCRIPTION "NetXMS Extended Checksum Subagent"
+SCREENNAME "System Console"
+
+MODULE LIBC, NETXMS

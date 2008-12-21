@@ -1,0 +1,24 @@
+#
+# Makefile for building NetXMS PING Subagent for Novell NetWare platform
+# Copyright (c) 2004 Victor Kirhenshtein
+#
+
+include ../../../../netware/Makefile.inc
+
+OBJECTS  = ping.o
+EXEC     = ping.nsm
+DEF      = ping.def
+
+all: $(EXEC)
+
+$(OBJECTS): Makefile.nw ping.h
+
+.cpp.o:
+	$(CC) $(CFLAGS) -o $*.o $<
+
+$(EXEC): $(OBJECTS) $(DEF)
+	$(LINK) $(LDFLAGS) -T $(DEF)
+	cp ping.nsm ../../../../netware/bin
+
+clean:
+	rm -f *.o $(EXEC)

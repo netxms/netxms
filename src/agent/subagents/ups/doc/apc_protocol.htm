@@ -1,0 +1,937 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3c.org/TR/1999/REC-html401-19991224/loose.dtd">
+<!-- saved from url=(0054)http://eu1.networkupstools.org/protocols/apcsmart.html -->
+<HTML><HEAD><TITLE>Network UPS Tools: APC's smart protocol</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=utf-8">
+<META content="MSHTML 6.00.2900.2802" name=GENERATOR></HEAD>
+<BODY text=#000000 vLink=#551a8b link=#0000ee bgColor=#ffffff>
+<TABLE cellSpacing=0 cellPadding=5 align=left bgColor=#ffffff border=0>
+  <TBODY>
+  <TR>
+    <TD vAlign=top align=left>
+      <TABLE cellSpacing=0 cellPadding=5 align=center border=0>
+        <TBODY>
+        <TR>
+          <TD align=middle colSpan=2><A 
+            href="http://eu1.networkupstools.org/mirror-bounce/">Mirror host</A> 
+            <BR><A href="http://eu1.networkupstools.org/mirrors.html">Other 
+            mirrors</A> </TD></TR>
+        <TR bgColor=#f0f0f0>
+          <TD colSpan=2><STRONG><BIG>Download</BIG></STRONG></TD></TR>
+        <TR bgColor=#ffffff>
+          <TD>&nbsp;</TD>
+          <TD><A href="http://eu1.networkupstools.org/source.html">Source</A> 
+            <BR><A 
+            href="http://eu1.networkupstools.org/packages.html">Packages</A> 
+        </TD></TR>
+        <TR bgColor=#f0f0f0>
+          <TD colSpan=2><STRONG><BIG>Support</BIG></STRONG></TD></TR>
+        <TR bgColor=#ffffff>
+          <TD>&nbsp;</TD>
+          <TD><A href="http://eu1.networkupstools.org/cables/">Cables</A> 
+            <BR><A 
+            href="http://eu1.networkupstools.org/client-projects/">Client&nbsp;projects</A> 
+            <BR><A 
+            href="http://eu1.networkupstools.org/compat/">Compatibility</A> 
+            <BR><A href="http://eu1.networkupstools.org/doc/">Documentation</A> 
+            <BR><A 
+            href="http://eu1.networkupstools.org/driver-projects/">Driver&nbsp;projects</A> 
+            <BR><A href="http://eu1.networkupstools.org/faq/">FAQ</A> <BR><A 
+            href="http://eu1.networkupstools.org/features/">Features</A> <BR><A 
+            href="http://eu1.networkupstools.org/lists/">Mailing&nbsp;lists</A> 
+            <BR><A 
+            href="http://eu1.networkupstools.org/protocols/">UPS&nbsp;protocols</A> 
+            <BR><A 
+            href="http://eu1.networkupstools.org/server-projects/">Server&nbsp;projects</A> 
+            <BR><A href="http://walnut.tuxfamily.org/">Walnut&nbsp;community</A> 
+          </TD></TR></TBODY></TABLE></TD>
+    <TD vAlign=top bgColor=#ffffff>
+      <H1><A href="http://eu1.networkupstools.org/"><IMG 
+      title="Network UPS Tools" height=40 alt="Network UPS Tools" 
+      src="apc_protocol_files/nut-banner.png" width=400 border=0></A></H1>
+      <H2>APC's smart protocol</H2>
+      <H3>Description</H3>Here's the information on the elusive APC smart 
+      signalling protocol used by their higher end units (Back-UPS Pro, 
+      Smart-UPS, Matrix-UPS, etc). What you see here has been collected from a 
+      variety of sources. Some people analyzed the chatter between PowerChute 
+      and their hardware. Others sent various characters to the UPS and figured 
+      out what the results meant. 
+      <H3>RS-232 differences</H3>Normal 9 pin serial connections have TxD on 3 
+      and RxD on 2. APC's smart serial ports put TxD on pin 1 and RxD on pin 2. 
+      This means you go nowhere if you use a normal straight through serial 
+      cable. In fact, you might even power down the load if you plug one of 
+      those cables in. This is due to the odd routing of pins - DTR and RTS from 
+      the PC usually wind up driving the on/off line. So, when you open the 
+      port, they go high and *poof* your computer dies. 
+      <P>Originally <A 
+      href="http://eu1.networkupstools.org/cables/apcevilhack.jpg">this evil 
+      hack</A> was used to connect the UPS to the PC when this page was first 
+      being built. As you can see, I cheated and neglected the ground (only 2 
+      wires!) and it still worked. This method can be used for playing around, 
+      but for professional systems this is obviously not a viable option. 
+      <P>That hack didn't work out so well (damned cats), so it was retired 
+      quite awhile back. The most practical solution was to go out and BUY the 
+      DOS/Win version of Powerchute just for the black (smart) cable. I 
+      recommend doing the same thing if you actually care about this thing 
+      working properly. Of course, if you have one of the newer packages that 
+      came with PowerChute, you already have the cable you need. 
+      <H3>Cable hacking</H3>
+      <UL>
+        <LI><A 
+        href="http://eu1.networkupstools.org/cables/940-0024C.jpg">Redrawn 
+        940-0024C clone diagram</A> (D. Stimits) 
+        <P></P>
+        <LI><A 
+        href="http://eu1.networkupstools.org/cables/mac-940-0024C.png">Mac 
+        940-0024C clone diagram</A> (Miguel Howard) 
+        <P></P>
+        <LI><A 
+        href="http://eu1.networkupstools.org/cables/940-0024C-orig.jpg">Original 
+        940-0024C diagram</A> (Steve Draper) </LI></UL>
+      <P>If you are handy with cable tools, check out these diagrams. They show 
+      how to clone the black "smart" cable that's normally provided with APC 
+      models sold after 1996. The loopback pins (back to the PC) are used to 
+      keep PowerChute happy by allowing cable detection. If you use the <A 
+      href="http://www.networkupstools.org/">NUT</A> apcsmart or newapc drivers, 
+      those pins don't matter. 
+      <P>
+      <H3>The Smart Protocol</H3>Despite the lack of official information from 
+      APC, this table has been constructed. It's standard RS-232 serial 
+      communications at 2400 bps/8N1. Don't rush the UPS while transmitting or 
+      it may stop talking to you. This isn't a problem with the normal single 
+      character queries, but it really does matter for multi-char things like 
+      "@000". Sprinkle a few calls to usleep() in your code and everything will 
+      work a lot better. 
+      <P>
+      <TABLE cellSpacing=0 cellPadding=5 bgColor=#202020 border=0>
+        <TBODY>
+        <TR bgColor=#ff5050>
+          <TH>Character</TH>
+          <TH>Meaning</TH>
+          <TH>Typical results</TH>
+          <TH>Other info</TH></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>^A</TD>
+          <TD>Model string</TD>
+          <TD>SMART-UPS 700</TD>
+          <TD>Spotty support for this query on older models</TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>^N</TD>
+          <TD>Turn on UPS</TD>
+          <TD>n/a</TD>
+          <TD>Send twice with &gt; 1.5s delay between chars 
+            <P>Only on 3rd gen SmartUPS and Black Back-UPS Pros </P></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>^Z</TD>
+          <TD>Capability string</TD>
+          <TD>(long string)</TD>
+          <TD>See <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#cap">"Capabilities" 
+            section</A> for more info</TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>A</TD>
+          <TD>Front panel test</TD>
+          <TD>Light show + "OK"</TD>
+          <TD>Also sounds the beeper for 2 seconds</TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>B</TD>
+          <TD><A name=B>Battery voltage</A></TD>
+          <TD>27.87</TD>
+          <TD>This obviously varies a lot based on the current charge. 
+            <P>Compare this to the <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#g">nominal 
+            battery voltage</A> </P></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>C</TD>
+          <TD>Internal temperature</TD>
+          <TD>036.0</TD>
+          <TD>Units are degrees C</TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>D</TD>
+          <TD><A name=D>Runtime calibration</A></TD>
+          <TD>!, then $</TD>
+          <TD>Runs until battery is below 25% (35% for Matrix) 
+            <P>This updates the 'j' values - only works at 100% battery charge 
+            <P>Can be aborted with a second "D" </P></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>E 
+          <TD>Automatic selftest intervals 
+          <TD>336</TD>
+          <TD>Writable variable 
+            <P>Values: 
+            <UL>
+              <LI>336 (14 days) 
+              <LI>168 (7 days) 
+              <LI>ON (at power on) (note extra space) 
+              <LI>OFF (never) </LI></UL></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>F</TD>
+          <TD>Line frequency, Hz</TD>
+          <TD>60.00</TD>
+          <TD>If this varies much, have a word with your local 
+        electrician</TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>G</TD>
+          <TD>Cause of transfer</TD>
+          <TD>O</TD>
+          <TD>Writable variable 
+            <P>Values: 
+            <UL>
+              <LI>R (unacceptable utility voltage rate of change) 
+              <LI>H (high utility voltage) 
+              <LI>L (low utility voltage) 
+              <LI>T (line voltage notch or spike) 
+              <LI>O (no transfers yet since turnon) 
+              <LI>S (transfer due to <A 
+              href="http://eu1.networkupstools.org/protocols/apcsmart.html#U">U 
+              command</A> or activation of UPS test) </LI></UL></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>I 
+          <TD>Measure-UPS <BR>Alarm enable </TD>
+          <TD>FF</TD>
+          <TD>(not yet decoded)(bitmapped table, coming soon)</TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>J</TD>
+          <TD>Measure-UPS <BR>Alarm status </TD>
+          <TD>0F,00</TD>
+          <TD>(not yet decoded)(bitmapped table, coming soon)</TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>K</TD>
+          <TD><A name=K>Shutdown with grace period</A></TD>
+          <TD>OK</TD>
+          <TD>Send twice with &gt; 1.5s delay between chars 
+            <P>Older units may send "*" instead of "OK" 
+            <P>Also see <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#p">grace 
+            period</A> </P></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>L</TD>
+          <TD>Input line voltage</TD>
+          <TD>118.3</TD>
+          <TD>Does not necessarily read 000.0 on line failure</TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>M 
+          <TD>Maximum line voltage</TD>
+          <TD>118.9</TD>
+          <TD>This is the max voltage since the last time this query was 
+        run</TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>N</TD>
+          <TD>Minimum line voltage</TD>
+          <TD>118.9</TD>
+          <TD>Like the one above, this one also resets itself on every 
+        query</TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>O</TD>
+          <TD>Output voltage</TD>
+          <TD>118.3</TD>
+          <TD>Also see <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#o">on 
+            battery output voltage</A> </TD>
+        <TR bgColor=#50ff50>
+          <TD>P</TD>
+          <TD>Power load %</TD>
+          <TD>023.5</TD>
+          <TD>Relative to the capacity of the UPS</TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>Q</TD>
+          <TD>Status flags</TD>
+          <TD>08</TD>
+          <TD>See <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#status">status 
+            flags section</A> for more info</TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>R</TD>
+          <TD>Turn dumb</TD>
+          <TD>BYE</TD>
+          <TD>Only on 3rd gen Smart-UPS, Smart-UPS v/s, Back-UPS Pro 
+            <P>UPS must receive command to <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#Y">enter 
+            smart mode</A> continue communications after sending this </P></TD>
+        <TR bgColor=#d0d0d0>
+          <TD>S</TD>
+          <TD>Soft shutdown</TD>
+          <TD>OK</TD>
+          <TD>Command executes after <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#p">grace 
+            period</A> 
+            <P>UPS goes online when power returns 
+            <P>Only works when on battery </P></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>U</TD>
+          <TD><A name=U>Simulate power failure</A></TD>
+          <TD>!, then $</TD>
+          <TD>See <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#async">async 
+            notifier section</A> for info on ! and $ </TD>
+        <TR bgColor=#d0d0d0>
+          <TD>V</TD>
+          <TD><A name=V>Firmware revision</A></TD>
+          <TD>GWD</TD>
+          <TD>Can be used to determine abilities of hardware</TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>W</TD>
+          <TD>Self test</TD>
+          <TD>OK</TD>
+          <TD>Tests battery, like pushing the test button on the front panel 
+            <P>Also see <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#X">test 
+            results</A> entry </P></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>X</TD>
+          <TD><A name=X>Self-test results</A></TD>
+          <TD>OK</TD>
+          <TD>Values: 
+            <UL>
+              <LI>OK - good battery 
+              <LI>BT - failed due to insufficient capacity 
+              <LI>NG - failed due to overload 
+              <LI>NO - no results available (no test performed in last 5 
+              minutes) </LI></UL></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>Y</TD>
+          <TD><A name=Y>Enter smart mode</A></TD>
+          <TD>SM</TD>
+          <TD>This must be sent before anything else on this page will work. 
+            <P>Also see <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#R">turn 
+            dumb command</A> to exit smart mode </P>
+        <TR bgColor=#d0d0d0>
+          <TD>Z</TD>
+          <TD>Shutdown immediately</TD>
+          <TD>n/a</TD>
+          <TD>Send twice with &gt; 1.5s delay between chars 
+            <P>UPS switches the load off immediately (no grace period) 
+</P></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>a 
+          <TD>Protocol info</TD>
+          <TD>(long string)</TD>
+          <TD>Returns three main sections: 
+            <UL>
+              <LI>Protocol version 
+              <LI>Alert messages (aka <A 
+              href="http://eu1.networkupstools.org/protocols/apcsmart.html#async">async 
+              notifiers</A>) 
+              <LI>Valid commands </LI></UL>Sections are separated with a period 
+        </TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>b</TD>
+          <TD>Firmware revision</TD>
+          <TD>50.9.D</TD>
+          <TD>Decoding above info: 
+            <UL>
+              <LI>50 = SKU (variable length) 
+              <LI>9 = firmware revision 
+              <LI>D = country code (used in <A 
+              href="http://eu1.networkupstools.org/protocols/apcsmart.html#cap">capability</A> 
+              decoding) </LI></UL></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>c</TD>
+          <TD><A name=c>UPS local id</A></TD>
+          <TD>UPS_IDEN</TD>
+          <TD>Writable variable 
+            <P>Up to 8 letter identifier for keeping track of your hardware 
+          </P></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>e</TD>
+          <TD><A name=e>Return threshold</A></TD>
+          <TD>00</TD>
+          <TD>Writable variable 
+            <P>Minimum battery charge % to return from shutdown after power 
+            returns 
+            <P>Values: 
+            <UL>
+              <LI>00 = 0% (UPS switches on immediately) 
+              <LI>01 = 15% 
+              <LI>02 = 25% 
+              <LI>03 = 90% </LI></UL>
+            <P>This prevents excessive cycling during multiple power failures 
+            </P></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>g</TD>
+          <TD><A name=g>Nominal battery voltage</A></TD>
+          <TD>024</TD>
+          <TD>The battery voltage that's expected to be present in the UPS 
+            normally 
+            <P>Compare to the <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#B">actual 
+            voltage</A> reading </P></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>f</TD>
+          <TD>Battery level</TD>
+          <TD>099.0</TD>
+          <TD>Percentage 
+            <P>It's much easier to use this rather than doing math on the <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#B">current 
+            battery voltage</A> and the <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#g">nominal 
+            battery voltage</A> </P></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>h</TD>
+          <TD>Measure-UPS <BR>Ambient humidity </TD>
+          <TD>042.4</TD>
+          <TD>Percentage 
+            <P>Only works on models with the Measure-UPS SmartSlot card 
+        </P></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>i</TD>
+          <TD>Measure-UPS <BR>Dry contacts </TD>
+          <TD>00</TD>
+          <TD>Bitmapped hex variable 
+            <P>Component values: 
+            <UL>
+              <LI>10 = contact 1 
+              <LI>20 = contact 2 
+              <LI>40 = contact 3 
+              <LI>80 = contact 4 </LI></UL>
+        <TR bgColor=#50ff50>
+          <TD>j</TD>
+          <TD>Estimated runtime</TD>
+          <TD>0327:</TD>
+          <TD>Minutes 
+            <P>Must be <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#D">calibrated</A> 
+            to be effective </P></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>k</TD>
+          <TD>Alarm delay</TD>
+          <TD>0</TD>
+          <TD>Writable variable 
+            <P>Values: 
+            <UL>
+              <LI>0 = 5 second delay after power failure 
+              <LI>T = 30 second delay 
+              <LI>L = alarm at low battery only 
+              <LI>N = alarm disabled </LI></UL>
+            <P>Does not affect low battery warning </P></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>l</TD>
+          <TD>Low transfer voltage</TD>
+          <TD>103</TD>
+          <TD>Writable variable 
+            <P>See <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#cap">capabilities</A> 
+            to get values for a UPS 
+            <P>UPS goes on battery after voltage drops below this point 
+        </P></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>m</TD>
+          <TD>Manufacturing date</TD>
+          <TD>11/29/96</TD>
+          <TD>Format may vary by country (MM/DD/YY vs DD/MM/YY)</TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>n</TD>
+          <TD>Serial number</TD>
+          <TD>WS9643050926</TD>
+          <TD>Unique for each UPS</TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>o</TD>
+          <TD><A name=o>On-battery voltage</A></TD>
+          <TD>115</TD>
+          <TD>May be a writable variable on 220/230/240 VAC units</TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>p</TD>
+          <TD><A name=p>Shutdown grace delay</A></TD>
+          <TD>020</TD>
+          <TD>Writable variable - seconds 
+            <P>See <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#cap">capabilities</A> 
+            to read values 
+            <P>Sets the delay before <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#S">soft 
+            shutdown</A> completes </P></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>q 
+          <TD>Low battery warning</TD>
+          <TD>02</TD>
+          <TD>Writable variable - minutes 
+            <P>See <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#cap">capabilities</A> 
+            to read values 
+            <P>The UPS will report a low battery this many minutes before it 
+            runs out of power </P></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>r 
+          <TD>Wakeup delay</TD>
+          <TD>000</TD>
+          <TD>Writable variable - seconds 
+            <P>See <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#cap">capabilities</A> 
+            to read values 
+            <P>The UPS will wait this many seconds after reaching the <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#e">minimum 
+            charge</A> before returning online </P></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>s</TD>
+          <TD>Sensitivity</TD>
+          <TD>H</TD>
+          <TD>Writable variable 
+            <P>See <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#cap">capabilities</A> 
+            to read values 
+            <P>Meaning of values: 
+            <UL>
+              <LI>H - highest 
+              <LI>M - medium 
+              <LI>L - lowest 
+              <LI>A - autoadjust (Matrix only) </LI></UL></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>u</TD>
+          <TD>Upper transfer voltage</TD>
+          <TD>132</TD>
+          <TD>Writable variable 
+            <P>See <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#cap">capabilities</A> 
+            to read values 
+            <P>UPS goes on battery after voltage rises above this poiont 
+        </P></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>v 
+          <TD>Measure-UPS <BR>Firmware 
+          <TD>4Kx</TD>
+          <TD>Firmware information for Measure-UPS board</TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>t 
+          <TD>Measure-UPS <BR>Ambient temperature 
+          <TD>80.5</TD>
+          <TD>Degrees C 
+            <P>Only works on models with the Measure-UPS SmartSlot card 
+        </P></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>x</TD>
+          <TD>Last battery change</TD>
+          <TD>11/29/96</TD>
+          <TD>Writable variable 
+            <P>This holds whatever the user sets in it, much like the <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#c">UPS 
+            local id</A> variable </P></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>y</TD>
+          <TD>Copyright notice</TD>
+          <TD>(C) APCC</TD>
+          <TD>Only works if <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#V">firmware 
+            letter</A> is later than O</TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>z 
+          <TD>Reset to factory settings</TD>
+          <TD>CLEAR</TD>
+          <TD>Resets most variables to initial factory values except <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#c">identity</A> 
+            or <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#x">battery 
+            change date</A> 
+            <P>Not on SmartUPS v/s or BackUPS Pro </P></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>-</TD>
+          <TD>Capability cycle</TD>
+          <TD>(various)</TD>
+          <TD>Cycle through possible <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#cap">capability 
+            values</A> 
+            <P>UPS sends | afterward to confirm change to PROM </P></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>@nnn</TD>
+          <TD><A name=@>Shutdown and return</A></TD>
+          <TD>OK</TD>
+          <TD>UPS shuts down after <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#p">grace 
+            period</A> with delayed wakeup after nnn tenths of an hour plus any 
+            <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#r">wakeup 
+            delay</A> time 
+            <P>Some older models send * instead of OK </P></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>0x7f</TD>
+          <TD>Abort shutdown</TD>
+          <TD>OK</TD>
+          <TD>Abort shutdown - use to abort <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#@">@</A>, 
+            <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#S">S</A>, 
+            <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#K">K</A> 
+
+            <P>Also known as the delete key in some places </P></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>~</TD>
+          <TD>Register #1</TD>
+          <TD>n/a</TD>
+          <TD>See <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#reg1">register 
+            1</A> table</TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>'</TD>
+          <TD>Register #2</TD>
+          <TD>n/a</TD>
+          <TD>See <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#reg2">register 
+            2</A> table</TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>7</TD>
+          <TD>Dip switch positions</TD>
+          <TD>n/a</TD>
+          <TD>See <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#dipsw">dip 
+            switch</A> table 
+            <P>Only makes sense on models which actually have dip switches 
+          </P></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>8</TD>
+          <TD>Register #3</TD>
+          <TD>n/a</TD>
+          <TD>See <A 
+            href="http://eu1.networkupstools.org/protocols/apcsmart.html#reg3">register 
+            3</A> table</TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>9</TD>
+          <TD>Line quality</TD>
+          <TD>FF</TD>
+          <TD>Values 
+            <UL>
+              <LI>00 - unacceptable 
+              <LI>FF - acceptable </LI></UL></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>&gt;</TD>
+          <TD>Battery packs</TD>
+          <TD>n/a</TD>
+          <TD>SmartCell models: returns number of connected packs 
+            <P>Non-SmartCell models: returns number set by user (use + and -) 
+            </P></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>[</TD>
+          <TD>Measure-UPS <BR>Upper temp limit </TD>
+          <TD>NO,NO</TD>
+          <TD>Degrees C <BR>Writable variable <BR>Values: 55,50,45,...,05 for 
+            both <BR>Use - to enumerate through left side, + to enumerate 
+            through right side </TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>]</TD>
+          <TD>Measure-UPS <BR>Lower temp limit </TD>
+          <TD>NO,NO</TD>
+          <TD>Degrees C <BR>Writeable variable <BR>See 'lower temp limit' 
+            above </TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>{</TD>
+          <TD>Measure-UPS <BR>Upper humidity limit </TD>
+          <TD>NO,NO</TD>
+          <TD>% <BR>Writable variable <BR>Values: 90,80,70,...,10 for both 
+            <BR>Use - and + to change values </TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>}</TD>
+          <TD>Measure-UPS <BR>Lower humidity limit </TD>
+          <TD>NO,NO</TD>
+          <TD>% <BR>Writable variable <BR>Values: 90,80,70,...,10 for both 
+            <BR>Use - and + to change values </TD></TR>
+        <TR bgColor=#ff5050>
+          <TH colSpan=4>Matrix-UPS and Symmetra commands</TH></TR>
+        <TR bgColor=#50ff50>
+          <TD>^</TD>
+          <TD>Run in bypass mode</TD>
+          <TD>n/a</TD>
+          <TD>If online, "BYP" response is received as bypass mode starts 
+            <P>If already in bypass, "INV" is received and UPS goes online 
+            <P>If UPS can't transfer, "ERR" received </P></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>&lt;</TD>
+          <TD>Number of bad battery packs</TD>
+          <TD>000</TD>
+          <TD>Returns count of bad packs connected to the UPS</TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>/</TD>
+          <TD>Load current</TD>
+          <TD>n/a</TD>
+          <TD>True RMS load current drawn by UPS</TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>\</TD>
+          <TD>Apparent load power</TD>
+          <TD>n/a</TD>
+          <TD>Output load as percentage of full rated load</TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>^V 
+          <TD>Output voltage selection</TD>
+          <TD>n/a</TD>
+          <TD>Writable variable 
+            <P>Values: 
+            <UL>
+              <LI>A - Automatic (based on input tap) 
+              <LI>M - 208 VAC 
+              <LI>I - 240 VAC </LI></UL></TD></TR>
+        <TR bgColor=#d0d0d0>
+          <TD>^L</TD>
+          <TD>Front panel language</TD>
+          <TD>n/a</TD>
+          <TD>Writable variable 
+            <P>Values: 
+            <UL>
+              <LI>E - English 
+              <LI>F - French 
+              <LI>G - German 
+              <LI>S - Spanish </LI></UL>
+            <P>Also 1, 2, 3, 4 - unknown </P></TD></TR>
+        <TR bgColor=#50ff50>
+          <TD>w</TD>
+          <TD>Run time conservation</TD>
+          <TD>n/a</TD>
+          <TD>Writable variable 
+            <P>Values: 
+            <UL>
+              <LI>NO - disabled 
+              <LI>02 - leave 2 minutes of runtime in battery 
+              <LI>05 - leave 5 minutes 
+              <LI>08 - leave 8 minutes </LI></UL></TD></TR></TBODY></TABLE><A 
+      name=dipsw></A>
+      <H3>Dip switch information</H3>
+      <TABLE cellPadding=5 border=5>
+        <TBODY>
+        <TR>
+          <TH>Bit 
+          <TH>Switch 
+          <TH>Option when bit=1 
+        <TR>
+          <TD>0 
+          <TD>4 
+          <TD>Low battery alarm changed from 2 to 5 mins. Autostartup disabled 
+            on SU370ci and 400 
+        <TR>
+          <TD>1 
+          <TD>3 
+          <TD>Audible alarm delayed 30 seconds 
+        <TR>
+          <TD>2 
+          <TD>2 
+          <TD>Output transfer set to 115 VAC (from 120 VAC) or to 240 VAC 
+            (from 230 VAC) 
+        <TR>
+          <TD>3 
+          <TD>1 
+          <TD>UPS desensitized - input voltage range expanded 
+        <TR>
+          <TD>4-7 
+          <TD>- 
+          <TD>Unused at this time </TR></TBODY></TABLE><A name=status></A>
+      <H3>Status flags</H3>Some common things you'll see: 
+      <UL>
+        <LI>08 = on line, battery OK 
+        <LI>10 = on battery, battery OK 
+        <LI>50 = on battery, battery low </LI></UL>
+      <TABLE cellPadding=5 border=5>
+        <TBODY>
+        <TR>
+          <TH>Bit
+          <TH>Meaning 
+        <TR>
+          <TD>0
+          <TD>1 = runtime calibration occurring <BR>Not reported by Smart UPS 
+            v/s and BackUPS Pro 
+        <TR>
+          <TD>1
+          <TD>1 = SmartTrim <BR>Not reported by 1st and 2nd generation 
+            SmartUPS models 
+        <TR>
+          <TD>2
+          <TD>1 = SmartBoost 
+        <TR>
+          <TD>3
+          <TD>1 = on line 
+        <TR>
+          <TD>4
+          <TD>1 = on battery 
+        <TR>
+          <TD>5
+          <TD>1 = overloaded output 
+        <TR>
+          <TD>6
+          <TD>1 = battery low 
+        <TR>
+          <TD>7
+          <TD>1 = replace battery </TR></TBODY></TABLE><A name=async></A>
+      <H3>Alert messages</H3>
+      <TABLE cellPadding=5 border=5>
+        <TBODY>
+        <TR>
+          <TH>Character
+          <TH>Description 
+        <TR>
+          <TD>! 
+          <TD>Line Fail - sent when the UPS goes on-battery, repeated every 30 
+            seconds until low battery condition reached. Sometimes occurs more 
+            than once in the first 30 seconds. 
+        <TR>
+          <TD>$ 
+          <TD>Return from line fail - UPS back on line power, only sent if a ! 
+            has been sent. 
+        <TR>
+          <TD>% 
+          <TD>Low battery - Sent to indicate low battery, but not on SmartUPS 
+            v/s or BackUPS Pro models 
+        <TR>
+          <TD>+ 
+          <TD>Return from low battery - Sent when the battery has been 
+            recharged to some level only if a % has been sent previously 
+        <TR>
+          <TD>? 
+          <TD>Abnormal condition - sent for conditions such as "shutdown due 
+            to overload" or "shutdown due to low battery capacity". Also occurs 
+            within 10 minutes of turnon. 
+        <TR>
+          <TD>= 
+          <TD>Return from abnormal condition - Sent when the UPS returns from 
+            an abnormal condition where ? was sent, but not a turn-on. Not 
+            implemented on SmartUPS v/s or BackUPS Pro models. 
+        <TR>
+          <TD>* 
+          <TD>About to turn off - Sent when the UPS is about to switch off the 
+            load. No commands are processed after this character is sent. Not 
+            implemented on SmartUPS v/s, BackUPS Pro, or 3rd generation SmartUPS 
+            models. 
+        <TR>
+          <TD># 
+          <TD>Replace battery - Sent when the UPS detects that the battery 
+            needs to be replaced. Sent every 5 hours until a new battery test is 
+            run or the UPS is shut off. Not implemented on SmartUPS v/s or 
+            BackUPS Pro models. 
+        <TR>
+          <TD>&amp; 
+          <TD>Check alarm register for fault (Measure-UPS) - sent to signal 
+            that temp or humidity out of set limits. Also sent when one of the 
+            contact closures changes states. Sent every 2 minutes, stops when 
+            the alarm conditions are reset. Only sent for alarms enabled with I. 
+            Cause of alarm may be determined with J. Not on SmartUPS v/s or 
+            BackUPS Pro. 
+        <TR>
+          <TD>| 
+          <TD>Variable change in EEPROM - Sent whenever any EEPROM variable is 
+            changed. Only supported on Matrix UPS and 3rd generation SmartUPS 
+            models. </TR></TBODY></TABLE><A name=reg1></A>
+      <H3>Register 1</H3>All bits are valid on the Matrix UPS. SmartUPS models 
+      only support bits 6 and 7. Other models do not respond. 
+      <P>
+      <TABLE cellPadding=5 border=5>
+        <TBODY>
+        <TR>
+          <TH>Bit 
+          <TH>Meaning 
+        <TR>
+          <TD>0 
+          <TD>In wakeup mode (typically lasts &lt; 2s) 
+        <TR>
+          <TD>1 
+          <TD>In bypass mode due to internal fault - see register 2 or 3 
+        <TR>
+          <TD>2 
+          <TD>Going to bypass mode due to command 
+        <TR>
+          <TD>3 
+          <TD>In bypass mode due to command 
+        <TR>
+          <TD>4 
+          <TD>Returning from bypass mode 
+        <TR>
+          <TD>5 
+          <TD>In bypass mode due to manual bypass control 
+        <TR>
+          <TD>6 
+          <TD>Ready to power load on user command 
+        <TR>
+          <TD>7 
+          <TD>Ready to power load on user command or return of line power 
+        </TR></TBODY></TABLE><A name=reg2></A>
+      <H3>Register 2</H3>Matrix UPS models report bits 0-5. SmartUPS models only 
+      support bits 4 and 6. SmartUPS v/s and BackUPS Pro report bits 4, 6, 7. 
+      Unused bits are set to 0. Other models do not respond. 
+      <P>
+      <TABLE cellPadding=5 border=5>
+        <TBODY>
+        <TR>
+          <TH>Bit 
+          <TH>Meaning 
+        <TR>
+          <TD>0 
+          <TD>Fan failure in electronics, UPS in bypass 
+        <TR>
+          <TD>1 
+          <TD>Fan failure in isolation unit 
+        <TR>
+          <TD>2 
+          <TD>Bypass supply failure 
+        <TR>
+          <TD>3 
+          <TD>Output voltage select failure, UPS in bypass 
+        <TR>
+          <TD>4 
+          <TD>DC imbalance, UPS in bypass 
+        <TR>
+          <TD>5 
+          <TD>Command sent to stop bypass with no battery connected - UPS 
+            still in bypass 
+        <TR>
+          <TD>6 
+          <TD>Relay fault in SmartTrim or SmartBoost 
+        <TR>
+          <TD>7 
+          <TD>Bad output voltage </TR></TBODY></TABLE><A name=reg3></A>
+      <H3>Register 3</H3>All bits are valid on the Matrix UPS and 3rd generation 
+      SmartUPS models. SmartUPS v/s and BackUPS Pro models report bits 0-5. All 
+      others report 0-4. State change of bits 1,2,5,6,7 are reported 
+      asynchronously with ? and = messages. 
+      <P>
+      <TABLE cellPadding=5 border=5>
+        <TBODY>
+        <TR>
+          <TH>Bit 
+          <TH>Meaning 
+        <TR>
+          <TD>0 
+          <TD>Output unpowered due to shutdown by low battery 
+        <TR>
+          <TD>1 
+          <TD>Unable to transfer to battery due to overload 
+        <TR>
+          <TD>2 
+          <TD>Main relay malfunction - UPS turned off 
+        <TR>
+          <TD>3 
+          <TD>In sleep mode from @ (maybe others) 
+        <TR>
+          <TD>4 
+          <TD>In shutdown mode from S 
+        <TR>
+          <TD>5 
+          <TD>Battery charger failure 
+        <TR>
+          <TD>6 
+          <TD>Bypass relay malfunction 
+        <TR>
+          <TD>7 
+          <TD>Normal operating temperature exceeded </TR></TBODY></TABLE><A 
+      name=cap></A>
+      <H3>Capabilities</H3>Upon sending a ^Z, your UPS will probably spit back 
+      something like this (truncated here for the example): 
+      <P>#uD43132135138129uM43229234239224uA43110112114108 .... 
+      <P>It looks bizarre and ugly, but is easily parsed. The # is some kind of 
+      marker/ident character. Skip it. The rest fits this form: 
+      <P>
+      <UL>
+        <LI>Command character - use this to select the value 
+        <LI>Locale - use 'b' to find out what yours is, '4' applies to all 
+        <LI>Number of choices - '4' means there are 4 possibilities coming up 
+        <LI>Choice length - '3' means they are all 3 chars long </LI></UL>Then 
+      it's followed by the choices, and it starts over. 
+      <P>Matrix-UPS models have ## between each grouping for some reason. 
+      <H3>Acknowledgements</H3>Large parts of this data were contributed or 
+      corrected by Steven Freed. This guy is some sort of APC UPS god. Many 
+      thanks. </TD></TR>
+  <TR>
+    <TD colSpan=2>
+      <HR>
+
+      <TABLE cellPadding=5 align=center>
+        <TBODY>
+        <TR>
+          <TD align=middle bgColor=#ffffff>Last updated: 29 October 2003 / <A 
+            href="http://www.exploits.org/~rkroll/contact.html">rkroll</A> </TD>
+          <TD bgColor=#ffffff><A href="http://validator.w3.org/"><IMG 
+            height=31 alt="Valid HTML 4.01!" src="apc_protocol_files/vh401.png" 
+            width=88 align=right border=0></A> 
+</TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE></BODY></HTML>

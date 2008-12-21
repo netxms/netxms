@@ -1,0 +1,8 @@
+INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
+
+bin_PROGRAMS = nxupload
+nxupload_SOURCES = nxupload.cpp
+nxupload_LDADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../../../libnxsnmp/libnxsnmp.la
+
+EXTRA_DIST = \
+	nxupload.dsp nxupload.dsw

@@ -1,0 +1,555 @@
+//Microsoft eMbedded Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+#include "newres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\nxpc.ico"
+IDI_CONNECT             ICON    DISCARDABLE     "res\\connect.ico"
+IDI_SEVERITY_MINOR      ICON    DISCARDABLE     "res\\SeverityMinor.ico"
+IDI_SEVERITY_NORMAL     ICON    DISCARDABLE     "res\\SeverityNormal.ico"
+IDI_SEVERITY_WARNING    ICON    DISCARDABLE     "res\\SeverityWarning.ico"
+IDI_ACK                 ICON    DISCARDABLE     "res\\ack.ico"
+IDI_UNKNOWN             ICON    DISCARDABLE     "res\\question.ico"
+IDI_SEVERITY_CRITICAL   ICON    DISCARDABLE     "res\\SeverityCritical.ico"
+IDI_SEVERITY_MAJOR      ICON    DISCARDABLE     "res\\SeverityMajor.ico"
+IDI_LOGIN               ICON    DISCARDABLE     "res\\login.ico"
+IDI_TEMPLATE_ROOT       ICON    DISCARDABLE     "res\\template_root.ico"
+IDI_CONTAINER           ICON    DISCARDABLE     "res\\container.ico"
+IDI_NETWORK             ICON    DISCARDABLE     "res\\network.ico"
+IDI_SERVICE             ICON    DISCARDABLE     "res\\network_service.ico"
+IDI_NODE                ICON    DISCARDABLE     "res\\node.ico"
+IDI_SUBNET              ICON    DISCARDABLE     "res\\subnet.ico"
+IDI_TEMPLATE            ICON    DISCARDABLE     "res\\template.ico"
+IDI_TEMPLATE_GROUP      ICON    DISCARDABLE     "res\\template_group.ico"
+IDI_INTERFACE           ICON    DISCARDABLE     "res\\interface.ico"
+IDI_VPNC                ICON    DISCARDABLE     "res\\vpnc.ico"
+IDI_CLUSTER             ICON    DISCARDABLE     "res\\cluster.ico"
+IDI_CONDITION           ICON    DISCARDABLE     "res\\condition.ico"
+IDI_OUTSTANDING         ICON    DISCARDABLE     "res\\outstanding.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "res\\Cmdbar.bmp"
+IDB_BTN_CLOSE           BITMAP  DISCARDABLE     "res\\btn_close.bmp"
+IDB_BTN_CLOSE_DIS       BITMAP  DISCARDABLE     "res\\btn_close_dis.bmp"
+IDB_BTN_PREV            BITMAP  DISCARDABLE     "res\\btn_prev.bmp"
+IDB_BTN_NEXT            BITMAP  DISCARDABLE     "res\\btn_next.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDR_MAINFRAME TOOLBAR DISCARDABLE  16, 16
+BEGIN
+    SEPARATOR
+    BUTTON      ID_VIEW_SUMMARY
+    BUTTON      ID_VIEW_ALARMS
+    BUTTON      ID_VIEW_OBJECTS
+    SEPARATOR
+    BUTTON      ID_VIEW_REFRESH
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menubar
+//
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "System"
+    BEGIN
+        MENUITEM "Settings...",                 ID_SYSTEM_SETTINGS
+        MENUITEM "About...",                    ID_APP_ABOUT
+        MENUITEM SEPARATOR
+        MENUITEM "Exit",                        ID_APP_EXIT
+    END
+    POPUP "View"
+    BEGIN
+        MENUITEM "Summary",                     ID_VIEW_SUMMARY
+        MENUITEM "Alarms",                      ID_VIEW_ALARMS
+        MENUITEM "Objects",                     ID_VIEW_OBJECTS
+        MENUITEM SEPARATOR
+        MENUITEM "Refresh",                     ID_VIEW_REFRESH
+        MENUITEM "Close",                       ID_VIEW_CLOSE
+    END
+END
+
+IDM_CONTEXT MENU DISCARDABLE 
+BEGIN
+    POPUP "Alarm"
+    BEGIN
+        MENUITEM "Acknowledge",                 ID_ALARM_ACKNOWLEDGE
+        MENUITEM "&Terminate",                  ID_ALARM_TERMINATE
+        MENUITEM "Delete",                      ID_ALARM_DELETE
+        MENUITEM SEPARATOR
+        POPUP "Sort by"
+        BEGIN
+            MENUITEM "Severity",                    ID_ALARM_SORTBY_SEVERITY
+            MENUITEM "Source",                      ID_ALARM_SORTBY_SOURCE
+            MENUITEM "Message text",                ID_ALARM_SORTBY_MESSAGETEXT
+
+            MENUITEM "Timestamp",                   ID_ALARM_SORTBY_TIMESTAMP
+
+            MENUITEM SEPARATOR
+            MENUITEM "Ascending",                   ID_ALARM_SORTBY_ASCENDING
+
+            MENUITEM "Descending",                  ID_ALARM_SORTBY_DESCENDING
+
+        END
+    END
+    POPUP "Object"
+    BEGIN
+        MENUITEM "Details...",                  ID_OBJECT_DETAILS
+        MENUITEM "Last DCI values...",          ID_OBJECT_LASTDCIVALUES
+        MENUITEM SEPARATOR
+        MENUITEM "Manage",                      ID_OBJECT_MANAGE
+        MENUITEM "Unmanage",                    ID_OBJECT_UNMANAGE
+        MENUITEM SEPARATOR
+        MENUITEM "Wake up",                     ID_OBJECT_WAKEUP
+    END
+    POPUP "DCI"
+    BEGIN
+        MENUITEM "Show history",                ID_DCI_SHOWHISTORY
+        MENUITEM "Graph",                       ID_DCI_GRAPH
+    END
+    POPUP "Graph"
+    BEGIN
+        POPUP "Presets"
+        BEGIN
+            MENUITEM "Last 10 minutes",             ID_GRAPH_PRESETS_LAST10MINUTES
+
+            MENUITEM "Last 30 minutes",             ID_GRAPH_PRESETS_LAST30MINUTES
+
+            MENUITEM "Last hour",                   ID_GRAPH_PRESETS_LASTHOUR
+
+            MENUITEM "Last 2 hours",                ID_GRAPH_PRESETS_LAST2HOURS
+
+            MENUITEM "Last 4 hours",                ID_GRAPH_PRESETS_LAST4HOURS
+
+            MENUITEM "Last day",                    ID_GRAPH_PRESETS_LASTDAY
+            MENUITEM "Last week",                   ID_GRAPH_PRESETS_LASTWEEK
+
+        END
+        MENUITEM "Full screen",                 ID_GRAPH_FULLSCREEN
+        MENUITEM "Properties...",               ID_GRAPH_PROPERTIES
+    END
+    POPUP "View"
+    BEGIN
+        MENUITEM "Refresh current view",        ID_VIEW_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Previous view",               ID_VIEW_PREV
+        MENUITEM "Next view",                   ID_VIEW_NEXT
+        MENUITEM "Close current view",          ID_VIEW_CLOSE
+        MENUITEM SEPARATOR
+        MENUITEM "Full screen",                 ID_VIEW_FULLSCREEN
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Data
+//
+
+IDR_MAINFRAME SHMENUBAR MOVEABLE PURE 
+BEGIN
+    IDR_MAINFRAME, 2,
+    I_IMAGENONE, ID_SYSTEM, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_SYSTEM, 0, 0,
+    I_IMAGENONE, ID_VIEW, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_VIEW, 0, 1,
+END
+
+IDM_CONTEXT SHMENUBAR DISCARDABLE 
+BEGIN
+    IDM_CONTEXT, 5,
+    I_IMAGENONE, ID_ALARM, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_ALARM, 0, 0,
+    I_IMAGENONE, ID_OBJECT, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_OBJECT, 0, 1,
+    I_IMAGENONE, ID_DCI, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_DCI, 0, 2,
+    I_IMAGENONE, ID_GRAPH, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_GRAPH, 0, 3,
+    I_IMAGENONE, ID_VIEW, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_CAP_VIEW, 0, 4,
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
+BEGIN
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL
+    "Q",            ID_APP_EXIT,            VIRTKEY, CONTROL
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 140, 110
+STYLE WS_POPUP | WS_CAPTION
+EXSTYLE 0x80000000L
+CAPTION "About nxpc"
+FONT 8, "System"
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
+    LTEXT           "NetXMS Pocket Console",IDC_STATIC,40,10,93,10,
+                    SS_NOPREFIX
+    LTEXT           "Copyright © 2005, 2006 Victor Kirhenshtein",IDC_STATIC,
+                    40,33,93,33
+    LTEXT           "Static",IDC_STATIC_VERSION,40,22,93,8
+END
+
+IDD_PROCESSING DIALOG DISCARDABLE  0, 0, 150, 38
+STYLE WS_POPUP | WS_BORDER
+FONT 8, "System"
+BEGIN
+    LTEXT           "Static",IDC_INFO_TEXT,37,7,106,22,SS_CENTERIMAGE
+    ICON            IDI_CONNECT,IDC_STATIC,7,7,21,20
+END
+
+IDD_LOGIN DIALOG DISCARDABLE  0, 0, 148, 140
+STYLE DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Login"
+FONT 8, "Microsoft Sans Serif"
+BEGIN
+    PUSHBUTTON      "Exit",IDCANCEL,101,121,40,12
+    LTEXT           "Server",IDC_STATIC,39,7,22,8
+    EDITTEXT        IDC_EDIT_SERVER,39,17,102,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_LOGIN,39,44,102,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_PASSWORD,39,71,102,13,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    LTEXT           "Login",IDC_STATIC,39,34,18,8
+    LTEXT           "Password",IDC_STATIC,39,61,32,8
+    ICON            IDI_LOGIN,IDC_STATIC,7,7,20,20
+    DEFPUSHBUTTON   "Connect",IDOK,56,121,40,12
+    CONTROL         "&Clear object cache",IDC_CHECK_CACHE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,39,90,75,10
+    CONTROL         "&Save password",IDC_CHECK_PASSWORD,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,39,102,65,10
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "OptiCom\0"
+            VALUE "FileDescription", "nxpc WCE MFC Application\0"
+            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "InternalName", "nxpc\0"
+            VALUE "LegalCopyright", "Copyright © 2005\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "nxpc.exe\0"
+            VALUE "ProductName", "nxpc Application\0"
+            VALUE "ProductVersion", "1, 0, 0, 1\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 133
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 103
+    END
+
+    IDD_PROCESSING, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 143
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 30
+    END
+
+    IDD_LOGIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 141
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 133
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_EDIT                "Edit"
+    IDS_TOOL                "Tools"
+    IDP_SOCKETS_INIT_FAILED "Windows sockets initialization failed."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDR_MAINFRAME           "Pocket NetXMS\n\nPocket NetXMS\n\n\nNxpc.Document\nNxpc Document"
+    IDS_NXC_INIT_FAILED     "Failed to initialize NetXMS client library"
+    IDS_WORKDIR_CREATION_FAILED "Failed to create working directory"
+    IDS_GETFOLDERPATH_FAILED "Unable to get path of application data folder"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    AFX_IDS_IDLEMESSAGE     "Ready"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_SAVE_AS         "Save the active document with a new name\nSave As"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
+    ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_NEXT_PANE            "Switch to the next window pane\nNext Pane"
+    ID_PREV_PANE            "Switch back to the previous window pane\nPrevious Pane"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_WINDOW_SPLIT         "Split the active window into panes\nSplit"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_EDIT_CLEAR           "Erase the selection\nErase"
+    ID_EDIT_CLEAR_ALL       "Erase everything\nErase All"
+    ID_EDIT_COPY            "Copy the selection and put it on the Clipboard\nCopy"
+    ID_EDIT_CUT             "Cut the selection and put it on the Clipboard\nCut"
+    ID_EDIT_FIND            "Find the specified text\nFind"
+    ID_EDIT_PASTE           "Insert Clipboard contents\nPaste"
+    ID_EDIT_REPEAT          "Repeat the last action\nRepeat"
+    ID_EDIT_REPLACE         "Replace specific text with different text\nReplace"
+    ID_EDIT_SELECT_ALL      "Select the entire document\nSelect All"
+    ID_EDIT_UNDO            "Undo the last action\nUndo"
+    ID_EDIT_REDO            "Redo the previously undone action\nRedo"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCTASKLIST      "Activate Task List"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SUMMARY             "Summary"
+    IDS_ALARMS              "Alarm browser"
+    IDS_OBJECTS             "Object browser"
+    IDS_REFRESH             "Refresh"
+    IDS_ABOUT               "About"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_INDICATOR_CAPS       "CAP"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAP_SYSTEM          "System"
+    IDS_CAP_VIEW            "View"
+    IDS_CAP_CONNECT         "Connect"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAP_ALARM           "Alarm"
+    IDS_CAP_OBJECT          "Object"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAP_REFRESH         "&Refresh"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAP_DCI             "DCI"
+    IDS_CAP_GRAPH           "Graph"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "#include ""newres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""res\\nxpc.rc2""  // non-Microsoft eMbedded Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#include ""wceres.rc""         // WCE-specific components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAP_ALARM           "Alarm"
+END
+
+#endif    // English (U.K.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif //_WIN32
+#include "res\nxpc.rc2"  // non-Microsoft eMbedded Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#include "wceres.rc"         // WCE-specific components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

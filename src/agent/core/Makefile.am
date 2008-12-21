@@ -1,0 +1,29 @@
+EXTRA_DIST = \
+    Makefile.nw nxagentd.def \
+    nxagentd.dsw nxagentd.dsp \
+    messages.mc messages.h messages.c \
+    nxagentd.rc \
+    win32.cpp resource.h \
+    nxagentd.h \
+    hddinfo.cpp \
+    netinfo.cpp \
+    service.cpp
+
+INCLUDES=-I@top_srcdir@/include
+
+bin_PROGRAMS = nxagentd
+nxagentd_SOURCES = messages.c actions.cpp comm.cpp config.cpp exec.cpp \
+                   getparam.cpp nxagentd.cpp register.cpp session.cpp \
+                   snmpproxy.cpp static_subagents.cpp subagent.cpp \
+                   sysinfo.cpp tools.cpp trap.cpp upgrade.cpp
+nxagentd_LDADD = ../../libnetxms/libnetxms.la @SUBAGENT_LIBS@
+AM_CPPFLAGS = $(all_includes) -DPREFIX=\"@prefix@\"
+CLEANFILES = messages.c messages.h static_subagents.cpp
+
+messages.c: messages.h
+
+messages.h: messages.mc
+	$(PERL) @top_builddir@/tools/mc.pl messages.mc
+
+static_subagents.cpp: @top_srcdir@/config.h Makefile
+	@top_builddir@/tools/create_ssa_list.sh "@STATIC_SUBAGENT_LIST@" > static_subagents.cpp

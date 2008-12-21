@@ -1,0 +1,29 @@
+/* XPM */
+static char *node[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 7 1",
+"  c black",
+". c green",
+"X c blue",
+"o c #808080",
+"O c #C0C0C0",
+"+ c gray100",
+"@ c None",
+/* pixels */
+"@@@ooooooooooo@@",
+"@@oOOOOOOOOO+o @",
+"@o++++++++++oo @",
+"@o+O       Ooo @",
+"@o+O XXXXXXOoo @",
+"@o+O XXXXXXOoo @",
+"@o+O XXXXXXOoo @",
+"@o+O XXXXXXOoo @",
+"@o+OOOOOOOOOoo @",
+"@oooooooooooo o@",
+"@            oo ",
+"o++++++++++++oo ",
+"o+OOOOO     Ooo ",
+"o+O.OOOOOOoOOoo ",
+"oooooooooooooo @",
+"@             @@"
+};

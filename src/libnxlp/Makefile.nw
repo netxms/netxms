@@ -1,0 +1,32 @@
+#
+# Makefile for building libnetxms for Novell NetWare platform
+# Copyright (c) 2004 Victor Kirhenshtein
+#
+
+include ../../netware/Makefile.inc
+
+OBJECTS  = main.o parser.o rule.o unixfile.o
+EXEC     = libnxlp.nlm
+DEF      = libnxlp.def
+OBJTMP   = libnxlp_r.o
+IMP      = libnxlp.imp
+
+all: $(EXEC)
+
+$(OBJECTS): libnxlp.h Makefile.nw
+
+.cpp.o:
+	$(CC) $(CFLAGS) -o $*.o $<
+
+.c.o:
+	$(CC) $(CFLAGS) -o $*.o $<
+
+$(EXEC): $(OBJECTS) $(DEF)
+	$(PRELINK) -o $(OBJTMP) $(OBJECTS) $(PLDFLAGS)
+	$(PERL) ../../tools/nwmkimp.pl $(OBJTMP) $(IMP)
+	$(LINK) $(LDFLAGS) -T $(DEF)
+	rm -f $(OBJTMP)
+	cp libnxlp.nlm ../../netware/bin
+
+clean:
+	rm -f *.o $(EXEC)

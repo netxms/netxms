@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
+	<object class="wxIcon" name="icoAlarmView">alarmview.xpm</object>
+	<object class="wxMenu" name="menuCtxAlarm">
+		<label>Alarm</label>
+		<object class="wxMenuItem" name="menuAlarmAck">
+			<label>&amp;Acknowledge</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuAlarmTerminate">
+			<label>&amp;Terminate</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuAlarmDelete">
+			<label>&amp;Delete</label>
+			<help></help>
+		</object>
+		<object class="separator" />
+		<object class="wxMenuItem" name="menuAlarmIncreaseFont">
+			<label>&amp;Increase font size</label>
+			<help></help>
+		</object>
+		<object class="wxMenuItem" name="menuAlarmDecreaseFont">
+			<label>D&amp;ecrease font size</label>
+			<help></help>
+		</object>
+	</object>
+</resource>
