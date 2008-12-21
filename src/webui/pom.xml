@@ -2,7 +2,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.netxms</groupId>
-    <artifactId>NetXMS-webui</artifactId>
+    <artifactId>netxms-webui</artifactId>
     <packaging>war</packaging>
     <version>0.2.24</version>
     <name>NetXMS-webui Maven Webapp</name>
