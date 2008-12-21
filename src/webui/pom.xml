@@ -23,12 +23,6 @@
             <id>gwt-maven</id>
             <url>http://gwt-maven.googlecode.com/svn/trunk/mavenrepo/</url>
         </repository>
-        <!--
-        <repository>
-            <id>java.net</id>
-            <url>http://download.java.net/maven/2</url>
-        </repository>
-        -->
     </repositories>
 
     <build>
@@ -48,10 +42,10 @@
                     <compileTargets>
                         <value>org.netxms.webui</value>
                     </compileTargets>
-                    <runTarget>org.netxms.client.webui/webui.html</runTarget>
+                    <runTarget>org.netxms.webui/webui.html</runTarget>
                     <!-- <style>DETAILED</style> -->
                     <style>OBF</style>
-                    <noServer>true</noServer>
+                    <!--<noServer>true</noServer>-->
                     <extraJvmArgs>-Xmx512m</extraJvmArgs>
                     <!--  gwtVersion - this parameter is VERY important with automatic mode - has to match the version in your declared deps -->
                     <!--  if this is set incorrect, or left out and default does not match (default is 1.5.2 for 2.0-beta23) you will have mysterious errors -->
@@ -119,7 +113,7 @@
             </plugin>
 
         </plugins>
-        <finalName>MapleSAK</finalName>
+        <finalName>netxms-webui</finalName>
     </build>
 
     <dependencies>
