@@ -453,8 +453,6 @@ src/server/tools/nxsnmpwalk/nxsnmpwalk.dsp eol=crlf
 src/server/tools/nxsnmpwalk/nxsnmpwalk.dsw eol=crlf
 src/server/tools/nxupload/nxupload.dsp eol=crlf
 src/server/tools/nxupload/nxupload.dsw eol=crlf
-src/webui/pom.xml -text
-src/webui/webui.launch -text
 tools/patch_config.status.pl -text
 www/data/documentation/body.shtml -text
 www/data/documentation/confexample/image001.png -text
