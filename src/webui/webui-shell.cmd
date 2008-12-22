@@ -1,0 +1,1 @@
+@java -Xmx256M -cp "%~dp0\src;%~dp0\bin;C:/SDK/gwt-windows-1.5.3/gwt-user.jar;C:/SDK/gwt-windows-1.5.3/gwt-dev-windows.jar;./lib/smartgwt.jar" com.google.gwt.dev.GWTShell -noserver -out "%~dp0\www" %* /webui.html
