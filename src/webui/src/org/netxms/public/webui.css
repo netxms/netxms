@@ -6,11 +6,28 @@
 	height: 100%;
 }
 
+.gwt-StackPanel .gwt-StackPanelItem
+{
+	font-family: Verdana, Helvetica;
+	font-weight: bold;
+}
+
+.gwt-StackPanel .gwt-StackPanelItem-selected
+{
+	font-family: Verdana, Helvetica;
+	font-weight: bold;
+}
+
 
 /* info bar */
 .infoBar
 {
-	background-color: #d00000;
+	background-color: #3D5C7A;
+}
+
+.infoBar a
+{
+	color: #FFFFFF;
 }
 
 

@@ -1,6 +1,7 @@
 package org.netxms.client;
 
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
@@ -25,9 +26,11 @@ import com.google.gwt.user.client.ui.SimplePanel;
 public class webui implements EntryPoint 
 {
 	private DockPanel mainPanel = new DockPanel();
-	private SimplePanel infoBar = new SimplePanel();
-	private ToolPanel toolPanel = new ToolPanel();
-	private SimplePanel workarea = new SimplePanel();
+	private SimplePanel infoBar;
+	private ToolPanel toolPanel;
+	private SimplePanel workarea;
+	
+	public static MainImageBundle mainImageBundle;
 
 	/**
 	 * Redirect browser to specific URL.
@@ -44,8 +47,9 @@ public class webui implements EntryPoint
 	 */
 	public void onModuleLoad() 
 	{
+		mainImageBundle = GWT.create(MainImageBundle.class);
+		
 		mainPanel.setSize("100%", "100%");
-
 		RootPanel.get().add(mainPanel);
 
 		// Show login dialog
@@ -150,13 +154,14 @@ public class webui implements EntryPoint
 	 */
 	private void loadMainPage()
 	{
-		infoBar.setWidth("100%");
-		infoBar.setHeight("40px");
-		infoBar.setStylePrimaryName("infoBar");
+		infoBar = new InfoBar();
 		mainPanel.add(infoBar, DockPanel.NORTH);
 		mainPanel.setCellHeight(infoBar, "40px");
 		
+		workarea = new SimplePanel();
 		workarea.setStylePrimaryName("workarea");
+		
+		toolPanel = new ToolPanel();
 		
 		HorizontalSplitPanel workPanel = new HorizontalSplitPanel();
 		workPanel.setSplitPosition("200px");
