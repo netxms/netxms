@@ -466,7 +466,7 @@ TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, TCHAR *pszBuffer, 
    }
    else
    {
-      _stprintf(pszBuffer, _T("MSG 0x%08X - Unable to find message text"), dwError);
+      _sntprintf(pszBuffer, iBufSize, _T("MSG 0x%08X - Unable to find message text"), dwError);
    }
    return pszBuffer;
 }

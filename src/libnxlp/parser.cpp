@@ -519,7 +519,7 @@ BOOL LogParser::CreateFromXML(const char *xml, int xmlLen, char *errorText, int 
 	XML_SetUserData(parser, &state);
 	XML_SetElementHandler(parser, StartElement, EndElement);
 	XML_SetCharacterDataHandler(parser, CharData);
-	success = (XML_Parse(parser, xml, (xmlLen == -1) ? strlen(xml) : xmlLen, TRUE) != XML_STATUS_ERROR);
+	success = (XML_Parse(parser, xml, (xmlLen == -1) ? (int)strlen(xml) : xmlLen, TRUE) != XML_STATUS_ERROR);
 
 	if (!success && (errorText != NULL))
 	{

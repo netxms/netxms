@@ -354,7 +354,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
       {
          TCHAR message[64];
 
-         _stprintf(message, _T("MSG 0x%08X - Unable to find message text"), msg);
+         _sntprintf(message, 64, _T("MSG 0x%08X - Unable to find message text"), msg);
 			if (m_flags & NXLOG_USE_SYSLOG)
 			{
 				t = time(NULL);

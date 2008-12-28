@@ -943,7 +943,7 @@ void Main(void)
          printf("Agent running. Press ESC to shutdown.\n");
          while(1)
          {
-            if (getch() == 27)
+            if (_getch() == 27)
                break;
          }
          printf("Agent shutting down...\n");

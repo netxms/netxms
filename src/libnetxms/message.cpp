@@ -294,7 +294,7 @@ CSCPMessage::CSCPMessage(char *xml)
 	XML_SetUserData(parser, &state);
 	XML_SetElementHandler(parser, StartElement, EndElement);
 	XML_SetCharacterDataHandler(parser, CharData);
-	if (XML_Parse(parser, xml, strlen(xml), TRUE) == XML_STATUS_ERROR)
+	if (XML_Parse(parser, xml, (int)strlen(xml), TRUE) == XML_STATUS_ERROR)
 	{
 /*fprintf(stderr,
         "%s at line %d\n",
@@ -392,7 +392,7 @@ void CSCPMessage::ProcessXMLData(void *state)
 			{
 				if (binData != NULL)
 				{
-					SetVariable(ps->varId, (BYTE *)binData, binLen);
+					SetVariable(ps->varId, (BYTE *)binData, (DWORD)binLen);
 					free(binData);
 				}
 			}
@@ -879,7 +879,7 @@ char *CSCPMessage::CreateXML(void)
 			case CSCP_DT_STRING:
 #ifdef UNICODE
 #ifdef UNICODE_UCS2
-				xml.AddDynamicString(EscapeStringForXML(m_ppVarList[i]->data.string.szValue, m_ppVarList[i]->data.string.dwLen / 2));
+				xml.AddDynamicString(EscapeStringForXML((TCHAR *)m_ppVarList[i]->data.string.szValue, m_ppVarList[i]->data.string.dwLen / 2));
 #else
 				tempStr = (WCHAR *)malloc(m_ppVarList[i]->data.string.dwLen * 2);
 				bytes = ucs2_to_ucs4(m_ppVarList[i]->data.string.szValue, m_ppVarList[i]->data.string.dwLen / 2, tempStr, m_ppVarList[i]->data.string.dwLen / 2);

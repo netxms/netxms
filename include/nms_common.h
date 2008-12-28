@@ -75,7 +75,11 @@
 //
 
 #define MAX_SECRET_LENGTH        64
+#ifdef __64BIT__
+#define INVALID_POINTER_VALUE    ((void *)_ULL(0xFFFFFFFFFFFFFFFF))
+#else
 #define INVALID_POINTER_VALUE    ((void *)0xFFFFFFFF)
+#endif
 #define MAX_DB_STRING            256
 #define MAX_PARAM_NAME           256
 #define GROUP_FLAG               ((DWORD)0x80000000)
@@ -133,6 +137,13 @@
 #define vsnprintf _vsnprintf
 #define popen     _popen
 #define pclose    _pclose
+#define strdup    _strdup
+#define stricmp   _stricmp
+#define open      _open
+#define read      _read
+#define write     _write
+#define close     _close
+#define getpid    _getpid
 
 typedef unsigned __int64 QWORD;
 typedef __int64 INT64;
@@ -168,7 +179,7 @@ typedef int socklen_t;
 #define O_TRUNC      0x0800
 #endif
 
-#if !defined(UNDER_CE) && !defined(__64BIT__)
+#if !defined(UNDER_CE)
 #define HAVE_LIBEXPAT 1
 #endif
 

@@ -24,6 +24,8 @@
 #include <dbghelp.h>
 #include "StackWalker.h"
 
+#pragma warning(disable : 4482)
+
 
 //
 // Customized StackWalker class
