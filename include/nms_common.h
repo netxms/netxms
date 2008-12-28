@@ -58,6 +58,17 @@
 
 
 //
+// Define __64BIT__ if compiling for 64bit platform with Visual C++
+//
+
+#if defined(_M_X64) || defined(_M_IA64)
+#ifndef __64BIT__
+#define __64BIT__
+#endif
+#endif
+
+
+//
 // Wrappers for 64-bit constants
 //
 
@@ -75,11 +86,6 @@
 //
 
 #define MAX_SECRET_LENGTH        64
-#ifdef __64BIT__
-#define INVALID_POINTER_VALUE    ((void *)_ULL(0xFFFFFFFFFFFFFFFF))
-#else
-#define INVALID_POINTER_VALUE    ((void *)0xFFFFFFFF)
-#endif
 #define MAX_DB_STRING            256
 #define MAX_PARAM_NAME           256
 #define GROUP_FLAG               ((DWORD)0x80000000)
@@ -436,6 +442,17 @@ typedef unsigned int socklen_t;
 typedef struct hostent HOSTENT;
 
 #endif   /* _WIN32 */
+
+
+//
+// Value used to indicate invalid pointer where NULL is not appropriate
+//
+
+#ifdef __64BIT__
+#define INVALID_POINTER_VALUE    ((void *)_ULL(0xFFFFFFFFFFFFFFFF))
+#else
+#define INVALID_POINTER_VALUE    ((void *)0xFFFFFFFF)
+#endif
 
 
 //

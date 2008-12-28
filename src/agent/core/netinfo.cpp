@@ -202,7 +202,7 @@ LONG H_NetIPStats(const char *cmd, const char *arg, char *value)
 
    if (GetIpStatistics(&ips) == NO_ERROR)
    {
-      switch((int)arg)
+      switch(CAST_FROM_POINTER(arg, int))
       {
          case NET_IP_FORWARDING:
             ret_int(value, ips.dwForwarding);
@@ -308,7 +308,7 @@ LONG H_NetInterfaceStats(const char *cmd, const char *arg, char *value)
          info.dwIndex = dwIndex;
          if (GetIfEntry(&info) == NO_ERROR)
          {
-            switch((int)arg)
+            switch(CAST_FROM_POINTER(arg, int))
             {
                case NET_IF_BYTES_IN:
                   ret_uint(value, info.dwInOctets);

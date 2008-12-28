@@ -48,6 +48,7 @@ netware/bin/.keep -text
 src/PPC_libs.vcw eol=crlf
 src/agent/core/nxagentd.dsp eol=crlf
 src/agent/core/nxagentd.dsw eol=crlf
+src/agent/core/nxagentd.vcproj -text
 src/agent/subagents/ecs/ecs.dsp eol=crlf
 src/agent/subagents/ecs/ecs.dsw eol=crlf
 src/agent/subagents/logscan/logscan.dsp eol=crlf
@@ -490,6 +491,7 @@ src/webui/src/org/netxms/webui.gwt.xml -text
 src/webui/tomcat/conf/web.xml -text
 src/webui/tomcat/webapps/ROOT/WEB-INF/web.xml -text
 src/webui/webui.launch -text
+tools/mc.rule -text
 tools/patch_config.status.pl -text
 www/data/documentation/body.shtml -text
 www/data/documentation/confexample/image001.png -text

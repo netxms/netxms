@@ -910,7 +910,7 @@ char *CSCPMessage::CreateXML(void)
 				{
 #ifdef UNICODE
 					tempStr = (WCHAR *)malloc((blen + 1) * sizeof(WCHAR));
-					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, bdata, blen, tempStr, blen);
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, bdata, (int)blen, tempStr, (int)blen);
 					tempStr[blen] = 0;
 					xml.AddDynamicString(tempStr);
 #else

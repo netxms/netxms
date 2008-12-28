@@ -239,9 +239,15 @@ LONG H_SubAgentList(const char *cmd, const char *arg, NETXMS_VALUES_LIST *value)
 
    for(i = 0; i < m_dwNumSubAgents; i++)
    {
+#ifdef __64BIT__
+      _sntprintf(szBuffer, MAX_PATH + 32, _T("%s %s 0x") UINT64X_FMT(_T("016")) _T(" %s"), 
+                 m_pSubAgentList[i].pInfo->szName, m_pSubAgentList[i].pInfo->szVersion,
+                 m_pSubAgentList[i].hModule, m_pSubAgentList[i].szName);
+#else
       _sntprintf(szBuffer, MAX_PATH + 32, _T("%s %s 0x%08X %s"), 
                  m_pSubAgentList[i].pInfo->szName, m_pSubAgentList[i].pInfo->szVersion,
                  m_pSubAgentList[i].hModule, m_pSubAgentList[i].szName);
+#endif
       NxAddResultString(value, szBuffer);
    }
    return SYSINFO_RC_SUCCESS;

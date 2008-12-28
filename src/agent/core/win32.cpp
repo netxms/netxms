@@ -38,7 +38,7 @@ LONG H_MemoryInfo(const char *cmd, const char *arg, char *value)
       if (!imp_GlobalMemoryStatusEx(&mse))
          return SYSINFO_RC_ERROR;
 
-      switch((int)arg)
+      switch(CAST_FROM_POINTER(arg, int))
       {
          case MEMINFO_PHYSICAL_FREE:
             ret_uint64(value, mse.ullAvailPhys);
@@ -79,7 +79,7 @@ LONG H_MemoryInfo(const char *cmd, const char *arg, char *value)
       MEMORYSTATUS ms;
 
       GlobalMemoryStatus(&ms);
-      switch((int)arg)
+      switch(CAST_FROM_POINTER(arg, int))
       {
          case MEMINFO_PHYSICAL_FREE:
             ret_uint64(value, ms.dwAvailPhys);
@@ -150,7 +150,7 @@ LONG H_DiskInfo(const char *pszCmd, const char *pArg, char *pValue)
       return SYSINFO_RC_UNSUPPORTED;
    if (GetDiskFreeSpaceEx(szPath, &availBytes, &totalBytes, &freeBytes))
    {
-      switch((int)pArg)
+      switch(CAST_FROM_POINTER(pArg, int))
       {
          case DISKINFO_FREE_BYTES:
             ret_uint64(pValue, freeBytes.QuadPart);

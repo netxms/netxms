@@ -17,7 +17,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libexpatw", "src\libexpat\l
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libnxlp", "src\libnxlp\libnxlp.vcproj", "{64EFC0C2-C67B-41F6-851D-F11DAB27A60B}"
 	ProjectSection(ProjectDependencies) = postProject
+		{B1745870-F3ED-4ACB-B813-0C4F47EF0793} = {B1745870-F3ED-4ACB-B813-0C4F47EF0793}
 		{6A88EF62-C4F2-4295-A833-549DAE4DF5ED} = {6A88EF62-C4F2-4295-A833-549DAE4DF5ED}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxagentd", "src\agent\core\nxagentd.vcproj", "{57598B02-3295-4FE8-9322-94CE871CC84D}"
+	ProjectSection(ProjectDependencies) = postProject
 		{B1745870-F3ED-4ACB-B813-0C4F47EF0793} = {B1745870-F3ED-4ACB-B813-0C4F47EF0793}
 	EndProjectSection
 EndProject
@@ -66,6 +71,13 @@ Global
 		{64EFC0C2-C67B-41F6-851D-F11DAB27A60B}.Release|Win32.ActiveCfg = Release|Win32
 		{64EFC0C2-C67B-41F6-851D-F11DAB27A60B}.Release|Win32.Build.0 = Release|Win32
 		{64EFC0C2-C67B-41F6-851D-F11DAB27A60B}.Release|x64.ActiveCfg = Release|Win32
+		{57598B02-3295-4FE8-9322-94CE871CC84D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{57598B02-3295-4FE8-9322-94CE871CC84D}.Debug|Win32.Build.0 = Debug|Win32
+		{57598B02-3295-4FE8-9322-94CE871CC84D}.Debug|x64.ActiveCfg = Debug|x64
+		{57598B02-3295-4FE8-9322-94CE871CC84D}.Debug|x64.Build.0 = Debug|x64
+		{57598B02-3295-4FE8-9322-94CE871CC84D}.Release|Win32.ActiveCfg = Release|Win32
+		{57598B02-3295-4FE8-9322-94CE871CC84D}.Release|Win32.Build.0 = Release|Win32
+		{57598B02-3295-4FE8-9322-94CE871CC84D}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
