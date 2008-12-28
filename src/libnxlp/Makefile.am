@@ -9,7 +9,7 @@ libnxlp_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxlp_la_LIBADD = ../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	libnxlp.dsp libnxlp.dsw \
+	libnxlp.vcproj libnxlp.dsp \
 	libnxlp.h \
 	winfile.cpp \
 	libnxlp.def Makefile.nw

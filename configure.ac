@@ -234,12 +234,12 @@ AC_ARG_ENABLE(debug,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle"
-	MODULES="libnxsnmp libnxsl libnxlp server agent libnxmap libnxcl nxevent nxpush nxreport nxmibc client console nxhttpd nxscript nxcptest"
+	MODULES="libnxsnmp libnxsl libnxlp server agent libnxmap libnxcl nxmibc client console nxhttpd nxscript nxcptest"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
 	CONTRIB_MODULES="mibs backgrounds"
-	CLIENT_COMPONENTS="console nxalarm nxsms"
+	CLIENT_COMPONENTS="console nxalarm nxevent nxpush nxsms"
 	UNSTABLE_SUBAGENT_DIRS="logscan odbcquery"
 	SERVER_TOOLS="nxconfig"
 	NEED_WXWIDGETS="yes"
@@ -344,8 +344,8 @@ check_substr "$COMPONENTS" "client"
 if test $? = 0; then
 	BUILD_CLIENT="yes"
 	NEED_ZLIB="yes"
-	MODULES="$MODULES libnxmap libnxcl nxevent nxpush nxreport console client"
-	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxsms"
+	MODULES="$MODULES libnxmap libnxcl console client"
+	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxevent nxpush nxsms"
 fi
 
 check_substr "$COMPONENTS" "agent"

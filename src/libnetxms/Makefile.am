@@ -19,7 +19,7 @@ libnetxmsw_la_CPPFLAGS = -DUNICODE
 libnetxmsw_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 
 EXTRA_DIST = \
-	libnetxms.dsp libnetxms.dsw \
+	libnetxms.vcproj libnetxmsw.vcproj libnetxms.dsp \
 	libnetxms.vcp libnetxms.vcw \
 	Makefile.nw netxms.def \
 	libnetxms.h md5.h sha1.h uuidP.h \

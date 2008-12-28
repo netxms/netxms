@@ -13,6 +13,7 @@ EXTRA_DIST = \
 	create_bin_apkg.sh \
 	create_ssa_list.sh \
 	mc.pl \
+	mc.rule \
 	nwmkimp.pl \
 	patch_config.status.pl \
 	sharIt \

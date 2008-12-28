@@ -47,7 +47,6 @@ netware/bin/.keep -text
 /netxms.dsw eol=crlf
 src/PPC_libs.vcw eol=crlf
 src/agent/core/nxagentd.dsp eol=crlf
-src/agent/core/nxagentd.dsw eol=crlf
 src/agent/core/nxagentd.vcproj -text
 src/agent/subagents/ecs/ecs.dsp eol=crlf
 src/agent/subagents/ecs/ecs.vcproj -text
@@ -96,6 +95,8 @@ src/client/console/plugins/AlarmBrowser/mcpAlarmBrowser.dsp eol=crlf
 src/client/console/plugins/Dashboard/mcpDashboard.dsp eol=crlf
 src/client/console/plugins/ObjectBrowser/mcpObjectBrowser.dsp eol=crlf
 src/client/nxalarm/nxalarm.dsp eol=crlf
+src/client/nxevent/nxevent.dsp eol=crlf
+src/client/nxpush/nxpush.dsp eol=crlf
 src/client/nxsms/nxsms.dsp eol=crlf
 src/console/PocketPC/nxpc.vcc eol=crlf
 src/console/PocketPC/nxpc.vcp eol=crlf
@@ -310,7 +311,6 @@ src/libexpat/libexpat/libexpat.vcproj -text
 src/libexpat/libexpat/libexpatw.vcproj -text
 src/libexpat/vms/descrip.mms -text
 src/libnetxms/libnetxms.dsp eol=crlf
-src/libnetxms/libnetxms.dsw eol=crlf
 src/libnetxms/libnetxms.vcp eol=crlf
 src/libnetxms/libnetxms.vcproj -text
 src/libnetxms/libnetxms.vcw eol=crlf
@@ -320,14 +320,14 @@ src/libnxcl/libnxcl.dsw eol=crlf
 src/libnxcl/libnxcl.vcp eol=crlf
 src/libnxcl/libnxcl.vcw eol=crlf
 src/libnxlp/libnxlp.dsp eol=crlf
-src/libnxlp/libnxlp.dsw eol=crlf
 src/libnxlp/libnxlp.h -text
 src/libnxlp/libnxlp.vcproj -text
 src/libnxlp/main.cpp -text
 src/libnxlp/sample.xml -text
 src/libnxlp/unixfile.cpp -text
 src/libnxmap/libnxmap.dsp eol=crlf
-src/libnxmap/libnxmap.dsw eol=crlf
+src/libnxmap/libnxmap.vcproj -text
+src/libnxmap/libnxmapw.vcproj -text
 src/libnxsl/libnxsl.dsp eol=crlf
 src/libnxsl/libnxsl.dsw eol=crlf
 src/libnxsl/parser.l -text
@@ -335,8 +335,6 @@ src/libnxsnmp/libnxsnmp.dsp eol=crlf
 src/libnxsnmp/libnxsnmp.dsw eol=crlf
 src/nxcptest/nxcptest.dsp eol=crlf
 src/nxcptest/nxcptest.dsw eol=crlf
-src/nxevent/nxevent.dsp eol=crlf
-src/nxevent/nxevent.dsw eol=crlf
 src/nxhttpd/nxhttpd.dsp eol=crlf
 src/nxhttpd/nxhttpd.dsw eol=crlf
 src/nxhttpd/static/images/I.png -text
@@ -412,10 +410,6 @@ src/nxhttpd/static/images/status/warning.png -text
 src/nxhttpd/static/images/terminate.png -text
 src/nxmibc/nxmibc.dsp eol=crlf
 src/nxmibc/nxmibc.dsw eol=crlf
-src/nxpush/nxpush.dsp eol=crlf
-src/nxpush/nxpush.dsw eol=crlf
-src/nxreport/nxreport.dsp eol=crlf
-src/nxreport/nxreport.dsw eol=crlf
 src/nxscript/nxscript.dsp eol=crlf
 src/nxscript/nxscript.dsw eol=crlf
 src/server/core/isc.cpp -text
