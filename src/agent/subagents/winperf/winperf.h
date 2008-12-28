@@ -23,8 +23,6 @@
 #ifndef _winperf_h_
 #define _winperf_h_
 
-#include <winsock2.h>
-#include <windows.h>
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <nms_threads.h>

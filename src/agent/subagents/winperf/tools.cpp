@@ -125,7 +125,8 @@ static BOOL TranslateElement(TCHAR *pszText)
 BOOL TranslateCounterName(const TCHAR *pszName, TCHAR *pszOut)
 {
 	const TCHAR *pCurr = pszName;
-	TCHAR *pSlash, *pBrace, *pNext, szTemp[MAX_ELEMENT_LENGTH];
+	const TCHAR *pSlash, *pBrace, *pNext;
+	TCHAR szTemp[MAX_ELEMENT_LENGTH];
 	BOOL bs1, bs2;
 	int nLen;
 

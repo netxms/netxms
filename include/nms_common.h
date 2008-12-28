@@ -118,6 +118,8 @@
 
 /********** WINDOWS ********************/
 
+#define _WIN32_WINNT		0x0500
+
 #define FS_PATH_SEPARATOR			_T("\\")
 #define FS_PATH_SEPARATOR_CHAR	_T('\\')
 
@@ -145,6 +147,7 @@
 #define pclose    _pclose
 #define strdup    _strdup
 #define stricmp   _stricmp
+#define strnicmp  _strnicmp
 #define open      _open
 #define read      _read
 #define write     _write

@@ -176,6 +176,7 @@ static BOOL GetProcessCommandLine(DWORD dwPId, TCHAR *pszCmdLine, DWORD dwLen)
 
 	pfnGetCommandLineA = GetProcAddress(GetModuleHandle("KERNEL32.DLL"), "GetCommandLineA"); 
 
+	/* TODO: need different solution for 64bit Windows */
 	hThread = CreateRemoteThread(hProcess, 0, 0, (LPTHREAD_START_ROUTINE)pfnGetCommandLineA, 0, 0, 0);
 	if (hThread != INVALID_HANDLE_VALUE)
 	{
@@ -320,7 +321,7 @@ LONG H_ProcInfo(const char *cmd, const char *arg, char *value)
    static char *typeList[]={ "min", "max", "avg", "sum", NULL };
 
    // Check attribute
-   attr = (int)arg;
+   attr = CAST_FROM_POINTER(arg, int);
    if (!IsAttributeSupported(attr))
       return SYSINFO_RC_UNSUPPORTED;     // Unsupported attribute
 

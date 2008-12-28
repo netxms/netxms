@@ -20,8 +20,6 @@
 **
 **/
 
-#define _WIN32_WINNT 0x0400
-
 #include "nxagentd.h"
 #include <winioctl.h>
 #include <ata.h>

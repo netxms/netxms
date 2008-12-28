@@ -7,8 +7,8 @@
 		<CustomBuildRule
 			Name="Message compiler"
 			DisplayName="Message compiler"
-			CommandLine="mc -s -U -h $(ProjectDir) -r $(ProjectDir) $(InputFileName)&#x0D;&#x0A;del $(ProjectDir)messages.rc&#x0D;&#x0A;"
-			Outputs="$(InputName).h MSG00001.bin"
+			CommandLine="mc -s -U -h &quot;$(ProjectDir)&quot; -r &quot;$(ProjectDir)&quot; &quot;$(InputFileName)&quot;&#x0D;&#x0A;del &quot;$(ProjectDir)messages.rc&quot;&#x0D;&#x0A;"
+			Outputs="$(InputName).h;MSG00001.bin"
 			FileExtensions="*.mc"
 			ExecutionDescription="Running message compiler"
 			>
