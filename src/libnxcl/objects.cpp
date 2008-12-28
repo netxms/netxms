@@ -1361,7 +1361,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
          fwrite(pList[i].pObject->pAccessList, 1, 
                 sizeof(NXC_ACL_ENTRY) * pList[i].pObject->dwAclSize, hFile);
          
-			dwSize = _tcslen(pList[i].pObject->pszComments) * sizeof(TCHAR);
+			dwSize = (DWORD)_tcslen(pList[i].pObject->pszComments) * sizeof(TCHAR);
          fwrite(&dwSize, 1, sizeof(DWORD), hFile);
          fwrite(pList[i].pObject->pszComments, 1, dwSize, hFile);
 
@@ -1373,11 +1373,11 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
          fwrite(&dwSize, 1, sizeof(DWORD), hFile);
 			for(j = 0; j < pList[i].pObject->pCustomAttrs->Size(); j++)
 			{
-            dwSize = _tcslen(pList[i].pObject->pCustomAttrs->GetKeyByIndex(j)) * sizeof(TCHAR);
+            dwSize = (DWORD)_tcslen(pList[i].pObject->pCustomAttrs->GetKeyByIndex(j)) * sizeof(TCHAR);
             fwrite(&dwSize, 1, sizeof(DWORD), hFile);
             fwrite(pList[i].pObject->pCustomAttrs->GetKeyByIndex(j), 1, dwSize, hFile);
 
-            dwSize = _tcslen(pList[i].pObject->pCustomAttrs->GetValueByIndex(j)) * sizeof(TCHAR);
+            dwSize = (DWORD)_tcslen(pList[i].pObject->pCustomAttrs->GetValueByIndex(j)) * sizeof(TCHAR);
             fwrite(&dwSize, 1, sizeof(DWORD), hFile);
             fwrite(pList[i].pObject->pCustomAttrs->GetValueByIndex(j), 1, dwSize, hFile);
 			}
@@ -1385,11 +1385,11 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
          switch(pList[i].pObject->iClass)
          {
             case OBJECT_NETWORKSERVICE:
-               dwSize = _tcslen(pList[i].pObject->netsrv.pszRequest) * sizeof(TCHAR);
+               dwSize = (DWORD)_tcslen(pList[i].pObject->netsrv.pszRequest) * sizeof(TCHAR);
                fwrite(&dwSize, 1, sizeof(DWORD), hFile);
                fwrite(pList[i].pObject->netsrv.pszRequest, 1, dwSize, hFile);
 
-               dwSize = _tcslen(pList[i].pObject->netsrv.pszResponse) * sizeof(TCHAR);
+               dwSize = (DWORD)_tcslen(pList[i].pObject->netsrv.pszResponse) * sizeof(TCHAR);
                fwrite(&dwSize, 1, sizeof(DWORD), hFile);
                fwrite(pList[i].pObject->netsrv.pszResponse, 1, dwSize, hFile);
                break;
@@ -1405,7 +1405,7 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
                       pList[i].pObject->vpnc.dwNumRemoteNets * sizeof(IP_NETWORK), hFile);
                break;
             case OBJECT_CONDITION:
-               dwSize = _tcslen(pList[i].pObject->cond.pszScript) * sizeof(TCHAR);
+               dwSize = (DWORD)_tcslen(pList[i].pObject->cond.pszScript) * sizeof(TCHAR);
                fwrite(&dwSize, 1, sizeof(DWORD), hFile);
                fwrite(pList[i].pObject->cond.pszScript, 1, dwSize, hFile);
 

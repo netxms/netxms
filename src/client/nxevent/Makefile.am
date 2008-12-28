@@ -14,4 +14,4 @@ bin_PROGRAMS = nxevent
 nxevent_SOURCES = nxevent.cpp
 nxevent_LDADD = ../libnetxms/libnetxms.la ../libnxmap/libnxmap.la ../libnxcl/libnxcl.la
 
-EXTRA_DIST = nxevent.dsp nxevent.dsw nxevent.h
+EXTRA_DIST = nxevent.vcproj nxevent.h

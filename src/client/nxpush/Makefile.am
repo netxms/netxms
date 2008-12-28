@@ -14,4 +14,4 @@ bin_PROGRAMS = nxpush
 nxpush_SOURCES = nxpush.cpp
 nxpush_LDADD = ../libnetxms/libnetxms.la ../libnxmap/libnxmap.la ../libnxcl/libnxcl.la
 
-EXTRA_DIST = nxpush.dsp nxpush.dsw
+EXTRA_DIST = nxpush.vcproj

@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="libexpatw"
-	ProjectGUID="{F16F9CA8-9438-4118-8A3C-F6DDC3DDCFDA}"
-	RootNamespace="libexpatw"
+	Name="libnxcl"
+	ProjectGUID="{3CB9B8C6-E6BF-4002-A61A-7A21FEADB531}"
+	RootNamespace="libnxcl"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -21,9 +21,9 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)_UNICODE"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			CharacterSet="1"
+			CharacterSet="2"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -43,7 +43,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="COMPILED_FROM_DSP,XML_UNICODE_WCHAR_T"
+				AdditionalIncludeDirectories="..\..\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBNXCL_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -63,8 +64,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="2"
-				ModuleDefinitionFile="libexpatw.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -95,88 +96,11 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug|x64"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)_UNICODE"
-			ConfigurationType="2"
-			CharacterSet="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				TargetEnvironment="3"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="0"
-				PreprocessorDefinitions="COMPILED_FROM_DSP,XML_UNICODE_WCHAR_T"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				LinkIncremental="2"
-				ModuleDefinitionFile="libexpatw.def"
-				GenerateDebugInformation="true"
-				SubSystem="2"
-				TargetMachine="17"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)_UNICODE"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			CharacterSet="1"
+			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
 			<Tool
@@ -196,7 +120,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="COMPILED_FROM_DSP,XML_UNICODE_WCHAR_T"
+				AdditionalIncludeDirectories="..\..\include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBNXCL_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -214,8 +139,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="1"
-				ModuleDefinitionFile="libexpatw.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -248,11 +173,89 @@
 			/>
 		</Configuration>
 		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="2"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="..\..\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBNXCL_EXPORTS"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="ws2_32.lib"
+				LinkIncremental="2"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
 			Name="Release|x64"
 			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)_UNICODE"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="2"
-			CharacterSet="1"
+			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
 			<Tool
@@ -273,7 +276,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="COMPILED_FROM_DSP,XML_UNICODE_WCHAR_T"
+				AdditionalIncludeDirectories="..\..\include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBNXCL_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -291,8 +295,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="1"
-				ModuleDefinitionFile="libexpatw.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -334,27 +338,111 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\libexpat.cpp"
+				RelativePath=".\actions.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\xmlparse.c"
+				RelativePath=".\agentcfg.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\xmlrole.c"
+				RelativePath=".\alarms.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\xmltok.c"
+				RelativePath=".\cert.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\xmltok_impl.c"
+				RelativePath=".\comm.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\xmltok_ns.c"
+				RelativePath=".\datacoll.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\epp.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\eventdb.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\events.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\graph.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\image.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\layer2.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\lpp.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\main.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\map.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\mib.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\mp.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\objects.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\objtools.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\package.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\script.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\server.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\session.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\situation.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\snmp.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\snmptrap.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\users.cpp"
 				>
 			</File>
 		</Filter>
@@ -364,59 +452,47 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\ascii.h"
+				RelativePath=".\libnxcl.h"
 				>
 			</File>
 			<File
-				RelativePath=".\asciitab.h"
+				RelativePath="..\..\include\netxms-regex.h"
 				>
 			</File>
 			<File
-				RelativePath=".\expat.h"
+				RelativePath="..\..\include\netxms-version.h"
 				>
 			</File>
 			<File
-				RelativePath=".\expat_external.h"
+				RelativePath="..\..\include\netxms_maps.h"
 				>
 			</File>
 			<File
-				RelativePath=".\iasciitab.h"
+				RelativePath="..\..\include\nms_common.h"
 				>
 			</File>
 			<File
-				RelativePath=".\internal.h"
+				RelativePath="..\..\include\nms_cscp.h"
 				>
 			</File>
 			<File
-				RelativePath=".\latin1tab.h"
+				RelativePath="..\..\include\nms_threads.h"
 				>
 			</File>
 			<File
-				RelativePath=".\macconfig.h"
+				RelativePath="..\..\include\nms_util.h"
 				>
 			</File>
 			<File
-				RelativePath=".\nametab.h"
+				RelativePath="..\..\include\nxclapi.h"
 				>
 			</File>
 			<File
-				RelativePath=".\utf8tab.h"
+				RelativePath="..\..\include\nxcpapi.h"
 				>
 			</File>
 			<File
-				RelativePath=".\winconfig.h"
-				>
-			</File>
-			<File
-				RelativePath=".\xmlrole.h"
-				>
-			</File>
-			<File
-				RelativePath=".\xmltok.h"
-				>
-			</File>
-			<File
-				RelativePath=".\xmltok_impl.h"
+				RelativePath="..\..\include\unicode.h"
 				>
 			</File>
 		</Filter>

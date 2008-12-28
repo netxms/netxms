@@ -247,7 +247,7 @@ TCHAR LIBNXCL_EXPORTABLE *NXCFormatAlarmText(NXC_SESSION session, NXC_ALARM *ala
 			out += prev;
 			break;
 		}
-		out.AddString(prev, curr - prev);
+		out.AddString(prev, (DWORD)(curr - prev));
 		curr++;
 		switch(*curr)
 		{

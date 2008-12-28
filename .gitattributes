@@ -95,8 +95,11 @@ src/client/console/plugins/AlarmBrowser/mcpAlarmBrowser.dsp eol=crlf
 src/client/console/plugins/Dashboard/mcpDashboard.dsp eol=crlf
 src/client/console/plugins/ObjectBrowser/mcpObjectBrowser.dsp eol=crlf
 src/client/nxalarm/nxalarm.dsp eol=crlf
+src/client/nxalarm/nxalarm.vcproj -text
 src/client/nxevent/nxevent.dsp eol=crlf
+src/client/nxevent/nxevent.vcproj -text
 src/client/nxpush/nxpush.dsp eol=crlf
+src/client/nxpush/nxpush.vcproj -text
 src/client/nxsms/nxsms.dsp eol=crlf
 src/console/PocketPC/nxpc.vcc eol=crlf
 src/console/PocketPC/nxpc.vcp eol=crlf
@@ -316,9 +319,10 @@ src/libnetxms/libnetxms.vcproj -text
 src/libnetxms/libnetxms.vcw eol=crlf
 src/libnetxms/libnetxmsw.vcproj -text
 src/libnxcl/libnxcl.dsp eol=crlf
-src/libnxcl/libnxcl.dsw eol=crlf
 src/libnxcl/libnxcl.vcp eol=crlf
+src/libnxcl/libnxcl.vcproj -text
 src/libnxcl/libnxcl.vcw eol=crlf
+src/libnxcl/libnxclw.vcproj -text
 src/libnxlp/libnxlp.dsp eol=crlf
 src/libnxlp/libnxlp.h -text
 src/libnxlp/libnxlp.vcproj -text
