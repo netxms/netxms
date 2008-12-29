@@ -5,4 +5,4 @@ nxsnmpwalk_SOURCES = nxsnmpwalk.cpp
 nxsnmpwalk_LDADD = ../../../libnetxms/libnetxms.la ../../../libnxsnmp/libnxsnmp.la
 
 EXTRA_DIST = \
-	nxsnmpwalk.dsp nxsnmpwalk.dsw
+	nxsnmpwalk.vcproj

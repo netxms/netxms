@@ -5,4 +5,4 @@ nxsnmpset_SOURCES = nxsnmpset.cpp
 nxsnmpset_LDADD = ../../../libnetxms/libnetxms.la ../../../libnxsnmp/libnxsnmp.la
 
 EXTRA_DIST = \
-	nxsnmpset.dsp nxsnmpset.dsw
+	nxsnmpset.vcproj

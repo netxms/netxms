@@ -14,7 +14,7 @@ bin_PROGRAMS = nxmibc
 nxmibc_SOURCES = array.cpp lex.mp.c mibparse.cpp nxmibc.cpp parser.tab.c
 nxmibc_LDADD = ../libnetxms/libnetxms.la ../libnxsnmp/libnxsnmp.la
 
-EXTRA_DIST = nxmibc.dsp nxmibc.dsw nxmibc.h mibparse.h parser.l parser.y parser.tab.h
+EXTRA_DIST = nxmibc.vcproj nxmibc.dsw nxmibc.h mibparse.h parser.l parser.y parser.tab.h
 
 lex.mp.c: parser.l parser.tab.c parser.tab.h
 	$(LEX) -Pmp parser.l

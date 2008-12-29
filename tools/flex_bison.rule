@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<VisualStudioToolFile
+	Name="FLEX &amp; BISON"
+	Version="8.00"
+	>
+	<Rules>
+		<CustomBuildRule
+			Name="FLEX"
+			DisplayName="FLEX"
+			CommandLine="flex [AllOptions] -olex.$(InputName).c $(InputName).l"
+			Outputs="lex.$(InputName).c"
+			AdditionalDependencies="$(InputName).tab.h"
+			FileExtensions="*.l"
+			ExecutionDescription="Running FLEX on $(InputName).l"
+			SupportsFileBatching="true"
+			>
+			<Properties>
+				<StringProperty
+					Name="PREFIX"
+					DisplayName="Parser prefix"
+					Description="Parser prefix"
+					Switch="-P[value]"
+					DefaultValue="yy"
+				/>
+			</Properties>
+		</CustomBuildRule>
+		<CustomBuildRule
+			Name="BISON"
+			DisplayName="BISON"
+			CommandLine="bison -b $(InputName) -d -t -v [AllOptions] $(InputName).y"
+			Outputs="$(InputName).tab.c;$(InputName).tab.h"
+			FileExtensions="*.y"
+			ExecutionDescription="Running BISON on $(InputName).y"
+			>
+			<Properties>
+				<StringProperty
+					Name="PREFIX"
+					DisplayName="Parser prefix"
+					Description="Parser prefix"
+					Switch="-p [value]"
+					DefaultValue="yy"
+				/>
+			</Properties>
+		</CustomBuildRule>
+	</Rules>
+</VisualStudioToolFile>

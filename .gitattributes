@@ -454,10 +454,16 @@ src/server/tools/nxget/nxget.dsw eol=crlf
 src/server/tools/nxupload/nxupload.dsp eol=crlf
 src/server/tools/nxupload/nxupload.dsw eol=crlf
 src/snmp/libnxsnmp/libnxsnmp.dsp eol=crlf
+src/snmp/libnxsnmp/libnxsnmp.vcproj -text
+src/snmp/libnxsnmp/libnxsnmpw.vcproj -text
 src/snmp/nxmibc/nxmibc.dsp eol=crlf
+src/snmp/nxmibc/nxmibc.vcproj -text
 src/snmp/nxsnmpget/nxsnmpget.dsp eol=crlf
+src/snmp/nxsnmpget/nxsnmpget.vcproj -text
 src/snmp/nxsnmpset/nxsnmpset.dsp eol=crlf
+src/snmp/nxsnmpset/nxsnmpset.vcproj -text
 src/snmp/nxsnmpwalk/nxsnmpwalk.dsp eol=crlf
+src/snmp/nxsnmpwalk/nxsnmpwalk.vcproj -text
 src/webui/src/org/netxms/client/AlarmBrowser.java -text
 src/webui/src/org/netxms/client/InfoBar.java -text
 src/webui/src/org/netxms/client/LoginDialog.java -text
@@ -481,6 +487,8 @@ src/webui/src/org/netxms/webui.gwt.xml -text
 src/webui/tomcat/conf/web.xml -text
 src/webui/tomcat/webapps/ROOT/WEB-INF/web.xml -text
 src/webui/webui.launch -text
+src/zlib/nxzlib.vcproj -text
+tools/flex_bison.rule -text
 tools/mc.rule -text
 tools/patch_config.status.pl -text
 www/data/documentation/body.shtml -text
