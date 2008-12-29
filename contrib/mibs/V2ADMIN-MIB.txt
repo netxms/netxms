@@ -4,7 +4,7 @@
 --        MODULE-IDENTITY, OBJECT-TYPE, Integer32, Counter32, UInteger32
 	snmpModules
             FROM SNMPv2-SMI
-        RowStatus, TestAndIncr
+        RowStatus, TestAndIncr, TruthValue
              FROM SNMPv2-TC
         MODULE-COMPLIANCE, OBJECT-GROUP
             FROM SNMPv2-CONF;

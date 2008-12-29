@@ -1460,6 +1460,8 @@ AC_CONFIG_FILES([
 	src/client/console/plugins/ObjectBrowser/Makefile
 	src/client/console/plugins/ObjectBrowser/rc/Makefile
 	src/client/nxalarm/Makefile
+	src/client/nxevent/Makefile
+	src/client/nxpush/Makefile
 	src/client/nxsms/Makefile
 	src/console/Makefile
 	src/console/nxuilib/Makefile
@@ -1478,9 +1480,6 @@ AC_CONFIG_FILES([
 	src/console/PocketPC/Makefile
 	src/console/PocketPC/res/Makefile
 	src/nxcptest/Makefile
-	src/nxevent/Makefile
-	src/nxpush/Makefile
-	src/nxreport/Makefile
 	src/nxmibc/Makefile
 	src/nxscript/Makefile
 	src/server/Makefile
