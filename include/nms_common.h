@@ -118,7 +118,9 @@
 
 /********** WINDOWS ********************/
 
+#ifndef _WIN32_WINNT
 #define _WIN32_WINNT		0x0500
+#endif
 
 #define FS_PATH_SEPARATOR			_T("\\")
 #define FS_PATH_SEPARATOR_CHAR	_T('\\')

@@ -552,7 +552,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "nxevent"=.\src\nxevent\nxevent.dsp - Package Owner=<4>
+Project: "nxevent"=.\src\client\nxevent\nxevent.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -687,7 +687,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "nxpush"=.\src\nxpush\nxpush.dsp - Package Owner=<4>
+Project: "nxpush"=.\src\client\nxpush\nxpush.dsp - Package Owner=<4>
 
 Package=<5>
 {{{

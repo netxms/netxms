@@ -3,7 +3,7 @@
 
 [Setup]
 #include "setup.iss"
-OutputBaseFilename=nxagent-0.2.24-x64
+OutputBaseFilename=nxagent-0.9.0-rc1-x64
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 
@@ -24,6 +24,7 @@ Source: "..\subagents\ecs\Release64\ecs.nsm"; DestDir: "{app}\bin"; Flags: ignor
 Source: "..\subagents\odbcquery\Release64\odbcquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion
 Source: "..\..\install\windows-x64\files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\install\windows-x64\files\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 
 #include "common.iss"
 
