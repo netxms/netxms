@@ -50,8 +50,6 @@ src/agent/core/nxagentd.dsp eol=crlf
 src/agent/core/nxagentd.vcproj -text
 src/agent/subagents/ecs/ecs.dsp eol=crlf
 src/agent/subagents/ecs/ecs.vcproj -text
-src/agent/subagents/logscan/logscan.dsp eol=crlf
-src/agent/subagents/logscan/logscan.dsw eol=crlf
 src/agent/subagents/logwatch/logwatch.dsp eol=crlf
 src/agent/subagents/logwatch/logwatch.vcproj -text
 src/agent/subagents/odbcquery/odbcquery.dsp eol=crlf

@@ -240,7 +240,7 @@ AC_ARG_WITH(dist,
 	TOP_LEVEL_MODULES="sql images"
 	CONTRIB_MODULES="mibs backgrounds"
 	CLIENT_COMPONENTS="console nxalarm nxevent nxpush nxsms"
-	UNSTABLE_SUBAGENT_DIRS="logscan odbcquery"
+	UNSTABLE_SUBAGENT_DIRS="odbcquery"
 	SERVER_TOOLS="nxconfig"
 	NEED_WXWIDGETS="yes"
 )
@@ -353,7 +353,7 @@ if test $? = 0; then
 	BUILD_AGENT="yes"
 	MODULES="$MODULES libnxlp agent"
 	if test "x$ENABLE_UNSTABLE" = "xyes"; then
-		UNSTABLE_SUBAGENT_DIRS="logscan odbcquery"
+		UNSTABLE_SUBAGENT_DIRS="odbcquery"
 	fi
 
 	case "$PLATFORM" in
@@ -1526,7 +1526,6 @@ AC_CONFIG_FILES([
 	src/agent/subagents/winperf/Makefile
 	src/agent/subagents/wmi/Makefile
 	src/agent/subagents/portCheck/Makefile
-	src/agent/subagents/logscan/Makefile
 	src/agent/subagents/ping/Makefile
 	src/agent/subagents/sms/Makefile
 	src/agent/subagents/ups/Makefile
