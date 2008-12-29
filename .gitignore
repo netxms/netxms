@@ -52,11 +52,11 @@ src/server/include/messages.h
 src/server/libnxsrv/*.bin
 src/server/libnxsrv/messages.c
 src/server/netxmsd/netxmsd
+src/server/nxsnmpget/nxsnmpget
 src/server/tools/nxaction/nxaction
 src/server/tools/nxadm/nxadm
 src/server/tools/nxdbmgr/nxdbmgr
 src/server/tools/nxget/nxget
-src/server/tools/nxsnmpget/nxsnmpget
 src/server/tools/nxsnmpwalk/nxsnmpwalk
 src/server/tools/nxupload/nxupload
 /stamp-h1
