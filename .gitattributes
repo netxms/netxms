@@ -408,8 +408,6 @@ src/nxhttpd/static/images/status/unknown.png -text
 src/nxhttpd/static/images/status/unmanaged.png -text
 src/nxhttpd/static/images/status/warning.png -text
 src/nxhttpd/static/images/terminate.png -text
-src/nxmibc/nxmibc.dsp eol=crlf
-src/nxmibc/nxmibc.dsw eol=crlf
 src/nxscript/nxscript.dsp eol=crlf
 src/nxscript/nxscript.dsw eol=crlf
 src/server/core/isc.cpp -text
@@ -433,8 +431,6 @@ src/server/modules/hpdp/hpdp.dsp eol=crlf
 src/server/modules/hpdp/hpdp.dsw eol=crlf
 src/server/netxmsd/netxmsd.dsp eol=crlf
 src/server/netxmsd/netxmsd.dsw eol=crlf
-src/server/nxsnmpget/nxsnmpget.dsp eol=crlf
-src/server/nxsnmpget/nxsnmpget.dsw eol=crlf
 src/server/smsdrv/generic/generic.dsp eol=crlf
 src/server/smsdrv/generic/generic.dsw eol=crlf
 src/server/smsdrv/nxagent/nxagent.dsp eol=crlf
@@ -455,13 +451,13 @@ src/server/tools/nxdbmgr/nxdbmgr.dsp eol=crlf
 src/server/tools/nxdbmgr/nxdbmgr.dsw eol=crlf
 src/server/tools/nxget/nxget.dsp eol=crlf
 src/server/tools/nxget/nxget.dsw eol=crlf
-src/server/tools/nxsnmpset/nxsnmpset.dsp eol=crlf
-src/server/tools/nxsnmpset/nxsnmpset.dsw eol=crlf
-src/server/tools/nxsnmpwalk/nxsnmpwalk.dsp eol=crlf
-src/server/tools/nxsnmpwalk/nxsnmpwalk.dsw eol=crlf
 src/server/tools/nxupload/nxupload.dsp eol=crlf
 src/server/tools/nxupload/nxupload.dsw eol=crlf
 src/snmp/libnxsnmp/libnxsnmp.dsp eol=crlf
+src/snmp/nxmibc/nxmibc.dsp eol=crlf
+src/snmp/nxsnmpget/nxsnmpget.dsp eol=crlf
+src/snmp/nxsnmpset/nxsnmpset.dsp eol=crlf
+src/snmp/nxsnmpwalk/nxsnmpwalk.dsp eol=crlf
 src/webui/src/org/netxms/client/AlarmBrowser.java -text
 src/webui/src/org/netxms/client/InfoBar.java -text
 src/webui/src/org/netxms/client/LoginDialog.java -text
