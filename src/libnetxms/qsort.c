@@ -403,7 +403,7 @@ void LIBNETXMS_EXPORTABLE QSortEx(void *base, size_t nmemb, size_t size, void *a
 {
 
   if (nmemb<=1) return;
-  if (((int)base|size)&(WORD_BYTES-1))
+  if ((CAST_FROM_POINTER(base,int)|size)&(WORD_BYTES-1))
     qsort_nonaligned(base,nmemb,size,arg,compare);
   else if (size!=WORD_BYTES)
     qsort_aligned(base,nmemb,size,arg,compare);

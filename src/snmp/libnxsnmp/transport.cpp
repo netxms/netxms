@@ -247,7 +247,7 @@ int SNMP_UDPTransport::RecvData(DWORD dwTimeout, struct sockaddr *pSender, sockl
          tv.tv_sec = dwTimeout / 1000;
          tv.tv_usec = (dwTimeout % 1000) * 1000;
 #ifdef _WIN32
-         if (select(m_hSocket + 1, &rdfs, NULL, NULL, &tv) <= 0)
+         if (select(1, &rdfs, NULL, NULL, &tv) <= 0)
             return 0;
 #else
          qwTime = GetCurrentTimeMs();

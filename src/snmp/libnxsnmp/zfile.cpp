@@ -137,7 +137,7 @@ BOOL ZFile::FillDataBuffer(void)
    if (m_stream.avail_in == 0)
    {
       // Read more data from disk
-      nBytes = fread(m_pCompBuffer, 1, DATA_BUFFER_SIZE, m_pFile);
+      nBytes = (int)fread(m_pCompBuffer, 1, DATA_BUFFER_SIZE, m_pFile);
       if (nBytes <= 0)
          return FALSE;  // EOF or error
 
