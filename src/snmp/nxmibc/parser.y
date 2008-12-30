@@ -35,15 +35,19 @@
  * A parser for the basic grammar to use for snmp V2c modules
  */
 
-#pragma warning(disable : 4102)
+#pragma warning(disable : 4065 4102)
 
+/*
 #ifndef __STDC__
 #define __STDC__	1
 #endif
+*/
 
 #define YYMALLOC	malloc
 #define YYFREE		free
 
+#include <nms_common.h>
+#include <nms_util.h>
 #include <string.h>
 #include <time.h>
 #include "mibparse.h"
@@ -95,11 +99,11 @@ void *__zmalloc(unsigned int nSize)
    return p;
 }
 
-static int AccessFromText(char *pszText)
+static int AccessFromText(const char *pszText)
 {
-   static char *pText[] = { "read-only", "read-write", "write-only",
-                            "not-accessible", "accessible-for-notify",
-                            "read-create", NULL };
+   static const char *pText[] = { "read-only", "read-write", "write-only",
+                                  "not-accessible", "accessible-for-notify",
+                                  "read-create", NULL };
    char szBuffer[256];
    int i;
 
@@ -1316,7 +1320,7 @@ MP_MODULE *ParseMIB(char *pszFilename)
    return m_pModule;
 }
 
-int mpwrap()
+extern "C" int mpwrap()
 {
 	return 1;
 }

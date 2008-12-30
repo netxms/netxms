@@ -413,7 +413,7 @@ src/nxscript/nxscript.dsp eol=crlf
 src/nxscript/nxscript.dsw eol=crlf
 src/server/core/isc.cpp -text
 src/server/core/nxcore.dsp eol=crlf
-src/server/core/nxcore.dsw eol=crlf
+src/server/core/nxcore.vcproj -text
 src/server/dbdrv/mssql/mssql.dsp eol=crlf
 src/server/dbdrv/mssql/mssql.dsw eol=crlf
 src/server/dbdrv/mysql/mysql.dsp eol=crlf
@@ -427,7 +427,7 @@ src/server/dbdrv/pgsql/pgsql.dsw eol=crlf
 src/server/dbdrv/sqlite/sqlite.dsp eol=crlf
 src/server/dbdrv/sqlite/sqlite.dsw eol=crlf
 src/server/libnxsrv/libnxsrv.dsp eol=crlf
-src/server/libnxsrv/libnxsrv.dsw eol=crlf
+src/server/libnxsrv/libnxsrv.vcproj -text
 src/server/modules/hpdp/hpdp.dsp eol=crlf
 src/server/modules/hpdp/hpdp.dsw eol=crlf
 src/server/netxmsd/netxmsd.dsp eol=crlf

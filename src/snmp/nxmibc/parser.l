@@ -53,7 +53,7 @@ WHITESPC  [[:blank:]\t\n\r]
 #define ECHO
 
 #include "mibparse.h"
-#include "parser.tab.h"/* token codes from the parser */
+#include "parser.tab.hpp"/* token codes from the parser */
 #include <nms_util.h>
 
 #if defined(_WIN32) 

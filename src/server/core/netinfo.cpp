@@ -265,7 +265,7 @@ static INTERFACE_LIST *SysGetLocalIfList(void)
          // Get network connection name from adapter name, if possible
          if (imp_HrLanConnectionNameFromGuidOrPath != NULL)
          {
-            WORD wGUID[256], wName[256];
+            WCHAR wGUID[256], wName[256];
 
             // Resolve GUID to network connection name
             MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, wGUID, 256);

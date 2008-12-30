@@ -6,13 +6,12 @@ libnxsrv_la_SOURCES = messages.c agent.cpp db.cpp isc.cpp license.cpp \
 libnxsrv_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxsrv_la_LIBADD = ../../libnetxms/libnetxms.la ../../libnxsnmp/libnxsnmp.la
 
-messages.c: ../include/messages.h
+messages.c: messages.h
 
-../include/messages.h: messages.mc
+messages.h: messages.mc
 	$(PERL) @top_builddir@/tools/mc.pl messages.mc
-	mv messages.h ../include
 
 EXTRA_DIST = \
-	libnxsrv.dsp libnxsrv.dsw libnxsrv.rc \
+	libnxsrv.vcproj libnxsrv.rc \
 	messages.mc messages.c \
 	libnxsrv.h resource.h

@@ -155,6 +155,7 @@
 #define write     _write
 #define close     _close
 #define getpid    _getpid
+#define fileno    _fileno
 
 typedef unsigned __int64 QWORD;
 typedef __int64 INT64;

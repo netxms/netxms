@@ -40,7 +40,7 @@
 #include <nxclapi.h>
 #include <nxcpapi.h>
 #include <nms_agent.h>
-#include <messages.h>
+#include "../libnxsrv/messages.h"
 #include <dbdrv.h>
 #include <nxsnmp.h>
 #include <netxms_isc.h>

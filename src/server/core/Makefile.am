@@ -13,7 +13,7 @@ libnxcore_la_SOURCES = acl.cpp agent.cpp actions.cpp admin.cpp alarm.cpp \
 			interface.cpp isc.cpp layer2.cpp locks.cpp lpp.cpp \
 			main.cpp map.cpp modules.cpp netinfo.cpp netobj.cpp \
 			netsrv.cpp node.cpp nortel.cpp np.cpp nxmp_data.cpp \
-			nxmp_lex.yy.cpp nxmp_lexer.cpp \
+			lex.nxmp_parser.cpp nxmp_lexer.cpp \
 			nxmp_parser.cpp nxmp_parser.tab.cpp \
 			nxsl_classes.cpp nxslext.cpp objects.cpp \
 			objtools.cpp package.cpp poll.cpp radius.cpp \
@@ -30,14 +30,14 @@ libnxcore_la_LIBADD = ../../libnetxms/libnetxms.la \
 		      ../libnxsrv/libnxsrv.la ../../libnxsl/libnxsl.la
 
 EXTRA_DIST = \
-	nxcore.dsp nxcore.dsw \
+	nxcore.vcproj \
 	nxcore.h radius.h \
 	nxmp_parser.l nxmp_parser.y nxmp_parser.h nxmp_parser.tab.hpp
 
 nxmp_data.cpp: nxmp_parser.tab.cpp
 
-nxmp_lex.yy.cpp: nxmp_parser.l nxmp_parser.tab.cpp nxmp_parser.tab.hpp
-	$(LEX) -B -f -8 -onxmp_lex.yy.cpp nxmp_parser.l
+lex.nxmp_parser.cpp: nxmp_parser.l nxmp_parser.tab.cpp nxmp_parser.tab.hpp
+	$(LEX) -B -f -8 -olex.nxmp_parser.cpp nxmp_parser.l
 
 nxmp_parser.tab.cpp: nxmp_parser.y
 	$(YACC) -b nxmp_parser -o nxmp_parser.tab.cpp -d -t -v nxmp_parser.y

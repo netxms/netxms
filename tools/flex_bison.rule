@@ -7,9 +7,9 @@
 		<CustomBuildRule
 			Name="FLEX"
 			DisplayName="FLEX"
-			CommandLine="flex [AllOptions] -olex.$(InputName).c $(InputName).l"
-			Outputs="lex.$(InputName).c"
-			AdditionalDependencies="$(InputName).tab.h"
+			CommandLine="flex [AllOptions] -olex.$(InputName).cpp $(InputName).l"
+			Outputs="lex.$(InputName).cpp"
+			AdditionalDependencies="$(InputName).tab.hpp"
 			FileExtensions="*.l"
 			ExecutionDescription="Running FLEX on $(InputName).l"
 			SupportsFileBatching="true"
@@ -22,13 +22,37 @@
 					Switch="-P[value]"
 					DefaultValue="yy"
 				/>
+				<BooleanProperty
+					Name="USE8BIT"
+					DisplayName="Generate 8-bit scanner"
+					Description="Generate 8-bit scanner"
+					Switch="-8"
+				/>
+				<BooleanProperty
+					Name="NOUNISTD"
+					DisplayName="Do not include unistd.h"
+					Description="Do not include unistd.h"
+					Switch="--nounistd"
+				/>
+				<BooleanProperty
+					Name="BATCH"
+					DisplayName="Generate batch scanner"
+					Description="Generate batch scanner"
+					Switch="-B"
+				/>
+				<BooleanProperty
+					Name="FAST"
+					DisplayName="Generate fast scanner"
+					Description="Generate fast, large scanner"
+					Switch="-f"
+				/>
 			</Properties>
 		</CustomBuildRule>
 		<CustomBuildRule
 			Name="BISON"
 			DisplayName="BISON"
-			CommandLine="bison -b $(InputName) -d -t -v [AllOptions] $(InputName).y"
-			Outputs="$(InputName).tab.c;$(InputName).tab.h"
+			CommandLine="bison -b $(InputName) -o $(InputName).tab.cpp -d -t -v [AllOptions] $(InputName).y"
+			Outputs="$(InputName).tab.cpp;$(InputName).tab.hpp"
 			FileExtensions="*.y"
 			ExecutionDescription="Running BISON on $(InputName).y"
 			>

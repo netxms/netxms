@@ -96,7 +96,6 @@ typedef __console_ctx * CONSOLE_CTX;
 #include "nms_dcoll.h"
 #include "nms_users.h"
 #include "nms_objects.h"
-#include "messages.h"
 #include "nms_locks.h"
 #include "nms_pkg.h"
 #include "nms_topo.h"
