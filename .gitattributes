@@ -454,6 +454,7 @@ src/server/tools/nxget/nxget.dsp eol=crlf
 src/server/tools/nxget/nxget.dsw eol=crlf
 src/server/tools/nxupload/nxupload.dsp eol=crlf
 src/server/tools/nxupload/nxupload.dsw eol=crlf
+src/snmp/Makefile.am -text
 src/snmp/libnxsnmp/libnxsnmp.dsp eol=crlf
 src/snmp/libnxsnmp/libnxsnmp.vcproj -text
 src/snmp/libnxsnmp/libnxsnmpw.vcproj -text

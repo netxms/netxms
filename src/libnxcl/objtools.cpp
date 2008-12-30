@@ -400,7 +400,7 @@ BOOL LIBNXCL_EXPORTABLE NXCIsAppropriateTool(NXC_OBJECT_TOOL *pTool, NXC_OBJECT 
          bResult = FALSE;
       if (pTool->dwFlags & TF_REQUIRES_OID_MATCH)
       {
-         TCHAR *pszPattern;
+         const TCHAR *pszPattern;
 
          pszPattern = CHECK_NULL_EX(pTool->pszMatchingOID);
          if (*pszPattern == 0)

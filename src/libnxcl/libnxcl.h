@@ -243,7 +243,7 @@ public:
    BOOL NeedPasswordChange(void) { return (m_dwFlags & NXC_SF_CHANGE_PASSWD) ? TRUE : FALSE; }
    BOOL IsDBConnLost(void) { return (m_dwFlags & NXC_SF_BAD_DBCONN) ? TRUE : FALSE; }
 
-   void SetLastLock(TCHAR *pszLock) { nx_strncpy(m_szLastLock, pszLock, MAX_LOCKINFO_LEN); }
+   void SetLastLock(const TCHAR *pszLock) { nx_strncpy(m_szLastLock, pszLock, MAX_LOCKINFO_LEN); }
    TCHAR *GetLastLock(void) { return m_szLastLock; }
 
 	TCHAR *GetServerTimeZone(void) { return m_szServerTimeZone; }
@@ -273,7 +273,7 @@ void ProcessUserDBUpdate(CSCPMessage *pMsg);
 void ProcessSituationChange(NXCL_Session *pSession, CSCPMessage *pMsg);
 void ProcessDCI(NXCL_Session *pSession, CSCPMessage *pMsg);
 
-void DebugPrintf(TCHAR *szFormat, ...);
+void DebugPrintf(const TCHAR *format, ...);
 
 
 //

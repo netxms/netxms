@@ -29,7 +29,7 @@
 // Do actual builtin object creation
 //
 
-static MP_OBJECT *CreateObject(char *pszName, DWORD dwId)
+static MP_OBJECT *CreateObject(const char *pszName, DWORD dwId)
 {
    MP_OBJECT *pObject;
    MP_SUBID *pSubId;

@@ -2,7 +2,7 @@ INCLUDES=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 
 bin_PROGRAMS = nxsnmpwalk
 nxsnmpwalk_SOURCES = nxsnmpwalk.cpp
-nxsnmpwalk_LDADD = ../../../libnetxms/libnetxms.la ../../../libnxsnmp/libnxsnmp.la
+nxsnmpwalk_LDADD = ../../libnetxms/libnetxms.la ../libnxsnmp/libnxsnmp.la
 
 EXTRA_DIST = \
 	nxsnmpwalk.vcproj

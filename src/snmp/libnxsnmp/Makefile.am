@@ -10,12 +10,12 @@ endif
 
 libnxsnmp_la_SOURCES = $(SOURCES)
 libnxsnmp_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
-libnxsnmp_la_LIBADD = ../libnetxms/libnetxms.la
+libnxsnmp_la_LIBADD = ../../libnetxms/libnetxms.la
 
 libnxsnmpw_la_SOURCES = $(SOURCES)
 libnxsnmpw_la_CPPFLAGS = -DUNICODE
 libnxsnmpw_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
-libnxsnmpw_la_LIBADD = ../libnetxms/libnetxmsw.la
+libnxsnmpw_la_LIBADD = ../../libnetxms/libnetxmsw.la
 
 EXTRA_DIST = \
 	libnxsnmp.vcproj libnxsnmpw.vcproj \

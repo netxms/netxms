@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [0.9.0-rc1], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.9.0-rc2], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -66,7 +66,13 @@ WX_UNICODE="no"
 AC_ARG_WITH(server,
 [AS_HELP_STRING(--with-server,build server)],
 [
-	COMPONENTS="$COMPONENTS server agent"
+	COMPONENTS="$COMPONENTS snmp server agent"
+])
+
+AC_ARG_WITH(snmp,
+[AS_HELP_STRING(--with-snmp,build SNMP library and tools)],
+[
+	COMPONENTS="$COMPONENTS snmp"
 ])
 
 AC_ARG_WITH(client,
@@ -78,7 +84,7 @@ AC_ARG_WITH(client,
 AC_ARG_WITH(console,
 [AS_HELP_STRING(--with-console,build management console)],
 [
-	COMPONENTS="$COMPONENTS console client"
+	COMPONENTS="$COMPONENTS snmp console client"
 ])
 
 AC_ARG_WITH(agent,
@@ -234,7 +240,7 @@ AC_ARG_ENABLE(debug,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle"
-	MODULES="libnxsnmp libnxsl libnxlp server agent libnxmap libnxcl nxmibc client console nxhttpd nxscript nxcptest"
+	MODULES="snmp libnxsl libnxlp server agent libnxmap libnxcl client console nxhttpd nxscript nxcptest"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
@@ -320,14 +326,19 @@ if test $? = 0; then
 	SUBAGENT_LIBS="../subagents/ipso/libnsm_ipso.la ../subagents/ping/libnsm_ping.la ../subagents/portCheck/libnsm_portCheck.la ../subagents/ups/libnsm_ups.la"
 fi
 
+check_substr "$COMPONENTS" "snmp"
+if test $? = 0; then
+	NEED_ZLIB="yes"
+	MODULES="$MODULES snmp"
+fi
+
 check_substr "$COMPONENTS" "server"
 if test $? = 0; then
 	if test "x$DBDRIVER_SELECTED" != "xyes"; then
 		AC_MSG_ERROR(You must select at least one database driver when building server.)
 	fi
 	BUILD_SERVER="yes"
-	NEED_ZLIB="yes"
-	MODULES="$MODULES libnxmap libnxsnmp libnxsl libnxlp server nxmibc nxscript"
+	MODULES="$MODULES libnxmap libnxsl libnxlp server nxscript"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds"
 fi
@@ -336,7 +347,6 @@ check_substr "$COMPONENTS" "console"
 if test $? = 0; then
 	BUILD_CONSOLE="yes"
 	NEED_WXWIDGETS="yes"
-	MODULES="$MODULES libnxsnmp"
 	CLIENT_COMPONENTS="$CLIENT_COMPONENTS console"
 fi
 
@@ -1436,7 +1446,6 @@ AC_CONFIG_FILES([
 	sql/Makefile
 	src/Makefile
 	src/libnetxms/Makefile
-	src/libnxsnmp/Makefile
 	src/libnxcl/Makefile
 	src/libnxlp/Makefile
 	src/libnxsl/Makefile
@@ -1480,7 +1489,6 @@ AC_CONFIG_FILES([
 	src/console/PocketPC/Makefile
 	src/console/PocketPC/res/Makefile
 	src/nxcptest/Makefile
-	src/nxmibc/Makefile
 	src/nxscript/Makefile
 	src/server/Makefile
 	src/server/core/Makefile
@@ -1502,11 +1510,14 @@ AC_CONFIG_FILES([
 	src/server/tools/nxconfig/Makefile
 	src/server/tools/nxconfig/res/Makefile
 	src/server/tools/nxdbmgr/Makefile
-	src/server/tools/nxsnmpget/Makefile
-	src/server/tools/nxsnmpwalk/Makefile
-	src/server/tools/nxsnmpset/Makefile
 	src/server/tools/nxupload/Makefile
 	src/server/libnxsrv/Makefile
+	src/snmp/Makefile
+	src/snmp/libnxsnmp/Makefile
+	src/snmp/nxmibc/Makefile
+	src/snmp/nxsnmpget/Makefile
+	src/snmp/nxsnmpset/Makefile
+	src/snmp/nxsnmpwalk/Makefile
 	src/agent/Makefile
 	src/agent/core/Makefile
 	src/agent/install/Makefile

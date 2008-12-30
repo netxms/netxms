@@ -56,7 +56,7 @@ static char **m_ppFileList = NULL;
 static struct
 {
    int nSeverity;
-   char *pszText;
+   const char *pszText;
 } m_errorList[] =
 {
    { MIBC_INFO, "Operation completed successfully" },
@@ -76,7 +76,7 @@ static struct
 extern "C" void Error(int nError, char *pszModule, ...)
 {
    va_list args;
-   static char *m_szSeverityText[] = { "INFO", "WARNING", "ERROR" };
+   static const char *m_szSeverityText[] = { "INFO", "WARNING", "ERROR" };
 
    printf("%s: %s %03d: ", pszModule, m_szSeverityText[m_errorList[nError].nSeverity], nError);
    va_start(args, pszModule);

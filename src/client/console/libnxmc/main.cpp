@@ -191,7 +191,7 @@ NXC_SESSION LIBNXMC_EXPORTABLE NXMCGetSession()
 
 const TCHAR LIBNXMC_EXPORTABLE *NXMCGetStatusText(int status)
 {
-	static TCHAR *texts[] =
+	static const TCHAR *texts[] =
 	{
 		_T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"), _T("CRITICAL"),
 		_T("UNKNOWN"), _T("UNMANAGED"), _T("DISABLED"), _T("TESTING")
@@ -207,7 +207,7 @@ const TCHAR LIBNXMC_EXPORTABLE *NXMCGetStatusText(int status)
 
 const TCHAR LIBNXMC_EXPORTABLE *NXMCGetStatusTextSmall(int status)
 {
-	static TCHAR *texts[] =
+	static const TCHAR *texts[] =
 	{
 		_T("Normal"), _T("Warning"), _T("Minor"), _T("Major"), _T("Critical"),
 		_T("Unknown"), _T("Unmanaged"), _T("Disabled"), _T("Testing")
@@ -223,7 +223,7 @@ const TCHAR LIBNXMC_EXPORTABLE *NXMCGetStatusTextSmall(int status)
 
 const TCHAR LIBNXMC_EXPORTABLE *NXMCGetAlarmStateName(int state)
 {
-	static TCHAR *texts[] =
+	static const TCHAR *texts[] =
 	{
 		_T("Outstanding"), _T("Acknowledged"), _T("Terminated")
 	};
@@ -238,10 +238,10 @@ const TCHAR LIBNXMC_EXPORTABLE *NXMCGetAlarmStateName(int state)
 
 const TCHAR LIBNXMC_EXPORTABLE *NXMCGetClassName(int objClass)
 {
-	static TCHAR *names[] = { _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"), _T("Network"), 
-                             _T("Container"), _T("Zone"), _T("ServiceRoot"), _T("Template"), 
-                             _T("TemplateGroup"), _T("TemplateRoot"), _T("NetworkService"),
-                             _T("VPNConnector"), _T("Condition"), _T("Cluster") };
+	static const TCHAR *names[] = { _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"), _T("Network"), 
+                                   _T("Container"), _T("Zone"), _T("ServiceRoot"), _T("Template"), 
+                                   _T("TemplateGroup"), _T("TemplateRoot"), _T("NetworkService"),
+                                   _T("VPNConnector"), _T("Condition"), _T("Cluster") };
 	
 	return ((objClass >= 0) && (objClass <= OBJECT_CLUSTER)) ? names[objClass] : _T("Unknown");
 }
@@ -253,7 +253,7 @@ const TCHAR LIBNXMC_EXPORTABLE *NXMCGetClassName(int objClass)
 
 const TCHAR LIBNXMC_EXPORTABLE *NXMCGetIfTypeName(int type)
 {
-	TCHAR *types[] = 
+	static const TCHAR *types[] = 
 	{
 		_T("Unknown"),
 		_T("Other"),
@@ -323,7 +323,7 @@ const TCHAR LIBNXMC_EXPORTABLE *NXMCGetIfTypeName(int type)
 
 const TCHAR LIBNXMC_EXPORTABLE *NXMCGetNodeTypeName(int type)
 {
-	CODE_TO_TEXT types[] =
+	static CODE_TO_TEXT types[] =
 	{
 		{ NODE_TYPE_GENERIC, _T("Generic") },
 		{ NODE_TYPE_NORTEL_ACCELAR, _T("Nortel Networks Passport switch") },

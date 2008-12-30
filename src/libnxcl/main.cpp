@@ -35,18 +35,18 @@ NXC_DEBUG_CALLBACK g_pDebugCallBack = NULL;
 // Print debug messages
 //
 
-void DebugPrintf(TCHAR *szFormat, ...)
+void DebugPrintf(const TCHAR *format, ...)
 {
    va_list args;
-   TCHAR szBuffer[4096];
+   TCHAR buffer[4096];
 
    if (g_pDebugCallBack == NULL)
       return;
 
-   va_start(args, szFormat);
-   _vsntprintf(szBuffer, 4096, szFormat, args);
+   va_start(args, format);
+   _vsntprintf(buffer, 4096, format, args);
    va_end(args);
-   g_pDebugCallBack(szBuffer);
+   g_pDebugCallBack(buffer);
 }
 
 
