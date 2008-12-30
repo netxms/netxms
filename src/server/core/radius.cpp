@@ -162,10 +162,10 @@ static void random_vector(unsigned char *vector)
 	if (!did_srand)
 	{
 		char garbage[8];
-		i = time(NULL) + getpid();
+		i = (unsigned int)time(NULL) + getpid();
 		for (n = 0; n < 8; n++)
 		{
-			i+= (garbage[n] << i);
+			i += (garbage[n] << i);
 		}
 		srand(i);
 		did_srand = 1;
@@ -245,7 +245,7 @@ static void encrypt_attr_style_1(char *secret, char *vector, VALUE_PAIR *vp)
 	char work_buf[SECRET_LEN + AUTH_VECTOR_LEN + SALT_LEN];
 	char digest[MD5_LEN];
 	char *i, *o;
-	unsigned short salt; /* salt in network order */
+	WORD salt; /* salt in network order */
 	int clear_len;
 	int work_len;
 	int secret_len;
@@ -296,7 +296,7 @@ static void encrypt_attr_style_1(char *secret, char *vector, VALUE_PAIR *vp)
 	 * Oh, and sizeof(long) always == sizeof(void*) in our part of the
 	 * universe, right? (*BSD, Solaris, Linux, DEC Unix...)
 	 */
-	salt = htons( ( ((long)vp ^ *(long *)vector) & 0xffff ) | 0x8000 );
+	salt = htons((WORD)((((long)vp ^ *(long *)vector) & 0xffff) | 0x8000));
 	memcpy(o, &salt, sizeof(salt));
 	o += sizeof(salt);
 

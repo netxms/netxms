@@ -332,7 +332,7 @@ src/libnxmap/libnxmap.dsp eol=crlf
 src/libnxmap/libnxmap.vcproj -text
 src/libnxmap/libnxmapw.vcproj -text
 src/libnxsl/libnxsl.dsp eol=crlf
-src/libnxsl/libnxsl.dsw eol=crlf
+src/libnxsl/libnxsl.vcproj -text
 src/libnxsl/parser.l -text
 src/nxcptest/nxcptest.dsp eol=crlf
 src/nxcptest/nxcptest.dsw eol=crlf
@@ -410,7 +410,7 @@ src/nxhttpd/static/images/status/unmanaged.png -text
 src/nxhttpd/static/images/status/warning.png -text
 src/nxhttpd/static/images/terminate.png -text
 src/nxscript/nxscript.dsp eol=crlf
-src/nxscript/nxscript.dsw eol=crlf
+src/nxscript/nxscript.vcproj -text
 src/server/core/isc.cpp -text
 src/server/core/nxcore.dsp eol=crlf
 src/server/core/nxcore.vcproj -text
@@ -423,15 +423,15 @@ src/server/dbdrv/odbc/odbc.dsw eol=crlf
 src/server/dbdrv/oracle/oracle.dsp eol=crlf
 src/server/dbdrv/oracle/oracle.dsw eol=crlf
 src/server/dbdrv/pgsql/pgsql.dsp eol=crlf
-src/server/dbdrv/pgsql/pgsql.dsw eol=crlf
+src/server/dbdrv/pgsql/pgsql.vcproj -text
 src/server/dbdrv/sqlite/sqlite.dsp eol=crlf
-src/server/dbdrv/sqlite/sqlite.dsw eol=crlf
+src/server/dbdrv/sqlite/sqlite.vcproj -text
 src/server/libnxsrv/libnxsrv.dsp eol=crlf
 src/server/libnxsrv/libnxsrv.vcproj -text
 src/server/modules/hpdp/hpdp.dsp eol=crlf
 src/server/modules/hpdp/hpdp.dsw eol=crlf
 src/server/netxmsd/netxmsd.dsp eol=crlf
-src/server/netxmsd/netxmsd.dsw eol=crlf
+src/server/netxmsd/netxmsd.vcproj -text
 src/server/smsdrv/generic/generic.dsp eol=crlf
 src/server/smsdrv/generic/generic.dsw eol=crlf
 src/server/smsdrv/nxagent/nxagent.dsp eol=crlf

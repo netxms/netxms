@@ -74,7 +74,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib libeay32.lib"
+				AdditionalDependencies="ws2_32.lib libeay32.lib iphlpapi.lib psapi.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -159,7 +159,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib libeay32.lib"
+				AdditionalDependencies="ws2_32.lib libeay32.lib iphlpapi.lib psapi.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -573,10 +573,6 @@
 			</File>
 			<File
 				RelativePath="..\include\nms_users.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\include\nms_util.h"
 				>
 			</File>
 			<File

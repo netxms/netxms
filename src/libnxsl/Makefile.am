@@ -1,17 +1,18 @@
 INCLUDES=-I@top_srcdir@/include
 
 lib_LTLIBRARIES = libnxsl.la
-libnxsl_la_SOURCES = lex.yy.cpp parser.tab.cpp array.cpp class.cpp compiler.cpp \
+libnxsl_la_SOURCES = lex.parser.cpp parser.tab.cpp \
+                     array.cpp class.cpp compiler.cpp \
 		     env.cpp functions.cpp instruction.cpp lexer.cpp \
 		     library.cpp main.cpp program.cpp stack.cpp value.cpp \
 		     variable.cpp
 libnxsl_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxsl_la_LIBADD = ../libnetxms/libnetxms.la
 
-EXTRA_DIST = libnxsl.dsp libnxsl.dsw libnxsl.h parser.l parser.y parser.tab.hpp
+EXTRA_DIST = libnxsl.vcproj libnxsl.h parser.l parser.y parser.tab.hpp
 
 lex.yy.cpp: parser.l parser.tab.cpp parser.tab.hpp
-	$(LEX) -B -f -8 -olex.yy.cpp parser.l
+	$(LEX) -B -f -8 -olex.parser.cpp parser.l
 
 parser.tab.cpp: parser.y
 	$(YACC) -b parser -o parser.tab.cpp -d -t -v parser.y

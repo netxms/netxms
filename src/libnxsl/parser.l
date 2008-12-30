@@ -126,8 +126,12 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>\n	yyextra->m_nCurrLine++;
 <INITIAL>{whitespace}	;
 <INITIAL>.	{
-			char szBuffer[128]; 
-			sprintf(szBuffer, "Invalid character '%c' (0x%02X)", *yytext, *yytext);
+			char szBuffer[128];
+#if defined(_WIN32) && (_MSC_VER >= 1400)
+			_snprintf_s(szBuffer, 128, _TRUNCATE, "Invalid character '%c' (0x%02X)", *yytext, *yytext);
+#else
+			snprintf(szBuffer, 128, "Invalid character '%c' (0x%02X)", *yytext, *yytext);
+#endif
 			LexerError(szBuffer, yyscanner);
 			return -1;
 		}

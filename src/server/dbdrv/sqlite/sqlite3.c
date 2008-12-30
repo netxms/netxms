@@ -21,7 +21,8 @@
 */
 
 #ifdef _WIN32
-#pragma warning(disable: 4018 4049 4244 4761)
+#pragma warning(disable: 4018 4049 4244 4267 4761)
+#define _CRT_SECURE_NO_WARNINGS
 #endif
 
 #define SQLITE_CORE 1

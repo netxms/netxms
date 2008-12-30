@@ -5,7 +5,7 @@ libnxddr_sqlite_la_SOURCES = sqlite.cpp sqlite3.c
 libnxddr_sqlite_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	sqlite.dsp sqlite.dsw \
+	sqlite.vcproj \
 	sqlitedrv.h sqlite3ext.h sqlite3.h
 
 install-exec-hook:

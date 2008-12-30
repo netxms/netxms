@@ -5,6 +5,6 @@ netxmsd_SOURCES = netxmsd.cpp
 netxmsd_LDADD = ../../libnetxms/libnetxms.la ../../libnxsnmp/libnxsnmp.la ../../libnxsl/libnxsl.la ../../libnxmap/libnxmap.la ../../libnxlp/libnxlp.la ../libnxsrv/libnxsrv.la ../core/libnxcore.la
 
 EXTRA_DIST = \
-	netxmsd.dsp netxmsd.dsw \
+	netxmsd.vcproj \
 	netxmsd.h \
 	winsrv.cpp

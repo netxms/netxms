@@ -5,7 +5,7 @@ libnxddr_pgsql_la_SOURCES = pgsql.cpp
 libnxddr_pgsql_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	pgsql.dsp pgsql.dsw \
+	pgsql.vcproj \
 	pgsqldrv.h
 
 install-exec-hook:

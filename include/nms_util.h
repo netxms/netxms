@@ -418,8 +418,12 @@ typedef struct _dir_struc
 #ifndef LIBNETXMS_INLINE
    inline TCHAR *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, size_t nLen)
    {
+#if defined(_WIN32) && (_MSC_VER >= 1400)
+		_tcsncpy_s(pszDest, nLen, pszSrc, _TRUNCATE);
+#else
       _tcsncpy(pszDest, pszSrc, nLen - 1);
       pszDest[nLen - 1] = 0;
+#endif
       return pszDest;
    }
 #endif

@@ -1742,7 +1742,7 @@ DWORD Node::GetItemFromCheckPointSNMP(const char *szParam, DWORD dwBufSize, char
 
 DWORD Node::GetItemFromAgent(const char *szParam, DWORD dwBufSize, char *szBuffer)
 {
-   DWORD dwError, dwResult = DCE_COMM_ERROR;
+   DWORD dwError = ERR_NOT_CONNECTED, dwResult = DCE_COMM_ERROR;
    DWORD dwTries = 3;
 
    if ((m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ||
