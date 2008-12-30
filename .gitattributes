@@ -99,6 +99,7 @@ src/client/nxevent/nxevent.vcproj -text
 src/client/nxpush/nxpush.dsp eol=crlf
 src/client/nxpush/nxpush.vcproj -text
 src/client/nxsms/nxsms.dsp eol=crlf
+src/client/nxsms/nxsms.vcproj -text
 src/console/PocketPC/nxpc.vcc eol=crlf
 src/console/PocketPC/nxpc.vcp eol=crlf
 src/console/PocketPC/nxpc.vcw eol=crlf
