@@ -437,9 +437,9 @@ src/server/smsdrv/generic/generic.dsw eol=crlf
 src/server/smsdrv/nxagent/nxagent.dsp eol=crlf
 src/server/smsdrv/nxagent/nxagent.dsw eol=crlf
 src/server/tools/nxaction/nxaction.dsp eol=crlf
-src/server/tools/nxaction/nxaction.dsw eol=crlf
+src/server/tools/nxaction/nxaction.vcproj -text
 src/server/tools/nxadm/nxadm.dsp eol=crlf
-src/server/tools/nxadm/nxadm.dsw eol=crlf
+src/server/tools/nxadm/nxadm.vcproj -text
 src/server/tools/nxconfig/nxconfig.dsp eol=crlf
 src/server/tools/nxconfig/nxconfig.dsw eol=crlf
 src/server/tools/nxconfig/res/failed.ico -text
@@ -449,11 +449,11 @@ src/server/tools/nxconfig/res/running.ico -text
 src/server/tools/nxconfig/res/warning.ico -text
 src/server/tools/nxconfig/res/wizard.bmp -text
 src/server/tools/nxdbmgr/nxdbmgr.dsp eol=crlf
-src/server/tools/nxdbmgr/nxdbmgr.dsw eol=crlf
+src/server/tools/nxdbmgr/nxdbmgr.vcproj -text
 src/server/tools/nxget/nxget.dsp eol=crlf
-src/server/tools/nxget/nxget.dsw eol=crlf
+src/server/tools/nxget/nxget.vcproj -text
 src/server/tools/nxupload/nxupload.dsp eol=crlf
-src/server/tools/nxupload/nxupload.dsw eol=crlf
+src/server/tools/nxupload/nxupload.vcproj -text
 src/snmp/Makefile.am -text
 src/snmp/libnxsnmp/libnxsnmp.dsp eol=crlf
 src/snmp/libnxsnmp/libnxsnmp.vcproj -text

@@ -5,4 +5,4 @@ nxaction_SOURCES = nxaction.cpp
 nxaction_LDADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../../../libnxsnmp/libnxsnmp.la
 
 EXTRA_DIST = \
-	nxaction.dsp nxaction.dsw
+	nxaction.vcproj

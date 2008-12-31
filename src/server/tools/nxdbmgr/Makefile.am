@@ -5,4 +5,4 @@ nxdbmgr_SOURCES = nxdbmgr.cpp check.cpp init.cpp reindex.cpp unlock.cpp upgrade.
 nxdbmgr_LDADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../../../libnxsnmp/libnxsnmp.la
 
 EXTRA_DIST = \
-	nxdbmgr.dsp nxdbmgr.dsw nxdbmgr.h
+	nxdbmgr.vcproj nxdbmgr.h

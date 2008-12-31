@@ -5,4 +5,4 @@ nxupload_SOURCES = nxupload.cpp
 nxupload_LDADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la ../../../libnxsnmp/libnxsnmp.la
 
 EXTRA_DIST = \
-	nxupload.dsp nxupload.dsw
+	nxupload.vcproj

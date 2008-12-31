@@ -106,7 +106,7 @@ BOOL GetYesNo(void)
 
       while(1)
       {
-         ch = getch();
+         ch = _getch();
          if ((ch == 'y') || (ch == 'Y'))
          {
             printf("Y\n");
