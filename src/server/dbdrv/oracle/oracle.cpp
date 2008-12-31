@@ -232,7 +232,7 @@ extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, TCHAR *er
 	}
 	OCIHandleFree(handleStmt, OCI_HTYPE_STMT);
 	if (errorText != NULL)
-		_tcscpy(errorText, pConn->szLastError);
+		nx_strncpy(errorText, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
 	MutexUnlock(pConn->mutexQueryLock);
 	return dwResult;
 }
@@ -361,7 +361,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWOR
 	}
 	OCIHandleFree(handleStmt, OCI_HTYPE_STMT);
 	if (errorText != NULL)
-		_tcscpy(errorText, pConn->szLastError);
+		nx_strncpy(errorText, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
 	MutexUnlock(pConn->mutexQueryLock);
 	return pResult;
 }
@@ -398,8 +398,12 @@ extern "C" WCHAR EXPORT *DrvGetField(ORACLE_RESULT *pResult, int nRow, int nColu
       if ((nRow < pResult->nRows) && (nRow >= 0) &&
           (nColumn < pResult->nCols) && (nColumn >= 0))
       {
+#ifdef _WIN32
+         wcsncpy_s(pBuffer, nBufLen, pResult->pData[nRow * pResult->nCols + nColumn], _TRUNCATE);
+#else
          wcsncpy(pBuffer, pResult->pData[nRow * pResult->nCols + nColumn], nBufLen);
          pBuffer[nBufLen - 1] = 0;
+#endif
          pValue = pBuffer;
       }
    }
@@ -510,7 +514,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwsz
 		safe_free(pConn->pBuffers[i].pData);
 	safe_free(pConn->pBuffers);
 	if (errorText != NULL)
-		_tcscpy(errorText, pConn->szLastError);
+		nx_strncpy(errorText, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
 	MutexUnlock(pConn->mutexQueryLock);
 	return NULL;
 }

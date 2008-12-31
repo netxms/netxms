@@ -148,6 +148,7 @@
 #define popen     _popen
 #define pclose    _pclose
 #define strdup    _strdup
+#define wcsdup    _wcsdup
 #define stricmp   _stricmp
 #define strnicmp  _strnicmp
 #define open      _open

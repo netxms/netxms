@@ -84,7 +84,7 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, TCHAR *
 		if (nRet == SQL_SUCCESS)
 			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 		else
-			_tcscpy(errorText, _T("Unable to obtain description for this error"));
+			nx_strncpy(errorText, _T("Unable to obtain description for this error"), DBDRV_MAX_ERROR_TEXT);
    }
    
    return dwError;
@@ -343,7 +343,7 @@ extern "C" LONG EXPORT DrvGetFieldLength(ODBCDRV_QUERY_RESULT *pResult, int iRow
    {
       if ((iRow < pResult->iNumRows) && (iRow >= 0) &&
           (iColumn < pResult->iNumCols) && (iColumn >= 0))
-         nLen = wcslen(pResult->pValues[iRow * pResult->iNumCols + iColumn]);
+         nLen = (LONG)wcslen(pResult->pValues[iRow * pResult->iNumCols + iColumn]);
    }
    return nLen;
 }
@@ -363,8 +363,12 @@ extern "C" NETXMS_WCHAR EXPORT *DrvGetField(ODBCDRV_QUERY_RESULT *pResult, int i
       if ((iRow < pResult->iNumRows) && (iRow >= 0) &&
           (iColumn < pResult->iNumCols) && (iColumn >= 0))
       {
+#ifdef _WIN32
+         wcsncpy_s(pBuffer, nBufSize, pResult->pValues[iRow * pResult->iNumCols + iColumn], _TRUNCATE);
+#else
          wcsncpy(pBuffer, pResult->pValues[iRow * pResult->iNumCols + iColumn], nBufSize);
          pBuffer[nBufSize - 1] = 0;
+#endif
          pValue = pBuffer;
       }
    }

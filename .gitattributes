@@ -415,13 +415,13 @@ src/server/core/isc.cpp -text
 src/server/core/nxcore.dsp eol=crlf
 src/server/core/nxcore.vcproj -text
 src/server/dbdrv/mssql/mssql.dsp eol=crlf
-src/server/dbdrv/mssql/mssql.dsw eol=crlf
+src/server/dbdrv/mssql/mssql.vcproj -text
 src/server/dbdrv/mysql/mysql.dsp eol=crlf
-src/server/dbdrv/mysql/mysql.dsw eol=crlf
+src/server/dbdrv/mysql/mysql.vcproj -text
 src/server/dbdrv/odbc/odbc.dsp eol=crlf
-src/server/dbdrv/odbc/odbc.dsw eol=crlf
+src/server/dbdrv/odbc/odbc.vcproj -text
 src/server/dbdrv/oracle/oracle.dsp eol=crlf
-src/server/dbdrv/oracle/oracle.dsw eol=crlf
+src/server/dbdrv/oracle/oracle.vcproj -text
 src/server/dbdrv/pgsql/pgsql.dsp eol=crlf
 src/server/dbdrv/pgsql/pgsql.vcproj -text
 src/server/dbdrv/sqlite/sqlite.dsp eol=crlf

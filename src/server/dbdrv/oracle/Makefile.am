@@ -5,7 +5,7 @@ libnxddr_oracle_la_SOURCES = oracle.cpp
 libnxddr_oracle_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	oracle.dsp oracle.dsw \
+	oracle.vcproj \
 	oracledrv.h
 
 install-exec-hook:

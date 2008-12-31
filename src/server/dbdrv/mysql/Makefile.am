@@ -5,7 +5,7 @@ libnxddr_mysql_la_SOURCES = mysql.cpp
 libnxddr_mysql_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	mysql.dsp mysql.dsw \
+	mysql.vcproj \
 	mysqldrv.h
 
 install-exec-hook:

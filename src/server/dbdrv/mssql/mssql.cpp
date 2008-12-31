@@ -247,7 +247,7 @@ static BOOL ExecuteQuery(MSDB_CONN *pConn, char *pszQuery, TCHAR *errorText)
 		}
 		else
 		{
-			_tcscpy(errorText, pConn->szErrorText);
+			nx_strncpy(errorText, pConn->szErrorText, DBDRV_MAX_ERROR_TEXT);
 		}
 	}
 
@@ -338,23 +338,23 @@ extern "C" DB_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, WCHAR *pwszQuery, DWORD 
                      case SQLINT1:
                         pResult->pValues[iCurrPos] = (char *)malloc(4);
                         if (pData)
-                           sprintf(pResult->pValues[iCurrPos], "%d", *((char *)pData));
+                           _snprintf_s(pResult->pValues[iCurrPos], 4, _TRUNCATE, "%d", *((char *)pData));
                         break;
                      case SQLINT2:
                         pResult->pValues[iCurrPos] = (char *)malloc(8);
-                        sprintf(pResult->pValues[iCurrPos], "%d", *((short *)pData));
+                        _snprintf_s(pResult->pValues[iCurrPos], 8, _TRUNCATE, "%d", *((short *)pData));
                         break;
                      case SQLINT4:
                         pResult->pValues[iCurrPos] = (char *)malloc(16);
-                        sprintf(pResult->pValues[iCurrPos], "%d", *((LONG *)pData));
+                        _snprintf_s(pResult->pValues[iCurrPos], 16, _TRUNCATE, "%d", *((LONG *)pData));
                         break;
                      case SQLFLT4:
                         pResult->pValues[iCurrPos] = (char *)malloc(32);
-                        sprintf(pResult->pValues[iCurrPos], "%f", *((float *)pData));
+                        _snprintf_s(pResult->pValues[iCurrPos], 32, _TRUNCATE, "%f", *((float *)pData));
                         break;
                      case SQLFLT8:
                         pResult->pValues[iCurrPos] = (char *)malloc(32);
-                        sprintf(pResult->pValues[iCurrPos], "%f", *((double *)pData));
+                        _snprintf_s(pResult->pValues[iCurrPos], 32, _TRUNCATE, "%f", *((double *)pData));
                         break;
                      default:    // Unknown data type
                         pResult->pValues[iCurrPos] = (char *)malloc(2);
@@ -552,19 +552,19 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
             pBuffer[nLen] = 0;
             break;
          case SQLINT1:
-            swprintf(pBuffer, L"%d", *((char *)pData));
+            _snwprintf_s(pBuffer, iBufSize, _TRUNCATE, L"%d", *((char *)pData));
             break;
          case SQLINT2:
-            swprintf(pBuffer, L"%d", *((short *)pData));
+            _snwprintf_s(pBuffer, iBufSize, _TRUNCATE, L"%d", *((short *)pData));
             break;
          case SQLINT4:
-            swprintf(pBuffer, L"%d", *((LONG *)pData));
+            _snwprintf_s(pBuffer, iBufSize, _TRUNCATE, L"%d", *((LONG *)pData));
             break;
          case SQLFLT4:
-            swprintf(pBuffer, L"%f", *((float *)pData));
+            _snwprintf_s(pBuffer, iBufSize, _TRUNCATE, L"%f", *((float *)pData));
             break;
          case SQLFLT8:
-            swprintf(pBuffer, L"%f", *((double *)pData));
+            _snwprintf_s(pBuffer, iBufSize, _TRUNCATE, L"%f", *((double *)pData));
             break;
          default:    // Unknown data type
             pBuffer[0] = 0;
