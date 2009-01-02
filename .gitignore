@@ -34,8 +34,6 @@ src/libnxsl/lex.yy.cpp
 src/libnxsl/parser.output
 src/libnxsl/parser.tab.cpp
 src/libnxsl/parser.tab.hpp
-src/nxhttpd/MSG00001.bin
-src/nxhttpd/messages.h
 src/private
 src/server/core/netxmsd
 src/server/core/nxmp_lex.yy.cpp
@@ -59,6 +57,8 @@ src/snmp/nxmibc/parser.tab.c
 src/snmp/nxmibc/parser.tab.h
 src/snmp/nxsnmpget/nxsnmpget
 src/snmp/nxsnmpwalk/nxsnmpwalk
+src/webui/nxhttpd/MSG00001.bin
+src/webui/nxhttpd/messages.h
 /stamp-h1
 /status
 www/.htpasswd.digest
