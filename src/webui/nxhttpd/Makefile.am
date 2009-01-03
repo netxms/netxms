@@ -26,5 +26,5 @@ messages.c: messages.h
 messages.h: messages.mc
 	$(PERL) @top_builddir@/tools/mc.pl messages.mc
 
-EXTRA_DIST = nxhttpd.h winsrv.cpp nxhttpd.dsp nxhttpd.dsw \
+EXTRA_DIST = nxhttpd.h winsrv.cpp nxhttpd.vcproj \
 	     resource.h nxhttpd.rc messages.mc

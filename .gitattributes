@@ -417,7 +417,6 @@ src/webui/client/tomcat/conf/web.xml -text
 src/webui/client/tomcat/webapps/ROOT/WEB-INF/web.xml -text
 src/webui/client/webui.launch -text
 src/webui/nxhttpd/nxhttpd.dsp eol=crlf
-src/webui/nxhttpd/nxhttpd.dsw eol=crlf
 src/webui/nxhttpd/static/images/I.png -text
 src/webui/nxhttpd/static/images/L.png -text
 src/webui/nxhttpd/static/images/Lminus.png -text

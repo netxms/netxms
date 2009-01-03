@@ -331,7 +331,7 @@ void Main(void)
    {
 #if defined(_WIN32)
       printf("NXHTTPD running. Press ESC to shutdown.\n");
-      while(getch() != 27);
+      while(_getch() != 27);
       printf("NXHTTPD shutting down...\n");
       Shutdown();
 #else
