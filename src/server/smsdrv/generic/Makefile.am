@@ -6,5 +6,5 @@ libnxsms_generic_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxsms_generic_la_LIBADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	generic.dsp generic.dsw \
+	generic.vcproj \
 	main.h

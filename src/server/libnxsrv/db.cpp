@@ -448,7 +448,7 @@ TCHAR LIBNXSRV_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn,
          pwszData = m_fpDrvGetField(hResult, iRow, iColumn, pwszBuffer, nLen);
          if (pwszData != NULL)
          {
-            nLen = wcslen(pwszData) + 1;
+            nLen = (int)wcslen(pwszData) + 1;
             pszRet = (char *)malloc(nLen);
             WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
                                 pwszData, -1, pszRet, nLen, NULL, NULL);

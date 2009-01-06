@@ -6,4 +6,4 @@ libnxsms_nxagent_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
 libnxsms_nxagent_la_LIBADD = ../../../libnetxms/libnetxms.la ../../libnxsrv/libnxsrv.la
 
 EXTRA_DIST = \
-	nxagent.dsp nxagent.dsw
+	nxagent.vcproj

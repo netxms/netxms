@@ -163,9 +163,9 @@ extern "C" BOOL EXPORT SMSDriverSend(TCHAR *pszPhoneNumber, TCHAR *pszText)
 		m_serial.Read(szTmp, 128); // read OK
 		DbgPrintf(4, "SMS send: AT+CMGF=1 sent, got {%s}", szTmp);
 		snprintf(szTmp, sizeof(szTmp), "AT+CMGS=\"%s\"\r\n", pszPhoneNumber);
-		m_serial.Write(szTmp, strlen(szTmp)); // set number
+		m_serial.Write(szTmp, (int)strlen(szTmp)); // set number
 		snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", pszText, 0x1A);
-		m_serial.Write(szTmp, strlen(szTmp)); // send text, end with ^Z
+		m_serial.Write(szTmp, (int)strlen(szTmp)); // send text, end with ^Z
 		m_serial.Read(szTmp, 128); // read +CMGS:ref_num
 		DbgPrintf(4, "SMS send: AT+CMGS + message body sent, got {%s}", szTmp);
 	}

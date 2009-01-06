@@ -359,10 +359,8 @@ src/server/modules/hpdp/hpdp.dsp eol=crlf
 src/server/modules/hpdp/hpdp.dsw eol=crlf
 src/server/netxmsd/netxmsd.dsp eol=crlf
 src/server/netxmsd/netxmsd.vcproj -text
-src/server/smsdrv/generic/generic.dsp eol=crlf
-src/server/smsdrv/generic/generic.dsw eol=crlf
-src/server/smsdrv/nxagent/nxagent.dsp eol=crlf
-src/server/smsdrv/nxagent/nxagent.dsw eol=crlf
+src/server/smsdrv/generic/generic.vcproj -text
+src/server/smsdrv/nxagent/nxagent.vcproj -text
 src/server/tools/nxaction/nxaction.dsp eol=crlf
 src/server/tools/nxaction/nxaction.vcproj -text
 src/server/tools/nxadm/nxadm.dsp eol=crlf
