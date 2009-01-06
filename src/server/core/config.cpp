@@ -314,7 +314,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *var, const TCHAR *value, BOO
 {
    DB_RESULT hResult;
    TCHAR *escValue, *query;
-	int len;
+	size_t len;
    BOOL bVarExist = FALSE, success = FALSE;
 
    if (_tcslen(var) > 127)

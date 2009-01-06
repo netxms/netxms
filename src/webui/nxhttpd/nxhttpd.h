@@ -385,7 +385,7 @@ void AddActionLink(HttpResponse &response, const TCHAR *pszSID, const TCHAR *psz
 						 const TCHAR *pszFunction, const TCHAR *pszArgs);
 void AddActionMenu(HttpResponse &response, const TCHAR *sid, ...);
 
-TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType);
+TCHAR *FormatTimeStamp(time_t timeStamp, TCHAR *pszBuffer, int iType);
 DWORD *IdListFromString(const TCHAR *pszStr, DWORD *pdwCount);
 BOOL IsListMember(DWORD dwId, DWORD dwCount, DWORD *pdwList);
 

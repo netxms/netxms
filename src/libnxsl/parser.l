@@ -18,6 +18,10 @@ escape		\\[bnrt0\"]
 
 %{
 
+#ifdef _WIN32
+#pragma warning(disable : 4244 4267)
+#endif
+
 #define YY_EXTRA_TYPE	NXSL_Lexer*
 #define YY_INPUT(buf, result, maxSize) { result = yyextra->LexerInput(buf, maxSize); }
 

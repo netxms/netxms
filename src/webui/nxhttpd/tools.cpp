@@ -52,12 +52,12 @@ void DebugPrintf(DWORD dwSessionId, const char *pszFormat, ...)
 // Format time stamp
 //
 
-TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType)
+TCHAR *FormatTimeStamp(time_t timeStamp, TCHAR *pszBuffer, int iType)
 {
    struct tm *pTime;
    static const TCHAR *pFormat[] = { _T("%d-%b-%Y %H:%M:%S"), _T("%H:%M:%S"), _T("%b/%d"), _T("%b") };
 
-   pTime = localtime((const time_t *)&dwTimeStamp);
+   pTime = localtime(&timeStamp);
 	if (pTime != NULL)
 		_tcsftime(pszBuffer, 32, pFormat[iType], pTime);
 	else

@@ -192,7 +192,7 @@ BOOL PieChart::Build(void)
 				}
 				if (arc_rad_label > PI)
 				{
-					posX = posX - fontX * _tcslen(s);
+					posX = posX - fontX * (int)_tcslen(s);
 				}
 				gdImageString(img, gdFontTiny, posX, posY, (unsigned char *)s, black);
 			}
@@ -207,7 +207,7 @@ BOOL PieChart::Build(void)
 	else
 	{
 		gdImageString(img, gdFontSmall,
-				img->sx / 2 - (strlen(m_noDataLabel) * gdFontSmall->w / 2),
+				img->sx / 2 - ((int)strlen(m_noDataLabel) * gdFontSmall->w / 2),
 				img->sy / 2 - gdFontSmall->h / 2,
 				(unsigned char *)m_noDataLabel, black);
 	}

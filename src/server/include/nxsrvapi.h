@@ -353,7 +353,7 @@ public:
    void SetProxy(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,
                  int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);
    void SetPort(WORD wPort) { m_wPort = wPort; }
-   void SetAuthData(int nMethod, const char *pszSecret) { m_iAuthMethod = nMethod; strncpy(m_szSecret, pszSecret, MAX_SECRET_LENGTH); }
+   void SetAuthData(int nMethod, const char *pszSecret) { m_iAuthMethod = nMethod; nx_strncpy(m_szSecret, pszSecret, MAX_SECRET_LENGTH); }
 };
 
 

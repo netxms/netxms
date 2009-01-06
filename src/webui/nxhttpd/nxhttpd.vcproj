@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="libgd"
-	ProjectGUID="{F5287CFB-0894-4169-B5B5-1AEE4F2FF585}"
-	RootNamespace="libgd"
+	Name="nxhttpd"
+	ProjectGUID="{AC0CB89C-E27A-43FA-A049-1FF4B2FE2121}"
+	RootNamespace="nxhttpd"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -16,13 +16,16 @@
 		/>
 	</Platforms>
 	<ToolFiles>
+		<ToolFile
+			RelativePath="..\..\..\tools\mc.rule"
+		/>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
+			ConfigurationType="1"
 			CharacterSet="2"
 			>
 			<Tool
@@ -30,6 +33,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="Message compiler"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -43,8 +49,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\libpng;..\libjpeg;..\..\..\zlib;..\freetype\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBGD_EXPORTS;BGDWIN32;_CRT_SECURE_NO_DEPRECATE;HAVE_CONFIG_H"
+				AdditionalIncludeDirectories="..\..\..\include;..\libgd\gd"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -64,9 +70,90 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
-				SubSystem="2"
+				SubSystem="1"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="1"
+			CharacterSet="2"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="Message compiler"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="..\..\..\include;..\libgd\gd"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				RuntimeLibrary="2"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="ws2_32.lib"
+				LinkIncremental="1"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -98,7 +185,7 @@
 			Name="Debug|x64"
 			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
+			ConfigurationType="1"
 			CharacterSet="2"
 			>
 			<Tool
@@ -106,6 +193,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="Message compiler"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -120,8 +210,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\libpng;..\libjpeg;..\..\..\zlib;..\freetype\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBGD_EXPORTS;BGDWIN32;_CRT_SECURE_NO_DEPRECATE;HAVE_CONFIG_H"
+				AdditionalIncludeDirectories="..\..\..\include;..\libgd\gd"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -141,86 +231,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
-				SubSystem="2"
+				SubSystem="1"
 				TargetMachine="17"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
-			CharacterSet="2"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\libpng;..\libjpeg;..\..\..\zlib;..\freetype\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBGD_EXPORTS;BGDWIN32;_CRT_SECURE_NO_DEPRECATE;HAVE_CONFIG_H"
-				RuntimeLibrary="2"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="false"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				LinkIncremental="1"
-				GenerateDebugInformation="true"
-				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -251,7 +266,7 @@
 			Name="Release|x64"
 			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
+			ConfigurationType="1"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
@@ -260,6 +275,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="Message compiler"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -273,8 +291,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\libpng;..\libjpeg;..\..\..\zlib;..\freetype\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBGD_EXPORTS;BGDWIN32;_CRT_SECURE_NO_DEPRECATE;HAVE_CONFIG_H"
+				AdditionalIncludeDirectories="..\..\..\include;..\libgd\gd"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -292,9 +310,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
-				SubSystem="2"
+				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="17"
@@ -334,119 +353,67 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\gd.c"
+				RelativePath=".\alarm.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\gd_gd.c"
+				RelativePath=".\client.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\gd_gd2.c"
+				RelativePath=".\ctrlpanel.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\gd_gif_in.c"
+				RelativePath=".\dataview.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\gd_gif_out.c"
+				RelativePath=".\html.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\gd_io.c"
+				RelativePath=".\httprequest.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\gd_io_dp.c"
+				RelativePath=".\httpresponse.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\gd_io_file.c"
+				RelativePath=".\json.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\gd_io_ss.c"
+				RelativePath=".\jsonutil.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\gd_jpeg.c"
+				RelativePath=".\nxhttpd.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\gd_png.c"
+				RelativePath=".\object.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\gd_security.c"
+				RelativePath=".\piechart.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\gd_ss.c"
+				RelativePath=".\session.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\gd_topal.c"
+				RelativePath=".\smgr.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\gd_wbmp.c"
+				RelativePath=".\tools.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\gdcache.c"
-				>
-			</File>
-			<File
-				RelativePath=".\gdfontg.c"
-				>
-			</File>
-			<File
-				RelativePath=".\gdfontl.c"
-				>
-			</File>
-			<File
-				RelativePath=".\gdfontmb.c"
-				>
-			</File>
-			<File
-				RelativePath=".\gdfonts.c"
-				>
-			</File>
-			<File
-				RelativePath=".\gdfontt.c"
-				>
-			</File>
-			<File
-				RelativePath=".\gdft.c"
-				>
-			</File>
-			<File
-				RelativePath=".\gdfx.c"
-				>
-			</File>
-			<File
-				RelativePath=".\gdhelpers.c"
-				>
-			</File>
-			<File
-				RelativePath=".\gdkanji.c"
-				>
-			</File>
-			<File
-				RelativePath=".\gdtables.c"
-				>
-			</File>
-			<File
-				RelativePath=".\gdxpm.c"
-				>
-			</File>
-			<File
-				RelativePath=".\strlcpy.c"
-				>
-			</File>
-			<File
-				RelativePath=".\wbmp.c"
+				RelativePath=".\winsrv.cpp"
 				>
 			</File>
 		</Filter>
@@ -456,59 +423,31 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\config.h"
+				RelativePath="..\..\..\include\netxms-version.h"
 				>
 			</File>
 			<File
-				RelativePath=".\entities.h"
+				RelativePath="..\..\..\include\nms_common.h"
 				>
 			</File>
 			<File
-				RelativePath=".\gd.h"
+				RelativePath="..\..\..\include\nms_util.h"
 				>
 			</File>
 			<File
-				RelativePath=".\gd_io.h"
+				RelativePath="..\..\client\nxalarm\nxalarm.h"
 				>
 			</File>
 			<File
-				RelativePath=".\gdcache.h"
+				RelativePath="..\..\..\include\nxclapi.h"
 				>
 			</File>
 			<File
-				RelativePath=".\gdfontg.h"
+				RelativePath=".\nxhttpd.h"
 				>
 			</File>
 			<File
-				RelativePath=".\gdfontl.h"
-				>
-			</File>
-			<File
-				RelativePath=".\gdfontmb.h"
-				>
-			</File>
-			<File
-				RelativePath=".\gdfonts.h"
-				>
-			</File>
-			<File
-				RelativePath=".\gdfontt.h"
-				>
-			</File>
-			<File
-				RelativePath=".\gdfx.h"
-				>
-			</File>
-			<File
-				RelativePath=".\gdhelpers.h"
-				>
-			</File>
-			<File
-				RelativePath=".\jisx0208.h"
-				>
-			</File>
-			<File
-				RelativePath=".\wbmp.h"
+				RelativePath="..\..\..\include\unicode.h"
 				>
 			</File>
 		</Filter>
@@ -517,6 +456,46 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+			<File
+				RelativePath=".\nxhttpd.rc"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Message Files"
+			>
+			<File
+				RelativePath=".\messages.mc"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="Message compiler"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="Message compiler"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="Message compiler"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="Message compiler"
+					/>
+				</FileConfiguration>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

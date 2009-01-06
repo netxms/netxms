@@ -507,6 +507,7 @@ src/webui/libgd/libpng/pngbar.jpg -text
 src/webui/libgd/libpng/pngbar.png -text
 src/webui/libgd/libpng/pngnow.png -text
 src/webui/nxhttpd/nxhttpd.dsp eol=crlf
+src/webui/nxhttpd/nxhttpd.vcproj -text
 src/webui/nxhttpd/static/images/I.png -text
 src/webui/nxhttpd/static/images/L.png -text
 src/webui/nxhttpd/static/images/Lminus.png -text

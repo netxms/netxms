@@ -1351,7 +1351,7 @@ void NXSL_Program::CallFunction(int nArgCount)
    if (m_dwSubLevel < CONTROL_STACK_LIMIT)
    {
       m_dwSubLevel++;
-      m_pCodeStack->Push((void *)(m_dwCurrPos + 1));
+      m_pCodeStack->Push(CAST_TO_POINTER(m_dwCurrPos + 1, void *));
       m_pCodeStack->Push(m_pLocals);
       m_pLocals = new NXSL_VariableSystem;
       m_nBindPos = 1;

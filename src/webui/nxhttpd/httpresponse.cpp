@@ -67,7 +67,7 @@ void HttpResponse::SetBody(const TCHAR *data, int size, BOOL bAppend)
 
 		if (size == -1)
 		{
-			size = _tcslen(data);
+			size = (int)_tcslen(data);
 		}
 
 		if (bAppend)

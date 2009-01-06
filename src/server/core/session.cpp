@@ -10201,7 +10201,7 @@ void ClientSession::GetServerFile(CSCPMessage *pRequest)
 	if (m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES)
 	{
 		pRequest->GetVariableStr(VID_FILE_NAME, name, MAX_PATH);
-		for(i = _tcslen(name) - 1; i >= 0; i--)
+		for(i = (int)_tcslen(name) - 1; i >= 0; i--)
 			if ((name[i] == _T('\\')) || (name[i] == '/'))
 				break;
 		i++;

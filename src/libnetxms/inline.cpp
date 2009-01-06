@@ -29,10 +29,16 @@
 // Functions defined as inline for C++ programs
 //
 
+extern "C" TCHAR LIBNETXMS_EXPORTABLE *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, size_t nLen)
+{
+   _tcsncpy(pszDest, pszSrc, nLen - 1);
+   pszDest[nLen - 1] = 0;
+   return pszDest;
+}
+
 extern "C" void LIBNETXMS_EXPORTABLE ret_string(TCHAR *rbuf, const TCHAR *value)
 {
-   _tcsncpy(rbuf, value, MAX_RESULT_LENGTH - 1);
-   rbuf[MAX_RESULT_LENGTH - 1] = 0;
+	nx_strncpy(rbuf, value, MAX_RESULT_LENGTH);
 }
 
 extern "C" void LIBNETXMS_EXPORTABLE ret_int(TCHAR *rbuf, LONG value)
@@ -66,11 +72,4 @@ extern "C" void LIBNETXMS_EXPORTABLE ret_uint64(TCHAR *rbuf, QWORD value)
 #else    /* _WIN32 */
    _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%llu"), value);
 #endif   /* _WIN32 */
-}
-
-extern "C" TCHAR LIBNETXMS_EXPORTABLE *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, size_t nLen)
-{
-   _tcsncpy(pszDest, pszSrc, nLen - 1);
-   pszDest[nLen - 1] = 0;
-   return pszDest;
 }

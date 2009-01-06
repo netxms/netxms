@@ -295,10 +295,9 @@ int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 
 int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 {   
-   char pResult[512];
+   TCHAR buffer[512];
    time_t tTime;
 	struct tm *ptm;
-   DWORD dwLen;
 	BOOL bLocalTime;
 
    if ((argc == 0) || (argc > 3))
@@ -331,8 +330,8 @@ int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 	}
 
    ptm = bLocalTime ? localtime(&tTime) : gmtime(&tTime);
-   dwLen = strftime(pResult, sizeof(pResult) / sizeof(pResult[0]), argv[0]->GetValueAsString(&dwLen), ptm);
-   *ppResult = new NXSL_Value(pResult);   
+   _tcsftime(buffer, 512, argv[0]->GetValueAsCString(), ptm);
+   *ppResult = new NXSL_Value(buffer);   
    
    return 0;
 }

@@ -76,7 +76,7 @@ void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *pszSubsys, BOOL bSuccess, DWOR
 {
 	TCHAR *pszQuery, *pszText, *pszEscText;
 	va_list args;
-	int nBufSize;
+	size_t nBufSize;
 	CSCPMessage msg;
 
 	nBufSize = _tcslen(pszFormat) + NumChars(pszFormat, _T('%')) * 256 + 1;

@@ -52,7 +52,7 @@ static BOOL IsWebMapExist(DWORD id)
 DWORD CreateWebMap(const TCHAR *name, const TCHAR *props, DWORD *id)
 {
 	TCHAR *escProps, *query;
-	int len;
+	size_t len;
 	DWORD mapId, rcc;
 
 	escProps = EncodeSQLString(CHECK_NULL_EX(props));
@@ -98,7 +98,7 @@ DWORD DeleteWebMap(DWORD id)
 DWORD UpdateWebMapData(DWORD mapId, const TCHAR *data)
 {
 	DWORD rcc;
-	int len;
+	size_t len;
 	TCHAR *query, *escData;
 
 	if (IsWebMapExist(mapId))
@@ -126,7 +126,7 @@ DWORD UpdateWebMapData(DWORD mapId, const TCHAR *data)
 DWORD UpdateWebMapProperties(DWORD mapId, const TCHAR *name, const TCHAR *props)
 {
 	DWORD rcc;
-	int len;
+	size_t len;
 	TCHAR *query, *escProps;
 
 	if (IsWebMapExist(mapId))

@@ -202,11 +202,11 @@ static int rad_pwencode(char *pwd_in, char *pwd_out, char *secret, char *vector)
 	char md5buf[256];
 	int i, secretlen;
 
-	i = strlen(pwd_in);
+	i = (int)strlen(pwd_in);
 	memset(passbuf, 0, AUTH_PASS_LEN);
 	memcpy(passbuf, pwd_in, i > AUTH_PASS_LEN ? AUTH_PASS_LEN : i);
 
-	secretlen = strlen(secret);
+	secretlen = (int)strlen(secret);
 	if (secretlen + AUTH_VECTOR_LEN > 256)
 	{
 		secretlen = 256 - AUTH_VECTOR_LEN;
@@ -301,7 +301,7 @@ static void encrypt_attr_style_1(char *secret, char *vector, VALUE_PAIR *vp)
 	o += sizeof(salt);
 
 	/* Create a first working buffer to calc the MD5 hash over */
-	secret_len = strlen(secret);	/* already limited by read_clients */
+	secret_len = (int)strlen(secret);	/* already limited by read_clients */
 	memcpy(work_buf, secret, secret_len);
 	memcpy(work_buf + secret_len, vector, AUTH_VECTOR_LEN);
 	memcpy(work_buf + secret_len + AUTH_VECTOR_LEN, &salt, sizeof(salt));
@@ -443,7 +443,7 @@ static int rad_build_packet(AUTH_HDR *auth, int auth_len,
 				 */
 				if (vp->length == 0 && vp->strvalue[0] != 0)
 				{
-					vp->length = strlen(vp->strvalue);
+					vp->length = (int)strlen(vp->strvalue);
 				}
 				if (vp->length >= AUTH_STRING_LEN)
 				{
@@ -531,7 +531,7 @@ static int rad_build_packet(AUTH_HDR *auth, int auth_len,
 	 */
 	if (msg && msg[0])
 	{
-		len = strlen(msg);
+		len = (int)strlen(msg);
 		if (len > 0 && len < AUTH_STRING_LEN-1)
 		{
 			*ptr++ = PW_REPLY_MESSAGE;
@@ -549,7 +549,7 @@ static int rad_build_packet(AUTH_HDR *auth, int auth_len,
 		/*
 		 * Append secret and calculate the response digest
 		 */
-		len = strlen(secret);
+		len = (int)strlen(secret);
 		if (total_length + len < auth_len)
 		{
 			memcpy((char *)auth + total_length, secret, len);
@@ -587,7 +587,7 @@ static int result_recv(DWORD host, WORD udp_port, char *buffer, int length, BYTE
 	// Verify the reply digest
 	memcpy(reply_digest, auth->vector, AUTH_VECTOR_LEN);
 	memcpy(auth->vector, vector, AUTH_VECTOR_LEN);
-	secretlen = strlen(secretkey);
+	secretlen = (int)strlen(secretkey);
 	memcpy(buffer + length, secretkey, secretlen);
 	CalculateMD5Hash((BYTE *)auth, length + secretlen, (BYTE *)calc_digest);
 
@@ -644,7 +644,7 @@ int RadiusAuth(char *cLogin, char *cPasswd)
 	// User name
 	vp = paircreate(PW_USER_NAME, PW_TYPE_STRING, "User-Name");
 	strncpy(vp->strvalue, cLogin, AUTH_STRING_LEN);
-	vp->length = min(strlen(cLogin), AUTH_STRING_LEN);
+	vp->length = min((int)strlen(cLogin), AUTH_STRING_LEN);
 	pairadd(&req, vp);
 
 	// Password
@@ -695,7 +695,7 @@ int RadiusAuth(char *cLogin, char *cPasswd)
 		FD_SET(sockfd, &readfds);
 		tv.tv_sec = nTimeout;
 		tv.tv_usec = 0;
-		if (select(sockfd + 1, &readfds, NULL, NULL, &tv) == 0)	
+		if (select(SELECT_NFDS(sockfd + 1), &readfds, NULL, NULL, &tv) == 0)	
 		{
 			continue;
 		}

@@ -134,6 +134,7 @@
 #include <process.h>
 #include <io.h>
 #include <fcntl.h>
+#include <direct.h>
 #endif
 
 #ifndef S_IRUSR
@@ -151,12 +152,15 @@
 #define wcsdup    _wcsdup
 #define stricmp   _stricmp
 #define strnicmp  _strnicmp
+#define strupr    _strupr
 #define open      _open
 #define read      _read
 #define write     _write
 #define close     _close
 #define getpid    _getpid
 #define fileno    _fileno
+#define chdir     _chdir
+#define mkdir     _mkdir
 
 typedef unsigned __int64 QWORD;
 typedef __int64 INT64;
@@ -467,11 +471,11 @@ typedef struct hostent HOSTENT;
 //
 
 #ifdef __64BIT__
-#define CAST_FROM_POINTER(p, t) ((t)((QWORD)p))
-#define CAST_TO_POINTER(v, t) ((t)((QWORD)v))
+#define CAST_FROM_POINTER(p, t) ((t)((QWORD)(p)))
+#define CAST_TO_POINTER(v, t) ((t)((QWORD)(v)))
 #else
-#define CAST_FROM_POINTER(p, t) ((t)p)
-#define CAST_TO_POINTER(v, t) ((t)v)
+#define CAST_FROM_POINTER(p, t) ((t)(p))
+#define CAST_TO_POINTER(v, t) ((t)(v))
 #endif
 
 

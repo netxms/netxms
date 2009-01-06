@@ -17,6 +17,10 @@ escape		\\[A-Za-z0-9\'\"\\]
 
 %{
 
+#ifdef _WIN32
+#pragma warning(disable : 4244 4267)
+#endif
+
 #define YY_EXTRA_TYPE	NXMP_Lexer*
 #define YY_INPUT(buf, result, maxSize) { result = yyextra->LexerInput(buf, maxSize); }
 #define YY_DECL int yylex(YYSTYPE *yylval_param, yyscan_t yyscanner, NXMP_Parser *dummy)
@@ -73,7 +77,7 @@ escape		\\[A-Za-z0-9\'\"\\]
 <INITIAL>{whitespace}	;
 <INITIAL>.	{
 			char szBuffer[128]; 
-			sprintf(szBuffer, "Invalid character '%c' (0x%02X)", *yytext, *yytext);
+			snprintf(szBuffer, 128, "Invalid character '%c' (0x%02X)", *yytext, *yytext);
 			LexerError(szBuffer);
 			return -1;
 		}

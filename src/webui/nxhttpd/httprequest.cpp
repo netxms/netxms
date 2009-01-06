@@ -82,7 +82,7 @@ BOOL HttpRequest::Read(SOCKET s)
 		tv.tv_sec = 0;
 		tv.tv_usec = 100;
 
-		err = select(s + 1, &rdfs, NULL, NULL, &tv);
+		err = select(SELECT_NFDS(s + 1), &rdfs, NULL, NULL, &tv);
 		if (err == -1)
 		{
 			// error

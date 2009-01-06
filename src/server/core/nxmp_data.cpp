@@ -34,7 +34,7 @@ static BOOL GetValueAsUInt(char *pszStr, DWORD *pdwValue)
    char *eptr;
    int nLen;
    
-   nLen = strlen(pszStr);
+   nLen = (int)strlen(pszStr);
    if (nLen == 0)
       return FALSE;
 

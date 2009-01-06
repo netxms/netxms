@@ -30,12 +30,11 @@
 #endif
 
 #ifdef _WIN32
-# include <direct.h>
-# include <errno.h>
-# include <psapi.h>
+#include <errno.h>
+#include <psapi.h>
 #else
-# include <signal.h>
-# include <sys/wait.h>
+#include <signal.h>
+#include <sys/wait.h>
 #endif
 
 
@@ -177,9 +176,9 @@ static BOOL CheckDataDir(void)
 	}
 
 #ifdef _WIN32
-# define MKDIR(name) mkdir(name)
+#define MKDIR(name) _mkdir(name)
 #else
-# define MKDIR(name) mkdir(name, 0700)
+#define MKDIR(name) mkdir(name, 0700)
 #endif
 
 	// Create directory for mib files if it doesn't exist

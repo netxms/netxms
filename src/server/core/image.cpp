@@ -194,7 +194,7 @@ void SendImageFile(ClientSession *pSession, DWORD dwRqId, DWORD dwImageId, WORD 
          _tcscpy(szFileName, g_szDataDir);
          _tcscat(szFileName, DDIR_IMAGES);
          _tcscat(szFileName, FS_PATH_SEPARATOR);
-         DBGetField(hResult, 0, 0, &szFileName[_tcslen(szFileName)], MAX_PATH - _tcslen(szFileName));
+         DBGetField(hResult, 0, 0, &szFileName[_tcslen(szFileName)], MAX_PATH - (int)_tcslen(szFileName));
          pFile = LoadFile(szFileName, &dwFileSize);
          if (pFile != NULL)
          {

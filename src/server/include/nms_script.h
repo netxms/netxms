@@ -31,7 +31,7 @@
 class NXSL_NetXMSObjectClass : public NXSL_Class
 {
 public:
-   NXSL_NetXMSObjectClass() : NXSL_Class() { strcpy(m_szName, "NetXMS_Object"); }
+   NXSL_NetXMSObjectClass() : NXSL_Class() { _tcscpy(m_szName, _T("NetXMS_Object")); }
 
    virtual NXSL_Value *GetAttr(NXSL_Object *pObject, char *pszAttr);
    virtual BOOL SetAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue);

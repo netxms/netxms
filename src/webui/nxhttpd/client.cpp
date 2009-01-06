@@ -48,7 +48,7 @@ static void DefaultRequestHandler(HttpRequest &request, HttpResponse &response)
 		// ugly but works
 		if ((g_szDocumentRoot[0] != 0) && (_tcsstr(uri, _T("..")) == NULL))
 		{
-			size = _tcslen(uri);
+			size = (int)_tcslen(uri);
 			for (i = 0; i < size; i++)
 			{
 				if ((uri[i] < 'A' && uri[i] > 'Z') &&
@@ -98,7 +98,7 @@ static void DefaultRequestHandler(HttpRequest &request, HttpResponse &response)
 
 							while (1)
 							{
-								size = fread(buffer, 1, sizeof(buffer), f);
+								size = (int)fread(buffer, 1, sizeof(buffer), f);
 
 								if (size <= 0)
 								{

@@ -363,29 +363,40 @@ typedef struct
 
 inline void ret_string(TCHAR *rbuf, const TCHAR *value)
 {
-   _tcsncpy(rbuf, value, MAX_RESULT_LENGTH - 1);
-   rbuf[MAX_RESULT_LENGTH - 1] = 0;
+	nx_strncpy(rbuf, value, MAX_RESULT_LENGTH);
 }
 
 inline void ret_int(TCHAR *rbuf, LONG value)
 {
+#ifdef _WIN32
+   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%d"), value);
+#else
    _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%d"), value);
+#endif
 }
 
 inline void ret_uint(TCHAR *rbuf, DWORD value)
 {
+#ifdef _WIN32
+   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%u"), value);
+#else
    _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%u"), value);
+#endif
 }
 
 inline void ret_double(TCHAR *rbuf, double value)
 {
+#ifdef _WIN32
+   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%f"), value);
+#else
    _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%f"), value);
+#endif
 }
 
 inline void ret_int64(TCHAR *rbuf, INT64 value)
 {
 #ifdef _WIN32
-   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%I64d"), value);
+   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%I64d"), value);
 #else    /* _WIN32 */
    _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%lld"), value);
 #endif   /* _WIN32 */
@@ -394,7 +405,7 @@ inline void ret_int64(TCHAR *rbuf, INT64 value)
 inline void ret_uint64(TCHAR *rbuf, QWORD value)
 {
 #ifdef _WIN32
-   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%I64u"), value);
+   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%I64u"), value);
 #else    /* _WIN32 */
    _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%llu"), value);
 #endif   /* _WIN32 */
