@@ -130,7 +130,7 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 			OCIHandleAlloc(pConn->handleEnv, (void **)&pConn->handleServer, OCI_HTYPE_SERVER, 0, NULL);
 			pwszStr = WideStringFromMBString(pszHost);
 			if (OCIServerAttach(pConn->handleServer, pConn->handleError,
-			                    (text *)pwszStr, wcslen(pwszStr) * sizeof(WCHAR), OCI_DEFAULT) == OCI_SUCCESS)
+			                    (text *)pwszStr, (sb4)wcslen(pwszStr) * sizeof(WCHAR), OCI_DEFAULT) == OCI_SUCCESS)
 			{
 				free(pwszStr);
 
@@ -142,11 +142,11 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 				OCIHandleAlloc(pConn->handleEnv, (void **)&pConn->handleSession, OCI_HTYPE_SESSION, 0, NULL);
 				pwszStr = WideStringFromMBString(pszLogin);
 				OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
-				           wcslen(pwszStr) * sizeof(WCHAR), OCI_ATTR_USERNAME, pConn->handleError);
+				           (ub4)wcslen(pwszStr) * sizeof(WCHAR), OCI_ATTR_USERNAME, pConn->handleError);
 				free(pwszStr);
 				pwszStr = WideStringFromMBString(pszPassword);
 				OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
-				           wcslen(pwszStr) * sizeof(WCHAR), OCI_ATTR_PASSWORD, pConn->handleError);
+				           (ub4)wcslen(pwszStr) * sizeof(WCHAR), OCI_ATTR_PASSWORD, pConn->handleError);
 
 				// Authenticate
 				if (OCISessionBegin(pConn->handleService, pConn->handleError,
@@ -213,7 +213,7 @@ extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, TCHAR *er
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 	OCIHandleAlloc(pConn->handleEnv, (void **)&handleStmt, OCI_HTYPE_STMT, 0, NULL);
 	if (OCIStmtPrepare(handleStmt, pConn->handleError, (text *)pwszQuery,
-	                   wcslen(pwszQuery) * sizeof(WCHAR), OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
+	                   (ub4)wcslen(pwszQuery) * sizeof(WCHAR), OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
 	{
 		if (OCIStmtExecute(pConn->handleService, handleStmt, pConn->handleError, 1, 0, NULL, NULL,
 		                   (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
@@ -257,7 +257,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWOR
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 	OCIHandleAlloc(pConn->handleEnv, (void **)&handleStmt, OCI_HTYPE_STMT, 0, NULL);
 	if (OCIStmtPrepare(handleStmt, pConn->handleError, (text *)pwszQuery,
-	                   wcslen(pwszQuery) * sizeof(WCHAR), OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
+	                   (ub4)wcslen(pwszQuery) * sizeof(WCHAR), OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
 	{
 		if (OCIStmtExecute(pConn->handleService, handleStmt, pConn->handleError,
 		                   0, 0, NULL, NULL, OCI_DEFAULT) == OCI_SUCCESS)
@@ -378,7 +378,7 @@ extern "C" LONG EXPORT DrvGetFieldLength(ORACLE_RESULT *pResult, int nRow, int n
 
 	if ((nRow >= 0) && (nRow < pResult->nRows) &&
 		 (nColumn >= 0) && (nColumn < pResult->nCols))
-		return wcslen(pResult->pData[pResult->nCols * nRow + nColumn]);
+		return (LONG)wcslen(pResult->pData[pResult->nCols * nRow + nColumn]);
 	
 	return 0;
 }
@@ -452,7 +452,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwsz
 
 	OCIHandleAlloc(pConn->handleEnv, (void **)&pConn->handleStmt, OCI_HTYPE_STMT, 0, NULL);
 	if (OCIStmtPrepare(pConn->handleStmt, pConn->handleError, (text *)pwszQuery,
-	                   wcslen(pwszQuery) * sizeof(WCHAR), OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
+	                   (ub4)wcslen(pwszQuery) * sizeof(WCHAR), OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
 	{
 		if (OCIStmtExecute(pConn->handleService, pConn->handleStmt, pConn->handleError,
 		                   0, 0, NULL, NULL, OCI_DEFAULT) == OCI_SUCCESS)

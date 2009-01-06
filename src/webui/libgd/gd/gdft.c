@@ -26,6 +26,10 @@
 #endif
 
 /* number of antialised colors for indexed bitmaps */
+#ifdef _WIN32
+#undef NUMCOLORS
+#endif
+
 #define NUMCOLORS 8
 
 static int fontConfigFlag = 0;

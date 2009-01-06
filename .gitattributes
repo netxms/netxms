@@ -487,6 +487,7 @@ src/webui/libgd/freetype/src/winfonts/rules.mk -text
 src/webui/libgd/freetype/version.sed -text
 src/webui/libgd/gd/README-JPEG.TXT -text
 src/webui/libgd/gd/entities.tcl -text
+src/webui/libgd/gd/libgd.vcproj -text
 src/webui/libgd/libjpeg/change.log -text
 src/webui/libgd/libjpeg/coderules.doc -text
 src/webui/libgd/libjpeg/filelist.doc -text
