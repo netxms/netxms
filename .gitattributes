@@ -96,12 +96,13 @@ src/client/nxalarm/nxalarm.dsp eol=crlf
 src/client/nxalarm/nxalarm.vcproj -text
 src/client/nxevent/nxevent.dsp eol=crlf
 src/client/nxevent/nxevent.vcproj -text
-src/client/nxlexer/nxlexer.dsp eol=crlf
-src/client/nxlexer/nxlexer.dsw eol=crlf
+src/client/nxlexer/nxlexer.vcproj -text
 src/client/nxpush/nxpush.dsp eol=crlf
 src/client/nxpush/nxpush.vcproj -text
 src/client/nxsms/nxsms.dsp eol=crlf
 src/client/nxsms/nxsms.vcproj -text
+src/client/scilexer/Margin.cur -text
+src/client/scilexer/scilexer.vcproj -text
 src/client/windows/nxav/nxav.dsp eol=crlf
 src/client/windows/nxav/nxav.dsw eol=crlf
 src/client/windows/nxav/res/ack.ico -text
