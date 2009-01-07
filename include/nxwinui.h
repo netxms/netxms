@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Windows UI Library
-** Copyright (C) 2005 Victor Kirhenshtein
+** Copyright (C) 2005-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxwinui.h
+** File: nxwinui.h
 **
 **/
 
@@ -67,16 +67,16 @@ typedef struct
 
 #ifndef NXWINUI_NO_MFC
 
-#include "../src/console/nxuilib/resource.h"
-#include "../src/console/nxuilib/LoginDialog.h"
-#include "../src/console/nxuilib/FlatButton.h"
-#include "../src/console/nxuilib/ScintillaCtrl.h"
-#include "../src/console/nxuilib/SimpleListCtrl.h"
-#include "../src/console/nxuilib/TaskBarPopupWnd.h"
-#include "../src/console/nxuilib/ComboListCtrl.h"
-#include "../src/console/nxuilib/InPlaceEdit.h"
-#include "../src/console/nxuilib/InPlaceCombo.h"
-#include "../src/console/nxuilib/ColourPickerXP.h"
+#include "../src/client/windows/nxuilib/resource.h"
+#include "../src/client/windows/nxuilib/LoginDialog.h"
+#include "../src/client/windows/nxuilib/FlatButton.h"
+#include "../src/client/windows/nxuilib/ScintillaCtrl.h"
+#include "../src/client/windows/nxuilib/SimpleListCtrl.h"
+#include "../src/client/windows/nxuilib/TaskBarPopupWnd.h"
+#include "../src/client/windows/nxuilib/ComboListCtrl.h"
+#include "../src/client/windows/nxuilib/InPlaceEdit.h"
+#include "../src/client/windows/nxuilib/InPlaceCombo.h"
+#include "../src/client/windows/nxuilib/ColourPickerXP.h"
 
 #endif
 

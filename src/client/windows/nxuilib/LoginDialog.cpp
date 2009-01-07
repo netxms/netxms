@@ -243,7 +243,7 @@ void CLoginDialog::LoadServerHistory()
 
 	for(i = 0; i < MAX_LOGINDLG_HISTORY_SIZE; i++)
 	{
-		_stprintf(szBuffer, _T("HistorySrv_%d"), i);
+		_sntprintf_s(szBuffer, 64, _TRUNCATE, _T("HistorySrv_%d"), i);
 		dwSize = 256;
 		if (RegQueryValueEx(hKey, szBuffer, NULL, NULL, (BYTE *)szData, &dwSize) == ERROR_SUCCESS)
 		{
@@ -280,7 +280,7 @@ void CLoginDialog::SaveServerHistory()
 	{
 		if (m_pszServerHistory[i] != NULL)
 		{
-			_stprintf(szBuffer, _T("HistorySrv_%d"), i);
+			_sntprintf_s(szBuffer, 64, _TRUNCATE, _T("HistorySrv_%d"), i);
 			RegSetValueEx(hKey, szBuffer, 0, REG_SZ, (BYTE *)m_pszServerHistory[i],
 			              (_tcslen(m_pszServerHistory[i]) + 1) * sizeof(TCHAR));
 		}

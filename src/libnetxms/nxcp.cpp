@@ -24,6 +24,11 @@
 
 #include "libnetxms.h"
 
+#ifdef _WIN32
+#define read	_read
+#define close	_close
+#endif
+
 
 //
 // Constants

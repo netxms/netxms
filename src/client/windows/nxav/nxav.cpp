@@ -65,21 +65,15 @@ BOOL CAlarmViewApp::InitInstance()
    if (!InitWorkDir())
       return FALSE;
 
-#ifdef _AFXDLL
-	Enable3dControls();			// Call this when using MFC in a shared DLL
-#else
-	Enable3dControlsStatic();	// Call this when linking to MFC statically
-#endif
-
 	// Change the registry key under which our settings are stored.
 	SetRegistryKey(_T("NetXMS"));
 
    // Load settings
    LoadAlarmSoundCfg(&m_soundCfg, NXAV_ALARM_SOUND_KEY);
    bAutoLogin = GetProfileInt(_T("Connection"), _T("AutoLogin"), FALSE);
-   _tcscpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
-   _tcscpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
-   _tcscpy(g_szPassword, (LPCTSTR)GetProfileString(_T("Connection"), _T("Password"), NULL));
+   nx_strncpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")), MAX_PATH);
+   nx_strncpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL), MAX_USER_NAME);
+   nx_strncpy(g_szPassword, (LPCTSTR)GetProfileString(_T("Connection"), _T("Password"), NULL), MAX_SECRET_LENGTH);
    g_dwOptions = GetProfileInt(_T("Connection"), _T("Options"), 0);
    g_bRepeatSound = GetProfileInt(_T("Settings"), _T("RepeatSound"), FALSE);
 
@@ -132,7 +126,7 @@ BOOL CAlarmViewApp::InitInstance()
       {
          TCHAR szBuffer[1024];
 
-         _sntprintf(szBuffer, 1024, _T("Unable to connect: %s"), NXCGetErrorText(dwResult));
+         _sntprintf_s(szBuffer, 1024, _TRUNCATE, _T("Unable to connect: %s"), NXCGetErrorText(dwResult));
          pFrame->MessageBox(szBuffer, _T("Error"), MB_ICONSTOP);
          bAutoLogin = FALSE;
       }
@@ -252,8 +246,8 @@ void CAlarmViewApp::ErrorBox(DWORD dwError, TCHAR *pszMessage, TCHAR *pszTitle)
 {
    TCHAR szBuffer[512];
 
-   _sntprintf(szBuffer, 512, (pszMessage != NULL) ? pszMessage : _T("Error: %s"), 
-              NXCGetErrorText(dwError));
+   _sntprintf_s(szBuffer, 512, _TRUNCATE, (pszMessage != NULL) ? pszMessage : _T("Error: %s"), 
+                NXCGetErrorText(dwError));
    m_pMainWnd->MessageBox(szBuffer, (pszTitle != NULL) ? pszTitle : _T("Error"), MB_ICONSTOP);
 }
 
@@ -274,8 +268,8 @@ BOOL CAlarmViewApp::InitWorkDir()
    }
 
    // Create working directory
-   _sntprintf(szBuffer, 256, _T("\\nxav-%08X"), GetCurrentProcessId());
-   _tcscat(g_szWorkDir, szBuffer);
+   _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("\\nxav-%08X"), GetCurrentProcessId());
+   _tcscat_s(g_szWorkDir, MAX_PATH, szBuffer);
    if (!CreateDirectory(g_szWorkDir, NULL))
       if (GetLastError() != ERROR_ALREADY_EXISTS)
       {
@@ -297,8 +291,8 @@ void CAlarmViewApp::DeleteWorkDir()
    WIN32_FIND_DATA data;
    TCHAR szName[1024];
 
-   _tcscpy(szName, g_szWorkDir);
-   _tcscat(szName, _T("\\*"));
+   nx_strncpy(szName, g_szWorkDir, 1024);
+   _tcscat_s(szName, 1024, _T("\\*"));
 
    hFile = FindFirstFile(szName, &data);
    if (hFile != INVALID_HANDLE_VALUE)
@@ -309,9 +303,9 @@ void CAlarmViewApp::DeleteWorkDir()
              (!_tcscmp(data.cFileName, _T(".."))))
             continue;
 
-         _tcscpy(szName, g_szWorkDir);
-         _tcscat(szName, _T("\\"));
-         _tcscat(szName, data.cFileName);
+         nx_strncpy(szName, g_szWorkDir, 1024);
+         _tcscat_s(szName, 1024, _T("\\"));
+         _tcscat_s(szName, 1024, data.cFileName);
          DeleteFile(szName);
       } while(FindNextFile(hFile, &data));
 

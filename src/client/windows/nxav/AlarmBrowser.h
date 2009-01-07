@@ -10,11 +10,6 @@
 /////////////////////////////////////////////////////////////////////////////
 // CAlarmBrowser html view
 
-#ifndef __AFXEXT_H__
-#include <afxext.h>
-#endif
-#include <afxhtml.h>
-
 class CAlarmBrowser : public CHtmlView
 {
 protected:

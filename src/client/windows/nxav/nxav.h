@@ -27,7 +27,6 @@
 #include <nxwinui.h>
 
 #include "globals.h"
-#include "..\..\..\INCLUDE\nxwinui.h"	// Added by ClassView
 
 /////////////////////////////////////////////////////////////////////////////
 // CAlarmViewApp:

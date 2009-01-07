@@ -1,5 +1,5 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
+// Microsoft Visual C++ generated include file.
 // Used by nxav.rc
 //
 #define IDD_ABOUTBOX                    100
@@ -13,7 +13,7 @@
 #define IDD_REQUEST_WAIT                130
 #define IDI_PROCESSING                  131
 #define IDB_NETXMS_LOGO                 132
-#define IDM_CONTEXT                     134
+#define IDC_CONTEXT_MENU                134
 #define IDC_EDIT_PASSWD                 140
 #define IDF_BACKGROUND                  141
 #define IDF_WARNING                     142

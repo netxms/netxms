@@ -7,7 +7,6 @@
 
 #include "InfoLine.h"	// Added by ClassView
 #include "AlarmBrowser.h"
-#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -60,8 +59,8 @@ protected:
 	afx_msg void OnDestroy();
 	afx_msg void OnTimer(UINT nIDEvent);
 	//}}AFX_MSG
-   afx_msg void OnAlarmUpdate(WPARAM wParam, LPARAM lParam);
-   afx_msg void OnDisableAlarmSound(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnAlarmUpdate(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnDisableAlarmSound(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

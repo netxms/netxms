@@ -78,9 +78,10 @@ BOOL CRequestProcessingDlg::OnInitDialog()
 // WM_REQUEST_COMPLETED message handler
 //
 
-void CRequestProcessingDlg::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
+LRESULT CRequestProcessingDlg::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 {
    EndDialog(lParam);
+	return 0;
 }
 
 
@@ -88,7 +89,8 @@ void CRequestProcessingDlg::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 // WM_SET_INFO_TEXT message handler
 //
 
-void CRequestProcessingDlg::OnSetInfoText(WPARAM wParam, LPARAM lParam)
+LRESULT CRequestProcessingDlg::OnSetInfoText(WPARAM wParam, LPARAM lParam)
 {
    m_wndInfoText.SetWindowText((LPCTSTR)lParam);
+	return 0;
 }

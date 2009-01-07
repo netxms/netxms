@@ -20,8 +20,8 @@ EXTRA_DIST = \
 	MemDC.h \
 	nxuilib.clw \
 	nxuilib.cpp \
-	nxuilib.def nxuilibw.def \
-	nxuilib.dsp nxuilib.dsw \
+	nxuilib.def \
+	nxuilib.vcproj \
 	nxuilib.h \
 	nxuilib.rc resource.h \
 	ScintillaCtrl.cpp ScintillaCtrl.h \

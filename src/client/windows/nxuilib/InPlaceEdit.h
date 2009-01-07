@@ -51,7 +51,7 @@ protected:
 	//{{AFX_MSG(CInPlaceEdit)
 	afx_msg void OnKillFocus(CWnd* pNewWnd);
 	afx_msg void OnChar(UINT nChar, UINT nRepCnt, UINT nFlags);
-	afx_msg void OnPaste(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnPaste(WPARAM wParam, LPARAM lParam);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	//}}AFX_MSG
 
@@ -67,7 +67,7 @@ private:
 	// Hide the copy constructor and operator =
 	CInPlaceEdit (CInPlaceEdit&) {}
 
-	operator = (CInPlaceEdit) {}
+	//CInPlaceEdit operator = (CInPlaceEdit) {}
 	
 	// Destructor
 	virtual ~CInPlaceEdit();

@@ -135,7 +135,7 @@ BOOL CAlarmBrowser::AcknowledgeAlarm(DWORD dwAlarmId)
    DWORD dwResult;
 
    dwResult = DoRequestArg2(NXCAcknowledgeAlarm, g_hSession,
-                            (void *)dwAlarmId, _T("Acknowledging alarm..."));
+                            CAST_TO_POINTER(dwAlarmId, void *), _T("Acknowledging alarm..."));
    if (dwResult != RCC_SUCCESS)
       appAlarmViewer.ErrorBox(dwResult, _T("Cannot acknowledge alarm: %s"));
    return (dwResult == RCC_SUCCESS);
@@ -151,7 +151,7 @@ BOOL CAlarmBrowser::TerminateAlarm(DWORD dwAlarmId)
    DWORD dwResult;
 
    dwResult = DoRequestArg2(NXCTerminateAlarm, g_hSession,
-                            (void *)dwAlarmId, _T("Terminating alarm..."));
+                            CAST_TO_POINTER(dwAlarmId, void *), _T("Terminating alarm..."));
    if (dwResult != RCC_SUCCESS)
       appAlarmViewer.ErrorBox(dwResult, _T("Cannot terminate alarm: %s"));
    return (dwResult == RCC_SUCCESS);

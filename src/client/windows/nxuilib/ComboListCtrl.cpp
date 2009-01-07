@@ -480,7 +480,7 @@ LRESULT CComboListCtrl::OnSelEndOK(WPARAM wParam, LPARAM lParam)
 {
 	TCHAR szBuffer[64];
 
-	_stprintf(szBuffer, _T("%08X"), wParam);
+	_sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%08X"), wParam);
 	SetItemText(m_nCPRow, m_nCPColumn, szBuffer);
 	return 0;
 }

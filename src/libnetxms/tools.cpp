@@ -27,6 +27,8 @@
 
 #ifdef _WIN32
 #include <netxms-regex.h>
+#define read	_read
+#define close	_close
 #else
 #include <regex.h>
 #endif

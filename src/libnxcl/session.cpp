@@ -23,6 +23,10 @@
 
 #include "libnxcl.h"
 
+#ifdef _WIN32
+#define close	_close
+#endif
+
 
 //
 // Session class constructor

@@ -23,6 +23,11 @@
 
 #include "libnxcl.h"
 
+#ifdef _WIN32
+#define write	_write
+#define close	_close
+#endif
+
 
 //
 // Network receiver thread

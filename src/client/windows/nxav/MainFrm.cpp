@@ -173,14 +173,16 @@ void CMainFrame::OnViewRefresh()
 
 void CMainFrame::AddAlarm(NXC_ALARM *pAlarm, CString &strHTML, BOOL bColoredLine)
 {
-   struct tm *ptm;
+	time_t t;
+   struct tm tmbuf;
    TCHAR szBuffer[64];
    NXC_OBJECT *pObject;
    CString strBuf;
 
    pObject = NXCFindObjectById(g_hSession, pAlarm->dwSourceObject);
-   ptm = localtime((const time_t *)&pAlarm->dwLastChangeTime);
-   _tcsftime(szBuffer, 64, _T("%d-%b-%Y<br>%H:%M:%S"), ptm);
+   t = pAlarm->dwLastChangeTime;
+	localtime_s(&tmbuf, &t);
+   _tcsftime(szBuffer, 64, _T("%d-%b-%Y<br>%H:%M:%S"), &tmbuf);
    strBuf.Format(_T("<tr bgcolor=%s>")
                  _T("<td align=left><table cellpadding=2 border=0><tr>")
                  _T("<td><img src=\"file:%s/%s.ico\" border=0/></td>")
@@ -245,7 +247,7 @@ void CMainFrame::GenerateHtml(CString &strHTML)
 // WM_ALARM_UPDATE message handler
 //
 
-void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
 {
    NXC_ALARM *pAlarm = (NXC_ALARM *)lParam;
    DWORD i;
@@ -295,6 +297,7 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
    GenerateHtml(strHTML);
    m_pwndAlarmView->SetHTML(strHTML);
    free(pAlarm);
+	return 0;
 }
 
 
@@ -322,7 +325,7 @@ void CMainFrame::SortAlarms()
 // WM_DISABLE_ALARM_SOUND message handler
 //
 
-void CMainFrame::OnDisableAlarmSound(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnDisableAlarmSound(WPARAM wParam, LPARAM lParam)
 {
    DWORD i;
    CString strHTML;
@@ -335,6 +338,7 @@ void CMainFrame::OnDisableAlarmSound(WPARAM wParam, LPARAM lParam)
          m_pwndAlarmView->SetHTML(strHTML);
          break;
       }
+	return 0;
 }
 
 

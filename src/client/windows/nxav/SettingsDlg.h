@@ -1,7 +1,6 @@
 #if !defined(AFX_SETTINGSDLG_H__D71A958C_F19C_49E9_8763_060B6CBDF888__INCLUDED_)
 #define AFX_SETTINGSDLG_H__D71A958C_F19C_49E9_8763_060B6CBDF888__INCLUDED_
 
-#include "..\..\..\INCLUDE\nxwinui.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000

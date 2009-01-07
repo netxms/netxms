@@ -31,7 +31,7 @@ public:
 
 	// Creates the Windows combo control and attaches it to the object, if needed and shows the combo ctrl
 	BOOL ShowComboCtrl(DWORD dwStyle, const CRect& rCellRect, CWnd* pParentWnd, UINT uiResourceID,
-					   int iRowIndex, int iColumnIndex, CStringList* pDropDownList, CString strCurSelecetion = "", int iCurSel = -1);
+					   int iRowIndex, int iColumnIndex, CStringList* pDropDownList, CString strCurSelecetion = _T(""), int iCurSel = -1);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -62,7 +62,7 @@ private:
 	// Hide the copy constructor and operator =
 	CInPlaceCombo (CInPlaceCombo&) {}
 
-	operator = (CInPlaceCombo) {}
+	//CInPlaceCombo operator = (CInPlaceCombo) {}
 
 	// Destructor
 	virtual ~CInPlaceCombo();

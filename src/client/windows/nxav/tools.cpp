@@ -59,7 +59,7 @@ BOOL FileFromResource(UINT nResId, TCHAR *pszFileName)
          {
             TCHAR szName[MAX_PATH];
 
-            _sntprintf(szName, MAX_PATH, _T("%s\\%s"), g_szWorkDir, pszFileName);
+            _sntprintf_s(szName, MAX_PATH, _TRUNCATE, _T("%s\\%s"), g_szWorkDir, pszFileName);
             hFile = CreateFile(szName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
                                FILE_ATTRIBUTE_NORMAL, NULL);
             if (hFile != INVALID_HANDLE_VALUE)

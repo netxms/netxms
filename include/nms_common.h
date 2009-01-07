@@ -153,10 +153,6 @@
 #define stricmp   _stricmp
 #define strnicmp  _strnicmp
 #define strupr    _strupr
-#define open      _open
-#define read      _read
-#define write     _write
-#define close     _close
 #define getpid    _getpid
 #define fileno    _fileno
 #define chdir     _chdir

@@ -17,6 +17,6 @@ EXTRA_DIST = \
 	SettingsDlg.cpp SettingsDlg.h \
 	StdAfx.cpp StdAfx.h \
 	comm.cpp globals.cpp globals.h \
-	nxav.clw nxav.cpp nxav.dsp nxav.dsw nxav.h nxav.rc \
+	nxav.clw nxav.cpp nxav.vcproj nxav.h nxav.rc \
 	resource.h \
 	tools.cpp

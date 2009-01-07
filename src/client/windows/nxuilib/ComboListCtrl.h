@@ -91,7 +91,7 @@ private:
 
 	// Creates and displays the in place combo box
 	CInPlaceCombo* ShowInPlaceList(int iRowIndex, int iColumnIndex, CStringList& rComboItemsList, 
-								   CString strCurSelecetion = "", int iSel = -1);
+								   CString strCurSelecetion = _T(""), int iSel = -1);
 
 	// Creates and displays the in place edit control
 	CInPlaceEdit* ShowInPlaceEdit(int iRowIndex, int iColumnIndex, CString& rstrCurSelection);

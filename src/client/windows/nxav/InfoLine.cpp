@@ -162,12 +162,12 @@ void CInfoLine::OnDestroy()
 void CInfoLine::OnTimer(UINT nIDEvent) 
 {
    time_t now;
-   struct tm *ptm;
+   struct tm tmbuf;
    TCHAR szBuffer[256];
 
    now = time(NULL);
-   ptm = localtime(&now);
-   _tcsftime(szBuffer, 256, _T("%A\n%d %B %Y\n%H:%M:%S"), ptm);
+   localtime_s(&tmbuf, &now);
+   _tcsftime(szBuffer, 256, _T("%A\n%d %B %Y\n%H:%M:%S"), &tmbuf);
    m_wndTimer.SetWindowText(szBuffer);
 }
 

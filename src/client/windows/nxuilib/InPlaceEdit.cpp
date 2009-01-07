@@ -53,11 +53,11 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CInPlaceEdit message handlers
 
-void CInPlaceEdit::OnPaste(WPARAM /*wParam*/, LPARAM /*lParam*/)
+LRESULT CInPlaceEdit::OnPaste(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	if (m_strValidChars.IsEmpty())
 	{
-		return;	
+		return 0;	
 	}
 
     CString strFromClipboard;
@@ -66,7 +66,7 @@ void CInPlaceEdit::OnPaste(WPARAM /*wParam*/, LPARAM /*lParam*/)
 	if(OpenClipboard()) {
 		HANDLE l_hData = GetClipboardData(CF_TEXT);
 		if(NULL == l_hData) {
-			return;
+			return 0;
 		}
 		
 		char *l_pBuffer = (char*)GlobalLock(l_hData);
@@ -83,12 +83,12 @@ void CInPlaceEdit::OnPaste(WPARAM /*wParam*/, LPARAM /*lParam*/)
 	{
 		if (-1 == m_strValidChars.Find(strFromClipboard.GetAt(iCounter_)))
 		{
-			return;
+			return 0;
 		}
 	}
 		
 	//let the individual control handle other processing
-	CEdit::Default();	
+	return CEdit::Default();	
 }
 
 void CInPlaceEdit::OnKillFocus(CWnd* pNewWnd) 
