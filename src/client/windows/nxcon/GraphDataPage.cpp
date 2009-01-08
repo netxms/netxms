@@ -131,7 +131,7 @@ void CGraphDataPage::OnButtonDelete()
 			if (nData > nPos)
 			{
 				m_wndListCtrl.SetItemData(i, nData - 1);
-				_stprintf(szBuffer, _T("%d"), nData);
+				_sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), nData);
 				m_wndListCtrl.SetItemText(i, 0, szBuffer);
 			}
 		}
@@ -189,7 +189,7 @@ void CGraphDataPage::AddListItem(DWORD dwIndex)
    TCHAR szBuffer[256];
    NXC_OBJECT *pObject;
 
-   _stprintf(szBuffer, _T("%d"), dwIndex + 1);
+   _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%d"), dwIndex + 1);
    iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
    m_wndListCtrl.SetItemData(iItem, dwIndex);
    pObject = NXCFindObjectById(g_hSession, m_ppItems[dwIndex]->m_dwNodeId);
@@ -317,10 +317,10 @@ void CGraphDataPage::OnButtonDown()
 		nItem2 = m_wndListCtrl.FindItem(&lvfi);
 		if (nItem2 != -1)
 		{
-			_stprintf(szBuffer, _T("%d"), dwIndex + 1);
+			_sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), dwIndex + 1);
 			m_wndListCtrl.SetItemText(nItem2, 0, szBuffer);
 			m_wndListCtrl.SetItemData(nItem2, dwIndex);
-			_stprintf(szBuffer, _T("%d"), dwIndex + 2);
+			_sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), dwIndex + 2);
 			m_wndListCtrl.SetItemText(nItem, 0, szBuffer);
 			m_wndListCtrl.SetItemData(nItem, dwIndex + 1);
 			pTemp = m_ppItems[dwIndex];
@@ -357,10 +357,10 @@ void CGraphDataPage::OnButtonUp()
 		nItem2 = m_wndListCtrl.FindItem(&lvfi);
 		if (nItem2 != -1)
 		{
-			_stprintf(szBuffer, _T("%d"), dwIndex + 1);
+			_sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), dwIndex + 1);
 			m_wndListCtrl.SetItemText(nItem2, 0, szBuffer);
 			m_wndListCtrl.SetItemData(nItem2, dwIndex);
-			_stprintf(szBuffer, _T("%d"), dwIndex);
+			_sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), dwIndex);
 			m_wndListCtrl.SetItemText(nItem, 0, szBuffer);
 			m_wndListCtrl.SetItemData(nItem, dwIndex - 1);
 			pTemp = m_ppItems[dwIndex];

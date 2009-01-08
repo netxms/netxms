@@ -46,9 +46,9 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	//}}AFX_MSG
-   afx_msg void OnStartDeployment(WPARAM wParam, DEPLOYMENT_JOB *pJob);
-   afx_msg void OnDeploymentInfo(DWORD dwRqId, NXC_DEPLOYMENT_STATUS *pInfo);
-   afx_msg void OnDeploymentFinished(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnStartDeployment(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnDeploymentInfo(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnDeploymentFinished(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

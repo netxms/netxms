@@ -50,7 +50,7 @@ protected:
 	afx_msg void OnStatusHideunmanaged();
 	afx_msg void OnStatusIcons();
 	//}}AFX_MSG
-   afx_msg void OnTreeViewVScroll(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnTreeViewVScroll(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 
 public:

@@ -128,8 +128,10 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(DEPLOYMENT_JOB *pJob)
 // WM_START_DEPLOYMENT message handler
 //
 
-void CDeploymentView::OnStartDeployment(WPARAM wParam, DEPLOYMENT_JOB *pJob)
+LRESULT CDeploymentView::OnStartDeployment(WPARAM wParam, LPARAM lParam)
 {
+	DEPLOYMENT_JOB *pJob = (DEPLOYMENT_JOB *)lParam;
+
    m_wndProgressCtrl.SetRange32(0, pJob->dwNumObjects);
    m_wndProgressCtrl.SetStep(1);
    m_wndProgressCtrl.SetPos(0);
@@ -137,6 +139,7 @@ void CDeploymentView::OnStartDeployment(WPARAM wParam, DEPLOYMENT_JOB *pJob)
    pJob->hWnd = m_hWnd;
    pJob->pdwRqId = &m_dwRqId;
 	ThreadCreate((THREAD_RESULT (THREAD_CALL *)(void *))DeploymentThread, 0, pJob);
+	return 0;
 }
 
 
@@ -144,9 +147,11 @@ void CDeploymentView::OnStartDeployment(WPARAM wParam, DEPLOYMENT_JOB *pJob)
 // WM_DEPLOYMENT_INFO message handler
 //
 
-void CDeploymentView::OnDeploymentInfo(DWORD dwRqId, NXC_DEPLOYMENT_STATUS *pInfo)
+LRESULT CDeploymentView::OnDeploymentInfo(WPARAM wParam, LPARAM lParam)
 {
-   if (dwRqId == m_dwRqId)
+	NXC_DEPLOYMENT_STATUS *pInfo = (NXC_DEPLOYMENT_STATUS *)lParam;
+
+   if (wParam == m_dwRqId)
    {
       LVFINDINFO lvfi;
       int iItem;
@@ -175,7 +180,7 @@ void CDeploymentView::OnDeploymentInfo(DWORD dwRqId, NXC_DEPLOYMENT_STATUS *pInf
       else
       {
          LVITEM lvi;
-         static m_iStateImage[] = { 1, 0, 0, 2, 3, 0 };
+         static int m_iStateImage[] = { 1, 0, 0, 2, 3, 0 };
 
          lvi.iItem = iItem;
          lvi.iSubItem = 0;
@@ -194,6 +199,7 @@ void CDeploymentView::OnDeploymentInfo(DWORD dwRqId, NXC_DEPLOYMENT_STATUS *pInf
       if (pInfo->dwStatus == DEPLOYMENT_STATUS_FAILED)
          m_dwFailedNodes++;
    }
+	return 0;
 }
 
 
@@ -242,7 +248,7 @@ void CDeploymentView::OnSize(UINT nType, int cx, int cy)
 // WM_DEPLOYMENT_FINISHED message handler
 //
 
-void CDeploymentView::OnDeploymentFinished(WPARAM wParam, LPARAM lParam)
+LRESULT CDeploymentView::OnDeploymentFinished(WPARAM wParam, LPARAM lParam)
 {
    m_bFinished = TRUE;
    InvalidateRect(NULL);
@@ -259,4 +265,5 @@ void CDeploymentView::OnDeploymentFinished(WPARAM wParam, LPARAM lParam)
    {
       theApp.ErrorBox(lParam, _T("Deployment job failed: %s"));
    }
+	return 0;
 }

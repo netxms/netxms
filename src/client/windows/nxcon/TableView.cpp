@@ -214,7 +214,7 @@ void CTableView::OnSetFocus(CWnd* pOldWnd)
 // WM_TABLE_DATA message handler
 //
 
-void CTableView::OnTableData(WPARAM wParam, LPARAM lParam)
+LRESULT CTableView::OnTableData(WPARAM wParam, LPARAM lParam)
 {
    DWORD i, j;
    int iItem, nPos;
@@ -263,6 +263,8 @@ void CTableView::OnTableData(WPARAM wParam, LPARAM lParam)
    m_wndWaitView.ShowWindow(SW_HIDE);
    m_wndWaitView.Stop();
    m_bIsBusy = FALSE;
+
+	return 0;
 }
 
 
@@ -270,7 +272,7 @@ void CTableView::OnTableData(WPARAM wParam, LPARAM lParam)
 // WM_NOTIFY::LVN_COLUMNCLICK message handler
 //
 
-void CTableView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+void CTableView::OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
    LVCOLUMN lvCol;
 
@@ -280,7 +282,7 @@ void CTableView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
    m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 
    // Change current sort mode and resort list
-   if (m_iSortMode == pNMHDR->iSubItem)
+   if (m_iSortMode == ((LPNMLISTVIEW)pNMHDR)->iSubItem)
    {
       // Same column, change sort direction
       m_iSortDir = 1 - m_iSortDir;
@@ -288,7 +290,7 @@ void CTableView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
    else
    {
       // Another sorting column
-      m_iSortMode = pNMHDR->iSubItem;
+      m_iSortMode = ((LPNMLISTVIEW)pNMHDR)->iSubItem;
    }
    m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
 
@@ -296,7 +298,7 @@ void CTableView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
    lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
    lvCol.iImage = m_iSortDir;
-   m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
+   m_wndListCtrl.SetColumn(((LPNMLISTVIEW)pNMHDR)->iSubItem, &lvCol);
    
    *pResult = 0;
 }

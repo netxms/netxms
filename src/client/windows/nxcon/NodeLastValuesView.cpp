@@ -147,7 +147,7 @@ void CNodeLastValuesView::OnSize(UINT nType, int cx, int cy)
 // NXCM_SET_OBJECT message handler
 //
 
-void CNodeLastValuesView::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
+LRESULT CNodeLastValuesView::OnSetObject(WPARAM wParam, LPARAM lParam)
 {
 	if (m_nTimer != 0)
 	{
@@ -155,9 +155,10 @@ void CNodeLastValuesView::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
 		m_nTimer = 0;
 	}
 
-   m_pObject = pObject;
+   m_pObject = (NXC_OBJECT *)lParam;
 	m_workerQueue.Clear();
-	m_workerQueue.Put((void *)pObject->dwId);
+	m_workerQueue.Put((void *)m_pObject->dwId);
+	return 0;
 }
 
 
@@ -251,7 +252,7 @@ int CNodeLastValuesView::CompareListItems(LPARAM nItem1, LPARAM nItem2)
 // Handler for NXCM_REQUEST_COMPLETED message
 //
 
-void CNodeLastValuesView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
+LRESULT CNodeLastValuesView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 {
 	DWORD i;
 	int nItem;
@@ -263,7 +264,7 @@ void CNodeLastValuesView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 	m_wndListCtrl.DeleteAllItems();
 	for(i = 0; i < m_dwNumItems; i++)
 	{
-		_stprintf(szBuffer, _T("%d"), m_pItemList[i].dwId);
+		_sntprintf_s(szBuffer, 128, _TRUNCATE, _T("%d"), m_pItemList[i].dwId);
 		nItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, m_pItemList[i].nStatus);
 		if (nItem != -1)
 		{
@@ -284,35 +285,35 @@ void CNodeLastValuesView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 						i64 = _tcstoll(m_pItemList[i].szValue, NULL, 10);
 						if (i64 >= 10000000000)
 						{
-							_stprintf(szBuffer, INT64_FMT _T(" G"), i64 / 1000000000);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, INT64_FMT _T(" G"), i64 / 1000000000);
 						}
 						else if (i64 >= 10000000)
 						{
-							_stprintf(szBuffer, INT64_FMT _T(" M"), i64 / 1000000);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, INT64_FMT _T(" M"), i64 / 1000000);
 						}
 						else if (i64 >= 10000)
 						{
-							_stprintf(szBuffer, INT64_FMT _T(" K"), i64 / 1000);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, INT64_FMT _T(" K"), i64 / 1000);
 						}
 						else if (i64 >= 0)
 						{
-							_stprintf(szBuffer, INT64_FMT, i64);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, INT64_FMT, i64);
 						}
 						else if (i64 <= -10000000000)
 						{
-							_stprintf(szBuffer, INT64_FMT _T(" G"), i64 / 1000000000);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, INT64_FMT _T(" G"), i64 / 1000000000);
 						}
 						else if (i64 <= -10000000)
 						{
-							_stprintf(szBuffer, INT64_FMT _T(" M"), i64 / 1000000);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, INT64_FMT _T(" M"), i64 / 1000000);
 						}
 						else if (i64 <= 10000)
 						{
-							_stprintf(szBuffer, INT64_FMT _T(" K"), i64 / 1000);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, INT64_FMT _T(" K"), i64 / 1000);
 						}
 						else
 						{
-							_stprintf(szBuffer, INT64_FMT, i64);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, INT64_FMT, i64);
 						}
 						break;
 					case DCI_DT_UINT:
@@ -320,54 +321,54 @@ void CNodeLastValuesView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 						ui64 = _tcstoull(m_pItemList[i].szValue, NULL, 10);
 						if (ui64 >= 10000000000)
 						{
-							_stprintf(szBuffer, UINT64_FMT _T(" G"), ui64 / 1000000000);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, UINT64_FMT _T(" G"), ui64 / 1000000000);
 						}
 						else if (ui64 >= 10000000)
 						{
-							_stprintf(szBuffer, UINT64_FMT _T(" M"), ui64 / 1000000);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, UINT64_FMT _T(" M"), ui64 / 1000000);
 						}
 						else if (ui64 >= 10000)
 						{
-							_stprintf(szBuffer, UINT64_FMT _T(" K"), ui64 / 1000);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, UINT64_FMT _T(" K"), ui64 / 1000);
 						}
 						else
 						{
-							_stprintf(szBuffer, UINT64_FMT, ui64);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, UINT64_FMT, ui64);
 						}
 						break;
 					case DCI_DT_FLOAT:
 						d = _tcstod(m_pItemList[i].szValue, NULL);
 						if (d >= 10000000000)
 						{
-							_stprintf(szBuffer, _T("%.2f G"), d / 1000000000);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, _T("%.2f G"), d / 1000000000);
 						}
 						else if (d >= 10000000)
 						{
-							_stprintf(szBuffer, _T("%.2f M"), d / 1000000);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, _T("%.2f M"), d / 1000000);
 						}
 						else if (d >= 10000)
 						{
-							_stprintf(szBuffer, _T("%.2f K"), d / 1000);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, _T("%.2f K"), d / 1000);
 						}
 						else if (d >= 0)
 						{
-							_stprintf(szBuffer, _T("%f"), d);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, _T("%f"), d);
 						}
 						else if (d <= -10000000000)
 						{
-							_stprintf(szBuffer, _T("%.2f G"), d / 1000000000);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, _T("%.2f G"), d / 1000000000);
 						}
 						else if (d <= -10000000)
 						{
-							_stprintf(szBuffer, _T("%.2f M"), d / 1000000);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, _T("%.2f M"), d / 1000000);
 						}
 						else if (d <= 10000)
 						{
-							_stprintf(szBuffer, _T("%.2f K"), d / 1000);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE, _T("%.2f K"), d / 1000);
 						}
 						else
 						{
-							_stprintf(szBuffer, _T("%f"), d);
+							_sntprintf_s(szBuffer, 128, _TRUNCATE,_T("%f"), d);
 						}
 						break;
 					default:
@@ -386,6 +387,7 @@ void CNodeLastValuesView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 	}
 	m_wndListCtrl.SortItems(CompareListItemsCB, (UINT_PTR)this);
 	m_nTimer = SetTimer(1, 30000, NULL);
+	return 0;
 }
 
 
@@ -393,7 +395,7 @@ void CNodeLastValuesView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 // Handler for list view column click
 //
 
-void CNodeLastValuesView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+void CNodeLastValuesView::OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
    LVCOLUMN lvCol;
 
@@ -403,7 +405,7 @@ void CNodeLastValuesView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pR
    m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 
    // Change current sort mode and resort list
-   if (m_iSortMode == pNMHDR->iSubItem)
+   if (m_iSortMode == ((LPNMLISTVIEW)pNMHDR)->iSubItem)
    {
       // Same column, change sort direction
       m_iSortDir = -m_iSortDir;
@@ -411,7 +413,7 @@ void CNodeLastValuesView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pR
    else
    {
       // Another sorting column
-      m_iSortMode = pNMHDR->iSubItem;
+      m_iSortMode = ((LPNMLISTVIEW)pNMHDR)->iSubItem;
    }
    m_wndListCtrl.SortItems(CompareListItemsCB, (UINT_PTR)this);
 
@@ -419,7 +421,7 @@ void CNodeLastValuesView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pR
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
    lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
    lvCol.iImage = (m_iSortDir > 0) ? m_iSortImageBase : (m_iSortImageBase + 1);
-   m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
+   m_wndListCtrl.SetColumn(((LPNMLISTVIEW)pNMHDR)->iSubItem, &lvCol);
    
    *pResult = 0;
 }
@@ -509,11 +511,11 @@ void CNodeLastValuesView::OnItemExportdata()
    if (dlg.DoModal() == IDOK)
    {
       dlg.SaveLastSelection();
-      dwTimeFrom = CTime(dlg.m_dateFrom.GetYear(), dlg.m_dateFrom.GetMonth(),
+      dwTimeFrom = (DWORD)CTime(dlg.m_dateFrom.GetYear(), dlg.m_dateFrom.GetMonth(),
                          dlg.m_dateFrom.GetDay(), dlg.m_timeFrom.GetHour(),
                          dlg.m_timeFrom.GetMinute(),
                          dlg.m_timeFrom.GetSecond(), -1).GetTime();
-      dwTimeTo = CTime(dlg.m_dateTo.GetYear(), dlg.m_dateTo.GetMonth(),
+      dwTimeTo = (DWORD)CTime(dlg.m_dateTo.GetYear(), dlg.m_dateTo.GetMonth(),
                        dlg.m_dateTo.GetDay(), dlg.m_timeTo.GetHour(),
                        dlg.m_timeTo.GetMinute(),
                        dlg.m_timeTo.GetSecond(), -1).GetTime();
@@ -541,7 +543,7 @@ void CNodeLastValuesView::OnItemShowdata()
    while(iItem != -1)
    {
       dwItemId = m_pItemList[m_wndListCtrl.GetItemData(iItem)].dwId;
-      _stprintf(szBuffer, _T("%s - "), m_pObject->szName); 
+      _sntprintf_s(szBuffer, 384, _TRUNCATE, _T("%s - "), m_pObject->szName); 
       m_wndListCtrl.GetItemText(iItem, 1, &szBuffer[_tcslen(szBuffer)],
                                 384 - _tcslen(szBuffer));
       theApp.ShowDCIData(m_pObject->dwId, dwItemId, szBuffer);

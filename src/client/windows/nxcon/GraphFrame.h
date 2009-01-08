@@ -117,11 +117,11 @@ protected:
 	afx_msg void OnUpdateGraphPresetsLastyear(CCmdUI* pCmdUI);
 	afx_msg void OnGraphDefine();
 	//}}AFX_MSG
-   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
-   afx_msg void OnUpdateGraphPoint(DWORD dwTimeStamp, double *pdValue);
-   afx_msg void OnGraphZoomChange(WPARAM nZoomLevel, LPARAM lParam);
-	afx_msg void OnRequestCompleted(WPARAM wParam, LPARAM lParam);
-	afx_msg void OnProcessingRequest(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnUpdateGraphPoint(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnGraphZoomChange(WPARAM nZoomLevel, LPARAM lParam);
+	afx_msg LRESULT OnRequestCompleted(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnProcessingRequest(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 private:
 	int m_iStatusBarHeight;

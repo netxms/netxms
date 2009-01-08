@@ -252,11 +252,11 @@ void CDesktopManager::OnContextMenu(CWnd* pWnd, CPoint point)
 // WM_NOTIFY::TVN_SELCHANGED message handler
 //
 
-void CDesktopManager::OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult)
+void CDesktopManager::OnTreeViewSelChange(NMHDR *lpnmt, LRESULT *pResult)
 {
    TVITEM item;
 
-   item.hItem = lpnmt->itemNew.hItem;
+   item.hItem = ((LPNMTREEVIEW)lpnmt)->itemNew.hItem;
    item.pszText = m_szCurrConf;
    item.cchTextMax = MAX_DB_STRING;
    item.mask = TVIF_IMAGE | TVIF_PARAM | TVIF_TEXT;

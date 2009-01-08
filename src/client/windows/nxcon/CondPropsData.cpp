@@ -113,13 +113,13 @@ int CCondPropsData::AddListItem(int nPos, INPUT_DCI *pItem, TCHAR *pszName)
    TCHAR szBuffer[64];
    NXC_OBJECT *pObject;
 
-   _stprintf(szBuffer, _T("%d"), nPos + 1);
+   _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%d"), nPos + 1);
    iItem = m_wndListCtrl.InsertItem(nPos, szBuffer);
    if (iItem != -1)
    {
       m_wndListCtrl.SetItemData(iItem, nPos);
 
-      _stprintf(szBuffer, _T("%d"), pItem->dwId);
+      _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%d"), pItem->dwId);
       m_wndListCtrl.SetItemText(iItem, 1, szBuffer);
 
       pObject = NXCFindObjectById(g_hSession, pItem->dwNodeId);
@@ -138,8 +138,8 @@ int CCondPropsData::AddListItem(int nPos, INPUT_DCI *pItem, TCHAR *pszName)
           (pItem->nFunction == F_DEVIATION) ||
           (pItem->nFunction == F_ERROR))
       {
-         _sntprintf(szBuffer, 64, _T("%s(%d)"),
-                    g_pszThresholdFunction[pItem->nFunction], pItem->nPolls);
+         _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%s(%d)"),
+                      g_pszThresholdFunction[pItem->nFunction], pItem->nPolls);
          m_wndListCtrl.SetItemText(iItem, 4, szBuffer);
       }
       else
@@ -209,7 +209,7 @@ void CCondPropsData::OnButtonDelete()
       m_wndListCtrl.DeleteItem(iItem);
       for(i = iItem; m_wndListCtrl.SetItemData(i, i); i++)
       {
-         _stprintf(szBuffer, _T("%d"), i + 1);
+         _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), i + 1);
          m_wndListCtrl.SetItemText(i, 0, szBuffer);
       }
    }

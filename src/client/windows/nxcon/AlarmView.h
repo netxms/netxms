@@ -1,7 +1,6 @@
 #if !defined(AFX_ALARMVIEW_H__FD1B4F5C_6CA1_4084_9F05_2384212DB9C8__INCLUDED_)
 #define AFX_ALARMVIEW_H__FD1B4F5C_6CA1_4084_9F05_2384212DB9C8__INCLUDED_
 
-#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -69,8 +68,8 @@ protected:
 	afx_msg void OnAlarmTerminate();
 	afx_msg void OnUpdateAlarmTerminate(CCmdUI* pCmdUI);
 	//}}AFX_MSG
-   afx_msg void OnSetObject(WPARAM wParam, NXC_OBJECT *pObject);
-   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
+   afx_msg LRESULT OnSetObject(WPARAM wParam, LPARAM lParam);
+   afx_msg void OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult);
    afx_msg void OnObjectTool(UINT nID);
    afx_msg void OnUpdateObjectTool(CCmdUI *pCmdUI);
 	DECLARE_MESSAGE_MAP()

@@ -162,7 +162,7 @@ void CActionEditor::OnClose()
 // Handler for double-clicks in list view
 //
 
-void CActionEditor::OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult)
+void CActionEditor::OnListViewDoubleClick(NMHDR *pInfo, LRESULT *pResult)
 {
    PostMessage(WM_COMMAND, ID_ACTION_PROPERTIES, 0);
 }
@@ -494,7 +494,7 @@ void CActionEditor::SortList()
 // WM_NOTIFY::LVN_COLUMNCLICK message handler
 //
 
-void CActionEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+void CActionEditor::OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
    LVCOLUMN lvCol;
 
@@ -504,7 +504,7 @@ void CActionEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
    m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 
    // Change current sort mode and resort list
-   if (m_iSortMode == pNMHDR->iSubItem)
+   if (m_iSortMode == ((LPNMLISTVIEW)pNMHDR)->iSubItem)
    {
       // Same column, change sort direction
       m_iSortDir = -m_iSortDir;
@@ -512,7 +512,7 @@ void CActionEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
    else
    {
       // Another sorting column
-      m_iSortMode = pNMHDR->iSubItem;
+      m_iSortMode = ((LPNMLISTVIEW)pNMHDR)->iSubItem;
    }
 
 	LockActions();

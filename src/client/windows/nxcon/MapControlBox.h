@@ -43,7 +43,7 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	//}}AFX_MSG
-   afx_msg void OnListViewItemChanging(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewItemChanging(NMHDR *pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 

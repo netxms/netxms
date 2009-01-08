@@ -126,7 +126,7 @@ void CMainFrame::OnSetFocus(CWnd* pOldWnd)
 // NXNM_TASKBAR_CALLBACK message handler
 //
 
-void CMainFrame::OnTaskbarCallback(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnTaskbarCallback(WPARAM wParam, LPARAM lParam)
 {
    NOTIFYICONDATA nid;
    POINT pt;
@@ -159,6 +159,7 @@ void CMainFrame::OnTaskbarCallback(WPARAM wParam, LPARAM lParam)
       default:
          break;
    }
+	return 0;
 }
 
 
@@ -195,7 +196,7 @@ void CMainFrame::OnSize(UINT nType, int cx, int cy)
 // NXNM_ALARM_UPDATE mesasge handler
 //
 
-void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
 {
    NXC_ALARM *pAlarm = (NXC_ALARM *)lParam;
    CAlarmPopup *pAlarmPopup = NULL;
@@ -244,6 +245,7 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
    // Destroy alarm record if it was not passed to popup window
    if (pAlarmPopup == NULL)
       free(pAlarm);
+	return 0;
 }
 
 
@@ -269,7 +271,8 @@ int CMainFrame::FindAlarmRecord(DWORD dwAlarmId)
 void CMainFrame::AddAlarm(NXC_ALARM *pAlarm)
 {
    int iIdx;
-   struct tm *ptm;
+   struct tm tmbuf;
+	time_t t;
    TCHAR szBuffer[64];
    NXC_OBJECT *pObject;
 
@@ -281,8 +284,9 @@ void CMainFrame::AddAlarm(NXC_ALARM *pAlarm)
       m_wndListCtrl.SetItemData(iIdx, pAlarm->dwAlarmId);
       m_wndListCtrl.SetItemText(iIdx, 1, pObject->szName);
       m_wndListCtrl.SetItemText(iIdx, 2, pAlarm->szMessage);
-      ptm = localtime((const time_t *)&pAlarm->dwLastChangeTime);
-      strftime(szBuffer, 32, "%d-%b-%Y %H:%M:%S", ptm);
+		t = pAlarm->dwLastChangeTime;
+      localtime_s(&tmbuf, &t);
+      _tcsftime(szBuffer, 64, _T("%d-%b-%Y %H:%M:%S"), &tmbuf);
       m_wndListCtrl.SetItemText(iIdx, 3, szBuffer);
    }
 }
@@ -334,9 +338,10 @@ void CMainFrame::OnFileExit()
 // NXNM_SERVER_SHUTDOWN message handler
 //
 
-void CMainFrame::OnServerShutdown(void)
+LRESULT CMainFrame::OnServerShutdown(WPARAM wParam, LPARAM lParam)
 {
-   MessageBox("NetXMS server was shutdown", "Warning", MB_OK | MB_ICONSTOP);
+   MessageBox(_T("NetXMS server was shutdown"), _T("Warning"), MB_OK | MB_ICONSTOP);
    m_bExit = TRUE;
    DestroyWindow();
+	return 0;
 }

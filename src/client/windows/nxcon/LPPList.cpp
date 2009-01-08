@@ -145,15 +145,15 @@ void CLPPList::AddListEntry(DWORD dwId, TCHAR *pszName, DWORD dwVersion, DWORD d
    int iItem;
    TCHAR szBuffer[64];
 
-   _stprintf(szBuffer, _T("%d"), dwId);
+   _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%d"), dwId);
    iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, 0);
    if (iItem != -1)
    {
       m_wndListCtrl.SetItemData(iItem, dwId);
       m_wndListCtrl.SetItemText(iItem, 1, pszName);
-      _stprintf(szBuffer, _T("%d"), dwVersion);
+      _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%d"), dwVersion);
       m_wndListCtrl.SetItemText(iItem, 2, szBuffer);
-      _stprintf(szBuffer, _T("0x%08X"), dwFlags);
+      _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("0x%08X"), dwFlags);
       m_wndListCtrl.SetItemText(iItem, 3, szBuffer);
    }
 }

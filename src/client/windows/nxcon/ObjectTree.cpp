@@ -305,7 +305,8 @@ void CObjectTree::UpdateStatusBar()
 // NXCM_CHILD_VSCROLL message handler
 //
 
-void CObjectTree::OnTreeViewVScroll(WPARAM wParam, LPARAM lParam)
+LRESULT CObjectTree::OnTreeViewVScroll(WPARAM wParam, LPARAM lParam)
 {
 	UpdateStatusBar();
+	return 0;
 }

@@ -289,17 +289,6 @@ BOOL CConsoleApp::InitInstance()
 
 	AfxEnableControlContainer();
 
-	// Standard initialization
-	// If you are not using these features and wish to reduce the size
-	//  of your final executable, you should remove from the following
-	//  the specific initialization routines you do not need.
-
-#ifdef _AFXDLL
-	Enable3dControls();			// Call this when using MFC in a shared DLL
-#else
-	Enable3dControlsStatic();	// Call this when linking to MFC statically
-#endif
-
    // Initialize speach engine
    SpeakerInit();
 
@@ -345,7 +334,7 @@ BOOL CConsoleApp::InitInstance()
 
 		_sntprintf(buffer, 256, _T("TZ=%s"), (LPCTSTR)m_strCustomTimeZone);
 		_tputenv(buffer);
-		tzset();
+		_tzset();
 	}
 
    // Create mutexes for action and graph lists access
@@ -363,13 +352,13 @@ BOOL CConsoleApp::InitInstance()
 	m_hMainMenu = pFrame->GetMenu()->GetSafeHmenu();
 
    // Load context menus
-   if (!m_ctxMenu.LoadMenu(IDM_CONTEXT))
+   if (!m_ctxMenu.LoadMenu(IDR_MENU_CONTEXT))
       MessageBox(NULL, _T("FAILED"), _T(""), 0);
 
 	// Load shared MDI menus and accelerator table
 	HINSTANCE hInstance = AfxGetResourceHandle();
 
-	hMenu = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDM_VIEW_SPECIFIC));
+	hMenu = ::LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU_VIEW_SPECIFIC));
 
    // Modify application menu as needed
    if (g_dwOptions & UI_OPT_EXPAND_CTRLPANEL)
@@ -1008,9 +997,9 @@ void CConsoleApp::OnConnectToServer()
 				{
 					TCHAR buffer[256];
 
-					_stprintf(buffer, _T("TZ=%s"), tz);
+					_sntprintf_s(buffer, 256, _TRUNCATE, _T("TZ=%s"), tz);
 					_tputenv(buffer);
-					tzset();
+					_tzset();
 				}
 				else
 				{
@@ -1640,8 +1629,8 @@ void CConsoleApp::SetObjectMgmtStatus(NXC_OBJECT *pObject, BOOL bIsManaged)
    {
       TCHAR szBuffer[256];
 
-      _stprintf(szBuffer, _T("Unable to change management status for object %s:\n%s"), 
-              pObject->szName, NXCGetErrorText(dwResult));
+      _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("Unable to change management status for object %s:\n%s"), 
+                   pObject->szName, NXCGetErrorText(dwResult));
       GetMainWnd()->MessageBox(szBuffer, _T("Error"), MB_ICONSTOP);
    }
 }
@@ -1731,7 +1720,7 @@ CMDIChildWnd *CConsoleApp::ShowDCIGraph(DWORD dwNodeId, DWORD dwNumItems,
       for(i = 0; i < dwNumItems; i++)
          if (ppItemList[i] != NULL)
             pWnd->AddItem(dwNodeId, ppItemList[i]);
-      dwCurrTime = time(NULL);
+      dwCurrTime = (DWORD)time(NULL);
       pWnd->SetTimeFrame(dwCurrTime - 3600, dwCurrTime);    // Last hour
       pWnd->SetSubTitle(pszItemName);
    }
@@ -1917,7 +1906,7 @@ void CConsoleApp::OnFileSettings()
 			default:
 				break;
 		}
-		tzset();
+		_tzset();
 
 		WriteProfileInt(_T("General"), _T("TimeZoneType"), m_nTimeZoneType);
 		WriteProfileString(_T("General"), _T("TimeZone"), m_strCustomTimeZone);
@@ -2074,7 +2063,7 @@ static DWORD SetDiscoveryConf(ND_CONFIG *pConf)
    if (dwResult != RCC_SUCCESS)
       goto cleanup;
 
-   _stprintf(szBuffer, _T("%d"), pConf->dwFlags);
+   _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%d"), pConf->dwFlags);
    dwResult = NXCSetServerVariable(g_hSession, _T("DiscoveryFilterFlags"), szBuffer);
    if (dwResult != RCC_SUCCESS)
       goto cleanup;
@@ -2965,7 +2954,7 @@ static DWORD DoDataExport(DWORD dwNodeId, DWORD dwItemId, DWORD dwTimeFrom,
             switch(iTimeStampFormat)
             {
                case 0:  // RAW
-                  sprintf(szBuffer, "%lu", pRow->dwTimeStamp);
+                  _snprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, "%lu", pRow->dwTimeStamp);
                   break;
                case 1:  // Text
 #ifdef UNICODE
@@ -2980,40 +2969,40 @@ static DWORD DoDataExport(DWORD dwNodeId, DWORD dwItemId, DWORD dwTimeFrom,
                   strcpy(szBuffer, "<internal error>");
                   break;
             }
-            write(hFile, szBuffer, strlen(szBuffer));
-            write(hFile, &separator[iSeparator], 1);
+            _write(hFile, szBuffer, strlen(szBuffer));
+            _write(hFile, &separator[iSeparator], 1);
             switch(pData->wDataType)
             {
                case DCI_DT_STRING:
-                  write(hFile, pRow->value.szString, _tcslen(pRow->value.szString));
+                  _write(hFile, pRow->value.szString, _tcslen(pRow->value.szString));
                   break;
                case DCI_DT_INT:
-                  sprintf(szBuffer, "%d", pRow->value.dwInt32);
-                  write(hFile, szBuffer, strlen(szBuffer));
+                  _snprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, "%d", pRow->value.dwInt32);
+                  _write(hFile, szBuffer, strlen(szBuffer));
                   break;
                case DCI_DT_UINT:
-                  sprintf(szBuffer, "%u", pRow->value.dwInt32);
-                  write(hFile, szBuffer, strlen(szBuffer));
+                  _snprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, "%u", pRow->value.dwInt32);
+                  _write(hFile, szBuffer, strlen(szBuffer));
                   break;
                case DCI_DT_INT64:
-                  sprintf(szBuffer, "%I64d", pRow->value.qwInt64);
-                  write(hFile, szBuffer, strlen(szBuffer));
+                  _snprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, "%I64d", pRow->value.qwInt64);
+                  _write(hFile, szBuffer, strlen(szBuffer));
                   break;
                case DCI_DT_UINT64:
-                  sprintf(szBuffer, "%I64u", pRow->value.qwInt64);
-                  write(hFile, szBuffer, strlen(szBuffer));
+                  _snprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, "%I64u", pRow->value.qwInt64);
+                  _write(hFile, szBuffer, strlen(szBuffer));
                   break;
                case DCI_DT_FLOAT:
-                  sprintf(szBuffer, "%f", pRow->value.dFloat);
-                  write(hFile, szBuffer, strlen(szBuffer));
+                  _snprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, "%f", pRow->value.dFloat);
+                  _write(hFile, szBuffer, strlen(szBuffer));
                   break;
                default:
                   break;
             }
-            write(hFile, "\r\n", 2);
+            _write(hFile, "\r\n", 2);
             inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
          }
-         close(hFile);
+         _close(hFile);
       }
       else
       {
@@ -3089,7 +3078,7 @@ void CConsoleApp::ExecuteObjectTool(NXC_OBJECT *pObject, DWORD dwIndex)
       if ((g_pObjectToolList[dwIndex].pszConfirmationText != NULL) &&
           (*g_pObjectToolList[dwIndex].pszConfirmationText != 0))
       {
-         _stprintf(szBuffer, _T("%lu"), pObject->dwId);
+         _sntprintf_s(szBuffer, 4096, _TRUNCATE, _T("%lu"), pObject->dwId);
          SetEnvironmentVariable(_T("OBJECT_ID"), szBuffer);
          SetEnvironmentVariable(_T("OBJECT_IP_ADDR"), IpToStr(pObject->dwIpAddr, szBuffer));
          SetEnvironmentVariable(_T("OBJECT_NAME"), pObject->szName);
@@ -3192,7 +3181,7 @@ void CConsoleApp::ExecuteWebTool(NXC_OBJECT *pObject, TCHAR *pszURL)
 {
    TCHAR szRealURL[4096];
 
-   _stprintf(szRealURL, _T("%lu"), pObject->dwId);
+   _sntprintf_s(szRealURL, 4096, _TRUNCATE, _T("%lu"), pObject->dwId);
    SetEnvironmentVariable(_T("OBJECT_ID"), szRealURL);
    SetEnvironmentVariable(_T("OBJECT_IP_ADDR"), IpToStr(pObject->dwIpAddr, szRealURL));
    SetEnvironmentVariable(_T("OBJECT_NAME"), pObject->szName);
@@ -3212,7 +3201,7 @@ void CConsoleApp::ExecuteCmdTool(NXC_OBJECT *pObject, TCHAR *pszCmd)
    PROCESS_INFORMATION pi;
 
    // Prepare command
-   _stprintf(szCmdLine, _T("%lu"), pObject->dwId);
+   _sntprintf_s(szCmdLine, 4096, _TRUNCATE, _T("%lu"), pObject->dwId);
    SetEnvironmentVariable(_T("OBJECT_ID"), szCmdLine);
    SetEnvironmentVariable(_T("OBJECT_IP_ADDR"), IpToStr(pObject->dwIpAddr, szCmdLine));
    SetEnvironmentVariable(_T("OBJECT_NAME"), pObject->szName);
@@ -3858,7 +3847,7 @@ static void CreateGraphSubmenu(CMenu *pMenu, TCHAR *pszCurrPath, DWORD *pdwStart
       {
          for(j = _tcslen(pszCurrPath); (szPath[j] == _T(' ')) || (szPath[j] == _T('\t')); j++);
          if ((*pszCurrPath == 0) ||
-             ((!memicmp(szPath, pszCurrPath, _tcslen(pszCurrPath) * sizeof(TCHAR))) &&
+             ((!_memicmp(szPath, pszCurrPath, _tcslen(pszCurrPath) * sizeof(TCHAR))) &&
               (szPath[j] == _T('-')) && (szPath[j + 1] == _T('>'))))
          {
             CMenu *pSubMenu;
@@ -4054,13 +4043,13 @@ static BOOL ExceptionHandler(EXCEPTION_POINTERS *pInfo)
 					_tcscpy(szBuffer, _T("Server 2003"));
 					break;
 				default:
-					_stprintf(szBuffer, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
+					_sntprintf_s(szBuffer, MAX_PATH, _TRUNCATE, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
 					break;
 			}
 		}
 		else
 		{
-			_stprintf(szBuffer, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
+			_sntprintf_s(szBuffer, MAX_PATH, _TRUNCATE, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
 		}
 		_ftprintf(m_pExInfoFile, _T("\nNetXMS Console Version: ") NETXMS_VERSION_STRING _T("\n")
 		                         _T("OS Version: Windows %s Build %d %s\n"),
@@ -4233,22 +4222,22 @@ static DWORD CreateDCI(NXC_OBJECT *pNode, NXC_OBJECT *pInterface, int nType,
 			switch(nType)
 			{
 				case IFDCI_IN_BYTES:
-					_stprintf(item.szName, _T("Net.Interface.BytesIn(%d)"), pInterface->iface.dwIfIndex);
+					_sntprintf_s(item.szName, MAX_ITEM_NAME, _TRUNCATE, _T("Net.Interface.BytesIn(%d)"), pInterface->iface.dwIfIndex);
 					break;
 				case IFDCI_OUT_BYTES:
-					_stprintf(item.szName, _T("Net.Interface.BytesOut(%d)"), pInterface->iface.dwIfIndex);
+					_sntprintf_s(item.szName, MAX_ITEM_NAME, _TRUNCATE, _T("Net.Interface.BytesOut(%d)"), pInterface->iface.dwIfIndex);
 					break;
 				case IFDCI_IN_PACKETS:
-					_stprintf(item.szName, _T("Net.Interface.PacketsIn(%d)"), pInterface->iface.dwIfIndex);
+					_sntprintf_s(item.szName, MAX_ITEM_NAME, _TRUNCATE, _T("Net.Interface.PacketsIn(%d)"), pInterface->iface.dwIfIndex);
 					break;
 				case IFDCI_OUT_PACKETS:
-					_stprintf(item.szName, _T("Net.Interface.PacketsOut(%d)"), pInterface->iface.dwIfIndex);
+					_sntprintf_s(item.szName, MAX_ITEM_NAME, _TRUNCATE, _T("Net.Interface.PacketsOut(%d)"), pInterface->iface.dwIfIndex);
 					break;
 				case IFDCI_IN_ERRORS:
-					_stprintf(item.szName, _T("Net.Interface.InErrors(%d)"), pInterface->iface.dwIfIndex);
+					_sntprintf_s(item.szName, MAX_ITEM_NAME, _TRUNCATE, _T("Net.Interface.InErrors(%d)"), pInterface->iface.dwIfIndex);
 					break;
 				case IFDCI_OUT_ERRORS:
-					_stprintf(item.szName, _T("Net.Interface.OutErrors(%d)"), pInterface->iface.dwIfIndex);
+					_sntprintf_s(item.szName, MAX_ITEM_NAME, _TRUNCATE, _T("Net.Interface.OutErrors(%d)"), pInterface->iface.dwIfIndex);
 					break;
 			}
 		}
@@ -4257,22 +4246,22 @@ static DWORD CreateDCI(NXC_OBJECT *pNode, NXC_OBJECT *pInterface, int nType,
 			switch(nType)
 			{
 				case IFDCI_IN_BYTES:
-					_stprintf(item.szName, _T(".1.3.6.1.2.1.2.2.1.10.%d"), pInterface->iface.dwIfIndex);
+					_sntprintf_s(item.szName, MAX_ITEM_NAME, _TRUNCATE, _T(".1.3.6.1.2.1.2.2.1.10.%d"), pInterface->iface.dwIfIndex);
 					break;
 				case IFDCI_OUT_BYTES:
-					_stprintf(item.szName, _T(".1.3.6.1.2.1.2.2.1.16.%d"), pInterface->iface.dwIfIndex);
+					_sntprintf_s(item.szName, MAX_ITEM_NAME, _TRUNCATE, _T(".1.3.6.1.2.1.2.2.1.16.%d"), pInterface->iface.dwIfIndex);
 					break;
 				case IFDCI_IN_PACKETS:
-					_stprintf(item.szName, _T(".1.3.6.1.2.1.2.2.1.11.%d"), pInterface->iface.dwIfIndex);
+					_sntprintf_s(item.szName, MAX_ITEM_NAME, _TRUNCATE, _T(".1.3.6.1.2.1.2.2.1.11.%d"), pInterface->iface.dwIfIndex);
 					break;
 				case IFDCI_OUT_PACKETS:
-					_stprintf(item.szName, _T(".1.3.6.1.2.1.2.2.1.17.%d"), pInterface->iface.dwIfIndex);
+					_sntprintf_s(item.szName, MAX_ITEM_NAME, _TRUNCATE, _T(".1.3.6.1.2.1.2.2.1.17.%d"), pInterface->iface.dwIfIndex);
 					break;
 				case IFDCI_IN_ERRORS:
-					_stprintf(item.szName, _T(".1.3.6.1.2.1.2.2.1.14.%d"), pInterface->iface.dwIfIndex);
+					_sntprintf_s(item.szName, MAX_ITEM_NAME, _TRUNCATE, _T(".1.3.6.1.2.1.2.2.1.14.%d"), pInterface->iface.dwIfIndex);
 					break;
 				case IFDCI_OUT_ERRORS:
-					_stprintf(item.szName, _T(".1.3.6.1.2.1.2.2.1.20.%d"), pInterface->iface.dwIfIndex);
+					_sntprintf_s(item.szName, MAX_ITEM_NAME, _TRUNCATE, _T(".1.3.6.1.2.1.2.2.1.20.%d"), pInterface->iface.dwIfIndex);
 					break;
 			}
 		}

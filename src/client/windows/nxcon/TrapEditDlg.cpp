@@ -207,7 +207,7 @@ void CTrapEditDlg::AddParameterEntry(DWORD dwIndex)
    TCHAR szBuffer[32];
    int iItem;
 
-   _stprintf(szBuffer, _T("%d"), dwIndex + 2);
+   _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), dwIndex + 2);
    iItem = m_wndArgList.InsertItem(dwIndex, szBuffer);
    if ((DWORD)iItem != dwIndex)
       MessageBox(_T("Internal error: iItem != dwIndex"), _T("Error"), MB_OK | MB_ICONSTOP);
@@ -228,7 +228,7 @@ void CTrapEditDlg::UpdateParameterEntry(DWORD dwIndex)
       SNMPConvertOIDToText(m_trap.pMaps[dwIndex].dwOidLen, m_trap.pMaps[dwIndex].pdwObjectId,
                            szBuffer, 1024);
    else
-      _stprintf(szBuffer, _T("POS: %d"), m_trap.pMaps[dwIndex].dwOidLen & 0x7FFFFFFF);
+      _sntprintf_s(szBuffer, 1024, _TRUNCATE, _T("POS: %d"), m_trap.pMaps[dwIndex].dwOidLen & 0x7FFFFFFF);
    m_wndArgList.SetItemText(dwIndex, 1, szBuffer);
 }
 

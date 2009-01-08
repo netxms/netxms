@@ -191,20 +191,20 @@ void CScriptManager::OnViewRefresh()
 // WM_NOTIFY::TVN_SELCHANGED message handler
 //
 
-void CScriptManager::OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult)
+void CScriptManager::OnTreeViewSelChange(NMHDR *lpnmt, LRESULT *pResult)
 {
    DWORD dwId;
    CString strName;
 
-   dwId = m_wndTreeCtrl.GetItemData(lpnmt->itemNew.hItem);
+   dwId = m_wndTreeCtrl.GetItemData(((LPNMTREEVIEW)lpnmt)->itemNew.hItem);
    if (dwId != 0)
    {
-      BuildScriptName(lpnmt->itemNew.hItem, strName);
+      BuildScriptName(((LPNMTREEVIEW)lpnmt)->itemNew.hItem, strName);
       m_wndScriptView.SetEditMode(dwId, (LPCTSTR)strName);
    }
    else
    {
-      m_wndScriptView.SetListMode(m_wndTreeCtrl, lpnmt->itemNew.hItem);
+      m_wndScriptView.SetListMode(m_wndTreeCtrl, ((LPNMTREEVIEW)lpnmt)->itemNew.hItem);
    }
    *pResult = 0;
 }
@@ -214,14 +214,14 @@ void CScriptManager::OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult)
 // WM_NOTIFY::TVN_SELCHANGING message handler
 //
 
-void CScriptManager::OnTreeViewSelChanging(LPNMTREEVIEW lpnmt, LRESULT *pResult)
+void CScriptManager::OnTreeViewSelChanging(NMHDR *lpnmt, LRESULT *pResult)
 {
    DWORD dwId;
 
    *pResult = 0;
-   if (lpnmt->itemOld.hItem != NULL)
+   if (((LPNMTREEVIEW)lpnmt)->itemOld.hItem != NULL)
    {
-      dwId = m_wndTreeCtrl.GetItemData(lpnmt->itemOld.hItem);
+      dwId = m_wndTreeCtrl.GetItemData(((LPNMTREEVIEW)lpnmt)->itemOld.hItem);
       if (dwId != 0)
       {
          if (!m_wndScriptView.ValidateClose())
@@ -454,20 +454,20 @@ void CScriptManager::InsertScript(DWORD dwId, LPTSTR pszName, BOOL bSelect)
 // WM_NOTIFY::LVN_ITEMCHANGED message handler
 //
 
-void CScriptManager::OnListViewItemChange(LPNMLISTVIEW pItem, LRESULT *pResult)
+void CScriptManager::OnListViewItemChange(NMHDR *pItem, LRESULT *pResult)
 {
    DWORD dwId;
    TCHAR szName[MAX_DB_STRING];
 
-   if (pItem->iItem != -1)
+   if (((LPNMLISTVIEW)pItem)->iItem != -1)
    {
-      if ((pItem->uChanged & LVIF_STATE) &&
-          (pItem->uNewState & LVIS_FOCUSED))
+      if ((((LPNMLISTVIEW)pItem)->uChanged & LVIF_STATE) &&
+          (((LPNMLISTVIEW)pItem)->uNewState & LVIS_FOCUSED))
       {
-         dwId = m_wndListCtrl.GetItemData(pItem->iItem);
+         dwId = m_wndListCtrl.GetItemData(((LPNMLISTVIEW)pItem)->iItem);
          if (dwId != 0)
          {
-            m_wndListCtrl.GetItemText(pItem->iItem, 0, szName, MAX_DB_STRING);
+            m_wndListCtrl.GetItemText(((LPNMLISTVIEW)pItem)->iItem, 0, szName, MAX_DB_STRING);
             m_wndScriptView.SetEditMode(dwId, szName);
          }
       }
@@ -480,16 +480,16 @@ void CScriptManager::OnListViewItemChange(LPNMLISTVIEW pItem, LRESULT *pResult)
 // WM_NOTIFY::LVN_ITEMCHANGING message handler
 //
 
-void CScriptManager::OnListViewItemChanging(LPNMLISTVIEW pItem, LRESULT *pResult)
+void CScriptManager::OnListViewItemChanging(NMHDR *pItem, LRESULT *pResult)
 {
    DWORD dwId;
 
    *pResult = 0;
-   if (pItem->uChanged & LVIF_STATE)
+   if (((LPNMLISTVIEW)pItem)->uChanged & LVIF_STATE)
    {
-      if ((pItem->uOldState & LVIS_FOCUSED) && (!(pItem->uNewState & LVIS_FOCUSED)))
+      if ((((LPNMLISTVIEW)pItem)->uOldState & LVIS_FOCUSED) && (!(((LPNMLISTVIEW)pItem)->uNewState & LVIS_FOCUSED)))
       {
-         dwId = m_wndListCtrl.GetItemData(pItem->iItem);
+         dwId = m_wndListCtrl.GetItemData(((LPNMLISTVIEW)pItem)->iItem);
          if (dwId != 0)
          {
             if (!m_wndScriptView.ValidateClose())
@@ -504,7 +504,7 @@ void CScriptManager::OnListViewItemChanging(LPNMLISTVIEW pItem, LRESULT *pResult
 // Handler for double click in list or tree view
 //
 
-void CScriptManager::OnViewDblClk(LPNMHDR pHdr, LRESULT *pResult)
+void CScriptManager::OnViewDblClk(NMHDR *pHdr, LRESULT *pResult)
 {
    m_wndScriptView.PostMessage(WM_COMMAND, ID_SCRIPT_EDIT, 0);
 }

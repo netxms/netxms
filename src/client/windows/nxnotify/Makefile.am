@@ -17,7 +17,7 @@ EXTRA_DIST = \
 	MainFrm.cpp MainFrm.h \
 	nxnotify.clw \
 	nxnotify.cpp \
-	nxnotify.dsp \
+	nxnotify.vcproj \
 	nxnotify.h \
 	nxnotify.rc resource.h \
 	PopupCfgPage.cpp PopupCfgPage.h \

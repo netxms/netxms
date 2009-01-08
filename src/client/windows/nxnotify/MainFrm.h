@@ -57,9 +57,9 @@ protected:
 	afx_msg void OnClose();
 	afx_msg void OnFileExit();
 	//}}AFX_MSG
-   afx_msg void OnTaskbarCallback(WPARAM wParam, LPARAM lParam);
-   afx_msg void OnAlarmUpdate(WPARAM wParam, LPARAM lParam);
-   afx_msg void OnServerShutdown(void);
+   afx_msg LRESULT OnTaskbarCallback(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnAlarmUpdate(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnServerShutdown(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

@@ -424,9 +424,10 @@ void CMapFrame::OnMapHome()
 // wParam contains object's ID, and lParam pointer to corresponding NXC_OBJECT structure
 //
 
-void CMapFrame::OnObjectChange(WPARAM wParam, NXC_OBJECT *pObject)
+LRESULT CMapFrame::OnObjectChange(WPARAM wParam, LPARAM lParam)
 {
-   m_wndMapView.OnObjectChange(wParam, pObject);
+   m_wndMapView.OnObjectChange(wParam, (NXC_OBJECT *)lParam);
+	return 0;
 }
 
 
@@ -824,17 +825,18 @@ NXC_OBJECT * CMapFrame::GetFirstSelectedObject()
 // NXCM_SUBMAP_CHANGE message handler
 //
 
-void CMapFrame::OnSubmapChange(WPARAM wParam, nxSubmap *pSubmap)
+LRESULT CMapFrame::OnSubmapChange(WPARAM wParam, LPARAM lParam)
 {
-   if (pSubmap != NULL)
+   if (lParam != 0)
    {
-      m_wndStatusBar.SetText(pSubmap->GetAutoLayoutFlag() ? _T("Automatic") : _T("Manual"),
+      m_wndStatusBar.SetText(((nxSubmap *)lParam)->GetAutoLayoutFlag() ? _T("Automatic") : _T("Manual"),
                              STATUS_PANE_LAYOUT, 0);
    }
    else
    {
       m_wndStatusBar.SetText(_T(""), STATUS_PANE_LAYOUT, 0);
    }
+	return 0;
 }
 
 

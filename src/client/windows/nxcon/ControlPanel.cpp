@@ -181,13 +181,13 @@ void CControlPanel::OnSetFocus(CWnd* pOldWnd)
 // Process double click on list control
 //
 
-void CControlPanel::OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult)
+void CControlPanel::OnListViewDoubleClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
-   if (pInfo->iItem != -1)
+   if (((NMITEMACTIVATE *)pNMHDR)->iItem != -1)
    {
       WPARAM wParam;
 
-      wParam = m_wndListCtrl.GetItemData(pInfo->iItem);
+      wParam = m_wndListCtrl.GetItemData(((NMITEMACTIVATE *)pNMHDR)->iItem);
       if (wParam != 0)
          PostMessage(WM_COMMAND, wParam, 0);
    }
@@ -211,8 +211,9 @@ void CControlPanel::AddItem(TCHAR *pszName, int iImage, WPARAM wParam)
 // Get save info for desktop saving
 //
 
-LRESULT CControlPanel::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+LRESULT CControlPanel::OnGetSaveInfo(WPARAM wParam, LPARAM lParam)
 {
+	WINDOW_SAVE_INFO *pInfo = (WINDOW_SAVE_INFO *)lParam;
    pInfo->iWndClass = WNDC_CONTROL_PANEL;
    GetWindowPlacement(&pInfo->placement);
    pInfo->szParameters[0] = 0;

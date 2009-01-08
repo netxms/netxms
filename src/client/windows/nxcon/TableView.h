@@ -55,8 +55,8 @@ protected:
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnClose();
 	//}}AFX_MSG
-   afx_msg void OnTableData(WPARAM wParam, LPARAM lParam);
-   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
+   afx_msg LRESULT OnTableData(WPARAM wParam, LPARAM lParam);
+   afx_msg void OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 
 public:

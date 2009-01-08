@@ -92,10 +92,11 @@ int CObjectOverview::OnCreate(LPCREATESTRUCT lpCreateStruct)
 // NXCM_SET_OBJECT message handler
 //
 
-void CObjectOverview::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
+LRESULT CObjectOverview::OnSetObject(WPARAM wParam, LPARAM lParam)
 {
-   m_pObject = pObject;
+   m_pObject = (NXC_OBJECT *)lParam;
    Refresh();
+	return 0;
 }
 
 
@@ -256,6 +257,6 @@ void CObjectOverview::InsertItem(TCHAR *pszName, DWORD dwValue)
 {
    TCHAR szBuffer[64];
 
-   _stprintf(szBuffer, _T("%u"), dwValue);
+   _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%u"), dwValue);
    InsertItem(pszName, szBuffer);
 }

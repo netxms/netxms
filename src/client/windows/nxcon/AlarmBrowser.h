@@ -1,7 +1,6 @@
 #if !defined(AFX_ALARMBROWSER_H__0378A627_F763_4D57_87DC_76A9EF2560D3__INCLUDED_)
 #define AFX_ALARMBROWSER_H__0378A627_F763_4D57_87DC_76A9EF2560D3__INCLUDED_
 
-#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -90,9 +89,9 @@ protected:
 	afx_msg void OnAlarmDetails();
 	afx_msg void OnUpdateAlarmDetails(CCmdUI* pCmdUI);
 	//}}AFX_MSG
-   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
-   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
-   afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
+   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, LPARAM lParam);
+   afx_msg void OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult);
+   afx_msg void OnTreeViewSelChange(NMHDR *lpnmt, LRESULT *pResult);
    afx_msg void OnObjectTool(UINT nID);
 	DECLARE_MESSAGE_MAP()
 

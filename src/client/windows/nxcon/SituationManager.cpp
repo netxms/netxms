@@ -209,7 +209,8 @@ void CSituationManager::OnUpdateSituationDelete(CCmdUI* pCmdUI)
 // NXCM_SITUATION_CHANGE message handler
 //
 
-void CSituationManager::OnSituationChange(WPARAM wParam, LPARAM lParam)
+LRESULT CSituationManager::OnSituationChange(WPARAM wParam, LPARAM lParam)
 {
 	// TODO: implement view update
+	return 0;
 }

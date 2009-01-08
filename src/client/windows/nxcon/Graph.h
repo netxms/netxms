@@ -1,7 +1,6 @@
 #if !defined(AFX_GRAPH_H__021ACC81_A267_4464_889B_5718D2985D19__INCLUDED_)
 #define AFX_GRAPH_H__021ACC81_A267_4464_889B_5718D2985D19__INCLUDED_
 
-#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #include "globals.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once

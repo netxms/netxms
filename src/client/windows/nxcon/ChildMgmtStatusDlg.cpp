@@ -95,8 +95,8 @@ LRESULT CChildMgmtStatusDlg::OnComboListSetItems(WPARAM wParam, LPARAM lParam)
 	CStringList *pComboList = reinterpret_cast<CStringList *>(lParam);
 
 	pComboList->RemoveAll();
-	pComboList->AddTail("Yes");
-	pComboList->AddTail("No");
+	pComboList->AddTail(_T("Yes"));
+	pComboList->AddTail(_T("No"));
 	return TRUE;
 }
 

@@ -342,7 +342,7 @@ void CServerCfgEditor::OnVariableDelete()
 // Handler for WM_NOTIFY::NM_DBLCLK from IDC_LIST_VIEW
 //
 
-void CServerCfgEditor::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
+void CServerCfgEditor::OnListViewDblClk(NMHDR *pNMHDR, LRESULT *pResult)
 {
    PostMessage(WM_COMMAND, ID_VARIABLE_EDIT, 0);
    *pResult = 0;

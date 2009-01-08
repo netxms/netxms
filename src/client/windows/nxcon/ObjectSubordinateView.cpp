@@ -97,10 +97,11 @@ void CObjectSubordinateView::OnSize(UINT nType, int cx, int cy)
 // NXCM_SET_OBJECT message handler
 //
 
-void CObjectSubordinateView::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
+LRESULT CObjectSubordinateView::OnSetObject(WPARAM wParam, LPARAM lParam)
 {
-   m_pObject = pObject;
+   m_pObject = (NXC_OBJECT *)lParam;
    Refresh();
+	return 0;
 }
 
 
@@ -124,7 +125,7 @@ void CObjectSubordinateView::Refresh()
 		pObject = NXCFindObjectById(g_hSession, m_pObject->pdwChildList[i]);
 		if (pObject != NULL)
 		{
-			_stprintf(szBuffer, _T("%d"), pObject->dwId);
+			_sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%d"), pObject->dwId);
 			nItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, GetObjectImageIndex(pObject));
 			if (nItem != -1)
 			{
@@ -251,7 +252,7 @@ void CObjectSubordinateView::OnSubordinateDelete()
 		if (m_wndListCtrl.GetSelectedCount() == 1)
 		{
 			pObject = (NXC_OBJECT *)m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
-			_stprintf(szBuffer, _T("Do you really want to delete object %s?"), (pObject != NULL) ? pObject->szName : _T("<unknown>"));
+			_sntprintf_s(szBuffer, 1024, _TRUNCATE, _T("Do you really want to delete object %s?"), (pObject != NULL) ? pObject->szName : _T("<unknown>"));
 		}
 		else
 		{
@@ -359,7 +360,7 @@ int CObjectSubordinateView::CompareListItems(NXC_OBJECT *obj1, NXC_OBJECT *obj2)
 // Handler for list view column click
 //
 
-void CObjectSubordinateView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+void CObjectSubordinateView::OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
    LVCOLUMN lvCol;
 
@@ -369,7 +370,7 @@ void CObjectSubordinateView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT 
    m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 
    // Change current sort mode and resort list
-   if (m_iSortMode == pNMHDR->iSubItem)
+   if (m_iSortMode == ((LPNMLISTVIEW)pNMHDR)->iSubItem)
    {
       // Same column, change sort direction
       m_iSortDir = -m_iSortDir;
@@ -377,7 +378,7 @@ void CObjectSubordinateView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT 
    else
    {
       // Another sorting column
-      m_iSortMode = pNMHDR->iSubItem;
+      m_iSortMode = ((LPNMLISTVIEW)pNMHDR)->iSubItem;
    }
    m_wndListCtrl.SortItems(CompareListItemsCB, (UINT_PTR)this);
 
@@ -385,7 +386,7 @@ void CObjectSubordinateView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT 
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
    lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
    lvCol.iImage = (m_iSortDir > 0) ? m_iSortImageBase : (m_iSortImageBase + 1);
-   m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
+   m_wndListCtrl.SetColumn(((LPNMLISTVIEW)pNMHDR)->iSubItem, &lvCol);
    
    *pResult = 0;
 }

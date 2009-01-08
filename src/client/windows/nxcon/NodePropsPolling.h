@@ -1,7 +1,6 @@
 #if !defined(AFX_NODEPROPSPOLLING_H__EC1C3F19_71F1_43F3_9572_568534EA16FF__INCLUDED_)
 #define AFX_NODEPROPSPOLLING_H__EC1C3F19_71F1_43F3_9572_568534EA16FF__INCLUDED_
 
-#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000

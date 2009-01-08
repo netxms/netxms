@@ -110,10 +110,10 @@ void CNodeTopologyView::OnSize(UINT nType, int cx, int cy)
 // NXCM_SET_OBJECT message handler
 //
 
-void CNodeTopologyView::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
+LRESULT CNodeTopologyView::OnSetObject(WPARAM wParam, LPARAM lParam)
 {
 	m_wndMap.ShowWindow(SW_HIDE);
-   m_pObject = pObject;
+   m_pObject = (NXC_OBJECT *)lParam;
 	if (m_pObject->node.dwFlags & NF_IS_BRIDGE)
 	{
 		ThreadCreate(QueryThread, 0, this);
@@ -124,6 +124,7 @@ void CNodeTopologyView::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
 		m_nState = STATE_NO_DATA;
 	}
 	InvalidateRect(NULL);
+	return 0;
 }
 
 
@@ -131,7 +132,7 @@ void CNodeTopologyView::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
 // NXCM_REQUEST_COMPLETED message handler
 //
 
-void CNodeTopologyView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
+LRESULT CNodeTopologyView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 {
 	nxmap_ObjList *pList = (nxmap_ObjList *)lParam;
    nxMap *pMap;
@@ -160,6 +161,7 @@ void CNodeTopologyView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 		}
 	}
 	delete pList;
+	return 0;
 }
 
 

@@ -1,7 +1,6 @@
 #if !defined(AFX_TRAPEDITOR_H__608EDB5F_7897_413D_916D_9061147CBF34__INCLUDED_)
 #define AFX_TRAPEDITOR_H__608EDB5F_7897_413D_916D_9061147CBF34__INCLUDED_
 
-#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -65,8 +64,8 @@ protected:
 	afx_msg void OnTrapDelete();
 	afx_msg void OnTrapEdit();
 	//}}AFX_MSG
-   afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
-   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewDblClk(NMHDR *pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 

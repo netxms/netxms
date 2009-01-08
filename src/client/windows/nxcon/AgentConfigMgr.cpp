@@ -264,9 +264,9 @@ void CAgentConfigMgr::EditConfig(NXC_AGENT_CONFIG *pConfig)
       {
          if (bNew)
          {
-            _stprintf(szBuffer, _T("%d"), pConfig->dwId);
+            _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), pConfig->dwId);
             nItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, -1);
-            _stprintf(szBuffer, _T("%d"), pConfig->dwSequence);
+            _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), pConfig->dwSequence);
             m_wndListCtrl.SetItemText(nItem, 1, szBuffer);
             m_wndListCtrl.SetItemData(nItem, pConfig->dwId);
             SelectListViewItem(&m_wndListCtrl, nItem);
@@ -330,7 +330,7 @@ void CAgentConfigMgr::OnConfigDelete()
 // Handler for WM_NOTIFY::NM_DBLCLK from ID_LIST_VIEW
 //
 
-void CAgentConfigMgr::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
+void CAgentConfigMgr::OnListViewDblClk(NMHDR *pNMHDR, LRESULT *pResult)
 {
    PostMessage(WM_COMMAND, ID_CONFIG_EDIT, 0);
 }
@@ -373,7 +373,7 @@ static int CALLBACK ItemCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
 // WM_NOTIFY::LVN_COLUMNCLICK message handler
 //
 
-void CAgentConfigMgr::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+void CAgentConfigMgr::OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
    LVCOLUMN lvCol;
 
@@ -383,7 +383,7 @@ void CAgentConfigMgr::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResul
    m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 
    // Change current sort mode and resort list
-   if (m_iSortMode == pNMHDR->iSubItem)
+   if (m_iSortMode == ((LPNMLISTVIEW)pNMHDR)->iSubItem)
    {
       // Same column, change sort direction
       m_iSortDir = -m_iSortDir;
@@ -391,7 +391,7 @@ void CAgentConfigMgr::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResul
    else
    {
       // Another sorting column
-      m_iSortMode = pNMHDR->iSubItem;
+      m_iSortMode = ((LPNMLISTVIEW)pNMHDR)->iSubItem;
    }
    m_wndListCtrl.SortItems(ItemCompareProc, (LPARAM)this);
 
@@ -399,7 +399,7 @@ void CAgentConfigMgr::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResul
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
    lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
    lvCol.iImage = (m_iSortDir == 1) ? 0 : 1;
-   m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
+   m_wndListCtrl.SetColumn(((LPNMLISTVIEW)pNMHDR)->iSubItem, &lvCol);
    
    *pResult = 0;
 }
@@ -457,7 +457,7 @@ void CAgentConfigMgr::SwapItems(int nItem1, int nItem2)
          m_wndListCtrl.GetItemText(nItem2, 2, szBuf2, 256);
          m_wndListCtrl.DeleteItem(nItem2);
 
-         _stprintf(szBuffer, _T("%d"), dwId2);
+         _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), dwId2);
          nItem = m_wndListCtrl.InsertItem(nItem1, szBuffer, -1);
          m_wndListCtrl.SetItemText(nItem, 1, szBuf1);
          m_wndListCtrl.SetItemText(nItem, 2, szBuf2);
@@ -516,12 +516,12 @@ void CAgentConfigMgr::OnViewRefresh()
    {
       for(i = 0; i < dwNumCfg; i++)
       {
-         _stprintf(szBuffer, _T("%d"), pList[i].dwId);
+         _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), pList[i].dwId);
          iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, -1);
          if (iItem != -1)
          {
             m_wndListCtrl.SetItemData(iItem, pList[i].dwId);
-            _stprintf(szBuffer, _T("%d"), pList[i].dwSequence);
+            _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), pList[i].dwSequence);
             m_wndListCtrl.SetItemText(iItem, 1, szBuffer);
             m_wndListCtrl.SetItemText(iItem, 2, pList[i].szName);
          }

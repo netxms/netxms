@@ -73,10 +73,10 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	//}}AFX_MSG
-   afx_msg void OnSetObject(WPARAM wParam, NXC_OBJECT *pObject);
-	afx_msg void OnRequestCompleted(WPARAM wParam, LPARAM lParam);
-	afx_msg void OnUpdateFinished(WPARAM wParam, LPARAM lParam);
-	afx_msg void OnGraphData(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnSetObject(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnRequestCompleted(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnUpdateFinished(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnGraphData(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

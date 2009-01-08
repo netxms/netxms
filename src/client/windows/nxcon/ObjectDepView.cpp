@@ -74,10 +74,11 @@ void CObjectDepView::OnSize(UINT nType, int cx, int cy)
 // NXCM_SET_OBJECT message handler
 //
 
-void CObjectDepView::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
+LRESULT CObjectDepView::OnSetObject(WPARAM wParam, LPARAM lParam)
 {
-   m_pObject = pObject;
+   m_pObject = (NXC_OBJECT *)lParam;
    Refresh();
+	return 0;
 }
 
 

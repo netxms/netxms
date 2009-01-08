@@ -1,7 +1,6 @@
 #if !defined(AFX_OBJECTTOOLSEDITOR_H__F2EFBBA9_DB03_4B91_8456_F7CE2B283155__INCLUDED_)
 #define AFX_OBJECTTOOLSEDITOR_H__F2EFBBA9_DB03_4B91_8456_F7CE2B283155__INCLUDED_
 
-#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -57,8 +56,8 @@ protected:
 	afx_msg void OnObjecttoolsNew();
 	afx_msg void OnObjecttoolsDelete();
 	//}}AFX_MSG
-   afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
-   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewDblClk(NMHDR *pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 
 public:

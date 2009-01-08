@@ -182,7 +182,7 @@ void CPackageMgr::AddListItem(NXC_PACKAGE_INFO *pInfo, BOOL bSelect)
    TCHAR szBuffer[64];
    int iItem;
 
-   _stprintf(szBuffer, _T("%d"), pInfo->dwId);
+   _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%d"), pInfo->dwId);
    iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, 0);
    if (iItem != -1)
    {

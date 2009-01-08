@@ -47,9 +47,9 @@ protected:
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
-   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
+   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, LPARAM lParam);
    afx_msg void OnRequestCompleted(void);
-   afx_msg void OnNetXMSEvent(WPARAM wParam, NXC_EVENT *pEvent);
+   afx_msg LRESULT OnNetXMSEvent(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

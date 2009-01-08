@@ -52,8 +52,8 @@ protected:
 	afx_msg void OnSubordinateUnbind();
 	afx_msg void OnSubordinateProperties();
 	//}}AFX_MSG
-   afx_msg void OnSetObject(WPARAM wParam, NXC_OBJECT *pObject);
-   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
+   afx_msg LRESULT OnSetObject(WPARAM wParam, LPARAM lParam);
+   afx_msg void OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 

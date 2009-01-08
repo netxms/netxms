@@ -58,14 +58,14 @@ protected:
 	afx_msg void OnDesktopRestore();
 	afx_msg void OnDesktopNew();
 	//}}AFX_MSG
-   afx_msg void OnStateChange(WPARAM wParam, LPARAM lParam);
-   afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
-   afx_msg void OnUserDBChange(WPARAM wParam, LPARAM lParam);
-   afx_msg void OnAlarmUpdate(WPARAM wParam, LPARAM lParam);
-   afx_msg void OnDeploymentInfo(WPARAM wParam, LPARAM lParam);
-   afx_msg void OnUpdateEventList(WPARAM wParam, LPARAM lParam);
-   afx_msg void OnUpdateObjectTools(WPARAM wParam, LPARAM lParam);
-   afx_msg void OnSituationChange(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnStateChange(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnObjectChange(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnUserDBChange(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnAlarmUpdate(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnDeploymentInfo(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnUpdateEventList(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnUpdateObjectTools(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnSituationChange(WPARAM wParam, LPARAM lParam);
    afx_msg LRESULT OnShowFatalError(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };

@@ -54,7 +54,7 @@ protected:
 	afx_msg void OnDesktopCopy();
 	afx_msg void OnUpdateDesktopCopy(CCmdUI* pCmdUI);
 	//}}AFX_MSG
-   afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
+   afx_msg void OnTreeViewSelChange(NMHDR *lpnmt, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 

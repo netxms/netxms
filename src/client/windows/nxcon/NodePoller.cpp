@@ -88,10 +88,10 @@ void CNodePoller::OnPollRestart()
 
 
 //
-// WM_REQUEST_COMPLETED message handler
+// NXCM_REQUEST_COMPLETED message handler
 //
 
-void CNodePoller::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
+LRESULT CNodePoller::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 {
    m_dwResult = lParam;
    m_bPollingStopped = TRUE;
@@ -106,20 +106,22 @@ void CNodePoller::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
       _sntprintf(szBuffer, 1024, _T("\x7F") _T("ePoll failed (%s)\r\n"), NXCGetErrorText(m_dwResult));
       PrintMsg(szBuffer);
    }
+	return 0;
 }
 
 
 //
-// WM_POLLER_MESSAGE message handler
+// NXCM_POLLER_MESSAGE message handler
 //
 
-void CNodePoller::OnPollerMessage(WPARAM wParam, LPARAM lParam)
+LRESULT CNodePoller::OnPollerMessage(WPARAM wParam, LPARAM lParam)
 {
    if (lParam != 0)
    {
       PrintMsg((TCHAR *)lParam);
       free((void *)lParam);
    }
+	return 0;
 }
 
 

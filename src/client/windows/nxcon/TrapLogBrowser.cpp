@@ -186,8 +186,9 @@ void CTrapLogBrowser::OnRequestCompleted(void)
 // Get save info for desktop saving
 //
 
-LRESULT CTrapLogBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+LRESULT CTrapLogBrowser::OnGetSaveInfo(WPARAM wParam, LPARAM lParam)
 {
+	WINDOW_SAVE_INFO *pInfo = (WINDOW_SAVE_INFO *)lParam;
    pInfo->iWndClass = WNDC_TRAP_LOG_BROWSER;
    GetWindowPlacement(&pInfo->placement);
    pInfo->szParameters[0] = 0;
@@ -199,11 +200,12 @@ LRESULT CTrapLogBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 // NXCM_TRAP_LOG_RECORD message handler
 //
 
-void CTrapLogBrowser::OnTrapLogRecord(WPARAM wParam, NXC_SNMP_TRAP_LOG_RECORD *pRec)
+LRESULT CTrapLogBrowser::OnTrapLogRecord(WPARAM wParam, LPARAM lParam)
 {
-   AddRecord(pRec, wParam == RECORD_ORDER_NORMAL);
-   safe_free(pRec->pszTrapVarbinds);
-   free(pRec);
+   AddRecord((NXC_SNMP_TRAP_LOG_RECORD *)lParam, wParam == RECORD_ORDER_NORMAL);
+   safe_free(((NXC_SNMP_TRAP_LOG_RECORD *)lParam)->pszTrapVarbinds);
+   free((NXC_SNMP_TRAP_LOG_RECORD *)lParam);
+	return 0;
 }
 
 

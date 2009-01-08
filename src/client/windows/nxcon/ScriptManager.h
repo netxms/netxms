@@ -67,11 +67,11 @@ protected:
 	afx_msg void OnScriptRename();
 	afx_msg void OnUpdateScriptRename(CCmdUI* pCmdUI);
 	//}}AFX_MSG
-   afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
-   afx_msg void OnTreeViewSelChanging(LPNMTREEVIEW lpnmt, LRESULT *pResult);
-   afx_msg void OnListViewItemChange(LPNMLISTVIEW pItem, LRESULT *pResult);
-   afx_msg void OnListViewItemChanging(LPNMLISTVIEW pItem, LRESULT *pResult);
-   afx_msg void OnViewDblClk(LPNMHDR pHdr, LRESULT *pResult);
+   afx_msg void OnTreeViewSelChange(NMHDR *lpnmt, LRESULT *pResult);
+   afx_msg void OnTreeViewSelChanging(NMHDR *lpnmt, LRESULT *pResult);
+   afx_msg void OnListViewItemChange(NMHDR *pItem, LRESULT *pResult);
+   afx_msg void OnListViewItemChanging(NMHDR *pItem, LRESULT *pResult);
+   afx_msg void OnViewDblClk(NMHDR *pHdr, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 

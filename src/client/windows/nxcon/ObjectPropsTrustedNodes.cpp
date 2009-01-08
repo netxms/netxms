@@ -78,7 +78,7 @@ BOOL CObjectPropsTrustedNodes::OnInitDialog()
       pObject = NXCFindObjectById(g_hSession, m_pdwNodeList[i]);
       if (pObject != NULL)
       {
-			_stprintf(buffer, _T("%d"), pObject->dwId);
+			_sntprintf_s(buffer, 32, _TRUNCATE, _T("%d"), pObject->dwId);
          item = m_wndListCtrl.InsertItem(0x7FFFFFFF, buffer,
                                           GetObjectImageIndex(pObject));
          if (item != -1)
@@ -167,7 +167,7 @@ void CObjectPropsTrustedNodes::OnButtonAdd()
 				object = NXCFindObjectById(g_hSession, dlg.m_pdwObjectList[i]);
 				if (object != NULL)
 				{
-					_stprintf(buffer, _T("%d"), object->dwId);
+					_sntprintf_s(buffer, 32, _TRUNCATE, _T("%d"), object->dwId);
 					item = m_wndListCtrl.InsertItem(0x7FFFFFFF, buffer,
 																GetObjectImageIndex(object));
 					if (item != -1)

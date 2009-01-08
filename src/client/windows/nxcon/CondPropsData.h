@@ -1,7 +1,6 @@
 #if !defined(AFX_CONDPROPSDATA_H__813A6116_1480_40B1_A036_E1E3B7580683__INCLUDED_)
 #define AFX_CONDPROPSDATA_H__813A6116_1480_40B1_A036_E1E3B7580683__INCLUDED_
 
-#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000

@@ -264,7 +264,7 @@ void CDCIPropPage::SelectSNMPItem(void)
    dlg.m_iOrigin = m_iOrigin;
    if (dlg.DoModal() == IDOK)
    {
-      _stprintf(szBuffer, _T(".%lu"), dlg.m_dwInstance);
+      _sntprintf_s(szBuffer, 1024, _TRUNCATE, _T(".%lu"), dlg.m_dwInstance);
       dlg.m_strOID += szBuffer;
       m_wndEditName.SetWindowText(dlg.m_strOID);
       m_wndTypeList.SelectString(-1, g_pszItemDataType[dlg.m_iDataType]);

@@ -84,8 +84,8 @@ protected:
 	afx_msg void OnItemCleardata();
 	afx_msg void OnUpdateItemCleardata(CCmdUI* pCmdUI);
 	//}}AFX_MSG
-   afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
-   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewDblClk(NMHDR *pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
 	int m_iSortDir;

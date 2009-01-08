@@ -1,7 +1,6 @@
 #if !defined(AFX_RULESITUATIONDLG_H__EB569571_64C4_4E25_AD9E_F7CA2F850E96__INCLUDED_)
 #define AFX_RULESITUATIONDLG_H__EB569571_64C4_4E25_AD9E_F7CA2F850E96__INCLUDED_
 
-#include "..\..\..\INCLUDE\nms_util.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000

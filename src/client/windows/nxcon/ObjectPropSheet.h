@@ -1,7 +1,6 @@
 #if !defined(AFX_OBJECTPROPSHEET_H__10D443C2_A463_468B_9974_FF168FB42918__INCLUDED_)
 #define AFX_OBJECTPROPSHEET_H__10D443C2_A463_468B_9974_FF168FB42918__INCLUDED_
 
-#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000

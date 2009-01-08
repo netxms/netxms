@@ -159,7 +159,7 @@ void CCertManager::OnViewRefresh()
 	{
 		for(i = 0; i < m_pCertList->dwNumElements; i++)
 		{
-			_stprintf(szBuffer, _T("%d"), m_pCertList->pElements[i].dwId);
+			_sntprintf_s(szBuffer, 16, _TRUNCATE, _T("%d"), m_pCertList->pElements[i].dwId);
 			nItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, 2);
 			if (nItem != -1)
 			{
@@ -233,7 +233,7 @@ void CCertManager::OnCertificateImport()
 				}
 				else
 				{
-					_stprintf(szBuffer, _T("Error encoding certificate:\n%s"),
+					_sntprintf_s(szBuffer, 512, _TRUNCATE, _T("Error encoding certificate:\n%s"),
 								 _ERR_error_tstring(ERR_get_error(), szError));
 					MessageBox(szBuffer, _T("Error"), MB_OK | MB_ICONSTOP);
 				}
@@ -241,7 +241,7 @@ void CCertManager::OnCertificateImport()
 			}
 			else
 			{
-				_stprintf(szBuffer, _T("Error loading certificate from file:\n%s"),
+				_sntprintf_s(szBuffer, 512, _TRUNCATE, _T("Error loading certificate from file:\n%s"),
 				          _ERR_error_tstring(ERR_get_error(), szError));
 				MessageBox(szBuffer, _T("Error"), MB_OK | MB_ICONSTOP);
 			}

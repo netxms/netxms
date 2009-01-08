@@ -101,10 +101,11 @@ int CClusterView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 // NXCM_SET_OBJECT message handler
 //
 
-void CClusterView::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
+LRESULT CClusterView::OnSetObject(WPARAM wParam, LPARAM lParam)
 {
-   m_pObject = pObject;
+   m_pObject = (NXC_OBJECT *)lParam;
 	Refresh();
+	return 0;
 }
 
 

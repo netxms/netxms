@@ -1,7 +1,6 @@
 #if !defined(AFX_AGENTPARAMSELDLG_H__04E7FF90_ABEA_40BC_A931_6AB70708E4C3__INCLUDED_)
 #define AFX_AGENTPARAMSELDLG_H__04E7FF90_ABEA_40BC_A931_6AB70708E4C3__INCLUDED_
 
-#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000

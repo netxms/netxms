@@ -123,7 +123,7 @@ void CNodeSummary::OnPaint()
       dc.FillSolidRect(x, y, iLineHeight, iLineHeight, g_statusColorTable[i]);
       dc.Draw3dRect(x, y, iLineHeight, iLineHeight, RGB(0, 0, 0), RGB(0, 0, 0));
       dc.SetBkColor(RGB(255, 255, 255));
-      _stprintf(szBuffer, _T("%s:\t%d"), g_szStatusTextSmall[i], m_dwNodeStats[i]);
+      _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%s:\t%d"), g_szStatusTextSmall[i], m_dwNodeStats[i]);
       dc.TabbedTextOut(x + iLineHeight + 5, y, szBuffer, _tcslen(szBuffer), 1, 
                        &iTabStop, x + iLineHeight + 5);
    }
@@ -133,7 +133,7 @@ void CNodeSummary::OnPaint()
    dc.MoveTo(X_MARGIN, y);
    dc.LineTo(x + iLineHeight + iTabStop + 30, y);
    y += 5;
-   _stprintf(szBuffer, _T("Total:\t%d"), m_dwTotalNodes);
+   _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("Total:\t%d"), m_dwTotalNodes);
    dc.TabbedTextOut(x + iLineHeight + 5, y, szBuffer, _tcslen(szBuffer), 1, 
                     &iTabStop, x + iLineHeight + 5);
 

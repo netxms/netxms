@@ -95,9 +95,9 @@ void CDiscoveryPropTargets::AddRecordToList(int nItem, NXC_ADDR_ENTRY *pAddr)
 {
    TCHAR szBuffer[256], szAddr1[16], szAddr2[16];
 
-   _stprintf(szBuffer, _T("%s%s%s"), IpToStr(pAddr->dwAddr1, szAddr1),
-             pAddr->dwType == 0 ? _T("/") : _T(" - "),
-             IpToStr(pAddr->dwAddr2, szAddr2));
+   _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%s%s%s"), IpToStr(pAddr->dwAddr1, szAddr1),
+                pAddr->dwType == 0 ? _T("/") : _T(" - "),
+                IpToStr(pAddr->dwAddr2, szAddr2));
    m_wndListCtrl.InsertItem(nItem, szBuffer);
    m_wndListCtrl.SetItemData(nItem, (LPARAM)nx_memdup(pAddr, sizeof(NXC_ADDR_ENTRY)));
 }

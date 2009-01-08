@@ -314,9 +314,9 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
 // WM_NOTIFY::TVN_SELCHANGED message handler
 //
 
-void CObjectBrowser::OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult)
+void CObjectBrowser::OnTreeViewSelChange(NMHDR *lpnmt, LRESULT *pResult)
 {
-   m_pCurrentObject = NXCFindObjectById(g_hSession, lpnmt->itemNew.lParam);
+   m_pCurrentObject = NXCFindObjectById(g_hSession, ((LPNMTREEVIEW)lpnmt)->itemNew.lParam);
    m_wndObjectView.SetCurrentObject(m_pCurrentObject);
    *pResult = 0;
 }
@@ -326,20 +326,20 @@ void CObjectBrowser::OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult)
 // Handler for TVN_GETDISPINFO notification from tree view control
 //
 
-void CObjectBrowser::OnTreeViewGetDispInfo(LPNMTVDISPINFO lpdi, LRESULT *pResult)
+void CObjectBrowser::OnTreeViewGetDispInfo(NMHDR *lpdi, LRESULT *pResult)
 {
    NXC_OBJECT *pObject;
 
-   if (lpdi->item.mask == TVIF_CHILDREN)
+   if (((LPNMTVDISPINFO)lpdi)->item.mask == TVIF_CHILDREN)
    {
-      pObject = NXCFindObjectById(g_hSession, lpdi->item.lParam);
+      pObject = NXCFindObjectById(g_hSession, ((LPNMTVDISPINFO)lpdi)->item.lParam);
       if (pObject != NULL)
       {
-         lpdi->item.cChildren = (pObject->dwNumChilds > 0) ? 1 : 0;
+         ((LPNMTVDISPINFO)lpdi)->item.cChildren = (pObject->dwNumChilds > 0) ? 1 : 0;
       }
       else
       {
-         lpdi->item.cChildren = 0;
+         ((LPNMTVDISPINFO)lpdi)->item.cChildren = 0;
       }
    }
    *pResult = 0;
@@ -350,37 +350,37 @@ void CObjectBrowser::OnTreeViewGetDispInfo(LPNMTVDISPINFO lpdi, LRESULT *pResult
 // Handler for TVN_ITEMEXPANDING notification from tree view control
 //
 
-void CObjectBrowser::OnTreeViewItemExpanding(LPNMTREEVIEW lpnmt, LRESULT *pResult)
+void CObjectBrowser::OnTreeViewItemExpanding(NMHDR *lpnmt, LRESULT *pResult)
 {
-   if ((lpnmt->action == TVE_EXPAND) ||
-       (lpnmt->action == TVE_EXPANDPARTIAL) ||
-       (lpnmt->action == TVE_TOGGLE))
+   if ((((LPNMTREEVIEW)lpnmt)->action == TVE_EXPAND) ||
+       (((LPNMTREEVIEW)lpnmt)->action == TVE_EXPANDPARTIAL) ||
+       (((LPNMTREEVIEW)lpnmt)->action == TVE_TOGGLE))
    {
       NXC_OBJECT *pObject, *pChildObject;
       DWORD i;
 
-      pObject = NXCFindObjectById(g_hSession, lpnmt->itemNew.lParam);
-      if ((pObject != NULL) && ((m_wndTreeCtrl.GetItemState(lpnmt->itemNew.hItem, TVIS_EXPANDEDONCE) & TVIS_EXPANDEDONCE) == 0))
+      pObject = NXCFindObjectById(g_hSession, ((LPNMTREEVIEW)lpnmt)->itemNew.lParam);
+      if ((pObject != NULL) && ((m_wndTreeCtrl.GetItemState(((LPNMTREEVIEW)lpnmt)->itemNew.hItem, TVIS_EXPANDEDONCE) & TVIS_EXPANDEDONCE) == 0))
       {
          for(i = 0; i < pObject->dwNumChilds; i++)
          {
             pChildObject = NXCFindObjectById(g_hSession, pObject->pdwChildList[i]);
             if (pChildObject != NULL)
-               AddObjectToTree(pChildObject, lpnmt->itemNew.hItem);
+               AddObjectToTree(pChildObject, ((LPNMTREEVIEW)lpnmt)->itemNew.hItem);
          }
 
 			// Check if child objects was really added
 			// If all child objects are unmanaged they may be hidden
-			if (m_wndTreeCtrl.GetChildItem(lpnmt->itemNew.hItem) == NULL)
+			if (m_wndTreeCtrl.GetChildItem(((LPNMTREEVIEW)lpnmt)->itemNew.hItem) == NULL)
 			{
 				HTREEITEM hItem;
 
 				hItem = m_wndTreeCtrl.InsertItem(_T("(all child objects are hidden)"), m_nLastObjectImage + 2,
-				                                 m_nLastObjectImage + 2, lpnmt->itemNew.hItem);
+				                                 m_nLastObjectImage + 2, ((LPNMTREEVIEW)lpnmt)->itemNew.hItem);
 				m_wndTreeCtrl.SetItemData(hItem, 0);
 			}
 
-         SortTreeItems(lpnmt->itemNew.hItem);
+         SortTreeItems(((LPNMTREEVIEW)lpnmt)->itemNew.hItem);
       }
    }
    *pResult = 0;
@@ -556,10 +556,11 @@ DWORD CObjectBrowser::FindObjectInTree(DWORD dwObjectId)
 // wParam contains object's ID, and lParam pointer to corresponding NXC_OBJECT structure
 //
 
-void CObjectBrowser::OnObjectChange(WPARAM wParam, LPARAM lParam)
+LRESULT CObjectBrowser::OnObjectChange(WPARAM wParam, LPARAM lParam)
 {
    UpdateObjectTree(wParam, (NXC_OBJECT *)lParam);
 	m_wndObjectTree.UpdateStatusBar();
+	return 0;
 }
 
 
@@ -1387,7 +1388,7 @@ void CObjectBrowser::OpenObject(DWORD dwObjectId)
 // NXCM_FIND_OBJECT message handler
 //
 
-void CObjectBrowser::OnFindObject(WPARAM wParam, TCHAR *pszSearchStr)
+LRESULT CObjectBrowser::OnFindObject(WPARAM wParam, LPARAM lParam)
 {
 	NXC_OBJECT *pObject;
    DWORD dwIndex;
@@ -1395,18 +1396,18 @@ void CObjectBrowser::OnFindObject(WPARAM wParam, TCHAR *pszSearchStr)
 	if (wParam == OBJECT_NEXT_INSTANCE)
 	{
 		FindNextObjectEntry();
-		return;
+		return 0;
 	}
 
-	if (!_tcsnicmp(pszSearchStr, _T("ip:"), 3))
+	if (!_tcsnicmp((TCHAR *)lParam, _T("ip:"), 3))
 	{
-		DWORD dwIpAddr = ntohl(_t_inet_addr(&pszSearchStr[3]));
+		DWORD dwIpAddr = ntohl(_t_inet_addr(((TCHAR *)lParam) + 3));
 		pObject = NXCFindObjectByIPAddress(g_hSession, dwIpAddr,
 												     ((m_pCurrentObject != NULL) && (wParam == OBJECT_FIND_NEXT))? m_pCurrentObject->dwId : 0);
 	}
 	else
 	{
-		pObject = NXCFindObjectByName(g_hSession, pszSearchStr,
+		pObject = NXCFindObjectByName(g_hSession, (TCHAR *)lParam,
 												((m_pCurrentObject != NULL) && (wParam == OBJECT_FIND_NEXT))? m_pCurrentObject->dwId : 0);
 	}
    if (pObject != NULL)
@@ -1440,9 +1441,10 @@ void CObjectBrowser::OnFindObject(WPARAM wParam, TCHAR *pszSearchStr)
    {
       TCHAR szBuffer[384];
 
-      _stprintf(szBuffer, _T("Matching object for pattern \"%s\" not found"), pszSearchStr);
+      _sntprintf_s(szBuffer, 384, _TRUNCATE, _T("Matching object for pattern \"%s\" not found"), (TCHAR *)lParam);
       MessageBox(szBuffer, _T("Find"), MB_OK | MB_ICONSTOP);
    }
+	return 0;
 }
 
 
@@ -1478,9 +1480,10 @@ void CObjectBrowser::FindNextObjectEntry()
 // NXCM_ACTIVATE_OBJECT_TREE message handler
 //
 
-void CObjectBrowser::OnActivateObjectTree(WPARAM wParam, LPARAM lParam)
+LRESULT CObjectBrowser::OnActivateObjectTree(WPARAM wParam, LPARAM lParam)
 {
 	m_wndTreeCtrl.SetFocus();
+	return 0;
 }
 
 

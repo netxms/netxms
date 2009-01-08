@@ -1,7 +1,6 @@
 #if !defined(AFX_REQUESTPROCESSINGDLG_H__58B4CC16_1239_4835_91DA_791FAAAC9C1D__INCLUDED_)
 #define AFX_REQUESTPROCESSINGDLG_H__58B4CC16_1239_4835_91DA_791FAAAC9C1D__INCLUDED_
 
-#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -41,9 +40,9 @@ protected:
 	//{{AFX_MSG(CRequestProcessingDlg)
 	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
-   afx_msg void OnRequestCompleted(WPARAM wParam, LPARAM lParam);
-   afx_msg void OnSetInfoText(WPARAM wParam, LPARAM lParam);
-   afx_msg LRESULT OnChangePassword(WPARAM wParam, TCHAR *pszBuffer);
+   afx_msg LRESULT OnRequestCompleted(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnSetInfoText(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnChangePassword(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

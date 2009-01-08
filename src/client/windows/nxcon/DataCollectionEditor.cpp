@@ -265,7 +265,7 @@ int CDataCollectionEditor::AddListItem(NXC_DCI *pItem)
    int iItem;
    TCHAR szBuffer[32];
 
-   _stprintf(szBuffer, _T("%d"), pItem->dwId);
+   _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), pItem->dwId);
    iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer);
    if (iItem != -1)
    {
@@ -289,9 +289,9 @@ void CDataCollectionEditor::UpdateListItem(int iItem, NXC_DCI *pItem)
    m_wndListCtrl.SetItemText(iItem, 2, pItem->szDescription);
    m_wndListCtrl.SetItemText(iItem, 3, pItem->szName);
    m_wndListCtrl.SetItemText(iItem, 4, g_pszItemDataType[pItem->iDataType]);
-   _stprintf(szBuffer, _T("%d sec"), pItem->iPollingInterval);
+   _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d sec"), pItem->iPollingInterval);
    m_wndListCtrl.SetItemText(iItem, 5, szBuffer);
-   _stprintf(szBuffer, _T("%d days"), pItem->iRetentionTime);
+   _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d days"), pItem->iRetentionTime);
    m_wndListCtrl.SetItemText(iItem, 6, szBuffer);
    m_wndListCtrl.SetItemText(iItem, 7, g_pszItemStatus[pItem->iStatus]);
    if (pItem->dwTemplateId != 0)
@@ -685,7 +685,7 @@ void CDataCollectionEditor::OnItemDelete()
 // Handler for WM_NOTIFY::NM_DBLCLK from IDC_LIST_VIEW
 //
 
-void CDataCollectionEditor::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
+void CDataCollectionEditor::OnListViewDblClk(NMHDR *pNMHDR, LRESULT *pResult)
 {
    PostMessage(WM_COMMAND, ID_ITEM_EDIT, 0);
 }
@@ -708,8 +708,8 @@ void CDataCollectionEditor::OnItemShowdata()
       dwItemId = m_wndListCtrl.GetItemData(iItem);
       dwIndex = NXCItemIndex(m_pItemList, dwItemId);
       pObject = NXCFindObjectById(g_hSession, m_pItemList->dwNodeId);
-      _stprintf(szBuffer, _T("%s - %s"), pObject->szName, 
-                m_pItemList->pItems[dwIndex].szDescription);
+      _sntprintf_s(szBuffer, 384, _TRUNCATE, _T("%s - %s"), pObject->szName, 
+                   m_pItemList->pItems[dwIndex].szDescription);
       theApp.ShowDCIData(m_pItemList->dwNodeId, dwItemId, szBuffer);
       iItem = m_wndListCtrl.GetNextItem(iItem, LVNI_SELECTED);
    }
@@ -752,8 +752,8 @@ void CDataCollectionEditor::OnItemGraph()
 
    if ((dwNumItems == 1) && (ppItemList[0] != NULL))
    {
-      _stprintf(szBuffer, _T("%s - %s"), pObject->szName,
-                ppItemList[0]->szDescription);
+      _sntprintf_s(szBuffer, 384, _TRUNCATE, _T("%s - %s"), pObject->szName,
+                   ppItemList[0]->szDescription);
    }
    else
    {
@@ -954,7 +954,7 @@ void CDataCollectionEditor::ChangeItemsStatus(int iStatus)
 // WM_NOTIFY::LVN_COLUMNCLICK message handler
 //
 
-void CDataCollectionEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+void CDataCollectionEditor::OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
    LVCOLUMN lvCol;
 
@@ -964,7 +964,7 @@ void CDataCollectionEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *
    m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 
    // Change current sort mode and resort list
-   if (m_iSortMode == pNMHDR->iSubItem)
+   if (m_iSortMode == ((LPNMLISTVIEW)pNMHDR)->iSubItem)
    {
       // Same column, change sort direction
       m_iSortDir = 1 - m_iSortDir;
@@ -972,7 +972,7 @@ void CDataCollectionEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *
    else
    {
       // Another sorting column
-      m_iSortMode = pNMHDR->iSubItem;
+      m_iSortMode = ((LPNMLISTVIEW)pNMHDR)->iSubItem;
    }
    m_wndListCtrl.SortItems(ItemCompareProc, (LPARAM)this);
 
@@ -980,7 +980,7 @@ void CDataCollectionEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
    lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
    lvCol.iImage = (m_iSortDir == 0)  ? m_iSortImageBase : (m_iSortImageBase + 1);
-   m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
+   m_wndListCtrl.SetColumn(((LPNMLISTVIEW)pNMHDR)->iSubItem, &lvCol);
    
    *pResult = 0;
 }
@@ -999,11 +999,11 @@ void CDataCollectionEditor::OnItemExportdata()
    if (dlg.DoModal() == IDOK)
    {
       dlg.SaveLastSelection();
-      dwTimeFrom = CTime(dlg.m_dateFrom.GetYear(), dlg.m_dateFrom.GetMonth(),
+      dwTimeFrom = (DWORD)CTime(dlg.m_dateFrom.GetYear(), dlg.m_dateFrom.GetMonth(),
                          dlg.m_dateFrom.GetDay(), dlg.m_timeFrom.GetHour(),
                          dlg.m_timeFrom.GetMinute(),
                          dlg.m_timeFrom.GetSecond(), -1).GetTime();
-      dwTimeTo = CTime(dlg.m_dateTo.GetYear(), dlg.m_dateTo.GetMonth(),
+      dwTimeTo = (DWORD)CTime(dlg.m_dateTo.GetYear(), dlg.m_dateTo.GetMonth(),
                        dlg.m_dateTo.GetDay(), dlg.m_timeTo.GetHour(),
                        dlg.m_timeTo.GetMinute(),
                        dlg.m_timeTo.GetSecond(), -1).GetTime();

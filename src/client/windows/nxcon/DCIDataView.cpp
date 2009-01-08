@@ -181,22 +181,22 @@ void CDCIDataView::OnViewRefresh()
                switch(pData->wDataType)
                {
                   case DCI_DT_INT:
-                     _stprintf(szBuffer, _T("%d"), pRow->value.dwInt32 / m_nScale);
+                     _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%d"), pRow->value.dwInt32 / m_nScale);
                      break;
                   case DCI_DT_UINT:
-                     _stprintf(szBuffer, _T("%u"), pRow->value.dwInt32 / m_nScale);
+                     _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%u"), pRow->value.dwInt32 / m_nScale);
                      break;
                   case DCI_DT_INT64:
-                     _stprintf(szBuffer, _T("%I64d"), pRow->value.qwInt64 / m_nScale);
+                     _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%I64d"), pRow->value.qwInt64 / m_nScale);
                      break;
                   case DCI_DT_UINT64:
-                     _stprintf(szBuffer, _T("%I64u"), pRow->value.qwInt64 / m_nScale);
+                     _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%I64u"), pRow->value.qwInt64 / m_nScale);
                      break;
                   case DCI_DT_FLOAT:
-                     _stprintf(szBuffer, _T("%f"), pRow->value.dFloat / m_nScale);
+                     _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%f"), pRow->value.dFloat / m_nScale);
                      break;
                   default:
-                     _stprintf(szBuffer, _T("Unknown data type (%d)"), pData->wDataType);
+                     _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("Unknown data type (%d)"), pData->wDataType);
                      break;
                }
                m_wndListCtrl.SetItemText(iItem, 1, szBuffer);
@@ -204,7 +204,7 @@ void CDCIDataView::OnViewRefresh()
          }
          inc_ptr(pRow, pData->wRowSize, NXC_DCI_ROW);
       }
-      _stprintf(szBuffer, _T("%d rows"), pData->dwNumRows);
+      _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%d rows"), pData->dwNumRows);
       m_wndStatusBar.SetText(szBuffer, 0, 0);
       NXCDestroyDCIData(pData);
    }
@@ -222,16 +222,16 @@ void CDCIDataView::OnViewRefresh()
 // WM_NOTIFY::LVN_ITEMACTIVATE message handler
 //
 
-void CDCIDataView::OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+void CDCIDataView::OnListViewItemChange(NMHDR *pNMHDR, LRESULT *pResult)
 {
-   if (pNMHDR->iItem != -1)
-      if (pNMHDR->uChanged & LVIF_STATE)
+   if (((LPNMLISTVIEW)pNMHDR)->iItem != -1)
+      if (((LPNMLISTVIEW)pNMHDR)->uChanged & LVIF_STATE)
       {
-         if (pNMHDR->uNewState & LVIS_FOCUSED)
+         if (((LPNMLISTVIEW)pNMHDR)->uNewState & LVIS_FOCUSED)
          {
             TCHAR szBuffer[64];
 
-            _stprintf(szBuffer, _T("Current row: %d"), pNMHDR->iItem + 1);
+            _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("Current row: %d"), ((LPNMLISTVIEW)pNMHDR)->iItem + 1);
             m_wndStatusBar.SetText(szBuffer, 1, 0);
          }
          else
@@ -246,8 +246,9 @@ void CDCIDataView::OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
 // Get save info for desktop saving
 //
 
-LRESULT CDCIDataView::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+LRESULT CDCIDataView::OnGetSaveInfo(WPARAM wParam, LPARAM lParam)
 {
+	WINDOW_SAVE_INFO *pInfo = (WINDOW_SAVE_INFO *)lParam;
    pInfo->iWndClass = WNDC_DCI_DATA;
    GetWindowPlacement(&pInfo->placement);
    _sntprintf(pInfo->szParameters, MAX_DB_STRING, _T("N:%d\x7FI:%d\x7FIN:%s"),
@@ -317,7 +318,7 @@ void CDCIDataView::DisplayScale()
 {
    TCHAR szBuffer[256];
 
-   _stprintf(szBuffer, _T("1:%d"), m_nScale);
+   _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("1:%d"), m_nScale);
    switch(m_nScale)
    {
       case 1024:

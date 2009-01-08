@@ -142,7 +142,7 @@ int CUserEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
 // Handler for WM_NOTIFY::NM_DBLCLK from IDC_LIST_VIEW
 //
 
-void CUserEditor::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
+void CUserEditor::OnListViewDblClk(NMHDR *pNMHDR, LRESULT *pResult)
 {
    PostMessage(WM_COMMAND, ID_USER_PROPERTIES, 0);
    *pResult = 0;
@@ -288,8 +288,8 @@ void CUserEditor::CreateUserObject(const TCHAR *pszName, BOOL bIsGroup, BOOL bSh
    {
       TCHAR szBuffer[256];
 
-      _stprintf(szBuffer, _T("Error creating %s object: %s"), 
-                bIsGroup ? _T("group") : _T("user"), NXCGetErrorText(dwResult));
+      _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("Error creating %s object: %s"), 
+                   bIsGroup ? _T("group") : _T("user"), NXCGetErrorText(dwResult));
       MessageBox(szBuffer, _T("Error"), MB_OK | MB_ICONSTOP);
    }
 }
@@ -299,10 +299,11 @@ void CUserEditor::CreateUserObject(const TCHAR *pszName, BOOL bIsGroup, BOOL bSh
 // WM_USERDB_CHANGE message handler
 //
 
-void CUserEditor::OnUserDBChange(int iCode, NXC_USER *pUserInfo)
+LRESULT CUserEditor::OnUserDBChange(WPARAM wParam, LPARAM lParam)
 {
    int iItem;
    LVFINDINFO lvfi;
+	NXC_USER *pUserInfo = (NXC_USER *)lParam;
 
    // Find related item
    lvfi.flags = LVFI_PARAM;
@@ -310,7 +311,7 @@ void CUserEditor::OnUserDBChange(int iCode, NXC_USER *pUserInfo)
    iItem = m_wndListCtrl.FindItem(&lvfi, -1);
 
    // Modify list control
-   switch(iCode)
+   switch(wParam)
    {
       case USER_DB_CREATE:
          if (iItem == -1)
@@ -338,6 +339,7 @@ void CUserEditor::OnUserDBChange(int iCode, NXC_USER *pUserInfo)
             m_wndListCtrl.DeleteItem(iItem);
          break;
    }
+	return 0;
 }
 
 
@@ -545,8 +547,8 @@ void CUserEditor::OnUserDelete()
          {
             TCHAR szBuffer[256];
 
-            _stprintf(szBuffer, _T("Do you really wish to delete %s %s ?"),
-                      dwId & GROUP_FLAG ? _T("group") : _T("user"), pUser->szName);
+            _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("Do you really wish to delete %s %s ?"),
+                         dwId & GROUP_FLAG ? _T("group") : _T("user"), pUser->szName);
             if (MessageBox(szBuffer, _T("Delete account"), MB_ICONQUESTION | MB_YESNO) == IDYES)
             {
                DWORD dwResult;
@@ -583,14 +585,14 @@ void CUserEditor::OnContextMenu(CWnd* pWnd, CPoint point)
 // WM_NOTIFY::LVN_ITEMACTIVATE message handler
 //
 
-void CUserEditor::OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+void CUserEditor::OnListViewItemChange(NMHDR *pNMHDR, LRESULT *pResult)
 {
-   if (pNMHDR->iItem != -1)
-      if (pNMHDR->uChanged & LVIF_STATE)
+   if (((LPNMLISTVIEW)pNMHDR)->iItem != -1)
+      if (((LPNMLISTVIEW)pNMHDR)->uChanged & LVIF_STATE)
       {
-         if (pNMHDR->uNewState & LVIS_FOCUSED)
+         if (((LPNMLISTVIEW)pNMHDR)->uNewState & LVIS_FOCUSED)
          {
-            m_dwCurrentUser = m_wndListCtrl.GetItemData(pNMHDR->iItem);
+            m_dwCurrentUser = m_wndListCtrl.GetItemData(((LPNMLISTVIEW)pNMHDR)->iItem);
          }
          else
          {
@@ -730,7 +732,7 @@ void CUserEditor::SortList()
 // WM_NOTIFY::LVN_COLUMNCLICK message handler
 //
 
-void CUserEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+void CUserEditor::OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
    LVCOLUMN lvCol;
 
@@ -740,7 +742,7 @@ void CUserEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
    m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 
    // Change current sort mode and resort list
-   if (m_iSortMode == pNMHDR->iSubItem)
+   if (m_iSortMode == ((LPNMLISTVIEW)pNMHDR)->iSubItem)
    {
       // Same column, change sort direction
       m_iSortDir = -m_iSortDir;
@@ -748,7 +750,7 @@ void CUserEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
    else
    {
       // Another sorting column
-      m_iSortMode = pNMHDR->iSubItem;
+      m_iSortMode = ((LPNMLISTVIEW)pNMHDR)->iSubItem;
    }
    SortList();
    

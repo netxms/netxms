@@ -47,9 +47,9 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnViewRefresh();
 	//}}AFX_MSG
-   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
+   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, LPARAM lParam);
    afx_msg void OnRequestCompleted(void);
-   afx_msg void OnTrapLogRecord(WPARAM wParam, NXC_SNMP_TRAP_LOG_RECORD *pRec);
+   afx_msg LRESULT OnTrapLogRecord(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

@@ -79,7 +79,7 @@ void CTrapParamDlg::OnSelectOid()
    dlg.m_strOID = szBuffer;
    if (dlg.DoModal() == IDOK)
    {
-      _stprintf(szBuffer, _T(".%lu"), dlg.m_dwInstance);
+      _sntprintf_s(szBuffer, 1024, _TRUNCATE, _T(".%lu"), dlg.m_dwInstance);
       dlg.m_strOID += szBuffer;
       m_wndEditOID.SetWindowText(dlg.m_strOID);
    }

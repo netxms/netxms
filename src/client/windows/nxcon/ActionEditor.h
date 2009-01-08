@@ -55,8 +55,8 @@ protected:
 	afx_msg void OnActionProperties();
 	afx_msg void OnActionDelete();
 	//}}AFX_MSG
-	afx_msg void OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult);
-   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
+	afx_msg void OnListViewDoubleClick(NMHDR *pInfo, LRESULT *pResult);
+   afx_msg void OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
 	CImageList m_imageList;

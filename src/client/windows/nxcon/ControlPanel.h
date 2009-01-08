@@ -32,7 +32,6 @@ public:
 // Implementation
 protected:
 	void AddItem(TCHAR *pszName, int iImage, WPARAM wParam);
-	afx_msg void OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT* pResult);
 	CImageList *m_pImageList;
 	CListCtrl m_wndListCtrl;
 	virtual ~CControlPanel();
@@ -45,7 +44,8 @@ protected:
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnClose();
 	//}}AFX_MSG
-   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
+	afx_msg void OnListViewDoubleClick(NMHDR *pNMHDR, LRESULT *pResult);
+   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

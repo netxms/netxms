@@ -208,7 +208,7 @@ void CObjectToolsEditor::OnClose()
 // Handler for WM_NOTIFY::NM_DBLCLK from IDC_LIST_VIEW
 //
 
-void CObjectToolsEditor::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
+void CObjectToolsEditor::OnListViewDblClk(NMHDR *pNMHDR, LRESULT *pResult)
 {
    PostMessage(WM_COMMAND, ID_OBJECTTOOLS_EDIT, 0);
    *pResult = 0;
@@ -616,7 +616,7 @@ NXC_OBJECT_TOOL *CObjectToolsEditor::GetToolById(DWORD dwId)
 // WM_NOTIFY::LVN_COLUMNCLICK message handler
 //
 
-void CObjectToolsEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+void CObjectToolsEditor::OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
    LVCOLUMN lvCol;
 
@@ -626,7 +626,7 @@ void CObjectToolsEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pRe
    m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 
    // Change current sort mode and resort list
-   if (m_iSortMode == pNMHDR->iSubItem)
+   if (m_iSortMode == ((LPNMLISTVIEW)pNMHDR)->iSubItem)
    {
       // Same column, change sort direction
       m_iSortDir = 1 - m_iSortDir;
@@ -634,7 +634,7 @@ void CObjectToolsEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pRe
    else
    {
       // Another sorting column
-      m_iSortMode = pNMHDR->iSubItem;
+      m_iSortMode = ((LPNMLISTVIEW)pNMHDR)->iSubItem;
    }
    m_wndListCtrl.SortItems(ToolCompareProc, (LPARAM)this);
 
@@ -642,7 +642,7 @@ void CObjectToolsEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pRe
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
    lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
    lvCol.iImage = (m_iSortDir == 0)  ? m_iSortImageBase : (m_iSortImageBase + 1);
-   m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
+   m_wndListCtrl.SetColumn(((LPNMLISTVIEW)pNMHDR)->iSubItem, &lvCol);
    
    *pResult = 0;
 }

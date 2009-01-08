@@ -206,9 +206,10 @@ void CMainFrame::BroadcastMessage(UINT msg, WPARAM wParam, LPARAM lParam, BOOL b
 // Handler for NXCM_OBJECT_CHANGE message
 //
 
-void CMainFrame::OnObjectChange(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnObjectChange(WPARAM wParam, LPARAM lParam)
 {
    BroadcastMessage(NXCM_OBJECT_CHANGE, wParam, lParam, TRUE);
+	return 0;
 }
 
 
@@ -216,9 +217,10 @@ void CMainFrame::OnObjectChange(WPARAM wParam, LPARAM lParam)
 // Handler for NXCM_USERDB_CHANGE message
 //
 
-void CMainFrame::OnUserDBChange(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnUserDBChange(WPARAM wParam, LPARAM lParam)
 {
    BroadcastMessage(NXCM_USERDB_CHANGE, wParam, lParam, TRUE);
+	return 0;
 }
 
 
@@ -226,9 +228,10 @@ void CMainFrame::OnUserDBChange(WPARAM wParam, LPARAM lParam)
 // Handler for NXCM_SITUATION_CHANGE message
 //
 
-void CMainFrame::OnSituationChange(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnSituationChange(WPARAM wParam, LPARAM lParam)
 {
    BroadcastMessage(NXCM_SITUATION_CHANGE, wParam, lParam, TRUE);
+	return 0;
 }
 
 
@@ -236,40 +239,43 @@ void CMainFrame::OnSituationChange(WPARAM wParam, LPARAM lParam)
 // Handler for NXCM_DEPLOYMENT_INFO message
 //
 
-void CMainFrame::OnDeploymentInfo(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnDeploymentInfo(WPARAM wParam, LPARAM lParam)
 {
    BroadcastMessage(NXCM_DEPLOYMENT_INFO, wParam, lParam, FALSE);
    safe_free(((NXC_DEPLOYMENT_STATUS *)lParam)->pszErrorMessage)
    free((void *)lParam);
+	return 0;
 }
 
 
 //
-// WM_UPDATE_EVENT_LIST message handler
+// NXCM_UPDATE_EVENT_LIST message handler
 //
 
-void CMainFrame::OnUpdateEventList(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnUpdateEventList(WPARAM wParam, LPARAM lParam)
 {
    DoRequestArg1(NXCLoadEventDB, g_hSession, _T("Reloading event information..."));
    BroadcastMessage(WM_COMMAND, ID_UPDATE_EVENT_LIST, 0, TRUE);
+	return 0;
 }
 
 
 //
-// WM_UPDATE_OBJECT_TOOLS message handler
+// NXCM_UPDATE_OBJECT_TOOLS message handler
 //
 
-void CMainFrame::OnUpdateObjectTools(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnUpdateObjectTools(WPARAM wParam, LPARAM lParam)
 {
    DoRequest(LoadObjectTools, _T("Reloading object tools information..."));
+	return 0;
 }
 
 
 //
-// Handler for WM_STATE_CHANGE message
+// Handler for NXCM_STATE_CHANGE message
 //
 
-void CMainFrame::OnStateChange(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnStateChange(WPARAM wParam, LPARAM lParam)
 {
    if (wParam)
    {
@@ -283,14 +289,15 @@ void CMainFrame::OnStateChange(WPARAM wParam, LPARAM lParam)
       m_wndStatusBar.GetStatusBarCtrl().SetIcon(1, NULL);
       m_wndStatusBar.GetStatusBarCtrl().SetText(_T(""), 1, 0);
    }
+	return 0;
 }
 
 
 //
-// WM_ALARM_UPDATE message handler
+// NXCM_ALARM_UPDATE message handler
 //
 
-void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
+LRESULT CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
 {
    CMDIChildWnd *pWnd;
 
@@ -301,6 +308,7 @@ void CMainFrame::OnAlarmUpdate(WPARAM wParam, LPARAM lParam)
    if (pWnd != NULL)
       ((CObjectBrowser *)pWnd)->OnAlarmUpdate(wParam, (NXC_ALARM *)lParam);
    free((void *)lParam);
+	return 0;
 }
 
 
@@ -372,24 +380,24 @@ static DWORD SaveDesktop(TCHAR *pszDesktopName, DWORD dwWindowCount, WINDOW_SAVE
 
    // Set window count
    _tcscpy(&szVar[dwLastChar], _T("WindowCount"));
-   _stprintf(szBuffer, _T("%d"), dwWindowCount);
+   _sntprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, _T("%d"), dwWindowCount);
    dwResult = NXCSetUserVariable(g_hSession, CURRENT_USER, szVar, szBuffer);
 
    for(i = 0; (i < dwWindowCount) && (dwResult == RCC_SUCCESS); i++)
    {
-      _stprintf(&szVar[dwLastChar], _T("wnd_%d/class"), i);
-      _stprintf(szBuffer, _T("%d"), pWndSaveInfo[i].iWndClass);
+      _sntprintf_s(&szVar[dwLastChar], MAX_VARIABLE_NAME - dwLastChar, _TRUNCATE, _T("wnd_%d/class"), i);
+      _sntprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, _T("%d"), pWndSaveInfo[i].iWndClass);
       dwResult = NXCSetUserVariable(g_hSession, CURRENT_USER, szVar, szBuffer);
 
       if (dwResult == RCC_SUCCESS)
       {
-         _stprintf(&szVar[dwLastChar], _T("wnd_%d/props"), i);
+         _sntprintf_s(&szVar[dwLastChar], MAX_VARIABLE_NAME - dwLastChar, _TRUNCATE, _T("wnd_%d/props"), i);
          dwResult = NXCSetUserVariable(g_hSession, CURRENT_USER, szVar, pWndSaveInfo[i].szParameters);
       }
 
       if (dwResult == RCC_SUCCESS)
       {
-         _stprintf(&szVar[dwLastChar], _T("wnd_%d/placement"), i);
+         _sntprintf_s(&szVar[dwLastChar], MAX_VARIABLE_NAME - dwLastChar, _TRUNCATE, _T("wnd_%d/placement"), i);
          BinToStr((BYTE *)&pWndSaveInfo[i].placement, sizeof(WINDOWPLACEMENT), szBuffer);
          dwResult = NXCSetUserVariable(g_hSession, CURRENT_USER, szVar, szBuffer);
       }
@@ -491,7 +499,7 @@ static DWORD LoadDesktop(TCHAR *pszName, DWORD *pdwWindowCount, WINDOW_SAVE_INFO
    DWORD i, dwResult, dwLastChar;
    TCHAR szBuffer[256], szVar[MAX_VARIABLE_NAME];
 
-   _sntprintf(szVar, MAX_VARIABLE_NAME - 32, _T("/Win32Console/Desktop/%s/"), pszName);
+   _sntprintf_s(szVar, MAX_VARIABLE_NAME - 32, _TRUNCATE, _T("/Win32Console/Desktop/%s/"), pszName);
    dwLastChar = _tcslen(szVar);
 
    // Set window count
@@ -504,20 +512,20 @@ static DWORD LoadDesktop(TCHAR *pszName, DWORD *pdwWindowCount, WINDOW_SAVE_INFO
       
       for(i = 0; i < *pdwWindowCount; i++)
       {
-         _stprintf(&szVar[dwLastChar], _T("wnd_%d/class"), i);
+         _sntprintf_s(&szVar[dwLastChar], MAX_VARIABLE_NAME - dwLastChar, _TRUNCATE, _T("wnd_%d/class"), i);
          dwResult = NXCGetUserVariable(g_hSession, CURRENT_USER, szVar, szBuffer, 256);
          if (dwResult == RCC_SUCCESS)
          {
             (*ppInfo)[i].iWndClass = _tcstol(szBuffer, 0, NULL);
 
-            _stprintf(&szVar[dwLastChar], _T("wnd_%d/placement"), i);
+            _sntprintf_s(&szVar[dwLastChar], MAX_VARIABLE_NAME - dwLastChar, _TRUNCATE, _T("wnd_%d/placement"), i);
             dwResult = NXCGetUserVariable(g_hSession, CURRENT_USER, szVar, szBuffer, 256);
          }
          if (dwResult == RCC_SUCCESS)
          {
             StrToBin(szBuffer, (BYTE *)&(*ppInfo)[i].placement, sizeof(WINDOWPLACEMENT));
 
-            _stprintf(&szVar[dwLastChar], _T("wnd_%d/props"), i);
+            _sntprintf_s(&szVar[dwLastChar], MAX_VARIABLE_NAME - dwLastChar, _TRUNCATE, _T("wnd_%d/props"), i);
             dwResult = NXCGetUserVariable(g_hSession, CURRENT_USER, szVar,
                                           (*ppInfo)[i].szParameters, MAX_WND_PARAM_LEN);
          }

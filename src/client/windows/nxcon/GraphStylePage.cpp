@@ -74,11 +74,11 @@ BOOL CGraphStylePage::OnInitDialog()
 	// Fill list control with data
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
 	{
-		_stprintf(szBuffer, _T("%d"), i + 1);
+		_sntprintf_s(szBuffer, 16, _TRUNCATE, _T("%d"), i + 1);
 		nItem = m_wndListCtrl.InsertItem(i, szBuffer);
 		if (nItem != -1)
 		{
-			_stprintf(szBuffer, _T("%08X"), m_styles[i].rgbColor);
+			_sntprintf_s(szBuffer, 16, _TRUNCATE, _T("%08X"), m_styles[i].rgbColor);
 			m_wndListCtrl.SetItemText(nItem, 1, szBuffer);
 			m_wndListCtrl.SetItemText(nItem, 2, g_szGraphType[m_styles[i].nType]);
 			if (m_styles[i].nLineWidth == 0)
@@ -87,7 +87,7 @@ BOOL CGraphStylePage::OnInitDialog()
 			}
 			else
 			{
-				_stprintf(szBuffer, _T("%d"), m_styles[i].nLineWidth);
+				_sntprintf_s(szBuffer, 16, _TRUNCATE, _T("%d"), m_styles[i].nLineWidth);
 				m_wndListCtrl.SetItemText(nItem, 3, szBuffer);
 			}
 			m_wndListCtrl.SetItemText(nItem, 4, m_styles[i].bShowThresholds ? _T("Yes") : _T("No"));
@@ -112,23 +112,23 @@ LRESULT CGraphStylePage::OnComboListSetItems(WPARAM wParam, LPARAM lParam)
 	switch(wParam)
 	{
 		case 2:
-			pComboList->AddTail("Line");
-			pComboList->AddTail("Area");
-			pComboList->AddTail("Stacked");
+			pComboList->AddTail(_T("Line"));
+			pComboList->AddTail(_T("Area"));
+			pComboList->AddTail(_T("Stacked"));
 			break;
 		case 3:
-			pComboList->AddTail("Automatic");
-			pComboList->AddTail("1");
-			pComboList->AddTail("2");
-			pComboList->AddTail("3");
-			pComboList->AddTail("4");
-			pComboList->AddTail("5");
+			pComboList->AddTail(_T("Automatic"));
+			pComboList->AddTail(_T("1"));
+			pComboList->AddTail(_T("2"));
+			pComboList->AddTail(_T("3"));
+			pComboList->AddTail(_T("4"));
+			pComboList->AddTail(_T("5"));
 			break;
 		case 4:
 		case 5:
 		case 6:
-			pComboList->AddTail("Yes");
-			pComboList->AddTail("No");
+			pComboList->AddTail(_T("Yes"));
+			pComboList->AddTail(_T("No"));
 			break;
 		default:
 			break;

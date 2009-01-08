@@ -95,7 +95,7 @@ BOOL CEventSelDlg::OnInitDialog()
    {
       for(i = 0; i < dwListSize; i++)
       {
-         _stprintf(szBuffer, _T("%u"), pList[i]->dwCode);
+         _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%u"), pList[i]->dwCode);
          iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pList[i]->szName, pList[i]->dwSeverity);
          m_wndListCtrl.SetItemText(iItem, 1, szBuffer);
          m_wndListCtrl.SetItemData(iItem, pList[i]->dwCode);

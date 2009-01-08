@@ -232,7 +232,7 @@ void CGraphFrame::OnViewRefresh()
    // Set new time frame
    if (m_iTimeFrameType == 1)
    {
-      m_dwTimeTo = time(NULL);
+      m_dwTimeTo = (DWORD)time(NULL);
       m_dwTimeTo += 60 - m_dwTimeTo % 60;   // Round to minute boundary
       m_dwTimeFrom = m_dwTimeTo - m_dwTimeFrame;
    }
@@ -383,8 +383,9 @@ void CGraphFrame::GetConfiguration(TCHAR *config)
 // Get save info for desktop saving
 //
 
-LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+LRESULT CGraphFrame::OnGetSaveInfo(WPARAM wParam, LPARAM lParam)
 {
+	WINDOW_SAVE_INFO *pInfo = (WINDOW_SAVE_INFO *)lParam;
    pInfo->iWndClass = WNDC_GRAPH;
    GetWindowPlacement(&pInfo->placement);
 	GetConfiguration(pInfo->szParameters);
@@ -551,13 +552,15 @@ void CGraphFrame::Preset(int nTimeUnit, DWORD dwNumUnits)
 // NXCM_UPDATE_GRAPH_POINT message handler
 //
 
-void CGraphFrame::OnUpdateGraphPoint(DWORD dwTimeStamp, double *pdValue)
+LRESULT CGraphFrame::OnUpdateGraphPoint(WPARAM wParam, LPARAM lParam)
 {
+	double *pdValue = (double *)lParam;
+
    if (pdValue != NULL)
    {
       TCHAR szTimeStamp[64], szText[256];
 
-      FormatTimeStamp(dwTimeStamp, szTimeStamp, TS_LONG_DATE_TIME);
+      FormatTimeStamp(wParam, szTimeStamp, TS_LONG_DATE_TIME);
       _sntprintf(szText, 256, _T("Time: %s  Value: %.3f"), szTimeStamp, *pdValue);
       m_wndStatusBar.SetText(szText, 3, 0);
    }
@@ -565,6 +568,7 @@ void CGraphFrame::OnUpdateGraphPoint(DWORD dwTimeStamp, double *pdValue)
    {
       m_wndStatusBar.SetText(_T(""), 3, 0);
    }
+	return 0;
 }
 
 
@@ -631,13 +635,13 @@ void CGraphFrame::OnUpdateGraphZoomout(CCmdUI* pCmdUI)
 // NXCM_GRAPH_ZOOM_CHANGED message handler
 //
 
-void CGraphFrame::OnGraphZoomChange(WPARAM nZoomLevel, LPARAM lParam)
+LRESULT CGraphFrame::OnGraphZoomChange(WPARAM nZoomLevel, LPARAM lParam)
 {
    TCHAR szBuffer[32];
 
    if (nZoomLevel > 0)
    {
-      _stprintf(szBuffer, _T("%d"), nZoomLevel);
+      _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), nZoomLevel);
       m_wndStatusBar.SetText(szBuffer, 2, 0);
       m_wndStatusBar.SetIcon(2,
          (HICON)LoadImage(theApp.m_hInstance, MAKEINTRESOURCE(IDI_ZOOMIN),
@@ -648,6 +652,7 @@ void CGraphFrame::OnGraphZoomChange(WPARAM nZoomLevel, LPARAM lParam)
       m_wndStatusBar.SetText(_T(""), 2, 0);
       m_wndStatusBar.SetIcon(2, NULL);
    }
+	return 0;
 }
 
 
@@ -859,7 +864,7 @@ void CGraphFrame::OnGraphDefine()
 // NXCM_REQUEST_COMPLETED message handler
 //
 
-void CGraphFrame::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
+LRESULT CGraphFrame::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 {
 	int nIndex;
 
@@ -888,6 +893,8 @@ void CGraphFrame::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 		m_wndGraph.Update();
 		m_bFullRefresh = FALSE;
 	}
+
+	return 0;
 }
 
 
@@ -895,10 +902,11 @@ void CGraphFrame::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 // NXCM_PROCESSING_REQUEST message handler
 //
 
-void CGraphFrame::OnProcessingRequest(WPARAM wParam, LPARAM lParam)
+LRESULT CGraphFrame::OnProcessingRequest(WPARAM wParam, LPARAM lParam)
 {
 	m_wndGraph.m_bUpdating = TRUE;
 	m_wndGraph.Invalidate(FALSE);
+	return 0;
 }
 
 
@@ -934,13 +942,13 @@ void CGraphFrame::SaveCurrentSettings(const TCHAR *pszName)
 
 	for(i = 0; i < MAX_GRAPH_ITEMS; i++)
 	{
-		_stprintf(option, _T("ItemColor_%d"), i);
+		_sntprintf_s(option, 64, _TRUNCATE, _T("ItemColor_%d"), i);
 		theApp.WriteProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].rgbColor);
 
-		_stprintf(option, _T("ItemType_%d"), i);
+		_sntprintf_s(option, 64, _TRUNCATE, _T("ItemType_%d"), i);
 		theApp.WriteProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].nType);
 
-		_stprintf(option, _T("ItemLineWidth_%d"), i);
+		_sntprintf_s(option, 64, _TRUNCATE, _T("ItemLineWidth_%d"), i);
 		theApp.WriteProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].nLineWidth);
 	}
 }
@@ -978,13 +986,13 @@ void CGraphFrame::LoadSettings(const TCHAR *pszName)
 
 	for(i = 0; i < MAX_GRAPH_ITEMS; i++)
 	{
-		_stprintf(option, _T("ItemColor_%d"), i);
+		_sntprintf_s(option, 64, _TRUNCATE, _T("ItemColor_%d"), i);
 		m_wndGraph.m_graphItemStyles[i].rgbColor = theApp.GetProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].rgbColor);
 
-		_stprintf(option, _T("ItemType_%d"), i);
+		_sntprintf_s(option, 64, _TRUNCATE, _T("ItemType_%d"), i);
 		m_wndGraph.m_graphItemStyles[i].nType = theApp.GetProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].nType);
 
-		_stprintf(option, _T("ItemLineWidth_%d"), i);
+		_sntprintf_s(option, 64, _TRUNCATE, _T("ItemLineWidth_%d"), i);
 		m_wndGraph.m_graphItemStyles[i].nLineWidth = theApp.GetProfileInt(section, option, m_wndGraph.m_graphItemStyles[i].nLineWidth);
 	}
 
@@ -1116,11 +1124,11 @@ BOOL CGraphFrame::EditProperties(BOOL frameIsValid)
       m_dwNumTimeUnits = pgSettings.m_dwNumUnits;
       if (m_iTimeFrameType == 0)
       {
-         m_dwTimeFrom = CTime(pgSettings.m_dateFrom.GetYear(), pgSettings.m_dateFrom.GetMonth(),
+         m_dwTimeFrom = (DWORD)CTime(pgSettings.m_dateFrom.GetYear(), pgSettings.m_dateFrom.GetMonth(),
                               pgSettings.m_dateFrom.GetDay(), pgSettings.m_timeFrom.GetHour(),
                               pgSettings.m_timeFrom.GetMinute(),
                               pgSettings.m_timeFrom.GetSecond(), -1).GetTime();
-         m_dwTimeTo = CTime(pgSettings.m_dateTo.GetYear(), pgSettings.m_dateTo.GetMonth(),
+         m_dwTimeTo = (DWORD)CTime(pgSettings.m_dateTo.GetYear(), pgSettings.m_dateTo.GetMonth(),
                             pgSettings.m_dateTo.GetDay(), pgSettings.m_timeTo.GetHour(),
                             pgSettings.m_timeTo.GetMinute(),
                             pgSettings.m_timeTo.GetSecond(), -1).GetTime();

@@ -137,9 +137,9 @@ protected:
 	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	//}}AFX_MSG
-   afx_msg void OnHeaderBeginTrack(NMHEADER *pHdrInfo, LRESULT *pResult);
-   afx_msg void OnHeaderTrack(NMHEADER *pHdrInfo, LRESULT *pResult);
-   afx_msg void OnHeaderEndTrack(NMHEADER *pHdrInfo, LRESULT *pResult);
+   afx_msg void OnHeaderBeginTrack(NMHDR *pHdrInfo, LRESULT *pResult);
+   afx_msg void OnHeaderTrack(NMHDR *pHdrInfo, LRESULT *pResult);
+   afx_msg void OnHeaderEndTrack(NMHDR *pHdrInfo, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 private:
 	COLORREF m_rgbEmptyBkColor;

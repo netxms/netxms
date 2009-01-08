@@ -30,16 +30,13 @@
 // Format time stamp
 //
 
-TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType)
+TCHAR *FormatTimeStamp(time_t ts, TCHAR *pszBuffer, int iType)
 {
-   struct tm *pTime;
+   struct tm tmbuf;
    static TCHAR *pFormat[] = { _T("%d-%b-%Y %H:%M:%S"), _T("%H:%M:%S"), _T("%b/%d"), _T("%b") };
 
-   pTime = localtime((const time_t *)&dwTimeStamp);
-	if (pTime != NULL)
-		_tcsftime(pszBuffer, 32, pFormat[iType], pTime);
-	else
-		_tcscpy(pszBuffer, _T("(null)"));
+   localtime_s(&tmbuf, &ts);
+	_tcsftime(pszBuffer, 32, pFormat[iType], &tmbuf);
    return pszBuffer;
 }
 
@@ -245,7 +242,7 @@ void CreateObjectImageList(void)
 
    for(i = 0; i < g_pSrvImageList->dwNumImages; i++)
    {
-      _stprintf(&szFileName[dwPos], _T("%08x.ico"), g_pSrvImageList->pImageList[i].dwId);
+      _sntprintf_s(&szFileName[dwPos], MAX_PATH - dwPos, _TRUNCATE, _T("%08x.ico"), g_pSrvImageList->pImageList[i].dwId);
       
       // Load and add 16x16 image
       hIcon = (HICON)LoadImage(NULL, szFileName, IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
@@ -635,7 +632,7 @@ CMenu *CreateToolsSubmenu(NXC_OBJECT *pObject, TCHAR *pszCurrPath, DWORD *pdwSta
          {
             for(j = _tcslen(pszCurrPath); (szPath[j] == _T(' ')) || (szPath[j] == _T('\t')); j++);
             if ((*pszCurrPath == 0) ||
-                ((!memicmp(szPath, pszCurrPath, _tcslen(pszCurrPath) * sizeof(TCHAR))) &&
+                ((!_memicmp(szPath, pszCurrPath, _tcslen(pszCurrPath) * sizeof(TCHAR))) &&
                  (szPath[j] == _T('-')) && (szPath[j + 1] == _T('>'))))
             {
                CMenu *pSubMenu;
@@ -854,13 +851,13 @@ void LoadListCtrlColumns(CListCtrl &wndListCtrl, TCHAR *pszSection, TCHAR *pszPr
    LVCOLUMN lvc;
    TCHAR szParam[256];
 
-   _sntprintf(szParam, 256, _T("%s_CNT"), pszPrefix);
+   _sntprintf_s(szParam, 256, _TRUNCATE, _T("%s_CNT"), pszPrefix);
    nCount = theApp.GetProfileInt(pszSection, szParam, 0);
 
    lvc.mask = LVCF_WIDTH;
    for(i = 0; i < nCount; i++)
    {
-      _sntprintf(szParam, 256, _T("%s_%d"), pszPrefix, i);
+      _sntprintf_s(szParam, 256, _TRUNCATE, _T("%s_%d"), pszPrefix, i);
       lvc.cx = theApp.GetProfileInt(pszSection, szParam, 50);
       wndListCtrl.SetColumn(i, &lvc);
    }

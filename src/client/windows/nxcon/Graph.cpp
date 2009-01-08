@@ -313,7 +313,7 @@ void CGraph::SetTimeFrame(DWORD dwTimeFrom, DWORD dwTimeTo)
    {
       lt.tm_sec = 0;
    }
-   m_dwTimeFrom = mktime(&lt);
+   m_dwTimeFrom = (DWORD)mktime(&lt);
 }
 
 
@@ -605,7 +605,7 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
    dc.SetTextColor(m_rgbTextColor);
 
    // Calculate text size and left margin
-   textSize = dc.GetTextExtent("0000.000");
+   textSize = dc.GetTextExtent(_T("0000.000"));
    iLeftMargin = textSize.cx + 10;
    if (m_bShowLegend)
    {
@@ -684,19 +684,19 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
    m_dSecondsPerPixel = (double)(m_dwTimeTo - m_dwTimeFrom) / (double)iGraphLen;
    if (m_dwTimeTo - m_dwTimeFrom >= 10368000)   // 120 days
    {
-      iTimeLen = dc.GetTextExtent("MMM").cx;
+      iTimeLen = dc.GetTextExtent(_T("MMM")).cx;
       nTimeLabel = TS_MONTH;
 //      nGridSizeX = (int)(2592000 / m_dSecondsPerPixel);
    }
    else if (m_dwTimeTo - m_dwTimeFrom >= 432000)   // 5 days
    {
-      iTimeLen = dc.GetTextExtent("MMM/00").cx;
+      iTimeLen = dc.GetTextExtent(_T("MMM/00")).cx;
       nTimeLabel = TS_DAY_AND_MONTH;
       nGridSizeX = (int)ceil(86400.0 / m_dSecondsPerPixel);
    }
    else
    {
-      iTimeLen = dc.GetTextExtent("00:00:00").cx;
+      iTimeLen = dc.GetTextExtent(_T("00:00:00")).cx;
       nTimeLabel = TS_LONG_TIME;
       nGridSizeX = 40;
    }

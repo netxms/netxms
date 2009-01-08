@@ -35,10 +35,10 @@ CDataExportDlg::CDataExportDlg(CWnd* pParent /*=NULL*/)
    m_iTimeStampFormat = theApp.GetProfileInt(_T("DataExport"), _T("TimeStampFormat"), 1);
    m_iSeparator = theApp.GetProfileInt(_T("DataExport"), _T("Separator"), 0);
    m_strFileName = theApp.GetProfileString(_T("DataExport"), _T("FileName"), NULL);
-   m_dateFrom = theApp.GetProfileInt(_T("DataExport"), _T("TimeFrom"), currTime - 86400);
-   m_timeFrom = theApp.GetProfileInt(_T("DataExport"), _T("TimeFrom"), currTime - 86400);
-   m_dateTo = theApp.GetProfileInt(_T("DataExport"), _T("TimeTo"), currTime);
-   m_timeTo = theApp.GetProfileInt(_T("DataExport"), _T("TimeTo"), currTime);
+   m_dateFrom = theApp.GetProfileInt(_T("DataExport"), _T("TimeFrom"), (int)(currTime - 86400));
+   m_timeFrom = theApp.GetProfileInt(_T("DataExport"), _T("TimeFrom"), (int)(currTime - 86400));
+   m_dateTo = theApp.GetProfileInt(_T("DataExport"), _T("TimeTo"), (int)currTime);
+   m_timeTo = theApp.GetProfileInt(_T("DataExport"), _T("TimeTo"), (int)currTime);
 }
 
 
@@ -75,11 +75,11 @@ void CDataExportDlg::SaveLastSelection()
    theApp.WriteProfileInt(_T("DataExport"), _T("Separator"), m_iSeparator);
    theApp.WriteProfileString(_T("DataExport"), _T("FileName"), (LPCTSTR)m_strFileName);
 
-   dwTimeFrom = CTime(m_dateFrom.GetYear(), m_dateFrom.GetMonth(),
+   dwTimeFrom = (DWORD)CTime(m_dateFrom.GetYear(), m_dateFrom.GetMonth(),
                       m_dateFrom.GetDay(), m_timeFrom.GetHour(),
                       m_timeFrom.GetMinute(),
                       m_timeFrom.GetSecond(), -1).GetTime();
-   dwTimeTo = CTime(m_dateTo.GetYear(), m_dateTo.GetMonth(),
+   dwTimeTo = (DWORD)CTime(m_dateTo.GetYear(), m_dateTo.GetMonth(),
                     m_dateTo.GetDay(), m_timeTo.GetHour(),
                     m_timeTo.GetMinute(),
                     m_timeTo.GetSecond(), -1).GetTime();

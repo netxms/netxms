@@ -883,7 +883,7 @@ static DWORD WINAPI DownloadThread(void *pArg)
 							}
 							WriteFile(m_hLocalFile, data, dwBytes, &dwStatus, NULL);
 							dwTotal += dwBytes;
-							_stprintf(szBuffer, _T("Downloading: %dK bytes received"), dwTotal / 1024);
+							_sntprintf_s(szBuffer, 256, _TRUNCATE, _T("Downloading: %dK bytes received"), dwTotal / 1024);
 							SetInfoText(hWnd, szBuffer);
 							if (dwBytes == 0)
 							{

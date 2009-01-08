@@ -1,7 +1,6 @@
 #if !defined(AFX_EDITSUBNETDLG_H__DCEA12C2_646B_495E_AC2C_7EFF3D61C069__INCLUDED_)
 #define AFX_EDITSUBNETDLG_H__DCEA12C2_646B_495E_AC2C_7EFF3D61C069__INCLUDED_
 
-#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000

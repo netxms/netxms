@@ -367,7 +367,6 @@ void CAlarmBrowser::AddAlarm(NXC_ALARM *pAlarm)
 
 void CAlarmBrowser::UpdateListItem(int nItem, NXC_ALARM *pAlarm)
 {
-   struct tm *ptm;
    TCHAR szBuffer[64];
    NXC_OBJECT *pObject;
    LVITEM lvi;
@@ -392,16 +391,12 @@ void CAlarmBrowser::UpdateListItem(int nItem, NXC_ALARM *pAlarm)
    m_wndListCtrl.SetItemText(nItem, 2, (pObject != NULL) ? pObject->szName : _T("<unknown>"));
    m_wndListCtrl.SetItemText(nItem, 3, pAlarm->szMessage);
 
-   _stprintf(szBuffer, _T("%d"), pAlarm->dwRepeatCount);
+   _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%d"), pAlarm->dwRepeatCount);
    m_wndListCtrl.SetItemText(nItem, 4, szBuffer);
 
-   ptm = localtime((const time_t *)&pAlarm->dwCreationTime);
-   _tcsftime(szBuffer, 32, _T("%d-%b-%Y %H:%M:%S"), ptm);
-   m_wndListCtrl.SetItemText(nItem, 5, szBuffer);
+   m_wndListCtrl.SetItemText(nItem, 5, FormatTimeStamp(pAlarm->dwCreationTime, szBuffer, TS_LONG_DATE_TIME));
    
-   ptm = localtime((const time_t *)&pAlarm->dwLastChangeTime);
-   _tcsftime(szBuffer, 32, _T("%d-%b-%Y %H:%M:%S"), ptm);
-   m_wndListCtrl.SetItemText(nItem, 6, szBuffer);
+   m_wndListCtrl.SetItemText(nItem, 6, FormatTimeStamp(pAlarm->dwLastChangeTime, szBuffer, TS_LONG_DATE_TIME));
 }
 
 
@@ -663,11 +658,11 @@ void CAlarmBrowser::UpdateStatusBar(void)
 
    for(i = 0, iSum = 0; i < 5; i++)
    {
-      _stprintf(szBuffer, _T("%d"), m_iNumAlarms[i]);
+      _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%d"), m_iNumAlarms[i]);
       m_wndStatusBar.SetText(szBuffer, i, 0);
       iSum += m_iNumAlarms[i];
    }
-   _stprintf(szBuffer, _T("Total: %d"), iSum);
+   _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("Total: %d"), iSum);
    m_wndStatusBar.SetText(szBuffer, 5, 0);
 }
 
@@ -694,8 +689,9 @@ void CAlarmBrowser::OnClose()
 // Get save info for desktop saving
 //
 
-LRESULT CAlarmBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+LRESULT CAlarmBrowser::OnGetSaveInfo(WPARAM wParam, LPARAM lParam)
 {
+	WINDOW_SAVE_INFO *pInfo = (WINDOW_SAVE_INFO *)lParam;
    pInfo->iWndClass = WNDC_ALARM_BROWSER;
    GetWindowPlacement(&pInfo->placement);
    _sntprintf(pInfo->szParameters, MAX_WND_PARAM_LEN, _T("SM:%d\x7FSD:%d\x7FSN:%d"),
@@ -708,7 +704,7 @@ LRESULT CAlarmBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 // WM_NOTIFY::LVN_COLUMNCLICK message handler
 //
 
-void CAlarmBrowser::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+void CAlarmBrowser::OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
    LVCOLUMN lvCol;
 
@@ -718,7 +714,7 @@ void CAlarmBrowser::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
    m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 
    // Change current sort mode and resort list
-   if (m_iSortMode == pNMHDR->iSubItem)
+   if (m_iSortMode == ((LPNMLISTVIEW)pNMHDR)->iSubItem)
    {
       // Same column, change sort direction
       m_iSortDir = 1 - m_iSortDir;
@@ -726,7 +722,7 @@ void CAlarmBrowser::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
    else
    {
       // Another sorting column
-      m_iSortMode = pNMHDR->iSubItem;
+      m_iSortMode = ((LPNMLISTVIEW)pNMHDR)->iSubItem;
    }
    m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
 
@@ -734,7 +730,7 @@ void CAlarmBrowser::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
    lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
    lvCol.iImage = (m_iSortDir == 0)  ? m_iSortImageBase : (m_iSortImageBase + 1);
-   m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
+   m_wndListCtrl.SetColumn(((LPNMLISTVIEW)pNMHDR)->iSubItem, &lvCol);
    
    *pResult = 0;
 }
@@ -865,11 +861,11 @@ BOOL CAlarmBrowser::IsNodeExist(DWORD dwNodeId)
 // WM_NOTIFY::TVN_SELCHANGED message handler
 //
 
-void CAlarmBrowser::OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult)
+void CAlarmBrowser::OnTreeViewSelChange(NMHDR *lpnmt, LRESULT *pResult)
 {
    if (m_bShowNodes)
    {
-      m_dwCurrNode = lpnmt->itemNew.lParam;
+      m_dwCurrNode = ((LPNMTREEVIEW)lpnmt)->itemNew.lParam;
       RefreshAlarmList();
    }
    *pResult = 0;

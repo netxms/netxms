@@ -83,8 +83,8 @@ protected:
 	afx_msg void OnItemCleardata();
 	afx_msg void OnUpdateItemCleardata(CCmdUI* pCmdUI);
 	//}}AFX_MSG
-   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
-   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
+   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, LPARAM lParam);
+   afx_msg void OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 

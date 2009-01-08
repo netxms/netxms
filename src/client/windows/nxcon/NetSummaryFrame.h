@@ -44,8 +44,8 @@ protected:
 	afx_msg void OnViewRefresh();
 	afx_msg void OnClose();
 	//}}AFX_MSG
-   afx_msg void OnObjectChange(DWORD dwObjectId, NXC_OBJECT *pObject);
-   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
+   afx_msg LRESULT OnObjectChange(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

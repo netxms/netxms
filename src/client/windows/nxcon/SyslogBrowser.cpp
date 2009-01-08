@@ -193,8 +193,9 @@ void CSyslogBrowser::OnRequestCompleted(void)
 // Get save info for desktop saving
 //
 
-LRESULT CSyslogBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+LRESULT CSyslogBrowser::OnGetSaveInfo(WPARAM wParam, LPARAM lParam)
 {
+	WINDOW_SAVE_INFO *pInfo = (WINDOW_SAVE_INFO *)lParam;
    pInfo->iWndClass = WNDC_SYSLOG_BROWSER;
    GetWindowPlacement(&pInfo->placement);
    pInfo->szParameters[0] = 0;
@@ -206,11 +207,12 @@ LRESULT CSyslogBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 // WM_SYSLOG_RECORD message handler
 //
 
-void CSyslogBrowser::OnSyslogRecord(WPARAM wParam, NXC_SYSLOG_RECORD *pRec)
+LRESULT CSyslogBrowser::OnSyslogRecord(WPARAM wParam, LPARAM lParam)
 {
-   AddRecord(pRec, wParam == RECORD_ORDER_NORMAL);
-   safe_free(pRec->pszText);
-   free(pRec);
+   AddRecord((NXC_SYSLOG_RECORD *)lParam, wParam == RECORD_ORDER_NORMAL);
+   safe_free(((NXC_SYSLOG_RECORD *)lParam)->pszText);
+   free((NXC_SYSLOG_RECORD *)lParam);
+	return 0;
 }
 
 
@@ -235,7 +237,7 @@ void CSyslogBrowser::AddRecord(NXC_SYSLOG_RECORD *pRec, BOOL bAppend)
       }
       else
       {
-         _stprintf(szBuffer, _T("<%d>"), pRec->wFacility);
+         _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("<%d>"), pRec->wFacility);
          m_wndListCtrl.SetItemText(iIdx, 2, szBuffer);
       }
       m_wndListCtrl.SetItemText(iIdx, 3, pRec->szHost);

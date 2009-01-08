@@ -135,9 +135,10 @@ void CSNMPWalkDlg::OnViewRefresh()
 // WM_REQUEST_COMPLETED message handler
 //
 
-void CSNMPWalkDlg::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
+LRESULT CSNMPWalkDlg::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 {
    EnableDlgItem(this, IDCANCEL, TRUE);
    m_wndStatus.SetWindowText(_T("Completed"));
    EndWaitCursor();
+	return 0;
 }

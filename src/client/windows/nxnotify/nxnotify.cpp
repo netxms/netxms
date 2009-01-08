@@ -60,13 +60,6 @@ BOOL CNxnotifyApp::InitInstance()
 		return FALSE;
    }
 
-	// Standard initialization
-#ifdef _AFXDLL
-	Enable3dControls();			// Call this when using MFC in a shared DLL
-#else
-	Enable3dControlsStatic();	// Call this when linking to MFC statically
-#endif
-
    // Create image list with severity icons
    hLib = GetModuleHandle(_T("NXUILIB.DLL"));
    g_imgListSeverity.Create(16, 16, ILC_COLOR32 | ILC_MASK, 5, 1);
@@ -89,9 +82,9 @@ BOOL CNxnotifyApp::InitInstance()
    g_dwPopupTimeout = GetProfileInt(_T("Settings"), _T("PopupTimeout"), g_dwPopupTimeout);
    LoadAlarmSoundCfg(&m_soundCfg, NXNOTIFY_ALARM_SOUND_KEY);
    bAutoLogin = GetProfileInt(_T("Connection"), _T("AutoLogin"), FALSE);
-   _tcscpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")));
-   _tcscpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL));
-   _tcscpy(g_szPassword, (LPCTSTR)GetProfileString(_T("Connection"), _T("Password"), NULL));
+   nx_strncpy(g_szServer, (LPCTSTR)GetProfileString(_T("Connection"), _T("Server"), _T("localhost")), MAX_PATH);
+   nx_strncpy(g_szLogin, (LPCTSTR)GetProfileString(_T("Connection"), _T("Login"), NULL), MAX_USER_NAME);
+   nx_strncpy(g_szPassword, (LPCTSTR)GetProfileString(_T("Connection"), _T("Password"), NULL), MAX_SECRET_LENGTH);
    g_dwOptions = GetProfileInt(_T("Connection"), _T("Options"), 0);
 
    // Load context menus
@@ -150,7 +143,7 @@ BOOL CNxnotifyApp::InitInstance()
       {
          TCHAR szBuffer[1024];
 
-         _sntprintf(szBuffer, 1024, _T("Unable to connect: %s"), NXCGetErrorText(dwResult));
+         _sntprintf_s(szBuffer, 1024, _TRUNCATE, _T("Unable to connect: %s"), NXCGetErrorText(dwResult));
          pFrame->MessageBox(szBuffer, _T("Error"), MB_ICONSTOP);
          bAutoLogin = FALSE;
       }
@@ -165,7 +158,7 @@ BOOL CNxnotifyApp::InitInstance()
    nid.uID = 0;
    nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
    nid.hIcon = appNotify.LoadIcon(IDR_MAINFRAME);
-   _tcscpy(nid.szTip, _T("NetXMS Alarm Notifier"));
+   nx_strncpy(nid.szTip, _T("NetXMS Alarm Notifier"), 128);
    nid.uCallbackMessage = NXNM_TASKBAR_CALLBACK;
    Shell_NotifyIcon(NIM_ADD, &nid);
 

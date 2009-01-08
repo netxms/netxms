@@ -42,7 +42,7 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	//}}AFX_MSG
-   afx_msg void OnSetObject(WPARAM wParam, NXC_OBJECT *pObject);
+   afx_msg LRESULT OnSetObject(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

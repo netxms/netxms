@@ -148,13 +148,13 @@ protected:
 	afx_msg void OnObjectPollInterfaceNames();
 	afx_msg void OnUpdateObjectPollInterfaceNames(CCmdUI* pCmdUI);
 	//}}AFX_MSG
-   afx_msg void OnTreeViewSelChange(LPNMTREEVIEW lpnmt, LRESULT *pResult);
-   afx_msg void OnTreeViewGetDispInfo(LPNMTVDISPINFO lpdi, LRESULT *pResult);
-   afx_msg void OnTreeViewItemExpanding(LPNMTREEVIEW lpnmt, LRESULT *pResult);
-   afx_msg void OnObjectChange(WPARAM wParam, LPARAM lParam);
+   afx_msg void OnTreeViewSelChange(NMHDR *lpnmt, LRESULT *pResult);
+   afx_msg void OnTreeViewGetDispInfo(NMHDR *lpdi, LRESULT *pResult);
+   afx_msg void OnTreeViewItemExpanding(NMHDR *lpnmt, LRESULT *pResult);
+   afx_msg LRESULT OnObjectChange(WPARAM wParam, LPARAM lParam);
    afx_msg void OnObjectTool(UINT nID);
-   afx_msg void OnFindObject(WPARAM wParam, TCHAR *pszSearchStr);
-	afx_msg void OnActivateObjectTree(WPARAM wParam, LPARAM lParam);
+   afx_msg LRESULT OnFindObject(WPARAM wParam, LPARAM);
+	afx_msg LRESULT OnActivateObjectTree(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

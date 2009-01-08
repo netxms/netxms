@@ -122,13 +122,14 @@ void CNetSummaryFrame::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI)
 
 
 //
-// WM_OBJECT_CHANGE message handler
+// NXCM_OBJECT_CHANGE message handler
 //
 
-void CNetSummaryFrame::OnObjectChange(DWORD dwObjectId, NXC_OBJECT *pObject)
+LRESULT CNetSummaryFrame::OnObjectChange(WPARAM wParam, LPARAM lParam)
 {
-   if (pObject->iClass == OBJECT_NODE)
+   if (((NXC_OBJECT *)lParam)->iClass == OBJECT_NODE)
       m_wndNodeSummary.Refresh();
+	return 0;
 }
 
 
@@ -161,8 +162,9 @@ void CNetSummaryFrame::OnClose()
 // Get save info for desktop saving
 //
 
-LRESULT CNetSummaryFrame::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+LRESULT CNetSummaryFrame::OnGetSaveInfo(WPARAM wParam, LPARAM lParam)
 {
+	WINDOW_SAVE_INFO *pInfo = (WINDOW_SAVE_INFO *)lParam;
    pInfo->iWndClass = WNDC_NETWORK_SUMMARY;
    GetWindowPlacement(&pInfo->placement);
    pInfo->szParameters[0] = 0;

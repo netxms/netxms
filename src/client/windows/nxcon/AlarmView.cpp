@@ -280,7 +280,6 @@ void CAlarmView::DeleteAlarmFromList(DWORD dwAlarmId)
 
 void CAlarmView::UpdateListItem(int nItem, NXC_ALARM *pAlarm)
 {
-   struct tm *ptm;
    TCHAR szBuffer[64];
    NXC_OBJECT *pObject;
    LVITEM lvi;
@@ -305,16 +304,12 @@ void CAlarmView::UpdateListItem(int nItem, NXC_ALARM *pAlarm)
    m_wndListCtrl.SetItemText(nItem, 2, (pObject != NULL) ? pObject->szName : _T("<unknown>"));
    m_wndListCtrl.SetItemText(nItem, 3, pAlarm->szMessage);
 
-   _stprintf(szBuffer, _T("%d"), pAlarm->dwRepeatCount);
+   _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%d"), pAlarm->dwRepeatCount);
    m_wndListCtrl.SetItemText(nItem, 4, szBuffer);
 
-   ptm = localtime((const time_t *)&pAlarm->dwCreationTime);
-   _tcsftime(szBuffer, 32, _T("%d-%b-%Y %H:%M:%S"), ptm);
-   m_wndListCtrl.SetItemText(nItem, 5, szBuffer);
+   m_wndListCtrl.SetItemText(nItem, 5, FormatTimeStamp(pAlarm->dwCreationTime, szBuffer, TS_LONG_DATE_TIME));
    
-   ptm = localtime((const time_t *)&pAlarm->dwLastChangeTime);
-   _tcsftime(szBuffer, 32, _T("%d-%b-%Y %H:%M:%S"), ptm);
-   m_wndListCtrl.SetItemText(nItem, 6, szBuffer);
+   m_wndListCtrl.SetItemText(nItem, 6, FormatTimeStamp(pAlarm->dwLastChangeTime, szBuffer, TS_LONG_DATE_TIME));
 }
 
 
@@ -364,10 +359,11 @@ BOOL CAlarmView::MatchAlarm(NXC_ALARM *pAlarm)
 // NXCM_SET_OBJECT message handler
 //
 
-void CAlarmView::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
+LRESULT CAlarmView::OnSetObject(WPARAM wParam, LPARAM lParam)
 {
-   m_pObject = pObject;
+   m_pObject = (NXC_OBJECT *)lParam;
    SendMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
+	return 0;
 }
 
 
@@ -424,7 +420,7 @@ void CAlarmView::OnContextMenu(CWnd* pWnd, CPoint point)
 // WM_NOTIFY::LVN_COLUMNCLICK message handler
 //
 
-void CAlarmView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+void CAlarmView::OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
    LVCOLUMN lvCol;
 
@@ -434,7 +430,7 @@ void CAlarmView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
    m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 
    // Change current sort mode and resort list
-   if (m_iSortMode == pNMHDR->iSubItem)
+   if (m_iSortMode == ((LPNMLISTVIEW)pNMHDR)->iSubItem)
    {
       // Same column, change sort direction
       m_iSortDir = 1 - m_iSortDir;
@@ -442,7 +438,7 @@ void CAlarmView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
    else
    {
       // Another sorting column
-      m_iSortMode = pNMHDR->iSubItem;
+      m_iSortMode = ((LPNMLISTVIEW)pNMHDR)->iSubItem;
    }
    m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
 
@@ -450,7 +446,7 @@ void CAlarmView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
    lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
    lvCol.iImage = (m_iSortDir == 0)  ? m_iSortImageBase : (m_iSortImageBase + 1);
-   m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
+   m_wndListCtrl.SetColumn(((LPNMLISTVIEW)pNMHDR)->iSubItem, &lvCol);
    
    *pResult = 0;
 }

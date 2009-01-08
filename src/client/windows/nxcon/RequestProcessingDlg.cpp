@@ -80,9 +80,10 @@ BOOL CRequestProcessingDlg::OnInitDialog()
 // WM_REQUEST_COMPLETED message handler
 //
 
-void CRequestProcessingDlg::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
+LRESULT CRequestProcessingDlg::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 {
    EndDialog(lParam);
+	return 0;
 }
 
 
@@ -90,9 +91,10 @@ void CRequestProcessingDlg::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 // WM_SET_INFO_TEXT message handler
 //
 
-void CRequestProcessingDlg::OnSetInfoText(WPARAM wParam, LPARAM lParam)
+LRESULT CRequestProcessingDlg::OnSetInfoText(WPARAM wParam, LPARAM lParam)
 {
    m_wndInfoText.SetWindowText((LPCTSTR)lParam);
+	return 0;
 }
 
 
@@ -100,7 +102,7 @@ void CRequestProcessingDlg::OnSetInfoText(WPARAM wParam, LPARAM lParam)
 // NXCM_CHANGE_PASSWORD message handler
 //
 
-LRESULT CRequestProcessingDlg::OnChangePassword(WPARAM wParam, TCHAR *pszBuffer)
+LRESULT CRequestProcessingDlg::OnChangePassword(WPARAM wParam, LPARAM lParam)
 {
    CPasswordChangeDlg dlg(IDD_CHANGE_PASSWORD);
    BOOL bResult = FALSE;
@@ -108,7 +110,7 @@ LRESULT CRequestProcessingDlg::OnChangePassword(WPARAM wParam, TCHAR *pszBuffer)
    if (dlg.DoModal() == IDOK)
    {
       bResult = TRUE;
-      nx_strncpy(pszBuffer, (LPCTSTR)dlg.m_szPassword, MAX_DB_STRING);
+      nx_strncpy((TCHAR *)lParam, (LPCTSTR)dlg.m_szPassword, MAX_DB_STRING);
    }
    return bResult;
 }

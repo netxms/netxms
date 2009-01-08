@@ -1,5 +1,5 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
+// Microsoft Visual C++ generated include file.
 // Used by nxcon.rc
 //
 #define IDD_ABOUTBOX                    100
@@ -49,7 +49,7 @@
 #define IDD_OBJECT_PROPERTIES           149
 #define IDD_DUMMY                       150
 #define IDD_EDIT_EVENT                  151
-#define IDM_VIEW_SPECIFIC               152
+#define IDR_MENU_VIEW_SPECIFIC          152
 #define IDA_MDI_DEFAULT                 153
 #define IDA_OBJECT_BROWSER              154
 #define IDI_SORT_UP                     156
@@ -66,7 +66,7 @@
 #define IDD_NEW_USER                    168
 #define IDD_USER_PROPERTIES             169
 #define IDD_GROUP_PROPERTIES            170
-#define IDM_CONTEXT                     171
+#define IDR_MENU_CONTEXT                171
 #define IDD_SET_PASSWORD                172
 #define IDI_PASSWORD                    173
 #define IDD_DCI_PROPERTIES              174

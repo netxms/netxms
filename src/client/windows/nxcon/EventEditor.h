@@ -59,8 +59,8 @@ protected:
 	afx_msg void OnEventDelete();
 	afx_msg void OnUpdateEventList();
 	//}}AFX_MSG
-	afx_msg void OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult);
-   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
+	afx_msg void OnListViewDoubleClick(NMHDR *pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 };
 

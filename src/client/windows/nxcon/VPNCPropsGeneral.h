@@ -1,7 +1,6 @@
 #if !defined(AFX_VPNCPROPSGENERAL_H__3150567E_5792_4B14_82A9_23031DCE196A__INCLUDED_)
 #define AFX_VPNCPROPSGENERAL_H__3150567E_5792_4B14_82A9_23031DCE196A__INCLUDED_
 
-#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000

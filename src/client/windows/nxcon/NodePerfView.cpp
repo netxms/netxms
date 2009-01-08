@@ -151,7 +151,7 @@ int CNodePerfView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 // NXCM_SET_OBJECT message handler
 //
 
-void CNodePerfView::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
+LRESULT CNodePerfView::OnSetObject(WPARAM wParam, LPARAM lParam)
 {
 	DWORD i;
 
@@ -167,11 +167,12 @@ void CNodePerfView::OnSetObject(WPARAM wParam, NXC_OBJECT *pObject)
 		delete m_pGraphList[i].pWnd;
 	}
 	m_dwNumGraphs = 0;
-   m_pObject = pObject;
+   m_pObject = (NXC_OBJECT *)lParam;
 	m_nState = STATE_LOADING;
 	InvalidateRect(NULL);
 	AdjustView();
 	m_workerQueue.Put(new WorkerTask(m_hWnd, TASK_GET_AVAIL_DCI));
+	return 0;
 }
 
 
@@ -256,12 +257,12 @@ BOOL CNodePerfView::CreateGraph(NXC_SYSTEM_DCI *pItemList, DWORD dwNumItems,
 // Handler for NXCM_REQUEST_COMPLETED message
 //
 
-void CNodePerfView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
+LRESULT CNodePerfView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 {
 	RECT rect;
 
 	if (m_nState != STATE_LOADING)
-		return;
+		return 0;
 
 	if (wParam != 0xFFFFFFFF)
 	{
@@ -323,6 +324,7 @@ void CNodePerfView::OnRequestCompleted(WPARAM wParam, LPARAM lParam)
 		m_nState = STATE_NO_DATA;
 	}
 	InvalidateRect(NULL);
+	return 0;
 }
 
 
@@ -397,13 +399,14 @@ void CNodePerfView::OnTimer(UINT nIDEvent)
 // NXCM_UPDATE_FINISHED message handler
 //
 
-void CNodePerfView::OnUpdateFinished(WPARAM wParam, LPARAM lParam)
+LRESULT CNodePerfView::OnUpdateFinished(WPARAM wParam, LPARAM lParam)
 {
 	if ((m_nState != STATE_UPDATING) || (m_pObject == NULL))
-		return;
+		return 0;
 
 	if (m_pObject->dwId == (DWORD)lParam)
 		m_nState = STATE_IDLE;
+	return 0;
 }
 
 
@@ -416,7 +419,7 @@ void CNodePerfView::UpdateAllGraphs()
 	DWORD i, j;
 
 	m_nState = STATE_UPDATING;
-   m_dwTimeTo = time(NULL);
+   m_dwTimeTo = (DWORD)time(NULL);
    m_dwTimeTo += 60 - m_dwTimeTo % 60;   // Round to minute boundary
    m_dwTimeFrom = m_dwTimeTo - 3600;
 	for(i = 0; i < m_dwNumGraphs; i++)
@@ -432,12 +435,12 @@ void CNodePerfView::UpdateAllGraphs()
 // NXCM_GRAPH_DATA message handler
 //
 
-void CNodePerfView::OnGraphData(WPARAM wParam, LPARAM lParam)
+LRESULT CNodePerfView::OnGraphData(WPARAM wParam, LPARAM lParam)
 {
 	DWORD i, j;
 
 	if (m_nState != STATE_UPDATING)
-		return;
+		return 0;
 
 	for(i = 0; i < m_dwNumGraphs; i++)
 	{
@@ -456,6 +459,7 @@ void CNodePerfView::OnGraphData(WPARAM wParam, LPARAM lParam)
 stop_search:
 	if (i == m_dwNumGraphs)		// Graph for given DCI ID not found
 		NXCDestroyDCIData(CAST_TO_POINTER(lParam, NXC_DCI_DATA *));
+	return 0;
 }
 
 

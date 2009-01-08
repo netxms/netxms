@@ -104,7 +104,7 @@ int CEventEditor::OnCreate(LPCREATESTRUCT lpCreateStruct)
    NXCGetEventDB(g_hSession, &m_ppEventTemplates, &m_dwNumTemplates);
    for(i = 0; i < m_dwNumTemplates; i++)
    {
-      _stprintf(szBuffer, _T("%d"), m_ppEventTemplates[i]->dwCode);
+      _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), m_ppEventTemplates[i]->dwCode);
       m_wndListCtrl.InsertItem(i, szBuffer, m_ppEventTemplates[i]->dwSeverity);
       m_wndListCtrl.SetItemData(i, m_ppEventTemplates[i]->dwCode);
       UpdateItem(i, m_ppEventTemplates[i]);
@@ -165,10 +165,10 @@ void CEventEditor::OnSize(UINT nType, int cx, int cy)
 // Handler for double-clicks in list view
 //
 
-void CEventEditor::OnListViewDoubleClick(NMITEMACTIVATE *pInfo, LRESULT *pResult)
+void CEventEditor::OnListViewDoubleClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
-   if (pInfo->iItem != -1)
-      EditEvent(pInfo->iItem);
+   if (((NMITEMACTIVATE *)pNMHDR)->iItem != -1)
+      EditEvent(((NMITEMACTIVATE *)pNMHDR)->iItem);
 }
 
 
@@ -334,7 +334,7 @@ void CEventEditor::OnEventNew()
    if (dwResult == RCC_SUCCESS)
    {
       // Create new item in list view
-      _stprintf(szBuffer, _T("%d"), dwNewCode);
+      _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), dwNewCode);
       iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, 0);
       m_wndListCtrl.SetItemData(iItem, dwNewCode);
 
@@ -495,7 +495,7 @@ int CEventEditor::CompareListItems(DWORD dwId1, DWORD dwId2)
 // WM_NOTIFY::LVN_COLUMNCLICK message handler
 //
 
-void CEventEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+void CEventEditor::OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
    LVCOLUMN lvCol;
 
@@ -505,7 +505,7 @@ void CEventEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
    m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 
    // Change current sort mode and resort list
-   if (m_iSortMode == pNMHDR->iSubItem)
+   if (m_iSortMode == ((LPNMLISTVIEW)pNMHDR)->iSubItem)
    {
       // Same column, change sort direction
       m_iSortDir = !m_iSortDir;
@@ -513,7 +513,7 @@ void CEventEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
    else
    {
       // Another sorting column
-      m_iSortMode = pNMHDR->iSubItem;
+      m_iSortMode = ((LPNMLISTVIEW)pNMHDR)->iSubItem;
    }
    m_wndListCtrl.SortItems(CompareItems, (UINT_PTR)this);
 

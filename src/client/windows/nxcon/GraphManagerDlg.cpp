@@ -116,7 +116,7 @@ void CGraphManagerDlg::CreateGraphTree(HTREEITEM hRoot, TCHAR *pszCurrPath, DWOR
       {
          for(j = _tcslen(pszCurrPath); (szPath[j] == _T(' ')) || (szPath[j] == _T('\t')); j++);
          if ((*pszCurrPath == 0) ||
-             ((!memicmp(szPath, pszCurrPath, _tcslen(pszCurrPath) * sizeof(TCHAR))) &&
+             ((!_memicmp(szPath, pszCurrPath, _tcslen(pszCurrPath) * sizeof(TCHAR))) &&
               (szPath[j] == _T('-')) && (szPath[j + 1] == _T('>'))))
          {
             HTREEITEM hSubTree;

@@ -57,8 +57,8 @@ protected:
 	afx_msg void OnConfigMoveup();
 	afx_msg void OnConfigMovedown();
 	//}}AFX_MSG
-   afx_msg void OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult);
-   afx_msg void OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewDblClk(NMHDR *pNMHDR, LRESULT *pResult);
+   afx_msg void OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 
 public:

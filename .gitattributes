@@ -204,8 +204,7 @@ src/client/windows/nxcon/icons/tree.ico -text
 src/client/windows/nxcon/icons/unsupported.ico -text
 src/client/windows/nxcon/icons/user.ico -text
 src/client/windows/nxcon/icons/users.ico -text
-src/client/windows/nxcon/nxcon.dsp eol=crlf
-src/client/windows/nxcon/nxcon.dsw eol=crlf
+src/client/windows/nxcon/nxcon.vcproj -text
 src/client/windows/nxcon/res/Toolbar.bmp -text
 src/client/windows/nxcon/res/any.bmp -text
 src/client/windows/nxcon/res/close.bmp -text
@@ -213,7 +212,7 @@ src/client/windows/nxcon/res/down_arrow.bmp -text
 src/client/windows/nxcon/res/none.bmp -text
 src/client/windows/nxcon/res/nxcon.ico -text
 src/client/windows/nxcon/res/up_arrow.bmp -text
-src/client/windows/nxnotify/nxnotify.dsp eol=crlf
+src/client/windows/nxnotify/nxnotify.vcproj -text
 src/client/windows/nxnotify/res/nxnotify.ico -text
 src/client/windows/nxnotify/res/processing.ico -text
 src/client/windows/nxnotify/res/sort_up.ico -text

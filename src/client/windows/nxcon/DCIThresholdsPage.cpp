@@ -125,7 +125,7 @@ void CDCIThresholdsPage::UpdateListEntry(int iItem, DWORD dwIndex)
       case F_AVERAGE:
       case F_DEVIATION:
       case F_ERROR:
-         _stprintf(szArgs, _T("%d"), m_pItem->pThresholdList[dwIndex].dwArg1);
+         _sntprintf_s(szArgs, 256, _TRUNCATE, _T("%d"), m_pItem->pThresholdList[dwIndex].dwArg1);
          break;
       default:
          szArgs[0] = 0;
@@ -135,33 +135,33 @@ void CDCIThresholdsPage::UpdateListEntry(int iItem, DWORD dwIndex)
    switch(g_nCurrentDCIDataType)
    {
       case DCI_DT_INT:
-         _stprintf(szValue, _T("%d"), m_pItem->pThresholdList[dwIndex].value.dwInt32);
+         _sntprintf_s(szValue, MAX_DCI_STRING_VALUE, _TRUNCATE, _T("%d"), m_pItem->pThresholdList[dwIndex].value.dwInt32);
          break;
       case DCI_DT_UINT:
-         _stprintf(szValue, _T("%u"), m_pItem->pThresholdList[dwIndex].value.dwInt32);
+         _sntprintf_s(szValue, MAX_DCI_STRING_VALUE, _TRUNCATE, _T("%u"), m_pItem->pThresholdList[dwIndex].value.dwInt32);
          break;
       case DCI_DT_INT64:
-         _stprintf(szValue, _T("%I64d"), m_pItem->pThresholdList[dwIndex].value.qwInt64);
+         _sntprintf_s(szValue, MAX_DCI_STRING_VALUE, _TRUNCATE, _T("%I64d"), m_pItem->pThresholdList[dwIndex].value.qwInt64);
          break;
       case DCI_DT_UINT64:
-         _stprintf(szValue, _T("%I64u"), m_pItem->pThresholdList[dwIndex].value.qwInt64);
+         _sntprintf_s(szValue, MAX_DCI_STRING_VALUE, _TRUNCATE, _T("%I64u"), m_pItem->pThresholdList[dwIndex].value.qwInt64);
          break;
       case DCI_DT_FLOAT:
-         _stprintf(szValue, _T("%f"), m_pItem->pThresholdList[dwIndex].value.dFloat);
+         _sntprintf_s(szValue, MAX_DCI_STRING_VALUE, _TRUNCATE, _T("%f"), m_pItem->pThresholdList[dwIndex].value.dFloat);
          break;
       case DCI_DT_STRING:
-         _stprintf(szValue, _T("\"%s\""), m_pItem->pThresholdList[dwIndex].value.szString);
+         _sntprintf_s(szValue, MAX_DCI_STRING_VALUE, _TRUNCATE, _T("\"%s\""), m_pItem->pThresholdList[dwIndex].value.szString);
          break;
    }
 
    // Threshold expression
    if (m_pItem->pThresholdList[dwIndex].wFunction == F_ERROR)
-      _stprintf(szBuffer, _T("%s(%s)"),
-                g_pszThresholdFunction[m_pItem->pThresholdList[dwIndex].wFunction], szArgs);
+      _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%s(%s)"),
+                   g_pszThresholdFunction[m_pItem->pThresholdList[dwIndex].wFunction], szArgs);
    else
-      _stprintf(szBuffer, _T("%s(%s) %s %s"),
-                g_pszThresholdFunction[m_pItem->pThresholdList[dwIndex].wFunction], szArgs,
-                g_pszThresholdOperation[m_pItem->pThresholdList[dwIndex].wOperation], szValue);
+      _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%s(%s) %s %s"),
+                   g_pszThresholdFunction[m_pItem->pThresholdList[dwIndex].wFunction], szArgs,
+                   g_pszThresholdOperation[m_pItem->pThresholdList[dwIndex].wOperation], szValue);
    m_wndListCtrl.SetItemText(iItem, 0, szBuffer);
 
    // Event

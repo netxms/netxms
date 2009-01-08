@@ -358,7 +358,7 @@ void CNodePropsGeneral::OnButtonGenerate()
                      _T("Confirmation"), MB_YESNO | MB_ICONQUESTION) != IDYES)
          return;
 
-   srand(time(NULL));
+   srand((unsigned int)time(NULL));
    for(i = 0; i < 15; i++)
    {
       szBuffer[i] = rand() * 90 / RAND_MAX + '!';

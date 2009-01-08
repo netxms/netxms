@@ -98,16 +98,16 @@ void CMapControlBox::OnSize(UINT nType, int cx, int cy)
 // WM_NOTIFY::LVN_ITEMCHANGING message handler
 //
 
-void CMapControlBox::OnListViewItemChanging(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+void CMapControlBox::OnListViewItemChanging(NMHDR *pNMHDR, LRESULT *pResult)
 {
    *pResult = FALSE;
-   if (pNMHDR->iItem != -1)
+   if (((LPNMLISTVIEW)pNMHDR)->iItem != -1)
    {
-      if (pNMHDR->uChanged & LVIF_STATE)
+      if (((LPNMLISTVIEW)pNMHDR)->uChanged & LVIF_STATE)
       {
-         if (pNMHDR->uNewState & LVIS_FOCUSED)
+         if (((LPNMLISTVIEW)pNMHDR)->uNewState & LVIS_FOCUSED)
          {
-            GetParent()->PostMessage(WM_COMMAND, m_wndListCtrl.GetItemData(pNMHDR->iItem), 0);
+            GetParent()->PostMessage(WM_COMMAND, m_wndListCtrl.GetItemData(((LPNMLISTVIEW)pNMHDR)->iItem), 0);
             *pResult = TRUE;
          }
       }

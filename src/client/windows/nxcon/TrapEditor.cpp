@@ -196,7 +196,7 @@ int CTrapEditor::AddItem(DWORD dwIndex)
    TCHAR szBuffer[32];
    int iItem;
 
-   _stprintf(szBuffer, _T("%d"), m_pTrapList[dwIndex].dwId);
+   _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), m_pTrapList[dwIndex].dwId);
    iItem = m_wndListCtrl.InsertItem(dwIndex, szBuffer);
    if (iItem != -1)
    {
@@ -434,7 +434,7 @@ void CTrapEditor::OnTrapEdit()
 // Handler for WM_NOTIFY::NM_DBLCLK from IDC_LIST_VIEW
 //
 
-void CTrapEditor::OnListViewDblClk(LPNMITEMACTIVATE pNMHDR, LRESULT *pResult)
+void CTrapEditor::OnListViewDblClk(NMHDR *pNMHDR, LRESULT *pResult)
 {
    PostMessage(WM_COMMAND, ID_TRAP_EDIT, 0);
 }
@@ -536,7 +536,7 @@ NXC_TRAP_CFG_ENTRY *CTrapEditor::GetTrapById(DWORD dwId)
 // WM_NOTIFY::LVN_COLUMNCLICK message handler
 //
 
-void CTrapEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+void CTrapEditor::OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
    LVCOLUMN lvCol;
 
@@ -546,7 +546,7 @@ void CTrapEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
    m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 
    // Change current sort mode and resort list
-   if (m_iSortMode == pNMHDR->iSubItem)
+   if (m_iSortMode == ((LPNMLISTVIEW)pNMHDR)->iSubItem)
    {
       // Same column, change sort direction
       m_iSortDir = -m_iSortDir;
@@ -554,7 +554,7 @@ void CTrapEditor::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
    else
    {
       // Another sorting column
-      m_iSortMode = pNMHDR->iSubItem;
+      m_iSortMode = ((LPNMLISTVIEW)pNMHDR)->iSubItem;
    }
    SortList();
    

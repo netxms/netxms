@@ -323,7 +323,7 @@ TCHAR *BuildSymbolicOIDString(SNMP_MIBObject *pNode, DWORD dwInstance);
 // Utility functions
 //
 
-TCHAR *FormatTimeStamp(DWORD dwTimeStamp, TCHAR *pszBuffer, int iType);
+TCHAR *FormatTimeStamp(time_t ts, TCHAR *pszBuffer, int iType);
 CSize GetWindowSize(CWnd *pWnd);
 void SelectListViewItem(CListCtrl *pListCtrl, int iItem);
 TCHAR *TranslateUNIXText(const TCHAR *pszText);

@@ -288,35 +288,35 @@ void CLastValuesView::UpdateItem(int iItem, NXC_DCI_VALUE *pValue)
 				i64 = _tcstoll(pValue->szValue, NULL, 10);
 				if (i64 >= 10000000000)
 				{
-					_stprintf(szBuffer, INT64_FMT _T(" G"), i64 / 1000000000);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, INT64_FMT _T(" G"), i64 / 1000000000);
 				}
 				else if (i64 >= 10000000)
 				{
-					_stprintf(szBuffer, INT64_FMT _T(" M"), i64 / 1000000);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, INT64_FMT _T(" M"), i64 / 1000000);
 				}
 				else if (i64 >= 10000)
 				{
-					_stprintf(szBuffer, INT64_FMT _T(" K"), i64 / 1000);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, INT64_FMT _T(" K"), i64 / 1000);
 				}
 				else if (i64 >= 0)
 				{
-					_stprintf(szBuffer, INT64_FMT, i64);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, INT64_FMT, i64);
 				}
 				else if (i64 <= -10000000000)
 				{
-					_stprintf(szBuffer, INT64_FMT _T(" G"), i64 / 1000000000);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, INT64_FMT _T(" G"), i64 / 1000000000);
 				}
 				else if (i64 <= -10000000)
 				{
-					_stprintf(szBuffer, INT64_FMT _T(" M"), i64 / 1000000);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, INT64_FMT _T(" M"), i64 / 1000000);
 				}
 				else if (i64 <= 10000)
 				{
-					_stprintf(szBuffer, INT64_FMT _T(" K"), i64 / 1000);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, INT64_FMT _T(" K"), i64 / 1000);
 				}
 				else
 				{
-					_stprintf(szBuffer, INT64_FMT, i64);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, INT64_FMT, i64);
 				}
 				break;
 			case DCI_DT_UINT:
@@ -324,54 +324,54 @@ void CLastValuesView::UpdateItem(int iItem, NXC_DCI_VALUE *pValue)
 				ui64 = _tcstoull(pValue->szValue, NULL, 10);
 				if (ui64 >= 10000000000)
 				{
-					_stprintf(szBuffer, UINT64_FMT _T(" G"), ui64 / 1000000000);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, UINT64_FMT _T(" G"), ui64 / 1000000000);
 				}
 				else if (ui64 >= 10000000)
 				{
-					_stprintf(szBuffer, UINT64_FMT _T(" M"), ui64 / 1000000);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, UINT64_FMT _T(" M"), ui64 / 1000000);
 				}
 				else if (ui64 >= 10000)
 				{
-					_stprintf(szBuffer, UINT64_FMT _T(" K"), ui64 / 1000);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, UINT64_FMT _T(" K"), ui64 / 1000);
 				}
 				else
 				{
-					_stprintf(szBuffer, UINT64_FMT, ui64);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, UINT64_FMT, ui64);
 				}
 				break;
 			case DCI_DT_FLOAT:
 				d = _tcstod(pValue->szValue, NULL);
 				if (d >= 10000000000)
 				{
-					_stprintf(szBuffer, _T("%.2f G"), d / 1000000000);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%.2f G"), d / 1000000000);
 				}
 				else if (d >= 10000000)
 				{
-					_stprintf(szBuffer, _T("%.2f M"), d / 1000000);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%.2f M"), d / 1000000);
 				}
 				else if (d >= 10000)
 				{
-					_stprintf(szBuffer, _T("%.2f K"), d / 1000);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%.2f K"), d / 1000);
 				}
 				else if (d >= 0)
 				{
-					_stprintf(szBuffer, _T("%f"), d);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%f"), d);
 				}
 				else if (d <= -10000000000)
 				{
-					_stprintf(szBuffer, _T("%.2f G"), d / 1000000000);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%.2f G"), d / 1000000000);
 				}
 				else if (d <= -10000000)
 				{
-					_stprintf(szBuffer, _T("%.2f M"), d / 1000000);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%.2f M"), d / 1000000);
 				}
 				else if (d <= 10000)
 				{
-					_stprintf(szBuffer, _T("%.2f K"), d / 1000);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%.2f K"), d / 1000);
 				}
 				else
 				{
-					_stprintf(szBuffer, _T("%f"), d);
+					_sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%f"), d);
 				}
 				break;
 			default:
@@ -392,8 +392,9 @@ void CLastValuesView::UpdateItem(int iItem, NXC_DCI_VALUE *pValue)
 // Get save info for desktop saving
 //
 
-LRESULT CLastValuesView::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+LRESULT CLastValuesView::OnGetSaveInfo(WPARAM wParam, LPARAM lParam)
 {
+	WINDOW_SAVE_INFO *pInfo = CAST_TO_POINTER(lParam, WINDOW_SAVE_INFO *);
    pInfo->iWndClass = WNDC_LAST_VALUES;
    GetWindowPlacement(&pInfo->placement);
    _sntprintf(pInfo->szParameters, MAX_DB_STRING, _T("F:%d\x7FN:%d\x7FS:%d"),
@@ -468,7 +469,7 @@ void CLastValuesView::OnItemShowdata()
    while(iItem != -1)
    {
       dwItemId = m_wndListCtrl.GetItemData(iItem);
-      _stprintf(szBuffer, _T("%s - "), pObject->szName); 
+      _sntprintf_s(szBuffer, 384, _TRUNCATE, _T("%s - "), pObject->szName); 
       m_wndListCtrl.GetItemText(iItem, 1, &szBuffer[_tcslen(szBuffer)],
                                 384 - _tcslen(szBuffer));
       theApp.ShowDCIData(m_dwNodeId, dwItemId, szBuffer);
@@ -611,11 +612,11 @@ void CLastValuesView::OnItemExportdata()
    if (dlg.DoModal() == IDOK)
    {
       dlg.SaveLastSelection();
-      dwTimeFrom = CTime(dlg.m_dateFrom.GetYear(), dlg.m_dateFrom.GetMonth(),
+      dwTimeFrom = (DWORD)CTime(dlg.m_dateFrom.GetYear(), dlg.m_dateFrom.GetMonth(),
                          dlg.m_dateFrom.GetDay(), dlg.m_timeFrom.GetHour(),
                          dlg.m_timeFrom.GetMinute(),
                          dlg.m_timeFrom.GetSecond(), -1).GetTime();
-      dwTimeTo = CTime(dlg.m_dateTo.GetYear(), dlg.m_dateTo.GetMonth(),
+      dwTimeTo = (DWORD)CTime(dlg.m_dateTo.GetYear(), dlg.m_dateTo.GetMonth(),
                        dlg.m_dateTo.GetDay(), dlg.m_timeTo.GetHour(),
                        dlg.m_timeTo.GetMinute(),
                        dlg.m_timeTo.GetSecond(), -1).GetTime();
@@ -691,7 +692,7 @@ int CLastValuesView::CompareListItems(LPARAM lParam1, LPARAM lParam2)
 // Handler for list view column click
 //
 
-void CLastValuesView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResult)
+void CLastValuesView::OnListViewColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
    LVCOLUMN lvCol;
 
@@ -701,7 +702,7 @@ void CLastValuesView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResul
    m_wndListCtrl.SetColumn(m_iSortMode, &lvCol);
 
    // Change current sort mode and resort list
-   if (m_iSortMode == pNMHDR->iSubItem)
+   if (m_iSortMode == ((LPNMLISTVIEW)pNMHDR)->iSubItem)
    {
       // Same column, change sort direction
       m_iSortDir = -m_iSortDir;
@@ -709,7 +710,7 @@ void CLastValuesView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResul
    else
    {
       // Another sorting column
-      m_iSortMode = pNMHDR->iSubItem;
+      m_iSortMode = ((LPNMLISTVIEW)pNMHDR)->iSubItem;
    }
    m_wndListCtrl.SortItems(CompareItems, (DWORD)this);
 
@@ -717,7 +718,7 @@ void CLastValuesView::OnListViewColumnClick(LPNMLISTVIEW pNMHDR, LRESULT *pResul
    lvCol.mask = LVCF_IMAGE | LVCF_FMT;
    lvCol.fmt = LVCFMT_BITMAP_ON_RIGHT | LVCFMT_IMAGE | LVCFMT_LEFT;
    lvCol.iImage = (m_iSortDir > 0) ? m_iSortImageBase : (m_iSortImageBase + 1);
-   m_wndListCtrl.SetColumn(pNMHDR->iSubItem, &lvCol);
+   m_wndListCtrl.SetColumn(((LPNMLISTVIEW)pNMHDR)->iSubItem, &lvCol);
    
    *pResult = 0;
 }

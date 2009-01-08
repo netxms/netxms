@@ -220,8 +220,9 @@ void CEventBrowser::OnRequestCompleted(void)
 // Get save info for desktop saving
 //
 
-LRESULT CEventBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
+LRESULT CEventBrowser::OnGetSaveInfo(WPARAM wParam, LPARAM lParam)
 {
+	WINDOW_SAVE_INFO *pInfo = (WINDOW_SAVE_INFO *)lParam;
    pInfo->iWndClass = WNDC_EVENT_BROWSER;
    GetWindowPlacement(&pInfo->placement);
    pInfo->szParameters[0] = 0;
@@ -233,8 +234,9 @@ LRESULT CEventBrowser::OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo)
 // WM_NETXMS_EVENT message handler
 //
 
-void CEventBrowser::OnNetXMSEvent(WPARAM wParam, NXC_EVENT *pEvent)
+LRESULT CEventBrowser::OnNetXMSEvent(WPARAM wParam, LPARAM lParam)
 {
-   AddEvent(pEvent, wParam == RECORD_ORDER_NORMAL);
-   free(pEvent);
+   AddEvent((NXC_EVENT *)lParam, wParam == RECORD_ORDER_NORMAL);
+   free((NXC_EVENT *)lParam);
+	return 0;
 }

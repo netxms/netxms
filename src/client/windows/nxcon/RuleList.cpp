@@ -694,11 +694,11 @@ void CRuleList::RecalcHeight()
 // Process HDN_BEGINTRACK notification from header control
 //
 
-void CRuleList::OnHeaderBeginTrack(NMHEADER *pHdrInfo, LRESULT *pResult)
+void CRuleList::OnHeaderBeginTrack(NMHDR *pHdrInfo, LRESULT *pResult)
 {
    int x;
 
-   x = GetColumnStartPos(pHdrInfo->iItem) + pHdrInfo->pitem->cxy - m_iXOrg;
+   x = GetColumnStartPos(((NMHEADER *)pHdrInfo)->iItem) + ((NMHEADER *)pHdrInfo)->pitem->cxy - m_iXOrg;
    DrawShadowLine(x, RULE_HEADER_HEIGHT, x, m_iTotalHeight + RULE_HEADER_HEIGHT);
    *pResult = 0;
 }
@@ -708,19 +708,19 @@ void CRuleList::OnHeaderBeginTrack(NMHEADER *pHdrInfo, LRESULT *pResult)
 // Process HDN_TRACK notification from header control
 //
 
-void CRuleList::OnHeaderTrack(NMHEADER *pHdrInfo, LRESULT *pResult)
+void CRuleList::OnHeaderTrack(NMHDR *pHdrInfo, LRESULT *pResult)
 {
    int x, sx;
 
    // Draw line at old and new column width
-   sx = GetColumnStartPos(pHdrInfo->iItem);
-   x = sx + m_pColList[pHdrInfo->iItem].m_iWidth - m_iXOrg;
+   sx = GetColumnStartPos(((NMHEADER *)pHdrInfo)->iItem);
+   x = sx + m_pColList[((NMHEADER *)pHdrInfo)->iItem].m_iWidth - m_iXOrg;
    DrawShadowLine(x, RULE_HEADER_HEIGHT, x, m_iTotalHeight + RULE_HEADER_HEIGHT);
-   x = sx + pHdrInfo->pitem->cxy - m_iXOrg;
+   x = sx + ((NMHEADER *)pHdrInfo)->pitem->cxy - m_iXOrg;
    DrawShadowLine(x, RULE_HEADER_HEIGHT, x, m_iTotalHeight + RULE_HEADER_HEIGHT);
 
    // New column width
-   m_pColList[pHdrInfo->iItem].m_iWidth = pHdrInfo->pitem->cxy;
+   m_pColList[((NMHEADER *)pHdrInfo)->iItem].m_iWidth = ((NMHEADER *)pHdrInfo)->pitem->cxy;
 
    *pResult = 0;
 }
@@ -730,7 +730,7 @@ void CRuleList::OnHeaderTrack(NMHEADER *pHdrInfo, LRESULT *pResult)
 // Process HDN_ENDTRACK notification from header control
 //
 
-void CRuleList::OnHeaderEndTrack(NMHEADER *pHdrInfo, LRESULT *pResult)
+void CRuleList::OnHeaderEndTrack(NMHDR *pHdrInfo, LRESULT *pResult)
 {
    RecalcWidth();
    m_wndHeader.SetWindowPos(NULL, -m_iXOrg, 0, m_iTotalWidth, RULE_HEADER_HEIGHT, SWP_NOZORDER);

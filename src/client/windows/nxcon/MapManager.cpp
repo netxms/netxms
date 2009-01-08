@@ -136,7 +136,7 @@ void CMapManager::OnViewRefresh()
 	{
 		for(i = 0; i < numMaps; i++)
 		{
-			_stprintf(buffer, _T("%d"), mapList[i].dwMapId);
+			_sntprintf_s(buffer, 64, _TRUNCATE, _T("%d"), mapList[i].dwMapId);
 			item = m_wndListCtrl.InsertItem(i, buffer);
 			if (item != -1)
 			{
@@ -173,7 +173,7 @@ void CMapManager::OnMapCreate()
 		                    &mapId, _T("Creating new network map..."));
 		if (rcc == RCC_SUCCESS)
 		{
-			_stprintf(buffer, _T("%d"), mapId);
+			_sntprintf_s(buffer, 64, _TRUNCATE, _T("%d"), mapId);
 			item = m_wndListCtrl.InsertItem(0x7FFFFFFF, buffer);
 			if (item != -1)
 			{

@@ -1,7 +1,6 @@
 #if !defined(AFX_DCIDATAVIEW_H__4C89D444_02D7_4D97_ADAC_F09D5564766F__INCLUDED_)
 #define AFX_DCIDATAVIEW_H__4C89D444_02D7_4D97_ADAC_F09D5564766F__INCLUDED_
 
-#include "..\..\..\INCLUDE\nxclapi.h"	// Added by ClassView
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -57,8 +56,8 @@ protected:
 	afx_msg void OnDataScaleNormal();
 	afx_msg void OnDataCopytoclipboard();
 	//}}AFX_MSG
-   afx_msg void OnListViewItemChange(LPNMLISTVIEW pNMHDR, LRESULT *pResult);
-   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, WINDOW_SAVE_INFO *pInfo);
+   afx_msg void OnListViewItemChange(NMHDR *pNMHDR, LRESULT *pResult);
+   afx_msg LRESULT OnGetSaveInfo(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 private:
 	int m_iStatusBarHeight;
