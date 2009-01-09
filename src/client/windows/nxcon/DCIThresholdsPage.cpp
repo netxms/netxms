@@ -203,23 +203,23 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
    switch(g_nCurrentDCIDataType)
    {
       case DCI_DT_INT:
-         _stprintf(szBuffer, _T("%d"), pThreshold->value.dwInt32);
+         _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), pThreshold->value.dwInt32);
          dlg.m_strValue = szBuffer;
          break;
       case DCI_DT_UINT:
-         _stprintf(szBuffer, _T("%u"), pThreshold->value.dwInt32);
+         _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%u"), pThreshold->value.dwInt32);
          dlg.m_strValue = szBuffer;
          break;
       case DCI_DT_INT64:
-         _stprintf(szBuffer, _T("%I64d"), pThreshold->value.qwInt64);
+         _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%I64d"), pThreshold->value.qwInt64);
          dlg.m_strValue = szBuffer;
          break;
       case DCI_DT_UINT64:
-         _stprintf(szBuffer, _T("%I64u"), pThreshold->value.qwInt64);
+         _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%I64u"), pThreshold->value.qwInt64);
          dlg.m_strValue = szBuffer;
          break;
       case DCI_DT_FLOAT:
-         _stprintf(szBuffer, _T("%f"), pThreshold->value.dFloat);
+         _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%f"), pThreshold->value.dFloat);
          dlg.m_strValue = szBuffer;
          break;
       case DCI_DT_STRING:

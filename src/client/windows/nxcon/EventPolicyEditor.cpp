@@ -330,7 +330,7 @@ void CEventPolicyEditor::InsertNewRule(int iInsertBefore)
    // Renumber all rows below new
    for(iPos++; iPos < (int)m_pEventPolicy->dwNumRules; iPos++)
    {
-      _stprintf(szBuffer, _T("%d"), iPos + 1);
+      _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), iPos + 1);
       m_wndRuleList.ReplaceItem(iPos, 0, 0, szBuffer);
    }
 
@@ -348,7 +348,7 @@ void CEventPolicyEditor::UpdateRow(int iRow)
    DWORD i;
 
    // Rule number
-   _stprintf(szBuffer, _T("%d"), iRow + 1);
+   _sntprintf_s(szBuffer, MAX_DB_STRING, _TRUNCATE, _T("%d"), iRow + 1);
    if (m_wndRuleList.GetNumItems(iRow, COL_RULE) == 0)
       m_wndRuleList.AddItem(iRow, COL_RULE, szBuffer);
    else
@@ -837,7 +837,7 @@ void CEventPolicyEditor::DeleteSelectedRules()
          NXCDeletePolicyRule(m_pEventPolicy, iRow);
          for(i = iRow; i < (int)m_pEventPolicy->dwNumRules; i++)
          {
-            _stprintf(szBuffer, _T("%d"), i + 1);
+            _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), i + 1);
             m_wndRuleList.ReplaceItem(i, 0, 0, szBuffer);
          }
          iRow = m_wndRuleList.GetNextRow(iRow - 1, RLF_SELECTED);
@@ -1282,7 +1282,7 @@ void CEventPolicyEditor::OnPolicyPaste()
    for(i = base + (int)m_clipboard->dwNumRules; i < (int)m_pEventPolicy->dwNumRules; i++)
    {
 		m_pEventPolicy->pRuleList[i].dwId = i;
-      _stprintf(buffer, _T("%d"), i + 1);
+      _sntprintf_s(buffer, 32, _TRUNCATE, _T("%d"), i + 1);
       m_wndRuleList.ReplaceItem(i, 0, 0, buffer);
    }
 

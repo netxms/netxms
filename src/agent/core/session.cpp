@@ -129,7 +129,7 @@ CommSession::~CommSession()
    delete m_pMessageQueue;
    safe_free(m_pMsgBuffer);
    if (m_hCurrFile != -1)
-      close(m_hCurrFile);
+      _close(m_hCurrFile);
    DestroyEncryptionContext(m_pCtx);
 }
 
@@ -227,13 +227,13 @@ void CommSession::ReadThread(void)
             {
                if ((m_hCurrFile != -1) && (m_dwFileRqId == pRawMsg->dwId))
                {
-                  if (write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
+                  if (_write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
                   {
                      if (wFlags & MF_END_OF_FILE)
                      {
                         CSCPMessage msg;
 
-                        close(m_hCurrFile);
+                        _close(m_hCurrFile);
                         m_hCurrFile = -1;
                   
                         msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -247,7 +247,7 @@ void CommSession::ReadThread(void)
                      // I/O error
                      CSCPMessage msg;
 
-                     close(m_hCurrFile);
+                     _close(m_hCurrFile);
                      m_hCurrFile = -1;
                
                      msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -769,8 +769,8 @@ void CommSession::UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
                   }
             }
 #endif
-            write(hFile, pConfig, dwSize);
-            close(hFile);
+            _write(hFile, pConfig, dwSize);
+            _close(hFile);
             pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
          }
          else

@@ -891,18 +891,18 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
    for(y = m_nZeroLine - textSize.cy / 2, dMark = 0; y > iTopMargin; y -= nGridSizeY, dMark += dStep)
    {
       if (bIntMarks)
-         _stprintf(szBuffer, INT64_FMT _T("%s"), (INT64)dMark / nDivider, szModifier);
+         _sntprintf_s(szBuffer, 256, _TRUNCATE, INT64_FMT _T("%s"), (INT64)dMark / nDivider, szModifier);
       else
-         _stprintf(szBuffer, _T("%5.3f%s"), dMark, szModifier);
+         _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%5.3f%s"), dMark, szModifier);
       CSize cz = dc.GetTextExtent(szBuffer);
       dc.TextOut(iLeftMargin - cz.cx - 5, y, szBuffer);
    }
    for(y = m_nZeroLine + nGridSizeY - textSize.cy / 2, dMark = -dStep; y < rect.bottom - iBottomMargin; y += nGridSizeY, dMark -= dStep)
    {
       if (bIntMarks)
-         _stprintf(szBuffer, INT64_FMT _T("%s"), (INT64)dMark / nDivider, szModifier);
+         _sntprintf_s(szBuffer, 256, _TRUNCATE, INT64_FMT _T("%s"), (INT64)dMark / nDivider, szModifier);
       else
-         _stprintf(szBuffer, _T("%5.3f%s"), dMark, szModifier);
+         _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%5.3f%s"), dMark, szModifier);
       CSize cz = dc.GetTextExtent(szBuffer);
       dc.TextOut(iLeftMargin - cz.cx - 5, y, szBuffer);
    }

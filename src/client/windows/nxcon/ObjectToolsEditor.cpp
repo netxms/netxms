@@ -234,7 +234,7 @@ void CObjectToolsEditor::OnViewRefresh()
    {
       for(i = 0; i < m_dwNumTools; i++)
       {
-         _stprintf(szBuffer, _T("%d"), m_pToolList[i].dwId);
+         _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), m_pToolList[i].dwId);
          iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer,
                                           m_pToolList[i].wType);
          if (iItem != -1)
@@ -417,7 +417,7 @@ void CObjectToolsEditor::EditTool(NXC_OBJECT_TOOL_DETAILS *pData)
    TCHAR szBuffer[1024];
    DWORD dwResult;
 
-   _stprintf(szBuffer, _T("Object Tool Properties (%s)"), g_szToolType[pData->wType]);
+   _sntprintf_s(szBuffer, 1024, _TRUNCATE, _T("Object Tool Properties (%s)"), g_szToolType[pData->wType]);
    CPropertySheet psh(szBuffer, this, 0);
 
    // Setup "General" page
@@ -575,7 +575,7 @@ void CObjectToolsEditor::EditTool(NXC_OBJECT_TOOL_DETAILS *pData)
          iItem = m_wndListCtrl.FindItem(&lvfi, -1);
          if (iItem == -1)
          {
-            _stprintf(szBuffer, _T("%d"), pData->dwId);
+            _sntprintf_s(szBuffer, 1024, _TRUNCATE, _T("%d"), pData->dwId);
             iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, pData->wType);
             if (iItem != -1)
                m_wndListCtrl.SetItemData(iItem, pData->dwId);

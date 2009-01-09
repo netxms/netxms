@@ -26,6 +26,8 @@
 
 #ifdef _WIN32
 #include <psapi.h>
+#define write	_write
+#define close	_close
 #else
 #include <dirent.h>
 #endif

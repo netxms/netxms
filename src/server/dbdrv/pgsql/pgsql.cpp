@@ -23,6 +23,10 @@
 
 #include "pgsqldrv.h"
 
+#ifdef _WIN32
+#pragma warning(disable : 4996)
+#endif
+
 
 //
 // API version
@@ -118,7 +122,7 @@ static BOOL UnsafeDrvQuery(PG_CONN *pConn, char *szQuery, TCHAR *errorText)
 	if (pResult == NULL)
 	{
 		if (errorText != NULL)
-			_tcscpy(errorText, _T("Internal error (pResult is NULL in UnsafeDrvQuery)"));
+			nx_strncpy(errorText, _T("Internal error (pResult is NULL in UnsafeDrvQuery)"), DBDRV_MAX_ERROR_TEXT);
 		return FALSE;
 	}
 
@@ -174,7 +178,7 @@ static DB_RESULT UnsafeDrvSelect(PG_CONN *pConn, char *szQuery, TCHAR *errorText
 	if (pResult == NULL)
 	{
 		if (errorText != NULL)
-			_tcscpy(errorText, _T("Internal error (pResult is NULL in UnsafeDrvSelect)"));
+			nx_strncpy(errorText, _T("Internal error (pResult is NULL in UnsafeDrvSelect)"), DBDRV_MAX_ERROR_TEXT);
 		return NULL;
 	}
 

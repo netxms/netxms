@@ -32,6 +32,9 @@
 #ifdef _WIN32
 #include <errno.h>
 #include <psapi.h>
+#define open	_open
+#define write	_write
+#define close	_close
 #else
 #include <signal.h>
 #include <sys/wait.h>

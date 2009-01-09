@@ -56,11 +56,12 @@ WHITESPC  [[:blank:]\t\n\r]
 #include "parser.tab.hpp"/* token codes from the parser */
 #include <nms_util.h>
 
-#if defined(_WIN32) 
+#ifdef _WIN32 
 #pragma warning(disable: 4018)
 #if defined(__64BIT__)
 #pragma warning(disable: 4244 4267)
 #endif
+#define read	_read
 #endif
 
 int mperror(char *pszMsg);
