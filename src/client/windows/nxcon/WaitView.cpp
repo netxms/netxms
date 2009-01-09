@@ -1,6 +1,8 @@
 // WaitView.cpp : implementation file
 //
 
+#define _CRT_SECURE_NO_DEPRECATE
+
 #include "stdafx.h"
 #include "nxcon.h"
 #include "WaitView.h"

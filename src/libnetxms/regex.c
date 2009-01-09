@@ -32,7 +32,10 @@
 
 #ifdef _WIN32
 
+#ifndef _CRT_SECURE_NO_DEPRECATE
 #define _CRT_SECURE_NO_DEPRECATE
+#endif
+
 #define STDC_HEADERS
 #pragma warning(disable:4018)
 #include <malloc.h>

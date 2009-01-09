@@ -169,7 +169,7 @@ int CUserEditor::AddListItem(NXC_USER *pUser)
    int iItem;
 	TCHAR buffer[256];
 
-	_sntprintf(buffer, 256, _T("%08X"), pUser->dwId);
+	_sntprintf_s(buffer, 256, _TRUNCATE, _T("%08X"), pUser->dwId);
    iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, buffer,
                  (pUser->dwId == GROUP_EVERYONE) ? 2 : ((pUser->dwId & GROUP_FLAG) ? 1 : 0));
    if (iItem != -1)

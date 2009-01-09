@@ -24,6 +24,12 @@
 #include "libnxsrv.h"
 #include <stdarg.h>
 
+#ifdef _WIN32
+#define open	_open
+#define close	_close
+#define write	_write
+#endif
+
 
 //
 // Constants

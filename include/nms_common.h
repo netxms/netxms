@@ -41,8 +41,10 @@
 #else    /* _WIN32 */
 #ifndef UNDER_CE
 #define _WITH_ENCRYPTION   1
-#endif
+#if !defined(WINDOWS_ONLY) && !defined(_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE
+#endif
+#endif
 #endif
 
 #ifdef HAVE_STDARG_H

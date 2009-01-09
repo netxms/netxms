@@ -216,15 +216,10 @@ LRESULT CTrapLogBrowser::OnTrapLogRecord(WPARAM wParam, LPARAM lParam)
 void CTrapLogBrowser::AddRecord(NXC_SNMP_TRAP_LOG_RECORD *pRec, BOOL bAppend)
 {
    int iIdx;
-   time_t t;
-   struct tm *ptm;
    TCHAR szBuffer[64];
    NXC_OBJECT *pNode;
 
-   t = pRec->dwTimeStamp;
-   ptm = localtime(&t);
-   _tcsftime(szBuffer, 32, _T("%d-%b-%Y %H:%M:%S"), ptm);
-   iIdx = m_wndListCtrl.InsertItem(bAppend ? 0x7FFFFFFF : 0, szBuffer);
+   iIdx = m_wndListCtrl.InsertItem(bAppend ? 0x7FFFFFFF : 0, FormatTimeStamp(pRec->dwTimeStamp, szBuffer, TS_LONG_DATE_TIME));
    if (iIdx != -1)
    {
       m_wndListCtrl.SetItemText(iIdx, 1, IpToStr(pRec->dwIpAddr, szBuffer));

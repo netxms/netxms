@@ -235,10 +235,10 @@ void CreateObjectImageList(void)
    g_pObjectNormalImageList = new CImageList;
    g_pObjectNormalImageList->Create(32, 32, ILC_COLOR24 | ILC_MASK, 16, 8);
 
-   _tcscpy(szFileName, g_szWorkDir);
-   _tcscat(szFileName, WORKDIR_IMAGECACHE);
-   _tcscat(szFileName, _T("\\"));
-   dwPos = _tcslen(szFileName);
+   _tcscpy_s(szFileName, MAX_PATH, g_szWorkDir);
+   _tcscat_s(szFileName, MAX_PATH, WORKDIR_IMAGECACHE);
+   _tcscat_s(szFileName, MAX_PATH, _T("\\"));
+   dwPos = (DWORD)_tcslen(szFileName);
 
    for(i = 0; i < g_pSrvImageList->dwNumImages; i++)
    {
@@ -832,11 +832,11 @@ void SaveListCtrlColumns(CListCtrl &wndListCtrl, TCHAR *pszSection, TCHAR *pszPr
    lvc.mask = LVCF_WIDTH;
    for(i = 0; wndListCtrl.GetColumn(i, &lvc); i++)
    {
-      _sntprintf(szParam, 256, _T("%s_%d"), pszPrefix, i);
+      _sntprintf_s(szParam, 256, _TRUNCATE, _T("%s_%d"), pszPrefix, i);
       theApp.WriteProfileInt(pszSection, szParam, lvc.cx);
    }
 
-   _sntprintf(szParam, 256, _T("%s_CNT"), pszPrefix);
+   _sntprintf_s(szParam, 256, _TRUNCATE, _T("%s_CNT"), pszPrefix);
    theApp.WriteProfileInt(pszSection, szParam, i);
 }
 

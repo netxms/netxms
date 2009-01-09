@@ -23,6 +23,11 @@
 
 #include "libnxsl.h"
 
+#ifdef _WIN32
+#define read	_read
+#define close	_close
+#endif
+
 
 //
 // For unknown reasons, min() becames undefined on Linux, despite the fact

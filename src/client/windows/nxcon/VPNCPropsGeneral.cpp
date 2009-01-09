@@ -208,7 +208,7 @@ void CVPNCPropsGeneral::AddSubnetToList(CListCtrl *pListCtrl, IP_NETWORK *pSubne
    TCHAR szBuffer[64], szIpAddr[16];
    int iItem;
 
-   _sntprintf(szBuffer, 64, _T("%s/%d"), IpToStr(pSubnet->dwAddr, szIpAddr), BitsInMask(pSubnet->dwMask));
+   _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%s/%d"), IpToStr(pSubnet->dwAddr, szIpAddr), BitsInMask(pSubnet->dwMask));
    iItem = pListCtrl->InsertItem(0x7FFFFFFF, szBuffer);
    if (iItem != -1)
    {
