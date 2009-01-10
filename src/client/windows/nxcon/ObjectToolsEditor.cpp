@@ -564,8 +564,8 @@ void CObjectToolsEditor::EditTool(NXC_OBJECT_TOOL_DETAILS *pData)
             safe_free(pTool->pszMatchingOID);
          }
          pTool->dwFlags = pData->dwFlags;
-         _tcscpy(pTool->szName, pData->szName);
-         _tcscpy(pTool->szDescription, pData->szDescription);
+         _tcscpy_s(pTool->szName, MAX_DB_STRING, pData->szName);
+         _tcscpy_s(pTool->szDescription, MAX_DB_STRING, pData->szDescription);
          pTool->pszData = _tcsdup(pData->pszData);
          pTool->pszMatchingOID = (pData->pszMatchingOID == NULL) ? NULL : _tcsdup(pData->pszMatchingOID);
 

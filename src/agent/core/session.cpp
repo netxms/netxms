@@ -22,6 +22,11 @@
 
 #include "nxagentd.h"
 
+#ifdef _WIN32
+#define write	_write
+#define close	_close
+#endif
+
 
 //
 // Externals
@@ -129,7 +134,7 @@ CommSession::~CommSession()
    delete m_pMessageQueue;
    safe_free(m_pMsgBuffer);
    if (m_hCurrFile != -1)
-      _close(m_hCurrFile);
+      close(m_hCurrFile);
    DestroyEncryptionContext(m_pCtx);
 }
 
@@ -227,13 +232,13 @@ void CommSession::ReadThread(void)
             {
                if ((m_hCurrFile != -1) && (m_dwFileRqId == pRawMsg->dwId))
                {
-                  if (_write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
+                  if (write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
                   {
                      if (wFlags & MF_END_OF_FILE)
                      {
                         CSCPMessage msg;
 
-                        _close(m_hCurrFile);
+                        close(m_hCurrFile);
                         m_hCurrFile = -1;
                   
                         msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -247,7 +252,7 @@ void CommSession::ReadThread(void)
                      // I/O error
                      CSCPMessage msg;
 
-                     _close(m_hCurrFile);
+                     close(m_hCurrFile);
                      m_hCurrFile = -1;
                
                      msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -769,8 +774,8 @@ void CommSession::UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
                   }
             }
 #endif
-            _write(hFile, pConfig, dwSize);
-            _close(hFile);
+            write(hFile, pConfig, dwSize);
+            close(hFile);
             pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
          }
          else

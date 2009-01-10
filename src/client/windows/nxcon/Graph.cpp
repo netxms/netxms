@@ -35,10 +35,11 @@ static char THIS_FILE[] = __FILE__;
 static int MonthFromTS(DWORD dwTimeStamp)
 {
    time_t t = dwTimeStamp;
-	struct tm *ltm;
+	struct tm ltm;
+	errno_t err;
 	
-	ltm = localtime(&t);
-   return ltm != NULL ? ltm->tm_mon : -1;
+	err = localtime_s(&ltm, &t);
+   return (err == 0) ? ltm.tm_mon : -1;
 }
 
 
@@ -288,7 +289,7 @@ void CGraph::SetTimeFrame(DWORD dwTimeFrom, DWORD dwTimeTo)
    m_dwTimeTo = dwTimeTo;
 
    // Round boundaries
-   memcpy(&lt, localtime(&t), sizeof(struct tm));
+   localtime_s(&lt, &t);
    if (dwTimeTo - dwTimeFrom >= 5184000)   // 60 days
    {
       // Align to month boundary
@@ -622,8 +623,8 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
 						TCHAR temp[1024];
 
 						object = NXCFindObjectById(g_hSession, m_ppItems[i]->m_dwNodeId);
-						_sntprintf(temp, 1024, _T("%s - %s"), (object != NULL) ? object->szName : _T("(null)"),
-						           m_ppItems[i]->m_pszDescription);
+						_sntprintf_s(temp, 1024, _TRUNCATE, _T("%s - %s"), (object != NULL) ? object->szName : _T("(null)"),
+						             m_ppItems[i]->m_pszDescription);
 						size = dc.GetTextExtent(temp, _tcslen(temp));
 					}
 					else
@@ -951,8 +952,8 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
 							TCHAR temp[1024];
 
 							object = NXCFindObjectById(g_hSession, m_ppItems[i]->m_dwNodeId);
-							_sntprintf(temp, 1024, _T("%s - %s"), (object != NULL) ? object->szName : _T("(null)"),
-										  m_ppItems[i]->m_pszDescription);
+							_sntprintf_s(temp, 1024, _TRUNCATE, _T("%s - %s"), (object != NULL) ? object->szName : _T("(null)"),
+										 m_ppItems[i]->m_pszDescription);
 							dc.TextOut(x + 14, y, temp, _tcslen(temp));
 						}
 						else
@@ -1025,14 +1026,14 @@ int CGraph::NextMonthOffset(DWORD dwTimeStamp)
    static double nSecPerMonth[12] = { 2678400, 2419200, 2678400, 2592000,
                                       2678400, 2592000, 2678400, 2678400,
                                       2592000, 2678400, 2592000, 2678400 };
-   struct tm *plt;
+   struct tm lt;
    time_t t = dwTimeStamp;
 
-   plt = localtime(&t);
-   if ((plt->tm_year % 4 == 0) && (plt->tm_mon == 1))
+   localtime_s(&lt, &t);
+   if ((lt.tm_year % 4 == 0) && (lt.tm_mon == 1))
       return (int)ceil(2505600.0 / m_dSecondsPerPixel) + 1;
    else
-      return (int)ceil(nSecPerMonth[plt->tm_mon] / m_dSecondsPerPixel) + 1;
+      return (int)ceil(nSecPerMonth[lt.tm_mon] / m_dSecondsPerPixel) + 1;
 }
 
 
