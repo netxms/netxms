@@ -159,6 +159,7 @@
 #define fileno    _fileno
 #define chdir     _chdir
 #define mkdir     _mkdir
+#define lseek     _lseek
 
 typedef unsigned __int64 QWORD;
 typedef __int64 INT64;

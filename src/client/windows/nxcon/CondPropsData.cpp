@@ -265,9 +265,9 @@ void CCondPropsData::OnButtonEdit()
          {
             TCHAR szBuffer[64];
 
-            _sntprintf(szBuffer, 64, _T("%s(%d)"),
-                       g_pszThresholdFunction[m_pDCIList[nIndex].nFunction],
-                       m_pDCIList[nIndex].nPolls);
+            _sntprintf_s(szBuffer, 64, _TRUNCATE, _T("%s(%d)"),
+                         g_pszThresholdFunction[m_pDCIList[nIndex].nFunction],
+                         m_pDCIList[nIndex].nPolls);
             m_wndListCtrl.SetItemText(iItem, 4, szBuffer);
          }
          else

@@ -368,7 +368,7 @@ inline void ret_string(TCHAR *rbuf, const TCHAR *value)
 
 inline void ret_int(TCHAR *rbuf, LONG value)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && (_MSC_VER >= 1300)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%d"), value);
 #else
    _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%d"), value);
@@ -377,7 +377,7 @@ inline void ret_int(TCHAR *rbuf, LONG value)
 
 inline void ret_uint(TCHAR *rbuf, DWORD value)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && (_MSC_VER >= 1300)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%u"), value);
 #else
    _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%u"), value);
@@ -386,7 +386,7 @@ inline void ret_uint(TCHAR *rbuf, DWORD value)
 
 inline void ret_double(TCHAR *rbuf, double value)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && (_MSC_VER >= 1300)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%f"), value);
 #else
    _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%f"), value);
@@ -395,7 +395,7 @@ inline void ret_double(TCHAR *rbuf, double value)
 
 inline void ret_int64(TCHAR *rbuf, INT64 value)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && (_MSC_VER >= 1300)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%I64d"), value);
 #else    /* _WIN32 */
    _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%lld"), value);
@@ -404,7 +404,7 @@ inline void ret_int64(TCHAR *rbuf, INT64 value)
 
 inline void ret_uint64(TCHAR *rbuf, QWORD value)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && (_MSC_VER >= 1300)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%I64u"), value);
 #else    /* _WIN32 */
    _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%llu"), value);

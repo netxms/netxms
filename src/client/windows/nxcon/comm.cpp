@@ -229,11 +229,11 @@ static DWORD WINAPI LoginThread(void *pArg)
 
       SetInfoText(hWnd, _T("Synchronizing objects..."));
       NXCGetServerID(g_hSession, bsServerId);
-      _tcscpy(szCacheFile, g_szWorkDir);
-      _tcscat(szCacheFile, WORKFILE_OBJECTCACHE);
+      nx_strncpy(szCacheFile, g_szWorkDir, MAX_PATH + 32);
+      _tcscat_s(szCacheFile, MAX_PATH + 32, WORKFILE_OBJECTCACHE);
       BinToStr(bsServerId, 8, &szCacheFile[_tcslen(szCacheFile)]);
-      _tcscat(szCacheFile, _T("."));
-      _tcscat(szCacheFile, g_szLogin);
+      _tcscat_s(szCacheFile, MAX_PATH + 32, _T("."));
+      _tcscat_s(szCacheFile, MAX_PATH + 32, g_szLogin);
       if (m_bClearCache)
          DeleteFile(szCacheFile);
       dwResult = NXCSubscribe(g_hSession, NXC_CHANNEL_OBJECTS);
@@ -262,9 +262,9 @@ static DWORD WINAPI LoginThread(void *pArg)
       BOOL bNeedDownload;
 
       SetInfoText(hWnd, _T("Loading and initializing MIB files..."));
-      _tcscpy(szFileName, g_szWorkDir);
-      _tcscat(szFileName, WORKDIR_MIBCACHE);
-      _tcscat(szFileName, _T("\\netxms.mib"));
+      _tcscpy_s(szFileName, MAX_PATH, g_szWorkDir);
+      _tcscat_s(szFileName, MAX_PATH, WORKDIR_MIBCACHE);
+      _tcscat_s(szFileName, MAX_PATH, _T("\\netxms.mib"));
       if (SNMPGetMIBTreeTimestamp(szFileName, &dwLocalTS) == SNMP_ERR_SUCCESS)
       {
          if (NXCGetMIBFileTimeStamp(g_hSession, &dwServerTS) == RCC_SUCCESS)
@@ -316,8 +316,8 @@ static DWORD WINAPI LoginThread(void *pArg)
       TCHAR szCacheDir[MAX_PATH];
 
       SetInfoText(hWnd, _T("Synchronizing images..."));
-      _tcscpy(szCacheDir, g_szWorkDir);
-      _tcscat(szCacheDir, WORKDIR_IMAGECACHE);
+      _tcscpy_s(szCacheDir, MAX_PATH, g_szWorkDir);
+      _tcscat_s(szCacheDir, MAX_PATH, WORKDIR_IMAGECACHE);
       dwResult = NXCSyncImages(g_hSession, &g_pSrvImageList, szCacheDir, IMAGE_FORMAT_ICO);
       if (dwResult == RCC_SUCCESS)
          CreateObjectImageList();
@@ -900,7 +900,7 @@ static DWORD WINAPI DownloadThread(void *pArg)
 						dwIndex = 0;
 						HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE,	szStatus, &dwBytes, &dwIndex);
 						AfxLoadString(IDS_HTTP_ERROR, szBuffer, 256);
-						_sntprintf(m_szErrorText, MAX_ERROR_TEXT, szBuffer, szStatus);
+						_sntprintf_s(m_szErrorText, MAX_ERROR_TEXT, _TRUNCATE, szBuffer, szStatus);
 					}
 				}
 				else
@@ -986,7 +986,7 @@ BOOL DownloadUpgradeFile(HANDLE hFile)
 		TCHAR szError[2048], szFormat[256], szCaption[256];
 	
 		AfxLoadString(IDS_DOWNLOAD_ERROR, szFormat, 256);
-		_sntprintf(szError, 2048, szFormat, m_szErrorText);
+		_sntprintf_s(szError, 2048, _TRUNCATE, szFormat, m_szErrorText);
 		AfxLoadString(IDS_CAPTION_ERROR, szCaption, 256);
 		theApp.m_pMainWnd->MessageBox(szError, szCaption, MB_OK | MB_ICONSTOP);
 	}
