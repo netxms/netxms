@@ -14,4 +14,4 @@ bin_PROGRAMS = nxcptest
 nxcptest_SOURCES = nxcptest.cpp
 nxcptest_LDADD = ../libnetxms/libnetxms.la
 
-EXTRA_DIST = nxcptest.dsp nxcptest.dsw nxcptest.h
+EXTRA_DIST = nxcptest.vcproj nxcptest.h
