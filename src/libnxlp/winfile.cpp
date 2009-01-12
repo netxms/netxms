@@ -62,7 +62,6 @@ static void ParseNewRecords(LogParser *parser, HANDLE hFile, void (*logger)(int,
 				else
 					*eptr = 0;
 
-				LOG(EVENTLOG_DEBUG_TYPE, _T("LogParser(%s): calling MatchLine(\"%s\")"), parser->GetFileName(), ptr);
 				parser->MatchLine(ptr);
          }
       }

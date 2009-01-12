@@ -256,8 +256,8 @@ BOOL CScriptView::ValidateClose(void)
    if ((m_nMode != MODE_EDIT) || (!m_wndEditor.GetModify()))
       return TRUE;
 
-   _sntprintf(szMessage, 1024, _T("Script %s is modified. Do you want to save changes?"),
-              (LPCTSTR)m_strScriptName);
+   _sntprintf_s(szMessage, 1024, _TRUNCATE, _T("Script %s is modified. Do you want to save changes?"),
+                (LPCTSTR)m_strScriptName);
    nRet = MessageBox(szMessage, _T("Warning"), MB_YESNOCANCEL | MB_ICONEXCLAMATION);
    switch(nRet)
    {

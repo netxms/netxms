@@ -170,13 +170,28 @@ const TCHAR *LogParser::CheckContext(LogParserRule *rule)
 	const TCHAR *state;
 	
 	if (rule->GetContext() == NULL)
+	{
+		Trace(5, _T("  rule has no context"));
 		return m_states[CONTEXT_SET_MANUAL];
+	}
 		
 	state = m_contexts.Get(rule->GetContext());
 	if (state == NULL)
+	{
+		Trace(5, _T("  context '%s' inactive, rule should be skipped"), rule->GetContext());
 		return NULL;	// Context inactive, don't use this rule		
+	}
 	
-	return !_tcscmp(state, m_states[CONTEXT_CLEAR]) ? NULL : state;
+	if (!_tcscmp(state, m_states[CONTEXT_CLEAR]))
+	{
+		Trace(5, _T("  context '%s' inactive, rule should be skipped"), rule->GetContext());
+		return NULL;
+	}
+	else
+	{
+		Trace(5, _T("  context '%s' active (mode=%s)"), rule->GetContext(), state);
+		return state;
+	}
 }
 
 

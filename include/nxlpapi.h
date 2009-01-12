@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2008 Victor Kirhenshtein
+** Copyright (C) 2008, 2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -175,6 +175,7 @@ public:
 	int GetProcessedRecordsCount() { return m_recordsProcessed; }
 	int GetMatchedRecordsCount() { return m_recordsMatched; }
 
+	int GetTraceLevel() { return m_traceLevel; }
 	void SetTraceLevel(int level) { m_traceLevel = level; }
 	void SetTraceCallback(void (*cb)(const TCHAR *, va_list)) { m_traceCallback = cb; }
 

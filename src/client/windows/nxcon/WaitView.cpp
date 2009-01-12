@@ -22,7 +22,7 @@ static char THIS_FILE[] = __FILE__;
 
 CWaitView::CWaitView()
 {
-   _tcscpy(m_szText, _T("Loading..."));
+   _tcscpy_s(m_szText, MAX_DB_STRING, _T("Loading..."));
 }
 
 CWaitView::~CWaitView()

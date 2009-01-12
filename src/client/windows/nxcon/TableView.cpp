@@ -241,8 +241,8 @@ LRESULT CTableView::OnTableData(WPARAM wParam, LPARAM lParam)
       m_wndListCtrl.SortItems(CompareListItems, (LPARAM)this);
 
       pNode = NXCFindObjectById(g_hSession, m_dwNodeId);
-      _sntprintf(szBuffer, 256, _T("%s - [%s]"), m_pData->pszTitle, 
-                 (pNode != NULL) ? pNode->szName : _T("<unknown>"));
+      _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%s - [%s]"), m_pData->pszTitle, 
+                   (pNode != NULL) ? pNode->szName : _T("<unknown>"));
       SetTitle(szBuffer); 
       OnUpdateFrameTitle(TRUE);
 
