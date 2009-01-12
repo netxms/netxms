@@ -76,6 +76,7 @@ private:
 	BOOL m_isValid;
 	int m_numParams;
 	regmatch_t *m_pmatch;
+	TCHAR *m_regexp;
 	TCHAR *m_source;
 	DWORD m_level;
 	DWORD m_idStart;
@@ -115,6 +116,8 @@ public:
 
 	void SetDescription(const TCHAR *descr) { safe_free(m_description); m_description = (descr != NULL) ? _tcsdup(descr) : NULL; }
 	const TCHAR *GetDescription() { return CHECK_NULL_EX(m_description); }
+
+	const TCHAR *GetRegexpSource() { return CHECK_NULL(m_regexp); }
 };
 
 
@@ -124,6 +127,8 @@ public:
 
 class LIBNXLP_EXPORTABLE LogParser
 {
+	friend BOOL LogParserRule::Match(const char *, LOG_PARSER_CALLBACK, DWORD, void *);
+
 private:
 	int m_numRules;
 	LogParserRule **m_rules;
