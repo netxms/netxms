@@ -328,6 +328,7 @@ src/libnxmap/libnxmapw.vcproj -text
 src/libnxsl/libnxsl.dsp eol=crlf
 src/libnxsl/libnxsl.vcproj -text
 src/libnxsl/parser.l -text
+src/nxcptest/nxcptest.vcproj -text
 src/nxlptest/nxlptest.vcproj -text
 src/nxscript/nxscript.dsp eol=crlf
 src/nxscript/nxscript.vcproj -text
