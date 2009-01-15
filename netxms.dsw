@@ -18,21 +18,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "generic"=.\src\server\smsdrv\generic\generic.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libnxsrv
-    End Project Dependency
-}}}
-
-###############################################################################
-
 Project: "hpdp"=.\src\server\modules\hpdp\hpdp.dsp - Package Owner=<4>
 
 Package=<5>
@@ -150,7 +135,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "libnxsnmp"=.\src\libnxsnmp\libnxsnmp.dsp - Package Owner=<4>
+Project: "libnxsnmp"=.\src\snmp\libnxsnmp\libnxsnmp.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -158,9 +143,6 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name libnetxms
-    End Project Dependency
 }}}
 
 ###############################################################################
@@ -178,21 +160,6 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libnxsnmp
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "logscan"=.\src\agent\subagents\logscan\logscan.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libnetxms
     End Project Dependency
 }}}
 
@@ -372,24 +339,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "nxagent"=.\src\server\smsdrv\nxagent\nxagent.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libnetxms
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxsrv
-    End Project Dependency
-}}}
-
-###############################################################################
-
 Project: "nxagentd"=.\src\agent\core\nxagentd.dsp - Package Owner=<4>
 
 Package=<5>
@@ -418,54 +367,6 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libnxcl
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "nxav"=.\src\console\nxav\nxav.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libnetxms
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxcl
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name nxuilib
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "nxcon"=.\src\console\win32\nxcon.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libnxcl
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxsnmp
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name nxuilib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxmap
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnetxms
     End Project Dependency
 }}}
 
@@ -514,21 +415,6 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libnxlp
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "nxcptest"=.\src\nxcptest\nxcptest.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libnetxms
     End Project Dependency
 }}}
 
@@ -588,39 +474,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "nxhttpd"=.\src\nxhttpd\nxhttpd.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libnetxms
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxcl
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "nxlexer"=.\src\console\nxlexer\nxlexer.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libnetxms
-    End Project Dependency
-}}}
-
-###############################################################################
-
 Project: "nxmc"=.\src\client\console\nxmc\nxmc.dsp - Package Owner=<4>
 
 Package=<5>
@@ -643,45 +496,6 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libnxsnmp
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "nxmibc"=.\src\nxmibc\nxmibc.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libnetxms
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxsnmp
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "nxnotify"=.\SRC\CONSOLE\nxnotify\nxnotify.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libnetxms
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxcl
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name nxuilib
     End Project Dependency
 }}}
 
@@ -724,78 +538,6 @@ Package=<4>
 ###############################################################################
 
 Project: "nxsms"=.\src\client\nxsms\nxsms.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libnetxms
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxcl
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "nxsnmpget"=.\src\server\tools\nxsnmpget\nxsnmpget.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libnetxms
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxsnmp
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "nxsnmpset"=.\src\server\tools\nxsnmpset\nxsnmpset.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libnetxms
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxsnmp
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "nxsnmpwalk"=.\src\server\tools\nxsnmpwalk\nxsnmpwalk.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libnetxms
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libnxsnmp
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "nxuilib"=.\src\console\nxuilib\nxuilib.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
