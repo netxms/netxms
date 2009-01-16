@@ -168,7 +168,7 @@ typedef int socklen_t;
 #define INT64_FMT			_T("%I64d")
 #define UINT64_FMT		_T("%I64u")
 #define UINT64X_FMT(m)  _T("%") m _T("I64X")
-#ifdef __64BIT__
+#if defined(__64BIT__) || (_MSC_VER > 1300)
 #define TIME_T_FMT   _T("%I64u")
 #else
 #define TIME_T_FMT   _T("%u")

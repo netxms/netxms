@@ -498,6 +498,7 @@ private:
    void SendMapList(DWORD dwRqId);
    void ResolveMapName(CSCPMessage *pRequest);
    void SaveMap(CSCPMessage *pRequest);
+   void DeleteMap(CSCPMessage *pRequest);
    void ProcessSubmapData(CSCPMessage *pRequest);
    void CreateMap(CSCPMessage *pRequest);
    void RenameMap(CSCPMessage *pRequest);

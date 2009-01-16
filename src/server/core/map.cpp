@@ -187,6 +187,34 @@ exit_save:
 
 
 //
+// Delete submap from database
+//
+
+BOOL nxSubmapSrv::DeleteFromDB()
+{
+	TCHAR query[256];
+	BOOL success;
+
+	_sntprintf(query, 256, _T("DELETE FROM submaps WHERE map_id=%d AND submap_id=%d"), m_dwMapId, m_dwId);
+	success = DBQuery(g_hCoreDB, query);
+
+	if (success)
+	{
+		_sntprintf(query, 256, _T("DELETE FROM submap_object_positions WHERE map_id=%d AND submap_id=%d"), m_dwMapId, m_dwId);
+		success = DBQuery(g_hCoreDB, query);
+	}
+
+	if (success)
+	{
+		_sntprintf(query, 256, _T("DELETE FROM submap_links WHERE map_id=%d AND submap_id=%d"), m_dwMapId, m_dwId);
+		success = DBQuery(g_hCoreDB, query);
+	}
+
+	return success;
+}
+
+
+//
 // Constructor for creating map object from scratch
 //
 
@@ -348,6 +376,42 @@ exit_save:
 		DBRollback(g_hCoreDB);
 
    return dwResult;
+}
+
+
+//
+// Delete map from database
+//
+
+BOOL nxMapSrv::DeleteFromDB()
+{
+	TCHAR query[256];
+	BOOL success;
+	DWORD i;
+
+	if (!DBBegin(g_hCoreDB))
+		return FALSE;
+
+   for(i = 0, success = TRUE; (i < m_dwNumSubmaps) && success; i++)
+      success = ((nxSubmapSrv *)m_ppSubmaps[i])->DeleteFromDB();
+
+	if (success)
+	{
+		_sntprintf(query, 256, _T("DELETE FROM maps WHERE map_id=%d"), m_dwMapId);
+		success = DBQuery(g_hCoreDB, query);
+	}
+
+	if (success)
+	{
+		_sntprintf(query, 256, _T("DELETE FROM map_access_lists WHERE map_id=%d"), m_dwMapId);
+		success = DBQuery(g_hCoreDB, query);
+	}
+
+	if (success)
+		DBCommit(g_hCoreDB);
+	else
+		DBRollback(g_hCoreDB);
+	return success;
 }
 
 
@@ -548,4 +612,52 @@ DWORD CreateNewMap(DWORD rootObj, const TCHAR *name, DWORD *newId)
 		delete map;
 	}
 	return rcc;
+}
+
+
+//
+// Delete map
+//
+
+DWORD DeleteMap(DWORD mapId)
+{
+   DWORD i, rcc = RCC_INVALID_MAP_ID;
+	int count;
+
+	LockMaps();
+   for(i = 0; i < m_dwNumMaps; i++)
+      if (m_ppMapList[i]->MapId() == mapId)
+		{
+			m_ppMapList[i]->IncRefCount();
+			for(count = 20; (m_ppMapList[i]->GetRefCount() > 1) && (count > 0); count--)
+			{
+				DbgPrintf(6, _T("DeleteMap(%d): Waiting for map unlock, current reference count %d"), mapId, m_ppMapList[i]->GetRefCount());
+				UnlockMaps();
+				ThreadSleep(100);
+				LockMaps();
+			}
+			if (m_ppMapList[i]->GetRefCount() == 1)
+			{
+				DbgPrintf(5, _T("DeleteMap(%d): calling DeleteFromDB()"), mapId);
+				if (m_ppMapList[i]->DeleteFromDB())
+				{
+					delete m_ppMapList[i];
+					m_dwNumMaps--;
+					memmove(&m_ppMapList[i], &m_ppMapList[i + 1], (m_dwNumMaps - i) * sizeof(nxMapSrv *));
+					rcc = RCC_SUCCESS;
+				}
+				else
+				{
+					rcc = RCC_DB_FAILURE;
+				}
+			}
+			else
+			{
+				rcc = RCC_RESOURCE_BUSY;
+			}
+			break;
+		}
+	UnlockMaps();
+	DbgPrintf(4, _T("DeleteMap(%d): RCC=%d"), mapId, rcc);
+   return rcc;
 }

@@ -1087,6 +1087,9 @@ void ClientSession::ProcessingThread(void)
          case CMD_SAVE_MAP:
             SaveMap(pMsg);
             break;
+			case CMD_DELETE_MAP:
+				DeleteMap(pMsg);
+				break;
          case CMD_SUBMAP_DATA:
             ProcessSubmapData(pMsg);
             break;
@@ -7538,6 +7541,33 @@ void ClientSession::RenameMap(CSCPMessage *pRequest)
 			msg.SetVariable(VID_RCC, RCC_INVALID_MAP_ID);
 		}
 		UnlockMaps();
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+
+   SendMessage(&msg);
+}
+
+
+//
+// Save map
+//
+
+void ClientSession::DeleteMap(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   DWORD dwMapId;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_MAPS)
+	{
+		dwMapId = pRequest->GetVariableLong(VID_MAP_ID);
+		DebugPrintf(4, _T("Requesting map deletion (mapId=%d)"), dwMapId);
+		msg.SetVariable(VID_RCC, ::DeleteMap(dwMapId));
 	}
 	else
 	{

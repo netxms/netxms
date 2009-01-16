@@ -731,6 +731,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\include\netxms_isc.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\include\netxms_maps.h"
 				>
 			</File>
@@ -748,6 +752,10 @@
 			</File>
 			<File
 				RelativePath="..\include\nms_core.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\nms_cscp.h"
 				>
 			</File>
 			<File
@@ -784,6 +792,10 @@
 			</File>
 			<File
 				RelativePath="..\include\nms_users.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\nxclapi.h"
 				>
 			</File>
 			<File

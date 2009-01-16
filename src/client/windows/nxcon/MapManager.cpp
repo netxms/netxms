@@ -206,7 +206,11 @@ void CMapManager::OnMapDelete()
 	while((item = m_wndListCtrl.GetNextItem(-1, LVIS_SELECTED)) != -1)
 	{
 		rcc = DoRequestArg2(NXCDeleteMap, g_hSession, (void *)m_wndListCtrl.GetItemData(item), _T("Deleting map..."));
-		if (rcc != RCC_SUCCESS)
+		if (rcc == RCC_SUCCESS)
+		{
+			m_wndListCtrl.DeleteItem(item);
+		}
+		else
 		{
 			theApp.ErrorBox(rcc, _T("Cannot delete map: %s"));
 			break;

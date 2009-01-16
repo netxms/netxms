@@ -136,11 +136,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
          pszTag = EncodeSQLString(pEvent->UserTag());
          snprintf(szQuery, 2048, "INSERT INTO event_log (event_id,event_code,event_timestamp,"
                                  "event_source,event_severity,event_message,root_event_id,user_tag) "
-#ifdef _WIN32
-                                 "VALUES (%I64d,%d,%d,%d,%d,'%s',%I64d,'%s')", 
-#else
-                                 "VALUES (%lld,%d,%d,%d,%d,'%s',%lld,'%s')", 
-#endif
+                                 "VALUES (" INT64_FMT ",%d," TIME_T_FMT ",%d,%d,'%s'," INT64_FMT ",'%s')", 
                   pEvent->Id(), pEvent->Code(), pEvent->TimeStamp(),
                   pEvent->SourceId(), pEvent->Severity(), pszMsg,
                   pEvent->GetRootId(), pszTag);

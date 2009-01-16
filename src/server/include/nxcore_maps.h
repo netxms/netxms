@@ -39,7 +39,8 @@ public:
    nxSubmapSrv(DB_RESULT hResult, int nRow, DWORD dwMapId);
    nxSubmapSrv(DWORD dwObjectId, DWORD dwMapId);
 
-   DWORD SaveToDB(void);
+   DWORD SaveToDB();
+	BOOL DeleteFromDB();
 };
 
 
@@ -56,12 +57,13 @@ public:
    nxMapSrv(DB_RESULT hResult, int nRow);
    nxMapSrv(DWORD dwMapId, DWORD dwObjectId, const TCHAR *pszName, const TCHAR *pszDescription);
 
-   DWORD SaveToDB(void);
+   DWORD SaveToDB();
+	BOOL DeleteFromDB();
    BOOL CheckUserRights(DWORD dwUserId, DWORD dwDesiredAccess);
 
-   void IncRefCount(void) { Lock(); m_nRefCount++; Unlock(); }
-   void DecRefCount(void) { Lock(); if (m_nRefCount > 0) m_nRefCount--; Unlock(); }
-   int GetRefCount(void) { int nRef; Lock(); nRef = m_nRefCount; Unlock(); return nRef; }
+   void IncRefCount() { Lock(); m_nRefCount++; Unlock(); }
+   void DecRefCount() { Lock(); if (m_nRefCount > 0) m_nRefCount--; Unlock(); }
+   int GetRefCount() { int nRef; Lock(); nRef = m_nRefCount; Unlock(); return nRef; }
 };
 
 
@@ -76,6 +78,7 @@ DWORD GetMapIdFromName(TCHAR *pszName, DWORD *pdwMapId);
 BOOL LockMaps(void);
 void UnlockMaps(void);
 nxMapSrv *FindMapByID(DWORD dwMapId);
+DWORD DeleteMap(DWORD mapId);
 
 
 //
