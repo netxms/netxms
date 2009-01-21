@@ -8,7 +8,7 @@
   <artifactId>netxms</artifactId>
   <packaging>pom</packaging>
   <properties>
-    <projectversion>0.2.23</projectversion>
+    <projectversion>0.9.0-rc1</projectversion>
   </properties>
   <modules>
     <module>netxms-base</module>

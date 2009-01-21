@@ -18,9 +18,9 @@ public class NXCSubnet extends NXCObject
 	/**
 	 * @param msg
 	 */
-	public NXCSubnet(NXCPMessage msg)
+	public NXCSubnet(NXCPMessage msg, NXCSession session)
 	{
-		super(msg);
+		super(msg, session);
 		
 		subnetMask = msg.getVariableAsInetAddress(NXCPCodes.VID_IP_NETMASK);
 	}

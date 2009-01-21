@@ -115,4 +115,20 @@ public class NXCSessionTest extends TestCase
 
 		session.disconnect();
 	}
+	
+	public void testObjectIsParent() throws Exception
+	{
+		NXCSession session = new NXCSession(serverAddress, loginName, password);
+		session.connect();
+		
+		session.syncObjects();
+		
+		NXCObject object = session.findObjectById(2);
+		assertEquals(false, object.isParent(1));
+		
+		object = session.findObjectById(12);
+		assertEquals(true, object.isParent(1));
+		
+		session.disconnect();
+	}
 }

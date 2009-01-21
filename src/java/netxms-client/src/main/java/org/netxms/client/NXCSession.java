@@ -161,11 +161,13 @@ public class NXCSession
 	private Map<Long, NXCObject> objectList = new HashMap<Long, NXCObject>();
 	
 	
-	//
-	// Create object from message
-	//
-	
-	private static NXCObject createObjectFromMessage(NXCPMessage msg)
+	/**
+	 * Create object from message
+	 * 
+	 * @param msg Source NXCP message
+	 * @return NetXMS object
+	 */
+	private NXCObject createObjectFromMessage(NXCPMessage msg)
 	{
 		final int objectClass = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_CLASS);
 		NXCObject object;
@@ -173,19 +175,19 @@ public class NXCSession
 		switch(objectClass)
 		{
 			case NXCObject.OBJECT_INTERFACE:
-				object = new NXCInterface(msg);
+				object = new NXCInterface(msg, this);
 				break;
 			case NXCObject.OBJECT_SUBNET:
-				object = new NXCSubnet(msg);
+				object = new NXCSubnet(msg, this);
 				break;
 			case NXCObject.OBJECT_CONTAINER:
-				object = new NXCContainer(msg);
+				object = new NXCContainer(msg, this);
 				break;
 			case NXCObject.OBJECT_NODE:
-				object = new NXCNode(msg);
+				object = new NXCNode(msg, this);
 				break;
 			default:
-				object = new NXCObject(msg);
+				object = new NXCObject(msg, this);
 				break;
 		}
 		

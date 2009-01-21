@@ -21,9 +21,9 @@ public class NXCInterface extends NXCObject
 	/**
 	 * @param msg
 	 */
-	public NXCInterface(NXCPMessage msg)
+	public NXCInterface(NXCPMessage msg, NXCSession session)
 	{
-		super(msg);
+		super(msg, session);
 		
 		subnetMask = msg.getVariableAsInetAddress(NXCPCodes.VID_IP_NETMASK);
 		ifIndex = msg.getVariableAsInteger(NXCPCodes.VID_IF_INDEX);

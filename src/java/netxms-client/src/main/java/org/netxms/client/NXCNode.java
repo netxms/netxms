@@ -30,9 +30,9 @@ public class NXCNode extends NXCObject
 	/**
 	 * @param msg
 	 */
-	public NXCNode(NXCPMessage msg)
+	public NXCNode(NXCPMessage msg, NXCSession session)
 	{
-		super(msg);
+		super(msg, session);
 
 		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
 		nodeType = msg.getVariableAsInteger(NXCPCodes.VID_NODE_TYPE);

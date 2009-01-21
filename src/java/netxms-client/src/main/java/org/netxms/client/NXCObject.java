@@ -41,6 +41,9 @@ public class NXCObject
 	public static final int STATUS_DISABLED       = 7;
 	public static final int STATUS_TESTING        = 8;
 	
+	// Associated client session
+	private NXCSession session = null;
+	
 	// Generic object attributes
 	private long objectId = 0;
 	private String objectName;
@@ -57,15 +60,18 @@ public class NXCObject
 	private HashSet<NXCAccessListElement> accessList = new HashSet<NXCAccessListElement>(0);
 
 
-	/*
+	/**
 	 * Create object from NXCP message
 	 * @param msg Message to create object from
+	 * @param session Associated client session
 	 */
 	
-	NXCObject(final NXCPMessage msg)
+	NXCObject(final NXCPMessage msg, final NXCSession session)
 	{
 		int i, count;
 		long id, id2;
+		
+		this.session = session;
 		
 		objectId = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_ID);
 		objectName = msg.getVariableAsString(NXCPCodes.VID_OBJECT_NAME);
@@ -193,11 +199,47 @@ public class NXCObject
 		return inheritAccessRights;
 	}
 
+
+	/**
+	 * Check if given object is direct or indirect parent
+	 * 
+	 * @param objectId ID of object to check
+	 */
+	public boolean isParent(final long objectId)
+	{
+		boolean rc = false;
+		
+		synchronized(parents)
+		{
+			final Iterator<Long> it = parents.iterator();
+			for(int i = 0; it.hasNext(); i++)
+			{
+				long id = it.next();
+				if (id == objectId)
+				{
+					// Direct parent
+					rc = true;
+					break;
+				}
+				NXCObject object = session.findObjectById(id);
+				if (object != null)
+				{
+					if (object.isParent(objectId))
+					{
+						rc = true;
+						break;
+					}
+				}
+			}
+		}		
+		return rc;
+	}
+	
 	
 	/**
 	 * @return List of parent objects
 	 */
-	public NXCObject[] getParentsAsArray(final NXCSession session)
+	public NXCObject[] getParentsAsArray()
 	{
 		final NXCObject[] list;
 		synchronized(parents)
@@ -216,7 +258,7 @@ public class NXCObject
 	/**
 	 * @return List of child objects
 	 */
-	public NXCObject[] getChildsAsArray(final NXCSession session)
+	public NXCObject[] getChildsAsArray()
 	{
 		final NXCObject[] list;
 		synchronized(childs)

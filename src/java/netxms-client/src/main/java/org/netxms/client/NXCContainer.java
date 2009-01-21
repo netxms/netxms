@@ -16,9 +16,9 @@ public class NXCContainer extends NXCObject
 	/**
 	 * @param msg
 	 */
-	public NXCContainer(NXCPMessage msg)
+	public NXCContainer(NXCPMessage msg, NXCSession session)
 	{
-		super(msg);
+		super(msg, session);
 		category = msg.getVariableAsInteger(NXCPCodes.VID_CATEGORY);
 	}
 
