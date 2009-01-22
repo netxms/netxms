@@ -186,6 +186,12 @@ public class NXCSession
 			case NXCObject.OBJECT_NODE:
 				object = new NXCNode(msg, this);
 				break;
+			case NXCObject.OBJECT_NETWORK:
+				object = new NXCEntireNetwork(msg, this);
+				break;
+			case NXCObject.OBJECT_SERVICEROOT:
+				object = new NXCServiceRoot(msg, this);
+				break;
 			default:
 				object = new NXCObject(msg, this);
 				break;
