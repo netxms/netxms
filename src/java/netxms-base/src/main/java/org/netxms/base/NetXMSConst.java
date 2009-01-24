@@ -10,5 +10,5 @@ package org.netxms.base;
 public final class NetXMSConst
 {
 	// Version information
-	public static final String VERSION = "0.2.23-rc4";
+	public static final String VERSION = "0.9.0";
 }

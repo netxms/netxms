@@ -368,10 +368,10 @@ public class NXCSession
 	}
 	
 	
-	//
-	// Report synchronization completion
-	//
-	
+	/**
+	 * Report synchronization completion
+	 * @param syncObject Synchronization object
+	 */
 	private void completeSync(final Semaphore syncObject)
 	{
 		syncObject.release();
