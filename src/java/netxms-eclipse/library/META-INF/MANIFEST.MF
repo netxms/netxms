@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: NetXMS Management Console Shared Library
+Bundle-SymbolicName: org.netxms.nxmc.library
+Bundle-Version: 1.0.0
+Bundle-Vendor: netxms.org
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ClassPath: .,
+ jar/netxms-base-0.9.0-rc1.jar,
+ jar/netxms-client-0.9.0-rc1.jar
+Export-Package: org.netxms.base,
+ org.netxms.client

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            name="Tools"
+            id="org.netxms.nxmc.tools">
+      </category>
+      <view
+            name="Job Monitor"
+            icon="icons/job_monitor.png"
+            category="org.netxms.nxmc.tools"
+            class="org.netxms.nxmc.jobmonitor.JobMonitor"
+            id="org.netxms.nxmc.jobmonitor.view.job_monitor">
+      </view>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            name="Views"
+            id="org.netxms.nxmc.core.category.views">
+      </category>
+      <command
+            name="Job Monitor"
+            description="Open Job Monitor"
+            categoryId="org.netxms.nxmc.core.category.views"
+            id="org.netxms.nxmc.jobmonitor.commands.open_job_monitor">
+      </command>
+   </extension>
+   
+   <extension point = "org.eclipse.ui.actionSets">
+	   <actionSet id="org.netxms.nxmc.jobmonitor.action_set"
+		   label="Job Monitor"
+		   visible="true">
+		   <action id="org.netxms.nxmc.jobmonitor.actions.open"
+			   menubarPath="view/tools"
+			   label="Job Monitor"
+			   tooltip="Open Job Monitor"
+			   icon="icons/job_monitor.png"
+			   class="org.netxms.nxmc.jobmonitor.actions.OpenJobMonitor"
+			   definitionId="org.netxms.nxmc.jobmonitor.commands.open_job_monitor">
+		   </action>
+	   </actionSet>
+   </extension>
+
+</plugin>

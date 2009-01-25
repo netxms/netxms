@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: NXMC Job Monitor Plug-in
+Bundle-SymbolicName: org.netxms.nxmc.jobmonitor; singleton:=true
+Bundle-Version: 1.0.0
+Bundle-Activator: org.netxms.nxmc.jobmonitor.Activator
+Bundle-Vendor: netxms.org
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy

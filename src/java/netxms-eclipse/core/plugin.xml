@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension-point id="org.netxms.nxmc.core.objecttab" name="org.netxms.nxmc.core.objecttab" schema="schema/nxmc_core_objecttab.exsd"/>
+
+   <extension
+         id="org.netxms.nxmc.core.application"
+         point="org.eclipse.core.runtime.applications">
+      <application>
+         <run
+               class="org.netxms.nxmc.core.NXMCApplication">
+         </run>
+      </application>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            name="RCP Perspective"
+            class="org.netxms.nxmc.core.Perspective"
+            id="org.netxms.nxmc.core.perspective">
+      </perspective>
+   </extension>
+
+</plugin>
