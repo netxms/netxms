@@ -20,8 +20,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
@@ -32,6 +30,7 @@ import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.core.extensionproviders.NXMCSharedData;
+import org.netxms.nxmc.tools.SortableTableViewer;
 
 /**
  * @author victor
@@ -65,25 +64,10 @@ public class AlarmView extends Composite
 		// Setup table columns
 		final String[] names = { "Severity", "State", "Source", "Message", "Count", "Created", "Last Change" };
 		final int[] widths = { 100, 100, 150, 300, 70, 90, 90 };
-		final Table table = new Table(this, SWT.MULTI | SWT.FULL_SELECTION);
-		final TableColumn[] tc = new TableColumn[names.length];
-		alarmViewer = new TableViewer(table);
-		TableSortingListener sortingListener = new TableSortingListener(alarmViewer);
-		for(int i = 0; i < names.length; i++)
-		{
-			tc[i] = new TableColumn(table, SWT.LEFT);
-			tc[i].setText(names[i]);
-			tc[i].setWidth(widths[i]);
-			tc[i].setData("ID", new Integer(i));
-			tc[i].addSelectionListener(sortingListener);
-		}
-		table.setLinesVisible(true);
-		table.setHeaderVisible(true);
-		
+		alarmViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN);
+	
 		alarmViewer.setLabelProvider(new AlarmListLabelProvider());
 		alarmViewer.setContentProvider(new ArrayContentProvider());
-		alarmViewer.getTable().setSortColumn(tc[0]);
-		alarmViewer.getTable().setSortDirection(SWT.DOWN);
 		alarmViewer.setComparator(new AlarmComparator());
 		alarmFilter = new AlarmListFilter();
 		alarmViewer.addFilter(alarmFilter);

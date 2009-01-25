@@ -320,7 +320,6 @@ src/java/netxms-eclipse/AlarmViewer/src/org/netxms/nxmc/alarmviewer/AlarmListLab
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/nxmc/alarmviewer/AlarmView.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/nxmc/alarmviewer/ObjectTabAlarms.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/nxmc/alarmviewer/TabProvider.java -text
-src/java/netxms-eclipse/AlarmViewer/src/org/netxms/nxmc/alarmviewer/TableSortingListener.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/nxmc/alarmviewer/actions/AcknowledgeAlarm.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/nxmc/alarmviewer/actions/OpenAlarmBrowser.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/nxmc/alarmviewer/actions/TerminateAlarm.java -text

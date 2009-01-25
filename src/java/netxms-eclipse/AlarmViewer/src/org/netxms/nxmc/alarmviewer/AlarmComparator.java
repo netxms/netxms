@@ -9,6 +9,8 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.NXCAlarm;
+import org.netxms.client.NXCObject;
+import org.netxms.nxmc.core.extensionproviders.NXMCSharedData;
 
 /**
  * @author victor
@@ -52,8 +54,24 @@ public class AlarmComparator extends ViewerComparator
 			case AlarmView.COLUMN_STATE:
 				rc = compareNumbers(((NXCAlarm)e1).getState(), ((NXCAlarm)e2).getState());
 				break;
+			case AlarmView.COLUMN_SOURCE:
+				NXCObject obj1 = NXMCSharedData.getSession().findObjectById(((NXCAlarm)e1).getSourceObjectId());
+				NXCObject obj2 = NXMCSharedData.getSession().findObjectById(((NXCAlarm)e2).getSourceObjectId());
+				String name1 = (obj1 != null) ? obj1.getObjectName() : "<unknown>";
+				String name2 = (obj2 != null) ? obj2.getObjectName() : "<unknown>";
+				rc = name1.compareToIgnoreCase(name2);
+				break;
 			case AlarmView.COLUMN_MESSAGE:
 				rc = ((NXCAlarm)e1).getMessage().compareToIgnoreCase(((NXCAlarm)e2).getMessage());
+				break;
+			case AlarmView.COLUMN_COUNT:
+				rc = compareNumbers(((NXCAlarm)e1).getRepeatCount(), ((NXCAlarm)e2).getRepeatCount());
+				break;
+			case AlarmView.COLUMN_CREATED:
+				rc = ((NXCAlarm)e1).getCreationTime().compareTo(((NXCAlarm)e2).getCreationTime());
+				break;
+			case AlarmView.COLUMN_LASTCHANGE:
+				rc = ((NXCAlarm)e1).getLastChangeTime().compareTo(((NXCAlarm)e2).getLastChangeTime());
 				break;
 			default:
 				rc = 0;
