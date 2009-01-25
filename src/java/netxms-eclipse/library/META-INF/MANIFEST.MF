@@ -9,4 +9,7 @@ Bundle-ClassPath: .,
  jar/netxms-base-0.9.0-rc1.jar,
  jar/netxms-client-0.9.0-rc1.jar
 Export-Package: org.netxms.base,
- org.netxms.client
+ org.netxms.client,
+ org.netxms.nxmc.tools
+Require-Bundle: org.eclipse.ui;bundle-version="3.4.1",
+ org.eclipse.core.runtime;bundle-version="3.4.0"
