@@ -65,7 +65,7 @@ public class AlarmView extends Composite
 		// Setup table columns
 		final String[] names = { "Severity", "State", "Source", "Message", "Count", "Created", "Last Change" };
 		final int[] widths = { 100, 100, 150, 300, 70, 90, 90 };
-		final Table table = new Table(this, SWT.MULTI | SWT.VIRTUAL | SWT.FULL_SELECTION);
+		final Table table = new Table(this, SWT.MULTI | SWT.FULL_SELECTION);
 		final TableColumn[] tc = new TableColumn[names.length];
 		alarmViewer = new TableViewer(table);
 		TableSortingListener sortingListener = new TableSortingListener(alarmViewer);
@@ -84,7 +84,7 @@ public class AlarmView extends Composite
 		alarmViewer.setContentProvider(new ArrayContentProvider());
 		alarmViewer.getTable().setSortColumn(tc[0]);
 		alarmViewer.getTable().setSortDirection(SWT.DOWN);
-//		alarmViewer.setComparator(new AlarmComparator());
+		alarmViewer.setComparator(new AlarmComparator());
 		alarmFilter = new AlarmListFilter();
 		alarmViewer.addFilter(alarmFilter);
 		
