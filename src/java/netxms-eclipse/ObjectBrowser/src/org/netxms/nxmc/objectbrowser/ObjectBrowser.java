@@ -3,6 +3,7 @@
  */
 package org.netxms.nxmc.objectbrowser;
 
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -78,6 +79,36 @@ public class ObjectBrowser extends ViewPart
    private void createMenu()
    {
       IMenuManager mgr = getViewSite().getActionBars().getMenuManager();
+      
+      // Show filter
+      Action actionShowFilter = new Action("Show filter", SWT.TOGGLE)
+      {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				objectTree.enableFilter(isChecked());
+			}
+      };
+      actionShowFilter.setChecked(true);
+      mgr.add(actionShowFilter);
+      
+      // Hide unmanaged objects
+      Action actionHideUnmanaged = new Action("Hide unmanaged objects", SWT.TOGGLE)
+      {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+			}
+      };
+      actionHideUnmanaged.setChecked(false);
+      mgr.add(actionHideUnmanaged);
+      
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
    }
 

@@ -352,9 +352,9 @@ src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/nxmc/objectbrowser/ObjectSe
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/nxmc/objectbrowser/ObjectTree.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/nxmc/objectbrowser/ObjectTreeComparator.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/nxmc/objectbrowser/ObjectTreeContentProvider.java -text
+src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/nxmc/objectbrowser/ObjectTreeFilter.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/nxmc/objectbrowser/ObjectTreeLabelProvider.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/nxmc/objectbrowser/actions/BindObject.java -text
-src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/nxmc/objectbrowser/actions/HideUnmanagedObjects.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/nxmc/objectbrowser/actions/OpenObjectBrowser.java -text
 src/java/netxms-eclipse/core/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/core/build.properties -text

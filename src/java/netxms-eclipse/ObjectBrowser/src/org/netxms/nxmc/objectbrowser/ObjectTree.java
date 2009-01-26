@@ -8,10 +8,13 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
@@ -28,9 +31,12 @@ import org.netxms.nxmc.core.extensionproviders.NXMCSharedData;
  */
 public class ObjectTree extends Composite
 {
+	private boolean filterEnabled = true;
 	private TreeViewer objectTree;
+	private Composite filterArea;
 	private Label filterLabel;
 	private Text filterText;
+	private ObjectTreeFilter filter;
 	
 	/**
 	 * @param parent
@@ -49,19 +55,27 @@ public class ObjectTree extends Composite
 		objectTree.setContentProvider(new ObjectTreeContentProvider());
 		objectTree.setLabelProvider(new ObjectTreeLabelProvider());
 		objectTree.setComparator(new ObjectTreeComparator());
+		filter = new ObjectTreeFilter();
+		objectTree.addFilter(filter);
 		objectTree.setInput(session);
 		
-		Composite filterArea = new Composite(this, SWT.NONE);
+		filterArea = new Composite(this, SWT.NONE);
 		
 		filterLabel = new Label(filterArea, SWT.NONE);
 		filterLabel.setText("Filter:");
 		
 		filterText = new Text(filterArea, SWT.BORDER);
+		filterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		filterText.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e)
+			{
+				filter.setFilterString(filterText.getText());
+				objectTree.refresh(false);
+			}
+		});
 		
-		RowLayout rowLayout = new RowLayout();
-		rowLayout.type = SWT.HORIZONTAL;
-		rowLayout.fill = true;
-		filterArea.setLayout(rowLayout);
+		filterArea.setLayout(new GridLayout(2, false));
 		
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
@@ -116,5 +130,29 @@ public class ObjectTree extends Composite
 	public TreeViewer getTreeViewer()
 	{
 		return objectTree;
+	}
+	
+	
+	/**
+	 * Enable or disable filter
+	 * 
+	 * @param enable New filter state
+	 */
+	public void enableFilter(boolean enable)
+	{
+		filterEnabled = enable;
+		filterArea.setVisible(filterEnabled);
+		FormData fd = (FormData)objectTree.getTree().getLayoutData();
+		fd.top = enable ? new FormAttachment(filterArea) : new FormAttachment(0, 0);
+		layout();
+	}
+
+
+	/**
+	 * @return the filterEnabled
+	 */
+	public boolean isFilterEnabled()
+	{
+		return filterEnabled;
 	}
 }

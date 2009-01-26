@@ -71,23 +71,4 @@
       </objectContribution>
    </extension>
 
-   <extension
-         point="org.eclipse.ui.viewActions">
-      <viewContribution
-            id="org.netxms.nxmc.objectbrowser.actions.view.object.hide_unmanaged"
-            targetID="org.netxms.nxmc.objectbrowser.view.object_browser">
-         <menu
-               id="org.netxms.nxmc.objectbrowser.menu.object_browser"
-               label="Hide unmanaged objects"
-               path="additions">
-         </menu>
-         <action
-               class="org.netxms.nxmc.objectbrowser.actions.HideUnmanagedObjects"
-               id="org.netxms.nxmc.objectbrowser.viewActions.HideUnmanagedObjects"
-               label="Hide unmanaged objects"
-               menubarPath="org.netxms.nxmc.objectbrowser.menu.object_browser">
-         </action>
-      </viewContribution>
-   </extension>
-
 </plugin>
