@@ -341,6 +341,7 @@ src/java/netxms-eclipse/ObjectBrowser/icons/network.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/node.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/object_browser.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/service.png -text
+src/java/netxms-eclipse/ObjectBrowser/icons/service_root.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/subnet.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/template.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/template_group.png -text

@@ -6,6 +6,7 @@ package org.netxms.nxmc.objectbrowser;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -22,6 +23,7 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
+import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.core.extensionproviders.NXMCSharedData;
 
@@ -72,6 +74,12 @@ public class ObjectTree extends Composite
 			{
 				filter.setFilterString(filterText.getText());
 				objectTree.refresh(false);
+				NXCObject obj = filter.getLastMatch();
+				if (obj != null)
+				{
+					//objectTree.reveal(obj);
+					objectTree.expandToLevel(obj, TreeViewer.ALL_LEVELS);
+				}
 			}
 		});
 		

@@ -733,6 +733,21 @@ public class NXCSession
 
 	
 	/**
+	 * Get list of all objects
+	 */
+	public NXCObject[] getAllObjects()
+	{
+		NXCObject[] list;
+		
+		synchronized(objectList)
+		{
+			list = objectList.values().toArray(new NXCObject[objectList.size()]);
+		}
+		return list;
+	}
+
+	
+	/**
 	 * Get alarm list.
 	 * 
 	 * @param getTerminated if set to true, all alarms will be retrieved from database,

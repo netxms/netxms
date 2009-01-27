@@ -25,7 +25,7 @@ public class ObjectTreeLabelProvider extends LabelProvider
 	{
 		super();
 		imageNetwork = Activator.getImageDescriptor("icons/network.png").createImage();
-		imageServiceRoot = Activator.getImageDescriptor("icons/network.png").createImage();
+		imageServiceRoot = Activator.getImageDescriptor("icons/service_root.png").createImage();
 		imageContainer = Activator.getImageDescriptor("icons/container.png").createImage();
 		imageSubnet = Activator.getImageDescriptor("icons/subnet.png").createImage();
 		imageNode = Activator.getImageDescriptor("icons/node.png").createImage();

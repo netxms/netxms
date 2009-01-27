@@ -25,7 +25,8 @@ public class ObjectTreeComparator extends ViewerComparator
 	{
 		if (((NXCObject)element).getObjectId() < 10)
 			return (int)((NXCObject)element).getObjectId();
-		if (((NXCObject)element).getObjectClass() == NXCObject.OBJECT_CONTAINER)
+		if ((((NXCObject)element).getObjectClass() == NXCObject.OBJECT_CONTAINER) ||
+				(((NXCObject)element).getObjectClass() == NXCObject.OBJECT_TEMPLATEGROUP))
 			return CATEGORY_CONTAINER;
 		return CATEGORY_OTHER;
 	}

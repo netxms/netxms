@@ -3,11 +3,17 @@
  */
 package org.netxms.nxmc.objectbrowser;
 
-import java.util.regex.Pattern;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.viewers.TreeSelection;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.NXCObject;
+import org.netxms.nxmc.core.extensionproviders.NXMCSharedData;
 
 /**
  * @author Victor
@@ -16,7 +22,8 @@ import org.netxms.client.NXCObject;
 public class ObjectTreeFilter extends ViewerFilter
 {
 	private String filterString = null;
-	//private Pattern pattern = null;
+	private Map<Long, NXCObject> objectList = null;
+	private NXCObject lastMatch = null;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -24,29 +31,87 @@ public class ObjectTreeFilter extends ViewerFilter
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
-		//if ((filterString == null) || (pattern == null))
-		if (filterString == null)
+		if (objectList == null)
 			return true;
-		
-		boolean pass = ((NXCObject)element).getObjectName().toLowerCase().startsWith(filterString);
-		if (!pass)
+
+		boolean pass = objectList.containsKey(((NXCObject)element).getObjectId());
+		if (!pass && (((NXCObject)element).getNumberOfChilds() > 0))
 		{
-			if (((NXCObject)element).getNumberOfChilds() > 0)
+			Iterator<NXCObject> it = objectList.values().iterator();
+			while(it.hasNext())
 			{
-				pass = true;
+				NXCObject obj = it.next();
+				if (obj.isParent(((NXCObject)element).getObjectId()))
+				{
+					pass = true;
+					break;
+				}
 			}
 		}
 		return pass;
-		//return pattern.matcher(((NXCObject)element).getObjectName()).matches();
 	}
 	
 	
 	/**
 	 * Set filter string
 	 */
-	void setFilterString(final String filterString)
+	public void setFilterString(final String filterString)
 	{
-		this.filterString = filterString.toLowerCase();
-		//pattern = filterString.isEmpty() ? null : Pattern.compile(filterString, Pattern.CASE_INSENSITIVE);
+		boolean fullSearch = true;
+		if (this.filterString != null)
+			if (filterString.startsWith(this.filterString))
+				fullSearch = false;
+		this.filterString = filterString.isEmpty() ? null : filterString.toLowerCase();
+		updateObjectList(fullSearch);
+	}
+	
+	
+	/**
+	 * Update list of matching objects
+	 */
+	private void updateObjectList(boolean doFullSearch)
+	{
+		if (filterString != null)
+		{
+			if (doFullSearch)
+			{
+				NXCObject[] fullList = NXMCSharedData.getSession().getAllObjects();
+				objectList = new HashMap<Long, NXCObject>();
+				for(int i = 0; i < fullList.length; i++)
+					if (fullList[i].getObjectName().toLowerCase().startsWith(filterString))
+					{
+						objectList.put(fullList[i].getObjectId(), fullList[i]);
+						lastMatch = fullList[i];
+					}
+			}
+			else
+			{
+				lastMatch = null;
+				Iterator<NXCObject> it = objectList.values().iterator();
+				while(it.hasNext())
+				{
+					NXCObject obj = it.next();
+					if (!obj.getObjectName().toLowerCase().startsWith(filterString))
+						it.remove();
+					else
+						lastMatch = obj;
+				}
+			}
+		}
+		else
+		{
+			objectList = null;
+			lastMatch = null;
+		}
+	}
+
+
+	/**
+	 * Get last matched object
+	 * @return Last matched object
+	 */
+	public final NXCObject getLastMatch()
+	{
+		return lastMatch;
 	}
 }

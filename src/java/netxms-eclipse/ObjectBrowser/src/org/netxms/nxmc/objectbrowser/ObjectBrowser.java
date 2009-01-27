@@ -136,6 +136,7 @@ public class ObjectBrowser extends ViewPart
 
 	public void setFocus() 
 	{
+		objectTree.setFocus();
 	}
 	
 

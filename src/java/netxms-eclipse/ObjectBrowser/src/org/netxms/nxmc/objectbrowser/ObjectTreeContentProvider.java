@@ -3,9 +3,12 @@
  */
 package org.netxms.nxmc.objectbrowser;
 
+import java.util.Iterator;
+
 import org.eclipse.jface.viewers.TreeNodeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.*;
+import org.netxms.nxmc.core.extensionproviders.NXMCSharedData;
 
 /**
  * @author Victor
@@ -44,7 +47,8 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	@Override
 	public Object getParent(Object element)
 	{
-		return null;
+		Iterator<Long> it = ((NXCObject)element).getParents();
+		return it.hasNext() ? NXMCSharedData.getSession().findObjectById(it.next()) : null;
 	}
 
 	/* (non-Javadoc)
