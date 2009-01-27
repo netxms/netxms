@@ -6,6 +6,8 @@ package org.netxms.nxmc.objectbrowser;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -16,49 +18,49 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
-import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.core.extensionproviders.NXMCSharedData;
 
 /**
- * @author victor
+ * @author Victor
  *
  */
-public class ObjectTree extends Composite
+public class ObjectList extends Composite
 {
+	private ObjectListFilter filter;
 	private boolean filterEnabled = true;
-	private TreeViewer objectTree;
+	private TableViewer objectList;
 	private Composite filterArea;
 	private Label filterLabel;
 	private Text filterText;
-	private ObjectTreeFilter filter;
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public ObjectTree(Composite parent, int style)
+	public ObjectList(Composite parent, int style)
 	{
 		super(parent, style);
-		
+
 		FormLayout formLayout = new FormLayout();
 		setLayout(formLayout);
 		
 		NXCSession session = NXMCSharedData.getSession();
 
-		objectTree = new TreeViewer(this, SWT.VIRTUAL | SWT.SINGLE);
-		objectTree.setContentProvider(new ObjectTreeContentProvider());
-		objectTree.setLabelProvider(new ObjectTreeLabelProvider());
-		objectTree.setComparator(new ObjectTreeComparator());
-		filter = new ObjectTreeFilter();
-		objectTree.addFilter(filter);
-		objectTree.setInput(session);
+		objectList = new TableViewer(this, SWT.SINGLE);
+		objectList.setContentProvider(new ArrayContentProvider());
+		objectList.setLabelProvider(new ObjectTreeLabelProvider());
+		objectList.setComparator(new ObjectTreeComparator());
+		filter = new ObjectListFilter();
+		objectList.addFilter(filter);
+		objectList.setInput(session.getAllObjects());
 		
 		filterArea = new Composite(this, SWT.NONE);
 		
@@ -72,13 +74,7 @@ public class ObjectTree extends Composite
 			public void modifyText(ModifyEvent e)
 			{
 				filter.setFilterString(filterText.getText());
-				objectTree.refresh(false);
-				NXCObject obj = filter.getLastMatch();
-				if (obj != null)
-				{
-					//objectTree.reveal(obj);
-					objectTree.expandToLevel(obj, TreeViewer.ALL_LEVELS);
-				}
+				objectList.refresh(false);
 			}
 		});
 		
@@ -89,7 +85,7 @@ public class ObjectTree extends Composite
 		fd.top = new FormAttachment(filterArea);
 		fd.right = new FormAttachment(100, 0);
 		fd.bottom = new FormAttachment(100, 0);
-		objectTree.getTree().setLayoutData(fd);
+		objectList.getControl().setLayoutData(fd);
 		
 		fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
@@ -104,39 +100,18 @@ public class ObjectTree extends Composite
 			{
 				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
 				{
-					new UIJob("Update object tree") {
+					new UIJob("Update object list") {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							objectTree.refresh();
+							objectList.setInput(NXMCSharedData.getSession().getAllObjects());
+							objectList.refresh();
 							return Status.OK_STATUS;
 						}
 					}.schedule();
 				}
 			}
 		});
-	}
-	
-	
-	/**
-	 * Get underlying tree control
-	 * 
-	 * @return Underlying tree control
-	 */
-	public Tree getTreeControl()
-	{
-		return objectTree.getTree();
-	}
-	
-	
-	/**
-	 * Get underlying tree viewer
-	 *
-	 * @return Underlying tree viewer
-	 */
-	public TreeViewer getTreeViewer()
-	{
-		return objectTree;
 	}
 	
 	
@@ -149,7 +124,7 @@ public class ObjectTree extends Composite
 	{
 		filterEnabled = enable;
 		filterArea.setVisible(filterEnabled);
-		FormData fd = (FormData)objectTree.getTree().getLayoutData();
+		FormData fd = (FormData)objectList.getControl().getLayoutData();
 		fd.top = enable ? new FormAttachment(filterArea) : new FormAttachment(0, 0);
 		layout();
 	}
@@ -172,5 +147,27 @@ public class ObjectTree extends Composite
 	public void setFilter(final String text)
 	{
 		filterText.setText(text);
+	}
+
+	
+	/**
+	 * Get underlying table control
+	 * 
+	 * @return Underlying table control
+	 */
+	public Control getTableControl()
+	{
+		return objectList.getControl();
+	}
+	
+	
+	/**
+	 * Get underlying table viewer
+	 *
+	 * @return Underlying table viewer
+	 */
+	public TableViewer getTableViewer()
+	{
+		return objectList;
 	}
 }

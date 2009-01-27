@@ -5,15 +5,18 @@ package org.netxms.nxmc.objectbrowser;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.IShellProvider;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
-import org.netxms.nxmc.core.extensionproviders.IUIConstants;
+import org.eclipse.swt.widgets.TabFolder;
 
 /**
  * @author Victor
@@ -21,7 +24,9 @@ import org.netxms.nxmc.core.extensionproviders.IUIConstants;
  */
 public class ObjectSelectionDialog extends Dialog
 {
-	private Text textFilter;
+	private ObjectTree objectTree;
+	private ObjectList objectList;
+	protected CTabFolder tabFolder;
 
 	/**
 	 * @param parentShell
@@ -47,6 +52,8 @@ public class ObjectSelectionDialog extends Dialog
 	{
 		super.configureShell(newShell);
       newShell.setText("Select Object");
+      //newShell.setMinimumSize(250, 350);
+      //newShell.setSize(400, 350);
 	}
 
 	/* (non-Javadoc)
@@ -58,27 +65,41 @@ public class ObjectSelectionDialog extends Dialog
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
       Composite dialogArea = (Composite)super.createDialogArea(parent);
 
-      RowLayout rowLayout = new RowLayout();
-      rowLayout.type = SWT.VERTICAL;
-      rowLayout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
-      rowLayout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
-      rowLayout.fill = true;
-      dialogArea.setLayout(rowLayout);
-
-      // Filter
-      Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("Filter");
-      textFilter = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
-      String text = settings.get("SelectObject.Filter");
-      if (text != null)
-      	textFilter.setText(text);
+      dialogArea.setLayout(new FormLayout());
+      
+      tabFolder = new CTabFolder(dialogArea, SWT.BOTTOM | SWT.FLAT | SWT.MULTI);
 
       // Object tree
-      label = new Label(dialogArea, SWT.NONE);
-      label.setText("Objects");
+      objectTree = new ObjectTree(tabFolder, SWT.NONE);
+      CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
+      tabItem.setText("Tree");
+      tabItem.setControl(objectTree);
+      String text = settings.get("SelectObject.Filter");
+      if (text != null)
+      	objectTree.setFilter(text);
       
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+		fd.top = new FormAttachment(0, 0);
+		fd.right = new FormAttachment(100, 0);
+		fd.bottom = new FormAttachment(100, 0);
+		fd.height = 450;
+		tabFolder.setLayoutData(fd);
+		
+		// Object list
+		objectList = new ObjectList(tabFolder, SWT.NONE);
+      tabItem = new CTabItem(tabFolder, SWT.NONE);
+      tabItem.setText("List");
+		tabItem.setControl(objectList);
+      if (text != null)
+      	objectList.setFilter(text);
+
+/*      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+		fd.top = new FormAttachment(0, 0);
+		fd.right = new FormAttachment(100, 0);
+		fd.bottom = new FormAttachment(100, 0);
+		objectList.setLayoutData(fd);*/
       return dialogArea;
 	}
-
-	
 }
