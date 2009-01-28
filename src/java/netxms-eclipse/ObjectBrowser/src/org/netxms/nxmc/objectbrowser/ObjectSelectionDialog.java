@@ -83,7 +83,7 @@ public class ObjectSelectionDialog extends Dialog
 		fd.top = new FormAttachment(0, 0);
 		fd.right = new FormAttachment(100, 0);
 		fd.bottom = new FormAttachment(100, 0);
-		fd.height = 450;
+		//fd.height = 500;
 		tabFolder.setLayoutData(fd);
 		
 		// Object list
