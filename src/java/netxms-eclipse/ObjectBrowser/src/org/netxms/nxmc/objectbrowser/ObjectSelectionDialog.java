@@ -5,18 +5,17 @@ package org.netxms.nxmc.objectbrowser;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.IShellProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.TabFolder;
 
 /**
  * @author Victor
@@ -34,6 +33,7 @@ public class ObjectSelectionDialog extends Dialog
 	public ObjectSelectionDialog(Shell parentShell)
 	{
 		super(parentShell);
+		setShellStyle(getShellStyle() | SWT.RESIZE);
 	}
 
 	/**
@@ -42,6 +42,7 @@ public class ObjectSelectionDialog extends Dialog
 	public ObjectSelectionDialog(IShellProvider parentShell)
 	{
 		super(parentShell);
+		setShellStyle(getShellStyle() | SWT.RESIZE);
 	}
 
 	/* (non-Javadoc)
@@ -52,8 +53,15 @@ public class ObjectSelectionDialog extends Dialog
 	{
 		super.configureShell(newShell);
       newShell.setText("Select Object");
-      //newShell.setMinimumSize(250, 350);
-      //newShell.setSize(400, 350);
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      try
+      {
+      	newShell.setSize(settings.getInt("SelectObject.cx"), settings.getInt("SelectObject.cy"));
+      }
+      catch(NumberFormatException e)
+      {
+      	newShell.setSize(400, 350);
+      }
 	}
 
 	/* (non-Javadoc)
@@ -70,7 +78,7 @@ public class ObjectSelectionDialog extends Dialog
       tabFolder = new CTabFolder(dialogArea, SWT.BOTTOM | SWT.FLAT | SWT.MULTI);
 
       // Object tree
-      objectTree = new ObjectTree(tabFolder, SWT.NONE);
+      objectTree = new ObjectTree(tabFolder, SWT.NONE, ObjectTree.CHECKBOXES);
       CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
       tabItem.setText("Tree");
       tabItem.setControl(objectTree);
@@ -83,23 +91,50 @@ public class ObjectSelectionDialog extends Dialog
 		fd.top = new FormAttachment(0, 0);
 		fd.right = new FormAttachment(100, 0);
 		fd.bottom = new FormAttachment(100, 0);
-		//fd.height = 500;
 		tabFolder.setLayoutData(fd);
 		
 		// Object list
-		objectList = new ObjectList(tabFolder, SWT.NONE);
+		objectList = new ObjectList(tabFolder, SWT.NONE, ObjectList.CHECKBOXES);
       tabItem = new CTabItem(tabFolder, SWT.NONE);
       tabItem.setText("List");
 		tabItem.setControl(objectList);
       if (text != null)
       	objectList.setFilter(text);
 
-/*      FormData fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-		fd.top = new FormAttachment(0, 0);
-		fd.right = new FormAttachment(100, 0);
-		fd.bottom = new FormAttachment(100, 0);
-		objectList.setLayoutData(fd);*/
       return dialogArea;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
+	 */
+	@Override
+	protected void cancelPressed()
+	{
+		saveSettings();
+		super.cancelPressed();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+	 */
+	@Override
+	protected void okPressed()
+	{
+		saveSettings();
+		super.okPressed();
+	}
+
+	
+	/**
+	 * Save dialog settings
+	 */
+	private void saveSettings()
+	{
+		Point size = getShell().getSize();
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      
+      settings.put("SelectObject.cx", size.x);
+      settings.put("SelectObject.cy", size.y);
+      settings.put("SelectObject.Filter", objectList.getFilter());
 	}
 }

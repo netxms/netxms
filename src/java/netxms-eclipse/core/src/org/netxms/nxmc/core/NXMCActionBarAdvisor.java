@@ -61,8 +61,12 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		
 		// View
 		viewMenu.add(new GroupMarker(IActionConstants.M_PRIMARY_VIEW));
-		fileMenu.add(new Separator());
-		fileMenu.add(new GroupMarker(IActionConstants.M_TOOL_VIEW));
+		viewMenu.add(new Separator());
+		viewMenu.add(new GroupMarker(IActionConstants.M_TOOL_VIEW));
+		viewMenu.add(new Separator());
+		MenuManager configMenu = new MenuManager("&Configuration", IActionConstants.M_CONFIG);
+		configMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		viewMenu.add(configMenu);
 		
 		// Help
 		helpMenu.add(aboutAction);

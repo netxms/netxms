@@ -122,7 +122,7 @@ public class ObjectBrowser extends ViewPart
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
-		objectTree = new ObjectTree(parent, SWT.NONE);
+		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.NONE);
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);

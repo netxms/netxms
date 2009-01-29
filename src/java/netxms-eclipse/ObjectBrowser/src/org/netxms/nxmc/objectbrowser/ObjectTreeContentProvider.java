@@ -8,7 +8,6 @@ import java.util.Iterator;
 import org.eclipse.jface.viewers.TreeNodeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.*;
-import org.netxms.nxmc.core.extensionproviders.NXMCSharedData;
 
 /**
  * @author Victor
@@ -16,7 +15,7 @@ import org.netxms.nxmc.core.extensionproviders.NXMCSharedData;
  */
 public class ObjectTreeContentProvider extends TreeNodeContentProvider
 {
-	private NXCSession session;
+	private NXCSession session = null;
 	
 	ObjectTreeContentProvider()
 	{
@@ -38,7 +37,7 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	@Override
 	public Object[] getElements(Object inputElement)
 	{
-		return session.getTopLevelObjects();
+		return (session != null) ? session.getTopLevelObjects() : new NXCObject[0];
 	}
 
 	/* (non-Javadoc)
@@ -47,8 +46,11 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	@Override
 	public Object getParent(Object element)
 	{
+		if (session == null)
+			return null;
+		
 		Iterator<Long> it = ((NXCObject)element).getParents();
-		return it.hasNext() ? NXMCSharedData.getSession().findObjectById(it.next()) : null;
+		return it.hasNext() ? session.findObjectById(it.next()) : null;
 	}
 
 	/* (non-Javadoc)

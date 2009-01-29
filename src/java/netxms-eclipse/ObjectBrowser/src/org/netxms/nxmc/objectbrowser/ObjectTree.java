@@ -32,6 +32,10 @@ import org.netxms.nxmc.core.extensionproviders.NXMCSharedData;
  */
 public class ObjectTree extends Composite
 {
+	// Options
+	public static final int NONE = 0;
+	public static final int CHECKBOXES = 0x01;
+
 	private boolean filterEnabled = true;
 	private TreeViewer objectTree;
 	private Composite filterArea;
@@ -43,7 +47,7 @@ public class ObjectTree extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	public ObjectTree(Composite parent, int style)
+	public ObjectTree(Composite parent, int style, int options)
 	{
 		super(parent, style);
 		
@@ -52,7 +56,7 @@ public class ObjectTree extends Composite
 		
 		NXCSession session = NXMCSharedData.getSession();
 
-		objectTree = new TreeViewer(this, SWT.VIRTUAL | SWT.SINGLE);
+		objectTree = new TreeViewer(this, SWT.VIRTUAL | SWT.SINGLE | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
 		objectTree.setContentProvider(new ObjectTreeContentProvider());
 		objectTree.setLabelProvider(new ObjectTreeLabelProvider());
 		objectTree.setComparator(new ObjectTreeComparator());

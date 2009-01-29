@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            name="Config"
+            id="org.netxms.nxmc.config">
+      </category>
+      <view
+            name="Server Configuration"
+            icon="icons/server_config.png"
+            category="org.netxms.nxmc.config"
+            class="org.netxms.nxmc.serverconfig.ServerConfigurationEditor"
+            id="org.netxms.nxmc.serverconfig.view.server_config">
+      </view>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            name="Views"
+            id="org.netxms.nxmc.core.category.views">
+      </category>
+      <command
+            name="Server Configuration"
+            description="Open server configuration editor"
+            categoryId="org.netxms.nxmc.core.category.views"
+            id="org.netxms.nxmc.serverconfig.commands.open_server_config">
+      </command>
+   </extension>
+
+   <extension point = "org.eclipse.ui.actionSets">
+	   <actionSet id="org.netxms.nxmc.serverconfig.action_set"
+		   label="Server Configuration"
+		   visible="true">
+		   <action id="org.netxms.nxmc.serverconfig.actions.open"
+			   menubarPath="view/config/additions"
+			   label="Server Configuration"
+			   tooltip="Open server configuration editor"
+			   icon="icons/server_config.png"
+			   class="org.netxms.nxmc.serverconfig.actions.OpenServerConfig"
+			   definitionId="org.netxms.nxmc.serverconfig.commands.open_server_config">
+		   </action>
+	   </actionSet>
+   </extension>
+
+</plugin>

@@ -717,11 +717,8 @@ public class NXCSession
 	/**
 	 * Get list of top-level objects.
 	 * 
-	 * @param name variable's name
-	 * @throws IOException if socket I/O error occurs
-	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 * @return List of all top level objects (either without parents or with inaccessible parents)
 	 */
-	
 	public NXCObject[] getTopLevelObjects()
 	{
 		HashSet<NXCObject> list = new HashSet<NXCObject>();
@@ -734,6 +731,8 @@ public class NXCSession
 	
 	/**
 	 * Get list of all objects
+	 * 
+	 * @return List of all objects
 	 */
 	public NXCObject[] getAllObjects()
 	{
@@ -756,7 +755,6 @@ public class NXCSession
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	
 	public HashMap<Long, NXCAlarm> getAlarms(final boolean getTerminated) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ALL_ALARMS);
@@ -786,7 +784,6 @@ public class NXCSession
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	
 	public void acknowledgeAlarm(final long alarmId) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_ACK_ALARM);
@@ -803,7 +800,6 @@ public class NXCSession
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	
 	public void terminateAlarm(final long alarmId) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_TERMINATE_ALARM);
@@ -820,7 +816,6 @@ public class NXCSession
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	
 	public void deleteAlarm(final long alarmId) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ALARM);
@@ -838,7 +833,6 @@ public class NXCSession
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	
 	public void openAlarm(final long alarmId, final String reference) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_ALARM_HD_STATE);
@@ -857,7 +851,6 @@ public class NXCSession
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	
 	public void closeAlarm(final long alarmId) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_ALARM_HD_STATE);
@@ -875,7 +868,6 @@ public class NXCSession
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	
 	public HashMap<String, NXCServerVariable> getServerVariables() throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_CONFIG_VARLIST);

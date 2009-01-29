@@ -8,7 +8,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -21,7 +20,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
@@ -34,6 +32,10 @@ import org.netxms.nxmc.core.extensionproviders.NXMCSharedData;
  */
 public class ObjectList extends Composite
 {
+	// Options
+	public static final int NONE = 0;
+	public static final int CHECKBOXES = 0x01;
+
 	private ObjectListFilter filter;
 	private boolean filterEnabled = true;
 	private TableViewer objectList;
@@ -45,7 +47,7 @@ public class ObjectList extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	public ObjectList(Composite parent, int style)
+	public ObjectList(Composite parent, int style, int options)
 	{
 		super(parent, style);
 
@@ -54,7 +56,7 @@ public class ObjectList extends Composite
 		
 		NXCSession session = NXMCSharedData.getSession();
 
-		objectList = new TableViewer(this, SWT.SINGLE);
+		objectList = new TableViewer(this, SWT.SINGLE | SWT.FULL_SELECTION | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
 		objectList.setContentProvider(new ArrayContentProvider());
 		objectList.setLabelProvider(new ObjectTreeLabelProvider());
 		objectList.setComparator(new ObjectTreeComparator());
@@ -147,6 +149,17 @@ public class ObjectList extends Composite
 	public void setFilter(final String text)
 	{
 		filterText.setText(text);
+	}
+
+	
+	/**
+	 * Get filter text
+	 * 
+	 * @return Current filter text
+	 */
+	public String getFilter()
+	{
+		return filterText.getText();
 	}
 
 	
