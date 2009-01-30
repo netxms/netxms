@@ -45,6 +45,8 @@ public class ServerConfigurationEditor extends ViewPart
 	private NXCSession session;
 	private HashMap<String, NXCServerVariable> varList;
 	
+	private Action actionAddVariable;
+	
 	// Columns
 	private static final int COL_NAME = 0;
 	private static final int COL_VALUE = 1;
@@ -208,14 +210,28 @@ public class ServerConfigurationEditor extends ViewPart
 
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionAddVariable);
 	}
 
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionAddVariable);
 	}
 
 	private void makeActions()
 	{
+		actionAddVariable = new Action() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				ServerConfigurationEditor.this.addVariable();
+			}
+		};
+		actionAddVariable.setText("Add variable");
+		actionAddVariable.setImageDescriptor(Activator.getImageDescriptor("icons/add_variable.png"));
 	}
 
 	/**
@@ -224,5 +240,14 @@ public class ServerConfigurationEditor extends ViewPart
 	public void setFocus()
 	{
 		viewer.getControl().setFocus();
+	}
+	
+	
+	/**
+	 * Add new variable
+	 */
+	private void addVariable()
+	{
+		
 	}
 }
