@@ -11,14 +11,17 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.*;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.jface.action.*;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.*;
 import org.eclipse.swt.SWT;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCServerVariable;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.core.extensionproviders.NXMCSharedData;
+import org.netxms.nxmc.tools.RefreshAction;
 import org.netxms.nxmc.tools.SortableTableViewer;
 
 /**
@@ -46,6 +49,7 @@ public class ServerConfigurationEditor extends ViewPart
 	private HashMap<String, NXCServerVariable> varList;
 	
 	private Action actionAddVariable;
+	private RefreshAction actionRefresh;
 	
 	// Columns
 	private static final int COL_NAME = 0;
@@ -127,6 +131,61 @@ public class ServerConfigurationEditor extends ViewPart
 
 	
 	/**
+	 * Refresh job
+	 * 
+	 * @author victor
+	 */
+	class RefreshJob extends Job
+	{
+
+		public RefreshJob()
+		{
+			super("Get server configuration variables");
+		}
+
+		@Override
+		protected IStatus run(IProgressMonitor monitor)
+		{
+			IStatus status;
+			
+			try
+			{
+				varList = session.getServerVariables();
+				status = Status.OK_STATUS;
+
+				new UIJob("Initialize server configuration editor") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						synchronized(varList)
+						{
+							viewer.setInput(varList.values().toArray());
+						}
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+			catch(Exception e)
+			{
+				status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
+                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
+                    "Cannot get server configuration variables: " + e.getMessage(), e);
+			}
+			return status;
+		}
+
+		/* (non-Javadoc)
+		 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
+		 */
+		@Override
+		public boolean belongsTo(Object family)
+		{
+			return family == ServerConfigurationEditor.JOB_FAMILY;
+		}
+	};
+	
+	
+	/**
 	 * The constructor.
 	 */
 	public ServerConfigurationEditor()
@@ -153,49 +212,7 @@ public class ServerConfigurationEditor extends ViewPart
 		
 		session = NXMCSharedData.getSession();
 
-		// Request alarm list from server
-		Job job = new Job("Get server configuration variables")
-		{
-			@Override
-			protected IStatus run(IProgressMonitor monitor)
-			{
-				IStatus status;
-				
-				try
-				{
-					varList = session.getServerVariables();
-					status = Status.OK_STATUS;
-
-					new UIJob("Initialize server configuration editor") {
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							synchronized(varList)
-							{
-								viewer.setInput(varList.values().toArray());
-							}
-							return Status.OK_STATUS;
-						}
-					}.schedule();
-				}
-				catch(Exception e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
-	                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-	                    "Cannot get server configuration variables: " + e.getMessage(), e);
-				}
-				return status;
-			}
-
-			/* (non-Javadoc)
-			 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-			 */
-			@Override
-			public boolean belongsTo(Object family)
-			{
-				return family == ServerConfigurationEditor.JOB_FAMILY;
-			}
-		};
+		Job job = new RefreshJob();
 		IWorkbenchSiteProgressService siteService =
 	      (IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class);
 		siteService.schedule(job, 0, true);
@@ -210,16 +227,32 @@ public class ServerConfigurationEditor extends ViewPart
 
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionRefresh);
 		manager.add(actionAddVariable);
 	}
 
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		manager.add(actionRefresh);
 		manager.add(actionAddVariable);
 	}
 
 	private void makeActions()
 	{
+		actionRefresh = new RefreshAction() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				Job job = new RefreshJob();
+				IWorkbenchSiteProgressService siteService =
+			      (IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class);
+				siteService.schedule(job, 0, true);
+			}
+		};
+		
 		actionAddVariable = new Action() {
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
@@ -248,6 +281,33 @@ public class ServerConfigurationEditor extends ViewPart
 	 */
 	private void addVariable()
 	{
-		
+		final VariableEditDialog dlg = new VariableEditDialog(getSite().getShell(), null);
+		if (dlg.open() == Window.OK)
+		{
+			MessageDialog.openInformation(null, "zz", "ok");
+			Job job = new Job("Create configuration variable") {
+				@Override
+				protected IStatus run(IProgressMonitor monitor)
+				{
+					IStatus status;
+					
+					try
+					{
+						NXMCSharedData.getSession().setServerVariable(dlg.getVarName(), dlg.getVarValue());
+						status = Status.OK_STATUS;
+					}
+					catch(Exception e)
+					{
+						status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
+						                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
+						                    "Cannot create configuration variable: " + e.getMessage(), e);
+					}
+					return status;
+				}
+			};
+			IWorkbenchSiteProgressService siteService =
+		      (IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class);
+			siteService.schedule(job, 0, true);
+		}
 	}
 }

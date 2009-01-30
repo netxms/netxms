@@ -3,6 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: NetXMS Management Console Shared Library
 Bundle-SymbolicName: org.netxms.nxmc.library
 Bundle-Version: 1.0.0
+Bundle-Activator: org.netxms.nxmc.library.Activator
 Bundle-Vendor: netxms.org
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
