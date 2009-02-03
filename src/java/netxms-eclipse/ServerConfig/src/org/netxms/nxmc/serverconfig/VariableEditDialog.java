@@ -28,10 +28,11 @@ public class VariableEditDialog extends Dialog
 	/**
 	 * @param parentShell
 	 */
-	public VariableEditDialog(Shell parentShell, String varName)
+	public VariableEditDialog(Shell parentShell, String varName, String varValue)
 	{
 		super(parentShell);
 		this.varName = varName;
+		this.varValue = varValue;
 	}
 
 	/* (non-Javadoc)
@@ -52,6 +53,7 @@ public class VariableEditDialog extends Dialog
       label.setText("Name");
       
       textName = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
+      textName.setTextLimit(63);
       if (varName != null)
       {
       	textName.setText(varName);
@@ -62,6 +64,10 @@ public class VariableEditDialog extends Dialog
       label.setText("Value");
 
       textValue = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
+      textValue.setTextLimit(255);
+      textValue.getShell().setMinimumSize(300, 0);
+      if (varValue != null)
+      	textValue.setText(varValue);
       
 		return dialogArea;
 	}

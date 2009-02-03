@@ -180,9 +180,8 @@ public class AlarmView extends Composite
 	
 
 	/**
-	 * Create pop-up menu for object browser
+	 * Create pop-up menu for alarm list
 	 */
-	
 	private void createPopupMenu()
 	{
 		// Create menu manager.

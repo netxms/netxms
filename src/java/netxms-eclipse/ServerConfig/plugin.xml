@@ -46,4 +46,46 @@
 	   </actionSet>
    </extension>
 
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.nxmc.serverconfig.actions.popup.delete_variable"
+            objectClass="org.netxms.client.NXCServerVariable">
+         <menu
+               id="org.netxms.nxmc.serverconfig.menu.variables"
+               label="Delete"
+               path="additions">
+         </menu>
+         <action
+               class="org.netxms.nxmc.serverconfig.actions.DeleteVariable"
+               id="org.netxms.nxmc.serverconfig.popupActions.DeleteVariable"
+               label="Delete"
+   		       icon="icons/delete_variable.png"
+               menubarPath="org.netxms.nxmc.serverconfig.menu.variables"
+               enablesFor="+">
+         </action>
+      </objectContribution>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.nxmc.serverconfig.actions.popup.edit_variable"
+            objectClass="org.netxms.client.NXCServerVariable">
+         <menu
+               id="org.netxms.nxmc.serverconfig.menu.variables"
+               label="Edit..."
+               path="additions">
+         </menu>
+         <action
+               class="org.netxms.nxmc.serverconfig.actions.EditVariable"
+               id="org.netxms.nxmc.serverconfig.popupActions.EditVariable"
+               label="Edit..."
+   		       icon="icons/edit_variable.png"
+               menubarPath="org.netxms.nxmc.serverconfig.menu.variables"
+               enablesFor="1">
+         </action>
+      </objectContribution>
+   </extension>
+
 </plugin>

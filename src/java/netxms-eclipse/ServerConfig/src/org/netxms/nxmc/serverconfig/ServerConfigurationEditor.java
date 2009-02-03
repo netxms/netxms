@@ -3,6 +3,7 @@ package org.netxms.nxmc.serverconfig;
 import java.util.HashMap;
 
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.part.*;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
@@ -14,7 +15,6 @@ import org.eclipse.jface.viewers.*;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.jface.action.*;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.*;
 import org.eclipse.swt.SWT;
 import org.netxms.client.NXCException;
@@ -209,6 +209,7 @@ public class ServerConfigurationEditor extends ViewPart
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), "org.netxms.nxmc.serverconfig.viewer");
 		makeActions();
 		contributeToActionBars();
+		createPopupMenu();
 		
 		session = NXMCSharedData.getSession();
 
@@ -267,6 +268,42 @@ public class ServerConfigurationEditor extends ViewPart
 		actionAddVariable.setImageDescriptor(Activator.getImageDescriptor("icons/add_variable.png"));
 	}
 
+	
+	/**
+	 * Create pop-up menu for variable list
+	 */
+	private void createPopupMenu()
+	{
+		// Create menu manager.
+		MenuManager menuMgr = new MenuManager();
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener()
+		{
+			public void menuAboutToShow(IMenuManager mgr)
+			{
+				fillContextMenu(mgr);
+			}
+		});
+
+		// Create menu.
+		Menu menu = menuMgr.createContextMenu(viewer.getControl());
+		viewer.getControl().setMenu(menu);
+
+		// Register menu for extension.
+		getSite().registerContextMenu(menuMgr, viewer);
+	}
+	
+
+	/**
+	 * Fill context menu
+	 * @param mgr Menu manager
+	 */
+	protected void fillContextMenu(IMenuManager mgr)
+	{
+		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+	}
+
+	
 	/**
 	 * Passing the focus request to the viewer's control.
 	 */
@@ -281,10 +318,9 @@ public class ServerConfigurationEditor extends ViewPart
 	 */
 	private void addVariable()
 	{
-		final VariableEditDialog dlg = new VariableEditDialog(getSite().getShell(), null);
+		final VariableEditDialog dlg = new VariableEditDialog(getSite().getShell(), null, null);
 		if (dlg.open() == Window.OK)
 		{
-			MessageDialog.openInformation(null, "zz", "ok");
 			Job job = new Job("Create configuration variable") {
 				@Override
 				protected IStatus run(IProgressMonitor monitor)
@@ -294,6 +330,7 @@ public class ServerConfigurationEditor extends ViewPart
 					try
 					{
 						NXMCSharedData.getSession().setServerVariable(dlg.getVarName(), dlg.getVarValue());
+						actionRefresh.run();
 						status = Status.OK_STATUS;
 					}
 					catch(Exception e)
@@ -304,10 +341,29 @@ public class ServerConfigurationEditor extends ViewPart
 					}
 					return status;
 				}
+
+				
+				/* (non-Javadoc)
+				 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
+				 */
+				@Override
+				public boolean belongsTo(Object family)
+				{
+					return family == ServerConfigurationEditor.JOB_FAMILY;
+				}
 			};
 			IWorkbenchSiteProgressService siteService =
 		      (IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class);
 			siteService.schedule(job, 0, true);
 		}
+	}
+	
+	
+	/**
+	 * Refresh list
+	 */
+	public void refreshVariablesList()
+	{
+		actionRefresh.run();
 	}
 }
