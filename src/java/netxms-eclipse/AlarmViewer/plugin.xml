@@ -63,17 +63,12 @@
       <objectContribution
             id="org.netxms.nxmc.alarmviewer.actions.popup.terminate_alarm"
             objectClass="org.netxms.client.NXCAlarm">
-         <menu
-               id="org.netxms.nxmc.alarmviewer.menu.alarm_viewer"
-               label="Terminate"
-               path="additions">
-         </menu>
          <action
                class="org.netxms.nxmc.alarmviewer.actions.TerminateAlarm"
                id="org.netxms.nxmc.alarmviewer.popupActions.TerminateAlarm"
                label="Terminate"
    		       icon="icons/terminated.png"
-               menubarPath="org.netxms.nxmc.alarmviewer.menu.alarm_viewer">
+               menubarPath="additions">
          </action>
       </objectContribution>
    </extension>
@@ -83,17 +78,12 @@
       <objectContribution
             id="org.netxms.nxmc.alarmviewer.actions.popup.acknowledge_alarm"
             objectClass="org.netxms.client.NXCAlarm">
-         <menu
-               id="org.netxms.nxmc.alarmviewer.menu.alarm_viewer"
-               label="Acknowledge"
-               path="additions">
-         </menu>
          <action
                class="org.netxms.nxmc.alarmviewer.actions.AcknowledgeAlarm"
                id="org.netxms.nxmc.alarmviewer.popupActions.AcknowledgeAlarm"
                label="Acknowledge"
    		       icon="icons/acknowledged.png"
-               menubarPath="org.netxms.nxmc.alarmviewer.menu.alarm_viewer">
+               menubarPath="additions">
          </action>
       </objectContribution>
    </extension>

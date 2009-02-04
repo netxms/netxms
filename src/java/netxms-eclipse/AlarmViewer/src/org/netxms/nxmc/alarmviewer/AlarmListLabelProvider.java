@@ -93,8 +93,11 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 	@Override
 	public void dispose()
 	{
-		for(int i = 0; i < 5; i++)
+		for(int i = 0; i < severityImages.length; i++)
 			severityImages[i].dispose();
+
+		for(int i = 0; i < stateImages.length; i++)
+			stateImages[i].dispose();
 	}
 
 	@Override

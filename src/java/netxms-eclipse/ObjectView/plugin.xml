@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="Last Values"
+            allowMultiple="true"
+            icon="icons/last_values.png"
+            class="org.netxms.nxmc.objectview.LastValuesBrowser"
+            id="org.netxms.nxmc.objectview.view.last_values">
+      </view>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.nxmc.objectview.actions.popup.object.lastvalues"
+            objectClass="org.netxms.client.NXCNode">
+         <action
+               class="org.netxms.nxmc.objectview.actions.ShowLastValues"
+               enablesFor="1"
+               id="org.netxms.nxmc.objectview.popupActions.ShowLastValues"
+               label="Last values"
+               icon="icons/last_values.png"
+               menubarPath="datacollection">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>

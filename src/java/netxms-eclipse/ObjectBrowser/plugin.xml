@@ -56,17 +56,12 @@
       <objectContribution
             id="org.netxms.nxmc.objectbrowser.actions.popup.object.bind"
             objectClass="org.netxms.client.NXCObject">
-         <menu
-               id="org.netxms.nxmc.objectbrowser.menu.object_browser"
-               label="Bind..."
-               path="additions">
-         </menu>
          <action
                class="org.netxms.nxmc.objectbrowser.actions.BindObject"
                enablesFor="1"
                id="org.netxms.nxmc.objectbrowser.popupActions.BindObject"
                label="Bind..."
-               menubarPath="org.netxms.nxmc.objectbrowser.menu.object_browser">
+               menubarPath="objectmgmt">
          </action>
       </objectContribution>
    </extension>

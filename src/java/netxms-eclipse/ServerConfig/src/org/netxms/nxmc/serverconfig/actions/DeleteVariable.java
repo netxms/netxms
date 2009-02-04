@@ -10,7 +10,6 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
@@ -20,7 +19,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.nxmc.core.extensionproviders.NXMCSharedData;
 import org.netxms.nxmc.serverconfig.Activator;
 import org.netxms.nxmc.serverconfig.ServerConfigurationEditor;
-import org.netxms.nxmc.serverconfig.VariableEditDialog;
 
 /**
  * @author victor

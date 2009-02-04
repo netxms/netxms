@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: NXMC Object Viewer Plug-in
+Bundle-SymbolicName: org.netxms.nxmc.objectview;singleton:=true
+Bundle-Version: 1.0.0
+Bundle-Activator: org.netxms.nxmc.objectview.Activator
+Bundle-Vendor: netxms.org
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.netxms.nxmc.library;bundle-version="1.0.0",
+ org.netxms.nxmc.core;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy

@@ -1,9 +1,7 @@
 /**
  * 
  */
-package org.netxms.nxmc.alarmviewer;
-
-import java.util.HashMap;
+package org.netxms.nxmc.objectview;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -24,10 +22,9 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCAlarm;
+import org.netxms.client.NXCDCIValue;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCListener;
-import org.netxms.client.NXCNotification;
+import org.netxms.client.NXCNode;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.core.extensionproviders.NXMCSharedData;
 import org.netxms.nxmc.tools.SortableTableViewer;
@@ -36,41 +33,36 @@ import org.netxms.nxmc.tools.SortableTableViewer;
  * @author victor
  *
  */
-public class AlarmView extends Composite
+public class LastValuesView extends Composite
 {
-	public static final String JOB_FAMILY = "AlarmViewJob";
+	public static final String JOB_FAMILY = "LastValuesViewJob";
 	
 	// Columns
-	public static final int COLUMN_SEVERITY = 0;
-	public static final int COLUMN_STATE = 1;
-	public static final int COLUMN_SOURCE = 2;
-	public static final int COLUMN_MESSAGE = 3;
-	public static final int COLUMN_COUNT = 4;
-	public static final int COLUMN_CREATED = 5;
-	public static final int COLUMN_LASTCHANGE = 6;
+	public static final int COLUMN_ID = 0;
+	public static final int COLUMN_DESCRIPTION = 1;
+	public static final int COLUMN_VALUE = 2;
+	public static final int COLUMN_TIMESTAMP = 3;
 	
 	private final ViewPart viewPart;
+	private final NXCNode node;
 	private NXCSession session;
-	private TableViewer alarmViewer;
-	private AlarmListFilter alarmFilter;
-	private HashMap<Long, NXCAlarm> alarmList;
+	private TableViewer dataViewer;
 	
-	public AlarmView(ViewPart viewPart, Composite parent, int style)
+	public LastValuesView(ViewPart viewPart, Composite parent, int style, NXCNode _node)
 	{
 		super(parent, style);
 		session = NXMCSharedData.getSession();
 		this.viewPart = viewPart;		
+		this.node = _node;
 		
 		// Setup table columns
-		final String[] names = { "Severity", "State", "Source", "Message", "Count", "Created", "Last Change" };
-		final int[] widths = { 100, 100, 150, 300, 70, 100, 100 };
-		alarmViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN);
+		final String[] names = { "ID", "Description", "Value", "Timestamp" };
+		final int[] widths = { 70, 250, 150, 100 };
+		dataViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN);
 	
-		alarmViewer.setLabelProvider(new AlarmListLabelProvider());
-		alarmViewer.setContentProvider(new ArrayContentProvider());
-		alarmViewer.setComparator(new AlarmComparator());
-		alarmFilter = new AlarmListFilter();
-		alarmViewer.addFilter(alarmFilter);
+		dataViewer.setLabelProvider(new LastValuesLabelProvider());
+		dataViewer.setContentProvider(new ArrayContentProvider());
+		//dataViewer.setComparator(new LastValuesComparator());
 		
 		createPopupMenu();
 
@@ -78,12 +70,12 @@ public class AlarmView extends Composite
 		addListener(SWT.Resize, new Listener() {
 			public void handleEvent(Event e)
 			{
-				alarmViewer.getControl().setBounds(alarmView.getClientArea());
+				dataViewer.getControl().setBounds(alarmView.getClientArea());
 			}
 		});
 
-		// Request alarm list from server
-		Job job = new Job("Synchronize alarm list")
+		// Request data from server
+		Job job = new Job("Get DCI values for node " + node.getObjectName())
 		{
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
@@ -92,17 +84,14 @@ public class AlarmView extends Composite
 				
 				try
 				{
-					alarmList = session.getAlarms(false);
+					final NXCDCIValue[] data = session.getLastValues(node.getObjectId());
 					status = Status.OK_STATUS;
 
-					new UIJob("Initialize alarm viewer") {
+					new UIJob("Initialize last values view") {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							synchronized(alarmList)
-							{
-								alarmViewer.setInput(alarmList.values());
-							}
+							dataViewer.setInput(data);
 							return Status.OK_STATUS;
 						}
 					}.schedule();
@@ -111,7 +100,7 @@ public class AlarmView extends Composite
 				{
 					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
 	                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-	                    "Cannot synchronize alarm list: " + e.getMessage(), e);
+	                    "Cannot get DCI values for node " + node.getObjectName() + ": " + e.getMessage(), e);
 				}
 				return status;
 			}
@@ -122,50 +111,21 @@ public class AlarmView extends Composite
 			@Override
 			public boolean belongsTo(Object family)
 			{
-				return family == AlarmView.JOB_FAMILY;
+				return family == LastValuesView.JOB_FAMILY;
 			}
 		};
 		IWorkbenchSiteProgressService siteService =
 	      (IWorkbenchSiteProgressService)viewPart.getSite().getAdapter(IWorkbenchSiteProgressService.class);
 		siteService.schedule(job, 0, true);
-		
-		// Add client library listener
-		session.addListener(new NXCListener() {
-			@Override
-			public void notificationHandler(NXCNotification n)
-			{
-				switch(n.getCode())
-				{
-					case NXCNotification.NEW_ALARM:
-					case NXCNotification.ALARM_CHANGED:
-						synchronized(alarmList)
-						{
-							alarmList.put(((NXCAlarm)n.getObject()).getId(), (NXCAlarm)n.getObject());
-						}
-						scheduleAlarmViewerUpdate();
-						break;
-					case NXCNotification.ALARM_TERMINATED:
-					case NXCNotification.ALARM_DELETED:
-						synchronized(alarmList)
-						{
-							alarmList.remove(((NXCAlarm)n.getObject()).getId());
-						}
-						scheduleAlarmViewerUpdate();
-						break;
-					default:
-						break;
-				}
-			}
-		});
 	}
 	
 	
 	/**
 	 * Schedule alarm viewer update
 	 */
-	private void scheduleAlarmViewerUpdate()
+	/*private void scheduleAlarmViewerUpdate()
 	{
-		new UIJob("Update alarm list") {
+		new UIJob("Update last values view") {
 			@Override
 			public IStatus runInUIThread(IProgressMonitor monitor)
 			{
@@ -176,7 +136,7 @@ public class AlarmView extends Composite
 				return Status.OK_STATUS;
 			}
 		}.schedule();
-	}
+	}*/
 	
 
 	/**
@@ -196,12 +156,12 @@ public class AlarmView extends Composite
 		});
 
 		// Create menu.
-		Menu menu = menuMgr.createContextMenu(alarmViewer.getControl());
-		alarmViewer.getControl().setMenu(menu);
+		Menu menu = menuMgr.createContextMenu(dataViewer.getControl());
+		dataViewer.getControl().setMenu(menu);
 
 		// Register menu for extension.
 		if (viewPart != null)
-			viewPart.getSite().registerContextMenu(menuMgr, alarmViewer);
+			viewPart.getSite().registerContextMenu(menuMgr, dataViewer);
 	}
 	
 
@@ -212,20 +172,5 @@ public class AlarmView extends Composite
 	protected void fillContextMenu(IMenuManager mgr)
 	{
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-	}
-
-	
-	/**
-	 * Change root object for alarm list
-	 * 
-	 * @param objectId ID of new root object
-	 */
-	public void setRootObject(long objectId)
-	{
-		alarmFilter.setRootObject(objectId);
-		synchronized(alarmList)
-		{
-			alarmViewer.refresh();
-		}
 	}
 }

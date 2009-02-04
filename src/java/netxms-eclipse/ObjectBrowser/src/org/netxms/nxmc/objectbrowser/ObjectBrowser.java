@@ -8,6 +8,7 @@ import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -16,6 +17,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.nxmc.core.extensionproviders.IActionConstants;
 
 
 /**
@@ -69,7 +71,13 @@ public class ObjectBrowser extends ViewPart
 	 */
 	protected void fillContextMenu(IMenuManager mgr)
 	{
+		mgr.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
+		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		mgr.add(new Separator());
+		mgr.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
+		mgr.add(new Separator());
+		mgr.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
 	}
 
 	
