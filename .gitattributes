@@ -284,6 +284,8 @@ src/java/netxms-client/pom.xml -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCAccessListElement.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCAlarm.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCContainer.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/NXCDCI.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/NXCDCIValue.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCEntireNetwork.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCInterface.java -text

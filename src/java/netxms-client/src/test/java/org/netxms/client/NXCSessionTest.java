@@ -131,4 +131,21 @@ public class NXCSessionTest extends TestCase
 		
 		session.disconnect();
 	}
+	
+	public void testGetLastValues() throws Exception
+	{
+		NXCSession session = new NXCSession(serverAddress, loginName, password);
+		session.connect();
+		
+		NXCDCIValue[] list = session.getLastValues(12);
+		assertEquals(true, list.length > 0);
+		
+		boolean statusFound = false;
+		for(int i = 0; i < list.length; i++)
+			if ((list[i].getName().equalsIgnoreCase("Status")) && (list[i].getSource() == NXCDCI.INTERNAL))
+				statusFound = true;
+		assertEquals(true, statusFound);
+		
+		session.disconnect();
+	}
 }
