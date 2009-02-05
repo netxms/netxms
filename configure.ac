@@ -1476,11 +1476,10 @@ AC_CONFIG_FILES([
 	src/client/windows/nxuilib/Makefile
 	src/client/windows/nxuilib/res/Makefile
 	src/client/windows/nxuilib/sounds/Makefile
-	src/console/nxlexer/Makefile
+	src/client/nxlexer/Makefile
 	src/client/windows/nxcon/Makefile
 	src/client/windows/nxcon/icons/Makefile
 	src/client/windows/nxcon/res/Makefile
-	src/console/win32starter/Makefile
 	src/client/windows/nxav/Makefile
 	src/client/windows/nxav/res/Makefile
 	src/client/windows/nxnotify/Makefile
