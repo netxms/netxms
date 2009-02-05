@@ -1485,7 +1485,6 @@ AC_CONFIG_FILES([
 	src/client/windows/nxav/res/Makefile
 	src/client/windows/nxnotify/Makefile
 	src/client/windows/nxnotify/res/Makefile
-	src/console/cmdline/Makefile
 	src/console/PocketPC/Makefile
 	src/console/PocketPC/res/Makefile
 	src/nxcptest/Makefile
@@ -1543,15 +1542,15 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/odbcquery/Makefile
 	src/agent/subagents/logwatch/Makefile
-	src/nxhttpd/Makefile
-	src/nxhttpd/static/Makefile
-	src/nxhttpd/static/images/Makefile
-	src/nxhttpd/static/images/buttons/Makefile
-	src/nxhttpd/static/images/buttons/normal/Makefile
-	src/nxhttpd/static/images/buttons/pressed/Makefile
-	src/nxhttpd/static/images/ctrlpanel/Makefile
-	src/nxhttpd/static/images/objects/Makefile
-	src/nxhttpd/static/images/status/Makefile
+	src/webui/nxhttpd/Makefile
+	src/webui/nxhttpd/static/Makefile
+	src/webui/nxhttpd/static/images/Makefile
+	src/webui/nxhttpd/static/images/buttons/Makefile
+	src/webui/nxhttpd/static/images/buttons/normal/Makefile
+	src/webui/nxhttpd/static/images/buttons/pressed/Makefile
+	src/webui/nxhttpd/static/images/ctrlpanel/Makefile
+	src/webui/nxhttpd/static/images/objects/Makefile
+	src/webui/nxhttpd/static/images/status/Makefile
 	tools/Makefile
 ])
 
