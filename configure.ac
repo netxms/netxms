@@ -1473,18 +1473,18 @@ AC_CONFIG_FILES([
 	src/client/nxpush/Makefile
 	src/client/nxsms/Makefile
 	src/console/Makefile
-	src/console/nxuilib/Makefile
-	src/console/nxuilib/res/Makefile
-	src/console/nxuilib/sounds/Makefile
+	src/client/windows/nxuilib/Makefile
+	src/client/windows/nxuilib/res/Makefile
+	src/client/windows/nxuilib/sounds/Makefile
 	src/console/nxlexer/Makefile
-	src/console/win32/Makefile
-	src/console/win32/icons/Makefile
-	src/console/win32/res/Makefile
+	src/client/windows/nxcon/Makefile
+	src/client/windows/nxcon/icons/Makefile
+	src/client/windows/nxcon/res/Makefile
 	src/console/win32starter/Makefile
-	src/console/nxav/Makefile
-	src/console/nxav/res/Makefile
-	src/console/nxnotify/Makefile
-	src/console/nxnotify/res/Makefile
+	src/client/windows/nxav/Makefile
+	src/client/windows/nxav/res/Makefile
+	src/client/windows/nxnotify/Makefile
+	src/client/windows/nxnotify/res/Makefile
 	src/console/cmdline/Makefile
 	src/console/PocketPC/Makefile
 	src/console/PocketPC/res/Makefile
