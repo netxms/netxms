@@ -8,4 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = nxuilib nxlexer win32 win32starter nxav nxnotify cmdline PocketPC
+SUBDIRS = PocketPC
