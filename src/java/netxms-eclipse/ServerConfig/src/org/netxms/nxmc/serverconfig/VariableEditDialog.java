@@ -59,6 +59,9 @@ public class VariableEditDialog extends Dialog
       	textName.setText(varName);
       	textName.setEditable(false);
       }
+      
+      label = new Label(dialogArea, SWT.NONE);
+      label.setText("");
 
       label = new Label(dialogArea, SWT.NONE);
       label.setText("Value");
@@ -68,6 +71,9 @@ public class VariableEditDialog extends Dialog
       textValue.getShell().setMinimumSize(300, 0);
       if (varValue != null)
       	textValue.setText(varValue);
+      
+      if (varName != null)
+      	textValue.setFocus();
       
 		return dialogArea;
 	}
