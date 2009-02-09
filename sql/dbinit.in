@@ -24,6 +24,8 @@ BEGIN TRANSACTION;
 
 // Actual SQL queries
 #include "schema.in"
+
+#ifndef SCHEMA_ONLY
 #include "setup.in"
 #include "events.in"
 #include "images.in"
@@ -32,6 +34,7 @@ BEGIN TRANSACTION;
 #include "objtools.in"
 #include "scripts.in"
 #include "maps.in"
+#endif
 
 // End transaction
 #if defined(DB_POSTGRESQL) || defined(DB_SQLITE)

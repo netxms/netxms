@@ -24,11 +24,26 @@
 
 
 //
-// Export server configuration
+// Export single database table
 //
 
-static void ExportConfig()
+static void ExportTable(const char *name, ...)
 {
+	va_list args;
+	String query1, query2;
+	const char *field;
+
+	query1 = "SELECT ";
+	query2.AddFormattedString("CREATE TABLE %s (", name); 
+	va_start(args, name);
+	
+	while((field = va_arg(args, const char *)) != NULL)
+	{
+		query += field;
+		query += ",";
+	}
+
+	va_end(args);
 }
 
 
@@ -41,7 +56,7 @@ void ExportDatabase(void)
 	if (!ValidateDatabase())
 		return;
 
-	ExportConfig();
+	ExportTable("config_clob", "var_name", "var_value", NULL);
 
 	_tprintf(_T("Database export complete.\n"));
 }
