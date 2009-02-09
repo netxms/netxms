@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxdbmgr.h
+** File: nxdbmgr.h
 **
 **/
 
@@ -53,17 +53,19 @@
 // Functions
 //
 
-void CheckDatabase(void);
+void CheckDatabase();
 void InitDatabase(const TCHAR *pszInitFile);
-void ReindexDatabase(void);
-void UpgradeDatabase(void);
-void UnlockDatabase(void);
+void ReindexDatabase();
+void ExportDatabase();
+void UpgradeDatabase();
+void UnlockDatabase();
 DB_RESULT SQLSelect(const TCHAR *pszQuery);
 BOOL SQLQuery(const TCHAR *pszQuery);
 BOOL SQLBatch(const TCHAR *pszBatch);
-BOOL GetYesNo(void);
+BOOL GetYesNo();
 void ShowQuery(const TCHAR *pszQuery);
 BOOL ExecSQLBatch(const TCHAR *pszFile);
+BOOL ValidateDatabase();
 
 BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault);
 int ConfigReadInt(const TCHAR *pszVar, int iDefault);

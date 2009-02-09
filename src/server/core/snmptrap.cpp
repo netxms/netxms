@@ -169,10 +169,12 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
    SNMP_Variable *pVar;
    int iResult;
 
+	// Extract varbinds from trap and add them as event's parameters
    for(i = 0; i < m_pTrapCfg[dwIndex].dwNumMaps; i++)
    {
       if (m_pTrapCfg[dwIndex].pMaps[i].dwOidLen & 0x80000000)
       {
+			// Extract by varbind position
          pVar = pdu->GetVariable((m_pTrapCfg[dwIndex].pMaps[i].dwOidLen & 0x7FFFFFFF) - 1);
          if (pVar != NULL)
          {
@@ -185,6 +187,7 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
       }
       else
       {
+			// Extract by varbind OID
          for(j = 0; j < pdu->GetNumVariables(); j++)
          {
             iResult = pdu->GetVariable(j)->GetName()->Compare(

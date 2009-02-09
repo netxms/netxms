@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2004-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -301,6 +301,76 @@ DWORD ConfigReadULong(const TCHAR *pszVar, DWORD dwDefault)
 
 
 //
+// Check that database has correct schema version and is not locked
+//
+
+BOOL ValidateDatabase()
+{
+	DB_RESULT hResult;
+	LONG nVersion = 0;
+	BOOL bLocked;
+   TCHAR szLockStatus[MAX_DB_STRING], szLockInfo[MAX_DB_STRING];
+
+   // Get database format version
+   hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBFormatVersion'"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         nVersion = DBGetFieldLong(hResult, 0, 0);
+      DBFreeResult(hResult);
+   }
+   if (nVersion < DB_FORMAT_VERSION)
+   {
+      _tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\nUse \"upgrade\" command to upgrade your database first.\n"),
+               nVersion, DB_FORMAT_VERSION);
+		return FALSE;
+   }
+   else if (nVersion > DB_FORMAT_VERSION)
+   {
+		_tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\n"
+					 "You need to upgrade your server before using this database.\n"),
+				   nVersion, DB_FORMAT_VERSION);
+		return FALSE;
+   }
+
+   // Check if database is locked
+   hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         DBGetField(hResult, 0, 0, szLockStatus, MAX_DB_STRING);
+         DecodeSQLString(szLockStatus);
+         bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
+      }
+      DBFreeResult(hResult);
+
+      if (bLocked)
+      {
+         hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockInfo'"));
+         if (hResult != NULL)
+         {
+            if (DBGetNumRows(hResult) > 0)
+            {
+               DBGetField(hResult, 0, 0, szLockInfo, MAX_DB_STRING);
+               DecodeSQLString(szLockInfo);
+            }
+            DBFreeResult(hResult);
+         }
+      }
+   }
+
+   if (bLocked)
+   {
+      _tprintf(_T("Database is locked by server %s [%s]\n"), szLockStatus, szLockInfo);
+		return FALSE;
+   }
+
+	return TRUE;
+}
+
+
+//
 // Startup
 //
 
@@ -529,6 +599,8 @@ int main(int argc, char *argv[])
          UnlockDatabase();
       else if (!strcmp(argv[optind], "reindex"))
          ReindexDatabase();
+      else if (!strcmp(argv[optind], "export"))
+         ExportDatabase();
    }
 
    // Shutdown

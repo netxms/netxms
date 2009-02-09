@@ -44,67 +44,10 @@ static void RecreateIndex(const TCHAR *pszIndex, const TCHAR *pszTable, const TC
 // Reindex database
 //
 
-void ReindexDatabase(void)
+void ReindexDatabase()
 {
-	DB_RESULT hResult;
-	LONG nVersion = 0;
-	BOOL bLocked;
-   TCHAR szLockStatus[MAX_DB_STRING], szLockInfo[MAX_DB_STRING];
-
-   // Get database format version
-   hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBFormatVersion'"));
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         nVersion = DBGetFieldLong(hResult, 0, 0);
-      DBFreeResult(hResult);
-   }
-   if (nVersion < DB_FORMAT_VERSION)
-   {
-      _tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\nUse \"upgrade\" command to upgrade your database first.\n"),
-               nVersion, DB_FORMAT_VERSION);
+	if (!ValidateDatabase())
 		return;
-   }
-   else if (nVersion > DB_FORMAT_VERSION)
-   {
-		_tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\n"
-					 "You need to upgrade your server before using this database.\n"),
-				   nVersion, DB_FORMAT_VERSION);
-		return;
-   }
-
-   // Check if database is locked
-   hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockStatus'"));
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-      {
-         DBGetField(hResult, 0, 0, szLockStatus, MAX_DB_STRING);
-         DecodeSQLString(szLockStatus);
-         bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
-      }
-      DBFreeResult(hResult);
-
-      if (bLocked)
-      {
-         hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBLockInfo'"));
-         if (hResult != NULL)
-         {
-            if (DBGetNumRows(hResult) > 0)
-            {
-               DBGetField(hResult, 0, 0, szLockInfo, MAX_DB_STRING);
-               DecodeSQLString(szLockInfo);
-            }
-            DBFreeResult(hResult);
-         }
-      }
-   }
-
-   if (bLocked)
-   {
-      _tprintf(_T("Database is locked by server %s [%s]\n"), szLockStatus, szLockInfo);
-		return;
-   }
 
 	if (g_iSyntax != DB_SYNTAX_ORACLE)
 		RecreateIndex(_T("idx_raw_dci_values_item_id"), _T("raw_dci_values"), _T("item_id"));
