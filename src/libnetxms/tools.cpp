@@ -1178,6 +1178,7 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, DWORD *pdwFileSize
                   break;
                }
             }
+				pBuffer[fs.st_size] = 0;
          }
       }
       close(fd);

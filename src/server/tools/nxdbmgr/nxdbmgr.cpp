@@ -415,21 +415,22 @@ int main(int argc, char *argv[])
          case 'h':   // Display help and exit
             _tprintf(_T("Usage: nxdbmgr [<options>] <command>\n"
                         "Valid commands are:\n"
-								"   batch <file> : Run SQL batch file\n"
-                        "   check        : Check database for errors\n"
-                        "   init <file>  : Initialize database\n"
-								"   reindex      : Reindex database\n"
-                        "   unlock       : Forced database unlock\n"
-                        "   upgrade      : Upgrade database to new version\n"
+								"   batch <file>  : Run SQL batch file\n"
+                        "   check         : Check database for errors\n"
+                        "   export <file> : Export database to file\n"
+                        "   init <file>   : Initialize database\n"
+								"   reindex       : Reindex database\n"
+                        "   unlock        : Forced database unlock\n"
+                        "   upgrade       : Upgrade database to new version\n"
                         "Valid options are:\n"
-                        "   -c <config>  : Use alternate configuration file. Default is " DEFAULT_CONFIG_FILE "\n"
-                        "   -f           : Force repair - do not ask for confirmation.\n"
-                        "   -h           : Display help and exit.\n"
-                        "   -I           : MySQL only - specify TYPE=InnoDB for new tables.\n"
-                        "   -M           : MySQL only - specify TYPE=MyISAM for new tables.\n"
-                        "   -t           : Enable trace moded (show executed SQL queries).\n"
-                        "   -v           : Display version and exit.\n"
-                        "   -X           : Ignore SQL errors when upgrading (USE WITH CARE!!!)\n"
+                        "   -c <config> : Use alternate configuration file. Default is " DEFAULT_CONFIG_FILE "\n"
+                        "   -f          : Force repair - do not ask for confirmation.\n"
+                        "   -h          : Display help and exit.\n"
+                        "   -I          : MySQL only - specify TYPE=InnoDB for new tables.\n"
+                        "   -M          : MySQL only - specify TYPE=MyISAM for new tables.\n"
+                        "   -t          : Enable trace moded (show executed SQL queries).\n"
+                        "   -v          : Display version and exit.\n"
+                        "   -X          : Ignore SQL errors when upgrading (USE WITH CARE!!!)\n"
                         "\n"));
             bStart = FALSE;
             break;
@@ -473,6 +474,7 @@ int main(int argc, char *argv[])
    }
    if (strcmp(argv[optind], "batch") && 
        strcmp(argv[optind], "check") && 
+       strcmp(argv[optind], "export") && 
        strcmp(argv[optind], "reindex") &&
        strcmp(argv[optind], "upgrade") &&
        strcmp(argv[optind], "unlock") &&
@@ -481,7 +483,7 @@ int main(int argc, char *argv[])
       _tprintf(_T("Invalid command \"%s\". Type nxdbmgr -h for command line syntax.\n"), argv[optind]);
       return 1;
    }
-   if ((!strcmp(argv[optind], "init") || !strcmp(argv[optind], "batch")) && (argc - optind < 2))
+   if ((!strcmp(argv[optind], "init") || !strcmp(argv[optind], "batch") || !strcmp(argv[optind], "export")) && (argc - optind < 2))
    {
       _tprintf("Required command argument missing\n");
       return 1;
@@ -600,7 +602,7 @@ int main(int argc, char *argv[])
       else if (!strcmp(argv[optind], "reindex"))
          ReindexDatabase();
       else if (!strcmp(argv[optind], "export"))
-         ExportDatabase();
+         ExportDatabase(argv[optind + 1]);
    }
 
    // Shutdown

@@ -354,6 +354,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\sqlite3.c"
+				>
+			</File>
+			<File
 				RelativePath=".\unlock.cpp"
 				>
 			</File>
@@ -385,6 +389,10 @@
 			</File>
 			<File
 				RelativePath="..\..\include\nxsrvapi.h"
+				>
+			</File>
+			<File
+				RelativePath=".\sqlite3.h"
 				>
 			</File>
 		</Filter>

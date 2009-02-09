@@ -56,7 +56,7 @@
 void CheckDatabase();
 void InitDatabase(const TCHAR *pszInitFile);
 void ReindexDatabase();
-void ExportDatabase();
+void ExportDatabase(const char *file);
 void UpgradeDatabase();
 void UnlockDatabase();
 DB_RESULT SQLSelect(const TCHAR *pszQuery);

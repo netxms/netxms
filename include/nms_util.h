@@ -264,6 +264,7 @@ public:
 	int Find(const TCHAR *pszStr, int nStart = 0);
 
 	void Strip();
+	void Shrink(int chars = 1);
 };
 
 

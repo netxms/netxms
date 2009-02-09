@@ -268,3 +268,18 @@ void String::Strip()
 		m_dwBufSize = (DWORD)_tcslen(m_pszBuffer) + 1;
 	}
 }
+
+
+//
+// Shring string by removing trailing characters
+//
+
+void String::Shrink(int chars)
+{
+	if (m_dwBufSize > 1)
+	{
+		m_dwBufSize -= min(m_dwBufSize - 1, (DWORD)chars);
+		if (m_pszBuffer != NULL)
+			m_pszBuffer[m_dwBufSize - 1] = 0;
+	}
+}

@@ -4,7 +4,16 @@
 
 sqldir=$(pkgdatadir)/sql
 
-sql_DATA = dbinit_mysql.sql dbinit_pgsql.sql dbinit_mssql.sql dbinit_oracle.sql dbinit_sqlite.sql
+sql_DATA = dbinit_mysql.sql \
+           dbinit_pgsql.sql \
+           dbinit_mssql.sql \
+           dbinit_oracle.sql \
+           dbinit_sqlite.sql \
+           dbschema_mysql.sql \
+           dbschema_pgsql.sql \
+           dbschema_mssql.sql \
+           dbschema_oracle.sql \
+           dbschema_sqlite.sql
 
 ROOT_FILE = dbinit.in
 SOURCE = $(ROOT_FILE) database.in schema.in setup.in events.in images.in policy.in objtools.in scripts.in maps.in
@@ -28,6 +37,21 @@ dbinit_oracle.sql: $(SOURCE) $(HEADER_FILES)
 
 dbinit_sqlite.sql: $(SOURCE) $(HEADER_FILES)
 	$(COMMAND) -DDB_SQLITE $(ROOT_FILE) | $(SQUEEZE) > $@
+
+dbschema_mysql.sql: $(SOURCE) $(HEADER_FILES)
+	$(COMMAND) -DDB_MYSQL -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
+
+dbschema_pgsql.sql: $(SOURCE) $(HEADER_FILES)
+	$(COMMAND) -DDB_POSTGRESQL -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
+
+dbschema_mssql.sql: $(SOURCE) $(HEADER_FILES)
+	$(COMMAND) -DDB_MSSQL -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
+
+dbschema_oracle.sql: $(SOURCE) $(HEADER_FILES)
+	$(COMMAND) -DDB_ORACLE -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
+
+dbschema_sqlite.sql: $(SOURCE) $(HEADER_FILES)
+	$(COMMAND) -DDB_SQLITE -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
 
 clean:
 	rm -f dbinit_*.sql
