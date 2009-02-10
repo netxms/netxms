@@ -414,6 +414,38 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
 
 
 //
+// Get column count in async query result
+//
+
+extern "C" int EXPORT DrvGetFieldCountAsync(DB_ASYNC_RESULT hResult)
+{
+	return (hResult != NULL) ? ((SQLITE_CONN *)hResult)->nNumCols : 0;
+}
+
+
+//
+// Get column name in async query result
+//
+
+extern "C" const WCHAR EXPORT *DrvGetFieldNameAsync(DB_ASYNC_RESULT hResult, int column)
+{
+   WCHAR *pwszRet = NULL;
+
+   if ((column >= 0) && (column < ((SQLITE_CONN *)hResult)->nNumCols))
+   {
+      pszData = (char *)sqlite3_column_text(((SQLITE_CONN *)hResult)->pvm, iColumn);
+      if (pszData != NULL)
+      {
+         MultiByteToWideChar(CP_UTF8, 0, pszData, -1, pBuffer, iBufSize);
+         pBuffer[iBufSize - 1] = 0;
+         pwszRet = pBuffer;
+      }
+   }
+   return pwszRet;
+}
+
+
+//
 // Destroy result of async query
 //
 

@@ -199,6 +199,7 @@ void ExportDatabase(const char *file)
 	// Export tables
 	ExportTable(db, "config", "var_name", "var_value", "is_visible", "need_server_restart", NULL);
 	ExportTable(db, "config_clob", "var_name", "var_value", NULL);
+	//ExportTable(db, "users", "id", "guid", "name", "password", "system_access", "flags", NULL);
 
 	success = TRUE;
 
