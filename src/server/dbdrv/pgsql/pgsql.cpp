@@ -264,12 +264,7 @@ extern "C" WCHAR EXPORT *DrvGetField(DB_RESULT pResult, int nRow, int nColumn,
 
 extern "C" int EXPORT DrvGetNumRows(DB_RESULT pResult)
 {
-	if (pResult != NULL)
-	{
-   	return PQntuples((PGresult *)pResult);
-	}
-	
-	return 0;
+	return (pResult != NULL) ? PQntuples((PGresult *)pResult) : 0;
 }
 
 
@@ -279,6 +274,7 @@ extern "C" int EXPORT DrvGetNumRows(DB_RESULT pResult)
 
 extern "C" int EXPORT DrvGetColumnCount(DB_RESULT hResult)
 {
+	return (hResult != NULL) ? PQnfields((PGresult *)hResult) : 0;
 }
 
 
@@ -286,8 +282,9 @@ extern "C" int EXPORT DrvGetColumnCount(DB_RESULT hResult)
 // Get column name in query result
 //
 
-extern "C" const WCHAR EXPORT *DrvGetColumnName(DB_RESULT hResult, int column)
+extern "C" const char EXPORT *DrvGetColumnName(DB_RESULT hResult, int column)
 {
+	return (hResult != NULL) ? PQfname((PGresult *)hResult, column) : NULL;
 }
 
 
@@ -448,6 +445,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(
 
 extern "C" int EXPORT DrvGetColumnCountAsync(DB_ASYNC_RESULT hResult)
 {
+	return ((hResult != NULL) && (((PG_CONN *)hResult)->pFetchBuffer != NULL))? PQnfields(((PG_CONN *)hResult)->pFetchBuffer) : 0;
 }
 
 
@@ -455,8 +453,9 @@ extern "C" int EXPORT DrvGetColumnCountAsync(DB_ASYNC_RESULT hResult)
 // Get column name in async query result
 //
 
-extern "C" const WCHAR EXPORT *DrvGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column)
+extern "C" const char EXPORT *DrvGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column)
 {
+	return ((hResult != NULL) && (((PG_CONN *)hResult)->pFetchBuffer != NULL))? PQfname(((PG_CONN *)hResult)->pFetchBuffer, column) : NULL;
 }
 
 

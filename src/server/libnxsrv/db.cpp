@@ -63,9 +63,9 @@ static DWORD (* m_fpDrvRollback)(DB_CONNECTION) = NULL;
 static void (* m_fpDrvUnload)(void) = NULL;
 static void (* m_fpEventHandler)(DWORD, TCHAR *);
 static int (* m_fpDrvGetColumnCount)(DB_RESULT);
-static const WCHAR* (* m_fpDrvGetColumnName)(DB_RESULT, int);
+static const char* (* m_fpDrvGetColumnName)(DB_RESULT, int);
 static int (* m_fpDrvGetColumnCountAsync)(DB_ASYNC_RESULT);
-static const WCHAR* (* m_fpDrvGetColumnNameAsync)(DB_ASYNC_RESULT, int);
+static const char* (* m_fpDrvGetColumnNameAsync)(DB_ASYNC_RESULT, int);
 
 
 //
@@ -139,9 +139,9 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bnxlog_write, BOOL bLogErrors, BOOL bDumpSQ
    m_fpDrvGetFieldAsync = (WCHAR* (*)(DB_ASYNC_RESULT, int, WCHAR *, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetFieldAsync");
    m_fpDrvGetNumRows = (int (*)(DB_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvGetNumRows");
    m_fpDrvGetColumnCount = (int (*)(DB_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvGetColumnCount");
-   m_fpDrvGetColumnName = (const WCHAR* (*)(DB_RESULT, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetColumnName");
+   m_fpDrvGetColumnName = (const char* (*)(DB_RESULT, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetColumnName");
    m_fpDrvGetColumnCountAsync = (int (*)(DB_ASYNC_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvGetColumnCountAsync");
-   m_fpDrvGetColumnNameAsync = (const WCHAR* (*)(DB_ASYNC_RESULT, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetColumnNameAsync");
+   m_fpDrvGetColumnNameAsync = (const char* (*)(DB_ASYNC_RESULT, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetColumnNameAsync");
    m_fpDrvFreeResult = (void (*)(DB_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvFreeResult");
    m_fpDrvFreeAsyncResult = (void (*)(DB_ASYNC_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvFreeAsyncResult");
    m_fpDrvBegin = (DWORD (*)(DB_CONNECTION))DLGetSymbolAddrEx(m_hDriver, "DrvBegin");
@@ -409,17 +409,16 @@ int LIBNXSRV_EXPORTABLE DBGetColumnCount(DB_RESULT hResult)
 
 BOOL LIBNXSRV_EXPORTABLE DBGetColumnName(DB_RESULT hResult, int column, TCHAR *buffer, int bufSize)
 {
-	const WCHAR *name;
+	const char *name;
 
 	name = m_fpDrvGetColumnName(hResult, column);
 	if (name != NULL)
 	{
 #ifdef UNICODE
-		nx_strncpy(buffer, name, bufSize);
-#else
-		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-		                    name, -1, buffer, bufSize, NULL, NULL);
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, -1, buffer, bufSize);
 		buffer[bufSize - 1] = 0;
+#else
+		nx_strncpy(buffer, name, bufSize);
 #endif
 	}
 	return name != NULL;
@@ -442,17 +441,16 @@ int LIBNXSRV_EXPORTABLE DBGetColumnCountAsync(DB_ASYNC_RESULT hResult)
 
 BOOL LIBNXSRV_EXPORTABLE DBGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column, TCHAR *buffer, int bufSize)
 {
-	const WCHAR *name;
+	const char *name;
 
 	name = m_fpDrvGetColumnNameAsync(hResult, column);
 	if (name != NULL)
 	{
 #ifdef UNICODE
-		nx_strncpy(buffer, name, bufSize);
-#else
-		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-		                    name, -1, buffer, bufSize, NULL, NULL);
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, -1, buffer, bufSize);
 		buffer[bufSize - 1] = 0;
+#else
+		nx_strncpy(buffer, name, bufSize);
 #endif
 	}
 	return name != NULL;

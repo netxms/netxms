@@ -50,11 +50,11 @@ static int SelectCallback(void *pArg, int nCols, char **ppszData, char **ppszNam
    }
 
 	// Store column names
-	if ((((SQLITE_RESULT *)pArg)->ppwszNames == NULL) && (nCols > 0) && (ppszNames != NULL))
+	if ((((SQLITE_RESULT *)pArg)->ppszNames == NULL) && (nCols > 0) && (ppszNames != NULL))
 	{
-		((SQLITE_RESULT *)pArg)->ppwszNames = (WCHAR **)malloc(sizeof(WCHAR *) * nCols);
+		((SQLITE_RESULT *)pArg)->ppszNames = (char **)malloc(sizeof(char *) * nCols);
 		for(i = 0; i < nCols; i++)
-			((SQLITE_RESULT *)pArg)->ppwszNames[i] = WideStringFromMBString(ppszNames[i]);
+			((SQLITE_RESULT *)pArg)->ppszNames[i] = strdup(ppszNames[i]);
 	}
 
    nPos = ((SQLITE_RESULT *)pArg)->nRows * ((SQLITE_RESULT *)pArg)->nCols;
@@ -352,15 +352,15 @@ extern "C" int EXPORT DrvGetColumnCount(DB_RESULT hResult)
 // Get column name in query result
 //
 
-extern "C" const WCHAR EXPORT *DrvGetColumnName(DB_RESULT hResult, int column)
+extern "C" const char EXPORT *DrvGetColumnName(DB_RESULT hResult, int column)
 {
-   WCHAR *pwszRet = NULL;
+   char *pszRet = NULL;
 
    if ((column >= 0) && (column < ((SQLITE_RESULT *)hResult)->nCols))
    {	
-		pwszRet = ((SQLITE_RESULT *)hResult)->ppwszNames[column];
+		pszRet = ((SQLITE_RESULT *)hResult)->ppszNames[column];
    }
-   return pwszRet;
+   return pszRet;
 }
 
 
@@ -380,6 +380,10 @@ extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
          for(i = 0; i < nCount; i++)
             safe_free(((SQLITE_RESULT *)hResult)->ppszData[i]);
          free(((SQLITE_RESULT *)hResult)->ppszData);
+
+         for(i = 0; i < ((SQLITE_RESULT *)hResult)->nCols; i++)
+            safe_free(((SQLITE_RESULT *)hResult)->ppszNames[i]);
+         free(((SQLITE_RESULT *)hResult)->ppszNames);
       }
       free(hResult);
    }
@@ -461,15 +465,15 @@ extern "C" int EXPORT DrvGetColumnCountAsync(DB_ASYNC_RESULT hResult)
 // Get column name in async query result
 //
 
-extern "C" const WCHAR EXPORT *DrvGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column)
+extern "C" const char EXPORT *DrvGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column)
 {
-   const WCHAR *pwszRet = NULL;
+   const char *pszRet = NULL;
 
    if ((column >= 0) && (column < ((SQLITE_CONN *)hResult)->nNumCols))
    {
-      pwszRet = (const WCHAR *)sqlite3_column_name16(((SQLITE_CONN *)hResult)->pvm, column);
+      pszRet = sqlite3_column_name(((SQLITE_CONN *)hResult)->pvm, column);
    }
-   return pwszRet;
+   return pszRet;
 }
 
 

@@ -28,57 +28,52 @@
 // Export single database table
 //
 
-static BOOL ExportTable(sqlite3 *db, const char *name, ...)
+static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 {
-	va_list args;
-	String srcQuery, dstQuery, dstQueryTemplate;
-	const char *field;
+	String query;
+	TCHAR buffer[256];
 	char *errmsg, *data;
 	DB_ASYNC_RESULT hResult;
-	int i, fieldCount = 0;
+	int i, columnCount = 0;
 	BOOL success = TRUE;
 
-	srcQuery = "SELECT ";
-	dstQueryTemplate.AddFormattedString("INSERT INTO %s (", name);
-	va_start(args, name);
-	
-	while((field = va_arg(args, const char *)) != NULL)
-	{
-		srcQuery += field;
-		srcQuery += ",";
+	printf("Exporting table %s\n", name);
 
-		dstQueryTemplate += field;
-		dstQueryTemplate += ",";
+	_sntprintf(buffer, 256, _T("SELECT * FROM %s"), name);
 
-		fieldCount++;
-	}
-	srcQuery.Shrink();
-	dstQueryTemplate.Shrink();
-
-	va_end(args);
-
-	srcQuery.AddFormattedString(" FROM %s", name);
-	dstQueryTemplate += ") VALUES (";
-
-	hResult = DBAsyncSelect(g_hCoreDB, srcQuery);
+	hResult = DBAsyncSelect(g_hCoreDB, buffer);
 	if (hResult != NULL)
 	{
 		while(DBFetch(hResult))
 		{
-			dstQuery = (const TCHAR *)dstQueryTemplate;
-			for(i = 0; i < fieldCount; i++)
-			{
-				dstQuery += "'";
-				data = (char *)malloc(8192);
-				dstQuery.AddDynamicString(DBGetFieldAsync(hResult, i, data, 8192));
-				dstQuery += "',";
-			}
-			dstQuery.Shrink();
-			dstQuery += ")";
+			query = "";
 
-			if (sqlite3_exec(db, dstQuery, NULL, NULL, &errmsg) != SQLITE_OK)
+			// Column names
+			columnCount = DBGetColumnCountAsync(hResult);
+			query.AddFormattedString("INSERT INTO %s (", name);
+			for(i = 0; i < columnCount; i++)
 			{
-				printf("ERROR: SQLite query failed: %s\n   Query: %s\n", errmsg, (const TCHAR *)dstQuery);
+				DBGetColumnNameAsync(hResult, i, buffer, 256);
+				query += buffer;
+				query += ",";
+			}
+			query.Shrink();
+			query += ") VALUES (";
+
+			// Data
+			for(i = 0; i < columnCount; i++)
+			{
+				query += "'";
+				data = (char *)malloc(8192);
+				query.AddDynamicString(DBGetFieldAsync(hResult, i, data, 8192));
+				query += "',";
+			}
+			query.Shrink();
+			query += ")";
+
+			if (sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK)
+			{
+				printf("ERROR: SQLite query failed: %s\n   Query: %s\n", errmsg, (const TCHAR *)query);
 				sqlite3_free(errmsg);
 				success = FALSE;
 				break;
@@ -101,6 +96,7 @@ void ExportDatabase(const char *file)
 	sqlite3 *db;
 	char *errmsg, buffer[MAX_PATH], *data;
 	DWORD size;
+	int i;
 	BOOL success = FALSE;
 
 	if (!ValidateDatabase())
@@ -197,9 +193,19 @@ void ExportDatabase(const char *file)
 	}
 
 	// Export tables
-	ExportTable(db, "config", "var_name", "var_value", "is_visible", "need_server_restart", NULL);
-	ExportTable(db, "config_clob", "var_name", "var_value", NULL);
-	//ExportTable(db, "users", "id", "guid", "name", "password", "system_access", "flags", NULL);
+	static TCHAR *tables[] = 
+	{
+		"config",
+		"config_clob",
+		"users",
+		NULL
+	};
+
+	for(i = 0; tables[i] != NULL; i++)
+	{
+		if (!ExportTable(db, tables[i]))
+			goto cleanup;
+	}
 
 	success = TRUE;
 

@@ -59,7 +59,7 @@ typedef struct
    int nRows;
    int nCols;
    char **ppszData;
-	WCHAR **ppwszNames;
+	char **ppszNames;
 } SQLITE_RESULT;
 
 
