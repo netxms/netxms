@@ -49,6 +49,14 @@ static int SelectCallback(void *pArg, int nCols, char **ppszData, char **ppszNam
       nMaxCol = min(((SQLITE_RESULT *)pArg)->nCols, nCols);
    }
 
+	// Store column names
+	if ((((SQLITE_RESULT *)pArg)->ppwszNames == NULL) && (nCols > 0) && (ppszNames != NULL))
+	{
+		((SQLITE_RESULT *)pArg)->ppwszNames = (WCHAR **)malloc(sizeof(WCHAR *) * nCols);
+		for(i = 0; i < nCols; i++)
+			((SQLITE_RESULT *)pArg)->ppwszNames[i] = WideStringFromMBString(ppszNames[i]);
+	}
+
    nPos = ((SQLITE_RESULT *)pArg)->nRows * ((SQLITE_RESULT *)pArg)->nCols;
    ((SQLITE_RESULT *)pArg)->nRows++;
    ((SQLITE_RESULT *)pArg)->ppszData = (char **)realloc(((SQLITE_RESULT *)pArg)->ppszData,
@@ -331,6 +339,32 @@ extern "C" int EXPORT DrvGetNumRows(DB_RESULT hResult)
 
 
 //
+// Get column count in query result
+//
+
+extern "C" int EXPORT DrvGetColumnCount(DB_RESULT hResult)
+{
+	return (hResult != NULL) ? ((SQLITE_RESULT *)hResult)->nCols : 0;
+}
+
+
+//
+// Get column name in query result
+//
+
+extern "C" const WCHAR EXPORT *DrvGetColumnName(DB_RESULT hResult, int column)
+{
+   WCHAR *pwszRet = NULL;
+
+   if ((column >= 0) && (column < ((SQLITE_RESULT *)hResult)->nCols))
+   {	
+		pwszRet = ((SQLITE_RESULT *)hResult)->ppwszNames[column];
+   }
+   return pwszRet;
+}
+
+
+//
 // Free SELECT results
 //
 
@@ -417,7 +451,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
 // Get column count in async query result
 //
 
-extern "C" int EXPORT DrvGetFieldCountAsync(DB_ASYNC_RESULT hResult)
+extern "C" int EXPORT DrvGetColumnCountAsync(DB_ASYNC_RESULT hResult)
 {
 	return (hResult != NULL) ? ((SQLITE_CONN *)hResult)->nNumCols : 0;
 }
@@ -427,19 +461,13 @@ extern "C" int EXPORT DrvGetFieldCountAsync(DB_ASYNC_RESULT hResult)
 // Get column name in async query result
 //
 
-extern "C" const WCHAR EXPORT *DrvGetFieldNameAsync(DB_ASYNC_RESULT hResult, int column)
+extern "C" const WCHAR EXPORT *DrvGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column)
 {
-   WCHAR *pwszRet = NULL;
+   const WCHAR *pwszRet = NULL;
 
    if ((column >= 0) && (column < ((SQLITE_CONN *)hResult)->nNumCols))
    {
-      pszData = (char *)sqlite3_column_text(((SQLITE_CONN *)hResult)->pvm, iColumn);
-      if (pszData != NULL)
-      {
-         MultiByteToWideChar(CP_UTF8, 0, pszData, -1, pBuffer, iBufSize);
-         pBuffer[iBufSize - 1] = 0;
-         pwszRet = pBuffer;
-      }
+      pwszRet = (const WCHAR *)sqlite3_column_name16(((SQLITE_CONN *)hResult)->pvm, column);
    }
    return pwszRet;
 }

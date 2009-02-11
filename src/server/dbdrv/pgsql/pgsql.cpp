@@ -274,6 +274,24 @@ extern "C" int EXPORT DrvGetNumRows(DB_RESULT pResult)
 
 
 //
+// Get column count in query result
+//
+
+extern "C" int EXPORT DrvGetColumnCount(DB_RESULT hResult)
+{
+}
+
+
+//
+// Get column name in query result
+//
+
+extern "C" const WCHAR EXPORT *DrvGetColumnName(DB_RESULT hResult, int column)
+{
+}
+
+
+//
 // Free SELECT results
 //
 
@@ -421,6 +439,24 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(
    pBuffer[nBufSize - 1] = 0;
 
    return pBuffer;
+}
+
+
+//
+// Get column count in async query result
+//
+
+extern "C" int EXPORT DrvGetColumnCountAsync(DB_ASYNC_RESULT hResult)
+{
+}
+
+
+//
+// Get column name in async query result
+//
+
+extern "C" const WCHAR EXPORT *DrvGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column)
+{
 }
 
 
