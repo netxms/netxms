@@ -52,7 +52,6 @@
 #include "ClusterPropsGeneral.h"
 #include "ClusterPropsResources.h"
 #include "DCIDataView.h"
-#include "LPPList.h"
 #include "ObjectBrowser.h"
 #include "PackageMgr.h"
 #include "DesktopManager.h"
@@ -127,7 +126,6 @@ BEGIN_MESSAGE_MAP(CConsoleApp, CWinApp)
 	ON_COMMAND(ID_CONTROLPANEL_AGENTPKG, OnControlpanelAgentpkg)
 	ON_COMMAND(ID_CONTROLPANEL_SERVERCFG, OnControlpanelServercfg)
 	ON_COMMAND(ID_VIEW_SYSLOG, OnViewSyslog)
-	ON_COMMAND(ID_CONTROLPANEL_LOGPROCESSING, OnControlpanelLogprocessing)
 	ON_COMMAND(ID_CONTROLPANEL_OBJECTTOOLS, OnControlpanelObjecttools)
 	ON_COMMAND(ID_CONTROLPANEL_SCRIPTLIBRARY, OnControlpanelScriptlibrary)
 	ON_COMMAND(ID_VIEW_SNMPTRAPLOG, OnViewSnmptraplog)
@@ -432,10 +430,6 @@ BOOL CConsoleApp::InitInstance()
    InsertMenu(m_hAgentCfgEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 17), _T("&Edit"));
    InsertMenu(m_hAgentCfgEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 18), _T("&Config"));
 
-   m_hLPPEditorMenu = LoadAppMenu(hMenu);
-   InsertMenu(m_hDCEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
-   //InsertMenu(m_hDCEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 4), _T("&Item"));
-
    m_hObjToolsEditorMenu = LoadAppMenu(hMenu);
    InsertMenu(m_hObjToolsEditorMenu, LAST_APP_MENU, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 0), _T("&Window"));
    InsertMenu(m_hObjToolsEditorMenu, LAST_APP_MENU - 1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)GetSubMenu(hMenu, 19), _T("&Object tools"));
@@ -495,7 +489,6 @@ BOOL CConsoleApp::InitInstance()
 	m_hLastValuesAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_LAST_VALUES));
 	m_hServerCfgEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_SERVER_CFG_EDITOR));
 	m_hAgentCfgEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_AGENT_CFG_EDITOR));
-	m_hLPPEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_MDI_DEFAULT));
 	m_hObjToolsEditorAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_OBJECT_TOOLS_EDITOR));
 	m_hScriptManagerAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_SCRIPT_MANAGER));
 	m_hDataViewAccel = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDA_DATA_VIEW));
@@ -582,8 +575,6 @@ int CConsoleApp::ExitInstance()
    SafeFreeResource(m_hServerCfgEditorAccel);
    SafeFreeResource(m_hAgentCfgEditorMenu);
    SafeFreeResource(m_hAgentCfgEditorAccel);
-   SafeFreeResource(m_hLPPEditorMenu);
-   SafeFreeResource(m_hLPPEditorAccel);
    SafeFreeResource(m_hScriptManagerMenu);
    SafeFreeResource(m_hScriptManagerAccel);
    SafeFreeResource(m_hDataViewMenu);
@@ -1774,27 +1765,6 @@ void CConsoleApp::OnControlpanelEventpolicy()
       {
          ErrorBox(dwResult, _T("Unable to load event processing policy:\n%s"));
       }
-   }
-}
-
-
-//
-// Show log processing policy list
-//
-
-void CConsoleApp::OnControlpanelLogprocessing() 
-{
-	// create a new MDI child window or open existing
-   if (m_viewState[VIEW_LPP_EDITOR].bActive)
-   {
-      m_viewState[VIEW_LPP_EDITOR].pWnd->BringWindowToTop();
-   }
-   else
-   {
-   	CMainFrame *pFrame = STATIC_DOWNCAST(CMainFrame, m_pMainWnd);
-
-	   pFrame->CreateNewChild(RUNTIME_CLASS(CLPPList), IDR_LPP_EDITOR,
-                             m_hLPPEditorMenu, m_hLPPEditorAccel);
    }
 }
 
@@ -3956,7 +3926,6 @@ void CConsoleApp::OnGraphListUpdate(WPARAM wParam, LPARAM lParam)
 	UPDATE_MENU(m_hEventEditorMenu, 4);
 	UPDATE_MENU(m_hUserEditorMenu, 4);
 	UPDATE_MENU(m_hDCEditorMenu, 4);
-	UPDATE_MENU(m_hLPPEditorMenu, 4);
 	UPDATE_MENU(m_hPolicyEditorMenu, 4);
 	UPDATE_MENU(m_hMapMenu, 5);
 	UPDATE_MENU(m_hTrapEditorMenu, 4);

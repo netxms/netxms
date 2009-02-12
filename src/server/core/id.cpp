@@ -293,18 +293,6 @@ BOOL InitIdTable(void)
       DBFreeResult(hResult);
    }
 
-   // Get first available log processing policy id
-/*
-   hResult = DBSelect(g_hCoreDB, "SELECT max(lpp_id) FROM lpp");
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         m_dwFreeIdTable[IDG_LPP] = max(m_dwFreeIdTable[IDG_LPP], 
-                                        DBGetFieldULong(hResult, 0, 0) + 1);
-      DBFreeResult(hResult);
-   }
-*/
-
    // Get first available object tool id
    hResult = DBSelect(g_hCoreDB, "SELECT max(tool_id) FROM object_tools");
    if (hResult != NULL)

@@ -54,7 +54,6 @@ void ReindexDatabase()
 	RecreateIndex(_T("idx_event_log_event_timestamp"), _T("event_log"), _T("event_timestamp"));
 	RecreateIndex(_T("idx_thresholds_item_id"), _T("thresholds"), _T("item_id"));
 	RecreateIndex(_T("idx_thresholds_sequence"), _T("thresholds"), _T("sequence_number"));
-	RecreateIndex(_T("idx_alarm_change_log_alarm_id"), _T("alarm_change_log"), _T("alarm_id"));
 	RecreateIndex(_T("idx_alarm_notes_alarm_id"), _T("alarm_notes"), _T("alarm_id"));
 	RecreateIndex(_T("idx_syslog_msg_timestamp"), _T("syslog"), _T("msg_timestamp"));
 	RecreateIndex(_T("idx_snmp_trap_log_trap_timestamp"), _T("snmp_trap_log"), _T("trap_timestamp"));

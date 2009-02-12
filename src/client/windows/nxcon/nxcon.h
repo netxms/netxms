@@ -98,7 +98,6 @@ enum
    VIEW_PACKAGE_MANAGER,
    VIEW_SERVER_CONFIG,
    VIEW_OBJECT_TOOLS,
-   VIEW_LPP_EDITOR,
    VIEW_SCRIPT_MANAGER,
    VIEW_BUILDER,
    VIEW_MODULE_MANAGER,
@@ -208,8 +207,6 @@ protected:
 	HACCEL m_hUserEditorAccel;    // Accelerator for user editor
 	HMENU m_hDCEditorMenu;        // Menu for data collection editor
 	HACCEL m_hDCEditorAccel;      // Accelerator for data collection editor
-	HMENU m_hLPPEditorMenu;       // Menu for log processing policy editor
-	HACCEL m_hLPPEditorAccel;     // Accelerator for log processing policy editor
 	HMENU m_hPolicyEditorMenu;    // Menu for event policy editor
 	HACCEL m_hPolicyEditorAccel;  // Accelerator for event policy editor
 	HMENU m_hMapMenu;             // Menu for map view
@@ -276,7 +273,6 @@ public:
 	afx_msg void OnControlpanelAgentpkg();
 	afx_msg void OnControlpanelServercfg();
 	afx_msg void OnViewSyslog();
-	afx_msg void OnControlpanelLogprocessing();
 	afx_msg void OnControlpanelObjecttools();
 	afx_msg void OnControlpanelScriptlibrary();
 	afx_msg void OnViewSnmptraplog();

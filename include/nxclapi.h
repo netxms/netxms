@@ -391,7 +391,7 @@ enum
 #define RCC_FILE_IO_ERROR           ((DWORD)52)
 #define RCC_CORRUPTED_MIB_FILE      ((DWORD)53)
 #define RCC_TRANSFER_IN_PROGRESS    ((DWORD)54)
-#define RCC_INVALID_LPP_ID          ((DWORD)55)
+//#define RCC_INVALID_LPP_ID          ((DWORD)55)
 #define RCC_INVALID_SCRIPT_ID       ((DWORD)56)
 #define RCC_INVALID_SCRIPT_NAME     ((DWORD)57)
 #define RCC_UNKNOWN_MAP_NAME        ((DWORD)58)
@@ -488,7 +488,7 @@ enum
 #define SYSTEM_ACCESS_MANAGE_ACTIONS      0x00000080
 #define SYSTEM_ACCESS_DELETE_ALARMS       0x00000100
 #define SYSTEM_ACCESS_MANAGE_PACKAGES     0x00000200
-#define SYSTEM_ACCESS_MANAGE_LPP          0x00000400
+// OBSOLETE: #define SYSTEM_ACCESS_MANAGE_LPP          0x00000400
 #define SYSTEM_ACCESS_MANAGE_TOOLS        0x00000800
 #define SYSTEM_ACCESS_MANAGE_SCRIPTS      0x00001000
 #define SYSTEM_ACCESS_VIEW_TRAP_LOG       0x00002000
@@ -1502,63 +1502,6 @@ typedef struct
 
 
 //
-// Log processing policy info
-//
-
-typedef struct
-{
-   DWORD dwId;
-   TCHAR szName[MAX_OBJECT_NAME];
-   DWORD dwVersion;
-   DWORD dwFlags;
-} NXC_LPP_INFO;
-
-
-//
-// Log processing policy list
-//
-
-typedef struct
-{
-   DWORD dwNumEntries;
-   NXC_LPP_INFO *pList;
-} NXC_LPP_LIST;
-
-
-//
-// Log processing policy rule
-//
-
-typedef struct
-{
-   DWORD dwMsgIdStart;
-   DWORD dwMsgIdEnd;
-   DWORD dwSeverity;
-   TCHAR szSourceName[MAX_DB_STRING];
-   TCHAR szMsgText[MAX_DB_STRING];
-   DWORD dwEventCode;
-} NXC_LPP_RULE;
-
-
-//
-// Log processing policy
-//
-
-typedef struct
-{
-   DWORD dwId;
-   TCHAR szName[MAX_OBJECT_NAME];
-   DWORD dwVersion;
-   DWORD dwFlags;
-   TCHAR szLogFile[MAX_DB_STRING];
-   DWORD dwNumNodes;
-   DWORD *pdwNodeList;
-   DWORD dwNumRules;
-   NXC_LPP_RULE *pRuleList;
-} NXC_LPP;
-
-
-//
 // Server stats
 //
 
@@ -2069,12 +2012,6 @@ DWORD LIBNXCL_EXPORTABLE NXCGenerateObjectToolId(NXC_SESSION hSession, DWORD *pd
 DWORD LIBNXCL_EXPORTABLE NXCUpdateObjectTool(NXC_SESSION hSession,
                                              NXC_OBJECT_TOOL_DETAILS *pData);
 BOOL LIBNXCL_EXPORTABLE NXCIsAppropriateTool(NXC_OBJECT_TOOL *pTool, NXC_OBJECT *pObject);
-
-DWORD LIBNXCL_EXPORTABLE NXCLoadLPPList(NXC_SESSION hSession, NXC_LPP_LIST **ppList);
-void LIBNXCL_EXPORTABLE NXCDestroyLPPList(NXC_LPP_LIST *pList);
-DWORD LIBNXCL_EXPORTABLE NXCRequestNewLPPID(NXC_SESSION hSession, DWORD *pdwId);
-DWORD LIBNXCL_EXPORTABLE NXCOpenLPP(NXC_SESSION hSession, NXC_LPP **ppPolicy);
-void LIBNXCL_EXPORTABLE NXCDestroyLPP(NXC_LPP *pPolicy);
 
 /** Script library **/
 DWORD LIBNXCL_EXPORTABLE NXCGetScriptList(NXC_SESSION hSession, DWORD *pdwNumScrpts,

@@ -44,17 +44,6 @@ struct LOCK_INFO
 
 
 //
-// LPP lock structure
-//
-
-struct LPP_LOCK_INFO
-{
-   DWORD dwPolicyId;
-   DWORD dwSessionId;
-};
-
-
-//
 // Static data
 //
 
@@ -69,8 +58,6 @@ static LOCK_INFO m_locks[NUMBER_OF_LOCKS] =
    { UNLOCKED, _T("Package Database"), _T("") },
    { UNLOCKED, _T("Object Tools Configuration"), _T("") }
 };
-static LPP_LOCK_INFO *m_pLockedLPP = NULL;
-static DWORD m_dwNumLockedLPP = 0;
 
 
 //
@@ -202,69 +189,6 @@ void RemoveAllSessionLocks(DWORD dwSessionId)
          m_locks[i].dwLockStatus = UNLOCKED;
          m_locks[i].szOwnerInfo[0] = 0;
       }
-   for(i = 0; i < m_dwNumLockedLPP; i++)
-      if (m_pLockedLPP[i].dwSessionId == dwSessionId)
-      {
-         m_dwNumLockedLPP--;
-         memmove(&m_pLockedLPP[i], &m_pLockedLPP[i + 1],
-                 sizeof(LPP_LOCK_INFO) * (m_dwNumLockedLPP - i));
-         i--;
-      }
    MutexUnlock(m_hMutexLockerAccess);
    DbgPrintf(5, "*Locks* All locks for session %d removed", dwSessionId);
-}
-
-
-//
-// Lock log processing policy
-//
-
-BOOL LockLPP(DWORD dwPolicyId, DWORD dwSessionId)
-{
-   DWORD i;
-   BOOL bRet;
-
-   MutexLock(m_hMutexLockerAccess, INFINITE);
-   for(i = 0; i < m_dwNumLockedLPP; i++)
-      if (m_pLockedLPP[i].dwPolicyId == dwPolicyId)
-         break;
-   if (i == m_dwNumLockedLPP)
-   {
-      m_pLockedLPP = (LPP_LOCK_INFO *)realloc(m_pLockedLPP, sizeof(LPP_LOCK_INFO) * (m_dwNumLockedLPP + 1));
-      m_pLockedLPP[m_dwNumLockedLPP].dwPolicyId = dwPolicyId;
-      m_pLockedLPP[m_dwNumLockedLPP].dwSessionId = dwSessionId;
-      m_dwNumLockedLPP++;
-      bRet = TRUE;
-      DbgPrintf(4, "*Locks* LPP %d locked successfully for session %d", dwPolicyId, dwSessionId);
-   }
-   else
-   {
-      bRet = FALSE;
-      DbgPrintf(4, "*Locks* LPP %d already locked", dwPolicyId);
-   }
-   MutexUnlock(m_hMutexLockerAccess);
-   return bRet;
-}
-
-
-//
-// Unlock log processing policy
-//
-
-void UnlockLPP(DWORD dwPolicyId, DWORD dwSessionId)
-{
-   DWORD i;
-
-   MutexLock(m_hMutexLockerAccess, INFINITE);
-   for(i = 0; i < m_dwNumLockedLPP; i++)
-      if ((m_pLockedLPP[i].dwPolicyId == dwPolicyId) &&
-          (m_pLockedLPP[i].dwSessionId == dwSessionId))
-      {
-         m_dwNumLockedLPP--;
-         memmove(&m_pLockedLPP[i], &m_pLockedLPP[i + 1],
-                 sizeof(LPP_LOCK_INFO) * (m_dwNumLockedLPP - i));
-         DbgPrintf(4, "*Locks* LPP %d unlocked", dwPolicyId);
-         break;
-      }
-   MutexUnlock(m_hMutexLockerAccess);
 }

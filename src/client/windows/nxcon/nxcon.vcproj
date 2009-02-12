@@ -509,10 +509,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\LPPList.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\MainFrm.cpp"
 				>
 			</File>
@@ -1192,10 +1188,6 @@
 			</File>
 			<File
 				RelativePath=".\LastValuesView.h"
-				>
-			</File>
-			<File
-				RelativePath=".\LPPList.h"
 				>
 			</File>
 			<File

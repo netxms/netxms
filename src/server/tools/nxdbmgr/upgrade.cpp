@@ -111,6 +111,12 @@ static BOOL H_UpgradeFromV85(void)
 	static TCHAR m_szBatch[] =
 		_T("DROP TABLE alarm_grops\n")
 		_T("DROP TABLE alarm_group_map\n")
+		_T("DROP TABLE alarm_change_log\n")
+		_T("DROP TABLE lpp\n")
+		_T("DROP TABLE lpp_associations\n")
+		_T("DROP TABLE lpp_rulesets\n")
+		_T("DROP TABLE lpp_rules\n")
+		_T("DROP TABLE lpp_groups\n")
 		_T("<END>");
 		
 	if (!SQLBatch(m_szBatch))
@@ -3782,6 +3788,7 @@ static struct
    { 82, H_UpgradeFromV82 },
    { 83, H_UpgradeFromV83 },
    { 84, H_UpgradeFromV84 },
+	{ 85, H_UpgradeFromV85 },
    { 0, NULL }
 };
 

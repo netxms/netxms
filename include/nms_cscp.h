@@ -294,8 +294,8 @@ typedef struct
 #define CMD_DCI_DATA                0x0032
 #define CMD_GET_MIB_TIMESTAMP       0x0033
 #define CMD_GET_MIB                 0x0034
-#define CMD_REQUEST_NEW_LPP_ID      0x0035
-#define CMD_OPEN_LPP                0x0036
+//#define CMD_REQUEST_NEW_LPP_ID      0x0035
+//#define CMD_OPEN_LPP                0x0036
 #define CMD_CREATE_OBJECT           0x0037
 #define CMD_GET_EVENT_NAMES         0x0038
 #define CMD_EVENT_NAME_LIST         0x0039
@@ -382,7 +382,7 @@ typedef struct
 #define CMD_CHANGE_SUBSCRIPTION     0x008A
 #define CMD_GET_SYSLOG              0x008B
 #define CMD_SYSLOG_RECORDS          0x008C
-#define CMD_GET_LPP_LIST            0x008D
+//#define CMD_GET_LPP_LIST            0x008D
 #define CMD_OPEN_LOG_POLICY         0x008E
 #define CMD_CLOSE_LOG_POLICY        0x008F
 #define CMD_GET_OBJECT_TOOL_DETAILS 0x0090
@@ -651,8 +651,8 @@ typedef struct
 #define VID_NUM_COLUMNS             ((DWORD)166)
 #define VID_NUM_ROWS                ((DWORD)167)
 #define VID_TABLE_TITLE             ((DWORD)168)
-#define VID_LPP_ID                  ((DWORD)169)
-#define VID_LPP_VERSION             ((DWORD)170)
+//#define VID_LPP_ID                  ((DWORD)169)
+//#define VID_LPP_VERSION             ((DWORD)170)
 #define VID_LOG_NAME                ((DWORD)171)
 #define VID_OPERATION               ((DWORD)172)
 #define VID_MAX_RECORDS             ((DWORD)173)
@@ -872,12 +872,6 @@ typedef struct
 #define VID_COLUMN_NAME_BASE        ((DWORD)0x10000000)
 #define VID_COLUMN_FMT_BASE         ((DWORD)0x20000000)
 #define VID_ROW_DATA_BASE           ((DWORD)0x30000000)
-
-// Base value for log policy rules
-#define VID_LPP_RULE_BASE           ((DWORD)0x10000000)
-#define VID_LPP_LIST_BASE           ((DWORD)0x10000000)
-#define VID_LPPGROUP_LIST_BASE      ((DWORD)0x20000000)
-#define VID_LPP_NODE_LIST_BASE      ((DWORD)0x01000000)
 
 // Base value for event log records
 #define VID_EVENTLOG_MSG_BASE       ((DWORD)0x10000000)

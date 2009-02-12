@@ -3,7 +3,6 @@ contrib/backgrounds/.keep -text
 contrib/logo.jpg -text
 doc/comparison_netxms_nnm.doc -text
 doc/internal/build.w64 -text
-doc/internal/db_format_change.txt svneol=native#unset
 doc/internal/netxms_architecture.vsd -text
 doc/manuals/client_library.doc -text
 doc/manuals/netxms_install_guide.odt -text

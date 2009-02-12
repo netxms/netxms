@@ -549,10 +549,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\lpp.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>

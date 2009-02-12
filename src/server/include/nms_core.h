@@ -147,7 +147,7 @@ typedef void * HSNMPSESSION;
 #define IDG_ALARM             11
 #define IDG_ALARM_NOTE        12
 #define IDG_PACKAGE           13
-#define IDG_LPP               14
+//#define IDG_LPP               14
 #define IDG_OBJECT_TOOL       15
 #define IDG_SCRIPT            16
 #define IDG_AGENT_CONFIG      17
@@ -482,9 +482,6 @@ private:
    void LockObjectTools(DWORD dwRqId, BOOL bLock);
    void ChangeSubscription(CSCPMessage *pRequest);
    void SendSyslog(CSCPMessage *pRequest);
-   void SendLogPoliciesList(DWORD dwRqId);
-   void CreateNewLPPID(DWORD dwRqId);
-   void OpenLPP(CSCPMessage *pRequest);
    void SendServerStats(DWORD dwRqId);
    void SendScriptList(DWORD dwRqId);
    void SendScript(CSCPMessage *pRequest);
@@ -714,8 +711,6 @@ BOOL CheckObjectToolAccess(DWORD dwToolId, DWORD dwUserId);
 DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession *pSession);
 DWORD DeleteObjectToolFromDB(DWORD dwToolId);
 DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg);
-
-void CreateLPPDirectoryMessage(CSCPMessage &msg);
 
 void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_LOG_RECORD *pRec);
 

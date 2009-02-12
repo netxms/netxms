@@ -92,7 +92,6 @@ EXTRA_DIST = \
 	InternalItemSelDlg.cpp InternalItemSelDlg.h \
 	LastValuesPropDlg.cpp LastValuesPropDlg.h \
 	LastValuesView.cpp LastValuesView.h \
-	LPPList.cpp LPPList.h \
 	MainFrm.cpp MainFrm.h \
 	MapControlBox.cpp MapControlBox.h \
 	MapFrame.cpp MapFrame.h \

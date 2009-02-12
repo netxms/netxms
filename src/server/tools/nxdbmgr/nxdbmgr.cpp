@@ -446,6 +446,7 @@ int main(int argc, char *argv[])
 								"   batch <file>  : Run SQL batch file\n"
                         "   check         : Check database for errors\n"
                         "   export <file> : Export database to file\n"
+                        "   import <file> : Import database from file\n"
                         "   init <file>   : Initialize database\n"
 								"   reindex       : Reindex database\n"
                         "   unlock        : Forced database unlock\n"

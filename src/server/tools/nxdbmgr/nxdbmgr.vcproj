@@ -376,6 +376,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\include\netxmsdb.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\include\nms_common.h"
 				>
 			</File>

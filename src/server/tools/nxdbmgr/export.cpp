@@ -268,7 +268,6 @@ void ExportDatabase(const char *file)
 		"policy_time_range_list",
 		"deleted_objects",
 		"alarms",
-		"alarm_change_log",
 		"alarm_notes",
 		"images",
 		"default_images",
@@ -294,7 +293,6 @@ void ExportDatabase(const char *file)
 		"certificates",
 		"audit_log",
 		"situations",
-		"situation_data",
 		"snmp_communities",
 		"web_maps",
 		NULL
