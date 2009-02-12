@@ -39,48 +39,72 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 
 	printf("Exporting table %s\n", name);
 
-	_sntprintf(buffer, 256, _T("SELECT * FROM %s"), name);
-
-	hResult = DBAsyncSelect(g_hCoreDB, buffer);
-	if (hResult != NULL)
+	if (sqlite3_exec(db, "BEGIN", NULL, NULL, &errmsg) == SQLITE_OK)
 	{
-		while(DBFetch(hResult))
+		_sntprintf(buffer, 256, _T("SELECT * FROM %s"), name);
+
+		hResult = SQLAsyncSelect(buffer);
+		if (hResult != NULL)
 		{
-			query = "";
-
-			// Column names
-			columnCount = DBGetColumnCountAsync(hResult);
-			query.AddFormattedString("INSERT INTO %s (", name);
-			for(i = 0; i < columnCount; i++)
+			while(DBFetch(hResult))
 			{
-				DBGetColumnNameAsync(hResult, i, buffer, 256);
-				query += buffer;
-				query += ",";
+				query = "";
+
+				// Column names
+				columnCount = DBGetColumnCountAsync(hResult);
+				query.AddFormattedString("INSERT INTO %s (", name);
+				for(i = 0; i < columnCount; i++)
+				{
+					DBGetColumnNameAsync(hResult, i, buffer, 256);
+					query += buffer;
+					query += ",";
+				}
+				query.Shrink();
+				query += ") VALUES (";
+
+				// Data
+				for(i = 0; i < columnCount; i++)
+				{
+					query += "'";
+					data = (char *)malloc(8192);
+					query.AddDynamicString(DBGetFieldAsync(hResult, i, data, 8192));
+					query += "',";
+				}
+				query.Shrink();
+				query += ")";
+
+				if (sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK)
+				{
+					printf("ERROR: SQLite query failed: %s\n   Query: %s\n", errmsg, (const TCHAR *)query);
+					sqlite3_free(errmsg);
+					success = FALSE;
+					break;
+				}
 			}
-			query.Shrink();
-			query += ") VALUES (";
-
-			// Data
-			for(i = 0; i < columnCount; i++)
+			DBFreeAsyncResult(g_hCoreDB, hResult);
+			if (sqlite3_exec(db, "COMMIT", NULL, NULL, &errmsg) == SQLITE_OK)
 			{
-				query += "'";
-				data = (char *)malloc(8192);
-				query.AddDynamicString(DBGetFieldAsync(hResult, i, data, 8192));
-				query += "',";
+				success = TRUE;
 			}
-			query.Shrink();
-			query += ")";
-
-			if (sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK)
+			else
 			{
-				printf("ERROR: SQLite query failed: %s\n   Query: %s\n", errmsg, (const TCHAR *)query);
+				printf("ERROR: Cannot commit transaction: %s", errmsg);
 				sqlite3_free(errmsg);
-				success = FALSE;
-				break;
 			}
 		}
-		DBFreeAsyncResult(g_hCoreDB, hResult);
-		success = TRUE;
+		else
+		{
+			if (sqlite3_exec(db, "ROLLBACK", NULL, NULL, &errmsg) != SQLITE_OK)
+			{
+				printf("ERROR: Cannot rollback transaction: %s", errmsg);
+				sqlite3_free(errmsg);
+			}
+		}
+	}
+	else
+	{
+		printf("ERROR: Cannot start transaction: %s", errmsg);
+		sqlite3_free(errmsg);
 	}
 
 	return success;
@@ -94,9 +118,10 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 void ExportDatabase(const char *file)
 {
 	sqlite3 *db;
-	char *errmsg, buffer[MAX_PATH], *data;
+	char *errmsg, buffer[MAX_PATH], queryTemplate[256], *data;
 	DWORD size;
-	int i;
+	int i, rowCount;
+	DB_RESULT hResult;
 	BOOL success = FALSE;
 
 	if (!ValidateDatabase())
@@ -198,6 +223,80 @@ void ExportDatabase(const char *file)
 		"config",
 		"config_clob",
 		"users",
+		"user_groups",
+		"user_group_members",
+		"user_profiles",
+		"object_properties",
+		"object_custom_attributes",
+		"zones",
+		"zone_ip_addr_list",
+		"nodes",
+		"clusters",
+		"cluster_members",
+		"cluster_sync_subnets",
+		"cluster_resources",
+		"subnets",
+		"interfaces",
+		"network_services",
+		"vpn_connectors",
+		"vpn_connector_networks",
+		"containers",
+		"conditions",
+		"cond_dci_map",
+		"templates",
+		"dct_node_map",
+		"nsmap",
+		"container_members",
+		"container_categories",
+		"acl",
+		"trusted_nodes",
+		"items",
+		"thresholds",
+		"dci_schedules",
+		"raw_dci_values",
+		"event_cfg",
+		"event_log",
+		"actions",
+		"event_groups",
+		"event_group_members",
+		"time_ranges",
+		"event_policy",
+		"policy_source_list",
+		"policy_event_list",
+		"policy_action_list",
+		"policy_situation_attr_list",
+		"policy_time_range_list",
+		"deleted_objects",
+		"alarms",
+		"alarm_change_log",
+		"alarm_notes",
+		"images",
+		"default_images",
+		"oid_to_type",
+		"snmp_trap_cfg",
+		"snmp_trap_pmap",
+		"agent_pkg",
+		"object_tools",
+		"object_tools_acl",
+		"object_tools_table_columns",
+		"syslog",
+		"script_library",
+		"snmp_trap_log",
+		"maps",
+		"map_access_lists",
+		"submaps",
+		"submap_object_positions",
+		"submap_links",
+		"agent_configs",
+		"address_lists",
+		"graphs",
+		"graph_acl",
+		"certificates",
+		"audit_log",
+		"situations",
+		"situation_data",
+		"snmp_communities",
+		"web_maps",
 		NULL
 	};
 
@@ -206,6 +305,39 @@ void ExportDatabase(const char *file)
 		if (!ExportTable(db, tables[i]))
 			goto cleanup;
 	}
+
+	// Export tables with collected DCI data
+	hResult = SQLSelect(_T("SELECT var_value FROM config WHERE var_name='IDataTableCreationCommand'"));
+	if (hResult == NULL)
+		goto cleanup;
+	DBGetField(hResult, 0, 0, queryTemplate, 256);
+	DBFreeResult(hResult);
+
+	hResult = SQLSelect(_T("SELECT id FROM nodes"));
+	if (hResult == NULL)
+		goto cleanup;
+
+	rowCount = DBGetNumRows(hResult);
+	for(i = 0; i < rowCount; i++)
+	{
+		snprintf(buffer, MAX_PATH, queryTemplate, DBGetFieldLong(hResult, i, 0));
+		if (sqlite3_exec(db, buffer, NULL, NULL, &errmsg) != SQLITE_OK)
+		{
+			_tprintf(_T("ERROR: SQL query failed: %s (%s)\n"), buffer, errmsg);
+			sqlite3_free(errmsg);
+			DBFreeResult(hResult);
+			goto cleanup;
+		}
+
+		snprintf(buffer, MAX_PATH, "idata_%d", DBGetFieldLong(hResult, i, 0));
+		if (!ExportTable(db, buffer))
+		{
+			DBFreeResult(hResult);
+			goto cleanup;
+		}
+	}
+
+	DBFreeResult(hResult);
 
 	success = TRUE;
 

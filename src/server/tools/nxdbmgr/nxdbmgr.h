@@ -60,6 +60,7 @@ void ExportDatabase(const char *file);
 void UpgradeDatabase();
 void UnlockDatabase();
 DB_RESULT SQLSelect(const TCHAR *pszQuery);
+DB_ASYNC_RESULT SQLAsyncSelect(const TCHAR *pszQuery);
 BOOL SQLQuery(const TCHAR *pszQuery);
 BOOL SQLBatch(const TCHAR *pszBatch);
 BOOL GetYesNo();

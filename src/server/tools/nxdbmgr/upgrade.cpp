@@ -103,6 +103,29 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 
 
 //
+// Upgrade from V85 to V86
+//
+
+static BOOL H_UpgradeFromV85(void)
+{
+	static TCHAR m_szBatch[] =
+		_T("DROP TABLE alarm_grops\n")
+		_T("DROP TABLE alarm_group_map\n")
+		_T("<END>");
+		
+	if (!SQLBatch(m_szBatch))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE config SET var_value='86' WHERE var_name='DBFormatVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V84 to V85
 //
 

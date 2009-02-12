@@ -721,12 +721,11 @@ void LIBNXSRV_EXPORTABLE DBFreeResult(DB_RESULT hResult)
 // Asyncronous SELECT query
 //
 
-DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *szQuery)
+DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText)
 {
    DB_RESULT hResult;
    DWORD dwError;
    INT64 ms;
-   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 #ifdef UNICODE
 #define pwszQuery szQuery
 #else
@@ -759,6 +758,13 @@ DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *
         nxlog_write(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, _T("ss"), szQuery, errorText);
    }
    return hResult;
+}
+
+DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *query)
+{
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+
+	return DBAsyncSelectEx(hConn, query, errorText);
 }
 
 
