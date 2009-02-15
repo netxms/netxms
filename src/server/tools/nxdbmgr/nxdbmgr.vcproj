@@ -338,7 +338,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\clear.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\export.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\import.cpp"
 				>
 			</File>
 			<File

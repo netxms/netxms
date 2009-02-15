@@ -632,6 +632,8 @@ int main(int argc, char *argv[])
          ReindexDatabase();
       else if (!strcmp(argv[optind], "export"))
          ExportDatabase(argv[optind + 1]);
+      else if (!strcmp(argv[optind], "import"))
+         ImportDatabase(argv[optind + 1]);
    }
 
    // Shutdown
