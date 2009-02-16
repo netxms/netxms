@@ -150,6 +150,18 @@
 
 
 //
+// Database syntax codes
+//
+
+#define DB_SYNTAX_MYSQL    0
+#define DB_SYNTAX_PGSQL    1
+#define DB_SYNTAX_MSSQL    2
+#define DB_SYNTAX_ORACLE   3
+#define DB_SYNTAX_SQLITE   4
+#define DB_SYNTAX_UNKNOWN	-1
+
+
+//
 // Database connection structure
 //
 
@@ -492,6 +504,9 @@ BOOL LIBNXSRV_EXPORTABLE DBBegin(DB_HANDLE hConn);
 BOOL LIBNXSRV_EXPORTABLE DBCommit(DB_HANDLE hConn);
 BOOL LIBNXSRV_EXPORTABLE DBRollback(DB_HANDLE hConn);
 void LIBNXSRV_EXPORTABLE DBUnloadDriver(void);
+
+int LIBNXSRV_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn);
+int LIBNXSRV_EXPORTABLE DBGetSyntax(DB_HANDLE conn);
 
 TCHAR LIBNXSRV_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn);
 void LIBNXSRV_EXPORTABLE DecodeSQLString(TCHAR *pszStr);

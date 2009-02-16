@@ -673,13 +673,7 @@ void CheckDatabase(void)
    _tprintf(_T("Checking database:\n"));
 
    // Get database format version
-   hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBFormatVersion'"));
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         iVersion = DBGetFieldLong(hResult, 0, 0);
-      DBFreeResult(hResult);
-   }
+   iVersion = DBGetSchemaVersion(g_hCoreDB);
    if (iVersion < DB_FORMAT_VERSION)
    {
       _tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\nUse \"upgrade\" command to upgrade your database first.\n"),

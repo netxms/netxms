@@ -114,7 +114,7 @@ DWORD g_dwConditionPollingInterval;
 DWORD g_dwPingSize;
 DWORD g_dwAuditFlags;
 char g_szDataDir[MAX_PATH];
-DWORD g_dwDBSyntax = DB_SYNTAX_GENERIC;
+int g_nDBSyntax = DB_SYNTAX_UNKNOWN;
 QWORD g_qwServerId;
 RSA *g_pServerKey = NULL;
 time_t g_tServerStartTime = 0;
@@ -450,7 +450,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
 	DbgPrintf(1, "Successfully connected to database %s@%s", g_szDbName, g_szDbServer);
 
 	// Check database version
-	iDBVersion = ConfigReadInt("DBFormatVersion", 0);
+	iDBVersion = DBGetSchemaVersion(g_hCoreDB);
 	if (iDBVersion != DB_FORMAT_VERSION)
 	{
 		nxlog_write(MSG_WRONG_DB_VERSION, EVENTLOG_ERROR_TYPE, "dd", iDBVersion, DB_FORMAT_VERSION);
@@ -458,31 +458,7 @@ BOOL NXCORE_EXPORTABLE Initialize(void)
 	}
 
 	// Read database syntax
-	ConfigReadStr("DBSyntax", szInfo, 256, "");
-	if (!stricmp(szInfo, "MYSQL"))
-	{
-		g_dwDBSyntax = DB_SYNTAX_MYSQL;
-	}
-	else if (!stricmp(szInfo, "PGSQL"))
-	{
-		g_dwDBSyntax = DB_SYNTAX_PGSQL;
-	}
-	else if (!stricmp(szInfo, "MSSQL"))
-	{
-		g_dwDBSyntax = DB_SYNTAX_MSSQL;
-	}
-	else if (!stricmp(szInfo, "ORACLE"))
-	{
-		g_dwDBSyntax = DB_SYNTAX_ORACLE;
-	}
-	else if (!stricmp(szInfo, "SQLITE"))
-	{
-		g_dwDBSyntax = DB_SYNTAX_SQLITE;
-	}
-	else
-	{
-		g_dwDBSyntax = DB_SYNTAX_GENERIC;
-	}
+	g_nDBSyntax = DBGetSyntax(g_hCoreDB);
 
 	// Read server ID
 	ConfigReadStr("ServerID", szInfo, 256, "");

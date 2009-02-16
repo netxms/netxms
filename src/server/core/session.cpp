@@ -1876,7 +1876,7 @@ void ClientSession::SendEventLog(CSCPMessage *pRequest)
 
    dwRqId = pRequest->GetId();
    dwMaxRecords = pRequest->GetVariableLong(VID_MAX_RECORDS);
-   wRecOrder = ((g_dwDBSyntax == DB_SYNTAX_MSSQL) || (g_dwDBSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
+   wRecOrder = ((g_nDBSyntax == DB_SYNTAX_MSSQL) || (g_nDBSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
 
    // Prepare confirmation message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -1885,7 +1885,7 @@ void ClientSession::SendEventLog(CSCPMessage *pRequest)
    MutexLock(m_mutexSendEvents, INFINITE);
 
    // Retrieve events from database
-   switch(g_dwDBSyntax)
+   switch(g_nDBSyntax)
    {
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
@@ -3226,7 +3226,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
             iType = ((Node *)pObject)->GetItemType(dwItemId);
 //DWORD s=GetTickCount();
             // Create database-dependent query for fetching N rows
-            switch(g_dwDBSyntax)
+            switch(g_nDBSyntax)
             {
                case DB_SYNTAX_MSSQL:
                   _stprintf(szQuery, _T("SELECT TOP %d idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d%s ORDER BY idata_timestamp DESC"),
@@ -6818,7 +6818,7 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
    TCHAR szQuery[1024], szBuffer[1024];
    WORD wRecOrder;
 
-   wRecOrder = ((g_dwDBSyntax == DB_SYNTAX_MSSQL) || (g_dwDBSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
+   wRecOrder = ((g_nDBSyntax == DB_SYNTAX_MSSQL) || (g_nDBSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
    dwMaxRecords = pRequest->GetVariableLong(VID_MAX_RECORDS);
 
    // Prepare confirmation message
@@ -6828,7 +6828,7 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
    MutexLock(m_mutexSendSyslog, INFINITE);
 
    // Retrieve events from database
-   switch(g_dwDBSyntax)
+   switch(g_nDBSyntax)
    {
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
@@ -6948,7 +6948,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
    DB_ASYNC_RESULT hResult;
    WORD wRecOrder;
 
-   wRecOrder = ((g_dwDBSyntax == DB_SYNTAX_MSSQL) || (g_dwDBSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
+   wRecOrder = ((g_nDBSyntax == DB_SYNTAX_MSSQL) || (g_nDBSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
    dwMaxRecords = pRequest->GetVariableLong(VID_MAX_RECORDS);
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -6964,7 +6964,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
       MutexLock(m_mutexSendTrapLog, INFINITE);
 
       // Retrieve trap log records from database
-      switch(g_dwDBSyntax)
+      switch(g_nDBSyntax)
       {
          case DB_SYNTAX_MYSQL:
          case DB_SYNTAX_PGSQL:

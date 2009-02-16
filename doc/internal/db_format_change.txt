@@ -1,4 +1,21 @@
 *************
+* 86 ==> 87 *
+*************
+
+- New table "metadata" added for storing data like schema version,
+  database syntax, etc.
+	CREATE TABLE metadata
+	(
+		var_name varchar(63) not null,
+		var_value varchar(255) not null,
+		PRIMARY KEY(var_name)
+	) TABLE_TYPE;
+- Configuration parameters DBFormatVersion, DBSyntax,
+  IDataTableCreationCommand, IDataIndexCreationCommand_* moved to
+  "metadata" table
+
+
+*************
 * 85 ==> 86 *
 *************
 

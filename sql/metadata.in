@@ -1,0 +1,24 @@
+/*
+** Metadata
+**
+** ex: syntax=sql
+*/
+
+INSERT INTO metadata (var_name,var_value)
+	VALUES ('SchemaVersion',DB_FORMAT_VERSION);
+INSERT INTO metadata (var_name,var_value)
+	VALUES ('Syntax',DB_SYNTAX);
+INSERT INTO metadata (var_name,var_value)
+	VALUES ('IDataTableCreationCommand','CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer not null,idata_value varchar(255) not null)');
+INSERT INTO metadata (var_name,var_value)
+	VALUES ('IDataIndexCreationCommand_0','CREATE INDEX idx_idata_%d_item_id ON idata_%d(item_id)');
+#if defined(DB_MYSQL)
+INSERT INTO metadata (var_name,var_value)
+	VALUES ('IDataIndexCreationCommand_1','CREATE INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp)');
+#elif defined(DB_POSTGRESQL)
+INSERT INTO metadata (var_name,var_value)
+	VALUES ('IDataIndexCreationCommand_1','CREATE INDEX idx_idata_%d_timestamp_id ON idata_%d(idata_timestamp,item_id)');
+#elif defined(DB_MSSQL)
+INSERT INTO metadata (var_name,var_value)
+	VALUES ('IDataIndexCreationCommand_1','CREATE CLUSTERED INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp)');
+#endif

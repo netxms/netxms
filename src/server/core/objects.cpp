@@ -304,14 +304,14 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          char szQuery[256], szQueryTemplate[256];
          DWORD i;
 
-         ConfigReadStr("IDataTableCreationCommand", szQueryTemplate, 255, "");
+         MetaDataReadStr("IDataTableCreationCommand", szQueryTemplate, 255, "");
          sprintf(szQuery, szQueryTemplate, pObject->Id());
          DBQuery(g_hCoreDB, szQuery);
 
          for(i = 0; i < 10; i++)
          {
             sprintf(szQuery, "IDataIndexCreationCommand_%d", i);
-            ConfigReadStr(szQuery, szQueryTemplate, 255, "");
+            MetaDataReadStr(szQuery, szQueryTemplate, 255, "");
             if (szQueryTemplate[0] != 0)
             {
                sprintf(szQuery, szQueryTemplate, pObject->Id(), pObject->Id());

@@ -118,18 +118,6 @@ typedef void * HSNMPSESSION;
 
 
 //
-// Database syntax codes
-//
-
-#define DB_SYNTAX_GENERIC     0
-#define DB_SYNTAX_MSSQL       1
-#define DB_SYNTAX_MYSQL       2
-#define DB_SYNTAX_PGSQL       3
-#define DB_SYNTAX_ORACLE      4
-#define DB_SYNTAX_SQLITE      5
-
-
-//
 // Unique identifier group codes
 //
 
@@ -608,6 +596,8 @@ BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *pszVar, int *pnArray,
 TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *var, const TCHAR *defValue);
 BOOL NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *var, const TCHAR *value, BOOL bCreate);
 
+BOOL NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
+
 BOOL NXCORE_EXPORTABLE LoadConfig(void);
 
 void NXCORE_EXPORTABLE Shutdown(void);
@@ -772,6 +762,6 @@ extern int g_nRequiredPolls;
 extern DB_HANDLE NXCORE_EXPORTABLE g_hCoreDB;
 extern Queue *g_pLazyRequestQueue;
 
-extern DWORD NXCORE_EXPORTABLE g_dwDBSyntax;
+extern int NXCORE_EXPORTABLE g_nDBSyntax;
 
 #endif   /* _nms_core_h_ */

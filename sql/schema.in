@@ -6,6 +6,18 @@
 
 
 /*
+** Metadata
+*/
+
+CREATE TABLE metadata
+(
+	var_name varchar(63) not null,
+	var_value varchar(255) not null,
+	PRIMARY KEY(var_name)
+) TABLE_TYPE;
+
+
+/*
 ** System configuration table
 */
 

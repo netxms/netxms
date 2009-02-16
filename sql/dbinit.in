@@ -24,13 +24,9 @@ BEGIN TRANSACTION;
 
 // Actual SQL queries
 #include "schema.in"
+#include "metadata.in"
 
-#ifdef SCHEMA_ONLY
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('DBFormatVersion',DB_FORMAT_VERSION,0,1);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart)
-	VALUES ('DBSyntax',DB_SYNTAX,0,1);
-#else
+#ifndef SCHEMA_ONLY
 #include "setup.in"
 #include "events.in"
 #include "images.in"

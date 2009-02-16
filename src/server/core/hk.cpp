@@ -183,7 +183,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
       RWLockUnlock(g_rwlockNodeIndex);
 
       // Run DB-specific maintenance tasks
-      if (g_dwDBSyntax == DB_SYNTAX_PGSQL)
+      if (g_nDBSyntax == DB_SYNTAX_PGSQL)
          PGSQLMaintenance();
    }
 

@@ -25,6 +25,91 @@
 
 
 //
+// Tables for export/import/clear
+//
+
+TCHAR *g_tables[] = 
+{
+	"config",
+	"config_clob",
+	"users",
+	"user_groups",
+	"user_group_members",
+	"user_profiles",
+	"object_properties",
+	"object_custom_attributes",
+	"zones",
+	"zone_ip_addr_list",
+	"nodes",
+	"clusters",
+	"cluster_members",
+	"cluster_sync_subnets",
+	"cluster_resources",
+	"subnets",
+	"interfaces",
+	"network_services",
+	"vpn_connectors",
+	"vpn_connector_networks",
+	"containers",
+	"conditions",
+	"cond_dci_map",
+	"templates",
+	"dct_node_map",
+	"nsmap",
+	"container_members",
+	"container_categories",
+	"acl",
+	"trusted_nodes",
+	"items",
+	"thresholds",
+	"dci_schedules",
+	"raw_dci_values",
+	"event_cfg",
+	"event_log",
+	"actions",
+	"event_groups",
+	"event_group_members",
+	"time_ranges",
+	"event_policy",
+	"policy_source_list",
+	"policy_event_list",
+	"policy_action_list",
+	"policy_situation_attr_list",
+	"policy_time_range_list",
+	"deleted_objects",
+	"alarms",
+	"alarm_notes",
+	"images",
+	"default_images",
+	"oid_to_type",
+	"snmp_trap_cfg",
+	"snmp_trap_pmap",
+	"agent_pkg",
+	"object_tools",
+	"object_tools_acl",
+	"object_tools_table_columns",
+	"syslog",
+	"script_library",
+	"snmp_trap_log",
+	"maps",
+	"map_access_lists",
+	"submaps",
+	"submap_object_positions",
+	"submap_links",
+	"agent_configs",
+	"address_lists",
+	"graphs",
+	"graph_acl",
+	"certificates",
+	"audit_log",
+	"situations",
+	"snmp_communities",
+	"web_maps",
+	NULL
+};
+
+
+//
 // Export single database table
 //
 
@@ -131,16 +216,8 @@ void ExportDatabase(const char *file)
 	_unlink(file);
 	if (sqlite3_open(file, &db) != SQLITE_OK)
 	{
-		_tprintf(_T("ERROR: unable to open output file\n"));
+		printf("ERROR: unable to open output file\n");
 		return;
-	}
-
-	// Create table to hold export metadata
-	if (sqlite3_exec(db, "CREATE TABLE metadata (label varchar(63), value varchar)", NULL, NULL, &errmsg) != SQLITE_OK)
-	{
-		_tprintf(_T("ERROR: unable to add metadata to output file: %s\n"), errmsg);
-		sqlite3_free(errmsg);
-		goto cleanup;
 	}
 
 	// Setup database schema
@@ -209,103 +286,15 @@ void ExportDatabase(const char *file)
 	// Check that dbschema_sqlite.sql and database have the same schema version
 	/* TODO */
 
-	// Clear config table in destination database
-	if (sqlite3_exec(db, "DELETE FROM config", NULL, NULL, &errmsg) != SQLITE_OK)
-	{
-		_tprintf(_T("ERROR: unable to clear config table: %s\n"), errmsg);
-		sqlite3_free(errmsg);
-		goto cleanup;
-	}
-
 	// Export tables
-	static TCHAR *tables[] = 
+	for(i = 0; g_tables[i] != NULL; i++)
 	{
-		"config",
-		"config_clob",
-		"users",
-		"user_groups",
-		"user_group_members",
-		"user_profiles",
-		"object_properties",
-		"object_custom_attributes",
-		"zones",
-		"zone_ip_addr_list",
-		"nodes",
-		"clusters",
-		"cluster_members",
-		"cluster_sync_subnets",
-		"cluster_resources",
-		"subnets",
-		"interfaces",
-		"network_services",
-		"vpn_connectors",
-		"vpn_connector_networks",
-		"containers",
-		"conditions",
-		"cond_dci_map",
-		"templates",
-		"dct_node_map",
-		"nsmap",
-		"container_members",
-		"container_categories",
-		"acl",
-		"trusted_nodes",
-		"items",
-		"thresholds",
-		"dci_schedules",
-		"raw_dci_values",
-		"event_cfg",
-		"event_log",
-		"actions",
-		"event_groups",
-		"event_group_members",
-		"time_ranges",
-		"event_policy",
-		"policy_source_list",
-		"policy_event_list",
-		"policy_action_list",
-		"policy_situation_attr_list",
-		"policy_time_range_list",
-		"deleted_objects",
-		"alarms",
-		"alarm_notes",
-		"images",
-		"default_images",
-		"oid_to_type",
-		"snmp_trap_cfg",
-		"snmp_trap_pmap",
-		"agent_pkg",
-		"object_tools",
-		"object_tools_acl",
-		"object_tools_table_columns",
-		"syslog",
-		"script_library",
-		"snmp_trap_log",
-		"maps",
-		"map_access_lists",
-		"submaps",
-		"submap_object_positions",
-		"submap_links",
-		"agent_configs",
-		"address_lists",
-		"graphs",
-		"graph_acl",
-		"certificates",
-		"audit_log",
-		"situations",
-		"snmp_communities",
-		"web_maps",
-		NULL
-	};
-
-	for(i = 0; tables[i] != NULL; i++)
-	{
-		if (!ExportTable(db, tables[i]))
+		if (!ExportTable(db, g_tables[i]))
 			goto cleanup;
 	}
 
 	// Export tables with collected DCI data
-	hResult = SQLSelect(_T("SELECT var_value FROM config WHERE var_name='IDataTableCreationCommand'"));
+	hResult = SQLSelect(_T("SELECT var_value FROM metadata WHERE var_name='IDataTableCreationCommand'"));
 	if (hResult == NULL)
 		goto cleanup;
 	DBGetField(hResult, 0, 0, queryTemplate, 256);

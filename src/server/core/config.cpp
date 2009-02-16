@@ -98,6 +98,37 @@ BOOL NXCORE_EXPORTABLE LoadConfig(void)
 
 
 //
+// Read string value from metadata table
+//
+
+BOOL NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault)
+{
+   DB_RESULT hResult;
+   TCHAR szQuery[256];
+   BOOL bSuccess = FALSE;
+
+   nx_strncpy(szBuffer, szDefault, iBufSize);
+   if (_tcslen(szVar) > 127)
+      return FALSE;
+
+   _sntprintf(szQuery, 256, _T("SELECT var_value FROM metadata WHERE var_name='%s'"), szVar);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult == 0)
+      return FALSE;
+
+   if (DBGetNumRows(hResult) > 0)
+   {
+      DBGetField(hResult, 0, 0, szBuffer, iBufSize);
+      DecodeSQLString(szBuffer);
+      bSuccess = TRUE;
+   }
+
+   DBFreeResult(hResult);
+   return bSuccess;
+}
+
+
+//
 // Read string value from configuration table
 //
 

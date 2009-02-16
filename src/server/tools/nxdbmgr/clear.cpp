@@ -24,14 +24,96 @@
 
 
 //
+// Tables to clear
+//
+
+extern TCHAR *g_tables[];
+
+
+//
+// Delete idata_xx tables
+//
+
+static BOOL DeleteIData()
+{
+	DB_RESULT hResult;
+	TCHAR query[256];
+	int i, count;
+
+	hResult = SQLSelect(_T("SELECT id FROM nodes"));
+	if (hResult != NULL)
+	{
+		count = DBGetNumRows(hResult);
+		for(i = 0; i < count; i++)
+		{
+			_sntprintf(query, 256, _T("DROP TABLE idata_%d"), DBGetFieldULong(hResult, i, 0));
+			if (!SQLQuery(query))
+				if (!g_bIgnoreErrors)
+					return FALSE;
+		}
+		DBFreeResult(hResult);
+	}
+	else
+	{
+		if (!g_bIgnoreErrors)
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
+
+//
+// Clear tables
+//
+
+static BOOL ClearTables()
+{
+	TCHAR query[256];
+	int i;
+
+	for(i = 0; g_tables[i] != NULL; i++)
+	{
+		_sntprintf(query, 256, _T("DELETE FROM %s"), g_tables[i]);
+		if (!SQLQuery(query))
+			if (!g_bIgnoreErrors)
+				return FALSE;
+	}
+	return TRUE;
+}
+
+
+//
 // Clear database
 //
 
 BOOL ClearDatabase()
 {
-	printf("WARNING!!!\nThis operation will clear all configuration and collected data from database.\nAre you sure (y/N)?");
+	if (!ValidateDatabase())
+		return FALSE;
+
+	printf("\n\nWARNING!!!\nThis operation will clear all configuration and collected data from database.\nAre you sure (y/N)?");
 	if (!GetYesNo())
 		return FALSE;
 
-	return TRUE;
+	BOOL success = FALSE;
+
+	if (DBBegin(g_hCoreDB))
+	{
+		if (DeleteIData() &&	ClearTables())
+		{
+			success = DBCommit(g_hCoreDB);
+			printf(success ? "Database successfully cleared\n" : "ERROR: cannot commit transaction\n");
+		}
+		else
+		{
+			DBRollback(g_hCoreDB);
+		}
+	}
+	else
+	{
+		printf("ERROR: cannot start transaction\n");
+	}
+
+	return success;
 }

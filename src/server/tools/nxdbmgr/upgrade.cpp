@@ -103,6 +103,91 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 
 
 //
+// Upgrade from V86 to V87
+//
+
+static BOOL MoveConfigToMetadata(const TCHAR *cfgVar, const TCHAR *mdVar)
+{
+	TCHAR query[1024], buffer[256];
+	DB_RESULT hResult;
+	BOOL success;
+
+	_sntprintf(query, 1024, _T("SELECT var_value FROM config WHERE var_name='%s'"), cfgVar);
+	hResult = SQLSelect(query);
+	if (hResult != NULL)
+	{
+		if (DBGetNumRows(hResult) > 0)
+		{
+			DBGetField(hResult, 0, 0, buffer, 256);
+			DecodeSQLString(buffer);
+			_sntprintf(query, 1024, _T("INSERT INTO metadata (var_name,var_value) VALUES ('%s','%s')"),
+						  mdVar, buffer);
+			DBFreeResult(hResult);
+			success = SQLQuery(query);
+			if (success)
+			{
+				_sntprintf(query, 1024, _T("DELETE FROM config WHERE var_name='%s'"), cfgVar);
+				success = SQLQuery(query);
+			}
+		}
+		else
+		{
+			success = TRUE;	// Variable missing in 'config' table, nothing to move
+		}
+	}
+	else
+	{
+		success = FALSE;
+	}
+	return success;
+}
+
+static BOOL H_UpgradeFromV86(void)
+{
+	if (!CreateTable(_T("CREATE TABLE metadata (")
+		              _T("var_name varchar(63) not null,")
+						  _T("var_value varchar(255) not null,")
+						  _T("PRIMARY KEY(var_name))")))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!MoveConfigToMetadata(_T("DBFormatVersion"), _T("SchemaVersion")))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!MoveConfigToMetadata(_T("DBSyntax"), _T("Syntax")))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!MoveConfigToMetadata(_T("IDataTableCreationCommand"), _T("IDataTableCreationCommand")))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!MoveConfigToMetadata(_T("IDataIndexCreationCommand_0"), _T("IDataIndexCreationCommand_0")))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!MoveConfigToMetadata(_T("IDataIndexCreationCommand_1"), _T("IDataIndexCreationCommand_1")))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!MoveConfigToMetadata(_T("IDataIndexCreationCommand_2"), _T("IDataIndexCreationCommand_2")))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!MoveConfigToMetadata(_T("IDataIndexCreationCommand_3"), _T("IDataIndexCreationCommand_3")))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='87' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V85 to V86
 //
 
@@ -3789,6 +3874,7 @@ static struct
    { 83, H_UpgradeFromV83 },
    { 84, H_UpgradeFromV84 },
 	{ 85, H_UpgradeFromV85 },
+	{ 86, H_UpgradeFromV86 },
    { 0, NULL }
 };
 
@@ -3807,13 +3893,7 @@ void UpgradeDatabase(void)
    _tprintf(_T("Upgrading database...\n"));
 
    // Get database format version
-   hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBFormatVersion'"));
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         iVersion = DBGetFieldLong(hResult, 0, 0);
-      DBFreeResult(hResult);
-   }
+	iVersion = DBGetSchemaVersion(g_hCoreDB);
    if (iVersion == DB_FORMAT_VERSION)
    {
       _tprintf(_T("Your database format is up to date\n"));

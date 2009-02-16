@@ -1068,3 +1068,122 @@ void LIBNXSRV_EXPORTABLE DecodeSQLString(TCHAR *pszStr)
    }
    pszStr[iPosOut] = 0;
 }
+
+
+//
+// Get database schema version
+// Will return 0 for unknown and -1 in case of SQL errors
+//
+
+int LIBNXSRV_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn)
+{
+	DB_RESULT hResult;
+	int version = 0;
+
+	// Read schema version from 'metadata' table, where it should
+	// be stored starting from schema version 87
+	// We ignore SQL error in this case, because table 'metadata'
+	// may not exist in old schema versions
+   hResult = DBSelect(conn, _T("SELECT var_value FROM metadata WHERE var_name='SchemaVersion'"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         version = DBGetFieldLong(hResult, 0, 0);
+      DBFreeResult(hResult);
+   }
+
+	// If database schema version is less than 87, version number
+	// will be stored in 'config' table
+	if (version == 0)
+	{
+		hResult = DBSelect(conn, _T("SELECT var_value FROM config WHERE var_name='DBFormatVersion'"));
+		if (hResult != NULL)
+		{
+			if (DBGetNumRows(hResult) > 0)
+				version = DBGetFieldLong(hResult, 0, 0);
+			DBFreeResult(hResult);
+		}
+		else
+		{
+			version = -1;
+		}
+	}
+
+	return version;
+}
+
+
+//
+// Get database syntax
+//
+
+int LIBNXSRV_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
+{
+	DB_RESULT hResult;
+	TCHAR syntaxId[256];
+	BOOL read = FALSE;
+	int syntax;
+
+   // Get database syntax
+   hResult = DBSelect(conn, _T("SELECT var_value FROM metadata WHERE var_name='Syntax'"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         DBGetField(hResult, 0, 0, syntaxId, sizeof(syntaxId));
+			read = TRUE;
+      }
+      else
+      {
+         _tcscpy(syntaxId, _T("UNKNOWN"));
+      }
+      DBFreeResult(hResult);
+   }
+
+	// If database schema version is less than 87, syntax
+	// will be stored in 'config' table, so try it
+	if (!read)
+	{
+		hResult = DBSelect(conn, _T("SELECT var_value FROM config WHERE var_name='DBSyntax'"));
+		if (hResult != NULL)
+		{
+			if (DBGetNumRows(hResult) > 0)
+			{
+				DBGetField(hResult, 0, 0, syntaxId, sizeof(syntaxId));
+				read = TRUE;
+			}
+			else
+			{
+				_tcscpy(syntaxId, _T("UNKNOWN"));
+			}
+			DBFreeResult(hResult);
+		}
+	}
+
+   if (!_tcscmp(syntaxId, _T("MYSQL")))
+   {
+      syntax = DB_SYNTAX_MYSQL;
+   }
+   else if (!_tcscmp(syntaxId, _T("PGSQL")))
+   {
+      syntax = DB_SYNTAX_PGSQL;
+   }
+   else if (!_tcscmp(syntaxId, _T("MSSQL")))
+   {
+      syntax = DB_SYNTAX_MSSQL;
+   }
+   else if (!_tcscmp(syntaxId, _T("ORACLE")))
+   {
+      syntax = DB_SYNTAX_ORACLE;
+   }
+   else if (!_tcscmp(syntaxId, _T("SQLITE")))
+   {
+      syntax = DB_SYNTAX_SQLITE;
+   }
+   else
+   {
+		syntax = DB_SYNTAX_UNKNOWN;
+   }
+
+	return syntax;
+}

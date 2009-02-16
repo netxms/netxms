@@ -340,13 +340,7 @@ BOOL ValidateDatabase()
    TCHAR szLockStatus[MAX_DB_STRING], szLockInfo[MAX_DB_STRING];
 
    // Get database format version
-   hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBFormatVersion'"));
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         nVersion = DBGetFieldLong(hResult, 0, 0);
-      DBFreeResult(hResult);
-   }
+   nVersion = DBGetSchemaVersion(g_hCoreDB);
    if (nVersion < DB_FORMAT_VERSION)
    {
       _tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\nUse \"upgrade\" command to upgrade your database first.\n"),
@@ -406,8 +400,7 @@ int main(int argc, char *argv[])
 {
    BOOL bStart = TRUE, bForce = FALSE;
    int ch;
-   TCHAR szSyntaxId[16], szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
-   DB_RESULT hResult;
+   TCHAR szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
 #ifdef _WIN32
    HKEY hKey;
    DWORD dwSize;
@@ -504,6 +497,7 @@ int main(int argc, char *argv[])
    if (strcmp(argv[optind], "batch") && 
        strcmp(argv[optind], "check") && 
        strcmp(argv[optind], "export") && 
+       strcmp(argv[optind], "import") && 
        strcmp(argv[optind], "reindex") &&
        strcmp(argv[optind], "upgrade") &&
        strcmp(argv[optind], "unlock") &&
@@ -512,7 +506,7 @@ int main(int argc, char *argv[])
       _tprintf(_T("Invalid command \"%s\". Type nxdbmgr -h for command line syntax.\n"), argv[optind]);
       return 1;
    }
-   if ((!strcmp(argv[optind], "init") || !strcmp(argv[optind], "batch") || !strcmp(argv[optind], "export")) && (argc - optind < 2))
+   if ((!strcmp(argv[optind], "init") || !strcmp(argv[optind], "batch") || !strcmp(argv[optind], "export") || !strcmp(argv[optind], "import")) && (argc - optind < 2))
    {
       _tprintf("Required command argument missing\n");
       return 1;
@@ -569,54 +563,13 @@ int main(int argc, char *argv[])
    else
    {
       // Get database syntax
-      hResult = DBSelect(g_hCoreDB, _T("SELECT var_value FROM config WHERE var_name='DBSyntax'"));
-      if (hResult != NULL)
-      {
-         if (DBGetNumRows(hResult) > 0)
-         {
-            DBGetField(hResult, 0, 0, szSyntaxId, sizeof(szSyntaxId));
-            DecodeSQLString(szSyntaxId);
-         }
-         else
-         {
-            _tcscpy(szSyntaxId, _T("UNKNOWN"));
-         }
-         DBFreeResult(hResult);
-      }
-      else
-      {
+		g_iSyntax = DBGetSyntax(g_hCoreDB);
+		if (g_iSyntax == DB_SYNTAX_UNKNOWN)
+		{
          _tprintf(_T("Unable to determine database syntax\n"));
          DBDisconnect(g_hCoreDB);
          DBUnloadDriver();
          return 5;
-      }
-
-      if (!_tcscmp(szSyntaxId, _T("MYSQL")))
-      {
-         g_iSyntax = DB_SYNTAX_MYSQL;
-      }
-      else if (!_tcscmp(szSyntaxId, _T("PGSQL")))
-      {
-         g_iSyntax = DB_SYNTAX_PGSQL;
-      }
-      else if (!_tcscmp(szSyntaxId, _T("MSSQL")))
-      {
-         g_iSyntax = DB_SYNTAX_MSSQL;
-      }
-      else if (!_tcscmp(szSyntaxId, _T("ORACLE")))
-      {
-         g_iSyntax = DB_SYNTAX_ORACLE;
-      }
-      else if (!_tcscmp(szSyntaxId, _T("SQLITE")))
-      {
-         g_iSyntax = DB_SYNTAX_SQLITE;
-      }
-      else
-      {
-         _tprintf(_T("Unknown database syntax %s\n"), szSyntaxId);
-         DBDisconnect(g_hCoreDB);
-         DBUnloadDriver();
-         return 6;
       }
 
       // Do requested operation
