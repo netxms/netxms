@@ -112,6 +112,12 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    struct timeval tv;
    fd_set rdfs;
 
+   // Create session list and it's access mutex
+   g_dwMaxSessions = min(max(g_dwMaxSessions, 2), 1024);
+   g_pSessionList = (CommSession **)malloc(sizeof(CommSession *) * g_dwMaxSessions);
+   memset(g_pSessionList, 0, sizeof(CommSession *) * g_dwMaxSessions);
+   g_hSessionListAccess = MutexCreate();
+
    // Create socket
    if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
    {
@@ -150,12 +156,6 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    // Set up queue
    listen(hSocket, SOMAXCONN);
 	nxlog_write(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), g_wListenPort);
-
-   // Create session list and it's access mutex
-   g_dwMaxSessions = min(max(g_dwMaxSessions, 2), 1024);
-   g_pSessionList = (CommSession **)malloc(sizeof(CommSession *) * g_dwMaxSessions);
-   memset(g_pSessionList, 0, sizeof(CommSession *) * g_dwMaxSessions);
-   g_hSessionListAccess = MutexCreate();
 
    // Wait for connection requests
    while(!(g_dwFlags & AF_SHUTDOWN))

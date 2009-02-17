@@ -82,9 +82,14 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, TCHAR *
 	{
 		nRet = SQLGetDiagField(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, errorText, DBDRV_MAX_ERROR_TEXT, &nChars);
 		if (nRet == SQL_SUCCESS)
+		{
 			errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+			RemoveTrailingCRLF(errorText);
+		}
 		else
+		{
 			nx_strncpy(errorText, _T("Unable to obtain description for this error"), DBDRV_MAX_ERROR_TEXT);
+		}
    }
    
    return dwError;
@@ -387,6 +392,26 @@ extern "C" int EXPORT DrvGetNumRows(ODBCDRV_QUERY_RESULT *pResult)
 
 
 //
+// Get column count in query result
+//
+
+extern "C" int EXPORT DrvGetColumnCount(ODBCDRV_QUERY_RESULT *pResult)
+{
+	return (pResult != NULL) ? pResult->iNumCols : 0;
+}
+
+
+//
+// Get column name in query result
+//
+
+extern "C" const char EXPORT *DrvGetColumnName(ODBCDRV_QUERY_RESULT *pResult, int column)
+{
+	return NULL;	/* TODO */
+}
+
+
+//
 // Free SELECT results
 //
 
@@ -539,6 +564,26 @@ extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pRe
       pBuffer[0] = 0;
    }
    return pBuffer;
+}
+
+
+//
+// Get column count in async query result
+//
+
+extern "C" int EXPORT DrvGetColumnCountAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
+{
+	return (pResult != NULL) ? pResult->iNumCols : 0;
+}
+
+
+//
+// Get column name in async query result
+//
+
+extern "C" const char EXPORT *DrvGetColumnNameAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult, int column)
+{
+	return NULL;	/* TODO */
 }
 
 

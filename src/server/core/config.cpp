@@ -119,7 +119,6 @@ BOOL NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int 
    if (DBGetNumRows(hResult) > 0)
    {
       DBGetField(hResult, 0, 0, szBuffer, iBufSize);
-      DecodeSQLString(szBuffer);
       bSuccess = TRUE;
    }
 

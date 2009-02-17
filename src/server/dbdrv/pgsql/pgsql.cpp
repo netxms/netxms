@@ -129,7 +129,10 @@ static BOOL UnsafeDrvQuery(PG_CONN *pConn, char *szQuery, TCHAR *errorText)
 	if (PQresultStatus(pResult) != PGRES_COMMAND_OK)
 	{
 		if (errorText != NULL)
+		{
 			nx_strncpy(errorText, PQerrorMessage(pConn->pHandle), DBDRV_MAX_ERROR_TEXT);
+			RemoveTrailingCRLF(errorText);
+		}
 		PQclear(pResult);
 		return FALSE;
 	}
@@ -185,8 +188,12 @@ static DB_RESULT UnsafeDrvSelect(PG_CONN *pConn, char *szQuery, TCHAR *errorText
 	if ((PQresultStatus(pResult) != PGRES_COMMAND_OK) &&
 	    (PQresultStatus(pResult) != PGRES_TUPLES_OK))
 	{
+		
 		if (errorText != NULL)
+		{
 			nx_strncpy(errorText, PQerrorMessage(pConn->pHandle), DBDRV_MAX_ERROR_TEXT);
+			RemoveTrailingCRLF(errorText);
+		}
 		PQclear(pResult);
 		return NULL;
 	}

@@ -154,6 +154,7 @@ static THREAD_RESULT THREAD_CALL SQLiteWorkerThread(void *pArg)
 				free(wtemp);
 #endif
 				pConn->pszErrorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+				RemoveTrailingCRLF(pConn->pszErrorText);
 			}
       }
       	

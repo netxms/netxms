@@ -45,6 +45,7 @@ static int ErrorHandler(PDBPROCESS hProcess, int severity, int dberr,
       if (pConn != NULL)
       {
 			nx_strncpy(pConn->szErrorText, dberrstr, DBDRV_MAX_ERROR_TEXT);
+			RemoveTrailingCRLF(pConn->szErrorText);
          if (dbdead(hProcess))
             pConn->bProcessDead = TRUE;
       }

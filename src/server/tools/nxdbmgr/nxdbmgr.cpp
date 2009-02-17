@@ -268,6 +268,36 @@ BOOL SQLBatch(const TCHAR *pszBatch)
 
 
 //
+// Read string value from metadata table
+//
+
+BOOL MetaDataReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault)
+{
+   DB_RESULT hResult;
+   TCHAR szQuery[256];
+   BOOL bSuccess = FALSE;
+
+   nx_strncpy(pszBuffer, pszDefault, iBufSize);
+   if (_tcslen(pszVar) > 127)
+      return FALSE;
+
+   _sntprintf(szQuery, 256, _T("SELECT var_value FROM metadata WHERE var_name='%s'"), pszVar);
+   hResult = SQLSelect(szQuery);
+   if (hResult == NULL)
+      return FALSE;
+
+   if (DBGetNumRows(hResult) > 0)
+   {
+      DBGetField(hResult, 0, 0, pszBuffer, iBufSize);
+      bSuccess = TRUE;
+   }
+
+   DBFreeResult(hResult);
+   return bSuccess;
+}
+
+
+//
 // Read string value from configuration table
 //
 
@@ -283,7 +313,7 @@ BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TC
 
    _sntprintf(szQuery, 256, _T("SELECT var_value FROM config WHERE var_name='%s'"), pszVar);
    hResult = SQLSelect(szQuery);
-   if (hResult == 0)
+   if (hResult == NULL)
       return FALSE;
 
    if (DBGetNumRows(hResult) > 0)

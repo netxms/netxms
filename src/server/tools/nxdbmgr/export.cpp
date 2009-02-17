@@ -167,18 +167,28 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 				}
 			}
 			DBFreeAsyncResult(g_hCoreDB, hResult);
-			if (sqlite3_exec(db, "COMMIT", NULL, NULL, &errmsg) == SQLITE_OK)
+
+			if (success)
 			{
-				success = TRUE;
+				if (sqlite3_exec(db, "COMMIT", NULL, NULL, &errmsg) != SQLITE_OK)
+				{
+					printf("ERROR: Cannot commit transaction: %s", errmsg);
+					sqlite3_free(errmsg);
+					success = FALSE;
+				}
 			}
 			else
 			{
-				printf("ERROR: Cannot commit transaction: %s", errmsg);
-				sqlite3_free(errmsg);
+				if (sqlite3_exec(db, "ROLLBACK", NULL, NULL, &errmsg) != SQLITE_OK)
+				{
+					printf("ERROR: Cannot rollback transaction: %s", errmsg);
+					sqlite3_free(errmsg);
+				}
 			}
 		}
 		else
 		{
+			success = FALSE;
 			if (sqlite3_exec(db, "ROLLBACK", NULL, NULL, &errmsg) != SQLITE_OK)
 			{
 				printf("ERROR: Cannot rollback transaction: %s", errmsg);
@@ -188,11 +198,35 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 	}
 	else
 	{
+		success = FALSE;
 		printf("ERROR: Cannot start transaction: %s", errmsg);
 		sqlite3_free(errmsg);
 	}
 
 	return success;
+}
+
+
+//
+// Callback for getting schema version
+//
+
+static int GetSchemaVersionCB(void *arg, int cols, char **data, char **names)
+{
+	*((int *)arg) = strtol(data[0], NULL, 10);
+	return 0;
+}
+
+
+//
+// Callback for getting idata_xx table creation query
+//
+
+static int GetIDataQueryCB(void *arg, int cols, char **data, char **names)
+{
+	strncpy((char *)arg, data[0], MAX_DB_STRING);
+	((char *)arg)[MAX_DB_STRING - 1] = 0;
+	return 0;
 }
 
 
@@ -203,7 +237,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 void ExportDatabase(const char *file)
 {
 	sqlite3 *db;
-	char *errmsg, buffer[MAX_PATH], queryTemplate[256], *data;
+	char *errmsg, buffer[MAX_PATH], queryTemplate[MAX_DB_STRING], *data;
 	DWORD size;
 	int i, rowCount;
 	DB_RESULT hResult;
@@ -284,7 +318,18 @@ void ExportDatabase(const char *file)
 	free(data);
 
 	// Check that dbschema_sqlite.sql and database have the same schema version
-	/* TODO */
+	int version = 0;
+	if (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersion'", GetSchemaVersionCB, &version, &errmsg) != SQLITE_OK)
+	{
+		printf("ERROR: SQL query failed (%s)\n", errmsg);
+		sqlite3_free(errmsg);
+		goto cleanup;
+	}
+	if (version != DBGetSchemaVersion(g_hCoreDB))
+	{
+		printf("ERROR: Schema version mismatch between dbschema_sqlite.sql and your database. Please check that NetXMS server installed correctly.\n");
+		goto cleanup;
+	}
 
 	// Export tables
 	for(i = 0; g_tables[i] != NULL; i++)
@@ -294,11 +339,13 @@ void ExportDatabase(const char *file)
 	}
 
 	// Export tables with collected DCI data
-	hResult = SQLSelect(_T("SELECT var_value FROM metadata WHERE var_name='IDataTableCreationCommand'"));
-	if (hResult == NULL)
+	if (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='IDataTableCreationCommand'",
+	                 GetIDataQueryCB, queryTemplate, &errmsg) != SQLITE_OK)
+	{
+		printf("ERROR: SQL query failed (%s)\n", errmsg);
+		sqlite3_free(errmsg);
 		goto cleanup;
-	DBGetField(hResult, 0, 0, queryTemplate, 256);
-	DBFreeResult(hResult);
+	}
 
 	hResult = SQLSelect(_T("SELECT id FROM nodes"));
 	if (hResult == NULL)

@@ -2856,7 +2856,7 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                      pItem = new DCItem(CreateUniqueId(IDG_ITEM), "no name", DS_INTERNAL, 
                                         DCI_DT_INT, 60, 30, (Node *)pObject);
                      pItem->SetStatus(ITEM_STATUS_DISABLED);
-                     if (((Template *)pObject)->AddItem(pItem))
+                     if ((bSuccess = ((Template *)pObject)->AddItem(pItem)))
                      {
                         msg.SetVariable(VID_RCC, RCC_SUCCESS);
                         // Return new item id to client

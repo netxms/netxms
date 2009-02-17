@@ -144,7 +144,10 @@ static DWORD DrvQueryInternal(MYSQL_CONN *pConn, const char *pszQuery, TCHAR *er
 		}
 		
 		if (errorText != NULL)
+		{
 			nx_strncpy(errorText, mysql_error(pConn->pMySQL), DBDRV_MAX_ERROR_TEXT);
+			RemoveTrailingCRLF(errorText);
+		}
 	}
 
 	MutexUnlock(pConn->mutexQueryLock);
@@ -205,7 +208,10 @@ extern "C" DB_RESULT EXPORT DrvSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD
 		}
 		
 		if (errorText != NULL)
+		{
 			nx_strncpy(errorText, mysql_error(pConn->pMySQL), DBDRV_MAX_ERROR_TEXT);
+			RemoveTrailingCRLF(errorText);
+		}
 	}
 
 	MutexUnlock(pConn->mutexQueryLock);
@@ -329,7 +335,10 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pwszQ
 		}
 		
 		if (errorText != NULL)
+		{
 			nx_strncpy(errorText, mysql_error(pConn->pMySQL), DBDRV_MAX_ERROR_TEXT);
+			RemoveTrailingCRLF(errorText);
+		}
 	}
 
 	if (pResult == NULL)

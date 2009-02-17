@@ -84,21 +84,55 @@ static BOOL ImportTable(sqlite3 *db, const char *table)
 static BOOL ImportIData(sqlite3 *db)
 {
 	DB_RESULT hResult;
-	int i, count;
-	TCHAR buffer[256];
+	int i, j, count;
+	DWORD id;
+	TCHAR buffer[1024], queryTemplate[5][MAX_DB_STRING];
+
+	// Query for idata tables creation should be stored already in
+	// target database metadata table
+	if (!MetaDataReadStr(_T("IDataTableCreationCommand"), queryTemplate[0], MAX_DB_STRING, _T("")))
+	{
+		printf("ERROR: unable to determine correct query for idata tables creation\n");
+		return FALSE;
+	}
+
+	// There can be up to 4 index creation queries for idata tables
+	for(i = 1; i < 5; i++)
+	{
+		_sntprintf(buffer, 1024, _T("IDataIndexCreationCommand_%d"), i - 1);
+		if (!MetaDataReadStr(buffer, queryTemplate[i], MAX_DB_STRING, _T("")))
+			break;
+	}
+	for(; i < 5; i++)
+		queryTemplate[i][0] = 0;
 
 	hResult = SQLSelect(_T("SELECT id FROM nodes"));
 	if (hResult == NULL)
 		return FALSE;
 
+	// Create and import idata_xx tables for each node in "nodes" table
 	count = DBGetNumRows(hResult);
 	for(i = 0; i < count; i++)
 	{
-		_sntprintf(buffer, 256, _T("idata_%d"), DBGetFieldULong(hResult, i, 0));
+		id = DBGetFieldULong(hResult, i, 0);
+		_sntprintf(buffer, 1024, queryTemplate[0], id);
+		if (!SQLQuery(buffer))
+			break;	// Failed to create idata_xx table
+
+		// Create indexes
+		for(j = 1; (j < 5) && (queryTemplate[j][0] != 0); j++)
+		{
+			_sntprintf(buffer, 1024, queryTemplate[j], id, id);
+			if (!SQLQuery(buffer))
+				goto cleanup;	// Failed to create index for idata_xx table
+		}
+
+		_sntprintf(buffer, 1024, _T("idata_%d"), DBGetFieldULong(hResult, i, 0));
 		if (!ImportTable(db, buffer))
 			break;
 	}
 
+cleanup:
 	DBFreeResult(hResult);
 	return i == count;
 }
@@ -124,11 +158,12 @@ void ImportDatabase(const char *file)
 	sqlite3 *db;
 	char *errmsg;
 	int i;
+	BOOL success = FALSE;
 
 	// Open SQLite database
 	if (sqlite3_open(file, &db) != SQLITE_OK)
 	{
-		printf("ERROR: unable to open output file\n");
+		printf("ERROR: unable to open output file\nDatabase import failed.\n");
 		return;
 	}
 
@@ -156,8 +191,12 @@ void ImportDatabase(const char *file)
 		if (!ImportTable(db, g_tables[i]))
 			goto cleanup;
 	}
-	ImportIData(db);
+	if (!ImportIData(db))
+		goto cleanup;
+
+	success = TRUE;
 
 cleanup:
 	sqlite3_close(db);
+	printf(success ? "Database import complete.\n" : "Database import failed.\n");
 }

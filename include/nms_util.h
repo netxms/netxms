@@ -478,6 +478,7 @@ extern "C"
 	BOOL LIBNETXMS_EXPORTABLE RegexpMatch(const TCHAR *pszStr, const TCHAR *pszExpr, BOOL bMatchCase);
    TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(TCHAR *line, TCHAR *buffer);
    int LIBNETXMS_EXPORTABLE NumChars(const TCHAR *pszStr, int ch);
+	void LIBNETXMS_EXPORTABLE RemoveTrailingCRLF(TCHAR *str);
 #ifdef __cplusplus
    BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName, BOOL bExtendedChars = FALSE);
 #endif

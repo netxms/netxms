@@ -72,6 +72,7 @@ static void SetLastErrorText(ORACLE_CONN *pConn)
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, buffer, -1,
 	                    pConn->szLastError, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
 #endif
+	RemoveTrailingCRLF(pConn->szLastError);
 }
 
 

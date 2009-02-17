@@ -253,6 +253,24 @@ void LIBNETXMS_EXPORTABLE StrStrip(TCHAR *str)
 
 
 //
+// Remove trailing CR/LF or LF from string
+//
+
+void LIBNETXMS_EXPORTABLE RemoveTrailingCRLF(TCHAR *str)
+{
+	if (*str == 0)
+		return;
+
+	TCHAR *p = str + _tcslen(str) - 1;
+	if (*p == '\n')
+		p--;
+	if (*p == '\r')
+		p--;
+	*(p + 1) = 0;
+}
+
+
+//
 // Add string to enumeration result set
 //
 
