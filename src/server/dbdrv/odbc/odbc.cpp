@@ -290,6 +290,28 @@ extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQue
          pResult->pValues = NULL;
          iCurrValue = 0;
 
+			// Get column names
+			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
+			for(i = 0; i < pResult->iNumCols; i++)
+			{
+				char name[256];
+				SQLSMALLINT len;
+
+				iResult = SQLColAttributeA(pConn->sqlStatement, (SQLSMALLINT)(i + 1),
+				                           SQL_DESC_BASE_COLUMN_NAME,
+				                           name, 256, &len, NULL); 
+				if ((iResult == SQL_SUCCESS) || 
+					 (iResult == SQL_SUCCESS_WITH_INFO))
+				{
+					name[len] = 0;
+					pResult->columnNames[i] = strdup(name);
+				}
+				else
+				{
+					pResult->columnNames[i] = strdup("");
+				}
+			}
+
          // Fetch all data
          while(iResult = SQLFetch(pConn->sqlStatement), 
                (iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
@@ -407,7 +429,7 @@ extern "C" int EXPORT DrvGetColumnCount(ODBCDRV_QUERY_RESULT *pResult)
 
 extern "C" const char EXPORT *DrvGetColumnName(ODBCDRV_QUERY_RESULT *pResult, int column)
 {
-	return NULL;	/* TODO */
+	return ((pResult != NULL) && (column >= 0) && (column < pResult->iNumCols)) ? pResult->columnNames[column] : NULL;
 }
 
 
@@ -425,6 +447,11 @@ extern "C" void EXPORT DrvFreeResult(ODBCDRV_QUERY_RESULT *pResult)
       for(i = 0; i < iNumValues; i++)
          safe_free(pResult->pValues[i]);
       safe_free(pResult->pValues);
+
+		for(i = 0; i < pResult->iNumCols; i++)
+			safe_free(pResult->columnNames[i]);
+		safe_free(pResult->columnNames);
+
       free(pResult);
    }
 }

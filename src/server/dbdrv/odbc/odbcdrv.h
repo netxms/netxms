@@ -92,6 +92,7 @@ typedef struct
    long iNumRows;
    long iNumCols;
    NETXMS_WCHAR **pValues;
+	char **columnNames;
 } ODBCDRV_QUERY_RESULT;
 
 
@@ -104,6 +105,7 @@ typedef struct
    long iNumCols;
    ODBCDRV_CONN *pConn;
    BOOL bNoMoreRows;
+	char **columnNames;
 } ODBCDRV_ASYNC_QUERY_RESULT;
 
 
