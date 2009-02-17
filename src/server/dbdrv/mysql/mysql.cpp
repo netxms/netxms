@@ -1,6 +1,6 @@
 /* 
 ** MySQL Database Driver
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -266,9 +266,27 @@ extern "C" WCHAR EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int iColumn,
 
 extern "C" int EXPORT DrvGetNumRows(DB_RESULT hResult)
 {
-	if (hResult == 0)
-		return 0;
-	return (int)mysql_num_rows((MYSQL_RES *)hResult);
+	return (hResult != NULL) ? (int)mysql_num_rows((MYSQL_RES *)hResult) : 0;
+}
+
+
+//
+// Get column count in query result
+//
+
+extern "C" int EXPORT DrvGetColumnCount(DB_RESULT hResult)
+{
+	return (hResult != NULL) ? (int)mysql_num_fields((MYSQL_RES *)hResult) : 0;
+}
+
+
+//
+// Get column name in query result
+//
+
+extern "C" const char EXPORT *DrvGetColumnName(DB_RESULT hResult, int column)
+{
+	return NULL;	/* TODO */
 }
 
 
@@ -427,6 +445,26 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
 	pBuffer[iLen] = 0;
 	
 	return pBuffer;
+}
+
+
+//
+// Get column count in async query result
+//
+
+extern "C" int EXPORT DrvGetColumnCountAsync(DB_ASYNC_RESULT hResult)
+{
+	return ((hResult != NULL) && (((MYSQL_ASYNC_RESULT *)hResult)->pHandle != NULL))? (int)mysql_num_fields(((MYSQL_ASYNC_RESULT *)hResult)->pHandle) : 0;
+}
+
+
+//
+// Get column name in async query result
+//
+
+extern "C" const char EXPORT *DrvGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column)
+{
+	return NULL;	/* TODO */
 }
 
 

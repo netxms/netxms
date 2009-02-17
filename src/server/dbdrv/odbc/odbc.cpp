@@ -467,6 +467,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_WCH
    ODBCDRV_ASYNC_QUERY_RESULT *pResult = NULL;
    long iResult;
    short wNumCols;
+	int i;
 
    MutexLock(pConn->mutexQuery, INFINITE);
 
@@ -499,7 +500,30 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_WCH
          pResult->iNumCols = wNumCols;
          pResult->pConn = pConn;
          pResult->bNoMoreRows = FALSE;
-         *pdwError = DBERR_SUCCESS;
+
+			// Get column names
+			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
+			for(i = 0; i < pResult->iNumCols; i++)
+			{
+				char name[256];
+				SQLSMALLINT len;
+
+				iResult = SQLColAttributeA(pConn->sqlStatement, (SQLSMALLINT)(i + 1),
+				                           SQL_DESC_BASE_COLUMN_NAME,
+				                           name, 256, &len, NULL); 
+				if ((iResult == SQL_SUCCESS) || 
+					 (iResult == SQL_SUCCESS_WITH_INFO))
+				{
+					name[len] = 0;
+					pResult->columnNames[i] = strdup(name);
+				}
+				else
+				{
+					pResult->columnNames[i] = strdup("");
+				}
+			}
+
+			*pdwError = DBERR_SUCCESS;
       }
       else
       {
@@ -610,7 +634,7 @@ extern "C" int EXPORT DrvGetColumnCountAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult
 
 extern "C" const char EXPORT *DrvGetColumnNameAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult, int column)
 {
-	return NULL;	/* TODO */
+	return ((pResult != NULL) && (column >= 0) && (column < pResult->iNumCols)) ? pResult->columnNames[column] : NULL;
 }
 
 
