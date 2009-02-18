@@ -314,7 +314,7 @@ LONG H_NetInterfaceStats(const char *pszParam, const char *pArg, char *pValue)
 			{
 				if(kstat_read(kc, kp, 0) != -1)
 				{
-					kn = (kstat_named_t *)kstat_data_lookup(kp, pArg);
+					kn = (kstat_named_t *)kstat_data_lookup(kp, (char *)pArg);
 					if (kn != NULL)
 					{
 						switch(kn->data_type)
