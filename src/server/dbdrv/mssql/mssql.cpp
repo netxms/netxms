@@ -1,6 +1,6 @@
 /* 
 ** Microsoft SQL Server Database Driver
-** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2004-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -294,6 +294,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, WCHAR *pwszQuery, DWORD 
    int i, iCurrPos, iLen, *piColTypes;
    void *pData;
    char *pszQueryUTF8;
+	LPCSTR name;
 
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
    MutexLock(pConn->mutexQueryLock, INFINITE);
@@ -307,11 +308,16 @@ extern "C" DB_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, WCHAR *pwszQuery, DWORD 
          pResult->iNumRows = 0;
          pResult->iNumCols = dbnumcols(pConn->hProcess);
          pResult->pValues = NULL;
+			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
 
-         // Determine column types
+         // Determine column names and types
          piColTypes = (int *)malloc(pResult->iNumCols * sizeof(int));
          for(i = 0; i < pResult->iNumCols; i++)
+			{
             piColTypes[i] = dbcoltype(pConn->hProcess, i + 1);
+				name = dbcolname(pConn->hProcess, i + 1);
+				pResult->columnNames[i] = strdup(CHECK_NULL_A(name));
+			}
 
          // Retrieve data
          iCurrPos = 0;
@@ -392,12 +398,12 @@ extern "C" DB_RESULT EXPORT DrvSelect(MSDB_CONN *pConn, WCHAR *pwszQuery, DWORD 
 // Get field length from result
 //
 
-extern "C" LONG EXPORT DrvGetFieldLength(DB_RESULT hResult, int iRow, int iColumn)
+extern "C" LONG EXPORT DrvGetFieldLength(MSDB_QUERY_RESULT *pResult, int iRow, int iColumn)
 {
-   if ((iRow < 0) || (iRow >= ((MSDB_QUERY_RESULT *)hResult)->iNumRows) ||
-       (iColumn < 0) || (iColumn >= ((MSDB_QUERY_RESULT *)hResult)->iNumCols))
+   if ((iRow < 0) || (iRow >= pResult->iNumRows) ||
+       (iColumn < 0) || (iColumn >= pResult->iNumCols))
       return -1;
-   return strlen(((MSDB_QUERY_RESULT *)hResult)->pValues[iRow * ((MSDB_QUERY_RESULT *)hResult)->iNumCols + iColumn]);
+   return strlen(pResult->pValues[iRow * pResult->iNumCols + iColumn]);
 }
 
 
@@ -405,13 +411,13 @@ extern "C" LONG EXPORT DrvGetFieldLength(DB_RESULT hResult, int iRow, int iColum
 // Get field value from result
 //
 
-extern "C" WCHAR EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int iColumn,
+extern "C" WCHAR EXPORT *DrvGetField(MSDB_QUERY_RESULT *pResult, int iRow, int iColumn,
                                      WCHAR *pBuffer, int nBufSize)
 {
-   if ((iRow < 0) || (iRow >= ((MSDB_QUERY_RESULT *)hResult)->iNumRows) ||
-       (iColumn < 0) || (iColumn >= ((MSDB_QUERY_RESULT *)hResult)->iNumCols))
+   if ((iRow < 0) || (iRow >= pResult->iNumRows) ||
+       (iColumn < 0) || (iColumn >= pResult->iNumCols))
       return NULL;
-   MultiByteToWideChar(CP_ACP, 0, ((MSDB_QUERY_RESULT *)hResult)->pValues[iRow * ((MSDB_QUERY_RESULT *)hResult)->iNumCols + iColumn],
+   MultiByteToWideChar(CP_ACP, 0, pResult->pValues[iRow * pResult->iNumCols + iColumn],
                        -1, pBuffer, nBufSize);
    pBuffer[nBufSize - 1] = 0;
    return pBuffer;
@@ -422,9 +428,29 @@ extern "C" WCHAR EXPORT *DrvGetField(DB_RESULT hResult, int iRow, int iColumn,
 // Get number of rows in result
 //
 
-extern "C" int EXPORT DrvGetNumRows(DB_RESULT hResult)
+extern "C" int EXPORT DrvGetNumRows(MSDB_QUERY_RESULT *pResult)
 {
-   return (hResult != NULL) ? ((MSDB_QUERY_RESULT *)hResult)->iNumRows : 0;
+   return (pResult != NULL) ? pResult->iNumRows : 0;
+}
+
+
+//
+// Get column count in query result
+//
+
+extern "C" int EXPORT DrvGetColumnCount(MSDB_QUERY_RESULT *pResult)
+{
+	return (pResult != NULL) ? pResult->iNumCols : 0;
+}
+
+
+//
+// Get column name in query result
+//
+
+extern "C" const char EXPORT *DrvGetColumnName(MSDB_QUERY_RESULT *pResult, int column)
+{
+	return ((pResult != NULL) && (column >= 0) && (column < pResult->iNumCols)) ? pResult->columnNames[column] : NULL;
 }
 
 
@@ -432,18 +458,20 @@ extern "C" int EXPORT DrvGetNumRows(DB_RESULT hResult)
 // Free SELECT results
 //
 
-extern "C" void EXPORT DrvFreeResult(DB_RESULT hResult)
+extern "C" void EXPORT DrvFreeResult(MSDB_QUERY_RESULT *pResult)
 {
-   if (hResult != NULL)
+   if (pResult != NULL)
    {
       int i, iNumValues;
 
-      iNumValues = ((MSDB_QUERY_RESULT *)hResult)->iNumRows * ((MSDB_QUERY_RESULT *)hResult)->iNumCols;
+      iNumValues = pResult->iNumRows * pResult->iNumCols;
       for(i = 0; i < iNumValues; i++)
-         free(((MSDB_QUERY_RESULT *)hResult)->pValues[i]);
-      if (((MSDB_QUERY_RESULT *)hResult)->pValues != NULL)
-         free(((MSDB_QUERY_RESULT *)hResult)->pValues);
-      free((MSDB_QUERY_RESULT *)hResult);
+         free(pResult->pValues[i]);
+      safe_free(pResult->pValues);
+		for(i = 0; i < pResult->iNumCols; i++)
+			safe_free(pResult->columnNames[i]);
+		safe_free(pResult->columnNames);
+      free(pResult);
    }
 }
 
@@ -457,6 +485,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MSDB_CONN *pConn, WCHAR *pwszQu
 {
    MSDB_ASYNC_QUERY_RESULT *pResult = NULL;
    char *pszQueryUTF8;
+	LPCSTR name;
    int i;
 
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
@@ -473,10 +502,15 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MSDB_CONN *pConn, WCHAR *pwszQu
          pResult->bNoMoreRows = FALSE;
          pResult->iNumCols = dbnumcols(pConn->hProcess);
          pResult->piColTypes = (int *)malloc(sizeof(int) * pResult->iNumCols);
+			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
 
-         // Determine column types
+         // Determine column names and types
          for(i = 0; i < pResult->iNumCols; i++)
+			{
             pResult->piColTypes[i] = dbcoltype(pConn->hProcess, i + 1);
+				name = dbcolname(pConn->hProcess, i + 1);
+				pResult->columnNames[i] = strdup(CHECK_NULL_A(name));
+			}
       }
    }
 
@@ -498,25 +532,25 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(MSDB_CONN *pConn, WCHAR *pwszQu
 // Fetch next result line from asynchronous SELECT results
 //
 
-extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
+extern "C" BOOL EXPORT DrvFetch(MSDB_ASYNC_QUERY_RESULT *pResult)
 {
-   BOOL bResult = TRUE;
+   BOOL success = TRUE;
    
-   if (hResult == NULL)
+   if (pResult == NULL)
    {
-      bResult = FALSE;
+      success = FALSE;
    }
    else
    {
       // Try to fetch next row from server
-      if (dbnextrow(((MSDB_ASYNC_QUERY_RESULT *)hResult)->pConnection->hProcess) == NO_MORE_ROWS)
+      if (dbnextrow(pResult->pConnection->hProcess) == NO_MORE_ROWS)
       {
-         ((MSDB_ASYNC_QUERY_RESULT *)hResult)->bNoMoreRows = TRUE;
-         bResult = FALSE;
-         MutexUnlock(((MSDB_ASYNC_QUERY_RESULT *)hResult)->pConnection->mutexQueryLock);
+         pResult->bNoMoreRows = TRUE;
+         success = FALSE;
+         MutexUnlock(pResult->pConnection->mutexQueryLock);
       }
    }
-   return bResult;
+   return success;
 }
 
 
@@ -524,31 +558,31 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
 // Get field from current row in async query result
 //
 
-extern "C" WCHAR EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
+extern "C" WCHAR EXPORT *DrvGetFieldAsync(MSDB_ASYNC_QUERY_RESULT *pResult, int iColumn,
                                           WCHAR *pBuffer, int iBufSize)
 {
    void *pData;
    int nLen;
 
    // Check if we have valid result handle
-   if (hResult == NULL)
+   if (pResult == NULL)
       return NULL;
 
    // Check if there are valid fetched row
-   if (((MSDB_ASYNC_QUERY_RESULT *)hResult)->bNoMoreRows)
+   if (pResult->bNoMoreRows)
       return NULL;
 
    // Now get column data
-   pData = (void *)dbdata(((MSDB_ASYNC_QUERY_RESULT *)hResult)->pConnection->hProcess, iColumn + 1);
+   pData = (void *)dbdata(pResult->pConnection->hProcess, iColumn + 1);
    if (pData != NULL)
    {
-      switch(((MSDB_ASYNC_QUERY_RESULT *)hResult)->piColTypes[iColumn])
+      switch(pResult->piColTypes[iColumn])
       {
          case SQLCHAR:
          case SQLTEXT:
          case SQLBINARY:
             nLen = MultiByteToWideChar(CP_ACP, 0, (char *)pData,
-                                       dbdatlen(((MSDB_ASYNC_QUERY_RESULT *)hResult)->pConnection->hProcess, iColumn + 1),
+                                       dbdatlen(pResult->pConnection->hProcess, iColumn + 1),
                                        pBuffer, iBufSize);
             pBuffer[nLen] = 0;
             break;
@@ -582,27 +616,50 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn,
 
 
 //
+// Get column count in async query result
+//
+
+extern "C" int EXPORT DrvGetColumnCountAsync(MSDB_ASYNC_QUERY_RESULT *pResult)
+{
+	return (pResult != NULL) ? pResult->iNumCols : 0;
+}
+
+
+//
+// Get column name in async query result
+//
+
+extern "C" const char EXPORT *DrvGetColumnNameAsync(MSDB_ASYNC_QUERY_RESULT *pResult, int column)
+{
+	return ((pResult != NULL) && (column >= 0) && (column < pResult->iNumCols)) ? pResult->columnNames[column] : NULL;
+}
+
+
+//
 // Destroy result of async query
 //
 
-extern "C" void EXPORT DrvFreeAsyncResult(DB_ASYNC_RESULT hResult)
+extern "C" void EXPORT DrvFreeAsyncResult(MSDB_ASYNC_QUERY_RESULT *pResult)
 {
-   if (hResult != NULL)
+   if (pResult != NULL)
    {
       // Check if all result rows fetchef
-      if (!((MSDB_ASYNC_QUERY_RESULT *)hResult)->bNoMoreRows)
+      if (!pResult->bNoMoreRows)
       {
          // Fetch remaining rows
-         while(dbnextrow(((MSDB_ASYNC_QUERY_RESULT *)hResult)->pConnection->hProcess) != NO_MORE_ROWS);
+         while(dbnextrow(pResult->pConnection->hProcess) != NO_MORE_ROWS);
 
          // Now we are ready for next query, so unlock query mutex
-         MutexUnlock(((MSDB_ASYNC_QUERY_RESULT *)hResult)->pConnection->mutexQueryLock);
+         MutexUnlock(pResult->pConnection->mutexQueryLock);
       }
 
       // Free allocated memory
-      if (((MSDB_ASYNC_QUERY_RESULT *)hResult)->piColTypes != NULL)
-         free(((MSDB_ASYNC_QUERY_RESULT *)hResult)->piColTypes);
-      free(hResult);
+      if (pResult->piColTypes != NULL)
+         free(pResult->piColTypes);
+		for(int i = 0; i < pResult->iNumCols; i++)
+			safe_free(pResult->columnNames[i]);
+		safe_free(pResult->columnNames);
+      free(pResult);
    }
 }
 

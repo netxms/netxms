@@ -87,7 +87,8 @@ static THREAD_RESULT THREAD_CALL SQLiteWorkerThread(void *pArg)
       switch(pConn->nCommand)
       {
          case SQLITE_DRV_OPEN:
-            pConn->nResult = sqlite3_open(pConn->pszQuery, &pConn->pdb);
+            pConn->nResult = sqlite3_open_v2(pConn->pszQuery, &pConn->pdb,
+				                                 SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, 0);
             if (pConn->nResult == SQLITE_OK)
             {
                sqlite3_busy_timeout(pConn->pdb, 30000);  // 30 sec. busy timeout
@@ -185,7 +186,8 @@ static int ExecCommand(SQLITE_CONN *pConn, int nCmd, const char *pszQuery, TCHAR
 
 extern "C" BOOL EXPORT DrvInit(char *szCmdLine)
 {
-   return TRUE;
+   return sqlite3_threadsafe() &&	// Fail if SQLite compiled without threading support
+		    (sqlite3_initialize() == SQLITE_OK);
 }
 
 
@@ -195,6 +197,7 @@ extern "C" BOOL EXPORT DrvInit(char *szCmdLine)
 
 extern "C" void EXPORT DrvUnload(void)
 {
+	sqlite3_shutdown();
 }
 
 
@@ -225,19 +228,19 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 {
    SQLITE_CONN *pConn;
 
-   // Create new handle
-   pConn = (SQLITE_CONN *)malloc(sizeof(SQLITE_CONN));
-   memset(pConn, 0, sizeof(SQLITE_CONN));
-   pConn->mutexQueryLock = MutexCreate();
-   pConn->condCommand = ConditionCreate(FALSE);
-   pConn->condResult = ConditionCreate(FALSE);
-   pConn->hThread = ThreadCreateEx(SQLiteWorkerThread, 0, pConn);
+	// Create new handle
+	pConn = (SQLITE_CONN *)malloc(sizeof(SQLITE_CONN));
+	memset(pConn, 0, sizeof(SQLITE_CONN));
+	pConn->mutexQueryLock = MutexCreate();
+	pConn->condCommand = ConditionCreate(FALSE);
+	pConn->condResult = ConditionCreate(FALSE);
+	pConn->hThread = ThreadCreateEx(SQLiteWorkerThread, 0, pConn);
 
-   if (ExecCommand(pConn, SQLITE_DRV_OPEN, pszDatabase, NULL) != SQLITE_OK)
-   {
-      DrvDisconnect(pConn);
-      pConn = NULL;
-   }
+	if (ExecCommand(pConn, SQLITE_DRV_OPEN, pszDatabase, NULL) != SQLITE_OK)
+	{
+		DrvDisconnect(pConn);
+		pConn = NULL;
+	}
    return (DB_CONNECTION)pConn;
 }
 

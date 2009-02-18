@@ -1,6 +1,6 @@
 /* $Id$ */
 /** Oracle Database Driver
-** Copyright (C) 2007 Victor Kirhenshtein
+** Copyright (C) 2007, 2008, 2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -57,6 +57,7 @@ typedef struct
 	TCHAR szLastError[DBDRV_MAX_ERROR_TEXT];
 	ORACLE_FETCH_BUFFER *pBuffers;
 	int nCols;
+	char **columnNames;
 } ORACLE_CONN;
 
 typedef struct
@@ -64,6 +65,7 @@ typedef struct
 	int nRows;
 	int nCols;
 	WCHAR **pData;
+	char **columnNames;
 } ORACLE_RESULT;
 
 #endif   /* _oracledrv_h_ */

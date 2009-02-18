@@ -1,7 +1,7 @@
 /* $Id$ */
 /* 
 ** Oracle Database Driver
-** Copyright (C) 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2007, 2008, 2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -102,6 +102,11 @@ static void DestroyQueryResult(ORACLE_RESULT *pResult)
 	for(i = 0; i < nCount; i++)
 		safe_free(pResult->pData[i]);
 	safe_free(pResult->pData);
+
+	for(i = 0; i < pResult->nCols; i++)
+		safe_free(pResult->columnNames[i]);
+	safe_free(pResult->columnNames);
+
 	free(pResult);
 }
 
@@ -124,6 +129,8 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 	pConn = (ORACLE_CONN *)malloc(sizeof(ORACLE_CONN));
 	if (pConn != NULL)
 	{
+		memset(pConn, 0, sizeof(ORACLE_CONN));
+
 		if (OCIEnvNlsCreate(&pConn->handleEnv, OCI_THREADED | OCI_NCHAR_LITERAL_REPLACE_OFF,
 		                    NULL, NULL, NULL, NULL, 0, NULL, OCI_UTF16ID, OCI_UTF16ID) == OCI_SUCCESS)
 		{
@@ -253,6 +260,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWOR
 	ub2 nWidth;
 	sword nStatus;
 	ORACLE_FETCH_BUFFER *pBuffers;
+	text *colName;
 	int i, nPos;
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
@@ -266,11 +274,13 @@ extern "C" DB_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWOR
 			pResult = (ORACLE_RESULT *)malloc(sizeof(ORACLE_RESULT));
 			pResult->nRows = 0;
 			pResult->pData = NULL;
+			pResult->columnNames = NULL;
 			OCIAttrGet(handleStmt, OCI_HTYPE_STMT, &nCount, NULL, OCI_ATTR_PARAM_COUNT, pConn->handleError);
 			pResult->nCols = nCount;
 			if (pResult->nCols > 0)
 			{
-				// Prepare receive buffers
+				// Prepare receive buffers and fetch column names
+				pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->nCols);
 				pBuffers = (ORACLE_FETCH_BUFFER *)malloc(sizeof(ORACLE_FETCH_BUFFER) * pResult->nCols);
 				memset(pBuffers, 0, sizeof(ORACLE_FETCH_BUFFER) * pResult->nCols);
 				for(i = 0; i < pResult->nCols; i++)
@@ -278,6 +288,18 @@ extern "C" DB_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWOR
 					if ((nStatus = OCIParamGet(handleStmt, OCI_HTYPE_STMT, pConn->handleError,
 					                           (void **)&handleParam, (ub4)(i + 1))) == OCI_SUCCESS)
 					{
+						// Column name
+						if (OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &colName, &nCount, OCI_ATTR_NAME, pConn->handleError) == OCI_SUCCESS)
+						{
+							// We are in UTF-16 mode, so OCIAttrGet will return UTF-16 strings
+							pResult->columnNames[i] = MBStringFromWideString((WCHAR *)colName);
+						}
+						else
+						{
+							pResult->columnNames[i] = strdup("");
+						}
+
+						// Data size
 						OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &nWidth, NULL, OCI_ATTR_DATA_SIZE, pConn->handleError);
 						pBuffers[i].pData = (WCHAR *)malloc((nWidth + 1) * sizeof(WCHAR));
 						handleDefine = NULL;
@@ -289,6 +311,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, DWOR
 							SetLastErrorText(pConn);
 							*pdwError = IsConnectionError(pConn);
 						}
+						OCIDescriptorFree(handleParam, OCI_DTYPE_PARAM);
 					}
 					else
 					{
@@ -423,6 +446,26 @@ extern "C" int EXPORT DrvGetNumRows(ORACLE_RESULT *pResult)
 
 
 //
+// Get column count in query result
+//
+
+extern "C" int EXPORT DrvGetColumnCount(ORACLE_RESULT *pResult)
+{
+	return (pResult != NULL) ? pResult->nCols : 0;
+}
+
+
+//
+// Get column name in query result
+//
+
+extern "C" const char EXPORT *DrvGetColumnName(ORACLE_RESULT *pResult, int column)
+{
+	return ((pResult != NULL) && (column >= 0) && (column < pResult->nCols)) ? pResult->columnNames[column] : NULL;
+}
+
+
+//
 // Free SELECT results
 //
 
@@ -444,6 +487,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwsz
 	OCIDefine *handleDefine;
 	ub4 nCount;
 	ub2 nWidth;
+	text *colName;
 	int i;
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
@@ -462,7 +506,8 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwsz
 			pConn->nCols = nCount;
 			if (pConn->nCols > 0)
 			{
-				// Prepare receive buffers
+				// Prepare receive buffers and fetch column names
+				pConn->columnNames = (char **)malloc(sizeof(char *) * pConn->nCols);
 				pConn->pBuffers = (ORACLE_FETCH_BUFFER *)malloc(sizeof(ORACLE_FETCH_BUFFER) * pConn->nCols);
 				memset(pConn->pBuffers, 0, sizeof(ORACLE_FETCH_BUFFER) * pConn->nCols);
 				for(i = 0; i < pConn->nCols; i++)
@@ -471,6 +516,18 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwsz
 					if (OCIParamGet(pConn->handleStmt, OCI_HTYPE_STMT, pConn->handleError,
 					                (void **)&handleParam, (ub4)(i + 1)) == OCI_SUCCESS)
 					{
+						// Column name
+						if (OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &colName, &nCount, OCI_ATTR_NAME, pConn->handleError) == OCI_SUCCESS)
+						{
+							// We are in UTF-16 mode, so OCIAttrGet will return UTF-16 strings
+							pConn->columnNames[i] = MBStringFromWideString((WCHAR *)colName);
+						}
+						else
+						{
+							pConn->columnNames[i] = strdup("");
+						}
+
+						// Data size
 						OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &nWidth, NULL, OCI_ATTR_DATA_SIZE, pConn->handleError);
 						pConn->pBuffers[i].pData = (WCHAR *)malloc((nWidth + 1) * sizeof(WCHAR));
 						handleDefine = NULL;
@@ -486,6 +543,8 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwsz
 							SetLastErrorText(pConn);
 							*pdwError = IsConnectionError(pConn);
 						}
+
+						OCIDescriptorFree(handleParam, OCI_DTYPE_PARAM);
 					}
 					else
 					{
@@ -564,6 +623,26 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(ORACLE_CONN *pConn, int nColumn,
 
 
 //
+// Get column count in async query result
+//
+
+extern "C" int EXPORT DrvGetColumnCountAsync(ORACLE_CONN *pConn)
+{
+	return (pConn != NULL) ? pConn->nCols : 0;
+}
+
+
+//
+// Get column name in async query result
+//
+
+extern "C" const char EXPORT *DrvGetColumnNameAsync(ORACLE_CONN *pConn, int column)
+{
+	return ((pConn != NULL) && (column >= 0) && (column < pConn->nCols)) ? pConn->columnNames[column] : NULL;
+}
+
+
+//
 // Destroy result of async query
 //
 
@@ -577,6 +656,11 @@ extern "C" void EXPORT DrvFreeAsyncResult(ORACLE_CONN *pConn)
 	for(i = 0; i < pConn->nCols; i++)
 		safe_free(pConn->pBuffers[i].pData);
 	safe_free_and_null(pConn->pBuffers);
+
+	for(i = 0; i < pConn->nCols; i++)
+		safe_free(pConn->columnNames[i]);
+	safe_free_and_null(pConn->columnNames);
+
 	pConn->nCols = 0;
 	MutexUnlock(pConn->mutexQueryLock);
 }

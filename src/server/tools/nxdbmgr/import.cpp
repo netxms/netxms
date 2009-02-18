@@ -66,12 +66,27 @@ static BOOL ImportTable(sqlite3 *db, const char *table)
 	char query[256], *errmsg;
 	int rc;
 
-	snprintf(query, 256, "SELECT * FROM %s", table);
-	rc = sqlite3_exec(db, query, ImportTableCB, (void *)table, &errmsg);
-	if (rc != SQLITE_OK)
+	printf("Importing table %s\n", table);
+
+	if (DBBegin(g_hCoreDB))
 	{
-		printf("ERROR: SQL query \"%s\" on import file failed (%s)\n", query, errmsg);
-		sqlite3_free(errmsg);
+		snprintf(query, 256, "SELECT * FROM %s", table);
+		rc = sqlite3_exec(db, query, ImportTableCB, (void *)table, &errmsg);
+		if (rc == SQLITE_OK)
+		{
+			DBCommit(g_hCoreDB);
+		}
+		else
+		{
+			printf("ERROR: SQL query \"%s\" on import file failed (%s)\n", query, errmsg);
+			sqlite3_free(errmsg);
+			DBRollback(g_hCoreDB);
+		}
+	}
+	else
+	{
+		printf("ERROR: unable to start transaction in target database\n");
+		rc = -1;
 	}
 	return rc == SQLITE_OK;
 }

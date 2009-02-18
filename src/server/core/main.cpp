@@ -238,7 +238,19 @@ static void LoadGlobalConfig()
 	if (ConfigReadInt("EnableZoning", 0))
 		g_dwFlags |= AF_ENABLE_ZONING;
 	if (ConfigReadInt("EnableMultipleDBConnections", 1))
-		g_dwFlags |= AF_ENABLE_MULTIPLE_DB_CONN;
+	{
+		// SQLite has troubles with multiple connections to the same database
+		// from different threads, and it does not speed up database access
+		// anyway, so we will not enable multiple connections for SQLite
+		if (g_nDBSyntax != DB_SYNTAX_SQLITE)
+		{
+			g_dwFlags |= AF_ENABLE_MULTIPLE_DB_CONN;
+		}
+		else
+		{
+			DbgPrintf(1, _T("Configuration parameter EnableMultipleDBConnections ignored because database engine is SQLite"));
+		}
+	}
 	if (ConfigReadInt("RunNetworkDiscovery", 0))
 		g_dwFlags |= AF_ENABLE_NETWORK_DISCOVERY;
 	if (ConfigReadInt("ActiveNetworkDiscovery", 0))

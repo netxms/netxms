@@ -67,6 +67,7 @@ typedef struct
    int iNumRows;
    int iNumCols;
    char **pValues;
+	char **columnNames;
 } MSDB_QUERY_RESULT;
 
 
@@ -80,6 +81,7 @@ typedef struct
    BOOL bNoMoreRows;
    int iNumCols;
    int *piColTypes;
+	char **columnNames;
 } MSDB_ASYNC_QUERY_RESULT;
 
 #endif   /* _mssqldrv_h_ */

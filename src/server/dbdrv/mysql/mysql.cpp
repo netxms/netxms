@@ -286,7 +286,13 @@ extern "C" int EXPORT DrvGetColumnCount(DB_RESULT hResult)
 
 extern "C" const char EXPORT *DrvGetColumnName(DB_RESULT hResult, int column)
 {
-	return NULL;	/* TODO */
+	MYSQL_FIELD *field;
+
+	if (hResult == NULL)
+		return NULL;
+
+	field = mysql_fetch_field_direct((MYSQL_RES *)hResult, column);
+	return (field != NULL) ? field->name : NULL;
 }
 
 
@@ -464,7 +470,13 @@ extern "C" int EXPORT DrvGetColumnCountAsync(DB_ASYNC_RESULT hResult)
 
 extern "C" const char EXPORT *DrvGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column)
 {
-	return NULL;	/* TODO */
+	MYSQL_FIELD *field;
+
+	if ((hResult == NULL) || (((MYSQL_ASYNC_RESULT *)hResult)->pHandle == NULL))
+		return NULL;
+
+	field = mysql_fetch_field_direct(((MYSQL_ASYNC_RESULT *)hResult)->pHandle, column);
+	return (field != NULL) ? field->name : NULL;
 }
 
 

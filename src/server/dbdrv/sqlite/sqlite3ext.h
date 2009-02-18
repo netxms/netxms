@@ -15,7 +15,7 @@
 ** as extensions by SQLite should #include this file instead of 
 ** sqlite3.h.
 **
-** @(#) $Id: sqlite3ext.h,v 1.21 2008/03/19 21:45:51 drh Exp $
+** @(#) $Id: sqlite3ext.h,v 1.25 2008/10/12 00:27:54 shane Exp $
 */
 #ifndef _SQLITE3EXT_H_
 #define _SQLITE3EXT_H_
@@ -78,7 +78,7 @@ struct sqlite3_api_routines {
   int  (*complete)(const char*sql);
   int  (*complete16)(const void*sql);
   int  (*create_collation)(sqlite3*,const char*,int,void*,int(*)(void*,int,const void*,int,const void*));
-  int  (*create_collation16)(sqlite3*,const char*,int,void*,int(*)(void*,int,const void*,int,const void*));
+  int  (*create_collation16)(sqlite3*,const void*,int,void*,int(*)(void*,int,const void*,int,const void*));
   int  (*create_function)(sqlite3*,const char*,int,int,void*,void (*xFunc)(sqlite3_context*,int,sqlite3_value**),void (*xStep)(sqlite3_context*,int,sqlite3_value**),void (*xFinal)(sqlite3_context*));
   int  (*create_function16)(sqlite3*,const void*,int,int,void*,void (*xFunc)(sqlite3_context*,int,sqlite3_value**),void (*xStep)(sqlite3_context*,int,sqlite3_value**),void (*xFinal)(sqlite3_context*));
   int (*create_module)(sqlite3*,const char*,const sqlite3_module*,void*);
@@ -188,6 +188,11 @@ struct sqlite3_api_routines {
   int (*test_control)(int, ...);
   void (*randomness)(int,void*);
   sqlite3 *(*context_db_handle)(sqlite3_context*);
+  int (*extended_result_codes)(sqlite3*,int);
+  int (*limit)(sqlite3*,int,int);
+  sqlite3_stmt *(*next_stmt)(sqlite3*,sqlite3_stmt*);
+  const char *(*sql)(sqlite3_stmt*);
+  int (*status)(int,int*,int*,int);
 };
 
 /*
@@ -203,7 +208,9 @@ struct sqlite3_api_routines {
 */
 #ifndef SQLITE_CORE
 #define sqlite3_aggregate_context      sqlite3_api->aggregate_context
+#ifndef SQLITE_OMIT_DEPRECATED
 #define sqlite3_aggregate_count        sqlite3_api->aggregate_count
+#endif
 #define sqlite3_bind_blob              sqlite3_api->bind_blob
 #define sqlite3_bind_double            sqlite3_api->bind_double
 #define sqlite3_bind_int               sqlite3_api->bind_int
@@ -259,14 +266,18 @@ struct sqlite3_api_routines {
 #define sqlite3_errmsg                 sqlite3_api->errmsg
 #define sqlite3_errmsg16               sqlite3_api->errmsg16
 #define sqlite3_exec                   sqlite3_api->exec
+#ifndef SQLITE_OMIT_DEPRECATED
 #define sqlite3_expired                sqlite3_api->expired
+#endif
 #define sqlite3_finalize               sqlite3_api->finalize
 #define sqlite3_free                   sqlite3_api->free
 #define sqlite3_free_table             sqlite3_api->free_table
 #define sqlite3_get_autocommit         sqlite3_api->get_autocommit
 #define sqlite3_get_auxdata            sqlite3_api->get_auxdata
 #define sqlite3_get_table              sqlite3_api->get_table
+#ifndef SQLITE_OMIT_DEPRECATED
 #define sqlite3_global_recover         sqlite3_api->global_recover
+#endif
 #define sqlite3_interrupt              sqlite3_api->interruptx
 #define sqlite3_last_insert_rowid      sqlite3_api->last_insert_rowid
 #define sqlite3_libversion             sqlite3_api->libversion
@@ -304,7 +315,9 @@ struct sqlite3_api_routines {
 #define sqlite3_thread_cleanup         sqlite3_api->thread_cleanup
 #define sqlite3_total_changes          sqlite3_api->total_changes
 #define sqlite3_trace                  sqlite3_api->trace
+#ifndef SQLITE_OMIT_DEPRECATED
 #define sqlite3_transfer_bindings      sqlite3_api->transfer_bindings
+#endif
 #define sqlite3_update_hook            sqlite3_api->update_hook
 #define sqlite3_user_data              sqlite3_api->user_data
 #define sqlite3_value_blob             sqlite3_api->value_blob
@@ -354,9 +367,14 @@ struct sqlite3_api_routines {
 #define sqlite3_test_control           sqlite3_api->test_control
 #define sqlite3_randomness             sqlite3_api->randomness
 #define sqlite3_context_db_handle      sqlite3_api->context_db_handle
+#define sqlite3_extended_result_codes  sqlite3_api->extended_result_codes
+#define sqlite3_limit                  sqlite3_api->limit
+#define sqlite3_next_stmt              sqlite3_api->next_stmt
+#define sqlite3_sql                    sqlite3_api->sql
+#define sqlite3_status                 sqlite3_api->status
 #endif /* SQLITE_CORE */
 
-#define SQLITE_EXTENSION_INIT1     const sqlite3_api_routines *sqlite3_api;
+#define SQLITE_EXTENSION_INIT1     const sqlite3_api_routines *sqlite3_api = 0;
 #define SQLITE_EXTENSION_INIT2(v)  sqlite3_api = v;
 
 #endif /* _SQLITE3EXT_H_ */
