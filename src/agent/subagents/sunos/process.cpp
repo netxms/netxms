@@ -143,7 +143,7 @@ static int ProcRead(PROC_ENT **pEnt, char *pszPattern)
 // Process list
 //
 
-LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	PROC_ENT *pList;
@@ -174,7 +174,7 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 // Handler for Process.Count(*) parameter
 //
 
-LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
+LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szArg[128] = "";
@@ -196,7 +196,7 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 // Handler for System.ProcessCount parameter
 //
 
-LONG H_SysProcCount(char *pszParam, char *pArg, char *pValue)
+LONG H_SysProcCount(const char *pszParam, const char *pArg, char *pValue)
 {
 	return ReadKStatValue("unix", 0, "system_misc", "nproc", pValue, NULL);
 }
@@ -327,7 +327,7 @@ static BOOL GetProcessAttribute(pid_t nPid, int nAttr, int nType,
 // Handler for Process.XXX parameters
 //
 
-LONG H_ProcessInfo(char *pszParam, char *pArg, char *pValue)
+LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szBuffer[256] = "";

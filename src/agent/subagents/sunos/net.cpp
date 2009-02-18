@@ -105,7 +105,7 @@ static BOOL GetInterfaceHWAddr(char *pszIfName, char *pszMacAddr)
 // Interface list
 //
 
-LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetIfList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct lifnum ln;
@@ -191,7 +191,7 @@ LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 // Get interface description
 //
 
-LONG H_NetIfDescription(char *pszParam, char *pArg, char *pValue)
+LONG H_NetIfDescription(const char *pszParam, const char *pArg, char *pValue)
 {
 	char *eptr, szIfName[IF_NAMESIZE];
 	int nIndex, nFd;
@@ -227,7 +227,7 @@ LONG H_NetIfDescription(char *pszParam, char *pArg, char *pValue)
 // Get interface administrative status
 //
 
-LONG H_NetIfAdminStatus(char *pszParam, char *pArg, char *pValue)
+LONG H_NetIfAdminStatus(const char *pszParam, const char *pArg, char *pValue)
 {
 	char *eptr, szIfName[IF_NAMESIZE];
 	int nIndex, nFd;
@@ -271,7 +271,7 @@ LONG H_NetIfAdminStatus(char *pszParam, char *pArg, char *pValue)
 // Get interface statistics
 //
 
-LONG H_NetInterfaceStats(char *pszParam, char *pArg, char *pValue)
+LONG H_NetInterfaceStats(const char *pszParam, const char *pArg, char *pValue)
 {
 	kstat_ctl_t *kc;
 	kstat_t *kp;
@@ -358,7 +358,7 @@ LONG H_NetInterfaceStats(char *pszParam, char *pArg, char *pValue)
 //
 // Get Link status
 //
-LONG H_NetInterfaceLink(char *pszParam, char *pArg, char *pValue)
+LONG H_NetInterfaceLink(const char *pszParam, const char *pArg, char *pValue)
 {
 	char *eptr, szIfName[IF_NAMESIZE];
 	int nIndex, nFd;

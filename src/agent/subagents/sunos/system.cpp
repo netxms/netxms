@@ -30,7 +30,7 @@
 // Handler for System.Uname parameter
 //
 
-LONG H_Uname(char *pszParam, char *pArg, char *pValue)
+LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
 {
 	char szSysStr[7][64];
 	int i;
@@ -68,7 +68,7 @@ LONG H_Uname(char *pszParam, char *pArg, char *pValue)
 // Handler for System.Uptime parameter
 //
 
-LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
+LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
 {
 	kstat_ctl_t *kc;
 	kstat_t *kp;
@@ -107,7 +107,7 @@ LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 // Handler for System.Hostname parameter
 //
 
-LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
+LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue)
 {
 	return (sysinfo(SI_HOSTNAME, pValue, MAX_RESULT_LENGTH) == -1) ?
 		SYSINFO_RC_ERROR : SYSINFO_RC_SUCCESS;
@@ -118,7 +118,7 @@ LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
 // Handler for System.CPU.LoadAvg
 //
 
-LONG H_LoadAvg(char *pszParam, char *pArg, char *pValue)
+LONG H_LoadAvg(const char *pszParam, const char *pArg, char *pValue)
 {
 	kstat_ctl_t *kc;
 	kstat_t *kp;
@@ -154,7 +154,7 @@ LONG H_LoadAvg(char *pszParam, char *pArg, char *pValue)
 // Handler for System.KStat(*)
 //
 
-LONG H_KStat(char *pszParam, char *pArg, char *pValue)
+LONG H_KStat(const char *pszParam, const char *pArg, char *pValue)
 {
 	char *eptr, szModule[128], szName[128], szInstance[16], szStat[128];
 	LONG nInstance;
@@ -185,7 +185,7 @@ LONG H_KStat(char *pszParam, char *pArg, char *pValue)
 // Handler for System.CPU.Count
 //
 
-LONG H_CPUCount(char *pszParam, char *pArg, char *pValue)
+LONG H_CPUCount(const char *pszParam, const char *pArg, char *pValue)
 {
 	return ReadKStatValue("unix", 0, "system_misc", "ncpus", pValue, NULL);
 }
@@ -266,7 +266,7 @@ LONG ReadKStatValue(char *pszModule, LONG nInstance, char *pszName,
 // Handler for System.CPU.Count
 //
 
-LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
+LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	kstat_named_t kn;
