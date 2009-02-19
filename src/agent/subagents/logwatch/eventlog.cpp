@@ -1,6 +1,6 @@
 /*
 ** NetXMS LogWatch subagent
-** Copyright (C) 2008 Victor Kirhenshtein
+** Copyright (C) 2008, 2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -275,12 +275,12 @@ THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *arg)
 	LogParser *parser = (LogParser *)arg;
    HANDLE hLog, handles[2];
    BYTE *buffer, *rec;
-   DWORD bytes, bytesNeeded;
+   DWORD bytes, bytesNeeded, bufferSize = 32768;
    BOOL success;
-	THREAD nt;	// NOtification thread's handle
+	THREAD nt;	// Notification thread's handle
 	NOTIFICATION_THREAD_DATA nd;
 
-   buffer = (BYTE *)malloc(BUFFER_SIZE);
+   buffer = (BYTE *)malloc(bufferSize);
 
    hLog = OpenEventLog(NULL, &(parser->GetFileName()[1]));
    if (hLog != NULL)
@@ -289,8 +289,17 @@ THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *arg)
       nd.hWakeupEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
       
       // Initial read
-      while(ReadEventLog(hLog, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, 0,
-                         buffer, BUFFER_SIZE, &bytes, &bytesNeeded));
+		do
+		{
+			while((success = ReadEventLog(hLog, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, 0,
+			                              buffer, bufferSize, &bytes, &bytesNeeded)));
+			if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+			{
+				bufferSize = bytesNeeded;
+				buffer = (BYTE *)realloc(buffer, bufferSize);
+				success = TRUE;
+			}
+		} while(success);
 
       if (GetLastError() == ERROR_HANDLE_EOF)
       {
@@ -308,8 +317,15 @@ THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *arg)
 
             do
             {
+retry_read:
                success = ReadEventLog(hLog, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, 0,
                                        buffer, BUFFER_SIZE, &bytes, &bytesNeeded);
+					if (!success && (GetLastError() == ERROR_INSUFFICIENT_BUFFER))
+					{
+						bufferSize = bytesNeeded;
+						buffer = (BYTE *)realloc(buffer, bufferSize);
+						goto retry_read;
+					}
                if (success)
                {
                   for(rec = buffer; rec < buffer + bytes; rec += ((EVENTLOGRECORD *)rec)->Length)
