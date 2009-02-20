@@ -12,7 +12,7 @@
             name="Job Monitor"
             icon="icons/job_monitor.png"
             category="org.netxms.nxmc.tools"
-            class="org.netxms.nxmc.jobmonitor.JobMonitor"
+            class="org.netxms.ui.eclipse.jobmonitor.JobMonitor"
             id="org.netxms.nxmc.jobmonitor.view.job_monitor">
       </view>
    </extension>
@@ -40,7 +40,7 @@
 			   label="Job Monitor"
 			   tooltip="Open Job Monitor"
 			   icon="icons/job_monitor.png"
-			   class="org.netxms.nxmc.jobmonitor.actions.OpenJobMonitor"
+			   class="org.netxms.ui.eclipse.jobmonitor.actions.OpenJobMonitor"
 			   definitionId="org.netxms.nxmc.jobmonitor.commands.open_job_monitor">
 		   </action>
 	   </actionSet>

@@ -8,7 +8,7 @@
          point="org.eclipse.core.runtime.applications">
       <application>
          <run
-               class="org.netxms.nxmc.core.NXMCApplication">
+               class="org.netxms.ui.eclipse.console.NXMCApplication">
          </run>
       </application>
    </extension>
@@ -17,7 +17,7 @@
          point="org.eclipse.ui.perspectives">
       <perspective
             name="RCP Perspective"
-            class="org.netxms.nxmc.core.Perspective"
+            class="org.netxms.ui.eclipse.console.Perspective"
             id="org.netxms.nxmc.core.perspective">
       </perspective>
    </extension>

@@ -7,7 +7,7 @@
             name="Object Browser"
             allowMultiple="false"
             icon="icons/object_browser.png"
-            class="org.netxms.nxmc.objectbrowser.ObjectBrowser"
+            class="org.netxms.ui.eclipse.objectbrowser.ObjectBrowser"
             id="org.netxms.nxmc.objectbrowser.view.object_browser">
       </view>
    </extension>
@@ -36,7 +36,7 @@
 			   label="Object Browser"
 			   tooltip="Open Object Browser"
 			   icon="icons/object_browser.png"
-			   class="org.netxms.nxmc.objectbrowser.actions.OpenObjectBrowser"
+			   class="org.netxms.ui.eclipse.objectbrowser.actions.OpenObjectBrowser"
 			   definitionId="org.netxms.nxmc.objectbrowser.commands.open_object_browser">
 		   </action>
 	   </actionSet>
@@ -57,7 +57,7 @@
             id="org.netxms.nxmc.objectbrowser.actions.popup.object.bind"
             objectClass="org.netxms.client.NXCObject">
          <action
-               class="org.netxms.nxmc.objectbrowser.actions.BindObject"
+               class="org.netxms.ui.eclipse.objectbrowser.actions.BindObject"
                enablesFor="1"
                id="org.netxms.nxmc.objectbrowser.popupActions.BindObject"
                label="Bind..."

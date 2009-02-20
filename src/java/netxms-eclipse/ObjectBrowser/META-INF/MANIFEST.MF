@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Object Browser Plug-in
 Bundle-SymbolicName: org.netxms.nxmc.objectbrowser;singleton:=true
 Bundle-Version: 1.0.0
-Bundle-Activator: org.netxms.nxmc.objectbrowser.Activator
+Bundle-Activator: org.netxms.ui.eclipse.objectbrowser.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,

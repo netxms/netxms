@@ -12,7 +12,7 @@
             name="Server Configuration"
             icon="icons/server_config.png"
             category="org.netxms.nxmc.config"
-            class="org.netxms.nxmc.serverconfig.ServerConfigurationEditor"
+            class="org.netxms.ui.eclipse.serverconfig.ServerConfigurationEditor"
             id="org.netxms.nxmc.serverconfig.view.server_config">
       </view>
    </extension>
@@ -40,7 +40,7 @@
 			   label="Server Configuration"
 			   tooltip="Open server configuration editor"
 			   icon="icons/server_config.png"
-			   class="org.netxms.nxmc.serverconfig.actions.OpenServerConfig"
+			   class="org.netxms.ui.eclipse.serverconfig.actions.OpenServerConfig"
 			   definitionId="org.netxms.nxmc.serverconfig.commands.open_server_config">
 		   </action>
 	   </actionSet>
@@ -57,7 +57,7 @@
                path="additions">
          </menu>
          <action
-               class="org.netxms.nxmc.serverconfig.actions.DeleteVariable"
+               class="org.netxms.ui.eclipse.serverconfig.actions.DeleteVariable"
                id="org.netxms.nxmc.serverconfig.popupActions.DeleteVariable"
                label="Delete"
    		       icon="icons/delete_variable.png"
@@ -78,7 +78,7 @@
                path="additions">
          </menu>
          <action
-               class="org.netxms.nxmc.serverconfig.actions.EditVariable"
+               class="org.netxms.ui.eclipse.serverconfig.actions.EditVariable"
                id="org.netxms.nxmc.serverconfig.popupActions.EditVariable"
                label="Edit..."
    		       icon="icons/edit_variable.png"

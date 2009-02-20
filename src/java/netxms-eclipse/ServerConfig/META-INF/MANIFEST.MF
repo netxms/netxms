@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Server Configuration Plug-in
 Bundle-SymbolicName: org.netxms.nxmc.serverconfig;singleton:=true
 Bundle-Version: 1.0.0
-Bundle-Activator: org.netxms.nxmc.serverconfig.Activator
+Bundle-Activator: org.netxms.ui.eclipse.serverconfig.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,

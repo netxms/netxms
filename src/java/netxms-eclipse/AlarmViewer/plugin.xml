@@ -4,7 +4,7 @@
    <extension
          point="org.netxms.nxmc.core.objecttab">
       <tab
-            class="org.netxms.nxmc.alarmviewer.TabProvider">
+            class="org.netxms.ui.eclipse.alarmviewer.TabProvider">
       </tab>
    </extension>
 
@@ -14,7 +14,7 @@
             name="Alarm Browser"
             allowMultiple="false"
             icon="icons/alarm_browser.png"
-            class="org.netxms.nxmc.alarmviewer.AlarmBrowser"
+            class="org.netxms.ui.eclipse.alarmviewer.AlarmBrowser"
             id="org.netxms.nxmc.alarmviewer.view.alarm_browser">
       </view>
    </extension>
@@ -43,7 +43,7 @@
 			   label="Alarm Browser"
 			   tooltip="Open Alarm Browser"
 			   icon="icons/alarm_browser.png"
-			   class="org.netxms.nxmc.alarmviewer.actions.OpenAlarmBrowser"
+			   class="org.netxms.ui.eclipse.alarmviewer.actions.OpenAlarmBrowser"
 			   definitionId="org.netxms.nxmc.alarmviewer.commands.open_alarm_browser">
 		   </action>
 	   </actionSet>
@@ -64,7 +64,7 @@
             id="org.netxms.nxmc.alarmviewer.actions.popup.terminate_alarm"
             objectClass="org.netxms.client.NXCAlarm">
          <action
-               class="org.netxms.nxmc.alarmviewer.actions.TerminateAlarm"
+               class="org.netxms.ui.eclipse.alarmviewer.actions.TerminateAlarm"
                id="org.netxms.nxmc.alarmviewer.popupActions.TerminateAlarm"
                label="Terminate"
    		       icon="icons/terminated.png"
@@ -79,7 +79,7 @@
             id="org.netxms.nxmc.alarmviewer.actions.popup.acknowledge_alarm"
             objectClass="org.netxms.client.NXCAlarm">
          <action
-               class="org.netxms.nxmc.alarmviewer.actions.AcknowledgeAlarm"
+               class="org.netxms.ui.eclipse.alarmviewer.actions.AcknowledgeAlarm"
                id="org.netxms.nxmc.alarmviewer.popupActions.AcknowledgeAlarm"
                label="Acknowledge"
    		       icon="icons/acknowledged.png"
