@@ -15,7 +15,7 @@ import org.osgi.framework.BundleContext;
 public class Activator extends AbstractUIPlugin
 {
 	// The plug-in ID
-	public static final String PLUGIN_ID = "org.netxms.nxmc.alarmviewer";
+	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.alarmviewer";
 
 	// The shared instance
 	private static Activator plugin;

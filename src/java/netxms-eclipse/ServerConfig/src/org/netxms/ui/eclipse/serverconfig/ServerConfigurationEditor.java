@@ -29,7 +29,7 @@ import org.netxms.ui.eclipse.tools.SortableTableViewer;
 
 public class ServerConfigurationEditor extends ViewPart
 {
-	public static final String ID = "org.netxms.nxmc.serverconfig.view.server_config";
+	public static final String ID = "org.netxms.ui.eclipse.serverconfig.view.server_config";
 	public static final String JOB_FAMILY = "ServerConfigJob";
 		
 	private TableViewer viewer;

@@ -6,14 +6,14 @@
          point="org.eclipse.ui.views">
       <category
             name="Config"
-            id="org.netxms.nxmc.config">
+            id="org.netxms.ui.eclipse.config">
       </category>
       <view
             name="Server Configuration"
             icon="icons/server_config.png"
-            category="org.netxms.nxmc.config"
+            category="org.netxms.ui.eclipse.config"
             class="org.netxms.ui.eclipse.serverconfig.ServerConfigurationEditor"
-            id="org.netxms.nxmc.serverconfig.view.server_config">
+            id="org.netxms.ui.eclipse.serverconfig.view.server_config">
       </view>
    </extension>
    
@@ -21,27 +21,27 @@
          point="org.eclipse.ui.commands">
       <category
             name="Views"
-            id="org.netxms.nxmc.core.category.views">
+            id="org.netxms.ui.eclipse.console.category.views">
       </category>
       <command
             name="Server Configuration"
             description="Open server configuration editor"
-            categoryId="org.netxms.nxmc.core.category.views"
-            id="org.netxms.nxmc.serverconfig.commands.open_server_config">
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.serverconfig.commands.open_server_config">
       </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
-	   <actionSet id="org.netxms.nxmc.serverconfig.action_set"
+	   <actionSet id="org.netxms.ui.eclipse.serverconfig.action_set"
 		   label="Server Configuration"
 		   visible="true">
-		   <action id="org.netxms.nxmc.serverconfig.actions.open"
+		   <action id="org.netxms.ui.eclipse.serverconfig.actions.open"
 			   menubarPath="view/config/additions"
 			   label="Server Configuration"
 			   tooltip="Open server configuration editor"
 			   icon="icons/server_config.png"
 			   class="org.netxms.ui.eclipse.serverconfig.actions.OpenServerConfig"
-			   definitionId="org.netxms.nxmc.serverconfig.commands.open_server_config">
+			   definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_server_config">
 		   </action>
 	   </actionSet>
    </extension>
@@ -49,7 +49,7 @@
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="org.netxms.nxmc.serverconfig.actions.popup.delete_variable"
+            id="org.netxms.ui.eclipse.serverconfig.actions.popup.delete_variable"
             objectClass="org.netxms.client.NXCServerVariable">
          <menu
                id="org.netxms.nxmc.serverconfig.menu.variables"
@@ -58,10 +58,10 @@
          </menu>
          <action
                class="org.netxms.ui.eclipse.serverconfig.actions.DeleteVariable"
-               id="org.netxms.nxmc.serverconfig.popupActions.DeleteVariable"
+               id="org.netxms.ui.eclipse.serverconfig.popupActions.DeleteVariable"
                label="Delete"
    		       icon="icons/delete_variable.png"
-               menubarPath="org.netxms.nxmc.serverconfig.menu.variables"
+               menubarPath="org.netxms.ui.eclipse.serverconfig.menu.variables"
                enablesFor="+">
          </action>
       </objectContribution>
@@ -70,19 +70,19 @@
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="org.netxms.nxmc.serverconfig.actions.popup.edit_variable"
+            id="org.netxms.ui.eclipse.serverconfig.actions.popup.edit_variable"
             objectClass="org.netxms.client.NXCServerVariable">
          <menu
-               id="org.netxms.nxmc.serverconfig.menu.variables"
+               id="org.netxms.ui.eclipse.serverconfig.menu.variables"
                label="Edit..."
                path="additions">
          </menu>
          <action
                class="org.netxms.ui.eclipse.serverconfig.actions.EditVariable"
-               id="org.netxms.nxmc.serverconfig.popupActions.EditVariable"
+               id="org.netxms.ui.eclipse.serverconfig.popupActions.EditVariable"
                label="Edit..."
    		       icon="icons/edit_variable.png"
-               menubarPath="org.netxms.nxmc.serverconfig.menu.variables"
+               menubarPath="org.netxms.ui.eclipse.serverconfig.menu.variables"
                enablesFor="1">
          </action>
       </objectContribution>

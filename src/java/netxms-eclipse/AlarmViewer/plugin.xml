@@ -15,7 +15,7 @@
             allowMultiple="false"
             icon="icons/alarm_browser.png"
             class="org.netxms.ui.eclipse.alarmviewer.AlarmBrowser"
-            id="org.netxms.nxmc.alarmviewer.view.alarm_browser">
+            id="org.netxms.ui.eclipse.alarmviewer.view.alarm_browser">
       </view>
    </extension>
 
@@ -23,28 +23,28 @@
          point="org.eclipse.ui.commands">
       <category
             name="Views"
-            id="org.netxms.nxmc.core.category.views">
+            id="org.netxms.ui.eclipse.console.category.views">
       </category>
       <command
             name="Alarm Browser"
             description="Open Alarm Browser"
-            categoryId="org.netxms.nxmc.core.category.views"
-            id="org.netxms.nxmc.alarmviewer.commands.open_alarm_browser">
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.alarmviewer.commands.open_alarm_browser">
       </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
-	   <actionSet id="org.netxms.nxmc.alarmviewer.action_set"
+	   <actionSet id="org.netxms.ui.eclipse.alarmviewer.action_set"
 		   label="Alarm Browser"
 		   visible="true">
-		   <action id="org.netxms.nxmc.alarmviewer.actions.open"
+		   <action id="org.netxms.ui.eclipse.alarmviewer.actions.open"
 			   menubarPath="view/primary"
 			   toolbarPath="view"
 			   label="Alarm Browser"
 			   tooltip="Open Alarm Browser"
 			   icon="icons/alarm_browser.png"
 			   class="org.netxms.ui.eclipse.alarmviewer.actions.OpenAlarmBrowser"
-			   definitionId="org.netxms.nxmc.alarmviewer.commands.open_alarm_browser">
+			   definitionId="org.netxms.ui.eclipse.alarmviewer.commands.open_alarm_browser">
 		   </action>
 	   </actionSet>
    </extension>
@@ -52,7 +52,7 @@
    <extension
          point="org.eclipse.ui.bindings">
       <key
-            commandId="org.netxms.nxmc.alarmviewer.commands.open_alarm_browser"
+            commandId="org.netxms.ui.eclipse.alarmviewer.commands.open_alarm_browser"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="F8">
       </key>
@@ -61,11 +61,11 @@
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="org.netxms.nxmc.alarmviewer.actions.popup.terminate_alarm"
+            id="org.netxms.ui.eclipse.alarmviewer.actions.popup.terminate_alarm"
             objectClass="org.netxms.client.NXCAlarm">
          <action
                class="org.netxms.ui.eclipse.alarmviewer.actions.TerminateAlarm"
-               id="org.netxms.nxmc.alarmviewer.popupActions.TerminateAlarm"
+               id="org.netxms.ui.eclipse.alarmviewer.popupActions.TerminateAlarm"
                label="Terminate"
    		       icon="icons/terminated.png"
                menubarPath="additions">
@@ -76,11 +76,11 @@
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="org.netxms.nxmc.alarmviewer.actions.popup.acknowledge_alarm"
+            id="org.netxms.ui.eclipse.alarmviewer.actions.popup.acknowledge_alarm"
             objectClass="org.netxms.client.NXCAlarm">
          <action
                class="org.netxms.ui.eclipse.alarmviewer.actions.AcknowledgeAlarm"
-               id="org.netxms.nxmc.alarmviewer.popupActions.AcknowledgeAlarm"
+               id="org.netxms.ui.eclipse.alarmviewer.popupActions.AcknowledgeAlarm"
                label="Acknowledge"
    		       icon="icons/acknowledged.png"
                menubarPath="additions">

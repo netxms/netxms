@@ -16,7 +16,7 @@ import org.eclipse.ui.part.ViewPart;
  */
 public class AlarmBrowser extends ViewPart
 {
-	public static final String ID = "org.netxms.nxmc.alarmviewer.view.alarm_browser";
+	public static final String ID = "org.netxms.ui.eclipse.alarmviewer.view.alarm_browser";
 	
 	private AlarmView alarmView;
 

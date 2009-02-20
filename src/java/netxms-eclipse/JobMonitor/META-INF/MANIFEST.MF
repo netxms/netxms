@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Job Monitor Plug-in
-Bundle-SymbolicName: org.netxms.nxmc.jobmonitor; singleton:=true
+Bundle-SymbolicName: org.netxms.ui.eclipse.jobmonitor; singleton:=true
 Bundle-Version: 1.0.0
 Bundle-Activator: org.netxms.ui.eclipse.jobmonitor.Activator
 Bundle-Vendor: netxms.org

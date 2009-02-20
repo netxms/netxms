@@ -9,19 +9,19 @@
             allowMultiple="true"
             icon="icons/last_values.png"
             class="org.netxms.ui.eclipse.objectview.LastValuesBrowser"
-            id="org.netxms.nxmc.objectview.view.last_values">
+            id="org.netxms.ui.eclipse.objectview.view.last_values">
       </view>
    </extension>
 
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="org.netxms.nxmc.objectview.actions.popup.object.lastvalues"
+            id="org.netxms.ui.eclipse.objectview.actions.popup.object.lastvalues"
             objectClass="org.netxms.client.NXCNode">
          <action
                class="org.netxms.ui.eclipse.objectview.actions.ShowLastValues"
                enablesFor="1"
-               id="org.netxms.nxmc.objectview.popupActions.ShowLastValues"
+               id="org.netxms.ui.eclipse.objectview.popupActions.ShowLastValues"
                label="Last values"
                icon="icons/last_values.png"
                menubarPath="datacollection">

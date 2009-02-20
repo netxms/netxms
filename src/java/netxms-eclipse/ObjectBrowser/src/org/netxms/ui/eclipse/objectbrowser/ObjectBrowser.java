@@ -26,7 +26,7 @@ import org.netxms.ui.eclipse.console.extensionproviders.IActionConstants;
  */
 public class ObjectBrowser extends ViewPart
 {
-	public static final String ID = "org.netxms.nxmc.objectbrowser.view.object_browser";
+	public static final String ID = "org.netxms.ui.eclipse.objectbrowser.view.object_browser";
 	
 	private ObjectTree objectTree;
 

@@ -11,7 +11,7 @@ public class Activator extends AbstractUIPlugin
 {
 
 	// The plug-in ID
-	public static final String PLUGIN_ID = "org.netxms.nxmc.objectview";
+	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.objectview";
 
 	// The shared instance
 	private static Activator plugin;

@@ -8,7 +8,7 @@
             allowMultiple="false"
             icon="icons/object_browser.png"
             class="org.netxms.ui.eclipse.objectbrowser.ObjectBrowser"
-            id="org.netxms.nxmc.objectbrowser.view.object_browser">
+            id="org.netxms.ui.eclipse.objectbrowser.view.object_browser">
       </view>
    </extension>
 
@@ -16,28 +16,28 @@
          point="org.eclipse.ui.commands">
       <category
             name="Views"
-            id="org.netxms.nxmc.core.category.views">
+            id="org.netxms.ui.eclipse.console.category.views">
       </category>
       <command
             name="Object Browser"
             description="Open Object Browser"
-            categoryId="org.netxms.nxmc.core.category.views"
-            id="org.netxms.nxmc.objectbrowser.commands.open_object_browser">
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.objectbrowser.commands.open_object_browser">
       </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
-	   <actionSet id="org.netxms.nxmc.objectbrowser.action_set"
+	   <actionSet id="org.netxms.ui.eclipse.objectbrowser.action_set"
 		   label="Object Browser"
 		   visible="true">
-		   <action id="org.netxms.nxmc.objectbrowser.actions.open"
+		   <action id="org.netxms.ui.eclipse.objectbrowser.actions.open"
 			   menubarPath="view/primary"
 			   toolbarPath="view"
 			   label="Object Browser"
 			   tooltip="Open Object Browser"
 			   icon="icons/object_browser.png"
 			   class="org.netxms.ui.eclipse.objectbrowser.actions.OpenObjectBrowser"
-			   definitionId="org.netxms.nxmc.objectbrowser.commands.open_object_browser">
+			   definitionId="org.netxms.ui.eclipse.objectbrowser.commands.open_object_browser">
 		   </action>
 	   </actionSet>
    </extension>
@@ -45,7 +45,7 @@
    <extension
          point="org.eclipse.ui.bindings">
       <key
-            commandId="org.netxms.nxmc.objectbrowser.commands.open_object_browser"
+            commandId="org.netxms.ui.eclipse.objectbrowser.commands.open_object_browser"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="F3">
       </key>
@@ -54,12 +54,12 @@
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="org.netxms.nxmc.objectbrowser.actions.popup.object.bind"
+            id="org.netxms.ui.eclipse.objectbrowser.actions.popup.object.bind"
             objectClass="org.netxms.client.NXCObject">
          <action
                class="org.netxms.ui.eclipse.objectbrowser.actions.BindObject"
                enablesFor="1"
-               id="org.netxms.nxmc.objectbrowser.popupActions.BindObject"
+               id="org.netxms.ui.eclipse.objectbrowser.popupActions.BindObject"
                label="Bind..."
                menubarPath="objectmgmt">
          </action>

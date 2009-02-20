@@ -6,7 +6,7 @@ import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 
 public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 {
-	private static final String PERSPECTIVE_ID = "org.netxms.nxmc.core.perspective";
+	private static final String PERSPECTIVE_ID = "org.netxms.ui.eclipse.console.perspective";
 
 	public WorkbenchWindowAdvisor createWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer)
 	{

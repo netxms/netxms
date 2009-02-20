@@ -33,7 +33,7 @@ import org.eclipse.swt.SWT;
 
 public class JobMonitor extends ViewPart
 {
-	public static final String ID = "org.netxms.nxmc.jobmonitor.view.job_monitor";
+	public static final String ID = "org.netxms.ui.eclipse.jobmonitor.view.job_monitor";
 	
 	private TableViewer viewer;
 	private Action actionClearCompleted;

@@ -4,7 +4,7 @@
    <extension-point id="org.netxms.nxmc.core.objecttab" name="org.netxms.nxmc.core.objecttab" schema="schema/nxmc_core_objecttab.exsd"/>
 
    <extension
-         id="org.netxms.nxmc.core.application"
+         id="org.netxms.ui.eclipse.console.application"
          point="org.eclipse.core.runtime.applications">
       <application>
          <run
@@ -18,7 +18,7 @@
       <perspective
             name="RCP Perspective"
             class="org.netxms.ui.eclipse.console.Perspective"
-            id="org.netxms.nxmc.core.perspective">
+            id="org.netxms.ui.eclipse.console.perspective">
       </perspective>
    </extension>
 

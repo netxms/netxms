@@ -1,13 +1,13 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NetXMS Management Console
-Bundle-SymbolicName: org.netxms.nxmc.core;singleton:=true
+Bundle-SymbolicName: org.netxms.ui.eclipse.console;singleton:=true
 Bundle-Version: 1.0.0
 Bundle-Activator: org.netxms.ui.eclipse.console.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
- org.netxms.nxmc.library;bundle-version="1.0.0",
+ org.netxms.ui.eclipse.library;bundle-version="1.0.0",
  org.eclipse.core.resources
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

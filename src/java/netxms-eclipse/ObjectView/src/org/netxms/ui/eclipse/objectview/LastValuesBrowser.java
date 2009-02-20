@@ -22,7 +22,7 @@ import org.netxms.ui.eclipse.console.extensionproviders.NXMCSharedData;
  */
 public class LastValuesBrowser extends ViewPart
 {
-	public static final String ID = "org.netxms.nxmc.objectview.view.last_values";
+	public static final String ID = "org.netxms.ui.eclipse.objectview.view.last_values";
 	
 	private NXCSession session;
 	private NXCNode node;

@@ -6,14 +6,14 @@
          point="org.eclipse.ui.views">
       <category
             name="Tools"
-            id="org.netxms.nxmc.tools">
+            id="org.netxms.ui.eclipse.tools">
       </category>
       <view
             name="Job Monitor"
             icon="icons/job_monitor.png"
-            category="org.netxms.nxmc.tools"
+            category="org.netxms.ui.eclipse.tools"
             class="org.netxms.ui.eclipse.jobmonitor.JobMonitor"
-            id="org.netxms.nxmc.jobmonitor.view.job_monitor">
+            id="org.netxms.ui.eclipse.jobmonitor.view.job_monitor">
       </view>
    </extension>
    
@@ -21,27 +21,27 @@
          point="org.eclipse.ui.commands">
       <category
             name="Views"
-            id="org.netxms.nxmc.core.category.views">
+            id="org.netxms.ui.eclipse.console.category.views">
       </category>
       <command
             name="Job Monitor"
             description="Open Job Monitor"
-            categoryId="org.netxms.nxmc.core.category.views"
-            id="org.netxms.nxmc.jobmonitor.commands.open_job_monitor">
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.jobmonitor.commands.open_job_monitor">
       </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
-	   <actionSet id="org.netxms.nxmc.jobmonitor.action_set"
+	   <actionSet id="org.netxms.ui.eclipse.jobmonitor.action_set"
 		   label="Job Monitor"
 		   visible="true">
-		   <action id="org.netxms.nxmc.jobmonitor.actions.open"
+		   <action id="org.netxms.ui.eclipse.jobmonitor.actions.open"
 			   menubarPath="view/tools"
 			   label="Job Monitor"
 			   tooltip="Open Job Monitor"
 			   icon="icons/job_monitor.png"
 			   class="org.netxms.ui.eclipse.jobmonitor.actions.OpenJobMonitor"
-			   definitionId="org.netxms.nxmc.jobmonitor.commands.open_job_monitor">
+			   definitionId="org.netxms.ui.eclipse.jobmonitor.commands.open_job_monitor">
 		   </action>
 	   </actionSet>
    </extension>
