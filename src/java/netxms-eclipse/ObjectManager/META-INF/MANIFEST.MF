@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: NXMC Object Viewer Plug-in
-Bundle-SymbolicName: org.netxms.ui.eclipse.objectview;singleton:=true
+Bundle-Name: NXMC Basic Object Management Plug-in
+Bundle-SymbolicName: org.netxms.ui.eclipse.objectmanager;singleton:=true
 Bundle-Version: 1.0.0
-Bundle-Activator: org.netxms.ui.eclipse.objectview.Activator
+Bundle-Activator: org.netxms.ui.eclipse.objectmanager.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,

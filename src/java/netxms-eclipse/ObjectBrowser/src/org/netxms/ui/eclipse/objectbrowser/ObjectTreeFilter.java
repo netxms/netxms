@@ -9,7 +9,7 @@ import java.util.Map;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.NXCObject;
-import org.netxms.ui.eclipse.console.extensionproviders.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
  * @author Victor
@@ -71,7 +71,7 @@ public class ObjectTreeFilter extends ViewerFilter
 		{
 			if (doFullSearch)
 			{
-				NXCObject[] fullList = NXMCSharedData.getSession().getAllObjects();
+				NXCObject[] fullList = NXMCSharedData.getInstance().getSession().getAllObjects();
 				objectList = new HashMap<Long, NXCObject>();
 				for(int i = 0; i < fullList.length; i++)
 					if (fullList[i].getObjectName().toLowerCase().startsWith(filterString))

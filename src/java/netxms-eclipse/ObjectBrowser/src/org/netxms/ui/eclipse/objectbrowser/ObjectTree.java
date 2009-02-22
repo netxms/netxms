@@ -24,7 +24,7 @@ import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.console.extensionproviders.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
  * @author victor
@@ -54,7 +54,7 @@ public class ObjectTree extends Composite
 		FormLayout formLayout = new FormLayout();
 		setLayout(formLayout);
 		
-		NXCSession session = NXMCSharedData.getSession();
+		NXCSession session = NXMCSharedData.getInstance().getSession();
 
 		objectTree = new TreeViewer(this, SWT.VIRTUAL | SWT.SINGLE | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
 		objectTree.setContentProvider(new ObjectTreeContentProvider());

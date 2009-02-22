@@ -7,7 +7,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.NXCAlarm;
 import org.netxms.client.NXCObject;
-import org.netxms.ui.eclipse.console.extensionproviders.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
  * @author victor
@@ -35,7 +35,7 @@ public class AlarmListFilter extends ViewerFilter
 		if ((rootObject == 0) || (rootObject == ((NXCAlarm)element).getSourceObjectId()))
 			return true;	// No filtering by object ID or root object is a source
 		
-		NXCObject object = NXMCSharedData.getSession().findObjectById(((NXCAlarm)element).getSourceObjectId());
+		NXCObject object = NXMCSharedData.getInstance().getSession().findObjectById(((NXCAlarm)element).getSourceObjectId());
 		if (object != null)
 			return object.isParent(rootObject);
 		return false;

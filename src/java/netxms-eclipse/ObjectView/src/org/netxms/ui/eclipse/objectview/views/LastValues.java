@@ -14,8 +14,8 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCNode;
 import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.console.extensionproviders.NXMCSharedData;
 import org.netxms.ui.eclipse.objectview.LastValuesView;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
  * @author Victor
@@ -45,7 +45,7 @@ public class LastValues extends ViewPart
 	{
 		super.init(site);
 		
-		session = NXMCSharedData.getSession();
+		session = NXMCSharedData.getInstance().getSession();
 		NXCObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
 		node = ((obj != null) && (obj instanceof NXCNode)) ? (NXCNode)obj : null;
 		setPartName("Last Values - " + ((node != null) ? node.getObjectName() : "<error>"));

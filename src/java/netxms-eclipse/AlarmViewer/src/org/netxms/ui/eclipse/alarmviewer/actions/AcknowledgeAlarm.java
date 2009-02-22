@@ -17,7 +17,7 @@ import org.netxms.client.NXCAlarm;
 import org.netxms.client.NXCException;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.AlarmView;
-import org.netxms.ui.eclipse.console.extensionproviders.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 
 /**
@@ -50,7 +50,7 @@ public class AcknowledgeAlarm implements IObjectActionDelegate
 			{
 				for(int i = 0; i < selection.length; i++)
 					if (selection[i] instanceof NXCAlarm)
-						NXMCSharedData.getSession().acknowledgeAlarm(((NXCAlarm)selection[i]).getId());
+						NXMCSharedData.getInstance().getSession().acknowledgeAlarm(((NXCAlarm)selection[i]).getId());
 				status = Status.OK_STATUS;
 			}
 			catch(Exception e)

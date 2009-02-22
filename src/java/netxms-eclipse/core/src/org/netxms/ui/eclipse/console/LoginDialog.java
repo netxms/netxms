@@ -24,7 +24,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.netxms.ui.eclipse.console.extensionproviders.IUIConstants;
+import org.netxms.ui.eclipse.shared.IUIConstants;
 
 /**
  * @author Victor

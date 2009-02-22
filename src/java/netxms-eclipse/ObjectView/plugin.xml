@@ -8,7 +8,7 @@
             name="Last Values"
             allowMultiple="true"
             icon="icons/last_values.png"
-            class="org.netxms.ui.eclipse.objectview.LastValuesBrowser"
+            class="org.netxms.ui.eclipse.objectview.views.LastValues"
             id="org.netxms.ui.eclipse.objectview.view.last_values">
       </view>
    </extension>

@@ -20,7 +20,7 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCServerVariable;
 import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.console.extensionproviders.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.RefreshAction;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 
@@ -199,7 +199,7 @@ public class ServerConfigurationEditor extends ViewPart
 		contributeToActionBars();
 		createPopupMenu();
 		
-		session = NXMCSharedData.getSession();
+		session = NXMCSharedData.getInstance().getSession();
 
 		Job job = new RefreshJob();
 		IWorkbenchSiteProgressService siteService =
@@ -317,7 +317,7 @@ public class ServerConfigurationEditor extends ViewPart
 					
 					try
 					{
-						NXMCSharedData.getSession().setServerVariable(dlg.getVarName(), dlg.getVarValue());
+						NXMCSharedData.getInstance().getSession().setServerVariable(dlg.getVarName(), dlg.getVarValue());
 						actionRefresh.run();
 						status = Status.OK_STATUS;
 					}

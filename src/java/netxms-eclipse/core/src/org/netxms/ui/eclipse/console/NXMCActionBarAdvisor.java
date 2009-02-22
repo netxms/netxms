@@ -17,7 +17,7 @@ import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
-import org.netxms.ui.eclipse.console.extensionproviders.IActionConstants;
+import org.netxms.ui.eclipse.shared.IActionConstants;
 
 public class NXMCActionBarAdvisor extends ActionBarAdvisor
 {

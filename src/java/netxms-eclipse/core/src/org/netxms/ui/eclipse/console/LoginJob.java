@@ -8,6 +8,7 @@ import java.lang.reflect.InvocationTargetException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.netxms.client.*;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 
 /**
@@ -47,7 +48,7 @@ public class LoginJob implements IRunnableWithProgress
 			session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS);
 			monitor.worked(5);
 			
-			Activator.getDefault().setSession(session);
+			NXMCSharedData.getInstance().setSession(session);
 		}
 		catch(IOException e)
 		{

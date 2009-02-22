@@ -29,7 +29,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.console.extensionproviders.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 
 /**
@@ -58,7 +58,7 @@ public class AlarmView extends Composite
 	public AlarmView(ViewPart viewPart, Composite parent, int style)
 	{
 		super(parent, style);
-		session = NXMCSharedData.getSession();
+		session = NXMCSharedData.getInstance().getSession();
 		this.viewPart = viewPart;		
 		
 		// Setup table columns

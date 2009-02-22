@@ -10,7 +10,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.NXCAlarm;
 import org.netxms.client.NXCObject;
-import org.netxms.ui.eclipse.console.extensionproviders.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
  * @author victor
@@ -55,8 +55,8 @@ public class AlarmComparator extends ViewerComparator
 				rc = compareNumbers(((NXCAlarm)e1).getState(), ((NXCAlarm)e2).getState());
 				break;
 			case AlarmView.COLUMN_SOURCE:
-				NXCObject obj1 = NXMCSharedData.getSession().findObjectById(((NXCAlarm)e1).getSourceObjectId());
-				NXCObject obj2 = NXMCSharedData.getSession().findObjectById(((NXCAlarm)e2).getSourceObjectId());
+				NXCObject obj1 = NXMCSharedData.getInstance().getSession().findObjectById(((NXCAlarm)e1).getSourceObjectId());
+				NXCObject obj2 = NXMCSharedData.getInstance().getSession().findObjectById(((NXCAlarm)e2).getSourceObjectId());
 				String name1 = (obj1 != null) ? obj1.getObjectName() : "<unknown>";
 				String name2 = (obj2 != null) ? obj2.getObjectName() : "<unknown>";
 				rc = name1.compareToIgnoreCase(name2);

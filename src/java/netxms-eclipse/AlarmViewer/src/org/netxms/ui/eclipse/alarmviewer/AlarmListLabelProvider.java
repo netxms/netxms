@@ -10,7 +10,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCAlarm;
 import org.netxms.client.NXCObject;
-import org.netxms.ui.eclipse.console.extensionproviders.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 
 /**
@@ -69,7 +69,7 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 			case AlarmView.COLUMN_STATE:
 				return stateText[((NXCAlarm)element).getState()];
 			case AlarmView.COLUMN_SOURCE:
-				NXCObject object = NXMCSharedData.getSession().findObjectById(((NXCAlarm)element).getSourceObjectId());
+				NXCObject object = NXMCSharedData.getInstance().getSession().findObjectById(((NXCAlarm)element).getSourceObjectId());
 				return (object != null) ? object.getObjectName() : null;
 			case AlarmView.COLUMN_MESSAGE:
 				return ((NXCAlarm)element).getMessage();

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.console.extensionproviders;
+package org.netxms.ui.eclipse.shared;
 
 /**
  * @author Victor

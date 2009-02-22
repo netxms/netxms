@@ -16,10 +16,10 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCServerVariable;
-import org.netxms.ui.eclipse.console.extensionproviders.NXMCSharedData;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.ServerConfigurationEditor;
 import org.netxms.ui.eclipse.serverconfig.VariableEditDialog;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
  * @author victor
@@ -53,7 +53,7 @@ public class EditVariable implements IObjectActionDelegate
 						
 						try
 						{
-							NXMCSharedData.getSession().setServerVariable(dlg.getVarName(), dlg.getVarValue());
+							NXMCSharedData.getInstance().getSession().setServerVariable(dlg.getVarName(), dlg.getVarValue());
 							if (wbPart instanceof ServerConfigurationEditor)
 								((ServerConfigurationEditor)wbPart).refreshVariablesList();
 							status = Status.OK_STATUS;

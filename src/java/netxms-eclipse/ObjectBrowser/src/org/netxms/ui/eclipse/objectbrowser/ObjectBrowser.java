@@ -16,8 +16,9 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.ui.eclipse.console.extensionproviders.IActionConstants;
+import org.netxms.ui.eclipse.shared.IActionConstants;
 
 
 /**
@@ -78,6 +79,7 @@ public class ObjectBrowser extends ViewPart
 		mgr.add(new GroupMarker(IActionConstants.MB_DATA_COLLECTION));
 		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
+		mgr.add(new PropertyDialogAction(getSite(), objectTree.getTreeViewer()));
 	}
 
 	

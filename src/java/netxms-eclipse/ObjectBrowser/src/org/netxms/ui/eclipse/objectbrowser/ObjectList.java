@@ -24,7 +24,7 @@ import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.console.extensionproviders.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
  * @author Victor
@@ -54,7 +54,7 @@ public class ObjectList extends Composite
 		FormLayout formLayout = new FormLayout();
 		setLayout(formLayout);
 		
-		NXCSession session = NXMCSharedData.getSession();
+		NXCSession session = NXMCSharedData.getInstance().getSession();
 
 		objectList = new TableViewer(this, SWT.SINGLE | SWT.FULL_SELECTION | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
 		objectList.setContentProvider(new ArrayContentProvider());
@@ -106,7 +106,7 @@ public class ObjectList extends Composite
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							objectList.setInput(NXMCSharedData.getSession().getAllObjects());
+							objectList.setInput(NXMCSharedData.getInstance().getSession().getAllObjects());
 							objectList.refresh();
 							return Status.OK_STATUS;
 						}
