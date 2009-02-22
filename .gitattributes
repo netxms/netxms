@@ -368,10 +368,10 @@ src/java/netxms-eclipse/ObjectView/icons/last_values.png -text
 src/java/netxms-eclipse/ObjectView/icons/unsupported.ico -text
 src/java/netxms-eclipse/ObjectView/plugin.xml -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/Activator.java -text
-src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/LastValuesBrowser.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/LastValuesLabelProvider.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/LastValuesView.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/actions/ShowLastValues.java -text
+src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/views/LastValues.java -text
 src/java/netxms-eclipse/ServerConfig/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ServerConfig/build.properties -text
 src/java/netxms-eclipse/ServerConfig/icons/add_variable.png -text

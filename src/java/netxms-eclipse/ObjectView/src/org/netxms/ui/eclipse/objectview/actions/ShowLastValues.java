@@ -13,7 +13,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.NXCNode;
-import org.netxms.ui.eclipse.objectview.LastValuesBrowser;
+import org.netxms.ui.eclipse.objectview.views.LastValues;
 
 /**
  * @author Victor
@@ -43,7 +43,7 @@ public class ShowLastValues implements IObjectActionDelegate
 		{
 			try
 			{
-				window.getActivePage().showView(LastValuesBrowser.ID, Long.toString(node.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
+				window.getActivePage().showView(LastValues.ID, Long.toString(node.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
 			}
 			catch(PartInitException e)
 			{

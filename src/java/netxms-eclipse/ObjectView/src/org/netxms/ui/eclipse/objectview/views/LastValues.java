@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.objectview;
+package org.netxms.ui.eclipse.objectview.views;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
@@ -15,12 +15,13 @@ import org.netxms.client.NXCNode;
 import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.extensionproviders.NXMCSharedData;
+import org.netxms.ui.eclipse.objectview.LastValuesView;
 
 /**
  * @author Victor
  *
  */
-public class LastValuesBrowser extends ViewPart
+public class LastValues extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.objectview.view.last_values";
 	
@@ -31,7 +32,7 @@ public class LastValuesBrowser extends ViewPart
 	/**
 	 * 
 	 */
-	public LastValuesBrowser()
+	public LastValues()
 	{
 		// TODO Auto-generated constructor stub
 	}
