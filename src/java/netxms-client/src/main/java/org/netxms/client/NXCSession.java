@@ -679,6 +679,7 @@ public class NXCSession
 	
 	/**
 	 * Synchronizes NetXMS objects between server and client.
+	 * After successful sync, subscribe client to object change notifications.
 	 * 
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -692,6 +693,7 @@ public class NXCSession
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 		waitForSync(syncObjects, commandTimeout * 10);
+		subscribe(CHANNEL_OBJECTS);
 	}
 	
 	
@@ -986,5 +988,95 @@ public class NXCSession
 			list[i] = new NXCDCIValue(msg, base);
 		
 		return list;
+	}
+	
+	
+	/**
+	 * Modify object (generic interface, in most cases wrapper functions should be used instead)
+	 */
+	public void modifyObject(final NXCObjectModificationData data) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_OBJECT);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)data.getObjectId());
+		
+		long flags = data.getFlags();
+		if (flags == 0)
+			return;	// Nothing to change
+		
+		// Object name
+		if ((flags & NXCObjectModificationData.MODIFY_NAME) != 0)
+			msg.setVariable(NXCPCodes.VID_OBJECT_NAME, data.getName());
+
+		// Access control list
+		if ((flags & NXCObjectModificationData.MODIFY_ACL) != 0)
+		{
+			final NXCAccessListElement[] acl = data.getACL();
+			msg.setVariableInt32(NXCPCodes.VID_ACL_SIZE, acl.length);
+			msg.setVariableInt16(NXCPCodes.VID_INHERIT_RIGHTS, data.isInheritAccessRights() ? 1 : 0);
+			
+			long id1 = NXCPCodes.VID_ACL_USER_BASE;
+			long id2 = NXCPCodes.VID_ACL_RIGHTS_BASE;
+			for(int i = 0; i < acl.length; i++)
+			{
+				msg.setVariableInt32(id1++, acl[i].getUserId());
+				msg.setVariableInt32(id2++, acl[i].getAccessRights());
+			}
+		}
+		
+		// Custom attributes
+		if ((flags & NXCObjectModificationData.MODIFY_CUSTOM_ATTRIBUTES) != 0)
+		{
+			Map<String, String> attrList = data.getCustomAttributes();
+			Iterator<String> it = attrList.keySet().iterator();
+			long id = NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE;
+			int count = 0;
+			while(it.hasNext())
+			{
+				String key = it.next();
+				String value = attrList.get(key);
+				msg.setVariable(id++, key);
+				msg.setVariable(id++, value);
+				count++;
+			}
+			msg.setVariableInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES, count);
+		}
+
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	
+	/**
+	 * Change object's name (wrapper for modifyObject())
+	 */
+	public void setObjectName(final long objectId, final String name) throws IOException, NXCException
+	{
+		NXCObjectModificationData data = new NXCObjectModificationData(objectId);
+		data.setName(name);
+		modifyObject(data);
+	}
+	
+	
+	/**
+	 * Change object's custom attributes
+	 */
+	public void setObjectCustomAttributes(final long objectId, final Map<String, String> attrList) throws IOException, NXCException
+	{
+		NXCObjectModificationData data = new NXCObjectModificationData(objectId);
+		data.setCustomAttributes(attrList);
+		modifyObject(data);
+	}
+	
+	
+	/**
+	 * Change object's ACL
+	 */
+	public void setObjectACL(final long objectId, final NXCAccessListElement[] acl, final boolean inheritAccessRights) 
+		throws IOException, NXCException
+	{
+		NXCObjectModificationData data = new NXCObjectModificationData(objectId);
+		data.setACL(acl);
+		data.setInheritAccessRights(inheritAccessRights);
+		modifyObject(data);
 	}
 }

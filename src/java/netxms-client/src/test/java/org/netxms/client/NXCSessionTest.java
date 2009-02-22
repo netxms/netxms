@@ -148,4 +148,30 @@ public class NXCSessionTest extends TestCase
 		
 		session.disconnect();
 	}
+
+	public void testSetObjectName() throws Exception
+	{
+		NXCSession session = new NXCSession(serverAddress, loginName, password);
+		session.connect();
+		
+		session.syncObjects();
+		
+		NXCObject object = session.findObjectById(1);
+		assertNotNull(object);
+		
+		session.setObjectName(1, "test name");
+		Thread.sleep(1000);	// Object update should be received from server
+		object = session.findObjectById(1);
+		assertNotNull(object);
+		assertEquals("test name", object.getObjectName());
+		
+		session.setObjectName(1, "Entire Network");
+		Thread.sleep(1000);	// Object update should be received from server
+		object = session.findObjectById(1);
+		assertNotNull(object);
+		assertEquals("Entire Network", object.getObjectName());
+		
+		session.disconnect();
+	}
+	
 }

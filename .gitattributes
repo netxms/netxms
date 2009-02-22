@@ -292,6 +292,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/NXCListener.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCNode.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCNotification.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCObject.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/NXCObjectModificationData.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCServerVariable.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCServiceRoot.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCSession.java -text
