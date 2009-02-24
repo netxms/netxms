@@ -155,6 +155,8 @@ static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
 static THREAD m_thListener = INVALID_THREAD_HANDLE;
 static THREAD m_thTrapSender = INVALID_THREAD_HANDLE;
 static char m_szProcessToWait[MAX_PATH] = "";
+static DWORD m_dwMaxLogSize = 16384 * 1024;
+static DWORD m_dwLogHistorySize = 4;
 
 #if defined(_WIN32) || defined(_NETWARE)
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
@@ -187,8 +189,10 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "ListenAddress", CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress },
    { "ListenPort", CT_WORD, 0, 0, 0, 0, &g_wListenPort },
    { "LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile },
+   { "LogHistorySize", CT_LONG, 0, 0, 0, 0, &m_dwLogHistorySize },
    { "LogUnresolvedSymbols", CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags },
    { "MasterServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList },
+   { "MaxLogSize", CT_LONG, 0, 0, 0, 0, &m_dwMaxLogSize },
    { "MaxSessions", CT_LONG, 0, 0, 0, 0, &g_dwMaxSessions },
    { "PlatformSuffix", CT_STRING, 0, 0, MAX_PSUFFIX_LENGTH, 0, g_szPlatformSuffix },
    { "RequireAuthentication", CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags },
@@ -556,6 +560,12 @@ BOOL Initialize(void)
 #endif
 
    // Open log file
+	if (!(g_dwFlags & AF_USE_SYSLOG))
+	{
+		if (!nxlog_set_rotation_policy((int)m_dwMaxLogSize, (int)m_dwLogHistorySize))
+			if (!(g_dwFlags & AF_DAEMON))
+				printf("WARNING: cannot set log rotation policy; using default values\n");
+	}
    nxlog_open((g_dwFlags & AF_USE_SYSLOG) ? NXAGENTD_SYSLOG_NAME : g_szLogFile,
 	           ((g_dwFlags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) |
 				  ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),

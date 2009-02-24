@@ -655,6 +655,8 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, DWORD flags, const TC
                                      unsigned int msgCount, const TCHAR **messages);
 void LIBNETXMS_EXPORTABLE nxlog_close(void);
 void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format, ...);
+BOOL LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int maxLogSize, int historySize);
+BOOL LIBNETXMS_EXPORTABLE nxlog_rotate();
 
 #ifdef __cplusplus
 }

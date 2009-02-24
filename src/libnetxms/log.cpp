@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -39,9 +39,109 @@ static HMODULE m_msgModuleHandle = NULL;
 static unsigned int m_numMessages;
 static const TCHAR **m_messages;
 #endif
+static TCHAR m_logFileName[MAX_PATH] = _T("");
 static FILE *m_logFileHandle = NULL;
 static MUTEX m_mutexLogAccess = INVALID_MUTEX_HANDLE;
 static DWORD m_flags = 0;
+static int m_maxLogSize = 16384 * 1024;	// 16 MB
+static int m_logHistorySize = 4;		// Keep up 4 previous log files
+
+
+//
+// Set log rotation policy
+// Setting log size to 0 disables log rotation
+//
+
+BOOL LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int maxLogSize, int historySize)
+{
+	// Validate parameters
+	if (((maxLogSize != 0) && (maxLogSize < 1024)) || (historySize < 0) || (historySize > 9))
+		return FALSE;
+
+	m_maxLogSize = maxLogSize;
+	m_logHistorySize = historySize;
+
+	return TRUE;
+}
+
+
+//
+// Rotate log
+//
+
+static BOOL RotateLog(BOOL needLock)
+{
+	int i;
+	TCHAR oldName[MAX_PATH], newName[MAX_PATH];
+
+	if (m_flags & NXLOG_USE_SYSLOG)
+		return FALSE;	// Cannot rotate system logs
+
+	if (needLock)
+		MutexLock(m_mutexLogAccess, INFINITE);
+
+	if ((m_logFileHandle != NULL) && (m_flags & NXLOG_IS_OPEN))
+	{
+		fclose(m_logFileHandle);
+		m_flags &= ~NXLOG_IS_OPEN;
+	}
+
+	// Delete old files
+	for(i = 9; i >= m_logHistorySize; i--)
+	{
+		_sntprintf(oldName, MAX_PATH, _T("%s.%d"), m_logFileName, i);
+		_tunlink(oldName);
+	}
+
+	// Shift file names
+	for(; i >= 0; i--)
+	{
+		_sntprintf(oldName, MAX_PATH, _T("%s.%d"), m_logFileName, i);
+		_sntprintf(newName, MAX_PATH, _T("%s.%d"), m_logFileName, i + 1);
+		_trename(oldName, newName);
+	}
+
+	// Rename current log to name.0
+	_sntprintf(newName, MAX_PATH, _T("%s.0"), m_logFileName);
+	_trename(m_logFileName, newName);
+
+	// Reopen log
+   m_logFileHandle = _tfopen(m_logFileName, _T("w"));
+   if (m_logFileHandle != NULL)
+   {
+		time_t t;
+      struct tm *loc;
+#if HAVE_LOCALTIME_R
+      struct tm ltmBuffer;
+#endif
+		TCHAR buffer[32];
+
+		m_flags |= NXLOG_IS_OPEN;
+      t = time(NULL);
+#if HAVE_LOCALTIME_R
+      loc = localtime_r(&t, &ltmBuffer);
+#else
+      loc = localtime(&t);
+#endif
+      _tcsftime(buffer, 32, _T("%d-%b-%Y %H:%M:%S"), loc);
+      _ftprintf(m_logFileHandle, _T("[%s] Log file truncated.\n"), buffer);
+	}
+
+	if (needLock)
+		MutexUnlock(m_mutexLogAccess);
+
+	return (m_flags & NXLOG_IS_OPEN) ? TRUE : FALSE;
+}
+
+
+//
+// API for application to force log rotation
+//
+
+BOOL LIBNETXMS_EXPORTABLE nxlog_rotate()
+{
+	return RotateLog(TRUE);
+}
 
 
 //
@@ -87,6 +187,7 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, DWORD flags,
 #endif
       time_t t;
 
+		nx_strncpy(m_logFileName, logName, MAX_PATH);
       m_logFileHandle = _tfopen(logName, _T("a"));
       if (m_logFileHandle != NULL)
       {
@@ -165,6 +266,16 @@ static void WriteLogToFile(TCHAR *message)
 	}
    if (m_flags & NXLOG_PRINT_TO_STDOUT)
       _tprintf(_T("%s %s"), buffer, message);
+
+	// Check log size
+	if (m_maxLogSize != 0)
+	{
+		struct stat st;
+
+		fstat(fileno(m_logFileHandle), &st);
+		if (st.st_size >= m_maxLogSize)
+			RotateLog(FALSE);
+	}
 
    MutexUnlock(m_mutexLogAccess);
 }
