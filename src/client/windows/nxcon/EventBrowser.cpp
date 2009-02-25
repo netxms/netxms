@@ -152,7 +152,8 @@ void CEventBrowser::AddEvent(NXC_EVENT *pEvent, BOOL bAppend)
    struct tm *ptm;
    TCHAR szBuffer[64];
 
-   ptm = localtime((const time_t *)&pEvent->dwTimeStamp);
+	time_t t = (time_t)pEvent->dwTimeStamp;
+   ptm = localtime(&t);
    _tcsftime(szBuffer, 32, _T("%d-%b-%Y %H:%M:%S"), ptm);
    iIdx = m_wndListCtrl.InsertItem(bAppend ? 0x7FFFFFFF : 0, szBuffer, pEvent->dwSeverity);
    if (iIdx != -1)
