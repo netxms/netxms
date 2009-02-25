@@ -351,21 +351,22 @@ NXC_OBJECT_TOOL *g_pObjectToolList = NULL;
 // Configuration file keywords
 //
 
-char g_szConfigKeywords[] = "Action ControlServers EnableActions EnabledCiphers "
+char g_szConfigKeywords[] = "Action ActionShellExec ControlServers EnableActions EnabledCiphers "
                             "EnableProxy EnableSNMPProxy EnableSubagentAutoload "
-									 "ExecTimeout ExternalParameter FileStore ListenPort "
-									 "LogFile LogUnresolvedSymbols MasterServers MaxSessions "
+									 "ExecTimeout ExternalParameter ExternalParameterShellExec "
+									 "FileStore ListenAddress ListenPort LogFile LogHistorySize"
+									 "LogUnresolvedSymbols MasterServers MaxLogSize MaxSessions "
                             "PlatformSuffix RequireAuthentication "
                             "RequireEncryption Servers SessionIdleTimeout "
-                            "SharedSecret StartupDelay SubAgent";
+                            "SharedSecret StartupDelay SubAgent WaitForProcess";
 
 
 //
 // Script keywords
 //
 
-char g_szScriptKeywords[] = "break continue do else exit for if ilike "
-                            "int32 int64 like NULL print real return "
+char g_szScriptKeywords[] = "break continue do else exit for if ilike imatch "
+                            "int32 int64 like match NULL print println real return "
                             "string sub typeof uint32 uint64 use while";
 
 
