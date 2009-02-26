@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nms_events.h
+** File: nms_events.h
 **
 **/
 
@@ -61,6 +61,7 @@ private:
    DWORD m_dwSeverity;
    DWORD m_dwFlags;
    DWORD m_dwSource;
+	TCHAR m_szName[MAX_EVENT_NAME];
    TCHAR *m_pszMessageText;
    TCHAR *m_pszMessageTemplate;
    DWORD m_dwNumParameters;
@@ -74,24 +75,25 @@ public:
    Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, const TCHAR *pszUserTag, const char *szFormat, va_list args);
    ~Event();
 
-   QWORD Id(void) { return m_qwId; }
-   DWORD Code(void) { return m_dwCode; }
-   DWORD Severity(void) { return m_dwSeverity; }
-   DWORD Flags(void) { return m_dwFlags; }
-   DWORD SourceId(void) { return m_dwSource; }
-   const char *Message(void) { return m_pszMessageText; }
-   const char *UserTag(void) { return m_pszUserTag; }
-   time_t TimeStamp(void) { return m_tTimeStamp; }
+   QWORD Id() { return m_qwId; }
+   DWORD Code() { return m_dwCode; }
+   DWORD Severity() { return m_dwSeverity; }
+   DWORD Flags() { return m_dwFlags; }
+   DWORD SourceId() { return m_dwSource; }
+	const TCHAR *Name() { return m_szName; }
+   const TCHAR *Message() { return m_pszMessageText; }
+   const TCHAR *UserTag() { return m_pszUserTag; }
+   time_t TimeStamp() { return m_tTimeStamp; }
    
-   QWORD GetRootId(void) { return m_qwRootId; }
+   QWORD GetRootId() { return m_qwRootId; }
    void SetRootId(QWORD qwId) { m_qwRootId = qwId; }
 
    void PrepareMessage(CSCPMessage *pMsg);
 
-   void ExpandMessageText(void);
+   void ExpandMessageText();
    TCHAR *ExpandText(TCHAR *szTemplate, TCHAR *pszAlarmMsg = NULL);
 
-   DWORD GetParametersCount(void) { return m_dwNumParameters; }
+   DWORD GetParametersCount() { return m_dwNumParameters; }
    char *GetParameter(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? m_ppszParameters[dwIndex] : NULL; }
    DWORD GetParameterAsULong(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? _tcstoul(m_ppszParameters[dwIndex], NULL, 0) : 0; }
    QWORD GetParameterAsUInt64(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? _tcstoull(m_ppszParameters[dwIndex], NULL, 0) : 0; }

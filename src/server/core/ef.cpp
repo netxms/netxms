@@ -50,7 +50,7 @@ BOOL EF_ProcessMessage(ISCSession *session, CSCPMessage *request, CSCPMessage *r
 {
 	int i, numArgs;
 	DWORD code, id;
-	TCHAR userTag[MAX_USERTAG_LENGTH], *argList[32];
+	TCHAR userTag[MAX_USERTAG_LENGTH], *argList[32], *name;
    char format[] = "ssssssssssssssssssssssssssssssss";
 	NetObj *object;
 	BOOL tagExist;
@@ -67,7 +67,30 @@ BOOL EF_ProcessMessage(ISCSession *session, CSCPMessage *request, CSCPMessage *r
 		
 		if (object != NULL)
 		{
-			code = request->GetVariableLong(VID_EVENT_CODE);
+			name = request->GetVariableStr(VID_EVENT_NAME);
+			if (name != NULL)
+			{
+				EVENT_TEMPLATE *pt;
+
+				DbgPrintf(5, _T("Event specified by name (%s)"), name);
+				pt = FindEventTemplateByName(name);
+				if (pt != NULL)
+				{
+					code = pt->dwCode;
+					DbgPrintf(5, _T("Event name %s resolved to event code %d"), name, code);
+				}
+				else
+				{
+					code = 0;
+					DbgPrintf(5, _T("Event name %s cannot be resolved"), name);
+				}
+				free(name);
+			}
+			else
+			{
+				code = request->GetVariableLong(VID_EVENT_CODE);
+				DbgPrintf(5, _T("Event specified by code (%d)"), code);
+			}
 			numArgs = request->GetVariableShort(VID_NUM_ARGS);
 			if (numArgs > 32)
 				numArgs = 32;

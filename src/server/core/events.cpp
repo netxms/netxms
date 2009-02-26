@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ static RWLOCK m_rwlockTemplateAccess;
 Event::Event()
 {
    m_qwId = 0;
+	m_szName[0] = 0;
    m_qwRootId = 0;
    m_dwCode = 0;
    m_dwSeverity = 0;
@@ -70,6 +71,7 @@ Event::Event()
 
 Event::Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, const TCHAR *pszUserTag, const char *szFormat, va_list args)
 {
+	_tcscpy(m_szName, pTemplate->szName);
    m_tTimeStamp = time(NULL);
    m_qwId = CreateUniqueEventId();
    m_qwRootId = 0;
@@ -243,6 +245,12 @@ TCHAR *Event::ExpandText(TCHAR *pszTemplate, TCHAR *pszAlarmMsg)
                   pText = (char *)realloc(pText, dwSize);
                   sprintf(&pText[dwPos], "%u", m_dwCode);
                   dwPos = (DWORD)_tcslen(pText);
+                  break;
+               case 'N':   // Event name
+                  dwSize += (DWORD)_tcslen(m_szName);
+                  pText = (char *)realloc(pText, dwSize);
+                  strcpy(&pText[dwPos], m_szName);
+                  dwPos += (DWORD)_tcslen(m_szName);
                   break;
                case 's':   // Severity code
                   dwSize += 3;

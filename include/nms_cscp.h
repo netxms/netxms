@@ -651,7 +651,7 @@ typedef struct
 #define VID_NUM_COLUMNS             ((DWORD)166)
 #define VID_NUM_ROWS                ((DWORD)167)
 #define VID_TABLE_TITLE             ((DWORD)168)
-//#define VID_LPP_ID                  ((DWORD)169)
+#define VID_EVENT_NAME              ((DWORD)169)
 //#define VID_LPP_VERSION             ((DWORD)170)
 #define VID_LOG_NAME                ((DWORD)171)
 #define VID_OPERATION               ((DWORD)172)

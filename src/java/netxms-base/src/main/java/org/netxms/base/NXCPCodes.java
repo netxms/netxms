@@ -415,7 +415,7 @@ public final class NXCPCodes
 	public static final long VID_NUM_COLUMNS             = 166;
 	public static final long VID_NUM_ROWS                = 167;
 	public static final long VID_TABLE_TITLE             = 168;
-	public static final long VID_LPP_ID                  = 169;
+	public static final long VID_EVENT_NAME              = 169;
 	public static final long VID_LPP_VERSION             = 170;
 	public static final long VID_LOG_NAME                = 171;
 	public static final long VID_OPERATION               = 172;

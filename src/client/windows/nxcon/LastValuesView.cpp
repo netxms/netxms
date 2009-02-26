@@ -249,7 +249,8 @@ void CLastValuesView::UpdateItem(int iItem, NXC_DCI_VALUE *pValue)
    struct tm *ptm;
 
    // Create timestamp
-   ptm = localtime((time_t *)&pValue->dwTimestamp);
+	time_t t = (time_t)pValue->dwTimestamp;
+   ptm = localtime(&t);
    _tcsftime(szTimeStamp, 64, _T("%d-%b-%Y %H:%M:%S"), ptm);
 
    // Set or clear modification flag

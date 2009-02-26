@@ -320,6 +320,7 @@ static BOOL ForwardEvent(const TCHAR *server, Event *event)
 		{
 			msg.SetVariable(VID_IP_ADDRESS, object->IpAddr());
 			msg.SetVariable(VID_EVENT_CODE, event->Code());
+			msg.SetVariable(VID_EVENT_NAME, event->Name());
 			if (event->UserTag() != NULL)
 				msg.SetVariable(VID_USER_TAG, event->UserTag());
 			msg.SetVariable(VID_NUM_ARGS, (WORD)event->GetParametersCount());
