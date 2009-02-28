@@ -8,8 +8,24 @@ Bundle-Vendor: netxms.org
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
  jar/netxms-base-0.9.0-rc1.jar,
- jar/netxms-client-0.9.0-rc1.jar
-Export-Package: org.netxms.base,
+ jar/netxms-client-0.9.0-rc1.jar,
+ jar/jcommon-1.0.15.jar,
+ jar/jfreechart-1.0.12-experimental.jar,
+ jar/jfreechart-1.0.12-swt.jar,
+ jar/jfreechart-1.0.12.jar,
+ jar/swtgraphics2d.jar
+Export-Package: com.keypoint,
+ org.jfree,
+ org.jfree.chart,
+ org.jfree.chart.plot,
+ org.jfree.chart.renderer,
+ org.jfree.chart.renderer.category,
+ org.jfree.chart.renderer.xy,
+ org.jfree.data.category,
+ org.jfree.data.time,
+ org.jfree.data.xy,
+ org.jfree.experimental.chart.swt,
+ org.netxms.base,
  org.netxms.client,
  org.netxms.ui.eclipse.shared,
  org.netxms.ui.eclipse.tools

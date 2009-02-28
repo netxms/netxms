@@ -168,13 +168,13 @@ public class NXCPVariable
 					break;
 				case TYPE_STRING:
 					int len = in.readInt() / 2;
-					String str = "";
+					StringBuilder sb = new StringBuilder(len);
 					while (len > 0)
 					{
-						str += in.readChar();
+						sb.append(in.readChar());
 						len--;
 					}
-					setStringValue(str);
+					setStringValue(sb.toString());
 					break;
 				case TYPE_BINARY:
 					binaryValue = new byte[in.readInt()];

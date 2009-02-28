@@ -6,6 +6,7 @@ package org.netxms.client;
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.*;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -121,6 +122,8 @@ public class NXCSession
 	
 	// Private constants
 	private static final int CLIENT_CHALLENGE_SIZE = 256;
+	private static final int MAX_DCI_DATA_ROWS = 200000;
+	private static final int MAX_DCI_STRING_VALUE_LENGTH = 256;
 	
 	// Internal synchronization objects
 	private final Semaphore syncObjects = new Semaphore(1);
@@ -985,9 +988,139 @@ public class NXCSession
 		NXCDCIValue[] list = new NXCDCIValue[count];
 		long base = NXCPCodes.VID_DCI_VALUES_BASE;
 		for(int i = 0; i < count; i++, base += 10)
-			list[i] = new NXCDCIValue(msg, base);
+			list[i] = new NXCDCIValue(nodeId, msg, base);
 		
 		return list;
+	}
+	
+	
+	/**
+	 * Parse data from raw message CMD_DCI_DATA
+	 * 
+	 * @param input Raw data
+	 * @param data Data object to add rows to
+	 * @return number of received data rows
+	 */
+	private int parseDataRows(final byte[] input, NXCDCIData data)
+	{
+		//noinspection IOResourceOpenedButNotSafelyClosed
+		final NXCPDataInputStream inputStream = new NXCPDataInputStream(input);
+		int rows = 0;
+		
+		try
+		{
+			inputStream.skipBytes(4);	// DCI ID
+			rows = inputStream.readInt();
+			final int dataType = inputStream.readInt();
+			
+			for(int i = 0; i < rows; i++)
+			{
+				long timestamp = inputStream.readUnsignedInt() * 1000;	// convert to milliseconds
+				
+				switch(dataType)
+				{
+					case NXCDCI.DT_INT:
+						data.addDataRow(new NXCDCIDataRow(new Date(timestamp), new Long(inputStream.readInt())));
+						break;
+					case NXCDCI.DT_UINT:
+						data.addDataRow(new NXCDCIDataRow(new Date(timestamp), new Long(inputStream.readUnsignedInt())));
+						break;
+					case NXCDCI.DT_INT64:
+					case NXCDCI.DT_UINT64:
+						data.addDataRow(new NXCDCIDataRow(new Date(timestamp), new Long(inputStream.readLong())));
+						break;
+					case NXCDCI.DT_FLOAT:
+						data.addDataRow(new NXCDCIDataRow(new Date(timestamp), new Double(inputStream.readDouble())));
+						break;
+					case NXCDCI.DT_STRING:
+						StringBuilder sb = new StringBuilder(256);
+						int count;
+						for(count = MAX_DCI_STRING_VALUE_LENGTH; count > 0; count--)
+						{
+							char ch = inputStream.readChar();
+							if (ch == 0)
+							{
+								count--;
+								break;
+							}
+							sb.append(ch);
+						}
+						inputStream.skipBytes(count);
+						data.addDataRow(new NXCDCIDataRow(new Date(timestamp), sb.toString()));
+						break;
+				}
+			}
+		}
+		catch(IOException e)
+		{
+		}
+		
+		return rows;
+	}
+	
+	/**
+	 * Get collected DCI data from server. Please note that you should specify
+	 * either row count limit or time from/to limit.
+	 * 
+	 * @param nodeId Node ID
+	 * @param dciId DCI ID
+	 * @param from Start of time range or null for no limit
+	 * @param to End of time range or null for no limit
+	 * @param maxRows Maximum number of rows to retrieve or 0 for no limit
+	 * @return DCI data set
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public NXCDCIData getCollectedData(final long nodeId, final long dciId,
+			                             Date from, Date to, int maxRows) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_DATA);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setVariableInt32(NXCPCodes.VID_DCI_ID, (int)dciId);
+		
+		NXCDCIData data = new NXCDCIData(nodeId, dciId);
+		
+		int rowsReceived, rowsRemaining = maxRows;
+		int timeFrom = (from != null) ? (int)(from.getTime() / 1000) : 0;
+		int timeTo = (to != null) ? (int)(to.getTime() / 1000) : 0;
+		
+		do
+		{
+			msg.setMessageId(requestId++);
+			msg.setVariableInt32(NXCPCodes.VID_MAX_ROWS, maxRows);
+			msg.setVariableInt32(NXCPCodes.VID_TIME_FROM, timeFrom);
+			msg.setVariableInt32(NXCPCodes.VID_TIME_TO, timeTo);
+			sendMessage(msg);
+			
+			waitForRCC(msg.getMessageId());
+			
+			NXCPMessage response = waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
+			if (!response.isRawMessage())
+				throw new NXCException(RCC_INTERNAL_ERROR);
+			
+			rowsReceived = parseDataRows(response.getBinaryData(), data);
+			if (((rowsRemaining == 0) || (rowsRemaining > MAX_DCI_DATA_ROWS)) && (rowsReceived == MAX_DCI_DATA_ROWS))
+			{
+				// adjust boundaries for next request
+				if (rowsRemaining > 0)
+					rowsRemaining -= rowsReceived;
+				
+				// Rows goes in newest to oldest order, so if we need to
+				// retrieve additional data, we should update timeTo limit
+				if (to != null)
+				{
+					NXCDCIDataRow row = data.getLastValue();
+					if (row != null)
+					{
+						// There should be only one value per second, so we set
+						// last row's timestamp - 1 second as new boundary
+						timeTo = (int)(row.getTimestamp().getTime() / 1000) - 1;
+					}
+				}
+			}
+		} while(rowsReceived == MAX_DCI_DATA_ROWS);
+
+		return data;
 	}
 	
 	

@@ -270,6 +270,7 @@ src/console/PocketPC/res/template_root.ico -text
 src/console/PocketPC/res/vpnc.ico -text
 src/java/netxms-base/pom.xml -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPCodes.java -text
+src/java/netxms-base/src/main/java/org/netxms/base/NXCPDataInputStream.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPException.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPMessage.java -text
 src/java/netxms-base/src/main/java/org/netxms/base/NXCPMessageReceiver.java -text
@@ -284,6 +285,8 @@ src/java/netxms-client/src/main/java/org/netxms/client/NXCAccessListElement.java
 src/java/netxms-client/src/main/java/org/netxms/client/NXCAlarm.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCContainer.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCDCI.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/NXCDCIData.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/NXCDCIDataRow.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCDCIValue.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCEntireNetwork.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCException.java -text
@@ -325,6 +328,13 @@ src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/TabPro
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/AcknowledgeAlarm.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/OpenAlarmBrowser.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/TerminateAlarm.java -text
+src/java/netxms-eclipse/Charts/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/Charts/build.properties -text
+src/java/netxms-eclipse/Charts/icons/graph.png -text
+src/java/netxms-eclipse/Charts/plugin.xml -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/Activator.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/actions/ShowHistoryGraph.java -text
+src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/HistoryGraph.java -text
 src/java/netxms-eclipse/JobMonitor/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/JobMonitor/build.properties -text
 src/java/netxms-eclipse/JobMonitor/icons/default.png -text
@@ -370,6 +380,7 @@ src/java/netxms-eclipse/ObjectView/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectView/build.properties -text
 src/java/netxms-eclipse/ObjectView/icons/active.ico -text
 src/java/netxms-eclipse/ObjectView/icons/disabled.ico -text
+src/java/netxms-eclipse/ObjectView/icons/graph.png -text
 src/java/netxms-eclipse/ObjectView/icons/last_values.png -text
 src/java/netxms-eclipse/ObjectView/icons/unsupported.ico -text
 src/java/netxms-eclipse/ObjectView/plugin.xml -text

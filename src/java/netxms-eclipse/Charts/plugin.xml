@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="History Graph"
+            allowMultiple="true"
+            icon="icons/graph.png"
+            class="org.netxms.ui.eclipse.charts.views.HistoryGraph"
+            id="org.netxms.ui.eclipse.charts.view.history_graph">
+      </view>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.ui.eclipse.charts.actions.popup.dci.graph"
+            objectClass="org.netxms.client.NXCDCIValue">
+         <action
+               class="org.netxms.ui.eclipse.charts.actions.ShowHistoryGraph"
+               id="org.netxms.ui.eclipse.charts.popupActions.ShowHistoryGraph"
+               label="Graph"
+               icon="icons/graph.png"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>

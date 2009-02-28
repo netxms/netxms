@@ -11,11 +11,20 @@ import java.util.Map;
 public class NXCPMessage
 {
 	public static final int HEADER_SIZE = 16;
+
+	// Message flags
+	public static final int MF_BINARY = 0x0001;
+	public static final int MF_END_OF_FILE = 0x0002;
+	public static final int MF_END_OF_SEQUENCE = 0x0008;
+	public static final int MF_REVERSE_ORDER = 0x0010;
+	public static final int MF_CONTROL = 0x0020;
 	
 	private int messageCode;
+	private int messageFlags;
 	private long messageId;
 	private Map<Long, NXCPVariable> variableMap = new HashMap<Long, NXCPVariable>(0);
 	private long timestamp;
+	private byte[] binaryData = null;
 
 	/**
 	 * @param msgCode
@@ -24,6 +33,7 @@ public class NXCPMessage
 	{
 		this.messageCode = msgCode;
 		messageId = 0L;
+		messageFlags = 0;
 	}
 
 	/**
@@ -34,6 +44,7 @@ public class NXCPMessage
 	{
 		this.messageCode = msgCode;
 		this.messageId = msgId;
+		messageFlags = 0;
 	}
 
 	/**
@@ -46,48 +57,62 @@ public class NXCPMessage
 	{
 		final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(nxcpMessage);
 		//noinspection IOResourceOpenedButNotSafelyClosed
-		final DataInputStream inputStream = new DataInputStream(byteArrayInputStream);
+		final NXCPDataInputStream inputStream = new NXCPDataInputStream(byteArrayInputStream);
 
 		messageCode = inputStream.readUnsignedShort();
-		inputStream.skipBytes(6);	// Message flags and size
+		messageFlags = inputStream.readUnsignedShort();
+		inputStream.skipBytes(4);	// Message size
 		messageId = (long)inputStream.readInt();
-		final int numVars = inputStream.readInt();
-
-		for(int i = 0; i < numVars; i++)
+		
+		if ((messageFlags & MF_BINARY) == MF_BINARY)
 		{
-			byteArrayInputStream.mark(byteArrayInputStream.available());
-			
-			// Read first 8 bytes - any DF (data field) is at least 8 bytes long
-			byte[] df = new byte[16];
-			inputStream.readFully(df, 0, 8);
-
-			switch(df[4])
+			final int size = inputStream.readInt();
+			binaryData = new byte[size];
+			inputStream.readFully(binaryData);
+		}
+		else if ((messageFlags & MF_CONTROL) == MF_CONTROL)
+		{
+		}
+		else
+		{
+			final int numVars = inputStream.readInt();
+	
+			for(int i = 0; i < numVars; i++)
 			{
-				case NXCPVariable.TYPE_INT16:
-					break;
-				case NXCPVariable.TYPE_FLOAT:		// all these types requires additional 8 bytes
-				case NXCPVariable.TYPE_INTEGER:
-				case NXCPVariable.TYPE_INT64:
-					inputStream.readFully(df, 8, 8);
-					break;
-				case NXCPVariable.TYPE_STRING:		// all these types has 4-byte length field followed by actual content
-				case NXCPVariable.TYPE_BINARY:
-					int size = inputStream.readInt();
-					byteArrayInputStream.reset();
-					df = new byte[size + 12];
-					inputStream.readFully(df);
-					
-					// Each df aligned to 8-bytes boundary
-					final int rem = (size + 12) % 8;
-					if (rem != 0)
-					{
-						inputStream.skipBytes(8 - rem);
-					}
-					break;
+				byteArrayInputStream.mark(byteArrayInputStream.available());
+				
+				// Read first 8 bytes - any DF (data field) is at least 8 bytes long
+				byte[] df = new byte[16];
+				inputStream.readFully(df, 0, 8);
+	
+				switch(df[4])
+				{
+					case NXCPVariable.TYPE_INT16:
+						break;
+					case NXCPVariable.TYPE_FLOAT:		// all these types requires additional 8 bytes
+					case NXCPVariable.TYPE_INTEGER:
+					case NXCPVariable.TYPE_INT64:
+						inputStream.readFully(df, 8, 8);
+						break;
+					case NXCPVariable.TYPE_STRING:		// all these types has 4-byte length field followed by actual content
+					case NXCPVariable.TYPE_BINARY:
+						int size = inputStream.readInt();
+						byteArrayInputStream.reset();
+						df = new byte[size + 12];
+						inputStream.readFully(df);
+						
+						// Each df aligned to 8-bytes boundary
+						final int rem = (size + 12) % 8;
+						if (rem != 0)
+						{
+							inputStream.skipBytes(8 - rem);
+						}
+						break;
+				}
+	
+				final NXCPVariable variable = new NXCPVariable(df);
+				variableMap.put(variable.getVariableId(), variable);
 			}
-
-			final NXCPVariable variable = new NXCPVariable(df);
-			variableMap.put(variable.getVariableId(), variable);
 		}
 	}
 
@@ -262,5 +287,33 @@ public class NXCPMessage
 		outputStream.write(payload);
 
 		return byteStream.toByteArray();
+	}
+
+	/**
+	 * Get data of raw message. Will return null if message is not a raw message.
+	 * 
+	 * @return Binary data of raw message
+	 */
+	public byte[] getBinaryData()
+	{
+		return binaryData;
+	}
+		
+	/**
+	 * Return true if message is a raw message
+	 * @return raw message flag
+	 */
+	public boolean isRawMessage()
+	{
+		return (messageFlags & MF_BINARY) == MF_BINARY;
+	}
+	
+	/**
+	 * Return true if message is a control message
+	 * @return control message flag
+	 */
+	public boolean isControlMessage()
+	{
+		return (messageFlags & MF_CONTROL) == MF_CONTROL;
 	}
 }
