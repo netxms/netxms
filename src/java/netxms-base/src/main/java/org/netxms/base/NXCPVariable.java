@@ -135,9 +135,9 @@ public class NXCPVariable
 	 */
 	public NXCPVariable(final byte[] nxcpDataField) throws IOException
 	{
-		DataInputStream in = new DataInputStream(new ByteArrayInputStream(nxcpDataField));
+		NXCPDataInputStream in = new NXCPDataInputStream(nxcpDataField);
 
-		variableId = (long)in.readInt();
+		variableId = (long)in.readUnsignedInt();
 		variableType = in.readUnsignedByte();
 		in.skipBytes(1);	// Skip padding
 		if (variableType == TYPE_INT16)
