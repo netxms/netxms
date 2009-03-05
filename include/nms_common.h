@@ -402,8 +402,10 @@ typedef u_int64_t QWORD;
 #define UINT64X_FMT(m)  _T("%") m _T("llX")
 #ifdef __64BIT__
 #define TIME_T_FMT		_T("%llu")
+#define TIME_T_FCAST(x)         ((QWORD)(x))
 #else
 #define TIME_T_FMT		_T("%u")
+#define TIME_T_FCAST(x)         ((DWORD)(x))
 #endif
 
 #ifndef TRUE

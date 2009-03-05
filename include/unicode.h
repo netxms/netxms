@@ -181,6 +181,7 @@
 #define _taccess  waccess
 #define _tstat    wstat
 #define _tunlink  wunlink
+#define _trename  wrename
 #define _tcsftime wcsftime
 #define _tctime   wctime
 #define _istspace iswspace
@@ -233,6 +234,7 @@
 #define _taccess  access
 #define _tstat    stat
 #define _tunlink  unlink
+#define _trename  rename
 #define _tcsftime strftime
 #define _tctime   ctime
 #define _istspace isspace

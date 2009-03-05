@@ -564,7 +564,7 @@ static void CheckIData(void)
 		for(i = 0; i < nodeCount; i++)
 		{
 			nodeId = DBGetFieldULong(hResultNodes, i, 0);
-			_sntprintf(query, 1024, _T("SELECT count(*) FROM idata_%d WHERE idata_timestamp>%d"), nodeId, now);
+			_sntprintf(query, 1024, _T("SELECT count(*) FROM idata_%d WHERE idata_timestamp>") TIME_T_FMT, nodeId, TIME_T_FCAST(now));
 //			hResult = DBSelect(g_hCoreDB, query);
 			hResult = SQLSelect(query);
 			if (hResult != NULL)
@@ -575,7 +575,7 @@ static void CheckIData(void)
 					_tprintf(_T("\rFound collected data for node [%d] with timestamp in the future. Correct? (Y/N) "), nodeId);
 					if (GetYesNo())
 					{
-						_sntprintf(query, 1024, _T("DELETE FROM idata_%d WHERE idata_timestamp>%d"), nodeId, now);
+						_sntprintf(query, 1024, _T("DELETE FROM idata_%d WHERE idata_timestamp>") TIME_T_FMT, nodeId, TIME_T_FCAST(now));
 						if (SQLQuery(query))
 							m_iNumFixes++;
 					}
@@ -596,7 +596,7 @@ static void CheckIData(void)
 		DBFreeResult(hResultNodes);
 	}
 
-	_sntprintf(query, 1024, _T("SELECT count(*) FROM raw_dci_values WHERE last_poll_time>%d"), now);
+	_sntprintf(query, 1024, _T("SELECT count(*) FROM raw_dci_values WHERE last_poll_time>") TIME_T_FMT, TIME_T_FCAST(now));
 	hResult = SQLSelect(query);
 	if (hResult != NULL)
 	{
@@ -606,7 +606,7 @@ static void CheckIData(void)
 			_tprintf(_T("\rFound DCIs with last poll timestamp in the future. Correct? (Y/N) "));
 			if (GetYesNo())
 			{
-				_sntprintf(query, 1024, _T("UPDATE raw_dci_values SET last_poll_time=%d WHERE last_poll_time>%d"), now, now);
+				_sntprintf(query, 1024, _T("UPDATE raw_dci_values SET last_poll_time=") TIME_T_FMT _T(" WHERE last_poll_time>") TIME_T_FMT, TIME_T_FCAST(now), TIME_T_FCAST(now));
 				if (SQLQuery(query))
 					m_iNumFixes++;
 			}
