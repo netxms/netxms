@@ -778,8 +778,8 @@ AC_TYPE_SIGNAL
 AC_TYPE_SIZE_T
 AC_STRUCT_TIMEZONE
 
-AC_CHECK_TYPES([int64_t, uint64_t, u_int64_t, mode_t])
-AC_CHECK_TYPES([off_t, socklen_t],,,[
+AC_CHECK_TYPES([long long, unsigned long long, int64_t, uint64_t, u_int64_t])
+AC_CHECK_TYPES([mode_t, off_t, socklen_t],,,[
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif

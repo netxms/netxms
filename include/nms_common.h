@@ -379,13 +379,17 @@ typedef void * HMODULE;
 typedef int mode_t;
 #endif
 
-#if HAVE_INT64_T
+#if HAVE_LONG_LONG && (SIZEOF_LONG_LONG == 8)
+typedef long long INT64;
+#elif HAVE_INT64_T
 typedef int64_t INT64;
 #else
 #error Target system does not have signed 64bit integer type
 #endif
 
-#if HAVE_UINT64_T
+#if HAVE_UNSIGNED_LONG_LONG && (SIZEOF_LONG_LONG == 8)
+typedef unsigned long long QWORD;
+#elif HAVE_UINT64_T
 typedef uint64_t QWORD;
 #elif HAVE_U_INT64_T
 typedef u_int64_t QWORD;
