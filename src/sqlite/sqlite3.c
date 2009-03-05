@@ -24,6 +24,7 @@
 #pragma warning(disable: 4018 4049 4244 4267 4311 4312 4761)
 #define _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_DEPRECATE
+#define SQLITE_API __declspec(dllexport)
 #endif
 
 #define SQLITE_CORE 1

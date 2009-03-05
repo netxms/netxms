@@ -66,11 +66,10 @@ public class LastValuesView extends Composite
 		
 		createPopupMenu();
 
-		final Composite alarmView = this;
 		addListener(SWT.Resize, new Listener() {
 			public void handleEvent(Event e)
 			{
-				dataViewer.getControl().setBounds(alarmView.getClientArea());
+				dataViewer.getControl().setBounds(LastValuesView.this.getClientArea());
 			}
 		});
 

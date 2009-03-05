@@ -231,9 +231,10 @@ BOOL Node::CreateFromDB(DWORD dwId)
       iNumRows = DBGetNumRows(hResult);
       if (iNumRows == 0)
       {
-         DBFreeResult(hResult);
+//         DBFreeResult(hResult);
          DbgPrintf(3, "Unbound node object %d (%s)", dwId, m_szName);
-         return FALSE;     // No parents - it shouldn't happen if database isn't corrupted
+bResult = TRUE;
+//         return FALSE;     // No parents - it shouldn't happen if database isn't corrupted
       }
 
       for(i = 0; i < iNumRows; i++)

@@ -74,11 +74,10 @@ public class AlarmView extends Composite
 		
 		createPopupMenu();
 
-		final Composite alarmView = this;
 		addListener(SWT.Resize, new Listener() {
 			public void handleEvent(Event e)
 			{
-				alarmViewer.getControl().setBounds(alarmView.getClientArea());
+				alarmViewer.getControl().setBounds(AlarmView.this.getClientArea());
 			}
 		});
 

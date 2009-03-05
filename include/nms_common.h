@@ -146,20 +146,21 @@
 # define S_IWUSR      0200
 #endif
 
-#define snprintf  _snprintf
-#define vsnprintf _vsnprintf
-#define popen     _popen
-#define pclose    _pclose
-#define strdup    _strdup
-#define wcsdup    _wcsdup
-#define stricmp   _stricmp
-#define strnicmp  _strnicmp
-#define strupr    _strupr
-#define getpid    _getpid
-#define fileno    _fileno
-#define chdir     _chdir
-#define mkdir     _mkdir
-#define lseek     _lseek
+#define snprintf     _snprintf
+#define vsnprintf    _vsnprintf
+#define popen        _popen
+#define pclose       _pclose
+#define strdup       _strdup
+#define wcsdup       _wcsdup
+#define stricmp      _stricmp
+#define strnicmp     _strnicmp
+#define strupr(s)    _strupr(s)
+#define getpid       _getpid
+#define fileno(f)    _fileno(f)
+#define chdir(p)     _chdir(p)
+#define mkdir(p,m)   _mkdir(p,m)
+#define lseek(f,o,w) _lseek(f,o,v)
+#define unlink(x)    _unlink(x)
 
 typedef unsigned __int64 QWORD;
 typedef __int64 INT64;
@@ -169,9 +170,11 @@ typedef int socklen_t;
 #define UINT64_FMT		_T("%I64u")
 #define UINT64X_FMT(m)  _T("%") m _T("I64X")
 #if defined(__64BIT__) || (_MSC_VER > 1300)
-#define TIME_T_FMT   _T("%I64u")
+#define TIME_T_FMT      _T("%I64u")
+#define TIME_T_FCAST(x) ((QWORD)(x))
 #else
-#define TIME_T_FMT   _T("%u")
+#define TIME_T_FMT      _T("%u")
+#define TIME_T_FCAST(x) ((DWORD)(x))
 #endif
 
 // Socket compatibility
@@ -253,6 +256,7 @@ typedef X_UINT64_X QWORD;
 #define UINT64_FMT		_T("%llu")
 #define UINT64X_FMT(m)  _T("%") m _T("llX")
 #define TIME_T_FMT		_T("%u")
+#define TIME_T_FCAST(x) ((DWORD)(x))
 
 #ifndef MAX_PATH
 #define MAX_PATH 256

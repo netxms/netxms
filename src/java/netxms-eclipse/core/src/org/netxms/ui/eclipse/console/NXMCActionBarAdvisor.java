@@ -47,10 +47,17 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	{
 		MenuManager fileMenu = new MenuManager("&File", IWorkbenchActionConstants.M_FILE);
 		MenuManager viewMenu = new MenuManager("&View", IActionConstants.M_VIEW);
+		MenuManager cfgMenu = new MenuManager("&Config", IActionConstants.M_CONFIG);
 		MenuManager helpMenu = new MenuManager("&Help", IWorkbenchActionConstants.M_HELP);
 		
 		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
+		menuBar.add(cfgMenu);
+
+		cfgMenu.add(new Separator());
+		cfgMenu.add(exitAction);
+		
+		
 		// Add a group marker indicating where action set menus will appear.
 		menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		menuBar.add(helpMenu);

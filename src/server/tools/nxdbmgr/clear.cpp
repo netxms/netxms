@@ -27,7 +27,7 @@
 // Tables to clear
 //
 
-extern TCHAR *g_tables[];
+extern const TCHAR *g_tables[];
 
 
 //
