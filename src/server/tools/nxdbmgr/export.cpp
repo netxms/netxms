@@ -28,7 +28,7 @@
 // Tables for export/import/clear
 //
 
-TCHAR *g_tables[] = 
+const TCHAR *g_tables[] = 
 {
 	"config",
 	"config_clob",
@@ -239,7 +239,7 @@ void ExportDatabase(const char *file)
 	sqlite3 *db;
 	char *errmsg, buffer[MAX_PATH], queryTemplate[MAX_DB_STRING], *data;
 	DWORD size;
-	int i, rowCount;
+	int i, rowCount, version = 0;
 	DB_RESULT hResult;
 	BOOL success = FALSE;
 
@@ -247,7 +247,7 @@ void ExportDatabase(const char *file)
 		return;
 
 	// Create new SQLite database
-	_unlink(file);
+	unlink(file);
 	if (sqlite3_open(file, &db) != SQLITE_OK)
 	{
 		printf("ERROR: unable to open output file\n");
@@ -318,7 +318,6 @@ void ExportDatabase(const char *file)
 	free(data);
 
 	// Check that dbschema_sqlite.sql and database have the same schema version
-	int version = 0;
 	if (sqlite3_exec(db, "SELECT var_value FROM metadata WHERE var_name='SchemaVersion'", GetSchemaVersionCB, &version, &errmsg) != SQLITE_OK)
 	{
 		printf("ERROR: SQL query failed (%s)\n", errmsg);

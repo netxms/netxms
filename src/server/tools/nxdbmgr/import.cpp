@@ -28,7 +28,7 @@
 // Tables to import
 //
 
-extern TCHAR *g_tables[];
+extern const TCHAR *g_tables[];
 
 
 //

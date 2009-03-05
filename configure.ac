@@ -66,7 +66,7 @@ WX_UNICODE="no"
 AC_ARG_WITH(server,
 [AS_HELP_STRING(--with-server,build server)],
 [
-	COMPONENTS="$COMPONENTS snmp server agent"
+	COMPONENTS="$COMPONENTS sqlite snmp server agent"
 ])
 
 AC_ARG_WITH(snmp,
@@ -90,19 +90,19 @@ AC_ARG_WITH(console,
 AC_ARG_WITH(agent,
 [AS_HELP_STRING(--with-agent,build agent)],
 [
-	COMPONENTS="$COMPONENTS agent"
+	COMPONENTS="$COMPONENTS sqlite agent"
 ])
 
 AC_ARG_WITH(static-agent,
 [AS_HELP_STRING(--with-static-agent,build statically linked agent)],
 [
-	COMPONENTS="$COMPONENTS static-agent"
+	COMPONENTS="$COMPONENTS sqlite static-agent"
 ])
 
 AC_ARG_WITH(ipso-agent,
 [AS_HELP_STRING(--with-ipso-agent,build statically linked IPSO agent)],
 [
-	COMPONENTS="$COMPONENTS ipso-agent"
+	COMPONENTS="$COMPONENTS sqlite ipso-agent"
 ])
 
 AC_ARG_WITH(nxhttpd,
@@ -126,7 +126,7 @@ AC_ARG_WITH(private,
 AC_ARG_WITH(sqlite,
 [AS_HELP_STRING(--with-sqlite,build SQLite database driver)],
 [ if test "x$withval" != "xno" ; then
-	COMPONENTS="$COMPONENTS sqlite"
+	COMPONENTS="$COMPONENTS sqlite_drv"
 	DBDRIVER_SELECTED="yes"
 fi ])
 
@@ -240,7 +240,7 @@ AC_ARG_ENABLE(debug,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle"
-	MODULES="snmp libnxsl libnxlp server agent libnxmap libnxcl client console nxhttpd nxscript nxcptest"
+	MODULES="sqlite snmp libnxsl libnxlp server agent libnxmap libnxcl client console nxhttpd nxscript nxcptest"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
@@ -255,6 +255,11 @@ AC_ARG_WITH(dist,
 #--------------------------------------------------------------------
 # Validate command line parameters and set various checking options
 #--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "sqlite"
+if test $? = 0; then
+	MODULES="$MODULES sqlite"
+fi
 
 check_substr "$COMPONENTS" "static-agent"
 if test $? = 0; then
@@ -410,7 +415,7 @@ if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS pgsql"
 fi
 
-check_substr "$COMPONENTS" "sqlite"
+check_substr "$COMPONENTS" "sqlite_drv"
 if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS sqlite"
 fi
@@ -1445,6 +1450,7 @@ AC_CONFIG_FILES([
 	netware/Makefile
 	sql/Makefile
 	src/Makefile
+	src/sqlite/Makefile
 	src/libnetxms/Makefile
 	src/libnxcl/Makefile
 	src/libnxlp/Makefile
