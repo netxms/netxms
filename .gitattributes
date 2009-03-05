@@ -528,6 +528,8 @@ src/snmp/nxsnmpset/nxsnmpset.dsp eol=crlf
 src/snmp/nxsnmpset/nxsnmpset.vcproj -text
 src/snmp/nxsnmpwalk/nxsnmpwalk.dsp eol=crlf
 src/snmp/nxsnmpwalk/nxsnmpwalk.vcproj -text
+src/sqlite/dllmain.c -text
+src/sqlite/nxsqlite.vcproj -text
 src/webui/client/src/org/netxms/client/AlarmBrowser.java -text
 src/webui/client/src/org/netxms/client/InfoBar.java -text
 src/webui/client/src/org/netxms/client/LoginDialog.java -text
