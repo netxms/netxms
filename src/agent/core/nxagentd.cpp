@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -52,6 +52,10 @@ THREAD_RESULT THREAD_CALL TrapSender(void *);
 
 void ShutdownTrapSender();
 
+void StartWatchdog();
+void StopWatchdog();
+int WatchdogMain(DWORD pid);
+
 #if !defined(_WIN32) && !defined(_NETWARE)
 void InitStaticSubagents(void);
 #endif
@@ -72,11 +76,11 @@ extern const TCHAR *g_szMessages[];
 //
 
 #if defined(_WIN32)
-#define VALID_OPTIONS   "c:CdDEfhHIM:P:r:RsSUvX:Z:"
+#define VALID_OPTIONS   "c:CdDEfhHIM:P:r:RsSUvX:W:Z:"
 #elif defined(_NETWARE)
-#define VALID_OPTIONS   "c:CDfhM:P:r:vX:Z:"
+#define VALID_OPTIONS   "c:CDfhM:P:r:vZ:"
 #else
-#define VALID_OPTIONS   "c:CdDfhM:p:P:r:vX:Z:"
+#define VALID_OPTIONS   "c:CdDfhM:p:P:r:vX:W:Z:"
 #endif
 
 
@@ -95,6 +99,7 @@ extern const TCHAR *g_szMessages[];
 #define ACTION_REMOVE_EVENT_SOURCE     8
 #define ACTION_CREATE_CONFIG           9
 #define ACTION_HELP							10
+#define ACTION_RUN_WATCHDOG            11
 
 
 //
@@ -155,6 +160,7 @@ static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
 static THREAD m_thListener = INVALID_THREAD_HANDLE;
 static THREAD m_thTrapSender = INVALID_THREAD_HANDLE;
 static char m_szProcessToWait[MAX_PATH] = "";
+static char m_szDumpDir[MAX_PATH] = "C:\\";
 static DWORD m_dwMaxLogSize = 16384 * 1024;
 static DWORD m_dwLogHistorySize = 4;
 
@@ -176,11 +182,14 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { "Action", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszActionList },
    { "ActionShellExec", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShellActionList },
    { "ControlServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList },
+   { "CreateCrashDumps", CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags },
+   { "DumpDirectory", CT_STRING, 0, 0, MAX_PATH, 0, m_szDumpDir },
    { "EnableActions", CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags },
    { "EnabledCiphers", CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers },
    { "EnableProxy", CT_BOOLEAN, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags },
    { "EnableSNMPProxy", CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_PROXY, 0, &g_dwFlags },
    { "EnableSubagentAutoload", CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags },
+   { "EnableWatchdog", CT_BOOLEAN, 0, 0, AF_ENABLE_WATCHDOG, 0, &g_dwFlags },
    { "ExecTimeout", CT_LONG, 0, 0, 0, 0, &g_dwExecTimeout },
    { "ExternalParameter", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList },
    { "ExternalParameterShellExec", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShExtParamList },
@@ -415,7 +424,7 @@ static LONG H_RestartAgent(const TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, co
               (g_dwFlags & AF_DEBUG) ? _T("-D ") : _T(""),
 				  szPlatformSuffixOption,
               (unsigned long)m_pid);
-   return ExecuteCommand(szCmdLine, NULL);
+   return ExecuteCommand(szCmdLine, NULL, NULL);
 #endif
 #endif  /* _NETWARE */
 }
@@ -566,16 +575,20 @@ BOOL Initialize(void)
 			if (!(g_dwFlags & AF_DAEMON))
 				printf("WARNING: cannot set log rotation policy; using default values\n");
 	}
-   nxlog_open((g_dwFlags & AF_USE_SYSLOG) ? NXAGENTD_SYSLOG_NAME : g_szLogFile,
-	           ((g_dwFlags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) |
-				  ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
-              _T("NXAGENTD.EXE"),
+   if (!nxlog_open((g_dwFlags & AF_USE_SYSLOG) ? NXAGENTD_SYSLOG_NAME : g_szLogFile,
+	                ((g_dwFlags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) |
+	                   ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
+	                _T("NXAGENTD.EXE"),
 #ifdef _WIN32
-				  0, NULL);
+	                0, NULL))
 #else
-				  g_dwNumMessages, g_szMessages);
+	                g_dwNumMessages, g_szMessages))
 #endif
-   DebugPrintf(INVALID_INDEX, "Log file opened");
+	{
+		fprintf(stderr, "FATAL ERROR: Cannot open log file\n");
+		return FALSE;
+	}
+	DebugPrintf(INVALID_INDEX, "Log file opened");
 
 #ifdef _WIN32
    WSADATA wsaData;
@@ -886,6 +899,10 @@ BOOL Initialize(void)
 #endif
    ThreadSleep(1);
 
+	// Start watchdog process
+	if (g_dwFlags & AF_ENABLE_WATCHDOG)
+		StartWatchdog();
+
    return TRUE;
 }
 
@@ -896,6 +913,9 @@ BOOL Initialize(void)
 
 void Shutdown(void)
 {
+	if (g_dwFlags & AF_ENABLE_WATCHDOG)
+		StopWatchdog();
+
    // Set shutdowm flag
    g_dwFlags |= AF_SHUTDOWN;
 	ShutdownTrapSender();
@@ -1075,12 +1095,16 @@ int main(int argc, char *argv[])
 {
    int ch, iExitCode = 0, iAction = ACTION_RUN_AGENT;
    BOOL bRestart = FALSE;
-   DWORD dwOldPID;
+   DWORD dwOldPID, dwMainPID;
 #ifdef _WIN32
    char szModuleName[MAX_PATH];
 #endif
 
    InitThreadLibrary();
+
+#ifdef NETXMS_MEMORY_DEBUG
+	InitMemoryDebugger();
+#endif
    
 #ifdef _NETWARE
    g_nThreadCount++;
@@ -1144,6 +1168,10 @@ int main(int argc, char *argv[])
          case 'X':   // Agent is being restarted
             bRestart = TRUE;
             dwOldPID = strtoul(optarg, NULL, 10);
+            break;
+         case 'W':   // Watchdog process
+            iAction = ACTION_RUN_WATCHDOG;
+            dwMainPID = strtoul(optarg, NULL, 10);
             break;
          case 'Z':   // Create configuration file
             iAction = ACTION_CREATE_CONFIG;
@@ -1239,6 +1267,13 @@ int main(int argc, char *argv[])
 
          if (NxLoadConfig(g_szConfigFile, "", m_cfgTemplate, !(g_dwFlags & AF_DAEMON)) == NXCFG_ERR_OK)
          {
+	// Set exception handler
+#ifdef _WIN32
+				if (g_dwFlags & AF_CATCH_EXCEPTIONS)
+					SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter, m_szDumpDir,
+											  "nxagentd", MSG_EXCEPTION, !(g_dwFlags & AF_DAEMON));
+				__try {
+#endif
             if ((!stricmp(g_szLogFile, "{syslog}")) || 
                 (!stricmp(g_szLogFile, "{eventlog}")))
                g_dwFlags |= AF_USE_SYSLOG;
@@ -1306,6 +1341,9 @@ int main(int argc, char *argv[])
             if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
                ConditionDestroy(m_hCondShutdown);
 #endif
+#ifdef _WIN32
+				LIBNETXMS_EXCEPTION_HANDLER
+#endif
          }
          else
          {
@@ -1320,6 +1358,9 @@ int main(int argc, char *argv[])
             iExitCode = 2;
          }
          break;
+		case ACTION_RUN_WATCHDOG:
+			iExitCode = WatchdogMain(dwMainPID);
+			break;
       case ACTION_CREATE_CONFIG:
          iExitCode = CreateConfig(CHECK_NULL(argv[optind]), CHECK_NULL(argv[optind + 1]),
                                   CHECK_NULL(argv[optind + 2]), argc - optind - 3,
@@ -1348,7 +1389,7 @@ int main(int argc, char *argv[])
          break;
 #endif
 		case ACTION_HELP:
-         printf(m_szHelpText);
+         fputs(m_szHelpText, stdout);
 			break;
       default:
          break;

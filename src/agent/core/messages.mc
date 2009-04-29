@@ -242,4 +242,22 @@ Language=English
 Successfully registered on management server %1
 .
 
+MessageId=
+SymbolicName=MSG_WATCHDOG_STARTED
+Language=English
+Watchdog process started
+.
+
+MessageId=
+SymbolicName=MSG_WATCHDOG_STOPPED
+Language=English
+Watchdog process stopped
+.
+
+MessageId=
+SymbolicName=MSG_EXCEPTION
+Language=English
+EXCEPTION %1 (%2) at %3 (crash dump was generated); please send files %4 and %5 to dump@netxms.org
+.
+
 ;#endif

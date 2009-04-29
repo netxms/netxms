@@ -96,6 +96,12 @@ void SendTrap(DWORD dwEventCode, int iNumArgs, TCHAR **ppArgList)
    int i;
    CSCPMessage msg;
 
+	DebugPrintf(INVALID_INDEX, _T("SendTrap(): event_code=%d, num_args=%d, arg[0]=\"%s\" arg[1]=\"%s\" arg[2]=\"%s\""),
+	            dwEventCode, iNumArgs, 
+					(iNumArgs > 0) ? ppArgList[0] : _T("(null)"),
+					(iNumArgs > 1) ? ppArgList[1] : _T("(null)"),
+					(iNumArgs > 2) ? ppArgList[2] : _T("(null)"));
+
    msg.SetCode(CMD_TRAP);
    msg.SetId(0);
    msg.SetVariable(VID_EVENT_CODE, dwEventCode);

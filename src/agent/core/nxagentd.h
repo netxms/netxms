@@ -92,21 +92,23 @@
 #define MAX_PSUFFIX_LENGTH 32
 #define MAX_SERVERS        32
 
-#define AF_DAEMON                   0x0001
-#define AF_USE_SYSLOG               0x0002
-#define AF_DEBUG                    0x0004
-#define AF_REQUIRE_AUTH             0x0008
-#define AF_LOG_UNRESOLVED_SYMBOLS   0x0010
-#define AF_ENABLE_ACTIONS           0x0020
-#define AF_REQUIRE_ENCRYPTION       0x0040
-#define AF_HIDE_WINDOW              0x0080
-#define AF_ENABLE_AUTOLOAD          0x0100
-#define AF_ENABLE_PROXY             0x0200
-#define AF_CENTRAL_CONFIG           0x0400
-#define AF_ENABLE_SNMP_PROXY			0x0800
-#define AF_SHUTDOWN                 0x1000
-#define AF_RUNNING_ON_NT4           0x2000
-#define AF_REGISTER                 0x4000
+#define AF_DAEMON                   0x00000001
+#define AF_USE_SYSLOG               0x00000002
+#define AF_DEBUG                    0x00000004
+#define AF_REQUIRE_AUTH             0x00000008
+#define AF_LOG_UNRESOLVED_SYMBOLS   0x00000010
+#define AF_ENABLE_ACTIONS           0x00000020
+#define AF_REQUIRE_ENCRYPTION       0x00000040
+#define AF_HIDE_WINDOW              0x00000080
+#define AF_ENABLE_AUTOLOAD          0x00000100
+#define AF_ENABLE_PROXY             0x00000200
+#define AF_CENTRAL_CONFIG           0x00000400
+#define AF_ENABLE_SNMP_PROXY			0x00000800
+#define AF_SHUTDOWN                 0x00001000
+#define AF_RUNNING_ON_NT4           0x00002000
+#define AF_REGISTER                 0x00004000
+#define AF_ENABLE_WATCHDOG          0x00008000
+#define AF_CATCH_EXCEPTIONS         0x00010000
 
 
 #ifdef _WIN32
@@ -340,7 +342,7 @@ BOOL AddAction(const char *pszName, int iType, const char *pArg,
 BOOL AddActionFromConfig(char *pszLine, BOOL bShellExec);
 DWORD ExecAction(char *pszAction, NETXMS_VALUES_LIST *pArgs);
 
-DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs);
+DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs, pid_t *pid);
 DWORD ExecuteShellCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs);
 
 BOOL WaitForProcess(const TCHAR *name);

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: actions.cpp
+** File: actions.cpp
 **
 **/
 
@@ -105,7 +105,7 @@ DWORD ExecAction(char *pszAction, NETXMS_VALUES_LIST *pArgs)
          switch(m_pActionList[i].iType)
          {
             case AGENT_ACTION_EXEC:
-               dwErrorCode = ExecuteCommand(m_pActionList[i].handler.pszCmdLine, pArgs);
+               dwErrorCode = ExecuteCommand(m_pActionList[i].handler.pszCmdLine, pArgs, NULL);
                break;
             case AGENT_ACTION_SHELLEXEC:
                dwErrorCode = ExecuteShellCommand(m_pActionList[i].handler.pszCmdLine, pArgs);

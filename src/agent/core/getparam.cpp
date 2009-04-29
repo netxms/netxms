@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -206,7 +206,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
 #endif
    { "Agent.AcceptedConnections", H_UIntPtr, (char *)&g_dwAcceptedConnections, DCI_DT_UINT, DCIDESC_AGENT_ACCEPTEDCONNECTIONS },
    { "Agent.AcceptErrors", H_UIntPtr, (char *)&g_dwAcceptErrors, DCI_DT_UINT, DCIDESC_AGENT_ACCEPTERRORS },
-   { "Agent.ActiveConnections", H_ActiveConnections, NULL, DCI_DT_INT, DCIDESC_AGENT_ACTIVECONNECTIONS },
+   { "Agent.ActiveConnections", H_ActiveConnections, NULL, DCI_DT_UINT, DCIDESC_AGENT_ACTIVECONNECTIONS },
    { "Agent.AuthenticationFailures", H_UIntPtr, (char *)&m_dwAuthenticationFailures, DCI_DT_UINT, DCIDESC_AGENT_AUTHENTICATIONFAILURES },
    { "Agent.ConfigurationServer", H_StringConstant, g_szConfigServer, DCI_DT_STRING, DCIDESC_AGENT_CONFIG_SERVER },
    { "Agent.FailedRequests", H_UIntPtr, (char *)&m_dwFailedRequests, DCI_DT_UINT, DCIDESC_AGENT_FAILEDREQUESTS },

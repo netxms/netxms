@@ -44,7 +44,6 @@ include/netxms_isc.h -text
 include/nxlpapi.h -text
 netware/bin/.keep -text
 src/PPC_libs.vcw eol=crlf
-src/agent/core/nxagentd.dsp eol=crlf
 src/agent/core/nxagentd.vcproj -text
 src/agent/subagents/ecs/ecs.dsp eol=crlf
 src/agent/subagents/ecs/ecs.vcproj -text

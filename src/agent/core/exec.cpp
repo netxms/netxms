@@ -2,7 +2,7 @@
 
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,10 +25,23 @@
 #include "nxagentd.h"
 
 #ifdef _WIN32
+#include <winternl.h>
 #define popen _popen
 #else
 #include <sys/wait.h>
 #endif
+
+
+//
+// Information for process starter
+//
+
+struct PROCESS_START_INFO
+{
+	char *cmdLine;
+	pid_t *pid;
+	CONDITION condProcessStarted;
+};
 
 
 //
@@ -46,7 +59,7 @@ static THREAD_RESULT THREAD_CALL Waiter(void *arg)
 
 static THREAD_RESULT THREAD_CALL Worker(void *arg)
 { 
-	char *cmd = (char *)arg;
+	char *cmd = ((PROCESS_START_INFO *)arg)->cmdLine;
 	if (cmd == NULL)
 	{
 		return THREAD_OK;
@@ -97,6 +110,8 @@ static THREAD_RESULT THREAD_CALL Worker(void *arg)
 	switch(p)
 	{
 		case -1: // error
+			*((PROCESS_START_INFO *)arg)->pid = -1;
+			ConditionSet(((PROCESS_START_INFO *)arg)->condProcessStarted);
 			break;
 		case 0: // child
 			{
@@ -114,6 +129,8 @@ static THREAD_RESULT THREAD_CALL Worker(void *arg)
 			break;
 		default: // parent
 			{
+				*((PROCESS_START_INFO *)arg)->pid = p;
+				ConditionSet(((PROCESS_START_INFO *)arg)->condProcessStarted);
 				pid_t *pp = (pid_t *)malloc(sizeof(pid_t));
 				*pp = p;
 				ThreadCreate(Waiter, 0, (void *)pp);
@@ -128,7 +145,7 @@ static THREAD_RESULT THREAD_CALL Worker(void *arg)
 #endif
 
 
-DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
+DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs, pid_t *pid)
 {
    char *pszCmdLine, *sptr;
    DWORD i, dwSize, dwRetCode = ERR_SUCCESS;
@@ -197,6 +214,47 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
    }
    else
    {
+		if (pid != NULL)
+		{
+			HMODULE dllKernel32;
+
+			dllKernel32 = LoadLibrary(_T("KERNEL32.DLL"));
+			if (dllKernel32 != NULL)
+			{
+				DWORD (WINAPI *fpGetProcessId)(HANDLE);
+
+				fpGetProcessId = (DWORD (WINAPI *)(HANDLE))GetProcAddress(dllKernel32, "GetProcessId");
+				if (fpGetProcessId != NULL)
+				{
+					*pid = fpGetProcessId(pi.hProcess);
+				}
+				else
+				{
+					HMODULE dllNtdll;
+
+					dllNtdll = LoadLibrary(_T("NTDLL.DLL"));
+					if (dllNtdll != NULL)
+					{
+						NTSTATUS (WINAPI *pfZwQueryInformationProcess)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
+
+						pfZwQueryInformationProcess = (NTSTATUS (WINAPI *)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG))GetProcAddress(dllNtdll, "ZwQueryInformationProcess");
+						if (pfZwQueryInformationProcess != NULL)
+						{
+							PROCESS_BASIC_INFORMATION pbi;
+							ULONG len;
+
+							if (pfZwQueryInformationProcess(pi.hProcess, ProcessBasicInformation, &pbi, sizeof(pbi), &len) == 0)
+							{
+								*pid = (pid_t)pbi.UniqueProcessId;
+							}
+						}
+						FreeLibrary(dllNtdll);
+					}
+				}
+				FreeLibrary(dllKernel32);
+			}
+		}
+
       // Close all handles
       CloseHandle(pi.hThread);
       CloseHandle(pi.hProcess);
@@ -207,7 +265,26 @@ DWORD ExecuteCommand(char *pszCommand, NETXMS_VALUES_LIST *pArgs)
    else
       dwRetCode = ERR_EXEC_FAILED;
 #else
-	if (!ThreadCreate(Worker, 0, (void *)strdup(pszCmdLine)))
+	PROCESS_START_INFO pi;
+	pid_t tempPid;
+
+	pi.cmdLine = strdup(pszCmdLine);
+	pi.pid = (pid != NULL) ? pid : &tempPid;
+	pi.condProcessStarted = ConditionCreate(TRUE);
+	if (ThreadCreate(Worker, 0, &pi))
+	{
+		if (ConditionWait(pi.condProcessStarted, 5000))
+		{
+			if (*pi.pid == -1)
+		   	dwRetCode = ERR_EXEC_FAILED;
+		}
+		else
+		{
+	   	dwRetCode = ERR_EXEC_FAILED;
+		}
+		ConditionDestroy(pi.condProcessStarted);
+	}
+	else
 	{
    	dwRetCode = ERR_EXEC_FAILED;
 	}

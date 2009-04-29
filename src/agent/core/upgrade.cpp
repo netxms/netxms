@@ -36,7 +36,7 @@ DWORD UpgradeAgent(TCHAR *pszPkgFile)
 
    // Start installation
    _sntprintf(szCmdLine, 1024, _T("\"%s\" /VERYSILENT /SUPPRESSMSGBOXES"), pszPkgFile);
-   return ExecuteCommand(szCmdLine, NULL);
+   return ExecuteCommand(szCmdLine, NULL, NULL);
 
 #elif defined(_NETWARE)
 
@@ -51,7 +51,7 @@ DWORD UpgradeAgent(TCHAR *pszPkgFile)
 										 _T(" opt=--disable-iconv")
 #endif
                                _T(" config=%s"), pszPkgFile, g_szConfigFile);
-   return ExecuteCommand(szCmdLine, NULL);
+   return ExecuteCommand(szCmdLine, NULL, NULL);
 
 #endif
 }

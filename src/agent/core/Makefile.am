@@ -1,6 +1,6 @@
 EXTRA_DIST = \
     Makefile.nw nxagentd.def \
-    nxagentd.vcproj nxagentd.dsp \
+    nxagentd.vcproj \
     messages.mc messages.h messages.c \
     nxagentd.rc \
     win32.cpp resource.h \
@@ -15,8 +15,9 @@ bin_PROGRAMS = nxagentd
 nxagentd_SOURCES = messages.c actions.cpp comm.cpp config.cpp exec.cpp \
                    getparam.cpp nxagentd.cpp register.cpp session.cpp \
                    snmpproxy.cpp static_subagents.cpp subagent.cpp \
-                   sysinfo.cpp tools.cpp trap.cpp upgrade.cpp
-nxagentd_LDADD = ../../libnetxms/libnetxms.la @SUBAGENT_LIBS@
+                   sysinfo.cpp tools.cpp trap.cpp upgrade.cpp \
+                   watchdog.cpp
+nxagentd_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @SUBAGENT_LIBS@
 AM_CPPFLAGS = $(all_includes) -DPREFIX=\"@prefix@\"
 CLEANFILES = messages.c messages.h static_subagents.cpp
 

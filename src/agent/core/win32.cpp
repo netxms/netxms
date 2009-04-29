@@ -193,37 +193,40 @@ LONG H_SystemUname(const char *cmd, const char *arg, char *value)
 {
    DWORD dwSize;
    char *cpuType, computerName[MAX_COMPUTERNAME_LENGTH + 1], osVersion[256];
-   SYSTEM_INFO sysInfo;
    OSVERSIONINFO versionInfo;
+	SYSTEM_INFO sysInfo;
 
    dwSize = MAX_COMPUTERNAME_LENGTH + 1;
    GetComputerName(computerName, &dwSize);
 
-   versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-   GetVersionEx(&versionInfo);
-   GetSystemInfo(&sysInfo);
+ 	versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	GetVersionEx(&versionInfo);
 
-   switch(versionInfo.dwPlatformId)
-   {
-      case VER_PLATFORM_WIN32_WINDOWS:
-         sprintf(osVersion,"Windows %s-%s",versionInfo.dwMinorVersion == 0 ? "95" :
-            (versionInfo.dwMinorVersion == 10 ? "98" :
-               (versionInfo.dwMinorVersion == 90 ? "Me" : "Unknown")),versionInfo.szCSDVersion);
-         break;
-      case VER_PLATFORM_WIN32_NT:
-         if (versionInfo.dwMajorVersion != 5)
-            sprintf(osVersion,"Windows NT %d.%d %s",versionInfo.dwMajorVersion,
-                    versionInfo.dwMinorVersion,versionInfo.szCSDVersion);
-         else      // Windows 2000, Windows XP or Windows Server 2003
-            sprintf(osVersion,"Windows %s%s%s",versionInfo.dwMinorVersion == 0 ? "2000" : 
-                    (versionInfo.dwMinorVersion == 1 ? "XP" : "Server 2003"),
-                       versionInfo.szCSDVersion[0] == 0 ? "" : " ", versionInfo.szCSDVersion);
-         break;
-      default:
-         strcpy(osVersion,"Windows [Unknown Version]");
-         break;
-   }
+	if (!GetWindowsVersionString(osVersion, 256))
+	{
+		switch(versionInfo.dwPlatformId)
+		{
+			case VER_PLATFORM_WIN32_WINDOWS:
+				sprintf(osVersion,"Windows %s-%s",versionInfo.dwMinorVersion == 0 ? "95" :
+					(versionInfo.dwMinorVersion == 10 ? "98" :
+						(versionInfo.dwMinorVersion == 90 ? "Me" : "Unknown")),versionInfo.szCSDVersion);
+				break;
+			case VER_PLATFORM_WIN32_NT:
+				if (versionInfo.dwMajorVersion != 5)
+					sprintf(osVersion,"Windows NT %d.%d %s",versionInfo.dwMajorVersion,
+							  versionInfo.dwMinorVersion,versionInfo.szCSDVersion);
+				else      // Windows 2000, Windows XP or Windows Server 2003
+					sprintf(osVersion,"Windows %s%s%s",versionInfo.dwMinorVersion == 0 ? "2000" : 
+							  (versionInfo.dwMinorVersion == 1 ? "XP" : "Server 2003"),
+								  versionInfo.szCSDVersion[0] == 0 ? "" : " ", versionInfo.szCSDVersion);
+				break;
+			default:
+				strcpy(osVersion,"Windows [Unknown Version]");
+				break;
+		}
+	}
 
+	GetSystemInfo(&sysInfo);
    switch(sysInfo.wProcessorArchitecture)
    {
       case PROCESSOR_ARCHITECTURE_INTEL:
