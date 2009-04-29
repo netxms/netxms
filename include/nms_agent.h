@@ -174,6 +174,7 @@
 #define DCIDESC_SYSTEM_PLATFORMNAME		"Platform name"
 #define DCIDESC_PROCESS_COUNT			"Number of {instance} processes"
 #define DCIDESC_PROCESS_COUNTEX			"Number of {instance} processes (extended)"
+#define DCIDESC_PROCESS_CPUTIME                 "Total execution time for process {instance}"
 #define DCIDESC_PROCESS_GDIOBJ			"GDI objects used by process {instance}"
 #define DCIDESC_PROCESS_IO_OTHERB		""
 #define DCIDESC_PROCESS_IO_OTHEROP		""
@@ -183,6 +184,7 @@
 #define DCIDESC_PROCESS_IO_WRITEOP		""
 #define DCIDESC_PROCESS_KERNELTIME		"Total execution time in kernel mode for process {instance}"
 #define DCIDESC_PROCESS_PAGEFAULTS		"Page faults for process {instance}"
+#define DCIDESC_PROCESS_SYSCALLS		"Number of system calls made by process {instance}"
 #define DCIDESC_PROCESS_THREADS			"Number of threads in process {instance}"
 #define DCIDESC_PROCESS_USEROBJ			"USER objects used by process {instance}"
 #define DCIDESC_PROCESS_USERTIME		"Total execution time in user mode for process {instance}"
@@ -398,7 +400,7 @@ inline void ret_int64(TCHAR *rbuf, INT64 value)
 #if defined(_WIN32) && (_MSC_VER >= 1300)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%I64d"), value);
 #else    /* _WIN32 */
-   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%lld"), value);
+   _sntprintf(rbuf, MAX_RESULT_LENGTH, INT64_FMT, value);
 #endif   /* _WIN32 */
 }
 
@@ -407,7 +409,7 @@ inline void ret_uint64(TCHAR *rbuf, QWORD value)
 #if defined(_WIN32) && (_MSC_VER >= 1300)
    _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%I64u"), value);
 #else    /* _WIN32 */
-   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%llu"), value);
+   _sntprintf(rbuf, MAX_RESULT_LENGTH, UINT64_FMT, value);
 #endif   /* _WIN32 */
 }
 

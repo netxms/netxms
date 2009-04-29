@@ -58,7 +58,7 @@
 //    object id, user arg
 //
 
-typedef void (* LOG_PARSER_CALLBACK)(DWORD, const char *, int, char **, DWORD, void *);
+typedef void (* LogParserCallback)(DWORD, const char *, int, char **, DWORD, void *);
 
 
 //
@@ -73,7 +73,7 @@ private:
 	LogParser *m_parser;
 	regex_t m_preg;
 	DWORD m_event;
-	BOOL m_isValid;
+	bool m_isValid;
 	int m_numParams;
 	regmatch_t *m_pmatch;
 	TCHAR *m_regexp;
@@ -84,40 +84,51 @@ private:
 	TCHAR *m_context;
 	int m_contextAction;
 	TCHAR *m_contextToChange;
-	BOOL m_isInverted;
-	BOOL m_breakOnMatch;
+	bool m_isInverted;
+	bool m_breakOnMatch;
 	TCHAR *m_description;
 
-	void ExpandMacros(const char *regexp, String &out);
+	void expandMacros(const char *regexp, String &out);
 
 public:
 	LogParserRule(LogParser *parser,
 	              const char *regexp, DWORD event = 0, int numParams = 0,
 	              const TCHAR *source = NULL, DWORD level = 0xFFFFFFFF,
-					  DWORD idStart = 0xFFFFFFFF, DWORD idEnd = 0xFFFFFFFF);
+					  DWORD idStart = 0, DWORD idEnd = 0xFFFFFFFF);
 	~LogParserRule();
 
-	BOOL IsValid() { return m_isValid; }
-	BOOL Match(const char *line, LOG_PARSER_CALLBACK cb, DWORD objectId, void *userArg);
+	bool isValid() { return m_isValid; }
+	bool match(const char *line, LogParserCallback cb, DWORD objectId, void *userArg);
+	bool matchEx(const TCHAR *source, DWORD eventId, DWORD level,
+	             const char *line, LogParserCallback cb, DWORD objectId, void *userArg); 
 	
-	void SetContext(const TCHAR *context) { safe_free(m_context); m_context = (context != NULL) ? _tcsdup(context) : NULL; }
-	void SetContextToChange(const TCHAR *context) { safe_free(m_contextToChange); m_contextToChange = (context != NULL) ? _tcsdup(context) : NULL; }
-	void SetContextAction(int action) { m_contextAction = action; }
+	void setContext(const TCHAR *context) { safe_free(m_context); m_context = (context != NULL) ? _tcsdup(context) : NULL; }
+	void setContextToChange(const TCHAR *context) { safe_free(m_contextToChange); m_contextToChange = (context != NULL) ? _tcsdup(context) : NULL; }
+	void setContextAction(int action) { m_contextAction = action; }
 
-	void SetInverted(BOOL flag) { m_isInverted = flag; }
-	BOOL IsInverted() { return m_isInverted; }
+	void setInverted(bool flag) { m_isInverted = flag; }
+	BOOL isInverted() { return m_isInverted; }
 
-	void SetBreakFlag(BOOL flag) { m_breakOnMatch = flag; }
-	BOOL GetBreakFlag() { return m_breakOnMatch; }
-	
-	const TCHAR *GetContext() { return m_context; }
-	const TCHAR *GetContextToChange() { return m_contextToChange; }
-	int GetContextAction() { return m_contextAction; }
+	void setBreakFlag(bool flag) { m_breakOnMatch = flag; }
+	BOOL getBreakFlag() { return m_breakOnMatch; }
 
-	void SetDescription(const TCHAR *descr) { safe_free(m_description); m_description = (descr != NULL) ? _tcsdup(descr) : NULL; }
-	const TCHAR *GetDescription() { return CHECK_NULL_EX(m_description); }
+	const TCHAR *getContext() { return m_context; }
+	const TCHAR *getContextToChange() { return m_contextToChange; }
+	int getContextAction() { return m_contextAction; }
 
-	const TCHAR *GetRegexpSource() { return CHECK_NULL(m_regexp); }
+	void setDescription(const TCHAR *descr) { safe_free(m_description); m_description = (descr != NULL) ? _tcsdup(descr) : NULL; }
+	const TCHAR *getDescription() { return CHECK_NULL_EX(m_description); }
+
+	void setSource(const TCHAR *source) { safe_free(m_source); m_source = (source != NULL) ? _tcsdup(source) : NULL; }
+	const TCHAR *getSource() { return CHECK_NULL_EX(m_source); }
+
+	void setLevel(DWORD level) { m_level = level; }
+	DWORD getLevel() { return m_level; }
+
+	void setIdRange(DWORD start, DWORD end) { m_idStart = start; m_idEnd = end; }
+	QWORD getIdRange() { return ((QWORD)m_idStart << 32) | (QWORD)m_idEnd; }
+
+	const TCHAR *getRegexpSource() { return CHECK_NULL(m_regexp); }
 };
 
 
@@ -127,67 +138,70 @@ public:
 
 class LIBNXLP_EXPORTABLE LogParser
 {
-	friend BOOL LogParserRule::Match(const char *, LOG_PARSER_CALLBACK, DWORD, void *);
+	friend bool LogParserRule::match(const char *, LogParserCallback, DWORD, void *);
+	friend bool LogParserRule::matchEx(const TCHAR *, DWORD, DWORD, const char *, LogParserCallback, DWORD, void *);
 
 private:
 	int m_numRules;
 	LogParserRule **m_rules;
 	StringMap m_contexts;
 	StringMap m_macros;
-	LOG_PARSER_CALLBACK m_cb;
+	LogParserCallback m_cb;
 	void *m_userArg;
 	TCHAR *m_fileName;
 	CODE_TO_TEXT *m_eventNameList;
-	BOOL (*m_eventResolver)(const TCHAR *, DWORD *);
+	bool (*m_eventResolver)(const TCHAR *, DWORD *);
 	THREAD m_thread;	// Associated thread
 	int m_recordsProcessed;
 	int m_recordsMatched;
-	BOOL m_processAllRules;
+	bool m_processAllRules;
 	int m_traceLevel;
 	void (*m_traceCallback)(const TCHAR *, va_list);
 	
-	const TCHAR *CheckContext(LogParserRule *rule);
-	void Trace(int level, const TCHAR *format, ...);
+	const TCHAR *checkContext(LogParserRule *rule);
+	void trace(int level, const TCHAR *format, ...);
+	bool matchLogRecord(bool hasAttributes, const char *source, DWORD eventId, DWORD level, const char *line, DWORD objectId);
 
 public:
 	LogParser();
 	~LogParser();
 	
-	BOOL CreateFromXML(const char *xml, int xmlLen = -1, char *errorText = NULL, int errBufSize = 0);
+	bool createFromXml(const char *xml, int xmlLen = -1, char *errorText = NULL, int errBufSize = 0);
 
-	void SetFileName(const TCHAR *name);
-	const TCHAR *GetFileName() { return m_fileName; }
+	void setFileName(const TCHAR *name);
+	const TCHAR *getFileName() { return m_fileName; }
 
-	void SetThread(THREAD th) { m_thread = th; }
-	THREAD GetThread() { return m_thread; }
+	void setThread(THREAD th) { m_thread = th; }
+	THREAD getThread() { return m_thread; }
 
-	void SetProcessAllFlag(BOOL flag) { m_processAllRules = flag; }
-	BOOL GetProcessAllFlag() { return m_processAllRules; }
+	void setProcessAllFlag(bool flag) { m_processAllRules = flag; }
+	bool getProcessAllFlag() { return m_processAllRules; }
 
-	BOOL AddRule(const char *regexp, DWORD event = 0, int numParams = 0);
-	BOOL AddRule(LogParserRule *rule);
-	void SetCallback(LOG_PARSER_CALLBACK cb) { m_cb = cb; }
-	void SetUserArg(void *arg) { m_userArg = arg; }
-	void SetEventNameList(CODE_TO_TEXT *ctt) { m_eventNameList = ctt; }
-	void SetEventNameResolver(BOOL (*cb)(const TCHAR *, DWORD *)) { m_eventResolver = cb; }
-	DWORD ResolveEventName(const TCHAR *name, DWORD defVal = 0);
+	bool addRule(const char *regexp, DWORD event = 0, int numParams = 0);
+	bool addRule(LogParserRule *rule);
+	void setCallback(LogParserCallback cb) { m_cb = cb; }
+	void setUserArg(void *arg) { m_userArg = arg; }
+	void setEventNameList(CODE_TO_TEXT *ctt) { m_eventNameList = ctt; }
+	void setEventNameResolver(bool (*cb)(const TCHAR *, DWORD *)) { m_eventResolver = cb; }
+	DWORD resolveEventName(const TCHAR *name, DWORD defVal = 0);
 
-	void AddMacro(const TCHAR *name, const TCHAR *value);
-	const TCHAR *GetMacro(const TCHAR *name);
+	void addMacro(const TCHAR *name, const TCHAR *value);
+	const TCHAR *getMacro(const TCHAR *name);
 
-	BOOL MatchLine(const char *line, DWORD objectId = 0);
+	bool matchLine(const char *line, DWORD objectId = 0);
+	bool matchEvent(const char *source, DWORD eventId, DWORD level, const char *line, DWORD objectId = 0);
 
-	int GetProcessedRecordsCount() { return m_recordsProcessed; }
-	int GetMatchedRecordsCount() { return m_recordsMatched; }
+	int getProcessedRecordsCount() { return m_recordsProcessed; }
+	int getMatchedRecordsCount() { return m_recordsMatched; }
 
-	int GetTraceLevel() { return m_traceLevel; }
-	void SetTraceLevel(int level) { m_traceLevel = level; }
-	void SetTraceCallback(void (*cb)(const TCHAR *, va_list)) { m_traceCallback = cb; }
+	int getTraceLevel() { return m_traceLevel; }
+	void setTraceLevel(int level) { m_traceLevel = level; }
+	void setTraceCallback(void (*cb)(const TCHAR *, va_list)) { m_traceCallback = cb; }
 
 #ifdef _WIN32
-	BOOL MonitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *, ...));
+	bool monitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *, ...));
 #else
-	BOOL MonitorFile(CONDITION stopCondition, BOOL *stopFlag, void (*logger)(int, const TCHAR *, ...));
+	bool monitorFile(CONDITION stopCondition, bool *stopFlag, void (*logger)(int, const TCHAR *, ...));
 #endif
 };
 

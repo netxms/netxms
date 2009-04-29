@@ -2,7 +2,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library API
-** Copyright (C) 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2004-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -472,6 +472,8 @@ enum
 #define OBJ_UPDATE_TRUSTED_NODES    ((QWORD)_ULL(0x0100000000))
 #define OBJ_UPDATE_CUSTOM_ATTRS     ((QWORD)_ULL(0x0200000000))
 #define OBJ_UPDATE_USE_IFXTABLE     ((QWORD)_ULL(0x0400000000))
+#define OBJ_UPDATE_AUTO_APPLY       ((QWORD)_ULL(0x0800000000))
+#define OBJ_UPDATE_AUTO_BIND        ((QWORD)_ULL(0x1000000000))
 
 
 //
@@ -607,6 +609,20 @@ enum
 #define OP_NE        5
 #define OP_LIKE      6
 #define OP_NOTLIKE   7
+
+
+//
+// DCI base units
+//
+
+#define DCI_BASEUNITS_OTHER             0
+#define DCI_BASEUNITS_CUSTOM            1
+#define DCI_BASEUNITS_BYTES             2
+#define DCI_BASEUNITS_BITS              3
+#define DCI_BASEUNITS_SECONDS           4
+#define DCI_BASEUNITS_PERCENTS          5
+#define DCI_BASEUNITS_BITS_PER_SECOND   6
+#define DCI_BASEUNITS_BYTES_PER_SECOND  7
 
 
 //
@@ -1001,11 +1017,15 @@ struct __nxc_object_subnet
 struct __nxc_object_container
 {
    DWORD dwCategory;
+	BOOL isAutoBindEnabled;
+	TCHAR *pszAutoBindFilter;
 };
 
 struct __nxc_object_dct
 {
    DWORD dwVersion;
+	BOOL isAutoApplyEnabled;
+	TCHAR *pszAutoApplyFilter;
 };
 
 struct __nxc_object_netsrv
@@ -1113,11 +1133,11 @@ typedef struct
 {
    QWORD qwFlags;
    DWORD dwObjectId;
-   TCHAR *pszName;
+   const TCHAR *pszName;
    int iAgentPort;
    int iAuthType;
-   TCHAR *pszSecret;
-   TCHAR *pszCommunity;
+   const TCHAR *pszSecret;
+   const TCHAR *pszCommunity;
    BOOL bInheritRights;
    DWORD dwImage;
    DWORD dwAclSize;
@@ -1127,8 +1147,8 @@ typedef struct
    WORD wProto;
    WORD wPort;
    DWORD dwPollerNode;
-   TCHAR *pszRequest;
-   TCHAR *pszResponse;
+   const TCHAR *pszRequest;
+   const TCHAR *pszResponse;
    DWORD dwIpAddr;
    DWORD dwPeerGateway;
    DWORD dwNumLocalNets;
@@ -1152,7 +1172,7 @@ typedef struct
    int nInactiveStatus;
    DWORD dwNumDCI;
    INPUT_DCI *pDCIList;
-   TCHAR *pszScript;
+   const TCHAR *pszScript;
 	DWORD dwClusterType;
 	DWORD dwNumSyncNets;
 	IP_NETWORK *pSyncNetList;
@@ -1162,6 +1182,10 @@ typedef struct
 	DWORD dwNumTrustedNodes;
 	DWORD *pdwTrustedNodes;
 	int nUseIfXTable;
+	BOOL isAutoApplyEnabled;
+	const TCHAR *pszAutoApplyFilter;
+	BOOL isAutoBindEnabled;
+	const TCHAR *pszAutoBindFilter;
 #ifdef __cplusplus
 	StringMap *pCustomAttrs;
 #else
@@ -1241,6 +1265,10 @@ typedef struct
    DWORD dwNumSchedules;
    TCHAR **ppScheduleList;
 	DWORD dwProxyNode;
+	int nBaseUnits;
+	int nMultiplier;
+	TCHAR *pszCustomUnitName;
+	TCHAR *pszPerfTabSettings;
 } NXC_DCI;
 
 
@@ -1918,6 +1946,9 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSystemDCIList(NXC_SESSION hSession, DWORD dwNodeI
                                              DWORD *pdwNumItems, NXC_SYSTEM_DCI **ppList);
 DWORD LIBNXCL_EXPORTABLE NXCPushDCIData(NXC_SESSION hSession, DWORD dwNumItems,
                                         NXC_DCI_PUSH_DATA *pItems, DWORD *pdwIndex);
+DWORD LIBNXCL_EXPORTABLE NXCTestDCITransformation(NXC_SESSION hSession, DWORD dwNodeId, DWORD dwItemId,
+																  const TCHAR *script, const TCHAR *value, BOOL *execStatus,
+																  TCHAR *execResult, size_t resultBufSize);
 
 /** MIB files **/
 DWORD LIBNXCL_EXPORTABLE NXCGetMIBFileTimeStamp(NXC_SESSION hSession, DWORD *pdwTimeStamp);

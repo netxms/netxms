@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -294,7 +294,7 @@ typedef struct
 #define CMD_DCI_DATA                0x0032
 #define CMD_GET_MIB_TIMESTAMP       0x0033
 #define CMD_GET_MIB                 0x0034
-//#define CMD_REQUEST_NEW_LPP_ID      0x0035
+#define CMD_TEST_DCI_TRANSFORMATION 0x0035
 //#define CMD_OPEN_LPP                0x0036
 #define CMD_CREATE_OBJECT           0x0037
 #define CMD_GET_EVENT_NAMES         0x0038
@@ -652,7 +652,7 @@ typedef struct
 #define VID_NUM_ROWS                ((DWORD)167)
 #define VID_TABLE_TITLE             ((DWORD)168)
 #define VID_EVENT_NAME              ((DWORD)169)
-//#define VID_LPP_VERSION             ((DWORD)170)
+#define VID_AUTO_APPLY              ((DWORD)170)
 #define VID_LOG_NAME                ((DWORD)171)
 #define VID_OPERATION               ((DWORD)172)
 #define VID_MAX_RECORDS             ((DWORD)173)
@@ -801,6 +801,17 @@ typedef struct
 #define VID_TOKEN_SOFTLIMIT         ((DWORD)316)
 #define VID_TOKEN_HARDLIMIT         ((DWORD)317)
 #define VID_USE_IFXTABLE            ((DWORD)318)
+#define VID_APPLY_FILTER            ((DWORD)319)
+#define VID_ENABLE_AUTO_BIND        ((DWORD)320)
+#define VID_AUTO_BIND_FILTER        ((DWORD)321)
+#define VID_BASE_UNITS              ((DWORD)322)
+#define VID_MULTIPLIER              ((DWORD)323)
+#define VID_CUSTOM_UNITS_NAME       ((DWORD)324)
+#define VID_PERFTAB_SETTINGS        ((DWORD)325)
+#define VID_EXECUTION_STATUS        ((DWORD)326)
+#define VID_EXECUTION_RESULT        ((DWORD)327)
+#define VID_TABLE_NUM_ROWS          ((DWORD)328)
+#define VID_TABLE_NUM_COLS          ((DWORD)329)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -938,6 +949,9 @@ typedef struct
 #define VID_SUBMAP_LINK_NAMES_BASE  ((DWORD)0x20000000)
 
 #define VID_WEBMAP_LIST_BASE        ((DWORD)0x30000000)
+
+#define VID_TABLE_COLUMN_INFO_BASE  ((DWORD)0x10000000)
+#define VID_TABLE_DATA_BASE         ((DWORD)0x20000000)
 
 
 //

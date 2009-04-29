@@ -108,7 +108,16 @@
 #endif
 
 #ifndef EVENTLOG_DEBUG_TYPE
-#define EVENTLOG_DEBUG_TYPE		255
+#define EVENTLOG_DEBUG_TYPE		0x0080
+#endif
+
+
+//
+// Compatibility defines for C sources
+//
+
+#ifndef __cplusplus
+typedef int bool;
 #endif
 
 
@@ -159,12 +168,13 @@
 #define fileno(f)    _fileno(f)
 #define chdir(p)     _chdir(p)
 #define mkdir(p,m)   _mkdir(p,m)
-#define lseek(f,o,w) _lseek(f,o,v)
+#define lseek(f,o,w) _lseek(f,o,w)
 #define unlink(x)    _unlink(x)
 
 typedef unsigned __int64 QWORD;
 typedef __int64 INT64;
 typedef int socklen_t;
+typedef DWORD pid_t;
 
 #define INT64_FMT			_T("%I64d")
 #define UINT64_FMT		_T("%I64u")
@@ -569,9 +579,12 @@ typedef struct tagPOINT
 //
 
 #ifndef _WIN32
-#define EVENTLOG_INFORMATION_TYPE   0
-#define EVENTLOG_WARNING_TYPE       1
-#define EVENTLOG_ERROR_TYPE         2
+#define EVENTLOG_SUCCESS                0x0000
+#define EVENTLOG_ERROR_TYPE             0x0001
+#define EVENTLOG_WARNING_TYPE           0x0002
+#define EVENTLOG_INFORMATION_TYPE       0x0004
+#define EVENTLOG_AUDIT_SUCCESS          0x0008
+#define EVENTLOG_AUDIT_FAILURE          0x0010
 #endif   /* _WIN32 */
 
 

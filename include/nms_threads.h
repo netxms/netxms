@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2008 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -75,10 +75,15 @@ THREAD_RESULT LIBNETXMS_EXPORTABLE THREAD_CALL SEHThreadStarter(void *);
 int LIBNETXMS_EXPORTABLE ___ExceptionHandler(EXCEPTION_POINTERS *pInfo);
 
 void LIBNETXMS_EXPORTABLE SetExceptionHandler(BOOL (*pfHandler)(EXCEPTION_POINTERS *),
-															 void (*pfWriter)(char *));
+															 void (*pfWriter)(const TCHAR *), const TCHAR *pszDumpDir,
+															 const TCHAR *pszBaseProcessName,
+															 DWORD dwLogMsgCode, BOOL bPrintToScreen);
 BOOL LIBNETXMS_EXPORTABLE SEHDefaultConsoleHandler(EXCEPTION_POINTERS *pInfo);
 TCHAR LIBNETXMS_EXPORTABLE *SEHExceptionName(DWORD code);
 void LIBNETXMS_EXPORTABLE SEHShowCallStack(CONTEXT *pCtx);
+
+void LIBNETXMS_EXPORTABLE SEHServiceExceptionDataWriter(const TCHAR *pszText);
+BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo);
 
 #define LIBNETXMS_EXCEPTION_HANDLER \
 	} __except(___ExceptionHandler((EXCEPTION_POINTERS *)_exception_info())) { ExitProcess(99); }
@@ -606,7 +611,7 @@ inline void ThreadSleep(int nSeconds)
 
 inline void ThreadSleepMs(DWORD dwMilliseconds)
 {
-#if HAVE_NANOSLEEP
+#if HAVE_NANOSLEEP && HAVE_DECL_NANOSLEEP
 	struct timespec interval, remainder;
 
 	interval.tv_sec = dwMilliseconds / 1000;

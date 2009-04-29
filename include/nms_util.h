@@ -1,7 +1,7 @@
 /* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -186,6 +186,8 @@ private:
 // Class for table data storage
 //
 
+class CSCPMessage;
+
 class LIBNETXMS_EXPORTABLE Table
 {
 private:
@@ -196,7 +198,10 @@ private:
 
 public:
    Table();
+   Table(CSCPMessage *msg);
    ~Table();
+
+	void FillMessage(CSCPMessage &msg);
 
    int GetNumRows(void) { return m_nNumRows; }
    int GetNumColumns(void) { return m_nNumCols; }
@@ -518,7 +523,7 @@ extern "C"
 	const char LIBNETXMS_EXPORTABLE *XMLGetAttr(const char **attrs, const char *name);
 	int LIBNETXMS_EXPORTABLE XMLGetAttrInt(const char **attrs, const char *name, int defVal);
 	int LIBNETXMS_EXPORTABLE XMLGetAttrDWORD(const char **attrs, const char *name, DWORD defVal);
-	BOOL LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name, BOOL defVal);
+	bool LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name, bool defVal);
 
 #ifdef __cplusplus
 	const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText = _T("Unknown"));
@@ -528,6 +533,7 @@ extern "C"
 
 #ifdef _WIN32
    TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(DWORD dwError, TCHAR *pszBuffer, size_t iBufSize);
+	BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strSize);
 #endif
 
 #if !(HAVE_DAEMON)
@@ -598,6 +604,12 @@ extern "C"
 #endif
 #if !HAVE_WSTAT
 	int wstat(const WCHAR *_path, struct stat *_sbuf);
+#endif
+#if !HAVE_WRENAME
+	int wrename(const WCHAR *_oldpath, const WCHAR *_newpath);
+#endif
+#if !HAVE_WUNLINK
+	int wunlink(const WCHAR *_path);
 #endif
 #if !HAVE_WGETENV
 	WCHAR *wgetenv(const WCHAR *_string);
