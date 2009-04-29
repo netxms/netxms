@@ -1,9 +1,0 @@
-<div class="oneThird">
-	<h1>Latest news <a href="/cgi-bin/news.pl?rss=yes"><img border="0" src="/rss.gif" /></a></h1>
-  
-  <!--#include virtual="/cgi-bin/news.pl?count=3&cut" -->
-
-  <div class="more"><a href="/news.shtml">More News &raquo;</a></div>
-
-  <p class="filler"><!-- Filler para to extend left vertical line --></p>
-</div>
