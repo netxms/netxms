@@ -1,8 +1,25 @@
 *
-* 0.9.0
+* 0.2.26
 *
 
-- Fixed issues: #239, #244
+- Fixed compilation problems on some UNIX platforms
+- Fixed incorrect behaviour of Disk.Free parameter on some Windows systems
+- Fixed broken Windows 2000 support (issue #248)
+
+
+*
+* 0.2.25
+*
+
+- Implemented automatic template application based on filters
+- Implemented automatic node binding to containers based on filters
+- Implemented database export and import
+- Database checking tool (nxdbmgr) improved
+- More standard parameters inplemented in Linux, FreeBSD, and Solaris subagents
+- Removed inconsistencies in some parameters' behavior on different platforms
+- DCI transformation scripts now can be tested from console
+- Network maps improved
+- Fixed issues: #197, #217, #239, #240, #241, #242, #243, #244, #245
 
 
 *

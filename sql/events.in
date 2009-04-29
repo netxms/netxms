@@ -557,6 +557,16 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'Parameters:#0D#0A' CONCAT
 		'   1) Number of beacons'
 	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_DB_QUERY_FAILED, 'SYS_DB_QUERY_FAILED',
+		EVENT_SEVERITY_CRITICAL, 1,
+		'Database query failed (Query: %1; Error: %2)',
+		'Generated when SQL query to backend database failed.#0D#0A' CONCAT
+		'Parameters:#0D#0A' CONCAT
+		'   1) Query#0D#0A' CONCAT
+		'   2) Error message'
+	);
 
 
 /*

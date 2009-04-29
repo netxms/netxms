@@ -4,11 +4,12 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [0.9.0-rc2], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [0.9.0-rc3], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
 
+AC_CONFIG_MACRO_DIR([m4])
 
 #--------------------------------------------------------------------
 # Functions
@@ -41,7 +42,6 @@ USE_PTH="no"
 BUILD_SERVER="no"
 BUILD_AGENT="no"
 BUILD_CLIENT="no"
-BUILD_CONSOLE="no"
 BUILD_NXHTTPD="no"
 BUILD_STATIC_AGENT="no"
 NEED_ZLIB="no"
@@ -81,12 +81,6 @@ AC_ARG_WITH(client,
 	COMPONENTS="$COMPONENTS client"
 ])
 
-AC_ARG_WITH(console,
-[AS_HELP_STRING(--with-console,build management console)],
-[
-	COMPONENTS="$COMPONENTS snmp console client"
-])
-
 AC_ARG_WITH(agent,
 [AS_HELP_STRING(--with-agent,build agent)],
 [
@@ -115,12 +109,6 @@ AC_ARG_WITH(mdebug,
 [AS_HELP_STRING(--with-mdebug,use debug version of memory allocation functions)],
 [
 	CPPFLAGS="$CPPFLAGS -DNETXMS_MEMORY_DEBUG"
-])
-
-AC_ARG_WITH(private,
-[AS_HELP_STRING(--with-private,include private sources into build)],
-[
-	COMPONENTS="$COMPONENTS private"
 ])
 
 AC_ARG_WITH(sqlite,
@@ -240,15 +228,14 @@ AC_ARG_ENABLE(debug,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle"
-	MODULES="sqlite snmp libnxsl libnxlp server agent libnxmap libnxcl client console nxhttpd nxscript nxcptest"
+	MODULES="sqlite snmp libnxsl libnxlp server agent libnxmap libnxcl client nxhttpd nxscript nxcptest"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
 	CONTRIB_MODULES="mibs backgrounds"
-	CLIENT_COMPONENTS="console nxalarm nxevent nxpush nxsms"
+	CLIENT_COMPONENTS="nxalarm nxevent nxpush nxsms"
 	UNSTABLE_SUBAGENT_DIRS="odbcquery"
 	SERVER_TOOLS="nxconfig"
-	NEED_WXWIDGETS="yes"
 )
 
 
@@ -324,7 +311,7 @@ if test $? = 0; then
 	DISABLE_ICONV="yes"
 	USE_PTH="yes"
 	MODULES="$MODULES libnxlp agent"
-	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO -D_USE_GNU_PTH -I/usr/local/include"
+	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO -D_USE_GNU_PTH -DSQLITE_THREADSAFE=0 -I/usr/local/include"
 	LDFLAGS="$LDFLAGS -all-static"
 	STATIC_SUBAGENT_LIST="ipso ping portcheck ups"
 	SUBAGENT_DIRS="ipso"
@@ -348,18 +335,11 @@ if test $? = 0; then
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds"
 fi
 
-check_substr "$COMPONENTS" "console"
-if test $? = 0; then
-	BUILD_CONSOLE="yes"
-	NEED_WXWIDGETS="yes"
-	CLIENT_COMPONENTS="$CLIENT_COMPONENTS console"
-fi
-
 check_substr "$COMPONENTS" "client"
 if test $? = 0; then
 	BUILD_CLIENT="yes"
 	NEED_ZLIB="yes"
-	MODULES="$MODULES libnxmap libnxcl console client"
+	MODULES="$MODULES libnxmap libnxcl client"
 	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxevent nxpush nxsms"
 fi
 
@@ -428,11 +408,6 @@ fi
 check_substr "$COMPONENTS" "oracle"
 if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS oracle"
-fi
-
-check_substr "$COMPONENTS" "private"
-if test $? = 0; then
-	MODULES="$MODULES private"
 fi
 
 
@@ -754,8 +729,8 @@ AC_CHECK_HEADERS([sys/types.h sys/stat.h unistd.h stdarg.h fcntl.h alloca.h])
 AC_CHECK_HEADERS([sys/int_types.h time.h sys/time.h sys/utsname.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h net/nh.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
-AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h])
-AC_CHECK_HEADERS([sys/sysctl.h vm/vm_param.h syslog.h getopt.h])
+AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h dlfcn.h])
+AC_CHECK_HEADERS([sys/sysctl.h sys/param.h sys/user.h vm/vm_param.h syslog.h getopt.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h],,,
 [[#ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>
@@ -813,7 +788,9 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror])
 AC_CHECK_FUNCS([strrchr strtol strtoul strtoll strtoull])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
-AC_CHECK_FUNCS([nanosleep getopt_long gmtime_r localtime_r lstat64])
+AC_CHECK_FUNCS([usleep nanosleep getopt_long gmtime_r localtime_r lstat64])
+
+AC_CHECK_DECLS([nanosleep])
 
 # Check if timezone is a function
 AC_MSG_CHECKING(for timezone function)
@@ -918,6 +895,14 @@ AC_CHECK_DECLS([__bswap_32, __bswap_64, htonll, ntohll],,,[
 #include <net/nh.h>
 #endif
 ])
+AC_CHECK_DECLS([RTLD_NOW, RTLD_GLOBAL],,,[
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#ifdef HAVE_DLFCN_H
+#include <dlfcn.h>
+#endif
+])
 
 
 #--------------------------------------------------------------------
@@ -933,6 +918,19 @@ if test "x$PLATFORM" = "xAIX"; then
 #endif
 	])
 fi
+
+
+#--------------------------------------------------------------------
+# *BSD specific checks
+#--------------------------------------------------------------------
+
+AC_CHECK_LIB(kvm, kvm_open)
+AC_CHECK_FUNCS([kvm_getswapinfo])
+AC_CHECK_TYPES([struct kinfo_proc2],,,[
+#if HAVE_SYS_SYSCTL_H
+#include <sys/sysctl.h>
+#endif
+])
 
 
 #--------------------------------------------------------------------
@@ -973,13 +971,14 @@ fi
 #--------------------------------------------------------------------
 
 AC_CHECK_HEADERS([wchar.h wctype.h iconv.h])
-AC_CHECK_TYPES([wchar_t],,,[
+AC_CHECK_TYPES([wchar_t, wint_t],,,[
 #if HAVE_WCHAR_H
 #include <wchar.h>
 #endif
 ])
 AC_CHECK_SIZEOF(wchar_t)
-AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull wfopen wopen wstat wgetenv towupper wcserror wcserror_r])
+AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull towupper wcserror wcserror_r])
+AC_CHECK_FUNCS([wfopen wopen wstat wgetenv wrename wunlink])
 
 if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,
@@ -1373,7 +1372,6 @@ fi
 CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -DPREFIX=\\\"\${prefix}\\\" -DPREFIXW=L\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DLIBDIR=\\\"\${libdir}\\\""
 
 AM_CONDITIONAL([BUILD_UNICODE_LIBS], [test "x$BUILD_UNICODE" = "xyes"])
-AM_CONDITIONAL([BUILD_UNICODE_CONSOLE], [test "x$WX_UNICODE" = "xyes"])
 
 
 #--------------------------------------------------------------------
@@ -1459,26 +1457,10 @@ AC_CONFIG_FILES([
 	src/install/Makefile
 	src/install/windows/Makefile
 	src/client/Makefile
-	src/client/console/Makefile
-	src/client/console/include/Makefile
-	src/client/console/libnxmc/Makefile
-	src/client/console/nxmc/Makefile
-	src/client/console/nxmc/rc/Makefile
-	src/client/console/nxmc/rc/icons/Makefile
-	src/client/console/nxmc/rc/icons/normal/Makefile
-	src/client/console/nxmc/rc/icons/small/Makefile
-	src/client/console/plugins/Makefile
-	src/client/console/plugins/AlarmBrowser/Makefile
-	src/client/console/plugins/AlarmBrowser/rc/Makefile
-	src/client/console/plugins/Dashboard/Makefile
-	src/client/console/plugins/Dashboard/rc/Makefile
-	src/client/console/plugins/ObjectBrowser/Makefile
-	src/client/console/plugins/ObjectBrowser/rc/Makefile
 	src/client/nxalarm/Makefile
 	src/client/nxevent/Makefile
 	src/client/nxpush/Makefile
 	src/client/nxsms/Makefile
-	src/console/Makefile
 	src/client/windows/nxuilib/Makefile
 	src/client/windows/nxuilib/res/Makefile
 	src/client/windows/nxuilib/sounds/Makefile
@@ -1490,8 +1472,6 @@ AC_CONFIG_FILES([
 	src/client/windows/nxav/res/Makefile
 	src/client/windows/nxnotify/Makefile
 	src/client/windows/nxnotify/res/Makefile
-	src/console/PocketPC/Makefile
-	src/console/PocketPC/res/Makefile
 	src/nxcptest/Makefile
 	src/nxscript/Makefile
 	src/server/Makefile
@@ -1559,11 +1539,6 @@ AC_CONFIG_FILES([
 	tools/Makefile
 ])
 
-if test -d src/private; then
-	PRIVATE=`cat src/private/configure.files`
-	AC_CONFIG_FILES([$PRIVATE])
-fi
-
 AC_OUTPUT
 
 echo "Updating libtool"
@@ -1572,12 +1547,6 @@ sed 's,$SED -e "/${host}-//g",$SED -e "s/${host}-//g",g' < ./libtool > libtool.n
 # On HP-UX, libtool passes +b instead of -Wl,+b even if gcc/g++ used as linker 
 if test "x$CC" = "xgcc" && test "x$PLATFORM" = "xHP-UX"; then
 	sed "s,hardcode_libdir_flag_spec_ld=,#hardcode_libdir_flag_spec_ld=,g" < ./libtool > libtool.new && mv libtool.new libtool && chmod +x ./libtool
-fi
-
-# Patch config.status
-if test -d src/private; then
-	PRIVATE=`cat src/private/configure.files`
-	$PERL tools/patch_config.status.pl $PRIVATE < config.status > config.status.temp && mv config.status.temp config.status && chmod +x ./config.status
 fi
 
 #--------------------------------------------------------------------
@@ -1611,12 +1580,6 @@ if test "x${BUILD_CLIENT}" = "xyes"; then
 	echo "Build Clients           : YES"
 else
 	echo "Build Clients           : NO"
-fi
-if test "x${BUILD_CONSOLE}" = "xyes"; then
-	echo "Build Console           : YES"
-	echo "wxWidgets config        :" `$WXCONF --selected-config --debug=$ENABLE_DEBUG`
-else
-	echo "Build Console           : NO"
 fi
 if test "x${BUILD_NXHTTPD}" = "xyes"; then
 	echo "Build Web Interface     : YES"

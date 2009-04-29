@@ -253,6 +253,7 @@ CREATE TABLE cluster_resources
 	resource_id integer not null,
 	resource_name varchar(255) not null,
 	ip_addr varchar(15) not null,
+	current_owner integer not null,
 	PRIMARY KEY(cluster_id,resource_id)
 ) TABLE_TYPE;
 
@@ -347,6 +348,8 @@ CREATE TABLE containers
 	id integer not null,
 	category integer not null,
 	object_class integer not null,
+	enable_auto_bind integer not null,
+	auto_bind_filter SQL_TEXT not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -391,7 +394,9 @@ CREATE TABLE cond_dci_map
 CREATE TABLE templates
 (
 	id integer not null,
-	version integer,
+	version integer not null,
+	enable_auto_apply integer not null,
+	apply_filter SQL_TEXT not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -504,6 +509,10 @@ CREATE TABLE items
 	all_thresholds integer not null,  // 1 if all thresholds should be processed at every check
 	resource_id integer not null,  // associated cluster resource ID
 	proxy_node integer not null,   // ID of proxy node (for SNMP and agent items)
+	base_units integer not null,		// bytes, seconds, etc.
+	unit_multiplier integer not null,	// kilo, mega, milli, etc.
+	custom_units_name varchar(63) not null, // units name of base_units = CUSTOM
+	perftab_settings SQL_TEXT not null,	// Settings for dispklaying graph on performance tab
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
@@ -528,8 +537,8 @@ CREATE TABLE dci_schedules
 CREATE TABLE raw_dci_values
 (
 	item_id integer not null,
-	raw_value varchar(255),
-	last_poll_time integer,
+	raw_value varchar(255) not null,
+	last_poll_time integer not null,
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
@@ -546,10 +555,10 @@ CREATE TABLE event_cfg
 (
 	event_code integer not null,
 	event_name varchar(63) not null,	// Short event name
-	severity integer,
-	flags integer,
-	message varchar(255),		// Message template
-	description SQL_TEXT,
+	severity integer not null,
+	flags integer not null,
+	message varchar(255) not null,		// Message template
+	description SQL_TEXT not null,
 	PRIMARY KEY(event_code)
 ) TABLE_TYPE;
 
@@ -562,11 +571,11 @@ CREATE TABLE event_log
 (
 	event_id SQL_INT64 not null,
 	event_code integer not null,
-	event_timestamp integer,
-	event_source integer,			// Source object ID
-	event_severity integer,
-	event_message varchar(255),
-	root_event_id SQL_INT64 default 0,	
+	event_timestamp integer not null,
+	event_source integer not null,			// Source object ID
+	event_severity integer not null,
+	event_message varchar(255) not null,
+	root_event_id SQL_INT64 not null,	
 		/* Non-zero if current event correlates to some other event */
 	user_tag varchar(63) not null,
 	PRIMARY KEY(event_id)
@@ -584,12 +593,12 @@ CREATE TABLE actions
 	action_id integer not null,
 	action_name varchar(63) not null,
 	action_type integer not null,
-	is_disabled integer,
+	is_disabled integer not null,
 	// Field "rcpt_addr" holds e-mail address for e-mail actions,
 	// phone number for sms actions, and remote host address for
 	// remote execution actions
-	rcpt_addr varchar(255),
-	email_subject varchar(255),
+	rcpt_addr varchar(255) not null,
+	email_subject varchar(255) not null,
 	// Field "action_data" holds message text for e-mail and sms actions,
 	// command line for external command execution actions, or
 	// action name with optional arguments for remote execution actions
