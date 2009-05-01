@@ -49,7 +49,7 @@ static void GenerateCurrentFileName(LogParser *parser, char *fname)
 #else
 	ltm = localtime(&t);
 #endif
-	_tcsftime(fname, MAX_PATH, parser->GetFileName(), ltm);
+	_tcsftime(fname, MAX_PATH, parser->getFileName(), ltm);
 }
 
 
@@ -81,7 +81,7 @@ static void ParseNewRecords(LogParser *parser, int fh)
 					*(eptr - 1) = 0;
 				else
 					*eptr = 0;
-				parser->MatchLine(ptr);
+				parser->matchLine(ptr);
          }
       }
       else
@@ -96,7 +96,7 @@ static void ParseNewRecords(LogParser *parser, int fh)
 // File parser thread
 //
 
-BOOL LogParser::MonitorFile(CONDITION stopCondition, BOOL *stopFlag, void (*logger)(int, const TCHAR *, ...))
+bool LogParser::monitorFile(CONDITION stopCondition, bool *stopFlag, void (*logger)(int, const TCHAR *, ...))
 {
 	char fname[MAX_PATH], temp[MAX_PATH];
 	struct stat st;
@@ -104,7 +104,7 @@ BOOL LogParser::MonitorFile(CONDITION stopCondition, BOOL *stopFlag, void (*logg
 	int err, fh;
 
 	if ((m_fileName == NULL) || (stopFlag == NULL))
-		return FALSE;
+		return false;
 
 
 	if (logger != NULL)
@@ -168,5 +168,5 @@ BOOL LogParser::MonitorFile(CONDITION stopCondition, BOOL *stopFlag, void (*logg
 
 	if (logger != NULL)
 		logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: parser thread for file \"%s\" stopped"), m_fileName);
-	return TRUE;
+	return true;
 }

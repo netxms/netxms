@@ -6,10 +6,10 @@ lib_LTLIBRARIES = libnxlp.la
 
 libnxlp_la_SOURCES = $(SOURCES)
 libnxlp_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
-libnxlp_la_LIBADD = ../libnetxms/libnetxms.la
+libnxlp_la_LIBADD = @top_srcdir@/src/libnetxms/libnetxms.la
 
 EXTRA_DIST = \
-	libnxlp.vcproj libnxlp.dsp \
+	libnxlp.vcproj \
 	libnxlp.h \
 	winfile.cpp \
 	libnxlp.def Makefile.nw

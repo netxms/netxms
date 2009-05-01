@@ -43,7 +43,7 @@ static TCHAR m_logFileName[MAX_PATH] = _T("");
 static FILE *m_logFileHandle = NULL;
 static MUTEX m_mutexLogAccess = INVALID_MUTEX_HANDLE;
 static DWORD m_flags = 0;
-static int m_maxLogSize = 16384 * 1024;	// 16 MB
+static int m_maxLogSize = 4096 * 1024;	// 4 MB
 static int m_logHistorySize = 4;		// Keep up 4 previous log files
 
 
@@ -365,6 +365,9 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 #if defined(UNICODE) && !defined(_WIN32)
 	char *mbMsg;
 #endif
+
+	if (!(m_flags & NXLOG_IS_OPEN))
+		return;
 
    memset(strings, 0, sizeof(char *) * 16);
 

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** NetXMS Foundation Library
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** NetXMS Message Bus library
+** Copyright (C) 2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,35 +17,14 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: config.cpp
+** File: libnxmb.h
 **
 **/
 
-#include "libnetxms.h"
+#ifndef _libnxmb_h_
+#define _libnxmb_h_
+
+#include <nxmbapi.h>
 
 
-//
-// Constructor
-//
-
-Config::Config()
-{
-}
-
-
-//
-// Destructor
-//
-
-Config::~Config()
-{
-}
-
-
-//
-// Load INI-style config
-//
-
-bool Config::loadIniConfig(const TCHAR *file)
-{
-}
+#endif

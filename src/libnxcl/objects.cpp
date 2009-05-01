@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2004-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -52,6 +52,12 @@ void DestroyObject(NXC_OBJECT *pObject)
          safe_free(pObject->cluster.pSyncNetList);
 			safe_free(pObject->cluster.pResourceList);
          break;
+		case OBJECT_TEMPLATE:
+			safe_free(pObject->dct.pszAutoApplyFilter);
+			break;
+		case OBJECT_CONTAINER:
+			safe_free(pObject->container.pszAutoBindFilter);
+			break;
    }
    safe_free(pObject->pdwChildList);
    safe_free(pObject->pdwParentList);
@@ -157,6 +163,12 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
          safe_free(pObject->cluster.pSyncNetList);
 			safe_free(pObject->cluster.pResourceList);
          break;
+		case OBJECT_TEMPLATE:
+			safe_free(pObject->dct.pszAutoApplyFilter);
+			break;
+		case OBJECT_CONTAINER:
+			safe_free(pObject->container.pszAutoBindFilter);
+			break;
    }
    safe_free(pObject->pdwChildList);
    safe_free(pObject->pdwParentList);
@@ -277,9 +289,13 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          break;
       case OBJECT_CONTAINER:
          pObject->container.dwCategory = pMsg->GetVariableLong(VID_CATEGORY);
+			pObject->container.isAutoBindEnabled = pMsg->GetVariableShort(VID_ENABLE_AUTO_BIND);
+			pObject->container.pszAutoBindFilter = pMsg->GetVariableStr(VID_AUTO_BIND_FILTER);
          break;
       case OBJECT_TEMPLATE:
          pObject->dct.dwVersion = pMsg->GetVariableLong(VID_TEMPLATE_VERSION);
+			pObject->dct.isAutoApplyEnabled = pMsg->GetVariableShort(VID_AUTO_APPLY);
+			pObject->dct.pszAutoApplyFilter = pMsg->GetVariableStr(VID_APPLY_FILTER);
          break;
       case OBJECT_NETWORKSERVICE:
          pObject->netsrv.iServiceType = (int)pMsg->GetVariableShort(VID_SERVICE_TYPE);
@@ -879,6 +895,16 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
          msg.SetVariable(dwId1++, pUpdate->pCustomAttrs->GetKeyByIndex(i));
          msg.SetVariable(dwId1++, pUpdate->pCustomAttrs->GetValueByIndex(i));
       }
+   }
+   if (pUpdate->qwFlags & OBJ_UPDATE_AUTO_APPLY)
+   {
+      msg.SetVariable(VID_AUTO_APPLY, (WORD)pUpdate->isAutoApplyEnabled);
+		msg.SetVariable(VID_APPLY_FILTER, CHECK_NULL_EX(pUpdate->pszAutoApplyFilter));
+   }
+   if (pUpdate->qwFlags & OBJ_UPDATE_AUTO_BIND)
+   {
+      msg.SetVariable(VID_ENABLE_AUTO_BIND, (WORD)pUpdate->isAutoBindEnabled);
+		msg.SetVariable(VID_AUTO_BIND_FILTER, CHECK_NULL_EX(pUpdate->pszAutoBindFilter));
    }
 
    // Send request

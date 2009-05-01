@@ -367,7 +367,7 @@ void CSCPMessage::ProcessXMLData(void *state)
 	switch(ps->varType)
 	{
 		case CSCP_DT_INTEGER:
-			SetVariable(ps->varId, strtoul(ps->value, NULL, 0));
+			SetVariable(ps->varId, (DWORD)strtoul(ps->value, NULL, 0));
 			break;
 		case CSCP_DT_INT16:
 			SetVariable(ps->varId, (WORD)strtoul(ps->value, NULL, 0));

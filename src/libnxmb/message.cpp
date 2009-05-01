@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** NetXMS Foundation Library
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** NetXMS Message Bus Library
+** Copyright (C) 2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,19 +17,32 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: config.cpp
+** File: message.cpp
 **
 **/
 
-#include "libnetxms.h"
+#include "libnxmb.h"
 
 
 //
-// Constructor
+// Default constructor
 //
 
-Config::Config()
+NXMBMessage::NXMBMessage()
 {
+	m_type = _tcsdup(_T("NONE"));
+	m_senderId = _tcsdup(_T("UNKNOWN"));
+}
+
+
+//
+// Create message with type and sender information
+//
+
+NXMBMessage::NXMBMessage(const TCHAR *type, const TCHAR *senderId)
+{
+	m_type = _tcsdup(CHECK_NULL(type));
+	m_senderId = _tcsdup(CHECK_NULL(senderId));
 }
 
 
@@ -37,15 +50,8 @@ Config::Config()
 // Destructor
 //
 
-Config::~Config()
+NXMBMessage::~NXMBMessage()
 {
-}
-
-
-//
-// Load INI-style config
-//
-
-bool Config::loadIniConfig(const TCHAR *file)
-{
+	safe_free(m_type);
+	safe_free(m_senderId);
 }

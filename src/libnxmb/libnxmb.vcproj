@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="libnetxms"
-	ProjectGUID="{B1745870-F3ED-4ACB-B813-0C4F47EF0793}"
-	RootNamespace="libnetxms"
+	Name="libnxmb"
+	ProjectGUID="{DAA82F5C-1144-4DC0-A2E8-5253068565F1}"
+	RootNamespace="libnxmb"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -43,8 +43,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\include;..\libexpat\libexpat"
-				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;_DEBUG;_USRDLL;LIBNETXMS_EXPORTS"
+				AdditionalIncludeDirectories="..\..\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBNXMB_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -64,10 +64,85 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib libeay32.lib crypt32.lib dbghelp.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="2"
+			CharacterSet="2"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="..\..\include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBNXMB_EXPORTS"
+				RuntimeLibrary="2"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				LinkIncremental="1"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -121,86 +196,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\include;..\libexpat\libexpat"
-				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;_DEBUG;_USRDLL;LIBNETXMS_EXPORTS"
+				AdditionalIncludeDirectories="..\..\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBNXMB_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib libeay32.lib crypt32.lib dbghelp.lib"
-				LinkIncremental="2"
-				GenerateDebugInformation="true"
-				SubSystem="2"
-				TargetMachine="17"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
-			CharacterSet="2"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\include;..\libexpat\libexpat"
-				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;_USRDLL;LIBNETXMS_EXPORTS;NDEBUG"
-				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
@@ -217,13 +217,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib libeay32.lib crypt32.lib dbghelp.lib"
-				LinkIncremental="1"
+				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
+				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -276,12 +273,12 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\include;..\libexpat\libexpat"
-				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;NDEBUG;_USRDLL;LIBNETXMS_EXPORTS"
+				AdditionalIncludeDirectories="..\..\include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBNXMB_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -295,7 +292,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib libeay32.lib crypt32.lib dbghelp.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -338,47 +334,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\base64.cpp"
+				RelativePath=".\dispatcher.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\config.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\crypto.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\dir.c"
-				>
-			</File>
-			<File
-				RelativePath=".\dload.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\gen_uuid.c"
-				>
-			</File>
-			<File
-				RelativePath=".\getopt.c"
-				>
-			</File>
-			<File
-				RelativePath=".\hash.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\icmp.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\inline.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\log.cpp"
+				RelativePath=".\filter.cpp"
 				>
 			</File>
 			<File
@@ -386,103 +346,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\md5.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\message.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\msgwq.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\nxcp.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\qsort.c"
-				>
-			</File>
-			<File
-				RelativePath=".\queue.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\regex.c"
-				>
-			</File>
-			<File
-				RelativePath=".\rwlock.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\scandir.c"
-				>
-			</File>
-			<File
-				RelativePath=".\seh.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\serial.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\sha1.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\StackWalker.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\string.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\strmap.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\strtoll.c"
-				>
-			</File>
-			<File
-				RelativePath=".\strtoull.c"
-				>
-			</File>
-			<File
-				RelativePath=".\table.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\threads.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\tools.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\unicode.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\uuid.c"
-				>
-			</File>
-			<File
-				RelativePath=".\wcstoll.c"
-				>
-			</File>
-			<File
-				RelativePath=".\wcstoull.c"
-				>
-			</File>
-			<File
-				RelativePath=".\xml.cpp"
+				RelativePath=".\subscriber.cpp"
 				>
 			</File>
 		</Filter>
@@ -492,19 +360,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\include\base64.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libnetxms.h"
-				>
-			</File>
-			<File
-				RelativePath=".\md5.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\netxms-regex.h"
+				RelativePath=".\libnxmb.h"
 				>
 			</File>
 			<File
@@ -512,19 +368,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\netxms_getopt.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\nms_agent.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\include\nms_common.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\nms_cscp.h"
 				>
 			</File>
 			<File
@@ -536,31 +380,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\nxconfig.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\nxcpapi.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\nxlog.h"
+				RelativePath="..\..\include\nxmbapi.h"
 				>
 			</File>
 			<File
 				RelativePath="..\..\include\nxqueue.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\rwlock.h"
-				>
-			</File>
-			<File
-				RelativePath=".\sha1.h"
-				>
-			</File>
-			<File
-				RelativePath=".\StackWalker.h"
 				>
 			</File>
 			<File
@@ -569,10 +393,6 @@
 			</File>
 			<File
 				RelativePath="..\..\include\uuid.h"
-				>
-			</File>
-			<File
-				RelativePath=".\uuidP.h"
 				>
 			</File>
 		</Filter>

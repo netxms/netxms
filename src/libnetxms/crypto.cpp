@@ -464,7 +464,7 @@ RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile)
    fp = _tfopen(pszKeyFile, _T("rb"));
    if (fp != NULL)
    {
-      if (fread(&dwLen, 1, sizeof(DWORD), fp) == sizeof(DWORD))
+      if (fread(&dwLen, 1, sizeof(DWORD), fp) == sizeof(DWORD) && dwLen < 10 * 1024)
       {
          pKeyBuffer = (BYTE *)malloc(dwLen);
          pBufPos = pKeyBuffer;

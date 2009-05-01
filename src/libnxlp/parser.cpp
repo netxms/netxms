@@ -32,7 +32,7 @@
 // Context state texts
 //
 
-static const TCHAR *m_states[] = { _T("MANUAL"), _T("AUTO"), _T("INACTIVE") };
+static const TCHAR *s_states[] = { _T("MANUAL"), _T("AUTO"), _T("INACTIVE") };
 
 
 //
@@ -75,8 +75,8 @@ typedef struct
 	String errorText;
 	String macroName;
 	String macro;
-	BOOL invertedRule;
-	BOOL breakFlag;
+	bool invertedRule;
+	bool breakFlag;
 } XML_PARSER_STATE;
 
 
@@ -121,7 +121,7 @@ LogParser::~LogParser()
 // Trace
 //
 
-void LogParser::Trace(int level, const TCHAR *format, ...)
+void LogParser::trace(int level, const TCHAR *format, ...)
 {
 	va_list args;
 
@@ -138,11 +138,11 @@ void LogParser::Trace(int level, const TCHAR *format, ...)
 // Add rule
 //
 
-BOOL LogParser::AddRule(LogParserRule *rule)
+bool LogParser::addRule(LogParserRule *rule)
 {
-	BOOL isOK;
+	bool isOK;
 
-	isOK = rule->IsValid();
+	isOK = rule->isValid();
 	if (isOK)
 	{
 		m_rules = (LogParserRule **)realloc(m_rules, sizeof(LogParserRule *) * (m_numRules + 1));
@@ -155,9 +155,9 @@ BOOL LogParser::AddRule(LogParserRule *rule)
 	return isOK;
 }
 
-BOOL LogParser::AddRule(const char *regexp, DWORD event, int numParams)
+bool LogParser::addRule(const char *regexp, DWORD event, int numParams)
 {
-	return AddRule(new LogParserRule(this, regexp, event, numParams));
+	return addRule(new LogParserRule(this, regexp, event, numParams));
 }
 
 
@@ -165,82 +165,110 @@ BOOL LogParser::AddRule(const char *regexp, DWORD event, int numParams)
 // Check context
 //
 
-const TCHAR *LogParser::CheckContext(LogParserRule *rule)
+const TCHAR *LogParser::checkContext(LogParserRule *rule)
 {
 	const TCHAR *state;
 	
-	if (rule->GetContext() == NULL)
+	if (rule->getContext() == NULL)
 	{
-		Trace(5, _T("  rule has no context"));
-		return m_states[CONTEXT_SET_MANUAL];
+		trace(5, _T("  rule has no context"));
+		return s_states[CONTEXT_SET_MANUAL];
 	}
 		
-	state = m_contexts.Get(rule->GetContext());
+	state = m_contexts.Get(rule->getContext());
 	if (state == NULL)
 	{
-		Trace(5, _T("  context '%s' inactive, rule should be skipped"), rule->GetContext());
+		trace(5, _T("  context '%s' inactive, rule should be skipped"), rule->getContext());
 		return NULL;	// Context inactive, don't use this rule		
 	}
 	
-	if (!_tcscmp(state, m_states[CONTEXT_CLEAR]))
+	if (!_tcscmp(state, s_states[CONTEXT_CLEAR]))
 	{
-		Trace(5, _T("  context '%s' inactive, rule should be skipped"), rule->GetContext());
+		trace(5, _T("  context '%s' inactive, rule should be skipped"), rule->getContext());
 		return NULL;
 	}
 	else
 	{
-		Trace(5, _T("  context '%s' active (mode=%s)"), rule->GetContext(), state);
+		trace(5, _T("  context '%s' active (mode=%s)"), rule->getContext(), state);
 		return state;
 	}
 }
 
 
 //
-// Match log line
+// Match log record
 //
 
-BOOL LogParser::MatchLine(const char *line, DWORD objectId)
+bool LogParser::matchLogRecord(bool hasAttributes, const char *source, DWORD eventId,
+										 DWORD level, const char *line, DWORD objectId)
 {
 	int i;
 	const TCHAR *state;
-	BOOL matched = FALSE;
+	bool matched = false;
 
-	Trace(2, _T("Match line: \"%s\""), line);
+	if (hasAttributes)
+		trace(2, _T("Match event: source=\"%s\" id=%u level=%d text=\"%s\""), source, eventId, level, line);
+	else
+		trace(2, _T("Match line: \"%s\""), line);
+
 	m_recordsProcessed++;
 	for(i = 0; i < m_numRules; i++)
 	{
-		Trace(4, _T("checking rule %d \"%s\""), i + 1, m_rules[i]->GetDescription());
-		if (((state = CheckContext(m_rules[i])) != NULL) && m_rules[i]->Match(line, m_cb, objectId, m_userArg))
+		trace(4, _T("checking rule %d \"%s\""), i + 1, m_rules[i]->getDescription());
+		bool ruleMatched = hasAttributes ? 
+			m_rules[i]->matchEx(source, eventId, level, line, m_cb, objectId, m_userArg) : 
+			m_rules[i]->match(line, m_cb, objectId, m_userArg);
+		if (((state = checkContext(m_rules[i])) != NULL) && ruleMatched)
 		{
-			Trace(1, _T("rule %d \"%s\" matched"), i + 1, m_rules[i]->GetDescription());
+			trace(1, _T("rule %d \"%s\" matched"), i + 1, m_rules[i]->getDescription());
 			if (!matched)
 				m_recordsMatched++;
 			
 			// Update context
-			if (m_rules[i]->GetContextToChange() != NULL)
+			if (m_rules[i]->getContextToChange() != NULL)
 			{
-				m_contexts.Set(m_rules[i]->GetContextToChange(), m_states[m_rules[i]->GetContextAction()]);
-				Trace(2, _T("rule %d \"%s\": context %s set to %s"), i + 1, m_rules[i]->GetDescription(), m_rules[i]->GetContextToChange(), m_states[m_rules[i]->GetContextAction()]);
+				m_contexts.Set(m_rules[i]->getContextToChange(), s_states[m_rules[i]->getContextAction()]);
+				trace(2, _T("rule %d \"%s\": context %s set to %s"), i + 1, m_rules[i]->getDescription(), m_rules[i]->getContextToChange(), s_states[m_rules[i]->getContextAction()]);
 			}
 			
 			// Set context of this rule to inactive if rule context mode is "automatic reset"
-			if (!_tcscmp(state, m_states[CONTEXT_SET_AUTOMATIC]))
+			if (!_tcscmp(state, s_states[CONTEXT_SET_AUTOMATIC]))
 			{
-				m_contexts.Set(m_rules[i]->GetContext(), m_states[CONTEXT_CLEAR]);
-				Trace(2, _T("rule %d \"%s\": context %s cleared because it was set to automatic reset mode"),
-				      i + 1, m_rules[i]->GetDescription(), m_rules[i]->GetContext());
+				m_contexts.Set(m_rules[i]->getContext(), s_states[CONTEXT_CLEAR]);
+				trace(2, _T("rule %d \"%s\": context %s cleared because it was set to automatic reset mode"),
+				      i + 1, m_rules[i]->getDescription(), m_rules[i]->getContext());
 			}
-			matched = TRUE;
-			if (!m_processAllRules || m_rules[i]->GetBreakFlag())
+			matched = true;
+			if (!m_processAllRules || m_rules[i]->getBreakFlag())
 				break;
 		}
 	}
 	if (i < m_numRules)
-		Trace(2, _T("processing stopped at rule %d \"%s\"; result = %s"), i + 1,
-				m_rules[i]->GetDescription(), matched ? _T("true") : _T("false"));
+		trace(2, _T("processing stopped at rule %d \"%s\"; result = %s"), i + 1,
+				m_rules[i]->getDescription(), matched ? _T("true") : _T("false"));
 	else
-		Trace(2, _T("Processing stopped at end of rules list; result = %s"), matched ? _T("true") : _T("false"));
+		trace(2, _T("Processing stopped at end of rules list; result = %s"), matched ? _T("true") : _T("false"));
 	return matched;
+}
+
+
+//
+// Match simple log line
+//
+
+bool LogParser::matchLine(const char *line, DWORD objectId)
+{
+	return matchLogRecord(false, NULL, 0, 0, line, objectId);
+}
+
+
+//
+// Match log event (text with additional attributes - source, severity, event id)
+//
+
+bool LogParser::matchEvent(const char *source, DWORD eventId, DWORD level, const char *line, DWORD objectId)
+{
+	return matchLogRecord(true, source, eventId, level, line, objectId);
 }
 
 
@@ -248,7 +276,7 @@ BOOL LogParser::MatchLine(const char *line, DWORD objectId)
 // Set associated file name
 //
 
-void LogParser::SetFileName(const TCHAR *name)
+void LogParser::setFileName(const TCHAR *name)
 {
 	safe_free(m_fileName);
 	m_fileName = (name != NULL) ? _tcsdup(name) : NULL;
@@ -259,7 +287,7 @@ void LogParser::SetFileName(const TCHAR *name)
 // Add macro
 //
 
-void LogParser::AddMacro(const TCHAR *name, const TCHAR *value)
+void LogParser::addMacro(const TCHAR *name, const TCHAR *value)
 {
 	m_macros.Set(name, value);
 }
@@ -269,7 +297,7 @@ void LogParser::AddMacro(const TCHAR *name, const TCHAR *value)
 // Get macro
 //
 
-const TCHAR *LogParser::GetMacro(const TCHAR *name)
+const TCHAR *LogParser::getMacro(const TCHAR *name)
 {
 	const TCHAR *value;
 
@@ -291,8 +319,8 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	if (!strcmp(name, "parser"))
 	{
 		ps->state = XML_STATE_PARSER;
-		ps->parser->SetProcessAllFlag(XMLGetAttrBoolean(attrs, "processAll", FALSE));
-		ps->parser->SetTraceLevel(XMLGetAttrInt(attrs, "trace", 0));
+		ps->parser->setProcessAllFlag(XMLGetAttrBoolean(attrs, "processAll", false));
+		ps->parser->setTraceLevel(XMLGetAttrInt(attrs, "trace", 0));
 	}
 	else if (!strcmp(name, "file"))
 	{
@@ -318,18 +346,22 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	else if (!strcmp(name, "rule"))
 	{
 		ps->regexp = NULL;
+		ps->invertedRule = false;
 		ps->event = NULL;
 		ps->context = NULL;
 		ps->contextAction = CONTEXT_SET_AUTOMATIC;
 		ps->description = NULL;
+		ps->id = NULL;
+		ps->source = NULL;
+		ps->level = NULL;
 		ps->ruleContext = XMLGetAttr(attrs, "context");
-		ps->breakFlag = XMLGetAttrBoolean(attrs, "break", FALSE);
+		ps->breakFlag = XMLGetAttrBoolean(attrs, "break", false);
 		ps->state = XML_STATE_RULE;
 	}
 	else if (!strcmp(name, "match"))
 	{
 		ps->state = XML_STATE_MATCH;
-		ps->invertedRule = XMLGetAttrBoolean(attrs, "invert", FALSE);
+		ps->invertedRule = XMLGetAttrBoolean(attrs, "invert", false);
 	}
 	else if (!strcmp(name, "id"))
 	{
@@ -410,7 +442,7 @@ static void EndElement(void *userData, const char *name)
 	}
 	else if (!strcmp(name, "file"))
 	{
-		ps->parser->SetFileName(ps->file);
+		ps->parser->setFileName(ps->file);
 		ps->state = XML_STATE_PARSER;
 	}
 	else if (!strcmp(name, "macros"))
@@ -419,7 +451,7 @@ static void EndElement(void *userData, const char *name)
 	}
 	else if (!strcmp(name, "macro"))
 	{
-		ps->parser->AddMacro(ps->macroName, ps->macro);
+		ps->parser->addMacro(ps->macroName, ps->macro);
 		ps->state = XML_STATE_MACROS;
 	}
 	else if (!strcmp(name, "rules"))
@@ -435,20 +467,48 @@ static void EndElement(void *userData, const char *name)
 		ps->event.Strip();
 		event = strtoul(ps->event, &eptr, 0);
 		if (*eptr != 0)
-			event = ps->parser->ResolveEventName(ps->event);
+			event = ps->parser->resolveEventName(ps->event);
 		rule = new LogParserRule(ps->parser, (const char *)ps->regexp, event, ps->numEventParams);
 		if (!ps->ruleContext.IsEmpty())
-			rule->SetContext(ps->ruleContext);
+			rule->setContext(ps->ruleContext);
 		if (!ps->context.IsEmpty())
 		{
-			rule->SetContextToChange(ps->context);
-			rule->SetContextAction(ps->contextAction);
+			rule->setContextToChange(ps->context);
+			rule->setContextAction(ps->contextAction);
 		}
+
 		if (!ps->description.IsEmpty())
-			rule->SetDescription(ps->description);
-		rule->SetInverted(ps->invertedRule);
-		rule->SetBreakFlag(ps->breakFlag);
-		ps->parser->AddRule(rule);
+			rule->setDescription(ps->description);
+		
+		if (!ps->source.IsEmpty())
+			rule->setSource(ps->source);
+
+		if (!ps->level.IsEmpty())
+			rule->setLevel(_tcstoul(ps->level, NULL, 0));
+
+		if (!ps->id.IsEmpty())
+		{
+			DWORD start, end;
+			TCHAR *eptr;
+
+			start = strtoul(ps->id, &eptr, 0);
+			if (*eptr == 0)
+			{
+				end = start;
+			}
+			else	/* TODO: add better error handling */
+			{
+				while(!_istdigit(*eptr))
+					eptr++;
+				end = strtoul(eptr, NULL, 0);
+			}
+			rule->setIdRange(start, end);
+		}
+
+		rule->setInverted(ps->invertedRule);
+		rule->setBreakFlag(ps->breakFlag);
+
+		ps->parser->addRule(rule);
 		ps->state = XML_STATE_RULES;
 	}
 	else if (!strcmp(name, "match"))
@@ -521,12 +581,12 @@ static void CharData(void *userData, const XML_Char *s, int len)
 
 #endif
 
-BOOL LogParser::CreateFromXML(const char *xml, int xmlLen, char *errorText, int errBufSize)
+bool LogParser::createFromXml(const char *xml, int xmlLen, char *errorText, int errBufSize)
 {
 #if HAVE_LIBEXPAT
 	XML_Parser parser = XML_ParserCreate(NULL);
 	XML_PARSER_STATE state;
-	BOOL success;
+	bool success;
 
 	// Parse XML
 	state.parser = this;
@@ -546,7 +606,7 @@ BOOL LogParser::CreateFromXML(const char *xml, int xmlLen, char *errorText, int 
 
 	if (success && (state.state == XML_STATE_ERROR))
 	{
-		success = FALSE;
+		success = false;
 		if (errorText != NULL)
 			strncpy(errorText, state.errorText, errBufSize);
 	}
@@ -556,7 +616,7 @@ BOOL LogParser::CreateFromXML(const char *xml, int xmlLen, char *errorText, int 
 
 	if (errorText != NULL)
 		strncpy(errorText, "Compiled without XML support", errBufSize);
-	return FALSE;
+	return false;
 #endif
 }
 
@@ -565,7 +625,7 @@ BOOL LogParser::CreateFromXML(const char *xml, int xmlLen, char *errorText, int 
 // Resolve event name
 //
 
-DWORD LogParser::ResolveEventName(const TCHAR *name, DWORD defVal)
+DWORD LogParser::resolveEventName(const TCHAR *name, DWORD defVal)
 {
 	if (m_eventNameList != NULL)
 	{

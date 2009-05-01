@@ -410,6 +410,10 @@ void NXCL_Session::ProcessDCI(CSCPMessage *pMsg)
                                  MAX_DB_STRING);
             pMsg->GetVariableStr(VID_INSTANCE, m_pItemList->pItems[i].szInstance,
                                  MAX_DB_STRING);
+				m_pItemList->pItems[i].nBaseUnits = (int)pMsg->GetVariableShort(VID_BASE_UNITS);
+				m_pItemList->pItems[i].nMultiplier = (int)pMsg->GetVariableLong(VID_MULTIPLIER);
+				m_pItemList->pItems[i].pszCustomUnitName = pMsg->GetVariableStr(VID_CUSTOM_UNITS_NAME);
+				m_pItemList->pItems[i].pszPerfTabSettings = pMsg->GetVariableStr(VID_PERFTAB_SETTINGS);
             m_pItemList->pItems[i].dwNumSchedules = pMsg->GetVariableLong(VID_NUM_SCHEDULES);
             m_pItemList->pItems[i].ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_pItemList->pItems[i].dwNumSchedules);
             for(j = 0, dwId = VID_DCI_SCHEDULE_BASE; j < m_pItemList->pItems[i].dwNumSchedules; j++, dwId++)

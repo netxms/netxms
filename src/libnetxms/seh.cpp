@@ -49,8 +49,12 @@ public:
 //
 
 static BOOL (*m_pfExceptionHandler)(EXCEPTION_POINTERS *) = NULL;
-static void (*m_pfWriter)(char *pszText) = NULL;
+static void (*m_pfWriter)(const TCHAR *pszText) = NULL;
 static HANDLE m_hExceptionLock = INVALID_HANDLE_VALUE;
+static TCHAR m_szBaseProcessName[64] = _T("netxms");
+static TCHAR m_szDumpDir[MAX_PATH] = _T("C:\\");
+static DWORD m_dwLogMessageCode = 0;
+static BOOL m_bPrintToScreen = FALSE;
 
 
 //
@@ -61,8 +65,14 @@ void NxStackWalker::OnOutput(LPCSTR pszText)
 {
 	if (m_pfWriter != NULL)
 	{
-		m_pfWriter("  ");
-		m_pfWriter((char *)pszText);
+		m_pfWriter(_T("  "));
+#ifdef UNICODE
+		WCHAR *wtext = WideStringFromMBString(pszText);
+		m_pfWriter(wtext);
+		free(wtext);
+#else
+		m_pfWriter(pszText);
+#endif
 	}
 	else
 	{
@@ -87,10 +97,18 @@ void SEHInit(void)
 //
 
 void LIBNETXMS_EXPORTABLE SetExceptionHandler(BOOL (*pfHandler)(EXCEPTION_POINTERS *),
-															 void (*pfWriter)(char *))
+															 void (*pfWriter)(const TCHAR *), const TCHAR *pszDumpDir,
+															 const TCHAR *pszBaseProcessName,
+															 DWORD dwLogMsgCode, BOOL bPrintToScreen)
 {
 	m_pfExceptionHandler = pfHandler;
 	m_pfWriter = pfWriter;
+	if (pszBaseProcessName != NULL)
+		nx_strncpy(m_szBaseProcessName, pszBaseProcessName, 64);
+	if (pszDumpDir != NULL)
+		nx_strncpy(m_szDumpDir, pszDumpDir, MAX_PATH);
+	m_dwLogMessageCode = dwLogMsgCode;
+	m_bPrintToScreen = bPrintToScreen;
 }
 
 
@@ -219,4 +237,148 @@ THREAD_RESULT LIBNETXMS_EXPORTABLE THREAD_CALL SEHThreadStarter(void *pArg)
 		ExitProcess(99);
 	}
 	return THREAD_OK;
+}
+
+
+/*
+ * Windows service exception handling
+ * ****************************************************
+ */
+
+
+//
+// Static data
+//
+
+static FILE *m_pExInfoFile = NULL;
+
+
+//
+// Writer for SEHShowCallStack()
+//
+
+void LIBNETXMS_EXPORTABLE SEHServiceExceptionDataWriter(const TCHAR *pszText)
+{
+	if (m_pExInfoFile != NULL)
+		_fputts(pszText, m_pExInfoFile);
+}
+
+
+//
+// Exception handler
+//
+
+BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
+{
+	TCHAR szWindowsVersion[256] = _T("ERROR"), szInfoFile[MAX_PATH], szDumpFile[MAX_PATH], szProcNameUppercase[64];
+	HANDLE hFile;
+	time_t t;
+	MINIDUMP_EXCEPTION_INFORMATION mei;
+   SYSTEM_INFO sysInfo;
+
+	t = time(NULL);
+	_tcscpy(szProcNameUppercase, m_szBaseProcessName);
+	_tcsupr(szProcNameUppercase);
+
+	// Create info file
+	_sntprintf(szInfoFile, MAX_PATH, _T("%s\\%s-%d-%u.info"),
+	           m_szDumpDir, m_szBaseProcessName, GetCurrentProcessId(), (DWORD)t);
+	m_pExInfoFile = _tfopen(szInfoFile, _T("w"));
+	if (m_pExInfoFile != NULL)
+	{
+		_ftprintf(m_pExInfoFile, _T("%s CRASH DUMP\n%s\n"), szProcNameUppercase, ctime(&t));
+		_ftprintf(m_pExInfoFile, _T("EXCEPTION: %08X (%s) at %08X\n"),
+		          pInfo->ExceptionRecord->ExceptionCode,
+		          SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
+		          pInfo->ExceptionRecord->ExceptionAddress);
+
+		// NetXMS and OS version
+		GetWindowsVersionString(szWindowsVersion, 256);
+		_ftprintf(m_pExInfoFile, _T("\nNetXMS Version: ") NETXMS_VERSION_STRING _T("\n")
+		                         _T("OS Version: %s\n"), szWindowsVersion);
+
+		// Processor architecture
+		_ftprintf(m_pExInfoFile, _T("Processor architecture: "));
+		GetSystemInfo(&sysInfo);
+		switch(sysInfo.wProcessorArchitecture)
+		{
+			case PROCESSOR_ARCHITECTURE_INTEL:
+				_ftprintf(m_pExInfoFile, _T("Intel x86\n"));
+				break;
+			case PROCESSOR_ARCHITECTURE_MIPS:
+				_ftprintf(m_pExInfoFile, _T("MIPS\n"));
+				break;
+			case PROCESSOR_ARCHITECTURE_ALPHA:
+				_ftprintf(m_pExInfoFile, _T("ALPHA\n"));
+				break;
+			case PROCESSOR_ARCHITECTURE_PPC:
+				_ftprintf(m_pExInfoFile, _T("PowerPC\n"));
+				break;
+			case PROCESSOR_ARCHITECTURE_IA64:
+				_ftprintf(m_pExInfoFile, _T("Intel IA-64\n"));
+				break;
+			case PROCESSOR_ARCHITECTURE_IA32_ON_WIN64:
+				_ftprintf(m_pExInfoFile, _T("Intel x86 on Win64\n"));
+				break;
+			case PROCESSOR_ARCHITECTURE_AMD64:
+				_ftprintf(m_pExInfoFile, _T("AMD64 (Intel EM64T)\n"));
+				break;
+			default:
+				_ftprintf(m_pExInfoFile, _T("UNKNOWN\n"));
+				break;
+		}
+
+#ifdef _X86_
+		_ftprintf(m_pExInfoFile, _T("\nRegister information:\n")
+		          _T("  eax=%08X  ebx=%08X  ecx=%08X  edx=%08X\n")
+		          _T("  esi=%08X  edi=%08X  ebp=%08X  esp=%08X\n")
+		          _T("  cs=%04X  ds=%04X  es=%04X  ss=%04X  fs=%04X  gs=%04X  flags=%08X\n"),
+		          pInfo->ContextRecord->Eax, pInfo->ContextRecord->Ebx,
+		          pInfo->ContextRecord->Ecx, pInfo->ContextRecord->Edx,
+		          pInfo->ContextRecord->Esi, pInfo->ContextRecord->Edi,
+		          pInfo->ContextRecord->Ebp, pInfo->ContextRecord->Esp,
+		          pInfo->ContextRecord->SegCs, pInfo->ContextRecord->SegDs,
+		          pInfo->ContextRecord->SegEs, pInfo->ContextRecord->SegSs,
+		          pInfo->ContextRecord->SegFs, pInfo->ContextRecord->SegGs,
+		          pInfo->ContextRecord->EFlags);
+#endif
+
+		_ftprintf(m_pExInfoFile, _T("\nCall stack:\n"));
+		SEHShowCallStack(pInfo->ContextRecord);
+
+		fclose(m_pExInfoFile);
+	}
+
+	// Create minidump
+	_sntprintf(szDumpFile, MAX_PATH, _T("%s\\%s-%d-%u.mdmp"),
+	           m_szDumpDir, m_szBaseProcessName, GetCurrentProcessId(), (DWORD)t);
+   hFile = CreateFile(szDumpFile, GENERIC_WRITE, 0, NULL,
+                      CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+   if (hFile != INVALID_HANDLE_VALUE)
+   {
+		mei.ThreadId = GetCurrentThreadId();
+		mei.ExceptionPointers = pInfo;
+		mei.ClientPointers = FALSE;
+      MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile,
+                        MiniDumpNormal, &mei, NULL, NULL);
+      CloseHandle(hFile);
+   }
+
+	// Write event log
+	nxlog_write(m_dwLogMessageCode, EVENTLOG_ERROR_TYPE, "xsxss",
+               pInfo->ExceptionRecord->ExceptionCode,
+               SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
+	            pInfo->ExceptionRecord->ExceptionAddress,
+	            szInfoFile, szDumpFile);
+
+	if (m_bPrintToScreen)
+	{
+		_tprintf(_T("\n\n*************************************************************\n")
+		         _T("EXCEPTION: %08X (%s) at %08X\nPROCESS TERMINATED"),
+               pInfo->ExceptionRecord->ExceptionCode,
+               SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
+               pInfo->ExceptionRecord->ExceptionAddress);
+	}
+
+	return TRUE;	// Terminate process
 }

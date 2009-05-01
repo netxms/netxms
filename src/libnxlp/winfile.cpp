@@ -62,7 +62,7 @@ static void ParseNewRecords(LogParser *parser, HANDLE hFile, void (*logger)(int,
 				else
 					*eptr = 0;
 
-				parser->MatchLine(ptr);
+				parser->matchLine(ptr);
          }
       }
       else
@@ -77,7 +77,7 @@ static void ParseNewRecords(LogParser *parser, HANDLE hFile, void (*logger)(int,
 // Monitor file changes and parse line by line
 //
 
-BOOL LogParser::MonitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *, ...))
+bool LogParser::monitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *, ...))
 {
    HANDLE hFile, hChange, handles[2];
    LARGE_INTEGER fp, fsnew;
@@ -157,5 +157,5 @@ BOOL LogParser::MonitorFile(HANDLE stopEvent, void (*logger)(int, const TCHAR *,
 			logger(EVENTLOG_ERROR_TYPE, _T("LogParser: Cannot open log file %s"), m_fileName);
    }
 
-	return TRUE;
+	return true;
 }

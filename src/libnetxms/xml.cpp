@@ -121,7 +121,7 @@ int LIBNETXMS_EXPORTABLE XMLGetAttrDWORD(const char **attrs, const char *name, D
 	return (value != NULL) ? strtoul(value, NULL, 0) : defVal;
 }
 
-BOOL LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name, BOOL defVal)
+bool LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name, bool defVal)
 {
 	const char *value;
 	int ival;
@@ -132,7 +132,7 @@ BOOL LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name
 	{
 		ival = strtol(value, &eptr, 0);
 		if (*eptr == 0)
-			return (ival != 0) ? TRUE : FALSE;
+			return (ival != 0) ? true : false;
 		return !stricmp(value, "yes") || !stricmp(value, "true");
 	}
 	return defVal;

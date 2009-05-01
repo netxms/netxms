@@ -42,7 +42,7 @@ LogParserRule::LogParserRule(LogParser *parser,
 	String expandedRegexp;
 
 	m_parser = parser;
-	ExpandMacros(regexp, expandedRegexp);
+	expandMacros(regexp, expandedRegexp);
 	m_regexp = _tcsdup(expandedRegexp);
 	m_isValid = (regcomp(&m_preg, expandedRegexp, REG_EXTENDED | REG_ICASE) == 0);
 	m_event = event;
@@ -80,31 +80,31 @@ LogParserRule::~LogParserRule()
 // Match line
 //
 
-BOOL LogParserRule::Match(const char *line, LOG_PARSER_CALLBACK cb, DWORD objectId, void *userArg)
+bool LogParserRule::match(const char *line, LogParserCallback cb, DWORD objectId, void *userArg)
 {
 	if (!m_isValid)
-		return FALSE;
+		return false;
 
 	if (m_isInverted)
 	{
-		m_parser->Trace(6, _T("  negated matching against regexp %s"), m_regexp);
+		m_parser->trace(6, _T("  negated matching against regexp %s"), m_regexp);
 		if (regexec(&m_preg, line, 0, NULL, 0) != 0)
 		{
-			m_parser->Trace(6, _T("  matched"));
+			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && (m_event != 0))
 				cb(m_event, line, 0, NULL, objectId, userArg);
-			return TRUE;
+			return true;
 		}
 	}
 	else
 	{
-		m_parser->Trace(6, _T("  matching against regexp %s"), m_regexp);
+		m_parser->trace(6, _T("  matching against regexp %s"), m_regexp);
 		if (regexec(&m_preg, line, (m_numParams > 0) ? m_numParams + 1 : 0, m_pmatch, 0) == 0)
 		{
-			m_parser->Trace(6, _T("  matched"));
+			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && (m_event != 0))
 			{
-				char **params;
+				char **params = NULL;
 				int i, len;
 
 				if (m_numParams > 0)
@@ -131,12 +131,45 @@ BOOL LogParserRule::Match(const char *line, LOG_PARSER_CALLBACK cb, DWORD object
 				for(i = 0; i < m_numParams; i++)
 					safe_free(params[i]);
 			}		
-			return TRUE;
+			return true;
 		}
 	}
 
-	m_parser->Trace(6, _T("  no match"));
-	return FALSE;	// no match
+	m_parser->trace(6, _T("  no match"));
+	return false;	// no match
+}
+
+
+//
+// Match event
+//
+
+bool LogParserRule::matchEx(const TCHAR *source, DWORD eventId, DWORD level,
+								  const char *line, LogParserCallback cb, DWORD objectId, void *userArg)
+{
+	if (m_source != NULL)
+	{
+		m_parser->trace(6, _T("  matching source \"%s\" against pattern \"%s\""), source, m_source);
+		if (!MatchString(m_source, source, FALSE))
+		{
+			m_parser->trace(6, _T("  source: no match"));
+			return false;
+		}
+	}
+
+	if ((eventId < m_idStart) || (eventId > m_idEnd))
+	{
+		m_parser->trace(6, _T("  event id 0x%08x not in range 0x%08x - 0x%08x"), eventId, m_idStart, m_idEnd);
+		return false;
+	}
+
+	if (!(m_level & level))
+	{
+		m_parser->trace(6, _T("  severity level 0x%04x not match mask 0x%04x"), level, m_level);
+		return false;
+	}
+
+	return match(line, cb, objectId, userArg);
 }
 
 
@@ -144,7 +177,7 @@ BOOL LogParserRule::Match(const char *line, LOG_PARSER_CALLBACK cb, DWORD object
 // Expand macros in regexp
 //
 
-void LogParserRule::ExpandMacros(const char *regexp, String &out)
+void LogParserRule::expandMacros(const char *regexp, String &out)
 {
 	const char *curr, *prev;
 	char name[256];
@@ -171,7 +204,7 @@ void LogParserRule::ExpandMacros(const char *regexp, String &out)
 					for(i = 0; (*curr != 0) && (*curr != '}'); i++)
 						name[i] = *curr++;
 					name[i] = 0;
-					out += m_parser->GetMacro(name);
+					out += m_parser->getMacro(name);
 				}
 				else
 				{

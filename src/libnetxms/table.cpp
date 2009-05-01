@@ -1,7 +1,7 @@
 /* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,6 +38,28 @@ Table::Table()
 
 
 //
+// Create table from NXCP message
+//
+
+Table::Table(CSCPMessage *msg)
+{
+	int i;
+	DWORD dwId;
+
+	m_nNumRows = msg->GetVariableLong(VID_TABLE_NUM_ROWS);
+	m_nNumCols = msg->GetVariableLong(VID_TABLE_NUM_COLS);
+
+	m_ppColNames = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumCols);
+	for(i = 0, dwId = VID_TABLE_COLUMN_INFO_BASE; i < m_nNumCols; i++, dwId += 9)
+		m_ppColNames[i] = msg->GetVariableStr(dwId++);
+
+	m_ppData = (TCHAR **)malloc(sizeof(TCHAR *) * m_nNumCols * m_nNumRows);
+	for(i = 0, dwId = VID_TABLE_DATA_BASE; i < m_nNumCols * m_nNumRows; i++)
+		m_ppData[i] = msg->GetVariableStr(dwId++);
+}
+
+
+//
 // Table destructor
 //
 
@@ -52,6 +74,26 @@ Table::~Table()
    for(i = 0; i < m_nNumRows * m_nNumCols; i++)
       safe_free(m_ppData[i]);
    safe_free(m_ppData);
+}
+
+
+//
+// Fill NXCP message with table data
+//
+
+void Table::FillMessage(CSCPMessage &msg)
+{
+	int i;
+	DWORD id;
+
+	msg.SetVariable(VID_TABLE_NUM_ROWS, (DWORD)m_nNumRows);
+	msg.SetVariable(VID_TABLE_NUM_COLS, (DWORD)m_nNumCols);
+
+	for(i = 0, id = VID_TABLE_COLUMN_INFO_BASE; i < m_nNumCols; i++, id += 9)
+		msg.SetVariable(id++, CHECK_NULL_EX(m_ppColNames[i]));
+
+	for(i = 0, id = VID_TABLE_DATA_BASE; i < m_nNumCols * m_nNumRows; i++)
+		msg.SetVariable(id++, CHECK_NULL_EX(m_ppData[i]));
 }
 
 

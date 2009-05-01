@@ -97,7 +97,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_DCI_DATA"),
       _T("CMD_GET_MIB_TIMESTAMP"),
       _T("CMD_GET_MIB"),
-      _T("CMD_REQUEST_NEW_LPP_ID"),
+      _T("CMD_TEST_DCI_TRANSFORMATION"),
       _T("CMD_OPEN_LPP"),
       _T("CMD_CREATE_OBJECT"),
       _T("CMD_GET_EVENT_NAMES"),

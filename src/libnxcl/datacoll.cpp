@@ -63,6 +63,8 @@ DWORD LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_SESSION hSession, NXC_DCI_LIST 
          safe_free(pItemList->pItems[i].ppScheduleList);
          safe_free(pItemList->pItems[i].pThresholdList);
          safe_free(pItemList->pItems[i].pszFormula);
+			safe_free(pItemList->pItems[i].pszCustomUnitName);
+			safe_free(pItemList->pItems[i].pszPerfTabSettings);
       }
       safe_free(pItemList->pItems);
       free(pItemList);
@@ -109,6 +111,8 @@ DWORD LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_SESSION hSession, NXC_DCI_LIST *pIt
          pItemList->pItems[pItemList->dwNumItems].dwNumSchedules = 0;
          pItemList->pItems[pItemList->dwNumItems].ppScheduleList = NULL;
          pItemList->pItems[pItemList->dwNumItems].iProcessAllThresholds = 0;
+			pItemList->pItems[pItemList->dwNumItems].nBaseUnits = DCI_BASEUNITS_OTHER;
+			pItemList->pItems[pItemList->dwNumItems].nMultiplier = 1;
          pItemList->dwNumItems++;
       }
       delete pResponse;
@@ -152,6 +156,12 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
    msg.SetVariable(VID_ADV_SCHEDULE, (WORD)pItem->iAdvSchedule);
 	msg.SetVariable(VID_RESOURCE_ID, pItem->dwResourceId);
 	msg.SetVariable(VID_PROXY_NODE, pItem->dwProxyNode);
+	msg.SetVariable(VID_BASE_UNITS, (WORD)pItem->nBaseUnits);
+	msg.SetVariable(VID_MULTIPLIER, (DWORD)pItem->nMultiplier);
+	if (pItem->pszCustomUnitName != NULL)
+		msg.SetVariable(VID_CUSTOM_UNITS_NAME, pItem->pszCustomUnitName);
+	if (pItem->pszPerfTabSettings)
+		msg.SetVariable(VID_PERFTAB_SETTINGS, pItem->pszPerfTabSettings);
    if (pItem->iAdvSchedule)
    {
       msg.SetVariable(VID_NUM_SCHEDULES, pItem->dwNumSchedules);
@@ -269,6 +279,8 @@ DWORD LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItemL
             safe_free(pItemList->pItems[i].ppScheduleList);
             safe_free(pItemList->pItems[i].pThresholdList);
             safe_free(pItemList->pItems[i].pszFormula);
+				safe_free(pItemList->pItems[i].pszCustomUnitName);
+				safe_free(pItemList->pItems[i].pszPerfTabSettings);
             pItemList->dwNumItems--;
             memmove(&pItemList->pItems[i], &pItemList->pItems[i + 1], 
                     sizeof(NXC_DCI) * (pItemList->dwNumItems - i));
@@ -860,8 +872,6 @@ DWORD LIBNXCL_EXPORTABLE NXCGetSystemDCIList(NXC_SESSION hSession, DWORD dwNodeI
 }
 
 
-
-
 //
 // Clear collected data for DCI
 //
@@ -880,4 +890,44 @@ DWORD LIBNXCL_EXPORTABLE NXCClearDCIData(NXC_SESSION hSession, DWORD dwNodeId, D
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
+// Test DCI's transformation script
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCTestDCITransformation(NXC_SESSION hSession, DWORD dwNodeId, DWORD dwItemId,
+																  const TCHAR *script, const TCHAR *value, BOOL *execStatus,
+																  TCHAR *execResult, size_t resultBufSize)
+{
+   DWORD dwRqId, dwResult;
+   CSCPMessage msg, *pResponse;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_TEST_DCI_TRANSFORMATION);
+   msg.SetId(dwRqId);
+   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+   msg.SetVariable(VID_DCI_ID, dwItemId);
+	msg.SetVariable(VID_SCRIPT, script);
+	msg.SetVariable(VID_VALUE, value);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+	pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (pResponse != NULL)
+   {
+      dwResult = pResponse->GetVariableLong(VID_RCC);
+      if (dwResult == RCC_SUCCESS)
+      {
+			*execStatus = pResponse->GetVariableShort(VID_EXECUTION_STATUS);
+			pResponse->GetVariableStr(VID_EXECUTION_RESULT, execResult, resultBufSize);
+      }
+      delete pResponse;
+   }
+   else
+   {
+      dwResult = RCC_TIMEOUT;
+   }
+   return dwResult;
 }

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** NetXMS Foundation Library
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** NetXMS Message Bus Library
+** Copyright (C) 2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,35 +17,48 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: config.cpp
+** File: subscriber.cpp
 **
 **/
 
-#include "libnetxms.h"
+#include "libnxmb.h"
 
 
 //
-// Constructor
+// Default constructor
 //
 
-Config::Config()
+NXMBSubscriber::NXMBSubscriber(const TCHAR *id)
+{
+	m_id = _tcsdup(CHECK_NULL(id));
+}
+
+
+//
+// Desctructor
+//
+
+NXMBSubscriber::~NXMBSubscriber()
+{
+	safe_free(m_id);
+}
+
+
+//
+// Default message handler
+//
+
+void NXMBSubscriber::messageHandler(NXMBMessage &msg)
 {
 }
 
 
 //
-// Destructor
+// If this method returns TRUE, dispatcher will delete subscriber object
+// on unregister or in own destructor
 //
 
-Config::~Config()
+bool NXMBSubscriber::isOwnedByDispatcher()
 {
-}
-
-
-//
-// Load INI-style config
-//
-
-bool Config::loadIniConfig(const TCHAR *file)
-{
+	return true;
 }

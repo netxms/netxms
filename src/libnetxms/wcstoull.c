@@ -47,6 +47,11 @@
 #define iswupper(c) isupper(c)
 #endif
 
+#if !HAVE_WINT_T && !defined(_WIN32)  
+typedef int wint_t;
+#endif
+
+
 /*
  * Convert a string to an 64 bit unsigned integer.
  *

@@ -948,6 +948,10 @@ DWORD LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName)
 #ifndef VER_PLATFORM_WIN32_CE
 #define VER_PLATFORM_WIN32_CE 3
 #endif
+#ifndef SM_SERVERR2
+#define SM_SERVERR2             89
+#endif
+
 
 //
 // Get OS name and version
@@ -1008,6 +1012,67 @@ void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize)
 #endif
 #endif
 }
+
+
+//
+// Get more specific Windows version string
+//
+
+#ifdef _WIN32
+
+BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strSize)
+{
+	OSVERSIONINFOEX ver;
+	TCHAR buffer[256];
+
+	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+	if (!GetVersionEx((OSVERSIONINFO *)&ver))
+		return FALSE;
+
+	switch(ver.dwMajorVersion)
+	{
+		case 5:
+			switch(ver.dwMinorVersion)
+			{
+				case 0:
+					_tcscpy(buffer, _T("2000"));
+					break;
+				case 1:
+					_tcscpy(buffer, _T("XP"));
+					break;
+				case 2:
+					_tcscpy(buffer, (GetSystemMetrics(SM_SERVERR2) != 0) ? _T("Server 2003 R2") : _T("Server 2003"));
+					break;
+				default:
+					_sntprintf(buffer, 256, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
+					break;
+			}
+			break;
+		case 6:
+			switch(ver.dwMinorVersion)
+			{
+				case 0:
+					_tcscpy(buffer, (ver.wProductType == VER_NT_WORKSTATION) ? _T("Vista") : _T("Server 2008"));
+					break;
+				case 1:
+					_tcscpy(buffer, (ver.wProductType == VER_NT_WORKSTATION) ? _T("7") : _T("Server 2008 R2"));
+					break;
+				default:
+					_sntprintf(buffer, 256, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
+					break;
+			}
+			break;
+		default:
+			_sntprintf(buffer, 256, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
+			break;
+	}
+
+	_sntprintf(versionString, strSize, _T("Windows %s Build %d %s"), buffer, ver.dwBuildNumber, ver.szCSDVersion);
+	StrStrip(versionString);
+	return TRUE;
+}
+
+#endif
 
 
 //

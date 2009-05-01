@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** NetXMS Foundation Library
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** NetXMS Message Bus Library
+** Copyright (C) 2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,35 +17,60 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: config.cpp
+** File: filter.cpp
 **
 **/
 
-#include "libnetxms.h"
+#include "libnxmb.h"
 
 
 //
-// Constructor
+// Basic filter class implementation
 //
 
-Config::Config()
+NXMBFilter::NXMBFilter()
 {
+}
+
+NXMBFilter::~NXMBFilter()
+{
+}
+
+bool NXMBFilter::isAllowed(NXMBMessage &msg)
+{ 
+	return TRUE;
+}
+
+bool NXMBFilter::isOwnedByDispatcher()
+{
+	return TRUE;
 }
 
 
 //
-// Destructor
+// Filter by message type implementation
 //
 
-Config::~Config()
+NXMBTypeFilter::NXMBTypeFilter()
+               :NXMBFilter()
 {
 }
 
-
-//
-// Load INI-style config
-//
-
-bool Config::loadIniConfig(const TCHAR *file)
+NXMBTypeFilter::~NXMBTypeFilter()
 {
+}
+
+bool NXMBTypeFilter::isAllowed(NXMBMessage &msg)
+{ 
+	return m_types.Get(msg.getType()) != NULL;
+}
+
+void NXMBTypeFilter::addMessageType(const TCHAR *type)
+{ 
+	m_types.Set(type, _T("*"));
+}
+
+void NXMBTypeFilter::removeMessageType(const TCHAR *type)
+{ 
+	m_types.Delete(type);
 }

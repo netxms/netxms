@@ -857,6 +857,34 @@ int wstat(const WCHAR *_path, struct stat *_sbuf)
 
 #endif
 
+#if !HAVE_WUNLINK
+
+int wunlink(const WCHAR *_path)
+{
+	char path[MAX_PATH];
+	
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+	                    _path, -1, path, MAX_PATH, NULL, NULL);
+	return unlink(path);
+}
+
+#endif
+
+#if !HAVE_WRENAME
+
+int wrename(const WCHAR *_oldpath, const WCHAR *_newpath)
+{
+	char oldpath[MAX_PATH], newpath[MAX_PATH];
+	
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+	                    _oldpath, -1, oldpath, MAX_PATH, NULL, NULL);
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+	                    _newpath, -1, newpath, MAX_PATH, NULL, NULL);
+	return rename(oldpath, newpath);
+}
+
+#endif
+
 #if !HAVE_WGETENV
 
 WCHAR *wgetenv(const WCHAR *_string)
