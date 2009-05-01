@@ -153,53 +153,6 @@ LONG H_CpuCount(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
-{
-	int nRet = SYSINFO_RC_ERROR;
-   	char szArg[128] = {0};
-	int nCount = -1;
-	int nResult = -1;
-	int i;
-	kvm_t *kd;
-	struct kinfo_proc *kp;
-
-   	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
-
-	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
-	if (kd != 0)
-	{
-		kp = kvm_getprocs(kd, KERN_PROC_ALL, 0, &nCount);
-
-		if (kp != NULL)
-		{
-			if (szArg[0] != 0)
-			{
-				for (nResult = 0, i = 0; i < nCount; i++)
-				{
-						if (strcasecmp(kp[i].kp_proc.p_comm, szArg) == 0)
-						{
-							nResult++;
-						}
-				}
-			}
-			else
-			{
-				nResult = nCount;
-			}
-		}
-
-		kvm_close(kd);
-	}
-
-	if (nResult >= 0)
-	{
-		ret_int(pValue, nResult);
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-
-	return nRet;
-}
-
 LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
@@ -299,45 +252,6 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
-{
-	int nRet = SYSINFO_RC_ERROR;
-	int nCount = -1;
-	int i;
-	struct kinfo_proc *kp;
-	kvm_t *kd;
-
-
-
-	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
-	if (kd != 0)
-	{
-		kp = kvm_getprocs(kd, KERN_PROC_ALL, 0, &nCount);
-
-		if (kp != NULL)
-		{
-			for (i = 0; i < nCount; i++)
-			{
-				char szBuff[128];
-
-				snprintf(szBuff, sizeof(szBuff), "%d %s",
-						kp[i].kp_proc.p_pid, kp[i].kp_proc.p_comm
-						);
-				NxAddResultString(pValue, szBuff);
-			}
-		}
-
-		kvm_close(kd);
-	}
-
-	if (nCount >= 0)
-	{
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-
-	return nRet;
-}
-
 //
 // stub
 //
@@ -346,54 +260,3 @@ LONG H_SourcePkgSupport(const char *pszParam, const char *pArg, char *pValue)
 	ret_int(pValue, 1);
 	return SYSINFO_RC_SUCCESS;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.8  2005/05/30 14:39:32  alk
-* process list now works via kvm, compatible with freebsd 5+
-
-Revision 1.7  2005/05/29 22:44:59  alk
-* configure: pthreads & fbsd5+; detection code should be rewriten!
-* another ugly hack: agent's process info disabled for fbsd5+: struct kinfo_proc changed; m/b fix it tomorow
-* server/nxadm & fbsd5.1: a**holes, in 5.1 there no define with version in readline.h...
-
-Revision 1.6  2005/01/24 19:51:16  alk
-reurn types/comments added
-Process.Count(*)/System.ProcessCount fixed
-
-Revision 1.5  2005/01/23 05:36:11  alk
-+ System.Memory.Swap.*
-+ System.Memory.Virtual.*
-
-NB! r/o access to /dev/mem required! (e.g. chgrp kmem ; chmod g+s)
-
-Revision 1.4  2005/01/23 05:14:49  alk
-System's PageSize used instead of Hardware PageSize
-
-Revision 1.3  2005/01/23 05:08:06  alk
-+ System.CPU.Count
-+ System.Memory.Physical.*
-+ System.ProcessCount
-+ System.ProcessList
-
-Revision 1.2  2005/01/17 23:25:47  alk
-Agent.SourcePackageSupport added
-
-Revision 1.1  2005/01/17 17:14:32  alk
-freebsd agent, incomplete (but working)
-
-Revision 1.1  2004/10/22 22:08:35  alk
-source restructured;
-implemented:
-	Net.IP.Forwarding
-	Net.IP6.Forwarding
-	Process.Count(*)
-	Net.ArpCache
-	Net.InterfaceList (if-type not implemented yet)
-	System.ProcessList
-
-
-*/

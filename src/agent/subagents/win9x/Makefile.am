@@ -11,6 +11,4 @@
 EXTRA_DIST = \
 	main.cpp \
 	procinfo.cpp \
-	win9x.dsp \
-	win9x.dsw \
 	win9x_subagent.h

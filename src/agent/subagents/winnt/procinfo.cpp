@@ -85,11 +85,11 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
    {
       case PROCINFO_VMSIZE:
          GetProcessMemoryInfo(hProcess, &mc, sizeof(PROCESS_MEMORY_COUNTERS));
-         value = mc.PagefileUsage/1024;   // Convert to Kbytes
+         value = mc.PagefileUsage;
          break;
       case PROCINFO_WKSET:
          GetProcessMemoryInfo(hProcess, &mc, sizeof(PROCESS_MEMORY_COUNTERS));
-         value = mc.WorkingSetSize/1024;   // Convert to Kbytes
+         value = mc.WorkingSetSize;
          break;
       case PROCINFO_PF:
          GetProcessMemoryInfo(hProcess, &mc, sizeof(PROCESS_MEMORY_COUNTERS));
@@ -99,6 +99,10 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
       case PROCINFO_UTIME:
          GetProcessTimes(hProcess, &ftCreate, &ftExit, &ftKernel, &ftUser);
          value = ConvertProcessTime(attr == PROCINFO_KTIME ? &ftKernel : &ftUser);
+         break;
+      case PROCINFO_CPUTIME:
+         GetProcessTimes(hProcess, &ftCreate, &ftExit, &ftKernel, &ftUser);
+         value = ConvertProcessTime(&ftKernel) + ConvertProcessTime(&ftUser);
          break;
       case PROCINFO_GDI_OBJ:
       case PROCINFO_USER_OBJ:

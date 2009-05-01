@@ -52,8 +52,16 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "Net.Interface.PacketsIn(*)",   H_NetIfInfoFromKVM, (char *)IF_INFO_PACKETS_IN,  DCI_DT_UINT64, DCIDESC_NET_INTERFACE_PACKETSIN },
 	{ "Net.Interface.PacketsOut(*)",  H_NetIfInfoFromKVM, (char *)IF_INFO_PACKETS_OUT, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_PACKETSOUT },
 
-	{ "Process.Count(*)",             H_ProcessCount,    (char *)0,			DCI_DT_UINT,	DCIDESC_PROCESS_COUNT },
-	{ "System.ProcessCount",          H_ProcessCount,    (char *)1,			DCI_DT_UINT,	DCIDESC_SYSTEM_PROCESSCOUNT },
+	{ "Process.Count(*)",             H_ProcessCount,    "P",			DCI_DT_UINT,	DCIDESC_PROCESS_COUNT },
+	{ "Process.CountEx(*)",           H_ProcessCount,    "E",			DCI_DT_UINT,	DCIDESC_PROCESS_COUNTEX },
+	{ "Process.CPUTime(*)",           H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_CPUTIME, const char *),
+		DCI_DT_INT64,	DCIDESC_PROCESS_CPUTIME },
+	{ "Process.Threads(*)",           H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_THREADS, const char *),
+		DCI_DT_INT64,	DCIDESC_PROCESS_THREADS },
+	{ "Process.VMSize(*)",            H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_VMSIZE, const char *),
+		DCI_DT_INT64,	DCIDESC_PROCESS_VMSIZE },
+	{ "Process.WkSet(*)",             H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_WKSET, const char *),
+		DCI_DT_INT64,	DCIDESC_PROCESS_WKSET },
 
 	{ "System.CPU.Count",             H_CpuCount,        NULL,				DCI_DT_INT,	DCIDESC_SYSTEM_CPU_COUNT },
 
@@ -64,12 +72,16 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "System.Memory.Physical.Free",  H_MemoryInfo,      (char *)PHYSICAL_FREE,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE },
 	{ "System.Memory.Physical.Total", H_MemoryInfo,      (char *)PHYSICAL_TOTAL,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_TOTAL },
 	{ "System.Memory.Physical.Used",  H_MemoryInfo,      (char *)PHYSICAL_USED,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_PHYSICAL_USED },
+#if HAVE_KVM_SWAPINFO
 	{ "System.Memory.Swap.Free",      H_MemoryInfo,      (char *)SWAP_FREE,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_SWAP_FREE },
 	{ "System.Memory.Swap.Total",     H_MemoryInfo,      (char *)SWAP_TOTAL,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_SWAP_TOTAL },
 	{ "System.Memory.Swap.Used",      H_MemoryInfo,      (char *)SWAP_USED,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_SWAP_USED },
 	{ "System.Memory.Virtual.Free",   H_MemoryInfo,      (char *)VIRTUAL_FREE,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_FREE },
 	{ "System.Memory.Virtual.Total",  H_MemoryInfo,      (char *)VIRTUAL_TOTAL,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_TOTAL },
 	{ "System.Memory.Virtual.Used",   H_MemoryInfo,      (char *)VIRTUAL_USED,		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
+#endif
+	{ "System.ProcessCount",          H_ProcessCount,    "S",			DCI_DT_UINT,	DCIDESC_SYSTEM_PROCESSCOUNT },
+	{ "System.ThreadCount",           H_ProcessCount,    "T",			DCI_DT_UINT,	DCIDESC_SYSTEM_THREADCOUNT },
 	{ "System.Uname",                 H_Uname,           NULL,				DCI_DT_STRING,	DCIDESC_SYSTEM_UNAME },
 	{ "System.Uptime",                H_Uptime,          NULL,				DCI_DT_UINT,	DCIDESC_SYSTEM_UPTIME },
 
@@ -124,53 +136,3 @@ extern "C" BOOL __NxSubAgentGetArpCache(NETXMS_VALUES_LIST *pValue)
 {
 	return H_NetArpCache("Net.ArpCache", NULL, pValue) == SYSINFO_RC_SUCCESS;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.11  2007/06/08 00:02:35  alk
-DECLARE_SUBAGENT_INIT replaced with DECLARE_SUBAGENT_ENTRY_POINT
-
-NETXMS_SUBAGENT_INFO initialization fixed (actions)
-
-Revision 1.10  2007/06/07 23:46:33  alk
-DECLARE_SUBAGENT_INIT replaced w/ DECLARE_SUBAGENT_ENTRY_POINT
-
-Revision 1.9  2007/06/06 08:46:39  alk
-DCI descriptions replaced with defines
-
-Revision 1.8  2007/04/18 20:26:29  victor
-
-FreeBSD agent improved
-
-Revision 1.7  2005/09/15 21:47:02  victor
-Added macro DECLARE_SUBAGENT_INIT to simplify initialization function declaration
-
-Revision 1.6  2005/08/22 23:00:05  alk
-Net.IP.RoutingTable added
-
-Revision 1.5  2005/03/10 19:04:07  alk
-implemented:
-	Net.Interface.AdminStatus(*)
-	Net.Interface.Link(*)
-
-Revision 1.4  2005/01/24 19:51:16  alk
-reurn types/comments added
-Process.Count(*)/System.ProcessCount fixed
-
-Revision 1.3  2005/01/23 05:08:06  alk
-+ System.CPU.Count
-+ System.Memory.Physical.*
-+ System.ProcessCount
-+ System.ProcessList
-
-Revision 1.2  2005/01/17 23:25:47  alk
-Agent.SourcePackageSupport added
-
-Revision 1.1  2005/01/17 17:14:32  alk
-freebsd agent, incomplete (but working)
-
-
-*/

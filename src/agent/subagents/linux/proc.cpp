@@ -20,15 +20,12 @@
 **
 **/
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <nms_util.h>
+#include "linux_subagent.h"
 
-#include "proc.h"
 
+//
+// Filter for reading only pid directories from /proc
+//
 
 static int ProcFilter(const struct dirent *pEnt)
 {
@@ -52,14 +49,30 @@ static int ProcFilter(const struct dirent *pEnt)
 	return 1;
 }
 
+
+//
+// Read process information from /proc system
+// Parameters:
+//    pEnt - If not NULL, ProcRead() will return pointer to dynamically
+//           allocated array of process information structures for
+//           matched processes. Caller should free it with free().
+//    szProcName - If not NULL, only processes with matched name will
+//                 be counted and read. If szCmdLine is NULL, then exact
+//                 match required to pass filter; otherwise szProcName can
+//                 be a regular expression.
+//    szCmdLine - If not NULL, only processes with command line matched to
+//                regular expression will be counted and read.
+// Return value: number of matched processes or -1 in case of error.
+//
+
 int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 {
 	struct dirent **pNameList;
 	int nCount, nFound;
 	BOOL bProcFound, bCmdFound;
-	BOOL bIgnoreCase = TRUE;
 
 	nFound = -1;
+	NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, "ProcRead(%p,\"%s\",\"%s\")", pEnt, CHECK_NULL(szProcName), CHECK_NULL(szCmdLine));
 
 	nCount = scandir("/proc", &pNameList, &ProcFilter, alphasort);
 	// if everything is null we can simply return nCount!!!
@@ -105,8 +118,9 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 			bProcFound = bCmdFound = FALSE;
 			char szFileName[512];
 			FILE *hFile;
+			char szProcStat[1024] = {0}; 
 			char szBuff[1024] = {0}; 
-			char *pProcName = NULL;
+			char *pProcName = NULL, *pProcStat = NULL;
 			unsigned long nPid;
 
 			snprintf(szFileName, sizeof(szFileName),
@@ -114,24 +128,25 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 			hFile = fopen(szFileName, "r");
 			if (hFile != NULL)
 			{
-				if (fgets(szBuff, sizeof(szBuff), hFile) != NULL)
+				if (fgets(szProcStat, sizeof(szProcStat), hFile) != NULL)
 				{
-					if (sscanf(szBuff, "%lu ", &nPid) == 1)
+					if (sscanf(szProcStat, "%lu ", &nPid) == 1)
 					{
-						pProcName = strchr(szBuff, ')');
+						pProcName = strchr(szProcStat, ')');
 						if (pProcName != NULL)
 						{
-							*pProcName = 0;
-							pProcName =  strchr(szBuff, '(');
+							pProcStat = pProcName + 1;
+							*pProcName = 0;							
+							pProcName =  strchr(szProcStat, '(');
 							if (pProcName != NULL)
 							{
 								pProcName++;
-								if (szProcName != NULL)
+								if ((szProcName != NULL) && (*szProcName != 0))
 								{
 									if (szCmdLine == NULL) // use old style compare
-										bProcFound = strcasecmp(pProcName, szProcName) == 0;
+										bProcFound = strcmp(pProcName, szProcName) == 0;
 									else
-										bProcFound = RegexpMatch(pProcName, szProcName, bIgnoreCase);
+										bProcFound = RegexpMatch(pProcName, szProcName, FALSE);
 								}
 								else
 								{
@@ -144,44 +159,46 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 				fclose(hFile);
 			} // hFile
 
-			if (szCmdLine != NULL)
+			if ((szCmdLine != NULL) && (*szCmdLine != 0))
 			{
 				snprintf(szFileName, sizeof(szFileName),
 						"/proc/%s/cmdline", pNameList[nCount]->d_name);
 				hFile = fopen(szFileName, "r");
 				if (hFile != NULL)
 				{
-					char szBuff[1024];
-					memset(szBuff, 0, sizeof(szBuff));
+					char processCmdLine[1024];
+					memset(processCmdLine, 0, sizeof(processCmdLine));
 
-					int len = fread(szBuff, 1, sizeof(szBuff) - 1, hFile);
+					int len = fread(processCmdLine, 1, sizeof(processCmdLine) - 1, hFile);
 					if (len > 0) // got a valid record in format: argv[0]\x00argv[1]\x00...
 					{
 						int j;
-						char *pArgs;
+						//char *pArgs;
 
+						/* Commented out by victor: to behave identicaly on different platforms,
+						   argv[0] should be matched as well
 						j = strlen(szBuff) + 1;
 						pArgs = szBuff + j; // skip first (argv[0])
-						len -= j;
+						len -= j;*/
 						// replace 0x00 with spaces
-						for (j = 0; j < len - 1; j++)
+						for(j = 0; j < len - 1; j++)
 						{
-							if (pArgs[j] == 0)
+							if (processCmdLine[j] == 0)
 							{
-								pArgs[j] = ' ';
+								processCmdLine[j] = ' ';
 							}
 						}
-						bCmdFound = RegexpMatch(pArgs, szCmdLine, bIgnoreCase);
+						bCmdFound = RegexpMatch(processCmdLine, szCmdLine, TRUE);
 					}
 					else
 					{
-						bCmdFound = RegexpMatch("", szCmdLine, bIgnoreCase);
+						bCmdFound = RegexpMatch("", szCmdLine, TRUE);
 					}
 					fclose(hFile);
 				} // hFile != NULL
 				else
 				{
-					bCmdFound = RegexpMatch("", szCmdLine, bIgnoreCase);
+					bCmdFound = RegexpMatch("", szCmdLine, TRUE);
 				}
 			} // szCmdLine
 			else
@@ -191,12 +208,25 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 
 			if (bProcFound && bCmdFound)
 			{
-				nFound++;
-				if (pEnt != NULL && pProcName != NULL )
+				if (pEnt != NULL && pProcName != NULL)
 				{
 					(*pEnt)[nFound].nPid = nPid;
 					nx_strncpy((*pEnt)[nFound].szProcName, pProcName, sizeof((*pEnt)[nFound].szProcName));
+
+					// Parse rest of /proc/pid/stat file
+					if (pProcStat != NULL)
+					{
+						if (sscanf(pProcStat, " %c %d %d %*d %*d %*d %*u %lu %*u %lu %*u %lu %lu %*u %*u %*d %*d %ld %*d %*u %lu %ld ",
+						           &(*pEnt)[nFound].state, &(*pEnt)[nFound].parent, &(*pEnt)[nFound].group,
+						           &(*pEnt)[nFound].minflt, &(*pEnt)[nFound].majflt,
+						           &(*pEnt)[nFound].utime, &(*pEnt)[nFound].ktime, &(*pEnt)[nFound].threads,
+						           &(*pEnt)[nFound].vmsize, &(*pEnt)[nFound].rss) != 10)
+						{
+							NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, "Error parsing /proc/%d/stat", nPid);
+						}
+					}
 				}
+				nFound++;
 			}
 
 			free(pNameList[nCount]);
@@ -207,43 +237,162 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 	return nFound;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-/*
 
-$Log: not supported by cvs2svn $
-Revision 1.9  2007/04/24 11:58:24  alk
-Process.CountEx() fixed
+//
+// Handler for System.ProcessCount, Process.Count() and Process,CountEx() parameters
+//
 
-Revision 1.8  2007/01/22 09:16:43  victor
-Fixed bug in Process.CountEx()
+LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
+{
+	int nRet = SYSINFO_RC_ERROR;
+	char szArg[128] = "", szCmdLine[128] = "";
+	int nCount = -1;
 
-Revision 1.7  2007/01/15 00:25:07  victor
-Minor fix
+	if (*pArg != 'T')
+	{
+		NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+		if (*pArg == 'E')
+		{
+			NxGetParameterArg(pszParam, 2, szCmdLine, sizeof(szCmdLine));
+		}
+	}
 
-Revision 1.6  2007/01/15 00:16:07  victor
-Implemented Process.CountEx for Linux
+	nCount = ProcRead(NULL, (*pArg != 'T') ? szArg : NULL, (*pArg == 'E') ? szCmdLine : NULL);
 
-Revision 1.5  2005/11/04 23:00:07  victor
-Fixed some 64bit portability issues
+	if (nCount >= 0)
+	{
+		ret_int(pValue, nCount);
+		nRet = SYSINFO_RC_SUCCESS;
+	}
 
-Revision 1.4  2005/10/27 08:24:06  victor
-Minor changes
-
-Revision 1.3  2005/10/17 20:45:46  victor
-Fixed incorrect usage of strncpy
-
-Revision 1.2  2005/01/18 17:09:33  alk
-process name matching chaged from patern to exact match
-
-Revision 1.1  2004/10/22 22:08:34  alk
-source restructured;
-implemented:
-        Net.IP.Forwarding
-        Net.IP6.Forwarding
-        Process.Count(*)
-        Net.ArpCache
-        Net.InterfaceList (if-type not implemented yet)
-        System.ProcessList
+	return nRet;
+}
 
 
-*/
+//
+// Handler for System.ThreadCount parameter
+//
+
+LONG H_ThreadCount(const char *param, const char *arg, char *value)
+{
+	int i, sum, count, ret = SYSINFO_RC_ERROR;
+	PROC_ENT *procList;
+
+	count = ProcRead(&procList, NULL, NULL);
+	if (count >= 0)
+	{
+		for(i = 0, sum = 0; i < count; i++)
+			sum += procList[i].threads;
+		ret_int(value, sum);
+		ret = SYSINFO_RC_SUCCESS;
+	}
+
+	return ret;
+}
+
+
+//
+// Handler for Process.xxx() parameters
+// Parameter has the following syntax:
+//    Process.XXX(<process>,<type>,<cmdline>)
+// where
+//    XXX        - requested process attribute (see documentation for list of valid attributes)
+//    <process>  - process name (same as in Process.Count() parameter)
+//    <type>     - representation type (meaningful when more than one process with the same
+//                 name exists). Valid values are:
+//         min - minimal value among all processes named <process>
+//         max - maximal value among all processes named <process>
+//         avg - average value for all processes named <process>
+//         sum - sum of values for all processes named <process>
+//    <cmdline>  - command line
+//
+
+LONG H_ProcessDetails(const char *param, const char *arg, char *value)
+{
+	int i, count, type;
+	long pageSize, ticksPerSecond;
+	INT64 currVal, finalVal;
+	PROC_ENT *procList;
+	char procName[MAX_PATH], cmdLine[MAX_PATH], buffer[256];
+   static const char *typeList[]={ "min", "max", "avg", "sum", NULL };
+
+   // Get parameter type arguments
+   NxGetParameterArg(param, 2, buffer, 256);
+   if (buffer[0] == 0)     // Omited type
+   {
+      type = INFOTYPE_SUM;
+   }
+   else
+   {
+      for(type = 0; typeList[type] != NULL; type++)
+         if (!stricmp(typeList[type], buffer))
+            break;
+      if (typeList[type] == NULL)
+         return SYSINFO_RC_UNSUPPORTED;     // Unsupported type
+   }
+
+   // Get process name
+   NxGetParameterArg(param, 1, procName, MAX_PATH);
+	NxGetParameterArg(param, 3, cmdLine, MAX_PATH);
+	StrStrip(cmdLine);
+
+	count = ProcRead(&procList, procName, (cmdLine[0] != 0) ? cmdLine : NULL);
+	NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, "H_ProcessDetails(\"%s\"): ProcRead() returns %d", param, count);
+	if (count == -1)
+		return SYSINFO_RC_ERROR;
+
+	pageSize = getpagesize();
+	ticksPerSecond = sysconf(_SC_CLK_TCK);
+	for(i = 0, finalVal = 0; i < count; i++)
+	{
+		switch(CAST_FROM_POINTER(arg, int))
+		{
+			case PROCINFO_CPUTIME:
+				currVal = (procList[i].ktime + procList[i].utime) * 1000 / ticksPerSecond;
+				break;
+			case PROCINFO_KTIME:
+				currVal = procList[i].ktime * 1000 / ticksPerSecond;
+				break;
+			case PROCINFO_UTIME:
+				currVal = procList[i].utime * 1000 / ticksPerSecond;
+				break;
+			case PROCINFO_PAGEFAULTS:
+				currVal = procList[i].majflt + procList[i].minflt;
+				break;
+			case PROCINFO_THREADS:
+				currVal = procList[i].threads;
+				break;
+			case PROCINFO_VMSIZE:
+				currVal = procList[i].vmsize;
+				break;
+			case PROCINFO_WKSET:
+				currVal = procList[i].rss * pageSize;
+				break;
+			default:
+				currVal = 0;
+				break;
+		}
+
+		switch(type)
+		{
+			case INFOTYPE_SUM:
+			case INFOTYPE_AVG:
+				finalVal += currVal;
+				break;
+			case INFOTYPE_MIN:
+				finalVal = min(currVal, finalVal);
+				break;
+			case INFOTYPE_MAX:
+				finalVal = max(currVal, finalVal);
+				break;
+		}
+	}
+
+	safe_free(procList);
+	if (type == INFOTYPE_AVG)
+		finalVal /= count;
+
+	ret_int64(value, finalVal);
+	return SYSINFO_RC_SUCCESS;
+}
+

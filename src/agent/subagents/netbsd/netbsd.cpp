@@ -32,8 +32,8 @@
 
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ "System.CPU.Count",             H_CpuCount,        NULL,
-		DCI_DT_UINT,	DCIDESC_PROCESS_COUNT },
+	{ "Agent.SourcePackageSupport",   H_SourcePkgSupport,NULL,
+		DCI_DT_INT,		DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
 
 	{ "Disk.Avail(*)",                H_DiskInfo,        (char *)DISK_AVAIL,
 		DCI_DT_UINT64,	DCIDESC_DISK_AVAIL },
@@ -71,10 +71,27 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "Net.Interface.PacketsOut(*)",  H_NetIfInfoFromKVM, (char *)IF_INFO_PACKETS_OUT,
 		DCI_DT_UINT64,		DCIDESC_NET_INTERFACE_PACKETSOUT },
 
-	{ "Process.Count(*)",             H_ProcessCount,    (char *)0,
+	{ "Process.Count(*)",             H_ProcessCount,    "P",			DCI_DT_UINT,	DCIDESC_PROCESS_COUNT },
+	{ "Process.CountEx(*)",           H_ProcessCount,    "E",			DCI_DT_UINT,	DCIDESC_PROCESS_COUNTEX },
+#if HAVE_STRUCT_KINFO_PROC2
+	{ "Process.CPUTime(*)",           H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_CPUTIME, const char *),
+		DCI_DT_INT64,	DCIDESC_PROCESS_CPUTIME },
+	{ "Process.KernelTime(*)",        H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_KTIME, const char *),
+		DCI_DT_INT64,	DCIDESC_PROCESS_CPUTIME },
+	{ "Process.PageFaults(*)",        H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_PAGEFAULTS, const char *),
+		DCI_DT_INT64,	DCIDESC_PROCESS_PAGEFAULTS },
+	{ "Process.Threads(*)",           H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_THREADS, const char *),
+		DCI_DT_INT64,	DCIDESC_PROCESS_THREADS },
+	{ "Process.UserTime(*)",          H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_UTIME, const char *),
+		DCI_DT_INT64,	DCIDESC_PROCESS_CPUTIME },
+	{ "Process.VMSize(*)",            H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_VMSIZE, const char *),
+		DCI_DT_INT64,	DCIDESC_PROCESS_VMSIZE },
+	{ "Process.WkSet(*)",             H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_WKSET, const char *),
+		DCI_DT_INT64,	DCIDESC_PROCESS_WKSET },
+#endif
+
+	{ "System.CPU.Count",             H_CpuCount,        NULL,
 		DCI_DT_UINT,	DCIDESC_PROCESS_COUNT },
-	{ "System.ProcessCount",          H_ProcessCount,    (char *)1,
-		DCI_DT_UINT,	DCIDESC_SYSTEM_PROCESSCOUNT },
 
 	{ "System.CPU.LoadAvg",           H_CpuLoad,         NULL,
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_CPU_LOADAVG },
@@ -110,13 +127,18 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_TOTAL },
 	{ "System.Memory.Virtual.Used",   H_MemoryInfo,      (char *)VIRTUAL_USED,
 		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
+
+	{ "System.ProcessCount",          H_ProcessCount,    "S",
+		DCI_DT_UINT,	DCIDESC_SYSTEM_PROCESSCOUNT },
+#if HAVE_STRUCT_KINFO_PROC2
+	{ "System.ThreadCount",           H_ProcessCount,    "T",
+		DCI_DT_UINT,	DCIDESC_SYSTEM_THREADCOUNT },
+#endif
+
 	{ "System.Uname",                 H_Uname,           NULL,
 		DCI_DT_STRING,	DCIDESC_SYSTEM_UNAME },
 	{ "System.Uptime",                H_Uptime,          NULL,
 		DCI_DT_UINT,	DCIDESC_SYSTEM_UPTIME },
-
-	{ "Agent.SourcePackageSupport",   H_SourcePkgSupport,NULL,
-		DCI_DT_INT,		DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
 };
 
 static NETXMS_SUBAGENT_ENUM m_enums[] =

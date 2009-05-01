@@ -10,4 +10,4 @@
 
 EXTRA_DIST = \
     collect.cpp tools.cpp winperf.cpp winperf.h \
-    winperf.dsp winperf.dsw
+    winperf.vcproj

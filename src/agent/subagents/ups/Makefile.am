@@ -5,7 +5,7 @@ libnsm_ups_la_SOURCES = apc.cpp bcmxcp.cpp main.cpp serial.cpp ups.cpp \
 								microdowell.cpp
 libnsm_ups_la_LDFLAGS = ../../../libnetxms/libnetxms.la
 
-EXTRA_DIST = ups.h ups.dsw ups.dsp usb.cpp
+EXTRA_DIST = ups.h ups.vcproj usb.cpp
 
 install-exec-hook:
 	if test "x`uname -s`" = "xAIX" ; then \

@@ -13,6 +13,5 @@ EXTRA_DIST = \
 	net.cpp \
 	procinfo.cpp \
 	system.cpp \
-	winnt.dsp \
-	winnt.dsw \
+	winnt.vcproj \
 	winnt_subagent.h

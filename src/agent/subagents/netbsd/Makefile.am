@@ -12,7 +12,7 @@ INCLUDES=-I@top_srcdir@/include
 AM_CXXFLAGS=-fpermissive 
 
 lib_LTLIBRARIES = libnsm_netbsd.la
-libnsm_netbsd_la_SOURCES = netbsd.cpp system.cpp disk.cpp net.cpp
+libnsm_netbsd_la_SOURCES = netbsd.cpp system.cpp disk.cpp net.cpp proc.cpp proc2.cpp
 libnsm_netbsd_la_LDFLAGS = -lkvm
 
 EXTRA_DIST = disk.h net.h system.h

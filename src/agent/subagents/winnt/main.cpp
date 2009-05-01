@@ -121,7 +121,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "Net.RemoteShareStatusText(*)", H_RemoteShareStatus, "T", DCI_DT_STRING, _T("Status of remote shared resource as text") },
 	{ "Process.Count(*)", H_ProcCountSpecific, "N", DCI_DT_INT, DCIDESC_PROCESS_COUNT },
 	{ "Process.CountEx(*)", H_ProcCountSpecific, "E", DCI_DT_INT, DCIDESC_PROCESS_COUNTEX },
-	{ "Process.GdiObj(*)", H_ProcInfo, (char *)PROCINFO_GDI_OBJ, DCI_DT_UINT64, DCIDESC_PROCESS_GDIOBJ },
+	{ "Process.CPUTime(*)", H_ProcInfo, (char *)PROCINFO_CPUTIME, DCI_DT_UINT64, DCIDESC_PROCESS_CPUTIME },
+	{ "Process.GDIObjects(*)", H_ProcInfo, (char *)PROCINFO_GDI_OBJ, DCI_DT_UINT64, DCIDESC_PROCESS_GDIOBJ },
 	{ "Process.IO.OtherB(*)", H_ProcInfo, (char *)PROCINFO_IO_OTHER_B, DCI_DT_UINT64, DCIDESC_PROCESS_IO_OTHERB },
 	{ "Process.IO.OtherOp(*)", H_ProcInfo, (char *)PROCINFO_IO_OTHER_OP, DCI_DT_UINT64, DCIDESC_PROCESS_IO_OTHEROP },
 	{ "Process.IO.ReadB(*)", H_ProcInfo, (char *)PROCINFO_IO_READ_B, DCI_DT_UINT64, DCIDESC_PROCESS_IO_READB },
@@ -130,14 +131,14 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "Process.IO.WriteOp(*)", H_ProcInfo, (char *)PROCINFO_IO_WRITE_OP, DCI_DT_UINT64, DCIDESC_PROCESS_IO_WRITEOP },
 	{ "Process.KernelTime(*)", H_ProcInfo, (char *)PROCINFO_KTIME, DCI_DT_UINT64, DCIDESC_PROCESS_KERNELTIME },
 	{ "Process.PageFaults(*)", H_ProcInfo, (char *)PROCINFO_PF, DCI_DT_UINT64, DCIDESC_PROCESS_PAGEFAULTS },
-	{ "Process.UserObj(*)", H_ProcInfo, (char *)PROCINFO_USER_OBJ, DCI_DT_UINT64, DCIDESC_PROCESS_USEROBJ },
+	{ "Process.UserObjects(*)", H_ProcInfo, (char *)PROCINFO_USER_OBJ, DCI_DT_UINT64, DCIDESC_PROCESS_USEROBJ },
 	{ "Process.UserTime(*)", H_ProcInfo, (char *)PROCINFO_UTIME, DCI_DT_UINT64, DCIDESC_PROCESS_USERTIME },
 	{ "Process.VMSize(*)", H_ProcInfo, (char *)PROCINFO_VMSIZE, DCI_DT_UINT64, DCIDESC_PROCESS_VMSIZE },
 	{ "Process.WkSet(*)", H_ProcInfo, (char *)PROCINFO_WKSET, DCI_DT_UINT64, DCIDESC_PROCESS_WKSET },
 	{ "System.ConnectedUsers", H_ConnectedUsers, NULL, DCI_DT_INT, DCIDESC_SYSTEM_CONNECTEDUSERS },
-	{ "System.ProcessCount", H_ProcCount, NULL, DCI_DT_INT, DCIDESC_SYSTEM_PROCESSCOUNT },
+	{ "System.ProcessCount", H_ProcCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
 	{ "System.ServiceState(*)", H_ServiceState, NULL, DCI_DT_INT, DCIDESC_SYSTEM_SERVICESTATE },
-	{ "System.ThreadCount", H_ThreadCount, NULL, DCI_DT_INT, DCIDESC_SYSTEM_THREADCOUNT }
+	{ "System.ThreadCount", H_ThreadCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =
 {

@@ -20,19 +20,7 @@
 **
 **/
 
-#include <nms_common.h>
-#include <nms_agent.h>
-
-//#include <linux/sysctl.h>
-#include <stdio.h>
-#include <sys/ioctl.h>
-#include <stdlib.h>
-#include <string.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <net/if.h>
-
-#include "net.h"
+#include <linux_subagent.h>
 
 
 LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue)
@@ -190,7 +178,7 @@ LONG H_NetRoutingTable(const char *pszParam, const char *pArg, NETXMS_VALUES_LIS
 			{
 				char szIF[64];
 				int nTmp, nType = 0;
-				unsigned long nDestination, nGateway, nMask;
+				unsigned int nDestination, nGateway, nMask;
 
 				if (sscanf(szLine,
 							"%s\t%08X\t%08X\t%d\t%d\t%d\t%d\t%08X",

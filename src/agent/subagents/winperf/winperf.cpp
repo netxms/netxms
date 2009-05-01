@@ -381,7 +381,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.CPU.Usage(*)"), H_CPUUsage, "1", DCI_DT_INT, "Average CPU {instance} utilization for last minute" },
    { _T("System.CPU.Usage5(*)"), H_CPUUsage, "2", DCI_DT_INT, "Average CPU {instance} utilization for last 5 minutes" },
    { _T("System.CPU.Usage15(*)"), H_CPUUsage, "3", DCI_DT_INT, "Average CPU {instance} utilization for last 15 minutes" },
-   { _T("System.ThreadCount"), H_CounterAlias, _T("\\System\\Threads"), DCI_DT_INT, _T("Total number of threads") },
+   { _T("System.ThreadCount"), H_CounterAlias, _T("\\System\\Threads"), DCI_DT_UINT, _T("Total number of threads") },
    { _T("System.Uptime"), H_CounterAlias, _T("\\System\\System Up Time"), DCI_DT_UINT, _T("System uptime") }
 };
 static NETXMS_SUBAGENT_ENUM m_enums[] =

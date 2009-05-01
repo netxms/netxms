@@ -20,16 +20,7 @@
 **
 **/
 
-#include <nms_common.h>
-#include <nms_agent.h>
-
-#include <locale.h>
-#include <sys/utsname.h>
-#include <sys/statvfs.h>
-#include <utmp.h>
-
-#include "system.h"
-#include "proc.h"
+#include "linux_subagent.h"
 
 
 //
@@ -205,33 +196,6 @@ LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue)
 		}
 
 		fclose(hFile);
-	}
-
-	return nRet;
-}
-
-LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
-{
-	int nRet = SYSINFO_RC_ERROR;
-	struct statvfs s;
-	char szArg[128] = "", szCmdLine[128] = "";
-	int nCount = -1;
-
-	if (*pArg != 'T')
-	{
-		NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
-		if (*pArg == 'E')
-		{
-			NxGetParameterArg(pszParam, 2, szCmdLine, sizeof(szCmdLine));
-		}
-	}
-
-	nCount = ProcRead(NULL, (*pArg != 'T') ? szArg : NULL, (*pArg == 'E') ? szCmdLine : NULL);
-
-	if (nCount >= 0)
-	{
-		ret_int(pValue, nCount);
-		nRet = SYSINFO_RC_SUCCESS;
 	}
 
 	return nRet;
@@ -640,10 +604,9 @@ static void GetUsage(int source, int slot, int count, char *value)
 
 LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue)
 {
-	struct CpuUsageParam *p = (struct CpuUsageParam *)pArg;
 	int count;
 
-	switch (p->timeInterval)
+	switch(CPU_USAGE_PARAM_INTERVAL(pArg))
 	{
 		case INTERVAL_5MIN:
 			count = 5 * 60;
@@ -656,7 +619,7 @@ LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue)
 			break;
 	}
 
-	GetUsage(p->source, 0, count, pValue);
+	GetUsage(CPU_USAGE_PARAM_SOURCE(pArg), 0, count, pValue);
 	return SYSINFO_RC_SUCCESS;
 }
 
@@ -673,7 +636,7 @@ LONG H_CpuUsageEx(const char *pszParam, const char *pArg, char *pValue)
 	if ((*eptr != 0) || (cpu < 0) || (cpu >= m_maxCPU))
 		return SYSINFO_RC_UNSUPPORTED;
 
-	switch (p->timeInterval)
+	switch(CPU_USAGE_PARAM_INTERVAL(pArg))
 	{
 		case INTERVAL_5MIN:
 			count = 5 * 60;
@@ -686,7 +649,7 @@ LONG H_CpuUsageEx(const char *pszParam, const char *pArg, char *pValue)
 			break;
 	}
 
-	GetUsage(p->source, cpu + 1, count, pValue);
+	GetUsage(CPU_USAGE_PARAM_SOURCE(pArg), cpu + 1, count, pValue);
 
 	return SYSINFO_RC_SUCCESS;
 }

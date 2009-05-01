@@ -168,59 +168,6 @@ LONG H_CpuCount(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
-{
-	int nRet = SYSINFO_RC_ERROR;
-//	struct statvfs s;
-	char szArg[128] = {0};
-	int nCount;
-	int nResult = -1;
-	int i;
-	kvm_t *kd;
-	struct kinfo_proc *kp;
-
-	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
-
-	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL);
-	if (kd != NULL)
-	{
-		kp = kvm_getprocs(kd, KERN_PROC_ALL, 0, &nCount);
-
-		if (kp != NULL)
-		{
-			if (szArg[0] != 0)
-			{
-				nResult = 0;
-				for (i = 0; i < nCount; i++)
-				{
-#if __FreeBSD__ >= 5
-					if (strcasecmp(kp[i].ki_comm, szArg) == 0)
-#else
-					if (strcasecmp(kp[i].kp_proc.p_comm, szArg) == 0)
-#endif
-					{
-						nResult++;
-					}
-				}
-			}
-			else
-			{
-				nResult = nCount;
-			}
-		}
-
-		kvm_close(kd);
-	}
-
-	if (nResult >= 0)
-	{
-		ret_int(pValue, nResult);
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-
-	return nRet;
-}
-
 LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
@@ -235,7 +182,9 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 	int nPageSize;
 	char szArg[16] = {0};
 	kvm_t *kd;
+#if HAVE_KWM_GETSWAPINFO
 	struct kvm_swap swap[16];
+#endif
 
 	nPageCount = nFreeCount = 0;
 	nSwapTotal = nSwapUsed = 0;
@@ -271,7 +220,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 #undef DOIT
 
 	// Swap
-
+#if HAVE_KVM_GETSWAPINFO
 	kd = kvm_open(NULL, NULL, NULL, O_RDONLY, "kvm_open");
 	if (kd != NULL)
 	{
@@ -291,6 +240,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 				(int)pArg != PHYSICAL_USED)
 		nRet = SYSINFO_RC_ERROR;
 	}
+#endif
 
 	if (nRet == SYSINFO_RC_SUCCESS)
 	{
@@ -335,48 +285,6 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
-{
-	int nRet = SYSINFO_RC_ERROR;
-	int nCount = -1;
-	int i;
-	struct kinfo_proc *kp;
-	kvm_t *kd;
-
-
-
-	kd = kvm_openfiles(_PATH_DEVNULL, _PATH_DEVNULL, NULL, O_RDONLY, NULL);
-	if (kd != 0)
-	{
-		kp = kvm_getprocs(kd, KERN_PROC_ALL, 0, &nCount);
-
-		if (kp != NULL)
-		{
-			for (i = 0; i < nCount; i++)
-			{
-				char szBuff[128];
-
-				snprintf(szBuff, sizeof(szBuff), "%d %s",
-#if __FreeBSD__ >= 5
-						kp[i].ki_pid, kp[i].ki_comm
-#else
-						kp[i].kp_proc.p_pid, kp[i].kp_proc.p_comm
-#endif
-						);
-				NxAddResultString(pValue, szBuff);
-			}
-		}
-
-		kvm_close(kd);
-	}
-
-	if (nCount >= 0)
-	{
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-
-	return nRet;
-}
 
 //
 // stub

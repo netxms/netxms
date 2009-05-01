@@ -4,7 +4,7 @@ lib_LTLIBRARIES = libnsm_odbcquery.la
 libnsm_odbcquery_la_SOURCES = odbcquery.cpp odbcsapi.cpp
 libnsm_odbcquery_la_LDFLAGS = ../../../libnetxms/libnetxms.la
 
-EXTRA_DIST = odbcquery.h
+EXTRA_DIST = odbcquery.vcproj odbcquery.h
 
 install-exec-hook:
 	if test "x`uname -s`" = "xAIX" ; then \

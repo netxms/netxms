@@ -36,6 +36,23 @@ enum
 	VIRTUAL_TOTAL,
 };
 
+enum
+{
+	PROCINFO_CPUTIME,
+	PROCINFO_KTIME,
+	PROCINFO_PAGEFAULTS,
+	PROCINFO_THREADS,
+	PROCINFO_UTIME,
+	PROCINFO_VMSIZE,
+	PROCINFO_WKSET
+};
+
+#define INFOTYPE_MIN             0
+#define INFOTYPE_MAX             1
+#define INFOTYPE_AVG             2
+#define INFOTYPE_SUM             3
+
+
 LONG H_ProcessList(const char *, const char *, NETXMS_VALUES_LIST *);
 LONG H_Uptime(const char *, const char *, char *);
 LONG H_Uname(const char *, const char *, char *);
@@ -45,30 +62,8 @@ LONG H_CpuCount(const char *, const char *, char *);
 LONG H_CpuLoad(const char *, const char *, char *);
 LONG H_CpuUsage(const char *, const char *, char *);
 LONG H_ProcessCount(const char *, const char *, char *);
+LONG H_ProcessInfo(const char *, const char *, char *);
 LONG H_MemoryInfo(const char *, const char *, char *);
 LONG H_SourcePkgSupport(const char *, const char *, char *);
 
 #endif // __SYSTEM_H__
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.2  2005/01/17 23:25:48  alk
-Agent.SourcePackageSupport added
-
-Revision 1.1  2005/01/17 17:14:32  alk
-freebsd agent, incomplete (but working)
-
-Revision 1.1  2004/10/22 22:08:35  alk
-source restructured;
-implemented:
-	Net.IP.Forwarding
-	Net.IP6.Forwarding
-	Process.Count(*)
-	Net.ArpCache
-	Net.InterfaceList (if-type not implemented yet)
-	System.ProcessList
-
-
-*/

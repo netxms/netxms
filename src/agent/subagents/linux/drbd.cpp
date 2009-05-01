@@ -20,8 +20,7 @@
 **
 **/
 
-#include <nms_common.h>
-#include <nms_agent.h>
+#include <linux_subagent.h>
 #include "drbd.h"
 
 

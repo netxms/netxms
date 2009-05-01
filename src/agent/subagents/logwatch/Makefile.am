@@ -2,9 +2,9 @@ INCLUDES=-I@top_srcdir@/include
 
 lib_LTLIBRARIES = libnsm_logwatch.la
 libnsm_logwatch_la_SOURCES = main.cpp
-libnsm_logwatch_la_LDFLAGS = ../../../libnetxms/libnetxms.la ../../../libnxlp/libnxlp.la
+libnsm_logwatch_la_LIBADD = @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/libnxlp/libnxlp.la
 
-EXTRA_DIST = logwatch.h logwatch.dsp logwatch.dsw logwatch.def Makefile.nw \
+EXTRA_DIST = logwatch.h logwatch.vcproj logwatch.def Makefile.nw \
              eventlog.cpp
 
 install-exec-hook:

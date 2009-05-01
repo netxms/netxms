@@ -3,28 +3,28 @@
 
 [Setup]
 #include "setup.iss"
-OutputBaseFilename=nxagent-0.9.0-rc1-x64
+OutputBaseFilename=nxagent-0.2.26-x64
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 
 [Files]
-Source: "..\..\libnetxms\Release64\libnetxms.dll"; DestDir: "{app}\bin"; BeforeInstall: StopService; Flags: ignoreversion
-Source: "..\..\libnxlp\Release64\libnxlp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\core\Release64\nxagentd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\subagents\winnt\Release64\winnt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\subagents\winperf\Release64\winperf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\subagents\wmi\Release64\wmi.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\subagents\ping\Release64\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\subagents\portCheck\Release64\portcheck.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\subagents\logscan\Release64\logscan.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\subagents\logwatch\Release64\logwatch.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\subagents\sms\Release64\sms.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\subagents\ups\Release64\ups.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\subagents\ecs\Release64\ecs.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\subagents\odbcquery\Release64\odbcquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\..\x64\release\libnetxms.dll"; DestDir: "{app}\bin"; BeforeInstall: StopService; Flags: ignoreversion
+Source: "..\..\..\x64\release\libnxlp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\..\x64\release\nxagentd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\..\x64\release\winnt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\..\x64\release\winperf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\..\x64\release\wmi.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\..\x64\release\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\..\x64\release\portcheck.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\..\x64\release\logwatch.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\..\x64\release\sms.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\..\x64\release\ups.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\..\x64\release\ecs.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\..\x64\release\odbcquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion
-Source: "..\..\install\windows-x64\files\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
-Source: "..\..\install\windows-x64\files\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\..\x64\release\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\install\windows\files-x64\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\install\windows\files-x64\Microsoft.VC80.CRT\*"; DestDir: "{app}\bin\Microsoft.VC80.CRT"; Flags: ignoreversion
 
 #include "common.iss"
 

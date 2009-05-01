@@ -20,14 +20,7 @@
 **
 **/
 
-#include <nms_common.h>
-#include <nms_agent.h>
-
-#include <paths.h>
-#include <mntent.h>
-#include <sys/vfs.h>
-
-#include "iostat.h"
+#include <linux_subagent.h>
 
 
 #define IF_PARAM1 char szParam1[512] = {0}; NxGetParameterArg(pszParam, 1, szParam1, sizeof(szParam1)); if (szParam1[0] != 0)

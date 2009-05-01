@@ -20,14 +20,8 @@
 **
 **/
 
-#include <nms_common.h>
-#include <nms_agent.h>
+#include "linux_subagent.h"
 
-#include <paths.h>
-#include <mntent.h>
-#include <sys/vfs.h>
-
-#include "disk.h"
 
 static void findMountpointByDevice(char *dev, int size)
 {
@@ -67,7 +61,7 @@ LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue)
 			
 			QWORD usedBlocks = (QWORD)(s.f_blocks - s.f_bfree);
 			QWORD totalBlocks = (QWORD)s.f_blocks;
-			QWORD blockSize = (QWORD)s.f_frsize;
+			QWORD blockSize = (QWORD)s.f_bsize;
 			QWORD freeBlocks = (QWORD)s.f_bfree;
 			QWORD availableBlocks = (QWORD)s.f_bavail;
 			

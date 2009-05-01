@@ -254,14 +254,19 @@ static THREAD_RESULT THREAD_CALL NotificationThread(void *arg)
 
 static void ParseEvent(LogParser *parser, EVENTLOGRECORD *rec)
 {
-	TCHAR msg[8192];
+	TCHAR msg[8192], *eventSourceName;
 	EventSource *es;
 
-	es = LoadEventSource((TCHAR *)((BYTE *)rec + sizeof(EVENTLOGRECORD)));
+	eventSourceName = (TCHAR *)((BYTE *)rec + sizeof(EVENTLOGRECORD));
+	es = LoadEventSource(eventSourceName);
 	if (es != NULL)
 	{
 		es->FormatMessage(rec, msg, 8192);
-		parser->MatchLine(msg);
+		parser->matchEvent(eventSourceName, rec->EventID & 0x0000FFFF, rec->EventType, msg);
+	}
+	else
+	{
+		NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: unable to load event source \"%s\""), eventSourceName);
 	}
 }
 
@@ -282,7 +287,7 @@ THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *arg)
 
    buffer = (BYTE *)malloc(bufferSize);
 
-   hLog = OpenEventLog(NULL, &(parser->GetFileName()[1]));
+   hLog = OpenEventLog(NULL, &(parser->getFileName()[1]));
    if (hLog != NULL)
    {
       nd.hLogEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -308,7 +313,7 @@ THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *arg)
 			handles[0] = nd.hWakeupEvent;
 			handles[1] = g_hCondShutdown;
 			NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Start watching event log \"%s\""),
-			                &(parser->GetFileName()[1]));
+			                &(parser->getFileName()[1]));
 
          while(1)
          {
@@ -335,23 +340,23 @@ retry_read:
 
             if (GetLastError() != ERROR_HANDLE_EOF)
 					NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to read event log \"%s\": %s"),
-										 &(parser->GetFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, BUFFER_SIZE / sizeof(TCHAR)));
+										 &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, BUFFER_SIZE / sizeof(TCHAR)));
          }
 
 			ThreadJoin(nt);
 			NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Stop watching event log \"%s\""),
-			                &(parser->GetFileName()[1]));
+			                &(parser->getFileName()[1]));
       }
       else
       {
 			NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to read event log \"%s\": %s"),
-			                &(parser->GetFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, BUFFER_SIZE / sizeof(TCHAR)));
+			                &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, BUFFER_SIZE / sizeof(TCHAR)));
       }
    }
    else
    {
 		NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to open event log \"%s\""),
-		                &(parser->GetFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, BUFFER_SIZE / sizeof(TCHAR)));
+		                &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, BUFFER_SIZE / sizeof(TCHAR)));
    }
 
 	free(buffer);

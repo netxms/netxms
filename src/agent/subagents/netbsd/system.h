@@ -35,6 +35,22 @@ enum
 	VIRTUAL_TOTAL,
 };
 
+enum
+{
+	PROCINFO_CPUTIME,
+	PROCINFO_KTIME,
+	PROCINFO_PAGEFAULTS,
+	PROCINFO_THREADS,
+	PROCINFO_UTIME,
+	PROCINFO_VMSIZE,
+	PROCINFO_WKSET
+};
+
+#define INFOTYPE_MIN             0
+#define INFOTYPE_MAX             1
+#define INFOTYPE_AVG             2
+#define INFOTYPE_SUM             3
+
 LONG H_ProcessList(const char *, const char *, NETXMS_VALUES_LIST *);
 LONG H_Uptime(const char *, const char *, char *);
 LONG H_Uname(const char *, const char *, char *);
@@ -44,6 +60,7 @@ LONG H_CpuCount(const char *, const char *, char *);
 LONG H_CpuLoad(const char *, const char *, char *);
 LONG H_CpuUsage(const char *, const char *, char *);
 LONG H_ProcessCount(const char *, const char *, char *);
+LONG H_ProcessInfo(const char *, const char *, char *);
 LONG H_MemoryInfo(const char *, const char *, char *);
 LONG H_SourcePkgSupport(const char *, const char *, char *);
 

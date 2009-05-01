@@ -2,7 +2,7 @@
 
 /*
  ** NetXMS subagent for SunOS/Solaris
- ** Copyright (C) 2004, 2005 Victor Kirhenshtein
+ ** Copyright (C) 2004-2009 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  ** along with this program; if not, write to the Free Software
  ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  **
- ** $module: main.cpp
+ ** File: main.cpp
  **
  **/
 
@@ -102,6 +102,7 @@ static void UnloadHandler(void)
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ "Agent.SourcePackageSupport", H_SourcePkg, NULL, DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
+	
 	{ "Disk.Avail(*)", H_DiskInfo, (char *)DISK_AVAIL, DCI_DT_UINT64, DCIDESC_DISK_AVAIL },
 	{ "Disk.AvailPerc(*)", H_DiskInfo, (char *)DISK_AVAIL_PERC, DCI_DT_FLOAT, DCIDESC_DISK_AVAILPERC },
 	{ "Disk.Free(*)", H_DiskInfo, (char *)DISK_FREE, DCI_DT_UINT64, DCIDESC_DISK_FREE },
@@ -109,6 +110,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "Disk.Total(*)", H_DiskInfo, (char *)DISK_TOTAL, DCI_DT_UINT64, DCIDESC_DISK_TOTAL },
 	{ "Disk.Used(*)", H_DiskInfo, (char *)DISK_USED, DCI_DT_UINT64, DCIDESC_DISK_USED },
 	{ "Disk.UsedPerc(*)", H_DiskInfo, (char *)DISK_USED_PERC, DCI_DT_FLOAT, DCIDESC_DISK_USEDPERC },
+	
 	{ "Net.Interface.AdminStatus(*)", H_NetIfAdminStatus, NULL, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
 	{ "Net.Interface.BytesIn(*)", H_NetInterfaceStats, "rbytes", DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
 	{ "Net.Interface.BytesOut(*)", H_NetInterfaceStats, "obytes", DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESOUT },
@@ -119,10 +121,18 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ "Net.Interface.PacketsIn(*)", H_NetInterfaceStats, "ipackets", DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSIN },
 	{ "Net.Interface.PacketsOut(*)", H_NetInterfaceStats, "opackets", DCI_DT_UINT, DCIDESC_NET_INTERFACE_PACKETSOUT },
 	{ "Net.Interface.Speed(*)", H_NetInterfaceStats, "ifspeed", DCI_DT_UINT, DCIDESC_NET_INTERFACE_SPEED },
-	{ "Process.Count(*)", H_ProcessCount, NULL, DCI_DT_UINT, DCIDESC_PROCESS_COUNT },
-	{ "Process.KernelTime(*)", H_ProcessInfo, (char *)PROCINFO_KTIME, DCI_DT_UINT64, DCIDESC_PROCESS_KERNELTIME },
-	{ "Process.PageFaults(*)", H_ProcessInfo, (char *)PROCINFO_PF, DCI_DT_UINT64, DCIDESC_PROCESS_PAGEFAULTS },
-	{ "Process.UserTime(*)", H_ProcessInfo, (char *)PROCINFO_UTIME, DCI_DT_UINT64, DCIDESC_PROCESS_USERTIME },
+
+	{ "Process.Count(*)", H_ProcessCount, "S", DCI_DT_UINT, DCIDESC_PROCESS_COUNT },
+	{ "Process.CountEx(*)", H_ProcessCount, "E", DCI_DT_UINT, DCIDESC_PROCESS_COUNTEX },
+	{ "Process.CPUTime(*)", H_ProcessInfo, CAST_TO_POINTER(PROCINFO_CPUTIME, const char *), DCI_DT_UINT64, DCIDESC_PROCESS_CPUTIME },
+	{ "Process.KernelTime(*)", H_ProcessInfo, CAST_TO_POINTER(PROCINFO_KTIME, const char *), DCI_DT_UINT64, DCIDESC_PROCESS_KERNELTIME },
+	{ "Process.PageFaults(*)", H_ProcessInfo, CAST_TO_POINTER(PROCINFO_PF, const char *), DCI_DT_UINT64, DCIDESC_PROCESS_PAGEFAULTS },
+	{ "Process.Syscalls(*)", H_ProcessInfo, CAST_TO_POINTER(PROCINFO_SYSCALLS, const char *), DCI_DT_UINT64, DCIDESC_PROCESS_SYSCALLS },
+	{ "Process.Threads(*)", H_ProcessInfo, CAST_TO_POINTER(PROCINFO_THREADS, const char *), DCI_DT_UINT, DCIDESC_PROCESS_THREADS },
+	{ "Process.UserTime(*)", H_ProcessInfo,  CAST_TO_POINTER(PROCINFO_UTIME, const char *), DCI_DT_UINT64, DCIDESC_PROCESS_USERTIME },
+	{ "Process.VMSize(*)", H_ProcessInfo, CAST_TO_POINTER(PROCINFO_VMSIZE, const char *), DCI_DT_UINT64, DCIDESC_PROCESS_VMSIZE },
+	{ "Process.WkSet(*)", H_ProcessInfo, CAST_TO_POINTER(PROCINFO_WKSET, const char *), DCI_DT_UINT64, DCIDESC_PROCESS_WKSET },
+
 	{ "System.CPU.Count", H_CPUCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_CPU_COUNT },
 	{ "System.CPU.LoadAvg", H_LoadAvg, (char *)0, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG },
 	{ "System.CPU.LoadAvg5", H_LoadAvg, (char *)1, DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_LOADAVG5 },

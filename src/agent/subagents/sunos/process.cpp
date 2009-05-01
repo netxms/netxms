@@ -1,8 +1,6 @@
-/* $Id$ */
-
 /*
  ** NetXMS subagent for SunOS/Solaris
- ** Copyright (C) 2004 Victor Kirhenshtein
+ ** Copyright (C) 2004-2009 Victor Kirhenshtein
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -18,7 +16,7 @@
  ** along with this program; if not, write to the Free Software
  ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  **
- ** $module: process.cpp
+ ** File: process.cpp
  **
  **/
 
@@ -64,13 +62,21 @@ static int ProcFilter(const struct dirent *pEnt)
 
 
 //
-// Read process list from /proc filesystem
-// Returns only processes with names matched to pszPattern
-// (currently with strcmp) ot, if pszPattern is NULL, all
-// processes in the system.
+// Read process information from /proc system
+// Parameters:
+//    pEnt - If not NULL, ProcRead() will return pointer to dynamically
+//           allocated array of process information structures for
+//           matched processes. Caller should free it with free().
+//    pszProcName - If not NULL, only processes with matched name will
+//                  be counted and read. If szCmdLine is NULL, then exact
+//                  match required to pass filter; otherwise szProcName can
+//                  be a regular expression.
+//    pszCmdLine - If not NULL, only processes with command line matched to
+//                 regular expression will be counted and read.
+// Return value: number of matched processes or -1 in case of error.
 //
 
-static int ProcRead(PROC_ENT **pEnt, char *pszPattern)
+static int ProcRead(PROC_ENT **pEnt, char *pszProcName, char *pszCmdLine)
 {
 	struct dirent **pNameList;
 	int nCount, nFound;
@@ -117,7 +123,22 @@ static int ProcRead(PROC_ENT **pEnt, char *pszPattern)
 
 				if (read(hFile, &psi, sizeof(psinfo_t)) == sizeof(psinfo_t))
 				{
-					if ((pszPattern == NULL) || (!strcmp(psi.pr_fname, CHECK_NULL_EX(pszPattern))))
+					BOOL nameMatch = TRUE, cmdLineMatch = TRUE;
+
+					if (pszProcName != NULL)
+					{
+						if (pszCmdLine == NULL)		// Match like in Process.Count()
+							nameMatch = !strcmp(psi.pr_fname, pszProcName);
+						else
+							nameMatch = RegexpMatch(psi.pr_fname, pszProcName, FALSE);
+					}
+
+					if ((pszCmdLine != NULL) && (*pszCmdLine != 0))
+					{
+						cmdLineMatch = RegexpMatch(psi.pr_psargs, pszCmdLine, TRUE);
+					}
+
+					if (nameMatch && cmdLineMatch)
 					{
 						if (pEnt != NULL)
 						{
@@ -150,7 +171,7 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *p
 	int i, nProc;
 	char szBuffer[256];
 
-	nProc = ProcRead(&pList, NULL);
+	nProc = ProcRead(&pList, NULL, NULL);
 	if (nProc != -1)
 	{
 		for(i = 0; i < nProc; i++)
@@ -171,20 +192,23 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *p
 
 
 //
-// Handler for Process.Count(*) parameter
+// Handler for Process.Count(*) and Process.CountEx(*) parameters
 //
 
-LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
+LONG H_ProcessCount(const char *param, const char *arg, char *value)
 {
 	int nRet = SYSINFO_RC_ERROR;
-	char szArg[128] = "";
+	char procName[256] = "", cmdLine[256] = "";
 	int nCount;
 
-	NxGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
-	nCount = ProcRead(NULL, szArg);
+	NxGetParameterArg(param, 1, procName, sizeof(procName));
+	if (*arg == 'E')	// Process.CountEx
+		NxGetParameterArg(param, 2, cmdLine, sizeof(cmdLine));
+
+	nCount = ProcRead(NULL, (procName[0] != 0) ? procName : NULL, (*arg == 'E') ? cmdLine : NULL);
 	if (nCount >= 0)
 	{
-		ret_int(pValue, nCount);
+		ret_int(value, nCount);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 
@@ -239,14 +263,31 @@ static BOOL GetProcessAttribute(pid_t nPid, int nAttr, int nType,
 	char szFileName[MAX_PATH];
 	prusage_t usage;
 	pstatus_t status;
+	psinfo_t info;
 	BOOL bResult = TRUE;
 
 	// Get value for current process instance
 	switch(nAttr)
 	{
 		case PROCINFO_VMSIZE:
+			if (ReadProcFile(nPid, "psinfo", &info, sizeof(psinfo_t)))
+			{
+				qwValue = info.pr_size * 1024;
+			}
+			else
+			{
+				bResult = FALSE;
+			}
 			break;
 		case PROCINFO_WKSET:
+			if (ReadProcFile(nPid, "psinfo", &info, sizeof(psinfo_t)))
+			{
+				qwValue = info.pr_rssize * 1024;
+			}
+			else
+			{
+				bResult = FALSE;
+			}
 			break;
 		case PROCINFO_PF:
 			if (ReadProcFile(nPid, "usage", &usage, sizeof(prusage_t)))
@@ -258,11 +299,31 @@ static BOOL GetProcessAttribute(pid_t nPid, int nAttr, int nType,
 				bResult = FALSE;
 			}
 			break;
+		case PROCINFO_SYSCALLS:
+			if (ReadProcFile(nPid, "usage", &usage, sizeof(prusage_t)))
+			{
+				qwValue = usage.pr_sysc;
+			}
+			else
+			{
+				bResult = FALSE;
+			}
+			break;
+		case PROCINFO_THREADS:
+			if (ReadProcFile(nPid, "status", &status, sizeof(pstatus_t)))
+			{
+				qwValue = status.pr_nlwp;
+			}
+			else
+			{
+				bResult = FALSE;
+			}
+			break;
 		case PROCINFO_KTIME:
 			if (ReadProcFile(nPid, "status", &status, sizeof(pstatus_t)))
 			{
 				qwValue = status.pr_stime.tv_sec * 1000 + 
-					status.pr_stime.tv_nsec / 1000000;
+				          status.pr_stime.tv_nsec / 1000000;
 			}
 			else
 			{
@@ -273,13 +334,25 @@ static BOOL GetProcessAttribute(pid_t nPid, int nAttr, int nType,
 			if (ReadProcFile(nPid, "status", &status, sizeof(pstatus_t)))
 			{
 				qwValue = status.pr_utime.tv_sec * 1000 + 
-					status.pr_utime.tv_nsec / 1000000;
+				          status.pr_utime.tv_nsec / 1000000;
 			}
 			else
 			{
 				bResult = FALSE;
 			}
 			break;
+		case PROCINFO_CPUTIME:
+			if (ReadProcFile(nPid, "status", &status, sizeof(pstatus_t)))
+			{
+				qwValue = status.pr_utime.tv_sec * 1000 + 
+				          status.pr_utime.tv_nsec / 1000000 +
+				          status.pr_stime.tv_sec * 1000 + 
+				          status.pr_stime.tv_nsec / 1000000;
+			}
+			else
+			{
+				bResult = FALSE;
+			}
 		case PROCINFO_IO_READ_B:
 			break;
 		case PROCINFO_IO_READ_OP:
@@ -327,17 +400,17 @@ static BOOL GetProcessAttribute(pid_t nPid, int nAttr, int nType,
 // Handler for Process.XXX parameters
 //
 
-LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue)
+LONG H_ProcessInfo(const char *param, const char *arg, char *value)
 {
 	int nRet = SYSINFO_RC_ERROR;
-	char szBuffer[256] = "";
+	char szBuffer[256] = "", procName[256] = "", cmdLine[256] = "";
 	int i, nCount, nType;
 	PROC_ENT *pList;
 	QWORD qwValue;
 	static char *pszTypeList[]={ "min", "max", "avg", "sum", NULL };
 
 	// Get parameter type arguments
-	NxGetParameterArg(pszParam, 2, szBuffer, sizeof(szBuffer));
+	NxGetParameterArg(param, 2, szBuffer, sizeof(szBuffer));
 	if (szBuffer[0] == 0)     // Omited type
 	{
 		nType = INFOTYPE_SUM;
@@ -351,16 +424,20 @@ LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue)
 			return SYSINFO_RC_UNSUPPORTED;     // Unsupported type
 	}
 
-	NxGetParameterArg(pszParam, 1, szBuffer, sizeof(szBuffer));
-	nCount = ProcRead(&pList, szBuffer);
+	// Get process name
+	NxGetParameterArg(param, 1, procName, MAX_PATH);
+	NxGetParameterArg(param, 3, cmdLine, MAX_PATH);
+	StrStrip(cmdLine);
+
+	nCount = ProcRead(&pList, (procName[0] != 0) ? procName : NULL, (cmdLine[0] != 0) ? cmdLine : NULL);
 	if (nCount > 0)
 	{
 		for(i = 0, qwValue = 0; i < nCount; i++)
-			if (!GetProcessAttribute(pList[i].nPid, (int)pArg, nType, i, &qwValue))
+			if (!GetProcessAttribute(pList[i].nPid, CAST_FROM_POINTER(arg, int), nType, i, &qwValue))
 				break;
 		if (i == nCount)
 		{
-			ret_uint64(pValue, qwValue);
+			ret_uint64(value, qwValue);
 			nRet = SYSINFO_RC_SUCCESS;
 		}
 	}

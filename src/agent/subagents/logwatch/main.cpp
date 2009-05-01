@@ -37,7 +37,7 @@ THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *);
 //
 
 CONDITION g_hCondShutdown = INVALID_CONDITION_HANDLE;
-BOOL g_shutdownFlag = FALSE;
+bool g_shutdownFlag = false;
 
 
 //
@@ -58,9 +58,9 @@ static LogParser **m_parserList = NULL;
 THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
 {
 #ifdef _WIN32
-	((LogParser *)arg)->MonitorFile(g_hCondShutdown, NxWriteAgentLog);
+	((LogParser *)arg)->monitorFile(g_hCondShutdown, NxWriteAgentLog);
 #else
-	((LogParser *)arg)->MonitorFile(g_hCondShutdown, &g_shutdownFlag, NxWriteAgentLog);
+	((LogParser *)arg)->monitorFile(g_hCondShutdown, &g_shutdownFlag, NxWriteAgentLog);
 #endif
 	return THREAD_OK;
 }
@@ -94,13 +94,13 @@ static void SubagentShutdown(void)
 {
 	DWORD i;
 
-	g_shutdownFlag = TRUE;
+	g_shutdownFlag = true;
 	if (g_hCondShutdown != INVALID_CONDITION_HANDLE)
 		ConditionSet(g_hCondShutdown);
 
 	for(i = 0; i < m_numParsers; i++)
 	{
-		ThreadJoin(m_parserList[i]->GetThread());
+		ThreadJoin(m_parserList[i]->getThread());
 		delete m_parserList[i];
 	}
 	safe_free(m_parserList);
@@ -120,8 +120,8 @@ static void SubagentShutdown(void)
 // Callback for matched log records
 //
 
-static void LogParserCallback(DWORD event, const TCHAR *text, int paramCount,
-                              TCHAR **paramList, DWORD objectId, void *userArg)
+static void LogParserMatch(DWORD event, const TCHAR *text, int paramCount,
+                           TCHAR **paramList, DWORD objectId, void *userArg)
 {
 	NxSendTrap2(event, paramCount, paramList);
 }
@@ -152,15 +152,17 @@ static void AddParserFromConfig(const TCHAR *file)
 	if (xml != NULL)
 	{
 		parser = new LogParser;
-		if (parser->CreateFromXML((const char *)xml, size, error, 1024))
+		if (parser->createFromXml((const char *)xml, size, error, 1024))
 		{
-			if (parser->GetFileName() != NULL)
+			if (parser->getFileName() != NULL)
 			{
-				parser->SetCallback(LogParserCallback);
-				parser->SetTraceCallback(LogParserTrace);
+				parser->setCallback(LogParserMatch);
+				parser->setTraceCallback(LogParserTrace);
 				m_numParsers++;
 				m_parserList = (LogParser **)realloc(m_parserList, sizeof(LogParser *) * m_numParsers);
 				m_parserList[m_numParsers - 1] = parser;
+				NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: registered parser for file %s, trace level set to %d"),
+				                parser->getFileName(), parser->getTraceLevel());
 			}
 			else
 			{
@@ -231,12 +233,12 @@ static BOOL SubagentInit(TCHAR *pszConfigFile)
 		for(i = 0; i < m_numParsers; i++)
 		{
 #ifdef _WIN32
-			if (m_parserList[i]->GetFileName()[0] == _T('*'))	// event log
-				m_parserList[i]->SetThread(ThreadCreateEx(ParserThreadEventLog, 0, m_parserList[i]));
+			if (m_parserList[i]->getFileName()[0] == _T('*'))	// event log
+				m_parserList[i]->setThread(ThreadCreateEx(ParserThreadEventLog, 0, m_parserList[i]));
 			else	// regular file
-				m_parserList[i]->SetThread(ThreadCreateEx(ParserThreadFile, 0, m_parserList[i]));
+				m_parserList[i]->setThread(ThreadCreateEx(ParserThreadFile, 0, m_parserList[i]));
 #else
-			m_parserList[i]->SetThread(ThreadCreateEx(ParserThreadFile, 0, m_parserList[i]));
+			m_parserList[i]->setThread(ThreadCreateEx(ParserThreadFile, 0, m_parserList[i]));
 #endif
 		}
 	}
