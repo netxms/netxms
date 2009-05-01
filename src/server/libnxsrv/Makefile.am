@@ -13,5 +13,5 @@ messages.h: messages.mc
 
 EXTRA_DIST = \
 	libnxsrv.vcproj libnxsrv.rc \
-	messages.mc messages.c \
+	messages.mc messages.c messages.h \
 	libnxsrv.h resource.h

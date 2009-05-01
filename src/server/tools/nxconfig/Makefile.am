@@ -28,7 +28,7 @@ EXTRA_DIST = \
 	SummaryPage.cpp SummaryPage.h \
 	WinSrvPage.cpp WinSrvPage.h \
 	WizardWorker.cpp \
-	nxconfig.clw nxconfig.cpp nxconfig.dsp \
-	nxconfig.dsw nxconfig.h nxconfig.rc \
+	nxconfig.clw nxconfig.cpp nxconfig.vcproj \
+	nxconfig.h nxconfig.rc \
 	resource.h \
 	tools.cpp tools.h

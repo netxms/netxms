@@ -535,6 +535,7 @@ private:
 	void WebMapGetList(DWORD dwRqId);
 	void RegisterAgent(CSCPMessage *pRequest);
 	void GetServerFile(CSCPMessage *pRequest);
+	void TestDCITransformation(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
@@ -703,6 +704,7 @@ DWORD DeleteObjectToolFromDB(DWORD dwToolId);
 DWORD UpdateObjectToolFromMessage(CSCPMessage *pMsg);
 
 void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_LOG_RECORD *pRec);
+void ReinitializeSyslogParser();
 
 void EscapeString(String &str);
 

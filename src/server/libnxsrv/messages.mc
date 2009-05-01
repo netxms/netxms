@@ -710,4 +710,28 @@ Language=English
 Failed to forward event to server %1: %2
 .
 
+MessageId=
+SymbolicName=MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR
+Language=English
+Failed to compile filter script for template object %1 "%2": %3
+.
+
+MessageId=
+SymbolicName=MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR
+Language=English
+Failed to execute filter script for template object %1 "%2": %3
+.
+
+MessageId=
+SymbolicName=MSG_CONTAINER_SCRIPT_COMPILATION_ERROR
+Language=English
+Failed to compile filter script for container object %1 "%2": %3
+.
+
+MessageId=
+SymbolicName=MSG_CONTAINER_SCRIPT_EXECUTION_ERROR
+Language=English
+Failed to execute filter script for container object %1 "%2": %3
+.
+
 ;#endif

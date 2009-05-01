@@ -125,6 +125,93 @@ static TCHAR *GetObjectName(DWORD dwId, TCHAR *pszBuffer)
 
 
 //
+// Check that given node is inside at least one container
+//
+
+static BOOL NodeInContainer(DWORD id)
+{
+	TCHAR query[256];
+	DB_RESULT hResult;
+	BOOL result = FALSE;
+
+	_sntprintf(query, 256, _T("SELECT container_id FROM container_members WHERE object_id=%d"), id);
+	hResult = SQLSelect(query);
+	if (hResult != NULL)
+	{
+		result = (DBGetNumRows(hResult) > 0);
+		DBFreeResult(hResult);
+	}
+	return result;
+}
+
+
+//
+// Find subnet for unlinked node
+//
+
+static BOOL FindSubnetForNode(DWORD id, const TCHAR *name)
+{
+	DB_RESULT hResult, hResult2;
+	TCHAR query[256], buffer[32];
+	int i, count;
+	DWORD addr, mask, subnet;
+	BOOL success = FALSE;
+
+	// Read list of interfaces of given node
+	_sntprintf(query, 256, _T("SELECT ip_addr,ip_netmask FROM interfaces WHERE node_id=%d"), id);
+	hResult = SQLSelect(query);
+	if (hResult != NULL)
+	{
+		count = DBGetNumRows(hResult);
+		for(i = 0; i < count; i++)
+		{
+			addr = DBGetFieldIPAddr(hResult, i, 0);
+			mask = DBGetFieldIPAddr(hResult, i, 1);
+			subnet = addr & mask;
+			
+			_sntprintf(query, 256, _T("SELECT id FROM subnets WHERE ip_addr='%s'"), IpToStr(subnet, buffer));
+			hResult2 = SQLSelect(query);
+			if (hResult2 != NULL)
+			{
+				if (DBGetNumRows(hResult2) > 0)
+				{
+					subnet = DBGetFieldULong(hResult2, 0, 0);
+					m_iNumErrors++;
+					_tprintf(_T("\rUnlinked node object %d (\"%s\") can be linked to subnet %d (%s). Link? (Y/N) "),
+								id, name, subnet, buffer);
+					if (GetYesNo())
+					{
+						_sntprintf(query, 256, _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), subnet, id);
+						if (SQLQuery(query))
+						{
+							success = TRUE;
+							m_iNumFixes++;
+							break;
+						}
+						else
+						{
+							// Node remains unlinked, so error count will be
+							// incremented again by node deletion code or next iteration
+							m_iNumErrors--;
+						}
+					}
+					else
+					{
+						// Node remains unlinked, so error count will be
+						// incremented again by node deletion code
+						m_iNumErrors--;
+					}
+				}
+				DBFreeResult(hResult2);
+			}
+		}
+		DBFreeResult(hResult);
+	}
+	return success;
+}
+
+
+//
 // Check node objects
 //
 
@@ -181,21 +268,24 @@ static void CheckNodes(void)
             hResult2 = SQLSelect(szQuery);
             if (hResult2 != NULL)
             {
-               if ((DBGetNumRows(hResult2) == 0) && (DBGetFieldIPAddr(hResult, i, 1) != 0))
+               if ((DBGetNumRows(hResult2) == 0) && (!NodeInContainer(dwId)))
                {
-                  m_iNumErrors++;
-                  _tprintf(_T("\rUnlinked node object %d (\"%s\"). Delete? (Y/N) "),
-                           dwId, szName);
-                  if (GetYesNo())
-                  {
-                     _sntprintf(szQuery, 1024, _T("DELETE FROM nodes WHERE id=%d"), dwId);
-                     bResult = SQLQuery(szQuery);
-                     _sntprintf(szQuery, 1024, _T("DELETE FROM acl WHERE object_id=%d"), dwId);
-                     bResult = bResult && SQLQuery(szQuery);
-                     _sntprintf(szQuery, 1024, _T("DELETE FROM object_properties WHERE object_id=%d"), dwId);
-                     if (SQLQuery(szQuery) && bResult)
-                        m_iNumFixes++;
-                  }
+						if ((DBGetFieldIPAddr(hResult, i, 1) == 0) || (!FindSubnetForNode(dwId, szName)))
+						{
+							m_iNumErrors++;
+							_tprintf(_T("\rUnlinked node object %d (\"%s\"). Delete? (Y/N) "),
+										dwId, szName);
+							if (GetYesNo())
+							{
+								_sntprintf(szQuery, 1024, _T("DELETE FROM nodes WHERE id=%d"), dwId);
+								bResult = SQLQuery(szQuery);
+								_sntprintf(szQuery, 1024, _T("DELETE FROM acl WHERE object_id=%d"), dwId);
+								bResult = bResult && SQLQuery(szQuery);
+								_sntprintf(szQuery, 1024, _T("DELETE FROM object_properties WHERE object_id=%d"), dwId);
+								if (SQLQuery(szQuery) && bResult)
+									m_iNumFixes++;
+							}
+						}
                }
                DBFreeResult(hResult2);
             }

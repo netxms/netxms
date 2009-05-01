@@ -462,7 +462,7 @@ void LIBNXSRV_EXPORTABLE WriteLogOther(WORD wType, const TCHAR *format, ...);
 void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...);
 
 BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bWriteLog, BOOL bLogErrors, BOOL bDumpSQL,
-                                void (* fpEventHandler)(DWORD, TCHAR *));
+                                void (* fpEventHandler)(DWORD, const TCHAR *, const TCHAR *));
 DB_HANDLE LIBNXSRV_EXPORTABLE DBConnect(void);
 DB_HANDLE LIBNXSRV_EXPORTABLE DBConnectEx(const TCHAR *pszServer, const TCHAR *pszDBName,
                                           const TCHAR *pszLogin, const TCHAR *pszPassword);

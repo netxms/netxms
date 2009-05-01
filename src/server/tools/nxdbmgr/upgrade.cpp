@@ -103,6 +103,86 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 
 
 //
+// Upgrade from V89 to V90
+//
+
+static BOOL H_UpgradeFromV89(void)
+{
+	static TCHAR m_szBatch[] =
+		_T("ALTER TABLE items ADD base_units integer\n")
+		_T("ALTER TABLE items ADD unit_multiplier integer\n")
+		_T("ALTER TABLE items ADD custom_units_name varchar(63)\n")
+		_T("ALTER TABLE items ADD perftab_settings $SQL:TEXT\n")
+		_T("UPDATE items SET base_units=0,unit_multiplier=1,custom_units_name='#00',perftab_settings='#00'\n")
+		_T("<END>");
+		
+	if (!SQLBatch(m_szBatch))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='90' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
+// Upgrade from V88 to V89
+//
+
+static BOOL H_UpgradeFromV88(void)
+{
+	static TCHAR m_szBatch[] =
+		_T("ALTER TABLE containers ADD enable_auto_bind integer\n")
+		_T("ALTER TABLE containers ADD auto_bind_filter $SQL:TEXT\n")
+		_T("UPDATE containers SET enable_auto_bind=0,auto_bind_filter='#00'\n")
+		_T("ALTER TABLE cluster_resources ADD current_owner integer\n")
+		_T("UPDATE cluster_resources SET current_owner=0\n")
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES (")
+			_T("52,'SYS_DB_QUERY_FAILED',4,1,'Database query failed (Query: %1; Error: %2)',")
+			_T("'Generated when SQL query to backend database failed.#0D#0A")
+			_T("Parameters:#0D#0A   1) Query#0D#0A   2) Error message')\n")
+		_T("<END>");
+		
+	if (!SQLBatch(m_szBatch))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='89' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
+// Upgrade from V87 to V88
+//
+
+static BOOL H_UpgradeFromV87(void)
+{
+	static TCHAR m_szBatch[] =
+		_T("ALTER TABLE templates ADD enable_auto_apply integer\n")
+		_T("ALTER TABLE templates ADD apply_filter $SQL:TEXT\n")
+		_T("UPDATE templates SET enable_auto_apply=0,apply_filter='#00'\n")
+		_T("<END>");
+		
+	if (!SQLBatch(m_szBatch))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='88' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V86 to V87
 //
 
@@ -3875,6 +3955,9 @@ static struct
    { 84, H_UpgradeFromV84 },
 	{ 85, H_UpgradeFromV85 },
 	{ 86, H_UpgradeFromV86 },
+	{ 87, H_UpgradeFromV87 },
+	{ 88, H_UpgradeFromV88 },
+	{ 89, H_UpgradeFromV89 },
    { 0, NULL }
 };
 

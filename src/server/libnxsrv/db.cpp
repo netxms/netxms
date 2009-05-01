@@ -61,7 +61,7 @@ static DWORD (* m_fpDrvBegin)(DB_CONNECTION) = NULL;
 static DWORD (* m_fpDrvCommit)(DB_CONNECTION) = NULL;
 static DWORD (* m_fpDrvRollback)(DB_CONNECTION) = NULL;
 static void (* m_fpDrvUnload)(void) = NULL;
-static void (* m_fpEventHandler)(DWORD, TCHAR *);
+static void (* m_fpEventHandler)(DWORD, const TCHAR *, const TCHAR *);
 static int (* m_fpDrvGetColumnCount)(DB_RESULT);
 static const char* (* m_fpDrvGetColumnName)(DB_RESULT, int);
 static int (* m_fpDrvGetColumnCountAsync)(DB_ASYNC_RESULT);
@@ -89,7 +89,7 @@ static void *DLGetSymbolAddrEx(HMODULE hModule, const TCHAR *pszSymbol)
 //
 
 BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bnxlog_write, BOOL bLogErrors, BOOL bDumpSQL,
-                                void (* fpEventHandler)(DWORD, TCHAR *))
+                                void (* fpEventHandler)(DWORD, const TCHAR *, const TCHAR *))
 {
    BOOL (* fpDrvInit)(char *);
    DWORD *pdwAPIVersion;
@@ -278,7 +278,7 @@ static void DBReconnect(DB_HANDLE hConn)
       {
          MutexLock(m_mutexReconnect, INFINITE);
          if ((m_nReconnect == 0) && (m_fpEventHandler != NULL))
-            m_fpEventHandler(DBEVENT_CONNECTION_LOST, NULL);
+            m_fpEventHandler(DBEVENT_CONNECTION_LOST, NULL, NULL);
          m_nReconnect++;
          MutexUnlock(m_mutexReconnect);
       }
@@ -289,7 +289,7 @@ static void DBReconnect(DB_HANDLE hConn)
       MutexLock(m_mutexReconnect, INFINITE);
       m_nReconnect--;
       if ((m_nReconnect == 0) && (m_fpEventHandler != NULL))
-         m_fpEventHandler(DBEVENT_CONNECTION_RESTORED, NULL);
+         m_fpEventHandler(DBEVENT_CONNECTION_RESTORED, NULL, NULL);
       MutexUnlock(m_mutexReconnect);
    }
 }
@@ -331,8 +331,13 @@ BOOL LIBNXSRV_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR 
    }
    
    MutexUnlock(hConn->mutexTransLock);
-   if ((dwResult != DBERR_SUCCESS) && m_bLogSQLErrors)
-      nxlog_write(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
+   if (dwResult != DBERR_SUCCESS)
+	{	
+		if (m_bLogSQLErrors)
+			nxlog_write(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
+		if (m_fpEventHandler != NULL)
+			m_fpEventHandler(DBEVENT_QUERY_FAILED, szQuery, errorText);
+	}
    return dwResult == DBERR_SUCCESS;
 #undef pwszQuery
 }
@@ -380,8 +385,13 @@ DB_RESULT LIBNXSRV_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, 
       DbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
    }
    MutexUnlock(hConn->mutexTransLock);
-   if ((hResult == NULL) && m_bLogSQLErrors)
-      nxlog_write(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
+   if (hResult == NULL)
+	{
+		if (m_bLogSQLErrors)
+			nxlog_write(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
+		if (m_fpEventHandler != NULL)
+			m_fpEventHandler(DBEVENT_QUERY_FAILED, szQuery, errorText);
+	}
    return hResult;
 }
 
@@ -756,6 +766,8 @@ DB_ASYNC_RESULT LIBNXSRV_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR
       MutexUnlock(hConn->mutexTransLock);
       if (m_bLogSQLErrors)
         nxlog_write(MSG_SQL_ERROR, EVENTLOG_ERROR_TYPE, _T("ss"), szQuery, errorText);
+		if (m_fpEventHandler != NULL)
+			m_fpEventHandler(DBEVENT_QUERY_FAILED, szQuery, errorText);
    }
    return hResult;
 }

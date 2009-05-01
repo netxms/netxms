@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -357,6 +357,8 @@ protected:
    DWORD m_dwVersion;
    BOOL m_bDCIListModified;
    TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
+	TCHAR *m_applyFilterSource;
+	NXSL_Program *m_applyFilter;
 
    virtual void PrepareForDeletion(void);
 
@@ -403,6 +405,8 @@ public:
 	void ValidateSystemTemplate(void);
 
    BOOL ApplyToNode(Node *pNode);
+	BOOL IsApplicable(Node *node);
+	BOOL IsAutoApplyEnabled() { return m_applyFilter != NULL; }
    void QueueUpdate(void);
    void QueueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI);
 
@@ -658,6 +662,11 @@ protected:
    void CheckInterfaceNames(INTERFACE_LIST *pIfList);
 	void CheckSubnetBinding(INTERFACE_LIST *pIfList);
 
+	void ApplySystemTemplates();
+	void ApplyUserTemplates();
+
+	void UpdateContainerMembership();
+
    virtual void PrepareForDeletion(void);
    virtual void OnObjectDelete(DWORD dwObjectId);
 
@@ -678,6 +687,7 @@ public:
    DWORD RuntimeFlags(void) { return m_dwDynamicFlags; }
    DWORD ZoneGUID(void) { return m_dwZoneGUID; }
    void SetLocalMgmtFlag(void) { m_dwFlags |= NF_IS_LOCAL_MGMT; }
+   void ClearLocalMgmtFlag(void) { m_dwFlags &= ~NF_IS_LOCAL_MGMT; }
 
    BOOL IsSNMPSupported(void) { return m_dwFlags & NF_IS_SNMP ? TRUE : FALSE; }
    BOOL IsNativeAgent(void) { return m_dwFlags & NF_IS_NATIVE_AGENT ? TRUE : FALSE; }
@@ -965,6 +975,8 @@ private:
 
 protected:
    DWORD m_dwCategory;
+	NXSL_Program *m_bindFilter;
+	TCHAR *m_bindFilterSource;
 
 public:
    Container();
@@ -978,11 +990,15 @@ public:
    virtual BOOL CreateFromDB(DWORD dwId);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    DWORD Category(void) { return m_dwCategory; }
 
    void LinkChildObjects(void);
    void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
+
+	BOOL IsSuitableForNode(Node *node);
+	BOOL IsAutoBindEnabled() { return m_bindFilter != NULL; }
 };
 
 

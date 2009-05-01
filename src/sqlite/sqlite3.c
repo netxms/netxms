@@ -25,6 +25,8 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_DEPRECATE
 #define SQLITE_API __declspec(dllexport)
+#else
+#include <config.h>
 #endif
 
 #define SQLITE_CORE 1
@@ -35,6 +37,15 @@
 #ifndef SQLITE_API
 # define SQLITE_API
 #endif
+
+#if !HAVE_DECL_PTHREAD_MUTEX_RECURSIVE && HAVE_DECL_MUTEX_TYPE_COUNTING_FAST
+#define PTHREAD_MUTEX_RECURSIVE MUTEX_TYPE_COUNTING_FAST
+#endif
+
+#if !HAVE_DECL_RTLD_GLOBAL
+#define RTLD_GLOBAL 0
+#endif
+
 /************** Begin file sqliteInt.h ***************************************/
 /*
 ** 2001 September 15

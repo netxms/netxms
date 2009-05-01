@@ -298,8 +298,7 @@ extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQue
 				SQLSMALLINT len;
 
 				iResult = SQLColAttributeA(pConn->sqlStatement, (SQLSMALLINT)(i + 1),
-				                           SQL_DESC_BASE_COLUMN_NAME,
-				                           name, 256, &len, NULL); 
+				                           SQL_DESC_NAME, name, 256, &len, NULL); 
 				if ((iResult == SQL_SUCCESS) || 
 					 (iResult == SQL_SUCCESS_WITH_INFO))
 				{
@@ -509,8 +508,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_WCH
 				SQLSMALLINT len;
 
 				iResult = SQLColAttributeA(pConn->sqlStatement, (SQLSMALLINT)(i + 1),
-				                           SQL_DESC_BASE_COLUMN_NAME,
-				                           name, 256, &len, NULL); 
+				                           SQL_DESC_NAME, name, 256, &len, NULL); 
 				if ((iResult == SQL_SUCCESS) || 
 					 (iResult == SQL_SUCCESS_WITH_INFO))
 				{

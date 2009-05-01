@@ -1,7 +1,7 @@
 /* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -201,6 +201,10 @@ private:
    DWORD m_dwErrorCount;      // Consequtive collection error count
 	DWORD m_dwResourceId;		// Associated cluster resource ID
 	DWORD m_dwProxyNode;       // Proxy node ID or 0 to disable
+	int m_nBaseUnits;
+	int m_nMultiplier;
+	TCHAR *m_pszCustomUnitName;
+	TCHAR *m_pszPerfTabSettings;
 
    void Lock() { MutexLock(m_hMutex, INFINITE); }
    void Unlock() { MutexUnlock(m_hMutex); }
@@ -283,6 +287,8 @@ public:
 	void AddThreshold(Threshold *pThreshold);
 	void AddSchedule(TCHAR *pszSchedule);
    void SetTransformationScript(TCHAR *pszScript);
+
+	BOOL TestTransformation(const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
 };
 
 
