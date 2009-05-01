@@ -1,4 +1,4 @@
-package org.netxms.ui.eclipse.serverconfig;
+package org.netxms.ui.eclipse.serverconfig.views;
 
 import java.util.HashMap;
 
@@ -20,6 +20,8 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCServerVariable;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.serverconfig.Activator;
+import org.netxms.ui.eclipse.serverconfig.dialogs.VariableEditDialog;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.RefreshAction;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
@@ -188,10 +190,26 @@ public class ServerConfigurationEditor extends ViewPart
 	{
 		final String[] names = { "Name", "Value", "Restart" };
 		final int[] widths = { 200, 150, 80 };
-		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN);
+		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ViewLabelProvider());
 		viewer.setComparator(new VarComparator());
+		
+		viewer.addDoubleClickListener(new IDoubleClickListener() {
+			@Override
+			public void doubleClick(DoubleClickEvent event)
+			{
+				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+				if ((selection != null) && (selection.size() == 1))
+				{
+					NXCServerVariable var = (NXCServerVariable)selection.getFirstElement();
+					if (var != null)
+					{
+						editVariable(var);
+					}
+				}
+			}
+		});
 
 		// Create the help context id for the viewer's control
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), "org.netxms.nxmc.serverconfig.viewer");
@@ -346,12 +364,56 @@ public class ServerConfigurationEditor extends ViewPart
 		}
 	}
 	
-	
 	/**
 	 * Refresh list
 	 */
 	public void refreshVariablesList()
 	{
 		actionRefresh.run();
+	}
+	
+	/**
+	 * Edit currently selected variable
+	 * @param var
+	 */
+	public void editVariable(NXCServerVariable var)
+	{
+		final VariableEditDialog dlg = new VariableEditDialog(getSite().getShell(), var.getName(), var.getValue());
+		if (dlg.open() == Window.OK)
+		{
+			Job job = new Job("Modify configuration variable") {
+				@Override
+				protected IStatus run(IProgressMonitor monitor)
+				{
+					IStatus status;
+					
+					try
+					{
+						NXMCSharedData.getInstance().getSession().setServerVariable(dlg.getVarName(), dlg.getVarValue());
+						refreshVariablesList();
+						status = Status.OK_STATUS;
+					}
+					catch(Exception e)
+					{
+						status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
+						                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
+						                    "Cannot modify configuration variable: " + e.getMessage(), e);
+					}
+					return status;
+				}
+				
+				/* (non-Javadoc)
+				 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
+				 */
+				@Override
+				public boolean belongsTo(Object family)
+				{
+					return family == ServerConfigurationEditor.JOB_FAMILY;
+				}
+			};
+			IWorkbenchSiteProgressService siteService =
+		      (IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class);
+			siteService.schedule(job, 0, true);
+		}
 	}
 }

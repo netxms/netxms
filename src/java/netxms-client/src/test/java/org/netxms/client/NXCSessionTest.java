@@ -1,5 +1,6 @@
 package org.netxms.client;
 
+import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -170,6 +171,37 @@ public class NXCSessionTest extends TestCase
 		object = session.findObjectById(1);
 		assertNotNull(object);
 		assertEquals("Entire Network", object.getObjectName());
+		
+		session.disconnect();
+	}
+	
+	public void testObjectCreateAndDelete() throws Exception
+	{
+		NXCSession session = new NXCSession(serverAddress, loginName, password);
+		session.connect();
+		
+		session.syncObjects();
+		
+		NXCObject object = session.findObjectById(2);
+		assertNotNull(object);
+		
+		NXCObjectCreationData cd = new NXCObjectCreationData(NXCObject.OBJECT_NODE, "TestNode", 2);
+		cd.setCreationFlags(NXCObjectCreationData.CF_CREATE_UNMANAGED);
+		cd.setIpAddress(InetAddress.getByName("192.168.10.1"));
+		long id = session.createObject(cd);
+		assertFalse(id == 0);
+
+		Thread.sleep(1000);	// Object update should be received from server
+
+		object = session.findObjectById(id);
+		assertNotNull(object);
+		assertEquals(object.getObjectName(), "TestNode");
+		
+		session.deleteObject(id);
+
+		Thread.sleep(1000);	// Object update should be received from server
+		object = session.findObjectById(id);
+		assertNull(object);
 		
 		session.disconnect();
 	}

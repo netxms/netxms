@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.serverconfig;
+package org.netxms.ui.eclipse.objectmanager.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
@@ -18,21 +18,21 @@ import org.netxms.ui.eclipse.shared.IUIConstants;
  * @author victor
  *
  */
-public class VariableEditDialog extends Dialog
+public class AttributeEditDialog extends Dialog
 {
 	private Text textName;
 	private Text textValue;
-	private String varName;
-	private String varValue;
+	private String attrName;
+	private String attrValue;
 	
 	/**
 	 * @param parentShell
 	 */
-	public VariableEditDialog(Shell parentShell, String varName, String varValue)
+	public AttributeEditDialog(Shell parentShell, String attrName, String attrValue)
 	{
 		super(parentShell);
-		this.varName = varName;
-		this.varValue = varValue;
+		this.attrName = attrName;
+		this.attrValue = attrValue;
 	}
 
 	/* (non-Javadoc)
@@ -54,9 +54,9 @@ public class VariableEditDialog extends Dialog
       
       textName = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
       textName.setTextLimit(63);
-      if (varName != null)
+      if (attrName != null)
       {
-      	textName.setText(varName);
+      	textName.setText(attrName);
       	textName.setEditable(false);
       }
       
@@ -69,10 +69,10 @@ public class VariableEditDialog extends Dialog
       textValue = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
       textValue.setTextLimit(255);
       textValue.getShell().setMinimumSize(300, 0);
-      if (varValue != null)
-      	textValue.setText(varValue);
+      if (attrValue != null)
+      	textValue.setText(attrValue);
       
-      if (varName != null)
+      if (attrName != null)
       	textValue.setFocus();
       
 		return dialogArea;
@@ -85,7 +85,7 @@ public class VariableEditDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText((varName == null) ? "Create Variable" : "Edit Variable");
+		newShell.setText((attrName == null) ? "Add Attribute" : "Modify Attribute");
 	}
 	
 	
@@ -93,9 +93,9 @@ public class VariableEditDialog extends Dialog
 	 * Get variable name
 	 * 
 	 */
-	public String getVarName()
+	public String getAttrName()
 	{
-		return varName;
+		return attrName;
 	}
 	
 	
@@ -103,9 +103,9 @@ public class VariableEditDialog extends Dialog
 	 * Get variable value
 	 * 
 	 */
-	public String getVarValue()
+	public String getAttrValue()
 	{
-		return varValue;
+		return attrValue;
 	}
 
 	
@@ -115,8 +115,8 @@ public class VariableEditDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		varName = textName.getText();
-		varValue = textValue.getText();
+		attrName = textName.getText();
+		attrValue = textValue.getText();
 		super.okPressed();
 	}
 }

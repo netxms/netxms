@@ -33,6 +33,13 @@ public class NXCNotification
 	public static final int ALARM_TERMINATED = 1011;
 	public static final int PREDEFINED_GRAPHS_CHANGED = 1012;
 	
+	public static final int CUSTOM_MESSAGE = 2000;
+	
+	// Subcodes for user database changes
+	public static final int USER_DB_OBJECT_CREATED = 0;
+	public static final int USER_DB_OBJECT_DELETED = 1;
+	public static final int USER_DB_OBJECT_MODIFIED = 2;
+	
 	// Notification object data
 	private int code;
 	private long subCode;
@@ -59,6 +66,18 @@ public class NXCNotification
 		this.code = code;
 		this.subCode = subCode;
 		this.object = null;
+	}
+
+	/**
+	 * @param code
+	 * @param subCode
+	 * @param object
+	 */
+	public NXCNotification(int code, long subCode, Object object)
+	{
+		this.code = code;
+		this.subCode = subCode;
+		this.object = object;
 	}
 
 	/**

@@ -19,4 +19,13 @@ public class NXCEntireNetwork extends NXCObject
 	{
 		super(msg, session);
 	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.client.NXCObject#getObjectClassName()
+	 */
+	@Override
+	public String getObjectClassName()
+	{
+		return "Network";
+	}
 }

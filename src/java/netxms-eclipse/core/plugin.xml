@@ -16,9 +16,18 @@
    <extension
          point="org.eclipse.ui.perspectives">
       <perspective
-            name="RCP Perspective"
-            class="org.netxms.ui.eclipse.console.Perspective"
-            id="org.netxms.ui.eclipse.console.perspective">
+            name="Empty Perspective"
+            class="org.netxms.ui.eclipse.console.perspectives.EmptyPerspective"
+            id="org.netxms.ui.eclipse.console.EmptyPerspective">
+      </perspective>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            name="Default Perspective"
+            class="org.netxms.ui.eclipse.console.perspectives.DefaultPerspective"
+            id="org.netxms.ui.eclipse.console.DefaultPerspective">
       </perspective>
    </extension>
 

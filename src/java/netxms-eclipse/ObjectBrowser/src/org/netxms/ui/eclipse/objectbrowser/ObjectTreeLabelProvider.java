@@ -42,6 +42,9 @@ public class ObjectTreeLabelProvider extends LabelProvider
 	@Override
 	public Image getImage(Object element)
 	{
+		if (element == null)
+			return null;
+		
 		switch(((NXCObject)element).getObjectClass())
 		{
 			case NXCObject.OBJECT_NETWORK:
@@ -75,7 +78,7 @@ public class ObjectTreeLabelProvider extends LabelProvider
 	@Override
 	public String getText(Object element)
 	{
-		return ((NXCObject)element).getObjectName();
+		return (element != null) ? ((NXCObject)element).getObjectName() : "<null>";
 	}
 
 	/* (non-Javadoc)

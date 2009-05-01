@@ -12,7 +12,7 @@
             name="Server Configuration"
             icon="icons/server_config.png"
             category="org.netxms.ui.eclipse.config"
-            class="org.netxms.ui.eclipse.serverconfig.ServerConfigurationEditor"
+            class="org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor"
             id="org.netxms.ui.eclipse.serverconfig.view.server_config">
       </view>
    </extension>
@@ -52,7 +52,7 @@
             id="org.netxms.ui.eclipse.serverconfig.actions.popup.delete_variable"
             objectClass="org.netxms.client.NXCServerVariable">
          <menu
-               id="org.netxms.nxmc.serverconfig.menu.variables"
+               id="org.netxms.ui.eclipse.serverconfig.menu.variables"
                label="Delete"
                path="additions">
          </menu>

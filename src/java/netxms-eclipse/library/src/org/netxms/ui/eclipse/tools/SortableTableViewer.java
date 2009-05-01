@@ -17,6 +17,8 @@ import org.eclipse.swt.widgets.TableColumn;
  */
 public class SortableTableViewer extends TableViewer
 {
+	public static final int DEFAULT_STYLE = -1;
+	
 	private TableColumn[] columns;
 	private TableSortingListener sortingListener;
 	
@@ -29,9 +31,10 @@ public class SortableTableViewer extends TableViewer
 	 * @param defaultSortingColumn Index of default sorting column
 	 */
 	public SortableTableViewer(Composite parent, String[] names, int[] widths,
-	                           int defaultSortingColumn, int defaultSortDir)
+	                           int defaultSortingColumn, int defaultSortDir,
+	                           int style)
 	{
-		super(new Table(parent, SWT.MULTI | SWT.FULL_SELECTION));
+		super(new Table(parent, (style == DEFAULT_STYLE) ? (SWT.MULTI | SWT.FULL_SELECTION) : style));
 
 		sortingListener = new TableSortingListener(this);
 		

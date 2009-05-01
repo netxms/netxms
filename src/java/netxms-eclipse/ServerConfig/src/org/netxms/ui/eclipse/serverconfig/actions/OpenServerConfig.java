@@ -6,7 +6,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
-import org.netxms.ui.eclipse.serverconfig.ServerConfigurationEditor;
+import org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor;
 
 public class OpenServerConfig implements IWorkbenchWindowActionDelegate
 {

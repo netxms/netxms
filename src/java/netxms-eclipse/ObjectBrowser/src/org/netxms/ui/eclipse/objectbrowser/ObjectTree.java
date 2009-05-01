@@ -112,7 +112,9 @@ public class ObjectTree extends Composite
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
+							Object[] state = objectTree.getExpandedElements();
 							objectTree.refresh();
+							objectTree.setExpandedElements(state);
 							return Status.OK_STATUS;
 						}
 					}.schedule();

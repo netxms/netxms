@@ -73,4 +73,13 @@ public class NXCInterface extends NXCObject
 	{
 		return requiredPollCount;
 	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.client.NXCObject#getObjectClassName()
+	 */
+	@Override
+	public String getObjectClassName()
+	{
+		return "Interface";
+	}
 }

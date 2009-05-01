@@ -7,6 +7,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.WorkbenchException;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
@@ -30,7 +31,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
     public void preWindowOpen()
     {
         IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-        configurer.setShowCoolBar(false);
+        configurer.setShowCoolBar(true);
         configurer.setShowStatusLine(true);
         configurer.setTitle("NetXMS Management Console");
     }
@@ -39,10 +40,11 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
      * Overriden to maximize the window when shwon.
      */
     @Override
-    public void postWindowCreate() {
-        IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-        IWorkbenchWindow window = configurer.getWindow();
-        window.getShell().setMaximized(true);
+    public void postWindowCreate() 
+    {
+   	 IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
+   	 IWorkbenchWindow window = configurer.getWindow();
+   	 window.getShell().setMaximized(true);
     }
     
     /* (non-Javadoc)
@@ -50,6 +52,14 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	 */
 	@Override
 	public void openIntro()
+	{
+		doLogin();
+	}
+	
+	/**
+	 * Show login dialog and perform login
+	 */
+	private void doLogin()
 	{
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
       Shell shell = getWindowConfigurer().getWindow().getShell();
@@ -86,10 +96,20 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       if (success)
       {
       	Activator.getDefault().getStatusItemConnection().setText("Connected");
+     	 	try
+     	 	{
+     	 		IWorkbenchWindow window = getWindowConfigurer().getWindow();
+     	 		window.getWorkbench().showPerspective("org.netxms.ui.eclipse.console.DefaultPerspective", window);
+     	 	}
+     	 	catch(WorkbenchException e)
+     	 	{
+     	 		// TODO Auto-generated catch block
+     	 		e.printStackTrace();
+     	 	}
       }
       else
       {
       	shell.close();
       }
-	} 
+	}
 }

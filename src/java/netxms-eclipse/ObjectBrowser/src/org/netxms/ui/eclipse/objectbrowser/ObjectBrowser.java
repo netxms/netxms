@@ -72,7 +72,6 @@ public class ObjectBrowser extends ViewPart
 	 */
 	protected void fillContextMenu(IMenuManager mgr)
 	{
-		/*
 		mgr.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
 		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
@@ -81,7 +80,6 @@ public class ObjectBrowser extends ViewPart
 		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
 		mgr.add(new PropertyDialogAction(getSite(), objectTree.getTreeViewer()));
-		*/
 		
 		/*
 		mgr.add(new GroupMarker(IActionConstants.MB_OBJECT_MANAGEMENT));
@@ -128,6 +126,7 @@ public class ObjectBrowser extends ViewPart
 		mgr.add(new PropertyDialogAction(getSite(), objectTree.getTreeViewer()));
 		*/
 
+		/*
 		MenuManager diag = new MenuManager("Create");
 		diag.add(new Action("Shutdown system") { });
 		mgr.add(diag);
@@ -149,6 +148,7 @@ public class ObjectBrowser extends ViewPart
 		mgr.add(new GroupMarker(IActionConstants.MB_PROPERTIES));
 		mgr.add(new Action("Comments") { });
 		mgr.add(new PropertyDialogAction(getSite(), objectTree.getTreeViewer()));
+		*/
 	}
 
 	

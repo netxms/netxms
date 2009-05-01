@@ -14,9 +14,11 @@ import java.util.Map;
 public class NXCObjectModificationData
 {
 	// Modification flags
-	public static final long MODIFY_NAME              = 0x00000001;
-	public static final long MODIFY_ACL               = 0x00000002;
-	public static final long MODIFY_CUSTOM_ATTRIBUTES = 0x00000004;
+	public static final long MODIFY_NAME              = 0x00000001L;
+	public static final long MODIFY_ACL               = 0x00000002L;
+	public static final long MODIFY_CUSTOM_ATTRIBUTES = 0x00000004L;
+	public static final long MODIFY_AUTO_APPLY        = 0x00000008L;
+	public static final long MODIFY_AUTO_BIND         = 0x00000010L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -24,6 +26,10 @@ public class NXCObjectModificationData
 	private NXCAccessListElement[] acl;
 	private boolean inheritAccessRights;
 	private Map<String, String> customAttributes;
+	private boolean autoApplyEnabled;
+	private String autoApplyFilter;
+	private boolean autoBindEnabled;
+	private String autoBindFilter;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -124,5 +130,73 @@ public class NXCObjectModificationData
 	{
 		this.customAttributes = customAttributes;
 		flags |= MODIFY_CUSTOM_ATTRIBUTES;
+	}
+
+	/**
+	 * @return the autoApplyEnabled
+	 */
+	public boolean isAutoApplyEnabled()
+	{
+		return autoApplyEnabled;
+	}
+
+	/**
+	 * @param autoApplyEnabled the autoApplyEnabled to set
+	 */
+	public void setAutoApplyEnabled(boolean autoApplyEnabled)
+	{
+		this.autoApplyEnabled = autoApplyEnabled;
+		flags |= MODIFY_AUTO_APPLY;
+	}
+
+	/**
+	 * @return the autoApplyFilter
+	 */
+	public String getAutoApplyFilter()
+	{
+		return autoApplyFilter;
+	}
+
+	/**
+	 * @param autoApplyFilter the autoApplyFilter to set
+	 */
+	public void setAutoApplyFilter(String autoApplyFilter)
+	{
+		this.autoApplyFilter = autoApplyFilter;
+		flags |= MODIFY_AUTO_APPLY;
+	}
+
+	/**
+	 * @return the autoApplyEnabled
+	 */
+	public boolean isAutoBindEnabled()
+	{
+		return autoBindEnabled;
+	}
+
+	/**
+	 * @param autoApplyEnabled the autoApplyEnabled to set
+	 */
+	public void setAutoBindEnabled(boolean autoBindEnabled)
+	{
+		this.autoBindEnabled = autoBindEnabled;
+		flags |= MODIFY_AUTO_BIND;
+	}
+
+	/**
+	 * @return the autoApplyFilter
+	 */
+	public String getAutoBindFilter()
+	{
+		return autoBindFilter;
+	}
+
+	/**
+	 * @param autoApplyFilter the autoApplyFilter to set
+	 */
+	public void setAutoBindFilter(String autoBindFilter)
+	{
+		this.autoBindFilter = autoBindFilter;
+		flags |= MODIFY_AUTO_BIND;
 	}
 }

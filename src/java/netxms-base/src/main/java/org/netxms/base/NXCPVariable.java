@@ -3,6 +3,7 @@ package org.netxms.base;
 import java.io.*;
 import java.net.*;
 import java.util.Arrays;
+import java.util.UUID;
 
 /**
  * @author victor
@@ -54,7 +55,7 @@ public class NXCPVariable
 	
 	private void setStringValue(String value)
 	{
-		stringValue = value;
+		stringValue = (value != null) ? value : "";
 		try
 		{
 			integerValue = Long.parseLong(stringValue);
@@ -122,6 +123,46 @@ public class NXCPVariable
 		variableId = varId;
 		variableType = TYPE_BINARY;
 		binaryValue = value;
+		stringValue = "";
+		integerValue = (long)0;
+		realValue = (double)0;
+	}
+
+	/**
+	 * @param varId
+	 * @param value
+	 */
+	public NXCPVariable(final long varId, final InetAddress value)
+	{
+		variableId = varId;
+		variableType = TYPE_INTEGER;
+		
+		byte[] addr = value.getAddress();
+		integerValue = ((long)(addr[0] & 0xFF) << 24) | ((long)(addr[1] & 0xFF) << 16) | ((long)(addr[2] & 0xFF) << 8) | (long)(addr[3] & 0xFF);
+		realValue = integerValue.doubleValue();
+		stringValue = integerValue.toString();
+	}
+
+	/**
+	 * @param varId
+	 * @param value
+	 */
+	public NXCPVariable(final long varId, final UUID value)
+	{
+		variableId = varId;
+		variableType = TYPE_BINARY;
+
+		final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(16);
+		final DataOutputStream out = new DataOutputStream(byteStream);
+		try
+		{
+			out.writeLong(value.getMostSignificantBits());
+			out.writeLong(value.getLeastSignificantBits());
+		}
+		catch(IOException e)
+		{
+		}
+		binaryValue = byteStream.toByteArray();
 		stringValue = "";
 		integerValue = (long)0;
 		realValue = (double)0;
@@ -225,6 +266,46 @@ public class NXCPVariable
 			inetAddr = null;
 		}
 		return inetAddr;
+	}
+	
+	public UUID getAsUUID()
+	{
+		if ((variableType != TYPE_BINARY) || (binaryValue == null) || (binaryValue.length != 16))
+			return null;
+		
+		NXCPDataInputStream in = new NXCPDataInputStream(binaryValue);
+		long hiBits, loBits;
+		try
+		{
+			hiBits = in.readLong();
+			loBits = in.readLong();
+		}
+		catch(IOException e)
+		{
+			hiBits = 0;
+			loBits = 0;
+		}
+		
+		return new UUID(hiBits, loBits);
+	}
+	
+	public long[] getAsUInt32Array()
+	{
+		if ((variableType != TYPE_BINARY) || (binaryValue == null))
+			return null;
+		
+		int count = binaryValue.length / 4;
+		long[] value = new long[count];
+		NXCPDataInputStream in = new NXCPDataInputStream(binaryValue);
+		try
+		{
+			for(int i = 0; i < count; i++)
+				value[i] = in.readUnsignedInt();
+		}
+		catch(IOException e)
+		{
+		}
+		return value;
 	}
 
 	/**

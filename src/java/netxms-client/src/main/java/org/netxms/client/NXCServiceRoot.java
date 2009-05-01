@@ -19,4 +19,13 @@ public class NXCServiceRoot extends NXCObject
 	{
 		super(msg, session);
 	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.client.NXCObject#getObjectClassName()
+	 */
+	@Override
+	public String getObjectClassName()
+	{
+		return "ServiceRoot";
+	}
 }

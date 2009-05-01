@@ -16,4 +16,46 @@
         </page>
   </extension>
 
+  <extension
+     point = "org.eclipse.ui.propertyPages">
+        <page
+           id="org.netxms.ui.eclipse.objectmanager.propertypages.CustomAttributes"
+           name="Custom Attributes"
+	       class="org.netxms.ui.eclipse.objectmanager.propertypages.CustomAttributes">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.client.NXCObject">
+             </instanceof>
+          </enabledWhen>
+        </page>
+  </extension>
+
+  <extension
+     point = "org.eclipse.ui.propertyPages">
+        <page
+           id="org.netxms.ui.eclipse.objectmanager.propertypages.AutoApply"
+           name="Automatic Apply Rules"
+	       class="org.netxms.ui.eclipse.objectmanager.propertypages.AutoApply">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.client.NXCTemplate">
+             </instanceof>
+          </enabledWhen>
+        </page>
+  </extension>
+
+  <extension
+     point = "org.eclipse.ui.propertyPages">
+        <page
+           id="org.netxms.ui.eclipse.objectmanager.propertypages.AutoBind"
+           name="Automatic Bind Rules"
+	       class="org.netxms.ui.eclipse.objectmanager.propertypages.AutoBind">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.client.NXCContainer">
+             </instanceof>
+          </enabledWhen>
+        </page>
+  </extension>
+
 </plugin>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="IP Neighbors"
+            allowMultiple="true"
+            icon="icons/quickmap.png"
+            class="org.netxms.ui.eclipse.quickmaps.views.IPNeighbors"
+            id="org.netxms.ui.eclipse.quickmaps.view.ip_neighbors">
+      </view>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.ui.eclipse.quickmaps.actions.popup.object.ip_neighbors"
+            objectClass="org.netxms.client.NXCNode">
+         <action
+               class="org.netxms.ui.eclipse.quickmaps.actions.ShowIPNeighbors"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowIPNeighbors"
+               label="IP Neighbors"
+               icon="icons/quickmap.png"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>

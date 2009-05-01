@@ -55,7 +55,7 @@ public class General extends PropertyPage
       
 		// Object class
       WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, "Object class",
-                                     Long.toString(object.getObjectClass()), null);
+                                     object.getObjectClassName(), null);
 		
 		// Object name
       initialName = new String(object.getObjectName());

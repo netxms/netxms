@@ -5,7 +5,10 @@ package org.netxms.client;
 
 import java.io.*;
 import java.net.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.*;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -127,6 +130,7 @@ public class NXCSession
 	
 	// Internal synchronization objects
 	private final Semaphore syncObjects = new Semaphore(1);
+	private final Semaphore syncUserDB = new Semaphore(1);
 	
 	// Connection-related attributes
 	private String connAddress;
@@ -163,6 +167,9 @@ public class NXCSession
 	// Objects
 	private Map<Long, NXCObject> objectList = new HashMap<Long, NXCObject>();
 	
+	// Users
+	private Map<Long, NXCUserDBObject> userDB = new HashMap<Long, NXCUserDBObject>();
+	
 	
 	/**
 	 * Create object from message
@@ -188,6 +195,9 @@ public class NXCSession
 				break;
 			case NXCObject.OBJECT_NODE:
 				object = new NXCNode(msg, this);
+				break;
+			case NXCObject.OBJECT_TEMPLATE:
+				object = new NXCTemplate(msg, this);
 				break;
 			case NXCObject.OBJECT_NETWORK:
 				object = new NXCEntireNetwork(msg, this);
@@ -243,7 +253,10 @@ public class NXCSession
 							final NXCObject obj = createObjectFromMessage(msg);
 							synchronized(objectList)
 							{
-								objectList.put(obj.getObjectId(), obj);
+								if (obj.isDeleted())
+									objectList.remove(obj.getObjectId());
+								else
+									objectList.put(obj.getObjectId(), obj);
 							}
 							if (msg.getMessageCode() == NXCPCodes.CMD_OBJECT_UPDATE)
 								sendNotification(new NXCNotification(NXCNotification.OBJECT_CHANGED, obj));
@@ -251,11 +264,42 @@ public class NXCSession
 						case NXCPCodes.CMD_OBJECT_LIST_END:
 							completeSync(syncObjects);
 							break;
+						case NXCPCodes.CMD_USER_DATA:
+							final NXCUser user = new NXCUser(msg);
+							synchronized(userDB)
+							{
+								if (user.isDeleted())
+									userDB.remove(user.getId());
+								else
+									userDB.put(user.getId(), user);
+							}
+							break;
+						case NXCPCodes.CMD_GROUP_DATA:
+							final NXCUserGroup group = new NXCUserGroup(msg);
+							synchronized(userDB)
+							{
+								if (group.isDeleted())
+									userDB.remove(group.getId());
+								else
+									userDB.put(group.getId(), group);
+							}
+							break;
+						case NXCPCodes.CMD_USER_DB_EOF:
+							completeSync(syncUserDB);
+							break;
+						case NXCPCodes.CMD_USER_DB_UPDATE:
+							processUserDBUpdate(msg);
+							break;
 						case NXCPCodes.CMD_ALARM_UPDATE:
 							sendNotification(new NXCNotification(msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE,
 							                                     new NXCAlarm(msg)));
 							break;
 						default:
+							if (msg.getMessageCode() >= 0x1000)
+							{
+								// Custom message
+								sendNotification(new NXCNotification(NXCNotification.CUSTOM_MESSAGE, msg));
+							}
 							msgWaitQueue.putMessage(msg);
 							break;
 					}
@@ -268,6 +312,44 @@ public class NXCSession
 				{
 				}
 			}
+		}
+
+		/**
+		 * Process updates in user database
+		 * @param msg Notification message
+		 */
+		private void processUserDBUpdate(final NXCPMessage msg)
+		{
+			final int code = msg.getVariableAsInteger(NXCPCodes.VID_UPDATE_TYPE);
+			final long id = msg.getVariableAsInt64(NXCPCodes.VID_USER_ID);
+			
+			NXCUserDBObject object = null;
+			switch(code)
+			{
+				case NXCNotification.USER_DB_OBJECT_CREATED:
+				case NXCNotification.USER_DB_OBJECT_MODIFIED:
+					object = ((id & 0x80000000) != 0) ? new NXCUserGroup(msg) : new NXCUser(msg);
+					synchronized(userDB)
+					{
+						userDB.put(id, object);
+					}
+					break;
+				case NXCNotification.USER_DB_OBJECT_DELETED:
+					synchronized(userDB)
+					{
+						object = userDB.get(id);
+						if (object != null)
+						{
+							userDB.remove(id);
+						}
+					}
+					break;
+			}
+
+			// Send notification if changed object was found in local database copy
+			// or added to it and notification code was known
+			if (object != null)
+				sendNotification(new NXCNotification(NXCNotification.USER_DB_CHANGED, code, object));
 		}
 	}
 	
@@ -425,6 +507,24 @@ public class NXCSession
 	private synchronized void sendMessage(final NXCPMessage msg) throws IOException
 	{
 		connSocket.getOutputStream().write(msg.createNXCPMessage());
+	}
+	
+
+	/**
+	 * Wait for message with specific code and id.
+	 *  
+	 * @param code Message code
+	 * @param id Message id
+	 * @param timeout Wait timeout in milliseconds
+	 * @return Message object 
+	 * @throws NXCException if message was not arrived within timeout interval
+	 */
+	private NXCPMessage waitForMessage(final int code, final long id, final int timeout) throws NXCException
+	{
+		final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id, timeout);
+		if (msg == null)
+			throw new NXCException(RCC_TIMEOUT);
+		return msg;
 	}
 	
 
@@ -966,6 +1066,154 @@ public class NXCSession
 	
 	
 	/**
+	 * Synchronize user database
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void syncUserDatabase() throws IOException, NXCException
+	{
+		syncUserDB.acquireUninterruptibly();
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_LOAD_USER_DB);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+		waitForSync(syncUserDB, commandTimeout * 10);
+	}
+	
+	/**
+	 * Find user by ID
+	 * @return User object with given ID or null if such user does not exist
+	 */
+	public NXCUserDBObject findUserDBObjectById(final long id)
+	{
+		NXCUserDBObject object;
+		
+		synchronized(userDB)
+		{
+			object = userDB.get(id);
+		}
+		return object;
+	}
+	
+	/**
+	 * Get list of all user database objects
+	 * @return List of all user database objects
+	 */
+	public NXCUserDBObject[] getUserDatabaseObjects()
+	{
+		NXCUserDBObject[] list;
+
+		synchronized(userDB)
+		{
+			Collection<NXCUserDBObject> values = userDB.values();
+			list = values.toArray(new NXCUserDBObject[values.size()]);
+		}
+		return list;
+	}
+	
+	/**
+	 * Create user or group on server
+	 * @param name Login name for new user
+	 * @return ID assigned to newly created user
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	private long createUserDBObject(final String name, final boolean isGroup) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_USER);
+		msg.setVariable(NXCPCodes.VID_USER_NAME, name);
+		msg.setVariableInt16(NXCPCodes.VID_IS_GROUP, isGroup ? 1 : 0);
+		sendMessage(msg);
+		
+		msg = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId());
+		int rcc = msg.getVariableAsInteger(NXCPCodes.VID_RCC);
+		if (rcc != RCC_SUCCESS)
+			throw new NXCException(rcc);
+		
+		return msg.getVariableAsInt64(NXCPCodes.VID_USER_ID);
+	}
+	
+	/**
+	 * Create user on server
+	 * @param name Login name for new user
+	 * @return ID assigned to newly created user
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public long createUser(final String name) throws IOException, NXCException
+	{
+		return createUserDBObject(name, false);
+	}
+
+	/**
+	 * Create user group on server
+	 * @param name Name for new user group
+	 * @return ID assigned to newly created user group
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public long createUserGroup(final String name) throws IOException, NXCException
+	{
+		return createUserDBObject(name, true);
+	}
+
+	/**
+	 * Delete user or group on server
+	 * @param id User or group ID
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void deleteUserDBObject(final long id) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_USER);
+		msg.setVariableInt32(NXCPCodes.VID_USER_ID, (int)id);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+
+	/**
+	 * Set password for user
+	 * @param id User ID
+	 * @param password New password
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void setUserPassword(final long id, final String password) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_PASSWORD);
+		msg.setVariableInt32(NXCPCodes.VID_USER_ID, (int)id);
+		
+		MessageDigest md;
+		try
+		{
+			md = MessageDigest.getInstance("SHA-1");
+		}
+		catch(NoSuchAlgorithmException e)
+		{
+			throw new NXCException(RCC_INTERNAL_ERROR);
+		}
+		byte[] digest = md.digest(password.getBytes());
+		msg.setVariable(NXCPCodes.VID_PASSWORD, digest);
+		
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Modify user database object
+	 * @param user User data
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void modifyUserDBObject(NXCUserDBObject object) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_USER);
+		object.fillMessage(msg);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+
+
+	/**
 	 * Get last DCI values for given node
 	 * 
 	 * @param nodeId ID of the node to get DCI values for
@@ -1123,9 +1371,69 @@ public class NXCSession
 		return data;
 	}
 	
+	/**
+	 * Create object
+	 * 
+	 * @param data Object creation data
+	 * @return ID of new object
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public long createObject(final NXCObjectCreationData data) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_OBJECT);
+		
+		// Common attributes
+		msg.setVariableInt32(NXCPCodes.VID_PARENT_ID, (int)data.getParentId());
+		msg.setVariableInt16(NXCPCodes.VID_OBJECT_CLASS, data.getObjectClass());
+		msg.setVariable(NXCPCodes.VID_OBJECT_NAME, data.getName());
+		if (data.getComments() != null)
+			msg.setVariable(NXCPCodes.VID_COMMENTS, data.getComments());
+		
+		// Class-specific attributes
+		switch(data.getObjectClass())
+		{
+			case NXCObject.OBJECT_NODE:
+				msg.setVariable(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
+				msg.setVariable(NXCPCodes.VID_IP_NETMASK, data.getIpNetMask());
+				msg.setVariableInt32(NXCPCodes.VID_CREATION_FLAGS, data.getCreationFlags());
+				msg.setVariableInt32(NXCPCodes.VID_PROXY_NODE, (int)data.getAgentProxyId());
+				msg.setVariableInt32(NXCPCodes.VID_SNMP_PROXY, (int)data.getSnmpProxyId());
+				break;
+		}
+		
+		sendMessage(msg);
+		NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId(),
+		                                      commandTimeout * 10);  // Object creation could take long time
+
+		int rcc = response.getVariableAsInteger(NXCPCodes.VID_RCC);
+		if (rcc != NXCSession.RCC_SUCCESS)
+		{
+			throw new NXCException(rcc);
+		}
+		
+		return response.getVariableAsInt64(NXCPCodes.VID_OBJECT_ID);
+	}
+	
+	/**
+	 * Delete object
+	 * @param objectId ID of an object which should be deleted
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void deleteObject(final long objectId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_OBJECT);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
 	
 	/**
 	 * Modify object (generic interface, in most cases wrapper functions should be used instead)
+	 * @param data Object modification data
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void modifyObject(final NXCObjectModificationData data) throws IOException, NXCException
 	{
@@ -1173,14 +1481,31 @@ public class NXCSession
 			}
 			msg.setVariableInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES, count);
 		}
+		
+		// Auto apply
+		if ((flags & NXCObjectModificationData.MODIFY_AUTO_APPLY) != 0)
+		{
+			msg.setVariableInt16(NXCPCodes.VID_AUTO_APPLY, data.isAutoApplyEnabled() ? 1 : 0);
+			msg.setVariable(NXCPCodes.VID_APPLY_FILTER, data.getAutoApplyFilter());
+		}
+
+		// Auto bind
+		if ((flags & NXCObjectModificationData.MODIFY_AUTO_BIND) != 0)
+		{
+			msg.setVariableInt16(NXCPCodes.VID_ENABLE_AUTO_BIND, data.isAutoBindEnabled() ? 1 : 0);
+			msg.setVariable(NXCPCodes.VID_AUTO_BIND_FILTER, data.getAutoBindFilter());
+		}
 
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
 	
-	
 	/**
 	 * Change object's name (wrapper for modifyObject())
+	 * @param objectId ID of object to be changed
+	 * @param name New object's name
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void setObjectName(final long objectId, final String name) throws IOException, NXCException
 	{
@@ -1191,7 +1516,9 @@ public class NXCSession
 	
 	
 	/**
-	 * Change object's custom attributes
+	 * Change object's custom attributes (wrapper for modifyObject())
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void setObjectCustomAttributes(final long objectId, final Map<String, String> attrList) throws IOException, NXCException
 	{
@@ -1200,9 +1527,10 @@ public class NXCSession
 		modifyObject(data);
 	}
 	
-	
 	/**
-	 * Change object's ACL
+	 * Change object's ACL (wrapper for modifyObject())
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void setObjectACL(final long objectId, final NXCAccessListElement[] acl, final boolean inheritAccessRights) 
 		throws IOException, NXCException
@@ -1211,5 +1539,44 @@ public class NXCSession
 		data.setACL(acl);
 		data.setInheritAccessRights(inheritAccessRights);
 		modifyObject(data);
+	}
+	
+	/**
+	 * Query layer 2 topology for node
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public NXCMapPage queryLayer2Topology(final long nodeId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_L2_TOPOLOGY);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		sendMessage(msg);
+		
+		NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId());
+		int rcc = response.getVariableAsInteger(NXCPCodes.VID_RCC);
+		if (rcc != NXCSession.RCC_SUCCESS)
+			throw new NXCException(rcc);
+		
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_OBJECTS);
+		long[] idList = response.getVariableAsUInt32Array(NXCPCodes.VID_OBJECT_LIST);
+		if (idList.length != count)
+			throw new NXCException(RCC_INTERNAL_ERROR);
+		
+		NXCMapPage page = new NXCMapPage();
+		for(int i = 0; i < count; i++)
+			page.addObject(new NXCMapObjectData(idList[i]));
+		
+		count = response.getVariableAsInteger(NXCPCodes.VID_NUM_LINKS);
+		long varId = NXCPCodes.VID_OBJECT_LINKS_BASE;
+		for(int i = 0; i < count; i++, varId += 5)
+		{
+			long obj1 = response.getVariableAsInt64(varId++);
+			long obj2 = response.getVariableAsInt64(varId++);
+			int type = response.getVariableAsInteger(varId++);
+			String port1 = response.getVariableAsString(varId++);
+			String port2 = response.getVariableAsString(varId++);
+			page.addLink(new NXCMapObjectLink(type, obj1, obj2, port1, port2));
+		}
+		return page;
 	}
 }

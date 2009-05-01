@@ -4,6 +4,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.eclipse.ui.progress.IProgressService;
+import org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor;
 import org.osgi.framework.BundleContext;
 
 /**

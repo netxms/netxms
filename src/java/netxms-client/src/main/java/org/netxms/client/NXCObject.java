@@ -299,4 +299,21 @@ public class NXCObject
 	{
 		return objectClass;
 	}
+
+
+	/**
+	 * @return Name of NetXMS object's class
+	 */
+	public String getObjectClassName()
+	{
+		return "Class " + Integer.toString(objectClass);
+	}
+	
+	/**
+	 * Get object's custom attributes
+	 */
+	public Map<String, String> getCustomAttributes()
+	{
+		return customAttributes;
+	}
 }

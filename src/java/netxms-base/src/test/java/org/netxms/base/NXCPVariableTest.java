@@ -2,6 +2,8 @@ package org.netxms.base;
 
 import java.net.InetAddress;
 import java.util.Arrays;
+import java.util.UUID;
+
 import junit.framework.TestCase;
 
 public class NXCPVariableTest extends TestCase
@@ -125,5 +127,47 @@ public class NXCPVariableTest extends TestCase
 		assertEquals(1, variable.getVariableId());
 		assertEquals(NXCPVariable.TYPE_INTEGER, variable.getVariableType());
 		assertEquals(InetAddress.getByName("10.0.1.2"), variable.getAsInetAddress());
+	}
+
+	
+	//
+	// Test set variable from InetAddress
+	//
+	
+	public void testSetAsInetAddress() throws Exception
+	{
+		final InetAddress addr = InetAddress.getByName("217.4.172.12");
+		final NXCPVariable variable = new NXCPVariable(1, addr);
+
+		assertEquals(1, variable.getVariableId());
+		assertEquals(NXCPVariable.TYPE_INTEGER, variable.getVariableType());
+		assertEquals(InetAddress.getByName("217.4.172.12"), variable.getAsInetAddress());
+	}
+	
+	//
+	// Passing UUIDs in variables
+	//
+	public void testUUIDConstruction() throws Exception
+	{
+		final String uuidName = "13f2cac0-eadf-11b1-9163-e3f1397b9128";
+		final NXCPVariable variable = new NXCPVariable(1, UUID.fromString(uuidName));
+
+		assertEquals(1, variable.getVariableId());
+		assertEquals(NXCPVariable.TYPE_BINARY, variable.getVariableType());
+		assertEquals(uuidName, variable.getAsUUID().toString());
+	}
+	
+	public void testUUIDEncodingAndDecoding() throws Exception
+	{
+		final String uuidName = "13f2cac0-eadf-11b1-9163-e3f1397b9128";
+		final NXCPVariable var1 = new NXCPVariable(1, UUID.fromString(uuidName));
+
+		final byte[] df = var1.createNXCPDataField();
+		assertEquals(32, df.length);
+		
+		final NXCPVariable var2 = new NXCPVariable(df);
+		assertEquals(1, var2.getVariableId());
+		assertEquals(NXCPVariable.TYPE_BINARY, var2.getVariableType());
+		assertEquals(uuidName, var2.getAsUUID().toString());
 	}
 }

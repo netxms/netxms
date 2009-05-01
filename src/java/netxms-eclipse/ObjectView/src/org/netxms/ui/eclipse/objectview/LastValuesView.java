@@ -58,7 +58,7 @@ public class LastValuesView extends Composite
 		// Setup table columns
 		final String[] names = { "ID", "Description", "Value", "Timestamp" };
 		final int[] widths = { 70, 250, 150, 100 };
-		dataViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN);
+		dataViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 	
 		dataViewer.setLabelProvider(new LastValuesLabelProvider());
 		dataViewer.setContentProvider(new ArrayContentProvider());

@@ -17,7 +17,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCServerVariable;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.serverconfig.Activator;
-import org.netxms.ui.eclipse.serverconfig.ServerConfigurationEditor;
+import org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**

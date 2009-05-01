@@ -33,4 +33,14 @@ public class NXCSubnet extends NXCObject
 	{
 		return subnetMask;
 	}
+
+
+	/* (non-Javadoc)
+	 * @see org.netxms.client.NXCObject#getObjectClassName()
+	 */
+	@Override
+	public String getObjectClassName()
+	{
+		return "Subnet";
+	}
 }

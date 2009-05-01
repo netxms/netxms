@@ -6,6 +6,8 @@ package org.netxms.client;
 import org.netxms.base.*;
 
 /**
+ * This class represents NetXMS NODE objects.
+ * 
  * @author Victor
  *
  */
@@ -169,5 +171,14 @@ public class NXCNode extends NXCObject
 	public String getSystemDescription()
 	{
 		return systemDescription;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.client.NXCObject#getObjectClassName()
+	 */
+	@Override
+	public String getObjectClassName()
+	{
+		return "Node";
 	}
 }

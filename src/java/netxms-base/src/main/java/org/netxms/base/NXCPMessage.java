@@ -7,6 +7,7 @@ import java.io.*;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class NXCPMessage
 {
@@ -199,6 +200,16 @@ public class NXCPMessage
 		setVariable(new NXCPVariable(varId, value));
 	}
 
+	public void setVariable(final long varId, final InetAddress value)
+	{
+		setVariable(new NXCPVariable(varId, value));
+	}
+
+	public void setVariable(final long varId, final UUID value)
+	{
+		setVariable(new NXCPVariable(varId, value));
+	}
+
 	public void setVariableInt64(final long varId, final long value)
 	{
 		setVariable(new NXCPVariable(varId, NXCPVariable.TYPE_INT64, value));
@@ -248,6 +259,18 @@ public class NXCPMessage
 	{
 		final NXCPVariable var = findVariable(varId);
 		return (var != null) ? var.getAsInetAddress() : null;
+	}
+	
+	public UUID getVariableAsUUID(final long varId)
+	{
+		final NXCPVariable var = findVariable(varId);
+		return (var != null) ? var.getAsUUID() : null;
+	}
+	
+	public long[] getVariableAsUInt32Array(final long varId)
+	{
+		final NXCPVariable var = findVariable(varId);
+		return (var != null) ? var.getAsUInt32Array() : null;
 	}
 	
 	public boolean getVariableAsBoolean(final long varId)

@@ -64,7 +64,7 @@ public class AlarmView extends Composite
 		// Setup table columns
 		final String[] names = { "Severity", "State", "Source", "Message", "Count", "Created", "Last Change" };
 		final int[] widths = { 100, 100, 150, 300, 70, 100, 100 };
-		alarmViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN);
+		alarmViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 	
 		alarmViewer.setLabelProvider(new AlarmListLabelProvider());
 		alarmViewer.setContentProvider(new ArrayContentProvider());
