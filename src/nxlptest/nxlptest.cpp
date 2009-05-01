@@ -81,7 +81,7 @@ static void LoggerCallback(int level, const TCHAR *format, ...)
 
 static THREAD_RESULT THREAD_CALL ParserThread(void *arg)
 {
-	((LogParser *)arg)->MonitorFile(m_stopCondition, LoggerCallback);
+	((LogParser *)arg)->monitorFile(m_stopCondition, LoggerCallback);
 	return THREAD_OK;
 }
 
@@ -137,19 +137,19 @@ int main(int argc, char *argv[])
 		THREAD thread;
 
 		parser = new LogParser;
-		if (parser->CreateFromXML((const char *)xml, size, errorText, 1024))
+		if (parser->createFromXml((const char *)xml, size, errorText, 1024))
 		{
-			parser->SetTraceCallback(TraceCallback);
+			parser->setTraceCallback(TraceCallback);
 			if (traceLevel != -1)
-				parser->SetTraceLevel(traceLevel);
+				parser->setTraceLevel(traceLevel);
 			if (inputFile != NULL)
-				parser->SetFileName(inputFile);
+				parser->setFileName(inputFile);
 
 			m_stopCondition = ConditionCreate(TRUE);
 			thread = ThreadCreateEx(ParserThread, 0, parser);
 #ifdef _WIN32
 			printf("Parser started. Press ESC to stop.\nFile: %s\nTrace level: %d\n\n",
-				    parser->GetFileName(), parser->GetTraceLevel());
+				    parser->getFileName(), parser->getTraceLevel());
 			while(1)
 			{
 				ch = _getch();

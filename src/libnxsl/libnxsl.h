@@ -2,7 +2,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2005-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -130,7 +130,7 @@ protected:
    BOOL m_bErrorState;
 
 public:
-	NXSL_Lexer(NXSL_Compiler *pCompiler, TCHAR *pszCode);
+	NXSL_Lexer(NXSL_Compiler *pCompiler, const TCHAR *pszCode);
 	virtual ~NXSL_Lexer();
 
 	int LexerInput(char *pBuffer, int nMaxSize);
@@ -160,7 +160,7 @@ public:
    NXSL_Compiler(void);
    ~NXSL_Compiler();
 
-   NXSL_Program *Compile(TCHAR *pszSourceCode);
+   NXSL_Program *Compile(const TCHAR *pszSourceCode);
    void Error(const char *pszMsg);
 
    TCHAR *GetErrorText(void) { return CHECK_NULL(m_pszErrorText); }

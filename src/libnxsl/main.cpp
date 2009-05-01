@@ -43,7 +43,7 @@
 // Interface to compiler
 //
 
-NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(TCHAR *pszSource,
+NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource,
                                              TCHAR *pszError, int nBufSize)
 {
    NXSL_Compiler compiler;
@@ -63,7 +63,7 @@ NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(TCHAR *pszSource,
 // Load file into memory
 //
 
-TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(TCHAR *pszFileName, DWORD *pdwFileSize)
+TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, DWORD *pdwFileSize)
 {
    int fd, iBufPos, iNumBytes, iBytesRead;
    TCHAR *pBuffer = NULL;

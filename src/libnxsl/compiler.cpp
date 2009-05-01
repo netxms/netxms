@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2005-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -88,7 +88,7 @@ void NXSL_Compiler::Error(const char *pszMsg)
 // Compile source code
 //
 
-NXSL_Program *NXSL_Compiler::Compile(TCHAR *pszSourceCode)
+NXSL_Program *NXSL_Compiler::Compile(const TCHAR *pszSourceCode)
 {
    NXSL_Program *pResult;
 	yyscan_t scanner;
