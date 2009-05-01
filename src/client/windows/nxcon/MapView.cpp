@@ -33,7 +33,9 @@ static SCALE_INFO m_scaleInfo[] =
    { -4, { 10, 10 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, -1, -1, _T("1:4") },
    { -2, { 20, 20 }, { 2, 2 }, { -2, 21 }, { 24, 13 }, 1, 1, _T("1:2") },
    { 0, { 40, 40 }, { 3, 3 }, { -15, 42 }, { 70, 26 }, 0, 0, _T("1:1") },   // Neutral scale (1:1)
-   { 2, { 80, 80 }, { 6, 6 }, { -30, 84 }, { 140, 52 }, 0, 2, _T("2:1") }
+   { 2, { 80, 80 }, { 6, 6 }, { -30, 84 }, { 140, 52 }, 0, 2, _T("2:1") },
+   { 4, { 160, 160 }, { 12, 12 }, { -60, 168 }, { 280, 104 }, 0, 4, _T("4:1") },
+   { 8, { 320, 320 }, { 24, 24 }, { -120, 336 }, { 560, 208 }, 0, 8, _T("8:1") }
 };
 
 
@@ -44,6 +46,7 @@ CMapView::CMapView()
 {
    m_nState = STATE_NORMAL;
    m_nScale = NEUTRAL_SCALE;
+	m_nObjectScaleShift = 0;
    m_pMap = NULL;
    m_pSubmap = NULL;
    m_rgbBkColor = RGB(224, 224, 224);
@@ -65,6 +68,7 @@ CMapView::CMapView()
 	m_bCanOpenObjects = TRUE;
 	m_bShowConnectorNames = FALSE;
 	m_bPositionOnChangedObject = FALSE;
+	m_objectPopupVisible = FALSE;
 }
 
 CMapView::~CMapView()
@@ -91,12 +95,13 @@ BEGIN_MESSAGE_MAP(CMapView, CWnd)
 	ON_WM_RBUTTONDOWN()
 	ON_WM_RBUTTONUP()
 	//}}AFX_MSG_MAP
+	ON_MESSAGE(WM_MOUSEHOVER, OnMouseHover)
 END_MESSAGE_MAP()
 
 
 const TCHAR *CMapView::GetScaleText(void)
 {
-   return m_scaleInfo[m_nScale].pszText;
+   return m_scaleInfo[m_nScale - m_nObjectScaleShift].pszText;
 }
 
 
@@ -141,7 +146,25 @@ int CMapView::OnCreate(LPCREATESTRUCT lpCreateStruct)
    SetScrollRange(SB_HORZ, 0, 0);
    SetScrollRange(SB_VERT, 0, 0);
 
+	m_wndObjectInfoPopup.Create(this, WS_CHILD);
+
    return 0;
+}
+
+
+//
+// Start mouse tracking
+//
+
+void CMapView::StartMouseTracking()
+{
+	TRACKMOUSEEVENT tme;
+
+	tme.cbSize = sizeof(TRACKMOUSEEVENT);
+	tme.hwndTrack = m_hWnd;
+	tme.dwFlags = TME_HOVER;
+	tme.dwHoverTime = HOVER_DEFAULT;
+	_TrackMouseEvent(&tme);
 }
 
 
@@ -801,8 +824,17 @@ void CMapView::OnMouseMove(UINT nFlags, CPoint point)
 {
    RECT rcOldSel, rcUpdate, rcClient;
 
+	if (m_objectPopupVisible)
+	{
+		m_wndObjectInfoPopup.ShowWindow(SW_HIDE);
+		m_objectPopupVisible = FALSE;
+	}
+
    switch(m_nState)
    {
+		case STATE_NORMAL:
+			StartMouseTracking();
+			break;
       case STATE_OBJECT_LCLICK:
          m_nState = STATE_DRAGGING;
          StartObjectDragging(point);
@@ -1006,7 +1038,7 @@ void CMapView::OpenSubmap(DWORD dwId, BOOL bAddToHistory)
          DeleteObject(m_hBkImage);
       if (m_pSubmap->GetBkImageFlag())
       {
-         m_hBkImage = GetBkImage(m_pMap->MapId(), dwId, m_scaleInfo[m_nScale].nFactor);
+         m_hBkImage = GetBkImage(m_pMap->MapId(), dwId, m_scaleInfo[m_nScale - m_nObjectScaleShift].nFactor);
       }
       else
       {
@@ -1256,7 +1288,7 @@ void CMapView::ZoomIn()
       if (m_hBkImage != NULL)
       {
          DeleteObject(m_hBkImage);
-         m_hBkImage = GetBkImage(m_pMap->MapId(), m_pSubmap->Id(), m_scaleInfo[m_nScale].nFactor);
+         m_hBkImage = GetBkImage(m_pMap->MapId(), m_pSubmap->Id(), m_scaleInfo[m_nScale - m_nObjectScaleShift].nFactor);
       }
       m_ptMapSize = m_pSubmap->GetMinSize();
       ScalePosMapToScreen(&m_ptMapSize);
@@ -1289,7 +1321,7 @@ void CMapView::ZoomOut()
       if (m_hBkImage != NULL)
       {
          DeleteObject(m_hBkImage);
-         m_hBkImage = GetBkImage(m_pMap->MapId(), m_pSubmap->Id(), m_scaleInfo[m_nScale].nFactor);
+         m_hBkImage = GetBkImage(m_pMap->MapId(), m_pSubmap->Id(), m_scaleInfo[m_nScale - m_nObjectScaleShift].nFactor);
       }
       m_ptMapSize = m_pSubmap->GetMinSize();
       ScalePosMapToScreen(&m_ptMapSize);
@@ -1629,4 +1661,74 @@ void CMapView::EnsureVisible(DWORD dwObjectId)
 		SetScrollPos(SB_VERT, m_ptOrg.y + rcClient.right - m_scaleInfo[m_nScale].ptObjectSize.y);
 		m_ptOrg.y += rcClient.right - m_scaleInfo[m_nScale].ptObjectSize.y;
 	}
+}
+
+
+//
+// WM_MOUSEHOVER message handler
+//
+
+LRESULT CMapView::OnMouseHover(WPARAM wParam, LPARAM lParam)
+{
+	POINT pt;
+	DWORD objectId;
+	NXC_OBJECT *object;
+
+	pt.x = LOWORD(lParam);
+	pt.y = HIWORD(lParam);
+	objectId = PointInObject(pt);
+	if (objectId != 0)
+	{
+		object = NXCFindObjectById(g_hSession, objectId);
+		if (object != NULL)
+		{
+			TCHAR info[4096];
+
+			theApp.DebugPrintf(_T("MAP: Mouse hover detected over object %d (%s)"), objectId, object->szName);
+
+			_sntprintf(info, 4096, _T("%s %s\r\nStatus: %s"), g_szObjectClass[object->iClass], object->szName,
+			           g_szStatusText[object->iStatus]);
+			if (object->iClass == OBJECT_NODE)
+			{
+				TCHAR ipAddr[16];
+
+				size_t len = _tcslen(info);
+				_sntprintf(&info[len], 4096 - len, _T("\r\nPrimaty IP: %s\r\nSystem: %s"), IpToStr(object->dwIpAddr, ipAddr),
+				           object->node.szSysDescription);
+			}
+
+			m_wndObjectInfoPopup.ShowAt(pt, info);
+			
+			m_objectPopupVisible = TRUE;
+		}
+	}
+
+	return 0;
+}
+
+
+
+//
+// Set scale shift for objects
+//
+
+void CMapView::SetObjectScaleShift(int nShift)
+{
+	if ((nShift < -2) || (nShift > 0))
+		return;	// Invalid shift value
+
+   ScalePosScreenToMap(&m_ptOrg);
+	m_nScale = m_nScale - m_nObjectScaleShift + nShift;
+	m_nObjectScaleShift = nShift;
+	if (m_nScale < 0)
+		m_nScale = 0;
+   ScalePosMapToScreen(&m_ptOrg);
+   if (m_hBkImage != NULL)
+   {
+      DeleteObject(m_hBkImage);
+      m_hBkImage = GetBkImage(m_pMap->MapId(), m_pSubmap->Id(), m_scaleInfo[m_nScale - m_nObjectScaleShift].nFactor);
+   }
+   m_ptMapSize = m_pSubmap->GetMinSize();
+   ScalePosMapToScreen(&m_ptMapSize);
+   Update();
 }

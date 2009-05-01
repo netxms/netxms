@@ -150,10 +150,7 @@ void CSyslogParserCfg::OnSize(UINT nType, int cx, int cy)
 
 void CSyslogParserCfg::OnSetFocus(CWnd* pOldWnd) 
 {
-	CMDIChildWnd::OnSetFocus(pOldWnd);
-	
-	// TODO: Add your message handler code here
-	
+	m_wndEditor.SetFocus();
 }
 
 
@@ -307,15 +304,13 @@ void CSyslogParserCfg::OnEditCtrlChange()
 
 BOOL CSyslogParserCfg::SaveConfig()
 {
-   DWORD dwResult, dwLength;
-   TCHAR *pszText;
+   DWORD dwResult;
+   CString strText;
    BOOL bResult = FALSE;
 
-   dwLength = m_wndEditor.GetWindowTextLength();
-   pszText = (TCHAR *)malloc(sizeof(TCHAR) * (dwLength + 2));
-   m_wndEditor.GetWindowText(pszText, dwLength + 1);
+   m_wndEditor.GetText(strText);
    dwResult = DoRequestArg3(NXCSetServerConfigCLOB, g_hSession, _T("SyslogParser"),
-                            pszText, _T("Updating syslog parser configuration..."));
+                            (void *)((LPCTSTR)strText), _T("Updating syslog parser configuration..."));
    if (dwResult == RCC_SUCCESS)
    {
       m_wndEditor.SetSavePoint();

@@ -500,6 +500,9 @@ void CNodePerfView::AdjustView()
 	m_nViewHeight = rect.bottom;
 	if (m_nTotalHeight > m_nViewHeight)
 	{
+		if (m_nTotalHeight - m_nViewHeight < m_nOrigin)
+			m_nOrigin = m_nTotalHeight - m_nViewHeight;
+
 		ShowScrollBar(SB_VERT, TRUE);
 		si.cbSize = sizeof(SCROLLINFO);
 		si.fMask = SIF_ALL;
@@ -511,6 +514,7 @@ void CNodePerfView::AdjustView()
 	}
 	else
 	{
+		m_nOrigin = 0;
 		ShowScrollBar(SB_VERT, FALSE);
 	}
 

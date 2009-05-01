@@ -555,6 +555,12 @@ BEGIN
             MENUITEM "&Toolbar",                    ID_MAP_SHOW_TOOLBAR
             MENUITEM "&Status bar",                 ID_MAP_SHOW_STATUSBAR
         END
+        POPUP "Object si&ze"
+        BEGIN
+            MENUITEM "&Normal",                     ID_MAP_OBJECTSIZE_NORMAL
+            MENUITEM "&Small",                      ID_MAP_OBJECTSIZE_SMALL
+            MENUITEM "&Tiny",                       ID_MAP_OBJECTSIZE_TINY
+        END
         MENUITEM SEPARATOR
         MENUITEM "&Create link between objects...\tCtrl+Alt+C", ID_MAP_LINK
         MENUITEM "Re&move link between objects...\tCtrl+Alt+R", ID_MAP_UNLINK
@@ -3043,6 +3049,46 @@ BEGIN
     PUSHBUTTON      "&Delete",IDC_BUTTON_DELETE,235,173,50,14
 END
 
+IDD_OBJECT_TEMPLATE_AUTOAPPLY DIALOGEX 0, 0, 292, 194
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Auto Apply"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&Apply this template automatically to nodes selected by filter",
+                    IDC_CHECK_ENABLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,
+                    7,199,10
+    LTEXT           "Filtering script",IDC_STATIC,7,22,44,8
+    CONTROL         "Custom1",IDC_EDIT_SCRIPT,"Scintilla",WS_TABSTOP,7,32,
+                    278,155,WS_EX_CLIENTEDGE
+END
+
+IDD_OBJECT_CONTAINER_AUTOBIND DIALOGEX 0, 0, 292, 194
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Auto Bind"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&Automatically bind nodes selected by filter to this container",
+                    IDC_CHECK_ENABLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,
+                    7,199,10
+    LTEXT           "Filtering script",IDC_STATIC,7,22,44,8
+    CONTROL         "Custom1",IDC_EDIT_SCRIPT,"Scintilla",WS_TABSTOP,7,32,
+                    278,155,WS_EX_CLIENTEDGE
+END
+
+IDD_TEST_TRANSFORMATION DIALOG DISCARDABLE  0, 0, 245, 171
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Test Transformation Script"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_VALUE,7,17,231,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Run",IDC_BUTTON_RUN,188,39,50,14
+    EDITTEXT        IDC_EDIT_RESULT,7,73,231,69,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "Close",IDCANCEL,188,150,50,14
+    LTEXT           "Test value",IDC_STATIC,7,7,34,8
+    LTEXT           "Static",IDC_STATUS_TEXT,38,42,129,8
+    ICON            "",IDC_STATUS_ICON,7,36,21,20
+    LTEXT           "Result",IDC_RESULT_TITLE,7,62,202,8
+END
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3880,6 +3926,30 @@ BEGIN
         RIGHTMARGIN, 285
         TOPMARGIN, 7
         BOTTOMMARGIN, 187
+    END
+
+    IDD_OBJECT_TEMPLATE_AUTOAPPLY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 285
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 187
+    END
+
+    IDD_OBJECT_CONTAINER_AUTOBIND, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 285
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 187
+    END
+
+    IDD_TEST_TRANSFORMATION, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 164
     END
 END
 #endif    // APSTUDIO_INVOKED

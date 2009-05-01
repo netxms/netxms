@@ -262,6 +262,9 @@
 #define IDD_CREATE_NETMAP               388
 #define IDD_OBJECT_CUSTOM_ATTRS         389
 #define IDI_FORWARD_EVENT               390
+#define IDD_OBJECT_TEMPLATE_AUTOAPPLY   391
+#define IDD_OBJECT_CONTAINER_AUTOBIND   392
+#define IDD_TEST_TRANSFORMATION         393
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -696,6 +699,11 @@
 #define IDC_RADIO_ENABLE                1539
 #define IDC_RADIO_DISABLE               1540
 #define IDC_BUTTON_SETTINGS             1541
+#define IDC_EDIT_RESULT                 1544
+#define IDC_STATUS_ICON                 1545
+#define IDC_STATUS_TEXT                 1546
+#define IDC_BUTTON_RUN                  1547
+#define IDC_RESULT_TITLE                1548
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -992,6 +1000,9 @@
 #define ID_POLICY_COPY                  33106
 #define ID_POLICY_CUT                   33107
 #define ID_POLICY_PASTE                 33108
+#define ID_MAP_OBJECTSIZE_NORMAL        33109
+#define ID_MAP_OBJECTSIZE_SMALL         33110
+#define ID_MAP_OBJECTSIZE_TINY          33111
 #define ID_ALWAYS_DISABLED              43210
 #define IDS_GETFOLDERPATH_FAILED        61216
 #define IDS_WORKDIR_CREATION_FAILED     61217
@@ -1002,9 +1013,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        391
-#define _APS_NEXT_COMMAND_VALUE         33109
-#define _APS_NEXT_CONTROL_VALUE         1542
+#define _APS_NEXT_RESOURCE_VALUE        394
+#define _APS_NEXT_COMMAND_VALUE         33112
+#define _APS_NEXT_CONTROL_VALUE         1549
 #define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif

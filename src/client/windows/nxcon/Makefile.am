@@ -19,7 +19,7 @@ EXTRA_DIST = \
 	AgentCfgDlg.cpp AgentCfgDlg.h \
 	AgentCfgEditor.cpp AgentCfgEditor.h \
 	AgentConfigMgr.cpp AgentConfigMgr.h \
-	 AgentParamSelDlg.cpp AgentParamSelDlg.h \
+	AgentParamSelDlg.cpp AgentParamSelDlg.h \
 	AlarmBrowser.cpp AlarmBrowser.h \
 	AlarmView.cpp AlarmView.h \
 	CertManager.cpp CertManager.h \
@@ -36,6 +36,7 @@ EXTRA_DIST = \
 	CondPropsScript.cpp CondPropsScript.h \
 	ConsolePropsGeneral.cpp ConsolePropsGeneral.h \
 	ConsoleUpgradeDlg.cpp ConsoleUpgradeDlg.h \
+	ContainerPropsAutoBind.cpp ContainerPropsAutoBind.h \
 	ControlPanel.cpp ControlPanel.h \
 	CreateClusterDlg.cpp CreateClusterDlg.h \
 	CreateCondDlg.cpp CreateCondDlg.h \
@@ -141,6 +142,7 @@ EXTRA_DIST = \
 	ObjToolPropOptions.cpp ObjToolPropOptions.h \
 	PackageMgr.cpp PackageMgr.h \
 	PasswordChangeDlg.cpp PasswordChangeDlg.h \
+	PopupInfoWindow.cpp PopupInfoWindow.h \
 	RemoveTemplateDlg.cpp RemoveTemplateDlg.h \
 	RequestProcessingDlg.cpp RequestProcessingDlg.h \
 	resource.h \
@@ -165,9 +167,11 @@ EXTRA_DIST = \
 	SyslogBrowser.cpp SyslogBrowser.h \
 	SyslogParserCfg.cpp SyslogParserCfg.h \
 	TableView.cpp TableView.h \
+	TemplatePropsAutoApply.cpp TemplatePropsAutoApply.h \
 	ThresholdDlg.cpp ThresholdDlg.h \
 	ToolBox.cpp ToolBox.h \
 	tools.cpp \
+	TransformTestDlg.cpp TransformTestDlg.h \
 	TrapEditor.cpp TrapEditor.h \
 	TrapEditDlg.cpp TrapEditDlg.h \
 	TrapLogBrowser.cpp TrapLogBrowser.h \

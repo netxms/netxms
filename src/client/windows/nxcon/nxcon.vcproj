@@ -285,6 +285,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ContainerPropsAutoBind.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ControlPanel.cpp"
 				>
 			</File>
@@ -697,6 +701,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PopupInfoWindow.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\RemoveTemplateDlg.cpp"
 				>
 			</File>
@@ -805,6 +813,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TemplatePropsAutoApply.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ThresholdDlg.cpp"
 				>
 			</File>
@@ -814,6 +826,10 @@
 			</File>
 			<File
 				RelativePath=".\tools.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TransformTestDlg.cpp"
 				>
 			</File>
 			<File
@@ -968,6 +984,10 @@
 			</File>
 			<File
 				RelativePath=".\ConsoleUpgradeDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ContainerPropsAutoBind.h"
 				>
 			</File>
 			<File
@@ -1411,6 +1431,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PopupInfoWindow.h"
+				>
+			</File>
+			<File
 				RelativePath=".\RemoveTemplateDlg.h"
 				>
 			</File>
@@ -1507,11 +1531,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TemplatePropsAutoApply.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ThresholdDlg.h"
 				>
 			</File>
 			<File
 				RelativePath=".\ToolBox.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TransformTestDlg.h"
 				>
 			</File>
 			<File
@@ -1951,5 +1983,9 @@
 		</Filter>
 	</Files>
 	<Globals>
+		<Global
+			Name="RESOURCE_FILE"
+			Value="nxcon.rc"
+		/>
 	</Globals>
 </VisualStudioProject>

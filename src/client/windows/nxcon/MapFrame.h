@@ -38,6 +38,8 @@ public:
 
 // Implementation
 protected:
+	CString m_strTitle;
+	int m_nScaleShift;
 	DWORD m_dwMapId;
 	NXC_OBJECT * GetFirstSelectedObject(void);
 	CStatusBarCtrl m_wndStatusBar;
@@ -106,10 +108,30 @@ protected:
 	afx_msg void OnUpdateMapShowconnectornames(CCmdUI* pCmdUI);
 	afx_msg void OnMapEnsurevisible();
 	afx_msg void OnUpdateMapEnsurevisible(CCmdUI* pCmdUI);
+	afx_msg void OnMapObjectsizeNormal();
+	afx_msg void OnMapObjectsizeSmall();
+	afx_msg void OnMapObjectsizeTiny();
+	afx_msg void OnUpdateMapObjectsizeNormal(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateMapObjectsizeSmall(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateMapObjectsizeTiny(CCmdUI* pCmdUI);
+	afx_msg void OnObjectChangeipaddress();
+	afx_msg void OnUpdateObjectChangeipaddress(CCmdUI* pCmdUI);
+	afx_msg void OnObjectComments();
+	afx_msg void OnUpdateObjectComments(CCmdUI* pCmdUI);
+	afx_msg void OnObjectPollConfiguration();
+	afx_msg void OnUpdateObjectPollConfiguration(CCmdUI* pCmdUI);
+	afx_msg void OnObjectPollInterfaceNames();
+	afx_msg void OnUpdateObjectPollInterfaceNames(CCmdUI* pCmdUI);
+	afx_msg void OnObjectPollStatus();
+	afx_msg void OnUpdateObjectPollStatus(CCmdUI* pCmdUI);
+	afx_msg void OnObjectSetchildmgmt();
+	afx_msg void OnUpdateObjectSetchildmgmt(CCmdUI* pCmdUI);
 	//}}AFX_MSG
    afx_msg LRESULT OnObjectChange(WPARAM wParam, LPARAM lParam);
    afx_msg LRESULT OnSubmapChange(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
+private:
+	void SetScaleShift(int nShift);
 };
 
 /////////////////////////////////////////////////////////////////////////////

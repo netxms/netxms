@@ -55,6 +55,9 @@ BOOL CCondPropsScript::OnInitDialog()
 	
    m_wndEditor.Attach(::GetDlgItem(m_hWnd, IDC_EDIT_SCRIPT));
    m_wndEditor.SetDefaults();
+   m_wndEditor.LoadLexer("nxlexer.dll");
+   m_wndEditor.SetLexer("nxsl");
+   m_wndEditor.SetKeywords(0, g_szScriptKeywords);
    m_wndEditor.SetText(m_strScript);
 	
 	return TRUE;

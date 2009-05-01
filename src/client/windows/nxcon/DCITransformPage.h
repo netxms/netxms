@@ -17,6 +17,8 @@ class CDCITransformPage : public CPropertyPage
 
 // Construction
 public:
+	DWORD m_dwItemId;
+	DWORD m_dwNodeId;
 	CString m_strFormula;
 	CDCITransformPage();
 	~CDCITransformPage();
@@ -46,6 +48,7 @@ protected:
 	//{{AFX_MSG(CDCITransformPage)
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSelchangeComboDelta();
+	afx_msg void OnButtonTest();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

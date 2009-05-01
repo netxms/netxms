@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "nxcon.h"
 #include "DCITransformPage.h"
+#include "TransformTestDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -61,6 +62,7 @@ void CDCITransformPage::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CDCITransformPage, CPropertyPage)
 	//{{AFX_MSG_MAP(CDCITransformPage)
 	ON_CBN_SELCHANGE(IDC_COMBO_DELTA, OnSelchangeComboDelta)
+	ON_BN_CLICKED(IDC_BUTTON_TEST, OnButtonTest)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -133,4 +135,26 @@ void CDCITransformPage::OnSelchangeComboDelta()
       if (!_tcsicmp(m_pszMethodList[m_iDeltaProc], szBuffer))
          break;
    EnableWarning();
+}
+
+
+//
+// Handler for "Test" button
+//
+
+void CDCITransformPage::OnButtonTest() 
+{
+	CTransformTestDlg dlg;
+
+	m_wndEditScript.GetText(dlg.m_strScript);
+	if (dlg.m_strScript.IsEmpty())
+	{
+		MessageBox(_T("Cannot test empty script"), _T("Warning"), MB_OK | MB_ICONEXCLAMATION);
+	}
+	else
+	{
+		dlg.m_dwNodeId = m_dwNodeId;
+		dlg.m_dwItemId = m_dwItemId;
+		dlg.DoModal();
+	}
 }

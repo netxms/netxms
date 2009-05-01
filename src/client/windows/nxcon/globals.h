@@ -272,6 +272,8 @@ DWORD DoRequestArg6(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pA
                     void *pArg5, void *pArg6, TCHAR *pszInfoText);
 DWORD DoRequestArg7(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
                     void *pArg5, void *pArg6, void *pArg7, TCHAR *pszInfoText);
+DWORD DoRequestArg8(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
+                    void *pArg5, void *pArg6, void *pArg7, void *pArg8, TCHAR *pszInfoText);
 DWORD DoRequestArg9(void *pFunc, void *pArg1, void *pArg2, void *pArg3, void *pArg4, 
                     void *pArg5, void *pArg6, void *pArg7, void *pArg8, void *pArg9,
                     TCHAR *pszInfoText);

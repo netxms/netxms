@@ -90,7 +90,9 @@ void CMapSelDlg::OnOK()
 		return;
 	}
 	
-	m_dwMapId = m_wndListCtrl.GetItemData(m_wndListCtrl.GetSelectionMark());
+	int index = m_wndListCtrl.GetSelectionMark();
+	m_dwMapId = m_wndListCtrl.GetItemData(index);
+	m_strMapName = m_wndListCtrl.GetItemText(index, 0);
 	CDialog::OnOK();
 }
 

@@ -14,6 +14,7 @@ class CMapSelDlg : public CDialog
 {
 // Construction
 public:
+	CString m_strMapName;
 	DWORD m_dwMapId;
 	CMapSelDlg(CWnd* pParent = NULL);   // standard constructor
 

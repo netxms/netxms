@@ -7,6 +7,7 @@
 #include "SubmapBkgndDlg.h"
 #include "MapLinkPropDlg.h"
 #include "MapSelDlg.h"
+#include "ChildMgmtStatusDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -18,6 +19,10 @@ static char THIS_FILE[] = __FILE__;
 
 #define STATUS_PANE_LAYOUT    1
 #define STATUS_PANE_SCALE     2
+
+#define SCALE_SHIFT_NORMAL		0
+#define SCALE_SHIFT_SMALL		-1
+#define SCALE_SHIFT_TINY		-2
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -31,6 +36,7 @@ CMapFrame::CMapFrame()
    m_bShowToolBar = theApp.GetProfileInt(MAP_SECTION, _T("ShowToolBar"), TRUE);
    m_bShowToolBox = theApp.GetProfileInt(MAP_SECTION, _T("ShowToolBox"), FALSE);
    m_bShowStatusBar = theApp.GetProfileInt(MAP_SECTION, _T("ShowStatusBar"), TRUE);
+	m_nScaleShift = SCALE_SHIFT_NORMAL;
 }
 
 CMapFrame::~CMapFrame()
@@ -97,6 +103,24 @@ BEGIN_MESSAGE_MAP(CMapFrame, CMDIChildWnd)
 	ON_UPDATE_COMMAND_UI(ID_MAP_SHOWCONNECTORNAMES, OnUpdateMapShowconnectornames)
 	ON_COMMAND(ID_MAP_ENSUREVISIBLE, OnMapEnsurevisible)
 	ON_UPDATE_COMMAND_UI(ID_MAP_ENSUREVISIBLE, OnUpdateMapEnsurevisible)
+	ON_COMMAND(ID_MAP_OBJECTSIZE_NORMAL, OnMapObjectsizeNormal)
+	ON_COMMAND(ID_MAP_OBJECTSIZE_SMALL, OnMapObjectsizeSmall)
+	ON_COMMAND(ID_MAP_OBJECTSIZE_TINY, OnMapObjectsizeTiny)
+	ON_UPDATE_COMMAND_UI(ID_MAP_OBJECTSIZE_NORMAL, OnUpdateMapObjectsizeNormal)
+	ON_UPDATE_COMMAND_UI(ID_MAP_OBJECTSIZE_SMALL, OnUpdateMapObjectsizeSmall)
+	ON_UPDATE_COMMAND_UI(ID_MAP_OBJECTSIZE_TINY, OnUpdateMapObjectsizeTiny)
+	ON_COMMAND(ID_OBJECT_CHANGEIPADDRESS, OnObjectChangeipaddress)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_CHANGEIPADDRESS, OnUpdateObjectChangeipaddress)
+	ON_COMMAND(ID_OBJECT_COMMENTS, OnObjectComments)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_COMMENTS, OnUpdateObjectComments)
+	ON_COMMAND(ID_OBJECT_POLL_CONFIGURATION, OnObjectPollConfiguration)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_POLL_CONFIGURATION, OnUpdateObjectPollConfiguration)
+	ON_COMMAND(ID_OBJECT_POLL_INTERFACE_NAMES, OnObjectPollInterfaceNames)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_POLL_INTERFACE_NAMES, OnUpdateObjectPollInterfaceNames)
+	ON_COMMAND(ID_OBJECT_POLL_STATUS, OnObjectPollStatus)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_POLL_STATUS, OnUpdateObjectPollStatus)
+	ON_COMMAND(ID_OBJECT_SETCHILDMGMT, OnObjectSetchildmgmt)
+	ON_UPDATE_COMMAND_UI(ID_OBJECT_SETCHILDMGMT, OnUpdateObjectSetchildmgmt)
 	//}}AFX_MSG_MAP
    ON_MESSAGE(NXCM_OBJECT_CHANGE, OnObjectChange)
    ON_MESSAGE(NXCM_SUBMAP_CHANGE, OnSubmapChange)
@@ -185,8 +209,16 @@ int CMapFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	if (dlg.DoModal() == IDOK)
 	{
+		TCHAR section[128];
+
 		m_dwMapId = dlg.m_dwMapId;
+		_sntprintf(section, 128, _T("Map_%d"), m_dwMapId);
+		m_nScaleShift = theApp.GetProfileInt(section, _T("ScaleShift"), SCALE_SHIFT_NORMAL);
 	   PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
+
+		m_strTitle = _T("Network Map - [");
+		m_strTitle += dlg.m_strMapName;
+		m_strTitle += _T("]");
 	}
 	else
 	{
@@ -250,23 +282,6 @@ void CMapFrame::OnSetFocus(CWnd* pOldWnd)
 
 
 //
-// Map (re)loading function
-//
-
-/*static DWORD LoadMap(TCHAR *pszName, nxMap **ppMap)
-{
-   DWORD dwResult, dwMapId;
-
-   dwResult = NXCResolveMapName(g_hSession, pszName, &dwMapId);
-   if (dwResult == RCC_SUCCESS)
-   {
-      dwResult = NXCLoadMap(g_hSession, dwMapId, (void **)ppMap);
-   }
-   return dwResult;
-}*/
-
-
-//
 // WM_COMMAND::ID_VIEW_REFRESH message handler
 //
 
@@ -279,6 +294,7 @@ void CMapFrame::OnViewRefresh()
    if (dwResult == RCC_SUCCESS)
    {
       m_wndMapView.SetMap(pMap);
+		m_wndMapView.SetObjectScaleShift(m_nScaleShift);
       m_wndStatusBar.SetText(m_wndMapView.GetScaleText(), STATUS_PANE_SCALE, 0);
    }
    else
@@ -286,49 +302,9 @@ void CMapFrame::OnViewRefresh()
       theApp.ErrorBox(dwResult, _T("Cannot load map from server: %s"));
       m_wndStatusBar.SetText(_T(""), STATUS_PANE_SCALE, 0);
    }
-   //m_wndMapView.SetMap(new nxMap(1, _T("Default"), _T("Default map")));
-/*   NXC_OBJECT *pObject;
-   DWORD i;
-   CString strFullString, strTitle;
 
-	if (strFullString.LoadString(IDR_MAPFRAME))
-		AfxExtractSubString(strTitle, strFullString, CDocTemplate::docName);
-
-   m_wndMapView.DeleteAllItems();
-   if (m_pRootObject == NULL)
-   {
-      pObject = NXCGetTopologyRootObject(g_hSession);
-      if (pObject != NULL)
-         AddObjectToView(pObject);
-
-      pObject = NXCGetServiceRootObject(g_hSession);
-      if (pObject != NULL)
-         AddObjectToView(pObject);
-   
-      pObject = NXCGetTemplateRootObject(g_hSession);
-      if (pObject != NULL)
-         AddObjectToView(pObject);
-
-      // add object name to title
-      strTitle += " - [root]";
-   }
-   else
-   {
-      for(i = 0; i < m_pRootObject->dwNumChilds; i++)
-      {
-         pObject = NXCFindObjectById(g_hSession, m_pRootObject->pdwChildList[i]);
-         if (pObject != NULL)
-            if (!pObject->bIsDeleted)
-               AddObjectToView(pObject);
-      }
-
-      // add object name to title
-      strTitle += " - [";
-      strTitle += m_pRootObject->szName;
-      strTitle += "]";
-   }
-
-   ::SetWindowText(m_hWnd, strTitle);*/
+	SetTitle(m_strTitle);
+	OnUpdateFrameTitle(TRUE);
 }
 
 
@@ -1051,4 +1027,217 @@ void CMapFrame::OnMapEnsurevisible()
 void CMapFrame::OnUpdateMapEnsurevisible(CCmdUI* pCmdUI) 
 {
 	pCmdUI->SetCheck(m_wndMapView.m_bPositionOnChangedObject);
+}
+
+
+//
+// Change object scale shift
+//
+
+void CMapFrame::SetScaleShift(int nShift)
+{
+	TCHAR section[128];
+
+	m_nScaleShift = nShift;
+	m_wndMapView.SetObjectScaleShift(m_nScaleShift);
+	_sntprintf(section, 128, _T("Map_%d"), m_dwMapId);
+	theApp.WriteProfileInt(section, _T("ScaleShift"), m_nScaleShift);
+}
+
+void CMapFrame::OnMapObjectsizeNormal() 
+{
+	SetScaleShift(SCALE_SHIFT_NORMAL);
+}
+
+void CMapFrame::OnUpdateMapObjectsizeNormal(CCmdUI* pCmdUI) 
+{
+	pCmdUI->SetCheck(m_nScaleShift == SCALE_SHIFT_NORMAL);
+}
+
+void CMapFrame::OnMapObjectsizeSmall() 
+{
+	SetScaleShift(SCALE_SHIFT_SMALL);
+}
+
+void CMapFrame::OnUpdateMapObjectsizeSmall(CCmdUI* pCmdUI) 
+{
+	pCmdUI->SetCheck(m_nScaleShift == SCALE_SHIFT_SMALL);
+}
+
+void CMapFrame::OnMapObjectsizeTiny() 
+{
+	SetScaleShift(SCALE_SHIFT_TINY);
+}
+
+void CMapFrame::OnUpdateMapObjectsizeTiny(CCmdUI* pCmdUI) 
+{
+	pCmdUI->SetCheck(m_nScaleShift == SCALE_SHIFT_TINY);
+}
+
+
+//
+// Handler for change object's IP address menu item
+//
+
+void CMapFrame::OnObjectChangeipaddress() 
+{
+   NXC_OBJECT *pObject;
+
+   pObject = GetFirstSelectedObject();
+   if ((pObject != NULL) && (pObject->iClass == OBJECT_NODE))
+      theApp.ChangeNodeAddress(pObject->dwId);
+}
+
+void CMapFrame::OnUpdateObjectChangeipaddress(CCmdUI* pCmdUI) 
+{
+   if (m_wndMapView.GetSelectionCount() != 1)
+   {
+      pCmdUI->Enable(FALSE);
+   }
+   else
+   {
+      NXC_OBJECT *pObject;
+
+      pObject = GetFirstSelectedObject();
+      pCmdUI->Enable(pObject->iClass == OBJECT_NODE);
+   }
+}
+
+
+//
+// handler for "comments" object menu
+//
+
+void CMapFrame::OnObjectComments() 
+{
+   NXC_OBJECT *pObject;
+
+   pObject = GetFirstSelectedObject();
+   if (pObject != NULL)
+      theApp.ShowObjectComments(pObject);
+}
+
+void CMapFrame::OnUpdateObjectComments(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable(m_wndMapView.GetSelectionCount() == 1);
+}
+
+
+//
+// Handler for "configuration poll" object menu
+//
+
+void CMapFrame::OnObjectPollConfiguration() 
+{
+   NXC_OBJECT *pObject;
+
+   pObject = GetFirstSelectedObject();
+   if ((pObject != NULL) && (pObject->iClass == OBJECT_NODE))
+      theApp.PollNode(pObject->dwId, POLL_CONFIGURATION);
+}
+
+void CMapFrame::OnUpdateObjectPollConfiguration(CCmdUI* pCmdUI) 
+{
+   if (m_wndMapView.GetSelectionCount() != 1)
+   {
+      pCmdUI->Enable(FALSE);
+   }
+   else
+   {
+      NXC_OBJECT *pObject;
+
+      pObject = GetFirstSelectedObject();
+      pCmdUI->Enable(pObject->iClass == OBJECT_NODE);
+   }
+}
+
+
+//
+// Handler for "interface names poll" object menu
+//
+
+void CMapFrame::OnObjectPollInterfaceNames() 
+{
+   NXC_OBJECT *pObject;
+
+   pObject = GetFirstSelectedObject();
+   if ((pObject != NULL) && (pObject->iClass == OBJECT_NODE))
+      theApp.PollNode(pObject->dwId, POLL_INTERFACE_NAMES);
+}
+
+void CMapFrame::OnUpdateObjectPollInterfaceNames(CCmdUI* pCmdUI) 
+{
+   if (m_wndMapView.GetSelectionCount() != 1)
+   {
+      pCmdUI->Enable(FALSE);
+   }
+   else
+   {
+      NXC_OBJECT *pObject;
+
+      pObject = GetFirstSelectedObject();
+      pCmdUI->Enable(pObject->iClass == OBJECT_NODE);
+   }
+}
+
+
+//
+// Handler for "status poll" object menu
+//
+
+void CMapFrame::OnObjectPollStatus() 
+{
+   NXC_OBJECT *pObject;
+
+   pObject = GetFirstSelectedObject();
+   if ((pObject != NULL) && (pObject->iClass == OBJECT_NODE))
+      theApp.PollNode(pObject->dwId, POLL_STATUS);
+}
+
+void CMapFrame::OnUpdateObjectPollStatus(CCmdUI* pCmdUI) 
+{
+   if (m_wndMapView.GetSelectionCount() != 1)
+   {
+      pCmdUI->Enable(FALSE);
+   }
+   else
+   {
+      NXC_OBJECT *pObject;
+
+      pObject = GetFirstSelectedObject();
+      pCmdUI->Enable(pObject->iClass == OBJECT_NODE);
+   }
+}
+
+
+//
+// Handler for "Set child management status" menu
+//
+
+void CMapFrame::OnObjectSetchildmgmt() 
+{
+	CChildMgmtStatusDlg dlg;
+   NXC_OBJECT *pObject;
+
+   pObject = GetFirstSelectedObject();
+	if (pObject != NULL)
+	{
+		dlg.m_pObject = pObject;
+		dlg.DoModal();
+	}
+}
+
+void CMapFrame::OnUpdateObjectSetchildmgmt(CCmdUI* pCmdUI) 
+{
+   if (m_wndMapView.GetSelectionCount() != 1)
+   {
+      pCmdUI->Enable(FALSE);
+   }
+   else
+   {
+      NXC_OBJECT *pObject;
+
+      pObject = GetFirstSelectedObject();
+      pCmdUI->Enable(pObject->dwNumChilds > 0);
+   }
 }

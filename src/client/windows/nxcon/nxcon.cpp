@@ -81,6 +81,8 @@
 #include "ObjectPropsTrustedNodes.h"
 #include "ObjectPropsCustomAttrs.h"
 #include "SyslogParserCfg.h"
+#include "TemplatePropsAutoApply.h"
+#include "ContainerPropsAutoBind.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1382,6 +1384,8 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
 	CClusterPropsGeneral wndClusterGeneral;
 	CClusterPropsResources wndClusterResources;
 	CObjectPropsCustomAttrs wndCustomAttrs;
+	CTemplatePropsAutoApply wndTemplateAutoApply;
+	CContainerPropsAutoBind wndContainerAutoBind;
    NXC_OBJECT *pObject;
 
    pObject = NXCFindObjectById(g_hSession, dwObjectId);
@@ -1468,6 +1472,26 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
 
 				wndClusterResources.m_pObject = pObject;
             wndPropSheet.AddPage(&wndClusterResources);
+				break;
+			case OBJECT_TEMPLATE:
+            wndObjectGeneral.m_dwObjectId = dwObjectId;
+            wndObjectGeneral.m_strClass = g_szObjectClass[pObject->iClass];
+            wndObjectGeneral.m_strName = pObject->szName;
+            wndPropSheet.AddPage(&wndObjectGeneral);
+
+				wndTemplateAutoApply.m_bEnableAutoApply = pObject->dct.isAutoApplyEnabled;
+				wndTemplateAutoApply.m_strFilterScript = CHECK_NULL_EX(pObject->dct.pszAutoApplyFilter);
+            wndPropSheet.AddPage(&wndTemplateAutoApply);
+				break;
+			case OBJECT_CONTAINER:
+            wndObjectGeneral.m_dwObjectId = dwObjectId;
+            wndObjectGeneral.m_strClass = g_szObjectClass[pObject->iClass];
+            wndObjectGeneral.m_strName = pObject->szName;
+            wndPropSheet.AddPage(&wndObjectGeneral);
+
+				wndContainerAutoBind.m_bEnableAutoBind = pObject->container.isAutoBindEnabled;
+				wndContainerAutoBind.m_strFilterScript = CHECK_NULL_EX(pObject->container.pszAutoBindFilter);
+            wndPropSheet.AddPage(&wndContainerAutoBind);
 				break;
          default:
             wndObjectGeneral.m_dwObjectId = dwObjectId;
@@ -3957,10 +3981,10 @@ static FILE *m_pExInfoFile = NULL;
 // Writer for SEHShowCallStack()
 //
 
-static void ExceptionDataWriter(char *pszText)
+static void ExceptionDataWriter(const TCHAR *pszText)
 {
 	if (m_pExInfoFile != NULL)
-		fputs(pszText, m_pExInfoFile);
+		_fputts(pszText, m_pExInfoFile);
 }
 
 
@@ -4122,7 +4146,7 @@ int CConsoleApp::Run()
 	int nRet;
 
 #ifndef _DEBUG
-	SetExceptionHandler(ExceptionHandler, ExceptionDataWriter);
+	SetExceptionHandler(ExceptionHandler, ExceptionDataWriter, NULL, _T("nxcon.exe"), NULL, FALSE);
 	__try
 	{
 #endif

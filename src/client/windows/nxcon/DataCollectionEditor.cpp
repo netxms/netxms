@@ -336,6 +336,8 @@ void CDataCollectionEditor::OnItemNew()
    item.iRetentionTime = 30;
    item.iSource = DS_NATIVE_AGENT;
    item.iStatus = ITEM_STATUS_ACTIVE;
+	item.nBaseUnits = DCI_BASEUNITS_OTHER;
+	item.nMultiplier = 1;
 
    if (EditItem(&item))
    {
@@ -457,6 +459,8 @@ BOOL CDataCollectionEditor::EditItem(NXC_DCI *pItem)
    // Setup "Transformation" page
    pgTransform.m_iDeltaProc = pItem->iDeltaCalculation;
    pgTransform.m_strFormula = CHECK_NULL_EX(pItem->pszFormula);
+	pgTransform.m_dwNodeId = m_pItemList->dwNodeId;
+	pgTransform.m_dwItemId = pItem->dwId;
 
    // Setup "Thresholds" page
    pgThresholds.m_pItem = pItem;

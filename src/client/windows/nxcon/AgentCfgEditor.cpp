@@ -365,8 +365,8 @@ void CAgentCfgEditor::OnConfigSaveandapply()
 
 BOOL CAgentCfgEditor::SaveConfig(BOOL bApply)
 {
-   DWORD dwResult, dwLength;
-   TCHAR *pszText;
+   DWORD dwResult;
+	CString strText;
    BOOL bResult = FALSE;
 
    if (bApply)
@@ -378,11 +378,9 @@ BOOL CAgentCfgEditor::SaveConfig(BOOL bApply)
       }
    }
 
-   dwLength = m_wndEditor.GetWindowTextLength();
-   pszText = (TCHAR *)malloc(sizeof(TCHAR) * (dwLength + 2));
-   m_wndEditor.GetWindowText(pszText, dwLength + 1);
+	m_wndEditor.GetText(strText);
    dwResult = DoRequestArg4(NXCUpdateAgentConfig, g_hSession, (void *)m_dwNodeId,
-                            pszText, (void *)bApply, _T("Updating agent's configuration file..."));
+                            (void *)((LPCTSTR)strText), (void *)bApply, _T("Updating agent's configuration file..."));
    if (dwResult == RCC_SUCCESS)
    {
       m_wndEditor.SetSavePoint();
