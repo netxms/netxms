@@ -7,7 +7,7 @@ OutputBaseFilename=nxagent-0.2.24
 
 [Files]
 Source: "..\..\libnetxms\Release\libnetxms.dll"; DestDir: "{app}\bin"; BeforeInstall: StopService; Flags: ignoreversion
-Source: "..\..\libnetxms\Release\libnetxms.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "..\..\libnetxms\Release\libnetxms.pdb"; DestDir: "{app}\bin"; BeforeInstall: StopService; Flags: ignoreversion
 Source: "..\..\libnxlp\Release\libnxlp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\libnxlp\Release\libnxlp.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\core\Release\nxagentd.exe"; DestDir: "{app}\bin"; Flags: ignoreversion

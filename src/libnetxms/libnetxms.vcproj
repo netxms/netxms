@@ -536,10 +536,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\nxconfig.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\include\nxcpapi.h"
 				>
 			</File>

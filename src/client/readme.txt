@@ -1,5 +1,6 @@
 Source tree layout for client components:
 
+console		New portable console based on wxWidgets
 nxalarm		Command line tool for managing alarms
 nxevent		Command line tool for sending events to server
 nxlexer		Lexer for Scintilla (used both by nxcon and nxmc)

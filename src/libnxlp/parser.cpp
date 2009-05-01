@@ -118,7 +118,7 @@ LogParser::~LogParser()
 
 
 //
-// Trace
+// trace(
 //
 
 void LogParser::trace(int level, const TCHAR *format, ...)
