@@ -214,6 +214,16 @@ static BOOL CheckDataDir(void)
 			return FALSE;
 		}
 
+	// Create directory for map background images if it doesn't exist
+	strcpy(szBuffer, g_szDataDir);
+	strcat(szBuffer, DDIR_BACKGROUNDS);
+	if (MKDIR(szBuffer) == -1)
+		if (errno != EEXIST)
+		{
+			nxlog_write(MSG_ERROR_CREATING_DATA_DIR, EVENTLOG_ERROR_TYPE, "s", szBuffer);
+			return FALSE;
+		}
+
 #undef MKDIR
 
 	return TRUE;
@@ -375,7 +385,7 @@ static BOOL IsNetxmsdProcess(DWORD dwPID)
 // Database event handler
 //
 
-static void DBEventHandler(DWORD dwEvent, TCHAR *pszData)
+static void DBEventHandler(DWORD dwEvent, const TCHAR *pszArg1, const TCHAR *pszArg2)
 {
 	if (!(g_dwFlags & AF_SERVER_INITIALIZED))
 		return;     // Don't try to do anything if server is not ready yet
@@ -391,6 +401,9 @@ static void DBEventHandler(DWORD dwEvent, TCHAR *pszData)
 			PostEvent(EVENT_DB_CONNECTION_RESTORED, g_dwMgmtNode, NULL);
 			g_dwFlags &= ~AF_DB_CONNECTION_LOST;
 			NotifyClientSessions(NX_NOTIFY_DBCONN_STATUS, TRUE);
+			break;
+		case DBEVENT_QUERY_FAILED:
+			PostEvent(EVENT_DB_QUERY_FAILED, g_dwMgmtNode, "ss", pszArg1, pszArg2);
 			break;
 		default:
 			break;

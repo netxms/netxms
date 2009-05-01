@@ -133,7 +133,11 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
          char *pszMsg, *pszTag, szQuery[2048];
 
          pszMsg = EncodeSQLString(pEvent->Message());
+			if (_tcslen(pszMsg) > (MAX_EVENT_MSG_LENGTH - 1))
+				pszMsg[MAX_EVENT_MSG_LENGTH - 1] = 0;
          pszTag = EncodeSQLString(pEvent->UserTag());
+			if (_tcslen(pszTag) > (MAX_USERTAG_LENGTH - 1))
+				pszTag[MAX_USERTAG_LENGTH - 1] = 0;
          snprintf(szQuery, 2048, "INSERT INTO event_log (event_id,event_code,event_timestamp,"
                                  "event_source,event_severity,event_message,root_event_id,user_tag) "
                                  "VALUES (" INT64_FMT ",%d," TIME_T_FMT ",%d,%d,'%s'," INT64_FMT ",'%s')", 
@@ -148,19 +152,19 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       // Send event to all connected clients
       EnumerateClientSessions(BroadcastEvent, pEvent);
 
-      // Write event information to screen if event debugging is on
-      if (IsStandalone() && (g_nDebugLevel >= 5))
+      // Write event information to debug
+      if (g_nDebugLevel >= 5)
       {
          NetObj *pObject = FindObjectById(pEvent->SourceId());
          if (pObject == NULL)
             pObject = g_pEntireNet;
-         printf("EVENT %d (F:0x%04X S:%d%s) FROM %s: %s\n", pEvent->Code(), 
-                pEvent->Flags(), pEvent->Severity(),
-                (pEvent->GetRootId() == 0) ? "" : " CORRELATED",
-                pObject->Name(), pEvent->Message());
+         DbgPrintf(5, _T("EVENT %d (F:0x%04X S:%d%s) FROM %s: %s"), pEvent->Code(), 
+                   pEvent->Flags(), pEvent->Severity(),
+                   (pEvent->GetRootId() == 0) ? "" : " CORRELATED",
+                   pObject->Name(), pEvent->Message());
       }
 
-      // Pass event through event processing policy
+      // Pass event through event processing policy if it is not correlated
       if (pEvent->GetRootId() == 0)
          g_pEventPolicy->ProcessEvent(pEvent);
 

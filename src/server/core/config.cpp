@@ -1,7 +1,7 @@
 /* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -128,6 +128,20 @@ BOOL NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int 
 
 
 //
+// Callback for configuration variables change
+//
+
+static void OnConfigVariableChange(BOOL isCLOB, const TCHAR *name, const TCHAR *value)
+{
+	// Restart syslog parser if configuration was changed
+	if (isCLOB && !_tcscmp(name, _T("SyslogParser")))
+	{
+		ReinitializeSyslogParser();
+	}
+}
+
+
+//
 // Read string value from configuration table
 //
 
@@ -228,7 +242,7 @@ BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, 
 {
    DB_RESULT hResult;
    TCHAR *pszEscValue, szQuery[1024];
-   BOOL bVarExist = FALSE;
+   BOOL bVarExist = FALSE, success;
 
    if (_tcslen(szVar) > 127)
       return FALSE;
@@ -257,7 +271,10 @@ BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, 
                                 _T("need_server_restart) VALUES ('%s','%s',%d,%d)"),
                  szVar, pszEscValue, isVisible, needRestart);
    free(pszEscValue);
-   return DBQuery(g_hCoreDB, szQuery);
+   success = DBQuery(g_hCoreDB, szQuery);
+	if (success)
+		OnConfigVariableChange(FALSE, szVar, szValue);
+	return success;
 }
 
 
@@ -379,5 +396,8 @@ BOOL NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *var, const TCHAR *value, BOO
 
 	free(query);
 	free(escValue);
+
+	if (success)
+		OnConfigVariableChange(TRUE, var, value);
 	return success;
 }

@@ -27,6 +27,9 @@
 // Externals
 //
 
+extern DWORD g_nxslNumSituationFunctions;
+extern NXSL_ExtFunction g_nxslSituationFunctions[];
+
 void RegisterDCIFunctions(NXSL_Environment *pEnv);
 
 
@@ -86,4 +89,5 @@ NXSL_ServerEnv::NXSL_ServerEnv()
 	SetLibrary(g_pScriptLibrary);
 	RegisterFunctionSet(sizeof(m_nxslServerFunctions) / sizeof(NXSL_ExtFunction), m_nxslServerFunctions);
 	RegisterDCIFunctions(this);
+	RegisterFunctionSet(g_nxslNumSituationFunctions, g_nxslSituationFunctions);
 }

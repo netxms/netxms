@@ -51,6 +51,7 @@ struct QUEUED_SYSLOG_MESSAGE
 static QWORD m_qwMsgId = 1;
 static Queue *m_pSyslogQueue = NULL;
 static LogParser *m_parser = NULL;
+static MUTEX m_mutexParserAccess = INVALID_MUTEX_HANDLE;
 
 
 //
@@ -304,10 +305,12 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
       // Send message to all connected clients
       EnumerateClientSessions(BroadcastSyslogMessage, &record);
 
+		MutexLock(m_mutexParserAccess, INFINITE);
 		if ((record.dwSourceObject != 0) && (m_parser != NULL))
 		{
-			m_parser->MatchLine(record.szMessage, record.dwSourceObject);
+			m_parser->matchLine(record.szMessage, record.dwSourceObject);
 		}
+		MutexUnlock(m_mutexParserAccess);
    }
 }
 
@@ -381,18 +384,51 @@ static void SyslogParserCallback(DWORD event, const char *line, int paramCount,
 // Event name resolver
 //
 
-static BOOL EventNameResolver(const TCHAR *name, DWORD *code)
+static bool EventNameResolver(const TCHAR *name, DWORD *code)
 {
 	EVENT_TEMPLATE *event;
-	BOOL success = FALSE;
+	bool success = false;
 
 	event = FindEventTemplateByName(name);
 	if (event != NULL)
 	{
 		*code = event->dwCode;
-		success = TRUE;
+		success = true;
 	}
 	return success;
+}
+
+
+//
+// Create syslog parser from config
+//
+
+static void CreateParserFromConfig()
+{
+	TCHAR *xml;
+
+	MutexLock(m_mutexParserAccess, INFINITE);
+	delete_and_null(m_parser);
+	xml = ConfigReadCLOB(_T("SyslogParser"), _T("<parser></parser>"));
+	if (xml != NULL)
+	{
+		TCHAR parseError[256];
+
+		m_parser = new LogParser;
+		m_parser->setEventNameResolver(EventNameResolver);
+		if (m_parser->createFromXml(xml, -1, parseError, 256))
+		{
+			m_parser->setCallback(SyslogParserCallback);
+			DbgPrintf(3, _T("syslogd: parser successfully created from config"));
+		}
+		else
+		{
+			delete_and_null(m_parser);
+			nxlog_write(MSG_SYSLOG_PARSER_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", parseError);
+		}
+		free(xml);
+	}
+	MutexUnlock(m_mutexParserAccess);
 }
 
 
@@ -411,7 +447,6 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    THREAD hProcessingThread;
    fd_set rdfs;
    struct timeval tv;
-	TCHAR *xml;
 
    // Determine first available message id
    hResult = DBSelect(g_hCoreDB, _T("SELECT max(msg_id) FROM syslog"));
@@ -454,24 +489,8 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
 	nxlog_write(MSG_LISTENING_FOR_SYSLOG, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(addr.sin_addr.s_addr), nPort);
 
 	// Create message parser
-	xml = ConfigReadCLOB(_T("SyslogParser"), _T("<parser></parser>"));
-	if (xml != NULL)
-	{
-		TCHAR parseError[256];
-
-		m_parser = new LogParser;
-		m_parser->SetEventNameResolver(EventNameResolver);
-		if (m_parser->CreateFromXML(xml, -1, parseError, 256))
-		{
-			m_parser->SetCallback(SyslogParserCallback);
-		}
-		else
-		{
-			delete_and_null(m_parser);
-			nxlog_write(MSG_SYSLOG_PARSER_INIT_FAILED, EVENTLOG_ERROR_TYPE, "s", parseError);
-		}
-		free(xml);
-	}
+	m_mutexParserAccess = MutexCreate();
+	CreateParserFromConfig();
 
    // Start processing thread
    m_pSyslogQueue = new Queue(1000, 100);
@@ -537,4 +556,16 @@ void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_LOG_RECORD *pRec)
    pMsg->SetVariable(dwId++, pRec->szHostName);
    pMsg->SetVariable(dwId++, pRec->szTag);
    pMsg->SetVariable(dwId++, pRec->szMessage);
+}
+
+
+//
+// Reinitialize parser on configuration change
+//
+
+void ReinitializeSyslogParser()
+{
+	if (m_mutexParserAccess == INVALID_MUTEX_HANDLE)
+		return;	// Syslog daemon not initialized
+	CreateParserFromConfig();
 }

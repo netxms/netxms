@@ -1216,6 +1216,9 @@ void ClientSession::ProcessingThread(void)
 			case CMD_GET_SERVER_FILE:
 				CALL_IN_NEW_THREAD(GetServerFile, pMsg);
 				break;
+			case CMD_TEST_DCI_TRANSFORMATION:
+				TestDCITransformation(pMsg);
+				break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -2117,8 +2120,17 @@ void ClientSession::SetConfigCLOB(CSCPMessage *pRequest)
 		value = pRequest->GetVariableStr(VID_VALUE);
 		if (value != NULL)
 		{
-			msg.SetVariable(VID_RCC, ConfigWriteCLOB(name, value, TRUE) ? RCC_SUCCESS : RCC_DB_FAILURE);
-			free(value);
+			if (ConfigWriteCLOB(name, value, TRUE))
+			{
+				msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				free(value);
+				WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_szWorkstation, 0,
+								  _T("Server configuration variable \"%s\" set to \"%s\""), name, value);
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+			}
 		}
 		else
 		{
@@ -2569,12 +2581,6 @@ void ClientSession::OnUserDBUpdate(int iCode, DWORD dwUserId, NETXMS_USER *pUser
       switch(iCode)
       {
          case USER_DB_CREATE:
-            msg.SetVariable(VID_USER_ID, dwUserId);
-            if (dwUserId & GROUP_FLAG)
-               msg.SetVariable(VID_USER_NAME, pGroup->szName);
-            else
-               msg.SetVariable(VID_USER_NAME, pUser->szName);
-            break;
          case USER_DB_MODIFY:
             if (dwUserId & GROUP_FLAG)
                FillGroupInfoMessage(&msg, pGroup);
@@ -10104,5 +10110,74 @@ void ClientSession::GetServerFile(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
+   SendMessage(&msg);
+}
+
+
+//
+// Test DCI transformation script
+//
+
+void ClientSession::TestDCITransformation(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *pObject;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+
+   // Get node id and check object class and access rights
+   pObject = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (pObject != NULL)
+   {
+      if (pObject->Type() == OBJECT_NODE)
+      {
+         if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         {
+				DCItem *dci;
+
+				dci = ((Node *)pObject)->GetItemById(pRequest->GetVariableLong(VID_DCI_ID));
+				if (dci != NULL)
+				{
+					BOOL success;
+					TCHAR *script, value[256], result[256];
+
+					script = pRequest->GetVariableStr(VID_SCRIPT);
+					if (script != NULL)
+					{
+						pRequest->GetVariableStr(VID_VALUE, value, sizeof(value) / sizeof(TCHAR));
+						success = dci->TestTransformation(script, value, result, sizeof(result) / sizeof(TCHAR));
+						free(script);
+						msg.SetVariable(VID_RCC, RCC_SUCCESS);
+						msg.SetVariable(VID_EXECUTION_STATUS, (WORD)success);
+						msg.SetVariable(VID_EXECUTION_RESULT, result);
+					}
+					else
+					{
+		            msg.SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
+					}
+				}
+				else
+				{
+	            msg.SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
+				}
+         }
+         else  // User doesn't have READ rights on object
+         {
+            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else     // Object is not a node
+      {
+         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
    SendMessage(&msg);
 }

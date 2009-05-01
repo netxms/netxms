@@ -49,6 +49,8 @@ Container::Container()
    m_pdwChildIdList = NULL;
    m_dwChildIdListSize = 0;
    m_dwCategory = 1;
+	m_bindFilter = NULL;
+	m_bindFilterSource = NULL;
 }
 
 
@@ -63,6 +65,8 @@ Container::Container(TCHAR *pszName, DWORD dwCategory)
    m_pdwChildIdList = NULL;
    m_dwChildIdListSize = 0;
    m_dwCategory = dwCategory;
+	m_bindFilter = NULL;
+	m_bindFilterSource = NULL;
    m_bIsHidden = TRUE;
 }
 
@@ -74,6 +78,8 @@ Container::Container(TCHAR *pszName, DWORD dwCategory)
 Container::~Container()
 {
    safe_free(m_pdwChildIdList);
+	safe_free(m_bindFilterSource);
+	delete m_bindFilter;
 }
 
 
@@ -92,7 +98,7 @@ BOOL Container::CreateFromDB(DWORD dwId)
    if (!LoadCommonProperties())
       return FALSE;
 
-   sprintf(szQuery, "SELECT category FROM containers WHERE id=%d", dwId);
+   sprintf(szQuery, "SELECT category,enable_auto_bind,auto_bind_filter FROM containers WHERE id=%d", dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -105,6 +111,20 @@ BOOL Container::CreateFromDB(DWORD dwId)
    }
 
    m_dwCategory = DBGetFieldULong(hResult, 0, 0);
+	if (DBGetFieldLong(hResult, 0, 1))
+	{
+		// Auto-bind enabled
+		m_bindFilterSource = DBGetField(hResult, 0, 2, NULL, 0);
+		if (m_bindFilterSource != NULL)
+		{
+			TCHAR error[256];
+
+			DecodeSQLString(m_bindFilterSource);
+			m_bindFilter = NXSLCompile(m_bindFilterSource, error, 256);
+			if (m_bindFilter == NULL)
+				nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
+		}
+	}
    DBFreeResult(hResult);
 
    // Load access list
@@ -138,9 +158,9 @@ BOOL Container::CreateFromDB(DWORD dwId)
 
 BOOL Container::SaveToDB(DB_HANDLE hdb)
 {
-   char szQuery[1024];
+   char szQuery[1024], *pszDynQuery, *pszEscScript;
    DB_RESULT hResult;
-   DWORD i;
+   DWORD i, len;
    BOOL bNewObject = TRUE;
 
    // Lock object's access
@@ -159,13 +179,18 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
    }
 
    // Form and execute INSERT or UPDATE query
+	pszEscScript = (m_bindFilterSource != NULL) ? EncodeSQLString(m_bindFilterSource) : _tcsdup(_T("#00"));
+	len = (DWORD)_tcslen(pszEscScript) + 256;
+	pszDynQuery = (TCHAR *)malloc(sizeof(TCHAR) * len);
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO containers (id,category,object_class) VALUES (%d,%d,%d)",
-              m_dwId, m_dwCategory, Type());
+      sprintf(pszDynQuery, "INSERT INTO containers (id,category,object_class,enable_auto_bind,auto_bind_filter) VALUES (%d,%d,%d,%d,'%s')",
+              m_dwId, m_dwCategory, Type(), (m_bindFilterSource != NULL) ? 1 : 0, pszEscScript);
    else
-      sprintf(szQuery, "UPDATE containers SET category=%d,object_class=%d WHERE id=%d",
-              m_dwCategory, Type(), m_dwId);
-   DBQuery(hdb, szQuery);
+      sprintf(pszDynQuery, "UPDATE containers SET category=%d,object_class=%d,enable_auto_bind=%d,auto_bind_filter='%s' WHERE id=%d",
+              m_dwCategory, Type(), (m_bindFilterSource != NULL) ? 1 : 0, pszEscScript, m_dwId);
+	free(pszEscScript);
+   DBQuery(hdb, pszDynQuery);
+	free(pszDynQuery);
 
    // Update members list
    sprintf(szQuery, "DELETE FROM container_members WHERE container_id=%d", m_dwId);
@@ -248,4 +273,79 @@ void Container::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);
    pMsg->SetVariable(VID_CATEGORY, m_dwCategory);
+	pMsg->SetVariable(VID_ENABLE_AUTO_BIND, (WORD)((m_bindFilterSource != NULL) ? 1 : 0));
+	pMsg->SetVariable(VID_AUTO_BIND_FILTER, CHECK_NULL_EX(m_bindFilterSource));
+}
+
+
+//
+// Modify object from message
+//
+
+DWORD Container::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+{
+   if (!bAlreadyLocked)
+      LockData();
+
+   // Change auto-bind filter
+	if (pRequest->GetVariableShort(VID_ENABLE_AUTO_BIND))
+	{
+		safe_free(m_bindFilterSource);
+		delete m_bindFilter;
+		m_bindFilterSource = pRequest->GetVariableStr(VID_AUTO_BIND_FILTER);
+		if (m_bindFilterSource != NULL)
+		{
+			TCHAR error[256];
+
+			m_bindFilter = NXSLCompile(m_bindFilterSource, error, 256);
+			if (m_bindFilter == NULL)
+				nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
+		}
+		else
+		{
+			m_bindFilter = NULL;
+		}
+	}
+	else
+	{
+		delete_and_null(m_bindFilter);
+		safe_free_and_null(m_bindFilterSource);
+	}
+
+   return NetObj::ModifyFromMessage(pRequest, TRUE);
+}
+
+
+//
+// Check if node should be placed into container
+//
+
+BOOL Container::IsSuitableForNode(Node *node)
+{
+	NXSL_ServerEnv *pEnv;
+	NXSL_Value *value;
+	BOOL result = FALSE;
+
+	LockData();
+	if (m_bindFilter != NULL)
+	{
+		pEnv = new NXSL_ServerEnv;
+		m_bindFilter->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
+		if (m_bindFilter->Run(pEnv, 0, NULL) == 0)
+		{
+			value = m_bindFilter->GetResult();
+			result = ((value != NULL) && (value->GetValueAsInt32() != 0));
+		}
+		else
+		{
+			TCHAR buffer[1024];
+
+			_sntprintf(buffer, 1024, _T("Container::%s::%d"), m_szName, m_dwId);
+			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), buffer,
+						 m_bindFilter->GetErrorText(), m_dwId);
+			nxlog_write(MSG_CONTAINER_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, m_bindFilter->GetErrorText());
+		}
+	}
+	UnlockData();
+	return result;
 }

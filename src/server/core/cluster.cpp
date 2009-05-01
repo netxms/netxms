@@ -161,7 +161,7 @@ BOOL Cluster::CreateFromDB(DWORD dwId)
 		// Load resources
 		if (bResult)
 		{
-			_stprintf(szQuery, _T("SELECT resource_id,resource_name,ip_addr FROM cluster_resources WHERE cluster_id=%d"), m_dwId);
+			_stprintf(szQuery, _T("SELECT resource_id,resource_name,ip_addr,current_owner FROM cluster_resources WHERE cluster_id=%d"), m_dwId);
 			hResult = DBSelect(g_hCoreDB, szQuery);
 			if (hResult != NULL)
 			{
@@ -175,7 +175,7 @@ BOOL Cluster::CreateFromDB(DWORD dwId)
 						DBGetField(hResult, i, 1, m_pResourceList[i].szName, MAX_DB_STRING);
 						DecodeSQLString(m_pResourceList[i].szName);
 						m_pResourceList[i].dwIpAddr = DBGetFieldIPAddr(hResult, i, 2);
-						m_pResourceList[i].dwCurrOwner = 0;
+						m_pResourceList[i].dwCurrOwner = DBGetFieldULong(hResult, i, 3);
 					}
 				}
 				DBFreeResult(hResult);
@@ -301,9 +301,10 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
 				for(i = 0; i < m_dwNumResources; i++)
 				{
 					pszEscName = EncodeSQLString(m_pResourceList[i].szName);
-					_stprintf(szQuery, _T("INSERT INTO cluster_resources (cluster_id,resource_id,resource_name,ip_addr) VALUES (%d,%d,'%s','%s')"),
+					_stprintf(szQuery, _T("INSERT INTO cluster_resources (cluster_id,resource_id,resource_name,ip_addr,current_owner) VALUES (%d,%d,'%s','%s',%d)"),
 								 m_dwId, m_pResourceList[i].dwId, pszEscName,
-								 IpToStr(m_pResourceList[i].dwIpAddr, szIpAddr));
+								 IpToStr(m_pResourceList[i].dwIpAddr, szIpAddr),
+								 m_pResourceList[i].dwCurrOwner);
 					free(pszEscName);
 					bResult = DBQuery(hdb, szQuery);
 					if (!bResult)
@@ -634,6 +635,7 @@ void Cluster::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 							 m_pResourceList[i].dwCurrOwner,
 							 (pObject != NULL) ? pObject->Name() : _T("<unknown>"));
 				m_pResourceList[i].dwCurrOwner = 0;
+				bModified = TRUE;
 			}
 		}
 		safe_free(pbResourceFound);

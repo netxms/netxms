@@ -435,7 +435,6 @@ src/nxcptest/nxcptest.vcproj -text
 src/nxlptest/nxlptest.vcproj -text
 src/nxscript/nxscript.vcproj -text
 src/server/core/isc.cpp -text
-src/server/core/nxcore.dsp eol=crlf
 src/server/core/nxcore.vcproj -text
 src/server/dbdrv/mssql/mssql.dsp eol=crlf
 src/server/dbdrv/mssql/mssql.vcproj -text

@@ -45,6 +45,8 @@ Template::Template()
    m_ppItems = NULL;
    m_dwDCILockStatus = INVALID_INDEX;
    m_dwVersion = 0x00010000;  // Initial version is 1.0
+	m_applyFilter = NULL;
+	m_applyFilterSource = NULL;
 }
 
 
@@ -60,6 +62,8 @@ Template::Template(const TCHAR *pszName)
    m_ppItems = NULL;
    m_dwDCILockStatus = INVALID_INDEX;
    m_dwVersion = 0x00010000;  // Initial version is 1.0
+	m_applyFilter = NULL;
+	m_applyFilterSource = NULL;
    m_bIsHidden = TRUE;
 }
 
@@ -71,6 +75,8 @@ Template::Template(const TCHAR *pszName)
 Template::~Template()
 {
    DestroyItems();
+	delete m_applyFilter;
+	safe_free(m_applyFilterSource);
 }
 
 
@@ -107,7 +113,7 @@ BOOL Template::CreateFromDB(DWORD dwId)
    if (!LoadCommonProperties())
       return FALSE;
 
-   _stprintf(szQuery, _T("SELECT version FROM templates WHERE id=%d"), dwId);
+   _stprintf(szQuery, _T("SELECT version,enable_auto_apply,apply_filter FROM templates WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -120,6 +126,19 @@ BOOL Template::CreateFromDB(DWORD dwId)
    }
 
    m_dwVersion = DBGetFieldULong(hResult, 0, 0);
+	if (DBGetFieldLong(hResult, 0, 1))
+	{
+		m_applyFilterSource = DBGetField(hResult, 0, 2, NULL, 0);
+		if (m_applyFilterSource != NULL)
+		{
+			TCHAR error[256];
+
+			DecodeSQLString(m_applyFilterSource);
+			m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256);
+			if (m_applyFilter == NULL)
+				nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
+		}
+	}
    DBFreeResult(hResult);
 
    // Load DCI and access list
@@ -172,9 +191,9 @@ BOOL Template::CreateFromDB(DWORD dwId)
 
 BOOL Template::SaveToDB(DB_HANDLE hdb)
 {
-   TCHAR szQuery[1024];
+   TCHAR *pszQuery, *pszEscScript, query2[256];
    DB_RESULT hResult;
-   DWORD i;
+   DWORD i, len;
    BOOL bNewObject = TRUE;
 
    // Lock object's access
@@ -183,8 +202,8 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
    SaveCommonProperties(hdb);
 
    // Check for object's existence in database
-   _stprintf(szQuery, _T("SELECT id FROM templates WHERE id=%d"), m_dwId);
-   hResult = DBSelect(hdb, szQuery);
+   _sntprintf(query2, 128, _T("SELECT id FROM templates WHERE id=%d"), m_dwId);
+   hResult = DBSelect(hdb, query2);
    if (hResult != 0)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -193,22 +212,27 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
    }
 
    // Form and execute INSERT or UPDATE query
+	pszEscScript = (m_applyFilterSource != NULL) ? EncodeSQLString(m_applyFilterSource) : _tcsdup(_T("#00"));
+	len = _tcslen(pszEscScript) + 256;
+	pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * len);
    if (bNewObject)
-      sprintf(szQuery, "INSERT INTO templates (id,version) VALUES (%d,%d)",
-              m_dwId, m_dwVersion);
+      _sntprintf(pszQuery, len, _T("INSERT INTO templates (id,version,enable_auto_apply,apply_filter) VALUES (%d,%d,%d,'%s')"),
+		           m_dwId, m_dwVersion, (m_applyFilterSource != NULL) ? 1 : 0, pszEscScript);
    else
-      sprintf(szQuery, "UPDATE templates SET version=%d WHERE id=%d",
-              m_dwVersion, m_dwId);
-   DBQuery(hdb, szQuery);
+      _sntprintf(pszQuery, len, _T("UPDATE templates SET version=%d,enable_auto_apply=%d,apply_filter='%s' WHERE id=%d"),
+                 m_dwVersion, (m_applyFilterSource != NULL) ? 1 : 0, pszEscScript, m_dwId);
+	free(pszEscScript);
+   DBQuery(hdb, pszQuery);
+	free(pszQuery);
 
    // Update members list
-   sprintf(szQuery, "DELETE FROM dct_node_map WHERE template_id=%d", m_dwId);
-   DBQuery(hdb, szQuery);
+   _sntprintf(query2, 256, _T("DELETE FROM dct_node_map WHERE template_id=%d"), m_dwId);
+   DBQuery(hdb, query2);
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
-      sprintf(szQuery, "INSERT INTO dct_node_map (template_id,node_id) VALUES (%d,%d)", m_dwId, m_pChildList[i]->Id());
-      DBQuery(hdb, szQuery);
+      _sntprintf(query2, 256, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (%d,%d)"), m_dwId, m_pChildList[i]->Id());
+      DBQuery(hdb, query2);
    }
    UnlockChildList();
 
@@ -266,13 +290,15 @@ BOOL Template::DeleteFromDB(void)
 
 void Template::LoadItemsFromDB(void)
 {
-   char szQuery[256];
+   TCHAR szQuery[512];
    DB_RESULT hResult;
 
-   sprintf(szQuery, "SELECT item_id,name,source,datatype,polling_interval,retention_time,"
-                    "status,delta_calculation,transformation,template_id,description,"
-                    "instance,template_item_id,adv_schedule,all_thresholds,resource_id,"
-                    "proxy_node FROM items WHERE node_id=%d", m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery),
+	           _T("SELECT item_id,name,source,datatype,polling_interval,retention_time,")
+              _T("status,delta_calculation,transformation,template_id,description,")
+              _T("instance,template_item_id,adv_schedule,all_thresholds,resource_id,")
+              _T("proxy_node,base_units,unit_multiplier,custom_units_name,")
+	           _T("perftab_settings FROM items WHERE node_id=%d"), m_dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
 
    if (hResult != 0)
@@ -630,6 +656,8 @@ void Template::CreateMessage(CSCPMessage *pMsg)
 {
    NetObj::CreateMessage(pMsg);
    pMsg->SetVariable(VID_TEMPLATE_VERSION, m_dwVersion);
+	pMsg->SetVariable(VID_AUTO_APPLY, (WORD)((m_applyFilterSource != NULL) ? 1 : 0));
+	pMsg->SetVariable(VID_APPLY_FILTER, CHECK_NULL_EX(m_applyFilterSource));
 }
 
 
@@ -645,6 +673,31 @@ DWORD Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    // Change template version
    if (pRequest->IsVariableExist(VID_TEMPLATE_VERSION))
       m_dwVersion = pRequest->GetVariableLong(VID_TEMPLATE_VERSION);
+
+   // Change apply filter
+	if (pRequest->GetVariableShort(VID_AUTO_APPLY))
+	{
+		safe_free(m_applyFilterSource);
+		delete m_applyFilter;
+		m_applyFilterSource = pRequest->GetVariableStr(VID_APPLY_FILTER);
+		if (m_applyFilterSource != NULL)
+		{
+			TCHAR error[256];
+
+			m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256);
+			if (m_applyFilter == NULL)
+				nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
+		}
+		else
+		{
+			m_applyFilter = NULL;
+		}
+	}
+	else
+	{
+		delete_and_null(m_applyFilter);
+		safe_free_and_null(m_applyFilterSource);
+	}
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
@@ -796,7 +849,14 @@ void Template::CreateNXMPRecord(String &str)
       m_ppItems[i]->CreateNXMPRecord(str);
    UnlockData();
 
-   str += _T("\t\t}\n\t}\n");
+   str += _T("\t\t}\n");
+	if (m_applyFilterSource != NULL)
+	{
+		str += _T("\t\tAPPLY_FILTER=\"");
+		str += m_applyFilterSource;
+		str += _T("\";\n");
+	}
+	str += _T("\n\t}\n");
 }
 
 
@@ -949,4 +1009,39 @@ void Template::PrepareForDeletion(void)
 		UnlockChildList();
 	}
 	NetObj::PrepareForDeletion();
+}
+
+
+//
+// Check if template should be automatically applied to node
+//
+
+BOOL Template::IsApplicable(Node *node)
+{
+	NXSL_ServerEnv *pEnv;
+	NXSL_Value *value;
+	BOOL result = FALSE;
+
+	LockData();
+	if (m_applyFilter != NULL)
+	{
+		pEnv = new NXSL_ServerEnv;
+		m_applyFilter->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
+		if (m_applyFilter->Run(pEnv, 0, NULL) == 0)
+		{
+			value = m_applyFilter->GetResult();
+			result = ((value != NULL) && (value->GetValueAsInt32() != 0));
+		}
+		else
+		{
+			TCHAR buffer[1024];
+
+			_sntprintf(buffer, 1024, _T("Template::%s::%d"), m_szName, m_dwId);
+			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), buffer,
+						 m_applyFilter->GetErrorText(), m_dwId);
+			nxlog_write(MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, m_applyFilter->GetErrorText());
+		}
+	}
+	UnlockData();
+	return result;
 }

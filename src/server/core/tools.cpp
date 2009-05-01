@@ -63,39 +63,13 @@ void GetSysInfoStr(char *pszBuffer, int nMaxSize)
 {
 #ifdef _WIN32
    DWORD dwSize;
-   char computerName[MAX_COMPUTERNAME_LENGTH + 1], osVersion[256];
-   SYSTEM_INFO sysInfo;
-   OSVERSIONINFO versionInfo;
+   char computerName[MAX_COMPUTERNAME_LENGTH + 1] = "localhost", osVersion[256] = "unknown";
 
    dwSize = MAX_COMPUTERNAME_LENGTH + 1;
    GetComputerName(computerName, &dwSize);
 
-   versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-   GetVersionEx(&versionInfo);
-   GetSystemInfo(&sysInfo);
-
-   switch(versionInfo.dwPlatformId)
-   {
-      case VER_PLATFORM_WIN32_WINDOWS:
-         sprintf(osVersion,"Windows %s-%s",versionInfo.dwMinorVersion == 0 ? "95" :
-            (versionInfo.dwMinorVersion == 10 ? "98" :
-               (versionInfo.dwMinorVersion == 90 ? "Me" : "Unknown")),versionInfo.szCSDVersion);
-         break;
-      case VER_PLATFORM_WIN32_NT:
-         if (versionInfo.dwMajorVersion != 5)
-            sprintf(osVersion,"Windows NT %d.%d %s",versionInfo.dwMajorVersion,
-                    versionInfo.dwMinorVersion,versionInfo.szCSDVersion);
-         else      // Windows 2000, Windows XP or Windows Server 2003
-            sprintf(osVersion,"Windows %s%s%s",versionInfo.dwMinorVersion == 0 ? "2000" : 
-                    (versionInfo.dwMinorVersion == 1 ? "XP" : "Server 2003"),
-                       versionInfo.szCSDVersion[0] == 0 ? "" : " ", versionInfo.szCSDVersion);
-         break;
-      default:
-         strcpy(osVersion,"Windows [Unknown Version]");
-         break;
-   }
-
-   _snprintf(pszBuffer, nMaxSize, "%s %s Build %d", computerName, osVersion, versionInfo.dwBuildNumber);
+	GetWindowsVersionString(osVersion, 256);
+   _snprintf(pszBuffer, nMaxSize, "%s %s", computerName, osVersion);
 #else
 # ifdef HAVE_SYS_UTSNAME_H
 	struct utsname uName;

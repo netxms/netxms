@@ -123,6 +123,21 @@ void CheckForMgmtNode(void)
       }
       DestroyInterfaceList(pIfList);
    }
+
+	// Check that other nodes does not have NF_IS_LOCAL_MGMT flag set
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+   for(i = 0; i < (int)g_dwIdIndexSize; i++)
+   {
+      if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE) &&
+		    (g_dwMgmtNode != g_pIndexById[i].dwKey) &&
+			 (((Node *)g_pIndexById[i].pObject)->IsLocalManagement()))
+      {
+			((Node *)g_pIndexById[i].pObject)->ClearLocalMgmtFlag();
+         DbgPrintf(2, _T("Incorrectly set flag NF_IS_LOCAL_MGMT cleared from node %s [%d]"),
+			          ((Node *)g_pIndexById[i].pObject)->Name(), ((Node *)g_pIndexById[i].pObject)->Id());
+      }
+   }
+   RWLockUnlock(g_rwlockIdIndex);
 }
 
 

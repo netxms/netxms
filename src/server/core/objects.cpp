@@ -650,7 +650,7 @@ DWORD FindLocalMgmtNode(void)
 BOOL LoadObjects(void)
 {
    DB_RESULT hResult;
-   DWORD i, j, dwNumRows;
+   DWORD i, dwNumRows;
    DWORD dwId;
    Template *pTemplate;
    char szQuery[256];
@@ -1016,8 +1016,8 @@ BOOL LoadObjects(void)
          ((NetObj *)g_pZoneIndexByGUID[i].pObject)->CalculateCompoundStatus();
    }
 
-	// Apply system templates
-   DbgPrintf(2, "Applying system templates...");
+	// Validate system templates and create when needed
+   DbgPrintf(2, "Validating system templates...");
 
 	pTemplate = FindTemplateByName(_T("@System.Agent"));
 	if (pTemplate == NULL)
@@ -1031,14 +1031,6 @@ BOOL LoadObjects(void)
 		pTemplate->Unhide();
 	}
 	pTemplate->ValidateSystemTemplate();
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-	for(j = 0; j < g_dwIdIndexSize; j++)
-		if (((NetObj *)g_pIndexById[j].pObject)->Type() == OBJECT_NODE)
-		{
-			if (((Node *)g_pIndexById[j].pObject)->IsNativeAgent())
-				pTemplate->ApplyToNode((Node *)g_pIndexById[j].pObject);
-		}
-   RWLockUnlock(g_rwlockIdIndex);
 
 	pTemplate = FindTemplateByName(_T("@System.SNMP"));
 	if (pTemplate == NULL)
@@ -1052,14 +1044,6 @@ BOOL LoadObjects(void)
 		pTemplate->Unhide();
 	}
 	pTemplate->ValidateSystemTemplate();
-   RWLockReadLock(g_rwlockIdIndex, INFINITE);
-	for(j = 0; j < g_dwIdIndexSize; j++)
-		if (((NetObj *)g_pIndexById[j].pObject)->Type() == OBJECT_NODE)
-		{
-			if (((Node *)g_pIndexById[j].pObject)->IsSNMPSupported())
-				pTemplate->ApplyToNode((Node *)g_pIndexById[j].pObject);
-		}
-   RWLockUnlock(g_rwlockIdIndex);
 
    return TRUE;
 }

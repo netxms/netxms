@@ -1,7 +1,7 @@
 /* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -170,6 +170,10 @@ DCItem::DCItem()
    m_dwErrorCount = 0;
 	m_dwResourceId = 0;
 	m_dwProxyNode = 0;
+	m_nBaseUnits = DCI_BASEUNITS_OTHER;
+	m_nMultiplier = 1;
+	m_pszCustomUnitName = NULL;
+	m_pszPerfTabSettings = NULL;
 }
 
 
@@ -209,6 +213,10 @@ DCItem::DCItem(const DCItem *pSrc)
    m_iAdvSchedule = pSrc->m_iAdvSchedule;
 	m_dwResourceId = pSrc->m_dwResourceId;
 	m_dwProxyNode = pSrc->m_dwProxyNode;
+	m_nBaseUnits = pSrc->m_nBaseUnits;
+	m_nMultiplier = pSrc->m_nMultiplier;
+	m_pszCustomUnitName = (pSrc->m_pszCustomUnitName != NULL) ? _tcsdup(pSrc->m_pszCustomUnitName) : NULL;
+	m_pszPerfTabSettings = (pSrc->m_pszPerfTabSettings != NULL) ? _tcsdup(pSrc->m_pszPerfTabSettings) : NULL;
 
    // Copy schedules
    m_dwNumSchedules = pSrc->m_dwNumSchedules;
@@ -234,7 +242,8 @@ DCItem::DCItem(const DCItem *pSrc)
 // Assumes that fields in SELECT query are in following order:
 // item_id,name,source,datatype,polling_interval,retention_time,status,
 // delta_calculation,transformation,template_id,description,instance,
-// template_item_id,adv_schedule,all_thresholds,resource_id,proxy_node
+// template_item_id,adv_schedule,all_thresholds,resource_id,proxy_node,
+// base_units,unit_multiplier,custom_units_name,perftab_settings
 //
 
 DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
@@ -280,6 +289,14 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_iProcessAllThresholds = (BYTE)DBGetFieldLong(hResult, iRow, 14);
 	m_dwResourceId = DBGetFieldULong(hResult, iRow, 15);
 	m_dwProxyNode = DBGetFieldULong(hResult, iRow, 16);
+	m_nBaseUnits = DBGetFieldLong(hResult, iRow, 17);
+	m_nMultiplier = DBGetFieldLong(hResult, iRow, 18);
+	m_pszCustomUnitName = DBGetField(hResult, iRow, 19, NULL, 0);
+	if (m_pszCustomUnitName != NULL)
+		DecodeSQLString(m_pszCustomUnitName);
+	m_pszPerfTabSettings = DBGetField(hResult, iRow, 20, NULL, 0);
+	if (m_pszPerfTabSettings != NULL)
+		DecodeSQLString(m_pszPerfTabSettings);
 
    if (m_iAdvSchedule)
    {
@@ -367,6 +384,10 @@ DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType,
    m_dwErrorCount = 0;
 	m_dwResourceId = 0;
 	m_dwProxyNode = 0;
+	m_nBaseUnits = DCI_BASEUNITS_OTHER;
+	m_nMultiplier = 1;
+	m_pszCustomUnitName = NULL;
+	m_pszPerfTabSettings = NULL;
 
    UpdateCacheSize();
 }
@@ -388,6 +409,8 @@ DCItem::~DCItem()
    safe_free(m_ppScheduleList);
    safe_free(m_pszScript);
    delete m_pScript;
+	safe_free(m_pszCustomUnitName);
+	safe_free(m_pszPerfTabSettings);
    ClearCache();
    MutexDestroy(m_hMutex);
 }
@@ -450,7 +473,8 @@ BOOL DCItem::LoadThresholdsFromDB(void)
 
 BOOL DCItem::SaveToDB(DB_HANDLE hdb)
 {
-   TCHAR *pszEscName, *pszEscScript, *pszEscDescr, *pszEscInstance, *pszQuery;
+   TCHAR *pszEscName, *pszEscScript, *pszEscDescr, *pszEscInstance;
+	TCHAR *pszEscCustomUnitName, *pszEscPerfTabSettings, *pszQuery;
    DB_RESULT hResult;
    BOOL bNewObject = TRUE, bResult;
 
@@ -460,7 +484,9 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
    pszEscScript = EncodeSQLString(CHECK_NULL_EX(m_pszScript));
    pszEscDescr = EncodeSQLString(m_szDescription);
    pszEscInstance = EncodeSQLString(m_szInstance);
-   pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * (_tcslen(pszEscScript) + 2048));
+	pszEscCustomUnitName = EncodeSQLString(CHECK_NULL_EX(m_pszCustomUnitName));
+	pszEscPerfTabSettings = EncodeSQLString(CHECK_NULL_EX(m_pszPerfTabSettings));
+   pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * (_tcslen(pszEscScript) + _tcslen(pszEscPerfTabSettings) + 2048));
 
    // Check for object's existence in database
    sprintf(pszQuery, "SELECT item_id FROM items WHERE item_id=%d", m_dwId);
@@ -477,31 +503,37 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
       sprintf(pszQuery, "INSERT INTO items (item_id,node_id,template_id,name,description,source,"
                         "datatype,polling_interval,retention_time,status,delta_calculation,"
                         "transformation,instance,template_item_id,adv_schedule,"
-                        "all_thresholds,resource_id,proxy_node) VALUES "
-						 	   "(%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d)",
+                        "all_thresholds,resource_id,proxy_node,base_units,unit_multiplier,"
+								"custom_units_name,perftab_settings) VALUES "
+						 	   "(%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,%d,'%s','%s',%d,%d,%d,%d,%d,%d,%d,'%s','%s')",
                         m_dwId, (m_pNode == NULL) ? (DWORD)0 : m_pNode->Id(), m_dwTemplateId,
                         pszEscName, pszEscDescr, m_iSource, m_iDataType, m_iPollingInterval,
                         m_iRetentionTime, m_iStatus, m_iDeltaCalculation,
                         pszEscScript, pszEscInstance, m_dwTemplateItemId,
                         m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId,
-							   m_dwProxyNode);
+							   m_dwProxyNode, m_nBaseUnits, m_nMultiplier, pszEscCustomUnitName,
+								pszEscPerfTabSettings);
    else
       sprintf(pszQuery, "UPDATE items SET node_id=%d,template_id=%d,name='%s',source=%d,"
                         "datatype=%d,polling_interval=%d,retention_time=%d,status=%d,"
                         "delta_calculation=%d,transformation='%s',description='%s',"
                         "instance='%s',template_item_id=%d,adv_schedule=%d,"
-                        "all_thresholds=%d,resource_id=%d,proxy_node=%d WHERE item_id=%d",
+                        "all_thresholds=%d,resource_id=%d,proxy_node=%d,base_units=%d,"
+								"unit_multiplier=%d,custom_units_name='%s',perftab_settings='%s' WHERE item_id=%d",
                         (m_pNode == NULL) ? 0 : m_pNode->Id(), m_dwTemplateId,
                         pszEscName, m_iSource, m_iDataType, m_iPollingInterval,
                         m_iRetentionTime, m_iStatus, m_iDeltaCalculation, pszEscScript,
                         pszEscDescr, pszEscInstance, m_dwTemplateItemId,
                         m_iAdvSchedule, m_iProcessAllThresholds, m_dwResourceId,
-							   m_dwProxyNode, m_dwId);
+							   m_dwProxyNode, m_nBaseUnits, m_nMultiplier, pszEscCustomUnitName,
+								pszEscPerfTabSettings, m_dwId);
    bResult = DBQuery(hdb, pszQuery);
    free(pszEscName);
    free(pszEscScript);
    free(pszEscDescr);
    free(pszEscInstance);
+	free(pszEscCustomUnitName);
+	free(pszEscPerfTabSettings);
 
    // Save thresholds
    if (bResult)
@@ -658,6 +690,12 @@ void DCItem::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_ALL_THRESHOLDS, (WORD)m_iProcessAllThresholds);
 	pMsg->SetVariable(VID_RESOURCE_ID, m_dwResourceId);
 	pMsg->SetVariable(VID_PROXY_NODE, m_dwProxyNode);
+	pMsg->SetVariable(VID_BASE_UNITS, (WORD)m_nBaseUnits);
+	pMsg->SetVariable(VID_MULTIPLIER, (DWORD)m_nMultiplier);
+	if (m_pszCustomUnitName != NULL)
+		pMsg->SetVariable(VID_CUSTOM_UNITS_NAME, m_pszCustomUnitName);
+	if (m_pszPerfTabSettings != NULL)
+		pMsg->SetVariable(VID_PERFTAB_SETTINGS, m_pszPerfTabSettings);
    pMsg->SetVariable(VID_NUM_THRESHOLDS, m_dwNumThresholds);
    for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < m_dwNumThresholds; i++, dwId++)
    {
@@ -723,6 +761,12 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
    pszStr = pMsg->GetVariableStr(VID_DCI_FORMULA);
    SetTransformationScript(pszStr);
    free(pszStr);
+	m_nBaseUnits = pMsg->GetVariableShort(VID_BASE_UNITS);
+	m_nMultiplier = (int)pMsg->GetVariableLong(VID_MULTIPLIER);
+	safe_free(m_pszCustomUnitName);
+	m_pszCustomUnitName = pMsg->GetVariableStr(VID_CUSTOM_UNITS_NAME);
+	safe_free(m_pszPerfTabSettings);
+	m_pszPerfTabSettings = pMsg->GetVariableStr(VID_PERFTAB_SETTINGS);
 
    // Update schedules
    for(i = 0; i < m_dwNumSchedules; i++)
@@ -1940,4 +1984,62 @@ void DCItem::ExpandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 		free(macro);
 	}
 	nx_strncpy(dst, (TCHAR *)temp, dstLen);
+}
+
+
+//
+// Test DCI's transformation script
+// Runs 
+//
+
+BOOL DCItem::TestTransformation(const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize)
+{
+	BOOL success = FALSE;
+	NXSL_Program *pScript;
+
+	pScript = NXSLCompile(script, buffer, bufSize);
+   if (pScript != NULL)
+   {
+      NXSL_Value *pValue;
+      NXSL_ServerEnv *pEnv;
+
+      pValue = new NXSL_Value(value);
+      pEnv = new NXSL_ServerEnv;
+      pScript->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+	
+	 	Lock();
+		if (pScript->Run(pEnv, 1, &pValue) == 0)
+      {
+         pValue = pScript->GetResult();
+         if (pValue != NULL)
+         {
+				if (pValue->IsObject())
+				{
+					nx_strncpy(buffer, _T("(object)"), bufSize);
+				}
+				else if (pValue->IsArray())
+				{
+					nx_strncpy(buffer, _T("(array)"), bufSize);
+				}
+				else
+				{
+					TCHAR *strval;
+
+					strval = pValue->GetValueAsCString();
+					nx_strncpy(buffer, CHECK_NULL(strval), bufSize);
+				}
+			}
+			else
+			{
+				nx_strncpy(buffer, _T("(null)"), bufSize);
+			}
+			success = TRUE;
+      }
+      else
+      {
+			nx_strncpy(buffer, pScript->GetErrorText(), bufSize);
+      }
+		Unlock();
+   }
+	return success;
 }

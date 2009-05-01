@@ -418,12 +418,15 @@ DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
             {
                if (g_pUserList[i].wFlags & UF_CHANGE_PASSWORD)
                {
-                  if (g_pUserList[i].nGraceLogins <= 0)
-                  {
-                     dwResult = RCC_NO_GRACE_LOGINS;
-                     break;
-                  }
-                  g_pUserList[i].nGraceLogins--;
+						if (g_pUserList[i].dwId != 0)	// Do not check grace logins for built-in admin user
+						{
+							if (g_pUserList[i].nGraceLogins <= 0)
+							{
+								dwResult = RCC_NO_GRACE_LOGINS;
+								break;
+							}
+							g_pUserList[i].nGraceLogins--;
+						}
                   *pbChangePasswd = TRUE;
                }
                else

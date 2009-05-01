@@ -983,7 +983,6 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
    char szBuffer[4096];
 	Cluster *pCluster;
 	SNMP_Transport *pTransport;
-	Template *pTemplate;
    BOOL bHasChanges = FALSE;
 
    SetPollerInfo(nPoller, "wait for lock");
@@ -1585,48 +1584,11 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 			}
 		}
 
-		// Apply system templates
-		pTemplate = FindTemplateByName(_T("@System.Agent"));
-		if (pTemplate != NULL)
-		{
-			if (IsNativeAgent())
-			{
-				if (!pTemplate->IsChild(m_dwId))
-				{
-					pTemplate->ApplyToNode(this);
-				}
-			}
-			else
-			{
-				if (pTemplate->IsChild(m_dwId))
-				{
-					pTemplate->DeleteChild(this);
-					DeleteParent(pTemplate);
-					pTemplate->QueueRemoveFromNode(m_dwId, TRUE);
-				}
-			}
-		}
+		// Apply templates
+		ApplySystemTemplates();
+		ApplyUserTemplates();
 
-		pTemplate = FindTemplateByName(_T("@System.SNMP"));
-		if (pTemplate != NULL)
-		{
-			if (IsSNMPSupported())
-			{
-				if (!pTemplate->IsChild(m_dwId))
-				{
-					pTemplate->ApplyToNode(this);
-				}
-			}
-			else
-			{
-				if (pTemplate->IsChild(m_dwId))
-				{
-					pTemplate->DeleteChild(this);
-					DeleteParent(pTemplate);
-					pTemplate->QueueRemoveFromNode(m_dwId, TRUE);
-				}
-			}
-		}
+		UpdateContainerMembership();
 
 		SendPollerMsg(dwRqId, _T("Finished configuration poll for node %s\r\n")
 		                      _T("Node configuration was%schanged after poll\r\n"),
@@ -1647,6 +1609,156 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
       Modify();
       UnlockData();
    }
+}
+
+
+//
+// Apply system templates
+//
+
+void Node::ApplySystemTemplates()
+{
+	Template *pTemplate;
+
+	pTemplate = FindTemplateByName(_T("@System.Agent"));
+	if (pTemplate != NULL)
+	{
+		if (IsNativeAgent())
+		{
+			if (!pTemplate->IsChild(m_dwId))
+			{
+				DbgPrintf(4, _T("Node::ApplySystemTemplates(): applying template %d \"%s\" to node %d \"%s\""),
+				          pTemplate->Id(), pTemplate->Name(), m_dwId, m_szName);
+				pTemplate->ApplyToNode(this);
+			}
+		}
+		else
+		{
+			if (pTemplate->IsChild(m_dwId))
+			{
+				DbgPrintf(4, _T("Node::ApplySystemTemplates(): removing template %d \"%s\" from node %d \"%s\""),
+				          pTemplate->Id(), pTemplate->Name(), m_dwId, m_szName);
+				pTemplate->DeleteChild(this);
+				DeleteParent(pTemplate);
+				pTemplate->QueueRemoveFromNode(m_dwId, TRUE);
+			}
+		}
+	}
+
+	pTemplate = FindTemplateByName(_T("@System.SNMP"));
+	if (pTemplate != NULL)
+	{
+		if (IsSNMPSupported())
+		{
+			if (!pTemplate->IsChild(m_dwId))
+			{
+				DbgPrintf(4, _T("Node::ApplySystemTemplates(): applying template %d \"%s\" to node %d \"%s\""),
+				          pTemplate->Id(), pTemplate->Name(), m_dwId, m_szName);
+				pTemplate->ApplyToNode(this);
+			}
+		}
+		else
+		{
+			if (pTemplate->IsChild(m_dwId))
+			{
+				DbgPrintf(4, _T("Node::ApplySystemTemplates(): removing template %d \"%s\" from node %d \"%s\""),
+				          pTemplate->Id(), pTemplate->Name(), m_dwId, m_szName);
+				pTemplate->DeleteChild(this);
+				DeleteParent(pTemplate);
+				pTemplate->QueueRemoveFromNode(m_dwId, TRUE);
+			}
+		}
+	}
+}
+
+
+//
+// Apply user templates
+//
+
+void Node::ApplyUserTemplates()
+{
+   DWORD i;
+   Template *pTemplate;
+
+   if (g_pIndexById == NULL)
+      return;
+
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+   for(i = 0; i < g_dwIdIndexSize; i++)
+   {
+      if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_TEMPLATE) &&
+			 (!((NetObj *)g_pIndexById[i].pObject)->IsDeleted()))
+      {
+         pTemplate = (Template *)g_pIndexById[i].pObject;
+			if (pTemplate->IsApplicable(this))
+			{
+				if (!pTemplate->IsChild(m_dwId))
+				{
+					DbgPrintf(4, _T("Node::ApplyUserTemplates(): applying template %d \"%s\" to node %d \"%s\""),
+					          pTemplate->Id(), pTemplate->Name(), m_dwId, m_szName);
+					pTemplate->ApplyToNode(this);
+				}
+			}
+			else
+			{
+				if (pTemplate->IsAutoApplyEnabled() && pTemplate->IsChild(m_dwId))
+				{
+					DbgPrintf(4, _T("Node::ApplyUserTemplates(): removing template %d \"%s\" from node %d \"%s\""),
+					          pTemplate->Id(), pTemplate->Name(), m_dwId, m_szName);
+					pTemplate->DeleteChild(this);
+					DeleteParent(pTemplate);
+					pTemplate->QueueRemoveFromNode(m_dwId, TRUE);
+				}
+			}
+      }
+   }
+   RWLockUnlock(g_rwlockIdIndex);
+}
+
+
+//
+// Update container membership
+//
+
+void Node::UpdateContainerMembership()
+{
+   DWORD i;
+   Container *pContainer;
+
+   if (g_pIndexById == NULL)
+      return;
+
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+   for(i = 0; i < g_dwIdIndexSize; i++)
+   {
+      if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_CONTAINER) &&
+			 (!((NetObj *)g_pIndexById[i].pObject)->IsDeleted()))
+      {
+         pContainer = (Container *)g_pIndexById[i].pObject;
+			if (pContainer->IsSuitableForNode(this))
+			{
+				if (!pContainer->IsChild(m_dwId))
+				{
+					DbgPrintf(4, _T("Node::UpdateContainerMembership(): binding node %d \"%s\" to container %d \"%s\""),
+					          m_dwId, m_szName, pContainer->Id(), pContainer->Name());
+					pContainer->AddChild(this);
+					AddParent(pContainer);
+				}
+			}
+			else
+			{
+				if (pContainer->IsAutoBindEnabled() && pContainer->IsChild(m_dwId))
+				{
+					DbgPrintf(4, _T("Node::UpdateContainerMembership(): removing node %d \"%s\" from container %d \"%s\""),
+					          m_dwId, m_szName, pContainer->Id(), pContainer->Name());
+					pContainer->DeleteChild(this);
+					DeleteParent(pContainer);
+				}
+			}
+      }
+   }
+   RWLockUnlock(g_rwlockIdIndex);
 }
 
 

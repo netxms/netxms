@@ -180,10 +180,6 @@ NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
    {
       pNode->SetMgmtStatus(FALSE);
    }
-   else
-   {
-      pNode->ConfigurationPoll(NULL, 0, -1, dwNetMask);
-   }
    pNode->Unhide();
    PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);
 

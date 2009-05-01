@@ -735,6 +735,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\include\netxmsdb.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\nms_actions.h"
 				>
 			</File>
@@ -808,6 +812,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\include\nxcpapi.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\nxevent.h"
 				>
 			</File>
 			<File

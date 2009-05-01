@@ -24,14 +24,6 @@
 
 
 //
-// Externals
-//
-
-extern DWORD g_nxslNumSituationFunctions;
-extern NXSL_ExtFunction g_nxslSituationFunctions[];
-
-
-//
 // Default event policy rule constructor
 //
 
@@ -288,7 +280,6 @@ BOOL EPRule::MatchScript(Event *pEvent)
       return TRUE;
 
    pEnv = new NXSL_ServerEnv;
-	pEnv->RegisterFunctionSet(g_nxslNumSituationFunctions, g_nxslSituationFunctions);
 
    // Pass event's parameters as arguments and
    // other information as variables
