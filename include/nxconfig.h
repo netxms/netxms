@@ -23,15 +23,64 @@
 #ifndef _nxconfig_h_
 #define _nxconfig_h_
 
+#include <nms_common.h>
+#include <nms_util.h>
+
+
+//
+// Config entry
+//
+
+class LIBNETXMS_EXPORTABLE ConfigEntry
+{
+private:
+	TCHAR *m_name;
+	ConfigEntry *m_parent;
+	ConfigEntry *m_next;
+	ConfigEntry *m_childs;
+	int m_valueCount;
+	TCHAR **m_values;
+	TCHAR *m_file;
+	int m_line;
+
+	void linkEntry(ConfigEntry *entry) { entry->m_next = m_next; m_next = entry; }
+	void addEntry(ConfigEntry *entry) { entry->m_parent = this; entry->m_next = m_childs; m_childs = entry; }
+
+public:
+	ConfigEntry(const TCHAR *name, ConfigEntry *parent, const TCHAR *file, int line);
+	~ConfigEntry();
+
+	ConfigEntry *getNext() { return m_next; }
+
+	const TCHAR *getName() { return m_name; }
+	const TCHAR *getValue(int index = 0);
+	int getValueCount() { return m_valueCount; }
+	int getConcatenatedValuesLength();
+
+	const TCHAR *getFile() { return m_file; }
+	int getLine() { return m_line; }
+
+	void addValue(const TCHAR *value);
+	void setValue(const TCHAR*value);
+
+	ConfigEntry *findEntry(const TCHAR *name);
+};
+
 
 //
 // Config class
 //
 
-class Config
+class LIBNETXMS_EXPORTABLE Config
 {
 private:
-	StringMap m_parameters;
+	ConfigEntry *m_root;
+	int m_errorCount;
+
+protected:
+	virtual void onError(const TCHAR *errorMessage);
+	
+	void error(const TCHAR *format, ...);
 
 public:
 	Config();
@@ -39,9 +88,16 @@ public:
 
 	bool loadConfig(const TCHAR *file);
 	bool loadXmlConfig(const TCHAR *file);
-	bool loadIniConfig(const TCHAR *file);
+	bool loadIniConfig(const TCHAR *file, const TCHAR *defaultSectionName);
 
 	bool loadConfigDirectory(const TCHAR *path);
+
+	ConfigEntry *getEntry(const TCHAR *path);
+	const TCHAR *getValue(const TCHAR *path);
+
+	bool bindParameters(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate);
+
+	int getErrorCount() { return m_errorCount; }
 };
 
 

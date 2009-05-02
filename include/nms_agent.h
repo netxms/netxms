@@ -25,6 +25,7 @@
 
 #include <nms_common.h>
 #include <nms_util.h>
+#include <nxconfig.h>
 
 
 //
@@ -32,14 +33,14 @@
 //
 
 #if defined(_STATIC_AGENT) || defined(_NETWARE)
-#define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" BOOL NxSubAgentRegister_##name(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
+#define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" BOOL NxSubAgentRegister_##name(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
 #else
 #ifdef _WIN32
 #define DECLSPEC_EXPORT __declspec(dllexport) __cdecl
 #else
 #define DECLSPEC_EXPORT
 #endif
-#define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" BOOL DECLSPEC_EXPORT NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
+#define DECLARE_SUBAGENT_ENTRY_POINT(name) extern "C" BOOL DECLSPEC_EXPORT NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
 #endif
 
 
@@ -331,7 +332,7 @@ typedef struct
 // Subagent initialization structure
 //
 
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((DWORD)0x20080722)
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((DWORD)0x20090502)
 
 class CSCPMessage;
 

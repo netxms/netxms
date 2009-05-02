@@ -21,6 +21,7 @@
 **/
 
 #include "nxdbmgr.h"
+#include <nxconfig.h>
 
 #ifdef _WIN32
 #include <conio.h>
@@ -561,11 +562,14 @@ int main(int argc, char *argv[])
 	}
 #endif
 
-   if (NxLoadConfig(szConfigFile, _T(""), m_cfgTemplate, TRUE) != NXCFG_ERR_OK)
+	Config *config = new Config();
+	if (!config->loadIniConfig(szConfigFile, _T("server")) || !config->bindParameters(_T("server"), m_cfgTemplate))
    {
       _tprintf(_T("Error loading configuration file\n"));
       return 2;
    }
+	delete config;
+
 #ifndef _WIN32
 	SetDefaultCodepage(m_szCodePage);
 #endif

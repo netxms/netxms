@@ -170,7 +170,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 //
 
 extern "C" BOOL __declspec(dllexport) __cdecl
-NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
+NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
 {
 	HMODULE hModule;
 

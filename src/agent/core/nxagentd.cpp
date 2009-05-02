@@ -123,6 +123,7 @@ DWORD g_dwSNMPTimeout = 3000;
 time_t g_tmAgentStartTime;
 DWORD g_dwStartupDelay = 0;
 DWORD g_dwMaxSessions = 32;
+Config *g_config;
 #ifdef _WIN32
 DWORD g_dwIdleTimeout = 60;   // Session idle timeout
 #else
@@ -660,7 +661,7 @@ BOOL Initialize(void)
    // Parse server list
    if (m_pszServerList != NULL)
    {
-      for(pItem = m_pszServerList; *pItem != 0; pItem = pEnd + 1)
+      for(pItem = pEnd = m_pszServerList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
          pEnd = strchr(pItem, ',');
          if (pEnd != NULL)
@@ -688,7 +689,7 @@ BOOL Initialize(void)
    {
       DWORD i, dwAddr;
 
-      for(pItem = m_pszMasterServerList; *pItem != 0; pItem = pEnd + 1)
+      for(pItem = pEnd = m_pszMasterServerList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
          pEnd = strchr(pItem, ',');
          if (pEnd != NULL)
@@ -730,7 +731,7 @@ BOOL Initialize(void)
    {
       DWORD i, dwAddr;
 
-      for(pItem = m_pszControlServerList; *pItem != 0; pItem = pEnd + 1)
+      for(pItem = pEnd = m_pszControlServerList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
          pEnd = strchr(pItem, ',');
          if (pEnd != NULL)
@@ -793,7 +794,7 @@ BOOL Initialize(void)
 	// Load other subagents
    if (m_pszSubagentList != NULL)
    {
-      for(pItem = m_pszSubagentList; *pItem != 0; pItem = pEnd + 1)
+      for(pItem = pEnd = m_pszSubagentList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
          pEnd = strchr(pItem, '\n');
          if (pEnd != NULL)
@@ -807,7 +808,7 @@ BOOL Initialize(void)
    // Parse action list
    if (m_pszActionList != NULL)
    {
-      for(pItem = m_pszActionList; *pItem != 0; pItem = pEnd + 1)
+      for(pItem = pEnd = m_pszActionList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
          pEnd = strchr(pItem, '\n');
          if (pEnd != NULL)
@@ -820,7 +821,7 @@ BOOL Initialize(void)
    }
    if (m_pszShellActionList != NULL)
    {
-      for(pItem = m_pszShellActionList; *pItem != 0; pItem = pEnd + 1)
+      for(pItem = pEnd = m_pszShellActionList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
          pEnd = strchr(pItem, '\n');
 
@@ -836,7 +837,7 @@ BOOL Initialize(void)
    // Parse external parameters list
    if (m_pszExtParamList != NULL)
    {
-      for(pItem = m_pszExtParamList; *pItem != 0; pItem = pEnd + 1)
+      for(pItem = pEnd = m_pszExtParamList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
          pEnd = strchr(pItem, '\n');
          if (pEnd != NULL)
@@ -849,7 +850,7 @@ BOOL Initialize(void)
    }
    if (m_pszShExtParamList != NULL)
    {
-      for(pItem = m_pszShExtParamList; *pItem != 0; pItem = pEnd + 1)
+      for(pItem = pEnd = m_pszShExtParamList; pEnd != NULL && *pItem != 0; pItem = pEnd + 1)
       {
          pEnd = strchr(pItem, '\n');
          if (pEnd != NULL)
@@ -1088,6 +1089,16 @@ static int CreateConfig(TCHAR *pszServer, TCHAR *pszLogFile, TCHAR *pszFileStore
 
 
 //
+// Init config
+//
+
+static void InitConfig()
+{
+	g_config = new Config();
+}
+
+
+//
 // Startup
 //
 
@@ -1230,6 +1241,8 @@ int main(int argc, char *argv[])
    if (bRestart)
       DoRestartActions(dwOldPID);
 
+	InitConfig();
+
    // Do requested action
    switch(iAction)
    {
@@ -1265,8 +1278,8 @@ int main(int argc, char *argv[])
             }
          }
 
-         if (NxLoadConfig(g_szConfigFile, "", m_cfgTemplate, !(g_dwFlags & AF_DAEMON)) == NXCFG_ERR_OK)
-         {
+			if (g_config->loadIniConfig(g_szConfigFile, _T("agent")) && g_config->bindParameters(_T("agent"), m_cfgTemplate))
+			{
 	// Set exception handler
 #ifdef _WIN32
 				if (g_dwFlags & AF_CATCH_EXCEPTIONS)
@@ -1352,7 +1365,7 @@ int main(int argc, char *argv[])
          }
          break;
       case ACTION_CHECK_CONFIG:
-         if (NxLoadConfig(g_szConfigFile, "", m_cfgTemplate, !(g_dwFlags & AF_DAEMON)) != NXCFG_ERR_OK)
+			if (!g_config->loadIniConfig(g_szConfigFile, _T("agent")) || !g_config->bindParameters(_T("agent"), m_cfgTemplate))
          {
             ConsolePrintf("Configuration file check failed\n");
             iExitCode = 2;

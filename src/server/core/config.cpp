@@ -22,6 +22,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxconfig.h>
 
 
 //
@@ -58,6 +59,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 BOOL NXCORE_EXPORTABLE LoadConfig(void)
 {
    BOOL bSuccess = FALSE;
+	Config *config;
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 	if (!_tcscmp(g_szConfigFile, _T("{search}")))
@@ -80,7 +82,8 @@ BOOL NXCORE_EXPORTABLE LoadConfig(void)
    if (IsStandalone())
       printf("Using configuration file \"%s\"\n", g_szConfigFile);
 
-   if (NxLoadConfig(g_szConfigFile, "", m_cfgTemplate, IsStandalone()) == NXCFG_ERR_OK)
+	config = new Config();
+	if (config->loadIniConfig(g_szConfigFile, _T("server")) && config->bindParameters(_T("server"), m_cfgTemplate))
    {
       if ((!stricmp(g_szLogFile,"{EventLog}")) ||
           (!stricmp(g_szLogFile,"{syslog}")))
@@ -93,6 +96,7 @@ BOOL NXCORE_EXPORTABLE LoadConfig(void)
       }
       bSuccess = TRUE;
    }
+	delete config;
    return bSuccess;
 }
 

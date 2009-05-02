@@ -392,6 +392,8 @@ extern DWORD g_dwMaxSessions;
 extern DWORD g_dwExecTimeout;
 extern DWORD g_dwSNMPTimeout;
 
+extern Config *g_config;
+
 extern DWORD g_dwAcceptErrors;
 extern DWORD g_dwAcceptedConnections;
 extern DWORD g_dwRejectedConnections;

@@ -503,8 +503,9 @@ extern "C"
    DWORD LIBNETXMS_EXPORTABLE IcmpPing(DWORD dwAddr, int iNumRetries, DWORD dwTimeout,
                                        DWORD *pdwRTT, DWORD dwPacketSize);
 
-   DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(const TCHAR *pszFileName, const TCHAR *pszSection, 
-                                           NX_CFG_TEMPLATE *pTemplateList, BOOL bPrint);
+   /* deprecated:
+	DWORD LIBNETXMS_EXPORTABLE NxLoadConfig(const TCHAR *pszFileName, const TCHAR *pszSection, 
+                                           NX_CFG_TEMPLATE *pTemplateList, BOOL bPrint);*/
    int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText);
 
    HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText);

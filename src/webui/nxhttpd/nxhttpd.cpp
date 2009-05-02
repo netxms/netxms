@@ -22,6 +22,7 @@
 **/
 
 #include "nxhttpd.h"
+#include <nxconfig.h>
 
 #ifdef _WIN32
 #include <conio.h>
@@ -386,6 +387,7 @@ static char m_szHelpText[] =
 int main(int argc, char *argv[])
 {
 	int ch, nAction = 0;
+	Config *config;
 #ifdef _WIN32
 	char szModuleName[MAX_PATH];
 #endif
@@ -456,7 +458,8 @@ int main(int argc, char *argv[])
 	switch(nAction)
 	{
 		case 0:  // Start server
-         if (NxLoadConfig(g_szConfigFile, "", m_cfgTemplate, !(g_dwFlags & AF_DAEMON)) == NXCFG_ERR_OK)
+			config = new Config();
+			if (config->loadIniConfig(g_szConfigFile, _T("server")) && config->bindParameters(_T("server"), m_cfgTemplate))
          {
 #ifdef _WIN32
 			   if (g_dwFlags & AF_DAEMON)
@@ -499,6 +502,7 @@ int main(int argc, char *argv[])
             printf("Error loading configuration file\n");
             return 2;
          }
+			delete config;
 			break;
 #ifdef _WIN32
 		case 1:  // Install service

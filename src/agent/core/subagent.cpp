@@ -42,13 +42,13 @@ static SUBAGENT *m_pSubAgentList = NULL;
 //
 
 BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
-                  BOOL (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, TCHAR *),
+                  BOOL (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, Config *),
                   TCHAR *pszEntryPoint)
 {
    NETXMS_SUBAGENT_INFO *pInfo;
    BOOL bSuccess = FALSE, bInitOK;
 
-   if (SubAgentRegister(&pInfo, g_szConfigFile))
+   if (SubAgentRegister(&pInfo, g_config))
    {
       // Check if information structure is valid
       if (pInfo->dwMagic == NETXMS_SUBAGENT_INFO_MAGIC)
@@ -153,7 +153,7 @@ BOOL LoadSubAgent(char *szModuleName)
    hModule = DLOpen(szModuleName, szErrorText);
    if (hModule != NULL)
    {
-      BOOL (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, TCHAR *);
+      BOOL (* SubAgentRegister)(NETXMS_SUBAGENT_INFO **, Config *);
 
       // Under NetWare, we have slightly different subagent
       // initialization procedure. Because normally two NLMs
@@ -172,9 +172,9 @@ BOOL LoadSubAgent(char *szModuleName)
          *pExt = 0;
       strupr(szFileName);
       sprintf(szEntryPoint, "NxSubAgentRegister_%s", szFileName);
-      SubAgentRegister = (BOOL (*)(NETXMS_SUBAGENT_INFO **, TCHAR *))DLGetSymbolAddr(hModule, szEntryPoint, szErrorText);
+      SubAgentRegister = (BOOL (*)(NETXMS_SUBAGENT_INFO **, Config *))DLGetSymbolAddr(hModule, szEntryPoint, szErrorText);
 #else
-      SubAgentRegister = (BOOL (*)(NETXMS_SUBAGENT_INFO **, TCHAR *))DLGetSymbolAddr(hModule, "NxSubAgentRegister", szErrorText);
+      SubAgentRegister = (BOOL (*)(NETXMS_SUBAGENT_INFO **, Config *))DLGetSymbolAddr(hModule, "NxSubAgentRegister", szErrorText);
 #endif
 
       if (SubAgentRegister != NULL)
