@@ -1,46 +1,4 @@
 *************
-* 89 ==> 90 *
-*************
-
-- New fields added to table "items":
-	ALTER TABLE items ADD base_units integer not null
-	ALTER TABLE items ADD unit_multiplier integer not null
-	ALTER TABLE items ADD custom_units_name varchar(63) not null
-	ALTER TABLE items ADD perftab_settings SQL_TEXT not null
-
-
-*************
-* 88 ==> 89 *
-*************
-
-- New fields added to table "containers":
-	ALTER TABLE containers ADD enable_auto_bind integer not null
-	ALTER TABLE containers ADD auto_bind_filter SQL_TEXT not null
-- New fields added to table "cluster_resources":
-	ALTER TABLE cluster_resources ADD current_owner integer not null
-- New event added:
-	INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
-		(
-			EVENT_DB_QUERY_FAILED, 'SYS_DB_QUERY_FAILED',
-			EVENT_SEVERITY_CRITICAL, 1,
-			'Database query failed (Query: %1; Error: %2)',
-			'Generated when SQL query to backend database failed.#0D#0A' CONCAT
-			'Parameters:#0D#0A' CONCAT
-			'   1) Query#0D#0A' CONCAT
-			'   2) Error message'
-		);
-
-
-*************
-* 87 ==> 88 *
-*************
-
-- New columns added to table "templates":
-	ALTER TABLE templates ADD enable_auto_apply integer not null
-	ALTER TABLE templates ADD apply_filter SQL_TEXT not null
-
-
-*************
 * 86 ==> 87 *
 *************
 

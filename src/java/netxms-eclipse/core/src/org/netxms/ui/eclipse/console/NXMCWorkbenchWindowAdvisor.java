@@ -33,7 +33,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
         IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
         configurer.setShowCoolBar(true);
         configurer.setShowStatusLine(true);
-        configurer.setTitle("NetXMS ATM Video Surveillance Console");
+        configurer.setTitle("NetXMS Management Console");
     }
 
     /**

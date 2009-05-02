@@ -1,6 +1,6 @@
 AppName=NetXMS Agent
-AppVerName=NetXMS Agent 0.2.25
-AppVersion=0.2.25
+AppVerName=NetXMS Agent 0.2.26
+AppVersion=0.2.26
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
