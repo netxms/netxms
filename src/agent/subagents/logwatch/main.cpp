@@ -1,6 +1,6 @@
 /*
 ** NetXMS LogWatch subagent
-** Copyright (C) 2008 Victor Kirhenshtein
+** Copyright (C) 2008, 2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -185,69 +185,40 @@ static void AddParserFromConfig(const TCHAR *file)
 
 
 //
-// Configuration file template
-//
-
-static TCHAR *m_pszParserList = NULL;
-static NX_CFG_TEMPLATE m_cfgTemplate[] =
-{
-	{ _T("Parser"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_pszParserList },
-	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
-};
-
-
-//
 // Subagent initialization
 //
 
-static BOOL SubagentInit(TCHAR *pszConfigFile)
+static BOOL SubagentInit(Config *config)
 {
-	DWORD i, dwResult;
+	int i;
+	ConfigEntry *parsers; 
 
-	// Load configuration
-	dwResult = NxLoadConfig(pszConfigFile, _T("LogWatch"), m_cfgTemplate, FALSE);
-	if (dwResult == NXCFG_ERR_OK)
+	parsers = config->getEntry(_T("/LogWatch/Parser"));
+	if (parsers != NULL)
 	{
-		TCHAR *pItem, *pEnd;
+		for(i = 0; i < parsers->getValueCount(); i++)
+			AddParserFromConfig(parsers->getValue(i));
+	}
 
-		// Parse log parsers list
-		if (m_pszParserList != NULL)
-		{
-			for(pItem = m_pszParserList; *pItem != 0; pItem = pEnd + 1)
-			{
-				pEnd = _tcschr(pItem, _T('\n'));
-				if (pEnd != NULL)
-					*pEnd = 0;
-				StrStrip(pItem);
-				AddParserFromConfig(pItem);
-			}
-			free(m_pszParserList);
-		}
-
-		// Additional initialization
+	// Additional initialization
 #ifdef _WIN32
-		InitEventLogParsers();
+	InitEventLogParsers();
 #endif
-		// Create shutdown condition and start parsing threads
-		g_hCondShutdown = ConditionCreate(TRUE);
-		for(i = 0; i < m_numParsers; i++)
-		{
+	// Create shutdown condition and start parsing threads
+	g_hCondShutdown = ConditionCreate(TRUE);
+	for(i = 0; i < (int)m_numParsers; i++)
+	{
 #ifdef _WIN32
-			if (m_parserList[i]->getFileName()[0] == _T('*'))	// event log
-				m_parserList[i]->setThread(ThreadCreateEx(ParserThreadEventLog, 0, m_parserList[i]));
-			else	// regular file
-				m_parserList[i]->setThread(ThreadCreateEx(ParserThreadFile, 0, m_parserList[i]));
-#else
+		if (m_parserList[i]->getFileName()[0] == _T('*'))	// event log
+			m_parserList[i]->setThread(ThreadCreateEx(ParserThreadEventLog, 0, m_parserList[i]));
+		else	// regular file
 			m_parserList[i]->setThread(ThreadCreateEx(ParserThreadFile, 0, m_parserList[i]));
+#else
+		m_parserList[i]->setThread(ThreadCreateEx(ParserThreadFile, 0, m_parserList[i]));
 #endif
-		}
-	}
-	else
-	{
-		safe_free(m_pszParserList);
 	}
 
-	return dwResult == NXCFG_ERR_OK;
+	return TRUE;
 }
 
 

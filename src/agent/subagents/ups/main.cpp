@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006 Victor Kirhenshtein
+** Copyright (C) 2006-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -264,48 +264,40 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
 // Subagent initialization
 //
 
-static BOOL SubAgentInit(TCHAR *pszConfigFile)
+static BOOL SubAgentInit(Config *config)
 {
-	DWORD i, dwResult;
+	int i;
+	TCHAR *entry;
+	ConfigEntry *devices; 
 
 	memset(m_deviceInfo, 0, sizeof(UPSInterface *) * MAX_UPS_DEVICES);
 
-	// Load configuration
-	dwResult = NxLoadConfig(pszConfigFile, _T("UPS"), cfgTemplate, FALSE);
-	if (dwResult == NXCFG_ERR_OK)
+	// Parse configuration
+	devices = config->getEntry(_T("/UPS/Device"));
+	if (devices != NULL)
 	{
-		TCHAR *pItem, *pEnd;
-
-		// Parse device list
-		if (m_pszDeviceList != NULL)
+		for(i = 0; i < devices->getValueCount(); i++)
 		{
-			for(pItem = m_pszDeviceList; *pItem != 0; pItem = pEnd + 1)
+			entry = _tcsdup(devices->getValue(i));
+			StrStrip(entry);
+			if (!AddDeviceFromConfig(entry))
 			{
-				pEnd = _tcschr(pItem, _T('\n'));
-				if (pEnd != NULL)
-					*pEnd = 0;
-				StrStrip(pItem);
-				if (!AddDeviceFromConfig(pItem))
-					NxWriteAgentLog(EVENTLOG_WARNING_TYPE,
-							_T("Unable to add UPS device from configuration file. ")
-							_T("Original configuration record: %s"), pItem);
+				NxWriteAgentLog(EVENTLOG_WARNING_TYPE,
+						_T("Unable to add UPS device from configuration file. ")
+						_T("Original configuration record: %s"), devices->getValue(i));
 			}
-			free(m_pszDeviceList);
-
-			// Start communicating with configured devices
-			for(i = 0; i < MAX_UPS_DEVICES; i++)
-			{
-				if (m_deviceInfo[i] != NULL)
-					m_deviceInfo[i]->StartCommunication();
-			}
+			free(entry);
 		}
 	}
-	else
+
+	// Start communicating with configured devices
+	for(i = 0; i < MAX_UPS_DEVICES; i++)
 	{
-		safe_free(m_pszDeviceList);
+		if (m_deviceInfo[i] != NULL)
+			m_deviceInfo[i]->StartCommunication();
 	}
 
-	return dwResult == NXCFG_ERR_OK;
+	return TRUE;
 }
 
 

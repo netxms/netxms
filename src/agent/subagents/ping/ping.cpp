@@ -287,7 +287,7 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 //
 
 static TCHAR *m_pszTargetList = NULL;
-static NX_CFG_TEMPLATE cfgTemplate[] =
+static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
 	{ _T("DefaultPacketSize"), CT_LONG, 0, 0, 0, 0, &m_dwDefPacketSize },
 	{ _T("PacketRate"), CT_LONG, 0, 0, 0, 0, &m_dwPollsPerMinute },
@@ -301,13 +301,14 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
 // Subagent initialization
 //
 
-static BOOL SubagentInit(TCHAR *pszConfigFile)
+static BOOL SubagentInit(Config *config)
 {
-	DWORD i, dwResult;
+	DWORD i;
+	bool success;
 
-	// Load configuration
-	dwResult = NxLoadConfig(pszConfigFile, _T("Ping"), cfgTemplate, FALSE);
-	if (dwResult == NXCFG_ERR_OK)
+	// Parse configuration
+	success = config->bindParameters(_T("Ping"), m_cfgTemplate);
+	if (success)
 	{
 		TCHAR *pItem, *pEnd;
 
@@ -343,7 +344,7 @@ static BOOL SubagentInit(TCHAR *pszConfigFile)
 		safe_free(m_pszTargetList);
 	}
 
-	return dwResult == NXCFG_ERR_OK;
+	return success;
 }
 
 

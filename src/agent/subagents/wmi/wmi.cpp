@@ -346,7 +346,7 @@ static LONG H_WMIClasses(const TCHAR *pszParam, const TCHAR *pArg, NETXMS_VALUES
 // Initialize subagent
 //
 
-static BOOL SubAgentInit(TCHAR *pszConfigFile)
+static BOOL SubAgentInit(Config *config)
 {
 	return TRUE;
 }

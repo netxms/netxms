@@ -341,7 +341,7 @@ typedef struct
    DWORD dwMagic;    // Magic number to check if subagent uses correct version of this structure
    TCHAR szName[MAX_SUBAGENT_NAME];
    TCHAR szVersion[32];
-	BOOL (* pInit)(TCHAR *);   // Called to initialize subagent. Can be NULL.
+	BOOL (* pInit)(Config *);   // Called to initialize subagent. Can be NULL.
    void (* pShutdown)(void);  // Called at subagent unload. Can be NULL.
    BOOL (* pCommandHandler)(DWORD dwCommand, CSCPMessage *pRequest,
                             CSCPMessage *pResponse, SOCKET sock,

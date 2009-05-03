@@ -31,15 +31,10 @@ TCHAR g_szDeviceModel[256] = _T("<unknown>");
 
 
 //
-// Configuration file template
+// Static variables
 //
 
-static TCHAR m_szDevice[256];
-static NX_CFG_TEMPLATE cfgTemplate[] =
-{
-	{ _T("Device"), CT_STRING, 0, 0, 255, 0, m_szDevice },
-	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
-};
+static TCHAR m_szDevice[MAX_PATH];
 
 
 //
@@ -70,19 +65,22 @@ static LONG H_SendSMS(const TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, const T
 // Subagent initialization
 //
 
-static BOOL SubAgentInit(TCHAR *pszConfigFile)
+static BOOL SubAgentInit(Config *config)
 {
-	DWORD dwResult;
-
-	// Load configuration
-	dwResult = NxLoadConfig(pszConfigFile, _T("SMS"), cfgTemplate, FALSE);
-	if (dwResult == NXCFG_ERR_OK)
+	// Parse configuration
+	const TCHAR *value = config->getValue(_T("/SMS/Device"));
+	if (value != NULL)
 	{
+		nx_strncpy(m_szDevice, value, MAX_PATH);
 		if (!InitSender(m_szDevice))
 			return FALSE;
 	}
+	else
+	{
+		NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("SMS: device not specified"));
+	}
 
-	return dwResult == NXCFG_ERR_OK;
+	return value != NULL;
 }
 
 

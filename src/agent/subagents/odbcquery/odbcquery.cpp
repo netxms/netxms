@@ -158,7 +158,7 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 // Parameter value should be <query_name>:<sql_source>:<sql>:<poll_interval>
 //
 
-static BOOL AddQueryFromConfig(TCHAR *pszCfg)
+static BOOL AddQueryFromConfig(const TCHAR *pszCfg)
 {
    TCHAR *ptr, *pszLine, *pszName = NULL;
 	TCHAR *pszSrc = NULL, *pszQuery = NULL, *pszPollInterval = NULL;
@@ -177,6 +177,7 @@ static BOOL AddQueryFromConfig(TCHAR *pszCfg)
 		NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("ODBC: String allocation failed"));
 		goto finish_add_query;
 	}
+	StrStrip(pszLine);
 
 	// Get query name
 	pszName = pszLine;
@@ -259,59 +260,35 @@ finish_add_query:
 
 
 //
-// Configuration file template
-//
-
-static TCHAR *m_pszQueryList = NULL;
-static NX_CFG_TEMPLATE cfgTemplate[] =
-{
-   { _T("Query"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_pszQueryList },
-   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
-};
-
-
-//
 // Subagent initialization
 //
 
-static BOOL SubAgentInit(TCHAR *pszConfigFile)
+static BOOL SubAgentInit(Config *config)
 {
-   DWORD i, dwResult;
+   int i;
+	ConfigEntry *ql;
 
-   // Load configuration
-   dwResult = NxLoadConfig(pszConfigFile, _T("ODBC"), cfgTemplate, FALSE);
-   if (dwResult == NXCFG_ERR_OK)
-   {
-      TCHAR *pItem, *pEnd;
+	// Add queries from config
+	ql = config->getEntry(_T("/ODBC/Query"));
+	if (ql != NULL)
+	{
+		for(i = 0; i < ql->getValueCount(); i++)
+		{
+			if (!AddQueryFromConfig(ql->getValue(i)))
+			{
+            NxWriteAgentLog(EVENTLOG_WARNING_TYPE,
+                            _T("Unable to add ODBC query from configuration file. ")
+									 _T("Original configuration record: %s"), ql->getValue(i));
+			}
+		}
+	}
 
-      // Parse target list
-      if (m_pszQueryList != NULL)
-      {
-         for(pItem = m_pszQueryList; *pItem != 0; pItem = pEnd + 1)
-         {
-            pEnd = _tcschr(pItem, _T('\n'));
-            if (pEnd != NULL)
-               *pEnd = 0;
-            StrStrip(pItem);
-            if (!AddQueryFromConfig(pItem))
-               NxWriteAgentLog(EVENTLOG_WARNING_TYPE,
-                               _T("Unable to add ODBC query from configuration file. ")
-                               _T("Original configuration record: %s"), pItem);
-         }
-         free(m_pszQueryList);
-      }
+   // Create shutdown condition and start poller threads
+   m_hCondShutdown = ConditionCreate(TRUE);
+   for(i = 0; i < (int)m_dwNumQueries; i++)
+      m_pQueryList[i].hThread = ThreadCreateEx(PollerThread, 0, &m_pQueryList[i]);
 
-      // Create shutdown condition and start poller threads
-      m_hCondShutdown = ConditionCreate(TRUE);
-      for(i = 0; i < m_dwNumQueries; i++)
-         m_pQueryList[i].hThread = ThreadCreateEx(PollerThread, 0, &m_pQueryList[i]);
-   }
-   else
-   {
-      safe_free(m_pszQueryList);
-   }
-
-   return dwResult == NXCFG_ERR_OK;
+   return TRUE;
 }
 
 

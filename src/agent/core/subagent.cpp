@@ -62,7 +62,7 @@ BOOL InitSubAgent(HMODULE hModule, TCHAR *pszModuleName,
          if (i == m_dwNumSubAgents)
          {
 				// Initialize subagent
-				bInitOK = (pInfo->pInit != NULL) ? pInfo->pInit(g_szConfigFile) : TRUE;
+				bInitOK = (pInfo->pInit != NULL) ? pInfo->pInit(g_config) : TRUE;
 				if (bInitOK)
 				{
 					// Add subagent to subagent's list
