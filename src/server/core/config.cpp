@@ -97,6 +97,7 @@ BOOL NXCORE_EXPORTABLE LoadConfig(void)
       bSuccess = TRUE;
    }
 	delete config;
+printf("MODLIST=%s\n",g_pszModLoadList);
    return bSuccess;
 }
 
