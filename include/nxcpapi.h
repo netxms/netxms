@@ -68,7 +68,7 @@ public:
    CSCPMessage(int nVersion = NXCP_VERSION);
    CSCPMessage(CSCPMessage *pMsg);
    CSCPMessage(CSCP_MESSAGE *pMsg, int nVersion = NXCP_VERSION);
-   CSCPMessage(char *xml);
+   CSCPMessage(const char *xml);
    ~CSCPMessage();
 
    CSCP_MESSAGE *CreateMessage(void);

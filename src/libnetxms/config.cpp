@@ -23,6 +23,7 @@
 
 #include "libnetxms.h"
 #include <nxconfig.h>
+#include <expat.h>
 
 
 //
@@ -260,10 +261,58 @@ bool Config::bindParameters(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 
 
 //
+// Get value
+//
+
+const TCHAR *Config::getValue(const TCHAR *path)
+{
+	ConfigEntry *entry = getEntry(path);
+	return (entry != NULL) ? entry->getValue() : NULL;
+}
+
+
+//
+// Get entry
+//
+
+ConfigEntry *Config::getEntry(const TCHAR *path)
+{
+	const TCHAR *curr, *end;
+	TCHAR name[256];
+	ConfigEntry *entry = m_root;
+
+	if ((path == NULL) || (*path != _T('/')))
+		return NULL;
+
+	if (!_tcscmp(path, _T("/")))
+		return m_root;
+
+	curr = path + 1;
+	while(entry != NULL)
+	{
+		end = _tcschr(curr, _T('/'));
+		if (end != NULL)
+		{
+			int len = min((int)(end - curr), 255);
+			_tcsncpy(name, curr, len);
+			name[len] = 0;
+			entry = entry->findEntry(name);
+			curr = end + 1;
+		}
+		else
+		{
+			return entry->findEntry(curr);
+		}
+	}
+	return NULL;
+}
+
+
+//
 // Load INI-style config
 //
 
-bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultSectionName)
+bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection)
 {
 	FILE *cfg;
 	TCHAR buffer[4096], *ptr;
@@ -277,10 +326,10 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultSectionName)
 		return false;
 	}
 
-	currentSection = m_root->findEntry(defaultSectionName);
+	currentSection = m_root->findEntry(defaultIniSection);
 	if (currentSection == NULL)
 	{
-		currentSection = new ConfigEntry(defaultSectionName, m_root, file, 0);
+		currentSection = new ConfigEntry(defaultIniSection, m_root, file, 0);
 	}
 
    while(!feof(cfg))
@@ -341,45 +390,147 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultSectionName)
 
 
 //
-// Get value
+// Load config from XML file
 //
 
-const TCHAR *Config::getValue(const TCHAR *path)
+#define MAX_STACK_DEPTH		256
+
+typedef struct
 {
-	ConfigEntry *entry = getEntry(path);
-	return (entry != NULL) ? entry->getValue() : NULL;
+	XML_Parser parser;
+	Config *config;
+	const TCHAR *file;
+	int level;
+	ConfigEntry *stack[MAX_STACK_DEPTH];
+	String charData[MAX_STACK_DEPTH];
+} XML_PARSER_STATE;
+
+static void StartElement(void *userData, const char *name, const char **attrs)
+{
+	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
+
+	if (ps->level == 0)
+	{
+		if (!stricmp(name, "config"))
+		{
+			ps->stack[ps->level++] = ps->config->getEntry(_T("/"));
+		}
+		else
+		{
+			ps->level = -1;
+		}
+	}
+	else if (ps->level > 0)
+	{
+		if (ps->level < MAX_STACK_DEPTH)
+		{
+#ifdef UNICODE
+			WCHAR wname[256];
+
+			MultiByteToWideChar(CP_UTF8, 0, name, -1, wname, 256);
+			wname[255] = 0;
+			ps->stack[ps->level] = ps->stack[ps->level - 1]->findEntry(wname);
+			if (ps->stack[ps->level] == NULL)
+				ps->stack[ps->level] = new ConfigEntry(wname, ps->stack[ps->level - 1], ps->file, XML_GetCurrentLineNumber(ps->parser));
+#else
+			ps->stack[ps->level] = ps->stack[ps->level - 1]->findEntry(name);
+			if (ps->stack[ps->level] == NULL)
+				ps->stack[ps->level] = new ConfigEntry(name, ps->stack[ps->level - 1], ps->file, XML_GetCurrentLineNumber(ps->parser));
+#endif
+			ps->charData[ps->level] = _T("");
+			ps->level++;
+		}
+		else
+		{
+			ps->level++;
+		}
+	}
+}
+
+static void EndElement(void *userData, const char *name)
+{
+	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
+
+	if (ps->level > MAX_STACK_DEPTH)
+	{
+		ps->level--;
+	}
+	else if (ps->level > 0)
+	{
+		ps->level--;
+		ps->stack[ps->level]->addValue(ps->charData[ps->level]);
+	}
+}
+
+static void CharData(void *userData, const XML_Char *s, int len)
+{
+	XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
+
+	if ((ps->level > 0) && (ps->level <= MAX_STACK_DEPTH))
+		ps->charData[ps->level - 1].AddMultiByteString(s, len, CP_UTF8);
+}
+
+bool Config::loadXmlConfig(const TCHAR *file)
+{
+	BYTE *xml;
+	DWORD size;
+	bool success;
+
+	xml = LoadFile(file, &size);
+	if (xml != NULL)
+	{
+		XML_PARSER_STATE state;
+
+		XML_Parser parser = XML_ParserCreate(NULL);
+		XML_SetUserData(parser, &state);
+		XML_SetElementHandler(parser, StartElement, EndElement);
+		XML_SetCharacterDataHandler(parser, CharData);
+
+		state.config = this;
+		state.level = 0;
+		state.parser = parser;
+		state.file = file;
+
+		success = (XML_Parse(parser, (char *)xml, size, TRUE) != XML_STATUS_ERROR);
+		if (!success)
+		{
+			error(_T("%s at line %d"), XML_ErrorString(XML_GetErrorCode(parser)),
+               XML_GetCurrentLineNumber(parser));
+		}
+	}
+	else
+	{
+		success = false;
+	}
+
+	return success;
 }
 
 
 //
-// Get entry
+// Load config file with format auto detection
 //
 
-ConfigEntry *Config::getEntry(const TCHAR *path)
+bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection)
 {
-	const TCHAR *curr, *end;
-	TCHAR name[256];
-	ConfigEntry *entry = m_root;
+	FILE *f;
+	int ch;
 
-	if ((path == NULL) || (*path != _T('/')))
-		return NULL;
-
-	curr = path + 1;
-	while(entry != NULL)
+	f = _tfopen(file, _T("r"));
+	if (f == NULL)
 	{
-		end = _tcschr(curr, _T('/'));
-		if (end != NULL)
-		{
-			int len = min((int)(end - curr), 255);
-			_tcsncpy(name, curr, len);
-			name[len] = 0;
-			entry = entry->findEntry(name);
-			curr = end + 1;
-		}
-		else
-		{
-			return entry->findEntry(curr);
-		}
+		error(_T("Cannot open file %s"), file);
+		return false;
 	}
-	return NULL;
+
+	// Skip all space/newline characters
+	do
+	{
+		ch = fgetc(f);
+	} while(isspace(ch));
+
+	fclose(f);
+
+	// If first non-space character is < assume XML format, otherwise assume INI format
+	return (ch == '<') ? loadXmlConfig(file) : loadIniConfig(file, defaultIniSection);
 }

@@ -274,7 +274,7 @@ static void CharData(void *userData, const XML_Char *s, int len)
 
 #endif
 
-CSCPMessage::CSCPMessage(char *xml)
+CSCPMessage::CSCPMessage(const char *xml)
 {
 #if HAVE_LIBEXPAT
 	XML_Parser parser = XML_ParserCreate(NULL);

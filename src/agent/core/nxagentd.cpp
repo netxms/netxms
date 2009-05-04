@@ -1278,7 +1278,7 @@ int main(int argc, char *argv[])
             }
          }
 
-			if (g_config->loadIniConfig(g_szConfigFile, _T("agent")) && g_config->bindParameters(_T("agent"), m_cfgTemplate))
+			if (g_config->loadConfig(g_szConfigFile, _T("agent")) && g_config->bindParameters(_T("agent"), m_cfgTemplate))
 			{
 	// Set exception handler
 #ifdef _WIN32

@@ -349,7 +349,7 @@ static LONG H_CounterAlias(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVal
 // Initialize subagent
 //
 
-static BOOL SubAgentInit(TCHAR *pszConfigFile)
+static BOOL SubAgentInit(Config *config)
 {
    // Create shutdown condition object
    g_hCondShutdown = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -474,7 +474,7 @@ static void AddPredefinedCounters(void)
 //
 
 static TCHAR *m_pszCounterList = NULL;
-static NX_CFG_TEMPLATE cfgTemplate[] =
+static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("Counter"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_pszCounterList },
    { _T("EnableDefaultCounters"), CT_BOOLEAN, 0, 0, WPF_ENABLE_DEFAULT_COUNTERS, 0, &m_dwFlags },
@@ -487,9 +487,9 @@ static NX_CFG_TEMPLATE cfgTemplate[] =
 //
 
 extern "C" BOOL __declspec(dllexport) __cdecl 
-   NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, TCHAR *pszConfigFile)
+   NxSubAgentRegister(NETXMS_SUBAGENT_INFO **ppInfo, Config *config)
 {
-   DWORD i, dwResult, dwBufferSize, dwBytes, dwType, dwStatus;
+   DWORD i, dwBufferSize, dwBytes, dwType, dwStatus;
 	TCHAR *pBuffer, *newName;
 
 	if (m_info.pParamList != NULL)
@@ -527,8 +527,8 @@ extern "C" BOOL __declspec(dllexport) __cdecl
 	}
 
    // Load configuration
-   dwResult = NxLoadConfig(pszConfigFile, _T("WinPerf"), cfgTemplate, FALSE);
-   if (dwResult == NXCFG_ERR_OK)
+	bool success = config->bindParameters(_T("WinPerf"), m_cfgTemplate);
+	if (success)
    {
       TCHAR *pItem, *pEnd;
 
@@ -557,7 +557,7 @@ extern "C" BOOL __declspec(dllexport) __cdecl
       safe_free(m_pszCounterList);
    }
    *ppInfo = &m_info;
-   return dwResult == NXCFG_ERR_OK;
+   return success;
 }
 
 

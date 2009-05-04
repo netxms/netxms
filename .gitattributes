@@ -411,7 +411,6 @@ src/libexpat/conftools/config.sub -text
 src/libexpat/conftools/install-sh -text
 src/libexpat/conftools/mkinstalldirs -text
 src/libexpat/libexpat/libexpat.vcproj -text
-src/libexpat/libexpat/libexpatw.vcproj -text
 src/libexpat/vms/descrip.mms -text
 src/libnetxms/libnetxms.vcp eol=crlf
 src/libnetxms/libnetxms.vcproj -text

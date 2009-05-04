@@ -86,9 +86,9 @@ public:
 	Config();
 	~Config();
 
-	bool loadConfig(const TCHAR *file);
 	bool loadXmlConfig(const TCHAR *file);
-	bool loadIniConfig(const TCHAR *file, const TCHAR *defaultSectionName);
+	bool loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection);
+	bool loadConfig(const TCHAR *file, const TCHAR *defaultIniSection);
 
 	bool loadConfigDirectory(const TCHAR *path);
 

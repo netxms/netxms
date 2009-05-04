@@ -105,7 +105,7 @@ void String::AddFormattedString(const TCHAR *pszFormat, ...)
 
 
 //
-// Add formatted string to the end of buffer
+// Add string to the end of buffer
 //
 
 void String::AddString(const TCHAR *pStr, DWORD dwSize)
@@ -114,6 +114,40 @@ void String::AddString(const TCHAR *pStr, DWORD dwSize)
    memcpy(&m_pszBuffer[m_dwBufSize - 1], pStr, dwSize * sizeof(TCHAR));
    m_dwBufSize += dwSize;
 	m_pszBuffer[m_dwBufSize - 1] = 0;
+}
+
+
+//
+// Add multibyte string to the end of buffer
+//
+
+void String::AddMultiByteString(const char *pStr, DWORD dwSize, int nCodePage)
+{
+#ifdef UNICODE
+   m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwSize) * sizeof(TCHAR));
+	MultiByteToWideChar(nCodePage, (nCodePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, pStr, dwSize, &m_pszBuffer[m_dwBufSize - 1], dwSize);
+   m_dwBufSize += dwSize;
+	m_pszBuffer[m_dwBufSize - 1] = 0;
+#else
+	AddString(pStr, dwSize);
+#endif
+}
+
+
+//
+// Add widechar string to the end of buffer
+//
+
+void String::AddWideCharString(const WCHAR *pStr, DWORD dwSize)
+{
+#ifdef UNICODE
+	AddString(pStr, dwSize);
+#else
+   m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwSize) * sizeof(TCHAR));
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pStr, dwSize, &m_pszBuffer[m_dwBufSize - 1], dwSize, NULL, NULL);
+   m_dwBufSize += dwSize;
+	m_pszBuffer[m_dwBufSize - 1] = 0;
+#endif
 }
 
 

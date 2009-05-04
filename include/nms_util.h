@@ -257,6 +257,9 @@ public:
 	void AddString(const TCHAR *pStr, DWORD dwLen);
 	void AddDynamicString(TCHAR *pszStr) { if (pszStr != NULL) { *this += pszStr; free(pszStr); } }
 
+	void AddMultiByteString(const char *pStr, DWORD dwSize, int nCodePage);
+	void AddWideCharString(const WCHAR *pStr, DWORD dwSize);
+
    void AddFormattedString(const TCHAR *pszFormat, ...);
    void EscapeCharacter(int ch, int esc);
    void Translate(const TCHAR *pszSrc, const TCHAR *pszDst);

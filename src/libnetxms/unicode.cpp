@@ -987,10 +987,22 @@ static WCHAR *ReplaceFormatSpecs(const WCHAR *oldFormat)
 		if ((*p == _T('%')) && (*(p + 1) != 0))
 		{
 			p++;
-			if (*p == _T('s'))
-				*p = _T('S');
-			else if (*p == _T('c'))
-				*p = _T('C');
+			switch(*p)
+			{
+				case _T('s'):
+					*p = _T('S');
+					break;
+				case _T('S'):
+					*p = _T('s');
+					break;
+				case _T('c'):
+					*p = _T('C');
+					break;
+				case _T('C'):
+					*p = _T('c');
+					break;
+				default:
+					break;
 		}
 	return fmt;
 }
