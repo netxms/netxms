@@ -505,6 +505,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\job.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\jobmgr.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\jobqueue.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\layer2.cpp"
 				>
 			</File>
@@ -800,6 +812,10 @@
 			</File>
 			<File
 				RelativePath=".\nxcore.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\nxcore_jobs.h"
 				>
 			</File>
 			<File

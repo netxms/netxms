@@ -26,6 +26,7 @@
 #include <nms_agent.h>
 #include <nxnt.h>
 #include <netxms_maps.h>
+#include "nxcore_jobs.h"
 
 
 //
@@ -642,6 +643,7 @@ protected:
    ROUTING_TABLE *m_pRoutingTable;
 	nxmap_ObjList *m_pTopology;		// Layer 2 topology
 	time_t m_tLastTopologyPoll;
+	ServerJobQueue *m_jobQueue;
 
    void PollerLock(void) { MutexLock(m_hPollerMutex, INFINITE); }
    void PollerUnlock(void) { MutexUnlock(m_hPollerMutex); }
@@ -779,6 +781,8 @@ public:
 
 	nxmap_ObjList *GetL2Topology(void);
 	nxmap_ObjList *BuildL2Topology(DWORD *pdwStatus);
+
+	ServerJobQueue *getJobQueue() { return m_jobQueue; }
 };
 
 

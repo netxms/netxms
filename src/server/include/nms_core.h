@@ -102,6 +102,7 @@ typedef __console_ctx * CONSOLE_CTX;
 #include "nms_script.h"
 #include "nxcore_maps.h"
 #include "nxcore_situations.h"
+#include "nxcore_jobs.h"
 
 
 //
@@ -536,6 +537,7 @@ private:
 	void RegisterAgent(CSCPMessage *pRequest);
 	void GetServerFile(CSCPMessage *pRequest);
 	void TestDCITransformation(CSCPMessage *pRequest);
+	void SendJobList(DWORD dwRqId);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

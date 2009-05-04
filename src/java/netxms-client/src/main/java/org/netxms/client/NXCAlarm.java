@@ -4,7 +4,9 @@
 package org.netxms.client;
 
 import java.util.Date;
-import org.netxms.base.*;
+
+import org.netxms.base.NXCPCodes;
+import org.netxms.base.NXCPMessage;
 
 
 /**

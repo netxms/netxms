@@ -66,7 +66,7 @@ public final class NXCPCodes
 	public static final int CMD_GET_MIB_TIMESTAMP       = 0x0033;
 	public static final int CMD_GET_MIB                 = 0x0034;
 	public static final int CMD_TEST_DCI_TRANSFORMATION = 0x0035;
-	//public static final int CMD_OPEN_LPP                = 0x0036;
+	public static final int CMD_GET_JOB_LIST            = 0x0036;
 	public static final int CMD_CREATE_OBJECT           = 0x0037;
 	public static final int CMD_GET_EVENT_NAMES         = 0x0038;
 	public static final int CMD_EVENT_NAME_LIST         = 0x0039;
@@ -153,9 +153,9 @@ public final class NXCPCodes
 	public static final int CMD_CHANGE_SUBSCRIPTION     = 0x008A;
 	public static final int CMD_GET_SYSLOG              = 0x008B;
 	public static final int CMD_SYSLOG_RECORDS          = 0x008C;
-	public static final int CMD_GET_LPP_LIST            = 0x008D;
-	public static final int CMD_OPEN_LOG_POLICY         = 0x008E;
-	public static final int CMD_CLOSE_LOG_POLICY        = 0x008F;
+	public static final int CMD_JOB_CHANGE_NOTIFICATION = 0x008D;
+	//public static final int CMD_OPEN_LOG_POLICY         = 0x008E;
+	//public static final int CMD_CLOSE_LOG_POLICY        = 0x008F;
 	public static final int CMD_GET_OBJECT_TOOL_DETAILS = 0x0090;
 	public static final int CMD_LOCK_OBJECT_TOOLS       = 0x0091;
 	public static final int CMD_UNLOCK_OBJECT_TOOLS     = 0x0092;
@@ -577,6 +577,14 @@ public final class NXCPCodes
 	public static final long VID_PERFTAB_SETTINGS        = 325;
 	public static final long VID_EXECUTION_STATUS        = 326;
 	public static final long VID_EXECUTION_RESULT        = 327;
+	public static final long VID_TABLE_NUM_ROWS          = 328;
+	public static final long VID_TABLE_NUM_COLS          = 329;
+	public static final long VID_JOB_COUNT               = 330;
+	public static final long VID_JOB_ID                  = 331;
+	public static final long VID_JOB_TYPE                = 332;
+	public static final long VID_JOB_STATUS              = 333;
+	public static final long VID_JOB_PROGRESS            = 334;
+	public static final long VID_FAILURE_MESSAGE         = 335;	
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
@@ -641,5 +649,6 @@ public final class NXCPCodes
 	public static final long VID_INSTANCE_LIST_BASE       = 0x20000000L;
 	public static final long VID_OBJECT_LINKS_BASE        = 0x10000000L;
 	public static final long VID_SUBMAP_LINK_NAMES_BASE   = 0x20000000L;
-	public static final long VID_WEBMAP_LIST_BASE         = 0x30000000L;	
+	public static final long VID_WEBMAP_LIST_BASE         = 0x30000000L;
+	public static final long VID_JOB_LIST_BASE            = 0x10000000L;
 }

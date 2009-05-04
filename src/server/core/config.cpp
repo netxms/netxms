@@ -83,7 +83,7 @@ BOOL NXCORE_EXPORTABLE LoadConfig(void)
       printf("Using configuration file \"%s\"\n", g_szConfigFile);
 
 	config = new Config();
-	if (config->loadIniConfig(g_szConfigFile, _T("server")) && config->bindParameters(_T("server"), m_cfgTemplate))
+	if (config->loadConfig(g_szConfigFile, _T("server")) && config->bindParameters(_T("server"), m_cfgTemplate))
    {
       if ((!stricmp(g_szLogFile,"{EventLog}")) ||
           (!stricmp(g_szLogFile,"{syslog}")))

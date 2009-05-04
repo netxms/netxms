@@ -1219,6 +1219,9 @@ void ClientSession::ProcessingThread(void)
 			case CMD_TEST_DCI_TRANSFORMATION:
 				TestDCITransformation(pMsg);
 				break;
+			case CMD_GET_JOB_LIST:
+				SendJobList(pMsg->GetId());
+				break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -10180,4 +10183,20 @@ void ClientSession::TestDCITransformation(CSCPMessage *pRequest)
 
    // Send response
    SendMessage(&msg);
+}
+
+
+//
+// Send list of server jobs
+//
+
+void ClientSession::SendJobList(DWORD dwRqId)
+{
+	CSCPMessage msg;
+
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	msg.SetId(dwRqId);
+	msg.SetVariable(VID_RCC, RCC_SUCCESS);
+	GetJobList(&msg);
+	SendMessage(&msg);
 }

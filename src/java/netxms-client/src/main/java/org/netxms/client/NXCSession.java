@@ -294,6 +294,9 @@ public class NXCSession
 							sendNotification(new NXCNotification(msg.getVariableAsInteger(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE,
 							                                     new NXCAlarm(msg)));
 							break;
+						case NXCPCodes.CMD_JOB_CHANGE_NOTIFICATION:
+							sendNotification(new NXCNotification(NXCNotification.JOB_CHANGE, new NXCServerJob(msg)));
+							break;
 						default:
 							if (msg.getMessageCode() >= 0x1000)
 							{
@@ -1578,5 +1581,30 @@ public class NXCSession
 			page.addLink(new NXCMapObjectLink(type, obj1, obj2, port1, port2));
 		}
 		return page;
+	}
+	
+	/**
+	 * Get list of server jobs
+	 * @return list of server jobs
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public NXCServerJob[] getServerJobList() throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_JOB_LIST);
+		sendMessage(msg);
+		
+		NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId());
+		int rcc = response.getVariableAsInteger(NXCPCodes.VID_RCC);
+		if (rcc != NXCSession.RCC_SUCCESS)
+			throw new NXCException(rcc);
+
+		int count = response.getVariableAsInteger(NXCPCodes.VID_JOB_COUNT);
+		NXCServerJob[] jobList = new NXCServerJob[count];
+		long baseVarId = NXCPCodes.VID_JOB_LIST_BASE;
+		for(int i = 0; i < count; i++, baseVarId += 10)
+			jobList[i] = new NXCServerJob(response, baseVarId);
+		
+		return jobList;
 	}
 }

@@ -18,6 +18,7 @@ public class NXCNotification
 	public static final int NEW_SYSLOG_RECORD = 7;
 	public static final int NEW_SNMP_TRAP = 8;
 	public static final int SITUATION_UPDATE = 9;
+	public static final int JOB_CHANGE = 10;
 	
 	public static final int NOTIFY_BASE = 1000;	// Base value for notifications used as subcode for NXC_EVENT_NOTIFICATION in C library
 	public static final int SERVER_SHUTDOWN = 1001;

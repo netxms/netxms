@@ -295,7 +295,7 @@ typedef struct
 #define CMD_GET_MIB_TIMESTAMP       0x0033
 #define CMD_GET_MIB                 0x0034
 #define CMD_TEST_DCI_TRANSFORMATION 0x0035
-//#define CMD_OPEN_LPP                0x0036
+#define CMD_GET_JOB_LIST            0x0036
 #define CMD_CREATE_OBJECT           0x0037
 #define CMD_GET_EVENT_NAMES         0x0038
 #define CMD_EVENT_NAME_LIST         0x0039
@@ -382,9 +382,9 @@ typedef struct
 #define CMD_CHANGE_SUBSCRIPTION     0x008A
 #define CMD_GET_SYSLOG              0x008B
 #define CMD_SYSLOG_RECORDS          0x008C
-//#define CMD_GET_LPP_LIST            0x008D
-#define CMD_OPEN_LOG_POLICY         0x008E
-#define CMD_CLOSE_LOG_POLICY        0x008F
+#define CMD_JOB_CHANGE_NOTIFICATION 0x008D
+//#define CMD_OPEN_LOG_POLICY         0x008E
+//#define CMD_CLOSE_LOG_POLICY        0x008F
 #define CMD_GET_OBJECT_TOOL_DETAILS 0x0090
 #define CMD_LOCK_OBJECT_TOOLS       0x0091
 #define CMD_UNLOCK_OBJECT_TOOLS     0x0092
@@ -812,6 +812,12 @@ typedef struct
 #define VID_EXECUTION_RESULT        ((DWORD)327)
 #define VID_TABLE_NUM_ROWS          ((DWORD)328)
 #define VID_TABLE_NUM_COLS          ((DWORD)329)
+#define VID_JOB_COUNT               ((DWORD)330)
+#define VID_JOB_ID                  ((DWORD)331)
+#define VID_JOB_TYPE                ((DWORD)332)
+#define VID_JOB_STATUS              ((DWORD)333)
+#define VID_JOB_PROGRESS            ((DWORD)334)
+#define VID_FAILURE_MESSAGE         ((DWORD)335)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -952,6 +958,8 @@ typedef struct
 
 #define VID_TABLE_COLUMN_INFO_BASE  ((DWORD)0x10000000)
 #define VID_TABLE_DATA_BASE         ((DWORD)0x20000000)
+
+#define VID_JOB_LIST_BASE           ((DWORD)0x10000000)
 
 
 //

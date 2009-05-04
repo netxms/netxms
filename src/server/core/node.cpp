@@ -80,6 +80,7 @@ Node::Node()
 	m_iPollCount = 0;
 	m_iRequiredPollCount = 0;	// Use system default
 	m_nUseIfXTable = IFXTABLE_DEFAULT;	// Use system default
+	m_jobQueue = new ServerJobQueue();
 }
 
 
@@ -133,6 +134,7 @@ Node::Node(DWORD dwAddr, DWORD dwFlags, DWORD dwProxyNode, DWORD dwSNMPProxy, DW
 	m_iPollCount = 0;
 	m_iRequiredPollCount = 0;	// Use system default
 	m_nUseIfXTable = IFXTABLE_DEFAULT;	// Use system default
+	m_jobQueue = new ServerJobQueue();
 }
 
 
@@ -150,6 +152,7 @@ Node::~Node()
    safe_free(m_pParamList);
    DestroyRoutingTable(m_pRoutingTable);
 	delete m_pTopology;
+	delete m_jobQueue;
 }
 
 

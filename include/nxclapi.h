@@ -302,6 +302,7 @@ enum
 #define NXC_EVENT_NEW_SYSLOG_RECORD    7
 #define NXC_EVENT_NEW_SNMP_TRAP        8
 #define NXC_EVENT_SITUATION_UPDATE     9
+#define NXC_EVENT_JOB_CHANGE           10
 
 
 //
