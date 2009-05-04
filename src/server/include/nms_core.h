@@ -310,7 +310,7 @@ public:
 
 #define DECLARE_THREAD_STARTER(func) static THREAD_RESULT THREAD_CALL ThreadStarter_##func(void *);
 
-class ClientSession
+class NXCORE_EXPORTABLE ClientSession
 {
 private:
    SOCKET m_hSocket;
@@ -550,6 +550,7 @@ public:
 
    void SendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
    void SendPollerMsg(DWORD dwRqId, const TCHAR *pszMsg);
+	BOOL SendFile(const TCHAR *file, DWORD dwRqId);
 
    DWORD GetIndex(void) { return m_dwIndex; }
    void SetIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }

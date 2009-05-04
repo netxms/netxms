@@ -1301,6 +1301,16 @@ void ClientSession::OnFileUpload(BOOL bSuccess)
 
 
 //
+// Send file to client
+//
+
+BOOL ClientSession::SendFile(const TCHAR *file, DWORD dwRqId)
+{
+	return SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx);
+}
+
+
+//
 // Send server information to client
 //
 
