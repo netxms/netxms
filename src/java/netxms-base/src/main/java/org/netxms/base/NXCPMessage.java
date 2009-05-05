@@ -339,4 +339,13 @@ public class NXCPMessage
 	{
 		return (messageFlags & MF_CONTROL) == MF_CONTROL;
 	}
+	
+	/**
+	 * Return true if message has "end of file" flag set
+	 * @return "end of file" flag
+	 */
+	public boolean isEndOfFileSet()
+	{
+		return (messageFlags & MF_END_OF_FILE) == MF_END_OF_FILE;
+	}
 }

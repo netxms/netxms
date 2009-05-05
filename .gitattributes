@@ -231,6 +231,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/NXCNotification.java -tex
 src/java/netxms-client/src/main/java/org/netxms/client/NXCObject.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCObjectCreationData.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCObjectModificationData.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/NXCReceivedFile.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCServerJob.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCServerVariable.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCServiceRoot.java -text

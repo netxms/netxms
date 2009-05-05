@@ -127,6 +127,7 @@ public class NXCSession
 	private static final int CLIENT_CHALLENGE_SIZE = 256;
 	private static final int MAX_DCI_DATA_ROWS = 200000;
 	private static final int MAX_DCI_STRING_VALUE_LENGTH = 256;
+	private static final int RECEIVED_FILE_TTL = 300000;	// 300 secunds
 	
 	// Internal synchronization objects
 	private final Semaphore syncObjects = new Semaphore(1);
@@ -148,6 +149,7 @@ public class NXCSession
 	private Socket connSocket = null;
 	private NXCPMsgWaitQueue msgWaitQueue = null;
 	private ReceiverThread recvThread = null;
+	private HousekeeperThread housekeeperThread = null;
 	private long requestId = 0;
 	private boolean isConnected = false;
 	
@@ -157,6 +159,9 @@ public class NXCSession
 	
 	// Notification listeners
 	private HashSet<NXCListener> listeners = new HashSet<NXCListener>(0);
+	
+	// Received files
+	private Map<Long, NXCReceivedFile> receivedFiles = new HashMap<Long, NXCReceivedFile>();
 	
 	// Server information
 	private String serverVersion = "(unknown)";
@@ -297,6 +302,9 @@ public class NXCSession
 						case NXCPCodes.CMD_JOB_CHANGE_NOTIFICATION:
 							sendNotification(new NXCNotification(NXCNotification.JOB_CHANGE, new NXCServerJob(msg)));
 							break;
+						case NXCPCodes.CMD_FILE_DATA:
+							processFileData(msg);
+							break;
 						default:
 							if (msg.getMessageCode() >= 0x1000)
 							{
@@ -313,6 +321,34 @@ public class NXCSession
 				}
 				catch(NXCPException e)
 				{
+				}
+			}
+		}
+
+		/**
+		 * Process file data
+		 * @param msg
+		 */
+		private void processFileData(NXCPMessage msg)
+		{
+			long id = msg.getMessageId();
+			NXCReceivedFile file;
+			synchronized(receivedFiles)
+			{
+				file = receivedFiles.get(id);
+				if (file == null)
+				{
+					file = new NXCReceivedFile(id);
+					receivedFiles.put(id, file);
+				}
+			}
+			file.writeData(msg.getBinaryData());
+			if (msg.isEndOfFileSet())
+			{
+				file.close();
+				synchronized(receivedFiles)
+				{
+					receivedFiles.notifyAll();
 				}
 			}
 		}
@@ -353,6 +389,63 @@ public class NXCSession
 			// or added to it and notification code was known
 			if (object != null)
 				sendNotification(new NXCNotification(NXCNotification.USER_DB_CHANGED, code, object));
+		}
+	}
+	
+	
+	/**
+	 * Housekeeper thread - cleans received files, etc.
+	 * 
+	 * @author Victor
+	 *
+	 */
+	private class HousekeeperThread extends Thread
+	{
+		private boolean stopFlag = false;
+		
+		HousekeeperThread()
+		{
+			setDaemon(true);
+			start();
+		}
+	
+		/* (non-Javadoc)
+		 * @see java.lang.Thread#run()
+		 */
+		@Override
+		public void run()
+		{
+			while(!stopFlag)
+			{
+				try
+				{
+					sleep(1000);
+				}
+				catch(InterruptedException e)
+				{
+				}
+				
+				// Check for old entries in received files
+				synchronized(receivedFiles)
+				{
+					long currTime = System.currentTimeMillis();
+					Iterator<NXCReceivedFile> it = receivedFiles.values().iterator();
+					while(it.hasNext())
+					{
+						NXCReceivedFile file = it.next();
+						if (file.getTimestamp() + RECEIVED_FILE_TTL < currTime)
+							it.remove();
+					}
+				}
+			}
+		}
+
+		/**
+		 * @param stopFlag the stopFlag to set
+		 */
+		public void setStopFlag(boolean stopFlag)
+		{
+			this.stopFlag = stopFlag;
 		}
 	}
 	
@@ -507,7 +600,7 @@ public class NXCSession
 	 * @param msg Message to sent
 	 * @throws IOException if case of socket communication failure
 	 */
-	private synchronized void sendMessage(final NXCPMessage msg) throws IOException
+	public synchronized void sendMessage(final NXCPMessage msg) throws IOException
 	{
 		connSocket.getOutputStream().write(msg.createNXCPMessage());
 	}
@@ -522,7 +615,7 @@ public class NXCSession
 	 * @return Message object 
 	 * @throws NXCException if message was not arrived within timeout interval
 	 */
-	private NXCPMessage waitForMessage(final int code, final long id, final int timeout) throws NXCException
+	public NXCPMessage waitForMessage(final int code, final long id, final int timeout) throws NXCException
 	{
 		final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id, timeout);
 		if (msg == null)
@@ -539,7 +632,7 @@ public class NXCSession
 	 * @return Message object 
 	 * @throws NXCException if message was not arrived within timeout interval
 	 */
-	private NXCPMessage waitForMessage(final int code, final long id) throws NXCException
+	public NXCPMessage waitForMessage(final int code, final long id) throws NXCException
 	{
 		final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id);
 		if (msg == null)
@@ -555,7 +648,7 @@ public class NXCSession
 	 * @throws NXCException if message was not arrived within timeout interval or contains
 	 *         RCC other than RCC_SUCCESS
 	 */
-	private void waitForRCC(final long id) throws NXCException
+	public void waitForRCC(final long id) throws NXCException
 	{
 		final NXCPMessage msg = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, id);
 		final int rcc = msg.getVariableAsInteger(NXCPCodes.VID_RCC);
@@ -570,11 +663,50 @@ public class NXCSession
 	 * @param code Message code
 	 * @return New message object
 	 */
-	private final NXCPMessage newMessage(int code)
+	public final NXCPMessage newMessage(int code)
 	{
 		return new NXCPMessage(code, requestId++);
 	}
+	
+	/**
+	 * Wait for specific file to arrive
+	 * @param id Message ID
+	 * @param timeout Wait timeout in milliseconds
+	 * @return Received file or null in case of failure
+	 */
+	public File waitForFile(final long id, final int timeout)
+	{
+		int timeRemaining = timeout;
+		File file = null;
+		
+		while(timeRemaining > 0)
+		{
+			synchronized(receivedFiles)
+			{
+				NXCReceivedFile rf = receivedFiles.get(id);
+				if (rf != null)
+				{
+					if (rf.getStatus() != NXCReceivedFile.OPEN)
+					{
+						if (rf.getStatus() == NXCReceivedFile.RECEIVED)
+							file = rf.getFile();
+						break;
+					}
+				}
 
+				long startTime = System.currentTimeMillis();
+				try
+				{
+					receivedFiles.wait(timeRemaining);
+				}
+				catch(InterruptedException e)
+				{
+				}
+				timeRemaining -= System.currentTimeMillis() - startTime;
+			}
+		}
+		return file;
+	}
 	
 	/**
 	 * Connect to server using previously set credentials.
@@ -593,6 +725,7 @@ public class NXCSession
 			connSocket = new Socket(connAddress, connPort);
 			msgWaitQueue = new NXCPMsgWaitQueue(commandTimeout);
 			recvThread = new ReceiverThread();
+			housekeeperThread = new HousekeeperThread(); 
 			
 			// get server information
 			NXCPMessage request = newMessage(NXCPCodes.CMD_GET_SERVER_INFO);
@@ -664,6 +797,21 @@ public class NXCSession
 				}
 			}
 			recvThread = null;
+		}
+		
+		if (housekeeperThread != null)
+		{
+			while(housekeeperThread.isAlive())
+			{
+				try
+				{
+					housekeeperThread.join();
+				}
+				catch(InterruptedException e)
+				{
+				}
+			}
+			housekeeperThread = null;
 		}
 		
 		connSocket = null;
