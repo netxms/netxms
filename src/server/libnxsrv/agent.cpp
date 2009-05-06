@@ -98,7 +98,7 @@ AgentConnection::AgentConnection()
    m_dwRecvTimeout = 420000;  // 7 minutes
    m_nProtocolVersion = NXCP_VERSION;
 	m_hCurrFile = -1;
-	m_condFileUpload = ConditionCreate(TRUE);
+	m_condFileDownload = ConditionCreate(TRUE);
 }
 
 
@@ -141,7 +141,7 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort,
    m_dwRecvTimeout = 420000;  // 7 minutes
    m_nProtocolVersion = NXCP_VERSION;
 	m_hCurrFile = -1;
-	m_condFileUpload = ConditionCreate(TRUE);
+	m_condFileDownload = ConditionCreate(TRUE);
 }
 
 
@@ -177,7 +177,7 @@ AgentConnection::~AgentConnection()
 		close(m_hCurrFile);
 
    MutexDestroy(m_mutexDataLock);
-	ConditionDestroy(m_condFileUpload);
+	ConditionDestroy(m_condFileDownload);
 }
 
 
@@ -275,7 +275,7 @@ void AgentConnection::ReceiverThread(void)
 			          NXCPMessageCodeName(pRawMsg->wCode, szBuffer), IpToStr(GetIpAddr(), szIpAddr));
 
 			if ((pRawMsg->wCode == CMD_FILE_DATA) &&
-				 (m_hCurrFile != -1) && (pRawMsg->dwId == m_dwUploadRequestId))
+				 (m_hCurrFile != -1) && (pRawMsg->dwId == m_dwDownloadRequestId))
 			{
             if (write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
             {
@@ -284,8 +284,15 @@ void AgentConnection::ReceiverThread(void)
                   close(m_hCurrFile);
                   m_hCurrFile = -1;
             
-                  OnFileUpload(TRUE);
+                  OnFileDownload(TRUE);
                }
+					else
+					{
+						if (m_downloadProgressCallback != NULL)
+						{
+							m_downloadProgressCallback(lseek(m_hCurrFile, 0, SEEK_CUR), m_downloadProgressCallbackArg);
+						}
+					}
             }
             else
             {
@@ -293,7 +300,7 @@ void AgentConnection::ReceiverThread(void)
                close(m_hCurrFile);
                m_hCurrFile = -1;
          
-               OnFileUpload(FALSE);
+               OnFileDownload(FALSE);
             }
 			}
 		}
@@ -1438,7 +1445,8 @@ DWORD AgentConnection::EnableTraps(void)
 // Send custom request to agent
 //
 
-CSCPMessage *AgentConnection::CustomRequest(CSCPMessage *pRequest, const TCHAR *recvFile)
+CSCPMessage *AgentConnection::CustomRequest(CSCPMessage *pRequest, const TCHAR *recvFile,
+														  void (*downloadProgressCallback)(size_t, void *), void *cbArg)
 {
    DWORD dwRqId, rcc;
 	CSCPMessage *msg = NULL;
@@ -1447,7 +1455,7 @@ CSCPMessage *AgentConnection::CustomRequest(CSCPMessage *pRequest, const TCHAR *
    pRequest->SetId(dwRqId);
 	if (recvFile != NULL)
 	{
-		rcc = PrepareFileUpload(recvFile, dwRqId);
+		rcc = PrepareFileDownload(recvFile, dwRqId, downloadProgressCallback, cbArg);
 		if (rcc != ERR_SUCCESS)
 		{
 			// Create fake response message
@@ -1467,9 +1475,9 @@ CSCPMessage *AgentConnection::CustomRequest(CSCPMessage *pRequest, const TCHAR *
 			{
 				if (msg->GetVariableLong(VID_RCC) == ERR_SUCCESS)
 				{
-					if (ConditionWait(m_condFileUpload, 1800000))	 // 30 min timeout
+					if (ConditionWait(m_condFileDownload, 1800000))	 // 30 min timeout
 					{
-						if (!m_fileUploadSucceeded)
+						if (!m_fileDownloadSucceeded)
 						{
 							msg->SetVariable(VID_RCC, ERR_IO_FAILURE);
 							remove(recvFile);
@@ -1498,14 +1506,17 @@ CSCPMessage *AgentConnection::CustomRequest(CSCPMessage *pRequest, const TCHAR *
 // Prepare for file upload
 //
 
-DWORD AgentConnection::PrepareFileUpload(const TCHAR *fileName, DWORD rqId)
+DWORD AgentConnection::PrepareFileDownload(const TCHAR *fileName, DWORD rqId,
+														 void (*downloadProgressCallback)(size_t, void *), void *cbArg)
 {
 	if (m_hCurrFile != -1)
 		return ERR_RESOURCE_BUSY;
 
-	ConditionReset(m_condFileUpload);
+	ConditionReset(m_condFileDownload);
 	m_hCurrFile = open(fileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, O_RDWR);
-	m_dwUploadRequestId = rqId;
+	m_dwDownloadRequestId = rqId;
+	m_downloadProgressCallback = downloadProgressCallback;
+	m_downloadProgressCallbackArg = cbArg;
 	return (m_hCurrFile != -1) ? ERR_SUCCESS : ERR_FILE_OPEN_ERROR;
 }
 
@@ -1514,8 +1525,8 @@ DWORD AgentConnection::PrepareFileUpload(const TCHAR *fileName, DWORD rqId)
 // File upload completion handler
 //
 
-void AgentConnection::OnFileUpload(BOOL success)
+void AgentConnection::OnFileDownload(BOOL success)
 {
-	m_fileUploadSucceeded = success;
-	ConditionSet(m_condFileUpload);
+	m_fileDownloadSucceeded = success;
+	ConditionSet(m_condFileDownload);
 }
