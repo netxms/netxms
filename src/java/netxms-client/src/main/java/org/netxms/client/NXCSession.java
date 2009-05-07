@@ -1128,19 +1128,19 @@ public class NXCSession
 	 */
 	public HashMap<String, NXCServerVariable> getServerVariables() throws IOException, NXCException
 	{
-		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_CONFIG_VARLIST);
-		sendMessage(msg);
+		NXCPMessage request = newMessage(NXCPCodes.CMD_GET_CONFIG_VARLIST);
+		sendMessage(request);
 
-		msg = waitForRCC(msg.getMessageId());
+		final NXCPMessage response = waitForRCC(request.getMessageId());
 		
 		long id;
-		int i, count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_VARIABLES);
+		int i, count = response.getVariableAsInteger(NXCPCodes.VID_NUM_VARIABLES);
 		final HashMap<String, NXCServerVariable> varList = new HashMap<String, NXCServerVariable>(count);
 		for(i = 0, id = NXCPCodes.VID_VARLIST_BASE; i < count; i++, id += 3)
 		{
-			String name = msg.getVariableAsString(id);
-			varList.put(name, new NXCServerVariable(name, msg.getVariableAsString(id + 1),
-			                                        msg.getVariableAsBoolean(id + 2)));
+			String name = response.getVariableAsString(id);
+			varList.put(name, new NXCServerVariable(name, response.getVariableAsString(id + 1),
+			                                        response.getVariableAsBoolean(id + 2)));
 		}
 		
 		return varList;
@@ -1269,14 +1269,14 @@ public class NXCSession
 	 */
 	private long createUserDBObject(final String name, final boolean isGroup) throws IOException, NXCException
 	{
-		NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_USER);
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_USER);
 		msg.setVariable(NXCPCodes.VID_USER_NAME, name);
 		msg.setVariableInt16(NXCPCodes.VID_IS_GROUP, isGroup ? 1 : 0);
 		sendMessage(msg);
 		
-		msg = waitForRCC(msg.getMessageId());
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
 		
-		return msg.getVariableAsInt64(NXCPCodes.VID_USER_ID);
+		return response.getVariableAsInt64(NXCPCodes.VID_USER_ID);
 	}
 	
 	/**
@@ -1370,17 +1370,17 @@ public class NXCSession
 	 */
 	public NXCDCIValue[] getLastValues(final long nodeId) throws IOException, NXCException
 	{
-		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_LAST_VALUES);
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_LAST_VALUES);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
 		sendMessage(msg);
 		
-		msg = waitForRCC(msg.getMessageId());
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
 		
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ITEMS);
+		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ITEMS);
 		NXCDCIValue[] list = new NXCDCIValue[count];
 		long base = NXCPCodes.VID_DCI_VALUES_BASE;
 		for(int i = 0; i < count; i++, base += 10)
-			list[i] = new NXCDCIValue(nodeId, msg, base);
+			list[i] = new NXCDCIValue(nodeId, response, base);
 		
 		return list;
 	}
@@ -1547,7 +1547,6 @@ public class NXCSession
 		}
 		
 		sendMessage(msg);
-		msg = waitForRCC(msg.getMessageId());
 		NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId(),
 		                                      commandTimeout * 10);  // Object creation could take long time
 
@@ -1697,10 +1696,7 @@ public class NXCSession
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
 		sendMessage(msg);
 		
-		NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId());
-		int rcc = response.getVariableAsInteger(NXCPCodes.VID_RCC);
-		if (rcc != NXCSession.RCC_SUCCESS)
-			throw new NXCException(rcc);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
 		
 		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_OBJECTS);
 		long[] idList = response.getVariableAsUInt32Array(NXCPCodes.VID_OBJECT_LIST);
@@ -1736,10 +1732,7 @@ public class NXCSession
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_JOB_LIST);
 		sendMessage(msg);
 		
-		NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId());
-		int rcc = response.getVariableAsInteger(NXCPCodes.VID_RCC);
-		if (rcc != NXCSession.RCC_SUCCESS)
-			throw new NXCException(rcc);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
 
 		int count = response.getVariableAsInteger(NXCPCodes.VID_JOB_COUNT);
 		NXCServerJob[] jobList = new NXCServerJob[count];
