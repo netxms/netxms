@@ -24,6 +24,15 @@
 
 
 //
+// Global variables
+//
+
+TCHAR g_windowsServiceName[MAX_PATH] = DEFAULT_AGENT_SERVICE_NAME;
+TCHAR g_windowsServiceDisplayName[MAX_PATH] = _T("NetXMS Agent");
+TCHAR g_windowsEventSourceName[MAX_PATH] = DEFAULT_AGENT_EVENT_SOURCE;
+
+
+//
 // Static data
 //
 
@@ -75,7 +84,7 @@ static VOID WINAPI AgentServiceMain(DWORD argc, LPTSTR *argv)
 {
    SERVICE_STATUS status;
 
-   serviceHandle = RegisterServiceCtrlHandler(AGENT_SERVICE_NAME, ServiceCtrlHandler);
+   serviceHandle = RegisterServiceCtrlHandler(g_windowsServiceName, ServiceCtrlHandler);
 
    // Now we start service initialization
    status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
@@ -114,7 +123,7 @@ static VOID WINAPI AgentServiceMain(DWORD argc, LPTSTR *argv)
 
 void InitService(void)
 {
-   static SERVICE_TABLE_ENTRY serviceTable[2]={ { AGENT_SERVICE_NAME, AgentServiceMain }, { NULL, NULL } };
+   static SERVICE_TABLE_ENTRY serviceTable[2]={ { g_windowsServiceName, AgentServiceMain }, { NULL, NULL } };
    char szErrorText[256];
 
    if (!StartServiceCtrlDispatcher(serviceTable))
@@ -130,7 +139,7 @@ void InitService(void)
 void InstallService(char *execName, char *confFile)
 {
    SC_HANDLE mgr, service;
-   char cmdLine[MAX_PATH*2], szErrorText[256];
+   TCHAR cmdLine[8192], szErrorText[256];
 
    mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
    if (mgr == NULL)
@@ -140,7 +149,9 @@ void InstallService(char *execName, char *confFile)
       return;
    }
 
-   sprintf(cmdLine, "\"%s\" -d -c \"%s\"", execName, confFile);
+   _sntprintf(cmdLine, 8192, _T("\"%s\" -d -c \"%s\" -n \"%s\" -e \"%s\""),
+	           execName, confFile, g_windowsServiceName, g_windowsEventSourceName);
+	
 	if (g_szPlatformSuffix[0] != 0)
 	{
 		strcat(cmdLine, " -P \"");
@@ -157,26 +168,27 @@ void InstallService(char *execName, char *confFile)
 		strcat(cmdLine, g_szConfigServer);
 		strcat(cmdLine, "\"");
 	}
-   service = CreateService(mgr, AGENT_SERVICE_NAME, "NetXMS Agent", GENERIC_READ,SERVICE_WIN32_OWN_PROCESS,
-                           SERVICE_AUTO_START,SERVICE_ERROR_NORMAL,cmdLine,NULL,NULL,NULL,NULL,NULL);
+   
+	service = CreateService(mgr, g_windowsServiceName, g_windowsServiceDisplayName, GENERIC_READ, SERVICE_WIN32_OWN_PROCESS,
+                           SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, cmdLine, NULL, NULL, NULL, NULL, NULL);
    if (service == NULL)
    {
       DWORD code = GetLastError();
 
       if (code == ERROR_SERVICE_EXISTS)
-         printf("ERROR: Service named '" AGENT_SERVICE_NAME "' already exist\n");
+         printf("ERROR: Service named '%s' already exist\n", g_windowsServiceName);
       else
          printf("ERROR: Cannot create service (%s)\n", GetSystemErrorText(code, szErrorText, 256));
    }
    else
    {
-      printf("Win32 Agent service created successfully\n");
+      printf("Service \"%s\" created successfully\n", g_windowsServiceName);
       CloseServiceHandle(service);
+
+		InstallEventSource(execName);
    }
 
    CloseServiceHandle(mgr);
-
-   InstallEventSource(execName);
 }
 
 
@@ -197,10 +209,10 @@ void RemoveService(void)
       return;
    }
 
-   service=OpenService(mgr, AGENT_SERVICE_NAME, DELETE);
+   service=OpenService(mgr, g_windowsServiceName, DELETE);
    if (service==NULL)
    {
-      printf("ERROR: Cannot open service named '" AGENT_SERVICE_NAME "' (%s)\n",
+      printf("ERROR: Cannot open service named '%s' (%s)\n", g_windowsServiceName,
              GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
    else
@@ -208,7 +220,7 @@ void RemoveService(void)
       if (DeleteService(service))
          printf("Win32 Agent service deleted successfully\n");
       else
-         printf("ERROR: Cannot remove service named '" AGENT_SERVICE_NAME "' (%s)\n",
+         printf("ERROR: Cannot remove service named '%s' (%s)\n", g_windowsServiceName,
                 GetSystemErrorText(GetLastError(), szErrorText, 256));
 
       CloseServiceHandle(service);
@@ -237,10 +249,10 @@ void StartAgentService(void)
       return;
    }
 
-   service = OpenService(mgr, AGENT_SERVICE_NAME, SERVICE_START);
+   service = OpenService(mgr, g_windowsServiceName, SERVICE_START);
    if (service == NULL)
    {
-      printf("ERROR: Cannot open service named '" AGENT_SERVICE_NAME "' (%s)\n",
+      printf("ERROR: Cannot open service named '%s' (%s)\n", g_windowsServiceName,
              GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
    else
@@ -248,7 +260,7 @@ void StartAgentService(void)
       if (StartService(service, 0, NULL))
          printf("Win32 Agent service started successfully\n");
       else
-         printf("ERROR: Cannot start service named '" AGENT_SERVICE_NAME "' (%s)\n",
+         printf("ERROR: Cannot start service named '%s' (%s)\n", g_windowsServiceName,
                 GetSystemErrorText(GetLastError(), szErrorText, 256));
 
       CloseServiceHandle(service);
@@ -275,10 +287,10 @@ void StopAgentService(void)
       return;
    }
 
-   service = OpenService(mgr, AGENT_SERVICE_NAME, SERVICE_STOP);
+   service = OpenService(mgr, g_windowsServiceName, SERVICE_STOP);
    if (service == NULL)
    {
-      printf("ERROR: Cannot open service named '" AGENT_SERVICE_NAME "' (%s)\n",
+      printf("ERROR: Cannot open service named '%s' (%s)\n", g_windowsServiceName,
              GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
    else
@@ -288,7 +300,7 @@ void StopAgentService(void)
       if (ControlService(service, SERVICE_CONTROL_STOP, &status))
          printf("Win32 Agent service stopped successfully\n");
       else
-         printf("ERROR: Cannot stop service named '" AGENT_SERVICE_NAME "' (%s)\n",
+         printf("ERROR: Cannot stop service named '%s' (%s)\n", g_windowsServiceName,
                 GetSystemErrorText(GetLastError(), szErrorText, 256));
 
       CloseServiceHandle(service);
@@ -306,10 +318,10 @@ void InstallEventSource(char *path)
 {
    HKEY hKey;
    DWORD dwTypes = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
-   char szErrorText[256];
+   TCHAR szErrorText[256], key[MAX_PATH];
 
-   if (ERROR_SUCCESS != RegCreateKeyEx(HKEY_LOCAL_MACHINE,
-         "System\\CurrentControlSet\\Services\\EventLog\\System\\" AGENT_EVENT_SOURCE,
+	_sntprintf(key, MAX_PATH, _T("System\\CurrentControlSet\\Services\\EventLog\\System\\%s"), g_windowsEventSourceName);
+   if (ERROR_SUCCESS != RegCreateKeyEx(HKEY_LOCAL_MACHINE, key,
          0,NULL,REG_OPTION_NON_VOLATILE,KEY_SET_VALUE,NULL,&hKey,NULL))
    {
       printf("Unable to create registry key: %s\n",
@@ -321,7 +333,7 @@ void InstallEventSource(char *path)
    RegSetValueEx(hKey, "EventMessageFile", 0, REG_EXPAND_SZ, (BYTE *)path, (DWORD)(strlen(path) + 1));
 
    RegCloseKey(hKey);
-   printf("Event source \"" AGENT_EVENT_SOURCE "\" installed successfully\n");
+   printf("Event source \"%s\" installed successfully\n", g_windowsEventSourceName);
 }
 
 
@@ -331,17 +343,17 @@ void InstallEventSource(char *path)
 
 void RemoveEventSource(void)
 {
-   char szErrorText[256];
+   TCHAR szErrorText[256], key[MAX_PATH];
 
-   if (ERROR_SUCCESS == RegDeleteKey(HKEY_LOCAL_MACHINE,
-         "System\\CurrentControlSet\\Services\\EventLog\\System\\" AGENT_EVENT_SOURCE))
+	_sntprintf(key, MAX_PATH, _T("System\\CurrentControlSet\\Services\\EventLog\\System\\%s"), g_windowsEventSourceName);
+   if (ERROR_SUCCESS == RegDeleteKey(HKEY_LOCAL_MACHINE, key))
    {
-      printf("Event source \"" AGENT_EVENT_SOURCE "\" uninstalled successfully\n");
+      _tprintf(_T("Event source \"%s\" uninstalled successfully\n"), g_windowsEventSourceName);
    }
    else
    {
-      printf("Unable to uninstall event source \"" AGENT_EVENT_SOURCE "\": %s\n",
-             GetSystemErrorText(GetLastError(), szErrorText, 256));
+      _tprintf(_T("Unable to uninstall event source \"%s\": %s\n"), g_windowsEventSourceName,
+               GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
 }
 
@@ -364,10 +376,10 @@ BOOL WaitForService(DWORD dwDesiredState)
       return FALSE;
    }
 
-   service = OpenService(mgr, AGENT_SERVICE_NAME, SERVICE_QUERY_STATUS);
+   service = OpenService(mgr, g_windowsServiceName, SERVICE_QUERY_STATUS);
    if (service == NULL)
    {
-      printf("ERROR: Cannot open service named '" AGENT_SERVICE_NAME "' (%s)\n",
+      printf("ERROR: Cannot open service named '%s' (%s)\n", g_windowsServiceName,
              GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
    else

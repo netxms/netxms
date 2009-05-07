@@ -82,11 +82,11 @@
 //
 
 #ifdef _WIN32
-#define AGENT_SERVICE_NAME    _T("NetXMSAgentdW32")
-#define AGENT_EVENT_SOURCE    _T("NetXMS Win32 Agent")
-#define NXAGENTD_SYSLOG_NAME  AGENT_EVENT_SOURCE
+#define DEFAULT_AGENT_SERVICE_NAME    _T("NetXMSAgentdW32")
+#define DEFAULT_AGENT_EVENT_SOURCE    _T("NetXMS Win32 Agent")
+#define NXAGENTD_SYSLOG_NAME          g_windowsEventSourceName
 #else
-#define NXAGENTD_SYSLOG_NAME  _T("nxagentd")
+#define NXAGENTD_SYSLOG_NAME          _T("nxagentd")
 #endif
 
 #define MAX_PSUFFIX_LENGTH 32
@@ -404,6 +404,8 @@ extern MUTEX g_hSessionListAccess;
 #ifdef _WIN32
 extern BOOL (__stdcall *imp_GlobalMemoryStatusEx)(LPMEMORYSTATUSEX);
 extern DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD);
+
+extern TCHAR g_windowsEventSourceName[];
 #endif   /* _WIN32 */
 
 #endif   /* _nxagentd_h_ */
