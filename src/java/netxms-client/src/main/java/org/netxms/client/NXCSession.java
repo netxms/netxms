@@ -645,15 +645,17 @@ public class NXCSession
 	 * Wait for CMD_REQUEST_COMPLETED message with given id
 	 * 
 	 * @param id Message id
+	 * @return received message
 	 * @throws NXCException if message was not arrived within timeout interval or contains
 	 *         RCC other than RCC_SUCCESS
 	 */
-	public void waitForRCC(final long id) throws NXCException
+	public NXCPMessage waitForRCC(final long id) throws NXCException
 	{
 		final NXCPMessage msg = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, id);
 		final int rcc = msg.getVariableAsInteger(NXCPCodes.VID_RCC);
 		if (rcc != RCC_SUCCESS)
 			throw new NXCException(rcc);
+		return msg;
 	}
 	
 
@@ -1129,10 +1131,7 @@ public class NXCSession
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_CONFIG_VARLIST);
 		sendMessage(msg);
 
-		msg = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId());
-		int rcc = msg.getVariableAsInteger(NXCPCodes.VID_RCC);
-		if (rcc != RCC_SUCCESS)
-			throw new NXCException(rcc);
+		msg = waitForRCC(msg.getMessageId());
 		
 		long id;
 		int i, count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_VARIABLES);
@@ -1275,10 +1274,7 @@ public class NXCSession
 		msg.setVariableInt16(NXCPCodes.VID_IS_GROUP, isGroup ? 1 : 0);
 		sendMessage(msg);
 		
-		msg = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId());
-		int rcc = msg.getVariableAsInteger(NXCPCodes.VID_RCC);
-		if (rcc != RCC_SUCCESS)
-			throw new NXCException(rcc);
+		msg = waitForRCC(msg.getMessageId());
 		
 		return msg.getVariableAsInt64(NXCPCodes.VID_USER_ID);
 	}
@@ -1378,10 +1374,7 @@ public class NXCSession
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
 		sendMessage(msg);
 		
-		msg = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId());
-		int rcc = msg.getVariableAsInteger(NXCPCodes.VID_RCC);
-		if (rcc != RCC_SUCCESS)
-			throw new NXCException(rcc);
+		msg = waitForRCC(msg.getMessageId());
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ITEMS);
 		NXCDCIValue[] list = new NXCDCIValue[count];
@@ -1554,6 +1547,7 @@ public class NXCSession
 		}
 		
 		sendMessage(msg);
+		msg = waitForRCC(msg.getMessageId());
 		NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId(),
 		                                      commandTimeout * 10);  // Object creation could take long time
 
