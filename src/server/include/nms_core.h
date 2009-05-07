@@ -571,7 +571,7 @@ public:
    void OnSyslogMessage(NX_LOG_RECORD *pRec);
    void OnNewSNMPTrap(CSCPMessage *pMsg);
    void OnObjectChange(NetObj *pObject);
-   void OnUserDBUpdate(int iCode, DWORD dwUserId, NETXMS_USER *pUser, NETXMS_USER_GROUP *pGroup);
+   void OnUserDBUpdate(int code, DWORD id, UserDatabaseObject *user);
    void OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
    void OnActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction);
 	void OnSituationChange(CSCPMessage *msg);
@@ -721,9 +721,9 @@ DWORD SearchIndex(INDEX *pIndex, DWORD dwIndexSize, DWORD dwKey);
 
 #ifdef _WITH_ENCRYPTION
 X509 *CertificateFromLoginMessage(CSCPMessage *pMsg);
-BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pChallenge,
+BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChallenge,
 									  BYTE *pSignature, DWORD dwSigLen, int nMappingMethod,
-									  TCHAR *pszMappingData);
+									  const TCHAR *pszMappingData);
 void ReloadCertificates(void);
 #endif
 

@@ -71,8 +71,8 @@ X509 *CertificateFromLoginMessage(CSCPMessage *pMsg)
 // Validate user's certificate
 //
 
-BOOL ValidateUserCertificate(X509 *pCert, TCHAR *pszLogin, BYTE *pChallenge, BYTE *pSignature,
-									  DWORD dwSigLen, int nMappingMethod, TCHAR *pszMappingData)
+BOOL ValidateUserCertificate(X509 *pCert, const TCHAR *pszLogin, BYTE *pChallenge, BYTE *pSignature,
+									  DWORD dwSigLen, int nMappingMethod, const TCHAR *pszMappingData)
 {
 	EVP_PKEY *pKey;
 	BYTE hash[SHA1_DIGEST_SIZE];

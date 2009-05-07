@@ -253,14 +253,14 @@ void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *,
 // Send user database update notification to all clients
 //
 
-void SendUserDBUpdate(int iCode, DWORD dwUserId, NETXMS_USER *pUser, NETXMS_USER_GROUP *pGroup)
+void SendUserDBUpdate(int code, DWORD id, UserDatabaseObject *object)
 {
    int i;
 
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
    for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (m_pSessionList[i] != NULL)
-         m_pSessionList[i]->OnUserDBUpdate(iCode, dwUserId, pUser, pGroup);
+         m_pSessionList[i]->OnUserDBUpdate(code, id, object);
    RWLockUnlock(m_rwlockSessionListAccess);
 }
 

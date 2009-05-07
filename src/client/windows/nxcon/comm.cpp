@@ -308,6 +308,8 @@ static DWORD WINAPI LoginThread(void *pArg)
    {
       SetInfoText(hWnd, _T("Loading event information..."));
       dwResult = NXCLoadEventDB(g_hSession);
+		if (dwResult == RCC_ACCESS_DENIED)
+			dwResult = RCC_SUCCESS;    // User may not have rights to view event configuration, it's ok here
    }
 
    // Synchronize images

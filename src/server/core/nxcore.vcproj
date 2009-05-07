@@ -697,7 +697,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\users.cpp"
+				RelativePath=".\userdb.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\userdb_objects.cpp"
 				>
 			</File>
 			<File

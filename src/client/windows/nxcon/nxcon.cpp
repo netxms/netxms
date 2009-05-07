@@ -543,6 +543,7 @@ int CConsoleApp::ExitInstance()
 
       NXCSetDebugCallback(NULL);
       NXCDisconnect(g_hSession);
+		g_hSession = NULL;
       NXCShutdown();
       NXCDestroyCCList(g_pCCList);
    }

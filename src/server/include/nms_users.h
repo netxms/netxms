@@ -41,41 +41,114 @@
 
 
 //
-// User structure
+// Generic user database object
 //
 
-typedef struct
+class NXCORE_EXPORTABLE UserDatabaseObject
 {
-   DWORD dwId;
-   TCHAR szName[MAX_USER_NAME];
-   BYTE passwordHash[SHA1_DIGEST_SIZE];
-   DWORD dwSystemRights;      // System-wide user's rights
-   WORD wFlags;
-   TCHAR szFullName[MAX_USER_FULLNAME];
-   TCHAR szDescription[MAX_USER_DESCR];
-   int nGraceLogins;
-   int nAuthMethod;
-	int nCertMappingMethod;
-	TCHAR *pszCertMappingData;
-   uuid_t guid;
-} NETXMS_USER;
+protected:
+	DWORD m_id;
+   uuid_t m_guid;
+	TCHAR m_name[MAX_USER_NAME];
+	TCHAR m_description[MAX_USER_DESCR];
+	DWORD m_systemRights;
+	DWORD m_flags;
+	StringMap m_attributes;		// Custom attributes
+
+public:
+	UserDatabaseObject();
+	UserDatabaseObject(DB_RESULT hResult, int row);
+	UserDatabaseObject(DWORD id, const TCHAR *name);
+	virtual ~UserDatabaseObject();
+
+	virtual bool saveToDatabase(DB_HANDLE hdb);
+	virtual bool deleteFromDatabase(DB_HANDLE hdb);
+
+	virtual void fillMessage(CSCPMessage *msg);
+	virtual void modifyFromMessage(CSCPMessage *msg);
+
+	DWORD getId() { return m_id; }
+	const TCHAR *getName() { return m_name; }
+	const TCHAR *getDescription() { return m_description; }
+	DWORD getSystemRights() { return m_systemRights; }
+	DWORD getFlags() { return m_flags; }
+	TCHAR *getGuidAsText(TCHAR *buffer) { return uuid_to_string(m_guid, buffer); }
+
+	bool isDeleted() { return (m_flags & UF_DELETED) ? true : false; }
+	bool isDisabled() { return (m_flags & UF_DISABLED) ? true : false; }
+	bool isModified() { return (m_flags & UF_MODIFIED) ? true : false; }
+
+	void setDeleted() { m_flags |= UF_DELETED; }
+
+	const TCHAR *getAttribure(const TCHAR *name) { return m_attributes.Get(name); }
+	void setAttribute(const TCHAR *name, const TCHAR *value) { m_attributes.Set(name, value); }
+};
 
 
 //
-// Group structure
+// User object
 //
 
-typedef struct
+class NXCORE_EXPORTABLE User : public UserDatabaseObject
 {
-   DWORD dwId;
-   TCHAR szName[MAX_USER_NAME];
-   DWORD dwSystemRights;
-   WORD wFlags;
-   DWORD dwNumMembers;
-   DWORD *pMembers;
-   TCHAR szDescription[MAX_USER_DESCR];
-   uuid_t guid;
-} NETXMS_USER_GROUP;
+protected:
+	TCHAR m_fullName[MAX_USER_FULLNAME];
+   BYTE m_passwordHash[SHA1_DIGEST_SIZE];
+   int m_graceLogins;
+   int m_authMethod;
+	int m_certMappingMethod;
+	TCHAR *m_certMappingData;
+
+public:
+	User();
+	User(DB_RESULT hResult, int row);
+	User(DWORD id, const TCHAR *name);
+	virtual ~User();
+
+	virtual bool saveToDatabase(DB_HANDLE hdb);
+	virtual bool deleteFromDatabase(DB_HANDLE hdb);
+
+	virtual void fillMessage(CSCPMessage *msg);
+	virtual void modifyFromMessage(CSCPMessage *msg);
+
+	const TCHAR *getFullName() { return m_fullName; }
+	int getGraceLogins() { return m_graceLogins; }
+	int getAuthMethod() { return m_authMethod; }
+	int getCertMappingMethod() { return m_certMappingMethod; }
+	const TCHAR *getCertMappingData() { return m_certMappingData; }
+
+	bool validatePassword(const TCHAR *password);
+	void decreaseGraceLogins() { if (m_graceLogins > 0) m_graceLogins--; }
+	void setPassword(BYTE *passwordHash, bool clearChangePasswdFlag);
+};
+
+
+//
+// Group object
+//
+
+class NXCORE_EXPORTABLE Group : public UserDatabaseObject
+{
+protected:
+	int m_memberCount;
+	DWORD *m_members;
+
+public:
+	Group();
+	Group(DB_RESULT hResult, int row);
+	Group(DWORD id, const TCHAR *name);
+	virtual ~Group();
+
+	virtual void fillMessage(CSCPMessage *msg);
+	virtual void modifyFromMessage(CSCPMessage *msg);
+
+	virtual bool saveToDatabase(DB_HANDLE hdb);
+	virtual bool deleteFromDatabase(DB_HANDLE hdb);
+
+	void addUser(DWORD userId);
+	void deleteUser(DWORD userId);
+	bool isMember(DWORD userId);
+};
 
 
 //
@@ -124,28 +197,18 @@ public:
 
 BOOL LoadUsers(void);
 void SaveUsers(DB_HANDLE hdb);
-void AddUserToGroup(DWORD dwUserId, DWORD dwGroupId);
-BOOL CheckUserMembership(DWORD dwUserId, DWORD dwGroupId);
 DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
 							  DWORD dwSigLen, void *pCert, BYTE *pChallenge,
 							  DWORD *pdwId, DWORD *pdwSystemRights,
 							  BOOL *pbChangePasswd);
+DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD dwId, BYTE *pszPassword, BOOL bResetChPasswd);
+BOOL NXCORE_EXPORTABLE CheckUserMembership(DWORD dwUserId, DWORD dwGroupId);
+DWORD DeleteUserDatabaseObject(DWORD id);
+void SendUserDBUpdate(int code, DWORD id, UserDatabaseObject *object);
+DWORD NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwId);
+DWORD NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg);
+UserDatabaseObject **OpenUserDatabase(int *count);
+void CloseUserDatabase();
 void DumpUsers(CONSOLE_CTX pCtx);
-DWORD CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwId);
-DWORD DeleteUserFromDB(DWORD dwId);
-DWORD ModifyUser(NETXMS_USER *pUserInfo);
-DWORD ModifyGroup(NETXMS_USER_GROUP *pGroupInfo);
-DWORD SetUserPassword(DWORD dwId, BYTE *pszPassword, BOOL bResetChPasswd);
-void SendUserDBUpdate(int iCode, DWORD dwUserId, NETXMS_USER *pUser, NETXMS_USER_GROUP *pUserGroup);
-
-
-//
-// Global variables
-//
-
-extern NETXMS_USER *g_pUserList;
-extern DWORD g_dwNumUsers;
-extern NETXMS_USER_GROUP *g_pGroupList;
-extern DWORD g_dwNumGroups;
 
 #endif

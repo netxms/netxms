@@ -1,0 +1,627 @@
+/* 
+** NetXMS - Network Management System
+** Copyright (C) 2003-2009 Victor Kirhenshtein
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: userdb_objects.cpp
+**
+**/
+
+#include "nxcore.h"
+
+
+/*****************************************************************************
+ **  UserDatabaseObject
+ ****************************************************************************/
+
+
+//
+// Constructor for generic user database object - create from database
+// Expects fields in the following order:
+//    id,name,system_access,flags,description,guid
+//
+
+UserDatabaseObject::UserDatabaseObject(DB_RESULT hResult, int row)
+{
+	m_id = DBGetFieldULong(hResult, row, 0);
+	DBGetField(hResult, row, 1, m_name, MAX_USER_NAME);
+	m_systemRights = DBGetFieldULong(hResult, row, 2);
+	m_flags = DBGetFieldULong(hResult, row, 3);
+	DBGetField(hResult, row, 4, m_description, MAX_USER_DESCR);
+	DecodeSQLString(m_description);
+	DBGetFieldGUID(hResult, row, 5, m_guid);
+}
+
+
+//
+// Default constructor for generic object
+//
+
+UserDatabaseObject::UserDatabaseObject()
+{
+}
+
+
+//
+// Condtructor for generic object - create new object with given id and name
+//
+
+UserDatabaseObject::UserDatabaseObject(DWORD id, const TCHAR *name)
+{
+	m_id = id;
+	uuid_generate(m_guid);
+	nx_strncpy(m_name, name, MAX_OBJECT_NAME);
+	m_systemRights = 0;
+	m_description[0] = 0;
+	m_flags = UF_MODIFIED;
+}
+
+
+//
+// Destructor for generic user database object
+//
+
+UserDatabaseObject::~UserDatabaseObject()
+{
+}
+
+
+//
+// Save object to database
+//
+
+bool UserDatabaseObject::saveToDatabase(DB_HANDLE hdb)
+{
+	return false;
+}
+
+
+//
+// Delete object from database
+//
+
+bool UserDatabaseObject::deleteFromDatabase(DB_HANDLE hdb)
+{
+	return false;
+}
+
+
+//
+// Fill NXCP message with object data
+//
+
+void UserDatabaseObject::fillMessage(CSCPMessage *msg)
+{
+   msg->SetVariable(VID_USER_ID, m_id);
+   msg->SetVariable(VID_USER_NAME, m_name);
+   msg->SetVariable(VID_USER_FLAGS, (WORD)m_flags);
+   msg->SetVariable(VID_USER_SYS_RIGHTS, m_systemRights);
+   msg->SetVariable(VID_USER_DESCRIPTION, m_description);
+   msg->SetVariable(VID_GUID, m_guid, UUID_LENGTH);
+}
+
+
+//
+// Modify object from NXCP message
+//
+
+void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
+{
+	DWORD flags;
+
+   msg->GetVariableStr(VID_USER_DESCRIPTION, m_description, MAX_USER_DESCR);
+   msg->GetVariableStr(VID_USER_NAME, m_name, MAX_USER_NAME);
+   flags = msg->GetVariableShort(VID_USER_FLAGS);
+
+	if (m_id != 0)
+		m_systemRights = msg->GetVariableLong(VID_USER_SYS_RIGHTS);
+
+	// Modify only UF_DISABLED and UF_CHANGE_PASSWORD flags from message
+   // Ignore DISABLED flag for superuser and "everyone" group
+   m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD);
+   if ((m_id == 0) || (m_id == GROUP_EVERYONE))
+      m_flags |= flags & UF_CHANGE_PASSWORD;
+   else
+      m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD);
+
+	m_flags |= UF_MODIFIED;
+}
+
+
+/*****************************************************************************
+ **  User
+ ****************************************************************************/
+
+
+//
+// Constructor for user object - create from database
+// Expects fields in the following order:
+//    id,name,system_access,flags,description,guid,password,full_name,
+//    grace_logins,auth_method,cert_mapping_method,cert_mapping_data
+//
+
+User::User(DB_RESULT hResult, int row)
+     :UserDatabaseObject(hResult, row)
+{
+	TCHAR buffer[256];
+
+	if (StrToBin(DBGetField(hResult, row, 6, buffer, 256), m_passwordHash, SHA1_DIGEST_SIZE) != SHA1_DIGEST_SIZE)
+	{
+		nxlog_write(MSG_INVALID_SHA1_HASH, EVENTLOG_WARNING_TYPE, "s", m_name);
+		CalculateSHA1Hash((BYTE *)"netxms", 6, m_passwordHash);
+	}
+
+	DBGetField(hResult, row, 7, m_fullName, MAX_USER_FULLNAME);
+	DecodeSQLString(m_fullName);
+
+	m_graceLogins = DBGetFieldLong(hResult, row, 8);
+	m_authMethod = DBGetFieldLong(hResult, row, 9);
+	m_certMappingMethod = DBGetFieldLong(hResult, row, 10);
+	
+	m_certMappingData = DBGetField(hResult, row, 11, NULL, 0);
+	if (m_certMappingData != NULL)
+		DecodeSQLString(m_certMappingData);
+
+	// Set full system access for superuser
+	if (m_id == 0)
+		m_systemRights = SYSTEM_ACCESS_FULL;
+}
+
+
+//
+// Constructor for user object - create default superuser
+//
+
+User::User()
+{
+	m_id = 0;
+	_tcscpy(m_name, _T("admin"));
+	m_flags = UF_MODIFIED | UF_CHANGE_PASSWORD;
+	m_systemRights = SYSTEM_ACCESS_FULL;
+	m_fullName[0] = 0;
+	_tcscpy(m_description, _T("Built-in system administrator account"));
+	CalculateSHA1Hash((BYTE *)"netxms", 6, m_passwordHash);
+	m_graceLogins = MAX_GRACE_LOGINS;
+	m_authMethod = AUTH_NETXMS_PASSWORD;
+	uuid_generate(m_guid);
+	m_certMappingMethod = 0;
+	m_certMappingData = NULL;
+}
+
+
+//
+// Constructor for user object - new user
+//
+
+User::User(DWORD id, const TCHAR *name)
+     : UserDatabaseObject(id, name)
+{
+	m_fullName[0] = 0;
+	m_graceLogins = MAX_GRACE_LOGINS;
+	m_authMethod = AUTH_NETXMS_PASSWORD;
+	m_certMappingMethod = USER_MAP_CERT_BY_SUBJECT;
+	m_certMappingData = NULL;
+	CalculateSHA1Hash((BYTE *)"", 0, m_passwordHash);
+}
+
+
+//
+// Destructor for user object
+//
+
+User::~User()
+{
+	safe_free(m_certMappingData);
+}
+
+
+//
+// Save object to database
+//
+
+bool User::saveToDatabase(DB_HANDLE hdb)
+{
+   DB_RESULT hResult;
+	TCHAR query[4096], password[SHA1_DIGEST_SIZE * 2 + 1], guidText[64], *escData, *escFullName, *escDescr;
+   bool userExists = false;
+
+   // Clear modification flag
+   m_flags &= ~UF_MODIFIED;
+
+   // Check if user record exists in database
+   _sntprintf(query, 4096, _T("SELECT id FROM users WHERE id=%d"), m_id);
+   hResult = DBSelect(hdb, query);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) != 0)
+         userExists = true;
+      DBFreeResult(hResult);
+   }
+
+   // Create or update record in database
+   BinToStr(m_passwordHash, SHA1_DIGEST_SIZE, password);
+	escData = EncodeSQLString(CHECK_NULL_EX(m_certMappingData));
+	escFullName = EncodeSQLString(m_fullName);
+	escDescr = EncodeSQLString(m_description);
+   if (userExists)
+      _sntprintf(query, 4096, _T("UPDATE users SET name='%s',password='%s',system_access=%d,flags=%d,")
+                              _T("full_name='%s',description='%s',grace_logins=%d,guid='%s',")
+							         _T("auth_method=%d,cert_mapping_method=%d,cert_mapping_data='%s' WHERE id=%d"),
+              m_name, password, m_systemRights, m_flags, escFullName,
+              escDescr, m_graceLogins, uuid_to_string(m_guid, guidText),
+              m_authMethod, m_certMappingMethod, escData, m_id);
+   else
+      _sntprintf(query, 4096, _T("INSERT INTO users (id,name,password,system_access,flags,full_name,")
+		                        _T("description,grace_logins,guid,auth_method,cert_mapping_method,")
+                              _T("cert_mapping_data) VALUES (%d,'%s','%s',%d,%d,'%s','%s',%d,'%s',%d,%d,'%s')"),
+              m_id, m_name, password, m_systemRights, m_flags,
+              escFullName, escDescr, m_graceLogins, uuid_to_string(m_guid, guidText),
+              m_authMethod, m_certMappingMethod, escData);
+	free(escData);
+	free(escFullName);
+	free(escDescr);
+
+	return DBQuery(hdb, query) ? true : false;
+}
+
+
+//
+// Delete object from database
+//
+
+bool User::deleteFromDatabase(DB_HANDLE hdb)
+{
+	TCHAR query[256];
+	BOOL rc;
+
+	rc = DBBegin(hdb);
+	if (rc)
+	{
+		_sntprintf(query, 256, _T("DELETE FROM users WHERE id=%d"), m_id);
+		rc = DBQuery(hdb, query);
+		if (rc)
+		{
+			_sntprintf(query, 256, _T("DELETE FROM user_profiles WHERE user_id=%d"), m_id);
+			rc = DBQuery(hdb, query);
+		}
+		if (rc)
+			DBCommit(hdb);
+		else
+			DBRollback(hdb);
+	}
+	return rc ? true : false;
+}
+
+
+//
+// Validate user's password
+//
+
+bool User::validatePassword(const TCHAR *password)
+{
+   BYTE hash[SHA1_DIGEST_SIZE];
+
+	CalculateSHA1Hash((BYTE *)password, strlen(password), hash);
+	return !memcmp(hash, m_passwordHash, SHA1_DIGEST_SIZE);
+}
+
+
+//
+// Set user's password
+//
+
+void User::setPassword(BYTE *passwordHash, bool clearChangePasswdFlag)
+{
+	memcpy(m_passwordHash, passwordHash, SHA1_DIGEST_SIZE);
+	m_graceLogins = MAX_GRACE_LOGINS;
+	m_flags |= UF_MODIFIED;
+	if (clearChangePasswdFlag)
+		m_flags &= ~UF_CHANGE_PASSWORD;
+}
+
+
+//
+// Fill CSCP message with user data
+//
+
+void User::fillMessage(CSCPMessage *msg)
+{
+	UserDatabaseObject::fillMessage(msg);
+
+   msg->SetVariable(VID_USER_FULL_NAME, m_fullName);
+   msg->SetVariable(VID_AUTH_METHOD, (WORD)m_authMethod);
+	msg->SetVariable(VID_CERT_MAPPING_METHOD, (WORD)m_certMappingMethod);
+	msg->SetVariable(VID_CERT_MAPPING_DATA, CHECK_NULL_EX(m_certMappingData));
+}
+
+
+//
+// Modify user object from NXCP message
+//
+
+void User::modifyFromMessage(CSCPMessage *msg)
+{
+	UserDatabaseObject::modifyFromMessage(msg);
+
+	msg->GetVariableStr(VID_USER_FULL_NAME, m_fullName, MAX_USER_FULLNAME);
+   m_authMethod = msg->GetVariableShort(VID_AUTH_METHOD);
+	m_certMappingMethod = msg->GetVariableShort(VID_CERT_MAPPING_METHOD);
+	safe_free(m_certMappingData);
+	m_certMappingData = msg->GetVariableStr(VID_CERT_MAPPING_DATA);
+}
+
+
+/*****************************************************************************
+ **  Group
+ ****************************************************************************/
+
+
+//
+// Constructor for group object - create from database
+// Expects fields in the following order:
+//    id,name,system_access,flags,description,guid
+//
+
+Group::Group(DB_RESULT hr, int row)
+      :UserDatabaseObject(hr, row)
+{
+	DB_RESULT hResult;
+	TCHAR query[256];
+
+	_sntprintf(query, 256, _T("SELECT user_id FROM user_group_members WHERE group_id=%d"), m_id);
+   hResult = DBSelect(g_hCoreDB, query);
+   if (hResult != NULL)
+	{
+		m_memberCount = DBGetNumRows(hResult);
+		if (m_memberCount > 0)
+		{
+			m_members = (DWORD *)malloc(sizeof(DWORD) * m_memberCount);
+			for(int i = 0; i < m_memberCount; i++)
+				m_members[i] = DBGetFieldULong(hResult, i, 0);
+		}
+		DBFreeResult(hResult);
+	}
+}
+
+
+//
+// Constructor for group object - create "Everyone" group
+//
+
+Group::Group()
+{
+	m_id = GROUP_EVERYONE;
+	_tcscpy(m_name, _T("Everyone"));
+	m_flags = UF_MODIFIED;
+	m_systemRights = 0;
+	_tcscpy(m_description, _T("Built-in everyone group"));
+	uuid_generate(m_guid);
+	m_memberCount = 0;
+	m_members = NULL;
+}
+
+
+//
+// Constructor for group object - create new group
+//
+
+Group::Group(DWORD id, const TCHAR *name)
+      :UserDatabaseObject(id, name)
+{
+	m_memberCount = 0;
+	m_members = NULL;
+}
+
+
+//
+// Destructor for group object
+//
+
+Group::~Group()
+{
+	safe_free(m_members);
+}
+
+
+//
+// Save object to database
+//
+
+bool Group::saveToDatabase(DB_HANDLE hdb)
+{
+   DB_RESULT hResult;
+	TCHAR query[4096], guidText[64], *escDescr;
+   bool groupExists = false;
+	BOOL rc;
+
+   // Clear modification flag
+   m_flags &= ~UF_MODIFIED;
+
+   // Check if group record exists in database
+   _sntprintf(query, 4096, _T("SELECT name FROM user_groups WHERE id=%d"), m_id);
+   hResult = DBSelect(hdb, query);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) != 0)
+         groupExists = true;
+      DBFreeResult(hResult);
+   }
+
+   // Create or update record in database
+   escDescr = EncodeSQLString(m_description);
+   if (groupExists)
+      _sntprintf(query, 4096, _T("UPDATE user_groups SET name='%s',system_access=%d,flags=%d,")
+                              _T("description='%s',guid='%s' WHERE id=%d"),
+              m_name, m_systemRights, m_flags, escDescr,
+              uuid_to_string(m_guid, guidText), m_id);
+   else
+      _sntprintf(query, 4096, _T("INSERT INTO user_groups (id,name,system_access,flags,description,guid) ")
+                              _T("VALUES (%d,'%s',%d,%d,'%s','%s')"),
+              m_id, m_name, m_systemRights, m_flags, escDescr,
+              uuid_to_string(m_guid, guidText));
+   free(escDescr);
+
+   rc = DBBegin(hdb);
+	if (rc)
+	{
+		rc = DBQuery(hdb,query);
+		if (rc)
+		{
+			if (groupExists)
+			{
+				_sntprintf(query, 4096, _T("DELETE FROM user_group_members WHERE group_id=%d"), m_id);
+				rc = DBQuery(hdb, query);
+			}
+
+			if (rc)
+			{
+				for(int i = 0; (i < m_memberCount) && rc; i++)
+				{
+					_sntprintf(query, 4096, _T("INSERT INTO user_group_members (group_id, user_id) VALUES (%d, %d)"),
+							     m_id, m_members[i]);
+					rc = DBQuery(hdb, query);
+				}
+			}
+		}
+		if (rc)
+			DBCommit(hdb);
+		else
+			DBRollback(hdb);
+	}
+
+	return rc ? true : false;
+}
+
+
+//
+// Delete object from database
+//
+
+bool Group::deleteFromDatabase(DB_HANDLE hdb)
+{
+	TCHAR query[256];
+	BOOL rc;
+
+	rc = DBBegin(hdb);
+	if (rc)
+	{
+		_sntprintf(query, 256, _T("DELETE FROM groups WHERE id=%d"), m_id);
+		rc = DBQuery(hdb, query);
+		if (rc)
+		{
+			_sntprintf(query, 256, _T("DELETE FROM user_group_members WHERE group_id=%d"), m_id);
+			rc = DBQuery(hdb, query);
+		}
+		if (rc)
+			DBCommit(hdb);
+		else
+			DBRollback(hdb);
+	}
+	return rc ? true : false;
+}
+
+
+//
+// Check if given user is a member
+//
+
+bool Group::isMember(DWORD userId)
+{
+	int i;
+
+	if (m_id == GROUP_EVERYONE)
+		return true;
+
+	for(i = 0; i < m_memberCount; i++)
+		if (m_members[i] == userId)
+			return true;
+	return false;
+}
+
+
+//
+// Add user to group
+//
+
+void Group::addUser(DWORD userId)
+{
+	int i;
+
+   // Check if user already in group
+   for(i = 0; i < m_memberCount; i++)
+      if (m_members[i] == userId)
+         return;
+
+   // Not in group, add it
+	m_memberCount++;
+   m_members = (DWORD *)realloc(m_members, sizeof(DWORD) * m_memberCount);
+   m_members[i] = userId;
+
+	m_flags |= UF_MODIFIED;
+}
+
+
+//
+// Delete user from group
+//
+
+void Group::deleteUser(DWORD userId)
+{
+   int i;
+
+   for(i = 0; i < m_memberCount; i++)
+      if (m_members[i] == userId)
+      {
+         m_memberCount--;
+         memmove(&m_members[i], &m_members[i + 1], sizeof(DWORD) * (m_memberCount - i));
+      }
+	m_flags |= UF_MODIFIED;
+}
+
+
+//
+// Fill NXCP message with user group data
+//
+
+void Group::fillMessage(CSCPMessage *msg)
+{
+   DWORD varId;
+	int i;
+
+	UserDatabaseObject::fillMessage(msg);
+
+   msg->SetVariable(VID_NUM_MEMBERS, (DWORD)m_memberCount);
+   for(i = 0, varId = VID_GROUP_MEMBER_BASE; i < m_memberCount; i++, varId++)
+      msg->SetVariable(varId, m_members[i]);
+}
+
+
+//
+// Modify group object from NXCP message
+//
+
+void Group::modifyFromMessage(CSCPMessage *msg)
+{
+	int i;
+	DWORD varId;
+
+	UserDatabaseObject::modifyFromMessage(msg);
+
+   m_memberCount = msg->GetVariableLong(VID_NUM_MEMBERS);
+   m_members = (DWORD *)realloc(m_members, sizeof(DWORD) * m_memberCount);
+   for(i = 0, varId = VID_GROUP_MEMBER_BASE; i < m_memberCount; i++, varId++)
+      m_members[i] = msg->GetVariableLong(varId);
+}

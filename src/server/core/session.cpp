@@ -156,45 +156,6 @@ DEFINE_THREAD_STARTER(GetServerFile)
 
 
 //
-// Fill CSCP message with user data
-//
-
-static void FillUserInfoMessage(CSCPMessage *pMsg, NETXMS_USER *pUser)
-{
-   pMsg->SetVariable(VID_USER_ID, pUser->dwId);
-   pMsg->SetVariable(VID_USER_NAME, pUser->szName);
-   pMsg->SetVariable(VID_USER_FLAGS, pUser->wFlags);
-   pMsg->SetVariable(VID_USER_SYS_RIGHTS, pUser->dwSystemRights);
-   pMsg->SetVariable(VID_USER_FULL_NAME, pUser->szFullName);
-   pMsg->SetVariable(VID_USER_DESCRIPTION, pUser->szDescription);
-   pMsg->SetVariable(VID_GUID, pUser->guid, UUID_LENGTH);
-   pMsg->SetVariable(VID_AUTH_METHOD, (WORD)pUser->nAuthMethod);
-	pMsg->SetVariable(VID_CERT_MAPPING_METHOD, (WORD)pUser->nCertMappingMethod);
-	pMsg->SetVariable(VID_CERT_MAPPING_DATA, CHECK_NULL_EX(pUser->pszCertMappingData));
-}
-
-
-//
-// Fill CSCP message with user group data
-//
-
-static void FillGroupInfoMessage(CSCPMessage *pMsg, NETXMS_USER_GROUP *pGroup)
-{
-   DWORD i, dwId;
-
-   pMsg->SetVariable(VID_USER_ID, pGroup->dwId);
-   pMsg->SetVariable(VID_USER_NAME, pGroup->szName);
-   pMsg->SetVariable(VID_USER_FLAGS, pGroup->wFlags);
-   pMsg->SetVariable(VID_USER_SYS_RIGHTS, pGroup->dwSystemRights);
-   pMsg->SetVariable(VID_USER_DESCRIPTION, pGroup->szDescription);
-   pMsg->SetVariable(VID_NUM_MEMBERS, pGroup->dwNumMembers);
-   pMsg->SetVariable(VID_GUID, pGroup->guid, UUID_LENGTH);
-   for(i = 0, dwId = VID_GROUP_MEMBER_BASE; i < pGroup->dwNumMembers; i++, dwId++)
-      pMsg->SetVariable(dwId, pGroup->pMembers[i]);
-}
-
-
-//
 // Client communication read thread starter
 //
 
@@ -2330,28 +2291,22 @@ void ClientSession::ModifyObject(CSCPMessage *pRequest)
 void ClientSession::SendUserDB(DWORD dwRqId)
 {
    CSCPMessage msg;
-   DWORD i;
+	UserDatabaseObject **users;
+   int i, userCount;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
    SendMessage(&msg);
+	msg.DeleteAllVariables();
 
-   // Send users
-   msg.SetCode(CMD_USER_DATA);
-   for(i = 0; i < g_dwNumUsers; i++)
+   // Send user database
+	users = OpenUserDatabase(&userCount);
+   for(i = 0; i < userCount; i++)
    {
-      FillUserInfoMessage(&msg, &g_pUserList[i]);
-      SendMessage(&msg);
-      msg.DeleteAllVariables();
-   }
-
-   // Send groups
-   msg.SetCode(CMD_GROUP_DATA);
-   for(i = 0; i < g_dwNumGroups; i++)
-   {
-      FillGroupInfoMessage(&msg, &g_pGroupList[i]);
+		msg.SetCode((users[i]->getId() & GROUP_FLAG) ? CMD_GROUP_DATA : CMD_USER_DATA);
+		users[i]->fillMessage(&msg);
       SendMessage(&msg);
       msg.DeleteAllVariables();
    }
@@ -2436,43 +2391,7 @@ void ClientSession::UpdateUser(CSCPMessage *pRequest)
    }
    else
    {
-      DWORD dwUserId, dwResult;
-
-      dwUserId = pRequest->GetVariableLong(VID_USER_ID);
-      if (dwUserId & GROUP_FLAG)
-      {
-         NETXMS_USER_GROUP group;
-         DWORD i, dwId;
-
-         group.dwId = dwUserId;
-         pRequest->GetVariableStr(VID_USER_DESCRIPTION, group.szDescription, MAX_USER_DESCR);
-         pRequest->GetVariableStr(VID_USER_NAME, group.szName, MAX_USER_NAME);
-         group.wFlags = pRequest->GetVariableShort(VID_USER_FLAGS);
-         group.dwSystemRights = pRequest->GetVariableLong(VID_USER_SYS_RIGHTS);
-         group.dwNumMembers = pRequest->GetVariableLong(VID_NUM_MEMBERS);
-         group.pMembers = (DWORD *)malloc(sizeof(DWORD) * group.dwNumMembers);
-         for(i = 0, dwId = VID_GROUP_MEMBER_BASE; i < group.dwNumMembers; i++, dwId++)
-            group.pMembers[i] = pRequest->GetVariableLong(dwId);
-         dwResult = ModifyGroup(&group);
-         safe_free(group.pMembers);
-      }
-      else
-      {
-         NETXMS_USER user;
-
-         user.dwId = dwUserId;
-         pRequest->GetVariableStr(VID_USER_DESCRIPTION, user.szDescription, MAX_USER_DESCR);
-         pRequest->GetVariableStr(VID_USER_FULL_NAME, user.szFullName, MAX_USER_FULLNAME);
-         pRequest->GetVariableStr(VID_USER_NAME, user.szName, MAX_USER_NAME);
-         user.wFlags = pRequest->GetVariableShort(VID_USER_FLAGS);
-         user.dwSystemRights = pRequest->GetVariableLong(VID_USER_SYS_RIGHTS);
-         user.nAuthMethod = pRequest->GetVariableShort(VID_AUTH_METHOD);
-			user.nCertMappingMethod = pRequest->GetVariableShort(VID_CERT_MAPPING_METHOD);
-			user.pszCertMappingData = pRequest->GetVariableStr(VID_CERT_MAPPING_DATA);
-         dwResult = ModifyUser(&user);
-			safe_free(user.pszCertMappingData);
-      }
-      msg.SetVariable(VID_RCC, dwResult);
+      msg.SetVariable(VID_RCC, ModifyUserDatabaseObject(pRequest));
    }
 
    // Send response
@@ -2513,7 +2432,7 @@ void ClientSession::DeleteUser(CSCPMessage *pRequest)
       {
          DWORD dwResult;
 
-         dwResult = DeleteUserFromDB(dwUserId);
+         dwResult = DeleteUserDatabaseObject(dwUserId);
          msg.SetVariable(VID_RCC, dwResult);
       }
       else
@@ -2581,7 +2500,7 @@ void ClientSession::LockUserDB(DWORD dwRqId, BOOL bLock)
 // Notify client on user database update
 //
 
-void ClientSession::OnUserDBUpdate(int iCode, DWORD dwUserId, NETXMS_USER *pUser, NETXMS_USER_GROUP *pGroup)
+void ClientSession::OnUserDBUpdate(int code, DWORD id, UserDatabaseObject *object)
 {
    CSCPMessage msg;
 
@@ -2589,19 +2508,16 @@ void ClientSession::OnUserDBUpdate(int iCode, DWORD dwUserId, NETXMS_USER *pUser
    {
       msg.SetCode(CMD_USER_DB_UPDATE);
       msg.SetId(0);
-      msg.SetVariable(VID_UPDATE_TYPE, (WORD)iCode);
+      msg.SetVariable(VID_UPDATE_TYPE, (WORD)code);
 
-      switch(iCode)
+      switch(code)
       {
          case USER_DB_CREATE:
          case USER_DB_MODIFY:
-            if (dwUserId & GROUP_FLAG)
-               FillGroupInfoMessage(&msg, pGroup);
-            else
-               FillUserInfoMessage(&msg, pUser);
+				object->fillMessage(&msg);
             break;
          default:
-            msg.SetVariable(VID_USER_ID, dwUserId);
+            msg.SetVariable(VID_USER_ID, id);
             break;
       }
 
