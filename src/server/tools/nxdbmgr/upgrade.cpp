@@ -103,6 +103,28 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 
 
 //
+// Upgrade from V90 to V91
+//
+
+static BOOL H_UpgradeFromV90(void)
+{
+	if (!CreateTable(_T("CREATE TABLE userdb_custom_attributes (")
+		              _T("object_id integer not null,")
+	                 _T("attr_name varchar(255) not null,")
+						  _T("attr_value $SQL:TEXT not null,")
+						  _T("PRIMARY KEY(object_id,attr_name))")))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='91' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V89 to V90
 //
 
@@ -3958,6 +3980,7 @@ static struct
 	{ 87, H_UpgradeFromV87 },
 	{ 88, H_UpgradeFromV88 },
 	{ 89, H_UpgradeFromV89 },
+	{ 90, H_UpgradeFromV90 },
    { 0, NULL }
 };
 

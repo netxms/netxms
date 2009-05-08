@@ -105,6 +105,7 @@ const TCHAR *g_tables[] =
 	"situations",
 	"snmp_communities",
 	"web_maps",
+	"userdb_custom_attributes",
 	NULL
 };
 

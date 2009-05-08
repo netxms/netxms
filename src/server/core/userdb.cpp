@@ -490,3 +490,44 @@ void CloseUserDatabase()
 {
    MutexUnlock(m_mutexUserDatabaseAccess);
 }
+
+
+//
+// Get custom attribute's value
+//
+
+const TCHAR *GetUserDbObjectAttr(DWORD id, const TCHAR *name)
+{
+	const TCHAR *value = NULL;
+
+   MutexLock(m_mutexUserDatabaseAccess, INFINITE);
+
+   for(int i = 0; i < m_userCount; i++)
+		if (m_users[i]->getId() == id)
+      {
+			value = m_users[i]->getAttribute(name);
+         break;
+      }
+
+   MutexUnlock(m_mutexUserDatabaseAccess);
+	return value;
+}
+
+
+//
+// Set custom attribute's value
+//
+
+void SetUserDbObjectAttr(DWORD id, const TCHAR *name, const TCHAR *value)
+{
+   MutexLock(m_mutexUserDatabaseAccess, INFINITE);
+
+   for(int i = 0; i < m_userCount; i++)
+		if (m_users[i]->getId() == id)
+      {
+			m_users[i]->setAttribute(name, value);
+         break;
+      }
+
+   MutexUnlock(m_mutexUserDatabaseAccess);
+}

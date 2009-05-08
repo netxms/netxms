@@ -141,6 +141,74 @@ void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
 }
 
 
+//
+// Load custom attributes from database
+//
+
+bool UserDatabaseObject::loadCustomAttributes(DB_HANDLE hdb)
+{
+	DB_RESULT hResult;
+	TCHAR query[256], *attrName, *attrValue;
+	bool success = false;
+
+	_sntprintf(query, 256, _T("SELECT attr_name,attr_value FROM userdb_custom_attributes WHERE object_id=%d"), m_id);
+	hResult = DBSelect(hdb, query);
+	if (hResult != NULL)
+	{
+		int count = DBGetNumRows(hResult);
+		for(int i = 0; i < count; i++)
+		{
+			attrName = DBGetField(hResult, i, 0, NULL, 0);
+			if (attrName != NULL)
+				DecodeSQLString(attrName);
+			else
+				attrName = _tcsdup(_T(""));
+
+			attrValue = DBGetField(hResult, i, 1, NULL, 0);
+			if (attrValue != NULL)
+				DecodeSQLString(attrValue);
+			else
+				attrValue = _tcsdup(_T(""));
+
+			m_attributes.SetPreallocated(attrName, attrValue);
+		}
+		DBFreeResult(hResult);
+		success = true;
+	}
+	return success;
+}
+
+
+//
+// Save custom attributes to database
+//
+
+bool UserDatabaseObject::saveCustomAttributes(DB_HANDLE hdb)
+{
+	TCHAR query[8192], *escName, *escValue;
+	DWORD i;
+	bool success = false;
+
+	_sntprintf(query, 256, _T("DELETE FROM userdb_custom_attributes WHERE object_id=%d"), m_id);
+	if (DBQuery(hdb, query))
+	{
+		for(i = 0; i < m_attributes.Size(); i++)
+		{
+			escName = EncodeSQLString(m_attributes.GetKeyByIndex(i));
+			escValue = EncodeSQLString(m_attributes.GetValueByIndex(i));
+			_sntprintf(query, 8192, _T("INSERT INTO userdb_custom_attributes (object_id,attr_name,attr_value) VALUES (%d,'%s','%s')"),
+			           m_id, escName, escValue);
+			free(escName);
+			free(escValue);
+			if (!DBQuery(hdb, query))
+				break;
+		}
+		success = (i == m_attributes.Size());
+	}
+	return success;
+}
+
+
 /*****************************************************************************
  **  User
  ****************************************************************************/
@@ -178,6 +246,8 @@ User::User(DB_RESULT hResult, int row)
 	// Set full system access for superuser
 	if (m_id == 0)
 		m_systemRights = SYSTEM_ACCESS_FULL;
+
+	loadCustomAttributes(g_hCoreDB);
 }
 
 
@@ -274,7 +344,20 @@ bool User::saveToDatabase(DB_HANDLE hdb)
 	free(escFullName);
 	free(escDescr);
 
-	return DBQuery(hdb, query) ? true : false;
+	BOOL rc = DBBegin(hdb);
+	if (rc)
+	{
+		rc = DBQuery(hdb, query);
+		if (rc)
+		{
+			rc = saveCustomAttributes(hdb);
+		}
+		if (rc)
+			DBCommit(hdb);
+		else
+			DBRollback(hdb);
+	}
+	return rc ? true : false;
 }
 
 
@@ -296,6 +379,11 @@ bool User::deleteFromDatabase(DB_HANDLE hdb)
 		{
 			_sntprintf(query, 256, _T("DELETE FROM user_profiles WHERE user_id=%d"), m_id);
 			rc = DBQuery(hdb, query);
+			if (rc)
+			{
+				_sntprintf(query, 256, _T("DELETE FROM userdb_custom_attributes WHERE object_id=%d"), m_id);
+				rc = DBQuery(hdb, query);
+			}
 		}
 		if (rc)
 			DBCommit(hdb);
@@ -394,6 +482,8 @@ Group::Group(DB_RESULT hr, int row)
 		}
 		DBFreeResult(hResult);
 	}
+
+	loadCustomAttributes(g_hCoreDB);
 }
 
 
@@ -493,6 +583,10 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
 					_sntprintf(query, 4096, _T("INSERT INTO user_group_members (group_id, user_id) VALUES (%d, %d)"),
 							     m_id, m_members[i]);
 					rc = DBQuery(hdb, query);
+					if (rc)
+					{
+						rc = saveCustomAttributes(hdb);
+					}
 				}
 			}
 		}
@@ -524,6 +618,11 @@ bool Group::deleteFromDatabase(DB_HANDLE hdb)
 		{
 			_sntprintf(query, 256, _T("DELETE FROM user_group_members WHERE group_id=%d"), m_id);
 			rc = DBQuery(hdb, query);
+			if (rc)
+			{
+				_sntprintf(query, 256, _T("DELETE FROM userdb_custom_attributes WHERE object_id=%d"), m_id);
+				rc = DBQuery(hdb, query);
+			}
 		}
 		if (rc)
 			DBCommit(hdb);

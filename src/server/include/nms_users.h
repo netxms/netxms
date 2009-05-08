@@ -55,6 +55,9 @@ protected:
 	DWORD m_flags;
 	StringMap m_attributes;		// Custom attributes
 
+	bool loadCustomAttributes(DB_HANDLE hdb);
+	bool saveCustomAttributes(DB_HANDLE hdb);
+
 public:
 	UserDatabaseObject();
 	UserDatabaseObject(DB_RESULT hResult, int row);
@@ -80,8 +83,8 @@ public:
 
 	void setDeleted() { m_flags |= UF_DELETED; }
 
-	const TCHAR *getAttribure(const TCHAR *name) { return m_attributes.Get(name); }
-	void setAttribute(const TCHAR *name, const TCHAR *value) { m_attributes.Set(name, value); }
+	const TCHAR *getAttribute(const TCHAR *name) { return m_attributes.Get(name); }
+	void setAttribute(const TCHAR *name, const TCHAR *value) { m_attributes.Set(name, value); m_flags |= UF_MODIFIED; }
 };
 
 
@@ -209,6 +212,8 @@ DWORD NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwI
 DWORD NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg);
 UserDatabaseObject **OpenUserDatabase(int *count);
 void CloseUserDatabase();
+const TCHAR *GetUserDbObjectAttr(DWORD id, const TCHAR *name);
+void SetUserDbObjectAttr(DWORD id, const TCHAR *name, const TCHAR *value);
 void DumpUsers(CONSOLE_CTX pCtx);
 
 #endif
