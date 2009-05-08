@@ -215,32 +215,35 @@ bool LogParser::matchLogRecord(bool hasAttributes, const char *source, DWORD eve
 	for(i = 0; i < m_numRules; i++)
 	{
 		trace(4, _T("checking rule %d \"%s\""), i + 1, m_rules[i]->getDescription());
-		bool ruleMatched = hasAttributes ? 
-			m_rules[i]->matchEx(source, eventId, level, line, m_cb, objectId, m_userArg) : 
-			m_rules[i]->match(line, m_cb, objectId, m_userArg);
-		if (((state = checkContext(m_rules[i])) != NULL) && ruleMatched)
+		if ((state = checkContext(m_rules[i])) != NULL)
 		{
-			trace(1, _T("rule %d \"%s\" matched"), i + 1, m_rules[i]->getDescription());
-			if (!matched)
-				m_recordsMatched++;
-			
-			// Update context
-			if (m_rules[i]->getContextToChange() != NULL)
+			bool ruleMatched = hasAttributes ?
+				m_rules[i]->matchEx(source, eventId, level, line, m_cb, objectId, m_userArg) : 
+				m_rules[i]->match(line, m_cb, objectId, m_userArg);
+			if (ruleMatched)
 			{
-				m_contexts.Set(m_rules[i]->getContextToChange(), s_states[m_rules[i]->getContextAction()]);
-				trace(2, _T("rule %d \"%s\": context %s set to %s"), i + 1, m_rules[i]->getDescription(), m_rules[i]->getContextToChange(), s_states[m_rules[i]->getContextAction()]);
+				trace(1, _T("rule %d \"%s\" matched"), i + 1, m_rules[i]->getDescription());
+				if (!matched)
+					m_recordsMatched++;
+				
+				// Update context
+				if (m_rules[i]->getContextToChange() != NULL)
+				{
+					m_contexts.Set(m_rules[i]->getContextToChange(), s_states[m_rules[i]->getContextAction()]);
+					trace(2, _T("rule %d \"%s\": context %s set to %s"), i + 1, m_rules[i]->getDescription(), m_rules[i]->getContextToChange(), s_states[m_rules[i]->getContextAction()]);
+				}
+				
+				// Set context of this rule to inactive if rule context mode is "automatic reset"
+				if (!_tcscmp(state, s_states[CONTEXT_SET_AUTOMATIC]))
+				{
+					m_contexts.Set(m_rules[i]->getContext(), s_states[CONTEXT_CLEAR]);
+					trace(2, _T("rule %d \"%s\": context %s cleared because it was set to automatic reset mode"),
+							i + 1, m_rules[i]->getDescription(), m_rules[i]->getContext());
+				}
+				matched = true;
+				if (!m_processAllRules || m_rules[i]->getBreakFlag())
+					break;
 			}
-			
-			// Set context of this rule to inactive if rule context mode is "automatic reset"
-			if (!_tcscmp(state, s_states[CONTEXT_SET_AUTOMATIC]))
-			{
-				m_contexts.Set(m_rules[i]->getContext(), s_states[CONTEXT_CLEAR]);
-				trace(2, _T("rule %d \"%s\": context %s cleared because it was set to automatic reset mode"),
-				      i + 1, m_rules[i]->getDescription(), m_rules[i]->getContext());
-			}
-			matched = true;
-			if (!m_processAllRules || m_rules[i]->getBreakFlag())
-				break;
 		}
 	}
 	if (i < m_numRules)
