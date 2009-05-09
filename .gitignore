@@ -26,6 +26,7 @@ src/agent/core/nxagentd
 src/agent/core/static_subagents.cpp
 src/agent/install/Output
 src/install/windows/files/*
+src/java/netxms-eclipse/library/jar/*.jar
 src/libnxsl/lex.yy.cpp
 src/libnxsl/parser.output
 src/libnxsl/parser.tab.cpp
