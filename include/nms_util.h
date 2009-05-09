@@ -303,8 +303,8 @@ public:
 	void Clear(void);
 
 	DWORD Size(void) { return m_dwSize; }
-	TCHAR *GetKeyByIndex(DWORD idx) { return (idx < m_dwSize) ? m_ppszKeys[idx] : NULL; }
-	TCHAR *GetValueByIndex(DWORD idx) { return (idx < m_dwSize) ? m_ppszValues[idx] : NULL; }
+	TCHAR *GetKeyByIndex(DWORD idx) { return (idx < m_dwSize) ? CHECK_NULL_EX(m_ppszKeys[idx]) : NULL; }
+	TCHAR *GetValueByIndex(DWORD idx) { return (idx < m_dwSize) ? CHECK_NULL_EX(m_ppszValues[idx]) : NULL; }
 };
 
 #endif   /* __cplusplus */

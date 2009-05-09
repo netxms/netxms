@@ -105,12 +105,20 @@ bool UserDatabaseObject::deleteFromDatabase(DB_HANDLE hdb)
 
 void UserDatabaseObject::fillMessage(CSCPMessage *msg)
 {
+	DWORD i, varId;
+
    msg->SetVariable(VID_USER_ID, m_id);
    msg->SetVariable(VID_USER_NAME, m_name);
    msg->SetVariable(VID_USER_FLAGS, (WORD)m_flags);
    msg->SetVariable(VID_USER_SYS_RIGHTS, m_systemRights);
    msg->SetVariable(VID_USER_DESCRIPTION, m_description);
    msg->SetVariable(VID_GUID, m_guid, UUID_LENGTH);
+	msg->SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, m_attributes.Size());
+	for(i = 0, varId = VID_CUSTOM_ATTRIBUTES_BASE; i < m_attributes.Size(); i++)
+	{
+		msg->SetVariable(varId++, m_attributes.GetKeyByIndex(i));
+		msg->SetVariable(varId++, m_attributes.GetValueByIndex(i));
+	}
 }
 
 
@@ -125,6 +133,23 @@ void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
    msg->GetVariableStr(VID_USER_DESCRIPTION, m_description, MAX_USER_DESCR);
    msg->GetVariableStr(VID_USER_NAME, m_name, MAX_USER_NAME);
    flags = msg->GetVariableShort(VID_USER_FLAGS);
+
+	// Update custom attributes only if VID_NUM_CUSTOM_ATTRIBUTES exist -
+	// older client versions may not be aware of custom attributes
+	if (msg->IsVariableExist(VID_NUM_CUSTOM_ATTRIBUTES))
+	{
+		DWORD i, varId, count;
+		TCHAR *name, *value;
+
+		count = msg->GetVariableLong(VID_NUM_CUSTOM_ATTRIBUTES);
+		m_attributes.Clear();
+		for(i = 0, varId = VID_CUSTOM_ATTRIBUTES_BASE; i < count; i++)
+		{
+			name = msg->GetVariableStr(varId++);
+			value = msg->GetVariableStr(varId++);
+			m_attributes.SetPreallocated((name != NULL) ? name : _tcsdup(_T("")), (value != NULL) ? value : _tcsdup(_T("")));
+		}
+	}
 
 	if (m_id != 0)
 		m_systemRights = msg->GetVariableLong(VID_USER_SYS_RIGHTS);
@@ -206,6 +231,17 @@ bool UserDatabaseObject::saveCustomAttributes(DB_HANDLE hdb)
 		success = (i == m_attributes.Size());
 	}
 	return success;
+}
+
+
+//
+// Get custom attribute as DWORD
+//
+
+DWORD UserDatabaseObject::getAttributeAsULong(const TCHAR *name)
+{
+	const TCHAR *value = getAttribute(name);
+	return (value != NULL) ? _tcstoul(value, NULL, 0) : 0;
 }
 
 

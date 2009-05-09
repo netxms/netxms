@@ -84,6 +84,7 @@ public:
 	void setDeleted() { m_flags |= UF_DELETED; }
 
 	const TCHAR *getAttribute(const TCHAR *name) { return m_attributes.Get(name); }
+	DWORD getAttributeAsULong(const TCHAR *name);
 	void setAttribute(const TCHAR *name, const TCHAR *value) { m_attributes.Set(name, value); m_flags |= UF_MODIFIED; }
 };
 
@@ -200,20 +201,23 @@ public:
 
 BOOL LoadUsers(void);
 void SaveUsers(DB_HANDLE hdb);
+void SendUserDBUpdate(int code, DWORD id, UserDatabaseObject *object);
 DWORD AuthenticateUser(TCHAR *pszName, TCHAR *pszPassword,
 							  DWORD dwSigLen, void *pCert, BYTE *pChallenge,
 							  DWORD *pdwId, DWORD *pdwSystemRights,
 							  BOOL *pbChangePasswd);
+
 DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD dwId, BYTE *pszPassword, BOOL bResetChPasswd);
 BOOL NXCORE_EXPORTABLE CheckUserMembership(DWORD dwUserId, DWORD dwGroupId);
-DWORD DeleteUserDatabaseObject(DWORD id);
-void SendUserDBUpdate(int code, DWORD id, UserDatabaseObject *object);
+DWORD NXCORE_EXPORTABLE DeleteUserDatabaseObject(DWORD id);
 DWORD NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwId);
 DWORD NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg);
-UserDatabaseObject **OpenUserDatabase(int *count);
-void CloseUserDatabase();
-const TCHAR *GetUserDbObjectAttr(DWORD id, const TCHAR *name);
-void SetUserDbObjectAttr(DWORD id, const TCHAR *name, const TCHAR *value);
+UserDatabaseObject NXCORE_EXPORTABLE **OpenUserDatabase(int *count);
+void NXCORE_EXPORTABLE CloseUserDatabase();
+const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(DWORD id, const TCHAR *name);
+DWORD NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(DWORD id, const TCHAR *name);
+void NXCORE_EXPORTABLE SetUserDbObjectAttr(DWORD id, const TCHAR *name, const TCHAR *value);
+
 void DumpUsers(CONSOLE_CTX pCtx);
 
 #endif

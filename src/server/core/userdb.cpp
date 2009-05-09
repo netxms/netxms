@@ -323,7 +323,7 @@ void DumpUsers(CONSOLE_CTX pCtx)
 // Will return RCC code
 //
 
-DWORD DeleteUserDatabaseObject(DWORD id)
+DWORD NXCORE_EXPORTABLE DeleteUserDatabaseObject(DWORD id)
 {
    int i, j;
 
@@ -474,7 +474,7 @@ DWORD NXCORE_EXPORTABLE SetUserPassword(DWORD id, BYTE *password, BOOL resetChPa
 // Open user database
 //
 
-UserDatabaseObject **OpenUserDatabase(int *count)
+UserDatabaseObject NXCORE_EXPORTABLE **OpenUserDatabase(int *count)
 {
    MutexLock(m_mutexUserDatabaseAccess, INFINITE);
 	*count = m_userCount;
@@ -486,7 +486,7 @@ UserDatabaseObject **OpenUserDatabase(int *count)
 // Close user database
 //
 
-void CloseUserDatabase()
+void NXCORE_EXPORTABLE CloseUserDatabase()
 {
    MutexUnlock(m_mutexUserDatabaseAccess);
 }
@@ -496,7 +496,7 @@ void CloseUserDatabase()
 // Get custom attribute's value
 //
 
-const TCHAR *GetUserDbObjectAttr(DWORD id, const TCHAR *name)
+const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(DWORD id, const TCHAR *name)
 {
 	const TCHAR *value = NULL;
 
@@ -513,12 +513,18 @@ const TCHAR *GetUserDbObjectAttr(DWORD id, const TCHAR *name)
 	return value;
 }
 
+DWORD NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(DWORD id, const TCHAR *name)
+{
+	const TCHAR *value = GetUserDbObjectAttr(id, name);
+	return (value != NULL) ? _tcstoul(value, NULL, 0) : 0;
+}
+
 
 //
 // Set custom attribute's value
 //
 
-void SetUserDbObjectAttr(DWORD id, const TCHAR *name, const TCHAR *value)
+void NXCORE_EXPORTABLE SetUserDbObjectAttr(DWORD id, const TCHAR *name, const TCHAR *value)
 {
    MutexLock(m_mutexUserDatabaseAccess, INFINITE);
 
