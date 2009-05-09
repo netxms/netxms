@@ -1,6 +1,10 @@
 package org.netxms.client;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.UUID;
+import java.util.Map.Entry;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -41,6 +45,7 @@ public abstract class NXCUserDBObject
 	protected int systemRights;
 	protected int flags;
 	protected String description;
+	protected Map<String, String> customAttributes = new HashMap<String, String>(0);
 
 	/**
 	 * Default constructor
@@ -64,6 +69,15 @@ public abstract class NXCUserDBObject
 		systemRights = msg.getVariableAsInteger(NXCPCodes.VID_USER_SYS_RIGHTS);
 		description = msg.getVariableAsString(NXCPCodes.VID_USER_DESCRIPTION);
 		guid = msg.getVariableAsUUID(NXCPCodes.VID_GUID);
+		
+		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES);
+		long varId = NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE;
+		for(int i = 0; i < count; i++)
+		{
+			String name = msg.getVariableAsString(varId++);
+			String value = msg.getVariableAsString(varId++);
+			customAttributes.put(name, value);
+		}
 	}
 	
 	/**
@@ -76,6 +90,16 @@ public abstract class NXCUserDBObject
 		msg.setVariableInt16(NXCPCodes.VID_USER_FLAGS, flags);
 		msg.setVariableInt32(NXCPCodes.VID_USER_SYS_RIGHTS, systemRights);
 		msg.setVariable(NXCPCodes.VID_USER_DESCRIPTION, description);
+		
+		msg.setVariableInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES, customAttributes.size());
+		long varId = NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE;
+		Iterator<Entry<String, String>> it = customAttributes.entrySet().iterator();
+		while(it.hasNext())
+		{
+			Entry<String, String> e = it.next();
+			msg.setVariable(varId++, e.getKey());
+			msg.setVariable(varId++, e.getValue());
+		}
 	}
 
 	/**
@@ -174,4 +198,22 @@ public abstract class NXCUserDBObject
 		this.description = description;
 	}
 
+	/**
+	 * Get custom attribute
+	 * @param name Name of the attribute
+	 */
+	public String getCustomAttribute(final String name)
+	{
+		return customAttributes.get(name);
+	}
+	
+	/**
+	 * Set custom attribute's value
+	 * @param name Name of the attribute
+	 * @param value New value for attribute
+	 */
+	public void setCustomAttribute(final String name, final String value)
+	{
+		customAttributes.put(name, value);
+	}
 }
