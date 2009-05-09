@@ -307,7 +307,7 @@ static BOOL SubagentInit(Config *config)
 	bool success;
 
 	// Parse configuration
-	success = config->bindParameters(_T("Ping"), m_cfgTemplate);
+	success = config->parseTemplate(_T("Ping"), m_cfgTemplate);
 	if (success)
 	{
 		TCHAR *pItem, *pEnd;

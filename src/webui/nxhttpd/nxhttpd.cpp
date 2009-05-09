@@ -459,7 +459,7 @@ int main(int argc, char *argv[])
 	{
 		case 0:  // Start server
 			config = new Config();
-			if (config->loadIniConfig(g_szConfigFile, _T("server")) && config->bindParameters(_T("server"), m_cfgTemplate))
+			if (config->loadIniConfig(g_szConfigFile, _T("server")) && config->parseTemplate(_T("server"), m_cfgTemplate))
          {
 #ifdef _WIN32
 			   if (g_dwFlags & AF_DAEMON)

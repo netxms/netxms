@@ -95,7 +95,7 @@ public:
 	ConfigEntry *getEntry(const TCHAR *path);
 	const TCHAR *getValue(const TCHAR *path);
 
-	bool bindParameters(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate);
+	bool parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate);
 
 	int getErrorCount() { return m_errorCount; }
 };

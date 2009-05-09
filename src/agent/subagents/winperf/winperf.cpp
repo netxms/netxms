@@ -527,7 +527,7 @@ extern "C" BOOL __declspec(dllexport) __cdecl
 	}
 
    // Load configuration
-	bool success = config->bindParameters(_T("WinPerf"), m_cfgTemplate);
+	bool success = config->parseTemplate(_T("WinPerf"), m_cfgTemplate);
 	if (success)
    {
       TCHAR *pItem, *pEnd;

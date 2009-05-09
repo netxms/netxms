@@ -184,10 +184,10 @@ void Config::error(const TCHAR *format, ...)
 
 
 //
-// Bind parameters to variables: simulation of old NxLoadConfig() API
+// Simulation of old NxLoadConfig() API
 //
 
-bool Config::bindParameters(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
+bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 {
 	TCHAR name[MAX_PATH], *curr, *eptr;
 	int i, j, pos;

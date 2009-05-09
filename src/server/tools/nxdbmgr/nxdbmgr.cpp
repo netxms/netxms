@@ -563,7 +563,7 @@ int main(int argc, char *argv[])
 #endif
 
 	Config *config = new Config();
-	if (!config->loadIniConfig(szConfigFile, _T("server")) || !config->bindParameters(_T("server"), m_cfgTemplate))
+	if (!config->loadIniConfig(szConfigFile, _T("server")) || !config->parseTemplate(_T("server"), m_cfgTemplate))
    {
       _tprintf(_T("Error loading configuration file\n"));
       return 2;
