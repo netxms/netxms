@@ -15,6 +15,9 @@ import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 
 public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 {
+	private static final String PERSPECTIVE_PROPERTY_NAME = "org.netxms.ui.DefaultPerspective";
+	private static final String DEFAULT_PERSPECTIVE_NAME = "org.netxms.ui.eclipse.console.DefaultPerspective";
+
 	public NXMCWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer)
 	{
 		super(configurer);
@@ -100,7 +103,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 			try
 			{
 				IWorkbenchWindow window = getWindowConfigurer().getWindow();
-				window.getWorkbench().showPerspective("org.netxms.ui.eclipse.console.DefaultPerspective", window);
+				window.getWorkbench().showPerspective(getDefaultPerspectiveName(), window);
 			}
 			catch(WorkbenchException e)
 			{
@@ -112,5 +115,12 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		{
 			shell.close();
 		}
+	}
+
+	private String getDefaultPerspectiveName()
+	{
+		final String perspectiveName = System.getProperty(PERSPECTIVE_PROPERTY_NAME);
+
+		return perspectiveName == null ? DEFAULT_PERSPECTIVE_NAME : perspectiveName;
 	}
 }
