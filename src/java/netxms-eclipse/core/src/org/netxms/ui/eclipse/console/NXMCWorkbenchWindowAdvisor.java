@@ -21,8 +21,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	}
 
 	@Override
-	public ActionBarAdvisor createActionBarAdvisor(
-			IActionBarConfigurer configurer)
+	public ActionBarAdvisor createActionBarAdvisor(IActionBarConfigurer configurer)
 	{
 		return new NXMCActionBarAdvisor(configurer);
 	}
@@ -76,15 +75,14 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 
 			try
 			{
-				LoginJob job = new LoginJob(settings.get("Connect.Server"),
-						settings.get("Connect.Login"), dialog.getPassword());
+				LoginJob job = new LoginJob(settings.get("Connect.Server"), settings.get("Connect.Login"), dialog
+						.getPassword());
 				new ProgressMonitorDialog(shell).run(true, true, job);
 				success = true;
 			}
 			catch(InvocationTargetException e)
 			{
-				MessageDialog.openError(shell, "Exception", e.toString()
-						+ " cause: " + e.getCause().toString());
+				MessageDialog.openError(shell, "Exception", e.toString() + " cause: " + e.getCause().toString());
 			}
 			catch(InterruptedException e)
 			{
@@ -102,8 +100,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 			try
 			{
 				IWorkbenchWindow window = getWindowConfigurer().getWindow();
-				window.getWorkbench().showPerspective(
-						"org.netxms.ui.eclipse.console.DefaultPerspective", window);
+				window.getWorkbench().showPerspective("org.netxms.ui.eclipse.console.DefaultPerspective", window);
 			}
 			catch(WorkbenchException e)
 			{

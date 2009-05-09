@@ -8,8 +8,7 @@ public class NXMCWorkbenchAdvisor extends WorkbenchAdvisor
 {
 	private static final String PERSPECTIVE_ID = "org.netxms.ui.eclipse.console.EmptyPerspective";
 
-	public WorkbenchWindowAdvisor createWorkbenchWindowAdvisor(
-			IWorkbenchWindowConfigurer configurer)
+	public WorkbenchWindowAdvisor createWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer)
 	{
 		return new NXMCWorkbenchWindowAdvisor(configurer);
 	}
