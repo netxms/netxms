@@ -526,7 +526,7 @@ extern "C"
 	TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *string, int length);
 	const char LIBNETXMS_EXPORTABLE *XMLGetAttr(const char **attrs, const char *name);
 	int LIBNETXMS_EXPORTABLE XMLGetAttrInt(const char **attrs, const char *name, int defVal);
-	int LIBNETXMS_EXPORTABLE XMLGetAttrDWORD(const char **attrs, const char *name, DWORD defVal);
+	DWORD LIBNETXMS_EXPORTABLE XMLGetAttrDWORD(const char **attrs, const char *name, DWORD defVal);
 	bool LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name, bool defVal);
 
 #ifdef __cplusplus

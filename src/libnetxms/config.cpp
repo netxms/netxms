@@ -424,19 +424,32 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	{
 		if (ps->level < MAX_STACK_DEPTH)
 		{
-#ifdef UNICODE
-			WCHAR wname[256];
+			TCHAR entryName[MAX_PATH];
 
-			MultiByteToWideChar(CP_UTF8, 0, name, -1, wname, 256);
-			wname[255] = 0;
-			ps->stack[ps->level] = ps->stack[ps->level - 1]->findEntry(wname);
-			if (ps->stack[ps->level] == NULL)
-				ps->stack[ps->level] = new ConfigEntry(wname, ps->stack[ps->level - 1], ps->file, XML_GetCurrentLineNumber(ps->parser));
+			DWORD id = XMLGetAttrDWORD(attrs, "id", 0);
+#ifdef UNICODE
+			if (id != 0)
+			{
+				WCHAR wname[MAX_PATH];
+
+				MultiByteToWideChar(CP_UTF8, 0, name, -1, wname, MAX_PATH);
+				wname[MAX_PATH - 1] = 0;
+				_snwprintf(entryName, MAX_PATH, L"%s#%u", wname, id);
+			}
+			else
+			{
+				MultiByteToWideChar(CP_UTF8, 0, name, -1, entryName, MAX_PATH);
+				entryName[MAX_PATH - 1] = 0;
+			}
 #else
-			ps->stack[ps->level] = ps->stack[ps->level - 1]->findEntry(name);
-			if (ps->stack[ps->level] == NULL)
-				ps->stack[ps->level] = new ConfigEntry(name, ps->stack[ps->level - 1], ps->file, XML_GetCurrentLineNumber(ps->parser));
+			if (id != 0)
+				snprintf(entryName, MAX_PATH, "%s#%u", name, id);
+			else
+				nx_strncpy(entryName, name, MAX_PATH);
 #endif
+			ps->stack[ps->level] = ps->stack[ps->level - 1]->findEntry(entryName);
+			if (ps->stack[ps->level] == NULL)
+				ps->stack[ps->level] = new ConfigEntry(entryName, ps->stack[ps->level - 1], ps->file, XML_GetCurrentLineNumber(ps->parser));
 			ps->charData[ps->level] = _T("");
 			ps->level++;
 		}
