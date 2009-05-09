@@ -136,6 +136,21 @@ int ConfigEntry::getConcatenatedValuesLength()
 
 
 //
+// Print config entry
+//
+
+void ConfigEntry::print(FILE *file, int level)
+{
+	_tprintf(_T("%*s%s\n"), level * 4, _T(""), m_name);
+	for(ConfigEntry *e = m_childs; e != NULL; e = e->getNext())
+		e->print(file, level + 1);
+
+	for(int i = 0, len = 0; i < m_valueCount; i++)
+		_tprintf(_T("%*svalue: %s\n"), level * 4 + 2, _T(""), m_values[i]);
+}
+
+
+//
 // Constructor for config
 //
 
@@ -380,7 +395,9 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection)
 
 			ConfigEntry *entry = currentSection->findEntry(buffer);
 			if (entry == NULL)
+			{
 				entry = new ConfigEntry(buffer, currentSection, file, sourceLine);
+			}
 			entry->addValue(ptr);
       }
    }
@@ -546,4 +563,74 @@ bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection)
 
 	// If first non-space character is < assume XML format, otherwise assume INI format
 	return (ch == '<') ? loadXmlConfig(file) : loadIniConfig(file, defaultIniSection);
+}
+
+
+//
+// Load all files in given directory
+//
+
+bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection)
+{
+	DIR *dir;
+   struct dirent *file;
+	TCHAR fileName[MAX_PATH];
+	bool success;
+
+#ifdef UNICODE
+	char mbpath[MAX_PATH];
+	WCHAR wname[MAX_PATH];
+
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, path, -1, mbpath, MAX_PATH, NULL, NULL);
+	mbpath[MAX_PATH - 1] = 0;
+   dir = opendir(mbpath);
+#else
+   dir = opendir(path);
+#endif
+   if (dir != NULL)
+   {
+		success = true;
+      while(1)
+      {
+         file = readdir(dir);
+         if (file == NULL)
+            break;
+
+         if (!strcmp(file->d_name, ".") || !strcmp(file->d_name, ".."))
+            continue;
+         
+			size_t len = _tcslen(path) + strlen(file->d_name) + 2;
+			if (len > MAX_PATH)
+				continue;	// Full file name is too long
+
+         _tcscpy(fileName, path);
+         _tcscat(fileName, FS_PATH_SEPARATOR);
+#ifdef UNICODE
+			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, file->d_name, -1, wname, MAX_PATH);
+         wcscat(fileName, wname);
+#else
+         strcat(fileName, file->d_name);
+#endif
+
+			success = success && loadConfig(fileName, defaultIniSection);
+      }
+      closedir(dir);
+   }
+	else
+	{
+		success = false;
+	}
+
+	return success;
+}
+
+
+//
+// Print config to output stream
+//
+
+void Config::print(FILE *file)
+{
+	if (m_root != NULL)
+		m_root->print(file, 0);
 }

@@ -260,4 +260,10 @@ Language=English
 EXCEPTION %1 (%2) at %3 (crash dump was generated); please send files %4 and %5 to dump@netxms.org
 .
 
+MessageId=
+SymbolicName=MSG_USE_CONFIG_D
+Language=English
+Additional configs was loaded from %1
+.
+
 ;#endif

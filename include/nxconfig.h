@@ -64,6 +64,8 @@ public:
 	void setValue(const TCHAR*value);
 
 	ConfigEntry *findEntry(const TCHAR *name);
+
+	void print(FILE *file, int level);
 };
 
 
@@ -90,7 +92,7 @@ public:
 	bool loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection);
 	bool loadConfig(const TCHAR *file, const TCHAR *defaultIniSection);
 
-	bool loadConfigDirectory(const TCHAR *path);
+	bool loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection);
 
 	ConfigEntry *getEntry(const TCHAR *path);
 	const TCHAR *getValue(const TCHAR *path);
@@ -98,6 +100,8 @@ public:
 	bool parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate);
 
 	int getErrorCount() { return m_errorCount; }
+
+	void print(FILE *file);
 };
 
 

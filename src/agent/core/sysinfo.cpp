@@ -50,7 +50,7 @@ LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
                 unsigned int &uFileCount, QWORD &llFileSize)
 {
    DIR *pDir = NULL;
-   struct dirent *pFile = NULL;
+   struct dirent *pFile;
 #if defined(_WIN32)
 #define STAT _stati64
    struct _stati64 fileInfo;
@@ -92,8 +92,12 @@ LONG GetDirInfo(char *szPath, char *szPattern, bool bRecursive,
          if (!strcmp(pFile->d_name, ".") || !strcmp(pFile->d_name, ".."))
             continue;
          
+			size_t len = strlen(szPath) + strlen(pFile->d_name) + 2;
+			if (len > MAX_PATH)
+				continue;	// Full file name is too long
+
          strcpy(szFileName, szPath);
-         strcat(szFileName, "/" );
+         strcat(szFileName, FS_PATH_SEPARATOR);
          strcat(szFileName, pFile->d_name);
 
          // skip unaccessible entries

@@ -60,18 +60,22 @@
 
 #if defined(_WIN32)
 #define AGENT_DEFAULT_CONFIG     "C:\\nxagentd.conf"
+#define AGENT_DEFAULT_CONFIG_D   "C:\\nxagentd.conf.d"
 #define AGENT_DEFAULT_LOG        "C:\\nxagentd.log"
 #define AGENT_DEFAULT_FILE_STORE "C:\\"
 #elif defined(_NETWARE)
 #define AGENT_DEFAULT_CONFIG     "SYS:ETC/nxagentd.conf"
+#define AGENT_DEFAULT_CONFIG_D   "SYS:ETC/nxagentd.conf.d"
 #define AGENT_DEFAULT_LOG        "SYS:ETC/nxagentd.log"
 #define AGENT_DEFAULT_FILE_STORE "SYS:\\"
 #elif defined(_IPSO)
 #define AGENT_DEFAULT_CONFIG     "/opt/netxms/etc/nxagentd.conf"
+#define AGENT_DEFAULT_CONFIG_D   "/opt/netxms/etc/nxagentd.conf.d"
 #define AGENT_DEFAULT_LOG        "/opt/netxms/log/nxagentd.log"
 #define AGENT_DEFAULT_FILE_STORE "/opt/netxms/store"
 #else
 #define AGENT_DEFAULT_CONFIG     "{search}"
+#define AGENT_DEFAULT_CONFIG_D   "{search}"
 #define AGENT_DEFAULT_LOG        "/var/log/nxagentd"
 #define AGENT_DEFAULT_FILE_STORE "/tmp"
 #endif

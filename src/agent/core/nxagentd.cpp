@@ -169,6 +169,7 @@ static char m_szProcessToWait[MAX_PATH] = "";
 static char m_szDumpDir[MAX_PATH] = "C:\\";
 static DWORD m_dwMaxLogSize = 16384 * 1024;
 static DWORD m_dwLogHistorySize = 4;
+static TCHAR m_szConfigIncludeDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
 
 #if defined(_WIN32) || defined(_NETWARE)
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
@@ -187,6 +188,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { "Action", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszActionList },
    { "ActionShellExec", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShellActionList },
+   { "ConfigIncludeDir", CT_STRING, 0, 0, MAX_PATH, 0, m_szConfigIncludeDir },
    { "ControlServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList },
    { "CreateCrashDumps", CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags },
    { "DumpDirectory", CT_STRING, 0, 0, MAX_PATH, 0, m_szDumpDir },
@@ -602,6 +604,7 @@ BOOL Initialize(void)
 		return FALSE;
 	}
 	DebugPrintf(INVALID_INDEX, "Log file opened");
+	nxlog_write(MSG_USE_CONFIG_D, EVENTLOG_INFORMATION_TYPE, "s", m_szConfigIncludeDir);
 
 #ifdef _WIN32
    WSADATA wsaData;
@@ -1257,6 +1260,21 @@ int main(int argc, char *argv[])
 			_tcscpy(g_szConfigFile, "/etc/nxagentd.conf");
 		}
 	}
+	if (!_tcscmp(m_szConfigIncludeDir, _T("{search}")))
+	{
+		if (access(PREFIX "/etc/nxagentd.conf.d", 4) == 0)
+		{
+			_tcscpy(m_szConfigIncludeDir, PREFIX "/etc/nxagentd.conf.d");
+		}
+		else if (access("/usr/etc/nxagentd.conf.d", 4) == 0)
+		{
+			_tcscpy(m_szConfigIncludeDir, "/usr/etc/nxagentd.conf.d");
+		}
+		else
+		{
+			_tcscpy(m_szConfigIncludeDir, "/etc/nxagentd.conf.d");
+		}
+	}
 #endif
 
    if (bRestart)
@@ -1299,85 +1317,95 @@ int main(int argc, char *argv[])
             }
          }
 
-			if (g_config->loadConfig(g_szConfigFile, _T("agent")) && g_config->parseTemplate(_T("agent"), m_cfgTemplate))
+			if (g_config->loadConfig(g_szConfigFile, _T("agent")))
 			{
+				g_config->loadConfigDirectory(m_szConfigIncludeDir, _T("agent"));
+				if (g_config->parseTemplate(_T("agent"), m_cfgTemplate))
+				{
+
 	// Set exception handler
 #ifdef _WIN32
-				if (g_dwFlags & AF_CATCH_EXCEPTIONS)
-					SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter, m_szDumpDir,
-											  "nxagentd", MSG_EXCEPTION, !(g_dwFlags & AF_DAEMON));
-				__try {
+					if (g_dwFlags & AF_CATCH_EXCEPTIONS)
+						SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter, m_szDumpDir,
+												  "nxagentd", MSG_EXCEPTION, !(g_dwFlags & AF_DAEMON));
+					__try {
 #endif
-            if ((!stricmp(g_szLogFile, "{syslog}")) || 
-                (!stricmp(g_szLogFile, "{eventlog}")))
-               g_dwFlags |= AF_USE_SYSLOG;
+					if ((!stricmp(g_szLogFile, "{syslog}")) || 
+						 (!stricmp(g_szLogFile, "{eventlog}")))
+						g_dwFlags |= AF_USE_SYSLOG;
 
 #ifdef _WIN32
-            if (g_dwFlags & AF_DAEMON)
-            {
-               InitService();
-            }
-            else
-            {
-               if (Initialize())
-               {
-                  Main();
-               }
-               else
-               {
-                  ConsolePrintf("Agent initialization failed\n");
-                  nxlog_close();
-                  iExitCode = 3;
-               }
-            }
+					if (g_dwFlags & AF_DAEMON)
+					{
+						InitService();
+					}
+					else
+					{
+						if (Initialize())
+						{
+							Main();
+						}
+						else
+						{
+							ConsolePrintf("Agent initialization failed\n");
+							nxlog_close();
+							iExitCode = 3;
+						}
+					}
 #else    /* _WIN32 */
 #ifndef _NETWARE
-            if (g_dwFlags & AF_DAEMON)
-               if (daemon(0, 0) == -1)
-               {
-                  perror("Unable to setup itself as a daemon");
-                  iExitCode = 4;
-               }
+					if (g_dwFlags & AF_DAEMON)
+						if (daemon(0, 0) == -1)
+						{
+							perror("Unable to setup itself as a daemon");
+							iExitCode = 4;
+						}
 #endif
-            if (iExitCode == 0)
+					if (iExitCode == 0)
             {
 #ifndef _NETWARE
-               m_pid = getpid();
+						m_pid = getpid();
 #endif
-               if (Initialize())
-               {
+						if (Initialize())
+						{
 #ifdef _NETWARE
-                  signal(SIGTERM, ExitHandler);
+							signal(SIGTERM, ExitHandler);
 #else
-                  FILE *fp;
+							FILE *fp;
 
-                  // Write PID file
-                  fp = fopen(g_szPidFile, "w");
-                  if (fp != NULL)
-                  {
-                     fprintf(fp, "%d", m_pid);
-                     fclose(fp);
-                  }   
+							// Write PID file
+							fp = fopen(g_szPidFile, "w");
+							if (fp != NULL)
+							{
+								fprintf(fp, "%d", m_pid);
+								fclose(fp);
+							}   
 #endif
-                  Main();
-                  Shutdown();
-               }
-               else
-               {
-                  ConsolePrintf("Agent initialization failed\n");
-                  nxlog_close();
-                  iExitCode = 3;
-               }
-            }
+							Main();
+							Shutdown();
+						}
+						else
+						{
+							ConsolePrintf("Agent initialization failed\n");
+							nxlog_close();
+							iExitCode = 3;
+						}
+	            }
 #endif   /* _WIN32 */
 
 #if defined(_WIN32) || defined(_NETWARE)
-            if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
-               ConditionDestroy(m_hCondShutdown);
+					if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
+						ConditionDestroy(m_hCondShutdown);
 #endif
 #ifdef _WIN32
-				LIBNETXMS_EXCEPTION_HANDLER
+					LIBNETXMS_EXCEPTION_HANDLER
 #endif
+				}
+				else
+				{
+					ConsolePrintf("Error parsing configuration file\n");
+					iExitCode = 2;
+				}
          }
          else
          {
