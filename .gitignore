@@ -29,6 +29,9 @@ src/install/windows/files/*
 src/java/netxms-base/.classpath
 src/java/netxms-base/.project
 src/java/netxms-base/.settings
+src/java/netxms-client/.classpath
+src/java/netxms-client/.project
+src/java/netxms-client/.settings
 src/java/netxms-eclipse/library/jar/*.jar
 src/libnxsl/lex.yy.cpp
 src/libnxsl/parser.output
