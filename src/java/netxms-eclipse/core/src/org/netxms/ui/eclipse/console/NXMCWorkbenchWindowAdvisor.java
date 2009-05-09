@@ -119,8 +119,6 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 
 	private String getDefaultPerspectiveName()
 	{
-		final String perspectiveName = System.getProperty(PERSPECTIVE_PROPERTY_NAME);
-
-		return perspectiveName == null ? DEFAULT_PERSPECTIVE_NAME : perspectiveName;
+		return System.getProperty(PERSPECTIVE_PROPERTY_NAME, DEFAULT_PERSPECTIVE_NAME);
 	}
 }
