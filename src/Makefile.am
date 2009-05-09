@@ -10,4 +10,3 @@
 
 SUBDIRS = libnetxms install
 SUBDIRS += @MODULES@
-EXTRA_DIST = PPC_libs.vcw README.libs
