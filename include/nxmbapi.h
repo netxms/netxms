@@ -55,8 +55,8 @@ public:
 	NXMBMessage(const TCHAR *type, const TCHAR *senderId);
 	virtual ~NXMBMessage();
 
-	const TCHAR *getType() { return m_type; }
-	const TCHAR *getSenderId() { return m_senderId; }
+	const TCHAR *getType() const { return m_type; }
+	const TCHAR *getSenderId() const { return m_senderId; }
 };
 
 
