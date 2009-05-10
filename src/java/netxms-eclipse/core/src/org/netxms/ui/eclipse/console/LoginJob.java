@@ -42,7 +42,11 @@ public class LoginJob implements IRunnableWithProgress
 			
 			monitor.setTaskName("Synchronizing objects...");
 			session.syncObjects();
-			monitor.worked(30);
+			monitor.worked(25);
+			
+			monitor.setTaskName("Synchronizing user database...");
+			session.syncUserDatabase();
+			monitor.worked(5);
 			
 			monitor.setTaskName("Subscribing to notifications...");
 			session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS);

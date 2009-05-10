@@ -5,6 +5,10 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.part.*;
 import org.eclipse.ui.progress.IProgressService;
+import org.eclipse.ui.progress.UIJob;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.core.runtime.jobs.IJobManager;
@@ -34,6 +38,7 @@ import org.eclipse.swt.SWT;
 public class JobMonitor extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.jobmonitor.view.job_monitor";
+	public static final String JOB_FAMILY = "JobMonitorInternal";
 	
 	private TableViewer viewer;
 	private Action actionClearCompleted;
@@ -146,40 +151,66 @@ public class JobMonitor extends ViewPart
 	 */
 	class ChangeListener implements IJobChangeListener
 	{
+		private void refreshViewer(IJobChangeEvent event)
+		{
+			Job job = event.getJob();
+			if (!job.belongsTo(JobMonitor.JOB_FAMILY) &&
+				 !(job instanceof UIJob))
+			{
+				new UIJob("Refresh job monitor view") {
+					/* (non-Javadoc)
+					 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
+					 */
+					@Override
+					public boolean belongsTo(Object family)
+					{
+						return family == JobMonitor.JOB_FAMILY;
+					}
+	
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						viewer.refresh();
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+			}
+		}
+		
 		@Override
 		public void aboutToRun(IJobChangeEvent event)
 		{
-			viewer.refresh();
+			refreshViewer(event);
 		}
 
 		@Override
 		public void awake(IJobChangeEvent event)
 		{
-			viewer.refresh();
+			refreshViewer(event);
 		}
 
 		@Override
 		public void done(IJobChangeEvent event)
 		{
-			viewer.refresh();
+			refreshViewer(event);
 		}
 
 		@Override
 		public void running(IJobChangeEvent event)
 		{
-			viewer.refresh();
+			refreshViewer(event);
 		}
 
 		@Override
 		public void scheduled(IJobChangeEvent event)
 		{
-			viewer.refresh();
+			refreshViewer(event);
 		}
 
 		@Override
 		public void sleeping(IJobChangeEvent event)
 		{
-			viewer.refresh();
+			refreshViewer(event);
 		}
 	}
 
