@@ -4,6 +4,10 @@
 
    <extension
          point="org.eclipse.ui.views">
+      <category
+            name="Tools"
+            id="org.netxms.ui.eclipse.tools">
+      </category>
       <view
             name="Server Jobs"
             icon="icons/server_jobs.png"
@@ -31,7 +35,7 @@
 		   label="Server Jobs"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.serverjobmanager.actions.open"
-			   menubarPath="view/additions"
+			   menubarPath="view/tools"
 			   label="Server Jobs"
 			   tooltip="Open server job manager"
 			   icon="icons/server_jobs.png"

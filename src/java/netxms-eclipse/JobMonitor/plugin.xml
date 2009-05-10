@@ -9,7 +9,7 @@
             id="org.netxms.ui.eclipse.tools">
       </category>
       <view
-            name="Job Monitor"
+            name="Console Job Monitor"
             icon="icons/job_monitor.png"
             category="org.netxms.ui.eclipse.tools"
             class="org.netxms.ui.eclipse.jobmonitor.JobMonitor"
@@ -24,8 +24,8 @@
             id="org.netxms.ui.eclipse.console.category.views">
       </category>
       <command
-            name="Job Monitor"
-            description="Open Job Monitor"
+            name="Console Job Monitor"
+            description="Open Console Job Monitor"
             categoryId="org.netxms.ui.eclipse.console.category.views"
             id="org.netxms.ui.eclipse.jobmonitor.commands.open_job_monitor">
       </command>
@@ -33,12 +33,12 @@
    
    <extension point = "org.eclipse.ui.actionSets">
 	   <actionSet id="org.netxms.ui.eclipse.jobmonitor.action_set"
-		   label="Job Monitor"
+		   label="Console Job Monitor"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.jobmonitor.actions.open"
 			   menubarPath="view/tools"
-			   label="Job Monitor"
-			   tooltip="Open Job Monitor"
+			   label="Console Job Monitor"
+			   tooltip="Open Console Job Monitor"
 			   icon="icons/job_monitor.png"
 			   class="org.netxms.ui.eclipse.jobmonitor.actions.OpenJobMonitor"
 			   definitionId="org.netxms.ui.eclipse.jobmonitor.commands.open_job_monitor">

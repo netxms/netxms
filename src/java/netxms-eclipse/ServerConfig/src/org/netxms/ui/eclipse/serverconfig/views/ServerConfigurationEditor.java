@@ -42,12 +42,17 @@ public class ServerConfigurationEditor extends ViewPart
 	private RefreshAction actionRefresh;
 	
 	// Columns
-	private static final int COL_NAME = 0;
-	private static final int COL_VALUE = 1;
-	private static final int COL_NEED_RESTART = 2;
+	private static final int COLUMN_NAME = 0;
+	private static final int COLUMN_VALUE = 1;
+	private static final int COLUMN_NEED_RESTART = 2;
 
-
-	class ViewLabelProvider extends LabelProvider implements ITableLabelProvider
+	/**
+	 * Label provider for server configuration variables
+	 * 
+	 * @author Victor
+	 *
+	 */
+	private class ViewLabelProvider extends LabelProvider implements ITableLabelProvider
 	{
 		/**
 		 * Returns text for given column 
@@ -57,11 +62,11 @@ public class ServerConfigurationEditor extends ViewPart
 		{
 			switch(index)
 			{
-				case COL_NAME:
+				case COLUMN_NAME:
 					return ((NXCServerVariable)obj).getName();
-				case COL_VALUE:
+				case COLUMN_VALUE:
 					return ((NXCServerVariable)obj).getValue();
-				case COL_NEED_RESTART:
+				case COLUMN_NEED_RESTART:
 					return ((NXCServerVariable)obj).isServerRestartNeeded() ? "Yes" : "No";
 			}
 			return "";
@@ -81,7 +86,12 @@ public class ServerConfigurationEditor extends ViewPart
 		}
 	}
 
-	class VarComparator extends ViewerComparator
+	/**
+	 * Comparator for server configuration variables
+	 * @author Victor
+	 *
+	 */
+	private class VarComparator extends ViewerComparator
 	{
 		/**
 		 * Compare two booleans and return -1, 0, or 1
@@ -102,20 +112,20 @@ public class ServerConfigurationEditor extends ViewPart
 			
 			switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
 			{
-				case COL_NAME:
+				case COLUMN_NAME:
 					result = ((NXCServerVariable)e1).getName().compareToIgnoreCase(((NXCServerVariable)e2).getName());
 					break;
-				case COL_VALUE:
+				case COLUMN_VALUE:
 					result = ((NXCServerVariable)e1).getValue().compareToIgnoreCase(((NXCServerVariable)e2).getValue());
 					break;
-				case COL_NEED_RESTART:
+				case COLUMN_NEED_RESTART:
 					result = compareBooleans(((NXCServerVariable)e1).isServerRestartNeeded(), ((NXCServerVariable)e2).isServerRestartNeeded());
 					break;
 				default:
 					result = 0;
 					break;
 			}
-			return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.DOWN) ? result : -result;
+			return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
 		}
 	}
 
@@ -125,7 +135,7 @@ public class ServerConfigurationEditor extends ViewPart
 	 * 
 	 * @author victor
 	 */
-	class RefreshJob extends Job
+	private class RefreshJob extends Job
 	{
 
 		public RefreshJob()
@@ -190,7 +200,7 @@ public class ServerConfigurationEditor extends ViewPart
 	{
 		final String[] names = { "Name", "Value", "Restart" };
 		final int[] widths = { 200, 150, 80 };
-		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
+		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ViewLabelProvider());
 		viewer.setComparator(new VarComparator());
@@ -225,6 +235,9 @@ public class ServerConfigurationEditor extends ViewPart
 		siteService.schedule(job, 0, true);
 	}
 
+	/**
+	 * Fill action bars
+	 */
 	private void contributeToActionBars()
 	{
 		IActionBars bars = getViewSite().getActionBars();

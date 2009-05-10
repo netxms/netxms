@@ -56,7 +56,13 @@ public class ServerJobManager extends ViewPart
 	private static final int COL_PROGRESS = 3;
 
 
-	class ViewLabelProvider extends LabelProvider implements ITableLabelProvider
+	/**
+	 * Label provider for server job list
+	 * 
+	 * @author Victor
+	 *
+	 */
+	private class ViewLabelProvider extends LabelProvider implements ITableLabelProvider
 	{
 		/**
 		 * Returns text for given column 
@@ -96,7 +102,13 @@ public class ServerJobManager extends ViewPart
 		}
 	}
 
-	class JobComparator extends ViewerComparator
+	/**
+	 * Comparator for server job list
+	 * 
+	 * @author Victor
+	 *
+	 */
+	private class JobComparator extends ViewerComparator
 	{
 		/* (non-Javadoc)
 		 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)

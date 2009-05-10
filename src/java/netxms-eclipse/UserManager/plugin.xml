@@ -46,4 +46,18 @@
 	   </actionSet>
    </extension>
 
+  <extension
+     point = "org.eclipse.ui.propertyPages">
+        <page
+           id="org.netxms.ui.eclipse.usermanager.propertypages.General"
+           name="General"
+	       class="org.netxms.ui.eclipse.usermanager.propertypages.General">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.client.NXCUserDBObject">
+             </instanceof>
+          </enabledWhen>
+        </page>
+  </extension>
+
 </plugin>
