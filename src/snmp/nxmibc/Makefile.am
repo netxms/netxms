@@ -19,5 +19,7 @@ EXTRA_DIST = nxmibc.vcproj nxmibc.h mibparse.h parser.l parser.y parser.tab.hpp
 lex.parser.cpp: parser.l parser.tab.cpp parser.tab.hpp
 	$(LEX) -Pmp -B -f -olex.parser.cpp parser.l
 
+parser.tab.hpp: parser.tab.cpp
+
 parser.tab.cpp: parser.y
 	$(YACC) -b parser -o parser.tab.cpp -d -p mp -t -v parser.y

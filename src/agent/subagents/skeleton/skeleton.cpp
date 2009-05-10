@@ -1,6 +1,6 @@
 /*
 ** Skeleton NetXMS subagent
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ static LONG H_Enum(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *p
 // Called by master agent to initialize subagent
 //
 
-static BOOL SubAgentInit(TCHAR *pszConfigFile)
+static BOOL SubAgentInit(Config *config)
 {
 	/* you can perform any initialization tasks here */
 	return TRUE;
