@@ -271,8 +271,8 @@ public:
 	TCHAR *SubStr(int nStart, int nLen) { return SubStr(nStart, nLen, NULL); }
 	int Find(const TCHAR *pszStr, int nStart = 0);
 
-	void Strip();
-	void Shrink(int chars = 1);
+	void trim();
+	void shrink(int chars = 1);
 };
 
 
@@ -482,6 +482,7 @@ extern "C"
    void LIBNETXMS_EXPORTABLE MACToStr(BYTE *pData, TCHAR *pStr);
 
    void LIBNETXMS_EXPORTABLE StrStrip(TCHAR *pszStr);
+   void LIBNETXMS_EXPORTABLE Trim(TCHAR *str);
    BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *string, BOOL matchCase);
 	BOOL LIBNETXMS_EXPORTABLE RegexpMatch(const TCHAR *pszStr, const TCHAR *pszExpr, BOOL bMatchCase);
    TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(TCHAR *line, TCHAR *buffer);

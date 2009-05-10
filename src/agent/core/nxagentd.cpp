@@ -1322,8 +1322,7 @@ int main(int argc, char *argv[])
 				g_config->loadConfigDirectory(m_szConfigIncludeDir, _T("agent"));
 				if (g_config->parseTemplate(_T("agent"), m_cfgTemplate))
 				{
-
-	// Set exception handler
+					// Set exception handler
 #ifdef _WIN32
 					if (g_dwFlags & AF_CATCH_EXCEPTIONS)
 						SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter, m_szDumpDir,

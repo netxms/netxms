@@ -46,11 +46,11 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 		query += names[i];
 		query += ",";
 	}
-	query.Shrink();
+	query.shrink();
 	query += ") VALUES (";
 	for(i = 0; i < cols; i++)
 		query.AddFormattedString("'%s',", data[i]);
-	query.Shrink();
+	query.shrink();
 	query += ")";
 
 	return SQLQuery(query) ? 0 : 1;

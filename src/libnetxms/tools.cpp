@@ -253,6 +253,22 @@ void LIBNETXMS_EXPORTABLE StrStrip(TCHAR *str)
 
 
 //
+// Strip whitespaces and tabs off the string
+//
+
+void LIBNETXMS_EXPORTABLE Trim(TCHAR *str)
+{
+   int i;
+
+   for(i = 0; (str[i] != 0) && _istspace(str[i]); i++);
+   if (i > 0)
+      memmove(str, &str[i], (_tcslen(&str[i]) + 1) * sizeof(TCHAR));
+   for(i = (int)_tcslen(str) - 1; (i >= 0) && _istspace(str[i]); i--);
+   str[i + 1] = 0;
+}
+
+
+//
 // Remove trailing CR/LF or LF from string
 //
 

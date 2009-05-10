@@ -291,14 +291,14 @@ int String::Find(const TCHAR *pszStr, int nStart)
 
 
 //
-// Strip leading and trailing spaces
+// Strip leading and trailing spaces, tabs, newlines
 //
 
-void String::Strip()
+void String::trim()
 {
 	if (m_pszBuffer != NULL)
 	{
-		StrStrip(m_pszBuffer);
+		Trim(m_pszBuffer);
 		m_dwBufSize = (DWORD)_tcslen(m_pszBuffer) + 1;
 	}
 }
@@ -308,7 +308,7 @@ void String::Strip()
 // Shring string by removing trailing characters
 //
 
-void String::Shrink(int chars)
+void String::shrink(int chars)
 {
 	if (m_dwBufSize > 1)
 	{

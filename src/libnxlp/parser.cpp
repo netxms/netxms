@@ -467,7 +467,7 @@ static void EndElement(void *userData, const char *name)
 		char *eptr;
 		LogParserRule *rule;
 
-		ps->event.Strip();
+		ps->event.trim();
 		event = strtoul(ps->event, &eptr, 0);
 		if (*eptr != 0)
 			event = ps->parser->resolveEventName(ps->event);

@@ -145,7 +145,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 					query += buffer;
 					query += ",";
 				}
-				query.Shrink();
+				query.shrink();
 				query += ") VALUES (";
 
 				// Data
@@ -156,7 +156,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 					query.AddDynamicString(DBGetFieldAsync(hResult, i, data, 8192));
 					query += "',";
 				}
-				query.Shrink();
+				query.shrink();
 				query += ")";
 
 				if (sqlite3_exec(db, query, NULL, NULL, &errmsg) != SQLITE_OK)

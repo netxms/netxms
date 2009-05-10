@@ -420,6 +420,7 @@ typedef struct
 	int level;
 	ConfigEntry *stack[MAX_STACK_DEPTH];
 	String charData[MAX_STACK_DEPTH];
+	bool trimValue[MAX_STACK_DEPTH];
 } XML_PARSER_STATE;
 
 static void StartElement(void *userData, const char *name, const char **attrs)
@@ -468,6 +469,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 			if (ps->stack[ps->level] == NULL)
 				ps->stack[ps->level] = new ConfigEntry(entryName, ps->stack[ps->level - 1], ps->file, XML_GetCurrentLineNumber(ps->parser));
 			ps->charData[ps->level] = _T("");
+			ps->trimValue[ps->level] = XMLGetAttrBoolean(attrs, "trim", true);
 			ps->level++;
 		}
 		else
@@ -488,6 +490,8 @@ static void EndElement(void *userData, const char *name)
 	else if (ps->level > 0)
 	{
 		ps->level--;
+		if (ps->trimValue[ps->level])
+			ps->charData[ps->level].trim();
 		ps->stack[ps->level]->addValue(ps->charData[ps->level]);
 	}
 }
