@@ -40,6 +40,8 @@ nxmp_data.cpp: nxmp_parser.tab.cpp
 lex.nxmp_parser.cpp: nxmp_parser.l nxmp_parser.tab.cpp nxmp_parser.tab.hpp
 	$(LEX) -B -f -8 -olex.nxmp_parser.cpp nxmp_parser.l
 
+nxmp_parser.tab.hpp: nxmp_parser.tab.cpp
+
 nxmp_parser.tab.cpp: nxmp_parser.y
 	$(YACC) -b nxmp_parser -o nxmp_parser.tab.cpp -d -t -v nxmp_parser.y
 	mv nxmp_parser.tab.cpp nxmp_parser.tab.xx
