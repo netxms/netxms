@@ -16,6 +16,8 @@ for line in fInput.readlines():
 	if match:
 		name = match.group(1).strip()
 		value = match.group(2).strip()
+		if value[0:3] == "_T(":
+			 value = value[3:-1]
 		if len(value) > 0:
 			fOutput.write("private static final int %s = %s;\n" % (name, value))
 fInput.close()
