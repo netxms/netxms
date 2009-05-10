@@ -29,7 +29,7 @@
 // Initalization callback
 //
 
-static BOOL SubAgentInit(TCHAR *pszConfigFile)
+static BOOL SubAgentInit(Config *config)
 {
 	StartCpuUsageCollector();
 	return TRUE;
