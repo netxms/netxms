@@ -188,7 +188,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { "Action", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszActionList },
    { "ActionShellExec", CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShellActionList },
-   { "ConfigIncludeDir", CT_STRING, 0, 0, MAX_PATH, 0, m_szConfigIncludeDir },
    { "ControlServers", CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList },
    { "CreateCrashDumps", CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags },
    { "DumpDirectory", CT_STRING, 0, 0, MAX_PATH, 0, m_szDumpDir },
@@ -1319,6 +1318,9 @@ int main(int argc, char *argv[])
 
 			if (g_config->loadConfig(g_szConfigFile, _T("agent")))
 			{
+				const TCHAR *dir = g_config->getValue(_T("/agent/ConfigIncludeDir"));
+				if (dir != NULL)
+					nx_strncpy(m_szConfigIncludeDir, dir, MAX_PATH);
 				g_config->loadConfigDirectory(m_szConfigIncludeDir, _T("agent"));
 				if (g_config->parseTemplate(_T("agent"), m_cfgTemplate))
 				{

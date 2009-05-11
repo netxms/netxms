@@ -1,3 +1,4 @@
+/*.suo
 /Makefile
 /Makefile.in
 /aclocal.m4
@@ -14,11 +15,18 @@ contrib/mibs/netxms.mib
 /lib
 /libtool
 netware/bin/*
+/private
 sql/dbinit_mssql.sql
 sql/dbinit_mysql.sql
 sql/dbinit_oracle.sql
 sql/dbinit_pgsql.sql
 sql/dbinit_sqlite.sql
+sql/dbschema_mssql.sql
+sql/dbschema_mysql.sql
+sql/dbschema_oracle.sql
+sql/dbschema_pgsql.sql
+sql/dbschema_sqlite.sql
+sql/gen.cmd
 src/agent/core/MSG00001.bin
 src/agent/core/messages.c
 src/agent/core/messages.h
@@ -33,11 +41,13 @@ src/java/netxms-client/.classpath
 src/java/netxms-client/.project
 src/java/netxms-client/.settings
 src/java/netxms-eclipse/library/jar/*.jar
+src/libnxsl/lex.parser.cpp
 src/libnxsl/lex.yy.cpp
 src/libnxsl/parser.output
 src/libnxsl/parser.tab.cpp
 src/libnxsl/parser.tab.hpp
 src/private
+src/server/core/lex.nxmp_parser.cpp
 src/server/core/netxmsd
 src/server/core/nxmp_lex.yy.cpp
 src/server/core/nxmp_parser.output
@@ -46,6 +56,7 @@ src/server/core/nxmp_parser.tab.hpp
 src/server/include/messages.h
 src/server/libnxsrv/*.bin
 src/server/libnxsrv/messages.c
+src/server/libnxsrv/messages.h
 src/server/netxmsd/netxmsd
 src/server/tools/nxaction/nxaction
 src/server/tools/nxadm/nxadm
@@ -55,9 +66,9 @@ src/server/tools/nxupload/nxupload
 src/snmp/nxmibc/Makefile
 src/snmp/nxmibc/Makefile.in
 src/snmp/nxmibc/lex.mp.c
+src/snmp/nxmibc/lex.parser.cpp
 src/snmp/nxmibc/parser.output
-src/snmp/nxmibc/parser.tab.c
-src/snmp/nxmibc/parser.tab.h
+src/snmp/nxmibc/parser.tab.*
 src/snmp/nxsnmpget/nxsnmpget
 src/snmp/nxsnmpwalk/nxsnmpwalk
 src/webui/nxhttpd/MSG00001.bin

@@ -184,7 +184,6 @@ public class ObjectSelectionDialog extends Dialog
 			for(int i = 0; i < selection.length; i++)
 			{
 				TreeItem item = selection[i];
-				ret.add(item.getText);
 			}
 		}
 		else
