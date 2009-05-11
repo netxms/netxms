@@ -88,18 +88,23 @@ void ServerJob::markProgress(int pctCompleted)
 
 THREAD_RESULT THREAD_CALL ServerJob::WorkerThreadStarter(void *arg)
 {
-	DbgPrintf(4, _T("Job %d started"), ((ServerJob *)arg)->m_id);
+	ServerJob *job = (ServerJob *)arg;
+	DbgPrintf(4, _T("Job %d started"), job->m_id);
 
-	if (((ServerJob *)arg)->run())
-		((ServerJob *)arg)->m_status = JOB_COMPLETED;
+	if (job->run())
+	{
+		job->m_status = JOB_COMPLETED;
+	}
 	else
-		((ServerJob *)arg)->m_status = JOB_FAILED;
-	((ServerJob *)arg)->m_workerThread = INVALID_THREAD_HANDLE;
+	{
+		job->m_status = JOB_FAILED;
+	}
+	job->m_workerThread = INVALID_THREAD_HANDLE;
 
-	DbgPrintf(4, _T("Job %d finished, status=%s"), ((ServerJob *)arg)->m_id, (((ServerJob *)arg)->m_status = JOB_COMPLETED) ? _T("COMPLETED") : _T("FAILED"));
+	DbgPrintf(4, _T("Job %d finished, status=%s"), job->m_id, (job->m_status == JOB_COMPLETED) ? _T("COMPLETED") : _T("FAILED"));
 
-	if (((ServerJob *)arg)->m_owningQueue != NULL)
-		((ServerJob *)arg)->m_owningQueue->jobCompleted((ServerJob *)arg);
+	if (job->m_owningQueue != NULL)
+		job->m_owningQueue->jobCompleted(job);
 	return THREAD_OK;
 }
 

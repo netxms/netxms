@@ -205,7 +205,7 @@ void Config::error(const TCHAR *format, ...)
 bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 {
 	TCHAR name[MAX_PATH], *curr, *eptr;
-	int i, j, pos;
+	int i, j, pos, initialErrorCount = m_errorCount;
 	ConfigEntry *entry;
 
 	name[0] = _T('/');
@@ -271,7 +271,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 		}
 	}
 
-	return m_errorCount == 0;
+	return (m_errorCount - initialErrorCount) == 0;
 }
 
 
