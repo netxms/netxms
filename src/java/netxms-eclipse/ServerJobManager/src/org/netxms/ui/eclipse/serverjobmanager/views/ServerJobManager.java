@@ -1,5 +1,9 @@
 package org.netxms.ui.eclipse.serverjobmanager.views;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -50,10 +54,11 @@ public class ServerJobManager extends ViewPart
 	private RefreshAction actionRefresh;
 	
 	// Columns
-	private static final int COL_STATUS = 0;
-	private static final int COL_NODE = 1;
-	private static final int COL_DESCRIPTION = 2;
-	private static final int COL_PROGRESS = 3;
+	private static final int COLUMN_STATUS = 0;
+	private static final int COLUMN_NODE = 1;
+	private static final int COLUMN_DESCRIPTION = 2;
+	private static final int COLUMN_PROGRESS = 3;
+	private static final int COLUMN_MESSAGE = 4;
 
 
 	/**
@@ -64,6 +69,26 @@ public class ServerJobManager extends ViewPart
 	 */
 	private class ViewLabelProvider extends LabelProvider implements ITableLabelProvider
 	{
+		private Map<Integer, String> statusTexts = new HashMap<Integer, String>(5);
+		private Map<Integer, Image> statusImages = new HashMap<Integer, Image>(5);
+		
+		public ViewLabelProvider()
+		{
+			super();
+			
+			statusTexts.put(NXCServerJob.ACTIVE, "Active");
+			statusTexts.put(NXCServerJob.COMPLETED, "Completed");
+			statusTexts.put(NXCServerJob.FAILED, "Failed");
+			statusTexts.put(NXCServerJob.ON_HOLD, "On hold");
+			statusTexts.put(NXCServerJob.PENDING, "Pending");
+
+			statusImages.put(NXCServerJob.ACTIVE, Activator.getImageDescriptor("icons/active.png").createImage());
+			statusImages.put(NXCServerJob.COMPLETED, Activator.getImageDescriptor("icons/completed.png").createImage());
+			statusImages.put(NXCServerJob.FAILED, Activator.getImageDescriptor("icons/failed.png").createImage());
+			statusImages.put(NXCServerJob.ON_HOLD, Activator.getImageDescriptor("icons/hold.png").createImage());
+			statusImages.put(NXCServerJob.PENDING, Activator.getImageDescriptor("icons/pending.png").createImage());
+		}
+		
 		/**
 		 * Returns text for given column 
 		 */
@@ -74,18 +99,36 @@ public class ServerJobManager extends ViewPart
 			{
 				switch(index)
 				{
-					case COL_STATUS:
-						return Integer.toString(((NXCServerJob)obj).getStatus());
-					case COL_NODE:
+					case COLUMN_STATUS:
+						return statusTexts.get(((NXCServerJob)obj).getStatus());
+					case COLUMN_NODE:
 						NXCObject object = session.findObjectById(((NXCServerJob)obj).getNodeId());
 						return (object != null) ? object.getObjectName() : "<unknown>";
-					case COL_DESCRIPTION:
+					case COLUMN_DESCRIPTION:
 						return ((NXCServerJob)obj).getDescription();
-					case COL_PROGRESS:
+					case COLUMN_PROGRESS:
 						return (((NXCServerJob)obj).getStatus() == NXCServerJob.ACTIVE) ? Integer.toString(((NXCServerJob)obj).getProgress()) + "%" : "";
+					case COLUMN_MESSAGE:
+						return ((NXCServerJob)obj).getFailureMessage();
 				}
 			}
 			return "";
+		}
+
+		/* (non-Javadoc)
+		 * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+		 */
+		@Override
+		public void dispose()
+		{
+			Iterator<Image> it = statusImages.values().iterator();
+			while(it.hasNext())
+			{
+				Image image = it.next();
+				image.dispose();
+			}
+			
+			super.dispose();
 		}
 
 		@Override
@@ -97,8 +140,10 @@ public class ServerJobManager extends ViewPart
 		@Override
 		public Image getColumnImage(Object element, int columnIndex)
 		{
-			// TODO Auto-generated method stub
-			return null;
+			if (!(element instanceof NXCServerJob) || (columnIndex != COLUMN_STATUS))
+				return null;
+			
+			return statusImages.get(((NXCServerJob)element).getStatus());
 		}
 	}
 
@@ -120,18 +165,21 @@ public class ServerJobManager extends ViewPart
 			
 			switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
 			{
-				case COL_STATUS:
+				case COLUMN_STATUS:
 					result = ((NXCServerJob)e1).getStatus() - ((NXCServerJob)e2).getStatus();
 					break;
-				case COL_NODE:
+				case COLUMN_NODE:
 					NXCObject object1 = session.findObjectById(((NXCServerJob)e1).getNodeId());
 					NXCObject object2 = session.findObjectById(((NXCServerJob)e2).getNodeId());
 					String name1 = (object1 != null) ? object1.getObjectName() : "<unknown>";
 					String name2 = (object2 != null) ? object2.getObjectName() : "<unknown>";
 					result = name1.compareToIgnoreCase(name2);
 					break;
-				case COL_DESCRIPTION:
+				case COLUMN_DESCRIPTION:
 					result = ((NXCServerJob)e1).getDescription().compareToIgnoreCase(((NXCServerJob)e2).getDescription());
+					break;
+				case COLUMN_MESSAGE:
+					result = ((NXCServerJob)e1).getFailureMessage().compareToIgnoreCase(((NXCServerJob)e2).getFailureMessage());
 					break;
 				default:
 					result = 0;
@@ -209,8 +257,8 @@ public class ServerJobManager extends ViewPart
 	 */
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { "Status", "Node", "Description", "Progress" };
-		final int[] widths = { 80, 150, 250, 100 };
+		final String[] names = { "Status", "Node", "Description", "Progress", "Message" };
+		final int[] widths = { 80, 150, 250, 100, 300 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ViewLabelProvider());
