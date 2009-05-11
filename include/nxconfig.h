@@ -31,6 +31,8 @@
 // Config entry
 //
 
+class ConfigEntryList;
+
 class LIBNETXMS_EXPORTABLE ConfigEntry
 {
 private:
@@ -64,8 +66,28 @@ public:
 	void setValue(const TCHAR*value);
 
 	ConfigEntry *findEntry(const TCHAR *name);
+	ConfigEntryList *getSubEntries(const TCHAR *mask);
 
 	void print(FILE *file, int level);
+};
+
+
+//
+// List of config entries
+//
+
+class ConfigEntryList
+{
+private:
+	ConfigEntry **m_list;
+	int m_size;
+
+public:
+	ConfigEntryList(ConfigEntry **list, int size) { m_list = list; m_size = size; }
+	~ConfigEntryList() { safe_free(m_list); }
+
+	int getSize() { return m_size; }
+	ConfigEntry *getEntry(int index) { return ((index >= 0) && (index < m_size)) ? m_list[index] : NULL; }
 };
 
 
@@ -96,6 +118,7 @@ public:
 
 	ConfigEntry *getEntry(const TCHAR *path);
 	const TCHAR *getValue(const TCHAR *path);
+	ConfigEntryList *getSubEntries(const TCHAR *path, const TCHAR *mask);
 
 	bool parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate);
 

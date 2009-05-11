@@ -81,6 +81,29 @@ ConfigEntry *ConfigEntry::findEntry(const TCHAR *name)
 
 
 //
+// Get all subentries with names matched to mask
+//
+
+ConfigEntryList *ConfigEntry::getSubEntries(const TCHAR *mask)
+{
+	ConfigEntry *e, **list = NULL;
+	int count = 0, allocated = 0;
+
+	for(e = m_childs; e != NULL; e = e->getNext())
+		if (MatchString(mask, e->getName(), FALSE))
+		{
+			if (count == allocated)
+			{
+				allocated += 10;
+				list = (ConfigEntry **)realloc(list, sizeof(ConfigEntry *) * allocated);
+			}
+			list[count++] = e;
+		}
+	return new ConfigEntryList(list, count);
+}
+
+
+//
 // Get value
 //
 
@@ -283,6 +306,17 @@ const TCHAR *Config::getValue(const TCHAR *path)
 {
 	ConfigEntry *entry = getEntry(path);
 	return (entry != NULL) ? entry->getValue() : NULL;
+}
+
+
+//
+// Get subentries
+//
+
+ConfigEntryList *Config::getSubEntries(const TCHAR *path, const TCHAR *mask)
+{
+	ConfigEntry *entry = getEntry(path);
+	return (entry != NULL) ? entry->getSubEntries(mask) : NULL;
 }
 
 

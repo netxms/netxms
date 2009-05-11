@@ -378,12 +378,12 @@ typedef struct
 #define CMD_GET_ROUTING_TABLE       0x0086
 #define CMD_EXEC_TABLE_TOOL         0x0087
 #define CMD_TABLE_DATA              0x0088
-#define CMD_APPLY_LOG_POLICY        0x0089
+//#define CMD_APPLY_LOG_POLICY        0x0089
 #define CMD_CHANGE_SUBSCRIPTION     0x008A
 #define CMD_GET_SYSLOG              0x008B
 #define CMD_SYSLOG_RECORDS          0x008C
 #define CMD_JOB_CHANGE_NOTIFICATION 0x008D
-//#define CMD_OPEN_LOG_POLICY         0x008E
+#define CMD_DEPLOY_AGENT_POLICY     0x008E
 //#define CMD_CLOSE_LOG_POLICY        0x008F
 #define CMD_GET_OBJECT_TOOL_DETAILS 0x0090
 #define CMD_LOCK_OBJECT_TOOLS       0x0091

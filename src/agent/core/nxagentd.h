@@ -276,7 +276,6 @@ private:
    void Action(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void RecvFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
    DWORD Upgrade(CSCPMessage *pRequest);
-   DWORD ApplyLogPolicy(CSCPMessage *pRequest);
    DWORD SetupProxyConnection(CSCPMessage *pRequest);
 
    void ReadThread(void);
