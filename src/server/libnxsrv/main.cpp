@@ -65,6 +65,14 @@ static struct
    { ERR_INVALID_PUBLIC_KEY, _T("Invalid public key") },
    { ERR_INVALID_SESSION_KEY, _T("Invalid session key") },
    { ERR_CONNECT_FAILED, _T("Connect failed") },
+   { ERR_MALFORMED_COMMAND, _T("Malformed command") },
+   { ERR_SOCKET_ERROR, _T("Socket error") },
+   { ERR_BAD_ARGUMENTS, _T("Bad arguments") },
+   { ERR_SUBAGENT_LOAD_FAILED, _T("Subagent load failed") },
+   { ERR_FILE_OPEN_ERROR, _T("File open error") },
+   { ERR_FILE_STAT_FAILED, _T("File stat filed") },
+   { ERR_MEM_ALLOC_FAILED, _T("Memory allocation failed") },
+   { ERR_FILE_DELETE_FAILED, _T("File delete failed") },
    { -1, NULL }
 };
 

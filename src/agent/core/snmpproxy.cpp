@@ -156,6 +156,6 @@ void ProxySNMPRequest(CSCPMessage *pRequest, CSCPMessage *pResponse)
 	}
 	else
 	{
-		pResponse->SetVariable(VID_RCC, ERR_MAILFORMED_COMMAND);
+		pResponse->SetVariable(VID_RCC, ERR_MALFORMED_COMMAND);
 	}
 }

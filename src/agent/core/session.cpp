@@ -785,7 +785,7 @@ void CommSession::UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
       }
       else
       {
-         pMsg->SetVariable(VID_RCC, ERR_MAILFORMED_COMMAND);
+         pMsg->SetVariable(VID_RCC, ERR_MALFORMED_COMMAND);
       }
    }
    else
