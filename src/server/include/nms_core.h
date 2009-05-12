@@ -538,6 +538,7 @@ private:
 	void GetServerFile(CSCPMessage *pRequest);
 	void TestDCITransformation(CSCPMessage *pRequest);
 	void SendJobList(DWORD dwRqId);
+	void CancelJob(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

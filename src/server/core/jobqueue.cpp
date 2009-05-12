@@ -102,9 +102,10 @@ void ServerJobQueue::jobCompleted(ServerJob *job)
 
 	MutexLock(m_accessMutex, INFINITE);
 	for(i = 0; i < m_jobCount; i++)
-		if (m_jobList[i]  == job)
+		if (m_jobList[i] == job)
 		{
-			if (job->getStatus() == JOB_COMPLETED)
+			if ((job->getStatus() == JOB_COMPLETED) ||
+				 (job->getStatus() == JOB_CANCELLED))
 			{
 				// Delete and remove from list
 				delete job;
@@ -116,6 +117,61 @@ void ServerJobQueue::jobCompleted(ServerJob *job)
 	MutexUnlock(m_accessMutex);
 
 	runNext();
+}
+
+
+//
+// Cancel job
+//
+
+bool ServerJobQueue::cancel(DWORD jobId)
+{
+	int i;
+	bool success = false;
+
+	MutexLock(m_accessMutex, INFINITE);
+	for(i = 0; i < m_jobCount; i++)
+		if (m_jobList[i]->getId()  == jobId)
+		{
+			if (m_jobList[i]->cancel())
+			{
+				DbgPrintf(4, _T("Job %d cancelled (node=%d, type=%s, description=\"%s\")"),
+							 m_jobList[i]->getId(), m_jobList[i]->getRemoteNode(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
+
+				// Delete and remove from list
+				delete m_jobList[i];
+				m_jobCount--;
+				memmove(&m_jobList[i], &m_jobList[i + 1], sizeof(ServerJob *) * (m_jobCount - i));
+				success = true;
+			}
+			break;
+		}
+	MutexUnlock(m_accessMutex);
+
+	runNext();
+	return success;
+}
+
+
+//
+// Find job b y ID
+//
+
+ServerJob *ServerJobQueue::findJob(DWORD jobId)
+{
+	int i;
+	ServerJob *job = NULL;
+
+	MutexLock(m_accessMutex, INFINITE);
+	for(i = 0; i < m_jobCount; i++)
+		if (m_jobList[i]->getId()  == jobId)
+		{
+			job = m_jobList[i];
+			break;
+		}
+	MutexUnlock(m_accessMutex);
+
+	return job;
 }
 
 

@@ -181,7 +181,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_GET_ROUTING_TABLE"),
       _T("CMD_EXEC_TABLE_TOOL"),
       _T("CMD_TABLE_DATA"),
-      _T("--- CMD_APPLY_LOG_POLICY"),
+      _T("CMD_CANCEL_JOB"),
       _T("CMD_CHANGE_SUBSCRIPTION"),
       _T("CMD_GET_SYSLOG"),
       _T("CMD_SYSLOG_RECORDS"),

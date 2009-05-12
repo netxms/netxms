@@ -361,6 +361,7 @@ src/java/netxms-eclipse/ServerConfig/src/org/netxms/ui/eclipse/serverconfig/view
 src/java/netxms-eclipse/ServerJobManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ServerJobManager/build.properties -text
 src/java/netxms-eclipse/ServerJobManager/icons/active.png -text
+src/java/netxms-eclipse/ServerJobManager/icons/cancel.png -text
 src/java/netxms-eclipse/ServerJobManager/icons/completed.png -text
 src/java/netxms-eclipse/ServerJobManager/icons/failed.png -text
 src/java/netxms-eclipse/ServerJobManager/icons/hold.png -text

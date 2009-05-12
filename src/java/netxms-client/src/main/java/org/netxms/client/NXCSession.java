@@ -94,7 +94,7 @@ public class NXCSession
 	public static final int RCC_FILE_IO_ERROR           = 52;
 	public static final int RCC_CORRUPTED_MIB_FILE      = 53;
 	public static final int RCC_TRANSFER_IN_PROGRESS    = 54;
-	public static final int RCC_INVALID_LPP_ID          = 55;
+	public static final int RCC_INVALID_JOB_ID          = 55;
 	public static final int RCC_INVALID_SCRIPT_ID       = 56;
 	public static final int RCC_INVALID_SCRIPT_NAME     = 57;
 	public static final int RCC_UNKNOWN_MAP_NAME        = 58;
@@ -121,7 +121,8 @@ public class NXCSession
 	public static final int RCC_INVALID_EVENT_ID        = 79;
 	public static final int RCC_AGENT_ERROR             = 80;
 	public static final int RCC_UNKNOWN_VARIABLE        = 81;
-	public static final int RCC_RESOURCE_NOT_AVAILABLE  = 82;	
+	public static final int RCC_RESOURCE_NOT_AVAILABLE  = 82;
+	public static final int RCC_JOB_CANCEL_FAILED       = 83;
 	
 	// Private constants
 	private static final int CLIENT_CHALLENGE_SIZE = 256;
@@ -1765,5 +1766,19 @@ public class NXCSession
 			jobList[i] = new NXCServerJob(response, baseVarId);
 		
 		return jobList;
+	}
+	
+	/**
+	 * Cancel server job
+	 * @param jobId Job ID
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void cancelServerJob(long jobId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_CANCEL_JOB);
+		msg.setVariableInt32(NXCPCodes.VID_JOB_ID, (int)jobId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
 	}
 }

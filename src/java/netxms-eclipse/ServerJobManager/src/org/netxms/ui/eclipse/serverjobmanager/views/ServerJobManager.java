@@ -8,14 +8,19 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
@@ -52,6 +57,8 @@ public class ServerJobManager extends ViewPart
 	private NXCServerJob[] jobList;
 	
 	private RefreshAction actionRefresh;
+	private Action actionRestartJob;
+	private Action actionCancelJob;
 	
 	// Columns
 	private static final int COLUMN_STATUS = 0;
@@ -270,6 +277,18 @@ public class ServerJobManager extends ViewPart
 		
 		session = NXMCSharedData.getInstance().getSession();
 
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event)
+			{
+				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+				if (selection != null)
+				{
+					actionCancelJob.setEnabled(selection.size()> 0);
+				}
+			}
+		});
+		
 		Job job = new RefreshJob();
 		IWorkbenchSiteProgressService siteService =
 	      (IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class);
@@ -285,14 +304,22 @@ public class ServerJobManager extends ViewPart
 
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionRestartJob);
+		manager.add(actionCancelJob);
+		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+		//manager.add(actionRestartJob);
+		manager.add(actionCancelJob);
 		manager.add(actionRefresh);
 	}
 
+	/**
+	 * Create actions
+	 */
 	private void makeActions()
 	{
 		actionRefresh = new RefreshAction() {
@@ -308,6 +335,81 @@ public class ServerJobManager extends ViewPart
 				siteService.schedule(job, 0, true);
 			}
 		};
+		
+		actionCancelJob = new Action() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+				
+				Job job = new Job("Cancel server jobs") {
+					@SuppressWarnings("unchecked")
+					@Override
+					protected IStatus run(IProgressMonitor monitor)
+					{
+						IStatus status;
+						
+						try
+						{
+							Iterator it = selection.iterator();
+							while(it.hasNext())
+							{
+								Object object = it.next();
+								if (object instanceof NXCServerJob)
+								{
+									session.cancelServerJob(((NXCServerJob)object).getId());
+								}
+								else
+								{
+									throw new NXCException(NXCSession.RCC_INTERNAL_ERROR);
+								}
+							}
+							status = Status.OK_STATUS;
+						}
+						catch(Exception e)
+						{
+							status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
+							                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
+							                    "Cannot cancel server job: " + e.getMessage(), e);
+						}
+						actionRefresh.run();
+						return status;
+					}
+
+					
+					/* (non-Javadoc)
+					 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
+					 */
+					@Override
+					public boolean belongsTo(Object family)
+					{
+						return family == ServerJobManager.JOB_FAMILY;
+					}
+				};
+				IWorkbenchSiteProgressService siteService =
+			      (IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class);
+				siteService.schedule(job, 0, true);
+			}
+		};
+		actionCancelJob.setText("Cancel");
+		actionCancelJob.setImageDescriptor(Activator.getImageDescriptor("icons/cancel.png"));
+		actionCancelJob.setEnabled(false);
+		
+		actionRestartJob = new Action() {
+			/* (non-Javadoc)
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+			}
+		};
+		actionRestartJob.setText("Restart");
+		//actionRestartJob.setImageDescriptor(Activator.getImageDescriptor("icons/user_delete.png"));
+		actionRestartJob.setEnabled(false);
 	}
 
 	
@@ -342,6 +444,9 @@ public class ServerJobManager extends ViewPart
 	 */
 	protected void fillContextMenu(IMenuManager mgr)
 	{
+		mgr.add(actionRestartJob);
+		mgr.add(actionCancelJob);
+		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 

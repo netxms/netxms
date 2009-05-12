@@ -126,9 +126,16 @@ void ServerJob::start()
 
 bool ServerJob::cancel()
 {
-	if (m_status != JOB_ACTIVE)
-		return false;
-	return onCancel();
+	switch(m_status)
+	{
+		case JOB_COMPLETED:
+			return false;
+		case JOB_ACTIVE:
+			return onCancel();
+		default:
+			m_status = JOB_CANCELLED;
+			return true;
+	}
 }
 
 

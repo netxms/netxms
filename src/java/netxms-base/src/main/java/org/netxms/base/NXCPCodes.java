@@ -149,12 +149,12 @@ public final class NXCPCodes
 	public static final int CMD_GET_ROUTING_TABLE       = 0x0086;
 	public static final int CMD_EXEC_TABLE_TOOL         = 0x0087;
 	public static final int CMD_TABLE_DATA              = 0x0088;
-	public static final int CMD_APPLY_LOG_POLICY        = 0x0089;
+	public static final int CMD_CANCEL_JOB              = 0x0089;
 	public static final int CMD_CHANGE_SUBSCRIPTION     = 0x008A;
 	public static final int CMD_GET_SYSLOG              = 0x008B;
 	public static final int CMD_SYSLOG_RECORDS          = 0x008C;
 	public static final int CMD_JOB_CHANGE_NOTIFICATION = 0x008D;
-	//public static final int CMD_OPEN_LOG_POLICY         = 0x008E;
+	public static final int CMD_DEPLOY_AGENT_POLICY     = 0x008E;
 	//public static final int CMD_CLOSE_LOG_POLICY        = 0x008F;
 	public static final int CMD_GET_OBJECT_TOOL_DETAILS = 0x0090;
 	public static final int CMD_LOCK_OBJECT_TOOLS       = 0x0091;

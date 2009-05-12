@@ -1183,6 +1183,9 @@ void ClientSession::ProcessingThread(void)
 			case CMD_GET_JOB_LIST:
 				SendJobList(pMsg->GetId());
 				break;
+			case CMD_CANCEL_JOB:
+				CancelJob(pMsg);
+				break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -10124,5 +10127,20 @@ void ClientSession::SendJobList(DWORD dwRqId)
 	msg.SetId(dwRqId);
 	msg.SetVariable(VID_RCC, RCC_SUCCESS);
 	GetJobList(&msg);
+	SendMessage(&msg);
+}
+
+
+//
+// Cancel server job
+//
+
+void ClientSession::CancelJob(CSCPMessage *pRequest)
+{
+	CSCPMessage msg;
+
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	msg.SetId(pRequest->GetId());
+	msg.SetVariable(VID_RCC, ::CancelJob(m_dwUserId, pRequest));
 	SendMessage(&msg);
 }

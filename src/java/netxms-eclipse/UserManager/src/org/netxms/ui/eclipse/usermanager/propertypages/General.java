@@ -18,7 +18,6 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCUser;
 import org.netxms.client.NXCUserDBObject;
 import org.netxms.ui.eclipse.usermanager.Activator;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**

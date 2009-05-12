@@ -67,7 +67,7 @@ public class NXCException extends Exception
       "File I/O operation failed",
       "MIB file is corrupted",
       "File transfer operation already in progress",
-      "Invalid log processing policy ID",
+      "Invalid job ID",
       "Invalid script ID",
       "Invalid script name",
       "Unknown map name",
@@ -94,7 +94,8 @@ public class NXCException extends Exception
 		"Invalid event ID",
 		"Operation cannot be completed due to agent error",
 		"Unknown variable",
-		"Requested resource not available"
+		"Requested resource not available",
+		"Job cannot be cancelled"
 	};
 
 	private int errorCode;

@@ -62,3 +62,37 @@ void GetJobList(CSCPMessage *msg)
    RWLockUnlock(g_rwlockIdIndex);
 	msg->SetVariable(VID_JOB_COUNT, count);
 }
+
+
+//
+// Cancel job
+//
+
+DWORD CancelJob(DWORD userId, CSCPMessage *msg)
+{
+	DWORD i, jobId, rcc = RCC_INVALID_JOB_ID;
+
+	jobId = msg->GetVariableLong(VID_JOB_ID);
+
+   RWLockReadLock(g_rwlockIdIndex, INFINITE);
+   for(i = 0; i < g_dwIdIndexSize; i++)
+   {
+      if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
+      {
+			ServerJobQueue *queue = ((Node *)g_pIndexById[i].pObject)->getJobQueue();
+			if (queue->findJob(jobId) != NULL)
+			{
+				if (((NetObj *)g_pIndexById[i].pObject)->CheckAccessRights(userId, OBJECT_ACCESS_CONTROL))
+				{
+					rcc = queue->cancel(jobId) ? RCC_SUCCESS : RCC_JOB_CANCEL_FAILED;
+				}
+				else
+				{
+					rcc = RCC_ACCESS_DENIED;
+				}
+			}
+      }
+   }
+   RWLockUnlock(g_rwlockIdIndex);
+	return rcc;
+}

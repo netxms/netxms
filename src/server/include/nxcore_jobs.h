@@ -34,7 +34,8 @@ enum ServerJobStatus
 	JOB_ACTIVE,
 	JOB_ON_HOLD,
 	JOB_COMPLETED,
-	JOB_FAILED
+	JOB_FAILED,
+	JOB_CANCELLED
 };
 
 
@@ -102,7 +103,10 @@ public:
 	~ServerJobQueue();
 
 	void add(ServerJob *job);
+	bool cancel(DWORD jobId);
 	void runNext();
+
+	ServerJob *findJob(DWORD jobId);
 
 	void jobCompleted(ServerJob *job);
 
@@ -116,6 +120,6 @@ public:
 
 bool NXCORE_EXPORTABLE AddJob(ServerJob *job);
 void GetJobList(CSCPMessage *msg);
-
+DWORD CancelJob(DWORD userId, CSCPMessage *msg);
 
 #endif   /* _nxcore_jobs_h_ */

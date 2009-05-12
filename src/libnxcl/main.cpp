@@ -341,7 +341,7 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
       _T("File I/O operation failed"),
       _T("MIB file is corrupted"),
       _T("File transfer operation already in progress"),
-      _T("Invalid log processing policy ID"),
+      _T("Invalid job ID"),
       _T("Invalid script ID"),
       _T("Invalid script name"),
       _T("Unknown map name"),
@@ -368,9 +368,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 		_T("Invalid event ID"),
 		_T("Operation cannot be completed due to agent error"),
 		_T("Unknown variable"),
-		_T("Requested resource not available")
+		_T("Requested resource not available"),
+		_T("Job cannot be cancelled")
    };
-   return ((dwError >= 0) && (dwError <= RCC_RESOURCE_NOT_AVAILABLE)) ? pszErrorText[dwError] : _T("No text message for this error");
+   return ((dwError >= 0) && (dwError <= RCC_JOB_CANCEL_FAILED)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

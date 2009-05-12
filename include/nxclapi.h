@@ -392,7 +392,7 @@ enum
 #define RCC_FILE_IO_ERROR           ((DWORD)52)
 #define RCC_CORRUPTED_MIB_FILE      ((DWORD)53)
 #define RCC_TRANSFER_IN_PROGRESS    ((DWORD)54)
-//#define RCC_INVALID_LPP_ID          ((DWORD)55)
+#define RCC_INVALID_JOB_ID          ((DWORD)55)
 #define RCC_INVALID_SCRIPT_ID       ((DWORD)56)
 #define RCC_INVALID_SCRIPT_NAME     ((DWORD)57)
 #define RCC_UNKNOWN_MAP_NAME        ((DWORD)58)
@@ -420,6 +420,7 @@ enum
 #define RCC_AGENT_ERROR             ((DWORD)80)
 #define RCC_UNKNOWN_VARIABLE        ((DWORD)81)
 #define RCC_RESOURCE_NOT_AVAILABLE  ((DWORD)82)
+#define RCC_JOB_CANCEL_FAILED       ((DWORD)83)
 
 
 //
