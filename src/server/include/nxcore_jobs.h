@@ -44,6 +44,7 @@ enum ServerJobStatus
 //
 
 class ServerJobQueue;
+class NetObj;
 
 class NXCORE_EXPORTABLE ServerJob
 {
@@ -57,16 +58,27 @@ private:
 	TCHAR *m_failureMessage;
 	THREAD m_workerThread;
 	ServerJobQueue *m_owningQueue;
+	time_t m_lastStatusChange;
+	int m_autoCancelDelay;	// Interval in seconds to cancel failed job automatically (0 = disabled)
+	time_t m_lastNotification;
+	NetObj *m_resolvedObject;
+	MUTEX m_notificationLock;
+	CSCPMessage m_notificationMessage;
 
 	static DWORD s_freeId;
 	static THREAD_RESULT THREAD_CALL WorkerThreadStarter(void *);
+	static void sendNotification(ClientSession *session, void *arg);
 
 protected:
 	virtual bool run();
 	virtual bool onCancel();
 
+	void notifyClients(bool isStatusChange);
+	void changeStatus(ServerJobStatus newStatus);
 	void markProgress(int pctCompleted);
 	void setFailureMessage(const TCHAR *msg);
+
+	void setDescription(const TCHAR *description);
 
 public:
 	ServerJob(const TCHAR *type, const TCHAR *description, DWORD node);
@@ -75,6 +87,9 @@ public:
 	void start();
 	bool cancel();
 
+	void setAutoCancelDelay(int delay) { m_autoCancelDelay = delay; }
+	int getAutoCancelDelay() { return m_autoCancelDelay; }
+
 	DWORD getId() { return m_id; }
 	const TCHAR *getType() { return m_type; }
 	const TCHAR *getDescription() { return m_description; }
@@ -82,8 +97,11 @@ public:
 	int getProgress() { return m_progress; }
 	DWORD getRemoteNode() { return m_remoteNode; }
 	const TCHAR *getFailureMessage() { return CHECK_NULL(m_failureMessage); }
+	time_t getLastStatusChange() { return m_lastStatusChange; }
 
 	void setOwningQueue(ServerJobQueue *queue);
+
+	void fillMessage(CSCPMessage *msg);
 };
 
 

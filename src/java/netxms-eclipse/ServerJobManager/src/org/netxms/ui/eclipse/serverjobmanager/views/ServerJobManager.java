@@ -15,6 +15,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -34,6 +35,8 @@ import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
+import org.netxms.client.NXCListener;
+import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCObject;
 import org.netxms.client.NXCServerJob;
 import org.netxms.client.NXCSession;
@@ -53,8 +56,8 @@ public class ServerJobManager extends ViewPart
 	public static final String JOB_FAMILY = "ServerJobManagerJob";
 		
 	private TableViewer viewer;
-	private NXCSession session;
-	private NXCServerJob[] jobList;
+	private NXCSession session = null;
+	private NXCListener clientListener = null;
 	
 	private RefreshAction actionRefresh;
 	private Action actionRestartJob;
@@ -206,7 +209,7 @@ public class ServerJobManager extends ViewPart
 	{
 		public RefreshJob()
 		{
-			super("Get server configuration variables");
+			super("Get server jobs");
 		}
 
 		@Override
@@ -216,17 +219,14 @@ public class ServerJobManager extends ViewPart
 			
 			try
 			{
-				jobList = session.getServerJobList();
+				final NXCServerJob[] jobList = session.getServerJobList();
 				status = Status.OK_STATUS;
 
-				new UIJob("Initialize server configuration editor") {
+				new UIJob("Update job list in UI") {
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						synchronized(jobList)
-						{
-							viewer.setInput(jobList);
-						}
+						viewer.setInput(jobList);
 						return Status.OK_STATUS;
 					}
 				}.schedule();
@@ -289,6 +289,23 @@ public class ServerJobManager extends ViewPart
 			}
 		});
 		
+		// Create listener for notifications received from server via client library
+		clientListener = new NXCListener() {
+			@Override
+			public void notificationHandler(NXCNotification n)
+			{
+				if (n.getCode() != NXCNotification.JOB_CHANGE)
+					return;
+				
+				Job job = new RefreshJob();
+				IWorkbenchSiteProgressService siteService =
+			      (IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class);
+				siteService.schedule(job, 0, true);
+			}
+		};
+		session.addListener(clientListener);
+		
+		// Schedule initial view refresh
 		Job job = new RefreshJob();
 		IWorkbenchSiteProgressService siteService =
 	      (IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class);
@@ -458,5 +475,16 @@ public class ServerJobManager extends ViewPart
 	public void setFocus()
 	{
 		viewer.getControl().setFocus();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		if ((session != null) && (clientListener != null))
+			session.removeListener(clientListener);
+		super.dispose();
 	}
 }

@@ -666,7 +666,7 @@ public class NXCSession
 	 * @param code Message code
 	 * @return New message object
 	 */
-	public final NXCPMessage newMessage(int code)
+	public final synchronized NXCPMessage newMessage(int code)
 	{
 		return new NXCPMessage(code, requestId++);
 	}
@@ -804,6 +804,7 @@ public class NXCSession
 		
 		if (housekeeperThread != null)
 		{
+			housekeeperThread.setStopFlag(true);
 			while(housekeeperThread.isAlive())
 			{
 				try

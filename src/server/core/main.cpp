@@ -91,6 +91,7 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg);
 THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg);
 THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg);
 THREAD_RESULT THREAD_CALL BeaconPoller(void *pArg);
+THREAD_RESULT THREAD_CALL JobManagerThread(void *arg);
 
 
 //
@@ -624,6 +625,7 @@ retry_db_lock:
 	// Start threads
 	ThreadCreate(WatchdogThread, 0, NULL);
 	ThreadCreate(NodePoller, 0, NULL);
+	ThreadCreate(JobManagerThread, 0, NULL);
 	m_thSyncer = ThreadCreateEx(Syncer, 0, NULL);
 	m_thHouseKeeper = ThreadCreateEx(HouseKeeper, 0, NULL);
 	m_thPollManager = ThreadCreateEx(PollManager, 0, NULL);

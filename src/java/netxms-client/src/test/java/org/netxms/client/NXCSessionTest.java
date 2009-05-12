@@ -1,7 +1,9 @@
 package org.netxms.client;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -206,4 +208,14 @@ public class NXCSessionTest extends TestCase
 		session.disconnect();
 	}
 	
+	public void testJobList() throws Exception
+	{
+		final NXCSession session = new NXCSession(serverAddress, loginName, password);
+		session.connect();
+		
+		final NXCServerJob[] jobList = session.getServerJobList();
+		assertNotNull(jobList);
+		
+		session.disconnect();
+	}
 }

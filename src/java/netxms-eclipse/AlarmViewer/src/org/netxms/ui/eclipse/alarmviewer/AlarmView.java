@@ -50,7 +50,8 @@ public class AlarmView extends Composite
 	public static final int COLUMN_LASTCHANGE = 6;
 	
 	private final ViewPart viewPart;
-	private NXCSession session;
+	private NXCSession session = null;
+	private NXCListener clientListener = null;
 	private TableViewer alarmViewer;
 	private AlarmListFilter alarmFilter;
 	private HashMap<Long, NXCAlarm> alarmList;
@@ -129,7 +130,7 @@ public class AlarmView extends Composite
 		siteService.schedule(job, 0, true);
 		
 		// Add client library listener
-		session.addListener(new NXCListener() {
+		clientListener = new NXCListener() {
 			@Override
 			public void notificationHandler(NXCNotification n)
 			{
@@ -155,10 +156,10 @@ public class AlarmView extends Composite
 						break;
 				}
 			}
-		});
+		};
+		session.addListener(clientListener);
 	}
-	
-	
+		
 	/**
 	 * Schedule alarm viewer update
 	 */
@@ -226,5 +227,16 @@ public class AlarmView extends Composite
 		{
 			alarmViewer.refresh();
 		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.widgets.Widget#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		if ((session != null) && (clientListener != null))
+			session.removeListener(clientListener);
+		super.dispose();
 	}
 }

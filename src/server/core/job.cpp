@@ -40,11 +40,15 @@ ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, DWORD node)
 	m_type = _tcsdup(CHECK_NULL(type));
 	m_description = _tcsdup(CHECK_NULL(description));
 	m_status = JOB_PENDING;
+	m_lastStatusChange = time(NULL);
+	m_autoCancelDelay = 0;
 	m_remoteNode = node;
 	m_progress = 0;
 	m_failureMessage = NULL;
 	m_owningQueue = NULL;
 	m_workerThread = INVALID_THREAD_HANDLE;
+	m_lastNotification = 0;
+	m_notificationLock = MutexCreate();
 }
 
 
@@ -58,6 +62,51 @@ ServerJob::~ServerJob()
 
 	safe_free(m_type);
 	safe_free(m_description);
+	MutexDestroy(m_notificationLock);
+}
+
+
+//
+// Send notification to clients
+//
+
+void ServerJob::sendNotification(ClientSession *session, void *arg)
+{
+	ServerJob *job = (ServerJob *)arg;
+	if (job->m_resolvedObject->CheckAccessRights(session->GetUserId(), OBJECT_ACCESS_READ))
+		session->SendMessage(&job->m_notificationMessage);
+}
+
+
+//
+// Notify clients
+//
+
+void ServerJob::notifyClients(bool isStatusChange)
+{
+	time_t t = time(NULL);
+	if (!isStatusChange && (t - m_lastNotification < 10))
+		return;	// Don't send progress notifycations often then 10 seconds
+
+	MutexLock(m_notificationLock, INFINITE);
+	m_notificationMessage.SetCode(CMD_JOB_CHANGE_NOTIFICATION);
+	fillMessage(&m_notificationMessage);
+	m_resolvedObject = FindObjectById(m_remoteNode);
+	if (m_resolvedObject != NULL)
+		EnumerateClientSessions(ServerJob::sendNotification, this);
+	MutexUnlock(m_notificationLock);
+}
+
+
+//
+// Change status
+//
+
+void ServerJob::changeStatus(ServerJobStatus newStatus)
+{
+	m_status = newStatus;
+	m_lastStatusChange = time(NULL);
+	notifyClients(true);
 }
 
 
@@ -68,6 +117,7 @@ ServerJob::~ServerJob()
 void ServerJob::setOwningQueue(ServerJobQueue *queue)
 {
 	m_owningQueue = queue;
+	notifyClients(true);
 }
 
 
@@ -78,7 +128,10 @@ void ServerJob::setOwningQueue(ServerJobQueue *queue)
 void ServerJob::markProgress(int pctCompleted)
 {
 	if ((pctCompleted > m_progress) && (pctCompleted <= 100))
+	{
 		m_progress = pctCompleted;
+		notifyClients(false);
+	}
 }
 
 
@@ -93,11 +146,11 @@ THREAD_RESULT THREAD_CALL ServerJob::WorkerThreadStarter(void *arg)
 
 	if (job->run())
 	{
-		job->m_status = JOB_COMPLETED;
+		job->changeStatus(JOB_COMPLETED);
 	}
 	else
 	{
-		job->m_status = JOB_FAILED;
+		job->changeStatus(JOB_FAILED);
 	}
 	job->m_workerThread = INVALID_THREAD_HANDLE;
 
@@ -133,7 +186,7 @@ bool ServerJob::cancel()
 		case JOB_ACTIVE:
 			return onCancel();
 		default:
-			m_status = JOB_CANCELLED;
+			changeStatus(JOB_CANCELLED);
 			return true;
 	}
 }
@@ -167,4 +220,31 @@ void ServerJob::setFailureMessage(const TCHAR *msg)
 {
 	safe_free(m_failureMessage);
 	m_failureMessage = (msg != NULL) ? _tcsdup(msg) : NULL;
+}
+
+
+//
+// Set description
+//
+
+void ServerJob::setDescription(const TCHAR *description)
+{ 
+	safe_free(m_description);
+	m_description = _tcsdup(description); 
+}
+
+
+//
+// Fill NXCP message with job's data
+//
+
+void ServerJob::fillMessage(CSCPMessage *msg)
+{
+	msg->SetVariable(VID_JOB_ID, m_id);
+	msg->SetVariable(VID_JOB_TYPE, m_type);
+	msg->SetVariable(VID_OBJECT_ID, m_remoteNode);
+	msg->SetVariable(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
+	msg->SetVariable(VID_JOB_STATUS, (WORD)m_status);
+	msg->SetVariable(VID_JOB_PROGRESS, (WORD)m_progress);
+	msg->SetVariable(VID_FAILURE_MESSAGE, CHECK_NULL(m_failureMessage));
 }

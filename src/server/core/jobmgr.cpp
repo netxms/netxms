@@ -96,3 +96,21 @@ DWORD CancelJob(DWORD userId, CSCPMessage *msg)
    RWLockUnlock(g_rwlockIdIndex);
 	return rcc;
 }
+
+
+//
+// Job manager worker thread
+//
+
+THREAD_RESULT THREAD_CALL JobManagerThread(void *arg)
+{
+	DbgPrintf(2, _T("Job Manager worker thread started"));
+
+	while(!SleepAndCheckForShutdown(2))
+	{
+		DbgPrintf(7, _T("Job Manager: checking queues"));
+	}
+
+	DbgPrintf(2, _T("Job Manager worker thread stopped"));
+	return THREAD_OK;
+}

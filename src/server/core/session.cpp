@@ -5773,7 +5773,7 @@ void ClientSession::UpdateAgentConfig(CSCPMessage *pRequest)
                   case ERR_IO_FAILURE:
                      msg.SetVariable(VID_RCC, RCC_IO_ERROR);
                      break;
-                  case ERR_MAILFORMED_COMMAND:
+                  case ERR_MALFORMED_COMMAND:
                      msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
                      break;
                   default:

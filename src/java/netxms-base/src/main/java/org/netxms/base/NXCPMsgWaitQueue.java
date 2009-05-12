@@ -104,7 +104,7 @@ public class NXCPMsgWaitQueue
 	
 	private Long calculateMessageHash(final NXCPMessage msg)
 	{
-		return (long)msg.getMessageCode() << 32 + msg.getMessageId();
+		return ((long)msg.getMessageCode() << 32) + msg.getMessageId();
 	}
 
 	
@@ -131,7 +131,7 @@ public class NXCPMsgWaitQueue
 	
 	public NXCPMessage waitForMessage(final int code, final long id, final int timeout)
 	{
-		final Long hash = (long)code << 32 + id;
+		final Long hash = ((long)code << 32) + id;
 		NXCPMessage msg = null;
 		int actualTimeout = timeout;
 		
@@ -140,8 +140,15 @@ public class NXCPMsgWaitQueue
 			synchronized(messageList)
 			{
 				msg = messageList.get(hash);
-				if (msg != null)
+				if ((msg != null) && (msg.getMessageCode() == code) && (msg.getMessageId() == id)) 
+				{
+					messageList.remove(hash);
 					break;
+				}
+				else
+				{
+					msg = null;	// Continue waiting
+				}
 				
 				long startTime = System.currentTimeMillis();
 				try
