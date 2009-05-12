@@ -46,6 +46,7 @@ DIR *opendir(const char *filename)
     DIR            *p;
     long            len;
     long            idx;
+	 char            tail;
     char            scannamespc[PATHLEN];
     char           *scanname = scannamespc;
     struct stat     sbuf;
@@ -55,6 +56,10 @@ DIR *opendir(const char *filename)
     /*
      * check to see if filename is a directory 
      */
+    strcpy(scanname, filename);
+	 tail = scanname[strlen(scanname) - 1];
+	 if ((tail == '/') || (tail == '\\'))
+		scanname[strlen(scanname) - 1] = 0;
     if ((stat(filename, &sbuf) < 0) || ((sbuf.st_mode & S_IFDIR) == 0))
     {
         return NULL;
@@ -63,18 +68,14 @@ DIR *opendir(const char *filename)
     /*
      * Create the search pattern 
      */
-    strcpy(scanname, filename);
-
-    if (strchr("/\\", *(scanname + strlen(scanname) - 1)) == NULL)
-        strcat(scanname, "/*");
-    else
-        strcat(scanname, "*");
+	strcat(scanname, "\\*");
 
     /*
      * do the FindFirstFile call 
      */
     fh = FindFirstFileA(scanname, &FindData);
-    if (fh == INVALID_HANDLE_VALUE) {
+    if (fh == INVALID_HANDLE_VALUE)
+	 {
         return NULL;
     }
 
