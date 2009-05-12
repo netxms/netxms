@@ -143,7 +143,7 @@ protected:
 // Currently there is no define which determines the PSDK-Version... 
 // So we just use the compiler-version (and assumes that the PSDK is 
 // the one which was installed by the VS-IDE)
-#if defined(_M_IX86) && (_WIN32_WINNT <= 0x0500) && (_MSC_VER < 1400)
+#if defined(_M_IX86) && (_WIN32_WINNT <= 0x0500)
 
 #ifdef CURRENT_THREAD_VIA_EXCEPTION
 // TODO: The following is not a "good" implementation, 
@@ -182,4 +182,5 @@ protected:
     c.ContextFlags = contextFlags; \
     RtlCaptureContext(&c); \
 } while(0);
+
 #endif
