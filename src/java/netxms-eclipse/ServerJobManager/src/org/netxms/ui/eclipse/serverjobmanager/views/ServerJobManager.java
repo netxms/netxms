@@ -360,7 +360,8 @@ public class ServerJobManager extends ViewPart
 								Object object = it.next();
 								if (object instanceof NXCServerJob)
 								{
-									session.cancelServerJob(((NXCServerJob)object).getId());
+									final NXCServerJob jobObject = (NXCServerJob)object;
+									session.cancelServerJob(jobObject.getId());
 								}
 								else
 								{
