@@ -57,6 +57,13 @@
 
 
 //
+// Agent policy types
+//
+
+#define AGENT_POLICY_CONFIG      1
+
+
+//
 // Error codes
 //
 

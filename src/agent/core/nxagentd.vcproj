@@ -385,6 +385,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\policy.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\register.cpp"
 				>
 			</File>

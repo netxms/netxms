@@ -384,6 +384,7 @@ extern char g_szFileStore[];
 extern char g_szConfigServer[];
 extern char g_szRegistrar[];
 extern char g_szListenAddress[];
+extern TCHAR g_szConfigIncludeDir[];
 extern WORD g_wListenPort;
 extern SERVER_INFO g_pServerList[];
 extern DWORD g_dwServerCount;

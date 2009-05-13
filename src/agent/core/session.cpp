@@ -34,6 +34,7 @@
 
 void UnregisterSession(DWORD dwIndex);
 void ProxySNMPRequest(CSCPMessage *pRequest, CSCPMessage *pResponse);
+DWORD DeployPolicy(DWORD session, CSCPMessage *request);
 
 
 //
@@ -488,6 +489,16 @@ void CommSession::ProcessingThread(void)
                   msg.SetVariable(VID_RCC, ERR_ACCESS_DENIED);
 					}
 					break;
+				case CMD_DEPLOY_AGENT_POLICY:
+					if (m_bMasterServer)
+					{
+						msg.SetVariable(VID_RCC, DeployPolicy(m_dwIndex, pMsg));
+					}
+					else
+					{
+                  msg.SetVariable(VID_RCC, ERR_ACCESS_DENIED);
+					}
+					break;
             default:
                // Attempt to process unknown command by subagents
                if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg, m_hSocket, m_pCtx))
@@ -779,7 +790,7 @@ void CommSession::UpdateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
          {
             DebugPrintf(m_dwIndex, "Error opening file %s for writing: %s",
                         g_szConfigFile, strerror(errno));
-            pMsg->SetVariable(VID_RCC, ERR_IO_FAILURE);
+            pMsg->SetVariable(VID_RCC, ERR_FILE_OPEN_ERROR);
          }
          free(pConfig);
       }

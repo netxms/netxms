@@ -120,6 +120,7 @@ char g_szPlatformSuffix[MAX_PSUFFIX_LENGTH] = "";
 char g_szConfigServer[MAX_DB_STRING] = "not_set";
 char g_szRegistrar[MAX_DB_STRING] = "not_set";
 char g_szListenAddress[MAX_PATH] = "*";
+TCHAR g_szConfigIncludeDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
 WORD g_wListenPort = AGENT_LISTEN_PORT;
 SERVER_INFO g_pServerList[MAX_SERVERS];
 DWORD g_dwServerCount = 0;
@@ -169,7 +170,6 @@ static char m_szProcessToWait[MAX_PATH] = "";
 static char m_szDumpDir[MAX_PATH] = "C:\\";
 static DWORD m_dwMaxLogSize = 16384 * 1024;
 static DWORD m_dwLogHistorySize = 4;
-static TCHAR m_szConfigIncludeDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
 
 #if defined(_WIN32) || defined(_NETWARE)
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
@@ -603,7 +603,7 @@ BOOL Initialize(void)
 		return FALSE;
 	}
 	DebugPrintf(INVALID_INDEX, "Log file opened");
-	nxlog_write(MSG_USE_CONFIG_D, EVENTLOG_INFORMATION_TYPE, "s", m_szConfigIncludeDir);
+	nxlog_write(MSG_USE_CONFIG_D, EVENTLOG_INFORMATION_TYPE, "s", g_szConfigIncludeDir);
 
 #ifdef _WIN32
    WSADATA wsaData;
@@ -1320,8 +1320,8 @@ int main(int argc, char *argv[])
 			{
 				const TCHAR *dir = g_config->getValue(_T("/agent/ConfigIncludeDir"));
 				if (dir != NULL)
-					nx_strncpy(m_szConfigIncludeDir, dir, MAX_PATH);
-				g_config->loadConfigDirectory(m_szConfigIncludeDir, _T("agent"));
+					nx_strncpy(g_szConfigIncludeDir, dir, MAX_PATH);
+				g_config->loadConfigDirectory(g_szConfigIncludeDir, _T("agent"));
 				if (g_config->parseTemplate(_T("agent"), m_cfgTemplate))
 				{
 					// Set exception handler
