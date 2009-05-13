@@ -1,9 +1,7 @@
 package org.netxms.client;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.util.HashMap;
-import java.util.Random;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 

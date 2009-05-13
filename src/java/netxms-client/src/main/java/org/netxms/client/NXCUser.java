@@ -27,16 +27,29 @@ public class NXCUser extends NXCUserDBObject
 	/**
 	 * Default constructor
 	 */
-	NXCUser(final String name)
+	public NXCUser(final String name)
 	{
 		super(name);
 		fullName = "";
 	}
 	
 	/**
+	 * Copy constructor
+	 */
+	public NXCUser(final NXCUser src)
+	{
+		super(src);
+		
+		this.authMethod = src.authMethod;
+		this.certMappingMethod = src.certMappingMethod;
+		this.certMappingData = new String(src.certMappingData);
+		this.fullName = new String(src.fullName);
+	}
+	
+	/**
 	 * Create user object from NXCP message
 	 */
-	NXCUser(final NXCPMessage msg)
+	protected NXCUser(final NXCPMessage msg)
 	{
 		super(msg);
 		authMethod = msg.getVariableAsInteger(NXCPCodes.VID_AUTH_METHOD);

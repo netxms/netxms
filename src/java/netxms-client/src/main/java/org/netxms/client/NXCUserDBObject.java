@@ -60,7 +60,7 @@ public abstract class NXCUserDBObject
 	/**
 	 * Copy constructor
 	 */
-	public NXCUserDBObject(NXCUserDBObject src)
+	public NXCUserDBObject(final NXCUserDBObject src)
 	{
 		this.id = src.id;
 		this.name = new String(src.name);
@@ -81,7 +81,7 @@ public abstract class NXCUserDBObject
 	 * Create object from NXCP message
 	 * @param msg Message containing object's data
 	 */
-	NXCUserDBObject(final NXCPMessage msg)
+	protected NXCUserDBObject(final NXCPMessage msg)
 	{
 		id = msg.getVariableAsInt64(NXCPCodes.VID_USER_ID);
 		name = msg.getVariableAsString(NXCPCodes.VID_USER_NAME);

@@ -17,16 +17,26 @@ public class NXCUserGroup extends NXCUserDBObject
 	/**
 	 * Default constructor
 	 */
-	NXCUserGroup(final String name)
+	public NXCUserGroup(final String name)
 	{
 		super(name);
 		members = new long[0];
 	}
 	
 	/**
+	 * Copy constructor
+	 */
+	public NXCUserGroup(final NXCUserGroup src)
+	{
+		super(src);
+		this.members = new long[src.members.length];
+		System.arraycopy(src.members, 0, this.members, 0, src.members.length);
+	}
+	
+	/**
 	 * Create group from NXCP message
 	 */
-	NXCUserGroup(final NXCPMessage msg)
+	protected NXCUserGroup(final NXCPMessage msg)
 	{
 		super(msg);
 
