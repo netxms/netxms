@@ -76,6 +76,7 @@ extern DWORD g_dwConditionPollingInterval;
 #define BUILTIN_OID_SERVICEROOT     2
 #define BUILTIN_OID_TEMPLATEROOT    3
 #define BUILTIN_OID_ZONE0           4
+#define BUILTIN_OID_POLICYROOT      5
 
 
 //
@@ -1094,7 +1095,6 @@ protected:
    BOOL m_bQueuedForPolling;
 
 public:
-
    Condition();
    Condition(BOOL bHidden);
    virtual ~Condition();
@@ -1122,6 +1122,55 @@ public:
    }
 
    int GetCacheSizeForDCI(DWORD dwItemId, BOOL bNoLock);
+};
+
+
+//
+// Agent policy object
+//
+
+class NXCORE_EXPORTABLE AgentPolicy : public NetObj
+{
+protected:
+	DWORD m_version;
+	int m_policyType;
+	TCHAR *m_data;
+
+public:
+   AgentPolicy(int type);
+   virtual ~AgentPolicy();
+};
+
+
+//
+// Policy group object
+//
+
+class NXCORE_EXPORTABLE PolicyGroup : public Container
+{
+public:
+   PolicyGroup() : Container() { }
+   PolicyGroup(TCHAR *pszName) : Container(pszName, 0) { }
+   virtual ~PolicyGroup() { }
+
+   virtual int Type(void) { return OBJECT_POLICYGROUP; }
+   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+};
+
+
+//
+// Policy root
+//
+
+class NXCORE_EXPORTABLE PolicyRoot : public UniversalRoot
+{
+public:
+   PolicyRoot();
+   virtual ~PolicyRoot();
+
+   virtual int Type(void) { return OBJECT_POLICYROOT; }
+   virtual const char *DefaultName(void) { return "Policies"; }
+   virtual void CalculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
 
@@ -1190,6 +1239,7 @@ int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds);
 extern Network *g_pEntireNet;
 extern ServiceRoot *g_pServiceRoot;
 extern TemplateRoot *g_pTemplateRoot;
+extern PolicyRoot *g_pPolicyRoot;
 
 extern DWORD NXCORE_EXPORTABLE g_dwMgmtNode;
 extern INDEX NXCORE_EXPORTABLE *g_pIndexById;

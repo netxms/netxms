@@ -397,6 +397,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\agent_policy.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\alarm.cpp"
 				>
 			</File>

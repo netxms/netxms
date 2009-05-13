@@ -144,6 +144,9 @@ typedef void * NXC_SESSION;
 #define OBJECT_VPNCONNECTOR   12
 #define OBJECT_CONDITION      13
 #define OBJECT_CLUSTER			14
+#define OBJECT_AGENTPOLICY    15
+#define OBJECT_POLICYGROUP    16
+#define OBJECT_POLICYROOT     17
 
 
 //

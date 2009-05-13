@@ -73,3 +73,34 @@ void TemplateRoot::CalculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }
+
+
+//
+// Policy root class default constructor
+//
+
+PolicyRoot::PolicyRoot()
+           :UniversalRoot()
+{
+   m_dwId = BUILTIN_OID_POLICYROOT;
+   strcpy(m_szName, "Policies");
+}
+
+
+//
+// Policy root class destructor
+//
+
+PolicyRoot::~PolicyRoot()
+{
+}
+
+
+//
+// Redefined status calculation for policy root
+//
+
+void PolicyRoot::CalculateCompoundStatus(BOOL bForcedRecalc)
+{
+   m_iStatus = STATUS_NORMAL;
+}

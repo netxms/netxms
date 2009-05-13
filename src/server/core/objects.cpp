@@ -32,6 +32,7 @@ BOOL g_bModificationsLocked = FALSE;
 Network *g_pEntireNet = NULL;
 ServiceRoot *g_pServiceRoot = NULL;
 TemplateRoot *g_pTemplateRoot = NULL;
+PolicyRoot *g_pPolicyRoot = NULL;
 
 DWORD NXCORE_EXPORTABLE g_dwMgmtNode = 0;
 INDEX NXCORE_EXPORTABLE *g_pIndexById = NULL;
@@ -203,7 +204,12 @@ void ObjectsInit(void)
    // Create "Template Root" object
    g_pTemplateRoot = new TemplateRoot;
    NetObjInsert(g_pTemplateRoot, FALSE);
-   DbgPrintf(1, "Built-in objects created");
+
+	// Create "Policy Root" object
+   g_pPolicyRoot = new PolicyRoot;
+   NetObjInsert(g_pPolicyRoot, FALSE);
+   
+	DbgPrintf(1, "Built-in objects created");
 
    // Start template update applying thread
    ThreadCreate(ApplyTemplateThread, 0, NULL);
@@ -336,6 +342,9 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          case OBJECT_TEMPLATEGROUP:
          case OBJECT_TEMPLATEROOT:
 			case OBJECT_CLUSTER:
+			case OBJECT_AGENTPOLICY:
+			case OBJECT_POLICYGROUP:
+			case OBJECT_POLICYROOT:
             break;
          case OBJECT_SUBNET:
             if (pObject->IpAddr() != 0)
@@ -401,6 +410,9 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
       case OBJECT_TEMPLATEGROUP:
       case OBJECT_TEMPLATEROOT:
 		case OBJECT_CLUSTER:
+		case OBJECT_AGENTPOLICY:
+		case OBJECT_POLICYGROUP:
+		case OBJECT_POLICYROOT:
          break;
       case OBJECT_SUBNET:
          if (pObject->IpAddr() != 0)
@@ -681,6 +693,7 @@ BOOL LoadObjects(void)
    g_pEntireNet->LoadFromDB();
    g_pServiceRoot->LoadFromDB();
    g_pTemplateRoot->LoadFromDB();
+	g_pPolicyRoot->LoadFromDB();
 
    // Load zones
    if (g_dwFlags & AF_ENABLE_ZONING)
