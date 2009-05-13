@@ -56,6 +56,26 @@ public abstract class NXCUserDBObject
 		description = "";
 		guid = UUID.randomUUID();
 	}
+	
+	/**
+	 * Copy constructor
+	 */
+	public NXCUserDBObject(NXCUserDBObject src)
+	{
+		this.id = src.id;
+		this.name = new String(src.name);
+		this.guid = UUID.fromString(src.guid.toString());
+		this.systemRights = src.systemRights;
+		this.flags = src.flags;
+		this.description = src.description;
+		this.customAttributes = new HashMap<String, String>(0);
+		Iterator<Entry<String, String>> it  = src.customAttributes.entrySet().iterator();
+		while(it.hasNext())
+		{
+			Entry<String, String> e = it.next();
+			this.customAttributes.put(new String(e.getKey()), new String(e.getValue()));
+		}
+	}
 
 	/**
 	 * Create object from NXCP message
