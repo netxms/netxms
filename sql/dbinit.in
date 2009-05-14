@@ -9,7 +9,6 @@
 // Common constants
 #include <nxevent.h>
 #include <nms_locks.h>
-#include <nximage.h>
 #include <netxmsdb.h>
 #include <nxnt.h>
 #include <nxtools.h>
@@ -29,7 +28,6 @@ BEGIN TRANSACTION;
 #ifndef SCHEMA_ONLY
 #include "setup.in"
 #include "events.in"
-#include "images.in"
 #include "policy.in"
 #include "traps.in"
 #include "objtools.in"

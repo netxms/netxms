@@ -16,8 +16,8 @@ sql_DATA = dbinit_mysql.sql \
            dbschema_sqlite.sql
 
 ROOT_FILE = dbinit.in
-SOURCE = $(ROOT_FILE) database.in schema.in metadata.in setup.in events.in images.in policy.in objtools.in scripts.in maps.in
-HEADER_FILES = ../include/netxmsdb.h ../include/nxevent.h ../include/nximage.h ../src/server/include/nms_locks.h
+SOURCE = $(ROOT_FILE) database.in schema.in metadata.in setup.in events.in policy.in objtools.in scripts.in maps.in
+HEADER_FILES = ../include/netxmsdb.h ../include/nxevent.h ../src/server/include/nms_locks.h
 COMMAND = $(CPP) -x c -P -Wundef -D_NETXMS_DB_SCHEMA_ -I@top_srcdir@/include -I@top_srcdir@/src/server/include
 SQUEEZE = perl -n -e "if (! /^[\s\t\n]*$$/) { print; }"
 
@@ -58,6 +58,6 @@ clean:
 
 EXTRA_DIST = \
 	$(sql_DATA) \
-	dbinit.in database.in events.in images.in \
+	dbinit.in database.in events.in \
 	policy.in schema.in setup.in traps.in objtools.in scripts.in \
 	metadata.in maps.in
