@@ -28,7 +28,6 @@
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nxevent.h>
-#include <nximage.h>
 #include <nxcpapi.h>
 #include <nxtools.h>
 #include <nxlog.h>
@@ -88,14 +87,6 @@ typedef void * NXC_SESSION;
 
 #define MODFLAG_DISABLED               0x0001
 #define MODFLAG_ACCEPT_ALL_COMMANDS    0x0002
-
-
-//
-// Image formats
-//
-
-#define IMAGE_FORMAT_ICO      0
-#define IMAGE_FORMAT_PNG      1
 
 
 //
@@ -449,7 +440,7 @@ enum
 #define OBJ_UPDATE_SNMP_VERSION     ((QWORD)_ULL(0x0000000010))
 #define OBJ_UPDATE_SNMP_COMMUNITY   ((QWORD)_ULL(0x0000000020))
 #define OBJ_UPDATE_ACL              ((QWORD)_ULL(0x0000000040))
-#define OBJ_UPDATE_IMAGE            ((QWORD)_ULL(0x0000000080))
+//#define OBJ_UPDATE_IMAGE            ((QWORD)_ULL(0x0000000080))
 #define OBJ_UPDATE_SYNC_NETS        ((QWORD)_ULL(0x0000000100))
 #define OBJ_UPDATE_SERVICE_TYPE     ((QWORD)_ULL(0x0000000200))
 #define OBJ_UPDATE_IP_PROTO         ((QWORD)_ULL(0x0000000400))
@@ -791,29 +782,6 @@ typedef struct
 
 
 //
-// Image information
-//
-
-typedef struct
-{
-   DWORD dwId;
-   TCHAR szName[MAX_OBJECT_NAME];
-   BYTE hash[MD5_DIGEST_SIZE];
-} NXC_IMAGE;
-
-
-//
-// Image list
-//
-
-typedef struct
-{
-   DWORD dwNumImages;
-   NXC_IMAGE *pImageList;
-} NXC_IMAGE_LIST;
-
-
-//
 // Trap parameter mapping entry
 //
 
@@ -1098,7 +1066,6 @@ typedef struct
    BOOL bInheritRights;
    DWORD dwAclSize;
    NXC_ACL_ENTRY *pAccessList;
-   DWORD dwImage;       // Image ID or IMG_DEFAULT for default image
    int iStatusCalcAlg;  // Status calculation algorithm
    int iStatusPropAlg;  // Status propagation alhorithm
    int iFixedStatus;    // Status to be propagated if alg = SA_PROPAGATE_FIXED
@@ -1144,7 +1111,6 @@ typedef struct
    const TCHAR *pszSecret;
    const TCHAR *pszCommunity;
    BOOL bInheritRights;
-   DWORD dwImage;
    DWORD dwAclSize;
    NXC_ACL_ENTRY *pAccessList;
    WORD wSNMPVersion;
@@ -1434,7 +1400,6 @@ typedef struct
 typedef struct
 {
    DWORD dwId;
-   DWORD dwImageId;
    TCHAR szName[MAX_OBJECT_NAME];
    TCHAR *pszDescription;
 } NXC_CONTAINER_CATEGORY;
@@ -1969,13 +1934,6 @@ void LIBNXCL_EXPORTABLE NXCAddPolicyRule(NXC_EPP *policy, NXC_EPP_RULE *rule, BO
 void LIBNXCL_EXPORTABLE NXCDeletePolicyRule(NXC_EPP *pEventPolicy, DWORD dwRule);
 NXC_EPP_RULE LIBNXCL_EXPORTABLE *NXCCopyEventPolicyRule(NXC_EPP_RULE *src);
 void LIBNXCL_EXPORTABLE NXCCopyEventPolicyRuleToBuffer(NXC_EPP_RULE *dst, NXC_EPP_RULE *src);
-
-/** Images **/
-DWORD LIBNXCL_EXPORTABLE NXCSyncImages(NXC_SESSION hSession, NXC_IMAGE_LIST **ppImageList, TCHAR *pszCacheDir, WORD wFormat);
-DWORD LIBNXCL_EXPORTABLE NXCLoadImageFile(NXC_SESSION hSession, DWORD dwImageId, TCHAR *pszCacheDir, WORD wFormat);
-void LIBNXCL_EXPORTABLE NXCDestroyImageList(NXC_IMAGE_LIST *pImageList);
-DWORD LIBNXCL_EXPORTABLE NXCLoadDefaultImageList(NXC_SESSION hSession, DWORD *pdwListSize,
-                                                 DWORD **ppdwClassId, DWORD **ppdwImageId);
 
 /** Alarms **/
 DWORD LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, BOOL bIncludeAck, DWORD *pdwNumAlarms, NXC_ALARM **ppAlarmList);

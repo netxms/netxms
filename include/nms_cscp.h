@@ -301,16 +301,16 @@ typedef struct
 #define CMD_EVENT_NAME_LIST         0x0039
 #define CMD_BIND_OBJECT             0x003A
 #define CMD_UNBIND_OBJECT           0x003B
-#define CMD_GET_IMAGE_LIST          0x003C
-#define CMD_LOAD_IMAGE_FILE         0x003D
-#define CMD_IMAGE_LIST              0x003E
-#define CMD_IMAGE_FILE              0x003F
+//#define CMD_GET_IMAGE_LIST          0x003C
+//#define CMD_LOAD_IMAGE_FILE         0x003D
+//#define CMD_IMAGE_LIST              0x003E
+//#define CMD_IMAGE_FILE              0x003F
 #define CMD_AUTHENTICATE            0x0040
 #define CMD_GET_PARAMETER           0x0041
 #define CMD_GET_LIST                0x0042
 #define CMD_ACTION                  0x0043
-#define CMD_GET_DEFAULT_IMAGE_LIST  0x0044
-#define CMD_DEFAULT_IMAGE_LIST      0x0045
+//#define CMD_GET_DEFAULT_IMAGE_LIST  0x0044
+//#define CMD_DEFAULT_IMAGE_LIST      0x0045
 #define CMD_GET_ALL_ALARMS          0x0046
 #define CMD_GET_ALARM               0x0047
 #define CMD_ACK_ALARM               0x0048
@@ -562,18 +562,18 @@ typedef struct
 #define VID_EVENT_NAME_TABLE        ((DWORD)77)
 #define VID_PARENT_ID               ((DWORD)78)
 #define VID_CHILD_ID                ((DWORD)79)
-#define VID_IMAGE_ID                ((DWORD)80)
-#define VID_NUM_IMAGES              ((DWORD)81)
+//#define VID_IMAGE_ID                ((DWORD)80)
+//#define VID_NUM_IMAGES              ((DWORD)81)
 #define VID_COMMENTS                ((DWORD)82)
-#define VID_IMAGE_FILE_SIZE         ((DWORD)83)
-#define VID_IMAGE_FILE              ((DWORD)84)
+//#define VID_IMAGE_FILE_SIZE         ((DWORD)83)
+//#define VID_IMAGE_FILE              ((DWORD)84)
 #define VID_PARAMETER               ((DWORD)85)
 #define VID_NUM_STRINGS             ((DWORD)86)
 #define VID_ACTION_NAME             ((DWORD)87)
 #define VID_NUM_ARGS                ((DWORD)88)
-#define VID_IMAGE_ID_LIST           ((DWORD)89)
+//#define VID_IMAGE_ID_LIST           ((DWORD)89)
 #define VID_CLASS_ID_LIST           ((DWORD)90)
-#define VID_IMAGE_FORMAT            ((DWORD)91)
+//#define VID_IMAGE_FORMAT            ((DWORD)91)
 #define VID_NOTIFICATION_DATA       ((DWORD)92)
 #define VID_ALARM_ID                ((DWORD)93)
 #define VID_TIMESTAMP               ((DWORD)94)
@@ -921,9 +921,6 @@ typedef struct
 // Base and last values for condition's DCI list
 #define VID_DCI_LIST_BASE           ((DWORD)0x40000000)
 #define VID_DCI_LIST_LAST           ((DWORD)0x4FFFFFFF)
-
-// Base value for image list
-#define VID_IMAGE_LIST_BASE         ((DWORD)0x10000000)
 
 // Base value for DCI push data
 #define VID_PUSH_DCI_DATA_BASE      ((DWORD)0x10000000)

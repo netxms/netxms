@@ -103,6 +103,29 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 
 
 //
+// Upgrade from V91 to V92
+//
+
+static BOOL H_UpgradeFromV91(void)
+{
+	static TCHAR batch[] =
+		_T("DROP TABLE images\n")
+		_T("DROP TABLE default_images\n")
+		_T("<END>");
+		
+	if (!SQLBatch(batch))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='92' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V90 to V91
 //
 

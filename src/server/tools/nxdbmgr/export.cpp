@@ -79,8 +79,6 @@ const TCHAR *g_tables[] =
 	"deleted_objects",
 	"alarms",
 	"alarm_notes",
-	"images",
-	"default_images",
 	"oid_to_type",
 	"snmp_trap_cfg",
 	"snmp_trap_pmap",

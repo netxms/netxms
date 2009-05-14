@@ -829,16 +829,6 @@ void ClientSession::ProcessingThread(void)
          case CMD_UNBIND_OBJECT:
             ChangeObjectBinding(pMsg, FALSE);
             break;
-         case CMD_GET_IMAGE_LIST:
-            SendImageCatalogue(this, pMsg->GetId(), pMsg->GetVariableShort(VID_IMAGE_FORMAT));
-            break;
-         case CMD_LOAD_IMAGE_FILE:
-            SendImageFile(this, pMsg->GetId(), pMsg->GetVariableLong(VID_IMAGE_ID),
-                          pMsg->GetVariableShort(VID_IMAGE_FORMAT));
-            break;
-         case CMD_GET_DEFAULT_IMAGE_LIST:
-            SendDefaultImageList(this, pMsg->GetId());
-            break;
          case CMD_GET_ALL_ALARMS:
             SendAllAlarms(pMsg->GetId(), pMsg->GetVariableShort(VID_IS_ACK));
             break;
@@ -4238,7 +4228,7 @@ void ClientSession::SendContainerCategories(DWORD dwRqId)
    {
       msg.SetVariable(VID_CATEGORY_ID, g_pContainerCatList[i].dwCatId);
       msg.SetVariable(VID_CATEGORY_NAME, g_pContainerCatList[i].szName);
-      msg.SetVariable(VID_IMAGE_ID, g_pContainerCatList[i].dwImageId);
+      //msg.SetVariable(VID_IMAGE_ID, g_pContainerCatList[i].dwImageId);
       msg.SetVariable(VID_DESCRIPTION, g_pContainerCatList[i].pszDescription);
       SendMessage(&msg);
       msg.DeleteAllVariables();

@@ -807,34 +807,6 @@ CREATE INDEX idx_alarm_notes_alarm_id ON alarm_notes(alarm_id);
 
 
 /*
-** Image catalog
-*/
-
-CREATE TABLE images
-(
-	image_id integer not null,
-	name varchar(64),
-	file_name_png varchar(255),
-	file_hash_png varchar(32),
-	file_name_ico varchar(255),
-	file_hash_ico varchar(32),
-	PRIMARY KEY(image_id)
-) TABLE_TYPE;
-
-
-/*
-** Default images for various object classes
-*/
-
-CREATE TABLE default_images
-(
-	object_class integer not null,
-	image_id integer not null,
-	PRIMARY KEY(object_class)
-) TABLE_TYPE;
-
-
-/*
 ** OID to node type translation
 */
 

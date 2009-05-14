@@ -24,6 +24,6 @@
 #ifndef _netxmsdb_h
 #define _netxmsdb_h
 
-#define DB_FORMAT_VERSION   91
+#define DB_FORMAT_VERSION   92
 
 #endif

@@ -551,9 +551,6 @@ retry_db_lock:
 	// Initialize SNMP stuff
 	SnmpInit();
 
-	// Update hashes for image files
-	UpdateImageHashes();
-
 	// Create synchronization stuff
 	m_condShutdown = ConditionCreate(TRUE);
 

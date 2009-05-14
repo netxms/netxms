@@ -1139,6 +1139,15 @@ protected:
 public:
    AgentPolicy(int type);
    virtual ~AgentPolicy();
+
+   virtual int Type(void) { return OBJECT_AGENTPOLICY; }
+
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
+   virtual BOOL DeleteFromDB(void);
+   virtual BOOL CreateFromDB(DWORD dwId);
+
+   virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 };
 
 

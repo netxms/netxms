@@ -56,7 +56,7 @@ static const char *m_pszGroupNames[NUMBER_OF_GROUPS] =
    "Events",
    "Data Collection Items",
    "SNMP Trap",
-   "Images",
+   "--Images",
    "Actions",
    "Event Groups",
    "Data Collection Thresholds",
@@ -65,7 +65,7 @@ static const char *m_pszGroupNames[NUMBER_OF_GROUPS] =
    "Alarms",
    "Alarm Notes",
    "Packages",
-   "Log Processing Policies",
+   "--Log Processing Policies",
    "Object Tools",
    "Scripts",
    "Agent Configs",
@@ -261,16 +261,6 @@ BOOL InitIdTable(void)
       if (DBGetNumRows(hResult) > 0)
          m_dwFreeIdTable[IDG_ALARM_NOTE] = max(m_dwFreeIdTable[IDG_ALARM_NOTE], 
                                                DBGetFieldULong(hResult, 0, 0) + 1);
-      DBFreeResult(hResult);
-   }
-
-   // Get first available image id
-   hResult = DBSelect(g_hCoreDB, "SELECT max(image_id) FROM images");
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         m_dwFreeIdTable[IDG_IMAGE] = max(m_dwFreeIdTable[IDG_IMAGE], 
-                                          DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

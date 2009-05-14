@@ -378,10 +378,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\image.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\layer2.cpp"
 				>
 			</File>

@@ -54,3 +54,55 @@ AgentPolicy::~AgentPolicy()
 {
 	safe_free(m_data);
 }
+
+
+//
+// Save to database
+//
+
+BOOL AgentPolicy::SaveToDB(DB_HANDLE hdb)
+{
+	return FALSE;
+}
+
+
+//
+// Delete from database
+//
+
+BOOL AgentPolicy::DeleteFromDB()
+{
+	return FALSE;
+}
+
+
+//
+// Load from database
+//
+
+BOOL AgentPolicy::CreateFromDB(DWORD dwId)
+{
+	return FALSE;
+}
+
+
+//
+// Create NXCP message with policy data
+//
+
+void AgentPolicy::CreateMessage(CSCPMessage *pMsg)
+{
+}
+
+
+//
+// Modify policy from message
+//
+
+DWORD AgentPolicy::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+{
+   if (!bAlreadyLocked)
+      LockData();
+
+   return NetObj::ModifyFromMessage(pRequest, TRUE);
+}

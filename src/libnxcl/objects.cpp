@@ -201,7 +201,6 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    pObject->iStatus = pMsg->GetVariableShort(VID_OBJECT_STATUS);
    pObject->dwIpAddr = pMsg->GetVariableLong(VID_IP_ADDRESS);
    pObject->bIsDeleted = pMsg->GetVariableShort(VID_IS_DELETED);
-   pObject->dwImage = pMsg->GetVariableLong(VID_IMAGE_ID);
    pObject->iStatusCalcAlg = (int)pMsg->GetVariableShort(VID_STATUS_CALCULATION_ALG);
    pObject->iStatusPropAlg = (int)pMsg->GetVariableShort(VID_STATUS_PROPAGATION_ALG);
    pObject->iFixedStatus = (int)pMsg->GetVariableShort(VID_FIXED_STATUS);
@@ -769,8 +768,6 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_SHARED_SECRET, pUpdate->pszSecret);
    if (pUpdate->qwFlags & OBJ_UPDATE_SNMP_COMMUNITY)
       msg.SetVariable(VID_COMMUNITY_STRING, pUpdate->pszCommunity);
-   if (pUpdate->qwFlags & OBJ_UPDATE_IMAGE)
-      msg.SetVariable(VID_IMAGE_ID, pUpdate->dwImage);
    if (pUpdate->qwFlags & OBJ_UPDATE_SNMP_VERSION)
       msg.SetVariable(VID_SNMP_VERSION, pUpdate->wSNMPVersion);
    if (pUpdate->qwFlags & OBJ_UPDATE_CHECK_REQUEST)
@@ -1129,8 +1126,6 @@ DWORD LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_SESSION hSession, NXC_CC_LIST **ppLis
             (*ppList)->pElements = (NXC_CONTAINER_CATEGORY *)realloc((*ppList)->pElements, 
                sizeof(NXC_CONTAINER_CATEGORY) * ((*ppList)->dwNumElements + 1));
             (*ppList)->pElements[(*ppList)->dwNumElements].dwId = dwCatId;
-            (*ppList)->pElements[(*ppList)->dwNumElements].dwImageId =
-               pResponse->GetVariableLong(VID_IMAGE_ID);
             pResponse->GetVariableStr(VID_CATEGORY_NAME, 
                (*ppList)->pElements[(*ppList)->dwNumElements].szName, MAX_OBJECT_NAME);
             (*ppList)->pElements[(*ppList)->dwNumElements].pszDescription =

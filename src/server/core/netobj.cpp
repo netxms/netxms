@@ -53,7 +53,7 @@ NetObj::NetObj()
    m_bInheritAccessRights = TRUE;
 	m_dwNumTrustedNodes = 0;
 	m_pdwTrustedNodes = NULL;
-   m_dwImageId = IMG_DEFAULT;    // Default image
+   m_dwImageId = 0;    // Default image
    m_pPollRequestor = NULL;
    m_iStatusCalcAlg = SA_CALCULATE_DEFAULT;
    m_iStatusPropAlg = SA_PROPAGATE_DEFAULT;
@@ -747,7 +747,6 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
    for(i = 0, dwId = VID_CHILD_ID_BASE; i < m_dwChildCount; i++, dwId++)
       pMsg->SetVariable(dwId, m_pChildList[i]->Id());
    pMsg->SetVariable(VID_INHERIT_RIGHTS, (WORD)m_bInheritAccessRights);
-   pMsg->SetVariable(VID_IMAGE_ID, m_dwImageId);
    pMsg->SetVariable(VID_STATUS_CALCULATION_ALG, (WORD)m_iStatusCalcAlg);
    pMsg->SetVariable(VID_STATUS_PROPAGATION_ALG, (WORD)m_iStatusPropAlg);
    pMsg->SetVariable(VID_FIXED_STATUS, (WORD)m_iFixedStatus);
@@ -821,10 +820,6 @@ DWORD NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    // Change object's name
    if (pRequest->IsVariableExist(VID_OBJECT_NAME))
       pRequest->GetVariableStr(VID_OBJECT_NAME, m_szName, MAX_OBJECT_NAME);
-
-   // Change object's image (icon)
-   if (pRequest->IsVariableExist(VID_IMAGE_ID))
-      m_dwImageId = pRequest->GetVariableLong(VID_IMAGE_ID);
 
    // Change object's status calculation/propagation algorithms
    if (pRequest->IsVariableExist(VID_STATUS_CALCULATION_ALG))

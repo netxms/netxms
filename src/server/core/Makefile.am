@@ -10,7 +10,7 @@ libnxcore_la_SOURCES = acl.cpp agent.cpp agent_policy.cpp actions.cpp \
 			container.cpp correlate.cpp datacoll.cpp \
 			dbwrite.cpp dcitem.cpp dcithreshold.cpp dcivalue.cpp \
 			debug.cpp ef.cpp email.cpp entirenet.cpp epp.cpp \
-			events.cpp evproc.cpp hk.cpp id.cpp image.cpp \
+			events.cpp evproc.cpp hk.cpp id.cpp \
 			interface.cpp isc.cpp job.cpp jobmgr.cpp jobqueue.cpp \
 			layer2.cpp locks.cpp \
 			main.cpp map.cpp modules.cpp netinfo.cpp netobj.cpp \
