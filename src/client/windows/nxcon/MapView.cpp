@@ -445,7 +445,7 @@ void CMapView::DrawObject(CDC &dc, DWORD dwIndex, CImageList *pImageList,
       ptIcon.y = pt.y + m_scaleInfo[m_nScale].ptIconOffset.y;
       if (pImageList != NULL)
       {
-         pImageList->Draw(&dc, GetObjectImageIndex(pObject), ptIcon,
+         pImageList->Draw(&dc, pObject->iClass, ptIcon,
                           (dwState & MOS_SELECTED) ? ILD_BLEND50 : ILD_TRANSPARENT);
       }
 

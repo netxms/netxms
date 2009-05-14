@@ -368,8 +368,7 @@ void CEventPolicyEditor::UpdateRow(int iRow)
       {
          pObject = NXCFindObjectById(g_hSession, m_pEventPolicy->pRuleList[iRow].pdwSourceList[i]);
          if (pObject != NULL)
-            m_wndRuleList.AddItem(iRow, COL_SOURCE, pObject->szName, 
-                                  GetObjectImageIndex(pObject));
+            m_wndRuleList.AddItem(iRow, COL_SOURCE, pObject->szName, pObject->iClass);
       }
    }
    m_wndRuleList.SetNegationFlag(iRow, COL_SOURCE, (m_pEventPolicy->pRuleList[iRow].dwFlags & RF_NEGATED_SOURCE) ? TRUE : FALSE);

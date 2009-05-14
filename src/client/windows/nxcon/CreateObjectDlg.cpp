@@ -106,8 +106,7 @@ void CCreateObjectDlg::UpdateParentInfo()
       _sntprintf_s(szBuffer, 16, _TRUNCATE, _T("ID: %d"), m_pParentObject->dwId);
       m_wndStaticId.SetWindowText(szBuffer);
       m_wndParentIcon.SetIcon(
-         g_pObjectNormalImageList->ExtractIcon(
-            GetObjectImageIndex(m_pParentObject)));
+         g_pObjectNormalImageList->ExtractIcon(m_pParentObject->iClass));
    }
    else
    {

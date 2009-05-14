@@ -72,13 +72,6 @@ ALARM_SOUND_CFG g_soundCfg;
 
 
 //
-// Server image list
-//
-
-NXC_IMAGE_LIST *g_pSrvImageList = NULL;
-
-
-//
 // Image lists with object images
 //
 

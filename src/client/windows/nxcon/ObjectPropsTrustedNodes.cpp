@@ -79,8 +79,7 @@ BOOL CObjectPropsTrustedNodes::OnInitDialog()
       if (pObject != NULL)
       {
 			_sntprintf_s(buffer, 32, _TRUNCATE, _T("%d"), pObject->dwId);
-         item = m_wndListCtrl.InsertItem(0x7FFFFFFF, buffer,
-                                          GetObjectImageIndex(pObject));
+         item = m_wndListCtrl.InsertItem(0x7FFFFFFF, buffer, pObject->iClass);
          if (item != -1)
          {
 				m_wndListCtrl.SetItemText(item, 1, pObject->szName);
@@ -168,8 +167,7 @@ void CObjectPropsTrustedNodes::OnButtonAdd()
 				if (object != NULL)
 				{
 					_sntprintf_s(buffer, 32, _TRUNCATE, _T("%d"), object->dwId);
-					item = m_wndListCtrl.InsertItem(0x7FFFFFFF, buffer,
-																GetObjectImageIndex(object));
+					item = m_wndListCtrl.InsertItem(0x7FFFFFFF, buffer, object->iClass);
 					if (item != -1)
 					{
 						m_wndListCtrl.SetItemText(item, 1, object->szName);

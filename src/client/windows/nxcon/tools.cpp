@@ -199,35 +199,35 @@ void LoadBitmapIntoList(CImageList *pImageList, UINT nIDResource, COLORREF rgbMa
 
 
 //
-// Find image's index in list by image id
-//
-
-int ImageIdToIndex(DWORD dwImageId)
-{
-   DWORD i;
-
-   for(i = 0; i < g_pSrvImageList->dwNumImages; i++)
-      if (g_pSrvImageList->pImageList[i].dwId == dwImageId)
-         return i;
-   return -1;
-}
-
-
-//
 // Create image list with object images
 //
 
 void CreateObjectImageList(void)
 {
-   HICON hIcon;
-   DWORD i, dwPos;
-   TCHAR szFileName[MAX_PATH];
-
    // Create small (16x16) image list
    if (g_pObjectSmallImageList != NULL)
       delete g_pObjectSmallImageList;
    g_pObjectSmallImageList = new CImageList;
    g_pObjectSmallImageList->Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 8);
+
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_NETWORK));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_SUBNET));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_NODE));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_INTERFACE));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_NETWORK));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_ZONE));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_NETWORK));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_TEMPLATE));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_TEMPLATEGROUP));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_TEMPLATEROOT));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_NETWORKSERVICE));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_VPNC));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONDITION));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CLUSTER));
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));  // policy
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));  // policy group
+	g_pObjectSmallImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));  // policy root
 
    // Create normal (32x32) image list
    if (g_pObjectNormalImageList != NULL)
@@ -235,53 +235,24 @@ void CreateObjectImageList(void)
    g_pObjectNormalImageList = new CImageList;
    g_pObjectNormalImageList->Create(32, 32, ILC_COLOR24 | ILC_MASK, 16, 8);
 
-   _tcscpy_s(szFileName, MAX_PATH, g_szWorkDir);
-   _tcscat_s(szFileName, MAX_PATH, WORKDIR_IMAGECACHE);
-   _tcscat_s(szFileName, MAX_PATH, _T("\\"));
-   dwPos = (DWORD)_tcslen(szFileName);
-
-   for(i = 0; i < g_pSrvImageList->dwNumImages; i++)
-   {
-      _sntprintf_s(&szFileName[dwPos], MAX_PATH - dwPos, _TRUNCATE, _T("%08x.ico"), g_pSrvImageList->pImageList[i].dwId);
-      
-      // Load and add 16x16 image
-      hIcon = (HICON)LoadImage(NULL, szFileName, IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
-      g_pObjectSmallImageList->Add(hIcon);
-      DestroyIcon(hIcon);
-
-      // Load and add 32x32 image
-      hIcon = (HICON)LoadImage(NULL, szFileName, IMAGE_ICON, 32, 32, LR_LOADFROMFILE);
-      g_pObjectNormalImageList->Add(hIcon);
-      DestroyIcon(hIcon);
-   }
-}
-
-
-//
-// Get index of class default image
-//
-
-int GetClassDefaultImageIndex(int iClass)
-{
-   DWORD i;
-
-   for(i = 0; i < g_dwDefImgListSize; i++)
-      if (g_pDefImgList[i].dwObjectClass == (DWORD)iClass)
-         return g_pDefImgList[i].iImageIndex;
-   return -1;
-}
-
-
-//
-// Get image index for given object
-//
-
-int GetObjectImageIndex(NXC_OBJECT *pObject)
-{
-   // Check if object has custom image
-   return (pObject->dwImage != IMG_DEFAULT) ?
-      ImageIdToIndex(pObject->dwImage) :
-      GetClassDefaultImageIndex(pObject->iClass);
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_NETWORK));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_SUBNET));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_NODE));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_INTERFACE));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_NETWORK));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_ZONE));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_NETWORK));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_TEMPLATE));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_TEMPLATEGROUP));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_TEMPLATEROOT));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_NETWORKSERVICE));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_VPNC));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONDITION));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CLUSTER));
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));  // policy
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));  // policy group
+	g_pObjectNormalImageList->Add(theApp.LoadIcon(IDI_OBJECT_CONTAINER));  // policy root
 }
 
 

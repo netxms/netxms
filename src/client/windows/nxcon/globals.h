@@ -305,9 +305,6 @@ void PrintBitmap(CDC &dc, CBitmap &bitmap, RECT *pRect);
 //
 
 void CreateObjectImageList(void);
-int ImageIdToIndex(DWORD dwImageId);
-int GetObjectImageIndex(NXC_OBJECT *pObject);
-int GetClassDefaultImageIndex(int iClass);
 CImageList *CreateEventImageList(void);
 void LoadBitmapIntoList(CImageList *pImageList, UINT nIDResource, COLORREF rgbMaskColor);
 HBITMAP LoadPicture(TCHAR *pszFile, int nScaleFactor);
@@ -403,7 +400,6 @@ extern TCHAR *g_pszThresholdFunctionLong[];
 extern CODE_TO_TEXT g_ctSnmpMibStatus[];
 extern CODE_TO_TEXT g_ctSnmpMibAccess[];
 extern CODE_TO_TEXT g_ctSnmpMibType[];
-extern NXC_IMAGE_LIST *g_pSrvImageList;
 extern CImageList *g_pObjectSmallImageList;
 extern CImageList *g_pObjectNormalImageList;
 extern DWORD g_dwDefImgListSize;

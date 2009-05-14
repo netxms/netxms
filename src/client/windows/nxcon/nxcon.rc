@@ -153,6 +153,19 @@ IDI_SITUATION           ICON                    "icons\\situation.ico"
 IDI_INSTANCE            ICON                    "icons\\instance.ico"
 IDI_EVENT_CORRELATION   ICON                    "icons\\event_corr.ico"
 IDI_FORWARD_EVENT       ICON                    "icons\\fwd_event.ico"
+IDI_OBJECT_ZONE         ICON    DISCARDABLE     "icons\\objects\\zone.ico"
+IDI_OBJECT_CLUSTER      ICON    DISCARDABLE     "icons\\objects\\cluster.ico"
+IDI_OBJECT_CONDITION    ICON    DISCARDABLE     "icons\\objects\\condition.ico"
+IDI_OBJECT_INTERFACE    ICON    DISCARDABLE     "icons\\objects\\interface.ico"
+IDI_OBJECT_NETWORK      ICON    DISCARDABLE     "icons\\objects\\network.ico"
+IDI_OBJECT_NETWORKSERVICE ICON    DISCARDABLE     "icons\\objects\\network_service.ico"
+IDI_OBJECT_NODE         ICON    DISCARDABLE     "icons\\objects\\node.ico"
+IDI_OBJECT_CONTAINER    ICON    DISCARDABLE     "icons\\objects\\node_group.ico"
+IDI_OBJECT_SUBNET       ICON    DISCARDABLE     "icons\\objects\\subnet.ico"
+IDI_OBJECT_TEMPLATE     ICON    DISCARDABLE     "icons\\objects\\template.ico"
+IDI_OBJECT_TEMPLATEGROUP ICON    DISCARDABLE     "icons\\objects\\template_group.ico"
+IDI_OBJECT_TEMPLATEROOT ICON    DISCARDABLE     "icons\\objects\\template_root.ico"
+IDI_OBJECT_VPNC         ICON    DISCARDABLE     "icons\\objects\\vpnc.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3052,7 +3065,7 @@ END
 IDD_OBJECT_TEMPLATE_AUTOAPPLY DIALOGEX 0, 0, 292, 194
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Auto Apply"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "&Apply this template automatically to nodes selected by filter",
                     IDC_CHECK_ENABLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,
@@ -3065,7 +3078,7 @@ END
 IDD_OBJECT_CONTAINER_AUTOBIND DIALOGEX 0, 0, 292, 194
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Auto Bind"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "&Automatically bind nodes selected by filter to this container",
                     IDC_CHECK_ENABLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,

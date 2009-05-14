@@ -68,8 +68,7 @@ BOOL CAddDCIDlg::OnInitDialog()
       if ((pIndex[i].pObject->iClass == OBJECT_NODE) &&
           (!pIndex[i].pObject->bIsDeleted))
       {
-         iItem = m_wndListNodes.InsertItem(0x7FFFFFFF, pIndex[i].pObject->szName,
-                                          GetObjectImageIndex(pIndex[i].pObject));
+         iItem = m_wndListNodes.InsertItem(0x7FFFFFFF, pIndex[i].pObject->szName, pIndex[i].pObject->iClass);
          m_wndListNodes.SetItemData(iItem, pIndex[i].pObject->dwId);
       }
    NXCUnlockObjectIndex(g_hSession);

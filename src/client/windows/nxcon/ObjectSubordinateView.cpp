@@ -126,7 +126,7 @@ void CObjectSubordinateView::Refresh()
 		if (pObject != NULL)
 		{
 			_sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%d"), pObject->dwId);
-			nItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, GetObjectImageIndex(pObject));
+			nItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, szBuffer, pObject->iClass);
 			if (nItem != -1)
 			{
 				m_wndListCtrl.SetItemText(nItem, 1, pObject->szName);

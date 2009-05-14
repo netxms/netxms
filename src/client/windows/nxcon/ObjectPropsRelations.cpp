@@ -83,8 +83,7 @@ BOOL CObjectPropsRelations::OnInitDialog()
       pObject = NXCFindObjectById(g_hSession, m_pObject->pdwChildList[i]);
       if (pObject != NULL)
       {
-         iItem = m_wndListChilds.InsertItem(0x7FFFFFFF, pObject->szName,
-                                            GetObjectImageIndex(pObject));
+         iItem = m_wndListChilds.InsertItem(0x7FFFFFFF, pObject->szName, pObject->iClass);
          if (iItem != -1)
          {
             m_wndListChilds.SetItemData(iItem, (LPARAM)pObject);
@@ -98,8 +97,7 @@ BOOL CObjectPropsRelations::OnInitDialog()
       pObject = NXCFindObjectById(g_hSession, m_pObject->pdwParentList[i]);
       if (pObject != NULL)
       {
-         iItem = m_wndListParents.InsertItem(0x7FFFFFFF, pObject->szName,
-                                             GetObjectImageIndex(pObject));
+         iItem = m_wndListParents.InsertItem(0x7FFFFFFF, pObject->szName, pObject->iClass);
          if (iItem != -1)
          {
             m_wndListChilds.SetItemData(iItem, (LPARAM)pObject);

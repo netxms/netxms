@@ -275,7 +275,6 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
 {
    HTREEITEM hItem;
    TVITEM tvi;
-   int nImage;
 
 	// Don't add unmanaged leaf objects if requested
 	if ((m_dwFlags & HIDE_UNMANAGED_OBJECTS) &&
@@ -292,8 +291,7 @@ void CObjectBrowser::AddObjectToTree(NXC_OBJECT *pObject, HTREEITEM hParent)
 	}
 
    // Add object record with class-dependent text
-   nImage = GetObjectImageIndex(pObject);
-   hItem = m_wndTreeCtrl.InsertItem(pObject->szName, nImage, nImage, hParent);
+   hItem = m_wndTreeCtrl.InsertItem(pObject->szName, pObject->iClass, pObject->iClass, hParent);
    m_wndTreeCtrl.SetItemData(hItem, pObject->dwId);
    m_wndTreeCtrl.SetItemState(hItem, INDEXTOOVERLAYMASK(pObject->iStatus), TVIS_OVERLAYMASK);
 

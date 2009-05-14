@@ -161,7 +161,7 @@ static BOOL SignChallenge(BYTE *pChallenge, DWORD dwChLen, BYTE *pSinature, DWOR
 static DWORD WINAPI LoginThread(void *pArg)
 {
    HWND hWnd = *((HWND *)pArg);    // Handle to status window
-   DWORD i, dwResult, dwFlags;
+   DWORD dwResult, dwFlags;
 	TCHAR *pszUpgradeURL = NULL;
 
 	dwFlags = 0;
@@ -310,40 +310,6 @@ static DWORD WINAPI LoginThread(void *pArg)
       dwResult = NXCLoadEventDB(g_hSession);
 		if (dwResult == RCC_ACCESS_DENIED)
 			dwResult = RCC_SUCCESS;    // User may not have rights to view event configuration, it's ok here
-   }
-
-   // Synchronize images
-   if (dwResult == RCC_SUCCESS)
-   {
-      TCHAR szCacheDir[MAX_PATH];
-
-      SetInfoText(hWnd, _T("Synchronizing images..."));
-      _tcscpy_s(szCacheDir, MAX_PATH, g_szWorkDir);
-      _tcscat_s(szCacheDir, MAX_PATH, WORKDIR_IMAGECACHE);
-      dwResult = NXCSyncImages(g_hSession, &g_pSrvImageList, szCacheDir, IMAGE_FORMAT_ICO);
-      if (dwResult == RCC_SUCCESS)
-         CreateObjectImageList();
-   }
-
-   // Load default image list
-   if (dwResult == RCC_SUCCESS)
-   {
-      DWORD *pdwClassId, *pdwImageId;
-
-      SetInfoText(hWnd, _T("Loading default image list..."));
-      dwResult = NXCLoadDefaultImageList(g_hSession, &g_dwDefImgListSize, &pdwClassId, &pdwImageId);
-      if (dwResult == RCC_SUCCESS)
-      {
-         g_pDefImgList = (DEF_IMG *)realloc(g_pDefImgList, sizeof(DEF_IMG) * g_dwDefImgListSize);
-         for(i = 0; i < g_dwDefImgListSize; i++)
-         {
-            g_pDefImgList[i].dwObjectClass = pdwClassId[i];
-            g_pDefImgList[i].dwImageId = pdwImageId[i];
-            g_pDefImgList[i].iImageIndex = ImageIdToIndex(pdwImageId[i]);
-         }
-         safe_free(pdwClassId);
-         safe_free(pdwImageId);
-      }
    }
 
    // Load object tools

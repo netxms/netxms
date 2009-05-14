@@ -116,7 +116,7 @@ void CObjectOverview::OnPaint()
 
       // Draw icon and objet's name right to it
       dc.FillSolidRect(X_MARGIN - 1, Y_MARGIN - 1, 34, 34, g_statusColorTable[m_pObject->iStatus]);
-      dwImageIndex = GetObjectImageIndex(m_pObject);
+      dwImageIndex = (DWORD)m_pObject->iClass;
       g_pObjectNormalImageList->Draw(&dc, dwImageIndex, CPoint(X_MARGIN, Y_MARGIN), ILD_TRANSPARENT);
       dc.SelectObject(&m_fontNormal);
       dc.SetBkColor(GetSysColor(COLOR_WINDOW));

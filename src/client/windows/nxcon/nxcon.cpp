@@ -325,6 +325,8 @@ BOOL CConsoleApp::InitInstance()
       WriteProfileInt(_T("General"), _T("CfgVersion"), NXCON_CONFIG_VERSION);
    }
 
+	CreateObjectImageList();
+
 	// Time zone information
 	m_nTimeZoneType = GetProfileInt(_T("General"), _T("TimeZoneType"), 0);
 	m_strCustomTimeZone = GetProfileString(_T("General"), _T("TimeZone"), _T("UTC"));

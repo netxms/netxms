@@ -265,6 +265,19 @@
 #define IDD_OBJECT_TEMPLATE_AUTOAPPLY   391
 #define IDD_OBJECT_CONTAINER_AUTOBIND   392
 #define IDD_TEST_TRANSFORMATION         393
+#define IDI_OBJECT_ZONE                 394
+#define IDI_OBJECT_CLUSTER              395
+#define IDI_OBJECT_CONDITION            396
+#define IDI_OBJECT_INTERFACE            397
+#define IDI_OBJECT_NETWORK              398
+#define IDI_OBJECT_NETWORKSERVICE       399
+#define IDI_OBJECT_NODE                 400
+#define IDI_OBJECT_CONTAINER            401
+#define IDI_OBJECT_SUBNET               402
+#define IDI_OBJECT_TEMPLATE             403
+#define IDI_OBJECT_TEMPLATEGROUP        404
+#define IDI_OBJECT_TEMPLATEROOT         405
+#define IDI_OBJECT_VPNC                 406
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -1013,7 +1026,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        394
+#define _APS_NEXT_RESOURCE_VALUE        407
 #define _APS_NEXT_COMMAND_VALUE         33112
 #define _APS_NEXT_CONTROL_VALUE         1549
 #define _APS_NEXT_SYMED_VALUE           135

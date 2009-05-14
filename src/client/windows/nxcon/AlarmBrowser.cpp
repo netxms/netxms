@@ -231,9 +231,7 @@ int CAlarmBrowser::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndTreeCtrl.Create(WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT | TVS_SHOWSELALWAYS,
                         rect, &m_wndSplitter, m_wndSplitter.IdFromRowCol(0, 0));
    m_wndTreeCtrl.SetImageList(m_pObjectImageList, TVSIL_NORMAL);
-   m_hTreeRoot = m_wndTreeCtrl.InsertItem(_T("All Nodes"),
-                                          GetClassDefaultImageIndex(OBJECT_NETWORK),
-                                          GetClassDefaultImageIndex(OBJECT_NETWORK));
+   m_hTreeRoot = m_wndTreeCtrl.InsertItem(_T("All Nodes"), OBJECT_NETWORK, OBJECT_NETWORK);
 
    // Create panes in splitter
    m_wndSplitter.SetupView(0, 0, CSize(150, 100));
@@ -315,9 +313,7 @@ void CAlarmBrowser::OnViewRefresh()
 
    m_wndListCtrl.DeleteAllItems();
    m_wndTreeCtrl.DeleteAllItems();
-   m_hTreeRoot = m_wndTreeCtrl.InsertItem(_T("All Nodes"),
-                                          GetClassDefaultImageIndex(OBJECT_NETWORK),
-                                          GetClassDefaultImageIndex(OBJECT_NETWORK));
+   m_hTreeRoot = m_wndTreeCtrl.InsertItem(_T("All Nodes"), OBJECT_NETWORK, OBJECT_NETWORK);
    safe_free(m_pAlarmList);
    m_dwNumAlarms = 0;
    m_pAlarmList = NULL;
@@ -818,7 +814,6 @@ void CAlarmBrowser::OnUpdateAlarmShownodes(CCmdUI* pCmdUI)
 void CAlarmBrowser::AddNodeToTree(DWORD dwNodeId)
 {
    NXC_OBJECT *pObject;
-   int iImage;
    HTREEITEM hItem;
 
    pObject = NXCFindObjectById(g_hSession, dwNodeId);
@@ -826,8 +821,7 @@ void CAlarmBrowser::AddNodeToTree(DWORD dwNodeId)
    {
       if (!IsNodeExist(dwNodeId))
       {
-         iImage = GetObjectImageIndex(pObject);
-         hItem = m_wndTreeCtrl.InsertItem(pObject->szName, iImage, iImage, m_hTreeRoot);
+         hItem = m_wndTreeCtrl.InsertItem(pObject->szName, pObject->iClass, pObject->iClass, m_hTreeRoot);
          m_wndTreeCtrl.SetItemData(hItem, dwNodeId);
       }
    }

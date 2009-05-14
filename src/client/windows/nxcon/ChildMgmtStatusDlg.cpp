@@ -73,7 +73,7 @@ BOOL CChildMgmtStatusDlg::OnInitDialog()
 		pObject = NXCFindObjectById(g_hSession, m_pObject->pdwChildList[i]);
 		if (pObject != NULL)
 		{
-			nItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pObject->szName, GetObjectImageIndex(pObject));
+			nItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pObject->szName, pObject->iClass);
 			if (nItem != -1)
 			{
 				m_wndListCtrl.SetItemText(nItem, 1, (pObject->iStatus == STATUS_UNMANAGED) ? _T("No") : _T("Yes"));

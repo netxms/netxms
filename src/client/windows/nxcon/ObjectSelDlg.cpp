@@ -112,7 +112,7 @@ BOOL CObjectSelDlg::OnInitDialog()
              (!pIndex[i].pObject->bIsDeleted))
          {
             iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pIndex[i].pObject->szName,
-                                             GetObjectImageIndex(pIndex[i].pObject));
+                                             pIndex[i].pObject->iClass);
             m_wndListCtrl.SetItemText(iItem, 1, g_szObjectClass[pIndex[i].pObject->iClass]);
             m_wndListCtrl.SetItemData(iItem, pIndex[i].pObject->dwId);
          }
@@ -136,8 +136,7 @@ BOOL CObjectSelDlg::OnInitDialog()
                   if ((pChild->iClass == OBJECT_INTERFACE) &&
                       (pChild->dwIpAddr != 0) && (!pChild->bIsDeleted))
                   {
-                     iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pChild->szName,
-                                                      GetObjectImageIndex(pChild));
+                     iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pChild->szName, pChild->iClass);
                      m_wndListCtrl.SetItemText(iItem, 1, IpToStr(pChild->dwIpAddr, szBuffer));
                      m_wndListCtrl.SetItemData(iItem, pObject->pdwChildList[i]);
                   }
@@ -147,8 +146,7 @@ BOOL CObjectSelDlg::OnInitDialog()
                   if ((dwClassMask[pChild->iClass] & m_dwAllowedClasses) &&
                       (!pChild->bIsDeleted))
                   {
-                     iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pChild->szName,
-                                                      GetObjectImageIndex(pChild));
+                     iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, pChild->szName, pChild->iClass);
                      m_wndListCtrl.SetItemText(iItem, 1, g_szObjectClass[pChild->iClass]);
                      m_wndListCtrl.SetItemData(iItem, pObject->pdwChildList[i]);
                   }
@@ -158,8 +156,7 @@ BOOL CObjectSelDlg::OnInitDialog()
 
          if (m_bSelectAddress && m_bShowLoopback)
          {
-            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, _T("<loopback>"),
-                                             GetClassDefaultImageIndex(OBJECT_INTERFACE));
+            iItem = m_wndListCtrl.InsertItem(0x7FFFFFFF, _T("<loopback>"), OBJECT_INTERFACE);
             m_wndListCtrl.SetItemText(iItem, 1, _T("127.0.0.1"));
             m_wndListCtrl.SetItemData(iItem, 0);
          }
