@@ -4004,6 +4004,7 @@ static struct
 	{ 88, H_UpgradeFromV88 },
 	{ 89, H_UpgradeFromV89 },
 	{ 90, H_UpgradeFromV90 },
+	{ 91, H_UpgradeFromV91 },
    { 0, NULL }
 };
 
