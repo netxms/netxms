@@ -174,7 +174,10 @@ AgentConnection::~AgentConnection()
    DestroyEncryptionContext(m_pCtx);
 
 	if (m_hCurrFile != -1)
+	{
 		close(m_hCurrFile);
+		OnFileDownload(FALSE);
+	}
 
    MutexDestroy(m_mutexDataLock);
 	ConditionDestroy(m_condFileDownload);
@@ -1512,6 +1515,7 @@ DWORD AgentConnection::PrepareFileDownload(const TCHAR *fileName, DWORD rqId,
 	if (m_hCurrFile != -1)
 		return ERR_RESOURCE_BUSY;
 
+	nx_strncpy(m_currentFileName, fileName, MAX_PATH);
 	ConditionReset(m_condFileDownload);
 	m_hCurrFile = open(fileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, O_RDWR);
 	m_dwDownloadRequestId = rqId;
@@ -1527,6 +1531,8 @@ DWORD AgentConnection::PrepareFileDownload(const TCHAR *fileName, DWORD rqId,
 
 void AgentConnection::OnFileDownload(BOOL success)
 {
+	if (!success)
+		_tremove(m_currentFileName);
 	m_fileDownloadSucceeded = success;
 	ConditionSet(m_condFileDownload);
 }

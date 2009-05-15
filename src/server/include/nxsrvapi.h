@@ -303,6 +303,7 @@ private:
    int m_iProxyAuth;
    TCHAR m_szProxySecret[MAX_SECRET_LENGTH];
 	int m_hCurrFile;
+	TCHAR m_currentFileName[MAX_PATH];
 	DWORD m_dwDownloadRequestId;
 	CONDITION m_condFileDownload;
 	BOOL m_fileDownloadSucceeded;
