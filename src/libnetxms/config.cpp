@@ -343,6 +343,20 @@ QWORD Config::getValueUInt64(const TCHAR *path, QWORD defaultValue)
 	return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
 }
 
+bool Config::getValueBoolean(const TCHAR *path, bool defaultValue)
+{
+	const TCHAR *value = getValue(path);
+	if (value != NULL)
+	{
+		return !_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || 
+		       !_tcsicmp(value, _T("on")) || (_tcstol(value, NULL, 0) != 0);
+	}
+	else
+	{
+		return defaultValue;
+	}
+}
+
 
 //
 // Get subentries
