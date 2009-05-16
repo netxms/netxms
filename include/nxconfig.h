@@ -122,6 +122,7 @@ public:
 	DWORD getValueUInt(const TCHAR *path, DWORD defaultValue);
 	INT64 getValueInt64(const TCHAR *path, INT64 defaultValue);
 	QWORD getValueUInt64(const TCHAR *path, QWORD defaultValue);
+	bool getValueBoolean(const TCHAR *path, bool defaultValue);
 	ConfigEntryList *getSubEntries(const TCHAR *path, const TCHAR *mask);
 
 	bool parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate);
