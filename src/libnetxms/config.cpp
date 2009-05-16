@@ -302,10 +302,45 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 // Get value
 //
 
-const TCHAR *Config::getValue(const TCHAR *path)
+const TCHAR *Config::getValue(const TCHAR *path, const TCHAR *defaultValue)
 {
+	const TCHAR *value;
 	ConfigEntry *entry = getEntry(path);
-	return (entry != NULL) ? entry->getValue() : NULL;
+	if (entry != NULL)
+	{
+		value = entry->getValue();
+		if (value == NULL)
+			value = defaultValue;
+	}
+	else
+	{
+		value = defaultValue;
+	}
+	return value;
+}
+
+LONG Config::getValueInt(const TCHAR *path, LONG defaultValue)
+{
+	const TCHAR *value = getValue(path);
+	return (path != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
+}
+
+DWORD Config::getValueUInt(const TCHAR *path, DWORD defaultValue)
+{
+	const TCHAR *value = getValue(path);
+	return (path != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
+}
+
+INT64 Config::getValueInt64(const TCHAR *path, INT64 defaultValue)
+{
+	const TCHAR *value = getValue(path);
+	return (path != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
+}
+
+QWORD Config::getValueUInt64(const TCHAR *path, QWORD defaultValue)
+{
+	const TCHAR *value = getValue(path);
+	return (path != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
 }
 
 
