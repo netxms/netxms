@@ -4,6 +4,7 @@
 package org.netxms.ui.eclipse.usermanager.views;
 
 import java.util.Iterator;
+import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -23,9 +24,11 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
@@ -37,6 +40,8 @@ import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
+import org.netxms.client.NXCListener;
+import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.NXCUser;
 import org.netxms.client.NXCUserDBObject;
@@ -45,6 +50,7 @@ import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.RefreshAction;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 import org.netxms.ui.eclipse.usermanager.Activator;
+import org.netxms.ui.eclipse.usermanager.dialogs.CreateObjectDialog;
 
 /**
  * @author Victor
@@ -64,6 +70,7 @@ public class UserManager extends ViewPart
 		
 	private TableViewer viewer;
 	private NXCSession session;
+	private NXCListener sessionListener;
 	private boolean databaseLocked = false;
 	private Action actionAddUser;
 	private Action actionAddGroup;
@@ -229,7 +236,12 @@ public class UserManager extends ViewPart
 			
 			try
 			{
-				final NXCUserDBObject[] users = session.getUserDatabaseObjects();
+				final NXCUserDBObject[] origUsers = session.getUserDatabaseObjects();
+				final NXCUserDBObject[] users = new NXCUserDBObject[origUsers.length];
+				for(int i = 0; i < origUsers.length; i++)
+				{
+					users[i] = (NXCUserDBObject)origUsers[i].clone();
+				}
 				status = Status.OK_STATUS;
 
 				new UIJob("Refresh user manager content") {
@@ -294,6 +306,18 @@ public class UserManager extends ViewPart
 		contributeToActionBars();
 		createPopupMenu();
 		
+		// Listener for server's notifications
+		sessionListener = new NXCListener() {
+			@Override
+			public void notificationHandler(NXCNotification n)
+			{
+				if (n.getCode() == NXCNotification.USER_DB_CHANGED)
+				{
+					actionRefresh.run();
+				}
+			}
+		};
+		
 		// Request server to lock user database, and on success refresh view
 		Job job = new Job("Open user database") {
 			@Override
@@ -306,6 +330,7 @@ public class UserManager extends ViewPart
 					session.lockUserDatabase();
 					databaseLocked = true;
 					actionRefresh.run();
+					session.addListener(sessionListener);
 					status = Status.OK_STATUS;
 				}
 				catch(Exception e)
@@ -394,6 +419,56 @@ public class UserManager extends ViewPart
 			@Override
 			public void run()
 			{
+				final CreateObjectDialog dlg = new CreateObjectDialog(getViewSite().getShell(), true);
+				if (dlg.open() == Window.OK)
+				{
+					Job job = new Job("Create user") {
+						@Override
+						protected IStatus run(IProgressMonitor monitor)
+						{
+							IStatus status;
+							
+							try
+							{
+								session.createUser(dlg.getLoginName());
+								if (dlg.isEditAfterCreate())
+								{
+									new UIJob("Edit new user") {
+										@Override
+										public IStatus runInUIThread(
+												IProgressMonitor monitor)
+										{
+											//viewer.setSelection(new StructuredSelection(viewer.getElementAt(0)), true);
+											return Status.OK_STATUS;
+										}
+									}.schedule();
+								}
+								status = Status.OK_STATUS;
+							}
+							catch(Exception e)
+							{
+								status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
+								                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
+								                    "Cannot create user: " + e.getMessage(), e);
+							}
+							actionRefresh.run();
+							return status;
+						}
+	
+						
+						/* (non-Javadoc)
+						 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
+						 */
+						@Override
+						public boolean belongsTo(Object family)
+						{
+							return family == UserManager.JOB_FAMILY;
+						}
+					};
+					IWorkbenchSiteProgressService siteService =
+				      (IWorkbenchSiteProgressService)getSite().getAdapter(IWorkbenchSiteProgressService.class);
+					siteService.schedule(job, 0, true);
+				}
 			}
 		};
 		actionAddUser.setText("Create new user");
@@ -536,6 +611,8 @@ public class UserManager extends ViewPart
 	@Override
 	public void dispose()
 	{
+		if (sessionListener != null)
+			session.removeListener(sessionListener);
 		if (databaseLocked)
 		{
 			new Job("Unlock user database") {

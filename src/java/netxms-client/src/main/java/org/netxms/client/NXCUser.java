@@ -133,4 +133,13 @@ public class NXCUser extends NXCUserDBObject
 	{
 		this.fullName = fullName;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#clone()
+	 */
+	@Override
+	public Object clone() throws CloneNotSupportedException
+	{
+		return new NXCUser(this);
+	}
 }

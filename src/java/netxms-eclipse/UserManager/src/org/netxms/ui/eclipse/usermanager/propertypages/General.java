@@ -15,9 +15,11 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
+import org.netxms.client.NXCSession;
 import org.netxms.client.NXCUser;
 import org.netxms.client.NXCUserDBObject;
 import org.netxms.ui.eclipse.usermanager.Activator;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -33,8 +35,17 @@ public class General extends PropertyPage
 	private String initialFullName;
 	private String initialDescription;
 	private NXCUserDBObject object;
+	private NXCSession session;
 	
-	
+	/**
+	 * 
+	 */
+	public General()
+	{
+		super();
+		session = NXMCSharedData.getInstance().getSession();
+	}
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
@@ -111,6 +122,13 @@ public class General extends PropertyPage
 					initialName = newName;
 					initialFullName = newFullName;
 					initialDescription = newDescription;
+					
+					object.setName(newName);
+					object.setDescription(newDescription);
+					if (object instanceof NXCUser)
+						((NXCUser)object).setFullName(newFullName);
+					session.modifyUserDBObject(object);
+					
 					status = Status.OK_STATUS;
 				}
 				catch(Exception e)

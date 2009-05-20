@@ -74,4 +74,13 @@ public class NXCUserGroup extends NXCUserDBObject
 	{
 		this.members = members;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#clone()
+	 */
+	@Override
+	public Object clone() throws CloneNotSupportedException
+	{
+		return new NXCUserGroup(this);
+	}
 }
