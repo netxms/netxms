@@ -16,23 +16,12 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.*;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.jface.action.*;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.*;
 import org.eclipse.swt.SWT;
+import org.netxms.ui.eclipse.tools.RefreshAction;
 
 /**
- * This sample class demonstrates how to plug-in a new workbench view. The view
- * shows data obtained from the model. The sample creates a dummy model on the
- * fly, but a real implementation would connect to the model available either in
- * this or another plug-in (e.g. the workspace). The view is connected to the
- * model using a content provider.
- * <p>
- * The view uses a label provider to define how model objects should be
- * presented in the view. Each view can present the same model objects using
- * different labels and icons, if needed. Alternatively, a single label provider
- * can be shared between views in order to ensure that objects of the same type
- * are presented in the same way everywhere.
- * <p>
+ * Console job monitor class
  */
 
 public class JobMonitor extends ViewPart
@@ -41,8 +30,9 @@ public class JobMonitor extends ViewPart
 	public static final String JOB_FAMILY = "JobMonitorInternal";
 	
 	private TableViewer viewer;
-	private Action actionClearCompleted;
+	private RefreshAction actionRefresh;
 	private Action actionShowSystem;
+	private ChangeListener jobChangeListener;
 	
 	// Columns
 	private static final int COL_NAME = 0;
@@ -68,7 +58,28 @@ public class JobMonitor extends ViewPart
 
 		public Object[] getElements(Object parent)
 		{
-			return (parent instanceof IJobManager) ? ((IJobManager)parent).find(null) : null;
+			Job[] filteredJobs = null;
+			if (parent instanceof IJobManager)
+			{
+				int i, j, size;
+				Job[] jobs = ((IJobManager)parent).find(null);
+				
+				for(i = 0, size = 0; i < jobs.length; i++)
+					if (jobs[i].belongsTo(JobMonitor.JOB_FAMILY))
+					{
+						jobs[i] = null;
+					}
+					else
+					{
+						size++;
+					}
+				
+				filteredJobs = new Job[size];
+				for(i = 0, j = 0; (i < jobs.length) && (j < size); i++)
+					if (jobs[i] != null)
+						filteredJobs[j++] = jobs[i];
+			}
+			return filteredJobs;
 		}
 	}
 
@@ -95,7 +106,6 @@ public class JobMonitor extends ViewPart
 					return "unknown";
 			}
 		}
-		
 		
 		/**
 		 * Returns text for given column 
@@ -142,7 +152,6 @@ public class JobMonitor extends ViewPart
 	class NameSorter extends ViewerSorter
 	{
 	}
-
 	
 	/**
 	 * Job change listener class for job monitor
@@ -170,7 +179,14 @@ public class JobMonitor extends ViewPart
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						viewer.refresh();
+						try
+						{
+							viewer.refresh();
+						}
+						catch(Exception e)
+						{
+							e.printStackTrace();
+						}
 						return Status.OK_STATUS;
 					}
 				}.schedule();
@@ -213,7 +229,6 @@ public class JobMonitor extends ViewPart
 			refreshViewer(event);
 		}
 	}
-
 	
 	/**
 	 * The constructor.
@@ -252,7 +267,8 @@ public class JobMonitor extends ViewPart
 		makeActions();
 		contributeToActionBars();
 		
-		Job.getJobManager().addJobChangeListener(new ChangeListener());
+		jobChangeListener = new ChangeListener();
+		Job.getJobManager().addJobChangeListener(jobChangeListener);
 	}
 
 	private void contributeToActionBars()
@@ -264,27 +280,47 @@ public class JobMonitor extends ViewPart
 
 	private void fillLocalPullDown(IMenuManager manager)
 	{
-		manager.add(actionClearCompleted);
+		manager.add(actionRefresh);
 		manager.add(actionShowSystem);
 	}
 
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
-		manager.add(actionClearCompleted);
+		manager.add(actionRefresh);
 	}
 
 	private void makeActions()
 	{
-		actionClearCompleted = new Action()
+		actionRefresh = new RefreshAction()
 		{
 			public void run()
 			{
-				showMessage("Action 1 executed");
+				new UIJob("Refresh job monitor view") {
+					/* (non-Javadoc)
+					 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
+					 */
+					@Override
+					public boolean belongsTo(Object family)
+					{
+						return family == JobMonitor.JOB_FAMILY;
+					}
+	
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						try
+						{
+							viewer.refresh();
+						}
+						catch(Exception e)
+						{
+							e.printStackTrace();
+						}
+						return Status.OK_STATUS;
+					}
+				}.schedule();
 			}
 		};
-		actionClearCompleted.setText("Clear Completed");
-		actionClearCompleted.setToolTipText("Remove completed jobs from the list");
-		actionClearCompleted.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
 
 		actionShowSystem = new Action()
 		{
@@ -296,16 +332,21 @@ public class JobMonitor extends ViewPart
 		actionShowSystem.setToolTipText("Show system jobs in the list");
 	}
 
-	private void showMessage(String message)
-	{
-		MessageDialog.openInformation(viewer.getControl().getShell(), "Job Monitor", message);
-	}
-
 	/**
 	 * Passing the focus request to the viewer's control.
 	 */
 	public void setFocus()
 	{
 		viewer.getControl().setFocus();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+	 */
+	@Override
+	public void dispose()
+	{
+		Job.getJobManager().removeJobChangeListener(jobChangeListener);
+		super.dispose();
 	}
 }

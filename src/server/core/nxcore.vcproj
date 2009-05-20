@@ -405,6 +405,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ap_config.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\audit.cpp"
 				>
 			</File>

@@ -1165,3 +1165,42 @@ CREATE TABLE web_maps
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
+
+
+/*
+** Agent policies - common attributes
+*/
+
+CREATE TABLE ap_common
+(
+	id integer not null,
+	policy_type integer not null,
+	version integer not null,
+	description SQL_TEXT not null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;
+
+
+/*
+** Agent policies - node binding
+*/
+
+CREATE TABLE ap_bindings
+(
+	policy_id integer not null,
+	node_id integer not null,
+	PRIMARY KEY(policy_id,node_id)
+) TABLE_TYPE;
+
+
+/*
+** Agent policies - configuration files
+*/
+
+CREATE TABLE ap_config_files
+(
+	id integer not null,
+	file_name varchar(63) not null,
+	file_content SQL_TEXT not null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;

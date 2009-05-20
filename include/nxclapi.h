@@ -79,6 +79,7 @@ typedef void * NXC_SESSION;
 #define MAC_ADDR_LENGTH          6
 #define CURRENT_USER             ((DWORD)0xFFFFFFFF)
 #define MAX_DCI_DATA_RECORDS     200000
+#define MAX_POLICY_CONFIG_NAME   64
 
 
 //
@@ -120,24 +121,25 @@ typedef void * NXC_SESSION;
 // Object types
 //
 
-#define OBJECT_GENERIC        0
-#define OBJECT_SUBNET         1
-#define OBJECT_NODE           2
-#define OBJECT_INTERFACE      3
-#define OBJECT_NETWORK        4
-#define OBJECT_CONTAINER      5
-#define OBJECT_ZONE           6
-#define OBJECT_SERVICEROOT    7
-#define OBJECT_TEMPLATE       8
-#define OBJECT_TEMPLATEGROUP  9
-#define OBJECT_TEMPLATEROOT   10
-#define OBJECT_NETWORKSERVICE 11
-#define OBJECT_VPNCONNECTOR   12
-#define OBJECT_CONDITION      13
-#define OBJECT_CLUSTER			14
-#define OBJECT_AGENTPOLICY    15
-#define OBJECT_POLICYGROUP    16
-#define OBJECT_POLICYROOT     17
+#define OBJECT_GENERIC              0
+#define OBJECT_SUBNET               1
+#define OBJECT_NODE                 2
+#define OBJECT_INTERFACE            3
+#define OBJECT_NETWORK              4
+#define OBJECT_CONTAINER            5
+#define OBJECT_ZONE                 6
+#define OBJECT_SERVICEROOT          7
+#define OBJECT_TEMPLATE             8
+#define OBJECT_TEMPLATEGROUP        9
+#define OBJECT_TEMPLATEROOT         10
+#define OBJECT_NETWORKSERVICE       11
+#define OBJECT_VPNCONNECTOR         12
+#define OBJECT_CONDITION            13
+#define OBJECT_CLUSTER			      14
+#define OBJECT_AGENTPOLICY          15
+#define OBJECT_POLICYGROUP          16
+#define OBJECT_POLICYROOT           17
+#define OBJECT_AGENTPOLICY_CONFIG   18
 
 
 //

@@ -1126,7 +1126,7 @@ public:
 
 
 //
-// Agent policy object
+// Generic agent policy object
 //
 
 class NXCORE_EXPORTABLE AgentPolicy : public NetObj
@@ -1134,13 +1134,38 @@ class NXCORE_EXPORTABLE AgentPolicy : public NetObj
 protected:
 	DWORD m_version;
 	int m_policyType;
-	TCHAR *m_data;
+	TCHAR *m_description;
 
 public:
    AgentPolicy(int type);
    virtual ~AgentPolicy();
 
    virtual int Type(void) { return OBJECT_AGENTPOLICY; }
+
+   virtual BOOL SaveToDB(DB_HANDLE hdb);
+   virtual BOOL DeleteFromDB(void);
+   virtual BOOL CreateFromDB(DWORD dwId);
+
+   virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+};
+
+
+//
+// Agent config policy object
+//
+
+class NXCORE_EXPORTABLE AgentPolicyConfig : public AgentPolicy
+{
+protected:
+	TCHAR m_fileName[MAX_POLICY_CONFIG_NAME];
+	TCHAR *m_fileContent;
+
+public:
+   AgentPolicyConfig();
+   virtual ~AgentPolicyConfig();
+
+   virtual int Type(void) { return OBJECT_AGENTPOLICY_CONFIG; }
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual BOOL DeleteFromDB(void);

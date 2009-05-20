@@ -24,25 +24,12 @@
 
 
 //
-// Redefined status calculation for policy group
-//
-
-void PolicyGroup::CalculateCompoundStatus(BOOL bForcedRecalc)
-{
-   m_iStatus = STATUS_NORMAL;
-}
-
-
-//
 // Agent policy default constructor
 //
 
-AgentPolicy::AgentPolicy(int type)
-            : NetObj()
+AgentPolicyConfig::AgentPolicyConfig()
+                  : AgentPolicy(AGENT_POLICY_CONFIG)
 {
-	m_version = 0x00010000;
-	m_policyType = type;
-	m_description = NULL;
 }
 
 
@@ -50,9 +37,8 @@ AgentPolicy::AgentPolicy(int type)
 // Destructor
 //
 
-AgentPolicy::~AgentPolicy()
+AgentPolicyConfig::~AgentPolicyConfig()
 {
-	safe_free(m_description);
 }
 
 
@@ -60,7 +46,7 @@ AgentPolicy::~AgentPolicy()
 // Save to database
 //
 
-BOOL AgentPolicy::SaveToDB(DB_HANDLE hdb)
+BOOL AgentPolicyConfig::SaveToDB(DB_HANDLE hdb)
 {
 	TCHAR query[256];
 
@@ -116,7 +102,7 @@ BOOL AgentPolicy::SaveToDB(DB_HANDLE hdb)
 // Delete from database
 //
 
-BOOL AgentPolicy::DeleteFromDB()
+BOOL AgentPolicyConfig::DeleteFromDB()
 {
 	TCHAR query[256];
 
@@ -132,7 +118,7 @@ BOOL AgentPolicy::DeleteFromDB()
 // Load from database
 //
 
-BOOL AgentPolicy::CreateFromDB(DWORD dwId)
+BOOL AgentPolicyConfig::CreateFromDB(DWORD dwId)
 {
 	m_dwId = dwId;
 
@@ -197,12 +183,9 @@ BOOL AgentPolicy::CreateFromDB(DWORD dwId)
 // Create NXCP message with policy data
 //
 
-void AgentPolicy::CreateMessage(CSCPMessage *msg)
+void AgentPolicyConfig::CreateMessage(CSCPMessage *msg)
 {
-	NetObj::CreateMessage(msg);
-	msg->SetVariable(VID_POLICY_TYPE, (WORD)m_policyType);
-	msg->SetVariable(VID_VERSION, m_version);
-	msg->SetVariable(VID_DESCRIPTION, m_description);
+	AgentPolicy::CreateMessage(msg);
 }
 
 
@@ -210,10 +193,10 @@ void AgentPolicy::CreateMessage(CSCPMessage *msg)
 // Modify policy from message
 //
 
-DWORD AgentPolicy::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+DWORD AgentPolicyConfig::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();
 
-   return NetObj::ModifyFromMessage(pRequest, TRUE);
+   return AgentPolicy::ModifyFromMessage(pRequest, TRUE);
 }

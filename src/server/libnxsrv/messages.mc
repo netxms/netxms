@@ -734,4 +734,28 @@ Language=English
 Failed to execute filter script for container object %1 "%2": %3
 .
 
+MessageId=
+SymbolicName=MSG_PG_LOAD_FAILED
+Language=English
+Failed to load policy group object with id %1 from database
+.
+
+MessageId=
+SymbolicName=MSG_AGENTPOLICY_LOAD_FAILED
+Language=English
+Failed to load agent policy object with id %1 from database
+.
+
+MessageId=
+SymbolicName=MSG_INVALID_AP_BINDING
+Language=English
+Inconsistent database: agent policy object %1 has reference to non-existing node object %2
+.
+
+MessageId=
+SymbolicName=MSG_AP_BINDING_NOT_NODE
+Language=English
+Inconsistent database: agent policy object %1 has reference to child object %2 which is not a node object
+.
+
 ;#endif

@@ -951,6 +951,30 @@ BOOL LoadObjects(void)
       DBFreeResult(hResult);
    }
 
+   // Load agent policies
+   DbgPrintf(2, "Loading agent policies...");
+   hResult = DBSelect(g_hCoreDB, "SELECT id,policy_type FROM ap_common");
+   if (hResult != NULL)
+   {
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         AgentPolicy *policy = new AgentPolicy(AGENT_POLICY_CONFIG);
+         if (policy->CreateFromDB(dwId))
+         {
+            NetObjInsert(policy, FALSE);  // Insert into indexes
+				policy->CalculateCompoundStatus();	// Force status change to NORMAL
+         }
+         else     // Object load failed
+         {
+            delete policy;
+            nxlog_write(MSG_AGENTPOLICY_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
    // Load container objects
    DbgPrintf(2, "Loading containers...");
    sprintf(szQuery, "SELECT id FROM containers WHERE object_class=%d", OBJECT_CONTAINER);
@@ -1003,16 +1027,44 @@ BOOL LoadObjects(void)
       DBFreeResult(hResult);
    }
 
+   // Load policy group objects
+   DbgPrintf(2, "Loading policy groups...");
+   sprintf(szQuery, "SELECT id FROM containers WHERE object_class=%d", OBJECT_POLICYGROUP);
+   hResult = DBSelect(g_hCoreDB, szQuery);
+   if (hResult != 0)
+   {
+      PolicyGroup *pGroup;
+
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         pGroup = new PolicyGroup;
+         if (pGroup->CreateFromDB(dwId))
+         {
+            NetObjInsert(pGroup, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            delete pGroup;
+            nxlog_write(MSG_PG_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
    // Link childs to container and template group objects
    DbgPrintf(2, "Linking objects...");
    for(i = 0; i < g_dwIdIndexSize; i++)
       if ((((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_CONTAINER) ||
-          (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_TEMPLATEGROUP))
+          (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_TEMPLATEGROUP) ||
+          (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_POLICYGROUP))
          ((Container *)g_pIndexById[i].pObject)->LinkChildObjects();
 
    // Link childs to "Service Root" and "Template Root" objects
    g_pServiceRoot->LinkChildObjects();
    g_pTemplateRoot->LinkChildObjects();
+   g_pPolicyRoot->LinkChildObjects();
 
    // Allow objects to change it's modification flag
    g_bModificationsLocked = FALSE;

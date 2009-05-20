@@ -16,6 +16,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -424,6 +425,11 @@ public class UserManager extends ViewPart
 			{
 				final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 				
+				if (!MessageDialog.openQuestion(UserManager.this.getViewSite().getShell(),
+				                                "Confirm user deletion",
+				                                "Do you really wish to delete selected user" + ((selection.size() > 1) ? "s?" : "?")))
+					return;
+				
 				Job job = new Job("Delete user database objects") {
 					@SuppressWarnings("unchecked")
 					@Override
@@ -545,6 +551,7 @@ public class UserManager extends ViewPart
 					}
 					catch(Exception e)
 					{
+						e.printStackTrace();
 						status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
 						                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
 						                    "Cannot unlock user database: " + e.getMessage(), e);
