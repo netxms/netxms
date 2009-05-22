@@ -72,6 +72,9 @@ public class UserManager extends ViewPart
 	private NXCSession session;
 	private NXCListener sessionListener;
 	private boolean databaseLocked = false;
+	private long newUserId = -1;
+	private NXCUserDBObject newUser;
+	private String newUserFound = "";
 	private Action actionAddUser;
 	private Action actionAddGroup;
 	private Action actionEditUser;
@@ -241,6 +244,14 @@ public class UserManager extends ViewPart
 				for(int i = 0; i < origUsers.length; i++)
 				{
 					users[i] = (NXCUserDBObject)origUsers[i].clone();
+					if (users[i].getId() == newUserId)
+					{
+						newUser = users[i];
+						synchronized(newUserFound)
+						{
+							newUserFound.notifyAll();
+						}
+					}
 				}
 				status = Status.OK_STATUS;
 
@@ -248,10 +259,7 @@ public class UserManager extends ViewPart
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
-						synchronized(users)
-						{
-							viewer.setInput(users);
-						}
+						viewer.setInput(users);
 						return Status.OK_STATUS;
 					}
 				}.schedule();
@@ -430,18 +438,28 @@ public class UserManager extends ViewPart
 							
 							try
 							{
-								session.createUser(dlg.getLoginName());
+								newUser = null;
+								newUserId = session.createUser(dlg.getLoginName());
 								if (dlg.isEditAfterCreate())
 								{
-									new UIJob("Edit new user") {
-										@Override
-										public IStatus runInUIThread(
-												IProgressMonitor monitor)
-										{
-											//viewer.setSelection(new StructuredSelection(viewer.getElementAt(0)), true);
-											return Status.OK_STATUS;
-										}
-									}.schedule();
+									// Wait for local user database copy update
+									synchronized(newUserFound)
+									{
+										newUserFound.wait(3000);
+									}
+									if (newUser != null)
+									{
+										new UIJob("Edit new user") {
+											@Override
+											public IStatus runInUIThread(
+													IProgressMonitor monitor)
+											{
+												viewer.setSelection(new StructuredSelection(newUser), true);
+												actionEditUser.run();
+												return Status.OK_STATUS;
+											}
+										}.schedule();
+									}
 								}
 								status = Status.OK_STATUS;
 							}

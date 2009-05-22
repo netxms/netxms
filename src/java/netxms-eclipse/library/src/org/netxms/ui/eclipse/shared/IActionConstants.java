@@ -12,6 +12,7 @@ public interface IActionConstants
 	public static final String M_VIEW = "view";
 	public static final String M_CONFIG = "config";
 	
+	public static final String M_PRODUCT_VIEW = "product";
 	public static final String M_PRIMARY_VIEW = "primary";
 	public static final String M_TOOL_VIEW = "tools";
 

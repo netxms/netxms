@@ -226,6 +226,26 @@ DWORD LIBNXCL_EXPORTABLE NXCSendSMS(NXC_SESSION hSession, TCHAR *phone, TCHAR *m
 
 
 //
+// Check connection status by sending keepalive message
+//
+
+DWORD LIBNXCL_EXPORTABLE NXCCheckConnection(NXC_SESSION hSession)
+{
+   CSCPMessage msg;
+   DWORD dwRqId;
+
+   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   msg.SetCode(CMD_KEEPALIVE);
+   msg.SetId(dwRqId);
+   if (!((NXCL_Session *)hSession)->SendMsg(&msg))
+		return RCC_COMM_FAILURE;
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+
+//
 // Get server's time zone
 //
 
