@@ -1260,7 +1260,7 @@ void ClientSession::OnFileUpload(BOOL bSuccess)
 
 BOOL ClientSession::SendFile(const TCHAR *file, DWORD dwRqId)
 {
-	return SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx);
+	return SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx, 0);
 }
 
 
@@ -3486,7 +3486,7 @@ void ClientSession::SendMIB(DWORD dwRqId)
    // Send compiled MIB file
    strcpy(szBuffer, g_szDataDir);
    strcat(szBuffer, DFILE_COMPILED_MIB);
-   SendFileOverNXCP(m_hSocket, dwRqId, szBuffer, m_pCtx);
+   SendFileOverNXCP(m_hSocket, dwRqId, szBuffer, m_pCtx, 0);
 }
 
 
@@ -7449,7 +7449,7 @@ void ClientSession::SendSubmapBkImage(CSCPMessage *pRequest)
    // Send bitmap file
    if (bSuccess)
    {
-      SendFileOverNXCP(m_hSocket, pRequest->GetId(), szBuffer, m_pCtx);
+      SendFileOverNXCP(m_hSocket, pRequest->GetId(), szBuffer, m_pCtx, 0);
    }
 }
 
@@ -10010,7 +10010,7 @@ void ClientSession::GetServerFile(CSCPMessage *pRequest)
 		if (_taccess(fname, 0) == 0)
 		{
 			DebugPrintf(5, _T("Sending file %s"), name);
-			if (SendFileOverNXCP(m_hSocket, pRequest->GetId(), fname, m_pCtx))
+			if (SendFileOverNXCP(m_hSocket, pRequest->GetId(), fname, m_pCtx, 0))
 			{
 				DebugPrintf(5, _T("File %s was succesfully sent"), name);
 		      msg.SetVariable(VID_RCC, RCC_SUCCESS);

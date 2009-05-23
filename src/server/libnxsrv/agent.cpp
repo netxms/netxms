@@ -980,7 +980,7 @@ DWORD AgentConnection::UploadFile(const TCHAR *pszFile)
 
    if (dwResult == ERR_SUCCESS)
    {
-      if (SendFileOverNXCP(m_hSocket, dwRqId, pszFile, m_pCtx))
+      if (SendFileOverNXCP(m_hSocket, dwRqId, pszFile, m_pCtx, 0))
          dwResult = WaitForRCC(dwRqId, m_dwCommandTimeout);
       else
          dwResult = ERR_IO_FAILURE;
