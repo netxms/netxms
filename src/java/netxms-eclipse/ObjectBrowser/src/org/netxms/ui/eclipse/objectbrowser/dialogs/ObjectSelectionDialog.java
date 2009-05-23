@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.objectbrowser;
+package org.netxms.ui.eclipse.objectbrowser.dialogs;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +21,10 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
+import org.netxms.client.NXCObject;
+import org.netxms.ui.eclipse.objectbrowser.Activator;
+import org.netxms.ui.eclipse.objectbrowser.ObjectList;
+import org.netxms.ui.eclipse.objectbrowser.ObjectTree;
 
 /**
  * @author Victor
@@ -32,24 +36,17 @@ public class ObjectSelectionDialog extends Dialog
 	private ObjectList objectList;
 	protected CTabFolder tabFolder;
 
+	private NXCObject[] rootObjects;
 	private boolean treeActive = true;
 
 	/**
 	 * @param parentShell
 	 */
-	public ObjectSelectionDialog(Shell parentShell)
+	public ObjectSelectionDialog(Shell parentShell, NXCObject[] rootObjects)
 	{
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
-	}
-
-	/**
-	 * @param parentShell
-	 */
-	public ObjectSelectionDialog(IShellProvider parentShell)
-	{
-		super(parentShell);
-		setShellStyle(getShellStyle() | SWT.RESIZE);
+		this.rootObjects = rootObjects;
 	}
 
 	/*
@@ -93,7 +90,7 @@ public class ObjectSelectionDialog extends Dialog
 		tabFolder = new CTabFolder(dialogArea, SWT.BOTTOM | SWT.FLAT | SWT.MULTI);
 
 		// Object tree
-		objectTree = new ObjectTree(tabFolder, SWT.NONE, ObjectTree.CHECKBOXES);
+		objectTree = new ObjectTree(tabFolder, SWT.NONE, ObjectTree.CHECKBOXES, rootObjects);
 		CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
 		tabItem.setText("Tree");
 		tabItem.setControl(objectTree);

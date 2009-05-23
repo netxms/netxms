@@ -9,7 +9,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.netxms.client.*;
-import org.netxms.ui.eclipse.objectbrowser.ObjectSelectionDialog;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 
 public class BindObject implements IObjectActionDelegate
 {
@@ -36,7 +36,7 @@ public class BindObject implements IObjectActionDelegate
 	 */
 	public void run(IAction action)
 	{
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell);
+		ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, null);
 		dlg.open();
 		if (dlg.getReturnCode() == Window.OK)
 		{

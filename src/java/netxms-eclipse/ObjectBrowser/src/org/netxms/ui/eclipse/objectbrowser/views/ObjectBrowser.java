@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.objectbrowser;
+package org.netxms.ui.eclipse.objectbrowser.views;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.ui.eclipse.objectbrowser.ObjectTree;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 
 
@@ -201,7 +202,7 @@ public class ObjectBrowser extends ViewPart
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
-		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.NONE);
+		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.NONE, null);
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);

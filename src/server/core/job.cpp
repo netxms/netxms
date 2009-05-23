@@ -150,7 +150,8 @@ THREAD_RESULT THREAD_CALL ServerJob::WorkerThreadStarter(void *arg)
 	}
 	else
 	{
-		job->changeStatus(JOB_FAILED);
+		if (job->m_status != JOB_CANCELLED)
+			job->changeStatus(JOB_FAILED);
 	}
 	job->m_workerThread = INVALID_THREAD_HANDLE;
 

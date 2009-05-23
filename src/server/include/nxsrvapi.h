@@ -342,6 +342,8 @@ public:
    BOOL IsConnected(void) { return m_bIsConnected; }
 	int GetProtocolVersion(void) { return m_nProtocolVersion; }
 
+	SOCKET GetSocket() { return m_hSocket; }
+
    ARP_CACHE *GetArpCache(void);
    INTERFACE_LIST *GetInterfaceList(void);
    ROUTING_TABLE *GetRoutingTable(void);

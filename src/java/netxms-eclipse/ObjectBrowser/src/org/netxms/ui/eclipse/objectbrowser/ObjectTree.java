@@ -48,7 +48,7 @@ public class ObjectTree extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	public ObjectTree(Composite parent, int style, int options)
+	public ObjectTree(Composite parent, int style, int options, NXCObject[] rootObjects)
 	{
 		super(parent, style);
 		
@@ -58,7 +58,7 @@ public class ObjectTree extends Composite
 		NXCSession session = NXMCSharedData.getInstance().getSession();
 
 		objectTree = new TreeViewer(this, SWT.VIRTUAL | SWT.SINGLE | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
-		objectTree.setContentProvider(new ObjectTreeContentProvider());
+		objectTree.setContentProvider(new ObjectTreeContentProvider(rootObjects));
 		objectTree.setLabelProvider(new WorkbenchLabelProvider());
 		objectTree.setComparator(new ObjectTreeComparator());
 		filter = new ObjectTreeFilter();
