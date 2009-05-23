@@ -24,7 +24,6 @@ import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsoleConstants;
-import org.eclipse.ui.console.IConsoleView;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 
 public class NXMCActionBarAdvisor extends ActionBarAdvisor
@@ -71,7 +70,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 						{
 							try
 							{
-								IConsoleView view = (IConsoleView)page.showView(IConsoleConstants.ID_CONSOLE_VIEW);
+								page.showView(IConsoleConstants.ID_CONSOLE_VIEW);
 							}
 							catch(PartInitException e)
 							{

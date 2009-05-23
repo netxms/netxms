@@ -144,7 +144,7 @@ public class ObjectSelectionDialog extends Dialog
 		if (control == objectTree)
 		{
 			treeActive = true;
-			final Tree tree = objectTree.getTreeControl();
+			//final Tree tree = objectTree.getTreeControl();
 		}
 		else if (control == objectList)
 		{
@@ -183,7 +183,7 @@ public class ObjectSelectionDialog extends Dialog
 			final TreeItem[] selection = tree.getSelection();
 			for(int i = 0; i < selection.length; i++)
 			{
-				TreeItem item = selection[i];
+				//TreeItem item = selection[i];
 			}
 		}
 		else

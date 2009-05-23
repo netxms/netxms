@@ -185,7 +185,7 @@ public class HistoryGraph extends ViewPart
 
 		for(int i = 0; i < data.length; i++)
 		{
-			final TimeSeries  series = new TimeSeries("First", Second.class);
+			final TimeSeries  series = new TimeSeries("First");
 			NXCDCIDataRow rows[] = data[i].getValues();
 			for(int j = 0; j < rows.length; j++)
 			{
