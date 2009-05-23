@@ -411,7 +411,7 @@ DWORD NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, DWORD *pdwI
 
 DWORD NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg)
 {
-   DWORD id, dwResult = RCC_INVALID_USER_ID;
+   DWORD id, fields, dwResult = RCC_INVALID_USER_ID;
 	int i;
 
 	id = msg->GetVariableLong(VID_USER_ID);
@@ -424,12 +424,16 @@ DWORD NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg)
       {
 			TCHAR name[MAX_USER_NAME];
 
-			msg->GetVariableStr(VID_USER_NAME, name, MAX_USER_NAME);
-         if (!IsValidObjectName(name))
-         {
-            dwResult = RCC_INVALID_OBJECT_NAME;
-            break;
-         }
+			fields = msg->GetVariableLong(VID_FIELDS);
+			if (fields & USER_MODIFY_LOGIN_NAME)
+			{
+				msg->GetVariableStr(VID_USER_NAME, name, MAX_USER_NAME);
+				if (!IsValidObjectName(name))
+				{
+					dwResult = RCC_INVALID_OBJECT_NAME;
+					break;
+				}
+			}
 
 			m_users[i]->modifyFromMessage(msg);
          SendUserDBUpdate(USER_DB_MODIFY, id, m_users[i]);

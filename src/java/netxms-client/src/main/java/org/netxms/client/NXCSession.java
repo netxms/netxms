@@ -23,7 +23,7 @@ public class NXCSession
 {
 	// Various public constants
 	public static final int DEFAULT_CONN_PORT = 4701;
-	public static final int CLIENT_PROTOCOL_VERSION = 19;
+	public static final int CLIENT_PROTOCOL_VERSION = 20;
 	
 	// Authentication types
 	public static final int AUTH_TYPE_PASSWORD = 0;
@@ -123,6 +123,16 @@ public class NXCSession
 	public static final int RCC_UNKNOWN_VARIABLE        = 81;
 	public static final int RCC_RESOURCE_NOT_AVAILABLE  = 82;
 	public static final int RCC_JOB_CANCEL_FAILED       = 83;
+	
+	// User object fields
+	public static final int USER_MODIFY_LOGIN_NAME      = 0x00000001;
+	public static final int USER_MODIFY_DESCRIPTION     = 0x00000002;
+	public static final int USER_MODIFY_FULL_NAME       = 0x00000004;
+	public static final int USER_MODIFY_FLAGS           = 0x00000008;
+	public static final int USER_MODIFY_ACCESS_RIGHTS   = 0x00000010;
+	public static final int USER_MODIFY_MEMBERS         = 0x00000020;
+	public static final int USER_MODIFY_CERT_MAPPING    = 0x00000040;
+	public static final int USER_MODIFY_AUTH_METHOD     = 0x00000080;
 	
 	// Private constants
 	private static final int CLIENT_CHALLENGE_SIZE = 256;
@@ -743,6 +753,12 @@ public class NXCSession
 			serverTimeZone = response.getVariableAsString(NXCPCodes.VID_TIMEZONE);
 			serverChallenge = response.getVariableAsBinary(NXCPCodes.VID_CHALLENGE);
 			
+			// Setup encryption if required
+			if (connUseEncryption)
+			{
+				/* TODO: implement encryption setup */
+			}
+			
 			// Login to server
 			request = newMessage(NXCPCodes.CMD_LOGIN);
 			request.setVariable(NXCPCodes.VID_LOGIN_NAME, connLoginName);
@@ -1277,7 +1293,6 @@ public class NXCSession
 		sendMessage(msg);
 		
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
-		
 		return response.getVariableAsInt64(NXCPCodes.VID_USER_ID);
 	}
 	
@@ -1353,12 +1368,24 @@ public class NXCSession
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public void modifyUserDBObject(NXCUserDBObject object) throws IOException, NXCException
+	public void modifyUserDBObject(final NXCUserDBObject object, final int fields) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_USER);
+		msg.setVariableInt32(NXCPCodes.VID_FIELDS, fields);
 		object.fillMessage(msg);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Modify user database object
+	 * @param user User data
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void modifyUserDBObject(final NXCUserDBObject object) throws IOException, NXCException
+	{
+		modifyUserDBObject(object, 0x7FFFFFFF);
 	}
 	
 	/**
@@ -1573,15 +1600,7 @@ public class NXCSession
 		}
 		
 		sendMessage(msg);
-		NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId(),
-		                                      commandTimeout * 10);  // Object creation could take long time
-
-		int rcc = response.getVariableAsInteger(NXCPCodes.VID_RCC);
-		if (rcc != NXCSession.RCC_SUCCESS)
-		{
-			throw new NXCException(rcc);
-		}
-		
+		NXCPMessage response = waitForRCC(msg.getMessageId());
 		return response.getVariableAsInt64(NXCPCodes.VID_OBJECT_ID);
 	}
 	

@@ -245,4 +245,31 @@ public abstract class NXCUserDBObject
 	{
 		return super.clone();
 	}
+	
+	/**
+	 * Check if object is disabled
+	 * @return true if object is disabled
+	 */
+	public boolean isDisabled()
+	{
+		return ((flags & DISABLED) == DISABLED) ? true : false;
+	}
+	
+	/**
+	 * Check if password should be changed at next logon
+	 * @return true if password should be changed at next logon
+	 */
+	public boolean isPasswordChangeNeeded()
+	{
+		return ((flags & CHANGE_PASSWORD) == CHANGE_PASSWORD) ? true : false;
+	}
+	
+	/**
+	 * Check if password change is forbidden
+	 * @return true if password change is forbidden
+	 */
+	public boolean isPasswordChangeForbidden()
+	{
+		return ((flags & CANNOT_CHANGE_PASSWORD) == CANNOT_CHANGE_PASSWORD) ? true : false;
+	}
 }

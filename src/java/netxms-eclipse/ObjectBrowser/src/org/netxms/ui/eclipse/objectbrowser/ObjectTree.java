@@ -19,6 +19,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
@@ -58,7 +59,7 @@ public class ObjectTree extends Composite
 
 		objectTree = new TreeViewer(this, SWT.VIRTUAL | SWT.SINGLE | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
 		objectTree.setContentProvider(new ObjectTreeContentProvider());
-		objectTree.setLabelProvider(new ObjectTreeLabelProvider());
+		objectTree.setLabelProvider(new WorkbenchLabelProvider());
 		objectTree.setComparator(new ObjectTreeComparator());
 		filter = new ObjectTreeFilter();
 		objectTree.addFilter(filter);

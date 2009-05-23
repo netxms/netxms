@@ -66,4 +66,13 @@
       </objectContribution>
    </extension>
 
+  <extension
+     point="org.eclipse.core.runtime.adapters">
+        <factory 
+           class="org.netxms.ui.eclipse.objectbrowser.ObjectAdapterFactory" 
+           adaptableType="org.netxms.client.NXCObject">
+          <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
+        </factory>
+  </extension>
+
 </plugin>

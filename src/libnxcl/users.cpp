@@ -173,6 +173,11 @@ DWORD LIBNXCL_EXPORTABLE NXCUnlockUserDB(NXC_SESSION hSession)
 
 DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_SESSION hSession, NXC_USER *pUserInfo)
 {
+	return NXCModifyUserEx(hSession, pUserInfo, 0xFFFFFFFF);
+}
+
+DWORD LIBNXCL_EXPORTABLE NXCModifyUserEx(NXC_SESSION hSession, NXC_USER *pUserInfo, DWORD dwFields)
+{
    CSCPMessage msg;
    DWORD i, dwId, dwRqId;
 
@@ -181,6 +186,7 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyUser(NXC_SESSION hSession, NXC_USER *pUserInfo
    // Fill in request
    msg.SetCode(CMD_UPDATE_USER);
    msg.SetId(dwRqId);
+	msg.SetVariable(VID_FIELDS, dwFields);
    msg.SetVariable(VID_USER_ID, pUserInfo->dwId);
    msg.SetVariable(VID_USER_NAME, pUserInfo->szName);
    msg.SetVariable(VID_USER_DESCRIPTION, pUserInfo->szDescription);

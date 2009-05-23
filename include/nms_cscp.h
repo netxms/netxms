@@ -819,6 +819,7 @@ typedef struct
 #define VID_JOB_PROGRESS            ((DWORD)334)
 #define VID_FAILURE_MESSAGE         ((DWORD)335)
 #define VID_POLICY_TYPE             ((DWORD)336)
+#define VID_FIELDS                  ((DWORD)337)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

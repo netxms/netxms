@@ -38,7 +38,7 @@ public class General extends PropertyPage
 	private NXCSession session;
 	
 	/**
-	 * 
+	 * Default constructor
 	 */
 	public General()
 	{
@@ -55,8 +55,6 @@ public class General extends PropertyPage
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		object = (NXCUserDBObject)getElement().getAdapter(NXCUserDBObject.class);
-		if (object == null)	// Paranoid check
-			return dialogArea;
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -64,7 +62,7 @@ public class General extends PropertyPage
       
       // Object ID
       WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, "Object ID",
-                                     Long.toString(object.getId()), null);
+                                     Integer.toHexString((int)object.getId()), null);
       
 		// Object name
       initialName = new String(object.getName());
@@ -123,11 +121,15 @@ public class General extends PropertyPage
 					initialFullName = newFullName;
 					initialDescription = newDescription;
 					
+					int fields = NXCSession.USER_MODIFY_LOGIN_NAME | NXCSession.USER_MODIFY_DESCRIPTION;
 					object.setName(newName);
 					object.setDescription(newDescription);
 					if (object instanceof NXCUser)
+					{
 						((NXCUser)object).setFullName(newFullName);
-					session.modifyUserDBObject(object);
+						fields |= NXCSession.USER_MODIFY_FULL_NAME;
+					}
+					session.modifyUserDBObject(object, fields);
 					
 					status = Status.OK_STATUS;
 				}

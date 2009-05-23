@@ -20,6 +20,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
@@ -58,7 +59,7 @@ public class ObjectList extends Composite
 
 		objectList = new TableViewer(this, SWT.SINGLE | SWT.FULL_SELECTION | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
 		objectList.setContentProvider(new ArrayContentProvider());
-		objectList.setLabelProvider(new ObjectTreeLabelProvider());
+		objectList.setLabelProvider(new WorkbenchLabelProvider());
 		objectList.setComparator(new ObjectTreeComparator());
 		filter = new ObjectListFilter();
 		objectList.addFilter(filter);

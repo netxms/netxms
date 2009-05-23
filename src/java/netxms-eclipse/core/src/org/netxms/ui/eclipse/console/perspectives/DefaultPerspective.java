@@ -21,6 +21,5 @@ public class DefaultPerspective implements IPerspectiveFactory
 		layout.setEditorAreaVisible(false);
 		layout.addView("org.netxms.ui.eclipse.objectbrowser.view.object_browser", IPageLayout.LEFT, 0, "");
 		layout.addView("org.netxms.ui.eclipse.alarmviewer.view.alarm_browser", IPageLayout.RIGHT, 0.25f, "org.netxms.ui.eclipse.objectbrowser.view.object_browser");
-		layout.addView("org.netxms.ui.eclipse.jobmonitor.view.job_monitor", IPageLayout.BOTTOM, 0.80f, "org.netxms.ui.eclipse.alarmviewer.view.alarm_browser");
 	}
 }

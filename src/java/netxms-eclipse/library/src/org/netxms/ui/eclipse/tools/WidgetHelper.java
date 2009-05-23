@@ -37,8 +37,10 @@ public class WidgetHelper
 		Composite group = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = INNER_SPACING;
+		layout.horizontalSpacing = 0;
 		layout.marginTop = 0;
 		layout.marginBottom = 0;
+		layout.marginWidth = 0;
 		group.setLayout(layout);
 
 		if (layoutData != null)

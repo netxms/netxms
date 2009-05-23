@@ -128,11 +128,15 @@ void UserDatabaseObject::fillMessage(CSCPMessage *msg)
 
 void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
 {
-	DWORD flags;
+	DWORD flags, fields;
 
-   msg->GetVariableStr(VID_USER_DESCRIPTION, m_description, MAX_USER_DESCR);
-   msg->GetVariableStr(VID_USER_NAME, m_name, MAX_USER_NAME);
-   flags = msg->GetVariableShort(VID_USER_FLAGS);
+	fields = msg->GetVariableLong(VID_FIELDS);
+	DbgPrintf(5, _T("UserDatabaseObject::modifyFromMessage(): id=%d fields=%08X"), m_id, fields);
+
+	if (fields & USER_MODIFY_DESCRIPTION)
+	   msg->GetVariableStr(VID_USER_DESCRIPTION, m_description, MAX_USER_DESCR);
+	if (fields & USER_MODIFY_LOGIN_NAME)
+	   msg->GetVariableStr(VID_USER_NAME, m_name, MAX_USER_NAME);
 
 	// Update custom attributes only if VID_NUM_CUSTOM_ATTRIBUTES exist -
 	// older client versions may not be aware of custom attributes
@@ -151,16 +155,20 @@ void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
 		}
 	}
 
-	if (m_id != 0)
+	if ((m_id != 0) && (fields & USER_MODIFY_ACCESS_RIGHTS))
 		m_systemRights = msg->GetVariableLong(VID_USER_SYS_RIGHTS);
 
-	// Modify only UF_DISABLED and UF_CHANGE_PASSWORD flags from message
-   // Ignore DISABLED flag for superuser and "everyone" group
-   m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD);
-   if ((m_id == 0) || (m_id == GROUP_EVERYONE))
-      m_flags |= flags & UF_CHANGE_PASSWORD;
-   else
-      m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD);
+	if (fields & USER_MODIFY_FLAGS)
+	{
+	   flags = msg->GetVariableShort(VID_USER_FLAGS);
+		// Modify only UF_DISABLED and UF_CHANGE_PASSWORD flags from message
+		// Ignore DISABLED flag for superuser and "everyone" group
+		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD);
+		if ((m_id == 0) || (m_id == GROUP_EVERYONE))
+			m_flags |= flags & UF_CHANGE_PASSWORD;
+		else
+			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD);
+	}
 
 	m_flags |= UF_MODIFIED;
 }
@@ -480,11 +488,18 @@ void User::modifyFromMessage(CSCPMessage *msg)
 {
 	UserDatabaseObject::modifyFromMessage(msg);
 
-	msg->GetVariableStr(VID_USER_FULL_NAME, m_fullName, MAX_USER_FULLNAME);
-   m_authMethod = msg->GetVariableShort(VID_AUTH_METHOD);
-	m_certMappingMethod = msg->GetVariableShort(VID_CERT_MAPPING_METHOD);
-	safe_free(m_certMappingData);
-	m_certMappingData = msg->GetVariableStr(VID_CERT_MAPPING_DATA);
+	DWORD fields = msg->GetVariableLong(VID_FIELDS);
+
+	if (fields & USER_MODIFY_FULL_NAME)
+		msg->GetVariableStr(VID_USER_FULL_NAME, m_fullName, MAX_USER_FULLNAME);
+	if (fields & USER_MODIFY_AUTH_METHOD)
+	   m_authMethod = msg->GetVariableShort(VID_AUTH_METHOD);
+	if (fields & USER_MODIFY_CERT_MAPPING)
+	{
+		m_certMappingMethod = msg->GetVariableShort(VID_CERT_MAPPING_METHOD);
+		safe_free(m_certMappingData);
+		m_certMappingData = msg->GetVariableStr(VID_CERT_MAPPING_DATA);
+	}
 }
 
 
@@ -751,12 +766,16 @@ void Group::fillMessage(CSCPMessage *msg)
 void Group::modifyFromMessage(CSCPMessage *msg)
 {
 	int i;
-	DWORD varId;
+	DWORD varId, fields;
 
 	UserDatabaseObject::modifyFromMessage(msg);
 
-   m_memberCount = msg->GetVariableLong(VID_NUM_MEMBERS);
-   m_members = (DWORD *)realloc(m_members, sizeof(DWORD) * m_memberCount);
-   for(i = 0, varId = VID_GROUP_MEMBER_BASE; i < m_memberCount; i++, varId++)
-      m_members[i] = msg->GetVariableLong(varId);
+	fields = msg->GetVariableLong(VID_FIELDS);
+	if (fields & USER_MODIFY_MEMBERS)
+	{
+		m_memberCount = msg->GetVariableLong(VID_NUM_MEMBERS);
+		m_members = (DWORD *)realloc(m_members, sizeof(DWORD) * m_memberCount);
+		for(i = 0, varId = VID_GROUP_MEMBER_BASE; i < m_memberCount; i++, varId++)
+			m_members[i] = msg->GetVariableLong(varId);
+	}
 }
