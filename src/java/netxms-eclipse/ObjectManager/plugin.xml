@@ -58,4 +58,34 @@
         </page>
   </extension>
 
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.bind"
+            objectClass="org.netxms.client.NXCContainer">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.BindObject"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObject"
+               label="Bind..."
+               menubarPath="objectmgmt">
+         </action>
+      </objectContribution>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.bind"
+            objectClass="org.netxms.client.NXCServiceRoot">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.BindObject"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObject"
+               label="Bind..."
+               menubarPath="objectmgmt">
+         </action>
+      </objectContribution>
+   </extension>
+
 </plugin>

@@ -51,21 +51,6 @@
       </key>
    </extension>
 
-   <extension
-         point="org.eclipse.ui.popupMenus">
-      <objectContribution
-            id="org.netxms.ui.eclipse.objectbrowser.actions.popup.object.bind"
-            objectClass="org.netxms.client.NXCObject">
-         <action
-               class="org.netxms.ui.eclipse.objectbrowser.actions.BindObject"
-               enablesFor="1"
-               id="org.netxms.ui.eclipse.objectbrowser.popupActions.BindObject"
-               label="Bind..."
-               menubarPath="objectmgmt">
-         </action>
-      </objectContribution>
-   </extension>
-
   <extension
      point="org.eclipse.core.runtime.adapters">
         <factory 

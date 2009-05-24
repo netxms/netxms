@@ -321,7 +321,6 @@ src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Ob
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectTreeComparator.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectTreeContentProvider.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectTreeFilter.java -text
-src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/actions/BindObject.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/actions/OpenObjectBrowser.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/ObjectSelectionDialog.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/views/ObjectBrowser.java -text
@@ -331,6 +330,7 @@ src/java/netxms-eclipse/ObjectManager/plugin.xml -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/Activator.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/AttrListLabelProvider.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/AttrViewerComparator.java -text
+src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/actions/BindObject.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/AttributeEditDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/AutoApply.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/AutoBind.java -text

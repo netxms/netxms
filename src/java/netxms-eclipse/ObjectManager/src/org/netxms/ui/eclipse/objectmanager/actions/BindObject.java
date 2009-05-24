@@ -1,4 +1,4 @@
-package org.netxms.ui.eclipse.objectbrowser.actions;
+package org.netxms.ui.eclipse.objectmanager.actions;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
