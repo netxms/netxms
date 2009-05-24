@@ -23,6 +23,7 @@ import org.netxms.client.NXCObject;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.ObjectList;
 import org.netxms.ui.eclipse.objectbrowser.ObjectTree;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
  * @author Victor
@@ -35,6 +36,7 @@ public class ObjectSelectionDialog extends Dialog
 	protected CTabFolder tabFolder;
 
 	private long[] rootObjects;
+	private long[] selectedObjects;
 	private boolean treeActive = true;
 
 	/**
@@ -139,8 +141,10 @@ public class ObjectSelectionDialog extends Dialog
 		if (control == objectTree)
 		{
 			treeActive = true;
-			TreeItem[] selection = objectTree.getTreeControl().getSelection();
-			System.out.println("Selection size: " + Integer.toString(selection.length));
+			Long[] objects = objectTree.getCheckedObjects();
+			selectedObjects = new long[objects.length];
+			for(int i = 0; i < objects.length; i++)
+				selectedObjects[i] = objects[i].longValue();
 		}
 		else if (control == objectList)
 		{
@@ -168,10 +172,11 @@ public class ObjectSelectionDialog extends Dialog
 	 * Retrieve selected objects
 	 * @return
 	 */
-	public List<Long> getSelectedObjects()
+	public NXCObject[] getSelectedObjects()
 	{
-		List<Long> ret = new ArrayList<Long>(0);
-
-		return ret;
+		if (selectedObjects == null)
+			return new NXCObject[0];
+		
+		return NXMCSharedData.getInstance().getSession().findMultipleObjects(selectedObjects);
 	}
 }

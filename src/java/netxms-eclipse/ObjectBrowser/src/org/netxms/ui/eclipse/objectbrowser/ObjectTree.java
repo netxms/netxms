@@ -3,6 +3,9 @@
  */
 package org.netxms.ui.eclipse.objectbrowser;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -46,6 +49,7 @@ public class ObjectTree extends Composite
 	private Label filterLabel;
 	private Text filterText;
 	private ObjectTreeFilter filter;
+	private Set<Long> checkedObjects = new HashSet<Long>(0);
 	
 	/**
 	 * @param parent
@@ -116,6 +120,11 @@ public class ObjectTree extends Composite
 				boolean isChecked = item.getChecked();
 				checkItems(item, isChecked);
 				checkPath(item.getParentItem(), isChecked, false);
+				Long id = ((NXCObject)item.getData()).getObjectId();
+				if (isChecked)
+					checkedObjects.add(id);
+				else
+					checkedObjects.remove(id);
 			}
 		});
 		
@@ -233,5 +242,14 @@ public class ObjectTree extends Composite
 	public void setFilter(final String text)
 	{
 		filterText.setText(text);
+	}
+
+
+	/**
+	 * @return IDs of objects checked in the tree
+	 */
+	public Long[] getCheckedObjects()
+	{
+		return checkedObjects.toArray(new Long[checkedObjects.size()]);
 	}
 }

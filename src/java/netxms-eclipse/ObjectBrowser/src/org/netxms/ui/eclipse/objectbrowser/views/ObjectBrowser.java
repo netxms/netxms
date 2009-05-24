@@ -3,8 +3,6 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.views;
 
-import java.util.ArrayList;
-
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -20,8 +18,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.NXCObject;
-import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.objectbrowser.ObjectTree;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
