@@ -1004,6 +1004,8 @@ public:
 
 	BOOL IsSuitableForNode(Node *node);
 	BOOL IsAutoBindEnabled() { return m_bindFilter != NULL; }
+
+	void setAutoBindFilter(const TCHAR *script);
 };
 
 
@@ -1238,7 +1240,7 @@ struct CONTAINER_CATEGORY
 
 void ObjectsInit(void);
 
-void NetObjInsert(NetObj *pObject, BOOL bNewObject);
+void NXCORE_EXPORTABLE NetObjInsert(NetObj *pObject, BOOL bNewObject);
 void NetObjDeleteFromIndexes(NetObj *pObject);
 void NetObjDelete(NetObj *pObject);
 
