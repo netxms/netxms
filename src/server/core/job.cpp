@@ -43,12 +43,14 @@ ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, DWORD node)
 	m_lastStatusChange = time(NULL);
 	m_autoCancelDelay = 0;
 	m_remoteNode = node;
+	m_resolvedObject = FindObjectById(m_remoteNode);
 	m_progress = 0;
 	m_failureMessage = NULL;
 	m_owningQueue = NULL;
 	m_workerThread = INVALID_THREAD_HANDLE;
 	m_lastNotification = 0;
 	m_notificationLock = MutexCreate();
+	m_blockNextJobsOnFailure = false;
 }
 
 
@@ -84,6 +86,9 @@ void ServerJob::sendNotification(ClientSession *session, void *arg)
 
 void ServerJob::notifyClients(bool isStatusChange)
 {
+	if (m_resolvedObject == NULL)
+		return;
+
 	time_t t = time(NULL);
 	if (!isStatusChange && (t - m_lastNotification < 3))
 		return;	// Don't send progress notifications often then every 3 seconds
@@ -92,9 +97,7 @@ void ServerJob::notifyClients(bool isStatusChange)
 	MutexLock(m_notificationLock, INFINITE);
 	m_notificationMessage.SetCode(CMD_JOB_CHANGE_NOTIFICATION);
 	fillMessage(&m_notificationMessage);
-	m_resolvedObject = FindObjectById(m_remoteNode);
-	if (m_resolvedObject != NULL)
-		EnumerateClientSessions(ServerJob::sendNotification, this);
+	EnumerateClientSessions(ServerJob::sendNotification, this);
 	MutexUnlock(m_notificationLock);
 }
 
@@ -252,5 +255,8 @@ void ServerJob::fillMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
 	msg->SetVariable(VID_JOB_STATUS, (WORD)m_status);
 	msg->SetVariable(VID_JOB_PROGRESS, (WORD)m_progress);
-	msg->SetVariable(VID_FAILURE_MESSAGE, CHECK_NULL(m_failureMessage));
+	if (m_status == JOB_FAILED)
+		msg->SetVariable(VID_FAILURE_MESSAGE, m_failureMessage != NULL ? m_failureMessage : _T("Internal error"));
+	else
+		msg->SetVariable(VID_FAILURE_MESSAGE, CHECK_NULL_EX(m_failureMessage));
 }

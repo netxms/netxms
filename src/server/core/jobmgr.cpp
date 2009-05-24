@@ -106,9 +106,20 @@ THREAD_RESULT THREAD_CALL JobManagerThread(void *arg)
 {
 	DbgPrintf(2, _T("Job Manager worker thread started"));
 
-	while(!SleepAndCheckForShutdown(2))
+	while(!SleepAndCheckForShutdown(10))
 	{
 		DbgPrintf(7, _T("Job Manager: checking queues"));
+
+		RWLockReadLock(g_rwlockIdIndex, INFINITE);
+		for(DWORD i = 0; i < g_dwIdIndexSize; i++)
+		{
+			if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
+			{
+				ServerJobQueue *queue = ((Node *)g_pIndexById[i].pObject)->getJobQueue();
+				queue->cleanup();
+			}
+		}
+		RWLockUnlock(g_rwlockIdIndex);
 	}
 
 	DbgPrintf(2, _T("Job Manager worker thread stopped"));

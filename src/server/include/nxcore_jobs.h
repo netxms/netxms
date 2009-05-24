@@ -65,6 +65,7 @@ private:
 	NetObj *m_resolvedObject;
 	MUTEX m_notificationLock;
 	CSCPMessage m_notificationMessage;
+	bool m_blockNextJobsOnFailure;
 
 	static DWORD s_freeId;
 	static THREAD_RESULT THREAD_CALL WorkerThreadStarter(void *);
@@ -90,6 +91,9 @@ public:
 
 	void setAutoCancelDelay(int delay) { m_autoCancelDelay = delay; }
 	int getAutoCancelDelay() { return m_autoCancelDelay; }
+
+	void setBlockNextJobsOnFailure(bool flag) { m_blockNextJobsOnFailure = flag; }
+	bool isBlockNextJobsOnFailure() { return m_blockNextJobsOnFailure; }
 
 	DWORD getId() { return m_id; }
 	const TCHAR *getType() { return m_type; }
@@ -124,6 +128,7 @@ public:
 	void add(ServerJob *job);
 	bool cancel(DWORD jobId);
 	void runNext();
+	void cleanup();
 
 	ServerJob *findJob(DWORD jobId);
 

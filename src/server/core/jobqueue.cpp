@@ -84,7 +84,8 @@ void ServerJobQueue::runNext()
 
 	MutexLock(m_accessMutex, INFINITE);
 	for(i = 0; i < m_jobCount; i++)
-		if (m_jobList[i]->getStatus() != JOB_ON_HOLD)
+		if ((m_jobList[i]->getStatus() != JOB_ON_HOLD) &&
+			 ((m_jobList[i]->getStatus() != JOB_FAILED) || m_jobList[i]->isBlockNextJobsOnFailure()))
 			break;
 	if ((i < m_jobCount) && (m_jobList[i]->getStatus() == JOB_PENDING))
 		m_jobList[i]->start();
@@ -153,6 +154,41 @@ bool ServerJobQueue::cancel(DWORD jobId)
 
 	runNext();
 	return success;
+}
+
+
+//
+// Clean up queue
+//
+
+void ServerJobQueue::cleanup()
+{
+	int i;
+	time_t now;
+
+	MutexLock(m_accessMutex, INFINITE);
+	now = time(NULL);
+	for(i = 0; i < m_jobCount; i++)
+	{
+		if (m_jobList[i]->getStatus() == JOB_FAILED)
+		{
+			int delay = m_jobList[i]->getAutoCancelDelay();
+			if ((delay > 0) && (now - m_jobList[i]->getLastStatusChange() >= delay))
+			{
+				DbgPrintf(4, _T("Failed job %d deleted from queue (node=%d, type=%s, description=\"%s\")"),
+							 m_jobList[i]->getId(), m_jobList[i]->getRemoteNode(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
+
+				// Delete and remove from list
+				m_jobList[i]->cancel();
+				delete m_jobList[i];
+				m_jobCount--;
+				memmove(&m_jobList[i], &m_jobList[i + 1], sizeof(ServerJob *) * (m_jobCount - i));
+			}
+		}
+	}
+	MutexUnlock(m_accessMutex);
+
+	runNext();
 }
 
 
