@@ -8,6 +8,7 @@ import java.net.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.*;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -970,14 +971,12 @@ public class NXCSession
 		subscribe(CHANNEL_OBJECTS);
 	}
 	
-	
 	/**
 	 * Find NetXMS object by it's identifier.
 	 * 
 	 * @param id Object identifier
 	 * @return Object with given ID or null if object cannot be found
 	 */
-	
 	public NXCObject findObjectById(final long id)
 	{
 		NXCObject obj;
@@ -989,6 +988,27 @@ public class NXCSession
 		return obj;
 	}
 
+	/**
+	 * Find multiple NetXMS objects by identifiers
+	 * @param idList array of object identifiers
+	 * @return array of found objects
+	 */
+	public NXCObject[] findMultipleObjects(final long[] idList)
+	{
+		ArrayList<NXCObject> result = new ArrayList<NXCObject>(idList.length);
+		
+		synchronized(objectList)
+		{
+			for(int i = 0; i < idList.length; i++)
+			{
+				final NXCObject object = objectList.get(idList[i]);
+				if (object != null)
+					result.add(object);
+			}
+		}
+
+		return result.toArray(new NXCObject[result.size()]);
+	}
 	
 	/**
 	 * Get list of top-level objects.

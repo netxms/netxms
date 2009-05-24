@@ -156,7 +156,6 @@ public class ObjectBrowser extends ViewPart
 		mgr.add(new PropertyDialogAction(getSite(), objectTree.getTreeViewer()));
 		*/
 	}
-
 	
 	/**
 	 * Create view menu
@@ -197,7 +196,6 @@ public class ObjectBrowser extends ViewPart
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
    }
 
-   
 	/**
 	 * 
 	 */
@@ -208,23 +206,11 @@ public class ObjectBrowser extends ViewPart
 		parent.setLayout(formLayout);
 		
 		// Read custom root objects
-		NXCObject[] rootObjects = null;
+		long[] rootObjects = null;
 		Object value = NXMCSharedData.getInstance().getProperty("ObjectBrowser.rootObjects");
 		if ((value != null) && (value instanceof long[]))
 		{
-			NXCSession session = NXMCSharedData.getInstance().getSession();
-			long[] idList = (long[])value;
-			ArrayList<NXCObject> objectList = new ArrayList<NXCObject>(idList.length);
-			
-			for(int i = 0; i < idList.length; i++)
-			{
-				final NXCObject object = session.findObjectById(idList[i]);
-				if (object != null)
-					objectList.add(object);
-			}
-
-			if (objectList.size() > 0)
-				rootObjects = objectList.toArray(new NXCObject[objectList.size()]);
+			rootObjects = (long[])value;
 		}
 		
 		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.NONE, rootObjects);
@@ -243,7 +229,6 @@ public class ObjectBrowser extends ViewPart
 	{
 		objectTree.setFocus();
 	}
-	
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()

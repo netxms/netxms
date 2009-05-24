@@ -16,9 +16,9 @@ import org.netxms.client.*;
 public class ObjectTreeContentProvider extends TreeNodeContentProvider
 {
 	private NXCSession session = null;
-	private NXCObject[] rootObjects;
+	private long[] rootObjects;
 	
-	ObjectTreeContentProvider(NXCObject[] rootObjects)
+	ObjectTreeContentProvider(long[] rootObjects)
 	{
 		super();
 		this.rootObjects = rootObjects;
@@ -39,9 +39,11 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	@Override
 	public Object[] getElements(Object inputElement)
 	{
-		if (rootObjects != null)
-			return rootObjects;
-		return (session != null) ? session.getTopLevelObjects() : new NXCObject[0];
+		if (session != null)
+		{
+			return (rootObjects != null) ? session.findMultipleObjects(rootObjects) : session.getTopLevelObjects();
+		}
+		return new NXCObject[0];
 	}
 
 	/* (non-Javadoc)

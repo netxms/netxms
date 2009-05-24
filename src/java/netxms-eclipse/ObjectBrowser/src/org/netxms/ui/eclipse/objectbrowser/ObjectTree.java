@@ -51,7 +51,7 @@ public class ObjectTree extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	public ObjectTree(Composite parent, int style, int options, NXCObject[] rootObjects)
+	public ObjectTree(Composite parent, int style, int options, long[] rootObjects)
 	{
 		super(parent, style);
 		

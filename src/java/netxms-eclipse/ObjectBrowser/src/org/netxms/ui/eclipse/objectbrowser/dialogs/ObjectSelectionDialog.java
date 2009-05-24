@@ -34,13 +34,13 @@ public class ObjectSelectionDialog extends Dialog
 	private ObjectList objectList;
 	protected CTabFolder tabFolder;
 
-	private NXCObject[] rootObjects;
+	private long[] rootObjects;
 	private boolean treeActive = true;
 
 	/**
 	 * @param parentShell
 	 */
-	public ObjectSelectionDialog(Shell parentShell, NXCObject[] rootObjects)
+	public ObjectSelectionDialog(Shell parentShell, long[] rootObjects)
 	{
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
