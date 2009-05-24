@@ -531,6 +531,10 @@ Group::Group(DB_RESULT hr, int row)
 			for(int i = 0; i < m_memberCount; i++)
 				m_members[i] = DBGetFieldULong(hResult, i, 0);
 		}
+		else
+		{
+			m_members = NULL;
+		}
 		DBFreeResult(hResult);
 	}
 
@@ -774,8 +778,15 @@ void Group::modifyFromMessage(CSCPMessage *msg)
 	if (fields & USER_MODIFY_MEMBERS)
 	{
 		m_memberCount = msg->GetVariableLong(VID_NUM_MEMBERS);
-		m_members = (DWORD *)realloc(m_members, sizeof(DWORD) * m_memberCount);
-		for(i = 0, varId = VID_GROUP_MEMBER_BASE; i < m_memberCount; i++, varId++)
-			m_members[i] = msg->GetVariableLong(varId);
+		if (m_memberCount > 0)
+		{
+			m_members = (DWORD *)realloc(m_members, sizeof(DWORD) * m_memberCount);
+			for(i = 0, varId = VID_GROUP_MEMBER_BASE; i < m_memberCount; i++, varId++)
+				m_members[i] = msg->GetVariableLong(varId);
+		}
+		else
+		{
+			safe_free_and_null(m_members);
+		}
 	}
 }
