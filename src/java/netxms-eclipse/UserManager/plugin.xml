@@ -58,10 +58,6 @@
              </instanceof>
           </enabledWhen>
         </page>
-  </extension>
-
-  <extension
-     point = "org.eclipse.ui.propertyPages">
         <page
            id="org.netxms.ui.eclipse.usermanager.propertypages.Authentication"
            name="Authentication"
@@ -71,6 +67,16 @@
                   value="org.netxms.client.NXCUser">
              </instanceof>
           </enabledWhen>
+        </page>
+        <page
+              class="org.netxms.ui.eclipse.usermanager.propertypages.Members"
+              id="org.netxms.ui.eclipse.usermanager.propertypages.Memebres"
+              name="Members">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.NXCUserGroup">
+              </instanceof>
+           </enabledWhen>
         </page>
   </extension>
 
