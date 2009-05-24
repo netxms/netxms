@@ -95,7 +95,7 @@ public class UserManager extends ViewPart
 		public UserLabelProvider()
 		{
 			userImage = Activator.getImageDescriptor("icons/user.png").createImage();
-			groupImage = Activator.getImageDescriptor("icons/user.png").createImage();
+			groupImage = Activator.getImageDescriptor("icons/group.png").createImage();
 		}
 		
 		@Override

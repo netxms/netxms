@@ -3,6 +3,9 @@
  */
 package org.netxms.ui.eclipse.shared;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.netxms.client.NXCSession;
 
 /**
@@ -15,6 +18,7 @@ public class NXMCSharedData
 {
 	private static NXMCSharedData instance = new NXMCSharedData();
 	private NXCSession session = null;
+	private Map<String, Object> consoleProperties = new HashMap<String, Object>(0);
 	
 	/**
 	 * Private constructor
@@ -52,5 +56,27 @@ public class NXMCSharedData
 	public void setSession(NXCSession session)
 	{
 		this.session = session;
+	}
+	
+	/**
+	 * Get value of console property
+	 * 
+	 * @param name name of the property
+	 * @return property value or null
+	 */
+	public Object getProperty(final String name)
+	{
+		return consoleProperties.get(name);
+	}
+	
+	/**
+	 * Set value of console property
+	 * 
+	 * @param name name of the property
+	 * @param value new property value
+	 */
+	public void setProperty(final String name, final Object value)
+	{
+		consoleProperties.put(name, value);
 	}
 }

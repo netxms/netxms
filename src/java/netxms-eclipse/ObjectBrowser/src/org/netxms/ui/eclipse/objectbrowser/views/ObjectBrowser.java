@@ -3,6 +3,8 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.views;
 
+import java.util.ArrayList;
+
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -18,8 +20,11 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.NXCObject;
+import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.objectbrowser.ObjectTree;
 import org.netxms.ui.eclipse.shared.IActionConstants;
+import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 
 /**
@@ -202,7 +207,27 @@ public class ObjectBrowser extends ViewPart
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
-		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.NONE, null);
+		// Read custom root objects
+		NXCObject[] rootObjects = null;
+		Object value = NXMCSharedData.getInstance().getProperty("ObjectBrowser.rootObjects");
+		if ((value != null) && (value instanceof long[]))
+		{
+			NXCSession session = NXMCSharedData.getInstance().getSession();
+			long[] idList = (long[])value;
+			ArrayList<NXCObject> objectList = new ArrayList<NXCObject>(idList.length);
+			
+			for(int i = 0; i < idList.length; i++)
+			{
+				final NXCObject object = session.findObjectById(idList[i]);
+				if (object != null)
+					objectList.add(object);
+			}
+
+			if (objectList.size() > 0)
+				rootObjects = objectList.toArray(new NXCObject[objectList.size()]);
+		}
+		
+		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.NONE, rootObjects);
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);
@@ -211,7 +236,7 @@ public class ObjectBrowser extends ViewPart
 		objectTree.setLayoutData(fd);
 		
 		createMenu();
-		createPopupMenu();	
+		createPopupMenu();
 	}
 
 	public void setFocus() 
