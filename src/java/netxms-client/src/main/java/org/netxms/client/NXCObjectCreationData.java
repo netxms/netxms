@@ -32,6 +32,7 @@ public class NXCObjectCreationData
 	 * Constructor.
 	 * 
 	 * @param objectClass Class of new object (one of NXCObject.OBJECT_xxx constants)
+	 * @see NXCObject
 	 * @param name Name of new object
 	 * @param parentId Parent object ID
 	 */
