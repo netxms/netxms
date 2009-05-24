@@ -138,10 +138,13 @@ bool ServerJobQueue::cancel(DWORD jobId)
 				DbgPrintf(4, _T("Job %d cancelled (node=%d, type=%s, description=\"%s\")"),
 							 m_jobList[i]->getId(), m_jobList[i]->getRemoteNode(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
 
-				// Delete and remove from list
-				delete m_jobList[i];
-				m_jobCount--;
-				memmove(&m_jobList[i], &m_jobList[i + 1], sizeof(ServerJob *) * (m_jobCount - i));
+				if (m_jobList[i]->getStatus() != JOB_CANCEL_PENDING)
+				{
+					// Delete and remove from list
+					delete m_jobList[i];
+					m_jobCount--;
+					memmove(&m_jobList[i], &m_jobList[i + 1], sizeof(ServerJob *) * (m_jobCount - i));
+				}
 				success = true;
 			}
 			break;
@@ -154,7 +157,7 @@ bool ServerJobQueue::cancel(DWORD jobId)
 
 
 //
-// Find job b y ID
+// Find job by ID
 //
 
 ServerJob *ServerJobQueue::findJob(DWORD jobId)

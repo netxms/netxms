@@ -322,7 +322,7 @@ protected:
    DWORD Authenticate(BOOL bProxyData);
    DWORD SetupProxyConnection(void);
    DWORD GetIpAddr(void) { return ntohl(m_dwAddr); }
-	DWORD PrepareFileDownload(const TCHAR *fileName, DWORD rqId, void (*downloadProgressCallback)(size_t, void *), void *cbArg);
+	DWORD PrepareFileDownload(const TCHAR *fileName, DWORD rqId, bool append, void (*downloadProgressCallback)(size_t, void *), void *cbArg);
 
    virtual void PrintMsg(const TCHAR *pszFormat, ...);
    virtual void OnTrap(CSCPMessage *pMsg);
@@ -359,7 +359,8 @@ public:
    DWORD GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize);
    DWORD UpdateConfigFile(const TCHAR *pszConfig);
    DWORD EnableTraps(void);
-	CSCPMessage *CustomRequest(CSCPMessage *pRequest, const TCHAR *recvFile = NULL, void (*downloadProgressCallback)(size_t, void *) = NULL, void *cbArg = NULL);
+	CSCPMessage *CustomRequest(CSCPMessage *pRequest, const TCHAR *recvFile = NULL, bool appendFile = false,
+	                           void (*downloadProgressCallback)(size_t, void *) = NULL, void *cbArg = NULL);
 
    DWORD GetNumDataLines(void) { return m_dwNumDataLines; }
    const TCHAR *GetDataLine(DWORD dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }

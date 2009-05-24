@@ -1,7 +1,9 @@
 package org.netxms.ui.eclipse.serverjobmanager.views;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -21,6 +23,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
@@ -86,12 +89,16 @@ public class ServerJobManager extends ViewPart
 			super();
 			
 			statusTexts.put(NXCServerJob.ACTIVE, "Active");
+			statusTexts.put(NXCServerJob.CANCEL_PENDING, "Cancel pending");
+			statusTexts.put(NXCServerJob.CANCELLED, "Cancelled");
 			statusTexts.put(NXCServerJob.COMPLETED, "Completed");
 			statusTexts.put(NXCServerJob.FAILED, "Failed");
 			statusTexts.put(NXCServerJob.ON_HOLD, "On hold");
 			statusTexts.put(NXCServerJob.PENDING, "Pending");
 
 			statusImages.put(NXCServerJob.ACTIVE, Activator.getImageDescriptor("icons/active.png").createImage());
+			statusImages.put(NXCServerJob.CANCEL_PENDING, Activator.getImageDescriptor("icons/cancel_pending.png").createImage());
+			statusImages.put(NXCServerJob.CANCELLED, Activator.getImageDescriptor("icons/cancel.png").createImage());
 			statusImages.put(NXCServerJob.COMPLETED, Activator.getImageDescriptor("icons/completed.png").createImage());
 			statusImages.put(NXCServerJob.FAILED, Activator.getImageDescriptor("icons/failed.png").createImage());
 			statusImages.put(NXCServerJob.ON_HOLD, Activator.getImageDescriptor("icons/hold.png").createImage());
@@ -130,12 +137,8 @@ public class ServerJobManager extends ViewPart
 		@Override
 		public void dispose()
 		{
-			Iterator<Image> it = statusImages.values().iterator();
-			while(it.hasNext())
-			{
-				Image image = it.next();
+			for(final Image image : statusImages.values())
 				image.dispose();
-			}
 			
 			super.dispose();
 		}
@@ -225,7 +228,27 @@ public class ServerJobManager extends ViewPart
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)
 					{
+						// Remember current selection
+						IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+						Object[] selectedObjects = selection.toArray();
+						
 						viewer.setInput(jobList);
+						
+						// Build new list of selected jobs - add object to selection if
+						// object with same id was selected before
+						List<NXCServerJob> selectedJobs = new ArrayList<NXCServerJob>(selectedObjects.length);
+						for(int i = 0; i < selectedObjects.length; i++)
+						{
+							for(int j = 0; j < jobList.length; j++)
+							{
+								if (((NXCServerJob)selectedObjects[i]).getId() == jobList[j].getId())
+								{
+									selectedJobs.add(jobList[j]);
+									break;
+								}
+							}
+						}
+						viewer.setSelection(new StructuredSelection(selectedJobs));
 						return Status.OK_STATUS;
 					}
 				}.schedule();
@@ -395,7 +418,6 @@ public class ServerJobManager extends ViewPart
 						actionRefresh.run();
 						return status;
 					}
-
 					
 					/* (non-Javadoc)
 					 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)

@@ -16,9 +16,12 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCListener;
@@ -64,6 +67,57 @@ public class ObjectTree extends Composite
 		filter = new ObjectTreeFilter();
 		objectTree.addFilter(filter);
 		objectTree.setInput(session);
+		
+		objectTree.getControl().addListener(SWT.Selection, new Listener() {
+			void checkItems(TreeItem item, boolean isChecked)
+			{
+				item.setGrayed(false);
+				item.setChecked(isChecked);
+				TreeItem[] items = item.getItems();
+				for(int i = 0; i < items.length; i++)
+					checkItems(items[i], isChecked);
+			}
+
+			void checkPath(TreeItem item, boolean checked, boolean grayed)
+			{
+				if (item == null)
+					return;
+				if (grayed)
+				{
+					checked = true;
+				}
+				else
+				{
+					int index = 0;
+					TreeItem[] items = item.getItems();
+					while(index < items.length)
+					{
+						TreeItem child = items[index];
+						if (child.getGrayed() || checked != child.getChecked())
+						{
+							checked = grayed = true;
+							break;
+						}
+						index++;
+					}
+				}
+				item.setChecked(checked);
+				item.setGrayed(grayed);
+				checkPath(item.getParentItem(), checked, grayed);
+			}
+
+			@Override
+			public void handleEvent(Event event)
+			{
+				if (event.detail != SWT.CHECK)
+					return;
+				
+				TreeItem item = (TreeItem)event.item;
+				boolean isChecked = item.getChecked();
+				checkItems(item, isChecked);
+				checkPath(item.getParentItem(), isChecked, false);
+			}
+		});
 		
 		filterArea = new Composite(this, SWT.NONE);
 		

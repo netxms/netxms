@@ -20,6 +20,8 @@ public class NXCServerJob
 	public static final int ON_HOLD = 2;
 	public static final int COMPLETED = 3;
 	public static final int FAILED = 4;	
+	public static final int CANCELLED = 5;
+	public static final int CANCEL_PENDING = 6;
 	
 	private long id;
 	private long nodeId;

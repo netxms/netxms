@@ -141,7 +141,8 @@ public class ObjectSelectionDialog extends Dialog
 		if (control == objectTree)
 		{
 			treeActive = true;
-			//final Tree tree = objectTree.getTreeControl();
+			TreeItem[] selection = objectTree.getTreeControl().getSelection();
+			System.out.println("Selection size: " + Integer.toString(selection.length));
 		}
 		else if (control == objectList)
 		{
@@ -166,27 +167,12 @@ public class ObjectSelectionDialog extends Dialog
 	}
 
 	/**
-	 * TODO: REWRITE FROM SCRATCH
-	 * 
+	 * Retrieve selected objects
 	 * @return
 	 */
 	public List<Long> getSelectedObjects()
 	{
 		List<Long> ret = new ArrayList<Long>(0);
-
-		if (treeActive)
-		{
-			final Tree tree = objectTree.getTreeControl();
-			final TreeItem[] selection = tree.getSelection();
-			for(int i = 0; i < selection.length; i++)
-			{
-				//TreeItem item = selection[i];
-			}
-		}
-		else
-		{
-			ret.add(2L);
-		}
 
 		return ret;
 	}

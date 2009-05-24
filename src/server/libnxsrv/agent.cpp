@@ -325,7 +325,14 @@ void AgentConnection::ReceiverThread(void)
 
    // Close socket and mark connection as disconnected
    Lock();
-   if (iErr == 0)
+	if (m_hCurrFile != -1)
+	{
+		close(m_hCurrFile);
+		m_hCurrFile = -1;
+		OnFileDownload(FALSE);
+	}
+	
+	if (iErr == 0)
       shutdown(m_hSocket, SHUT_RDWR);
    closesocket(m_hSocket);
    m_hSocket = -1;
@@ -514,6 +521,13 @@ connect_cleanup:
 void AgentConnection::Disconnect(void)
 {
    Lock();
+	if (m_hCurrFile != -1)
+	{
+		close(m_hCurrFile);
+		m_hCurrFile = -1;
+		OnFileDownload(FALSE);
+	}
+	
    if (m_hSocket != -1)
    {
       shutdown(m_hSocket, SHUT_RDWR);
@@ -1448,7 +1462,7 @@ DWORD AgentConnection::EnableTraps(void)
 // Send custom request to agent
 //
 
-CSCPMessage *AgentConnection::CustomRequest(CSCPMessage *pRequest, const TCHAR *recvFile,
+CSCPMessage *AgentConnection::CustomRequest(CSCPMessage *pRequest, const TCHAR *recvFile, bool appendFile,
 														  void (*downloadProgressCallback)(size_t, void *), void *cbArg)
 {
    DWORD dwRqId, rcc;
@@ -1458,7 +1472,7 @@ CSCPMessage *AgentConnection::CustomRequest(CSCPMessage *pRequest, const TCHAR *
    pRequest->SetId(dwRqId);
 	if (recvFile != NULL)
 	{
-		rcc = PrepareFileDownload(recvFile, dwRqId, downloadProgressCallback, cbArg);
+		rcc = PrepareFileDownload(recvFile, dwRqId, appendFile, downloadProgressCallback, cbArg);
 		if (rcc != ERR_SUCCESS)
 		{
 			// Create fake response message
@@ -1509,7 +1523,7 @@ CSCPMessage *AgentConnection::CustomRequest(CSCPMessage *pRequest, const TCHAR *
 // Prepare for file upload
 //
 
-DWORD AgentConnection::PrepareFileDownload(const TCHAR *fileName, DWORD rqId,
+DWORD AgentConnection::PrepareFileDownload(const TCHAR *fileName, DWORD rqId, bool append,
 														 void (*downloadProgressCallback)(size_t, void *), void *cbArg)
 {
 	if (m_hCurrFile != -1)
@@ -1517,7 +1531,9 @@ DWORD AgentConnection::PrepareFileDownload(const TCHAR *fileName, DWORD rqId,
 
 	nx_strncpy(m_currentFileName, fileName, MAX_PATH);
 	ConditionReset(m_condFileDownload);
-	m_hCurrFile = open(fileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, O_RDWR);
+	m_hCurrFile = open(fileName, O_CREAT | (append ? 0 : O_TRUNC) | O_WRONLY | O_BINARY, O_RDWR);
+	if (append)
+		lseek(m_hCurrFile, 0, SEEK_END);
 	m_dwDownloadRequestId = rqId;
 	m_downloadProgressCallback = downloadProgressCallback;
 	m_downloadProgressCallbackArg = cbArg;
@@ -1531,8 +1547,8 @@ DWORD AgentConnection::PrepareFileDownload(const TCHAR *fileName, DWORD rqId,
 
 void AgentConnection::OnFileDownload(BOOL success)
 {
-	if (!success)
-		_tremove(m_currentFileName);
+/*	if (!success)
+		_tremove(m_currentFileName);*/
 	m_fileDownloadSucceeded = success;
 	ConditionSet(m_condFileDownload);
 }

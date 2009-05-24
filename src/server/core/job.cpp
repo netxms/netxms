@@ -150,12 +150,11 @@ THREAD_RESULT THREAD_CALL ServerJob::WorkerThreadStarter(void *arg)
 	}
 	else
 	{
-		if (job->m_status != JOB_CANCELLED)
-			job->changeStatus(JOB_FAILED);
+		job->changeStatus((job->m_status == JOB_CANCEL_PENDING) ? JOB_CANCELLED : JOB_FAILED);
 	}
 	job->m_workerThread = INVALID_THREAD_HANDLE;
 
-	DbgPrintf(4, _T("Job %d finished, status=%s"), job->m_id, (job->m_status == JOB_COMPLETED) ? _T("COMPLETED") : _T("FAILED"));
+	DbgPrintf(4, _T("Job %d finished, status=%s"), job->m_id, (job->m_status == JOB_COMPLETED) ? _T("COMPLETED") : ((job->m_status == JOB_CANCELLED) ? _T("CANCELLED") : _T("FAILED")));
 
 	if (job->m_owningQueue != NULL)
 		job->m_owningQueue->jobCompleted(job);
@@ -183,9 +182,13 @@ bool ServerJob::cancel()
 	switch(m_status)
 	{
 		case JOB_COMPLETED:
+		case JOB_CANCEL_PENDING:
 			return false;
 		case JOB_ACTIVE:
-			return onCancel();
+			if (!onCancel())
+				return false;
+			changeStatus(JOB_CANCEL_PENDING);
+			return true;
 		default:
 			changeStatus(JOB_CANCELLED);
 			return true;
