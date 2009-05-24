@@ -468,8 +468,8 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, const TCH
    hFile = _topen(pszFile, O_RDONLY | O_BINARY);
    if (hFile != -1)
    {
-	   if (lseek(hFile, offset, offset < 0 ? SEEK_END : SEEK_SET) == 0)
-	   {
+		if (lseek(hFile, offset, offset < 0 ? SEEK_END : SEEK_SET) != -1)
+		{
 #else
    hFile = _tfopen(pszFile, _T("rb"));
    if (hFile != NULL)
@@ -477,66 +477,62 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, DWORD dwId, const TCH
 	   if (fseek(hFile, offset, offset < 0 ? SEEK_END : SEEK_SET) == 0)
 	   {
 #endif
-		  // Allocate message and prepare it's header
-		  pMsg = (CSCP_MESSAGE *)malloc(FILE_BUFFER_SIZE + CSCP_HEADER_SIZE + 8);
-		  pMsg->dwId = htonl(dwId);
-		  pMsg->wCode = htons(CMD_FILE_DATA);
-		  pMsg->wFlags = htons(MF_BINARY);
+			// Allocate message and prepare it's header
+			pMsg = (CSCP_MESSAGE *)malloc(FILE_BUFFER_SIZE + CSCP_HEADER_SIZE + 8);
+			pMsg->dwId = htonl(dwId);
+			pMsg->wCode = htons(CMD_FILE_DATA);
+			pMsg->wFlags = htons(MF_BINARY);
 
-		  while(1)
-		  {
+			while(1)
+			{
 #ifndef UNDER_CE
-			 iBytes = read(hFile, pMsg->df, FILE_BUFFER_SIZE);
-			 if (iBytes < 0)
-				break;
+				iBytes = read(hFile, pMsg->df, FILE_BUFFER_SIZE);
+				if (iBytes < 0)
+					break;
 #else
-			 iBytes = fread(pMsg->df, 1, FILE_BUFFER_SIZE, hFile);
-			 if (ferror(hFile))
-				{
-				break;	// Read error
-				}
+				iBytes = fread(pMsg->df, 1, FILE_BUFFER_SIZE, hFile);
+				if (ferror(hFile))
+					break;	// Read error
 #endif
 
-			 // Message should be aligned to 8 bytes boundary
-			 dwPadding = (8 - (((DWORD)iBytes + CSCP_HEADER_SIZE) % 8)) & 7;
-			 pMsg->dwSize = htonl((DWORD)iBytes + CSCP_HEADER_SIZE + dwPadding);
-			 pMsg->dwNumVars = htonl((DWORD)iBytes);   // dwNumVars contains actual data size for binary message
-			 if (iBytes < FILE_BUFFER_SIZE)
-				pMsg->wFlags |= htons(MF_END_OF_FILE);
+				// Message should be aligned to 8 bytes boundary
+				dwPadding = (8 - (((DWORD)iBytes + CSCP_HEADER_SIZE) % 8)) & 7;
+				pMsg->dwSize = htonl((DWORD)iBytes + CSCP_HEADER_SIZE + dwPadding);
+				pMsg->dwNumVars = htonl((DWORD)iBytes);   // dwNumVars contains actual data size for binary message
+				if (iBytes < FILE_BUFFER_SIZE)
+					pMsg->wFlags |= htons(MF_END_OF_FILE);
 
-			 if (pCtx != NULL)
-			 {
-				pEnMsg = CSCPEncryptMessage(pCtx, pMsg);
-				if (pEnMsg != NULL)
+				if (pCtx != NULL)
 				{
-				   SendEx(hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0);
-				   free(pEnMsg);
-				}
-			 }
-			 else
-			 {
-				if (SendEx(hSocket, (char *)pMsg, (DWORD)iBytes + CSCP_HEADER_SIZE + dwPadding, 0) <= 0)
+					pEnMsg = CSCPEncryptMessage(pCtx, pMsg);
+					if (pEnMsg != NULL)
 					{
-						break;	// Send error
+						SendEx(hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0);
+						free(pEnMsg);
 					}
-			 }
+				}
+				else
+				{
+					if (SendEx(hSocket, (char *)pMsg, (DWORD)iBytes + CSCP_HEADER_SIZE + dwPadding, 0) <= 0)
+						break;	// Send error
+				}
 
-			 if (iBytes < FILE_BUFFER_SIZE)
-			 {
-				// End of file
-				bResult = TRUE;
-				break;
-			 }
-		  }
+				if (iBytes < FILE_BUFFER_SIZE)
+				{
+					// End of file
+					bResult = TRUE;
+					break;
+				}
+			}
 
-		  free(pMsg);
-	  }
+			free(pMsg);
+		}
 #ifndef UNDER_CE
-      close(hFile);
+		close(hFile);
 #else
-      fclose(hFile);
+		fclose(hFile);
 #endif
-   }
+	}
 
    // If file upload failed, send CMD_ABORT_FILE_TRANSFER
    if (!bResult)

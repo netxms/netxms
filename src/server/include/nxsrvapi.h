@@ -309,6 +309,7 @@ private:
 	BOOL m_fileDownloadSucceeded;
 	void (*m_downloadProgressCallback)(size_t, void *);
 	void *m_downloadProgressCallbackArg;
+	bool m_deleteFileOnDownloadFailure;
 
    void ReceiverThread(void);
    static THREAD_RESULT THREAD_CALL ReceiverThreadStarter(void *);
@@ -372,6 +373,7 @@ public:
                  int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);
    void SetPort(WORD wPort) { m_wPort = wPort; }
    void SetAuthData(int nMethod, const char *pszSecret) { m_iAuthMethod = nMethod; nx_strncpy(m_szSecret, pszSecret, MAX_SECRET_LENGTH); }
+	void setDeleteFileOnDownloadFailure(bool flag) { m_deleteFileOnDownloadFailure = flag; }
 };
 
 

@@ -85,8 +85,9 @@ void ServerJob::sendNotification(ClientSession *session, void *arg)
 void ServerJob::notifyClients(bool isStatusChange)
 {
 	time_t t = time(NULL);
-	if (!isStatusChange && (t - m_lastNotification < 10))
-		return;	// Don't send progress notifycations often then 10 seconds
+	if (!isStatusChange && (t - m_lastNotification < 3))
+		return;	// Don't send progress notifications often then every 3 seconds
+	m_lastNotification = t;
 
 	MutexLock(m_notificationLock, INFINITE);
 	m_notificationMessage.SetCode(CMD_JOB_CHANGE_NOTIFICATION);
@@ -150,11 +151,12 @@ THREAD_RESULT THREAD_CALL ServerJob::WorkerThreadStarter(void *arg)
 	}
 	else
 	{
-		job->changeStatus((job->m_status == JOB_CANCEL_PENDING) ? JOB_CANCELLED : JOB_FAILED);
+		if (job->m_status != JOB_CANCEL_PENDING)
+			job->changeStatus(JOB_FAILED);
 	}
 	job->m_workerThread = INVALID_THREAD_HANDLE;
 
-	DbgPrintf(4, _T("Job %d finished, status=%s"), job->m_id, (job->m_status == JOB_COMPLETED) ? _T("COMPLETED") : ((job->m_status == JOB_CANCELLED) ? _T("CANCELLED") : _T("FAILED")));
+	DbgPrintf(4, _T("Job %d finished, status=%s"), job->m_id, (job->m_status == JOB_COMPLETED) ? _T("COMPLETED") : ((job->m_status == JOB_CANCEL_PENDING) ? _T("CANCELLED") : _T("FAILED")));
 
 	if (job->m_owningQueue != NULL)
 		job->m_owningQueue->jobCompleted(job);

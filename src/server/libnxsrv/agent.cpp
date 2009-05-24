@@ -98,6 +98,7 @@ AgentConnection::AgentConnection()
    m_dwRecvTimeout = 420000;  // 7 minutes
    m_nProtocolVersion = NXCP_VERSION;
 	m_hCurrFile = -1;
+	m_deleteFileOnDownloadFailure = true;
 	m_condFileDownload = ConditionCreate(TRUE);
 }
 
@@ -141,6 +142,7 @@ AgentConnection::AgentConnection(DWORD dwAddr, WORD wPort,
    m_dwRecvTimeout = 420000;  // 7 minutes
    m_nProtocolVersion = NXCP_VERSION;
 	m_hCurrFile = -1;
+	m_deleteFileOnDownloadFailure = true;
 	m_condFileDownload = ConditionCreate(TRUE);
 }
 
@@ -293,7 +295,7 @@ void AgentConnection::ReceiverThread(void)
 					{
 						if (m_downloadProgressCallback != NULL)
 						{
-							m_downloadProgressCallback(lseek(m_hCurrFile, 0, SEEK_CUR), m_downloadProgressCallbackArg);
+							m_downloadProgressCallback(_tell(m_hCurrFile), m_downloadProgressCallbackArg);
 						}
 					}
             }
@@ -1497,7 +1499,8 @@ CSCPMessage *AgentConnection::CustomRequest(CSCPMessage *pRequest, const TCHAR *
 						if (!m_fileDownloadSucceeded)
 						{
 							msg->SetVariable(VID_RCC, ERR_IO_FAILURE);
-							remove(recvFile);
+							if (m_deleteFileOnDownloadFailure)
+								remove(recvFile);
 						}
 					}
 					else
@@ -1531,9 +1534,17 @@ DWORD AgentConnection::PrepareFileDownload(const TCHAR *fileName, DWORD rqId, bo
 
 	nx_strncpy(m_currentFileName, fileName, MAX_PATH);
 	ConditionReset(m_condFileDownload);
-	m_hCurrFile = open(fileName, O_CREAT | (append ? 0 : O_TRUNC) | O_WRONLY | O_BINARY, O_RDWR);
-	if (append)
-		lseek(m_hCurrFile, 0, SEEK_END);
+	m_hCurrFile = open(fileName, (append ? 0 : (O_CREAT | O_TRUNC)) | O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
+	if (m_hCurrFile == -1)
+	{
+		DbgPrintf(4, _T("AgentConnection::PrepareFileDownload(): cannot open file %s (%s); append=%d rqId=%d"),
+		          fileName, _tcserror(errno), append, rqId);
+	}
+	else 
+	{
+		if (append)
+			lseek(m_hCurrFile, 0, SEEK_END);
+	}
 	m_dwDownloadRequestId = rqId;
 	m_downloadProgressCallback = downloadProgressCallback;
 	m_downloadProgressCallbackArg = cbArg;
@@ -1547,8 +1558,8 @@ DWORD AgentConnection::PrepareFileDownload(const TCHAR *fileName, DWORD rqId, bo
 
 void AgentConnection::OnFileDownload(BOOL success)
 {
-/*	if (!success)
-		_tremove(m_currentFileName);*/
+	if (!success && m_deleteFileOnDownloadFailure)
+		_tremove(m_currentFileName);
 	m_fileDownloadSucceeded = success;
 	ConditionSet(m_condFileDownload);
 }
