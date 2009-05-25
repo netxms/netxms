@@ -35,7 +35,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
 		configurer.setShowCoolBar(true);
 		configurer.setShowStatusLine(true);
-		configurer.setTitle("NetXMS Management Console");
+		//configurer.setTitle("NetXMS Management Console");
 	}
 
 	/**
