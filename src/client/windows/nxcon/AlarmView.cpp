@@ -374,7 +374,7 @@ LRESULT CAlarmView::OnSetObject(WPARAM wParam, LPARAM lParam)
 void CAlarmView::OnContextMenu(CWnd* pWnd, CPoint point) 
 {
    int iItem;
-   UINT uFlags;
+   UINT uFlags = 0;
    CMenu *pMenu, *pToolsMenu;
    CPoint pt;
 

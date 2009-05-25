@@ -231,7 +231,7 @@ void CDesktopManager::OnContextMenu(CWnd* pWnd, CPoint point)
 {
    CMenu *pMenu;
    HTREEITEM hItem;
-   UINT uFlags;
+   UINT uFlags = 0;
    CPoint pt;
 
    pt = point;

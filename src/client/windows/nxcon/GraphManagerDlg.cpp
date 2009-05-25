@@ -173,7 +173,7 @@ void CGraphManagerDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 {
    CPoint pt;
    HTREEITEM hItem;
-   UINT uFlags;
+   UINT uFlags = 0;
 	RECT rect;
 	CMenu *pMenu;
 

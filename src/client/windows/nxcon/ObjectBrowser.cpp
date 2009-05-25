@@ -764,7 +764,7 @@ void CObjectBrowser::OnContextMenu(CWnd* pWnd, CPoint point)
    CPoint pt;
    DWORD dwTemp;
    HTREEITEM hItem;
-   UINT uFlags;
+   UINT uFlags = 0;
    CWnd *pWndPane, *pWndChild;
 	RECT rect;
    BOOL bMenuInserted = FALSE;

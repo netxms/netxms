@@ -532,7 +532,7 @@ void CScriptManager::OnContextMenu(CWnd* pWnd, CPoint point)
    if (m_nMode == MODE_TREE)
    {
       HTREEITEM hItem;
-      UINT uFlags;
+      UINT uFlags = 0;
       CPoint pt;
 
       pt = point;

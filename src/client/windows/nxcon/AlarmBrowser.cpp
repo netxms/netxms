@@ -487,7 +487,7 @@ int CAlarmBrowser::FindAlarmRecord(DWORD dwAlarmId)
 void CAlarmBrowser::OnContextMenu(CWnd *pWnd, CPoint point) 
 {
    int iItem;
-   UINT uFlags;
+   UINT uFlags = 0;
    CMenu *pMenu, *pToolsMenu;
    CPoint pt;
    CWnd *pChildWnd;
