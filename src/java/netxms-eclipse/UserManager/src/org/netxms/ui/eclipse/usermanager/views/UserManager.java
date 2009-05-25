@@ -50,6 +50,7 @@ import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.RefreshAction;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 import org.netxms.ui.eclipse.usermanager.Activator;
+import org.netxms.ui.eclipse.usermanager.dialogs.ChangePasswordDialog;
 import org.netxms.ui.eclipse.usermanager.dialogs.CreateObjectDialog;
 
 /**
@@ -604,7 +605,12 @@ public class UserManager extends ViewPart
 				if (firstElement instanceof org.netxms.client.NXCUser)
 				{
 					NXCUser user = (NXCUser) firstElement;
-					// do change password
+					final ChangePasswordDialog dialog = new ChangePasswordDialog(getSite().getShell());
+					if (dialog.open() == Window.OK)
+					{
+						System.out.println("New password: >" + dialog.getPassword() + "<");
+						// do change password
+					}
 				}
 			}
 

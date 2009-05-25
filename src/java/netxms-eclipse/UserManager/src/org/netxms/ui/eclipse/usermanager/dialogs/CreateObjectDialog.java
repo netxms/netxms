@@ -16,7 +16,7 @@ import org.netxms.ui.eclipse.shared.IUIConstants;
 
 /**
  * @author Victor
- *
+ * 
  */
 public class CreateObjectDialog extends Dialog
 {
@@ -25,42 +25,42 @@ public class CreateObjectDialog extends Dialog
 	private String loginName;
 	private boolean editAfterCreate;
 	private boolean isUser;
-	
+
 	public CreateObjectDialog(Shell parentShell, boolean isUser)
 	{
 		super(parentShell);
 		this.isUser = isUser;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
-		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
-		FillLayout layout = new FillLayout();
-      layout.type = SWT.VERTICAL;
-      layout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
-      layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
-      dialogArea.setLayout(layout);
-		
-      Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("Login name");
-      
-      textLogin = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
-      textLogin.setTextLimit(63);
-      textLogin.getShell().setMinimumSize(300, 0);
-      textLogin.setFocus();
-      
-      label = new Label(dialogArea, SWT.NONE);
-      label.setText("");
+		Composite dialogArea = (Composite) super.createDialogArea(parent);
 
-      checkEdit = new Button(dialogArea, SWT.CHECK);
-      checkEdit.setText("Define additional properties");
-      checkEdit.setSelection(true);
-      
+		FillLayout layout = new FillLayout();
+		layout.type = SWT.VERTICAL;
+		layout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
+		layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
+		dialogArea.setLayout(layout);
+
+		Label label = new Label(dialogArea, SWT.NONE);
+		label.setText("Login name");
+
+		textLogin = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
+		textLogin.setTextLimit(63);
+		textLogin.getShell().setMinimumSize(300, 0);
+		textLogin.setFocus();
+
+		label = new Label(dialogArea, SWT.NONE);
+		label.setText("");
+
+		checkEdit = new Button(dialogArea, SWT.CHECK);
+		checkEdit.setText("Define additional properties");
+		checkEdit.setSelection(true);
+
 		return dialogArea;
 	}
 
@@ -73,8 +73,7 @@ public class CreateObjectDialog extends Dialog
 		super.configureShell(newShell);
 		newShell.setText(isUser ? "Create New User" : "Create New Group");
 	}
-	
-	
+
 	/**
 	 * Get variable name
 	 * 
@@ -83,8 +82,7 @@ public class CreateObjectDialog extends Dialog
 	{
 		return loginName;
 	}
-	
-	
+
 	/**
 	 * Get variable value
 	 * 
@@ -94,7 +92,6 @@ public class CreateObjectDialog extends Dialog
 		return editAfterCreate;
 	}
 
-	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
 	 */
