@@ -602,14 +602,20 @@ public class UserManager extends ViewPart
 				final IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
 
 				final Object firstElement = selection.getFirstElement();
-				if (firstElement instanceof org.netxms.client.NXCUser)
+				if (firstElement instanceof NXCUser)
 				{
 					NXCUser user = (NXCUser) firstElement;
 					final ChangePasswordDialog dialog = new ChangePasswordDialog(getSite().getShell());
 					if (dialog.open() == Window.OK)
 					{
-						System.out.println("New password: >" + dialog.getPassword() + "<");
-						// do change password
+						try
+						{
+							session.setUserPassword(user.getId(), dialog.getPassword());
+						}
+						catch(Exception e)
+						{
+							MessageDialog.openError(getSite().getShell(), "Unable to change password", e.getMessage());
+						}
 					}
 				}
 			}
@@ -650,11 +656,18 @@ public class UserManager extends ViewPart
 	 * @param mgr
 	 *           Menu manager
 	 */
-	protected void fillContextMenu(IMenuManager mgr)
+	protected void fillContextMenu(final IMenuManager mgr)
 	{
 		mgr.add(actionEditUser);
 		mgr.add(actionDeleteUser);
-		mgr.add(actionChangePassword);
+
+		final IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+		final Object firstElement = selection.getFirstElement();
+		if (firstElement instanceof NXCUser)
+		{
+			mgr.add(actionChangePassword);
+		}
+
 		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}

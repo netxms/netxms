@@ -67,7 +67,7 @@ public class ChangePasswordDialog extends Dialog
 		final String password2 = textPassword2.getText();
 
 		final boolean ret;
-		if (password1.length() > 0 && password1.equals(password2))
+		if (password1.equals(password2))
 		{
 			ret = true;
 		}
@@ -84,19 +84,6 @@ public class ChangePasswordDialog extends Dialog
 	{
 		super.configureShell(newShell);
 		newShell.setText("Change password");
-	}
-
-	@Override
-	protected Button createButton(Composite parent, int id, String label, boolean defaultButton)
-	{
-		final Button button = super.createButton(parent, id, label, defaultButton);
-
-		if (id == OK)
-		{
-			button.setEnabled(false);
-		}
-
-		return button;
 	}
 
 	@Override
