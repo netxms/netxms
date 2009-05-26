@@ -2,6 +2,34 @@
 <?eclipse version="3.2"?>
 <plugin>
 
+  <extension
+     point = "org.eclipse.ui.propertyPages">
+        <page
+           id="org.netxms.ui.eclipse.policymanager.propertypages.Policy"
+           name="Policy"
+	       class="org.netxms.ui.eclipse.policymanager.propertypages.Policy">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.client.NXCAgentPolicy">
+             </instanceof>
+          </enabledWhen>
+        </page>
+  </extension>
+
+  <extension
+     point = "org.eclipse.ui.propertyPages">
+        <page
+           id="org.netxms.ui.eclipse.policymanager.propertypages.ConfigFile"
+           name="Configuration File"
+	       class="org.netxms.ui.eclipse.policymanager.propertypages.ConfigFile">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.client.NXCAgentPolicyConfig">
+             </instanceof>
+          </enabledWhen>
+        </page>
+  </extension>
+
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
@@ -27,6 +55,36 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.policymanager.popupActions.CreatePolicyGroup"
                label="Create policy group..."
+               menubarPath="objectcreation">
+         </action>
+      </objectContribution>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.createAgentPolicyConfig"
+            objectClass="org.netxms.client.NXCPolicyRoot">
+         <action
+               class="org.netxms.ui.eclipse.policymanager.actions.CreateAgentPolicyConfig"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.policymanager.popupActions.CreateAgentPolicyConfig"
+               label="Create agent policy (configuration file)..."
+               menubarPath="objectcreation">
+         </action>
+      </objectContribution>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.createAgentPolicyConfig"
+            objectClass="org.netxms.client.NXCPolicyGroup">
+         <action
+               class="org.netxms.ui.eclipse.policymanager.actions.CreateAgentPolicyConfig"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.policymanager.popupActions.CreateAgentPolicyConfig"
+               label="Create agent policy (configuration file)..."
                menubarPath="objectcreation">
          </action>
       </objectContribution>

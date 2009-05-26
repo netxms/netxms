@@ -76,7 +76,7 @@ AgentPolicy::~AgentPolicy()
 
 BOOL AgentPolicy::SavePolicyCommonProperties(DB_HANDLE hdb)
 {
-	TCHAR query[256];
+	TCHAR query[8192], *description;
 
 	SaveCommonProperties(hdb);
 
@@ -90,14 +90,16 @@ BOOL AgentPolicy::SavePolicyCommonProperties(DB_HANDLE hdb)
          isNewObject = false;
       DBFreeResult(hResult);
    }
+	description = EncodeSQLString(CHECK_NULL_EX(m_description));
    if (isNewObject)
-      _sntprintf(query, 256,
-                 _T("INSERT INTO ap_common (id,policy_type,version) VALUES (%d,%d,%d)"),
-                 m_dwId, m_policyType, m_version);
+      _sntprintf(query, 8192,
+                 _T("INSERT INTO ap_common (id,policy_type,version,description) VALUES (%d,%d,%d,'%s')"),
+                 m_dwId, m_policyType, m_version, description);
    else
-      _sntprintf(query, 256,
-                 _T("UPDATE ap_common SET policy_type=%d,version=%d WHERE id=%d"),
-                 m_policyType, m_version, m_dwId);
+      _sntprintf(query, 8192,
+                 _T("UPDATE ap_common SET policy_type=%d,version=%d,description='%s' WHERE id=%d"),
+                 m_policyType, m_version, description, m_dwId);
+	free(description);
    BOOL success = DBQuery(hdb, query);
 
    // Save access list
@@ -227,7 +229,7 @@ void AgentPolicy::CreateMessage(CSCPMessage *msg)
 	NetObj::CreateMessage(msg);
 	msg->SetVariable(VID_POLICY_TYPE, (WORD)m_policyType);
 	msg->SetVariable(VID_VERSION, m_version);
-	msg->SetVariable(VID_DESCRIPTION, m_description);
+	msg->SetVariable(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
 }
 
 

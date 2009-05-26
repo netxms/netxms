@@ -362,7 +362,10 @@ src/java/netxms-eclipse/PolicyManager/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/PolicyManager/build.properties -text
 src/java/netxms-eclipse/PolicyManager/plugin.xml -text
 src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/Activator.java -text
+src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/actions/CreateAgentPolicyConfig.java -text
 src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/actions/CreatePolicyGroup.java -text
+src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/propertypages/ConfigFile.java -text
+src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/propertypages/Policy.java -text
 src/java/netxms-eclipse/QuickMaps/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/QuickMaps/build.properties -text
 src/java/netxms-eclipse/QuickMaps/icons/node.png -text
