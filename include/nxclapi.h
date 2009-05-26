@@ -136,9 +136,9 @@ typedef void * NXC_SESSION;
 #define OBJECT_VPNCONNECTOR         12
 #define OBJECT_CONDITION            13
 #define OBJECT_CLUSTER			      14
-#define OBJECT_AGENTPOLICY          15
-#define OBJECT_POLICYGROUP          16
-#define OBJECT_POLICYROOT           17
+#define OBJECT_POLICYGROUP          15
+#define OBJECT_POLICYROOT           16
+#define OBJECT_AGENTPOLICY          17
 #define OBJECT_AGENTPOLICY_CONFIG   18
 
 
@@ -417,6 +417,7 @@ enum
 #define RCC_UNKNOWN_VARIABLE        ((DWORD)81)
 #define RCC_RESOURCE_NOT_AVAILABLE  ((DWORD)82)
 #define RCC_JOB_CANCEL_FAILED       ((DWORD)83)
+#define RCC_INVALID_POLICY_ID       ((DWORD)84)
 
 
 //

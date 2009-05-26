@@ -1,7 +1,7 @@
 /* $Id$ */
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@
 #ifndef _netxmsdb_h
 #define _netxmsdb_h
 
-//#define DB_FORMAT_VERSION   200
-#define DB_FORMAT_VERSION   92
+#define DB_FORMAT_VERSION   200
 
 #endif

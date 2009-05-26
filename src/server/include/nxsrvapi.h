@@ -325,6 +325,8 @@ protected:
    DWORD GetIpAddr(void) { return ntohl(m_dwAddr); }
 	DWORD PrepareFileDownload(const TCHAR *fileName, DWORD rqId, bool append, void (*downloadProgressCallback)(size_t, void *), void *cbArg);
 
+	DWORD generateRequestId() { return m_dwRequestId++; }
+
    virtual void PrintMsg(const TCHAR *pszFormat, ...);
    virtual void OnTrap(CSCPMessage *pMsg);
 	virtual void OnFileDownload(BOOL success);
@@ -341,16 +343,16 @@ public:
    BOOL Connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, DWORD *pdwError = NULL);
    void Disconnect(void);
    BOOL IsConnected(void) { return m_bIsConnected; }
-	int GetProtocolVersion(void) { return m_nProtocolVersion; }
+	int getProtocolVersion(void) { return m_nProtocolVersion; }
 
-	SOCKET GetSocket() { return m_hSocket; }
+	SOCKET getSocket() { return m_hSocket; }
 
    ARP_CACHE *GetArpCache(void);
    INTERFACE_LIST *GetInterfaceList(void);
    ROUTING_TABLE *GetRoutingTable(void);
    DWORD GetParameter(const TCHAR *pszParam, DWORD dwBufSize, TCHAR *pszBuffer);
    DWORD GetList(const TCHAR *pszParam);
-   DWORD Nop(void);
+   DWORD nop(void);
    DWORD ExecAction(const TCHAR *pszAction, int argc, TCHAR **argv);
    DWORD UploadFile(const TCHAR *pszFile);
    DWORD StartUpgrade(const TCHAR *pszPkgName);
@@ -358,15 +360,16 @@ public:
                              WORD wProto = 0, const TCHAR *pszRequest = NULL, const TCHAR *pszResponse = NULL);
    DWORD GetSupportedParameters(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
    DWORD GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize);
-   DWORD UpdateConfigFile(const TCHAR *pszConfig);
-   DWORD EnableTraps(void);
-	CSCPMessage *CustomRequest(CSCPMessage *pRequest, const TCHAR *recvFile = NULL, bool appendFile = false,
+   DWORD updateConfigFile(const TCHAR *pszConfig);
+   DWORD enableTraps(void);
+	CSCPMessage *customRequest(CSCPMessage *pRequest, const TCHAR *recvFile = NULL, bool appendFile = false,
 	                           void (*downloadProgressCallback)(size_t, void *) = NULL, void *cbArg = NULL);
 
    DWORD GetNumDataLines(void) { return m_dwNumDataLines; }
    const TCHAR *GetDataLine(DWORD dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }
 
-   void SetCommandTimeout(DWORD dwTimeout) { m_dwCommandTimeout = max(dwTimeout, 500); }
+   void setCommandTimeout(DWORD dwTimeout) { m_dwCommandTimeout = max(dwTimeout, 500); }
+	DWORD getCommandTimeout() { return m_dwCommandTimeout; }
    void SetRecvTimeout(DWORD dwTimeout) { m_dwRecvTimeout = max(dwTimeout, 10000); }
    void SetEncryptionPolicy(int iPolicy) { m_iEncryptionPolicy = iPolicy; }
    void SetProxy(DWORD dwAddr, WORD wPort = AGENT_LISTEN_PORT,

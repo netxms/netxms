@@ -300,6 +300,8 @@ public:
                      int iAuthMethod = AUTH_NONE, TCHAR *pszSecret = NULL) :
             AgentConnection(dwAddr, wPort, iAuthMethod, pszSecret) { }
    virtual ~AgentConnectionEx();
+
+	DWORD deployPolicy(AgentPolicy *policy);
 };
 
 
@@ -536,8 +538,9 @@ private:
 	void RegisterAgent(CSCPMessage *pRequest);
 	void GetServerFile(CSCPMessage *pRequest);
 	void TestDCITransformation(CSCPMessage *pRequest);
-	void SendJobList(DWORD dwRqId);
-	void CancelJob(CSCPMessage *pRequest);
+	void sendJobList(DWORD dwRqId);
+	void cancelJob(CSCPMessage *pRequest);
+	void deployAgentPolicy(CSCPMessage *pRequest);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

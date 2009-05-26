@@ -1208,6 +1208,13 @@ BOOL IsValidParentClass(int iChildClass, int iParentClass)
              (iChildClass == OBJECT_TEMPLATE))
             return TRUE;
          break;
+      case OBJECT_POLICYROOT:
+      case OBJECT_POLICYGROUP:
+         if ((iChildClass == OBJECT_POLICYGROUP) || 
+             (iChildClass == OBJECT_AGENTPOLICY) ||
+             (iChildClass == OBJECT_AGENTPOLICY_CONFIG))
+            return TRUE;
+         break;
       case OBJECT_NODE:
          if ((iChildClass == OBJECT_NETWORKSERVICE) ||
              (iChildClass == OBJECT_VPNCONNECTOR))

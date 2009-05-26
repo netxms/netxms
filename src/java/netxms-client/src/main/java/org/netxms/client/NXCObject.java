@@ -14,21 +14,25 @@ import org.netxms.base.*;
 public class NXCObject
 {
 	// Object classes
-	public static final int OBJECT_GENERIC        = 0;
-	public static final int OBJECT_SUBNET         = 1;
-	public static final int OBJECT_NODE           = 2;
-	public static final int OBJECT_INTERFACE      = 3;
-	public static final int OBJECT_NETWORK        = 4;
-	public static final int OBJECT_CONTAINER      = 5;
-	public static final int OBJECT_ZONE           = 6;
-	public static final int OBJECT_SERVICEROOT    = 7;
-	public static final int OBJECT_TEMPLATE       = 8;
-	public static final int OBJECT_TEMPLATEGROUP  = 9;
-	public static final int OBJECT_TEMPLATEROOT   = 10;
-	public static final int OBJECT_NETWORKSERVICE = 11;
-	public static final int OBJECT_VPNCONNECTOR   = 12;
-	public static final int OBJECT_CONDITION      = 13;
-	public static final int OBJECT_CLUSTER        = 14;
+	public static final int OBJECT_GENERIC            = 0;
+	public static final int OBJECT_SUBNET             = 1;
+	public static final int OBJECT_NODE               = 2;
+	public static final int OBJECT_INTERFACE          = 3;
+	public static final int OBJECT_NETWORK            = 4;
+	public static final int OBJECT_CONTAINER          = 5;
+	public static final int OBJECT_ZONE               = 6;
+	public static final int OBJECT_SERVICEROOT        = 7;
+	public static final int OBJECT_TEMPLATE           = 8;
+	public static final int OBJECT_TEMPLATEGROUP      = 9;
+	public static final int OBJECT_TEMPLATEROOT       = 10;
+	public static final int OBJECT_NETWORKSERVICE     = 11;
+	public static final int OBJECT_VPNCONNECTOR       = 12;
+	public static final int OBJECT_CONDITION          = 13;
+	public static final int OBJECT_CLUSTER            = 14;
+	public static final int OBJECT_POLICYGROUP        = 15;
+	public static final int OBJECT_POLICYROOT         = 16;
+	public static final int OBJECT_AGENTPOLICY        = 17;
+	public static final int OBJECT_AGENTPOLICY_CONFIG = 18;
 	
 	// Status codes
 	public static final int STATUS_NORMAL         = 0;

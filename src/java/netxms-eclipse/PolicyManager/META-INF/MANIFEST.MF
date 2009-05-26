@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: NXMS Policy Manager Plug-in
+Bundle-SymbolicName: org.netxms.ui.eclipse.policymanager;singleton:=true
+Bundle-Version: 1.0.0
+Bundle-Activator: org.netxms.ui.eclipse.policymanager.Activator
+Bundle-Vendor: netxms.org
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.netxms.ui.eclipse.library;bundle-version="1.0.0",
+ org.netxms.ui.eclipse.objectbrowser;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy

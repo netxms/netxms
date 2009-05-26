@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
          {
             AgentConnection conn(dwAddr, wPort, iAuthMethod, szSecret);
 
-            conn.SetCommandTimeout(dwTimeout);
+            conn.setCommandTimeout(dwTimeout);
             conn.SetEncryptionPolicy(iEncryptionPolicy);
             if (conn.Connect(pServerKey, bVerbose, &dwError))
             {

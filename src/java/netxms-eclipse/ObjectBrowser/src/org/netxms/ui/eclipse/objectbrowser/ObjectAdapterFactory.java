@@ -77,6 +77,13 @@ public class ObjectAdapterFactory implements IAdapterFactory
 								return Activator.getImageDescriptor("icons/template_group.png");
 							case NXCObject.OBJECT_TEMPLATE:
 								return Activator.getImageDescriptor("icons/template.png");
+							case NXCObject.OBJECT_POLICYROOT:
+								return Activator.getImageDescriptor("icons/policy_root.png");
+							case NXCObject.OBJECT_POLICYGROUP:
+								return Activator.getImageDescriptor("icons/policy_group.png");
+							case NXCObject.OBJECT_AGENTPOLICY:
+							case NXCObject.OBJECT_AGENTPOLICY_CONFIG:
+								return Activator.getImageDescriptor("icons/policy.png");
 							default:
 								return null;
 						}

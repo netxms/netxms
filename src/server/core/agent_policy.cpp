@@ -47,6 +47,20 @@ AgentPolicy::AgentPolicy(int type)
 
 
 //
+// Constructor for user-initiated object creation
+//
+
+AgentPolicy::AgentPolicy(const TCHAR *name, int type)
+            : NetObj()
+{
+	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
+	m_version = 0x00010000;
+	m_policyType = type;
+	m_description = NULL;
+}
+
+
+//
 // Destructor
 //
 
@@ -57,14 +71,12 @@ AgentPolicy::~AgentPolicy()
 
 
 //
-// Save to database
+// Save common policy properties to database
 //
 
-BOOL AgentPolicy::SaveToDB(DB_HANDLE hdb)
+BOOL AgentPolicy::SavePolicyCommonProperties(DB_HANDLE hdb)
 {
 	TCHAR query[256];
-
-	LockData();
 
 	SaveCommonProperties(hdb);
 
@@ -88,7 +100,6 @@ BOOL AgentPolicy::SaveToDB(DB_HANDLE hdb)
                  m_policyType, m_version, m_dwId);
    BOOL success = DBQuery(hdb, query);
 
-
    // Save access list
    SaveACLToDB(hdb);
 
@@ -102,6 +113,20 @@ BOOL AgentPolicy::SaveToDB(DB_HANDLE hdb)
       DBQuery(hdb, query);
    }
    UnlockChildList();
+
+	return success;
+}
+
+
+//
+// Save to database
+//
+
+BOOL AgentPolicy::SaveToDB(DB_HANDLE hdb)
+{
+	LockData();
+
+	BOOL success = SavePolicyCommonProperties(hdb);
 
 	// Clear modifications flag and unlock object
 	if (success)
@@ -215,5 +240,25 @@ DWORD AgentPolicy::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    if (!bAlreadyLocked)
       LockData();
 
+	if (pRequest->IsVariableExist(VID_VERSION))
+		m_version = pRequest->GetVariableLong(VID_VERSION);
+
+	if (pRequest->IsVariableExist(VID_DESCRIPTION))
+	{
+		safe_free(m_description);
+		m_description = pRequest->GetVariableStr(VID_DESCRIPTION);
+	}
+
    return NetObj::ModifyFromMessage(pRequest, TRUE);
+}
+
+
+//
+// Create deployment message
+//
+
+bool AgentPolicy::createDeploymentMessage(CSCPMessage *msg)
+{
+	msg->SetVariable(VID_POLICY_TYPE, (WORD)m_policyType);
+	return true;
 }

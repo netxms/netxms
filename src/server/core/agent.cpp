@@ -78,3 +78,28 @@ void AgentConnectionEx::OnTrap(CSCPMessage *pMsg)
       DbgPrintf(3, _T("Cannot find node for IP address %s"), IpToStr(GetIpAddr(), szBuffer));
    }
 }
+
+
+//
+// Deploy policy to agent
+//
+
+DWORD AgentConnectionEx::deployPolicy(AgentPolicy *policy)
+{
+	DWORD rqId, rcc;
+	CSCPMessage msg(getProtocolVersion());
+
+   rqId = generateRequestId();
+   msg.SetId(rqId);
+	msg.SetCode(CMD_DEPLOY_AGENT_POLICY);
+
+	if (SendMessage(&msg))
+   {
+      rcc = WaitForRCC(rqId, getCommandTimeout());
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
+   return rcc;
+}

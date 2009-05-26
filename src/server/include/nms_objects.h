@@ -761,7 +761,7 @@ public:
    void OpenParamList(DWORD *pdwNumParams, NXC_AGENT_PARAM **ppParamList);
    void CloseParamList(void) { UnlockData(); }
 
-   AgentConnection *CreateAgentConnection(void);
+   AgentConnectionEx *CreateAgentConnection(void);
 	SNMP_Transport *CreateSNMPTransport(void);
 
    virtual void CreateMessage(CSCPMessage *pMsg);
@@ -1138,8 +1138,11 @@ protected:
 	int m_policyType;
 	TCHAR *m_description;
 
+	BOOL SavePolicyCommonProperties(DB_HANDLE hdb);
+
 public:
    AgentPolicy(int type);
+   AgentPolicy(const TCHAR *name, int type);
    virtual ~AgentPolicy();
 
    virtual int Type(void) { return OBJECT_AGENTPOLICY; }
@@ -1150,6 +1153,8 @@ public:
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+	virtual bool createDeploymentMessage(CSCPMessage *msg);
 };
 
 
@@ -1165,6 +1170,7 @@ protected:
 
 public:
    AgentPolicyConfig();
+   AgentPolicyConfig(const TCHAR *name);
    virtual ~AgentPolicyConfig();
 
    virtual int Type(void) { return OBJECT_AGENTPOLICY_CONFIG; }
@@ -1175,6 +1181,8 @@ public:
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+	virtual bool createDeploymentMessage(CSCPMessage *msg);
 };
 
 

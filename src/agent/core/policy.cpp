@@ -38,7 +38,7 @@ static DWORD DeployConfig(DWORD session, CSCPMessage *msg)
 	int i, fh;
 	DWORD rcc;
 
-	msg->GetVariableStr(VID_FILE_NAME, name, MAX_PATH);
+	msg->GetVariableStr(VID_CONFIG_FILE_NAME, name, MAX_PATH);
 	for(i = _tcslen(name) - 1; i >= 0; i--)
 		if ((name[i] == '/') || (name[i] == '\\'))
 		{
@@ -51,11 +51,11 @@ static DWORD DeployConfig(DWORD session, CSCPMessage *msg)
 	fh = _topen(path, O_CREAT | O_TRUNC, O_WRONLY | O_BINARY);
 	if (fh != -1)
 	{
-		DWORD size = msg->GetVariableBinary(VID_CONFIG_FILE, 0, NULL);
+		DWORD size = msg->GetVariableBinary(VID_CONFIG_FILE_DATA, 0, NULL);
 		BYTE *data = (BYTE *)malloc(size);
 		if (data != NULL)
 		{
-			msg->GetVariableBinary(VID_CONFIG_FILE, data, size);
+			msg->GetVariableBinary(VID_CONFIG_FILE_DATA, data, size);
 			if (write(fh, data, size) == size)
 			{
 		      DebugPrintf(session, _T("Configuration file %s saved successfully"), path);
@@ -91,7 +91,7 @@ DWORD DeployPolicy(DWORD session, CSCPMessage *request)
 {
 	DWORD type, rcc;
 
-	type = request->GetVariableLong(VID_POLICY_TYPE);
+	type = request->GetVariableShort(VID_POLICY_TYPE);
 	switch(type)
 	{
 		case AGENT_POLICY_CONFIG:

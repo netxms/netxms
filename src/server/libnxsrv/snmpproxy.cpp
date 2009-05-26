@@ -58,7 +58,7 @@ int SNMP_ProxyTransport::Send(SNMP_PDU *pPDU)
    BYTE *pBuffer;
    DWORD dwSize;
    int nRet = -1;
-	CSCPMessage msg(m_pAgentConnection->GetProtocolVersion());
+	CSCPMessage msg(m_pAgentConnection->getProtocolVersion());
 
    dwSize = pPDU->Encode(&pBuffer);
    if (dwSize != 0)
@@ -70,7 +70,7 @@ int SNMP_ProxyTransport::Send(SNMP_PDU *pPDU)
 		msg.SetVariable(VID_PDU, pBuffer, dwSize);
       free(pBuffer);
 
-		m_pResponse = m_pAgentConnection->CustomRequest(&msg);
+		m_pResponse = m_pAgentConnection->customRequest(&msg);
 		if (m_pResponse != NULL)
 		{
 			nRet = 1;

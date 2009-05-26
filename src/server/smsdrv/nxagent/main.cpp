@@ -89,7 +89,7 @@ extern "C" BOOL EXPORT SMSDriverSend(TCHAR *pszPhoneNumber, TCHAR *pszText)
 	{
       AgentConnection conn(dwAddr, m_wPort, (m_szSecret[0] != 0) ? AUTH_SHA1_HASH : AUTH_NONE, m_szSecret);
 
-		conn.SetCommandTimeout(m_dwTimeout);
+		conn.setCommandTimeout(m_dwTimeout);
 		//conn.SetEncryptionPolicy(iEncryptionPolicy);
 
       if (conn.Connect())

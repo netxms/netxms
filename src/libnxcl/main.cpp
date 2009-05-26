@@ -389,9 +389,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(DWORD dwError)
 		_T("Operation cannot be completed due to agent error"),
 		_T("Unknown variable"),
 		_T("Requested resource not available"),
-		_T("Job cannot be cancelled")
+		_T("Job cannot be cancelled"),
+		_T("Invalid policy ID")
    };
-   return ((dwError >= 0) && (dwError <= RCC_JOB_CANCEL_FAILED)) ? pszErrorText[dwError] : _T("No text message for this error");
+   return ((dwError >= 0) && (dwError <= RCC_INVALID_POLICY_ID)) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 

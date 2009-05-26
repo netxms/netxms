@@ -13,7 +13,6 @@ import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 
 public class BindObject implements IObjectActionDelegate
 {
-
 	private Shell shell;
 
 	/**

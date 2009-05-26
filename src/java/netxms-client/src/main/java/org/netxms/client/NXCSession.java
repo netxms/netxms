@@ -222,6 +222,18 @@ public class NXCSession
 			case NXCObject.OBJECT_SERVICEROOT:
 				object = new NXCServiceRoot(msg, this);
 				break;
+			case NXCObject.OBJECT_POLICYROOT:
+				object = new NXCPolicyRoot(msg, this);
+				break;
+			case NXCObject.OBJECT_POLICYGROUP:
+				object = new NXCPolicyGroup(msg, this);
+				break;
+			case NXCObject.OBJECT_AGENTPOLICY:
+				object = new NXCAgentPolicy(msg, this);
+				break;
+			case NXCObject.OBJECT_AGENTPOLICY_CONFIG:
+				object = new NXCAgentPolicyConfig(msg, this);
+				break;
 			default:
 				object = new NXCObject(msg, this);
 				break;
@@ -1021,6 +1033,7 @@ public class NXCSession
 		list.add(findObjectById(1));
 		list.add(findObjectById(2));
 		list.add(findObjectById(3));
+		list.add(findObjectById(5));
 		return list.toArray(new NXCObject[list.size()]);
 	}
 
@@ -1703,6 +1716,25 @@ public class NXCSession
 		{
 			msg.setVariableInt16(NXCPCodes.VID_ENABLE_AUTO_BIND, data.isAutoBindEnabled() ? 1 : 0);
 			msg.setVariable(NXCPCodes.VID_AUTO_BIND_FILTER, data.getAutoBindFilter());
+		}
+		
+		// Description
+		if ((flags & NXCObjectModificationData.MODIFY_DESCRIPTION) != 0)
+		{
+			msg.setVariable(NXCPCodes.VID_DESCRIPTION, data.getDescription());
+		}
+
+		// Version
+		if ((flags & NXCObjectModificationData.MODIFY_VERSION) != 0)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_VERSION, data.getVersion());
+		}
+
+		// Configuration file
+		if ((flags & NXCObjectModificationData.MODIFY_POLICY_CONFIG) != 0)
+		{
+			msg.setVariable(NXCPCodes.VID_CONFIG_FILE_NAME, data.getConfigFileName());
+			msg.setVariable(NXCPCodes.VID_CONFIG_FILE_DATA, data.getConfigFileContent());
 		}
 
 		sendMessage(msg);

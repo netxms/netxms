@@ -1171,10 +1171,13 @@ void ClientSession::ProcessingThread(void)
 				TestDCITransformation(pMsg);
 				break;
 			case CMD_GET_JOB_LIST:
-				SendJobList(pMsg->GetId());
+				sendJobList(pMsg->GetId());
 				break;
 			case CMD_CANCEL_JOB:
-				CancelJob(pMsg);
+				cancelJob(pMsg);
+				break;
+			case CMD_DEPLOY_AGENT_POLICY:
+				deployAgentPolicy(pMsg);
 				break;
          default:
             // Pass message to loaded modules
@@ -3605,6 +3608,16 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
                      NetObjInsert(pObject, TRUE);
 							pObject->CalculateCompoundStatus();	// Force status change to NORMAL
                      break;
+                  case OBJECT_POLICYGROUP:
+                     pObject = new PolicyGroup(szObjectName);
+                     NetObjInsert(pObject, TRUE);
+							pObject->CalculateCompoundStatus();	// Force status change to NORMAL
+                     break;
+                  case OBJECT_AGENTPOLICY_CONFIG:
+                     pObject = new AgentPolicyConfig(szObjectName);
+                     NetObjInsert(pObject, TRUE);
+							pObject->CalculateCompoundStatus();	// Force status change to NORMAL
+                     break;
                   case OBJECT_CLUSTER:
                      pObject = new Cluster(szObjectName);
                      NetObjInsert(pObject, TRUE);
@@ -5743,7 +5756,7 @@ void ClientSession::UpdateAgentConfig(CSCPMessage *pRequest)
             if (pConn != NULL)
             {
                pszConfig = pRequest->GetVariableStr(VID_CONFIG_FILE);
-               dwResult = pConn->UpdateConfigFile(pszConfig);
+               dwResult = pConn->updateConfigFile(pszConfig);
                free(pszConfig);
 
                if ((pRequest->GetVariableShort(VID_APPLY_FLAG) != 0) &&
@@ -10109,7 +10122,7 @@ void ClientSession::TestDCITransformation(CSCPMessage *pRequest)
 // Send list of server jobs
 //
 
-void ClientSession::SendJobList(DWORD dwRqId)
+void ClientSession::sendJobList(DWORD dwRqId)
 {
 	CSCPMessage msg;
 
@@ -10125,12 +10138,63 @@ void ClientSession::SendJobList(DWORD dwRqId)
 // Cancel server job
 //
 
-void ClientSession::CancelJob(CSCPMessage *pRequest)
+void ClientSession::cancelJob(CSCPMessage *pRequest)
 {
 	CSCPMessage msg;
 
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 	msg.SetId(pRequest->GetId());
 	msg.SetVariable(VID_RCC, ::CancelJob(m_dwUserId, pRequest));
+	SendMessage(&msg);
+}
+
+
+//
+// Deploy agent policy
+//
+
+void ClientSession::deployAgentPolicy(CSCPMessage *request)
+{
+	CSCPMessage msg;
+
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	msg.SetId(request->GetId());
+
+	DWORD policyId = request->GetVariableLong(VID_POLICY_ID);
+	DWORD targetId = request->GetVariableLong(VID_OBJECT_ID);
+
+	NetObj *policy = FindObjectById(policyId);
+	if ((policy != NULL) && (policy->Type() >= OBJECT_AGENTPOLICY))
+	{
+		NetObj *target = FindObjectById(targetId);
+		if ((target != NULL) && (target->Type() == OBJECT_NODE))
+		{
+			if (target->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL) &&
+			    policy->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+			{
+				if (((Node *)target)->IsNativeAgent())
+				{
+					msg.SetVariable(VID_RCC, RCC_SUCCESS);
+				}
+				else
+				{
+					msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+				}
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+			}
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_POLICY_ID);
+	}
+
 	SendMessage(&msg);
 }

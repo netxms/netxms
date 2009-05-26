@@ -226,6 +226,8 @@ src/java/netxms-base/src/test/java/org/netxms/base/NXCPMsgWaitQueueTest.java -te
 src/java/netxms-base/src/test/java/org/netxms/base/NXCPVariableTest.java -text
 src/java/netxms-client/pom.xml -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCAccessListElement.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/NXCAgentPolicy.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/NXCAgentPolicyConfig.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCAlarm.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCContainer.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCDCI.java -text
@@ -244,6 +246,8 @@ src/java/netxms-client/src/main/java/org/netxms/client/NXCNotification.java -tex
 src/java/netxms-client/src/main/java/org/netxms/client/NXCObject.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCObjectCreationData.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCObjectModificationData.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/NXCPolicyGroup.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/NXCPolicyRoot.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCReceivedFile.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCServerJob.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCServerVariable.java -text
@@ -306,6 +310,9 @@ src/java/netxms-eclipse/ObjectBrowser/icons/interface.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/network.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/node.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/object_browser.png -text
+src/java/netxms-eclipse/ObjectBrowser/icons/policy.png -text
+src/java/netxms-eclipse/ObjectBrowser/icons/policy_group.png -text
+src/java/netxms-eclipse/ObjectBrowser/icons/policy_root.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/service.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/service_root.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/subnet.png -text
@@ -322,6 +329,7 @@ src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Ob
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectTreeContentProvider.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectTreeFilter.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/actions/OpenObjectBrowser.java -text
+src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/CreateObjectDialog.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/dialogs/ObjectSelectionDialog.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/views/ObjectBrowser.java -text
 src/java/netxms-eclipse/ObjectManager/META-INF/MANIFEST.MF -text
@@ -349,6 +357,12 @@ src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/LastValu
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/LastValuesView.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/actions/ShowLastValues.java -text
 src/java/netxms-eclipse/ObjectView/src/org/netxms/ui/eclipse/objectview/views/LastValues.java -text
+src/java/netxms-eclipse/PolicyManager/.settings/org.eclipse.jdt.core.prefs -text
+src/java/netxms-eclipse/PolicyManager/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/PolicyManager/build.properties -text
+src/java/netxms-eclipse/PolicyManager/plugin.xml -text
+src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/Activator.java -text
+src/java/netxms-eclipse/PolicyManager/src/org/netxms/ui/eclipse/policymanager/actions/CreatePolicyGroup.java -text
 src/java/netxms-eclipse/QuickMaps/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/QuickMaps/build.properties -text
 src/java/netxms-eclipse/QuickMaps/icons/node.png -text

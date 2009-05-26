@@ -19,6 +19,9 @@ public class NXCObjectModificationData
 	public static final long MODIFY_CUSTOM_ATTRIBUTES = 0x00000004L;
 	public static final long MODIFY_AUTO_APPLY        = 0x00000008L;
 	public static final long MODIFY_AUTO_BIND         = 0x00000010L;
+	public static final long MODIFY_POLICY_CONFIG     = 0x00000020L;
+	public static final long MODIFY_VERSION           = 0x00000040L;
+	public static final long MODIFY_DESCRIPTION       = 0x00000080L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -30,6 +33,10 @@ public class NXCObjectModificationData
 	private String autoApplyFilter;
 	private boolean autoBindEnabled;
 	private String autoBindFilter;
+	private String configFileName;
+	private String configFileContent;
+	private int version;
+	private String description;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -198,5 +205,73 @@ public class NXCObjectModificationData
 	{
 		this.autoBindFilter = autoBindFilter;
 		flags |= MODIFY_AUTO_BIND;
+	}
+
+	/**
+	 * @return the configFileName
+	 */
+	public String getConfigFileName()
+	{
+		return configFileName;
+	}
+
+	/**
+	 * @param configFileName the configFileName to set
+	 */
+	public void setConfigFileName(String configFileName)
+	{
+		this.configFileName = configFileName;
+		flags |= MODIFY_POLICY_CONFIG;
+	}
+
+	/**
+	 * @return the configFileContent
+	 */
+	public String getConfigFileContent()
+	{
+		return configFileContent;
+	}
+
+	/**
+	 * @param configFileContent the configFileContent to set
+	 */
+	public void setConfigFileContent(String configFileContent)
+	{
+		this.configFileContent = configFileContent;
+		flags |= MODIFY_POLICY_CONFIG;
+	}
+
+	/**
+	 * @return the version
+	 */
+	public int getVersion()
+	{
+		return version;
+	}
+
+	/**
+	 * @param version the version to set
+	 */
+	public void setVersion(int version)
+	{
+		this.version = version;
+		flags |= MODIFY_VERSION;
+	}
+
+	/**
+	 * @return the description
+	 */
+	public String getDescription()
+	{
+		return description;
+	}
+
+	/**
+	 * @param description the description to set
+	 */
+	public void setDescription(String description)
+	{
+		this.description = description;
+		flags |= MODIFY_DESCRIPTION;
 	}
 }

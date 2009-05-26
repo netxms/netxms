@@ -103,6 +103,44 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 
 
 //
+// Upgrade from V92 to V200
+//
+
+static BOOL H_UpgradeFromV92(void)
+{
+	if (!CreateTable(_T("CREATE TABLE ap_common (")
+		              _T("id integer not null,")
+		              _T("policy_type integer not null,")
+		              _T("version integer not null,")
+						  _T("description $SQL:TEXT not null,")
+						  _T("PRIMARY KEY(id))")))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateTable(_T("CREATE TABLE ap_bindings (")
+		              _T("policy_id integer not null,")
+		              _T("node_id integer not null,")
+						  _T("PRIMARY KEY(policy_id,node_id))")))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!CreateTable(_T("CREATE TABLE ap_config_files (")
+		              _T("policy_id integer not null,")
+		              _T("file_name varchar(63) not null,")
+						  _T("file_content $SQL:TEXT not null,")
+						  _T("PRIMARY KEY(policy_id))")))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='200' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V91 to V92
 //
 
@@ -4005,6 +4043,7 @@ static struct
 	{ 89, H_UpgradeFromV89 },
 	{ 90, H_UpgradeFromV90 },
 	{ 91, H_UpgradeFromV91 },
+	{ 92, H_UpgradeFromV92 },
    { 0, NULL }
 };
 
@@ -4063,7 +4102,7 @@ void UpgradeDatabase(void)
             if (m_dbUpgradeMap[i].fpProc())
             {
                DBCommit(g_hCoreDB);
-               iVersion++;
+               iVersion = DBGetSchemaVersion(g_hCoreDB);
             }
             else
             {

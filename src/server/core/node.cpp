@@ -1778,7 +1778,7 @@ BOOL Node::ConnectToAgent(void)
       m_pAgentConnection = new AgentConnectionEx(htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
 
    // Check if we already connected
-   if (m_pAgentConnection->Nop() == ERR_SUCCESS)
+   if (m_pAgentConnection->nop() == ERR_SUCCESS)
       return TRUE;
 
    // Close current connection or clean up after broken connection
@@ -1789,8 +1789,8 @@ BOOL Node::ConnectToAgent(void)
    bRet = m_pAgentConnection->Connect(g_pServerKey);
    if (bRet)
 	{
-		m_pAgentConnection->SetCommandTimeout(g_dwAgentCommandTimeout);
-      m_pAgentConnection->EnableTraps();
+		m_pAgentConnection->setCommandTimeout(g_dwAgentCommandTimeout);
+      m_pAgentConnection->enableTraps();
 	}
    return bRet;
 }
@@ -2464,24 +2464,24 @@ void Node::CheckOSPFSupport(SNMP_Transport *pTransport)
 // Create ready to use agent connection
 //
 
-AgentConnection *Node::CreateAgentConnection(void)
+AgentConnectionEx *Node::CreateAgentConnection(void)
 {
-   AgentConnection *pConn;
+   AgentConnectionEx *conn;
 
    if ((!(m_dwFlags & NF_IS_NATIVE_AGENT)) ||
        (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ||
        (m_dwDynamicFlags & NDF_UNREACHABLE))
       return NULL;
 
-   pConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort,
-                               m_wAuthMethod, m_szSharedSecret);
-   SetAgentProxy(pConn);
-   if (!pConn->Connect(g_pServerKey))
+   conn = new AgentConnectionEx(htonl(m_dwIpAddr), m_wAgentPort,
+                                m_wAuthMethod, m_szSharedSecret);
+   SetAgentProxy(conn);
+   if (!conn->Connect(g_pServerKey))
    {
-      delete pConn;
-      pConn = NULL;
+      delete conn;
+      conn = NULL;
    }
-   return pConn;
+   return conn;
 }
 
 

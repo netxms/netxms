@@ -479,7 +479,7 @@ int main(int argc, char *argv[])
          {
             AgentConnection conn(dwAddr, wAgentPort, iAuthMethod, szSecret);
 
-            conn.SetCommandTimeout(dwTimeout);
+            conn.setCommandTimeout(dwTimeout);
             conn.SetEncryptionPolicy(iEncryptionPolicy);
             if (bUseProxy)
                conn.SetProxy(dwProxyAddr, wProxyPort, iProxyAuth, szProxySecret);

@@ -146,4 +146,24 @@ bool NXCORE_EXPORTABLE AddJob(ServerJob *job);
 void GetJobList(CSCPMessage *msg);
 DWORD CancelJob(DWORD userId, CSCPMessage *msg);
 
+
+//
+// Agent policy deployment job
+//
+
+class AgentPolicy;
+
+class PolicyDeploymentJob : public ServerJob
+{
+protected:
+	Node *m_node;
+	AgentPolicy *m_policy;
+
+	virtual bool run();
+
+public:
+	PolicyDeploymentJob(Node *node, AgentPolicy *policy);
+	virtual ~PolicyDeploymentJob();
+};
+
 #endif   /* _nxcore_jobs_h_ */

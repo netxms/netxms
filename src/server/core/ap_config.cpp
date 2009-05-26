@@ -30,6 +30,20 @@
 AgentPolicyConfig::AgentPolicyConfig()
                   : AgentPolicy(AGENT_POLICY_CONFIG)
 {
+	m_fileName[0] = 0;
+	m_fileContent = NULL;
+}
+
+
+//
+// Constructor for user-initiated object creation
+//
+
+AgentPolicyConfig::AgentPolicyConfig(const TCHAR *name)
+                  : AgentPolicy(name, AGENT_POLICY_CONFIG)
+{
+	m_fileName[0] = 0;
+	m_fileContent = NULL;
 }
 
 
@@ -39,6 +53,7 @@ AgentPolicyConfig::AgentPolicyConfig()
 
 AgentPolicyConfig::~AgentPolicyConfig()
 {
+	safe_free(m_fileContent);
 }
 
 
@@ -48,46 +63,33 @@ AgentPolicyConfig::~AgentPolicyConfig()
 
 BOOL AgentPolicyConfig::SaveToDB(DB_HANDLE hdb)
 {
-	TCHAR query[256];
-
 	LockData();
 
-	SaveCommonProperties(hdb);
+	BOOL success = SavePolicyCommonProperties(hdb);
+	if (success)
+	{
+		TCHAR *data = EncodeSQLString(CHECK_NULL_EX(m_fileContent));
+		int len = _tcslen(data) + MAX_POLICY_CONFIG_NAME + 256;
+		TCHAR *query = (TCHAR *)malloc(len * sizeof(TCHAR));
 
-   // Check for object's existence in database
-	bool isNewObject = true;
-   _sntprintf(query, 256, _T("SELECT id FROM ap_common WHERE id=%d"), m_dwId);
-   DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         isNewObject = false;
-      DBFreeResult(hResult);
-   }
-   if (isNewObject)
-      _sntprintf(query, 256,
-                 _T("INSERT INTO ap_common (id,policy_type,version) VALUES (%d,%d,%d)"),
-                 m_dwId, m_policyType, m_version);
-   else
-      _sntprintf(query, 256,
-                 _T("UPDATE ap_common SET policy_type=%d,version=%d WHERE id=%d"),
-                 m_policyType, m_version, m_dwId);
-   BOOL success = DBQuery(hdb, query);
+		_sntprintf(query, len, _T("SELECT file_name FROM ap_config_files WHERE policy_id=%d"), m_dwId);
+		DB_RESULT hResult = DBSelect(hdb, query);
+		if (hResult != NULL)
+		{
+			BOOL isNew = (DBGetNumRows(hResult) > 0);
+			DBFreeResult(hResult);
 
-
-   // Save access list
-   SaveACLToDB(hdb);
-
-   // Update node bindings
-   _sntprintf(query, 256, _T("DELETE FROM ap_bindings WHERE policy_id=%d"), m_dwId);
-   DBQuery(hdb, query);
-   LockChildList(FALSE);
-   for(DWORD i = 0; i < m_dwChildCount; i++)
-   {
-      _sntprintf(query, 256, _T("INSERT INTO ap_bindings (policy_id,node_id) VALUES (%d,%d)"), m_dwId, m_pChildList[i]->Id());
-      DBQuery(hdb, query);
-   }
-   UnlockChildList();
+			if (isNew)
+				_sntprintf(query, len, _T("INSERT INTO ap_config_files (policy_id,file_name,file_content) VALUES (%d,'%s','%s')"),
+				           m_dwId, m_fileName, data);
+			else
+				_sntprintf(query, len, _T("UPDATE ap_config_files SET file_name='%s',file_content='%s' WHERE policy_id=%d"),
+				           m_fileName, data, m_dwId);
+			success = DBQuery(hdb, query);
+		}
+		free(query);
+		free(data);
+	}
 
 	// Clear modifications flag and unlock object
 	if (success)
@@ -104,12 +106,13 @@ BOOL AgentPolicyConfig::SaveToDB(DB_HANDLE hdb)
 
 BOOL AgentPolicyConfig::DeleteFromDB()
 {
+	AgentPolicy::DeleteFromDB();
+
 	TCHAR query[256];
 
-	_sntprintf(query, 256, _T("DELETE FROM ap_common WHERE id=%d"), m_dwId);
+	_sntprintf(query, 256, _T("DELETE FROM ap_config_files WHERE policy_id=%d"), m_dwId);
 	QueueSQLRequest(query);
-	_sntprintf(query, 256, _T("DELETE FROM ap_bindings WHERE policy_id=%d"), m_dwId);
-	QueueSQLRequest(query);
+
 	return TRUE;
 }
 
@@ -120,62 +123,25 @@ BOOL AgentPolicyConfig::DeleteFromDB()
 
 BOOL AgentPolicyConfig::CreateFromDB(DWORD dwId)
 {
-	m_dwId = dwId;
+	BOOL success = FALSE;
 
-	if (!LoadCommonProperties())
-   {
-      DbgPrintf(2, "Cannot load common properties for agent policy object %d", dwId);
-      return FALSE;
-   }
-
-   if (!m_bIsDeleted)
-   {
+	if (AgentPolicy::CreateFromDB(dwId))
+	{
 		TCHAR query[256];
 
-	   LoadACLFromDB();
-
-		_sntprintf(query, 256, _T("SELECT version, description FROM ap_common WHERE id=%d"), dwId);
+		_sntprintf(query, 256, _T("SELECT file_name,file_content FROM ap_config_files WHERE policy_id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(g_hCoreDB, query);
-		if (hResult == NULL)
-			return FALSE;
-
-		m_version = DBGetFieldULong(hResult, 0, 0);
-		m_description = DBGetField(hResult, 0, 1, NULL, 0);
-		DecodeSQLString(m_description);
-		DBFreeResult(hResult);
-
-	   // Load related nodes list
-      _sntprintf(query, 256, _T("SELECT node_id FROM ap_bindings WHERE policy_id=%d"), m_dwId);
-      hResult = DBSelect(g_hCoreDB, query);
-      if (hResult != NULL)
-      {
-         int numNodes = DBGetNumRows(hResult);
-         for(int i = 0; i < numNodes; i++)
-         {
-            DWORD nodeId = DBGetFieldULong(hResult, i, 0);
-            NetObj *object = FindObjectById(nodeId);
-            if (object != NULL)
-            {
-               if (object->Type() == OBJECT_NODE)
-               {
-                  AddChild(object);
-                  object->AddParent(this);
-               }
-               else
-               {
-                  nxlog_write(MSG_AP_BINDING_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", m_dwId, nodeId);
-               }
-            }
-            else
-            {
-               nxlog_write(MSG_INVALID_AP_BINDING, EVENTLOG_ERROR_TYPE, "dd", m_dwId, nodeId);
-            }
-         }
-         DBFreeResult(hResult);
-      }
+		if (hResult != NULL)
+		{
+			if (DBGetNumRows(hResult) > 0)
+			{
+				DBGetField(hResult, 0, 0, m_fileName, MAX_POLICY_CONFIG_NAME);
+				m_fileContent = DBGetField(hResult, 0, 1, NULL, 0);
+			}
+			DBFreeResult(hResult);
+		}
 	}
-
-	return TRUE;
+	return success;
 }
 
 
@@ -186,6 +152,8 @@ BOOL AgentPolicyConfig::CreateFromDB(DWORD dwId)
 void AgentPolicyConfig::CreateMessage(CSCPMessage *msg)
 {
 	AgentPolicy::CreateMessage(msg);
+	msg->SetVariable(VID_CONFIG_FILE_NAME, m_fileName);
+	msg->SetVariable(VID_CONFIG_FILE_DATA, CHECK_NULL_EX(m_fileContent));
 }
 
 
@@ -198,5 +166,32 @@ DWORD AgentPolicyConfig::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyL
    if (!bAlreadyLocked)
       LockData();
 
-   return AgentPolicy::ModifyFromMessage(pRequest, TRUE);
+	if (pRequest->IsVariableExist(VID_CONFIG_FILE_NAME))
+		pRequest->GetVariableStr(VID_CONFIG_FILE_NAME, m_fileName, MAX_POLICY_CONFIG_NAME);
+
+	if (pRequest->IsVariableExist(VID_CONFIG_FILE_DATA))
+	{
+		safe_free(m_fileContent);
+		m_fileContent = pRequest->GetVariableStr(VID_CONFIG_FILE_DATA);
+	}
+
+	return AgentPolicy::ModifyFromMessage(pRequest, TRUE);
+}
+
+
+//
+// Create deployment message
+//
+
+bool AgentPolicyConfig::createDeploymentMessage(CSCPMessage *msg)
+{
+	if (!AgentPolicy::createDeploymentMessage(msg))
+		return false;
+
+	if ((m_fileName[0] == 0) || (m_fileContent == NULL))
+		return false;  // Policy cannot be deployed
+
+	msg->SetVariable(VID_CONFIG_FILE_NAME, m_fileName);
+	msg->SetVariable(VID_CONFIG_FILE_DATA, m_fileContent);
+	return true;
 }

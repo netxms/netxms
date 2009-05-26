@@ -459,7 +459,7 @@ setup_encryption:
    }
 
    // Test connectivity
-   if ((dwError = Nop()) != ERR_SUCCESS)
+   if ((dwError = nop()) != ERR_SUCCESS)
    {
       if ((dwError == ERR_ENCRYPTION_REQUIRED) &&
           (m_iEncryptionPolicy != ENCRYPTION_DISABLED))
@@ -755,7 +755,7 @@ ARP_CACHE *AgentConnection::GetArpCache(void)
 // Send dummy command to agent (can be used for keepalive)
 //
 
-DWORD AgentConnection::Nop(void)
+DWORD AgentConnection::nop(void)
 {
    CSCPMessage msg(m_nProtocolVersion);
    DWORD dwRqId;
@@ -1279,7 +1279,7 @@ DWORD AgentConnection::GetConfigFile(TCHAR **ppszConfig, DWORD *pdwSize)
 // Get configuration file from agent
 //
 
-DWORD AgentConnection::UpdateConfigFile(const TCHAR *pszConfig)
+DWORD AgentConnection::updateConfigFile(const TCHAR *pszConfig)
 {
    DWORD dwRqId, dwResult;
    CSCPMessage msg(m_nProtocolVersion);
@@ -1445,7 +1445,7 @@ DWORD AgentConnection::SetupProxyConnection(void)
 // Enable trap receiving on connection
 //
 
-DWORD AgentConnection::EnableTraps(void)
+DWORD AgentConnection::enableTraps(void)
 {
    CSCPMessage msg(m_nProtocolVersion);
    DWORD dwRqId;
@@ -1464,7 +1464,7 @@ DWORD AgentConnection::EnableTraps(void)
 // Send custom request to agent
 //
 
-CSCPMessage *AgentConnection::CustomRequest(CSCPMessage *pRequest, const TCHAR *recvFile, bool appendFile,
+CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *recvFile, bool appendFile,
 														  void (*downloadProgressCallback)(size_t, void *), void *cbArg)
 {
    DWORD dwRqId, rcc;
