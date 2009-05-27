@@ -12,7 +12,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
-import org.netxms.client.NXCUser;
 import org.netxms.client.NXCUserDBObject;
 import org.netxms.client.NXCUserGroup;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;

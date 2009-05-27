@@ -6,7 +6,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
@@ -16,8 +15,6 @@ import org.netxms.ui.eclipse.shared.IUIConstants;
 
 public class ChangePasswordDialog extends Dialog
 {
-
-	private Shell shell;
 	private Text textPassword1;
 	private Text textPassword2;
 	private String password;
@@ -25,7 +22,6 @@ public class ChangePasswordDialog extends Dialog
 	public ChangePasswordDialog(Shell parentShell)
 	{
 		super(parentShell);
-		this.shell = parentShell;
 	}
 
 	@Override

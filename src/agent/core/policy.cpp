@@ -39,6 +39,7 @@ static DWORD DeployConfig(DWORD session, CSCPMessage *msg)
 	DWORD rcc;
 
 	msg->GetVariableStr(VID_CONFIG_FILE_NAME, name, MAX_PATH);
+	DebugPrintf(session, _T("DeployConfig(): original file name is %s"), name);
 	for(i = _tcslen(name) - 1; i >= 0; i--)
 		if ((name[i] == '/') || (name[i] == '\\'))
 		{

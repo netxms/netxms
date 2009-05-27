@@ -92,14 +92,20 @@ DWORD AgentConnectionEx::deployPolicy(AgentPolicy *policy)
    rqId = generateRequestId();
    msg.SetId(rqId);
 	msg.SetCode(CMD_DEPLOY_AGENT_POLICY);
-
-	if (SendMessage(&msg))
-   {
-      rcc = WaitForRCC(rqId, getCommandTimeout());
-   }
-   else
-   {
-      rcc = ERR_CONNECTION_BROKEN;
-   }
+	if (policy->createDeploymentMessage(&msg))
+	{
+		if (SendMessage(&msg))
+		{
+			rcc = WaitForRCC(rqId, getCommandTimeout());
+		}
+		else
+		{
+			rcc = ERR_CONNECTION_BROKEN;
+		}
+	}
+	else
+	{
+		rcc = ERR_INTERNAL_ERROR;
+	}
    return rcc;
 }

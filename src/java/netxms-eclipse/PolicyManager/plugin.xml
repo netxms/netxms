@@ -90,4 +90,19 @@
       </objectContribution>
    </extension>
 
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.deployPolicy"
+            objectClass="org.netxms.client.NXCAgentPolicy">
+         <action
+               class="org.netxms.ui.eclipse.policymanager.actions.DeployPolicy"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.policymanager.popupActions.DeployPolicy"
+               label="Deploy..."
+               menubarPath="objectmgmt">
+         </action>
+      </objectContribution>
+   </extension>
+
 </plugin>

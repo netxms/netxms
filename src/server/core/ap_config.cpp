@@ -192,6 +192,7 @@ bool AgentPolicyConfig::createDeploymentMessage(CSCPMessage *msg)
 		return false;  // Policy cannot be deployed
 
 	msg->SetVariable(VID_CONFIG_FILE_NAME, m_fileName);
-	msg->SetVariable(VID_CONFIG_FILE_DATA, m_fileContent);
+	msg->SetVariable(VID_CONFIG_FILE_DATA, (BYTE *)m_fileContent, _tcslen(m_fileContent) * sizeof(TCHAR));
+	printf("SET: %s\n",m_fileName);
 	return true;
 }

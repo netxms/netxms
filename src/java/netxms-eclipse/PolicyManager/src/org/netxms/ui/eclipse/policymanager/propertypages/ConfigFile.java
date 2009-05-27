@@ -16,7 +16,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCAgentPolicy;
 import org.netxms.client.NXCAgentPolicyConfig;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectModificationData;

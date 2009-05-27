@@ -10174,7 +10174,16 @@ void ClientSession::deployAgentPolicy(CSCPMessage *request)
 			{
 				if (((Node *)target)->IsNativeAgent())
 				{
-					msg.SetVariable(VID_RCC, RCC_SUCCESS);
+					PolicyDeploymentJob *job = new PolicyDeploymentJob((Node *)target, (AgentPolicy *)policy);
+					if (AddJob(job))
+					{
+						msg.SetVariable(VID_RCC, RCC_SUCCESS);
+					}
+					else
+					{
+						delete job;
+						msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+					}
 				}
 				else
 				{
