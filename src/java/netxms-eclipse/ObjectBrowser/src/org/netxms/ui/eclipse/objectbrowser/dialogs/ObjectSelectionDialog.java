@@ -4,6 +4,7 @@
 package org.netxms.ui.eclipse.objectbrowser.dialogs;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.Dialog;
@@ -18,8 +19,8 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.client.NXCObject;
+import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.ObjectList;
 import org.netxms.ui.eclipse.objectbrowser.ObjectTree;
@@ -170,13 +171,78 @@ public class ObjectSelectionDialog extends Dialog
 
 	/**
 	 * Retrieve selected objects
+	 * 
 	 * @return
 	 */
-	public NXCObject[] getSelectedObjects()
+	public NXCObject[] getCheckedObjects()
 	{
 		if (selectedObjects == null)
 			return new NXCObject[0];
-		
+
 		return NXMCSharedData.getInstance().getSession().findMultipleObjects(selectedObjects);
 	}
+
+	/**
+	 * Retrive all selected objects (including childs)
+	 * 
+	 * @return
+	 */
+	public NXCObject[] getAllCheckedObjects()
+	{
+		return getAllCheckedObjects(-1);
+	}
+
+	/**
+	 * Retrive all selected objects by type
+	 * 
+	 * @return
+	 */
+	public NXCObject[] getAllCheckedObjects(int objectType)
+	{
+		if (selectedObjects == null)
+			return new NXCObject[0];
+
+		final NXCSession session = NXMCSharedData.getInstance().getSession();
+
+		final List<NXCObject> resuls = new ArrayList<NXCObject>();
+		final NXCObject[] objects = session.findMultipleObjects(selectedObjects);
+		for(int i = 0; i < objects.length; i++)
+		{
+			resuls.addAll(extractAllObjects(session, objects[i]));
+		}
+
+		if (objectType != -1)
+		{
+			final Iterator<NXCObject> it = resuls.iterator();
+			while (it.hasNext()) {
+				final NXCObject next = it.next();
+				if (next.getObjectClass() != objectType) {
+					it.remove();
+				}
+			}
+		}
+
+		return resuls.toArray(new NXCObject[] {});
+	}
+
+	private List<NXCObject> extractAllObjects(NXCSession session, NXCObject object)
+	{
+		final List<NXCObject> ret = new ArrayList<NXCObject>(0);
+
+		ret.add(object);
+
+		final Iterator<Long> it = object.getChilds();
+		while(it.hasNext())
+		{
+			final Long childId = it.next();
+			final NXCObject child = session.findObjectById(childId);
+			if (child != null)
+			{
+				ret.addAll(extractAllObjects(session, child));
+			}
+		}
+
+		return ret;
+	}
+
 }
