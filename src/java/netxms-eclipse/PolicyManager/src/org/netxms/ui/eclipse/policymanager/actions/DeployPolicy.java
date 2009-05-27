@@ -46,7 +46,15 @@ public class DeployPolicy implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, null);
+		// Read custom root objects
+		long[] rootObjects = null;
+		Object value = NXMCSharedData.getInstance().getProperty("PolicyManager.rootObjects");
+		if ((value != null) && (value instanceof long[]))
+		{
+			rootObjects = (long[])value;
+		}
+		
+		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, rootObjects);
 		if (dlg.open() == Window.OK)
 		{
 			new Job("Deploy agent policy") {

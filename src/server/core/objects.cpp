@@ -342,9 +342,10 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          case OBJECT_TEMPLATEGROUP:
          case OBJECT_TEMPLATEROOT:
 			case OBJECT_CLUSTER:
-			case OBJECT_AGENTPOLICY:
 			case OBJECT_POLICYGROUP:
 			case OBJECT_POLICYROOT:
+			case OBJECT_AGENTPOLICY:
+			case OBJECT_AGENTPOLICY_CONFIG:
             break;
          case OBJECT_SUBNET:
             if (pObject->IpAddr() != 0)
@@ -410,9 +411,10 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
       case OBJECT_TEMPLATEGROUP:
       case OBJECT_TEMPLATEROOT:
 		case OBJECT_CLUSTER:
-		case OBJECT_AGENTPOLICY:
 		case OBJECT_POLICYGROUP:
 		case OBJECT_POLICYROOT:
+		case OBJECT_AGENTPOLICY:
+		case OBJECT_AGENTPOLICY_CONFIG:
          break;
       case OBJECT_SUBNET:
          if (pObject->IpAddr() != 0)
@@ -959,8 +961,19 @@ BOOL LoadObjects(void)
       dwNumRows = DBGetNumRows(hResult);
       for(i = 0; i < dwNumRows; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         AgentPolicy *policy = new AgentPolicy(AGENT_POLICY_CONFIG);
+         AgentPolicy *policy;
+
+			dwId = DBGetFieldULong(hResult, i, 0);
+			int type = DBGetFieldLong(hResult, i, 1);
+			switch(type)
+			{
+				case AGENT_POLICY_CONFIG:
+					policy = new AgentPolicyConfig();
+					break;
+				default:
+					policy = new AgentPolicy(type);
+					break;
+			}
          if (policy->CreateFromDB(dwId))
          {
             NetObjInsert(policy, FALSE);  // Insert into indexes

@@ -72,11 +72,11 @@ BOOL AgentPolicyConfig::SaveToDB(DB_HANDLE hdb)
 		int len = _tcslen(data) + MAX_POLICY_CONFIG_NAME + 256;
 		TCHAR *query = (TCHAR *)malloc(len * sizeof(TCHAR));
 
-		_sntprintf(query, len, _T("SELECT file_name FROM ap_config_files WHERE policy_id=%d"), m_dwId);
+		_sntprintf(query, len, _T("SELECT policy_id FROM ap_config_files WHERE policy_id=%d"), m_dwId);
 		DB_RESULT hResult = DBSelect(hdb, query);
 		if (hResult != NULL)
 		{
-			BOOL isNew = (DBGetNumRows(hResult) > 0);
+			BOOL isNew = (DBGetNumRows(hResult) == 0);
 			DBFreeResult(hResult);
 
 			if (isNew)
@@ -137,6 +137,9 @@ BOOL AgentPolicyConfig::CreateFromDB(DWORD dwId)
 			{
 				DBGetField(hResult, 0, 0, m_fileName, MAX_POLICY_CONFIG_NAME);
 				m_fileContent = DBGetField(hResult, 0, 1, NULL, 0);
+				if (m_fileContent != NULL)
+					DecodeSQLString(m_fileContent);
+				success = TRUE;
 			}
 			DBFreeResult(hResult);
 		}
@@ -193,6 +196,5 @@ bool AgentPolicyConfig::createDeploymentMessage(CSCPMessage *msg)
 
 	msg->SetVariable(VID_CONFIG_FILE_NAME, m_fileName);
 	msg->SetVariable(VID_CONFIG_FILE_DATA, (BYTE *)m_fileContent, _tcslen(m_fileContent) * sizeof(TCHAR));
-	printf("SET: %s\n",m_fileName);
 	return true;
 }
