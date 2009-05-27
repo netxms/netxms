@@ -1855,7 +1855,7 @@ public class NXCSession
 		// Agent port
 		if ((flags & NXCObjectModificationData.MODIFY_AGENT_PORT) != 0)
 		{
-			msg.setVariableInt32(NXCPCodes.VID_AGENT_PORT, data.getAgentPort());
+			msg.setVariableInt16(NXCPCodes.VID_AGENT_PORT, data.getAgentPort());
 		}
 
 		sendMessage(msg);
