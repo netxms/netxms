@@ -22,6 +22,7 @@ public class NXCObjectModificationData
 	public static final long MODIFY_POLICY_CONFIG     = 0x00000020L;
 	public static final long MODIFY_VERSION           = 0x00000040L;
 	public static final long MODIFY_DESCRIPTION       = 0x00000080L;
+	public static final long MODIFY_AGENT_PORT        = 0x00000100L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -37,6 +38,7 @@ public class NXCObjectModificationData
 	private String configFileContent;
 	private int version;
 	private String description;
+	private int agentPort;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -274,4 +276,16 @@ public class NXCObjectModificationData
 		this.description = description;
 		flags |= MODIFY_DESCRIPTION;
 	}
+
+	public int getAgentPort()
+	{
+		return agentPort;
+	}
+
+	public void setAgentPort(int agentPort)
+	{
+		this.agentPort = agentPort;
+		flags |= MODIFY_AGENT_PORT;
+	}
+	
 }
