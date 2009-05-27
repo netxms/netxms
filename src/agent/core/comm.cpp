@@ -270,7 +270,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
       for(i = 0; i < g_dwMaxSessions; i++)
          if (g_pSessionList[i] != NULL)
          {
-            if (g_pSessionList[i]->GetTimeStamp() < now - (time_t)g_dwIdleTimeout)
+            if (g_pSessionList[i]->GetTimeStamp() < (now - (time_t)g_dwIdleTimeout))
                g_pSessionList[i]->Disconnect();
          }
       MutexUnlock(g_hSessionListAccess);

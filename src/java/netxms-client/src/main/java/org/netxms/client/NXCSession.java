@@ -1819,6 +1819,23 @@ public class NXCSession
 	}
 	
 	/**
+	 * Execute action on remote agent
+	 * 
+	 * @param nodeId Node object ID
+	 * @param action Action name
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void executeAction(final long nodeId, final String action) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_ACTION);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setVariable(NXCPCodes.VID_ACTION_NAME, action);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
 	 * Get list of server jobs
 	 * @return list of server jobs
 	 * @throws IOException if socket I/O error occurs
