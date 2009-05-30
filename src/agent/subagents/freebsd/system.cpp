@@ -182,7 +182,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 	int nPageSize;
 	char szArg[16] = {0};
 	kvm_t *kd;
-#if HAVE_KWM_GETSWAPINFO
+#if HAVE_KVM_GETSWAPINFO
 	struct kvm_swap swap[16];
 #endif
 
