@@ -1,5 +1,9 @@
 package org.netxms.ui.eclipse.quickmaps.views;
 
+import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.ImageFigure;
+import org.eclipse.draw2d.Label;
+import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -18,6 +22,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.zest.core.viewers.GraphViewer;
+import org.eclipse.zest.core.viewers.IFigureProvider;
 import org.eclipse.zest.core.viewers.IGraphEntityContentProvider;
 import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.SpringLayoutAlgorithm;
@@ -26,6 +31,7 @@ import org.netxms.client.NXCNode;
 import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.quickmaps.Activator;
+import org.netxms.ui.eclipse.quickmaps.ObjectFigure;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
@@ -76,7 +82,7 @@ public abstract class NetworkMap extends ViewPart
 	/**
 	 * Label provider for map
 	 */
-	class MapLabelProvider extends LabelProvider
+	class MapLabelProvider extends LabelProvider implements IFigureProvider
 	{
 		/* (non-Javadoc)
 		 * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
@@ -98,6 +104,15 @@ public abstract class NetworkMap extends ViewPart
 			if (element instanceof NXCObject)
 				return ((NXCObject)element).getObjectClass() == NXCObject.OBJECT_NODE ? imgNode : imgSubnet;
 			return null;
+		}
+
+		/* (non-Javadoc)
+		 * @see org.eclipse.zest.core.viewers.IFigureProvider#getFigure(java.lang.Object)
+		 */
+		@Override
+		public IFigure getFigure(Object element)
+		{
+			return new ObjectFigure((NXCObject)element);
 		}
 	}
 	

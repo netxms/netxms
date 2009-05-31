@@ -457,6 +457,24 @@ BOOL nxMapSrv::CheckUserRights(DWORD dwUserId, DWORD dwDesiredAccess)
       bRet = ((dwRights & dwDesiredAccess) == dwDesiredAccess)? TRUE : FALSE;
    }
 
+	// Check user rights via root object rights
+	if (!bRet)
+	{
+		NetObj *object = FindObjectById(m_dwObjectId);
+		if (object != NULL)
+		{
+	      dwRights = 0;
+
+			if (object->CheckAccessRights(dwUserId, OBJECT_ACCESS_READ))
+				dwRights |= MAP_ACCESS_READ;
+
+			if (object->CheckAccessRights(dwUserId, OBJECT_ACCESS_MODIFY))
+				dwRights |= MAP_ACCESS_WRITE;
+
+			bRet = ((dwRights & dwDesiredAccess) == dwDesiredAccess)? TRUE : FALSE;
+		}
+	}
+
    Unlock();
    return bRet;
 }
