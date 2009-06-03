@@ -50,6 +50,9 @@ public class ConfigFile extends PropertyPage
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+		layout.marginWidth = 0;
+		layout.marginHeight = 0;
+		//FormLayout layout = new FormLayout();
       dialogArea.setLayout(layout);
       
 		// File name
@@ -67,7 +70,8 @@ public class ConfigFile extends PropertyPage
       gd.grabExcessVerticalSpace = true;
       gd.horizontalAlignment = GridData.FILL;
       gd.verticalAlignment = GridData.FILL;
-      textContent = new Text(dialogArea, SWT.MULTI | SWT.BORDER);
+      gd.heightHint = 0;
+      textContent = new Text(dialogArea, SWT.MULTI | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
       textContent.setText(object.getFileContent());
       textContent.setLayoutData(gd);
       

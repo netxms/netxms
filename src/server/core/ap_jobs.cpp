@@ -66,6 +66,66 @@ bool PolicyDeploymentJob::run()
 		DWORD rcc = conn->deployPolicy(m_policy);
 		if (rcc == ERR_SUCCESS)
 		{
+			m_policy->linkNode(m_node);
+			success = true;
+		}
+		else
+		{
+			setFailureMessage(AgentErrorCodeToText(rcc));
+		}
+	}
+	else
+	{
+		setFailureMessage(_T("Agent connection not available"));
+	}
+	return success;
+}
+
+
+//
+// Constructor
+//
+
+PolicyUninstallJob::PolicyUninstallJob(Node *node, AgentPolicy *policy)
+                   : ServerJob(_T("UNINSTALL_AGENT_POLICY"), _T("Uninstall agent policy"), node->Id())
+{
+	m_node = node;
+	m_policy = policy;
+	node->IncRefCount();
+	policy->IncRefCount();
+
+	TCHAR buffer[1024];
+	_sntprintf(buffer, 1024, _T("Uninstall policy %s"), policy->Name());
+	setDescription(buffer);
+}
+
+
+//
+// Destructor
+//
+
+PolicyUninstallJob::~PolicyUninstallJob()
+{
+	m_node->DecRefCount();
+	m_policy->DecRefCount();
+}
+
+
+//
+// Run job
+//
+
+bool PolicyUninstallJob::run()
+{
+	bool success = false;
+
+	AgentConnectionEx *conn = m_node->CreateAgentConnection();
+	if (conn != NULL)
+	{
+		DWORD rcc = conn->uninstallPolicy(m_policy);
+		if (rcc == ERR_SUCCESS)
+		{
+			m_policy->unlinkNode(m_node);
 			success = true;
 		}
 		else

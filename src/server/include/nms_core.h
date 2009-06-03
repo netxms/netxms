@@ -302,6 +302,7 @@ public:
    virtual ~AgentConnectionEx();
 
 	DWORD deployPolicy(AgentPolicy *policy);
+	DWORD uninstallPolicy(AgentPolicy *policy);
 };
 
 
@@ -540,7 +541,7 @@ private:
 	void TestDCITransformation(CSCPMessage *pRequest);
 	void sendJobList(DWORD dwRqId);
 	void cancelJob(CSCPMessage *pRequest);
-	void deployAgentPolicy(CSCPMessage *pRequest);
+	void deployAgentPolicy(CSCPMessage *pRequest, bool uninstallFlag);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);

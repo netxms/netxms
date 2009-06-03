@@ -73,6 +73,7 @@ public class CustomAttributes extends PropertyPage
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
+		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
       final String[] columnNames = { "Name", "Value" };
@@ -91,6 +92,7 @@ public class CustomAttributes extends PropertyPage
       gridData.grabExcessVerticalSpace = true;
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
+      gridData.heightHint = 0;
       viewer.getControl().setLayoutData(gridData);
       
       Composite buttons = new Composite(dialogArea, SWT.NONE);

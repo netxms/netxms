@@ -109,3 +109,34 @@ DWORD AgentConnectionEx::deployPolicy(AgentPolicy *policy)
 	}
    return rcc;
 }
+
+
+//
+// Uninstall policy from agent
+//
+
+DWORD AgentConnectionEx::uninstallPolicy(AgentPolicy *policy)
+{
+	DWORD rqId, rcc;
+	CSCPMessage msg(getProtocolVersion());
+
+   rqId = generateRequestId();
+   msg.SetId(rqId);
+	msg.SetCode(CMD_UNINSTALL_AGENT_POLICY);
+	if (policy->createUninstallMessage(&msg))
+	{
+		if (SendMessage(&msg))
+		{
+			rcc = WaitForRCC(rqId, getCommandTimeout());
+		}
+		else
+		{
+			rcc = ERR_CONNECTION_BROKEN;
+		}
+	}
+	else
+	{
+		rcc = ERR_INTERNAL_ERROR;
+	}
+   return rcc;
+}

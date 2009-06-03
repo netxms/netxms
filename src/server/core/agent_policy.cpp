@@ -264,3 +264,14 @@ bool AgentPolicy::createDeploymentMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_POLICY_TYPE, (WORD)m_policyType);
 	return true;
 }
+
+
+//
+// Create uninstall message
+//
+
+bool AgentPolicy::createUninstallMessage(CSCPMessage *msg)
+{
+	msg->SetVariable(VID_POLICY_TYPE, (WORD)m_policyType);
+	return true;
+}

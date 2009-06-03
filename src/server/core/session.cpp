@@ -1177,7 +1177,10 @@ void ClientSession::ProcessingThread(void)
 				cancelJob(pMsg);
 				break;
 			case CMD_DEPLOY_AGENT_POLICY:
-				deployAgentPolicy(pMsg);
+				deployAgentPolicy(pMsg, false);
+				break;
+			case CMD_UNINSTALL_AGENT_POLICY:
+				deployAgentPolicy(pMsg, true);
 				break;
          default:
             // Pass message to loaded modules
@@ -10153,7 +10156,7 @@ void ClientSession::cancelJob(CSCPMessage *pRequest)
 // Deploy agent policy
 //
 
-void ClientSession::deployAgentPolicy(CSCPMessage *request)
+void ClientSession::deployAgentPolicy(CSCPMessage *request, bool uninstallFlag)
 {
 	CSCPMessage msg;
 
@@ -10174,7 +10177,11 @@ void ClientSession::deployAgentPolicy(CSCPMessage *request)
 			{
 				if (((Node *)target)->IsNativeAgent())
 				{
-					PolicyDeploymentJob *job = new PolicyDeploymentJob((Node *)target, (AgentPolicy *)policy);
+					ServerJob *job;
+					if (uninstallFlag)
+						job = new PolicyUninstallJob((Node *)target, (AgentPolicy *)policy);
+					else
+						job = new PolicyDeploymentJob((Node *)target, (AgentPolicy *)policy);
 					if (AddJob(job))
 					{
 						msg.SetVariable(VID_RCC, RCC_SUCCESS);

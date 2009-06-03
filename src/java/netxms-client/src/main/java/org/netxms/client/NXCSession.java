@@ -2037,4 +2037,20 @@ public class NXCSession
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
+
+	/**
+	 * Uninstall policy from agent
+	 * @param policyId Policy object ID
+	 * @param nodeId Node object ID
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void uninstallAgentPolicy(final long policyId, final long nodeId) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_UNINSTALL_AGENT_POLICY);
+		msg.setVariableInt32(NXCPCodes.VID_POLICY_ID, (int) policyId);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
 }

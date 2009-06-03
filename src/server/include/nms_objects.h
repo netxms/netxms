@@ -1155,6 +1155,10 @@ public:
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool createDeploymentMessage(CSCPMessage *msg);
+	virtual bool createUninstallMessage(CSCPMessage *msg);
+
+	void linkNode(Node *node) { AddChild(node); node->AddParent(this); }
+	void unlinkNode(Node *node) { DeleteChild(node); node->DeleteParent(this); }
 };
 
 
@@ -1183,6 +1187,7 @@ public:
    virtual DWORD ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool createDeploymentMessage(CSCPMessage *msg);
+	virtual bool createUninstallMessage(CSCPMessage *msg);
 };
 
 

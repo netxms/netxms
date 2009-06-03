@@ -166,4 +166,23 @@ public:
 	virtual ~PolicyDeploymentJob();
 };
 
+
+//
+// Agent policy uninstall job
+//
+
+class PolicyUninstallJob : public ServerJob
+{
+protected:
+	Node *m_node;
+	AgentPolicy *m_policy;
+
+	virtual bool run();
+
+public:
+	PolicyUninstallJob(Node *node, AgentPolicy *policy);
+	virtual ~PolicyUninstallJob();
+};
+
+
 #endif   /* _nxcore_jobs_h_ */

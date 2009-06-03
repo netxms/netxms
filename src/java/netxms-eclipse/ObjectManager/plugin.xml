@@ -14,10 +14,7 @@
              </instanceof>
           </enabledWhen>
         </page>
-  </extension>
 
-  <extension
-     point = "org.eclipse.ui.propertyPages">
         <page
            id="org.netxms.ui.eclipse.objectmanager.propertypages.CustomAttributes"
            name="Custom Attributes"
@@ -28,10 +25,7 @@
              </instanceof>
           </enabledWhen>
         </page>
-  </extension>
 
-  <extension
-     point = "org.eclipse.ui.propertyPages">
         <page
            id="org.netxms.ui.eclipse.objectmanager.propertypages.AutoApply"
            name="Automatic Apply Rules"
@@ -42,10 +36,7 @@
              </instanceof>
           </enabledWhen>
         </page>
-  </extension>
 
-  <extension
-     point = "org.eclipse.ui.propertyPages">
         <page
            id="org.netxms.ui.eclipse.objectmanager.propertypages.AutoBind"
            name="Automatic Bind Rules"
@@ -61,6 +52,19 @@
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.delete"
+            objectClass="org.netxms.client.NXCObject">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.DeleteObject"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.DeleteObject"
+               label="Delete"
+               icon="icons/delete.png"
+               menubarPath="objectmgmt">
+         </action>
+      </objectContribution>
+
+      <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.bind"
             objectClass="org.netxms.client.NXCContainer">
          <action
@@ -71,10 +75,7 @@
                menubarPath="objectmgmt">
          </action>
       </objectContribution>
-   </extension>
 
-   <extension
-         point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.bind"
             objectClass="org.netxms.client.NXCServiceRoot">

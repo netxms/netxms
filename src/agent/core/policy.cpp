@@ -105,3 +105,58 @@ DWORD DeployPolicy(DWORD session, CSCPMessage *request)
 	DebugPrintf(session, _T("Policy deployment: TYPE=%d RCC=%d"), type, rcc);
 	return rcc;
 }
+
+
+//
+// Remove configuration file
+//
+
+static DWORD RemoveConfig(DWORD session, CSCPMessage *msg)
+{
+	TCHAR path[MAX_PATH], name[MAX_PATH], *fname, tail;
+	int i;
+	DWORD rcc;
+
+	msg->GetVariableStr(VID_CONFIG_FILE_NAME, name, MAX_PATH);
+	DebugPrintf(session, _T("RemoveConfig(): original file name is %s"), name);
+	for(i = _tcslen(name) - 1; i >= 0; i--)
+		if ((name[i] == '/') || (name[i] == '\\'))
+		{
+			break;
+		}
+	fname = &name[i + 1];
+	tail = g_szConfigIncludeDir[_tcslen(g_szConfigIncludeDir) - 1];
+	_sntprintf(path, MAX_PATH, _T("%s%s%s"), g_szConfigIncludeDir, ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""), fname);
+	if (_tremove(path) != 0)
+	{
+		rcc = (errno == ENOENT) ? ERR_SUCCESS : ERR_IO_FAILURE;
+	}
+	else
+	{
+		rcc = ERR_SUCCESS;
+	}
+	return rcc;
+}
+
+
+//
+// Uninstall policy from agent
+//
+
+DWORD UninstallPolicy(DWORD session, CSCPMessage *request)
+{
+	DWORD type, rcc;
+
+	type = request->GetVariableShort(VID_POLICY_TYPE);
+	switch(type)
+	{
+		case AGENT_POLICY_CONFIG:
+			rcc = RemoveConfig(session, request);
+			break;
+		default:
+			rcc = ERR_BAD_ARGUMENTS;
+			break;
+	}
+	DebugPrintf(session, _T("Policy uninstall: TYPE=%d RCC=%d"), type, rcc);
+	return rcc;
+}

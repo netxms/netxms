@@ -45,8 +45,8 @@ public class General extends PropertyPage
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
-//      layout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
-//      layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
+		layout.marginWidth = 0;
+		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
       // Object ID

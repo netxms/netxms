@@ -386,8 +386,9 @@ static LONG H_RestartAgent(const TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, co
 	}
 
 #ifdef _WIN32
-   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" %s%s%s%s%s%s%s-X %u"), szExecName,
-              g_szConfigFile, (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
+   _sntprintf(szCmdLine, 4096, _T("\"%s\" -c \"%s\" -n \"%s\" -e \"%s\" %s%s%s%s%s%s%s-X %u"), szExecName,
+              g_szConfigFile, g_windowsServiceName, g_windowsEventSourceName,
+				  (g_dwFlags & AF_DAEMON) ? _T("-d ") : _T(""),
               (g_dwFlags & AF_HIDE_WINDOW) ? _T("-H ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
@@ -396,7 +397,6 @@ static LONG H_RestartAgent(const TCHAR *pszAction, NETXMS_VALUES_LIST *pArgs, co
 				  szPlatformSuffixOption,
               (g_dwFlags & AF_DAEMON) ? 0 : GetCurrentProcessId());
 	DebugPrintf(INVALID_INDEX, _T("Restarting agent with command line '%s'"), szCmdLine);
-
 
    // Fill in process startup info structure
    memset(&si, 0, sizeof(STARTUPINFO));

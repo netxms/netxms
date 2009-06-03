@@ -35,6 +35,7 @@
 void UnregisterSession(DWORD dwIndex);
 void ProxySNMPRequest(CSCPMessage *pRequest, CSCPMessage *pResponse);
 DWORD DeployPolicy(DWORD session, CSCPMessage *request);
+DWORD UninstallPolicy(DWORD session, CSCPMessage *request);
 
 
 //
@@ -493,6 +494,16 @@ void CommSession::ProcessingThread(void)
 					if (m_bMasterServer)
 					{
 						msg.SetVariable(VID_RCC, DeployPolicy(m_dwIndex, pMsg));
+					}
+					else
+					{
+                  msg.SetVariable(VID_RCC, ERR_ACCESS_DENIED);
+					}
+					break;
+				case CMD_UNINSTALL_AGENT_POLICY:
+					if (m_bMasterServer)
+					{
+						msg.SetVariable(VID_RCC, UninstallPolicy(m_dwIndex, pMsg));
 					}
 					else
 					{

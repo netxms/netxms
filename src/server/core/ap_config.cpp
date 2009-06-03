@@ -198,3 +198,20 @@ bool AgentPolicyConfig::createDeploymentMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_CONFIG_FILE_DATA, (BYTE *)m_fileContent, _tcslen(m_fileContent) * sizeof(TCHAR));
 	return true;
 }
+
+
+//
+// Create uninstall message
+//
+
+bool AgentPolicyConfig::createUninstallMessage(CSCPMessage *msg)
+{
+	if (!AgentPolicy::createDeploymentMessage(msg))
+		return false;
+
+	if (m_fileName[0] == 0)
+		return false;  // Policy cannot be uninstalled
+
+	msg->SetVariable(VID_CONFIG_FILE_NAME, m_fileName);
+	return true;
+}

@@ -57,6 +57,8 @@ public class AutoBind extends PropertyPage
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+		layout.marginWidth = 0;
+		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
 
       // Enable/disable check box

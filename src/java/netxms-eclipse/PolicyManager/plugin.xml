@@ -14,10 +14,7 @@
              </instanceof>
           </enabledWhen>
         </page>
-  </extension>
 
-  <extension
-     point = "org.eclipse.ui.propertyPages">
         <page
            id="org.netxms.ui.eclipse.policymanager.propertypages.ConfigFile"
            name="Configuration File"
@@ -43,10 +40,7 @@
                menubarPath="objectcreation">
          </action>
       </objectContribution>
-   </extension>
 
-   <extension
-         point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.createPolicyGroup"
             objectClass="org.netxms.client.NXCPolicyGroup">
@@ -58,10 +52,7 @@
                menubarPath="objectcreation">
          </action>
       </objectContribution>
-   </extension>
 
-   <extension
-         point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.createAgentPolicyConfig"
             objectClass="org.netxms.client.NXCPolicyRoot">
@@ -73,10 +64,7 @@
                menubarPath="objectcreation">
          </action>
       </objectContribution>
-   </extension>
 
-   <extension
-         point="org.eclipse.ui.popupMenus">
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.createAgentPolicyConfig"
             objectClass="org.netxms.client.NXCPolicyGroup">
@@ -88,10 +76,19 @@
                menubarPath="objectcreation">
          </action>
       </objectContribution>
-   </extension>
 
-   <extension
-         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.uninstallPolicy"
+            objectClass="org.netxms.client.NXCAgentPolicy">
+         <action
+               class="org.netxms.ui.eclipse.policymanager.actions.UninstallPolicy"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.policymanager.popupActions.UninstallPolicy"
+               label="Uninstall..."
+               menubarPath="objectmgmt">
+         </action>
+      </objectContribution>
+
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.deployPolicy"
             objectClass="org.netxms.client.NXCAgentPolicy">

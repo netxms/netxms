@@ -36,7 +36,7 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		configurer.setShowCoolBar(true);
 		configurer.setShowStatusLine(true);
 		//configurer.setTitle("NetXMS Management Console");
-		configurer.setTitle("Stronghold Management Console");
+		//configurer.setTitle("Stronghold Management Console");
 	}
 
 	/**
