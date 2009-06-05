@@ -1202,5 +1202,5 @@ CREATE TABLE ap_config_files
 	policy_id integer not null,
 	file_name varchar(63) not null,
 	file_content SQL_TEXT not null,
-	PRIMARY KEY(id)
+	PRIMARY KEY(policy_id)
 ) TABLE_TYPE;
