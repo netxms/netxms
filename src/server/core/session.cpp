@@ -2250,8 +2250,17 @@ void ClientSession::ModifyObject(CSCPMessage *pRequest)
             if (!pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_ACL))
                dwResult = RCC_ACCESS_DENIED;
 
+			// If user attempts to rename object, check object's name
+			if (pRequest->IsVariableExist(VID_OBJECT_NAME))
+			{
+				TCHAR name[256];
+				pRequest->GetVariableStr(VID_OBJECT_NAME, name, 256);
+				if (!IsValidObjectName(name, TRUE))
+					dwResult = RCC_INVALID_OBJECT_NAME;
+			}
+
          // If allowed, change object and set completion code
-         if (dwResult != RCC_ACCESS_DENIED)
+         if (dwResult == RCC_SUCCESS)
             dwResult = pObject->ModifyFromMessage(pRequest);
          msg.SetVariable(VID_RCC, dwResult);
 

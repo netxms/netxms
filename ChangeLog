@@ -1,4 +1,11 @@
 *
+* 1.0.0
+*
+
+- Fixed issues: #253, #254, #255
+
+
+*
 * 0.2.26
 *
 
@@ -19,6 +26,8 @@
 - Removed inconsistencies in some parameters' behavior on different platforms
 - DCI transformation scripts now can be tested from console
 - Network maps improved
+- Added support for matching Windows event log records by event source,
+  severity, and event code
 - Fixed issues: #197, #217, #239, #240, #241, #242, #243, #244, #245
 
 
