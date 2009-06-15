@@ -481,7 +481,7 @@ int main(int argc, char *argv[])
                         "   -h          : Display help and exit.\n"
                         "   -I          : MySQL only - specify TYPE=InnoDB for new tables.\n"
                         "   -M          : MySQL only - specify TYPE=MyISAM for new tables.\n"
-                        "   -t          : Enable trace moded (show executed SQL queries).\n"
+                        "   -t          : Enable trace mode (show executed SQL queries).\n"
                         "   -v          : Display version and exit.\n"
                         "   -X          : Ignore SQL errors when upgrading (USE WITH CARE!!!)\n"
                         "\n"));

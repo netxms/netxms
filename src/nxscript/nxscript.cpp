@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
    NXSL_Value **ppArgs;
    NXSL_ExtFunction func;
    int i, ch;
-   BOOL bDump = FALSE;
+   bool dump = false, printResult = false;
 
    func.m_iNumArgs = 0;
    func.m_pfHandler = F_new;
@@ -57,17 +57,20 @@ int main(int argc, char *argv[])
    m_pTestClass = new NXSL_TestClass;
 
    printf("NetXMS Scripting Host  Version " NETXMS_VERSION_STRING "\n"
-          "Copyright (c) 2005, 2006, 2007, 2008 Victor Kirhenshtein\n\n");
+          "Copyright (c) 2005-2009 Victor Kirhenshtein\n\n");
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "d")) != -1)
+   while((ch = getopt(argc, argv, "dr")) != -1)
    {
       switch(ch)
       {
          case 'd':
-            bDump = TRUE;
+            dump = true;
             break;
+			case 'r':
+				printResult = true;
+				break;
          case '?':
             return 127;
          default:
@@ -80,6 +83,7 @@ int main(int argc, char *argv[])
       printf("Usage: nxscript [options] script [arg1 [... argN]]\n\n"
              "Valid options are:\n"
              "   -d Dump compiled script code\n"
+             "   -r Print script return value\n"
              "\n");
       return 127;
    }
@@ -91,7 +95,7 @@ int main(int argc, char *argv[])
 		free(pszSource);
 		if (pScript != NULL)
 		{
-			if (bDump)
+			if (dump)
 				pScript->Dump(stdout);
 			pEnv = new NXSL_Environment;
 			pEnv->SetIO(stdin, stdout);
@@ -109,7 +113,13 @@ int main(int argc, char *argv[])
 				ppArgs = NULL;
 			}
 
-			if (pScript->Run(pEnv, argc - optind - 1, ppArgs) == -1)
+			if (pScript->Run(pEnv, argc - optind - 1, ppArgs) == 0)
+			{
+				NXSL_Value *result = pScript->GetResult();
+				if (printResult)
+					printf("Result = %s\n", (result != NULL) ? result->GetValueAsCString() : "(null)");
+			}
+			else
 			{
 				printf("%s\n", pScript->GetErrorText());
 			}

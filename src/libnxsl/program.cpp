@@ -405,8 +405,7 @@ int NXSL_Program::Run(NXSL_Environment *pEnv, DWORD argc, NXSL_Value **argv,
    dwOrigNumFn = m_dwNumFunctions;
 
    // Delete previous return value
-   delete m_pRetValue;
-   m_pRetValue = NULL;
+   delete_and_null(m_pRetValue);
 
    // Use provided environment or create default
    if (pEnv != NULL)
@@ -752,7 +751,12 @@ void NXSL_Program::Execute(void)
                         m_pDataStack->Pop();
                      m_pDataStack->Push(pValue);
                   }
-                  else
+                  else if (nRet == NXSL_STOP_SCRIPT_EXECUTION)
+						{
+                     m_pDataStack->Push(pValue);
+			            dwNext = m_dwCodeSize;
+						}
+						else
                   {
                      // Execution error inside function
                      Error(nRet);
@@ -833,11 +837,9 @@ void NXSL_Program::Execute(void)
          }
          break;
       case OPCODE_EXIT:
-         pValue = (NXSL_Value *)m_pDataStack->Pop();
-         if (pValue != NULL)
+			if (m_pDataStack->Size() > 0)
          {
             dwNext = m_dwCodeSize;
-            delete pValue;
          }
          else
          {

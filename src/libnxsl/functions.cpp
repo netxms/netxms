@@ -735,3 +735,17 @@ int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 	free(newStr);
 	return 0;
 }
+
+
+//
+// Exit from script
+//
+
+int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
+{
+	if (argc > 1)
+		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+	*ppResult = (argc == 0) ? new NXSL_Value((LONG)0) : new NXSL_Value(argv[0]);
+   return NXSL_STOP_SCRIPT_EXECUTION;
+}

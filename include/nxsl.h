@@ -73,6 +73,13 @@
 
 
 //
+// Special return codes for external functions
+//
+
+#define NXSL_STOP_SCRIPT_EXECUTION        -1
+
+
+//
 // Exportable classes
 //
 

@@ -20,7 +20,7 @@ public class NXCAlarm
 	public static final int STATE_ACKNOWLEDGED = 1;
 	public static final int STATE_TERMINATED = 2;
 	
-	// Alrm helpdesk states
+	// Alarm helpdesk states
 	public static final int HELPDESK_STATE_IGNORED = 0;
 	public static final int HELPDESK_STATE_OPEN = 1;
 	public static final int HELPDESK_STATE_CLOSED = 2;

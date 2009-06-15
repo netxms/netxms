@@ -31,6 +31,7 @@
 int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
+int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
@@ -56,6 +57,7 @@ int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult);
 
 static NXSL_ExtFunction m_builtinFunctions[] =
 {
+	{ "_exit", F_exit, -1 },
    { "abs", F_abs, 1 },
    { "classof", F_classof, 1 },
 	{ "d2x", F_d2x, -1 },
