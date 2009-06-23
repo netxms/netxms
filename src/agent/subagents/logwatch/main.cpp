@@ -29,6 +29,8 @@
 
 #ifdef _WIN32
 THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *);
+THREAD_RESULT THREAD_CALL ParserThreadEventLogV6(void *);
+bool InitEventLogParsersV6();
 #endif
 
 
@@ -190,29 +192,39 @@ static void AddParserFromConfig(const TCHAR *file)
 
 static BOOL SubagentInit(Config *config)
 {
-	int i;
-	ConfigEntry *parsers; 
-
-	parsers = config->getEntry(_T("/LogWatch/Parser"));
+	ConfigEntry *parsers = config->getEntry(_T("/LogWatch/Parser"));
 	if (parsers != NULL)
 	{
-		for(i = 0; i < parsers->getValueCount(); i++)
+		for(int i = 0; i < parsers->getValueCount(); i++)
 			AddParserFromConfig(parsers->getValue(i));
 	}
 
 	// Additional initialization
 #ifdef _WIN32
-	InitEventLogParsers();
+	THREAD_RESULT (THREAD_CALL *eventLogParserThread)(void *);
+	if (InitEventLogParsersV6())
+	{
+		eventLogParserThread = ParserThreadEventLogV6;
+	}
+	else
+	{
+		eventLogParserThread = ParserThreadEventLog;
+		InitEventLogParsers();
+	}
 #endif
 	// Create shutdown condition and start parsing threads
 	g_hCondShutdown = ConditionCreate(TRUE);
-	for(i = 0; i < (int)m_numParsers; i++)
+	for(int i = 0; i < (int)m_numParsers; i++)
 	{
 #ifdef _WIN32
 		if (m_parserList[i]->getFileName()[0] == _T('*'))	// event log
-			m_parserList[i]->setThread(ThreadCreateEx(ParserThreadEventLog, 0, m_parserList[i]));
+		{
+			m_parserList[i]->setThread(ThreadCreateEx(eventLogParserThread, 0, m_parserList[i]));
+		}
 		else	// regular file
+		{
 			m_parserList[i]->setThread(ThreadCreateEx(ParserThreadFile, 0, m_parserList[i]));
+		}
 #else
 		m_parserList[i]->setThread(ThreadCreateEx(ParserThreadFile, 0, m_parserList[i]));
 #endif

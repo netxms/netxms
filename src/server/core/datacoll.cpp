@@ -185,17 +185,20 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
       WatchdogNotify(dwWatchdogId);
 		DbgPrintf(8, _T("ItemPoller: wakeup"));
 
-      RWLockReadLock(g_rwlockNodeIndex, INFINITE);
-		DbgPrintf(8, _T("ItemPoller: node index lock acquired (index size %d)"), g_dwNodeAddrIndexSize);
+      RWLockReadLock(g_rwlockIdIndex, INFINITE);
+		DbgPrintf(8, _T("ItemPoller: object index lock acquired (index size %d)"), g_dwIdIndexSize);
       qwStart = GetCurrentTimeMs();
-      for(i = 0; i < g_dwNodeAddrIndexSize; i++)
+      for(i = 0; i < g_dwIdIndexSize; i++)
 		{
-			DbgPrintf(8, _T("ItemPoller: (%d) calling QueueItemsForPolling for node %s [%d]"),
-			          i, ((Node *)g_pNodeIndexByAddr[i].pObject)->Name(), ((Node *)g_pNodeIndexByAddr[i].pObject)->Id());
-         ((Node *)g_pNodeIndexByAddr[i].pObject)->QueueItemsForPolling(g_pItemQueue);
+			if (((NetObj *)g_pIndexById[i].pObject)->Type() == OBJECT_NODE)
+			{
+				DbgPrintf(8, _T("ItemPoller: (%d) calling QueueItemsForPolling for node %s [%d]"),
+							 i, ((Node *)g_pIndexById[i].pObject)->Name(), ((Node *)g_pIndexById[i].pObject)->Id());
+				((Node *)g_pIndexById[i].pObject)->QueueItemsForPolling(g_pItemQueue);
+			}
 		}
-      RWLockUnlock(g_rwlockNodeIndex);
-		DbgPrintf(8, _T("ItemPoller: node index lock released"));
+      RWLockUnlock(g_rwlockIdIndex);
+		DbgPrintf(8, _T("ItemPoller: object index lock released"));
 
       // Save last poll time
       dwTimingHistory[dwCurrPos] = (DWORD)(GetCurrentTimeMs() - qwStart);

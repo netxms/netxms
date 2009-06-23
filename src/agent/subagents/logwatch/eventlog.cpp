@@ -355,7 +355,7 @@ retry_read:
    }
    else
    {
-		NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to open event log \"%s\""),
+		NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to open event log \"%s\": %s"),
 		                &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, BUFFER_SIZE / sizeof(TCHAR)));
    }
 
