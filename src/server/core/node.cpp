@@ -722,7 +722,7 @@ void Node::StatusPoll(ClientSession *pSession, DWORD dwRqId, int nPoller)
 
    // Check SNMP agent connectivity
 restart_agent_check:
-   if ((m_dwFlags & NF_IS_SNMP) && (!(m_dwFlags & NF_DISABLE_SNMP)))
+   if ((m_dwFlags & NF_IS_SNMP) && (!(m_dwFlags & NF_DISABLE_SNMP)) && (m_dwIpAddr != 0))
    {
       TCHAR szBuffer[256];
       DWORD dwResult;
@@ -769,7 +769,7 @@ restart_agent_check:
    }
 
    // Check native agent connectivity
-   if ((m_dwFlags & NF_IS_NATIVE_AGENT) && (!(m_dwFlags & NF_DISABLE_NXCP)))
+   if ((m_dwFlags & NF_IS_NATIVE_AGENT) && (!(m_dwFlags & NF_DISABLE_NXCP)) && (m_dwIpAddr != 0))
    {
       AgentConnection *pAgentConn;
 
@@ -887,60 +887,64 @@ restart_agent_check:
    DbgPrintf(7, "StatusPoll(%s): finished child object poll", m_szName);
 
    // Check if entire node is down
-   LockChildList(FALSE);
-	if (m_dwChildCount > 0)
+	// This check is disabled for nodes without IP address
+	if (m_dwIpAddr != 0)
 	{
-		for(i = 0, bAllDown = TRUE; i < m_dwChildCount; i++)
-			if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
-				 (m_pChildList[i]->Status() != STATUS_CRITICAL) &&
-				 (m_pChildList[i]->Status() != STATUS_UNKNOWN) &&
-				 (m_pChildList[i]->Status() != STATUS_UNMANAGED) &&
-				 (m_pChildList[i]->Status() != STATUS_DISABLED))
-			{
-				bAllDown = FALSE;
-				break;
-			}
+		LockChildList(FALSE);
+		if (m_dwChildCount > 0)
+		{
+			for(i = 0, bAllDown = TRUE; i < m_dwChildCount; i++)
+				if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
+					 (m_pChildList[i]->Status() != STATUS_CRITICAL) &&
+					 (m_pChildList[i]->Status() != STATUS_UNKNOWN) &&
+					 (m_pChildList[i]->Status() != STATUS_UNMANAGED) &&
+					 (m_pChildList[i]->Status() != STATUS_DISABLED))
+				{
+					bAllDown = FALSE;
+					break;
+				}
+		}
+		else
+		{
+			bAllDown = FALSE;
+		}
+		UnlockChildList();
+		if (bAllDown && (m_dwFlags & NF_IS_NATIVE_AGENT) &&
+		    (!(m_dwFlags & NF_DISABLE_NXCP)))
+		   if (!(m_dwDynamicFlags & NDF_AGENT_UNREACHABLE))
+		      bAllDown = FALSE;
+		if (bAllDown && (m_dwFlags & NF_IS_SNMP) &&
+		    (!(m_dwFlags & NF_DISABLE_SNMP)))
+		   if (!(m_dwDynamicFlags & NDF_SNMP_UNREACHABLE))
+		      bAllDown = FALSE;
+		if (bAllDown)
+		{
+		   if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
+		   {
+		      m_dwDynamicFlags |= NDF_UNREACHABLE;
+		      PostEvent(EVENT_NODE_DOWN, m_dwId, NULL);
+		      SendPollerMsg(dwRqId, POLLER_ERROR "Node is unreachable\r\n");
+		   }
+		   else
+		   {
+		      SendPollerMsg(dwRqId, POLLER_WARNING "Node is still unreachable\r\n");
+		   }
+		}
+		else
+		{
+		   if (m_dwDynamicFlags & NDF_UNREACHABLE)
+		   {
+		      m_dwDynamicFlags &= ~(NDF_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_AGENT_UNREACHABLE);
+		      PostEvent(EVENT_NODE_UP, m_dwId, NULL);
+		      SendPollerMsg(dwRqId, POLLER_INFO "Node recovered from unreachable state\r\n");
+				goto restart_agent_check;
+		   }
+		   else
+		   {
+		      SendPollerMsg(dwRqId, POLLER_INFO "Node is connected\r\n");
+		   }
+		}
 	}
-	else
-	{
-		bAllDown = FALSE;
-	}
-   UnlockChildList();
-   if (bAllDown && (m_dwFlags & NF_IS_NATIVE_AGENT) &&
-       (!(m_dwFlags & NF_DISABLE_NXCP)))
-      if (!(m_dwDynamicFlags & NDF_AGENT_UNREACHABLE))
-         bAllDown = FALSE;
-   if (bAllDown && (m_dwFlags & NF_IS_SNMP) &&
-       (!(m_dwFlags & NF_DISABLE_SNMP)))
-      if (!(m_dwDynamicFlags & NDF_SNMP_UNREACHABLE))
-         bAllDown = FALSE;
-   if (bAllDown)
-   {
-      if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
-      {
-         m_dwDynamicFlags |= NDF_UNREACHABLE;
-         PostEvent(EVENT_NODE_DOWN, m_dwId, NULL);
-         SendPollerMsg(dwRqId, POLLER_ERROR "Node is unreachable\r\n");
-      }
-      else
-      {
-         SendPollerMsg(dwRqId, POLLER_WARNING "Node is still unreachable\r\n");
-      }
-   }
-   else
-   {
-      if (m_dwDynamicFlags & NDF_UNREACHABLE)
-      {
-         m_dwDynamicFlags &= ~(NDF_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_AGENT_UNREACHABLE);
-         PostEvent(EVENT_NODE_UP, m_dwId, NULL);
-         SendPollerMsg(dwRqId, POLLER_INFO "Node recovered from unreachable state\r\n");
-			goto restart_agent_check;
-      }
-      else
-      {
-         SendPollerMsg(dwRqId, POLLER_INFO "Node is connected\r\n");
-      }
-   }
 
    // Send delayed events and destroy delayed event queue
    ResendEvents(pQueue);
@@ -1021,7 +1025,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 		// ***** NetXMS agent check *****
       DbgPrintf(5, "ConfPoll(%s): checking for NetXMS agent Flags={%08X} DynamicFlags={%08X}", m_szName, m_dwFlags, m_dwDynamicFlags);
       if ((!((m_dwFlags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE))) &&
-          (!(m_dwFlags & NF_DISABLE_NXCP)))
+          (!(m_dwFlags & NF_DISABLE_NXCP)) && (m_dwIpAddr != 0))
       {
 	      SendPollerMsg(dwRqId, _T("   Checking NetXMS agent...\r\n"));
          pAgentConn = new AgentConnection(htonl(m_dwIpAddr), m_wAgentPort,
@@ -1113,7 +1117,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 
 		// ***** SNMP check *****
 		if ((!((m_dwFlags & NF_IS_SNMP) && (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE))) &&
-          (!(m_dwFlags & NF_DISABLE_SNMP)))
+          (!(m_dwFlags & NF_DISABLE_SNMP)) && (m_dwIpAddr != 0))
       {
 	      SendPollerMsg(dwRqId, _T("   Checking SNMP...\r\n"));
          DbgPrintf(5, "ConfPoll(%s): trying SNMP GET", m_szName);
@@ -1280,7 +1284,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
 
       // Check for CheckPoint SNMP agent on port 260
       DbgPrintf(5, "ConfPoll(%s): checking for CheckPoint SNMP on port 260", m_szName);
-      if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)))
+      if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)) && (m_dwIpAddr != 0))
       {
 			pTransport = new SNMP_UDPTransport;
 			((SNMP_UDPTransport *)pTransport)->CreateUDPTransport(NULL, htonl(m_dwIpAddr), CHECKPOINT_SNMP_PORT);
@@ -1535,14 +1539,16 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
                if (pInterface->IpAddr() != m_dwIpAddr)
                {
                   DeleteInterface(pInterface);
-                  CreateNewInterface(m_dwIpAddr, dwNetMask);
+						if (m_dwIpAddr != 0)
+	                  CreateNewInterface(m_dwIpAddr, dwNetMask);
                }
             }
          }
          else if (dwCount == 0)
          {
             // No interfaces at all, create pseudo-interface
-            CreateNewInterface(m_dwIpAddr, dwNetMask);
+				if (m_dwIpAddr != 0)
+            	CreateNewInterface(m_dwIpAddr, dwNetMask);
          }
       }
 
