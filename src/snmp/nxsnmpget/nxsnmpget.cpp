@@ -1,6 +1,6 @@
 /* 
 ** nxsnmpget - command line tool used to retrieve parameters from SNMP agent
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxsnmpget.cpp
+** File: nxsnmpget.cpp
 **
 **/
 

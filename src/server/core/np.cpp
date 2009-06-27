@@ -139,9 +139,9 @@ static NXSL_DiscoveryClass m_nxslDiscoveryClass;
 // Returns pointer to new node object on success or NULL on failure
 //
 
-NetObj *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
-                    TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy,
-						  Cluster *pCluster)
+Node *PollNewNode(DWORD dwIpAddr, DWORD dwNetMask, DWORD dwCreationFlags,
+                  TCHAR *pszName, DWORD dwProxyNode, DWORD dwSNMPProxy,
+                  Cluster *pCluster)
 {
    Node *pNode;
    char szIpAddr1[32], szIpAddr2[32];
@@ -427,7 +427,15 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 		          IpToStr(pInfo->dwIpAddr, szIpAddr),
 		          IpToStr(pInfo->dwNetMask, szNetMask));
       if (AcceptNewNode(pInfo->dwIpAddr, pInfo->dwNetMask))
-         PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, NULL, 0, 0, NULL);
+		{
+         Node *node = PollNewNode(pInfo->dwIpAddr, pInfo->dwNetMask, 0, NULL, 0, 0, NULL);
+			if (node != NULL)
+			{
+				// We should do configuration poll before taking new node from the queue
+				// to prevent possible node duplication
+				node->ConfigurationPoll(NULL, 0, -1, pInfo->dwNetMask);
+			}
+		}
       free(pInfo);
    }
    DbgPrintf(1, "Node poller thread terminated");

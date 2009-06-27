@@ -37,7 +37,7 @@ static struct
 {
    { ASN_TRAP_V1_PDU, SNMP_VERSION_1, SNMP_TRAP },
    { ASN_TRAP_V2_PDU, SNMP_VERSION_2C, SNMP_TRAP },
-   { ASN_TRAP_V1_PDU, SNMP_VERSION_1, SNMP_TRAP },
+   { ASN_TRAP_V2_PDU, SNMP_VERSION_3, SNMP_TRAP },
    { ASN_GET_REQUEST_PDU, -1, SNMP_GET_REQUEST },
    { ASN_GET_NEXT_REQUEST_PDU, -1, SNMP_GET_NEXT_REQUEST },
    { ASN_SET_REQUEST_PDU, -1, SNMP_SET_REQUEST },
@@ -480,7 +480,7 @@ DWORD SNMP_PDU::Encode(BYTE **ppBuffer)
    BYTE *pbCurrPos, *pBlock, *pVarBinds, *pPacket;
 
    // Estimate required buffer size and allocate it
-   for(dwBufferSize = 256, i = 0; i < m_dwNumVariables; i++)
+   for(dwBufferSize = 1024, i = 0; i < m_dwNumVariables; i++)
       dwBufferSize += m_ppVarList[i]->GetValueLength() + m_ppVarList[i]->GetName()->Length() * 4 + 16;
    pBlock = (BYTE *)malloc(dwBufferSize);
    pVarBinds = (BYTE *)malloc(dwBufferSize);
@@ -572,15 +572,31 @@ DWORD SNMP_PDU::Encode(BYTE **ppBuffer)
       dwPacketSize += dwBytes;
       pbCurrPos += dwBytes;
 
-      dwBytes = BER_Encode(ASN_OCTET_STRING, (BYTE *)m_pszCommunity,
-                           (DWORD)strlen(m_pszCommunity), pbCurrPos,
-                           dwBufferSize - dwPacketSize);
-      dwPacketSize += dwBytes;
-      pbCurrPos += dwBytes;
+		if (m_dwVersion == SNMP_VERSION_3)
+		{
+			dwBytes = EncodeV3Header(pbCurrPos, dwBufferSize - dwPacketSize);
+			dwPacketSize += dwBytes;
+			pbCurrPos += dwBytes;
 
-      // Encode PDU into packet
-      dwBytes = BER_Encode(dwPDUType, pBlock, dwPDUSize, pbCurrPos, dwBufferSize - dwPacketSize);
-      dwPacketSize += dwBytes;
+			dwBytes = EncodeV3SecurityParameters(pbCurrPos, dwBufferSize - dwPacketSize);
+			dwPacketSize += dwBytes;
+			pbCurrPos += dwBytes;
+
+			dwBytes = EncodeV3ScopedPDU(dwPDUType, pBlock, dwPDUSize, pbCurrPos, dwBufferSize - dwPacketSize);
+			dwPacketSize += dwBytes;
+		}
+		else
+		{
+			dwBytes = BER_Encode(ASN_OCTET_STRING, (BYTE *)m_pszCommunity,
+										(DWORD)strlen(m_pszCommunity), pbCurrPos,
+										dwBufferSize - dwPacketSize);
+			dwPacketSize += dwBytes;
+			pbCurrPos += dwBytes;
+
+			// Encode PDU into packet
+			dwBytes = BER_Encode(dwPDUType, pBlock, dwPDUSize, pbCurrPos, dwBufferSize - dwPacketSize);
+			dwPacketSize += dwBytes;
+		}
 
       // And final step: allocate buffer for entire datagramm and wrap packet
       // into SEQUENCE
@@ -600,6 +616,54 @@ DWORD SNMP_PDU::Encode(BYTE **ppBuffer)
 
 
 //
+// Encode version 3 header
+//
+
+DWORD SNMP_PDU::EncodeV3Header(BYTE *buffer, DWORD bufferSize)
+{
+	BYTE header[256];
+	DWORD bytes;
+
+	bytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_dwRqId, sizeof(DWORD), header, 256);
+	bytes += BER_Encode(ASN_INTEGER, (BYTE *)&m_dwMsgMaxSize, sizeof(DWORD), &header[bytes], 256 - bytes);
+	bytes += BER_Encode(ASN_OCTET_STRING, &m_flags, 1, &header[bytes], 256 - bytes);
+	bytes += BER_Encode(ASN_INTEGER, (BYTE *)&m_dwSecurityModel, sizeof(DWORD), &header[bytes], 256 - bytes);
+	return BER_Encode(ASN_SEQUENCE, header, bytes, buffer, bufferSize);
+}
+
+
+//
+// Encode version 3 security parameters
+//
+
+DWORD SNMP_PDU::EncodeV3SecurityParameters(BYTE *buffer, DWORD bufferSize)
+{
+	return 0;
+}
+
+
+//
+// Encode versionj 3 scoped PDU
+//
+
+DWORD SNMP_PDU::EncodeV3ScopedPDU(DWORD pduType, BYTE *pdu, DWORD pduSize, BYTE *buffer, DWORD bufferSize)
+{
+	DWORD spduLen = pduSize + SNMP_MAX_CONTEXT_NAME + SNMP_MAX_CONTEXT_ID + 32;
+	BYTE *spdu = (BYTE *)malloc(spduLen);
+	DWORD bytes;
+
+	bytes = BER_Encode(ASN_OCTET_STRING, m_contextId, (DWORD)m_contextIdLen, spdu, spduLen);
+	bytes += BER_Encode(ASN_OCTET_STRING, (BYTE *)m_contextName, strlen(m_contextName), &spdu[bytes], spduLen - bytes);
+	bytes += BER_Encode(pduType, pdu, pduSize, &spdu[bytes], spduLen - bytes);
+	
+	// Wrap scoped PDU into SEQUENCE
+	bytes = BER_Encode(ASN_SEQUENCE, spdu, bytes, buffer, bufferSize);
+	free(spdu);
+	return bytes;
+}
+
+
+//
 // Bind variable to PDU
 //
 
@@ -608,4 +672,32 @@ void SNMP_PDU::BindVariable(SNMP_Variable *pVar)
    m_ppVarList = (SNMP_Variable **)realloc(m_ppVarList, sizeof(SNMP_Variable *) * (m_dwNumVariables + 1));
    m_ppVarList[m_dwNumVariables] = pVar;
    m_dwNumVariables++;
+}
+
+
+//
+// Set context ID
+//
+
+void SNMP_PDU::SetContextId(BYTE *id, int len)
+{
+	m_contextIdLen = min(len, SNMP_MAX_CONTEXT_ID);
+	memcpy(m_contextId, id, m_contextIdLen);
+}
+
+void SNMP_PDU::SetContextId(const char *id)
+{
+	m_contextIdLen = min(strlen(id), SNMP_MAX_CONTEXT_ID);
+	memcpy(m_contextId, id, m_contextIdLen);
+}
+
+
+//
+// Set context name
+//
+
+void SNMP_PDU::SetContextName(const char *name)
+{
+	strncpy(m_contextName, name, SNMP_MAX_CONTEXT_NAME);
+	m_contextName[SNMP_MAX_CONTEXT_NAME - 1] = 0;
 }

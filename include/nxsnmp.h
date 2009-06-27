@@ -59,6 +59,8 @@
 #define MAX_OID_LEN           128
 #define MAX_MIB_OBJECT_NAME   64
 #define SNMP_DEFAULT_PORT     161
+#define SNMP_MAX_CONTEXT_ID   256
+#define SNMP_MAX_CONTEXT_NAME 256
 
 
 //
@@ -106,6 +108,7 @@
 
 #define SNMP_VERSION_1     0
 #define SNMP_VERSION_2C    1
+#define SNMP_VERSION_3     3
 
 
 //
@@ -162,6 +165,15 @@
 #define ASN_GET_BULK_REQUEST_PDU    0xA5
 #define ASN_INFORM_REQUEST_PDU      0xA6
 #define ASN_TRAP_V2_PDU             0xA7
+
+
+//
+// SNMP V3 header flags
+//
+
+#define SNMP_AUTH_FLAG           0x01
+#define SNMP_PRIV_FLAG           0x02
+#define SNMP_REPORTABLE_FLAG     0x04
 
 
 //
@@ -386,12 +398,21 @@ private:
    DWORD m_dwRqId;
    DWORD m_dwErrorCode;
    DWORD m_dwErrorIndex;
+	DWORD m_dwMsgMaxSize;
+	BYTE m_flags;
+	DWORD m_dwSecurityModel;
+	BYTE m_contextId[SNMP_MAX_CONTEXT_ID];
+	int m_contextIdLen;
+	char m_contextName[SNMP_MAX_CONTEXT_NAME];
 
    BOOL ParseVariable(BYTE *pData, DWORD dwVarLength);
    BOOL ParseVarBinds(BYTE *pData, DWORD dwPDULength);
    BOOL ParsePDU(BYTE *pData, DWORD dwPDULength);
    BOOL ParseTrapPDU(BYTE *pData, DWORD dwPDULength);
    BOOL ParseTrap2PDU(BYTE *pData, DWORD dwPDULength);
+	DWORD EncodeV3Header(BYTE *buffer, DWORD bufferSize);
+	DWORD EncodeV3SecurityParameters(BYTE *buffer, DWORD bufferSize);
+	DWORD EncodeV3ScopedPDU(DWORD pduType, BYTE *pdu, DWORD pduSize, BYTE *buffer, DWORD bufferSize);
 
 public:
    SNMP_PDU();
@@ -413,6 +434,10 @@ public:
 
    DWORD GetRequestId(void) { return m_dwRqId; }
    void SetRequestId(DWORD dwId) { m_dwRqId = dwId; }
+
+	void SetContextId(BYTE *id, int len);
+	void SetContextId(const char *id);
+	void SetContextName(const char *name);
 
    void BindVariable(SNMP_Variable *pVar);
 };
