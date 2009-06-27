@@ -207,6 +207,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
    DBGetField(hResult, 0, 7, m_szCommunityString, MAX_COMMUNITY_LENGTH);
    DecodeSQLString(m_szCommunityString);
    DBGetField(hResult, 0, 8, m_szObjectId, MAX_OID_LEN * 4);
+	DecodeSQLString(m_szObjectId);
    m_dwNodeType = DBGetFieldULong(hResult, 0, 9);
    DBGetField(hResult, 0, 10, m_szAgentVersion, MAX_AGENT_VERSION_LEN);
    DecodeSQLString(m_szAgentVersion);
@@ -232,14 +233,6 @@ BOOL Node::CreateFromDB(DWORD dwId)
          return FALSE;     // Query failed
 
       iNumRows = DBGetNumRows(hResult);
-      if (iNumRows == 0)
-      {
-//         DBFreeResult(hResult);
-         DbgPrintf(3, "Unbound node object %d (%s)", dwId, m_szName);
-bResult = TRUE;
-//         return FALSE;     // No parents - it shouldn't happen if database isn't corrupted
-      }
-
       for(i = 0; i < iNumRows; i++)
       {
          dwSubnetId = DBGetFieldULong(hResult, i, 0);
@@ -291,7 +284,7 @@ bResult = TRUE;
 BOOL Node::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR *pszEscVersion, *pszEscPlatform, *pszEscSecret;
-   TCHAR *pszEscCommunity, szQuery[4096], szIpAddr[16];
+   TCHAR *pszEscCommunity, *escObjectId, szQuery[4096], szIpAddr[16];
 	TCHAR *pszEscDescr;
    DB_RESULT hResult;
    BOOL bNewObject = TRUE;
@@ -317,6 +310,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    pszEscPlatform = EncodeSQLString(m_szPlatformName);
    pszEscSecret = EncodeSQLString(m_szSharedSecret);
    pszEscCommunity = EncodeSQLString(m_szCommunityString);
+   escObjectId = EncodeSQLString(m_szObjectId);
    pszEscDescr = EncodeSQLString(m_szSysDescription);
    if (bNewObject)
       snprintf(szQuery, 4096,
@@ -329,7 +323,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 					"(%d,'%s',%d,%d,'%s',%d,%d,%d,'%s','%s',%d,%d,'%s','%s','%s',%d,%d,%d,%d,%d)",
                m_dwId, IpToStr(m_dwIpAddr, szIpAddr), m_dwFlags,
                m_iSNMPVersion, pszEscCommunity, m_iStatusPollType,
-               m_wAgentPort, m_wAuthMethod, pszEscSecret, m_szObjectId,
+               m_wAgentPort, m_wAuthMethod, pszEscSecret, escObjectId,
                m_dwProxyNode, m_dwNodeType, pszEscVersion,
                pszEscPlatform, pszEscDescr, m_dwPollerNode, m_dwZoneGUID,
 					m_dwSNMPProxy, m_iRequiredPollCount,m_nUseIfXTable);
@@ -345,7 +339,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
                IpToStr(m_dwIpAddr, szIpAddr), 
                m_dwFlags, m_iSNMPVersion, pszEscCommunity,
                m_iStatusPollType, m_wAgentPort, m_wAuthMethod, pszEscSecret, 
-               m_szObjectId, m_dwNodeType, pszEscDescr,
+               escObjectId, m_dwNodeType, pszEscDescr,
                pszEscVersion, pszEscPlatform, m_dwPollerNode, m_dwZoneGUID,
                m_dwProxyNode, m_dwSNMPProxy, m_iRequiredPollCount,
 					m_nUseIfXTable, m_dwId);
@@ -354,6 +348,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    free(pszEscPlatform);
    free(pszEscSecret);
    free(pszEscCommunity);
+	free(escObjectId);
 	free(pszEscDescr);
 
    // Save data collection items
