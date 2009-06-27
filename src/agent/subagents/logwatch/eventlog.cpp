@@ -38,17 +38,19 @@ class EventSource
 {
 private:
 	TCHAR *m_name;
+	TCHAR *m_logName;
 	int m_numModules;
 	HMODULE *m_modules;
 
 public:
-	EventSource(const TCHAR *name);
+	EventSource(const TCHAR *logName, const TCHAR *name);
 	~EventSource();
 
-	BOOL Load();
-	BOOL FormatMessage(EVENTLOGRECORD *rec, TCHAR *msg, size_t msgSize);
+	BOOL load();
+	BOOL formatMessage(EVENTLOGRECORD *rec, TCHAR *msg, size_t msgSize);
 
-	const TCHAR *GetName() { return m_name; }
+	const TCHAR *getName() { return m_name; }
+	const TCHAR *getLogName() { return m_logName; }
 };
 
 
@@ -56,8 +58,9 @@ public:
 // Event source constructor
 //
 
-EventSource::EventSource(const TCHAR *name)
+EventSource::EventSource(const TCHAR *logName, const TCHAR *name)
 {
+	m_logName = _tcsdup(logName);
 	m_name = _tcsdup(name);
 	m_numModules = 0;
 	m_modules = NULL;
@@ -72,6 +75,7 @@ EventSource::~EventSource()
 {
 	int i;
 
+	safe_free(m_logName);
 	safe_free(m_name);
 	for(i = 0; i < m_numModules; i++)
 		FreeLibrary(m_modules[i]);
@@ -83,7 +87,7 @@ EventSource::~EventSource()
 // Load event source
 //
 
-BOOL EventSource::Load()
+BOOL EventSource::load()
 {
    HKEY hKey;
    TCHAR buffer[MAX_PATH], path[MAX_PATH], *curr, *next;
@@ -91,7 +95,7 @@ BOOL EventSource::Load()
    DWORD size = MAX_PATH;
    BOOL isLoaded = FALSE;
 
-   _sntprintf(buffer, MAX_PATH, _T("System\\CurrentControlSet\\Services\\EventLog\\System\\%s"), m_name);
+   _sntprintf(buffer, MAX_PATH, _T("System\\CurrentControlSet\\Services\\EventLog\\%s\\%s"), m_logName, m_name);
    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, buffer, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
    {
       if (RegQueryValueEx(hKey, _T("EventMessageFile"), NULL, NULL, (BYTE *)buffer, &size) == ERROR_SUCCESS)
@@ -132,7 +136,7 @@ BOOL EventSource::Load()
 // Format message
 //
 
-BOOL EventSource::FormatMessage(EVENTLOGRECORD *rec, TCHAR *msg, size_t msgSize)
+BOOL EventSource::formatMessage(EVENTLOGRECORD *rec, TCHAR *msg, size_t msgSize)
 {
    TCHAR *strings[256], *str;
    int i;
@@ -159,8 +163,8 @@ BOOL EventSource::FormatMessage(EVENTLOGRECORD *rec, TCHAR *msg, size_t msgSize)
    }
    if (!success)
    {
-      NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: event log %s FormatMessage(%d) error: %s"),
-		                m_name, rec->EventID, 
+      NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: event log %s source %s FormatMessage(%d) error: %s"),
+		                m_logName, m_name, rec->EventID, 
 							 GetSystemErrorText(GetLastError(), msg, msgSize));
       nx_strncpy(msg, _T("**** LogWatch: cannot format message ****"), msgSize);
    }
@@ -181,7 +185,7 @@ static CRITICAL_SECTION m_csEventSourceAccess;
 // Load event source
 //
 
-EventSource *LoadEventSource(const TCHAR *name)
+EventSource *LoadEventSource(const TCHAR *log, const TCHAR *name)
 {
 	EventSource *es = NULL;
 	int i;
@@ -190,7 +194,8 @@ EventSource *LoadEventSource(const TCHAR *name)
 	
 	for(i = 0; i < m_numEventSources; i++)
 	{
-		if (!_tcsicmp(name, m_eventSourceList[i]->GetName()))
+		if (!_tcsicmp(name, m_eventSourceList[i]->getName()) &&
+			 !_tcsicmp(log, m_eventSourceList[i]->getLogName()))
 		{
 			es = m_eventSourceList[i];
 			break;
@@ -199,8 +204,8 @@ EventSource *LoadEventSource(const TCHAR *name)
 
 	if (es == NULL)
 	{
-		es = new EventSource(name);
-		if (es->Load())
+		es = new EventSource(log, name);
+		if (es->load())
 		{
 			m_numEventSources++;
 			m_eventSourceList = (EventSource **)realloc(m_eventSourceList, sizeof(EventSource *) * m_numEventSources);
@@ -225,6 +230,7 @@ struct NOTIFICATION_THREAD_DATA
 {
 	HANDLE hLogEvent;
 	HANDLE hWakeupEvent;
+	HANDLE hStopEvent;
 };
 
 
@@ -237,7 +243,7 @@ static THREAD_RESULT THREAD_CALL NotificationThread(void *arg)
 	HANDLE handles[2];
 
 	handles[0] = ((NOTIFICATION_THREAD_DATA *)arg)->hLogEvent;
-	handles[1] = g_hCondShutdown;
+	handles[1] = ((NOTIFICATION_THREAD_DATA *)arg)->hStopEvent;
    while(1)
    {
       if (WaitForMultipleObjects(2, handles, FALSE, INFINITE) == WAIT_OBJECT_0 + 1)
@@ -258,15 +264,15 @@ static void ParseEvent(LogParser *parser, EVENTLOGRECORD *rec)
 	EventSource *es;
 
 	eventSourceName = (TCHAR *)((BYTE *)rec + sizeof(EVENTLOGRECORD));
-	es = LoadEventSource(eventSourceName);
+	es = LoadEventSource(&(parser->getFileName()[1]), eventSourceName);
 	if (es != NULL)
 	{
-		es->FormatMessage(rec, msg, 8192);
+		es->formatMessage(rec, msg, 8192);
 		parser->matchEvent(eventSourceName, rec->EventID & 0x0000FFFF, rec->EventType, msg);
 	}
 	else
 	{
-		NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: unable to load event source \"%s\""), eventSourceName);
+		NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: unable to load event source \"%s\" for log \"%s\""), eventSourceName, &(parser->getFileName()[1]));
 	}
 }
 
@@ -280,33 +286,38 @@ THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *arg)
 	LogParser *parser = (LogParser *)arg;
    HANDLE hLog, handles[2];
    BYTE *buffer, *rec;
-   DWORD bytes, bytesNeeded, bufferSize = 32768;
-   BOOL success;
+   DWORD bytes, bytesNeeded, bufferSize = 32768, error = 0;
+   BOOL success, reopen = FALSE;
 	THREAD nt;	// Notification thread's handle
 	NOTIFICATION_THREAD_DATA nd;
 
    buffer = (BYTE *)malloc(bufferSize);
 
+reopen_log:
    hLog = OpenEventLog(NULL, &(parser->getFileName()[1]));
    if (hLog != NULL)
    {
       nd.hLogEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
       nd.hWakeupEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+      nd.hStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
       
-      // Initial read
-		do
+      // Initial read (skip on reopen)
+		if (!reopen)
 		{
-			while((success = ReadEventLog(hLog, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, 0,
-			                              buffer, bufferSize, &bytes, &bytesNeeded)));
-			if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+			do
 			{
-				bufferSize = bytesNeeded;
-				buffer = (BYTE *)realloc(buffer, bufferSize);
-				success = TRUE;
-			}
-		} while(success);
+				while((success = ReadEventLog(hLog, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, 0,
+														buffer, bufferSize, &bytes, &bytesNeeded)));
+				if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+				{
+					bufferSize = bytesNeeded;
+					buffer = (BYTE *)realloc(buffer, bufferSize);
+					success = TRUE;
+				}
+			} while(success);
+		}
 
-      if (GetLastError() == ERROR_HANDLE_EOF)
+      if (reopen || (GetLastError() == ERROR_HANDLE_EOF))
       {
          nt = ThreadCreateEx(NotificationThread, 0, &nd);
          NotifyChangeEventLog(hLog, nd.hLogEvent);
@@ -317,7 +328,7 @@ THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *arg)
 
          while(1)
          {
-            if (WaitForMultipleObjects(2, handles, FALSE, INFINITE) == WAIT_OBJECT_0 + 1)
+            if (WaitForMultipleObjects(2, handles, FALSE, 5000) == WAIT_OBJECT_0 + 1)
 					break;	// Shutdown condition raised
 
             do
@@ -325,7 +336,8 @@ THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *arg)
 retry_read:
                success = ReadEventLog(hLog, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, 0,
                                        buffer, BUFFER_SIZE, &bytes, &bytesNeeded);
-					if (!success && (GetLastError() == ERROR_INSUFFICIENT_BUFFER))
+					error = GetLastError();
+					if (!success && (error == ERROR_INSUFFICIENT_BUFFER))
 					{
 						bufferSize = bytesNeeded;
 						buffer = (BYTE *)realloc(buffer, bufferSize);
@@ -338,20 +350,40 @@ retry_read:
                }
             } while(success);
 
-            if (GetLastError() != ERROR_HANDLE_EOF)
+				if (error == ERROR_EVENTLOG_FILE_CHANGED)
+				{
+					NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Got ERROR_EVENTLOG_FILE_CHANGED, reopen event log \"%s\""),
+										 &(parser->getFileName()[1]));
+					break;
+				}
+
+            if (error != ERROR_HANDLE_EOF)
 					NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to read event log \"%s\": %s"),
 										 &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, BUFFER_SIZE / sizeof(TCHAR)));
          }
 
+			SetEvent(nd.hStopEvent);
 			ThreadJoin(nt);
 			NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, _T("LogWatch: Stop watching event log \"%s\""),
 			                &(parser->getFileName()[1]));
       }
       else
       {
-			NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to read event log \"%s\": %s"),
+			NxWriteAgentLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to read event log (initial read) \"%s\": %s"),
 			                &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, BUFFER_SIZE / sizeof(TCHAR)));
       }
+
+		CloseEventLog(hLog);
+		CloseHandle(nd.hLogEvent);
+		CloseHandle(nd.hWakeupEvent);
+		CloseHandle(nd.hStopEvent);
+		
+		if (error == ERROR_EVENTLOG_FILE_CHANGED)
+		{
+			error = 0;
+			reopen = TRUE;
+			goto reopen_log;
+		}
    }
    else
    {

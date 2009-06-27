@@ -220,6 +220,9 @@ static BOOL SubagentInit(Config *config)
 		if (m_parserList[i]->getFileName()[0] == _T('*'))	// event log
 		{
 			m_parserList[i]->setThread(ThreadCreateEx(eventLogParserThread, 0, m_parserList[i]));
+			// Seems that simultaneous calls to OpenEventLog() from two or more threads may
+			// cause entire process to hang
+			ThreadSleepMs(200);
 		}
 		else	// regular file
 		{
