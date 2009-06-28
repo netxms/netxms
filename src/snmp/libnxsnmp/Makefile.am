@@ -1,6 +1,7 @@
 INCLUDES=-I@top_srcdir@/include
 
-SOURCES = ber.cpp main.cpp mib.cpp oid.cpp pdu.cpp transport.cpp variable.cpp zfile.cpp
+SOURCES = ber.cpp engine.cpp main.cpp mib.cpp oid.cpp pdu.cpp \
+          security.cpp transport.cpp variable.cpp zfile.cpp
 
 if BUILD_UNICODE_LIBS
 lib_LTLIBRARIES = libnxsnmp.la libnxsnmpw.la

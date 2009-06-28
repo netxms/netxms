@@ -175,7 +175,7 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
       if (m_pTrapCfg[dwIndex].pMaps[i].dwOidLen & 0x80000000)
       {
 			// Extract by varbind position
-         pVar = pdu->GetVariable((m_pTrapCfg[dwIndex].pMaps[i].dwOidLen & 0x7FFFFFFF) - 1);
+         pVar = pdu->getVariable((m_pTrapCfg[dwIndex].pMaps[i].dwOidLen & 0x7FFFFFFF) - 1);
          if (pVar != NULL)
          {
             pszArgList[i] = _tcsdup(pVar->GetValueAsString(szBuffer, 256));
@@ -188,18 +188,18 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
       else
       {
 			// Extract by varbind OID
-         for(j = 0; j < pdu->GetNumVariables(); j++)
+         for(j = 0; j < pdu->getNumVariables(); j++)
          {
-            iResult = pdu->GetVariable(j)->GetName()->Compare(
+            iResult = pdu->getVariable(j)->GetName()->Compare(
                   m_pTrapCfg[dwIndex].pMaps[i].pdwObjectId,
                   m_pTrapCfg[dwIndex].pMaps[i].dwOidLen);
             if ((iResult == OID_EQUAL) || (iResult == OID_SHORTER))
             {
-               pszArgList[i] = _tcsdup(pdu->GetVariable(j)->GetValueAsString(szBuffer, 256));
+               pszArgList[i] = _tcsdup(pdu->getVariable(j)->GetValueAsString(szBuffer, 256));
                break;
             }
          }
-         if (j == pdu->GetNumVariables())
+         if (j == pdu->getNumVariables())
             pszArgList[i] = _tcsdup(_T(""));
       }
    }
@@ -207,7 +207,7 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
    szFormat[m_pTrapCfg[dwIndex].dwNumMaps + 1] = 0;
    PostEventWithTag(m_pTrapCfg[dwIndex].dwEventCode, dwObjectId,
 	                 m_pTrapCfg[dwIndex].szUserTag,
-	                 szFormat, pdu->GetTrapId()->GetValueAsText(),
+	                 szFormat, pdu->getTrapId()->GetValueAsText(),
                     pszArgList[0], pszArgList[1], pszArgList[2], pszArgList[3],
                     pszArgList[4], pszArgList[5], pszArgList[6], pszArgList[7],
                     pszArgList[8], pszArgList[9], pszArgList[10], pszArgList[11],
@@ -247,7 +247,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
 
    dwOriginAddr = ntohl(pOrigin->sin_addr.s_addr);
    DbgPrintf(4, "Received SNMP trap %s from %s", 
-             pdu->GetTrapId()->GetValueAsText(), IpToStr(dwOriginAddr, szBuffer));
+             pdu->getTrapId()->GetValueAsText(), IpToStr(dwOriginAddr, szBuffer));
 
    // Match IP address to object
    pNode = FindNodeByIP(dwOriginAddr);
@@ -259,12 +259,12 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
       TCHAR *pszEscTrapArgs, szQuery[8192];
       DWORD dwTimeStamp = (DWORD)time(NULL);
 
-      dwBufSize = pdu->GetNumVariables() * 4096 + 16;
+      dwBufSize = pdu->getNumVariables() * 4096 + 16;
       pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
       pszTrapArgs[0] = 0;
-      for(i = 0, dwBufPos = 0; i < pdu->GetNumVariables(); i++)
+      for(i = 0, dwBufPos = 0; i < pdu->getNumVariables(); i++)
       {
-         pVar = pdu->GetVariable(i);
+         pVar = pdu->getVariable(i);
          dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
                                 (i == 0) ? _T("") : _T("; "),
                                 pVar->GetName()->GetValueAsText(), 
@@ -277,7 +277,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
                                 _T("ip_addr,object_id,trap_oid,trap_varlist) VALUES ")
                                 _T("(") INT64_FMT _T(",%d,'%s',%d,'%s','%s')"),
                  m_qnTrapId, dwTimeStamp, IpToStr(dwOriginAddr, szBuffer),
-                 (pNode != NULL) ? pNode->Id() : (DWORD)0, pdu->GetTrapId()->GetValueAsText(),
+                 (pNode != NULL) ? pNode->Id() : (DWORD)0, pdu->getTrapId()->GetValueAsText(),
                  pszEscTrapArgs);
       free(pszEscTrapArgs);
       QueueSQLRequest(szQuery);
@@ -290,7 +290,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
       msg.SetVariable(VID_TRAP_LOG_MSG_BASE + 1, dwTimeStamp);
       msg.SetVariable(VID_TRAP_LOG_MSG_BASE + 2, dwOriginAddr);
       msg.SetVariable(VID_TRAP_LOG_MSG_BASE + 3, (pNode != NULL) ? pNode->Id() : (DWORD)0);
-      msg.SetVariable(VID_TRAP_LOG_MSG_BASE + 4, (TCHAR *)pdu->GetTrapId()->GetValueAsText());
+      msg.SetVariable(VID_TRAP_LOG_MSG_BASE + 4, (TCHAR *)pdu->getTrapId()->GetValueAsText());
       msg.SetVariable(VID_TRAP_LOG_MSG_BASE + 5, pszTrapArgs);
       EnumerateClientSessions(BroadcastNewTrap, &msg);
       free(pszTrapArgs);
@@ -318,7 +318,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
       {
          if (m_pTrapCfg[i].dwOidLen > 0)
          {
-            iResult = pdu->GetTrapId()->Compare(m_pTrapCfg[i].pdwObjectId, m_pTrapCfg[i].dwOidLen);
+            iResult = pdu->getTrapId()->Compare(m_pTrapCfg[i].pdwObjectId, m_pTrapCfg[i].dwOidLen);
             if (iResult == OID_EQUAL)
             {
                dwMatchLen = m_pTrapCfg[i].dwOidLen;
@@ -346,12 +346,12 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
          if (!processed)
          {
             // Build trap's parameters string
-            dwBufSize = pdu->GetNumVariables() * 4096 + 16;
+            dwBufSize = pdu->getNumVariables() * 4096 + 16;
             pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
             pszTrapArgs[0] = 0;
-            for(i = 0, dwBufPos = 0; i < pdu->GetNumVariables(); i++)
+            for(i = 0, dwBufPos = 0; i < pdu->getNumVariables(); i++)
             {
-               pVar = pdu->GetVariable(i);
+               pVar = pdu->getVariable(i);
                dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
                                       (i == 0) ? _T("") : _T("; "),
                                       pVar->GetName()->GetValueAsText(), 
@@ -360,7 +360,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin)
 
             // Generate default event for unmatched traps
             PostEvent(EVENT_SNMP_UNMATCHED_TRAP, pNode->Id(), "ss", 
-                      pdu->GetTrapId()->GetValueAsText(), pszTrapArgs);
+                      pdu->getTrapId()->GetValueAsText(), pszTrapArgs);
             free(pszTrapArgs);
          }
       }
@@ -413,10 +413,10 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    while(!ShutdownInProgress())
    {
       nAddrLen = sizeof(struct sockaddr_in);
-      iBytes = pTransport->Read(&pdu, 2000, (struct sockaddr *)&addr, &nAddrLen);
+      iBytes = pTransport->readMessage(&pdu, 2000, (struct sockaddr *)&addr, &nAddrLen);
       if ((iBytes > 0) && (pdu != NULL))
       {
-         if (pdu->GetCommand() == SNMP_TRAP)
+         if (pdu->getCommand() == SNMP_TRAP)
             ProcessTrap(pdu, &addr);
          delete pdu;
       }

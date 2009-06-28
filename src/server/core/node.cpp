@@ -1282,7 +1282,7 @@ void Node::ConfigurationPoll(ClientSession *pSession, DWORD dwRqId,
       if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)) && (m_dwIpAddr != 0))
       {
 			pTransport = new SNMP_UDPTransport;
-			((SNMP_UDPTransport *)pTransport)->CreateUDPTransport(NULL, htonl(m_dwIpAddr), CHECKPOINT_SNMP_PORT);
+			((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(m_dwIpAddr), CHECKPOINT_SNMP_PORT);
          if (SnmpGet(SNMP_VERSION_1, pTransport, m_szCommunityString,
                      ".1.3.6.1.4.1.2620.1.1.10.0", NULL, 0,
                      szBuffer, 4096, FALSE, FALSE) == SNMP_ERR_SUCCESS)
@@ -1842,7 +1842,7 @@ DWORD Node::GetItemFromCheckPointSNMP(const char *szParam, DWORD dwBufSize, char
 		SNMP_Transport *pTransport;
 
 		pTransport = new SNMP_UDPTransport;
-		((SNMP_UDPTransport *)pTransport)->CreateUDPTransport(NULL, htonl(m_dwIpAddr), CHECKPOINT_SNMP_PORT);
+		((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(m_dwIpAddr), CHECKPOINT_SNMP_PORT);
       dwResult = SnmpGet(SNMP_VERSION_1, pTransport,
                          m_szCommunityString, szParam, NULL, 0, szBuffer,
                          dwBufSize, FALSE, TRUE);
@@ -3003,7 +3003,7 @@ SNMP_Transport *Node::CreateSNMPTransport(void)
 	if (m_dwSNMPProxy == 0)
 	{
 		pTransport = new SNMP_UDPTransport;
-		((SNMP_UDPTransport *)pTransport)->CreateUDPTransport(NULL, htonl(m_dwIpAddr), m_wSNMPPort);
+		((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(m_dwIpAddr), m_wSNMPPort);
 	}
 	else
 	{

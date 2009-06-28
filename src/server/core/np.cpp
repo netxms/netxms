@@ -232,7 +232,7 @@ static BOOL AcceptNewNode(DWORD dwIpAddr, DWORD dwNetMask)
    // Check SNMP support
 	DbgPrintf(4, "AcceptNewNode(%s): checking SNMP support", szIpAddr);
 	pTransport = new SNMP_UDPTransport;
-	pTransport->CreateUDPTransport(NULL, htonl(dwIpAddr), 161);
+	pTransport->createUDPTransport(NULL, htonl(dwIpAddr), 161);
 	if (SnmpCheckCommSettings(pTransport, NULL, &data.nSNMPVersion, szCommunityString))
 	{
       data.dwFlags |= NNF_IS_SNMP;

@@ -72,17 +72,17 @@ static DWORD SONMPTopoHandler(DWORD dwVersion, const char *pszCommunity,
    pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, (char *)pszCommunity, SnmpNewRequestId(), dwVersion);
    _tcscpy(szOid, ".1.3.6.1.4.1.45.1.6.13.2.1.1.1");	// Slot
    _tcscat(szOid, szSuffix);
-	pRqPDU->BindVariable(new SNMP_Variable(szOid));
+	pRqPDU->bindVariable(new SNMP_Variable(szOid));
    _tcscpy(szOid, ".1.3.6.1.4.1.45.1.6.13.2.1.1.2");	// Port
    _tcscat(szOid, szSuffix);
-	pRqPDU->BindVariable(new SNMP_Variable(szOid));
-   dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+	pRqPDU->bindVariable(new SNMP_Variable(szOid));
+   dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
    delete pRqPDU;
 
    if (dwResult == SNMP_ERR_SUCCESS)
    {
-		_stprintf(szIfName, _T("%d/%d"), pRespPDU->GetVariable(0)->GetValueAsUInt(),
-		          pRespPDU->GetVariable(1)->GetValueAsUInt());
+		_stprintf(szIfName, _T("%d/%d"), pRespPDU->getVariable(0)->GetValueAsUInt(),
+		          pRespPDU->getVariable(1)->GetValueAsUInt());
 		((PeerList *)pArg)->Add(ntohl(pVar->GetValueAsUInt()), szIfName);
       delete pRespPDU;
 	}
@@ -112,14 +112,14 @@ static DWORD CDPTopoHandler(DWORD dwVersion, const char *pszCommunity,
    pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, (char *)pszCommunity, SnmpNewRequestId(), dwVersion);
    _tcscpy(szOid, ".1.3.6.1.4.1.9.9.23.1.2.1.1.7");	// Remote port name
    _tcscat(szOid, szSuffix);
-	pRqPDU->BindVariable(new SNMP_Variable(szOid));
-   dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+	pRqPDU->bindVariable(new SNMP_Variable(szOid));
+   dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
    delete pRqPDU;
 
    if (dwResult == SNMP_ERR_SUCCESS)
    {
 		((PeerList *)pArg)->Add(ntohl(inet_addr(pVar->GetValueAsIPAddr(szIpAddr))),
-		                        pRespPDU->GetVariable(0)->GetValueAsString(szIfName, MAX_CONNECTOR_NAME));
+		                        pRespPDU->getVariable(0)->GetValueAsString(szIfName, MAX_CONNECTOR_NAME));
       delete pRespPDU;
 	}
 

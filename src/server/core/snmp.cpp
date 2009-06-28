@@ -136,16 +136,16 @@ DWORD SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport, const char *szCommuni
 
    if (dwResult == SNMP_ERR_SUCCESS)   // Still no errors
    {
-      pRqPDU->BindVariable(new SNMP_Variable(pdwVarName, dwNameLen));
-      dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+      pRqPDU->bindVariable(new SNMP_Variable(pdwVarName, dwNameLen));
+      dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 
       // Analyze response
       if (dwResult == SNMP_ERR_SUCCESS)
       {
-         if ((pRespPDU->GetNumVariables() > 0) &&
-             (pRespPDU->GetErrorCode() == SNMP_PDU_ERR_SUCCESS))
+         if ((pRespPDU->getNumVariables() > 0) &&
+             (pRespPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
          {
-            SNMP_Variable *pVar = pRespPDU->GetVariable(0);
+            SNMP_Variable *pVar = pRespPDU->getVariable(0);
 
             if ((pVar->GetType() != ASN_NO_SUCH_OBJECT) &&
                 (pVar->GetType() != ASN_NO_SUCH_INSTANCE))
@@ -188,7 +188,7 @@ DWORD SnmpGet(DWORD dwVersion, SNMP_Transport *pTransport, const char *szCommuni
          }
          else
          {
-            if (pRespPDU->GetErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME)
+            if (pRespPDU->getErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME)
                dwResult = SNMP_ERR_NO_OBJECT;
             else
                dwResult = SNMP_ERR_AGENT;
@@ -239,16 +239,16 @@ DWORD SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const char *szC
       while(bRunning)
       {
          pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, (char *)szCommunity, m_dwRequestId++, dwVersion);
-         pRqPDU->BindVariable(new SNMP_Variable(pdwName, dwNameLen));
-         dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+         pRqPDU->bindVariable(new SNMP_Variable(pdwName, dwNameLen));
+         dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 
          // Analyze response
          if (dwResult == SNMP_ERR_SUCCESS)
          {
-            if ((pRespPDU->GetNumVariables() > 0) &&
-                (pRespPDU->GetErrorCode() == SNMP_PDU_ERR_SUCCESS))
+            if ((pRespPDU->getNumVariables() > 0) &&
+                (pRespPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
             {
-               SNMP_Variable *pVar = pRespPDU->GetVariable(0);
+               SNMP_Variable *pVar = pRespPDU->getVariable(0);
 
                if ((pVar->GetType() != ASN_NO_SUCH_OBJECT) &&
                    (pVar->GetType() != ASN_NO_SUCH_INSTANCE))
@@ -283,7 +283,7 @@ DWORD SnmpEnumerate(DWORD dwVersion, SNMP_Transport *pTransport, const char *szC
             }
             else
             {
-               if (pRespPDU->GetErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME)
+               if (pRespPDU->getErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME)
                   dwResult = SNMP_ERR_NO_OBJECT;
                else
                   dwResult = SNMP_ERR_AGENT;

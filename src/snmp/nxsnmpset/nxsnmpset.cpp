@@ -1,6 +1,6 @@
 /* 
-** nxsnmpget - command line tool used to retrieve parameters from SNMP agent
-** Copyright (C) 2004 Victor Kirhenshtein
+** nxsnmpset - command line tool used to set parameters on SNMP agent
+** Copyright (C) 2004-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nxsnmpget.cpp
+** File: nxsnmpset.cpp
 **
 **/
 
@@ -30,11 +30,14 @@
 // Static data
 //
 
-static char m_szCommunity[256] = "public";
-static WORD m_wPort = 161;
-static DWORD m_dwVersion = SNMP_VERSION_2C;
-static DWORD m_dwTimeout = 3000;
-static DWORD m_dwType = ASN_OCTET_STRING;
+static char m_community[256] = "public";
+static char m_user[256] = "";
+static char m_authPassword[256] = "";
+static char m_encryptionPassword[256] = "";
+static WORD m_port = 161;
+static DWORD m_snmpVersion = SNMP_VERSION_2C;
+static DWORD m_timeout = 3000;
+static DWORD m_type = ASN_OCTET_STRING;
 
 
 //
@@ -57,7 +60,7 @@ static int SetVariables(int argc, char *argv[])
 
    // Create SNMP transport
    pTransport = new SNMP_UDPTransport;
-   dwResult = pTransport->CreateUDPTransport(argv[0], 0, m_wPort);
+   dwResult = pTransport->createUDPTransport(argv[0], 0, m_port);
    if (dwResult != SNMP_ERR_SUCCESS)
    {
       printf("Unable to create UDP transport: %s\n", SNMPGetErrorText(dwResult));
@@ -66,14 +69,17 @@ static int SetVariables(int argc, char *argv[])
    else
    {
       // Create request
-      request = new SNMP_PDU(SNMP_SET_REQUEST, m_szCommunity, getpid(), m_dwVersion);
+		if (m_snmpVersion == SNMP_VERSION_3)
+			request = new SNMP_PDU(SNMP_SET_REQUEST, new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword), getpid(), SNMP_VERSION_3);
+		else
+			request = new SNMP_PDU(SNMP_SET_REQUEST, m_community, getpid(), m_snmpVersion);
       for(i = 1; i < argc; i += 2)
       {
          if (SNMPIsCorrectOID(argv[i]))
          {
             pVar = new SNMP_Variable(argv[i]);
-            pVar->SetValueFromString(m_dwType, argv[i + 1]);
-            request->BindVariable(pVar);
+            pVar->SetValueFromString(m_type, argv[i + 1]);
+            request->bindVariable(pVar);
          }
          else
          {
@@ -85,11 +91,11 @@ static int SetVariables(int argc, char *argv[])
       // Send request and process response
       if (iExit == 0)
       {
-         if ((dwResult = pTransport->DoRequest(request, &response, m_dwTimeout, 3)) == SNMP_ERR_SUCCESS)
+         if ((dwResult = pTransport->doRequest(request, &response, m_timeout, 3)) == SNMP_ERR_SUCCESS)
          {
-            if (response->GetErrorCode() != 0)
+            if (response->getErrorCode() != 0)
             {
-               printf("SET operation failed (error code %d)\n", response->GetErrorCode());
+               printf("SET operation failed (error code %d)\n", response->getErrorCode());
             }
             delete response;
          }
@@ -121,19 +127,22 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:hp:t:v:")) != -1)
+	while((ch = getopt(argc, argv, "A:c:E:hp:t:u:v:w:")) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
             printf("Usage: nxsnmpset [<options>] <host> <variable> <value>\n"
                    "Valid options are:\n"
-                   "   -c <string>  : Specify community string. Default is \"public\".\n"
-                   "   -h           : Display help and exit.\n"
-                   "   -p <port>    : Specify agent's port number. Default is 161.\n"
+                   "   -A <passwd>  : User's authentication password for SNMP v3 USM\n"
+                   "   -c <string>  : Community string. Default is \"public\"\n"
+                   "   -E <passwd>  : User's encryption password for SNMP v3 USM\n"
+                   "   -h           : Display help and exit\n"
+                   "   -p <port>    : Agent's port number. Default is 161\n"
                    "   -t <type>    : Specify variable's data type. Default is octet string.\n"
-                   "   -v <version> : Specify SNMP version (valid values is 1 and 2c).\n"
-                   "   -w <seconds> : Specify request timeout (default is 3 seconds)\n\n"
+                   "   -u <user>    : User name for SNMP v3 USM\n"
+                   "   -v <version> : SNMP version to use (valid values is 1, 2c, and 3)\n"
+                   "   -w <seconds> : Request timeout (default is 3 seconds)\n"
                    "Note: You can specify data type either as number or in symbolic form.\n"
                    "      Valid symbolic representations are following:\n"
                    "         INTEGER, STRING, OID, IPADDR, COUNTER32, GAUGE32,\n"
@@ -141,21 +150,6 @@ int main(int argc, char *argv[])
                    "\n");
             iExit = 0;
             bStart = FALSE;
-            break;
-         case 'c':   // Community
-            nx_strncpy(m_szCommunity, optarg, 256);
-            break;
-         case 'p':   // Port number
-            dwValue = strtoul(optarg, &eptr, 0);
-            if ((*eptr != 0) || (dwValue > 65535) || (dwValue == 0))
-            {
-               printf("Invalid port number %s\n", optarg);
-               bStart = FALSE;
-            }
-            else
-            {
-               m_wPort = (WORD)dwValue;
-            }
             break;
          case 't':
             // First, check for numeric representation
@@ -171,22 +165,50 @@ int main(int argc, char *argv[])
                }
                else
                {
-                  m_dwType = dwValue;
+                  m_type = dwValue;
                }
             }
             else
             {
-               m_dwType = dwValue;
+               m_type = dwValue;
+            }
+            break;
+         case 'c':   // Community
+            nx_strncpy(m_community, optarg, 256);
+            break;
+         case 'u':   // User
+            nx_strncpy(m_user, optarg, 256);
+            break;
+         case 'A':   // authentication password
+            nx_strncpy(m_authPassword, optarg, 256);
+            break;
+         case 'E':   // encription password
+            nx_strncpy(m_encryptionPassword, optarg, 256);
+            break;
+         case 'p':   // Port number
+            dwValue = strtoul(optarg, &eptr, 0);
+            if ((*eptr != 0) || (dwValue > 65535) || (dwValue == 0))
+            {
+               printf("Invalid port number %s\n", optarg);
+               bStart = FALSE;
+            }
+            else
+            {
+               m_port = (WORD)dwValue;
             }
             break;
          case 'v':   // Version
             if (!strcmp(optarg, "1"))
             {
-               m_dwVersion = SNMP_VERSION_1;
+               m_snmpVersion = SNMP_VERSION_1;
             }
             else if (!stricmp(optarg, "2c"))
             {
-               m_dwVersion = SNMP_VERSION_2C;
+               m_snmpVersion = SNMP_VERSION_2C;
+            }
+            else if (!stricmp(optarg, "3"))
+            {
+               m_snmpVersion = SNMP_VERSION_3;
             }
             else
             {
@@ -203,7 +225,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-               m_dwTimeout = dwValue;
+               m_timeout = dwValue;
             }
             break;
          case '?':

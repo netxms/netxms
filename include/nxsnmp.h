@@ -56,11 +56,12 @@
 // Various constants
 //
 
-#define MAX_OID_LEN           128
-#define MAX_MIB_OBJECT_NAME   64
-#define SNMP_DEFAULT_PORT     161
-#define SNMP_MAX_CONTEXT_ID   256
-#define SNMP_MAX_CONTEXT_NAME 256
+#define MAX_OID_LEN                 128
+#define MAX_MIB_OBJECT_NAME         64
+#define SNMP_DEFAULT_PORT           161
+#define SNMP_MAX_CONTEXT_NAME       256
+#define SNMP_MAX_ENGINEID_LEN       256
+#define SNMP_DEFAULT_MSG_MAX_SIZE   65536
 
 
 //
@@ -92,6 +93,13 @@
 #define SNMP_ERR_FILE_IO            11    /* file I/O error */
 #define SNMP_ERR_BAD_FILE_HEADER    12    /* file header is invalid */
 #define SNMP_ERR_BAD_FILE_DATA      13    /* file data is invalid or corrupted */
+#define SNMP_ERR_UNSUPP_SEC_LEVEL   14    /* unsupported security level */
+#define SNMP_ERR_TIME_WINDOW        15    /* not in time window */
+#define SNMP_ERR_SEC_NAME           16    /* unknown security name */
+#define SNMP_ERR_ENGINE_ID          17    /* unknown engine ID */
+#define SNMP_ERR_AUTH_FAILURE       18    /* authentication failure */
+#define SNMP_ERR_DECRYPTION         19    /* decryption error */
+#define SNMP_ERR_BAD_RESPONSE       20    /* malformed or unexpected response from agent */
 
 
 //
@@ -118,11 +126,12 @@
 #define SNMP_INVALID_PDU         255
 #define SNMP_GET_REQUEST         0
 #define SNMP_GET_NEXT_REQUEST    1
-#define SNMP_GET_RESPONSE        2
+#define SNMP_RESPONSE            2
 #define SNMP_SET_REQUEST         3
 #define SNMP_TRAP                4
 #define SNMP_GET_BULK_REQUEST    5
 #define SNMP_INFORM_REQUEST      6
+#define SNMP_REPORT              8
 
 
 //
@@ -159,12 +168,22 @@
 #define ASN_NO_SUCH_INSTANCE        0x81
 #define ASN_GET_REQUEST_PDU         0xA0
 #define ASN_GET_NEXT_REQUEST_PDU    0xA1
-#define ASN_GET_RESPONSE_PDU        0xA2
+#define ASN_RESPONSE_PDU            0xA2
 #define ASN_SET_REQUEST_PDU         0xA3
 #define ASN_TRAP_V1_PDU             0xA4
 #define ASN_GET_BULK_REQUEST_PDU    0xA5
 #define ASN_INFORM_REQUEST_PDU      0xA6
 #define ASN_TRAP_V2_PDU             0xA7
+#define ASN_REPORT_PDU              0xA8
+
+
+//
+// Security models
+//
+
+#define SNMP_SECURITY_MODEL_V1      1
+#define SNMP_SECURITY_MODEL_V2C     2
+#define SNMP_SECURITY_MODEL_USM     3
 
 
 //
@@ -379,6 +398,64 @@ public:
 
 
 //
+// Security context
+//
+
+class LIBNXSNMP_EXPORTABLE SNMP_SecurityContext
+{
+private:
+	int m_securityModel;
+	char *m_community;
+	char *m_user;
+	char *m_authPassword;
+	char *m_encryptionPassword;
+
+public:
+	SNMP_SecurityContext();
+	SNMP_SecurityContext(int securityModel);
+	SNMP_SecurityContext(const char *community);
+	SNMP_SecurityContext(const char *user, const char *authPassword, const char *encryptionPassword);
+	~SNMP_SecurityContext();
+
+	int getSecurityModel() { return m_securityModel; }
+	const char *getCommunity() { return CHECK_NULL_A(m_community); }
+	const char *getUser() { return CHECK_NULL_A(m_user); }
+	const char *getAuthPassword() { return CHECK_NULL_A(m_authPassword); }
+	const char *getEncryptionPassword() { return CHECK_NULL_A(m_encryptionPassword); }
+
+	void setCommunity(const char *community);
+	void setUser(const char *user);
+	void setAuthPassword(const char *authPassword);
+	void setEncryptionPassword(const char *encryptionPassword);
+};
+
+
+//
+// SNMP engine
+//
+
+class LIBNXSNMP_EXPORTABLE SNMP_Engine
+{
+private:
+	BYTE m_id[SNMP_MAX_ENGINEID_LEN];
+	int m_idLen;
+	int m_engineBoots;
+	int m_engineTime;
+
+public:
+	SNMP_Engine();
+	SNMP_Engine(BYTE *id, int idLen, int engineBoots, int engineTime);
+	SNMP_Engine(SNMP_Engine *src);
+	~SNMP_Engine();
+
+	BYTE *getId() { return m_id; }
+	int getIdLen() { return m_idLen; }
+	int getBoots() { return m_engineBoots; }
+	int getTime() { return m_engineTime; }
+};
+
+
+//
 // SNMP PDU
 //
 
@@ -387,7 +464,6 @@ class LIBNXSNMP_EXPORTABLE SNMP_PDU
 private:
    DWORD m_dwVersion;
    DWORD m_dwCommand;
-   char *m_pszCommunity;
    DWORD m_dwNumVariables;
    SNMP_Variable **m_ppVarList;
    SNMP_ObjectId *m_pEnterprise;
@@ -398,48 +474,62 @@ private:
    DWORD m_dwRqId;
    DWORD m_dwErrorCode;
    DWORD m_dwErrorIndex;
-	DWORD m_dwMsgMaxSize;
+	SNMP_SecurityContext *m_security;
+	SNMP_Engine *m_authoritativeEngine;
+	DWORD m_msgId;
+	DWORD m_msgMaxSize;
 	BYTE m_flags;
-	DWORD m_dwSecurityModel;
-	BYTE m_contextId[SNMP_MAX_CONTEXT_ID];
-	int m_contextIdLen;
+	BYTE m_contextEngineId[SNMP_MAX_ENGINEID_LEN];
+	int m_contextEngineIdLen;
 	char m_contextName[SNMP_MAX_CONTEXT_NAME];
 
-   BOOL ParseVariable(BYTE *pData, DWORD dwVarLength);
-   BOOL ParseVarBinds(BYTE *pData, DWORD dwPDULength);
-   BOOL ParsePDU(BYTE *pData, DWORD dwPDULength);
-   BOOL ParseTrapPDU(BYTE *pData, DWORD dwPDULength);
-   BOOL ParseTrap2PDU(BYTE *pData, DWORD dwPDULength);
-	DWORD EncodeV3Header(BYTE *buffer, DWORD bufferSize);
-	DWORD EncodeV3SecurityParameters(BYTE *buffer, DWORD bufferSize);
-	DWORD EncodeV3ScopedPDU(DWORD pduType, BYTE *pdu, DWORD pduSize, BYTE *buffer, DWORD bufferSize);
+   BOOL parseVariable(BYTE *pData, DWORD dwVarLength);
+   BOOL parseVarBinds(BYTE *pData, DWORD dwPDULength);
+   BOOL parsePdu(BYTE *pdu, DWORD pduLength);
+   BOOL parseTrapPDU(BYTE *pData, DWORD dwPDULength);
+   BOOL parseTrap2PDU(BYTE *pData, DWORD dwPDULength);
+   BOOL parsePduContent(BYTE *pData, DWORD dwPDULength);
+   BOOL parseV3Header(BYTE *pData, DWORD dwPDULength);
+   BOOL parseV3SecurityUsm(BYTE *pData, DWORD dwPDULength);
+   BOOL parseV3ScopedPdu(BYTE *pData, DWORD dwPDULength);
+	DWORD encodeV3Header(BYTE *buffer, DWORD bufferSize);
+	DWORD encodeV3SecurityParameters(BYTE *buffer, DWORD bufferSize);
+	DWORD encodeV3ScopedPDU(DWORD pduType, BYTE *pdu, DWORD pduSize, BYTE *buffer, DWORD bufferSize);
 
 public:
    SNMP_PDU();
    SNMP_PDU(DWORD dwCommand, char *pszCommunity, DWORD dwRqId, DWORD dwVersion = SNMP_VERSION_2C);
+   SNMP_PDU(DWORD dwCommand, SNMP_SecurityContext *security, DWORD dwRqId, DWORD dwVersion = SNMP_VERSION_3);
    ~SNMP_PDU();
 
-   BOOL Parse(BYTE *pRawData, DWORD dwRawLength);
-   DWORD Encode(BYTE **ppBuffer);
+   BOOL parse(BYTE *pRawData, DWORD dwRawLength);
+   DWORD encode(BYTE **ppBuffer);
 
-   DWORD GetCommand(void) { return m_dwCommand; }
-   SNMP_ObjectId *GetTrapId(void) { return m_pEnterprise; }
-   int GetTrapType(void) { return m_iTrapType; }
-   int GetSpecificTrapType(void) { return m_iSpecificTrap; }
-   DWORD GetNumVariables(void) { return m_dwNumVariables; }
-   SNMP_Variable *GetVariable(DWORD dwIndex) { return (dwIndex < m_dwNumVariables) ? m_ppVarList[dwIndex] : NULL; }
-   const char *GetCommunity(void) { return m_pszCommunity; }
-   DWORD GetVersion(void) { return m_dwVersion; }
-   DWORD GetErrorCode(void) { return m_dwErrorCode; }
+   DWORD getCommand(void) { return m_dwCommand; }
+   SNMP_ObjectId *getTrapId(void) { return m_pEnterprise; }
+   int getTrapType(void) { return m_iTrapType; }
+   int getSpecificTrapType(void) { return m_iSpecificTrap; }
+   DWORD getNumVariables(void) { return m_dwNumVariables; }
+   SNMP_Variable *getVariable(DWORD dwIndex) { return (dwIndex < m_dwNumVariables) ? m_ppVarList[dwIndex] : NULL; }
+   DWORD getVersion(void) { return m_dwVersion; }
+   DWORD getErrorCode(void) { return m_dwErrorCode; }
+	DWORD getMessageId() { return m_msgId; }
+	SNMP_SecurityContext *getSecurityContext() { return m_security; }
 
-   DWORD GetRequestId(void) { return m_dwRqId; }
-   void SetRequestId(DWORD dwId) { m_dwRqId = dwId; }
+   DWORD getRequestId(void) { return m_dwRqId; }
+   void setRequestId(DWORD dwId) { m_dwRqId = dwId; }
 
-	void SetContextId(BYTE *id, int len);
-	void SetContextId(const char *id);
-	void SetContextName(const char *name);
+	void setAuthoritativeEngine(SNMP_Engine *engine) { delete m_authoritativeEngine; m_authoritativeEngine = engine; }
+	SNMP_Engine *getAuthoritativeEngine() { return m_authoritativeEngine; }
 
-   void BindVariable(SNMP_Variable *pVar);
+	void setContextEngineId(BYTE *id, int len);
+	void setContextEngineId(const char *id);
+	void setContextName(const char *name);
+	const char *getContextName() { return m_contextName; }
+	int getContextEngineIdLength() { return m_contextEngineIdLen; }
+	BYTE *getContextEngineId() { return m_contextEngineId; }
+
+   void bindVariable(SNMP_Variable *pVar);
 };
 
 
@@ -449,22 +539,25 @@ public:
 
 class LIBNXSNMP_EXPORTABLE SNMP_Transport
 {
+protected:
+	SNMP_Engine *m_authoritativeEngine;
+
 public:
-   SNMP_Transport() { }
-   virtual ~SNMP_Transport() { }
+   SNMP_Transport();
+   virtual ~SNMP_Transport();
 
-   virtual int Read(SNMP_PDU **ppData, DWORD dwTimeout = INFINITE,
-                    struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL)
+   virtual int readMessage(SNMP_PDU **data, DWORD timeout = INFINITE,
+                           struct sockaddr *sender = NULL, socklen_t *addrSize = NULL)
 	{
 		return -1;
 	}
-   virtual int Send(SNMP_PDU *pPDU)
+   virtual int sendMessage(SNMP_PDU *pdu)
 	{
 		return -1;
 	}
 
-   DWORD DoRequest(SNMP_PDU *pRequest, SNMP_PDU **pResponse, 
-                   DWORD dwTimeout = INFINITE, DWORD dwNumRetries = 1);
+   DWORD doRequest(SNMP_PDU *request, SNMP_PDU **response, 
+                   DWORD timeout = INFINITE, int numRetries = 1);
 };
 
 
@@ -481,20 +574,20 @@ private:
    DWORD m_dwBufferPos;
    BYTE *m_pBuffer;
 
-   DWORD PreParsePDU(void);
-   int RecvData(DWORD dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize);
-   void ClearBuffer(void);
+   DWORD preParsePDU(void);
+   int recvData(DWORD dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize);
+   void clearBuffer(void);
 
 public:
    SNMP_UDPTransport();
    SNMP_UDPTransport(SOCKET hSocket);
    virtual ~SNMP_UDPTransport();
 
-   virtual int Read(SNMP_PDU **ppData, DWORD dwTimeout = INFINITE,
-                    struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL);
-   virtual int Send(SNMP_PDU *pPDU);
+   virtual int readMessage(SNMP_PDU **ppData, DWORD dwTimeout = INFINITE,
+                           struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL);
+   virtual int sendMessage(SNMP_PDU *pPDU);
 
-   DWORD CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr = 0, WORD wPort = SNMP_DEFAULT_PORT);
+   DWORD createUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr = 0, WORD wPort = SNMP_DEFAULT_PORT);
 };
 
 

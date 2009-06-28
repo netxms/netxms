@@ -26,10 +26,43 @@
 
 
 //
-// Constants
+// Report to SNMP error mapping
 //
 
-#define DEFAULT_BUFFER_SIZE      32768
+static struct
+{
+	const TCHAR *oid;
+	DWORD errorCode;
+} m_oidToErrorMap[] =
+{
+	{ _T(".1.3.6.1.6.3.15.1.1.1.0"), SNMP_ERR_UNSUPP_SEC_LEVEL },
+	{ _T(".1.3.6.1.6.3.15.1.1.2.0"), SNMP_ERR_TIME_WINDOW },
+	{ _T(".1.3.6.1.6.3.15.1.1.3.0"), SNMP_ERR_SEC_NAME },
+	{ _T(".1.3.6.1.6.3.15.1.1.4.0"), SNMP_ERR_ENGINE_ID },
+	{ _T(".1.3.6.1.6.3.15.1.1.5.0"), SNMP_ERR_AUTH_FAILURE },
+	{ _T(".1.3.6.1.6.3.15.1.1.6.0"), SNMP_ERR_DECRYPTION },
+	{ NULL, 0 }
+};
+
+
+//
+// Constructor
+//
+
+SNMP_Transport::SNMP_Transport()
+{
+	m_authoritativeEngine = NULL;
+}
+
+
+//
+// Destructor
+//
+
+SNMP_Transport::~SNMP_Transport()
+{
+	delete m_authoritativeEngine;
+}
 
 
 //
@@ -37,48 +70,108 @@
 // with respect for timeouts and retransmissions
 //
 
-DWORD SNMP_Transport::DoRequest(SNMP_PDU *pRequest, SNMP_PDU **ppResponse, 
-                                DWORD dwTimeout, DWORD dwNumRetries)
+DWORD SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, 
+                                DWORD timeout, int numRetries)
 {
-   DWORD dwResult;
-   int iBytes;
+   DWORD rc;
+   int bytes;
 
-   if ((pRequest == NULL) || (ppResponse == NULL) || (dwNumRetries == 0))
+   if ((request == NULL) || (response == NULL) || (numRetries == 0))
       return SNMP_ERR_PARAM;
 
-   *ppResponse = NULL;
+   *response = NULL;
+	// Set authoritative engine for PDU if we have cached one
+	if ((request->getVersion() == SNMP_VERSION_3) &&
+		 (request->getAuthoritativeEngine() == NULL) &&
+		 (m_authoritativeEngine != NULL))
+	{
+		request->setAuthoritativeEngine(new SNMP_Engine(m_authoritativeEngine));
+	}
 
-   while(dwNumRetries-- > 0)
+   while(numRetries-- >= 0)
    {
-		dwResult = SNMP_ERR_SUCCESS;
-      if (Send(pRequest) <= 0)
+retry:
+		rc = SNMP_ERR_SUCCESS;
+      if (sendMessage(request) <= 0)
       {
-         dwResult = SNMP_ERR_COMM;
+         rc = SNMP_ERR_COMM;
          break;
       }
 
-      iBytes = Read(ppResponse, dwTimeout);
-      if (iBytes > 0)
+      bytes = readMessage(response, timeout);
+      if (bytes > 0)
       {
-         if (*ppResponse != NULL)
+         if (*response != NULL)
          {
-            if ((*ppResponse)->GetRequestId() == pRequest->GetRequestId())
-               break;
-            dwResult = SNMP_ERR_TIMEOUT;
+				if (request->getVersion() == SNMP_VERSION_3)
+				{
+					if ((*response)->getMessageId() == request->getMessageId())
+					{
+						// Cache authoritative engine ID
+						if ((m_authoritativeEngine == NULL) && ((*response)->getAuthoritativeEngine() != NULL))
+							m_authoritativeEngine = new SNMP_Engine((*response)->getAuthoritativeEngine());
+
+						if ((*response)->getCommand() == SNMP_REPORT)
+						{
+		               SNMP_Variable *var = (*response)->getVariable(0);
+							const TCHAR *oid = var->GetName()->GetValueAsText();
+							rc = SNMP_ERR_AGENT;
+							for(int i = 0; m_oidToErrorMap[i].oid != NULL; i++)
+							{
+								if (!_tcscmp(oid, m_oidToErrorMap[i].oid))
+								{
+									rc = m_oidToErrorMap[i].errorCode;
+									break;
+								}
+							}
+
+							// Engine ID discovery - if request contains empty engine ID,
+							// replace it with correct one and retry
+							if (rc == SNMP_ERR_ENGINE_ID)
+							{
+								bool canRetry = false;
+
+								if (request->getContextEngineIdLength() == 0)
+								{
+									request->setContextEngineId((*response)->getContextEngineId(), (*response)->getContextEngineIdLength());
+									canRetry = true;
+								}
+								if (request->getAuthoritativeEngine()->getIdLen() == 0)
+								{
+									request->setAuthoritativeEngine(new SNMP_Engine((*response)->getAuthoritativeEngine()));
+									canRetry = true;
+								}
+								if (canRetry)
+									goto retry;
+							}
+						}
+						else if ((*response)->getCommand() != SNMP_RESPONSE)
+						{
+							rc = SNMP_ERR_BAD_RESPONSE;
+						}
+						break;
+					}
+				}
+				else
+				{
+					if ((*response)->getRequestId() == request->getRequestId())
+						break;
+				}
+            rc = SNMP_ERR_TIMEOUT;
          }
          else
          {
-            dwResult = SNMP_ERR_PARSE;
+            rc = SNMP_ERR_PARSE;
             break;
          }
       }
       else
       {
-         dwResult = (iBytes == 0) ? SNMP_ERR_TIMEOUT : SNMP_ERR_COMM;
+         rc = (bytes == 0) ? SNMP_ERR_TIMEOUT : SNMP_ERR_COMM;
       }
    }
 
-   return dwResult;
+   return rc;
 }
 
 
@@ -90,7 +183,7 @@ SNMP_UDPTransport::SNMP_UDPTransport()
                   :SNMP_Transport()
 {
    m_hSocket = -1;
-   m_dwBufferSize = DEFAULT_BUFFER_SIZE;
+   m_dwBufferSize = SNMP_DEFAULT_MSG_MAX_SIZE;
    m_dwBufferPos = 0;
    m_dwBytesInBuffer = 0;
    m_pBuffer = (BYTE *)malloc(m_dwBufferSize);
@@ -105,7 +198,7 @@ SNMP_UDPTransport::SNMP_UDPTransport(SOCKET hSocket)
                   :SNMP_Transport()
 {
    m_hSocket = hSocket;
-   m_dwBufferSize = DEFAULT_BUFFER_SIZE;
+   m_dwBufferSize = SNMP_DEFAULT_MSG_MAX_SIZE;
    m_dwBufferPos = 0;
    m_dwBytesInBuffer = 0;
    m_pBuffer = (BYTE *)malloc(m_dwBufferSize);
@@ -118,7 +211,7 @@ SNMP_UDPTransport::SNMP_UDPTransport(SOCKET hSocket)
 // IP address will be used
 //
 
-DWORD SNMP_UDPTransport::CreateUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr, WORD wPort)
+DWORD SNMP_UDPTransport::createUDPTransport(TCHAR *pszHostName, DWORD dwHostAddr, WORD wPort)
 {
    struct sockaddr_in addr;
    DWORD dwResult;
@@ -217,7 +310,7 @@ SNMP_UDPTransport::~SNMP_UDPTransport()
 // Clear buffer
 //
 
-void SNMP_UDPTransport::ClearBuffer(void)
+void SNMP_UDPTransport::clearBuffer(void)
 {
    m_dwBytesInBuffer = 0;
    m_dwBufferPos = 0;
@@ -228,7 +321,7 @@ void SNMP_UDPTransport::ClearBuffer(void)
 // Receive data from socket
 //
 
-int SNMP_UDPTransport::RecvData(DWORD dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize)
+int SNMP_UDPTransport::recvData(DWORD dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize)
 {
    fd_set rdfs;
    struct timeval tv;
@@ -274,7 +367,7 @@ int SNMP_UDPTransport::RecvData(DWORD dwTimeout, struct sockaddr *pSender, sockl
 // Pre-parse PDU
 //
 
-DWORD SNMP_UDPTransport::PreParsePDU(void)
+DWORD SNMP_UDPTransport::preParsePDU(void)
 {
    DWORD dwType, dwLength, dwIdLength;
    BYTE *pbCurrPos;
@@ -293,28 +386,28 @@ DWORD SNMP_UDPTransport::PreParsePDU(void)
 // Read PDU from socket
 //
 
-int SNMP_UDPTransport::Read(SNMP_PDU **ppData, DWORD dwTimeout, 
-                            struct sockaddr *pSender, socklen_t *piAddrSize)
+int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, DWORD dwTimeout, 
+                                   struct sockaddr *pSender, socklen_t *piAddrSize)
 {
    int iBytes;
    DWORD dwPDULength;
 
    if (m_dwBytesInBuffer < 2)
    {
-      iBytes = RecvData(dwTimeout, pSender, piAddrSize);
+      iBytes = recvData(dwTimeout, pSender, piAddrSize);
       if (iBytes <= 0)
       {
-         ClearBuffer();
+         clearBuffer();
          return iBytes;
       }
       m_dwBytesInBuffer += iBytes;
    }
 
-   dwPDULength = PreParsePDU();
+   dwPDULength = preParsePDU();
    if (dwPDULength == 0)
    {
       // Clear buffer
-      ClearBuffer();
+      clearBuffer();
       return 0;
    }
 
@@ -328,10 +421,10 @@ int SNMP_UDPTransport::Read(SNMP_PDU **ppData, DWORD dwTimeout,
    // Read entire PDU into buffer
    while(m_dwBytesInBuffer < dwPDULength)
    {
-      iBytes = RecvData(dwTimeout, pSender, piAddrSize);
+      iBytes = recvData(dwTimeout, pSender, piAddrSize);
       if (iBytes <= 0)
       {
-         ClearBuffer();
+         clearBuffer();
          return iBytes;
       }
       m_dwBytesInBuffer += iBytes;
@@ -339,7 +432,7 @@ int SNMP_UDPTransport::Read(SNMP_PDU **ppData, DWORD dwTimeout,
 
    // Create new PDU object and remove parsed data from buffer
    *ppData = new SNMP_PDU;
-   if (!(*ppData)->Parse(&m_pBuffer[m_dwBufferPos], dwPDULength))
+   if (!(*ppData)->parse(&m_pBuffer[m_dwBufferPos], dwPDULength))
    {
       delete *ppData;
       *ppData = NULL;
@@ -356,13 +449,13 @@ int SNMP_UDPTransport::Read(SNMP_PDU **ppData, DWORD dwTimeout,
 // Send PDU to socket
 //
 
-int SNMP_UDPTransport::Send(SNMP_PDU *pPDU)
+int SNMP_UDPTransport::sendMessage(SNMP_PDU *pPDU)
 {
    BYTE *pBuffer;
    DWORD dwSize;
    int nBytes = 0;
 
-   dwSize = pPDU->Encode(&pBuffer);
+   dwSize = pPDU->encode(&pBuffer);
    if (dwSize != 0)
    {
       nBytes = send(m_hSocket, (char *)pBuffer, dwSize, 0);

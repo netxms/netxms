@@ -53,14 +53,14 @@ SNMP_ProxyTransport::~SNMP_ProxyTransport()
 // Send PDU
 //
 
-int SNMP_ProxyTransport::Send(SNMP_PDU *pPDU)
+int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
 {
    BYTE *pBuffer;
    DWORD dwSize;
    int nRet = -1;
 	CSCPMessage msg(m_pAgentConnection->getProtocolVersion());
 
-   dwSize = pPDU->Encode(&pBuffer);
+   dwSize = pdu->encode(&pBuffer);
    if (dwSize != 0)
    {
 		msg.SetCode(CMD_SNMP_REQUEST);
@@ -85,8 +85,8 @@ int SNMP_ProxyTransport::Send(SNMP_PDU *pPDU)
 // Receive PDU
 //
 
-int SNMP_ProxyTransport::Read(SNMP_PDU **ppData, DWORD dwTimeout, 
-                              struct sockaddr *pSender, socklen_t *piAddrSize)
+int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, DWORD dwTimeout, 
+                                     struct sockaddr *pSender, socklen_t *piAddrSize)
 {
 	int nRet;
 	BYTE *pBuffer;
@@ -101,7 +101,7 @@ int SNMP_ProxyTransport::Read(SNMP_PDU **ppData, DWORD dwTimeout,
 		pBuffer = (BYTE *)malloc(dwSize);
 		m_pResponse->GetVariableBinary(VID_PDU, pBuffer, dwSize);
 		*ppData = new SNMP_PDU;
-		if (!(*ppData)->Parse(pBuffer, dwSize))
+		if (!(*ppData)->parse(pBuffer, dwSize))
 		{
 			delete *ppData;
 			*ppData = NULL;

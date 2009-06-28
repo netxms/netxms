@@ -345,16 +345,16 @@ static DWORD TableHandler(DWORD dwVersion, const char *szCommunity, SNMP_Variabl
       dwNameLen = SNMPParseOID(szOid, pdwVarName, MAX_OID_LEN);
       if (dwNameLen != 0)
       {
-         pRqPDU->BindVariable(new SNMP_Variable(pdwVarName, dwNameLen));
+         pRqPDU->bindVariable(new SNMP_Variable(pdwVarName, dwNameLen));
       }
    }
 
-   dwResult = pTransport->DoRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+   dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
    delete pRqPDU;
    if (dwResult == SNMP_ERR_SUCCESS)
    {
-      if ((pRespPDU->GetNumVariables() > 0) &&
-          (pRespPDU->GetErrorCode() == SNMP_PDU_ERR_SUCCESS))
+      if ((pRespPDU->getNumVariables() > 0) &&
+          (pRespPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
       {
          ((SNMP_ENUM_ARGS *)pArg)->dwNumRows++;
 
@@ -365,7 +365,7 @@ static DWORD TableHandler(DWORD dwVersion, const char *szCommunity, SNMP_Variabl
 
          for(i = 1; i < ((SNMP_ENUM_ARGS *)pArg)->dwNumCols; i++)
             AddSNMPResult(&((SNMP_ENUM_ARGS *)pArg)->values, 
-                          pRespPDU->GetVariable(i - 1), 
+                          pRespPDU->getVariable(i - 1), 
                           ((SNMP_ENUM_ARGS *)pArg)->pnFormatList[i],
                           ((SNMP_ENUM_ARGS *)pArg)->pNode);
       }

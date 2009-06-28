@@ -103,7 +103,7 @@ const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(DWORD dwError)
       _T("Invalid parameters passed to function"),
       _T("Unable to create socket"),
       _T("Communication error"),
-      _T("Rrror parsing PDU"),
+      _T("Error parsing PDU"),
       _T("No such object"),
       _T("Invalid hostname or IP address"),
       _T("OID is incorrect"),
@@ -111,10 +111,17 @@ const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(DWORD dwError)
       _T("Unknown variable data type"),
       _T("File I/O error"),
       _T("Invalid file header"),
-      _T("Invalid or corrupted file data")
+      _T("Invalid or corrupted file data"),
+      _T("Unsupported security level"),
+      _T("Not in time window"),
+      _T("Unknown security name"),
+      _T("Unknown engine ID"),
+      _T("Authentication failure"),
+      _T("Decryption error"),
+      _T("Malformed or unexpected response from agent")
    };
 
-   return ((dwError >= SNMP_ERR_SUCCESS) && (dwError <= SNMP_ERR_BAD_FILE_DATA)) ?
+   return ((dwError >= SNMP_ERR_SUCCESS) && (dwError <= SNMP_ERR_BAD_RESPONSE)) ?
       pszErrorText[dwError] : _T("Unknown error");
 }
 
