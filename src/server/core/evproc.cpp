@@ -115,7 +115,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       // Expand message text
       // We cannot expand message text in PostEvent because of
       // possible deadlock on g_rwlockIdIndex
-      pEvent->ExpandMessageText();
+      pEvent->expandMessageText();
 
       // Attempt to correlate event to some of previous events
       CorrelateEvent(pEvent);
@@ -128,22 +128,22 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 		}
 
       // Write event to log if required
-      if (pEvent->Flags() & EF_LOG)
+      if (pEvent->getFlags() & EF_LOG)
       {
          char *pszMsg, *pszTag, szQuery[2048];
 
-         pszMsg = EncodeSQLString(pEvent->Message());
+         pszMsg = EncodeSQLString(pEvent->getMessage());
 			if (_tcslen(pszMsg) > (MAX_EVENT_MSG_LENGTH - 1))
 				pszMsg[MAX_EVENT_MSG_LENGTH - 1] = 0;
-         pszTag = EncodeSQLString(pEvent->UserTag());
+         pszTag = EncodeSQLString(pEvent->getUserTag());
 			if (_tcslen(pszTag) > (MAX_USERTAG_LENGTH - 1))
 				pszTag[MAX_USERTAG_LENGTH - 1] = 0;
          snprintf(szQuery, 2048, "INSERT INTO event_log (event_id,event_code,event_timestamp,"
                                  "event_source,event_severity,event_message,root_event_id,user_tag) "
                                  "VALUES (" INT64_FMT ",%d," TIME_T_FMT ",%d,%d,'%s'," INT64_FMT ",'%s')", 
-                  pEvent->Id(), pEvent->Code(), pEvent->TimeStamp(),
-                  pEvent->SourceId(), pEvent->Severity(), pszMsg,
-                  pEvent->GetRootId(), pszTag);
+                  pEvent->getId(), pEvent->getCode(), pEvent->getTimeStamp(),
+                  pEvent->getSourceId(), pEvent->getSeverity(), pszMsg,
+                  pEvent->getRootId(), pszTag);
          free(pszMsg);
 			free(pszTag);
          QueueSQLRequest(szQuery);
@@ -155,17 +155,17 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       // Write event information to debug
       if (g_nDebugLevel >= 5)
       {
-         NetObj *pObject = FindObjectById(pEvent->SourceId());
+         NetObj *pObject = FindObjectById(pEvent->getSourceId());
          if (pObject == NULL)
             pObject = g_pEntireNet;
-         DbgPrintf(5, _T("EVENT %d (F:0x%04X S:%d%s) FROM %s: %s"), pEvent->Code(), 
-                   pEvent->Flags(), pEvent->Severity(),
-                   (pEvent->GetRootId() == 0) ? "" : " CORRELATED",
-                   pObject->Name(), pEvent->Message());
+         DbgPrintf(5, _T("EVENT %d (F:0x%04X S:%d%s) FROM %s: %s"), pEvent->getCode(), 
+                   pEvent->getFlags(), pEvent->getSeverity(),
+                   (pEvent->getRootId() == 0) ? "" : " CORRELATED",
+                   pObject->Name(), pEvent->getMessage());
       }
 
       // Pass event through event processing policy if it is not correlated
-      if (pEvent->GetRootId() == 0)
+      if (pEvent->getRootId() == 0)
          g_pEventPolicy->ProcessEvent(pEvent);
 
       // Destroy event

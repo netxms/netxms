@@ -283,19 +283,19 @@ BOOL EPRule::MatchScript(Event *pEvent)
 
    // Pass event's parameters as arguments and
    // other information as variables
-   ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * pEvent->GetParametersCount());
-   memset(ppValueList, 0, sizeof(NXSL_Value *) * pEvent->GetParametersCount());
-   for(i = 0; i < pEvent->GetParametersCount(); i++)
-      ppValueList[i] = new NXSL_Value(pEvent->GetParameter(i));
+   ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * pEvent->getParametersCount());
+   memset(ppValueList, 0, sizeof(NXSL_Value *) * pEvent->getParametersCount());
+   for(i = 0; i < pEvent->getParametersCount(); i++)
+      ppValueList[i] = new NXSL_Value(pEvent->getParameter(i));
 
    pLocals = new NXSL_VariableSystem;
-   pLocals->Create(_T("EVENT_CODE"), new NXSL_Value(pEvent->Code()));
-   pLocals->Create(_T("SEVERITY"), new NXSL_Value(pEvent->Severity()));
-   pLocals->Create(_T("SEVERITY_TEXT"), new NXSL_Value(g_szStatusText[pEvent->Severity()]));
-   pLocals->Create(_T("OBJECT_ID"), new NXSL_Value(pEvent->SourceId()));
-   pLocals->Create(_T("EVENT_TEXT"), new NXSL_Value((TCHAR *)pEvent->Message()));
-   pLocals->Create(_T("USER_TAG"), new NXSL_Value((TCHAR *)pEvent->UserTag()));
-	pObject = FindObjectById(pEvent->SourceId());
+   pLocals->Create(_T("EVENT_CODE"), new NXSL_Value(pEvent->getCode()));
+   pLocals->Create(_T("SEVERITY"), new NXSL_Value(pEvent->getSeverity()));
+   pLocals->Create(_T("SEVERITY_TEXT"), new NXSL_Value(g_szStatusText[pEvent->getSeverity()]));
+   pLocals->Create(_T("OBJECT_ID"), new NXSL_Value(pEvent->getSourceId()));
+   pLocals->Create(_T("EVENT_TEXT"), new NXSL_Value((TCHAR *)pEvent->getMessage()));
+   pLocals->Create(_T("USER_TAG"), new NXSL_Value((TCHAR *)pEvent->getUserTag()));
+	pObject = FindObjectById(pEvent->getSourceId());
 	if (pObject != NULL)
 	{
 		if (pObject->Type() == OBJECT_NODE)
@@ -305,7 +305,7 @@ BOOL EPRule::MatchScript(Event *pEvent)
 	m_pScript->SetGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value);
 
    // Run script
-   if (m_pScript->Run(pEnv, pEvent->GetParametersCount(), ppValueList, pLocals, &pGlobals) == 0)
+   if (m_pScript->Run(pEnv, pEvent->getParametersCount(), ppValueList, pLocals, &pGlobals) == 0)
    {
       pValue = m_pScript->GetResult();
       if (pValue != NULL)
@@ -319,7 +319,7 @@ BOOL EPRule::MatchScript(Event *pEvent)
          	if (var != NULL)
          	{
          		// Update custom message in event
-         		pEvent->SetCustomMessage(var->Value()->GetValueAsCString());
+         		pEvent->setCustomMessage(var->Value()->GetValueAsCString());
          	}
          }
       }
@@ -351,8 +351,8 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
    if (!(m_dwFlags & RF_DISABLED))
    {
       // Check if event match
-      if (MatchSource(pEvent->SourceId()) && MatchEvent(pEvent->Code()) &&
-          MatchSeverity(pEvent->Severity()) && MatchScript(pEvent))
+      if (MatchSource(pEvent->getSourceId()) && MatchEvent(pEvent->getCode()) &&
+          MatchSeverity(pEvent->getSeverity()) && MatchScript(pEvent))
       {
          // Generate alarm if requested
          if (m_dwFlags & RF_GENERATE_ALARM)
@@ -361,7 +361,7 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
          // Event matched, perform actions
          if (m_dwNumActions > 0)
          {
-            pszText = pEvent->ExpandText(m_szAlarmMessage);
+            pszText = pEvent->expandText(m_szAlarmMessage);
             for(i = 0; i < m_dwNumActions; i++)
                ExecuteAction(m_pdwActionList[i], pEvent, pszText);
             free(pszText);
@@ -376,11 +376,11 @@ BOOL EPRule::ProcessEvent(Event *pEvent)
 				pSituation = FindSituationById(m_dwSituationId);
 				if (pSituation != NULL)
 				{
-					pszText = pEvent->ExpandText(m_szSituationInstance);
+					pszText = pEvent->expandText(m_szSituationInstance);
 					for(i = 0; i < m_situationAttrList.Size(); i++)
 					{
-						pszAttr = pEvent->ExpandText(m_situationAttrList.GetKeyByIndex(i));
-						pszValue = pEvent->ExpandText(m_situationAttrList.GetValueByIndex(i));
+						pszAttr = pEvent->expandText(m_situationAttrList.GetKeyByIndex(i));
+						pszValue = pEvent->expandText(m_situationAttrList.GetValueByIndex(i));
 						pSituation->UpdateSituation(pszText, pszAttr, pszValue);
 						free(pszAttr);
 						free(pszValue);
@@ -412,7 +412,7 @@ void EPRule::GenerateAlarm(Event *pEvent)
    // Terminate alarms with key == our ack_key
 	if (m_iAlarmSeverity == SEVERITY_TERMINATE)
 	{
-		pszAckKey = pEvent->ExpandText(m_szAlarmKey);
+		pszAckKey = pEvent->expandText(m_szAlarmKey);
 		if (pszAckKey[0] != 0)
 			g_alarmMgr.TerminateByKey(pszAckKey);
 		free(pszAckKey);
@@ -420,7 +420,7 @@ void EPRule::GenerateAlarm(Event *pEvent)
 	else	// Generate new alarm
 	{
 		g_alarmMgr.NewAlarm(m_szAlarmMessage, m_szAlarmKey, ALARM_STATE_OUTSTANDING,
-								  (m_iAlarmSeverity == SEVERITY_FROM_EVENT) ? pEvent->Severity() : m_iAlarmSeverity,
+								  (m_iAlarmSeverity == SEVERITY_FROM_EVENT) ? pEvent->getSeverity() : m_iAlarmSeverity,
 								  m_dwAlarmTimeout, m_dwAlarmTimeoutEvent, pEvent);
 	}
 }

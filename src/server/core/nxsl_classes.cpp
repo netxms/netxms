@@ -106,6 +106,14 @@ NXSL_Value *NXSL_NodeClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
    {
       pValue = new NXSL_Value(pNode->GetPlatformName());
    }
+	else
+	{
+		const TCHAR *attrValue = pNode->GetCustomAttribute(pszAttr);
+		if (attrValue != NULL)
+		{
+			pValue = new NXSL_Value(attrValue);
+		}
+	}
    return pValue;
 }
 
@@ -128,35 +136,39 @@ NXSL_Value *NXSL_EventClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
    event = (Event *)pObject->Data();
    if (!strcmp(pszAttr, "code"))
    {
-      value = new NXSL_Value(event->Code());
+      value = new NXSL_Value(event->getCode());
    }
    else if (!strcmp(pszAttr, "id"))
    {
-      value = new NXSL_Value(event->Id());
+      value = new NXSL_Value(event->getId());
    }
    else if (!strcmp(pszAttr, "severity"))
    {
-      value = new NXSL_Value(event->Severity());
+      value = new NXSL_Value(event->getSeverity());
    }
    else if (!strcmp(pszAttr, "timestamp"))
    {
-      value = new NXSL_Value((INT64)event->TimeStamp());
+      value = new NXSL_Value((INT64)event->getTimeStamp());
    }
    else if (!strcmp(pszAttr, "message"))
    {
-      value = new NXSL_Value(event->Message());
+      value = new NXSL_Value(event->getMessage());
+   }
+   else if (!strcmp(pszAttr, "customMessage"))
+   {
+		value = new NXSL_Value(event->getCustomMessage());
    }
    else if (!strcmp(pszAttr, "userTag"))
    {
-      value = new NXSL_Value(event->UserTag());
+      value = new NXSL_Value(event->getUserTag());
    }
    else if (!strcmp(pszAttr, "parameters"))
    {
 		NXSL_Array *array = new NXSL_Array;
 		DWORD i;
 
-		for(i = 0; i < event->GetParametersCount(); i++)
-			array->Set((int)(i + 1), new NXSL_Value(event->GetParameter(i)));
+		for(i = 0; i < event->getParametersCount(); i++)
+			array->Set((int)(i + 1), new NXSL_Value(event->getParameter(i)));
       value = new NXSL_Value(array);
    }
    return value;

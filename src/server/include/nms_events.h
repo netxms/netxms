@@ -75,30 +75,31 @@ public:
    Event(EVENT_TEMPLATE *pTemplate, DWORD dwSourceId, const TCHAR *pszUserTag, const char *szFormat, va_list args);
    ~Event();
 
-   QWORD Id() { return m_qwId; }
-   DWORD Code() { return m_dwCode; }
-   DWORD Severity() { return m_dwSeverity; }
-   DWORD Flags() { return m_dwFlags; }
-   DWORD SourceId() { return m_dwSource; }
-	const TCHAR *Name() { return m_szName; }
-   const TCHAR *Message() { return m_pszMessageText; }
-   const TCHAR *UserTag() { return m_pszUserTag; }
-   time_t TimeStamp() { return m_tTimeStamp; }
+   QWORD getId() { return m_qwId; }
+   DWORD getCode() { return m_dwCode; }
+   DWORD getSeverity() { return m_dwSeverity; }
+   DWORD getFlags() { return m_dwFlags; }
+   DWORD getSourceId() { return m_dwSource; }
+	const TCHAR *getName() { return m_szName; }
+   const TCHAR *getMessage() { return m_pszMessageText; }
+   const TCHAR *getUserTag() { return m_pszUserTag; }
+   time_t getTimeStamp() { return m_tTimeStamp; }
    
-   QWORD GetRootId() { return m_qwRootId; }
-   void SetRootId(QWORD qwId) { m_qwRootId = qwId; }
+   QWORD getRootId() { return m_qwRootId; }
+   void setRootId(QWORD qwId) { m_qwRootId = qwId; }
 
-   void PrepareMessage(CSCPMessage *pMsg);
+   void prepareMessage(CSCPMessage *pMsg);
 
-   void ExpandMessageText();
-   TCHAR *ExpandText(TCHAR *szTemplate, TCHAR *pszAlarmMsg = NULL);
+   void expandMessageText();
+   TCHAR *expandText(TCHAR *szTemplate, TCHAR *pszAlarmMsg = NULL);
 
-   DWORD GetParametersCount() { return m_dwNumParameters; }
-   char *GetParameter(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? m_ppszParameters[dwIndex] : NULL; }
-   DWORD GetParameterAsULong(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? _tcstoul(m_ppszParameters[dwIndex], NULL, 0) : 0; }
-   QWORD GetParameterAsUInt64(DWORD dwIndex) { return (dwIndex < m_dwNumParameters) ? _tcstoull(m_ppszParameters[dwIndex], NULL, 0) : 0; }
+   DWORD getParametersCount() { return m_dwNumParameters; }
+   char *getParameter(DWORD index) { return (index < m_dwNumParameters) ? m_ppszParameters[index] : NULL; }
+   DWORD getParameterAsULong(DWORD index) { return (index < m_dwNumParameters) ? _tcstoul(m_ppszParameters[index], NULL, 0) : 0; }
+   QWORD getParameterAsUInt64(DWORD index) { return (index < m_dwNumParameters) ? _tcstoull(m_ppszParameters[index], NULL, 0) : 0; }
    
-   void SetCustomMessage(const TCHAR *pszMessage) { safe_free(m_pszCustomMessage); m_pszCustomMessage = (pszMessage != NULL) ? _tcsdup(pszMessage) : NULL; }
+   const TCHAR *getCustomMessage() { return CHECK_NULL_EX(m_pszCustomMessage); }
+   void setCustomMessage(const TCHAR *message) { safe_free(m_pszCustomMessage); m_pszCustomMessage = (message != NULL) ? _tcsdup(message) : NULL; }
 };
 
 

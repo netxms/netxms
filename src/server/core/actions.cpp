@@ -315,17 +315,17 @@ static BOOL ForwardEvent(const TCHAR *server, Event *event)
 
 		msg.SetId(1);
 		msg.SetCode(CMD_FORWARD_EVENT);
-		object = FindObjectById(event->SourceId());
+		object = FindObjectById(event->getSourceId());
 		if (object != NULL)
 		{
 			msg.SetVariable(VID_IP_ADDRESS, object->IpAddr());
-			msg.SetVariable(VID_EVENT_CODE, event->Code());
-			msg.SetVariable(VID_EVENT_NAME, event->Name());
-			if (event->UserTag() != NULL)
-				msg.SetVariable(VID_USER_TAG, event->UserTag());
-			msg.SetVariable(VID_NUM_ARGS, (WORD)event->GetParametersCount());
-			for(i = 0; i < event->GetParametersCount(); i++)
-				msg.SetVariable(VID_EVENT_ARG_BASE + i, event->GetParameter(i));
+			msg.SetVariable(VID_EVENT_CODE, event->getCode());
+			msg.SetVariable(VID_EVENT_NAME, event->getName());
+			if (event->getUserTag() != NULL)
+				msg.SetVariable(VID_USER_TAG, event->getUserTag());
+			msg.SetVariable(VID_NUM_ARGS, (WORD)event->getParametersCount());
+			for(i = 0; i < event->getParametersCount(); i++)
+				msg.SetVariable(VID_EVENT_ARG_BASE + i, event->getParameter(i));
 
 			if (isc->SendMessage(&msg))
 			{
@@ -373,8 +373,8 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
       {
          char *pszExpandedData, *pszExpandedSubject, *pszExpandedRcpt, *curr, *next;
 
-         pszExpandedData = pEvent->ExpandText(CHECK_NULL_EX(pAction->pszData), pszAlarmMsg);
-         pszExpandedRcpt = pEvent->ExpandText(pAction->szRcptAddr, pszAlarmMsg);
+         pszExpandedData = pEvent->expandText(CHECK_NULL_EX(pAction->pszData), pszAlarmMsg);
+         pszExpandedRcpt = pEvent->expandText(pAction->szRcptAddr, pszAlarmMsg);
          switch(pAction->iType)
          {
             case ACTION_EXEC:
@@ -386,7 +386,7 @@ BOOL ExecuteAction(DWORD dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
             case ACTION_SEND_EMAIL:
                DbgPrintf(3, "*actions* Sending mail to %s: \"%s\"", 
                          pszExpandedRcpt, pszExpandedData);
-               pszExpandedSubject = pEvent->ExpandText(pAction->szEmailSubject, pszAlarmMsg);
+               pszExpandedSubject = pEvent->expandText(pAction->szEmailSubject, pszAlarmMsg);
 					curr = pszExpandedRcpt;
 					do
 					{

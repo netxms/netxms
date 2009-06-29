@@ -166,8 +166,8 @@ void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
    BOOL bNewAlarm = TRUE;
 
    // Expand alarm's message and key
-   pszExpMsg = pEvent->ExpandText(pszMsg);
-   pszExpKey = pEvent->ExpandText(pszKey);
+   pszExpMsg = pEvent->expandText(pszMsg);
+   pszExpKey = pEvent->expandText(pszKey);
 
    // Check if we have a duplicate alarm
    if ((nState != ALARM_STATE_TERMINATED) && (*pszExpKey != 0))
@@ -179,7 +179,7 @@ void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
          {
             m_pAlarmList[i].dwRepeatCount++;
             m_pAlarmList[i].dwLastChangeTime = (DWORD)time(NULL);
-            m_pAlarmList[i].dwSourceObject = pEvent->SourceId();
+            m_pAlarmList[i].dwSourceObject = pEvent->getSourceId();
             m_pAlarmList[i].nState = nState;
             m_pAlarmList[i].nCurrentSeverity = iSeverity;
 				m_pAlarmList[i].dwTimeout = dwTimeout;
@@ -201,9 +201,9 @@ void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
       // Create new alarm structure
       memset(&alarm, 0, sizeof(NXC_ALARM));
       alarm.dwAlarmId = CreateUniqueId(IDG_ALARM);
-      alarm.qwSourceEventId = pEvent->Id();
-      alarm.dwSourceEventCode = pEvent->Code();
-      alarm.dwSourceObject = pEvent->SourceId();
+      alarm.qwSourceEventId = pEvent->getId();
+      alarm.dwSourceEventCode = pEvent->getCode();
+      alarm.dwSourceObject = pEvent->getSourceId();
       alarm.dwCreationTime = (DWORD)time(NULL);
       alarm.dwLastChangeTime = alarm.dwCreationTime;
       alarm.nState = nState;

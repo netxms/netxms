@@ -157,7 +157,7 @@ Event::~Event()
 // Create message text from template
 //
 
-void Event::ExpandMessageText(void)
+void Event::expandMessageText(void)
 {
    if (m_pszMessageTemplate != NULL)
    {
@@ -166,7 +166,7 @@ void Event::ExpandMessageText(void)
          free(m_pszMessageText);
          m_pszMessageText = NULL;
       }
-      m_pszMessageText = ExpandText(m_pszMessageTemplate);
+      m_pszMessageText = expandText(m_pszMessageTemplate);
       free(m_pszMessageTemplate);
       m_pszMessageTemplate = NULL;
    }
@@ -177,7 +177,7 @@ void Event::ExpandMessageText(void)
 // Substitute % macros in given text with actual values
 //
 
-TCHAR *Event::ExpandText(TCHAR *pszTemplate, TCHAR *pszAlarmMsg)
+TCHAR *Event::expandText(TCHAR *pszTemplate, TCHAR *pszAlarmMsg)
 {
    char *pCurr;
    DWORD dwPos, dwSize, dwParam;
@@ -450,7 +450,7 @@ TCHAR *Event::ExpandText(TCHAR *pszTemplate, TCHAR *pszAlarmMsg)
 // Fill message with event data
 //
 
-void Event::PrepareMessage(CSCPMessage *pMsg)
+void Event::prepareMessage(CSCPMessage *pMsg)
 {
 	DWORD dwId = VID_EVENTLOG_MSG_BASE;
 

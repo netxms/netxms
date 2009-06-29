@@ -45,7 +45,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
 	// Check for NetXMS server netwok connectivity
 	if (g_dwFlags & AF_NO_NETWORK_CONNECTIVITY)
 	{
-		pEvent->SetRootId(m_networkLostEventId);
+		pEvent->setRootId(m_networkLostEventId);
 		return;
 	}
 
@@ -66,7 +66,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
                {
                   if (((Node *)pTrace->pHopList[i].pObject)->IsDown())
                   {
-                     pEvent->SetRootId(((Node *)pTrace->pHopList[i].pObject)->GetLastEventId(LAST_EVENT_NODE_DOWN));
+                     pEvent->setRootId(((Node *)pTrace->pHopList[i].pObject)->GetLastEventId(LAST_EVENT_NODE_DOWN));
                   }
                   else
                   {
@@ -90,7 +90,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
                         {
                            if (pInterface->Status() == STATUS_CRITICAL)
                            {
-                              pEvent->SetRootId(pInterface->GetLastDownEventId());
+                              pEvent->setRootId(pInterface->GetLastDownEventId());
                            }
                         }
                      }
@@ -113,34 +113,34 @@ void CorrelateEvent(Event *pEvent)
    NetObj *pObject;
    Interface *pInterface;
 
-   pObject = FindObjectById(pEvent->SourceId());
+   pObject = FindObjectById(pEvent->getSourceId());
    if ((pObject != NULL) && (pObject->Type() == OBJECT_NODE))
    {
-      switch(pEvent->Code())
+      switch(pEvent->getCode())
       {
          case EVENT_INTERFACE_DOWN:
-            pInterface = ((Node *)pObject)->FindInterface(pEvent->GetParameterAsULong(4), INADDR_ANY);
+            pInterface = ((Node *)pObject)->FindInterface(pEvent->getParameterAsULong(4), INADDR_ANY);
             if (pInterface != NULL)
             {
-               pInterface->SetLastDownEventId(pEvent->Id());
+               pInterface->SetLastDownEventId(pEvent->getId());
             }
          case EVENT_SERVICE_DOWN:
          case EVENT_SNMP_FAIL:
          case EVENT_AGENT_FAIL:
             if (((Node *)pObject)->RuntimeFlags() & NDF_UNREACHABLE)
             {
-               pEvent->SetRootId(((Node *)pObject)->GetLastEventId(LAST_EVENT_NODE_DOWN));
+               pEvent->setRootId(((Node *)pObject)->GetLastEventId(LAST_EVENT_NODE_DOWN));
             }
             break;
          case EVENT_NODE_DOWN:
-            ((Node *)pObject)->SetLastEventId(LAST_EVENT_NODE_DOWN, pEvent->Id());
+            ((Node *)pObject)->SetLastEventId(LAST_EVENT_NODE_DOWN, pEvent->getId());
             C_SysNodeDown((Node *)pObject, pEvent);
             break;
          case EVENT_NODE_UP:
             ((Node *)pObject)->SetLastEventId(LAST_EVENT_NODE_DOWN, 0);
             break;
 			case EVENT_NETWORK_CONNECTION_LOST:
-				m_networkLostEventId = pEvent->Id();
+				m_networkLostEventId = pEvent->getId();
 				break;
          default:
             break;

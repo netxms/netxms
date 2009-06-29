@@ -2182,7 +2182,7 @@ void ClientSession::OnNewEvent(Event *pEvent)
       pUpdate->dwCategory = INFO_CAT_EVENT;
       msg = new CSCPMessage;
       msg->SetCode(CMD_EVENTLOG_RECORDS);
-      pEvent->PrepareMessage(msg);
+      pEvent->prepareMessage(msg);
       pUpdate->pData = msg;
       m_pUpdateQueue->Put(pUpdate);
    }
