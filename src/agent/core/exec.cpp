@@ -328,6 +328,7 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 
 		nRet = (int)fread(data->value, 1, MAX_RESULT_LENGTH - 1, hPipe);
 		pclose(hPipe);
+	   DebugPrintf(INVALID_INDEX, "H_ExternalParameter/POpenWorker: worker thread pipe read result: %d", nRet);
 		if (nRet > 0)
 		{
 			data->value[MAX_RESULT_LENGTH - 1] = 0;
@@ -339,6 +340,7 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 		}
 		else
 		{
+		   DebugPrintf(INVALID_INDEX, "H_ExternalParameter/POpenWorker: worker thread pipe read error: %s", strerror(errno));
 			data->status = SYSINFO_RC_ERROR;
 		}
 	}
@@ -370,6 +372,8 @@ LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
 	char *pszCmdLine, szBuffer[1024], szTempFile[MAX_PATH];
 	const char *sptr;
 	int i, iSize, iStatus;
+
+   DebugPrintf(INVALID_INDEX, "H_ExternalParameter called for \"%s\" \"%s\"", pszCmd, pszArg);
 
    // Substitute $1 .. $9 with actual arguments
    iSize = (int)strlen(pszArg);
@@ -404,6 +408,7 @@ LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
          pszCmdLine[i++] = *sptr;
       }
    pszCmdLine[i] = 0;
+   DebugPrintf(INVALID_INDEX, "H_ExternalParameter: command line is \"%s\"", pszCmdLine);
 
 #if defined(_WIN32)
 	if (*pszArg == 'E')
@@ -497,6 +502,7 @@ LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
 			data->finished = ConditionCreate(TRUE);
 			data->released = ConditionCreate(TRUE);
 			ThreadCreate(POpenWorker, 0, data);
+		   DebugPrintf(INVALID_INDEX, "H_ExternalParameter (shell exec): worker thread created");
 			if (ConditionWait(data->finished, g_dwExecTimeout))
 			{
 				iStatus = data->status;
@@ -509,6 +515,7 @@ LONG H_ExternalParameter(const char *pszCmd, const char *pszArg, char *pValue)
 				iStatus = SYSINFO_RC_ERROR;
 			}
 			ConditionSet(data->released);	// Allow worker to destroy data
+		   DebugPrintf(INVALID_INDEX, "H_ExternalParameter (shell exec): execution status %d", iStatus);
 		}
 #endif
 
