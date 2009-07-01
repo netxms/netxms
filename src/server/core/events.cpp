@@ -365,13 +365,20 @@ TCHAR *Event::expandText(TCHAR *pszTemplate, TCHAR *pszAlarmMsg)
 
 								if (script->Run(pEnv) == 0)
 								{
-									TCHAR *temp = script->GetResult()->GetValueAsCString();
-									dwSize += (DWORD)_tcslen(temp);
-									pText = (char *)realloc(pText, dwSize);
-									_tcscpy(&pText[dwPos], temp);
-									dwPos += (DWORD)_tcslen(temp);
-									DbgPrintf(4, "Event::ExpandText(%d, \"%s\"): Script %s executed successfully",
-									          m_dwCode, pszTemplate, scriptName);
+									NXSL_Value *result = script->GetResult();
+									if (result != NULL)
+									{
+										TCHAR *temp = result->GetValueAsCString();
+										if (temp != NULL)
+										{
+											dwSize += (DWORD)_tcslen(temp);
+											pText = (char *)realloc(pText, dwSize);
+											_tcscpy(&pText[dwPos], temp);
+											dwPos += (DWORD)_tcslen(temp);
+											DbgPrintf(4, "Event::ExpandText(%d, \"%s\"): Script %s executed successfully",
+														 m_dwCode, pszTemplate, scriptName);
+										}
+									}
 								}
 								else
 								{

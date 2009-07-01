@@ -1098,7 +1098,7 @@ void DCItem::Transform(ItemValue &value, time_t nElapsedTime)
                   value = pValue->GetValueAsReal();
                   break;
                case DCI_DT_STRING:
-                  value = pValue->GetValueAsCString();
+                  value = CHECK_NULL_EX(pValue->GetValueAsCString());
                   break;
                default:
                   break;
@@ -1960,7 +1960,9 @@ void DCItem::ExpandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 
 				if (script->Run(pEnv) == 0)
 				{
-					temp += script->GetResult()->GetValueAsCString();
+					NXSL_Value *result = script->GetResult();
+					if (result != NULL)
+						temp += CHECK_NULL_EX(result->GetValueAsCString());
 		         DbgPrintf(4, "DCItem::ExpandMacros(%d,\"%s\"): Script %s executed successfully", m_dwId, src, &macro[7]);
 				}
 				else
@@ -2013,7 +2015,11 @@ BOOL DCItem::TestTransformation(const TCHAR *script, const TCHAR *value, TCHAR *
          pValue = pScript->GetResult();
          if (pValue != NULL)
          {
-				if (pValue->IsObject())
+				if (pValue->IsNull())
+				{
+					nx_strncpy(buffer, _T("(null)"), bufSize);
+				}
+				else if (pValue->IsObject())
 				{
 					nx_strncpy(buffer, _T("(object)"), bufSize);
 				}

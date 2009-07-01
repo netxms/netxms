@@ -319,7 +319,7 @@ BOOL EPRule::MatchScript(Event *pEvent)
          	if (var != NULL)
          	{
          		// Update custom message in event
-         		pEvent->setCustomMessage(var->Value()->GetValueAsCString());
+         		pEvent->setCustomMessage(CHECK_NULL_EX(var->Value()->GetValueAsCString()));
          	}
          }
       }
