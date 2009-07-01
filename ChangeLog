@@ -1,7 +1,10 @@
 *
-* 1.0.0
+* 0.2.27
 *
 
+- Added support for SNMP version 3
+- Log monitoring improved
+- Built-in scripting language (NXSL) improved
 - Fixed issues: #253, #254, #255
 
 

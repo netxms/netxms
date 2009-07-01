@@ -34,6 +34,8 @@ static char m_community[256] = "public";
 static char m_user[256] = "";
 static char m_authPassword[256] = "";
 static char m_encryptionPassword[256] = "";
+static int m_authMethod = SNMP_AUTH_NONE;
+static int m_encryptionMethod = SNMP_ENCRYPT_NONE;
 static WORD m_port = 161;
 static DWORD m_snmpVersion = SNMP_VERSION_2C;
 static DWORD m_timeout = 3000;
@@ -68,11 +70,13 @@ static int SetVariables(int argc, char *argv[])
    }
    else
    {
-      // Create request
 		if (m_snmpVersion == SNMP_VERSION_3)
-			request = new SNMP_PDU(SNMP_SET_REQUEST, new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword), getpid(), SNMP_VERSION_3);
+			pTransport->setSecurityContext(new SNMP_SecurityContext(m_user, m_authPassword, m_authMethod));
 		else
-			request = new SNMP_PDU(SNMP_SET_REQUEST, m_community, getpid(), m_snmpVersion);
+			pTransport->setSecurityContext(new SNMP_SecurityContext(m_community));
+
+		// Create request
+		request = new SNMP_PDU(SNMP_SET_REQUEST, getpid(), m_snmpVersion);
       for(i = 1; i < argc; i += 2)
       {
          if (SNMPIsCorrectOID(argv[i]))
@@ -127,15 +131,17 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "A:c:E:hp:t:u:v:w:")) != -1)
+	while((ch = getopt(argc, argv, "a:A:c:e:E:hp:t:u:v:w:")) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
             printf("Usage: nxsnmpset [<options>] <host> <variable> <value>\n"
                    "Valid options are:\n"
+						 "   -a <method>  : Authentication method for SNMP v3 USM. Valid methods are MD5 and SHA1\n"
                    "   -A <passwd>  : User's authentication password for SNMP v3 USM\n"
                    "   -c <string>  : Community string. Default is \"public\"\n"
+						 "   -e <method>  : Encryption method for SNMP v3 USM. Valid methods are DES and AES\n"
                    "   -E <passwd>  : User's encryption password for SNMP v3 USM\n"
                    "   -h           : Display help and exit\n"
                    "   -p <port>    : Agent's port number. Default is 161\n"

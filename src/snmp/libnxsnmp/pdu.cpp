@@ -25,6 +25,13 @@
 
 
 //
+// Static data
+//
+
+static BYTE m_hashPlaceholder[12] = { 0xAB, 0xCD, 0xEF, 0xFF, 0x00, 0x11, 0x22, 0x33, 0xBB, 0xAA, 0x99, 0x88 };
+
+
+//
 // PDU type to command translation
 //
 
@@ -56,7 +63,6 @@ SNMP_PDU::SNMP_PDU()
 {
    m_dwVersion = SNMP_VERSION_1;
    m_dwCommand = SNMP_INVALID_PDU;
-   m_security = new SNMP_SecurityContext;
    m_dwNumVariables = 0;
    m_ppVarList = NULL;
    m_pEnterprise = NULL;
@@ -67,10 +73,10 @@ SNMP_PDU::SNMP_PDU()
 	m_flags = 0;
    m_iTrapType = 0;
    m_iSpecificTrap = 0;
-	m_authoritativeEngine = NULL;
 	m_contextEngineIdLen = 0;
 	m_contextName[0] = 0;
 	m_msgMaxSize = SNMP_DEFAULT_MSG_MAX_SIZE;
+	m_community = NULL;
 }
 
 
@@ -78,11 +84,10 @@ SNMP_PDU::SNMP_PDU()
 // Create request PDU
 //
 
-SNMP_PDU::SNMP_PDU(DWORD dwCommand, char *pszCommunity, DWORD dwRqId, DWORD dwVersion)
+SNMP_PDU::SNMP_PDU(DWORD dwCommand, DWORD dwRqId, DWORD dwVersion)
 {
    m_dwVersion = dwVersion;
    m_dwCommand = dwCommand;
-   m_security = new SNMP_SecurityContext(pszCommunity);
    m_dwNumVariables = 0;
    m_ppVarList = NULL;
    m_pEnterprise = NULL;
@@ -93,36 +98,10 @@ SNMP_PDU::SNMP_PDU(DWORD dwCommand, char *pszCommunity, DWORD dwRqId, DWORD dwVe
 	m_flags = 0;
    m_iTrapType = 0;
    m_iSpecificTrap = 0;
-	m_authoritativeEngine = NULL;
 	m_contextEngineIdLen = 0;
 	m_contextName[0] = 0;
 	m_msgMaxSize = SNMP_DEFAULT_MSG_MAX_SIZE;
-}
-
-
-//
-// Create request PDU
-//
-
-SNMP_PDU::SNMP_PDU(DWORD dwCommand, SNMP_SecurityContext *security, DWORD dwRqId, DWORD dwVersion)
-{
-   m_dwVersion = SNMP_VERSION_3;
-   m_dwCommand = dwCommand;
-   m_security = security;
-   m_dwNumVariables = 0;
-   m_ppVarList = NULL;
-   m_pEnterprise = NULL;
-   m_dwErrorCode = 0;
-   m_dwErrorIndex = 0;
-   m_dwRqId = dwRqId;
-	m_msgId = dwRqId;
-	m_flags = 0;
-   m_iTrapType = 0;
-   m_iSpecificTrap = 0;
-	m_authoritativeEngine = NULL;
-	m_contextEngineIdLen = 0;
-	m_contextName[0] = 0;
-	m_msgMaxSize = SNMP_DEFAULT_MSG_MAX_SIZE;
+	m_community = NULL;
 }
 
 
@@ -134,12 +113,11 @@ SNMP_PDU::~SNMP_PDU()
 {
    DWORD i;
 
-   delete m_security;
-	delete m_authoritativeEngine;
    delete m_pEnterprise;
    for(i = 0; i < m_dwNumVariables; i++)
       delete m_ppVarList[i];
    safe_free(m_ppVarList);
+	safe_free(m_community);
 }
 
 
@@ -485,9 +463,7 @@ BOOL SNMP_PDU::parseV3Header(BYTE *header, DWORD headerLength)
       return FALSE;   // Error parsing content
    currPos += length;
    remLength -= length + idLength;
-
-	delete m_security;
-	m_security = new SNMP_SecurityContext(securityModel);
+	m_securityModel = (int)securityModel;
 
 	return TRUE;
 }
@@ -543,7 +519,7 @@ BOOL SNMP_PDU::parseV3SecurityUsm(BYTE *data, DWORD dataLength)
    currPos += length;
    remLength -= length + idLength;
 
-	setAuthoritativeEngine(new SNMP_Engine(engineId, engineIdLen, engineBoots, engineTime));
+	m_authoritativeEngine = SNMP_Engine(engineId, engineIdLen, engineBoots, engineTime);
 
 	return TRUE;
 }
@@ -687,7 +663,7 @@ BOOL SNMP_PDU::parse(BYTE *pRawData, DWORD dwRawLength)
 		if (dwType != ASN_OCTET_STRING)
 			return FALSE;   // Should be octet string
 
-		if (m_security->getSecurityModel() == SNMP_SECURITY_MODEL_USM)
+		if (m_securityModel == SNMP_SECURITY_MODEL_USM)
 		{
 			if (!parseV3SecurityUsm(pbCurrPos, dwLength))
 				return FALSE;
@@ -710,16 +686,14 @@ BOOL SNMP_PDU::parse(BYTE *pRawData, DWORD dwRawLength)
 			return FALSE;
 		if (dwType != ASN_OCTET_STRING)
 			return FALSE;   // Community field should be of string type
-		char *community = (char *)malloc(dwLength + 1);
-		if (!BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)community))
+		m_community = (char *)malloc(dwLength + 1);
+		if (!BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)m_community))
 		{
-			free(community);
+			free(m_community);
+			m_community = NULL;
 			return FALSE;   // Error parsing content of version field
 		}
-		community[dwLength] = 0;
-		delete m_security;
-		m_security = new SNMP_SecurityContext(community);
-		free(community);
+		m_community[dwLength] = 0;
 		pbCurrPos += dwLength;
 		dwPacketLength -= dwLength + dwIdLength;
 
@@ -734,7 +708,7 @@ BOOL SNMP_PDU::parse(BYTE *pRawData, DWORD dwRawLength)
 // Create packet from PDU
 //
 
-DWORD SNMP_PDU::encode(BYTE **ppBuffer)
+DWORD SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 {
    DWORD i, dwBufferSize, dwBytes, dwVarBindsSize, dwPDUType, dwPDUSize, dwPacketSize, dwValue;
    BYTE *pbCurrPos, *pBlock, *pVarBinds, *pPacket;
@@ -834,14 +808,11 @@ DWORD SNMP_PDU::encode(BYTE **ppBuffer)
 
 		if (m_dwVersion == SNMP_VERSION_3)
 		{
-			if (m_authoritativeEngine == NULL)
-				m_authoritativeEngine = new SNMP_Engine;
-
-			dwBytes = encodeV3Header(pbCurrPos, dwBufferSize - dwPacketSize);
+			dwBytes = encodeV3Header(pbCurrPos, dwBufferSize - dwPacketSize, securityContext);
 			dwPacketSize += dwBytes;
 			pbCurrPos += dwBytes;
 
-			dwBytes = encodeV3SecurityParameters(pbCurrPos, dwBufferSize - dwPacketSize);
+			dwBytes = encodeV3SecurityParameters(pbCurrPos, dwBufferSize - dwPacketSize, securityContext);
 			dwPacketSize += dwBytes;
 			pbCurrPos += dwBytes;
 
@@ -850,8 +821,8 @@ DWORD SNMP_PDU::encode(BYTE **ppBuffer)
 		}
 		else
 		{
-			dwBytes = BER_Encode(ASN_OCTET_STRING, (BYTE *)m_security->getCommunity(),
-										(DWORD)strlen(m_security->getCommunity()), pbCurrPos,
+			dwBytes = BER_Encode(ASN_OCTET_STRING, (BYTE *)securityContext->getCommunity(),
+										(DWORD)strlen(securityContext->getCommunity()), pbCurrPos,
 										dwBufferSize - dwPacketSize);
 			dwPacketSize += dwBytes;
 			pbCurrPos += dwBytes;
@@ -865,6 +836,12 @@ DWORD SNMP_PDU::encode(BYTE **ppBuffer)
       // into SEQUENCE
       *ppBuffer = (BYTE *)malloc(dwPacketSize + 6);
       dwBytes = BER_Encode(ASN_SEQUENCE, pPacket, dwPacketSize, *ppBuffer, dwPacketSize + 6);
+
+		// Sign message
+		if ((m_dwVersion == SNMP_VERSION_3) && securityContext->needAuthentication())
+		{
+			signMessage(*ppBuffer, dwBytes, securityContext);
+		}
    }
    else
    {
@@ -882,14 +859,24 @@ DWORD SNMP_PDU::encode(BYTE **ppBuffer)
 // Encode version 3 header
 //
 
-DWORD SNMP_PDU::encodeV3Header(BYTE *buffer, DWORD bufferSize)
+DWORD SNMP_PDU::encodeV3Header(BYTE *buffer, DWORD bufferSize, SNMP_SecurityContext *securityContext)
 {
 	BYTE header[256];
-	DWORD bytes, securityModel = m_security->getSecurityModel();
+	DWORD bytes, securityModel = securityContext->getSecurityModel();
+
+	BYTE flags = 0;
+	if (securityContext->needAuthentication())
+	{
+		flags |= SNMP_AUTH_FLAG;
+		if (securityContext->needEncryption())
+		{
+			flags |= SNMP_PRIV_FLAG;
+		}
+	}
 
 	bytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_dwRqId, sizeof(DWORD), header, 256);
 	bytes += BER_Encode(ASN_INTEGER, (BYTE *)&m_msgMaxSize, sizeof(DWORD), &header[bytes], 256 - bytes);
-	bytes += BER_Encode(ASN_OCTET_STRING, &m_flags, 1, &header[bytes], 256 - bytes);
+	bytes += BER_Encode(ASN_OCTET_STRING, &flags, 1, &header[bytes], 256 - bytes);
 	bytes += BER_Encode(ASN_INTEGER, (BYTE *)&securityModel, sizeof(DWORD), &header[bytes], 256 - bytes);
 	return BER_Encode(ASN_SEQUENCE, header, bytes, buffer, bufferSize);
 }
@@ -899,22 +886,26 @@ DWORD SNMP_PDU::encodeV3Header(BYTE *buffer, DWORD bufferSize)
 // Encode version 3 security parameters
 //
 
-DWORD SNMP_PDU::encodeV3SecurityParameters(BYTE *buffer, DWORD bufferSize)
+DWORD SNMP_PDU::encodeV3SecurityParameters(BYTE *buffer, DWORD bufferSize, SNMP_SecurityContext *securityContext)
 {
 	BYTE securityParameters[1024], sequence[1040];
-	DWORD bytes, engineBoots = m_authoritativeEngine->getBoots(), engineTime = m_authoritativeEngine->getTime();
+	DWORD bytes;
+	DWORD engineBoots = securityContext->getAuthoritativeEngine().getBoots();
+	DWORD engineTime = securityContext->getAuthoritativeEngine().getTime();
 
-	if ((m_security != NULL) && (m_security->getSecurityModel() == SNMP_SECURITY_MODEL_USM))
+	if ((securityContext != NULL) && (securityContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM))
 	{
-		bytes = BER_Encode(ASN_OCTET_STRING, m_authoritativeEngine->getId(), m_authoritativeEngine->getIdLen(), securityParameters, 1024);
+		bytes = BER_Encode(ASN_OCTET_STRING, securityContext->getAuthoritativeEngine().getId(),
+		                   securityContext->getAuthoritativeEngine().getIdLen(), securityParameters, 1024);
 		bytes += BER_Encode(ASN_INTEGER, (BYTE *)&engineBoots, sizeof(DWORD), &securityParameters[bytes], 1024 - bytes);
 		bytes += BER_Encode(ASN_INTEGER, (BYTE *)&engineTime, sizeof(DWORD), &securityParameters[bytes], 1024 - bytes);
-		bytes += BER_Encode(ASN_OCTET_STRING, (BYTE *)m_security->getUser(), strlen(m_security->getUser()), &securityParameters[bytes], 1024 - bytes);
+		bytes += BER_Encode(ASN_OCTET_STRING, (BYTE *)securityContext->getUser(), strlen(securityContext->getUser()), &securityParameters[bytes], 1024 - bytes);
 
 		// Authentication parameters
-		if (m_flags & SNMP_AUTH_FLAG)
+		if (securityContext->needAuthentication())
 		{
-			/* TODO: implement authentication */
+			// Add placeholder for message hash
+			bytes += BER_Encode(ASN_OCTET_STRING, m_hashPlaceholder, 12, &securityParameters[bytes], 1024 - bytes);
 		}
 		else
 		{
@@ -922,7 +913,7 @@ DWORD SNMP_PDU::encodeV3SecurityParameters(BYTE *buffer, DWORD bufferSize)
 		}
 
 		// Privacy parameters
-		if (m_flags & SNMP_PRIV_FLAG)
+		if (securityContext->needEncryption())
 		{
 			/* TODO: implement encryption */
 		}
@@ -963,6 +954,99 @@ DWORD SNMP_PDU::encodeV3ScopedPDU(DWORD pduType, BYTE *pdu, DWORD pduSize, BYTE 
 	bytes = BER_Encode(ASN_SEQUENCE, spdu, bytes, buffer, bufferSize);
 	free(spdu);
 	return bytes;
+}
+
+
+//
+// Sign message
+//
+// Algorithm described in RFC:
+//   1) The msgAuthenticationParameters field is set to the serialization,
+//      according to the rules in [RFC3417], of an OCTET STRING containing
+//      12 zero octets.
+//   2) From the secret authKey, two keys K1 and K2 are derived:
+//      a) extend the authKey to 64 octets by appending 48 zero octets;
+//         save it as extendedAuthKey
+//      b) obtain IPAD by replicating the octet 0x36 64 times;
+//      c) obtain K1 by XORing extendedAuthKey with IPAD;
+//      d) obtain OPAD by replicating the octet 0x5C 64 times;
+//      e) obtain K2 by XORing extendedAuthKey with OPAD.
+//   3) Prepend K1 to the wholeMsg and calculate MD5 digest over it
+//      according to [RFC1321].
+//   4) Prepend K2 to the result of the step 4 and calculate MD5 digest
+//      over it according to [RFC1321].  Take the first 12 octets of the
+//      final digest - this is Message Authentication Code (MAC).
+//   5) Replace the msgAuthenticationParameters field with MAC obtained in
+//      the step 4.
+//
+
+void SNMP_PDU::signMessage(BYTE *msg, DWORD msgLen, SNMP_SecurityContext *securityContext)
+{
+	int hashPos;
+
+	// Find placeholder for hash
+	for(hashPos = 0; hashPos < (int)msgLen - 12; hashPos++)
+		if (!memcmp(&msg[hashPos], m_hashPlaceholder, 12))
+			break;
+
+	// Fill hash placeholder with zeroes
+	memset(&msg[hashPos], 0, 12);
+
+	BYTE k1[64], k2[64], hash[20], *buffer;
+	switch(securityContext->getAuthenticationMethod())
+	{
+		case SNMP_AUTH_MD5:
+			// Create K1 and K2
+			memcpy(k1, securityContext->getAuthKeyMD5(), 16);
+			memset(&k1[16], 0, 48);
+			memcpy(k2, k1, 64);
+			for(int i = 0; i < 64; i++)
+			{
+				k1[i] ^= 0x36;
+				k2[i] ^= 0x5C;
+			}
+
+			// Calculate first hash (step 3)
+			buffer = (BYTE *)malloc(msgLen + 64);
+			memcpy(buffer, k1, 64);
+			memcpy(&buffer[64], msg, msgLen);
+			CalculateMD5Hash(buffer, msgLen + 64, hash);
+
+			// Calculate second hash
+			memcpy(buffer, k2, 64);
+			memcpy(&buffer[64], hash, 16);
+			CalculateMD5Hash(buffer, 80, hash);
+			free(buffer);
+			break;
+		case SNMP_AUTH_SHA1:
+			// Create K1 and K2
+			memcpy(k1, securityContext->getAuthKeySHA1(), 20);
+			memset(&k1[20], 0, 44);
+			memcpy(k2, k1, 64);
+			for(int i = 0; i < 64; i++)
+			{
+				k1[i] ^= 0x36;
+				k2[i] ^= 0x5C;
+			}
+
+			// Calculate first hash (step 3)
+			buffer = (BYTE *)malloc(msgLen + 64);
+			memcpy(buffer, k1, 64);
+			memcpy(&buffer[64], msg, msgLen);
+			CalculateSHA1Hash(buffer, msgLen + 64, hash);
+
+			// Calculate second hash
+			memcpy(buffer, k2, 64);
+			memcpy(&buffer[64], hash, 20);
+			CalculateSHA1Hash(buffer, 84, hash);
+			free(buffer);
+			break;
+		default:
+			break;
+	}
+
+	// Update message hash
+	memcpy(&msg[hashPos], hash, 12);
 }
 
 

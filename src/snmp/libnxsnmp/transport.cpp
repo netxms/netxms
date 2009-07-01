@@ -52,6 +52,7 @@ static struct
 SNMP_Transport::SNMP_Transport()
 {
 	m_authoritativeEngine = NULL;
+	m_securityContext = NULL;
 }
 
 
@@ -62,6 +63,18 @@ SNMP_Transport::SNMP_Transport()
 SNMP_Transport::~SNMP_Transport()
 {
 	delete m_authoritativeEngine;
+	delete m_securityContext;
+}
+
+
+//
+// Set security context
+//
+
+void SNMP_Transport::setSecurityContext(SNMP_SecurityContext *ctx)
+{
+	delete m_securityContext;
+	m_securityContext = ctx;
 }
 
 
@@ -80,13 +93,10 @@ DWORD SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response,
       return SNMP_ERR_PARAM;
 
    *response = NULL;
-	// Set authoritative engine for PDU if we have cached one
-	if ((request->getVersion() == SNMP_VERSION_3) &&
-		 (request->getAuthoritativeEngine() == NULL) &&
-		 (m_authoritativeEngine != NULL))
-	{
-		request->setAuthoritativeEngine(new SNMP_Engine(m_authoritativeEngine));
-	}
+
+	// Create dummy context
+	if (m_securityContext == NULL)
+		m_securityContext = new SNMP_SecurityContext();
 
    while(numRetries-- >= 0)
    {
@@ -108,8 +118,11 @@ retry:
 					if ((*response)->getMessageId() == request->getMessageId())
 					{
 						// Cache authoritative engine ID
-						if ((m_authoritativeEngine == NULL) && ((*response)->getAuthoritativeEngine() != NULL))
+						if ((m_authoritativeEngine == NULL) && ((*response)->getAuthoritativeEngine().getIdLen() != 0))
+						{
 							m_authoritativeEngine = new SNMP_Engine((*response)->getAuthoritativeEngine());
+							m_securityContext->setAuthoritativeEngine(*m_authoritativeEngine);
+						}
 
 						if ((*response)->getCommand() == SNMP_REPORT)
 						{
@@ -136,9 +149,9 @@ retry:
 									request->setContextEngineId((*response)->getContextEngineId(), (*response)->getContextEngineIdLength());
 									canRetry = true;
 								}
-								if (request->getAuthoritativeEngine()->getIdLen() == 0)
+								if (m_securityContext->getAuthoritativeEngine().getIdLen() == 0)
 								{
-									request->setAuthoritativeEngine(new SNMP_Engine((*response)->getAuthoritativeEngine()));
+									m_securityContext->setAuthoritativeEngine((*response)->getAuthoritativeEngine());
 									canRetry = true;
 								}
 								if (canRetry)
@@ -455,7 +468,7 @@ int SNMP_UDPTransport::sendMessage(SNMP_PDU *pPDU)
    DWORD dwSize;
    int nBytes = 0;
 
-   dwSize = pPDU->encode(&pBuffer);
+   dwSize = pPDU->encode(&pBuffer, m_securityContext);
    if (dwSize != 0)
    {
       nBytes = send(m_hSocket, (char *)pBuffer, dwSize, 0);

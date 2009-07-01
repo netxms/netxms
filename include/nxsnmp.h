@@ -196,6 +196,24 @@
 
 
 //
+// SNMP v3 authentication methods
+//
+
+#define SNMP_AUTH_NONE           0
+#define SNMP_AUTH_MD5            1
+#define SNMP_AUTH_SHA1           2
+
+
+//
+// SNMP v3 encryption methods
+//
+
+#define SNMP_ENCRYPT_NONE        0
+#define SNMP_ENCRYPT_DES         1
+#define SNMP_ENCRYPT_AES         2
+
+
+//
 // MIB object access types
 //
 
@@ -398,39 +416,6 @@ public:
 
 
 //
-// Security context
-//
-
-class LIBNXSNMP_EXPORTABLE SNMP_SecurityContext
-{
-private:
-	int m_securityModel;
-	char *m_community;
-	char *m_user;
-	char *m_authPassword;
-	char *m_encryptionPassword;
-
-public:
-	SNMP_SecurityContext();
-	SNMP_SecurityContext(int securityModel);
-	SNMP_SecurityContext(const char *community);
-	SNMP_SecurityContext(const char *user, const char *authPassword, const char *encryptionPassword);
-	~SNMP_SecurityContext();
-
-	int getSecurityModel() { return m_securityModel; }
-	const char *getCommunity() { return CHECK_NULL_A(m_community); }
-	const char *getUser() { return CHECK_NULL_A(m_user); }
-	const char *getAuthPassword() { return CHECK_NULL_A(m_authPassword); }
-	const char *getEncryptionPassword() { return CHECK_NULL_A(m_encryptionPassword); }
-
-	void setCommunity(const char *community);
-	void setUser(const char *user);
-	void setAuthPassword(const char *authPassword);
-	void setEncryptionPassword(const char *encryptionPassword);
-};
-
-
-//
 // SNMP engine
 //
 
@@ -456,6 +441,57 @@ public:
 
 
 //
+// Security context
+//
+
+class LIBNXSNMP_EXPORTABLE SNMP_SecurityContext
+{
+private:
+	int m_securityModel;
+	char *m_authName;	// community for V1/V2c, user for V3 USM
+	char *m_authPassword;
+	char *m_encryptionPassword;
+	BYTE m_authKeyMD5[16];
+	BYTE m_authKeySHA1[20];
+	SNMP_Engine m_authoritativeEngine;
+	int m_authMethod;
+	int m_encryptionMethod;
+
+	void recalculateKeys();
+
+public:
+	SNMP_SecurityContext();
+	SNMP_SecurityContext(int securityModel);
+	SNMP_SecurityContext(const char *user);
+	SNMP_SecurityContext(const char *user, const char *authPassword, int authMethod);
+	SNMP_SecurityContext(const char *user, const char *authPassword, const char *encryptionPassword,
+	                     int authMethod, int encryptionMethod);
+	~SNMP_SecurityContext();
+
+	int getSecurityModel() { return m_securityModel; }
+	const char *getCommunity() { return CHECK_NULL_A(m_authName); }
+	const char *getUser() { return CHECK_NULL_A(m_authName); }
+	const char *getAuthPassword() { return CHECK_NULL_A(m_authPassword); }
+	const char *getEncryptionPassword() { return CHECK_NULL_A(m_encryptionPassword); }
+
+	bool needAuthentication() { return m_authMethod != SNMP_AUTH_NONE; }
+	bool needEncryption() { return m_encryptionMethod != SNMP_ENCRYPT_NONE; }
+	int getAuthenticationMethod() { return m_authMethod; }
+	int getEncryptionMethod() { return m_encryptionMethod; }
+	BYTE *getAuthKeyMD5() { return m_authKeyMD5; }
+	BYTE *getAuthKeySHA1() { return m_authKeySHA1; }
+
+	void setCommunity(const char *community);
+	void setUser(const char *user);
+	void setAuthPassword(const char *authPassword);
+	void setEncryptionPassword(const char *encryptionPassword);
+
+	void setAuthoritativeEngine(SNMP_Engine &engine);
+	SNMP_Engine& getAuthoritativeEngine() { return m_authoritativeEngine; }
+};
+
+
+//
 // SNMP PDU
 //
 
@@ -474,14 +510,18 @@ private:
    DWORD m_dwRqId;
    DWORD m_dwErrorCode;
    DWORD m_dwErrorIndex;
-	SNMP_SecurityContext *m_security;
-	SNMP_Engine *m_authoritativeEngine;
 	DWORD m_msgId;
 	DWORD m_msgMaxSize;
-	BYTE m_flags;
 	BYTE m_contextEngineId[SNMP_MAX_ENGINEID_LEN];
 	int m_contextEngineIdLen;
 	char m_contextName[SNMP_MAX_CONTEXT_NAME];
+	
+	// The following attributes only used by parser and
+	// valid only for received PDUs
+	BYTE m_flags;
+	char *m_community;
+	SNMP_Engine m_authoritativeEngine;
+	int m_securityModel;
 
    BOOL parseVariable(BYTE *pData, DWORD dwVarLength);
    BOOL parseVarBinds(BYTE *pData, DWORD dwPDULength);
@@ -492,18 +532,18 @@ private:
    BOOL parseV3Header(BYTE *pData, DWORD dwPDULength);
    BOOL parseV3SecurityUsm(BYTE *pData, DWORD dwPDULength);
    BOOL parseV3ScopedPdu(BYTE *pData, DWORD dwPDULength);
-	DWORD encodeV3Header(BYTE *buffer, DWORD bufferSize);
-	DWORD encodeV3SecurityParameters(BYTE *buffer, DWORD bufferSize);
+	DWORD encodeV3Header(BYTE *buffer, DWORD bufferSize, SNMP_SecurityContext *securityContext);
+	DWORD encodeV3SecurityParameters(BYTE *buffer, DWORD bufferSize, SNMP_SecurityContext *securityContext);
 	DWORD encodeV3ScopedPDU(DWORD pduType, BYTE *pdu, DWORD pduSize, BYTE *buffer, DWORD bufferSize);
+	void signMessage(BYTE *msg, DWORD msgLen, SNMP_SecurityContext *securityContext);
 
 public:
    SNMP_PDU();
-   SNMP_PDU(DWORD dwCommand, char *pszCommunity, DWORD dwRqId, DWORD dwVersion = SNMP_VERSION_2C);
-   SNMP_PDU(DWORD dwCommand, SNMP_SecurityContext *security, DWORD dwRqId, DWORD dwVersion = SNMP_VERSION_3);
+   SNMP_PDU(DWORD dwCommand, DWORD dwRqId, DWORD dwVersion = SNMP_VERSION_2C);
    ~SNMP_PDU();
 
    BOOL parse(BYTE *pRawData, DWORD dwRawLength);
-   DWORD encode(BYTE **ppBuffer);
+   DWORD encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext);
 
    DWORD getCommand(void) { return m_dwCommand; }
    SNMP_ObjectId *getTrapId(void) { return m_pEnterprise; }
@@ -514,13 +554,14 @@ public:
    DWORD getVersion(void) { return m_dwVersion; }
    DWORD getErrorCode(void) { return m_dwErrorCode; }
 	DWORD getMessageId() { return m_msgId; }
-	SNMP_SecurityContext *getSecurityContext() { return m_security; }
+
+	const char *getCommunity() { return (m_community != NULL) ? "" : m_community; }
+	SNMP_Engine& getAuthoritativeEngine() { return m_authoritativeEngine; }
+	int getSecurityModel() { return m_securityModel; }
+	int getFlags() { return (int)m_flags; }
 
    DWORD getRequestId(void) { return m_dwRqId; }
    void setRequestId(DWORD dwId) { m_dwRqId = dwId; }
-
-	void setAuthoritativeEngine(SNMP_Engine *engine) { delete m_authoritativeEngine; m_authoritativeEngine = engine; }
-	SNMP_Engine *getAuthoritativeEngine() { return m_authoritativeEngine; }
 
 	void setContextEngineId(BYTE *id, int len);
 	void setContextEngineId(const char *id);
@@ -540,6 +581,7 @@ public:
 class LIBNXSNMP_EXPORTABLE SNMP_Transport
 {
 protected:
+	SNMP_SecurityContext *m_securityContext;
 	SNMP_Engine *m_authoritativeEngine;
 
 public:
@@ -558,6 +600,8 @@ public:
 
    DWORD doRequest(SNMP_PDU *request, SNMP_PDU **response, 
                    DWORD timeout = INFINITE, int numRetries = 1);
+
+	void setSecurityContext(SNMP_SecurityContext *ctx);
 };
 
 

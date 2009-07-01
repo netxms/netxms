@@ -337,7 +337,7 @@ static DWORD TableHandler(DWORD dwVersion, const char *szCommunity, SNMP_Variabl
    }
 
    // Get values for other columns
-   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, (char *)szCommunity, SnmpNewRequestId(), dwVersion);
+   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);
    for(i = 1; i < ((SNMP_ENUM_ARGS *)pArg)->dwNumCols; i++)
    {
       _tcscpy(szOid, ((SNMP_ENUM_ARGS *)pArg)->ppszOidList[i]);

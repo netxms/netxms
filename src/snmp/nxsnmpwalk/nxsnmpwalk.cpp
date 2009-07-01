@@ -34,6 +34,8 @@ static char m_community[256] = "public";
 static char m_user[256] = "";
 static char m_authPassword[256] = "";
 static char m_encryptionPassword[256] = "";
+static int m_authMethod = SNMP_AUTH_NONE;
+static int m_encryptionMethod = SNMP_ENCRYPT_NONE;
 static WORD m_port = 161;
 static DWORD m_snmpVersion = SNMP_VERSION_2C;
 static DWORD m_timeout = 3000;
@@ -69,6 +71,11 @@ int GetData(char *pszHost, char *pszRootOid)
    }
    else
    {
+		if (m_snmpVersion == SNMP_VERSION_3)
+			pTransport->setSecurityContext(new SNMP_SecurityContext(m_user, m_authPassword, m_authMethod));
+		else
+			pTransport->setSecurityContext(new SNMP_SecurityContext(m_community));
+
       // Get root
       dwRootLen = SNMPParseOID(pszRootOid, pdwRootName, MAX_OID_LEN);
       if (dwRootLen == 0)
@@ -83,10 +90,7 @@ int GetData(char *pszHost, char *pszRootOid)
          // Walk the MIB
          while(bRunning)
          {
-				if (m_snmpVersion == SNMP_VERSION_3)
-					pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword), getpid(), SNMP_VERSION_3);
-				else
-					pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, m_community, getpid(), m_snmpVersion);
+				pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, getpid(), m_snmpVersion);
             pRqPDU->bindVariable(new SNMP_Variable(pdwName, dwNameLen));
             dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, m_timeout, 3);
 
@@ -170,15 +174,17 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "A:c:E:hp:u:v:w:")) != -1)
+	while((ch = getopt(argc, argv, "a:A:c:e:E:hp:u:v:w:")) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
             printf("Usage: nxsnmpwalk [<options>] <host> <start_oid>\n"
                    "Valid options are:\n"
+						 "   -a <method>  : Authentication method for SNMP v3 USM. Valid methods are MD5 and SHA1\n"
                    "   -A <passwd>  : User's authentication password for SNMP v3 USM\n"
                    "   -c <string>  : Community string. Default is \"public\"\n"
+						 "   -e <method>  : Encryption method for SNMP v3 USM. Valid methods are DES and AES\n"
                    "   -E <passwd>  : User's encryption password for SNMP v3 USM\n"
                    "   -h           : Display help and exit\n"
                    "   -p <port>    : Agent's port number. Default is 161\n"
@@ -195,9 +201,47 @@ int main(int argc, char *argv[])
          case 'u':   // User
             nx_strncpy(m_user, optarg, 256);
             break;
+			case 'a':   // authentication method
+				if (!stricmp(optarg, "md5"))
+				{
+					m_authMethod = SNMP_AUTH_MD5;
+				}
+				else if (!stricmp(optarg, "sha1"))
+				{
+					m_authMethod = SNMP_AUTH_SHA1;
+				}
+				else if (!stricmp(optarg, "none"))
+				{
+					m_authMethod = SNMP_AUTH_NONE;
+				}
+				else
+				{
+               printf("Invalid authentication method %s\n", optarg);
+					bStart = FALSE;
+				}
+				break;
          case 'A':   // authentication password
             nx_strncpy(m_authPassword, optarg, 256);
             break;
+			case 'e':   // encryption method
+				if (!stricmp(optarg, "des"))
+				{
+					m_encryptionMethod = SNMP_ENCRYPT_DES;
+				}
+				else if (!stricmp(optarg, "aes"))
+				{
+					m_encryptionMethod = SNMP_ENCRYPT_AES;
+				}
+				else if (!stricmp(optarg, "none"))
+				{
+					m_encryptionMethod = SNMP_ENCRYPT_NONE;
+				}
+				else
+				{
+               printf("Invalid encryption method %s\n", optarg);
+					bStart = FALSE;
+				}
+				break;
          case 'E':   // encription password
             nx_strncpy(m_encryptionPassword, optarg, 256);
             break;
