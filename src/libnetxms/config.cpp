@@ -407,6 +407,31 @@ ConfigEntry *Config::getEntry(const TCHAR *path)
 
 
 //
+// Find comment start in INI style config line
+// Comment starts with # character, characters within double quotes ignored
+//
+
+static TCHAR *FindComment(TCHAR *str)
+{
+	TCHAR *curr;
+	bool quotes;
+
+	for(curr = str, quotes = false; *curr != 0; curr++)
+	{
+		if (*curr == _T('"'))
+		{
+			quotes = !quotes;
+		}
+		else if ((*curr == _T('#')) && !quotes)
+		{
+			return curr;
+		}
+	}
+	return NULL;
+}
+
+
+//
 // Load INI-style config
 //
 
@@ -439,7 +464,7 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection)
       ptr = _tcschr(buffer, _T('\n'));
       if (ptr != NULL)
          *ptr = 0;
-      ptr = _tcschr(buffer, _T('#'));
+      ptr = FindComment(buffer);
       if (ptr != NULL)
          *ptr = 0;
 
