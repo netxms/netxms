@@ -982,7 +982,7 @@ DWORD SNMP_PDU::encodeV3ScopedPDU(DWORD pduType, BYTE *pdu, DWORD pduSize, BYTE 
 
 void SNMP_PDU::signMessage(BYTE *msg, DWORD msgLen, SNMP_SecurityContext *securityContext)
 {
-	int hashPos;
+	int i, hashPos;
 
 	// Find placeholder for hash
 	for(hashPos = 0; hashPos < (int)msgLen - 12; hashPos++)
@@ -1000,7 +1000,7 @@ void SNMP_PDU::signMessage(BYTE *msg, DWORD msgLen, SNMP_SecurityContext *securi
 			memcpy(k1, securityContext->getAuthKeyMD5(), 16);
 			memset(&k1[16], 0, 48);
 			memcpy(k2, k1, 64);
-			for(int i = 0; i < 64; i++)
+			for(i = 0; i < 64; i++)
 			{
 				k1[i] ^= 0x36;
 				k2[i] ^= 0x5C;
@@ -1023,7 +1023,7 @@ void SNMP_PDU::signMessage(BYTE *msg, DWORD msgLen, SNMP_SecurityContext *securi
 			memcpy(k1, securityContext->getAuthKeySHA1(), 20);
 			memset(&k1[20], 0, 44);
 			memcpy(k2, k1, 64);
-			for(int i = 0; i < 64; i++)
+			for(i = 0; i < 64; i++)
 			{
 				k1[i] ^= 0x36;
 				k2[i] ^= 0x5C;
