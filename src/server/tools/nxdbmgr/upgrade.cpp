@@ -112,6 +112,7 @@ static BOOL H_UpgradeFromV200(int currVersion, int newVersion)
 		_T("ALTER TABLE nodes ADD usm_auth_password varchar(127)\n")
 		_T("ALTER TABLE nodes ADD usm_priv_password varchar(127)\n")
 		_T("ALTER TABLE nodes ADD usm_methods integer\n")
+		_T("UPDATE nodes SET usm_auth_password='#00',usm_priv_password='#00',usm_methods=0\n")
 		_T("<END>");
 		
 	if (!SQLBatch(batch))
