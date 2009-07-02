@@ -103,10 +103,35 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 
 
 //
-// Upgrade from V92 to V200
+// Upgrade from V200 to V201
 //
 
-static BOOL H_UpgradeFromV92(void)
+static BOOL H_UpgradeFromV200(int currVersion, int newVersion)
+{
+	static TCHAR batch[] =
+		_T("ALTER TABLE nodes ADD usm_auth_password varchar(127)\n")
+		_T("ALTER TABLE nodes ADD usm_priv_password varchar(127)\n")
+		_T("ALTER TABLE nodes ADD usm_methods integer\n")
+		_T("<END>");
+		
+	if (!SQLBatch(batch))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='201' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
+// Upgrade from V92 to V200
+//      or from V93 to V201
+//
+
+static BOOL H_UpgradeFromV92orV93(int currVersion, int newVersion)
 {
 	if (!CreateTable(_T("CREATE TABLE ap_common (")
 		              _T("id integer not null,")
@@ -132,7 +157,9 @@ static BOOL H_UpgradeFromV92(void)
 		if (!g_bIgnoreErrors)
 			return FALSE;
 
-	if (!SQLQuery(_T("UPDATE metadata SET var_value='200' WHERE var_name='SchemaVersion'")))
+	TCHAR query[256];
+	_sntprintf(query, 256, _T("UPDATE metadata SET var_value='%d' WHERE var_name='SchemaVersion'"), newVersion);
+	if (!SQLQuery(query))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -144,7 +171,7 @@ static BOOL H_UpgradeFromV92(void)
 // Upgrade from V91 to V92
 //
 
-static BOOL H_UpgradeFromV91(void)
+static BOOL H_UpgradeFromV91(int currVersion, int newVersion)
 {
 	static TCHAR batch[] =
 		_T("DROP TABLE images\n")
@@ -167,7 +194,7 @@ static BOOL H_UpgradeFromV91(void)
 // Upgrade from V90 to V91
 //
 
-static BOOL H_UpgradeFromV90(void)
+static BOOL H_UpgradeFromV90(int currVersion, int newVersion)
 {
 	if (!CreateTable(_T("CREATE TABLE userdb_custom_attributes (")
 		              _T("object_id integer not null,")
@@ -189,7 +216,7 @@ static BOOL H_UpgradeFromV90(void)
 // Upgrade from V89 to V90
 //
 
-static BOOL H_UpgradeFromV89(void)
+static BOOL H_UpgradeFromV89(int currVersion, int newVersion)
 {
 	static TCHAR m_szBatch[] =
 		_T("ALTER TABLE items ADD base_units integer\n")
@@ -215,7 +242,7 @@ static BOOL H_UpgradeFromV89(void)
 // Upgrade from V88 to V89
 //
 
-static BOOL H_UpgradeFromV88(void)
+static BOOL H_UpgradeFromV88(int currVersion, int newVersion)
 {
 	static TCHAR m_szBatch[] =
 		_T("ALTER TABLE containers ADD enable_auto_bind integer\n")
@@ -245,7 +272,7 @@ static BOOL H_UpgradeFromV88(void)
 // Upgrade from V87 to V88
 //
 
-static BOOL H_UpgradeFromV87(void)
+static BOOL H_UpgradeFromV87(int currVersion, int newVersion)
 {
 	static TCHAR m_szBatch[] =
 		_T("ALTER TABLE templates ADD enable_auto_apply integer\n")
@@ -305,7 +332,7 @@ static BOOL MoveConfigToMetadata(const TCHAR *cfgVar, const TCHAR *mdVar)
 	return success;
 }
 
-static BOOL H_UpgradeFromV86(void)
+static BOOL H_UpgradeFromV86(int currVersion, int newVersion)
 {
 	if (!CreateTable(_T("CREATE TABLE metadata (")
 		              _T("var_name varchar(63) not null,")
@@ -354,7 +381,7 @@ static BOOL H_UpgradeFromV86(void)
 // Upgrade from V85 to V86
 //
 
-static BOOL H_UpgradeFromV85(void)
+static BOOL H_UpgradeFromV85(int currVersion, int newVersion)
 {
 	static TCHAR m_szBatch[] =
 		_T("DROP TABLE alarm_grops\n")
@@ -383,7 +410,7 @@ static BOOL H_UpgradeFromV85(void)
 // Upgrade from V84 to V85
 //
 
-static BOOL H_UpgradeFromV84(void)
+static BOOL H_UpgradeFromV84(int currVersion, int newVersion)
 {
 	static TCHAR m_szBatch[] =
 		_T("ALTER TABLE nodes ADD use_ifxtable integer\n")
@@ -414,7 +441,7 @@ static BOOL H_UpgradeFromV84(void)
 // Upgrade from V83 to V84
 //
 
-static BOOL H_UpgradeFromV83(void)
+static BOOL H_UpgradeFromV83(int currVersion, int newVersion)
 {
 	if (!CreateConfigParam(_T("EnableAgentRegistration"), _T("1"), 1, 0))
 		if (!g_bIgnoreErrors)
@@ -444,7 +471,7 @@ static BOOL H_UpgradeFromV83(void)
 // Upgrade from V82 to V83
 //
 
-static BOOL H_UpgradeFromV82(void)
+static BOOL H_UpgradeFromV82(int currVersion, int newVersion)
 {
 	// Fix incorrect alarm timeouts
 	if (!SQLQuery(_T("UPDATE alarms SET timeout=0,timeout_event=43")))
@@ -463,7 +490,7 @@ static BOOL H_UpgradeFromV82(void)
 // Upgrade from V81 to V82
 //
 
-static BOOL H_UpgradeFromV81(void)
+static BOOL H_UpgradeFromV81(int currVersion, int newVersion)
 {
 	if (!CreateTable(_T("CREATE TABLE config_clob (")
 	                 _T("var_name varchar(63) not null,")
@@ -484,7 +511,7 @@ static BOOL H_UpgradeFromV81(void)
 // Upgrade from V80 to V81
 //
 
-static BOOL H_UpgradeFromV80(void)
+static BOOL H_UpgradeFromV80(int currVersion, int newVersion)
 {
 	DB_RESULT hResult;
 	TCHAR query[1024], buffer[1024];
@@ -589,7 +616,7 @@ static BOOL H_UpgradeFromV80(void)
 // Upgrade from V79 to V80
 //
 
-static BOOL H_UpgradeFromV79(void)
+static BOOL H_UpgradeFromV79(int currVersion, int newVersion)
 {
 	static TCHAR m_szBatch[] =
 		_T("ALTER TABLE nodes ADD uname varchar(255)\n")
@@ -612,7 +639,7 @@ static BOOL H_UpgradeFromV79(void)
 // Upgrade from V78 to V79
 //
 
-static BOOL H_UpgradeFromV78(void)
+static BOOL H_UpgradeFromV78(int currVersion, int newVersion)
 {
 	static TCHAR m_szBatch[] =
 		_T("DELETE FROM config WHERE var_name='RetainCustomInterfaceNames'\n")
@@ -671,7 +698,7 @@ static BOOL H_UpgradeFromV78(void)
 // Upgrade from V77 to V78
 //
 
-static BOOL H_UpgradeFromV77(void)
+static BOOL H_UpgradeFromV77(int currVersion, int newVersion)
 {
 	if (!CreateTable(_T("CREATE TABLE trusted_nodes (")
 	                 _T("source_object_id integer not null,")
@@ -696,7 +723,7 @@ static BOOL H_UpgradeFromV77(void)
 // Upgrade from V76 to V77
 //
 
-static BOOL H_UpgradeFromV76(void)
+static BOOL H_UpgradeFromV76(int currVersion, int newVersion)
 {
 	DB_RESULT hResult;
 	int i, count, seq;
@@ -758,7 +785,7 @@ error:
 // Upgrade from V75 to V76
 //
 
-static BOOL H_UpgradeFromV75(void)
+static BOOL H_UpgradeFromV75(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES (")
@@ -803,7 +830,7 @@ static BOOL H_UpgradeFromV75(void)
 // Upgrade from V74 to V75
 //
 
-static BOOL H_UpgradeFromV74(void)
+static BOOL H_UpgradeFromV74(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("ALTER TABLE address_lists ADD community_id integer\n")
@@ -841,7 +868,7 @@ static BOOL H_UpgradeFromV74(void)
 // Upgrade from V73 to V74
 //
 
-static BOOL H_UpgradeFromV73(void)
+static BOOL H_UpgradeFromV73(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) ")
@@ -884,7 +911,7 @@ static BOOL H_UpgradeFromV73(void)
 // Upgrade from V72 to V73
 //
 
-static BOOL H_UpgradeFromV72(void)
+static BOOL H_UpgradeFromV72(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("ALTER TABLE event_policy ADD situation_id integer\n")
@@ -937,7 +964,7 @@ static BOOL H_UpgradeFromV72(void)
 // Upgrade from V71 to V72
 //
 
-static BOOL H_UpgradeFromV71(void)
+static BOOL H_UpgradeFromV71(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("ALTER TABLE items ADD proxy_node integer\n")
@@ -960,7 +987,7 @@ static BOOL H_UpgradeFromV71(void)
 // Upgrade from V70 to V71
 //
 
-static BOOL H_UpgradeFromV70(void)
+static BOOL H_UpgradeFromV70(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("ALTER TABLE nodes ADD required_polls integer\n")
@@ -991,7 +1018,7 @@ static BOOL H_UpgradeFromV70(void)
 // Upgrade from V69 to V70
 //
 
-static BOOL H_UpgradeFromV69(void)
+static BOOL H_UpgradeFromV69(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("ALTER TABLE snmp_trap_cfg ADD user_tag varchar(63)\n")
@@ -1032,7 +1059,7 @@ static BOOL H_UpgradeFromV69(void)
 // Upgrade from V68 to V69
 //
 
-static BOOL H_UpgradeFromV68(void)
+static BOOL H_UpgradeFromV68(int currVersion, int newVersion)
 {
 	if (!CreateTable(_T("CREATE TABLE audit_log (")
 	                 _T("record_id integer not null,")
@@ -1067,7 +1094,7 @@ static BOOL H_UpgradeFromV68(void)
 // Upgrade from V67 to V68
 //
 
-static BOOL H_UpgradeFromV67(void)
+static BOOL H_UpgradeFromV67(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("ALTER TABLE thresholds ADD repeat_interval integer\n")
@@ -1094,7 +1121,7 @@ static BOOL H_UpgradeFromV67(void)
 // Upgrade from V66 to V67
 //
 
-static BOOL H_UpgradeFromV66(void)
+static BOOL H_UpgradeFromV66(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("ALTER TABLE subnets ADD synthetic_mask integer\n")
@@ -1119,7 +1146,7 @@ static BOOL H_UpgradeFromV66(void)
 // Upgrade from V65 to V66
 //
 
-static BOOL H_UpgradeFromV65(void)
+static BOOL H_UpgradeFromV65(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("ALTER TABLE submap_links ADD port1 varchar(255)\n")
@@ -1143,7 +1170,7 @@ static BOOL H_UpgradeFromV65(void)
 // Upgrade from V64 to V65
 //
 
-static BOOL H_UpgradeFromV64(void)
+static BOOL H_UpgradeFromV64(int currVersion, int newVersion)
 {
    static TCHAR m_szPGSQLBatch[] =
 		_T("ALTER TABLE nodes ADD new_community varchar(127)\n")
@@ -1198,7 +1225,7 @@ static BOOL H_UpgradeFromV64(void)
 // Upgrade from V63 to V64
 //
 
-static BOOL H_UpgradeFromV63(void)
+static BOOL H_UpgradeFromV63(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("INSERT INTO oid_to_type (pair_id,snmp_oid,node_type,node_flags) VALUES (15,'.1.3.6.1.4.1.45.3.29.*',3,0)\n")
@@ -1236,7 +1263,7 @@ static BOOL H_UpgradeFromV63(void)
 // Upgrade from V62 to V63
 //
 
-static BOOL H_UpgradeFromV62(void)
+static BOOL H_UpgradeFromV62(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) ")
@@ -1281,7 +1308,7 @@ static BOOL H_UpgradeFromV62(void)
 // Upgrade from V61 to V62
 //
 
-static BOOL H_UpgradeFromV61(void)
+static BOOL H_UpgradeFromV61(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("UPDATE event_policy SET alarm_key=alarm_ack_key WHERE alarm_severity=6\n")
@@ -1367,7 +1394,7 @@ static BOOL H_UpgradeFromV61(void)
 // Upgrade from V60 to V61
 //
 
-static BOOL H_UpgradeFromV60(void)
+static BOOL H_UpgradeFromV60(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("DELETE FROM object_tools WHERE tool_id=14\n")
@@ -1440,7 +1467,7 @@ static BOOL H_UpgradeFromV60(void)
 // Upgrade from V59 to V60
 //
 
-static BOOL H_UpgradeFromV59(void)
+static BOOL H_UpgradeFromV59(int currVersion, int newVersion)
 {
 	if (!CreateTable(_T("CREATE TABLE certificates (")
 	                 _T("cert_id integer not null,")
@@ -1468,7 +1495,7 @@ static BOOL H_UpgradeFromV59(void)
 // Upgrade from V58 to V59
 //
 
-static BOOL H_UpgradeFromV58(void)
+static BOOL H_UpgradeFromV58(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("ALTER TABLE users ADD cert_mapping_method integer\n")
@@ -1497,7 +1524,7 @@ static BOOL H_UpgradeFromV58(void)
 // Upgrade from V57 to V58
 //
 
-static BOOL H_UpgradeFromV57(void)
+static BOOL H_UpgradeFromV57(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("ALTER TABLE object_properties ADD is_system integer\n")
@@ -1537,7 +1564,7 @@ static BOOL H_UpgradeFromV57(void)
 // Upgrade from V56 to V57
 //
 
-static BOOL H_UpgradeFromV56(void)
+static BOOL H_UpgradeFromV56(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("ALTER TABLE items ADD resource_id integer\n")
@@ -1562,7 +1589,7 @@ static BOOL H_UpgradeFromV56(void)
 // Upgrade from V55 to V56
 //
 
-static BOOL H_UpgradeFromV55(void)
+static BOOL H_UpgradeFromV55(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES")
@@ -1618,7 +1645,7 @@ static BOOL H_UpgradeFromV55(void)
 // Upgrade from V54 to V55
 //
 
-static BOOL H_UpgradeFromV54(void)
+static BOOL H_UpgradeFromV54(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 		_T("ALTER TABLE containers DROP COLUMN description\n")
@@ -1677,7 +1704,7 @@ static BOOL H_UpgradeFromV54(void)
 // Upgrade from V53 to V54
 //
 
-static BOOL H_UpgradeFromV53(void)
+static BOOL H_UpgradeFromV53(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       _T("CREATE INDEX idx_address_lists_list_type ON address_lists(list_type)\n")
@@ -1721,7 +1748,7 @@ static BOOL H_UpgradeFromV53(void)
 // Upgrade from V52 to V53
 //
 
-static BOOL H_UpgradeFromV52(void)
+static BOOL H_UpgradeFromV52(int currVersion, int newVersion)
 {
    DB_RESULT hResult;
    int i, nCount;
@@ -1776,7 +1803,7 @@ static BOOL H_UpgradeFromV52(void)
 // Upgrade from V51 to V52
 //
 
-static BOOL H_UpgradeFromV51(void)
+static BOOL H_UpgradeFromV51(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 	   "UPDATE object_tools SET tool_data='Configured ICMP targets#7FICMP.TargetList#7F^(.*) (.*) (.*) (.*) (.*)' WHERE tool_id=12\n"
@@ -1818,7 +1845,7 @@ static BOOL H_UpgradeFromV51(void)
 // Upgrade from V50 to V51
 //
 
-static BOOL H_UpgradeFromV50(void)
+static BOOL H_UpgradeFromV50(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE event_groups ADD range_start integer\n"
@@ -1842,7 +1869,7 @@ static BOOL H_UpgradeFromV50(void)
 // Upgrade from V49 to V50
 //
 
-static BOOL H_UpgradeFromV49(void)
+static BOOL H_UpgradeFromV49(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE object_tools ADD confirmation_text varchar(255)\n"
@@ -1869,7 +1896,7 @@ static BOOL H_UpgradeFromV49(void)
 // Upgrade from V48 to V49
 //
 
-static BOOL H_UpgradeFromV48(void)
+static BOOL H_UpgradeFromV48(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE items ADD all_thresholds integer\n"
@@ -1894,7 +1921,7 @@ static BOOL H_UpgradeFromV48(void)
 // Upgrade from V47 to V48
 //
 
-static BOOL H_UpgradeFromV47(void)
+static BOOL H_UpgradeFromV47(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE event_policy ADD script $SQL:TEXT\n"
@@ -1934,7 +1961,7 @@ static BOOL H_UpgradeFromV47(void)
 // Upgrade from V46 to V47
 //
 
-static BOOL H_UpgradeFromV46(void)
+static BOOL H_UpgradeFromV46(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE object_properties ADD comments $SQL:TEXT\n"
@@ -2021,7 +2048,7 @@ static BOOL H_UpgradeFromV46(void)
 // Upgrade from V45 to V46
 //
 
-static BOOL H_UpgradeFromV45(void)
+static BOOL H_UpgradeFromV45(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "UPDATE object_tools_table_columns SET col_format=5 WHERE tool_id=5 AND col_number=1\n"
@@ -2085,7 +2112,7 @@ static BOOL H_UpgradeFromV45(void)
 // Upgrade from V44 to V45
 //
 
-static BOOL H_UpgradeFromV44(void)
+static BOOL H_UpgradeFromV44(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 	   "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) "
@@ -2116,7 +2143,7 @@ static BOOL H_UpgradeFromV44(void)
 // Upgrade from V43 to V44
 //
 
-static BOOL H_UpgradeFromV43(void)
+static BOOL H_UpgradeFromV43(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "DELETE FROM object_tools WHERE tool_id=8000\n"
@@ -2163,7 +2190,7 @@ static BOOL H_UpgradeFromV43(void)
 // Upgrade from V42 to V43
 //
 
-static BOOL H_UpgradeFromV42(void)
+static BOOL H_UpgradeFromV42(int currVersion, int newVersion)
 {
    if (!CreateConfigParam(_T("RADIUSPort"), _T("1645"), 1, 0))
       if (!g_bIgnoreErrors)
@@ -2181,7 +2208,7 @@ static BOOL H_UpgradeFromV42(void)
 // Upgrade from V41 to V42
 //
 
-static BOOL H_UpgradeFromV41(void)
+static BOOL H_UpgradeFromV41(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 	   "INSERT INTO images (image_id,name,file_name_png,file_hash_png,"
@@ -2248,7 +2275,7 @@ static BOOL H_UpgradeFromV41(void)
 // Upgrade from V40 to V41
 //
 
-static BOOL H_UpgradeFromV40(void)
+static BOOL H_UpgradeFromV40(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE users ADD guid varchar(36)\n"
@@ -2337,7 +2364,7 @@ static BOOL H_UpgradeFromV40(void)
 // Upgrade from V39 to V40
 //
 
-static BOOL H_UpgradeFromV39(void)
+static BOOL H_UpgradeFromV39(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE users ADD grace_logins integer\n"
@@ -2360,7 +2387,7 @@ static BOOL H_UpgradeFromV39(void)
 // Upgrade from V38 to V39
 //
 
-static BOOL H_UpgradeFromV38(void)
+static BOOL H_UpgradeFromV38(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 	   "INSERT INTO maps (map_id,map_name,description,root_object_id) "
@@ -2445,7 +2472,7 @@ static BOOL H_UpgradeFromV38(void)
 // Upgrade from V37 to V38
 //
 
-static BOOL H_UpgradeFromV37(void)
+static BOOL H_UpgradeFromV37(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 	   "CREATE INDEX idx_event_log_event_timestamp ON event_log(event_timestamp)\n"
@@ -2485,7 +2512,7 @@ static BOOL H_UpgradeFromV37(void)
 // Upgrade from V36 to V37
 //
 
-static BOOL H_UpgradeFromV36(void)
+static BOOL H_UpgradeFromV36(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "DROP TABLE new_nodes\n"
@@ -2532,7 +2559,7 @@ static BOOL H_UpgradeFromV36(void)
 // Upgrade from V35 to V36
 //
 
-static BOOL H_UpgradeFromV35(void)
+static BOOL H_UpgradeFromV35(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE nodes ADD proxy_node integer\n"
@@ -2561,7 +2588,7 @@ static BOOL H_UpgradeFromV35(void)
 // Upgrade from V34 to V35
 //
 
-static BOOL H_UpgradeFromV34(void)
+static BOOL H_UpgradeFromV34(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE object_properties DROP COLUMN status_alg\n"
@@ -2622,7 +2649,7 @@ static BOOL H_UpgradeFromV34(void)
 // Upgrade from V33 to V34
 //
 
-static BOOL H_UpgradeFromV33(void)
+static BOOL H_UpgradeFromV33(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE items ADD adv_schedule integer\n"
@@ -2684,7 +2711,7 @@ static BOOL H_UpgradeFromV33(void)
 // Upgrade from V32 to V33
 //
 
-static BOOL H_UpgradeFromV32(void)
+static BOOL H_UpgradeFromV32(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description) "
@@ -2770,7 +2797,7 @@ static BOOL H_UpgradeFromV32(void)
 // Upgrade from V31 to V32
 //
 
-static BOOL H_UpgradeFromV31(void)
+static BOOL H_UpgradeFromV31(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,description) "
@@ -2821,7 +2848,7 @@ static BOOL H_UpgradeFromV31(void)
 // Upgrade from V30 to V31
 //
 
-static BOOL H_UpgradeFromV30(void)
+static BOOL H_UpgradeFromV30(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
 	   "INSERT INTO default_images (object_class,image_id) "
@@ -2872,7 +2899,7 @@ static BOOL H_UpgradeFromV30(void)
 // Upgrade from V29 to V30
 //
 
-static BOOL H_UpgradeFromV29(void)
+static BOOL H_UpgradeFromV29(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE object_properties ADD status_alg integer\n"
@@ -2919,7 +2946,7 @@ static BOOL H_UpgradeFromV29(void)
 // Upgrade from V28 to V29
 //
 
-static BOOL H_UpgradeFromV28(void)
+static BOOL H_UpgradeFromV28(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE nodes ADD zone_guid integer\n"
@@ -2969,7 +2996,7 @@ static BOOL H_UpgradeFromV28(void)
 // Upgrade from V27 to V28
 //
 
-static BOOL H_UpgradeFromV27(void)
+static BOOL H_UpgradeFromV27(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE users ADD system_access integer\n"
@@ -3057,7 +3084,7 @@ static BOOL MoveObjectData(DWORD dwId, BOOL bInheritRights)
 // Upgrade from V26 to V27
 //
 
-static BOOL H_UpgradeFromV26(void)
+static BOOL H_UpgradeFromV26(int currVersion, int newVersion)
 {
    DB_RESULT hResult;
    DWORD i, dwNumObjects, dwId;
@@ -3209,7 +3236,7 @@ static BOOL H_UpgradeFromV26(void)
 // Upgrade from V25 to V26
 //
 
-static BOOL H_UpgradeFromV25(void)
+static BOOL H_UpgradeFromV25(int currVersion, int newVersion)
 {
    DB_RESULT hResult;
    TCHAR szTemp[512];
@@ -3253,7 +3280,7 @@ static BOOL H_UpgradeFromV25(void)
 // Upgrade from V24 to V25
 //
 
-static BOOL H_UpgradeFromV24(void)
+static BOOL H_UpgradeFromV24(int currVersion, int newVersion)
 {
    DB_RESULT hResult;
    int i, iNumRows;
@@ -3300,7 +3327,7 @@ static BOOL H_UpgradeFromV24(void)
 // Upgrade from V23 to V24
 //
 
-static BOOL H_UpgradeFromV23(void)
+static BOOL H_UpgradeFromV23(int currVersion, int newVersion)
 {
    DB_RESULT hResult;
    TCHAR szQuery[256];
@@ -3356,7 +3383,7 @@ static BOOL H_UpgradeFromV23(void)
 // Upgrade from V22 to V23
 //
 
-static BOOL H_UpgradeFromV22(void)
+static BOOL H_UpgradeFromV22(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE items ADD template_item_id integer\n"
@@ -3380,7 +3407,7 @@ static BOOL H_UpgradeFromV22(void)
 // Upgrade from V21 to V22
 //
 
-static BOOL H_UpgradeFromV21(void)
+static BOOL H_UpgradeFromV21(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) "
@@ -3434,7 +3461,7 @@ static BOOL H_UpgradeFromV21(void)
 // Upgrade from V20 to V21
 //
 
-static BOOL H_UpgradeFromV20(void)
+static BOOL H_UpgradeFromV20(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)" 
@@ -3546,7 +3573,7 @@ static BOOL H_UpgradeFromV20(void)
 // Upgrade from V19 to V20
 //
 
-static BOOL H_UpgradeFromV19(void)
+static BOOL H_UpgradeFromV19(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE nodes ADD poller_node_id integer\n"
@@ -3618,7 +3645,7 @@ static BOOL H_UpgradeFromV19(void)
 // Upgrade from V18 to V19
 //
 
-static BOOL H_UpgradeFromV18(void)
+static BOOL H_UpgradeFromV18(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE nodes ADD platform_name varchar(63)\n"
@@ -3652,7 +3679,7 @@ static BOOL H_UpgradeFromV18(void)
 // Upgrade from V17 to V18
 //
 
-static BOOL H_UpgradeFromV17(void)
+static BOOL H_UpgradeFromV17(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE nodes DROP COLUMN inherit_access_rights\n"
@@ -3765,7 +3792,7 @@ static BOOL H_UpgradeFromV17(void)
 // Upgrade from V16 to V17
 //
 
-static BOOL H_UpgradeFromV16(void)
+static BOOL H_UpgradeFromV16(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "DROP TABLE locks\n"
@@ -3860,7 +3887,7 @@ static BOOL H_UpgradeFromV16(void)
 // Upgrade from V15 to V16
 //
 
-static BOOL H_UpgradeFromV15(void)
+static BOOL H_UpgradeFromV15(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "INSERT INTO events (event_id,name,severity,flags,message,description) VALUES "
@@ -3907,7 +3934,7 @@ static BOOL H_UpgradeFromV15(void)
 // Upgrade from V14 to V15
 //
 
-static BOOL H_UpgradeFromV14(void)
+static BOOL H_UpgradeFromV14(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
       "ALTER TABLE items ADD instance varchar(255)\n"
@@ -3961,89 +3988,92 @@ static BOOL H_UpgradeFromV14(void)
 
 static struct
 {
-   int iVersion;
-   BOOL (* fpProc)(void);
+   int version;
+   int newVersion,
+   BOOL (* fpProc)(int, int);
 } m_dbUpgradeMap[] =
 {
-   { 14, H_UpgradeFromV14 },
-   { 15, H_UpgradeFromV15 },
-   { 16, H_UpgradeFromV16 },
-   { 17, H_UpgradeFromV17 },
-   { 18, H_UpgradeFromV18 },
-   { 19, H_UpgradeFromV19 },
-   { 20, H_UpgradeFromV20 },
-   { 21, H_UpgradeFromV21 },
-   { 22, H_UpgradeFromV22 },
-   { 23, H_UpgradeFromV23 },
-   { 24, H_UpgradeFromV24 },
-   { 25, H_UpgradeFromV25 },
-   { 26, H_UpgradeFromV26 },
-   { 27, H_UpgradeFromV27 },
-   { 28, H_UpgradeFromV28 },
-   { 29, H_UpgradeFromV29 },
-   { 30, H_UpgradeFromV30 },
-   { 31, H_UpgradeFromV31 },
-   { 32, H_UpgradeFromV32 },
-   { 33, H_UpgradeFromV33 },
-   { 34, H_UpgradeFromV34 },
-   { 35, H_UpgradeFromV35 },
-   { 36, H_UpgradeFromV36 },
-   { 37, H_UpgradeFromV37 },
-   { 38, H_UpgradeFromV38 },
-   { 39, H_UpgradeFromV39 },
-   { 40, H_UpgradeFromV40 },
-   { 41, H_UpgradeFromV41 },
-   { 42, H_UpgradeFromV42 },
-   { 43, H_UpgradeFromV43 },
-   { 44, H_UpgradeFromV44 },
-   { 45, H_UpgradeFromV45 },
-   { 46, H_UpgradeFromV46 },
-   { 47, H_UpgradeFromV47 },
-   { 48, H_UpgradeFromV48 },
-   { 49, H_UpgradeFromV49 },
-   { 50, H_UpgradeFromV50 },
-   { 51, H_UpgradeFromV51 },
-   { 52, H_UpgradeFromV52 },
-   { 53, H_UpgradeFromV53 },
-   { 54, H_UpgradeFromV54 },
-   { 55, H_UpgradeFromV55 },
-   { 56, H_UpgradeFromV56 },
-   { 57, H_UpgradeFromV57 },
-   { 58, H_UpgradeFromV58 },
-   { 59, H_UpgradeFromV59 },
-   { 60, H_UpgradeFromV60 },
-   { 61, H_UpgradeFromV61 },
-   { 62, H_UpgradeFromV62 },
-   { 63, H_UpgradeFromV63 },
-   { 64, H_UpgradeFromV64 },
-   { 65, H_UpgradeFromV65 },
-   { 66, H_UpgradeFromV66 },
-   { 67, H_UpgradeFromV67 },
-   { 68, H_UpgradeFromV68 },
-   { 69, H_UpgradeFromV69 },
-   { 70, H_UpgradeFromV70 },
-   { 71, H_UpgradeFromV71 },
-   { 72, H_UpgradeFromV72 },
-   { 73, H_UpgradeFromV73 },
-   { 74, H_UpgradeFromV74 },
-   { 75, H_UpgradeFromV75 },
-   { 76, H_UpgradeFromV76 },
-   { 77, H_UpgradeFromV77 },
-   { 78, H_UpgradeFromV78 },
-   { 79, H_UpgradeFromV79 },
-   { 80, H_UpgradeFromV80 },
-   { 81, H_UpgradeFromV81 },
-   { 82, H_UpgradeFromV82 },
-   { 83, H_UpgradeFromV83 },
-   { 84, H_UpgradeFromV84 },
-	{ 85, H_UpgradeFromV85 },
-	{ 86, H_UpgradeFromV86 },
-	{ 87, H_UpgradeFromV87 },
-	{ 88, H_UpgradeFromV88 },
-	{ 89, H_UpgradeFromV89 },
-	{ 90, H_UpgradeFromV90 },
-	{ 91, H_UpgradeFromV91 },
-	{ 92, H_UpgradeFromV92 },
+   { 14, 15, H_UpgradeFromV14 },
+   { 15, 16, H_UpgradeFromV15 },
+   { 16, 17, H_UpgradeFromV16 },
+   { 17, 18, H_UpgradeFromV17 },
+   { 18, 19, H_UpgradeFromV18 },
+   { 19, 20, H_UpgradeFromV19 },
+   { 20, 21, H_UpgradeFromV20 },
+   { 21, 22, H_UpgradeFromV21 },
+   { 22, 23, H_UpgradeFromV22 },
+   { 23, 24, H_UpgradeFromV23 },
+   { 24, 25, H_UpgradeFromV24 },
+   { 25, 26, H_UpgradeFromV25 },
+   { 26, 27, H_UpgradeFromV26 },
+   { 27, 28, H_UpgradeFromV27 },
+   { 28, 29, H_UpgradeFromV28 },
+   { 29, 30, H_UpgradeFromV29 },
+   { 30, 31, H_UpgradeFromV30 },
+   { 31, 32, H_UpgradeFromV31 },
+   { 32, 33, H_UpgradeFromV32 },
+   { 33, 34, H_UpgradeFromV33 },
+   { 34, 35, H_UpgradeFromV34 },
+   { 35, 36, H_UpgradeFromV35 },
+   { 36, 37, H_UpgradeFromV36 },
+   { 37, 38, H_UpgradeFromV37 },
+   { 38, 39, H_UpgradeFromV38 },
+   { 39, 40, H_UpgradeFromV39 },
+   { 40, 41, H_UpgradeFromV40 },
+   { 41, 42, H_UpgradeFromV41 },
+   { 42, 43, H_UpgradeFromV42 },
+   { 43, 44, H_UpgradeFromV43 },
+   { 44, 45, H_UpgradeFromV44 },
+   { 45, 46, H_UpgradeFromV45 },
+   { 46, 47, H_UpgradeFromV46 },
+   { 47, 48, H_UpgradeFromV47 },
+   { 48, 49, H_UpgradeFromV48 },
+   { 49, 50, H_UpgradeFromV49 },
+   { 50, 51, H_UpgradeFromV50 },
+   { 51, 52, H_UpgradeFromV51 },
+   { 52, 53, H_UpgradeFromV52 },
+   { 53, 54, H_UpgradeFromV53 },
+   { 54, 55, H_UpgradeFromV54 },
+   { 55, 56, H_UpgradeFromV55 },
+   { 56, 57, H_UpgradeFromV56 },
+   { 57, 58, H_UpgradeFromV57 },
+   { 58, 59, H_UpgradeFromV58 },
+   { 59, 60, H_UpgradeFromV59 },
+   { 60, 61, H_UpgradeFromV60 },
+   { 61, 62, H_UpgradeFromV61 },
+   { 62, 63, H_UpgradeFromV62 },
+   { 63, 64, H_UpgradeFromV63 },
+   { 64, 65, H_UpgradeFromV64 },
+   { 65, 66, H_UpgradeFromV65 },
+   { 66, 67, H_UpgradeFromV66 },
+   { 67, 68, H_UpgradeFromV67 },
+   { 68, 69, H_UpgradeFromV68 },
+   { 69, 70, H_UpgradeFromV69 },
+   { 70, 71, H_UpgradeFromV70 },
+   { 71, 72, H_UpgradeFromV71 },
+   { 72, 73, H_UpgradeFromV72 },
+   { 73, 74, H_UpgradeFromV73 },
+   { 74, 75, H_UpgradeFromV74 },
+   { 75, 76, H_UpgradeFromV75 },
+   { 76, 77, H_UpgradeFromV76 },
+   { 77, 78, H_UpgradeFromV77 },
+   { 78, 79, H_UpgradeFromV78 },
+   { 79, 80, H_UpgradeFromV79 },
+   { 80, 81, H_UpgradeFromV80 },
+   { 81, 82, H_UpgradeFromV81 },
+   { 82, 83, H_UpgradeFromV82 },
+   { 83, 84, H_UpgradeFromV83 },
+   { 84, 85, H_UpgradeFromV84 },
+	{ 85, 86, H_UpgradeFromV85 },
+	{ 86, 87, H_UpgradeFromV86 },
+	{ 87, 88, H_UpgradeFromV87 },
+	{ 88, 89, H_UpgradeFromV88 },
+	{ 89, 90, H_UpgradeFromV89 },
+	{ 90, 91, H_UpgradeFromV90 },
+	{ 91, 92, H_UpgradeFromV91 },
+	{ 92, 200, H_UpgradeFromV92orV93 },
+	{ 93, 201, H_UpgradeFromV92orV93 },
+	{ 200, 201, H_UpgradeFromV200 },
    { 0, NULL }
 };
 
@@ -4090,16 +4120,16 @@ void UpgradeDatabase(void)
          {
             // Find upgrade procedure
             for(i = 0; m_dbUpgradeMap[i].fpProc != NULL; i++)
-               if (m_dbUpgradeMap[i].iVersion == iVersion)
+               if (m_dbUpgradeMap[i].version == iVersion)
                   break;
             if (m_dbUpgradeMap[i].fpProc == NULL)
             {
                _tprintf(_T("Unable to find upgrade procedure for version %d\n"), iVersion);
                break;
             }
-            printf("Upgrading from version %d to %d\n", iVersion, iVersion + 1);
+            printf("Upgrading from version %d to %d\n", iVersion, m_dbUpgradeMap[i].newVersion);
             DBBegin(g_hCoreDB);
-            if (m_dbUpgradeMap[i].fpProc())
+            if (m_dbUpgradeMap[i].fpProc(iVersion, m_dbUpgradeMap[i].newVersion))
             {
                DBCommit(g_hCoreDB);
                iVersion = DBGetSchemaVersion(g_hCoreDB);

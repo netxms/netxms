@@ -1,5 +1,16 @@
+***************
+* 200 ==> 201 *
+***************
+
+- New columns added to table "nodes":
+   usm_auth_password varchar(127) not null,
+   usm_priv_password varchar(127) not null,
+   usm_methods integer not null
+
+
 **************
 * 92 ==> 200 *
+* 93 ==> 201 *
 **************
 
 - New tables added:
