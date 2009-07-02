@@ -122,18 +122,18 @@
 // Attributes for H_NetIPStats and H_NetInterfacStats
 //
 
-#define NET_IP_FORWARDING        1
+#define NETINFO_IP_FORWARDING        1
 
-#define NET_IF_BYTES_IN          1
-#define NET_IF_BYTES_OUT         2
-#define NET_IF_DESCR             3
-#define NET_IF_IN_ERRORS         4
-#define NET_IF_LINK              5
-#define NET_IF_OUT_ERRORS        6
-#define NET_IF_PACKETS_IN        7
-#define NET_IF_PACKETS_OUT       8
-#define NET_IF_SPEED             9
-#define NET_IF_ADMIN_STATUS      10
+#define NETINFO_IF_BYTES_IN          1
+#define NETINFO_IF_BYTES_OUT         2
+#define NETINFO_IF_DESCR             3
+#define NETINFO_IF_IN_ERRORS         4
+#define NETINFO_IF_LINK              5
+#define NETINFO_IF_OUT_ERRORS        6
+#define NETINFO_IF_PACKETS_IN        7
+#define NETINFO_IF_PACKETS_OUT       8
+#define NETINFO_IF_SPEED             9
+#define NETINFO_IF_ADMIN_STATUS      10
 
 
 //

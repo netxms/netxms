@@ -204,7 +204,7 @@ LONG H_NetIPStats(const char *cmd, const char *arg, char *value)
    {
       switch(CAST_FROM_POINTER(arg, int))
       {
-         case NET_IP_FORWARDING:
+         case NETINFO_IP_FORWARDING:
             ret_int(value, ips.dwForwarding);
             break;
          default:
@@ -310,34 +310,34 @@ LONG H_NetInterfaceStats(const char *cmd, const char *arg, char *value)
          {
             switch(CAST_FROM_POINTER(arg, int))
             {
-               case NET_IF_BYTES_IN:
+               case NETINFO_IF_BYTES_IN:
                   ret_uint(value, info.dwInOctets);
                   break;
-               case NET_IF_BYTES_OUT:
+               case NETINFO_IF_BYTES_OUT:
                   ret_uint(value, info.dwOutOctets);
                   break;
-               case NET_IF_DESCR:
+               case NETINFO_IF_DESCR:
                   ret_string(value, (char *)info.bDescr);
                   break;
-               case NET_IF_IN_ERRORS:
+               case NETINFO_IF_IN_ERRORS:
                   ret_uint(value, info.dwInErrors);
                   break;
-               case NET_IF_LINK:
+               case NETINFO_IF_LINK:
                   ret_uint(value, (info.dwOperStatus == MIB_IF_OPER_STATUS_OPERATIONAL) ? 1 : 0);
                   break;
-               case NET_IF_OUT_ERRORS:
+               case NETINFO_IF_OUT_ERRORS:
                   ret_uint(value, info.dwOutErrors);
                   break;
-               case NET_IF_PACKETS_IN:
+               case NETINFO_IF_PACKETS_IN:
                   ret_uint(value, info.dwInUcastPkts + info.dwInNUcastPkts);
                   break;
-               case NET_IF_PACKETS_OUT:
+               case NETINFO_IF_PACKETS_OUT:
                   ret_uint(value, info.dwOutUcastPkts + info.dwOutNUcastPkts);
                   break;
-               case NET_IF_SPEED:
+               case NETINFO_IF_SPEED:
                   ret_uint(value, info.dwSpeed);
                   break;
-               case NET_IF_ADMIN_STATUS:
+               case NETINFO_IF_ADMIN_STATUS:
                   ret_uint(value, info.dwAdminStatus ? 1 : 2);
                   break;
                default:
