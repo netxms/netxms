@@ -3989,7 +3989,7 @@ static BOOL H_UpgradeFromV14(int currVersion, int newVersion)
 static struct
 {
    int version;
-   int newVersion,
+   int newVersion;
    BOOL (* fpProc)(int, int);
 } m_dbUpgradeMap[] =
 {
