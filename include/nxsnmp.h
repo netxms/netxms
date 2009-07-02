@@ -461,7 +461,7 @@ private:
 
 public:
 	SNMP_SecurityContext();
-	SNMP_SecurityContext(int securityModel);
+	SNMP_SecurityContext(SNMP_SecurityContext *src);
 	SNMP_SecurityContext(const char *user);
 	SNMP_SecurityContext(const char *user, const char *authPassword, int authMethod);
 	SNMP_SecurityContext(const char *user, const char *authPassword, const char *encryptionPassword,
@@ -602,6 +602,7 @@ public:
                    DWORD timeout = INFINITE, int numRetries = 1);
 
 	void setSecurityContext(SNMP_SecurityContext *ctx);
+	const char *getCommunityString() { return (m_securityContext != NULL) ? m_securityContext->getCommunity() : ""; }
 };
 
 

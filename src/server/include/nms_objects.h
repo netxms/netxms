@@ -616,10 +616,10 @@ protected:
    DWORD m_dwNodeType;
    char m_szSharedSecret[MAX_SECRET_LENGTH];
    int m_iStatusPollType;
-   int m_iSNMPVersion;
+   int m_snmpVersion;
    WORD m_wSNMPPort;
 	WORD m_nUseIfXTable;
-   char m_szCommunityString[MAX_COMMUNITY_LENGTH];
+	SNMP_SecurityContext *m_snmpSecurity;
    char m_szObjectId[MAX_OID_LEN * 4];
    char m_szAgentVersion[MAX_AGENT_VERSION_LEN];
    char m_szPlatformName[MAX_PLATFORM_NAME_LEN];
@@ -698,7 +698,7 @@ public:
    BOOL IsRouter(void) { return m_dwFlags & NF_IS_ROUTER ? TRUE : FALSE; }
    BOOL IsLocalManagement(void) { return m_dwFlags & NF_IS_LOCAL_MGMT ? TRUE : FALSE; }
 
-	LONG GetSNMPVersion() { return m_iSNMPVersion; }
+	LONG GetSNMPVersion() { return m_snmpVersion; }
 	const TCHAR *GetSNMPObjectId() { return m_szObjectId; }
 	const TCHAR *GetAgentVersion() { return m_szAgentVersion; }
 	const TCHAR *GetPlatformName() { return m_szPlatformName; }
@@ -778,7 +778,7 @@ public:
    void SetLastEventId(int nIndex, QWORD qwId) { if ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) m_qwLastEvents[nIndex] = qwId; }
 
    DWORD CallSnmpEnumerate(const char *pszRootOid, 
-      DWORD (* pHandler)(DWORD, const char *, SNMP_Variable *, SNMP_Transport *, void *), void *pArg);
+      DWORD (* pHandler)(DWORD, SNMP_Variable *, SNMP_Transport *, void *), void *pArg);
 
 	nxmap_ObjList *GetL2Topology(void);
 	nxmap_ObjList *BuildL2Topology(DWORD *pdwStatus);

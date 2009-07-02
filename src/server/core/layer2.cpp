@@ -56,9 +56,7 @@ public:
 // Topology table walker's callback for SONMP topology table
 //
 
-static DWORD SONMPTopoHandler(DWORD dwVersion, const char *pszCommunity,
-                              SNMP_Variable *pVar, SNMP_Transport *pTransport,
-                              void *pArg)
+static DWORD SONMPTopoHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    SNMP_ObjectId *pOid;
    TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4], szIfName[MAX_CONNECTOR_NAME];
@@ -69,7 +67,7 @@ static DWORD SONMPTopoHandler(DWORD dwVersion, const char *pszCommunity,
    SNMPConvertOIDToText(pOid->Length() - 14, (DWORD *)&(pOid->GetValue())[14], szSuffix, MAX_OID_LEN * 4);
 
 	// Get interface
-   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, (char *)pszCommunity, SnmpNewRequestId(), dwVersion);
+   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);
    _tcscpy(szOid, ".1.3.6.1.4.1.45.1.6.13.2.1.1.1");	// Slot
    _tcscat(szOid, szSuffix);
 	pRqPDU->bindVariable(new SNMP_Variable(szOid));
@@ -95,9 +93,7 @@ static DWORD SONMPTopoHandler(DWORD dwVersion, const char *pszCommunity,
 // Topology table walker's callback for CDP topology table
 //
 
-static DWORD CDPTopoHandler(DWORD dwVersion, const char *pszCommunity,
-                            SNMP_Variable *pVar, SNMP_Transport *pTransport,
-                            void *pArg)
+static DWORD CDPTopoHandler(DWORD dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    SNMP_ObjectId *pOid;
    TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4],
@@ -109,7 +105,7 @@ static DWORD CDPTopoHandler(DWORD dwVersion, const char *pszCommunity,
    SNMPConvertOIDToText(pOid->Length() - 14, (DWORD *)&(pOid->GetValue())[14], szSuffix, MAX_OID_LEN * 4);
 
 	// Get interface
-   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, (char *)pszCommunity, SnmpNewRequestId(), dwVersion);
+   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);
    _tcscpy(szOid, ".1.3.6.1.4.1.9.9.23.1.2.1.1.7");	// Remote port name
    _tcscat(szOid, szSuffix);
 	pRqPDU->bindVariable(new SNMP_Variable(szOid));

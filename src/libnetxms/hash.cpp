@@ -182,13 +182,26 @@ void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, size_t nbytes, 
 void LIBNETXMS_EXPORTABLE SHA1HashForPattern(unsigned char *data, size_t patternSize, size_t fullSize, BYTE *hash)
 {
    SHA1_CTX context;
-	int count, remainder;
+	int count, patternIndex;
+	const unsigned char *src;
+	BYTE *dst, patternBuffer[64];
 
-	remainder = fullSize % patternSize;
    I_SHA1Init(&context);
-	for(count = 0; count < (int)fullSize - remainder; count += patternSize)
-	   I_SHA1Update(&context, data, (uint32)patternSize);
-   I_SHA1Update(&context, data, (uint32)remainder);
+	for(count = 0, src = data, patternIndex = 0; count < (int)fullSize; count += 64)
+	{
+		dst = patternBuffer;
+		for(int i = 0; i < 64; i++)
+		{
+			*dst++ = *src++;
+			patternIndex++;
+			if (patternIndex >= (int)patternSize)
+			{
+				patternIndex = 0;
+				src = data;
+			}
+		}
+	   I_SHA1Update(&context, patternBuffer, 64);
+	}
    I_SHA1Final(hash, &context);
 }
 

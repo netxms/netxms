@@ -314,7 +314,7 @@ static void AddSNMPResult(NETXMS_VALUES_LIST *pValues, SNMP_Variable *pVar,
 // Handler for SNMP table enumeration
 //
 
-static DWORD TableHandler(DWORD dwVersion, const char *szCommunity, SNMP_Variable *pVar,
+static DWORD TableHandler(DWORD dwVersion, SNMP_Variable *pVar,
                           SNMP_Transport *pTransport, void *pArg)
 {
    TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4];

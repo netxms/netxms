@@ -7030,7 +7030,7 @@ typedef struct
 // SNMP walker enumeration callback
 //
 
-static DWORD WalkerCallback(DWORD dwVersion, const char *pszCommunity, SNMP_Variable *pVar,
+static DWORD WalkerCallback(DWORD dwVersion, SNMP_Variable *pVar,
                             SNMP_Transport *pTransport, void *pArg)
 {
    CSCPMessage *pMsg = ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->pMsg;

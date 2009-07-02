@@ -40,16 +40,17 @@ SNMP_SecurityContext::SNMP_SecurityContext()
 	memset(m_authKeySHA1, 0, 20);
 }
 
-SNMP_SecurityContext::SNMP_SecurityContext(int securityModel)
+SNMP_SecurityContext::SNMP_SecurityContext(SNMP_SecurityContext *src)
 {
-	m_securityModel = securityModel;
-	m_authName = NULL;
-	m_authPassword = NULL;
-	m_encryptionPassword = NULL;
-	m_authMethod = SNMP_AUTH_NONE;
-	m_encryptionMethod = SNMP_ENCRYPT_NONE;
-	memset(m_authKeyMD5, 0, 16);
-	memset(m_authKeySHA1, 0, 20);
+	m_securityModel = src->m_securityModel;
+	m_authName = (src->m_authName != NULL) ? strdup(src->m_authName) : NULL;
+	m_authPassword = (src->m_authPassword != NULL) ? strdup(src->m_authPassword) : NULL;
+	m_encryptionPassword = (src->m_encryptionPassword != NULL) ? strdup(src->m_encryptionPassword) : NULL;
+	m_authMethod = src->m_authMethod;
+	m_encryptionMethod = src->m_authMethod;
+	memcpy(m_authKeyMD5, src->m_authKeyMD5, 16);
+	memcpy(m_authKeySHA1, src->m_authKeySHA1, 20);
+	m_authoritativeEngine = src->m_authoritativeEngine;
 }
 
 SNMP_SecurityContext::SNMP_SecurityContext(const char *community)
