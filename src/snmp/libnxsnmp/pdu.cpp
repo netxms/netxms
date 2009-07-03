@@ -76,7 +76,7 @@ SNMP_PDU::SNMP_PDU()
 	m_contextEngineIdLen = 0;
 	m_contextName[0] = 0;
 	m_msgMaxSize = SNMP_DEFAULT_MSG_MAX_SIZE;
-	m_community = NULL;
+	m_authObject = NULL;
 }
 
 
@@ -101,7 +101,7 @@ SNMP_PDU::SNMP_PDU(DWORD dwCommand, DWORD dwRqId, DWORD dwVersion)
 	m_contextEngineIdLen = 0;
 	m_contextName[0] = 0;
 	m_msgMaxSize = SNMP_DEFAULT_MSG_MAX_SIZE;
-	m_community = NULL;
+	m_authObject = NULL;
 }
 
 
@@ -117,7 +117,7 @@ SNMP_PDU::~SNMP_PDU()
    for(i = 0; i < m_dwNumVariables; i++)
       delete m_ppVarList[i];
    safe_free(m_ppVarList);
-	safe_free(m_community);
+	safe_free(m_authObject);
 }
 
 
@@ -521,6 +521,32 @@ BOOL SNMP_PDU::parseV3SecurityUsm(BYTE *data, DWORD dataLength)
 
 	m_authoritativeEngine = SNMP_Engine(engineId, engineIdLen, engineBoots, engineTime);
 
+	// User name
+   if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
+      return FALSE;
+   if (type != ASN_OCTET_STRING)
+      return FALSE;
+	m_authObject = (char *)malloc(length + 1);
+	if (!BER_DecodeContent(type, currPos, length, (BYTE *)m_authObject))
+	{
+		free(m_authObject);
+		m_authObject = NULL;
+		return FALSE;
+	}
+	m_authObject[length] = 0;
+   currPos += length;
+   remLength -= length + idLength;
+
+	// Message signature
+   if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
+      return FALSE;
+   if (type != ASN_OCTET_STRING)
+      return FALSE;
+	memcpy(m_signature, currPos, min(length, 12));
+	memset(currPos, 0, min(length, 12));	// Replace with 0 to generate correct hash in validate method
+   currPos += length;
+   remLength -= length + idLength;
+
 	return TRUE;
 }
 
@@ -616,10 +642,76 @@ BOOL SNMP_PDU::parsePdu(BYTE *pdu, DWORD pduLength)
 
 
 //
+// Validate V3 signed message
+//
+
+BOOL SNMP_PDU::validateSignedMessage(BYTE *msg, DWORD msgLen, SNMP_SecurityContext *securityContext)
+{
+	BYTE k1[64], k2[64], hash[20], *buffer;
+	int i;
+
+	switch(securityContext->getAuthenticationMethod())
+	{
+		case SNMP_AUTH_MD5:
+			// Create K1 and K2
+			memcpy(k1, securityContext->getAuthKeyMD5(), 16);
+			memset(&k1[16], 0, 48);
+			memcpy(k2, k1, 64);
+			for(i = 0; i < 64; i++)
+			{
+				k1[i] ^= 0x36;
+				k2[i] ^= 0x5C;
+			}
+
+			// Calculate first hash (step 3)
+			buffer = (BYTE *)malloc(msgLen + 64);
+			memcpy(buffer, k1, 64);
+			memcpy(&buffer[64], msg, msgLen);
+			CalculateMD5Hash(buffer, msgLen + 64, hash);
+
+			// Calculate second hash
+			memcpy(buffer, k2, 64);
+			memcpy(&buffer[64], hash, 16);
+			CalculateMD5Hash(buffer, 80, hash);
+			free(buffer);
+			break;
+		case SNMP_AUTH_SHA1:
+			// Create K1 and K2
+			memcpy(k1, securityContext->getAuthKeySHA1(), 20);
+			memset(&k1[20], 0, 44);
+			memcpy(k2, k1, 64);
+			for(i = 0; i < 64; i++)
+			{
+				k1[i] ^= 0x36;
+				k2[i] ^= 0x5C;
+			}
+
+			// Calculate first hash (step 3)
+			buffer = (BYTE *)malloc(msgLen + 64);
+			memcpy(buffer, k1, 64);
+			memcpy(&buffer[64], msg, msgLen);
+			CalculateSHA1Hash(buffer, msgLen + 64, hash);
+
+			// Calculate second hash
+			memcpy(buffer, k2, 64);
+			memcpy(&buffer[64], hash, 20);
+			CalculateSHA1Hash(buffer, 84, hash);
+			free(buffer);
+			break;
+		default:
+			break;
+	}
+
+	// Computed hash should match message signature
+	return !memcmp(m_signature, hash, 12);
+}
+
+
+//
 // Create PDU from packet
 //
 
-BOOL SNMP_PDU::parse(BYTE *pRawData, DWORD dwRawLength)
+BOOL SNMP_PDU::parse(BYTE *pRawData, DWORD dwRawLength, SNMP_SecurityContext *securityContext)
 {
    BYTE *pbCurrPos;
    DWORD dwType, dwLength, dwPacketLength, dwIdLength;
@@ -667,6 +759,12 @@ BOOL SNMP_PDU::parse(BYTE *pRawData, DWORD dwRawLength)
 		{
 			if (!parseV3SecurityUsm(pbCurrPos, dwLength))
 				return FALSE;
+
+			if (m_flags & SNMP_AUTH_FLAG)
+			{
+				if (!validateSignedMessage(pRawData, dwRawLength, securityContext))
+					return FALSE;
+			}
 		}
 
 		pbCurrPos += dwLength;
@@ -686,14 +784,14 @@ BOOL SNMP_PDU::parse(BYTE *pRawData, DWORD dwRawLength)
 			return FALSE;
 		if (dwType != ASN_OCTET_STRING)
 			return FALSE;   // Community field should be of string type
-		m_community = (char *)malloc(dwLength + 1);
-		if (!BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)m_community))
+		m_authObject = (char *)malloc(dwLength + 1);
+		if (!BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)m_authObject))
 		{
-			free(m_community);
-			m_community = NULL;
+			free(m_authObject);
+			m_authObject = NULL;
 			return FALSE;   // Error parsing content of version field
 		}
-		m_community[dwLength] = 0;
+		m_authObject[dwLength] = 0;
 		pbCurrPos += dwLength;
 		dwPacketLength -= dwLength + dwIdLength;
 

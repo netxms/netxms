@@ -445,7 +445,7 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, DWORD dwTimeout,
 
    // Create new PDU object and remove parsed data from buffer
    *ppData = new SNMP_PDU;
-   if (!(*ppData)->parse(&m_pBuffer[m_dwBufferPos], dwPDULength))
+   if (!(*ppData)->parse(&m_pBuffer[m_dwBufferPos], dwPDULength, m_securityContext))
    {
       delete *ppData;
       *ppData = NULL;

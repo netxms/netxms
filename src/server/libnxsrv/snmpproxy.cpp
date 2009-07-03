@@ -101,7 +101,7 @@ int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, DWORD dwTimeout,
 		pBuffer = (BYTE *)malloc(dwSize);
 		m_pResponse->GetVariableBinary(VID_PDU, pBuffer, dwSize);
 		*ppData = new SNMP_PDU;
-		if (!(*ppData)->parse(pBuffer, dwSize))
+		if (!(*ppData)->parse(pBuffer, dwSize, m_securityContext))
 		{
 			delete *ppData;
 			*ppData = NULL;

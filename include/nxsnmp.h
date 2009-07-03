@@ -519,9 +519,10 @@ private:
 	// The following attributes only used by parser and
 	// valid only for received PDUs
 	BYTE m_flags;
-	char *m_community;
+	char *m_authObject;
 	SNMP_Engine m_authoritativeEngine;
 	int m_securityModel;
+	BYTE m_signature[12];
 
    BOOL parseVariable(BYTE *pData, DWORD dwVarLength);
    BOOL parseVarBinds(BYTE *pData, DWORD dwPDULength);
@@ -532,6 +533,7 @@ private:
    BOOL parseV3Header(BYTE *pData, DWORD dwPDULength);
    BOOL parseV3SecurityUsm(BYTE *pData, DWORD dwPDULength);
    BOOL parseV3ScopedPdu(BYTE *pData, DWORD dwPDULength);
+	BOOL validateSignedMessage(BYTE *msg, DWORD msgLen, SNMP_SecurityContext *securityContext);
 	DWORD encodeV3Header(BYTE *buffer, DWORD bufferSize, SNMP_SecurityContext *securityContext);
 	DWORD encodeV3SecurityParameters(BYTE *buffer, DWORD bufferSize, SNMP_SecurityContext *securityContext);
 	DWORD encodeV3ScopedPDU(DWORD pduType, BYTE *pdu, DWORD pduSize, BYTE *buffer, DWORD bufferSize);
@@ -542,7 +544,7 @@ public:
    SNMP_PDU(DWORD dwCommand, DWORD dwRqId, DWORD dwVersion = SNMP_VERSION_2C);
    ~SNMP_PDU();
 
-   BOOL parse(BYTE *pRawData, DWORD dwRawLength);
+   BOOL parse(BYTE *pRawData, DWORD dwRawLength, SNMP_SecurityContext *securityContext);
    DWORD encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext);
 
    DWORD getCommand(void) { return m_dwCommand; }
@@ -555,7 +557,8 @@ public:
    DWORD getErrorCode(void) { return m_dwErrorCode; }
 	DWORD getMessageId() { return m_msgId; }
 
-	const char *getCommunity() { return (m_community != NULL) ? "" : m_community; }
+	const char *getCommunity() { return (m_authObject != NULL) ? m_authObject : ""; }
+	const char *getUser() { return (m_authObject != NULL) ? m_authObject : ""; }
 	SNMP_Engine& getAuthoritativeEngine() { return m_authoritativeEngine; }
 	int getSecurityModel() { return m_securityModel; }
 	int getFlags() { return (int)m_flags; }
