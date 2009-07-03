@@ -60,4 +60,17 @@
         </factory>
   </extension>
 
+  <extension
+     point="org.eclipse.ui.decorators">
+       <decorator
+          id="org.netxms.ui.eclipse.decorators.NXCObject"
+          label="NetXMS Objects Decorator"
+          state="true"
+          lightweight= "false"
+          class="org.netxms.ui.eclipse.objectbrowser.ObjectDecorator">
+         <enablement>
+           <objectClass name="org.netxms.client.NXCObject"/>
+         </enablement>
+    </decorator>
+  </extension>
 </plugin>

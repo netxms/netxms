@@ -82,6 +82,7 @@ public class NXCObject
 		objectClass = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_CLASS);
 		primaryIP = msg.getVariableAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
 		isDeleted = msg.getVariableAsBoolean(NXCPCodes.VID_IS_DELETED);
+		status = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_STATUS);
 		
 		// Parents
 		count = msg.getVariableAsInteger(NXCPCodes.VID_PARENT_CNT);

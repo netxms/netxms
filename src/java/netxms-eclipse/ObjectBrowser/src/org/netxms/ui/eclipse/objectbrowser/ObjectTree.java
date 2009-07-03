@@ -66,7 +66,7 @@ public class ObjectTree extends Composite
 
 		objectTree = new TreeViewer(this, SWT.VIRTUAL | SWT.SINGLE | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
 		objectTree.setContentProvider(new ObjectTreeContentProvider(rootObjects));
-		objectTree.setLabelProvider(new WorkbenchLabelProvider());
+		objectTree.setLabelProvider(WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider());
 		objectTree.setComparator(new ObjectTreeComparator());
 		filter = new ObjectTreeFilter();
 		objectTree.addFilter(filter);

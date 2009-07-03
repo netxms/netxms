@@ -315,6 +315,14 @@ src/java/netxms-eclipse/ObjectBrowser/icons/policy_group.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/policy_root.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/service.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/service_root.png -text
+src/java/netxms-eclipse/ObjectBrowser/icons/status/critical.png -text
+src/java/netxms-eclipse/ObjectBrowser/icons/status/disabled.gif -text
+src/java/netxms-eclipse/ObjectBrowser/icons/status/major.png -text
+src/java/netxms-eclipse/ObjectBrowser/icons/status/minor.png -text
+src/java/netxms-eclipse/ObjectBrowser/icons/status/testing.png -text
+src/java/netxms-eclipse/ObjectBrowser/icons/status/unknown.gif -text
+src/java/netxms-eclipse/ObjectBrowser/icons/status/unmanaged.gif -text
+src/java/netxms-eclipse/ObjectBrowser/icons/status/warning.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/subnet.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/template.png -text
 src/java/netxms-eclipse/ObjectBrowser/icons/template_group.png -text
@@ -322,6 +330,7 @@ src/java/netxms-eclipse/ObjectBrowser/icons/template_root.png -text
 src/java/netxms-eclipse/ObjectBrowser/plugin.xml -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/Activator.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectAdapterFactory.java -text
+src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectDecorator.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectList.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectListFilter.java -text
 src/java/netxms-eclipse/ObjectBrowser/src/org/netxms/ui/eclipse/objectbrowser/ObjectTree.java -text
@@ -377,6 +386,7 @@ src/java/netxms-eclipse/QuickMaps/icons/quickmap.png -text
 src/java/netxms-eclipse/QuickMaps/icons/subnet.png -text
 src/java/netxms-eclipse/QuickMaps/plugin.xml -text
 src/java/netxms-eclipse/QuickMaps/src/org/netxms/ui/eclipse/quickmaps/Activator.java -text
+src/java/netxms-eclipse/QuickMaps/src/org/netxms/ui/eclipse/quickmaps/ObjectFigure.java -text
 src/java/netxms-eclipse/QuickMaps/src/org/netxms/ui/eclipse/quickmaps/actions/ShowIPNeighbors.java -text
 src/java/netxms-eclipse/QuickMaps/src/org/netxms/ui/eclipse/quickmaps/views/IPNeighbors.java -text
 src/java/netxms-eclipse/QuickMaps/src/org/netxms/ui/eclipse/quickmaps/views/NetworkMap.java -text
