@@ -87,6 +87,18 @@
                menubarPath="objectmgmt">
          </action>
       </objectContribution>
+
+      <objectContribution
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.changeIpAddress"
+            objectClass="org.netxms.client.NXCNode">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.ChangeIpAddress"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.ChangeIpAddress"
+               label="Change IP address..."
+               menubarPath="objectmgmt">
+         </action>
+      </objectContribution>
    </extension>
 
 </plugin>

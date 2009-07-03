@@ -4,14 +4,17 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.TreeSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.netxms.client.NXCNode;
 import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.objectmanager.dialogs.EnterIpAddressDialog;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
-public class DeleteObject implements IObjectActionDelegate
+public class ChangeIpAddress implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
 	private NXCObject object;
@@ -25,23 +28,19 @@ public class DeleteObject implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		boolean confirmed = MessageDialog.openConfirm(window.getShell(), "Confirm Delete",
-				"Are you sure you want to delete '" + object.getObjectName() + "'?");
-
-		if (!confirmed)
-		{
+		EnterIpAddressDialog dlg = new EnterIpAddressDialog(window.getShell());
+		if (dlg.open() != Window.OK)
 			return;
-		}
-
+		
 		final NXCSession session = NXMCSharedData.getInstance().getSession();
 
 		try
 		{
-			session.deleteObject(object.getObjectId());
+			//session.changeNodeIpAddress(object.getObjectId(), address);
 		}
 		catch(Exception e)
 		{
-			MessageDialog.openError(window.getShell(), "Error", "Cannot delete object: " + e.getMessage());
+			MessageDialog.openError(window.getShell(), "Error", "Cannot change IP address: " + e.getMessage());
 		}
 	}
 
@@ -51,7 +50,7 @@ public class DeleteObject implements IObjectActionDelegate
 		if (selection instanceof TreeSelection)
 		{
 			final Object obj = ((TreeSelection)selection).getFirstElement();
-			if (obj instanceof NXCObject)
+			if (obj instanceof NXCNode)
 			{
 				object = (NXCObject)obj;
 			}

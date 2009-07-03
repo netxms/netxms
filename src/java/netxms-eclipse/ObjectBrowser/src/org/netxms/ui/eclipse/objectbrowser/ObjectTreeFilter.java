@@ -20,15 +20,18 @@ public class ObjectTreeFilter extends ViewerFilter
 	private String filterString = null;
 	private Map<Long, NXCObject> objectList = null;
 	private NXCObject lastMatch = null;
-	private long[] rootObjects;
+	private long[] rootObjects = null;
 	
 	/**
 	 * Constructor
 	 */
 	public ObjectTreeFilter(long[] rootObjects)
 	{
-		this.rootObjects = new long[rootObjects.length];
-		System.arraycopy(rootObjects, 0, this.rootObjects, 0, rootObjects.length);
+		if (rootObjects != null)
+		{
+			this.rootObjects = new long[rootObjects.length];
+			System.arraycopy(rootObjects, 0, this.rootObjects, 0, rootObjects.length);
+		}
 	}
 	
 	/* (non-Javadoc)
@@ -85,7 +88,7 @@ public class ObjectTreeFilter extends ViewerFilter
 				objectList = new HashMap<Long, NXCObject>();
 				for(int i = 0; i < fullList.length; i++)
 					if ((fullList[i].getObjectName().toLowerCase().startsWith(filterString)) &&
-					    fullList[i].isChildOf(rootObjects))
+					    ((rootObjects == null) || fullList[i].isChildOf(rootObjects)))
 					{
 						objectList.put(fullList[i].getObjectId(), fullList[i]);
 						lastMatch = fullList[i];
@@ -129,7 +132,7 @@ public class ObjectTreeFilter extends ViewerFilter
 		NXCObject[] parents = childObject.getParentsAsArray();
 		for(NXCObject object : parents)
 		{
-			if (object.isChildOf(rootObjects))
+			if ((rootObjects == null) || object.isChildOf(rootObjects))
 				return object;
 		}
 		return null;
