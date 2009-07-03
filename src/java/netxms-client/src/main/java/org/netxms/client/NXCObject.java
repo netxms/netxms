@@ -204,13 +204,12 @@ public class NXCObject
 		return inheritAccessRights;
 	}
 
-
 	/**
 	 * Check if given object is direct or indirect parent
 	 * 
 	 * @param objectId ID of object to check
 	 */
-	public boolean isParent(final long objectId)
+	public boolean isChildOf(final long objectId)
 	{
 		boolean rc = false;
 		
@@ -229,7 +228,7 @@ public class NXCObject
 				NXCObject object = session.findObjectById(id);
 				if (object != null)
 				{
-					if (object.isParent(objectId))
+					if (object.isChildOf(objectId))
 					{
 						rc = true;
 						break;
@@ -240,6 +239,43 @@ public class NXCObject
 		return rc;
 	}
 	
+	/**
+	 * Check if at least one of given objects is direct or indirect parent
+	 * @param objects List of object ID to check
+	 */
+	public boolean isChildOf(final long[] objects)
+	{
+		for(int i = 0; i < objects.length; i++)
+			if (isChildOf(objects[i]))
+				return true;
+		return false;
+	}
+	
+	/**
+	 * Check if given object is direct parent
+	 * 
+	 * @param objectId ID of object to check
+	 */
+	public boolean isDirectChildOf(final long objectId)
+	{
+		boolean rc = false;
+		
+		synchronized(parents)
+		{
+			final Iterator<Long> it = parents.iterator();
+			for(int i = 0; it.hasNext(); i++)
+			{
+				long id = it.next();
+				if (id == objectId)
+				{
+					// Direct parent
+					rc = true;
+					break;
+				}
+			}
+		}		
+		return rc;
+	}
 	
 	/**
 	 * @return List of parent objects

@@ -20,6 +20,16 @@ public class ObjectTreeFilter extends ViewerFilter
 	private String filterString = null;
 	private Map<Long, NXCObject> objectList = null;
 	private NXCObject lastMatch = null;
+	private long[] rootObjects;
+	
+	/**
+	 * Constructor
+	 */
+	public ObjectTreeFilter(long[] rootObjects)
+	{
+		this.rootObjects = new long[rootObjects.length];
+		System.arraycopy(rootObjects, 0, this.rootObjects, 0, rootObjects.length);
+	}
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -37,7 +47,7 @@ public class ObjectTreeFilter extends ViewerFilter
 			while(it.hasNext())
 			{
 				NXCObject obj = it.next();
-				if (obj.isParent(((NXCObject)element).getObjectId()))
+				if (obj.isChildOf(((NXCObject)element).getObjectId()))
 				{
 					pass = true;
 					break;
@@ -74,7 +84,8 @@ public class ObjectTreeFilter extends ViewerFilter
 				NXCObject[] fullList = NXMCSharedData.getInstance().getSession().getAllObjects();
 				objectList = new HashMap<Long, NXCObject>();
 				for(int i = 0; i < fullList.length; i++)
-					if (fullList[i].getObjectName().toLowerCase().startsWith(filterString))
+					if ((fullList[i].getObjectName().toLowerCase().startsWith(filterString)) &&
+					    fullList[i].isChildOf(rootObjects))
 					{
 						objectList.put(fullList[i].getObjectId(), fullList[i]);
 						lastMatch = fullList[i];
@@ -101,7 +112,6 @@ public class ObjectTreeFilter extends ViewerFilter
 		}
 	}
 
-
 	/**
 	 * Get last matched object
 	 * @return Last matched object
@@ -109,5 +119,19 @@ public class ObjectTreeFilter extends ViewerFilter
 	public final NXCObject getLastMatch()
 	{
 		return lastMatch;
+	}
+	
+	/**
+	 * Get parent for given object
+	 */
+	public NXCObject getParent(final NXCObject childObject)
+	{
+		NXCObject[] parents = childObject.getParentsAsArray();
+		for(NXCObject object : parents)
+		{
+			if (object.isChildOf(rootObjects))
+				return object;
+		}
+		return null;
 	}
 }

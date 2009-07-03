@@ -125,10 +125,10 @@ public class NXCSessionTest extends TestCase
 		session.syncObjects();
 		
 		NXCObject object = session.findObjectById(2);
-		assertEquals(false, object.isParent(1));
+		assertEquals(false, object.isChildOf(1));
 		
 		object = session.findObjectById(12);
-		assertEquals(true, object.isParent(1));
+		assertEquals(true, object.isChildOf(1));
 		
 		session.disconnect();
 	}

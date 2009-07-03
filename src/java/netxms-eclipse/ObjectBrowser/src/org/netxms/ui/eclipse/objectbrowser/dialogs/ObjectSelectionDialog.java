@@ -11,7 +11,6 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -22,7 +21,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
-import org.netxms.ui.eclipse.objectbrowser.ObjectList;
 import org.netxms.ui.eclipse.objectbrowser.ObjectTree;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
@@ -33,12 +31,12 @@ import org.netxms.ui.eclipse.shared.NXMCSharedData;
 public class ObjectSelectionDialog extends Dialog
 {
 	private ObjectTree objectTree;
-	private ObjectList objectList;
+	//private ObjectList objectList;
 	protected CTabFolder tabFolder;
 
 	private long[] rootObjects;
 	private long[] selectedObjects;
-	private boolean treeActive = true;
+	//private boolean treeActive = true;
 
 	/**
 	 * @param parentShell
@@ -88,13 +86,15 @@ public class ObjectSelectionDialog extends Dialog
 
 		dialogArea.setLayout(new FormLayout());
 
-		tabFolder = new CTabFolder(dialogArea, SWT.BOTTOM | SWT.FLAT | SWT.MULTI);
+		//tabFolder = new CTabFolder(dialogArea, SWT.BOTTOM | SWT.FLAT | SWT.MULTI);
 
 		// Object tree
-		objectTree = new ObjectTree(tabFolder, SWT.NONE, ObjectTree.CHECKBOXES, rootObjects);
+		/*objectTree = new ObjectTree(tabFolder, SWT.NONE, ObjectTree.CHECKBOXES, rootObjects);
 		CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
 		tabItem.setText("Tree");
-		tabItem.setControl(objectTree);
+		tabItem.setControl(objectTree);*/
+		objectTree = new ObjectTree(dialogArea, SWT.NONE, ObjectTree.CHECKBOXES, rootObjects);
+		
 		String text = settings.get("SelectObject.Filter");
 		if (text != null)
 			objectTree.setFilter(text);
@@ -104,15 +104,18 @@ public class ObjectSelectionDialog extends Dialog
 		fd.top = new FormAttachment(0, 0);
 		fd.right = new FormAttachment(100, 0);
 		fd.bottom = new FormAttachment(100, 0);
-		tabFolder.setLayoutData(fd);
+		//tabFolder.setLayoutData(fd);
+		objectTree.setLayoutData(fd);
 
 		// Object list
+		/*
 		objectList = new ObjectList(tabFolder, SWT.NONE, ObjectList.CHECKBOXES);
 		tabItem = new CTabItem(tabFolder, SWT.NONE);
 		tabItem.setText("List");
 		tabItem.setControl(objectList);
 		if (text != null)
 			objectList.setFilter(text);
+		*/
 
 		return dialogArea;
 	}
@@ -137,20 +140,20 @@ public class ObjectSelectionDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		final Control control = tabFolder.getSelection().getControl();
+/*		final Control control = tabFolder.getSelection().getControl();
 
-		if (control == objectTree)
+		if (control == objectTree)*/
 		{
-			treeActive = true;
+			//treeActive = true;
 			Long[] objects = objectTree.getCheckedObjects();
 			selectedObjects = new long[objects.length];
 			for(int i = 0; i < objects.length; i++)
 				selectedObjects[i] = objects[i].longValue();
 		}
-		else if (control == objectList)
+		/*else if (control == objectList)
 		{
 			treeActive = false;
-		}
+		}*/
 
 		saveSettings();
 		super.okPressed();
@@ -166,7 +169,7 @@ public class ObjectSelectionDialog extends Dialog
 
 		settings.put("SelectObject.cx", size.x);
 		settings.put("SelectObject.cy", size.y);
-		settings.put("SelectObject.Filter", objectList.getFilter());
+		settings.put("SelectObject.Filter", objectTree.getFilter());
 	}
 
 	/**

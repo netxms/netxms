@@ -9,6 +9,7 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -64,11 +65,40 @@ public class ObjectTree extends Composite
 		
 		NXCSession session = NXMCSharedData.getInstance().getSession();
 
+		// Create filter area
+		filterArea = new Composite(this, SWT.NONE);
+		
+		filterLabel = new Label(filterArea, SWT.NONE);
+		filterLabel.setText("Filter:");
+		
+		filterText = new Text(filterArea, SWT.BORDER);
+		filterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		filterText.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e)
+			{
+				filter.setFilterString(filterText.getText());
+				objectTree.refresh(false);
+				NXCObject obj = filter.getLastMatch();
+				if (obj != null)
+				{
+					objectTree.setSelection(new StructuredSelection(obj), true);
+					NXCObject parent = filter.getParent(obj);
+					if (parent != null)
+						objectTree.expandToLevel(parent, 1);
+					objectTree.reveal(obj);
+				}
+			}
+		});
+		
+		filterArea.setLayout(new GridLayout(2, false));
+		
+		// Create object tree control
 		objectTree = new TreeViewer(this, SWT.VIRTUAL | SWT.SINGLE | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
 		objectTree.setContentProvider(new ObjectTreeContentProvider(rootObjects));
 		objectTree.setLabelProvider(WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider());
 		objectTree.setComparator(new ObjectTreeComparator());
-		filter = new ObjectTreeFilter();
+		filter = new ObjectTreeFilter(rootObjects);
 		objectTree.addFilter(filter);
 		objectTree.setInput(session);
 		
@@ -128,30 +158,7 @@ public class ObjectTree extends Composite
 			}
 		});
 		
-		filterArea = new Composite(this, SWT.NONE);
-		
-		filterLabel = new Label(filterArea, SWT.NONE);
-		filterLabel.setText("Filter:");
-		
-		filterText = new Text(filterArea, SWT.BORDER);
-		filterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		filterText.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e)
-			{
-				filter.setFilterString(filterText.getText());
-				objectTree.refresh(false);
-				NXCObject obj = filter.getLastMatch();
-				if (obj != null)
-				{
-					//objectTree.reveal(obj);
-					objectTree.expandToLevel(obj, TreeViewer.ALL_LEVELS);
-				}
-			}
-		});
-		
-		filterArea.setLayout(new GridLayout(2, false));
-		
+		// Setup layout
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(filterArea);
@@ -185,6 +192,9 @@ public class ObjectTree extends Composite
 				}
 			}
 		});
+		
+		// Set initial focus to filter input line
+		filterText.setFocus();
 	}
 	
 	
@@ -233,7 +243,6 @@ public class ObjectTree extends Composite
 		return filterEnabled;
 	}
 	
-	
 	/**
 	 * Set filter text
 	 * 
@@ -244,6 +253,15 @@ public class ObjectTree extends Composite
 		filterText.setText(text);
 	}
 
+	/**
+	 * Get filter text
+	 * 
+	 * @return Current filter text
+	 */
+	public String getFilter()
+	{
+		return filterText.getText();
+	}
 
 	/**
 	 * @return IDs of objects checked in the tree

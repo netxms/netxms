@@ -37,7 +37,7 @@ public class AlarmListFilter extends ViewerFilter
 		
 		NXCObject object = NXMCSharedData.getInstance().getSession().findObjectById(((NXCAlarm)element).getSourceObjectId());
 		if (object != null)
-			return object.isParent(rootObject);
+			return object.isChildOf(rootObject);
 		return false;
 	}
 
