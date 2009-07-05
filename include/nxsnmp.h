@@ -450,12 +450,12 @@ private:
 	int m_securityModel;
 	char *m_authName;	// community for V1/V2c, user for V3 USM
 	char *m_authPassword;
-	char *m_encryptionPassword;
+	char *m_privPassword;
 	BYTE m_authKeyMD5[16];
 	BYTE m_authKeySHA1[20];
 	SNMP_Engine m_authoritativeEngine;
 	int m_authMethod;
-	int m_encryptionMethod;
+	int m_privMethod;
 
 	void recalculateKeys();
 
@@ -472,19 +472,22 @@ public:
 	const char *getCommunity() { return CHECK_NULL_A(m_authName); }
 	const char *getUser() { return CHECK_NULL_A(m_authName); }
 	const char *getAuthPassword() { return CHECK_NULL_A(m_authPassword); }
-	const char *getEncryptionPassword() { return CHECK_NULL_A(m_encryptionPassword); }
+	const char *getPrivPassword() { return CHECK_NULL_A(m_privPassword); }
 
 	bool needAuthentication() { return m_authMethod != SNMP_AUTH_NONE; }
-	bool needEncryption() { return m_encryptionMethod != SNMP_ENCRYPT_NONE; }
-	int getAuthenticationMethod() { return m_authMethod; }
-	int getEncryptionMethod() { return m_encryptionMethod; }
+	bool needEncryption() { return m_privMethod != SNMP_ENCRYPT_NONE; }
+	int getAuthMethod() { return m_authMethod; }
+	int getPrivMethod() { return m_privMethod; }
 	BYTE *getAuthKeyMD5() { return m_authKeyMD5; }
 	BYTE *getAuthKeySHA1() { return m_authKeySHA1; }
 
-	void setCommunity(const char *community);
-	void setUser(const char *user);
-	void setAuthPassword(const char *authPassword);
-	void setEncryptionPassword(const char *encryptionPassword);
+	void setAuthName(const char *name);
+	void setCommunity(const char *community) { setAuthName(community); }
+	void setUser(const char *user) { setAuthName(user); }
+	void setAuthPassword(const char *password);
+	void setPrivPassword(const char *password);
+	void setAuthMethod(int method) { m_authMethod = method; }
+	void setPrivMethod(int method) { m_privMethod = method; }
 
 	void setAuthoritativeEngine(SNMP_Engine &engine);
 	SNMP_Engine& getAuthoritativeEngine() { return m_authoritativeEngine; }

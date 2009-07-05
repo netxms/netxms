@@ -7,13 +7,13 @@ Bundle-Activator: org.netxms.ui.eclipse.library.Activator
 Bundle-Vendor: netxms.org
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
- jar/netxms-base-0.9.0.jar,
- jar/netxms-client-0.9.0.jar,
  jar/jcommon-1.0.15.jar,
  jar/jfreechart-1.0.12-experimental.jar,
  jar/jfreechart-1.0.12-swt.jar,
  jar/jfreechart-1.0.12.jar,
- jar/swtgraphics2d.jar
+ jar/swtgraphics2d.jar,
+ jar/netxms-base-1.1.0.jar,
+ jar/netxms-client-1.1.0.jar
 Export-Package: com.keypoint,
  org.jfree,
  org.jfree.chart,

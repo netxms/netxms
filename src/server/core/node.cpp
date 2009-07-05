@@ -327,10 +327,10 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    pszEscSecret = EncodeSQLString(m_szSharedSecret);
 	pszEscCommunity = EncodeSQLString(m_snmpSecurity->getCommunity());
 	snmpAuthPassword = EncodeSQLString(m_snmpSecurity->getAuthPassword());
-	snmpPrivPassword = EncodeSQLString(m_snmpSecurity->getEncryptionPassword());
+	snmpPrivPassword = EncodeSQLString(m_snmpSecurity->getPrivPassword());
    escObjectId = EncodeSQLString(m_szObjectId);
    pszEscDescr = EncodeSQLString(m_szSysDescription);
-	int snmpMethods = m_snmpSecurity->getAuthenticationMethod() | (m_snmpSecurity->getEncryptionMethod() << 8);
+	int snmpMethods = m_snmpSecurity->getAuthMethod() | (m_snmpSecurity->getPrivMethod() << 8);
    if (bNewObject)
       snprintf(szQuery, 4096,
                "INSERT INTO nodes (id,primary_ip,"
@@ -2162,7 +2162,10 @@ void Node::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_AGENT_PORT, m_wAgentPort);
    pMsg->SetVariable(VID_AUTH_METHOD, m_wAuthMethod);
    pMsg->SetVariable(VID_SHARED_SECRET, m_szSharedSecret);
-	pMsg->SetVariable(VID_COMMUNITY_STRING, m_snmpSecurity->getCommunity());
+	pMsg->SetVariable(VID_SNMP_AUTH_OBJECT, m_snmpSecurity->getCommunity());
+	pMsg->SetVariable(VID_SNMP_AUTH_PASSWORD, m_snmpSecurity->getAuthPassword());
+	pMsg->SetVariable(VID_SNMP_PRIV_PASSWORD, m_snmpSecurity->getPrivPassword());
+	pMsg->SetVariable(VID_SNMP_USM_METHODS, (WORD)((WORD)m_snmpSecurity->getAuthMethod() | ((WORD)m_snmpSecurity->getPrivMethod() << 8)));
    pMsg->SetVariable(VID_SNMP_OID, m_szObjectId);
    pMsg->SetVariable(VID_NODE_TYPE, m_dwNodeType);
    pMsg->SetVariable(VID_SNMP_VERSION, (WORD)m_snmpVersion);
@@ -2253,11 +2256,21 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    if (pRequest->IsVariableExist(VID_SNMP_VERSION))
       m_snmpVersion = pRequest->GetVariableShort(VID_SNMP_VERSION);
 
-   // Change SNMP community string
-   if (pRequest->IsVariableExist(VID_COMMUNITY_STRING))
+   // Change SNMP authentication data
+   if (pRequest->IsVariableExist(VID_SNMP_AUTH_OBJECT))
 	{
-      pRequest->GetVariableStr(VID_COMMUNITY_STRING, buffer, 256);
-		m_snmpSecurity->setCommunity(buffer);
+      pRequest->GetVariableStr(VID_SNMP_AUTH_OBJECT, buffer, 256);
+		m_snmpSecurity->setAuthName(buffer);
+
+		pRequest->GetVariableStr(VID_SNMP_AUTH_PASSWORD, buffer, 256);
+		m_snmpSecurity->setAuthPassword(buffer);
+
+		pRequest->GetVariableStr(VID_SNMP_PRIV_PASSWORD, buffer, 256);
+		m_snmpSecurity->setPrivPassword(buffer);
+
+		WORD methods = pRequest->GetVariableShort(VID_SNMP_USM_METHODS);
+		m_snmpSecurity->setAuthMethod((int)(methods & 0xFF));
+		m_snmpSecurity->setPrivMethod((int)(methods >> 8));
 	}
 
    // Change proxy node

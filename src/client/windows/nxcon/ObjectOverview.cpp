@@ -213,7 +213,7 @@ void CObjectOverview::Refresh()
 				if (m_pObject->node.dwFlags & NF_IS_SNMP)
 				{
 					InsertItem(_T("SNMP Agent"), _T("Active"));
-					InsertItem(_T("SNMP OID"), m_pObject->node.szObjectId);
+					InsertItem(_T("SNMP OID"), CHECK_NULL_EX(m_pObject->node.pszSnmpObjectId));
 				}
 				else
 				{

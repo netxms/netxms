@@ -47,6 +47,17 @@
              </instanceof>
           </enabledWhen>
         </page>
+
+        <page
+           id="org.netxms.ui.eclipse.objectmanager.propertypages.Snmp"
+           name="SNMP"
+	       class="org.netxms.ui.eclipse.objectmanager.propertypages.Snmp">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.client.NXCNode">
+             </instanceof>
+          </enabledWhen>
+        </page>
   </extension>
 
    <extension

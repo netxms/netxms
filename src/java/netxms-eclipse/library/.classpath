@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry exported="true" kind="lib" path="jar/netxms-base-0.9.0.jar" sourcepath="/netxms-base"/>
-	<classpathentry exported="true" kind="lib" path="jar/netxms-client-0.9.0.jar" sourcepath="/netxms-client"/>
+	<classpathentry exported="true" kind="lib" path="jar/netxms-client-1.1.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="jar/netxms-base-1.1.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="jar/swtgraphics2d.jar"/>
 	<classpathentry exported="true" kind="lib" path="jar/jfreechart-1.0.12.jar"/>
 	<classpathentry exported="true" kind="lib" path="jar/jfreechart-1.0.12-swt.jar"/>

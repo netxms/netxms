@@ -33,6 +33,12 @@ void DestroyObject(NXC_OBJECT *pObject)
    DebugPrintf(_T("DestroyObject(id:%d, name:\"%s\")"), pObject->dwId, pObject->szName);
    switch(pObject->iClass)
    {
+		case OBJECT_NODE:
+			safe_free(pObject->node.pszAuthName);
+			safe_free(pObject->node.pszAuthPassword);
+			safe_free(pObject->node.pszPrivPassword);
+			safe_free(pObject->node.pszSnmpObjectId);
+			break;
       case OBJECT_NETWORKSERVICE:
          safe_free(pObject->netsrv.pszRequest);
          safe_free(pObject->netsrv.pszResponse);
@@ -144,6 +150,12 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
    DebugPrintf(_T("ReplaceObject(id:%d, name:\"%s\")"), pObject->dwId, pObject->szName);
    switch(pObject->iClass)
    {
+		case OBJECT_NODE:
+			safe_free(pObject->node.pszAuthName);
+			safe_free(pObject->node.pszAuthPassword);
+			safe_free(pObject->node.pszPrivPassword);
+			safe_free(pObject->node.pszSnmpObjectId);
+			break;
       case OBJECT_NETWORKSERVICE:
          safe_free(pObject->netsrv.pszRequest);
          safe_free(pObject->netsrv.pszResponse);
@@ -189,6 +201,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 {
    NXC_OBJECT *pObject;
    DWORD i, dwId1, dwId2, dwCount;
+	WORD methods;
 
    // Allocate memory for new object structure
    pObject = (NXC_OBJECT *)malloc(sizeof(NXC_OBJECT));
@@ -273,8 +286,13 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->node.wAgentPort = pMsg->GetVariableShort(VID_AGENT_PORT);
          pObject->node.wAuthMethod = pMsg->GetVariableShort(VID_AUTH_METHOD);
          pMsg->GetVariableStr(VID_SHARED_SECRET, pObject->node.szSharedSecret, MAX_SECRET_LENGTH);
-         pMsg->GetVariableStr(VID_COMMUNITY_STRING, pObject->node.szCommunityString, MAX_COMMUNITY_LENGTH);
-         pMsg->GetVariableStr(VID_SNMP_OID, pObject->node.szObjectId, MAX_OID_LENGTH);
+         pObject->node.pszAuthName = pMsg->GetVariableStr(VID_SNMP_AUTH_OBJECT);
+         pObject->node.pszAuthPassword = pMsg->GetVariableStr(VID_SNMP_AUTH_PASSWORD);
+         pObject->node.pszPrivPassword = pMsg->GetVariableStr(VID_SNMP_PRIV_PASSWORD);
+			methods = pMsg->GetVariableShort(VID_SNMP_USM_METHODS);
+			pObject->node.wSnmpAuthMethod = methods & 0xFF;
+			pObject->node.wSnmpPrivMethod = methods >> 8;
+         pObject->node.pszSnmpObjectId = pMsg->GetVariableStr(VID_SNMP_OID);
          pObject->node.nSNMPVersion = (BYTE)pMsg->GetVariableShort(VID_SNMP_VERSION);
          pMsg->GetVariableStr(VID_AGENT_VERSION, pObject->node.szAgentVersion, MAX_AGENT_VERSION_LEN);
          pMsg->GetVariableStr(VID_PLATFORM_NAME, pObject->node.szPlatformName, MAX_PLATFORM_NAME_LEN);
@@ -766,8 +784,13 @@ DWORD LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE
       msg.SetVariable(VID_AUTH_METHOD, (WORD)pUpdate->iAuthType);
    if (pUpdate->qwFlags & OBJ_UPDATE_AGENT_SECRET)
       msg.SetVariable(VID_SHARED_SECRET, pUpdate->pszSecret);
-   if (pUpdate->qwFlags & OBJ_UPDATE_SNMP_COMMUNITY)
-      msg.SetVariable(VID_COMMUNITY_STRING, pUpdate->pszCommunity);
+   if (pUpdate->qwFlags & OBJ_UPDATE_SNMP_AUTH)
+	{
+      msg.SetVariable(VID_SNMP_AUTH_OBJECT, pUpdate->pszAuthName);
+      msg.SetVariable(VID_SNMP_AUTH_PASSWORD, CHECK_NULL_EX(pUpdate->pszAuthPassword));
+      msg.SetVariable(VID_SNMP_PRIV_PASSWORD, CHECK_NULL_EX(pUpdate->pszPrivPassword));
+		msg.SetVariable(VID_SNMP_USM_METHODS, (WORD)(pUpdate->wSnmpAuthMethod | (pUpdate->wSnmpPrivMethod << 8)));
+	}
    if (pUpdate->qwFlags & OBJ_UPDATE_SNMP_VERSION)
       msg.SetVariable(VID_SNMP_VERSION, pUpdate->wSNMPVersion);
    if (pUpdate->qwFlags & OBJ_UPDATE_CHECK_REQUEST)
@@ -1405,6 +1428,23 @@ DWORD LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *p
 
          switch(pList[i].pObject->iClass)
          {
+				case OBJECT_NODE:
+               dwSize = (DWORD)_tcslen(CHECK_NULL_EX(pList[i].pObject->node.pszAuthName)) * sizeof(TCHAR);
+               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
+               fwrite(pList[i].pObject->node.pszAuthName, 1, dwSize, hFile);
+
+               dwSize = (DWORD)_tcslen(CHECK_NULL_EX(pList[i].pObject->node.pszAuthPassword)) * sizeof(TCHAR);
+               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
+               fwrite(pList[i].pObject->node.pszAuthPassword, 1, dwSize, hFile);
+
+               dwSize = (DWORD)_tcslen(CHECK_NULL_EX(pList[i].pObject->node.pszPrivPassword)) * sizeof(TCHAR);
+               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
+               fwrite(pList[i].pObject->node.pszPrivPassword, 1, dwSize, hFile);
+
+               dwSize = (DWORD)_tcslen(CHECK_NULL_EX(pList[i].pObject->node.pszSnmpObjectId)) * sizeof(TCHAR);
+               fwrite(&dwSize, 1, sizeof(DWORD), hFile);
+               fwrite(pList[i].pObject->node.pszSnmpObjectId, 1, dwSize, hFile);
+					break;
             case OBJECT_NETWORKSERVICE:
                dwSize = (DWORD)_tcslen(pList[i].pObject->netsrv.pszRequest) * sizeof(TCHAR);
                fwrite(&dwSize, 1, sizeof(DWORD), hFile);
@@ -1530,6 +1570,27 @@ void NXCL_Session::LoadObjectsFromCache(const TCHAR *pszFile)
 
                   switch(object.iClass)
                   {
+							case OBJECT_NODE:
+                        fread(&dwSize, 1, sizeof(DWORD), hFile);
+                        object.node.pszAuthName = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
+                        fread(object.node.pszAuthName, 1, dwSize, hFile);
+                        object.node.pszAuthName[dwSize / sizeof(TCHAR)] = 0;
+
+                        fread(&dwSize, 1, sizeof(DWORD), hFile);
+                        object.node.pszAuthPassword = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
+                        fread(object.node.pszAuthPassword, 1, dwSize, hFile);
+                        object.node.pszAuthPassword[dwSize / sizeof(TCHAR)] = 0;
+
+                        fread(&dwSize, 1, sizeof(DWORD), hFile);
+                        object.node.pszPrivPassword = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
+                        fread(object.node.pszPrivPassword, 1, dwSize, hFile);
+                        object.node.pszPrivPassword[dwSize / sizeof(TCHAR)] = 0;
+
+                        fread(&dwSize, 1, sizeof(DWORD), hFile);
+                        object.node.pszSnmpObjectId = (TCHAR *)malloc(dwSize + sizeof(TCHAR));
+                        fread(object.node.pszSnmpObjectId, 1, dwSize, hFile);
+                        object.node.pszSnmpObjectId[dwSize / sizeof(TCHAR)] = 0;
+								break;
                      case OBJECT_NETWORKSERVICE:
                         fread(&dwSize, 1, sizeof(DWORD), hFile);
                         object.netsrv.pszRequest = (TCHAR *)malloc(dwSize + sizeof(TCHAR));

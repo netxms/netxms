@@ -1400,10 +1400,10 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
          case OBJECT_NODE:
             wndNodeGeneral.m_dwObjectId = dwObjectId;
             wndNodeGeneral.m_strName = pObject->szName;
-            wndNodeGeneral.m_strOID = pObject->node.szObjectId;
+            wndNodeGeneral.m_strOID = pObject->node.pszSnmpObjectId;
             wndNodeGeneral.m_dwIpAddr = pObject->dwIpAddr;
             wndNodeGeneral.m_iAgentPort = (int)pObject->node.wAgentPort;
-            wndNodeGeneral.m_strCommunity = pObject->node.szCommunityString;
+            wndNodeGeneral.m_strCommunity = pObject->node.pszAuthName;
             wndNodeGeneral.m_iAuthType = pObject->node.wAuthMethod;
             wndNodeGeneral.m_strSecret = pObject->node.szSharedSecret;
             wndNodeGeneral.m_iSNMPVersion = (pObject->node.nSNMPVersion == SNMP_VERSION_1) ? 0 : 1;

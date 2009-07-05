@@ -40,7 +40,7 @@
 // Current client-server protocol version
 //
 
-#define CLIENT_PROTOCOL_VERSION     20
+#define CLIENT_PROTOCOL_VERSION     21
 
 
 #endif

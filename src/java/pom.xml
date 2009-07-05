@@ -12,7 +12,7 @@
   <url>http://www.netxms.org</url>
 
   <properties>
-    <projectversion>0.9.0</projectversion>
+    <projectversion>1.1.0</projectversion>
   </properties>
 
   <modules>

@@ -24,7 +24,11 @@ public class NXCNode extends NXCObject
 	private String agentSharedSecret;
 	private String agentVersion;
 	private String platformName;
-	private String snmpCommunityString;
+	private String snmpAuthName;
+	private String snmpAuthPassword;
+	private String snmpPrivPassword;
+	private int snmpAuthMethod;
+	private int snmpPrivMethod;
 	private String snmpOID;
 	private int snmpVersion;
 	private String systemDescription;
@@ -47,7 +51,12 @@ public class NXCNode extends NXCObject
 		agentSharedSecret = msg.getVariableAsString(NXCPCodes.VID_SHARED_SECRET);
 		agentVersion = msg.getVariableAsString(NXCPCodes.VID_AGENT_VERSION);
 		platformName = msg.getVariableAsString(NXCPCodes.VID_PLATFORM_NAME);
-		snmpCommunityString = msg.getVariableAsString(NXCPCodes.VID_COMMUNITY_STRING);
+		snmpAuthName = msg.getVariableAsString(NXCPCodes.VID_SNMP_AUTH_OBJECT);
+		snmpAuthPassword = msg.getVariableAsString(NXCPCodes.VID_SNMP_AUTH_PASSWORD);
+		snmpPrivPassword = msg.getVariableAsString(NXCPCodes.VID_SNMP_PRIV_PASSWORD);
+		int methods = msg.getVariableAsInteger(NXCPCodes.VID_SNMP_USM_METHODS);
+		snmpAuthMethod = methods & 0xFF;
+		snmpPrivMethod = methods >> 8;
 		snmpOID = msg.getVariableAsString(NXCPCodes.VID_SNMP_OID);
 		snmpVersion = msg.getVariableAsInteger(NXCPCodes.VID_SNMP_VERSION);
 		systemDescription = msg.getVariableAsString(NXCPCodes.VID_SYS_DESCRIPTION);
@@ -142,11 +151,13 @@ public class NXCNode extends NXCObject
 	}
 
 	/**
-	 * @return the snmpCommunityString
+	 * Get SNMP authentication name - community string for version 1 and 2c, or user name for version 3.
+	 * 
+	 * @return SNMP authentication name
 	 */
-	public String getSnmpCommunityString()
+	public String getSnmpAuthName()
 	{
-		return snmpCommunityString;
+		return snmpAuthName;
 	}
 
 	/**
@@ -180,5 +191,45 @@ public class NXCNode extends NXCObject
 	public String getObjectClassName()
 	{
 		return "Node";
+	}
+
+	/**
+	 * Get SNMP authentication password.
+	 * 
+	 * @return SNMP authentication password
+	 */
+	public String getSnmpAuthPassword()
+	{
+		return snmpAuthPassword;
+	}
+
+	/**
+	 * Get SNMP privacy password.
+	 * 
+	 * @return SNMP privacy password
+	 */
+	public String getSnmpPrivPassword()
+	{
+		return snmpPrivPassword;
+	}
+
+	/**
+	 * Get SNMP authentication method
+	 * 
+	 * @return SNMP authentication method
+	 */
+	public int getSnmpAuthMethod()
+	{
+		return snmpAuthMethod;
+	}
+
+	/**
+	 * Get SNMP privacy (encryption) method
+	 * 
+	 * @return SNMP privacy method
+	 */
+	public int getSnmpPrivMethod()
+	{
+		return snmpPrivMethod;
 	}
 }

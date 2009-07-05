@@ -650,7 +650,7 @@ BOOL SNMP_PDU::validateSignedMessage(BYTE *msg, DWORD msgLen, SNMP_SecurityConte
 	BYTE k1[64], k2[64], hash[20], *buffer;
 	int i;
 
-	switch(securityContext->getAuthenticationMethod())
+	switch(securityContext->getAuthMethod())
 	{
 		case SNMP_AUTH_MD5:
 			// Create K1 and K2
@@ -1091,7 +1091,7 @@ void SNMP_PDU::signMessage(BYTE *msg, DWORD msgLen, SNMP_SecurityContext *securi
 	memset(&msg[hashPos], 0, 12);
 
 	BYTE k1[64], k2[64], hash[20], *buffer;
-	switch(securityContext->getAuthenticationMethod())
+	switch(securityContext->getAuthMethod())
 	{
 		case SNMP_AUTH_MD5:
 			// Create K1 and K2

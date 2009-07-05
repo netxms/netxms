@@ -267,7 +267,7 @@ public final class NXCPCodes
 	public static final long VID_AGENT_PORT              = 15;
 	public static final long VID_AUTH_METHOD             = 16;
 	public static final long VID_SHARED_SECRET           = 17;
-	public static final long VID_COMMUNITY_STRING        = 18;
+	public static final long VID_SNMP_AUTH_OBJECT        = 18;
 	public static final long VID_SNMP_OID                = 19;
 	public static final long VID_NAME                    = 20;
 	public static final long VID_VALUE                   = 21;
@@ -333,14 +333,14 @@ public final class NXCPCodes
 	public static final long VID_CONFIG_FILE_DATA        = 81;
 	public static final long VID_COMMENTS                = 82;
 	public static final long VID_POLICY_ID               = 83;
-	//public static final long VID_IMAGE_FILE              = 84;
+	public static final long VID_SNMP_USM_METHODS        = 84;
 	public static final long VID_PARAMETER               = 85;
 	public static final long VID_NUM_STRINGS             = 86;
 	public static final long VID_ACTION_NAME             = 87;
 	public static final long VID_NUM_ARGS                = 88;
-	//public static final long VID_IMAGE_ID_LIST           = 89;
+	public static final long VID_SNMP_AUTH_PASSWORD      = 89;
 	public static final long VID_CLASS_ID_LIST           = 90;
-	//public static final long VID_IMAGE_FORMAT            = 91;
+	public static final long VID_SNMP_PRIV_PASSWORD      = 91;
 	public static final long VID_NOTIFICATION_DATA       = 92;
 	public static final long VID_ALARM_ID                = 93;
 	public static final long VID_TIMESTAMP               = 94;

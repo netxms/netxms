@@ -416,7 +416,7 @@ void ClientSession::ShowObjectOverview(HttpResponse &response, NXC_OBJECT *pObje
 			if (pObject->node.dwFlags & NF_IS_SNMP)
 			{
 				ShowObjectAttribute(response, _T("SNMP Agent"), _T("Active"));
-				ShowObjectAttribute(response, _T("SNMP OID"), pObject->node.szObjectId);
+				ShowObjectAttribute(response, _T("SNMP OID"), CHECK_NULL_EX(pObject->node.pszSnmpObjectId));
 			}
 			else
 			{

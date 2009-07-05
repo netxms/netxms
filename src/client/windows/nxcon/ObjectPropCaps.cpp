@@ -76,7 +76,7 @@ BOOL CObjectPropCaps::OnInitDialog()
    AddListRecord(_T("isLLDP"), (m_pObject->node.dwFlags & NF_IS_LLDP));
    AddListRecord(_T("nodeType"), CodeToText(m_pObject->node.dwNodeType, g_ctNodeType));
    AddListRecord(_T("platformName"), m_pObject->node.szPlatformName);
-   AddListRecord(_T("snmpOID"), m_pObject->node.szObjectId);
+   AddListRecord(_T("snmpOID"), CHECK_NULL_EX(m_pObject->node.pszSnmpObjectId));
 	
 	return TRUE;
 }

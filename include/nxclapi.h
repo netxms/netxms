@@ -91,7 +91,7 @@ typedef void * NXC_SESSION;
 
 
 //
-// Authentication methods
+// NetXMS agent authentication methods
 //
 
 #define AUTH_NONE             0
@@ -441,7 +441,7 @@ enum
 #define OBJ_UPDATE_AGENT_AUTH       ((QWORD)_ULL(0x0000000004))
 #define OBJ_UPDATE_AGENT_SECRET     ((QWORD)_ULL(0x0000000008))
 #define OBJ_UPDATE_SNMP_VERSION     ((QWORD)_ULL(0x0000000010))
-#define OBJ_UPDATE_SNMP_COMMUNITY   ((QWORD)_ULL(0x0000000020))
+#define OBJ_UPDATE_SNMP_AUTH        ((QWORD)_ULL(0x0000000020))
 #define OBJ_UPDATE_ACL              ((QWORD)_ULL(0x0000000040))
 //#define OBJ_UPDATE_IMAGE            ((QWORD)_ULL(0x0000000080))
 #define OBJ_UPDATE_SYNC_NETS        ((QWORD)_ULL(0x0000000100))
@@ -986,8 +986,12 @@ struct __nxc_object_node
 	DWORD dwSNMPProxy;
    DWORD dwZoneGUID;
    TCHAR szSharedSecret[MAX_SECRET_LENGTH];
-   TCHAR szCommunityString[MAX_COMMUNITY_LENGTH];
-   TCHAR szObjectId[MAX_OID_LENGTH];
+   TCHAR *pszAuthName;     // SNMP authentication name
+	TCHAR *pszAuthPassword; // SNMP v3 USM auth password
+	TCHAR *pszPrivPassword; // SNMP v3 USM privacy password
+   TCHAR *pszSnmpObjectId;
+	WORD wSnmpAuthMethod;
+	WORD wSnmpPrivMethod;
    WORD wAgentPort;     // Listening TCP port for native agent
    WORD wAuthMethod;    // Native agent's authentication method
    TCHAR szAgentVersion[MAX_AGENT_VERSION_LEN];
@@ -1126,7 +1130,11 @@ typedef struct
    int iAgentPort;
    int iAuthType;
    const TCHAR *pszSecret;
-   const TCHAR *pszCommunity;
+   const TCHAR *pszAuthName;
+   const TCHAR *pszAuthPassword;
+   const TCHAR *pszPrivPassword;
+	WORD wSnmpAuthMethod;
+	WORD wSnmpPrivMethod;
    BOOL bInheritRights;
    DWORD dwAclSize;
    NXC_ACL_ENTRY *pAccessList;

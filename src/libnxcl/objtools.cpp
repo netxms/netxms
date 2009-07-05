@@ -405,7 +405,7 @@ BOOL LIBNXCL_EXPORTABLE NXCIsAppropriateTool(NXC_OBJECT_TOOL *pTool, NXC_OBJECT 
          pszPattern = CHECK_NULL_EX(pTool->pszMatchingOID);
          if (*pszPattern == 0)
             pszPattern = _T("*");
-         if (!MatchString(pszPattern, pObject->node.szObjectId, TRUE))
+         if (!MatchString(pszPattern, CHECK_NULL_EX(pObject->node.pszSnmpObjectId), TRUE))
             bResult = FALSE;
       }
    }

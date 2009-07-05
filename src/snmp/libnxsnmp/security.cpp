@@ -33,9 +33,9 @@ SNMP_SecurityContext::SNMP_SecurityContext()
 	m_securityModel = 0;
 	m_authName = NULL;
 	m_authPassword = NULL;
-	m_encryptionPassword = NULL;
+	m_privPassword = NULL;
 	m_authMethod = SNMP_AUTH_NONE;
-	m_encryptionMethod = SNMP_ENCRYPT_NONE;
+	m_privMethod = SNMP_ENCRYPT_NONE;
 	memset(m_authKeyMD5, 0, 16);
 	memset(m_authKeySHA1, 0, 20);
 }
@@ -45,9 +45,9 @@ SNMP_SecurityContext::SNMP_SecurityContext(SNMP_SecurityContext *src)
 	m_securityModel = src->m_securityModel;
 	m_authName = (src->m_authName != NULL) ? strdup(src->m_authName) : NULL;
 	m_authPassword = (src->m_authPassword != NULL) ? strdup(src->m_authPassword) : NULL;
-	m_encryptionPassword = (src->m_encryptionPassword != NULL) ? strdup(src->m_encryptionPassword) : NULL;
+	m_privPassword = (src->m_privPassword != NULL) ? strdup(src->m_privPassword) : NULL;
 	m_authMethod = src->m_authMethod;
-	m_encryptionMethod = src->m_authMethod;
+	m_privMethod = src->m_authMethod;
 	memcpy(m_authKeyMD5, src->m_authKeyMD5, 16);
 	memcpy(m_authKeySHA1, src->m_authKeySHA1, 20);
 	m_authoritativeEngine = src->m_authoritativeEngine;
@@ -58,9 +58,9 @@ SNMP_SecurityContext::SNMP_SecurityContext(const char *community)
 	m_securityModel = SNMP_SECURITY_MODEL_V2C;
 	m_authName = strdup(CHECK_NULL_A(community));
 	m_authPassword = NULL;
-	m_encryptionPassword = NULL;
+	m_privPassword = NULL;
 	m_authMethod = SNMP_AUTH_NONE;
-	m_encryptionMethod = SNMP_ENCRYPT_NONE;
+	m_privMethod = SNMP_ENCRYPT_NONE;
 	memset(m_authKeyMD5, 0, 16);
 	memset(m_authKeySHA1, 0, 20);
 }
@@ -70,9 +70,9 @@ SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPas
 	m_securityModel = SNMP_SECURITY_MODEL_USM;
 	m_authName = strdup(CHECK_NULL_A(user));
 	m_authPassword = strdup(CHECK_NULL_A(authPassword));
-	m_encryptionPassword = NULL;
+	m_privPassword = NULL;
 	m_authMethod = authMethod;
-	m_encryptionMethod = SNMP_ENCRYPT_NONE;
+	m_privMethod = SNMP_ENCRYPT_NONE;
 	recalculateKeys();
 }
 
@@ -82,9 +82,9 @@ SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPas
 	m_securityModel = SNMP_SECURITY_MODEL_USM;
 	m_authName = strdup(CHECK_NULL_A(user));
 	m_authPassword = strdup(CHECK_NULL_A(authPassword));
-	m_encryptionPassword = strdup(CHECK_NULL_A(encryptionPassword));
+	m_privPassword = strdup(CHECK_NULL_A(encryptionPassword));
 	m_authMethod = authMethod;
-	m_encryptionMethod = encryptionMethod;
+	m_privMethod = encryptionMethod;
 	recalculateKeys();
 }
 
@@ -97,29 +97,18 @@ SNMP_SecurityContext::~SNMP_SecurityContext()
 {
 	safe_free(m_authName);
 	safe_free(m_authPassword);
-	safe_free(m_encryptionPassword);
+	safe_free(m_privPassword);
 }
 
 
 //
-// Set community
+// Set authentication name
 //
 
-void SNMP_SecurityContext::setCommunity(const char *community)
+void SNMP_SecurityContext::setAuthName(const char *name)
 {
 	safe_free(m_authName);
-	m_authName = strdup(CHECK_NULL_A(community));
-}
-
-
-//
-// Set user
-//
-
-void SNMP_SecurityContext::setUser(const char *user)
-{
-	safe_free(m_authName);
-	m_authName = strdup(CHECK_NULL_A(user));
+	m_authName = strdup(CHECK_NULL_A(name));
 }
 
 
@@ -127,10 +116,10 @@ void SNMP_SecurityContext::setUser(const char *user)
 // Set authentication password
 //
 
-void SNMP_SecurityContext::setAuthPassword(const char *authPassword)
+void SNMP_SecurityContext::setAuthPassword(const char *password)
 {
 	safe_free(m_authPassword);
-	m_authPassword = strdup(CHECK_NULL_A(authPassword));
+	m_authPassword = strdup(CHECK_NULL_A(password));
 	recalculateKeys();
 }
 
@@ -139,10 +128,10 @@ void SNMP_SecurityContext::setAuthPassword(const char *authPassword)
 // Set encryption password
 //
 
-void SNMP_SecurityContext::setEncryptionPassword(const char *encryptionPassword)
+void SNMP_SecurityContext::setPrivPassword(const char *password)
 {
-	safe_free(m_encryptionPassword);
-	m_encryptionPassword = strdup(CHECK_NULL_A(encryptionPassword));
+	safe_free(m_privPassword);
+	m_privPassword = strdup(CHECK_NULL_A(password));
 	recalculateKeys();
 }
 
@@ -166,7 +155,7 @@ void SNMP_SecurityContext::recalculateKeys()
 {
 	BYTE buffer[256];
 	const char *authPassword = (m_authPassword != NULL) ? m_authPassword : "";
-	const char *encPassword = (m_encryptionPassword != NULL) ? m_encryptionPassword : "";
+	const char *encPassword = (m_privPassword != NULL) ? m_privPassword : "";
 
 	// MD5 auth key
 	MD5HashForPattern((const BYTE *)authPassword, strlen(authPassword), 1048576, buffer);

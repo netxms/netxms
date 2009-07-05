@@ -177,7 +177,7 @@ void CNodePropsGeneral::OnChangeEditPort()
 
 void CNodePropsGeneral::OnChangeEditCommunity() 
 {
-   m_pUpdate->qwFlags |= OBJ_UPDATE_SNMP_COMMUNITY;
+   m_pUpdate->qwFlags |= OBJ_UPDATE_SNMP_AUTH;
    SetModified();
 }
 
@@ -214,7 +214,7 @@ void CNodePropsGeneral::OnOK()
    // Set fields in update structure
    m_pUpdate->pszName = (TCHAR *)((LPCTSTR)m_strName);
    m_pUpdate->iAgentPort = m_iAgentPort;
-   m_pUpdate->pszCommunity = (TCHAR *)((LPCTSTR)m_strCommunity);
+   m_pUpdate->pszAuthName = (TCHAR *)((LPCTSTR)m_strCommunity);
    m_pUpdate->pszSecret = (TCHAR *)((LPCTSTR)m_strSecret);
    m_pUpdate->wSNMPVersion = (m_iSNMPVersion == 0) ? SNMP_VERSION_1 : SNMP_VERSION_2C;
    m_pUpdate->dwIpAddr = m_dwIpAddr;
