@@ -13,7 +13,8 @@ ACLOCAL=aclocal
 AUTOCONF=autoconf
 AUTOHEADER=autoheader
 AUTOMAKE=automake
-LIBTOOLIZE=libtoolize
+which libtoolize > /dev/null && LIBTOOLIZE=libtoolize
+which glibtoolize > /dev/null && LIBTOOLIZE=glibtoolize
 
 mkdir -p config
 touch README
