@@ -477,6 +477,7 @@ case "$PLATFORM" in
       fi
       ;;
    SunOS)
+      CPPFLAGS="$CPPFLAGS -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS"
       LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
       export LD_LIBRARY_PATH
       ;;
