@@ -1063,10 +1063,32 @@ public class NXCSession
 	public NXCObject[] getTopLevelObjects()
 	{
 		HashSet<NXCObject> list = new HashSet<NXCObject>();
-		list.add(findObjectById(1));
-		list.add(findObjectById(2));
-		list.add(findObjectById(3));
-		list.add(findObjectById(5));
+		synchronized(objectList)
+		{
+			for(NXCObject object : objectList.values())
+			{
+				if (object.getNumberOfParents() == 0)
+				{
+					list.add(object);
+				}
+				else
+				{
+					boolean hasParents = false;
+					Iterator<Long> it = object.getParents();
+					while(it.hasNext())
+					{
+						Long parent = it.next();
+						if (objectList.containsKey(parent))
+						{
+							hasParents = true;
+							break;
+						}
+					}
+					if (!hasParents)
+						list.add(object);
+				}
+			}
+		}
 		return list.toArray(new NXCObject[list.size()]);
 	}
 

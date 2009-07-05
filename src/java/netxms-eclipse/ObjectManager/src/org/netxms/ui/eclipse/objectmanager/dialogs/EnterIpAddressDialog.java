@@ -3,16 +3,19 @@
  */
 package org.netxms.ui.eclipse.objectmanager.dialogs;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.nebula.widgets.formattedtext.FormattedText;
-import org.eclipse.nebula.widgets.formattedtext.MaskFormatter;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.shared.IUIConstants;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * @author Victor
@@ -20,7 +23,8 @@ import org.netxms.ui.eclipse.shared.IUIConstants;
  */
 public class EnterIpAddressDialog extends Dialog
 {
-	private FormattedText textAddress;
+	private Text textAddress;
+	private InetAddress ipAddress;
 	
 	/**
 	 * Constructor
@@ -40,18 +44,49 @@ public class EnterIpAddressDialog extends Dialog
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 
-		FillLayout layout = new FillLayout();
-      layout.type = SWT.VERTICAL;
+		GridLayout layout = new GridLayout();
       layout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
       layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-      Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("New IP address");
-      
-      textAddress = new FormattedText(dialogArea, SWT.BORDER);
-      textAddress.setFormatter(new MaskFormatter("###.###.###.###"));
+      textAddress = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, "New IP address", "", null);
+      textAddress.getShell().setMinimumSize(300, 0);
       
 		return dialogArea;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+	 */
+	@Override
+	protected void okPressed()
+	{
+		try
+		{
+			ipAddress = InetAddress.getByName(textAddress.getText());
+			super.okPressed();
+		}
+		catch(UnknownHostException e)
+		{
+			MessageDialog.openWarning(getShell(), "Warning", "Invalid IP address or host name");
+		}
+	}
+
+	/**
+	 * @return the ipAddress
+	 */
+	public InetAddress getIpAddress()
+	{
+		return ipAddress;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+	 */
+	@Override
+	protected void configureShell(Shell newShell)
+	{
+		super.configureShell(newShell);
+		newShell.setText("Enter IP Address");
 	}
 }
