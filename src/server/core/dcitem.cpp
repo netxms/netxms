@@ -1047,31 +1047,7 @@ void DCItem::Transform(ItemValue &value, time_t nElapsedTime)
       NXSL_Value *pValue;
       NXSL_ServerEnv *pEnv;
 
-      switch(m_iDataType)
-      {
-         case DCI_DT_INT:
-            pValue = new NXSL_Value((LONG)value);
-            break;
-         case DCI_DT_UINT:
-            pValue = new NXSL_Value((DWORD)value);
-            break;
-         case DCI_DT_INT64:
-            pValue = new NXSL_Value((INT64)value);
-            break;
-         case DCI_DT_UINT64:
-            pValue = new NXSL_Value((QWORD)value);
-            break;
-         case DCI_DT_FLOAT:
-            pValue = new NXSL_Value((double)value);
-            break;
-         case DCI_DT_STRING:
-            pValue = new NXSL_Value((char *)((const char *)value));
-            break;
-         default:
-            pValue = new NXSL_Value;
-            break;
-      }
-
+      pValue = new NXSL_Value((char *)((const char *)value));
       pEnv = new NXSL_ServerEnv;
       m_pScript->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
 	
