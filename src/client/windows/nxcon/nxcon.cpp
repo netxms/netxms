@@ -83,6 +83,7 @@
 #include "SyslogParserCfg.h"
 #include "TemplatePropsAutoApply.h"
 #include "ContainerPropsAutoBind.h"
+#include "NodePropsConn.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1370,6 +1371,7 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
 {
 	CObjectPropSheet wndPropSheet(_T("Object Properties"), GetMainWnd(), 0);
    CNodePropsGeneral wndNodeGeneral;
+	CNodePropsConn wndNodeConn;
    CNetSrvPropsGeneral wndNetSrvGeneral;
 	CIfPropsGeneral wndIfGeneral;
    CObjectPropsGeneral wndObjectGeneral;
@@ -1402,14 +1404,22 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
             wndNodeGeneral.m_strName = pObject->szName;
             wndNodeGeneral.m_strOID = pObject->node.pszSnmpObjectId;
             wndNodeGeneral.m_dwIpAddr = pObject->dwIpAddr;
-            wndNodeGeneral.m_iAgentPort = (int)pObject->node.wAgentPort;
-            wndNodeGeneral.m_strCommunity = pObject->node.pszAuthName;
-            wndNodeGeneral.m_iAuthType = pObject->node.wAuthMethod;
-            wndNodeGeneral.m_strSecret = pObject->node.szSharedSecret;
-            wndNodeGeneral.m_iSNMPVersion = (pObject->node.nSNMPVersion == SNMP_VERSION_1) ? 0 : 1;
-            wndNodeGeneral.m_dwProxyNode = pObject->node.dwProxyNode;
-				wndNodeGeneral.m_dwSNMPProxy = pObject->node.dwSNMPProxy;
             wndPropSheet.AddPage(&wndNodeGeneral);
+
+				// Create "Connectivity" tab
+            wndNodeConn.m_iAgentPort = (int)pObject->node.wAgentPort;
+				wndNodeConn.m_bForceEncryption = (pObject->node.dwFlags & NF_FORCE_ENCRYPTION) ? TRUE : FALSE;
+            wndNodeConn.m_strSnmpAuthName = pObject->node.pszAuthName;
+				wndNodeConn.m_strSnmpAuthPassword = pObject->node.pszAuthPassword;
+				wndNodeConn.m_strSnmpPrivPassword = pObject->node.pszPrivPassword;
+            wndNodeConn.m_iAuthType = pObject->node.wAuthMethod;
+            wndNodeConn.m_strSecret = pObject->node.szSharedSecret;
+            wndNodeConn.m_iSNMPVersion = (int)pObject->node.nSNMPVersion;
+				wndNodeConn.m_iSnmpAuth = (int)pObject->node.wSnmpAuthMethod;
+				wndNodeConn.m_iSnmpPriv = (int)pObject->node.wSnmpPrivMethod;
+            wndNodeConn.m_dwProxyNode = pObject->node.dwProxyNode;
+				wndNodeConn.m_dwSNMPProxy = pObject->node.dwSNMPProxy;
+            wndPropSheet.AddPage(&wndNodeConn);
 
             // Create "Polling" tab
             wndNodePolling.m_dwPollerNode = pObject->node.dwPollerNode;

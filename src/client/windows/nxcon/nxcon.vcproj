@@ -585,6 +585,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\NodePropsConn.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\NodePropsGeneral.cpp"
 				>
 			</File>
@@ -1300,6 +1304,10 @@
 			</File>
 			<File
 				RelativePath=".\NodePoller.h"
+				>
+			</File>
+			<File
+				RelativePath=".\NodePropsConn.h"
 				>
 			</File>
 			<File

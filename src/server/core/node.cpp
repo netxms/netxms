@@ -237,6 +237,7 @@ BOOL Node::CreateFromDB(DWORD dwId)
 	int snmpMethods = DBGetFieldLong(hResult, 0, 21);
 	delete m_snmpSecurity;
 	m_snmpSecurity = new SNMP_SecurityContext(snmpAuthObject, snmpAuthPassword, snmpPrivPassword, snmpMethods & 0xFF, snmpMethods >> 8);
+	m_snmpSecurity->setSecurityModel((m_snmpVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
 
    DBFreeResult(hResult);
 
@@ -2254,7 +2255,10 @@ DWORD Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
    // Change SNMP protocol version
    if (pRequest->IsVariableExist(VID_SNMP_VERSION))
+	{
       m_snmpVersion = pRequest->GetVariableShort(VID_SNMP_VERSION);
+		m_snmpSecurity->setSecurityModel((m_snmpVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
+	}
 
    // Change SNMP authentication data
    if (pRequest->IsVariableExist(VID_SNMP_AUTH_OBJECT))

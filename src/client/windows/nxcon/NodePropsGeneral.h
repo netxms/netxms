@@ -16,8 +16,6 @@ class CNodePropsGeneral : public CPropertyPage
 
 // Construction
 public:
-	DWORD m_dwSNMPProxy;
-	DWORD m_dwProxyNode;
 	DWORD m_dwIpAddr;
 	CNodePropsGeneral();
 	~CNodePropsGeneral();
@@ -25,16 +23,9 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CNodePropsGeneral)
 	enum { IDD = IDD_OBJECT_NODE_GENERAL };
-	CComboBox	m_wndAuthList;
 	DWORD	m_dwObjectId;
 	CString	m_strName;
 	CString	m_strOID;
-	int		m_iAgentPort;
-	CString	m_strSecret;
-	CString	m_strCommunity;
-	int		m_iAuthType;
-	int		m_iSNMPVersion;
-	BOOL	m_bForceEncryption;
 	//}}AFX_DATA
 
 
@@ -53,16 +44,7 @@ protected:
 	//{{AFX_MSG(CNodePropsGeneral)
 	virtual BOOL OnInitDialog();
 	afx_msg void OnChangeEditName();
-	afx_msg void OnChangeEditSecret();
-	afx_msg void OnChangeEditPort();
-	afx_msg void OnChangeEditCommunity();
-	afx_msg void OnSelchangeComboAuth();
-	afx_msg void OnRadioVersion2c();
-	afx_msg void OnRadioVersion1();
 	afx_msg void OnSelectIp();
-	afx_msg void OnSelectProxy();
-	afx_msg void OnButtonGenerate();
-	afx_msg void OnSelectSnmpproxy();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

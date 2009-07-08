@@ -488,6 +488,7 @@ public:
 	void setPrivPassword(const char *password);
 	void setAuthMethod(int method) { m_authMethod = method; }
 	void setPrivMethod(int method) { m_privMethod = method; }
+	void setSecurityModel(int model) { m_securityModel = model; }
 
 	void setAuthoritativeEngine(SNMP_Engine &engine);
 	SNMP_Engine& getAuthoritativeEngine() { return m_authoritativeEngine; }

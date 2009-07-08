@@ -278,6 +278,7 @@
 #define IDI_OBJECT_TEMPLATEGROUP        404
 #define IDI_OBJECT_TEMPLATEROOT         405
 #define IDI_OBJECT_VPNC                 406
+#define IDD_OBJECT_NODE_CONN            407
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -300,7 +301,6 @@
 #define IDC_EDIT_PORT                   1020
 #define IDC_EDIT_OID                    1021
 #define IDC_COMBO_SNMP_VERSION          1022
-#define IDC_SELECT_SNMPPROXY            1022
 #define IDC_EDIT_COMMUNITY              1023
 #define IDC_LIST1                       1024
 #define IDC_LIST_CAPS                   1024
@@ -328,9 +328,13 @@
 #define IDC_LIST_SITUATIONS             1024
 #define IDC_LIST_ATTRIBUTES             1024
 #define IDC_LIST_MAPS                   1024
+#define IDC_EDIT_COMMUNITY2             1024
+#define IDC_EDIT_AUTH_PASSWORD          1024
 #define IDC_INFO_TEXT                   1025
 #define IDC_LIST_CHILDS                 1025
 #define IDC_LIST_REMOTE                 1025
+#define IDC_EDIT_COMMUNITY3             1025
+#define IDC_EDIT_PRIV_PASSWORD          1025
 #define IDC_EDIT_CLASS                  1026
 #define IDC_CHECK_READ                  1027
 #define IDC_CHECK_MODIFY                1028
@@ -477,6 +481,7 @@
 #define IDC_SELECT_EVENT                1195
 #define IDC_BUTTON_UP                   1198
 #define IDC_BUTTON_DOWN                 1199
+#define IDC_SELECT_SNMPPROXY            1200
 #define IDC_STATIC_INSTANCE             1201
 #define IDC_SELECT_OID                  1202
 #define IDC_BUTTON_EDIT                 1203
@@ -717,6 +722,10 @@
 #define IDC_STATUS_TEXT                 1546
 #define IDC_BUTTON_RUN                  1547
 #define IDC_RESULT_TITLE                1548
+#define IDC_COMBO1                      1549
+#define IDC_COMBO_USM_AUTH              1549
+#define IDC_COMBO_USM_PRIV              1551
+#define IDC_STATIC_AUTH_NAME            1553
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -1026,9 +1035,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        407
+#define _APS_NEXT_RESOURCE_VALUE        408
 #define _APS_NEXT_COMMAND_VALUE         33112
-#define _APS_NEXT_CONTROL_VALUE         1549
+#define _APS_NEXT_CONTROL_VALUE         1554
 #define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif
