@@ -25,7 +25,11 @@
 # define SQLITE_PRIVATE static
 #endif
 #ifndef SQLITE_API
-# define SQLITE_API
+#ifdef _WIN32
+#define SQLITE_API __declspec(dllexport)
+#else
+#define SQLITE_API
+#endif
 #endif
 /************** Begin file sqliteInt.h ***************************************/
 /*
