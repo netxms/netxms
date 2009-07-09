@@ -169,18 +169,25 @@ enum
 
 
 //
+// I/O stats
+//
+
+#define IOSTAT_NUM_READS      0
+#define IOSTAT_NUM_WRITES     1
+#define IOSTAT_NUM_SREADS     2
+#define IOSTAT_NUM_SWRITES    3
+#define IOSTAT_IO_TIME        4
+
+
+//
 // Functions
 //
 
 LONG H_DiskInfo(const char *, const char *, char *);
 
-LONG H_TransferRate(const char *, const char *, char *);
-LONG H_BlockReadRate(const char *, const char *, char *);
-LONG H_BlockWriteRate(const char *, const char *, char *);
-LONG H_BytesReadRate(const char *, const char *, char *);
-LONG H_BytesWriteRate(const char *, const char *, char *);
+LONG H_IoStats(const char *, const char *, char *);
 LONG H_DiskQueue(const char *, const char *, char *);
-LONG H_DiskTime(const char *, const char *, char *);
+LONG H_DiskQueueTotal(const char *, const char *, char *);
 
 LONG H_NetIfInfoFromIOCTL(const char *, const char *, char *);
 LONG H_NetIfInfoFromProc(const char *, const char *, char *);
@@ -206,8 +213,11 @@ LONG H_SourcePkgSupport(const char *, const char *, char *);
 LONG H_ConnectedUsers(const char *, const char *, char *);
 LONG H_ActiveUserSessions(const char *, const char *, NETXMS_VALUES_LIST *);
 
-void StartCpuUsageCollector(void);
-void ShutdownCpuUsageCollector(void);
+void StartCpuUsageCollector();
+void ShutdownCpuUsageCollector();
+
+void StartIoStatCollector();
+void ShutdownIoStatCollector();
 
 int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine);
 

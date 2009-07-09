@@ -32,6 +32,7 @@
 static BOOL SubAgentInit(Config *config)
 {
 	StartCpuUsageCollector();
+	StartIoStatCollector();
 	return TRUE;
 }
 
@@ -43,6 +44,7 @@ static BOOL SubAgentInit(Config *config)
 static void SubAgentShutdown(void)
 {
 	ShutdownCpuUsageCollector();
+	ShutdownIoStatCollector();
 }
 
 
@@ -326,21 +328,19 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_INT,		DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
 
 	/* iostat */
-	{ "System.IO.TransferRate(*)",    H_TransferRate,    NULL,
-		DCI_DT_UINT64,	"" },
-	{ "System.IO.BlockReadRate(*)",   H_BlockReadRate, NULL,
-		DCI_DT_UINT64,	"" },
-	{ "System.IO.BlockWriteRate(*)",  H_BlockWriteRate,  NULL,
-		DCI_DT_UINT64,	"" },
-	{ "System.IO.BytesReadRate(*)",   H_BytesReadRate,   NULL,
-		DCI_DT_UINT64,	"" },
-	{ "System.IO.BytesWriteRate(*)",  H_BytesWriteRate,  NULL,
-		DCI_DT_UINT64,	"" },
+	{ "System.IO.ReadRate(*)",        H_IoStats, (const char *)IOSTAT_NUM_READS,
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_IO_READS_EX },
+	{ "System.IO.WriteRate(*)",       H_IoStats, (const char *)IOSTAT_NUM_WRITES,
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_IO_WRITES_EX },
+	{ "System.IO.BytesReadRate(*)",   H_IoStats, (const char *)IOSTAT_NUM_SREADS,
+		DCI_DT_UINT64,	DCIDESC_SYSTEM_IO_BYTEREADS_EX },
+	{ "System.IO.BytesWriteRate(*)",  H_IoStats, (const char *)IOSTAT_NUM_SWRITES,
+		DCI_DT_UINT64,	DCIDESC_SYSTEM_IO_BYTEWRITES_EX },
 	{ "System.IO.DiskQueue(*)",       H_DiskQueue,       NULL,
-		DCI_DT_UINT64,	"" },
-	{ "System.IO.DiskQueue",          H_DiskInfo,        NULL,
-		DCI_DT_UINT64,	"" },
-	{ "System.IO.DiskTime",           H_DiskTime,        NULL,
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_IO_DISKQUEUE_EX },
+	{ "System.IO.DiskQueue",          H_DiskQueueTotal,  NULL,
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_IO_DISKQUEUE },
+	{ "System.IO.DiskTime(*)",        H_IoStats, (const char *)IOSTAT_IO_TIME,
 		DCI_DT_UINT,	"" },
 };
 

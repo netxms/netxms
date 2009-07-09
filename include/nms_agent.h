@@ -275,7 +275,16 @@
 #define DCIDESC_SYSTEM_CPU_USAGE15_STEAL		"Average CPU utilization (steal) for last 15 minutes"
 
 
-#define DCIDESC_SYSTEM_IO_DISKQUEUE		"Average disk queue length for last minute"
+#define DCIDESC_SYSTEM_IO_DISKQUEUE       "Average disk queue length for last minute"
+#define DCIDESC_SYSTEM_IO_DISKQUEUE_EX    "Average disk queue length of device {instance} for last minute"
+#define DCIDESC_SYSTEM_IO_READS           "Average number of read operations for last minute"
+#define DCIDESC_SYSTEM_IO_READS_EX        "Average number of read operations on device {instance} for last minute"
+#define DCIDESC_SYSTEM_IO_WRITES          "Average number of write operations for last minute"
+#define DCIDESC_SYSTEM_IO_WRITES_EX       "Average number of write operations on device {instance} for last minute"
+#define DCIDESC_SYSTEM_IO_BYTEREADS       "Average number of bytes read for last minute"
+#define DCIDESC_SYSTEM_IO_BYTEREADS_EX    "Average number of bytes read on device {instance} for last minute"
+#define DCIDESC_SYSTEM_IO_BYTEWRITES      "Average number of bytes written for last minute"
+#define DCIDESC_SYSTEM_IO_BYTEWRITES_EX   "Average number of bytes written on device {instance} for last minute"
 
 
 //
