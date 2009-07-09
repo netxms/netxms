@@ -469,10 +469,10 @@ public:
 	~SNMP_SecurityContext();
 
 	int getSecurityModel() { return m_securityModel; }
-	const char *getCommunity() { return CHECK_NULL_A(m_authName); }
-	const char *getUser() { return CHECK_NULL_A(m_authName); }
-	const char *getAuthPassword() { return CHECK_NULL_A(m_authPassword); }
-	const char *getPrivPassword() { return CHECK_NULL_A(m_privPassword); }
+	const char *getCommunity() { return CHECK_NULL_EX_A(m_authName); }
+	const char *getUser() { return CHECK_NULL_EX_A(m_authName); }
+	const char *getAuthPassword() { return CHECK_NULL_EX_A(m_authPassword); }
+	const char *getPrivPassword() { return CHECK_NULL_EX_A(m_privPassword); }
 
 	bool needAuthentication() { return m_authMethod != SNMP_AUTH_NONE; }
 	bool needEncryption() { return m_privMethod != SNMP_ENCRYPT_NONE; }

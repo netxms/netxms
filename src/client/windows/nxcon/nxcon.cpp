@@ -1409,9 +1409,9 @@ void CConsoleApp::ObjectProperties(DWORD dwObjectId)
 				// Create "Connectivity" tab
             wndNodeConn.m_iAgentPort = (int)pObject->node.wAgentPort;
 				wndNodeConn.m_bForceEncryption = (pObject->node.dwFlags & NF_FORCE_ENCRYPTION) ? TRUE : FALSE;
-            wndNodeConn.m_strSnmpAuthName = pObject->node.pszAuthName;
-				wndNodeConn.m_strSnmpAuthPassword = pObject->node.pszAuthPassword;
-				wndNodeConn.m_strSnmpPrivPassword = pObject->node.pszPrivPassword;
+            wndNodeConn.m_strSnmpAuthName = CHECK_NULL_EX(pObject->node.pszAuthName);
+				wndNodeConn.m_strSnmpAuthPassword = CHECK_NULL_EX(pObject->node.pszAuthPassword);
+				wndNodeConn.m_strSnmpPrivPassword = CHECK_NULL_EX(pObject->node.pszPrivPassword);
             wndNodeConn.m_iAuthType = pObject->node.wAuthMethod;
             wndNodeConn.m_strSecret = pObject->node.szSharedSecret;
             wndNodeConn.m_iSNMPVersion = (int)pObject->node.nSNMPVersion;

@@ -47,7 +47,7 @@ SNMP_SecurityContext::SNMP_SecurityContext(SNMP_SecurityContext *src)
 	m_authPassword = (src->m_authPassword != NULL) ? strdup(src->m_authPassword) : NULL;
 	m_privPassword = (src->m_privPassword != NULL) ? strdup(src->m_privPassword) : NULL;
 	m_authMethod = src->m_authMethod;
-	m_privMethod = src->m_authMethod;
+	m_privMethod = src->m_privMethod;
 	memcpy(m_authKeyMD5, src->m_authKeyMD5, 16);
 	memcpy(m_authKeySHA1, src->m_authKeySHA1, 20);
 	m_authoritativeEngine = src->m_authoritativeEngine;
@@ -56,7 +56,7 @@ SNMP_SecurityContext::SNMP_SecurityContext(SNMP_SecurityContext *src)
 SNMP_SecurityContext::SNMP_SecurityContext(const char *community)
 {
 	m_securityModel = SNMP_SECURITY_MODEL_V2C;
-	m_authName = strdup(CHECK_NULL_A(community));
+	m_authName = strdup(CHECK_NULL_EX_A(community));
 	m_authPassword = NULL;
 	m_privPassword = NULL;
 	m_authMethod = SNMP_AUTH_NONE;
@@ -68,8 +68,8 @@ SNMP_SecurityContext::SNMP_SecurityContext(const char *community)
 SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPassword, int authMethod)
 {
 	m_securityModel = SNMP_SECURITY_MODEL_USM;
-	m_authName = strdup(CHECK_NULL_A(user));
-	m_authPassword = strdup(CHECK_NULL_A(authPassword));
+	m_authName = strdup(CHECK_NULL_EX_A(user));
+	m_authPassword = strdup(CHECK_NULL_EX_A(authPassword));
 	m_privPassword = NULL;
 	m_authMethod = authMethod;
 	m_privMethod = SNMP_ENCRYPT_NONE;
@@ -80,9 +80,9 @@ SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPas
 														 int authMethod, int encryptionMethod)
 {
 	m_securityModel = SNMP_SECURITY_MODEL_USM;
-	m_authName = strdup(CHECK_NULL_A(user));
-	m_authPassword = strdup(CHECK_NULL_A(authPassword));
-	m_privPassword = strdup(CHECK_NULL_A(encryptionPassword));
+	m_authName = strdup(CHECK_NULL_EX_A(user));
+	m_authPassword = strdup(CHECK_NULL_EX_A(authPassword));
+	m_privPassword = strdup(CHECK_NULL_EX_A(encryptionPassword));
 	m_authMethod = authMethod;
 	m_privMethod = encryptionMethod;
 	recalculateKeys();
@@ -108,7 +108,7 @@ SNMP_SecurityContext::~SNMP_SecurityContext()
 void SNMP_SecurityContext::setAuthName(const char *name)
 {
 	safe_free(m_authName);
-	m_authName = strdup(CHECK_NULL_A(name));
+	m_authName = strdup(CHECK_NULL_EX_A(name));
 }
 
 
@@ -119,7 +119,7 @@ void SNMP_SecurityContext::setAuthName(const char *name)
 void SNMP_SecurityContext::setAuthPassword(const char *password)
 {
 	safe_free(m_authPassword);
-	m_authPassword = strdup(CHECK_NULL_A(password));
+	m_authPassword = strdup(CHECK_NULL_EX_A(password));
 	recalculateKeys();
 }
 
@@ -131,7 +131,7 @@ void SNMP_SecurityContext::setAuthPassword(const char *password)
 void SNMP_SecurityContext::setPrivPassword(const char *password)
 {
 	safe_free(m_privPassword);
-	m_privPassword = strdup(CHECK_NULL_A(password));
+	m_privPassword = strdup(CHECK_NULL_EX_A(password));
 	recalculateKeys();
 }
 
