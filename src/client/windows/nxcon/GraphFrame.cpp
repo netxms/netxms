@@ -158,8 +158,6 @@ int CGraphFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
    m_wndStatusBar.m_dwMaxValue = m_dwRefreshInterval;
    m_wndStatusBar.SetText(m_wndGraph.m_bAutoScale ? _T("Autoscale") : _T(""), 0, 0);
    m_wndStatusBar.SetText(m_dwFlags & GF_AUTOUPDATE ? _T("Autoupdate") : _T(""), 1, 0);
-//   m_wndStatusBar.SetText((m_dwFlags & GF_AUTOUPDATE) ? (LPCTSTR)m_dwSeconds : _T(""), 1,
-//                          (m_dwFlags & GF_AUTOUPDATE) ? SBT_OWNERDRAW : 0);
 
 	return 0;
 }
@@ -328,8 +326,6 @@ void CGraphFrame::OnTimer(UINT nIDEvent)
       PostMessage(WM_COMMAND, ID_VIEW_REFRESH, 0);
       m_dwSeconds = 0;
    }
-//   m_wndStatusBar.SetText((m_dwFlags & GF_AUTOUPDATE) ? (LPCTSTR)m_dwSeconds : _T(""), 1,
-//                          (m_dwFlags & GF_AUTOUPDATE) ? SBT_OWNERDRAW : 0);
 }
 
 
@@ -346,14 +342,15 @@ void CGraphFrame::GetConfiguration(TCHAR *config)
               _T("F:%d\x7FN:%d\x7FTS:%d\x7FTF:%d\x7F") _T("A:%d\x7F")
               _T("TFT:%d\x7FTU:%d\x7FNTU:%d\x7FS:%d\x7F")
               _T("CA:%u\x7F") _T("CB:%u\x7F") _T("CG:%u\x7F") _T("CS:%u\x7F")
-              _T("CT:%u\x7F") _T("CR:%u\x7FR:%d\x7FG:%d\x7FL:%d"),
+              _T("CT:%u\x7F") _T("CR:%u\x7FR:%d\x7FG:%d\x7FL:%d\x7FH:%d"),
               m_dwFlags, m_dwNumItems, m_dwTimeFrom, m_dwTimeTo, m_dwRefreshInterval,
               m_iTimeFrameType, m_iTimeUnit, m_dwNumTimeUnits,
               m_wndGraph.m_bAutoScale, m_wndGraph.m_rgbAxisColor, 
               m_wndGraph.m_rgbBkColor, m_wndGraph.m_rgbGridColor,
               m_wndGraph.m_rgbSelRectColor, m_wndGraph.m_rgbTextColor,
 				  m_wndGraph.m_rgbRulerColor, m_wndGraph.m_bShowRuler,
-              m_wndGraph.m_bShowGrid, m_wndGraph.m_bShowLegend);
+              m_wndGraph.m_bShowGrid, m_wndGraph.m_bShowLegend,
+				  m_wndGraph.m_bShowHostNames);
 
    for(i = 0; i < MAX_GRAPH_ITEMS; i++)
    {
@@ -414,6 +411,7 @@ void CGraphFrame::RestoreFromServer(TCHAR *pszParams)
    m_wndGraph.m_bShowGrid = (BOOL)ExtractWindowParamLong(pszParams, _T("G"), TRUE);
    m_wndGraph.m_bShowLegend = (BOOL)ExtractWindowParamLong(pszParams, _T("L"), TRUE);
    m_wndGraph.m_bShowRuler = (BOOL)ExtractWindowParamLong(pszParams, _T("R"), TRUE);
+	m_wndGraph.m_bShowHostNames = (BOOL)ExtractWindowParamLong(pszParams, _T("H"), FALSE);
    m_wndGraph.m_rgbAxisColor = ExtractWindowParamULong(pszParams, _T("CA"), m_wndGraph.m_rgbAxisColor);
    m_wndGraph.m_rgbBkColor = ExtractWindowParamULong(pszParams, _T("CB"), m_wndGraph.m_rgbBkColor);
    m_wndGraph.m_rgbGridColor = ExtractWindowParamULong(pszParams, _T("CG"), m_wndGraph.m_rgbGridColor);
