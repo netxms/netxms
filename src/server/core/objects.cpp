@@ -64,7 +64,8 @@ const char *g_szClassName[]={ "Generic", "Subnet", "Node", "Interface",
                               "Network", "Container", "Zone", "ServiceRoot",
                               "Template", "TemplateGroup", "TemplateRoot",
                               "NetworkService", "VPNConnector", "Condition",
-                              "Cluster" };
+                              "Cluster", "PolicyGroup", "PolicyRoot",
+                              "AgentPolicy", "AgentPolicyConfig" };
 
 
 //
