@@ -186,6 +186,7 @@ enum
 LONG H_DiskInfo(const char *, const char *, char *);
 
 LONG H_IoStats(const char *, const char *, char *);
+LONG H_IoStatsTotal(const char *, const char *, char *);
 LONG H_DiskQueue(const char *, const char *, char *);
 LONG H_DiskQueueTotal(const char *, const char *, char *);
 

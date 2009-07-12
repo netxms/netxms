@@ -277,6 +277,8 @@
 
 #define DCIDESC_SYSTEM_IO_DISKQUEUE       "Average disk queue length for last minute"
 #define DCIDESC_SYSTEM_IO_DISKQUEUE_EX    "Average disk queue length of device {instance} for last minute"
+#define DCIDESC_SYSTEM_IO_DISKTIME        "Percent of CPU time spent on I/O for last minute"
+#define DCIDESC_SYSTEM_IO_DISKTIME_EX     "Percent of CPU time spent on I/O on device {instance} for last minute"
 #define DCIDESC_SYSTEM_IO_READS           "Average number of read operations for last minute"
 #define DCIDESC_SYSTEM_IO_READS_EX        "Average number of read operations on device {instance} for last minute"
 #define DCIDESC_SYSTEM_IO_WRITES          "Average number of write operations for last minute"

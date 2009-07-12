@@ -42,6 +42,7 @@ struct IOSTAT_SAMPLE
 struct IOSTAT_DEVICE
 {
 	char name[64];
+	bool isRealDevice;
 	IOSTAT_SAMPLE samples[SAMPLES_PER_MINUTE];
 };
 
@@ -57,6 +58,24 @@ static IOSTAT_DEVICE *m_devices = NULL;
 static int m_deviceCount = 0;
 static int m_currSample = 0;
 static MUTEX m_dataAccess;
+static bool m_isSysFsAvailable = false;
+
+
+//
+// Check if given disk is a device, not partition
+//
+
+static bool IsRealDevice(const char *name)
+{
+	if (!m_isSysFsAvailable)
+		return false;	// Unable to check
+
+	// Check using /sys/block
+	char path[MAX_PATH];
+
+	snprintf(path, MAX_PATH, "/sys/block/%s", name);
+	return access(path, 0) == 0;
+}
 
 
 //
@@ -89,7 +108,9 @@ static void ParseIoStat(char *line)
 		m_deviceCount++;
 		m_devices = (IOSTAT_DEVICE *)realloc(m_devices, m_deviceCount * sizeof(IOSTAT_DEVICE));
 		strcpy(m_devices[dev].name, devName);
+		m_devices[dev].isRealDevice = IsRealDevice(devName);
 		memset(m_devices[dev].samples, 0, sizeof(IOSTAT_SAMPLE) * SAMPLES_PER_MINUTE);
+		NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, "ParseIoStat(): new device added (name=%s isRealDevice=%d)", devName, m_devices[dev].isRealDevice);
 	}
 
 	// Parse counters
@@ -163,6 +184,17 @@ static THREAD_RESULT THREAD_CALL IoCollectionThread(void *arg)
 
 void StartIoStatCollector()
 {
+	// Check if /sys/block is available
+	struct stat st;	
+	if (stat("/sys/block", &st) == 0)
+	{
+		if (S_ISDIR(st.st_mode))
+		{
+			m_isSysFsAvailable = true;
+			NxWriteAgentLog(EVENTLOG_DEBUG_TYPE, "Linux: using /sys/block to distinguish devices from partitions");
+		}
+	}	
+
 	m_condStop = ConditionCreate(TRUE);
 	m_dataAccess = MutexCreate();
 	m_collectorThread = ThreadCreateEx(IoCollectionThread, 0, NULL);
@@ -188,10 +220,12 @@ void ShutdownIoStatCollector()
 
 static IOSTAT_SAMPLE *GetSamples(const char *param)
 {
-	char devName[64];
+	char *devName, buffer[64];
 
-	if (!NxGetParameterArg(param, 1, devName, 64))
+	if (!NxGetParameterArg(param, 1, buffer, 64))
 		return NULL;
+
+	devName = !strncmp(buffer, "/dev/", 5) ? &buffer[5] : buffer;
 
 	for(int i = 0; i < m_deviceCount; i++)
 		if (!strcmp(devName, m_devices[i].name))
@@ -252,6 +286,50 @@ LONG H_IoStats(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
+LONG H_IoStatsTotal(const char *pszParam, const char *pArg, char *pValue)
+{
+	int metric = CAST_FROM_POINTER(pArg, int);
+
+	MutexLock(m_dataAccess, INFINITE);
+
+	double dsum = 0;
+	QWORD qsum = 0;
+	for(int i = 0; i < m_deviceCount; i++)
+	{
+		if (m_devices[i].isRealDevice)
+		{
+			DWORD delta = GetSampleDelta(m_devices[i].samples, metric);
+			switch(metric)
+			{
+				case IOSTAT_NUM_SREADS:
+				case IOSTAT_NUM_SWRITES:
+					delta *= 512;	// Convert sectors to bytes
+					qsum += (QWORD)(delta / 60);
+					break;
+				case IOSTAT_IO_TIME:   // Milliseconds spent on I/O - convert to %
+					dsum += (double)delta / 600;	// = / 60000 * 100
+					break;
+				default:
+					dsum += (double)delta / 60;
+					break;
+			}
+		}
+	}
+
+	MutexUnlock(m_dataAccess);
+
+	if ((metric == IOSTAT_NUM_SREADS) || (metric == IOSTAT_NUM_SWRITES))
+	{
+		ret_uint64(pValue, qsum);
+	}
+	else
+	{
+		ret_double(pValue, dsum);
+	}
+
+	return SYSINFO_RC_SUCCESS;
+}
+
 LONG H_DiskQueue(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_UNSUPPORTED;
@@ -280,8 +358,11 @@ LONG H_DiskQueueTotal(const char *pszParam, const char *pArg, char *pValue)
 	DWORD sum = 0;
 	for(int i = 0; i < m_deviceCount; i++)
 	{
-		for(int j = 0; j < SAMPLES_PER_MINUTE; j++)
-			sum += m_devices[i].samples[j].ioRequests;
+		if (m_devices[i].isRealDevice)
+		{
+			for(int j = 0; j < SAMPLES_PER_MINUTE; j++)
+				sum += m_devices[i].samples[j].ioRequests;
+		}
 	}
 	MutexUnlock(m_dataAccess);	
 

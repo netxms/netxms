@@ -328,20 +328,30 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_INT,		DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
 
 	/* iostat */
+	{ "System.IO.ReadRate",           H_IoStatsTotal, (const char *)IOSTAT_NUM_READS,
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_IO_READS },
 	{ "System.IO.ReadRate(*)",        H_IoStats, (const char *)IOSTAT_NUM_READS,
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_IO_READS_EX },
+	{ "System.IO.WriteRate",          H_IoStatsTotal, (const char *)IOSTAT_NUM_WRITES,
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_IO_WRITES },
 	{ "System.IO.WriteRate(*)",       H_IoStats, (const char *)IOSTAT_NUM_WRITES,
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_IO_WRITES_EX },
+	{ "System.IO.BytesReadRate",      H_IoStatsTotal, (const char *)IOSTAT_NUM_SREADS,
+		DCI_DT_UINT64,	DCIDESC_SYSTEM_IO_BYTEREADS },
 	{ "System.IO.BytesReadRate(*)",   H_IoStats, (const char *)IOSTAT_NUM_SREADS,
 		DCI_DT_UINT64,	DCIDESC_SYSTEM_IO_BYTEREADS_EX },
+	{ "System.IO.BytesWriteRate",     H_IoStatsTotal, (const char *)IOSTAT_NUM_SWRITES,
+		DCI_DT_UINT64,	DCIDESC_SYSTEM_IO_BYTEWRITES },
 	{ "System.IO.BytesWriteRate(*)",  H_IoStats, (const char *)IOSTAT_NUM_SWRITES,
 		DCI_DT_UINT64,	DCIDESC_SYSTEM_IO_BYTEWRITES_EX },
 	{ "System.IO.DiskQueue(*)",       H_DiskQueue,       NULL,
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_IO_DISKQUEUE_EX },
 	{ "System.IO.DiskQueue",          H_DiskQueueTotal,  NULL,
 		DCI_DT_FLOAT,	DCIDESC_SYSTEM_IO_DISKQUEUE },
+	{ "System.IO.DiskTime",           H_IoStatsTotal, (const char *)IOSTAT_IO_TIME,
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_IO_DISKTIME },
 	{ "System.IO.DiskTime(*)",        H_IoStats, (const char *)IOSTAT_IO_TIME,
-		DCI_DT_UINT,	"" },
+		DCI_DT_FLOAT,	DCIDESC_SYSTEM_IO_DISKTIME_EX },
 };
 
 static NETXMS_SUBAGENT_ENUM m_enums[] =
