@@ -89,7 +89,7 @@ static void GetNDDInfo(char *pszDevice, BYTE *pMacAddr, DWORD *pdwType)
 // Handler for Net.InterfaceList enum
 //
 
-LONG H_NetIfList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_NetIfList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	LONG nRet;
 	struct ifconf ifc;

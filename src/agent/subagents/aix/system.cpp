@@ -32,7 +32,7 @@
 // Hander for System.CPU.Count parameter
 //
 
-LONG H_CPUCount(char *pszParam, char *pArg, char *pValue)
+LONG H_CPUCount(const char *pszParam, const char *pArg, char *pValue)
 {
 	struct vario v;
 	LONG nRet;
@@ -54,7 +54,7 @@ LONG H_CPUCount(char *pszParam, char *pArg, char *pValue)
 // Handler for System.Uname parameter
 //
 
-LONG H_Uname(char *pszParam, char *pArg, char *pValue)
+LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
 {
 	LONG nRet;
 	struct utsname un;
@@ -77,7 +77,7 @@ LONG H_Uname(char *pszParam, char *pArg, char *pValue)
 // Handler for System.Uptime parameter
 //
 
-LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
+LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
 	int fd;
@@ -107,7 +107,7 @@ LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 // Handler for System.Hostname parameter
 //
 
-LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
+LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue)
 {
 	LONG nRet;
 	struct utsname un;
@@ -129,7 +129,7 @@ LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
 // Handler for System.Memory.Physical.xxx parameters
 //
 
-LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
+LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 {
 	struct vminfo vmi;
 	LONG nRet;
@@ -176,7 +176,7 @@ static BOOL kread(int kmem, off_t offset, void *buffer, size_t buflen)
 // Handler for System.LoadAvg parameters
 //
 
-LONG H_LoadAvg(char *param, char *arg, char *value)
+LONG H_LoadAvg(const char *param, const char *arg, char *value)
 {
 	int kmem;
 	LONG rc = SYSINFO_RC_ERROR;

@@ -1,7 +1,7 @@
 /* $Id$ */
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2004-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -91,7 +91,7 @@ retry_getprocs:
 // Handler for System.ProcessList enum
 //
 
-LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
+LONG H_ProcessList(const char *pszParam, const char *pArg, NETXMS_VALUES_LIST *pValue)
 {
 	LONG nRet;
 	PROCENTRY *pList;
@@ -122,7 +122,7 @@ LONG H_ProcessList(char *pszParam, char *pArg, NETXMS_VALUES_LIST *pValue)
 // Handler for System.ProcessCount parameter
 //
 
-LONG H_SysProcessCount(char *pszParam, char *pArg, char *pValue)
+LONG H_SysProcessCount(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nprocs;
 	pid_t index = 0;
@@ -140,7 +140,7 @@ LONG H_SysProcessCount(char *pszParam, char *pArg, char *pValue)
 // Handler for System.ThreadCount parameter
 //
 
-LONG H_SysThreadCount(char *pszParam, char *pArg, char *pValue)
+LONG H_SysThreadCount(const char *pszParam, const char *pArg, char *pValue)
 {
 	LONG nRet;
 	PROCENTRY *pList;
@@ -170,7 +170,7 @@ LONG H_SysThreadCount(char *pszParam, char *pArg, char *pValue)
 // Handler for Process.Count(*) parameter
 //
 
-LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
+LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
 {
 	LONG nRet;
 	PROCENTRY *pList;
@@ -205,7 +205,7 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 // Handler for Process.xxx(*) parameters
 //
 
-LONG H_ProcessInfo(char *pszParam, char *pArg, char *pValue)
+LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szBuffer[256] = "";
