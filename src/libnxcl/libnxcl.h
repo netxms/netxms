@@ -126,6 +126,7 @@ private:
    TCHAR m_szLastLock[MAX_LOCKINFO_LEN];
    void *m_pClientData;       // Client-defined data
 	TCHAR m_szServerTimeZone[MAX_TZ_LEN];
+	MUTEX m_mutexSendMsg;
 
    DWORD m_dwUserId;          // Id of logged-in user
    DWORD m_dwSystemAccess;    // System access rights for current user

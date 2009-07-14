@@ -51,6 +51,7 @@ NXCL_Session::NXCL_Session()
    m_szLastLock[0] = 0;
    m_pClientData = NULL;
 	m_szServerTimeZone[0] = 0;
+	m_mutexSendMsg = MutexCreate();
 
    m_ppEventTemplates = NULL;
    m_dwNumTemplates = 0;
@@ -123,6 +124,8 @@ NXCL_Session::~NXCL_Session()
       pthread_cond_destroy(&m_condSyncOp[i]);
 #endif
    }
+
+	MutexDestroy(m_mutexSendMsg);
 
    DestroyEncryptionContext(m_pCtx);
 }
@@ -260,6 +263,7 @@ BOOL NXCL_Session::SendMsg(CSCPMessage *pMsg)
 
    DebugPrintf(_T("SendMsg(\"%s\", id:%d)"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
    pRawMsg = pMsg->CreateMessage();
+	MutexLock(m_mutexSendMsg, INFINITE);
    if (m_pCtx != NULL)
    {
       pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
@@ -277,6 +281,7 @@ BOOL NXCL_Session::SendMsg(CSCPMessage *pMsg)
    {
       bResult = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0) == (int)ntohl(pRawMsg->dwSize));
    }
+	MutexUnlock(m_mutexSendMsg);
    free(pRawMsg);
    return bResult;
 }
