@@ -287,7 +287,11 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
 	if (m_pExInfoFile != NULL)
 	{
 		_ftprintf(m_pExInfoFile, _T("%s CRASH DUMP\n%s\n"), szProcNameUppercase, ctime(&t));
+#ifdef _M_IX86
 		_ftprintf(m_pExInfoFile, _T("EXCEPTION: %08X (%s) at %08X\n"),
+#else
+		_ftprintf(m_pExInfoFile, _T("EXCEPTION: %08X (%s) at %016I64X\n"),
+#endif
 		          pInfo->ExceptionRecord->ExceptionCode,
 		          SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
 		          pInfo->ExceptionRecord->ExceptionAddress);
@@ -374,7 +378,11 @@ BOOL LIBNETXMS_EXPORTABLE SEHServiceExceptionHandler(EXCEPTION_POINTERS *pInfo)
 	if (m_bPrintToScreen)
 	{
 		_tprintf(_T("\n\n*************************************************************\n")
+#ifdef _M_IX86
 		         _T("EXCEPTION: %08X (%s) at %08X\nPROCESS TERMINATED"),
+#else
+		         _T("EXCEPTION: %08X (%s) at %016I64X\nPROCESS TERMINATED"),
+#endif
                pInfo->ExceptionRecord->ExceptionCode,
                SEHExceptionName(pInfo->ExceptionRecord->ExceptionCode),
                pInfo->ExceptionRecord->ExceptionAddress);

@@ -153,7 +153,7 @@ int ConfigEntry::getConcatenatedValuesLength()
 		return 0;
 
 	for(i = 0, len = 0; i < m_valueCount; i++)
-		len += _tcslen(m_values[i]);
+		len += (int)_tcslen(m_values[i]);
 	return len + (m_valueCount - 1);
 }
 
@@ -234,7 +234,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 	name[0] = _T('/');
 	nx_strncpy(&name[1], section, MAX_PATH - 2);
 	_tcscat(name, _T("/"));
-	pos = _tcslen(name);
+	pos = (int)_tcslen(name);
 	
 	for(i = 0; cfgTemplate[i].iType != CT_END_OF_LIST; i++)
 	{
