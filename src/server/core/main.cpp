@@ -195,16 +195,6 @@ static BOOL CheckDataDir(void)
 			return FALSE;
 		}
 
-	// Create directory for image files if it doesn't exist
-	strcpy(szBuffer, g_szDataDir);
-	strcat(szBuffer, DDIR_IMAGES);
-	if (MKDIR(szBuffer) == -1)
-		if (errno != EEXIST)
-		{
-			nxlog_write(MSG_ERROR_CREATING_DATA_DIR, EVENTLOG_ERROR_TYPE, "s", szBuffer);
-			return FALSE;
-		}
-
 	// Create directory for package files if it doesn't exist
 	strcpy(szBuffer, g_szDataDir);
 	strcat(szBuffer, DDIR_PACKAGES);

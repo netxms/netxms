@@ -29,7 +29,7 @@
 
 static BOOL TrapHandler(SNMP_PDU *pdu, Node *pNode)
 {
-	if (_tcscmp(pdu->GetTrapId()->GetValueAsText(), _T(".1.3.6.1.4.1.??????")))
+	if (_tcscmp(pdu->getTrapId()->GetValueAsText(), _T(".1.3.6.1.4.1.??????")))
 		return FALSE;
 
 	return TRUE;

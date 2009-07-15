@@ -60,7 +60,6 @@
 # define DEFAULT_DUMP_DIR      "C:\\"
 
 # define DDIR_MIBS             "\\mibs"
-# define DDIR_IMAGES           "\\images"
 # define DDIR_PACKAGES         "\\packages"
 # define DDIR_BACKGROUNDS      "\\backgrounds"
 # define DDIR_SHARED_FILES     "\\shared"
@@ -82,7 +81,6 @@
 # define DEFAULT_DUMP_DIR      "/"
 
 # define DDIR_MIBS             "/mibs"
-# define DDIR_IMAGES           "/images"
 # define DDIR_PACKAGES         "/packages"
 # define DDIR_BACKGROUNDS      "/backgrounds"
 # define DDIR_SHARED_FILES     "/shared"
