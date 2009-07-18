@@ -46,7 +46,7 @@ public class LoginDialog extends Dialog
 	protected LoginDialog(Shell parentShell)
 	{
 		super(parentShell);
-		loginImage = Activator.getImageDescriptor("icons/login.png");
+		loginImage = Activator.getImageDescriptor(Messages.getString("LoginDialog.image_name")); //$NON-NLS-1$
 	}
 
 	
@@ -54,7 +54,7 @@ public class LoginDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
       super.configureShell(newShell);
-      newShell.setText("NetXMS Console - Connect to Server");
+      newShell.setText(Messages.getString("LoginDialog.title")); //$NON-NLS-1$
       
       // Center dialog on screen
       // We don't have main window at this moment, so use
@@ -98,19 +98,19 @@ public class LoginDialog extends Dialog
       
       // Connection
       Group groupConn = new Group(fields, SWT.SHADOW_ETCHED_IN);
-      groupConn.setText("Connection");
+      groupConn.setText(Messages.getString("LoginDialog.connection")); //$NON-NLS-1$
       GridLayout gridLayout = new GridLayout(2, false);
       gridLayout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
       gridLayout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
       groupConn.setLayout(gridLayout);
 
       label = new Label(groupConn, SWT.NONE);
-      label.setText("Server:");
+      label.setText(Messages.getString("LoginDialog.server")); //$NON-NLS-1$
       comboServer = new Combo(groupConn, SWT.DROP_DOWN);
-      String[] items = settings.getArray("Connect.ServerHistory");
+      String[] items = settings.getArray("Connect.ServerHistory"); //$NON-NLS-1$
       if (items != null)
       	comboServer.setItems(items);
-      String text = settings.get("Connect.Server");
+      String text = settings.get("Connect.Server"); //$NON-NLS-1$
       if (text != null)
       	comboServer.setText(text);
       GridData gridData = new GridData();
@@ -119,9 +119,9 @@ public class LoginDialog extends Dialog
       comboServer.setLayoutData(gridData);
       
       label = new Label(groupConn, SWT.NONE);
-      label.setText("Login:");
+      label.setText(Messages.getString("LoginDialog.login")); //$NON-NLS-1$
       textLogin = new Text(groupConn, SWT.SINGLE | SWT.BORDER);
-      text = settings.get("Connect.Login");
+      text = settings.get("Connect.Login"); //$NON-NLS-1$
       if (text != null)
       	textLogin.setText(text);
       gridData = new GridData();
@@ -130,7 +130,7 @@ public class LoginDialog extends Dialog
       textLogin.setLayoutData(gridData);
       
       label = new Label(groupConn, SWT.NONE);
-      label.setText("Password:");
+      label.setText(Messages.getString("LoginDialog.password")); //$NON-NLS-1$
       textPassword = new Text(groupConn, SWT.SINGLE | SWT.PASSWORD | SWT.BORDER);
       gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
@@ -139,7 +139,7 @@ public class LoginDialog extends Dialog
       
       // Options
       Group groupOpts = new Group(fields, SWT.SHADOW_ETCHED_IN);
-      groupOpts.setText("Options");
+      groupOpts.setText(Messages.getString("LoginDialog.options")); //$NON-NLS-1$
       rowLayout = new RowLayout();
       rowLayout.type = SWT.VERTICAL;
       //rowLayout.justify = true;
@@ -147,20 +147,20 @@ public class LoginDialog extends Dialog
       groupOpts.setLayout(rowLayout);
 
       checkBoxEncrypt = new Button(groupOpts, SWT.CHECK);
-      checkBoxEncrypt.setText("&Encrypt connection");
-      checkBoxEncrypt.setSelection(settings.getBoolean("Connect.Encrypt"));
+      checkBoxEncrypt.setText(Messages.getString("LoginDialog.opt_encrypt")); //$NON-NLS-1$
+      checkBoxEncrypt.setSelection(settings.getBoolean("Connect.Encrypt")); //$NON-NLS-1$
       
       checkBoxClearCache = new Button(groupOpts, SWT.CHECK);
-      checkBoxClearCache.setText("&Clear session cache before connect");
-      checkBoxClearCache.setSelection(settings.getBoolean("Connect.ClearCache"));
+      checkBoxClearCache.setText(Messages.getString("LoginDialog.opt_clear_cache")); //$NON-NLS-1$
+      checkBoxClearCache.setSelection(settings.getBoolean("Connect.ClearCache")); //$NON-NLS-1$
       
       checkBoxDontCache = new Button(groupOpts, SWT.CHECK);
-      checkBoxDontCache.setText("&Don't cache this session");
-      checkBoxDontCache.setSelection(settings.getBoolean("Connect.DontCache"));
+      checkBoxDontCache.setText(Messages.getString("LoginDialog.opt_dont_cache")); //$NON-NLS-1$
+      checkBoxDontCache.setSelection(settings.getBoolean("Connect.DontCache")); //$NON-NLS-1$
       
       checkBoxMatchVersion = new Button(groupOpts, SWT.CHECK);
-      checkBoxMatchVersion.setText("&Server version should match client version");
-      checkBoxMatchVersion.setSelection(settings.getBoolean("Connect.MatchVersion"));
+      checkBoxMatchVersion.setText(Messages.getString("LoginDialog.opt_version_match")); //$NON-NLS-1$
+      checkBoxMatchVersion.setSelection(settings.getBoolean("Connect.MatchVersion")); //$NON-NLS-1$
 
       FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
@@ -183,13 +183,13 @@ public class LoginDialog extends Dialog
 	{
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
    
-      settings.put("Connect.Server", comboServer.getText());
-      settings.put("Connect.ServerHistory", comboServer.getItems());
-      settings.put("Connect.Login", textLogin.getText());
-      settings.put("Connect.Encrypt", checkBoxEncrypt.getSelection());
-      settings.put("Connect.DontCache", checkBoxDontCache.getSelection());
-      settings.put("Connect.ClearCache", checkBoxClearCache.getSelection());
-      settings.put("Connect.MatchVersion", checkBoxMatchVersion.getSelection());
+      settings.put("Connect.Server", comboServer.getText()); //$NON-NLS-1$
+      settings.put("Connect.ServerHistory", comboServer.getItems()); //$NON-NLS-1$
+      settings.put("Connect.Login", textLogin.getText()); //$NON-NLS-1$
+      settings.put("Connect.Encrypt", checkBoxEncrypt.getSelection()); //$NON-NLS-1$
+      settings.put("Connect.DontCache", checkBoxDontCache.getSelection()); //$NON-NLS-1$
+      settings.put("Connect.ClearCache", checkBoxClearCache.getSelection()); //$NON-NLS-1$
+      settings.put("Connect.MatchVersion", checkBoxMatchVersion.getSelection()); //$NON-NLS-1$
       
       password = textPassword.getText();
   

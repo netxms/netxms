@@ -15,8 +15,8 @@ import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 
 public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 {
-	private static final String PERSPECTIVE_PROPERTY_NAME = "org.netxms.ui.DefaultPerspective";
-	private static final String DEFAULT_PERSPECTIVE_NAME = "org.netxms.ui.eclipse.console.DefaultPerspective";
+	private static final String PERSPECTIVE_PROPERTY_NAME = "org.netxms.ui.DefaultPerspective"; //$NON-NLS-1$
+	private static final String DEFAULT_PERSPECTIVE_NAME = "org.netxms.ui.eclipse.console.DefaultPerspective"; //$NON-NLS-1$
 
 	public NXMCWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer)
 	{
@@ -79,28 +79,28 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 
 			try
 			{
-				LoginJob job = new LoginJob(settings.get("Connect.Server"), settings.get("Connect.Login"), dialog
+				LoginJob job = new LoginJob(settings.get("Connect.Server"), settings.get("Connect.Login"), dialog //$NON-NLS-1$ //$NON-NLS-2$
 						.getPassword());
 				new ProgressMonitorDialog(shell).run(true, true, job);
 				success = true;
 			}
 			catch(InvocationTargetException e)
 			{
-				MessageDialog.openError(shell, "Exception", e.toString() + " cause: " + e.getCause().toString());
+				MessageDialog.openError(shell, Messages.getString("NXMCWorkbenchWindowAdvisor.exception"), e.toString() + Messages.getString("NXMCWorkbenchWindowAdvisor.cause") + e.getCause().toString()); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			catch(InterruptedException e)
 			{
-				MessageDialog.openError(shell, "Exception", e.toString());
+				MessageDialog.openError(shell, Messages.getString("NXMCWorkbenchWindowAdvisor.exception"), e.toString()); //$NON-NLS-1$
 			}
 			catch(Exception e)
 			{
-				MessageDialog.openError(shell, "Exception", e.toString());
+				MessageDialog.openError(shell, Messages.getString("NXMCWorkbenchWindowAdvisor.exception"), e.toString()); //$NON-NLS-1$
 			}
 		} while(!success);
 
 		if (success)
 		{
-			Activator.getDefault().getStatusItemConnection().setText("Connected");
+			Activator.getDefault().getStatusItemConnection().setText(Messages.getString("NXMCWorkbenchWindowAdvisor.connected")); //$NON-NLS-1$
 			try
 			{
 				IWorkbenchWindow window = getWindowConfigurer().getWindow();

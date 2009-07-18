@@ -31,7 +31,7 @@ public class LoginJob implements IRunnableWithProgress
 	@Override
 	public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
 	{
-		monitor.beginTask("Connecting...", 100);
+		monitor.beginTask(Messages.getString("LoginJob.connecting"), 100); //$NON-NLS-1$
 		try
 		{
 			NXCSession session = new NXCSession(server, loginName, password);
@@ -40,15 +40,15 @@ public class LoginJob implements IRunnableWithProgress
 			session.connect();
 			monitor.worked(40);
 			
-			monitor.setTaskName("Synchronizing objects...");
+			monitor.setTaskName(Messages.getString("LoginJob.sync_objects")); //$NON-NLS-1$
 			session.syncObjects();
 			monitor.worked(25);
 			
-			monitor.setTaskName("Synchronizing user database...");
+			monitor.setTaskName(Messages.getString("LoginJob.sync_users")); //$NON-NLS-1$
 			session.syncUserDatabase();
 			monitor.worked(5);
 			
-			monitor.setTaskName("Subscribing to notifications...");
+			monitor.setTaskName(Messages.getString("LoginJob.subscribe")); //$NON-NLS-1$
 			session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS);
 			monitor.worked(5);
 			

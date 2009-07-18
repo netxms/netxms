@@ -301,6 +301,12 @@ src/java/netxms-eclipse/JobMonitor/plugin.xml -text
 src/java/netxms-eclipse/JobMonitor/src/org/netxms/ui/eclipse/jobmonitor/Activator.java -text
 src/java/netxms-eclipse/JobMonitor/src/org/netxms/ui/eclipse/jobmonitor/JobMonitor.java -text
 src/java/netxms-eclipse/JobMonitor/src/org/netxms/ui/eclipse/jobmonitor/actions/OpenJobMonitor.java -text
+src/java/netxms-eclipse/LanguagePacks/ru/console/.settings/org.eclipse.jdt.core.prefs -text
+src/java/netxms-eclipse/LanguagePacks/ru/console/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/LanguagePacks/ru/console/build.properties -text
+src/java/netxms-eclipse/LanguagePacks/ru/console/icons/login_ru.png -text
+src/java/netxms-eclipse/LanguagePacks/ru/console/src/org/netxms/ui/eclipse/console/messages_ru.properties -text
+src/java/netxms-eclipse/LanguagePacks/ru/console/src/org/netxms/ui/eclipse/console/messages_ru.source -text
 src/java/netxms-eclipse/ObjectBrowser/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/ObjectBrowser/build.properties -text
 src/java/netxms-eclipse/ObjectBrowser/icons/cluster.png -text
@@ -457,6 +463,7 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/ICommandIds.java 
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/LoginDialog.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/LoginJob.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/MemoryMonitor.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/Messages.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/NXMCActionBarAdvisor.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/NXMCApplication.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/NXMCWorkbenchAdvisor.java -text
@@ -465,6 +472,7 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/ObjectTabOverview
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/actions/OpenView.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/extensionproviders/IObjectTabProvider.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/extensionproviders/ObjectTab.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/messages.properties -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/perspectives/DefaultPerspective.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/perspectives/EmptyPerspective.java -text
 src/java/netxms-eclipse/library/META-INF/MANIFEST.MF -text
