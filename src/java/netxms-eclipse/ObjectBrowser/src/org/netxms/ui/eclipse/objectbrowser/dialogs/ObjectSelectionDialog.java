@@ -59,11 +59,11 @@ public class ObjectSelectionDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Select Object");
+		newShell.setText(Messages.getString("ObjectSelectionDialog.title")); //$NON-NLS-1$
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
-			newShell.setSize(settings.getInt("SelectObject.cx"), settings.getInt("SelectObject.cy"));
+			newShell.setSize(settings.getInt("SelectObject.cx"), settings.getInt("SelectObject.cy")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		catch(NumberFormatException e)
 		{
@@ -95,7 +95,7 @@ public class ObjectSelectionDialog extends Dialog
 		tabItem.setControl(objectTree);*/
 		objectTree = new ObjectTree(dialogArea, SWT.NONE, ObjectTree.CHECKBOXES, rootObjects);
 		
-		String text = settings.get("SelectObject.Filter");
+		String text = settings.get("SelectObject.Filter"); //$NON-NLS-1$
 		if (text != null)
 			objectTree.setFilter(text);
 
@@ -167,9 +167,9 @@ public class ObjectSelectionDialog extends Dialog
 		Point size = getShell().getSize();
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 
-		settings.put("SelectObject.cx", size.x);
-		settings.put("SelectObject.cy", size.y);
-		settings.put("SelectObject.Filter", objectTree.getFilter());
+		settings.put("SelectObject.cx", size.x); //$NON-NLS-1$
+		settings.put("SelectObject.cy", size.y); //$NON-NLS-1$
+		settings.put("SelectObject.Filter", objectTree.getFilter()); //$NON-NLS-1$
 	}
 
 	/**

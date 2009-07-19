@@ -81,17 +81,17 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 				}
 			}
 		};
-		openConsoleAction.setText("Console");
+		openConsoleAction.setText(Messages.getString("NXMCActionBarAdvisor.menu_console")); //$NON-NLS-1$
 		openConsoleAction.setImageDescriptor(ConsolePlugin.getImageDescriptor(IConsoleConstants.IMG_VIEW_CONSOLE));
 	}
 
 	@Override
 	protected void fillMenuBar(IMenuManager menuBar)
 	{
-		MenuManager fileMenu = new MenuManager("&File",
+		MenuManager fileMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_file"), //$NON-NLS-1$
 				IWorkbenchActionConstants.M_FILE);
-		MenuManager viewMenu = new MenuManager("&View", IActionConstants.M_VIEW);
-		MenuManager helpMenu = new MenuManager("&Help",
+		MenuManager viewMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_view"), IActionConstants.M_VIEW); //$NON-NLS-1$
+		MenuManager helpMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_help"), //$NON-NLS-1$
 				IWorkbenchActionConstants.M_HELP);
 
 		menuBar.add(fileMenu);
@@ -113,7 +113,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		viewMenu.add(openConsoleAction);
 		viewMenu.add(new GroupMarker(IActionConstants.M_TOOL_VIEW));
 		viewMenu.add(new Separator());
-		MenuManager configMenu = new MenuManager("&Configuration",
+		MenuManager configMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_configuration"), //$NON-NLS-1$
 				IActionConstants.M_CONFIG);
 		configMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		viewMenu.add(configMenu);
@@ -126,7 +126,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	protected void fillCoolBar(ICoolBarManager coolBar)
 	{
 		IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
-		coolBar.add(new ToolBarContributionItem(toolbar, "view"));
+		coolBar.add(new ToolBarContributionItem(toolbar, "view")); //$NON-NLS-1$
 	}
 
 	/*
@@ -140,12 +140,12 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	protected void fillStatusLine(IStatusLineManager statusLine)
 	{
 		StatusLineContributionItem statusItem = new StatusLineContributionItem(
-				"ConnectionStatus");
-		statusItem.setText("");
+				"ConnectionStatus"); //$NON-NLS-1$
+		statusItem.setText(""); //$NON-NLS-1$
 		statusLine.add(statusItem);
 		Activator.getDefault().setStatusItemConnection(statusItem);
 
-		MemoryMonitor mm = new MemoryMonitor("memoryMonitor");
+		MemoryMonitor mm = new MemoryMonitor("memoryMonitor"); //$NON-NLS-1$
 		statusLine.add(mm);
 	}
 }

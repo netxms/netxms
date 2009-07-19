@@ -29,7 +29,7 @@ import org.netxms.ui.eclipse.shared.NXMCSharedData;
  */
 public class ObjectBrowser extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.objectbrowser.view.object_browser";
+	public static final String ID = "org.netxms.ui.eclipse.objectbrowser.view.object_browser"; //$NON-NLS-1$
 	
 	private ObjectTree objectTree;
 
@@ -163,7 +163,7 @@ public class ObjectBrowser extends ViewPart
       IMenuManager mgr = getViewSite().getActionBars().getMenuManager();
       
       // Show filter
-      Action actionShowFilter = new Action("Show filter", SWT.TOGGLE)
+      Action actionShowFilter = new Action(Messages.getString("ObjectBrowser.show_filter"), SWT.TOGGLE) //$NON-NLS-1$
       {
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
@@ -178,7 +178,7 @@ public class ObjectBrowser extends ViewPart
       mgr.add(actionShowFilter);
       
       // Hide unmanaged objects
-      Action actionHideUnmanaged = new Action("Hide unmanaged objects", SWT.TOGGLE)
+      Action actionHideUnmanaged = new Action(Messages.getString("ObjectBrowser.hide_unmanaged"), SWT.TOGGLE) //$NON-NLS-1$
       {
 			/* (non-Javadoc)
 			 * @see org.eclipse.jface.action.Action#run()
@@ -205,7 +205,7 @@ public class ObjectBrowser extends ViewPart
 		
 		// Read custom root objects
 		long[] rootObjects = null;
-		Object value = NXMCSharedData.getInstance().getProperty("ObjectBrowser.rootObjects");
+		Object value = NXMCSharedData.getInstance().getProperty("ObjectBrowser.rootObjects"); //$NON-NLS-1$
 		if ((value != null) && (value instanceof long[]))
 		{
 			rootObjects = (long[])value;

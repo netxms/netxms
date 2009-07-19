@@ -45,7 +45,7 @@ public class OpenObjectBrowser implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
+				MessageDialog.openError(window.getShell(), Messages.getString("OpenObjectBrowser.error"), Messages.getString("OpenObjectBrowser.error_opening_view") + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		}
 	}

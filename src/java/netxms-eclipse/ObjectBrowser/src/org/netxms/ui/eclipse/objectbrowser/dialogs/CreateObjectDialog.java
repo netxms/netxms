@@ -42,7 +42,7 @@ public class CreateObjectDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Create " + objectClassName);
+		newShell.setText(Messages.getString("CreateObjectDialog.title") + objectClassName); //$NON-NLS-1$
 	}
 	
 	/* (non-Javadoc)
@@ -60,7 +60,7 @@ public class CreateObjectDialog extends Dialog
       dialogArea.setLayout(layout);
 		
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("Object name");
+      label.setText(Messages.getString("CreateObjectDialog.object_name")); //$NON-NLS-1$
       
       textName = new Text(dialogArea, SWT.SINGLE | SWT.BORDER);
       textName.setTextLimit(63);

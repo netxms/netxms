@@ -68,7 +68,7 @@ public class ObjectList extends Composite
 		filterArea = new Composite(this, SWT.NONE);
 		
 		filterLabel = new Label(filterArea, SWT.NONE);
-		filterLabel.setText("Filter:");
+		filterLabel.setText(Messages.getString("ObjectList.filter")); //$NON-NLS-1$
 		
 		filterText = new Text(filterArea, SWT.BORDER);
 		filterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
