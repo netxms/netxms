@@ -62,19 +62,19 @@ public class General extends PropertyPage
       
       // Object ID
       WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, "Object ID",
-                                     Integer.toHexString((int)object.getId()), null);
+                                     Integer.toHexString((int)object.getId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
       
 		// Object name
       initialName = new String(object.getName());
       textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, "Login name",
-      		                                    initialName, null);
+      		                                    initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		// Full name
       if (object instanceof NXCUser)
       {
 	      initialFullName = new String(((NXCUser)object).getFullName());
 	      textFullName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, "Full name",
-	      		                                        initialFullName, null);
+	      		                                        initialFullName, WidgetHelper.DEFAULT_LAYOUT_DATA);
       }
       else
       {
@@ -84,7 +84,7 @@ public class General extends PropertyPage
 		// Description
       initialDescription = new String(object.getDescription());
       textDescription = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER,
-                                                       "Description", initialDescription, null);
+                                                       "Description", initialDescription, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		return dialogArea;
 	}

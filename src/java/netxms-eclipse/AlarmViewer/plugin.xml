@@ -2,13 +2,6 @@
 <?eclipse version="3.2"?>
 <plugin>
    <extension
-         point="org.netxms.nxmc.core.objecttab">
-      <tab
-            class="org.netxms.ui.eclipse.alarmviewer.TabProvider">
-      </tab>
-   </extension>
-
-   <extension
          point="org.eclipse.ui.views">
       <view
             name="Alarm Browser"

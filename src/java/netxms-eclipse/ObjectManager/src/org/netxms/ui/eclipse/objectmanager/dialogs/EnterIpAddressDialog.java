@@ -49,7 +49,8 @@ public class EnterIpAddressDialog extends Dialog
       layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-      textAddress = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, "New IP address", "", null);
+      textAddress = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, "New IP address", "",
+                                                   WidgetHelper.DEFAULT_LAYOUT_DATA);
       textAddress.getShell().setMinimumSize(300, 0);
       
 		return dialogArea;

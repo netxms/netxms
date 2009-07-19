@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.2"?>
 <plugin>
-   <extension-point id="org.netxms.nxmc.core.objecttab" name="org.netxms.nxmc.core.objecttab" schema="schema/nxmc_core_objecttab.exsd"/>
 
    <extension
          id="org.netxms.ui.eclipse.console.application"

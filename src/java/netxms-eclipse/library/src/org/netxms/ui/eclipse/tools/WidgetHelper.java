@@ -19,6 +19,7 @@ public class WidgetHelper
 {
 	public static int INNER_SPACING = 2;
 	public static int OUTER_SPACING = 4;
+	public static String DEFAULT_LAYOUT_DATA = "WidgetHelper::default_layout_data";
 	
 	
 	/**
@@ -43,7 +44,7 @@ public class WidgetHelper
 		layout.marginWidth = 0;
 		group.setLayout(layout);
 
-		if (layoutData != null)
+		if (layoutData != DEFAULT_LAYOUT_DATA)
 		{
 			group.setLayoutData(layoutData);
 		}

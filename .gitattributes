@@ -281,8 +281,6 @@ src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmC
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmListFilter.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmListLabelProvider.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/AlarmView.java -text
-src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/ObjectTabAlarms.java -text
-src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/TabProvider.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/AcknowledgeAlarm.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/OpenAlarmBrowser.java -text
 src/java/netxms-eclipse/AlarmViewer/src/org/netxms/ui/eclipse/alarmviewer/actions/TerminateAlarm.java -text
@@ -444,6 +442,7 @@ src/java/netxms-eclipse/UserManager/build.properties -text
 src/java/netxms-eclipse/UserManager/icons/group.png -text
 src/java/netxms-eclipse/UserManager/icons/group_add.png -text
 src/java/netxms-eclipse/UserManager/icons/group_key.png -text
+src/java/netxms-eclipse/UserManager/icons/password.png -text
 src/java/netxms-eclipse/UserManager/icons/user.png -text
 src/java/netxms-eclipse/UserManager/icons/user_add.png -text
 src/java/netxms-eclipse/UserManager/icons/user_delete.png -text
@@ -469,9 +468,7 @@ src/java/netxms-eclipse/core/icons/alt_window_32.gif -text
 src/java/netxms-eclipse/core/icons/information.png -text
 src/java/netxms-eclipse/core/icons/login.png -text
 src/java/netxms-eclipse/core/plugin.xml -text
-src/java/netxms-eclipse/core/schema/nxmc_core_objecttab.exsd -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/Activator.java -text
-src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/ICommandIds.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/LoginDialog.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/LoginJob.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/MemoryMonitor.java -text
@@ -480,10 +477,6 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/NXMCActionBarAdvi
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/NXMCApplication.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/NXMCWorkbenchAdvisor.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/NXMCWorkbenchWindowAdvisor.java -text
-src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/ObjectTabOverview.java -text
-src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/actions/OpenView.java -text
-src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/extensionproviders/IObjectTabProvider.java -text
-src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/extensionproviders/ObjectTab.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/messages.properties -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/perspectives/DefaultPerspective.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/perspectives/EmptyPerspective.java -text

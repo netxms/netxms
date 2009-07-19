@@ -6,12 +6,16 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.shared.IUIConstants;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.usermanager.Activator;
 
 public class ChangePasswordDialog extends Dialog
 {
@@ -29,17 +33,34 @@ public class ChangePasswordDialog extends Dialog
 	{
 		Composite dialogArea = (Composite) super.createDialogArea(parent);
 
-		final FillLayout layout = new FillLayout(SWT.VERTICAL);
+		final GridLayout layout = new GridLayout();
 
 		layout.marginWidth = IUIConstants.DIALOG_WIDTH_MARGIN;
 		layout.marginHeight = IUIConstants.DIALOG_HEIGHT_MARGIN;
+		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
+		
+		Label pic = new Label(dialogArea, SWT.NONE);
+		pic.setImage(Activator.getImageDescriptor("icons/password.png").createImage());
+		GridData gd = new GridData();
+		gd.verticalAlignment = SWT.TOP;
+		pic.setLayoutData(gd);
 
-		new Label(dialogArea, SWT.NONE).setText("New password:");
-		textPassword1 = new Text(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD);
-		new Label(dialogArea, SWT.NONE).setText("Confirm new password:");
-		textPassword2 = new Text(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD);
+		Composite editArea = new Composite(dialogArea, SWT.NONE);
+		FillLayout editAreaLayout = new FillLayout(SWT.VERTICAL);
+		editAreaLayout.marginWidth = 0;
+		editAreaLayout.marginHeight = 0;
+		editArea.setLayout(editAreaLayout);
+		
+		textPassword1 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, "New password:", "", null);
+		textPassword2 = WidgetHelper.createLabeledText(editArea, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD, "Confirm new password:", "", null);
 
+		gd = new GridData();
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalAlignment = SWT.FILL;
+		gd.widthHint = 250;
+		editArea.setLayoutData(gd);
+		
 		final ModifyListener listener = new ModifyListener()
 		{
 

@@ -51,16 +51,16 @@ public class General extends PropertyPage
       
       // Object ID
       WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, "Object ID",
-                                     Long.toString(object.getObjectId()), null);
+                                     Long.toString(object.getObjectId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
       
 		// Object class
       WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, "Object class",
-                                     object.getObjectClassName(), null);
+                                     object.getObjectClassName(), WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		// Object name
       initialName = new String(object.getObjectName());
       textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, "Object name",
-      		                                    initialName, null);
+      		                                    initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		
 		return dialogArea;
 	}

@@ -35,12 +35,10 @@ public class NXMCWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
 		configurer.setShowCoolBar(true);
 		configurer.setShowStatusLine(true);
-		//configurer.setTitle("NetXMS Management Console");
-		//configurer.setTitle("Stronghold Management Console");
 	}
 
 	/**
-	 * Overriden to maximize the window when shwon.
+	 * Overridden to maximize the window when shown.
 	 */
 	@Override
 	public void postWindowCreate()
