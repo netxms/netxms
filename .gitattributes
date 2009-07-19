@@ -235,6 +235,8 @@ src/java/netxms-client/src/main/java/org/netxms/client/NXCDCIData.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCDCIDataRow.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCDCIValue.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCEntireNetwork.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/NXCEventProcessingPolicy.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/NXCEventProcessingPolicyRule.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCException.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCInterface.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCListener.java -text

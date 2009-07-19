@@ -2106,4 +2106,44 @@ public class NXCSession
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
+	
+	/**
+	 * Open event processing policy for editing. This call will lock event processing policy on server
+	 * until closeEventProcessingPolicy called or session terminated.
+	 * 
+	 * @return Event processing policy
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public NXCEventProcessingPolicy openEventProcessingPolicy() throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_EPP);
+		sendMessage(msg);
+		NXCPMessage response = waitForRCC(msg.getMessageId());
+		
+		int numRules = response.getVariableAsInteger(NXCPCodes.VID_NUM_RULES);
+		final NXCEventProcessingPolicy policy = new NXCEventProcessingPolicy(numRules);
+
+		for(int i = 0; i < numRules; i++)
+		{
+			response = waitForMessage(NXCPCodes.CMD_EPP_RECORD, msg.getMessageId());
+			policy.addRule(new NXCEventProcessingPolicyRule(response));
+		}
+		
+		return policy;
+	}
+	
+	/**
+	 * Close event processing policy. This call will unlock event processing policy on server.
+	 * If policy was not previously open by current session exception will be thrown.
+	 * 
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void closeEventProcessingPolicy() throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_CLOSE_EPP);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
 }
