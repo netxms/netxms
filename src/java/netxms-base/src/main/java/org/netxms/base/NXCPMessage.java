@@ -273,6 +273,12 @@ public class NXCPMessage
 		return (var != null) ? var.getAsUInt32Array() : null;
 	}
 	
+	public Long[] getVariableAsUInt32ArrayEx(final long varId)
+	{
+		final NXCPVariable var = findVariable(varId);
+		return (var != null) ? var.getAsUInt32ArrayEx() : null;
+	}
+	
 	public boolean getVariableAsBoolean(final long varId)
 	{
 		final NXCPVariable var = findVariable(varId);

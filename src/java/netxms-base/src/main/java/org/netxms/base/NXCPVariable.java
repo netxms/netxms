@@ -307,6 +307,25 @@ public class NXCPVariable
 		}
 		return value;
 	}
+	
+	public Long[] getAsUInt32ArrayEx()
+	{
+		if ((variableType != TYPE_BINARY) || (binaryValue == null))
+			return null;
+		
+		int count = binaryValue.length / 4;
+		Long[] value = new Long[count];
+		NXCPDataInputStream in = new NXCPDataInputStream(binaryValue);
+		try
+		{
+			for(int i = 0; i < count; i++)
+				value[i] = in.readUnsignedInt();
+		}
+		catch(IOException e)
+		{
+		}
+		return value;
+	}
 
 	/**
 	 * @return the variableId
