@@ -91,17 +91,20 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		MenuManager fileMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_file"), //$NON-NLS-1$
 				IWorkbenchActionConstants.M_FILE);
 		MenuManager viewMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_view"), IActionConstants.M_VIEW); //$NON-NLS-1$
+		MenuManager toolsMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_tools"), IActionConstants.M_TOOLS); //$NON-NLS-1$
 		MenuManager helpMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_help"), //$NON-NLS-1$
 				IWorkbenchActionConstants.M_HELP);
 
 		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
+		menuBar.add(toolsMenu);
 
 		// Add a group marker indicating where action set menus will appear.
 		menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		menuBar.add(helpMenu);
 
 		// File
+		fileMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		fileMenu.add(new Separator());
 		fileMenu.add(exitAction);
 
@@ -117,6 +120,9 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 				IActionConstants.M_CONFIG);
 		configMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		viewMenu.add(configMenu);
+		
+		// Tools
+		toolsMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 
 		// Help
 		helpMenu.add(aboutAction);

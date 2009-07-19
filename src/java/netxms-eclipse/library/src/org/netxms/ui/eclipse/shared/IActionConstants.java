@@ -10,6 +10,7 @@ package org.netxms.ui.eclipse.shared;
 public interface IActionConstants
 {
 	public static final String M_VIEW = "view";
+	public static final String M_TOOLS = "tools";
 	public static final String M_CONFIG = "config";
 	
 	public static final String M_PRODUCT_VIEW = "product";

@@ -38,7 +38,7 @@ public class ChangeIpAddress implements IObjectActionDelegate
 		if (dlg.open() != Window.OK)
 			return;
 
-		new Job("Change IP address for node " + node.getObjectName()) {
+		Job job = new Job("Change IP address for node " + node.getObjectName()) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
@@ -61,7 +61,9 @@ public class ChangeIpAddress implements IObjectActionDelegate
 				}
 				return status;
 			}
-		}.schedule();
+		};
+		job.setUser(true);
+		job.schedule();
 	}
 
 	@Override

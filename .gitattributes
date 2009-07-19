@@ -451,6 +451,7 @@ src/java/netxms-eclipse/UserManager/icons/user_manager.png -text
 src/java/netxms-eclipse/UserManager/plugin.xml -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/Activator.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/UserAdapterFactory.java -text
+src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/actions/ChangePassword.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/actions/OpenUserManager.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/dialogs/ChangePasswordDialog.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/dialogs/CreateObjectDialog.java -text
@@ -467,9 +468,12 @@ src/java/netxms-eclipse/core/icons/alt_window_16.gif -text
 src/java/netxms-eclipse/core/icons/alt_window_32.gif -text
 src/java/netxms-eclipse/core/icons/information.png -text
 src/java/netxms-eclipse/core/icons/login.png -text
+src/java/netxms-eclipse/core/icons/password.png -text
+src/java/netxms-eclipse/core/nxmc.product -text
 src/java/netxms-eclipse/core/plugin.xml -text
+src/java/netxms-eclipse/core/plugin_customization.ini -text
+src/java/netxms-eclipse/core/splash.bmp -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/Activator.java -text
-src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/LoginDialog.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/LoginJob.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/MemoryMonitor.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/Messages.java -text
@@ -477,6 +481,8 @@ src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/NXMCActionBarAdvi
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/NXMCApplication.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/NXMCWorkbenchAdvisor.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/NXMCWorkbenchWindowAdvisor.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/dialogs/LoginDialog.java -text
+src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/dialogs/PasswordExpiredDialog.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/messages.properties -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/perspectives/DefaultPerspective.java -text
 src/java/netxms-eclipse/core/src/org/netxms/ui/eclipse/console/perspectives/EmptyPerspective.java -text

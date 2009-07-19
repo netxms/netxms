@@ -31,8 +31,22 @@
       </command>
    </extension>
 
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            name="Tools"
+            id="org.netxms.ui.eclipse.console.category.tools">
+      </category>
+      <command
+            name="Change password..."
+            description="Change password for current user"
+            categoryId="org.netxms.ui.eclipse.console.category.tools"
+            id="org.netxms.ui.eclipse.usermanager.commands.change_password">
+      </command>
+   </extension>
+
    <extension point = "org.eclipse.ui.actionSets">
-	   <actionSet id="org.netxms.ui.eclipse.usermanager.action_set"
+	   <actionSet id="org.netxms.ui.eclipse.usermanager.action_sets.open"
 		   label="User Manager"
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.usermanager.actions.open"
@@ -42,6 +56,17 @@
 			   icon="icons/user_manager.png"
 			   class="org.netxms.ui.eclipse.usermanager.actions.OpenUserManager"
 			   definitionId="org.netxms.ui.eclipse.usermanager.commands.open_user_manager">
+		   </action>
+	   </actionSet>
+	   <actionSet id="org.netxms.ui.eclipse.usermanager.action_sets.change_password"
+		   label="Change password..."
+		   visible="true">
+		   <action id="org.netxms.ui.eclipse.usermanager.actions.change_password"
+			   menubarPath="tools/additions"
+			   label="Change password..."
+			   tooltip="Change password for current user"
+			   class="org.netxms.ui.eclipse.usermanager.actions.ChangePassword"
+			   definitionId="org.netxms.ui.eclipse.usermanager.commands.change_password">
 		   </action>
 	   </actionSet>
    </extension>

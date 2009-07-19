@@ -168,6 +168,7 @@ public class NXCSession
 	// Information about logged in user
 	private int userId;
 	private int userSystemRights;
+	private boolean passwordExpired;
 
 	// Internal communication data
 	private Socket connSocket = null;
@@ -815,6 +816,7 @@ public class NXCSession
 				throw new NXCException(rcc);
 			userId = response.getVariableAsInteger(NXCPCodes.VID_USER_ID);
 			userSystemRights = response.getVariableAsInteger(NXCPCodes.VID_USER_SYS_RIGHTS);
+			passwordExpired = response.getVariableAsBoolean(NXCPCodes.VID_CHANGE_PASSWD_FLAG);
 
 			isConnected = true;
 		}
@@ -990,6 +992,14 @@ public class NXCSession
 	public int getUserSystemRights()
 	{
 		return userSystemRights;
+	}
+
+	/**
+	 * @return the passwordExpired
+	 */
+	public boolean isPasswordExpired()
+	{
+		return passwordExpired;
 	}
 
 	/**

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.console;
+package org.netxms.ui.eclipse.console.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
@@ -24,6 +24,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.shared.IUIConstants;
 
 /**
@@ -43,12 +45,11 @@ public class LoginDialog extends Dialog
 	private String password;
 	private boolean isOk = false;
 	
-	protected LoginDialog(Shell parentShell)
+	public LoginDialog(Shell parentShell)
 	{
 		super(parentShell);
 		loginImage = Activator.getImageDescriptor(Messages.getString("LoginDialog.image_name")); //$NON-NLS-1$
 	}
-
 	
 	@Override
 	protected void configureShell(Shell newShell)
