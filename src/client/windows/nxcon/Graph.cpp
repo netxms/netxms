@@ -687,7 +687,6 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
    {
       iTimeLen = dc.GetTextExtent(_T("MMM")).cx;
       nTimeLabel = TS_MONTH;
-//      nGridSizeX = (int)(2592000 / m_dSecondsPerPixel);
    }
    else if (m_dwTimeTo - m_dwTimeFrom >= 432000)   // 5 days
    {
@@ -910,7 +909,8 @@ void CGraph::DrawGraphOnBitmap(CBitmap &bmpGraph, RECT &rect)
 
    // Display absciss marks
    y = rect.bottom - iBottomMargin + 3;
-   iStep = iTimeLen / nGridSizeX + 1;    // How many grid lines we should skip
+	if (nTimeLabel != TS_MONTH)
+		iStep = iTimeLen / nGridSizeX + 1;    // How many grid lines we should skip
    for(x = iLeftMargin; x < rect.right - iRightMargin;)
    {
       dwTimeStamp = m_dwTimeFrom + (DWORD)((double)(x - iLeftMargin) * m_dSecondsPerPixel);
