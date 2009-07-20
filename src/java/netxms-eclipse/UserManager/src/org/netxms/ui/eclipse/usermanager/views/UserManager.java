@@ -351,7 +351,7 @@ public class UserManager extends ViewPart
 				catch(Exception e)
 				{
 					status = new Status(Status.ERROR, Activator.PLUGIN_ID, (e instanceof NXCException) ? ((NXCException) e)
-							.getErrorCode() : 0, "Cannot lock user database: " + e.getMessage(), e);
+							.getErrorCode() : 0, "Cannot lock user database: " + e.getMessage(), null);
 					new UIJob("Close user manager")
 					{
 						@Override
@@ -705,10 +705,9 @@ public class UserManager extends ViewPart
 					}
 					catch(Exception e)
 					{
-						e.printStackTrace();
 						status = new Status(Status.ERROR, Activator.PLUGIN_ID,
 								(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
-								"Cannot unlock user database: " + e.getMessage(), e);
+								"Cannot unlock user database: " + e.getMessage(), null);
 					}
 					return status;
 				}

@@ -95,7 +95,7 @@ public class AutoBind extends PropertyPage
       gd.verticalIndent = IUIConstants.DIALOG_SPACING;
 		label.setLayoutData(gd);
       
-      filterSource = new Text(dialogArea, SWT.BORDER | SWT.MULTI);
+      filterSource = new Text(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		filterSource.setText(object.getAutoBindFilter());
 		filterSource.setFont(new Font(getShell().getDisplay(), "Courier New", 10, SWT.NORMAL));
 		filterSource.setEnabled(object.isAutoBindEnabled());
@@ -105,6 +105,8 @@ public class AutoBind extends PropertyPage
 		gd.grabExcessVerticalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;
+		gd.widthHint = 0;
+      gd.heightHint = 0;
 		filterSource.setLayoutData(gd);
 		
 		return dialogArea;

@@ -293,6 +293,14 @@ src/java/netxms-eclipse/Charts/plugin.xml -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/Activator.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/actions/ShowHistoryGraph.java -text
 src/java/netxms-eclipse/Charts/src/org/netxms/ui/eclipse/charts/views/HistoryGraph.java -text
+src/java/netxms-eclipse/EPP/.settings/org.eclipse.jdt.core.prefs -text
+src/java/netxms-eclipse/EPP/META-INF/MANIFEST.MF -text
+src/java/netxms-eclipse/EPP/build.properties -text
+src/java/netxms-eclipse/EPP/icons/epp.png -text
+src/java/netxms-eclipse/EPP/plugin.xml -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/Activator.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/actions/OpenPolicyEditor.java -text
+src/java/netxms-eclipse/EPP/src/org/netxms/ui/eclipse/epp/views/PolicyEditor.java -text
 src/java/netxms-eclipse/JobMonitor/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/JobMonitor/build.properties -text
 src/java/netxms-eclipse/JobMonitor/icons/default.png -text
@@ -373,6 +381,7 @@ src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/di
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/dialogs/EnterIpAddressDialog.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/AutoApply.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/AutoBind.java -text
+src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/Comments.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/CustomAttributes.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/General.java -text
 src/java/netxms-eclipse/ObjectManager/src/org/netxms/ui/eclipse/objectmanager/propertypages/Snmp.java -text

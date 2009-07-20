@@ -27,6 +27,17 @@
         </page>
 
         <page
+           id="org.netxms.ui.eclipse.objectmanager.propertypages.Comments"
+           name="Comments"
+	       class="org.netxms.ui.eclipse.objectmanager.propertypages.Comments">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.client.NXCObject">
+             </instanceof>
+          </enabledWhen>
+        </page>
+
+        <page
            id="org.netxms.ui.eclipse.objectmanager.propertypages.AutoApply"
            name="Automatic Apply Rules"
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.AutoApply">

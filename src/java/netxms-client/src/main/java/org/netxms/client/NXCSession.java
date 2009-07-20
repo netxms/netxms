@@ -1966,6 +1966,25 @@ public class NXCSession
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
+	
+	/**
+	 * Change object's comments.
+	 * 
+	 * @param objectId Object's ID
+	 * @param comments New comments
+	 * @throws IOException
+	 *            if socket I/O error occurs
+	 * @throws NXCException
+	 *            if NetXMS server returns an error or operation was timed out
+	 */
+	public void updateObjectComments(final long objectId, final String comments) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_OBJECT_COMMENTS);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+		msg.setVariable(NXCPCodes.VID_COMMENTS, comments);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
 
 	/**
 	 * Query layer 2 topology for node
