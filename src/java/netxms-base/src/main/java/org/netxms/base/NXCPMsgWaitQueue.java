@@ -3,9 +3,9 @@
  */
 package org.netxms.base;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 
 
 /**
@@ -15,17 +15,15 @@ import java.util.Map;
 
 public class NXCPMsgWaitQueue
 {
-	private Map<Long, NXCPMessage> messageList = new HashMap<Long, NXCPMessage>(0);
+	private List<NXCPMessage> messageList = new ArrayList<NXCPMessage>(0);
 	private int defaultTimeout;
 	private int messageLifeTime;
 	private boolean isActive = true;
 	private HousekeeperThread housekeeperThread = null;
 	
-	
-	//
-	// Housekeeper thread
-	//
-	
+	/**
+	 * Housekeeper thread - deletes expired messages from queue.
+	 */
 	private class HousekeeperThread extends Thread
 	{
 		HousekeeperThread()
@@ -49,7 +47,7 @@ public class NXCPMsgWaitQueue
 				synchronized(messageList)
 				{
 					final long currTime = System.currentTimeMillis();
-					Iterator<NXCPMessage> it = messageList.values().iterator();
+					final Iterator<NXCPMessage> it = messageList.iterator();
 					while(it.hasNext())
 					{
 						final NXCPMessage msg = it.next();
@@ -63,7 +61,6 @@ public class NXCPMsgWaitQueue
 			}
 		}
 	}
-	
 	
 	/**
 	 * @param defaultTimeout
@@ -86,52 +83,39 @@ public class NXCPMsgWaitQueue
 		housekeeperThread = new HousekeeperThread();
 	}
 	
-	
-	//
-	// Finalize
-	//
-	
+	/**
+	 * Finalize.
+	 */
 	@Override
 	protected void finalize()
 	{
 		shutdown();
 	}
 	
-	
-	//
-	// Calculate hash for message
-	//
-	
-	private Long calculateMessageHash(final NXCPMessage msg)
-	{
-		return ((long)msg.getMessageCode() << 32) + msg.getMessageId();
-	}
-
-	
-	//
-	// Put message into queue
-	//
-	
+	/**
+	 * Put message into queue.
+	 * 
+	 * @param msg NXCP message
+	 */
 	public void putMessage(final NXCPMessage msg)
 	{
 		synchronized(messageList)
 		{
 			msg.setTimestamp(System.currentTimeMillis());
-			messageList.put(calculateMessageHash(msg), msg);
+			messageList.add(msg);
 			messageList.notifyAll();
 		}
 	}
-
 	
 	/**
+	 * Wait for message.
+	 * 
 	 * @param code	Message code
 	 * @param id Message id
 	 * @param timeout Wait timeout in milliseconds
 	 */
-	
 	public NXCPMessage waitForMessage(final int code, final long id, final int timeout)
 	{
-		final Long hash = ((long)code << 32) + id;
 		NXCPMessage msg = null;
 		int actualTimeout = timeout;
 		
@@ -139,17 +123,22 @@ public class NXCPMsgWaitQueue
 		{
 			synchronized(messageList)
 			{
-				msg = messageList.get(hash);
-				if ((msg != null) && (msg.getMessageCode() == code) && (msg.getMessageId() == id)) 
+				final Iterator<NXCPMessage> it = messageList.iterator();
+				boolean found = false;
+				while(it.hasNext())
 				{
-					messageList.remove(hash);
+					msg = it.next();
+					if ((msg.getMessageCode() == code) && (msg.getMessageId() == id)) 
+					{
+						it.remove();
+						found = true;
+						break;
+					}
+				}
+				if (found)
 					break;
-				}
-				else
-				{
-					msg = null;	// Continue waiting
-				}
 				
+				msg = null;
 				long startTime = System.currentTimeMillis();
 				try
 				{
@@ -165,22 +154,20 @@ public class NXCPMsgWaitQueue
 		return msg;
 	}
 
-
 	/**
+	 * Wait for message.
+	 * 
 	 * @param code	Message code
 	 * @param id Message id
 	 */
-
 	public NXCPMessage waitForMessage(final int code, final long id)
 	{
 		return waitForMessage(code, id, defaultTimeout);
 	}
 	
-	
-	//
-	// Shutdown wait queue
-	//
-	
+	/**
+	 * Shutdown wait queue.
+	 */
 	public void shutdown()
 	{
 		isActive = false;
