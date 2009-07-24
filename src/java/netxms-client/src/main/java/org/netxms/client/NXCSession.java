@@ -1898,7 +1898,9 @@ public class NXCSession
 		
 		if ((flags & NXCObjectModificationData.MODIFY_TRUSTED_NODES) != 0)
 		{
-			msg.setVariable(NXCPCodes.VID_TRUSTED_NODES, data.getTrustedNodes());
+			final long[] nodes = data.getTrustedNodes();
+			msg.setVariableInt32(NXCPCodes.VID_NUM_TRUSTED_NODES, nodes.length);
+			msg.setVariable(NXCPCodes.VID_TRUSTED_NODES, nodes);
 		}
 		
 		if ((flags & NXCObjectModificationData.MODIFY_SNMP_VERSION) != 0)

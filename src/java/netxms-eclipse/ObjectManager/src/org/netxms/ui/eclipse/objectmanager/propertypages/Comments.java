@@ -133,4 +133,14 @@ public class Comments extends PropertyPage
 	{
 		applyChanges(true);
 	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+	 */
+	@Override
+	protected void performDefaults()
+	{
+		super.performDefaults();
+		comments.setText("");
+	}
 }

@@ -4,6 +4,7 @@
 
 package org.netxms.client;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,6 +59,7 @@ public class NXCObject
 	private String comments;
 	private HashSet<Long> parents = new HashSet<Long>(0);
 	private HashSet<Long> childs = new HashSet<Long>(0);
+	private HashSet<Long> trustedNodes = new HashSet<Long>(0);
 	private Map<String, String> customAttributes = new HashMap<String, String>(0);
 	
 	private boolean inheritAccessRights = true;
@@ -94,6 +96,18 @@ public class NXCObject
 
 		// Childs
 		count = msg.getVariableAsInteger(NXCPCodes.VID_CHILD_CNT);
+		for(i = 0, id = NXCPCodes.VID_CHILD_ID_BASE; i < count; i++, id++)
+		{
+			childs.add(msg.getVariableAsInt64(id));
+		}
+		
+		// Trusted nodes
+		count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_TRUSTED_NODES);
+		if (count > 0)
+		{
+			Long[] nodes = msg.getVariableAsUInt32ArrayEx(NXCPCodes.VID_TRUSTED_NODES);
+			trustedNodes.addAll(Arrays.asList(nodes));
+		}
 		for(i = 0, id = NXCPCodes.VID_CHILD_ID_BASE; i < count; i++, id++)
 		{
 			childs.add(msg.getVariableAsInt64(id));
@@ -296,7 +310,6 @@ public class NXCObject
 		return list;
 	}
 
-
 	/**
 	 * @return List of child objects
 	 */
@@ -315,7 +328,24 @@ public class NXCObject
 		return list;
 	}
 
-	
+	/**
+	 * @return List of trusted nodes
+	 */
+	public NXCObject[] getTrustedNodes()
+	{
+		final NXCObject[] list;
+		synchronized(trustedNodes)
+		{
+			list = new NXCObject[trustedNodes.size()];
+			final Iterator<Long> it = trustedNodes.iterator();
+			for(int i = 0; it.hasNext(); i++)
+			{
+				list[i] = session.findObjectById(it.next());
+			}
+		}
+		return list;
+	}
+
 	/**
 	 * @return Number of parent objects
 	 */

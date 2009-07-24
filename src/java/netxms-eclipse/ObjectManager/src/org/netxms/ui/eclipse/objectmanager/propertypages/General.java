@@ -30,7 +30,6 @@ public class General extends PropertyPage
 	private String initialName;
 	private NXCObject object;
 	
-	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
@@ -64,7 +63,6 @@ public class General extends PropertyPage
 		
 		return dialogArea;
 	}
-	
 	
 	/**
 	 * Apply changes
@@ -117,7 +115,6 @@ public class General extends PropertyPage
 		}.schedule();
 	}
 
-	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
 	 */
@@ -127,7 +124,6 @@ public class General extends PropertyPage
 		applyChanges(false);
 		return true;
 	}
-
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#performApply()

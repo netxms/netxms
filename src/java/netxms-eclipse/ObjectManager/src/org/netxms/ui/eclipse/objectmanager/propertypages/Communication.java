@@ -353,4 +353,29 @@ public class Communication extends PropertyPage
 	{
 		applyChanges(true);
 	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+	 */
+	@Override
+	protected void performDefaults()
+	{
+		super.performDefaults();
+		
+		agentPort.setText("4700");
+		agentForceEncryption.setSelection(false);
+		agentAuthMethod.select(0);
+		agentProxy.setObjectId(0);
+		agentSharedSecret.setText("");
+		agentSharedSecret.getTextControl().setEnabled(false);
+		
+		snmpVersion.select(0);
+		snmpAuth.select(0);
+		snmpPriv.select(0);
+		snmpAuthName.setText("public");
+		snmpAuthPassword.setText("");
+		snmpPrivPassword.setText("");
+		snmpProxy.setObjectId(0);
+		onSnmpVersionChange();
+	}
 }

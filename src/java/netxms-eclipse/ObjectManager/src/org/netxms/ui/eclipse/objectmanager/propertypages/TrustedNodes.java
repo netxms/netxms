@@ -5,17 +5,13 @@ package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -27,16 +23,15 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCObject;
 import org.netxms.client.NXCObjectModificationData;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
-import org.netxms.ui.eclipse.objectmanager.AttrListLabelProvider;
-import org.netxms.ui.eclipse.objectmanager.AttrViewerComparator;
-import org.netxms.ui.eclipse.objectmanager.dialogs.AttributeEditDialog;
+import org.netxms.ui.eclipse.objectmanager.TrustedNodesComparator;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -45,17 +40,15 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  * @author Victor
  *
  */
-public class CustomAttributes extends PropertyPage
+public class TrustedNodes extends PropertyPage
 {
 	public static final int COLUMN_NAME = 0;
-	public static final int COLUMN_VALUE = 1;
 	
 	private NXCObject object = null;
 	private SortableTableViewer viewer;
 	private Button addButton;
-	private Button editButton;
 	private Button deleteButton;
-	private Map<String, String> attributes = null;
+	private HashMap<Long, NXCObject> trustedNodes = new HashMap<Long, NXCObject>(0);
 	private boolean isModified = false;
 
 	/* (non-Javadoc)
@@ -67,8 +60,6 @@ public class CustomAttributes extends PropertyPage
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		object = (NXCObject)getElement().getAdapter(NXCObject.class);
-		if (object == null)	// Paranoid check
-			return dialogArea;
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -76,16 +67,18 @@ public class CustomAttributes extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { "Name", "Value" };
-      final int[] columnWidths = { 150, 250 };
+      final String[] columnNames = { "Node" };
+      final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new AttrListLabelProvider());
-      viewer.setComparator(new AttrViewerComparator());
+      viewer.setLabelProvider(new WorkbenchLabelProvider());
+      viewer.setComparator(new TrustedNodesComparator());
       
-      attributes = new HashMap<String, String>(object.getCustomAttributes());
-      viewer.setInput(attributes.entrySet());
+      NXCObject[] nodes = object.getTrustedNodes();
+      for(int i = 0; i < nodes.length; i++)
+      	trustedNodes.put(nodes[i].getObjectId(), nodes[i]);
+      viewer.setInput(nodes);
       
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
@@ -117,47 +110,14 @@ public class CustomAttributes extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), null, null);
+				ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null);
 				if (dlg.open() == Window.OK)
 				{
-					if (attributes.containsKey(dlg.getAttrName()))
-					{
-						MessageDialog.openWarning(CustomAttributes.this.getShell(), "Warning", "Attribute named " + dlg.getAttrName() + " already exists");
-					}
-					else
-					{
-						attributes.put(dlg.getAttrName(), dlg.getAttrValue());
-				      viewer.setInput(attributes.entrySet());
-				      CustomAttributes.this.isModified = true;
-					}
-				}
-			}
-      });
-		
-      editButton = new Button(buttons, SWT.PUSH);
-      editButton.setText("Modify...");
-      editButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
-			@SuppressWarnings("unchecked")
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-				if (selection.size() == 1)
-				{
-					Entry<String, String> element = (Entry<String, String>)selection.getFirstElement();
-					final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), element.getKey(), element.getValue());
-					if (dlg.open() == Window.OK)
-					{
-						attributes.put(dlg.getAttrName(), dlg.getAttrValue());
-				      viewer.setInput(attributes.entrySet());
-				      CustomAttributes.this.isModified = true;
-					}
+					NXCObject[] nodes = dlg.getAllCheckedObjects(NXCObject.OBJECT_NODE);
+			      for(int i = 0; i < nodes.length; i++)
+			      	trustedNodes.put(nodes[i].getObjectId(), nodes[i]);
+			      viewer.setInput(trustedNodes.values().toArray());
+			      isModified = true;
 				}
 			}
       });
@@ -176,31 +136,23 @@ public class CustomAttributes extends PropertyPage
 			public void widgetSelected(SelectionEvent e)
 			{
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-				Iterator<Entry<String, String>> it = selection.iterator();
+				Iterator<NXCObject> it = selection.iterator();
 				if (it.hasNext())
 				{
 					while(it.hasNext())
 					{
-						Entry<String, String> element = it.next();
-						attributes.remove(element.getKey());
+						NXCObject object = it.next();
+						trustedNodes.remove(object.getObjectId());
 					}
-			      viewer.setInput(attributes.entrySet());
-			      CustomAttributes.this.isModified = true;
+			      viewer.setInput(trustedNodes.values().toArray());
+			      isModified = true;
 				}
-			}
-      });
-		
-      viewer.addDoubleClickListener(new IDoubleClickListener() {
-			@Override
-			public void doubleClick(DoubleClickEvent event)
-			{
-				editButton.notifyListeners(SWT.Selection, new Event());
 			}
       });
       
 		return dialogArea;
 	}
-
+	
 	/**
 	 * Apply changes
 	 * 
@@ -214,7 +166,7 @@ public class CustomAttributes extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		new Job("Update custom attributes") {
+		new Job("Update trusted nodes for object " + object.getObjectName()) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
@@ -225,7 +177,12 @@ public class CustomAttributes extends PropertyPage
 					if (object != null)
 					{
 						NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-						md.setCustomAttributes(attributes);
+						Set<Long> idList = trustedNodes.keySet();
+						long[] nodes = new long[idList.size()];
+						int i = 0;
+						for(long id : idList)
+							nodes[i++] = id;
+						md.setTrustedNodes(nodes);
 						NXMCSharedData.getInstance().getSession().modifyObject(md);
 					}
 					isModified = false;
@@ -235,16 +192,16 @@ public class CustomAttributes extends PropertyPage
 				{
 					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
 					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-					                    "Cannot update custom attributes: " + e.getMessage(), null);
+					                    "Cannot update trusted nodes list: " + e.getMessage(), null);
 				}
 
 				if (isApply)
 				{
-					new UIJob("Update \"Custom Attributes\" property page") {
+					new UIJob("Update \"Trusted Nodes\" property page") {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							CustomAttributes.this.setValid(true);
+							TrustedNodes.this.setValid(true);
 							return Status.OK_STATUS;
 						}
 					}.schedule();
@@ -272,5 +229,17 @@ public class CustomAttributes extends PropertyPage
 	{
 		applyChanges(false);
 		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+	 */
+	@Override
+	protected void performDefaults()
+	{
+		trustedNodes.clear();
+		viewer.setInput(new NXCObject[0]);
+		isModified = true;
+		super.performDefaults();
 	}
 }

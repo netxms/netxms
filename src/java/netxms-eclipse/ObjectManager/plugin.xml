@@ -69,6 +69,17 @@
              </instanceof>
           </enabledWhen>
         </page>
+
+        <page
+           id="org.netxms.ui.eclipse.objectmanager.propertypages.TrustedNodes"
+           name="Trusted Nodes"
+	       class="org.netxms.ui.eclipse.objectmanager.propertypages.TrustedNodes">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.client.NXCNode">
+             </instanceof>
+          </enabledWhen>
+        </page>
   </extension>
 
    <extension
