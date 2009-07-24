@@ -60,9 +60,9 @@
         </page>
 
         <page
-           id="org.netxms.ui.eclipse.objectmanager.propertypages.Snmp"
-           name="SNMP"
-	       class="org.netxms.ui.eclipse.objectmanager.propertypages.Snmp">
+           id="org.netxms.ui.eclipse.objectmanager.propertypages.Communication"
+           name="Communication"
+	       class="org.netxms.ui.eclipse.objectmanager.propertypages.Communication">
           <enabledWhen>
              <instanceof
                   value="org.netxms.client.NXCNode">

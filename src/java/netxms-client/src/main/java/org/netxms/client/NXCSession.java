@@ -1834,7 +1834,6 @@ public class NXCSession
 			}
 		}
 
-		// Custom attributes
 		if ((flags & NXCObjectModificationData.MODIFY_CUSTOM_ATTRIBUTES) != 0)
 		{
 			Map<String, String> attrList = data.getCustomAttributes();
@@ -1852,27 +1851,23 @@ public class NXCSession
 			msg.setVariableInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES, count);
 		}
 
-		// Auto apply
 		if ((flags & NXCObjectModificationData.MODIFY_AUTO_APPLY) != 0)
 		{
 			msg.setVariableInt16(NXCPCodes.VID_AUTO_APPLY, data.isAutoApplyEnabled() ? 1 : 0);
 			msg.setVariable(NXCPCodes.VID_APPLY_FILTER, data.getAutoApplyFilter());
 		}
 
-		// Auto bind
 		if ((flags & NXCObjectModificationData.MODIFY_AUTO_BIND) != 0)
 		{
 			msg.setVariableInt16(NXCPCodes.VID_ENABLE_AUTO_BIND, data.isAutoBindEnabled() ? 1 : 0);
 			msg.setVariable(NXCPCodes.VID_AUTO_BIND_FILTER, data.getAutoBindFilter());
 		}
 
-		// Description
 		if ((flags & NXCObjectModificationData.MODIFY_DESCRIPTION) != 0)
 		{
 			msg.setVariable(NXCPCodes.VID_DESCRIPTION, data.getDescription());
 		}
 
-		// Version
 		if ((flags & NXCObjectModificationData.MODIFY_VERSION) != 0)
 		{
 			msg.setVariableInt32(NXCPCodes.VID_VERSION, data.getVersion());
@@ -1885,10 +1880,44 @@ public class NXCSession
 			msg.setVariable(NXCPCodes.VID_CONFIG_FILE_DATA, data.getConfigFileContent());
 		}
 
-		// Agent port
 		if ((flags & NXCObjectModificationData.MODIFY_AGENT_PORT) != 0)
 		{
 			msg.setVariableInt16(NXCPCodes.VID_AGENT_PORT, data.getAgentPort());
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_AGENT_PROXY) != 0)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_PROXY_NODE, (int)data.getAgentProxy());
+		}
+
+		if ((flags & NXCObjectModificationData.MODIFY_AGENT_AUTH) != 0)
+		{
+			msg.setVariableInt16(NXCPCodes.VID_AUTH_METHOD, data.getAgentAuthMethod());
+			msg.setVariable(NXCPCodes.VID_SHARED_SECRET, data.getAgentSecret());
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_TRUSTED_NODES) != 0)
+		{
+			msg.setVariable(NXCPCodes.VID_TRUSTED_NODES, data.getTrustedNodes());
+		}
+		
+		if ((flags & NXCObjectModificationData.MODIFY_SNMP_VERSION) != 0)
+		{
+			msg.setVariableInt16(NXCPCodes.VID_SNMP_VERSION, data.getSnmpVersion());
+		}
+
+		if ((flags & NXCObjectModificationData.MODIFY_SNMP_AUTH) != 0)
+		{
+			msg.setVariable(NXCPCodes.VID_SNMP_AUTH_OBJECT, data.getSnmpAuthName());
+			msg.setVariable(NXCPCodes.VID_SNMP_AUTH_PASSWORD, data.getSnmpAuthPassword());
+			msg.setVariable(NXCPCodes.VID_SNMP_PRIV_PASSWORD, data.getSnmpPrivPassword());
+			int methods = data.getSnmpAuthMethod() | (data.getSnmpPrivMethod() << 8);
+			msg.setVariableInt16(NXCPCodes.VID_SNMP_USM_METHODS, methods);
+		}
+
+		if ((flags & NXCObjectModificationData.MODIFY_SNMP_PROXY) != 0)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_SNMP_PROXY, (int)data.getSnmpProxy());
 		}
 
 		sendMessage(msg);

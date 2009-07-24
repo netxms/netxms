@@ -79,7 +79,7 @@ public class Comments extends PropertyPage
 			setValid(false);
 		
 		final String newComments = new String(comments.getText());
-		new Job("Update comments") {
+		new Job("Update comments for object " + object.getObjectName()) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
@@ -100,7 +100,7 @@ public class Comments extends PropertyPage
 
 				if (isApply)
 				{
-					new UIJob("Update \"Automatic Apply Rules\" property page") {
+					new UIJob("Update \"Comments\" property page") {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{

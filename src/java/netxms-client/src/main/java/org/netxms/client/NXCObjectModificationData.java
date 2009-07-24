@@ -23,6 +23,12 @@ public class NXCObjectModificationData
 	public static final long MODIFY_VERSION           = 0x00000040L;
 	public static final long MODIFY_DESCRIPTION       = 0x00000080L;
 	public static final long MODIFY_AGENT_PORT        = 0x00000100L;
+	public static final long MODIFY_AGENT_AUTH        = 0x00000200L;
+	public static final long MODIFY_SNMP_VERSION      = 0x00000400L;
+	public static final long MODIFY_SNMP_AUTH         = 0x00000800L;
+	public static final long MODIFY_AGENT_PROXY       = 0x00001000L;
+	public static final long MODIFY_SNMP_PROXY        = 0x00002000L;
+	public static final long MODIFY_TRUSTED_NODES     = 0x00004000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -39,6 +45,17 @@ public class NXCObjectModificationData
 	private int version;
 	private String description;
 	private int agentPort;
+	private int agentAuthMethod;
+	private String agentSecret;
+	private long agentProxy;
+	private int snmpVersion;
+	private int snmpAuthMethod;
+	private int snmpPrivMethod;
+	private String snmpAuthName;
+	private String snmpAuthPassword;
+	private String snmpPrivPassword;
+	private long snmpProxy;
+	private long[] trustedNodes;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -287,5 +304,191 @@ public class NXCObjectModificationData
 		this.agentPort = agentPort;
 		flags |= MODIFY_AGENT_PORT;
 	}
-	
+
+	/**
+	 * @return the agentAuthMethod
+	 */
+	public int getAgentAuthMethod()
+	{
+		return agentAuthMethod;
+	}
+
+	/**
+	 * @param agentAuthMethod the agentAuthMethod to set
+	 */
+	public void setAgentAuthMethod(int agentAuthMethod)
+	{
+		this.agentAuthMethod = agentAuthMethod;
+		flags |= MODIFY_AGENT_AUTH;
+	}
+
+	/**
+	 * @return the agentSecret
+	 */
+	public String getAgentSecret()
+	{
+		return agentSecret;
+	}
+
+	/**
+	 * @param agentSecret the agentSecret to set
+	 */
+	public void setAgentSecret(String agentSecret)
+	{
+		this.agentSecret = agentSecret;
+		flags |= MODIFY_AGENT_AUTH;
+	}
+
+	/**
+	 * @return the agentProxy
+	 */
+	public long getAgentProxy()
+	{
+		return agentProxy;
+	}
+
+	/**
+	 * @param agentProxy the agentProxy to set
+	 */
+	public void setAgentProxy(long agentProxy)
+	{
+		this.agentProxy = agentProxy;
+		flags |= MODIFY_AGENT_PROXY;
+	}
+
+	/**
+	 * @return the snmpVersion
+	 */
+	public int getSnmpVersion()
+	{
+		return snmpVersion;
+	}
+
+	/**
+	 * @param snmpVersion the snmpVersion to set
+	 */
+	public void setSnmpVersion(int snmpVersion)
+	{
+		this.snmpVersion = snmpVersion;
+		flags |= MODIFY_SNMP_VERSION;
+	}
+
+	/**
+	 * @return the snmpAuthMethod
+	 */
+	public int getSnmpAuthMethod()
+	{
+		return snmpAuthMethod;
+	}
+
+	/**
+	 * @param snmpAuthMethod the snmpAuthMethod to set
+	 */
+	public void setSnmpAuthMethod(int snmpAuthMethod)
+	{
+		this.snmpAuthMethod = snmpAuthMethod;
+		flags |= MODIFY_SNMP_AUTH;
+	}
+
+	/**
+	 * @return the snmpPrivMethod
+	 */
+	public int getSnmpPrivMethod()
+	{
+		return snmpPrivMethod;
+	}
+
+	/**
+	 * @param snmpPrivMethod the snmpPrivMethod to set
+	 */
+	public void setSnmpPrivMethod(int snmpPrivMethod)
+	{
+		this.snmpPrivMethod = snmpPrivMethod;
+		flags |= MODIFY_SNMP_AUTH;
+	}
+
+	/**
+	 * @return the snmpAuthName
+	 */
+	public String getSnmpAuthName()
+	{
+		return snmpAuthName;
+	}
+
+	/**
+	 * @param snmpAuthName the snmpAuthName to set
+	 */
+	public void setSnmpAuthName(String snmpAuthName)
+	{
+		this.snmpAuthName = snmpAuthName;
+		flags |= MODIFY_SNMP_AUTH;
+	}
+
+	/**
+	 * @return the snmpAuthPassword
+	 */
+	public String getSnmpAuthPassword()
+	{
+		return snmpAuthPassword;
+	}
+
+	/**
+	 * @param snmpAuthPassword the snmpAuthPassword to set
+	 */
+	public void setSnmpAuthPassword(String snmpAuthPassword)
+	{
+		this.snmpAuthPassword = snmpAuthPassword;
+		flags |= MODIFY_SNMP_AUTH;
+	}
+
+	/**
+	 * @return the snmpPrivPassword
+	 */
+	public String getSnmpPrivPassword()
+	{
+		return snmpPrivPassword;
+	}
+
+	/**
+	 * @param snmpPrivPassword the snmpPrivPassword to set
+	 */
+	public void setSnmpPrivPassword(String snmpPrivPassword)
+	{
+		this.snmpPrivPassword = snmpPrivPassword;
+		flags |= MODIFY_SNMP_AUTH;
+	}
+
+	/**
+	 * @return the snmpProxy
+	 */
+	public long getSnmpProxy()
+	{
+		return snmpProxy;
+	}
+
+	/**
+	 * @param snmpProxy the snmpProxy to set
+	 */
+	public void setSnmpProxy(long snmpProxy)
+	{
+		this.snmpProxy = snmpProxy;
+		flags |= MODIFY_SNMP_PROXY;
+	}
+
+	/**
+	 * @return the trustedNodes
+	 */
+	public long[] getTrustedNodes()
+	{
+		return trustedNodes;
+	}
+
+	/**
+	 * @param trustedNodes the trustedNodes to set
+	 */
+	public void setTrustedNodes(long[] trustedNodes)
+	{
+		this.trustedNodes = trustedNodes;
+		flags |= MODIFY_TRUSTED_NODES;
+	}
 }

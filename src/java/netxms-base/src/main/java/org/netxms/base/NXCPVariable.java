@@ -25,11 +25,9 @@ public class NXCPVariable
 	private String stringValue;
 	private byte[] binaryValue;
 
-	
-	//
-	// Overriden toString()
-	//
-	
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString()
 	{
@@ -48,11 +46,11 @@ public class NXCPVariable
 		return result.toString();
 	}
 	
-	
-	//
-	// Set string value and numeric values if possible
-	//
-	
+	/**
+	 * Set string value and numeric values if possible
+	 * 
+	 * @param value New string value
+	 */
 	private void setStringValue(String value)
 	{
 		stringValue = (value != null) ? value : "";
@@ -74,13 +72,11 @@ public class NXCPVariable
 		}
 	}
 
-
 	/**
 	 * @param varId
 	 * @param varType
 	 * @param value
 	 */
-	
 	public NXCPVariable(final long varId, final int varType, final Long value)
 	{
 		variableId = varId;
@@ -123,6 +119,31 @@ public class NXCPVariable
 		variableId = varId;
 		variableType = TYPE_BINARY;
 		binaryValue = value;
+		stringValue = "";
+		integerValue = (long)0;
+		realValue = (double)0;
+	}
+
+	/**
+	 * @param varId
+	 * @param value
+	 */
+	public NXCPVariable(final long varId, final long[] value)
+	{
+		variableId = varId;
+		variableType = TYPE_BINARY;
+
+		final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(value.length * 4);
+		final DataOutputStream out = new DataOutputStream(byteStream);
+		try
+		{
+			for(int i = 0; i < value.length; i++)
+				out.writeInt((int)value[i]);
+		}
+		catch(IOException e)
+		{
+		}
+		binaryValue = byteStream.toByteArray();
 		stringValue = "";
 		integerValue = (long)0;
 		realValue = (double)0;
@@ -225,27 +246,51 @@ public class NXCPVariable
 		}
 	}
 
-
+	/**
+	 * Get variable's value as long integer
+	 * 
+	 * @return Variable's value as long integer
+	 */
 	public Long getAsInteger()
 	{
 		return integerValue;
 	}
 
+	/**
+	 * Get variable's value as floating point number
+	 * 
+	 * @return Variable's value as floating point number
+	 */
 	public Double getAsReal()
 	{
 		return realValue;
 	}
 
+	/**
+	 * Get variable's value as string
+	 * 
+	 * @return Variable's value as string
+	 */
 	public String getAsString()
 	{
 		return stringValue;
 	}
 
+	/**
+	 * Get variable's value as byte array
+	 * 
+	 * @return Variable's value as byte array
+	 */
 	public byte[] getAsBinary()
 	{
 		return binaryValue;
 	}
 
+	/**
+	 * Get variable's value as IP address
+	 * 
+	 * @return Variable's value as IP address
+	 */
 	public InetAddress getAsInetAddress()
 	{
 		final byte[] addr = new byte[4];
@@ -268,6 +313,11 @@ public class NXCPVariable
 		return inetAddr;
 	}
 	
+	/**
+	 * Get variable's value as UUID
+	 * 
+	 * @return Variable's value as UUID
+	 */
 	public UUID getAsUUID()
 	{
 		if ((variableType != TYPE_BINARY) || (binaryValue == null) || (binaryValue.length != 16))
@@ -289,6 +339,12 @@ public class NXCPVariable
 		return new UUID(hiBits, loBits);
 	}
 	
+	/**
+	 * Get variable's value as array of long integers. Variable should be of
+	 * binary type, and integer values should be packet as DWORD's in network byte order.
+	 * 
+	 * @return Variable's value as array of long integers
+	 */
 	public long[] getAsUInt32Array()
 	{
 		if ((variableType != TYPE_BINARY) || (binaryValue == null))
@@ -308,6 +364,12 @@ public class NXCPVariable
 		return value;
 	}
 	
+	/**
+	 * Get variable's value as array of long integers. Variable should be of
+	 * binary type, and integer values should be packet as DWORD's in network byte order.
+	 * 
+	 * @return Variable's value as array of long integers
+	 */
 	public Long[] getAsUInt32ArrayEx()
 	{
 		if ((variableType != TYPE_BINARY) || (binaryValue == null))

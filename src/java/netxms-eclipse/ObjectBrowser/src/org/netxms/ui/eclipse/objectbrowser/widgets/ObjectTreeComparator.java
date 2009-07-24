@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.objectbrowser;
+package org.netxms.ui.eclipse.objectbrowser.widgets;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
@@ -11,7 +11,7 @@ import org.netxms.client.NXCObject;
  * @author Victor
  *
  */
-public class ObjectTreeComparator extends ViewerComparator
+class ObjectTreeComparator extends ViewerComparator
 {
 	// Categories
 	private static final int CATEGORY_CONTAINER = 10;

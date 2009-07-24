@@ -28,6 +28,7 @@ Export-Package: com.keypoint,
  org.netxms.base,
  org.netxms.client,
  org.netxms.ui.eclipse.shared,
- org.netxms.ui.eclipse.tools
+ org.netxms.ui.eclipse.tools,
+ org.netxms.ui.eclipse.widgets
 Require-Bundle: org.eclipse.ui;bundle-version="3.4.1",
  org.eclipse.core.runtime;bundle-version="3.4.0"

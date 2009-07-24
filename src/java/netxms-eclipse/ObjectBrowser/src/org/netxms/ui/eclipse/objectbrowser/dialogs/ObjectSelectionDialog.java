@@ -21,7 +21,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
-import org.netxms.ui.eclipse.objectbrowser.ObjectTree;
+import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
@@ -82,7 +82,7 @@ public class ObjectSelectionDialog extends Dialog
 	protected Control createDialogArea(Composite parent)
 	{
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
-		Composite dialogArea = (Composite) super.createDialogArea(parent);
+		Composite dialogArea = (Composite)super.createDialogArea(parent);
 
 		dialogArea.setLayout(new FormLayout());
 

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.objectbrowser;
+package org.netxms.ui.eclipse.objectbrowser.widgets;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -9,6 +9,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FormAttachment;
@@ -25,6 +27,7 @@ import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
@@ -43,6 +46,8 @@ public class ObjectList extends Composite
 	private Composite filterArea;
 	private Label filterLabel;
 	private Text filterText;
+	private NXCListener sessionListener = null;
+	private NXCSession session = null;
 	
 	/**
 	 * @param parent
@@ -52,11 +57,11 @@ public class ObjectList extends Composite
 	{
 		super(parent, style);
 
+		session = NXMCSharedData.getInstance().getSession();
+
 		FormLayout formLayout = new FormLayout();
 		setLayout(formLayout);
 		
-		NXCSession session = NXMCSharedData.getInstance().getSession();
-
 		objectList = new TableViewer(this, SWT.SINGLE | SWT.FULL_SELECTION | (((options & CHECKBOXES) == CHECKBOXES) ? SWT.CHECK : 0));
 		objectList.setContentProvider(new ArrayContentProvider());
 		objectList.setLabelProvider(new WorkbenchLabelProvider());
@@ -97,7 +102,7 @@ public class ObjectList extends Composite
 		filterArea.setLayoutData(fd);
 		
 		// Add client library listener
-		session.addListener(new NXCListener() {
+		sessionListener = new NXCListener() {
 			@Override
 			public void notificationHandler(NXCNotification n)
 			{
@@ -114,9 +119,22 @@ public class ObjectList extends Composite
 					}.schedule();
 				}
 			}
+		};
+		session.addListener(sessionListener);
+
+		// Set dispose listener
+		addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				if ((session != null) && (sessionListener != null))
+					session.removeListener(sessionListener);
+			}
 		});
+		
+		// Set initial focus to filter input line
+		filterText.setFocus();
 	}
-	
 	
 	/**
 	 * Enable or disable filter
@@ -132,7 +150,6 @@ public class ObjectList extends Composite
 		layout();
 	}
 
-
 	/**
 	 * @return the filterEnabled
 	 */
@@ -140,7 +157,6 @@ public class ObjectList extends Composite
 	{
 		return filterEnabled;
 	}
-	
 	
 	/**
 	 * Set filter text
@@ -151,7 +167,6 @@ public class ObjectList extends Composite
 	{
 		filterText.setText(text);
 	}
-
 	
 	/**
 	 * Get filter text
@@ -162,7 +177,6 @@ public class ObjectList extends Composite
 	{
 		return filterText.getText();
 	}
-
 	
 	/**
 	 * Get underlying table control
@@ -173,7 +187,6 @@ public class ObjectList extends Composite
 	{
 		return objectList.getControl();
 	}
-	
 	
 	/**
 	 * Get underlying table viewer

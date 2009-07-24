@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.objectbrowser;
+package org.netxms.ui.eclipse.objectbrowser.widgets;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -12,6 +12,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FormAttachment;
@@ -32,6 +34,7 @@ import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
@@ -51,6 +54,8 @@ public class ObjectTree extends Composite
 	private Text filterText;
 	private ObjectTreeFilter filter;
 	private Set<Long> checkedObjects = new HashSet<Long>(0);
+	private NXCListener sessionListener = null;
+	private NXCSession session = null;
 	
 	/**
 	 * @param parent
@@ -60,11 +65,11 @@ public class ObjectTree extends Composite
 	{
 		super(parent, style);
 		
+		session = NXMCSharedData.getInstance().getSession();
+
 		FormLayout formLayout = new FormLayout();
 		setLayout(formLayout);
 		
-		NXCSession session = NXMCSharedData.getInstance().getSession();
-
 		// Create filter area
 		filterArea = new Composite(this, SWT.NONE);
 		
@@ -173,7 +178,7 @@ public class ObjectTree extends Composite
 		filterArea.setLayoutData(fd);
 		
 		// Add client library listener
-		session.addListener(new NXCListener() {
+		sessionListener = new NXCListener() {
 			@Override
 			public void notificationHandler(NXCNotification n)
 			{
@@ -191,12 +196,22 @@ public class ObjectTree extends Composite
 					}.schedule();
 				}
 			}
+		};
+		session.addListener(sessionListener);
+		
+		// Set dispose listener
+		addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e)
+			{
+				if ((session != null) && (sessionListener != null))
+					session.removeListener(sessionListener);
+			}
 		});
 		
 		// Set initial focus to filter input line
 		filterText.setFocus();
 	}
-	
 	
 	/**
 	 * Get underlying tree control
@@ -207,8 +222,7 @@ public class ObjectTree extends Composite
 	{
 		return objectTree.getTree();
 	}
-	
-	
+		
 	/**
 	 * Get underlying tree viewer
 	 *
@@ -218,7 +232,6 @@ public class ObjectTree extends Composite
 	{
 		return objectTree;
 	}
-	
 	
 	/**
 	 * Enable or disable filter
@@ -233,7 +246,6 @@ public class ObjectTree extends Composite
 		fd.top = enable ? new FormAttachment(filterArea) : new FormAttachment(0, 0);
 		layout();
 	}
-
 
 	/**
 	 * @return the filterEnabled

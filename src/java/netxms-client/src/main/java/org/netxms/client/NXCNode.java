@@ -13,6 +13,15 @@ import org.netxms.base.*;
  */
 public class NXCNode extends NXCObject
 {
+	public static final int SNMP_VERSION_1 = 0;
+	public static final int SNMP_VERSION_2C = 1;
+	public static final int SNMP_VERSION_3 = 3;
+	
+	public static final int AGENT_AUTH_NONE = 0;
+	public static final int AGENT_AUTH_PLAINTEXT = 1;
+	public static final int AGENT_AUTH_MD5 = 2;
+	public static final int AGENT_AUTH_SHA1 = 3;
+	
 	private int flags;
 	private int nodeType;
 	private int requredPollCount;

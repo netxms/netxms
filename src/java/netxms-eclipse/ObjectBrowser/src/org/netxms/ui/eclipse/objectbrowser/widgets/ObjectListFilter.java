@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.objectbrowser;
+package org.netxms.ui.eclipse.objectbrowser.widgets;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
@@ -11,7 +11,7 @@ import org.netxms.client.NXCObject;
  * @author Victor
  *
  */
-public class ObjectListFilter extends ViewerFilter
+class ObjectListFilter extends ViewerFilter
 {
 	private String filterString = null;
 	
