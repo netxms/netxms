@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="Location Map"
+            allowMultiple="false"
+            icon="icons/map.png"
+            class="org.netxms.ui.eclipse.googlemaps.views.LocationMap"
+            id="org.netxms.ui.eclipse.googlemaps.view.location_map">
+      </view>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            name="Views"
+            id="org.netxms.ui.eclipse.console.category.views">
+      </category>
+      <command
+            name="Location Map"
+            description="Open Location Map"
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.googlemaps.commands.open_location_map">
+      </command>
+   </extension>
+   
+   <extension point = "org.eclipse.ui.actionSets">
+	   <actionSet id="org.netxms.ui.eclipse.googlemaps.action_set"
+		   label="Location Map"
+		   visible="true">
+		   <action id="org.netxms.ui.eclipse.googlemaps.actions.open"
+			   menubarPath="view/primary"
+			   toolbarPath="view"
+			   label="Location Map"
+			   tooltip="Open Location Map"
+			   icon="icons/map.png"
+			   class="org.netxms.ui.eclipse.googlemaps.actions.OpenLocationMap"
+			   definitionId="org.netxms.ui.eclipse.googlemaps.commands.open_location_map">
+		   </action>
+	   </actionSet>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.googlemaps.commands.open_location_map"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="Ctrl+F11">
+      </key>
+   </extension>
+
+</plugin>
