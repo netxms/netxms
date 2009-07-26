@@ -555,6 +555,36 @@ extern "C" BOOL EXPORT DrvFetch(MSDB_ASYNC_QUERY_RESULT *pResult)
 
 
 //
+// Get field length from async query result
+//
+
+extern "C" LONG EXPORT DrvGetFieldLengthAsync(MSDB_ASYNC_QUERY_RESULT *result, int column)
+{
+	if ((result == NULL) || (column < 0) || (column >= result->iNumCols))
+      return -1;
+
+   switch(result->piColTypes[column])
+   {
+      case SQLCHAR:
+      case SQLTEXT:
+      case SQLBINARY:
+         return dbdatlen(result->pConnection->hProcess, column + 1);
+      case SQLINT1:
+         return 4;
+      case SQLINT2:
+         return 6;
+      case SQLINT4:
+         return 12;
+      case SQLFLT4:
+         return 30;
+      case SQLFLT8:
+			return 20;
+	}
+	return 0;
+}
+
+
+//
 // Get field from current row in async query result
 //
 

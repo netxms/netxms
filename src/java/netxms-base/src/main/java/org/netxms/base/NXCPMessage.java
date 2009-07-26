@@ -355,8 +355,17 @@ public class NXCPMessage
 	 * Return true if message has "end of file" flag set
 	 * @return "end of file" flag
 	 */
-	public boolean isEndOfFileSet()
+	public boolean isEndOfFile()
 	{
 		return (messageFlags & MF_END_OF_FILE) == MF_END_OF_FILE;
+	}
+	
+	/**
+	 * Return true if message has "end of sequence" flag set
+	 * @return "end of file" flag
+	 */
+	public boolean isEndOfSequence()
+	{
+		return (messageFlags & MF_END_OF_SEQUENCE) == MF_END_OF_SEQUENCE;
 	}
 }

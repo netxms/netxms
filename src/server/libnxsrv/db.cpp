@@ -52,6 +52,7 @@ static DB_RESULT (* m_fpDrvSelect)(DB_CONNECTION, WCHAR *, DWORD *, TCHAR *) = N
 static DB_ASYNC_RESULT (* m_fpDrvAsyncSelect)(DB_CONNECTION, WCHAR *, DWORD *, TCHAR *) = NULL;
 static BOOL (* m_fpDrvFetch)(DB_ASYNC_RESULT) = NULL;
 static LONG (* m_fpDrvGetFieldLength)(DB_RESULT, int, int) = NULL;
+static LONG (* m_fpDrvGetFieldLengthAsync)(DB_RESULT, int) = NULL;
 static WCHAR* (* m_fpDrvGetField)(DB_RESULT, int, int, WCHAR *, int) = NULL;
 static WCHAR* (* m_fpDrvGetFieldAsync)(DB_ASYNC_RESULT, int, WCHAR *, int) = NULL;
 static int (* m_fpDrvGetNumRows)(DB_RESULT) = NULL;
@@ -135,6 +136,7 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bnxlog_write, BOOL bLogErrors, BOOL bDumpSQ
    m_fpDrvAsyncSelect = (DB_ASYNC_RESULT (*)(DB_CONNECTION, WCHAR *, DWORD *, TCHAR *))DLGetSymbolAddrEx(m_hDriver, "DrvAsyncSelect");
    m_fpDrvFetch = (BOOL (*)(DB_ASYNC_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvFetch");
    m_fpDrvGetFieldLength = (LONG (*)(DB_RESULT, int, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetFieldLength");
+   m_fpDrvGetFieldLengthAsync = (LONG (*)(DB_RESULT, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetFieldLengthAsync");
    m_fpDrvGetField = (WCHAR* (*)(DB_RESULT, int, int, WCHAR *, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetField");
    m_fpDrvGetFieldAsync = (WCHAR* (*)(DB_ASYNC_RESULT, int, WCHAR *, int))DLGetSymbolAddrEx(m_hDriver, "DrvGetFieldAsync");
    m_fpDrvGetNumRows = (int (*)(DB_RESULT))DLGetSymbolAddrEx(m_hDriver, "DrvGetNumRows");
@@ -156,7 +158,7 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bnxlog_write, BOOL bLogErrors, BOOL bDumpSQ
        (m_fpDrvBegin == NULL) || (m_fpDrvCommit == NULL) || (m_fpDrvRollback == NULL) ||
 		 (m_fpDrvGetColumnCount == NULL) || (m_fpDrvGetColumnName == NULL) ||
 		 (m_fpDrvGetColumnCountAsync == NULL) || (m_fpDrvGetColumnNameAsync == NULL) ||
-       (m_fpDrvGetFieldLength == NULL))
+       (m_fpDrvGetFieldLength == NULL) || (m_fpDrvGetFieldLengthAsync == NULL))
    {
       if (m_bnxlog_write)
          nxlog_write(MSG_DBDRV_NO_ENTRY_POINTS, EVENTLOG_ERROR_TYPE, "s", g_szDbDriver);
@@ -797,23 +799,74 @@ BOOL LIBNXSRV_EXPORTABLE DBFetch(DB_ASYNC_RESULT hResult)
 TCHAR LIBNXSRV_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, TCHAR *pBuffer, int iBufSize)
 {
 #ifdef UNICODE
-   return m_fpDrvGetFieldAsync(hResult, iColumn, pBuffer, iBufSize);
-#else
-   WCHAR *pwszBuffer;
-   char *pszRet;
-
-   pwszBuffer = (WCHAR *)malloc(iBufSize * sizeof(WCHAR));
-   if (m_fpDrvGetFieldAsync(hResult, iColumn, pwszBuffer, iBufSize) != NULL)
+   if (pBuffer != NULL)
    {
-      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                          pwszBuffer, -1, pBuffer, iBufSize, NULL, NULL);
-      pszRet = pBuffer;
+	   return m_fpDrvGetFieldAsync(hResult, iColumn, pBuffer, iBufSize);
    }
    else
    {
-      pszRet = NULL;
+      LONG nLen;
+      WCHAR *pszTemp;
+
+      nLen = m_fpDrvGetFieldLengthAsync(hResult, iColumn);
+      if (nLen == -1)
+      {
+         pszTemp = NULL;
+      }
+      else
+      {
+         nLen++;
+         pszBuffer = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+         m_fpDrvGetFieldAsync(hResult, iColumn, pszTemp, nLen);
+      }
+      return pszTemp;
    }
-   free(pwszBuffer);
+#else
+   WCHAR *pwszData, *pwszBuffer;
+   char *pszRet;
+   int nLen;
+
+   if (pBuffer != NULL)
+   {
+		pwszBuffer = (WCHAR *)malloc(iBufSize * sizeof(WCHAR));
+		if (m_fpDrvGetFieldAsync(hResult, iColumn, pwszBuffer, iBufSize) != NULL)
+		{
+			WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+									  pwszBuffer, -1, pBuffer, iBufSize, NULL, NULL);
+			pszRet = pBuffer;
+		}
+		else
+		{
+			pszRet = NULL;
+		}
+		free(pwszBuffer);
+   }
+   else
+   {
+      nLen = m_fpDrvGetFieldLengthAsync(hResult, iColumn);
+      if (nLen == -1)
+      {
+         pszRet = NULL;
+      }
+      else
+      {
+         nLen++;
+         pwszBuffer = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+         pwszData = m_fpDrvGetFieldAsync(hResult, iColumn, pwszBuffer, nLen);
+         if (pwszData != NULL)
+         {
+            nLen = (int)wcslen(pwszData) + 1;
+            pszRet = (char *)malloc(nLen);
+            WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
+                                pwszData, -1, pszRet, nLen, NULL, NULL);
+         }
+         else
+         {
+            pszRet = NULL;
+         }
+         free(pwszBuffer);
+      }
+   }
    return pszRet;
 #endif
 }

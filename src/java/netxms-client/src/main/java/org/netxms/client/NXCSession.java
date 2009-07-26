@@ -381,7 +381,7 @@ public class NXCSession
 				}
 			}
 			file.writeData(msg.getBinaryData());
-			if (msg.isEndOfFileSet())
+			if (msg.isEndOfFile())
 			{
 				file.close();
 				synchronized(receivedFiles)

@@ -563,6 +563,31 @@ extern "C" BOOL EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
 
 
 //
+// Get field length from async query result
+//
+
+extern "C" LONG EXPORT DrvGetFieldLengthAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult, int iColumn)
+{
+   LONG nLen = -1;
+
+   if (pResult != NULL)
+   {
+      if ((iColumn < pResult->iNumCols) && (iColumn >= 0))
+		{
+			SQLLEN dataSize;
+		   long rc = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_CHAR,
+		                        NULL, 0, &dataSize);
+			if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
+			{
+				nLen = dataSize;
+			}
+		}
+   }
+   return nLen;
+}
+
+
+//
 // Get field from current row in async query result
 //
 
