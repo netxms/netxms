@@ -2,10 +2,10 @@ package org.netxms.client;
 
 public final class NXCAccessListElement
 {
-	private int userId;
+	private long userId;
 	private int accessRights;
 
-	public NXCAccessListElement(int userId, int accessRights)
+	public NXCAccessListElement(long userId, int accessRights)
 	{
 		this.userId = userId;
 		this.accessRights = accessRights;
@@ -14,7 +14,7 @@ public final class NXCAccessListElement
 	/**
 	 * @return the userId
 	 */
-	public int getUserId()
+	public long getUserId()
 	{
 		return userId;
 	}
@@ -43,6 +43,6 @@ public final class NXCAccessListElement
 	@Override
 	public int hashCode()
 	{
-		return (accessRights << 16) & userId;
+		return (int)((accessRights << 16) & userId);
 	}
 }

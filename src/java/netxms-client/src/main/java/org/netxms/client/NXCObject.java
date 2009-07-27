@@ -125,7 +125,7 @@ public class NXCObject
 		count = msg.getVariableAsInteger(NXCPCodes.VID_ACL_SIZE);
 		for(i = 0, id = NXCPCodes.VID_ACL_USER_BASE, id2 = NXCPCodes.VID_ACL_RIGHTS_BASE; i < count; i++, id++, id2++)
 		{
-			accessList.add(new NXCAccessListElement(msg.getVariableAsInteger(id), msg.getVariableAsInteger(id2)));
+			accessList.add(new NXCAccessListElement(msg.getVariableAsInt64(id), msg.getVariableAsInteger(id2)));
 		}
 	}
 
@@ -149,13 +149,12 @@ public class NXCObject
 
 
 	/**
-	 * @return Iterator for access list
+	 * @return Access list
 	 */
-	public Iterator<NXCAccessListElement> getAccessList()
+	public NXCAccessListElement[] getAccessList()
 	{
-		return accessList.iterator();
+		return accessList.toArray(new NXCAccessListElement[accessList.size()]);
 	}
-
 
 	/**
 	 * @return the comments

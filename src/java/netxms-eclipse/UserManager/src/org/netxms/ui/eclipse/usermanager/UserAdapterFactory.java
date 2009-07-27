@@ -6,6 +6,8 @@ package org.netxms.ui.eclipse.usermanager;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.model.IWorkbenchAdapter;
+import org.netxms.client.NXCAccessListElement;
+import org.netxms.client.NXCSession;
 import org.netxms.client.NXCUser;
 import org.netxms.client.NXCUserDBObject;
 import org.netxms.client.NXCUserGroup;
@@ -98,6 +100,40 @@ public class UserAdapterFactory implements IAdapterFactory
 					public String getLabel(Object o)
 					{
 						return ((NXCUserGroup)o).getName();
+					}
+
+					@Override
+					public Object getParent(Object o)
+					{
+						return null;
+					}
+				};
+			}
+
+			// NXCAccessListElement
+			if (adaptableObject instanceof NXCAccessListElement)
+			{
+				return new IWorkbenchAdapter() {
+					@Override
+					public Object[] getChildren(Object o)
+					{
+						return null;
+					}
+
+					@Override
+					public ImageDescriptor getImageDescriptor(Object object)
+					{
+						long userId = ((NXCAccessListElement)object).getUserId();
+						return Activator.getImageDescriptor((userId < 0x80000000L) ? "icons/user.png" : "icons/group.png");
+					}
+
+					@Override
+					public String getLabel(Object object)
+					{
+						long userId = ((NXCAccessListElement)object).getUserId();
+						NXCSession session = NXMCSharedData.getInstance().getSession();
+						NXCUserDBObject dbo = session.findUserDBObjectById(userId);
+						return (dbo != null) ? dbo.getName() : ("{" + Long.toString(userId) + "}");
 					}
 
 					@Override

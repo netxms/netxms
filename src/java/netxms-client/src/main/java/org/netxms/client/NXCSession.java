@@ -1829,7 +1829,7 @@ public class NXCSession
 			long id2 = NXCPCodes.VID_ACL_RIGHTS_BASE;
 			for(int i = 0; i < acl.length; i++)
 			{
-				msg.setVariableInt32(id1++, acl[i].getUserId());
+				msg.setVariableInt32(id1++, (int)acl[i].getUserId());
 				msg.setVariableInt32(id2++, acl[i].getAccessRights());
 			}
 		}

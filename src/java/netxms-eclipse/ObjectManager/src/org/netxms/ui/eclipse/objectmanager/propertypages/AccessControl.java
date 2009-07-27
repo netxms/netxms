@@ -3,8 +3,8 @@
  */
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -16,8 +16,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.ui.eclipse.objectmanager.AttrListLabelProvider;
-import org.netxms.ui.eclipse.objectmanager.AttrViewerComparator;
+import org.netxms.client.NXCAccessListElement;
+import org.netxms.client.NXCObject;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -27,6 +27,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class AccessControl extends PropertyPage
 {
+	private NXCObject object;
 	private SortableTableViewer userList;
 	private Button checkRead;
 	private Button checkModify;
@@ -46,6 +47,11 @@ public class AccessControl extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
+		object = (NXCObject)getElement().getAdapter(NXCObject.class);
+		
+		// Initiate loading of user manager plugin if it was not loaded before
+		Platform.getAdapterManager().loadAdapter(new NXCAccessListElement(0, 0), "org.eclipse.ui.model.IWorkbenchAdapter");
+		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
@@ -72,6 +78,7 @@ public class AccessControl extends PropertyPage
                                          SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       userList.setContentProvider(new ArrayContentProvider());
       userList.setLabelProvider(new WorkbenchLabelProvider());
+      userList.setInput(object.getAccessList());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;

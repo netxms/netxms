@@ -214,7 +214,7 @@ public class NXCPVariable
 			switch(variableType)
 			{
 				case TYPE_INTEGER:
-					integerValue = (long)in.readInt();
+					integerValue = (long)in.readUnsignedInt();
 					realValue = integerValue.doubleValue();
 					stringValue = integerValue.toString();
 					break;
