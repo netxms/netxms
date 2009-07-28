@@ -32,6 +32,18 @@ public abstract class NXCUserDBObject
 	public static final int SYSTEM_ACCESS_REGISTER_AGENTS = 0x00080000;
 	public static final int SYSTEM_ACCESS_READ_FILES = 0x00100000;
 	
+	public static final int OBJECT_ACCESS_READ          = 0x00000001;
+	public static final int OBJECT_ACCESS_MODIFY        = 0x00000002;
+	public static final int OBJECT_ACCESS_CREATE        = 0x00000004;
+	public static final int OBJECT_ACCESS_DELETE        = 0x00000008;
+	public static final int OBJECT_ACCESS_READ_ALARMS   = 0x00000010;
+	public static final int OBJECT_ACCESS_ACL           = 0x00000020;
+	public static final int OBJECT_ACCESS_ACK_ALARMS    = 0x00000040;
+	public static final int OBJECT_ACCESS_SEND_EVENTS   = 0x00000080;
+	public static final int OBJECT_ACCESS_CONTROL       = 0x00000100;
+	public static final int OBJECT_ACCESS_TERM_ALARMS   = 0x00000200;
+	public static final int OBJECT_ACCESS_PUSH_DATA     = 0x00000400;
+	
 	// Object flags
 	public static final int MODIFIED = 0x0001;
 	public static final int DELETED = 0x0002;
