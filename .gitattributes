@@ -477,10 +477,12 @@ src/java/netxms-eclipse/UserManager/icons/user_manager.png -text
 src/java/netxms-eclipse/UserManager/plugin.xml -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/Activator.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/UserAdapterFactory.java -text
+src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/UserComparator.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/actions/ChangePassword.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/actions/OpenUserManager.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/dialogs/ChangePasswordDialog.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/dialogs/CreateObjectDialog.java -text
+src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/dialogs/SelectUserDialog.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/propertypages/Authentication.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/propertypages/General.java -text
 src/java/netxms-eclipse/UserManager/src/org/netxms/ui/eclipse/usermanager/propertypages/Members.java -text

@@ -15,6 +15,7 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -38,6 +39,7 @@ import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
 
 /**
  * @author Victor
@@ -111,6 +113,26 @@ public class AccessControl extends PropertyPage
       
       final Button addButton = new Button(buttons, SWT.PUSH);
       addButton.setText("Add...");
+      addButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				SelectUserDialog dlg = new SelectUserDialog(AccessControl.this.getShell(), true);
+				if (dlg.open() == Window.OK)
+				{
+					NXCUserDBObject[] selection = dlg.getSelection();
+					for(NXCUserDBObject user : selection)
+						acl.put(user.getId(), new NXCAccessListElement(user.getId(), 0));
+					userList.setInput(acl.values().toArray());
+				}
+			}
+      });
 
       final Button deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText("Delete");

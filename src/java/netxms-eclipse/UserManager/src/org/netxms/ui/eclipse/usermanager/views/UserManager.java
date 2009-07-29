@@ -18,15 +18,12 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
@@ -36,6 +33,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
@@ -45,11 +43,11 @@ import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.NXCUser;
 import org.netxms.client.NXCUserDBObject;
-import org.netxms.client.NXCUserGroup;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.RefreshAction;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 import org.netxms.ui.eclipse.usermanager.Activator;
+import org.netxms.ui.eclipse.usermanager.UserComparator;
 import org.netxms.ui.eclipse.usermanager.dialogs.ChangePasswordDialog;
 import org.netxms.ui.eclipse.usermanager.dialogs.CreateObjectDialog;
 
@@ -63,11 +61,11 @@ public class UserManager extends ViewPart
 	public static final String JOB_FAMILY = "UserManagerJob";
 
 	// Columns
-	private static final int COLUMN_NAME = 0;
-	private static final int COLUMN_TYPE = 1;
-	private static final int COLUMN_FULLNAME = 2;
-	private static final int COLUMN_DESCRIPTION = 3;
-	private static final int COLUMN_GUID = 4;
+	public static final int COLUMN_NAME = 0;
+	public static final int COLUMN_TYPE = 1;
+	public static final int COLUMN_FULLNAME = 2;
+	public static final int COLUMN_DESCRIPTION = 3;
+	public static final int COLUMN_GUID = 4;
 
 	private TableViewer viewer;
 	private NXCSession session;
@@ -89,40 +87,21 @@ public class UserManager extends ViewPart
 	 * @author Victor
 	 * 
 	 */
-	private class UserLabelProvider implements ITableLabelProvider
+	private class UserLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider
 	{
-		private Image userImage;
-		private Image groupImage;
-
-		public UserLabelProvider()
-		{
-			userImage = Activator.getImageDescriptor("icons/user.png").createImage();
-			groupImage = Activator.getImageDescriptor("icons/group.png").createImage();
-		}
-
 		@Override
 		public Image getColumnImage(Object element, int columnIndex)
 		{
-			if (columnIndex == 0)
-			{
-				if (element instanceof NXCUser)
-					return userImage;
-				if (element instanceof NXCUserGroup)
-					return groupImage;
-			}
-			return null;
+			return (columnIndex == 0) ? getImage(element) : null;
 		}
 
 		@Override
 		public String getColumnText(Object element, int columnIndex)
 		{
-			if (!(element instanceof NXCUserDBObject))
-				return null;
-
 			switch(columnIndex)
 			{
 				case COLUMN_NAME:
-					return ((NXCUserDBObject) element).getName();
+					return getText(element);
 				case COLUMN_TYPE:
 					return (element instanceof NXCUser) ? "User" : "Group";
 				case COLUMN_FULLNAME:
@@ -133,92 +112,6 @@ public class UserManager extends ViewPart
 					return ((NXCUserDBObject) element).getGuid().toString();
 			}
 			return null;
-		}
-
-		@Override
-		public void addListener(ILabelProviderListener listener)
-		{
-		}
-
-		@Override
-		public void dispose()
-		{
-			userImage.dispose();
-			groupImage.dispose();
-		}
-
-		@Override
-		public boolean isLabelProperty(Object element, String property)
-		{
-			return false;
-		}
-
-		@Override
-		public void removeListener(ILabelProviderListener listener)
-		{
-		}
-	}
-
-	/**
-	 * Comparator for user list
-	 * 
-	 * @author Victor
-	 * 
-	 */
-	private class UserComparator extends ViewerComparator
-	{
-		/**
-		 * Compare object types
-		 */
-		private int compareTypes(Object o1, Object o2)
-		{
-			int type1 = (o1 instanceof NXCUserGroup) ? 1 : 0;
-			int type2 = (o2 instanceof NXCUserGroup) ? 1 : 0;
-			return type1 - type2;
-		}
-
-		/**
-		 * Get full name for user db object
-		 */
-		private String getFullName(Object object)
-		{
-			if (object instanceof NXCUser)
-				return ((NXCUser) object).getFullName();
-			return "";
-		}
-
-		/* (non-Javadoc)
-		 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-		 */
-		@Override
-		public int compare(Viewer viewer, Object e1, Object e2)
-		{
-			int result;
-
-			switch((Integer) ((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"))
-			{
-				case COLUMN_NAME:
-					result = ((NXCUserDBObject) e1).getName().compareToIgnoreCase(((NXCUserDBObject) e2).getName());
-					break;
-				case COLUMN_TYPE:
-					result = compareTypes(e1, e2);
-					break;
-				case COLUMN_FULLNAME:
-					result = getFullName(e1).compareToIgnoreCase(getFullName(e2));
-					break;
-				case COLUMN_DESCRIPTION:
-					result = ((NXCUserDBObject) e1).getDescription().compareToIgnoreCase(
-							((NXCUserDBObject) e2).getDescription());
-					break;
-				case COLUMN_GUID:
-					result = ((NXCUserDBObject) e1).getGuid().toString().compareTo(
-							((NXCUserDBObject) e2).getGuid().toString());
-					break;
-				default:
-					result = 0;
-					break;
-			}
-			return (((SortableTableViewer) viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
 		}
 	}
 

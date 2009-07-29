@@ -168,7 +168,7 @@ public class Authentication extends PropertyPage
 				{
 					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
 					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-					                    "Cannot update user account: " + e.getMessage(), e);
+					                    "Cannot update user account: " + e.getMessage(), null);
 				}
 
 				if (isApply)
