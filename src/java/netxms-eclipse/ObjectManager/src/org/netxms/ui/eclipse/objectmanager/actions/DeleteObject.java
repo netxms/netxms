@@ -1,86 +1,55 @@
 package org.netxms.ui.eclipse.objectmanager.actions;
 
-import java.io.IOException;
-
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.TreeSelection;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IWorkbenchPart;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.netxms.client.NXCException;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.objectmanager.Activator;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
-public class DeleteObject implements IObjectActionDelegate
+public class DeleteObject extends MultipleObjectAction
 {
-	private IWorkbenchWindow window;
-	private NXCObject object;
-
-	@Override
-	public void setActivePart(IAction action, IWorkbenchPart targetPart)
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#confirm()
+	 */
+	protected boolean confirm()
 	{
-		window = targetPart.getSite().getWorkbenchWindow();
-	}
-
-	@Override
-	public void run(IAction action)
-	{
-		boolean confirmed = MessageDialog.openConfirm(window.getShell(), "Confirm Delete",
-				"Are you sure you want to delete '" + object.getObjectName() + "'?");
-
-		if (!confirmed)
-			return;
-
-		new Job("Delete object " + object.getObjectName() + " [" + object.getObjectId() + "]") {
-			@Override
-			protected IStatus run(IProgressMonitor monitor)
-			{
-				IStatus status;
-				final NXCSession session = NXMCSharedData.getInstance().getSession();
-				try
-				{
-					session.deleteObject(object.getObjectId());
-					status = Status.OK_STATUS;
-				}
-				catch(NXCException e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, e.getErrorCode(),
-								           "Cannot delete object " + object.getObjectName() + ": " + e.getMessage(), null);
-				}
-				catch(IOException e)
-				{
-					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 0,
-					                    "Cannot delete object " + object.getObjectName() + ": I/O error (" + e.getMessage() + ")", null);
-				}
-				return status;
-			}
-		}.schedule();
-	}
-
-	@Override
-	public void selectionChanged(IAction action, ISelection selection)
-	{
-		if (selection instanceof TreeSelection)
+		IStructuredSelection selection = getSelection();
+		String question;
+		if (selection.size() == 1)
 		{
-			final Object obj = ((TreeSelection)selection).getFirstElement();
-			if (obj instanceof NXCObject)
-			{
-				object = (NXCObject)obj;
-			}
-			else
-			{
-				object = null;
-			}
+			question = "Are you sure you want to delete '" + ((NXCObject)selection.getFirstElement()).getObjectName() + "'?";
 		}
+		else
+		{
+			question = "Are you sure you want to delete selected objects?";
+		}
+		boolean confirmed = MessageDialog.openConfirm(getWindow().getShell(), "Confirm Delete", question);
+		return confirmed;
+	}
 
-		action.setEnabled(object != null);
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#errorPrefix()
+	 */
+	@Override
+	protected String errorPrefix()
+	{
+		return "Cannot delete object";
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#jobDescription()
+	 */
+	@Override
+	protected String jobDescription()
+	{
+		return "Delete object";
+	}
+
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#runObjectAction(org.netxms.client.NXCSession, org.netxms.client.NXCObject)
+	 */
+	@Override
+	protected void runObjectAction(NXCSession session, NXCObject object) throws Exception
+	{
+		session.deleteObject(object.getObjectId());
 	}
 }

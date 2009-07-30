@@ -56,6 +56,7 @@ public class ObjectTree extends Composite
 	private Set<Long> checkedObjects = new HashSet<Long>(0);
 	private NXCListener sessionListener = null;
 	private NXCSession session = null;
+	private long[] expandedElements = null;
 	
 	/**
 	 * @param parent
@@ -188,9 +189,9 @@ public class ObjectTree extends Composite
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							Object[] state = objectTree.getExpandedElements();
+							saveExpandedState();
 							objectTree.refresh();
-							objectTree.setExpandedElements(state);
+							restoreExpandedState();
 							return Status.OK_STATUS;
 						}
 					}.schedule();
@@ -281,5 +282,28 @@ public class ObjectTree extends Composite
 	public Long[] getCheckedObjects()
 	{
 		return checkedObjects.toArray(new Long[checkedObjects.size()]);
+	}
+	
+	/**
+	 * Save expanded elements
+	 */
+	private void saveExpandedState()
+	{
+		Object[] elements = objectTree.getExpandedElements();
+		expandedElements = new long[elements.length];
+		for(int i = 0; i < elements.length; i++)
+			expandedElements[i] = ((NXCObject)elements[i]).getObjectId();
+	}
+	
+	/**
+	 * Expand elements that was expanded when saveExpandedState() was called
+	 */
+	private void restoreExpandedState()
+	{
+		if (expandedElements == null)
+			return;
+		
+		NXCObject[] objects = session.findMultipleObjects(expandedElements);
+		objectTree.setExpandedElements(objects);
 	}
 }

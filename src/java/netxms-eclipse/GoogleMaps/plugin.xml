@@ -33,7 +33,7 @@
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.googlemaps.actions.open"
 			   menubarPath="view/primary"
-			   toolbarPath="view"
+			   toolbarPath="view/additions"
 			   label="Location Map"
 			   tooltip="Open Location Map"
 			   icon="icons/map.png"

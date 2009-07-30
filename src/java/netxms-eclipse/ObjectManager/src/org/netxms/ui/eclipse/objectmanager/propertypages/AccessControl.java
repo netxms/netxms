@@ -34,6 +34,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCObject;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCUserDBObject;
+import org.netxms.ui.eclipse.objectmanager.AccessListComparator;
 import org.netxms.ui.eclipse.objectmanager.AccessListLabelProvider;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
@@ -94,6 +95,7 @@ public class AccessControl extends PropertyPage
                                          SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       userList.setContentProvider(new ArrayContentProvider());
       userList.setLabelProvider(new AccessListLabelProvider());
+      userList.setComparator(new AccessListComparator());
       userList.setInput(acl.values().toArray());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;

@@ -51,6 +51,7 @@
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.usermanager.actions.open"
 			   menubarPath="view/config/additions"
+			   toolbarPath="config/additions"
 			   label="User Manager"
 			   tooltip="Open user manager"
 			   icon="icons/user_manager.png"

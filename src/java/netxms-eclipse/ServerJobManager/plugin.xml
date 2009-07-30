@@ -36,6 +36,7 @@
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.serverjobmanager.actions.open"
 			   menubarPath="view/tools"
+			   toolbarPath="tools/additions"
 			   label="Server Jobs"
 			   tooltip="Open server job manager"
 			   icon="icons/server_jobs.png"

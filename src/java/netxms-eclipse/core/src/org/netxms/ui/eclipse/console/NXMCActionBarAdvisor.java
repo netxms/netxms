@@ -132,7 +132,20 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	protected void fillCoolBar(ICoolBarManager coolBar)
 	{
 		IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
+		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		coolBar.add(new ToolBarContributionItem(toolbar, "product")); //$NON-NLS-1$
+
+		toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
+		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		coolBar.add(new ToolBarContributionItem(toolbar, "view")); //$NON-NLS-1$
+
+		toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
+		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		coolBar.add(new ToolBarContributionItem(toolbar, "tools")); //$NON-NLS-1$
+
+		toolbar = new ToolBarManager(SWT.FLAT | SWT.TRAIL);
+		toolbar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		coolBar.add(new ToolBarContributionItem(toolbar, "config")); //$NON-NLS-1$
 	}
 
 	/*

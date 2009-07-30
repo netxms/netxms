@@ -2003,10 +2003,8 @@ public class NXCSession
 	 * 
 	 * @param objectId Object's ID
 	 * @param comments New comments
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void updateObjectComments(final long objectId, final String comments) throws IOException, NXCException
 	{
@@ -2016,7 +2014,84 @@ public class NXCSession
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
+	
+	/**
+	 * Set object's managed status.
+	 * 
+	 * @param objectId object's identifier
+	 * @param isManaged object's managed status
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void setObjectManaged(final long objectId, final boolean isManaged) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_OBJECT_MGMT_STATUS);
+		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+		msg.setVariableInt16(NXCPCodes.VID_MGMT_STATUS, isManaged ? 1 : 0);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
 
+	/**
+	 * Common internal implementation for bindObject, unbindObject, and removeTemplate
+	 * 
+	 * @param parentId parent object's identifier
+	 * @param childId Child object's identifier
+	 * @param bind true if operation is "bind"
+	 * @param removeDci true if DCIs created from template should be removed during unbind
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	private void changeObjectBinding(long parentId, long childId, boolean bind, boolean removeDci) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(bind ? NXCPCodes.CMD_BIND_OBJECT : NXCPCodes.CMD_UNBIND_OBJECT);
+		msg.setVariableInt32(NXCPCodes.VID_PARENT_ID, (int)parentId);
+		msg.setVariableInt32(NXCPCodes.VID_CHILD_ID, (int)childId);
+		msg.setVariableInt16(NXCPCodes.VID_REMOVE_DCI, removeDci ? 1 : 0);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Bind object.
+	 * 
+	 * @param parentId parent object's identifier
+	 * @param childId Child object's identifier
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void bindObject(final long parentId, final long childId) throws IOException, NXCException
+	{
+		changeObjectBinding(parentId, childId, true, false);
+	}
+	
+	/**
+	 * Unbind object.
+	 * 
+	 * @param parentId parent object's identifier
+	 * @param childId Child object's identifier
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void unbindObject(final long parentId, final long childId) throws IOException, NXCException
+	{
+		changeObjectBinding(parentId, childId, false, false);
+	}
+	
+	/**
+	 * Remove data collection template from node.
+	 * 
+	 * @param templateId template object identifier
+	 * @param nodeId node object identifier
+	 * @param removeDci true if DCIs created from this template should be removed
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void removeTemplate(final long templateId, final long nodeId, final boolean removeDci) throws IOException, NXCException
+	{
+		changeObjectBinding(templateId, nodeId, false, removeDci);
+	}
+	
 	/**
 	 * Query layer 2 topology for node
 	 * 

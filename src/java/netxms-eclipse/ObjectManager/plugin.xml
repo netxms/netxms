@@ -100,7 +100,7 @@
             objectClass="org.netxms.client.NXCObject">
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.DeleteObject"
-               enablesFor="1"
+               enablesFor="+"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.DeleteObject"
                label="Delete"
                icon="icons/delete.png"
@@ -140,6 +140,30 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.ChangeIpAddress"
                label="Change IP address..."
+               menubarPath="objectmgmt">
+         </action>
+      </objectContribution>
+
+      <objectContribution
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.unmanage"
+            objectClass="org.netxms.client.NXCObject">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.Unmanage"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.Unmanage"
+               label="Unmanage"
+               menubarPath="objectmgmt">
+         </action>
+      </objectContribution>
+
+      <objectContribution
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.manage"
+            objectClass="org.netxms.client.NXCObject">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.Manage"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.Manage"
+               label="Manage"
                menubarPath="objectmgmt">
          </action>
       </objectContribution>

@@ -37,6 +37,7 @@
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.serverconfig.actions.open"
 			   menubarPath="view/config/additions"
+			   toolbarPath="config/additions"
 			   label="Server Configuration"
 			   tooltip="Open server configuration editor"
 			   icon="icons/server_config.png"

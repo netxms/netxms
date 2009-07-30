@@ -8,7 +8,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.TreeSelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
@@ -69,9 +69,9 @@ public class ChangeIpAddress implements IObjectActionDelegate
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{
-		if (selection instanceof TreeSelection)
+		if (selection instanceof IStructuredSelection)
 		{
-			final Object obj = ((TreeSelection)selection).getFirstElement();
+			final Object obj = ((IStructuredSelection)selection).getFirstElement();
 			if (obj instanceof NXCNode)
 			{
 				node = (NXCNode)obj;

@@ -3,7 +3,7 @@ package org.netxms.ui.eclipse.objectmanager.actions;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.TreeSelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
@@ -48,9 +48,9 @@ public class BindObject implements IObjectActionDelegate
 	 */
 	public void selectionChanged(IAction action, ISelection selection)
 	{
-		if (selection instanceof TreeSelection)
+		if (selection instanceof IStructuredSelection)
 		{
-			Object obj = ((TreeSelection)selection).getFirstElement();
+			Object obj = ((IStructuredSelection)selection).getFirstElement();
 			action.setEnabled((obj instanceof NXCServiceRoot) || (obj instanceof NXCContainer));
 		}
 	}

@@ -14,10 +14,6 @@
 
    <extension
          point="org.eclipse.ui.commands">
-      <category
-            name="Views"
-            id="org.netxms.ui.eclipse.console.category.views">
-      </category>
       <command
             name="Alarm Browser"
             description="Open Alarm Browser"
@@ -32,7 +28,7 @@
 		   visible="true">
 		   <action id="org.netxms.ui.eclipse.alarmviewer.actions.open"
 			   menubarPath="view/primary"
-			   toolbarPath="view"
+			   toolbarPath="view/additions"
 			   label="Alarm Browser"
 			   tooltip="Open Alarm Browser"
 			   icon="icons/alarm_browser.png"

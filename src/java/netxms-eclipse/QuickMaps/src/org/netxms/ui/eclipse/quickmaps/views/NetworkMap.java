@@ -109,7 +109,8 @@ public abstract class NetworkMap extends ViewPart
 		@Override
 		public IFigure getFigure(Object element)
 		{
-			return new ObjectFigure((NXCObject)element);
+			return null;
+			//return new ObjectFigure((NXCObject)element);
 		}
 	}
 	
