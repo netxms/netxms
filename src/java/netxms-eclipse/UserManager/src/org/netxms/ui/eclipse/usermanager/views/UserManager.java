@@ -18,22 +18,21 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
@@ -48,6 +47,7 @@ import org.netxms.ui.eclipse.tools.RefreshAction;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.usermanager.UserComparator;
+import org.netxms.ui.eclipse.usermanager.UserLabelProvider;
 import org.netxms.ui.eclipse.usermanager.dialogs.ChangePasswordDialog;
 import org.netxms.ui.eclipse.usermanager.dialogs.CreateObjectDialog;
 
@@ -71,113 +71,13 @@ public class UserManager extends ViewPart
 	private NXCSession session;
 	private NXCListener sessionListener;
 	private boolean databaseLocked = false;
-	private long newUserId = -1;
-	private NXCUserDBObject newUser;
-	private String newUserFound = "";
+	private boolean editNewUser = false;
 	private Action actionAddUser;
 	private Action actionAddGroup;
 	private Action actionEditUser;
 	private Action actionDeleteUser;
 	private Action actionChangePassword;
 	private RefreshAction actionRefresh;
-
-	/**
-	 * Label provider for user manager
-	 * 
-	 * @author Victor
-	 * 
-	 */
-	private class UserLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider
-	{
-		@Override
-		public Image getColumnImage(Object element, int columnIndex)
-		{
-			return (columnIndex == 0) ? getImage(element) : null;
-		}
-
-		@Override
-		public String getColumnText(Object element, int columnIndex)
-		{
-			switch(columnIndex)
-			{
-				case COLUMN_NAME:
-					return getText(element);
-				case COLUMN_TYPE:
-					return (element instanceof NXCUser) ? "User" : "Group";
-				case COLUMN_FULLNAME:
-					return (element instanceof NXCUser) ? ((NXCUser) element).getFullName() : null;
-				case COLUMN_DESCRIPTION:
-					return ((NXCUserDBObject) element).getDescription();
-				case COLUMN_GUID:
-					return ((NXCUserDBObject) element).getGuid().toString();
-			}
-			return null;
-		}
-	}
-
-	/**
-	 * Refresh job
-	 * 
-	 * @author victor
-	 */
-	private class RefreshJob extends Job
-	{
-
-		public RefreshJob()
-		{
-			super("Get user database");
-		}
-
-		@Override
-		protected IStatus run(IProgressMonitor monitor)
-		{
-			IStatus status;
-
-			try
-			{
-				final NXCUserDBObject[] origUsers = session.getUserDatabaseObjects();
-				final NXCUserDBObject[] users = new NXCUserDBObject[origUsers.length];
-				for(int i = 0; i < origUsers.length; i++)
-				{
-					users[i] = (NXCUserDBObject) origUsers[i].clone();
-					if (users[i].getId() == newUserId)
-					{
-						newUser = users[i];
-						synchronized(newUserFound)
-						{
-							newUserFound.notifyAll();
-						}
-					}
-				}
-				status = Status.OK_STATUS;
-
-				new UIJob("Refresh user manager content")
-				{
-					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
-					{
-						viewer.setInput(users);
-						return Status.OK_STATUS;
-					}
-				}.schedule();
-			}
-			catch(Exception e)
-			{
-				status = new Status(Status.ERROR, Activator.PLUGIN_ID, (e instanceof NXCException) ? ((NXCException) e)
-						.getErrorCode() : 0, "Cannot get user database: " + e.getMessage(), e);
-			}
-			return status;
-		}
-
-		/* (non-Javadoc)
-		 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-		 */
-		@Override
-		public boolean belongsTo(Object family)
-		{
-			return family == UserManager.JOB_FAMILY;
-		}
-	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -198,13 +98,20 @@ public class UserManager extends ViewPart
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				IStructuredSelection selection = (IStructuredSelection) event.getSelection();
+				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
 				if (selection != null)
 				{
 					actionEditUser.setEnabled(selection.size() == 1);
-					actionChangePassword.setEnabled(selection.size() == 1);
+					actionChangePassword.setEnabled((selection.size() == 1) && (selection.getFirstElement() instanceof NXCUser));
 					actionDeleteUser.setEnabled(selection.size() > 0);
 				}
+			}
+		});
+		viewer.addDoubleClickListener(new IDoubleClickListener() {
+			@Override
+			public void doubleClick(DoubleClickEvent event)
+			{
+				actionEditUser.run();
 			}
 		});
 
@@ -216,11 +123,25 @@ public class UserManager extends ViewPart
 		sessionListener = new NXCListener()
 		{
 			@Override
-			public void notificationHandler(NXCNotification n)
+			public void notificationHandler(final NXCNotification n)
 			{
 				if (n.getCode() == NXCNotification.USER_DB_CHANGED)
 				{
-					actionRefresh.run();
+					new UIJob("Update user list")
+					{
+						@Override
+						public IStatus runInUIThread(IProgressMonitor monitor)
+						{
+							viewer.setInput(session.getUserDatabaseObjects());
+							if (editNewUser && (n.getSubCode() == NXCNotification.USER_DB_OBJECT_CREATED))
+							{
+								editNewUser = false;
+								viewer.setSelection(new StructuredSelection(n.getObject()), true);
+								actionEditUser.run();
+							}
+							return Status.OK_STATUS;
+						}
+					}.schedule();
 				}
 			}
 		};
@@ -237,7 +158,15 @@ public class UserManager extends ViewPart
 				{
 					session.lockUserDatabase();
 					databaseLocked = true;
-					actionRefresh.run();
+					new UIJob("Update user list")
+					{
+						@Override
+						public IStatus runInUIThread(IProgressMonitor monitor)
+						{
+							viewer.setInput(session.getUserDatabaseObjects());
+							return Status.OK_STATUS;
+						}
+					}.schedule();
 					session.addListener(sessionListener);
 					status = Status.OK_STATUS;
 				}
@@ -283,8 +212,9 @@ public class UserManager extends ViewPart
 	{
 		manager.add(actionAddUser);
 		manager.add(actionAddGroup);
-		manager.add(actionEditUser);
+		manager.add(actionChangePassword);
 		manager.add(actionDeleteUser);
+		manager.add(actionEditUser);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -299,8 +229,8 @@ public class UserManager extends ViewPart
 	{
 		manager.add(actionAddUser);
 		manager.add(actionAddGroup);
-		manager.add(actionEditUser);
 		manager.add(actionDeleteUser);
+		manager.add(actionEditUser);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -318,10 +248,7 @@ public class UserManager extends ViewPart
 			@Override
 			public void run()
 			{
-				Job job = new RefreshJob();
-				IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(
-						IWorkbenchSiteProgressService.class);
-				siteService.schedule(job, 0, true);
+				viewer.setInput(session.getUserDatabaseObjects());
 			}
 		};
 
@@ -333,69 +260,10 @@ public class UserManager extends ViewPart
 			@Override
 			public void run()
 			{
-				final CreateObjectDialog dlg = new CreateObjectDialog(getViewSite().getShell(), true);
-				if (dlg.open() == Window.OK)
-				{
-					Job job = new Job("Create user")
-					{
-						@Override
-						protected IStatus run(IProgressMonitor monitor)
-						{
-							IStatus status;
-
-							try
-							{
-								newUser = null;
-								newUserId = session.createUser(dlg.getLoginName());
-								if (dlg.isEditAfterCreate())
-								{
-									// Wait for local user database copy update
-									synchronized(newUserFound)
-									{
-										newUserFound.wait(3000);
-									}
-									if (newUser != null)
-									{
-										new UIJob("Edit new user")
-										{
-											@Override
-											public IStatus runInUIThread(IProgressMonitor monitor)
-											{
-												viewer.setSelection(new StructuredSelection(newUser), true);
-												actionEditUser.run();
-												return Status.OK_STATUS;
-											}
-										}.schedule();
-									}
-								}
-								status = Status.OK_STATUS;
-							}
-							catch(Exception e)
-							{
-								status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-										(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
-										"Cannot create user: " + e.getMessage(), e);
-							}
-							actionRefresh.run();
-							return status;
-						}
-
-						/* (non-Javadoc)
-						 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-						 */
-						@Override
-						public boolean belongsTo(Object family)
-						{
-							return family == UserManager.JOB_FAMILY;
-						}
-					};
-					IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(
-							IWorkbenchSiteProgressService.class);
-					siteService.schedule(job, 0, true);
-				}
+				addUser();
 			}
 		};
-		actionAddUser.setText("Create new user");
+		actionAddUser.setText("Create new &user");
 		actionAddUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_add.png"));
 
 		actionAddGroup = new Action()
@@ -406,13 +274,14 @@ public class UserManager extends ViewPart
 			@Override
 			public void run()
 			{
+				addGroup();
 			}
 		};
-		actionAddGroup.setText("Create new group");
+		actionAddGroup.setText("Create new &group");
 		actionAddGroup.setImageDescriptor(Activator.getImageDescriptor("icons/group_add.png"));
 
 		actionEditUser = new PropertyDialogAction(getSite(), viewer);
-		actionEditUser.setText("Edit");
+		actionEditUser.setText("&Properties");
 		actionEditUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_edit.png"));
 		actionEditUser.setEnabled(false);
 
@@ -424,71 +293,15 @@ public class UserManager extends ViewPart
 			@Override
 			public void run()
 			{
-				final IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
-
-				final String message = "Do you really wish to delete selected user" + ((selection.size() > 1) ? "s?" : "?");
-				final Shell shell = UserManager.this.getViewSite().getShell();
-				if (!MessageDialog.openQuestion(shell, "Confirm user deletion", message))
-				{
-					return;
-				}
-
-				Job job = new Job("Delete user database objects")
-				{
-					@SuppressWarnings("unchecked")
-					@Override
-					protected IStatus run(IProgressMonitor monitor)
-					{
-						IStatus status;
-
-						try
-						{
-							Iterator it = selection.iterator();
-							while(it.hasNext())
-							{
-								Object object = it.next();
-								if (object instanceof NXCUserDBObject)
-								{
-									session.deleteUserDBObject(((NXCUserDBObject) object).getId());
-								}
-								else
-								{
-									throw new NXCException(NXCSession.RCC_INTERNAL_ERROR);
-								}
-							}
-							status = Status.OK_STATUS;
-						}
-						catch(Exception e)
-						{
-							status = new Status(Status.ERROR, Activator.PLUGIN_ID,
-									(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
-									"Cannot delete user database object: " + e.getMessage(), e);
-						}
-						actionRefresh.run();
-						return status;
-					}
-
-					/* (non-Javadoc)
-					 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-					 */
-					@Override
-					public boolean belongsTo(Object family)
-					{
-						return family == UserManager.JOB_FAMILY;
-					}
-				};
-				IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(
-						IWorkbenchSiteProgressService.class);
-				siteService.schedule(job, 0, true);
+				deleteUser();
 			}
 		};
-		actionDeleteUser.setText("Delete");
+		actionDeleteUser.setText("&Delete");
 		actionDeleteUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_delete.png"));
 		actionDeleteUser.setEnabled(false);
 
 		actionChangePassword = new Action()
 		{
-
 			@Override
 			public void run()
 			{
@@ -512,10 +325,9 @@ public class UserManager extends ViewPart
 					}
 				}
 			}
-
 		};
 		actionChangePassword.setText("Change Password");
-		actionChangePassword.setImageDescriptor(Activator.getImageDescriptor("icons/group_key.png"));
+		actionChangePassword.setImageDescriptor(Activator.getImageDescriptor("icons/change_password.png"));
 		actionChangePassword.setEnabled(false);
 	}
 
@@ -546,12 +358,10 @@ public class UserManager extends ViewPart
 	/**
 	 * Fill context menu
 	 * 
-	 * @param mgr
-	 *           Menu manager
+	 * @param mgr Menu manager
 	 */
 	protected void fillContextMenu(final IMenuManager mgr)
 	{
-		mgr.add(actionEditUser);
 		mgr.add(actionDeleteUser);
 
 		final IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
@@ -563,6 +373,8 @@ public class UserManager extends ViewPart
 
 		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+		mgr.add(new Separator());
+		mgr.add(actionEditUser);
 	}
 
 	/* (non-Javadoc)
@@ -607,5 +419,157 @@ public class UserManager extends ViewPart
 			}.schedule();
 		}
 		super.dispose();
+	}
+	
+	/**
+	 * Add new user
+	 */
+	private void addUser()
+	{
+		final CreateObjectDialog dlg = new CreateObjectDialog(getViewSite().getShell(), true);
+		if (dlg.open() == Window.OK)
+		{
+			Job job = new Job("Create user")
+			{
+				@Override
+				protected IStatus run(IProgressMonitor monitor)
+				{
+					IStatus status;
+
+					try
+					{
+						editNewUser = dlg.isEditAfterCreate();
+						session.createUser(dlg.getLoginName());
+						status = Status.OK_STATUS;
+					}
+					catch(Exception e)
+					{
+						status = new Status(Status.ERROR, Activator.PLUGIN_ID,
+								(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
+								"Cannot create user: " + e.getMessage(), null);
+					}
+					return status;
+				}
+
+				/* (non-Javadoc)
+				 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
+				 */
+				@Override
+				public boolean belongsTo(Object family)
+				{
+					return family == UserManager.JOB_FAMILY;
+				}
+			};
+			IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(
+					IWorkbenchSiteProgressService.class);
+			siteService.schedule(job, 0, true);
+		}
+	}
+	
+	/**
+	 * Add new group.
+	 */
+	private void addGroup()
+	{
+		final CreateObjectDialog dlg = new CreateObjectDialog(getViewSite().getShell(), false);
+		if (dlg.open() == Window.OK)
+		{
+			Job job = new Job("Create group")
+			{
+				@Override
+				protected IStatus run(IProgressMonitor monitor)
+				{
+					IStatus status;
+
+					try
+					{
+						editNewUser = dlg.isEditAfterCreate();
+						session.createUserGroup(dlg.getLoginName());
+						status = Status.OK_STATUS;
+					}
+					catch(Exception e)
+					{
+						status = new Status(Status.ERROR, Activator.PLUGIN_ID,
+								(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
+								"Cannot create group: " + e.getMessage(), null);
+					}
+					return status;
+				}
+
+				/* (non-Javadoc)
+				 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
+				 */
+				@Override
+				public boolean belongsTo(Object family)
+				{
+					return family == UserManager.JOB_FAMILY;
+				}
+			};
+			IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(
+					IWorkbenchSiteProgressService.class);
+			siteService.schedule(job, 0, true);
+		}
+	}
+
+	/**
+	 * Delete user or group
+	 */
+	private void deleteUser()
+	{
+		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+
+		final String message = "Do you really wish to delete selected user" + ((selection.size() > 1) ? "s?" : "?");
+		final Shell shell = UserManager.this.getViewSite().getShell();
+		if (!MessageDialog.openQuestion(shell, "Confirm user deletion", message))
+		{
+			return;
+		}
+
+		Job job = new Job("Delete user database objects")
+		{
+			@SuppressWarnings("unchecked")
+			@Override
+			protected IStatus run(IProgressMonitor monitor)
+			{
+				IStatus status;
+
+				try
+				{
+					Iterator it = selection.iterator();
+					while(it.hasNext())
+					{
+						Object object = it.next();
+						if (object instanceof NXCUserDBObject)
+						{
+							session.deleteUserDBObject(((NXCUserDBObject) object).getId());
+						}
+						else
+						{
+							throw new NXCException(NXCSession.RCC_INTERNAL_ERROR);
+						}
+					}
+					status = Status.OK_STATUS;
+				}
+				catch(Exception e)
+				{
+					status = new Status(Status.ERROR, Activator.PLUGIN_ID,
+							(e instanceof NXCException) ? ((NXCException) e).getErrorCode() : 0,
+							"Cannot delete user database object: " + e.getMessage(), null);
+				}
+				return status;
+			}
+
+			/* (non-Javadoc)
+			 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
+			 */
+			@Override
+			public boolean belongsTo(Object family)
+			{
+				return family == UserManager.JOB_FAMILY;
+			}
+		};
+		IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(
+				IWorkbenchSiteProgressService.class);
+		siteService.schedule(job, 0, true);
 	}
 }

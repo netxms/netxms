@@ -62,7 +62,7 @@ public class General extends PropertyPage
       
       // Object ID
       WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, "Object ID",
-                                     Integer.toHexString((int)object.getId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
+                                     Long.toString(object.getId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
       
 		// Object name
       initialName = new String(object.getName());

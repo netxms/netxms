@@ -132,8 +132,11 @@ class ObjectTreeFilter extends ViewerFilter
 		NXCObject[] parents = childObject.getParentsAsArray();
 		for(NXCObject object : parents)
 		{
-			if ((rootObjects == null) || object.isChildOf(rootObjects))
-				return object;
+			if (object != null)
+			{
+				if ((rootObjects == null) || object.isChildOf(rootObjects))
+					return object;
+			}
 		}
 		return null;
 	}
