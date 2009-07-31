@@ -35,7 +35,7 @@ public class ObjectSelector extends AbstractSelector
 	@Override
 	protected void selectionButtonHandler()
 	{
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null);
+		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, null);
 		if (dlg.open() == Window.OK)
 		{
 			NXCObject[] objects = dlg.getAllCheckedObjects(objectClass);

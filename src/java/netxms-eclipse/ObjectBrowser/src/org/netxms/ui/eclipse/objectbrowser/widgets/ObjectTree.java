@@ -66,7 +66,7 @@ public class ObjectTree extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	public ObjectTree(Composite parent, int style, int options, long[] rootObjects)
+	public ObjectTree(Composite parent, int style, int options, long[] rootObjects, Set<Integer> classFilter)
 	{
 		super(parent, style);
 		
@@ -108,7 +108,7 @@ public class ObjectTree extends Composite
 		objectTree.setContentProvider(new ObjectTreeContentProvider(rootObjects));
 		objectTree.setLabelProvider(WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider());
 		objectTree.setComparator(new ObjectTreeComparator());
-		filter = new ObjectTreeFilter(rootObjects);
+		filter = new ObjectTreeFilter(rootObjects, classFilter);
 		objectTree.addFilter(filter);
 		objectTree.setInput(session);
 		

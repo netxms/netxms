@@ -35,7 +35,7 @@ public class BindObject implements IObjectActionDelegate
 	 */
 	public void run(IAction action)
 	{
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, null);
+		ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, null, ObjectSelectionDialog.createNodeSelectionFilter());
 		dlg.open();
 		if (dlg.getReturnCode() == Window.OK)
 		{

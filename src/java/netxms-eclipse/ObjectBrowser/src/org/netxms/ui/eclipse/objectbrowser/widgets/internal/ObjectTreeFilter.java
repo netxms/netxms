@@ -6,6 +6,8 @@ package org.netxms.ui.eclipse.objectbrowser.widgets.internal;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.NXCObject;
@@ -21,17 +23,19 @@ public class ObjectTreeFilter extends ViewerFilter
 	private Map<Long, NXCObject> objectList = null;
 	private NXCObject lastMatch = null;
 	private long[] rootObjects = null;
+	private Set<Integer> classFilter = null;
 	
 	/**
 	 * Constructor
 	 */
-	public ObjectTreeFilter(long[] rootObjects)
+	public ObjectTreeFilter(long[] rootObjects, Set<Integer> classFilter)
 	{
 		if (rootObjects != null)
 		{
 			this.rootObjects = new long[rootObjects.length];
 			System.arraycopy(rootObjects, 0, this.rootObjects, 0, rootObjects.length);
 		}
+		this.classFilter = classFilter;
 	}
 	
 	/* (non-Javadoc)
@@ -40,6 +44,12 @@ public class ObjectTreeFilter extends ViewerFilter
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
+		if (classFilter != null)
+		{
+			if (!classFilter.contains(((NXCObject)element).getObjectClass()))
+				return false;
+		}
+		
 		if (objectList == null)
 			return true;
 

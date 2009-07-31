@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.2"?>
 <plugin>
-
    <extension
          id="org.netxms.ui.eclipse.console.application"
          point="org.eclipse.core.runtime.applications">
@@ -19,16 +18,24 @@
             class="org.netxms.ui.eclipse.console.perspectives.EmptyPerspective"
             id="org.netxms.ui.eclipse.console.EmptyPerspective">
       </perspective>
-   </extension>
-
-   <extension
-         point="org.eclipse.ui.perspectives">
       <perspective
             name="Default Perspective"
             class="org.netxms.ui.eclipse.console.perspectives.DefaultPerspective"
             id="org.netxms.ui.eclipse.console.DefaultPerspective">
       </perspective>
    </extension>
+   
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="Progress View"
+            icon="icons/pview.gif"
+            category="org.eclipse.ui"
+            class="org.eclipse.ui.ExtensionFactory:progressView"
+            id="org.eclipse.ui.views.ProgressView">
+      </view>
+   </extension>
+
    <extension
          id="product"
          point="org.eclipse.core.runtime.products">

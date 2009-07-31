@@ -110,7 +110,7 @@ public class TrustedNodes extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null);
+				ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter());
 				if (dlg.open() == Window.OK)
 				{
 					NXCObject[] nodes = dlg.getAllCheckedObjects(NXCObject.OBJECT_NODE);

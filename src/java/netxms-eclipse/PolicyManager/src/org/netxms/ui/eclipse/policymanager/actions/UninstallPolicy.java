@@ -54,7 +54,7 @@ public class UninstallPolicy implements IObjectActionDelegate
 			rootObjects = (long[])value;
 		}
 		
-		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, rootObjects);
+		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, rootObjects, ObjectSelectionDialog.createNodeSelectionFilter());
 		if (dlg.open() == Window.OK)
 		{
 			new Job("Uninstall agent policy") {

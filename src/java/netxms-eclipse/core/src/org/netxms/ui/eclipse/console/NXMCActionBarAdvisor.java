@@ -34,6 +34,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 	private IWorkbenchAction exitAction;
 	private IWorkbenchAction aboutAction;
 	private Action openConsoleAction;
+	private Action openProgressViewAction;
 
 	public NXMCActionBarAdvisor(IActionBarConfigurer configurer)
 	{
@@ -83,6 +84,41 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		};
 		openConsoleAction.setText(Messages.getString("NXMCActionBarAdvisor.menu_console")); //$NON-NLS-1$
 		openConsoleAction.setImageDescriptor(ConsolePlugin.getImageDescriptor(IConsoleConstants.IMG_VIEW_CONSOLE));
+
+		openProgressViewAction = new Action()
+		{
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.eclipse.jface.action.Action#run()
+			 */
+			@Override
+			public void run()
+			{
+				IWorkbench wb = PlatformUI.getWorkbench();
+				if (wb != null)
+				{
+					IWorkbenchWindow win = wb.getActiveWorkbenchWindow();
+					if (win != null)
+					{
+						IWorkbenchPage page = win.getActivePage();
+						if (page != null)
+						{
+							try
+							{
+								page.showView("org.eclipse.ui.views.ProgressView");
+							}
+							catch(PartInitException e)
+							{
+								e.printStackTrace();
+							}
+						}
+					}
+				}
+			}
+		};
+		openProgressViewAction.setText("&Progress");
+		openProgressViewAction.setImageDescriptor(Activator.getImageDescriptor("icons/pview.gif"));
 	}
 
 	@Override
@@ -114,6 +150,7 @@ public class NXMCActionBarAdvisor extends ActionBarAdvisor
 		viewMenu.add(new GroupMarker(IActionConstants.M_PRIMARY_VIEW));
 		viewMenu.add(new Separator());
 		viewMenu.add(openConsoleAction);
+		viewMenu.add(openProgressViewAction);
 		viewMenu.add(new GroupMarker(IActionConstants.M_TOOL_VIEW));
 		viewMenu.add(new Separator());
 		MenuManager configMenu = new MenuManager(Messages.getString("NXMCActionBarAdvisor.menu_configuration"), //$NON-NLS-1$

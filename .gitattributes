@@ -311,14 +311,6 @@ src/java/netxms-eclipse/GoogleMaps/src/org/netxms/ui/eclipse/googlemaps/actions/
 src/java/netxms-eclipse/GoogleMaps/src/org/netxms/ui/eclipse/googlemaps/tools/MapAccessor.java -text
 src/java/netxms-eclipse/GoogleMaps/src/org/netxms/ui/eclipse/googlemaps/views/LocationMap.java -text
 src/java/netxms-eclipse/GoogleMaps/src/org/netxms/ui/eclipse/googlemaps/widgets/GoogleMap.java -text
-src/java/netxms-eclipse/JobMonitor/META-INF/MANIFEST.MF -text
-src/java/netxms-eclipse/JobMonitor/build.properties -text
-src/java/netxms-eclipse/JobMonitor/icons/default.png -text
-src/java/netxms-eclipse/JobMonitor/icons/job_monitor.png -text
-src/java/netxms-eclipse/JobMonitor/plugin.xml -text
-src/java/netxms-eclipse/JobMonitor/src/org/netxms/ui/eclipse/jobmonitor/Activator.java -text
-src/java/netxms-eclipse/JobMonitor/src/org/netxms/ui/eclipse/jobmonitor/JobMonitor.java -text
-src/java/netxms-eclipse/JobMonitor/src/org/netxms/ui/eclipse/jobmonitor/actions/OpenJobMonitor.java -text
 src/java/netxms-eclipse/LanguagePacks/ru/console/.settings/org.eclipse.jdt.core.prefs -text
 src/java/netxms-eclipse/LanguagePacks/ru/console/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/LanguagePacks/ru/console/build.properties -text
@@ -502,6 +494,7 @@ src/java/netxms-eclipse/core/icons/alt_window_32.gif -text
 src/java/netxms-eclipse/core/icons/information.png -text
 src/java/netxms-eclipse/core/icons/login.png -text
 src/java/netxms-eclipse/core/icons/password.png -text
+src/java/netxms-eclipse/core/icons/pview.gif -text
 src/java/netxms-eclipse/core/nxmc.product -text
 src/java/netxms-eclipse/core/plugin.xml -text
 src/java/netxms-eclipse/core/plugin_customization.ini -text

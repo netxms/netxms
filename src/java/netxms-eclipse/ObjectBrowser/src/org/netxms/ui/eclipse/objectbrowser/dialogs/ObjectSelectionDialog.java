@@ -4,13 +4,14 @@
 package org.netxms.ui.eclipse.objectbrowser.dialogs;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -31,21 +32,36 @@ import org.netxms.ui.eclipse.shared.NXMCSharedData;
 public class ObjectSelectionDialog extends Dialog
 {
 	private ObjectTree objectTree;
-	//private ObjectList objectList;
-	protected CTabFolder tabFolder;
-
 	private long[] rootObjects;
 	private long[] selectedObjects;
-	//private boolean treeActive = true;
+	private Set<Integer> classFilter;
+	
+	/**
+	 * Create filter for node selection - it allows node objects and possible
+	 * parents - subnets and containers.
+	 * 
+	 * @return Class filter for node selection
+	 */
+	public static Set<Integer> createNodeSelectionFilter()
+	{
+		HashSet<Integer> classFilter = new HashSet<Integer>(5);
+		classFilter.add(NXCObject.OBJECT_NETWORK);
+		classFilter.add(NXCObject.OBJECT_SUBNET);
+		classFilter.add(NXCObject.OBJECT_SERVICEROOT);
+		classFilter.add(NXCObject.OBJECT_CONTAINER);
+		classFilter.add(NXCObject.OBJECT_NODE);
+		return classFilter;
+	}
 
 	/**
 	 * @param parentShell
 	 */
-	public ObjectSelectionDialog(Shell parentShell, long[] rootObjects)
+	public ObjectSelectionDialog(Shell parentShell, long[] rootObjects, Set<Integer> classFilter)
 	{
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
 		this.rootObjects = rootObjects;
+		this.classFilter = classFilter;
 	}
 
 	/*
@@ -86,14 +102,7 @@ public class ObjectSelectionDialog extends Dialog
 
 		dialogArea.setLayout(new FormLayout());
 
-		//tabFolder = new CTabFolder(dialogArea, SWT.BOTTOM | SWT.FLAT | SWT.MULTI);
-
-		// Object tree
-		/*objectTree = new ObjectTree(tabFolder, SWT.NONE, ObjectTree.CHECKBOXES, rootObjects);
-		CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
-		tabItem.setText("Tree");
-		tabItem.setControl(objectTree);*/
-		objectTree = new ObjectTree(dialogArea, SWT.NONE, ObjectTree.CHECKBOXES, rootObjects);
+		objectTree = new ObjectTree(dialogArea, SWT.NONE, ObjectTree.CHECKBOXES, rootObjects, classFilter);
 		
 		String text = settings.get("SelectObject.Filter"); //$NON-NLS-1$
 		if (text != null)
@@ -104,18 +113,7 @@ public class ObjectSelectionDialog extends Dialog
 		fd.top = new FormAttachment(0, 0);
 		fd.right = new FormAttachment(100, 0);
 		fd.bottom = new FormAttachment(100, 0);
-		//tabFolder.setLayoutData(fd);
 		objectTree.setLayoutData(fd);
-
-		// Object list
-		/*
-		objectList = new ObjectList(tabFolder, SWT.NONE, ObjectList.CHECKBOXES);
-		tabItem = new CTabItem(tabFolder, SWT.NONE);
-		tabItem.setText("List");
-		tabItem.setControl(objectList);
-		if (text != null)
-			objectList.setFilter(text);
-		*/
 
 		return dialogArea;
 	}
@@ -140,20 +138,10 @@ public class ObjectSelectionDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-/*		final Control control = tabFolder.getSelection().getControl();
-
-		if (control == objectTree)*/
-		{
-			//treeActive = true;
-			Long[] objects = objectTree.getCheckedObjects();
-			selectedObjects = new long[objects.length];
-			for(int i = 0; i < objects.length; i++)
-				selectedObjects[i] = objects[i].longValue();
-		}
-		/*else if (control == objectList)
-		{
-			treeActive = false;
-		}*/
+		Long[] objects = objectTree.getCheckedObjects();
+		selectedObjects = new long[objects.length];
+		for(int i = 0; i < objects.length; i++)
+			selectedObjects[i] = objects[i].longValue();
 
 		saveSettings();
 		super.okPressed();
@@ -186,7 +174,7 @@ public class ObjectSelectionDialog extends Dialog
 	}
 
 	/**
-	 * Retrive all selected objects (including childs)
+	 * Retrieve all selected objects (including childs)
 	 * 
 	 * @return
 	 */
@@ -196,7 +184,7 @@ public class ObjectSelectionDialog extends Dialog
 	}
 
 	/**
-	 * Retrive all selected objects by type
+	 * Retrieve all selected objects by type
 	 * 
 	 * @return
 	 */
@@ -247,5 +235,4 @@ public class ObjectSelectionDialog extends Dialog
 
 		return ret;
 	}
-
 }
