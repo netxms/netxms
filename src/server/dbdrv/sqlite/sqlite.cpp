@@ -432,6 +432,18 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
 
 
 //
+// Get field length from async query result
+//
+
+extern "C" LONG EXPORT DrvGetFieldLengthAsync(DB_RESULT hResult, int iColumn)
+{
+   if ((iColumn >= 0) && (iColumn < ((SQLITE_CONN *)hResult)->nNumCols))
+      return strlen((char *)sqlite3_column_text(((SQLITE_CONN *)hResult)->pvm, iColumn));
+   return 0;
+}
+
+
+//
 // Get field from current row in async query result
 //
 

@@ -420,6 +420,29 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT hResult)
 
 
 //
+// Get field length from async query result result
+//
+
+extern "C" LONG EXPORT DrvGetFieldLengthAsync(DB_ASYNC_RESULT hResult, int iColumn)
+{
+	// Check if we have valid result handle
+	if (hResult == NULL)
+		return 0;
+	
+	// Check if there are valid fetched row
+	if ((((MYSQL_ASYNC_RESULT *)hResult)->bNoMoreRows) ||
+		(((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow == NULL))
+		return 0;
+	
+	// Check if column number is valid
+	if ((iColumn < 0) || (iColumn >= ((MYSQL_ASYNC_RESULT *)hResult)->iNumCols))
+		return 0;
+
+	return ((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths[iColumn];
+}
+
+
+//
 // Get field from current row in async query result
 //
 

@@ -396,6 +396,33 @@ extern "C" BOOL EXPORT DrvFetch(DB_ASYNC_RESULT pConn)
 
 
 //
+// Get field length from async quety result
+//
+
+extern "C" LONG EXPORT DrvGetFieldLengthAsync(PG_CONN *pConn, int nColumn)
+{
+	if ((pConn == NULL) || (pConn->pFetchBuffer == NULL))
+	{
+		return 0;
+	}
+
+	// validate column index
+	if (nColumn >= PQnfields(pConn->pFetchBuffer))
+	{
+		return 0;
+	}
+
+	char *value = PQgetvalue(pConn->pFetchBuffer, 0, nColumn);
+	if (value == NULL)
+	{
+		return 0;
+	}
+
+	return strlen(value);
+}
+
+
+//
 // Get field from current row in async query result
 //
 

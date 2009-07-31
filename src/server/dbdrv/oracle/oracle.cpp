@@ -593,6 +593,25 @@ extern "C" BOOL EXPORT DrvFetch(ORACLE_CONN *pConn)
 
 
 //
+// Get field length from current row in async query result
+//
+
+extern "C" LONG EXPORT DrvGetFieldLengthAsync(ORACLE_CONN *pConn, int nColumn)
+{
+	if (pConn == NULL)
+		return 0;
+
+	if ((nColumn < 0) || (nColumn >= pConn->nCols))
+		return 0;
+
+	if (pConn->pBuffers[nColumn].isNull)
+		return 0;
+
+	return (LONG)(pConn->pBuffers[nColumn].nLength / sizeof(WCHAR));
+}
+
+
+//
 // Get field from current row in async query result
 //
 
