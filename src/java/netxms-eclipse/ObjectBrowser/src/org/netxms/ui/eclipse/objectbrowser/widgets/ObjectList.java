@@ -28,6 +28,8 @@ import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
+import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectListFilter;
+import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeComparator;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**

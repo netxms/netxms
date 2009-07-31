@@ -35,6 +35,9 @@ import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
+import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeComparator;
+import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeContentProvider;
+import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeFilter;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
 /**
@@ -57,6 +60,7 @@ public class ObjectTree extends Composite
 	private NXCListener sessionListener = null;
 	private NXCSession session = null;
 	private long[] expandedElements = null;
+	private int changeCount = 0;
 	
 	/**
 	 * @param parent
@@ -185,16 +189,21 @@ public class ObjectTree extends Composite
 			{
 				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
 				{
+					changeCount++;
 					new UIJob("Update object tree") {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							saveExpandedState();
-							objectTree.refresh();
-							restoreExpandedState();
+							changeCount--;
+							if (changeCount <= 0)
+							{
+								saveExpandedState();
+								objectTree.refresh();
+								restoreExpandedState();
+							}
 							return Status.OK_STATUS;
 						}
-					}.schedule();
+					}.schedule(500);
 				}
 			}
 		};

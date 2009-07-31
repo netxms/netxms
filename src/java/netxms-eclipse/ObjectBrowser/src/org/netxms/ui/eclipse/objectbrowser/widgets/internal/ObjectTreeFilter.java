@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.objectbrowser.widgets;
+package org.netxms.ui.eclipse.objectbrowser.widgets.internal;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -15,7 +15,7 @@ import org.netxms.ui.eclipse.shared.NXMCSharedData;
  * @author Victor
  *
  */
-class ObjectTreeFilter extends ViewerFilter
+public class ObjectTreeFilter extends ViewerFilter
 {
 	private String filterString = null;
 	private Map<Long, NXCObject> objectList = null;

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.objectbrowser.widgets;
+package org.netxms.ui.eclipse.objectbrowser.widgets.internal;
 
 import java.util.Iterator;
 
@@ -13,12 +13,12 @@ import org.netxms.client.*;
  * @author Victor
  *
  */
-class ObjectTreeContentProvider extends TreeNodeContentProvider
+public class ObjectTreeContentProvider extends TreeNodeContentProvider
 {
 	private NXCSession session = null;
 	private long[] rootObjects;
 	
-	ObjectTreeContentProvider(long[] rootObjects)
+	public ObjectTreeContentProvider(long[] rootObjects)
 	{
 		super();
 		this.rootObjects = rootObjects;

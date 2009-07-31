@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.objectbrowser.widgets;
+package org.netxms.ui.eclipse.objectbrowser.widgets.internal;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
@@ -11,7 +11,7 @@ import org.netxms.client.NXCObject;
  * @author Victor
  *
  */
-class ObjectTreeComparator extends ViewerComparator
+public class ObjectTreeComparator extends ViewerComparator
 {
 	// Categories
 	private static final int CATEGORY_CONTAINER = 10;
@@ -26,7 +26,8 @@ class ObjectTreeComparator extends ViewerComparator
 		if (((NXCObject)element).getObjectId() < 10)
 			return (int)((NXCObject)element).getObjectId();
 		if ((((NXCObject)element).getObjectClass() == NXCObject.OBJECT_CONTAINER) ||
-				(((NXCObject)element).getObjectClass() == NXCObject.OBJECT_TEMPLATEGROUP))
+		    (((NXCObject)element).getObjectClass() == NXCObject.OBJECT_TEMPLATEGROUP) ||
+		    (((NXCObject)element).getObjectClass() == NXCObject.OBJECT_POLICYGROUP))
 			return CATEGORY_CONTAINER;
 		return CATEGORY_OTHER;
 	}
@@ -37,7 +38,6 @@ class ObjectTreeComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-		// TODO Auto-generated method stub
 		return super.compare(viewer, e1, e2);
 	}
 }
