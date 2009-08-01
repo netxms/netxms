@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DciValue;
+
 import junit.framework.TestCase;
 
 
@@ -138,12 +141,12 @@ public class NXCSessionTest extends TestCase
 		NXCSession session = new NXCSession(serverAddress, loginName, password);
 		session.connect();
 		
-		NXCDCIValue[] list = session.getLastValues(12);
+		DciValue[] list = session.getLastValues(12);
 		assertEquals(true, list.length > 0);
 		
 		boolean statusFound = false;
 		for(int i = 0; i < list.length; i++)
-			if ((list[i].getName().equalsIgnoreCase("Status")) && (list[i].getSource() == NXCDCI.INTERNAL))
+			if ((list[i].getName().equalsIgnoreCase("Status")) && (list[i].getSource() == DataCollectionItem.INTERNAL))
 				statusFound = true;
 		assertEquals(true, statusFound);
 		

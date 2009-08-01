@@ -27,6 +27,8 @@ Export-Package: com.keypoint,
  org.jfree.experimental.chart.swt,
  org.netxms.base,
  org.netxms.client,
+ org.netxms.client.datacollection,
+ org.netxms.client.epp,
  org.netxms.ui.eclipse.shared,
  org.netxms.ui.eclipse.tools,
  org.netxms.ui.eclipse.widgets

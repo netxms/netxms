@@ -28,6 +28,13 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCPMessageReceiver;
 import org.netxms.base.NXCPMsgWaitQueue;
 import org.netxms.base.NetXMSConst;
+import org.netxms.client.datacollection.DataCollectionConfiguration;
+import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DciDataRow;
+import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.epp.EventProcessingPolicy;
+import org.netxms.client.epp.EventProcessingPolicyRule;
 
 /**
  * @author victor
@@ -36,7 +43,7 @@ public class NXCSession
 {
 	// Various public constants
 	public static final int DEFAULT_CONN_PORT = 4701;
-	public static final int CLIENT_PROTOCOL_VERSION = 21;
+	public static final int CLIENT_PROTOCOL_VERSION = 22;
 
 	// Authentication types
 	public static final int AUTH_TYPE_PASSWORD = 0;
@@ -1583,7 +1590,7 @@ public class NXCSession
 	 * @throws NXCException
 	 *            if NetXMS server returns an error or operation was timed out
 	 */
-	public NXCDCIValue[] getLastValues(final long nodeId) throws IOException, NXCException
+	public DciValue[] getLastValues(final long nodeId) throws IOException, NXCException
 	{
 		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_LAST_VALUES);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
@@ -1592,10 +1599,10 @@ public class NXCSession
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
 
 		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ITEMS);
-		NXCDCIValue[] list = new NXCDCIValue[count];
+		DciValue[] list = new DciValue[count];
 		long base = NXCPCodes.VID_DCI_VALUES_BASE;
 		for(int i = 0; i < count; i++, base += 10)
-			list[i] = new NXCDCIValue(nodeId, response, base);
+			list[i] = new DciValue(nodeId, response, base);
 
 		return list;
 	}
@@ -1609,7 +1616,7 @@ public class NXCSession
 	 *           Data object to add rows to
 	 * @return number of received data rows
 	 */
-	private int parseDataRows(final byte[] input, NXCDCIData data)
+	private int parseDataRows(final byte[] input, DciData data)
 	{
 		//noinspection IOResourceOpenedButNotSafelyClosed
 		final NXCPDataInputStream inputStream = new NXCPDataInputStream(input);
@@ -1627,20 +1634,20 @@ public class NXCSession
 
 				switch(dataType)
 				{
-					case NXCDCI.DT_INT:
-						data.addDataRow(new NXCDCIDataRow(new Date(timestamp), new Long(inputStream.readInt())));
+					case DataCollectionItem.DT_INT:
+						data.addDataRow(new DciDataRow(new Date(timestamp), new Long(inputStream.readInt())));
 						break;
-					case NXCDCI.DT_UINT:
-						data.addDataRow(new NXCDCIDataRow(new Date(timestamp), new Long(inputStream.readUnsignedInt())));
+					case DataCollectionItem.DT_UINT:
+						data.addDataRow(new DciDataRow(new Date(timestamp), new Long(inputStream.readUnsignedInt())));
 						break;
-					case NXCDCI.DT_INT64:
-					case NXCDCI.DT_UINT64:
-						data.addDataRow(new NXCDCIDataRow(new Date(timestamp), new Long(inputStream.readLong())));
+					case DataCollectionItem.DT_INT64:
+					case DataCollectionItem.DT_UINT64:
+						data.addDataRow(new DciDataRow(new Date(timestamp), new Long(inputStream.readLong())));
 						break;
-					case NXCDCI.DT_FLOAT:
-						data.addDataRow(new NXCDCIDataRow(new Date(timestamp), new Double(inputStream.readDouble())));
+					case DataCollectionItem.DT_FLOAT:
+						data.addDataRow(new DciDataRow(new Date(timestamp), new Double(inputStream.readDouble())));
 						break;
-					case NXCDCI.DT_STRING:
+					case DataCollectionItem.DT_STRING:
 						StringBuilder sb = new StringBuilder(256);
 						int count;
 						for(count = MAX_DCI_STRING_VALUE_LENGTH; count > 0; count--)
@@ -1654,7 +1661,7 @@ public class NXCSession
 							sb.append(ch);
 						}
 						inputStream.skipBytes(count);
-						data.addDataRow(new NXCDCIDataRow(new Date(timestamp), sb.toString()));
+						data.addDataRow(new DciDataRow(new Date(timestamp), sb.toString()));
 						break;
 				}
 			}
@@ -1686,14 +1693,14 @@ public class NXCSession
 	 * @throws NXCException
 	 *            if NetXMS server returns an error or operation was timed out
 	 */
-	public NXCDCIData getCollectedData(final long nodeId, final long dciId, Date from, Date to, int maxRows)
+	public DciData getCollectedData(final long nodeId, final long dciId, Date from, Date to, int maxRows)
 			throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_DATA);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
 		msg.setVariableInt32(NXCPCodes.VID_DCI_ID, (int) dciId);
 
-		NXCDCIData data = new NXCDCIData(nodeId, dciId);
+		DciData data = new DciData(nodeId, dciId);
 
 		int rowsReceived, rowsRemaining = maxRows;
 		int timeFrom = (from != null) ? (int) (from.getTime() / 1000) : 0;
@@ -1724,7 +1731,7 @@ public class NXCSession
 				// retrieve additional data, we should update timeTo limit
 				if (to != null)
 				{
-					NXCDCIDataRow row = data.getLastValue();
+					DciDataRow row = data.getLastValue();
 					if (row != null)
 					{
 						// There should be only one value per second, so we set
@@ -2240,19 +2247,19 @@ public class NXCSession
 	 * @throws IOException if socket I/O error occurs
 	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
-	public NXCEventProcessingPolicy openEventProcessingPolicy() throws IOException, NXCException
+	public EventProcessingPolicy openEventProcessingPolicy() throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_EPP);
 		sendMessage(msg);
 		NXCPMessage response = waitForRCC(msg.getMessageId());
 		
 		int numRules = response.getVariableAsInteger(NXCPCodes.VID_NUM_RULES);
-		final NXCEventProcessingPolicy policy = new NXCEventProcessingPolicy(numRules);
+		final EventProcessingPolicy policy = new EventProcessingPolicy(numRules);
 
 		for(int i = 0; i < numRules; i++)
 		{
 			response = waitForMessage(NXCPCodes.CMD_EPP_RECORD, msg.getMessageId());
-			policy.addRule(new NXCEventProcessingPolicyRule(response));
+			policy.addRule(new EventProcessingPolicyRule(response));
 		}
 		
 		return policy;
@@ -2270,5 +2277,21 @@ public class NXCSession
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_CLOSE_EPP);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Open data collection configuration for given node. You must call DataCollectionConfiguration.close() to
+	 * close data collection configuration when it is no longer needed.
+	 * 
+	 * @param nodeId Node object identifier
+	 * @return Data collection configuration object
+	 * @throws NXCException 
+	 * @throws IOException 
+	 */
+	public DataCollectionConfiguration openDataCollectionConfiguration(long nodeId) throws IOException, NXCException
+	{
+		final DataCollectionConfiguration cfg = new DataCollectionConfiguration(this, nodeId);
+		cfg.open();
+		return cfg;
 	}
 }

@@ -8,7 +8,7 @@ import java.text.DateFormat;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.NXCDCIValue;
+import org.netxms.client.datacollection.DciValue;
 
 
 /**
@@ -36,7 +36,7 @@ public class LastValuesLabelProvider implements ITableLabelProvider
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-		return (columnIndex == LastValuesView.COLUMN_ID) ? stateImages[((NXCDCIValue)element).getStatus()] : null;
+		return (columnIndex == LastValuesView.COLUMN_ID) ? stateImages[((DciValue)element).getStatus()] : null;
 	}
 
 	
@@ -46,13 +46,13 @@ public class LastValuesLabelProvider implements ITableLabelProvider
 		switch(columnIndex)
 		{
 			case LastValuesView.COLUMN_ID:
-				return Long.toString(((NXCDCIValue)element).getId());
+				return Long.toString(((DciValue)element).getId());
 			case LastValuesView.COLUMN_DESCRIPTION:
-				return ((NXCDCIValue)element).getDescription();
+				return ((DciValue)element).getDescription();
 			case LastValuesView.COLUMN_VALUE:
-				return ((NXCDCIValue)element).getValue();
+				return ((DciValue)element).getValue();
 			case LastValuesView.COLUMN_TIMESTAMP:
-				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(((NXCDCIValue)element).getTimestamp());
+				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(((DciValue)element).getTimestamp());
 		}
 		return null;
 	}

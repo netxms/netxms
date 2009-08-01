@@ -22,10 +22,10 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCDCIValue;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCNode;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
 
@@ -83,7 +83,7 @@ public class LastValuesView extends Composite
 				
 				try
 				{
-					final NXCDCIValue[] data = session.getLastValues(node.getObjectId());
+					final DciValue[] data = session.getLastValues(node.getObjectId());
 					status = Status.OK_STATUS;
 
 					new UIJob("Initialize last values view") {

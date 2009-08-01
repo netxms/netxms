@@ -12,7 +12,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.NXCDCIValue;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.ui.eclipse.charts.views.HistoryGraph;
 
 /**
@@ -44,8 +44,8 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 		{
 			String id = Long.toString(uniqueId++);
 			for(int i = 0; i < currentSelection.length; i++)
-				if (currentSelection[i] instanceof NXCDCIValue)
-					id += "&" + ((NXCDCIValue)currentSelection[i]).getId() + "@" + ((NXCDCIValue)currentSelection[i]).getNodeId();
+				if (currentSelection[i] instanceof DciValue)
+					id += "&" + ((DciValue)currentSelection[i]).getId() + "@" + ((DciValue)currentSelection[i]).getNodeId();
 			
 			try
 			{
@@ -69,7 +69,7 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 	public void selectionChanged(IAction action, ISelection selection)
 	{
 		if ((selection instanceof IStructuredSelection) &&
-				(((IStructuredSelection)selection).getFirstElement() instanceof NXCDCIValue))
+				(((IStructuredSelection)selection).getFirstElement() instanceof DciValue))
 		{
 			currentSelection = ((IStructuredSelection)selection).toArray();
 		}

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.client.datacollection;
 
 import java.util.Date;
 
@@ -10,12 +10,12 @@ import java.util.Date;
  * @author Victor
  *
  */
-public class NXCDCIDataRow
+public class DciDataRow
 {
 	private Date timestamp;
 	private Object value;
 
-	public NXCDCIDataRow(Date timestamp, Object value)
+	public DciDataRow(Date timestamp, Object value)
 	{
 		super();
 		this.timestamp = timestamp;

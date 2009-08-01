@@ -14,10 +14,9 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.ExpandBar;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.NXCEventProcessingPolicy;
-import org.netxms.client.NXCEventProcessingPolicyRule;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.epp.EventProcessingPolicy;
 import org.netxms.ui.eclipse.epp.Activator;
 import org.netxms.ui.eclipse.epp.controls.RuleList;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
@@ -33,7 +32,7 @@ public class PolicyEditor extends ViewPart
 
 	private NXCSession session;
 	private boolean policyLocked = false;
-	private NXCEventProcessingPolicy policy; 
+	private EventProcessingPolicy policy; 
 	private ExpandBar ruleList;
 	
 	/* (non-Javadoc)
@@ -139,9 +138,5 @@ public class PolicyEditor extends ViewPart
 	 */
 	private void fillRulesList()
 	{
-		List<NXCEventProcessingPolicyRule> rules = policy.getRules();
-		for(final NXCEventProcessingPolicyRule rule : rules)
-		{
-		}
 	}
 }

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.client.epp;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,7 +16,7 @@ import org.netxms.base.NXCPMessage;
  * 
  * @author Victor
  */
-public class NXCEventProcessingPolicyRule
+public class EventProcessingPolicyRule
 {
 	private List<Long> sources;
 	private List<Long> events;
@@ -38,7 +38,7 @@ public class NXCEventProcessingPolicyRule
 	 * 
 	 * @param msg NXCP message
 	 */
-	protected NXCEventProcessingPolicyRule(NXCPMessage msg)
+	public EventProcessingPolicyRule(NXCPMessage msg)
 	{
 		sources = Arrays.asList(msg.getVariableAsUInt32ArrayEx(NXCPCodes.VID_RULE_SOURCES));
 		events = Arrays.asList(msg.getVariableAsUInt32ArrayEx(NXCPCodes.VID_RULE_EVENTS));

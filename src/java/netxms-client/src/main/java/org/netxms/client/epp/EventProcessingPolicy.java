@@ -1,28 +1,29 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.client.epp;
 
 import java.util.ArrayList;
 import java.util.List;
+
 
 /**
  * This class represents NetXMS event processing policy.
  * 
  * @author Victor
  */
-public class NXCEventProcessingPolicy
+public class EventProcessingPolicy
 {
-	private List<NXCEventProcessingPolicyRule> rules;
+	private List<EventProcessingPolicyRule> rules;
 
 	/**
 	 * Create new policy object.
 	 * 
 	 * @param numRules Expected number of rules
 	 */
-	protected NXCEventProcessingPolicy(int numRules)
+	public EventProcessingPolicy(int numRules)
 	{
-		rules = new ArrayList<NXCEventProcessingPolicyRule>(numRules);
+		rules = new ArrayList<EventProcessingPolicyRule>(numRules);
 	}
 	
 	/**
@@ -30,7 +31,7 @@ public class NXCEventProcessingPolicy
 	 * 
 	 * @param rule Rule to add
 	 */
-	protected void addRule(NXCEventProcessingPolicyRule rule)
+	public void addRule(EventProcessingPolicyRule rule)
 	{
 		rules.add(rule);
 	}
@@ -38,7 +39,7 @@ public class NXCEventProcessingPolicy
 	/**
 	 * @return the rules
 	 */
-	public List<NXCEventProcessingPolicyRule> getRules()
+	public List<EventProcessingPolicyRule> getRules()
 	{
 		return rules;
 	}

@@ -55,7 +55,7 @@ public final class NXCPCodes
 	public static final int CMD_SET_PASSWORD            = 0x0028;
 	public static final int CMD_GET_NODE_DCI_LIST       = 0x0029;
 	public static final int CMD_NODE_DCI                = 0x002A;
-	public static final int CMD_NODE_DCI_LIST_END       = 0x002B;
+//	public static final int CMD_NODE_DCI_LIST_END       = 0x002B;
 	public static final int CMD_DELETE_NODE_DCI         = 0x002C;
 	public static final int CMD_MODIFY_NODE_DCI         = 0x002D;
 	public static final int CMD_UNLOCK_NODE_DCI_LIST    = 0x002E;

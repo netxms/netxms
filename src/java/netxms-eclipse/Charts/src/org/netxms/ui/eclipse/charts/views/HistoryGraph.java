@@ -26,10 +26,10 @@ import org.jfree.data.time.Second;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.experimental.chart.swt.ChartComposite;
-import org.netxms.client.NXCDCIData;
-import org.netxms.client.NXCDCIDataRow;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 
@@ -123,7 +123,7 @@ public class HistoryGraph extends ViewPart
 				
 				final Date from = new Date(System.currentTimeMillis() - 3600000);
 				final Date to = new Date(System.currentTimeMillis());
-				final NXCDCIData[] data = new NXCDCIData[items.size()];
+				final DciData[] data = new DciData[items.size()];
 
 				try
 				{
@@ -179,14 +179,14 @@ public class HistoryGraph extends ViewPart
 	/**
 	 * Create chart based on a dataset
 	 */
-	private JFreeChart createChart(final NXCDCIData data[])
+	private JFreeChart createChart(final DciData data[])
 	{
 		TimeSeriesCollection  dataset =  new TimeSeriesCollection();
 
 		for(int i = 0; i < data.length; i++)
 		{
 			final TimeSeries  series = new TimeSeries("First");
-			NXCDCIDataRow rows[] = data[i].getValues();
+			DciDataRow rows[] = data[i].getValues();
 			for(int j = 0; j < rows.length; j++)
 			{
 				series.addOrUpdate(new Second(rows[j].getTimestamp()), rows[j].getValueAsDouble());

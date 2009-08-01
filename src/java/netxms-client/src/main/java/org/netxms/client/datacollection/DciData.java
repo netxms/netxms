@@ -1,9 +1,10 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.client.datacollection;
 
 import java.util.ArrayList;
+
 
 /**
  * Class to hold series of collected DCI data
@@ -11,18 +12,18 @@ import java.util.ArrayList;
  * @author Victor
  *
  */
-public class NXCDCIData
+public class DciData
 {
 	private long nodeId;
 	private long dciId;
-	private ArrayList<NXCDCIDataRow> values = new ArrayList<NXCDCIDataRow>();
+	private ArrayList<DciDataRow> values = new ArrayList<DciDataRow>();
 	
 	
 	/**
 	 * @param nodeId
 	 * @param dciId
 	 */
-	public NXCDCIData(long nodeId, long dciId)
+	public DciData(long nodeId, long dciId)
 	{
 		this.nodeId = nodeId;
 		this.dciId = dciId;
@@ -50,9 +51,9 @@ public class NXCDCIData
 	/**
 	 * @return the values
 	 */
-	public NXCDCIDataRow[] getValues()
+	public DciDataRow[] getValues()
 	{
-		return values.toArray(new NXCDCIDataRow[values.size()]);
+		return values.toArray(new DciDataRow[values.size()]);
 	}
 	
 	
@@ -61,7 +62,7 @@ public class NXCDCIData
 	 * 
 	 * @return last added value
 	 */
-	public NXCDCIDataRow getLastValue()
+	public DciDataRow getLastValue()
 	{
 		return (values.size() > 0) ? values.get(values.size() - 1) : null;
 	}
@@ -70,7 +71,7 @@ public class NXCDCIData
 	/**
 	 * Add new value
 	 */
-	public void addDataRow(NXCDCIDataRow row)
+	public void addDataRow(DciDataRow row)
 	{
 		values.add(row);
 	}

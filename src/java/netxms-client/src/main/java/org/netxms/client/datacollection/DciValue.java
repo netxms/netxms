@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.client.datacollection;
 
 import java.util.Date;
 
@@ -11,7 +11,7 @@ import org.netxms.base.NXCPMessage;
  * @author Victor
  *
  */
-public class NXCDCIValue
+public class DciValue
 {
 	private long id;					// DCI id
 	private long nodeId;				// related node object id
@@ -29,7 +29,7 @@ public class NXCDCIValue
 	 * @param msg NXCP message
 	 * @param base Base variable ID for value object
 	 */
-	NXCDCIValue(long nodeId, NXCPMessage msg, long base)
+	public DciValue(long nodeId, NXCPMessage msg, long base)
 	{
 		long var = base;
 	
