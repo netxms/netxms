@@ -523,7 +523,7 @@ void Template::SendItemsToClient(ClientSession *pSession, DWORD dwRqId)
    UnlockData();
 
    // Send end-of-list indicator
-   msg.SetCode(CMD_NODE_DCI_LIST_END);
+	msg.SetEndOfSequence();
    pSession->SendMessage(&msg);
 }
 

@@ -33,14 +33,14 @@
 #define NETXMS_VERSION_MINOR        1
 #define NETXMS_VERSION_BUILD        0
 #define NETXMS_VERSION_HOTFIX       0
-#define NETXMS_VERSION_STRING       _T("1.1.0-rc4")
+#define NETXMS_VERSION_STRING       _T("1.1.0-rc5")
 
 
 //
 // Current client-server protocol version
 //
 
-#define CLIENT_PROTOCOL_VERSION     21
+#define CLIENT_PROTOCOL_VERSION     22
 
 
 #endif

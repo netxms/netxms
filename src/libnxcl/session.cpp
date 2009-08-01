@@ -382,94 +382,88 @@ void NXCL_Session::CompleteSync(int nSyncOp, DWORD dwRetCode)
 
 void NXCL_Session::ProcessDCI(CSCPMessage *pMsg)
 {
-   switch(pMsg->GetCode())
+	if (pMsg->IsEndOfSequence())
+	{
+      CompleteSync(SYNC_DCI_LIST, RCC_SUCCESS);
+	}
+	else if (m_pItemList != NULL)
    {
-      case CMD_NODE_DCI_LIST_END:
-         CompleteSync(SYNC_DCI_LIST, RCC_SUCCESS);
-         break;
-      case CMD_NODE_DCI:
-         if (m_pItemList != NULL)
-         {
-            DWORD i, j, dwId;
-            DCI_THRESHOLD dct;
+      DWORD i, j, dwId;
+      DCI_THRESHOLD dct;
 
-            i = m_pItemList->dwNumItems;
-            m_pItemList->dwNumItems++;
-            m_pItemList->pItems = (NXC_DCI *)realloc(m_pItemList->pItems, 
-                                          sizeof(NXC_DCI) * m_pItemList->dwNumItems);
-            m_pItemList->pItems[i].dwId = pMsg->GetVariableLong(VID_DCI_ID);
-            m_pItemList->pItems[i].dwTemplateId = pMsg->GetVariableLong(VID_TEMPLATE_ID);
-            m_pItemList->pItems[i].dwResourceId = pMsg->GetVariableLong(VID_RESOURCE_ID);
-            m_pItemList->pItems[i].dwProxyNode = pMsg->GetVariableLong(VID_PROXY_NODE);
-            m_pItemList->pItems[i].iDataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
-            m_pItemList->pItems[i].iPollingInterval = (int)pMsg->GetVariableLong(VID_POLLING_INTERVAL);
-            m_pItemList->pItems[i].iRetentionTime = (int)pMsg->GetVariableLong(VID_RETENTION_TIME);
-            m_pItemList->pItems[i].iSource = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
-            m_pItemList->pItems[i].iStatus = (BYTE)pMsg->GetVariableShort(VID_DCI_STATUS);
-            m_pItemList->pItems[i].iDeltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
-            m_pItemList->pItems[i].iProcessAllThresholds = (BYTE)pMsg->GetVariableShort(VID_ALL_THRESHOLDS);
-            m_pItemList->pItems[i].iAdvSchedule = (BYTE)pMsg->GetVariableShort(VID_ADV_SCHEDULE);
-            m_pItemList->pItems[i].pszFormula = pMsg->GetVariableStr(VID_DCI_FORMULA);
-            pMsg->GetVariableStr(VID_NAME, m_pItemList->pItems[i].szName, MAX_ITEM_NAME);
-            pMsg->GetVariableStr(VID_DESCRIPTION, m_pItemList->pItems[i].szDescription,
-                                 MAX_DB_STRING);
-            pMsg->GetVariableStr(VID_INSTANCE, m_pItemList->pItems[i].szInstance,
-                                 MAX_DB_STRING);
-				m_pItemList->pItems[i].nBaseUnits = (int)pMsg->GetVariableShort(VID_BASE_UNITS);
-				m_pItemList->pItems[i].nMultiplier = (int)pMsg->GetVariableLong(VID_MULTIPLIER);
-				m_pItemList->pItems[i].pszCustomUnitName = pMsg->GetVariableStr(VID_CUSTOM_UNITS_NAME);
-				m_pItemList->pItems[i].pszPerfTabSettings = pMsg->GetVariableStr(VID_PERFTAB_SETTINGS);
-            m_pItemList->pItems[i].dwNumSchedules = pMsg->GetVariableLong(VID_NUM_SCHEDULES);
-            m_pItemList->pItems[i].ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_pItemList->pItems[i].dwNumSchedules);
-            for(j = 0, dwId = VID_DCI_SCHEDULE_BASE; j < m_pItemList->pItems[i].dwNumSchedules; j++, dwId++)
-               m_pItemList->pItems[i].ppScheduleList[j] = pMsg->GetVariableStr(dwId);
-            m_pItemList->pItems[i].dwNumThresholds = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
-            m_pItemList->pItems[i].pThresholdList = 
-               (NXC_DCI_THRESHOLD *)malloc(sizeof(NXC_DCI_THRESHOLD) * m_pItemList->pItems[i].dwNumThresholds);
-            for(j = 0, dwId = VID_DCI_THRESHOLD_BASE; j < m_pItemList->pItems[i].dwNumThresholds; j++, dwId++)
-            {
-               pMsg->GetVariableBinary(dwId, (BYTE *)&dct, sizeof(DCI_THRESHOLD));
-               m_pItemList->pItems[i].pThresholdList[j].dwId = ntohl(dct.dwId);
-               m_pItemList->pItems[i].pThresholdList[j].dwEvent = ntohl(dct.dwEvent);
-               m_pItemList->pItems[i].pThresholdList[j].dwRearmEvent = ntohl(dct.dwRearmEvent);
-               m_pItemList->pItems[i].pThresholdList[j].dwArg1 = ntohl(dct.dwArg1);
-               m_pItemList->pItems[i].pThresholdList[j].dwArg2 = ntohl(dct.dwArg2);
-               m_pItemList->pItems[i].pThresholdList[j].wFunction = ntohs(dct.wFunction);
-               m_pItemList->pItems[i].pThresholdList[j].wOperation = ntohs(dct.wOperation);
-               m_pItemList->pItems[i].pThresholdList[j].nRepeatInterval = ntohl(dct.nRepeatInterval);
-               switch(m_pItemList->pItems[i].iDataType)
-               {
-                  case DCI_DT_INT:
-                  case DCI_DT_UINT:
-                     m_pItemList->pItems[i].pThresholdList[j].value.dwInt32 = ntohl(dct.value.dwInt32);
-                     break;
-                  case DCI_DT_INT64:
-                  case DCI_DT_UINT64:
-                     m_pItemList->pItems[i].pThresholdList[j].value.qwInt64 = ntohq(dct.value.qwInt64);
-                     break;
-                  case DCI_DT_FLOAT:
-                     m_pItemList->pItems[i].pThresholdList[j].value.dFloat = ntohd(dct.value.dFloat);
-                     break;
-                  case DCI_DT_STRING:
-                     SwapWideString(dct.value.szString);
+      i = m_pItemList->dwNumItems;
+      m_pItemList->dwNumItems++;
+      m_pItemList->pItems = (NXC_DCI *)realloc(m_pItemList->pItems, 
+                                    sizeof(NXC_DCI) * m_pItemList->dwNumItems);
+      m_pItemList->pItems[i].dwId = pMsg->GetVariableLong(VID_DCI_ID);
+      m_pItemList->pItems[i].dwTemplateId = pMsg->GetVariableLong(VID_TEMPLATE_ID);
+      m_pItemList->pItems[i].dwResourceId = pMsg->GetVariableLong(VID_RESOURCE_ID);
+      m_pItemList->pItems[i].dwProxyNode = pMsg->GetVariableLong(VID_PROXY_NODE);
+      m_pItemList->pItems[i].iDataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
+      m_pItemList->pItems[i].iPollingInterval = (int)pMsg->GetVariableLong(VID_POLLING_INTERVAL);
+      m_pItemList->pItems[i].iRetentionTime = (int)pMsg->GetVariableLong(VID_RETENTION_TIME);
+      m_pItemList->pItems[i].iSource = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
+      m_pItemList->pItems[i].iStatus = (BYTE)pMsg->GetVariableShort(VID_DCI_STATUS);
+      m_pItemList->pItems[i].iDeltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
+      m_pItemList->pItems[i].iProcessAllThresholds = (BYTE)pMsg->GetVariableShort(VID_ALL_THRESHOLDS);
+      m_pItemList->pItems[i].iAdvSchedule = (BYTE)pMsg->GetVariableShort(VID_ADV_SCHEDULE);
+      m_pItemList->pItems[i].pszFormula = pMsg->GetVariableStr(VID_DCI_FORMULA);
+      pMsg->GetVariableStr(VID_NAME, m_pItemList->pItems[i].szName, MAX_ITEM_NAME);
+      pMsg->GetVariableStr(VID_DESCRIPTION, m_pItemList->pItems[i].szDescription,
+                           MAX_DB_STRING);
+      pMsg->GetVariableStr(VID_INSTANCE, m_pItemList->pItems[i].szInstance,
+                           MAX_DB_STRING);
+		m_pItemList->pItems[i].nBaseUnits = (int)pMsg->GetVariableShort(VID_BASE_UNITS);
+		m_pItemList->pItems[i].nMultiplier = (int)pMsg->GetVariableLong(VID_MULTIPLIER);
+		m_pItemList->pItems[i].pszCustomUnitName = pMsg->GetVariableStr(VID_CUSTOM_UNITS_NAME);
+		m_pItemList->pItems[i].pszPerfTabSettings = pMsg->GetVariableStr(VID_PERFTAB_SETTINGS);
+      m_pItemList->pItems[i].dwNumSchedules = pMsg->GetVariableLong(VID_NUM_SCHEDULES);
+      m_pItemList->pItems[i].ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_pItemList->pItems[i].dwNumSchedules);
+      for(j = 0, dwId = VID_DCI_SCHEDULE_BASE; j < m_pItemList->pItems[i].dwNumSchedules; j++, dwId++)
+         m_pItemList->pItems[i].ppScheduleList[j] = pMsg->GetVariableStr(dwId);
+      m_pItemList->pItems[i].dwNumThresholds = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
+      m_pItemList->pItems[i].pThresholdList = 
+         (NXC_DCI_THRESHOLD *)malloc(sizeof(NXC_DCI_THRESHOLD) * m_pItemList->pItems[i].dwNumThresholds);
+      for(j = 0, dwId = VID_DCI_THRESHOLD_BASE; j < m_pItemList->pItems[i].dwNumThresholds; j++, dwId++)
+      {
+         pMsg->GetVariableBinary(dwId, (BYTE *)&dct, sizeof(DCI_THRESHOLD));
+         m_pItemList->pItems[i].pThresholdList[j].dwId = ntohl(dct.dwId);
+         m_pItemList->pItems[i].pThresholdList[j].dwEvent = ntohl(dct.dwEvent);
+         m_pItemList->pItems[i].pThresholdList[j].dwRearmEvent = ntohl(dct.dwRearmEvent);
+         m_pItemList->pItems[i].pThresholdList[j].dwArg1 = ntohl(dct.dwArg1);
+         m_pItemList->pItems[i].pThresholdList[j].dwArg2 = ntohl(dct.dwArg2);
+         m_pItemList->pItems[i].pThresholdList[j].wFunction = ntohs(dct.wFunction);
+         m_pItemList->pItems[i].pThresholdList[j].wOperation = ntohs(dct.wOperation);
+         m_pItemList->pItems[i].pThresholdList[j].nRepeatInterval = ntohl(dct.nRepeatInterval);
+         switch(m_pItemList->pItems[i].iDataType)
+         {
+            case DCI_DT_INT:
+            case DCI_DT_UINT:
+               m_pItemList->pItems[i].pThresholdList[j].value.dwInt32 = ntohl(dct.value.dwInt32);
+               break;
+            case DCI_DT_INT64:
+            case DCI_DT_UINT64:
+               m_pItemList->pItems[i].pThresholdList[j].value.qwInt64 = ntohq(dct.value.qwInt64);
+               break;
+            case DCI_DT_FLOAT:
+               m_pItemList->pItems[i].pThresholdList[j].value.dFloat = ntohd(dct.value.dFloat);
+               break;
+            case DCI_DT_STRING:
+               SwapWideString(dct.value.szString);
 #ifdef UNICODE
 #ifdef UNICODE_UCS4
-                     ucs2_to_ucs4(dct.value.szString, -1, m_pItemList->pItems[i].pThresholdList[j].value.szString, MAX_STRING_VALUE);
+               ucs2_to_ucs4(dct.value.szString, -1, m_pItemList->pItems[i].pThresholdList[j].value.szString, MAX_STRING_VALUE);
 #else
-                     wcscpy(m_pItemList->pItems[i].pThresholdList[j].value.szString, dct.value.szString);
+               wcscpy(m_pItemList->pItems[i].pThresholdList[j].value.szString, dct.value.szString);
 #endif                     
 #else
-                     ucs2_to_mb(dct.value.szString, -1, m_pItemList->pItems[i].pThresholdList[j].value.szString, MAX_STRING_VALUE);
+               ucs2_to_mb(dct.value.szString, -1, m_pItemList->pItems[i].pThresholdList[j].value.szString, MAX_STRING_VALUE);
 #endif
-                     break;
-                  default:
-                     break;
-               }
-            }
+               break;
+            default:
+               break;
          }
-         break;
-      default:
-         break;
+      }
    }
 }
 

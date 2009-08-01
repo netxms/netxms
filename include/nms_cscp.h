@@ -284,7 +284,7 @@ typedef struct
 #define CMD_SET_PASSWORD            0x0028
 #define CMD_GET_NODE_DCI_LIST       0x0029
 #define CMD_NODE_DCI                0x002A
-#define CMD_NODE_DCI_LIST_END       0x002B
+//#define CMD_NODE_DCI_LIST_END       0x002B
 #define CMD_DELETE_NODE_DCI         0x002C
 #define CMD_MODIFY_NODE_DCI         0x002D
 #define CMD_UNLOCK_NODE_DCI_LIST    0x002E

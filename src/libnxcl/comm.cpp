@@ -186,7 +186,6 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
                pSession->ProcessUserDBUpdate(pMsg);
                break;
             case CMD_NODE_DCI:
-            case CMD_NODE_DCI_LIST_END:
                pSession->ProcessDCI(pMsg);
                break;
             case CMD_ALARM_UPDATE:
