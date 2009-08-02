@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [0.9.0-rc3], [NetXMS Team <bugs@netxms.org>])
+AC_INIT([NetXMS], [1.1.0-rc5], [NetXMS Team <bugs@netxms.org>])
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE
@@ -46,7 +46,7 @@ BUILD_NXHTTPD="no"
 BUILD_STATIC_AGENT="no"
 NEED_ZLIB="no"
 NEED_WXWIDGETS="no"
-MODULES=""
+MODULES="libnetxms install"
 STATIC_SUBAGENT_LIST=""
 SUBAGENT_DIRS=""
 SUBAGENT_LIBS=""
@@ -228,7 +228,7 @@ AC_ARG_ENABLE(debug,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle"
-	MODULES="sqlite snmp libnxsl libnxlp server agent libnxmap libnxcl client nxhttpd nxscript nxcptest"
+	MODULES="libexpat libnetxms install sqlite snmp libnxsl libnxlp server agent libnxmap libnxcl client nxhttpd nxscript nxcptest"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="sql images"
@@ -717,9 +717,9 @@ fi
 HAVE_LIBEXPAT=yes
 AC_CHECK_HEADER(expat.h,,HAVE_LIBEXPAT=no)
 AC_CHECK_LIB(expat, XML_Parse, [], [ HAVE_LIBEXPAT=no ])
-if test "x$HAVE_LIBEXPAT" = "xyes"; then
-	AC_DEFINE(HAVE_LIBEXPAT,1,Define to 1 if you have working libexpat)
-	MODULES="$MODULES nxcptest"
+if test "x$HAVE_LIBEXPAT" = "xno"; then
+	MODULES="libexpat $MODULES"
+	CPPFLAGS="$CPPFLAGS "
 fi
 
 #--------------------------------------------------------------------
@@ -730,6 +730,7 @@ AC_CHECK_HEADERS([sys/types.h sys/stat.h unistd.h stdarg.h fcntl.h alloca.h])
 AC_CHECK_HEADERS([sys/int_types.h time.h sys/time.h sys/utsname.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h net/nh.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
+AC_CHECK_HEADERS([inttypes.h memory.h stdint.h stdlib.h strings.h string.h])
 AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h dlfcn.h])
 AC_CHECK_HEADERS([sys/sysctl.h sys/param.h sys/user.h vm/vm_param.h syslog.h getopt.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h],,,
@@ -786,7 +787,7 @@ AC_FUNC_STRFTIME
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 
-AC_CHECK_FUNCS([gettimeofday memmove memset strchr strcspn strdup strerror])
+AC_CHECK_FUNCS([gettimeofday memmove memset bcopy strchr strcspn strdup strerror])
 AC_CHECK_FUNCS([strrchr strtol strtoul strtoll strtoull])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
 AC_CHECK_FUNCS([usleep nanosleep getopt_long gmtime_r localtime_r lstat64])
@@ -1450,6 +1451,8 @@ AC_CONFIG_FILES([
 	sql/Makefile
 	src/Makefile
 	src/sqlite/Makefile
+	src/libexpat/Makefile
+	src/libexpat/libexpat/Makefile
 	src/libnetxms/Makefile
 	src/libnxcl/Makefile
 	src/libnxlp/Makefile

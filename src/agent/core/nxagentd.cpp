@@ -1259,19 +1259,19 @@ int main(int argc, char *argv[])
 			_tcscpy(g_szConfigFile, "/etc/nxagentd.conf");
 		}
 	}
-	if (!_tcscmp(m_szConfigIncludeDir, _T("{search}")))
+	if (!_tcscmp(g_szConfigIncludeDir, _T("{search}")))
 	{
 		if (access(PREFIX "/etc/nxagentd.conf.d", 4) == 0)
 		{
-			_tcscpy(m_szConfigIncludeDir, PREFIX "/etc/nxagentd.conf.d");
+			_tcscpy(g_szConfigIncludeDir, PREFIX "/etc/nxagentd.conf.d");
 		}
 		else if (access("/usr/etc/nxagentd.conf.d", 4) == 0)
 		{
-			_tcscpy(m_szConfigIncludeDir, "/usr/etc/nxagentd.conf.d");
+			_tcscpy(g_szConfigIncludeDir, "/usr/etc/nxagentd.conf.d");
 		}
 		else
 		{
-			_tcscpy(m_szConfigIncludeDir, "/etc/nxagentd.conf.d");
+			_tcscpy(g_szConfigIncludeDir, "/etc/nxagentd.conf.d");
 		}
 	}
 #endif

@@ -49,7 +49,7 @@ static DWORD DeployConfig(DWORD session, CSCPMessage *msg)
 	tail = g_szConfigIncludeDir[_tcslen(g_szConfigIncludeDir) - 1];
 	_sntprintf(path, MAX_PATH, _T("%s%s%s"), g_szConfigIncludeDir, ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""), fname);
 
-	fh = _topen(path, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, _S_IREAD | _S_IWRITE);
+	fh = _topen(path, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
 	if (fh != -1)
 	{
 		DWORD size = msg->GetVariableBinary(VID_CONFIG_FILE_DATA, 0, NULL);

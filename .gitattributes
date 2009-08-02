@@ -43,7 +43,6 @@ images/zone.png -text
 include/netxms_isc.h -text
 include/nxlpapi.h -text
 netware/bin/.keep -text
-src/agent/core/Makefile.am svneol=native#unset
 src/agent/core/nxagentd.vcproj -text
 src/agent/subagents/ecs/ecs.vcproj -text
 src/agent/subagents/logwatch/logwatch.vcproj -text
@@ -530,12 +529,9 @@ src/java/netxms-eclipse/library/src/org/netxms/ui/eclipse/widgets/LabeledText.ja
 src/java/pom.xml -text
 src/libexpat/Changes -text
 src/libexpat/MANIFEST -text
-src/libexpat/configure -text
-src/libexpat/conftools/PrintPath -text
-src/libexpat/conftools/config.guess -text
-src/libexpat/conftools/config.sub -text
-src/libexpat/conftools/install-sh -text
-src/libexpat/conftools/mkinstalldirs -text
+src/libexpat/Makefile.am -text
+src/libexpat/expat_config.h -text
+src/libexpat/libexpat/Makefile.am -text
 src/libexpat/libexpat/libexpat.vcproj -text
 src/libexpat/vms/descrip.mms -text
 src/libnetxms/libnetxms.vcp eol=crlf
