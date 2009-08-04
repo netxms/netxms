@@ -51,11 +51,11 @@ public class DataCollectionConfiguration
 		
 		while(true)
 		{
-			final NXCPMessage response = session.waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
+			final NXCPMessage response = session.waitForMessage(NXCPCodes.CMD_NODE_DCI, msg.getMessageId());
 			if (response.isEndOfSequence())
 				break;
 			
-			DataCollectionItem item = new DataCollectionItem(response);
+			DataCollectionItem item = new DataCollectionItem(this, response);
 			items.put(item.getId(), item);
 		}
 		isOpen = true;
@@ -107,5 +107,13 @@ public class DataCollectionConfiguration
 		if (isOpen)
 			close();
 		super.finalize();
+	}
+
+	/**
+	 * @return the nodeId
+	 */
+	public long getNodeId()
+	{
+		return nodeId;
 	}
 }

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            name="Data Collection Configuration"
+            allowMultiple="true"
+            icon="icons/dc_editor.png"
+            class="org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor"
+            id="org.netxms.ui.eclipse.datacollection.view.data_collection_editor">
+      </view>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.dceditor_NXCNode"
+            objectClass="org.netxms.client.NXCNode">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.OpenEditor"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor"
+               label="Data Collection Configuration"
+               icon="icons/dc_editor.png"
+               menubarPath="datacollection">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.dceditor_NXCTemplate"
+            objectClass="org.netxms.client.NXCTemplate">
+         <action
+               class="org.netxms.ui.eclipse.datacollection.actions.OpenEditor"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor"
+               label="Data Collection Configuration"
+               icon="icons/dc_editor.png"
+               menubarPath="datacollection">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>

@@ -109,7 +109,7 @@
       </objectContribution>
 
       <objectContribution
-            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.bind"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.bind_NXCContainer"
             objectClass="org.netxms.client.NXCContainer">
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.BindObject"
@@ -121,7 +121,7 @@
       </objectContribution>
 
       <objectContribution
-            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.bind"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.bind_NXCServiceRoot"
             objectClass="org.netxms.client.NXCServiceRoot">
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.BindObject"

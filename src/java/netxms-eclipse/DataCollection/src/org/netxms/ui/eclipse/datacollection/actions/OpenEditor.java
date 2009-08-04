@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.charts.actions;
+package org.netxms.ui.eclipse.datacollection.actions;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -12,19 +12,19 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.datacollection.DataCollectionItem;
-import org.netxms.client.datacollection.DciValue;
-import org.netxms.ui.eclipse.charts.views.HistoryGraph;
+import org.netxms.client.NXCNode;
+import org.netxms.client.NXCObject;
+import org.netxms.client.NXCTemplate;
+import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
 
 /**
  * @author Victor
  *
  */
-public class ShowHistoryGraph implements IObjectActionDelegate
+public class OpenEditor implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private Object[] currentSelection = null;
-	private long uniqueId = 0;
+	private NXCObject object;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -41,26 +41,13 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		if (currentSelection != null)
+		if (object != null)
 		{
-			String id = Long.toString(uniqueId++);
-			for(int i = 0; i < currentSelection.length; i++)
-			{
-				if (currentSelection[i] instanceof DciValue)
-					id += "&" + ((DciValue)currentSelection[i]).getId() + "@" + ((DciValue)currentSelection[i]).getNodeId();
-				else if (currentSelection[i] instanceof DataCollectionItem)
-					id += "&" + ((DataCollectionItem)currentSelection[i]).getId() + "@" + ((DataCollectionItem)currentSelection[i]).getNodeId();
-			}
-			
 			try
 			{
-				window.getActivePage().showView(HistoryGraph.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
+				window.getActivePage().showView(DataCollectionEditor.ID, Long.toString(object.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
 			}
 			catch(PartInitException e)
-			{
-				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
-			}
-			catch(IllegalArgumentException e)
 			{
 				MessageDialog.openError(window.getShell(), "Error", "Error opening view: " + e.getMessage());
 			}
@@ -73,23 +60,22 @@ public class ShowHistoryGraph implements IObjectActionDelegate
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{
-		if ((selection instanceof IStructuredSelection) && !selection.isEmpty())
+		if (selection instanceof IStructuredSelection)
 		{
 			Object element = ((IStructuredSelection)selection).getFirstElement();
-			if ((element instanceof DciValue) || (element instanceof DataCollectionItem))
+			if ((element instanceof NXCNode) || (element instanceof NXCTemplate))
 			{
-				currentSelection = ((IStructuredSelection)selection).toArray();
+				object = (NXCObject)element;
 			}
 			else
 			{
-				currentSelection = null;
+				object = null;
 			}
 		}
 		else
 		{
-			currentSelection = null;
+			object = null;
 		}
-		
-		action.setEnabled((currentSelection != null) && (currentSelection.length > 0));
+		action.setEnabled(object != null);
 	}
 }

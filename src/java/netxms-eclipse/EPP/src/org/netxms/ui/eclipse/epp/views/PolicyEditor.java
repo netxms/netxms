@@ -3,8 +3,6 @@
  */
 package org.netxms.ui.eclipse.epp.views;
 
-import java.util.List;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -131,12 +129,5 @@ public class PolicyEditor extends ViewPart
 			}.schedule();
 		}
 		super.dispose();
-	}
-
-	/**
-	 * Fill rules list with policy data
-	 */
-	private void fillRulesList()
-	{
 	}
 }

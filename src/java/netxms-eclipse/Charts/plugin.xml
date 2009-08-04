@@ -16,8 +16,19 @@
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="org.netxms.ui.eclipse.charts.actions.popup.dci.graph"
-            objectClass="org.netxms.client.NXCDCIValue">
+            id="org.netxms.ui.eclipse.charts.actions.popup.dci.graph_DciValue"
+            objectClass="org.netxms.client.datacollection.DciValue">
+         <action
+               class="org.netxms.ui.eclipse.charts.actions.ShowHistoryGraph"
+               id="org.netxms.ui.eclipse.charts.popupActions.ShowHistoryGraph"
+               label="Graph"
+               icon="icons/graph.png"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.charts.actions.popup.dci.graph_DataCollectionItem"
+            objectClass="org.netxms.client.datacollection.DataCollectionItem">
          <action
                class="org.netxms.ui.eclipse.charts.actions.ShowHistoryGraph"
                id="org.netxms.ui.eclipse.charts.popupActions.ShowHistoryGraph"

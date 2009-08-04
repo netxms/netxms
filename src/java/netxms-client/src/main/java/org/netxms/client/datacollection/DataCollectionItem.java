@@ -36,6 +36,7 @@ public class DataCollectionItem
 	public static final int DT_NULL = 6;
 	
 	// DCI data
+	private DataCollectionConfiguration owner;
 	private long id;
 	private long templateId;
 	private long resourceId;
@@ -63,8 +64,9 @@ public class DataCollectionItem
 	 * 
 	 * @param msg NXCP message
 	 */
-	protected DataCollectionItem(final NXCPMessage msg)
+	protected DataCollectionItem(final DataCollectionConfiguration owner, final NXCPMessage msg)
 	{
+		this.owner = owner;
 		id = msg.getVariableAsInt64(NXCPCodes.VID_DCI_ID);
 		templateId = msg.getVariableAsInt64(NXCPCodes.VID_TEMPLATE_ID);
 		resourceId = msg.getVariableAsInt64(NXCPCodes.VID_RESOURCE_ID);
@@ -412,5 +414,25 @@ public class DataCollectionItem
 	public ArrayList<Threshold> getThresholds()
 	{
 		return thresholds;
+	}
+
+	/**
+	 * Get owning data collection configuration.
+	 * 
+	 * @return the owner
+	 */
+	public DataCollectionConfiguration getOwner()
+	{
+		return owner;
+	}
+
+	/**
+	 * Get ID of owning node.
+	 * 
+	 * @return
+	 */
+	public long getNodeId()
+	{
+		return owner.getNodeId();
 	}
 }
