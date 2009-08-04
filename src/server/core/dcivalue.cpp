@@ -66,7 +66,7 @@ ItemValue::ItemValue(const TCHAR *pszValue, DWORD dwTimeStamp)
 
 ItemValue::ItemValue(const ItemValue *pValue)
 {
-   strcpy(m_szString, pValue->m_szString);
+   _tcscpy(m_szString, pValue->m_szString);
    m_iInt32 = pValue->m_iInt32;
    m_iInt64 = pValue->m_iInt64;
    m_dwInt32 = pValue->m_dwInt32;
@@ -91,7 +91,7 @@ ItemValue::~ItemValue()
 
 const ItemValue& ItemValue::operator=(const ItemValue &src)
 {
-   strcpy(m_szString, src.m_szString);
+   _tcscpy(m_szString, src.m_szString);
    m_iInt32 = src.m_iInt32;
    m_iInt64 = src.m_iInt64;
    m_dwInt32 = src.m_dwInt32;

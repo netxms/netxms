@@ -116,7 +116,7 @@ int CDCIThresholdsPage::AddListEntry(DWORD dwIndex)
 
 void CDCIThresholdsPage::UpdateListEntry(int iItem, DWORD dwIndex)
 {
-   TCHAR szBuffer[256], szArgs[256], szValue[MAX_DCI_STRING_VALUE];
+   TCHAR szBuffer[256], szArgs[256];
 
    m_wndListCtrl.SetItemData(iItem, dwIndex);
 
@@ -132,28 +132,6 @@ void CDCIThresholdsPage::UpdateListEntry(int iItem, DWORD dwIndex)
          break;
    }
 
-   switch(g_nCurrentDCIDataType)
-   {
-      case DCI_DT_INT:
-         _sntprintf_s(szValue, MAX_DCI_STRING_VALUE, _TRUNCATE, _T("%d"), m_pItem->pThresholdList[dwIndex].value.dwInt32);
-         break;
-      case DCI_DT_UINT:
-         _sntprintf_s(szValue, MAX_DCI_STRING_VALUE, _TRUNCATE, _T("%u"), m_pItem->pThresholdList[dwIndex].value.dwInt32);
-         break;
-      case DCI_DT_INT64:
-         _sntprintf_s(szValue, MAX_DCI_STRING_VALUE, _TRUNCATE, _T("%I64d"), m_pItem->pThresholdList[dwIndex].value.qwInt64);
-         break;
-      case DCI_DT_UINT64:
-         _sntprintf_s(szValue, MAX_DCI_STRING_VALUE, _TRUNCATE, _T("%I64u"), m_pItem->pThresholdList[dwIndex].value.qwInt64);
-         break;
-      case DCI_DT_FLOAT:
-         _sntprintf_s(szValue, MAX_DCI_STRING_VALUE, _TRUNCATE, _T("%f"), m_pItem->pThresholdList[dwIndex].value.dFloat);
-         break;
-      case DCI_DT_STRING:
-         _sntprintf_s(szValue, MAX_DCI_STRING_VALUE, _TRUNCATE, _T("\"%s\""), m_pItem->pThresholdList[dwIndex].value.szString);
-         break;
-   }
-
    // Threshold expression
    if (m_pItem->pThresholdList[dwIndex].wFunction == F_ERROR)
       _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%s(%s)"),
@@ -161,7 +139,8 @@ void CDCIThresholdsPage::UpdateListEntry(int iItem, DWORD dwIndex)
    else
       _sntprintf_s(szBuffer, 256, _TRUNCATE, _T("%s(%s) %s %s"),
                    g_pszThresholdFunction[m_pItem->pThresholdList[dwIndex].wFunction], szArgs,
-                   g_pszThresholdOperation[m_pItem->pThresholdList[dwIndex].wOperation], szValue);
+                   g_pszThresholdOperation[m_pItem->pThresholdList[dwIndex].wOperation], 
+						 m_pItem->pThresholdList[dwIndex].szValue);
    m_wndListCtrl.SetItemText(iItem, 0, szBuffer);
 
    // Event
@@ -178,13 +157,13 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
 {
    CThresholdDlg dlg;
    BOOL bResult = FALSE;
-   TCHAR szBuffer[32];
 
    dlg.m_iFunction = pThreshold->wFunction;
    dlg.m_iOperation = pThreshold->wOperation;
    dlg.m_dwArg1 = pThreshold->dwArg1;
    dlg.m_dwEventId = pThreshold->dwEvent;
    dlg.m_dwRearmEventId = pThreshold->dwRearmEvent;
+	dlg.m_strValue = pThreshold->szValue;
 	switch(pThreshold->nRepeatInterval)
 	{
 		case -1:
@@ -200,32 +179,6 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
 			dlg.m_nSeconds = pThreshold->nRepeatInterval;
 			break;
 	}
-   switch(g_nCurrentDCIDataType)
-   {
-      case DCI_DT_INT:
-         _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%d"), pThreshold->value.dwInt32);
-         dlg.m_strValue = szBuffer;
-         break;
-      case DCI_DT_UINT:
-         _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%u"), pThreshold->value.dwInt32);
-         dlg.m_strValue = szBuffer;
-         break;
-      case DCI_DT_INT64:
-         _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%I64d"), pThreshold->value.qwInt64);
-         dlg.m_strValue = szBuffer;
-         break;
-      case DCI_DT_UINT64:
-         _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%I64u"), pThreshold->value.qwInt64);
-         dlg.m_strValue = szBuffer;
-         break;
-      case DCI_DT_FLOAT:
-         _sntprintf_s(szBuffer, 32, _TRUNCATE, _T("%f"), pThreshold->value.dFloat);
-         dlg.m_strValue = szBuffer;
-         break;
-      case DCI_DT_STRING:
-         dlg.m_strValue = pThreshold->value.szString;
-         break;
-   }
    if (dlg.DoModal() == IDOK)
    {
       pThreshold->dwArg1 = dlg.m_dwArg1;
@@ -233,6 +186,11 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
       pThreshold->wOperation = (WORD)dlg.m_iOperation;
       pThreshold->dwEvent = dlg.m_dwEventId;
       pThreshold->dwRearmEvent = dlg.m_dwRearmEventId;
+		nx_strncpy(pThreshold->szValue, dlg.m_strValue, MAX_STRING_VALUE);
+		if (g_nCurrentDCIDataType != DCI_DT_STRING)
+		{
+			StrStrip(pThreshold->szValue);
+		}
 		switch(dlg.m_nRepeat)
 		{
 			case 0:
@@ -245,27 +203,6 @@ BOOL CDCIThresholdsPage::EditThreshold(NXC_DCI_THRESHOLD *pThreshold)
 				pThreshold->nRepeatInterval = dlg.m_nSeconds;
 				break;
 		}
-      switch(g_nCurrentDCIDataType)
-      {
-         case DCI_DT_INT:
-            pThreshold->value.dwInt32 = _tcstol((LPCTSTR)dlg.m_strValue, NULL, 0);
-            break;
-         case DCI_DT_UINT:
-            pThreshold->value.dwInt32 = _tcstoul((LPCTSTR)dlg.m_strValue, NULL, 0);
-            break;
-         case DCI_DT_INT64:
-            pThreshold->value.qwInt64 = _tcstoll((LPCTSTR)dlg.m_strValue, NULL, 0);
-            break;
-         case DCI_DT_UINT64:
-            pThreshold->value.qwInt64 = _tcstoull((LPCTSTR)dlg.m_strValue, NULL, 0);
-            break;
-         case DCI_DT_FLOAT:
-            pThreshold->value.dFloat = _tcstod((LPCTSTR)dlg.m_strValue, NULL);
-            break;
-         case DCI_DT_STRING:
-            nx_strncpy(pThreshold->value.szString, (LPCTSTR)dlg.m_strValue, MAX_STRING_VALUE);
-            break;
-      }
       bResult = TRUE;
    }
 

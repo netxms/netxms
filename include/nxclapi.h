@@ -1225,13 +1225,7 @@ typedef struct
    DWORD dwArg1;
    DWORD dwArg2;
 	LONG nRepeatInterval;
-   union
-   {
-      DWORD dwInt32;
-      INT64 qwInt64;
-      double dFloat;
-      TCHAR szString[MAX_STRING_VALUE];
-   } value;
+   TCHAR szValue[MAX_STRING_VALUE];
 } NXC_DCI_THRESHOLD;
 
 

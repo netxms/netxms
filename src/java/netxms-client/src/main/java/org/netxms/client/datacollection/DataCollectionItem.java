@@ -96,7 +96,7 @@ public class DataCollectionItem
 		count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_THRESHOLDS);
 		thresholds = new ArrayList<Threshold>(count);
 		varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
-		for(int i = 0; i < count; i++, varId++)
+		for(int i = 0; i < count; i++, varId += 10)
 		{
 			thresholds.add(new Threshold(msg, varId));
 		}

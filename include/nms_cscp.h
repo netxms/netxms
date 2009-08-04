@@ -170,30 +170,6 @@ typedef struct
    } value;
 } DCI_DATA_ROW;
 
-
-//
-// DCI threshold structure
-//
-
-typedef struct
-{
-   DWORD dwId;
-   DWORD dwEvent;
-   DWORD dwRearmEvent;
-   DWORD dwArg1;
-   DWORD dwArg2;
-	LONG nRepeatInterval;
-   union
-   {
-      DWORD dwInt32;
-      INT64 qwInt64;
-      double dFloat;
-      UCS2CHAR szString[MAX_DCI_STRING_VALUE];
-   } value;
-   WORD wFunction;
-   WORD wOperation;
-} DCI_THRESHOLD;
-
 #ifdef __HP_aCC
 #pragma pack
 #else
@@ -832,10 +808,8 @@ typedef struct
 #define VID_GROUP_MEMBER_LAST       ((DWORD)0x00004FFF)
 
 // Variable range for data collection thresholds
-#define VID_DCI_THRESHOLD_BASE      ((DWORD)0x00005000)
-#define VID_DCI_THRESHOLD_LAST      ((DWORD)0x00005FFF)
-#define VID_DCI_SCHEDULE_BASE       ((DWORD)0x0000A000)
-#define VID_DCI_SCHEDULE_LAST       ((DWORD)0x0000AFFF)
+#define VID_DCI_THRESHOLD_BASE      ((DWORD)0x20000000)
+#define VID_DCI_SCHEDULE_BASE       ((DWORD)0x10000000)
 
 // Variable range for event argument list
 #define VID_EVENT_ARG_BASE          ((DWORD)0x00008000)

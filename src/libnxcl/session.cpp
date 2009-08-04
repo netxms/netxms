@@ -389,7 +389,6 @@ void NXCL_Session::ProcessDCI(CSCPMessage *pMsg)
 	else if (m_pItemList != NULL)
    {
       DWORD i, j, dwId;
-      DCI_THRESHOLD dct;
 
       i = m_pItemList->dwNumItems;
       m_pItemList->dwNumItems++;
@@ -426,43 +425,15 @@ void NXCL_Session::ProcessDCI(CSCPMessage *pMsg)
          (NXC_DCI_THRESHOLD *)malloc(sizeof(NXC_DCI_THRESHOLD) * m_pItemList->pItems[i].dwNumThresholds);
       for(j = 0, dwId = VID_DCI_THRESHOLD_BASE; j < m_pItemList->pItems[i].dwNumThresholds; j++, dwId++)
       {
-         pMsg->GetVariableBinary(dwId, (BYTE *)&dct, sizeof(DCI_THRESHOLD));
-         m_pItemList->pItems[i].pThresholdList[j].dwId = ntohl(dct.dwId);
-         m_pItemList->pItems[i].pThresholdList[j].dwEvent = ntohl(dct.dwEvent);
-         m_pItemList->pItems[i].pThresholdList[j].dwRearmEvent = ntohl(dct.dwRearmEvent);
-         m_pItemList->pItems[i].pThresholdList[j].dwArg1 = ntohl(dct.dwArg1);
-         m_pItemList->pItems[i].pThresholdList[j].dwArg2 = ntohl(dct.dwArg2);
-         m_pItemList->pItems[i].pThresholdList[j].wFunction = ntohs(dct.wFunction);
-         m_pItemList->pItems[i].pThresholdList[j].wOperation = ntohs(dct.wOperation);
-         m_pItemList->pItems[i].pThresholdList[j].nRepeatInterval = ntohl(dct.nRepeatInterval);
-         switch(m_pItemList->pItems[i].iDataType)
-         {
-            case DCI_DT_INT:
-            case DCI_DT_UINT:
-               m_pItemList->pItems[i].pThresholdList[j].value.dwInt32 = ntohl(dct.value.dwInt32);
-               break;
-            case DCI_DT_INT64:
-            case DCI_DT_UINT64:
-               m_pItemList->pItems[i].pThresholdList[j].value.qwInt64 = ntohq(dct.value.qwInt64);
-               break;
-            case DCI_DT_FLOAT:
-               m_pItemList->pItems[i].pThresholdList[j].value.dFloat = ntohd(dct.value.dFloat);
-               break;
-            case DCI_DT_STRING:
-               SwapWideString(dct.value.szString);
-#ifdef UNICODE
-#ifdef UNICODE_UCS4
-               ucs2_to_ucs4(dct.value.szString, -1, m_pItemList->pItems[i].pThresholdList[j].value.szString, MAX_STRING_VALUE);
-#else
-               wcscpy(m_pItemList->pItems[i].pThresholdList[j].value.szString, dct.value.szString);
-#endif                     
-#else
-               ucs2_to_mb(dct.value.szString, -1, m_pItemList->pItems[i].pThresholdList[j].value.szString, MAX_STRING_VALUE);
-#endif
-               break;
-            default:
-               break;
-         }
+			m_pItemList->pItems[i].pThresholdList[j].dwId = pMsg->GetVariableLong(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].dwEvent = pMsg->GetVariableLong(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].dwRearmEvent = pMsg->GetVariableLong(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].wFunction = pMsg->GetVariableShort(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].wOperation = pMsg->GetVariableShort(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].dwArg1 = pMsg->GetVariableLong(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].dwArg2 = pMsg->GetVariableLong(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].nRepeatInterval = (LONG)pMsg->GetVariableLong(dwId++);
+			pMsg->GetVariableStr(dwId++, m_pItemList->pItems[i].pThresholdList[j].szValue, MAX_STRING_VALUE);
       }
    }
 }

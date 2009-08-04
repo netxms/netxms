@@ -95,25 +95,25 @@ class DCItem;
 class Threshold
 {
 private:
-   DWORD m_dwId;             // Unique threshold id
-   DWORD m_dwItemId;         // Related item id
-   DWORD m_dwEventCode;      // Event code to be generated
-   DWORD m_dwRearmEventCode;
+   DWORD m_id;             // Unique threshold id
+   DWORD m_itemId;         // Related item id
+   DWORD m_eventCode;      // Event code to be generated
+   DWORD m_rearmEventCode;
    ItemValue m_value;
-   BYTE m_iFunction;          // Function code
-   BYTE m_iOperation;         // Comparision operation code
-   BYTE m_iDataType;          // Related item data type
-   int m_iParam1;             // Function's parameter #1
-   int m_iParam2;             // Function's parameter #2
-   BOOL m_bIsReached;
-	int m_iNumMatches;			// Number of consecutive matches
-	int m_nRepeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
-	time_t m_tmLastEventTimestamp;
+   BYTE m_function;          // Function code
+   BYTE m_operation;         // Comparision operation code
+   BYTE m_dataType;          // Related item data type
+   int m_param1;             // Function's parameter #1
+   int m_param2;             // Function's parameter #2
+   BOOL m_isReached;
+	int m_numMatches;			// Number of consecutive matches
+	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
+	time_t m_lastEventTimestamp;
 
-   const ItemValue& Value(void) { return m_value; }
-   void CalculateAverageValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
-   void CalculateMDValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
-   void CalculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
+   const ItemValue& value(void) { return m_value; }
+   void calculateAverageValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
+   void calculateMDValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
+   void calculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues);
 
 public:
 	Threshold();
@@ -122,40 +122,40 @@ public:
    Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem);
    ~Threshold();
 
-   void BindToItem(DWORD dwItemId) { m_dwItemId = dwItemId; }
+   void bindToItem(DWORD dwItemId) { m_itemId = dwItemId; }
 
-   DWORD Id() { return m_dwId; }
-   DWORD EventCode() { return m_dwEventCode; }
-   DWORD RearmEventCode() { return m_dwRearmEventCode; }
-   const char *StringValue() { return m_value.String(); }
-   BOOL IsReached() { return m_bIsReached; }
+   DWORD getId() { return m_id; }
+   DWORD getEventCode() { return m_eventCode; }
+   DWORD getRearmEventCode() { return m_rearmEventCode; }
+   const char *getStringValue() { return m_value.String(); }
+   BOOL isReached() { return m_isReached; }
 	
-	int RepeatInterval() { return m_nRepeatInterval; }
-	time_t GetLastEventTimestamp() { return m_tmLastEventTimestamp; }
-	void SetLastEventTimestamp() { m_tmLastEventTimestamp = time(NULL); }
+	int getRepeatInterval() { return m_repeatInterval; }
+	time_t getLastEventTimestamp() { return m_lastEventTimestamp; }
+	void setLastEventTimestamp() { m_lastEventTimestamp = time(NULL); }
 
-   BOOL SaveToDB(DB_HANDLE hdb, DWORD dwIndex);
-   int Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue);
-   int CheckError(DWORD dwErrorCount);
+   BOOL saveToDB(DB_HANDLE hdb, DWORD dwIndex);
+   int check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue);
+   int checkError(DWORD dwErrorCount);
 
-   void CreateMessage(DCI_THRESHOLD *pData);
-   void UpdateFromMessage(DCI_THRESHOLD *pData);
+   void createMessage(CSCPMessage *msg, DWORD baseId);
+   void updateFromMessage(CSCPMessage *msg, DWORD baseId);
 
-   void CreateId(void);
-   DWORD RequiredCacheSize(void) { return ((m_iFunction == F_LAST) || (m_iFunction == F_ERROR)) ? 0 : m_iParam1; }
+   void createId(void);
+   DWORD getRequiredCacheSize(void) { return ((m_function == F_LAST) || (m_function == F_ERROR)) ? 0 : m_param1; }
 
-   BOOL Compare(Threshold *pThr);
+   BOOL compare(Threshold *pThr);
 
-   void CreateNXMPRecord(String &str);
+   void createNXMPRecord(String &str);
 
-	void Associate(DCItem *pItem);
-	void SetFunction(int nFunc) { m_iFunction = nFunc; }
-	void SetOperation(int nOp) { m_iOperation = nOp; }
-	void SetEvent(DWORD dwEvent) { m_dwEventCode = dwEvent; }
-	void SetRearmEvent(DWORD dwEvent) { m_dwRearmEventCode = dwEvent; }
-	void SetParam1(int nVal) { m_iParam1 = nVal; }
-	void SetParam2(int nVal) { m_iParam2 = nVal; }
-	void SetValue(TCHAR *pszValue) { m_value = pszValue; }
+	void associate(DCItem *pItem);
+	void setFunction(int nFunc) { m_function = nFunc; }
+	void setOperation(int nOp) { m_operation = nOp; }
+	void setEvent(DWORD dwEvent) { m_eventCode = dwEvent; }
+	void setRearmEvent(DWORD dwEvent) { m_rearmEventCode = dwEvent; }
+	void setParam1(int nVal) { m_param1 = nVal; }
+	void setParam2(int nVal) { m_param2 = nVal; }
+	void setValue(const TCHAR *value) { m_value = value; }
 };
 
 

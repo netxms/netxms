@@ -30,19 +30,19 @@
 
 Threshold::Threshold(DCItem *pRelatedItem)
 {
-   m_dwId = 0;
-   m_dwItemId = pRelatedItem->Id();
-   m_dwEventCode = EVENT_THRESHOLD_REACHED;
-   m_dwRearmEventCode = EVENT_THRESHOLD_REARMED;
-   m_iFunction = F_LAST;
-   m_iOperation = OP_EQ;
-   m_iDataType = pRelatedItem->DataType();
-   m_iParam1 = 1;
-   m_iParam2 = 0;
-   m_bIsReached = FALSE;
-	m_nRepeatInterval = -1;
-	m_tmLastEventTimestamp = 0;
-	m_iNumMatches = 0;
+   m_id = 0;
+   m_itemId = pRelatedItem->Id();
+   m_eventCode = EVENT_THRESHOLD_REACHED;
+   m_rearmEventCode = EVENT_THRESHOLD_REARMED;
+   m_function = F_LAST;
+   m_operation = OP_EQ;
+   m_dataType = pRelatedItem->DataType();
+   m_param1 = 1;
+   m_param2 = 0;
+   m_isReached = FALSE;
+	m_repeatInterval = -1;
+	m_lastEventTimestamp = 0;
+	m_numMatches = 0;
 }
 
 
@@ -52,19 +52,19 @@ Threshold::Threshold(DCItem *pRelatedItem)
 
 Threshold::Threshold()
 {
-   m_dwId = 0;
-   m_dwItemId = 0;
-   m_dwEventCode = EVENT_THRESHOLD_REACHED;
-   m_dwRearmEventCode = EVENT_THRESHOLD_REARMED;
-   m_iFunction = F_LAST;
-   m_iOperation = OP_EQ;
-   m_iDataType = 0;
-   m_iParam1 = 1;
-   m_iParam2 = 0;
-   m_bIsReached = FALSE;
-	m_nRepeatInterval = -1;
-	m_tmLastEventTimestamp = 0;
-	m_iNumMatches = 0;
+   m_id = 0;
+   m_itemId = 0;
+   m_eventCode = EVENT_THRESHOLD_REACHED;
+   m_rearmEventCode = EVENT_THRESHOLD_REARMED;
+   m_function = F_LAST;
+   m_operation = OP_EQ;
+   m_dataType = 0;
+   m_param1 = 1;
+   m_param2 = 0;
+   m_isReached = FALSE;
+	m_repeatInterval = -1;
+	m_lastEventTimestamp = 0;
+	m_numMatches = 0;
 }
 
 
@@ -72,22 +72,22 @@ Threshold::Threshold()
 // Create from another threshold object
 //
 
-Threshold::Threshold(Threshold *pSrc)
+Threshold::Threshold(Threshold *src)
 {
-   m_dwId = pSrc->m_dwId;
-   m_dwItemId = pSrc->m_dwItemId;
-   m_dwEventCode = pSrc->m_dwEventCode;
-   m_dwRearmEventCode = pSrc->m_dwRearmEventCode;
-   m_value = pSrc->Value();
-   m_iFunction = pSrc->m_iFunction;
-   m_iOperation = pSrc->m_iOperation;
-   m_iDataType = pSrc->m_iDataType;
-   m_iParam1 = pSrc->m_iParam1;
-   m_iParam2 = pSrc->m_iParam2;
-   m_bIsReached = FALSE;
-	m_nRepeatInterval = pSrc->m_nRepeatInterval;
-	m_tmLastEventTimestamp = 0;
-	m_iNumMatches = 0;
+   m_id = src->m_id;
+   m_itemId = src->m_itemId;
+   m_eventCode = src->m_eventCode;
+   m_rearmEventCode = src->m_rearmEventCode;
+   m_value = src->m_value;
+   m_function = src->m_function;
+   m_operation = src->m_operation;
+   m_dataType = src->m_dataType;
+   m_param1 = src->m_param1;
+   m_param2 = src->m_param2;
+   m_isReached = FALSE;
+	m_repeatInterval = src->m_repeatInterval;
+	m_lastEventTimestamp = 0;
+	m_numMatches = 0;
 }
 
 
@@ -103,24 +103,24 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
 {
    TCHAR szBuffer[MAX_DB_STRING];
 
-   m_dwId = DBGetFieldULong(hResult, iRow, 0);
-   m_dwItemId = pRelatedItem->Id();
-   m_dwEventCode = DBGetFieldULong(hResult, iRow, 7);
-   m_dwRearmEventCode = DBGetFieldULong(hResult, iRow, 9);
+   m_id = DBGetFieldULong(hResult, iRow, 0);
+   m_itemId = pRelatedItem->Id();
+   m_eventCode = DBGetFieldULong(hResult, iRow, 7);
+   m_rearmEventCode = DBGetFieldULong(hResult, iRow, 9);
    DBGetField(hResult, iRow, 1, szBuffer, MAX_DB_STRING);
    DecodeSQLString(szBuffer);
    m_value = szBuffer;
-   m_iFunction = (BYTE)DBGetFieldLong(hResult, iRow, 3);
-   m_iOperation = (BYTE)DBGetFieldLong(hResult, iRow, 4);
-   m_iDataType = pRelatedItem->DataType();
-   m_iParam1 = DBGetFieldLong(hResult, iRow, 5);
-	if ((m_iFunction == F_LAST) && (m_iParam1 < 1))
-		m_iParam1 = 1;
-   m_iParam2 = DBGetFieldLong(hResult, iRow, 6);
-   m_bIsReached = DBGetFieldLong(hResult, iRow, 8);
-	m_nRepeatInterval = DBGetFieldLong(hResult, iRow, 10);
-	m_tmLastEventTimestamp = 0;
-	m_iNumMatches = 0;
+   m_function = (BYTE)DBGetFieldLong(hResult, iRow, 3);
+   m_operation = (BYTE)DBGetFieldLong(hResult, iRow, 4);
+   m_dataType = pRelatedItem->DataType();
+   m_param1 = DBGetFieldLong(hResult, iRow, 5);
+	if ((m_function == F_LAST) && (m_param1 < 1))
+		m_param1 = 1;
+   m_param2 = DBGetFieldLong(hResult, iRow, 6);
+   m_isReached = DBGetFieldLong(hResult, iRow, 8);
+	m_repeatInterval = DBGetFieldLong(hResult, iRow, 10);
+	m_lastEventTimestamp = 0;
+	m_numMatches = 0;
 }
 
 
@@ -137,9 +137,9 @@ Threshold::~Threshold()
 // Create new unique id for object
 //
 
-void Threshold::CreateId(void)
+void Threshold::createId(void)
 {
-   m_dwId = CreateUniqueId(IDG_THRESHOLD); 
+   m_id = CreateUniqueId(IDG_THRESHOLD); 
 }
 
 
@@ -147,14 +147,14 @@ void Threshold::CreateId(void)
 // Save threshold to database
 //
 
-BOOL Threshold::SaveToDB(DB_HANDLE hdb, DWORD dwIndex)
+BOOL Threshold::saveToDB(DB_HANDLE hdb, DWORD dwIndex)
 {
    TCHAR *pszEscValue, szQuery[512];
    DB_RESULT hResult;
    BOOL bNewObject = TRUE;
 
    // Check for object's existence in database
-   _stprintf(szQuery, _T("SELECT threshold_id FROM thresholds WHERE threshold_id=%d"), m_dwId);
+   _stprintf(szQuery, _T("SELECT threshold_id FROM thresholds WHERE threshold_id=%d"), m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -170,17 +170,17 @@ BOOL Threshold::SaveToDB(DB_HANDLE hdb, DWORD dwIndex)
                        "check_function,check_operation,parameter_1,parameter_2,event_code,"
                        "sequence_number,current_state,rearm_event_code,repeat_interval) VALUES "
                        "(%d,%d,'%s','#00',%d,%d,%d,%d,%d,%d,%d,%d,%d)", 
-              m_dwId, m_dwItemId, pszEscValue, m_iFunction, m_iOperation, m_iParam1,
-              m_iParam2, m_dwEventCode, dwIndex, m_bIsReached, m_dwRearmEventCode,
-				  m_nRepeatInterval);
+              m_id, m_itemId, pszEscValue, m_function, m_operation, m_param1,
+              m_param2, m_eventCode, dwIndex, m_isReached, m_rearmEventCode,
+				  m_repeatInterval);
    else
       sprintf(szQuery, "UPDATE thresholds SET item_id=%d,fire_value='%s',check_function=%d,"
                        "check_operation=%d,parameter_1=%d,parameter_2=%d,event_code=%d,"
                        "sequence_number=%d,current_state=%d,"
                        "rearm_event_code=%d,repeat_interval=%d WHERE threshold_id=%d",
-              m_dwItemId, pszEscValue, m_iFunction, m_iOperation, m_iParam1,
-              m_iParam2, m_dwEventCode, dwIndex, m_bIsReached,
-              m_dwRearmEventCode, m_nRepeatInterval, m_dwId);
+              m_itemId, pszEscValue, m_function, m_operation, m_param1,
+              m_param2, m_eventCode, dwIndex, m_isReached,
+              m_rearmEventCode, m_repeatInterval, m_id);
    free(pszEscValue);
    return DBQuery(hdb, szQuery);
 }
@@ -194,26 +194,26 @@ BOOL Threshold::SaveToDB(DB_HANDLE hdb, DWORD dwIndex)
 //    NO_ACTION - when there are no changes in item's value match to threshold's condition
 //
 
-int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue)
+int Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue)
 {
    BOOL bMatch = FALSE;
-   int iResult, iDataType = m_iDataType;
+   int iResult, iDataType = m_dataType;
 
    // Execute function on value
-   switch(m_iFunction)
+   switch(m_function)
    {
       case F_LAST:         // Check last value only
          fvalue = value;
          break;
       case F_AVERAGE:      // Check average value for last n polls
-         CalculateAverageValue(&fvalue, value, ppPrevValues);
+         calculateAverageValue(&fvalue, value, ppPrevValues);
          break;
       case F_DEVIATION:    // Check mean absolute deviation
-         CalculateMDValue(&fvalue, value, ppPrevValues);
+         calculateMDValue(&fvalue, value, ppPrevValues);
          break;
       case F_DIFF:
-         CalculateDiff(&fvalue, value, ppPrevValues);
-         if (m_iDataType == DCI_DT_STRING)
+         calculateDiff(&fvalue, value, ppPrevValues);
+         if (m_dataType == DCI_DT_STRING)
             iDataType = DCI_DT_INT;  // diff() for strings is an integer
          break;
       case F_ERROR:        // Check for collection error
@@ -224,7 +224,7 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
    }
 
    // Run comparision operation on function result and threshold value
-   if (m_iFunction == F_ERROR)
+   if (m_function == F_ERROR)
    {
       // Threshold::Check() can be called only for valid values, which
       // means that error thresholds cannot be active
@@ -232,7 +232,7 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
    }
    else
    {
-      switch(m_iOperation)
+      switch(m_operation)
       {
          case OP_LE:    // Less
             switch(iDataType)
@@ -362,12 +362,12 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
             break;
          case OP_LIKE:
             // This operation can be performed only on strings
-            if (m_iDataType == DCI_DT_STRING)
+            if (m_dataType == DCI_DT_STRING)
                bMatch = MatchString(m_value.String(), fvalue.String(), TRUE);
             break;
          case OP_NOTLIKE:
             // This operation can be performed only on strings
-            if (m_iDataType == DCI_DT_STRING)
+            if (m_dataType == DCI_DT_STRING)
                bMatch = !MatchString(m_value.String(), fvalue.String(), TRUE);
             break;
          default:
@@ -376,23 +376,23 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
    }
 
 	// Check for number of consecutive matches
-	if (m_iFunction == F_LAST)
+	if (m_function == F_LAST)
 	{
 		if (bMatch)
 		{
-			m_iNumMatches++;
-			if (m_iNumMatches < m_iParam1)
+			m_numMatches++;
+			if (m_numMatches < m_param1)
 				bMatch = FALSE;
 		}
 		else
 		{
-			m_iNumMatches = 0;
+			m_numMatches = 0;
 		}
 	}
 
-   iResult = (bMatch & !m_bIsReached) ? THRESHOLD_REACHED :
-                ((!bMatch & m_bIsReached) ? THRESHOLD_REARMED : NO_ACTION);
-   m_bIsReached = bMatch;
+   iResult = (bMatch & !m_isReached) ? THRESHOLD_REACHED :
+                ((!bMatch & m_isReached) ? THRESHOLD_REARMED : NO_ACTION);
+   m_isReached = bMatch;
    if (iResult != NO_ACTION)
    {
       TCHAR szQuery[256];
@@ -400,7 +400,7 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
       // Update threshold status in database
       _sntprintf(szQuery, 256,
                  _T("UPDATE thresholds SET current_state=%d WHERE threshold_id=%d"),
-                 m_bIsReached, m_dwId);
+                 m_isReached, m_id);
       QueueSQLRequest(szQuery);
    }
    return iResult;
@@ -412,18 +412,18 @@ int Threshold::Check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fval
 // Return same values as Check()
 //
 
-int Threshold::CheckError(DWORD dwErrorCount)
+int Threshold::checkError(DWORD dwErrorCount)
 {
    int nResult;
    BOOL bMatch;
 
-   if (m_iFunction != F_ERROR)
+   if (m_function != F_ERROR)
       return NO_ACTION;
 
-   bMatch = ((DWORD)m_iParam1 <= dwErrorCount);
-   nResult = (bMatch & !m_bIsReached) ? THRESHOLD_REACHED :
-                ((!bMatch & m_bIsReached) ? THRESHOLD_REARMED : NO_ACTION);
-   m_bIsReached = bMatch;
+   bMatch = ((DWORD)m_param1 <= dwErrorCount);
+   nResult = (bMatch & !m_isReached) ? THRESHOLD_REACHED :
+                ((!bMatch & m_isReached) ? THRESHOLD_REARMED : NO_ACTION);
+   m_isReached = bMatch;
    if (nResult != NO_ACTION)
    {
       TCHAR szQuery[256];
@@ -431,7 +431,7 @@ int Threshold::CheckError(DWORD dwErrorCount)
       // Update threshold status in database
       _sntprintf(szQuery, 256,
                  _T("UPDATE thresholds SET current_state=%d WHERE threshold_id=%d"),
-                 m_bIsReached, m_dwId);
+                 m_isReached, m_id);
       QueueSQLRequest(szQuery);
    }
    return nResult;
@@ -442,48 +442,19 @@ int Threshold::CheckError(DWORD dwErrorCount)
 // Fill DCI_THRESHOLD with object's data ready to send over the network
 //
 
-void Threshold::CreateMessage(DCI_THRESHOLD *pData)
+void Threshold::createMessage(CSCPMessage *msg, DWORD baseId)
 {
-   pData->dwId = htonl(m_dwId);
-   pData->dwEvent = htonl(m_dwEventCode);
-   pData->dwRearmEvent = htonl(m_dwRearmEventCode);
-   pData->wFunction = htons((WORD)m_iFunction);
-   pData->wOperation = htons((WORD)m_iOperation);
-   pData->dwArg1 = htonl(m_iParam1);
-   pData->dwArg2 = htonl(m_iParam2);
-	pData->nRepeatInterval = htonl(m_nRepeatInterval);
-   switch(m_iDataType)
-   {
-      case DCI_DT_INT:
-         pData->value.dwInt32 = htonl((LONG)m_value);
-         break;
-      case DCI_DT_UINT:
-         pData->value.dwInt32 = htonl((DWORD)m_value);
-         break;
-      case DCI_DT_INT64:
-         pData->value.qwInt64 = htonq((INT64)m_value);
-         break;
-      case DCI_DT_UINT64:
-         pData->value.qwInt64 = htonq((QWORD)m_value);
-         break;
-      case DCI_DT_FLOAT:
-         pData->value.dFloat = htond((double)m_value);
-         break;
-      case DCI_DT_STRING:
-#ifdef UNICODE
-#ifdef UNICODE_UCS4
-         ucs4_to_ucs2(m_value.String(), -1, pData->value.szString, MAX_DCI_STRING_VALUE);
-#else
-         wcscpy(pData->value.szString,  m_value.String());
-#endif
-#else
-         mb_to_ucs2(m_value.String(), -1, pData->value.szString, MAX_DCI_STRING_VALUE);
-#endif
-         SwapWideString(pData->value.szString);
-         break;
-      default:
-         break;
-   }
+	DWORD varId = baseId;
+
+	msg->SetVariable(varId++, m_id);
+	msg->SetVariable(varId++, m_eventCode);
+	msg->SetVariable(varId++, m_rearmEventCode);
+	msg->SetVariable(varId++, (WORD)m_function);
+	msg->SetVariable(varId++, (WORD)m_operation);
+	msg->SetVariable(varId++, (DWORD)m_param1);
+	msg->SetVariable(varId++, (DWORD)m_param2);
+	msg->SetVariable(varId++, (DWORD)m_repeatInterval);
+	msg->SetVariable(varId++, m_value.String());
 }
 
 
@@ -491,54 +462,19 @@ void Threshold::CreateMessage(DCI_THRESHOLD *pData)
 // Update threshold object from DCI_THRESHOLD structure
 //
 
-void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
+void Threshold::updateFromMessage(CSCPMessage *msg, DWORD baseId)
 {
-#if !defined(UNICODE) || defined(UNICODE_UCS4)
-   TCHAR szBuffer[MAX_DCI_STRING_VALUE];
-#endif
+	TCHAR buffer[MAX_DCI_STRING_VALUE];
+	DWORD varId = baseId + 1;	// Skip ID field
 
-   m_dwEventCode = ntohl(pData->dwEvent);
-   m_dwRearmEventCode = ntohl(pData->dwRearmEvent);
-   m_iFunction = (BYTE)ntohs(pData->wFunction);
-   m_iOperation = (BYTE)ntohs(pData->wOperation);
-   m_iParam1 = ntohl(pData->dwArg1);
-   m_iParam2 = ntohl(pData->dwArg2);
-	m_nRepeatInterval = ntohl(pData->nRepeatInterval);
-   switch(m_iDataType)
-   {
-      case DCI_DT_INT:
-         m_value = (LONG)ntohl(pData->value.dwInt32);
-         break;
-      case DCI_DT_UINT:
-         m_value = (DWORD)ntohl(pData->value.dwInt32);
-         break;
-      case DCI_DT_INT64:
-         m_value = (INT64)ntohq(pData->value.qwInt64);
-         break;
-      case DCI_DT_UINT64:
-         m_value = (QWORD)ntohq(pData->value.qwInt64);
-         break;
-      case DCI_DT_FLOAT:
-         m_value = ntohd(pData->value.dFloat);
-         break;
-      case DCI_DT_STRING:
-         SwapWideString(pData->value.szString);
-#ifdef UNICODE
-#ifdef UNICODE_UCS4
-         ucs2_to_ucs4(pData->value.szString, -1, szBuffer, MAX_DCI_STRING_VALUE);
-         m_value = szBuffer;
-#else
-         m_value = pData->value.szString;
-#endif         
-#else		/* UNICODE */
-         ucs2_to_mb(pData->value.szString, -1, szBuffer, MAX_DCI_STRING_VALUE);
-         m_value = szBuffer;
-#endif
-         break;
-      default:
-         DbgPrintf(3, "WARNING: Invalid datatype %d in threshold object %d", m_iDataType, m_dwId);
-         break;
-   }
+	m_eventCode = msg->GetVariableLong(varId++);
+	m_rearmEventCode = msg->GetVariableLong(varId++);
+   m_function = (BYTE)msg->GetVariableShort(varId++);
+   m_operation = (BYTE)msg->GetVariableShort(varId++);
+   m_param1 = (int)msg->GetVariableLong(varId++);
+   m_param2 = (int)msg->GetVariableLong(varId++);
+	m_repeatInterval = (int)msg->GetVariableLong(varId++);
+	m_value = msg->GetVariableStr(varId++, buffer, MAX_DCI_STRING_VALUE);
 }
 
 
@@ -550,7 +486,7 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
 { \
    vtype var; \
    var = (vtype)lastValue; \
-   for(i = 1, nValueCount = 1; i < m_iParam1; i++) \
+   for(i = 1, nValueCount = 1; i < m_param1; i++) \
    { \
       if (ppPrevValues[i - 1]->GetTimeStamp() != 1) \
       { \
@@ -561,11 +497,11 @@ void Threshold::UpdateFromMessage(DCI_THRESHOLD *pData)
    *pResult = var / (vtype)nValueCount; \
 }
 
-void Threshold::CalculateAverageValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
+void Threshold::calculateAverageValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
 {
    int i, nValueCount;
 
-   switch(m_iDataType)
+   switch(m_dataType)
    {
       case DCI_DT_INT:
          CALC_AVG_VALUE(LONG);
@@ -599,7 +535,7 @@ void Threshold::CalculateAverageValue(ItemValue *pResult, ItemValue &lastValue, 
 { \
    vtype mean, dev; \
    mean = (vtype)lastValue; \
-   for(i = 1, nValueCount = 1; i < m_iParam1; i++) \
+   for(i = 1, nValueCount = 1; i < m_param1; i++) \
    { \
       if (ppPrevValues[i - 1]->GetTimeStamp() != 1) \
       { \
@@ -609,7 +545,7 @@ void Threshold::CalculateAverageValue(ItemValue *pResult, ItemValue &lastValue, 
    } \
    mean /= (vtype)nValueCount; \
    dev = ABS((vtype)lastValue - mean); \
-   for(i = 1, nValueCount = 1; i < m_iParam1; i++) \
+   for(i = 1, nValueCount = 1; i < m_param1; i++) \
    { \
       if (ppPrevValues[i - 1]->GetTimeStamp() != 1) \
       { \
@@ -620,11 +556,11 @@ void Threshold::CalculateAverageValue(ItemValue *pResult, ItemValue &lastValue, 
    *pResult = dev / (vtype)nValueCount; \
 }
 
-void Threshold::CalculateMDValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
+void Threshold::calculateMDValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
 {
    int i, nValueCount;
 
-   switch(m_iDataType)
+   switch(m_dataType)
    {
       case DCI_DT_INT:
 #define ABS(x) ((x) < 0 ? -(x) : (x))
@@ -659,9 +595,9 @@ void Threshold::CalculateMDValue(ItemValue *pResult, ItemValue &lastValue, ItemV
 // Calculate difference between last and previous value
 //
 
-void Threshold::CalculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
+void Threshold::calculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
 {
-   CalculateItemValueDiff(*pResult, m_iDataType, lastValue, *ppPrevValues[0]);
+   CalculateItemValueDiff(*pResult, m_dataType, lastValue, *ppPrevValues[0]);
 }
 
 
@@ -669,11 +605,11 @@ void Threshold::CalculateDiff(ItemValue *pResult, ItemValue &lastValue, ItemValu
 // Compare to another threshold
 //
 
-BOOL Threshold::Compare(Threshold *pThr)
+BOOL Threshold::compare(Threshold *pThr)
 {
    BOOL bMatch;
 
-   switch(m_iDataType)
+   switch(m_dataType)
    {
       case DCI_DT_INT:
          bMatch = ((LONG)pThr->m_value == (LONG)m_value);
@@ -698,14 +634,14 @@ BOOL Threshold::Compare(Threshold *pThr)
          break;
    }
    return bMatch &&
-          (pThr->m_dwEventCode == m_dwEventCode) &&
-          (pThr->m_dwRearmEventCode == m_dwRearmEventCode) &&
-          (pThr->m_iDataType == m_iDataType) &&
-          (pThr->m_iFunction == m_iFunction) &&
-          (pThr->m_iOperation == m_iOperation) &&
-          (pThr->m_iParam1 == m_iParam1) &&
-          (pThr->m_iParam2 == m_iParam2) &&
-			 (pThr->m_nRepeatInterval == m_nRepeatInterval);
+          (pThr->m_eventCode == m_eventCode) &&
+          (pThr->m_rearmEventCode == m_rearmEventCode) &&
+          (pThr->m_dataType == m_dataType) &&
+          (pThr->m_function == m_function) &&
+          (pThr->m_operation == m_operation) &&
+          (pThr->m_param1 == m_param1) &&
+          (pThr->m_param2 == m_param2) &&
+			 (pThr->m_repeatInterval == m_repeatInterval);
 }
 
 
@@ -713,14 +649,14 @@ BOOL Threshold::Compare(Threshold *pThr)
 // Create management pack record
 //
 
-void Threshold::CreateNXMPRecord(String &str)
+void Threshold::createNXMPRecord(String &str)
 {
    TCHAR szEvent1[MAX_EVENT_NAME], szEvent2[MAX_EVENT_NAME];
    String strValue;
 
    strValue = (TCHAR *)m_value.String();
-   ResolveEventName(m_dwEventCode, szEvent1);
-   ResolveEventName(m_dwRearmEventCode, szEvent2);
+   ResolveEventName(m_eventCode, szEvent1);
+   ResolveEventName(m_rearmEventCode, szEvent2);
    str.AddFormattedString(_T("\t\t\t\t\t@THRESHOLD\n\t\t\t\t\t{\n")
                           _T("\t\t\t\t\t\tFUNCTION=%d;\n")
                           _T("\t\t\t\t\t\tCONDITION=%d;\n")
@@ -731,9 +667,9 @@ void Threshold::CreateNXMPRecord(String &str)
                           _T("\t\t\t\t\t\tPARAM2=%d;\n")
                           _T("\t\t\t\t\t\tREPEAT_INTERVAL=%d;\n")
                           _T("\t\t\t\t\t}\n"),
-                          m_iFunction, m_iOperation, (TCHAR *)strValue,
-                          szEvent1, szEvent2, m_iParam1, m_iParam2,
-								  m_nRepeatInterval);
+                          m_function, m_operation, (TCHAR *)strValue,
+                          szEvent1, szEvent2, m_param1, m_param2,
+								  m_repeatInterval);
 }
 
 
@@ -741,8 +677,8 @@ void Threshold::CreateNXMPRecord(String &str)
 // Made an association with DCI (used by management pack parser)
 //
 
-void Threshold::Associate(DCItem *pItem)
+void Threshold::associate(DCItem *pItem)
 {
-   m_dwItemId = pItem->Id();
-   m_iDataType = pItem->DataType();
+   m_itemId = pItem->Id();
+   m_dataType = pItem->DataType();
 }

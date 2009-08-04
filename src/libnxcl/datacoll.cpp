@@ -134,7 +134,6 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
 {
    DWORD i, dwId, dwRqId, dwRetCode;
    CSCPMessage msg, *pResponse;
-   DCI_THRESHOLD dct;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -175,43 +174,15 @@ DWORD LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, DWORD dwNodeId, NXC_
    msg.SetVariable(VID_NUM_THRESHOLDS, pItem->dwNumThresholds);
    for(i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < pItem->dwNumThresholds; i++, dwId++)
    {
-      dct.dwId = htonl(pItem->pThresholdList[i].dwId);
-      dct.dwEvent = htonl(pItem->pThresholdList[i].dwEvent);
-      dct.dwRearmEvent = htonl(pItem->pThresholdList[i].dwRearmEvent);
-      dct.dwArg1 = htonl(pItem->pThresholdList[i].dwArg1);
-      dct.dwArg2 = htonl(pItem->pThresholdList[i].dwArg2);
-      dct.wFunction = htons(pItem->pThresholdList[i].wFunction);
-      dct.wOperation = htons(pItem->pThresholdList[i].wOperation);
-		dct.nRepeatInterval = htonl(pItem->pThresholdList[i].nRepeatInterval);
-      switch(pItem->iDataType)
-      {
-         case DCI_DT_INT:
-         case DCI_DT_UINT:
-            dct.value.dwInt32 = htonl(pItem->pThresholdList[i].value.dwInt32);
-            break;
-         case DCI_DT_INT64:
-         case DCI_DT_UINT64:
-            dct.value.qwInt64 = htonq(pItem->pThresholdList[i].value.qwInt64);
-            break;
-         case DCI_DT_FLOAT:
-            dct.value.dFloat = htond(pItem->pThresholdList[i].value.dFloat);
-            break;
-         case DCI_DT_STRING:
-#ifdef UNICODE
-#ifdef UNICODE_UCS4
-				ucs4_to_ucs2(pItem->pThresholdList[i].value.szString, -1, dct.value.szString, MAX_DCI_STRING_VALUE);
-#else
-            wcscpy(dct.value.szString, pItem->pThresholdList[i].value.szString);
-#endif            
-#else
-				mb_to_ucs2(pItem->pThresholdList[i].value.szString, -1, dct.value.szString, MAX_DCI_STRING_VALUE);
-#endif
-            SwapWideString(dct.value.szString);
-            break;
-         default:
-            break;
-      }
-      msg.SetVariable(dwId, (BYTE *)&dct, sizeof(DCI_THRESHOLD));
+		msg.SetVariable(dwId++, pItem->pThresholdList[i].dwId);
+      msg.SetVariable(dwId++, pItem->pThresholdList[i].dwEvent);
+      msg.SetVariable(dwId++, pItem->pThresholdList[i].dwRearmEvent);
+      msg.SetVariable(dwId++, pItem->pThresholdList[i].wFunction);
+      msg.SetVariable(dwId++, pItem->pThresholdList[i].wOperation);
+      msg.SetVariable(dwId++, pItem->pThresholdList[i].dwArg1);
+      msg.SetVariable(dwId++, pItem->pThresholdList[i].dwArg2);
+		msg.SetVariable(dwId++, (DWORD)pItem->pThresholdList[i].nRepeatInterval);
+      msg.SetVariable(dwId++, pItem->pThresholdList[i].szValue);
    }
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 

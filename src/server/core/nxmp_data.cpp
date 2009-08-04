@@ -318,7 +318,7 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
 				nVal = strtol(pszValue, &eptr, 0);
 				if (*eptr == 0)
 				{
-					m_pCurrThreshold->SetFunction(nVal);
+					m_pCurrThreshold->setFunction(nVal);
 				}
 				else
 				{
@@ -330,7 +330,7 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
 				nVal = strtol(pszValue, &eptr, 0);
 				if (*eptr == 0)
 				{
-					m_pCurrThreshold->SetOperation(nVal);
+					m_pCurrThreshold->setOperation(nVal);
 				}
 				else
 				{
@@ -339,7 +339,7 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
          }
          else if (!stricmp(pszName, "VALUE"))
          {
-				m_pCurrThreshold->SetValue(pszValue);
+				m_pCurrThreshold->setValue(pszValue);
          }
          else if (!stricmp(pszName, "ACTIVATION_EVENT"))
          {
@@ -354,7 +354,7 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
 				nVal = strtol(pszValue, &eptr, 0);
 				if (*eptr == 0)
 				{
-					m_pCurrThreshold->SetParam1(nVal);
+					m_pCurrThreshold->setParam1(nVal);
 				}
 				else
 				{
@@ -366,7 +366,7 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
 				nVal = strtol(pszValue, &eptr, 0);
 				if (*eptr == 0)
 				{
-					m_pCurrThreshold->SetParam2(nVal);
+					m_pCurrThreshold->setParam2(nVal);
 				}
 				else
 				{
@@ -436,11 +436,11 @@ void NXMP_Data::SetEvent(char *pszEvent, int nTarget)
 			break;
 		case NXMP_SETEVENT_THRESHOLD_ACTIVATE:
 			if (m_pCurrThreshold != NULL)
-				m_pCurrThreshold->SetEvent(dwEventCode);
+				m_pCurrThreshold->setEvent(dwEventCode);
 			break;
 		case NXMP_SETEVENT_THRESHOLD_DEACTIVATE:
 			if (m_pCurrThreshold != NULL)
-				m_pCurrThreshold->SetRearmEvent(dwEventCode);
+				m_pCurrThreshold->setRearmEvent(dwEventCode);
 			break;
 		default:
 			break;
@@ -719,14 +719,14 @@ void NXMP_Data::CloseThreshold(void)
 
 BOOL NXMP_Data::ValidateThreshold(Threshold *pThreshold, DWORD dwIndex)
 {
-	if (pThreshold->EventCode() == 0)
+	if (pThreshold->getEventCode() == 0)
 	{
 		_sntprintf(m_pszValidationErrorText, m_nMaxValidationErrorLen,
 		           _T("Template %s DCI %d threshold %d attribute \"activation event\" refers to unknown event"),
 					  m_pCurrTemplate->Name(), m_dwCurrDCIIndex, dwIndex);
 		return FALSE;
 	}
-	if (pThreshold->RearmEventCode() == 0)
+	if (pThreshold->getRearmEventCode() == 0)
 	{
 		_sntprintf(m_pszValidationErrorText, m_nMaxValidationErrorLen,
 		           _T("Template %s DCI %d threshold %d attribute \"deactivation event\" refers to unknown event"),
@@ -876,15 +876,15 @@ static BOOL UpdateEvent(EVENT_TEMPLATE *pEvent)
 
 BOOL NXMP_Data::ResolveEventsForThreshold(Threshold *pThreshold, DWORD dwIndex)
 {
-	if (pThreshold->EventCode() & GROUP_FLAG)
+	if (pThreshold->getEventCode() & GROUP_FLAG)
 	{
 		// Correct event code should be set already at event installation phase
-		pThreshold->SetEvent(m_pEventList[pThreshold->EventCode() & ~GROUP_FLAG].dwCode);
+		pThreshold->setEvent(m_pEventList[pThreshold->getEventCode() & ~GROUP_FLAG].dwCode);
 	}
-	if (pThreshold->RearmEventCode() & GROUP_FLAG)
+	if (pThreshold->getRearmEventCode() & GROUP_FLAG)
 	{
 		// Correct event code should be set already at event installation phase
-		pThreshold->SetRearmEvent(m_pEventList[pThreshold->RearmEventCode() & ~GROUP_FLAG].dwCode);
+		pThreshold->setRearmEvent(m_pEventList[pThreshold->getRearmEventCode() & ~GROUP_FLAG].dwCode);
 	}
 	return TRUE;
 }

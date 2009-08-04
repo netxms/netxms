@@ -594,10 +594,8 @@ public final class NXCPCodes
 	public static final long VID_ACL_RIGHTS_LAST          = 0x00002FFFL;
 	public static final long VID_GROUP_MEMBER_BASE        = 0x00004000L;
 	public static final long VID_GROUP_MEMBER_LAST        = 0x00004FFFL;
-	public static final long VID_DCI_THRESHOLD_BASE       = 0x00005000L;
-	public static final long VID_DCI_THRESHOLD_LAST       = 0x00005FFFL;
-	public static final long VID_DCI_SCHEDULE_BASE        = 0x0000A000L;
-	public static final long VID_DCI_SCHEDULE_LAST        = 0x0000AFFFL;
+	public static final long VID_DCI_THRESHOLD_BASE       = 0x20000000L;
+	public static final long VID_DCI_SCHEDULE_BASE        = 0x10000000L;
 	public static final long VID_EVENT_ARG_BASE           = 0x00008000L;
 	public static final long VID_EVENT_ARG_LAST           = 0x00008FFFL;
 	public static final long VID_TRAP_PLEN_BASE           = 0x00009000L;
