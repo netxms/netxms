@@ -327,7 +327,19 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
       }
    }
 
-   if (newStatus != oldStatus)
+	if (newStatus == m_iPendingStatus)
+	{
+		m_iPollCount++;
+	}
+	else
+	{
+		m_iPendingStatus = newStatus;
+		m_iPollCount = 1;
+	}
+	DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): newStatus=%d oldStatus=%d pollCount=%d"),
+	          m_dwId, m_szName, newStatus, oldStatus, m_iPollCount);
+
+   if ((newStatus != oldStatus) && (m_iPollCount >= ((m_iRequiredPollCount > 0) ? m_iRequiredPollCount : g_nRequiredPolls)))
    {
 		static DWORD statusToEvent[] =
 		{
@@ -342,30 +354,17 @@ void Interface::StatusPoll(ClientSession *pSession, DWORD dwRqId,
 			EVENT_INTERFACE_TESTING   // Testing
 		};
 
-		if (newStatus == m_iPendingStatus)
-		{
-			m_iPollCount++;
-		}
-		else
-		{
-			m_iPendingStatus = newStatus;
-			m_iPollCount = 1;
-		}
-
-		if (m_iPollCount >= ((m_iRequiredPollCount > 0) ? m_iRequiredPollCount : g_nRequiredPolls))
-		{
-			DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): status changed from %d to %d"), m_dwId, m_szName, m_iStatus, newStatus);
-			m_iStatus = newStatus;
-			m_iPendingStatus = -1;	// Invalidate pending status
-			SendPollerMsg(dwRqId, "      Interface status changed to %s\r\n", g_szStatusTextSmall[m_iStatus]);
-			PostEventEx(pEventQueue, 
-							statusToEvent[m_iStatus],
-							pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask,
-							m_dwIfIndex);
-			LockData();
-			Modify();
-			UnlockData();
-		}
+		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): status changed from %d to %d"), m_dwId, m_szName, m_iStatus, newStatus);
+		m_iStatus = newStatus;
+		m_iPendingStatus = -1;	// Invalidate pending status
+		SendPollerMsg(dwRqId, "      Interface status changed to %s\r\n", g_szStatusTextSmall[m_iStatus]);
+		PostEventEx(pEventQueue, 
+						statusToEvent[m_iStatus],
+						pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask,
+						m_dwIfIndex);
+		LockData();
+		Modify();
+		UnlockData();
    }
    SendPollerMsg(dwRqId, "   Finished status poll on interface %s\r\n", m_szName);
 }
