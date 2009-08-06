@@ -92,7 +92,8 @@ NXSL_Instruction::NXSL_Instruction(NXSL_Instruction *pSrc)
       case OPCODE_DEC:
       case OPCODE_INCP:
       case OPCODE_DECP:
-      case OPCODE_REFERENCE:
+      case OPCODE_GET_ATTRIBUTE:
+      case OPCODE_SET_ATTRIBUTE:
          m_operand.m_pszString = strdup(pSrc->m_operand.m_pszString);
          break;
       default:
@@ -119,7 +120,8 @@ NXSL_Instruction::~NXSL_Instruction()
       case OPCODE_DEC:
       case OPCODE_INCP:
       case OPCODE_DECP:
-      case OPCODE_REFERENCE:
+      case OPCODE_GET_ATTRIBUTE:
+      case OPCODE_SET_ATTRIBUTE:
          safe_free(m_operand.m_pszString);
          break;
       case OPCODE_PUSH_CONSTANT:

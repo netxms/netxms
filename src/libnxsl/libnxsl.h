@@ -93,7 +93,7 @@ typedef void *yyscan_t;
 #define OPCODE_NOT            36
 #define OPCODE_BIT_NOT        37
 #define OPCODE_CAST           38
-#define OPCODE_REFERENCE      39
+#define OPCODE_GET_ATTRIBUTE  39
 #define OPCODE_INCP           40
 #define OPCODE_DECP           41
 #define OPCODE_JNZ            42
@@ -105,6 +105,7 @@ typedef void *yyscan_t;
 #define OPCODE_ARRAY          48
 #define OPCODE_GET_ELEMENT    49
 #define OPCODE_SET_ELEMENT    50
+#define OPCODE_SET_ATTRIBUTE  51
 
 
 //

@@ -51,9 +51,10 @@ static const char *m_szCommandMnemonic[] =
    "AND", "OR", "LSHIFT", "RSHIFT",
    "NRET", "JZ", "PRINT", "CONCAT",
    "BIND", "INC", "DEC", "NEG", "NOT",
-   "BITNOT", "CAST", "REF", "INCP", "DECP",
+   "BITNOT", "CAST", "AGET", "INCP", "DECP",
    "JNZ", "LIKE", "ILIKE", "MATCH",
-   "IMATCH", "CASE", "ARRAY", "EGET", "ESET"
+   "IMATCH", "CASE", "ARRAY", "EGET",
+	"ESET", "ASET"
 };
 
 
@@ -345,7 +346,8 @@ void NXSL_Program::Dump(FILE *pFile)
          case OPCODE_DEC:
          case OPCODE_INCP:
          case OPCODE_DECP:
-         case OPCODE_REFERENCE:
+         case OPCODE_GET_ATTRIBUTE:
+         case OPCODE_SET_ATTRIBUTE:
             fprintf(pFile, "%s\n", m_ppInstructionSet[i]->m_operand.m_pszString);
             break;
          case OPCODE_PUSH_CONSTANT:
@@ -622,25 +624,32 @@ void NXSL_Program::Execute(void)
 					if (!index->IsInteger())
 					{
 						Error(NXSL_ERR_INDEX_NOT_INTEGER);
-						delete pValue;
 					}
 					else if (!array->IsArray())
 					{
 						Error(NXSL_ERR_NOT_ARRAY);
-						delete pValue;
 					}
 					else
 					{
-						array->GetValueAsArray()->Set(index->GetValueAsInt32(), pValue);
+						if (pValue->IsArray())
+						{
+							array->GetValueAsArray()->Set(index->GetValueAsInt32(), new NXSL_Value(new NXSL_Array(pValue->GetValueAsArray())));
+						}
+						else
+						{
+							array->GetValueAsArray()->Set(index->GetValueAsInt32(), new NXSL_Value(pValue));
+						}
+						m_pDataStack->Push(pValue);
+						pValue = NULL;		// Prevent deletion
 					}
 				}
 				else
 				{
 					Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
-					delete pValue;
 				}
 				delete index;
 				delete array;
+				delete pValue;
 			}
          else
          {
@@ -911,7 +920,7 @@ void NXSL_Program::Execute(void)
             Error(NXSL_ERR_NOT_NUMBER);
          }
          break;
-      case OPCODE_REFERENCE:
+      case OPCODE_GET_ATTRIBUTE:
          pValue = (NXSL_Value *)m_pDataStack->Pop();
          if (pValue != NULL)
          {
@@ -943,6 +952,52 @@ void NXSL_Program::Execute(void)
                Error(NXSL_ERR_NOT_OBJECT);
             }
             delete pValue;
+         }
+         else
+         {
+            Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
+         break;
+      case OPCODE_SET_ATTRIBUTE:
+         pValue = (NXSL_Value *)m_pDataStack->Pop();
+         if (pValue != NULL)
+         {
+				NXSL_Value *pReference = (NXSL_Value *)m_pDataStack->Pop();
+				if (pReference != NULL)
+				{
+					if (pReference->DataType() == NXSL_DT_OBJECT)
+					{
+						NXSL_Object *pObj;
+
+						pObj = pReference->GetValueAsObject();
+						if (pObj != NULL)
+						{
+							if (pObj->Class()->SetAttr(pObj, cp->m_operand.m_pszString, pValue))
+							{
+								m_pDataStack->Push(pValue);
+								pValue = NULL;
+							}
+							else
+							{
+								Error(NXSL_ERR_NO_SUCH_ATTRIBUTE);
+							}
+						}
+						else
+						{
+							Error(NXSL_ERR_INTERNAL);
+						}
+					}
+					else
+					{
+						Error(NXSL_ERR_NOT_OBJECT);
+					}
+					delete pReference;
+				}
+				else
+				{
+					Error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+				}
+				delete pValue;
          }
          else
          {

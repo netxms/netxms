@@ -38,10 +38,19 @@ NXSL_Value *NXSL_TestClass::GetAttr(NXSL_Object *pObject, char *pszAttr)
    {
       pValue = new NXSL_Value("Demo Object");
    }
+   else if (!strcmp(pszAttr, "value"))
+   {
+		pValue = new NXSL_Value((char *)pObject->Data());
+   }
    return pValue;
 }
 
 BOOL NXSL_TestClass::SetAttr(NXSL_Object *pObject, char *pszAttr, NXSL_Value *pValue)
 {
+   if (!strcmp(pszAttr, "value"))
+   {
+		_tcscpy((char *)pObject->Data(), CHECK_NULL(pValue->GetValueAsCString()));
+		return TRUE;
+   }
    return FALSE;
 }

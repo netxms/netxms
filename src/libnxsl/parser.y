@@ -215,9 +215,13 @@ Expression:
 {
 	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_GET_ELEMENT));
 }
+|	Expression T_REF T_IDENTIFIER '=' Expression
+{
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_SET_ATTRIBUTE, $3));
+}
 |	Expression T_REF T_IDENTIFIER
 {
-	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_REFERENCE, $3));
+	pScript->AddInstruction(new NXSL_Instruction(pLexer->GetCurrLine(), OPCODE_GET_ATTRIBUTE, $3));
 }
 |	'-' Expression		%prec NEGATE
 {

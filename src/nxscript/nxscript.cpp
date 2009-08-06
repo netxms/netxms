@@ -30,7 +30,9 @@ static NXSL_TestClass *m_pTestClass;
 
 int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 {
-   *ppResult = new NXSL_Value(new NXSL_Object(m_pTestClass, NULL));
+	TCHAR *buffer = (TCHAR *)malloc(1024);
+	strcpy(buffer, "test value");
+   *ppResult = new NXSL_Value(new NXSL_Object(m_pTestClass, buffer));
    return 0;
 }
 
