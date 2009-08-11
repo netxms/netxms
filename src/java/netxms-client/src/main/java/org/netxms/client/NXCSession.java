@@ -607,8 +607,7 @@ public class NXCSession
 	/**
 	 * Add notification listener
 	 * 
-	 * @param lst
-	 *           Listener to add
+	 * @param lst Listener to add
 	 */
 	public void addListener(NXCListener lst)
 	{
@@ -618,8 +617,7 @@ public class NXCSession
 	/**
 	 * Remove notification listener
 	 * 
-	 * @param lst
-	 *           Listener to remove
+	 * @param lst Listener to remove
 	 */
 	public void removeListener(NXCListener lst)
 	{
@@ -629,8 +627,7 @@ public class NXCSession
 	/**
 	 * Call notification handlers on all registered listeners
 	 * 
-	 * @param n
-	 *           Notification object
+	 * @param n Notification object
 	 */
 	protected synchronized void sendNotification(NXCNotification n)
 	{

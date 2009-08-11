@@ -73,6 +73,26 @@ public class Threshold
 		repeatInterval = -1;
 		value = "0";
 	}
+	
+	/**
+	 * Fill NXCP message with threshold's data
+	 * 
+	 * @param msg NXCP message
+	 * @param baseId Base variable identifier
+	 */
+	protected void fillMessage(final NXCPMessage msg, final long baseId)
+	{
+		long varId = baseId;
+		msg.setVariableInt32(varId++, (int)id);
+		msg.setVariableInt32(varId++, fireEvent);
+		msg.setVariableInt32(varId++, rearmEvent);
+		msg.setVariableInt16(varId++, function);
+		msg.setVariableInt16(varId++, operation);
+		msg.setVariableInt32(varId++, arg1);
+		msg.setVariableInt32(varId++, arg2);
+		msg.setVariableInt32(varId++, repeatInterval);
+		msg.setVariable(varId++, value);
+	}
 
 	/**
 	 * @return the fireEvent

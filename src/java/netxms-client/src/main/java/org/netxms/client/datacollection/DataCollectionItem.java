@@ -35,6 +35,12 @@ public class DataCollectionItem
 	public static final int DT_FLOAT = 5;
 	public static final int DT_NULL = 6;
 	
+	// Delta calculation
+	public static final int DELTA_NONE = 0;
+	public static final int DELTA_SIMPLE = 1;
+	public static final int DELTA_AVERAGE_PER_SECOND = 2;
+	public static final int DELTA_AVERAGE_PER_MINUTE = 3;
+	
 	// DCI data
 	private DataCollectionConfiguration owner;
 	private long id;
@@ -62,6 +68,7 @@ public class DataCollectionItem
 	/**
 	 * Create data collection item object from NXCP message
 	 * 
+	 * @param owner Owning configuration object
 	 * @param msg NXCP message
 	 */
 	protected DataCollectionItem(final DataCollectionConfiguration owner, final NXCPMessage msg)
@@ -101,6 +108,87 @@ public class DataCollectionItem
 		for(int i = 0; i < count; i++, varId += 10)
 		{
 			thresholds.add(new Threshold(msg, varId));
+		}
+	}
+
+	/**
+	 * Constructor for new data collection items.
+	 * 
+	 * @param owner Owning configuration object
+	 * @param id Identifier assigned to new item
+	 */
+	protected DataCollectionItem(final DataCollectionConfiguration owner, long id)
+	{
+		this.owner = owner;
+		this.id = id;
+		templateId = 0;
+		resourceId = 0;
+		proxyNode = 0;
+		dataType = DT_INT;
+		pollingInterval = 60;
+		retentionTime = 30;
+		origin = AGENT;
+		status = ACTIVE;
+		deltaCalculation = DELTA_NONE;
+		processAllThresholds = false;
+		useAdvancedSchedule = false;
+		transformationScript = null;
+		name = "";
+		description = "";
+		instance = "";
+		baseUnits = 0;
+		multiplier = 0;
+		customUnitName = null;
+		schedules = new ArrayList<String>(0);
+		thresholds = new ArrayList<Threshold>(0);
+	}
+	
+	/**
+	 * Fill NXCP message with item's data.
+	 * 
+	 * @param msg NXCP message
+	 */
+	public void fillMessage(final NXCPMessage msg)
+	{
+		msg.setVariableInt32(NXCPCodes.VID_DCI_ID, (int)id);
+		msg.setVariableInt16(NXCPCodes.VID_DCI_DATA_TYPE, dataType);
+		msg.setVariableInt32(NXCPCodes.VID_POLLING_INTERVAL, pollingInterval);
+		msg.setVariableInt32(NXCPCodes.VID_RETENTION_TIME, retentionTime);
+		msg.setVariableInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin);
+		msg.setVariableInt16(NXCPCodes.VID_DCI_DELTA_CALCULATION, deltaCalculation);
+		msg.setVariableInt16(NXCPCodes.VID_DCI_STATUS, status);
+		msg.setVariable(NXCPCodes.VID_NAME, name);
+		msg.setVariable(NXCPCodes.VID_DESCRIPTION, description);
+		msg.setVariable(NXCPCodes.VID_INSTANCE, instance);
+		msg.setVariable(NXCPCodes.VID_DCI_FORMULA, transformationScript);
+		msg.setVariableInt16(NXCPCodes.VID_ALL_THRESHOLDS, processAllThresholds ? 1 : 0);
+		msg.setVariableInt16(NXCPCodes.VID_ADV_SCHEDULE, useAdvancedSchedule ? 1 : 0);
+		msg.setVariableInt32(NXCPCodes.VID_RESOURCE_ID, (int)resourceId);
+		msg.setVariableInt32(NXCPCodes.VID_PROXY_NODE, (int)proxyNode);
+		msg.setVariableInt16(NXCPCodes.VID_BASE_UNITS, baseUnits);
+		msg.setVariableInt32(NXCPCodes.VID_MULTIPLIER, multiplier);
+		if (customUnitName != null)
+			msg.setVariable(NXCPCodes.VID_CUSTOM_UNITS_NAME, customUnitName);
+		
+		if (useAdvancedSchedule)
+		{
+			msg.setVariableInt32(NXCPCodes.VID_NUM_SCHEDULES, schedules.size());
+			long varId = NXCPCodes.VID_DCI_SCHEDULE_BASE;
+			for(int i = 0; i < schedules.size(); i++)
+			{
+				msg.setVariable(varId++, schedules.get(i));
+			}
+		}
+		else
+		{
+			msg.setVariableInt32(NXCPCodes.VID_NUM_SCHEDULES, 0);
+		}
+
+		msg.setVariableInt32(NXCPCodes.VID_NUM_THRESHOLDS, thresholds.size());
+		long varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
+		for(int i = 0; i < thresholds.size(); i++, varId +=10)
+		{
+			thresholds.get(i).fillMessage(msg, varId);
 		}
 	}
 
