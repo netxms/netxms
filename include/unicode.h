@@ -272,6 +272,12 @@
 
 #endif	/* _WIN32 */
 
+// Define UCS2-specific helper functions as define to wide string helper functions if possible
+#if UNICODE_UCS2
+#define UCS2StringFromMBString	WideStringFromMBString
+#define MBStringFromUCS2String	MBStringFromWideString
+#endif
+
 
 #ifdef UNICODE
 #define _t_inet_addr    inet_addr_w

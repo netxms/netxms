@@ -38,7 +38,7 @@
 
 typedef struct
 {
-	WCHAR *pData;
+	UCS2CHAR *pData;
 	ub2 nLength;
 	ub2 nCode;
 	sb2 isNull;

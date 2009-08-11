@@ -786,6 +786,39 @@ size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, size_t srcLen, UCS2CHAR 
 #endif
 }
 
+
+//
+// Convert multibyte string to UCS-2 string allocating UCS-2 string dynamically
+//
+
+UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromMBString(const char *pszString)
+{
+	UCS2CHAR *pszOut;
+	int nLen;
+
+	nLen = (int)strlen(pszString) + 1;
+	pszOut = (UCS2CHAR *)malloc(nLen * sizeof(UCS2CHAR));
+	mb_to_ucs2(pszString, -1, pszOut, nLen);
+	return pszOut;
+}
+
+
+//
+// Convert UCS-2 string to multibyte string allocating multibyte string dynamically
+//
+
+char LIBNETXMS_EXPORTABLE *MBStringFromUCS2String(const UCS2CHAR *pszString)
+{
+	char *pszOut;
+	int nLen;
+
+	nLen = (int)ucs2_strlen(pszString) + 1;
+	pszOut = (char *)malloc(nLen);
+	ucs2_to_mb(pszString, -1, pszOut, nLen);
+	return pszOut;
+}
+
+
 #endif	/* !defined(_WIN32) && !defined(UNICODE) */
 
 

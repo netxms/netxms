@@ -324,17 +324,24 @@ extern "C" DB_RESULT EXPORT DrvSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQue
                iResult = SQLGetData(pConn->sqlStatement, (short)i,
                                     m_useUnicode ? SQL_C_WCHAR : SQL_C_CHAR,
                                     pDataBuffer, DATA_BUFFER_SIZE, &iDataSize);
-               if (m_useUnicode)
-               {
+					if (iDataSize != SQL_NULL_DATA)
+					{
+						if (m_useUnicode)
+						{
 #if defined(_WIN32) || defined(UNICODE_UCS2)
-               	pResult->pValues[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
+               		pResult->pValues[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
 #else
-               	pResult->pValues[iCurrValue++] = UCS4StringFromUCS2String((const UCS2CHAR *)pDataBuffer);
+	               	pResult->pValues[iCurrValue++] = UCS4StringFromUCS2String((const UCS2CHAR *)pDataBuffer);
 #endif
+						}
+						else
+						{
+               		pResult->pValues[iCurrValue++] = WideStringFromMBString((const char *)pDataBuffer);
+						}
 					}
 					else
 					{
-               	pResult->pValues[iCurrValue++] = WideStringFromMBString((const char *)pDataBuffer);
+						pResult->pValues[iCurrValue++] = wcsdup(L"");
 					}
             }
          }
@@ -630,7 +637,7 @@ extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pRe
 		   pBuffer[iBufSize - 1] = 0;
 		   free(tempBuff);
 		}
-      if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
+      if (((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO)) || (iDataSize == SQL_NULL_DATA))
          pBuffer[0] = 0;
    }
    else
