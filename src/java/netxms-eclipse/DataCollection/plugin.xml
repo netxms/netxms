@@ -41,4 +41,27 @@
       </objectContribution>
    </extension>
 
+  <extension
+     point = "org.eclipse.ui.propertyPages">
+        <page
+           id="org.netxms.ui.eclipse.datacollection.propertypages.Transformation"
+           name="Transformation"
+	       class="org.netxms.ui.eclipse.datacollection.propertypages.Transformation">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.client.datacollection.DataCollectionItem">
+             </instanceof>
+          </enabledWhen>
+        </page>
+   </extension>
+
+  <extension
+     point="org.eclipse.core.runtime.adapters">
+        <factory 
+           class="org.netxms.ui.eclipse.datacollection.DataCollectionAdapterFactory" 
+           adaptableType="org.netxms.client.datacollection.DataCollectionItem">
+          <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
+        </factory>
+  </extension>
+
 </plugin>

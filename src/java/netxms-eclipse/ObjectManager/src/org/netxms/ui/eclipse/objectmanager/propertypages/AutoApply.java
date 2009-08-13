@@ -151,7 +151,7 @@ public class AutoApply extends PropertyPage
 				{
 					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
 					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-					                    "Cannot change template automatic apply options: " + e.getMessage(), e);
+					                    "Cannot change template automatic apply options: " + e.getMessage(), null);
 				}
 
 				if (isApply)

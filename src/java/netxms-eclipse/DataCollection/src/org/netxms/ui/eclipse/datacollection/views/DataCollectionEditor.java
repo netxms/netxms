@@ -16,6 +16,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -23,6 +24,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -164,6 +166,7 @@ public class DataCollectionEditor extends ViewPart
 				try
 				{
 					dciConfig = session.openDataCollectionConfiguration(object.getObjectId());
+					dciConfig.setUserData(viewer);
 					new UIJob("Update data collection configurator for " + object.getObjectName())
 					{
 						@Override
@@ -192,8 +195,17 @@ public class DataCollectionEditor extends ViewPart
 				return status;
 			}
 		};
-		IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(
-				IWorkbenchSiteProgressService.class);
+		scheduleJob(job);
+	}
+	
+	/**
+	 * Schedule job related to view
+	 * 
+	 * @param job Job to schedule
+	 */
+	private void scheduleJob(final Job job)
+	{
+		IWorkbenchSiteProgressService siteService = (IWorkbenchSiteProgressService) getSite().getAdapter(IWorkbenchSiteProgressService.class);
 		siteService.schedule(job, 0, true);
 	}
 
@@ -307,6 +319,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			public void run()
 			{
+				deleteItems();
 			}
 		};
 		actionDelete.setText("&Delete");
@@ -377,6 +390,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			public void run()
 			{
+				setItemStatus(DataCollectionItem.ACTIVE);
 			}
 		};
 		actionActivate.setText("&Activate");
@@ -391,6 +405,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			public void run()
 			{
+				setItemStatus(DataCollectionItem.DISABLED);
 			}
 		};
 		actionDisable.setText("D&isable");
@@ -463,5 +478,114 @@ public class DataCollectionEditor extends ViewPart
 			}.schedule();
 		}
 		super.dispose();
+	}
+
+	/**
+	 * Change status for selected items
+	 * 
+	 * @param newStatus New status
+	 */
+	private void setItemStatus(final int newStatus)
+	{
+		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() <= 0)
+			return;
+		
+		Job job = new Job("Change status of data collection items for " + object.getObjectName())
+		{
+			@SuppressWarnings("unchecked")
+			@Override
+			protected IStatus run(IProgressMonitor monitor)
+			{
+				final long[] itemList = new long[selection.size()];
+				Iterator<DataCollectionItem> it = selection.iterator();
+				for(int pos = 0; it.hasNext(); pos++)
+				{
+					final DataCollectionItem dci = it.next();
+					itemList[pos] = dci.getId();
+				}
+				IStatus status;
+				try
+				{
+					dciConfig.setItemStatus(itemList, newStatus);
+					new UIJob("Update DCI list for " + object.getObjectName())
+					{
+						@Override
+						public IStatus runInUIThread(IProgressMonitor monitor)
+						{
+							Iterator<DataCollectionItem> it = selection.iterator();
+							while(it.hasNext())
+							{
+								final DataCollectionItem dci = it.next();
+								dci.setStatus(newStatus);
+								viewer.update(dci, null);
+							}
+							return Status.OK_STATUS;
+						}
+					}.schedule();
+					status = Status.OK_STATUS;
+				}
+				catch(Exception e)
+				{
+					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
+		                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
+		                    "Cannot change status of data collection items for " + object.getObjectName() + ": " + e.getMessage(), null);
+				}
+				return status;
+			}
+		};
+		scheduleJob(job);
+	}
+
+	/**
+	 * Delete currently selected DCIs
+	 */
+	private void deleteItems()
+	{
+		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() <= 0)
+			return;
+		
+		if (!MessageDialog.openConfirm(getSite().getShell(), "Delete Data Collection Items",
+		                               "Do you really want to delete selected data collection items?"))
+			return;
+		
+		Job job = new Job("Delete data collection items for " + object.getObjectName())
+		{
+			@SuppressWarnings("unchecked")
+			@Override
+			protected IStatus run(IProgressMonitor monitor)
+			{
+				IStatus status;
+				try
+				{
+					Iterator<DataCollectionItem> it = selection.iterator();
+					while(it.hasNext())
+					{
+						final DataCollectionItem dci = it.next();
+						dciConfig.deleteItem(dci.getId());
+					}
+					status = Status.OK_STATUS;
+				}
+				catch(Exception e)
+				{
+					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
+		                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
+		                    "Cannot delete data collection items for " + object.getObjectName() + ": " + e.getMessage(), null);
+				}
+				
+				new UIJob("Update DCI list for " + object.getObjectName())
+				{
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor)
+					{
+						viewer.setInput(dciConfig.getItems());
+						return Status.OK_STATUS;
+					}
+				}.schedule();
+				return status;
+			}
+		};
+		scheduleJob(job);
 	}
 }

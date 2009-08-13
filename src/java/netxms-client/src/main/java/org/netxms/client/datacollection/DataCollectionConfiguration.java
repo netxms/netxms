@@ -23,6 +23,7 @@ public class DataCollectionConfiguration
 	private long nodeId;
 	private HashMap<Long, DataCollectionItem> items;
 	private boolean isOpen = false;
+	private Object userData = null;
 
 	/**
 	 * Create empty data collection configuration.
@@ -263,5 +264,21 @@ public class DataCollectionConfiguration
 	public long getNodeId()
 	{
 		return nodeId;
+	}
+
+	/**
+	 * @return the userData
+	 */
+	public Object getUserData()
+	{
+		return userData;
+	}
+
+	/**
+	 * @param userData the userData to set
+	 */
+	public void setUserData(Object userData)
+	{
+		this.userData = userData;
 	}
 }
