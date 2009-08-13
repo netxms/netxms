@@ -53,6 +53,16 @@
              </instanceof>
           </enabledWhen>
         </page>
+        <page
+           id="org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule"
+           name="Custom Schedule"
+	       class="org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.client.datacollection.DataCollectionItem">
+             </instanceof>
+          </enabledWhen>
+        </page>
    </extension>
 
   <extension

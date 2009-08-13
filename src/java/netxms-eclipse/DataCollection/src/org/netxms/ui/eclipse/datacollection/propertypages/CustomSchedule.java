@@ -1,22 +1,24 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.objectmanager.propertypages;
+package org.netxms.ui.eclipse.datacollection.propertypages;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -31,44 +33,34 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCObject;
-import org.netxms.client.NXCObjectModificationData;
-import org.netxms.ui.eclipse.objectmanager.Activator;
-import org.netxms.ui.eclipse.objectmanager.AttrListLabelProvider;
-import org.netxms.ui.eclipse.objectmanager.AttrViewerComparator;
-import org.netxms.ui.eclipse.objectmanager.dialogs.AttributeEditDialog;
-import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.ui.eclipse.datacollection.Activator;
+import org.netxms.ui.eclipse.datacollection.dialogs.EditScheduleDialog;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
+import org.netxms.ui.eclipse.tools.StringComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * @author Victor
  *
  */
-public class CustomAttributes extends PropertyPage
+public class CustomSchedule extends PropertyPage
 {
-	public static final int COLUMN_NAME = 0;
-	public static final int COLUMN_VALUE = 1;
-	
-	private NXCObject object = null;
+	private DataCollectionItem dci;
+	private HashSet<String> schedules;
 	private SortableTableViewer viewer;
 	private Button addButton;
 	private Button editButton;
 	private Button deleteButton;
-	private Map<String, String> attributes = null;
-	private boolean isModified = false;
-
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	protected Control createContents(Composite parent)
 	{
+		dci = (DataCollectionItem)getElement().getAdapter(DataCollectionItem.class);
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
-		object = (NXCObject)getElement().getAdapter(NXCObject.class);
-		if (object == null)	// Paranoid check
-			return dialogArea;
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -76,16 +68,29 @@ public class CustomAttributes extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { "Name", "Value" };
-      final int[] columnWidths = { 150, 250 };
+      final String[] columnNames = { "Schedule" };
+      final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new AttrListLabelProvider());
-      viewer.setComparator(new AttrViewerComparator());
+      viewer.setComparator(new StringComparator());
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@SuppressWarnings("unchecked")
+			@Override
+			public void selectionChanged(SelectionChangedEvent event)
+			{
+				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+				if (selection != null)
+				{
+					editButton.setEnabled(selection.size() == 1);
+					deleteButton.setEnabled(selection.size() > 0);
+				}
+			}
+		});
       
-      attributes = new HashMap<String, String>(object.getCustomAttributes());
-      viewer.setInput(attributes.entrySet());
+      schedules = new HashSet<String>();
+      schedules.addAll(dci.getSchedules());
+      viewer.setInput(schedules.toArray());
       
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
@@ -117,20 +122,7 @@ public class CustomAttributes extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), null, null);
-				if (dlg.open() == Window.OK)
-				{
-					if (attributes.containsKey(dlg.getAttrName()))
-					{
-						MessageDialog.openWarning(CustomAttributes.this.getShell(), "Warning", "Attribute named " + dlg.getAttrName() + " already exists");
-					}
-					else
-					{
-						attributes.put(dlg.getAttrName(), dlg.getAttrValue());
-				      viewer.setInput(attributes.entrySet());
-				      CustomAttributes.this.isModified = true;
-					}
-				}
+				addSchedule();
 			}
       });
 		
@@ -143,22 +135,10 @@ public class CustomAttributes extends PropertyPage
 				widgetSelected(e);
 			}
 
-			@SuppressWarnings("unchecked")
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-				if (selection.size() == 1)
-				{
-					Entry<String, String> element = (Entry<String, String>)selection.getFirstElement();
-					final AttributeEditDialog dlg = new AttributeEditDialog(CustomAttributes.this.getShell(), element.getKey(), element.getValue());
-					if (dlg.open() == Window.OK)
-					{
-						attributes.put(dlg.getAttrName(), dlg.getAttrValue());
-				      viewer.setInput(attributes.entrySet());
-				      CustomAttributes.this.isModified = true;
-					}
-				}
+				editSchedule();
 			}
       });
 		
@@ -171,22 +151,10 @@ public class CustomAttributes extends PropertyPage
 				widgetSelected(e);
 			}
 
-			@SuppressWarnings("unchecked")
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-				Iterator<Entry<String, String>> it = selection.iterator();
-				if (it.hasNext())
-				{
-					while(it.hasNext())
-					{
-						Entry<String, String> element = it.next();
-						attributes.remove(element.getKey());
-					}
-			      viewer.setInput(attributes.entrySet());
-			      CustomAttributes.this.isModified = true;
-				}
+				deleteSchedules();
 			}
       });
 		
@@ -197,10 +165,59 @@ public class CustomAttributes extends PropertyPage
 				editButton.notifyListeners(SWT.Selection, new Event());
 			}
       });
-      
-		return dialogArea;
-	}
 
+      return dialogArea;
+	}
+	
+	/**
+	 * Add new schedule to list
+	 */
+	private void addSchedule()
+	{
+		EditScheduleDialog dlg = new EditScheduleDialog(getShell(), "");
+		if (dlg.open() == Window.OK)
+		{
+			schedules.add(dlg.getSchedule());
+			viewer.setInput(schedules.toArray());
+			viewer.setSelection(new StructuredSelection(dlg.getSchedule()));
+		}
+	}
+	
+	/**
+	 * Edit currently selected schedule
+	 */
+	private void editSchedule()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		if (selection.size() != 1)
+			return;
+		
+		final String oldValue = new String((String)selection.getFirstElement());
+		EditScheduleDialog dlg = new EditScheduleDialog(getShell(), (String)selection.getFirstElement());
+		if (dlg.open() == Window.OK)
+		{
+			schedules.remove(oldValue);
+			schedules.add(dlg.getSchedule());
+			viewer.setInput(schedules.toArray());
+			viewer.setSelection(new StructuredSelection(dlg.getSchedule()));
+		}
+	}
+	
+	/**
+	 * Delete selected schedules
+	 */
+	@SuppressWarnings("unchecked")
+	private void deleteSchedules()
+	{
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		Iterator<String> it = selection.iterator();
+		while(it.hasNext())
+		{
+			schedules.remove(it.next());
+		}
+		viewer.setInput(schedules.toArray());
+	}
+	
 	/**
 	 * Apply changes
 	 * 
@@ -208,13 +225,11 @@ public class CustomAttributes extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		if (!isModified)
-			return;		// Nothing to apply
-		
 		if (isApply)
 			setValid(false);
 		
-		new Job("Update custom attributes") {
+		dci.setSchedules(schedules);
+		new Job("Update schedule for DCI " + dci.getId()) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
 			{
@@ -222,29 +237,23 @@ public class CustomAttributes extends PropertyPage
 				
 				try
 				{
-					if (object != null)
-					{
-						NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-						md.setCustomAttributes(attributes);
-						NXMCSharedData.getInstance().getSession().modifyObject(md);
-					}
-					isModified = false;
+					dci.getOwner().modifyItem(dci);
 					status = Status.OK_STATUS;
 				}
 				catch(Exception e)
 				{
 					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
 					                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
-					                    "Cannot update custom attributes: " + e.getMessage(), null);
+					                    "Cannot update schedule: " + e.getMessage(), null);
 				}
 
 				if (isApply)
 				{
-					new UIJob("Update \"Custom Attributes\" property page") {
+					new UIJob("Update \"Custom Schedule\" property page") {
 						@Override
 						public IStatus runInUIThread(IProgressMonitor monitor)
 						{
-							CustomAttributes.this.setValid(true);
+							CustomSchedule.this.setValid(true);
 							return Status.OK_STATUS;
 						}
 					}.schedule();
@@ -253,6 +262,16 @@ public class CustomAttributes extends PropertyPage
 				return status;
 			}
 		}.schedule();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
+	 */
+	@Override
+	public boolean performOk()
+	{
+		applyChanges(false);
+		return true;
 	}
 
 	/* (non-Javadoc)
@@ -265,12 +284,13 @@ public class CustomAttributes extends PropertyPage
 	}
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
+	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
 	 */
 	@Override
-	public boolean performOk()
+	protected void performDefaults()
 	{
-		applyChanges(false);
-		return true;
+		super.performDefaults();
+		schedules.clear();
+		viewer.setInput(schedules.toArray());
 	}
 }

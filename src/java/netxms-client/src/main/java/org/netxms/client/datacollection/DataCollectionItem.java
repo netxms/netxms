@@ -4,6 +4,7 @@
 package org.netxms.client.datacollection;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -494,6 +495,20 @@ public class DataCollectionItem
 	public ArrayList<String> getSchedules()
 	{
 		return schedules;
+	}
+	
+	/**
+	 * Set schedules
+	 * 
+	 * @param newSchedules Collection containing new schedules
+	 */
+	public void setSchedules(Collection<String> newSchedules)
+	{
+		schedules.clear();
+		for(String s : newSchedules)
+		{
+			schedules.add(new String(s));
+		}
 	}
 
 	/**

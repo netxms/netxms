@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -301,6 +302,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			public void run()
 			{
+				createItem();
 			}
 		};
 		actionCreate.setText("&New...");
@@ -550,8 +552,7 @@ public class DataCollectionEditor extends ViewPart
 		                               "Do you really want to delete selected data collection items?"))
 			return;
 		
-		Job job = new Job("Delete data collection items for " + object.getObjectName())
-		{
+		Job job = new Job("Delete data collection items for " + object.getObjectName()) {
 			@SuppressWarnings("unchecked")
 			@Override
 			protected IStatus run(IProgressMonitor monitor)
@@ -583,6 +584,44 @@ public class DataCollectionEditor extends ViewPart
 						return Status.OK_STATUS;
 					}
 				}.schedule();
+				return status;
+			}
+		};
+		scheduleJob(job);
+	}
+	
+	/**
+	 * Create new data collection item
+	 */
+	private void createItem()
+	{
+		Job job = new Job("Create new data collection item for " + object.getObjectName()) {
+			@Override
+			protected IStatus run(IProgressMonitor monitor)
+			{
+				IStatus status;
+				try
+				{
+					final long id = dciConfig.createItem();
+					new UIJob("Open created DCI") {
+						@Override
+						public IStatus runInUIThread(IProgressMonitor monitor)
+						{
+							viewer.setInput(dciConfig.getItems());
+							DataCollectionItem dci = dciConfig.findItem(id);
+							viewer.setSelection(new StructuredSelection(dci), true);
+							actionEdit.run();
+							return Status.OK_STATUS;
+						}
+					}.schedule();
+					status = Status.OK_STATUS;
+				}
+				catch(Exception e)
+				{
+					status = new Status(Status.ERROR, Activator.PLUGIN_ID, 
+		                    (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
+		                    "Cannot create data collection items for " + object.getObjectName() + ": " + e.getMessage(), null);
+				}
 				return status;
 			}
 		};
