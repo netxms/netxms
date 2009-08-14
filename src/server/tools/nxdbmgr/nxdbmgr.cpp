@@ -367,7 +367,7 @@ BOOL ValidateDatabase()
 {
 	DB_RESULT hResult;
 	LONG nVersion = 0;
-	BOOL bLocked;
+	BOOL bLocked = FALSE;
    TCHAR szLockStatus[MAX_DB_STRING], szLockInfo[MAX_DB_STRING];
 
    // Get database format version

@@ -158,7 +158,7 @@ void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 									 DWORD dwTimeoutEvent, Event *pEvent)
 {
    NXC_ALARM alarm;
-   TCHAR *pszExpMsg, *pszExpKey, *pszEscRef, szQuery[2048];
+   TCHAR *pszExpMsg, *pszExpKey, szQuery[2048];
    DWORD i, dwObjectId = 0;
    BOOL bNewAlarm = TRUE;
 
@@ -212,8 +212,6 @@ void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 		alarm.dwTimeoutEvent = dwTimeoutEvent;
       nx_strncpy(alarm.szMessage, pszExpMsg, MAX_DB_STRING);
       nx_strncpy(alarm.szKey, pszExpKey, MAX_DB_STRING);
-      free(pszExpMsg);
-      free(pszExpKey);
 
       // Add new alarm to active alarm list if needed
       if (alarm.nState != ALARM_STATE_TERMINATED)
@@ -252,6 +250,9 @@ void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
    // Update status of related object if needed
    if ((dwObjectId != 0) && (alarm.nState != ALARM_STATE_TERMINATED))
       UpdateObjectStatus(dwObjectId);
+
+	free(pszExpMsg);
+   free(pszExpKey);
 }
 
 
