@@ -819,6 +819,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\include\nms_util.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\include\nxclapi.h"
 				>
 			</File>

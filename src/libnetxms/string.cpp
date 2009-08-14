@@ -43,6 +43,17 @@ String::String()
 
 
 //
+// Copy constructor
+//
+
+String::String(const String &src)
+{
+	m_dwBufSize = src.m_dwBufSize;
+	m_pszBuffer = (src.m_pszBuffer != NULL) ? (TCHAR *)nx_memdup(src.m_pszBuffer, src.m_dwBufSize * sizeof(TCHAR)) : NULL;
+}
+
+
+//
 // Destructor
 //
 
@@ -69,7 +80,7 @@ const String& String::operator =(const TCHAR *pszStr)
 // Operator +=
 //
 
-const String&  String::operator +=(const TCHAR *pszStr)
+const String& String::operator +=(const TCHAR *pszStr)
 {
    DWORD dwLen;
 

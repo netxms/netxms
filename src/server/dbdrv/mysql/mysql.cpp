@@ -32,6 +32,79 @@ int EXPORT drvAPIVersion = DBDRV_API_VERSION;
 
 
 //
+// Prepare string for using in SQL query - enclose in quotes and escape as needed
+//
+
+#define UPDATE_LENGTH \
+				len++; \
+				if (len >= bufferSize - 1) \
+				{ \
+					bufferSize += 128; \
+					out = (TCHAR *)realloc(out, bufferSize * sizeof(TCHAR)); \
+				}
+
+extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
+{
+	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
+	int bufferSize = len + 128;
+	TCHAR *out = (TCHAR *)malloc(bufferSize * sizeof(TCHAR));
+	out[0] = _T('\'');
+
+	const TCHAR *src = str;
+	int outPos;
+	for(outPos = 1; *src != NULL; src++)
+	{
+		switch(*src)
+		{
+			case _T('\''):
+				out[outPos++] = _T('\'');
+				out[outPos++] = _T('\'');
+				UPDATE_LENGTH;
+				break;
+			case _T('\r'):
+				out[outPos++] = _T('\\');
+				out[outPos++] = _T('\r');
+				UPDATE_LENGTH;
+				break;
+			case _T('\n'):
+				out[outPos++] = _T('\\');
+				out[outPos++] = _T('\n');
+				UPDATE_LENGTH;
+				break;
+			case _T('\b'):
+				out[outPos++] = _T('\\');
+				out[outPos++] = _T('\b');
+				UPDATE_LENGTH;
+				break;
+			case _T('\t'):
+				out[outPos++] = _T('\\');
+				out[outPos++] = _T('\t');
+				UPDATE_LENGTH;
+				break;
+			case 26:
+				out[outPos++] = _T('\\');
+				out[outPos++] = _T('Z');
+				break;
+			case _T('\\'):
+				out[outPos++] = _T('\\');
+				out[outPos++] = _T('\\');
+				UPDATE_LENGTH;
+				break;
+			default:
+				out[outPos++] = *src;
+				break;
+		}
+	}
+	out[outPos++] = _T('\'');
+	out[outPos++] = 0;
+
+	return out;
+}
+
+#undef UPDATE_LENGTH
+
+
+//
 // Initialize driver
 //
 
@@ -95,7 +168,7 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin, char *sz
 	pConn->mutexQueryLock = MutexCreate();
 
    // Switch to UTF-8 encoding
-   mysql_query(pMySQL, "SET NAMES 'utf8'");
+   mysql_set_character_set(pMySQL, "utf8");
 	
 	return (DB_CONNECTION)pConn;
 }

@@ -109,10 +109,64 @@ extern "C" int EXPORT drvAPIVersion = DBDRV_API_VERSION;
 
 
 //
+// Prepare string for using in SQL query - enclose in quotes and escape as needed
+//
+
+extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
+{
+	int len = (int)_tcslen(str) + 4;   // + two quotes, N prefix, and \0 at the end
+	int bufferSize = len + 128;
+	TCHAR *out = (TCHAR *)malloc(bufferSize * sizeof(TCHAR));
+	_tcscpy(out, _T("N'"));
+
+	const TCHAR *src = str;
+	int outPos;
+	for(outPos = 2; *src != NULL; src++)
+	{
+		if (*src < 32)
+		{
+			TCHAR buffer[32];
+
+			_sntprintf(buffer, 32, _T("'+nchar(%d)+N'"), *src);
+			int l = (int)_tcslen(buffer);
+
+			len += l;
+			if (len >= bufferSize)
+			{
+				bufferSize += 128;
+				out = (TCHAR *)realloc(out, bufferSize * sizeof(TCHAR));
+			}
+			memcpy(&out[outPos], buffer, l * sizeof(TCHAR));
+			outPos += l;
+		}
+		else if (*src == _T('\''))
+		{
+			len++;
+			if (len >= bufferSize)
+			{
+				bufferSize += 128;
+				out = (TCHAR *)realloc(out, bufferSize * sizeof(TCHAR));
+			}
+			out[outPos++] = _T('\'');
+			out[outPos++] = _T('\'');
+		}
+		else
+		{
+			out[outPos++] = *src;
+		}
+	}
+	out[outPos++] = _T('\'');
+	out[outPos++] = 0;
+
+	return out;
+}
+
+
+//
 // Initialize driver
 //
 
-extern "C" BOOL EXPORT DrvInit(char *szCmdLine)
+extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
 {
    BOOL bResult = FALSE;
 
@@ -138,35 +192,35 @@ extern "C" void EXPORT DrvUnload(void)
 // Connect to database
 //
 
-extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin,
-                                           char *szPassword, char *szDatabase)
+extern "C" DB_CONNECTION EXPORT DrvConnect(const char *host, const char *login,
+                                           const char *password, const char *database)
 {
    LOGINREC *loginrec;
    MSDB_CONN *pConn = NULL;
    PDBPROCESS hProcess;
 
    loginrec = dblogin();
-   if (!strcmp(szLogin, "*"))
+   if (!strcmp(login, "*"))
    {
       DBSETLSECURE(loginrec);
    }
    else
    {
-      DBSETLUSER(loginrec, szLogin);
-      DBSETLPWD(loginrec, szPassword);
+      DBSETLUSER(loginrec, login);
+      DBSETLPWD(loginrec, password);
    }
    DBSETLAPP(loginrec, "NetXMS");
    DBSETLTIME(loginrec, CONNECT_TIMEOUT);
-   hProcess = dbopen(loginrec, szHost);
+   hProcess = dbopen(loginrec, host);
 
    if (hProcess != NULL)
    {
       dbsetuserdata(hProcess, NULL);
 
       // Change to specified database
-      if (szDatabase != NULL)
+      if (database != NULL)
       {
-         if (dbuse(hProcess, szDatabase) != SUCCEED)
+         if (dbuse(hProcess, database) != SUCCEED)
          {
             dbclose(hProcess);
             hProcess = NULL;
@@ -179,10 +233,10 @@ extern "C" DB_CONNECTION EXPORT DrvConnect(char *szHost, char *szLogin,
          pConn->hProcess = hProcess;
          pConn->mutexQueryLock = MutexCreate();
          pConn->bProcessDead = FALSE;
-         nx_strncpy(pConn->szHost, szHost, MAX_CONN_STRING);
-         nx_strncpy(pConn->szLogin, szLogin, MAX_CONN_STRING);
-         nx_strncpy(pConn->szPassword, szPassword, MAX_CONN_STRING);
-         nx_strncpy(pConn->szDatabase, CHECK_NULL_EX(szDatabase), MAX_CONN_STRING);
+         nx_strncpy(pConn->szHost, host, MAX_CONN_STRING);
+         nx_strncpy(pConn->szLogin, login, MAX_CONN_STRING);
+         nx_strncpy(pConn->szPassword, password, MAX_CONN_STRING);
+         nx_strncpy(pConn->szDatabase, CHECK_NULL_EX(database), MAX_CONN_STRING);
 			pConn->szErrorText[0] = 0;
 
          dbsetuserdata(hProcess, pConn);

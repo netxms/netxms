@@ -67,6 +67,7 @@ static int (* m_fpDrvGetColumnCount)(DB_RESULT);
 static const char* (* m_fpDrvGetColumnName)(DB_RESULT, int);
 static int (* m_fpDrvGetColumnCountAsync)(DB_ASYNC_RESULT);
 static const char* (* m_fpDrvGetColumnNameAsync)(DB_ASYNC_RESULT, int);
+static TCHAR* (* m_fpDrvPrepareString)(const TCHAR *) = NULL;
 
 
 //
@@ -150,6 +151,7 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bnxlog_write, BOOL bLogErrors, BOOL bDumpSQ
    m_fpDrvCommit = (DWORD (*)(DB_CONNECTION))DLGetSymbolAddrEx(m_hDriver, "DrvCommit");
    m_fpDrvRollback = (DWORD (*)(DB_CONNECTION))DLGetSymbolAddrEx(m_hDriver, "DrvRollback");
    m_fpDrvUnload = (void (*)(void))DLGetSymbolAddrEx(m_hDriver, "DrvUnload");
+   m_fpDrvPrepareString = (TCHAR* (*)(const TCHAR *))DLGetSymbolAddrEx(m_hDriver, "DrvPrepareString");
    if ((fpDrvInit == NULL) || (m_fpDrvConnect == NULL) || (m_fpDrvDisconnect == NULL) ||
        (m_fpDrvQuery == NULL) || (m_fpDrvSelect == NULL) || (m_fpDrvGetField == NULL) ||
        (m_fpDrvGetNumRows == NULL) || (m_fpDrvFreeResult == NULL) || 
@@ -158,7 +160,8 @@ BOOL LIBNXSRV_EXPORTABLE DBInit(BOOL bnxlog_write, BOOL bLogErrors, BOOL bDumpSQ
        (m_fpDrvBegin == NULL) || (m_fpDrvCommit == NULL) || (m_fpDrvRollback == NULL) ||
 		 (m_fpDrvGetColumnCount == NULL) || (m_fpDrvGetColumnName == NULL) ||
 		 (m_fpDrvGetColumnCountAsync == NULL) || (m_fpDrvGetColumnNameAsync == NULL) ||
-       (m_fpDrvGetFieldLength == NULL) || (m_fpDrvGetFieldLengthAsync == NULL))
+       (m_fpDrvGetFieldLength == NULL) || (m_fpDrvGetFieldLengthAsync == NULL) ||
+		 (m_fpDrvPrepareString == NULL))
    {
       if (m_bnxlog_write)
          nxlog_write(MSG_DBDRV_NO_ENTRY_POINTS, EVENTLOG_ERROR_TYPE, "s", g_szDbDriver);
@@ -1048,6 +1051,18 @@ BOOL LIBNXSRV_EXPORTABLE DBRollback(DB_HANDLE hConn)
    }
    MutexUnlock(hConn->mutexTransLock);
    return bRet;
+}
+
+
+//
+// Prepare string for using int SQL statement
+//
+
+String LIBNXSRV_EXPORTABLE DBPrepareString(const TCHAR *str)
+{
+	String out;
+	out.SetBuffer(m_fpDrvPrepareString(str));
+	return out;
 }
 
 

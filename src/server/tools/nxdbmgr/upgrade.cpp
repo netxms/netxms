@@ -103,6 +103,75 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 
 
 //
+// Convert strings
+//
+
+static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHAR *column)
+{
+	DB_RESULT hResult;
+	TCHAR *query;
+	int queryLen = 512;
+	BOOL success = FALSE;
+
+	query = (TCHAR *)malloc(queryLen);
+	_sntprintf(query, queryLen, _T("SELECT %s,%s FROM %s"), idColumn, column, table);
+	hResult = SQLSelect(query);
+	if (hResult == NULL)
+	{
+		free(query);
+		return FALSE;
+	}
+
+	int count = DBGetNumRows(hResult);
+	for(int i = 0; i < count; i++)
+	{
+		INT64 id = DBGetFieldInt64(hResult, i, 0);
+		TCHAR *value = DBGetField(hResult, i, 1, NULL, 0);
+		DecodeSQLString(value);
+		String newValue = DBPrepareString(value);
+		if ((int)newValue.Size() + 256 > queryLen)
+		{
+			queryLen = newValue.Size() + 256;
+			query = (TCHAR *)realloc(query, queryLen);
+		}
+		_sntprintf(query, queryLen, _T("UPDATE %s SET %s=%s WHERE %s=") INT64_FMT, table, column,
+		           (const TCHAR *)newValue, idColumn, id);
+		if (!SQLQuery(query))
+			goto cleanup;
+	}
+	success = TRUE;
+
+cleanup:
+	DBFreeResult(hResult);
+	return success;
+}
+
+
+//
+// Upgrade from V201 to V202
+//
+
+static BOOL H_UpgradeFromV201(int currVersion, int newVersion)
+{
+	if (!ConvertStrings("alarms", "alarm_id", "message"))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+	if (!ConvertStrings("alarms", "alarm_id", "alarm_key"))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+	if (!ConvertStrings("alarms", "alarm_id", "hd_ref"))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='202' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V200 to V201
 //
 
@@ -4075,6 +4144,7 @@ static struct
 	{ 92, 200, H_UpgradeFromV92orV93 },
 	{ 93, 201, H_UpgradeFromV92orV93 },
 	{ 200, 201, H_UpgradeFromV200 },
+	{ 201, 202, H_UpgradeFromV201 },
    { 0, NULL }
 };
 

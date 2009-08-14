@@ -23,6 +23,8 @@
 #ifndef _mssqldrv_h_
 #define _mssqldrv_h_
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #ifdef _WIN32
 #include <winsock2.h>
 #include <windows.h>

@@ -30,7 +30,7 @@
 // API version
 //
 
-#define DBDRV_API_VERSION           6
+#define DBDRV_API_VERSION           7
 
 
 //

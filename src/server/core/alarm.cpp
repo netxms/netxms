@@ -127,16 +127,13 @@ BOOL AlarmManager::Init(void)
          m_pAlarmList[i].dwSourceEventCode = DBGetFieldULong(hResult, i, 2);
          m_pAlarmList[i].qwSourceEventId = DBGetFieldUInt64(hResult, i, 3);
          DBGetField(hResult, i, 4, m_pAlarmList[i].szMessage, MAX_DB_STRING);
-         DecodeSQLString(m_pAlarmList[i].szMessage);
          m_pAlarmList[i].nOriginalSeverity = (BYTE)DBGetFieldLong(hResult, i, 5);
          m_pAlarmList[i].nCurrentSeverity = (BYTE)DBGetFieldLong(hResult, i, 6);
          DBGetField(hResult, i, 7, m_pAlarmList[i].szKey, MAX_DB_STRING);
-         DecodeSQLString(m_pAlarmList[i].szKey);
          m_pAlarmList[i].dwCreationTime = DBGetFieldULong(hResult, i, 8);
          m_pAlarmList[i].dwLastChangeTime = DBGetFieldULong(hResult, i, 9);
          m_pAlarmList[i].nHelpDeskState = (BYTE)DBGetFieldLong(hResult, i, 10);
          DBGetField(hResult, i, 11, m_pAlarmList[i].szHelpDeskRef, MAX_HELPDESK_REF_LEN);
-         DecodeSQLString(m_pAlarmList[i].szHelpDeskRef);
          m_pAlarmList[i].dwAckByUser = DBGetFieldULong(hResult, i, 12);
          m_pAlarmList[i].dwRepeatCount = DBGetFieldULong(hResult, i, 13);
          m_pAlarmList[i].nState = (BYTE)DBGetFieldLong(hResult, i, 14);
@@ -232,28 +229,20 @@ void AlarmManager::NewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
       }
 
       // Save alarm to database
-      pszExpMsg = EncodeSQLString(alarm.szMessage);
-      pszExpKey = EncodeSQLString(alarm.szKey);
-      pszEscRef = EncodeSQLString(alarm.szHelpDeskRef);
       sprintf(szQuery, "INSERT INTO alarms (alarm_id,creation_time,last_change_time,"
                        "source_object_id,source_event_code,message,original_severity,"
                        "current_severity,alarm_key,alarm_state,ack_by,hd_state,"
                        "hd_ref,repeat_count,term_by,timeout,timeout_event,source_event_id) VALUES "
-                       "(%d,%d,%d,%d,%d,'%s',%d,%d,'%s',%d,%d,%d,'%s',%d,%d,%d,%d,"
-#ifdef _WIN32
-                       "%I64d)",
-#else
-                       "%lld)",
-#endif
+                       "(%d,%d,%d,%d,%d,%s,%d,%d,%s,%d,%d,%d,%s,%d,%d,%d,%d," UINT64_FMT ")",
               alarm.dwAlarmId, alarm.dwCreationTime, alarm.dwLastChangeTime,
-              alarm.dwSourceObject, alarm.dwSourceEventCode, pszExpMsg,
-              alarm.nOriginalSeverity, alarm.nCurrentSeverity, pszExpKey,
-              alarm.nState, alarm.dwAckByUser, alarm.nHelpDeskState, pszEscRef,
+				  alarm.dwSourceObject, alarm.dwSourceEventCode,
+				  (const TCHAR *)DBPrepareString(alarm.szMessage),
+              alarm.nOriginalSeverity, alarm.nCurrentSeverity,
+				  (const TCHAR *)DBPrepareString(alarm.szKey),
+              alarm.nState, alarm.dwAckByUser, alarm.nHelpDeskState,
+				  (const TCHAR *)DBPrepareString(alarm.szHelpDeskRef),
               alarm.dwRepeatCount, alarm.dwTermByUser, alarm.dwTimeout,
 				  alarm.dwTimeoutEvent, alarm.qwSourceEventId);
-      free(pszExpMsg);
-      free(pszExpKey);
-      free(pszEscRef);
       QueueSQLRequest(szQuery);
 
       // Notify connected clients about new alarm
@@ -425,17 +414,16 @@ void AlarmManager::DeleteAlarm(DWORD dwAlarmId)
 
 void AlarmManager::UpdateAlarmInDB(NXC_ALARM *pAlarm)
 {
-   char szQuery[1024], *pszEscRef;
+   char szQuery[1024];
 
-   pszEscRef = EncodeSQLString(pAlarm->szHelpDeskRef);
    sprintf(szQuery, "UPDATE alarms SET alarm_state=%d,ack_by=%d,term_by=%d,"
                     "last_change_time=%d,current_severity=%d,repeat_count=%d,"
-                    "hd_state=%d,hd_ref='%s',timeout=%d,timeout_event=%d WHERE alarm_id=%d",
+                    "hd_state=%d,hd_ref=%s,timeout=%d,timeout_event=%d WHERE alarm_id=%d",
            pAlarm->nState, pAlarm->dwAckByUser, pAlarm->dwTermByUser,
            pAlarm->dwLastChangeTime, pAlarm->nCurrentSeverity,
-           pAlarm->dwRepeatCount, pAlarm->nHelpDeskState, pszEscRef,
+           pAlarm->dwRepeatCount, pAlarm->nHelpDeskState, 
+			  (const TCHAR *)DBPrepareString(pAlarm->szHelpDeskRef),
            pAlarm->dwTimeout, pAlarm->dwTimeoutEvent, pAlarm->dwAlarmId);
-   free(pszEscRef);
    QueueSQLRequest(szQuery);
 }
 

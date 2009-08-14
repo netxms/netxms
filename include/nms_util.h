@@ -246,6 +246,7 @@ public:
 	static const int npos;
 
    String();
+	String(const String &src);
    ~String();
 
    void SetBuffer(TCHAR *pszBuffer);

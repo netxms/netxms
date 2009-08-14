@@ -181,6 +181,44 @@ static int ExecCommand(SQLITE_CONN *pConn, int nCmd, const char *pszQuery, TCHAR
 
 
 //
+// Prepare string for using in SQL query - enclose in quotes and escape as needed
+//
+
+extern "C" TCHAR EXPORT *DrvPrepareString(const TCHAR *str)
+{
+	int len = (int)_tcslen(str) + 3;   // + two quotes and \0 at the end
+	int bufferSize = len + 128;
+	TCHAR *out = (TCHAR *)malloc(bufferSize * sizeof(TCHAR));
+	out[0] = _T('\'');
+
+	const TCHAR *src = str;
+	int outPos;
+	for(outPos = 1; *src != NULL; src++)
+	{
+		if (*src == _T('\''))
+		{
+			len++;
+			if (len >= bufferSize)
+			{
+				bufferSize += 128;
+				out = (TCHAR *)realloc(out, bufferSize * sizeof(TCHAR));
+			}
+			out[outPos++] = _T('\'');
+			out[outPos++] = _T('\'');
+		}
+		else
+		{
+			out[outPos++] = *src;
+		}
+	}
+	out[outPos++] = _T('\'');
+	out[outPos++] = 0;
+
+	return out;
+}
+
+
+//
 // Initialize driver
 //
 
