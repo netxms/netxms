@@ -47,7 +47,7 @@
 // DCI value
 //
 
-class ItemValue
+class NXCORE_EXPORTABLE ItemValue
 {
 private:
    double m_dFloat;
@@ -92,7 +92,7 @@ public:
 
 class DCItem;
 
-class Threshold
+class NXCORE_EXPORTABLE Threshold
 {
 private:
    DWORD m_id;             // Unique threshold id
@@ -165,7 +165,7 @@ public:
 
 class Template;
 
-class DCItem
+class NXCORE_EXPORTABLE DCItem
 {
 private:
    DWORD m_dwId;
@@ -206,16 +206,16 @@ private:
 	TCHAR *m_pszCustomUnitName;
 	TCHAR *m_pszPerfTabSettings;
 
-   void Lock() { MutexLock(m_hMutex, INFINITE); }
-   void Unlock() { MutexUnlock(m_hMutex); }
+   void lock() { MutexLock(m_hMutex, INFINITE); }
+   void unlock() { MutexUnlock(m_hMutex); }
 
-   void Transform(ItemValue &value, time_t nElapsedTime);
-   void CheckThresholds(ItemValue &value);
-   void ClearCache();
+   void transform(ItemValue &value, time_t nElapsedTime);
+   void checkThresholds(ItemValue &value);
+   void clearCache();
 
-	BOOL MatchClusterResource();
+	BOOL matchClusterResource();
 
-	void ExpandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen);
+	void expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen);
 
 public:
    DCItem();
@@ -226,69 +226,70 @@ public:
           const TCHAR *pszDescription = NULL);
    ~DCItem();
 
-   void PrepareForDeletion();
-   void UpdateFromTemplate(DCItem *pItem);
+   void prepareForDeletion();
+   void updateFromTemplate(DCItem *pItem);
 
-   BOOL SaveToDB(DB_HANDLE hdb);
-   BOOL LoadThresholdsFromDB();
-   void DeleteFromDB();
+   BOOL saveToDB(DB_HANDLE hdb);
+   BOOL loadThresholdsFromDB();
+   void deleteFromDB();
 
-   void UpdateCacheSize(DWORD dwCondId = 0);
+   void updateCacheSize(DWORD dwCondId = 0);
 
-   DWORD Id() { return m_dwId; }
-   int DataSource() { return m_iSource; }
-   int DataType() { return m_iDataType; }
-   int Status() { return m_iStatus; }
-   const char *Name() { return m_szName; }
-   const char *Description() { return m_szDescription; }
-   Template *RelatedNode() { return m_pNode; }
-   DWORD TemplateId() { return m_dwTemplateId; }
-   DWORD TemplateItemId() { return m_dwTemplateItemId; }
-	DWORD ResourceId() { return m_dwResourceId; }
-	DWORD ProxyNode() { return m_dwProxyNode; }
+   DWORD getId() { return m_dwId; }
+   int getDataSource() { return m_iSource; }
+   int getDataType() { return m_iDataType; }
+   int getStatus() { return m_iStatus; }
+   const TCHAR *getName() { return m_szName; }
+   const TCHAR *getDescription() { return m_szDescription; }
+   Template *getRelatedNode() { return m_pNode; }
+   DWORD getTemplateId() { return m_dwTemplateId; }
+   DWORD getTemplateItemId() { return m_dwTemplateItemId; }
+	DWORD getResourceId() { return m_dwResourceId; }
+	DWORD getProxyNode() { return m_dwProxyNode; }
 
-   BOOL ReadyForPolling(time_t currTime);
-   void SetLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
-   void SetStatus(int iStatus) { m_iStatus = (BYTE)iStatus; }
-   void SetBusyFlag(BOOL bIsBusy) { m_iBusy = (BYTE)bIsBusy; }
-   void ChangeBinding(DWORD dwNewId, Template *pNode, BOOL doMacroExpansion);
-   void SetTemplateId(DWORD dwTemplateId, DWORD dwItemId) 
+   BOOL isReadyForPolling(time_t currTime);
+   void setLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
+   void setStatus(int iStatus) { m_iStatus = (BYTE)iStatus; }
+   void setBusyFlag(BOOL bIsBusy) { m_iBusy = (BYTE)bIsBusy; }
+   void changeBinding(DWORD dwNewId, Template *pNode, BOOL doMacroExpansion);
+   void setTemplateId(DWORD dwTemplateId, DWORD dwItemId) 
          { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
-	void SystemModify(const TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType);
+	void systemModify(const TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType);
 
-   void NewValue(time_t nTimeStamp, const char *pszValue);
-   void NewError();
+   void processNewValue(time_t nTimeStamp, const char *pszValue);
+   void processNewError();
 
-   void GetLastValue(CSCPMessage *pMsg, DWORD dwId);
-   NXSL_Value *GetValueForNXSL(int nFunction, int nPolls);
+   void getLastValue(CSCPMessage *pMsg, DWORD dwId);
+   NXSL_Value *getValueForNXSL(int nFunction, int nPolls);
 
-   void CreateMessage(CSCPMessage *pMsg);
-   void UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId);
+   void createMessage(CSCPMessage *pMsg);
+   void updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, DWORD **ppdwMapIndex, DWORD **ppdwMapId);
 
-   void DeleteExpiredData();
-	BOOL DeleteAllData();
+   void deleteExpiredData();
+	BOOL deleteAllData();
 
-   void GetEventList(DWORD **ppdwList, DWORD *pdwSize);
-   void CreateNXMPRecord(String &str);
+   void getEventList(DWORD **ppdwList, DWORD *pdwSize);
+   void createNXMPRecord(String &str);
 
-	BOOL EnumThresholds(BOOL (* pfCallback)(Threshold *, DWORD, void *), void *pArg);
+	BOOL enumThresholds(BOOL (* pfCallback)(Threshold *, DWORD, void *), void *pArg);
 
-	void FinishMPParsing();
-	void SetName(TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_ITEM_NAME); }
-	void SetDescription(TCHAR *pszDescr) { nx_strncpy(m_szDescription, pszDescr, MAX_DB_STRING); }
-	void SetInstance(TCHAR *pszInstance) { nx_strncpy(m_szInstance, pszInstance, MAX_DB_STRING); }
-	void SetOrigin(int nOrigin) { m_iSource = nOrigin; }
-	void SetDataType(int nDataType) { m_iDataType = nDataType; }
-	void SetRetentionTime(int nTime) { m_iRetentionTime = nTime; }
-	void SetInterval(int nInt) { m_iPollingInterval = nInt; }
-	void SetDeltaCalcMethod(int nMethod) { m_iDeltaCalculation = nMethod; }
-	void SetAllThresholdsFlag(BOOL bFlag) { m_iProcessAllThresholds = bFlag ? 1 : 0; }
-	void SetAdvScheduleFlag(BOOL bFlag) { m_iAdvSchedule = bFlag ? 1 : 0; }
-	void AddThreshold(Threshold *pThreshold);
-	void AddSchedule(TCHAR *pszSchedule);
-   void SetTransformationScript(TCHAR *pszScript);
+	void finishMPParsing();
+	void setName(TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_ITEM_NAME); }
+	void setDescription(TCHAR *pszDescr) { nx_strncpy(m_szDescription, pszDescr, MAX_DB_STRING); }
+	void setInstance(TCHAR *pszInstance) { nx_strncpy(m_szInstance, pszInstance, MAX_DB_STRING); }
+	void setOrigin(int nOrigin) { m_iSource = nOrigin; }
+	void setDataType(int nDataType) { m_iDataType = nDataType; }
+	void setRetentionTime(int nTime) { m_iRetentionTime = nTime; }
+	void setInterval(int nInt) { m_iPollingInterval = nInt; }
+	void setDeltaCalcMethod(int nMethod) { m_iDeltaCalculation = nMethod; }
+	void setAllThresholdsFlag(BOOL bFlag) { m_iProcessAllThresholds = bFlag ? 1 : 0; }
+	void setAdvScheduleFlag(BOOL bFlag) { m_iAdvSchedule = bFlag ? 1 : 0; }
+	void addThreshold(Threshold *pThreshold);
+	void deleteAllThresholds();
+	void addSchedule(TCHAR *pszSchedule);
+   void setTransformationScript(TCHAR *pszScript);
 
-	BOOL TestTransformation(const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
+	BOOL testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
 };
 
 

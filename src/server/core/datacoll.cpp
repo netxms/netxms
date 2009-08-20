@@ -67,12 +67,12 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
    while(!ShutdownInProgress())
    {
       pItem = (DCItem *)g_pItemQueue->GetOrBlock();
-		pNode = (Node *)pItem->RelatedNode();
-		if (pItem->ProxyNode() != 0)
+		pNode = (Node *)pItem->getRelatedNode();
+		if (pItem->getProxyNode() != 0)
 		{
 			NetObj *object;
 
-			object = FindObjectById(pItem->ProxyNode());
+			object = FindObjectById(pItem->getProxyNode());
 			if (object != NULL)
 			{
 				if ((object->Type() == OBJECT_NODE) &&
@@ -84,7 +84,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 				else
 				{
                // Change item's status to "not supported"
-               pItem->SetStatus(ITEM_STATUS_NOT_SUPPORTED);
+               pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED);
 
 					if (pNode != NULL)
 					{
@@ -105,19 +105,19 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 
       if (pNode != NULL)
       {
-         switch(pItem->DataSource())
+         switch(pItem->getDataSource())
          {
             case DS_INTERNAL:    // Server internal parameters (like status)
-               dwError = pNode->GetInternalItem(pItem->Name(), MAX_LINE_SIZE, pBuffer);
+               dwError = pNode->GetInternalItem(pItem->getName(), MAX_LINE_SIZE, pBuffer);
                break;
             case DS_SNMP_AGENT:
-               dwError = pNode->GetItemFromSNMP(pItem->Name(), MAX_LINE_SIZE, pBuffer);
+               dwError = pNode->GetItemFromSNMP(pItem->getName(), MAX_LINE_SIZE, pBuffer);
                break;
             case DS_CHECKPOINT_AGENT:
-               dwError = pNode->GetItemFromCheckPointSNMP(pItem->Name(), MAX_LINE_SIZE, pBuffer);
+               dwError = pNode->GetItemFromCheckPointSNMP(pItem->getName(), MAX_LINE_SIZE, pBuffer);
                break;
             case DS_NATIVE_AGENT:
-               dwError = pNode->GetItemFromAgent(pItem->Name(), MAX_LINE_SIZE, pBuffer);
+               dwError = pNode->GetItemFromAgent(pItem->getName(), MAX_LINE_SIZE, pBuffer);
                break;
          }
 
@@ -128,28 +128,28 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
          switch(dwError)
          {
             case DCE_SUCCESS:
-					if (pItem->Status() == ITEM_STATUS_NOT_SUPPORTED)
-	               pItem->SetStatus(ITEM_STATUS_ACTIVE);
-					pItem->NewValue(currTime, pBuffer);
+					if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
+	               pItem->setStatus(ITEM_STATUS_ACTIVE);
+					pItem->processNewValue(currTime, pBuffer);
                break;
             case DCE_COMM_ERROR:
-               pItem->NewError();
+               pItem->processNewError();
                break;
             case DCE_NOT_SUPPORTED:
                // Change item's status
-               pItem->SetStatus(ITEM_STATUS_NOT_SUPPORTED);
+               pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED);
                break;
          }
 
          // Update item's last poll time and clear busy flag so item can be polled again
-         pItem->SetLastPollTime(currTime);
-         pItem->SetBusyFlag(FALSE);
+         pItem->setLastPollTime(currTime);
+         pItem->setBusyFlag(FALSE);
 
          // Decrement node's usage counter
          pNode->DecRefCount();
-			if ((pItem->ProxyNode() != 0) && (pItem->RelatedNode() != NULL))
+			if ((pItem->getProxyNode() != 0) && (pItem->getRelatedNode() != NULL))
 			{
-				pItem->RelatedNode()->DecRefCount();
+				pItem->getRelatedNode()->DecRefCount();
 			}
       }
       else     /* pNode == NULL */

@@ -209,26 +209,26 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
 		case CTX_DCI:
          if (!stricmp(pszName, "NAME"))
          {
-            m_pCurrDCI->SetName(pszValue);
+            m_pCurrDCI->setName(pszValue);
          }
          else if (!stricmp(pszName, "DESCRIPTION"))
          {
-            m_pCurrDCI->SetDescription(pszValue);
+            m_pCurrDCI->setDescription(pszValue);
          }
          else if (!stricmp(pszName, "INSTANCE"))
          {
-            m_pCurrDCI->SetInstance(pszValue);
+            m_pCurrDCI->setInstance(pszValue);
          }
          else if (!stricmp(pszName, "SCRIPT"))
          {
-            m_pCurrDCI->SetTransformationScript(pszValue);
+            m_pCurrDCI->setTransformationScript(pszValue);
          }
          else if (!stricmp(pszName, "DATATYPE"))
          {
 				nVal = strtol(pszValue, &eptr, 0);
 				if (*eptr == 0)
 				{
-					m_pCurrDCI->SetDataType(nVal);
+					m_pCurrDCI->setDataType(nVal);
 				}
 				else
 				{
@@ -240,7 +240,7 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
 				nVal = strtol(pszValue, &eptr, 0);
 				if (*eptr == 0)
 				{
-					m_pCurrDCI->SetOrigin(nVal);
+					m_pCurrDCI->setOrigin(nVal);
 				}
 				else
 				{
@@ -252,7 +252,7 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
 				nVal = strtol(pszValue, &eptr, 0);
 				if (*eptr == 0)
 				{
-					m_pCurrDCI->SetInterval(nVal);
+					m_pCurrDCI->setInterval(nVal);
 				}
 				else
 				{
@@ -264,7 +264,7 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
 				nVal = strtol(pszValue, &eptr, 0);
 				if (*eptr == 0)
 				{
-					m_pCurrDCI->SetRetentionTime(nVal);
+					m_pCurrDCI->setRetentionTime(nVal);
 				}
 				else
 				{
@@ -276,7 +276,7 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
 				nVal = strtol(pszValue, &eptr, 0);
 				if (*eptr == 0)
 				{
-					m_pCurrDCI->SetAllThresholdsFlag(nVal);
+					m_pCurrDCI->setAllThresholdsFlag(nVal);
 				}
 				else
 				{
@@ -288,7 +288,7 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
 				nVal = strtol(pszValue, &eptr, 0);
 				if (*eptr == 0)
 				{
-					m_pCurrDCI->SetDeltaCalcMethod(nVal);
+					m_pCurrDCI->setDeltaCalcMethod(nVal);
 				}
 				else
 				{
@@ -300,7 +300,7 @@ BOOL NXMP_Data::ParseVariable(char *pszName, char *pszValue)
 				nVal = strtol(pszValue, &eptr, 0);
 				if (*eptr == 0)
 				{
-					m_pCurrDCI->SetAdvScheduleFlag(nVal);
+					m_pCurrDCI->setAdvScheduleFlag(nVal);
 				}
 				else
 				{
@@ -675,7 +675,7 @@ void NXMP_Data::NewDCI(void)
 void NXMP_Data::AddDCISchedule(char *pszStr)
 {
 	if (m_pCurrDCI != NULL)
-		m_pCurrDCI->AddSchedule(pszStr);
+		m_pCurrDCI->addSchedule(pszStr);
 }
 
 
@@ -685,7 +685,7 @@ void NXMP_Data::AddDCISchedule(char *pszStr)
 
 void NXMP_Data::CloseDCI(void)
 {
-	m_pCurrDCI->FinishMPParsing();
+	m_pCurrDCI->finishMPParsing();
 	m_pCurrTemplate->AddItem(m_pCurrDCI);
    m_nContext = CTX_TEMPLATE;
 }
@@ -708,7 +708,7 @@ void NXMP_Data::NewThreshold(void)
 
 void NXMP_Data::CloseThreshold(void)
 {
-	m_pCurrDCI->AddThreshold(m_pCurrThreshold);
+	m_pCurrDCI->addThreshold(m_pCurrThreshold);
    m_nContext = CTX_DCI;
 }
 
@@ -754,7 +754,7 @@ static BOOL ThresholdValidationCallback(Threshold *pThreshold, DWORD dwIndex, vo
 static BOOL DCIValidationCallback(DCItem *pItem, DWORD dwIndex, void *pArg)
 {
 	((NXMP_Data *)pArg)->SetCurrDCIIndex(dwIndex);
-	return pItem->EnumThresholds(ThresholdValidationCallback, pArg);
+	return pItem->enumThresholds(ThresholdValidationCallback, pArg);
 }
 
 
@@ -907,7 +907,7 @@ static BOOL ThresholdEventResolveCallback(Threshold *pThreshold, DWORD dwIndex, 
 static BOOL DCIEventResolveCallback(DCItem *pItem, DWORD dwIndex, void *pArg)
 {
 	((NXMP_Data *)pArg)->SetCurrDCIIndex(dwIndex);
-	return pItem->EnumThresholds(ThresholdEventResolveCallback, pArg);
+	return pItem->enumThresholds(ThresholdEventResolveCallback, pArg);
 }
 
 

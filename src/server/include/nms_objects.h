@@ -366,7 +366,6 @@ protected:
 
    void LoadItemsFromDB(void);
    void DestroyItems(void);
-	void ValidateDCIList(DCI_CFG *cfg);
 
 public:
    Template();
@@ -405,12 +404,14 @@ public:
    BOOL IsLockedBySession(DWORD dwSessionId) { return m_dwDCILockStatus == dwSessionId; }
    DWORD *GetDCIEventsList(DWORD *pdwCount);
 	void ValidateSystemTemplate(void);
+	void ValidateDCIList(DCI_CFG *cfg);
 
    BOOL ApplyToNode(Node *pNode);
-	BOOL IsApplicable(Node *node);
-	BOOL IsAutoApplyEnabled() { return m_applyFilter != NULL; }
-   void QueueUpdate(void);
-   void QueueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI);
+	BOOL isApplicable(Node *node);
+	BOOL isAutoApplyEnabled() { return m_applyFilter != NULL; }
+	void setAutoApplyFilter(const TCHAR *filter);
+   void queueUpdate(void);
+   void queueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI);
 
    void CreateNXMPRecord(String &str);
 	
@@ -1285,10 +1286,10 @@ int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds);
 // Global variables
 //
 
-extern Network *g_pEntireNet;
-extern ServiceRoot *g_pServiceRoot;
-extern TemplateRoot *g_pTemplateRoot;
-extern PolicyRoot *g_pPolicyRoot;
+extern Network NXCORE_EXPORTABLE *g_pEntireNet;
+extern ServiceRoot NXCORE_EXPORTABLE *g_pServiceRoot;
+extern TemplateRoot NXCORE_EXPORTABLE *g_pTemplateRoot;
+extern PolicyRoot NXCORE_EXPORTABLE *g_pPolicyRoot;
 
 extern DWORD NXCORE_EXPORTABLE g_dwMgmtNode;
 extern INDEX NXCORE_EXPORTABLE *g_pIndexById;

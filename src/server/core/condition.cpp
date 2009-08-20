@@ -347,7 +347,7 @@ DWORD Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
                   pItem = ((Node *)pObject)->GetItemById(m_pDCIList[i].dwId);
                   if (pItem != NULL)
                   {
-                     pItem->UpdateCacheSize(m_dwId);
+                     pItem->updateCacheSize(m_dwId);
                   }
                }
             }
@@ -419,7 +419,7 @@ void Condition::Check(void)
             pItem = ((Node *)pObject)->GetItemById(m_pDCIList[i].dwId);
             if (pItem != NULL)
             {
-               ppValueList[i] = pItem->GetValueForNXSL(m_pDCIList[i].nFunction, m_pDCIList[i].nPolls);
+               ppValueList[i] = pItem->getValueForNXSL(m_pDCIList[i].nFunction, m_pDCIList[i].nPolls);
             }
          }
       }

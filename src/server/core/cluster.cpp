@@ -94,7 +94,7 @@ BOOL Cluster::CreateFromDB(DWORD dwId)
    LoadACLFromDB();
    LoadItemsFromDB();
    for(i = 0; i < (int)m_dwNumItems; i++)
-      if (!m_ppItems[i]->LoadThresholdsFromDB())
+      if (!m_ppItems[i]->loadThresholdsFromDB())
          return FALSE;
 
    if (!m_bIsDeleted)
@@ -234,7 +234,7 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
    if (bResult)
    {
       for(i = 0; i < m_dwNumItems; i++)
-         m_ppItems[i]->SaveToDB(hdb);
+         m_ppItems[i]->saveToDB(hdb);
 
 		// Save cluster members list
 		if (DBBegin(hdb))

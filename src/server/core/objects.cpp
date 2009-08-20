@@ -29,10 +29,10 @@
 
 BOOL g_bModificationsLocked = FALSE;
 
-Network *g_pEntireNet = NULL;
-ServiceRoot *g_pServiceRoot = NULL;
-TemplateRoot *g_pTemplateRoot = NULL;
-PolicyRoot *g_pPolicyRoot = NULL;
+Network NXCORE_EXPORTABLE *g_pEntireNet = NULL;
+ServiceRoot NXCORE_EXPORTABLE *g_pServiceRoot = NULL;
+TemplateRoot NXCORE_EXPORTABLE *g_pTemplateRoot = NULL;
+PolicyRoot NXCORE_EXPORTABLE *g_pPolicyRoot = NULL;
 
 DWORD NXCORE_EXPORTABLE g_dwMgmtNode = 0;
 INDEX NXCORE_EXPORTABLE *g_pIndexById = NULL;

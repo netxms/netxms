@@ -31,12 +31,12 @@
 Threshold::Threshold(DCItem *pRelatedItem)
 {
    m_id = 0;
-   m_itemId = pRelatedItem->Id();
+   m_itemId = pRelatedItem->getId();
    m_eventCode = EVENT_THRESHOLD_REACHED;
    m_rearmEventCode = EVENT_THRESHOLD_REARMED;
    m_function = F_LAST;
    m_operation = OP_EQ;
-   m_dataType = pRelatedItem->DataType();
+   m_dataType = pRelatedItem->getDataType();
    m_param1 = 1;
    m_param2 = 0;
    m_isReached = FALSE;
@@ -104,7 +104,7 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
    TCHAR szBuffer[MAX_DB_STRING];
 
    m_id = DBGetFieldULong(hResult, iRow, 0);
-   m_itemId = pRelatedItem->Id();
+   m_itemId = pRelatedItem->getId();
    m_eventCode = DBGetFieldULong(hResult, iRow, 7);
    m_rearmEventCode = DBGetFieldULong(hResult, iRow, 9);
    DBGetField(hResult, iRow, 1, szBuffer, MAX_DB_STRING);
@@ -112,7 +112,7 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
    m_value = szBuffer;
    m_function = (BYTE)DBGetFieldLong(hResult, iRow, 3);
    m_operation = (BYTE)DBGetFieldLong(hResult, iRow, 4);
-   m_dataType = pRelatedItem->DataType();
+   m_dataType = pRelatedItem->getDataType();
    m_param1 = DBGetFieldLong(hResult, iRow, 5);
 	if ((m_function == F_LAST) && (m_param1 < 1))
 		m_param1 = 1;
@@ -679,6 +679,6 @@ void Threshold::createNXMPRecord(String &str)
 
 void Threshold::associate(DCItem *pItem)
 {
-   m_itemId = pItem->Id();
-   m_dataType = pItem->DataType();
+   m_itemId = pItem->getId();
+   m_dataType = pItem->getDataType();
 }

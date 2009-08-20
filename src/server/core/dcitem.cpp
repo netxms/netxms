@@ -50,7 +50,7 @@ static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 	dci = node->GetItemById(argv[1]->GetValueAsUInt32());
 	if (dci != NULL)
 	{
-		*ppResult = dci->GetValueForNXSL(F_LAST, 1);
+		*ppResult = dci->getValueForNXSL(F_LAST, 1);
 	}
 	else
 	{
@@ -83,7 +83,7 @@ static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult)
 
 	node = (Node *)object->Data();
 	dci = node->GetItemByName(argv[1]->GetValueAsCString());
-	*ppResult = (dci != NULL) ? new NXSL_Value(dci->Id()) : new NXSL_Value((DWORD)0);
+	*ppResult = (dci != NULL) ? new NXSL_Value(dci->getId()) : new NXSL_Value((DWORD)0);
 	return 0;
 }
 
@@ -110,7 +110,7 @@ static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppRe
 
 	node = (Node *)object->Data();
 	dci = node->GetItemByDescription(argv[1]->GetValueAsCString());
-	*ppResult = (dci != NULL) ? new NXSL_Value(dci->Id()) : new NXSL_Value((DWORD)0);
+	*ppResult = (dci != NULL) ? new NXSL_Value(dci->getId()) : new NXSL_Value((DWORD)0);
 	return 0;
 }
 
@@ -201,7 +201,7 @@ DCItem::DCItem(const DCItem *pSrc)
 	_tcscpy(m_szInstance, pSrc->m_szInstance);
    m_pszScript = NULL;
    m_pScript = NULL;
-   SetTransformationScript(pSrc->m_pszScript);
+   setTransformationScript(pSrc->m_pszScript);
    m_pNode = NULL;
    m_hMutex = MutexCreate();
    m_dwCacheSize = 0;
@@ -265,7 +265,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode)
    m_pScript = NULL;
    pszTmp = DBGetField(hResult, iRow, 8, NULL, 0);
    DecodeSQLString(pszTmp);
-   SetTransformationScript(pszTmp);
+   setTransformationScript(pszTmp);
    free(pszTmp);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 9);
    DBGetField(hResult, iRow, 10, m_szDescription, MAX_DB_STRING);
@@ -389,7 +389,7 @@ DCItem::DCItem(DWORD dwId, const TCHAR *szName, int iSource, int iDataType,
 	m_pszCustomUnitName = NULL;
 	m_pszPerfTabSettings = NULL;
 
-   UpdateCacheSize();
+   updateCacheSize();
 }
 
 
@@ -411,8 +411,23 @@ DCItem::~DCItem()
    delete m_pScript;
 	safe_free(m_pszCustomUnitName);
 	safe_free(m_pszPerfTabSettings);
-   ClearCache();
+   clearCache();
    MutexDestroy(m_hMutex);
+}
+
+
+//
+// Delete all thresholds
+//
+
+void DCItem::deleteAllThresholds()
+{
+	lock();
+   for(DWORD i = 0; i < m_dwNumThresholds; i++)
+      delete m_ppThresholdList[i];
+   safe_free_and_null(m_ppThresholdList);
+	m_dwNumThresholds = 0;
+	unlock();
 }
 
 
@@ -420,7 +435,7 @@ DCItem::~DCItem()
 // Clear data cache
 //
 
-void DCItem::ClearCache(void)
+void DCItem::clearCache(void)
 {
    DWORD i;
 
@@ -436,7 +451,7 @@ void DCItem::ClearCache(void)
 // Load data collection items thresholds from database
 //
 
-BOOL DCItem::LoadThresholdsFromDB(void)
+BOOL DCItem::loadThresholdsFromDB(void)
 {
    DWORD i;
    char szQuery[256];
@@ -461,7 +476,7 @@ BOOL DCItem::LoadThresholdsFromDB(void)
       bResult = TRUE;
    }
 
-   //UpdateCacheSize();
+   //updateCacheSize();
 
    return bResult;
 }
@@ -471,14 +486,14 @@ BOOL DCItem::LoadThresholdsFromDB(void)
 // Save to database
 //
 
-BOOL DCItem::SaveToDB(DB_HANDLE hdb)
+BOOL DCItem::saveToDB(DB_HANDLE hdb)
 {
    TCHAR *pszEscName, *pszEscScript, *pszEscDescr, *pszEscInstance;
 	TCHAR *pszEscCustomUnitName, *pszEscPerfTabSettings, *pszQuery;
    DB_RESULT hResult;
    BOOL bNewObject = TRUE, bResult;
 
-   Lock();
+   lock();
 
    pszEscName = EncodeSQLString(m_szName);
    pszEscScript = EncodeSQLString(CHECK_NULL_EX(m_pszScript));
@@ -605,7 +620,7 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
       }
    }
 
-   Unlock();
+   unlock();
    free(pszQuery);
    return bResult;
 }
@@ -615,7 +630,7 @@ BOOL DCItem::SaveToDB(DB_HANDLE hdb)
 // Check last value for threshold breaches
 //
 
-void DCItem::CheckThresholds(ItemValue &value)
+void DCItem::checkThresholds(ItemValue &value)
 {
    DWORD i, iResult, dwInterval;
    ItemValue checkValue;
@@ -669,11 +684,11 @@ void DCItem::CheckThresholds(ItemValue &value)
 // Create CSCP message with item data
 //
 
-void DCItem::CreateMessage(CSCPMessage *pMsg)
+void DCItem::createMessage(CSCPMessage *pMsg)
 {
    DWORD i, dwId;
 
-   Lock();
+   lock();
    pMsg->SetVariable(VID_DCI_ID, m_dwId);
    pMsg->SetVariable(VID_TEMPLATE_ID, m_dwTemplateId);
    pMsg->SetVariable(VID_NAME, m_szName);
@@ -705,7 +720,7 @@ void DCItem::CreateMessage(CSCPMessage *pMsg)
       for(i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < m_dwNumSchedules; i++, dwId++)
          pMsg->SetVariable(dwId, m_ppScheduleList[i]);
    }
-   Unlock();
+   unlock();
 }
 
 
@@ -713,7 +728,7 @@ void DCItem::CreateMessage(CSCPMessage *pMsg)
 // Delete item and collected data from database
 //
 
-void DCItem::DeleteFromDB(void)
+void DCItem::deleteFromDB(void)
 {
    char szQuery[256];
 
@@ -732,14 +747,14 @@ void DCItem::DeleteFromDB(void)
 // Update item from CSCP message
 //
 
-void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, 
+void DCItem::updateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps, 
                                DWORD **ppdwMapIndex, DWORD **ppdwMapId)
 {
    DWORD i, j, dwNum, dwId;
    Threshold **ppNewList;
    TCHAR *pszStr;
 
-   Lock();
+   lock();
 
    pMsg->GetVariableStr(VID_NAME, m_szName, MAX_ITEM_NAME);
    pMsg->GetVariableStr(VID_DESCRIPTION, m_szDescription, MAX_DB_STRING);
@@ -754,7 +769,7 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
 	m_dwResourceId = pMsg->GetVariableLong(VID_RESOURCE_ID);
 	m_dwProxyNode = pMsg->GetVariableLong(VID_PROXY_NODE);
    pszStr = pMsg->GetVariableStr(VID_DCI_FORMULA);
-   SetTransformationScript(pszStr);
+   setTransformationScript(pszStr);
    free(pszStr);
 	m_nBaseUnits = pMsg->GetVariableShort(VID_BASE_UNITS);
 	m_nMultiplier = (int)pMsg->GetVariableLong(VID_MULTIPLIER);
@@ -849,8 +864,8 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
    }
       
    safe_free(newThresholds);
-   UpdateCacheSize();
-   Unlock();
+   updateCacheSize();
+   unlock();
 }
 
 
@@ -858,17 +873,17 @@ void DCItem::UpdateFromMessage(CSCPMessage *pMsg, DWORD *pdwNumMaps,
 // Process new value
 //
 
-void DCItem::NewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
+void DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
 {
    TCHAR *pszEscValue, szQuery[MAX_LINE_SIZE + 128];
    ItemValue rawValue, *pValue;
 
-   Lock();
+   lock();
 
    // Normally m_pNode shouldn't be NULL for polled items, but who knows...
    if (m_pNode == NULL)
    {
-      Unlock();
+      unlock();
       return;
    }
 
@@ -887,7 +902,7 @@ void DCItem::NewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
    if (m_tPrevValueTimeStamp == 0)
       m_prevRawValue = *pValue;  // Delta should be zero for first poll
    rawValue = *pValue;
-   Transform(*pValue, tmTimeStamp - m_tPrevValueTimeStamp);
+   transform(*pValue, tmTimeStamp - m_tPrevValueTimeStamp);
    m_prevRawValue = rawValue;
    m_tPrevValueTimeStamp = tmTimeStamp;
 
@@ -900,7 +915,7 @@ void DCItem::NewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
    QueueSQLRequest(szQuery);
 
    // Check thresholds and add value to cache
-   CheckThresholds(*pValue);
+   checkThresholds(*pValue);
 
    if (m_dwCacheSize > 0)
    {
@@ -913,7 +928,7 @@ void DCItem::NewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
       delete pValue;
    }
 
-   Unlock();
+   unlock();
 }
 
 
@@ -921,16 +936,16 @@ void DCItem::NewValue(time_t tmTimeStamp, const TCHAR *pszOriginalValue)
 // Process new data collection error
 //
 
-void DCItem::NewError(void)
+void DCItem::processNewError(void)
 {
    DWORD i, iResult;
 
-   Lock();
+   lock();
 
    // Normally m_pNode shouldn't be NULL for polled items, but who knows...
    if (m_pNode == NULL)
    {
-      Unlock();
+      unlock();
       return;
    }
 
@@ -959,7 +974,7 @@ void DCItem::NewError(void)
       }
    }
 
-   Unlock();
+   unlock();
 }
 
 
@@ -967,7 +982,7 @@ void DCItem::NewError(void)
 // Transform received value
 //
 
-void DCItem::Transform(ItemValue &value, time_t nElapsedTime)
+void DCItem::transform(ItemValue &value, time_t nElapsedTime)
 {
    switch(m_iDeltaCalculation)
    {
@@ -1092,11 +1107,11 @@ void DCItem::Transform(ItemValue &value, time_t nElapsedTime)
 // Set new ID and node/template association
 //
 
-void DCItem::ChangeBinding(DWORD dwNewId, Template *pNewNode, BOOL doMacroExpansion)
+void DCItem::changeBinding(DWORD dwNewId, Template *pNewNode, BOOL doMacroExpansion)
 {
    DWORD i;
 
-   Lock();
+   lock();
    m_pNode = pNewNode;
 	if (dwNewId != 0)
 	{
@@ -1107,14 +1122,14 @@ void DCItem::ChangeBinding(DWORD dwNewId, Template *pNewNode, BOOL doMacroExpans
 
 	if (doMacroExpansion)
 	{
-		ExpandMacros(m_szName, m_szName, MAX_ITEM_NAME);
-		ExpandMacros(m_szDescription, m_szDescription, MAX_DB_STRING);
-		ExpandMacros(m_szInstance, m_szInstance, MAX_DB_STRING);
+		expandMacros(m_szName, m_szName, MAX_ITEM_NAME);
+		expandMacros(m_szDescription, m_szDescription, MAX_DB_STRING);
+		expandMacros(m_szInstance, m_szInstance, MAX_DB_STRING);
 	}
 
-   ClearCache();
-   UpdateCacheSize();
-   Unlock();
+   clearCache();
+   updateCacheSize();
+   unlock();
 }
 
 
@@ -1125,14 +1140,14 @@ void DCItem::ChangeBinding(DWORD dwNewId, Template *pNewNode, BOOL doMacroExpans
 // condition object
 //
 
-void DCItem::UpdateCacheSize(DWORD dwCondId)
+void DCItem::updateCacheSize(DWORD dwCondId)
 {
    DWORD i, dwSize, dwRequiredSize;
 
    // Sanity check
    if (m_pNode == NULL)
    {
-      DbgPrintf(3, _T("DCItem::UpdateCacheSize() called for DCI %d when m_pNode == NULL"), m_dwId);
+      DbgPrintf(3, _T("DCItem::updateCacheSize() called for DCI %d when m_pNode == NULL"), m_dwId);
       return;
    }
 
@@ -1266,7 +1281,7 @@ void DCItem::UpdateCacheSize(DWORD dwCondId)
 // Put last value into CSCP message
 //
 
-void DCItem::GetLastValue(CSCPMessage *pMsg, DWORD dwId)
+void DCItem::getLastValue(CSCPMessage *pMsg, DWORD dwId)
 {
    pMsg->SetVariable(dwId++, m_dwId);
    pMsg->SetVariable(dwId++, m_szName);
@@ -1292,7 +1307,7 @@ void DCItem::GetLastValue(CSCPMessage *pMsg, DWORD dwId)
 // Get item's last value for use in NXSL
 //
 
-NXSL_Value *DCItem::GetValueForNXSL(int nFunction, int nPolls)
+NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
 {
    NXSL_Value *pValue;
 
@@ -1357,16 +1372,16 @@ NXSL_Value *DCItem::GetValueForNXSL(int nFunction, int nPolls)
 // Clean expired data
 //
 
-void DCItem::DeleteExpiredData(void)
+void DCItem::deleteExpiredData(void)
 {
    TCHAR szQuery[256];
    time_t now;
 
    now = time(NULL);
-   Lock();
+   lock();
    _sntprintf(szQuery, 256, _T("DELETE FROM idata_%d WHERE (item_id=%d) AND (idata_timestamp<%ld)"),
               m_pNode->Id(), m_dwId, now - (time_t)m_iRetentionTime * 86400);
-   Unlock();
+   unlock();
    QueueSQLRequest(szQuery);
 }
 
@@ -1375,17 +1390,17 @@ void DCItem::DeleteExpiredData(void)
 // Delete all collected data
 //
 
-BOOL DCItem::DeleteAllData(void)
+BOOL DCItem::deleteAllData(void)
 {
    TCHAR szQuery[256];
 	BOOL success;
 
-   Lock();
+   lock();
    _sntprintf(szQuery, 256, _T("DELETE FROM idata_%d WHERE item_id=%d"), m_pNode->Id(), m_dwId);
    success = DBQuery(g_hCoreDB, szQuery);
-	ClearCache();
-	UpdateCacheSize();
-   Unlock();
+	clearCache();
+	updateCacheSize();
+   unlock();
 	return success;
 }
 
@@ -1394,9 +1409,9 @@ BOOL DCItem::DeleteAllData(void)
 // Prepare item for deletion
 //
 
-void DCItem::PrepareForDeletion(void)
+void DCItem::prepareForDeletion(void)
 {
-   Lock();
+   lock();
 
    m_iStatus = ITEM_STATUS_DISABLED;   // Prevent future polls
 
@@ -1405,12 +1420,12 @@ void DCItem::PrepareForDeletion(void)
    // rewrited using conditions
    while(m_iBusy)
    {
-      Unlock();
+      unlock();
       ThreadSleepMs(100);
-      Lock();
+      lock();
    }
 
-   Unlock();
+   unlock();
 }
 
 
@@ -1520,7 +1535,7 @@ static BOOL MatchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule)
 // DCI has no resource association
 //
 
-BOOL DCItem::MatchClusterResource(void)
+BOOL DCItem::matchClusterResource(void)
 {
 	Cluster *pCluster;
 
@@ -1539,14 +1554,14 @@ BOOL DCItem::MatchClusterResource(void)
 // Check if DCI have to be polled
 //
 
-BOOL DCItem::ReadyForPolling(time_t currTime)
+BOOL DCItem::isReadyForPolling(time_t currTime)
 {
    BOOL bResult;
 
-   Lock();
+   lock();
    if ((m_iStatus != ITEM_STATUS_DISABLED) && (!m_iBusy) && 
        m_bCacheLoaded && (m_iSource != DS_PUSH_AGENT) &&
-		 (MatchClusterResource()))
+		 (matchClusterResource()))
    {
       if (m_iAdvSchedule)
       {
@@ -1581,7 +1596,7 @@ BOOL DCItem::ReadyForPolling(time_t currTime)
    {
       bResult = FALSE;
    }
-   Unlock();
+   unlock();
    return bResult;
 }
 
@@ -1590,11 +1605,11 @@ BOOL DCItem::ReadyForPolling(time_t currTime)
 // Update from template item
 //
 
-void DCItem::UpdateFromTemplate(DCItem *pItem)
+void DCItem::updateFromTemplate(DCItem *pItem)
 {
    DWORD i, dwCount;
 
-   Lock();
+   lock();
 
    m_iDataType = pItem->m_iDataType;
    m_iPollingInterval = pItem->m_iPollingInterval;
@@ -1604,7 +1619,7 @@ void DCItem::UpdateFromTemplate(DCItem *pItem)
    m_iStatus = pItem->m_iStatus;
    m_iProcessAllThresholds = pItem->m_iProcessAllThresholds;
 	m_dwProxyNode = pItem->m_dwProxyNode;
-   SetTransformationScript(pItem->m_pszScript);
+   setTransformationScript(pItem->m_pszScript);
    m_iAdvSchedule = pItem->m_iAdvSchedule;
 
    // Copy schedules
@@ -1639,13 +1654,13 @@ void DCItem::UpdateFromTemplate(DCItem *pItem)
       m_ppThresholdList[i]->bindToItem(m_dwId);
    }
 
-   ExpandMacros(pItem->m_szName, m_szName, MAX_ITEM_NAME);
-   ExpandMacros(pItem->m_szDescription, m_szDescription, MAX_DB_STRING);
-   ExpandMacros(pItem->m_szInstance, m_szInstance, MAX_DB_STRING);
+   expandMacros(pItem->m_szName, m_szName, MAX_ITEM_NAME);
+   expandMacros(pItem->m_szDescription, m_szDescription, MAX_DB_STRING);
+   expandMacros(pItem->m_szInstance, m_szInstance, MAX_DB_STRING);
 
-   UpdateCacheSize();
+   updateCacheSize();
    
-   Unlock();
+   unlock();
 }
 
 
@@ -1653,7 +1668,7 @@ void DCItem::UpdateFromTemplate(DCItem *pItem)
 // Set new formula
 //
 
-void DCItem::SetTransformationScript(TCHAR *pszScript)
+void DCItem::setTransformationScript(TCHAR *pszScript)
 {
    safe_free(m_pszScript);
    delete m_pScript;
@@ -1683,11 +1698,11 @@ void DCItem::SetTransformationScript(TCHAR *pszScript)
 // Get list of used events
 //
 
-void DCItem::GetEventList(DWORD **ppdwList, DWORD *pdwSize)
+void DCItem::getEventList(DWORD **ppdwList, DWORD *pdwSize)
 {
    DWORD i, j;
 
-   Lock();
+   lock();
 
    if (m_dwNumThresholds > 0)
    {
@@ -1700,7 +1715,7 @@ void DCItem::GetEventList(DWORD **ppdwList, DWORD *pdwSize)
       }
    }
 
-   Unlock();
+   unlock();
 }
 
 
@@ -1708,12 +1723,12 @@ void DCItem::GetEventList(DWORD **ppdwList, DWORD *pdwSize)
 // Create management pack record
 //
 
-void DCItem::CreateNXMPRecord(String &str)
+void DCItem::createNXMPRecord(String &str)
 {
    String strName, strDescr, strInstance, strTemp;
    DWORD i;
 
-   Lock();
+   lock();
    
    strName = m_szName;
    EscapeString(strName);
@@ -1769,7 +1784,7 @@ void DCItem::CreateNXMPRecord(String &str)
       m_ppThresholdList[i]->createNXMPRecord(str);
    }
 
-   Unlock();
+   unlock();
    str += _T("\t\t\t\t}\n\t\t\t}\n");
 }
 
@@ -1778,7 +1793,7 @@ void DCItem::CreateNXMPRecord(String &str)
 // Modify item - intended for updating items in system templates
 //
 
-void DCItem::SystemModify(const TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType)
+void DCItem::systemModify(const TCHAR *pszName, int nOrigin, int nRetention, int nInterval, int nDataType)
 {
    m_iDataType = nDataType;
    m_iPollingInterval = nInterval;
@@ -1795,7 +1810,7 @@ void DCItem::SystemModify(const TCHAR *pszName, int nOrigin, int nRetention, int
 // 3. Associate all thresholds
 //
 
-void DCItem::FinishMPParsing(void)
+void DCItem::finishMPParsing(void)
 {
 	DWORD i;
 
@@ -1812,7 +1827,7 @@ void DCItem::FinishMPParsing(void)
 // Add threshold to the list
 //
 
-void DCItem::AddThreshold(Threshold *pThreshold)
+void DCItem::addThreshold(Threshold *pThreshold)
 {
 	m_dwNumThresholds++;
 	m_ppThresholdList = (Threshold **)realloc(m_ppThresholdList, sizeof(Threshold *) * m_dwNumThresholds);
@@ -1824,7 +1839,7 @@ void DCItem::AddThreshold(Threshold *pThreshold)
 // Add schedule
 //
 
-void DCItem::AddSchedule(TCHAR *pszSchedule)
+void DCItem::addSchedule(TCHAR *pszSchedule)
 {
 	m_dwNumSchedules++;
 	m_ppScheduleList = (TCHAR **)realloc(m_ppScheduleList, sizeof(TCHAR *) * m_dwNumSchedules);
@@ -1836,12 +1851,12 @@ void DCItem::AddSchedule(TCHAR *pszSchedule)
 // Enumerate all thresholds
 //
 
-BOOL DCItem::EnumThresholds(BOOL (* pfCallback)(Threshold *, DWORD, void *), void *pArg)
+BOOL DCItem::enumThresholds(BOOL (* pfCallback)(Threshold *, DWORD, void *), void *pArg)
 {
 	DWORD i;
 	BOOL bRet = TRUE;
 
-	Lock();
+	lock();
 	for(i = 0; i < m_dwNumThresholds; i++)
 	{
 		if (!pfCallback(m_ppThresholdList[i], i, pArg))
@@ -1850,7 +1865,7 @@ BOOL DCItem::EnumThresholds(BOOL (* pfCallback)(Threshold *, DWORD, void *), voi
 			break;
 		}
 	}
-	Unlock();
+	unlock();
 	return bRet;
 }
 
@@ -1859,7 +1874,7 @@ BOOL DCItem::EnumThresholds(BOOL (* pfCallback)(Threshold *, DWORD, void *), voi
 // Expand macros in text
 //
 
-void DCItem::ExpandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
+void DCItem::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 {
 	String temp;
 	TCHAR *head, *rest, *macro;
@@ -1933,11 +1948,11 @@ void DCItem::ExpandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 					NXSL_Value *result = script->GetResult();
 					if (result != NULL)
 						temp += CHECK_NULL_EX(result->GetValueAsCString());
-		         DbgPrintf(4, "DCItem::ExpandMacros(%d,\"%s\"): Script %s executed successfully", m_dwId, src, &macro[7]);
+		         DbgPrintf(4, "DCItem::expandMacros(%d,\"%s\"): Script %s executed successfully", m_dwId, src, &macro[7]);
 				}
 				else
 				{
-		         DbgPrintf(4, "DCItem::ExpandMacros(%d,\"%s\"): Script %s execution error: %s",
+		         DbgPrintf(4, "DCItem::expandMacros(%d,\"%s\"): Script %s execution error: %s",
 					          m_dwId, src, &macro[7], script->GetErrorText());
 					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, _T("ssd"), &macro[7],
 								 script->GetErrorText(), m_dwId);
@@ -1945,7 +1960,7 @@ void DCItem::ExpandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 			}
 			else
 			{
-	         DbgPrintf(4, "DCItem::ExpandMacros(%d,\"%s\"): Cannot find script %s", m_dwId, src, &macro[7]);
+	         DbgPrintf(4, "DCItem::expandMacros(%d,\"%s\"): Cannot find script %s", m_dwId, src, &macro[7]);
 			}
 	      g_pScriptLibrary->Unlock();
 		}
@@ -1964,7 +1979,7 @@ void DCItem::ExpandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 // Runs 
 //
 
-BOOL DCItem::TestTransformation(const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize)
+BOOL DCItem::testTransformation(const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize)
 {
 	BOOL success = FALSE;
 	NXSL_Program *pScript;
@@ -1979,7 +1994,7 @@ BOOL DCItem::TestTransformation(const TCHAR *script, const TCHAR *value, TCHAR *
       pEnv = new NXSL_ServerEnv;
       pScript->SetGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
 	
-	 	Lock();
+	 	lock();
 		if (pScript->Run(pEnv, 1, &pValue) == 0)
       {
          pValue = pScript->GetResult();
@@ -2015,7 +2030,7 @@ BOOL DCItem::TestTransformation(const TCHAR *script, const TCHAR *value, TCHAR *
       {
 			nx_strncpy(buffer, pScript->GetErrorText(), bufSize);
       }
-		Unlock();
+		unlock();
    }
 	return success;
 }

@@ -2739,7 +2739,7 @@ void ClientSession::CloseNodeDCIList(CSCPMessage *pRequest)
             // Queue template update
             if ((pObject->Type() == OBJECT_TEMPLATE) ||
 					 (pObject->Type() == OBJECT_CLUSTER))
-               ((Template *)pObject)->QueueUpdate();
+               ((Template *)pObject)->queueUpdate();
          }
          else
          {
@@ -2798,12 +2798,12 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
                      // Create dummy DCI
                      pItem = new DCItem(CreateUniqueId(IDG_ITEM), "no name", DS_INTERNAL, 
                                         DCI_DT_INT, 60, 30, (Node *)pObject);
-                     pItem->SetStatus(ITEM_STATUS_DISABLED);
+                     pItem->setStatus(ITEM_STATUS_DISABLED);
                      if ((bSuccess = ((Template *)pObject)->AddItem(pItem)))
                      {
                         msg.SetVariable(VID_RCC, RCC_SUCCESS);
                         // Return new item id to client
-                        msg.SetVariable(VID_DCI_ID, pItem->Id());
+                        msg.SetVariable(VID_DCI_ID, pItem->getId());
                      }
                      else  // Unable to add item to node
                      {
@@ -2961,7 +2961,7 @@ void ClientSession::ClearDCIData(CSCPMessage *pRequest)
             dci = ((Template *)pObject)->GetItemById(dwItemId);
 				if (dci != NULL)
 				{
-					msg.SetVariable(VID_RCC, dci->DeleteAllData() ? RCC_SUCCESS : RCC_DB_FAILURE);
+					msg.SetVariable(VID_RCC, dci->deleteAllData() ? RCC_SUCCESS : RCC_DB_FAILURE);
 					DebugPrintf(4, _T("ClearDCIData: DCI %d at node %d"), dwItemId, pObject->Id()); 
 				}
 				else
@@ -3042,8 +3042,8 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
                      if (pSrcItem != NULL)
                      {
                         pDstItem = new DCItem(pSrcItem);
-								pDstItem->SetTemplateId(0, 0);
-                        pDstItem->ChangeBinding(CreateUniqueId(IDG_ITEM),
+								pDstItem->setTemplateId(0, 0);
+                        pDstItem->changeBinding(CreateUniqueId(IDG_ITEM),
                                                 (Template *)pDestination, FALSE);
                         if (((Template *)pDestination)->AddItem(pDstItem))
                         {
@@ -3076,7 +3076,7 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
 
                   // Queue template update
                   if (pDestination->Type() == OBJECT_TEMPLATE)
-                     ((Template *)pDestination)->QueueUpdate();
+                     ((Template *)pDestination)->queueUpdate();
                }
                else  // Destination's DCI list already locked by someone else
                {
@@ -3777,7 +3777,7 @@ void ClientSession::ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
                if ((pParent->Type() == OBJECT_TEMPLATE) &&
                    (pChild->Type() == OBJECT_NODE))
                {
-                  ((Template *)pParent)->QueueRemoveFromNode(pChild->Id(), 
+                  ((Template *)pParent)->queueRemoveFromNode(pChild->Id(), 
                                                 pRequest->GetVariableShort(VID_REMOVE_DCI));
                }
                msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -7565,7 +7565,7 @@ DWORD ClientSession::ResolveDCIName(DWORD dwNode, DWORD dwItem, TCHAR **ppszName
 				pItem = ((Template *)pObject)->GetItemById(dwItem);
 				if (pItem != NULL)
 				{
-					*ppszName = (TCHAR *)pItem->Description();
+					*ppszName = (TCHAR *)pItem->getDescription();
 					dwResult = RCC_SUCCESS;
 				}
 				else
@@ -8184,7 +8184,7 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
 
                   if (pItem != NULL)
                   {
-                     if (pItem->DataSource() == DS_PUSH_AGENT)
+                     if (pItem->getDataSource() == DS_PUSH_AGENT)
                      {
                         ppItemList[i] = pItem;
                         ppValueList[i] = pRequest->GetVariableStr(dwId++);
@@ -8224,7 +8224,7 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
          time(&t);
          for(i = 0; i < dwNumItems; i++)
          {
-            ppItemList[i]->NewValue(t, ppValueList[i]);
+            ppItemList[i]->processNewValue(t, ppValueList[i]);
          }
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
       }
@@ -8674,12 +8674,12 @@ void ClientSession::SendDCIInfo(CSCPMessage *pRequest)
 				pItem = ((Template *)pObject)->GetItemById(pRequest->GetVariableLong(VID_DCI_ID));
 				if (pItem != NULL)
 				{
-					msg.SetVariable(VID_TEMPLATE_ID, pItem->TemplateId());
-					msg.SetVariable(VID_RESOURCE_ID, pItem->ResourceId());
-					msg.SetVariable(VID_DCI_DATA_TYPE, (WORD)pItem->DataType());
-					msg.SetVariable(VID_DCI_SOURCE_TYPE, (WORD)pItem->DataSource());
-					msg.SetVariable(VID_NAME, (TCHAR *)pItem->Name());
-					msg.SetVariable(VID_DESCRIPTION, (TCHAR *)pItem->Description());
+					msg.SetVariable(VID_TEMPLATE_ID, pItem->getTemplateId());
+					msg.SetVariable(VID_RESOURCE_ID, pItem->getResourceId());
+					msg.SetVariable(VID_DCI_DATA_TYPE, (WORD)pItem->getDataType());
+					msg.SetVariable(VID_DCI_SOURCE_TYPE, (WORD)pItem->getDataSource());
+					msg.SetVariable(VID_NAME, pItem->getName());
+					msg.SetVariable(VID_DESCRIPTION, pItem->getDescription());
 	            msg.SetVariable(VID_RCC, RCC_SUCCESS);
 				}
 				else
@@ -10094,7 +10094,7 @@ void ClientSession::TestDCITransformation(CSCPMessage *pRequest)
 					if (script != NULL)
 					{
 						pRequest->GetVariableStr(VID_VALUE, value, sizeof(value) / sizeof(TCHAR));
-						success = dci->TestTransformation(script, value, result, sizeof(result) / sizeof(TCHAR));
+						success = dci->testTransformation(script, value, result, sizeof(result) / sizeof(TCHAR));
 						free(script);
 						msg.SetVariable(VID_RCC, RCC_SUCCESS);
 						msg.SetVariable(VID_EXECUTION_STATUS, (WORD)success);

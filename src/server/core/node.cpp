@@ -278,10 +278,10 @@ BOOL Node::CreateFromDB(DWORD dwId)
 
       // Walk through all items in the node and load appropriate thresholds
       for(i = 0; i < (int)m_dwNumItems; i++)
-         if (!m_ppItems[i]->LoadThresholdsFromDB())
+         if (!m_ppItems[i]->loadThresholdsFromDB())
          {
             DbgPrintf(3, _T("Cannot load thresholds for DCI %d of node %d (%s)"),
-                      m_ppItems[i]->Id(), dwId, m_szName);
+                      m_ppItems[i]->getId(), dwId, m_szName);
             bResult = FALSE;
          }
    }
@@ -381,7 +381,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
       DWORD i;
 
       for(i = 0; i < m_dwNumItems; i++)
-         m_ppItems[i]->SaveToDB(hdb);
+         m_ppItems[i]->saveToDB(hdb);
    }
 
    // Save access list
@@ -1664,7 +1664,7 @@ void Node::ApplySystemTemplates()
 				          pTemplate->Id(), pTemplate->Name(), m_dwId, m_szName);
 				pTemplate->DeleteChild(this);
 				DeleteParent(pTemplate);
-				pTemplate->QueueRemoveFromNode(m_dwId, TRUE);
+				pTemplate->queueRemoveFromNode(m_dwId, TRUE);
 			}
 		}
 	}
@@ -1689,7 +1689,7 @@ void Node::ApplySystemTemplates()
 				          pTemplate->Id(), pTemplate->Name(), m_dwId, m_szName);
 				pTemplate->DeleteChild(this);
 				DeleteParent(pTemplate);
-				pTemplate->QueueRemoveFromNode(m_dwId, TRUE);
+				pTemplate->queueRemoveFromNode(m_dwId, TRUE);
 			}
 		}
 	}
@@ -1715,7 +1715,7 @@ void Node::ApplyUserTemplates()
 			 (!((NetObj *)g_pIndexById[i].pObject)->IsDeleted()))
       {
          pTemplate = (Template *)g_pIndexById[i].pObject;
-			if (pTemplate->IsApplicable(this))
+			if (pTemplate->isApplicable(this))
 			{
 				if (!pTemplate->IsChild(m_dwId))
 				{
@@ -1726,13 +1726,13 @@ void Node::ApplyUserTemplates()
 			}
 			else
 			{
-				if (pTemplate->IsAutoApplyEnabled() && pTemplate->IsChild(m_dwId))
+				if (pTemplate->isAutoApplyEnabled() && pTemplate->IsChild(m_dwId))
 				{
 					DbgPrintf(4, _T("Node::ApplyUserTemplates(): removing template %d \"%s\" from node %d \"%s\""),
 					          pTemplate->Id(), pTemplate->Name(), m_dwId, m_szName);
 					pTemplate->DeleteChild(this);
 					DeleteParent(pTemplate);
-					pTemplate->QueueRemoveFromNode(m_dwId, TRUE);
+					pTemplate->queueRemoveFromNode(m_dwId, TRUE);
 				}
 			}
       }
@@ -2141,9 +2141,9 @@ void Node::QueueItemsForPolling(Queue *pPollerQueue)
    LockData();
    for(i = 0; i < m_dwNumItems; i++)
    {
-      if (m_ppItems[i]->ReadyForPolling(currTime))
+      if (m_ppItems[i]->isReadyForPolling(currTime))
       {
-         m_ppItems[i]->SetBusyFlag(TRUE);
+         m_ppItems[i]->setBusyFlag(TRUE);
          IncRefCount();   // Increment reference count for each queued DCI
          pPollerQueue->Put(m_ppItems[i]);
       }
@@ -2539,9 +2539,9 @@ DWORD Node::GetLastValues(CSCPMessage *pMsg)
 
    for(i = 0, dwId = VID_DCI_VALUES_BASE, dwCount = 0; i < m_dwNumItems; i++)
 	{
-		if (_tcsnicmp(m_ppItems[i]->Description(), _T("@system."), 8))
+		if (_tcsnicmp(m_ppItems[i]->getDescription(), _T("@system."), 8))
 		{
-			m_ppItems[i]->GetLastValue(pMsg, dwId);
+			m_ppItems[i]->getLastValue(pMsg, dwId);
 			dwId += 10;
 			dwCount++;
 		}
@@ -2563,7 +2563,7 @@ void Node::CleanDCIData(void)
 
    LockData();
    for(i = 0; i < m_dwNumItems; i++)
-      m_ppItems[i]->DeleteExpiredData();
+      m_ppItems[i]->deleteExpiredData();
    UnlockData();
 }
 
@@ -2581,26 +2581,26 @@ BOOL Node::ApplyTemplateItem(DWORD dwTemplateId, DCItem *pItem)
 
    LockData();
 
-   DbgPrintf(5, "Applying item \"%s\" to node \"%s\"", pItem->Name(), m_szName);
+   DbgPrintf(5, "Applying item \"%s\" to node \"%s\"", pItem->getName(), m_szName);
 
    // Check if that template item exists
    for(i = 0; i < m_dwNumItems; i++)
-      if ((m_ppItems[i]->TemplateId() == dwTemplateId) &&
-          (m_ppItems[i]->TemplateItemId() == pItem->Id()))
+      if ((m_ppItems[i]->getTemplateId() == dwTemplateId) &&
+          (m_ppItems[i]->getTemplateItemId() == pItem->getId()))
          break;   // Item with specified id already exist
 
    if (i == m_dwNumItems)
    {
       // New item from template, just add it
       pNewItem = new DCItem(pItem);
-      pNewItem->SetTemplateId(dwTemplateId, pItem->Id());
-      pNewItem->ChangeBinding(CreateUniqueId(IDG_ITEM), this, TRUE);
+      pNewItem->setTemplateId(dwTemplateId, pItem->getId());
+      pNewItem->changeBinding(CreateUniqueId(IDG_ITEM), this, TRUE);
       bResult = AddItem(pNewItem, TRUE);
    }
    else
    {
       // Update existing item
-      m_ppItems[i]->UpdateFromTemplate(pItem);
+      m_ppItems[i]->updateFromTemplate(pItem);
       Modify();
    }
 
@@ -2625,15 +2625,15 @@ void Node::CleanDeletedTemplateItems(DWORD dwTemplateId, DWORD dwNumItems, DWORD
    dwNumDeleted = 0;
 
    for(i = 0; i < m_dwNumItems; i++)
-      if (m_ppItems[i]->TemplateId() == dwTemplateId)
+      if (m_ppItems[i]->getTemplateId() == dwTemplateId)
       {
          for(j = 0; j < dwNumItems; j++)
-            if (m_ppItems[i]->TemplateItemId() == pdwItemList[j])
+            if (m_ppItems[i]->getTemplateItemId() == pdwItemList[j])
                break;
 
          // Delete DCI if it's not in list
          if (j == dwNumItems)
-            pdwDeleteList[dwNumDeleted++] = m_ppItems[i]->Id();
+            pdwDeleteList[dwNumDeleted++] = m_ppItems[i]->getId();
       }
 
    for(i = 0; i < dwNumDeleted; i++)
@@ -2661,9 +2661,9 @@ void Node::UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
 		dwNumDeleted = 0;
 
       for(i = 0; i < m_dwNumItems; i++)
-         if (m_ppItems[i]->TemplateId() == dwTemplateId)
+         if (m_ppItems[i]->getTemplateId() == dwTemplateId)
          {
-            pdwDeleteList[dwNumDeleted++] = m_ppItems[i]->Id();
+            pdwDeleteList[dwNumDeleted++] = m_ppItems[i]->getId();
          }
 
 		for(i = 0; i < dwNumDeleted; i++)
@@ -2676,9 +2676,9 @@ void Node::UnbindFromTemplate(DWORD dwTemplateId, BOOL bRemoveDCI)
       LockData();
 
       for(i = 0; i < m_dwNumItems; i++)
-         if (m_ppItems[i]->TemplateId() == dwTemplateId)
+         if (m_ppItems[i]->getTemplateId() == dwTemplateId)
          {
-            m_ppItems[i]->SetTemplateId(0, 0);
+            m_ppItems[i]->setTemplateId(0, 0);
          }
 
       UnlockData();
@@ -2759,7 +2759,7 @@ void Node::UpdateDCICache(void)
 
    /* LOCK? */
    for(i = 0; i < m_dwNumItems; i++)
-      m_ppItems[i]->UpdateCacheSize();
+      m_ppItems[i]->updateCacheSize();
 }
 
 
@@ -3170,11 +3170,11 @@ DWORD Node::GetSystemDCIList(CSCPMessage *pMsg)
 
    for(i = 0, dwId = VID_SYSDCI_LIST_BASE, dwCount = 0; i < m_dwNumItems; i++)
 	{
-		if (!_tcsnicmp(m_ppItems[i]->Description(), _T("@System."), 8))
+		if (!_tcsnicmp(m_ppItems[i]->getDescription(), _T("@System."), 8))
 		{
-			pMsg->SetVariable(dwId++, m_ppItems[i]->Id());
-			pMsg->SetVariable(dwId++, (TCHAR *)m_ppItems[i]->Description());
-			pMsg->SetVariable(dwId++, (WORD)m_ppItems[i]->Status());
+			pMsg->SetVariable(dwId++, m_ppItems[i]->getId());
+			pMsg->SetVariable(dwId++, (TCHAR *)m_ppItems[i]->getDescription());
+			pMsg->SetVariable(dwId++, (WORD)m_ppItems[i]->getStatus());
 			dwId += 7;
 			dwCount++;
 		}

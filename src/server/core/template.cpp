@@ -97,6 +97,34 @@ void Template::DestroyItems(void)
 
 
 //
+// Set auto apply filter
+//
+
+void Template::setAutoApplyFilter(const TCHAR *filter)
+{
+	LockData();
+	safe_free(m_applyFilterSource);
+	delete m_applyFilter;
+	if (filter != NULL)
+	{
+		TCHAR error[256];
+
+		m_applyFilterSource = _tcsdup(filter);
+		m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256);
+		if (m_applyFilter == NULL)
+			nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
+	}
+	else
+	{
+		m_applyFilterSource = NULL;
+		m_applyFilter = NULL;
+	}
+	Modify();
+	UnlockData();
+}
+
+
+//
 // Create object from database data
 //
 
@@ -145,7 +173,7 @@ BOOL Template::CreateFromDB(DWORD dwId)
    LoadACLFromDB();
    LoadItemsFromDB();
    for(i = 0; i < (int)m_dwNumItems; i++)
-      if (!m_ppItems[i]->LoadThresholdsFromDB())
+      if (!m_ppItems[i]->loadThresholdsFromDB())
          bResult = FALSE;
 
    // Load related nodes list
@@ -238,7 +266,7 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
 
    // Save data collection items
    for(i = 0; i < m_dwNumItems; i++)
-      m_ppItems[i]->SaveToDB(hdb);
+      m_ppItems[i]->saveToDB(hdb);
 
    // Save access list
    SaveACLToDB(hdb);
@@ -332,7 +360,7 @@ BOOL Template::AddItem(DCItem *pItem, BOOL bLocked)
 
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
-      if (m_ppItems[i]->Id() == pItem->Id())
+      if (m_ppItems[i]->getId() == pItem->getId())
          break;   // Item with specified id already exist
    
    if (i == m_dwNumItems)     // Add new item
@@ -340,10 +368,10 @@ BOOL Template::AddItem(DCItem *pItem, BOOL bLocked)
       m_dwNumItems++;
       m_ppItems = (DCItem **)realloc(m_ppItems, sizeof(DCItem *) * m_dwNumItems);
       m_ppItems[i] = pItem;
-      m_ppItems[i]->SetLastPollTime(0);    // Cause item to be polled immediatelly
-      if (m_ppItems[i]->Status() != ITEM_STATUS_DISABLED)
-         m_ppItems[i]->SetStatus(ITEM_STATUS_ACTIVE);
-      m_ppItems[i]->SetBusyFlag(FALSE);
+      m_ppItems[i]->setLastPollTime(0);    // Cause item to be polled immediatelly
+      if (m_ppItems[i]->getStatus() != ITEM_STATUS_DISABLED)
+         m_ppItems[i]->setStatus(ITEM_STATUS_ACTIVE);
+      m_ppItems[i]->setBusyFlag(FALSE);
       Modify();
       bResult = TRUE;
    }
@@ -368,11 +396,11 @@ BOOL Template::DeleteItem(DWORD dwItemId, BOOL bNeedLock)
 
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
-      if (m_ppItems[i]->Id() == dwItemId)
+      if (m_ppItems[i]->getId() == dwItemId)
       {
          // Destroy item
-         m_ppItems[i]->PrepareForDeletion();
-         m_ppItems[i]->DeleteFromDB();
+         m_ppItems[i]->prepareForDeletion();
+         m_ppItems[i]->deleteFromDB();
          delete m_ppItems[i];
          m_dwNumItems--;
          memmove(&m_ppItems[i], &m_ppItems[i + 1], sizeof(DCItem *) * (m_dwNumItems - i));
@@ -387,7 +415,7 @@ BOOL Template::DeleteItem(DWORD dwItemId, BOOL bNeedLock)
 
 
 //
-// Modify data collection item from CSCP message
+// Modify data collection item from NXCP message
 //
 
 BOOL Template::UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps, 
@@ -400,9 +428,9 @@ BOOL Template::UpdateItem(DWORD dwItemId, CSCPMessage *pMsg, DWORD *pdwNumMaps,
 
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
-      if (m_ppItems[i]->Id() == dwItemId)
+      if (m_ppItems[i]->getId() == dwItemId)
       {
-         m_ppItems[i]->UpdateFromMessage(pMsg, pdwNumMaps, ppdwMapIndex, ppdwMapId);
+         m_ppItems[i]->updateFromMessage(pMsg, pdwNumMaps, ppdwMapIndex, ppdwMapId);
          bResult = TRUE;
          m_bIsModified = TRUE;
          break;
@@ -427,9 +455,9 @@ BOOL Template::SetItemStatus(DWORD dwNumItems, DWORD *pdwItemList, int iStatus)
    {
       for(j = 0; j < m_dwNumItems; j++)
       {
-         if (m_ppItems[j]->Id() == pdwItemList[i])
+         if (m_ppItems[j]->getId() == pdwItemList[i])
          {
-            m_ppItems[j]->SetStatus(iStatus);
+            m_ppItems[j]->setStatus(iStatus);
             break;
          }
       }
@@ -511,10 +539,10 @@ void Template::SendItemsToClient(ClientSession *pSession, DWORD dwRqId)
    // Walk through items list
    for(i = 0; i < m_dwNumItems; i++)
    {
-		if ((_tcsnicmp(m_ppItems[i]->Description(), _T("@system."), 8)) ||
+		if ((_tcsnicmp(m_ppItems[i]->getDescription(), _T("@system."), 8)) ||
 			 (Type() == OBJECT_TEMPLATE))
 		{
-			m_ppItems[i]->CreateMessage(&msg);
+			m_ppItems[i]->createMessage(&msg);
 			pSession->SendMessage(&msg);
 			msg.DeleteAllVariables();
 		}
@@ -540,9 +568,9 @@ int Template::GetItemType(DWORD dwItemId)
    LockData();
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
-      if (m_ppItems[i]->Id() == dwItemId)
+      if (m_ppItems[i]->getId() == dwItemId)
       {
-         iType = m_ppItems[i]->DataType();
+         iType = m_ppItems[i]->getDataType();
          break;
       }
 
@@ -563,7 +591,7 @@ DCItem *Template::GetItemById(DWORD dwItemId)
    LockData();
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
-      if (m_ppItems[i]->Id() == dwItemId)
+      if (m_ppItems[i]->getId() == dwItemId)
       {
          pItem = m_ppItems[i];
          break;
@@ -586,7 +614,7 @@ DCItem *Template::GetItemByName(const TCHAR *pszName)
    LockData();
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
-      if (!_tcsicmp(m_ppItems[i]->Name(), pszName))
+      if (!_tcsicmp(m_ppItems[i]->getName(), pszName))
       {
          pItem = m_ppItems[i];
          break;
@@ -609,7 +637,7 @@ DCItem *Template::GetItemByDescription(const TCHAR *pszDescription)
    LockData();
    // Check if that item exists
    for(i = 0; i < m_dwNumItems; i++)
-      if (!_tcsicmp(m_ppItems[i]->Description(), pszDescription))
+      if (!_tcsicmp(m_ppItems[i]->getDescription(), pszDescription))
       {
          pItem = m_ppItems[i];
          break;
@@ -728,7 +756,7 @@ BOOL Template::ApplyToNode(Node *pNode)
    {
       if (m_ppItems[i] != NULL)
       {
-         pdwItemList[i] = m_ppItems[i]->Id();
+         pdwItemList[i] = m_ppItems[i]->getId();
          if (!pNode->ApplyTemplateItem(m_dwId, m_ppItems[i]))
          {
             bErrors = TRUE;
@@ -754,7 +782,7 @@ BOOL Template::ApplyToNode(Node *pNode)
 // Queue template update
 //
 
-void Template::QueueUpdate(void)
+void Template::queueUpdate(void)
 {
    DWORD i;
    TEMPLATE_UPDATE_INFO *pInfo;
@@ -778,7 +806,7 @@ void Template::QueueUpdate(void)
 // Queue template remove from node
 //
 
-void Template::QueueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI)
+void Template::queueRemoveFromNode(DWORD dwNodeId, BOOL bRemoveDCI)
 {
    TEMPLATE_UPDATE_INFO *pInfo;
 
@@ -809,7 +837,7 @@ DWORD *Template::GetDCIEventsList(DWORD *pdwCount)
    LockData();
    for(i = 0; i < m_dwNumItems; i++)
    {
-      m_ppItems[i]->GetEventList(&pdwList, pdwCount);
+      m_ppItems[i]->getEventList(&pdwList, pdwCount);
    }
    UnlockData();
 
@@ -846,7 +874,7 @@ void Template::CreateNXMPRecord(String &str)
 
    LockData();
    for(i = 0; i < m_dwNumItems; i++)
-      m_ppItems[i]->CreateNXMPRecord(str);
+      m_ppItems[i]->createNXMPRecord(str);
    UnlockData();
 
    str += _T("\t\t}\n");
@@ -877,9 +905,9 @@ void Template::ValidateDCIList(DCI_CFG *cfg)
 	{
 		for(j = 0; cfg[j].pszName != NULL; j++)
 		{
-			if (!_tcsicmp(m_ppItems[i]->Description(), cfg[j].pszName))
+			if (!_tcsicmp(m_ppItems[i]->getDescription(), cfg[j].pszName))
 			{
-				m_ppItems[i]->SystemModify(cfg[j].pszParam, cfg[j].nOrigin,
+				m_ppItems[i]->systemModify(cfg[j].pszParam, cfg[j].nOrigin,
 					                        cfg[j].nRetention, cfg[j].nInterval,
 													cfg[j].nDataType);
 				cfg[j].nFound = 1;
@@ -889,7 +917,7 @@ void Template::ValidateDCIList(DCI_CFG *cfg)
 
 		// Mark non-existing items
 		if (cfg[j].pszName == NULL)
-         pdwDeleteList[dwNumDeleted++] = m_ppItems[i]->Id();
+         pdwDeleteList[dwNumDeleted++] = m_ppItems[i]->getId();
 	}
 
 	// Delete unneeded items
@@ -985,7 +1013,7 @@ void Template::AssociateItems(void)
 
 	LockData();
 	for(i = 0; i < m_dwNumItems; i++)
-		m_ppItems[i]->ChangeBinding(0, this, FALSE);
+		m_ppItems[i]->changeBinding(0, this, FALSE);
 	UnlockData();
 }
 
@@ -1004,7 +1032,7 @@ void Template::PrepareForDeletion(void)
 		for(i = 0; i < m_dwChildCount; i++)
 		{
 			if (m_pChildList[i]->Type() == OBJECT_NODE)
-				QueueRemoveFromNode(m_pChildList[i]->Id(), TRUE);
+				queueRemoveFromNode(m_pChildList[i]->Id(), TRUE);
 		}
 		UnlockChildList();
 	}
@@ -1016,7 +1044,7 @@ void Template::PrepareForDeletion(void)
 // Check if template should be automatically applied to node
 //
 
-BOOL Template::IsApplicable(Node *node)
+BOOL Template::isApplicable(Node *node)
 {
 	NXSL_ServerEnv *pEnv;
 	NXSL_Value *value;
