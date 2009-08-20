@@ -77,8 +77,7 @@ public class Transformation extends PropertyPage
       testScriptButton.setText("&Test...");   
       gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
-      gd.minimumWidth = 90;
-      gd.widthHint = 90;
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       testScriptButton.setLayoutData(gd);
 		
 		return dialogArea;

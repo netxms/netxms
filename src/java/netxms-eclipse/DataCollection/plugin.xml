@@ -44,6 +44,16 @@
   <extension
      point = "org.eclipse.ui.propertyPages">
         <page
+           id="org.netxms.ui.eclipse.datacollection.propertypages.General"
+           name="General"
+	       class="org.netxms.ui.eclipse.datacollection.propertypages.General">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.client.datacollection.DataCollectionItem">
+             </instanceof>
+          </enabledWhen>
+        </page>
+        <page
            id="org.netxms.ui.eclipse.datacollection.propertypages.Transformation"
            name="Transformation"
 	       class="org.netxms.ui.eclipse.datacollection.propertypages.Transformation">

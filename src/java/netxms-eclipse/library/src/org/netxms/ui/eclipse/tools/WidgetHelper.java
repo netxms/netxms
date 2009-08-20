@@ -20,6 +20,7 @@ public class WidgetHelper
 {
 	public static int INNER_SPACING = 2;
 	public static int OUTER_SPACING = 4;
+	public static int BUTTON_WIDTH_HINT = 90;
 	public static String DEFAULT_LAYOUT_DATA = "WidgetHelper::default_layout_data";
 	
 	
@@ -43,6 +44,7 @@ public class WidgetHelper
 		layout.marginTop = 0;
 		layout.marginBottom = 0;
 		layout.marginWidth = 0;
+		layout.marginHeight = 0;
 		group.setLayout(layout);
 
 		if (layoutData != DEFAULT_LAYOUT_DATA)
@@ -91,6 +93,7 @@ public class WidgetHelper
 		layout.marginTop = 0;
 		layout.marginBottom = 0;
 		layout.marginWidth = 0;
+		layout.marginHeight = 0;
 		group.setLayout(layout);
 
 		if (layoutData != DEFAULT_LAYOUT_DATA)

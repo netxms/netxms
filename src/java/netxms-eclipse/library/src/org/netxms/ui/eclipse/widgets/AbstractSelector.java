@@ -40,6 +40,7 @@ public class AbstractSelector extends Composite
 		layout.marginTop = 0;
 		layout.marginBottom = 0;
 		layout.marginWidth = 0;
+		layout.marginHeight = 0;
 		layout.numColumns = 2;
 		setLayout(layout);
 		
