@@ -1182,6 +1182,12 @@ void ClientSession::ProcessingThread(void)
 			case CMD_UNINSTALL_AGENT_POLICY:
 				deployAgentPolicy(pMsg, true);
 				break;
+			case CMD_GET_CURRENT_USER_ATTR:
+				getUserCustomAttribute(pMsg);
+				break;
+			case CMD_SET_CURRENT_USER_ATTR:
+				setUserCustomAttribute(pMsg);
+				break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -10220,6 +10226,63 @@ void ClientSession::deployAgentPolicy(CSCPMessage *request, bool uninstallFlag)
 	{
 		msg.SetVariable(VID_RCC, RCC_INVALID_POLICY_ID);
 	}
+
+	SendMessage(&msg);
+}
+
+
+//
+// Get custom attribute for current user
+//
+
+void ClientSession::getUserCustomAttribute(CSCPMessage *request)
+{
+	CSCPMessage msg;
+
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	msg.SetId(request->GetId());
+
+	TCHAR *name = request->GetVariableStr(VID_NAME);
+	if ((name != NULL) && (*name == _T('.')))
+	{
+		const TCHAR *value = GetUserDbObjectAttr(m_dwUserId, name);
+		msg.SetVariable(VID_VALUE, CHECK_NULL_EX(value));
+		msg.SetVariable(VID_RCC, RCC_SUCCESS);
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+	safe_free(name);
+
+	SendMessage(&msg);
+}
+
+
+//
+// Set custom attribute for current user
+//
+
+void ClientSession::setUserCustomAttribute(CSCPMessage *request)
+{
+	CSCPMessage msg;
+
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	msg.SetId(request->GetId());
+
+	TCHAR *name = request->GetVariableStr(VID_NAME);
+	if ((name != NULL) && (*name == _T('.')))
+	{
+		TCHAR *value = request->GetVariableStr(VID_VALUE);
+		SetUserDbObjectAttr(m_dwUserId, name, CHECK_NULL_EX(value));
+		msg.SetVariable(VID_RCC, RCC_SUCCESS);
+		safe_free(value);
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+	}
+	safe_free(name);
 
 	SendMessage(&msg);
 }

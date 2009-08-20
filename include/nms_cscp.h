@@ -285,8 +285,8 @@ typedef struct
 #define CMD_GET_PARAMETER           0x0041
 #define CMD_GET_LIST                0x0042
 #define CMD_ACTION                  0x0043
-//#define CMD_GET_DEFAULT_IMAGE_LIST  0x0044
-//#define CMD_DEFAULT_IMAGE_LIST      0x0045
+#define CMD_GET_CURRENT_USER_ATTR   0x0044
+#define CMD_SET_CURRENT_USER_ATTR   0x0045
 #define CMD_GET_ALL_ALARMS          0x0046
 #define CMD_GET_ALARM               0x0047
 #define CMD_ACK_ALARM               0x0048

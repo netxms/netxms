@@ -542,6 +542,8 @@ private:
 	void sendJobList(DWORD dwRqId);
 	void cancelJob(CSCPMessage *pRequest);
 	void deployAgentPolicy(CSCPMessage *pRequest, bool uninstallFlag);
+	void getUserCustomAttribute(CSCPMessage *request);
+	void setUserCustomAttribute(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
