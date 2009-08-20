@@ -620,8 +620,9 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResul
       if ((iColumn < pResult->iNumCols) && (iColumn >= 0))
 		{
 			SQLLEN dataSize;
+			char temp[1];
 		   long rc = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_CHAR,
-		                        NULL, 0, &dataSize);
+		                        temp, 0, &dataSize);
 			if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
 			{
 				nLen = dataSize;
