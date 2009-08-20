@@ -77,8 +77,8 @@ public class NXCSessionTest extends TestCase
 			session.addListener(new NXCListener() {
 				public void notificationHandler(NXCNotification n)
 				{
-					assertEquals(n.getCode(), NXCNotification.ALARM_TERMINATED);
-					assertEquals(((NXCAlarm)n.getObject()).getId(), alarmId.longValue());
+					assertEquals(NXCNotification.ALARM_TERMINATED, n.getCode());
+					assertEquals(alarmId.longValue(), ((NXCAlarm)n.getObject()).getId());
 					success[0] = true;
 					s.release();
 				}
@@ -198,7 +198,7 @@ public class NXCSessionTest extends TestCase
 
 		object = session.findObjectById(id);
 		assertNotNull(object);
-		assertEquals(object.getObjectName(), "TestNode");
+		assertEquals("TestNode", object.getObjectName());
 		
 		session.deleteObject(id);
 
@@ -216,6 +216,35 @@ public class NXCSessionTest extends TestCase
 		
 		final NXCServerJob[] jobList = session.getServerJobList();
 		assertNotNull(jobList);
+		
+		session.disconnect();
+	}
+	
+	public void testUserAttributes() throws Exception
+	{
+		final NXCSession session = new NXCSession(serverAddress, loginName, password);
+		session.connect();
+
+		String value = session.getAttributeForCurrentUser(".testAttribute");
+		assertEquals("", value);
+		
+		session.setAttributeForCurrentUser(".testAttribute", "test value");
+		value = session.getAttributeForCurrentUser(".testAttribute");
+		assertEquals("test value", value);
+	
+		session.setAttributeForCurrentUser(".testAttribute", "");
+
+		boolean accessDenied = false;
+		try
+		{
+			session.setAttributeForCurrentUser("forbidden", "test");
+		}
+		catch(NXCException e)
+		{
+			assertEquals(NXCSession.RCC_ACCESS_DENIED, e.getErrorCode());
+			accessDenied = true;
+		}
+		assertEquals(true, accessDenied);
 		
 		session.disconnect();
 	}

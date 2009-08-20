@@ -1564,16 +1564,50 @@ public class NXCSession
 	/**
 	 * Unlock user database
 	 * 
-	 * @throws IOException
-	 *            if socket I/O error occurs
-	 * @throws NXCException
-	 *            if NetXMS server returns an error or operation was timed out
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public void unlockUserDatabase() throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_UNLOCK_USER_DB);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
+	}
+
+	/**
+	 * Set custom attribute for currently logged in user. Server will allow to change
+	 * only attributes whose name starts with dot.
+	 * 
+	 * @param name Attribute's name
+	 * @param value New attribute's value
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void setAttributeForCurrentUser(final String name, final String value) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_CURRENT_USER_ATTR);
+		msg.setVariable(NXCPCodes.VID_NAME, name);
+		msg.setVariable(NXCPCodes.VID_VALUE, value);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Get custom attribute for currently logged in user. If attribute is not set, empty string will
+	 * be returned.
+	 * 
+	 * @param name Attribute's name
+	 * @return Attribute's value
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public String getAttributeForCurrentUser(final String name) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_CURRENT_USER_ATTR);
+		msg.setVariable(NXCPCodes.VID_NAME, name);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsString(NXCPCodes.VID_VALUE);
 	}
 
 	/**
