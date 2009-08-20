@@ -242,7 +242,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 		entry = getEntry(name);
 		if (entry != NULL)
 		{
-			const TCHAR *value = CHECK_NULL(entry->getValue());
+			const TCHAR *value = CHECK_NULL(entry->getValue(entry->getValueCount() - 1));
          switch(cfgTemplate[i].iType)
          {
             case CT_LONG:
