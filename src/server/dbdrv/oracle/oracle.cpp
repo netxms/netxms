@@ -568,14 +568,20 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwsz
 	text *colName;
 	int i;
 
+#if UNICODE_UCS4
+	UCS2CHAR *ucs2Query = UCS2StringFromUCS4String(pwszQuery);
+#else
+	UCS2CHAR *ucs2Query = pwszQuery;
+#endif
+
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 
 	pConn->pBuffers = NULL;
 	pConn->nCols = 0;
 
 	OCIHandleAlloc(pConn->handleEnv, (void **)&pConn->handleStmt, OCI_HTYPE_STMT, 0, NULL);
-	if (OCIStmtPrepare(pConn->handleStmt, pConn->handleError, (text *)pwszQuery,
-	                   (ub4)wcslen(pwszQuery) * sizeof(WCHAR), OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
+	if (OCIStmtPrepare(pConn->handleStmt, pConn->handleError, (text *)ucs2Query,
+	                   (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
 	{
 		if (OCIStmtExecute(pConn->handleService, pConn->handleStmt, pConn->handleError,
 		                   0, 0, NULL, NULL, OCI_DEFAULT) == OCI_SUCCESS)
@@ -598,7 +604,7 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwsz
 						if (OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &colName, &nCount, OCI_ATTR_NAME, pConn->handleError) == OCI_SUCCESS)
 						{
 							// We are in UTF-16 mode, so OCIAttrGet will return UTF-16 strings
-							pConn->columnNames[i] = MBStringFromWideString((WCHAR *)colName);
+							pConn->columnNames[i] = MBStringFromUCS2String((UCS2CHAR *)colName);
 						}
 						else
 						{
@@ -643,6 +649,10 @@ extern "C" DB_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *pwsz
 		SetLastErrorText(pConn);
 		*pdwError = IsConnectionError(pConn);
 	}
+
+#if UNICODE_UCS4
+	free(ucs2Query);
+#endif
 
 	if (*pdwError == DBERR_SUCCESS)
 		return pConn;
@@ -773,24 +783,24 @@ extern "C" void EXPORT DrvFreeAsyncResult(ORACLE_CONN *pConn)
 
 extern "C" DWORD EXPORT DrvBegin(ORACLE_CONN *pConn)
 {
-   DWORD dwResult;
+	DWORD dwResult;
 
 	if (pConn == NULL)
-      return DBERR_INVALID_HANDLE;
+		return DBERR_INVALID_HANDLE;
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 	if (OCITransStart(pConn->handleService, pConn->handleError, 300, OCI_TRANS_NEW) == OCI_SUCCESS)
 	{
 		pConn->nTransLevel++;
-      dwResult = DBERR_SUCCESS;
+		dwResult = DBERR_SUCCESS;
 	}
 	else
 	{
 		SetLastErrorText(pConn);
-      dwResult = IsConnectionError(pConn);
+		dwResult = IsConnectionError(pConn);
 	}
 	MutexUnlock(pConn->mutexQueryLock);
-   return dwResult;
+	return dwResult;
 }
 
 
@@ -800,10 +810,10 @@ extern "C" DWORD EXPORT DrvBegin(ORACLE_CONN *pConn)
 
 extern "C" DWORD EXPORT DrvCommit(ORACLE_CONN *pConn)
 {
-   DWORD dwResult;
+	DWORD dwResult;
 
 	if (pConn == NULL)
-      return DBERR_INVALID_HANDLE;
+		return DBERR_INVALID_HANDLE;
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 	if (pConn->nTransLevel > 0)
@@ -824,7 +834,7 @@ extern "C" DWORD EXPORT DrvCommit(ORACLE_CONN *pConn)
 		dwResult = DBERR_SUCCESS;
 	}
 	MutexUnlock(pConn->mutexQueryLock);
-   return dwResult;
+	return dwResult;
 }
 
 
@@ -834,10 +844,10 @@ extern "C" DWORD EXPORT DrvCommit(ORACLE_CONN *pConn)
 
 extern "C" DWORD EXPORT DrvRollback(ORACLE_CONN *pConn)
 {
-   DWORD dwResult;
+	DWORD dwResult;
 
 	if (pConn == NULL)
-      return DBERR_INVALID_HANDLE;
+		return DBERR_INVALID_HANDLE;
 
 	MutexLock(pConn->mutexQueryLock, INFINITE);
 	if (pConn->nTransLevel > 0)
@@ -858,7 +868,7 @@ extern "C" DWORD EXPORT DrvRollback(ORACLE_CONN *pConn)
 		dwResult = DBERR_SUCCESS;
 	}
 	MutexUnlock(pConn->mutexQueryLock);
-   return dwResult;
+	return dwResult;
 }
 
 
@@ -870,9 +880,9 @@ extern "C" DWORD EXPORT DrvRollback(ORACLE_CONN *pConn)
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-   if (dwReason == DLL_PROCESS_ATTACH)
-      DisableThreadLibraryCalls(hInstance);
-   return TRUE;
+	if (dwReason == DLL_PROCESS_ATTACH)
+		DisableThreadLibraryCalls(hInstance);
+	return TRUE;
 }
 
 #endif
