@@ -28,7 +28,6 @@ import org.netxms.client.NXCNode;
 import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.quickmaps.Activator;
-import org.netxms.ui.eclipse.quickmaps.ObjectFigure;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 

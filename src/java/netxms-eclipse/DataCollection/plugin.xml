@@ -42,11 +42,21 @@
    </extension>
 
   <extension
-     point = "org.eclipse.ui.propertyPages">
+     point="org.eclipse.ui.propertyPages">
         <page
            id="org.netxms.ui.eclipse.datacollection.propertypages.General"
            name="General"
 	       class="org.netxms.ui.eclipse.datacollection.propertypages.General">
+          <enabledWhen>
+             <instanceof
+                  value="org.netxms.client.datacollection.DataCollectionItem">
+             </instanceof>
+          </enabledWhen>
+        </page>
+        <page
+           id="org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule"
+           name="Custom Schedule"
+	       class="org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule">
           <enabledWhen>
              <instanceof
                   value="org.netxms.client.datacollection.DataCollectionItem">
@@ -64,9 +74,9 @@
           </enabledWhen>
         </page>
         <page
-           id="org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule"
-           name="Custom Schedule"
-	       class="org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule">
+           id="org.netxms.ui.eclipse.datacollection.propertypages.Thresholds"
+           name="Thresholds"
+	       class="org.netxms.ui.eclipse.datacollection.propertypages.Thresholds">
           <enabledWhen>
              <instanceof
                   value="org.netxms.client.datacollection.DataCollectionItem">

@@ -3,7 +3,6 @@
  */
 package org.netxms.ui.eclipse.datacollection.propertypages;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -18,13 +17,13 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -75,7 +74,6 @@ public class CustomSchedule extends PropertyPage
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setComparator(new StringComparator());
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@SuppressWarnings("unchecked")
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
@@ -103,8 +101,13 @@ public class CustomSchedule extends PropertyPage
       Composite buttons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
+      buttonLayout.marginBottom = 0;
+      buttonLayout.marginTop = 0;
+      buttonLayout.marginLeft = 0;
+      buttonLayout.marginRight = 0;
+      buttonLayout.spacing = WidgetHelper.OUTER_SPACING;
+      buttonLayout.fill = true;
       buttonLayout.pack = false;
-      buttonLayout.marginWidth = 0;
       buttons.setLayout(buttonLayout);
       gridData = new GridData();
       gridData.horizontalAlignment = SWT.RIGHT;
@@ -112,6 +115,9 @@ public class CustomSchedule extends PropertyPage
 
       addButton = new Button(buttons, SWT.PUSH);
       addButton.setText("&Add...");
+      RowData rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      addButton.setLayoutData(rd);
       addButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -127,7 +133,10 @@ public class CustomSchedule extends PropertyPage
       });
 		
       editButton = new Button(buttons, SWT.PUSH);
-      editButton.setText("&Modify...");
+      editButton.setText("&Edit...");
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      editButton.setLayoutData(rd);
       editButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -144,6 +153,9 @@ public class CustomSchedule extends PropertyPage
 		
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText("&Delete");
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      deleteButton.setLayoutData(rd);
       deleteButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)

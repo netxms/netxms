@@ -124,4 +124,15 @@ public class AbstractSelector extends Composite
 	{
 		return text.getText();
 	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
+	 */
+	@Override
+	public void setEnabled(boolean enabled)
+	{
+		text.setEnabled(enabled);
+		button.setEnabled(enabled);
+		super.setEnabled(enabled);
+	}
 }

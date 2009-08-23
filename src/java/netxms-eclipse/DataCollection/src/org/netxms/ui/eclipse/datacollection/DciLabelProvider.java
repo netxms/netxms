@@ -41,6 +41,7 @@ public class DciLabelProvider implements ITableLabelProvider
 		originTexts.put(DataCollectionItem.SNMP, "SNMP");
 		originTexts.put(DataCollectionItem.CHECKPOINT_SNMP, "Check Point SNMP");
 		originTexts.put(DataCollectionItem.INTERNAL, "Internal");
+		originTexts.put(DataCollectionItem.PUSH, "Push");
 		
 		statusTexts.put(DataCollectionItem.ACTIVE, "Active");
 		statusTexts.put(DataCollectionItem.DISABLED, "Disabled");
@@ -87,7 +88,7 @@ public class DciLabelProvider implements ITableLabelProvider
 				return dtTexts.get(dci.getDataType());
 			case DataCollectionEditor.COLUMN_INTERVAL:
 				if (dci.isUseAdvancedSchedule())
-					return "advanced schedule";
+					return "custom schedule";
 				return Integer.toString(dci.getPollingInterval());
 			case DataCollectionEditor.COLUMN_RETENTION:
 				int days = dci.getRetentionTime();
