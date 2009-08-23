@@ -81,7 +81,7 @@ Table::~Table()
 // Fill NXCP message with table data
 //
 
-void Table::FillMessage(CSCPMessage &msg)
+void Table::fillMessage(CSCPMessage &msg)
 {
 	int i;
 	DWORD id;
@@ -101,7 +101,7 @@ void Table::FillMessage(CSCPMessage &msg)
 // Add new column
 //
 
-void Table::AddColumn(TCHAR *pszName)
+int Table::addColumn(TCHAR *pszName)
 {
    m_ppColNames = (TCHAR **)realloc(m_ppColNames, sizeof(TCHAR *) * (m_nNumCols + 1));
    m_ppColNames[m_nNumCols] = _tcsdup(pszName);
@@ -124,6 +124,7 @@ void Table::AddColumn(TCHAR *pszName)
    }
 
    m_nNumCols++;
+	return m_nNumCols - 1;
 }
 
 
@@ -131,7 +132,7 @@ void Table::AddColumn(TCHAR *pszName)
 // Add new row
 //
 
-void Table::AddRow(void)
+int Table::addRow(void)
 {
    if (m_nNumCols > 0)
    {
@@ -139,6 +140,7 @@ void Table::AddRow(void)
       memset(&m_ppData[m_nNumRows * m_nNumCols], 0, sizeof(TCHAR *) * m_nNumCols);
    }
    m_nNumRows++;
+	return m_nNumRows - 1;
 }
 
 
@@ -146,7 +148,7 @@ void Table::AddRow(void)
 // Set data at position
 //
 
-void Table::SetAt(int nRow, int nCol, TCHAR *pszData)
+void Table::setAt(int nRow, int nCol, const TCHAR *pszData)
 {
    if ((nRow < 0) || (nRow >= m_nNumRows) ||
        (nCol < 0) || (nCol >= m_nNumCols))
@@ -156,44 +158,54 @@ void Table::SetAt(int nRow, int nCol, TCHAR *pszData)
    m_ppData[nRow * m_nNumCols + nCol] = _tcsdup(pszData);
 }
 
-void Table::SetAt(int nRow, int nCol, LONG nData)
+void Table::setPreallocatedAt(int nRow, int nCol, TCHAR *pszData)
+{
+   if ((nRow < 0) || (nRow >= m_nNumRows) ||
+       (nCol < 0) || (nCol >= m_nNumCols))
+      return;
+
+   safe_free(m_ppData[nRow * m_nNumCols + nCol]);
+   m_ppData[nRow * m_nNumCols + nCol] = pszData;
+}
+
+void Table::setAt(int nRow, int nCol, LONG nData)
 {
    TCHAR szBuffer[32];
 
    _sntprintf(szBuffer, 32, _T("%d"), nData);
-   SetAt(nRow, nCol, szBuffer);
+   setAt(nRow, nCol, szBuffer);
 }
 
-void Table::SetAt(int nRow, int nCol, DWORD dwData)
+void Table::setAt(int nRow, int nCol, DWORD dwData)
 {
    TCHAR szBuffer[32];
 
    _sntprintf(szBuffer, 32, _T("%u"), dwData);
-   SetAt(nRow, nCol, szBuffer);
+   setAt(nRow, nCol, szBuffer);
 }
 
-void Table::SetAt(int nRow, int nCol, INT64 nData)
+void Table::setAt(int nRow, int nCol, INT64 nData)
 {
    TCHAR szBuffer[32];
 
    _sntprintf(szBuffer, 32, INT64_FMT, nData);
-   SetAt(nRow, nCol, szBuffer);
+   setAt(nRow, nCol, szBuffer);
 }
 
-void Table::SetAt(int nRow, int nCol, QWORD qwData)
+void Table::setAt(int nRow, int nCol, QWORD qwData)
 {
    TCHAR szBuffer[32];
 
    _sntprintf(szBuffer, 32, UINT64_FMT, qwData);
-   SetAt(nRow, nCol, szBuffer);
+   setAt(nRow, nCol, szBuffer);
 }
 
-void Table::SetAt(int nRow, int nCol, double dData)
+void Table::setAt(int nRow, int nCol, double dData)
 {
    TCHAR szBuffer[32];
 
    _sntprintf(szBuffer, 32, _T("%f"), dData);
-   SetAt(nRow, nCol, szBuffer);
+   setAt(nRow, nCol, szBuffer);
 }
 
 
@@ -201,7 +213,7 @@ void Table::SetAt(int nRow, int nCol, double dData)
 // Get data from position
 //
 
-TCHAR *Table::GetAsString(int nRow, int nCol)
+const TCHAR *Table::getAsString(int nRow, int nCol)
 {
    if ((nRow < 0) || (nRow >= m_nNumRows) ||
        (nCol < 0) || (nCol >= m_nNumCols))
@@ -210,42 +222,42 @@ TCHAR *Table::GetAsString(int nRow, int nCol)
    return m_ppData[nRow * m_nNumCols + nCol];
 }
 
-LONG Table::GetAsInt(int nRow, int nCol)
+LONG Table::getAsInt(int nRow, int nCol)
 {
-   TCHAR *pszVal;
+   const TCHAR *pszVal;
 
-   pszVal = GetAsString(nRow, nCol);
+   pszVal = getAsString(nRow, nCol);
    return pszVal != NULL ? _tcstol(pszVal, NULL, 0) : 0;
 }
 
-DWORD Table::GetAsUInt(int nRow, int nCol)
+DWORD Table::getAsUInt(int nRow, int nCol)
 {
-   TCHAR *pszVal;
+   const TCHAR *pszVal;
 
-   pszVal = GetAsString(nRow, nCol);
+   pszVal = getAsString(nRow, nCol);
    return pszVal != NULL ? _tcstoul(pszVal, NULL, 0) : 0;
 }
 
-INT64 Table::GetAsInt64(int nRow, int nCol)
+INT64 Table::getAsInt64(int nRow, int nCol)
 {
-   TCHAR *pszVal;
+   const TCHAR *pszVal;
 
-   pszVal = GetAsString(nRow, nCol);
+   pszVal = getAsString(nRow, nCol);
    return pszVal != NULL ? _tcstoll(pszVal, NULL, 0) : 0;
 }
 
-QWORD Table::GetAsUInt64(int nRow, int nCol)
+QWORD Table::getAsUInt64(int nRow, int nCol)
 {
-   TCHAR *pszVal;
+   const TCHAR *pszVal;
 
-   pszVal = GetAsString(nRow, nCol);
+   pszVal = getAsString(nRow, nCol);
    return pszVal != NULL ? _tcstoull(pszVal, NULL, 0) : 0;
 }
 
-double Table::GetAsDouble(int nRow, int nCol)
+double Table::getAsDouble(int nRow, int nCol)
 {
-   TCHAR *pszVal;
+   const TCHAR *pszVal;
 
-   pszVal = GetAsString(nRow, nCol);
+   pszVal = getAsString(nRow, nCol);
    return pszVal != NULL ? _tcstod(pszVal, NULL) : 0;
 }

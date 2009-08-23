@@ -975,33 +975,33 @@ void CAlarmBrowser::OnAlarmDetails()
          if (pObject != NULL)
          {
             pTable = new Table;
-            pTable->AddColumn(_T("Attribute"));
-            pTable->AddColumn(_T("Image"));
-            pTable->AddColumn(_T("Value"));
+            pTable->addColumn(_T("Attribute"));
+            pTable->addColumn(_T("Image"));
+            pTable->addColumn(_T("Value"));
 
             // Current severity
-            pTable->AddRow();
-            pTable->Set(0, _T("Current Severity"));
-            pTable->Set(1, (LONG)pAlarm->nCurrentSeverity);
-            pTable->Set(2, g_szStatusTextSmall[pAlarm->nCurrentSeverity]);
+            pTable->addRow();
+            pTable->set(0, _T("Current Severity"));
+            pTable->set(1, (LONG)pAlarm->nCurrentSeverity);
+            pTable->set(2, g_szStatusTextSmall[pAlarm->nCurrentSeverity]);
 
             // Original severity
-            pTable->AddRow();
-            pTable->Set(0, _T("Original Severity"));
-            pTable->Set(1, (LONG)pAlarm->nOriginalSeverity);
-            pTable->Set(2, g_szStatusTextSmall[pAlarm->nOriginalSeverity]);
+            pTable->addRow();
+            pTable->set(0, _T("Original Severity"));
+            pTable->set(1, (LONG)pAlarm->nOriginalSeverity);
+            pTable->set(2, g_szStatusTextSmall[pAlarm->nOriginalSeverity]);
 
             // State
-            pTable->AddRow();
-            pTable->Set(0, _T("State"));
-            pTable->Set(1, (LONG)(pAlarm->nState + 5));
-            pTable->Set(2, g_szAlarmState[pAlarm->nState]);
+            pTable->addRow();
+            pTable->set(0, _T("State"));
+            pTable->set(1, (LONG)(pAlarm->nState + 5));
+            pTable->set(2, g_szAlarmState[pAlarm->nState]);
 
             // Source
-            pTable->AddRow();
-            pTable->Set(0, _T("Source"));
-            pTable->Set(1, (LONG)(-1));
-            pTable->Set(2, pObject->szName);
+            pTable->addRow();
+            pTable->set(0, _T("Source"));
+            pTable->set(1, (LONG)(-1));
+            pTable->set(2, pObject->szName);
 
             theApp.ShowDetailsWindow(VIEW_ALARM_DETAILS, m_hWnd, pTable);
          }

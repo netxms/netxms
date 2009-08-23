@@ -119,12 +119,12 @@ void CDetailsView::Update()
    m_wndListCtrl.DeleteAllItems();
    if (m_pData != NULL)
    {
-      for(i = 0; i < m_pData->GetNumRows(); i++)
+      for(i = 0; i < m_pData->getNumRows(); i++)
       {
-         nItem = m_wndListCtrl.InsertItem(i, m_pData->GetAsString(i, 0), -1);
+         nItem = m_wndListCtrl.InsertItem(i, m_pData->getAsString(i, 0), -1);
          if (nItem != -1)
          {
-            m_wndListCtrl.SetItemText(nItem, 2, m_pData->GetAsString(i, 2));
+            m_wndListCtrl.SetItemText(nItem, 2, m_pData->getAsString(i, 2));
          }
       }
    }

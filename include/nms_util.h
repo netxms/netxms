@@ -201,34 +201,36 @@ public:
    Table(CSCPMessage *msg);
    ~Table();
 
-	void FillMessage(CSCPMessage &msg);
+	void fillMessage(CSCPMessage &msg);
 
-   int GetNumRows(void) { return m_nNumRows; }
-   int GetNumColumns(void) { return m_nNumCols; }
+   int getNumRows(void) { return m_nNumRows; }
+   int getNumColumns(void) { return m_nNumCols; }
 
-   void AddColumn(TCHAR *pszName);
-   void AddRow(void);
+   int addColumn(TCHAR *pszName);
+   int addRow(void);
 
-   void SetAt(int nRow, int nCol, TCHAR *pszData);
-   void SetAt(int nRow, int nCol, LONG nData);
-   void SetAt(int nRow, int nCol, DWORD dwData);
-   void SetAt(int nRow, int nCol, double dData);
-   void SetAt(int nRow, int nCol, INT64 nData);
-   void SetAt(int nRow, int nCol, QWORD qwData);
+   void setAt(int nRow, int nCol, LONG nData);
+   void setAt(int nRow, int nCol, DWORD dwData);
+   void setAt(int nRow, int nCol, double dData);
+   void setAt(int nRow, int nCol, INT64 nData);
+   void setAt(int nRow, int nCol, QWORD qwData);
+   void setAt(int nRow, int nCol, const TCHAR *pszData);
+   void setPreallocatedAt(int nRow, int nCol, TCHAR *pszData);
 
-   void Set(int nCol, TCHAR *pszData) { SetAt(m_nNumRows - 1, nCol, pszData); }
-   void Set(int nCol, LONG nData) { SetAt(m_nNumRows - 1, nCol, nData); }
-   void Set(int nCol, DWORD dwData) { SetAt(m_nNumRows - 1, nCol, dwData); }
-   void Set(int nCol, double dData) { SetAt(m_nNumRows - 1, nCol, dData); }
-   void Set(int nCol, INT64 nData) { SetAt(m_nNumRows - 1, nCol, nData); }
-   void Set(int nCol, QWORD qwData) { SetAt(m_nNumRows - 1, nCol, qwData); }
+   void set(int nCol, LONG nData) { setAt(m_nNumRows - 1, nCol, nData); }
+   void set(int nCol, DWORD dwData) { setAt(m_nNumRows - 1, nCol, dwData); }
+   void set(int nCol, double dData) { setAt(m_nNumRows - 1, nCol, dData); }
+   void set(int nCol, INT64 nData) { setAt(m_nNumRows - 1, nCol, nData); }
+   void set(int nCol, QWORD qwData) { setAt(m_nNumRows - 1, nCol, qwData); }
+   void set(int nCol, const TCHAR *pszData) { setAt(m_nNumRows - 1, nCol, pszData); }
+   void setPreallocated(int nCol, TCHAR *pszData) { setPreallocatedAt(m_nNumRows - 1, nCol, pszData); }
 
-   TCHAR *GetAsString(int nRow, int nCol);
-   LONG GetAsInt(int nRow, int nCol);
-   DWORD GetAsUInt(int nRow, int nCol);
-   INT64 GetAsInt64(int nRow, int nCol);
-   QWORD GetAsUInt64(int nRow, int nCol);
-   double GetAsDouble(int nRow, int nCol);
+   const TCHAR *getAsString(int nRow, int nCol);
+   LONG getAsInt(int nRow, int nCol);
+   DWORD getAsUInt(int nRow, int nCol);
+   INT64 getAsInt64(int nRow, int nCol);
+   QWORD getAsUInt64(int nRow, int nCol);
+   double getAsDouble(int nRow, int nCol);
 };
 
 
