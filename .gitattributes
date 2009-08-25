@@ -253,6 +253,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/NXCTemplate.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCUser.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCUserDBObject.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCUserGroup.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/Table.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollectionConfiguration.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollectionItem.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciData.java -text
@@ -261,6 +262,10 @@ src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciValue.j
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/Threshold.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/epp/EventProcessingPolicy.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/epp/EventProcessingPolicyRule.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/log/ColumnFilter.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/log/Log.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/log/LogColumn.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/log/LogFilter.java -text
 src/java/netxms-client/src/test/java/org/netxms/client/NXCSessionTest.java -text
 src/java/netxms-eclipse/AlarmViewer/META-INF/MANIFEST.MF -text
 src/java/netxms-eclipse/AlarmViewer/build.properties -text

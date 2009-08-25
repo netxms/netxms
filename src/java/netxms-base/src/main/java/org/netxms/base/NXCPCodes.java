@@ -651,4 +651,6 @@ public final class NXCPCodes
 	public static final long VID_SUBMAP_LINK_NAMES_BASE   = 0x20000000L;
 	public static final long VID_WEBMAP_LIST_BASE         = 0x30000000L;
 	public static final long VID_JOB_LIST_BASE            = 0x10000000L;
+	public static final long VID_TABLE_COLUMN_INFO_BASE   = 0x10000000L;
+	public static final long VID_TABLE_DATA_BASE          = 0x20000000L;
 }
