@@ -55,7 +55,7 @@ public final class NXCPCodes
 	public static final int CMD_SET_PASSWORD            = 0x0028;
 	public static final int CMD_GET_NODE_DCI_LIST       = 0x0029;
 	public static final int CMD_NODE_DCI                = 0x002A;
-//	public static final int CMD_NODE_DCI_LIST_END       = 0x002B;
+	public static final int CMD_GET_LOG_DATA            = 0x002B;
 	public static final int CMD_DELETE_NODE_DCI         = 0x002C;
 	public static final int CMD_MODIFY_NODE_DCI         = 0x002D;
 	public static final int CMD_UNLOCK_NODE_DCI_LIST    = 0x002E;
@@ -73,9 +73,9 @@ public final class NXCPCodes
 	public static final int CMD_BIND_OBJECT             = 0x003A;
 	public static final int CMD_UNBIND_OBJECT           = 0x003B;
 	public static final int CMD_UNINSTALL_AGENT_POLICY  = 0x003C;
-//	public static final int CMD_LOAD_IMAGE_FILE         = 0x003D;
-//	public static final int CMD_IMAGE_LIST              = 0x003E;
-//	public static final int CMD_IMAGE_FILE              = 0x003F;
+	public static final int CMD_OPEN_SERVER_LOG         = 0x003D;
+	public static final int CMD_CLOSE_SERVER_LOG        = 0x003E;
+	public static final int CMD_QUERY_LOG               = 0x003F;
 	public static final int CMD_AUTHENTICATE            = 0x0040;
 	public static final int CMD_GET_PARAMETER           = 0x0041;
 	public static final int CMD_GET_LIST                = 0x0042;
@@ -155,7 +155,7 @@ public final class NXCPCodes
 	public static final int CMD_SYSLOG_RECORDS          = 0x008C;
 	public static final int CMD_JOB_CHANGE_NOTIFICATION = 0x008D;
 	public static final int CMD_DEPLOY_AGENT_POLICY     = 0x008E;
-	//public static final int CMD_CLOSE_LOG_POLICY        = 0x008F;
+	public static final int CMD_LOG_DATA                = 0x008F;
 	public static final int CMD_GET_OBJECT_TOOL_DETAILS = 0x0090;
 	public static final int CMD_LOCK_OBJECT_TOOLS       = 0x0091;
 	public static final int CMD_UNLOCK_OBJECT_TOOLS     = 0x0092;

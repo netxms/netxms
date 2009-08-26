@@ -2,13 +2,13 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Nxmc Quick Maps Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.quickmaps;singleton:=true
-Bundle-Version: 1.0.0
+Bundle-Version: 1.1.0
 Bundle-Activator: org.netxms.ui.eclipse.quickmaps.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.netxms.ui.eclipse.library;bundle-version="1.0.0",
+Require-Bundle: org.netxms.ui.eclipse.library;bundle-version="1.1.0",
+ org.eclipse.ui;bundle-version="3.5.0",
+ org.eclipse.core.runtime;bundle-version="3.5.0",
  org.eclipse.zest.core;bundle-version="1.1.0",
- org.eclipse.zest.layouts;bundle-version="1.1.0",
- org.eclipse.ui;bundle-version="3.4.1",
- org.eclipse.core.runtime;bundle-version="3.4.0"
+ org.eclipse.zest.layouts;bundle-version="1.1.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
