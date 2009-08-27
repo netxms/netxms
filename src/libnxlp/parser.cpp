@@ -471,6 +471,8 @@ static void EndElement(void *userData, const char *name)
 		event = strtoul(ps->event, &eptr, 0);
 		if (*eptr != 0)
 			event = ps->parser->resolveEventName(ps->event);
+//		if (ps->regexp.IsEmpty())
+//			ps->regexp = _T(".*");
 		rule = new LogParserRule(ps->parser, (const char *)ps->regexp, event, ps->numEventParams);
 		if (!ps->ruleContext.IsEmpty())
 			rule->setContext(ps->ruleContext);

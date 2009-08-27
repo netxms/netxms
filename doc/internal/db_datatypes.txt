@@ -1,0 +1,5 @@
+          MS SQL    MySQL         PostgreSQL   Oracle   SQLite
+
+varchar   8000      255/65535 *   unlimited    4000     unlimited
+
+* 255 characters prior to 5.0.3, 65535 later

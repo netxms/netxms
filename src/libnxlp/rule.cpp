@@ -83,7 +83,10 @@ LogParserRule::~LogParserRule()
 bool LogParserRule::match(const char *line, LogParserCallback cb, DWORD objectId, void *userArg)
 {
 	if (!m_isValid)
+	{
+		m_parser->trace(6, _T("  regexp is invalid: %s"), m_regexp);
 		return false;
+	}
 
 	if (m_isInverted)
 	{
