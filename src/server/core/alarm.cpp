@@ -435,7 +435,7 @@ void AlarmManager::UpdateAlarmInDB(NXC_ALARM *pAlarm)
 
 void AlarmManager::SendAlarmNotification(ClientSession *pSession, void *pArg)
 {
-   pSession->OnAlarmUpdate(((AlarmManager *)pArg)->m_dwNotifyCode,
+   pSession->onAlarmUpdate(((AlarmManager *)pArg)->m_dwNotifyCode,
                            ((AlarmManager *)pArg)->m_pNotifyAlarmInfo);
 }
 
@@ -462,7 +462,7 @@ void AlarmManager::SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSess
    NetObj *pObject;
    CSCPMessage msg;
 
-   dwUserId = pSession->GetUserId();
+   dwUserId = pSession->getUserId();
 
    // Prepare message
    msg.SetCode(CMD_ALARM_DATA);
@@ -486,7 +486,7 @@ void AlarmManager::SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSess
             if (pObject->CheckAccessRights(dwUserId, OBJECT_ACCESS_READ_ALARMS))
             {
                FillAlarmInfoMessage(&msg, &m_pAlarmList[i]);
-               pSession->SendMessage(&msg);
+               pSession->sendMessage(&msg);
                msg.DeleteAllVariables();
             }
          }
@@ -497,7 +497,7 @@ void AlarmManager::SendAlarmsToClient(DWORD dwRqId, BOOL bIncludeAck, ClientSess
 
    // Send end-of-list indicator
    msg.SetVariable(VID_ALARM_ID, (DWORD)0);
-   pSession->SendMessage(&msg);
+   pSession->sendMessage(&msg);
 }
 
 

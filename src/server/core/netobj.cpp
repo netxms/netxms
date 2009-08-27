@@ -782,8 +782,8 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
 
 static void BroadcastObjectChange(ClientSession *pSession, void *pArg)
 {
-   if (pSession->IsAuthenticated())
-      pSession->OnObjectChange((NetObj *)pArg);
+   if (pSession->isAuthenticated())
+      pSession->onObjectChange((NetObj *)pArg);
 }
 
 
@@ -1052,7 +1052,7 @@ void NetObj::SendPollerMsg(DWORD dwRqId, const TCHAR *pszFormat, ...)
       va_start(args, pszFormat);
       _vsntprintf(szBuffer, 1024, pszFormat, args);
       va_end(args);
-      m_pPollRequestor->SendPollerMsg(dwRqId, szBuffer);
+      m_pPollRequestor->sendPollerMsg(dwRqId, szBuffer);
    }
 }
 

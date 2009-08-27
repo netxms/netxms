@@ -260,7 +260,7 @@ typedef struct
 #define CMD_SET_PASSWORD            0x0028
 #define CMD_GET_NODE_DCI_LIST       0x0029
 #define CMD_NODE_DCI                0x002A
-//#define CMD_NODE_DCI_LIST_END       0x002B
+#define CMD_GET_LOG_DATA            0x002B
 #define CMD_DELETE_NODE_DCI         0x002C
 #define CMD_MODIFY_NODE_DCI         0x002D
 #define CMD_UNLOCK_NODE_DCI_LIST    0x002E
@@ -278,9 +278,9 @@ typedef struct
 #define CMD_BIND_OBJECT             0x003A
 #define CMD_UNBIND_OBJECT           0x003B
 #define CMD_UNINSTALL_AGENT_POLICY  0x003C
-//#define CMD_LOAD_IMAGE_FILE         0x003D
-//#define CMD_IMAGE_LIST              0x003E
-//#define CMD_IMAGE_FILE              0x003F
+#define CMD_OPEN_SERVER_LOG         0x003D
+#define CMD_CLOSE_SERVER_LOG        0x003E
+#define CMD_QUERY_LOG               0x003F
 #define CMD_AUTHENTICATE            0x0040
 #define CMD_GET_PARAMETER           0x0041
 #define CMD_GET_LIST                0x0042
@@ -360,7 +360,7 @@ typedef struct
 #define CMD_SYSLOG_RECORDS          0x008C
 #define CMD_JOB_CHANGE_NOTIFICATION 0x008D
 #define CMD_DEPLOY_AGENT_POLICY     0x008E
-//#define CMD_CLOSE_LOG_POLICY        0x008F
+#define CMD_LOG_DATA                0x008F
 #define CMD_GET_OBJECT_TOOL_DETAILS 0x0090
 #define CMD_LOCK_OBJECT_TOOLS       0x0091
 #define CMD_UNLOCK_OBJECT_TOOLS     0x0092
@@ -796,6 +796,8 @@ typedef struct
 #define VID_FAILURE_MESSAGE         ((DWORD)335)
 #define VID_POLICY_TYPE             ((DWORD)336)
 #define VID_FIELDS                  ((DWORD)337)
+#define VID_LOG_HANDLE              ((DWORD)338)
+#define VID_START_ROW               ((DWORD)339)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)

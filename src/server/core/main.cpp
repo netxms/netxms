@@ -598,6 +598,8 @@ retry_db_lock:
 	if (!InitDataCollector())
 		return FALSE;
 
+	InitLogAccess();
+
 	// Initialize watchdog
 	WatchdogInit();
 

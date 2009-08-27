@@ -273,8 +273,8 @@ static void BindMsgToNode(NX_LOG_RECORD *pRec, DWORD dwSourceIP)
 
 static void BroadcastSyslogMessage(ClientSession *pSession, void *pArg)
 {
-   if (pSession->IsAuthenticated())
-      pSession->OnSyslogMessage((NX_LOG_RECORD *)pArg);
+   if (pSession->isAuthenticated())
+      pSession->onSyslogMessage((NX_LOG_RECORD *)pArg);
 }
 
 

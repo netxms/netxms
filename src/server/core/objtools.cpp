@@ -253,8 +253,8 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
    }
 
    // Send responce to client
-   ((TOOL_STARTUP_INFO *)pArg)->pSession->SendMessage(&msg);
-   ((TOOL_STARTUP_INFO *)pArg)->pSession->DecRefCount();
+   ((TOOL_STARTUP_INFO *)pArg)->pSession->sendMessage(&msg);
+   ((TOOL_STARTUP_INFO *)pArg)->pSession->decRefCount();
    safe_free(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
    free(pArg);
    return THREAD_OK;
@@ -454,8 +454,8 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
    }
 
    // Send responce to client
-   ((TOOL_STARTUP_INFO *)pArg)->pSession->SendMessage(&msg);
-   ((TOOL_STARTUP_INFO *)pArg)->pSession->DecRefCount();
+   ((TOOL_STARTUP_INFO *)pArg)->pSession->sendMessage(&msg);
+   ((TOOL_STARTUP_INFO *)pArg)->pSession->decRefCount();
    safe_free(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
    free(pArg);
    return THREAD_OK;
@@ -483,7 +483,7 @@ DWORD ExecuteTableTool(DWORD dwToolId, Node *pNode, DWORD dwRqId, ClientSession 
          nType = DBGetFieldLong(hResult, 0, 0);
          if ((nType == TOOL_TYPE_TABLE_SNMP) || (nType == TOOL_TYPE_TABLE_AGENT))
          {
-            pSession->IncRefCount();
+            pSession->incRefCount();
             pStartup = (TOOL_STARTUP_INFO *)malloc(sizeof(TOOL_STARTUP_INFO));
             pStartup->dwToolId = dwToolId;
             pStartup->dwRqId = dwRqId;

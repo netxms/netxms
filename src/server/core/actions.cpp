@@ -39,7 +39,7 @@ static DWORD m_dwUpdateCode;
 
 static void SendActionDBUpdate(ClientSession *pSession, void *pArg)
 {
-   pSession->OnActionDBUpdate(m_dwUpdateCode, (NXC_ACTION *)pArg);
+   pSession->onActionDBUpdate(m_dwUpdateCode, (NXC_ACTION *)pArg);
 }
 
 
@@ -589,7 +589,7 @@ void SendActionsToClient(ClientSession *pSession, DWORD dwRqId)
    {
       msg.SetVariable(VID_ACTION_ID, m_pActionList[i].dwId);
       FillActionInfoMessage(&msg, &m_pActionList[i]);
-      pSession->SendMessage(&msg);
+      pSession->sendMessage(&msg);
       msg.DeleteAllVariables();
    }
 
@@ -597,5 +597,5 @@ void SendActionsToClient(ClientSession *pSession, DWORD dwRqId)
 
    // Send end-of-list flag
    msg.SetVariable(VID_ACTION_ID, (DWORD)0);
-   pSession->SendMessage(&msg);
+   pSession->sendMessage(&msg);
 }

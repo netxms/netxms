@@ -176,7 +176,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
       {
          // Change deployment status to "Initializing"
          msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INITIALIZE);
-         pStartup->pSession->SendMessage(&msg);
+         pStartup->pSession->sendMessage(&msg);
 
          // Create agent connection
          pAgentConn = pNode->CreateAgentConnection();
@@ -208,7 +208,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
             {
                // Change deployment status to "File Transfer"
                msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_TRANSFER);
-               pStartup->pSession->SendMessage(&msg);
+               pStartup->pSession->sendMessage(&msg);
 
                // Upload package file to agent
                strcpy(szBuffer, g_szDataDir);
@@ -227,7 +227,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
 
                      // Change deployment status to "Package installation"
                      msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INSTALLATION);
-                     pStartup->pSession->SendMessage(&msg);
+                     pStartup->pSession->sendMessage(&msg);
 
                      // Wait for agent's restart
                      ThreadSleep(20);
@@ -300,7 +300,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
       msg.SetVariable(VID_DEPLOYMENT_STATUS, 
          bSuccess ? (WORD)DEPLOYMENT_STATUS_COMPLETED : (WORD)DEPLOYMENT_STATUS_FAILED);
       msg.SetVariable(VID_ERROR_MESSAGE, pszErrorMsg);
-      pStartup->pSession->SendMessage(&msg);
+      pStartup->pSession->sendMessage(&msg);
       pNode->DecRefCount();
    }
    return THREAD_OK;
@@ -326,7 +326,7 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
    // Sanity check
    if (pStartup->dwNumNodes == 0)
    {
-      pStartup->pSession->DecRefCount();
+      pStartup->pSession->decRefCount();
       return THREAD_OK;
    }
 
@@ -347,7 +347,7 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
       pQueue->Put(pStartup->ppNodeList[i]);
       msg.SetVariable(VID_OBJECT_ID, pStartup->ppNodeList[i]->Id());
       msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_PENDING);
-      pStartup->pSession->SendMessage(&msg);
+      pStartup->pSession->sendMessage(&msg);
       msg.DeleteAllVariables();
    }
 
@@ -362,8 +362,8 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
 
    // Send final notification to client
    msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_FINISHED);
-   pStartup->pSession->SendMessage(&msg);
-   pStartup->pSession->DecRefCount();
+   pStartup->pSession->sendMessage(&msg);
+   pStartup->pSession->decRefCount();
 
    // Cleanup
    MutexDestroy(pStartup->mutex);

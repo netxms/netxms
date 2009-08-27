@@ -56,12 +56,12 @@ static void SendNewRecord(ClientSession *pSession, void *pArg)
 {
    UPDATE_INFO *pUpdate;
 
-   if (pSession->IsAuthenticated() && pSession->IsSubscribed(NXC_CHANNEL_AUDIT_LOG))
+   if (pSession->isAuthenticated() && pSession->isSubscribed(NXC_CHANNEL_AUDIT_LOG))
 	{
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
       pUpdate->dwCategory = INFO_CAT_AUDIT_RECORD;
       pUpdate->pData = new CSCPMessage((CSCPMessage *)pArg);
-      pSession->QueueUpdate(pUpdate);
+      pSession->queueUpdate(pUpdate);
 	}
 }
 

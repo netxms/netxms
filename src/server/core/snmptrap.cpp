@@ -228,7 +228,7 @@ static void GenerateTrapEvent(DWORD dwObjectId, DWORD dwIndex, SNMP_PDU *pdu)
 
 static void BroadcastNewTrap(ClientSession *pSession, void *pArg)
 {
-   pSession->OnNewSNMPTrap((CSCPMessage *)pArg);
+   pSession->onNewSNMPTrap((CSCPMessage *)pArg);
 }
 
 
@@ -464,13 +464,13 @@ void SendTrapsToClient(ClientSession *pSession, DWORD dwRqId)
             msg.SetVariableToInt32Array(dwId2, m_pTrapCfg[i].pMaps[j].dwOidLen, m_pTrapCfg[i].pMaps[j].pdwObjectId);
          msg.SetVariable(dwId3, m_pTrapCfg[i].pMaps[j].szDescription);
       }
-      pSession->SendMessage(&msg);
+      pSession->sendMessage(&msg);
       msg.DeleteAllVariables();
    }
    MutexUnlock(m_mutexTrapCfgAccess);
 
    msg.SetVariable(VID_TRAP_ID, (DWORD)0);
-   pSession->SendMessage(&msg);
+   pSession->sendMessage(&msg);
 }
 
 

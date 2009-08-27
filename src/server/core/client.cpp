@@ -51,7 +51,7 @@ static BOOL RegisterSession(ClientSession *pSession)
       if (m_pSessionList[i] == NULL)
       {
          m_pSessionList[i] = pSession;
-         pSession->SetIndex(i);
+         pSession->setIndex(i);
          RWLockUnlock(m_rwlockSessionListAccess);
          return TRUE;
       }
@@ -99,8 +99,8 @@ static THREAD_RESULT THREAD_CALL ClientKeepAliveThread(void *)
       RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
       for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
          if (m_pSessionList[i] != NULL)
-            if (m_pSessionList[i]->IsAuthenticated())
-               m_pSessionList[i]->SendMessage(&msg);
+            if (m_pSessionList[i]->isAuthenticated())
+               m_pSessionList[i]->sendMessage(&msg);
       RWLockUnlock(m_rwlockSessionListAccess);
    }
 
@@ -194,7 +194,7 @@ THREAD_RESULT THREAD_CALL ClientListener(void *)
       }
       else
       {
-         pSession->Run();
+         pSession->run();
       }
    }
 
@@ -220,12 +220,12 @@ void DumpSessions(CONSOLE_CTX pCtx)
       if (m_pSessionList[i] != NULL)
       {
          ConsolePrintf(pCtx, "%-3d %-24s %-8s %s [%s]\n", i, 
-                       (m_pSessionList[i]->GetState() != SESSION_STATE_PROCESSING) ?
-                         pszStateName[m_pSessionList[i]->GetState()] :
-                         NXCPMessageCodeName(m_pSessionList[i]->GetCurrentCmd(), szBuffer),
-					        pszCipherName[m_pSessionList[i]->GetCipher() + 1],
-                       m_pSessionList[i]->GetUserName(),
-                       m_pSessionList[i]->GetClientInfo());
+                       (m_pSessionList[i]->getState() != SESSION_STATE_PROCESSING) ?
+                         pszStateName[m_pSessionList[i]->getState()] :
+                         NXCPMessageCodeName(m_pSessionList[i]->getCurrentCmd(), szBuffer),
+					        pszCipherName[m_pSessionList[i]->getCipher() + 1],
+                       m_pSessionList[i]->getUserName(),
+                       m_pSessionList[i]->getClientInfo());
          iCount++;
       }
    RWLockUnlock(m_rwlockSessionListAccess);
@@ -260,7 +260,7 @@ void SendUserDBUpdate(int code, DWORD id, UserDatabaseObject *object)
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
    for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (m_pSessionList[i] != NULL)
-         m_pSessionList[i]->OnUserDBUpdate(code, id, object);
+         m_pSessionList[i]->onUserDBUpdate(code, id, object);
    RWLockUnlock(m_rwlockSessionListAccess);
 }
 
@@ -276,7 +276,7 @@ void NXCORE_EXPORTABLE NotifyClientSessions(DWORD dwCode, DWORD dwData)
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
    for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (m_pSessionList[i] != NULL)
-         m_pSessionList[i]->Notify(dwCode, dwData);
+         m_pSessionList[i]->notify(dwCode, dwData);
    RWLockUnlock(m_rwlockSessionListAccess);
 }
 

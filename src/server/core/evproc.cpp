@@ -43,8 +43,8 @@ static THREAD m_threadStormDetector = INVALID_THREAD_HANDLE;
 
 static void BroadcastEvent(ClientSession *pSession, void *pArg)
 {
-   if (pSession->IsAuthenticated())
-      pSession->OnNewEvent((Event *)pArg);
+   if (pSession->isAuthenticated())
+      pSession->onNewEvent((Event *)pArg);
 }
 
 

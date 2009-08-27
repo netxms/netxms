@@ -543,7 +543,7 @@ void Template::SendItemsToClient(ClientSession *pSession, DWORD dwRqId)
 			 (Type() == OBJECT_TEMPLATE))
 		{
 			m_ppItems[i]->createMessage(&msg);
-			pSession->SendMessage(&msg);
+			pSession->sendMessage(&msg);
 			msg.DeleteAllVariables();
 		}
    }
@@ -552,7 +552,7 @@ void Template::SendItemsToClient(ClientSession *pSession, DWORD dwRqId)
 
    // Send end-of-list indicator
 	msg.SetEndOfSequence();
-   pSession->SendMessage(&msg);
+   pSession->sendMessage(&msg);
 }
 
 

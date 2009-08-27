@@ -102,6 +102,7 @@ typedef __console_ctx * CONSOLE_CTX;
 #include "nxcore_maps.h"
 #include "nxcore_situations.h"
 #include "nxcore_jobs.h"
+#include "nxcore_logs.h"
 
 
 //
@@ -375,6 +376,8 @@ private:
 	DECLARE_THREAD_STARTER(SendSyslog)
 	DECLARE_THREAD_STARTER(CreateObject)
 	DECLARE_THREAD_STARTER(GetServerFile)
+	DECLARE_THREAD_STARTER(queryServerLog)
+	DECLARE_THREAD_STARTER(getServerLogQueryData)
 
    void ReadThread(void);
    void WriteThread(void);
@@ -382,15 +385,9 @@ private:
    void UpdateThread(void);
    void PollerThread(Node *pNode, int iPollType, DWORD dwRqId);
 
-   BOOL CheckSysAccessRights(DWORD dwRequiredAccess) 
-   { 
-      return m_dwUserId == 0 ? TRUE : 
-         ((dwRequiredAccess & m_dwSystemAccess) ? TRUE : FALSE);
-   }
-
-   void SetupEncryption(DWORD dwRqId);
+   void setupEncryption(DWORD dwRqId);
    void RespondToKeepalive(DWORD dwRqId);
-   void OnFileUpload(BOOL bSuccess);
+   void onFileUpload(BOOL bSuccess);
    void DebugPrintf(int level, const TCHAR *format, ...);
    void SendServerInfo(DWORD dwRqId);
    void Login(CSCPMessage *pRequest);
@@ -544,43 +541,54 @@ private:
 	void deployAgentPolicy(CSCPMessage *pRequest, bool uninstallFlag);
 	void getUserCustomAttribute(CSCPMessage *request);
 	void setUserCustomAttribute(CSCPMessage *request);
+	void openServerLog(CSCPMessage *request);
+	void closeServerLog(CSCPMessage *request);
+	void queryServerLog(CSCPMessage *request);
+	void getServerLogQueryData(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, DWORD dwHostAddr);
    ~ClientSession();
 
-   void IncRefCount(void) { m_dwRefCount++; }
-   void DecRefCount(void) { if (m_dwRefCount > 0) m_dwRefCount--; }
+   void incRefCount() { m_dwRefCount++; }
+   void decRefCount() { if (m_dwRefCount > 0) m_dwRefCount--; }
 
-   void Run(void);
+   void run();
 
-   void SendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
-   void SendPollerMsg(DWORD dwRqId, const TCHAR *pszMsg);
-	BOOL SendFile(const TCHAR *file, DWORD dwRqId);
+   void sendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
+   void sendPollerMsg(DWORD dwRqId, const TCHAR *pszMsg);
+	BOOL sendFile(const TCHAR *file, DWORD dwRqId);
 
-   DWORD GetIndex(void) { return m_dwIndex; }
-   void SetIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
-   int GetState(void) { return m_iState; }
-   const TCHAR *GetUserName(void) { return m_szUserName; }
-   const TCHAR *GetClientInfo(void) { return m_szClientInfo; }
-   DWORD GetUserId(void) { return m_dwUserId; }
-   BOOL IsAuthenticated(void) { return (m_dwFlags & CSF_AUTHENTICATED) ? TRUE : FALSE; }
-   BOOL IsSubscribed(DWORD dwChannel) { return (m_dwActiveChannels & dwChannel) ? TRUE : FALSE; }
-   WORD GetCurrentCmd(void) { return m_wCurrentCmd; }
-   int GetCipher(void) { return (m_pCtx == NULL) ? -1 : m_pCtx->nCipher; }
+   DWORD getIndex(void) { return m_dwIndex; }
+   void setIndex(DWORD dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
+   int getState(void) { return m_iState; }
+   const TCHAR *getUserName(void) { return m_szUserName; }
+   const TCHAR *getClientInfo(void) { return m_szClientInfo; }
+   DWORD getUserId() { return m_dwUserId; }
+	DWORD getSystemRights() { return m_dwSystemAccess; }
+   BOOL isAuthenticated(void) { return (m_dwFlags & CSF_AUTHENTICATED) ? TRUE : FALSE; }
+   BOOL isSubscribed(DWORD dwChannel) { return (m_dwActiveChannels & dwChannel) ? TRUE : FALSE; }
+   WORD getCurrentCmd(void) { return m_wCurrentCmd; }
+   int getCipher(void) { return (m_pCtx == NULL) ? -1 : m_pCtx->nCipher; }
 
-   void Kill(void);
-   void Notify(DWORD dwCode, DWORD dwData = 0);
+	bool checkSysAccessRights(DWORD requiredAccess) 
+   { 
+      return m_dwUserId == 0 ? true : 
+         ((requiredAccess & m_dwSystemAccess) ? true : false);
+   }
 
-	void QueueUpdate(UPDATE_INFO *pUpdate) { m_pUpdateQueue->Put(pUpdate); }
-   void OnNewEvent(Event *pEvent);
-   void OnSyslogMessage(NX_LOG_RECORD *pRec);
-   void OnNewSNMPTrap(CSCPMessage *pMsg);
-   void OnObjectChange(NetObj *pObject);
-   void OnUserDBUpdate(int code, DWORD id, UserDatabaseObject *user);
-   void OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
-   void OnActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction);
-	void OnSituationChange(CSCPMessage *msg);
+   void kill(void);
+   void notify(DWORD dwCode, DWORD dwData = 0);
+
+	void queueUpdate(UPDATE_INFO *pUpdate) { m_pUpdateQueue->Put(pUpdate); }
+   void onNewEvent(Event *pEvent);
+   void onSyslogMessage(NX_LOG_RECORD *pRec);
+   void onNewSNMPTrap(CSCPMessage *pMsg);
+   void onObjectChange(NetObj *pObject);
+   void onUserDBUpdate(int code, DWORD id, UserDatabaseObject *user);
+   void onAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm);
+   void onActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction);
+	void onSituationChange(CSCPMessage *msg);
 };
 
 

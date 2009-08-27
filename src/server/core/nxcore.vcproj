@@ -569,6 +569,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\logfilter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\loghandle.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\logs.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>
@@ -832,6 +844,10 @@
 			</File>
 			<File
 				RelativePath="..\include\nxcore_jobs.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\nxcore_logs.h"
 				>
 			</File>
 			<File

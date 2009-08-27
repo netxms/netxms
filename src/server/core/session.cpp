@@ -153,6 +153,8 @@ DEFINE_THREAD_STARTER(SendEventLog)
 DEFINE_THREAD_STARTER(SendSyslog)
 DEFINE_THREAD_STARTER(CreateObject)
 DEFINE_THREAD_STARTER(GetServerFile)
+DEFINE_THREAD_STARTER(queryServerLog)
+DEFINE_THREAD_STARTER(getServerLogQueryData)
 
 
 //
@@ -166,7 +168,7 @@ THREAD_RESULT THREAD_CALL ClientSession::ReadThreadStarter(void *pArg)
    // When ClientSession::ReadThread exits, all other session
    // threads are already stopped, so we can safely destroy
    // session object
-   UnregisterSession(((ClientSession *)pArg)->GetIndex());
+   UnregisterSession(((ClientSession *)pArg)->getIndex());
    delete (ClientSession *)pArg;
    return THREAD_OK;
 }
@@ -215,7 +217,7 @@ THREAD_RESULT THREAD_CALL ClientSession::PollerThreadStarter(void *pArg)
       ((POLLER_START_DATA *)pArg)->pNode,
       ((POLLER_START_DATA *)pArg)->iPollType,
       ((POLLER_START_DATA *)pArg)->dwRqId);
-   ((POLLER_START_DATA *)pArg)->pSession->DecRefCount();
+   ((POLLER_START_DATA *)pArg)->pSession->decRefCount();
    free(pArg);
    return THREAD_OK;
 }
@@ -305,7 +307,7 @@ ClientSession::~ClientSession()
 // Start all threads
 //
 
-void ClientSession::Run(void)
+void ClientSession::run(void)
 {
    m_hWriteThread = ThreadCreateEx(WriteThreadStarter, 0, this);
    m_hProcessingThread = ThreadCreateEx(ProcessingThreadStarter, 0, this);
@@ -414,9 +416,9 @@ void ClientSession::ReadThread(void)
                         msg.SetCode(CMD_REQUEST_COMPLETED);
                         msg.SetId(pRawMsg->dwId);
                         msg.SetVariable(VID_RCC, RCC_SUCCESS);
-                        SendMessage(&msg);
+                        sendMessage(&msg);
 
-                        OnFileUpload(TRUE);
+                        onFileUpload(TRUE);
                      }
                   }
                   else
@@ -430,9 +432,9 @@ void ClientSession::ReadThread(void)
                      msg.SetCode(CMD_REQUEST_COMPLETED);
                      msg.SetId(pRawMsg->dwId);
                      msg.SetVariable(VID_RCC, RCC_IO_ERROR);
-                     SendMessage(&msg);
+                     sendMessage(&msg);
 
-                     OnFileUpload(FALSE);
+                     onFileUpload(FALSE);
                   }
                }
                else
@@ -441,7 +443,7 @@ void ClientSession::ReadThread(void)
                   close(m_hCurrFile);
                   m_hCurrFile = -1;
                
-                  OnFileUpload(FALSE);
+                  onFileUpload(FALSE);
                }
             }
             else
@@ -498,7 +500,7 @@ void ClientSession::ReadThread(void)
    {
       close(m_hCurrFile);
       m_hCurrFile = -1;
-      OnFileUpload(FALSE);
+      onFileUpload(FALSE);
    }
 
    // Remove all locks created by this session
@@ -594,7 +596,7 @@ void ClientSession::UpdateThread(void)
       {
          case INFO_CAT_EVENT:
             MutexLock(m_mutexSendEvents, INFINITE);
-            SendMessage((CSCPMessage *)pUpdate->pData);
+            sendMessage((CSCPMessage *)pUpdate->pData);
             MutexUnlock(m_mutexSendEvents);
             delete (CSCPMessage *)pUpdate->pData;
             break;
@@ -602,19 +604,19 @@ void ClientSession::UpdateThread(void)
             MutexLock(m_mutexSendSyslog, INFINITE);
             msg.SetCode(CMD_SYSLOG_RECORDS);
             CreateMessageFromSyslogMsg(&msg, (NX_LOG_RECORD *)pUpdate->pData);
-            SendMessage(&msg);
+            sendMessage(&msg);
             MutexUnlock(m_mutexSendSyslog);
             free(pUpdate->pData);
             break;
          case INFO_CAT_SNMP_TRAP:
             MutexLock(m_mutexSendTrapLog, INFINITE);
-            SendMessage((CSCPMessage *)pUpdate->pData);
+            sendMessage((CSCPMessage *)pUpdate->pData);
             MutexUnlock(m_mutexSendTrapLog);
             delete (CSCPMessage *)pUpdate->pData;
             break;
          case INFO_CAT_AUDIT_RECORD:
             MutexLock(m_mutexSendAuditLog, INFINITE);
-            SendMessage((CSCPMessage *)pUpdate->pData);
+            sendMessage((CSCPMessage *)pUpdate->pData);
             MutexUnlock(m_mutexSendAuditLog);
             delete (CSCPMessage *)pUpdate->pData;
             break;
@@ -624,7 +626,7 @@ void ClientSession::UpdateThread(void)
             ((NetObj *)pUpdate->pData)->CreateMessage(&msg);
             if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
                ((NetObj *)pUpdate->pData)->CommentsToMessage(&msg);
-            SendMessage(&msg);
+            sendMessage(&msg);
             MutexUnlock(m_mutexSendObjects);
             msg.DeleteAllVariables();
             ((NetObj *)pUpdate->pData)->DecRefCount();
@@ -634,7 +636,7 @@ void ClientSession::UpdateThread(void)
             msg.SetCode(CMD_ALARM_UPDATE);
             msg.SetVariable(VID_NOTIFICATION_CODE, pUpdate->dwCode);
             FillAlarmInfoMessage(&msg, (NXC_ALARM *)pUpdate->pData);
-            SendMessage(&msg);
+            sendMessage(&msg);
             MutexUnlock(m_mutexSendAlarms);
             msg.DeleteAllVariables();
             free(pUpdate->pData);
@@ -646,14 +648,14 @@ void ClientSession::UpdateThread(void)
             msg.SetVariable(VID_ACTION_ID, ((NXC_ACTION *)pUpdate->pData)->dwId);
             if (pUpdate->dwCode != NX_NOTIFY_ACTION_DELETED)
                FillActionInfoMessage(&msg, (NXC_ACTION *)pUpdate->pData);
-            SendMessage(&msg);
+            sendMessage(&msg);
             MutexUnlock(m_mutexSendActions);
             msg.DeleteAllVariables();
             free(pUpdate->pData);
             break;
          case INFO_CAT_SITUATION:
             MutexLock(m_mutexSendSituations, INFINITE);
-            SendMessage((CSCPMessage *)pUpdate->pData);
+            sendMessage((CSCPMessage *)pUpdate->pData);
             MutexUnlock(m_mutexSendSituations);
             delete (CSCPMessage *)pUpdate->pData;
             break;
@@ -943,7 +945,7 @@ void ClientSession::ProcessingThread(void)
             ChangeObjectIP(pMsg);
             break;
          case CMD_REQUEST_ENCRYPTION:
-            SetupEncryption(pMsg->GetId());
+            setupEncryption(pMsg->GetId());
             break;
          case CMD_GET_AGENT_CONFIG:
             GetAgentConfig(pMsg);
@@ -1188,6 +1190,18 @@ void ClientSession::ProcessingThread(void)
 			case CMD_SET_CURRENT_USER_ATTR:
 				setUserCustomAttribute(pMsg);
 				break;
+			case CMD_OPEN_SERVER_LOG:
+				openServerLog(pMsg);
+				break;
+			case CMD_CLOSE_SERVER_LOG:
+				closeServerLog(pMsg);
+				break;
+			case CMD_QUERY_LOG:
+				CALL_IN_NEW_THREAD(queryServerLog, pMsg);
+				break;
+			case CMD_GET_LOG_DATA:
+				CALL_IN_NEW_THREAD(getServerLogQueryData, pMsg);
+				break;
          default:
             // Pass message to loaded modules
             for(i = 0; i < g_dwNumModules; i++)
@@ -1213,7 +1227,7 @@ void ClientSession::ProcessingThread(void)
                response.SetId(pMsg->GetId());
                response.SetCode(CMD_REQUEST_COMPLETED);
                response.SetVariable(VID_RCC, RCC_NOT_IMPLEMENTED);
-               SendMessage(&response);
+               sendMessage(&response);
             }
             break;
       }
@@ -1234,7 +1248,7 @@ void ClientSession::RespondToKeepalive(DWORD dwRqId)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -1242,7 +1256,7 @@ void ClientSession::RespondToKeepalive(DWORD dwRqId)
 // Process received file
 //
 
-void ClientSession::OnFileUpload(BOOL bSuccess)
+void ClientSession::onFileUpload(BOOL bSuccess)
 {
    // Do processing specific to command initiated file upload
    switch(m_dwUploadCommand)
@@ -1270,7 +1284,7 @@ void ClientSession::OnFileUpload(BOOL bSuccess)
 // Send file to client
 //
 
-BOOL ClientSession::SendFile(const TCHAR *file, DWORD dwRqId)
+BOOL ClientSession::sendFile(const TCHAR *file, DWORD dwRqId)
 {
 	return SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx, 0);
 }
@@ -1370,7 +1384,7 @@ void ClientSession::SendServerInfo(DWORD dwRqId)
 	msg.SetVariable(VID_CONSOLE_UPGRADE_URL, (TCHAR *)strURL);
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -1469,7 +1483,7 @@ void ClientSession::Login(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -1487,12 +1501,12 @@ void ClientSession::SendEventDB(DWORD dwRqId)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
-   if (CheckSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB))
+   if (checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB))
    {
       if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
       {
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
-         SendMessage(&msg);
+         sendMessage(&msg);
          msg.DeleteAllVariables();
 
          // Prepare data message
@@ -1517,7 +1531,7 @@ void ClientSession::SendEventDB(DWORD dwRqId)
                DecodeSQLString(szBuffer);
                msg.SetVariable(VID_DESCRIPTION, szBuffer);
 
-               SendMessage(&msg);
+               sendMessage(&msg);
                msg.DeleteAllVariables();
             }
             DBFreeAsyncResult(g_hCoreDB, hResult);
@@ -1535,7 +1549,7 @@ void ClientSession::SendEventDB(DWORD dwRqId)
    {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -1552,7 +1566,7 @@ void ClientSession::LockEventDB(DWORD dwRqId)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
 
-   if (!CheckSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
+   if (!checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
    {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
@@ -1568,7 +1582,7 @@ void ClientSession::LockEventDB(DWORD dwRqId)
 		WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_szWorkstation, 0,
 			           _T("Event configuration database locked"));
    }
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -1595,7 +1609,7 @@ void ClientSession::UnlockEventDB(DWORD dwRqId)
    {
       msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
    }
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -1619,7 +1633,7 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
    else
    {
       // Check access rights
-      if (CheckSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
+      if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
       {
          char szQuery[4096], szName[MAX_EVENT_NAME];
          DWORD dwEventCode;
@@ -1698,7 +1712,7 @@ void ClientSession::SetEventInfo(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -1725,7 +1739,7 @@ void ClientSession::DeleteEventTemplate(CSCPMessage *pRequest)
       dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
 
       // Check access rights
-      if (CheckSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) && (dwEventCode >= FIRST_USER_EVENT_ID))
+      if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) && (dwEventCode >= FIRST_USER_EVENT_ID))
       {
          TCHAR szQuery[256];
 
@@ -1751,7 +1765,7 @@ void ClientSession::DeleteEventTemplate(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -1775,7 +1789,7 @@ void ClientSession::GenerateEventCode(DWORD dwRqId)
    else
    {
       // Check access rights
-      if (CheckSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
+      if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
       {
          msg.SetVariable(VID_EVENT_CODE, CreateUniqueId(IDG_EVENT));
       }
@@ -1786,7 +1800,7 @@ void ClientSession::GenerateEventCode(DWORD dwRqId)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -1803,7 +1817,7 @@ void ClientSession::SendAllObjects(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
-   SendMessage(&msg);
+   sendMessage(&msg);
    msg.DeleteAllVariables();
 
    // Change "sync comments" flag
@@ -1830,14 +1844,14 @@ void ClientSession::SendAllObjects(CSCPMessage *pRequest)
          ((NetObj *)g_pIndexById[i].pObject)->CreateMessage(&msg);
          if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
             ((NetObj *)g_pIndexById[i].pObject)->CommentsToMessage(&msg);
-         SendMessage(&msg);
+         sendMessage(&msg);
          msg.DeleteAllVariables();
       }
    RWLockUnlock(g_rwlockIdIndex);
 
    // Send end of list notification
    msg.SetCode(CMD_OBJECT_LIST_END);
-   SendMessage(&msg);
+   sendMessage(&msg);
 
    MutexUnlock(m_mutexSendObjects);
 }
@@ -1911,7 +1925,7 @@ void ClientSession::SendEventLog(CSCPMessage *pRequest)
    if (hResult != NULL)
    {
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
-   	SendMessage(&msg);
+   	sendMessage(&msg);
    	msg.DeleteAllVariables();
 	   msg.SetCode(CMD_EVENTLOG_RECORDS);
 	   
@@ -1921,7 +1935,7 @@ void ClientSession::SendEventLog(CSCPMessage *pRequest)
          {
             msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
             msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
-            SendMessage(&msg);
+            sendMessage(&msg);
             msg.DeleteAllVariables();
             dwNumRows = 0;
             dwId = VID_EVENTLOG_MSG_BASE;
@@ -1944,12 +1958,12 @@ void ClientSession::SendEventLog(CSCPMessage *pRequest)
       msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
       msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
       msg.SetEndOfSequence();
-      SendMessage(&msg);
+      sendMessage(&msg);
    }
    else
    {
       msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
-   	SendMessage(&msg);
+   	sendMessage(&msg);
 	}
 
    MutexUnlock(m_mutexSendEvents);
@@ -1999,7 +2013,7 @@ void ClientSession::SendAllConfigVars(DWORD dwRqId)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -2038,7 +2052,7 @@ void ClientSession::SetConfigVariable(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -2077,7 +2091,7 @@ void ClientSession::DeleteConfigVariable(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -2121,7 +2135,7 @@ void ClientSession::SetConfigCLOB(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 	
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -2157,7 +2171,7 @@ void ClientSession::GetConfigCLOB(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 	
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -2165,7 +2179,7 @@ void ClientSession::GetConfigCLOB(CSCPMessage *pRequest)
 // Close session forcibly
 //
 
-void ClientSession::Kill(void)
+void ClientSession::kill(void)
 {
    // We shutdown socket connection, which will cause
    // read thread to stop, and other threads will follow
@@ -2177,12 +2191,12 @@ void ClientSession::Kill(void)
 // Handler for new events
 //
 
-void ClientSession::OnNewEvent(Event *pEvent)
+void ClientSession::onNewEvent(Event *pEvent)
 {
    UPDATE_INFO *pUpdate;
    CSCPMessage *msg;
 
-   if (IsAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_EVENTS))
+   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_EVENTS))
    {
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
       pUpdate->dwCategory = INFO_CAT_EVENT;
@@ -2199,11 +2213,11 @@ void ClientSession::OnNewEvent(Event *pEvent)
 // Handler for object changes
 //
 
-void ClientSession::OnObjectChange(NetObj *pObject)
+void ClientSession::onObjectChange(NetObj *pObject)
 {
    UPDATE_INFO *pUpdate;
 
-   if (IsAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_OBJECTS))
+   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_OBJECTS))
       if (pObject->CheckAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
@@ -2219,14 +2233,14 @@ void ClientSession::OnObjectChange(NetObj *pObject)
 // Send notification message to server
 //
 
-void ClientSession::Notify(DWORD dwCode, DWORD dwData)
+void ClientSession::notify(DWORD dwCode, DWORD dwData)
 {
    CSCPMessage msg;
 
    msg.SetCode(CMD_NOTIFY);
    msg.SetVariable(VID_NOTIFICATION_CODE, dwCode);
    msg.SetVariable(VID_NOTIFICATION_DATA, dwData);
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -2294,7 +2308,7 @@ void ClientSession::ModifyObject(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -2312,7 +2326,7 @@ void ClientSession::SendUserDB(DWORD dwRqId)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
-   SendMessage(&msg);
+   sendMessage(&msg);
 	msg.DeleteAllVariables();
 
    // Send user database
@@ -2321,13 +2335,13 @@ void ClientSession::SendUserDB(DWORD dwRqId)
    {
 		msg.SetCode((users[i]->getId() & GROUP_FLAG) ? CMD_GROUP_DATA : CMD_USER_DATA);
 		users[i]->fillMessage(&msg);
-      SendMessage(&msg);
+      sendMessage(&msg);
       msg.DeleteAllVariables();
    }
 
    // Send end-of-database notification
    msg.SetCode(CMD_USER_DB_EOF);
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -2376,7 +2390,7 @@ void ClientSession::CreateUser(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -2409,7 +2423,7 @@ void ClientSession::UpdateUser(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -2457,7 +2471,7 @@ void ClientSession::DeleteUser(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -2506,7 +2520,7 @@ void ClientSession::LockUserDB(DWORD dwRqId, BOOL bLock)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -2514,11 +2528,11 @@ void ClientSession::LockUserDB(DWORD dwRqId, BOOL bLock)
 // Notify client on user database update
 //
 
-void ClientSession::OnUserDBUpdate(int code, DWORD id, UserDatabaseObject *object)
+void ClientSession::onUserDBUpdate(int code, DWORD id, UserDatabaseObject *object)
 {
    CSCPMessage msg;
 
-   if (IsAuthenticated())
+   if (isAuthenticated())
    {
       msg.SetCode(CMD_USER_DB_UPDATE);
       msg.SetId(0);
@@ -2535,7 +2549,7 @@ void ClientSession::OnUserDBUpdate(int code, DWORD id, UserDatabaseObject *objec
             break;
       }
 
-      SendMessage(&msg);
+      sendMessage(&msg);
    }
 }
 
@@ -2587,7 +2601,7 @@ void ClientSession::ChangeObjectMgmtStatus(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -2624,7 +2638,7 @@ void ClientSession::SetPassword(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -2688,7 +2702,7 @@ void ClientSession::OpenNodeDCIList(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 
    // If DCI list was successfully locked, send it to client
    if (bSuccess)
@@ -2763,7 +2777,7 @@ void ClientSession::CloseNodeDCIList(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -2872,7 +2886,7 @@ void ClientSession::ModifyNodeDCI(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -2935,7 +2949,7 @@ void ClientSession::ChangeDCIStatus(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -2992,7 +3006,7 @@ void ClientSession::ClearDCIData(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -3111,7 +3125,7 @@ void ClientSession::CopyDCI(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -3202,7 +3216,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
             {
                // Send CMD_REQUEST_COMPLETED message
                msg.SetVariable(VID_RCC, RCC_SUCCESS);
-               SendMessage(&msg);
+               sendMessage(&msg);
 
                dwNumRows = DBGetNumRows(hResult);
 
@@ -3280,7 +3294,7 @@ void ClientSession::GetCollectedData(CSCPMessage *pRequest)
 
    // Send response
    if (!bSuccess)
-      SendMessage(&msg);
+      sendMessage(&msg);
 }
 
 
@@ -3323,7 +3337,7 @@ void ClientSession::SendLastValues(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -3363,7 +3377,7 @@ void ClientSession::OpenEPP(DWORD dwRqId)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 
    // Send policy to client
    if (bSuccess)
@@ -3399,7 +3413,7 @@ void ClientSession::CloseEPP(DWORD dwRqId)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -3447,7 +3461,7 @@ void ClientSession::SaveEPP(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -3464,7 +3478,7 @@ void ClientSession::ProcessEPPRecord(CSCPMessage *pRequest)
       msg.SetCode(CMD_REQUEST_COMPLETED);
       msg.SetId(pRequest->GetId());
       msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
-      SendMessage(&msg);
+      sendMessage(&msg);
    }
    else
    {
@@ -3487,7 +3501,7 @@ void ClientSession::ProcessEPPRecord(CSCPMessage *pRequest)
             msg.SetCode(CMD_REQUEST_COMPLETED);
             msg.SetId(pRequest->GetId());
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
-            SendMessage(&msg);
+            sendMessage(&msg);
 
             m_dwFlags &= ~CSF_EPP_UPLOAD;
          }
@@ -3550,7 +3564,7 @@ void ClientSession::SendMIBTimestamp(DWORD dwRqId)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -3724,7 +3738,7 @@ void ClientSession::CreateObject(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -3805,7 +3819,7 @@ void ClientSession::ChangeObjectBinding(CSCPMessage *pRequest, BOOL bBind)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -3851,7 +3865,7 @@ void ClientSession::DeleteObject(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -3859,12 +3873,12 @@ void ClientSession::DeleteObject(CSCPMessage *pRequest)
 // Process changes in alarms
 //
 
-void ClientSession::OnAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
+void ClientSession::onAlarmUpdate(DWORD dwCode, NXC_ALARM *pAlarm)
 {
    UPDATE_INFO *pUpdate;
    NetObj *pObject;
 
-   if (IsAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_ALARMS))
+   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_ALARMS))
    {
       pObject = FindObjectById(pAlarm->dwSourceObject);
       if (pObject != NULL)
@@ -3929,7 +3943,7 @@ void ClientSession::AcknowledgeAlarm(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -3970,7 +3984,7 @@ void ClientSession::TerminateAlarm(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -4014,7 +4028,7 @@ void ClientSession::DeleteAlarm(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -4063,7 +4077,7 @@ void ClientSession::LockActionDB(DWORD dwRqId, BOOL bLock)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -4110,7 +4124,7 @@ void ClientSession::CreateAction(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -4143,7 +4157,7 @@ void ClientSession::UpdateAction(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -4186,7 +4200,7 @@ void ClientSession::DeleteAction(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -4194,11 +4208,11 @@ void ClientSession::DeleteAction(CSCPMessage *pRequest)
 // Process changes in actions
 //
 
-void ClientSession::OnActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction)
+void ClientSession::onActionDBUpdate(DWORD dwCode, NXC_ACTION *pAction)
 {
    UPDATE_INFO *pUpdate;
 
-   if (IsAuthenticated())
+   if (isAuthenticated())
    {
       if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS)
       {
@@ -4229,7 +4243,7 @@ void ClientSession::SendAllActions(DWORD dwRqId)
        (m_dwSystemAccess & SYSTEM_ACCESS_EPP))
    {
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
-      SendMessage(&msg);
+      sendMessage(&msg);
       MutexLock(m_mutexSendActions, INFINITE);
       SendActionsToClient(this, dwRqId);
       MutexUnlock(m_mutexSendActions);
@@ -4237,7 +4251,7 @@ void ClientSession::SendAllActions(DWORD dwRqId)
    else
    {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-      SendMessage(&msg);
+      sendMessage(&msg);
    }
 }
 
@@ -4261,13 +4275,13 @@ void ClientSession::SendContainerCategories(DWORD dwRqId)
       msg.SetVariable(VID_CATEGORY_NAME, g_pContainerCatList[i].szName);
       //msg.SetVariable(VID_IMAGE_ID, g_pContainerCatList[i].dwImageId);
       msg.SetVariable(VID_DESCRIPTION, g_pContainerCatList[i].pszDescription);
-      SendMessage(&msg);
+      sendMessage(&msg);
       msg.DeleteAllVariables();
    }
 
    // Send end-of-list indicator
    msg.SetVariable(VID_CATEGORY_ID, (DWORD)0);
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -4331,7 +4345,7 @@ void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
    MutexUnlock(m_mutexPollerInit);
 	safe_free(pData);
 }
@@ -4341,7 +4355,7 @@ void ClientSession::ForcedNodePoll(CSCPMessage *pRequest)
 // Send message fro poller to client
 //
 
-void ClientSession::SendPollerMsg(DWORD dwRqId, const TCHAR *pszMsg)
+void ClientSession::sendPollerMsg(DWORD dwRqId, const TCHAR *pszMsg)
 {
    CSCPMessage msg;
 
@@ -4349,7 +4363,7 @@ void ClientSession::SendPollerMsg(DWORD dwRqId, const TCHAR *pszMsg)
    msg.SetId(dwRqId);
    msg.SetVariable(VID_RCC, RCC_OPERATION_IN_PROGRESS);
    msg.SetVariable(VID_POLLER_MESSAGE, pszMsg);
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -4378,7 +4392,7 @@ void ClientSession::PollerThread(Node *pNode, int iPollType, DWORD dwRqId)
          pNode->UpdateInterfaceNames(this, dwRqId);
          break;
       default:
-         SendPollerMsg(dwRqId, _T("Invalid poll type requested\r\n"));
+         sendPollerMsg(dwRqId, _T("Invalid poll type requested\r\n"));
          break;
    }
    pNode->DecRefCount();
@@ -4386,7 +4400,7 @@ void ClientSession::PollerThread(Node *pNode, int iPollType, DWORD dwRqId)
    msg.SetCode(CMD_POLLING_INFO);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -4455,7 +4469,7 @@ void ClientSession::OnTrap(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -4505,7 +4519,7 @@ void ClientSession::OnWakeUpNode(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -4556,7 +4570,7 @@ void ClientSession::QueryParameter(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -4610,7 +4624,7 @@ void ClientSession::EditTrap(int iOperation, CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -4659,7 +4673,7 @@ void ClientSession::LockTrapCfg(DWORD dwRqId, BOOL bLock)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -4681,7 +4695,7 @@ void ClientSession::SendAllTraps(DWORD dwRqId)
       if (m_dwFlags & CSF_TRAP_CFG_LOCKED)
       {
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
-         SendMessage(&msg);
+         sendMessage(&msg);
          bSuccess = TRUE;
          SendTrapsToClient(this, dwRqId);
       }
@@ -4698,7 +4712,7 @@ void ClientSession::SendAllTraps(DWORD dwRqId)
 
    // Send response
    if (!bSuccess)
-      SendMessage(&msg);
+      sendMessage(&msg);
 }
 
 
@@ -4726,7 +4740,7 @@ void ClientSession::SendAllTraps2(DWORD dwRqId)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -4775,7 +4789,7 @@ void ClientSession::LockPackageDB(DWORD dwRqId, BOOL bLock)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -4802,7 +4816,7 @@ void ClientSession::SendAllPackages(DWORD dwRqId)
          if (hResult != NULL)
          {
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
-            SendMessage(&msg);
+            sendMessage(&msg);
             bSuccess = TRUE;
 
             msg.SetCode(CMD_PACKAGE_INFO);
@@ -4818,12 +4832,12 @@ void ClientSession::SendAllPackages(DWORD dwRqId)
                DBGetFieldAsync(hResult, 5, szBuffer, MAX_DB_STRING);
                DecodeSQLString(szBuffer);
                msg.SetVariable(VID_DESCRIPTION, szBuffer);
-               SendMessage(&msg);
+               sendMessage(&msg);
                msg.DeleteAllVariables();
             }
 
             msg.SetVariable(VID_PACKAGE_ID, (DWORD)0);
-            SendMessage(&msg);
+            sendMessage(&msg);
 
             DBFreeAsyncResult(g_hCoreDB, hResult);
          }
@@ -4845,7 +4859,7 @@ void ClientSession::SendAllPackages(DWORD dwRqId)
 
    // Send response
    if (!bSuccess)
-      SendMessage(&msg);
+      sendMessage(&msg);
 }
 
 
@@ -4952,7 +4966,7 @@ void ClientSession::InstallPackage(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -4988,7 +5002,7 @@ void ClientSession::RemovePackage(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -5030,7 +5044,7 @@ void ClientSession::SendParametersList(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -5176,7 +5190,7 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 
    // Allow deployment thread to run
    if (bSuccess)
@@ -5264,7 +5278,7 @@ void ClientSession::ApplyTemplate(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -5321,7 +5335,7 @@ void ClientSession::GetUserVariable(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -5395,7 +5409,7 @@ void ClientSession::SetUserVariable(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -5447,7 +5461,7 @@ void ClientSession::EnumUserVariables(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -5489,7 +5503,7 @@ void ClientSession::DeleteUserVariable(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -5578,7 +5592,7 @@ void ClientSession::CopyUserVariable(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -5634,7 +5648,7 @@ void ClientSession::ChangeObjectIP(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -5642,7 +5656,7 @@ void ClientSession::ChangeObjectIP(CSCPMessage *pRequest)
 // Setup encryption with client
 //
 
-void ClientSession::SetupEncryption(DWORD dwRqId)
+void ClientSession::setupEncryption(DWORD dwRqId)
 {
    CSCPMessage msg;
 
@@ -5655,7 +5669,7 @@ void ClientSession::SetupEncryption(DWORD dwRqId)
    // Send request for session key
    PrepareKeyRequestMsg(&msg, g_pServerKey);
    msg.SetId(dwRqId);
-   SendMessage(&msg);
+   sendMessage(&msg);
    msg.DeleteAllVariables();
 
    // Wait for encryption setup
@@ -5671,7 +5685,7 @@ void ClientSession::SetupEncryption(DWORD dwRqId)
    msg.SetVariable(VID_RCC, RCC_NO_ENCRYPTION_SUPPORT);
 #endif
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -5741,7 +5755,7 @@ void ClientSession::GetAgentConfig(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -5824,7 +5838,7 @@ void ClientSession::UpdateAgentConfig(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -5900,7 +5914,7 @@ void ClientSession::ExecuteAction(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -6007,7 +6021,7 @@ void ClientSession::SendObjectTools(DWORD dwRqId)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -6129,7 +6143,7 @@ void ClientSession::SendObjectToolDetails(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -6178,7 +6192,7 @@ void ClientSession::LockObjectTools(DWORD dwRqId, BOOL bLock)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -6214,7 +6228,7 @@ void ClientSession::UpdateObjectTool(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -6252,7 +6266,7 @@ void ClientSession::DeleteObjectTool(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -6276,7 +6290,7 @@ void ClientSession::GenerateObjectToolId(DWORD dwRqId)
    else
    {
       // Check access rights
-      if (CheckSysAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS))
+      if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS))
       {
          msg.SetVariable(VID_TOOL_ID, CreateUniqueId(IDG_OBJECT_TOOL));
       }
@@ -6287,7 +6301,7 @@ void ClientSession::GenerateObjectToolId(DWORD dwRqId)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -6342,7 +6356,7 @@ void ClientSession::ExecTableTool(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -6369,7 +6383,7 @@ void ClientSession::ChangeSubscription(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -6431,7 +6445,7 @@ void ClientSession::SendServerStats(DWORD dwRqId)
 	msg.SetVariable(VID_QSIZE_STATUS_POLLER, g_statusPollQueue.Size());
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -6472,7 +6486,7 @@ void ClientSession::SendScriptList(DWORD dwRqId)
    {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -6518,7 +6532,7 @@ void ClientSession::SendScript(CSCPMessage *pRequest)
    {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -6585,7 +6599,7 @@ void ClientSession::UpdateScript(CSCPMessage *pRequest)
    {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -6635,7 +6649,7 @@ void ClientSession::RenameScript(CSCPMessage *pRequest)
    {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -6678,7 +6692,7 @@ void ClientSession::DeleteScript(CSCPMessage *pRequest)
    {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -6694,10 +6708,10 @@ static void CopySessionData(ClientSession *pSession, void *pArg)
    ((CSCPMessage *)pArg)->SetVariable(VID_NUM_SESSIONS, dwIndex + 1);
 
    dwId = VID_SESSION_DATA_BASE + dwIndex * 100;
-   ((CSCPMessage *)pArg)->SetVariable(dwId++, pSession->GetIndex());
-   ((CSCPMessage *)pArg)->SetVariable(dwId++, (WORD)pSession->GetCipher());
-   ((CSCPMessage *)pArg)->SetVariable(dwId++, (TCHAR *)pSession->GetUserName());
-   ((CSCPMessage *)pArg)->SetVariable(dwId++, (TCHAR *)pSession->GetClientInfo());
+   ((CSCPMessage *)pArg)->SetVariable(dwId++, pSession->getIndex());
+   ((CSCPMessage *)pArg)->SetVariable(dwId++, (WORD)pSession->getCipher());
+   ((CSCPMessage *)pArg)->SetVariable(dwId++, (TCHAR *)pSession->getUserName());
+   ((CSCPMessage *)pArg)->SetVariable(dwId++, (TCHAR *)pSession->getClientInfo());
 }
 
 
@@ -6721,7 +6735,7 @@ void ClientSession::SendSessionList(DWORD dwRqId)
    {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -6742,7 +6756,7 @@ void ClientSession::KillSession(CSCPMessage *pRequest)
    {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -6750,11 +6764,11 @@ void ClientSession::KillSession(CSCPMessage *pRequest)
 // Handler for new syslog messages
 //
 
-void ClientSession::OnSyslogMessage(NX_LOG_RECORD *pRec)
+void ClientSession::onSyslogMessage(NX_LOG_RECORD *pRec)
 {
    UPDATE_INFO *pUpdate;
 
-   if (IsAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_SYSLOG))
+   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_SYSLOG))
    {
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
       pUpdate->dwCategory = INFO_CAT_SYSLOG_MSG;
@@ -6831,7 +6845,7 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
    if (hResult != NULL)
    {
 		msg.SetVariable(VID_RCC, RCC_SUCCESS);
-		SendMessage(&msg);
+		sendMessage(&msg);
 		msg.DeleteAllVariables();
 		msg.SetCode(CMD_SYSLOG_RECORDS);
 		
@@ -6842,7 +6856,7 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
          {
             msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
             msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
-            SendMessage(&msg);
+            sendMessage(&msg);
             msg.DeleteAllVariables();
             dwNumRows = 0;
             dwId = VID_SYSLOG_MSG_BASE;
@@ -6864,12 +6878,12 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
       msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
       msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
       msg.SetEndOfSequence();
-      SendMessage(&msg);
+      sendMessage(&msg);
    }
    else
    {
 		msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
-		SendMessage(&msg);
+		sendMessage(&msg);
 	}
 
    MutexUnlock(m_mutexSendSyslog);
@@ -6880,11 +6894,11 @@ void ClientSession::SendSyslog(CSCPMessage *pRequest)
 // Handler for new traps
 //
 
-void ClientSession::OnNewSNMPTrap(CSCPMessage *pMsg)
+void ClientSession::onNewSNMPTrap(CSCPMessage *pMsg)
 {
    UPDATE_INFO *pUpdate;
 
-   if (IsAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_SNMP_TRAPS))
+   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_SNMP_TRAPS))
    {
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
       pUpdate->dwCategory = INFO_CAT_SNMP_TRAP;
@@ -6916,7 +6930,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
    if (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_TRAP_LOG)
    {
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
-      SendMessage(&msg);
+      sendMessage(&msg);
       msg.DeleteAllVariables();
       msg.SetCode(CMD_TRAP_LOG_RECORDS);
 
@@ -6974,7 +6988,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
             {
                msg.SetVariable(VID_NUM_RECORDS, dwNumRows);
                msg.SetVariable(VID_RECORDS_ORDER, wRecOrder);
-               SendMessage(&msg);
+               sendMessage(&msg);
                msg.DeleteAllVariables();
                dwNumRows = 0;
                dwId = VID_TRAP_LOG_MSG_BASE;
@@ -7002,7 +7016,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
    {
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -7049,7 +7063,7 @@ static DWORD WalkerCallback(DWORD dwVersion, SNMP_Variable *pVar,
    if (((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars == 50)
    {
       pMsg->SetVariable(VID_NUM_VARIABLES, ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars);
-      ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->pSession->SendMessage(pMsg);
+      ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->pSession->sendMessage(pMsg);
       ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars = 0;
       ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId = VID_SNMP_WALKER_DATA_BASE;
       pMsg->DeleteAllVariables();
@@ -7078,9 +7092,9 @@ static THREAD_RESULT THREAD_CALL WalkerThread(void *pArg)
          ((WALKER_THREAD_ARGS *)pArg)->szBaseOID, WalkerCallback, &args);
    msg.SetVariable(VID_NUM_VARIABLES, args.dwNumVars);
    msg.SetEndOfSequence();
-   ((WALKER_THREAD_ARGS *)pArg)->pSession->SendMessage(&msg);
+   ((WALKER_THREAD_ARGS *)pArg)->pSession->sendMessage(&msg);
 
-   ((WALKER_THREAD_ARGS *)pArg)->pSession->DecRefCount();
+   ((WALKER_THREAD_ARGS *)pArg)->pSession->decRefCount();
    ((WALKER_THREAD_ARGS *)pArg)->pObject->DecRefCount();
    free(pArg);
    return THREAD_OK;
@@ -7134,7 +7148,7 @@ void ClientSession::StartSnmpWalk(CSCPMessage *pRequest)
    {
       msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -7151,7 +7165,7 @@ void ClientSession::SendMapList(DWORD dwRqId)
 
 	CreateMapListMessage(msg, m_dwUserId);
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -7172,7 +7186,7 @@ void ClientSession::ResolveMapName(CSCPMessage *pRequest)
    msg.SetVariable(VID_RCC, GetMapIdFromName(szName, &dwMapId));
    msg.SetVariable(VID_MAP_ID, dwMapId);
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -7221,7 +7235,7 @@ void ClientSession::SaveMap(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_OPERATION_IN_PROGRESS);
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -7264,7 +7278,7 @@ void ClientSession::ProcessSubmapData(CSCPMessage *pRequest)
    }
 
    if (bSend)
-      SendMessage(&msg);
+      sendMessage(&msg);
 }
 
 
@@ -7302,7 +7316,7 @@ void ClientSession::CreateMap(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -7343,7 +7357,7 @@ void ClientSession::RenameMap(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -7370,7 +7384,7 @@ void ClientSession::DeleteMap(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -7400,7 +7414,7 @@ void ClientSession::LoadMap(CSCPMessage *pRequest)
 
          for(i = 0; i < pMap->GetSubmapCount(); i++)
          {
-            SendMessage(&msg);
+            sendMessage(&msg);
             msg.SetCode(CMD_SUBMAP_DATA);
             msg.DeleteAllVariables();
             pSubmap = pMap->GetSubmapByIndex(i);
@@ -7420,7 +7434,7 @@ void ClientSession::LoadMap(CSCPMessage *pRequest)
    }
    UnlockMaps();
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -7475,7 +7489,7 @@ void ClientSession::SendSubmapBkImage(CSCPMessage *pRequest)
    UnlockMaps();
 
    // Send response message
-   SendMessage(&msg);
+   sendMessage(&msg);
 
    // Send bitmap file
    if (bSuccess)
@@ -7545,7 +7559,7 @@ void ClientSession::RecvSubmapBkImage(CSCPMessage *pRequest)
    UnlockMaps();
 
    // Send response message
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -7628,7 +7642,7 @@ void ClientSession::ResolveDCINames(CSCPMessage *pRequest)
    free(pdwDCIList);
 
    msg.SetVariable(VID_RCC, dwResult);
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -7674,7 +7688,7 @@ void ClientSession::SendAgentCfgList(DWORD dwRqId)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -7728,7 +7742,7 @@ void ClientSession::OpenAgentConfig(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -7828,7 +7842,7 @@ void ClientSession::SaveAgentConfig(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -7881,7 +7895,7 @@ void ClientSession::DeleteAgentConfig(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -7952,7 +7966,7 @@ void ClientSession::SwapAgentConfigs(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -8055,7 +8069,7 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, (WORD)1);  // DB Failure
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -8089,7 +8103,7 @@ void ClientSession::SendObjectComments(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -8122,7 +8136,7 @@ void ClientSession::UpdateObjectComments(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -8250,7 +8264,7 @@ void ClientSession::PushDCIData(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -8296,7 +8310,7 @@ void ClientSession::GetAddrList(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -8353,7 +8367,7 @@ void ClientSession::SetAddrList(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -8388,7 +8402,7 @@ void ClientSession::ResetComponent(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -8442,7 +8456,7 @@ void ClientSession::SendDCIEventList(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -8553,7 +8567,7 @@ void ClientSession::CreateManagementPack(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -8651,7 +8665,7 @@ void ClientSession::InstallManagementPack(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -8708,7 +8722,7 @@ void ClientSession::SendDCIInfo(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -8866,7 +8880,7 @@ void ClientSession::SendGraphList(DWORD dwRqId)
 		msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 	}
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -8998,7 +9012,7 @@ void ClientSession::DefineGraph(CSCPMessage *pRequest)
 			{
 				DBCommit(g_hCoreDB);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
-				Notify(NX_NOTIFY_GRAPHS_CHANGED);
+				notify(NX_NOTIFY_GRAPHS_CHANGED);
 			}
 			else
 			{
@@ -9011,7 +9025,7 @@ void ClientSession::DefineGraph(CSCPMessage *pRequest)
 		}
 	}
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -9052,7 +9066,7 @@ void ClientSession::DeleteGraph(CSCPMessage *pRequest)
 						_stprintf(szQuery, _T("DELETE FROM graph_acl WHERE graph_id=%d"), dwGraphId);
 						DBQuery(g_hCoreDB, szQuery);
 						msg.SetVariable(VID_RCC, RCC_SUCCESS);
-						Notify(NX_NOTIFY_GRAPHS_CHANGED);
+						notify(NX_NOTIFY_GRAPHS_CHANGED);
 					}
 					else
 					{
@@ -9081,7 +9095,7 @@ void ClientSession::DeleteGraph(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 	}
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -9121,7 +9135,7 @@ void ClientSession::SendSystemDCIList(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -9201,7 +9215,7 @@ void ClientSession::AddCACertificate(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -9244,7 +9258,7 @@ void ClientSession::DeleteCertificate(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -9311,7 +9325,7 @@ void ClientSession::UpdateCertificateComments(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -9378,7 +9392,7 @@ void ClientSession::SendCertificateList(DWORD dwRqId)
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -9446,7 +9460,7 @@ void ClientSession::QueryL2Topology(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -9474,7 +9488,7 @@ void ClientSession::SendSMS(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -9519,7 +9533,7 @@ void ClientSession::SendCommunityList(DWORD dwRqId)
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 	
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -9574,7 +9588,7 @@ void ClientSession::UpdateCommunityList(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 	
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -9598,7 +9612,7 @@ void ClientSession::SendSituationList(DWORD dwRqId)
 	else
 	{
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-		SendMessage(&msg);
+		sendMessage(&msg);
 	}
 }
 
@@ -9635,7 +9649,7 @@ void ClientSession::CreateSituation(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 	
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -9669,7 +9683,7 @@ void ClientSession::UpdateSituation(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 	
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -9693,7 +9707,7 @@ void ClientSession::DeleteSituation(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 	
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -9729,7 +9743,7 @@ void ClientSession::DeleteSituationInstance(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 	
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -9737,11 +9751,11 @@ void ClientSession::DeleteSituationInstance(CSCPMessage *pRequest)
 // Handler for situation chage
 //
 
-void ClientSession::OnSituationChange(CSCPMessage *msg)
+void ClientSession::onSituationChange(CSCPMessage *msg)
 {
    UPDATE_INFO *pUpdate;
 
-   if (IsAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_SITUATIONS))
+   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_SITUATIONS))
    {
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
       pUpdate->dwCategory = INFO_CAT_SITUATION;
@@ -9786,7 +9800,7 @@ void ClientSession::WebMapAdd(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -9815,7 +9829,7 @@ void ClientSession::WebMapUpdateData(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -9845,7 +9859,7 @@ void ClientSession::WebMapUpdateProps(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -9869,7 +9883,7 @@ void ClientSession::WebMapDelete(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -9911,7 +9925,7 @@ void ClientSession::WebMapGetData(CSCPMessage *pRequest)
 		msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 	}
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -9960,7 +9974,7 @@ void ClientSession::WebMapGetList(DWORD dwRqId)
 		msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
 	}
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -10009,7 +10023,7 @@ void ClientSession::RegisterAgent(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -10063,7 +10077,7 @@ void ClientSession::GetServerFile(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -10132,7 +10146,7 @@ void ClientSession::TestDCITransformation(CSCPMessage *pRequest)
    }
 
    // Send response
-   SendMessage(&msg);
+   sendMessage(&msg);
 }
 
 
@@ -10148,7 +10162,7 @@ void ClientSession::sendJobList(DWORD dwRqId)
 	msg.SetId(dwRqId);
 	msg.SetVariable(VID_RCC, RCC_SUCCESS);
 	GetJobList(&msg);
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -10163,7 +10177,7 @@ void ClientSession::cancelJob(CSCPMessage *pRequest)
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 	msg.SetId(pRequest->GetId());
 	msg.SetVariable(VID_RCC, ::CancelJob(m_dwUserId, pRequest));
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -10227,7 +10241,7 @@ void ClientSession::deployAgentPolicy(CSCPMessage *request, bool uninstallFlag)
 		msg.SetVariable(VID_RCC, RCC_INVALID_POLICY_ID);
 	}
 
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -10255,7 +10269,7 @@ void ClientSession::getUserCustomAttribute(CSCPMessage *request)
 	}
 	safe_free(name);
 
-	SendMessage(&msg);
+	sendMessage(&msg);
 }
 
 
@@ -10284,5 +10298,126 @@ void ClientSession::setUserCustomAttribute(CSCPMessage *request)
 	}
 	safe_free(name);
 
-	SendMessage(&msg);
+	sendMessage(&msg);
+}
+
+
+//
+// Open server log
+//
+
+void ClientSession::openServerLog(CSCPMessage *request)
+{
+	CSCPMessage msg;
+	TCHAR name[256];
+	DWORD rcc;
+	DWORD handle;
+
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	msg.SetId(request->GetId());
+
+	request->GetVariableStr(VID_LOG_NAME, name, 256);
+	handle = OpenLog(name, this, &rcc);
+	if (handle != -1)
+	{
+		msg.SetVariable(VID_RCC, RCC_SUCCESS);
+		msg.SetVariable(VID_LOG_HANDLE, (DWORD)handle);
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, rcc);
+	}
+
+	sendMessage(&msg);
+}
+
+
+//
+// Close server log
+//
+
+void ClientSession::closeServerLog(CSCPMessage *request)
+{
+	CSCPMessage msg;
+
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	msg.SetId(request->GetId());
+
+	int handle = (int)request->GetVariableLong(VID_LOG_HANDLE);
+	msg.SetVariable(VID_RCC, CloseLog(this, handle));
+
+	sendMessage(&msg);
+}
+
+
+//
+// Query server log
+//
+
+void ClientSession::queryServerLog(CSCPMessage *request)
+{
+	CSCPMessage msg;
+
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	msg.SetId(request->GetId());
+
+	int handle = (int)request->GetVariableLong(VID_LOG_HANDLE);
+	LogHandle *log = AcquireLogHandleObject(this, handle);
+	if (log != NULL)
+	{
+		msg.SetVariable(VID_RCC, log->query(new LogFilter(request)) ? RCC_SUCCESS : RCC_DB_FAILURE);
+		log->unlock();
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_LOG_HANDLE);
+	}
+
+	sendMessage(&msg);
+}
+
+
+//
+// Get log data from query result
+//
+
+void ClientSession::getServerLogQueryData(CSCPMessage *request)
+{
+	CSCPMessage msg;
+	Table *data;
+
+	msg.SetCode(CMD_REQUEST_COMPLETED);
+	msg.SetId(request->GetId());
+
+	int handle = (int)request->GetVariableLong(VID_LOG_HANDLE);
+	LogHandle *log = AcquireLogHandleObject(this, handle);
+	if (log != NULL)
+	{
+		INT64 startRow = request->GetVariableInt64(VID_START_ROW);
+		INT64 numRows = request->GetVariableInt64(VID_NUM_ROWS);
+		data = log->getData(startRow, numRows);
+		log->unlock();
+		if (data != NULL)
+		{
+			msg.SetVariable(VID_RCC, RCC_SUCCESS);
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_LOG_HANDLE);
+	}
+
+	sendMessage(&msg);
+
+	if (data != NULL)
+	{
+		msg.SetCode(CMD_LOG_DATA);
+		msg.DeleteAllVariables();
+		data->fillMessage(msg);
+		sendMessage(&msg);
+	}
 }

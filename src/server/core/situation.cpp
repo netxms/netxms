@@ -38,7 +38,7 @@ static RWLOCK m_rwlockSituationIndex;
 
 static void SendSituationNotification(ClientSession *pSession, void *pArg)
 {
-   pSession->OnSituationChange((CSCPMessage *)pArg);
+   pSession->onSituationChange((CSCPMessage *)pArg);
 }
 
 
@@ -494,14 +494,14 @@ void SendSituationListToClient(ClientSession *session, CSCPMessage *msg)
    RWLockReadLock(m_rwlockSituationIndex, INFINITE);
    
 	msg->SetVariable(VID_SITUATION_COUNT, m_dwSituationIndexSize);
-	session->SendMessage(msg);
+	session->sendMessage(msg);
 	
 	msg->SetCode(CMD_SITUATION_DATA);
 	for(i = 0; i < m_dwSituationIndexSize; i++)
 	{
 		msg->DeleteAllVariables();
 		((Situation *)m_pSituationIndex[i].pObject)->CreateMessage(msg);
-		session->SendMessage(msg);
+		session->sendMessage(msg);
 	}
 	
    RWLockUnlock(m_rwlockSituationIndex);
