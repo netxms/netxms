@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+#######################################
+#
+# NetXMS server startup script
+# For Ubuntu Linux
+#
+# Written by Dmitry Chernyshov
+# dchernyshov@cogito.ru
+#
+#######################################
+
+NETXMS_BINDIR="~BINDIR~"
+NETXMS_LIBDIR="~LIBDIR~"
+
+NAME=netxmsd
+DAEMON=$NETXMS_BINDIR/netxmsd
+PIDFILE=/var/run/netxmsd.pid
+
+test -x $DAEMON || exit 5
+
+
+. /lib/lsb/init-functions
+case "$1" in
+ start)
+        # start daemon
+        log_daemon_msg "Starting NetXMS server" "netxmsd"
+        start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON -- -p $PIDFILE -d
+        log_end_msg $?
+        ;;
+ stop)
+        log_daemon_msg "Stopping NetXMS server" "netxmsd"
+        start-stop-daemon --stop --quiet --pidfile $PIDFILE
+        log_end_msg $?
+        ;;
+ restart)
+        $0 stop && sleep 2 && $0 start
+        ;;
+esac
