@@ -143,6 +143,9 @@ public class NXCSession
 	public static final int RCC_UNKNOWN_VARIABLE = 81;
 	public static final int RCC_RESOURCE_NOT_AVAILABLE = 82;
 	public static final int RCC_JOB_CANCEL_FAILED = 83;
+	public static final int RCC_INVALID_POLICY_ID = 84;
+	public static final int RCC_UNKNOWN_LOG_NAME = 85;
+	public static final int RCC_INVALID_LOG_HANDLE = 86;
 
 	// User object fields
 	public static final int USER_MODIFY_LOGIN_NAME = 0x00000001;

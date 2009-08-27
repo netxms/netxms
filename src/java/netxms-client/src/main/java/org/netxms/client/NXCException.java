@@ -95,7 +95,10 @@ public class NXCException extends Exception
 		"Operation cannot be completed due to agent error",
 		"Unknown variable",
 		"Requested resource not available",
-		"Job cannot be cancelled"
+		"Job cannot be cancelled",
+		"Invalid policy ID",
+		"Unknown log name",
+		"Invalid log handle"
 	};
 
 	private int errorCode;

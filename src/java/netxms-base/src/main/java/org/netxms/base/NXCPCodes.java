@@ -587,6 +587,7 @@ public final class NXCPCodes
 	public static final long VID_FAILURE_MESSAGE         = 335;	
 	public static final long VID_POLICY_TYPE             = 336;
 	public static final long VID_FIELDS                  = 337;
+	public static final long VID_LOG_HANDLE              = 338;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
