@@ -201,7 +201,7 @@ public:
    Table(CSCPMessage *msg);
    ~Table();
 
-	void fillMessage(CSCPMessage &msg);
+	int fillMessage(CSCPMessage &msg, int offset, int rowLimit);
 
    int getNumRows(void) { return m_nNumRows; }
    int getNumColumns(void) { return m_nNumCols; }

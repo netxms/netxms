@@ -10416,8 +10416,13 @@ void ClientSession::getServerLogQueryData(CSCPMessage *request)
 	if (data != NULL)
 	{
 		msg.SetCode(CMD_LOG_DATA);
-		msg.DeleteAllVariables();
-		data->fillMessage(msg);
-		sendMessage(&msg);
+		int offset = 0;
+		do
+		{
+			msg.DeleteAllVariables();
+			offset = data->fillMessage(msg, offset, 200);
+			sendMessage(&msg);
+		} while(offset < data->getNumRows());
+		delete data;
 	}
 }

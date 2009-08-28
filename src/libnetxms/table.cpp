@@ -81,19 +81,32 @@ Table::~Table()
 // Fill NXCP message with table data
 //
 
-void Table::fillMessage(CSCPMessage &msg)
+int Table::fillMessage(CSCPMessage &msg, int offset, int rowLimit)
 {
-	int i;
+	int i, row, col;
 	DWORD id;
 
-	msg.SetVariable(VID_TABLE_NUM_ROWS, (DWORD)m_nNumRows);
-	msg.SetVariable(VID_TABLE_NUM_COLS, (DWORD)m_nNumCols);
+	if (offset == 0)
+	{
+		msg.SetVariable(VID_TABLE_NUM_ROWS, (DWORD)m_nNumRows);
+		msg.SetVariable(VID_TABLE_NUM_COLS, (DWORD)m_nNumCols);
 
-	for(i = 0, id = VID_TABLE_COLUMN_INFO_BASE; i < m_nNumCols; i++, id += 9)
-		msg.SetVariable(id++, CHECK_NULL_EX(m_ppColNames[i]));
+		for(i = 0, id = VID_TABLE_COLUMN_INFO_BASE; i < m_nNumCols; i++, id += 9)
+			msg.SetVariable(id++, CHECK_NULL_EX(m_ppColNames[i]));
+	}
+	msg.SetVariable(VID_TABLE_OFFSET, (DWORD)offset);
 
-	for(i = 0, id = VID_TABLE_DATA_BASE; i < m_nNumCols * m_nNumRows; i++)
-		msg.SetVariable(id++, CHECK_NULL_EX(m_ppData[i]));
+	int stopRow = (rowLimit == -1) ? m_nNumRows : min(m_nNumRows, offset + rowLimit);
+	for(i = offset * m_nNumCols, row = offset, id = VID_TABLE_DATA_BASE; row < stopRow; row++)
+	{
+		for(col = 0; col < m_nNumCols; col++)
+			msg.SetVariable(id++, CHECK_NULL_EX(m_ppData[i++]));
+	}
+	msg.SetVariable(VID_NUM_ROWS, (DWORD)(row - offset));
+
+	if (row == m_nNumRows)
+		msg.SetEndOfSequence();
+	return row;
 }
 
 
