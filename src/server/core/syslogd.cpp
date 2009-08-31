@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -308,7 +308,8 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, DWORD dwSourceIP)
 		MutexLock(m_mutexParserAccess, INFINITE);
 		if ((record.dwSourceObject != 0) && (m_parser != NULL))
 		{
-			m_parser->matchLine(record.szMessage, record.dwSourceObject);
+			m_parser->matchEvent(record.szTag, record.nFacility, 1 << record.nSeverity,
+			                     record.szMessage, record.dwSourceObject);
 		}
 		MutexUnlock(m_mutexParserAccess);
    }

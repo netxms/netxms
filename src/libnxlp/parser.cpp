@@ -366,15 +366,15 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->state = XML_STATE_MATCH;
 		ps->invertedRule = XMLGetAttrBoolean(attrs, "invert", false);
 	}
-	else if (!strcmp(name, "id"))
+	else if (!strcmp(name, "id") || !strcmp(name, "facility"))
 	{
 		ps->state = XML_STATE_ID;
 	}
-	else if (!strcmp(name, "level"))
+	else if (!strcmp(name, "level") || !strcmp(name, "severity"))
 	{
 		ps->state = XML_STATE_LEVEL;
 	}
-	else if (!strcmp(name, "source"))
+	else if (!strcmp(name, "source") || !strcmp(name, "tag"))
 	{
 		ps->state = XML_STATE_SOURCE;
 	}
@@ -471,8 +471,8 @@ static void EndElement(void *userData, const char *name)
 		event = strtoul(ps->event, &eptr, 0);
 		if (*eptr != 0)
 			event = ps->parser->resolveEventName(ps->event);
-//		if (ps->regexp.IsEmpty())
-//			ps->regexp = _T(".*");
+		if (ps->regexp.IsEmpty())
+			ps->regexp = _T(".*");
 		rule = new LogParserRule(ps->parser, (const char *)ps->regexp, event, ps->numEventParams);
 		if (!ps->ruleContext.IsEmpty())
 			rule->setContext(ps->ruleContext);
@@ -520,15 +520,15 @@ static void EndElement(void *userData, const char *name)
 	{
 		ps->state = XML_STATE_RULE;
 	}
-	else if (!strcmp(name, "id"))
+	else if (!strcmp(name, "id") || !strcmp(name, "facility"))
 	{
 		ps->state = XML_STATE_RULE;
 	}
-	else if (!strcmp(name, "level"))
+	else if (!strcmp(name, "level") || !strcmp(name, "severity"))
 	{
 		ps->state = XML_STATE_RULE;
 	}
-	else if (!strcmp(name, "source"))
+	else if (!strcmp(name, "source") || !strcmp(name, "tag"))
 	{
 		ps->state = XML_STATE_RULE;
 	}
