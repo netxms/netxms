@@ -589,6 +589,8 @@ public final class NXCPCodes
 	public static final long VID_FIELDS                  = 337;
 	public static final long VID_LOG_HANDLE              = 338;
 	public static final long VID_START_ROW               = 339;
+	public static final long VID_TABLE_OFFSET            = 340;
+	public static final long VID_NUM_FILTERS             = 341;
 
 	public static final long VID_ACL_USER_BASE            = 0x00001000L;
 	public static final long VID_ACL_USER_LAST            = 0x00001FFFL;
@@ -655,4 +657,5 @@ public final class NXCPCodes
 	public static final long VID_JOB_LIST_BASE            = 0x10000000L;
 	public static final long VID_TABLE_COLUMN_INFO_BASE   = 0x10000000L;
 	public static final long VID_TABLE_DATA_BASE          = 0x20000000L;
+	public static final long VID_COLUMN_FILTERS_BASE      = 0x10000000L;
 }

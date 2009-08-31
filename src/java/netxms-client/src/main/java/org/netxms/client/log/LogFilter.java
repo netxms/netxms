@@ -19,6 +19,10 @@
 package org.netxms.client.log;
 
 import java.util.HashMap;
+import java.util.Map.Entry;
+
+import org.netxms.base.NXCPCodes;
+import org.netxms.base.NXCPMessage;
 
 /**
  * @author Victor Kirhenshtein
@@ -66,5 +70,21 @@ public class LogFilter
 	public void clearColumnFilter(String column)
 	{
 		columnFilters.remove(column);
+	}
+	
+	/**
+	 * Fill NXCP message with filter's data.
+	 * 
+	 * @param msg NXCP message
+	 */
+	public void fillMessage(final NXCPMessage msg)
+	{
+		msg.setVariableInt32(NXCPCodes.VID_NUM_FILTERS, columnFilters.size());
+		long varId = NXCPCodes.VID_COLUMN_FILTERS_BASE;
+		for(final Entry<String, ColumnFilter> e : columnFilters.entrySet())
+		{
+			msg.setVariable(varId++, e.getKey());
+			varId += e.getValue().fillMessage(msg, varId);
+		}
 	}
 }

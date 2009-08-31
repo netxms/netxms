@@ -35,6 +35,7 @@ import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.epp.EventProcessingPolicy;
 import org.netxms.client.epp.EventProcessingPolicyRule;
+import org.netxms.client.log.Log;
 
 /**
  * @author victor
@@ -768,6 +769,26 @@ public class NXCSession
 	}
 
 	/**
+	 * Receive table from server.
+	 * 
+	 * @param requestId request ID
+	 * @param msgCode Message code
+	 * @return Received table
+	 * @throws NXCException if NetXMS server returns an error, protocol negotiation with the server was failed, or operation was timed out
+	 */
+	public Table receiveTable(long requestId, int msgCode) throws NXCException
+	{
+		NXCPMessage msg = waitForMessage(msgCode, requestId);
+		Table table = new Table(msg);
+		while(!msg.isEndOfSequence())
+		{
+			msg = waitForMessage(msgCode, requestId);
+			table.addDataFromMessage(msg);
+		}
+		return table;
+	}
+
+	/**
 	 * Connect to server using previously set credentials.
 	 * 
 	 * @throws IOException
@@ -838,7 +859,6 @@ public class NXCSession
 	 * Disconnect from server.
 	 * 
 	 */
-
 	public void disconnect()
 	{
 		if (connSocket != null)
@@ -2319,13 +2339,31 @@ public class NXCSession
 	 * 
 	 * @param nodeId Node object identifier
 	 * @return Data collection configuration object
-	 * @throws NXCException 
-	 * @throws IOException 
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
 	 */
 	public DataCollectionConfiguration openDataCollectionConfiguration(long nodeId) throws IOException, NXCException
 	{
 		final DataCollectionConfiguration cfg = new DataCollectionConfiguration(this, nodeId);
 		cfg.open();
 		return cfg;
+	}
+	
+	/**
+	 * Open server log by name.
+	 * 
+	 * @param logName Log name
+	 * @return Log object
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public Log openServerLog(final String logName) throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_SERVER_LOG);
+		msg.setVariable(NXCPCodes.VID_LOG_NAME, logName);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		Log log = new Log(this, response);
+		return log;
 	}
 }

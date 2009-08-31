@@ -52,6 +52,22 @@ public class Table
 	}
 	
 	/**
+	 * Add data from additional messages
+	 */
+	public void addDataFromMessage(final NXCPMessage msg)
+	{
+		int rowCount = msg.getVariableAsInteger(NXCPCodes.VID_TABLE_NUM_ROWS);
+		long varId = NXCPCodes.VID_TABLE_DATA_BASE;
+		for(int i = 0; i < rowCount; i++)
+		{
+			ArrayList<String> row = new ArrayList<String>(columns.size());
+			for(int j = 0; j < columns.size(); j++)
+				row.add(msg.getVariableAsString(varId++));
+			data.add(row);
+		}
+	}
+	
+	/**
 	 * Get number of columns in table
 	 * 
 	 * @return Number of columns
