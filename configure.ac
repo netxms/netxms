@@ -1438,6 +1438,7 @@ AC_CONFIG_FILES([
 	contrib/startup/gentoo/Makefile
 	contrib/startup/redhat/Makefile
 	contrib/startup/suse/Makefile
+	contrib/startup/ubuntu/Makefile
 	contrib/mibs/Makefile
 	contrib/backgrounds/Makefile
 	doc/Makefile
