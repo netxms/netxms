@@ -29,6 +29,14 @@
 
 LogFilter::LogFilter(CSCPMessage *msg)
 {
+	m_numColumnFilters = msg->GetVariableLong(VID_NUM_FILTERS);
+	m_columnFilters = (ColumnFilter **)malloc(sizeof(ColumnFilter *) * m_numColumnFilters);
+	DWORD varId = VID_COLUMN_FILTERS_BASE;
+	for(int i = 0; i < m_numColumnFilters; i++)
+	{
+		m_columnFilters[i] = new ColumnFilter(msg, varId);
+		varId += m_columnFilters[i]->getVariableCount();
+	}
 }
 
 
@@ -38,4 +46,7 @@ LogFilter::LogFilter(CSCPMessage *msg)
 
 LogFilter::~LogFilter()
 {
+	for(int i = 0; i < m_numColumnFilters; i++)
+		delete m_columnFilters[i];
+	safe_free(m_columnFilters);
 }

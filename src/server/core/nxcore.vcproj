@@ -433,6 +433,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\columnfilter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\condition.cpp"
 				>
 			</File>

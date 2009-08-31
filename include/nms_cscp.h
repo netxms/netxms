@@ -799,6 +799,7 @@ typedef struct
 #define VID_LOG_HANDLE              ((DWORD)338)
 #define VID_START_ROW               ((DWORD)339)
 #define VID_TABLE_OFFSET            ((DWORD)340)
+#define VID_NUM_FILTERS             ((DWORD)341)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((DWORD)0x00001000)
@@ -936,6 +937,8 @@ typedef struct
 #define VID_TABLE_DATA_BASE         ((DWORD)0x20000000)
 
 #define VID_JOB_LIST_BASE           ((DWORD)0x10000000)
+
+#define VID_COLUMN_FILTERS_BASE     ((DWORD)0x10000000)
 
 
 //

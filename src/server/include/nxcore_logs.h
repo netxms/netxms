@@ -37,6 +37,16 @@
 
 
 //
+// Column filter types
+//
+
+#define FILTER_EQUALS      0
+#define FILTER_RANGE       1
+#define FILTER_SET         2
+#define FILTER_LIKE        3
+
+
+//
 // Log definition structure
 //
 
@@ -63,18 +73,38 @@ struct NXCORE_LOG
 class ColumnFilter
 {
 private:
+	int m_varCount;	// Number of variables read from NXCP message during construction
 	int m_type;
+	TCHAR *m_column;
+	union
+	{
+		INT64 equalsTo;
+		struct
+		{
+			INT64 start;
+			INT64 end;
+		} range;
+		TCHAR *like;
+		struct
+		{
+			int operation;
+			int count;
+			ColumnFilter **filters;
+		} set;
+	} m_value;
 
 public:
-	ColumnFilter();
+	ColumnFilter(CSCPMessage *msg, DWORD baseId);
 	~ColumnFilter();
+
+	int getVariableCount() { return m_varCount; }
 };
 
 class LogFilter
 {
 private:
 	int m_numColumnFilters;
-	ColumnFilter *m_columnFilters;
+	ColumnFilter **m_columnFilters;
 
 public:
 	LogFilter(CSCPMessage *msg);
