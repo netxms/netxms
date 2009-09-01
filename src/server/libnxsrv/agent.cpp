@@ -29,7 +29,7 @@
 #define close	_close
 #define write	_write
 #else
-#define _tell(f) lseek(f,0,SEEK_SET)
+#define _tell(f) lseek(f,0,SEEK_CUR)
 #endif
 
 
