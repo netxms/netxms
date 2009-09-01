@@ -28,6 +28,8 @@
 #define open	_open
 #define close	_close
 #define write	_write
+#else
+#define _tell(f) lseek(f,0,SEEK_SET)
 #endif
 
 
