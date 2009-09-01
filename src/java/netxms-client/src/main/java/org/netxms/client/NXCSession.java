@@ -774,7 +774,7 @@ public class NXCSession
 	 * @param requestId request ID
 	 * @param msgCode Message code
 	 * @return Received table
-	 * @throws NXCException if NetXMS server returns an error, protocol negotiation with the server was failed, or operation was timed out
+	 * @throws NXCException if operation was timed out
 	 */
 	public Table receiveTable(long requestId, int msgCode) throws NXCException
 	{

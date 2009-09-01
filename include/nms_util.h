@@ -248,6 +248,7 @@ public:
 	static const int npos;
 
    String();
+   String(const TCHAR *init);
 	String(const String &src);
    ~String();
 
@@ -489,6 +490,7 @@ extern "C"
    BOOL LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *string, BOOL matchCase);
 	BOOL LIBNETXMS_EXPORTABLE RegexpMatch(const TCHAR *pszStr, const TCHAR *pszExpr, BOOL bMatchCase);
    TCHAR LIBNETXMS_EXPORTABLE *ExtractWord(TCHAR *line, TCHAR *buffer);
+	TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
    int LIBNETXMS_EXPORTABLE NumChars(const TCHAR *pszStr, int ch);
 	void LIBNETXMS_EXPORTABLE RemoveTrailingCRLF(TCHAR *str);
 #ifdef __cplusplus

@@ -32,7 +32,7 @@ const int String::npos = -1;
 
 
 //
-// Constructor
+// Constructors
 //
 
 String::String()
@@ -41,15 +41,16 @@ String::String()
    m_pszBuffer = NULL;
 }
 
-
-//
-// Copy constructor
-//
-
 String::String(const String &src)
 {
 	m_dwBufSize = src.m_dwBufSize;
 	m_pszBuffer = (src.m_pszBuffer != NULL) ? (TCHAR *)nx_memdup(src.m_pszBuffer, src.m_dwBufSize * sizeof(TCHAR)) : NULL;
+}
+
+String::String(const TCHAR *init)
+{
+   m_dwBufSize = _tcslen(init) + 1;
+   m_pszBuffer = _tcsdup(init);
 }
 
 

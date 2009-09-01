@@ -1247,6 +1247,30 @@ long LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsInt(const TCHAR *optString, c
 
 
 //
+// Split string
+//
+
+TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings)
+{
+	TCHAR **strings;
+
+	*numStrings = NumChars(source, sep) + 1;
+	strings = (TCHAR **)malloc(sizeof(TCHAR *) * (*numStrings));
+	for(int n = 0, i = 0; n < *numStrings; n++, i++)
+	{
+		int start = i;
+		while((source[i] != sep) && (source[i] != 0))
+			i++;
+		int len = i - start;
+		strings[n] = (TCHAR *)malloc(sizeof(TCHAR) * (len + 1));
+		memcpy(strings[n], &source[start], len * sizeof(TCHAR));
+		strings[n][len] = 0;
+	}
+	return strings;
+}
+
+
+//
 // Load file into memory
 //
 
