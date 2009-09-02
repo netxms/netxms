@@ -265,6 +265,7 @@ static void LoadGlobalConfig()
 	if (ConfigReadInt("CheckTrustedNodes", 1))
 		g_dwFlags |= AF_CHECK_TRUSTED_NODES;
 	ConfigReadStr("DataDirectory", g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
+	DbgPrintf(1, _T("Data directory set to %s"), g_szDataDir);
 	g_dwPingSize = ConfigReadInt("IcmpPingSize", 46);
 	g_dwLockTimeout = ConfigReadInt("LockTimeout", 60000);
 	g_dwSNMPTimeout = ConfigReadInt("SNMPRequestTimeout", 2000);

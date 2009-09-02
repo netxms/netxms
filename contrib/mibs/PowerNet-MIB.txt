@@ -6643,16 +6643,16 @@ upsSCGReturnBatteryCapacityOffset OBJECT-TYPE
    ACCESS read-write
    STATUS mandatory
    DESCRIPTION       
-        "A reboot command uses the Initiator’s Return battery Capacity (RBC) to control
+        "A reboot command uses the Initiator's Return battery Capacity (RBC) to control
         when the SCG completes this operation. In a Normal Control Operation (NCC) the 
         UPS will only complete the reboot if RBC is reached.  Due to normal battery 
         charge rate variations it may be desirable for the Followers to complete the 
-        reboot if they are within some range of the Initiator’s RBC when the Initiator 
+        reboot if they are within some range of the Initiator's RBC when the Initiator 
         is prepared (charged to RBC) to complete the reboot. The Return Battery 
         Capacity Offset (RBCO) defines a percent battery capacity subtracted from an 
-        RBC above which a Follower’s battery must be charged for it to complete a 
-        reboot.  For example, if the Initiator’s RBC is 50% and the Initiator’s RBCO is
-        5% then a Follower’s battery capacity is within range if it is greater or equal 
+        RBC above which a Follower's battery must be charged for it to complete a 
+        reboot.  For example, if the Initiator's RBC is 50% and the Initiator's RBCO is
+        5% then a Follower's battery capacity is within range if it is greater or equal 
         to 45% (50% - 5%) at the time when the Initiator tries to complete the reboot 
         command.  The default RBCO is 10%. "
    ::= { upsSyncCtrlGroupConfig 4 }
@@ -6756,7 +6756,7 @@ upsBasicStateOutputState OBJECT-TYPE
       "An ASCII string containing the 64 flags representing
        the current state(s) of the UPS. If the Network Card
        is unable to determine the state of the UPS, this
-       variable is set to ‘UNKNOWN’.
+       variable is set to 'UNKNOWN'.
 
        The flags are numbered 1 to 64, read from left to
        right. The flags are defined as follows:
@@ -6853,9 +6853,9 @@ upsAdvStateAbnormalConditions OBJECT-TYPE
       "An ASCII string containing the 32 flags representing
        the current active UPS faults. If the Network Card
        is unable to determine the values of the flags, this
-       variable is set to ‘UNKNOWN’. If this variable is not
+       variable is set to 'UNKNOWN'. If this variable is not
        supported by the connected UPS, this variable is set to
-       ‘NOT SUPPORTED’.
+       'NOT SUPPORTED'.
        
        The flags are numbered from 1 to 32, and read from left to
        right. The flags are defined as follows:
@@ -6910,8 +6910,8 @@ upsAdvStateSymmetra3PhaseSpecificFaults OBJECT-TYPE
       the current active UPS specific faults for the Symmetra
       3-Phase UPS models. If the Network Card is unable to
       determine the values of the flags, this variable is set
-      to ‘UNKNOWN’. If the connected UPS does not use this
-      variable, it is set to ‘NOT SUPPORTED’.
+      to 'UNKNOWN'. If the connected UPS does not use this
+      variable, it is set to 'NOT SUPPORTED'.
       
       The flags are numbered from 1 to 64, and read from left
       to right. The bits are defined as follows:
@@ -7006,8 +7006,8 @@ upsAdvStateDP300ESpecificFaults OBJECT-TYPE
       the current active UPS specific faults for the Silcon
       DP300E UPS models. If the Network Card is unable to
       determine the values of the flags, this variable is set
-      to ‘UNKNOWN’. If the connected UPS does not use this
-      variable, it is set to ‘NOT SUPPORTED’.
+      to 'UNKNOWN'. If the connected UPS does not use this
+      variable, it is set to 'NOT SUPPORTED'.
       
       The flags are numbered from 1 to 64, and read from left
       to right. The bits are defined as follows:
@@ -22524,7 +22524,7 @@ rARUStatusAruAlarmState OBJECT-TYPE
    DESCRIPTION
       "An ASCII string containing the 8 flags representing
        the current alarm state of the ARU. If the state of 
-       the ARU is unknown, this variable is set to ‘UNKNOWN’.
+       the ARU is unknown, this variable is set to 'UNKNOWN'.
 
        The flags are numbered 1 to 8, read from left to
        right. The flags are defined as follows:

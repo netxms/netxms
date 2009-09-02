@@ -148,6 +148,42 @@ cleanup:
 
 
 //
+// Upgrade from V202 to V203
+//
+
+static BOOL H_UpgradeFromV202(int currVersion, int newVersion)
+{
+	static TCHAR batch[] = 
+		_T("INSERT INTO object_tools (tool_id,tool_name,tool_type,tool_data,flags,matching_oid,description,confirmation_text)")
+			_T(" VALUES (20,'&Info->Topology table (LLDP)',2,'Topology Table',1,' ','Show topology table (LLDP)','#00')\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)")
+			_T(" VALUES (20,0,'Chassis ID','.1.0.8802.1.1.2.1.4.1.1.5',0,0)\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)")
+			_T(" VALUES (20,1,'Local port','.1.0.8802.1.1.2.1.4.1.1.2',5,0)\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)")
+			_T(" VALUES (20,2,'System name','.1.0.8802.1.1.2.1.4.1.1.9',0,0)\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)")
+			_T(" VALUES (20,3,'System description','.1.0.8802.1.1.2.1.4.1.1.10',0,0)\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)")
+			_T(" VALUES (20,4,'Remote port ID','.1.0.8802.1.1.2.1.4.1.1.7',4,0)\n")
+		_T("INSERT INTO object_tools_table_columns (tool_id,col_number,col_name,col_oid,col_format,col_substr)")
+			_T(" VALUES (20,5,'Remote port description','.1.0.8802.1.1.2.1.4.1.1.8',0,0)\n")
+		_T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (20,-2147483648)\n")
+		_T("<END>");
+
+	if (!SQLBatch(batch))
+		if (!g_bIgnoreErrors)
+			return FALSE;
+
+	if (!SQLQuery(_T("UPDATE metadata SET var_value='203' WHERE var_name='SchemaVersion'")))
+      if (!g_bIgnoreErrors)
+         return FALSE;
+
+   return TRUE;
+}
+
+
+//
 // Upgrade from V201 to V202
 //
 
@@ -4145,6 +4181,7 @@ static struct
 	{ 93, 201, H_UpgradeFromV92orV93 },
 	{ 200, 201, H_UpgradeFromV200 },
 	{ 201, 202, H_UpgradeFromV201 },
+	{ 202, 203, H_UpgradeFromV202 },
    { 0, NULL }
 };
 

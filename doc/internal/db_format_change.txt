@@ -1,4 +1,18 @@
 ***************
+* 202 ==> 203 *
+***************
+
+- Added object tool "Topology table (LLDP)"
+
+
+***************
+* 201 ==> 202 *
+***************
+
+- Escaped characters with # replaced in table "alarms"
+
+
+****************
 * 200 ==> 201 *
 ***************
 
