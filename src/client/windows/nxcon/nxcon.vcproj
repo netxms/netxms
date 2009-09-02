@@ -685,6 +685,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ObjToolColumnEditDlg.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ObjToolPropColumns.cpp"
 				>
 			</File>
@@ -1416,6 +1420,10 @@
 			</File>
 			<File
 				RelativePath=".\ObjectView.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ObjToolColumnEditDlg.h"
 				>
 			</File>
 			<File

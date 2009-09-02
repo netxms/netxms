@@ -279,6 +279,7 @@
 #define IDI_OBJECT_TEMPLATEROOT         405
 #define IDI_OBJECT_VPNC                 406
 #define IDD_OBJECT_NODE_CONN            407
+#define IDD_EDIT_COLUMN                 408
 #define ID_EDIT_BOX                     525
 #define IDC_STATIC_TITLE                1003
 #define IDC_STATIC_TEXT                 1004
@@ -726,6 +727,7 @@
 #define IDC_COMBO_USM_AUTH              1549
 #define IDC_COMBO_USM_PRIV              1551
 #define IDC_STATIC_AUTH_NAME            1553
+#define IDC_STATIC_OID                  1555
 #define IDR_WEB_BROWSER                 8100
 #define IDR_SYSLOG_BROWSER              8101
 #define IDR_LPP_EDITOR                  8102
@@ -1035,9 +1037,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        408
+#define _APS_NEXT_RESOURCE_VALUE        410
 #define _APS_NEXT_COMMAND_VALUE         33112
-#define _APS_NEXT_CONTROL_VALUE         1554
+#define _APS_NEXT_CONTROL_VALUE         1557
 #define _APS_NEXT_SYMED_VALUE           135
 #endif
 #endif
