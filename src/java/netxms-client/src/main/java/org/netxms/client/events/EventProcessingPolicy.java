@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.client.epp;
+package org.netxms.client.events;
 
 import java.util.ArrayList;
 import java.util.List;
