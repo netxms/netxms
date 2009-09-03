@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciValue;
 
@@ -241,7 +242,7 @@ public class NXCSessionTest extends TestCase
 		}
 		catch(NXCException e)
 		{
-			assertEquals(NXCSession.RCC_ACCESS_DENIED, e.getErrorCode());
+			assertEquals(RCC.ACCESS_DENIED, e.getErrorCode());
 			accessDenied = true;
 		}
 		assertEquals(true, accessDenied);

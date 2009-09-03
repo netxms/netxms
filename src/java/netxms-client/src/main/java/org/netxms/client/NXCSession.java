@@ -17,6 +17,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +29,7 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCPMessageReceiver;
 import org.netxms.base.NXCPMsgWaitQueue;
 import org.netxms.base.NetXMSConst;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciData;
@@ -35,6 +37,7 @@ import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.Log;
 import org.netxms.client.maps.NetworkMapObjectData;
 import org.netxms.client.maps.NetworkMapObjectLink;
@@ -61,95 +64,6 @@ public class NXCSession
 	public static final int CHANNEL_SNMP_TRAPS = 0x0010;
 	public static final int CHANNEL_AUDIT_LOG = 0x0020;
 	public static final int CHANNEL_SITUATIONS = 0x0040;
-
-	// Request completion codes (RCC)
-	public static final int RCC_SUCCESS = 0;
-	public static final int RCC_COMPONENT_LOCKED = 1;
-	public static final int RCC_ACCESS_DENIED = 2;
-	public static final int RCC_INVALID_REQUEST = 3;
-	public static final int RCC_TIMEOUT = 4;
-	public static final int RCC_OUT_OF_STATE_REQUEST = 5;
-	public static final int RCC_DB_FAILURE = 6;
-	public static final int RCC_INVALID_OBJECT_ID = 7;
-	public static final int RCC_ALREADY_EXIST = 8;
-	public static final int RCC_COMM_FAILURE = 9;
-	public static final int RCC_SYSTEM_FAILURE = 10;
-	public static final int RCC_INVALID_USER_ID = 11;
-	public static final int RCC_INVALID_ARGUMENT = 12;
-	public static final int RCC_DUPLICATE_DCI = 13;
-	public static final int RCC_INVALID_DCI_ID = 14;
-	public static final int RCC_OUT_OF_MEMORY = 15;
-	public static final int RCC_IO_ERROR = 16;
-	public static final int RCC_INCOMPATIBLE_OPERATION = 17;
-	public static final int RCC_OBJECT_CREATION_FAILED = 18;
-	public static final int RCC_OBJECT_LOOP = 19;
-	public static final int RCC_INVALID_OBJECT_NAME = 20;
-	public static final int RCC_INVALID_ALARM_ID = 21;
-	public static final int RCC_INVALID_ACTION_ID = 22;
-	public static final int RCC_OPERATION_IN_PROGRESS = 23;
-	public static final int RCC_DCI_COPY_ERRORS = 24;
-	public static final int RCC_INVALID_EVENT_CODE = 25;
-	public static final int RCC_NO_WOL_INTERFACES = 26;
-	public static final int RCC_NO_MAC_ADDRESS = 27;
-	public static final int RCC_NOT_IMPLEMENTED = 28;
-	public static final int RCC_INVALID_TRAP_ID = 29;
-	public static final int RCC_DCI_NOT_SUPPORTED = 30;
-	public static final int RCC_VERSION_MISMATCH = 31;
-	public static final int RCC_NPI_PARSE_ERROR = 32;
-	public static final int RCC_DUPLICATE_PACKAGE = 33;
-	public static final int RCC_PACKAGE_FILE_EXIST = 34;
-	public static final int RCC_RESOURCE_BUSY = 35;
-	public static final int RCC_INVALID_PACKAGE_ID = 36;
-	public static final int RCC_INVALID_IP_ADDR = 37;
-	public static final int RCC_ACTION_IN_USE = 38;
-	public static final int RCC_VARIABLE_NOT_FOUND = 39;
-	public static final int RCC_BAD_PROTOCOL = 40;
-	public static final int RCC_ADDRESS_IN_USE = 41;
-	public static final int RCC_NO_CIPHERS = 42;
-	public static final int RCC_INVALID_PUBLIC_KEY = 43;
-	public static final int RCC_INVALID_SESSION_KEY = 44;
-	public static final int RCC_NO_ENCRYPTION_SUPPORT = 45;
-	public static final int RCC_INTERNAL_ERROR = 46;
-	public static final int RCC_EXEC_FAILED = 47;
-	public static final int RCC_INVALID_TOOL_ID = 48;
-	public static final int RCC_SNMP_ERROR = 49;
-	public static final int RCC_BAD_REGEXP = 50;
-	public static final int RCC_UNKNOWN_PARAMETER = 51;
-	public static final int RCC_FILE_IO_ERROR = 52;
-	public static final int RCC_CORRUPTED_MIB_FILE = 53;
-	public static final int RCC_TRANSFER_IN_PROGRESS = 54;
-	public static final int RCC_INVALID_JOB_ID = 55;
-	public static final int RCC_INVALID_SCRIPT_ID = 56;
-	public static final int RCC_INVALID_SCRIPT_NAME = 57;
-	public static final int RCC_UNKNOWN_MAP_NAME = 58;
-	public static final int RCC_INVALID_MAP_ID = 59;
-	public static final int RCC_ACCOUNT_DISABLED = 60;
-	public static final int RCC_NO_GRACE_LOGINS = 61;
-	public static final int RCC_CONNECTION_BROKEN = 62;
-	public static final int RCC_INVALID_CONFIG_ID = 63;
-	public static final int RCC_DB_CONNECTION_LOST = 64;
-	public static final int RCC_ALARM_OPEN_IN_HELPDESK = 65;
-	public static final int RCC_ALARM_NOT_OUTSTANDING = 66;
-	public static final int RCC_NOT_PUSH_DCI = 67;
-	public static final int RCC_NXMP_PARSE_ERROR = 68;
-	public static final int RCC_NXMP_VALIDATION_ERROR = 69;
-	public static final int RCC_INVALID_GRAPH_ID = 70;
-	public static final int RCC_LOCAL_CRYPTO_ERROR = 71;
-	public static final int RCC_UNSUPPORTED_AUTH_TYPE = 72;
-	public static final int RCC_BAD_CERTIFICATE = 73;
-	public static final int RCC_INVALID_CERT_ID = 74;
-	public static final int RCC_SNMP_FAILURE = 75;
-	public static final int RCC_NO_L2_TOPOLOGY_SUPPORT = 76;
-	public static final int RCC_INVALID_SITUATION_ID = 77;
-	public static final int RCC_INSTANCE_NOT_FOUND = 78;
-	public static final int RCC_INVALID_EVENT_ID = 79;
-	public static final int RCC_AGENT_ERROR = 80;
-	public static final int RCC_UNKNOWN_VARIABLE = 81;
-	public static final int RCC_RESOURCE_NOT_AVAILABLE = 82;
-	public static final int RCC_JOB_CANCEL_FAILED = 83;
-	public static final int RCC_INVALID_POLICY_ID = 84;
-	public static final int RCC_UNKNOWN_LOG_NAME = 85;
-	public static final int RCC_INVALID_LOG_HANDLE = 86;
 
 	// User object fields
 	public static final int USER_MODIFY_LOGIN_NAME = 0x00000001;
@@ -596,7 +510,7 @@ public class NXCSession
 				actualTimeout -= System.currentTimeMillis() - startTime;
 			}
 			if (!success)
-				throw new NXCException(RCC_TIMEOUT);
+				throw new NXCException(RCC.TIMEOUT);
 		}
 	}
 
@@ -675,7 +589,7 @@ public class NXCSession
 	{
 		final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id, timeout);
 		if (msg == null)
-			throw new NXCException(RCC_TIMEOUT);
+			throw new NXCException(RCC.TIMEOUT);
 		return msg;
 	}
 
@@ -694,7 +608,7 @@ public class NXCSession
 	{
 		final NXCPMessage msg = msgWaitQueue.waitForMessage(code, id);
 		if (msg == null)
-			throw new NXCException(RCC_TIMEOUT);
+			throw new NXCException(RCC.TIMEOUT);
 		return msg;
 	}
 
@@ -705,13 +619,13 @@ public class NXCSession
 	 *           Message id
 	 * @return received message
 	 * @throws NXCException
-	 *            if message was not arrived within timeout interval or contains RCC other than RCC_SUCCESS
+	 *            if message was not arrived within timeout interval or contains RCC other than RCC.SUCCESS
 	 */
 	public NXCPMessage waitForRCC(final long id) throws NXCException
 	{
 		final NXCPMessage msg = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, id);
 		final int rcc = msg.getVariableAsInteger(NXCPCodes.VID_RCC);
-		if (rcc != RCC_SUCCESS)
+		if (rcc != RCC.SUCCESS)
 			throw new NXCException(rcc);
 		return msg;
 	}
@@ -818,7 +732,7 @@ public class NXCSession
 			NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
 
 			if (response.getVariableAsInteger(NXCPCodes.VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION)
-				throw new NXCException(RCC_BAD_PROTOCOL);
+				throw new NXCException(RCC.BAD_PROTOCOL);
 
 			serverVersion = response.getVariableAsString(NXCPCodes.VID_SERVER_VERSION);
 			serverId = response.getVariableAsBinary(NXCPCodes.VID_SERVER_ID);
@@ -843,7 +757,7 @@ public class NXCSession
 			sendMessage(request);
 			response = waitForMessage(NXCPCodes.CMD_LOGIN_RESP, request.getMessageId());
 			int rcc = response.getVariableAsInteger(NXCPCodes.VID_RCC);
-			if (rcc != RCC_SUCCESS)
+			if (rcc != RCC.SUCCESS)
 				throw new NXCException(rcc);
 			userId = response.getVariableAsInteger(NXCPCodes.VID_USER_ID);
 			userSystemRights = response.getVariableAsInteger(NXCPCodes.VID_USER_SYS_RIGHTS);
@@ -1529,7 +1443,7 @@ public class NXCSession
 		}
 		catch(NoSuchAlgorithmException e)
 		{
-			throw new NXCException(RCC_INTERNAL_ERROR);
+			throw new NXCException(RCC.INTERNAL_ERROR);
 		}
 		byte[] digest = md.digest(password.getBytes());
 		msg.setVariable(NXCPCodes.VID_PASSWORD, digest);
@@ -1775,7 +1689,7 @@ public class NXCSession
 
 			NXCPMessage response = waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
 			if (!response.isRawMessage())
-				throw new NXCException(RCC_INTERNAL_ERROR);
+				throw new NXCException(RCC.INTERNAL_ERROR);
 
 			rowsReceived = parseDataRows(response.getBinaryData(), data);
 			if (((rowsRemaining == 0) || (rowsRemaining > MAX_DCI_DATA_ROWS)) && (rowsReceived == MAX_DCI_DATA_ROWS))
@@ -2175,7 +2089,7 @@ public class NXCSession
 		int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_OBJECTS);
 		long[] idList = response.getVariableAsUInt32Array(NXCPCodes.VID_OBJECT_LIST);
 		if (idList.length != count)
-			throw new NXCException(RCC_INTERNAL_ERROR);
+			throw new NXCException(RCC.INTERNAL_ERROR);
 
 		NetworkMapPage page = new NetworkMapPage();
 		for(int i = 0; i < count; i++)
@@ -2368,5 +2282,28 @@ public class NXCSession
 		final NXCPMessage response = waitForRCC(msg.getMessageId());
 		Log log = new Log(this, response);
 		return log;
+	}
+	
+	/**
+	 * Get event templates from server
+	 * 
+	 * @return List of configured event templates
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public List<EventTemplate> getEventTemplates() throws IOException, NXCException
+	{
+		NXCPMessage msg = newMessage(NXCPCodes.CMD_LOAD_EVENT_DB);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+		ArrayList<EventTemplate> list = new ArrayList<EventTemplate>();
+		while(true)
+		{
+			final NXCPMessage response = waitForMessage(NXCPCodes.CMD_EVENT_DB_RECORD, msg.getMessageId());
+			if (response.isEndOfSequence())
+				break;
+			list.add(new EventTemplate(response));
+		}
+		return list;
 	}
 }

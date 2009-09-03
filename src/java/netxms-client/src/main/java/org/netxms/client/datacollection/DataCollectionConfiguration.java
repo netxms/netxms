@@ -10,6 +10,7 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RCC;
 
 /**
  * Data collection configuration for node
@@ -128,7 +129,7 @@ public class DataCollectionConfiguration
 	{
 		DataCollectionItem item = items.get(itemId);
 		if (item == null)
-			throw new NXCException(NXCSession.RCC_INVALID_DCI_ID);
+			throw new NXCException(RCC.INVALID_DCI_ID);
 		modifyItem(item);
 	}
 

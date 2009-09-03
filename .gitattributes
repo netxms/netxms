@@ -251,6 +251,8 @@ src/java/netxms-client/src/main/java/org/netxms/client/NXCUser.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCUserDBObject.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/NXCUserGroup.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/Table.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/constants/RCC.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/constants/Severity.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollectionConfiguration.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DataCollectionItem.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciData.java -text
@@ -259,6 +261,7 @@ src/java/netxms-client/src/main/java/org/netxms/client/datacollection/DciValue.j
 src/java/netxms-client/src/main/java/org/netxms/client/datacollection/Threshold.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/EventProcessingPolicy.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/events/EventProcessingPolicyRule.java -text
+src/java/netxms-client/src/main/java/org/netxms/client/events/EventTemplate.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/ColumnFilter.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/Log.java -text
 src/java/netxms-client/src/main/java/org/netxms/client/log/LogColumn.java -text
