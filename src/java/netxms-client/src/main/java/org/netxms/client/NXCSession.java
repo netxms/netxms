@@ -36,6 +36,9 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.epp.EventProcessingPolicy;
 import org.netxms.client.epp.EventProcessingPolicyRule;
 import org.netxms.client.log.Log;
+import org.netxms.client.maps.NetworkMapObjectData;
+import org.netxms.client.maps.NetworkMapObjectLink;
+import org.netxms.client.maps.NetworkMapPage;
 
 /**
  * @author victor
@@ -2161,7 +2164,7 @@ public class NXCSession
 	 * @throws NXCException
 	 *            if NetXMS server returns an error or operation was timed out
 	 */
-	public NXCMapPage queryLayer2Topology(final long nodeId) throws IOException, NXCException
+	public NetworkMapPage queryLayer2Topology(final long nodeId) throws IOException, NXCException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_L2_TOPOLOGY);
 		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
@@ -2174,9 +2177,9 @@ public class NXCSession
 		if (idList.length != count)
 			throw new NXCException(RCC_INTERNAL_ERROR);
 
-		NXCMapPage page = new NXCMapPage();
+		NetworkMapPage page = new NetworkMapPage();
 		for(int i = 0; i < count; i++)
-			page.addObject(new NXCMapObjectData(idList[i]));
+			page.addObject(new NetworkMapObjectData(idList[i]));
 
 		count = response.getVariableAsInteger(NXCPCodes.VID_NUM_LINKS);
 		long varId = NXCPCodes.VID_OBJECT_LINKS_BASE;
@@ -2187,7 +2190,7 @@ public class NXCSession
 			int type = response.getVariableAsInteger(varId++);
 			String port1 = response.getVariableAsString(varId++);
 			String port2 = response.getVariableAsString(varId++);
-			page.addLink(new NXCMapObjectLink(type, obj1, obj2, port1, port2));
+			page.addLink(new NetworkMapObjectLink(type, obj1, obj2, port1, port2));
 		}
 		return page;
 	}

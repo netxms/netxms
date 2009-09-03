@@ -7,12 +7,12 @@ import java.util.Iterator;
 
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.NXCMapObjectData;
-import org.netxms.client.NXCMapObjectLink;
-import org.netxms.client.NXCMapPage;
 import org.netxms.client.NXCNode;
 import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSubnet;
+import org.netxms.client.maps.NetworkMapObjectData;
+import org.netxms.client.maps.NetworkMapObjectLink;
+import org.netxms.client.maps.NetworkMapPage;
 
 /**
  * @author Victor
@@ -45,9 +45,9 @@ public class IPNeighbors extends NetworkMap
 	 */
 	protected void buildMapPage()
 	{
-		mapPage = new NXCMapPage();
+		mapPage = new NetworkMapPage();
 
-		mapPage.addObject(new NXCMapObjectData(node.getObjectId()));
+		mapPage.addObject(new NetworkMapObjectData(node.getObjectId()));
 		
 		Iterator<Long> it = node.getParents();
 		while(it.hasNext())
@@ -56,8 +56,8 @@ public class IPNeighbors extends NetworkMap
 			NXCObject object = session.findObjectById(id);
 			if ((object != null) && (object instanceof NXCSubnet))
 			{
-				mapPage.addObject(new NXCMapObjectData(id));
-				mapPage.addLink(new NXCMapObjectLink(NXCMapObjectLink.NORMAL, node.getObjectId(), id));
+				mapPage.addObject(new NetworkMapObjectData(id));
+				mapPage.addLink(new NetworkMapObjectLink(NetworkMapObjectLink.NORMAL, node.getObjectId(), id));
 				addNodesFromSubnet((NXCSubnet)object, node.getObjectId());
 			}
 		}
@@ -79,8 +79,8 @@ public class IPNeighbors extends NetworkMap
 				NXCObject object = session.findObjectById(id);
 				if ((object != null) && (object instanceof NXCNode))
 				{
-					mapPage.addObject(new NXCMapObjectData(id));
-					mapPage.addLink(new NXCMapObjectLink(NXCMapObjectLink.NORMAL, subnet.getObjectId(), id));
+					mapPage.addObject(new NetworkMapObjectData(id));
+					mapPage.addLink(new NetworkMapObjectLink(NetworkMapObjectLink.NORMAL, subnet.getObjectId(), id));
 				}
 			}
 		}

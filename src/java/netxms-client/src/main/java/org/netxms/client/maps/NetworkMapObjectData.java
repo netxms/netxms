@@ -1,14 +1,14 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.client.maps;
 
 /**
  * Data for representing object on map
  * @author Victor
  *
  */
-public class NXCMapObjectData
+public class NetworkMapObjectData
 {
 	public static final int NO_POSITION = -1;
 	
@@ -19,7 +19,7 @@ public class NXCMapObjectData
 	/**
 	 * Object with position
 	 */
-	public NXCMapObjectData(long objectId, int x, int y)
+	public NetworkMapObjectData(long objectId, int x, int y)
 	{
 		this.objectId = objectId;
 		this.x = x;
@@ -29,7 +29,7 @@ public class NXCMapObjectData
 	/**
 	 * Unpositioned object
 	 */
-	public NXCMapObjectData(long objectId)
+	public NetworkMapObjectData(long objectId)
 	{
 		this.objectId = objectId;
 		this.x = NO_POSITION;
@@ -66,8 +66,8 @@ public class NXCMapObjectData
 	@Override
 	public boolean equals(Object arg0)
 	{
-		if (arg0 instanceof NXCMapObjectData)
-			return ((NXCMapObjectData)arg0).objectId == this.objectId;
+		if (arg0 instanceof NetworkMapObjectData)
+			return ((NetworkMapObjectData)arg0).objectId == this.objectId;
 		return super.equals(arg0);
 	}
 }

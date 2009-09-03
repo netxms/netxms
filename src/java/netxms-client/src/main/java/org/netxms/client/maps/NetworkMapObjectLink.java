@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.client.maps;
 
 /**
  * Represents link between two objects on map
@@ -9,7 +9,7 @@ package org.netxms.client;
  * @author Victor
  *
  */
-public class NXCMapObjectLink
+public class NetworkMapObjectLink
 {
 	// Link types
 	public static final int NORMAL = 0;
@@ -28,7 +28,7 @@ public class NXCMapObjectLink
 	 * @param port1
 	 * @param port2
 	 */
-	public NXCMapObjectLink(int linkType, long object1, long object2, String port1, String port2)
+	public NetworkMapObjectLink(int linkType, long object1, long object2, String port1, String port2)
 	{
 		this.linkType = linkType;
 		this.object1 = object1;
@@ -44,7 +44,7 @@ public class NXCMapObjectLink
 	 * @param port1
 	 * @param port2
 	 */
-	public NXCMapObjectLink(int linkType, long object1, long object2)
+	public NetworkMapObjectLink(int linkType, long object1, long object2)
 	{
 		this.linkType = linkType;
 		this.object1 = object1;
@@ -99,9 +99,9 @@ public class NXCMapObjectLink
 	@Override
 	public boolean equals(Object obj)
 	{
-		if (obj instanceof NXCMapObjectLink)
-			return (((NXCMapObjectLink)obj).object1 == this.object1) &&
-			       (((NXCMapObjectLink)obj).object2 == this.object2);
+		if (obj instanceof NetworkMapObjectLink)
+			return (((NetworkMapObjectLink)obj).object1 == this.object1) &&
+			       (((NetworkMapObjectLink)obj).object2 == this.object2);
 		return super.equals(obj);
 	}
 }

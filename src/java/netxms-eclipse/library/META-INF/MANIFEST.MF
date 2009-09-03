@@ -29,6 +29,8 @@ Export-Package: com.keypoint,
  org.netxms.client,
  org.netxms.client.datacollection,
  org.netxms.client.epp,
+ org.netxms.client.log,
+ org.netxms.client.maps,
  org.netxms.ui.eclipse.shared,
  org.netxms.ui.eclipse.tools,
  org.netxms.ui.eclipse.widgets

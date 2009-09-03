@@ -23,10 +23,10 @@ import org.eclipse.zest.core.viewers.IFigureProvider;
 import org.eclipse.zest.core.viewers.IGraphEntityContentProvider;
 import org.eclipse.zest.layouts.LayoutStyles;
 import org.eclipse.zest.layouts.algorithms.SpringLayoutAlgorithm;
-import org.netxms.client.NXCMapPage;
 import org.netxms.client.NXCNode;
 import org.netxms.client.NXCObject;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.ui.eclipse.quickmaps.Activator;
 import org.netxms.ui.eclipse.shared.IActionConstants;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
@@ -40,15 +40,15 @@ public abstract class NetworkMap extends ViewPart
 	 */
 	class MapContentProvider implements IGraphEntityContentProvider
 	{
-		private NXCMapPage page;
+		private NetworkMapPage page;
 		
 		@Override
 		public Object[] getElements(Object inputElement)
 		{
-			if (!(inputElement instanceof NXCMapPage))
+			if (!(inputElement instanceof NetworkMapPage))
 				return null;
 			
-			return ((NXCMapPage)inputElement).getResolvedObjects(session);
+			return ((NetworkMapPage)inputElement).getResolvedObjects(session);
 		}
 
 		@Override
@@ -68,8 +68,8 @@ public abstract class NetworkMap extends ViewPart
 		@Override
 		public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
 		{
-			if (newInput instanceof NXCMapPage)
-				page = (NXCMapPage)newInput;
+			if (newInput instanceof NetworkMapPage)
+				page = (NetworkMapPage)newInput;
 			else
 				page = null;
 		}
@@ -115,7 +115,7 @@ public abstract class NetworkMap extends ViewPart
 	
 	protected NXCSession session;
 	protected NXCNode node;
-	protected NXCMapPage mapPage;
+	protected NetworkMapPage mapPage;
 	protected GraphViewer viewer;
 	protected Image imgNode;
 	protected Image imgSubnet;

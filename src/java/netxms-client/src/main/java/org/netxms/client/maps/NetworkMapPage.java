@@ -1,27 +1,30 @@
 /**
  * 
  */
-package org.netxms.client;
+package org.netxms.client.maps;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+
+import org.netxms.client.NXCObject;
+import org.netxms.client.NXCSession;
 
 /**
  * Represents single map page (submap)
  * @author Victor
  *
  */
-public class NXCMapPage
+public class NetworkMapPage
 {
 	private String name;
-	private Set<NXCMapObjectData> objects = new HashSet<NXCMapObjectData>(0);
-	private Set<NXCMapObjectLink> links = new HashSet<NXCMapObjectLink>(0);
+	private Set<NetworkMapObjectData> objects = new HashSet<NetworkMapObjectData>(0);
+	private Set<NetworkMapObjectLink> links = new HashSet<NetworkMapObjectLink>(0);
 
 	/**
 	 * Create empty unnamed page
 	 */
-	public NXCMapPage()
+	public NetworkMapPage()
 	{
 		name = "";
 	}
@@ -29,7 +32,7 @@ public class NXCMapPage
 	/**
 	 * Create empty named page
 	 */
-	public NXCMapPage(final String name)
+	public NetworkMapPage(final String name)
 	{
 		this.name = name;
 	}
@@ -37,7 +40,7 @@ public class NXCMapPage
 	/**
 	 * Add object to map
 	 */
-	public void addObject(final NXCMapObjectData object)
+	public void addObject(final NetworkMapObjectData object)
 	{
 		objects.add(object);
 	}
@@ -45,7 +48,7 @@ public class NXCMapPage
 	/**
 	 * Add link between objects to map
 	 */
-	public void addLink(final NXCMapObjectLink link)
+	public void addLink(final NetworkMapObjectLink link)
 	{
 		links.add(link);
 	}
@@ -69,7 +72,7 @@ public class NXCMapPage
 	/**
 	 * @return the objects
 	 */
-	public Set<NXCMapObjectData> getObjects()
+	public Set<NetworkMapObjectData> getObjects()
 	{
 		return objects;
 	}
@@ -77,7 +80,7 @@ public class NXCMapPage
 	/**
 	 * @return the links
 	 */
-	public Set<NXCMapObjectLink> getLinks()
+	public Set<NetworkMapObjectLink> getLinks()
 	{
 		return links;
 	}
@@ -92,15 +95,15 @@ public class NXCMapPage
 	{
 		Object[] list = new Object[objects.size() + links.size()];
 		
-		Iterator<NXCMapObjectData> oit = objects.iterator();
+		Iterator<NetworkMapObjectData> oit = objects.iterator();
 		for(int i = 0; oit.hasNext(); i++)
 		{
-			NXCMapObjectData data = oit.next();
+			NetworkMapObjectData data = oit.next();
 			long id = data.getObjectId();
 			list[i] = session.findObjectById(id);
 		}
 		
-		Iterator<NXCMapObjectLink> lit = links.iterator();
+		Iterator<NetworkMapObjectLink> lit = links.iterator();
 		for(int i = objects.size(); lit.hasNext(); i++)
 		{
 			list[i] = lit.next();
@@ -118,10 +121,10 @@ public class NXCMapPage
 	{
 		NXCObject[] list = new NXCObject[objects.size()];
 		
-		Iterator<NXCMapObjectData> it = objects.iterator();
+		Iterator<NetworkMapObjectData> it = objects.iterator();
 		for(int i = 0; it.hasNext(); i++)
 		{
-			NXCMapObjectData data = it.next();
+			NetworkMapObjectData data = it.next();
 			long id = data.getObjectId();
 			list[i] = session.findObjectById(id);
 		}
@@ -139,10 +142,10 @@ public class NXCMapPage
 	{
 		Set<NXCObject> result = new HashSet<NXCObject>(0);
 		
-		Iterator<NXCMapObjectLink> it = links.iterator();
+		Iterator<NetworkMapObjectLink> it = links.iterator();
 		while(it.hasNext())
 		{
-			NXCMapObjectLink link = it.next();
+			NetworkMapObjectLink link = it.next();
 			if (link.getObject1() == root)
 			{
 				long id = link.getObject2();
