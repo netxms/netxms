@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            name="Config"
+            id="org.netxms.ui.eclipse.config">
+      </category>
+      <view
+            name="Event Configurator"
+            icon="icons/event_configurator.png"
+            category="org.netxms.ui.eclipse.config"
+            class="org.netxms.ui.eclipse.eventmanager.views.EventConfigurator"
+            id="org.netxms.ui.eclipse.eventmanager.view.event_configurator">
+      </view>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            name="Views"
+            id="org.netxms.ui.eclipse.console.category.views">
+      </category>
+      <command
+            name="Event Configurator"
+            description="Open event configurator"
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            id="org.netxms.ui.eclipse.eventmanager.commands.open_event_configurator">
+      </command>
+   </extension>
+
+   <extension point = "org.eclipse.ui.actionSets">
+	   <actionSet id="org.netxms.ui.eclipse.eventmanager.action_sets.open"
+		   label="Event Configurator"
+		   visible="true">
+		   <action id="org.netxms.ui.eclipse.eventmanager.actions.open"
+			   menubarPath="view/config/additions"
+			   toolbarPath="config/additions"
+			   label="Event Configurator"
+			   tooltip="Open event configurator"
+			   icon="icons/event_configurator.png"
+			   class="org.netxms.ui.eclipse.eventmanager.actions.OpenEventConfigurator"
+			   definitionId="org.netxms.ui.eclipse.eventmanager.commands.open_event_configurator">
+		   </action>
+	   </actionSet>
+   </extension>
+
+</plugin>

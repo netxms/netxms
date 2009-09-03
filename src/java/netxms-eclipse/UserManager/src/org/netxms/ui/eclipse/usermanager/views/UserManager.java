@@ -42,6 +42,7 @@ import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.NXCUser;
 import org.netxms.client.NXCUserDBObject;
+import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.RefreshAction;
 import org.netxms.ui.eclipse.tools.SortableTableViewer;
@@ -545,7 +546,7 @@ public class UserManager extends ViewPart
 						}
 						else
 						{
-							throw new NXCException(NXCSession.RCC_INTERNAL_ERROR);
+							throw new NXCException(RCC.INTERNAL_ERROR);
 						}
 					}
 					status = Status.OK_STATUS;

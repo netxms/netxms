@@ -14,7 +14,7 @@ import org.eclipse.swt.widgets.ExpandBar;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.epp.EventProcessingPolicy;
+import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.ui.eclipse.epp.Activator;
 import org.netxms.ui.eclipse.epp.controls.RuleList;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;

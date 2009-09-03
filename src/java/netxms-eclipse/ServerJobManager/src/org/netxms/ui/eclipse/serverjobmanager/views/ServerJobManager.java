@@ -42,6 +42,7 @@ import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCObject;
 import org.netxms.client.NXCServerJob;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.serverjobmanager.Activator;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
 import org.netxms.ui.eclipse.tools.RefreshAction;
@@ -404,7 +405,7 @@ public class ServerJobManager extends ViewPart
 								}
 								else
 								{
-									throw new NXCException(NXCSession.RCC_INTERNAL_ERROR);
+									throw new NXCException(RCC.INTERNAL_ERROR);
 								}
 							}
 							status = Status.OK_STATUS;
