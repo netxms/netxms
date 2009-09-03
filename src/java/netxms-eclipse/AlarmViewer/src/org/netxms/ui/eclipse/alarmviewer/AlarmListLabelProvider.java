@@ -10,7 +10,9 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCAlarm;
 import org.netxms.client.NXCObject;
+import org.netxms.client.constants.Severity;
 import org.netxms.ui.eclipse.shared.NXMCSharedData;
+import org.netxms.ui.eclipse.shared.StatusDisplayInfo;
 
 
 /**
@@ -20,7 +22,6 @@ import org.netxms.ui.eclipse.shared.NXMCSharedData;
 public class AlarmListLabelProvider implements ITableLabelProvider
 {
 	// Constants
-	private static final String[] severityText = { "Normal", "Warning", "Minor", "Major", "Critical" };
 	private static final String[] stateText = { "Outstanding", "Acknowledged", "Terminated" };
 	
 	// Severity images
@@ -34,18 +35,20 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 	{
 		super();
 
-		severityImages[0] = Activator.getImageDescriptor("icons/normal.png").createImage();
-		severityImages[1] = Activator.getImageDescriptor("icons/warning.png").createImage();
-		severityImages[2] = Activator.getImageDescriptor("icons/minor.png").createImage();
-		severityImages[3] = Activator.getImageDescriptor("icons/major.png").createImage();
-		severityImages[4] = Activator.getImageDescriptor("icons/critical.png").createImage();
+		severityImages[Severity.NORMAL] = StatusDisplayInfo.getStatusImageDescriptor(Severity.NORMAL).createImage();
+		severityImages[Severity.WARNING] = StatusDisplayInfo.getStatusImageDescriptor(Severity.WARNING).createImage();
+		severityImages[Severity.MINOR] = StatusDisplayInfo.getStatusImageDescriptor(Severity.MINOR).createImage();
+		severityImages[Severity.MAJOR] = StatusDisplayInfo.getStatusImageDescriptor(Severity.MAJOR).createImage();
+		severityImages[Severity.CRITICAL] = StatusDisplayInfo.getStatusImageDescriptor(Severity.CRITICAL).createImage();
 
 		stateImages[0] = Activator.getImageDescriptor("icons/outstanding.png").createImage();
 		stateImages[1] = Activator.getImageDescriptor("icons/acknowledged.png").createImage();
 		stateImages[2] = Activator.getImageDescriptor("icons/terminated.png").createImage();
 	}
 
-	
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+	 */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
@@ -59,13 +62,16 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+	 */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
 		switch(columnIndex)
 		{
 			case AlarmView.COLUMN_SEVERITY:
-				return severityText[((NXCAlarm)element).getCurrentSeverity()];
+				return StatusDisplayInfo.getStatusText(((NXCAlarm)element).getCurrentSeverity());
 			case AlarmView.COLUMN_STATE:
 				return stateText[((NXCAlarm)element).getState()];
 			case AlarmView.COLUMN_SOURCE:
@@ -83,13 +89,17 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
+	 */
 	@Override
 	public void addListener(ILabelProviderListener listener)
 	{
-		// TODO Auto-generated method stub
-		
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
+	 */
 	@Override
 	public void dispose()
 	{
@@ -100,17 +110,20 @@ public class AlarmListLabelProvider implements ITableLabelProvider
 			stateImages[i].dispose();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java.lang.Object, java.lang.String)
+	 */
 	@Override
 	public boolean isLabelProperty(Object element, String property)
 	{
-		// TODO Auto-generated method stub
 		return false;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
+	 */
 	@Override
 	public void removeListener(ILabelProviderListener listener)
 	{
-		// TODO Auto-generated method stub
-		
 	}
 }

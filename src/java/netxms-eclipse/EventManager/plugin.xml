@@ -47,4 +47,13 @@
 	   </actionSet>
    </extension>
 
+  <extension
+     point="org.eclipse.core.runtime.adapters">
+        <factory 
+           class="org.netxms.ui.eclipse.eventmanager.EventTemplateAdapterFactory" 
+           adaptableType="org.netxms.client.events.EventTemplate">
+          <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
+        </factory>
+  </extension>
+
 </plugin>

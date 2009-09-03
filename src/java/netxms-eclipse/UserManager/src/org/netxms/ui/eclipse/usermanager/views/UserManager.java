@@ -520,7 +520,7 @@ public class UserManager extends ViewPart
 		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 
 		final String message = "Do you really wish to delete selected user" + ((selection.size() > 1) ? "s?" : "?");
-		final Shell shell = UserManager.this.getViewSite().getShell();
+		final Shell shell = getViewSite().getShell();
 		if (!MessageDialog.openQuestion(shell, "Confirm user deletion", message))
 		{
 			return;

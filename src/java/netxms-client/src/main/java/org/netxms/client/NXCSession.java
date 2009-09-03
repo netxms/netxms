@@ -684,6 +684,19 @@ public class NXCSession
 		}
 		return file;
 	}
+	
+	/**
+	 * Execute simple commands (without arguments and only returning RCC)
+	 * @param command Command code
+	 * @throws IOException
+	 * @throws NXCException
+	 */
+	protected void executeSimpleCommand(int command) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(command);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
 
 	/**
 	 * Receive table from server.
@@ -2305,5 +2318,77 @@ public class NXCSession
 			list.add(new EventTemplate(response));
 		}
 		return list;
+	}
+	
+	/**
+	 * Lock event configuration.
+	 * 
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void lockEventConfiguration() throws IOException, NXCException
+	{
+		executeSimpleCommand(NXCPCodes.CMD_LOCK_EVENT_DB);
+	}
+	
+	/**
+	 * Unlock event configuration.
+	 * 
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void unlockEventConfiguration() throws IOException, NXCException
+	{
+		executeSimpleCommand(NXCPCodes.CMD_UNLOCK_EVENT_DB);
+	}
+	
+	/**
+	 * Generate code for new event template.
+	 * 
+	 * @return Code for new event template
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public long generateEventCode() throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_GENERATE_EVENT_CODE);
+		sendMessage(msg);
+		final NXCPMessage response = waitForRCC(msg.getMessageId());
+		return response.getVariableAsInt64(NXCPCodes.VID_EVENT_CODE);
+	}
+	
+	/**
+	 * Delete event template.
+	 * 
+	 * @param eventCode Event code
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void deleteEventTemplate(long eventCode) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_EVENT_TEMPLATE);
+		msg.setVariableInt32(NXCPCodes.VID_EVENT_CODE, (int)eventCode);
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
+	}
+	
+	/**
+	 * Modify event template.
+	 * 
+	 * @param evt Event template
+	 * @throws IOException if socket I/O error occurs
+	 * @throws NXCException if NetXMS server returns an error or operation was timed out
+	 */
+	public void modifyEventTemplate(EventTemplate evt) throws IOException, NXCException
+	{
+		final NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_EVENT_INFO);
+		msg.setVariableInt32(NXCPCodes.VID_EVENT_CODE, (int)evt.getCode());
+		msg.setVariableInt32(NXCPCodes.VID_SEVERITY, evt.getSeverity());
+		msg.setVariableInt32(NXCPCodes.VID_FLAGS, evt.getFlags());
+		msg.setVariable(NXCPCodes.VID_NAME, evt.getName());
+		msg.setVariable(NXCPCodes.VID_MESSAGE, evt.getMessage());
+		msg.setVariable(NXCPCodes.VID_DESCRIPTION, evt.getDescription());
+		sendMessage(msg);
+		waitForRCC(msg.getMessageId());
 	}
 }
