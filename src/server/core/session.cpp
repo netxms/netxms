@@ -1539,6 +1539,7 @@ void ClientSession::SendEventDB(DWORD dwRqId)
 
          // End-of-list indicator
          msg.SetVariable(VID_EVENT_CODE, (DWORD)0);
+			msg.SetEndOfSequence();
       }
       else
       {
